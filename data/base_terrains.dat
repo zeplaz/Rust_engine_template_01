@@ -1,0 +1,11 @@
+Syntax: name, roughness, moisture, temperature, base_height, texture_paths
+Grass, 0.2,0.4, 20.0, 1.0, ["data/textures/tiles_single/green_grass2_#512x256.png", ""data/textures/tiles_single//green_grass_light_#512x256.png"]
+Forest, 0.3,0.5, 18.0, 1.0,["data/textures/tiles_single/dirt_#256x128.png"]
+Swamp, 0.6,0.7 , 17.0, 0.8,["data/textures/tiles_single/brickpavers2.png"]
+Water, 0.8,1.0, 15.0, 0.0, ["data/textures/tiles_single/water_v02_#800x400.png","data/textures/tiles_single/water_v01_#800x400.png"]
+Cliff, 0.9,0.3, 12.0, 10.0,["data/textures/tiles_single/rock_#256x128.png"]
+Concrete, 0.1,0.2,17.0, 1.0,["data/textures/tiles_single/concrete368a.png"]
+Sand, 0.4,0.2, 22.0, 1.0, ["data/textures/tiles_single/brickpavers2.png"]
+Dirt, 0.5, 0.4,19.0, 1.0,["data/textures/tiles_single/dirtsand2_#512x256.png"]
+Snow, 0.7,0.8 ,-5.0, 1.0, ["data/textures/tiles_single/snow_#256x128.png"]
+Stone, 0.8, 0.4,12.0, 2.0, ["data/textures/tiles_single/stone_#512x256.png"]

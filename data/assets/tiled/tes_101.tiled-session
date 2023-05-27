@@ -1,0 +1,55 @@
+{
+    "Map/SizeTest": {
+        "height": 4300,
+        "width": 2
+    },
+    "activeFile": "",
+    "expandedProjectPaths": [
+    ],
+    "file.lastUsedOpenFilter": "Tous les Fichiers (*)",
+    "fileStates": {
+        "base.tsx": {
+            "dynamicWrapping": true
+        },
+        "bease_01.tmx": {
+            "scale": 0.75,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 912,
+                "y": 58.66666666666663
+            }
+        },
+        "rails.tsx": {
+            "dynamicWrapping": false
+        },
+        "test_card.tmx": {
+            "scale": 1,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 1506,
+                "y": 63
+            }
+        },
+        "test_card.tmx#rails": {
+            "scaleInDock": 1
+        }
+    },
+    "last.imagePath": "assets/unsorted_asset_tile_maps",
+    "map.height": 200,
+    "map.layerDataFormat": null,
+    "map.orientation": null,
+    "map.tileHeight": 64,
+    "map.tileWidth": 64,
+    "map.width": 200,
+    "openFiles": [
+    ],
+    "project": "tes_101.tiled-project",
+    "recentFiles": [
+    ],
+    "tileset.lastUsedFormat": "tsx",
+    "tileset.margin": 5,
+    "tileset.tileSize": {
+        "height": 64,
+        "width": 64
+    }
+}

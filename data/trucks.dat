@@ -1,0 +1,44 @@
+# Truck types
+# Syntax: capacity, mass, max_speed, military_civilian, texture_path. name
+1000, 2000.0, 80, Civilian, {"full_midday":"data/textures/truck1.png",} "Chevrolet C/K"
+1500, 2500.0, 90, Military, "data/textures/truck2.png", "ZIL-130"
+2000, 3000.0, 100, Civilian, "data/textures/truck3.png", "Toyota Dyna"
+2500, 3500.0, 110, Civilian, "data/textures/truck4.png", "Ford F-Series"
+3000, 4000.0, 120, Military, "data/textures/truck5.png", "URAL-4320"
+3500, 4500.0, 130, Civilian, "data/textures/truck6.png", "Isuzu Elf"
+4000, 5000.0, 140, Military, "data/textures/truck7.png", "MAZ-535"
+4500, 5500.0, 150, Civilian, "data/textures/truck8.png", "Nissan Atlas"
+5000, 6000.0, 160, Civilian, "data/textures/truck9.png", "GMC C/K"
+5500, 6500.0, 170, Military, "data/textures/truck10.png", "KamAZ-5410"
+
+
+an isometric tilemap of a URAL-4320.
+truck in different rotation states.
+margin of 2 pixel between each tile in the tilemap.
+these should be in series
+
+an isometric tile map of a URAL-4320 truck.
+the image should have multi rotation iterations of the identical truck in the same image.
+one for faceing north, south, east, west.
+
+
+truck_data = [
+    {
+        "capacity": 1000,
+        "mass": 2000.0,
+        "max_speed": 80,
+        "military_civilian": "Civilian",
+        "texture_paths": {
+            "full_midday": "data/textures//truck1.png",
+            "empty_night_e4": "data/textures/tile_map_empty_night_e4.png",
+            "full_night_e16": "data/textures/tile_map_full_night_e16.png",
+            "empty_midday": "data/textures/tile_map_empty_miday.png",
+        },
+        "emission_levels": {
+            "night": 4,
+            "night_full": 16,
+        },
+        "name": "Chevrolet C/K",
+    },
+    # Add more truck data here...
+]

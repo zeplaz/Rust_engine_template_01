@@ -1,8 +1,39 @@
 [package]
-name = "processor_alpha_dine_x01"
-version = "0.1.0"
-edition = "2011"
+name = "proc_A_dine01"
+version = "0.1.1"
+edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[lib]
+path = "src/lib.rs"
+
+[package.metadata.'cargo-features']
+# Required for glob pattern matching
+glob = ["*"]
 
 [dependencies]
+imgui = "0.10.0"
+reqwest = { version = "0.11", features = ["json"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+bevy = "0.10.1"
+bevy_egui = "0.20.2"
+bevy_puffin = "0.4.0"
+
+bevy-inspector-egui = "0.18.3"
+egui = "0.21.0"
+glow = "0.12.1"
+
+
+[dependencies.glfw]
+version = "*"
+
+[dependencies.glm]
+version = "0.2.3"
+
+[dependencies.gl]
+version = "0.14.0"
+
+
+[profile.dev.package."*"]
+opt-level = 3

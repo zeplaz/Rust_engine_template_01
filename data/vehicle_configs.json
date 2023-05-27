@@ -1,0 +1,54 @@
+[
+  {
+    "name": "civ_truck_01",
+    "vtype":"Truck",
+    "capacity": 500,
+    "mass": 7257,
+    "max_speed": 110,
+    "military_civilian": "civilian",
+    "textures": {
+      "empty": {
+        "miday": [
+          {
+            "path": "vehicles/civ_truck_01/tile_map_8_empty_miday.png",
+            "tiles": 8,
+            "emission_level": 0
+          }
+        ],
+        "night": [
+          {
+            "path": "vehicles/civ_truck_01/tile_map_8_empty_night_e16.png",
+            "tiles": 8,
+            "emission_level": 16.0
+          },
+          {
+            "path": "vehicles/civ_truck_01/tile_map_8_empty_night_e4.png",
+            "tiles": 8,
+            "emission_level": 4.0
+          }
+        ]
+      },
+      "full": {
+        "miday": [
+          {
+            "path": "vehicles/civ_truck_01/tile_map_8_full_miday.png",
+            "tiles": 8,
+            "emission_level": 0
+          }
+        ],
+        "night": [
+          {
+            "path": "vehicles/civ_truck_01/tile_map_8_full_night_e16.png",
+            "tiles": 8,
+            "emission_level": 16.0
+          },
+          {
+            "path": "vehicles/civ_truck_01/tile_map_8_full_night_e4.png",
+            "tiles": 8,
+            "emission_level": 4.0
+          }
+        ]
+      }
+    }
+  }
+]

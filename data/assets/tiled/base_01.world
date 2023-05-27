@@ -1,0 +1,13 @@
+{
+    "maps": [
+        {
+            "fileName": "test_card.tmx",
+            "height": 128,
+            "width": 128,
+            "x": 1216,
+            "y": 0
+        }
+    ],
+    "onlyShowAdjacentMaps": false,
+    "type": "world"
+}
