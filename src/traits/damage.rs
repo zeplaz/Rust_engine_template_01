@@ -1,4 +1,4 @@
-use crate::systems::damage::DamageState;
+use crate::entities::damages::DamageState;
 
 pub trait DamageInfoProvider {
     type DamageInfo;
