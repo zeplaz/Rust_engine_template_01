@@ -54,16 +54,7 @@ pub enum MiniMapState {
     Safty,
 }
 
-#[derive(Debug, Clone, Copy, Default, Eq, PartialEq, Hash, States)]
-pub enum EntityMenuState {
-    #[default]
-    None,
-    RoadVehicle,
-    Train,
-    MiliaryUnit,
-    Building,
-    Resources,
-}
+
 
 #[derive(Debug, Clone, Copy, Default, Eq, PartialEq, Hash, States)]
 pub enum InGameMenuState {

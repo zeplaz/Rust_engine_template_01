@@ -9,7 +9,9 @@ entity_info.set_owner_id(new_owner_id, ownership_change_events);
 .add_system(ownership_change_listener)
 */
 
+use bevy::{prelude::*, utils::hashbrown::hash_map};
 use crate::idgen::EntityId;
+
 
 pub struct OwnershipChangeEvent {
     pub entity_id: EntityId,
@@ -29,3 +31,12 @@ fn ownership_change_listener(mut events: EventReader<OwnershipChangeEvent>, mut 
         // such as modifying building lists or updating trade rules.
     }
 }
+
+fn get_color_for_owner(owner_id: EntityId) -> Color {
+
+    // check colour table!
+    //let  Colour_map = hash_map!{"red" => Color::RED, "green" => Color::GREEN, "blue" =>Coal::BLUE, "yellow" => Color::YELLOW, "cyan" => Color::CYAN};
+}
+
+
+

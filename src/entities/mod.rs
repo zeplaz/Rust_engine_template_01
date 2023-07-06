@@ -1,11 +1,16 @@
-pub mod buildings;
-pub mod entity;
-pub mod rails;
-pub mod road_vehicles;
-pub mod roads;
-pub mod templates;
 
-pub use entity::EntityInfo;
-pub use entity::MilitaryCivilian;
-pub use road_vehicles::{Bus, RoadVehicle, RoadVehicleConfig, Truck};
-pub use templates::RoadVehiclesResource;
+pub mod prelude;
+pub mod types_aliases; 
+
+pub mod entity;
+
+pub mod e_infos; 
+pub mod e_states;
+pub mod e_flag_types;
+pub mod e_componets;
+
+pub mod damages;
+
+pub use damages::*;
+
+pub use entity::*;

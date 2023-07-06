@@ -4,31 +4,10 @@ use crate::resource::ResourceType;
 use crate::systems::damage::RoadVehicleDamageInfo;
 use crate::traits::damage::{DamageInfoProvider, TakesDamage};
 
-#[derive(Debug)]
-pub enum RoadVehicleVisualStates {
-    Full,
-    Empty,
-    Night,
-    Midday,
-}
 
-#[derive(Debug, Deserialize)]
-pub struct RoadVehicleConfig {
-    pub name: String,
-    pub vtype: RoadVehicleType,
-    pub capacity: u32,
-    pub mass: f32,
-    pub max_speed: f32,
-    pub military_civilian: Option<String>,
-    pub textures: HashMap<String, HashMap<String, HashMap<String, TextureInfo>>>,
-}
 
-#[derive(Debug, Deserialize)]
-pub struct TextureInfo {
-    pub path: String,
-    pub tiles: u32,
-    pub emission: f32,
-}
+
+
 
 struct RoadVehicle {
     entityinfo: EntityInfo,
@@ -95,12 +74,7 @@ pub struct Truck {
     // other fields
 }
 
-#[derive(Debug)]
-pub enum AddToCapacityStatus {
-    Success,
-    ResourceTypeNotAllowed,
-    ResourceTypeMismatch,
-}
+
 
 impl Truck {
     pub fn new(veh: RoadVehicle) -> Truck {
@@ -175,19 +149,5 @@ impl Truck {
 
         self.current_load += amount;
         AddToCapacityStatus::Success
-    }
-}
-
-struct Bus {
-    vehicle: RoadVehicle,
-    passengers: u32,
-}
-
-impl Bus {
-    pub fn new(veh: RoadVehicle) -> Bus {
-        Bus {
-            vehicle: veh,
-            passengers: 0,
-        }
     }
 }

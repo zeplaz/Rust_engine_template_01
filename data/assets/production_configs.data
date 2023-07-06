@@ -1,0 +1,159 @@
+//config file for the production inputs and outputs of buildings etc 
+
+
+//basic building types: 
+
+BuildingType::House
+    input: [(Electrcity, 0.5)]
+    output: [(Knowledge, 0.1)(Labour,10)]
+    storage: [(capacity, 30)]
+
+    whitelist: [Human, Ammunition, Essentials, Electronics]
+    blacklist: [all] 
+    radius: [12]
+
+BuildingType::RailDepot
+    input: [(Labour, 1.0),(Electrcity, 0.5)]
+    output: []
+    storage: [(capacity, 100)]
+   
+    whitelist: [all]
+    blacklist: [Knowledge] 
+    radius: [30]
+
+BuildingType::Warehouse
+    input: [(Labour, 1.0),(Electrcity, 0.5)]
+    output: []
+    storage: [(capacity, 75)]
+
+    whitelist: [all]
+    blacklist: [Knowledge] 
+    radius: [30]
+
+BuildingType::Depanneur
+    input: [(Labour, 1.0), (Food, 0.7),(Electrcity, 0.5)]
+    output: [(Knowledge, 0.02)]
+    storage: [(in_capacity, 10)(capacity, 30)]
+
+    whitelist: [Essentials,Human]
+    blacklist: [all] 
+    radius: [15]
+
+BuildingType::FuelStation
+    input: [(Labour, 1.0), (Food, 0.3),(Electrcity, 0.8)]
+    output: [Knowledge, 0.02]
+    storage: [(in_capacity, 10)(out_capacity, 50)]
+
+    whitelist: [Food,Water,Fuel,Human]
+    blacklist: [all] 
+    radius: [15]
+
+BuildingType::FeildDepo
+    input: [(Labour, 1.0)]
+    output: []
+   storage: [(out_capacity, 200)]
+    
+    whitelist: [Essentials,Military,Labour]
+    blacklist: [Knowledge] 
+    radius: [15]
+
+BuildingType::Burocracy
+    input: [(Labour, 2.0),(Electrcity, 0.8)]
+    output: [(Knowledge, 0.5)]
+   storage: [(capacity, 50)]
+    
+    whitelist: [Human,Paper]
+    blacklist: [All] 
+    radius: [50]
+
+
+BuildingType::PowerPlant
+    input: [(Labour, 10.0),(Water,20), (Coal, 13.0)||(Fuel,15)||(Oil,30)||(Wood,40)]
+    output: [(Electrcity, 500.0)]
+
+    storage: [(in_capacity, 50)(out_capacity.1)]
+    
+    whitelist: [Electrcity]
+    blacklist: [All] 
+    radius: [50]
+    
+
+BuildingType::ReserchCenter
+    input: [(Labour, 2.0), (Knowledge, 2.0),(Electrcity, 0.8)]
+    output: [(Knowledge, 5.0)]
+
+BuildingType::Farm
+    input: [(Labour, 1.0), (Water, 2.0), (Fertilizer, 0.5)]
+    output: [(Food, 3.0)]
+
+
+// MINE TYPES
+MineType::Gravel
+    input: [(Labour, 2.0), (Electrcity, 1.0)]
+    output: [(Coal, 30.0)]
+
+MineType::Metal
+    input: [(Labour, 10.0), (Electrcity, 12.0)]
+    output: [(Metal, 3.0)]
+    
+MineType::RareEarth
+    input: [(Labour, 2.0), (Electrcity, 30.0)]
+    output: [(RareEarth, 0.3)]
+
+MineType::Gravel
+    input: [(Labour, 2.0), (Electrcity, 1.0)]
+    output: [(Gravel, 2.0)]
+
+MineType::Oil
+    input: [(Labour, 5.0), (Electrcity, 10.0)]
+    output: [(Oil, 2.0)]
+
+
+//FACTORY TYPES
+FactoryType::Ammunition
+    input: [(Labour, 2.0), (Metal, 3.0), (Chemicals, 1.0), (Electrcity, 12.0)]
+    output: [(Ammunition, 2.0)]
+
+FactoryType::Electronics
+    input: [(Labour, 2.0), (Metal, 1.0), (Chemicals, 1.0), (RareEarth, 1.0), (Electrcity, 12.0)]
+    output: [(Electronics, 1.0)]
+
+FactoryType::WarSupply
+    input: [(Labour, 2.0), (Metal, 3.0),(Chemicals, 1.0),(RareEarth, 1.0) (Ammunition, 1.0), (Electrcity, 12.0)]
+    output: [(WarSupply, 1.0)]
+
+FactoryType::MetalProcessing
+    input: [(Labour, 2.0), (Metal, 1.0), (Energy, 1.0), (Electrcity, 12.0)]
+    output: [(ProcessedMetals, 2.0)]
+
+FactoryType::Chemicals
+    input: [(Labour, 2.0), (Water, 2.0),(Metal, 0.2) ,(Energy, 1.0), (oil,0.3), (Electrcity, 12.0)]
+    output: [(Chemicals, 2.0)]
+
+FactoryType::Wood
+    input: [(Labour, 2.0), (Electrcity, 12.0)]
+    output: [(Wood, 3.0)]
+
+FactoryType::Fertilizer
+    input: [(Labour, 2.0), (Chemicals, 2.0), (Electrcity, 12.0)]
+    output: [(Fertilizer, 2.0)]
+
+FactoryType::Refinery
+    input: [(Labour, 2.0), (Oil, 3.0), (Electrcity, 32.0)]
+    output: [(Fuel, 2.0), (Chemicals, 1.0)]
+
+//speicalized factory types. 
+
+//Concrete factories//
+FactoryType::Concreate::Limecrete
+    input: [(Labour, 4.0), (Gravel, 13.0), (Water, 14.0),(Electrcity, 12.0)]
+    output: [(ConcreateType::Limecrete, 2.0)]
+FactoryType::Concreate::Portland
+    input: [(Labour, 3.0), (Gravel, 8.0), (Water, 16.0),(Electrcity, 22.0)]
+    output: [(ConcreateType::Portland, 7.0)]
+FactoryType::Concreate::Geopolymer
+    input: [(Labour, 2.0), (Gravel, 10.0), (Water, 1.0), (Chemicals, 1.0), (Electrcity, 15.0)]
+    output: [(ConcreateType::Geopolymer, 2.0)]
+FactoryType::Concreate::Gypsum
+    input: [(Labour, 2.0), (Gravel, 12.0), (Water, 1.0),(Electrcity, 22.0)]
+    output: [(ConcreateType::Gypsum, 2.0)]
