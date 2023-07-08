@@ -152,7 +152,7 @@ fn update_grid_totals_system(
 //3. Updating Grids When Transformers Are Destroyed
 
 
-fn update_on_transformer_destroyed(
+fn update_on_power_infastructure_destroyed(
     mut commands: Commands,
     mut grid_query: Query<&mut ElectricalGrid>,
     removed_transformers: RemovedComponents<TransformerComponent>,

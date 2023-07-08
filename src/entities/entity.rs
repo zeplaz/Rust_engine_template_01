@@ -14,7 +14,7 @@ use super::e_flag_types::*;
 pub struct EntityInfo {
     id: EntityId,
     owner_id: Option<EntityId>,
-    position: Vec2,
+    position: Vec3,
     entity_type: EntityType,
 }
 
@@ -22,7 +22,7 @@ impl EntityInfo {
     fn new(
         id_generator: &mut IdGenerator,
         owner_id: Option<EntityId>,
-        position: Vec2,
+        position: Vec3,
         entity_type: EntityType,
     ) -> Self {
         EntityInfo {
@@ -72,8 +72,3 @@ impl AgentOwnable for EntityInfo {
     }
 }
 
-#[derive(Debug, Deserialize)]
-pub struct RoadVehicleConfig {
-    pub name: String,
-    pub vtype: RoadVehicleType,
-}

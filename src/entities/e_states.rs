@@ -9,17 +9,18 @@ pub enum EntityMenuState {
     MiliaryUnit,
     Building,
     Resources,
+    HQ,
 }
 
 
 #[derive(Debug, Clone, Copy, Default, Eq, PartialEq, Hash, States)]
-pub enum VehicleCarryingState {
+pub enum CarryingState {
     Full,
     #[default]
     Empty,
 }
 #[derive(Debug, Clone, Copy, Default, Eq, PartialEq, Hash, States)]
-pub enum VehicleLightingState{
+pub enum LightingState{
     Night,
     #[default]
     Midday,

@@ -4,6 +4,12 @@ use bevy::prelude::*;
 pub use super::ed_states::*;
 
 
+
+#[derive(Component)]
+pub struct Condition {
+    pub condition: f32,
+}
+
 #[derive(Debug, Component)]
 pub struct DamageStateComponent {
     state: DamageState,
