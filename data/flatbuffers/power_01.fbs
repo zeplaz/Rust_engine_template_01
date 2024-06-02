@@ -1,0 +1,146 @@
+
+
+include "production_01.fbs"
+
+
+namespace entities.properties;
+
+enum PowerPlantType:byte {
+    Coal,
+    Nuclear,
+    Solar,
+    Wind,
+    Oil,
+    Gas,
+    Geothermal,
+    Hydro,
+    Biomass,
+}
+
+enum SwitchState: byte {
+    Open,
+    Closed,
+}
+
+
+enum OperationMechanism: byte {
+    Manual,
+    Automatic, 
+}
+
+enum SwitchCloseBehavior: byte {
+    NonReclosing,
+    AutoReclosing,
+}
+
+table Switch {
+    close_behavior: SwitchCloseBehavior;
+    operational_mechanism: OperationMechanism;
+}
+
+table Substation {
+    capacity: float;
+    radius: float; 
+}
+table PowerPlant{
+plant_type: PowerPlantType
+max_output: float
+status: OperationalStatus
+fuel_supply: float
+}
+
+enum PowerDistributionType:byte {
+    ThreePhaseHeavyIndustrial,
+    ThreePhaseMediumIndustrial,
+    OnePhaseLightIndustrial,
+    ThreePhaseResidential,
+    OnePhaseResidential,
+    ThreePhaseLongDistance,
+    OnephaseLongDistance,
+    Mixed, // for substations that can handle both industrial and residential
+}
+
+
+
+
+
+table ElectricalGrid {
+    members: [BevyEntity]; // Assuming Entity is represented as an integer ID
+    connected_grids: [BevyEntity];
+    total_load: float;
+}
+
+table ElectricalLoad {
+    base_load: float;
+    current_load: float;
+}
+
+table ThermalComponent {
+    current_temperature:float;
+    max_temperature:float;
+}
+
+table ElectricalComponent {
+    base_load:float;
+    current_load:float;
+    max_transfer:float;
+    capacity:float;
+}
+
+table TransformerComponent {
+    input_voltage:[InputVoltage]; // An array of structs to simulate HashMap
+    output_voltages:[OutputVoltage]; // An array of structs to simulate HashMap
+}
+
+table InputVoltage {
+    type:PowerDistributionType;
+    voltage:float;
+}
+
+table OutputVoltage {
+    type:PowerDistributionType;
+    voltage:float;
+}
+
+table Fuel {
+    name:string;
+    current_fuel:float;
+    max_fuel:float;
+    property:ResourceMechanism;
+}
+
+
+table Switch {
+    state:SwitchState;
+    max_current:float;
+    connected_entities:ConnectedEntities;
+    retry_duration:float; // Use -1.0 to indicate that it's optional or irrelevant
+    operation_time:float; // Use -1.0 to indicate that it's optional or irrelevant
+    elapsed_time:float;
+    retry_count:uint;
+    operation_mechanism:OperationMechanism;
+    event_behavior:SwitchCloseBehavior;
+}
+
+table ElectricalGrid {
+    members:[ulong]; // HashSet<Entity>
+    connected_grids:[ulong]; // HashSet<Entity>
+}
+
+table PowerPlant {
+    plant_type:PowerPlantType;
+    max_output:float;
+    current_output:float = -1.0; // Use -1.0 to indicate that it's optional or dynamically defined
+    status:OperationalStatus;
+    efficiency:float = -1.0; // Use -1.0 to indicate that it's optional or irrelevant for some types
+}
+root_type ThermalComponent;
+root_type ElectricalComponent;
+root_type FuelComponent;
+
+root_type Transformer;
+root_type Switch;
+root_type ElectricalGrid;
+root_type PowerPlant;
+
+root_type Power; 

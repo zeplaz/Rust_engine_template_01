@@ -1,7 +1,7 @@
 pub mod damage;
 pub mod navigation;
-pub mod power_systems;
-pub mod production_consumption;
+pub mod production;
+
 
 pub use damage::*;
 pub use navigation::*;

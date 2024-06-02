@@ -29,7 +29,7 @@ truck_data = [
         "max_speed": 80,
         "military_civilian": "Civilian",
         "texture_paths": {
-            "full_midday": "data/textures//truck1.png",
+            "full_midday": "data/textures/truck1.png",
             "empty_night_e4": "data/textures/tile_map_empty_night_e4.png",
             "full_night_e16": "data/textures/tile_map_full_night_e16.png",
             "empty_midday": "data/textures/tile_map_empty_miday.png",

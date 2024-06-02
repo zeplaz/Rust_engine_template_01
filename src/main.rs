@@ -1,4 +1,5 @@
-use crate::engine::*;
+use crate::engine::EnginePlugin;
+use bevy::prelude::*;
 
 fn main() {
     App::new()

@@ -1,11 +1,12 @@
+use serde::Deserialize;
 
-
-use serde::{Deserialize};
-
-
-#[derive(Debug, Deserialize)]
-pub struct TextureInfo {
-    pub path: String,
-    pub tiles: u32,
-    pub emission: f32,
+pub enum Direction {
+    North,
+    NorthEast,
+    East,
+    SouthEast,
+    South,
+    SouthWest,
+    West,
+    NorthWest,
 }

@@ -1,0 +1,23 @@
+
+
+
+
+namespace entities.properties;
+
+
+ enum ResourceMechanism: byte {
+    Flow,
+    Storable,
+}
+
+
+enum ConcreateType:byte { 
+    Limecrete,
+    Portland,
+    Geopolymer, 
+    Gypsum, 
+}
+
+ 
+
+root_type Production;

@@ -3,15 +3,13 @@ use crate::engine::states::EnigneState;
 use bevy::prelude::*;
 use bevy_egui::EguiPlugin;
 
-struct EnginePlugin {}
+pub struct EnginePlugin {}
 
 impl Plugin for EnginePlugin {
     //pub fn setup(mut commands: Commands) {}
 
     fn build(&self, app: &mut App) {
-        
-        app.add_plugins(DefaultPlugins)
-        .add_plugin(EguiPlugin);
+        app.add_plugins(DefaultPlugins).add_plugin(EguiPlugin);
 
         //app.add_plugin(MenuStatePlugin)
         //.add_state(AppState::MainMenu)
@@ -34,7 +32,6 @@ impl Plugin for EnginePlugin {
         );*/
     }
 }
-
 
 /*
 

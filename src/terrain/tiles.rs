@@ -1,22 +1,26 @@
 use bevy::prelude::*;
+use entities::entity::EntityInfo;
+use linfa::Distance;
 
 #[derive(Bundle, Debug, Clone)]
 
 pub struct Tile {
     entityinfo: EntityInfo,
-    height: f32,
-    roughness: f32,
-    tempature: f32,
-    moisture: f32,
-    terrain_type: TerrainType,
-    road: bool,
-    track: bool,
+    //entity stuff?
+    entities: Vec<Entity>,
+
     building_id: Option<EntityId>,
     vehicles_id: Vec<EntityId>,
-    entities: Vec<Entity>,
-    pub safety_rating: f32,
+
+    //neighbor stuff
     neighbor_ids: [Option<EntityId>; 8],
     neighbor_gradients: [Option<f32>; 8],
+
+    //model tags
+    pub safety_rating: f32,
+
+    //spatial hash
+    spatial_hash: SpatialHash,
 }
 
 impl Tile {
@@ -47,14 +51,14 @@ impl Tile {
         }
     }
 }
-
+impl Distance for Tile {}
 fn calculate_gradient(
     tile1: &Tile,
     pos1: (usize, usize),
     tile2: &Tile,
     pos2: (usize, usize),
 ) -> f32 {
-    let height_diff = tile2.height - tile1.height;
+    let height_diff = tile2.elevation - tile1.elevation;
     let distance = (((pos2.0 as f32) - (pos1.0 as f32)).powi(2)
         + ((pos2.1 as f32) - (pos1.1 as f32)).powi(2))
     .sqrt();

@@ -94,8 +94,22 @@ fn spawn_entity(
                         &mut materials,
                     );
                 }
-                RoadVehicleType::Car => {}
-                RoadVehicleType::Truck => {} // Add other road vehicle types here
+                RoadVehicleType::Car => {
+                    commands.spawn().insert(car);
+                    insert_material_and_light_affected(
+                        &mut commands,
+                        data.texture_handle,
+                        &mut materials,
+                    );
+                }
+                RoadVehicleType::Truck => {
+                    commands.spawn().insert(truck);
+                    insert_material_and_light_affected(
+                        &mut commands,
+                        data.texture_handle,
+                        &mut materials,
+                    );
+                } // Add other road vehicle types here
             }
         }
         EntityType::Train => {

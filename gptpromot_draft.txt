@@ -1,0 +1,82 @@
+give full detailed examples from source matiral, propose improvemnts form code. give compleate examples. provide lots more code then explinaiton, when providing explenation just give as curt an anaser as nessary, unless promoted for more details. alwasy go for compleixty and details, and degin for examples should always focus on genertic uses, so if "hand stuct or coments, for a building xyz" the systems we devlope should be applcable to handed the other types of units. aka the examples should use the data prodiviced but be based aroung genertic systems that will alow to work with as best possable reusablity of code.
+we must always keep up to date with altest bevy relases.
+we will also use libs like
+https://github.com/StarArawn/bevy_ecs_tilemap
+https://github.com/mvlabat/bevy_egui
+
+
+
+
+example code:
+use bevy::prelude::*;
+use bevy::reflect::Reflect;
+
+#[derive(Reflect, Component)]
+#[reflect(Component)]
+struct Building {
+    #[reflect(ui)]
+    building_type: BuildingType,
+    // other fields...
+}
+
+#[derive(Reflect, Debug, PartialEq, Clone)]
+enum BuildingType {
+    Residential,
+    Commercial,
+    // other types...
+}
+In the above example, #[reflect(ui)] is a custom attribute to indicate that building_type should be exposed in the UI. You'll need to implement the logic to interpret this attribute.
+
+Step 2: Create a UI Builder System
+Next, let's create a system that generates UI elements from the reflected data.
+
+rust
+Copy code
+use bevy_egui::{egui, EguiContext};
+
+fn ui_builder_system(query: Query<&Building, With<Building>>, mut egui_context: ResMut<EguiContext>) {
+    egui::Window::new("Dynamic UI").show(egui_context.ctx_mut(), |ui| {
+        for building in query.iter() {
+            generate_ui_for_building(building, ui);
+        }
+    });
+}
+
+fn generate_ui_for_building(building: &Building, ui: &mut egui::Ui) {
+    let reflected: &Reflect = building.as_reflect();
+
+    // Iterate over each field in the struct
+    for field in reflected.iter_fields() {
+        let field_name = field.name();
+        let field_value = field.get::<BuildingType>().unwrap();
+
+        // Generate UI based on field type
+        match field_value {
+            BuildingType::Residential => {
+                ui.label(format!("{}: Residential", field_name));
+            },
+            BuildingType::Commercial => {
+                ui.label(format!("{}: Commercial", field_name));
+            },
+            // ... handle other cases
+        }
+    }
+}
+Step 3: Integrate with Bevy App
+Finally, integrate this system with your Bevy app.
+
+rust
+Copy code
+fn main() {
+    App::build()
+        .add_plugins(DefaultPlugins)
+        .add_plugin(EguiPlugin)
+        .add_startup_system(setup.system())
+        .add_system(ui_builder_system.system())
+        .run();
+}
+
+fn setup(mut commands: Commands) {
+    commands.spawn().insert(Building { building_type: BuildingType::Residential });
+    // Add other entities and components as needed
+}

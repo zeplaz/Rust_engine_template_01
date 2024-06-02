@@ -1,0 +1,6 @@
+<!DOCTYPE RCC><RCC version="1.0">
+<qresource>
+    <file alias="radio_icon_01.png">icons/radio-icon.png</file>
+    <file alias="checkmark_icon_01.png">icons/checkmark-icon.png</file>
+</qresource>
+</RCC>

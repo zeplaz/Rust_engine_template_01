@@ -1,0 +1,22 @@
+
+
+namespace entities.properties;
+
+table BevyEntity {
+    generation: uint;
+    index: uint;
+}
+
+
+ enum SegmentMembership:byte      {
+    Civilian,
+    Military,
+    Police,
+    NationalGuard, 
+    Praetorian,
+    Intelligence,
+    }
+
+
+
+root_type Entityz;

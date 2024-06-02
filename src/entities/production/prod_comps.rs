@@ -1,7 +1,7 @@
 use bevy::utils::{HashMap,HashSet};
 use bevy::prelude::*;
 
-use crate::entities::{production::ResourceType,production::ResourceFilter};
+use crate::entities::types_of::p_enumz::{ResourceType,ResourceFilter};
 use crate::idgen::EntityId;
 use crate::traits::rates::*;
 
@@ -39,11 +39,6 @@ impl RateCalculatable for ProductionComponent {
     fn calculate_total_rate(&self) -> f32 {
         self.production_rates.values().sum()
     }
-}
-
-#[derive(Component)]
-pub struct DistroRadius{
-    pub radius: f32,
 }
 
 // Sources component

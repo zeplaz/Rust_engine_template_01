@@ -1,0 +1,140 @@
+
+
+include "production_01.fbs"
+include "entity_01.fbs"
+
+
+namespace entities.properties;
+
+
+enum MineType: byte {
+    Metal,
+    RareEarth,
+    Gravel,
+    Oil,
+}
+
+enum FactoryType: byte {
+    Ammunition,
+    Electronics,
+    WarSupply,
+    ProcessedMetals,
+    Chemicals,
+    Woood,
+    Fertilizer,
+    Refinery,
+    PaperMill,
+    Concreate = ConcreateType,
+}
+
+
+enum PowerType: byte {
+    PowerPlant,
+    Trasformer,
+    Substation,
+    Switch,
+    PowerLine
+}
+
+
+enum ResidenceType: byte {
+    SmallHouse,
+    MediumHouse,
+    LargeHouse,
+    Estate,
+    ApartmentsType
+}
+
+
+enum ApartmentUnitType:byte {
+    Studio,
+    Single,
+    Double,
+    ThreeBedrooms,
+    Family,
+    Luxury,
+}
+
+
+union ApartmentUnitUnion {
+    Highrise,
+    Duplex,
+    Quadplex,
+    ThreeStoryBlock,
+    FiveStoryBlock
+}
+
+table Highrise {
+    units_available: [ApartmentUnitType];
+}
+
+table Duplex {
+    units_available: [ApartmentUnitType];
+}
+
+table Quadplex {
+    units_available: [ApartmentUnitType];
+}
+
+table ThreeStoryBlock {
+    units_available: [ApartmentUnitType];
+}
+
+table FiveStoryBlock {
+    units_available: [ApartmentUnitType];
+}
+
+table ApartmentsType {
+    type: ApartmentUnitUnion;
+}
+
+ enum BuildingType {
+    Residencey = ResidenceType,
+    Depanneur,
+    Burocracy,
+    FeildDepo,
+    Warehouse,
+    Factory = FactoryType,
+    Mine = MineType,
+    FuelStation,
+    Power = PowerType,
+    ReserchCenter,
+    Farm,
+    RailDepot,
+    TrainStation,
+}
+
+
+
+table SubstationComponent {
+    max_transfer: float;
+    input_voltage: float;
+    output_voltages: [VoltageMapping];
+    current_temperature: float;
+    max_temperature: float;
+}
+
+table ElectricalGrid{
+    members: [Entity];
+    connected_grids: [EntityGrid];
+    total_load: float;
+    total_capacity: float;
+}
+
+table SubstationComponent {
+    capacity: float;
+    max_transfer: float;
+    input_voltage: float;
+    output_voltages: [VoltageMapping]; // This represents the HashMap
+    current_temperature: float;
+    max_temperature: float;
+}
+
+
+table PowerLine{
+ }
+
+
+
+
+root_type Strukturave;
