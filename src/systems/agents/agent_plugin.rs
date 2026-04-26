@@ -1,0 +1,41 @@
+use bevy::prelude::*;
+
+use crate::systems::agents::permissions::AgentPermissionsPlugin;
+use crate::systems::agents::agent_manager::AgentManagerPlugin;
+use crate::systems::agents::multiplayer::MultiplayerPlugin;
+use crate::events::ownership_events::OwnershipPlugin;
+use crate::gui::AgentPermissionsUiPlugin;
+
+/// Master plugin for all agent-related functionality
+pub struct AgentSystemsPlugin;
+
+impl Plugin for AgentSystemsPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_plugins((
+            // Core agent systems
+            AgentPermissionsPlugin,
+            AgentManagerPlugin,
+            
+            // Ownership and events
+            OwnershipPlugin,
+            
+            // Multiplayer functionality
+            MultiplayerPlugin,
+            
+            // UI
+            AgentPermissionsUiPlugin,
+        ));
+        
+        info!("Agent systems initialized. Press F7 to open the Agent Permissions UI.");
+    }
+}
+
+/// System to toggle the permissions UI with a keyboard shortcut
+pub fn permissions_ui_shortcut(
+    keyboard_input: Res<Input<KeyCode>>,
+    mut toggle_events: EventWriter<crate::gui::TogglePermissionsUiEvent>,
+) {
+    if keyboard_input.just_pressed(KeyCode::F7) {
+        toggle_events.send(crate::gui::TogglePermissionsUiEvent);
+    }
+}

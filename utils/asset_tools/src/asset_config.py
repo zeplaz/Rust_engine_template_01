@@ -5,33 +5,14 @@ MASTER_ENTITY_FILTER_ROLES = ["Building", "Vehicle","Transportable","Power", "Pr
 
 TEXTURE_MAP_STATES = ["Midday", "Night", "Full", "Empty", "Lights_On", "Destroyed", "On_Fire"]
 
-# 
+#
 ASSET_TYPES = ["Building","Tree","Vehcle","Train","Rail","Road","Resource"]
 # general
 SEGMENT_MEMBERSHIP = ["Civilian", "Military", "Police", "National_Guard", "Praetorian","Intelligence"]
 
 
-
-# damage
-FIRE_STATES = [ "None", "Burning", "Burned", "Smoldering", "Smoldered"]
-DAMAGE_STATES = [ "FullyOperationa","Damaged", "Disabled", "Wrecked"]
-
 # Roads 
 SURFACE_TYPES = ["Asphalt", "Cobblestone", "Gravel", "Dirt"]
-
-# Resource 
-CONCREATE_TYPES = ["Limecrete", "Portland", "Geopolymer", "Gypsum"]
-
-RESOURCE_TYPES = [ "Labour", "Water", "Food", "Wood", "Steal", "Concreate", "Ammunition", "Fertilizer", "Chemicals", "RareEarth","Electronics",
-                   "Metal","Oil","Paper","Electrcity","Coal","WarSupply","Knowledge","Fuel"]
-
-RESOURCE_CATEGORY =[ "Raw Material", "Processed Materials","Energy","Military","Humnan", "Essentials"]
-# metals  "Gold", "Iron", "Copper", "Silver", "Bronze", "Aluminum", "Titanium", "Lead", "Platinum", "Nickel", "Zinc"]
-
-CARGO_TYPES = ["Fluid","Gas","People", "Dry Goods"]
-
-
-
 
 
 
@@ -47,8 +28,6 @@ Asset_defintions = {
     "Damage_States":DAMAGE_STATES,
     "Fire_States":FIRE_STATES,
     "Segment_Membership":SEGMENT_MEMBERSHIP,
-    
-    
 }
 
 

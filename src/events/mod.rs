@@ -1,4 +1,5 @@
+// Event modules
 pub mod ownership_events;
 
-
-pub use ownership_events::{OwnershipChangeEvent};
+// Public exports
+pub use ownership_events::*;

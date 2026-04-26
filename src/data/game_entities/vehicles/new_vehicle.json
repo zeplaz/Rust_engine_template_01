@@ -1,0 +1,43 @@
+{
+    "asset_name": "New Vehicle",
+    "asset_type": "Vehicle",
+    "segment": "Civilian",
+    "description": "Produces concrete from raw materials",
+    "is_building": false,
+    "is_vehicle": true,
+    "is_power": false,
+    "is_transportable": false,
+    "is_productive": true,
+    "is_scenery": false,
+    "sound_emission": 60.0,
+    "sound_class": "Engine",
+    "detection_multiplier": 1.0,
+    "texture_path": "",
+    "texture_states": {},
+    "vehicle_type": "Road",
+    "road_vehicle_type": "Bus",
+    "fuel_type": "Diesel",
+    "fuel_class": "Fossil",
+    "fuel_efficiency": 10.0,
+    "capacity": 0,
+    "mass": 1.0,
+    "max_speed": 60,
+    "building_size_x": 3,
+    "building_size_y": 2,
+    "building_height": 1,
+    "construction_cost": 1000,
+    "power_generation": 0,
+    "power_consumption": 50,
+    "power_storage": 0,
+    "produces_resources": [
+        "Concrete"
+    ],
+    "consumes_resources": [
+        "Water",
+        "Chemicals",
+        "Labour"
+    ],
+    "storage_capacity": {},
+    "created": "2025-03-10T00:14:54.190946",
+    "version": "1.0.0"
+}

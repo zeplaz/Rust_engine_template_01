@@ -1,5 +1,11 @@
-use crate::engine::EnginePlugin;
 use bevy::prelude::*;
+use proc_a_dine01::engine::EnginePlugin;
+
+// Simple UI state resource
+#[derive(Resource, Default)]
+struct UiState {
+    show_world_gen: bool,
+}
 
 fn main() {
     App::new()
