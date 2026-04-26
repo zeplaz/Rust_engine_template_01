@@ -1,9 +1,7 @@
+// Damage systems
+mod damage_system;
+mod vehicle_damage;
 
-
-
-
-
-pub mod damage_system;
-//pub mod damage_system;
+// Public exports
 pub use damage_system::*;
-//pub use damage_system::{RoadVehicleDamageSystem};
+pub use vehicle_damage::*;

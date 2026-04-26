@@ -1,0 +1,39 @@
+{
+    "general": {
+        "project_name": "New World",
+        "output_directory": "./output",
+        "seed": 12345
+    },
+    "terrain": {
+        "width": 512,
+        "height": 512,
+        "scale": 0.05,
+        "octaves": 6,
+        "persistence": 0.5,
+        "lacunarity": 2.0,
+        "moisture_bias": 0.0,
+        "temperature_bias": 0.0,
+        "sea_level": 0.4,
+        "river_count": 3,
+        "lake_count": 2,
+        "island_mode": true,
+        "island_falloff": 3.0
+    },
+    "regions": {
+        "method": "Voronoi",
+        "region_count": 24,
+        "centroidal_iterations": 3,
+        "noise_distortion": 0.2
+    },
+    "resources": {
+        "resource_count": 16,
+        "min_resource_size": 3,
+        "max_resource_size": 12,
+        "resource_types": ["Iron", "Coal", "Oil", "Aluminum", "Uranium", "Food"]
+    },
+    "display": {
+        "show_grid": true,
+        "show_region_borders": true,
+        "display_mode": "Biome"
+    }
+}

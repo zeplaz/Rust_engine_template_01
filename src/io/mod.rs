@@ -1,3 +1,8 @@
+// Input/Output systems
+mod mouse;
+mod templates;
+pub mod serialization;
 
-pub mod mouse; 
+// Public exports
 pub use mouse::*;
+pub use templates::*;
