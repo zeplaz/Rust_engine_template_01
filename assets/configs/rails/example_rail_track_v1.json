@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "id": "example_standard_gauge_mainline",
+  "description": "Content example aligned with `GaugeType` / `RailGauge` in `entities/structure/components.rs`.",
+  "gauge": {
+    "gauge_type": "Standard",
+    "width_mm": 1435.0,
+    "name": "Standard gauge",
+    "max_speed_m_s": 55.0,
+    "max_load_capacity": 2.0e7,
+    "stability_factor": 1.0,
+    "turn_radius_m": 300.0,
+    "infrastructure_cost_factor": 1.0,
+    "rolling_stock_interchangeability": true
+  },
+  "meta": {
+    "rust_gauge_enum": "entities::structure::components::GaugeType",
+    "valid_gauge_types": [
+      "Narrow",
+      "Standard",
+      "Broad",
+      "Metre",
+      "TwoFoot",
+      "Brunel",
+      "FiveFoot"
+    ],
+    "engine_note": "`Rrails` / `RailGauge` structs are partial; extend when rail sim serializes."
+  }
+}

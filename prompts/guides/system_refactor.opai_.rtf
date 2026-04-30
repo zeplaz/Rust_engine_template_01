@@ -1,0 +1,484 @@
+You are working on a large-scale Bevy (0.18+ (CHECK_BEVY_VERSION)+) simulation engine with an evolving terrain/world generation system.
+
+Your task is to **refactor and unify the world generation pipeline into a pure, deterministic, data-oriented system**, while preserving all emergent complexity and extensibility.
+
+---
+
+## 🔒 HARD CONSTRAINTS
+
+* DO NOT generate full replacement files
+* DO NOT simplify systems unless it increases composability or emergent behavior
+* DO NOT collapse systems into monoliths
+* ALL suggestions must:
+
+  * reference specific symbols, structs, or modules from provided files
+  * include *before → after* transformations (diff-style or patch-style)
+* Prefer **tables + code snippets** over prose
+* Every recommendation must include:
+
+  * impact on threading
+  * impact on ECS sync
+  * serialization implications
+
+---
+
+## 📂 INPUT EXPECTATION
+
+You will be given multiple Rust files incrementally.
+
+For EACH file:
+
+1. Extract:
+
+   * structs
+   * enums
+   * systems
+   * ownership patterns
+2. Identify:
+
+   * duplication
+   * conflicting models (ECS vs data)
+   * hidden coupling
+   * serialization boundaries
+
+---
+
+## 🎯 PRIMARY GOALS
+
+### 1. Enforce PURE GENERATOR
+
+Transform generation into:
+
+```rust
+fn generate_world(params: &WorldGenParams) -> WorldData
+```
+
+Requirements:
+
+* no ECS usage
+* no Commands
+* no side effects
+* deterministic (seeded)
+
+---
+
+### 2. UNIFY ALL PARAM TYPES
+
+You must detect and merge:
+
+* duplicate `WorldGenParams`
+* inconsistent feature fields (`river_count` vs `river_threshold`)
+
+Produce:
+
+| Source File | Struct | Conflict | Resolution |
+| ----------- | ------ | -------- | ---------- |
+
+Then define:
+
+* modular param hierarchy
+* nested structs (RegionParams, TerrainParams, FeatureParams)
+
+---
+
+### 3. SINGLE SOURCE OF TRUTH (DATA MODEL)
+
+Unify ALL world representations into:
+
+```rust
+WorldData
+```
+
+You must:
+
+* map all existing data into it
+* identify data loss risks
+* propose extensions (NOT removals)
+
+---
+
+### 4. BIOME + TERRAIN UNIFICATION
+
+Find and reconcile:
+
+* BiomeType (all versions)
+* TerrainType
+* GameBiomeType
+
+Produce:
+
+| Enum | File | Semantic Role | Merge Strategy |
+| ---- | ---- | ------------- | -------------- |
+
+Then define:
+
+* canonical biome ID
+* optional layered definition system
+
+---
+
+### 5. REMOVE HYBRID STRUCTS
+
+Identify structs mixing:
+
+* ECS logic
+* runtime logic
+* data storage
+
+Example targets:
+
+* Tile
+* GeoRegion
+
+For each:
+
+```text
+STRUCT: Tile
+ISSUE: stores neighbor state + ECS refs + simulation logic
+ACTION:
+  - split into:
+    - TileData (pure)
+    - TileComponent (ECS ref)
+```
+
+---
+
+### 6. REGION GENERATION CONSOLIDATION
+
+You must:
+
+* locate ALL Voronoi / region generation implementations
+* unify into ONE pipeline
+
+Output:
+
+| Function | File | Algorithm | Keep/Delete | Notes |
+| -------- | ---- | --------- | ----------- | ----- |
+
+---
+
+### 7. NOISE + SAMPLING PIPELINE
+
+Standardize:
+
+* noise creation
+* sampling
+* coordinate normalization
+
+Define reusable:
+
+```rust
+struct NoiseStack { ... }
+```
+
+---
+
+### 8. DERIVED VS STORED DATA
+
+Identify which fields should NOT be stored:
+
+Example:
+
+* gradients
+* neighbors
+* environment structs
+
+Convert to:
+
+* query-time computation
+
+---
+
+### 9. SERIALIZATION BOUNDARY
+
+Clearly define:
+
+| Layer     | Serializable | Notes        |
+| --------- | ------------ | ------------ |
+| WorldData | ✅            | canonical    |
+| ECS       | ❌            | runtime only |
+
+---
+
+### 10. OUTPUT FORMAT
+
+You MUST structure output as:
+
+### A. System Map
+
+### B. Conflict Table
+
+### C. Refactor Actions (diff-style snippets)
+
+### D. New Canonical Interfaces
+
+### E. Migration Plan (step-by-step, non-breaking)
+
+---
+
+## ⚠️ EDGE CASES TO HANDLE
+
+* partial world streaming (chunking readiness)
+* very large maps (memory layout concerns)
+* deterministic multiplayer sync
+* modding/data-driven extensions
+* future GPU offloading
+* multi-threaded generation safety
+
+---
+
+## 📌 STYLE
+
+* No banter
+* No motivational language
+* No vague suggestions
+* Everything must map to actual code changes
+
+---
+
+## 🔁 INTERACTION MODE
+
+After analyzing each file:
+
+* request the NEXT file explicitly
+* track cross-file dependencies
+* revise prior assumptions when needed
+
+---
+
+Begin by requesting the first file.
+
+
+
+_____________________________________________
+You are designing a **multi-threaded subengine architecture** for a Bevy (0.18+ (CHECK_BEVY_VERSION)+) application.
+
+The system must implement:
+
+GUI → Dispatch → Worker Threads → ECS Sync
+
+This is NOT a simple async task system.
+It must support:
+
+* large world generation
+* incremental updates
+* failure recovery
+* deterministic pipelines
+
+---
+
+## 🔒 HARD CONSTRAINTS
+
+* NO full rewrites
+* NO simplification of system complexity
+* DO NOT remove systems unless replaced with a more extensible abstraction
+* ALL recommendations must:
+
+  * reference provided code
+  * include patch-style snippets
+  * define thread boundaries explicitly
+
+---
+
+## 🎯 PRIMARY GOALS
+
+### 1. THREAD ARCHITECTURE
+
+Define explicit threads:
+
+| Thread    | Responsibility | Owns Data | Communicates Via |
+| --------- | -------------- | --------- | ---------------- |
+| GUI       | input + config | params    | channel          |
+| Dispatch  | scheduling     | job queue | channel          |
+| Generator | world gen      | WorldData | channel          |
+| Engine    | ECS            | Entities  | direct           |
+| Render    | GPU            | meshes    | bevy             |
+
+---
+
+### 2. MESSAGE BUS DESIGN
+
+Replace ad-hoc events with structured messages:
+
+```rust
+enum EngineMessage {
+    GenerateWorld(WorldGenParams),
+    WorldGenerated(WorldData),
+    SaveWorld(PathBuf),
+    Error(EngineError),
+}
+```
+
+You must:
+
+* map existing events → messages
+* detect redundancy
+
+---
+
+### 3. JOB SYSTEM
+
+Define:
+
+```rust
+struct Job {
+    id: JobId,
+    kind: JobKind,
+    priority: u8,
+}
+```
+
+Support:
+
+* cancellation
+* deduplication
+* dependency chaining
+
+---
+
+### 4. WORLD GENERATION PIPELINE (THREADED)
+
+Convert:
+
+ECS-triggered generation → background job
+
+Flow:
+
+```
+UI → GenerateWorldEvent
+   → Dispatch Queue
+   → Worker Thread
+   → WorldData
+   → Main Thread Apply
+```
+
+---
+
+### 5. ECS SYNC BOUNDARY
+
+STRICT RULE:
+
+* ECS must NEVER be mutated off-thread
+
+Define sync system:
+
+```rust
+fn apply_world_data(
+    mut commands: Commands,
+    mut receiver: Res<WorldReceiver>,
+)
+```
+
+---
+
+### 6. ERROR HANDLING PIPELINE
+
+Implement:
+
+| Stage        | Action             |
+| ------------ | ------------------ |
+| Worker panic | catch + send error |
+| Engine       | log + recover      |
+| GUI          | display            |
+| Audio        | optional signal    |
+
+---
+
+### 7. FILE I/O THREADING
+
+Move:
+
+* save/load off main thread
+
+Define:
+
+```rust
+enum IoJob {
+    Save(WorldData),
+    Load(PathBuf),
+}
+```
+
+---
+
+### 8. STATE SYNCHRONIZATION
+
+Define canonical runtime state:
+
+```rust
+struct EngineState {
+    active_jobs: HashMap<JobId, JobState>,
+    world: Option<WorldData>,
+}
+```
+
+---
+
+### 9. INTEGRATION WITH EXISTING SYSTEMS
+
+You must analyze:
+
+* current event systems
+* UI triggers
+* world generator
+
+Produce:
+
+| Existing System | Issue | Replace With |
+| --------------- | ----- | ------------ |
+
+---
+
+### 10. EDGE CASES
+
+You MUST handle:
+
+* multiple simultaneous generation requests
+* cancelling outdated jobs
+* partial world updates
+* large memory transfers
+* UI desync
+* thread starvation
+* deterministic seed reuse
+* crash-safe recovery
+
+---
+
+### 11. OUTPUT FORMAT
+
+### A. Thread Model Diagram (table form)
+
+### B. Message Definitions
+
+### C. System Replacement Table
+
+### D. Patch Snippets (critical paths only)
+
+### E. Execution Flow (step-by-step)
+
+### F. Failure Modes + Recovery
+
+---
+
+## 📌 STYLE
+
+* no filler
+* no generic advice
+* no simplifications
+* prioritize extensibility over minimalism
+
+---
+
+## 🔁 INTERACTION MODE
+
+* request relevant files before making assumptions
+* refine architecture incrementally
+* track all systems across responses
+
+---
+
+Begin by requesting:
+
+1. current event definitions
+2. world generation trigger systems
+3. UI systems interacting with generation

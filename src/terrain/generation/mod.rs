@@ -2,7 +2,9 @@
 mod geo_plugin;
 mod world_generator;
 mod bevy_terrain_gen;
-mod world_generator_enhanced;
+pub mod terrain_noise;
+pub mod tuning_io;
+pub mod world_generator_enhanced;
 mod world_generation_plugin;
 
 // Public exports

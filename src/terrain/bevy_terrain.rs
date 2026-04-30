@@ -1,7 +1,10 @@
-// TerrainType enum
-#[derive(Debug, Clone)]
-#[doc(alais = "Paramter_labels")]
-pub enum TerrainType {
+use bevy::prelude::Vec2;
+use serde::{Deserialize, Serialize};
+
+/// Legacy parsing label set from `base_terrains.dat`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[doc(alias = "Parameter_labels")]
+pub enum LegacyTerrainType {
     Grass,
     Forest,
     Swamp,
@@ -14,46 +17,52 @@ pub enum TerrainType {
     Stone,
 }
 
-// infsastucure, or added other fetures.,, mbooling bitwize ones,
-pub struct Terrain_Features {
-    road: bool,
-    track: bool,
+/// Legacy alias maintained so old parsing code can migrate gradually.
+#[deprecated(note = "Use terrain::biome::TerrainClass for canonical storage/generation")]
+pub type TerrainType = LegacyTerrainType;
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, Default)]
+pub struct TerrainFeatures {
+    pub road: bool,
+    pub track: bool,
 }
 
-// should be floats, "envoment' of intraction";; this should be influnced by infastuctree
-//or features..
-pub struct terrain_environment {
-    ambent_tempature: Vec2,
-    roughness: f64,
-    moisture: f64,
-    elevation: f64,
-    sunlight: f64,
-    cloud_coverage: f64,
-    water_desity: f64,
-    water_salinity: f64,
+/// Legacy environment descriptor retained for migration/readback.
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+pub struct LegacyTerrainEnvironment {
+    pub ambient_temperature: Vec2,
+    pub roughness: f64,
+    pub moisture: f64,
+    pub elevation: f64,
+    pub sunlight: f64,
+    pub cloud_coverage: f64,
+    pub water_density: f64,
+    pub water_salinity: f64,
 }
 
-//tags of flora
-pub enum terrain_tags {
-    Setaphata,
-    moss,
-    vines,
-    shrubs,
-    broad_leafed_trees,
-    coniferous_trees,
-    grass,
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Hash)]
+pub enum LegacyTerrainTag {
+    SedgePath,
+    Moss,
+    Vines,
+    Shrubs,
+    BroadLeafedTrees,
+    ConiferousTrees,
+    Grass,
 }
 
-pub enum Ceres_subtags {
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Hash)]
+pub enum LegacyCropSubtag {
     Cereal,
     Legumes,
 }
-//-> collection of images, of their kind->blend for new vierities.
- pub enum flower_subtags {
-     dafidals,
-     forgetmenoghts,
-     bella,
-     dandlions,
-     blue iris,
-     a... 
- }
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Hash)]
+pub enum LegacyFlowerSubtag {
+    Dafidals,
+    Forgetmenoghts,
+    Bella,
+    Dandlions,
+    BlueIris,
+    A,
+}

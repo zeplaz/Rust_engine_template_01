@@ -114,7 +114,10 @@ pub enum EmergencyType {
     None,
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, Hash, Default, States)]
+#[derive(
+    Debug, Clone, Copy, Eq, PartialEq, Hash, Default, States, serde::Serialize, serde::Deserialize,
+)]
+#[serde(rename_all = "PascalCase")]
 pub enum OperationalStatus {
     #[default]
     // The plant is operational but not currently generating electricity. It's ready to start when needed.

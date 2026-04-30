@@ -1,0 +1,31 @@
+// Rule DSL for material resolution — paired with material_registry + tag_registry.
+// Tie-break: higher priority first; equal priority → file order (index ascending).
+(
+    schema_version: 1,
+    rules: [
+        (
+            required: ["wet", "lowland", "fertile"],
+            forbidden: ["rock"],
+            result: "loam_wet",
+            priority: 20,
+        ),
+        (
+            required: ["rock", "hard", "dry"],
+            forbidden: ["wet"],
+            result: "basalt_dense",
+            priority: 18,
+        ),
+        (
+            required: ["wet", "lowland", "soft"],
+            forbidden: [],
+            result: "silt_marsh",
+            priority: 12,
+        ),
+        (
+            required: ["sand", "dry", "traversable"],
+            forbidden: [],
+            result: "sand_dry",
+            priority: 8,
+        ),
+    ],
+)

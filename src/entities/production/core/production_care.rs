@@ -1,8 +1,9 @@
 // src/production/core/production_core.rs
+use std::collections::HashMap;
+
 use super::building_core::Building;
 use super::resources::{ResourceStorage, ResourceType};
 use bevy::prelude::*;
-use bevy::utils::HashMap;
 
 #[derive(Resource, Debug, Clone)]
 pub struct ProductionSettings {
@@ -55,9 +56,9 @@ pub fn update_resource_storage(
 ) {
     for mut storage in storage_query.iter_mut() {
         // Apply deterioration to perishable resources
-        for (resource_type, amount) in storage.resources.iter_mut() {
+        for (resource_type, amount) in storage.amounts.iter_mut() {
             if resource_type.is_perishable() {
-                *amount -= *amount * settings.storage_deterioration_rate * time.delta_seconds();
+                *amount -= *amount * settings.storage_deterioration_rate * time.delta_secs();
                 if *amount < 0.001 {
                     *amount = 0.0;
                 }
@@ -74,20 +75,16 @@ pub fn connect_production_chains(
     settings: Res<ProductionSettings>,
 ) {
     // Find potential connections between producers and consumers
-    for (producer_entity, producer, producer_transform) in producers.iter().map(|(e, p)| {
-        let transform = buildings
-            .get(e)
-            .map(|(_, t, _)| t)
-            .unwrap_or(&Transform::default());
-        (e, p, transform)
-    }) {
-        for (consumer_entity, consumer, consumer_transform) in consumers.iter().map(|(e, c)| {
-            let transform = buildings
-                .get(e)
-                .map(|(_, t, _)| t)
-                .unwrap_or(&Transform::default());
-            (e, c, transform)
-        }) {
+    for (producer_entity, producer) in producers.iter() {
+        let producer_transform = buildings
+            .get(producer_entity)
+            .map(|(_, t, _)| *t)
+            .unwrap_or_default();
+        for (consumer_entity, consumer) in consumers.iter() {
+            let consumer_transform = buildings
+                .get(consumer_entity)
+                .map(|(_, t, _)| *t)
+                .unwrap_or_default();
             // Skip self-connections
             if producer_entity == consumer_entity {
                 continue;

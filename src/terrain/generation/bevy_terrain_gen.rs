@@ -1,26 +1,25 @@
 use bevy::prelude::*;
+use serde::{Deserialize, Serialize};
 
-pub struct theda_postion {
-    val: Vec4, //xyz:gradaint,/slope)
+use crate::terrain::biome::{BiomeWeights, TerrainSurfaceMix};
+use crate::terrain::ecology::{CropType, FlowerType, FloraType};
+
+/// Serializable, data-only generation profile for tile-scale ecology.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TerrainPoint {
+    pub position: Vec3,
+    pub gradient: Vec3,
+    pub biome_weights: BiomeWeights,
+    pub surface_mix: TerrainSurfaceMix,
 }
 
-impl Spaicalzation
-pub enum resource_tags {
-    Mineral,
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct VegetationCandidates {
+    pub flora: Vec<FloraType>,
+    pub crops: Vec<CropType>,
+    pub flowers: Vec<FlowerType>,
 }
 
-pub struct terrain_pont {
-    positional: theda_postion,
-}
-
-
-// compostion of the  envorment of tile
-
-/*
-pub struct fertility_tags{
-    fertility: f64,
-    fitility_matrix: ?,
-}
-*/
-
-//Bryophyte
+// Legacy migration note: this file previously held invalid prototype structs/enums;
+// those names are replaced by `TerrainPoint` and `VegetationCandidates` for canonical
+// serializable generation inputs.

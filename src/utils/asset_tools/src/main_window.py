@@ -2,7 +2,16 @@ import os
 import sys
 from PyQt5.QtCore import Qt, QSize
 from PyQt5.QtGui import QIcon, QPixmap
-from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QLabel, QVBoxLayout, QHBoxLayout
+from PyQt5.QtWidgets import (
+    QApplication,
+    QMainWindow,
+    QWidget,
+    QLabel,
+    QVBoxLayout,
+    QHBoxLayout,
+    QFileDialog,
+    QListWidget,
+)
 
 # Import PyQt-Fluent-Widgets
 from qfluentwidgets import (NavigationInterface, NavigationItemPosition, MessageBox,
@@ -18,7 +27,17 @@ from .pages.vehicle_page import VehiclePage
 from .pages.dynamic_building_page import DynamicBuildingPage
 from .pages.texture_page import TexturePage
 from .pages.power_page import PowerPage
+from .pages.transport_page import TransportPage
+from .pages.worldgen_page import WorldGenPage
+from .pages.terrain_registry_pages import (
+    MaterialRegistryPage,
+    MaterialRulesPage,
+    TagRegistryPage,
+)
 from .config.asset_config import AssetConfig, ASSET_TYPES, RESOURCE_TYPES
+from .config.content_constants import MASTER_ENTITY_FILTER_ROLES
+from .integration.const_game_entities import load_power_voltage_levels_raw
+from . import repo_paths
 
 class MainWindow(SplitFluentWindow):
     def __init__(self):
@@ -41,7 +60,12 @@ class MainWindow(SplitFluentWindow):
         self.vehicle_page = VehiclePage(self)
         self.building_page = DynamicBuildingPage(self)
         self.texture_page = TexturePage(self)
-        self.power_page  = PowerPage(self)
+        self.power_page = PowerPage(self)
+        self.transport_page = TransportPage(self)
+        self.worldgen_page = WorldGenPage(self)
+        self.material_registry_page = MaterialRegistryPage(self)
+        self.tag_registry_page = TagRegistryPage(self)
+        self.material_rules_page = MaterialRulesPage(self)
         # Create a welcome/dashboard home page
         self.home_page = self.createHomePage()
 
@@ -50,6 +74,11 @@ class MainWindow(SplitFluentWindow):
         self.vehicle_page.setObjectName("Vehicles")
         self.building_page.setObjectName("Buildings")
         self.texture_page.setObjectName("Textures")
+        self.worldgen_page.setObjectName("WorldGen")
+        self.material_registry_page.setObjectName("Materials")
+        self.tag_registry_page.setObjectName("Tags")
+        self.material_rules_page.setObjectName("MatRules")
+        self.transport_page.setObjectName("Transport")
         self.power_page.setObjectName("PowerPage")
 
         # Set tooltips directly on the pages
@@ -57,6 +86,11 @@ class MainWindow(SplitFluentWindow):
         self.vehicle_page.setToolTip("Vehicles")
         self.building_page.setToolTip("Buildings")
         self.texture_page.setToolTip("Textures")
+        self.worldgen_page.setToolTip("World generation")
+        self.material_registry_page.setToolTip("Terrain material registry (JSON)")
+        self.tag_registry_page.setToolTip("Terrain tag registry (JSON)")
+        self.material_rules_page.setToolTip("Material rules (RON)")
+        self.transport_page.setToolTip("Roads & Rails")
         self.power_page.setToolTip("Power")
 
         # Add pages to navigation with icons only, tooltip will show on hover
@@ -64,6 +98,16 @@ class MainWindow(SplitFluentWindow):
         self.addSubInterface(self.vehicle_page, FluentIcon.CAR, "")
         self.addSubInterface(self.building_page, FluentIcon.FOLDER, "")
         self.addSubInterface(self.texture_page, FluentIcon.PHOTO, "")
+        _map = getattr(FluentIcon, "MAP", getattr(FluentIcon, "GLOBE", FluentIcon.FOLDER))
+        self.addSubInterface(self.worldgen_page, _map, "")
+        _doc = getattr(FluentIcon, "DOCUMENT", FluentIcon.FOLDER)
+        self.addSubInterface(self.material_registry_page, _doc, "")
+        _tag = getattr(FluentIcon, "TAG", FluentIcon.FOLDER)
+        self.addSubInterface(self.tag_registry_page, _tag, "")
+        _code = getattr(FluentIcon, "CODE", FluentIcon.FOLDER)
+        self.addSubInterface(self.material_rules_page, _code, "")
+        _bus = getattr(FluentIcon, "BUS", FluentIcon.CAR)
+        self.addSubInterface(self.transport_page, _bus, "")
         self.addSubInterface(self.power_page, FluentIcon.PROJECTOR, "")
 
         # Set default page
@@ -85,6 +129,85 @@ class MainWindow(SplitFluentWindow):
         subtitle.setStyleSheet("font-size: 16px; color: #cccccc;")
         layout.addWidget(subtitle)
 
+        # Content studio: canonical repo paths + legacy parity (folder browse, consts preview)
+        studio_title = QLabel("Content studio")
+        studio_title.setStyleSheet("font-size: 20px; font-weight: bold; color: #ffffff;")
+        layout.addWidget(studio_title)
+
+        roles_lbl = QLabel("Asset roles (tags): " + ", ".join(MASTER_ENTITY_FILTER_ROLES))
+        roles_lbl.setStyleSheet("font-size: 13px; color: #aaaaaa;")
+        roles_lbl.setWordWrap(True)
+        layout.addWidget(roles_lbl)
+
+        paths_lbl = QLabel(
+            "<b>Repository root:</b> {}<br/>"
+            "<b>Power definitions:</b> {}<br/>"
+            "<b>World gen tuning (active):</b> {}<br/>"
+            "<b>World gen tuning (example):</b> {}<br/>"
+            "<b>Terrain materials (active):</b> {}<br/>"
+            "<b>Terrain materials (example):</b> {}<br/>"
+            "<b>Terrain tags (active):</b> {}<br/>"
+            "<b>Terrain tags (example):</b> {}<br/>"
+            "<b>Material rules (active):</b> {}<br/>"
+            "<b>Material rules (example):</b> {}<br/>"
+            "<b>Building types index:</b> {}<br/>"
+            "<b>Buildings configs:</b> {}<br/>"
+            "<b>Roads configs:</b> {}<br/>"
+            "<b>Rails configs:</b> {}<br/>"
+            "<b>Vehicles configs:</b> {}<br/>"
+            "<b>Tiled assets:</b> {}".format(
+                repo_paths.REPO_ROOT,
+                repo_paths.plant_definitions_json,
+                repo_paths.world_gen_tuning_json,
+                repo_paths.world_gen_tuning_example_json,
+                repo_paths.material_registry_json,
+                repo_paths.material_registry_example_json,
+                repo_paths.tag_registry_json,
+                repo_paths.tag_registry_example_json,
+                repo_paths.material_rules_ron,
+                repo_paths.material_rules_example_ron,
+                repo_paths.building_types_index_json,
+                repo_paths.buildings_configs_dir,
+                repo_paths.roads_configs_dir,
+                repo_paths.rails_configs_dir,
+                repo_paths.vehicles_configs_dir,
+                repo_paths.tiled_assets_dir,
+            )
+        )
+        paths_lbl.setTextFormat(Qt.RichText)
+        paths_lbl.setWordWrap(True)
+        paths_lbl.setStyleSheet("font-size: 13px; color: #cccccc;")
+        layout.addWidget(paths_lbl)
+
+        volts = load_power_voltage_levels_raw()
+        if volts:
+            preview = ", ".join(volts[:24])
+            if len(volts) > 24:
+                preview += ", …"
+            vol_lbl = QLabel("<b>Power voltages (MV, from consts):</b> " + preview)
+            vol_lbl.setTextFormat(Qt.RichText)
+            vol_lbl.setWordWrap(True)
+            vol_lbl.setStyleSheet("font-size: 12px; color: #88cc88;")
+            layout.addWidget(vol_lbl)
+
+        self._package_list = QListWidget()
+        self._package_list.setMaximumHeight(140)
+        browse_btn = PushButton("Browse package folder…")
+        browse_btn.clicked.connect(self._on_browse_package_folder)
+        layout.addWidget(browse_btn)
+        layout.addWidget(self._package_list)
+
+        dep_note = QLabel(
+            "Legacy PySide editor under <code>utils/asset_tools/</code> is deprecated — see "
+            "<code>prompts/designer_questions/tools_ui/spec/07_asset_editor_dual_chain_audit_v1.md</code>."
+        )
+        dep_note.setTextFormat(Qt.RichText)
+        dep_note.setWordWrap(True)
+        dep_note.setStyleSheet("font-size: 11px; color: #888888;")
+        layout.addWidget(dep_note)
+
+        layout.addSpacing(16)
+
         # Add separator
         separator = QWidget()
         separator.setFixedHeight(2)
@@ -99,7 +222,7 @@ class MainWindow(SplitFluentWindow):
 
         # Create workflow steps
         steps = [
-            ("1. Choose Asset Type", "Select from the navigation menu: Vehicle, Building, or Texture"),
+            ("1. Choose Asset Type", "Select: Vehicle, Building, Texture, World generation, Materials, Tags, Rules, Transport, or Power"),
             ("2. Create or Edit", "Create a new asset or select an existing one to edit"),
             ("3. Configure Properties", "Set the asset's properties in the detail tabs"),
             ("4. Test Preview", "Check the preview tab to ensure the asset looks correct"),
@@ -160,6 +283,29 @@ class MainWindow(SplitFluentWindow):
         layout.addWidget(quick_actions)
 
         return home_page
+
+    def _on_browse_package_folder(self):
+        """List JSON / image / Tiled files under a chosen folder (shallow legacy parity)."""
+        start = str(repo_paths.assets_dir)
+        folder = QFileDialog.getExistingDirectory(self, "Content package folder", start)
+        if not folder:
+            return
+        self._package_list.clear()
+        exts = {".json", ".png", ".tsx", ".tmx", ".const", ".dat"}
+        count = 0
+        try:
+            for dirpath, _dirnames, filenames in os.walk(folder):
+                for fn in sorted(filenames):
+                    if count >= 500:
+                        break
+                    low = os.path.splitext(fn)[1].lower()
+                    if low in exts:
+                        self._package_list.addItem(os.path.join(dirpath, fn))
+                        count += 1
+                if count >= 500:
+                    break
+        except OSError:
+            pass
 
     def switchToVehiclePage(self):
         """Switch to the vehicle page and start creating a new vehicle"""

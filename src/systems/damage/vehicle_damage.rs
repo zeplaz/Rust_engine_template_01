@@ -1,3 +1,9 @@
+use crate::entities::damages as entity_damages;
+use crate::entities::vehicles::runtime::RoadVehicle;
+use crate::traits::damage::{DamageInfoProvider, TakesDamage};
+
+use entity_damages::{DamageState, RoadVehicleDamageInfo};
+
 impl DamageInfoProvider for RoadVehicle {
     type DamageInfo = RoadVehicleDamageInfo;
 
@@ -6,15 +12,15 @@ impl DamageInfoProvider for RoadVehicle {
     }
 }
 
-// other f
-
 impl TakesDamage for RoadVehicle {
     fn apply_damage(&mut self, amount: f32) {
-        // logic to apply damage to the vehicle
+        self.damage_info.structural_integrity =
+            (self.damage_info.structural_integrity - amount * 0.1).max(0.0);
     }
 
     fn repair(&mut self, amount: f32) {
-        // logic to repair the vehicle
+        self.damage_info.structural_integrity =
+            (self.damage_info.structural_integrity + amount).min(1.0);
     }
 
     fn get_structural_integrity(&self) -> f32 {
@@ -23,9 +29,5 @@ impl TakesDamage for RoadVehicle {
 
     fn damage_state(&self) -> &DamageState {
         &self.damage_info.state
-    }
-
-    fn set_damage_state(&mut self, state: DamageState) {
-        self.damage_state = state;
     }
 }

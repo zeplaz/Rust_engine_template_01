@@ -1,10 +1,13 @@
 use bevy::prelude::*;
-use bevy_egui::{egui, EguiContext};
+use bevy_egui::{egui, EguiContexts, EguiPrimaryContextPass};
 
+use crate::terrain::generation::tuning_io::{load_overlay, WorldGenTuningOverlay};
 use crate::terrain::generation::world_generator_enhanced::{
-    WorldGenParams, RegionMethod, GenerateWorldEvent
+    GenerateWorldEvent, RegionMethod, WorldGenParams, TerrainNoiseProfile,
+    WORLD_GEN_TUNING_JSON_PATH,
 };
 
+#[derive(Resource)]
 pub struct WorldGenUiState {
     pub visible: bool,
     pub preview_mode: PreviewMode,
@@ -30,25 +33,63 @@ impl Default for WorldGenUiState {
 }
 
 // Toggle event for the world gen UI
-#[derive(Event)]
+#[derive(Message)]
 pub struct ToggleWorldGenUiEvent;
 
-// UI System for world generation
+// UI System for world generation — EguiPrimaryContextPass, returns Result (bevy_egui 0.39).
 pub fn world_gen_ui_system(
-    mut egui_context: ResMut<EguiContext>,
+    mut contexts: EguiContexts,
     mut world_gen_params: ResMut<WorldGenParams>,
     mut world_gen_ui_state: ResMut<WorldGenUiState>,
-    mut generate_event: EventWriter<GenerateWorldEvent>,
-) {
+    mut generate_event: MessageWriter<GenerateWorldEvent>,
+    mut tuning_io_hint: Local<String>,
+) -> Result {
     if !world_gen_ui_state.visible {
-        return;
+        return Ok(());
     }
 
     egui::Window::new("World Generator")
         .resizable(true)
         .collapsible(true)
-        .show(egui_context.ctx_mut(), |ui| {
+        .show(contexts.ctx_mut()?, |ui| {
             ui.heading("World Generator");
+            ui.add_space(10.0);
+            
+            ui.label(format!("Optional overlay: {}", WORLD_GEN_TUNING_JSON_PATH));
+            ui.horizontal(|ui| {
+                if ui.button("Reload tuning JSON").clicked() {
+                    match load_overlay(WORLD_GEN_TUNING_JSON_PATH)
+                    {
+                        Ok(Some(o)) => {
+                            if let Some(n) = o.noise_sampling {
+                                world_gen_params.noise_sampling = n;
+                            }
+                            if let Some(b) = o.biome_tuning {
+                                world_gen_params.biome_tuning = b;
+                            }
+                            *tuning_io_hint = "Reloaded overlay.".to_string();
+                        }
+                        Ok(None) => *tuning_io_hint = "No file — using in-memory params only.".to_string(),
+                        Err(e) => *tuning_io_hint = format!("Reload error: {e}"),
+                    }
+                }
+                if ui.button("Save tuning JSON").clicked() {
+                    let overlay = WorldGenTuningOverlay {
+                        noise_sampling: Some(world_gen_params.noise_sampling.clone()),
+                        biome_tuning: Some(world_gen_params.biome_tuning.clone()),
+                    };
+                    match serde_json::to_string_pretty(&overlay) {
+                        Ok(s) => match std::fs::write(WORLD_GEN_TUNING_JSON_PATH, s) {
+                            Ok(()) => *tuning_io_hint = "Saved overlay.".to_string(),
+                            Err(e) => *tuning_io_hint = format!("Write error: {e}"),
+                        },
+                        Err(e) => *tuning_io_hint = format!("Serialize error: {e}"),
+                    }
+                }
+            });
+            if !tuning_io_hint.is_empty() {
+                ui.small(&*tuning_io_hint);
+            }
             ui.add_space(10.0);
             
             egui::CollapsingHeader::new("General Settings")
@@ -90,12 +131,79 @@ pub fn world_gen_ui_system(
             egui::CollapsingHeader::new("Terrain Settings")
                 .default_open(true)
                 .show(ui, |ui| {
+                    ui.label("Height noise profile:");
+                    ui.radio_value(&mut world_gen_params.height_noise_profile, TerrainNoiseProfile::FbmPerlin, "fBm · Perlin (baseline)");
+                    ui.radio_value(&mut world_gen_params.height_noise_profile, TerrainNoiseProfile::RidgedMulti, "Ridged (ranges / cliffs)");
+                    ui.radio_value(&mut world_gen_params.height_noise_profile, TerrainNoiseProfile::Billow, "Billow (soft landmasses)");
+                    ui.radio_value(&mut world_gen_params.height_noise_profile, TerrainNoiseProfile::HybridMulti, "Hybrid multifractal");
+                    ui.radio_value(&mut world_gen_params.height_noise_profile, TerrainNoiseProfile::FbmOpenSimplex, "fBm · OpenSimplex");
+
                     ui.add(egui::Slider::new(&mut world_gen_params.noise_scale, 0.01..=0.1).text("Noise Scale"));
                     ui.add(egui::Slider::new(&mut world_gen_params.noise_octaves, 1..=8).text("Noise Octaves"));
+                    ui.add(egui::Slider::new(&mut world_gen_params.noise_lacunarity, 1.2..=3.5).text("Lacunarity"));
+                    ui.add(egui::Slider::new(&mut world_gen_params.noise_persistence, 0.2..=0.85).text("Persistence"));
+
+                    egui::CollapsingHeader::new("Post shaping (naturalistic pass)")
+                        .default_open(false)
+                        .show(ui, |ui| {
+                            ui.label("Applied after the main fractal: curve land/ocean contrast, warp coasts, add small-scale detail.");
+                            ui.add(egui::Slider::new(&mut world_gen_params.height_curve_exponent, 0.35..=2.5).text("Height curve (1 = linear)"));
+                            ui.add(egui::Slider::new(&mut world_gen_params.domain_warp_strength, 0.0..=1.5).text("Domain warp strength"));
+                            ui.add(egui::Slider::new(&mut world_gen_params.terrain_detail_mix, 0.0..=1.0).text("High-frequency detail mix"));
+                        });
+
                     ui.add(egui::Slider::new(&mut world_gen_params.moisture_bias, -0.5..=0.5).text("Moisture Bias"));
                     ui.add(egui::Slider::new(&mut world_gen_params.temperature_bias, -0.5..=0.5).text("Temperature Bias"));
-                    
+
                     ui.add_space(5.0);
+                });
+            
+            egui::CollapsingHeader::new("Noise channels (advanced)")
+                .default_open(false)
+                .show(ui, |ui| {
+                    let ns = &mut world_gen_params.noise_sampling;
+                    ui.add(egui::Slider::new(&mut ns.warp_noise_scale_mul, 0.05..=1.0).text("Warp noise · scale ×"));
+                    ui.add(egui::Slider::new(&mut ns.warp_noise_octaves, 2..=12).text("Warp octaves"));
+                    ui.horizontal(|ui| {
+                        ui.label("Warp seed offset");
+                        ui.add(egui::DragValue::new(&mut ns.warp_seed_offset).speed(1.0));
+                    });
+                    ui.add(egui::Slider::new(&mut ns.detail_noise_scale_mul, 0.5..=8.0).text("Detail noise · scale ×"));
+                    ui.add(egui::Slider::new(&mut ns.detail_noise_octaves, 1..=8).text("Detail octaves"));
+                    ui.horizontal(|ui| {
+                        ui.label("Detail seed offset");
+                        ui.add(egui::DragValue::new(&mut ns.detail_seed_offset).speed(1.0));
+                    });
+                    ui.add(egui::Slider::new(&mut ns.moisture_noise_scale_mul, 0.3..=3.0).text("Moisture fBm · scale ×"));
+                    ui.add(egui::Slider::new(&mut ns.temperature_noise_scale_mul, 0.3..=3.0).text("Temperature fBm · scale ×"));
+                    ui.add(egui::Slider::new(&mut ns.moisture_sample_freq_mul, 0.1..=4.0).text("Moisture sample freq ×"));
+                    ui.add(egui::Slider::new(&mut ns.temperature_sample_freq_mul, 0.1..=4.0).text("Temperature sample freq ×"));
+                    ui.add(egui::Slider::new(&mut ns.warp_coord_frequency_mul, 0.02..=0.25).text("Warp coord frequency"));
+                    ui.add(egui::Slider::new(&mut ns.warp_coord_z, -4.0..=8.0).text("Warp coord Z"));
+                    ui.add(egui::Slider::new(&mut ns.warp_phase_offset_x, -50.0..=50.0).text("Warp phase X"));
+                    ui.add(egui::Slider::new(&mut ns.warp_phase_offset_y, -50.0..=50.0).text("Warp phase Y"));
+                    ui.add(egui::Slider::new(&mut ns.warp_displacement_scale, 1.0..=40.0).text("Warp displacement (× strength)"));
+                    ui.add(egui::Slider::new(&mut ns.detail_coord_frequency_mul, 1.0..=12.0).text("Detail coord frequency"));
+                    ui.add(egui::Slider::new(&mut ns.detail_persistence_mul, 0.2..=1.0).text("Detail persistence ×"));
+                });
+            
+            egui::CollapsingHeader::new("Biome generator coupling")
+                .default_open(false)
+                .show(ui, |ui| {
+                    let b = &mut world_gen_params.biome_tuning;
+                    ui.label("Thresholds and soft weights used by `classify_biome` on the same height/moisture/temp maps as world gen.");
+                    ui.add(egui::Slider::new(&mut b.sea_level, 0.15..=0.55).text("Sea level (soft marine)"));
+                    ui.add(egui::Slider::new(&mut b.deep_water_height_max, 0.05..=0.35).text("Deep water height max"));
+                    ui.add(egui::Slider::new(&mut b.shallow_water_height_max, 0.2..=0.55).text("Shallow water height max"));
+                    ui.add(egui::Slider::new(&mut b.beach_height_max, 0.28..=0.48).text("Beach height max"));
+                    ui.add(egui::Slider::new(&mut b.mountain_height_min, 0.55..=0.92).text("Mountain height min"));
+                    ui.add(egui::Slider::new(&mut b.grassland_moisture_max, 0.2..=0.6).text("Grassland moisture max"));
+                    ui.add(egui::Slider::new(&mut b.desert_moisture_max, 0.1..=0.55).text("Desert moisture max"));
+                    ui.add(egui::Slider::new(&mut b.swamp_moisture_min, 0.55..=0.95).text("Swamp moisture min"));
+                    ui.add(egui::Slider::new(&mut b.forest_moisture_max, 0.45..=0.85).text("Forest moisture band max"));
+                    ui.add(egui::Slider::new(&mut b.hot_lowlands_temperature_min, 0.45..=0.9).text("Hot lowlands temp min"));
+                    ui.add(egui::Slider::new(&mut b.tundra_temperature_max, 0.1..=0.45).text("Tundra temp max"));
+                    ui.add(egui::Slider::new(&mut b.snow_peak_temperature_max, 0.05..=0.35).text("Snow peak temp max"));
                 });
             
             egui::CollapsingHeader::new("Feature Settings")
@@ -129,7 +237,7 @@ pub fn world_gen_ui_system(
             
             ui.horizontal(|ui| {
                 if ui.button("Generate World").clicked() {
-                    generate_event.send(GenerateWorldEvent(world_gen_params.clone()));
+                    generate_event.write(GenerateWorldEvent(world_gen_params.clone()));
                 }
                 
                 if ui.button("Close").clicked() {
@@ -137,11 +245,12 @@ pub fn world_gen_ui_system(
                 }
             });
         });
+    Ok(())
 }
 
 // System to toggle the world gen UI
 pub fn toggle_world_gen_ui_system(
-    mut events: EventReader<ToggleWorldGenUiEvent>,
+    mut events: MessageReader<ToggleWorldGenUiEvent>,
     mut world_gen_ui_state: ResMut<WorldGenUiState>,
 ) {
     for _ in events.read() {
@@ -155,7 +264,9 @@ pub struct WorldGenUiPlugin;
 impl Plugin for WorldGenUiPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<WorldGenUiState>()
-           .add_event::<ToggleWorldGenUiEvent>()
-           .add_systems(Update, (world_gen_ui_system, toggle_world_gen_ui_system));
+           .add_message::<ToggleWorldGenUiEvent>()
+           // Non-egui toggle logic stays in Update; UI rendering in EguiPrimaryContextPass
+           .add_systems(Update, toggle_world_gen_ui_system)
+           .add_systems(EguiPrimaryContextPass, world_gen_ui_system);
     }
 }

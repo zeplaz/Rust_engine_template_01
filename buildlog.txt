@@ -1,0 +1,1066 @@
+   Compiling proc_A_dine01 v0.1.1 (C:\dev\github\Rust_engine_template_01)
+error: visibility `pub` is not followed by an item
+  --> src\entities\mod.rs:14:1
+   |
+14 | pub pub mod structure;
+   | ^^^ the visibility
+   |
+   = help: you likely meant to define an item, e.g., `pub fn foo() {}`
+
+error: expected item, found keyword `pub`
+  --> src\entities\mod.rs:14:5
+   |
+14 | pub pub mod structure;
+   |     ^^^ expected item
+   |
+   = note: for a full list of items that can appear in modules, see <https://doc.rust-lang.org/reference/items.html>
+
+error[E0433]: cannot find `production` in `entities`
+ --> src\engine\engine_with_worldgen.rs:2:22
+  |
+2 | use crate::entities::production::core::ManufacturingCorePlugin;
+  |                      ^^^^^^^^^^ could not find `production` in `entities`
+
+error[E0433]: cannot find `types` in `entities`
+ --> src\io\serialization\resource_deserializer.rs:8:22
+  |
+8 | use crate::entities::types::p_enumz::ResourceType;
+  |                      ^^^^^ could not find `types` in `entities`
+
+error[E0433]: cannot find `types` in `entities`
+ --> src\io\serialization\resource_deserializer.rs:9:22
+  |
+9 | use crate::entities::types::s_flagz::{
+  |                      ^^^^^ could not find `types` in `entities`
+
+error[E0433]: cannot find `vehicles` in `entities`
+ --> src\systems\damage\vehicle_damage.rs:2:22
+  |
+2 | use crate::entities::vehicles::runtime::RoadVehicle;
+  |                      ^^^^^^^^ could not find `vehicles` in `entities`
+
+error[E0433]: cannot find `vehicles` in `entities`
+ --> src\systems\navigation\road_vehicles_motion.rs:4:22
+  |
+4 | use crate::entities::vehicles::runtime::{Bus, Truck};
+  |                      ^^^^^^^^ could not find `vehicles` in `entities`
+
+error[E0433]: cannot find `production` in `entities`
+ --> src\systems\production\runtime.rs:3:22
+  |
+3 | use crate::entities::production::aluminum::AluminumRuntimePlugin;
+  |                      ^^^^^^^^^^ could not find `production` in `entities`
+
+error[E0433]: cannot find `production` in `entities`
+ --> src\systems\production\runtime.rs:4:22
+  |
+4 | use crate::entities::production::concrete::ConcreteRuntimePlugin;
+  |                      ^^^^^^^^^^ could not find `production` in `entities`
+
+error[E0433]: cannot find `production` in `entities`
+ --> src\systems\production\runtime.rs:5:22
+  |
+5 | use crate::entities::production::power::PowerRuntimePlugin;
+  |                      ^^^^^^^^^^ could not find `production` in `entities`
+
+error[E0425]: cannot find type `EventReader` in this scope
+  --> src\events\ownership_events.rs:58:17
+   |
+58 |     mut events: EventReader<OwnershipChangeEvent>,
+   |                 ^^^^^^^^^^^ not found in this scope
+
+error[E0425]: cannot find type `EventWriter` in this scope
+  --> src\events\ownership_events.rs:60:28
+   |
+60 |     mut permission_events: EventWriter<PermissionGrantEvent>,
+   |                            ^^^^^^^^^^^ not found in this scope
+
+error[E0425]: cannot find type `EventWriter` in this scope
+  --> src\engine\transitions.rs:35:32
+   |
+35 | pub fn exit_game(mut app_exit: EventWriter<bevy::app::AppExit>) {
+   |                                ^^^^^^^^^^^ not found in this scope
+
+error[E0425]: cannot find type `EventWriter` in this scope
+  --> src\gui\main_menu.rs:38:26
+   |
+38 |     mut app_exit_events: EventWriter<AppExit>,
+   |                          ^^^^^^^^^^^ not found in this scope
+
+error[E0425]: cannot find type `EventReader` in this scope
+  --> src\gui\agent_permissions_ui.rs:43:17
+   |
+43 |     mut events: EventReader<TogglePermissionsUiEvent>,
+   |                 ^^^^^^^^^^^ not found in this scope
+
+error[E0425]: cannot find type `EventWriter` in this scope
+  --> src\gui\agent_permissions_ui.rs:61:23
+   |
+61 |     mut grant_events: EventWriter<PermissionGrantEvent>,
+   |                       ^^^^^^^^^^^ not found in this scope
+
+error[E0425]: cannot find type `EventWriter` in this scope
+  --> src\gui\agent_permissions_ui.rs:62:24
+   |
+62 |     mut revoke_events: EventWriter<PermissionRevokeEvent>,
+   |                        ^^^^^^^^^^^ not found in this scope
+
+error[E0425]: cannot find type `EventWriter` in this scope
+  --> src\gui\editor\world_gen_ui.rs:41:25
+   |
+41 |     mut generate_event: EventWriter<GenerateWorldEvent>,
+   |                         ^^^^^^^^^^^ not found in this scope
+
+error[E0425]: cannot find type `EventReader` in this scope
+   --> src\gui\editor\world_gen_ui.rs:145:17
+    |
+145 |     mut events: EventReader<ToggleWorldGenUiEvent>,
+    |                 ^^^^^^^^^^^ not found in this scope
+
+error[E0425]: cannot find type `EventReader` in this scope
+   --> src\systems\agents\permissions.rs:415:17
+    |
+415 |     mut events: EventReader<PermissionGrantEvent>,
+    |                 ^^^^^^^^^^^ not found in this scope
+
+error[E0425]: cannot find type `EventReader` in this scope
+   --> src\systems\agents\permissions.rs:427:17
+    |
+427 |     mut events: EventReader<PermissionRevokeEvent>,
+    |                 ^^^^^^^^^^^ not found in this scope
+
+error[E0425]: cannot find type `EventWriter` in this scope
+   --> src\systems\agents\agent_manager.rs:167:28
+    |
+167 |     mut permission_events: EventWriter<crate::systems::agents::permissions::PermissionGrantEvent>,
+    |                            ^^^^^^^^^^^ not found in this scope
+
+error[E0425]: cannot find type `EventReader` in this scope
+  --> src\systems\agents\multiplayer.rs:80:17
+   |
+80 |     mut events: EventReader<PlayerConnectionEvent>,
+   |                 ^^^^^^^^^^^ not found in this scope
+
+error[E0425]: cannot find type `EventWriter` in this scope
+  --> src\systems\agents\agent_plugin.rs:36:24
+   |
+36 |     mut toggle_events: EventWriter<crate::gui::TogglePermissionsUiEvent>,
+   |                        ^^^^^^^^^^^ not found in this scope
+
+error[E0405]: cannot find trait `DamageInfoProvider` in this scope
+  --> src\systems\damage\damage_system.rs:23:6
+   |
+23 | impl DamageInfoProvider for RoadVehicleDamageInfo {
+   |      ^^^^^^^^^^^^^^^^^^ not found in this scope
+   |
+help: consider importing this trait through its public re-export
+   |
+ 1 + use crate::traits::DamageInfoProvider;
+   |
+
+error[E0405]: cannot find trait `DamageInfoProvider` in this scope
+  --> src\systems\damage\damage_system.rs:31:6
+   |
+31 | impl DamageInfoProvider for BuildingDamageInfo {
+   |      ^^^^^^^^^^^^^^^^^^ not found in this scope
+   |
+help: consider importing this trait through its public re-export
+   |
+ 1 + use crate::traits::DamageInfoProvider;
+   |
+
+error[E0425]: cannot find type `Commands` in this scope
+ --> src\terrain\generation\world_generator.rs:2:19
+  |
+2 |     mut commands: Commands,
+  |                   ^^^^^^^^ not found in this scope
+
+error[E0425]: cannot find function `generate_regions` in this scope
+   --> src\terrain\generation\world_generator.rs:6:19
+    |
+  6 |     let regions = generate_regions(/* ... */);
+    |                   ^^^^^^^^^^^^^^^^ not found in this scope
+    |
+note: function `crate::terrain::generation::world_generator_enhanced::generate_regions` exists but is inaccessible
+   --> src\terrain\generation\world_generator_enhanced.rs:245:1
+    |
+245 | fn generate_regions(params: &WorldGenParams, rng: &mut StdRng) -> Vec<Vec<VoronoiSite>> {
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ not accessible
+
+error[E0422]: cannot find struct, variant or union type `GeoRegion` in this scope
+  --> src\terrain\generation\world_generator.rs:11:21
+   |
+11 |             .insert(GeoRegion { /* ... */ })
+   |                     ^^^^^^^^^ not found in this scope
+   |
+help: consider importing this struct through its public re-export
+   |
+ 1 + use crate::terrain::GeoRegion;
+   |
+
+error[E0422]: cannot find struct, variant or union type `TileBundle` in this scope
+  --> src\terrain\generation\world_generator.rs:17:32
+   |
+17 |                 .insert_bundle(TileBundle {
+   |                                ^^^^^^^^^^ not found in this scope
+
+error[E0422]: cannot find struct, variant or union type `Position` in this scope
+  --> src\terrain\generation\world_generator.rs:18:31
+   |
+18 |                     position: Position { /* ... */ },
+   |                               ^^^^^^^^ not found in this scope
+
+error[E0422]: cannot find struct, variant or union type `Height` in this scope
+  --> src\terrain\generation\world_generator.rs:19:29
+   |
+19 |                     height: Height { /* ... */ },
+   |                             ^^^^^^ not found in this scope
+   |
+help: consider importing one of these items
+   |
+ 1 + use crate::bevysubengines::PreviewMode::Height;
+   |
+ 1 + use crate::gui::PreviewMode::Height;
+   |
+ 1 + use crate::terrain::generation::Height;
+   |
+
+error[E0422]: cannot find struct, variant or union type `Roughness` in this scope
+  --> src\terrain\generation\world_generator.rs:20:32
+   |
+20 |                     roughness: Roughness { /* ... */ },
+   |                                ^^^^^^^^^ not found in this scope
+
+error[E0425]: cannot find type `EventReader` in this scope
+   --> src\terrain\generation\world_generator_enhanced.rs:436:17
+    |
+436 |     mut events: EventReader<GenerateWorldEvent>,
+    |                 ^^^^^^^^^^^ not found in this scope
+
+error[E0425]: cannot find type `EventWriter` in this scope
+  --> src\terrain\generation\world_generation_plugin.rs:40:24
+   |
+40 |     mut toggle_events: EventWriter<crate::gui::editor::world_gen_ui::ToggleWorldGenUiEvent>,
+   |                        ^^^^^^^^^^^ not found in this scope
+
+error[E0425]: cannot find type `BuildingType` in this scope
+ --> src\traits\buildings.rs:5:36
+  |
+5 |     fn get_building_type(&self) -> BuildingType;
+  |                                    ^^^^^^^^^^^^ not found in this scope
+
+error[E0425]: cannot find type `EventReader` in this scope
+  --> src\utils\events.rs:11:50
+   |
+11 | pub fn ownership_change_visual_hook(mut _events: EventReader<OwnershipChangeEvent>) {
+   |                                                  ^^^^^^^^^^^ not found in this scope
+
+error[E0425]: cannot find type `EventWriter` in this scope
+   --> src\bevysubengines\world_generator_plugin.rs:164:25
+    |
+164 |     mut generate_event: EventWriter<GenerateWorldEvent>,
+    |                         ^^^^^^^^^^^ not found in this scope
+
+error[E0425]: cannot find type `EventWriter` in this scope
+   --> src\bevysubengines\world_generator_plugin.rs:165:21
+    |
+165 |     mut save_event: EventWriter<SaveWorldEvent>,
+    |                     ^^^^^^^^^^^ not found in this scope
+
+error[E0425]: cannot find type `EventWriter` in this scope
+   --> src\bevysubengines\world_generator_plugin.rs:166:21
+    |
+166 |     mut load_event: EventWriter<LoadWorldEvent>,
+    |                     ^^^^^^^^^^^ not found in this scope
+
+error[E0425]: cannot find type `EventReader` in this scope
+   --> src\bevysubengines\world_generator_plugin.rs:294:17
+    |
+294 |     mut events: EventReader<GenerateWorldEvent>,
+    |                 ^^^^^^^^^^^ not found in this scope
+
+error[E0425]: cannot find type `EventReader` in this scope
+   --> src\bevysubengines\world_generator_plugin.rs:313:17
+    |
+313 |     mut events: EventReader<SaveWorldEvent>,
+    |                 ^^^^^^^^^^^ not found in this scope
+
+error[E0425]: cannot find type `EventReader` in this scope
+   --> src\bevysubengines\world_generator_plugin.rs:340:17
+    |
+340 |     mut events: EventReader<LoadWorldEvent>,
+    |                 ^^^^^^^^^^^ not found in this scope
+
+error[E0425]: cannot find function `voronoi_diagram_generation` in this scope
+   --> src\bevysubengines\world_generator_plugin.rs:380:38
+    |
+380 |         RegionMethodType::Regular => voronoi_diagram_generation(
+    |                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^ not found in this scope
+    |
+help: consider importing this function through its public re-export
+    |
+  1 + use crate::terrain::voronoi_diagram_generation;
+    |
+
+error[E0425]: cannot find function `manhattan_voronoi_diagram_generation` in this scope
+   --> src\bevysubengines\world_generator_plugin.rs:383:40
+    |
+383 |         RegionMethodType::Manhattan => manhattan_voronoi_diagram_generation(
+    |                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ not found in this scope
+    |
+help: consider importing this function through its public re-export
+    |
+  1 + use crate::terrain::manhattan_voronoi_diagram_generation;
+    |
+
+error[E0425]: cannot find function `centroidal_voronoi_diagram_generation` in this scope
+   --> src\bevysubengines\world_generator_plugin.rs:386:41
+    |
+386 |         RegionMethodType::Centroidal => centroidal_voronoi_diagram_generation(
+    |                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ not found in this scope
+    |
+help: consider importing this function through its public re-export
+    |
+  1 + use crate::terrain::centroidal_voronoi_diagram_generation;
+    |
+
+error[E0425]: cannot find function `additively_weighted_voronoi_diagram_generation` in this scope
+   --> src\bevysubengines\world_generator_plugin.rs:396:13
+    |
+396 |             additively_weighted_voronoi_diagram_generation(
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ not found in this scope
+    |
+help: consider importing this function through its public re-export
+    |
+  1 + use crate::terrain::additively_weighted_voronoi_diagram_generation;
+    |
+
+error[E0425]: cannot find function `power_voronoi_diagram_generation` in this scope
+   --> src\bevysubengines\world_generator_plugin.rs:408:13
+    |
+408 |             power_voronoi_diagram_generation(
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ not found in this scope
+    |
+help: consider importing this function through its public re-export
+    |
+  1 + use crate::terrain::power_voronoi_diagram_generation;
+    |
+
+error[E0425]: cannot find function `circular_voronoi_diagram_generation` in this scope
+   --> src\bevysubengines\world_generator_plugin.rs:413:39
+    |
+413 |         RegionMethodType::Circular => circular_voronoi_diagram_generation(
+    |                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ not found in this scope
+    |
+help: consider importing this function through its public re-export
+    |
+  1 + use crate::terrain::circular_voronoi_diagram_generation;
+    |
+
+error[E0603]: module `states` is private
+ --> src\gui\main_menu.rs:1:20
+  |
+1 | use crate::engine::states::{BaseState, MainMenuState};
+  |                    ^^^^^^ private module
+  |
+help: consider importing this enum through its public re-export instead:
+      crate::engine::BaseState
+ --> src\gui\main_menu.rs:1:29
+  |
+1 | use crate::engine::states::{BaseState, MainMenuState};
+  |                             ^^^^^^^^^
+note: the module `states` is defined here
+ --> src\engine\mod.rs:4:1
+  |
+4 | mod states;
+  | ^^^^^^^^^^^
+
+error[E0603]: module `states` is private
+ --> src\gui\main_menu.rs:1:20
+  |
+1 | use crate::engine::states::{BaseState, MainMenuState};
+  |                    ^^^^^^ private module
+  |
+help: consider importing this enum through its public re-export instead:
+      crate::engine::MainMenuState
+ --> src\gui\main_menu.rs:1:40
+  |
+1 | use crate::engine::states::{BaseState, MainMenuState};
+  |                                        ^^^^^^^^^^^^^
+note: the module `states` is defined here
+ --> src\engine\mod.rs:4:1
+  |
+4 | mod states;
+  | ^^^^^^^^^^^
+
+error[E0603]: module `world_generator_enhanced` is private
+ --> src\gui\editor\world_gen_ui.rs:4:33
+  |
+4 | use crate::terrain::generation::world_generator_enhanced::{
+  |                                 ^^^^^^^^^^^^^^^^^^^^^^^^ private module
+  |
+note: the module `world_generator_enhanced` is defined here
+ --> src\terrain\generation\mod.rs:5:1
+  |
+5 | mod world_generator_enhanced;
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error[E0603]: module `world_generator_enhanced` is private
+ --> src\gui\editor\world_gen_ui.rs:4:33
+  |
+4 | use crate::terrain::generation::world_generator_enhanced::{
+  |                                 ^^^^^^^^^^^^^^^^^^^^^^^^ private module
+  |
+help: consider importing this enum through its public re-export instead:
+      crate::terrain::generation::RegionMethod
+ --> src\gui\editor\world_gen_ui.rs:5:21
+  |
+5 |     WorldGenParams, RegionMethod, GenerateWorldEvent
+  |                     ^^^^^^^^^^^^
+note: the module `world_generator_enhanced` is defined here
+ --> src\terrain\generation\mod.rs:5:1
+  |
+5 | mod world_generator_enhanced;
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error[E0603]: module `world_generator_enhanced` is private
+ --> src\gui\editor\world_preview.rs:6:33
+  |
+6 | use crate::terrain::generation::world_generator_enhanced::{
+  |                                 ^^^^^^^^^^^^^^^^^^^^^^^^ private module
+  |
+note: the module `world_generator_enhanced` is defined here
+ --> src\terrain\generation\mod.rs:5:1
+  |
+5 | mod world_generator_enhanced;
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error[E0603]: module `damage` is private
+ --> src\systems\damage\damage_system.rs:1:20
+  |
+1 | use crate::traits::damage::*;
+  |                    ^^^^^^ private module
+  |
+note: the module `damage` is defined here
+ --> src\traits\mod.rs:4:1
+  |
+4 | mod damage;
+  | ^^^^^^^^^^^
+
+error[E0603]: module `damage` is private
+ --> src\systems\damage\vehicle_damage.rs:3:20
+  |
+3 | use crate::traits::damage::{DamageInfoProvider, TakesDamage};
+  |                    ^^^^^^ private module
+  |
+help: consider importing this trait through its public re-export instead:
+      crate::traits::DamageInfoProvider
+ --> src\systems\damage\vehicle_damage.rs:3:29
+  |
+3 | use crate::traits::damage::{DamageInfoProvider, TakesDamage};
+  |                             ^^^^^^^^^^^^^^^^^^
+note: the module `damage` is defined here
+ --> src\traits\mod.rs:4:1
+  |
+4 | mod damage;
+  | ^^^^^^^^^^^
+
+error[E0603]: module `damage` is private
+ --> src\systems\damage\vehicle_damage.rs:3:20
+  |
+3 | use crate::traits::damage::{DamageInfoProvider, TakesDamage};
+  |                    ^^^^^^ private module
+  |
+help: consider importing this trait through its public re-export instead:
+      crate::traits::TakesDamage
+ --> src\systems\damage\vehicle_damage.rs:3:49
+  |
+3 | use crate::traits::damage::{DamageInfoProvider, TakesDamage};
+  |                                                 ^^^^^^^^^^^
+note: the module `damage` is defined here
+ --> src\traits\mod.rs:4:1
+  |
+4 | mod damage;
+  | ^^^^^^^^^^^
+
+error[E0603]: module `tiles` is private
+ --> src\systems\navigation\nav.rs:6:21
+  |
+6 | use crate::terrain::tiles::Tile;
+  |                     ^^^^^ private module
+  |
+note: the module `tiles` is defined here
+ --> src\terrain\mod.rs:3:1
+  |
+3 | mod tiles;
+  | ^^^^^^^^^^
+
+error[E0603]: module `tiles` is private
+ --> src\systems\navigation\potental_feild_nav.rs:8:21
+  |
+8 | use crate::terrain::tiles::Tile;
+  |                     ^^^^^ private module
+  |
+note: the module `tiles` is defined here
+ --> src\terrain\mod.rs:3:1
+  |
+3 | mod tiles;
+  | ^^^^^^^^^^
+
+error[E0603]: module `vehicles` is private
+  --> src\systems\navigation\road_vehicles_motion.rs:5:20
+   |
+ 5 | use crate::traits::vehicles::LoadBasedSpeedModifier;
+   |                    ^^^^^^^^ private module
+   |
+note: the module `vehicles` is defined here
+  --> src\traits\mod.rs:11:1
+   |
+11 | mod vehicles;
+   | ^^^^^^^^^^^^^
+help: consider importing this trait through its public re-export instead
+   |
+ 5 - use crate::traits::vehicles::LoadBasedSpeedModifier;
+ 5 + use crate::traits::LoadBasedSpeedModifier;
+   |
+
+error[E0603]: module `region` is private
+ --> src\terrain\world.rs:9:20
+  |
+9 | use crate::traits::region::Region;
+  |                    ^^^^^^ private module
+  |
+note: the module `region` is defined here
+ --> src\traits\mod.rs:8:1
+  |
+8 | mod region;
+  | ^^^^^^^^^^^
+help: consider importing this trait through its public re-export instead
+  |
+9 - use crate::traits::region::Region;
+9 + use crate::traits::Region;
+  |
+
+error[E0603]: module `world_gen_ui` is private
+ --> src\terrain\generation\world_generation_plugin.rs:4:25
+  |
+4 | use crate::gui::editor::world_gen_ui::WorldGenUiPlugin;
+  |                         ^^^^^^^^^^^^ private module
+  |
+note: the module `world_gen_ui` is defined here
+ --> src\gui\editor\mod.rs:2:1
+  |
+2 | mod world_gen_ui;
+  | ^^^^^^^^^^^^^^^^^
+
+error[E0603]: module `world_preview` is private
+ --> src\terrain\generation\world_generation_plugin.rs:5:25
+  |
+5 | use crate::gui::editor::world_preview::WorldPreviewPlugin;
+  |                         ^^^^^^^^^^^^^ private module
+  |
+note: the module `world_preview` is defined here
+ --> src\gui\editor\mod.rs:3:1
+  |
+3 | mod world_preview;
+  | ^^^^^^^^^^^^^^^^^^
+
+error[E0603]: module `tiles` is private
+ --> src\traits\mask.rs:6:21
+  |
+6 | use crate::terrain::tiles::TileType;
+  |                     ^^^^^ private module
+  |
+note: the module `tiles` is defined here
+ --> src\terrain\mod.rs:3:1
+  |
+3 | mod tiles;
+  | ^^^^^^^^^^
+help: consider importing this enum through its public re-export instead
+  |
+6 - use crate::terrain::tiles::TileType;
+6 + use crate::terrain::TileType;
+  |
+
+error[E0603]: module `world` is private
+ --> src\traits\mask.rs:7:21
+  |
+7 | use crate::terrain::world::World;
+  |                     ^^^^^ private module
+  |
+note: the module `world` is defined here
+ --> src\terrain\mod.rs:7:1
+  |
+7 | mod world;
+  | ^^^^^^^^^^
+
+error[E0603]: module `voronoi_enhanced` is private
+  --> src\bevysubengines\world_generator_plugin.rs:10:21
+   |
+10 | use crate::terrain::voronoi_enhanced::*;
+   |                     ^^^^^^^^^^^^^^^^ private module
+   |
+note: the module `voronoi_enhanced` is defined here
+  --> src\terrain\mod.rs:6:1
+   |
+ 6 | mod voronoi_enhanced;
+   | ^^^^^^^^^^^^^^^^^^^^^
+
+error[E0603]: module `world_gen_ui` is private
+  --> src\terrain\generation\world_generation_plugin.rs:40:56
+   |
+40 |     mut toggle_events: EventWriter<crate::gui::editor::world_gen_ui::ToggleWorldGenUiEvent>,
+   |                                                        ^^^^^^^^^^^^ private module
+   |
+note: the module `world_gen_ui` is defined here
+  --> src\gui\editor\mod.rs:2:1
+   |
+ 2 | mod world_gen_ui;
+   | ^^^^^^^^^^^^^^^^^
+help: consider importing this struct through its public re-export instead
+   |
+40 -     mut toggle_events: EventWriter<crate::gui::editor::world_gen_ui::ToggleWorldGenUiEvent>,
+40 +     mut toggle_events: EventWriter<crate::gui::ToggleWorldGenUiEvent>,
+   |
+
+error[E0603]: module `world_gen_ui` is private
+  --> src\terrain\generation\world_generation_plugin.rs:44:48
+   |
+44 |         toggle_events.send(crate::gui::editor::world_gen_ui::ToggleWorldGenUiEvent);
+   |                                                ^^^^^^^^^^^^ private module
+   |
+note: the module `world_gen_ui` is defined here
+  --> src\gui\editor\mod.rs:2:1
+   |
+ 2 | mod world_gen_ui;
+   | ^^^^^^^^^^^^^^^^^
+help: consider importing this unit struct through its public re-export instead
+   |
+44 -         toggle_events.send(crate::gui::editor::world_gen_ui::ToggleWorldGenUiEvent);
+44 +         toggle_events.send(crate::gui::ToggleWorldGenUiEvent);
+   |
+
+warning: unused imports: `Deserialize` and `Serialize`
+ --> src\events\ownership_events.rs:4:13
+  |
+4 | use serde::{Deserialize, Serialize};
+  |             ^^^^^^^^^^^  ^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `crate::engine::states::EnigneState`
+ --> src\engine\engine.rs:3:5
+  |
+3 | use crate::engine::states::EnigneState;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::engine::states::EnigneState`
+ --> src\engine\engine_with_worldgen.rs:1:5
+  |
+1 | use crate::engine::states::EnigneState;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `EguiPrimaryContextPass`
+  --> src\engine\engine_with_worldgen.rs:11:29
+   |
+11 | use bevy_egui::{EguiPlugin, EguiPrimaryContextPass};
+   |                             ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: type `Nav_Sets` should have an upper camel case name
+ --> src\engine\sets.rs:4:10
+  |
+4 | pub enum Nav_Sets {
+  |          ^^^^^^^^ help: convert the identifier to upper camel case: `NavSets`
+  |
+  = note: `#[warn(non_camel_case_types)]` (part of `#[warn(nonstandard_style)]`) on by default
+
+warning: unused import: `bevy::app::AppExit`
+ --> src\gui\ui_windows.rs:1:5
+  |
+1 | use bevy::app::AppExit;
+  |     ^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `EguiPrimaryContextPass`
+ --> src\gui\ui_windows.rs:4:58
+  |
+4 | use bevy_egui::{egui, EguiContextSettings, EguiContexts, EguiPrimaryContextPass};
+  |                                                          ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `std::collections::HashMap`
+ --> src\gui\agent_permissions_ui.rs:3:5
+  |
+3 | use std::collections::HashMap;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `world_gen_ui::*`
+ --> src\gui\components\mod.rs:5:9
+  |
+5 | pub use world_gen_ui::*;
+  |         ^^^^^^^^^^^^^^^
+
+warning: unused import: `EguiContexts`
+ --> src\gui\editor\world_preview.rs:9:23
+  |
+9 | use bevy_egui::{egui, EguiContexts, EguiPrimaryContextPass};
+  |                       ^^^^^^^^^^^^
+
+warning: unused import: `gui_assets::*`
+  --> src\gui\mod.rs:25:9
+   |
+25 | pub use gui_assets::*;
+   |         ^^^^^^^^^^^^^
+
+warning: unused import: `gui_sets::*`
+  --> src\gui\mod.rs:26:9
+   |
+26 | pub use gui_sets::*;
+   |         ^^^^^^^^^^^
+
+warning: unused import: `base_cam::*`
+ --> src\render\mod.rs:7:9
+  |
+7 | pub use base_cam::*;
+  |         ^^^^^^^^^^^
+
+warning: unused import: `std::time::Duration`
+ --> src\systems\agents\permissions.rs:4:5
+  |
+4 | use std::time::Duration;
+  |     ^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::events::ownership_events::OwnershipChangeEvent`
+ --> src\systems\agents\permissions.rs:7:5
+  |
+7 | use crate::events::ownership_events::OwnershipChangeEvent;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `Deserialize` and `Serialize`
+ --> src\systems\agents\agent_manager.rs:3:13
+  |
+3 | use serde::{Deserialize, Serialize};
+  |             ^^^^^^^^^^^  ^^^^^^^^^
+
+warning: unused imports: `Deserialize` and `Serialize`
+ --> src\systems\agents\multiplayer.rs:2:13
+  |
+2 | use serde::{Deserialize, Serialize};
+  |             ^^^^^^^^^^^  ^^^^^^^^^
+
+warning: unused import: `HashSet`
+ --> src\systems\agents\multiplayer.rs:3:33
+  |
+3 | use std::collections::{HashMap, HashSet};
+  |                                 ^^^^^^^
+
+warning: unused import: `vehicle_damage::*`
+ --> src\systems\damage\mod.rs:7:9
+  |
+7 | pub use vehicle_damage::*;
+  |         ^^^^^^^^^^^^^^^^^
+
+warning: unused import: `road_vehicles_motion::*`
+  --> src\systems\navigation\mod.rs:11:9
+   |
+11 | pub use road_vehicles_motion::*;
+   |         ^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `collision::*`
+  --> src\systems\mod.rs:11:9
+   |
+11 | pub use collision::*;
+   |         ^^^^^^^^^^^^
+
+warning: type `Cell_map_2D` should have an upper camel case name
+ --> src\terrain\locational.rs:7:12
+  |
+7 | pub struct Cell_map_2D<T: Copy> {
+  |            ^^^^^^^^^^^ help: convert the identifier to upper camel case: `CellMap2d`
+
+warning: unused import: `MultiFractal`
+ --> src\terrain\generation\world_generator_enhanced.rs:2:18
+  |
+2 | use noise::{Fbm, MultiFractal, NoiseFn, Perlin};
+  |                  ^^^^^^^^^^^^
+
+warning: unused import: `std::collections::HashMap`
+ --> src\terrain\generation\world_generator_enhanced.rs:5:5
+  |
+5 | use std::collections::HashMap;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `World`
+ --> src\terrain\generation\world_generator_enhanced.rs:8:29
+  |
+8 | use crate::terrain::world::{World, GeoRegion};
+  |                             ^^^^^
+
+warning: unused import: `world_generator::*`
+  --> src\terrain\generation\mod.rs:10:9
+   |
+10 | pub use world_generator::*;
+   |         ^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `tools::*`
+  --> src\terrain\mod.rs:19:9
+   |
+19 | pub use tools::*;
+   |         ^^^^^^^^
+
+warning: unused import: `buildings::*`
+  --> src\traits\mod.rs:15:9
+   |
+15 | pub use buildings::*;
+   |         ^^^^^^^^^^^^
+
+warning: unused import: `time::*`
+  --> src\traits\mod.rs:22:9
+   |
+22 | pub use time::*;
+   |         ^^^^^^^
+
+warning: unused import: `bevy::prelude::*`
+ --> src\utils\events.rs:6:5
+  |
+6 | use bevy::prelude::*;
+  |     ^^^^^^^^^^^^^^^^
+
+warning: unused import: `std::path::Path`
+ --> src\bevysubengines\world_generator_plugin.rs:8:5
+  |
+8 | use std::path::Path;
+  |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::idgen::EntityId`
+  --> src\bevysubengines\world_generator_plugin.rs:11:5
+   |
+11 | use crate::idgen::EntityId;
+   |     ^^^^^^^^^^^^^^^^^^^^^^
+
+error[E0277]: `WorldGenUiState` is not a `Resource`
+   --> src\gui\editor\world_gen_ui.rs:40:29
+    |
+ 40 |     mut world_gen_ui_state: ResMut<WorldGenUiState>,
+    |                             ^^^^^^^^^^^^^^^^^^^^^^^ invalid `Resource`
+    |
+help: the trait `bevy::prelude::Resource` is not implemented for `WorldGenUiState`
+   --> src\gui\editor\world_gen_ui.rs:8:1
+    |
+  8 | pub struct WorldGenUiState {
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^
+    = note: consider annotating `WorldGenUiState` with `#[derive(Resource)]`
+note: there are multiple different versions of crate `bevy_ecs` in the dependency graph
+   --> C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bevy_ecs-0.18.1\src\resource.rs:75:1
+    |
+ 75 | pub trait Resource: Send + Sync + 'static {}
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ this is the expected trait
+    |
+   ::: C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bevy_ecs-0.15.1\src\system\system_param.rs:737:1
+    |
+737 | pub trait Resource: Send + Sync + 'static {}
+    | ----------------------------------------- this is the trait that was imported
+    = help: you can use `cargo tree` to explore your dependency tree
+    = help: the following other types implement trait `bevy::prelude::Resource`:
+              AccessibilityRequested
+              AccumulatedMouseMotion
+              AccumulatedMouseScroll
+              AgentManager
+              AppTypeRegistry
+              AssetProcessor
+              AssetSourceBuilders
+              AtmosphereBuffer
+            and 296 others
+note: required by a bound in `bevy::prelude::ResMut`
+   --> C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bevy_ecs-0.18.1\src\change_detection\params.rs:172:35
+    |
+172 | pub struct ResMut<'w, T: ?Sized + Resource> {
+    |                                   ^^^^^^^^ required by this bound in `ResMut`
+
+error[E0277]: `WorldGenUiState` is not a `Resource`
+   --> src\gui\editor\world_gen_ui.rs:146:29
+    |
+146 |     mut world_gen_ui_state: ResMut<WorldGenUiState>,
+    |                             ^^^^^^^^^^^^^^^^^^^^^^^ invalid `Resource`
+    |
+help: the trait `bevy::prelude::Resource` is not implemented for `WorldGenUiState`
+   --> src\gui\editor\world_gen_ui.rs:8:1
+    |
+  8 | pub struct WorldGenUiState {
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^
+    = note: consider annotating `WorldGenUiState` with `#[derive(Resource)]`
+note: there are multiple different versions of crate `bevy_ecs` in the dependency graph
+   --> C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bevy_ecs-0.18.1\src\resource.rs:75:1
+    |
+ 75 | pub trait Resource: Send + Sync + 'static {}
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ this is the expected trait
+    |
+   ::: C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bevy_ecs-0.15.1\src\system\system_param.rs:737:1
+    |
+737 | pub trait Resource: Send + Sync + 'static {}
+    | ----------------------------------------- this is the trait that was imported
+    = help: you can use `cargo tree` to explore your dependency tree
+    = help: the following other types implement trait `bevy::prelude::Resource`:
+              AccessibilityRequested
+              AccumulatedMouseMotion
+              AccumulatedMouseScroll
+              AgentManager
+              AppTypeRegistry
+              AssetProcessor
+              AssetSourceBuilders
+              AtmosphereBuffer
+            and 296 others
+note: required by a bound in `bevy::prelude::ResMut`
+   --> C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bevy_ecs-0.18.1\src\change_detection\params.rs:172:35
+    |
+172 | pub struct ResMut<'w, T: ?Sized + Resource> {
+    |                                   ^^^^^^^^ required by this bound in `ResMut`
+
+error[E0277]: `WorldGenUiState` is not a `Resource`
+   --> src\gui\editor\world_preview.rs:80:25
+    |
+ 80 |     world_gen_ui_state: Res<WorldGenUiState>,
+    |                         ^^^^^^^^^^^^^^^^^^^^ invalid `Resource`
+    |
+help: the trait `bevy::prelude::Resource` is not implemented for `WorldGenUiState`
+   --> src\gui\editor\world_gen_ui.rs:8:1
+    |
+  8 | pub struct WorldGenUiState {
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^
+    = note: consider annotating `WorldGenUiState` with `#[derive(Resource)]`
+note: there are multiple different versions of crate `bevy_ecs` in the dependency graph
+   --> C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bevy_ecs-0.18.1\src\resource.rs:75:1
+    |
+ 75 | pub trait Resource: Send + Sync + 'static {}
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ this is the expected trait
+    |
+   ::: C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bevy_ecs-0.15.1\src\system\system_param.rs:737:1
+    |
+737 | pub trait Resource: Send + Sync + 'static {}
+    | ----------------------------------------- this is the trait that was imported
+    = help: you can use `cargo tree` to explore your dependency tree
+    = help: the following other types implement trait `bevy::prelude::Resource`:
+              AccessibilityRequested
+              AccumulatedMouseMotion
+              AccumulatedMouseScroll
+              AgentManager
+              AppTypeRegistry
+              AssetProcessor
+              AssetSourceBuilders
+              AtmosphereBuffer
+            and 296 others
+note: required by a bound in `bevy::prelude::Res`
+   --> C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bevy_ecs-0.18.1\src\change_detection\params.rs:99:32
+    |
+ 99 | pub struct Res<'w, T: ?Sized + Resource> {
+    |                                ^^^^^^^^ required by this bound in `Res`
+
+error[E0277]: `WorldGenUiState` is not a `Resource`
+   --> src\gui\editor\world_preview.rs:141:25
+    |
+141 |     world_gen_ui_state: Res<WorldGenUiState>,
+    |                         ^^^^^^^^^^^^^^^^^^^^ invalid `Resource`
+    |
+help: the trait `bevy::prelude::Resource` is not implemented for `WorldGenUiState`
+   --> src\gui\editor\world_gen_ui.rs:8:1
+    |
+  8 | pub struct WorldGenUiState {
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^
+    = note: consider annotating `WorldGenUiState` with `#[derive(Resource)]`
+note: there are multiple different versions of crate `bevy_ecs` in the dependency graph
+   --> C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bevy_ecs-0.18.1\src\resource.rs:75:1
+    |
+ 75 | pub trait Resource: Send + Sync + 'static {}
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ this is the expected trait
+    |
+   ::: C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bevy_ecs-0.15.1\src\system\system_param.rs:737:1
+    |
+737 | pub trait Resource: Send + Sync + 'static {}
+    | ----------------------------------------- this is the trait that was imported
+    = help: you can use `cargo tree` to explore your dependency tree
+    = help: the following other types implement trait `bevy::prelude::Resource`:
+              AccessibilityRequested
+              AccumulatedMouseMotion
+              AccumulatedMouseScroll
+              AgentManager
+              AppTypeRegistry
+              AssetProcessor
+              AssetSourceBuilders
+              AtmosphereBuffer
+            and 296 others
+note: required by a bound in `bevy::prelude::Res`
+   --> C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bevy_ecs-0.18.1\src\change_detection\params.rs:99:32
+    |
+ 99 | pub struct Res<'w, T: ?Sized + Resource> {
+    |                                ^^^^^^^^ required by this bound in `Res`
+
+error[E0107]: type alias takes 1 generic argument but 2 generic arguments were supplied
+  --> src\io\serialization\deserializers.rs:40:6
+   |
+40 | ) -> Result<Option<MilitaryCivilian>, D::Error>
+   |      ^^^^^^                         ---------- help: remove the unnecessary generic argument
+   |      |
+   |      expected 1 generic argument
+   |
+note: type alias defined here, with 1 generic parameter: `T`
+  --> C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde_json-1.0.149\src\error.rs:25:10
+   |
+25 | pub type Result<T> = result::Result<T, Error>;
+   |          ^^^^^^ -
+
+error[E0277]: `CreateAgentCommand` is not a `Component`
+   --> src\systems\agents\agent_manager.rs:70:28
+    |
+ 70 |     create_agent_requests: Query<(Entity, &CreateAgentCommand)>,
+    |                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ invalid `Component`
+    |
+help: the trait `bevy::prelude::Component` is not implemented for `CreateAgentCommand`
+   --> src\systems\agents\agent_manager.rs:57:1
+    |
+ 57 | pub struct CreateAgentCommand {
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    = note: consider annotating `CreateAgentCommand` with `#[derive(Component)]`
+note: there are multiple different versions of crate `bevy_ecs` in the dependency graph
+   --> C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bevy_ecs-0.18.1\src\component\mod.rs:509:1
+    |
+509 | pub trait Component: Send + Sync + 'static {
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ this is the expected trait
+    |
+   ::: C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bevy_ecs-0.15.1\src\component.rs:377:1
+    |
+377 | pub trait Component: Send + Sync + 'static {
+    | ------------------------------------------ this is the trait that was imported
+    = help: you can use `cargo tree` to explore your dependency tree
+    = help: the following other types implement trait `bevy::prelude::Component`:
+              Aabb
+              AccessibilityNode
+              AddPlayerCommand
+              Agent
+              AgentPermissions
+              AmbientLight
+              Anchor
+              AnimatedBy
+            and 383 others
+    = note: required for `&CreateAgentCommand` to implement `QueryData`
+    = note: 1 redundant requirement hidden
+    = note: required for `(bevy::prelude::Entity, &CreateAgentCommand)` to implement `QueryData`
+note: required by a bound in `bevy::prelude::Query`
+   --> C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bevy_ecs-0.18.1\src\system\query.rs:485:37
+    |
+485 | pub struct Query<'world, 'state, D: QueryData, F: QueryFilter = ()> {
+    |                                     ^^^^^^^^^ required by this bound in `Query`
+
+error[E0433]: cannot find type `EntityType` in this scope
+  --> src\terrain\generation\world_generator.rs:12:21
+   |
+12 |             .insert(EntityType::Region);
+   |                     ^^^^^^^^^^ use of undeclared type `EntityType`
+
+error[E0433]: cannot find type `EntityType` in this scope
+  --> src\terrain\generation\world_generator.rs:23:25
+   |
+23 |                 .insert(EntityType::Tile);
+   |                         ^^^^^^^^^^ use of undeclared type `EntityType`
+
+Some errors have detailed explanations: E0107, E0277, E0405, E0422, E0425, E0433, E0603.
+For more information about an error, try `rustc --explain E0107`.
+warning: `proc_A_dine01` (lib) generated 32 warnings
+error: could not compile `proc_A_dine01` (lib) due to 76 previous errors; 32 warnings emitted

@@ -1,0 +1,1510 @@
+{
+  "schema_version": 1,
+  "plants": [
+    {
+      "id": "coal_ultra_supercritical_650mw_v1",
+      "display_name": "Coal Ultra Supercritical 650Mw",
+      "plant_type": "Coal",
+      "narrative": {
+        "short_description": "Ultra-supercritical coal, FGD + SCR",
+        "operator_notes": "Registry id `coal_ultra_supercritical_650mw_v1`; instance overrides in saves.",
+        "risk_summary": "Capability-scoped failures (`SteamCycle`, `ContainmentBuilding`, `VariableRenewable`)."
+      },
+      "output_model": {
+        "nameplate_mw": 650.0,
+        "base_efficiency_factor": 0.43,
+        "part_load_curve_id": "coal_generic_partload_v1",
+        "min_stable_output_fraction": 0.18,
+        "ramp_up_mw_per_minute": 40.0,
+        "ramp_down_mw_per_minute": 40.0,
+        "inertia_constant_h": 4.5
+      },
+      "operational": {
+        "status_modifiers": {
+          "Standby": {
+            "output_fraction": 0.0,
+            "aux_load_fraction": 0.03,
+            "efficiency_multiplier": 0.95,
+            "ramp_limited": false,
+            "allow_black_start": false,
+            "tooling_label": "hot_standby"
+          },
+          "Operational": {
+            "output_fraction": 1.0,
+            "aux_load_fraction": 0.04,
+            "efficiency_multiplier": 1.0,
+            "ramp_limited": false,
+            "allow_black_start": false,
+            "tooling_label": "full_dispatch"
+          },
+          "Maintenance": {
+            "output_fraction": 0.0,
+            "aux_load_fraction": 0.015,
+            "efficiency_multiplier": 0.9,
+            "ramp_limited": false,
+            "allow_black_start": false,
+            "tooling_label": "planned_outage"
+          },
+          "OutOfFuel": {
+            "output_fraction": 0.0,
+            "aux_load_fraction": 0.01,
+            "efficiency_multiplier": 0.85,
+            "ramp_limited": false,
+            "allow_black_start": false,
+            "tooling_label": "fuel_trip"
+          },
+          "StartingUp": {
+            "output_fraction": 0.35,
+            "aux_load_fraction": 0.06,
+            "efficiency_multiplier": 0.88,
+            "ramp_limited": true,
+            "allow_black_start": true,
+            "tooling_label": "sync_ramp"
+          },
+          "ShuttingDown": {
+            "output_fraction": 0.15,
+            "aux_load_fraction": 0.05,
+            "efficiency_multiplier": 0.9,
+            "ramp_limited": true,
+            "allow_black_start": false,
+            "tooling_label": "coast_down"
+          },
+          "Decommissioned": {
+            "output_fraction": 0.0,
+            "aux_load_fraction": 0.0,
+            "efficiency_multiplier": 0.0,
+            "ramp_limited": false,
+            "allow_black_start": false,
+            "tooling_label": "safstor_demolition"
+          },
+          "ExternalShutdown": {
+            "output_fraction": 0.0,
+            "aux_load_fraction": 0.02,
+            "efficiency_multiplier": 0.92,
+            "ramp_limited": false,
+            "allow_black_start": false,
+            "tooling_label": "grid_or_labor"
+          },
+          "ReducedCapacity": {
+            "output_fraction": 0.65,
+            "aux_load_fraction": 0.04,
+            "efficiency_multiplier": 0.93,
+            "ramp_limited": false,
+            "allow_black_start": false,
+            "tooling_label": "equipment_derate"
+          },
+          "OverCapacity": {
+            "output_fraction": 1.08,
+            "aux_load_fraction": 0.045,
+            "efficiency_multiplier": 0.97,
+            "ramp_limited": false,
+            "allow_black_start": false,
+            "tooling_label": "overload_excursion"
+          },
+          "EnvironmentalShutdown": {
+            "output_fraction": 0.0,
+            "aux_load_fraction": 0.03,
+            "efficiency_multiplier": 0.92,
+            "ramp_limited": false,
+            "allow_black_start": false,
+            "tooling_label": "permit_ambient"
+          }
+        },
+        "transition_hints": [
+          {
+            "from": "Standby",
+            "to": "StartingUp",
+            "trigger": "dispatch",
+            "typical_duration_s": 300.0
+          },
+          {
+            "from": "StartingUp",
+            "to": "Operational",
+            "trigger": "synchronize",
+            "typical_duration_s": 600.0
+          }
+        ]
+      },
+      "instance_template": {
+        "reactor_units": 0,
+        "unit_thermal_mw": 1.0,
+        "turbine_units": 1,
+        "hydro_head_m": 0.0,
+        "hydro_design_flow_m3s": 0.0,
+        "solar_array_area_m2": 0.0,
+        "panel_nominal_efficiency": 0.0,
+        "wind_rotor_diameter_m": 0.0,
+        "wind_hub_height_m": 0.0,
+        "geothermal_brine_inlet_c": 0.0,
+        "geothermal_brine_flow_kg_s": 0.0,
+        "fuel_feed_rate_kg_s": 52.0
+      },
+      "capabilities": {
+        "is_steam_cycle": true,
+        "is_nuclear_containment": false,
+        "is_variable_renewable": false
+      },
+      "emissions": {
+        "co2_kg_per_mwh": 820.0,
+        "nox_g_per_mwh": 120.0,
+        "so2_g_per_mwh": 80.0,
+        "particulate_g_per_mwh": 15.0,
+        "thermal_outfall_kw_per_mw": 450.0
+      },
+      "economics": {
+        "capex_per_kw": 2800.0,
+        "fixed_om_per_kw_year": 28.0,
+        "variable_om_per_mwh": 3.2,
+        "fuel_cost_per_mwh_thermal": 18.0,
+        "expected_availability": 0.91
+      },
+      "research": {
+        "required_research_ids": [],
+        "unlock_notes": "Research gates are soft until the tree exists."
+      },
+      "grid_interface": {
+        "power_factor": 0.95,
+        "inrush_multiplier": 1.05,
+        "allow_grid_forming": true
+      }
+    },
+    {
+      "id": "heavy_fuel_oil_steam_120mw_v1",
+      "display_name": "Heavy Fuel Oil Steam 120Mw",
+      "plant_type": "Oil",
+      "narrative": {
+        "short_description": "Residual-oil steam turbine + tank farm",
+        "operator_notes": "Registry id `heavy_fuel_oil_steam_120mw_v1`; instance overrides in saves.",
+        "risk_summary": "Capability-scoped failures (`SteamCycle`, `ContainmentBuilding`, `VariableRenewable`)."
+      },
+      "output_model": {
+        "nameplate_mw": 120.0,
+        "base_efficiency_factor": 0.38,
+        "part_load_curve_id": "oil_generic_partload_v1",
+        "min_stable_output_fraction": 0.05,
+        "ramp_up_mw_per_minute": 35.0,
+        "ramp_down_mw_per_minute": 40.0,
+        "inertia_constant_h": 2.0
+      },
+      "operational": {
+        "status_modifiers": {
+          "Standby": {
+            "output_fraction": 0.0,
+            "aux_load_fraction": 0.03,
+            "efficiency_multiplier": 0.95,
+            "ramp_limited": false,
+            "allow_black_start": false,
+            "tooling_label": "hot_standby"
+          },
+          "Operational": {
+            "output_fraction": 1.0,
+            "aux_load_fraction": 0.04,
+            "efficiency_multiplier": 1.0,
+            "ramp_limited": false,
+            "allow_black_start": false,
+            "tooling_label": "full_dispatch"
+          },
+          "Maintenance": {
+            "output_fraction": 0.0,
+            "aux_load_fraction": 0.015,
+            "efficiency_multiplier": 0.9,
+            "ramp_limited": false,
+            "allow_black_start": false,
+            "tooling_label": "planned_outage"
+          },
+          "OutOfFuel": {
+            "output_fraction": 0.0,
+            "aux_load_fraction": 0.01,
+            "efficiency_multiplier": 0.85,
+            "ramp_limited": false,
+            "allow_black_start": false,
+            "tooling_label": "fuel_trip"
+          },
+          "StartingUp": {
+            "output_fraction": 0.35,
+            "aux_load_fraction": 0.06,
+            "efficiency_multiplier": 0.88,
+            "ramp_limited": true,
+            "allow_black_start": true,
+            "tooling_label": "sync_ramp"
+          },
+          "ShuttingDown": {
+            "output_fraction": 0.15,
+            "aux_load_fraction": 0.05,
+            "efficiency_multiplier": 0.9,
+            "ramp_limited": true,
+            "allow_black_start": false,
+            "tooling_label": "coast_down"
+          },
+          "Decommissioned": {
+            "output_fraction": 0.0,
+            "aux_load_fraction": 0.0,
+            "efficiency_multiplier": 0.0,
+            "ramp_limited": false,
+            "allow_black_start": false,
+            "tooling_label": "safstor_demolition"
+          },
+          "ExternalShutdown": {
+            "output_fraction": 0.0,
+            "aux_load_fraction": 0.02,
+            "efficiency_multiplier": 0.92,
+            "ramp_limited": false,
+            "allow_black_start": false,
+            "tooling_label": "grid_or_labor"
+          },
+          "ReducedCapacity": {
+            "output_fraction": 0.65,
+            "aux_load_fraction": 0.04,
+            "efficiency_multiplier": 0.93,
+            "ramp_limited": false,
+            "allow_black_start": false,
+            "tooling_label": "equipment_derate"
+          },
+          "OverCapacity": {
+            "output_fraction": 1.08,
+            "aux_load_fraction": 0.045,
+            "efficiency_multiplier": 0.97,
+            "ramp_limited": false,
+            "allow_black_start": false,
+            "tooling_label": "overload_excursion"
+          },
+          "EnvironmentalShutdown": {
+            "output_fraction": 0.0,
+            "aux_load_fraction": 0.03,
+            "efficiency_multiplier": 0.92,
+            "ramp_limited": false,
+            "allow_black_start": false,
+            "tooling_label": "permit_ambient"
+          }
+        },
+        "transition_hints": [
+          {
+            "from": "Standby",
+            "to": "StartingUp",
+            "trigger": "dispatch",
+            "typical_duration_s": 300.0
+          },
+          {
+            "from": "StartingUp",
+            "to": "Operational",
+            "trigger": "synchronize",
+            "typical_duration_s": 600.0
+          }
+        ]
+      },
+      "instance_template": {
+        "reactor_units": 0,
+        "unit_thermal_mw": 1.0,
+        "turbine_units": 1,
+        "hydro_head_m": 0.0,
+        "hydro_design_flow_m3s": 0.0,
+        "solar_array_area_m2": 0.0,
+        "panel_nominal_efficiency": 0.0,
+        "wind_rotor_diameter_m": 0.0,
+        "wind_hub_height_m": 0.0,
+        "geothermal_brine_inlet_c": 0.0,
+        "geothermal_brine_flow_kg_s": 0.0,
+        "fuel_feed_rate_kg_s": 9.0
+      },
+      "capabilities": {
+        "is_steam_cycle": true,
+        "is_nuclear_containment": false,
+        "is_variable_renewable": false
+      },
+      "emissions": {
+        "co2_kg_per_mwh": 650.0,
+        "nox_g_per_mwh": 90.0,
+        "so2_g_per_mwh": 300.0,
+        "particulate_g_per_mwh": 0.0,
+        "thermal_outfall_kw_per_mw": 380.0
+      },
+      "economics": {
+        "capex_per_kw": 2200.0,
+        "fixed_om_per_kw_year": 28.0,
+        "variable_om_per_mwh": 3.2,
+        "fuel_cost_per_mwh_thermal": 48.0,
+        "expected_availability": 0.91
+      },
+      "research": {
+        "required_research_ids": [],
+        "unlock_notes": "Research gates are soft until the tree exists."
+      },
+      "grid_interface": {
+        "power_factor": 0.95,
+        "inrush_multiplier": 1.05,
+        "allow_grid_forming": false
+      }
+    },
+    {
+      "id": "cc_gtu_h_class_500mw_v1",
+      "display_name": "Cc Gtu H Class 500Mw",
+      "plant_type": "Gas",
+      "narrative": {
+        "short_description": "H-class combined-cycle block",
+        "operator_notes": "Registry id `cc_gtu_h_class_500mw_v1`; instance overrides in saves.",
+        "risk_summary": "Capability-scoped failures (`SteamCycle`, `ContainmentBuilding`, `VariableRenewable`)."
+      },
+      "output_model": {
+        "nameplate_mw": 500.0,
+        "base_efficiency_factor": 0.58,
+        "part_load_curve_id": "gas_generic_partload_v1",
+        "min_stable_output_fraction": 0.05,
+        "ramp_up_mw_per_minute": 120.0,
+        "ramp_down_mw_per_minute": 40.0,
+        "inertia_constant_h": 2.0
+      },
+      "operational": {
+        "status_modifiers": {
+          "Standby": {
+            "output_fraction": 0.0,
+            "aux_load_fraction": 0.03,
+            "efficiency_multiplier": 0.95,
+            "ramp_limited": false,
+            "allow_black_start": false,
+            "tooling_label": "hot_standby"
+          },
+          "Operational": {
+            "output_fraction": 1.0,
+            "aux_load_fraction": 0.04,
+            "efficiency_multiplier": 1.0,
+            "ramp_limited": false,
+            "allow_black_start": false,
+            "tooling_label": "full_dispatch"
+          },
+          "Maintenance": {
+            "output_fraction": 0.0,
+            "aux_load_fraction": 0.015,
+            "efficiency_multiplier": 0.9,
+            "ramp_limited": false,
+            "allow_black_start": false,
+            "tooling_label": "planned_outage"
+          },
+          "OutOfFuel": {
+            "output_fraction": 0.0,
+            "aux_load_fraction": 0.01,
+            "efficiency_multiplier": 0.85,
+            "ramp_limited": false,
+            "allow_black_start": false,
+            "tooling_label": "fuel_trip"
+          },
+          "StartingUp": {
+            "output_fraction": 0.35,
+            "aux_load_fraction": 0.06,
+            "efficiency_multiplier": 0.88,
+            "ramp_limited": true,
+            "allow_black_start": true,
+            "tooling_label": "sync_ramp"
+          },
+          "ShuttingDown": {
+            "output_fraction": 0.15,
+            "aux_load_fraction": 0.05,
+            "efficiency_multiplier": 0.9,
+            "ramp_limited": true,
+            "allow_black_start": false,
+            "tooling_label": "coast_down"
+          },
+          "Decommissioned": {
+            "output_fraction": 0.0,
+            "aux_load_fraction": 0.0,
+            "efficiency_multiplier": 0.0,
+            "ramp_limited": false,
+            "allow_black_start": false,
+            "tooling_label": "safstor_demolition"
+          },
+          "ExternalShutdown": {
+            "output_fraction": 0.0,
+            "aux_load_fraction": 0.02,
+            "efficiency_multiplier": 0.92,
+            "ramp_limited": false,
+            "allow_black_start": false,
+            "tooling_label": "grid_or_labor"
+          },
+          "ReducedCapacity": {
+            "output_fraction": 0.65,
+            "aux_load_fraction": 0.04,
+            "efficiency_multiplier": 0.93,
+            "ramp_limited": false,
+            "allow_black_start": false,
+            "tooling_label": "equipment_derate"
+          },
+          "OverCapacity": {
+            "output_fraction": 1.08,
+            "aux_load_fraction": 0.045,
+            "efficiency_multiplier": 0.97,
+            "ramp_limited": false,
+            "allow_black_start": false,
+            "tooling_label": "overload_excursion"
+          },
+          "EnvironmentalShutdown": {
+            "output_fraction": 0.0,
+            "aux_load_fraction": 0.03,
+            "efficiency_multiplier": 0.92,
+            "ramp_limited": false,
+            "allow_black_start": false,
+            "tooling_label": "permit_ambient"
+          }
+        },
+        "transition_hints": [
+          {
+            "from": "Standby",
+            "to": "StartingUp",
+            "trigger": "dispatch",
+            "typical_duration_s": 300.0
+          },
+          {
+            "from": "StartingUp",
+            "to": "Operational",
+            "trigger": "synchronize",
+            "typical_duration_s": 600.0
+          }
+        ]
+      },
+      "instance_template": {
+        "reactor_units": 0,
+        "unit_thermal_mw": 1.0,
+        "turbine_units": 1,
+        "hydro_head_m": 0.0,
+        "hydro_design_flow_m3s": 0.0,
+        "solar_array_area_m2": 0.0,
+        "panel_nominal_efficiency": 0.0,
+        "wind_rotor_diameter_m": 0.0,
+        "wind_hub_height_m": 0.0,
+        "geothermal_brine_inlet_c": 0.0,
+        "geothermal_brine_flow_kg_s": 0.0,
+        "fuel_feed_rate_kg_s": 18.0
+      },
+      "capabilities": {
+        "is_steam_cycle": true,
+        "is_nuclear_containment": false,
+        "is_variable_renewable": false
+      },
+      "emissions": {
+        "co2_kg_per_mwh": 350.0,
+        "nox_g_per_mwh": 35.0,
+        "so2_g_per_mwh": 2.0,
+        "particulate_g_per_mwh": 0.0,
+        "thermal_outfall_kw_per_mw": 280.0
+      },
+      "economics": {
+        "capex_per_kw": 850.0,
+        "fixed_om_per_kw_year": 28.0,
+        "variable_om_per_mwh": 3.2,
+        "fuel_cost_per_mwh_thermal": 32.0,
+        "expected_availability": 0.91
+      },
+      "research": {
+        "required_research_ids": [],
+        "unlock_notes": "Research gates are soft until the tree exists."
+      },
+      "grid_interface": {
+        "power_factor": 0.95,
+        "inrush_multiplier": 1.05,
+        "allow_grid_forming": true
+      }
+    },
+    {
+      "id": "bubbling_fb_biomass_40mw_v1",
+      "display_name": "Bubbling Fb Biomass 40Mw",
+      "plant_type": "Biomass",
+      "narrative": {
+        "short_description": "BFB / grate biomass boiler-steam",
+        "operator_notes": "Registry id `bubbling_fb_biomass_40mw_v1`; instance overrides in saves.",
+        "risk_summary": "Capability-scoped failures (`SteamCycle`, `ContainmentBuilding`, `VariableRenewable`)."
+      },
+      "output_model": {
+        "nameplate_mw": 40.0,
+        "base_efficiency_factor": 0.32,
+        "part_load_curve_id": "biomass_generic_partload_v1",
+        "min_stable_output_fraction": 0.05,
+        "ramp_up_mw_per_minute": 35.0,
+        "ramp_down_mw_per_minute": 40.0,
+        "inertia_constant_h": 2.0
+      },
+      "operational": {
+        "status_modifiers": {
+          "Standby": {
+            "output_fraction": 0.0,
+            "aux_load_fraction": 0.03,
+            "efficiency_multiplier": 0.95,
+            "ramp_limited": false,
+            "allow_black_start": false,
+            "tooling_label": "hot_standby"
+          },
+          "Operational": {
+            "output_fraction": 1.0,
+            "aux_load_fraction": 0.04,
+            "efficiency_multiplier": 1.0,
+            "ramp_limited": false,
+            "allow_black_start": false,
+            "tooling_label": "full_dispatch"
+          },
+          "Maintenance": {
+            "output_fraction": 0.0,
+            "aux_load_fraction": 0.015,
+            "efficiency_multiplier": 0.9,
+            "ramp_limited": false,
+            "allow_black_start": false,
+            "tooling_label": "planned_outage"
+          },
+          "OutOfFuel": {
+            "output_fraction": 0.0,
+            "aux_load_fraction": 0.01,
+            "efficiency_multiplier": 0.85,
+            "ramp_limited": false,
+            "allow_black_start": false,
+            "tooling_label": "fuel_trip"
+          },
+          "StartingUp": {
+            "output_fraction": 0.35,
+            "aux_load_fraction": 0.06,
+            "efficiency_multiplier": 0.88,
+            "ramp_limited": true,
+            "allow_black_start": true,
+            "tooling_label": "sync_ramp"
+          },
+          "ShuttingDown": {
+            "output_fraction": 0.15,
+            "aux_load_fraction": 0.05,
+            "efficiency_multiplier": 0.9,
+            "ramp_limited": true,
+            "allow_black_start": false,
+            "tooling_label": "coast_down"
+          },
+          "Decommissioned": {
+            "output_fraction": 0.0,
+            "aux_load_fraction": 0.0,
+            "efficiency_multiplier": 0.0,
+            "ramp_limited": false,
+            "allow_black_start": false,
+            "tooling_label": "safstor_demolition"
+          },
+          "ExternalShutdown": {
+            "output_fraction": 0.0,
+            "aux_load_fraction": 0.02,
+            "efficiency_multiplier": 0.92,
+            "ramp_limited": false,
+            "allow_black_start": false,
+            "tooling_label": "grid_or_labor"
+          },
+          "ReducedCapacity": {
+            "output_fraction": 0.65,
+            "aux_load_fraction": 0.04,
+            "efficiency_multiplier": 0.93,
+            "ramp_limited": false,
+            "allow_black_start": false,
+            "tooling_label": "equipment_derate"
+          },
+          "OverCapacity": {
+            "output_fraction": 1.08,
+            "aux_load_fraction": 0.045,
+            "efficiency_multiplier": 0.97,
+            "ramp_limited": false,
+            "allow_black_start": false,
+            "tooling_label": "overload_excursion"
+          },
+          "EnvironmentalShutdown": {
+            "output_fraction": 0.0,
+            "aux_load_fraction": 0.03,
+            "efficiency_multiplier": 0.92,
+            "ramp_limited": false,
+            "allow_black_start": false,
+            "tooling_label": "permit_ambient"
+          }
+        },
+        "transition_hints": [
+          {
+            "from": "Standby",
+            "to": "StartingUp",
+            "trigger": "dispatch",
+            "typical_duration_s": 300.0
+          },
+          {
+            "from": "StartingUp",
+            "to": "Operational",
+            "trigger": "synchronize",
+            "typical_duration_s": 600.0
+          }
+        ]
+      },
+      "instance_template": {
+        "reactor_units": 0,
+        "unit_thermal_mw": 1.0,
+        "turbine_units": 1,
+        "hydro_head_m": 0.0,
+        "hydro_design_flow_m3s": 0.0,
+        "solar_array_area_m2": 0.0,
+        "panel_nominal_efficiency": 0.0,
+        "wind_rotor_diameter_m": 0.0,
+        "wind_hub_height_m": 0.0,
+        "geothermal_brine_inlet_c": 0.0,
+        "geothermal_brine_flow_kg_s": 0.0,
+        "fuel_feed_rate_kg_s": 7.0
+      },
+      "capabilities": {
+        "is_steam_cycle": true,
+        "is_nuclear_containment": false,
+        "is_variable_renewable": false
+      },
+      "emissions": {
+        "co2_kg_per_mwh": 30.0,
+        "nox_g_per_mwh": 95.0,
+        "so2_g_per_mwh": 40.0,
+        "particulate_g_per_mwh": 25.0,
+        "thermal_outfall_kw_per_mw": 320.0
+      },
+      "economics": {
+        "capex_per_kw": 4200.0,
+        "fixed_om_per_kw_year": 28.0,
+        "variable_om_per_mwh": 3.2,
+        "fuel_cost_per_mwh_thermal": 22.0,
+        "expected_availability": 0.91
+      },
+      "research": {
+        "required_research_ids": [],
+        "unlock_notes": "Research gates are soft until the tree exists."
+      },
+      "grid_interface": {
+        "power_factor": 0.95,
+        "inrush_multiplier": 1.05,
+        "allow_grid_forming": false
+      }
+    },
+    {
+      "id": "pwr_4loop_1100mw_v1",
+      "display_name": "Pwr 4Loop 1100Mw",
+      "plant_type": "Nuclear",
+      "narrative": {
+        "short_description": "Large four-loop PWR",
+        "operator_notes": "Registry id `pwr_4loop_1100mw_v1`; instance overrides in saves.",
+        "risk_summary": "Capability-scoped failures (`SteamCycle`, `ContainmentBuilding`, `VariableRenewable`)."
+      },
+      "output_model": {
+        "nameplate_mw": 1100.0,
+        "base_efficiency_factor": 0.33,
+        "part_load_curve_id": "nuclear_generic_partload_v1",
+        "min_stable_output_fraction": 0.18,
+        "ramp_up_mw_per_minute": 25.0,
+        "ramp_down_mw_per_minute": 40.0,
+        "inertia_constant_h": 4.5
+      },
+      "operational": {
+        "status_modifiers": {
+          "Standby": {
+            "output_fraction": 0.0,
+            "aux_load_fraction": 0.03,
+            "efficiency_multiplier": 0.95,
+            "ramp_limited": false,
+            "allow_black_start": false,
+            "tooling_label": "hot_standby"
+          },
+          "Operational": {
+            "output_fraction": 1.0,
+            "aux_load_fraction": 0.04,
+            "efficiency_multiplier": 1.0,
+            "ramp_limited": false,
+            "allow_black_start": false,
+            "tooling_label": "full_dispatch"
+          },
+          "Maintenance": {
+            "output_fraction": 0.0,
+            "aux_load_fraction": 0.015,
+            "efficiency_multiplier": 0.9,
+            "ramp_limited": false,
+            "allow_black_start": false,
+            "tooling_label": "planned_outage"
+          },
+          "OutOfFuel": {
+            "output_fraction": 0.0,
+            "aux_load_fraction": 0.01,
+            "efficiency_multiplier": 0.85,
+            "ramp_limited": false,
+            "allow_black_start": false,
+            "tooling_label": "fuel_trip"
+          },
+          "StartingUp": {
+            "output_fraction": 0.35,
+            "aux_load_fraction": 0.06,
+            "efficiency_multiplier": 0.88,
+            "ramp_limited": true,
+            "allow_black_start": true,
+            "tooling_label": "sync_ramp"
+          },
+          "ShuttingDown": {
+            "output_fraction": 0.15,
+            "aux_load_fraction": 0.05,
+            "efficiency_multiplier": 0.9,
+            "ramp_limited": true,
+            "allow_black_start": false,
+            "tooling_label": "coast_down"
+          },
+          "Decommissioned": {
+            "output_fraction": 0.0,
+            "aux_load_fraction": 0.0,
+            "efficiency_multiplier": 0.0,
+            "ramp_limited": false,
+            "allow_black_start": false,
+            "tooling_label": "safstor_demolition"
+          },
+          "ExternalShutdown": {
+            "output_fraction": 0.0,
+            "aux_load_fraction": 0.02,
+            "efficiency_multiplier": 0.92,
+            "ramp_limited": false,
+            "allow_black_start": false,
+            "tooling_label": "grid_or_labor"
+          },
+          "ReducedCapacity": {
+            "output_fraction": 0.65,
+            "aux_load_fraction": 0.04,
+            "efficiency_multiplier": 0.93,
+            "ramp_limited": false,
+            "allow_black_start": false,
+            "tooling_label": "equipment_derate"
+          },
+          "OverCapacity": {
+            "output_fraction": 1.08,
+            "aux_load_fraction": 0.045,
+            "efficiency_multiplier": 0.97,
+            "ramp_limited": false,
+            "allow_black_start": false,
+            "tooling_label": "overload_excursion"
+          },
+          "EnvironmentalShutdown": {
+            "output_fraction": 0.0,
+            "aux_load_fraction": 0.08,
+            "efficiency_multiplier": 0.96,
+            "ramp_limited": false,
+            "allow_black_start": false,
+            "tooling_label": "intake_thermal_limit"
+          }
+        },
+        "transition_hints": [
+          {
+            "from": "Standby",
+            "to": "StartingUp",
+            "trigger": "dispatch",
+            "typical_duration_s": 300.0
+          },
+          {
+            "from": "StartingUp",
+            "to": "Operational",
+            "trigger": "synchronize",
+            "typical_duration_s": 2400.0
+          }
+        ]
+      },
+      "instance_template": {
+        "reactor_units": 1,
+        "unit_thermal_mw": 3200.0,
+        "turbine_units": 1,
+        "hydro_head_m": 0.0,
+        "hydro_design_flow_m3s": 0.0,
+        "solar_array_area_m2": 0.0,
+        "panel_nominal_efficiency": 0.0,
+        "wind_rotor_diameter_m": 0.0,
+        "wind_hub_height_m": 0.0,
+        "geothermal_brine_inlet_c": 0.0,
+        "geothermal_brine_flow_kg_s": 0.0,
+        "fuel_feed_rate_kg_s": 0.0
+      },
+      "capabilities": {
+        "is_steam_cycle": true,
+        "is_nuclear_containment": true,
+        "is_variable_renewable": false
+      },
+      "emissions": {
+        "co2_kg_per_mwh": 0.0,
+        "nox_g_per_mwh": 0.0,
+        "so2_g_per_mwh": 0.0,
+        "particulate_g_per_mwh": 0.0,
+        "thermal_outfall_kw_per_mw": 950.0
+      },
+      "economics": {
+        "capex_per_kw": 7500.0,
+        "fixed_om_per_kw_year": 28.0,
+        "variable_om_per_mwh": 3.2,
+        "fuel_cost_per_mwh_thermal": 6.0,
+        "expected_availability": 0.91
+      },
+      "research": {
+        "required_research_ids": [
+          "nuclear_gen_ii_plus_v1"
+        ],
+        "unlock_notes": "Research gates are soft until the tree exists."
+      },
+      "grid_interface": {
+        "power_factor": 0.95,
+        "inrush_multiplier": 1.05,
+        "allow_grid_forming": true
+      }
+    },
+    {
+      "id": "reaction_francis_medium_head_v1",
+      "display_name": "Reaction Francis Medium Head",
+      "plant_type": "Hydro",
+      "narrative": {
+        "short_description": "Francis reaction, medium-head scheme",
+        "operator_notes": "Registry id `reaction_francis_medium_head_v1`; instance overrides in saves.",
+        "risk_summary": "Capability-scoped failures (`SteamCycle`, `ContainmentBuilding`, `VariableRenewable`)."
+      },
+      "output_model": {
+        "nameplate_mw": 210.0,
+        "base_efficiency_factor": 0.9,
+        "part_load_curve_id": "hydro_generic_partload_v1",
+        "min_stable_output_fraction": 0.18,
+        "ramp_up_mw_per_minute": 80.0,
+        "ramp_down_mw_per_minute": 40.0,
+        "inertia_constant_h": 4.5
+      },
+      "operational": {
+        "status_modifiers": {
+          "Standby": {
+            "output_fraction": 0.0,
+            "aux_load_fraction": 0.03,
+            "efficiency_multiplier": 0.95,
+            "ramp_limited": false,
+            "allow_black_start": false,
+            "tooling_label": "hot_standby"
+          },
+          "Operational": {
+            "output_fraction": 1.0,
+            "aux_load_fraction": 0.04,
+            "efficiency_multiplier": 1.0,
+            "ramp_limited": false,
+            "allow_black_start": false,
+            "tooling_label": "full_dispatch"
+          },
+          "Maintenance": {
+            "output_fraction": 0.0,
+            "aux_load_fraction": 0.015,
+            "efficiency_multiplier": 0.9,
+            "ramp_limited": false,
+            "allow_black_start": false,
+            "tooling_label": "planned_outage"
+          },
+          "OutOfFuel": {
+            "output_fraction": 0.0,
+            "aux_load_fraction": 0.01,
+            "efficiency_multiplier": 0.85,
+            "ramp_limited": false,
+            "allow_black_start": false,
+            "tooling_label": "fuel_trip"
+          },
+          "StartingUp": {
+            "output_fraction": 0.35,
+            "aux_load_fraction": 0.06,
+            "efficiency_multiplier": 0.88,
+            "ramp_limited": true,
+            "allow_black_start": true,
+            "tooling_label": "sync_ramp"
+          },
+          "ShuttingDown": {
+            "output_fraction": 0.15,
+            "aux_load_fraction": 0.05,
+            "efficiency_multiplier": 0.9,
+            "ramp_limited": true,
+            "allow_black_start": false,
+            "tooling_label": "coast_down"
+          },
+          "Decommissioned": {
+            "output_fraction": 0.0,
+            "aux_load_fraction": 0.0,
+            "efficiency_multiplier": 0.0,
+            "ramp_limited": false,
+            "allow_black_start": false,
+            "tooling_label": "safstor_demolition"
+          },
+          "ExternalShutdown": {
+            "output_fraction": 0.0,
+            "aux_load_fraction": 0.02,
+            "efficiency_multiplier": 0.92,
+            "ramp_limited": false,
+            "allow_black_start": false,
+            "tooling_label": "grid_or_labor"
+          },
+          "ReducedCapacity": {
+            "output_fraction": 0.65,
+            "aux_load_fraction": 0.04,
+            "efficiency_multiplier": 0.93,
+            "ramp_limited": false,
+            "allow_black_start": false,
+            "tooling_label": "equipment_derate"
+          },
+          "OverCapacity": {
+            "output_fraction": 1.08,
+            "aux_load_fraction": 0.045,
+            "efficiency_multiplier": 0.97,
+            "ramp_limited": false,
+            "allow_black_start": false,
+            "tooling_label": "overload_excursion"
+          },
+          "EnvironmentalShutdown": {
+            "output_fraction": 0.0,
+            "aux_load_fraction": 0.02,
+            "efficiency_multiplier": 0.94,
+            "ramp_limited": false,
+            "allow_black_start": false,
+            "tooling_label": "fish_flood_drought"
+          }
+        },
+        "transition_hints": [
+          {
+            "from": "Standby",
+            "to": "StartingUp",
+            "trigger": "dispatch",
+            "typical_duration_s": 300.0
+          },
+          {
+            "from": "StartingUp",
+            "to": "Operational",
+            "trigger": "synchronize",
+            "typical_duration_s": 600.0
+          }
+        ]
+      },
+      "instance_template": {
+        "reactor_units": 0,
+        "unit_thermal_mw": 1.0,
+        "turbine_units": 1,
+        "hydro_head_m": 85.0,
+        "hydro_design_flow_m3s": 260.0,
+        "solar_array_area_m2": 0.0,
+        "panel_nominal_efficiency": 0.0,
+        "wind_rotor_diameter_m": 0.0,
+        "wind_hub_height_m": 0.0,
+        "geothermal_brine_inlet_c": 0.0,
+        "geothermal_brine_flow_kg_s": 0.0,
+        "fuel_feed_rate_kg_s": 0.0
+      },
+      "capabilities": {
+        "is_steam_cycle": false,
+        "is_nuclear_containment": false,
+        "is_variable_renewable": false
+      },
+      "emissions": {
+        "co2_kg_per_mwh": 12.0,
+        "nox_g_per_mwh": 0.0,
+        "so2_g_per_mwh": 0.0,
+        "particulate_g_per_mwh": 0.0,
+        "thermal_outfall_kw_per_mw": 0.0
+      },
+      "economics": {
+        "capex_per_kw": 3200.0,
+        "fixed_om_per_kw_year": 28.0,
+        "variable_om_per_mwh": 3.2,
+        "fuel_cost_per_mwh_thermal": 0.0,
+        "expected_availability": 0.91
+      },
+      "research": {
+        "required_research_ids": [],
+        "unlock_notes": "Research gates are soft until the tree exists."
+      },
+      "grid_interface": {
+        "power_factor": 0.95,
+        "inrush_multiplier": 1.05,
+        "allow_grid_forming": true
+      }
+    },
+    {
+      "id": "utility_tracker_pv_150mw_ac_v1",
+      "display_name": "Utility Tracker Pv 150Mw Ac",
+      "plant_type": "Solar",
+      "narrative": {
+        "short_description": "Single-axis tracker PV farm",
+        "operator_notes": "Registry id `utility_tracker_pv_150mw_ac_v1`; instance overrides in saves.",
+        "risk_summary": "Capability-scoped failures (`SteamCycle`, `ContainmentBuilding`, `VariableRenewable`)."
+      },
+      "output_model": {
+        "nameplate_mw": 150.0,
+        "base_efficiency_factor": 0.22,
+        "part_load_curve_id": "solar_generic_partload_v1",
+        "min_stable_output_fraction": 0.05,
+        "ramp_up_mw_per_minute": 300.0,
+        "ramp_down_mw_per_minute": 40.0,
+        "inertia_constant_h": 2.0
+      },
+      "operational": {
+        "status_modifiers": {
+          "Standby": {
+            "output_fraction": 0.0,
+            "aux_load_fraction": 0.03,
+            "efficiency_multiplier": 0.95,
+            "ramp_limited": false,
+            "allow_black_start": false,
+            "tooling_label": "hot_standby"
+          },
+          "Operational": {
+            "output_fraction": 1.0,
+            "aux_load_fraction": 0.04,
+            "efficiency_multiplier": 1.0,
+            "ramp_limited": false,
+            "allow_black_start": false,
+            "tooling_label": "full_dispatch"
+          },
+          "Maintenance": {
+            "output_fraction": 0.0,
+            "aux_load_fraction": 0.015,
+            "efficiency_multiplier": 0.9,
+            "ramp_limited": false,
+            "allow_black_start": false,
+            "tooling_label": "planned_outage"
+          },
+          "OutOfFuel": {
+            "output_fraction": 0.0,
+            "aux_load_fraction": 0.01,
+            "efficiency_multiplier": 1.0,
+            "ramp_limited": false,
+            "allow_black_start": false,
+            "tooling_label": "na_map_to_reducedcapacity"
+          },
+          "StartingUp": {
+            "output_fraction": 0.35,
+            "aux_load_fraction": 0.06,
+            "efficiency_multiplier": 0.88,
+            "ramp_limited": true,
+            "allow_black_start": true,
+            "tooling_label": "sync_ramp"
+          },
+          "ShuttingDown": {
+            "output_fraction": 0.15,
+            "aux_load_fraction": 0.05,
+            "efficiency_multiplier": 0.9,
+            "ramp_limited": true,
+            "allow_black_start": false,
+            "tooling_label": "coast_down"
+          },
+          "Decommissioned": {
+            "output_fraction": 0.0,
+            "aux_load_fraction": 0.0,
+            "efficiency_multiplier": 0.0,
+            "ramp_limited": false,
+            "allow_black_start": false,
+            "tooling_label": "safstor_demolition"
+          },
+          "ExternalShutdown": {
+            "output_fraction": 0.0,
+            "aux_load_fraction": 0.02,
+            "efficiency_multiplier": 0.92,
+            "ramp_limited": false,
+            "allow_black_start": false,
+            "tooling_label": "grid_or_labor"
+          },
+          "ReducedCapacity": {
+            "output_fraction": 0.65,
+            "aux_load_fraction": 0.04,
+            "efficiency_multiplier": 0.93,
+            "ramp_limited": false,
+            "allow_black_start": false,
+            "tooling_label": "equipment_derate"
+          },
+          "OverCapacity": {
+            "output_fraction": 1.08,
+            "aux_load_fraction": 0.045,
+            "efficiency_multiplier": 0.97,
+            "ramp_limited": false,
+            "allow_black_start": false,
+            "tooling_label": "overload_excursion"
+          },
+          "EnvironmentalShutdown": {
+            "output_fraction": 0.0,
+            "aux_load_fraction": 0.01,
+            "efficiency_multiplier": 0.9,
+            "ramp_limited": false,
+            "allow_black_start": false,
+            "tooling_label": "renewable_weather_window"
+          }
+        },
+        "transition_hints": [
+          {
+            "from": "Standby",
+            "to": "StartingUp",
+            "trigger": "dispatch",
+            "typical_duration_s": 300.0
+          },
+          {
+            "from": "StartingUp",
+            "to": "Operational",
+            "trigger": "synchronize",
+            "typical_duration_s": 600.0
+          }
+        ]
+      },
+      "instance_template": {
+        "reactor_units": 0,
+        "unit_thermal_mw": 1.0,
+        "turbine_units": 1,
+        "hydro_head_m": 0.0,
+        "hydro_design_flow_m3s": 0.0,
+        "solar_array_area_m2": 1200000.0,
+        "panel_nominal_efficiency": 0.205,
+        "wind_rotor_diameter_m": 0.0,
+        "wind_hub_height_m": 0.0,
+        "geothermal_brine_inlet_c": 0.0,
+        "geothermal_brine_flow_kg_s": 0.0,
+        "fuel_feed_rate_kg_s": 0.0
+      },
+      "capabilities": {
+        "is_steam_cycle": false,
+        "is_nuclear_containment": false,
+        "is_variable_renewable": true
+      },
+      "emissions": {
+        "co2_kg_per_mwh": 8.0,
+        "nox_g_per_mwh": 0.0,
+        "so2_g_per_mwh": 0.0,
+        "particulate_g_per_mwh": 0.0,
+        "thermal_outfall_kw_per_mw": 0.0
+      },
+      "economics": {
+        "capex_per_kw": 900.0,
+        "fixed_om_per_kw_year": 28.0,
+        "variable_om_per_mwh": 3.2,
+        "fuel_cost_per_mwh_thermal": 0.0,
+        "expected_availability": 0.87
+      },
+      "research": {
+        "required_research_ids": [],
+        "unlock_notes": "Research gates are soft until the tree exists."
+      },
+      "grid_interface": {
+        "power_factor": 0.95,
+        "inrush_multiplier": 1.15,
+        "allow_grid_forming": false
+      }
+    },
+    {
+      "id": "class_III_turbine_80m_hub_3mw_v1",
+      "display_name": "Class Iii Turbine 80M Hub 3Mw",
+      "plant_type": "Wind",
+      "narrative": {
+        "short_description": "Class III site IEC turbine repower",
+        "operator_notes": "Registry id `class_III_turbine_80m_hub_3mw_v1`; instance overrides in saves.",
+        "risk_summary": "Capability-scoped failures (`SteamCycle`, `ContainmentBuilding`, `VariableRenewable`)."
+      },
+      "output_model": {
+        "nameplate_mw": 3.0,
+        "base_efficiency_factor": 0.38,
+        "part_load_curve_id": "wind_generic_partload_v1",
+        "min_stable_output_fraction": 0.05,
+        "ramp_up_mw_per_minute": 60.0,
+        "ramp_down_mw_per_minute": 40.0,
+        "inertia_constant_h": 2.0
+      },
+      "operational": {
+        "status_modifiers": {
+          "Standby": {
+            "output_fraction": 0.0,
+            "aux_load_fraction": 0.03,
+            "efficiency_multiplier": 0.95,
+            "ramp_limited": false,
+            "allow_black_start": false,
+            "tooling_label": "hot_standby"
+          },
+          "Operational": {
+            "output_fraction": 1.0,
+            "aux_load_fraction": 0.04,
+            "efficiency_multiplier": 1.0,
+            "ramp_limited": false,
+            "allow_black_start": false,
+            "tooling_label": "full_dispatch"
+          },
+          "Maintenance": {
+            "output_fraction": 0.0,
+            "aux_load_fraction": 0.015,
+            "efficiency_multiplier": 0.9,
+            "ramp_limited": false,
+            "allow_black_start": false,
+            "tooling_label": "planned_outage"
+          },
+          "OutOfFuel": {
+            "output_fraction": 0.0,
+            "aux_load_fraction": 0.01,
+            "efficiency_multiplier": 1.0,
+            "ramp_limited": false,
+            "allow_black_start": false,
+            "tooling_label": "na_map_to_reducedcapacity"
+          },
+          "StartingUp": {
+            "output_fraction": 0.35,
+            "aux_load_fraction": 0.06,
+            "efficiency_multiplier": 0.88,
+            "ramp_limited": true,
+            "allow_black_start": true,
+            "tooling_label": "sync_ramp"
+          },
+          "ShuttingDown": {
+            "output_fraction": 0.15,
+            "aux_load_fraction": 0.05,
+            "efficiency_multiplier": 0.9,
+            "ramp_limited": true,
+            "allow_black_start": false,
+            "tooling_label": "coast_down"
+          },
+          "Decommissioned": {
+            "output_fraction": 0.0,
+            "aux_load_fraction": 0.0,
+            "efficiency_multiplier": 0.0,
+            "ramp_limited": false,
+            "allow_black_start": false,
+            "tooling_label": "safstor_demolition"
+          },
+          "ExternalShutdown": {
+            "output_fraction": 0.0,
+            "aux_load_fraction": 0.02,
+            "efficiency_multiplier": 0.92,
+            "ramp_limited": false,
+            "allow_black_start": false,
+            "tooling_label": "grid_or_labor"
+          },
+          "ReducedCapacity": {
+            "output_fraction": 0.65,
+            "aux_load_fraction": 0.04,
+            "efficiency_multiplier": 0.93,
+            "ramp_limited": false,
+            "allow_black_start": false,
+            "tooling_label": "equipment_derate"
+          },
+          "OverCapacity": {
+            "output_fraction": 1.08,
+            "aux_load_fraction": 0.045,
+            "efficiency_multiplier": 0.97,
+            "ramp_limited": false,
+            "allow_black_start": false,
+            "tooling_label": "overload_excursion"
+          },
+          "EnvironmentalShutdown": {
+            "output_fraction": 0.0,
+            "aux_load_fraction": 0.01,
+            "efficiency_multiplier": 0.9,
+            "ramp_limited": false,
+            "allow_black_start": false,
+            "tooling_label": "renewable_weather_window"
+          }
+        },
+        "transition_hints": [
+          {
+            "from": "Standby",
+            "to": "StartingUp",
+            "trigger": "dispatch",
+            "typical_duration_s": 300.0
+          },
+          {
+            "from": "StartingUp",
+            "to": "Operational",
+            "trigger": "synchronize",
+            "typical_duration_s": 600.0
+          }
+        ]
+      },
+      "instance_template": {
+        "reactor_units": 0,
+        "unit_thermal_mw": 1.0,
+        "turbine_units": 1,
+        "hydro_head_m": 0.0,
+        "hydro_design_flow_m3s": 0.0,
+        "solar_array_area_m2": 0.0,
+        "panel_nominal_efficiency": 0.0,
+        "wind_rotor_diameter_m": 136.0,
+        "wind_hub_height_m": 80.0,
+        "geothermal_brine_inlet_c": 0.0,
+        "geothermal_brine_flow_kg_s": 0.0,
+        "fuel_feed_rate_kg_s": 0.0
+      },
+      "capabilities": {
+        "is_steam_cycle": false,
+        "is_nuclear_containment": false,
+        "is_variable_renewable": true
+      },
+      "emissions": {
+        "co2_kg_per_mwh": 8.0,
+        "nox_g_per_mwh": 0.0,
+        "so2_g_per_mwh": 0.0,
+        "particulate_g_per_mwh": 0.0,
+        "thermal_outfall_kw_per_mw": 0.0
+      },
+      "economics": {
+        "capex_per_kw": 1300.0,
+        "fixed_om_per_kw_year": 28.0,
+        "variable_om_per_mwh": 3.2,
+        "fuel_cost_per_mwh_thermal": 0.0,
+        "expected_availability": 0.87
+      },
+      "research": {
+        "required_research_ids": [],
+        "unlock_notes": "Research gates are soft until the tree exists."
+      },
+      "grid_interface": {
+        "power_factor": 0.95,
+        "inrush_multiplier": 1.25,
+        "allow_grid_forming": false
+      }
+    },
+    {
+      "id": "orc_binary_brine_45mw_v1",
+      "display_name": "Orc Binary Brine 45Mw",
+      "plant_type": "Geothermal",
+      "narrative": {
+        "short_description": "ORC binary plant on brine loop",
+        "operator_notes": "Registry id `orc_binary_brine_45mw_v1`; instance overrides in saves.",
+        "risk_summary": "Capability-scoped failures (`SteamCycle`, `ContainmentBuilding`, `VariableRenewable`)."
+      },
+      "output_model": {
+        "nameplate_mw": 45.0,
+        "base_efficiency_factor": 0.12,
+        "part_load_curve_id": "geothermal_generic_partload_v1",
+        "min_stable_output_fraction": 0.18,
+        "ramp_up_mw_per_minute": 35.0,
+        "ramp_down_mw_per_minute": 40.0,
+        "inertia_constant_h": 2.0
+      },
+      "operational": {
+        "status_modifiers": {
+          "Standby": {
+            "output_fraction": 0.0,
+            "aux_load_fraction": 0.03,
+            "efficiency_multiplier": 0.95,
+            "ramp_limited": false,
+            "allow_black_start": false,
+            "tooling_label": "hot_standby"
+          },
+          "Operational": {
+            "output_fraction": 1.0,
+            "aux_load_fraction": 0.04,
+            "efficiency_multiplier": 1.0,
+            "ramp_limited": false,
+            "allow_black_start": false,
+            "tooling_label": "full_dispatch"
+          },
+          "Maintenance": {
+            "output_fraction": 0.0,
+            "aux_load_fraction": 0.015,
+            "efficiency_multiplier": 0.9,
+            "ramp_limited": false,
+            "allow_black_start": false,
+            "tooling_label": "planned_outage"
+          },
+          "OutOfFuel": {
+            "output_fraction": 0.0,
+            "aux_load_fraction": 0.01,
+            "efficiency_multiplier": 0.85,
+            "ramp_limited": false,
+            "allow_black_start": false,
+            "tooling_label": "fuel_trip"
+          },
+          "StartingUp": {
+            "output_fraction": 0.35,
+            "aux_load_fraction": 0.06,
+            "efficiency_multiplier": 0.88,
+            "ramp_limited": true,
+            "allow_black_start": true,
+            "tooling_label": "sync_ramp"
+          },
+          "ShuttingDown": {
+            "output_fraction": 0.15,
+            "aux_load_fraction": 0.05,
+            "efficiency_multiplier": 0.9,
+            "ramp_limited": true,
+            "allow_black_start": false,
+            "tooling_label": "coast_down"
+          },
+          "Decommissioned": {
+            "output_fraction": 0.0,
+            "aux_load_fraction": 0.0,
+            "efficiency_multiplier": 0.0,
+            "ramp_limited": false,
+            "allow_black_start": false,
+            "tooling_label": "safstor_demolition"
+          },
+          "ExternalShutdown": {
+            "output_fraction": 0.0,
+            "aux_load_fraction": 0.02,
+            "efficiency_multiplier": 0.92,
+            "ramp_limited": false,
+            "allow_black_start": false,
+            "tooling_label": "grid_or_labor"
+          },
+          "ReducedCapacity": {
+            "output_fraction": 0.65,
+            "aux_load_fraction": 0.04,
+            "efficiency_multiplier": 0.93,
+            "ramp_limited": false,
+            "allow_black_start": false,
+            "tooling_label": "equipment_derate"
+          },
+          "OverCapacity": {
+            "output_fraction": 1.08,
+            "aux_load_fraction": 0.045,
+            "efficiency_multiplier": 0.97,
+            "ramp_limited": false,
+            "allow_black_start": false,
+            "tooling_label": "overload_excursion"
+          },
+          "EnvironmentalShutdown": {
+            "output_fraction": 0.0,
+            "aux_load_fraction": 0.03,
+            "efficiency_multiplier": 0.92,
+            "ramp_limited": false,
+            "allow_black_start": false,
+            "tooling_label": "permit_ambient"
+          }
+        },
+        "transition_hints": [
+          {
+            "from": "Standby",
+            "to": "StartingUp",
+            "trigger": "dispatch",
+            "typical_duration_s": 300.0
+          },
+          {
+            "from": "StartingUp",
+            "to": "Operational",
+            "trigger": "synchronize",
+            "typical_duration_s": 600.0
+          }
+        ]
+      },
+      "instance_template": {
+        "reactor_units": 0,
+        "unit_thermal_mw": 1.0,
+        "turbine_units": 1,
+        "hydro_head_m": 0.0,
+        "hydro_design_flow_m3s": 0.0,
+        "solar_array_area_m2": 0.0,
+        "panel_nominal_efficiency": 0.0,
+        "wind_rotor_diameter_m": 0.0,
+        "wind_hub_height_m": 0.0,
+        "geothermal_brine_inlet_c": 165.0,
+        "geothermal_brine_flow_kg_s": 420.0,
+        "fuel_feed_rate_kg_s": 0.0
+      },
+      "capabilities": {
+        "is_steam_cycle": true,
+        "is_nuclear_containment": false,
+        "is_variable_renewable": false
+      },
+      "emissions": {
+        "co2_kg_per_mwh": 45.0,
+        "nox_g_per_mwh": 0.0,
+        "so2_g_per_mwh": 0.0,
+        "particulate_g_per_mwh": 0.0,
+        "thermal_outfall_kw_per_mw": 0.0
+      },
+      "economics": {
+        "capex_per_kw": 4500.0,
+        "fixed_om_per_kw_year": 28.0,
+        "variable_om_per_mwh": 3.2,
+        "fuel_cost_per_mwh_thermal": 0.0,
+        "expected_availability": 0.91
+      },
+      "research": {
+        "required_research_ids": [],
+        "unlock_notes": "Research gates are soft until the tree exists."
+      },
+      "grid_interface": {
+        "power_factor": 0.95,
+        "inrush_multiplier": 1.05,
+        "allow_grid_forming": false
+      }
+    }
+  ]
+}

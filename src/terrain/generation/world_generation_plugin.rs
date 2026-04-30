@@ -17,13 +17,31 @@ impl Plugin for WorldGenerationPlugin {
     }
 }
 
+/// Tooling-only plugin boundary (editor/testing workflows).
+pub struct WorldGenerationToolsUiPlugin;
+
+impl Plugin for WorldGenerationToolsUiPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_plugins((WorldGenUiPlugin, WorldPreviewPlugin));
+    }
+}
+
+/// Runtime/in-game boundary (no tooling windows).
+pub struct WorldGenerationInGamePlugin;
+
+impl Plugin for WorldGenerationInGamePlugin {
+    fn build(&self, app: &mut App) {
+        app.add_plugins(WorldGeneratorPlugin);
+    }
+}
+
 // A simple keyboard input system to toggle the world gen UI
 pub fn world_gen_key_input(
-    mut toggle_events: EventWriter<crate::gui::editor::world_gen_ui::ToggleWorldGenUiEvent>,
-    keyboard_input: Res<Input<KeyCode>>,
+    mut toggle_events: MessageWriter<crate::gui::editor::world_gen_ui::ToggleWorldGenUiEvent>,
+    keyboard_input: Res<ButtonInput<KeyCode>>,
 ) {
     if keyboard_input.just_pressed(KeyCode::F8) {
-        toggle_events.send(crate::gui::editor::world_gen_ui::ToggleWorldGenUiEvent);
+        toggle_events.write(crate::gui::editor::world_gen_ui::ToggleWorldGenUiEvent);
     }
 }
 
@@ -32,7 +50,8 @@ pub struct WorldGenToolsPlugin;
 
 impl Plugin for WorldGenToolsPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins(WorldGenerationPlugin)
+        // Explicitly keep tools UI in this plugin; in-game runtime uses WorldGenerationInGamePlugin.
+        app.add_plugins((WorldGenerationInGamePlugin, WorldGenerationToolsUiPlugin))
            .add_systems(Update, world_gen_key_input);
         
         info!("World Generation Tools initialized. Press F8 to open the World Generator UI.");

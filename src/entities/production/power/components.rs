@@ -1,12 +1,12 @@
 use bevy::prelude::*;
-use bevy::utils::{HashMap, HashSet};
+use std::collections::{HashMap, HashSet};
 
 use crate::entities::production::power::power_states::{
     OperationMechanism, PowerDistributionType, PowerPlantType, ResourceMechanism,
     SwitchCloseBehavior, SwitchState,
 };
 
-use crate::entities::types_of::e_flagz::OperationalStatus;
+use crate::entities::types::OperationalStatus;
 
 #[derive(Component)]
 pub struct ThermalComponent {
@@ -44,6 +44,8 @@ pub struct Fuel {
 
 #[derive(Component)]
 pub struct PowerPlant {
+    /// Row id in `assets/config/power/plant_definitions.json` (`PlantDefinition.id`). Empty uses `PlantArchetype::for_type` only.
+    pub definition_id: String,
     pub plant_type: PowerPlantType,
     pub max_output: f32,
     pub current_output: f32,

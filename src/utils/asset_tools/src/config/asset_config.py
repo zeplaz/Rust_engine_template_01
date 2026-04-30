@@ -45,11 +45,6 @@ class AssetConfig:
     """
     Class to manage asset configuration
     """
-     def update_matrix_grid(self):
-        """Update the matrix grid when size  change"""
-        x = self.building_size_x.value()
-        y = self.building_size_y.value()
-        self.tile_matrix_grid.resize_grid(x, y)
 
     def __init__(self):
         """Initialize with default values"""

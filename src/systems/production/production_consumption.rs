@@ -1,3 +1,5 @@
+// LEGACY MODULE (not actively wired):
+// retained for staged migration into domain runtime plugins.
 use bevy::prelude::*;
 
 //use crate::systems::power_systems::*;

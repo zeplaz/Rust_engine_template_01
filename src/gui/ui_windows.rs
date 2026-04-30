@@ -1,7 +1,5 @@
-use bevy::app::AppExit;
-
 use bevy::{prelude::*, window::PrimaryWindow};
-use bevy_egui::{egui, EguiContexts, EguiPlugin, EguiSettings};
+use bevy_egui::{egui, EguiContextSettings, EguiContexts};
 // will go in gui:
 pub fn run_prompt_getter() {
     //    let mut input_box = InputBoxState::new();
@@ -32,11 +30,11 @@ pub enum UIRegion {
     MainWorld,
 }
 
-pub fn configure_visuals_system(mut contexts: EguiContexts) {
-    contexts.ctx_mut().set_visuals(egui::Visuals {
-        window_rounding: 0.0.into(),
+pub fn configure_visuals_system(mut contexts: EguiContexts) -> Result {
+    contexts.ctx_mut()?.set_visuals(egui::Visuals {
         ..Default::default()
     });
+    Ok(())
 }
 
 pub fn configure_ui_state_system(mut ui_state: ResMut<UiState>) {
@@ -44,21 +42,21 @@ pub fn configure_ui_state_system(mut ui_state: ResMut<UiState>) {
 }
 
 pub fn update_ui_scale_factor_system(
-    keyboard_input: Res<Input<KeyCode>>,
+    keyboard_input: Res<ButtonInput<KeyCode>>,
     mut toggle_scale_factor: Local<Option<bool>>,
-    mut egui_settings: ResMut<EguiSettings>,
+    mut egui_ctx: Query<&mut EguiContextSettings>,
     windows: Query<&Window, With<PrimaryWindow>>,
 ) {
     if keyboard_input.just_pressed(KeyCode::Slash) || toggle_scale_factor.is_none() {
         *toggle_scale_factor = Some(!toggle_scale_factor.unwrap_or(true));
 
-        if let Ok(window) = windows.get_single() {
+        if let (Ok(window), Ok(mut settings)) = (windows.single(), egui_ctx.single_mut()) {
             let scale_factor = if toggle_scale_factor.unwrap() {
                 1.0
             } else {
                 1.0 / window.scale_factor()
             };
-            egui_settings.scale_factor = scale_factor;
+            settings.scale_factor = scale_factor;
         }
     }
 }

@@ -1,15 +1,16 @@
+use std::collections::HashMap;
+
 use bevy::prelude::*;
-use bevy::utils::hashbrown::HashMap;
 use serde::{Deserialize, Serialize};
 
 use crate::idgen::EntityId;
 use crate::systems::agents::permissions::{PermissionDomain, AccessLevel, PermissionGrantEvent};
 
 /// Event triggered when an entity's ownership changes
-#[derive(Event)]
+#[derive(Message)]
 pub struct OwnershipChangeEvent {
     pub entity_id: EntityId,
-    pub old_owner_id: EntityId,
+    pub old_owner_id: Option<EntityId>,
     pub new_owner_id: EntityId,
 }
 
@@ -25,16 +26,16 @@ impl Default for FactionColors {
         let mut colors = HashMap::new();
         
         // Add some default colors for common factions
-        colors.insert(EntityId::from_u32(1), Color::rgb(0.8, 0.0, 0.0));  // Red
-        colors.insert(EntityId::from_u32(2), Color::rgb(0.0, 0.0, 0.8));  // Blue
-        colors.insert(EntityId::from_u32(3), Color::rgb(0.0, 0.8, 0.0));  // Green
-        colors.insert(EntityId::from_u32(4), Color::rgb(0.8, 0.8, 0.0));  // Yellow
-        colors.insert(EntityId::from_u32(5), Color::rgb(0.8, 0.0, 0.8));  // Purple
-        colors.insert(EntityId::from_u32(6), Color::rgb(0.0, 0.8, 0.8));  // Cyan
-        
+        colors.insert(EntityId::from_u32(1), Color::srgb(0.8, 0.0, 0.0));  // Red
+        colors.insert(EntityId::from_u32(2), Color::srgb(0.0, 0.0, 0.8));  // Blue
+        colors.insert(EntityId::from_u32(3), Color::srgb(0.0, 0.8, 0.0));  // Green
+        colors.insert(EntityId::from_u32(4), Color::srgb(0.8, 0.8, 0.0));  // Yellow
+        colors.insert(EntityId::from_u32(5), Color::srgb(0.8, 0.0, 0.8));  // Purple
+        colors.insert(EntityId::from_u32(6), Color::srgb(0.0, 0.8, 0.8));  // Cyan
+
         Self {
             colors,
-            default_color: Color::rgb(0.5, 0.5, 0.5),  // Grey default
+            default_color: Color::srgb(0.5, 0.5, 0.5),  // Grey default
         }
     }
 }
@@ -51,33 +52,17 @@ impl FactionColors {
     }
 }
 
-/// System to handle ownership change events
+/// System to handle ownership change events (permissions + color lookup).
+/// Sprite/material mutation requires an `EntityId` → `Entity` map; see `utils/events.rs` note.
 pub fn ownership_change_listener(
-    mut events: EventReader<OwnershipChangeEvent>,
-    mut sprite_query: Query<(&mut Sprite, &Handle<Image>)>,
-    mut mesh_query: Query<&mut Handle<StandardMaterial>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
+    mut events: MessageReader<OwnershipChangeEvent>,
     faction_colors: Res<FactionColors>,
-    mut permission_events: EventWriter<PermissionGrantEvent>,
+    mut permission_events: MessageWriter<PermissionGrantEvent>,
 ) {
     for event in events.read() {
-        // Get the new owner's color
-        let color = faction_colors.get_color(event.new_owner_id);
-        
-        // Update 2D sprite color if the entity has one
-        if let Ok((mut sprite, _)) = sprite_query.get_mut(event.entity_id.as_u32() as Entity) {
-            sprite.color = color;
-        }
-        
-        // Update 3D material color if the entity has one
-        if let Ok(mut material_handle) = mesh_query.get_mut(event.entity_id.as_u32() as Entity) {
-            if let Some(material) = materials.get_mut(&*material_handle) {
-                material.base_color = color;
-            }
-        }
-        
-        // Transfer ownership permissions for this entity
-        permission_events.send(PermissionGrantEvent {
+        let _color = faction_colors.get_color(event.new_owner_id);
+
+        permission_events.write(PermissionGrantEvent {
             to_agent_id: event.new_owner_id,
             from_agent_id: EntityId::default(), // System-granted
             grant: crate::systems::agents::permissions::PermissionGrant {
@@ -100,7 +85,7 @@ pub struct OwnershipPlugin;
 impl Plugin for OwnershipPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<FactionColors>()
-           .add_event::<OwnershipChangeEvent>()
+           .add_message::<OwnershipChangeEvent>()
            .add_systems(Update, ownership_change_listener);
     }
 }

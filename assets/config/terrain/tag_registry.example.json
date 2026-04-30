@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "tags": [
+    { "name": "lowland", "category": "terrain" },
+    { "name": "wet", "category": "moisture" },
+    { "name": "dry", "category": "moisture" },
+    { "name": "hot", "category": "temperature" },
+    { "name": "cold", "category": "temperature" },
+    { "name": "soil", "category": "surface" },
+    { "name": "sand", "category": "surface" },
+    { "name": "rock", "category": "surface" },
+    { "name": "hard", "category": "mechanical" },
+    { "name": "soft", "category": "mechanical" },
+    { "name": "fertile", "category": "ecology" },
+    { "name": "traversable", "category": "nav" },
+    { "name": "non_traversable", "category": "nav" },
+    { "name": "mineable", "category": "resource" }
+  ]
+}

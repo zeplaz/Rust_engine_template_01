@@ -5,7 +5,8 @@ use serde::{Deserialize, Serialize};
 use crate::idgen::EntityId;
 use crate::events::ownership_events::FactionColors;
 use crate::systems::agents::permissions::{
-    Agent, AgentType, AgentPermissions, PermissionDomain, AccessLevel
+    Agent, AgentType, AgentPermissions, PermissionDomain, AccessLevel,
+    PermissionGrantEvent, PermissionRevokeEvent,
 };
 
 /// Resource that manages all agents in the game
@@ -53,7 +54,7 @@ impl AgentManager {
 }
 
 /// Command for creating a new agent
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Component)]
 pub struct CreateAgentCommand {
     pub name: String,
     pub faction_id: Option<EntityId>,
@@ -164,7 +165,7 @@ pub fn handle_delegation_system(
     mut agent_query: Query<&mut AgentPermissions>,
     delegation_requests: Query<(Entity, &DelegateAuthorityCommand)>,
     game_time: Res<crate::systems::agents::permissions::GameTime>,
-    mut permission_events: EventWriter<crate::systems::agents::permissions::PermissionGrantEvent>,
+    mut permission_events: MessageWriter<crate::systems::agents::permissions::PermissionGrantEvent>,
 ) {
     for (request_entity, cmd) in delegation_requests.iter() {
         // Get the delegating agent's permissions
@@ -186,7 +187,7 @@ pub fn handle_delegation_system(
                     None, // No condition for now
                 ) {
                     // If successful, send a grant event
-                    permission_events.send(crate::systems::agents::permissions::PermissionGrantEvent {
+                    permission_events.write(crate::systems::agents::permissions::PermissionGrantEvent {
                         to_agent_id: cmd.to_agent_id,
                         from_agent_id: cmd.from_agent_id,
                         grant,
@@ -200,6 +201,35 @@ pub fn handle_delegation_system(
     }
 }
 
+/// Bridge `EntityId` → Bevy `Entity` using [`AgentManager`], then apply grant payloads.
+pub fn handle_permission_grants(
+    mut events: MessageReader<PermissionGrantEvent>,
+    mut agent_query: Query<&mut AgentPermissions>,
+    agent_manager: Res<AgentManager>,
+) {
+    for event in events.read() {
+        if let Some(entity) = agent_manager.get_agent_entity(event.to_agent_id) {
+            if let Ok(mut permissions) = agent_query.get_mut(entity) {
+                permissions.grant_permission(event.grant.clone(), event.from_agent_id);
+            }
+        }
+    }
+}
+
+pub fn handle_permission_revokes(
+    mut events: MessageReader<PermissionRevokeEvent>,
+    mut agent_query: Query<&mut AgentPermissions>,
+    agent_manager: Res<AgentManager>,
+) {
+    for event in events.read() {
+        if let Some(entity) = agent_manager.get_agent_entity(event.from_agent_id) {
+            if let Ok(mut permissions) = agent_query.get_mut(entity) {
+                permissions.revoke_permission(event.domain, event.revoker_id);
+            }
+        }
+    }
+}
+
 /// Agent Manager Plugin to register all agent-related systems
 pub struct AgentManagerPlugin;
 
@@ -210,6 +240,8 @@ impl Plugin for AgentManagerPlugin {
                create_agent_system,
                handle_delegation_system,
                agent_authority_system,
+               handle_permission_grants,
+               handle_permission_revokes,
            ));
     }
 }

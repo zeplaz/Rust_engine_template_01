@@ -15,6 +15,7 @@ impl EntityId {
     }
 }
 
+#[derive(Clone)]
 pub struct VoronoiSite {
     pub id: EntityId,
     pub position: Vec2,

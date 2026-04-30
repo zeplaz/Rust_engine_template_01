@@ -1,26 +1,11 @@
-fn generate_world(
-    mut commands: Commands,
-    // Add other necessary resources, such as noise generators, biome data, etc.
-) {
-    // Create the GeoRegions
-    let regions = generate_regions(/* ... */);
+//! Legacy world-generation sketch — **not wired**. Canonical path: `world_generator_enhanced` + `WorldGenToolsPlugin`.
+//! Retained for migration trace per `terrain_biome_migration_matrix_v1.md`.
 
-    for region in regions {
-        // Create a region entity
-        commands.spawn()
-            .insert(GeoRegion { /* ... */ })
-            .insert(EntityType::Region);
+use bevy::prelude::*;
 
-        for tile in region.tiles {
-            // Spawn the tile entities within the region
-            commands.spawn()
-                .insert_bundle(TileBundle {
-                    position: Position { /* ... */ },
-                    height: Height { /* ... */ },
-                    roughness: Roughness { /* ... */ },
-                    // ... other components
-                })
-                .insert(EntityType::Tile);
-        }
-    }
+/// No-op plugin preserving module path; do not register in active graphs until ported.
+pub struct LegacyWorldGeneratorPlugin;
+
+impl Plugin for LegacyWorldGeneratorPlugin {
+    fn build(&self, _app: &mut App) {}
 }

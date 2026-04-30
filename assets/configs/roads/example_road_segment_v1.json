@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "id": "example_asphalt_2lane",
+  "description": "Content example aligned with `Road` fields in `entities/structure/components.rs` (lanes + `RoadSurfaceType`).",
+  "lanes": 2,
+  "surface": "Asphalt",
+  "meta": {
+    "rust_surface_enum": "entities::types::s_flagz::RoadSurfaceType",
+    "valid_surfaces": ["Asphalt", "Dirt"],
+    "engine_note": "`Road` component is currently non-public in Rust; promote when save/load wires segments."
+  }
+}

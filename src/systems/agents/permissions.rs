@@ -1,10 +1,9 @@
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
-use bevy::utils::Duration;
+use std::time::Duration;
 
 use crate::idgen::EntityId;
-use crate::events::ownership_events::OwnershipChangeEvent;
 
 /// Represents the various domains/systems in the game that can have permissions assigned
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -101,7 +100,7 @@ pub enum PermissionCondition {
 }
 
 /// Component that stores all permissions for an agent
-#[derive(Component, Clone, Serialize, Deserialize)]
+#[derive(Component, Debug, Clone, Serialize, Deserialize)]
 pub struct AgentPermissions {
     pub permissions: HashMap<PermissionDomain, PermissionGrant>,
     pub delegated_to: HashMap<EntityId, Vec<PermissionGrant>>,  // Permissions this agent has delegated to others
@@ -299,22 +298,24 @@ impl AgentPermissions {
     
     /// Revoke a permission from this agent
     pub fn revoke_permission(&mut self, domain: PermissionDomain, revoker_id: EntityId) -> bool {
-        if let Some(grant) = self.permissions.get(&domain) {
-            // Only the grantor or an admin can revoke
-            if grant.grantor == revoker_id || 
-               (self.permissions.get(&PermissionDomain::Admin)
-                   .map_or(false, |admin_grant| admin_grant.grantor == revoker_id)) {
-                self.permissions.remove(&domain);
-                
-                // Also remove from delegated_from tracking
-                if let Some(delegated) = self.delegated_from.get_mut(&grant.grantor) {
-                    delegated.retain(|g| g.domain != domain);
-                }
-                
-                return true;
-            }
+        let Some(grant) = self.permissions.get(&domain).cloned() else {
+            return false;
+        };
+        // Only the grantor or an admin can revoke
+        let can_revoke = grant.grantor == revoker_id
+            || self
+                .permissions
+                .get(&PermissionDomain::Admin)
+                .is_some_and(|admin_grant| admin_grant.grantor == revoker_id);
+        if !can_revoke {
+            return false;
         }
-        false
+        let grantor = grant.grantor;
+        self.permissions.remove(&domain);
+        if let Some(delegated) = self.delegated_from.get_mut(&grantor) {
+            delegated.retain(|g| g.domain != domain);
+        }
+        true
     }
     
     /// Revoke all permissions delegated to a specific agent
@@ -348,7 +349,7 @@ pub struct GameTime {
 }
 
 /// Event for permission grants
-#[derive(Event)]
+#[derive(Message)]
 pub struct PermissionGrantEvent {
     pub to_agent_id: EntityId,
     pub from_agent_id: EntityId,
@@ -356,7 +357,7 @@ pub struct PermissionGrantEvent {
 }
 
 /// Event for permission revocations
-#[derive(Event)]
+#[derive(Message)]
 pub struct PermissionRevokeEvent {
     pub from_agent_id: EntityId,
     pub revoker_id: EntityId,
@@ -368,70 +369,6 @@ pub enum PermissionResult {
     Granted,
     Denied { reason: String },
     PendingApproval { approver_id: EntityId },
-}
-
-/// Permission check system - validates if an action can be performed
-pub fn permission_check_system(
-    agent_query: Query<&AgentPermissions>,
-    game_time: Res<GameTime>,
-) -> impl FnMut(EntityId, PermissionDomain, AccessLevel) -> PermissionResult {
-    move |agent_id: EntityId, domain: PermissionDomain, level: AccessLevel| {
-        // Get the agent's permissions
-        if let Ok(permissions) = agent_query.get(agent_id.as_u32() as Entity) {
-            // Check basic permission
-            if !permissions.has_permission(domain, level, game_time.current_time) {
-                return PermissionResult::Denied { 
-                    reason: format!("Agent lacks permission for {:?}", domain) 
-                };
-            }
-            
-            // Check for conditional permissions
-            if let Some(grant) = permissions.permissions.get(&domain) {
-                if let Some(condition) = &grant.condition {
-                    match condition {
-                        PermissionCondition::RequiresApproval { approver } => {
-                            return PermissionResult::PendingApproval { approver_id: *approver };
-                        },
-                        // Other conditions would be checked here
-                        _ => {
-                            // For now, we'll assume other conditions are met
-                            // In a real implementation, you'd check each condition type
-                        }
-                    }
-                }
-            }
-            
-            PermissionResult::Granted
-        } else {
-            PermissionResult::Denied { 
-                reason: "Agent not found".to_string() 
-            }
-        }
-    }
-}
-
-/// System to handle permission grant events
-pub fn handle_permission_grants(
-    mut events: EventReader<PermissionGrantEvent>,
-    mut agent_query: Query<&mut AgentPermissions>,
-) {
-    for event in events.read() {
-        if let Ok(mut permissions) = agent_query.get_mut(event.to_agent_id.as_u32() as Entity) {
-            permissions.grant_permission(event.grant.clone(), event.from_agent_id);
-        }
-    }
-}
-
-/// System to handle permission revoke events
-pub fn handle_permission_revokes(
-    mut events: EventReader<PermissionRevokeEvent>,
-    mut agent_query: Query<&mut AgentPermissions>,
-) {
-    for event in events.read() {
-        if let Ok(mut permissions) = agent_query.get_mut(event.from_agent_id.as_u32() as Entity) {
-            permissions.revoke_permission(event.domain, event.revoker_id);
-        }
-    }
 }
 
 /// System to periodically check for and remove expired permissions
@@ -469,12 +406,8 @@ pub struct AgentPermissionsPlugin;
 impl Plugin for AgentPermissionsPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<GameTime>()
-           .add_event::<PermissionGrantEvent>()
-           .add_event::<PermissionRevokeEvent>()
-           .add_systems(Update, (
-               handle_permission_grants,
-               handle_permission_revokes,
-               expire_permissions_system,
-           ));
+           .add_message::<PermissionGrantEvent>()
+           .add_message::<PermissionRevokeEvent>()
+           .add_systems(Update, expire_permissions_system);
     }
 }

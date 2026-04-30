@@ -1,7 +1,8 @@
 use bevy::prelude::*;
 use crate::idgen::EntityId;
-use crate::entities::types_of::e_flagz::SegmentMembership;
-use crate::entities::types_of::s_flagz::{RoadSurfaceType,BuildingType};
+use crate::entities::types_of::{
+    BuildingType, RoadSurfaceType, SegmentMembership,
+};
 
 // Building component
 #[derive(Component)]

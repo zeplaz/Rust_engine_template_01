@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "materials": [
+    {
+      "name": "loam_wet",
+      "family": "Grassland",
+      "tags": ["soil", "wet", "fertile", "traversable"],
+      "properties": {
+        "friction": 0.8,
+        "water_retention": 0.9,
+        "buildable": true
+      },
+      "preview_color": [90, 160, 70, 255]
+    },
+    {
+      "name": "basalt_dense",
+      "family": "Stone",
+      "tags": ["rock", "hard", "dry", "non_traversable"],
+      "properties": {
+        "hardness": 0.95,
+        "mineable": true
+      },
+      "preview_color": [55, 55, 62, 255]
+    },
+    {
+      "name": "silt_marsh",
+      "family": "Swamp",
+      "tags": ["soil", "wet", "soft", "traversable"],
+      "properties": {
+        "friction": 0.5,
+        "water_retention": 1.0,
+        "buildable": false
+      },
+      "preview_color": [70, 100, 65, 255]
+    },
+    {
+      "name": "sand_dry",
+      "family": "Beach",
+      "tags": ["sand", "dry", "traversable"],
+      "properties": {
+        "friction": 0.65,
+        "buildable": true
+      },
+      "preview_color": [210, 190, 120, 255]
+    }
+  ]
+}

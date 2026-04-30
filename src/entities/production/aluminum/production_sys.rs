@@ -1,3 +1,5 @@
+// LEGACY MODULE (not actively wired):
+// replaced by `aluminum/components.rs` + `aluminum/systems.rs`.
 // src/production/materials/aluminum/plugin.rs
 use super::components::*;
 use super::systems::*;

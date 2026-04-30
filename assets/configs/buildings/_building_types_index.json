@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "source_of_truth_rust": "src/entities/types/s_flagz.rs",
+  "description": "Maps designer/tool labels to engine building classifications. Pair with `assets/configs/buildings/*.json` asset blobs from the Fluent editor.",
+  "road_surface_types": [
+    { "id": "Asphalt", "use": "Road / surface logistics" },
+    { "id": "Dirt", "use": "Unpaved / low-tier roads" }
+  ],
+  "building_type_variants": [
+    { "id": "Generic", "category": "general" },
+    { "id": "Farm", "category": "agriculture" },
+    { "id": "House", "category": "residential" },
+    { "id": "RaiLDepot", "category": "rail", "note": "Spelling matches Rust enum typo" },
+    { "id": "Burocracy", "category": "civic" },
+    { "id": "WareHouse", "category": "logistics" },
+    { "id": "Depanneur", "category": "retail" },
+    { "id": "FeildDepot", "category": "military_field", "note": "Spelling matches Rust enum" },
+    { "id": "FactoryType", "category": "industry", "subkinds": "concrete_or_lines" },
+    { "id": "MineType", "category": "extraction", "subkinds": "gravel_metal_rare_oil" }
+  ],
+  "factory_line_kinds": [
+    "ConcreteType",
+    "Ammunition",
+    "Electronics",
+    "WarSupply",
+    "Chemical",
+    "Wood",
+    "Fertilizer",
+    "Refinery",
+    "MetalProcessing"
+  ],
+  "concrete_subtypes": ["Limecrete", "Portland", "Geopolymer", "Gypsum"],
+  "mine_subtypes": ["Gravel", "Metal", "RareEarth", "Oil"],
+  "example_asset_files": [
+    "assets/configs/buildings/new_building.json",
+    "assets/configs/buildings/concrete_basic_production_plant.json",
+    "assets/configs/buildings/concrete_production_plant_copy.json",
+    "assets/configs/buildings/aluminum_smelter1.json"
+  ],
+  "related_transport_examples": [
+    "assets/configs/roads/example_road_segment_v1.json",
+    "assets/configs/rails/example_rail_track_v1.json"
+  ]
+}
