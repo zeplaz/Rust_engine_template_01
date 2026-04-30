@@ -1,7 +1,9 @@
 // Terrain generation systems
+pub mod cell_matrix;
 mod geo_plugin;
 mod world_generator;
 mod bevy_terrain_gen;
+pub mod passes;
 pub mod terrain_noise;
 pub mod tuning_io;
 pub mod world_generator_enhanced;

@@ -1,10 +1,10 @@
 use bevy::prelude::*;
-use noise::NoiseFn;
+use noise::{Fbm, NoiseFn, Perlin};
 use rand::{Rng, SeedableRng};
 use rand::rngs::StdRng;
 
 use super::terrain_noise::{
-    build_fbm_perlin, build_height_noise, sample_height_field, NoiseSamplingTuning,
+    build_fbm_perlin, build_height_noise, sample_height_field, HeightNoise, NoiseSamplingTuning,
 };
 pub use super::terrain_noise::TerrainNoiseProfile;
 
@@ -44,7 +44,9 @@ pub struct WorldGenParams {
     pub moisture_bias: f32,
     pub temperature_bias: f32,
 
-    /// Channel frequencies / warp / detail — editable via UI, JSON (`world_gen_tuning.json`), or scripts.
+    /// Channel frequencies / warp / detail — when loading chunk fields with [`crate::terrain::generation::passes::p1_fields::fill_fields`]
+    /// and `tuning_overlay` is `None`, this is the tuning used (same path as [`crate::terrain::generation::world_generator_enhanced::generate_world`]).
+    /// Optionally overridden by JSON via `tuning_io` merge on startup.
     pub noise_sampling: NoiseSamplingTuning,
     /// Biome weights + class thresholds — must stay aligned with `classify_biome`.
     pub biome_tuning: BiomeTuning,
@@ -97,6 +99,120 @@ impl Default for WorldGenParams {
     }
 }
 
+/// Noise kernels for height / warp / detail / moisture / temperature — build once per full-world or chunk fill.
+pub struct WorldNoiseKernels {
+    pub height: HeightNoise,
+    pub warp: Fbm<Perlin>,
+    pub detail: Fbm<Perlin>,
+    pub moisture: Fbm<Perlin>,
+    pub temperature: Fbm<Perlin>,
+}
+
+/// Same kernel construction as legacy `generate_world` (frequencies derived from `tuning`, usually `params.noise_sampling`).
+pub fn build_world_noise_kernels(params: &WorldGenParams, tuning: &NoiseSamplingTuning) -> WorldNoiseKernels {
+    let lac = params.noise_lacunarity as f64;
+    let per = params.noise_persistence as f64;
+    let height_noise = build_height_noise(
+        params.height_noise_profile,
+        params.noise_scale,
+        params.noise_octaves,
+        params.seed,
+        lac,
+        per,
+    );
+    let warp_noise = build_fbm_perlin(
+        params.noise_scale * tuning.warp_noise_scale_mul,
+        tuning.warp_noise_octaves,
+        params.seed.wrapping_add(tuning.warp_seed_offset),
+        lac,
+        per,
+    );
+    let detail_noise = build_fbm_perlin(
+        params.noise_scale * tuning.detail_noise_scale_mul,
+        tuning.detail_noise_octaves,
+        params.seed.wrapping_add(tuning.detail_seed_offset),
+        lac,
+        per * tuning.detail_persistence_mul,
+    );
+    let moisture_noise = build_fbm_perlin(
+        params.noise_scale * tuning.moisture_noise_scale_mul,
+        params.noise_octaves,
+        params.seed.wrapping_add(1),
+        lac,
+        per,
+    );
+    let temperature_noise = build_fbm_perlin(
+        params.noise_scale * tuning.temperature_noise_scale_mul,
+        params.noise_octaves,
+        params.seed.wrapping_add(2),
+        lac,
+        per,
+    );
+    WorldNoiseKernels {
+        height: height_noise,
+        warp: warp_noise,
+        detail: detail_noise,
+        moisture: moisture_noise,
+        temperature: temperature_noise,
+    }
+}
+
+/// Island edge falloff in world tile space — normalized by `params.width` / `height` like legacy tile spawn.
+#[inline]
+pub fn island_falloff_at_world_tile(wx: i32, wy: i32, params: &WorldGenParams) -> f32 {
+    let w = params.width.max(1) as f32;
+    let h = params.height.max(1) as f32;
+    let normalized_x = wx as f32 / w;
+    let normalized_y = wy as f32 / h;
+    if params.island_mode {
+        let dx = normalized_x * 2.0 - 1.0;
+        let dy = normalized_y * 2.0 - 1.0;
+        let distance_from_center = (dx * dx + dy * dy).sqrt();
+        (1.0 - distance_from_center.powf(params.island_falloff)).max(0.0)
+    } else {
+        1.0
+    }
+}
+
+/// Elevation (with island falloff), moisture, temperature for one world tile — shared by `generate_world` and pass 1.
+pub fn sample_fields_at_world_tile(
+    wx: i32,
+    wy: i32,
+    params: &WorldGenParams,
+    kernels: &WorldNoiseKernels,
+    tuning: &NoiseSamplingTuning,
+) -> (f32, f32, f32) {
+    let noise_x = wx as f64 * params.noise_scale as f64;
+    let noise_y = wy as f64 * params.noise_scale as f64;
+    let height_norm = sample_height_field(
+        &kernels.height,
+        &kernels.warp,
+        &kernels.detail,
+        noise_x,
+        noise_y,
+        params.height_curve_exponent,
+        params.domain_warp_strength,
+        params.terrain_detail_mix,
+        tuning,
+    );
+    let height_value = height_norm * island_falloff_at_world_tile(wx, wy, params);
+    let moisture_value = (kernels.moisture.get([
+        noise_x * tuning.moisture_sample_freq_mul,
+        noise_y * tuning.moisture_sample_freq_mul,
+        0.0,
+    ]) * 0.5
+        + 0.5) as f32
+        + params.moisture_bias;
+    let temperature_value = (kernels.temperature.get([
+        noise_x * tuning.temperature_sample_freq_mul,
+        noise_y * tuning.temperature_sample_freq_mul,
+        0.0,
+    ]) * 0.5
+        + 0.5) as f32
+        + params.temperature_bias;
+    (height_value, moisture_value, temperature_value)
+}
+
 // Component to tag entities as part of the world
 #[derive(Component)]
 pub struct WorldMarker;
@@ -140,47 +256,9 @@ pub fn generate_world(
     // Create a stable RNG from the seed
     let mut rng = StdRng::seed_from_u64(params.seed);
     
-    let lac = params.noise_lacunarity as f64;
-    let per = params.noise_persistence as f64;
     let ns = &params.noise_sampling;
+    let kernels = build_world_noise_kernels(&params, ns);
 
-    let height_noise = build_height_noise(
-        params.height_noise_profile,
-        params.noise_scale,
-        params.noise_octaves,
-        params.seed,
-        lac,
-        per,
-    );
-    let warp_noise = build_fbm_perlin(
-        params.noise_scale * ns.warp_noise_scale_mul,
-        ns.warp_noise_octaves,
-        params.seed.wrapping_add(ns.warp_seed_offset),
-        lac,
-        per,
-    );
-    let detail_noise = build_fbm_perlin(
-        params.noise_scale * ns.detail_noise_scale_mul,
-        ns.detail_noise_octaves,
-        params.seed.wrapping_add(ns.detail_seed_offset),
-        lac,
-        per * ns.detail_persistence_mul,
-    );
-    let moisture_noise = build_fbm_perlin(
-        params.noise_scale * ns.moisture_noise_scale_mul,
-        params.noise_octaves,
-        params.seed.wrapping_add(1),
-        lac,
-        per,
-    );
-    let temperature_noise = build_fbm_perlin(
-        params.noise_scale * ns.temperature_noise_scale_mul,
-        params.noise_octaves,
-        params.seed.wrapping_add(2),
-        lac,
-        per,
-    );
-    
     // Generate regions using the specified method
     let regions = generate_regions(&params, &mut rng);
     
@@ -240,49 +318,14 @@ pub fn generate_world(
                 }
             }
             
-            // Calculate terrain properties
-            let normalized_x = x as f32 / params.width as f32;
-            let normalized_y = y as f32 / params.height as f32;
-            
-            // Apply island falloff if enabled
-            let island_falloff_factor = if params.island_mode {
-                // Create falloff from edges (0 at edges, 1 in center)
-                let dx = normalized_x * 2.0 - 1.0;
-                let dy = normalized_y * 2.0 - 1.0;
-                let distance_from_center = (dx * dx + dy * dy).sqrt();
-                (1.0 - distance_from_center.powf(params.island_falloff)).max(0.0)
-            } else {
-                1.0
-            };
-            
-            // Generate height value
-            let noise_x = x as f64 * params.noise_scale as f64;
-            let noise_y = y as f64 * params.noise_scale as f64;
-            let height_norm = sample_height_field(
-                &height_noise,
-                &warp_noise,
-                &detail_noise,
-                noise_x,
-                noise_y,
-                params.height_curve_exponent,
-                params.domain_warp_strength,
-                params.terrain_detail_mix,
+            let (height_value, moisture_value, temperature_value) = sample_fields_at_world_tile(
+                x as i32,
+                y as i32,
+                &params,
+                &kernels,
                 ns,
             );
-            let height_value = height_norm * island_falloff_factor;
-            
-            // Generate moisture and temperature
-            let moisture_value = (moisture_noise.get([
-                noise_x * ns.moisture_sample_freq_mul,
-                noise_y * ns.moisture_sample_freq_mul,
-                0.0,
-            ]) * 0.5 + 0.5) as f32 + params.moisture_bias;
-            let temperature_value = (temperature_noise.get([
-                noise_x * ns.temperature_sample_freq_mul,
-                noise_y * ns.temperature_sample_freq_mul,
-                0.0,
-            ]) * 0.5 + 0.5) as f32 + params.temperature_bias;
-            
+
             // Determine biome based on height, moisture, and temperature
             let biome = determine_biome(
                 height_value,

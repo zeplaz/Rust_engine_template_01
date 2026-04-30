@@ -29,7 +29,7 @@ Scope: One canonical chain `noise → ChunkCellMatrix → multi-pass tags → re
 | **MaterialDef + MaterialRegistry** | `MaterialDef`, `MaterialRegistry`, `MaterialRegistryLoader` | [`src/terrain/material/registry.rs`](../../../src/terrain/material/registry.rs) + `assets/config/terrain/material_registry.json` | Partial — same as `MaterialId` row |
 | **TagId(u16) + TagRegistry + TagSet** | `TagId`, `TagSet`, `TagRegistry` | [`src/terrain/material/tags.rs`](../../../src/terrain/material/tags.rs) + `assets/config/terrain/tag_registry.json` | Partial — JSON load path only; Bevy loader **U5** |
 | **MaterialRule + RuleSet + resolver** | `MaterialRule`, `RuleSet`, `resolve_material(...)` | [`src/terrain/material/rules.rs`](../../../src/terrain/material/rules.rs) + [`src/terrain/material/resolver.rs`](../../../src/terrain/material/resolver.rs) + `material_rules.ron` | Applied |
-| **ChunkCellMatrix** (SoA per-chunk grid) | *(proposed)* | `src/terrain/generation/cell_matrix.rs` | Pending |
+| **ChunkCellMatrix** (SoA per-chunk grid) | `ChunkCellMatrix` | [`src/terrain/generation/cell_matrix.rs`](../../../src/terrain/generation/cell_matrix.rs) | Partial — alloc + `idx` only (**U4-S01**); passes **U4-S02+** |
 | **Multi-pass tagging** | *(proposed)* | `src/terrain/generation/passes.rs` | Pending |
 | **MaterializedChunk** (ECS component) | *(proposed)* | `src/terrain/material/runtime.rs` | Pending |
 | **Material plugin (assets + hot reload)** | *(proposed)* `MaterialUnificationPlugin` | `src/systems/terrain/material_plugin.rs` | Pending |
@@ -62,7 +62,7 @@ Scope: One canonical chain `noise → ChunkCellMatrix → multi-pass tags → re
 
 | Pass | Inputs | Outputs | Calls | Status |
 |:---:|:---|:---|:---|:---:|
-| 1. Fields | seed, params | `ChunkCellMatrix.{elevation,moisture,temperature,aux}` | existing `generate_world` noise | Partial — already produces fields, but not into `ChunkCellMatrix` (yet) |
+| 1. Fields | seed, params | `ChunkCellMatrix.{elevation,moisture,temperature}` | `build_world_noise_kernels` + `fill_fields` (shared with `generate_world`) | **Applied** |
 | 2. Threshold tags | fields + `BiomeTuning` (+ new `tag_tuning` 📎) | `TagSet` cells (e.g. `lowland`, `wet`, `hot`) | new (data-driven from JSON) | Pending |
 | 3. Biome / family | fields + `BiomeTuning` | `BiomeWeights`, `MaterialFamily` (`TerrainClass`), biome tags | existing `classify_biome` | Pending — wire into pipeline (no second classifier) |
 | 4. Hydrology / erosion | hydrology events | `flooded`, `eroded`, `silted` tags | future hydrology pass | Pending |
