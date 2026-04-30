@@ -1,11 +1,13 @@
 use crate::entities::MilitaryCivilian;
 use crate::entities::RoadVehicleConfig;
 use serde::Deserialize;
-use serde_json::Result;
+use serde::Deserializer;
 use std::collections::HashMap;
 use std::fs::{self, DirEntry};
 use std::io;
 use std::path::Path;
+use std::str::FromStr;
+use crate::terrain::bevy_terrain::LegacyTerrainType;
 
 fn load_all_json_files_from_dir<P: AsRef<Path>>(path: P) -> io::Result<HashMap<String, String>> {
     let mut json_files = HashMap::new();
@@ -27,7 +29,9 @@ fn load_all_json_files_from_dir<P: AsRef<Path>>(path: P) -> io::Result<HashMap<S
     Ok(json_files)
 }
 
-pub fn deserialize_road_vehicle_configs<P: AsRef<Path>>(path: P) -> Result<Vec<RoadVehicleConfig>> {
+pub fn deserialize_road_vehicle_configs<P: AsRef<Path>>(
+    path: P,
+) -> Result<Vec<RoadVehicleConfig>, Box<dyn std::error::Error + Send + Sync>> {
     let file_contents = fs::read_to_string(path)?;
     let road_vehicle_configs: Vec<RoadVehicleConfig> = serde_json::from_str(&file_contents)?;
     Ok(road_vehicle_configs)
@@ -35,12 +39,12 @@ pub fn deserialize_road_vehicle_configs<P: AsRef<Path>>(path: P) -> Result<Vec<R
 
 fn deserialize_military_civilian<'de, D>(
     deserializer: D,
-) -> Result<Option<MilitaryCivilian>, D::Error>
+) -> std::result::Result<Option<MilitaryCivilian>, D::Error>
 where
     D: Deserializer<'de>,
 {
     let s = Option::<String>::deserialize(deserializer)?;
-    let mc = s.and_then(|string| MilitaryCivilian::from_str(&string));
+    let mc = s.and_then(|string| MilitaryCivilian::from_str(&string).ok());
     Ok(mc)
 }
 
@@ -55,7 +59,7 @@ struct DrezTruckData {
 }
 
 fn load_truck_varyants() -> HashMap<String, DrezTruckData> {
-    let bytes = std::fs::read("data/trucks.dat").expect("Failed to read trucks.dat");
+    let bytes = std::fs::read("assets/data/trucks.dat").expect("Failed to read trucks.dat");
     let file_content = String::from_utf8_lossy(&bytes);
 
     let mut trucks = HashMap::new();
@@ -79,6 +83,7 @@ fn load_truck_varyants() -> HashMap<String, DrezTruckData> {
             max_speed,
             military_civilian,
             texture_path,
+            name: name.clone(),
         };
 
         trucks.insert(name, truck);
@@ -95,10 +100,10 @@ struct DrezTerrainData {
     textures: Option<Vec<String>>,
 }
 
-fn deserialize_terrain_data() -> HashMap<TerrainType, DrezTerrainData> {
-    let terrain_data_file = std::fs::read_to_string("data/base_terrains.dat")
+fn deserialize_terrain_data() -> HashMap<LegacyTerrainType, DrezTerrainData> {
+    let terrain_data_file = std::fs::read_to_string("assets/data/base_terrains.dat")
         .expect("Unable to read terrain data file");
-    let mut terrain_data: HashMap<TerrainType, DrezTerrainData> = HashMap::new();
+    let mut terrain_data: HashMap<LegacyTerrainType, DrezTerrainData> = HashMap::new();
     for line in terrain_data_file.lines() {
         let mut parts = line.trim().split(',');
         let terrain_type = parts.next().expect("Missing terrain type").trim();
@@ -126,16 +131,16 @@ fn deserialize_terrain_data() -> HashMap<TerrainType, DrezTerrainData> {
                 .map(|t| t.trim().split(' ').map(|s| s.to_string()).collect()),
         };
         let terrain_type = match terrain_type {
-            "Grass" => TerrainType::Grass,
-            "Forest" => TerrainType::Forest,
-            "Swamp" => TerrainType::Swamp,
-            "Water" => TerrainType::Water,
-            "Cliff" => TerrainType::Cliff,
-            "Concrete" => TerrainType::Concrete,
-            "Sand" => TerrainType::Sand,
-            "Dirt" => TerrainType::Dirt,
-            "Snow" => TerrainType::Snow,
-            "Stone" => TerrainType::Stone,
+            "Grass" => LegacyTerrainType::Grass,
+            "Forest" => LegacyTerrainType::Forest,
+            "Swamp" => LegacyTerrainType::Swamp,
+            "Water" => LegacyTerrainType::Water,
+            "Cliff" => LegacyTerrainType::Cliff,
+            "Concrete" => LegacyTerrainType::Concrete,
+            "Sand" => LegacyTerrainType::Sand,
+            "Dirt" => LegacyTerrainType::Dirt,
+            "Snow" => LegacyTerrainType::Snow,
+            "Stone" => LegacyTerrainType::Stone,
             _ => panic!("Unknown terrain type: {}", terrain_type),
         };
         terrain_data.insert(terrain_type, terrain);

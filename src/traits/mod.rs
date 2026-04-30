@@ -1,7 +1,7 @@
 // Trait definitions
 mod agents;
 mod buildings;
-mod damage;
+pub mod damage;
 mod ids;
 mod mask;
 mod rates;

@@ -69,7 +69,7 @@ pub fn add_player_system(
 }
 
 /// Event for player connection changes
-#[derive(Event)]
+#[derive(Message)]
 pub struct PlayerConnectionEvent {
     pub player_id: String,
     pub connected: bool,
@@ -77,7 +77,7 @@ pub struct PlayerConnectionEvent {
 
 /// System to handle player connection events
 pub fn handle_player_connections(
-    mut events: EventReader<PlayerConnectionEvent>,
+    mut events: MessageReader<PlayerConnectionEvent>,
     mut connection_query: Query<&mut PlayerConnection>,
     multiplayer_manager: Res<MultiplayerManager>,
 ) {
@@ -204,7 +204,7 @@ pub struct MultiplayerPlugin;
 impl Plugin for MultiplayerPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<MultiplayerManager>()
-           .add_event::<PlayerConnectionEvent>()
+           .add_message::<PlayerConnectionEvent>()
            .add_systems(Update, (
                add_player_system,
                handle_player_connections,

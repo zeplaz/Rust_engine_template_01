@@ -1,17 +1,15 @@
-use crate::engine::states::EnigneState;
-//use crate::gui::main_menu::MainMenuPlugin;
+// LEGACY MODULE (not actively wired):
+// Canonical entry: `engine::engine_with_worldgen::EnginePlugin` (re-exported as `crate::engine::EnginePlugin`).
 use bevy::prelude::*;
 use bevy_egui::EguiPlugin;
 
 pub struct EnginePlugin {}
 
 impl Plugin for EnginePlugin {
-    //pub fn setup(mut commands: Commands) {}
-
     fn build(&self, app: &mut App) {
-        app.add_plugins(DefaultPlugins).add_plugin(EguiPlugin);
+        app.add_plugins(DefaultPlugins).add_plugins(EguiPlugin::default());
 
-        //app.add_plugin(MenuStatePlugin)
+        // Historical: `add_plugins(MenuStatePlugin)`, `init_state`, `add_systems(OnEnter(...), …)`.
         //.add_state(AppState::MainMenu)
         //.add_system_set(SystemSet::on_enter(AppState::LoadEditor).with_system(setup_load_editor.system()))
         //.add_system_set(SystemSet::on_update(AppState::LoadEditor).with_system(handle_load_editor.system()))

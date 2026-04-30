@@ -1,4 +1,8 @@
-use bevy::utils::{HashMap,HashSet};
+// LEGACY MODULE (not actively wired):
+// retained for migration reference; canonical replacements live under
+// `entities::production::{concrete,aluminum,power}::components` and
+// `entities::production::core::manufacturing`.
+use std::collections::{HashMap, HashSet};
 use bevy::prelude::*;
 
 use crate::entities::types_of::p_enumz::{ResourceType,ResourceFilter};

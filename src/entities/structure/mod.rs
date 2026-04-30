@@ -1,5 +1,5 @@
 // Structure entities module
-mod components;
+pub mod components;
 
 // Public exports
 pub use components::*;

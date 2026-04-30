@@ -1,66 +1,49 @@
 use bevy::prelude::*;
-use entities::entity::EntityInfo;
-use linfa::Distance;
 
-#[derive(Bundle, Debug, Clone)]
+use crate::idgen::EntityId;
 
-pub struct Tile {
-    entityinfo: EntityInfo,
-    //entity stuff?
-    entities: Vec<Entity>,
-
-    building_id: Option<EntityId>,
-    vehicles_id: Vec<EntityId>,
-
-    //neighbor stuff
-    neighbor_ids: [Option<EntityId>; 8],
-    neighbor_gradients: [Option<f32>; 8],
-
-    //model tags
-    pub safety_rating: f32,
-
-    //spatial hash
-    spatial_hash: SpatialHash,
+/// High-level tile category for placement / mask rules (see `traits::mask`).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum TileType {
+    Any,
+    Buildable,
+    Road,
+    Water,
 }
 
-impl Tile {
-    fn notify_neighbors_height_change(&self, geo_region: &mut GeoRegion) {
-        for (index, neighbor_id_option) in self.neighbor_ids.iter().enumerate() {
-            if let Some(neighbor_id) = neighbor_id_option {
-                if let Some(neighbor) = geo_region.get_tile_by_id_mut(*neighbor_id) {
-                    let opposite_index = match (delta.0 as i32, delta.1 as i32) {
-                        (-1, 0) => 0,
-                        (-1, 1) => 1,
-                        (0, 1) => 2,
-                        (1, 1) => 3,
-                        (1, 0) => 4,
-                        (1, -1) => 5,
-                        (0, -1) => 6,
-                        (-1, -1) => 7,
-                        _ => continue,
-                    };
-                    let new_gradient = calculate_gradient(
-                        self,
-                        self.entityinfo.position,
-                        neighbor,
-                        neighbor.entityinfo.position,
-                    );
-                    neighbor.neighbor_gradients[opposite_index] = Some(new_gradient);
-                }
-            }
+/// Terrain tile state shared by worldgen bookkeeping and navigation queries.
+/// ECS components can wrap or extend this as the chunk/streaming model lands.
+#[derive(Debug, Clone, Component)]
+pub struct Tile {
+    pub id: EntityId,
+    pub grid_x: i32,
+    pub grid_y: i32,
+    /// Optional owning agent / faction for influence fields (`navigation/implementation_questions_v1.md` § dynamic obstacles).
+    pub owner_id: Option<EntityId>,
+    pub tile_type: TileType,
+    pub safety_rating: f32,
+}
+
+impl Default for Tile {
+    fn default() -> Self {
+        Self {
+            id: EntityId::default(),
+            grid_x: 0,
+            grid_y: 0,
+            owner_id: None,
+            tile_type: TileType::Any,
+            safety_rating: 1.0,
         }
     }
 }
-impl Distance for Tile {}
-fn calculate_gradient(
-    tile1: &Tile,
-    pos1: (usize, usize),
-    tile2: &Tile,
-    pos2: (usize, usize),
-) -> f32 {
-    let height_diff = tile2.elevation - tile1.elevation;
-    let distance = (((pos2.0 as f32) - (pos1.0 as f32)).powi(2)
-        + ((pos2.1 as f32) - (pos1.1 as f32)).powi(2))
-    .sqrt();
-    height_diff / distance
+
+impl Tile {
+    pub fn get_id(&self) -> EntityId {
+        self.id
+    }
+
+    pub fn get_position(&self) -> (usize, usize) {
+        (self.grid_x as usize, self.grid_y as usize)
+    }
 }
+

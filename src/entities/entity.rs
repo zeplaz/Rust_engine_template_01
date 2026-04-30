@@ -4,12 +4,12 @@ use bevy::prelude::*;
 use serde::Deserialize;
 
 use crate::events::ownership_events::*;
-use crate::idgen::{EntityId, IdGenerator};
-use crate::traits::agents::AgentOwnable;
-use crate::traits::ids::Identifiable;
+use crate::idgen::EntityId;
+use crate::traits::AgentOwnable;
+use crate::traits::Identifiable;
 
-use super::types_of::*;
-use crate::traits::spacial::Spaceialization;
+use crate::entities::types_of::*;
+use crate::traits::Spaceialization;
 
 #[derive(Debug, Clone)]
 pub struct EntityInfo {
@@ -20,14 +20,16 @@ pub struct EntityInfo {
 }
 
 impl EntityInfo {
-    fn new(
-        id_generator: &mut IdGenerator,
+    // Canonical constructor: `EntityId::new()` issues a process-wide unique id
+    // via the atomic counter in `crate::idgen` (replaces the retired
+    // `core::id_generator::IdGenerator`).
+    pub fn new(
         owner_id: Option<EntityId>,
         entity_type: EntityType,
         position: Vec4,
     ) -> Self {
         EntityInfo {
-            id: id_generator.generate_id(),
+            id: EntityId::new(),
             owner_id,
             entity_type,
             position,
@@ -35,17 +37,17 @@ impl EntityInfo {
     }
 
     pub fn get_entity_type(&self) -> EntityType {
-        self.entity_type
+        self.entity_type.clone()
     }
 
     pub fn set_owner_id(
         &mut self,
         new_owner_id: EntityId,
-        mut ownership_change_events: EventWriter<OwnershipChangeEvent>,
+        mut ownership_change_events: MessageWriter<OwnershipChangeEvent>,
     ) {
         let old_owner_id = self.owner_id;
         self.owner_id = Some(new_owner_id);
-        ownership_change_events.send(OwnershipChangeEvent {
+        ownership_change_events.write(OwnershipChangeEvent {
             entity_id: self.id,
             old_owner_id,
             new_owner_id,
@@ -53,18 +55,16 @@ impl EntityInfo {
     }
 }
 
-impl Spaceialization for Entity {
-    tyoe Position  = Vec4;
+impl Spaceialization for EntityInfo {
+    type Position = Vec4;
 
-    fn get_position(&self) -> &self::Position {
+    fn get_position(&self) -> &Self::Position {
         &self.position
     }
-
-
 }
 
 impl Identifiable for EntityInfo {
-    fn id(&mut self) -> EntityId {
+    fn id(&self) -> EntityId {
         self.id
     }
 }
@@ -75,6 +75,6 @@ impl AgentOwnable for EntityInfo {
     }
 
     fn get_owner(&self) -> EntityId {
-        self.owner_id
+        self.owner_id.unwrap_or_else(|| EntityId::from_u32(0))
     }
 }

@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use proc_a_dine01::engine::EnginePlugin;
+use proc_A_dine01::engine::EnginePlugin;
 
 // Simple UI state resource
 #[derive(Resource, Default)]
@@ -9,9 +9,8 @@ struct UiState {
 
 fn main() {
     App::new()
-        .insert_resource(ClearColor(Color::rgb(0.0, 0.0, 0.0)))
-        .insert_resource(Msaa::Sample4)
+        .insert_resource(ClearColor(Color::srgb(0.0, 0.0, 0.0)))
         .init_resource::<UiState>()
-        .add_plugin(EnginePlugin)
+        .add_plugins(EnginePlugin)
         .run();
 }

@@ -1,8 +1,7 @@
 
-
 use bevy::prelude::*;
 
-pub use super::VehicleType;
+use crate::entities::types_of::VehicleType;
 
 
 #[derive(Component)]  

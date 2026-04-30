@@ -1,9 +1,12 @@
 // Vehicle entities module
-mod components;
-mod states;
-mod road_vehicles;
+pub mod components;
+pub mod config;
+pub mod runtime;
+pub mod states;
+pub mod tools_ui;
 
-// Public exports
 pub use components::*;
+pub use config::*;
+pub use runtime::*;
 pub use states::*;
-pub use road_vehicles::*;
+pub use tools_ui::*;

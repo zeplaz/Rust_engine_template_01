@@ -1,42 +1,15 @@
-/*
-example usage:
-fn example_system(
-    mut query: Query<(&EntityId, &mut EntityInfo)>,
-    mut ownership_change_events: EventWriter<OwnershipChangeEvent>,
-) {
-entity_info.set_owner_id(new_owner_id, ownership_change_events);
-.add_event::<OwnershipChangeEvent>()
-.add_system(ownership_change_listener)
-*/
+//! Ownership-event **documentation** and future hooks.
+//! Canonical event type: `crate::events::ownership_events::OwnershipChangeEvent`.
+//!
+//! Visual reactivity should map `EntityId` → Bevy `Entity` via a registry resource before mutating `Sprite` / materials.
 
-use bevy::{prelude::*, utils::hashbrown::hash_map};
-use crate::idgen::EntityId;
+use bevy::prelude::*;
 
+use crate::events::ownership_events::OwnershipChangeEvent;
 
-pub struct OwnershipChangeEvent {
-    pub entity_id: EntityId,
-    pub old_owner_id: EntityId,
-    pub new_owner_id: EntityId,
-}
-
-
-fn ownership_change_listener(mut events: EventReader<OwnershipChangeEvent>, mut query: Query<&mut Sprite>) {
-    for event in events.iter() {
-        // Update the sprite's color based on the new owner_id
-        if let Ok(mut sprite) = query.get_mut(event.entity_id) {
-            sprite.color = get_color_for_owner(event.new_owner_id);
-        }
-
-        // Perform any other necessary updates related to the ownership change,
-        // such as modifying building lists or updating trade rules.
+/// Placeholder for ownership-driven presentation; extend when render entities are keyed by `EntityId`.
+pub fn ownership_change_visual_hook(mut _events: MessageReader<OwnershipChangeEvent>) {
+    for _event in _events.read() {
+        // Wire to faction color updates / labels once ECS linkage exists.
     }
 }
-
-fn get_color_for_owner(owner_id: EntityId) -> Color {
-
-    // check colour table!
-    //let  Colour_map = hash_map!{"red" => Color::RED, "green" => Color::GREEN, "blue" =>Coal::BLUE, "yellow" => Color::YELLOW, "cyan" => Color::CYAN};
-}
-
-
-

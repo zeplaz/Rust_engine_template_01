@@ -1,3 +1,6 @@
+// LEGACY MODULE (not actively wired):
+// kept for migration reference while concrete runtime is split into
+// `concrete/components.rs` and `concrete/systems.rs`.
 // src/production/materials/concrete/plugin.rs
 use super::components::*;
 use super::systems::*;

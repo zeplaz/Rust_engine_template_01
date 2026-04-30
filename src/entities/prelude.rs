@@ -1,9 +1,9 @@
-pub use crate::entities::e_componets::*;
-pub use crate::entities::e_infos::*;
-pub use crate::entities::e_states::*;
-pub use crate::entities::types_aliases::*;
-pub use crate::entities::types_of::*;
+//! LEGACY SHIM — prefer explicit paths:
+//! - `crate::entities::production::*`
+//! - `crate::entities::vehicles::*`
+//! - `crate::entities::types::*` / `crate::entities::types_of::*` (shim)
+//!
+//! Do not add new wildcard re-exports here.
 
 pub use crate::entities::production::*;
-pub use crate::entities::strukturave::*;
 pub use crate::entities::vehicles::*;

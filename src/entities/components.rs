@@ -1,6 +1,7 @@
+use std::collections::{HashMap, HashSet};
+
 use crate::entities::prelude::*;
 use bevy::prelude::*;
-use bevy::utils::{HashMap, HashSet};
 
 pub use crate::entities::entity::*;
 use crate::entities::types_aliases::ResourceRequirementsMap;

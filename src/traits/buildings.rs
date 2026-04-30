@@ -1,3 +1,5 @@
+use crate::entities::BuildingType;
+
 trait Building {
     fn is_producer(&self) -> bool;
     fn is_consumer(&self) -> bool;

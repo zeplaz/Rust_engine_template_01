@@ -1,50 +1,43 @@
+use crate::engine::{BaseState, MainMenuState};
 use crate::gui::ui_windows::*;
-//use editor::;
-use crate::engine::states::*;
 use bevy::app::AppExit;
 use bevy::{prelude::*, window::PrimaryWindow};
-use bevy_egui::{egui, EguiContexts, EguiSettings};
+use bevy_egui::{egui, EguiContexts, EguiPrimaryContextPass};
 
 pub struct BaseMenuPlugin;
 
 impl Plugin for BaseMenuPlugin {
     fn build(&self, app: &mut App) {
-        app.add_state::<MainMenuState>()
-        .add_system(main_menu_ui_setup.in_schedule(OnEnter(MainMenuState::MainMenu)))
-        .add_system(main_menu_ui_system.in_set(OnUpdate(BaseState::MainMenu)));
+        app.init_state::<MainMenuState>()
+            .add_systems(OnEnter(MainMenuState::MainMenu), main_menu_ui_setup)
+            // Egui rendering goes in EguiPrimaryContextPass (bevy_egui 0.39)
+            .add_systems(
+                EguiPrimaryContextPass,
+                main_menu_ui_system.run_if(in_state(BaseState::MainMenu)),
+            );
     }
 }
-//.add_state::<MainMenuState>()
+
 fn main_menu_ui_setup(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut ui_state: ResMut<UiState>,
 ) {
-    // Load the necessary fonts, textures, or other assets for the main menu UI
-    let font_handle = asset_server.load("data/assets/fonts/FiraMono-Medium.ttf");
+    let font_handle = asset_server.load("fonts/FiraMono-Medium.ttf");
     ui_state.font_handle = Some(font_handle);
-
-    // Load any necessary sound effects or music for the main menu
-
-    //ui_state.menu_music_handle = Some(menu_music_handle);
-    //ui_state.button_click_sound_handle = Some(button_click_sound_handle);
-
-    // Configure any additional UI elements or settings, such as colors or layout preferences
-    ui_state.menu_text_color = Color::rgb(0.9, 0.9, 0.9);
-    ui_state.menu_background_color = Color::rgb(0.2, 0.2, 0.2);
+    ui_state.menu_text_color = Color::srgb(0.9, 0.9, 0.9);    // explicit sRGB
+    ui_state.menu_background_color = Color::srgb(0.2, 0.2, 0.2);
 }
 
 fn main_menu_ui_system(
-    primary_window_query: Query<&Window, With<PrimaryWindow>>,
+    _primary_window_query: Query<&Window, With<PrimaryWindow>>,
     mut ui_state: ResMut<UiState>,
     mut contexts: EguiContexts,
-    mut state: ResMut<State<MainMenuState>>,
-    mut app_exit_events: EventWriter<AppExit>,
-    mut commands: Commands,
-) {
-    let mut open_editor = false;
-    let mut quit = false;
-    let ctx = contexts.ctx_mut();
+    mut next_base: ResMut<NextState<BaseState>>,
+    mut next_menu: ResMut<NextState<MainMenuState>>,
+    mut app_exit_events: MessageWriter<AppExit>,
+) -> Result {
+    let ctx = contexts.ctx_mut()?;
 
     let egui_texture_handle = ui_state
         .egui_texture_handle
@@ -60,25 +53,19 @@ fn main_menu_ui_system(
     egui::TopBottomPanel::top("main_menu_bar").show(ctx, |ui| {
         ui.horizontal(|ui| {
             if ui.button("Debug_Enter").clicked() {
-                commands.insert_resource(NextState(Some(BaseState::Simuation)));
+                // Bevy 0.18: `set` re-runs OnEnter/OnExit even when already in state; prefer `set_if_neq`.
+                NextState::set_if_neq(&mut *next_base, BaseState::Simulation);
             }
             if ui.button("Load World").clicked() {
-                commands.insert_resource(NextState(Some(MainMenuState::Load)));
+                NextState::set_if_neq(&mut *next_menu, MainMenuState::Load);
             }
-
             if ui.button("Load Editor").clicked() {
-                open_editor = true;
+                NextState::set_if_neq(&mut *next_base, BaseState::Editor);
             }
-
             if ui.button("Quit").clicked() {
-                quit = true;
+                app_exit_events.write(AppExit::Success);
             }
         });
     });
-
-    if quit {
-        if let Ok(primary_window) = primary_window_query.get_single() {
-            app_exit_events.send(AppExit);
-        }
-    }
+    Ok(())
 }

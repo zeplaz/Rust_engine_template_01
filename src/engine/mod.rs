@@ -1,11 +1,12 @@
 // Core engine functionality
 mod engine;
 mod engine_with_worldgen;  // New engine implementation with world generation
-mod states;
+pub mod states;
 mod transitions;
 mod sets;
 
-// Logic models
+// Logic models — heavy optional deps; see `research_lmodels` feature in Cargo.toml.
+#[cfg(feature = "research_lmodels")]
 pub mod lmodels;
 
 // Public exports

@@ -4,8 +4,10 @@ use bevy::render::render_resource::{
 };
 
 use crate::terrain::generation::world_generator_enhanced::{
-    WorldGenParams, BiomeType, Height, Moisture, Temperature, TerrainType, TileMarker
+    WorldGenParams, Height, Moisture, Temperature, TerrainType, TileMarker
 };
+use bevy_egui::{egui, EguiPrimaryContextPass, EguiTextureHandle};
+use crate::terrain::biome::TerrainClass;
 use crate::gui::editor::world_gen_ui::{WorldGenUiState, PreviewMode};
 
 // Resources for the world preview
@@ -58,7 +60,7 @@ pub fn init_world_preview_texture(
     };
     
     // Fill with black background
-    image.data = vec![0; (4 * width * height) as usize];
+    image.data = Some(vec![0; (4 * width * height) as usize]);
     
     // Add to assets
     let texture_handle = images.add(image);
@@ -92,27 +94,35 @@ pub fn update_world_preview_texture(
     // Clear the image
     let width = preview_texture.width;
     let height = preview_texture.height;
-    image.data = vec![0; (4 * width * height) as usize];
+    let tex_w = width as usize;
+    let tex_h = height as usize;
+    let len = 4 * tex_w * tex_h;
+    let data = match image.data.as_mut() {
+        Some(d) => d,
+        None => return,
+    };
+    data.resize(len, 0);
+    data.fill(0);
     
     // Draw tiles based on the preview mode
-    for (transform, height, moisture, temperature, terrain) in tile_query.iter() {
+    for (transform, tile_height, moisture, temperature, terrain) in tile_query.iter() {
         let x = transform.translation.x as usize;
         let y = transform.translation.z as usize;
         
-        if x >= width as usize || y >= height as usize {
+        if x >= tex_w || y >= tex_h {
             continue;
         }
         
-        let pixel_index = 4 * (y * width as usize + x);
+        let pixel_index = 4 * (y * tex_w + x);
         
         // Skip if out of bounds
-        if pixel_index + 3 >= image.data.len() {
+        if pixel_index + 3 >= data.len() {
             continue;
         }
         
         // Choose color based on preview mode
         let color = match world_gen_ui_state.preview_mode {
-            PreviewMode::Height => height_to_color(height.0),
+            PreviewMode::Height => height_to_color(tile_height.0),
             PreviewMode::Moisture => moisture_to_color(moisture.0),
             PreviewMode::Temperature => temperature_to_color(temperature.0),
             PreviewMode::Biome => biome_to_color(&terrain.0),
@@ -125,39 +135,33 @@ pub fn update_world_preview_texture(
         };
         
         // Set the pixel color
-        image.data[pixel_index] = color[0];
-        image.data[pixel_index + 1] = color[1];
-        image.data[pixel_index + 2] = color[2];
-        image.data[pixel_index + 3] = color[3];
+        data[pixel_index] = color[0];
+        data[pixel_index + 1] = color[1];
+        data[pixel_index + 2] = color[2];
+        data[pixel_index + 3] = color[3];
     }
 }
 
-// UI system to display the preview texture
+// UI system to display the preview texture — EguiPrimaryContextPass, returns Result.
 pub fn display_world_preview(
-    mut egui_context: ResMut<bevy_egui::EguiContext>,
+    mut contexts: bevy_egui::EguiContexts,
     preview_texture: Res<WorldPreviewTexture>,
     world_gen_ui_state: Res<WorldGenUiState>,
-    images: Res<Assets<Image>>,
-) {
-    // Only display if the UI is visible
+) -> Result {
     if !world_gen_ui_state.visible {
-        return;
+        return Ok(());
     }
-    
+
+    // Register texture with egui context for display.
+    let texture_id = contexts.add_image(EguiTextureHandle::Strong(preview_texture.texture.clone()));
+    let size = [preview_texture.width as f32, preview_texture.height as f32];
+
     egui::Window::new("World Preview")
         .resizable(true)
-        .show(egui_context.ctx_mut(), |ui| {
-            if let Some(image) = images.get(&preview_texture.texture) {
-                // Convert the Bevy image to an egui image
-                let size = [preview_texture.width as f32, preview_texture.height as f32];
-                let egui_texture_id = egui_context.add_image(&preview_texture.texture);
-                
-                // Display the image
-                ui.image(egui_texture_id, size);
-            } else {
-                ui.label("Preview not available");
-            }
+        .show(contexts.ctx_mut()?, |ui| {
+            ui.image(egui::load::SizedTexture::new(texture_id, size));
         });
+    Ok(())
 }
 
 // Helper functions to convert data to colors
@@ -177,19 +181,24 @@ fn temperature_to_color(temperature: f32) -> [u8; 4] {
     [t, 0, 0, 255]
 }
 
-fn biome_to_color(biome: &BiomeType) -> [u8; 4] {
+fn biome_to_color(biome: &TerrainClass) -> [u8; 4] {
     match biome {
-        BiomeType::DeepWater => [0, 0, 128, 255],
-        BiomeType::ShallowWater => [0, 0, 255, 255],
-        BiomeType::Beach => [240, 240, 64, 255],
-        BiomeType::Desert => [255, 255, 128, 255],
-        BiomeType::Grassland => [0, 255, 0, 255],
-        BiomeType::Forest => [0, 128, 0, 255],
-        BiomeType::DenseForest => [0, 64, 0, 255],
-        BiomeType::Mountain => [128, 128, 128, 255],
-        BiomeType::SnowCappedMountain => [255, 255, 255, 255],
-        BiomeType::Tundra => [192, 192, 255, 255],
-        BiomeType::Swamp => [64, 64, 0, 255],
+        TerrainClass::DeepWater => [0, 0, 128, 255],
+        TerrainClass::ShallowWater => [0, 0, 255, 255],
+        TerrainClass::Beach => [240, 240, 64, 255],
+        TerrainClass::Desert => [255, 255, 128, 255],
+        TerrainClass::Grassland => [0, 255, 0, 255],
+        TerrainClass::Forest => [0, 128, 0, 255],
+        TerrainClass::DenseForest => [0, 64, 0, 255],
+        TerrainClass::Mountain => [128, 128, 128, 255],
+        TerrainClass::SnowCappedMountain => [255, 255, 255, 255],
+        TerrainClass::Tundra => [192, 192, 255, 255],
+        TerrainClass::Swamp => [64, 64, 0, 255],
+        TerrainClass::Cliff => [90, 90, 90, 255],
+        TerrainClass::Concrete => [170, 170, 170, 255],
+        TerrainClass::Dirt => [139, 69, 19, 255],
+        TerrainClass::Snow => [250, 250, 250, 255],
+        TerrainClass::Stone => [120, 120, 120, 255],
     }
 }
 
@@ -200,6 +209,8 @@ impl Plugin for WorldPreviewPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<WorldPreviewTexture>()
            .add_systems(Startup, init_world_preview_texture)
-           .add_systems(Update, (update_world_preview_texture, display_world_preview));
+           // Non-egui texture update stays in Update; display rendering in EguiPrimaryContextPass
+           .add_systems(Update, update_world_preview_texture)
+           .add_systems(EguiPrimaryContextPass, display_world_preview);
     }
 }

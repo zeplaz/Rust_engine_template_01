@@ -2,9 +2,12 @@ pub mod prelude;
 
 // Entity basics
 mod entity;
-mod components;
+pub mod components;
+pub mod damages;
 mod states;
-mod types;
+pub mod types;
+pub mod types_aliases;
+pub mod types_of;
 
 // Entity categories
 pub mod production;
@@ -17,3 +20,4 @@ pub use components::*;
 pub use states::*;
 pub use types::*;
 pub use prelude::*;
+pub use vehicles::config::{MilitaryCivilian, RoadVehicleConfig};

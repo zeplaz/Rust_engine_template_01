@@ -1,73 +1,80 @@
-const ICON_PATH: String = "data/splash_01.png";
+// Canonical Bevy native UI: splash screen.
+// Uses Node + required components pattern (Bevy 0.15+).
+// No egui here — this is in-game rendering, not tooling.
 
-mod splash {
-    use bevy::prelude::*;
+use bevy::prelude::*;
 
-    use crate::engine::{despawn_screen, Enigne_State};
+use bevy::ui::widget::ImageNode;
 
-    // This plugin will display a splash screen with Bevy logo for 1 second before switching to the menu
-    pub struct SplashPlugin;
+// Tag component marking entities spawned for the splash screen.
+#[derive(Component)]
+pub struct OnSplashScreen;
 
-    impl Plugin for SplashPlugin {
-        fn build(&self, app: &mut App) {
-            // As this plugin is managing the splash screen, it will focus on the state `GameState::Splash`
-            app
-                // When entering the state, spawn everything needed for this screen
-                .add_systems(OnEnter(GameState::Splash), splash_setup)
-                // While in this state, run the `countdown` system
-                .add_systems(Update, countdown.run_if(in_state(GameState::Splash)))
-                // When exiting the state, despawn everything that was spawned for this screen
-                .add_systems(OnExit(GameState::Splash), despawn_screen::<OnSplashScreen>);
-        }
+#[derive(Resource, Deref, DerefMut)]
+struct SplashTimer(Timer);
+
+pub struct SplashPlugin;
+
+impl Plugin for SplashPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_systems(OnEnter(AppStartState::Splash), splash_setup)
+            .add_systems(Update, countdown.run_if(in_state(AppStartState::Splash)))
+            .add_systems(OnExit(AppStartState::Splash), despawn_splash);
     }
+}
 
-    // Tag component used to tag entities added on the splash screen
-    #[derive(Component)]
-    struct OnSplashScreen;
+/// Game-start state enum used only by the splash flow.
+#[derive(Debug, Clone, Copy, Default, Eq, PartialEq, Hash, States)]
+pub enum AppStartState {
+    #[default]
+    Splash,
+    Menu,
+}
 
-    // Newtype to use a `Timer` for this screen as a resource
-    #[derive(Resource, Deref, DerefMut)]
-    struct SplashTimer(Timer);
+fn splash_setup(mut commands: Commands, asset_server: Res<AssetServer>) {
+    let icon: Handle<Image> = asset_server.load("splash/splash_01.png");
 
-    fn splash_setup(mut commands: Commands, asset_server: Res<AssetServer>) {
-        let icon = asset_server.load(ICON_PATH);
-        // Display the logo
-        commands
-            .spawn((
-                NodeBundle {
-                    style: Style {
-                        align_items: AlignItems::Center,
-                        justify_content: JustifyContent::Center,
-                        size: Size::new(Val::Percent(100.0), Val::Percent(100.0)),
-                        ..default()
-                    },
-                    ..default()
-                },
-                OnSplashScreen,
-            ))
-            .with_children(|parent| {
-                parent.spawn(ImageBundle {
-                    style: Style {
-                        // This will set the logo to be 200px wide, and auto adjust its height
-                        size: Size::new(Val::Px(200.0), Val::Auto),
-                        ..default()
-                    },
-                    image: UiImage::new(icon),
-                    ..default()
-                });
-            });
-        // Insert the timer as a resource
-        commands.insert_resource(SplashTimer(Timer::from_seconds(1.0, TimerMode::Once)));
+    // Outer full-screen container — native Bevy UI Node.
+    commands.spawn((
+        Node {
+            width: Val::Percent(100.0),
+            height: Val::Percent(100.0),
+            align_items: AlignItems::Center,
+            justify_content: JustifyContent::Center,
+            ..default()
+        },
+        OnSplashScreen,
+    ))
+    .with_children(|parent| {
+        // Logo image — UiImage + Node (required components; no legacy image bundle type).
+        parent.spawn((
+            Node {
+                width: Val::Px(200.0),
+                height: Val::Auto,
+                ..default()
+            },
+            ImageNode::from(icon),
+        ));
+    });
+
+    commands.insert_resource(SplashTimer(Timer::from_seconds(1.0, TimerMode::Once)));
+}
+
+fn countdown(
+    mut next_state: ResMut<NextState<AppStartState>>,
+    time: Res<Time>,
+    mut timer: ResMut<SplashTimer>,
+) {
+    if timer.tick(time.delta()).is_finished() {
+        NextState::set_if_neq(&mut *next_state, AppStartState::Menu);
     }
+}
 
-    // Tick the timer, and change state when finished
-    fn countdown(
-        mut game_state: ResMut<NextState<GameState>>,
-        time: Res<Time>,
-        mut timer: ResMut<SplashTimer>,
-    ) {
-        if timer.tick(time.delta()).finished() {
-            game_state.set(GameState::Menu);
-        }
+fn despawn_splash(
+    mut commands: Commands,
+    splash_query: Query<Entity, With<OnSplashScreen>>,
+) {
+    for entity in &splash_query {
+        commands.entity(entity).despawn();
     }
 }

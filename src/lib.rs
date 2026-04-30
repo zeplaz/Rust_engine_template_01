@@ -3,6 +3,7 @@
 
 // Core modules
 pub mod core;
+pub mod events;
 pub mod engine;
 pub mod entities;
 pub mod gui;

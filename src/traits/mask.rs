@@ -1,4 +1,9 @@
+//! Footprint / mask placement helpers (serializable geometry only — no ECS writes here).
+//! Pair with `terrain_biome_migration_matrix_v1.md` when tying masks to chunk tiles.
 
+use bevy::prelude::Vec2;
+
+use crate::terrain::{TileType, World};
 
 pub trait MaskOperations {
     fn size(&self) -> Vec2;
@@ -12,41 +17,54 @@ pub trait MaskOperations {
     ) -> bool;
 }
 
-
 impl MaskOperations for Vec<Vec<u8>> {
     fn size(&self) -> Vec2 {
+        if self.is_empty() || self[0].is_empty() {
+            return Vec2::ZERO;
+        }
         Vec2::new(self[0].len() as f32, self.len() as f32)
     }
 
-
+    /// For every occupied cell in `self` (non-zero), require `other_mask` to be occupied at the offset from `position`.
     fn fits_in_mask(&self, other_mask: &Self, position: Vec2) -> bool {
+        let base_x = position.x as usize;
+        let base_y = position.y as usize;
+        for (y, row) in self.iter().enumerate() {
+            for (x, &cell) in row.iter().enumerate() {
+                if cell == 0 {
+                    continue;
+                }
+                let ox = base_x + x;
+                let oy = base_y + y;
+                if oy >= other_mask.len() || ox >= other_mask[oy].len() {
+                    return false;
+                }
+                if other_mask[oy][ox] == 0 {
+                    return false;
+                }
+            }
+        }
+        true
+    }
 
-           let other_size = other_mask.size();
-       }
-
-
-
-
-
-       fn is_valid_placement(
-       &self,
-       position: Vec2,
-       world: &World,
-       valid_tile_types: &[TileType],
-       valid_mask: Option<&Self>,
-   ) -> bool {
-
-       for y in 0..self.len() {
-           for x in 0..self[0].len() {
-
-       if let Some(valid_mask) = valid_mask {
-                   if !self.fits_in_mask(valid_mask, Vec2::new(x as f32, y as f32)) {
-                       return false;
-                   }
-               }
-
-           }
-       }// end FORZ!
-       true 
-   }
+    fn is_valid_placement(
+        &self,
+        _position: Vec2,
+        _world: &World,
+        _valid_tile_types: &[TileType],
+        valid_mask: Option<&Self>,
+    ) -> bool {
+        if let Some(vm) = valid_mask {
+            if self.size() == Vec2::ZERO {
+                return true;
+            }
+            // Full overlap check: mask must sit entirely on allowed footprint.
+            if !self.fits_in_mask(vm, Vec2::ZERO) {
+                return false;
+            }
+        }
+        // World / tile-type sampling hooks: add when `World` exposes chunk tile queries (see terrain_world designer docs).
+        let _ = (_valid_tile_types, _world);
+        true
+    }
 }

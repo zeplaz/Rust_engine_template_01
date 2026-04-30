@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use bevy_egui::{egui, EguiContext};
+use bevy_egui::{egui, EguiContexts, EguiPrimaryContextPass};
 use std::collections::HashMap;
 
 use crate::idgen::EntityId;
@@ -35,12 +35,12 @@ impl Default for PermissionsUiState {
 }
 
 /// Event to toggle the permissions UI
-#[derive(Event)]
+#[derive(Message)]
 pub struct TogglePermissionsUiEvent;
 
 /// System to handle UI visibility toggle
 pub fn toggle_permissions_ui(
-    mut events: EventReader<TogglePermissionsUiEvent>,
+    mut events: MessageReader<TogglePermissionsUiEvent>,
     mut ui_state: ResMut<PermissionsUiState>,
 ) {
     for _ in events.read() {
@@ -48,21 +48,21 @@ pub fn toggle_permissions_ui(
     }
 }
 
-/// System to render the permissions UI
+/// System to render the permissions UI — EguiPrimaryContextPass, returns Result.
 #[allow(clippy::too_many_arguments)]
 pub fn permissions_ui_system(
-    mut egui_context: ResMut<EguiContext>,
+    mut contexts: EguiContexts,
     mut ui_state: ResMut<PermissionsUiState>,
     agent_manager: Res<AgentManager>,
     agent_query: Query<(&Agent, &AgentPermissions)>,
     faction_colors: Res<FactionColors>,
     local_player_agent: Option<Res<LocalPlayerAgent>>, // Would need to be set up elsewhere
     game_time: Res<crate::systems::agents::permissions::GameTime>,
-    mut grant_events: EventWriter<PermissionGrantEvent>,
-    mut revoke_events: EventWriter<PermissionRevokeEvent>,
-) {
+    mut grant_events: MessageWriter<PermissionGrantEvent>,
+    mut revoke_events: MessageWriter<PermissionRevokeEvent>,
+) -> Result {
     if !ui_state.visible {
-        return;
+        return Ok(());
     }
     
     // Default to local player's agent if none selected
@@ -73,11 +73,11 @@ pub fn permissions_ui_system(
     egui::Window::new("Agent Permissions")
         .resizable(true)
         .min_width(600.0)
-        .show(egui_context.ctx_mut(), |ui| {
+        .show(contexts.ctx_mut()?, |ui| {
             ui.horizontal(|ui| {
                 ui.label("Viewing permissions for:");
                 
-                egui::ComboBox::from_id_source("agent_selector")
+                egui::ComboBox::from_id_salt("agent_selector")
                     .selected_text(
                         ui_state.selected_agent
                             .and_then(|id| agent_manager.get_agent_entity(id))
@@ -129,14 +129,15 @@ pub fn permissions_ui_system(
                                 ui.cursor().min,
                                 egui::vec2(20.0, 20.0)
                             );
+                            let srgba = color.to_srgba();
                             ui.painter().rect_filled(
                                 color_rect,
                                 0.0,
                                 egui::Color32::from_rgba_unmultiplied(
-                                    (color.r() * 255.0) as u8,
-                                    (color.g() * 255.0) as u8,
-                                    (color.b() * 255.0) as u8,
-                                    (color.a() * 255.0) as u8,
+                                    (srgba.red * 255.0) as u8,
+                                    (srgba.green * 255.0) as u8,
+                                    (srgba.blue * 255.0) as u8,
+                                    (srgba.alpha * 255.0) as u8,
                                 )
                             );
                             ui.add_space(25.0);
@@ -221,7 +222,7 @@ pub fn permissions_ui_system(
                                                 format!("{:?}", domain)
                                             ).clicked() {
                                                 ui_state.filter_domain = Some(domain);
-                                                ui.close_menu();
+                                                ui.close();
                                             }
                                         }
                                     });
@@ -303,7 +304,7 @@ pub fn permissions_ui_system(
                                             if ui.button("Revoke").clicked() {
                                                 // Check if local player has authority to revoke
                                                 if let Some(local_id) = local_player_agent.as_ref().map(|lpa| lpa.agent_id) {
-                                                    revoke_events.send(PermissionRevokeEvent {
+                                                    revoke_events.write(PermissionRevokeEvent {
                                                         from_agent_id: agent_id,
                                                         revoker_id: local_id,
                                                         domain,
@@ -333,7 +334,7 @@ pub fn permissions_ui_system(
                                         // Domain selection
                                         ui.label("Domain:");
                                         let mut selected_domain = ui_state.filter_domain.unwrap_or(PermissionDomain::Observer);
-                                        egui::ComboBox::from_id_source("domain_selector")
+                                        egui::ComboBox::from_id_salt("domain_selector")
                                             .selected_text(format!("{:?}", selected_domain))
                                             .show_ui(ui, |ui| {
                                                 for &domain in &[
@@ -370,7 +371,7 @@ pub fn permissions_ui_system(
                                         // Access level selection
                                         ui.label("Access Level:");
                                         let mut selected_level = AccessLevel::ReadOnly;
-                                        egui::ComboBox::from_id_source("access_level_selector")
+                                        egui::ComboBox::from_id_salt("access_level_selector")
                                             .selected_text(format!("{:?}", selected_level))
                                             .show_ui(ui, |ui| {
                                                 for &level in &[
@@ -420,7 +421,7 @@ pub fn permissions_ui_system(
                                         ui.label("");
                                         if ui.button("Grant Permission").clicked() {
                                             if let Some(local_id) = local_player_agent.as_ref().map(|lpa| lpa.agent_id) {
-                                                grant_events.send(PermissionGrantEvent {
+                                                grant_events.write(PermissionGrantEvent {
                                                     to_agent_id: agent_id,
                                                     from_agent_id: local_id,
                                                     grant: PermissionGrant {
@@ -500,7 +501,7 @@ pub fn permissions_ui_system(
                                                 if ui.button("Revoke").clicked() {
                                                     // Check if local player has authority to revoke
                                                     if let Some(local_id) = local_player_agent.as_ref().map(|lpa| lpa.agent_id) {
-                                                        revoke_events.send(PermissionRevokeEvent {
+                                                        revoke_events.write(PermissionRevokeEvent {
                                                             from_agent_id: *delegate_id,
                                                             revoker_id: local_id,
                                                             domain: grant.domain,
@@ -520,6 +521,7 @@ pub fn permissions_ui_system(
                 ui.heading("Select an agent to view permissions");
             }
         });
+    Ok(())
 }
 
 /// Resource to track the local player's agent
@@ -534,10 +536,8 @@ pub struct AgentPermissionsUiPlugin;
 impl Plugin for AgentPermissionsUiPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<PermissionsUiState>()
-           .add_event::<TogglePermissionsUiEvent>()
-           .add_systems(Update, (
-               toggle_permissions_ui,
-               permissions_ui_system,
-           ));
+           .add_message::<TogglePermissionsUiEvent>()
+           .add_systems(Update, toggle_permissions_ui)
+           .add_systems(EguiPrimaryContextPass, permissions_ui_system);
     }
 }

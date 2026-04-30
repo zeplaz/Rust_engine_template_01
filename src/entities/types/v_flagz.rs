@@ -1,4 +1,6 @@
-#[derive(Debug)]
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum VehicleType {
     Road(RoadVehicleType),
     Ship(ShipType),
@@ -7,16 +9,15 @@ pub enum VehicleType {
     Construction,
 }
 
-
-
-#[derive(Debug)]
-pub enum ShipType{
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub enum ShipType {
     Passenger,
     Freight,
     Tanker,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "PascalCase")]
 pub enum RoadVehicleType {
     Bus,
     Truck,

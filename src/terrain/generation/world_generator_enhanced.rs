@@ -1,11 +1,17 @@
 use bevy::prelude::*;
-use noise::{NoiseFn, Perlin, Simplex, Fbm};
+use noise::NoiseFn;
 use rand::{Rng, SeedableRng};
 use rand::rngs::StdRng;
-use std::collections::HashMap;
 
+use super::terrain_noise::{
+    build_fbm_perlin, build_height_noise, sample_height_field, NoiseSamplingTuning,
+};
+pub use super::terrain_noise::TerrainNoiseProfile;
+
+use super::tuning_io;
 use crate::terrain::voronoi_enhanced::*;
-use crate::terrain::world::{World, GeoRegion};
+use crate::terrain::world::GeoRegion;
+use crate::terrain::biome::{classify_biome, BiomeTuning, TerrainClass};
 
 // World generation parameters structure
 #[derive(Resource, Clone)]
@@ -20,11 +26,28 @@ pub struct WorldGenParams {
     pub region_method: RegionMethod,
     pub region_iterations: u32,  // For centroidal relaxation
     
-    // Terrain settings
+    // Terrain / noise
     pub noise_scale: f32,
     pub noise_octaves: u32,
+    /// Lacunarity between octaves (frequency multiplier per octave).
+    pub noise_lacunarity: f32,
+    /// Persistence between octaves (amplitude falloff per octave).
+    pub noise_persistence: f32,
+    /// Which fractal family drives **height** (moisture/temperature use fBm·Perlin).
+    pub height_noise_profile: TerrainNoiseProfile,
+    /// >1 flattens lowlands; <1 lifts lows — artistic land/ocean contrast after base noise.
+    pub height_curve_exponent: f32,
+    /// Domain warp: displaces sample coordinates before height noise (0 = off). Natural coasts / folds.
+    pub domain_warp_strength: f32,
+    /// Blend in high-frequency fBm for small-scale breakup (0–1).
+    pub terrain_detail_mix: f32,
     pub moisture_bias: f32,
     pub temperature_bias: f32,
+
+    /// Channel frequencies / warp / detail — editable via UI, JSON (`world_gen_tuning.json`), or scripts.
+    pub noise_sampling: NoiseSamplingTuning,
+    /// Biome weights + class thresholds — must stay aligned with `classify_biome`.
+    pub biome_tuning: BiomeTuning,
     
     // Feature settings
     pub river_count: u32,
@@ -55,8 +78,16 @@ impl Default for WorldGenParams {
             region_iterations: 3,
             noise_scale: 0.03,
             noise_octaves: 6,
+            noise_lacunarity: 2.0,
+            noise_persistence: 0.5,
+            height_noise_profile: TerrainNoiseProfile::default(),
+            height_curve_exponent: 1.0,
+            domain_warp_strength: 0.0,
+            terrain_detail_mix: 0.0,
             moisture_bias: 0.0,
             temperature_bias: 0.0,
+            noise_sampling: NoiseSamplingTuning::default(),
+            biome_tuning: BiomeTuning::default(),
             river_count: 3,
             lake_count: 2,
             mountain_threshold: 0.7,
@@ -91,24 +122,13 @@ pub struct Moisture(pub f32);
 pub struct Temperature(pub f32);
 
 // Biome type
-#[derive(Component, Clone, Copy, PartialEq, Eq, Debug, Hash)]
-pub enum BiomeType {
-    DeepWater,
-    ShallowWater,
-    Beach,
-    Desert,
-    Grassland,
-    Forest,
-    DenseForest,
-    Mountain,
-    SnowCappedMountain,
-    Tundra,
-    Swamp,
-}
+/// Legacy alias kept for transition; canonical enum now lives in `terrain::biome`.
+#[deprecated(note = "Use terrain::biome::TerrainClass")]
+pub type BiomeType = TerrainClass;
 
 // Terrain type
 #[derive(Component)]
-pub struct TerrainType(pub BiomeType);
+pub struct TerrainType(pub TerrainClass);
 
 // System to generate the world
 pub fn generate_world(
@@ -120,10 +140,46 @@ pub fn generate_world(
     // Create a stable RNG from the seed
     let mut rng = StdRng::seed_from_u64(params.seed);
     
-    // Create noise functions
-    let height_noise = create_noise_function(params.noise_scale, params.noise_octaves, params.seed);
-    let moisture_noise = create_noise_function(params.noise_scale * 1.5, params.noise_octaves, params.seed + 1);
-    let temperature_noise = create_noise_function(params.noise_scale * 0.8, params.noise_octaves, params.seed + 2);
+    let lac = params.noise_lacunarity as f64;
+    let per = params.noise_persistence as f64;
+    let ns = &params.noise_sampling;
+
+    let height_noise = build_height_noise(
+        params.height_noise_profile,
+        params.noise_scale,
+        params.noise_octaves,
+        params.seed,
+        lac,
+        per,
+    );
+    let warp_noise = build_fbm_perlin(
+        params.noise_scale * ns.warp_noise_scale_mul,
+        ns.warp_noise_octaves,
+        params.seed.wrapping_add(ns.warp_seed_offset),
+        lac,
+        per,
+    );
+    let detail_noise = build_fbm_perlin(
+        params.noise_scale * ns.detail_noise_scale_mul,
+        ns.detail_noise_octaves,
+        params.seed.wrapping_add(ns.detail_seed_offset),
+        lac,
+        per * ns.detail_persistence_mul,
+    );
+    let moisture_noise = build_fbm_perlin(
+        params.noise_scale * ns.moisture_noise_scale_mul,
+        params.noise_octaves,
+        params.seed.wrapping_add(1),
+        lac,
+        per,
+    );
+    let temperature_noise = build_fbm_perlin(
+        params.noise_scale * ns.temperature_noise_scale_mul,
+        params.noise_octaves,
+        params.seed.wrapping_add(2),
+        lac,
+        per,
+    );
     
     // Generate regions using the specified method
     let regions = generate_regions(&params, &mut rng);
@@ -161,7 +217,7 @@ pub fn generate_world(
         geo_regions.push(geo_region);
         
         // Make the region a child of the world
-        commands.entity(world_entity).push_children(&[region_entity]);
+        commands.entity(world_entity).add_children(&[region_entity]);
     }
     
     // Process all points to generate terrain
@@ -202,14 +258,38 @@ pub fn generate_world(
             // Generate height value
             let noise_x = x as f64 * params.noise_scale as f64;
             let noise_y = y as f64 * params.noise_scale as f64;
-            let height_value = (height_noise.get([noise_x, noise_y, 0.0]) * 0.5 + 0.5) as f32 * island_falloff_factor;
+            let height_norm = sample_height_field(
+                &height_noise,
+                &warp_noise,
+                &detail_noise,
+                noise_x,
+                noise_y,
+                params.height_curve_exponent,
+                params.domain_warp_strength,
+                params.terrain_detail_mix,
+                ns,
+            );
+            let height_value = height_norm * island_falloff_factor;
             
             // Generate moisture and temperature
-            let moisture_value = (moisture_noise.get([noise_x * 1.5, noise_y * 1.5, 0.0]) * 0.5 + 0.5) as f32 + params.moisture_bias;
-            let temperature_value = (temperature_noise.get([noise_x * 0.8, noise_y * 0.8, 0.0]) * 0.5 + 0.5) as f32 + params.temperature_bias;
+            let moisture_value = (moisture_noise.get([
+                noise_x * ns.moisture_sample_freq_mul,
+                noise_y * ns.moisture_sample_freq_mul,
+                0.0,
+            ]) * 0.5 + 0.5) as f32 + params.moisture_bias;
+            let temperature_value = (temperature_noise.get([
+                noise_x * ns.temperature_sample_freq_mul,
+                noise_y * ns.temperature_sample_freq_mul,
+                0.0,
+            ]) * 0.5 + 0.5) as f32 + params.temperature_bias;
             
             // Determine biome based on height, moisture, and temperature
-            let biome = determine_biome(height_value, moisture_value, temperature_value);
+            let biome = determine_biome(
+                height_value,
+                moisture_value,
+                temperature_value,
+                &params.biome_tuning,
+            );
             
             // Create tile entity
             let tile_entity = commands.spawn((
@@ -223,7 +303,7 @@ pub fn generate_world(
             )).id();
             
             // Add to region
-            commands.entity(region_entities[closest_region_index]).push_children(&[tile_entity]);
+            commands.entity(region_entities[closest_region_index]).add_children(&[tile_entity]);
             
             // Add to GeoRegion data structure
             geo_regions[closest_region_index].add_tile(position, tile_entity);
@@ -241,15 +321,6 @@ pub fn generate_world(
     }
     
     info!("World generation completed");
-}
-
-// Helper function to create a noise function
-fn create_noise_function(scale: f32, octaves: u32, seed: u64) -> Fbm {
-    let mut fbm = Fbm::new();
-    fbm.seed = seed as u32;
-    fbm.octaves = octaves as usize;
-    fbm.frequency = scale as f64;
-    fbm
 }
 
 // Generate regions using the specified method
@@ -307,54 +378,13 @@ fn generate_regions(params: &WorldGenParams, rng: &mut StdRng) -> Vec<Vec<Vorono
 }
 
 // Determine biome type based on height, moisture, and temperature
-fn determine_biome(height: f32, moisture: f32, temperature: f32) -> BiomeType {
-    // Deep water
-    if height < 0.2 {
-        return BiomeType::DeepWater;
-    }
-    
-    // Shallow water
-    if height < 0.35 {
-        return BiomeType::ShallowWater;
-    }
-    
-    // Beach
-    if height < 0.38 {
-        return BiomeType::Beach;
-    }
-    
-    // Mountain and snow
-    if height > 0.75 {
-        if temperature < 0.2 {
-            return BiomeType::SnowCappedMountain;
-        } else {
-            return BiomeType::Mountain;
-        }
-    }
-    
-    // Handle other biomes based on temperature and moisture
-    if temperature < 0.3 {
-        // Cold biomes
-        return BiomeType::Tundra;
-    } else if temperature > 0.7 {
-        // Hot biomes
-        if moisture < 0.3 {
-            return BiomeType::Desert;
-        } else if moisture > 0.8 {
-            return BiomeType::Swamp;
-        } else {
-            return BiomeType::Grassland;
-        }
-    } else {
-        // Moderate temperature biomes
-        if moisture < 0.4 {
-            return BiomeType::Grassland;
-        } else if moisture < 0.7 {
-            return BiomeType::Forest;
-        } else {
-            return BiomeType::DenseForest;
-        }
-    }
+fn determine_biome(
+    height: f32,
+    moisture: f32,
+    temperature: f32,
+    tuning: &BiomeTuning,
+) -> TerrainClass {
+    classify_biome(height, moisture, temperature, tuning).terrain_class
 }
 
 // Generate rivers
@@ -472,9 +502,12 @@ fn generate_lakes(
     }
 }
 
-// Event to trigger world generation
-#[derive(Event)]
+// Message to trigger world generation (buffered; processed before `generate_world` in chain).
+#[derive(Message)]
 pub struct GenerateWorldEvent(pub WorldGenParams);
+
+/// Default path for optional JSON overlay (`noise_sampling` + `biome_tuning`).
+pub const WORLD_GEN_TUNING_JSON_PATH: &str = "assets/config/world_gen_tuning.json";
 
 // Plugin to register world generation systems
 pub struct WorldGeneratorPlugin;
@@ -482,20 +515,31 @@ pub struct WorldGeneratorPlugin;
 impl Plugin for WorldGeneratorPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<WorldGenParams>()
-           .add_event::<GenerateWorldEvent>()
-           .add_systems(Update, handle_generate_world_event);
+           .add_message::<GenerateWorldEvent>()
+           .add_systems(Startup, merge_world_gen_tuning_from_json)
+           .add_systems(
+               Update,
+               (apply_generate_world_request, generate_world).chain(),
+           );
     }
 }
 
-// System to handle world generation events
-fn handle_generate_world_event(
-    mut events: EventReader<GenerateWorldEvent>,
-    mut commands: Commands,
+fn merge_world_gen_tuning_from_json(mut params: ResMut<WorldGenParams>) {
+    if let Ok(Some(overlay)) = tuning_io::load_overlay(WORLD_GEN_TUNING_JSON_PATH) {
+        if let Some(n) = overlay.noise_sampling {
+            params.noise_sampling = n;
+        }
+        if let Some(b) = overlay.biome_tuning {
+            params.biome_tuning = b;
+        }
+    }
+}
+
+fn apply_generate_world_request(
+    mut events: MessageReader<GenerateWorldEvent>,
+    mut params: ResMut<WorldGenParams>,
 ) {
-    for event in events.read() {
-        // Clear existing world entities
-        commands.insert_resource(event.0.clone());
-        generate_world(commands, event.0.clone().into());
-        break; // Only process one event per frame
+    for GenerateWorldEvent(new_params) in events.read() {
+        *params = new_params.clone();
     }
 }
