@@ -72,7 +72,7 @@ impl Default for NoiseSamplingTuning {
 }
 
 /// Base fractal used for **height** sampling (cliffs, continents, ranges, etc.).
-#[derive(Clone, Copy, PartialEq, Eq, Default, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, serde::Serialize, serde::Deserialize)]
 pub enum TerrainNoiseProfile {
     /// fBm over Perlin — smooth, homogeneous landforms (good baseline).
     #[default]
@@ -87,6 +87,7 @@ pub enum TerrainNoiseProfile {
     FbmOpenSimplex,
 }
 
+#[derive(Clone)]
 pub enum HeightNoise {
     FbmPerlin(Fbm<Perlin>),
     Ridged(RidgedMulti<Perlin>),

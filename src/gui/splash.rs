@@ -17,7 +17,8 @@ pub struct SplashPlugin;
 
 impl Plugin for SplashPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(OnEnter(AppStartState::Splash), splash_setup)
+        app.init_state::<AppStartState>()
+            .add_systems(OnEnter(AppStartState::Splash), splash_setup)
             .add_systems(Update, countdown.run_if(in_state(AppStartState::Splash)))
             .add_systems(OnExit(AppStartState::Splash), despawn_splash);
     }
@@ -34,7 +35,7 @@ pub enum AppStartState {
 fn splash_setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     let icon: Handle<Image> = asset_server.load("splash/splash_01.png");
 
-    // Outer full-screen container — native Bevy UI Node.
+    // Full-bleed color so the splash is visible even before `splash_01.png` finishes loading (or if the file is absent).
     commands.spawn((
         Node {
             width: Val::Percent(100.0),
@@ -43,6 +44,7 @@ fn splash_setup(mut commands: Commands, asset_server: Res<AssetServer>) {
             justify_content: JustifyContent::Center,
             ..default()
         },
+        BackgroundColor(Color::srgb(0.07, 0.08, 0.11)),
         OnSplashScreen,
     ))
     .with_children(|parent| {

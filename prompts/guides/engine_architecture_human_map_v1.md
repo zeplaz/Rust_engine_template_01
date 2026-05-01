@@ -254,6 +254,20 @@ graph TB
   TUI --> PV["WorldPreviewPlugin"]
 ```
 
+### 9.1 World creation vs load/save (stub and implementation plan)
+
+**Shipped today:** [`MainMenuState::Load`](../../src/gui/main_menu.rs) shows an egui **Load World** panel (`load_menu_ui_system`): editable path (default `saves/slot_0.ron`), **Cancel** returns to the main menu bar and clears [`WorldGenFlowState`](../../src/engine/states.rs) to **`Idle`**. **Load into game (stub)** despawns any procedural [`WorldMarker`](../../src/terrain/generation/world_generator_enhanced.rs) hierarchy, logs the path, sets **`WorldGenFlowState::Idle`**, **`BaseState::Simulation`**, and returns **`MainMenuState::MainMenu`** — **no file I/O or deserialization yet**.
+
+**Procedural vs load:** [`WorldGenFlowState::LoadingSave`](../../src/engine/states.rs) is entered when choosing **Load World** from the top bar; [`GenerateWorldEvent`](../../src/terrain/generation/world_generator_enhanced.rs) is rejected while that flow is active so saves never accidentally trigger world generation.
+
+**Basic plan to implement real loads**
+
+1. **Schema** — Define a versioned save root (RON/JSON) listing world identity, serialized ECS snapshot or registries to rebuild (align with `ProductionSerializationPlugin` / `g4` stubs).
+2. **Picker** — Replace the text field with a platform file dialog (or `std::fs::read_dir` + list for dev), resolve to `PathBuf`, validate extension and magic/header.
+3. **Deserialize** — One system or plugin command: `load_save(path) -> Result<SaveBundle, LoadError>`; map failures to user-visible egui error + stay on Load screen.
+4. **Apply** — Despawn procedural `WorldMarker` trees (reuse `despawn_generated_world_entities`); spawn/load entities from save; set [`SimControlState`](../../src/systems/sim_control.rs) as needed; transition **`Simulation` + `WorldGenFlowState::Idle`** only after a successful apply.
+5. **Testing** — Round-trip minimal world, corrupt file, wrong version, missing assets; keep **stub button** behind `#[cfg(feature = "dev_tools")]` if you want one-click fake loads in QA.
+
 ---
 
 ## 10. GUI — default bindings to surfaces
@@ -288,7 +302,7 @@ graph LR
 | Window | `DefaultPlugins` creates **`PrimaryWindow`**. |
 | Clear | [`main.rs`](../../src/main.rs) **`ClearColor`**. |
 | Layers today | **Bevy UI** (HUD) + **egui** on top of cleared swapchain. |
-| World camera | **No** `Camera2d` / `Camera3d` in **library** game path; only [`bin/world_generator.rs`](../../src/bin/world_generator.rs) spawns **`Camera2d`**. |
+| World camera | `Camera2d` is spawned on **Startup** in [`engine_with_worldgen.rs`](../../src/engine/engine_with_worldgen.rs) (`spawn_primary_ui_camera`) so **Bevy UI** (splash, HUD) renders. World geometry / tilemap still needs a follow-up camera if you add a 3D or separate 2D world view. |
 | Render stubs | [`render/light.rs`](../../src/render/light.rs) empty plugin build; [`base_cam.rs`](../../src/render/base_cam.rs) empty. |
 
 ```mermaid
@@ -298,14 +312,14 @@ graph TB
   CLR --> L1["Bevy UI InGameHud"]
   CLR --> L2["egui overlay"]
   L3["World geometry tilemap"]
-  CAM["Camera2d or Camera3d TBD in main"]
+  CAM["Camera2d Startup — UI / splash / HUD"]
   CAM --> L3
   L1 --> OUT["Present to swapchain"]
   L2 --> OUT
   L3 --> OUT
 ```
 
-*Today **L3** and **CAM** are integration work items unless you only run tooling binaries.*
+*Splash uses `BackgroundColor` so the screen is not black while `splash/splash_01.png` loads or if that file is missing from `assets/`.*
 
 ---
 

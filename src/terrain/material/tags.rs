@@ -12,10 +12,18 @@ use serde::Deserialize;
 pub struct TagId(pub u16);
 
 /// Fixed-width set of up to **256** tags (four `u64` lanes).
-#[derive(Clone, Copy, PartialEq, Eq, Debug, Default)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug, Default, Hash)]
 pub struct TagSet([u64; 4]);
 
 impl TagSet {
+    /// Every tag id **0..256** allowed (material / preview pool default).
+    pub const ALL: Self = Self([u64::MAX, u64::MAX, u64::MAX, u64::MAX]);
+
+    #[inline]
+    pub fn bits(&self) -> [u64; 4] {
+        self.0
+    }
+
     pub fn insert(&mut self, id: TagId) {
         let i = id.0 as usize;
         if i >= 256 {
@@ -25,6 +33,16 @@ impl TagSet {
         let lane = i / 64;
         let bit = i % 64;
         self.0[lane] |= 1u64 << bit;
+    }
+
+    pub fn remove(&mut self, id: TagId) {
+        let i = id.0 as usize;
+        if i >= 256 {
+            return;
+        }
+        let lane = i / 64;
+        let bit = i % 64;
+        self.0[lane] &= !(1u64 << bit);
     }
 
     pub fn contains(&self, id: TagId) -> bool {
@@ -44,6 +62,11 @@ impl TagSet {
             self.0[2] | other.0[2],
             self.0[3] | other.0[3],
         ])
+    }
+
+    /// True if any tag is present in both sets.
+    pub fn intersects(&self, other: &Self) -> bool {
+        (0..4).any(|lane| (self.0[lane] & other.0[lane]) != 0)
     }
 
     /// True iff every tag set in `required` is also present in `self`.

@@ -150,9 +150,9 @@ fn run_passes_from(
     for p in low..5 {
         match p {
             0 => fill_fields(matrix, chunk_coord, params, None),
-            1 => apply_threshold_tags(matrix, &params.biome_tuning, tag_reg),
+            1 => apply_threshold_tags(matrix, &params.biome_tuning, tag_reg, &params.tag_pool),
             2 => classify_cells(matrix, &params.biome_tuning, tag_reg),
-            3 => apply_hydrology_chunk(matrix, &params.biome_tuning, tag_reg),
+            3 => apply_hydrology_chunk(matrix, &params.biome_tuning, tag_reg, &params.tag_pool),
             4 => apply_agent_overlay(matrix),
             _ => {}
         }
@@ -251,9 +251,9 @@ pub fn materialize_chunks(
 
     for (entity, chunk, mut matrix) in q.iter_mut() {
         fill_fields(&mut matrix, chunk.coord, &params, None);
-        apply_threshold_tags(&mut matrix, &params.biome_tuning, tag_reg);
+        apply_threshold_tags(&mut matrix, &params.biome_tuning, tag_reg, &params.tag_pool);
         classify_cells(&mut matrix, &params.biome_tuning, tag_reg);
-        apply_hydrology_chunk(&mut matrix, &params.biome_tuning, tag_reg);
+        apply_hydrology_chunk(&mut matrix, &params.biome_tuning, tag_reg, &params.tag_pool);
         apply_agent_overlay(&mut matrix);
         #[cfg(feature = "dev_tools")]
         let (data, trace) = materialize_traced(&matrix, rule_set, reg, tag_reg);

@@ -108,6 +108,7 @@ struct PassTuningFingerprint<'a> {
     river_count: u32,
     lake_count: u32,
     mountain_threshold: f32,
+    tag_pool: [u64; 4],
 }
 
 pub fn hash_tuning_bucket(params: &WorldGenParams) -> u64 {
@@ -121,6 +122,7 @@ pub fn hash_tuning_bucket(params: &WorldGenParams) -> u64 {
         river_count: params.river_count,
         lake_count: params.lake_count,
         mountain_threshold: params.mountain_threshold,
+        tag_pool: params.tag_pool.bits(),
     })
 }
 

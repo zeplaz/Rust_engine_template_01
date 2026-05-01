@@ -92,7 +92,81 @@ pub fn tag_overlay_rgba(tag_target: TagId, cell_tags: &TagSet) -> [u8; 4] {
     }
 }
 
-// Resources for the world preview
+#[inline]
+pub fn tag_overlay_rgba_pool(cell_tags: &TagSet, pool: &TagSet) -> [u8; 4] {
+    if pool.intersects(cell_tags) {
+        TAG_OVERLAY_HIGHLIGHT
+    } else {
+        [0, 0, 0, 0]
+    }
+}
+
+/// Zoom / pan state for the World Preview egui window.
+#[derive(Resource)]
+pub struct WorldPreviewView {
+    /// Scale factor: 1.0 = one screen pixel per map tile (at default fit).
+    pub zoom: f32,
+}
+
+impl WorldPreviewView {
+    pub const ZOOM_MIN: f32 = 0.02;
+    pub const ZOOM_MAX: f32 = 32.0;
+}
+
+impl Default for WorldPreviewView {
+    fn default() -> Self {
+        Self { zoom: 1.0 }
+    }
+}
+
+fn rgba_preview_image(width: u32, height: u32) -> Image {
+    let size = Extent3d {
+        width,
+        height,
+        depth_or_array_layers: 1,
+    };
+
+    let mut image = Image {
+        texture_descriptor: TextureDescriptor {
+            label: None,
+            size,
+            dimension: TextureDimension::D2,
+            format: TextureFormat::Rgba8UnormSrgb,
+            mip_level_count: 1,
+            sample_count: 1,
+            usage: TextureUsages::TEXTURE_BINDING
+                | TextureUsages::COPY_DST
+                | TextureUsages::RENDER_ATTACHMENT,
+            view_formats: &[],
+        },
+        ..default()
+    };
+
+    image.data = Some(vec![0; 4 * width as usize * height as usize]);
+    image
+}
+
+/// Resize the RGBA preview buffer when `WorldGenParams` width/height changes.
+pub fn sync_world_preview_texture_size(
+    params: Res<WorldGenParams>,
+    mut preview: ResMut<WorldPreviewTexture>,
+    mut images: ResMut<Assets<Image>>,
+) {
+    if preview.width == params.width && preview.height == params.height {
+        return;
+    }
+
+    let width = params.width;
+    let height = params.height;
+    let old = preview.texture.clone();
+    let image = rgba_preview_image(width, height);
+    preview.texture = images.add(image);
+    preview.width = width;
+    preview.height = height;
+
+    let _ = images.remove(old.id());
+}
+
 #[derive(Resource)]
 pub struct WorldPreviewTexture {
     pub texture: Handle<Image>,
@@ -117,41 +191,13 @@ pub fn init_world_preview_texture(
     params: Res<WorldGenParams>,
 ) {
     // Create a new image
-    let width = params.width;
-    let height = params.height;
-    let size = Extent3d {
-        width,
-        height,
-        depth_or_array_layers: 1,
-    };
-    
-    let mut image = Image {
-        texture_descriptor: TextureDescriptor {
-            label: None,
-            size,
-            dimension: TextureDimension::D2,
-            format: TextureFormat::Rgba8UnormSrgb,
-            mip_level_count: 1,
-            sample_count: 1,
-            usage: TextureUsages::TEXTURE_BINDING
-                | TextureUsages::COPY_DST
-                | TextureUsages::RENDER_ATTACHMENT,
-            view_formats: &[],
-        },
-        ..default()
-    };
-    
-    // Fill with black background
-    image.data = Some(vec![0; (4 * width * height) as usize]);
-    
-    // Add to assets
+    let image = rgba_preview_image(params.width, params.height);
     let texture_handle = images.add(image);
     
-    // Create resource
     commands.insert_resource(WorldPreviewTexture {
         texture: texture_handle,
-        width,
-        height,
+        width: params.width,
+        height: params.height,
     });
 }
 
@@ -160,6 +206,7 @@ pub fn update_world_preview_texture(
     mut images: ResMut<Assets<Image>>,
     preview_texture: Res<WorldPreviewTexture>,
     world_gen_ui_state: Res<WorldGenUiState>,
+    world_gen_params: Res<WorldGenParams>,
     handles: Res<TerrainRegistriesHandles>,
     materials: Res<Assets<MaterialRegistry>>,
     tile_query: Query<(&Transform, &Height, &Moisture, &Temperature, &TerrainType), With<TileMarker>>,
@@ -236,11 +283,11 @@ pub fn update_world_preview_texture(
                     }
                 }
             }
-            PreviewMode::Tag(tag) => {
+            PreviewMode::Tag => {
                 let tx = x as u32;
                 let ty = y as u32;
                 match cell_tags_for_world_tile(tx, ty, &tag_slices) {
-                    Some(ts) => tag_overlay_rgba(tag, &ts),
+                    Some(ts) => tag_overlay_rgba_pool(&ts, &world_gen_params.tag_pool),
                     None => [0, 0, 0, 0],
                 }
             }
@@ -265,19 +312,53 @@ pub fn display_world_preview(
     mut contexts: bevy_egui::EguiContexts,
     preview_texture: Res<WorldPreviewTexture>,
     world_gen_ui_state: Res<WorldGenUiState>,
+    mut view: ResMut<WorldPreviewView>,
 ) -> Result {
     if !world_gen_ui_state.visible {
         return Ok(());
     }
 
-    // Register texture with egui context for display.
     let texture_id = contexts.add_image(EguiTextureHandle::Strong(preview_texture.texture.clone()));
-    let size = [preview_texture.width as f32, preview_texture.height as f32];
+    let tex_w = preview_texture.width as f32;
+    let tex_h = preview_texture.height as f32;
 
     egui::Window::new("World Preview")
         .resizable(true)
         .show(contexts.ctx_mut()?, |ui| {
-            ui.image(egui::load::SizedTexture::new(texture_id, size));
+            ui.horizontal(|ui| {
+                ui.label("Zoom:");
+                ui.add(egui::Slider::new(
+                    &mut view.zoom,
+                    WorldPreviewView::ZOOM_MIN..=WorldPreviewView::ZOOM_MAX,
+                ));
+                if ui.button("1∶1").clicked() {
+                    view.zoom = 1.0;
+                }
+            });
+            ui.small("Ctrl + scroll wheel (⌘ on macOS) over the map to zoom. Scroll to pan.");
+
+            let z = view
+                .zoom
+                .clamp(WorldPreviewView::ZOOM_MIN, WorldPreviewView::ZOOM_MAX);
+            let display_w = tex_w * z;
+            let display_h = tex_h * z;
+
+            egui::ScrollArea::both()
+                .auto_shrink([false, false])
+                .show(ui, |ui| {
+                    let sized = egui::load::SizedTexture::new(texture_id, [display_w, display_h]);
+                    let resp = ui.image(sized);
+                    if resp.hovered() {
+                        let zoom_mod = ui.ctx().input(|i| i.modifiers.ctrl || i.modifiers.command);
+                        let scroll = ui.ctx().input(|i| i.smooth_scroll_delta.y);
+                        if zoom_mod && scroll != 0.0 {
+                            view.zoom *= 1.0 + scroll * 0.002;
+                            view.zoom = view
+                                .zoom
+                                .clamp(WorldPreviewView::ZOOM_MIN, WorldPreviewView::ZOOM_MAX);
+                        }
+                    }
+                });
         });
     Ok(())
 }
@@ -327,10 +408,13 @@ pub struct WorldPreviewPlugin;
 impl Plugin for WorldPreviewPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<WorldPreviewTexture>()
-           .add_systems(Startup, init_world_preview_texture)
-           // Non-egui texture update stays in Update; display rendering in EguiPrimaryContextPass
-           .add_systems(Update, update_world_preview_texture)
-           .add_systems(EguiPrimaryContextPass, display_world_preview);
+            .init_resource::<WorldPreviewView>()
+            .add_systems(Startup, init_world_preview_texture)
+            .add_systems(
+                Update,
+                (sync_world_preview_texture_size, update_world_preview_texture).chain(),
+            )
+            .add_systems(EguiPrimaryContextPass, display_world_preview);
     }
 }
 
@@ -368,5 +452,16 @@ mod tests {
         ts.insert(TagId(5));
         assert_eq!(tag_overlay_rgba(TagId(5), &ts), TAG_OVERLAY_HIGHLIGHT);
         assert_eq!(tag_overlay_rgba(TagId(4), &ts), [0, 0, 0, 0]);
+    }
+
+    #[test]
+    fn preview_tag_pool_highlights_overlap() {
+        let mut pool = TagSet::default();
+        pool.insert(TagId(4));
+        let mut ts = TagSet::default();
+        ts.insert(TagId(5));
+        assert_eq!(tag_overlay_rgba_pool(&ts, &pool), [0, 0, 0, 0]);
+        ts.insert(TagId(4));
+        assert_eq!(tag_overlay_rgba_pool(&ts, &pool), TAG_OVERLAY_HIGHLIGHT);
     }
 }

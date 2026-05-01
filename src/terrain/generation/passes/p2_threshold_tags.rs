@@ -9,13 +9,18 @@ fn insert_named(
     registry: &TagRegistry,
     name: &str,
     on: bool,
+    tag_pool: &TagSet,
 ) {
     if !on {
         return;
     }
-    if let Some(id) = registry.tag_id(name) {
-        set.insert(id);
+    let Some(id) = registry.tag_id(name) else {
+        return;
+    };
+    if !tag_pool.contains(id) {
+        return;
     }
+    set.insert(id);
 }
 
 /// Writes **baseline** threshold tags into `matrix.tags` (replaces prior contents per cell).
@@ -23,6 +28,7 @@ pub fn apply_threshold_tags(
     matrix: &mut ChunkCellMatrix,
     tuning: &BiomeTuning,
     tag_registry: &TagRegistry,
+    tag_pool: &TagSet,
 ) {
     let n = &tuning.threshold_tag_names;
     for i in 0..matrix.elevation.len() {
@@ -31,36 +37,41 @@ pub fn apply_threshold_tags(
         let t = matrix.temperature[i];
         let mut tags = TagSet::default();
         let lowland = h >= tuning.beach_height_max && h < tuning.mountain_height_min;
-        insert_named(&mut tags, tag_registry, &n.lowland, lowland);
+        insert_named(&mut tags, tag_registry, &n.lowland, lowland, tag_pool);
         insert_named(
             &mut tags,
             tag_registry,
             &n.highland,
             h >= tuning.mountain_height_min,
+            tag_pool,
         );
         insert_named(
             &mut tags,
             tag_registry,
             &n.wet,
             m >= tuning.wetland_moist_threshold,
+            tag_pool,
         );
         insert_named(
             &mut tags,
             tag_registry,
             &n.dry,
             m <= tuning.desert_moisture_max,
+            tag_pool,
         );
         insert_named(
             &mut tags,
             tag_registry,
             &n.hot,
             t >= tuning.hot_lowlands_temperature_min,
+            tag_pool,
         );
         insert_named(
             &mut tags,
             tag_registry,
             &n.cold,
             t <= tuning.tundra_temperature_max,
+            tag_pool,
         );
         matrix.tags[i] = tags;
     }
@@ -84,7 +95,7 @@ mod tests {
         matrix.moisture[0] = tuning.wetland_moist_threshold + 0.01;
         matrix.temperature[0] = 0.5;
 
-        apply_threshold_tags(&mut matrix, &tuning, &tag_registry);
+        apply_threshold_tags(&mut matrix, &tuning, &tag_registry, &TagSet::ALL);
 
         let low_id = tag_registry.tag_id("lowland").unwrap();
         let wet_id = tag_registry.tag_id("wet").unwrap();

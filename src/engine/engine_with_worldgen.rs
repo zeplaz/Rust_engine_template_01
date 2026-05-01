@@ -1,8 +1,8 @@
 use crate::entities::production::core::ManufacturingCorePlugin;
 use crate::entities::vehicles::RoadVehicleToolsUiPlugin;
 use crate::gui::{
-    DiagnosticsUiPlugin, FactionToolsUiPlugin, HudQuickMenuPlugin, InGameHudPlugin,
-    KeybindingsOptionsPlugin, LogisticsTargetsPanelPlugin,
+    BaseMenuPlugin, DiagnosticsUiPlugin, FactionToolsUiPlugin, HudQuickMenuPlugin,
+    InGameHudPlugin, KeybindingsOptionsPlugin, LogisticsTargetsPanelPlugin, SplashPlugin,
 };
 #[cfg(feature = "bevy_tilemap_adapter")]
 use crate::render::TilemapAdapterPlugin;
@@ -12,15 +12,42 @@ use crate::systems::production::{
 use crate::systems::sim_control::SimControlPlugin;
 use crate::systems::terrain::MaterialUnificationPlugin;
 use crate::terrain::generation::WorldGenToolsPlugin;
+use bevy::asset::AssetPlugin;
 use bevy::prelude::*;
+use bevy::window::{PresentMode, Window, WindowPlugin};
 use bevy_egui::EguiPlugin;
+
+/// Root camera for **Bevy UI** (splash, in-game HUD). Without this, the window stays clear/black.
+fn spawn_primary_ui_camera(mut commands: Commands) {
+    commands.spawn(Camera2d);
+}
 
 pub struct EnginePlugin;
 
 impl Plugin for EnginePlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins(DefaultPlugins)
+        // Resolve `assets/` from the crate root so running `target/debug/proc_A_dine01.exe` from any CWD still finds files.
+        let assets_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("assets");
+        let asset_file_path = assets_root.to_string_lossy().into_owned();
+
+        app.add_plugins(
+            DefaultPlugins
+                .set(AssetPlugin {
+                    file_path: asset_file_path,
+                    ..default()
+                })
+                .set(WindowPlugin {
+                    primary_window: Some(Window {
+                        present_mode: PresentMode::AutoVsync,
+                        ..default()
+                    }),
+                    ..default()
+                }),
+        )
+            .add_systems(Startup, spawn_primary_ui_camera)
             .add_plugins(EguiPlugin::default())
+            .add_plugins(SplashPlugin)
+            .add_plugins(BaseMenuPlugin)
             // Sim loop control (pause / step / speed / monotonic tick).
             .add_plugins(SimControlPlugin)
             .add_plugins(MaterialUnificationPlugin);

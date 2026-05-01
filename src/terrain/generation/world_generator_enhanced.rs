@@ -1,9 +1,12 @@
 use std::collections::HashMap;
+use std::time::Instant;
 
 use bevy::prelude::*;
+use crossbeam_channel::{unbounded, Receiver, TryRecvError};
 use noise::{Fbm, NoiseFn, Perlin};
 use rand::{Rng, SeedableRng};
 use rand::rngs::StdRng;
+use rayon::prelude::*;
 use serde::{Deserialize, Serialize};
 
 use super::terrain_noise::{
@@ -15,7 +18,12 @@ use super::tuning_io;
 use crate::terrain::voronoi_enhanced::*;
 use crate::terrain::world::GeoRegion;
 use crate::terrain::biome::{classify_biome, BiomeTuning, TerrainClass};
+use crate::engine::WorldGenFlowState;
 use crate::terrain::generation::hydrology::{compute_hydrology_world, HydrologyParams, HydrologyResult};
+use crate::terrain::generation::world_gen_diagnostics::{
+    summary_line, write_world_gen_debug_report, WorldGenLastDebugReport, WorldGenRunTiming,
+};
+use crate::terrain::material::TagSet;
 
 // World generation parameters structure
 #[derive(Resource, Clone)]
@@ -25,12 +33,15 @@ pub struct WorldGenParams {
     pub height: u32,
     pub seed: u64,
     
-    // Region settings
+    /// Voronoi **site count** for tile→region assignment (ECS hierarchy / future sim hooks).
+    /// This does **not** drive height, moisture, or temperature — those come entirely from fractal noise
+    /// (`noise_scale`, profiles, island falloff, warp, etc.).
     pub num_regions: u32,
     pub region_method: RegionMethod,
     pub region_iterations: u32,  // For centroidal relaxation
     
     // Terrain / noise
+    /// Multiplier on **world tile indices** into height noise (higher → higher spatial frequency → more features per map).
     pub noise_scale: f32,
     pub noise_octaves: u32,
     /// Lacunarity between octaves (frequency multiplier per octave).
@@ -61,6 +72,8 @@ pub struct WorldGenParams {
     pub mountain_threshold: f32,
     pub island_mode: bool,
     pub island_falloff: f32,
+    /// Tags permitted in pass 2 / 4 (`ChunkCellMatrix`). Unchecked tags in the World Generator UI are cleared here.
+    pub tag_pool: TagSet,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Serialize, Deserialize)]
@@ -99,11 +112,13 @@ impl Default for WorldGenParams {
             mountain_threshold: 0.7,
             island_mode: true,
             island_falloff: 3.0,
+            tag_pool: TagSet::ALL,
         }
     }
 }
 
 /// Noise kernels for height / warp / detail / moisture / temperature — build once per full-world or chunk fill.
+#[derive(Clone)]
 pub struct WorldNoiseKernels {
     pub height: HeightNoise,
     pub warp: Fbm<Perlin>,
@@ -158,6 +173,91 @@ pub fn build_world_noise_kernels(params: &WorldGenParams, tuning: &NoiseSampling
         detail: detail_noise,
         moisture: moisture_noise,
         temperature: temperature_noise,
+    }
+}
+
+/// One tile after parallel height-field sampling (ECS spawn reads this on the main thread).
+#[derive(Clone, Copy)]
+struct TileSpawnData {
+    moisture: f32,
+    temperature: f32,
+    biome: TerrainClass,
+    region_index: usize,
+}
+
+/// Raster produced on a background thread (`rayon` per row), then consumed for batched ECS spawns.
+struct PrecomputedTiling {
+    height_grid: Vec<f32>,
+    cells: Vec<TileSpawnData>,
+}
+
+#[inline]
+fn closest_voronoi_region_index(position: Vec2, regions: &[Vec<VoronoiSite>]) -> usize {
+    let mut closest_region_index = 0usize;
+    let mut min_distance = f32::MAX;
+    for (region_index, region_points) in regions.iter().enumerate() {
+        for point in region_points {
+            let distance = position.distance(point.position);
+            if distance < min_distance {
+                min_distance = distance;
+                closest_region_index = region_index;
+            }
+        }
+    }
+    closest_region_index
+}
+
+/// Parallel over world rows (CPU pool). Runs on a dedicated thread so the Bevy main thread can keep polling.
+fn compute_tiling_parallel(
+    params: WorldGenParams,
+    regions: Vec<Vec<VoronoiSite>>,
+    kernels: WorldNoiseKernels,
+    w: usize,
+    height: u32,
+) -> PrecomputedTiling {
+    let h = height as usize;
+    let grid_len = w * h;
+    let mut height_grid = vec![0.0f32; grid_len];
+    let mut cells = vec![
+        TileSpawnData {
+            moisture: 0.0,
+            temperature: 0.0,
+            biome: TerrainClass::Grassland,
+            region_index: 0,
+        };
+        grid_len
+    ];
+    let tuning = &params.noise_sampling;
+
+    cells
+        .par_chunks_mut(w)
+        .zip(height_grid.par_chunks_mut(w))
+        .enumerate()
+        .for_each(|(y, (row_cells, row_heights))| {
+            for x in 0..w {
+                let position = Vec2::new(x as f32, y as f32);
+                let closest_region_index = closest_voronoi_region_index(position, &regions);
+                let (hv, mv, tv) = sample_fields_at_world_tile(
+                    x as i32,
+                    y as i32,
+                    &params,
+                    &kernels,
+                    tuning,
+                );
+                row_heights[x] = hv;
+                let biome = determine_biome(hv, mv, tv, &params.biome_tuning);
+                row_cells[x] = TileSpawnData {
+                    moisture: mv,
+                    temperature: tv,
+                    biome,
+                    region_index: closest_region_index,
+                };
+            }
+        });
+
+    PrecomputedTiling {
+        height_grid,
+        cells,
     }
 }
 
@@ -221,6 +321,16 @@ pub fn sample_fields_at_world_tile(
 #[derive(Component)]
 pub struct WorldMarker;
 
+/// Removes prior procedural worlds before regenerating (avoids duplicate `WorldMarker` hierarchies).
+pub fn despawn_generated_world_entities(
+    commands: &mut Commands,
+    query: &Query<Entity, With<WorldMarker>>,
+) {
+    for entity in query.iter() {
+        commands.entity(entity).despawn();
+    }
+}
+
 // Component to tag entities as part of a region
 #[derive(Component)]
 pub struct RegionMarker;
@@ -258,149 +368,485 @@ pub type BiomeType = TerrainClass;
 #[derive(Component)]
 pub struct TerrainType(pub TerrainClass);
 
-// System to generate the world
-pub fn generate_world(
+/// Max world width / height (tiles) for **full** generation (`GenerateWorldEvent` full phase).
+pub const MAX_WORLD_GEN_AXIS: u32 = 5120;
+
+/// Hard cap on `width * height` for a **full** generation pass (prevents runaway ECS spawns / memory pressure).
+pub const MAX_WORLD_GEN_TILES: u64 = MAX_WORLD_GEN_AXIS as u64 * MAX_WORLD_GEN_AXIS as u64;
+
+/// Max width/height for the **preview** generation pass (smaller than full [`MAX_WORLD_GEN_AXIS`]).
+pub const PREVIEW_WORLD_MAX_AXIS: u32 = 1024;
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub enum WorldGenPhase {
+    Preview,
+    Full,
+}
+
+fn preview_world_params(full: &WorldGenParams) -> WorldGenParams {
+    let mut p = full.clone();
+    p.width = p.width.clamp(128, PREVIEW_WORLD_MAX_AXIS);
+    p.height = p.height.clamp(128, PREVIEW_WORLD_MAX_AXIS);
+    p.river_count = p.river_count.min(2);
+    p.lake_count = p.lake_count.min(1);
+    p
+}
+
+fn effective_params_for_phase(stored: &WorldGenParams, phase: WorldGenPhase) -> WorldGenParams {
+    match phase {
+        WorldGenPhase::Preview => preview_world_params(stored),
+        WorldGenPhase::Full => stored.clone(),
+    }
+}
+
+/// Rows of tiles spawned per frame after parallel sampling (ECS work stays batched for responsive UI).
+const WORLD_GEN_TILE_ROWS_PER_TICK: u32 = 32;
+
+#[derive(Resource, Default)]
+pub struct WorldGenProgress {
+    pub running: bool,
+    pub label: String,
+    /// Approximate overall progress 0.0–1.0 (terrain ~0–0.9, hydrology tail).
+    pub fraction: f32,
+}
+
+#[derive(Clone, Copy)]
+enum WorldGenPipelineStep {
+    /// Background thread: `rayon` row-parallel noise + Voronoi; main thread polls `tiling_compute_rx`.
+    TilingComputePending,
+    /// Batched `Commands::spawn` from precomputed raster.
+    TilingSpawn,
+    /// Waiting on hydrology result (compute off main thread; ECS spawn on receive).
+    HydrologyPending,
+}
+
+struct WorldGenActive {
+    request_phase: WorldGenPhase,
+    run_params: WorldGenParams,
+    region_entities: Vec<Entity>,
+    geo_regions: Vec<GeoRegion>,
+    w: usize,
+    height_grid: Vec<f32>,
+    /// Filled when [`WorldGenPipelineStep::TilingComputePending`] receives [`PrecomputedTiling`].
+    spawn_cells: Vec<TileSpawnData>,
+    tile_lookup: HashMap<(u32, u32), Entity>,
+    next_tile_row: u32,
+    step: WorldGenPipelineStep,
+    biome_counts: HashMap<String, u64>,
+    timing: WorldGenRunTiming,
+    tiling_compute_rx: Option<Receiver<PrecomputedTiling>>,
+    hydro_rx: Option<Receiver<HydrologyResult>>,
+    hydro_queued_at: Option<Instant>,
+}
+
+#[derive(Resource, Default)]
+pub struct WorldGenJobSlot(Option<WorldGenActive>);
+
+impl WorldGenJobSlot {
+    pub fn is_busy(&self) -> bool {
+        self.0.is_some()
+    }
+}
+
+fn finalize_world_gen_job(
+    job: WorldGenActive,
+    hydro: Option<&HydrologyResult>,
+    last_debug: &mut WorldGenLastDebugReport,
+    completed: &mut MessageWriter<WorldGenCompletedEvent>,
+    progress: &mut WorldGenProgress,
+) {
+    let phase = job.request_phase;
+    let p = &job.run_params;
+    let phase_str = format!("{phase:?}");
+    let profile_str = format!("{:?}", p.height_noise_profile);
+    let region_str = format!("{:?}", p.region_method);
+
+    match write_world_gen_debug_report(
+        &phase_str,
+        p.seed,
+        p.num_regions,
+        &region_str,
+        p.noise_scale,
+        p.noise_octaves,
+        &profile_str,
+        p.island_mode,
+        p.island_falloff,
+        p.river_count,
+        p.lake_count,
+        p.width,
+        p.height,
+        &job.timing,
+        &job.height_grid,
+        &job.biome_counts,
+        hydro,
+    ) {
+        Ok((path, report)) => {
+            last_debug.path = Some(path.clone());
+            last_debug.summary_one_line = summary_line(&path, &report);
+        }
+        Err(e) => {
+            warn!("Could not write world_gen debug report: {e}");
+            last_debug.path = None;
+            last_debug.summary_one_line = format!("debug write failed: {e}");
+        }
+    }
+
+    #[cfg(debug_assertions)]
+    debug!(
+        target: "world_gen",
+        "Finished {:?} pass ({}×{})",
+        phase,
+        p.width,
+        p.height
+    );
+    info!("World generation completed ({phase:?})");
+    completed.write(WorldGenCompletedEvent(phase));
+    progress.running = false;
+    progress.label.clear();
+    progress.fraction = 0.0;
+}
+
+fn world_gen_pipeline_tick(
     mut commands: Commands,
     params: Res<WorldGenParams>,
+    mut pending: ResMut<WorldGenPending>,
+    mut slot: ResMut<WorldGenJobSlot>,
+    mut progress: ResMut<WorldGenProgress>,
+    world_roots: Query<Entity, With<WorldMarker>>,
+    mut completed: MessageWriter<WorldGenCompletedEvent>,
+    mut last_debug: ResMut<WorldGenLastDebugReport>,
 ) {
-    info!("Generating world with seed: {}", params.seed);
-    
-    // Create a stable RNG from the seed
-    let mut rng = StdRng::seed_from_u64(params.seed);
-    
-    let ns = &params.noise_sampling;
-    let kernels = build_world_noise_kernels(&params, ns);
+    if let Some(job) = slot.0.as_mut() {
+        if matches!(job.step, WorldGenPipelineStep::HydrologyPending) {
+            let Some(rx) = job.hydro_rx.as_ref() else {
+                error!("world_gen: HydrologyPending without receiver — resetting job");
+                slot.0 = None;
+                progress.running = false;
+                progress.label.clear();
+                progress.fraction = 0.0;
+                return;
+            };
+            match rx.try_recv() {
+                Ok(hydro) => {
+                    let hydro_ms = job
+                        .hydro_queued_at
+                        .as_ref()
+                        .expect("hydro queue time")
+                        .elapsed()
+                        .as_secs_f64()
+                        * 1000.0;
+                    let mut job = slot.0.take().expect("job");
+                    job.timing.hydrology_compute_ms = hydro_ms;
+                    job.hydro_rx = None;
+                    job.hydro_queued_at = None;
 
-    // Generate regions using the specified method
-    let regions = generate_regions(&params, &mut rng);
-    
-    // Create the world entity
-    let world_entity = commands.spawn((
-        WorldMarker,
-        Name::new("World"),
-    )).id();
-    
-    // Create and populate the regions
-    let mut geo_regions = Vec::new();
-    let mut region_entities = Vec::new();
-    
-    for (region_index, region_points) in regions.iter().enumerate() {
-        // Calculate region center
-        let mut center = Vec2::ZERO;
-        for point in region_points {
-            center += point.position;
-        }
-        center /= region_points.len() as f32;
-        
-        // Create a GeoRegion
-        let mut geo_region = GeoRegion::new();
-        geo_region.center = center;
-        
-        // Create the region entity
-        let region_entity = commands.spawn((
-            RegionMarker,
-            Transform::from_translation(Vec3::new(center.x, 0.0, center.y)),
-            Name::new(format!("Region {}", region_index)),
-        )).id();
-        
-        region_entities.push(region_entity);
-        geo_regions.push(geo_region);
-        
-        // Make the region a child of the world
-        commands.entity(world_entity).add_children(&[region_entity]);
-    }
+                    progress.label = "Spawning rivers / lakes…".to_string();
+                    progress.fraction = 0.95;
 
-    let w = params.width as usize;
-    let grid_len = w.saturating_mul(params.height as usize).max(1);
-    let mut height_grid: Vec<f32> = vec![0.0; grid_len];
-    let mut tile_lookup: HashMap<(u32, u32), Entity> =
-        HashMap::with_capacity(grid_len.max(256));
-
-    // Process all points to generate terrain
-    for y in 0..params.height {
-        for x in 0..params.width {
-            let position = Vec2::new(x as f32, y as f32);
-
-            // Determine which region this point belongs to
-
-            let mut closest_region_index = 0;
-            let mut min_distance = f32::MAX;
-            
-            for (region_index, region_points) in regions.iter().enumerate() {
-                // Find the closest point in the region
-                for point in region_points {
-                    let distance = position.distance(point.position);
-                    if distance < min_distance {
-                        min_distance = distance;
-                        closest_region_index = region_index;
+                    if job.run_params.river_count > 0 {
+                        spawn_hydrology_rivers(
+                            &mut commands,
+                            &job.run_params,
+                            &job.tile_lookup,
+                            &hydro,
+                        );
                     }
+                    if job.run_params.lake_count > 0 {
+                        spawn_hydrology_lakes(
+                            &mut commands,
+                            &job.run_params,
+                            &job.tile_lookup,
+                            &job.geo_regions,
+                            &job.region_entities,
+                            &hydro,
+                        );
+                    }
+                    finalize_world_gen_job(
+                        job,
+                        Some(&hydro),
+                        &mut last_debug,
+                        &mut completed,
+                        &mut progress,
+                    );
+                    return;
+                }
+                Err(TryRecvError::Empty) => {
+                    progress.label = "Rivers / lakes (background CPU)…".to_string();
+                    progress.fraction = 0.92;
+                    return;
+                }
+                Err(TryRecvError::Disconnected) => {
+                    error!("Hydrology worker thread disconnected");
+                    slot.0 = None;
+                    progress.running = false;
+                    progress.label.clear();
+                    progress.fraction = 0.0;
+                    return;
                 }
             }
-            
-            let (height_value, moisture_value, temperature_value) = sample_fields_at_world_tile(
-                x as i32,
-                y as i32,
-                &params,
-                &kernels,
-                ns,
-            );
-            height_grid[y as usize * w + x as usize] = height_value;
-
-            // Determine biome based on height, moisture, and temperature
-            let biome = determine_biome(
-                height_value,
-                moisture_value,
-                temperature_value,
-                &params.biome_tuning,
-            );
-            
-            // Create tile entity
-            let tile_entity = commands.spawn((
-                TileMarker,
-                Transform::from_translation(Vec3::new(x as f32, height_value * 20.0, y as f32)),
-                Height(height_value),
-                Moisture(moisture_value),
-                Temperature(temperature_value),
-                TerrainType(biome),
-                Name::new(format!("Tile ({}, {})", x, y)),
-            )).id();
-            
-            // Add to region
-            commands.entity(region_entities[closest_region_index]).add_children(&[tile_entity]);
-            
-            // Add to GeoRegion data structure
-            geo_regions[closest_region_index].add_tile(position, tile_entity);
-
-            tile_lookup.insert((x, y), tile_entity);
+        } else if matches!(job.step, WorldGenPipelineStep::TilingComputePending) {
+            let Some(rx) = job.tiling_compute_rx.as_ref() else {
+                error!("world_gen: TilingComputePending without receiver — resetting job");
+                slot.0 = None;
+                progress.running = false;
+                progress.label.clear();
+                progress.fraction = 0.0;
+                return;
+            };
+            match rx.try_recv() {
+                Ok(pre) => {
+                    job.height_grid = pre.height_grid;
+                    job.spawn_cells = pre.cells;
+                    job.tiling_compute_rx = None;
+                    job.step = WorldGenPipelineStep::TilingSpawn;
+                    job.next_tile_row = 0;
+                    progress.label = "Terrain (spawning tiles)…".to_string();
+                    progress.fraction = 0.45;
+                }
+                Err(TryRecvError::Empty) => {
+                    progress.label = "Terrain (sampling, parallel CPU)…".to_string();
+                    progress.fraction = 0.25;
+                    return;
+                }
+                Err(TryRecvError::Disconnected) => {
+                    error!("Terrain sampling worker thread disconnected");
+                    slot.0 = None;
+                    progress.running = false;
+                    progress.label.clear();
+                    progress.fraction = 0.0;
+                    return;
+                }
+            }
         }
     }
 
-    if params.river_count > 0 || params.lake_count > 0 {
-        let hydro_params = HydrologyParams::from_biome_tuning(&params.biome_tuning);
-        let hydro = compute_hydrology_world(
+    // Start new job
+    if slot.0.is_none() {
+        let Some(phase) = pending.0.take() else {
+            return;
+        };
+
+        let run_params = effective_params_for_phase(&params, phase);
+        let tiles = (run_params.width as u64).saturating_mul(run_params.height as u64);
+
+        if phase == WorldGenPhase::Full
+            && (tiles > MAX_WORLD_GEN_TILES
+                || run_params.width > MAX_WORLD_GEN_AXIS
+                || run_params.height > MAX_WORLD_GEN_AXIS)
+        {
+            error!(
+                "Full world generation aborted: {}×{} ({} tiles) exceeds cap {}×{} ({} tiles). Lower width/height under World Generator.",
+                run_params.width,
+                run_params.height,
+                tiles,
+                MAX_WORLD_GEN_AXIS,
+                MAX_WORLD_GEN_AXIS,
+                MAX_WORLD_GEN_TILES
+            );
+            progress.running = false;
+            progress.label.clear();
+            progress.fraction = 0.0;
+            return;
+        }
+
+        #[cfg(debug_assertions)]
+        debug!(
+            target: "world_gen",
+            "Starting {phase:?} pass: logical {}×{} (requested {}×{}), seed {}",
+            run_params.width,
+            run_params.height,
             params.width,
             params.height,
-            &height_grid,
-            &hydro_params,
-            params.river_count,
-            params.lake_count,
+            run_params.seed
         );
-        if params.river_count > 0 {
-            spawn_hydrology_rivers(&mut commands, &params, &tile_lookup, &hydro);
+
+        despawn_generated_world_entities(&mut commands, &world_roots);
+
+        info!(
+            "Generating {phase:?} world with seed: {} ({}×{})",
+            run_params.seed, run_params.width, run_params.height
+        );
+
+        let wall_start = Instant::now();
+        let t_regions = Instant::now();
+        let mut rng = StdRng::seed_from_u64(run_params.seed);
+        let ns = &run_params.noise_sampling;
+        let kernels = build_world_noise_kernels(&run_params, ns);
+        let regions = generate_regions(&run_params, &mut rng);
+        let regions_ms = t_regions.elapsed().as_secs_f64() * 1000.0;
+
+        let world_entity = commands
+            .spawn((WorldMarker, Name::new("World")))
+            .id();
+
+        let mut geo_regions = Vec::new();
+        let mut region_entities = Vec::new();
+
+        for (region_index, region_points) in regions.iter().enumerate() {
+            let mut center = Vec2::ZERO;
+            for point in region_points {
+                center += point.position;
+            }
+            center /= region_points.len() as f32;
+
+            let mut geo_region = GeoRegion::new();
+            geo_region.center = center;
+
+            let region_entity = commands
+                .spawn((
+                    RegionMarker,
+                    Transform::from_translation(Vec3::new(center.x, 0.0, center.y)),
+                    Name::new(format!("Region {}", region_index)),
+                ))
+                .id();
+
+            region_entities.push(region_entity);
+            geo_regions.push(geo_region);
+            commands.entity(world_entity).add_children(&[region_entity]);
         }
-        if params.lake_count > 0 {
-            spawn_hydrology_lakes(
-                &mut commands,
-                &params,
-                &tile_lookup,
-                &geo_regions,
-                &region_entities,
-                &hydro,
+
+        let w = run_params.width as usize;
+        let grid_len = w.saturating_mul(run_params.height as usize).max(1);
+        let tiling_started = Instant::now();
+
+        let run_params_thread = run_params.clone();
+        let regions_thread = regions.clone();
+        let kernels_thread = kernels;
+        let height_thread = run_params.height;
+        let (tx, rx) = unbounded();
+        std::thread::spawn(move || {
+            let pre = compute_tiling_parallel(
+                run_params_thread,
+                regions_thread,
+                kernels_thread,
+                w,
+                height_thread,
             );
+            let _ = tx.send(pre);
+        });
+
+        slot.0 = Some(WorldGenActive {
+            request_phase: phase,
+            run_params,
+            region_entities,
+            geo_regions,
+            w,
+            height_grid: Vec::new(),
+            spawn_cells: Vec::new(),
+            tile_lookup: HashMap::with_capacity(grid_len.max(256)),
+            next_tile_row: 0,
+            step: WorldGenPipelineStep::TilingComputePending,
+            biome_counts: HashMap::new(),
+            timing: WorldGenRunTiming::from_parts(wall_start, regions_ms, tiling_started),
+            tiling_compute_rx: Some(rx),
+            hydro_rx: None,
+            hydro_queued_at: None,
+        });
+
+        progress.running = true;
+        progress.label = "Terrain (sampling, parallel CPU)…".to_string();
+        progress.fraction = 0.1;
+    }
+
+    let Some(job) = slot.0.as_mut() else {
+        return;
+    };
+
+    if !matches!(job.step, WorldGenPipelineStep::TilingSpawn) {
+        return;
+    }
+
+    let h = job.run_params.height;
+    let y_end = (job.next_tile_row + WORLD_GEN_TILE_ROWS_PER_TICK).min(h);
+    let w = job.w;
+    debug_assert_eq!(
+        job.spawn_cells.len(),
+        w * h as usize,
+        "spawn_cells must match raster size"
+    );
+
+    for y in job.next_tile_row..y_end {
+        let row_off = y as usize * w;
+        for x in 0..job.run_params.width {
+            let idx = row_off + x as usize;
+            let cell = job.spawn_cells[idx];
+            let height_value = job.height_grid[idx];
+            let position = Vec2::new(x as f32, y as f32);
+
+            *job
+                .biome_counts
+                .entry(format!("{:?}", cell.biome))
+                .or_insert(0) += 1;
+
+            let tile_entity = commands
+                .spawn((
+                    TileMarker,
+                    Transform::from_translation(Vec3::new(
+                        x as f32,
+                        height_value * 20.0,
+                        y as f32,
+                    )),
+                    Height(height_value),
+                    Moisture(cell.moisture),
+                    Temperature(cell.temperature),
+                    TerrainType(cell.biome),
+                    Name::new(format!("Tile ({}, {})", x, y)),
+                ))
+                .id();
+
+            commands
+                .entity(job.region_entities[cell.region_index])
+                .add_children(&[tile_entity]);
+            job.geo_regions[cell.region_index].add_tile(position, tile_entity);
+
+            job.tile_lookup.insert((x, y), tile_entity);
         }
     }
-    
-    info!("World generation completed");
+
+    job.next_tile_row = y_end;
+    progress.fraction = if y_end >= h {
+        0.9
+    } else {
+        y_end as f32 / h as f32 * 0.9
+    };
+    progress.label = format!("Terrain (spawning tiles)… {y_end} / {h}");
+
+    if y_end < h {
+        return;
+    }
+
+    job.spawn_cells = Vec::new();
+
+    job.timing.tiling_ms = job
+        .timing
+        .tiling_started
+        .elapsed()
+        .as_secs_f64()
+        * 1000.0;
+
+    if job.run_params.river_count > 0 || job.run_params.lake_count > 0 {
+        let (tx, rx) = unbounded();
+        let grid = job.height_grid.clone();
+        let gw = job.run_params.width;
+        let gh = job.run_params.height;
+        let rc = job.run_params.river_count;
+        let lc = job.run_params.lake_count;
+        let tuning = job.run_params.biome_tuning.clone();
+        std::thread::spawn(move || {
+            let hp = HydrologyParams::from_biome_tuning(&tuning);
+            let r = compute_hydrology_world(gw, gh, &grid, &hp, rc, lc);
+            let _ = tx.send(r);
+        });
+        job.hydro_rx = Some(rx);
+        job.hydro_queued_at = Some(Instant::now());
+        job.step = WorldGenPipelineStep::HydrologyPending;
+        progress.label = "Rivers / lakes (queued to CPU thread)…".to_string();
+        progress.fraction = 0.9;
+        return;
+    }
+
+    let job = slot.0.take().expect("tiling done");
+    finalize_world_gen_job(job, None, &mut last_debug, &mut completed, &mut progress);
 }
 
 // Generate regions using the specified method
@@ -566,8 +1012,34 @@ fn spawn_hydrology_lakes(
 }
 
 // Message to trigger world generation (buffered; processed before `generate_world` in chain).
+#[derive(Message, Clone)]
+pub struct GenerateWorldEvent {
+    pub params: WorldGenParams,
+    pub phase: WorldGenPhase,
+}
+
+/// When `Some`, `generate_world` will run once for that phase and then clear.
+#[derive(Resource, Default)]
+struct WorldGenPending(Option<WorldGenPhase>);
+
 #[derive(Message)]
-pub struct GenerateWorldEvent(pub WorldGenParams);
+struct WorldGenCompletedEvent(WorldGenPhase);
+
+fn world_gen_apply_completion(
+    mut events: MessageReader<WorldGenCompletedEvent>,
+    mut next_flow: ResMut<NextState<WorldGenFlowState>>,
+) {
+    for WorldGenCompletedEvent(phase) in events.read() {
+        match phase {
+            WorldGenPhase::Preview => {
+                NextState::set_if_neq(&mut *next_flow, WorldGenFlowState::PreviewReady);
+            }
+            WorldGenPhase::Full => {
+                NextState::set_if_neq(&mut *next_flow, WorldGenFlowState::FullReady);
+            }
+        }
+    }
+}
 
 /// Default path for optional JSON overlay (`noise_sampling` + `biome_tuning`).
 pub const WORLD_GEN_TUNING_JSON_PATH: &str = "assets/config/world_gen_tuning.json";
@@ -578,12 +1050,23 @@ pub struct WorldGeneratorPlugin;
 impl Plugin for WorldGeneratorPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<WorldGenParams>()
-           .add_message::<GenerateWorldEvent>()
-           .add_systems(Startup, merge_world_gen_tuning_from_json)
-           .add_systems(
-               Update,
-               (apply_generate_world_request, generate_world).chain(),
-           );
+            .init_resource::<WorldGenPending>()
+            .init_resource::<WorldGenJobSlot>()
+            .init_resource::<WorldGenProgress>()
+            .init_resource::<WorldGenLastDebugReport>()
+            .init_state::<WorldGenFlowState>()
+            .add_message::<GenerateWorldEvent>()
+            .add_message::<WorldGenCompletedEvent>()
+            .add_systems(Startup, merge_world_gen_tuning_from_json)
+            .add_systems(
+                Update,
+                (
+                    apply_generate_world_request,
+                    world_gen_pipeline_tick,
+                    world_gen_apply_completion,
+                )
+                    .chain(),
+            );
     }
 }
 
@@ -601,9 +1084,47 @@ fn merge_world_gen_tuning_from_json(mut params: ResMut<WorldGenParams>) {
 fn apply_generate_world_request(
     mut events: MessageReader<GenerateWorldEvent>,
     mut params: ResMut<WorldGenParams>,
+    mut pending: ResMut<WorldGenPending>,
+    flow: Res<State<WorldGenFlowState>>,
+    job_slot: Res<WorldGenJobSlot>,
 ) {
-    for GenerateWorldEvent(new_params) in events.read() {
-        *params = new_params.clone();
+    for ev in events.read() {
+        if job_slot.0.is_some() {
+            warn!("World generation already running; duplicate request ignored.");
+            continue;
+        }
+        let allow = match (*flow.get(), ev.phase) {
+            (WorldGenFlowState::Idle, _) => {
+                warn!(
+                    "Ignored {:?} world generation: use Main Menu → New World. \
+                     (Debug builds: F8 from simulation opens the tool into the setup flow.)",
+                    ev.phase
+                );
+                false
+            }
+            (WorldGenFlowState::LoadingSave, _) => {
+                warn!("Ignored world generation while save load is active.");
+                false
+            }
+            (_, WorldGenPhase::Full) if *flow.get() != WorldGenFlowState::PreviewReady => {
+                warn!(
+                    "Full generation requires a preview first: click “Generate preview”, then “Generate full world”."
+                );
+                false
+            }
+            (WorldGenFlowState::FullReady, _) => {
+                warn!(
+                    "Ignored generation: confirm “Enter world” or discard the current world first."
+                );
+                false
+            }
+            _ => true,
+        };
+        if !allow {
+            continue;
+        }
+        params.clone_from(&ev.params);
+        pending.0 = Some(ev.phase);
     }
 }
 

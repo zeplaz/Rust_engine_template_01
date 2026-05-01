@@ -1,5 +1,7 @@
 use bevy::prelude::*;
 
+use crate::gui::AppStartState;
+
 use crate::terrain::generation::world_generator_enhanced::WorldGeneratorPlugin;
 use crate::gui::editor::world_gen_ui::WorldGenUiPlugin;
 use crate::gui::editor::world_preview::WorldPreviewPlugin;
@@ -53,7 +55,10 @@ impl Plugin for WorldGenToolsPlugin {
     fn build(&self, app: &mut App) {
         // Explicitly keep tools UI in this plugin; in-game runtime uses WorldGenerationInGamePlugin.
         app.add_plugins((WorldGenerationInGamePlugin, WorldGenerationToolsUiPlugin))
-           .add_systems(Update, world_gen_key_input);
+            .add_systems(
+                Update,
+                world_gen_key_input.run_if(not(in_state(AppStartState::Splash))),
+            );
         
         info!("World Generation Tools initialized. Default key for UI is F8; change under Options → key bindings when KeybindingsOptionsPlugin is loaded.");
     }

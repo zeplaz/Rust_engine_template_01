@@ -14,7 +14,8 @@ use crate::terrain::biome::BiomeTuning;
 pub struct HydrologyParams {
     /// Normalized height below which tiles are treated as open water.
     pub water_line: f32,
-    /// Fraction of max upstream accumulation required for a river channel cell.
+    /// River channel sensitivity: blended against **max** accumulation and a **rank** threshold so
+    /// a single mega–catchment cell does not starve smaller maps of visible channels.
     pub river_acc_quantile: f32,
     /// Min absolute slope (neighbour height delta) to tag erosion on river cells.
     pub erosion_slope_threshold: f32,

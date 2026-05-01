@@ -7,8 +7,9 @@ use bevy_ecs_tilemap::prelude::*;
 
 use crate::gui::editor::world_gen_ui::{PreviewMode, WorldGenUiState};
 use crate::terrain::biome::TerrainClass;
+use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
 use crate::terrain::generation::ChunkCellMatrix;
-use crate::terrain::material::{MaterialId, MaterializedChunk, MaterializedResources};
+use crate::terrain::material::{MaterialId, MaterializedChunk, MaterializedResources, TagSet};
 
 /// Three tilemaps per chunk: terrain (z=0), overlay preview (z=10), resources (z=20).
 #[derive(Component, Clone, Copy, Debug)]
@@ -143,7 +144,7 @@ fn terrain_class_discriminant(c: TerrainClass) -> u32 {
     }
 }
 
-fn overlay_index_for_cell(matrix: &ChunkCellMatrix, x: u32, y: u32, mode: PreviewMode) -> u32 {
+fn overlay_index_for_cell(matrix: &ChunkCellMatrix, x: u32, y: u32, mode: PreviewMode, tag_pool: &TagSet) -> u32 {
     let i = matrix.idx(x, y);
     match mode {
         PreviewMode::None => 0,
@@ -152,8 +153,8 @@ fn overlay_index_for_cell(matrix: &ChunkCellMatrix, x: u32, y: u32, mode: Previe
         PreviewMode::Temperature => (matrix.temperature[i].clamp(0.0, 1.0) * 255.0) as u32,
         PreviewMode::Biome => terrain_class_discriminant(matrix.family[i]),
         PreviewMode::Regions => 0,
-        PreviewMode::Tag(tag) => {
-            if matrix.tags[i].contains(tag) {
+        PreviewMode::Tag => {
+            if matrix.tags[i].intersects(tag_pool) {
                 240
             } else {
                 0
@@ -169,11 +170,13 @@ fn sync_overlay_layer_changed(
         Or<(Changed<ChunkCellMatrix>, Changed<ChunkTilemaps>)>,
     >,
     ui: Res<WorldGenUiState>,
+    params: Res<WorldGenParams>,
     storages: Query<&TileStorage>,
 ) {
     let mode = ui.preview_mode;
+    let pool = params.tag_pool;
     for (matrix, maps) in chunks.iter() {
-        apply_overlay_indices(&mut commands, matrix, maps.overlay, mode, &storages);
+        apply_overlay_indices(&mut commands, matrix, maps.overlay, mode, &pool, &storages);
     }
 }
 
@@ -181,14 +184,16 @@ fn sync_overlay_on_preview_change(
     mut commands: Commands,
     chunks: Query<(&ChunkCellMatrix, &ChunkTilemaps)>,
     ui: Res<WorldGenUiState>,
+    params: Res<WorldGenParams>,
     storages: Query<&TileStorage>,
 ) {
-    if !ui.is_changed() {
+    if !ui.is_changed() && !params.is_changed() {
         return;
     }
     let mode = ui.preview_mode;
+    let pool = params.tag_pool;
     for (matrix, maps) in chunks.iter() {
-        apply_overlay_indices(&mut commands, matrix, maps.overlay, mode, &storages);
+        apply_overlay_indices(&mut commands, matrix, maps.overlay, mode, &pool, &storages);
     }
 }
 
@@ -197,6 +202,7 @@ fn apply_overlay_indices(
     matrix: &ChunkCellMatrix,
     tilemap: Entity,
     mode: PreviewMode,
+    tag_pool: &TagSet,
     storages: &Query<&TileStorage>,
 ) {
     let Ok(storage) = storages.get(tilemap) else {
@@ -207,7 +213,7 @@ fn apply_overlay_indices(
     }
     for y in 0..matrix.size.y {
         for x in 0..matrix.size.x {
-            let idx = overlay_index_for_cell(matrix, x, y, mode);
+            let idx = overlay_index_for_cell(matrix, x, y, mode, tag_pool);
             let pos = TilePos { x, y };
             let Some(tile_e) = storage.get(&pos) else {
                 continue;
@@ -340,6 +346,7 @@ mod tests {
         app.add_plugins(MinimalPlugins)
             .add_plugins(TilemapAdapterPlugin)
             .init_resource::<WorldGenUiState>()
+            .init_resource::<WorldGenParams>()
             .add_systems(Startup, setup_tilemaps_entity);
         app.update();
         app.update();
@@ -370,6 +377,7 @@ mod tests {
         app.add_plugins(MinimalPlugins)
             .add_plugins(TilemapAdapterPlugin)
             .init_resource::<WorldGenUiState>()
+            .init_resource::<WorldGenParams>()
             .add_systems(Startup, setup_tilemaps_entity);
         app.update();
         app.update();
