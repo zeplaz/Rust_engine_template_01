@@ -24,6 +24,7 @@ Version: `v1.0.1`
 | [`../matrix/terrain_biome/material_unification_matrix_v1.md`](../matrix/terrain_biome/material_unification_matrix_v1.md) | Terrain matrix — many **non–U-phase** rows may still be Pending / Partial (backlog beyond U7) |
 | [`../matrix/terrain_biome/runbook/README.md`](../matrix/terrain_biome/runbook/README.md) | Step-pack index; **maintenance capsule** [`../legacy_runbooks/terrain/terrain_u_applied_maintenance_v1.md`](../legacy_runbooks/terrain/terrain_u_applied_maintenance_v1.md) |
 | [`implementation_gap_hunt_runbook_v1.md`](implementation_gap_hunt_runbook_v1.md) | **Cadence sweep** for stubs / TODOs / placeholder behavior in `src/` — run before big planning or after merges (§3) |
+| [`developer_reflective_brief_v1.plan.md`](developer_reflective_brief_v1.plan.md) | **Engineering** mirror (open in Cursor for plan/Mermaid preview): IA, maps, UI wireframes, decisions table · stub [`developer_reflective_brief_v1.md`](developer_reflective_brief_v1.md) |
 
 ---
 
@@ -111,3 +112,4 @@ Before writing **G2** atomic Rust steps (after **G2-S00**), answer gap-hunt §5:
 | [`implementation_gap_hunt_runbook_v1.md`](implementation_gap_hunt_runbook_v1.md) | Cadence stub/placeholder sweep in `src/` (§2–§4); triage before runbook waves |
 | [`gap_remediation_runbook_v1.md`](gap_remediation_runbook_v1.md) | **G1** hydrology **Applied** (capsule + legacy full); active **G3** GUI; **G2–G5** parked until §4 **BQ-109+** |
 | [`../matrix/gap_remediation/runbook/g3_execution_cycle_v1.md`](../matrix/gap_remediation/runbook/g3_execution_cycle_v1.md) | **G3** step order: GUI and backlog orchestrators alternate; cycle **results** use **BQ-###** only |
+| [`developer_reflective_brief_v1.plan.md`](developer_reflective_brief_v1.plan.md) | Engineering fills IA + diagrams + decisions; ties **BQ-###** back into this brief |
