@@ -1,7 +1,10 @@
+use std::collections::HashMap;
+
 use bevy::prelude::*;
 use noise::{Fbm, NoiseFn, Perlin};
 use rand::{Rng, SeedableRng};
 use rand::rngs::StdRng;
+use serde::{Deserialize, Serialize};
 
 use super::terrain_noise::{
     build_fbm_perlin, build_height_noise, sample_height_field, HeightNoise, NoiseSamplingTuning,
@@ -12,6 +15,7 @@ use super::tuning_io;
 use crate::terrain::voronoi_enhanced::*;
 use crate::terrain::world::GeoRegion;
 use crate::terrain::biome::{classify_biome, BiomeTuning, TerrainClass};
+use crate::terrain::generation::hydrology::{compute_hydrology_world, HydrologyParams, HydrologyResult};
 
 // World generation parameters structure
 #[derive(Resource, Clone)]
@@ -59,7 +63,7 @@ pub struct WorldGenParams {
     pub island_falloff: f32,
 }
 
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug, Serialize, Deserialize)]
 pub enum RegionMethod {
     Regular,
     Manhattan,
@@ -225,6 +229,14 @@ pub struct RegionMarker;
 #[derive(Component)]
 pub struct TileMarker;
 
+/// Marker for hydrology feature entities spawned during enhanced world gen.
+#[derive(Component)]
+pub struct RiverMarker;
+
+/// Marker for hydrology feature entities spawned during enhanced world gen.
+#[derive(Component)]
+pub struct LakeMarker;
+
 // Height component
 #[derive(Component)]
 pub struct Height(pub f32);
@@ -297,13 +309,20 @@ pub fn generate_world(
         // Make the region a child of the world
         commands.entity(world_entity).add_children(&[region_entity]);
     }
-    
+
+    let w = params.width as usize;
+    let grid_len = w.saturating_mul(params.height as usize).max(1);
+    let mut height_grid: Vec<f32> = vec![0.0; grid_len];
+    let mut tile_lookup: HashMap<(u32, u32), Entity> =
+        HashMap::with_capacity(grid_len.max(256));
+
     // Process all points to generate terrain
     for y in 0..params.height {
         for x in 0..params.width {
             let position = Vec2::new(x as f32, y as f32);
-            
+
             // Determine which region this point belongs to
+
             let mut closest_region_index = 0;
             let mut min_distance = f32::MAX;
             
@@ -325,6 +344,7 @@ pub fn generate_world(
                 &kernels,
                 ns,
             );
+            height_grid[y as usize * w + x as usize] = height_value;
 
             // Determine biome based on height, moisture, and temperature
             let biome = determine_biome(
@@ -350,17 +370,34 @@ pub fn generate_world(
             
             // Add to GeoRegion data structure
             geo_regions[closest_region_index].add_tile(position, tile_entity);
+
+            tile_lookup.insert((x, y), tile_entity);
         }
     }
-    
-    // Generate rivers if specified
-    if params.river_count > 0 {
-        generate_rivers(&mut commands, &params, &geo_regions, &region_entities, &mut rng);
-    }
-    
-    // Generate lakes if specified
-    if params.lake_count > 0 {
-        generate_lakes(&mut commands, &params, &geo_regions, &region_entities, &mut rng);
+
+    if params.river_count > 0 || params.lake_count > 0 {
+        let hydro_params = HydrologyParams::from_biome_tuning(&params.biome_tuning);
+        let hydro = compute_hydrology_world(
+            params.width,
+            params.height,
+            &height_grid,
+            &hydro_params,
+            params.river_count,
+            params.lake_count,
+        );
+        if params.river_count > 0 {
+            spawn_hydrology_rivers(&mut commands, &params, &tile_lookup, &hydro);
+        }
+        if params.lake_count > 0 {
+            spawn_hydrology_lakes(
+                &mut commands,
+                &params,
+                &tile_lookup,
+                &geo_regions,
+                &region_entities,
+                &hydro,
+            );
+        }
     }
     
     info!("World generation completed");
@@ -430,117 +467,100 @@ fn determine_biome(
     classify_biome(height, moisture, temperature, tuning).terrain_class
 }
 
-// Generate rivers
-fn generate_rivers(
-    commands: &mut Commands,
-    params: &WorldGenParams,
+fn region_entity_for_tile(
     geo_regions: &[GeoRegion],
     region_entities: &[Entity],
-    rng: &mut StdRng,
+    x: u32,
+    y: u32,
+) -> Option<Entity> {
+    let key = (x as usize, y as usize);
+    let idx = geo_regions.iter().position(|r| r.tiles.contains_key(&key))?;
+    Some(region_entities[idx])
+}
+
+fn apply_shallow_water_visual(
+    commands: &mut Commands,
+    tile: Entity,
+    gx: f32,
+    gy: f32,
+    water_height: f32,
 ) {
-    // Implementation for river generation
-    // This is a simplified approach that traces paths from high to low elevation
-    
-    for river_index in 0..params.river_count {
-        // Choose a random starting point in a high elevation area
-        let mut start_x = rng.gen_range(0..params.width);
-        let mut start_y = rng.gen_range(0..params.height);
-        
-        // Find the region for this point
-        let mut current_position = Vec2::new(start_x as f32, start_y as f32);
-        
-        // Create a river entity
-        let river_entity = commands.spawn((
-            Name::new(format!("River {}", river_index)),
-        )).id();
-        
-        // Generate river path
-        let max_steps = 1000; // Prevent infinite loops
-        let mut river_tiles = Vec::new();
-        
-        for _ in 0..max_steps {
-            // Add current position to river
-            river_tiles.push(current_position);
-            
-            // Find lowest neighbor
-            let neighbors = [
-                Vec2::new(current_position.x - 1.0, current_position.y),
-                Vec2::new(current_position.x + 1.0, current_position.y),
-                Vec2::new(current_position.x, current_position.y - 1.0),
-                Vec2::new(current_position.x, current_position.y + 1.0),
-                Vec2::new(current_position.x - 1.0, current_position.y - 1.0),
-                Vec2::new(current_position.x + 1.0, current_position.y - 1.0),
-                Vec2::new(current_position.x - 1.0, current_position.y + 1.0),
-                Vec2::new(current_position.x + 1.0, current_position.y + 1.0),
-            ];
-            
-            // We would need to find these tiles and check their heights
-            // This is simplified - in a real implementation, you'd look up the actual entities
-            
-            // For now, we'll just move in a random direction that's within bounds
-            let direction = rng.gen_range(0..8);
-            let next_position = neighbors[direction];
-            
-            // Check if in bounds
-            if next_position.x < 0.0 || next_position.x >= params.width as f32 || 
-               next_position.y < 0.0 || next_position.y >= params.height as f32 {
-                break;
-            }
-            
-            // Check if we've reached water
-            // We would need to check the biome of the tile at this position
-            
-            // Move to next position
-            current_position = next_position;
-        }
-        
-        // For each river tile, change its biome to water and attach to river entity
-        for position in river_tiles {
-            // In a real implementation, you would:
-            // 1. Find the tile entity at this position
-            // 2. Change its TerrainType to water
-            // 3. Possibly make it a child of the river entity
+    commands.entity(tile).insert((
+        TerrainType(TerrainClass::ShallowWater),
+        Height(water_height),
+        Moisture(0.95),
+        Transform::from_xyz(gx, water_height * 20.0, gy),
+    ));
+}
+
+fn spawn_hydrology_rivers(
+    commands: &mut Commands,
+    params: &WorldGenParams,
+    tile_lookup: &HashMap<(u32, u32), Entity>,
+    hydro: &HydrologyResult,
+) {
+    let water_line = params.biome_tuning.shallow_water_height_max;
+    let river_depth = (water_line * 0.92).clamp(0.02, 0.98);
+    for (river_index, path) in hydro.rivers.iter().enumerate() {
+        let river_entity = commands
+            .spawn((RiverMarker, Name::new(format!("River {}", river_index))))
+            .id();
+        for &(tx, ty) in path {
+            let Some(&tile_e) = tile_lookup.get(&(tx, ty)) else {
+                continue;
+            };
+            apply_shallow_water_visual(
+                commands,
+                tile_e,
+                tx as f32,
+                ty as f32,
+                river_depth,
+            );
+            commands.entity(tile_e).insert(ChildOf(river_entity));
         }
     }
 }
 
-// Generate lakes
-fn generate_lakes(
+fn spawn_hydrology_lakes(
     commands: &mut Commands,
     params: &WorldGenParams,
+    tile_lookup: &HashMap<(u32, u32), Entity>,
     geo_regions: &[GeoRegion],
     region_entities: &[Entity],
-    rng: &mut StdRng,
+    hydro: &HydrologyResult,
 ) {
-    // Implementation for lake generation
-    // This is a simplified placeholder
-    
-    for lake_index in 0..params.lake_count {
-        // Choose a random center point
-        let center_x = rng.gen_range(0..params.width);
-        let center_y = rng.gen_range(0..params.height);
-        
-        // Create a lake entity
-        let lake_entity = commands.spawn((
-            Name::new(format!("Lake {}", lake_index)),
-        )).id();
-        
-        // Determine lake size (radius)
-        let radius = rng.gen_range(5..20);
-        
-        // Fill the circular area with water tiles
-        for y in center_y.saturating_sub(radius)..=(center_y + radius).min(params.height - 1) {
-            for x in center_x.saturating_sub(radius)..=(center_x + radius).min(params.width - 1) {
-                let distance = ((x as i32 - center_x as i32).pow(2) + 
-                               (y as i32 - center_y as i32).pow(2)) as f32;
-                
-                if distance <= (radius * radius) as f32 {
-                    // In a real implementation, you would:
-                    // 1. Find the tile entity at this position
-                    // 2. Change its TerrainType to water
-                    // 3. Possibly make it a child of the lake entity
-                }
-            }
+    let tuning = &params.biome_tuning;
+    let lake_depth = ((tuning.deep_water_height_max + tuning.shallow_water_height_max) * 0.5)
+        .clamp(0.02, 0.98);
+
+    for (lake_index, region) in hydro.lakes.iter().enumerate() {
+        if region.cells.is_empty() {
+            continue;
+        }
+        let (cx, cy) = region.cells[region.cells.len() / 2];
+        let Some(region_parent) = region_entity_for_tile(geo_regions, region_entities, cx, cy)
+        else {
+            continue;
+        };
+        let lake_entity = commands
+            .spawn((
+                LakeMarker,
+                Name::new(format!("Lake {}", lake_index)),
+                ChildOf(region_parent),
+            ))
+            .id();
+        for &(lx, ly) in &region.cells {
+            let Some(&tile_e) = tile_lookup.get(&(lx, ly)) else {
+                continue;
+            };
+            apply_shallow_water_visual(
+                commands,
+                tile_e,
+                lx as f32,
+                ly as f32,
+                lake_depth,
+            );
+            commands.entity(tile_e).insert(ChildOf(lake_entity));
         }
     }
 }
@@ -584,5 +604,47 @@ fn apply_generate_world_request(
 ) {
     for GenerateWorldEvent(new_params) in events.read() {
         *params = new_params.clone();
+    }
+}
+
+#[cfg(test)]
+mod hydrology_spawning_tests {
+    use crate::terrain::generation::hydrology::{
+        compute_hydrology_rect, compute_hydrology_world, HydrologyParams,
+    };
+
+    #[test]
+    fn generate_rivers_uses_compute_hydrology() {
+        let w = 16u32;
+        let h = 16u32;
+        let mut dem = vec![0.45f32; (w * h) as usize];
+        for x in 0..w {
+            dem[x as usize] = 0.95;
+        }
+        let p = HydrologyParams::default();
+        let r = compute_hydrology_world(w, h, &dem, &p, 2, 1);
+        assert!(r.rivers.len() <= 2);
+        assert!(r.lakes.len() <= 1);
+    }
+
+    #[test]
+    fn enhanced_generator_consumes_p4_hydrology_tags() {
+        let w = 12u32;
+        let h = 12u32;
+        let mut dem = Vec::new();
+        for y in 0..h {
+            for x in 0..w {
+                let fx = x as f32 / (w.saturating_sub(1).max(1) as f32);
+                let fy = y as f32 / (h.saturating_sub(1).max(1) as f32);
+                dem.push(fx * 0.6 + fy * 0.4);
+            }
+        }
+        let p = HydrologyParams::default();
+        let rect = compute_hydrology_rect(w, h, &dem, &p, 3);
+        let world = compute_hydrology_world(w, h, &dem, &p, 3, 0);
+        assert_eq!(world.accumulation, rect.accumulation);
+        assert_eq!(world.river_mask, rect.river_mask);
+        assert_eq!(world.lake_mask, rect.lake_mask);
+        assert!(world.lakes.is_empty());
     }
 }

@@ -9,8 +9,19 @@ path = "src/lib.rs"
 
 [features]
 default = []
-# Optional research / ML prototypes (`engine/lmodels/*`); not part of the default game build boundary.
-research_lmodels = []
+# Optional research / ML prototypes (`engine::lmodels`); **stub only** — linfa crates are declared for
+# future wiring; `cargo build --features research_lmodels` prints a `build.rs` warning. See module docs.
+research_lmodels = [
+    "dep:linfa",
+    "dep:linfa-clustering",
+    "dep:linfa-nn",
+    "dep:linfa-ica",
+    "dep:linfa-kernel",
+]
+# U6: `bevy_ecs_tilemap` with **render disabled** — headless-safe ECS + `TileTextureIndex` sync only.
+bevy_tilemap_adapter = ["dep:bevy_ecs_tilemap"]
+# U7: rule-trace component + materialize tracing (no extra deps).
+dev_tools = []
 # `legacy_io_templates` removed 2026-04-26: src/io/templates.rs retired.
 
 [package.metadata.'cargo-features']
@@ -35,6 +46,14 @@ noise = "0.8.2"
 rand = "0.8.5"
 rand_chacha = "0.3.1"
 nalgebra = "0.32.2"
+bevy_ecs_tilemap = { version = "0.18.1", optional = true, default-features = false }
+
+# Optional linfa stack for `research_lmodels` — **not integrated** in `engine::lmodels` yet (stub module).
+linfa = { version = "0.8.1", optional = true, default-features = false }
+linfa-clustering = { version = "0.8.1", optional = true, default-features = false }
+linfa-nn = { version = "0.8.1", optional = true, default-features = false }
+linfa-ica = { version = "0.8.1", optional = true, default-features = false }
+linfa-kernel = { version = "0.8.1", optional = true, default-features = false }
 
 # Removed from previous Cargo.toml (incompatible with wgpu / Bevy architecture):
 #   imgui      — OpenGL ImGui; replaced by bevy_egui

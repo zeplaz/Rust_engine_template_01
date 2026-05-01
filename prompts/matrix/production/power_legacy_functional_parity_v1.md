@@ -83,3 +83,17 @@ Legend: **D** = `PlantDefinition` JSON (`operational.*`), **E** = ECS/systems, *
 ## 7. Review cadence
 
 When changing power behavior: update **this file** (gap rows), **JSON**, and **serialization matrix** if save format includes `definition_id` or instance params.
+
+---
+
+## 8. G2 gap remediation traceability (failure mode placeholders)
+
+Canonical stubs today: [`src/entities/production/power/failure_modes.rs`](../../../src/entities/production/power/failure_modes.rs). Legacy scheduling pointer: [`src/systems/production/power_systems.rs`](../../../src/systems/production/power_systems.rs).
+
+| Rust symbol | Capability marker | Parity anchor | G2 promotion notes |
+|:---|:---|:---|:---|
+| `steam_system_placeholder` | `SteamCycle` | §5 table — thermal columns (coal/oil/gas/biomass) **Operational** / **ReducedCapacity** | Steam leak, condenser vacuum, feedwater chemistry → derate `efficiency` or `status`; needs gap-hunt §5 + `PlantDefinition.operational` hooks |
+| `nuclear_containment_placeholder` | `ContainmentBuilding` | §5 — **Nuclear** column across statuses | SCRAM, containment pressure, decay heat; high coupling to damage/alerts — **ASK:** until §5 |
+| `variable_renewable_placeholder` | `VariableRenewable` | §5 — **Solar** / **Wind** | Resource (irradiance/wind) coupling to output; **ASK:** until §5 |
+
+**Rule:** No new `match` on `PowerPlantType` for these behaviors; keep **capability** queries as today (`failure_modes.rs` module docs).

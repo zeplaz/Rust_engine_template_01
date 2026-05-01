@@ -1,6 +1,6 @@
 # U5 — `MaterializedChunk` + `MaterialUnificationPlugin` + preview hookup `v1`
 
-> **Pair:** orchestrator [`../../../guides/terrain_unification_runbook_v1.md`](../../../guides/terrain_unification_runbook_v1.md) · matrix [`../material_unification_matrix_v1.md`](../material_unification_matrix_v1.md) §§5, 6, 7, 9, 10. **Pre-req:** U4 must be **Applied**.
+> **Pair:** orchestrator [`../../../guides/terrain_unification_runbook_v1.md`](../../../guides/terrain_unification_runbook_v1.md) · matrix [`../material_unification_matrix_v1.md`](../material_unification_matrix_v1.md) §§5, 6, 7, 9, 10 · **tools parity** [`../../../guides/world_assets_tools_rulebook_v1.md`](../../../guides/world_assets_tools_rulebook_v1.md). **Pre-req:** U4 must be **Applied**.
 
 **Phase goal:** Wire the U3+U4 building blocks into ECS and the editor preview. **No tilemap renderer yet** — that is U6.
 
@@ -124,7 +124,8 @@
 **Verify:**
 - `cargo test -p proc_A_dine01 material_ -- --nocapture`
 - `cargo test -p proc_A_dine01 preview_ -- --nocapture`
-- `cargo run -p proc_A_dine01 --bin world_generator` (smoke run; close window after seeing preview render with material colors — manual gate, surface to human).
+- **`cargo run -p proc_A_dine01 --bin world_generator`** (smoke; same F8 + registry preview stack as main — see [`../../../guides/world_assets_tools_rulebook_v1.md`](../../../guides/world_assets_tools_rulebook_v1.md); close window after seeing preview — manual gate, surface to human).
+- `cargo run -p proc_A_dine01` (full engine smoke; optional duplicate check)
 
 **Definition of done:**
 - [ ] All U5 tests green.

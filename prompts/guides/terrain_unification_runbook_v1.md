@@ -1,8 +1,8 @@
 # Terrain unification runbook `v1`
 
-> **STATUS:** Documentation harness for executing **Rust phases U3–U7** of the material / tag / rule unification. **U3** scaffolding lives in [`src/terrain/material/`](../../src/terrain/material/). Designed for a small-context-window agent looping atomic steps with verification at each one.
+> **STATUS:** **U3**–**U5** applied; **U6** optional tilemap adapter is **Applied** with feature `bevy_tilemap_adapter` (multi-layer ECS). **U7** applied (invalidation, profiles, `dev_tools` trace). See matrix §10.
 
-Version: `v1.0.2`
+Version: `v1.0.4`
 Audience: agents (and humans) implementing the engine side of the terrain-unification stack.
 
 ---
@@ -101,10 +101,10 @@ Mirrors [`material_unification_matrix_v1.md`](../matrix/terrain_biome/material_u
 | **U1** | n/a (committed example assets) | Applied |
 | **U2** | n/a (Python asset-editor pages) | Applied |
 | **U3** | [`runbook/u3_steps_v1.md`](../matrix/terrain_biome/runbook/u3_steps_v1.md) | **Applied** |
-| **U4** | [`runbook/u4_steps_v1.md`](../matrix/terrain_biome/runbook/u4_steps_v1.md) | Pending |
-| **U5** | [`runbook/u5_steps_v1.md`](../matrix/terrain_biome/runbook/u5_steps_v1.md) | Pending |
-| **U6** | [`runbook/u6_steps_v1.md`](../matrix/terrain_biome/runbook/u6_steps_v1.md) | Pending |
-| **U7** | [`runbook/u7_steps_v1.md`](../matrix/terrain_biome/runbook/u7_steps_v1.md) | Pending |
+| **U4** | [`runbook/u4_steps_v1.md`](../matrix/terrain_biome/runbook/u4_steps_v1.md) | **Applied** |
+| **U5** | [`runbook/u5_steps_v1.md`](../matrix/terrain_biome/runbook/u5_steps_v1.md) | **Applied** |
+| **U6** | [`runbook/u6_steps_v1.md`](../matrix/terrain_biome/runbook/u6_steps_v1.md) | **Applied** |
+| **U7** | [`runbook/u7_steps_v1.md`](../matrix/terrain_biome/runbook/u7_steps_v1.md) | **Applied** |
 
 **Sequencing rule:** finish U*N* before starting U*N+1*. U6 is **optional**; U7 only begins once U5 is fully Applied.
 
@@ -148,8 +148,8 @@ Mirrors [`material_unification_matrix_v1.md`](../matrix/terrain_biome/material_u
 | Rule | `MaterialRule`, `RuleSet` (RON) *(U3)* |
 | Resolver | `resolve_material(...)` *(U3)* |
 | Per-chunk grid | `ChunkCellMatrix` *(U4)* |
-| Materialized output | `MaterializedChunk { materials: Vec<MaterialId> }` *(U5)* |
-| Plugin | `MaterialUnificationPlugin` *(U5)* |
+| Materialized output | `MaterializedChunk { size, materials }` |
+| Plugin | `MaterialUnificationPlugin` *(U5)* · `TilemapAdapterPlugin` *(U6, feature `bevy_tilemap_adapter`)* |
 
 ---
 
@@ -158,6 +158,7 @@ Mirrors [`material_unification_matrix_v1.md`](../matrix/terrain_biome/material_u
 | Doc | Purpose |
 |:---|:---|
 | [`../matrix/terrain_biome/material_unification_matrix_v1.md`](../matrix/terrain_biome/material_unification_matrix_v1.md) | Source of truth for U-phase status, §§13–18 invalidation/layers/perf/LLM/packs |
+| [`world_assets_tools_rulebook_v1.md`](world_assets_tools_rulebook_v1.md) | **World tools parity** — `world_generator` vs `EnginePlugin`, tests, iteration gate before U6/U7 |
 | [`../matrix/terrain_biome/runbook/README.md`](../matrix/terrain_biome/runbook/README.md) | Step-pack index |
 | [`../designer_questions/terrain_world/material_tag_rule_system_v1.md`](../designer_questions/terrain_world/material_tag_rule_system_v1.md) | Designer narrative + open Qs **42–48** |
 | [`../designer_questions/terrain_world/implementation_questions_v1.md`](../designer_questions/terrain_world/implementation_questions_v1.md) | Engineering checklist (items **42–78**) |
@@ -166,6 +167,7 @@ Mirrors [`material_unification_matrix_v1.md`](../matrix/terrain_biome/material_u
 | [`system_runbook_authoring_meta_v1.md`](system_runbook_authoring_meta_v1.md) | **Meta-runbook** — how to author similar runbooks for power, weapons, buildings, navigation, factions, diplomacy |
 | [`../designer_questions/terrain_world/llm_world_evolution_reference_outline_v1.md`](../designer_questions/terrain_world/llm_world_evolution_reference_outline_v1.md) | Non-authoritative outline (LLM rule-evolution, memory tiers, metric system) |
 | [`terrain_paired_runbooks_queue_v1.md`](terrain_paired_runbooks_queue_v1.md) | **Paired runbooks:** planned partners, authoring order (Q0–Q6), sync gates |
+| [`rulebook_backlog_designer_brief_v1.md`](rulebook_backlog_designer_brief_v1.md) | **Pre-meta briefing:** designers / leads scope §8b + matrix backlog before Q0–Q6 or new orchestrators (pairs with meta §3) |
 
 ### 8b. Paired runbooks (planned)
 
@@ -175,7 +177,7 @@ Work that must stay aligned with U3–U7 gets its **own** execution orchestrator
 |:---|:---|:---|:---|
 | **Serialization / hybrid wire** | `prompts/guides/serialization_terrain_runbook_v1.md` | [`../matrix/serialization/serialization_hybrid_migration_matrix_v1.md`](../matrix/serialization/serialization_hybrid_migration_matrix_v1.md) | When `MaterialDef.name` / chunk fields hit saves (from U3 onward) |
 | **Bevy assets & hot-reload** | [`bevy_asset_terrain_runbook_v1.md`](bevy_asset_terrain_runbook_v1.md) (A1–A3 packs) | [`../matrix/assets/bevy_asset_config_migration_matrix_v1.md`](../matrix/assets/bevy_asset_config_migration_matrix_v1.md) | Loaders + versioning with U3; hashes with U7 |
-| **Preview / composite UI** | `prompts/guides/world_preview_runbook_v1.md` | [`../matrix/terrain_biome/composite_style_preview_integration_matrix_v1.md`](../matrix/terrain_biome/composite_style_preview_integration_matrix_v1.md) | Same release train as **U5** (`world_preview`, `PreviewMode::Tag`) |
+| **Preview / composite UI** | `prompts/guides/world_preview_runbook_v1.md` | [`../matrix/terrain_biome/composite_style_preview_integration_matrix_v1.md`](../matrix/terrain_biome/composite_style_preview_integration_matrix_v1.md) | Same release train as **U5** (`world_preview`, `PreviewMode::Tag`); **binary parity:** [`world_assets_tools_rulebook_v1.md`](world_assets_tools_rulebook_v1.md) |
 | **Chunk streaming / neighbors** | `prompts/guides/chunk_streaming_terrain_runbook_v1.md` | Designer [`chunks_streaming_v1.md`](../designer_questions/terrain_world/chunks_streaming_v1.md) + material matrix §§13–16 | Spatial passes **U4+** when cross-chunk reads matter |
 
 **Rule:** each paired orchestrator §8 lists this file; unresolved coupling is `ASK:` in the paired matrix or terrain checklist — do not invent shared types in prose only.

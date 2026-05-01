@@ -1,12 +1,12 @@
 //! Per-chunk SoA cell grid — see `prompts/matrix/terrain_biome/runbook/u4_steps_v1.md` (U4-S01).
 
-use bevy::prelude::UVec2;
+use bevy::prelude::{Component, UVec2};
 
 use crate::terrain::biome::{BiomeWeights, TerrainClass};
 use crate::terrain::material::TagSet;
 
 /// SoA storage for one chunk’s worth of terrain fields + tags + biome outputs (pass pipeline fills these).
-#[derive(Debug, Clone)]
+#[derive(Component, Debug, Clone)]
 pub struct ChunkCellMatrix {
     pub size: UVec2,
     pub elevation: Vec<f32>,

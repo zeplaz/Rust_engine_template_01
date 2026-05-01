@@ -134,6 +134,31 @@ pub struct BiomeClassification {
     pub biome_weights: BiomeWeights,
 }
 
+/// Registry tag names for pass 2 (threshold tags). Defaults match `tag_registry.example.json`; override via `BiomeTuning` JSON.
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(default)]
+pub struct ThresholdTagNames {
+    pub lowland: String,
+    pub highland: String,
+    pub wet: String,
+    pub dry: String,
+    pub hot: String,
+    pub cold: String,
+}
+
+impl Default for ThresholdTagNames {
+    fn default() -> Self {
+        Self {
+            lowland: "lowland".into(),
+            highland: "highland".into(),
+            wet: "wet".into(),
+            dry: "dry".into(),
+            hot: "hot".into(),
+            cold: "cold".into(),
+        }
+    }
+}
+
 /// All thresholds / gains that couple height → moisture/temperature → biome weights and `TerrainClass`.
 /// Tune via editor sliders, JSON overlay, or scripts — keeps generation and classification in sync.
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -175,6 +200,8 @@ pub struct BiomeTuning {
     pub swamp_moisture_min: f32,
     pub grassland_moisture_max: f32,
     pub forest_moisture_max: f32,
+    /// Pass 2 — tag names resolved against [`crate::terrain::material::TagRegistry`].
+    pub threshold_tag_names: ThresholdTagNames,
 }
 
 impl Default for BiomeTuning {
@@ -213,6 +240,7 @@ impl Default for BiomeTuning {
             swamp_moisture_min: 0.8,
             grassland_moisture_max: 0.4,
             forest_moisture_max: 0.7,
+            threshold_tag_names: ThresholdTagNames::default(),
         }
     }
 }

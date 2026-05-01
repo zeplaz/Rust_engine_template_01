@@ -14,6 +14,9 @@
     { "name": "fertile", "category": "ecology" },
     { "name": "traversable", "category": "nav" },
     { "name": "non_traversable", "category": "nav" },
-    { "name": "mineable", "category": "resource" }
+    { "name": "mineable", "category": "resource" },
+    { "name": "flooded", "category": "hydrology" },
+    { "name": "eroded", "category": "hydrology" },
+    { "name": "silted", "category": "hydrology" }
   ]
 }

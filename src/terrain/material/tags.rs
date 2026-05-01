@@ -1,7 +1,10 @@
 //! Bit-packed tag sets. **ASK:** if total distinct tags can exceed **256** — drives designer `§43` (`implementation_questions_v1.md`).
 
 use std::collections::HashMap;
+use std::fmt;
 
+use bevy::asset::{io::Reader, Asset, AssetLoader, LoadContext};
+use bevy::reflect::TypePath;
 use serde::Deserialize;
 
 /// Interned tag id (bit index into [`TagSet`], max **256** tags).
@@ -61,7 +64,7 @@ struct TagRegistryFile {
     pub tags: Vec<TagDef>,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Asset, TypePath, Clone, Debug)]
 pub struct TagRegistry {
     pub schema_version: u32,
     pub tags: Vec<TagDef>,
@@ -77,7 +80,7 @@ impl TagRegistry {
         Ok(Self::from_file(file))
     }
 
-    fn from_file(file: TagRegistryFile) -> Self {
+    pub(crate) fn from_file(file: TagRegistryFile) -> Self {
         let mut name_to_id = HashMap::new();
         for (i, t) in file.tags.iter().enumerate() {
             name_to_id.insert(t.name.clone(), TagId(i as u16));
@@ -91,6 +94,68 @@ impl TagRegistry {
 
     pub fn tag_id(&self, name: &str) -> Option<TagId> {
         self.name_to_id.get(name).copied()
+    }
+}
+
+/// Bevy loader for `*.tag_registry.json`.
+#[derive(Default, TypePath)]
+pub struct TagRegistryLoader;
+
+#[derive(Debug)]
+pub enum TagRegistryLoaderError {
+    Io(std::io::Error),
+    Json(String),
+}
+
+impl fmt::Display for TagRegistryLoaderError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Io(e) => write!(f, "{e}"),
+            Self::Json(e) => write!(f, "{e}"),
+        }
+    }
+}
+
+impl std::error::Error for TagRegistryLoaderError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            Self::Io(e) => Some(e),
+            Self::Json(_) => None,
+        }
+    }
+}
+
+impl From<std::io::Error> for TagRegistryLoaderError {
+    fn from(value: std::io::Error) -> Self {
+        Self::Io(value)
+    }
+}
+
+impl From<serde_json::Error> for TagRegistryLoaderError {
+    fn from(value: serde_json::Error) -> Self {
+        Self::Json(value.to_string())
+    }
+}
+
+impl AssetLoader for TagRegistryLoader {
+    type Asset = TagRegistry;
+    type Settings = ();
+    type Error = TagRegistryLoaderError;
+
+    async fn load(
+        &self,
+        reader: &mut dyn Reader,
+        _settings: &Self::Settings,
+        _load_context: &mut LoadContext<'_>,
+    ) -> Result<Self::Asset, Self::Error> {
+        let mut bytes = Vec::new();
+        reader.read_to_end(&mut bytes).await?;
+        let file: TagRegistryFile = serde_json::from_slice(&bytes)?;
+        Ok(TagRegistry::from_file(file))
+    }
+
+    fn extensions(&self) -> &[&str] {
+        &["tag_registry.json"]
     }
 }
 
@@ -130,5 +195,11 @@ mod tests {
         assert!(u.intersects_all(&req));
         req.insert(TagId(99));
         assert!(!u.intersects_all(&req));
+    }
+
+    #[test]
+    fn tag_registry_loader_extensions() {
+        let loader = TagRegistryLoader::default();
+        assert!(loader.extensions().contains(&"tag_registry.json"));
     }
 }

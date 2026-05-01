@@ -138,3 +138,7 @@
 78. **Tag visualizer performance:** bitmask GPU blit vs CPU thumb for editor preview?
 
 📎 Unresolved items feed back into designer docs above; do **not** invent numbers without `ASK:`.
+
+### U7 close-out carries (terrain unification, 2026-04)
+
+Promoted from [`u7_steps_v1.md`](../../matrix/terrain_biome/runbook/u7_steps_v1.md) 📎 block — still **`ASK:`** where noted elsewhere: **§62** resource ruleset, **§72** on-disk audit JSONL, cross-process hash (xxh3) **item 50**, **§77** modded priority bands, **§78** tag GPU path, `material_unification_matrix` §7 footnotes.

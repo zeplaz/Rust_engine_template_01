@@ -9,12 +9,24 @@ use super::tags::{TagRegistry, TagSet};
 /// `_weights` is reserved for future `weight_predicate` / scoring (`§48`); pass [`BiomeWeights::default()`] until then.
 pub fn resolve_material(
     family: TerrainClass,
-    _weights: &BiomeWeights,
+    weights: &BiomeWeights,
     tags: TagSet,
     rules: &RuleSet,
     registry: &MaterialRegistry,
     tag_registry: &TagRegistry,
 ) -> MaterialId {
+    resolve_material_with_rule_index(family, weights, tags, rules, registry, tag_registry).0
+}
+
+/// `rule_index` from the winning rule file order or `u32::MAX` when the family default was used.
+pub fn resolve_material_with_rule_index(
+    family: TerrainClass,
+    weights: &BiomeWeights,
+    tags: TagSet,
+    rules: &RuleSet,
+    registry: &MaterialRegistry,
+    tag_registry: &TagRegistry,
+) -> (MaterialId, u32) {
     for rule in &rules.rules {
         if let Some(f) = rule.family_filter {
             if f != family {
@@ -26,15 +38,16 @@ pub fn resolve_material(
         }
         let Some(id) = registry.name_to_id.get(&rule.result_name).copied() else {
             panic!(
-                "resolve_material: rule references unknown material {:?}",
+                "resolve_material_with_rule_index: rule references unknown material {:?}",
                 rule.result_name
             );
         };
-        return id;
+        return (id, rule.rule_index);
     }
 
-    family_default(family, registry)
-        .unwrap_or_else(|| panic!("resolve_material: no materials for family {family:?}"))
+    let id = family_default(family, registry)
+        .unwrap_or_else(|| panic!("resolve_material_with_rule_index: no materials for family {family:?}"));
+    (id, u32::MAX)
 }
 
 fn rule_matches(tags: &TagSet, rule: &super::rules::MaterialRule, tag_registry: &TagRegistry) -> bool {

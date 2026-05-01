@@ -1,3 +1,7 @@
+use std::fmt;
+
+use bevy::asset::{io::Reader, Asset, AssetLoader, LoadContext};
+use bevy::reflect::TypePath;
 use serde::Deserialize;
 
 use crate::terrain::biome::TerrainClass;
@@ -12,7 +16,7 @@ pub struct MaterialRule {
     pub rule_index: u32,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Asset, TypePath, Clone, Debug)]
 pub struct RuleSet {
     pub schema_version: u32,
     pub rules: Vec<MaterialRule>,
@@ -41,6 +45,10 @@ impl RuleSet {
         let file: RuleSetFile = ron::de::from_str(&s).map_err(|e| {
             std::io::Error::new(std::io::ErrorKind::InvalidData, format!("RON: {e}"))
         })?;
+        Ok(Self::from_file(file))
+    }
+
+    pub(crate) fn from_file(file: RuleSetFile) -> Self {
         let mut rules: Vec<MaterialRule> = file
             .rules
             .into_iter()
@@ -59,10 +67,68 @@ impl RuleSet {
                 .cmp(&a.priority)
                 .then_with(|| a.rule_index.cmp(&b.rule_index))
         });
-        Ok(Self {
+        Self {
             schema_version: file.schema_version,
             rules,
-        })
+        }
+    }
+}
+
+/// Bevy loader for `*.material_rules.ron`.
+#[derive(Default, TypePath)]
+pub struct RuleSetLoader;
+
+#[derive(Debug)]
+pub enum RuleSetLoaderError {
+    Io(std::io::Error),
+    Ron(String),
+}
+
+impl fmt::Display for RuleSetLoaderError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Io(e) => write!(f, "{e}"),
+            Self::Ron(e) => write!(f, "{e}"),
+        }
+    }
+}
+
+impl std::error::Error for RuleSetLoaderError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            Self::Io(e) => Some(e),
+            Self::Ron(_) => None,
+        }
+    }
+}
+
+impl From<std::io::Error> for RuleSetLoaderError {
+    fn from(value: std::io::Error) -> Self {
+        Self::Io(value)
+    }
+}
+
+impl AssetLoader for RuleSetLoader {
+    type Asset = RuleSet;
+    type Settings = ();
+    type Error = RuleSetLoaderError;
+
+    async fn load(
+        &self,
+        reader: &mut dyn Reader,
+        _settings: &Self::Settings,
+        _load_context: &mut LoadContext<'_>,
+    ) -> Result<Self::Asset, Self::Error> {
+        let mut bytes = Vec::new();
+        reader.read_to_end(&mut bytes).await?;
+        let s = std::str::from_utf8(&bytes).map_err(|e| RuleSetLoaderError::Ron(e.to_string()))?;
+        let file: RuleSetFile = ron::de::from_str(s)
+            .map_err(|e| RuleSetLoaderError::Ron(format!("RON: {e}")))?;
+        Ok(RuleSet::from_file(file))
+    }
+
+    fn extensions(&self) -> &[&str] {
+        &["material_rules.ron"]
     }
 }
 
@@ -112,5 +178,11 @@ mod tests {
         });
         assert_eq!(rules[0].result_name, "first");
         assert_eq!(rules[1].result_name, "second");
+    }
+
+    #[test]
+    fn rule_set_loader_extensions() {
+        let loader = RuleSetLoader::default();
+        assert!(loader.extensions().contains(&"material_rules.ron"));
     }
 }

@@ -80,6 +80,10 @@ fn scan_dir(dir: &Path, offenders: &mut Vec<String>) {
 }
 
 fn main() {
+    if env::var_os("CARGO_FEATURE_RESEARCH_LMODELS").is_some() {
+        println!("cargo:warning=feature `research_lmodels`: `engine::lmodels` is a stub — linfa crates are optional deps only and are not wired; replace the stub when implementing ML integration.");
+    }
+
     let manifest_dir = env::var("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR");
     let src = PathBuf::from(manifest_dir).join("src");
     let mut offenders = Vec::new();
