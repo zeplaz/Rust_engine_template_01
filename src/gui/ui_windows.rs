@@ -1,5 +1,7 @@
 use bevy::{prelude::*, window::PrimaryWindow};
 use bevy_egui::{egui, EguiContextSettings, EguiContexts};
+
+use crate::gui::InputBindings;
 // will go in gui:
 pub fn run_prompt_getter() {
     //    let mut input_box = InputBoxState::new();
@@ -43,11 +45,12 @@ pub fn configure_ui_state_system(mut ui_state: ResMut<UiState>) {
 
 pub fn update_ui_scale_factor_system(
     keyboard_input: Res<ButtonInput<KeyCode>>,
+    bindings: Res<InputBindings>,
     mut toggle_scale_factor: Local<Option<bool>>,
     mut egui_ctx: Query<&mut EguiContextSettings>,
     windows: Query<&Window, With<PrimaryWindow>>,
 ) {
-    if keyboard_input.just_pressed(KeyCode::Slash) || toggle_scale_factor.is_none() {
+    if keyboard_input.just_pressed(bindings.toggle_egui_ui_scale) || toggle_scale_factor.is_none() {
         *toggle_scale_factor = Some(!toggle_scale_factor.unwrap_or(true));
 
         if let (Ok(window), Ok(mut settings)) = (windows.single(), egui_ctx.single_mut()) {

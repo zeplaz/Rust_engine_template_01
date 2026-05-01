@@ -39,8 +39,9 @@ impl Plugin for WorldGenerationInGamePlugin {
 pub fn world_gen_key_input(
     mut toggle_events: MessageWriter<crate::gui::editor::world_gen_ui::ToggleWorldGenUiEvent>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
+    bindings: Res<crate::gui::InputBindings>,
 ) {
-    if keyboard_input.just_pressed(KeyCode::F8) {
+    if keyboard_input.just_pressed(bindings.toggle_world_generator) {
         toggle_events.write(crate::gui::editor::world_gen_ui::ToggleWorldGenUiEvent);
     }
 }
@@ -54,6 +55,6 @@ impl Plugin for WorldGenToolsPlugin {
         app.add_plugins((WorldGenerationInGamePlugin, WorldGenerationToolsUiPlugin))
            .add_systems(Update, world_gen_key_input);
         
-        info!("World Generation Tools initialized. Press F8 to open the World Generator UI.");
+        info!("World Generation Tools initialized. Default key for UI is F8; change under Options → key bindings when KeybindingsOptionsPlugin is loaded.");
     }
 }

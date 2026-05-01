@@ -1,6 +1,9 @@
 use crate::entities::production::core::ManufacturingCorePlugin;
 use crate::entities::vehicles::RoadVehicleToolsUiPlugin;
-use crate::gui::{DiagnosticsUiPlugin, FactionToolsUiPlugin};
+use crate::gui::{
+    DiagnosticsUiPlugin, FactionToolsUiPlugin, HudQuickMenuPlugin, InGameHudPlugin,
+    KeybindingsOptionsPlugin, LogisticsTargetsPanelPlugin,
+};
 #[cfg(feature = "bevy_tilemap_adapter")]
 use crate::render::TilemapAdapterPlugin;
 use crate::systems::production::{
@@ -23,10 +26,14 @@ impl Plugin for EnginePlugin {
             .add_plugins(MaterialUnificationPlugin);
         #[cfg(feature = "bevy_tilemap_adapter")]
         app.add_plugins(TilemapAdapterPlugin);
-        app.add_plugins(DiagnosticsUiPlugin)
+        app.add_plugins(KeybindingsOptionsPlugin)
+            .add_plugins(DiagnosticsUiPlugin)
             .add_plugins(FactionToolsUiPlugin)
+            .add_plugins(InGameHudPlugin)
+            .add_plugins(LogisticsTargetsPanelPlugin)
             // World generation editor + runtime.
             .add_plugins(WorldGenToolsPlugin)
+            .add_plugins(HudQuickMenuPlugin)
             // Production stack.
             .add_plugins(ProductionRuntimePlugin)
             .add_plugins(ManufacturingCorePlugin)
@@ -36,7 +43,7 @@ impl Plugin for EnginePlugin {
             .add_plugins(RoadVehicleToolsUiPlugin);
 
         info!(
-            "Engine initialized. Hotkeys: F3 Diagnostics · F4 Faction Tools · F7 Agents · F8 World Generator."
+            "Engine initialized. Key bindings default: F1 options · F3 diagnostics · F4 faction · F8 world gen · F9 logistics cycle · F10 logistics list · P pause sim · / egui scale — edit in Options; saved RON under user config path."
         );
     }
 }

@@ -12,6 +12,8 @@
 use bevy::prelude::*;
 use bevy_egui::{egui, EguiContexts, EguiPrimaryContextPass};
 
+use super::input_bindings::InputBindings;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum FactionToolsPanel {
     Roster,
@@ -42,8 +44,12 @@ impl Plugin for FactionToolsUiPlugin {
     }
 }
 
-fn toggle_faction_tools(keys: Res<ButtonInput<KeyCode>>, mut state: ResMut<FactionToolsState>) {
-    if keys.just_pressed(KeyCode::F4) {
+fn toggle_faction_tools(
+    keys: Res<ButtonInput<KeyCode>>,
+    bindings: Res<InputBindings>,
+    mut state: ResMut<FactionToolsState>,
+) {
+    if keys.just_pressed(bindings.toggle_faction_tools) {
         state.visible = !state.visible;
     }
 }
@@ -51,13 +57,17 @@ fn toggle_faction_tools(keys: Res<ButtonInput<KeyCode>>, mut state: ResMut<Facti
 pub fn faction_tools_ui_system(
     mut contexts: EguiContexts,
     mut state: ResMut<FactionToolsState>,
+    bindings: Res<InputBindings>,
 ) -> Result {
     if !state.visible {
         return Ok(());
     }
     let ctx = contexts.ctx_mut()?;
 
-    egui::Window::new("Faction Tools (F4)")
+    egui::Window::new(format!(
+        "Faction Tools ({})",
+        InputBindings::format_key(bindings.toggle_faction_tools)
+    ))
         .resizable(true)
         .show(ctx, |ui| {
             ui.horizontal(|ui| {

@@ -14,7 +14,7 @@ Audience: agents and humans turning recorded backlog answers into paired runbook
 3. **Preview is a consumer, not a source of truth.** It reads chunk/material/tag state and does not mutate runtime simulation.
 4. **Streaming owns neighbor bands.** Spatial tag expansion and smooth chunk edges require ghost bands / neighbor reads.
 5. **TaskPool work stays off-thread until ECS apply.** Worker tasks write buffers; main thread owns Bevy ECS mutation.
-6. **Surface unresolved choices as `TODO:`** in [`rulebook_backlog_designer_brief_v1.md`](rulebook_backlog_designer_brief_v1.md) §4.
+6. **Surface unresolved choices as `ASK:` with a `BQ-###` row** in [`rulebook_backlog_designer_brief_v1.md`](rulebook_backlog_designer_brief_v1.md) §4 (add a row if missing).
 
 ---
 
@@ -76,10 +76,20 @@ Every backlog step reads:
 - `TaskPool` generation should be used aggressively for heavy terrain work.
 - Spatial tag expansion requires ghost bands.
 
-**Open item:** define the `TileStorage` diff update contract for smooth transitions; tracked in [`rulebook_backlog_designer_brief_v1.md`](rulebook_backlog_designer_brief_v1.md) §4.
+**Open item:** `TileStorage` diff update contract — **BQ-101** in [`rulebook_backlog_designer_brief_v1.md`](rulebook_backlog_designer_brief_v1.md) §4.
 
 ---
 
 ## 7. Prompt fragment
 
-> Read [`prompts/guides/backlog_serialization_preview_streaming_runbook_v1.md`](backlog_serialization_preview_streaming_runbook_v1.md) §§1-6. Execute wave **S** before **P**, and **P** before **C**. Do not invent save schema, preview mutation authority, or chunk-streaming thresholds; surface unresolved choices in the backlog brief §4.
+> Read [`prompts/guides/backlog_serialization_preview_streaming_runbook_v1.md`](backlog_serialization_preview_streaming_runbook_v1.md) §§1-7. Execute wave **S** before **P**, and **P** before **C**. Do not invent save schema, preview mutation authority, or chunk-streaming thresholds; add or update **BQ-###** in the backlog brief §4 for any unresolved choice.
+
+---
+
+## 8. Micro-pass after each G3 GUI step
+
+When following [`../matrix/gap_remediation/runbook/g3_execution_cycle_v1.md`](../matrix/gap_remediation/runbook/g3_execution_cycle_v1.md) §3:
+
+1. Run **one** wave action (**S**, **P**, or **C** as assigned) from §§4–6 above — doc audit or matrix note only unless implementation already matches.
+2. Record outcomes in the active **`results/g3*_cycle_results_v1.md`** file’s §4 **Backlog queue deltas** using **BQ-###** only.
+3. Resume the next **GUI** row in the execution cycle table — do not skip the alternation unless the cycle doc’s adjustment clause applies.

@@ -1,6 +1,6 @@
 # Terrain unification runbook `v1`
 
-> **STATUS:** **U3**–**U5** applied; **U6** optional tilemap adapter is **Applied** with feature `bevy_tilemap_adapter` (multi-layer ECS). **U7** applied (invalidation, profiles, `dev_tools` trace). See matrix §10.
+> **STATUS:** **U3**–**U5** applied; **U6** optional tilemap adapter is **Applied** with feature `bevy_tilemap_adapter` (multi-layer ECS). **U7** applied (invalidation, profiles, `dev_tools` trace). See matrix §10. **Maintenance capsule for U3–U7:** [`../legacy_runbooks/terrain/terrain_u_applied_maintenance_v1.md`](../legacy_runbooks/terrain/terrain_u_applied_maintenance_v1.md); **active step packs:** [`../matrix/terrain_biome/runbook/README.md`](../matrix/terrain_biome/runbook/README.md).
 
 Version: `v1.0.4`
 Audience: agents (and humans) implementing the engine side of the terrain-unification stack.

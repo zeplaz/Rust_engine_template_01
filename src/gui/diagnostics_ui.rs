@@ -12,6 +12,7 @@
 use bevy::prelude::*;
 use bevy_egui::{egui, EguiContexts, EguiPrimaryContextPass};
 
+use super::input_bindings::InputBindings;
 use crate::systems::sim_control::{SimControlState, SimTick};
 
 /// UI visibility + cheap rolling FPS estimate.
@@ -38,9 +39,12 @@ impl Plugin for DiagnosticsUiPlugin {
     }
 }
 
-/// `F3` toggles visibility. Avoids overlap with `F7` (agents), `F8` (world gen).
-fn toggle_diagnostics_ui(keys: Res<ButtonInput<KeyCode>>, mut state: ResMut<DiagnosticsUiState>) {
-    if keys.just_pressed(KeyCode::F3) {
+fn toggle_diagnostics_ui(
+    keys: Res<ButtonInput<KeyCode>>,
+    bindings: Res<InputBindings>,
+    mut state: ResMut<DiagnosticsUiState>,
+) {
+    if keys.just_pressed(bindings.toggle_diagnostics) {
         state.visible = !state.visible;
     }
 }
@@ -62,6 +66,7 @@ fn sample_fps(time: Res<Time>, mut state: ResMut<DiagnosticsUiState>) {
 pub fn diagnostics_ui_system(
     mut contexts: EguiContexts,
     state: Res<DiagnosticsUiState>,
+    bindings: Res<InputBindings>,
     mut ctrl: ResMut<SimControlState>,
     tick: Res<SimTick>,
     entities: Query<Entity>,
@@ -73,7 +78,10 @@ pub fn diagnostics_ui_system(
     let entity_count = entities.iter().count();
     let ctx = contexts.ctx_mut()?;
 
-    egui::Window::new("Diagnostics (F3)")
+    egui::Window::new(format!(
+        "Diagnostics ({})",
+        InputBindings::format_key(bindings.toggle_diagnostics)
+    ))
         .resizable(true)
         .collapsible(true)
         .show(ctx, |ui| {

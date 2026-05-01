@@ -1,9 +1,13 @@
 //! Simulation control loop: pause, single-step, speed multiplier, monotonic tick.
 //!
 //! Designer doc: `prompts/designer_questions/tools_ui/spec/01_plugin_schedule_patterns.md`.
-//! UI driver:   `crate::gui::diagnostics_ui::DiagnosticsUiPlugin` (F3 panel).
+//! UI driver:   `crate::gui::diagnostics_ui::DiagnosticsUiPlugin` (diagnostics panel).
+//!
+//! Pause hotkey: [`crate::gui::InputBindings::toggle_simulation_pause`] (Options → key bindings).
 
 use bevy::prelude::*;
+
+use crate::gui::InputBindings;
 
 /// Operator controls; mutated by tools UI, read by gameplay systems.
 #[derive(Resource, Debug, Clone)]
@@ -45,7 +49,17 @@ impl Plugin for SimControlPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<SimControlState>()
             .init_resource::<SimTick>()
-            .add_systems(Update, advance_sim_tick);
+            .add_systems(Update, (advance_sim_tick, keyboard_toggle_pause));
+    }
+}
+
+fn keyboard_toggle_pause(
+    keys: Res<ButtonInput<KeyCode>>,
+    bindings: Res<InputBindings>,
+    mut ctrl: ResMut<SimControlState>,
+) {
+    if keys.just_pressed(bindings.toggle_simulation_pause) {
+        ctrl.paused = !ctrl.paused;
     }
 }
 

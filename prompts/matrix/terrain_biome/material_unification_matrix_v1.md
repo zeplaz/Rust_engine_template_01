@@ -260,3 +260,20 @@ Scope: One canonical chain `noise → ChunkCellMatrix → multi-pass tags → re
 | **World profile** | One `*.world_profile.ron` bundles registry + tags + rules paths (+ optional tuning path) | **Applied** — see `assets/config/terrain/profiles/default.world_profile.ron`, `WorldProfileLoader` |
 | **Biome / rules pack** | Drop-in folder merged at load or explicit `#include` **ASK:** **item 77**; loaded biome packs must expose on/off switches via menu item + config key | Decided — UX key/name pending |
 | **Modded `RuleSet`** | Stable rule `name` keys for overrides; numeric priority bands reserved for core vs mods **ASK:** | Pending |
+
+---
+
+## 19. Open rows only (agent shortcut)
+
+Skim here instead of re-reading **Pending / Partial / ASK** mixed sections **§§8–9, 14–18**. Designer-facing queue ids: [`rulebook_backlog_designer_brief_v1.md`](../../guides/rulebook_backlog_designer_brief_v1.md) §4.
+
+| Topic | Matrix § | Queue |
+|:---|:---|:---|
+| Save wire + schema registry policy (terrain names on disk) | §8 | **BQ-107** + wave **S** |
+| TileStorage diff / smooth transition renderer contract | §15–16 | **BQ-101** |
+| Biome / rules pack on/off UX | §18 | **BQ-106** |
+| Multi-layer overlay / resources rows (Partial) | §15 | §15 table + implementation_questions |
+| Tag expansion passes 1 / 4 (Pending) | §14 | Product / §3 pass 5 stub path |
+| LLM / agent audit telemetry (Partial) | §17 | Checklist items 71–73 |
+
+---

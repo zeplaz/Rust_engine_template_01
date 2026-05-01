@@ -6,7 +6,12 @@
 
 mod main_menu;
 mod splash;
+mod input_bindings;
+mod options_keybindings_ui;
+mod hud_quick_menu;
+mod logistics_focus;
 mod in_game_hud;
+mod logistics_targets_panel;
 mod in_game_ui;     // LEGACY MODULE — kept for migration trace
 mod gui_assets;
 mod gui_sets;
@@ -20,7 +25,12 @@ pub mod editor;
 // Public exports
 pub use main_menu::*;
 pub use splash::*;
+pub use input_bindings::*;
+pub use options_keybindings_ui::*;
+pub use hud_quick_menu::*;
+pub use logistics_focus::*;
 pub use in_game_hud::*;
+pub use logistics_targets_panel::*;
 pub use in_game_ui::*;
 pub use gui_assets::*;
 pub use gui_sets::*;
