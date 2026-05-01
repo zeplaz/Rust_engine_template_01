@@ -14,13 +14,18 @@ fn insert_tag_if(
     registry: &TagRegistry,
     name: &str,
     on: bool,
+    tag_pool: &TagSet,
 ) {
     if !on {
         return;
     }
-    if let Some(id) = registry.tag_id(name) {
-        set.insert(id);
+    let Some(id) = registry.tag_id(name) else {
+        return;
+    };
+    if !tag_pool.contains(id) {
+        return;
     }
+    set.insert(id);
 }
 
 /// Merge hydrology-related tags into each cell's [`TagSet`] (preserves pass 2–3 tags).
@@ -29,6 +34,7 @@ pub fn apply_hydrology_with_params(
     tuning: &BiomeTuning,
     tag_registry: &TagRegistry,
     params: &HydrologyParams,
+    tag_pool: &TagSet,
 ) {
     let w = matrix.size.x;
     let h = matrix.size.y;
@@ -67,9 +73,9 @@ pub fn apply_hydrology_with_params(
                 && matrix.moisture[i] >= params.silt_moisture_threshold
                 && (hydro.river_mask[i as usize] || matrix.moisture[i] >= tuning.wetland_moist_threshold);
 
-            insert_tag_if(&mut tags, tag_registry, "flooded", flooded);
-            insert_tag_if(&mut tags, tag_registry, "eroded", eroded);
-            insert_tag_if(&mut tags, tag_registry, "silted", silty);
+            insert_tag_if(&mut tags, tag_registry, "flooded", flooded, tag_pool);
+            insert_tag_if(&mut tags, tag_registry, "eroded", eroded, tag_pool);
+            insert_tag_if(&mut tags, tag_registry, "silted", silty, tag_pool);
 
             matrix.tags[i] = tags;
         }
@@ -85,7 +91,7 @@ pub fn apply_hydrology(matrix: &mut ChunkCellMatrix) {
     let tag_registry =
         TagRegistry::load_from_json(tag_path.to_str().unwrap()).expect("example tag registry");
     let params = HydrologyParams::from_biome_tuning(&tuning);
-    apply_hydrology_with_params(matrix, &tuning, &tag_registry, &params);
+    apply_hydrology_with_params(matrix, &tuning, &tag_registry, &params, &TagSet::ALL);
 }
 
 /// Chunk pipeline entry: uses world tuning + loaded tag registry (same files as material plugin).
@@ -93,15 +99,17 @@ pub fn apply_hydrology_chunk(
     matrix: &mut ChunkCellMatrix,
     tuning: &BiomeTuning,
     tag_registry: &TagRegistry,
+    tag_pool: &TagSet,
 ) {
     let params = HydrologyParams::from_biome_tuning(tuning);
-    apply_hydrology_with_params(matrix, tuning, tag_registry, &params);
+    apply_hydrology_with_params(matrix, tuning, tag_registry, &params, tag_pool);
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use bevy::prelude::UVec2;
+    use crate::terrain::material::TagSet;
     use std::path::PathBuf;
 
     #[test]
@@ -134,7 +142,7 @@ mod tests {
             }
         }
         let params = HydrologyParams::from_biome_tuning(&tuning);
-        apply_hydrology_with_params(&mut matrix, &tuning, &tag_registry, &params);
+        apply_hydrology_with_params(&mut matrix, &tuning, &tag_registry, &params, &TagSet::ALL);
         assert!(matrix.tags[matrix.idx(2, 2)].contains(flood_id));
     }
 }

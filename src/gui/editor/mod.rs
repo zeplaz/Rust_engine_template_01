@@ -1,4 +1,5 @@
 // World generation UI components
+pub mod world_gen_hints;
 pub mod world_gen_ui;
 pub mod world_preview;
 

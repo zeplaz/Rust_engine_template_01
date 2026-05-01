@@ -6,6 +6,7 @@ use std::collections::HashMap;
 use bevy::prelude::*;
 
 use crate::gui::editor::world_gen_ui::ToggleWorldGenUiEvent;
+use crate::gui::AppStartState;
 
 use crate::entities::production::core::{
     resolve_logistics_focus_entity, storage_entities_for_focus, LogisticsSiteMember,
@@ -44,7 +45,7 @@ impl Plugin for InGameHudPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<HudLogisticsFocus>()
             .init_resource::<HudAggregateSettings>()
-            .add_systems(Startup, spawn_hud)
+            .add_systems(OnEnter(AppStartState::Menu), spawn_hud)
             .add_systems(
                 Update,
                 (
@@ -52,12 +53,20 @@ impl Plugin for InGameHudPlugin {
                     cycle_logistics_focus_dev,
                     hud_toolbar_clicks,
                     update_site_logistics_hud,
-                ),
+                )
+                    .run_if(not(in_state(AppStartState::Splash))),
             );
     }
 }
 
-fn spawn_hud(mut commands: Commands, bindings: Res<InputBindings>) {
+fn spawn_hud(
+    mut commands: Commands,
+    bindings: Res<InputBindings>,
+    existing: Query<Entity, With<HudRoot>>,
+) {
+    if !existing.is_empty() {
+        return;
+    }
     let hint = format!(
         "Site logistics — no focus ({} · {} · toolbar · click storage)",
         InputBindings::format_key(bindings.cycle_logistics_focus),

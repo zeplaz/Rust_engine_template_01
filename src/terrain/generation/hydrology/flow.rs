@@ -306,7 +306,18 @@ pub fn compute_hydrology_rect(
     let down = d8_downstream(&filled, w, h);
     let acc = accumulate(&down, &filled, w, h);
     let mx = max_slice(&acc).max(1.0);
-    let acc_th = params.river_acc_quantile * mx;
+    let acc_th_by_max = params.river_acc_quantile * mx;
+    let q = params.river_acc_quantile.clamp(0.0, 1.0);
+    let acc_th_by_rank = if n <= 1 {
+        acc[0]
+    } else {
+        let mut sorted = acc.clone();
+        sorted.sort_by(|a, b| a.total_cmp(b));
+        let idx = ((1.0 - q) * (n - 1) as f32).round() as usize;
+        sorted[idx.min(n - 1)]
+    };
+    // More permissive of the two: avoids “one huge sink” making 0.12×max untouchable for typical cells.
+    let acc_th = acc_th_by_max.min(acc_th_by_rank);
 
     let mut river_mask = vec![false; n];
     for i in 0..n {

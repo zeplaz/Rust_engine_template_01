@@ -25,6 +25,23 @@ pub enum MainMenuState {
     Load,
     Editor,
 }
+
+/// High-level pipeline for **new** procedural worlds (preview → full → confirm enter).
+/// Loading a save should use `LoadingSave` and must not run the procedural generator.
+#[derive(Debug, Clone, Copy, Default, Eq, PartialEq, Hash, States)]
+pub enum WorldGenFlowState {
+    /// No active world-build flow; procedural `GenerateWorldEvent` requests are ignored.
+    #[default]
+    Idle,
+    /// User is editing parameters (sliders, seeds) before any commit.
+    NewWorldSetup,
+    /// Preview terrain exists; user may tweak and re-preview or request full generation.
+    PreviewReady,
+    /// Full-size world generated; user confirms before [`BaseState::Simulation`].
+    FullReady,
+    /// Reserved for save/load path (no procedural `GenerateWorldEvent`).
+    LoadingSave,
+}
 #[derive(Debug, Clone, Copy, Default, Eq, PartialEq, Hash, States)]
 pub enum BuildMenuState {
     #[default]

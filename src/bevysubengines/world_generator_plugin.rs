@@ -17,6 +17,7 @@ use crate::terrain::ecology::estimate_ecological_suitability;
 use crate::terrain::generation::terrain_noise::{
     build_fbm_perlin, build_height_noise, sample_height_field, NoiseSamplingTuning, TerrainNoiseProfile,
 };
+use crate::terrain::generation::world_generator_enhanced::MAX_WORLD_GEN_AXIS;
 use noise::NoiseFn;
 
 // Separate subengine plugin for world generation
@@ -213,8 +214,8 @@ fn world_gen_ui_system(
             egui::CollapsingHeader::new("General Settings")
                 .default_open(true)
                 .show(ui, |ui| {
-                    ui.add(egui::Slider::new(&mut world_gen_params.width, 128..=2048).text("Width"));
-                    ui.add(egui::Slider::new(&mut world_gen_params.height, 128..=2048).text("Height"));
+                    ui.add(egui::Slider::new(&mut world_gen_params.width, 128..=MAX_WORLD_GEN_AXIS).text("Width"));
+                    ui.add(egui::Slider::new(&mut world_gen_params.height, 128..=MAX_WORLD_GEN_AXIS).text("Height"));
 
                     ui.horizontal(|ui| {
                         if ui.button("Random Seed").clicked() {
