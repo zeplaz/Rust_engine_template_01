@@ -587,15 +587,9 @@ fn generate_world_data(params: WorldGenParams) -> WorldData {
         }
     }
 
-    // Create rivers (simplified)
-    for _ in 0..params.river_count {
-        // In a real implementation, you would create realistic river paths here
-    }
-
-    // Create lakes (simplified)
-    for _ in 0..params.lake_count {
-        // In a real implementation, you would create realistic lakes here
-    }
+    // Rivers/lakes are not produced on this legacy JSON export path. Designer-facing hydrology
+    // lives in `terrain::generation::passes::p4_hydrology` and ECS `world_generator_enhanced`
+    // (`compute_hydrology_world`) per `prompts/guides/world_assets_tools_rulebook_v1.md` §1.
 
     WorldData {
         params,

@@ -2,8 +2,12 @@
 
 > **STATUS:** **Authoring harness for lower-power agents.** Use this doc to spawn a per-system execution runbook **modeled after** [`terrain_unification_runbook_v1.md`](terrain_unification_runbook_v1.md) (the canonical example). Audience is intentionally an agent with a **small context window and limited reasoning depth** — every choice that the agent could get wrong is **decided up front here**.
 
-Version: `v1.1.0`
+Version: `v1.1.2`
 Audience: agents producing `<system>_runbook_v1.md` + `runbook/` step packs for one of the **target systems** in §3, including **paired** terrain-adjacent runbooks ([`terrain_paired_runbooks_queue_v1.md`](terrain_paired_runbooks_queue_v1.md)).
+
+**Human prep (designers / leads):** Before running paired **Q0–Q6** for new §8b orchestrators or expanding meta-driven runbooks past terrain, scope backlog and priorities in [`rulebook_backlog_designer_brief_v1.md`](rulebook_backlog_designer_brief_v1.md) so §3 `ASK:` rows and pair order are explicit.
+
+**Implementation hygiene:** On a milestone or monthly cadence, run [`implementation_gap_hunt_runbook_v1.md`](implementation_gap_hunt_runbook_v1.md) §2–§4 so placeholder code is triaged **before** it is mistaken for shipped behavior.
 
 ---
 
@@ -60,6 +64,7 @@ When the human picks a system, copy the row's values into the variables in §7. 
 | **Navigation** | **N** | `ASK:` (no dedicated navigation matrix yet) | [`navigation/spec/README.md`](../designer_questions/navigation/spec/README.md), [`pathfinding_hierarchical_v1.md`](../designer_questions/navigation/pathfinding_hierarchical_v1.md), [`implementation_questions_v1.md`](../designer_questions/navigation/implementation_questions_v1.md) | `prompts/guides/navigation_runbook_v1.md` | `prompts/matrix/navigation/runbook/` *(create folder; matrix folder ASK: needs nav matrix first)* |
 | **Factions** | **F** | [`faction_editor_tooling_matrix_v1.md`](../designer_questions/factions/faction_editor_tooling_matrix_v1.md) (lives in designer dir; **do not move it**, link from runbook) | [`factions/faction_editor/README.md`](../designer_questions/factions/faction_editor/README.md) and `00`–`05` siblings, [`implementation_questions_v1.md`](../designer_questions/factions/implementation_questions_v1.md) | `prompts/guides/factions_runbook_v1.md` | `prompts/matrix/factions/runbook/` *(create folder)* |
 | **Diplomacy / bargaining** | **D** | `ASK:` (no matrix yet) | [`factions/diplomacy_bargaining_reference_outline_v1.md`](../designer_questions/factions/diplomacy_bargaining_reference_outline_v1.md) **(non-authoritative)** + factions data-model docs | `prompts/guides/diplomacy_runbook_v1.md` | `ASK:` (system not yet specced — see §10 empty-system policy) |
+| **Gap remediation** | **G** | [`prompts/matrix/terrain_biome/material_unification_matrix_v1.md`](../matrix/terrain_biome/material_unification_matrix_v1.md) for **G1 hydrology**; `ASK:` for G2-G5 until owner matrices are selected | [`implementation_gap_hunt_runbook_v1.md`](implementation_gap_hunt_runbook_v1.md), [`rulebook_backlog_designer_brief_v1.md`](rulebook_backlog_designer_brief_v1.md), terrain [`implementation_questions_v1.md`](../designer_questions/terrain_world/implementation_questions_v1.md) for G1 | `prompts/guides/gap_remediation_runbook_v1.md` | `prompts/matrix/gap_remediation/runbook/` |
 
 If a system row has any `ASK:` that the runbook **cannot** be authored without, **halt and surface** before producing any file.
 

@@ -67,6 +67,14 @@ pub struct MaterialRegistry {
     pub name_to_id: HashMap<String, MaterialId>,
 }
 
+/// First material definition matching `family` (registry row order — same as `resolve_material` fallback).
+pub fn family_default_material_def<'a>(
+    registry: &'a MaterialRegistry,
+    family: TerrainClass,
+) -> Option<&'a MaterialDef> {
+    registry.materials.iter().find(|m| m.family == family)
+}
+
 impl MaterialRegistry {
     pub fn load_from_json(path: &str) -> std::io::Result<Self> {
         let s = std::fs::read_to_string(path)?;
@@ -169,7 +177,7 @@ mod tests {
         assert!(reg.materials.len() >= 4);
         assert_eq!(
             reg.name_to_id.get("loam_wet"),
-            Some(&MaterialId(0))
+            Some(&MaterialId(2))
         );
     }
 

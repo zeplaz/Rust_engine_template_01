@@ -59,5 +59,6 @@ Copy this table into each **partner** orchestrator once steps exist; trim rows t
 | Doc | Role |
 |:---|:---|
 | [`terrain_unification_runbook_v1.md`](terrain_unification_runbook_v1.md) §8b | Terrain-side paired table |
+| [`rulebook_backlog_designer_brief_v1.md`](rulebook_backlog_designer_brief_v1.md) | Designer / lead **Q1–Q6** backlog scope before starting **Q0** for a new pair |
 | [`system_runbook_authoring_meta_v1.md`](system_runbook_authoring_meta_v1.md) §12 | Paired norms + quality gate |
 | [`../matrix/terrain_biome/material_unification_matrix_v1.md`](../matrix/terrain_biome/material_unification_matrix_v1.md) | Terrain phase truth |

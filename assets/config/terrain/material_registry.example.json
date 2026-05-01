@@ -2,6 +2,20 @@
   "schema_version": 1,
   "materials": [
     {
+      "name": "water_deep",
+      "family": "DeepWater",
+      "tags": ["water", "fluid"],
+      "properties": {},
+      "preview_color": [20, 40, 90, 255]
+    },
+    {
+      "name": "water_shallow",
+      "family": "ShallowWater",
+      "tags": ["water", "fluid"],
+      "properties": {},
+      "preview_color": [40, 90, 140, 255]
+    },
+    {
       "name": "loam_wet",
       "family": "Grassland",
       "tags": ["soil", "wet", "fertile", "traversable"],
@@ -42,6 +56,76 @@
         "buildable": true
       },
       "preview_color": [210, 190, 120, 255]
+    },
+    {
+      "name": "dune_default",
+      "family": "Desert",
+      "tags": ["sand"],
+      "properties": {},
+      "preview_color": [200, 170, 100, 255]
+    },
+    {
+      "name": "turf_forest",
+      "family": "Forest",
+      "tags": ["vegetation"],
+      "properties": {},
+      "preview_color": [40, 110, 55, 255]
+    },
+    {
+      "name": "turf_dense_forest",
+      "family": "DenseForest",
+      "tags": ["vegetation"],
+      "properties": {},
+      "preview_color": [25, 80, 40, 255]
+    },
+    {
+      "name": "granite_peak",
+      "family": "Mountain",
+      "tags": ["rock"],
+      "properties": {},
+      "preview_color": [100, 95, 90, 255]
+    },
+    {
+      "name": "snow_peak",
+      "family": "SnowCappedMountain",
+      "tags": ["snow", "rock"],
+      "properties": {},
+      "preview_color": [230, 240, 250, 255]
+    },
+    {
+      "name": "tundra_soil",
+      "family": "Tundra",
+      "tags": ["cold"],
+      "properties": {},
+      "preview_color": [120, 130, 100, 255]
+    },
+    {
+      "name": "cliff_face",
+      "family": "Cliff",
+      "tags": ["rock"],
+      "properties": {},
+      "preview_color": [80, 78, 75, 255]
+    },
+    {
+      "name": "concrete_default",
+      "family": "Concrete",
+      "tags": ["built"],
+      "properties": {},
+      "preview_color": [140, 140, 140, 255]
+    },
+    {
+      "name": "dirt_track",
+      "family": "Dirt",
+      "tags": ["soil"],
+      "properties": {},
+      "preview_color": [120, 90, 60, 255]
+    },
+    {
+      "name": "snow_field",
+      "family": "Snow",
+      "tags": ["cold"],
+      "properties": {},
+      "preview_color": [240, 245, 250, 255]
     }
   ]
 }

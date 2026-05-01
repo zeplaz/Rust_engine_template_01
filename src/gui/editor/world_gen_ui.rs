@@ -1,16 +1,19 @@
 use bevy::prelude::*;
 use bevy_egui::{egui, EguiContexts, EguiPrimaryContextPass};
 
+use crate::systems::terrain::TerrainRegistriesHandles;
 use crate::terrain::generation::tuning_io::{load_overlay, WorldGenTuningOverlay};
 use crate::terrain::generation::world_generator_enhanced::{
-    GenerateWorldEvent, RegionMethod, WorldGenParams, TerrainNoiseProfile,
-    WORLD_GEN_TUNING_JSON_PATH,
+    GenerateWorldEvent, RegionMethod, TerrainNoiseProfile, WorldGenParams, WORLD_GEN_TUNING_JSON_PATH,
 };
+use crate::terrain::material::{TagId, TagRegistry};
 
 #[derive(Resource)]
 pub struct WorldGenUiState {
     pub visible: bool,
     pub preview_mode: PreviewMode,
+    /// Last-selected tag for [`PreviewMode::Tag`].
+    pub tag_pick: TagId,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -21,6 +24,7 @@ pub enum PreviewMode {
     Temperature,
     Biome,
     Regions,
+    Tag(TagId),
 }
 
 impl Default for WorldGenUiState {
@@ -28,6 +32,7 @@ impl Default for WorldGenUiState {
         Self {
             visible: false,
             preview_mode: PreviewMode::None,
+            tag_pick: TagId(0),
         }
     }
 }
@@ -43,6 +48,11 @@ pub fn world_gen_ui_system(
     mut world_gen_ui_state: ResMut<WorldGenUiState>,
     mut generate_event: MessageWriter<GenerateWorldEvent>,
     mut tuning_io_hint: Local<String>,
+    handles: Res<TerrainRegistriesHandles>,
+    tag_assets: Res<Assets<TagRegistry>>,
+    #[cfg(feature = "bevy_tilemap_adapter")] mut tile_layer_vis: Option<
+        ResMut<crate::render::tilemap_adapter::TilemapLayerVisibility>,
+    >,
 ) -> Result {
     if !world_gen_ui_state.visible {
         return Ok(());
@@ -231,7 +241,51 @@ pub fn world_gen_ui_system(
                 ui.radio_value(&mut world_gen_ui_state.preview_mode, PreviewMode::Temperature, "Temperature");
                 ui.radio_value(&mut world_gen_ui_state.preview_mode, PreviewMode::Biome, "Biome");
                 ui.radio_value(&mut world_gen_ui_state.preview_mode, PreviewMode::Regions, "Regions");
+                let tag_on = matches!(world_gen_ui_state.preview_mode, PreviewMode::Tag(_));
+                if ui.selectable_label(tag_on, "Tag").clicked() {
+                    world_gen_ui_state.preview_mode =
+                        PreviewMode::Tag(world_gen_ui_state.tag_pick);
+                }
             });
+            if let Some(tag_reg) = tag_assets.get(&handles.tag_registry) {
+                ui.horizontal(|ui| {
+                    ui.label("Tag overlay:");
+                    let sel_name = tag_reg
+                        .tags
+                        .get(world_gen_ui_state.tag_pick.0 as usize)
+                        .map(|t| t.name.as_str())
+                        .unwrap_or("—");
+                    egui::ComboBox::from_id_salt("tag_overlay_pick")
+                        .selected_text(sel_name)
+                        .show_ui(ui, |ui| {
+                            for (i, t) in tag_reg.tags.iter().enumerate() {
+                                let id = TagId(i as u16);
+                                if ui
+                                    .selectable_value(
+                                        &mut world_gen_ui_state.tag_pick,
+                                        id,
+                                        &t.name,
+                                    )
+                                    .changed()
+                                    && matches!(world_gen_ui_state.preview_mode, PreviewMode::Tag(_))
+                                {
+                                    world_gen_ui_state.preview_mode = PreviewMode::Tag(id);
+                                }
+                            }
+                        });
+                });
+            }
+            
+            #[cfg(feature = "bevy_tilemap_adapter")]
+            if let Some(ref mut vis) = tile_layer_vis {
+                egui::CollapsingHeader::new("Tilemap layers")
+                    .default_open(true)
+                    .show(ui, |ui| {
+                        ui.checkbox(&mut vis.terrain, "Terrain (z=0)");
+                        ui.checkbox(&mut vis.overlay, "Overlay / preview (z=10)");
+                        ui.checkbox(&mut vis.resources, "Resources (z=20)");
+                    });
+            }
             
             ui.add_space(20.0);
             

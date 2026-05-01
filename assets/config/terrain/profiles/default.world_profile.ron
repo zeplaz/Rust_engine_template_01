@@ -1,0 +1,7 @@
+(
+  schema_version: 1,
+  material_registry: "config/terrain/material_registry.example.json",
+  tag_registry: "config/terrain/tag_registry.example.json",
+  material_rules: "config/terrain/material_rules.example.ron",
+  tuning: Some("config/world_gen_tuning.example.json"),
+)
