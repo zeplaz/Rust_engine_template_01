@@ -1,6 +1,6 @@
 # Gap remediation runbook `v1`
 
-> **STATUS:** Documentation harness for executing **Rust phases G1-G5** of implementation-gap remediation. **G1 (hydrology) is Applied** in code (`terrain::generation::hydrology`, p4, `world_generator_enhanced`); **G3 (GUI)** is the next active phase by sequence (letters unchanged). G2/G4/G5 remain parked behind their promotion blockers.
+> **STATUS:** Documentation harness for executing **Rust phases G1-G5** of implementation-gap remediation. **G1 (hydrology) is Applied** in code (`terrain::generation::hydrology`, p4, `world_generator_enhanced`); **G3 (GUI)** is the next active phase by sequence (letters unchanged). G2/G4/G5 remain parked behind their promotion blockers. **Closed pack history:** [`../legacy_runbooks/README.md`](../legacy_runbooks/README.md) (G1 full steps, terrain U maintenance capsule).
 
 Version: `v1.0.0`
 Audience: agents (and humans) replacing stubs, placeholders, and TODO-backed no-op code with real behavior.
@@ -94,13 +94,13 @@ A step that cannot fit this shape is too big. Split it before executing.
 
 ## 4. Phase index
 
-Mirrors the routing table in [`implementation_gap_hunt_runbook_v1.md`](implementation_gap_hunt_runbook_v1.md) §4.5. Update **here and in the owning matrix/runbook** when a phase completes.
+Mirrors the routing table in [`implementation_gap_hunt_runbook_v1.md`](implementation_gap_hunt_runbook_v1.md) §4.5. Update **here and in the owning matrix/runbook** when a phase completes. **G1** step history (pre-capsule): [`../legacy_runbooks/gap_remediation/g1_hydrology_steps_v1_FULL.md`](../legacy_runbooks/gap_remediation/g1_hydrology_steps_v1_FULL.md).
 
 | Phase | Step pack | Focus | Status |
 |:---:|:---|:---|:---:|
 | **G1** | [`runbook/g1_hydrology_steps_v1.md`](../matrix/gap_remediation/runbook/g1_hydrology_steps_v1.md) | Hydrology: unify legacy ECS, `world_generator_plugin` stubs, and p4 chunk pipeline; upgrade flow algorithm | **Applied** |
 | **G2** | [`runbook/g2_power_placeholders_steps_v1.md`](../matrix/gap_remediation/runbook/g2_power_placeholders_steps_v1.md) | Power placeholders / failure modes | Parked - placeholder pack |
-| **G3** | [`runbook/g3_gui_todos_steps_v1.md`](../matrix/gap_remediation/runbook/g3_gui_todos_steps_v1.md) | GUI TODOs surfaced by gap hunt | **Active - next** |
+| **G3** | [`runbook/g3_gui_todos_steps_v1.md`](../matrix/gap_remediation/runbook/g3_gui_todos_steps_v1.md) | GUI gaps surfaced by gap hunt | **Active - next** |
 | **G4** | [`runbook/g4_serialization_stubs_steps_v1.md`](../matrix/gap_remediation/runbook/g4_serialization_stubs_steps_v1.md) | Serialization stubs and paired-save gaps | Pending - placeholder pack |
 | **G5** | [`runbook/g5_nav_damage_steps_v1.md`](../matrix/gap_remediation/runbook/g5_nav_damage_steps_v1.md) | Navigation, damage, manufacturing placeholders | Pending - placeholder pack |
 
@@ -162,7 +162,7 @@ Mirrors the routing table in [`implementation_gap_hunt_runbook_v1.md`](implement
 
 ## 9. Prompt fragment for the executing agent
 
-> Read [`prompts/guides/gap_remediation_runbook_v1.md`](gap_remediation_runbook_v1.md) §§1-6 first. **G1 (hydrology) is Applied** — use [`g1_hydrology_steps_v1.md`](../matrix/gap_remediation/runbook/g1_hydrology_steps_v1.md) only for audits. Start new work with **G3 GUI** via [`g3_gui_todos_steps_v1.md`](../matrix/gap_remediation/runbook/g3_gui_todos_steps_v1.md) and the GUI runbook; pair backlog work through [`backlog_serialization_preview_streaming_runbook_v1.md`](backlog_serialization_preview_streaming_runbook_v1.md). For parked **G2/G4/G5**, open phase packs only after **§10** promotion criteria and the pack’s blockers are satisfied. On any halt condition (§6), stop and surface to the human.
+> Read [`prompts/guides/gap_remediation_runbook_v1.md`](gap_remediation_runbook_v1.md) §§1-6 first. **G1 (hydrology) is Applied** — use [`g1_hydrology_steps_v1.md`](../matrix/gap_remediation/runbook/g1_hydrology_steps_v1.md) only for audits. Start **G3** with [`g3_execution_cycle_v1.md`](../matrix/gap_remediation/runbook/g3_execution_cycle_v1.md) (GUI ↔ backlog alternation), [`g3_gui_todos_steps_v1.md`](../matrix/gap_remediation/runbook/g3_gui_todos_steps_v1.md), and [`gui_runbook_v1.md`](gui_runbook_v1.md); pair backlog micro-passes through [`backlog_serialization_preview_streaming_runbook_v1.md`](backlog_serialization_preview_streaming_runbook_v1.md). For parked **G2/G4/G5**, open phase packs only after **§10** promotion criteria and the pack’s blockers are satisfied. On any halt condition (§6), stop and surface to the human.
 
 ---
 
@@ -172,10 +172,10 @@ Mirrors the routing table in [`implementation_gap_hunt_runbook_v1.md`](implement
 
 | Queue item | Next action | Blocker / owner |
 |:---|:---|:---|
-| **G3 GUI** | Use [`gui_runbook_v1.md`](gui_runbook_v1.md) + [`g3_gui_todos_steps_v1.md`](../matrix/gap_remediation/runbook/g3_gui_todos_steps_v1.md); split by faction editor, production HUD, diagnostics, runtime UI | Each surface must define data source + read/write authority before Rust |
+| **G3 GUI** | Run [`g3_execution_cycle_v1.md`](../matrix/gap_remediation/runbook/g3_execution_cycle_v1.md); [`gui_runbook_v1.md`](gui_runbook_v1.md) + [`g3_gui_todos_steps_v1.md`](../matrix/gap_remediation/runbook/g3_gui_todos_steps_v1.md) | Each **slice**: sub-pack **§3 living map** + **per-action tests** where applicable; **BQ-102–105** only for unresolved `ASK:`; **BQ-108** = invariant sign-off; **results** via [`g3_cycle_results_TEMPLATE.md`](../matrix/gap_remediation/runbook/g3_cycle_results_TEMPLATE.md) |
 | **Backlog wave S > P > C** | Use [`backlog_serialization_preview_streaming_runbook_v1.md`](backlog_serialization_preview_streaming_runbook_v1.md) | S = serialization, P = preview / composite UI, C = chunk streaming / neighbors |
 | **G2 Power** | Parked; **G2-S00** traceability remains valid | Needs [`g2_power_placeholders_steps_v1.md`](../matrix/gap_remediation/runbook/g2_power_placeholders_steps_v1.md) blockers + gap-hunt §5 |
 | **G4 Serialization stubs** | Parked unless owned by backlog wave **S** | Align with [`serialization_hybrid_migration_matrix_v1.md`](../matrix/serialization/serialization_hybrid_migration_matrix_v1.md) |
 | **G5 Nav / damage / mfg** | Parked | Owner + matrix row per [`g5_nav_damage_steps_v1.md`](../matrix/gap_remediation/runbook/g5_nav_damage_steps_v1.md) |
 
-Human prep remains [`rulebook_backlog_designer_brief_v1.md`](rulebook_backlog_designer_brief_v1.md); agents should surface unresolved `ASK:` / TODOs there at the end of each cycle.
+Human prep remains [`rulebook_backlog_designer_brief_v1.md`](rulebook_backlog_designer_brief_v1.md) §4 **BQ-###**; agents should record cycle outcomes in **`results/g3*_cycle_results_v1.md`** and update brief rows — not informal open-work lists outside those anchors.

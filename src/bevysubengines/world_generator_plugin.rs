@@ -189,9 +189,13 @@ fn world_gen_ui_system(
     mut save_event: MessageWriter<SaveWorldEvent>,
     mut load_event: MessageWriter<LoadWorldEvent>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
+    bindings: Option<Res<crate::gui::InputBindings>>,
 ) -> Result {
-    // Toggle UI with F8
-    if keyboard_input.just_pressed(KeyCode::F8) {
+    let toggle_key = bindings
+        .as_deref()
+        .map(|b| b.toggle_world_generator)
+        .unwrap_or_else(|| crate::gui::InputBindings::default().toggle_world_generator);
+    if keyboard_input.just_pressed(toggle_key) {
         world_gen_state.ui_visible = !world_gen_state.ui_visible;
     }
 

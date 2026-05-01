@@ -2,7 +2,7 @@
 
 > **STATUS:** One-page **input** for designers and project leads before engineering runs [`terrain_paired_runbooks_queue_v1.md`](terrain_paired_runbooks_queue_v1.md) (**Q0–Q6**) or [`system_runbook_authoring_meta_v1.md`](system_runbook_authoring_meta_v1.md) to spawn new orchestrators. **No Rust** — decisions and scope only.
 
-Version: `v1.0.0`
+Version: `v1.0.1`
 
 ---
 
@@ -22,7 +22,7 @@ Version: `v1.0.0`
 | [`terrain_paired_runbooks_queue_v1.md`](terrain_paired_runbooks_queue_v1.md) | **Q0–Q6** authoring order, sync gate template |
 | [`system_runbook_authoring_meta_v1.md`](system_runbook_authoring_meta_v1.md) §3 | Fixed paths for **new** system orchestrators; `ASK:` rows need humans before authoring |
 | [`../matrix/terrain_biome/material_unification_matrix_v1.md`](../matrix/terrain_biome/material_unification_matrix_v1.md) | Terrain matrix — many **non–U-phase** rows may still be Pending / Partial (backlog beyond U7) |
-| [`../matrix/terrain_biome/runbook/README.md`](../matrix/terrain_biome/runbook/README.md) | Step-pack index (maintenance / audit entry) |
+| [`../matrix/terrain_biome/runbook/README.md`](../matrix/terrain_biome/runbook/README.md) | Step-pack index; **maintenance capsule** [`../legacy_runbooks/terrain/terrain_u_applied_maintenance_v1.md`](../legacy_runbooks/terrain/terrain_u_applied_maintenance_v1.md) |
 | [`implementation_gap_hunt_runbook_v1.md`](implementation_gap_hunt_runbook_v1.md) | **Cadence sweep** for stubs / TODOs / placeholder behavior in `src/` — run before big planning or after merges (§3) |
 
 ---
@@ -48,20 +48,48 @@ Copy the table into a ticket or shared doc and assign **Owner** + **Target date*
 | **Q2 terrain backlog** | Fold decisions into [`material_unification_matrix_v1.md`](../matrix/terrain_biome/material_unification_matrix_v1.md) §§8, 9, 14, 16, 18. Prefer logical simulation behavior, code clarity, maintainability, and getting working code that can expand safely. |
 | **Q3 next system orchestrator** | **UI tools** first, followed by **Navigation**, **Factions**, **Power**, then **Supply chain**. |
 | **Q4 coupling** | Do not front-load a heavy dependency matrix yet; keep moving and monitor dependencies as they arise. |
-| **Q5 `ASK:` ownership** | User / designer owns unresolved product answers. Agents should surface a clean TODO list at the end of each cycle. |
+| **Q5 `ASK:` ownership** | User / designer owns unresolved product answers. Agents should surface a **backlog queue snapshot** (**BQ-###**, §4) at the end of each cycle. |
 | **Q6 non-goals / scope** | **LLM tooling is out of scope. Diplomacy is in scope.** |
 
 ---
 
-## 4. Open follow-ups bubbled to next cycle
+## 4. Backlog queue — next cycle (BQ-###)
 
-These are designer / lead TODOs that should be answered before the next implementation wave turns them into Rust steps.
+Use these ids in G3 **results** files and orchestrator notes. **Do not** parallel-track the same subject under informal open-work labels.
 
-- Define the **Diff updates** smooth-transition contract in [`material_unification_matrix_v1.md`](../matrix/terrain_biome/material_unification_matrix_v1.md) §16: what changed tile indices should be sent to `TileStorage`, when, and how visual transitions stay reliable.
-- Define each GUI surface's **data source** before Rust work: faction editor, production HUD, diagnostics, and runtime in-game UI.
-- Decide the **biome pack on/off UX**: menu placement and config key naming for enabling/disabling loaded biome packs.
-- Choose **schema-version strategy** during the first serialization wave: per-file by default, or registry when many schemas share a lifecycle.
-- Confirm GUI invariants for [`gui_runbook_v1.md`](gui_runbook_v1.md): egui placeholders must be marked `TEMP-EGUI`; desktop asset tools never cross into in-game UI.
+| BQ ID | Subject | Anchor |
+|:---|:---|:---|
+| **BQ-101** | **TileStorage diff / smooth transition** — what changed tile indices are sent, when, and how visuals stay reliable | [`material_unification_matrix_v1.md`](../matrix/terrain_biome/material_unification_matrix_v1.md) §16 |
+| **BQ-102** | **Faction editor** — **G3A** §3 living map for slices not yet wired | G3A sub-pack |
+| **BQ-103** | **Production HUD** — **G3B** §3 living map + **Next** polish: entity id → display names · optional F9 `dev_tools` gate · in-transit / pipeline row · richer bars/tooltips | G3B sub-pack § Next |
+| **BQ-104** | **Diagnostics** — **G3C** §3 living map gaps | G3C sub-pack |
+| **BQ-105** | **Runtime in-game UI** — **G3D** §3 living map gaps | G3D sub-pack |
+| **BQ-106** | **Biome pack on/off UX** — menu placement and config key naming | Product / tools |
+| **BQ-107** | **Schema-version strategy** for first serialization wave — per-file default vs registry when many schemas share lifecycle | Wave **S** + serialization matrix |
+| **BQ-108** | **GUI invariants sign-off** — `TEMP-EGUI` labelling; desktop asset tools never render in-game UI | [`gui_runbook_v1.md`](gui_runbook_v1.md) §1 |
+| **BQ-109** | **G2 power promotion** — player-visible behavior; save/schema; power parity matrix rows; owner (see §4.2) | G2 pack · gap-hunt §5 |
+| **BQ-110** | **G4 serialization execution** — first domain DTO + register/load + ECS hydration test; hybrid matrix row; wave **S** | G4 pack · [`serialization_hybrid_migration_matrix_v1.md`](../matrix/serialization/serialization_hybrid_migration_matrix_v1.md) |
+| **BQ-111** | **G5 subsystem promotion** — navigation vs damage vs manufacturing **per finding**; optional matrices; before `G5-SNN` | G5 pack living queue |
+
+### 4.1 G3 sub-pack §3 → BQ crosswalk
+
+| Sub-pack §3 living map | BQ ID |
+|:---|:---|
+| **G3A** Faction editor | **BQ-102** |
+| **G3B** Production HUD | **BQ-103** |
+| **G3C** Diagnostics | **BQ-104** |
+| **G3D** Runtime in-game UI | **BQ-105** |
+
+### 4.2 G2 promotion questions (verbatim — **BQ-109**)
+
+Before writing **G2** atomic Rust steps (after **G2-S00**), answer gap-hunt §5:
+
+| Question | Required answer |
+|:---|:---|
+| Player-visible behavior | What should steam leak / condenser, nuclear containment / decay heat, and renewable derates do to status, efficiency, alerts, and UI? |
+| Save/schema impact | Are failure modes persisted as deterministic runtime state, derived from config, or replayed from events? |
+| Matrix row | Which power parity rows flip when each failure mode lands? |
+| Owner | Power runtime, damage, or production tools? |
 
 ---
 
@@ -81,4 +109,5 @@ These are designer / lead TODOs that should be answered before the next implemen
 | [`terrain_paired_runbooks_queue_v1.md`](terrain_paired_runbooks_queue_v1.md) | Optional gate before **Q0** for a new pair |
 | [`system_runbook_authoring_meta_v1.md`](system_runbook_authoring_meta_v1.md) | Human prep before invoking meta for **`ASK:`**-free rows |
 | [`implementation_gap_hunt_runbook_v1.md`](implementation_gap_hunt_runbook_v1.md) | Cadence stub/placeholder sweep in `src/` (§2–§4); triage before runbook waves |
-| [`gap_remediation_runbook_v1.md`](gap_remediation_runbook_v1.md) | Executes triaged gaps by phase (**G1** hydrology first; **G2-G5** require owner / matrix answers before promotion) |
+| [`gap_remediation_runbook_v1.md`](gap_remediation_runbook_v1.md) | **G1** hydrology **Applied** (capsule + legacy full); active **G3** GUI; **G2–G5** parked until §4 **BQ-109+** |
+| [`../matrix/gap_remediation/runbook/g3_execution_cycle_v1.md`](../matrix/gap_remediation/runbook/g3_execution_cycle_v1.md) | **G3** step order: GUI and backlog orchestrators alternate; cycle **results** use **BQ-###** only |

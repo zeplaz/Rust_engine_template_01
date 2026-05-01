@@ -33,9 +33,10 @@ impl Plugin for AgentSystemsPlugin {
 /// System to toggle the permissions UI with a keyboard shortcut
 pub fn permissions_ui_shortcut(
     keyboard_input: Res<ButtonInput<KeyCode>>,
+    bindings: Res<crate::gui::InputBindings>,
     mut toggle_events: MessageWriter<crate::gui::TogglePermissionsUiEvent>,
 ) {
-    if keyboard_input.just_pressed(KeyCode::F7) {
+    if keyboard_input.just_pressed(bindings.toggle_agent_permissions) {
         toggle_events.write(crate::gui::TogglePermissionsUiEvent);
     }
 }

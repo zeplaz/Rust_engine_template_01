@@ -4,6 +4,7 @@
 
 use bevy::prelude::*;
 use bevy_egui::EguiPlugin;
+use proc_A_dine01::gui::KeybindingsOptionsPlugin;
 use proc_A_dine01::systems::terrain::MaterialUnificationPlugin;
 use proc_A_dine01::terrain::generation::WorldGenToolsPlugin;
 
@@ -12,6 +13,7 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .add_plugins(EguiPlugin::default())
         .add_plugins(MaterialUnificationPlugin)
+        .add_plugins(KeybindingsOptionsPlugin)
         .add_plugins(WorldGenToolsPlugin)
         .add_systems(Startup, setup)
         .run();
@@ -19,5 +21,5 @@ fn main() {
 
 fn setup(mut commands: Commands) {
     commands.spawn(Camera2d);
-    info!("World Generator (canonical stack). Press F8 for World Generator + preview (registry-backed biome / tag overlay).");
+    info!("World Generator (canonical stack). F1 key bindings · default F8 toggles World Generator + preview.");
 }

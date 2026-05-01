@@ -98,6 +98,8 @@ Once triaged, route each code gap to [`gap_remediation_runbook_v1.md`](gap_remed
 | **G4** | Serialization stubs | `systems/production/serialization.rs`, serialization hybrid matrix, paired runbook **S** |
 | **G5** | Navigation, damage, manufacturing placeholders | `potental_feild_nav.rs`, `damage_system.rs`, `manufacturing_plugin.rs` |
 
+**Applied / archive packs** (hydrology G1 full text, terrain U maintenance): [`../legacy_runbooks/README.md`](../legacy_runbooks/README.md).
+
 ---
 
 ## 5. Questions for designers / leads (when product truth is missing)

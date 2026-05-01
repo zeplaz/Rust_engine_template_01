@@ -1,5 +1,7 @@
 # Terrain unification runbook — step packs
 
+> **Maintenance first:** For **Applied** U3–U7 status, onboarding, and when to reopen a pack, read **[`../../../legacy_runbooks/terrain/terrain_u_applied_maintenance_v1.md`](../../../legacy_runbooks/terrain/terrain_u_applied_maintenance_v1.md)** — then return here for atomic `uN_steps_v1.md` execution detail.
+
 > **STATUS:** Index of atomic-step packs that drive **Rust phases U3–U7** of the material / tag / rule unification. Pair with the orchestrator at [`../../../guides/terrain_unification_runbook_v1.md`](../../../guides/terrain_unification_runbook_v1.md), the matrix at [`../material_unification_matrix_v1.md`](../material_unification_matrix_v1.md), and **tooling parity / testing** at [`../../../guides/world_assets_tools_rulebook_v1.md`](../../../guides/world_assets_tools_rulebook_v1.md).
 
 **Authoritative phase status:** U3–U7 are **Applied** per orchestrator [**§4 Phase index**](../../../guides/terrain_unification_runbook_v1.md#4-phase-index) and matrix [**§10**](../material_unification_matrix_v1.md) (mirror those docs when in doubt). This README describes **how to run** packs for maintenance, audits, or future extensions — not an open execution gap for U6/U7.

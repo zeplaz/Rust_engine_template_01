@@ -19,14 +19,7 @@ G2 owns power-related placeholders found by the gap hunt, especially:
 
 ## Promotion blockers
 
-Before writing atomic steps, answer gap-hunt §5:
-
-| Question | Required answer |
-|:---|:---|
-| Player-visible behavior | What should steam leak / condenser, nuclear containment / decay heat, and renewable derates do to status, efficiency, alerts, and UI? |
-| Save/schema impact | Are failure modes persisted as deterministic runtime state, derived from config, or replayed from events? |
-| Matrix row | Which power parity rows flip when each failure mode lands? |
-| Owner | Power runtime, damage, or production tools? |
+**Canonical:** [`../../../guides/rulebook_backlog_designer_brief_v1.md`](../../../guides/rulebook_backlog_designer_brief_v1.md) §4 **BQ-109** (verbatim promotion questions — single source of truth). Answer per gap-hunt §5 before any **G2-SNN** Rust steps after **G2-S00**.
 
 ---
 
