@@ -32,6 +32,12 @@ Every GUI step reads:
 
 If a step needs more than this, split or surface `ASK:` with **BQ-###** in the backlog brief §4.
 
+### 2.1 Related pack (non-G3)
+
+| Pack | Role |
+|:---|:---|
+| [`../matrix/map_editor/runbook/README.md`](../matrix/map_editor/runbook/README.md) | **World map editor** M1–M5 — post-procedural brushes, roads, snapshots; orchestrator [`map_editor_runbook_v1.md`](map_editor_runbook_v1.md). Editor egui = **`TEMP-EGUI`** per §1. |
+
 ---
 
 ## 3. Sub-pack index

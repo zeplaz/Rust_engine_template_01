@@ -71,6 +71,7 @@ Use these ids in G3 **results** files and orchestrator notes. **Do not** paralle
 | **BQ-109** | **G2 power promotion** — player-visible behavior; save/schema; power parity matrix rows; owner (see §4.2) | G2 pack · gap-hunt §5 |
 | **BQ-110** | **G4 serialization execution** — first domain DTO + register/load + ECS hydration test; hybrid matrix row; wave **S** | G4 pack · [`serialization_hybrid_migration_matrix_v1.md`](../matrix/serialization/serialization_hybrid_migration_matrix_v1.md) |
 | **BQ-111** | **G5 subsystem promotion** — navigation vs damage vs manufacturing **per finding**; optional matrices; before `G5-SNN` | G5 pack living queue |
+| **BQ-112** | **World map editor (M1–M5)** — FullReady→Editor routing, `TEMP-EGUI` palette, brushes, snapshot save/load vs **G4**/serialization matrix | [`map_editor_runbook_v1.md`](map_editor_runbook_v1.md) · [`map_editor_matrix_v1.md`](../matrix/map_editor/map_editor_matrix_v1.md) |
 
 ### 4.1 G3 sub-pack §3 → BQ crosswalk
 

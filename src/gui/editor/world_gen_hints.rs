@@ -129,6 +129,8 @@ pub const GENERATE_FULL: &str =
     "Spawn the full-size world using current sliders (allowed after a preview exists).";
 pub const CLOSE_PANEL: &str = "Hide this window without changing flow state.";
 pub const ENTER_WORLD: &str = "Leave the generator and enter simulation with the generated world.";
+pub const OPEN_IN_MAP_EDITOR: &str =
+    "Open the map editor with this generated world; world-gen flow returns to Idle (TEMP-EGUI shell).";
 pub const DISCARD_WORLD: &str = "Despawn the procedural world entity tree and return flow to Idle.";
 pub const DISCARD_PREVIEW: &str = "Despawn preview content and return flow to Idle.";
 
