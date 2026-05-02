@@ -2,6 +2,9 @@
 //!
 //! Do **not** lexicographically sort tiles when building transport edges — that scrambles designer intent.
 //! Order comes from [`MapEditorRoadMarkerV1::placement_seq`](`crate::gui::editor::map_editor::MapEditorRoadMarkerV1`) (or any ordered slice you pass in).
+//! **R9:** [`bake_snapshot_from_ordered_markers_with_world_positions`] uses marker **world** positions for **`control_points`** (spline / CP path).
+
+use bevy::prelude::Vec3;
 
 use super::snapshot::{
     TransportEdgeRecord, TransportNetworkSnapshot, TransportNodeRecord, TRANSPORT_NETWORK_SCHEMA_V1,
@@ -24,16 +27,23 @@ fn collapse_consecutive_duplicate_tiles(points: &[(u32, u32)]) -> Vec<(u32, u32)
     out
 }
 
-/// **`markers`** must be in **authoring order** (e.g. sorted by `placement_seq`). Only **consecutive**
-/// duplicate tiles are removed (double-click same tile). Builds an **R8** snapshot: `control_points`,
-/// `profile`, `allowed_agents`.
-pub fn bake_snapshot_from_ordered_tile_markers(
-    markers_in_authoring_order: &[(u32, u32)],
-    height_normalized_at: impl Fn(u32, u32) -> f32,
-    y_world_scale: f32,
-    y_marker_bias: f32,
+fn collapse_consecutive_duplicate_tiles_with_pos(points: &[(u32, u32, Vec3)]) -> Vec<(u32, u32, Vec3)> {
+    let mut out = Vec::new();
+    for &(x, z, p) in points {
+        if out.last().map(|(ox, oz, _): &(u32, u32, Vec3)| (*ox, *oz)) == Some((x, z)) {
+            continue;
+        }
+        out.push((x, z, p));
+    }
+    out
+}
+
+/// **`markers`** in authoring order: `(tile_x, tile_z, world_position)` per vertex. Uses **world positions**
+/// for `TransportNodeRecord::position` and edge `control_points` (**R9** CP path).
+pub fn bake_snapshot_from_ordered_markers_with_world_positions(
+    markers_in_authoring_order: &[(u32, u32, Vec3)],
 ) -> TransportNetworkSnapshot {
-    let pts = collapse_consecutive_duplicate_tiles(markers_in_authoring_order);
+    let pts = collapse_consecutive_duplicate_tiles_with_pos(markers_in_authoring_order);
 
     if pts.len() < 2 {
         return TransportNetworkSnapshot {
@@ -44,26 +54,18 @@ pub fn bake_snapshot_from_ordered_tile_markers(
     }
 
     let mut nodes: Vec<TransportNodeRecord> = Vec::with_capacity(pts.len());
-    for &(x, z) in &pts {
-        let hn = height_normalized_at(x, z);
-        let y = hn * y_world_scale + y_marker_bias;
+    for &(x, z, p) in &pts {
         nodes.push(TransportNodeRecord {
             key: node_key(x, z),
-            position: [x as f32, y, z as f32],
+            position: [p.x, p.y, p.z],
         });
     }
 
     let n_edge = pts.len() - 1;
     let mut edges: Vec<TransportEdgeRecord> = Vec::with_capacity(n_edge);
     for i in 0..n_edge {
-        let (x0, z0) = pts[i];
-        let (x1, z1) = pts[i + 1];
-        let h0 = height_normalized_at(x0, z0);
-        let h1 = height_normalized_at(x1, z1);
-        let y0 = h0 * y_world_scale + y_marker_bias;
-        let y1 = h1 * y_world_scale + y_marker_bias;
-        let p0 = [x0 as f32, y0, z0 as f32];
-        let p1 = [x1 as f32, y1, z1 as f32];
+        let (x0, z0, p0) = pts[i];
+        let (x1, z1, p1) = pts[i + 1];
         let successors = if i + 1 < n_edge {
             vec![(i + 1) as u64]
         } else {
@@ -74,7 +76,7 @@ pub fn bake_snapshot_from_ordered_tile_markers(
             head: node_key(x0, z0),
             tail: node_key(x1, z1),
             successors,
-            control_points: vec![p0, p1],
+            control_points: vec![[p0.x, p0.y, p0.z], [p1.x, p1.y, p1.z]],
             profile: DEFAULT_ROAD_PROFILE.into(),
             allowed_agents: vec!["road_vehicle".into()],
         });
@@ -85,6 +87,26 @@ pub fn bake_snapshot_from_ordered_tile_markers(
         nodes,
         edges,
     }
+}
+
+/// Tile-centered heights → same as [`bake_snapshot_from_ordered_markers_with_world_positions`] with
+/// `Y = height_normalized * y_world_scale + y_marker_bias`.
+pub fn bake_snapshot_from_ordered_tile_markers(
+    markers_in_authoring_order: &[(u32, u32)],
+    height_normalized_at: impl Fn(u32, u32) -> f32,
+    y_world_scale: f32,
+    y_marker_bias: f32,
+) -> TransportNetworkSnapshot {
+    let pts = collapse_consecutive_duplicate_tiles(markers_in_authoring_order);
+    let with_pos: Vec<(u32, u32, Vec3)> = pts
+        .iter()
+        .map(|&(x, z)| {
+            let hn = height_normalized_at(x, z);
+            let y = hn * y_world_scale + y_marker_bias;
+            (x, z, Vec3::new(x as f32, y, z as f32))
+        })
+        .collect();
+    bake_snapshot_from_ordered_markers_with_world_positions(&with_pos)
 }
 
 #[cfg(test)]
@@ -126,5 +148,16 @@ mod tests {
         let markers = vec![(0u32, 0u32), (0u32, 0u32), (1u32, 0u32)];
         let snap = bake_snapshot_from_ordered_tile_markers(&markers, |_, _| 0.5_f32, 20., 0.25);
         assert_eq!(snap.edges.len(), 1);
+    }
+
+    #[test]
+    fn world_positions_override_y_for_control_points() {
+        let m = vec![
+            (0u32, 0u32, Vec3::new(0., 5., 0.)),
+            (1u32, 0u32, Vec3::new(1., 7., 0.)),
+        ];
+        let snap = bake_snapshot_from_ordered_markers_with_world_positions(&m);
+        assert!((snap.edges[0].control_points[0][1] - 5.).abs() < 0.001);
+        assert!((snap.edges[0].control_points[1][1] - 7.).abs() < 0.001);
     }
 }

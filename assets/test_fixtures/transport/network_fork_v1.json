@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "nodes": [
+    { "key": "a", "position": [0.0, 0.0, 0.0] },
+    { "key": "b", "position": [1.0, 0.0, 0.0] },
+    { "key": "c", "position": [0.0, 0.0, 1.0] }
+  ],
+  "edges": [
+    {
+      "id": 0,
+      "head": "a",
+      "tail": "b",
+      "successors": [],
+      "control_points": [[0.0, 0.0, 0.0], [1.0, 0.0, 0.0]],
+      "profile": "default_road",
+      "allowed_agents": ["road_vehicle"]
+    },
+    {
+      "id": 1,
+      "head": "a",
+      "tail": "c",
+      "successors": [],
+      "control_points": [[0.0, 0.0, 0.0], [0.0, 0.0, 1.0]],
+      "profile": "default_road",
+      "allowed_agents": ["road_vehicle"]
+    }
+  ]
+}

@@ -6,5 +6,7 @@
 // `crate::io::serialization::deserializers`.
 mod mouse;
 pub mod serialization;
+pub mod snapshot;
 
 pub use mouse::*;
+pub use snapshot::{read_hybrid_world_snapshot_dev_v0, write_hybrid_world_snapshot_dev_v0, WorldSnapshotHeaderDevV0};

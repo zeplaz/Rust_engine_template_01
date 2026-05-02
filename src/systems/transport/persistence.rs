@@ -171,4 +171,20 @@ mod tests {
         let js1 = serde_json::to_value(&s1).unwrap();
         assert_eq!(js0, js1);
     }
+
+    /// **W4 / T-LANE-001** slice: one node fans out to two edges (junction seed).
+    #[test]
+    fn g4_fork_fixture_hydrate_two_edges_from_one_head() {
+        let json = include_str!("../../../assets/test_fixtures/transport/network_fork_v1.json");
+        let snap = transport_network_snapshot_from_json_str(json).unwrap();
+        assert_eq!(snap.edges.len(), 2);
+        assert!(snap.edges.iter().all(|e| e.head == "a"));
+        let mut top = TransportTopology::default();
+        let mut field = TransportFieldStore::default();
+        let mut dir = TransportEdgeDirectory::default();
+        hydrate_transport_from_snapshot(&mut top, &mut field, &mut dir, &snap).unwrap();
+        assert_eq!(top.neighbors.len(), 2);
+        assert_eq!(top.neighbors[&crate::systems::transport::TransportEdgeId(0)].len(), 0);
+        assert_eq!(top.neighbors[&crate::systems::transport::TransportEdgeId(1)].len(), 0);
+    }
 }
