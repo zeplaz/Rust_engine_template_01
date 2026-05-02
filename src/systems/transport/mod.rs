@@ -3,8 +3,7 @@
 //! Docs: `prompts/designer_questions/transport/rulebook_drafts.md` §0.2,
 //! `transport_code_implementation_plan_v1.md`.
 //!
-//! This module is **not** the map-editor authoring ghost (matrix **R9**); bake will eventually
-//! populate [`TransportTopology`] / field keys.
+//! This module is **not** the map-editor authoring UI; editor ghost/preview lives in [`crate::gui::editor::map_editor`].
 
 mod bake;
 mod persistence;

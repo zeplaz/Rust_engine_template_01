@@ -5,6 +5,7 @@
 //! - **Editor v1 pattern:** [`MapEditorRoadMarkerV1`] — tile-aligned scaffold; **`placement_seq`** preserves **click order** for bake (R9). Do not lexicographically sort tiles for transport graph building.
 //! - See also [`map_editor_matrix_v1.md`](../../../../prompts/matrix/map_editor/map_editor_matrix_v1.md) §5 · **R9 bake order:** [`../../../../prompts/matrix/transport/runbook/r9_authoring_bake_order_steps_v1.md`](../../../../prompts/matrix/transport/runbook/r9_authoring_bake_order_steps_v1.md).
 //! - **G4 dev:** Road tool — **Save / Load transport (dev JSON)** → `assets/saves/dev_transport_network.json` (paths via `CARGO_MANIFEST_DIR`).
+//! - **M5 / S stub:** **Save / Load hybrid (dev)** → `assets/saves/dev_world_hybrid_v0.sav` (header line + transport JSON body).
 //!
 //! ## Tile / pick convention (M3-S01)
 //! Matches [`crate::terrain::generation::world_generator_enhanced`] spawn layout:
@@ -34,11 +35,13 @@ use crate::terrain::biome::TerrainClass;
 use crate::terrain::generation::world_generator_enhanced::{
     Height, TerrainType, TileMarker, WorldGenParams, WorldMarker,
 };
+use crate::io::snapshot::{read_hybrid_world_snapshot_dev_v0, write_hybrid_world_snapshot_dev_v0};
 use crate::systems::transport::{
-    bake_snapshot_from_ordered_tile_markers, hydrate_transport_from_snapshot,
-    transport_network_snapshot_from_world, transport_network_snapshot_save_json_path,
+    bake_snapshot_from_ordered_markers_with_world_positions, hydrate_transport_from_json_str,
+    hydrate_transport_from_snapshot, transport_network_snapshot_from_world,
+    transport_network_snapshot_save_json_path, transport_network_snapshot_to_json_string,
     LoadTransportNetworkSnapshotFromDisk, TransportEdgeDirectory, TransportFieldStore,
-    TransportLastHydratedSnapshot, TransportTopology,
+    TransportLastHydratedSnapshot, TransportNetworkSnapshot, TransportTopology,
 };
 use crate::terrain::material::{MaterialId, MaterialRegistry};
 
@@ -54,8 +57,76 @@ pub struct MapEditorSaveDevTransportRequest;
 #[derive(Message)]
 pub struct MapEditorLoadDevTransportRequest;
 
+/// **M5 / wave S** stub: write hybrid-shaped dev snapshot (JSON header line + transport JSON body).
+#[derive(Message)]
+pub struct MapEditorSaveHybridWorldDevRequest;
+
+/// Load transport body from [`dev_hybrid_world_save_path`] after validating header.
+#[derive(Message)]
+pub struct MapEditorLoadHybridWorldDevRequest;
+
+/// **R9:** undo last road-marker placement (stack captured **before** each click).
+#[derive(Message)]
+pub struct MapEditorRoadUndoRequest;
+
 fn dev_transport_network_save_path() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("assets/saves/dev_transport_network.json")
+}
+
+fn dev_hybrid_world_save_path() -> PathBuf {
+    Path::new(env!("CARGO_MANIFEST_DIR")).join("assets/saves/dev_world_hybrid_v0.sav")
+}
+
+/// Live **preview** polyline from markers (R9 ghost) — not hydrated until **Bake**.
+#[derive(Resource, Clone, Debug, Default)]
+pub struct RoadAuthoringGhostPreview {
+    pub snapshot: Option<TransportNetworkSnapshot>,
+}
+
+/// One undo frame: full marker set **before** a placement action.
+#[derive(Clone, Debug, Default)]
+pub struct RoadMarkerUndoFrame {
+    pub entries: Vec<(u32, u32, u32, Vec3)>,
+}
+
+impl RoadMarkerUndoFrame {
+    fn capture(q: &Query<(&MapEditorRoadMarkerV1, &Transform)>) -> Self {
+        let mut rows: Vec<_> = q
+            .iter()
+            .map(|(m, t)| (m.placement_seq, m.tile_x, m.tile_z, t.translation))
+            .collect();
+        rows.sort_by_key(|(seq, _, _, _)| *seq);
+        Self {
+            entries: rows
+                .into_iter()
+                .map(|(seq, tx, tz, pos)| (seq, tx, tz, pos))
+                .collect(),
+        }
+    }
+}
+
+#[derive(Resource, Debug)]
+pub struct MapEditorRoadUndoStack {
+    pub frames: Vec<RoadMarkerUndoFrame>,
+    pub max_frames: usize,
+}
+
+impl Default for MapEditorRoadUndoStack {
+    fn default() -> Self {
+        Self {
+            frames: Vec::new(),
+            max_frames: 50,
+        }
+    }
+}
+
+impl MapEditorRoadUndoStack {
+    fn push_frame(&mut self, frame: RoadMarkerUndoFrame) {
+        while self.frames.len() >= self.max_frames {
+            self.frames.remove(0);
+        }
+        self.frames.push(frame);
+    }
 }
 
 /// Monotonic **click order** for the current editor session (reset when entering editor).
@@ -197,9 +268,13 @@ fn on_enter_editor(
     mut tool: ResMut<MapEditorTool>,
     mut next_sub: ResMut<NextState<InGameEditorState>>,
     mut road_seq: ResMut<MapEditorRoadPlacementSeq>,
+    mut undo: ResMut<MapEditorRoadUndoStack>,
+    mut ghost: ResMut<RoadAuthoringGhostPreview>,
 ) {
     *tool = MapEditorTool::default();
     *road_seq = MapEditorRoadPlacementSeq::default();
+    *undo = MapEditorRoadUndoStack::default();
+    *ghost = RoadAuthoringGhostPreview::default();
     NextState::set_if_neq(&mut *next_sub, InGameEditorState::Select);
 }
 
@@ -459,6 +534,8 @@ fn map_editor_minimap_window(
     tool: Res<MapEditorTool>,
     world_roots: Query<Entity, With<WorldMarker>>,
     road_entities: Query<(Entity, &MapEditorRoadMarkerV1)>,
+    road_tf: Query<(&MapEditorRoadMarkerV1, &Transform)>,
+    mut road_undo: ResMut<MapEditorRoadUndoStack>,
     mut road_placement: ResMut<MapEditorRoadPlacementSeq>,
     mut tile_queries: ParamSet<(
         Query<(&mut Transform, &mut Height, &mut TerrainType), With<TileMarker>>,
@@ -548,6 +625,8 @@ fn map_editor_minimap_window(
                                 let read = tile_queries.p1();
                                 height_at_tile(&read, cx, cy)
                             };
+                            let before = RoadMarkerUndoFrame::capture(&road_tf);
+                            road_undo.push_frame(before);
                             place_road_marker(
                                 &mut commands,
                                 &world_roots,
@@ -567,26 +646,21 @@ fn map_editor_minimap_window(
 
 fn map_editor_bake_transport(
     mut events: MessageReader<MapEditorBakeTransportRequest>,
-    markers: Query<&MapEditorRoadMarkerV1>,
-    tiles: Query<(&Transform, &Height), With<TileMarker>>,
+    markers: Query<(&MapEditorRoadMarkerV1, &Transform)>,
     mut topology: ResMut<TransportTopology>,
     mut fields: ResMut<TransportFieldStore>,
     mut directory: ResMut<TransportEdgeDirectory>,
     mut last_hydrated: ResMut<TransportLastHydratedSnapshot>,
 ) {
     for _ in events.read() {
-        let mut rows: Vec<(u32, u32, u32)> = markers
+        let mut rows: Vec<(u32, u32, u32, Vec3)> = markers
             .iter()
-            .map(|m| (m.placement_seq, m.tile_x, m.tile_z))
+            .map(|(m, t)| (m.placement_seq, m.tile_x, m.tile_z, t.translation))
             .collect();
-        rows.sort_by_key(|(seq, _, _)| *seq);
-        let coords: Vec<(u32, u32)> = rows.into_iter().map(|(_, x, z)| (x, z)).collect();
-        let snap = bake_snapshot_from_ordered_tile_markers(
-            &coords,
-            |x, z| height_at_tile(&tiles, x, z),
-            HEIGHT_WORLD_SCALE,
-            0.25,
-        );
+        rows.sort_by_key(|(seq, _, _, _)| *seq);
+        let with_pos: Vec<(u32, u32, Vec3)> =
+            rows.into_iter().map(|(_, x, z, p)| (x, z, p)).collect();
+        let snap = bake_snapshot_from_ordered_markers_with_world_positions(&with_pos);
         if snap.edges.is_empty() {
             warn!("Bake transport: need ≥2 markers after removing consecutive duplicates on same tile.");
             continue;
@@ -639,6 +713,147 @@ fn map_editor_dev_load_transport(
     }
 }
 
+fn road_authoring_ghost_refresh(
+    base: Res<State<BaseState>>,
+    tool: Res<MapEditorTool>,
+    markers: Query<(&MapEditorRoadMarkerV1, &Transform)>,
+    mut ghost: ResMut<RoadAuthoringGhostPreview>,
+) {
+    if base.get() != &BaseState::Editor || tool.kind != MapEditorToolKind::Road {
+        ghost.snapshot = None;
+        return;
+    }
+    let mut rows: Vec<(u32, u32, u32, Vec3)> = markers
+        .iter()
+        .map(|(m, t)| (m.placement_seq, m.tile_x, m.tile_z, t.translation))
+        .collect();
+    rows.sort_by_key(|(seq, _, _, _)| *seq);
+    let with_pos: Vec<(u32, u32, Vec3)> = rows.into_iter().map(|(_, x, z, p)| (x, z, p)).collect();
+    let snap = bake_snapshot_from_ordered_markers_with_world_positions(&with_pos);
+    ghost.snapshot = if snap.edges.is_empty() {
+        None
+    } else {
+        Some(snap)
+    };
+}
+
+fn map_editor_road_undo(
+    mut events: MessageReader<MapEditorRoadUndoRequest>,
+    mut commands: Commands,
+    world_roots: Query<Entity, With<WorldMarker>>,
+    road_entities: Query<(Entity, &MapEditorRoadMarkerV1)>,
+    mut stack: ResMut<MapEditorRoadUndoStack>,
+    mut placement: ResMut<MapEditorRoadPlacementSeq>,
+) {
+    for _ in events.read() {
+        let Some(frame) = stack.frames.pop() else {
+            continue;
+        };
+        let Ok(world_root) = world_roots.single() else {
+            warn!("Map editor undo: expected exactly one WorldMarker");
+            continue;
+        };
+        let to_remove: Vec<Entity> = road_entities.iter().map(|(e, _)| e).collect();
+        for e in to_remove {
+            commands.entity(e).despawn();
+        }
+        for (seq, tx, tz, pos) in &frame.entries {
+            commands.entity(world_root).with_children(|parent| {
+                parent.spawn((
+                    MapEditorRoadMarkerV1 {
+                        tile_x: *tx,
+                        tile_z: *tz,
+                        placement_seq: *seq,
+                    },
+                    Transform::from_translation(*pos),
+                    Name::new(format!("Road marker v1 ({tx},{tz}) seq={seq}")),
+                ));
+            });
+        }
+        placement.next = frame
+            .entries
+            .iter()
+            .map(|(s, _, _, _)| *s)
+            .max()
+            .map(|m| m.saturating_add(1))
+            .unwrap_or(0);
+    }
+}
+
+fn map_editor_dev_save_hybrid_world(
+    mut events: MessageReader<MapEditorSaveHybridWorldDevRequest>,
+    last: Res<TransportLastHydratedSnapshot>,
+    topology: Res<TransportTopology>,
+    directory: Res<TransportEdgeDirectory>,
+) {
+    for _ in events.read() {
+        let snap = last
+            .snapshot
+            .clone()
+            .or_else(|| transport_network_snapshot_from_world(&topology, &directory));
+        let Some(snap) = snap else {
+            warn!("Save hybrid world: bake or load a graph first (nothing to save).");
+            continue;
+        };
+        let path = dev_hybrid_world_save_path();
+        if let Some(parent) = path.parent() {
+            let _ = std::fs::create_dir_all(parent);
+        }
+        let json = match transport_network_snapshot_to_json_string(&snap) {
+            Ok(s) => s,
+            Err(e) => {
+                warn!("Save hybrid: JSON error {e:?}");
+                continue;
+            }
+        };
+        match write_hybrid_world_snapshot_dev_v0(&path, json.as_bytes()) {
+            Ok(()) => info!("Saved hybrid dev snapshot to {}", path.display()),
+            Err(e) => warn!("Save hybrid failed: {e:?}"),
+        }
+    }
+}
+
+fn map_editor_dev_load_hybrid_world(
+    mut events: MessageReader<MapEditorLoadHybridWorldDevRequest>,
+    mut topology: ResMut<TransportTopology>,
+    mut fields: ResMut<TransportFieldStore>,
+    mut directory: ResMut<TransportEdgeDirectory>,
+    mut last: ResMut<TransportLastHydratedSnapshot>,
+) {
+    for _ in events.read() {
+        let path = dev_hybrid_world_save_path();
+        let (header, body) = match read_hybrid_world_snapshot_dev_v0(&path) {
+            Ok(x) => x,
+            Err(e) => {
+                warn!("Load hybrid failed for {}: {e:?}", path.display());
+                continue;
+            }
+        };
+        let json = match std::str::from_utf8(&body) {
+            Ok(s) => s,
+            Err(e) => {
+                warn!("Load hybrid: body not UTF-8: {e:?}");
+                continue;
+            }
+        };
+        match hydrate_transport_from_json_str(
+            topology.as_mut(),
+            fields.as_mut(),
+            directory.as_mut(),
+            json,
+        ) {
+            Ok(snap) => {
+                last.snapshot = Some(snap);
+                info!(
+                    "Loaded hybrid dev transport ({} bytes, header v{})",
+                    header.transport_byte_len, header.format_version
+                );
+            }
+            Err(e) => warn!("Load hybrid hydrate failed: {e:?}"),
+        }
+    }
+}
+
 fn map_editor_palette_system(
     mut contexts: EguiContexts,
     mut tool: ResMut<MapEditorTool>,
@@ -648,9 +863,13 @@ fn map_editor_palette_system(
     mut next_sub: ResMut<NextState<InGameEditorState>>,
     sub_state: Res<State<InGameEditorState>>,
     hover: Res<MapEditorHover>,
+    ghost: Res<RoadAuthoringGhostPreview>,
     mut bake_events: MessageWriter<MapEditorBakeTransportRequest>,
     mut save_dev_transport: MessageWriter<MapEditorSaveDevTransportRequest>,
     mut load_dev_transport: MessageWriter<MapEditorLoadDevTransportRequest>,
+    mut save_hybrid: MessageWriter<MapEditorSaveHybridWorldDevRequest>,
+    mut load_hybrid: MessageWriter<MapEditorLoadHybridWorldDevRequest>,
+    mut road_undo: MessageWriter<MapEditorRoadUndoRequest>,
 ) -> Result {
     egui::Window::new("Map editor — tools (TEMP-EGUI)")
         .anchor(egui::Align2::LEFT_TOP, [8.0, 8.0])
@@ -696,6 +915,34 @@ fn map_editor_palette_system(
             } else if tool.kind == MapEditorToolKind::Road {
                 ui.add_space(6.0);
                 ui.label("Road: click minimap tile to place/replace orange marker (TEMP-EGUI v1).");
+                match ghost.snapshot.as_ref() {
+                    Some(s) => ui
+                        .label(
+                            egui::RichText::new(format!(
+                                "Ghost preview (not baked): {} edges — bake to hydrate runtime.",
+                                s.edges.len()
+                            ))
+                            .weak(),
+                        ),
+                    None => ui.label(
+                        egui::RichText::new("Ghost preview: need ≥2 markers after dedup.").weak(),
+                    ),
+                };
+                let key_undo = ui.ctx().input(|i| {
+                    i.key_pressed(egui::Key::Z) && (i.modifiers.ctrl || i.modifiers.command)
+                });
+                if key_undo {
+                    road_undo.write(MapEditorRoadUndoRequest);
+                }
+                ui.horizontal(|ui| {
+                    if ui
+                        .button("Undo road marker")
+                        .on_hover_text("Restores markers before last click (stack ≤50). Ctrl/⌘+Z")
+                        .clicked()
+                    {
+                        road_undo.write(MapEditorRoadUndoRequest);
+                    }
+                });
                 if ui
                     .button("Bake roads → transport graph (W1 / R8 hydrate)")
                     .on_hover_text("Markers in click order → TransportTopology; needs ≥2 markers after dedup.")
@@ -718,6 +965,25 @@ fn map_editor_palette_system(
                         .clicked()
                     {
                         load_dev_transport.write(MapEditorLoadDevTransportRequest);
+                    }
+                });
+                ui.horizontal(|ui| {
+                    if ui
+                        .button("Save hybrid world (dev)")
+                        .on_hover_text(format!(
+                            "M5/S stub: JSON header + transport JSON body → {}",
+                            dev_hybrid_world_save_path().display()
+                        ))
+                        .clicked()
+                    {
+                        save_hybrid.write(MapEditorSaveHybridWorldDevRequest);
+                    }
+                    if ui
+                        .button("Load hybrid world (dev)")
+                        .on_hover_text(format!("Reads {}", dev_hybrid_world_save_path().display()))
+                        .clicked()
+                    {
+                        load_hybrid.write(MapEditorLoadHybridWorldDevRequest);
                     }
                 });
             }
@@ -751,8 +1017,13 @@ impl Plugin for MapEditorPlugin {
             .add_message::<MapEditorBakeTransportRequest>()
             .add_message::<MapEditorSaveDevTransportRequest>()
             .add_message::<MapEditorLoadDevTransportRequest>()
+            .add_message::<MapEditorSaveHybridWorldDevRequest>()
+            .add_message::<MapEditorLoadHybridWorldDevRequest>()
+            .add_message::<MapEditorRoadUndoRequest>()
             .init_resource::<MapEditorTool>()
             .init_resource::<MapEditorRoadPlacementSeq>()
+            .init_resource::<MapEditorRoadUndoStack>()
+            .init_resource::<RoadAuthoringGhostPreview>()
             .init_resource::<MapEditorHover>()
             .init_resource::<MapEditorGridView>()
             .init_resource::<MapEditorMapTexture>()
@@ -769,9 +1040,13 @@ impl Plugin for MapEditorPlugin {
             .add_systems(
                 Update,
                 (
+                    road_authoring_ghost_refresh,
+                    map_editor_road_undo,
                     map_editor_bake_transport,
                     map_editor_dev_save_transport,
                     map_editor_dev_load_transport,
+                    map_editor_dev_save_hybrid_world,
+                    map_editor_dev_load_hybrid_world,
                 )
                     .run_if(in_state(BaseState::Editor)),
             )
