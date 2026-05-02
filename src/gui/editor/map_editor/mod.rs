@@ -4,6 +4,7 @@
 //! - **Legacy ECS:** `src/entities/structure/components.rs` has **private** `Road` / `RoadSegment` / `RoadConnection` stubs (no world-gen spawn, not wired to runtime nav).
 //! - **Editor v1 pattern:** [`MapEditorRoadMarkerV1`] — tile-aligned scaffold; **`placement_seq`** preserves **click order** for bake (R9). Do not lexicographically sort tiles for transport graph building.
 //! - See also [`map_editor_matrix_v1.md`](../../../../prompts/matrix/map_editor/map_editor_matrix_v1.md) §5 · **R9 bake order:** [`../../../../prompts/matrix/transport/runbook/r9_authoring_bake_order_steps_v1.md`](../../../../prompts/matrix/transport/runbook/r9_authoring_bake_order_steps_v1.md).
+//! - **G4 dev:** Road tool — **Save / Load transport (dev JSON)** → `assets/saves/dev_transport_network.json` (paths via `CARGO_MANIFEST_DIR`).
 //!
 //! ## Tile / pick convention (M3-S01)
 //! Matches [`crate::terrain::generation::world_generator_enhanced`] spawn layout:
@@ -14,6 +15,9 @@
 //!
 //! ## Biome brush (M3-S03)
 //! Sets [`TerrainType`] directly — **no** [`classify_biome`](crate::terrain::biome::classify_biome); manual paint only.
+
+use std::path::{Path, PathBuf};
+use std::sync::Arc;
 
 use bevy::math::IVec2;
 use bevy::prelude::*;
@@ -32,13 +36,27 @@ use crate::terrain::generation::world_generator_enhanced::{
 };
 use crate::systems::transport::{
     bake_snapshot_from_ordered_tile_markers, hydrate_transport_from_snapshot,
-    TransportEdgeDirectory, TransportFieldStore, TransportTopology,
+    transport_network_snapshot_from_world, transport_network_snapshot_save_json_path,
+    LoadTransportNetworkSnapshotFromDisk, TransportEdgeDirectory, TransportFieldStore,
+    TransportLastHydratedSnapshot, TransportTopology,
 };
 use crate::terrain::material::{MaterialId, MaterialRegistry};
 
 /// Request: build **W1** transport topology from current [`MapEditorRoadMarkerV1`] entities.
 #[derive(Message)]
 pub struct MapEditorBakeTransportRequest;
+
+/// **G4** dev: write `TransportNetworkSnapshot` JSON under `assets/saves/` (crate root at compile time).
+#[derive(Message)]
+pub struct MapEditorSaveDevTransportRequest;
+
+/// **G4** dev: load same path via [`LoadTransportNetworkSnapshotFromDisk`].
+#[derive(Message)]
+pub struct MapEditorLoadDevTransportRequest;
+
+fn dev_transport_network_save_path() -> PathBuf {
+    Path::new(env!("CARGO_MANIFEST_DIR")).join("assets/saves/dev_transport_network.json")
+}
 
 /// Monotonic **click order** for the current editor session (reset when entering editor).
 /// Drives bake polyline order — **R9**; see `r9_authoring_bake_order_steps_v1.md`.
@@ -554,6 +572,7 @@ fn map_editor_bake_transport(
     mut topology: ResMut<TransportTopology>,
     mut fields: ResMut<TransportFieldStore>,
     mut directory: ResMut<TransportEdgeDirectory>,
+    mut last_hydrated: ResMut<TransportLastHydratedSnapshot>,
 ) {
     for _ in events.read() {
         let mut rows: Vec<(u32, u32, u32)> = markers
@@ -573,9 +592,50 @@ fn map_editor_bake_transport(
             continue;
         }
         match hydrate_transport_from_snapshot(&mut topology, &mut fields, &mut directory, &snap) {
-            Ok(()) => {}
+            Ok(()) => {
+                last_hydrated.snapshot = Some(snap);
+            }
             Err(e) => warn!("Bake transport hydrate failed: {e:?}"),
         }
+    }
+}
+
+fn map_editor_dev_save_transport(
+    mut events: MessageReader<MapEditorSaveDevTransportRequest>,
+    last: Res<TransportLastHydratedSnapshot>,
+    topology: Res<TransportTopology>,
+    directory: Res<TransportEdgeDirectory>,
+) {
+    for _ in events.read() {
+        let snap = last
+            .snapshot
+            .clone()
+            .or_else(|| transport_network_snapshot_from_world(&topology, &directory));
+        let Some(snap) = snap else {
+            warn!("Save transport: bake or load a graph first (nothing to save).");
+            continue;
+        };
+        let path = dev_transport_network_save_path();
+        if let Some(parent) = path.parent() {
+            let _ = std::fs::create_dir_all(parent);
+        }
+        match transport_network_snapshot_save_json_path(&snap, &path) {
+            Ok(()) => info!("Saved transport R8 JSON to {}", path.display()),
+            Err(e) => warn!("Save transport failed: {e:?}"),
+        }
+    }
+}
+
+fn map_editor_dev_load_transport(
+    mut events: MessageReader<MapEditorLoadDevTransportRequest>,
+    mut load_tx: MessageWriter<LoadTransportNetworkSnapshotFromDisk>,
+) {
+    for _ in events.read() {
+        let path = dev_transport_network_save_path();
+        let s: String = path.to_string_lossy().into_owned();
+        load_tx.write(LoadTransportNetworkSnapshotFromDisk {
+            path: Arc::from(s.into_boxed_str()),
+        });
     }
 }
 
@@ -589,6 +649,8 @@ fn map_editor_palette_system(
     sub_state: Res<State<InGameEditorState>>,
     hover: Res<MapEditorHover>,
     mut bake_events: MessageWriter<MapEditorBakeTransportRequest>,
+    mut save_dev_transport: MessageWriter<MapEditorSaveDevTransportRequest>,
+    mut load_dev_transport: MessageWriter<MapEditorLoadDevTransportRequest>,
 ) -> Result {
     egui::Window::new("Map editor — tools (TEMP-EGUI)")
         .anchor(egui::Align2::LEFT_TOP, [8.0, 8.0])
@@ -636,11 +698,28 @@ fn map_editor_palette_system(
                 ui.label("Road: click minimap tile to place/replace orange marker (TEMP-EGUI v1).");
                 if ui
                     .button("Bake roads → transport graph (W1 / R8 hydrate)")
-                    .on_hover_text("Sorted tile chain → TransportTopology + field keys; needs ≥2 markers.")
+                    .on_hover_text("Markers in click order → TransportTopology; needs ≥2 markers after dedup.")
                     .clicked()
                 {
                     bake_events.write(MapEditorBakeTransportRequest);
                 }
+                ui.add_space(4.0);
+                ui.horizontal(|ui| {
+                    if ui
+                        .button("Save transport (dev JSON)")
+                        .on_hover_text(format!("Writes {}", dev_transport_network_save_path().display()))
+                        .clicked()
+                    {
+                        save_dev_transport.write(MapEditorSaveDevTransportRequest);
+                    }
+                    if ui
+                        .button("Load transport (dev JSON)")
+                        .on_hover_text(format!("Reads {}", dev_transport_network_save_path().display()))
+                        .clicked()
+                    {
+                        load_dev_transport.write(MapEditorLoadDevTransportRequest);
+                    }
+                });
             }
 
             ui.add_space(8.0);
@@ -670,6 +749,8 @@ impl Plugin for MapEditorPlugin {
     fn build(&self, app: &mut App) {
         app.init_state::<InGameEditorState>()
             .add_message::<MapEditorBakeTransportRequest>()
+            .add_message::<MapEditorSaveDevTransportRequest>()
+            .add_message::<MapEditorLoadDevTransportRequest>()
             .init_resource::<MapEditorTool>()
             .init_resource::<MapEditorRoadPlacementSeq>()
             .init_resource::<MapEditorHover>()
@@ -687,7 +768,12 @@ impl Plugin for MapEditorPlugin {
             )
             .add_systems(
                 Update,
-                map_editor_bake_transport.run_if(in_state(BaseState::Editor)),
+                (
+                    map_editor_bake_transport,
+                    map_editor_dev_save_transport,
+                    map_editor_dev_load_transport,
+                )
+                    .run_if(in_state(BaseState::Editor)),
             )
             .add_systems(
                 EguiPrimaryContextPass,

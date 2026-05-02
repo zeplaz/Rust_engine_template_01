@@ -107,11 +107,68 @@ pub fn hydrate_transport_from_snapshot(
             TransportEdgeMeta {
                 profile: e.profile.clone(),
                 allowed_agents: e.allowed_agents.clone(),
+                head_key: e.head.clone(),
+                tail_key: e.tail.clone(),
+                control_points: e.control_points.clone(),
             },
         );
     }
 
     Ok(())
+}
+
+/// Build an **R8** DTO from runtime resources (G4 save path). Returns `None` if the graph is empty
+/// or any edge lacks directory metadata.
+pub fn transport_network_snapshot_from_world(
+    topology: &TransportTopology,
+    edge_directory: &TransportEdgeDirectory,
+) -> Option<TransportNetworkSnapshot> {
+    if topology.neighbors.is_empty() {
+        return None;
+    }
+
+    let mut node_pos: std::collections::HashMap<String, [f32; 3]> = std::collections::HashMap::new();
+    let mut ids: Vec<TransportEdgeId> = topology.neighbors.keys().copied().collect();
+    ids.sort_by_key(|k| k.0);
+
+    let mut edges: Vec<TransportEdgeRecord> = Vec::with_capacity(ids.len());
+    for id in ids {
+        let meta = edge_directory.by_edge.get(&id)?;
+        let succ: Vec<u64> = topology
+            .neighbors
+            .get(&id)
+            .map(|s| s.iter().map(|x| x.0).collect())
+            .unwrap_or_default();
+        if !meta.head_key.is_empty() && !meta.control_points.is_empty() {
+            node_pos.insert(meta.head_key.clone(), meta.control_points[0]);
+        }
+        if !meta.tail_key.is_empty() {
+            if let Some(p) = meta.control_points.last() {
+                node_pos.insert(meta.tail_key.clone(), *p);
+            }
+        }
+        edges.push(TransportEdgeRecord {
+            id: id.0,
+            head: meta.head_key.clone(),
+            tail: meta.tail_key.clone(),
+            successors: succ,
+            control_points: meta.control_points.clone(),
+            profile: meta.profile.clone(),
+            allowed_agents: meta.allowed_agents.clone(),
+        });
+    }
+
+    let mut nodes: Vec<TransportNodeRecord> = node_pos
+        .into_iter()
+        .map(|(key, position)| TransportNodeRecord { key, position })
+        .collect();
+    nodes.sort_by(|a, b| a.key.cmp(&b.key));
+
+    Some(TransportNetworkSnapshot {
+        schema_version: TRANSPORT_NETWORK_SCHEMA_V1,
+        nodes,
+        edges,
+    })
 }
 
 fn polyline_length(points: &[[f32; 3]]) -> f32 {
@@ -201,6 +258,20 @@ mod tests {
                 },
             ],
         }
+    }
+
+    #[test]
+    fn hydrate_then_snapshot_from_world_round_trip() {
+        let s0 = sample_snapshot();
+        let mut top = TransportTopology::default();
+        let mut field = TransportFieldStore::default();
+        let mut dir = TransportEdgeDirectory::default();
+        hydrate_transport_from_snapshot(&mut top, &mut field, &mut dir, &s0).unwrap();
+        let s1 = transport_network_snapshot_from_world(&top, &dir).expect("snapshot_from_world");
+        assert_eq!(
+            serde_json::to_value(&s0).unwrap(),
+            serde_json::to_value(&s1).unwrap()
+        );
     }
 
     #[test]

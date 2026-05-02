@@ -23,6 +23,14 @@ Active placeholders in `src/systems/production/serialization.rs`:
 
 Until these register real loaders, **production matrix “serialization plugin” rows are API boundaries only**, not save compatibility.
 
+## Transport **R8** slice (code truth)
+
+**G4** dev path (JSON; hybrid binary body still **ASK** per §Locked direction):
+
+- `src/systems/transport/persistence.rs` — `transport_network_snapshot_from_json_str`, save helpers, `LoadTransportNetworkSnapshotFromDisk`, `TransportLastHydratedSnapshot`.
+- Fixture: `assets/test_fixtures/transport/network_chain_v1.json`.
+- Step pack: [`../gap_remediation/runbook/g4_transport_r8_network_slice_steps_v1.md`](../gap_remediation/runbook/g4_transport_r8_network_slice_steps_v1.md).
+
 ## Locked direction
 
 1. **Move away from pure JSON** for heavy / hand-edited data.
@@ -55,6 +63,7 @@ Until these register real loaders, **production matrix “serialization plugin�
 
 - Deserializers: `src/io/serialization/deserializers.rs`
 - Production serialization plugins: `src/systems/production/serialization.rs`
+- **Transport R8 / G4:** `src/systems/transport/persistence.rs` (JSON slice + load message)
 
 ## Paired designer docs
 

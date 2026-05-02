@@ -24,7 +24,8 @@ Version: `v1.0.2`
 | **Bake** | `src/systems/transport/bake.rs` | **`bake_snapshot_from_ordered_tile_markers`**: markers in **`placement_seq`** order (see **R9** [`../../matrix/transport/runbook/r9_authoring_bake_order_steps_v1.md`](../../matrix/transport/runbook/r9_authoring_bake_order_steps_v1.md)). **No** lexicographic sort. |
 | **Edge directory** | `TransportEdgeDirectory` | Stable **`profile`** + **`allowed_agents`** per edge (for **R7** export). |
 | **Nav export** | `TransportNavExport` + `refresh_transport_nav_export` | **W3** / **R7**: costs, successors, masks — refreshed after cost cache each frame. |
-| **Map editor** | `map_editor/mod.rs` | Road tool: **Bake roads → transport graph** (**Message** → hydrate). |
+| **Map editor** | `map_editor/mod.rs` | Road tool: **Bake roads → transport graph** (**Message** → hydrate); updates **`TransportLastHydratedSnapshot`**. |
+| **G4 persistence** | `src/systems/transport/persistence.rs` | JSON load/save, **`LoadTransportNetworkSnapshotFromDisk`**, fixture tests — see [`../../matrix/gap_remediation/runbook/g4_transport_r8_network_slice_steps_v1.md`](../../matrix/gap_remediation/runbook/g4_transport_r8_network_slice_steps_v1.md). |
 
 This does **not** replace the full **G4** hybrid save pipeline or spline ECS; it implements **W1–W3** code paths, editor hook, and unit tests. Full world snapshot ownership stays matrix **M5** / **R8**.
 

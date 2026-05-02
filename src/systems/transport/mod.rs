@@ -7,10 +7,12 @@
 //! populate [`TransportTopology`] / field keys.
 
 mod bake;
+mod persistence;
 mod types;
 mod snapshot;
 
 pub use bake::*;
+pub use persistence::*;
 pub use snapshot::*;
 pub use types::*;
 
@@ -38,6 +40,8 @@ impl Plugin for TransportSimulationPlugin {
             .init_resource::<TransportCostWeights>()
             .init_resource::<TransportCostCache>()
             .init_resource::<TransportNavExport>()
+            .init_resource::<TransportLastHydratedSnapshot>()
+            .add_plugins(TransportNetworkPersistencePlugin)
             .configure_sets(
                 Update,
                 (
