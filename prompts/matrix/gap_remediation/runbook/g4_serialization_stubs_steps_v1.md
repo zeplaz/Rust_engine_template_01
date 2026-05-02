@@ -13,6 +13,7 @@
 G4 owns serialization placeholders surfaced by gap hunt, especially:
 
 - [`../../../../src/systems/production/serialization.rs`](../../../../src/systems/production/serialization.rs) — `ConcreteSerializationPlugin`, `AluminumSerializationPlugin`, `PowerSerializationPlugin` registration bodies.
+- [`g4_transport_r8_network_slice_steps_v1.md`](g4_transport_r8_network_slice_steps_v1.md) — **Transport / R8** — `TransportNetworkSnapshot` load/save + `hydrate_transport_from_snapshot` boundary (pair with [`../../transport/runbook/r9_authoring_bake_order_steps_v1.md`](../../transport/runbook/r9_authoring_bake_order_steps_v1.md) for authoring order).
 - Additional production / economy DTO rows as they appear in the hybrid matrix — **concrete, aluminum, and power are examples**, not an exhaustive closed list.
 
 ---
@@ -43,7 +44,8 @@ When promoted, split by **serialized domain** (extend matrix as needed):
 1. Concrete production config persistence (+ matrix row).
 2. Aluminum chain persistence (+ matrix row).
 3. Power topology / plant spec DTOs (+ matrix row).
-4. Additional domains as they appear **aluminum/concrete/power are not the cap**.
-5. Aggregator plugin tests and matrix close for touched rows.
+4. **Transport `TransportNetworkSnapshot`** (R8 slice) per [`g4_transport_r8_network_slice_steps_v1.md`](g4_transport_r8_network_slice_steps_v1.md) when wave **S** schedules it (+ hybrid matrix row).
+5. Additional domains as they appear **aluminum/concrete/power are not the cap**.
+6. Aggregator plugin tests and matrix close for touched rows.
 
 No `G4-SNN` atomic steps exist until the **first** domain row in §Placeholder is executed with code + test alignment.

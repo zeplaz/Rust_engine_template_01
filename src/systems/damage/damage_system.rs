@@ -1,3 +1,4 @@
+use crate::engine::NavSets;
 use crate::traits::damage::{DamageInfoProvider, *};
 use bevy::prelude::*;
 
@@ -9,7 +10,10 @@ pub struct DamageSystem;
 
 impl Plugin for DamageSystem {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, apply_road_damage);
+        app.add_systems(
+            Update,
+            apply_road_damage.in_set(NavSets::DamageSpeedAdjustment),
+        );
     }
 }
 

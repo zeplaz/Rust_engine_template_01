@@ -4,7 +4,7 @@
 >
 > **Halt (authoritative):** **R9** (editor spline tool) cannot reach **Applied** until **R8** (snapshot schema + deterministic hydrate story) is at least **Partial**. Prototype code may exist in branches; **status** reflects merge-ready truth.
 
-Version: `v1.0.2`
+Version: `v1.0.3`
 
 ---
 
@@ -41,10 +41,8 @@ The following files are **rough concept notes** from earlier ideation. They **do
 | [`../../designer_questions/transport/rulebook_drafts.md`](../../designer_questions/transport/rulebook_drafts.md) | **Orchestrator** (P0–P3), **logical simulation schedule** §0.2, Rulebooks **A–C** (field, cost cache, junction blocks) |
 | [`../../designer_questions/transport/transport_sim_runplan_v1.md`](../../designer_questions/transport/transport_sim_runplan_v1.md) | **Run plan** + tracked todos (**T-SCHED-001**, **T-LANE-001**, **T-GHOST-001**, **T-LOD-001**) |
 | [`../../designer_questions/transport/lane_graph_model_idea.md`](../../designer_questions/transport/lane_graph_model_idea.md) | Module layers; **authoring vs runtime** ghost; stubs honest until Phase II |
-| [`../../designer_questions/transport/sysem_desitions.md`](../../designer_questions/transport/sysem_desitions.md) | Hybrid tension spec (draft); **LOD as budget bands** |
-| [`../../designer_questions/transport/transport_editor_ux_risk_v1.md`](../../designer_questions/transport/transport_editor_ux_risk_v1.md) | UX; **R9** authoring ghost semantics |
-
-These **do not** change **R1–R10** status without matrix edits.
+| [`../../designer_questions/transport/system_decisions_v1.md`](../../designer_questions/transport/system_decisions_v1.md) | Hybrid tension spec (draft); **LOD as budget bands** |
+| [`../../designer_questions/transport/transport_code_implementation_plan_v1.md`](../../designer_questions/transport/transport_code_implementation_plan_v1.md) | **Rust** spine: `TransportSimulationPlugin`, schedule sets (**T-SCHED-001**) |
 
 ---
 
@@ -116,9 +114,9 @@ flowchart TD
 | [`../../designer_questions/transport/transport_editor_ux_risk_v1.md`](../../designer_questions/transport/transport_editor_ux_risk_v1.md) | User-input / UX risk detail |
 | [`reference_post_foundation_track_v1.md`](reference_post_foundation_track_v1.md) | **§9** — lock Options A/B/C; then reprioritize **R7/R9/R10** per checklist |
 | [`../../designer_questions/transport/rulebook_drafts.md`](../../designer_questions/transport/rulebook_drafts.md) | Orchestrator + simulation schedule + Rulebooks A–C |
-| [`../../designer_questions/transport/transport_sim_runplan_v1.md`](../../designer_questions/transport/transport_sim_runplan_v1.md) | Forward run plan + **T-*** todos |
+| [`../../designer_questions/transport/transport_code_implementation_plan_v1.md`](../../designer_questions/transport/transport_code_implementation_plan_v1.md) | **Rust** spine + waves W1–W5 (`src/systems/transport/`) |
 | [`../../designer_questions/transport/lane_graph_model_idea.md`](../../designer_questions/transport/lane_graph_model_idea.md) | Lane modules + ghost classes |
-| [`../../designer_questions/transport/sysem_desitions.md`](../../designer_questions/transport/sysem_desitions.md) | Tension spec (draft) |
+| [`../../designer_questions/transport/system_decisions_v1.md`](../../designer_questions/transport/system_decisions_v1.md) | Tension spec (draft) |
 | [`hybred_road_stats.md`](../../guides/hybred_road_stats.md) · [`lan level traffic.idea.md`](../../guides/lan%20level%20traffic.idea.md) · [`basic_nav_outline.md`](../../guides/basic_nav_outline.md) · [`intersection_road.md`](../../guides/intersection_road.md) · [`ref_buildout_roads.md`](../../guides/ref_buildout_roads.md) | **§1b** brainstorming only |
 
 ---
@@ -328,6 +326,7 @@ Do not edit the plan file in `.cursor/plans/`.
 
 - [x] **R1–R10** documented with owners, blockers, and JSON appendix.
 - [x] Sync gates + **R9 vs R8** halt rule explicit.
+- [x] **R9 bake order** + **G4 transport R8 slice** runbooks: [`runbook/r9_authoring_bake_order_steps_v1.md`](runbook/r9_authoring_bake_order_steps_v1.md) · [`../gap_remediation/runbook/g4_transport_r8_network_slice_steps_v1.md`](../gap_remediation/runbook/g4_transport_r8_network_slice_steps_v1.md)
 - [x] Phase II junction scope fenced.
 - [x] Post-foundation track placeholder + reference-file gate.
 - [ ] **Applied** rows: none until Rust + tests + designer sign-off per future runbook.

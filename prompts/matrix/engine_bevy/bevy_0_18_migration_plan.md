@@ -1,3 +1,9 @@
+## Bevy 0.18 — schedule refactor runbook
+
+Cross-plugin **`SystemSet`** ordering and plugin inventory: **[`../guides/ecs_systems_schedule_runbook_v1.md`](../guides/ecs_systems_schedule_runbook_v1.md)** · step packs [`runbook/README.md`](runbook/README.md).
+
+---
+
 ## Bevy 0.10.x → 0.18 migration plan (validated)
 
 > **STATUS:** ✅ **Active game/editor stack targets Bevy 0.18** (`bevy` 0.18 + `bevy_egui` 0.39). Core migration (schedules, states, input, egui pass, messages, `Camera2d`, `NextState::set_if_neq` on menu/splash/transitions, `AppExit::Success`) is applied. **Optional later:** Phase G feature flags, custom assets/render paths, `bevy-inspector-egui` when a matching release is chosen, warning cleanup (`cargo fix`).

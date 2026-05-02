@@ -2,8 +2,8 @@
 //!
 //! ## Road markers (M4) — audit
 //! - **Legacy ECS:** `src/entities/structure/components.rs` has **private** `Road` / `RoadSegment` / `RoadConnection` stubs (no world-gen spawn, not wired to runtime nav).
-//! - **Editor v1 pattern:** [`MapEditorRoadMarkerV1`] — tile-aligned scaffold only, parented under the single [`WorldMarker`] root; **not** a full road graph. Future work maps markers → public `Road` / segments or snapshot DTO (M5+).
-//! - See also [`map_editor_matrix_v1.md`](../../../../prompts/matrix/map_editor/map_editor_matrix_v1.md) §5.
+//! - **Editor v1 pattern:** [`MapEditorRoadMarkerV1`] — tile-aligned scaffold; **`placement_seq`** preserves **click order** for bake (R9). Do not lexicographically sort tiles for transport graph building.
+//! - See also [`map_editor_matrix_v1.md`](../../../../prompts/matrix/map_editor/map_editor_matrix_v1.md) §5 · **R9 bake order:** [`../../../../prompts/matrix/transport/runbook/r9_authoring_bake_order_steps_v1.md`](../../../../prompts/matrix/transport/runbook/r9_authoring_bake_order_steps_v1.md).
 //!
 //! ## Tile / pick convention (M3-S01)
 //! Matches [`crate::terrain::generation::world_generator_enhanced`] spawn layout:
@@ -30,14 +30,30 @@ use crate::terrain::biome::TerrainClass;
 use crate::terrain::generation::world_generator_enhanced::{
     Height, TerrainType, TileMarker, WorldGenParams, WorldMarker,
 };
+use crate::systems::transport::{
+    bake_snapshot_from_ordered_tile_markers, hydrate_transport_from_snapshot,
+    TransportEdgeDirectory, TransportFieldStore, TransportTopology,
+};
 use crate::terrain::material::{MaterialId, MaterialRegistry};
 
+/// Request: build **W1** transport topology from current [`MapEditorRoadMarkerV1`] entities.
+#[derive(Message)]
+pub struct MapEditorBakeTransportRequest;
+
+/// Monotonic **click order** for the current editor session (reset when entering editor).
+/// Drives bake polyline order — **R9**; see `r9_authoring_bake_order_steps_v1.md`.
+#[derive(Resource, Default, Debug)]
+pub struct MapEditorRoadPlacementSeq {
+    pub next: u32,
+}
+
 /// Tile-aligned **road placeholder** for map editor M4. Does not replace `entities::structure` `Road` stubs;
-/// serialisation / nav parity is a later step (M5+).
+/// `placement_seq` is **authoring order** for [`bake_snapshot_from_ordered_tile_markers`] (not lexicographic).
 #[derive(Component, Clone, Copy, Debug)]
 pub struct MapEditorRoadMarkerV1 {
     pub tile_x: u32,
     pub tile_z: u32,
+    pub placement_seq: u32,
 }
 
 fn height_at_tile(tiles: &Query<(&Transform, &Height), With<TileMarker>>, tx: u32, tz: u32) -> f32 {
@@ -69,6 +85,7 @@ fn place_road_marker(
     commands: &mut Commands,
     world_roots: &Query<Entity, With<WorldMarker>>,
     road_q: &Query<(Entity, &MapEditorRoadMarkerV1)>,
+    placement: &mut MapEditorRoadPlacementSeq,
     tx: u32,
     tz: u32,
     height_normalized: f32,
@@ -78,15 +95,18 @@ fn place_road_marker(
         return;
     };
     despawn_road_markers_at(commands, road_q, tx, tz);
+    let seq = placement.next;
+    placement.next = placement.next.saturating_add(1);
     let y = height_normalized * HEIGHT_WORLD_SCALE + 0.25;
     commands.entity(world_root).with_children(|parent| {
         parent.spawn((
             MapEditorRoadMarkerV1 {
                 tile_x: tx,
                 tile_z: tz,
+                placement_seq: seq,
             },
             Transform::from_translation(Vec3::new(tx as f32, y, tz as f32)),
-            Name::new(format!("Road marker v1 ({tx},{tz})")),
+            Name::new(format!("Road marker v1 ({tx},{tz}) seq={seq}")),
         ));
     });
 }
@@ -155,8 +175,13 @@ fn sync_tool_to_substate(tool: &MapEditorTool, next_sub: &mut NextState<InGameEd
     NextState::set_if_neq(next_sub, tool.kind.to_in_game());
 }
 
-fn on_enter_editor(mut tool: ResMut<MapEditorTool>, mut next_sub: ResMut<NextState<InGameEditorState>>) {
+fn on_enter_editor(
+    mut tool: ResMut<MapEditorTool>,
+    mut next_sub: ResMut<NextState<InGameEditorState>>,
+    mut road_seq: ResMut<MapEditorRoadPlacementSeq>,
+) {
     *tool = MapEditorTool::default();
+    *road_seq = MapEditorRoadPlacementSeq::default();
     NextState::set_if_neq(&mut *next_sub, InGameEditorState::Select);
 }
 
@@ -416,6 +441,7 @@ fn map_editor_minimap_window(
     tool: Res<MapEditorTool>,
     world_roots: Query<Entity, With<WorldMarker>>,
     road_entities: Query<(Entity, &MapEditorRoadMarkerV1)>,
+    mut road_placement: ResMut<MapEditorRoadPlacementSeq>,
     mut tile_queries: ParamSet<(
         Query<(&mut Transform, &mut Height, &mut TerrainType), With<TileMarker>>,
         Query<(&Transform, &Height), With<TileMarker>>,
@@ -508,6 +534,7 @@ fn map_editor_minimap_window(
                                 &mut commands,
                                 &world_roots,
                                 &road_entities,
+                                &mut *road_placement,
                                 cx,
                                 cy,
                                 hn,
@@ -520,6 +547,38 @@ fn map_editor_minimap_window(
     Ok(())
 }
 
+fn map_editor_bake_transport(
+    mut events: MessageReader<MapEditorBakeTransportRequest>,
+    markers: Query<&MapEditorRoadMarkerV1>,
+    tiles: Query<(&Transform, &Height), With<TileMarker>>,
+    mut topology: ResMut<TransportTopology>,
+    mut fields: ResMut<TransportFieldStore>,
+    mut directory: ResMut<TransportEdgeDirectory>,
+) {
+    for _ in events.read() {
+        let mut rows: Vec<(u32, u32, u32)> = markers
+            .iter()
+            .map(|m| (m.placement_seq, m.tile_x, m.tile_z))
+            .collect();
+        rows.sort_by_key(|(seq, _, _)| *seq);
+        let coords: Vec<(u32, u32)> = rows.into_iter().map(|(_, x, z)| (x, z)).collect();
+        let snap = bake_snapshot_from_ordered_tile_markers(
+            &coords,
+            |x, z| height_at_tile(&tiles, x, z),
+            HEIGHT_WORLD_SCALE,
+            0.25,
+        );
+        if snap.edges.is_empty() {
+            warn!("Bake transport: need ≥2 markers after removing consecutive duplicates on same tile.");
+            continue;
+        }
+        match hydrate_transport_from_snapshot(&mut topology, &mut fields, &mut directory, &snap) {
+            Ok(()) => {}
+            Err(e) => warn!("Bake transport hydrate failed: {e:?}"),
+        }
+    }
+}
+
 fn map_editor_palette_system(
     mut contexts: EguiContexts,
     mut tool: ResMut<MapEditorTool>,
@@ -529,6 +588,7 @@ fn map_editor_palette_system(
     mut next_sub: ResMut<NextState<InGameEditorState>>,
     sub_state: Res<State<InGameEditorState>>,
     hover: Res<MapEditorHover>,
+    mut bake_events: MessageWriter<MapEditorBakeTransportRequest>,
 ) -> Result {
     egui::Window::new("Map editor — tools (TEMP-EGUI)")
         .anchor(egui::Align2::LEFT_TOP, [8.0, 8.0])
@@ -574,6 +634,13 @@ fn map_editor_palette_system(
             } else if tool.kind == MapEditorToolKind::Road {
                 ui.add_space(6.0);
                 ui.label("Road: click minimap tile to place/replace orange marker (TEMP-EGUI v1).");
+                if ui
+                    .button("Bake roads → transport graph (W1 / R8 hydrate)")
+                    .on_hover_text("Sorted tile chain → TransportTopology + field keys; needs ≥2 markers.")
+                    .clicked()
+                {
+                    bake_events.write(MapEditorBakeTransportRequest);
+                }
             }
 
             ui.add_space(8.0);
@@ -602,7 +669,9 @@ pub struct MapEditorPlugin;
 impl Plugin for MapEditorPlugin {
     fn build(&self, app: &mut App) {
         app.init_state::<InGameEditorState>()
+            .add_message::<MapEditorBakeTransportRequest>()
             .init_resource::<MapEditorTool>()
+            .init_resource::<MapEditorRoadPlacementSeq>()
             .init_resource::<MapEditorHover>()
             .init_resource::<MapEditorGridView>()
             .init_resource::<MapEditorMapTexture>()
@@ -615,6 +684,10 @@ impl Plugin for MapEditorPlugin {
                 )
                     .chain()
                     .run_if(in_state(BaseState::Editor)),
+            )
+            .add_systems(
+                Update,
+                map_editor_bake_transport.run_if(in_state(BaseState::Editor)),
             )
             .add_systems(
                 EguiPrimaryContextPass,

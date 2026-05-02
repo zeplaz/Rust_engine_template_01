@@ -31,7 +31,7 @@ Version: `v1.0.1`
 | **G1** | [`g1_hydrology_steps_v1.md`](g1_hydrology_steps_v1.md) | Hydrology priority pack: unify legacy ECS hydrology, legacy subengine stubs, and p4 chunk pipeline; replace greedy flow with D8 / priority-flood; wire ECS visuals to p4 output |
 | **G2** | [`g2_power_placeholders_steps_v1.md`](g2_power_placeholders_steps_v1.md) | Power placeholders; **G2-S00** doc traceability first; Rust steps after promotion blockers |
 | **G3** | [`g3_gui_todos_steps_v1.md`](g3_gui_todos_steps_v1.md) · [`g3_execution_cycle_v1.md`](g3_execution_cycle_v1.md) | **Active** GUI index + 14-step GUI ↔ backlog cycle; results template [`g3_cycle_results_TEMPLATE.md`](g3_cycle_results_TEMPLATE.md) |
-| **G4** | [`g4_serialization_stubs_steps_v1.md`](g4_serialization_stubs_steps_v1.md) | Serialization stubs; placeholder pack until paired serialization runbook **S** exists or owns the rows |
+| **G4** | [`g4_serialization_stubs_steps_v1.md`](g4_serialization_stubs_steps_v1.md) · [`g4_transport_r8_network_slice_steps_v1.md`](g4_transport_r8_network_slice_steps_v1.md) | Serialization stubs + **Transport / R8** slice (hydrate boundary; pair [`../../transport/runbook/r9_authoring_bake_order_steps_v1.md`](../../transport/runbook/r9_authoring_bake_order_steps_v1.md)) |
 | **G5** | [`g5_nav_damage_steps_v1.md`](g5_nav_damage_steps_v1.md) | Navigation, damage, and manufacturing placeholders; placeholder pack until owners and matrices are chosen |
 
 ---

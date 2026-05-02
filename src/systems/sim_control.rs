@@ -4,10 +4,22 @@
 //! UI driver:   `crate::gui::diagnostics_ui::DiagnosticsUiPlugin` (diagnostics panel).
 //!
 //! Pause hotkey: [`crate::gui::InputBindings::toggle_simulation_pause`] (Options → key bindings).
+//!
+//! **Schedule:** [`SimControlSystemSet`] — transport and other gameplay should run **after**
+//! [`SimControlSystemSet::AdvanceSimTick`] (see `TransportSimulationPlugin`).
 
 use bevy::prelude::*;
 
 use crate::gui::InputBindings;
+
+/// Ordering hooks for cross-plugin dependencies on `Update`.
+#[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
+pub enum SimControlSystemSet {
+    /// Pause / step input before tick advances the same frame.
+    ApplyOperatorInput,
+    /// `SimTick` + `steps_remaining`; systems that read `SimControlState` for gameplay dt should run after this.
+    AdvanceSimTick,
+}
 
 /// Operator controls; mutated by tools UI, read by gameplay systems.
 #[derive(Resource, Debug, Clone)]
@@ -49,7 +61,21 @@ impl Plugin for SimControlPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<SimControlState>()
             .init_resource::<SimTick>()
-            .add_systems(Update, (advance_sim_tick, keyboard_toggle_pause));
+            .configure_sets(
+                Update,
+                (
+                    SimControlSystemSet::ApplyOperatorInput,
+                    SimControlSystemSet::AdvanceSimTick.after(SimControlSystemSet::ApplyOperatorInput),
+                ),
+            )
+            .add_systems(
+                Update,
+                keyboard_toggle_pause.in_set(SimControlSystemSet::ApplyOperatorInput),
+            )
+            .add_systems(
+                Update,
+                advance_sim_tick.in_set(SimControlSystemSet::AdvanceSimTick),
+            );
     }
 }
 

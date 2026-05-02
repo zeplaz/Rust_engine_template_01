@@ -4,7 +4,7 @@
 >
 > **Run plan & todos:** [`transport_sim_runplan_v1.md`](transport_sim_runplan_v1.md) (**T-SCHED-001**, **T-LANE-001**, **T-GHOST-001**, **T-LOD-001**).
 >
-> Code snippets below are **illustrative** naming, not shipped API.
+> **Code:** [`transport_code_implementation_plan_v1.md`](transport_code_implementation_plan_v1.md) · `crate::systems::transport`.
 
 Version: `v1.1.0` (condensed — duplicate rulebook numbering removed; scope split by phase)
 

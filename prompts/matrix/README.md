@@ -11,7 +11,7 @@ Each **subsystem folder** holds one migration/boundary doc. **Paired** design + 
 | `production/` | `production_migration_matrix_v1.md` | `../designer_questions/production_economy/` → `production_economy/spec/README.md` |
 | `strategic_platforms/` | `strategic_platforms_matrix_v1.md` | `../designer_questions/strategic_platforms/` → `strategic_platforms/spec/README.md` |
 | `repo/` | `repo_boundary_matrix_v1.md` | (cross-cutting — read with any subsystem) |
-| `engine_bevy/` | `bevy_0_18_migration_plan.md` | `../designer_questions/tools_ui/` → `tools_ui/spec/README.md` |
+| `engine_bevy/` | `bevy_0_18_migration_plan.md` · **ECS schedule** orchestrator [`../../guides/ecs_systems_schedule_runbook_v1.md`](../guides/ecs_systems_schedule_runbook_v1.md) · **`runbook/`** (S0–S1) | `../designer_questions/tools_ui/` → `tools_ui/spec/README.md` |
 | `serialization/` | `serialization_hybrid_migration_matrix_v1.md` | `terrain_world/` + `production_economy/` + **`factions/`** (any save-affecting DTO) |
 | `assets/` | `bevy_asset_config_migration_matrix_v1.md` · **`runbook/`** (paired terrain asset policy A1–A3; orchestrator [`../../guides/bevy_asset_terrain_runbook_v1.md`](../guides/bevy_asset_terrain_runbook_v1.md)) | `terrain_world/` + `production_economy/` + `factions/` (RON / hand-edited configs) |
 | **`map_editor/`** | **`map_editor_matrix_v1.md`** · **`runbook/`** (M1–M5; orchestrator [`../../guides/map_editor_runbook_v1.md`](../guides/map_editor_runbook_v1.md)) | `terrain_world/` (tile ECS, procedural handoff) + **`serialization/`** (M5 saves) |

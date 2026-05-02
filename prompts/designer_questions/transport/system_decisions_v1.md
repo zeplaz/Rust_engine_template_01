@@ -2,9 +2,9 @@
 
 > **STATUS:** **Draft.** Tension doc only. Does **not** override [`../../matrix/transport/road_rail_migration_matrix_v1.md`](../../matrix/transport/road_rail_migration_matrix_v1.md) or [`rulebook_drafts.md`](rulebook_drafts.md) until referenced there.
 >
-> **Schedule:** [`rulebook_drafts.md`](rulebook_drafts.md) §0.2 · **Run plan:** [`transport_sim_runplan_v1.md`](transport_sim_runplan_v1.md)
+> **Schedule:** [`rulebook_drafts.md`](rulebook_drafts.md) §0.2 · **Run plan:** [`transport_sim_runplan_v1.md`](transport_sim_runplan_v1.md) · **Code plan:** [`transport_code_implementation_plan_v1.md`](transport_code_implementation_plan_v1.md)
 
-Version: `v1.1.0` *(renamed file may follow — see README)*
+Version: `v1.1.1`
 
 ---
 
