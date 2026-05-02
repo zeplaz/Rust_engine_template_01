@@ -14,6 +14,7 @@ Each **subsystem folder** holds one migration/boundary doc. **Paired** design + 
 | `engine_bevy/` | `bevy_0_18_migration_plan.md` | `../designer_questions/tools_ui/` → `tools_ui/spec/README.md` |
 | `serialization/` | `serialization_hybrid_migration_matrix_v1.md` | `terrain_world/` + `production_economy/` + **`factions/`** (any save-affecting DTO) |
 | `assets/` | `bevy_asset_config_migration_matrix_v1.md` · **`runbook/`** (paired terrain asset policy A1–A3; orchestrator [`../../guides/bevy_asset_terrain_runbook_v1.md`](../guides/bevy_asset_terrain_runbook_v1.md)) | `terrain_world/` + `production_economy/` + `factions/` (RON / hand-edited configs) |
+| **`map_editor/`** | **`map_editor_matrix_v1.md`** · **`runbook/`** (M1–M5; orchestrator [`../../guides/map_editor_runbook_v1.md`](../guides/map_editor_runbook_v1.md)) | `terrain_world/` (tile ECS, procedural handoff) + **`serialization/`** (M5 saves) |
 
 ### Subsystems **without** a dedicated `matrix/<name>/` folder
 

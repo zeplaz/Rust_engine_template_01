@@ -1,8 +1,9 @@
 use crate::entities::production::core::ManufacturingCorePlugin;
 use crate::entities::vehicles::RoadVehicleToolsUiPlugin;
 use crate::gui::{
-    BaseMenuPlugin, DiagnosticsUiPlugin, FactionToolsUiPlugin, HudQuickMenuPlugin,
-    InGameHudPlugin, KeybindingsOptionsPlugin, LogisticsTargetsPanelPlugin, SplashPlugin,
+    editor::map_editor_ui::MapEditorShellPlugin, BaseMenuPlugin, DiagnosticsUiPlugin,
+    FactionToolsUiPlugin, HudQuickMenuPlugin, InGameHudPlugin, KeybindingsOptionsPlugin,
+    LogisticsTargetsPanelPlugin, SplashPlugin,
 };
 #[cfg(feature = "bevy_tilemap_adapter")]
 use crate::render::TilemapAdapterPlugin;
@@ -48,6 +49,7 @@ impl Plugin for EnginePlugin {
             .add_plugins(EguiPlugin::default())
             .add_plugins(SplashPlugin)
             .add_plugins(BaseMenuPlugin)
+            .add_plugins(MapEditorShellPlugin)
             // Sim loop control (pause / step / speed / monotonic tick).
             .add_plugins(SimControlPlugin)
             .add_plugins(MaterialUnificationPlugin);

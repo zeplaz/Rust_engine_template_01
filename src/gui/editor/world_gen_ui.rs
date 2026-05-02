@@ -586,6 +586,16 @@ pub fn world_gen_ui_system(
                         world_gen_ui_state.visible = false;
                     }
                     if tt(
+                        ui.add_enabled(!busy, egui::Button::new("Open in map editor")),
+                        hints::OPEN_IN_MAP_EDITOR,
+                    )
+                    .clicked()
+                    {
+                        NextState::set_if_neq(&mut *next_base, BaseState::Editor);
+                        NextState::set_if_neq(&mut *next_flow, WorldGenFlowState::Idle);
+                        world_gen_ui_state.visible = false;
+                    }
+                    if tt(
                         ui.add_enabled(!busy, egui::Button::new("Discard generated world")),
                         hints::DISCARD_WORLD,
                     )

@@ -88,6 +88,7 @@ fn main_menu_ui_system(
                 );
             }
             if ui.button("Load Editor").clicked() {
+                NextState::set_if_neq(&mut *next_world_flow, WorldGenFlowState::Idle);
                 NextState::set_if_neq(&mut *next_base, BaseState::Editor);
             }
             if ui.button("Quit").clicked() {
@@ -126,6 +127,16 @@ fn load_menu_ui_system(
             if ui.button("Cancel").clicked() {
                 NextState::set_if_neq(&mut *next_menu, MainMenuState::MainMenu);
                 NextState::set_if_neq(&mut *next_world_flow, WorldGenFlowState::Idle);
+            }
+            if ui.button("Open in map editor (stub)").clicked() {
+                info!(
+                    "Open in map editor (stub): no file read yet — would load {:?}; entering editor shell until M5 hydrate.",
+                    path_buf.as_str()
+                );
+                despawn_generated_world_entities(&mut commands, &world_roots);
+                NextState::set_if_neq(&mut *next_world_flow, WorldGenFlowState::Idle);
+                NextState::set_if_neq(&mut *next_base, BaseState::Editor);
+                NextState::set_if_neq(&mut *next_menu, MainMenuState::MainMenu);
             }
             if ui.button("Load into game (stub)").clicked() {
                 despawn_generated_world_entities(&mut commands, &world_roots);
