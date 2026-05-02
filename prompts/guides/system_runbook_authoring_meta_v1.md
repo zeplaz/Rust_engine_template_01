@@ -2,7 +2,7 @@
 
 > **STATUS:** **Authoring harness for lower-power agents.** Use this doc to spawn a per-system execution runbook **modeled after** [`terrain_unification_runbook_v1.md`](terrain_unification_runbook_v1.md) (the canonical example). Audience is intentionally an agent with a **small context window and limited reasoning depth** — every choice that the agent could get wrong is **decided up front here**.
 
-Version: `v1.1.2`
+Version: `v1.1.3`
 Audience: agents producing `<system>_runbook_v1.md` + `runbook/` step packs for one of the **target systems** in §3, including **paired** terrain-adjacent runbooks ([`terrain_paired_runbooks_queue_v1.md`](terrain_paired_runbooks_queue_v1.md)).
 
 **Human prep (designers / leads):** Before running paired **Q0–Q6** for new §8b orchestrators or expanding meta-driven runbooks past terrain, scope backlog and priorities in [`rulebook_backlog_designer_brief_v1.md`](rulebook_backlog_designer_brief_v1.md) so §3 `ASK:` rows and pair order are explicit.
@@ -66,6 +66,7 @@ When the human picks a system, copy the row's values into the variables in §7. 
 | **Diplomacy / bargaining** | **D** | `ASK:` (no matrix yet) | [`factions/diplomacy_bargaining_reference_outline_v1.md`](../designer_questions/factions/diplomacy_bargaining_reference_outline_v1.md) **(non-authoritative)** + factions data-model docs | `prompts/guides/diplomacy_runbook_v1.md` | `ASK:` (system not yet specced — see §10 empty-system policy) |
 | **Gap remediation** | **G** | [`prompts/matrix/terrain_biome/material_unification_matrix_v1.md`](../matrix/terrain_biome/material_unification_matrix_v1.md) for **G1 hydrology**; `ASK:` for G2-G5 until owner matrices are selected | [`implementation_gap_hunt_runbook_v1.md`](implementation_gap_hunt_runbook_v1.md), [`rulebook_backlog_designer_brief_v1.md`](rulebook_backlog_designer_brief_v1.md), terrain [`implementation_questions_v1.md`](../designer_questions/terrain_world/implementation_questions_v1.md) for G1 | `prompts/guides/gap_remediation_runbook_v1.md` | `prompts/matrix/gap_remediation/runbook/` |
 | **World map editor** | **M** | [`prompts/matrix/map_editor/map_editor_matrix_v1.md`](../matrix/map_editor/map_editor_matrix_v1.md) | [`engine_architecture_human_map_v1.md`](engine_architecture_human_map_v1.md); world gen flow in `src/engine/states.rs`; [`terrain_unification_runbook_v1.md`](terrain_unification_runbook_v1.md) §8b | `prompts/guides/map_editor_runbook_v1.md` | `prompts/matrix/map_editor/runbook/` |
+| **Road / rail network** | **T** | [`prompts/matrix/transport/road_rail_migration_matrix_v1.md`](../matrix/transport/road_rail_migration_matrix_v1.md) (§1c designer orchestrator; **T-*** todos in [`transport_sim_runplan_v1.md`](../designer_questions/transport/transport_sim_runplan_v1.md)) | [`designer_questions/transport/README.md`](../designer_questions/transport/README.md), [`rulebook_drafts.md`](../designer_questions/transport/rulebook_drafts.md), [`transport_editor_ux_risk_v1.md`](../designer_questions/transport/transport_editor_ux_risk_v1.md); nav [`navigation/spec/README.md`](../designer_questions/navigation/spec/README.md) | `ASK:` `prompts/guides/transport_runbook_v1.md` | `ASK:` `prompts/matrix/transport/runbook/` |
 
 If a system row has any `ASK:` that the runbook **cannot** be authored without, **halt and surface** before producing any file.
 

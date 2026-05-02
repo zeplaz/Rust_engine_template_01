@@ -15,6 +15,7 @@ Each **subsystem folder** holds one migration/boundary doc. **Paired** design + 
 | `serialization/` | `serialization_hybrid_migration_matrix_v1.md` | `terrain_world/` + `production_economy/` + **`factions/`** (any save-affecting DTO) |
 | `assets/` | `bevy_asset_config_migration_matrix_v1.md` · **`runbook/`** (paired terrain asset policy A1–A3; orchestrator [`../../guides/bevy_asset_terrain_runbook_v1.md`](../guides/bevy_asset_terrain_runbook_v1.md)) | `terrain_world/` + `production_economy/` + `factions/` (RON / hand-edited configs) |
 | **`map_editor/`** | **`map_editor_matrix_v1.md`** · **`runbook/`** (M1–M5; orchestrator [`../../guides/map_editor_runbook_v1.md`](../guides/map_editor_runbook_v1.md)) | `terrain_world/` (tile ECS, procedural handoff) + **`serialization/`** (M5 saves) |
+| **`transport/`** | **`road_rail_migration_matrix_v1.md`** · §1b + §1c (`guides/` brainstorm + designer orchestrator) · [`transport_sim_runplan_v1.md`](../designer_questions/transport/transport_sim_runplan_v1.md) · reference [`reference_post_foundation_track_v1.md`](transport/reference_post_foundation_track_v1.md) | `../designer_questions/transport/` → [`README.md`](../designer_questions/transport/README.md) · [`rulebook_drafts.md`](../designer_questions/transport/rulebook_drafts.md) · UX [`transport_editor_ux_risk_v1.md`](../designer_questions/transport/transport_editor_ux_risk_v1.md) · nav: `../designer_questions/navigation/` |
 
 ### Subsystems **without** a dedicated `matrix/<name>/` folder
 

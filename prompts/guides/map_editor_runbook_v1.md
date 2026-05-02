@@ -92,9 +92,9 @@ Mirrors [`map_editor_matrix_v1.md`](../matrix/map_editor/map_editor_matrix_v1.md
 | Phase | Step pack | Status |
 |:---:|:---|:---:|
 | **M1** | [`runbook/m1_steps_v1.md`](../matrix/map_editor/runbook/m1_steps_v1.md) | Applied |
-| **M2** | [`runbook/m2_steps_v1.md`](../matrix/map_editor/runbook/m2_steps_v1.md) | Pending |
-| **M3** | [`runbook/m3_steps_v1.md`](../matrix/map_editor/runbook/m3_steps_v1.md) | Pending |
-| **M4** | [`runbook/m4_steps_v1.md`](../matrix/map_editor/runbook/m4_steps_v1.md) | Pending |
+| **M2** | [`runbook/m2_steps_v1.md`](../matrix/map_editor/runbook/m2_steps_v1.md) | Applied |
+| **M3** | [`runbook/m3_steps_v1.md`](../matrix/map_editor/runbook/m3_steps_v1.md) | Applied |
+| **M4** | [`runbook/m4_steps_v1.md`](../matrix/map_editor/runbook/m4_steps_v1.md) | Applied |
 | **M5** | [`runbook/m5_steps_v1.md`](../matrix/map_editor/runbook/m5_steps_v1.md) | Pending |
 
 **Sequencing rule:** finish **M*N*** before starting **M*N+1***.
