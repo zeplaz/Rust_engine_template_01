@@ -1,5 +1,5 @@
 // World generation UI components
-pub mod map_editor_ui;
+pub mod map_editor;
 pub mod world_gen_hints;
 pub mod world_gen_ui;
 pub mod world_preview;

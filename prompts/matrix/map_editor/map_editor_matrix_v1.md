@@ -27,6 +27,7 @@ Version: `v1.0.0`
 | Base vs editor vs sim | `BaseState` — `src/engine/states.rs` |
 | World-gen flow | `WorldGenFlowState` — `src/engine/states.rs` |
 | In-game editor modes | `InGameEditorState` — `src/engine/states.rs` *(wire under Editor)* |
+| Road marker (editor v1) | `MapEditorRoadMarkerV1` — `src/gui/editor/map_editor/mod.rs` (tile scaffold; not legacy `Road` stubs) |
 
 ---
 
@@ -35,9 +36,9 @@ Version: `v1.0.0`
 | Phase | Scope | Step pack | Status |
 |:---:|:---|:---| :---: |
 | **M1** | State machine + menus: FullReady → Editor; load → Editor stub split | [`runbook/m1_steps_v1.md`](runbook/m1_steps_v1.md) | Applied |
-| **M2** | `MapEditorPlugin` shell, `run_if(Editor)`, mode resource, minimal palette | [`runbook/m2_steps_v1.md`](runbook/m2_steps_v1.md) | Pending |
-| **M3** | Height brush + biome repaint on tiles | [`runbook/m3_steps_v1.md`](runbook/m3_steps_v1.md) | Pending |
-| **M4** | Road / structure markers tile-aligned | [`runbook/m4_steps_v1.md`](runbook/m4_steps_v1.md) | Pending |
+| **M2** | `MapEditorPlugin` shell, `run_if(Editor)`, mode resource, minimal palette | [`runbook/m2_steps_v1.md`](runbook/m2_steps_v1.md) | Applied |
+| **M3** | Height brush + biome repaint on tiles | [`runbook/m3_steps_v1.md`](runbook/m3_steps_v1.md) | Applied |
+| **M4** | Road / structure markers tile-aligned | [`runbook/m4_steps_v1.md`](runbook/m4_steps_v1.md) | Applied |
 | **M5** | Snapshot serde, save from editor, open saved map in editor | [`runbook/m5_steps_v1.md`](runbook/m5_steps_v1.md) | Pending |
 
 ---
@@ -62,3 +63,4 @@ Version: `v1.0.0`
 | **Serialization wave S / G4** | **M5** must not invent stable binary ids; use **names** for materials/biomes in snapshots until hybrid matrix rows say otherwise |
 | **Terrain U3–U7** | Editor edits **ECS tiles**; chunk/materialize paths are **out of scope** for M1–M3 unless an explicit step adds invalidation |
 | **World gen alpha** | **M1** must not break `GenerateWorldEvent` / preview / full pipeline |
+| **Road ECS (M4 audit)** | `entities/structure/components.rs`: private `Road` / `RoadSegment` / `RoadConnection` stubs only (no spawn). Editor uses **`MapEditorRoadMarkerV1`** under **`WorldMarker`** until M5+ aligns snapshot / nav with a public road model. |

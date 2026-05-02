@@ -74,3 +74,7 @@
 **Definition of done:**
 
 - [ ] **M4** **Applied**.
+
+---
+
+**M4 audit (executed):** Legacy road types are **private** stubs in `src/entities/structure/components.rs` (`Road`, `RoadSegment`, `RoadConnection`) — not spawned by world gen. **Map editor v1** uses public **`MapEditorRoadMarkerV1`** in `src/gui/editor/map_editor/mod.rs`, parented under **`WorldMarker`**, with orange overlay on the minimap. Matrix §2 / §5 updated.

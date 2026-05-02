@@ -1,7 +1,7 @@
 use crate::entities::production::core::ManufacturingCorePlugin;
 use crate::entities::vehicles::RoadVehicleToolsUiPlugin;
 use crate::gui::{
-    editor::map_editor_ui::MapEditorShellPlugin, BaseMenuPlugin, DiagnosticsUiPlugin,
+    editor::map_editor::MapEditorPlugin, BaseMenuPlugin, DiagnosticsUiPlugin,
     FactionToolsUiPlugin, HudQuickMenuPlugin, InGameHudPlugin, KeybindingsOptionsPlugin,
     LogisticsTargetsPanelPlugin, SplashPlugin,
 };
@@ -49,7 +49,7 @@ impl Plugin for EnginePlugin {
             .add_plugins(EguiPlugin::default())
             .add_plugins(SplashPlugin)
             .add_plugins(BaseMenuPlugin)
-            .add_plugins(MapEditorShellPlugin)
+            .add_plugins(MapEditorPlugin)
             // Sim loop control (pause / step / speed / monotonic tick).
             .add_plugins(SimControlPlugin)
             .add_plugins(MaterialUnificationPlugin);

@@ -87,7 +87,7 @@ fn main_menu_ui_system(
                     "Load World: procedural generation is disabled in this flow; deserialize when saves are wired."
                 );
             }
-            if ui.button("Load Editor").clicked() {
+            if ui.button("New map in editor").clicked() {
                 NextState::set_if_neq(&mut *next_world_flow, WorldGenFlowState::Idle);
                 NextState::set_if_neq(&mut *next_base, BaseState::Editor);
             }
@@ -128,9 +128,9 @@ fn load_menu_ui_system(
                 NextState::set_if_neq(&mut *next_menu, MainMenuState::MainMenu);
                 NextState::set_if_neq(&mut *next_world_flow, WorldGenFlowState::Idle);
             }
-            if ui.button("Open in map editor (stub)").clicked() {
+            if ui.button("Open saved map in editor (stub)").clicked() {
                 info!(
-                    "Open in map editor (stub): no file read yet — would load {:?}; entering editor shell until M5 hydrate.",
+                    "Open saved map in editor (stub): no file read yet — would load {:?}; entering editor shell until M5 hydrate.",
                     path_buf.as_str()
                 );
                 despawn_generated_world_entities(&mut commands, &world_roots);
