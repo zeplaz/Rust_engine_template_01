@@ -93,7 +93,7 @@ flowchart TD
 | **R5** | `GaugeType` + rail stub | `RailProfile` (data-driven id) | pending | transport | Schema not externalized; rail stricter curvature vs road (policy) |
 | **R6** | `Tree` + terrain overlap | Terrain interaction rules | pending | terrain | Rules: clear / tag; bridge / water **future**; alignment with tile ECS |
 | **R7** | Ad-hoc nav assumptions | Cost field + `allowed_agents` export *(may later align with lane graph + dynamic field costs — guides only)* | pending | nav | **G5** pack unpromoted; depends R1–R3 export shape; post-foundation choice (reservation / lane A* / field hybrid) per **§1b** + §9 |
-| **R8** | No road network save | Snapshot: nodes, edges, **control_points**, **profile names** | blocked | save | **G4** wave S + hybrid matrix row for transport DTO |
+| **R8** | No road network save | Snapshot: nodes, edges, **control_points**, **profile names** | **partial** | save | **In repo:** `TransportNetworkSnapshot` JSON + `hydrate_transport_from_snapshot` + **`g4_transport_r8_network_slice_steps_v1`**; **open:** hybrid wave **S** body, **M5** world slice ownership |
 | **R9** | `MapEditorRoadMarkerV1` (M4 tile marker) | Spline tool + **authoring ghost** + confirm bake | pending | editor | **Authoring ghost** only until bake (**T-GHOST-001**); **cannot mark Applied until R8 ≥ Partial**; snapping; optional cost preview `ASK:` |
 | **R10** | Terrain-only / single stack | Multi-layer tilemap (road / rail / debug); **or** mesh overlay track (Option B) | pending | transport | Feature `bevy_tilemap_adapter`; U6/U7 layer priority; **tiles vs extruded mesh** is post-foundation (§9 **B**); intersection fill = Phase II geometry |
 
@@ -104,7 +104,7 @@ flowchart TD
 | Doc | Role |
 |:---|:---|
 | [`../serialization/serialization_hybrid_migration_matrix_v1.md`](../serialization/serialization_hybrid_migration_matrix_v1.md) | **R8** — names not opaque runtime ids; deterministic hydrate |
-| [`../gap_remediation/runbook/g4_serialization_stubs_steps_v1.md`](../gap_remediation/runbook/g4_serialization_stubs_steps_v1.md) | **G4** execution gate (BQ-110) |
+| [`../gap_remediation/runbook/g4_transport_r8_network_slice_steps_v1.md`](../gap_remediation/runbook/g4_transport_r8_network_slice_steps_v1.md) | **R8** **G4** JSON slice + load `Message` (`LoadTransportNetworkSnapshotFromDisk`) |
 | [`../gap_remediation/runbook/g5_nav_damage_steps_v1.md`](../gap_remediation/runbook/g5_nav_damage_steps_v1.md) | **G5** / **R7** (BQ-111) |
 | [`../map_editor/map_editor_matrix_v1.md`](../map_editor/map_editor_matrix_v1.md) | **M4/M5**; **R9** replaces or migrates `MapEditorRoadMarkerV1` |
 | [`../../guides/gui_runbook_v1.md`](../../guides/gui_runbook_v1.md) | Editor tooling = **TEMP-EGUI** until Bevy UI parity |
@@ -286,11 +286,11 @@ Do not edit the plan file in `.cursor/plans/`.
   "row_id": "R8",
   "legacy": "No road network persistence",
   "target": "Snapshot: nodes, edges, control_points[], profile string ids",
-  "status": "blocked",
-  "blockers": ["G4 wave S", "hybrid matrix transport row", "deterministic hydrate tests"],
+  "status": "partial",
+  "blockers": ["hybrid wave S binary world snapshot", "M5 network slice in monolithic save", "BQ-110 full G4 promotion when prioritized"],
   "owner": "save",
   "g2_g5": ["G4"],
-  "cross_links": ["serialization_hybrid_migration_matrix", "map_editor M5"]
+  "cross_links": ["serialization_hybrid_migration_matrix", "map_editor M5", "g4_transport_r8_network_slice_steps_v1", "assets/test_fixtures/transport/network_chain_v1.json"]
 }
 ```
 

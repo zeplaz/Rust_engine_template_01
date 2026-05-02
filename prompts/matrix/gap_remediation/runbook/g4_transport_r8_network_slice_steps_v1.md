@@ -1,8 +1,8 @@
 # G4 — Transport **R8** network slice (snapshot / hydrate) `v1`
 
-> **STATUS:** Companion to **G4** stub pack [`g4_serialization_stubs_steps_v1.md`](g4_serialization_stubs_steps_v1.md). Defines the **first concrete domain slice** that should use the hybrid save story once **wave S** touches transport: **`TransportNetworkSnapshot`** ↔ runtime **`hydrate_transport_from_snapshot`**.
+> **STATUS:** **Executed (JSON slice)** — hybrid **binary** world body + **M5** aggregation remain **open** per [`../../serialization/serialization_hybrid_migration_matrix_v1.md`](../../serialization/serialization_hybrid_migration_matrix_v1.md).
 
-**Source of truth:** [`../../serialization/serialization_hybrid_migration_matrix_v1.md`](../../serialization/serialization_hybrid_migration_matrix_v1.md) · **R8** row [`../../transport/road_rail_migration_matrix_v1.md`](../../transport/road_rail_migration_matrix_v1.md) · code `src/systems/transport/snapshot.rs`, `bake.rs`.
+**Source of truth:** [`../../serialization/serialization_hybrid_migration_matrix_v1.md`](../../serialization/serialization_hybrid_migration_matrix_v1.md) · **R8** row [`../../transport/road_rail_migration_matrix_v1.md`](../../transport/road_rail_migration_matrix_v1.md) · code `src/systems/transport/snapshot.rs`, `persistence.rs`.
 
 **Authoring order:** [`../../transport/runbook/r9_authoring_bake_order_steps_v1.md`](../../transport/runbook/r9_authoring_bake_order_steps_v1.md) — baked **`control_points`** must match designer intent; **never** persist a **lexicographically sorted** vertex list unless the sort is an explicit, documented transform.
 
@@ -12,7 +12,7 @@
 
 | In scope | Out of scope (separate rows / packs) |
 |:---|:---|
-| Serialize `TransportNetworkSnapshot` (JSON/RON/section of binary blob TBD by hybrid matrix) | Full **M5** world snapshot orchestration |
+| Serialize `TransportNetworkSnapshot` (JSON dev slice; binary TBD) | Full **M5** world snapshot orchestration |
 | Load → **`hydrate_transport_from_snapshot`** on main thread; **no** gameplay rule invention in loader | Phase II lane combinatorics (**T-LANE-001**) |
 | Deterministic round-trip tests for DTO + hydrate | Tilemap-only road visuals without graph |
 
@@ -31,19 +31,19 @@
 
 ---
 
-## 3. Atomic steps (G4-SNN template — fill when executing)
+## 3. Atomic steps (**Applied** for JSON slice)
 
-When **BQ-110** + hybrid matrix name this slice:
-
-1. **G4-T01** — Register transport snapshot loader next to owning plugin (`TransportSimulationPlugin` or serialization boundary); version gate on `schema_version`.
-2. **G4-T02** — Save path: emit `TransportNetworkSnapshot` from runtime **or** from editor bake only (document which is **source of truth** at save time).
-3. **G4-T03** — Test: fixture JSON/RON → hydrate → assert `TransportTopology` / `TransportEdgeDirectory` + cost pipeline (existing transport tests extended).
-4. **G4-T04** — Update [`../../serialization/serialization_hybrid_migration_matrix_v1.md`](../../serialization/serialization_hybrid_migration_matrix_v1.md) + **R8** §4 status (`Partial` / `Applied`) with owner.
+| Step | Result |
+|:---|:---|
+| **G4-T01** | `persistence.rs`: JSON parse + schema gate; `TransportNetworkPersistencePlugin` + `LoadTransportNetworkSnapshotFromDisk` hydrates world + updates `TransportLastHydratedSnapshot`. |
+| **G4-T02** | ** Save source of truth:** editor bake sets `TransportLastHydratedSnapshot`; `transport_network_snapshot_from_world` rebuilds DTO from runtime (edge meta stores head/tail/CP). `transport_network_snapshot_save_json_path` for tools. |
+| **G4-T03** | Tests: `g4_fixture_load_hydrate_nonempty_topology`, `g4_round_trip_json_file_from_manifest`, `hydrate_then_snapshot_from_world_round_trip`; fixture `assets/test_fixtures/transport/network_chain_v1.json`. |
+| **G4-T04** | Matrix: **R8** → **partial**; hybrid matrix + this file + transport cross-links updated. Full **Applied** when wave **S** owns transport bytes inside world save. |
 
 ---
 
 ## 4. Acceptance
 
-- [ ] One **load test** proves file → **`hydrate_transport_from_snapshot`** → nonempty graph when fixture expects it.
-- [ ] Matrix **R8** blockers list **G4 wave S** completion for this slice explicitly.
-- [ ] **R9** bake order runbook cross-linked; no hidden tile-sort in save path.
+- [x] **Load test:** file → **`hydrate_transport_from_snapshot`** → nonempty topology (`g4_*` tests).
+- [x] Matrix **R8** documents **partial** + remaining **G4 wave S / M5** blockers.
+- [x] **R9** bake order runbook cross-linked; no hidden tile-sort in save path.

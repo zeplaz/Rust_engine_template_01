@@ -76,10 +76,14 @@ pub struct TransportEdgeDirectory {
     pub by_edge: HashMap<TransportEdgeId, TransportEdgeMeta>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Eq)]
+/// Per-edge authoring/R8 metadata (including **head/tail** + polyline for G4 save round-trip).
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct TransportEdgeMeta {
     pub profile: String,
     pub allowed_agents: Vec<String>,
+    pub head_key: String,
+    pub tail_key: String,
+    pub control_points: Vec<[f32; 3]>,
 }
 
 /// **R7** coarse nav export: topology + cached costs + agent masks (G5 adapter reads this).
