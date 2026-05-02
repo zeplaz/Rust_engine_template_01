@@ -2,7 +2,9 @@
 
 > **STATUS:** Living checklist. **Does not** override [`../../matrix/transport/road_rail_migration_matrix_v1.md`](../../matrix/transport/road_rail_migration_matrix_v1.md). Use after doc cleanup to steer implementation and runbook authoring.
 
-Version: `v1.0.0`
+> **Code spine:** [`transport_code_implementation_plan_v1.md`](transport_code_implementation_plan_v1.md) · `src/systems/transport/`.
+
+Version: `v1.0.2`
 
 ---
 
@@ -11,11 +13,17 @@ Version: `v1.0.0`
 | Artifact | Role |
 |:---|:---|
 | Matrix **R1–R10** | Authoritative migration gates (G4/G5, R8 halt for R9, Phase II fenced) |
+| **`TransportSimulationPlugin`** | `src/systems/transport/` — topology → field → cost cache (**T-SCHED-001** draft mapping) |
+| **`NavigationSchedulePlugin`** | `src/systems/navigation/schedule_plugin.rs` — **S2**: `NavSets` after `CostCache` |
+| **`DamageSystem`** | `src/systems/damage/damage_system.rs` — **S2**: `apply_road_damage` in `NavSets::DamageSpeedAdjustment` |
+| [`transport_code_implementation_plan_v1.md`](transport_code_implementation_plan_v1.md) | Waves **W1–W5** for wiring bake, R8, R7, Phase II |
 | [`rulebook_drafts.md`](rulebook_drafts.md) | Phased **orchestrator** + rulebooks **A–C** + **P3** outlines (field, cost cache, junctions; trains/streaming deferred) |
 | [`lane_graph_model_idea.md`](lane_graph_model_idea.md) | Module layering + **logical schedule** (engine-agnostic); stubs until **T-LANE-001** |
-| [`sysem_desitions.md`](sysem_desitions.md) | Hybrid tension spec (draft): movement, field, reservations, ghost classes, LOD as **budget bands** |
+| [`system_decisions_v1.md`](system_decisions_v1.md) | Hybrid tension spec (draft): movement, field, reservations, ghost classes, LOD as **budget bands** |
 | [`transport_editor_ux_risk_v1.md`](transport_editor_ux_risk_v1.md) | Authoring UX; **authoring ghost vs runtime preview** |
-| `prompts/guides/*.md` | Non-authoritative brainstorm (matrix §1b) |
+| [`ecs_systems_schedule_runbook_v1.md`](../../guides/ecs_systems_schedule_runbook_v1.md) | Bevy **0.18** schedule refactor (**S0–S2**) |
+| **`SimControlSystemSet`** | `src/systems/sim_control.rs` — **S1** |
+| **`NavSets`** | `src/engine/sets.rs` — **S2** wired (variant order: damage → motion) |
 
 ---
 
@@ -36,7 +44,7 @@ Version: `v1.0.0`
 |:---|:---|:---|
 | **T-SCHED-001** | Map **logical schedule** in [`rulebook_drafts.md`](rulebook_drafts.md) §0.2 to the real engine scheduler when transport plugins land | transport + ecs-core |
 | **T-LANE-001** | Replace `LaneEdge` / `LaneNavGraph` **stubs** and “junction topology” hand-waves with Phase II **data model + build rules** (matrix §8) | transport + designer |
-| **T-GHOST-001** | Keep **authoring ghost** (editor, pre-bake) separate from any **runtime preview**; document in [`transport_editor_ux_risk_v1.md`](transport_editor_ux_risk_v1.md) + [`sysem_desitions.md`](sysem_desitions.md) | editor |
+| **T-GHOST-001** | Keep **authoring ghost** (editor, pre-bake) separate from any **runtime preview**; document in [`transport_editor_ux_risk_v1.md`](transport_editor_ux_risk_v1.md) + [`system_decisions_v1.md`](system_decisions_v1.md) | editor |
 | **T-LOD-001** | Define sim LOD tiers as **ms/CPU/memory/streaming-radius bands** in a perf or world runbook — not fixed entity counts | perf + world sim |
 
 ---
@@ -53,4 +61,4 @@ Version: `v1.0.0`
 ## 5. Review cadence
 
 - After each milestone: check matrix §4/§10, this run plan §3, and Phase II paragraph in matrix §8 for drift.
-- When **`sysem_desitions.md`** is renamed (e.g. `system_decisions_v1.md`), update links in README + this file.
+- **Code spine:** [`transport_code_implementation_plan_v1.md`](transport_code_implementation_plan_v1.md) — `src/systems/transport/` + `TransportSimulationPlugin`.

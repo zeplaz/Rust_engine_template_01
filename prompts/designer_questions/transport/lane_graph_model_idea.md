@@ -105,5 +105,5 @@ Within simulation (non-editor):
 ## 10. Traceability
 
 - Matrix **R2/R3/R7** — graph shape and nav export.  
-- [`sysem_desitions.md`](sysem_desitions.md) — hybrid tension spec.  
+- [`system_decisions_v1.md`](system_decisions_v1.md) — hybrid tension spec.  
 - [`rulebook_drafts.md`](rulebook_drafts.md) — orchestrator + rulebooks A–C.

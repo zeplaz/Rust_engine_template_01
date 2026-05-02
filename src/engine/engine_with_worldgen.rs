@@ -10,7 +10,10 @@ use crate::render::TilemapAdapterPlugin;
 use crate::systems::production::{
     ProductionRuntimePlugin, ProductionSerializationPlugin, ProductionToolsUiPlugin,
 };
+use crate::systems::damage::DamageSystem;
+use crate::systems::navigation::NavigationSchedulePlugin;
 use crate::systems::sim_control::SimControlPlugin;
+use crate::systems::transport::TransportSimulationPlugin;
 use crate::systems::terrain::MaterialUnificationPlugin;
 use crate::terrain::generation::WorldGenToolsPlugin;
 use bevy::asset::AssetPlugin;
@@ -52,9 +55,15 @@ impl Plugin for EnginePlugin {
             .add_plugins(MapEditorPlugin)
             // Sim loop control (pause / step / speed / monotonic tick).
             .add_plugins(SimControlPlugin)
+            .add_plugins(TransportSimulationPlugin)
+            // Nav: damage/speed adjustments after transport cost cache; motion stage after damage (S2).
+            .add_plugins(NavigationSchedulePlugin)
+            .add_plugins(DamageSystem)
             .add_plugins(MaterialUnificationPlugin);
         #[cfg(feature = "bevy_tilemap_adapter")]
         app.add_plugins(TilemapAdapterPlugin);
+        // Plugin order still matters for init; cross-simulation ordering uses SystemSet edges
+        // (see `SimControlSystemSet`, `TransportSchedule` — `prompts/guides/ecs_systems_schedule_runbook_v1.md`).
         app.add_plugins(KeybindingsOptionsPlugin)
             .add_plugins(DiagnosticsUiPlugin)
             .add_plugins(FactionToolsUiPlugin)

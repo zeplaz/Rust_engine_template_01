@@ -30,7 +30,11 @@ These live under [`../../guides/`](../../guides/). They are **concept sketches**
 |:---|:---|
 | [`rulebook_drafts.md`](rulebook_drafts.md) | **P0–P3** phase map, **logical simulation schedule** (engine-agnostic), Rulebooks **A–C**, **P3** outline (trains, streaming/LOD **budget** framing) |
 | [`lane_graph_model_idea.md`](lane_graph_model_idea.md) | Module layers; **LaneGraph first** in sim pipe; **authoring vs runtime** ghost; stubs until **T-LANE-001** |
-| [`sysem_desitions.md`](sysem_desitions.md) | Hybrid tension spec (draft v1); reservations, collision `ASK:`, LOD as **budget bands** *(filename preserved until rename)* |
+| [`system_decisions_v1.md`](system_decisions_v1.md) | Hybrid tension spec (draft v1); reservations collision `ASK:`; LOD **budget bands** |
+| [`transport_code_implementation_plan_v1.md`](transport_code_implementation_plan_v1.md) | Maps rulebooks → **Rust** (`TransportSimulationPlugin`, `TransportSchedule` sets) |
+| [`../../matrix/transport/runbook/r9_authoring_bake_order_steps_v1.md`](../../matrix/transport/runbook/r9_authoring_bake_order_steps_v1.md) | **R9** bake order (authoring vs bad sort) + promotion checklist |
+| [`../../matrix/gap_remediation/runbook/g4_transport_r8_network_slice_steps_v1.md`](../../matrix/gap_remediation/runbook/g4_transport_r8_network_slice_steps_v1.md) | **G4** + **R8** persist/hydrate slice for `TransportNetworkSnapshot` |
+| [`../../guides/ecs_systems_schedule_runbook_v1.md`](../../guides/ecs_systems_schedule_runbook_v1.md) | Bevy **0.18** plugin/`SystemSet` inventory + **S1** ordering (sim tick → transport) — **before W1** |
 
 ---
 
