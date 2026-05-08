@@ -5,7 +5,9 @@
 
 use bevy::prelude::*;
 
+use super::types::ChunkFireOverlay;
 use crate::systems::chunk_sim_lod::ChunkSimLod;
+use crate::systems::ecology::ChunkEcology;
 use crate::systems::sim_control::SimControlState;
 use crate::systems::weather::ChunkWeather;
 use crate::terrain::generation::{Chunk, ChunkCellMatrix};
@@ -32,16 +34,20 @@ pub(crate) fn spawn_chunk_surface_fire_on_new_chunk(
     }
 }
 
-/// Dry + warm cells raise heat; [`ChunkWeather`] rain/wind and cell moisture pull or push it; scaled by [`ChunkSimLod`].
+/// Chunks **with** [`ChunkFireOverlay`] use per-cell sim; this path is **without** overlay only.
 pub fn chunk_surface_fire_tick(
     ctrl: Res<SimControlState>,
     time: Res<Time>,
-    mut query: Query<(
-        &ChunkCellMatrix,
-        &ChunkWeather,
-        Option<&ChunkSimLod>,
-        &mut ChunkSurfaceFire,
-    )>,
+    mut query: Query<
+        (
+            &ChunkCellMatrix,
+            &ChunkWeather,
+            Option<&ChunkSimLod>,
+            Option<&ChunkEcology>,
+            &mut ChunkSurfaceFire,
+        ),
+        Without<ChunkFireOverlay>,
+    >,
 ) {
     if !ctrl.should_tick() {
         return;
@@ -51,7 +57,7 @@ pub fn chunk_surface_fire_tick(
         return;
     }
 
-    for (matrix, wx, lod, mut fire) in &mut query {
+    for (matrix, wx, lod, eco_opt, mut fire) in &mut query {
         let lod_s = lod.map(|l| l.dt_scale()).unwrap_or(1.0);
         let dt_e = dt * lod_s;
 
@@ -71,9 +77,10 @@ pub fn chunk_surface_fire_tick(
 
         let dryness = (0.42 - mean_m).max(0.0);
         let warmth = (mean_t - 0.08).max(0.0);
-        let rain_suppress = 1.0 - wx.rain_intensity * 0.78;
+        let rain_suppress: f32 = 1.0 - wx.rain_intensity * 0.78;
         let wind_boost = 1.0 + wx.wind_speed * 0.6;
-        let spark = (dryness * warmth * 3.5).min(0.08) * rain_suppress.max(0.0) * wind_boost;
+        let eco_mul = 1.0 + 0.95 * eco_opt.map(|e| e.fire_risk).unwrap_or(0.0);
+        let spark = (dryness * warmth * 3.5).min(0.08) * rain_suppress.max(0.0) * wind_boost * eco_mul;
 
         let wet_line = (mean_m * 0.12 + wx.rain_intensity * 0.18) * dt_e;
 

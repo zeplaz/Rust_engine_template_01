@@ -16,7 +16,8 @@ use crate::systems::sim_control::SimControlPlugin;
 use crate::systems::transport::TransportSimulationPlugin;
 use crate::render::GpuWeatherFireFieldPlugin;
 use crate::systems::{
-    configure_chunk_environment_sets, ChunkSimLodPlugin, EcologyPlugin, FirePlugin, WeatherPlugin,
+    configure_chunk_environment_sets,
+    ChunkEnvironmentPersistPlugin, ChunkSimLodPlugin, EcologyPlugin, FirePlugin, WeatherPlugin,
 };
 use crate::systems::terrain::MaterialUnificationPlugin;
 use crate::terrain::generation::WorldGenToolsPlugin;
@@ -60,7 +61,8 @@ impl Plugin for EnginePlugin {
             // Sim loop control (pause / step / speed / monotonic tick).
             .add_plugins(SimControlPlugin);
         configure_chunk_environment_sets(app);
-        app.add_plugins(ChunkSimLodPlugin)
+        app.add_plugins(ChunkEnvironmentPersistPlugin)
+            .add_plugins(ChunkSimLodPlugin)
             .add_plugins(FirePlugin)
             .add_plugins(WeatherPlugin)
             .add_plugins(EcologyPlugin)

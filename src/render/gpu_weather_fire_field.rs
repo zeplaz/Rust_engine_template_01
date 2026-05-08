@@ -27,6 +27,8 @@ use bevy::{
     shader::PipelineCacheError,
 };
 
+use crate::systems::ecology::ChunkEcology;
+use crate::systems::fire::chunk_fire_overlay_tick;
 use crate::systems::fire::chunk_surface_fire_tick;
 use crate::systems::fire::ChunkSurfaceFire;
 use crate::systems::weather::ChunkWeather;
@@ -49,7 +51,10 @@ impl Default for WeatherFireFieldDebugOverlay {
 
 #[derive(Resource, Clone, ExtractResource, ShaderType)]
 pub struct WeatherFireFieldUniforms {
+    /// rain, snow, fire_heat_mean, fog
     pub means: Vec4,
+    /// biomass_mean, fire_risk_mean, wind_speed_mean, lightning_mean
+    pub extra_means: Vec4,
     pub time_secs: f32,
     pub blend_rate: f32,
     pub decay: f32,
@@ -60,6 +65,7 @@ impl Default for WeatherFireFieldUniforms {
     fn default() -> Self {
         Self {
             means: Vec4::ZERO,
+            extra_means: Vec4::ZERO,
             time_secs: 0.0,
             blend_rate: 0.14,
             decay: 0.004,
@@ -151,17 +157,22 @@ fn sync_weather_fire_uniforms(
     time: Res<Time>,
     wx: Query<&ChunkWeather>,
     fire: Query<&ChunkSurfaceFire>,
+    eco: Query<&ChunkEcology>,
     mut u: ResMut<WeatherFireFieldUniforms>,
 ) {
     let mut nw = 0u32;
     let mut r = 0f32;
     let mut s = 0f32;
     let mut fg = 0f32;
+    let mut wind = 0f32;
+    let mut li = 0f32;
     for w in &wx {
         nw += 1;
         r += w.rain_intensity;
         s += w.snow_depth;
         fg += w.fog_density;
+        wind += w.wind_speed;
+        li += w.lightning_risk;
     }
     let mut nf = 0u32;
     let mut h_sum = 0f32;
@@ -169,13 +180,28 @@ fn sync_weather_fire_uniforms(
         nf += 1;
         h_sum += f.heat;
     }
+    let mut ne = 0u32;
+    let mut bio = 0f32;
+    let mut frisk = 0f32;
+    for e in &eco {
+        ne += 1;
+        bio += e.biomass;
+        frisk += e.fire_risk;
+    }
 
     let nf_w = nw.max(1) as f32;
+    let nf_e = ne.max(1) as f32;
     u.means = Vec4::new(
         r / nf_w,
         s / nf_w,
         if nf > 0 { h_sum / nf.max(1) as f32 } else { 0.0 },
         fg / nf_w,
+    );
+    u.extra_means = Vec4::new(
+        bio / nf_e,
+        frisk / nf_e,
+        wind / nf_w,
+        li / nf_w,
     );
     u.time_secs = time.elapsed_secs();
 }
@@ -211,7 +237,9 @@ impl Plugin for GpuWeatherFireFieldPlugin {
                 (
                     cleanup_debug_sprite,
                     maybe_spawn_debug_sprite.after(cleanup_debug_sprite),
-                    sync_weather_fire_uniforms.after(chunk_surface_fire_tick),
+                    sync_weather_fire_uniforms
+                        .after(chunk_fire_overlay_tick)
+                        .after(chunk_surface_fire_tick),
                     flip_debug_sprite_texture.after(sync_weather_fire_uniforms),
                 ),
             );

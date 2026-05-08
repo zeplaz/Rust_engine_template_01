@@ -1,9 +1,9 @@
 //! Footprint / mask placement helpers (serializable geometry only — no ECS writes here).
-//! Pair with `terrain_biome_migration_matrix_v1.md` when tying masks to chunk tiles.
+//! Pair with chunk material masks when tying footprints to `ChunkCellMatrix` (`terrain_biome` runbooks).
 
 use bevy::prelude::Vec2;
 
-use crate::terrain::{TileType, World};
+use crate::terrain::{TileFootprintKind, World};
 
 pub trait MaskOperations {
     fn size(&self) -> Vec2;
@@ -12,7 +12,7 @@ pub trait MaskOperations {
         &self,
         position: Vec2,
         world: &World,
-        valid_tile_types: &[TileType],
+        valid_footprints: &[TileFootprintKind],
         valid_mask: Option<&Self>,
     ) -> bool;
 }
@@ -51,7 +51,7 @@ impl MaskOperations for Vec<Vec<u8>> {
         &self,
         _position: Vec2,
         _world: &World,
-        _valid_tile_types: &[TileType],
+        _valid_footprints: &[TileFootprintKind],
         valid_mask: Option<&Self>,
     ) -> bool {
         if let Some(vm) = valid_mask {
@@ -63,8 +63,8 @@ impl MaskOperations for Vec<Vec<u8>> {
                 return false;
             }
         }
-        // World / tile-type sampling hooks: add when `World` exposes chunk tile queries (see terrain_world designer docs).
-        let _ = (_valid_tile_types, _world);
+        // World / chunk sampling: wire `World` + `ChunkCellMatrix` / material tags when mask needs sim truth.
+        let _ = (_valid_footprints, _world);
         true
     }
 }

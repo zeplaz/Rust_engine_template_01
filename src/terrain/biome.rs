@@ -97,6 +97,23 @@ impl Default for TerrainSurfaceMix {
     }
 }
 
+/// Soil / substrate proxy from **mean biome blend** (chunk ecology). Not terrain ontology truth.
+pub fn terrain_mix_from_biome_weights(bw: BiomeWeights) -> TerrainSurfaceMix {
+    let o = (bw.temperate * 0.35 + bw.wetland * 0.5 + bw.boreal * 0.35 + bw.coastal * 0.12)
+        .clamp(0.0, 1.0);
+    let si = (bw.wetland * 0.28 + bw.coastal * 0.22 + bw.temperate * 0.18).clamp(0.0, 1.0);
+    let sa = (bw.arid * 0.55 + bw.coastal * 0.25 + bw.marine * 0.15).clamp(0.0, 1.0);
+    let ro = (bw.alpine * 0.55 + bw.arid * 0.12).clamp(0.0, 1.0);
+    let cl = ((bw.temperate + bw.wetland) * 0.12 + bw.coastal * 0.08).clamp(0.0, 0.45);
+    TerrainSurfaceMix {
+        sand: sa,
+        silt: si,
+        clay: cl,
+        rock: ro,
+        organic: o,
+    }
+}
+
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub struct TileEnvironmentProfile {
     pub biome_weights: BiomeWeights,
