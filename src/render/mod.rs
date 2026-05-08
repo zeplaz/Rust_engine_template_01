@@ -1,5 +1,6 @@
 // Rendering systems
 mod base_cam;
+pub mod gpu_weather_fire_field;
 mod light;
 pub mod shaders;
 
@@ -7,6 +8,9 @@ pub mod shaders;
 pub mod tilemap_adapter;
 
 // Public exports
+pub use gpu_weather_fire_field::{
+    GpuWeatherFireFieldPlugin, WeatherFireFieldDebugOverlay, WeatherFireFieldUniforms,
+};
 pub use light::*;
 
 #[cfg(feature = "bevy_tilemap_adapter")]

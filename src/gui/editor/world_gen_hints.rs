@@ -28,6 +28,8 @@ pub const REGION_CIRCULAR: &str = "Bias sites toward a circular arena layout (ge
 pub const REGION_POWER: &str = "Power diagram variant — different cell borders when weights differ.";
 pub const REGION_ITERATIONS: &str =
     "Lloyd relaxation passes for Centroidal mode only. More iterations → rounder, more uniform regions.";
+pub const STRATEGIC_FIELD_COUPLING: &str =
+    "After fractal sampling, nudge moisture/temperature from polygon-world **strategic** kinds (see `prompts/guides/voronoi_polygon_worlds_notes.md.md`). 0 = classify tiles only; ~0.1–0.25 = gentle structure-aware climate.";
 
 pub const PROFILE_FBMPERLIN: &str =
     "Smooth fractional Brownian motion on Perlin — good default continents and soft coasts.";

@@ -14,7 +14,10 @@ use crate::systems::damage::DamageSystem;
 use crate::systems::navigation::NavigationSchedulePlugin;
 use crate::systems::sim_control::SimControlPlugin;
 use crate::systems::transport::TransportSimulationPlugin;
-use crate::systems::weather::WeatherPlugin;
+use crate::render::GpuWeatherFireFieldPlugin;
+use crate::systems::{
+    configure_chunk_environment_sets, ChunkSimLodPlugin, EcologyPlugin, FirePlugin, WeatherPlugin,
+};
 use crate::systems::terrain::MaterialUnificationPlugin;
 use crate::terrain::generation::WorldGenToolsPlugin;
 use bevy::asset::AssetPlugin;
@@ -55,8 +58,13 @@ impl Plugin for EnginePlugin {
             .add_plugins(BaseMenuPlugin)
             .add_plugins(MapEditorPlugin)
             // Sim loop control (pause / step / speed / monotonic tick).
-            .add_plugins(SimControlPlugin)
+            .add_plugins(SimControlPlugin);
+        configure_chunk_environment_sets(app);
+        app.add_plugins(ChunkSimLodPlugin)
+            .add_plugins(FirePlugin)
             .add_plugins(WeatherPlugin)
+            .add_plugins(EcologyPlugin)
+            .add_plugins(GpuWeatherFireFieldPlugin)
             .add_plugins(TransportSimulationPlugin)
             // Nav: damage/speed adjustments after transport cost cache; motion stage after damage (S2).
             .add_plugins(NavigationSchedulePlugin)
