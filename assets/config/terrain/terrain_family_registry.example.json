@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "families": [
+    { "name": "DeepWater", "biome_bucket": "Water" },
+    { "name": "ShallowWater", "biome_bucket": "Water" },
+    { "name": "Beach", "biome_bucket": "Beach" },
+    { "name": "Desert", "biome_bucket": "Desert" },
+    { "name": "Grassland", "biome_bucket": "Plains" },
+    { "name": "Forest", "biome_bucket": "Forest" },
+    { "name": "DenseForest", "biome_bucket": "Forest" },
+    { "name": "Mountain", "biome_bucket": "Mountain" },
+    { "name": "SnowCappedMountain", "biome_bucket": "Snow" },
+    { "name": "Tundra", "biome_bucket": "Snow" },
+    { "name": "Swamp", "biome_bucket": "Swamp" },
+    { "name": "Cliff", "biome_bucket": "Mountain" },
+    { "name": "Concrete", "biome_bucket": "Plains" },
+    { "name": "Dirt", "biome_bucket": "Plains" },
+    { "name": "Snow", "biome_bucket": "Snow" },
+    { "name": "Stone", "biome_bucket": "Mountain" }
+  ]
+}
