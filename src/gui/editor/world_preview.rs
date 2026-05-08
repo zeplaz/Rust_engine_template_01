@@ -1,23 +1,132 @@
+//! World raster preview — tints align with [`WorldGenParams`] width/height.
+//!
+//! **Authoritative when chunks exist:** height, moisture, temperature, and classified **biome family**
+//! come from [`ChunkCellMatrix`] on materialized chunk entities (same grid as tags / materials).
+//! ECS [`TileMarker`](crate::terrain::generation::world_generator_enhanced::TileMarker) tiles remain
+//! the **fallback** until chunk data covers that world tile.
+
 use bevy::math::{IVec2, UVec2};
 use bevy::prelude::*;
 use bevy::render::render_resource::{
     Extent3d, TextureDescriptor, TextureDimension, TextureFormat, TextureUsages,
 };
 
-use crate::gui::editor::world_gen_ui::{PreviewMode, WorldGenUiState};
+use crate::gui::editor::world_gen_hints as hints;
+use crate::gui::editor::world_gen_ui::WorldGenUiState;
 use crate::systems::terrain::TerrainRegistriesHandles;
-use crate::terrain::biome::TerrainClass;
+use crate::terrain::ChunkCellKey;
+use crate::terrain::family::{TerrainFamilyId, TerrainFamilyRegistry};
 use crate::terrain::generation::world_generator_enhanced::{
     Height, Moisture, Temperature, TerrainType, TileMarker, WorldGenParams,
 };
-use crate::terrain::generation::{Chunk, ChunkCellMatrix};
+use crate::terrain::generation::{Chunk, ChunkCellMatrix, ChunkDerivedMetrics};
+use crate::terrain::mobility::{evaluate_tile, MobilityProfileRegistry, MovementHint};
 use crate::terrain::material::{
-    family_default_material_def, MaterialId, MaterialRegistry, MaterializedChunk, TagId, TagSet,
+    family_default_material_def, MaterialId, MaterialRegistry, MaterializedChunk, TagId, TagRegistry,
+    TagSet,
 };
 use bevy_egui::{egui, EguiPrimaryContextPass, EguiTextureHandle};
 
 /// Highlight color for tag-overlay preview mode (U5).
 pub const TAG_OVERLAY_HIGHLIGHT: [u8; 4] = [255, 220, 0, 255];
+
+/// RGBA for editor / minimap when material registry is missing or has no row for `family`.
+pub fn terrain_family_preview_rgba(
+    families: Option<&TerrainFamilyRegistry>,
+    id: TerrainFamilyId,
+) -> [u8; 4] {
+    fn by_name(name: &str) -> [u8; 4] {
+        match name {
+            "DeepWater" => [0, 0, 128, 255],
+            "ShallowWater" => [0, 0, 255, 255],
+            "Beach" => [240, 240, 64, 255],
+            "Desert" => [255, 255, 128, 255],
+            "Grassland" => [0, 255, 0, 255],
+            "Forest" => [0, 128, 0, 255],
+            "DenseForest" => [0, 64, 0, 255],
+            "Mountain" => [128, 128, 128, 255],
+            "SnowCappedMountain" => [255, 255, 255, 255],
+            "Tundra" => [192, 192, 255, 255],
+            "Swamp" => [64, 64, 0, 255],
+            "Cliff" => [90, 90, 90, 255],
+            "Concrete" => [170, 170, 170, 255],
+            "Dirt" => [139, 69, 19, 255],
+            "Snow" => [250, 250, 250, 255],
+            "Stone" => [120, 120, 120, 255],
+            _ => [128, 0, 128, 255],
+        }
+    }
+    if let Some(reg) = families {
+        if let Some(d) = reg.def(id) {
+            return by_name(&d.name);
+        }
+    }
+    let u = (id.0 as u32)
+        .wrapping_mul(1103515245)
+        .wrapping_add(12345);
+    [
+        (u & 0xff) as u8,
+        ((u >> 8) & 0xff) as u8,
+        ((u >> 16) & 0xff) as u8,
+        255,
+    ]
+}
+
+/// Row-major cell layer at world tile `(tx, ty)` from overlapping chunk slabs `(coord, size, slice)`.
+pub fn chunk_cell_layer_at_world_tile<T: Copy>(
+    tx: u32,
+    ty: u32,
+    chunks: &[(IVec2, UVec2, &[T])],
+) -> Option<T> {
+    let tx_i = tx as i32;
+    let ty_i = ty as i32;
+    for (coord, size, layer) in chunks {
+        let sx = size.x as i32;
+        let sy = size.y as i32;
+        let wx0 = coord.x * sx;
+        let wy0 = coord.y * sy;
+        if tx_i < wx0 || ty_i < wy0 {
+            continue;
+        }
+        let lx = tx_i - wx0;
+        let ly = ty_i - wy0;
+        if lx < 0 || ly < 0 || lx >= sx || ly >= sy {
+            continue;
+        }
+        let idx = (ly * sx + lx) as usize;
+        if idx < layer.len() {
+            return Some(layer[idx]);
+        }
+    }
+    None
+}
+
+/// [`ChunkCellKey`] for world tile `(tx, ty)` when it falls on a listed chunk slab.
+pub fn chunk_cell_key_for_world_tile(
+    tx: u32,
+    ty: u32,
+    chunks: &[(IVec2, UVec2)],
+) -> Option<ChunkCellKey> {
+    let tx_i = tx as i32;
+    let ty_i = ty as i32;
+    for (coord, size) in chunks {
+        let sx = size.x as i32;
+        let sy = size.y as i32;
+        let wx0 = coord.x * sx;
+        let wy0 = coord.y * sy;
+        if tx_i < wx0 || ty_i < wy0 {
+            continue;
+        }
+        let lx = tx_i - wx0;
+        let ly = ty_i - wy0;
+        if lx < 0 || ly < 0 || lx >= sx || ly >= sy {
+            continue;
+        }
+        let idx = (ly * sx + lx) as u32;
+        return Some(ChunkCellKey::new(*coord, idx));
+    }
+    None
+}
 
 pub fn cell_tags_for_world_tile(
     tx: u32,
@@ -47,12 +156,39 @@ pub fn cell_tags_for_world_tile(
     None
 }
 
+/// Chunk-derived stitched `slope_grade` at world tile `(tx, ty)` when present on a materialized chunk.
+#[inline]
+pub fn slope_grade_for_world_tile(
+    tx: u32,
+    ty: u32,
+    chunks: &[(IVec2, UVec2, &[f32])],
+) -> Option<f32> {
+    chunk_cell_layer_at_world_tile(tx, ty, chunks)
+}
+
+pub fn movement_hint_rgba(hint: &MovementHint) -> [u8; 4] {
+    if hint.blocked {
+        [220, 50, 50, 255]
+    } else {
+        let stress = ((hint.cost_mul - 1.0).max(0.0) / 2.0).min(1.0);
+        let g = ((1.0 - stress) * 220.0) as u8;
+        let r = (stress * 200.0) as u8;
+        [r, g, 70, 255]
+    }
+}
+
+fn slope_grade_to_color(s: f32) -> [u8; 4] {
+    let u = (s.clamp(0.0, 1.0) * 255.0) as u8;
+    [u, 255u8.saturating_sub(u), 120, 255]
+}
+
 pub fn preview_biome_rgba_for_tile(
     tx: u32,
     ty: u32,
-    terrain: &TerrainClass,
+    terrain_family: TerrainFamilyId,
     chunks: &[(IVec2, UVec2, &[MaterialId])],
     registry: &MaterialRegistry,
+    families: Option<&TerrainFamilyRegistry>,
 ) -> [u8; 4] {
     let tx_i = tx as i32;
     let ty_i = ty as i32;
@@ -75,13 +211,47 @@ pub fn preview_biome_rgba_for_tile(
             return registry.materials[mid.0 as usize].preview_color;
         }
     }
-    if let Some(def) = family_default_material_def(registry, *terrain) {
+    if let Some(def) = family_default_material_def(registry, terrain_family) {
         return def.preview_color;
     }
-    #[allow(deprecated)]
-    {
-        biome_to_color(terrain)
+    terrain_family_preview_rgba(families, terrain_family)
+}
+
+/// `sim.traction_mod` from the resolved material at world tile `(tx, ty)`, else **1.0** (same lookup order as [`preview_biome_rgba_for_tile`]).
+pub fn material_traction_mod_for_world_tile(
+    tx: u32,
+    ty: u32,
+    terrain_family: TerrainFamilyId,
+    chunks: &[(IVec2, UVec2, &[MaterialId])],
+    registry: &MaterialRegistry,
+) -> f32 {
+    let tx_i = tx as i32;
+    let ty_i = ty as i32;
+    for (coord, size, materials) in chunks {
+        let sx = size.x as i32;
+        let sy = size.y as i32;
+        let wx0 = coord.x * sx;
+        let wy0 = coord.y * sy;
+        if tx_i < wx0 || ty_i < wy0 {
+            continue;
+        }
+        let lx = tx_i - wx0;
+        let ly = ty_i - wy0;
+        if lx < 0 || ly < 0 || lx >= sx || ly >= sy {
+            continue;
+        }
+        let idx = (ly * sx + lx) as usize;
+        if idx < materials.len() {
+            let mid = materials[idx];
+            return registry.materials[mid.0 as usize]
+                .sim_f32("traction_mod")
+                .unwrap_or(1.0);
+        }
     }
+    if let Some(def) = family_default_material_def(registry, terrain_family) {
+        return def.sim_f32("traction_mod").unwrap_or(1.0);
+    }
+    1.0
 }
 
 pub fn tag_overlay_rgba(tag_target: TagId, cell_tags: &TagSet) -> [u8; 4] {
@@ -99,6 +269,84 @@ pub fn tag_overlay_rgba_pool(cell_tags: &TagSet, pool: &TagSet) -> [u8; 4] {
     } else {
         [0, 0, 0, 0]
     }
+}
+
+/// Raster tint mode for [`update_world_preview_texture`] (one component per tile, no full regen).
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum PreviewMode {
+    None,
+    Height,
+    Moisture,
+    Temperature,
+    Biome,
+    Regions,
+    /// Highlights cells whose tags intersect [`WorldGenParams::tag_pool`](crate::terrain::generation::world_generator_enhanced::WorldGenParams::tag_pool).
+    Tag,
+    /// Stitched [`ChunkDerivedMetrics::slope_grade`] from chunk entities (authoritative for terrain).
+    DerivedSlope,
+    /// Mobility hint for the selected profile — interpretation, not stored terrain state.
+    Mobility,
+}
+
+impl PreviewMode {
+    fn label(self) -> &'static str {
+        match self {
+            PreviewMode::None => "None",
+            PreviewMode::Height => "Height",
+            PreviewMode::Moisture => "Moisture",
+            PreviewMode::Temperature => "Temperature",
+            PreviewMode::Biome => "Biome",
+            PreviewMode::Regions => "Regions",
+            PreviewMode::Tag => "Tag",
+            PreviewMode::DerivedSlope => "Slope (chunk)",
+            PreviewMode::Mobility => "Mobility",
+        }
+    }
+
+    fn next(self) -> Self {
+        match self {
+            PreviewMode::None => PreviewMode::Height,
+            PreviewMode::Height => PreviewMode::Moisture,
+            PreviewMode::Moisture => PreviewMode::Temperature,
+            PreviewMode::Temperature => PreviewMode::Biome,
+            PreviewMode::Biome => PreviewMode::Regions,
+            PreviewMode::Regions => PreviewMode::Tag,
+            PreviewMode::Tag => PreviewMode::DerivedSlope,
+            PreviewMode::DerivedSlope => PreviewMode::Mobility,
+            PreviewMode::Mobility => PreviewMode::None,
+        }
+    }
+
+    fn prev(self) -> Self {
+        match self {
+            PreviewMode::None => PreviewMode::Mobility,
+            PreviewMode::Height => PreviewMode::None,
+            PreviewMode::Moisture => PreviewMode::Height,
+            PreviewMode::Temperature => PreviewMode::Moisture,
+            PreviewMode::Biome => PreviewMode::Temperature,
+            PreviewMode::Regions => PreviewMode::Biome,
+            PreviewMode::Tag => PreviewMode::Regions,
+            PreviewMode::DerivedSlope => PreviewMode::Tag,
+            PreviewMode::Mobility => PreviewMode::DerivedSlope,
+        }
+    }
+}
+
+/// Toggles for the World Preview egui window (independent of whether the World Generator panel is open).
+#[derive(Resource)]
+pub struct WorldPreviewUiState {
+    pub window_open: bool,
+}
+
+impl Default for WorldPreviewUiState {
+    fn default() -> Self {
+        Self { window_open: true }
+    }
+}
+
+#[inline]
+fn tt_egui(response: egui::Response, text: &'static str) -> egui::Response {
+    response.on_hover_text(text)
 }
 
 /// Zoom / pan state for the World Preview egui window.
@@ -205,16 +453,21 @@ pub fn init_world_preview_texture(
 pub fn update_world_preview_texture(
     mut images: ResMut<Assets<Image>>,
     preview_texture: Res<WorldPreviewTexture>,
+    world_preview_ui: Res<WorldPreviewUiState>,
     world_gen_ui_state: Res<WorldGenUiState>,
     world_gen_params: Res<WorldGenParams>,
     handles: Res<TerrainRegistriesHandles>,
     materials: Res<Assets<MaterialRegistry>>,
+    family_assets: Res<Assets<TerrainFamilyRegistry>>,
+    tag_assets: Res<Assets<TagRegistry>>,
+    mobility_assets: Res<Assets<MobilityProfileRegistry>>,
     tile_query: Query<(&Transform, &Height, &Moisture, &Temperature, &TerrainType), With<TileMarker>>,
     chunk_mats: Query<(&Chunk, &MaterializedChunk)>,
     chunk_cells: Query<(&Chunk, &ChunkCellMatrix)>,
+    chunk_derived: Query<(&Chunk, &ChunkDerivedMetrics)>,
+    overlay: Res<crate::terrain::DynamicTerrainOverlay>,
 ) {
-    // Only update if the preview is visible
-    if !world_gen_ui_state.visible {
+    if !world_preview_ui.window_open && !world_gen_ui_state.visible {
         return;
     }
     
@@ -241,11 +494,38 @@ pub fn update_world_preview_texture(
         .iter()
         .map(|(c, m)| (c.coord, m.size, m.materials.as_slice()))
         .collect();
+    let chunk_geom: Vec<(IVec2, UVec2)> = chunk_cells
+        .iter()
+        .map(|(c, m)| (c.coord, m.size))
+        .collect();
     let tag_slices: Vec<(IVec2, UVec2, &[TagSet])> = chunk_cells
         .iter()
         .map(|(c, m)| (c.coord, m.size, m.tags.as_slice()))
         .collect();
+    let elev_slices: Vec<(IVec2, UVec2, &[f32])> = chunk_cells
+        .iter()
+        .map(|(c, m)| (c.coord, m.size, m.elevation.as_slice()))
+        .collect();
+    let moist_slices: Vec<(IVec2, UVec2, &[f32])> = chunk_cells
+        .iter()
+        .map(|(c, m)| (c.coord, m.size, m.moisture.as_slice()))
+        .collect();
+    let temp_slices: Vec<(IVec2, UVec2, &[f32])> = chunk_cells
+        .iter()
+        .map(|(c, m)| (c.coord, m.size, m.temperature.as_slice()))
+        .collect();
+    let family_slices: Vec<(IVec2, UVec2, &[TerrainFamilyId])> = chunk_cells
+        .iter()
+        .map(|(c, m)| (c.coord, m.size, m.family.as_slice()))
+        .collect();
+    let slope_slices: Vec<(IVec2, UVec2, &[f32])> = chunk_derived
+        .iter()
+        .map(|(c, d)| (c.coord, d.size, d.slope_grade.as_slice()))
+        .collect();
     let reg_opt = materials.get(&handles.material_registry);
+    let fam_opt = family_assets.get(&handles.terrain_families);
+    let tag_reg_opt = tag_assets.get(&handles.tag_registry);
+    let mob_reg_opt = mobility_assets.get(&handles.mobility_profiles);
 
     // Draw tiles based on the preview mode
     for (transform, tile_height, moisture, temperature, terrain) in tile_query.iter() {
@@ -265,22 +545,44 @@ pub fn update_world_preview_texture(
         
         // Choose color based on the preview mode
         let color = match world_gen_ui_state.preview_mode {
-            PreviewMode::Height => height_to_color(tile_height.0),
-            PreviewMode::Moisture => moisture_to_color(moisture.0),
-            PreviewMode::Temperature => temperature_to_color(temperature.0),
+            PreviewMode::Height => {
+                let tx = x as u32;
+                let ty = y as u32;
+                let h = chunk_cell_layer_at_world_tile(tx, ty, &elev_slices)
+                    .unwrap_or(tile_height.0);
+                height_to_color(h)
+            }
+            PreviewMode::Moisture => {
+                let tx = x as u32;
+                let ty = y as u32;
+                let m = chunk_cell_layer_at_world_tile(tx, ty, &moist_slices)
+                    .unwrap_or(moisture.0);
+                moisture_to_color(m)
+            }
+            PreviewMode::Temperature => {
+                let tx = x as u32;
+                let ty = y as u32;
+                let t = chunk_cell_layer_at_world_tile(tx, ty, &temp_slices)
+                    .unwrap_or(temperature.0);
+                temperature_to_color(t)
+            }
             PreviewMode::Biome => {
                 let tx = x as u32;
                 let ty = y as u32;
+                let terrain_family = chunk_cell_layer_at_world_tile(tx, ty, &family_slices)
+                    .unwrap_or(terrain.0);
                 match reg_opt {
                     Some(reg) => {
-                        preview_biome_rgba_for_tile(tx, ty, &terrain.0, &mat_slices, reg)
+                        preview_biome_rgba_for_tile(
+                            tx,
+                            ty,
+                            terrain_family,
+                            &mat_slices,
+                            reg,
+                            fam_opt,
+                        )
                     }
-                    None => {
-                        #[allow(deprecated)]
-                        {
-                            biome_to_color(&terrain.0)
-                        }
-                    }
+                    None => terrain_family_preview_rgba(fam_opt, terrain_family),
                 }
             }
             PreviewMode::Tag => {
@@ -295,6 +597,53 @@ pub fn update_world_preview_texture(
                 // For region preview, we would need information about which region each tile belongs to
                 // For now, just default to black
                 [0, 0, 0, 255]
+            }
+            PreviewMode::DerivedSlope => {
+                let tx = x as u32;
+                let ty = y as u32;
+                match slope_grade_for_world_tile(tx, ty, &slope_slices) {
+                    Some(s) => slope_grade_to_color(s),
+                    None => [0, 0, 0, 0],
+                }
+            }
+            PreviewMode::Mobility => {
+                let tx = x as u32;
+                let ty = y as u32;
+                if let (Some(tag_reg), Some(mob_reg)) = (tag_reg_opt, mob_reg_opt) {
+                    if !mob_reg.profiles.is_empty() {
+                        let pi = world_gen_ui_state
+                            .mobility_profile_index
+                            .min(mob_reg.profiles.len() - 1);
+                        let profile = &mob_reg.profiles[pi];
+                        let slope = slope_grade_for_world_tile(tx, ty, &slope_slices).unwrap_or(0.0);
+                        let tags = cell_tags_for_world_tile(tx, ty, &tag_slices).unwrap_or_default();
+                        let terrain_family = chunk_cell_layer_at_world_tile(tx, ty, &family_slices)
+                            .unwrap_or(terrain.0);
+                        let mud_boost = chunk_cell_key_for_world_tile(tx, ty, &chunk_geom)
+                            .and_then(|k| overlay.mud.get(&k).copied())
+                            .filter(|&m| m > 1e-6)
+                            .map(|mud| 1.0 + mud * 0.25)
+                            .unwrap_or(1.0);
+                        let traction = reg_opt
+                            .map(|r| {
+                                material_traction_mod_for_world_tile(
+                                    tx,
+                                    ty,
+                                    terrain_family,
+                                    &mat_slices,
+                                    r,
+                                ) * mud_boost
+                            })
+                            .unwrap_or(mud_boost);
+                        let hint =
+                            evaluate_tile(profile, &tags, slope, 1.0, tag_reg, traction);
+                        movement_hint_rgba(&hint)
+                    } else {
+                        [0, 0, 0, 0]
+                    }
+                } else {
+                    [0, 0, 0, 0]
+                }
             }
             PreviewMode::None => [0, 0, 0, 0], // Transparent
         };
@@ -311,10 +660,15 @@ pub fn update_world_preview_texture(
 pub fn display_world_preview(
     mut contexts: bevy_egui::EguiContexts,
     preview_texture: Res<WorldPreviewTexture>,
-    world_gen_ui_state: Res<WorldGenUiState>,
+    mut world_preview_ui: ResMut<WorldPreviewUiState>,
+    mut world_gen_ui_state: ResMut<WorldGenUiState>,
+    mut world_gen_params: ResMut<WorldGenParams>,
     mut view: ResMut<WorldPreviewView>,
+    handles: Res<TerrainRegistriesHandles>,
+    tag_assets: Res<Assets<TagRegistry>>,
+    mobility_assets: Res<Assets<MobilityProfileRegistry>>,
 ) -> Result {
-    if !world_gen_ui_state.visible {
+    if !world_preview_ui.window_open {
         return Ok(());
     }
 
@@ -322,9 +676,127 @@ pub fn display_world_preview(
     let tex_w = preview_texture.width as f32;
     let tex_h = preview_texture.height as f32;
 
+    let mut window_open = world_preview_ui.window_open;
     egui::Window::new("World Preview")
         .resizable(true)
+        .open(&mut window_open)
         .show(contexts.ctx_mut()?, |ui| {
+            ui.horizontal(|ui| {
+                ui.label("Preview:");
+                if tt_egui(ui.button("◀"), "Previous view mode").clicked() {
+                    world_gen_ui_state.preview_mode = world_gen_ui_state.preview_mode.prev();
+                }
+                if tt_egui(ui.button("▶"), "Next view mode").clicked() {
+                    world_gen_ui_state.preview_mode = world_gen_ui_state.preview_mode.next();
+                }
+                ui.label(
+                    egui::RichText::new(world_gen_ui_state.preview_mode.label())
+                        .strong(),
+                );
+            });
+            ui.horizontal(|ui| {
+                tt_egui(
+                    ui.radio_value(&mut world_gen_ui_state.preview_mode, PreviewMode::None, "None"),
+                    hints::PREVIEW_NONE,
+                );
+                tt_egui(
+                    ui.radio_value(&mut world_gen_ui_state.preview_mode, PreviewMode::Height, "Height"),
+                    hints::PREVIEW_HEIGHT,
+                );
+                tt_egui(
+                    ui.radio_value(&mut world_gen_ui_state.preview_mode, PreviewMode::Moisture, "Moisture"),
+                    hints::PREVIEW_MOIST,
+                );
+                tt_egui(
+                    ui.radio_value(
+                        &mut world_gen_ui_state.preview_mode,
+                        PreviewMode::Temperature,
+                        "Temperature",
+                    ),
+                    hints::PREVIEW_TEMP,
+                );
+            });
+            ui.horizontal(|ui| {
+                tt_egui(
+                    ui.radio_value(&mut world_gen_ui_state.preview_mode, PreviewMode::Biome, "Biome"),
+                    hints::PREVIEW_BIOME,
+                );
+                tt_egui(
+                    ui.radio_value(&mut world_gen_ui_state.preview_mode, PreviewMode::Regions, "Regions"),
+                    hints::PREVIEW_REGIONS,
+                );
+                tt_egui(
+                    ui.radio_value(&mut world_gen_ui_state.preview_mode, PreviewMode::Tag, "Tag"),
+                    hints::PREVIEW_TAG,
+                );
+            });
+            ui.horizontal(|ui| {
+                tt_egui(
+                    ui.radio_value(
+                        &mut world_gen_ui_state.preview_mode,
+                        PreviewMode::DerivedSlope,
+                        "Slope",
+                    ),
+                    hints::PREVIEW_SLOPE,
+                );
+                tt_egui(
+                    ui.radio_value(
+                        &mut world_gen_ui_state.preview_mode,
+                        PreviewMode::Mobility,
+                        "Mobility",
+                    ),
+                    hints::PREVIEW_MOBILITY,
+                );
+            });
+            if let Some(mob) = mobility_assets.get(&handles.mobility_profiles) {
+                if !mob.profiles.is_empty() {
+                    ui.horizontal(|ui| {
+                        ui.label("Mobility profile:");
+                        let n = mob.profiles.len();
+                        let idx = world_gen_ui_state
+                            .mobility_profile_index
+                            .min(n - 1);
+                        world_gen_ui_state.mobility_profile_index = idx;
+                        let mut sel = idx;
+                        egui::ComboBox::from_id_salt("world_preview_mobility_profile")
+                            .selected_text(mob.profiles[idx].id.as_str())
+                            .show_ui(ui, |ui| {
+                                for (i, p) in mob.profiles.iter().enumerate() {
+                                    ui.selectable_value(&mut sel, i, p.id.as_str());
+                                }
+                            });
+                        if sel != idx {
+                            world_gen_ui_state.mobility_profile_index = sel;
+                        }
+                    });
+                }
+            }
+            if let Some(tag_reg) = tag_assets.get(&handles.tag_registry) {
+                ui.label("Terrain tag pool (passes 2 & 4):");
+                ui.small(
+                    "Unchecked names are not written onto chunks; Tag view only highlights cells carrying checked tags.",
+                );
+                egui::ScrollArea::vertical()
+                    .max_height(160.0)
+                    .id_salt("world_preview_tag_pool_scroll")
+                    .show(ui, |ui| {
+                        for (i, t) in tag_reg.tags.iter().enumerate() {
+                            let id = TagId(i as u16);
+                            let mut on = world_gen_params.tag_pool.contains(id);
+                            let r = ui.checkbox(&mut on, &t.name);
+                            let r = tt_egui(r, hints::TAG_POOL_ENTRY);
+                            if r.changed() {
+                                if on {
+                                    world_gen_params.tag_pool.insert(id);
+                                } else {
+                                    world_gen_params.tag_pool.remove(id);
+                                }
+                            }
+                        }
+                    });
+            }
+
+            ui.add_space(6.0);
             ui.horizontal(|ui| {
                 ui.label("Zoom:");
                 ui.add(egui::Slider::new(
@@ -335,8 +807,12 @@ pub fn display_world_preview(
                     view.zoom = 1.0;
                 }
             });
-            ui.small("Ctrl + scroll wheel (⌘ on macOS) over the map to zoom. Scroll to pan.");
-
+            ui.small(format!(
+                "Map {}×{} tiles ({} cells). Ctrl / ⌘ + scroll on the image to zoom; scroll area pans.",
+                preview_texture.width,
+                preview_texture.height,
+                preview_texture.width as u64 * preview_texture.height as u64,
+            ));
             let z = view
                 .zoom
                 .clamp(WorldPreviewView::ZOOM_MIN, WorldPreviewView::ZOOM_MAX);
@@ -360,6 +836,7 @@ pub fn display_world_preview(
                     }
                 });
         });
+    world_preview_ui.window_open = window_open;
     Ok(())
 }
 
@@ -380,28 +857,6 @@ fn temperature_to_color(temperature: f32) -> [u8; 4] {
     [t, 0, 0, 255]
 }
 
-#[deprecated(note = "use MaterialDef.preview_color via MaterialRegistry")]
-fn biome_to_color(biome: &TerrainClass) -> [u8; 4] {
-    match biome {
-        TerrainClass::DeepWater => [0, 0, 128, 255],
-        TerrainClass::ShallowWater => [0, 0, 255, 255],
-        TerrainClass::Beach => [240, 240, 64, 255],
-        TerrainClass::Desert => [255, 255, 128, 255],
-        TerrainClass::Grassland => [0, 255, 0, 255],
-        TerrainClass::Forest => [0, 128, 0, 255],
-        TerrainClass::DenseForest => [0, 64, 0, 255],
-        TerrainClass::Mountain => [128, 128, 128, 255],
-        TerrainClass::SnowCappedMountain => [255, 255, 255, 255],
-        TerrainClass::Tundra => [192, 192, 255, 255],
-        TerrainClass::Swamp => [64, 64, 0, 255],
-        TerrainClass::Cliff => [90, 90, 90, 255],
-        TerrainClass::Concrete => [170, 170, 170, 255],
-        TerrainClass::Dirt => [139, 69, 19, 255],
-        TerrainClass::Snow => [250, 250, 250, 255],
-        TerrainClass::Stone => [120, 120, 120, 255],
-    }
-}
-
 // Plugin to register all world preview systems
 pub struct WorldPreviewPlugin;
 
@@ -409,6 +864,7 @@ impl Plugin for WorldPreviewPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<WorldPreviewTexture>()
             .init_resource::<WorldPreviewView>()
+            .init_resource::<WorldPreviewUiState>()
             .add_systems(Startup, init_world_preview_texture)
             .add_systems(
                 Update,
@@ -422,27 +878,54 @@ impl Plugin for WorldPreviewPlugin {
 mod tests {
     use super::*;
     use crate::terrain::material::{MaterialDef, MaterialRegistry};
+    use crate::terrain::TerrainFamilyRegistry;
     use std::collections::HashMap;
 
-    fn tiny_grass_registry() -> MaterialRegistry {
-        MaterialRegistry {
-            schema_version: 1,
+    fn tiny_grass_registry() -> (TerrainFamilyRegistry, MaterialRegistry) {
+        let fam_path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("assets/config/terrain/terrain_family_registry.example.json");
+        let families =
+            TerrainFamilyRegistry::load_from_json(fam_path.to_str().unwrap()).unwrap();
+        let grass = families.id("Grassland").unwrap();
+        let reg = MaterialRegistry {
+            schema_version: 2,
             materials: vec![MaterialDef {
                 name: "grass_default".into(),
-                family: TerrainClass::Grassland,
+                family: grass,
                 tags: vec![],
                 properties: serde_json::json!({}),
                 preview_color: [10, 20, 30, 255],
             }],
             name_to_id: HashMap::from([("grass_default".into(), MaterialId(0))]),
-        }
+        };
+        (families, reg)
+    }
+
+    #[test]
+    fn chunk_cell_layer_prefers_matching_chunk() {
+        let size = UVec2::new(2, 2);
+        let elev = vec![0.1, 0.2, 0.3, 0.4];
+        let slices: Vec<(IVec2, UVec2, &[f32])> = vec![(IVec2::ZERO, size, elev.as_slice())];
+        assert_eq!(chunk_cell_layer_at_world_tile(0, 0, &slices), Some(0.1));
+        assert_eq!(chunk_cell_layer_at_world_tile(1, 0, &slices), Some(0.2));
+        assert_eq!(chunk_cell_layer_at_world_tile(0, 1, &slices), Some(0.3));
+    }
+
+    #[test]
+    fn chunk_cell_key_matches_flat_index() {
+        let geom = vec![(IVec2::ZERO, UVec2::new(2, 2))];
+        assert_eq!(
+            chunk_cell_key_for_world_tile(1, 0, &geom),
+            Some(ChunkCellKey::new(IVec2::ZERO, 1))
+        );
     }
 
     #[test]
     fn preview_uses_material_def_color() {
-        let reg = tiny_grass_registry();
+        let (families, reg) = tiny_grass_registry();
+        let grass = families.id("Grassland").unwrap();
         let chunks: Vec<(IVec2, UVec2, &[MaterialId])> = vec![];
-        let c = preview_biome_rgba_for_tile(0, 0, &TerrainClass::Grassland, &chunks, &reg);
+        let c = preview_biome_rgba_for_tile(0, 0, grass, &chunks, &reg, Some(&families));
         assert_eq!(c, [10, 20, 30, 255]);
     }
 

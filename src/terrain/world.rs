@@ -4,7 +4,7 @@ use std::collections::HashMap;
 use bevy::prelude::*;
 
 use crate::idgen::EntityId;
-use crate::terrain::locational::Cell_map_2D;
+use crate::terrain::locational::CellMap2d;
 use crate::terrain::tiles::Tile;
 use crate::traits::Region;
 
@@ -18,7 +18,7 @@ pub struct GeoRegion {
     /// Grid position → spawned tile entity.
     pub tiles: BTreeMap<(usize, usize), Entity>,
     pub tile_id_map: HashMap<EntityId, (usize, usize)>,
-    pub cell_map: Cell_map_2D<f32>,
+    pub cell_map: CellMap2d<f32>,
 }
 
 impl GeoRegion {
@@ -28,7 +28,7 @@ impl GeoRegion {
             center: Vec2::ZERO,
             tiles: BTreeMap::new(),
             tile_id_map: HashMap::default(),
-            cell_map: Cell_map_2D::new(1.0),
+            cell_map: CellMap2d::new(1.0),
         }
     }
 
@@ -43,7 +43,7 @@ impl GeoRegion {
 #[derive(Debug)]
 pub struct World {
     pub regions: Vec<GeoRegion>,
-    pub regions_cellmap: Cell_map_2D<f64>,
+    pub regions_cellmap: CellMap2d<f64>,
     pub width: u32,
     pub height: u32,
 }
@@ -53,7 +53,7 @@ impl Region for GeoRegion {}
 impl World {
     pub fn new(
         regions: Vec<GeoRegion>,
-        regions_cellmap: Cell_map_2D<f64>,
+        regions_cellmap: CellMap2d<f64>,
         width: u32,
         height: u32,
     ) -> Self {

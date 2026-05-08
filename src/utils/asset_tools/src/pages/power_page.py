@@ -6,31 +6,22 @@ from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel,
 from .base_page import (LineEdit, SpinBox, ComboBox, PushButton,
                        DoubleSpinBox, CheckBox, RadioButton, FluentIcon)
     
-from ..config.asset_config import SEGMENT_MEMBERSHIP
+from ..config.asset_config import (
+    SEGMENT_MEMBERSHIP,
+    POWER_PLANT_TYPES,
+    POWER_DISTRIBUTION_TYPES,
+    SWITCH_STATES,
+    OPERATION_MECHANISMS,
+    SWITCH_BEHAVIORS,
+    OPERATIONAL_STATUSES,
+)
 
-# Power system enums
-POWER_PLANT_TYPES = [
-    "Coal", "Nuclear", "Solar", "Wind", "Oil", "Gas", "Geothermal", "Hydro", "Biomass"
-]
+# Power system enums (single source: asset_config.py)
 
-POWER_DISTRIBUTION_TYPES = [
-    "ThreePhaseHeavyIndustrial", "ThreePhaseMediumIndustrial", "OnePhaseLightIndustrial",
-    "ThreePhaseResidential", "OnePhaseResidential", "ThreePhaseLongDistance",
-    "OnephaseLongDistance", "Mixed"
-]
-
-SWITCH_STATES = ["Open", "Closed"]
-OPERATION_MECHANISMS = ["Manual", "Automatic"]
-SWITCH_BEHAVIORS = ["NonReclosing", "AutoReclosing"]
-OPERATIONAL_STATUSES = [
-    "Standby", "Operational", "Maintenance", "OutOfFuel", "StartingUp", 
-    "ShuttingDown", "Decommissioned", "ExternalShutdown", "ReducedCapacity",
-    "OverCapacity", "EnvironmentalShutdown"
-]
 
 class PowerPage(QWidget):
     """Power infrastructure configuration page"""
-    
+
     # Signal to notify when configuration changes
     assetConfigChanged = pyqtSignal(dict)
     

@@ -59,7 +59,7 @@ fn main_menu_ui_system(
 ) -> Result {
     let ctx = contexts.ctx_mut()?;
 
-    let egui_texture_handle = ui_state
+    let _egui_texture_handle = ui_state
         .egui_texture_handle
         .get_or_insert_with(|| {
             ctx.load_texture(

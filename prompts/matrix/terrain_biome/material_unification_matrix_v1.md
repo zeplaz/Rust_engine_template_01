@@ -1,6 +1,8 @@
 # Material / tag / rule unification — integration matrix `v1`
 
-**STATUS:** **U5 Applied** — `MaterializedChunk`, `MaterialUnificationPlugin`, registry-backed biome preview + `PreviewMode::Tag`; **U6 / U7 Applied (tilemap)** — optional `bevy_tilemap_adapter` → `TilemapAdapterPlugin` + `ChunkTilemaps` (terrain / overlay / resource layers, F8 toggles when feature on); **U7 Applied** — `ChunkDependency` / `ChunkDirty`, partial rebuild, `WorldProfile` loader, optional `dev_tools` `RuleTrace`. `generate_world` tile path unchanged; chunk ECS pipeline runs when `Chunk` + `ChunkCellMatrix` entities exist.
+**STATUS:** **U5 Applied** — `MaterializedChunk`, `MaterialUnificationPlugin`, registry-backed biome preview + `PreviewMode::Tag` + **`DerivedSlope`** (chunk [`ChunkDerivedMetrics`](../../../src/terrain/generation/derived.rs) stitched `slope_grade`) + **`Mobility`** ([`evaluate_tile`](../../../src/terrain/mobility/mod.rs) + registry profile picker); **material registry** example at **`schema_version: 2`** (namespaced `properties`). **U6 / U7 Applied (tilemap)** — optional `bevy_tilemap_adapter` → `TilemapAdapterPlugin` + `ChunkTilemaps` (terrain / overlay / resource layers, F8 toggles when feature on); overlay mirrors new preview modes. **U7 Applied** — `ChunkDependency` / `ChunkDirty`, partial rebuild, `WorldProfile` loader, optional `dev_tools` `RuleTrace`. `generate_world` tile path unchanged; chunk ECS pipeline runs when `Chunk` + `ChunkCellMatrix` entities exist.
+
+> **Preview authority (Phase 6):** **Chunk SoA / derived** is the target **single source** for slope and mobility heatmaps; height / moisture / temperature / biome may still use **ECS `TileMarker`** where spawned — **dual-authority** is transitional; see [`ontology/refactor_execution_plan_v1.md`](../../designer_questions/terrain_world/ontology/refactor_execution_plan_v1.md) (continuity table + implementation **E**).
 
 **Paired designer Q:** [`../../designer_questions/terrain_world/material_tag_rule_system_v1.md`](../../designer_questions/terrain_world/material_tag_rule_system_v1.md)
 **Primary biome matrix:** [`terrain_biome_migration_matrix_v1.md`](terrain_biome_migration_matrix_v1.md)
@@ -101,9 +103,13 @@ Scope: One canonical chain `noise → ChunkCellMatrix → multi-pass tags → re
 | Height / Moisture / Temperature | existing tile components | grey / blue / red ramps | Applied (`world_preview.rs`) |
 | Biome | `TerrainClass` + `MaterialRegistry` | `MaterialDef.preview_color` (per chunk cell when `MaterializedChunk` covers tile; else family default) | **Applied** |
 | Regions | region index | placeholder | Partial |
-| **Tag overlay** | `TagSet` mask | `PreviewMode::Tag(TagId)` → `TAG_OVERLAY_HIGHLIGHT` | **Applied** |
+| **Derived slope** | [`ChunkDerivedMetrics`](../../../src/terrain/generation/derived.rs) (`slope_grade`, border-stitched) | false-color heatmap in `world_preview` + tilemap overlay index | **Applied** |
+| **Mobility interpretation** | `TagSet` + stitched slope + [`MobilityProfileRegistry`](../../../src/terrain/mobility/mod.rs) | `PreviewMode::Mobility`; **no** terrain tag writes | **Applied** |
+| **Tag overlay** | `TagSet` mask | `PreviewMode::Tag` + tag pool | **Applied** |
 | **Material color** | `MaterialId → MaterialDef.preview_color` | data-driven | **Applied** |
 | **Direct-sample** | `ChunkCellMatrix` | runs without spawned tiles | Pending — pair `composite_style_preview_integration_matrix_v1.md` **P3** |
+
+**Dual-authority note (transition):** Modes above that read **chunk** data should remain authoritative when both chunk and tile ECS exist; **Height / Moisture / Temperature / Biome** still often read **tile components** today — migrate to chunk-first sampling per [`refactor_execution_plan_v1.md`](../../designer_questions/terrain_world/ontology/refactor_execution_plan_v1.md).
 
 ---
 
@@ -115,6 +121,7 @@ Scope: One canonical chain `noise → ChunkCellMatrix → multi-pass tags → re
 | `MaterialRegistry` | `MaterialRegistryLoader`, `*.material_registry.json` | file watch | rebuild name→id; rerun pass 6 only | **Applied** |
 | `TagRegistry` | `TagRegistryLoader`, `*.tag_registry.json` | file watch | rebuild name→id; rerun passes 2–6 | **Applied** |
 | `RuleSet` | `RuleSetLoader`, `*.material_rules.ron` | file watch | re-sort rules; rerun pass 6 only | **Applied** |
+| `MobilityProfileRegistry` | loader `*.mobility_profiles.ron` | file watch | **`ASK:`** whether changes mark chunks dirty for preview-only vs full regen; today loaded at startup with terrain registries | **Partial** |
 
 **Invariant:** F8 panel + asset editor **only edit files**. The engine watches. No second mutation path.
 
@@ -135,7 +142,7 @@ Scope: One canonical chain `noise → ChunkCellMatrix → multi-pass tags → re
 
 | Surface | Current | Target | Status |
 |:---|:---|:---|:---:|
-| F8 egui panel | `WorldGenParams`, `BiomeTuning`, `PreviewMode` inc. **`Tag`**, tag combo | + registry-backed biome colors | **Applied** |
+| F8 egui panel | `WorldGenParams`, `BiomeTuning`, `PreviewMode` inc. **Tag**, **DerivedSlope**, **Mobility**, tag pool + mobility profile combo | + registry-backed biome colors | **Applied** |
 | Asset editor World Gen page | Overview / Noise / Biome / Full JSON tabs | separate **Materials**, **Tags**, **Rules** nav pages (`terrain_registry_pages.py`) | Applied |
 | Inspector (`bevy-inspector-egui`) | n/a | optional — view registries as tables | Confirmed — Planned |
 
@@ -150,7 +157,7 @@ Scope: One canonical chain `noise → ChunkCellMatrix → multi-pass tags → re
 | **U2** | Asset-editor **Materials**, **Tags**, **Rules** pages + nav + repo_paths | Phase 3 (Python) | Applied |
 | **U3** | Rust scaffolding: `MaterialId`, `MaterialDef`, `MaterialRegistry`, `TagId`, `TagRegistry`, `TagSet`, `MaterialRule`, `RuleSet`, `resolve_material` (loader + assets) | follow-up plan | **Applied** |
 | **U4** | `ChunkCellMatrix` + multi-pass pipeline (pass 1–4, 6 wired; pass 5 stub) | follow-up plan | **Applied** |
-| **U5** | `MaterializedChunk` + `MaterialUnificationPlugin` + preview via `MaterialDef.preview_color` + `PreviewMode::Tag` | follow-up plan | **Applied** |
+| **U5** | `MaterializedChunk` + `MaterialUnificationPlugin` + preview via `MaterialDef.preview_color` + `PreviewMode::{Tag, DerivedSlope, Mobility}` (chunk stitched metrics + mobility RON) | follow-up plan | **Applied** |
 | **U6** | Optional `bevy_ecs_tilemap` adapter (multi-layer: terrain z0 / overlay z10 / resources z20; feature-gated); GPU compute preview out of scope | follow-up plan | **Applied** (ECS + F8 layer toggles with `bevy_tilemap_adapter`) |
 | **U7** *(optional)* | Invalidation (`ChunkDependency` / `ChunkDirty`), partial chunk rebuild after `AssetEventSystems`, multi-layer tilemaps, `WorldProfile` / `default.world_profile.ron`, optional `dev_tools` `RuleTrace` — see §§13–18 | after U5 | **Applied** |
 
@@ -175,7 +182,7 @@ Scope: One canonical chain `noise → ChunkCellMatrix → multi-pass tags → re
 | [`../../guides/system_runbook_authoring_meta_v1.md`](../../guides/system_runbook_authoring_meta_v1.md) | Meta-runbook (authoring template for sibling system runbooks); **§12** paired norms |
 | [`../../guides/bevy_asset_terrain_runbook_v1.md`](../../guides/bevy_asset_terrain_runbook_v1.md) | **Paired** Bevy terrain registry policy + gates (A1–A3); step packs [`runbook/README.md`](runbook/README.md) |
 | [`../../guides/terrain_paired_runbooks_queue_v1.md`](../../guides/terrain_paired_runbooks_queue_v1.md) | **Paired** terrain-adjacent runbooks — Q0–Q6 creation queue + sync gates |
-| [`../../designer_questions/terrain_world/llm_world_evolution_reference_outline_v1.md`](../../designer_questions/terrain_world/llm_world_evolution_reference_outline_v1.md) | Non-authoritative LLM rule-evolution / memory-tiers outline |
+| [`../../designer_questions/terrain_world/ontology/refactor_execution_plan_v1.md`](../../designer_questions/terrain_world/ontology/refactor_execution_plan_v1.md) | Cross-chunk continuity, interpretation stack, Phase 6 prompts / AI constraints, implementation tranche |
 
 ---
 

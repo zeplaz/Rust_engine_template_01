@@ -4,7 +4,6 @@ pub mod prelude;
 mod entity;
 pub mod components;
 pub mod damages;
-mod states;
 pub mod types;
 pub mod types_aliases;
 pub mod types_of;
@@ -14,10 +13,7 @@ pub mod production;
 pub mod structure;
 pub mod vehicles;
 
-// Public exports
-pub use entity::*;
+// Public exports (no `prelude::*` merge — avoids ambiguous `components` / `states` / `ConcreteType` paths)
 pub use components::*;
-pub use states::*;
 pub use types::*;
-pub use prelude::*;
 pub use vehicles::config::{MilitaryCivilian, RoadVehicleConfig};

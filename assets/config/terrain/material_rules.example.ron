@@ -22,7 +22,7 @@
             priority: 12,
         ),
         (
-            required: ["sand", "dry", "traversable"],
+            required: ["sand", "dry", "loose_surface"],
             forbidden: [],
             result: "sand_dry",
             priority: 8,

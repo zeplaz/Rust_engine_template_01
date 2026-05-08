@@ -1,6 +1,5 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 
-use crate::entities::prelude::*;
 use bevy::prelude::*;
 
 pub use crate::entities::entity::*;

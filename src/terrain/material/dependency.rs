@@ -9,6 +9,7 @@ use super::registry::MaterialRegistry;
 use super::rules::RuleSet;
 use super::tags::TagRegistry;
 use crate::terrain::biome::BiomeTuning;
+use crate::terrain::family::{hash_terrain_family_registry, TerrainFamilyRegistry};
 use crate::terrain::generation::terrain_noise::{NoiseSamplingTuning, TerrainNoiseProfile};
 use crate::terrain::generation::world_generator_enhanced::{RegionMethod, WorldGenParams};
 
@@ -23,6 +24,7 @@ pub fn hash_asset<T: Hash>(asset: &T) -> u64 {
 pub struct ChunkDependency {
     pub source_noise_id: u64,
     pub registry_hash: u64,
+    pub families_hash: u64,
     pub rules_hash: u64,
     pub tags_hash: u64,
     pub tuning_hash: u64,
@@ -175,6 +177,7 @@ pub fn compute_chunk_dependency(
     chunk_xy: IVec2,
     params: &WorldGenParams,
     reg: &MaterialRegistry,
+    families: &TerrainFamilyRegistry,
     rules: &RuleSet,
     tags: &TagRegistry,
 ) -> ChunkDependency {
@@ -182,6 +185,7 @@ pub fn compute_chunk_dependency(
     ChunkDependency {
         source_noise_id: source_noise_id_for_chunk(chunk_xy, p1),
         registry_hash: hash_material_registry(reg),
+        families_hash: hash_terrain_family_registry(families),
         rules_hash: hash_rule_set(rules),
         tags_hash: hash_tag_registry(tags),
         tuning_hash: hash_tuning_bucket(params),

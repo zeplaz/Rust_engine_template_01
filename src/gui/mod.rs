@@ -32,8 +32,6 @@ pub use logistics_focus::*;
 pub use in_game_hud::*;
 pub use logistics_targets_panel::*;
 pub use in_game_ui::*;
-pub use gui_assets::*;
-pub use gui_sets::*;
 pub use ui_windows::*;
 pub use agent_permissions_ui::*;
 pub use diagnostics_ui::*;

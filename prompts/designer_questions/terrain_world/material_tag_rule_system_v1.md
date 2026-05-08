@@ -3,7 +3,7 @@
 **Audience:** designers + engineers unifying the proposed material/tag/rule system with the existing biome / world-gen stack so there is **one** canonical chain from noise to render/sim — no parallel data models.
 
 **Paired implementation matrix:** [`../../matrix/terrain_biome/material_unification_matrix_v1.md`](../../matrix/terrain_biome/material_unification_matrix_v1.md)
-**Pair with:** [`composite_style_worldgen_v1.md`](composite_style_worldgen_v1.md) (layered fields + preview), [`chunks_streaming_v1.md`](chunks_streaming_v1.md), [`hydrology_v1.md`](hydrology_v1.md), [`tile_sprites_v1.md`](tile_sprites_v1.md).
+**Pair with:** [`composite_style_worldgen_v1.md`](composite_style_worldgen_v1.md) (layered fields + preview), [`chunks_streaming_v1.md`](chunks_streaming_v1.md), [`hydrology_v1.md`](hydrology_v1.md), [`tile_sprites_v1.md`](tile_sprites_v1.md), **[`ontology/README.md`](ontology/README.md)** (facts vs interpretations — vocabulary, mobility matrix, derived metrics).
 
 **Code touchpoints (verify with `rg`):**
 
@@ -145,6 +145,31 @@ pub fn resolve_material(
 - O(rules) per cell with rules pre-sorted (priority desc, file-index asc).
 - Optional memoization key `(family, tag_set, quantize8(weights))` for hot loops.
 - Fallback: registry-declared **family default**, never a silent `MaterialId(0)`.
+
+### 4.1 `properties` — namespaces (schema v2+)
+
+`MaterialDef.properties` is **opaque JSON** in code (`serde_json::Value`). **`material_registry.example.json` uses `schema_version: 2`** and **dot-separated namespaces** so mods, AI context, and migrations stay unambiguous.
+
+**Required namespace prefixes (v1 convention):**
+
+| Prefix | Meaning | Example keys |
+|:---|:---|:---|
+| `facts.*` | Stable substrate / material facts (strings or numbers) | `facts.surface`, `facts.hydrology`, `facts.rock_hardness` |
+| `sim.*` | Numeric knobs for simulation interpretation (not verdicts) | `sim.traction_mod`, `sim.water_retention`, `sim.erosion_rate` |
+| `render.*` | Presentation-only hints | *(reserved — e.g. tint weight)* |
+| `gen.*` | Generator / procedural authoring | *(reserved)* |
+| `mobility.*` | Authoring hints consumed by mobility profiles / cost assembly | *(reserved — prefer facts + rules first)* |
+| `build.*` | Structural / bearing hints for construction systems | `build.support_capacity` |
+| `warfare.*` | Exposure / cover hints for combat / recon | `warfare.concealment` |
+
+| Avoid | Instead |
+|:---|:---|
+| Unprefixed keys (`friction`, `hardness`, …) in **new** authoring | Prefer the table above; keep legacy only until migrated. |
+| `buildable`, `mineable` | **Interpretations**. Use fact **tags** (`mineral_rich`, `hard_surface`, …) and let systems decide. See [`ontology/fact_vocabulary_rulebook_v1.md`](ontology/fact_vocabulary_rulebook_v1.md). |
+
+**Code access (recommended):** Prefer **small `MaterialDef` helpers** (`sim_f32`, `facts_str`, `build_f32`, …) that **prefix the namespace** internally — avoid scattering raw `properties["sim.traction_mod"]` lookups (typo risk, migration pain, ambiguous AI context). Prompt examples in chat/docs are **illustrative**; evolve toward **typed / enum keys** when the schema stabilizes.
+
+**Derived metrics (not in `properties`):** chunk-local [`ChunkDerivedMetrics`](../../../src/terrain/generation/derived.rs) (`slope_grade`, …) — see [`ontology/derived_metric_pipeline_v1.md`](ontology/derived_metric_pipeline_v1.md).
 
 ---
 

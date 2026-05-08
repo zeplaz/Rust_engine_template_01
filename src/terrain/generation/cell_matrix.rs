@@ -2,8 +2,9 @@
 
 use bevy::prelude::{Component, UVec2};
 
-use crate::terrain::biome::{BiomeWeights, TerrainClass};
+use crate::terrain::biome::BiomeWeights;
 use crate::terrain::material::TagSet;
+use crate::terrain::family::{TerrainFamilyId, DEFAULT_TERRAIN_FAMILY_ID};
 
 /// SoA storage for one chunk’s worth of terrain fields + tags + biome outputs (pass pipeline fills these).
 #[derive(Component, Debug, Clone)]
@@ -13,7 +14,8 @@ pub struct ChunkCellMatrix {
     pub moisture: Vec<f32>,
     pub temperature: Vec<f32>,
     pub tags: Vec<TagSet>,
-    pub family: Vec<TerrainClass>,
+    /// Classified terrain **family** id — from [`TerrainFamilyRegistry`](crate::terrain::family::TerrainFamilyRegistry).
+    pub family: Vec<TerrainFamilyId>,
     pub weights: Vec<BiomeWeights>,
 }
 
@@ -26,7 +28,7 @@ impl ChunkCellMatrix {
             moisture: vec![0.0; n],
             temperature: vec![0.0; n],
             tags: vec![TagSet::default(); n],
-            family: vec![TerrainClass::Grassland; n],
+            family: vec![DEFAULT_TERRAIN_FAMILY_ID; n],
             weights: vec![BiomeWeights::default(); n],
         }
     }

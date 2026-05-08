@@ -108,13 +108,21 @@ pub const ISLAND_FALLOFF: &str =
     "Power on edge falloff (with island mode). Higher → steeper drop toward the map rim.";
 
 pub const PREVIEW_NONE: &str = "No false-color overlay on the preview.";
-pub const PREVIEW_HEIGHT: &str = "Color tiles by normalized height.";
-pub const PREVIEW_MOIST: &str = "Color tiles by moisture channel.";
-pub const PREVIEW_TEMP: &str = "Color tiles by temperature channel.";
-pub const PREVIEW_BIOME: &str = "Color tiles by classified terrain class.";
+pub const PREVIEW_HEIGHT: &str =
+    "Color tiles by normalized height — prefers [`ChunkCellMatrix::elevation`] when chunk data covers the tile; otherwise ECS tile height.";
+pub const PREVIEW_MOIST: &str =
+    "Color by moisture — prefers chunk matrix when present; otherwise ECS tile moisture.";
+pub const PREVIEW_TEMP: &str =
+    "Color by temperature — prefers chunk matrix when present; otherwise ECS tile temperature.";
+pub const PREVIEW_BIOME: &str =
+    "Color by material preview / family default — prefers chunk classified `family` when present; otherwise ECS terrain class.";
 pub const PREVIEW_REGIONS: &str = "Tint tiles by Voronoi region index.";
 pub const PREVIEW_TAG: &str =
     "Highlight tiles whose material tags intersect the checked tag pool (below).";
+pub const PREVIEW_SLOPE: &str =
+    "Chunk stitched slope_grade (derived metric). Uses materialized chunk data when available.";
+pub const PREVIEW_MOBILITY: &str =
+    "Movement hint under selected profile (facts + slope + material traction + dynamic mud overlay when sim has written it). Uses chunk tags/slope/family when present. Not written to terrain tags.";
 
 pub const TAG_POOL_ENTRY: &str =
     "If checked, this tag may be written in procedural passes; Tag preview only draws tiles carrying these tags.";

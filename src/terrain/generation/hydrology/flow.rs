@@ -150,12 +150,34 @@ fn d8_downstream(filled: &[f32], w: usize, h: usize) -> Vec<Option<usize>> {
     down
 }
 
-fn accumulate(downstream: &[Option<usize>], filled: &[f32], w: usize, h: usize) -> Vec<f32> {
+/// Per-cell runoff input into flow accumulation. Uniform when `moisture` is `None` or wrong length.
+/// Wet cells (high moisture / rainfall proxy) inject more water, shaping channel hierarchy.
+fn accumulation_inputs(moisture: Option<&[f32]>, n: usize) -> Vec<f32> {
+    let uniform = |i: usize| {
+        moisture
+            .and_then(|m| m.get(i).copied())
+            .map(|mv| {
+                let m = mv.clamp(0.0, 1.0);
+                // Dry ~0.12, wet ~1.35 — keeps arid Interiors from dominating catchments.
+                0.12 + m * 1.23
+            })
+            .unwrap_or(1.0)
+    };
+    (0..n).map(uniform).collect()
+}
+
+fn accumulate(
+    downstream: &[Option<usize>],
+    filled: &[f32],
+    w: usize,
+    h: usize,
+    moisture: Option<&[f32]>,
+) -> Vec<f32> {
     let n = w * h;
     let mut order: Vec<usize> = (0..n).collect();
     order.sort_by(|&a, &b| filled[b].total_cmp(&filled[a]));
 
-    let mut acc = vec![1.0f32; n];
+    let mut acc = accumulation_inputs(moisture, n);
     for &i in &order {
         if let Some(ds) = downstream[i] {
             acc[ds] += acc[i];
@@ -173,7 +195,7 @@ fn trace_downstream_path(
     river_mask: &[bool],
     down: &[Option<usize>],
     w: usize,
-    h: usize,
+    _h: usize,
     max_len: usize,
 ) -> Vec<(u32, u32)> {
     let mut path = Vec::new();
@@ -238,8 +260,8 @@ fn extract_river_traces(
 fn label_lakes(
     w: usize,
     h: usize,
-    dem: &[f32],
-    filled: &[f32],
+    _dem: &[f32],
+    _filled: &[f32],
     lake_mask: &[bool],
 ) -> Vec<LakeRegion> {
     let n = w * h;
@@ -281,12 +303,15 @@ fn label_lakes(
 }
 
 /// Full hydrology for a single rectangle (`dem.len() == width * height`).
+///
+/// When `moisture` matches the grid length, it scales per-cell runoff into accumulation (rainfall proxy).
 pub fn compute_hydrology_rect(
     width: u32,
     height: u32,
     dem: &[f32],
     params: &HydrologyParams,
     river_traces: u32,
+    moisture: Option<&[f32]>,
 ) -> HydrologyResult {
     let w = width as usize;
     let h = height as usize;
@@ -302,9 +327,11 @@ pub fn compute_hydrology_rect(
         };
     }
 
+    let moisture = moisture.filter(|m| m.len() == n);
+
     let filled = priority_flood_fill(dem, w, h);
     let down = d8_downstream(&filled, w, h);
-    let acc = accumulate(&down, &filled, w, h);
+    let acc = accumulate(&down, &filled, w, h, moisture);
     let mx = max_slice(&acc).max(1.0);
     let acc_th_by_max = params.river_acc_quantile * mx;
     let q = params.river_acc_quantile.clamp(0.0, 1.0);
@@ -361,11 +388,19 @@ pub fn compute_hydrology_world(
     width: u32,
     height: u32,
     height_grid: &[f32],
+    moisture_grid: Option<&[f32]>,
     params: &HydrologyParams,
     river_count: u32,
     lake_count: u32,
 ) -> HydrologyResult {
-    let mut r = compute_hydrology_rect(width, height, height_grid, params, river_count);
+    let mut r = compute_hydrology_rect(
+        width,
+        height,
+        height_grid,
+        params,
+        river_count,
+        moisture_grid,
+    );
     if lake_count == 0 {
         r.lakes.clear();
     } else if r.lakes.len() > lake_count as usize {
@@ -410,8 +445,8 @@ mod tests {
         let h = 8u32;
         let dem = plane_dem(w, h);
         let p = HydrologyParams::default();
-        let a = compute_hydrology_rect(w, h, &dem, &p, 2);
-        let b = compute_hydrology_rect(w, h, &dem, &p, 2);
+        let a = compute_hydrology_rect(w, h, &dem, &p, 2, None);
+        let b = compute_hydrology_rect(w, h, &dem, &p, 2, None);
         assert_eq!(a.accumulation, b.accumulation);
         assert_eq!(a.river_mask, b.river_mask);
         assert_eq!(a.lake_mask, b.lake_mask);
@@ -438,7 +473,7 @@ mod tests {
         let h = 12u32;
         let dem = plane_dem(w, h);
         let p = HydrologyParams::default();
-        let r = compute_hydrology_rect(w, h, &dem, &p, 3);
+        let r = compute_hydrology_rect(w, h, &dem, &p, 3, None);
         let river_cells = r.river_mask.iter().filter(|x| **x).count();
         assert!(river_cells > 0, "expected some high-accumulation channels");
         assert!(r.rivers.len() <= 3);

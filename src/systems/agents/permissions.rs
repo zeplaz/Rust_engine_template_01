@@ -1,7 +1,6 @@
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
-use std::time::Duration;
 
 use crate::idgen::EntityId;
 
@@ -237,7 +236,7 @@ impl AgentPermissions {
     }
     
     /// Grant a permission to this agent
-    pub fn grant_permission(&mut self, grant: PermissionGrant, granting_agent_id: EntityId) {
+    pub fn grant_permission(&mut self, grant: PermissionGrant, _granting_agent_id: EntityId) {
         // Store the grant by domain
         self.permissions.insert(grant.domain, grant.clone());
         

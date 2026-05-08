@@ -1,59 +1,63 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "materials": [
     {
       "name": "water_deep",
       "family": "DeepWater",
       "tags": ["water", "fluid"],
-      "properties": {},
+      "properties": {
+        "facts.hydrology": "deep_water"
+      },
       "preview_color": [20, 40, 90, 255]
     },
     {
       "name": "water_shallow",
       "family": "ShallowWater",
       "tags": ["water", "fluid"],
-      "properties": {},
+      "properties": {
+        "facts.hydrology": "shallow_water"
+      },
       "preview_color": [40, 90, 140, 255]
     },
     {
       "name": "loam_wet",
       "family": "Grassland",
-      "tags": ["soil", "wet", "fertile", "traversable"],
+      "tags": ["soil", "wet", "fertile", "hard_surface"],
       "properties": {
-        "friction": 0.8,
-        "water_retention": 0.9,
-        "buildable": true
+        "facts.surface": "firm",
+        "sim.traction_mod": 0.8,
+        "sim.water_retention": 0.9
       },
       "preview_color": [90, 160, 70, 255]
     },
     {
       "name": "basalt_dense",
       "family": "Stone",
-      "tags": ["rock", "hard", "dry", "non_traversable"],
+      "tags": ["rock", "hard", "dry", "hard_bedrock", "rocky", "mineral_rich"],
       "properties": {
-        "hardness": 0.95,
-        "mineable": true
+        "facts.rock_hardness": 0.95
       },
       "preview_color": [55, 55, 62, 255]
     },
     {
       "name": "silt_marsh",
       "family": "Swamp",
-      "tags": ["soil", "wet", "soft", "traversable"],
+      "tags": ["soil", "wet", "soft", "marsh"],
       "properties": {
-        "friction": 0.5,
-        "water_retention": 1.0,
-        "buildable": false
+        "facts.surface": "soft",
+        "facts.hydrology": "waterlogged",
+        "sim.traction_mod": 0.5,
+        "sim.water_retention": 1.0
       },
       "preview_color": [70, 100, 65, 255]
     },
     {
       "name": "sand_dry",
       "family": "Beach",
-      "tags": ["sand", "dry", "traversable"],
+      "tags": ["sand", "dry", "loose_surface"],
       "properties": {
-        "friction": 0.65,
-        "buildable": true
+        "facts.surface": "loose",
+        "sim.traction_mod": 0.65
       },
       "preview_color": [210, 190, 120, 255]
     },
@@ -68,28 +72,36 @@
       "name": "turf_forest",
       "family": "Forest",
       "tags": ["vegetation"],
-      "properties": {},
+      "properties": {
+        "warfare.concealment": 0.35
+      },
       "preview_color": [40, 110, 55, 255]
     },
     {
       "name": "turf_dense_forest",
       "family": "DenseForest",
       "tags": ["vegetation"],
-      "properties": {},
+      "properties": {
+        "warfare.concealment": 0.75
+      },
       "preview_color": [25, 80, 40, 255]
     },
     {
       "name": "granite_peak",
       "family": "Mountain",
       "tags": ["rock"],
-      "properties": {},
+      "properties": {
+        "facts.rock_hardness": 0.88
+      },
       "preview_color": [100, 95, 90, 255]
     },
     {
       "name": "snow_peak",
       "family": "SnowCappedMountain",
       "tags": ["snow", "rock"],
-      "properties": {},
+      "properties": {
+        "sim.traction_mod": 0.55
+      },
       "preview_color": [230, 240, 250, 255]
     },
     {
@@ -103,28 +115,37 @@
       "name": "cliff_face",
       "family": "Cliff",
       "tags": ["rock"],
-      "properties": {},
+      "properties": {
+        "build.support_capacity": 0.25
+      },
       "preview_color": [80, 78, 75, 255]
     },
     {
       "name": "concrete_default",
       "family": "Concrete",
       "tags": ["built"],
-      "properties": {},
+      "properties": {
+        "build.support_capacity": 0.85,
+        "warfare.concealment": 0.05
+      },
       "preview_color": [140, 140, 140, 255]
     },
     {
       "name": "dirt_track",
       "family": "Dirt",
       "tags": ["soil"],
-      "properties": {},
+      "properties": {
+        "sim.traction_mod": 0.75
+      },
       "preview_color": [120, 90, 60, 255]
     },
     {
       "name": "snow_field",
       "family": "Snow",
       "tags": ["cold"],
-      "properties": {},
+      "properties": {
+        "sim.traction_mod": 0.5
+      },
       "preview_color": [240, 245, 250, 255]
     }
   ]

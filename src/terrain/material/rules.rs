@@ -4,13 +4,13 @@ use bevy::asset::{io::Reader, Asset, AssetLoader, LoadContext};
 use bevy::reflect::TypePath;
 use serde::Deserialize;
 
-use crate::terrain::biome::TerrainClass;
+use crate::terrain::family::{TerrainFamilyId, TerrainFamilyRegistry};
 
 #[derive(Clone, Debug)]
 pub struct MaterialRule {
     pub required: Vec<String>,
     pub forbidden: Vec<String>,
-    pub family_filter: Option<TerrainClass>,
+    pub family_filter: Option<TerrainFamilyId>,
     pub result_name: String,
     pub priority: i32,
     pub rule_index: u32,
@@ -23,7 +23,7 @@ pub struct RuleSet {
 }
 
 #[derive(Deserialize)]
-struct RuleSetFile {
+pub(crate) struct RuleSetFile {
     schema_version: u32,
     rules: Vec<RuleEntryFile>,
 }
@@ -33,44 +33,58 @@ struct RuleEntryFile {
     required: Vec<String>,
     forbidden: Vec<String>,
     #[serde(default)]
-    family_filter: Option<TerrainClass>,
+    family_filter: Option<String>,
     #[serde(alias = "result")]
     result_name: String,
     priority: i32,
 }
 
+fn default_family_registry_path() -> std::path::PathBuf {
+    std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("assets/config/terrain/terrain_family_registry.example.json")
+}
+
 impl RuleSet {
     pub fn load_from_ron(path: &str) -> std::io::Result<Self> {
+        let families = TerrainFamilyRegistry::load_from_json(
+            default_family_registry_path().to_str().unwrap(),
+        )?;
         let s = std::fs::read_to_string(path)?;
         let file: RuleSetFile = ron::de::from_str(&s).map_err(|e| {
             std::io::Error::new(std::io::ErrorKind::InvalidData, format!("RON: {e}"))
         })?;
-        Ok(Self::from_file(file))
+        Self::from_file(file, &families).map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e))
     }
 
-    pub(crate) fn from_file(file: RuleSetFile) -> Self {
+    pub(crate) fn from_file(file: RuleSetFile, families: &TerrainFamilyRegistry) -> Result<Self, String> {
         let mut rules: Vec<MaterialRule> = file
             .rules
             .into_iter()
             .enumerate()
-            .map(|(i, r)| MaterialRule {
-                required: r.required,
-                forbidden: r.forbidden,
-                family_filter: r.family_filter,
-                result_name: r.result_name,
-                priority: r.priority,
-                rule_index: i as u32,
+            .map(|(i, r)| {
+                let family_filter = match r.family_filter {
+                    None => None,
+                    Some(ref name) => Some(families.require_id(name)?),
+                };
+                Ok(MaterialRule {
+                    required: r.required,
+                    forbidden: r.forbidden,
+                    family_filter,
+                    result_name: r.result_name,
+                    priority: r.priority,
+                    rule_index: i as u32,
+                })
             })
-            .collect();
+            .collect::<Result<_, String>>()?;
         rules.sort_by(|a, b| {
             b.priority
                 .cmp(&a.priority)
                 .then_with(|| a.rule_index.cmp(&b.rule_index))
         });
-        Self {
+        Ok(Self {
             schema_version: file.schema_version,
             rules,
-        }
+        })
     }
 }
 
@@ -103,8 +117,8 @@ impl std::error::Error for RuleSetLoaderError {
 }
 
 impl From<std::io::Error> for RuleSetLoaderError {
-    fn from(value: std::io::Error) -> Self {
-        Self::Io(value)
+    fn from(e: std::io::Error) -> Self {
+        Self::Io(e)
     }
 }
 
@@ -124,7 +138,13 @@ impl AssetLoader for RuleSetLoader {
         let s = std::str::from_utf8(&bytes).map_err(|e| RuleSetLoaderError::Ron(e.to_string()))?;
         let file: RuleSetFile = ron::de::from_str(s)
             .map_err(|e| RuleSetLoaderError::Ron(format!("RON: {e}")))?;
-        Ok(RuleSet::from_file(file))
+        let families = TerrainFamilyRegistry::load_from_json(
+            default_family_registry_path().to_str().ok_or_else(|| {
+                RuleSetLoaderError::Ron("family registry path not utf-8".into())
+            })?,
+        )
+        .map_err(|e| RuleSetLoaderError::Ron(e.to_string()))?;
+        RuleSet::from_file(file, &families).map_err(RuleSetLoaderError::Ron)
     }
 
     fn extensions(&self) -> &[&str] {

@@ -98,16 +98,16 @@ pub enum InGameEditorState {
     Rail,
 }
 
-pub struct EnigneState {
+pub struct EngineState {
     starting_up: bool,
     quit: bool,
     error: bool,
     running: bool,
 }
 
-impl Default for EnigneState {
+impl Default for EngineState {
     fn default() -> Self {
-        EnigneState {
+        EngineState {
             starting_up: true,
             quit: false,
             error: false,

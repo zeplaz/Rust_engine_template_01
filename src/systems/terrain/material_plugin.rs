@@ -1,5 +1,7 @@
 //! Terrain material registries + chunk materialization (material unification U5 / U7).
 
+use std::collections::HashMap;
+
 use bevy::asset::{AssetEvent, AssetEventSystems};
 use bevy::prelude::*;
 
@@ -9,7 +11,11 @@ use crate::terrain::generation::passes::{
 #[cfg(feature = "dev_tools")]
 use crate::terrain::generation::passes::materialize_traced;
 use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
-use crate::terrain::generation::{Chunk, ChunkCellMatrix};
+use crate::terrain::generation::{Chunk, ChunkCellMatrix, ChunkDerivedMetrics, stitch_chunk_slope_grades};
+use crate::terrain::{
+    decay_dynamic_terrain_overlay, stub_accumulate_overlay_from_chunk_fields, DynamicTerrainOverlay,
+    TerrainFamilyRegistry, TerrainFamilyRegistryLoader,
+};
 use crate::terrain::material::{
     compute_chunk_dependency,
     hash_pass1_bucket,
@@ -32,24 +38,36 @@ use crate::terrain::material::{
     DIRTY_PASS6,
     DIRTY_PASSES_2_THROUGH_6,
 };
+use crate::terrain::mobility::{MobilityProfileRegistry, MobilityProfileRegistryLoader};
 #[cfg(feature = "dev_tools")]
 use crate::terrain::material::RuleTrace;
 
 /// Strong handles for the dev/example terrain registries loaded at startup.
 #[derive(Resource, Clone)]
 pub struct TerrainRegistriesHandles {
+    pub terrain_families: Handle<TerrainFamilyRegistry>,
     pub material_registry: Handle<MaterialRegistry>,
     pub tag_registry: Handle<TagRegistry>,
     pub rule_set: Handle<RuleSet>,
+    pub mobility_profiles: Handle<MobilityProfileRegistry>,
 }
 
 fn terrain_registries_startup(
     mut commands: Commands,
+    mut family_assets: ResMut<Assets<TerrainFamilyRegistry>>,
     mut materials: ResMut<Assets<MaterialRegistry>>,
     mut tags: ResMut<Assets<TagRegistry>>,
     mut rules: ResMut<Assets<RuleSet>>,
+    mut mobility: ResMut<Assets<MobilityProfileRegistry>>,
 ) {
     let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    let fam = TerrainFamilyRegistry::load_from_json(
+        root
+            .join("assets/config/terrain/terrain_family_registry.example.json")
+            .to_str()
+            .unwrap(),
+    )
+    .expect("load example terrain family registry");
     let mat = MaterialRegistry::load_from_json(
         root
             .join("assets/config/terrain/material_registry.example.json")
@@ -71,23 +89,40 @@ fn terrain_registries_startup(
             .unwrap(),
     )
     .expect("load example material rules");
+    let mob = MobilityProfileRegistry::load_from_ron(
+        root
+            .join("assets/config/terrain/mobility_profiles.example.ron")
+            .to_str()
+            .unwrap(),
+    )
+    .expect("load example mobility profiles");
+    let terrain_families = family_assets.add(fam);
     let material_registry = materials.add(mat);
     let tag_registry = tags.add(tag);
     let rule_set = rules.add(rule);
+    let mobility_profiles = mobility.add(mob);
     commands.insert_resource(TerrainRegistriesHandles {
+        terrain_families,
         material_registry,
         tag_registry,
         rule_set,
+        mobility_profiles,
     });
 }
 
 fn mark_chunks_dirty_on_asset_change(
+    mut fam: MessageReader<AssetEvent<TerrainFamilyRegistry>>,
     mut mat: MessageReader<AssetEvent<MaterialRegistry>>,
     mut tag: MessageReader<AssetEvent<TagRegistry>>,
     mut rule: MessageReader<AssetEvent<RuleSet>>,
     mut q: Query<&mut ChunkDirty, With<ChunkDependency>>,
 ) {
     let mut mask = 0u8;
+    for e in fam.read() {
+        if matches!(e, AssetEvent::Added { .. } | AssetEvent::Modified { .. }) {
+            mask |= DIRTY_PASSES_2_THROUGH_6;
+        }
+    }
     for e in mat.read() {
         if matches!(e, AssetEvent::Added { .. } | AssetEvent::Modified { .. }) {
             mask |= crate::terrain::material::dependency::DIRTY_PASS6;
@@ -146,12 +181,13 @@ fn run_passes_from(
     chunk_coord: IVec2,
     params: &WorldGenParams,
     tag_reg: &TagRegistry,
+    families: &TerrainFamilyRegistry,
 ) {
     for p in low..5 {
         match p {
             0 => fill_fields(matrix, chunk_coord, params, None),
             1 => apply_threshold_tags(matrix, &params.biome_tuning, tag_reg, &params.tag_pool),
-            2 => classify_cells(matrix, &params.biome_tuning, tag_reg),
+            2 => classify_cells(matrix, &params.biome_tuning, tag_reg, families),
             3 => apply_hydrology_chunk(matrix, &params.biome_tuning, tag_reg, &params.tag_pool),
             4 => apply_agent_overlay(matrix),
             _ => {}
@@ -159,8 +195,30 @@ fn run_passes_from(
     }
 }
 
+/// Cross-chunk slope stitching: chunk boundaries are partitions only; edge cells sample neighbor elevations.
+fn stitch_chunk_derived_slopes(
+    mut q: Query<
+        (&Chunk, &ChunkCellMatrix, &mut ChunkDerivedMetrics),
+        With<MaterializedChunk>,
+    >,
+) {
+    let map: HashMap<IVec2, (UVec2, Vec<f32>)> = q
+        .iter()
+        .map(|(c, m, _)| (c.coord, (m.size, m.elevation.clone())))
+        .collect();
+    if map.is_empty() {
+        return;
+    }
+    for (chunk, matrix, mut derived) in q.iter_mut() {
+        derived.size = matrix.size;
+        derived.slope_grade = stitch_chunk_slope_grades(chunk.coord, matrix, &map);
+        derived.sync_stub_layers_to_slope_len();
+    }
+}
+
 fn rebuild_dirty_chunks(
     handles: Res<TerrainRegistriesHandles>,
+    family_assets: Res<Assets<TerrainFamilyRegistry>>,
     materials: Res<Assets<MaterialRegistry>>,
     tag_assets: Res<Assets<TagRegistry>>,
     rule_assets: Res<Assets<RuleSet>>,
@@ -177,6 +235,9 @@ fn rebuild_dirty_chunks(
         With<MaterializedChunk>,
     >,
 ) {
+    let Some(families) = family_assets.get(&handles.terrain_families) else {
+        return;
+    };
     let Some(reg) = materials.get(&handles.material_registry) else {
         return;
     };
@@ -200,35 +261,40 @@ fn rebuild_dirty_chunks(
             chunk.coord,
             &params,
             tag_reg,
+            families,
         );
         #[cfg(feature = "dev_tools")]
         {
             let (data, trace) = materialize_traced(&matrix, rule_set, reg, tag_reg);
+            let derived = ChunkDerivedMetrics::from_chunk_matrix(&matrix);
             commands.entity(entity).insert(MaterializedChunk::from(data.clone()));
             commands
                 .entity(entity)
                 .insert(MaterializedResources {
                     ids: data.materials.clone(),
                 });
-            commands.entity(entity).insert(trace);
+            commands.entity(entity).insert((trace, derived));
         }
         #[cfg(not(feature = "dev_tools"))]
         {
             let data = materialize(&matrix, rule_set, reg, tag_reg);
+            let derived = ChunkDerivedMetrics::from_chunk_matrix(&matrix);
             commands.entity(entity).insert(MaterializedChunk::from(data.clone()));
             commands
                 .entity(entity)
                 .insert(MaterializedResources {
                     ids: data.materials.clone(),
                 });
+            commands.entity(entity).insert(derived);
         }
-        *dep = compute_chunk_dependency(chunk.coord, &params, reg, rule_set, tag_reg);
+        *dep = compute_chunk_dependency(chunk.coord, &params, reg, families, rule_set, tag_reg);
         dirty.passes = 0;
     }
 }
 
 pub fn materialize_chunks(
     handles: Res<TerrainRegistriesHandles>,
+    family_assets: Res<Assets<TerrainFamilyRegistry>>,
     materials: Res<Assets<MaterialRegistry>>,
     tag_assets: Res<Assets<TagRegistry>>,
     rule_assets: Res<Assets<RuleSet>>,
@@ -239,6 +305,9 @@ pub fn materialize_chunks(
         Without<MaterializedChunk>,
     >,
 ) {
+    let Some(families) = family_assets.get(&handles.terrain_families) else {
+        return;
+    };
     let Some(reg) = materials.get(&handles.material_registry) else {
         return;
     };
@@ -252,14 +321,15 @@ pub fn materialize_chunks(
     for (entity, chunk, mut matrix) in q.iter_mut() {
         fill_fields(&mut matrix, chunk.coord, &params, None);
         apply_threshold_tags(&mut matrix, &params.biome_tuning, tag_reg, &params.tag_pool);
-        classify_cells(&mut matrix, &params.biome_tuning, tag_reg);
+        classify_cells(&mut matrix, &params.biome_tuning, tag_reg, families);
         apply_hydrology_chunk(&mut matrix, &params.biome_tuning, tag_reg, &params.tag_pool);
         apply_agent_overlay(&mut matrix);
         #[cfg(feature = "dev_tools")]
         let (data, trace) = materialize_traced(&matrix, rule_set, reg, tag_reg);
         #[cfg(not(feature = "dev_tools"))]
         let data = materialize(&matrix, rule_set, reg, tag_reg);
-        let deps = compute_chunk_dependency(chunk.coord, &params, reg, rule_set, tag_reg);
+        let derived = ChunkDerivedMetrics::from_chunk_matrix(&matrix);
+        let deps = compute_chunk_dependency(chunk.coord, &params, reg, families, rule_set, tag_reg);
         let res = MaterializedResources {
             ids: data.materials.clone(),
         };
@@ -269,6 +339,7 @@ pub fn materialize_chunks(
             res,
             deps,
             ChunkDirty::default(),
+            derived,
         ));
         #[cfg(feature = "dev_tools")]
         commands.entity(entity).insert(trace);
@@ -279,7 +350,12 @@ pub struct MaterialUnificationPlugin;
 
 impl Plugin for MaterialUnificationPlugin {
     fn build(&self, app: &mut App) {
-        app.init_asset::<MaterialRegistry>()
+        app.init_resource::<DynamicTerrainOverlay>()
+            .init_asset::<TerrainFamilyRegistry>()
+            .register_asset_loader(TerrainFamilyRegistryLoader::default())
+            .init_asset::<MaterialRegistry>()
+            .init_asset::<MobilityProfileRegistry>()
+            .register_asset_loader(MobilityProfileRegistryLoader::default())
             .init_asset::<TagRegistry>()
             .init_asset::<RuleSet>()
             .init_asset::<WorldProfile>()
@@ -291,11 +367,20 @@ impl Plugin for MaterialUnificationPlugin {
             .add_systems(Startup, terrain_registries_startup)
             .add_systems(Update, materialize_chunks)
             .add_systems(
+                Update,
+                (
+                    stub_accumulate_overlay_from_chunk_fields,
+                    decay_dynamic_terrain_overlay,
+                )
+                    .chain(),
+            )
+            .add_systems(
                 PostUpdate,
                 (
                     mark_chunks_dirty_on_asset_change,
                     mark_chunks_dirty_on_world_gen_params_change,
                     rebuild_dirty_chunks,
+                    stitch_chunk_derived_slopes,
                 )
                     .chain()
                     .after(AssetEventSystems),
@@ -341,6 +426,7 @@ mod tests {
                 ChunkDependency {
                     source_noise_id: 0,
                     registry_hash: 0,
+                    families_hash: 0,
                     rules_hash: 0,
                     tags_hash: 0,
                     tuning_hash: 0,
@@ -398,7 +484,7 @@ mod tests {
         app.update();
 
         {
-            let mut world = app.world_mut();
+            let world = app.world_mut();
             let mut ent = world.entity_mut(e);
             ent.get_mut::<ChunkCellMatrix>().unwrap().elevation[0] = 999.0;
             ent.get_mut::<ChunkDirty>().unwrap().passes = DIRTY_PASS6;
@@ -413,7 +499,7 @@ mod tests {
         }
 
         {
-            let mut world = app.world_mut();
+            let world = app.world_mut();
             world
                 .entity_mut(e)
                 .get_mut::<ChunkDirty>()

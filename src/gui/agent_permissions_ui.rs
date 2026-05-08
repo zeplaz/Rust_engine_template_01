@@ -1,6 +1,5 @@
 use bevy::prelude::*;
 use bevy_egui::{egui, EguiContexts, EguiPrimaryContextPass};
-use std::collections::HashMap;
 
 use crate::idgen::EntityId;
 use crate::systems::agents::permissions::{
@@ -55,7 +54,7 @@ pub fn permissions_ui_system(
     mut ui_state: ResMut<PermissionsUiState>,
     agent_manager: Res<AgentManager>,
     agent_query: Query<(&Agent, &AgentPermissions)>,
-    faction_colors: Res<FactionColors>,
+    _faction_colors: Res<FactionColors>,
     local_player_agent: Option<Res<LocalPlayerAgent>>, // Would need to be set up elsewhere
     game_time: Res<crate::systems::agents::permissions::GameTime>,
     mut grant_events: MessageWriter<PermissionGrantEvent>,
@@ -161,7 +160,7 @@ pub fn permissions_ui_system(
                             ui.horizontal(|ui| {
                                 ui.selectable_value(&mut ui_state.filter_domain, None, "All Permissions");
                                 
-                                let domains = [
+                                let _domains = [
                                     PermissionDomain::EconomicPolicy,
                                     PermissionDomain::TradePolicy,
                                     PermissionDomain::ResourceManagement,

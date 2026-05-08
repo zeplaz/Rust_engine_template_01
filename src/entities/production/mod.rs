@@ -7,8 +7,6 @@ pub mod power;
 // - prod_comps.rs
 // These are kept as migration reference for subsequent incremental passes.
 
-pub use aluminum::*;
-pub use concrete::*;
-pub use core::*;
-pub use power::*;
+// Intentionally no `pub use submodule::*` — each subsystem has its own `components` / `systems`;
+// merging them here caused ambiguous glob re-exports at `production::`.
 

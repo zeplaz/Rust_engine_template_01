@@ -7,13 +7,14 @@ pub mod production;
 pub mod sim_control;
 pub mod terrain;
 pub mod transport;
+pub mod weather;
 
 // Public exports
 pub use agents::*;
-pub use collision::*;
 pub use damage::*;
 pub use navigation::*;
 pub use production::*;
 pub use sim_control::*;
 pub use terrain::*;
 pub use transport::*;
+pub use weather::*;

@@ -1,5 +1,8 @@
 // Processor Alpha Dine Game Engine
 // Main library file
+//
+// Package id `proc_A_dine01` is intentionally non–snake_case; renaming would churn imports/Cargo.
+#![allow(non_snake_case)]
 
 // Core modules
 pub mod core;
