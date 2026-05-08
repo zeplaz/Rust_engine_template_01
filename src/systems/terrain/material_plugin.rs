@@ -13,9 +13,10 @@ use crate::terrain::generation::passes::materialize_traced;
 use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
 use crate::terrain::generation::{Chunk, ChunkCellMatrix, ChunkDerivedMetrics, stitch_chunk_slope_grades};
 use crate::terrain::{
-    decay_dynamic_terrain_overlay, stub_accumulate_overlay_from_chunk_fields, DynamicTerrainOverlay,
-    TerrainFamilyRegistry, TerrainFamilyRegistryLoader,
+    decay_dynamic_terrain_overlay, stub_accumulate_overlay_from_chunk_fields, ChunkCellKey,
+    DynamicTerrainOverlay, TerrainFamilyRegistry, TerrainFamilyRegistryLoader,
 };
+use crate::systems::weather::ChunkWeather;
 use crate::terrain::material::{
     compute_chunk_dependency,
     hash_pass1_bucket,
@@ -346,6 +347,60 @@ pub fn materialize_chunks(
     }
 }
 
+/// Mud/snow overlay reads [`ChunkWeather`] (rain/snow depth) after field accumulation (S2 → dynamic overlay).
+fn apply_chunk_weather_to_dynamic_overlay(
+    time: Option<Res<Time>>,
+    mut overlay: ResMut<DynamicTerrainOverlay>,
+    chunks: Query<(&Chunk, &ChunkCellMatrix, Option<&ChunkWeather>)>,
+) {
+    let Some(time) = time else {
+        return;
+    };
+    let dt = time.delta_secs().clamp(0.0, 0.1);
+    if dt <= 0.0 {
+        return;
+    }
+    for (chunk, matrix, w_opt) in chunks.iter() {
+        let Some(w) = w_opt else {
+            continue;
+        };
+        let dim_x = matrix.size.x;
+        let dim_y = matrix.size.y;
+        let expected = (dim_x * dim_y) as usize;
+        if matrix.moisture.len() != expected {
+            continue;
+        }
+        let boost_mud = 1.0 + 0.55 * w.rain_intensity + 0.2 * w.snow_depth.min(1.0);
+        let boost_snow = 1.0 + 0.45 * w.snow_depth + 0.12 * w.rain_intensity;
+        let rain_mud = w.rain_intensity * 0.014 * dt;
+        let fall_snow = w.snow_depth * 0.011 * dt;
+        for y in 0..dim_y {
+            for x in 0..dim_x {
+                let i = matrix.idx(x, y);
+                let key = ChunkCellKey::new(chunk.coord, i as u32);
+                if boost_mud > 1.001 {
+                    if let Some(v) = overlay.mud.get_mut(&key) {
+                        *v = (*v * boost_mud).min(2.0);
+                    }
+                }
+                if boost_snow > 1.001 {
+                    if let Some(v) = overlay.snow.get_mut(&key) {
+                        *v = (*v * boost_snow).min(2.0);
+                    }
+                }
+                if rain_mud > 1e-7 {
+                    let e = overlay.mud.entry(key).or_insert(0.0);
+                    *e = (*e + rain_mud).min(2.0);
+                }
+                if fall_snow > 1e-7 {
+                    let e = overlay.snow.entry(key).or_insert(0.0);
+                    *e = (*e + fall_snow).min(2.0);
+                }
+            }
+        }
+    }
+}
+
 pub struct MaterialUnificationPlugin;
 
 impl Plugin for MaterialUnificationPlugin {
@@ -370,6 +425,7 @@ impl Plugin for MaterialUnificationPlugin {
                 Update,
                 (
                     stub_accumulate_overlay_from_chunk_fields,
+                    apply_chunk_weather_to_dynamic_overlay,
                     decay_dynamic_terrain_overlay,
                 )
                     .chain(),

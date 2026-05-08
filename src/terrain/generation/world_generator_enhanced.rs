@@ -1,3 +1,12 @@
+//! Enhanced procedural world generation: parallel height/moisture/temperature sampling, Voronoi **region**
+//! hierarchy, hydrology, river/lake spawn pipelines.
+//!
+//! **Polygon / graph-first design** (macro regions, semantic terrain, coarse sim layers) is documented in
+//! [`voronoi_polygon_worlds_notes`](../../../prompts/guides/voronoi_polygon_worlds_notes.md.md).
+//! Voronoi site count here still maps tiles → region entities; optional [`WorldGenParams::strategic_field_coupling`]
+//! applies [`MacroStrategicKind`](super::polygon_world_semantics::MacroStrategicKind) nudges to moisture/temperature
+//! after noise sampling (structure-informed fields without replacing the fractal core).
+
 use std::collections::HashMap;
 use std::time::Instant;
 
@@ -28,6 +37,10 @@ use crate::terrain::generation::world_gen_diagnostics::{
 };
 use crate::terrain::material::TagSet;
 
+pub use crate::terrain::generation::polygon_world_semantics::{
+    apply_strategic_field_nudge, classify_strategic_tile, MacroStrategicKind,
+};
+
 // World generation parameters structure
 #[derive(Resource, Clone)]
 pub struct WorldGenParams {
@@ -42,7 +55,9 @@ pub struct WorldGenParams {
     pub num_regions: u32,
     pub region_method: RegionMethod,
     pub region_iterations: u32,  // For centroidal relaxation
-    
+
+    /// 0–~0.35: nudge moisture/temperature from [`MacroStrategicKind`] after noise; 0 still **classifies** every tile.
+    pub strategic_field_coupling: f32,
     // Terrain / noise
     /// Multiplier on **world tile indices** into height noise (higher → higher spatial frequency → more features per map).
     pub noise_scale: f32,
@@ -98,6 +113,7 @@ impl Default for WorldGenParams {
             num_regions: 24,
             region_method: RegionMethod::Centroidal,
             region_iterations: 3,
+            strategic_field_coupling: 0.0,
             noise_scale: 0.024,
             noise_octaves: 6,
             noise_lacunarity: 2.0,
@@ -186,6 +202,7 @@ struct TileSpawnData {
     temperature: f32,
     terrain_family: TerrainFamilyId,
     region_index: usize,
+    strategic_kind: MacroStrategicKind,
 }
 
 /// Raster produced on a background thread (`rayon` per row), then consumed for batched ECS spawns.
@@ -230,6 +247,7 @@ fn compute_tiling_parallel(
             temperature: 0.0,
             terrain_family: DEFAULT_TERRAIN_FAMILY_ID,
             region_index: 0,
+            strategic_kind: MacroStrategicKind::default(),
         };
         grid_len
     ];
@@ -253,6 +271,16 @@ fn compute_tiling_parallel(
                     tuning,
                 );
                 row_heights[x] = hv;
+                let mut mv = mv;
+                let mut tv = tv;
+                let strategic_kind =
+                    classify_strategic_tile(hv, mv, tv, params.mountain_threshold);
+                apply_strategic_field_nudge(
+                    strategic_kind,
+                    params.strategic_field_coupling,
+                    &mut mv,
+                    &mut tv,
+                );
                 row_moist[x] = mv;
                 let terrain_family =
                     classify_biome(hv, mv, tv, &params.biome_tuning, families).terrain_family;
@@ -261,6 +289,7 @@ fn compute_tiling_parallel(
                     temperature: tv,
                     terrain_family,
                     region_index: closest_region_index,
+                    strategic_kind,
                 };
             }
         });
@@ -806,6 +835,7 @@ fn world_gen_pipeline_tick(
                     Moisture(cell.moisture),
                     Temperature(cell.temperature),
                     TerrainType(cell.terrain_family),
+                    cell.strategic_kind,
                     Name::new(format!("Tile ({}, {})", x, y)),
                 ))
                 .id();

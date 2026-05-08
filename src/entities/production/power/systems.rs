@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 
 use crate::systems::sim_control::SimControlState;
+use crate::systems::weather::GlobalRenewableWeatherFactors;
 use crate::entities::production::power::capabilities::attach_power_plant_capabilities;
 use crate::entities::production::power::components::{ElectricalComponent, PowerPlant};
 use crate::entities::production::power::failure_modes::{
@@ -21,6 +22,7 @@ impl Plugin for PowerRuntimePlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<GridConnectionRadiusSq>()
             .init_resource::<PlantDefinitionRegistry>()
+            .init_resource::<GlobalRenewableWeatherFactors>()
             .add_message::<GridOverloadEvent>()
             .add_systems(
                 Update,

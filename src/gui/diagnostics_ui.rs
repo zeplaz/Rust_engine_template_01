@@ -13,7 +13,9 @@ use bevy::prelude::*;
 use bevy_egui::{egui, EguiContexts, EguiPrimaryContextPass};
 
 use super::input_bindings::InputBindings;
+use crate::render::WeatherFireFieldDebugOverlay;
 use crate::systems::sim_control::{SimControlState, SimTick};
+use crate::systems::weather::{WeatherPrecipVisualSample, WeatherVisualSettings};
 
 /// UI visibility + cheap rolling FPS estimate.
 #[derive(Resource, Debug, Clone)]
@@ -70,6 +72,9 @@ pub fn diagnostics_ui_system(
     mut ctrl: ResMut<SimControlState>,
     tick: Res<SimTick>,
     entities: Query<Entity>,
+    mut wx: ResMut<WeatherVisualSettings>,
+    wx_sample: Res<WeatherPrecipVisualSample>,
+    mut gpu_field_debug: ResMut<WeatherFireFieldDebugOverlay>,
 ) -> Result {
     if !state.visible {
         return Ok(());
@@ -101,6 +106,31 @@ pub fn diagnostics_ui_system(
                 }
             });
             ui.add(egui::Slider::new(&mut ctrl.speed, 0.0..=8.0).text("speed"));
+
+            ui.separator();
+            ui.heading("GPU weather / fire field (compute)");
+            ui.checkbox(&mut gpu_field_debug.show, "Debug sprite (128² Rgba32Float field, bottom-left)");
+            ui.small("CPU uploads mean rain/snow/fog + mean chunk surface fire heat; WGSL relaxes a ping-pong texture. Visual-only.");
+
+            ui.separator();
+            ui.heading("Weather FX (preview)");
+            ui.checkbox(&mut wx.enabled, "Enable weather VFX");
+            ui.add_enabled_ui(wx.enabled, |ui| {
+                ui.checkbox(&mut wx.overlay, "Screen overlay (rain/fog tint)");
+                ui.checkbox(&mut wx.particles, "Precip particles (streaks / flakes)");
+                ui.add(
+                    egui::Slider::new(&mut wx.max_precip_particles, 32usize..=512usize)
+                        .text("Particle pool"),
+                );
+            });
+            if wx_sample.chunk_count == 0 {
+                ui.small("No ChunkWeather yet — open map with materialized chunks or run a scene that spawns chunks.");
+            } else {
+                ui.small(format!(
+                    "Mean precip sample ({} chunks): rain {:.2}, snow {:.2}, fog {:.2}",
+                    wx_sample.chunk_count, wx_sample.rain, wx_sample.snow, wx_sample.fog
+                ));
+            }
 
             // TODO: tabs — chunk streamer, production manifest summary, faction roster.
         });

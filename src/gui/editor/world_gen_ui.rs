@@ -207,8 +207,9 @@ pub fn world_gen_ui_system(
                 .default_open(true)
                 .show(ui, |ui| {
                     ui.small(
-                        "Regions only group tiles under region entities — they do not shape height/biomes. \
-                         More regions = smaller Voronoi cells for logic, not bumpier terrain.",
+                        "Regions group tiles under Voronoi sites (strategic partitioning — see \
+                         `prompts/guides/voronoi_polygon_worlds_notes.md.md`). \
+                         They do not set height; optional **strategic semantics** below bias moisture/temperature slightly.",
                     );
                     tt(
                         ui.add(egui::Slider::new(&mut world_gen_params.num_regions, 4..=64).text("Number of Regions")),
@@ -250,7 +251,15 @@ pub fn world_gen_ui_system(
                             hints::REGION_ITERATIONS,
                         );
                     }
-                    
+
+                    tt(
+                        ui.add(
+                            egui::Slider::new(&mut world_gen_params.strategic_field_coupling, 0.0..=0.35)
+                                .text("Strategic field blend (moisture/temp)"),
+                        ),
+                        hints::STRATEGIC_FIELD_COUPLING,
+                    );
+
                     ui.add_space(5.0);
                 });
             

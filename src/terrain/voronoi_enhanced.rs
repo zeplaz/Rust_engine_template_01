@@ -1,3 +1,8 @@
+//! Euclidean / weighted / centroidal Voronoi helpers for macro region masks.
+//!
+//! Design context (graph-first worlds, Delaunay/Voronoi duality, rivers as graphs):
+//! `prompts/guides/voronoi_polygon_worlds_notes.md.md`.
+
 use bevy::prelude::*;
 use rand::Rng;
 

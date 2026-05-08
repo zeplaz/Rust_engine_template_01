@@ -9,6 +9,7 @@ pub mod passes;
 pub mod hydrology;
 pub mod terrain_noise;
 pub mod tuning_io;
+pub mod polygon_world_semantics;
 pub mod world_generator_enhanced;
 pub mod world_gen_diagnostics;
 mod world_generation_plugin;
