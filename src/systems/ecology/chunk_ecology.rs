@@ -9,7 +9,7 @@ use crate::systems::chunk_sim_lod::ChunkSimLod;
 use crate::systems::fire::ChunkSurfaceFire;
 use crate::systems::sim_control::SimControlState;
 use crate::systems::weather::ChunkWeather;
-use crate::terrain::biome::{BiomeWeights, TerrainSurfaceMix};
+use crate::terrain::biome::{terrain_mix_from_biome_weights, BiomeWeights};
 use crate::terrain::ecology::estimate_ecological_suitability;
 use crate::terrain::generation::{Chunk, ChunkCellMatrix};
 
@@ -104,7 +104,7 @@ pub(crate) fn integrate_chunk_ecology_step(
         None => (0.35, 0.5, BiomeWeights::default()),
     };
 
-    let mix = TerrainSurfaceMix::default();
+    let mix = terrain_mix_from_biome_weights(bw);
     let suit = estimate_ecological_suitability(bw, mix, mean_m, mean_t);
     let target_biomass = (suit.flora_density * 0.55 + suit.flower_density * 0.15
         + suit.crop_yield_factor * 0.15)
