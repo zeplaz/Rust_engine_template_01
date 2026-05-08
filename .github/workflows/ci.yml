@@ -1,0 +1,39 @@
+# CI: Rust crate + Python asset-tools guardrails (ResourceType parity).
+name: CI
+
+on:
+  push:
+  pull_request:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: cargo check (default features)
+        run: cargo check -p proc_A_dine01
+
+      - name: cargo check (bevy_tilemap_adapter)
+        run: cargo check -p proc_A_dine01 --features bevy_tilemap_adapter
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: ResourceType vs RESOURCE_TYPES parity
+        run: python src/utils/asset_tools/scripts/check_resource_parity.py
+
+      - name: py_compile (asset_tools config + key pages)
+        run: |
+          python -m py_compile src/utils/asset_tools/src/config/asset_config.py
+          python -m py_compile src/utils/asset_tools/src/config/content_constants.py
+          python -m py_compile src/utils/asset_tools/src/pages/vehicle_page.py
+          python -m py_compile src/utils/asset_tools/src/pages/power_page.py
