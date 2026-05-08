@@ -29,9 +29,9 @@ use bevy_egui::egui::{self, Sense};
 use bevy_egui::{EguiContexts, EguiPrimaryContextPass, EguiTextureHandle};
 
 use crate::engine::{BaseState, InGameEditorState, MainMenuState, WorldGenFlowState};
-use crate::gui::editor::world_preview::preview_biome_rgba_for_tile;
+use crate::gui::editor::world_preview::{preview_biome_rgba_for_tile, terrain_family_preview_rgba};
 use crate::systems::terrain::TerrainRegistriesHandles;
-use crate::terrain::biome::TerrainClass;
+use crate::terrain::family::{TerrainFamilyId, DEFAULT_TERRAIN_FAMILY_ID};
 use crate::terrain::generation::world_generator_enhanced::{
     Height, TerrainType, TileMarker, WorldGenParams, WorldMarker,
 };
@@ -90,7 +90,9 @@ pub struct RoadMarkerUndoFrame {
 }
 
 impl RoadMarkerUndoFrame {
-    fn capture(q: &Query<(&MapEditorRoadMarkerV1, &Transform)>) -> Self {
+    fn capture(
+        q: &Query<(&MapEditorRoadMarkerV1, &Transform), Without<TileMarker>>,
+    ) -> Self {
         let mut rows: Vec<_> = q
             .iter()
             .map(|(m, t)| (m.placement_seq, m.tile_x, m.tile_z, t.translation))
@@ -145,7 +147,14 @@ pub struct MapEditorRoadMarkerV1 {
     pub placement_seq: u32,
 }
 
-fn height_at_tile(tiles: &Query<(&Transform, &Height), With<TileMarker>>, tx: u32, tz: u32) -> f32 {
+fn height_at_tile(
+    tiles: &Query<
+        (&Transform, &Height),
+        (With<TileMarker>, Without<MapEditorRoadMarkerV1>),
+    >,
+    tx: u32,
+    tz: u32,
+) -> f32 {
     for (tf, h) in tiles.iter() {
         if tf.translation.x.round() as u32 == tx && tf.translation.z.round() as u32 == tz {
             return h.0;
@@ -245,8 +254,8 @@ pub struct MapEditorTool {
     pub kind: MapEditorToolKind,
     pub brush_radius: f32,
     pub terrain_paint: MapEditorTerrainPaint,
-    /// Biome used when `terrain_paint == Biome` (manual override only).
-    pub paint_biome: TerrainClass,
+    /// Biome family (manual override only) — dense id into [`TerrainFamilyRegistry`].
+    pub paint_biome: TerrainFamilyId,
 }
 
 impl Default for MapEditorTool {
@@ -255,7 +264,7 @@ impl Default for MapEditorTool {
             kind: MapEditorToolKind::default(),
             brush_radius: 3.0,
             terrain_paint: MapEditorTerrainPaint::default(),
-            paint_biome: TerrainClass::Grassland,
+            paint_biome: DEFAULT_TERRAIN_FAMILY_ID,
         }
     }
 }
@@ -390,6 +399,7 @@ fn map_editor_raster_minimap(
 
     let mat_slices: Vec<(IVec2, bevy::math::UVec2, &[MaterialId])> = vec![];
     let reg_opt = materials.get(&handles.material_registry);
+    let fam_opt = Some(crate::terrain::default_terrain_families());
 
     for (transform, terrain) in tile_q.iter() {
         let x = transform.translation.x.round() as isize;
@@ -407,8 +417,15 @@ fn map_editor_raster_minimap(
             continue;
         }
         let color = match reg_opt {
-            Some(reg) => preview_biome_rgba_for_tile(x as u32, y as u32, &terrain.0, &mat_slices, reg),
-            None => editor_fallback_biome_rgba(&terrain.0),
+            Some(reg) => preview_biome_rgba_for_tile(
+                x as u32,
+                y as u32,
+                terrain.0,
+                &mat_slices,
+                reg,
+                fam_opt,
+            ),
+            None => terrain_family_preview_rgba(fam_opt, terrain.0),
         };
         data[pixel_index] = color[0];
         data[pixel_index + 1] = color[1];
@@ -434,55 +451,18 @@ fn map_editor_raster_minimap(
     }
 }
 
-fn editor_fallback_biome_rgba(biome: &TerrainClass) -> [u8; 4] {
-    match biome {
-        TerrainClass::DeepWater => [0, 0, 128, 255],
-        TerrainClass::ShallowWater => [0, 0, 255, 255],
-        TerrainClass::Beach => [240, 240, 64, 255],
-        TerrainClass::Desert => [255, 255, 128, 255],
-        TerrainClass::Grassland => [0, 255, 0, 255],
-        TerrainClass::Forest => [0, 128, 0, 255],
-        TerrainClass::DenseForest => [0, 64, 0, 255],
-        TerrainClass::Mountain => [128, 128, 128, 255],
-        TerrainClass::SnowCappedMountain => [255, 255, 255, 255],
-        TerrainClass::Tundra => [192, 192, 255, 255],
-        TerrainClass::Swamp => [64, 64, 0, 255],
-        TerrainClass::Cliff => [90, 90, 90, 255],
-        TerrainClass::Concrete => [170, 170, 170, 255],
-        TerrainClass::Dirt => [139, 69, 19, 255],
-        TerrainClass::Snow => [250, 250, 250, 255],
-        TerrainClass::Stone => [120, 120, 120, 255],
-    }
-}
-
-fn terrain_class_combo(ui: &mut egui::Ui, current: &mut TerrainClass) {
+fn terrain_family_combo(ui: &mut egui::Ui, current: &mut TerrainFamilyId) {
+    let reg = crate::terrain::default_terrain_families();
+    let sel = reg.def(*current).map(|d| d.name.as_str()).unwrap_or("?");
     egui::ComboBox::from_id_salt("map_editor_biome_pick")
-        .selected_text(format!("{current:?}"))
+        .selected_text(sel)
         .show_ui(ui, |ui| {
-            for c in ALL_TERRAIN_CLASSES {
-                ui.selectable_value(current, c, format!("{c:?}"));
+            for (i, def) in reg.families.iter().enumerate() {
+                let id = TerrainFamilyId(i as u16);
+                ui.selectable_value(current, id, def.name.as_str());
             }
         });
 }
-
-const ALL_TERRAIN_CLASSES: [TerrainClass; 16] = [
-    TerrainClass::DeepWater,
-    TerrainClass::ShallowWater,
-    TerrainClass::Beach,
-    TerrainClass::Desert,
-    TerrainClass::Grassland,
-    TerrainClass::Forest,
-    TerrainClass::DenseForest,
-    TerrainClass::Mountain,
-    TerrainClass::SnowCappedMountain,
-    TerrainClass::Tundra,
-    TerrainClass::Swamp,
-    TerrainClass::Cliff,
-    TerrainClass::Concrete,
-    TerrainClass::Dirt,
-    TerrainClass::Snow,
-    TerrainClass::Stone,
-];
 
 fn apply_brush_disk(
     tool: &MapEditorTool,
@@ -490,7 +470,7 @@ fn apply_brush_disk(
     center_y: u32,
     tiles: &mut Query<
         (&mut Transform, &mut Height, &mut TerrainType),
-        With<TileMarker>,
+        (With<TileMarker>, Without<MapEditorRoadMarkerV1>),
     >,
     height_delta_opt: Option<f32>,
 ) {
@@ -534,12 +514,18 @@ fn map_editor_minimap_window(
     tool: Res<MapEditorTool>,
     world_roots: Query<Entity, With<WorldMarker>>,
     road_entities: Query<(Entity, &MapEditorRoadMarkerV1)>,
-    road_tf: Query<(&MapEditorRoadMarkerV1, &Transform)>,
+    road_tf: Query<(&MapEditorRoadMarkerV1, &Transform), Without<TileMarker>>,
     mut road_undo: ResMut<MapEditorRoadUndoStack>,
     mut road_placement: ResMut<MapEditorRoadPlacementSeq>,
     mut tile_queries: ParamSet<(
-        Query<(&mut Transform, &mut Height, &mut TerrainType), With<TileMarker>>,
-        Query<(&Transform, &Height), With<TileMarker>>,
+        Query<
+            (&mut Transform, &mut Height, &mut TerrainType),
+            (With<TileMarker>, Without<MapEditorRoadMarkerV1>),
+        >,
+        Query<
+            (&Transform, &Height),
+            (With<TileMarker>, Without<MapEditorRoadMarkerV1>),
+        >,
     )>,
 ) -> Result {
     let texture_id = contexts.add_image(EguiTextureHandle::Strong(map_tex.texture.clone()));
@@ -910,7 +896,7 @@ fn map_editor_palette_system(
                     );
                 });
                 if tool.terrain_paint == MapEditorTerrainPaint::Biome {
-                    terrain_class_combo(ui, &mut tool.paint_biome);
+                    terrain_family_combo(ui, &mut tool.paint_biome);
                 }
             } else if tool.kind == MapEditorToolKind::Road {
                 ui.add_space(6.0);

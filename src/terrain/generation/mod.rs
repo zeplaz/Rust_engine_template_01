@@ -1,6 +1,7 @@
 // Terrain generation systems
 pub mod chunk;
 pub mod cell_matrix;
+pub mod derived;
 mod geo_plugin;
 mod world_generator;
 mod bevy_terrain_gen;
@@ -16,6 +17,7 @@ pub use passes::{materialize, MaterializedChunkData};
 
 // Public exports
 pub use cell_matrix::ChunkCellMatrix;
+pub use derived::{compute_slope_grade, stitch_all_chunk_slope_grades, stitch_chunk_slope_grades, ChunkDerivedMetrics};
 pub use chunk::Chunk;
 pub use geo_plugin::*;
 pub use world_generator::*;

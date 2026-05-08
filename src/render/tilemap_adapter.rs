@@ -6,10 +6,15 @@ use bevy::prelude::*;
 use bevy_ecs_tilemap::prelude::*;
 
 use crate::gui::editor::world_gen_ui::{PreviewMode, WorldGenUiState};
-use crate::terrain::biome::TerrainClass;
+use crate::systems::terrain::TerrainRegistriesHandles;
+use crate::terrain::family::TerrainFamilyId;
 use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
-use crate::terrain::generation::ChunkCellMatrix;
-use crate::terrain::material::{MaterialId, MaterializedChunk, MaterializedResources, TagSet};
+use crate::terrain::generation::{Chunk, ChunkCellMatrix, ChunkDerivedMetrics};
+use crate::terrain::material::{
+    MaterialId, MaterialRegistry, MaterializedChunk, MaterializedResources, TagRegistry, TagSet,
+};
+use crate::terrain::mobility::{evaluate_tile, MobilityProfile, MobilityProfileRegistry, MovementHint};
+use crate::terrain::{ChunkCellKey, DynamicTerrainOverlay};
 
 /// Three tilemaps per chunk: terrain (z=0), overlay preview (z=10), resources (z=20).
 #[derive(Component, Clone, Copy, Debug)]
@@ -123,35 +128,37 @@ fn sync_material_indices_inner(
     }
 }
 
-fn terrain_class_discriminant(c: TerrainClass) -> u32 {
-    match c {
-        TerrainClass::DeepWater => 0,
-        TerrainClass::ShallowWater => 1,
-        TerrainClass::Beach => 2,
-        TerrainClass::Desert => 3,
-        TerrainClass::Grassland => 4,
-        TerrainClass::Forest => 5,
-        TerrainClass::DenseForest => 6,
-        TerrainClass::Mountain => 7,
-        TerrainClass::SnowCappedMountain => 8,
-        TerrainClass::Tundra => 9,
-        TerrainClass::Swamp => 10,
-        TerrainClass::Cliff => 11,
-        TerrainClass::Concrete => 12,
-        TerrainClass::Dirt => 13,
-        TerrainClass::Snow => 14,
-        TerrainClass::Stone => 15,
+fn terrain_family_overlay_index(id: TerrainFamilyId) -> u32 {
+    id.0 as u32
+}
+
+fn movement_hint_tile_index(hint: &MovementHint) -> u32 {
+    if hint.blocked {
+        255
+    } else {
+        let c = ((hint.cost_mul.clamp(1.0, 5.0) - 1.0) / 4.0 * 200.0
+            + hint.stuck_risk.clamp(0.0, 1.0) * 54.0)
+            .min(254.0);
+        c as u32
     }
 }
 
-fn overlay_index_for_cell(matrix: &ChunkCellMatrix, x: u32, y: u32, mode: PreviewMode, tag_pool: &TagSet) -> u32 {
+fn overlay_index_for_cell(
+    matrix: &ChunkCellMatrix,
+    x: u32,
+    y: u32,
+    mode: PreviewMode,
+    tag_pool: &TagSet,
+    derived_slope: Option<f32>,
+    mobility_hint: Option<&MovementHint>,
+) -> u32 {
     let i = matrix.idx(x, y);
     match mode {
         PreviewMode::None => 0,
         PreviewMode::Height => (matrix.elevation[i].clamp(0.0, 1.0) * 255.0) as u32,
         PreviewMode::Moisture => (matrix.moisture[i].clamp(0.0, 1.0) * 255.0) as u32,
         PreviewMode::Temperature => (matrix.temperature[i].clamp(0.0, 1.0) * 255.0) as u32,
-        PreviewMode::Biome => terrain_class_discriminant(matrix.family[i]),
+        PreviewMode::Biome => terrain_family_overlay_index(matrix.family[i]),
         PreviewMode::Regions => 0,
         PreviewMode::Tag => {
             if matrix.tags[i].intersects(tag_pool) {
@@ -160,50 +167,156 @@ fn overlay_index_for_cell(matrix: &ChunkCellMatrix, x: u32, y: u32, mode: Previe
                 0
             }
         }
+        PreviewMode::DerivedSlope => {
+            let s = derived_slope.unwrap_or(0.0);
+            (s.clamp(0.0, 1.0) * 255.0) as u32
+        }
+        PreviewMode::Mobility => mobility_hint.map(movement_hint_tile_index).unwrap_or(0),
     }
+}
+
+fn mobility_overlay_context<'a>(
+    handles: Option<&'a TerrainRegistriesHandles>,
+    tag_assets: Option<&'a Assets<TagRegistry>>,
+    mobility_assets: Option<&'a Assets<MobilityProfileRegistry>>,
+    material_assets: Option<&'a Assets<MaterialRegistry>>,
+    ui: &WorldGenUiState,
+) -> Option<(
+    &'a TagRegistry,
+    &'a MobilityProfile,
+    Option<&'a MaterialRegistry>,
+)> {
+    if ui.preview_mode != PreviewMode::Mobility {
+        return None;
+    }
+    let handles = handles?;
+    let tag_reg = tag_assets?.get(&handles.tag_registry)?;
+    let mob_reg = mobility_assets?.get(&handles.mobility_profiles)?;
+    if mob_reg.profiles.is_empty() {
+        return None;
+    }
+    let idx = ui
+        .mobility_profile_index
+        .min(mob_reg.profiles.len() - 1);
+    let mat_reg = material_assets.and_then(|a| a.get(&handles.material_registry));
+    Some((tag_reg, &mob_reg.profiles[idx], mat_reg))
 }
 
 fn sync_overlay_layer_changed(
     mut commands: Commands,
     chunks: Query<
-        (&ChunkCellMatrix, &ChunkTilemaps),
-        Or<(Changed<ChunkCellMatrix>, Changed<ChunkTilemaps>)>,
+        (
+            &Chunk,
+            &ChunkCellMatrix,
+            Option<&ChunkDerivedMetrics>,
+            &MaterializedChunk,
+            &ChunkTilemaps,
+        ),
+        Or<(
+            Changed<ChunkCellMatrix>,
+            Changed<ChunkTilemaps>,
+            Changed<ChunkDerivedMetrics>,
+            Changed<MaterializedChunk>,
+        )>,
     >,
     ui: Res<WorldGenUiState>,
     params: Res<WorldGenParams>,
     storages: Query<&TileStorage>,
+    overlay: Res<DynamicTerrainOverlay>,
+    handles: Option<Res<TerrainRegistriesHandles>>,
+    tag_assets: Option<Res<Assets<TagRegistry>>>,
+    mobility_assets: Option<Res<Assets<MobilityProfileRegistry>>>,
+    material_assets: Option<Res<Assets<MaterialRegistry>>>,
 ) {
     let mode = ui.preview_mode;
     let pool = params.tag_pool;
-    for (matrix, maps) in chunks.iter() {
-        apply_overlay_indices(&mut commands, matrix, maps.overlay, mode, &pool, &storages);
+    let mob_ctx = mobility_overlay_context(
+        handles.as_ref().map(|r| &**r),
+        tag_assets.as_ref().map(|r| &**r),
+        mobility_assets.as_ref().map(|r| &**r),
+        material_assets.as_ref().map(|r| &**r),
+        &ui,
+    );
+    for (chunk, matrix, derived, mat_chunk, maps) in chunks.iter() {
+        apply_overlay_indices(
+            &mut commands,
+            chunk,
+            &overlay,
+            matrix,
+            derived,
+            mat_chunk,
+            maps.overlay,
+            mode,
+            &pool,
+            &storages,
+            mob_ctx,
+        );
     }
 }
 
 fn sync_overlay_on_preview_change(
     mut commands: Commands,
-    chunks: Query<(&ChunkCellMatrix, &ChunkTilemaps)>,
+    chunks: Query<(
+        &Chunk,
+        &ChunkCellMatrix,
+        Option<&ChunkDerivedMetrics>,
+        &MaterializedChunk,
+        &ChunkTilemaps,
+    )>,
     ui: Res<WorldGenUiState>,
     params: Res<WorldGenParams>,
     storages: Query<&TileStorage>,
+    overlay: Res<DynamicTerrainOverlay>,
+    handles: Option<Res<TerrainRegistriesHandles>>,
+    tag_assets: Option<Res<Assets<TagRegistry>>>,
+    mobility_assets: Option<Res<Assets<MobilityProfileRegistry>>>,
+    material_assets: Option<Res<Assets<MaterialRegistry>>>,
 ) {
     if !ui.is_changed() && !params.is_changed() {
         return;
     }
     let mode = ui.preview_mode;
     let pool = params.tag_pool;
-    for (matrix, maps) in chunks.iter() {
-        apply_overlay_indices(&mut commands, matrix, maps.overlay, mode, &pool, &storages);
+    let mob_ctx = mobility_overlay_context(
+        handles.as_ref().map(|r| &**r),
+        tag_assets.as_ref().map(|r| &**r),
+        mobility_assets.as_ref().map(|r| &**r),
+        material_assets.as_ref().map(|r| &**r),
+        &ui,
+    );
+    for (chunk, matrix, derived, mat_chunk, maps) in chunks.iter() {
+        apply_overlay_indices(
+            &mut commands,
+            chunk,
+            &overlay,
+            matrix,
+            derived,
+            mat_chunk,
+            maps.overlay,
+            mode,
+            &pool,
+            &storages,
+            mob_ctx,
+        );
     }
 }
 
 fn apply_overlay_indices(
     commands: &mut Commands,
+    chunk: &Chunk,
+    overlay: &DynamicTerrainOverlay,
     matrix: &ChunkCellMatrix,
+    derived: Option<&ChunkDerivedMetrics>,
+    mat_chunk: &MaterializedChunk,
     tilemap: Entity,
     mode: PreviewMode,
     tag_pool: &TagSet,
     storages: &Query<&TileStorage>,
+    mobility_ctx: Option<(
+        &TagRegistry,
+        &MobilityProfile,
+        Option<&MaterialRegistry>,
+    )>,
 ) {
     let Ok(storage) = storages.get(tilemap) else {
         return;
@@ -213,7 +326,45 @@ fn apply_overlay_indices(
     }
     for y in 0..matrix.size.y {
         for x in 0..matrix.size.x {
-            let idx = overlay_index_for_cell(matrix, x, y, mode, tag_pool);
+            let cell_i = matrix.idx(x, y);
+            let slope_cell = derived.and_then(|d| d.slope_grade.get(cell_i).copied());
+            let mobility_hint = mobility_ctx.map(|(tr, pr, mreg)| {
+                let mut scale = mreg
+                    .and_then(|reg| {
+                        mat_chunk.materials.get(cell_i).and_then(|mid| {
+                            reg.materials
+                                .get(mid.0 as usize)
+                                .and_then(|d| d.sim_f32("traction_mod"))
+                        })
+                    })
+                    .unwrap_or(1.0);
+                let key = ChunkCellKey::new(chunk.coord, cell_i as u32);
+                let mud_boost = overlay
+                    .mud
+                    .get(&key)
+                    .copied()
+                    .filter(|&m| m > 1e-6)
+                    .map(|mud| 1.0 + mud * 0.25)
+                    .unwrap_or(1.0);
+                scale *= mud_boost;
+                evaluate_tile(
+                    pr,
+                    &matrix.tags[cell_i],
+                    slope_cell.unwrap_or(0.0),
+                    1.0,
+                    tr,
+                    scale,
+                )
+            });
+            let idx = overlay_index_for_cell(
+                matrix,
+                x,
+                y,
+                mode,
+                tag_pool,
+                slope_cell,
+                mobility_hint.as_ref(),
+            );
             let pos = TilePos { x, y };
             let Some(tile_e) = storage.get(&pos) else {
                 continue;
@@ -285,7 +436,8 @@ pub struct TilemapAdapterPlugin;
 
 impl Plugin for TilemapAdapterPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins(TilemapPlugin)
+        app.init_resource::<DynamicTerrainOverlay>()
+            .add_plugins(TilemapPlugin)
             .init_resource::<TilemapLayerVisibility>()
             .add_systems(
                 Update,
@@ -304,7 +456,7 @@ impl Plugin for TilemapAdapterPlugin {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use bevy::prelude::MinimalPlugins;
+    use bevy::prelude::{IVec2, MinimalPlugins, UVec2};
 
     fn setup_tilemaps_entity(mut commands: Commands) {
         let map_size = TilemapSize { x: 2, y: 1 };
@@ -329,6 +481,9 @@ mod tests {
             .insert((tile_storage, Transform::from_xyz(0.0, 0.0, 0.0)));
 
         commands.spawn((
+            Chunk {
+                coord: IVec2::ZERO,
+            },
             ChunkCellMatrix::new(UVec2::new(2, 1)),
             MaterializedChunk {
                 size: UVec2::new(2, 1),

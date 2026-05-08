@@ -127,7 +127,9 @@
 
 71. **Determinism contract:** agent may change **rules/thresholds files** only; **seed** + **world revision id** unchanged ⇒ same world — enforce how?
 72. **Audit log:** append-only JSONL of agent edits — ship with saves or dev-only?
-73. **Metric feedback loop** (% traversable, fragmentation, connectivity): which metrics are **real** in-engine vs stub for future?
+73. **Metric feedback loop** (fragmentation, connectivity, mobility-under-profile): which metrics are **real** in-engine vs stub for future?
+    - **Binding context:** Terrain **facts** = `TagSet` + materials; **derived (persist-friendly)** = [`ChunkDerivedMetrics`](../../../src/terrain/generation/derived.rs) (today `slope_grade` + border stitch; more fields stub per [`derived_metric_pipeline_v1.md`](ontology/derived_metric_pipeline_v1.md)); **interpretation** = [`evaluate_tile`](../../../src/terrain/mobility/mod.rs) + `MobilityProfileRegistry` (**no** writes to tags); **dynamic / transient** = overlay layer (design: [`refactor_execution_plan_v1.md`](ontology/refactor_execution_plan_v1.md) tranche **B**) — not new permanent verdict tags.
+    - **Do not** define "percent traversable" as a universal material boolean; use **profile-specific** clearance or nav graph metrics (see [`llm_world_evolution_reference_outline_v1.md`](llm_world_evolution_reference_outline_v1.md) metric table + AI constraints).?
 74. **Safety caps:** max rules injected per session; max priority delta 📎?
 
 ## Debug, packs, profiles

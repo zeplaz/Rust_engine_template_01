@@ -7,7 +7,6 @@ pub mod shaders;
 pub mod tilemap_adapter;
 
 // Public exports
-pub use base_cam::*;
 pub use light::*;
 
 #[cfg(feature = "bevy_tilemap_adapter")]

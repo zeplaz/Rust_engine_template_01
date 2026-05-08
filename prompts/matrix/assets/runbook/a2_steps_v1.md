@@ -8,7 +8,7 @@
 
 ### A2-S01 `material_registry.example.json`
 
-**Goal:** Top-level `schema_version` (number) and `materials` array present; each material has `name`, `family`, `tags`, `preview_color`.
+**Goal:** Top-level `schema_version` (number) and `materials` array present; each material has `name`, `family`, `tags`, `preview_color`; **`properties` keys use namespace convention** when non-empty (see `material_tag_rule_system_v1.md` §4.1).
 
 **Anchor reads:** [`../bevy_asset_config_migration_matrix_v1.md`](../bevy_asset_config_migration_matrix_v1.md) Terrain table · example file.
 
@@ -85,7 +85,7 @@
 
 | Step | Result |
 |:---|:---|
-| A2-S01 | Pass — `schema_version` 1; four materials with `name`, `family`, `tags`, `preview_color`. |
+| A2-S01 | Pass — `schema_version` **2**; namespaced `properties` (`facts.*`, `sim.*`, …); materials retain `name`, `family`, `tags`, `preview_color`. |
 | A2-S02 | Pass — `schema_version` 1; fourteen tags with `name`, `category`. |
 | A2-S03 | Pass — `schema_version` 1; four rules with `required`, `forbidden`, `result`, `priority`. |
 | A2-S04 | Pass — Bevy matrix footnote under Terrain table; **Loader / Asset** remains **Pending** until U3-S04. |

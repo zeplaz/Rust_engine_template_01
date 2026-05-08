@@ -12,7 +12,8 @@ use crate::terrain::{
     power_voronoi_diagram_generation,
     voronoi_diagram_generation,
 };
-use crate::terrain::biome::{classify_biome, BiomeBucket, BiomeWeights, BiomeTuning, TerrainClass, TerrainSurfaceMix};
+use crate::terrain::biome::{BiomeBucket, BiomeWeights, BiomeTuning, TerrainSurfaceMix};
+use crate::terrain::family::{classify_biome, default_terrain_families, TerrainFamilyId, TerrainFamilyRegistry, DEFAULT_TERRAIN_FAMILY_ID};
 use crate::terrain::ecology::estimate_ecological_suitability;
 use crate::terrain::generation::terrain_noise::{
     build_fbm_perlin, build_height_noise, sample_height_field, NoiseSamplingTuning, TerrainNoiseProfile,
@@ -156,16 +157,16 @@ pub struct WorldData {
     pub biome_weights_map: Vec<BiomeWeights>,
     /// Canonical terrain substrate blend per tile for simulation effects.
     pub terrain_mix_map: Vec<TerrainSurfaceMix>,
-    /// Dominant terrain label derived from biome/height fields.
-    pub biome_map: Vec<TerrainClass>,
+    /// Dominant terrain **family** id per tile (registry row index).
+    pub biome_map: Vec<TerrainFamilyId>,
     /// Derived ecological utility fields for gameplay/economy simulation hooks.
     pub flora_density_map: Vec<f32>,
     pub crop_yield_map: Vec<f32>,
     pub flower_density_map: Vec<f32>,
 }
-/// Legacy alias kept to preserve old references; use `TerrainClass` in new code.
-#[deprecated(note = "Use terrain::biome::TerrainClass")]
-pub type BiomeType = TerrainClass;
+/// Legacy alias — use [`TerrainFamilyId`].
+#[deprecated(note = "Use terrain::family::TerrainFamilyId")]
+pub type BiomeType = TerrainFamilyId;
 
 // Events
 #[derive(Message)]
@@ -409,6 +410,7 @@ fn generate_world_data(params: WorldGenParams) -> WorldData {
     let width = params.width;
     let height = params.height;
     let total_size = (width * height) as usize;
+    let families = default_terrain_families();
 
     // Initialize maps
     let mut height_map = vec![0.0; total_size];
@@ -417,7 +419,7 @@ fn generate_world_data(params: WorldGenParams) -> WorldData {
     let mut region_map = vec![0; total_size];
     let mut biome_weights_map = vec![BiomeWeights::default(); total_size];
     let mut terrain_mix_map = vec![TerrainSurfaceMix::default(); total_size];
-    let mut biome_map = vec![TerrainClass::Grassland; total_size];
+    let mut biome_map = vec![DEFAULT_TERRAIN_FAMILY_ID; total_size];
     let mut flora_density_map = vec![0.0; total_size];
     let mut crop_yield_map = vec![0.0; total_size];
     let mut flower_density_map = vec![0.0; total_size];
@@ -575,8 +577,8 @@ fn generate_world_data(params: WorldGenParams) -> WorldData {
 
             // Canonical data boundary: deterministic, serializable classification.
             let classification =
-                classify_biome(height_val, moisture_val, temp_val, &params.biome_tuning);
-            biome_map[idx] = classification.terrain_class;
+                classify_biome(height_val, moisture_val, temp_val, &params.biome_tuning, families);
+            biome_map[idx] = classification.terrain_family;
             biome_weights_map[idx] = classification.biome_weights;
             let terrain_mix = TerrainSurfaceMix::default();
             terrain_mix_map[idx] = terrain_mix;
@@ -654,7 +656,7 @@ pub fn export_world_data_binary(world_data: &WorldData, path: &str) -> Result<()
 
 // Convert world data to a format compatible with the main game engine
 pub fn convert_to_game_engine_format(world_data: &WorldData) -> GameWorldData {
-    // Here we would convert the world data to the format expected by the main game engine
+    let families = default_terrain_families();
     GameWorldData {
         width: world_data.params.width,
         height: world_data.params.height,
@@ -667,7 +669,7 @@ pub fn convert_to_game_engine_format(world_data: &WorldData) -> GameWorldData {
                         (idx / world_data.params.width as usize) as f32
                     ),
                     height,
-                    biome: convert_biome_to_game_biome(biome),
+                    biome: convert_biome_to_game_biome(families, biome),
                     region_id: world_data.region_map[idx],
                 }
             })
@@ -690,6 +692,8 @@ pub struct GameTileData {
     pub region_id: u32,
 }
 
-fn convert_biome_to_game_biome(biome: TerrainClass) -> BiomeBucket {
-    biome.into()
+fn convert_biome_to_game_biome(families: &TerrainFamilyRegistry, biome: TerrainFamilyId) -> BiomeBucket {
+    families
+        .biome_bucket(biome)
+        .unwrap_or(BiomeBucket::Plains)
 }

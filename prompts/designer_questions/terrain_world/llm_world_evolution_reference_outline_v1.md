@@ -4,7 +4,8 @@
 
 - [`material_tag_rule_system_v1.md`](material_tag_rule_system_v1.md) (designer narrative; §§7–8 cover hot-reload + agent overlay)
 - [`../../matrix/terrain_biome/material_unification_matrix_v1.md`](../../matrix/terrain_biome/material_unification_matrix_v1.md) (especially §§7, 13, 16, 17 — hot-reload, invalidation, performance, LLM/agent policy)
-- [`implementation_questions_v1.md`](implementation_questions_v1.md) §§47, 71–78 (agent authority, determinism, audit log, packs)
+- [`implementation_questions_v1.md`](implementation_questions_v1.md) §§47, **71–78** (agent authority, determinism, audit log, packs) — **§73** ties real metrics to derived / mobility / overlays
+- [`ontology/refactor_execution_plan_v1.md`](ontology/refactor_execution_plan_v1.md) — Phase **6.5** LLM prompt hygiene (no verdict tags on terrain)
 
 Use this file to spawn **new matrix rows** and **new implementation questions**, not as runtime truth.
 
@@ -20,6 +21,19 @@ Use this file to spawn **new matrix rows** and **new implementation questions**,
 | "partial regeneration" / "mark dirty" | `ChunkDirty` + `ChunkDependency` | Matrix §§13, 16 |
 | "rule evolution log" | Append-only JSONL audit | Matrix §17, impl Q §72 |
 | "world snapshot" | Aggregated metrics over loaded chunks | New table proposed below |
+
+---
+
+## AI / ontology constraints (Phase 6 — bind LLM behavior)
+
+When using this outline to **train prompts** or **steer agents** editing terrain assets:
+
+- **Do not** invent **terrain verdict tags** (e.g. universal `traversable` / `non_traversable` on cells). **Passability is profile-specific** — use [`mobility_profile_matrix_v1.md`](mobility_profile_matrix_v1.md) + facts + derived metrics.
+- **Do not** store **gameplay conclusions** in `TagSet` or `MaterialDef` as if they were physics; **world data = reality**, **systems = interpretation** ([`ontology/README.md`](ontology/README.md)).
+- **Prefer** metrics defined over **facts**, **chunk derived** ([`derived_metric_pipeline_v1.md`](ontology/derived_metric_pipeline_v1.md)), or **mobility-under-profile** — not boolean material flags removed from the ontology.
+- **Dynamic sim** (mud, damage, congestion, …) belongs in a **transient overlay** layer in design — **not** as spurious permanent tags; see [`refactor_execution_plan_v1.md`](ontology/refactor_execution_plan_v1.md) (implementation tranche **B**).
+
+Violating the above breaks **mod compatibility**, **save stability**, and **AI tool context**.
 
 ---
 
@@ -41,15 +55,15 @@ The outline proposes Tiers 0–4. Map to canonical repo concepts before any impl
 
 ## Metric system (data-only — no engine logic in this outline)
 
-**Core metrics** the outline proposes. The repo treats these as **candidate** signals; pick which become real engine measurements via impl Q §73.
+**Core metrics** the outline proposes. The repo treats these as **candidate** signals; pick which become real engine measurements via impl Q §73. **Obsolete pattern:** single boolean “traversable” per material — **replaced** by **facts + derived + [`evaluate_tile`](../../../src/terrain/mobility/mod.rs) under a chosen profile** (see matrix §6 **Mobility** row).
 
 | Metric | Definition | Real today? |
 |:---|:---|:---:|
-| `traversable_ratio` | Cells whose `MaterialDef` has `traversable: true` ÷ total cells. | Possible once `MaterialDef.properties` parsing lands (U3+). |
-| `buildable_ratio` | Same with `buildable`. | Possible. |
+| `mobility_clearance_ratio` *(working name)* | Fraction of cells where `MovementHint.blocked == false` for a **named** `MobilityProfile` (e.g. `wheeled_logistics`), using stitched `slope_grade` + `TagSet`. | **Partial** — evaluator exists; **world-level aggregation** `ASK:` |
+| `buildable_pressure_ratio` *(working name)* | Cells above a **derived** `support_capacity` threshold (or interpretation policy), not a `buildable: true` material flag. | Stub — derive field / policy **`ASK:`** |
 | `wetness_coverage` | Cells whose `TagSet` contains `wet` tag ÷ total. | Possible after U4 pass 2. |
 | `biome_fragmentation` | Connected-component analysis on `MaterialFamily` per chunk. | Expensive — pair impl Q §70 (LOD), defer. |
-| `path_connectivity` | Cross-chunk reachability of `traversable` cells. | Requires nav graph (separate system). |
+| `path_connectivity` | Cross-chunk reachability under a **mobility profile** (or transport graph), not "traversable tag" connectivity. | Requires nav + same inputs as mobility **`ASK:`** |
 | `resource_distribution_uniformity` / `_variance` | Per-resource coefficient of variation across chunks. | Possible once resource rules exist (impl Q §62). |
 | `edge_density` | Fraction of cells where neighbor's `MaterialFamily` differs. | Possible after U4 pass 2. |
 | `tag_entropy` | Shannon entropy over `TagSet` distribution. | Possible. |
@@ -77,7 +91,7 @@ Outline proposes four action types. Map to **file edits** (the only allowed muta
 
 ## Trigger conditions (proposed thresholds)
 
-Outline lists illustrative thresholds (`traversable_ratio < 0.6`, etc.). The repo treats these as **`ASK:`** until paired with real metric implementations (item §73). Do **not** hardcode them in Rust — they belong in a designer-edited `assets/config/terrain/world_evolution_policy.json` (proposed; **`ASK:`**).
+Outline lists illustrative thresholds (e.g. `mobility_clearance_ratio < 0.6` under **`wheeled_logistics`**). The repo treats these as **`ASK:`** until paired with real metric implementations (item §73). Do **not** hardcode them in Rust — they belong in a designer-edited `assets/config/terrain/world_evolution_policy.json` (proposed; **`ASK:`**).
 
 ---
 
@@ -126,7 +140,7 @@ If the outline's "expected effect" field is desired, add it to `RuleTrace.expect
 When the human is ready, lift these as new **implementation questions** (continuing the §§49–78 numbering convention) and **matrix rows** (continuing matrix §§13–18 layout):
 
 - **Q79** Memory tiers — which become real (Tier 1 component, Tier 2 resource) vs deferred (Tier 3 ring buffer)?
-- **Q80** Metric set — confirm initial subset (likely `traversable_ratio`, `wetness_coverage`, `tag_entropy`) before others.
+- **Q80** Metric set — confirm initial subset (likely **`mobility_clearance_ratio`** + profile id, `wetness_coverage`, `tag_entropy`) before others; **reject** reintroducing global traversable bit.
 - **Q81** `world_evolution_policy.json` schema — JSON or extension to existing `world_gen_tuning.json`?
 - **Q82** Audit log location and rotation policy.
 - **Q83** Tag-count-per-cell cap (16 outline vs 256 repo) — pick one.

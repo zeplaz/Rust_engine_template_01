@@ -1,14 +1,14 @@
-use crate::terrain::biome::{BiomeWeights, TerrainClass};
-
 use super::registry::{MaterialId, MaterialRegistry};
 use super::rules::RuleSet;
 use super::tags::{TagRegistry, TagSet};
+use crate::terrain::biome::BiomeWeights;
+use crate::terrain::family::TerrainFamilyId;
 
 /// Pick a [`MaterialId`] from `(family, tags, rules, registries)` — deterministic (rules pre-sorted).
 ///
 /// `_weights` is reserved for future `weight_predicate` / scoring (`§48`); pass [`BiomeWeights::default()`] until then.
 pub fn resolve_material(
-    family: TerrainClass,
+    family: TerrainFamilyId,
     weights: &BiomeWeights,
     tags: TagSet,
     rules: &RuleSet,
@@ -20,8 +20,8 @@ pub fn resolve_material(
 
 /// `rule_index` from the winning rule file order or `u32::MAX` when the family default was used.
 pub fn resolve_material_with_rule_index(
-    family: TerrainClass,
-    weights: &BiomeWeights,
+    family: TerrainFamilyId,
+    _weights: &BiomeWeights,
     tags: TagSet,
     rules: &RuleSet,
     registry: &MaterialRegistry,
@@ -69,7 +69,7 @@ fn rule_matches(tags: &TagSet, rule: &super::rules::MaterialRule, tag_registry: 
     true
 }
 
-fn family_default(family: TerrainClass, registry: &MaterialRegistry) -> Option<MaterialId> {
+fn family_default(family: TerrainFamilyId, registry: &MaterialRegistry) -> Option<MaterialId> {
     registry
         .materials
         .iter()
@@ -81,6 +81,7 @@ fn family_default(family: TerrainClass, registry: &MaterialRegistry) -> Option<M
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::terrain::family::TerrainFamilyRegistry;
     use crate::terrain::material::rules::MaterialRule;
 
     fn example_paths() -> (std::path::PathBuf, std::path::PathBuf, std::path::PathBuf) {
@@ -97,6 +98,15 @@ mod tests {
         let (mp, tp, _) = example_paths();
         let registry = MaterialRegistry::load_from_json(mp.to_str().unwrap()).unwrap();
         let tag_registry = TagRegistry::load_from_json(tp.to_str().unwrap()).unwrap();
+
+        let fam = TerrainFamilyRegistry::load_from_json(
+            std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+                .join("assets/config/terrain/terrain_family_registry.example.json")
+                .to_str()
+                .unwrap(),
+        )
+        .unwrap();
+        let grass = fam.id("Grassland").unwrap();
 
         let mut tags = TagSet::default();
         for name in ["wet", "lowland", "fertile"] {
@@ -132,7 +142,7 @@ mod tests {
         };
 
         let id = resolve_material(
-            TerrainClass::Grassland,
+            grass,
             &BiomeWeights::default(),
             tags,
             &rules,
@@ -152,8 +162,17 @@ mod tests {
             rules: vec![],
         };
 
+        let fam = TerrainFamilyRegistry::load_from_json(
+            std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+                .join("assets/config/terrain/terrain_family_registry.example.json")
+                .to_str()
+                .unwrap(),
+        )
+        .unwrap();
+        let grass = fam.id("Grassland").unwrap();
+
         let id = resolve_material(
-            TerrainClass::Grassland,
+            grass,
             &BiomeWeights::default(),
             TagSet::default(),
             &rules,

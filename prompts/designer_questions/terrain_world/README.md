@@ -23,6 +23,7 @@
 | `tile_sprites_v1.md` | Pixel vs logic decouple, PNG → future formats |
 | `composite_style_worldgen_v1.md` | Layered scalar fields, deterministic chunks, fast pixel preview (mental model + code map) |
 | `material_tag_rule_system_v1.md` | Material registry, interned tags, RON rules, `ChunkCellMatrix` — unified with `TerrainClass` |
+| **`ontology/README.md`** | **Facts vs interpretations:** tag vocabulary (no nav verdicts), mobility profile matrix, derived metric pipeline · **execution:** [`ontology/refactor_execution_plan_v1.md`](ontology/refactor_execution_plan_v1.md) |
 | `procedural_world_pipeline_reference_outline_v1.md` | Non-authoritative outline (hot-reload graph, multi-pass tags, layers) → spawns matrix §§13–18 + checklist **49–78** |
 | `llm_world_evolution_reference_outline_v1.md` | Non-authoritative outline (LLM rule-edit loop, memory tiers, metric system) → feeds future Qs §§79–83 |
 | **`implementation_questions_v1.md`** | **Engineering checklist** — types, queues, IPC |

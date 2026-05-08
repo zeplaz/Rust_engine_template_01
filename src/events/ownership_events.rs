@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 
 use bevy::prelude::*;
-use serde::{Deserialize, Serialize};
 
 use crate::idgen::EntityId;
 use crate::systems::agents::permissions::{PermissionDomain, AccessLevel, PermissionGrantEvent};

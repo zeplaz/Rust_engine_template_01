@@ -82,7 +82,7 @@ pub struct TagDef {
 }
 
 #[derive(Clone, Debug, Deserialize)]
-struct TagRegistryFile {
+pub(crate) struct TagRegistryFile {
     pub schema_version: u32,
     pub tags: Vec<TagDef>,
 }

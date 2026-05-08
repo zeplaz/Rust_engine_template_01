@@ -18,7 +18,7 @@ pub enum LegacyTerrainType {
 }
 
 /// Legacy alias maintained so old parsing code can migrate gradually.
-#[deprecated(note = "Use terrain::biome::TerrainClass for canonical storage/generation")]
+#[deprecated(note = "Use terrain::family::TerrainFamilyId for dominant terrain family on tiles / chunks")]
 pub type TerrainType = LegacyTerrainType;
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, Default)]

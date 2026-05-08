@@ -33,7 +33,7 @@ impl HydrologyParams {
     pub fn from_biome_tuning(t: &BiomeTuning) -> Self {
         Self {
             water_line: t.shallow_water_height_max,
-            river_acc_quantile: 0.12,
+            river_acc_quantile: 0.10,
             erosion_slope_threshold: 0.08,
             silt_moisture_threshold: (t.wetland_moist_threshold * 0.85).min(1.0),
         }

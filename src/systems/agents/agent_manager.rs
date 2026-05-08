@@ -1,6 +1,5 @@
 use bevy::prelude::*;
 use std::collections::HashMap;
-use serde::{Deserialize, Serialize};
 
 use crate::idgen::EntityId;
 use crate::events::ownership_events::FactionColors;
@@ -134,8 +133,8 @@ pub fn create_agent_system(
 
 /// System that updates the game state based on agent permissions
 pub fn agent_authority_system(
-    agent_manager: Res<AgentManager>,
-    agent_query: Query<(&Agent, &AgentPermissions)>,
+    _agent_manager: Res<AgentManager>,
+    _agent_query: Query<(&Agent, &AgentPermissions)>,
 ) {
     // This system would validate actions against permissions
     // For example:

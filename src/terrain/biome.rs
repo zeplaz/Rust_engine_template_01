@@ -1,30 +1,5 @@
 use serde::{Deserialize, Serialize};
 
-/// Canonical terrain/biome data model for generation + storage.
-#[derive(Clone, Copy, PartialEq, Eq, Debug, Hash, Serialize, Deserialize)]
-pub enum TerrainClass {
-    DeepWater,
-    ShallowWater,
-    Beach,
-    Desert,
-    Grassland,
-    Forest,
-    DenseForest,
-    Mountain,
-    SnowCappedMountain,
-    Tundra,
-    Swamp,
-    Cliff,
-    Concrete,
-    Dirt,
-    Snow,
-    Stone,
-}
-
-/// Legacy name retained for migration. Use `TerrainClass` directly for new code.
-#[deprecated(note = "Use terrain::biome::TerrainClass")]
-pub type BiomeType = TerrainClass;
-
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Hash, Serialize, Deserialize)]
 pub enum BiomeId {
     Marine,
@@ -128,12 +103,6 @@ pub struct TileEnvironmentProfile {
     pub terrain_mix: TerrainSurfaceMix,
 }
 
-#[derive(Clone, Copy, Debug)]
-pub struct BiomeClassification {
-    pub terrain_class: TerrainClass,
-    pub biome_weights: BiomeWeights,
-}
-
 /// Registry tag names for pass 2 (threshold tags). Defaults match `tag_registry.example.json`; override via `BiomeTuning` JSON.
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(default)]
@@ -159,12 +128,12 @@ impl Default for ThresholdTagNames {
     }
 }
 
-/// All thresholds / gains that couple height → moisture/temperature → biome weights and `TerrainClass`.
+/// All thresholds / gains that couple height → moisture/temperature → biome weights and terrain **family** id
+/// from [`crate::terrain::family::classify_biome`].
 /// Tune via editor sliders, JSON overlay, or scripts — keeps generation and classification in sync.
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(default)]
 pub struct BiomeTuning {
-    // --- soft weights (Whittaker-style bands) ---
     pub sea_level: f32,
     pub marine_height_sensitivity: f32,
     pub coastal_height_center: f32,
@@ -188,7 +157,6 @@ pub struct BiomeTuning {
     pub temperate_alpine_suppress: f32,
     pub temperate_floor: f32,
 
-    // --- hard terrain-class thresholds (normalized height 0–1) ---
     pub deep_water_height_max: f32,
     pub shallow_water_height_max: f32,
     pub beach_height_max: f32,
@@ -200,7 +168,6 @@ pub struct BiomeTuning {
     pub swamp_moisture_min: f32,
     pub grassland_moisture_max: f32,
     pub forest_moisture_max: f32,
-    /// Pass 2 — tag names resolved against [`crate::terrain::material::TagRegistry`].
     pub threshold_tag_names: ThresholdTagNames,
 }
 
@@ -245,12 +212,13 @@ impl Default for BiomeTuning {
     }
 }
 
-pub fn classify_biome(
+/// Whittaker-style soft weights + normalization (shared with [`crate::terrain::family::classify_biome`]).
+pub fn compute_biome_weights(
     height: f32,
     moisture: f32,
     temperature: f32,
     tuning: &BiomeTuning,
-) -> BiomeClassification {
+) -> BiomeWeights {
     let mut weights = BiomeWeights::default();
     weights.marine =
         ((tuning.sea_level - height) * tuning.marine_height_sensitivity).max(0.0);
@@ -272,42 +240,7 @@ pub fn classify_biome(
         - weights.marine * tuning.temperate_marine_weight
         - weights.alpine * tuning.temperate_alpine_suppress)
         .max(tuning.temperate_floor);
-    let weights = weights.normalize();
-
-    let terrain_class = if height < tuning.deep_water_height_max {
-        TerrainClass::DeepWater
-    } else if height < tuning.shallow_water_height_max {
-        TerrainClass::ShallowWater
-    } else if height < tuning.beach_height_max {
-        TerrainClass::Beach
-    } else if height > tuning.mountain_height_min {
-        if temperature < tuning.snow_peak_temperature_max {
-            TerrainClass::SnowCappedMountain
-        } else {
-            TerrainClass::Mountain
-        }
-    } else if temperature < tuning.tundra_temperature_max {
-        TerrainClass::Tundra
-    } else if temperature > tuning.hot_lowlands_temperature_min {
-        if moisture < tuning.desert_moisture_max {
-            TerrainClass::Desert
-        } else if moisture > tuning.swamp_moisture_min {
-            TerrainClass::Swamp
-        } else {
-            TerrainClass::Grassland
-        }
-    } else if moisture < tuning.grassland_moisture_max {
-        TerrainClass::Grassland
-    } else if moisture < tuning.forest_moisture_max {
-        TerrainClass::Forest
-    } else {
-        TerrainClass::DenseForest
-    };
-
-    BiomeClassification {
-        terrain_class,
-        biome_weights: weights,
-    }
+    weights.normalize()
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Hash, Serialize, Deserialize)]
@@ -322,26 +255,19 @@ pub enum BiomeBucket {
     Swamp,
 }
 
-/// Legacy adapter name retained for migration.
-#[deprecated(note = "Use BiomeBucket as a derived view, not canonical storage")]
-pub type GameBiomeType = BiomeBucket;
-
-impl From<TerrainClass> for BiomeBucket {
-    fn from(value: TerrainClass) -> Self {
-        match value {
-            TerrainClass::DeepWater | TerrainClass::ShallowWater => BiomeBucket::Water,
-            TerrainClass::Beach => BiomeBucket::Beach,
-            TerrainClass::Desert => BiomeBucket::Desert,
-            TerrainClass::Grassland => BiomeBucket::Plains,
-            TerrainClass::Forest | TerrainClass::DenseForest => BiomeBucket::Forest,
-            TerrainClass::Mountain | TerrainClass::Cliff | TerrainClass::Stone => {
-                BiomeBucket::Mountain
-            }
-            TerrainClass::SnowCappedMountain | TerrainClass::Tundra | TerrainClass::Snow => {
-                BiomeBucket::Snow
-            }
-            TerrainClass::Swamp => BiomeBucket::Swamp,
-            TerrainClass::Concrete | TerrainClass::Dirt => BiomeBucket::Plains,
-        }
+/// Parse aggregate bucket from `terrain_family_registry.example.json`.
+pub fn biome_bucket_from_str(s: &str) -> Result<BiomeBucket, String> {
+    match s {
+        "Water" => Ok(BiomeBucket::Water),
+        "Beach" => Ok(BiomeBucket::Beach),
+        "Plains" => Ok(BiomeBucket::Plains),
+        "Forest" => Ok(BiomeBucket::Forest),
+        "Mountain" => Ok(BiomeBucket::Mountain),
+        "Snow" => Ok(BiomeBucket::Snow),
+        "Desert" => Ok(BiomeBucket::Desert),
+        "Swamp" => Ok(BiomeBucket::Swamp),
+        _ => Err(format!(
+            "unknown biome_bucket {s:?}; use Water|Beach|Plains|Forest|Mountain|Snow|Desert|Swamp"
+        )),
     }
 }

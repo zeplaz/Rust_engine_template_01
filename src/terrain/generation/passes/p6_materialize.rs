@@ -76,7 +76,8 @@ pub fn materialize_traced(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::terrain::biome::{BiomeWeights, TerrainClass};
+    use crate::terrain::biome::BiomeWeights;
+    use crate::terrain::TerrainFamilyRegistry;
     use crate::terrain::material::TagSet;
     use bevy::prelude::UVec2;
 
@@ -106,8 +107,17 @@ mod tests {
         )
         .unwrap();
 
+        let fam = TerrainFamilyRegistry::load_from_json(
+            root
+                .join("assets/config/terrain/terrain_family_registry.example.json")
+                .to_str()
+                .unwrap(),
+        )
+        .unwrap();
+        let grass = fam.id("Grassland").unwrap();
+
         let mut matrix = ChunkCellMatrix::new(UVec2::new(1, 1));
-        matrix.family[0] = TerrainClass::Grassland;
+        matrix.family[0] = grass;
         matrix.weights[0] = BiomeWeights::default();
         let mut t0 = TagSet::default();
         for name in ["wet", "lowland", "fertile"] {
@@ -145,12 +155,22 @@ mod tests {
         )
         .unwrap();
 
+        let fam = TerrainFamilyRegistry::load_from_json(
+            root
+                .join("assets/config/terrain/terrain_family_registry.example.json")
+                .to_str()
+                .unwrap(),
+        )
+        .unwrap();
+        let grass = fam.id("Grassland").unwrap();
+        let stone = fam.id("Stone").unwrap();
+
         let mut matrix = ChunkCellMatrix::new(UVec2::new(2, 1));
         let loam = *registry.name_to_id.get("loam_wet").unwrap();
         let basalt = *registry.name_to_id.get("basalt_dense").unwrap();
 
         // Cell 0: Grassland + tags matching first rule (loam_wet)
-        matrix.family[0] = TerrainClass::Grassland;
+        matrix.family[0] = grass;
         matrix.weights[0] = BiomeWeights::default();
         let mut t0 = TagSet::default();
         for name in ["wet", "lowland", "fertile"] {
@@ -159,7 +179,7 @@ mod tests {
         matrix.tags[0] = t0;
 
         // Cell 1: Stone + basalt rule tags
-        matrix.family[1] = TerrainClass::Stone;
+        matrix.family[1] = stone;
         matrix.weights[1] = BiomeWeights::default();
         let mut t1 = TagSet::default();
         for name in ["rock", "hard", "dry"] {

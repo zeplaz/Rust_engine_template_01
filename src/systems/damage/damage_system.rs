@@ -1,5 +1,5 @@
 use crate::engine::NavSets;
-use crate::traits::damage::{DamageInfoProvider, *};
+use crate::traits::damage::DamageInfoProvider;
 use bevy::prelude::*;
 
 use crate::entities::damages as entity_damages;

@@ -16,8 +16,14 @@ from .base_page import (LineEdit, SpinBox, ComboBox, PushButton,
                        FluentIcon, ImageLabel)
 
 from ..config.asset_config import (
-    VEHICLE_TYPES, ROAD_VEHICLE_TYPES, SEGMENT_MEMBERSHIP, 
-    FUEL_TYPES, FUEL_CLASS, SOUND_CLASSES
+    VEHICLE_TYPES,
+    ROAD_VEHICLE_TYPES,
+    SEGMENT_MEMBERSHIP,
+    FUEL_SOURCE_CATEGORY,
+    SOUND_CLASSES,
+    fuel_types_for_category,
+    normalize_fuel_type,
+    normalize_fuel_source_category,
 )
 
 class VehiclePage(EntityBasePage):
@@ -252,7 +258,23 @@ class VehiclePage(EntityBasePage):
                 self.road_vehicle_type_combo.setVisible(True)
             else:
                 self.road_vehicle_type_combo.setVisible(False)
-                
+
+            if hasattr(self, "fuel_class_combo"):
+                raw_class = vehicle_data.get("fuel_class", FUEL_SOURCE_CATEGORY[0])
+                category = normalize_fuel_source_category(raw_class) or FUEL_SOURCE_CATEGORY[0]
+                self.fuel_class_combo.blockSignals(True)
+                ci = self.fuel_class_combo.findText(category)
+                self.fuel_class_combo.setCurrentIndex(ci if ci >= 0 else 0)
+                self.fuel_class_combo.blockSignals(False)
+                self.limitFuelTypesByCategory(category)
+                raw_fuel = vehicle_data.get("fuel_type", "")
+                fuel = normalize_fuel_type(raw_fuel) if raw_fuel else self.fuel_type_combo.currentText()
+                fi = self.fuel_type_combo.findText(fuel)
+                if fi >= 0:
+                    self.fuel_type_combo.setCurrentIndex(fi)
+                elif self.fuel_type_combo.count() > 0:
+                    self.fuel_type_combo.setCurrentIndex(0)
+            
             # Update the preview
             self.updatePreview()
             
@@ -397,8 +419,8 @@ class VehiclePage(EntityBasePage):
             "capacity": 0,
             "mass": 1.0,
             "max_speed": 60,
-            "fuel_type": FUEL_TYPES[0],
-            "fuel_class": FUEL_CLASS[0],
+            "fuel_type": fuel_types_for_category(FUEL_SOURCE_CATEGORY[0])[0],
+            "fuel_class": FUEL_SOURCE_CATEGORY[0],
             "fuel_efficiency": 10.0,
             "sound_class": SOUND_CLASSES[0],
             "sound_emission": 60.0,
@@ -417,9 +439,10 @@ class VehiclePage(EntityBasePage):
         self.mass_spin.setValue(1.0)
         self.max_speed_spin.setValue(60)
         
-        # Clear advanced settings
-        self.fuel_type_combo.setCurrentIndex(0)
+        # Clear advanced settings (category first so fuel type list matches)
         self.fuel_class_combo.setCurrentIndex(0)
+        self.limitFuelTypesByCategory(self.fuel_class_combo.currentText())
+        self.fuel_type_combo.setCurrentIndex(0)
         self.fuel_efficiency_spin.setValue(10.0)
         self.sound_class_combo.setCurrentIndex(0)
         self.sound_emission_spin.setValue(60.0)
@@ -565,6 +588,7 @@ class VehiclePage(EntityBasePage):
         layout = QVBoxLayout(tab)
         
         # Create advanced widgets
+        # Fuel type options are filled from ``fuel_types_for_category`` (see ``limitFuelTypesByCategory``).
         self.fuel_type_combo = ComboBox()
         self.fuel_class_combo = ComboBox()
         self.fuel_efficiency_spin = DoubleSpinBox()
@@ -572,9 +596,8 @@ class VehiclePage(EntityBasePage):
         self.sound_emission_spin = DoubleSpinBox()
         self.detection_multiplier_spin = DoubleSpinBox()
         
-        # Fuel type and class combos
-        self.fuel_type_combo.addItems(FUEL_TYPES)
-        self.fuel_class_combo.addItems(FUEL_CLASS)
+        # Fuel type and source category (serialized field remains fuel_class)
+        self.fuel_class_combo.addItems(FUEL_SOURCE_CATEGORY)
         
         # Fuel efficiency spin
         self.fuel_efficiency_spin.setRange(0.1, 1000.0)
@@ -598,7 +621,7 @@ class VehiclePage(EntityBasePage):
         fuel_group = QGroupBox("Fuel Properties")
         fuel_layout = QFormLayout()
         fuel_layout.addRow("Fuel Type:", self.fuel_type_combo)
-        fuel_layout.addRow("Fuel Class:", self.fuel_class_combo)
+        fuel_layout.addRow("Fuel source category:", self.fuel_class_combo)
         fuel_layout.addRow("Fuel Efficiency (km/L):", self.fuel_efficiency_spin)
         fuel_group.setLayout(fuel_layout)
         
@@ -626,49 +649,33 @@ class VehiclePage(EntityBasePage):
         # Connect fuel type changes to sound emission adjustment
         self.fuel_type_combo.currentTextChanged.connect(self.adjustSoundBasedOnFuel)
         
-        # Connect fuel class changes to limit fuel types
-        self.fuel_class_combo.currentTextChanged.connect(self.limitFuelTypesByClass)
-        
+        # Connect fuel source category changes to limit fuel types
+        self.fuel_class_combo.currentTextChanged.connect(self.limitFuelTypesByCategory)
+
+        self.limitFuelTypesByCategory(self.fuel_class_combo.currentText())
+
         return tab
-    
-    def limitFuelTypesByClass(self, fuel_class):
-        """Limit available fuel types based on selected fuel class
-        
-        Args:
-            fuel_class: Selected fuel class
+
+    def limitFuelTypesByCategory(self, fuel_source_category):
+        """Limit available fuel types based on selected fuel source category.
+
+        Serialized JSON field is still ``fuel_class``; values are ``FUEL_SOURCE_CATEGORY``.
         """
-        # Store current selection
-        current_selection = self.fuel_type_combo.currentText()
-        
-        # Temporarily block signals
+        current_selection = normalize_fuel_type(self.fuel_type_combo.currentText())
+
         self.fuel_type_combo.blockSignals(True)
-        
-        # Clear and repopulate based on class
         self.fuel_type_combo.clear()
-        
-        if fuel_class == "Fossil":
-            self.fuel_type_combo.addItems(["Diesel", "Gasoline", "Coal"])
-        elif fuel_class == "Electric":
-            self.fuel_type_combo.addItems(["Electric"])
-        elif fuel_class == "Renewable":
-            self.fuel_type_combo.addItems(["Hydrogen", "Solar"])
-        elif fuel_class == "Nuclear":
-            self.fuel_type_combo.addItems(["Nuclear"])
-        elif fuel_class == "Hybrid":
-            self.fuel_type_combo.addItems(["Hybrid", "Electric", "Diesel", "Gasoline"])
-        else:
-            # Default: add all
-            self.fuel_type_combo.addItems(FUEL_TYPES)
-        
-        # Try to restore previous selection if valid
+        allowed = fuel_types_for_category(fuel_source_category)
+        self.fuel_type_combo.addItems(allowed)
+
         index = self.fuel_type_combo.findText(current_selection)
         if index >= 0:
             self.fuel_type_combo.setCurrentIndex(index)
-        
-        # Unblock signals
+        elif self.fuel_type_combo.count() > 0:
+            self.fuel_type_combo.setCurrentIndex(0)
+
         self.fuel_type_combo.blockSignals(False)
-        
-        # Update sound settings
+
         self.adjustSoundBasedOnFuel(self.fuel_type_combo.currentText())
         
     def onVehicleTypeChanged(self, vehicle_type):
@@ -685,31 +692,46 @@ class VehiclePage(EntityBasePage):
         Args:
             fuel_type: Selected fuel type
         """
-        # Base sound level
         base_level = 70.0
-        
-        # Adjust based on fuel type
-        if fuel_type == "Electric":
-            # Electric vehicles are much quieter
+        ft = normalize_fuel_type(fuel_type)
+
+        if ft in ("Battery_Electric", "Grid_Electric_Trolley"):
             self.sound_emission_spin.setValue(base_level - 30.0)
             self.detection_multiplier_spin.setValue(0.5)
             self.sound_class_combo.setCurrentText("Electrical")
-        elif fuel_type == "Hydrogen":
-            # Hydrogen fuel cells are relatively quiet
+        elif ft == "Hydrogen_FuelCell":
             self.sound_emission_spin.setValue(base_level - 20.0)
             self.detection_multiplier_spin.setValue(0.7)
-        elif fuel_type == "Diesel":
-            # Diesel engines are louder
+            self.sound_class_combo.setCurrentText("Electrical")
+        elif ft in ("Diesel", "Gasoline", "Biodiesel", "Bio_Ethanol", "LPG", "Crude_Transport_Only"):
             self.sound_emission_spin.setValue(base_level + 10.0)
             self.detection_multiplier_spin.setValue(1.3)
             self.sound_class_combo.setCurrentText("Engine")
-        elif fuel_type == "Jet Fuel":
-            # Jet engines are very loud
+        elif ft in ("Jet_Kerosene", "Avgas"):
             self.sound_emission_spin.setValue(base_level + 30.0)
             self.detection_multiplier_spin.setValue(2.0)
             self.sound_class_combo.setCurrentText("Engine")
+        elif ft == "Marine_Bunker":
+            self.sound_emission_spin.setValue(base_level + 20.0)
+            self.detection_multiplier_spin.setValue(1.6)
+            self.sound_class_combo.setCurrentText("Engine")
+        elif ft in ("Coal", "Steam_External"):
+            self.sound_emission_spin.setValue(base_level + 15.0)
+            self.detection_multiplier_spin.setValue(1.4)
+            self.sound_class_combo.setCurrentText("Machinery")
+        elif ft == "Nuclear_Heat":
+            self.sound_emission_spin.setValue(base_level - 5.0)
+            self.detection_multiplier_spin.setValue(1.0)
+            self.sound_class_combo.setCurrentText("Machinery")
+        elif ft in ("Hybrid_Battery_Diesel", "Hybrid_Battery_Gasoline"):
+            self.sound_emission_spin.setValue(base_level + 5.0)
+            self.detection_multiplier_spin.setValue(1.1)
+            self.sound_class_combo.setCurrentText("Engine")
+        elif ft in ("Solid_Rocket", "Liquid_Rocket"):
+            self.sound_emission_spin.setValue(base_level + 40.0)
+            self.detection_multiplier_spin.setValue(2.5)
+            self.sound_class_combo.setCurrentText("Explosive")
         else:
-            # Default for other fuel types
             self.sound_emission_spin.setValue(base_level)
             self.detection_multiplier_spin.setValue(1.0)
             self.sound_class_combo.setCurrentText("Engine")

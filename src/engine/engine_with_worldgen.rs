@@ -1,5 +1,5 @@
 use crate::entities::production::core::ManufacturingCorePlugin;
-use crate::entities::vehicles::RoadVehicleToolsUiPlugin;
+use crate::entities::vehicles::tools_ui::RoadVehicleToolsUiPlugin;
 use crate::gui::{
     editor::map_editor::MapEditorPlugin, BaseMenuPlugin, DiagnosticsUiPlugin,
     FactionToolsUiPlugin, HudQuickMenuPlugin, InGameHudPlugin, KeybindingsOptionsPlugin,
@@ -14,6 +14,7 @@ use crate::systems::damage::DamageSystem;
 use crate::systems::navigation::NavigationSchedulePlugin;
 use crate::systems::sim_control::SimControlPlugin;
 use crate::systems::transport::TransportSimulationPlugin;
+use crate::systems::weather::WeatherPlugin;
 use crate::systems::terrain::MaterialUnificationPlugin;
 use crate::terrain::generation::WorldGenToolsPlugin;
 use bevy::asset::AssetPlugin;
@@ -55,6 +56,7 @@ impl Plugin for EnginePlugin {
             .add_plugins(MapEditorPlugin)
             // Sim loop control (pause / step / speed / monotonic tick).
             .add_plugins(SimControlPlugin)
+            .add_plugins(WeatherPlugin)
             .add_plugins(TransportSimulationPlugin)
             // Nav: damage/speed adjustments after transport cost cache; motion stage after damage (S2).
             .add_plugins(NavigationSchedulePlugin)

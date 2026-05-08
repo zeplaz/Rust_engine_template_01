@@ -1,7 +1,6 @@
 // Entity struct
 //use std::str::FromStr;
 use bevy::prelude::*;
-use serde::Deserialize;
 
 use crate::events::ownership_events::*;
 use crate::idgen::EntityId;

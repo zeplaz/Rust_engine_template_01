@@ -115,7 +115,7 @@ pub fn connect_production_chains(
 }
 
 pub fn update_building_status(
-    mut buildings: Query<&mut Building>,
+    _buildings: Query<&mut Building>,
     // Other queries needed for status updates
 ) {
     // Implementation details

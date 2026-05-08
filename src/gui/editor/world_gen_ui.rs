@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use bevy_egui::{egui, EguiContexts, EguiPrimaryContextPass};
 
 use crate::engine::{BaseState, WorldGenFlowState};
-use crate::systems::terrain::TerrainRegistriesHandles;
+use crate::gui::editor::world_preview::WorldPreviewUiState;
 use crate::terrain::generation::tuning_io::{load_overlay, WorldGenTuningOverlay};
 use crate::terrain::generation::world_generator_enhanced::{
     despawn_generated_world_entities, GenerateWorldEvent, MAX_WORLD_GEN_AXIS, PREVIEW_WORLD_MAX_AXIS,
@@ -10,7 +10,9 @@ use crate::terrain::generation::world_generator_enhanced::{
     WORLD_GEN_TUNING_JSON_PATH,
 };
 use crate::terrain::generation::WorldGenLastDebugReport;
-use crate::terrain::material::{TagId, TagRegistry};
+
+// Re-export for `tilemap_adapter` and other call sites that imported `PreviewMode` from this module.
+pub use crate::gui::editor::world_preview::PreviewMode;
 
 use super::world_gen_hints as hints;
 
@@ -22,19 +24,9 @@ fn tt(response: egui::Response, text: &'static str) -> egui::Response {
 #[derive(Resource)]
 pub struct WorldGenUiState {
     pub visible: bool,
-    pub preview_mode: PreviewMode,
-}
-
-#[derive(Clone, Copy, PartialEq, Eq)]
-pub enum PreviewMode {
-    None,
-    Height,
-    Moisture,
-    Temperature,
-    Biome,
-    Regions,
-    /// Highlights cells whose tags intersect [`WorldGenParams::tag_pool`](crate::terrain::generation::world_generator_enhanced::WorldGenParams::tag_pool).
-    Tag,
+    pub preview_mode: crate::gui::editor::world_preview::PreviewMode,
+    /// Index into [`MobilityProfileRegistry::profiles`](crate::terrain::mobility::MobilityProfileRegistry).
+    pub mobility_profile_index: usize,
 }
 
 impl Default for WorldGenUiState {
@@ -42,6 +34,7 @@ impl Default for WorldGenUiState {
         Self {
             visible: false,
             preview_mode: PreviewMode::None,
+            mobility_profile_index: 0,
         }
     }
 }
@@ -64,8 +57,7 @@ pub fn world_gen_ui_system(
     progress: Res<WorldGenProgress>,
     last_debug: Res<WorldGenLastDebugReport>,
     mut tuning_io_hint: Local<String>,
-    handles: Res<TerrainRegistriesHandles>,
-    tag_assets: Res<Assets<TagRegistry>>,
+    mut world_preview_ui: ResMut<WorldPreviewUiState>,
     #[cfg(feature = "bevy_tilemap_adapter")] mut tile_layer_vis: Option<
         ResMut<crate::render::tilemap_adapter::TilemapLayerVisibility>,
     >,
@@ -89,6 +81,9 @@ pub fn world_gen_ui_system(
             if matches!(*flow.get(), WorldGenFlowState::PreviewReady | WorldGenFlowState::FullReady)
             {
                 ui.small("Review the preview / map, then run full generation, then confirm before entering simulation.");
+                ui.checkbox(&mut world_preview_ui.window_open, "Show World Preview window");
+                ui.small("Preview tint mode and tag pool: use the World Preview panel (◀ ▶ switch views without regen).");
+                ui.add_space(6.0);
             } else if matches!(*flow.get(), WorldGenFlowState::NewWorldSetup) {
                 ui.small("Adjust parameters, then generate a preview. Full world runs only after a preview exists.");
             }
@@ -501,62 +496,6 @@ pub fn world_gen_ui_system(
                     
                     ui.add_space(5.0);
                 });
-            
-            ui.add_space(10.0);
-            
-            ui.heading("Preview Mode");
-            ui.horizontal(|ui| {
-                tt(
-                    ui.radio_value(&mut world_gen_ui_state.preview_mode, PreviewMode::None, "None"),
-                    hints::PREVIEW_NONE,
-                );
-                tt(
-                    ui.radio_value(&mut world_gen_ui_state.preview_mode, PreviewMode::Height, "Height"),
-                    hints::PREVIEW_HEIGHT,
-                );
-                tt(
-                    ui.radio_value(&mut world_gen_ui_state.preview_mode, PreviewMode::Moisture, "Moisture"),
-                    hints::PREVIEW_MOIST,
-                );
-                tt(
-                    ui.radio_value(&mut world_gen_ui_state.preview_mode, PreviewMode::Temperature, "Temperature"),
-                    hints::PREVIEW_TEMP,
-                );
-                tt(
-                    ui.radio_value(&mut world_gen_ui_state.preview_mode, PreviewMode::Biome, "Biome"),
-                    hints::PREVIEW_BIOME,
-                );
-                tt(
-                    ui.radio_value(&mut world_gen_ui_state.preview_mode, PreviewMode::Regions, "Regions"),
-                    hints::PREVIEW_REGIONS,
-                );
-                tt(
-                    ui.radio_value(&mut world_gen_ui_state.preview_mode, PreviewMode::Tag, "Tag"),
-                    hints::PREVIEW_TAG,
-                );
-            });
-            if let Some(tag_reg) = tag_assets.get(&handles.tag_registry) {
-                ui.label("Terrain tag pool (passes 2 & 4):");
-                ui.small("Unchecked names are not written onto chunks; Tag preview only highlights cells carrying checked tags.");
-                egui::ScrollArea::vertical()
-                    .max_height(160.0)
-                    .id_salt("world_gen_tag_pool_scroll")
-                    .show(ui, |ui| {
-                        for (i, t) in tag_reg.tags.iter().enumerate() {
-                            let id = TagId(i as u16);
-                            let mut on = world_gen_params.tag_pool.contains(id);
-                            let r = ui.checkbox(&mut on, &t.name);
-                            let r = tt(r, hints::TAG_POOL_ENTRY);
-                            if r.changed() {
-                                if on {
-                                    world_gen_params.tag_pool.insert(id);
-                                } else {
-                                    world_gen_params.tag_pool.remove(id);
-                                }
-                            }
-                        }
-                    });
-            }
             
             #[cfg(feature = "bevy_tilemap_adapter")]
             if let Some(ref mut vis) = tile_layer_vis {

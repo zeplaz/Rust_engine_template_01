@@ -17,7 +17,10 @@ pub use super::terrain_noise::TerrainNoiseProfile;
 use super::tuning_io;
 use crate::terrain::voronoi_enhanced::*;
 use crate::terrain::world::GeoRegion;
-use crate::terrain::biome::{classify_biome, BiomeTuning, TerrainClass};
+use crate::terrain::biome::BiomeTuning;
+use crate::terrain::family::{
+    classify_biome, default_terrain_families, TerrainFamilyId, DEFAULT_TERRAIN_FAMILY_ID,
+};
 use crate::engine::WorldGenFlowState;
 use crate::terrain::generation::hydrology::{compute_hydrology_world, HydrologyParams, HydrologyResult};
 use crate::terrain::generation::world_gen_diagnostics::{
@@ -63,7 +66,7 @@ pub struct WorldGenParams {
     /// and `tuning_overlay` is `None`, this is the tuning used (same path as [`crate::terrain::generation::world_generator_enhanced::generate_world`]).
     /// Optionally overridden by JSON via `tuning_io` merge on startup.
     pub noise_sampling: NoiseSamplingTuning,
-    /// Biome weights + class thresholds — must stay aligned with `classify_biome`.
+    /// Biome weights + class thresholds — must stay aligned with [`crate::terrain::family::classify_biome`].
     pub biome_tuning: BiomeTuning,
     
     // Feature settings
@@ -95,20 +98,20 @@ impl Default for WorldGenParams {
             num_regions: 24,
             region_method: RegionMethod::Centroidal,
             region_iterations: 3,
-            noise_scale: 0.03,
+            noise_scale: 0.024,
             noise_octaves: 6,
             noise_lacunarity: 2.0,
             noise_persistence: 0.5,
             height_noise_profile: TerrainNoiseProfile::default(),
-            height_curve_exponent: 1.0,
-            domain_warp_strength: 0.0,
-            terrain_detail_mix: 0.0,
+            height_curve_exponent: 1.12,
+            domain_warp_strength: 0.32,
+            terrain_detail_mix: 0.22,
             moisture_bias: 0.0,
             temperature_bias: 0.0,
             noise_sampling: NoiseSamplingTuning::default(),
             biome_tuning: BiomeTuning::default(),
-            river_count: 3,
-            lake_count: 2,
+            river_count: 5,
+            lake_count: 3,
             mountain_threshold: 0.7,
             island_mode: true,
             island_falloff: 3.0,
@@ -181,13 +184,15 @@ pub fn build_world_noise_kernels(params: &WorldGenParams, tuning: &NoiseSampling
 struct TileSpawnData {
     moisture: f32,
     temperature: f32,
-    biome: TerrainClass,
+    terrain_family: TerrainFamilyId,
     region_index: usize,
 }
 
 /// Raster produced on a background thread (`rayon` per row), then consumed for batched ECS spawns.
 struct PrecomputedTiling {
     height_grid: Vec<f32>,
+    /// Same layout as `height_grid` — feeds moisture-weighted flow accumulation in hydrology.
+    moisture_grid: Vec<f32>,
     cells: Vec<TileSpawnData>,
 }
 
@@ -218,22 +223,25 @@ fn compute_tiling_parallel(
     let h = height as usize;
     let grid_len = w * h;
     let mut height_grid = vec![0.0f32; grid_len];
+    let mut moisture_grid = vec![0.0f32; grid_len];
     let mut cells = vec![
         TileSpawnData {
             moisture: 0.0,
             temperature: 0.0,
-            biome: TerrainClass::Grassland,
+            terrain_family: DEFAULT_TERRAIN_FAMILY_ID,
             region_index: 0,
         };
         grid_len
     ];
     let tuning = &params.noise_sampling;
+    let families = default_terrain_families();
 
     cells
         .par_chunks_mut(w)
         .zip(height_grid.par_chunks_mut(w))
+        .zip(moisture_grid.par_chunks_mut(w))
         .enumerate()
-        .for_each(|(y, (row_cells, row_heights))| {
+        .for_each(|(y, ((row_cells, row_heights), row_moist))| {
             for x in 0..w {
                 let position = Vec2::new(x as f32, y as f32);
                 let closest_region_index = closest_voronoi_region_index(position, &regions);
@@ -245,11 +253,13 @@ fn compute_tiling_parallel(
                     tuning,
                 );
                 row_heights[x] = hv;
-                let biome = determine_biome(hv, mv, tv, &params.biome_tuning);
+                row_moist[x] = mv;
+                let terrain_family =
+                    classify_biome(hv, mv, tv, &params.biome_tuning, families).terrain_family;
                 row_cells[x] = TileSpawnData {
                     moisture: mv,
                     temperature: tv,
-                    biome,
+                    terrain_family,
                     region_index: closest_region_index,
                 };
             }
@@ -257,6 +267,7 @@ fn compute_tiling_parallel(
 
     PrecomputedTiling {
         height_grid,
+        moisture_grid,
         cells,
     }
 }
@@ -359,14 +370,13 @@ pub struct Moisture(pub f32);
 #[derive(Component)]
 pub struct Temperature(pub f32);
 
-// Biome type
-/// Legacy alias kept for transition; canonical enum now lives in `terrain::biome`.
-#[deprecated(note = "Use terrain::biome::TerrainClass")]
-pub type BiomeType = TerrainClass;
+/// Legacy alias — dominant terrain **family** id (dense index into [`crate::terrain::TerrainFamilyRegistry`]).
+#[deprecated(note = "Use terrain::family::TerrainFamilyId")]
+pub type BiomeType = TerrainFamilyId;
 
-// Terrain type
+/// Dominant terrain **family** on a tile (`MaterialDef.family` / chunk `ChunkCellMatrix.family`).
 #[derive(Component)]
-pub struct TerrainType(pub TerrainClass);
+pub struct TerrainType(pub TerrainFamilyId);
 
 /// Max world width / height (tiles) for **full** generation (`GenerateWorldEvent` full phase).
 pub const MAX_WORLD_GEN_AXIS: u32 = 5120;
@@ -387,8 +397,6 @@ fn preview_world_params(full: &WorldGenParams) -> WorldGenParams {
     let mut p = full.clone();
     p.width = p.width.clamp(128, PREVIEW_WORLD_MAX_AXIS);
     p.height = p.height.clamp(128, PREVIEW_WORLD_MAX_AXIS);
-    p.river_count = p.river_count.min(2);
-    p.lake_count = p.lake_count.min(1);
     p
 }
 
@@ -427,6 +435,7 @@ struct WorldGenActive {
     geo_regions: Vec<GeoRegion>,
     w: usize,
     height_grid: Vec<f32>,
+    moisture_grid: Vec<f32>,
     /// Filled when [`WorldGenPipelineStep::TilingComputePending`] receives [`PrecomputedTiling`].
     spawn_cells: Vec<TileSpawnData>,
     tile_lookup: HashMap<(u32, u32), Entity>,
@@ -596,6 +605,7 @@ fn world_gen_pipeline_tick(
             match rx.try_recv() {
                 Ok(pre) => {
                     job.height_grid = pre.height_grid;
+                    job.moisture_grid = pre.moisture_grid;
                     job.spawn_cells = pre.cells;
                     job.tiling_compute_rx = None;
                     job.step = WorldGenPipelineStep::TilingSpawn;
@@ -732,6 +742,7 @@ fn world_gen_pipeline_tick(
             geo_regions,
             w,
             height_grid: Vec::new(),
+            moisture_grid: Vec::new(),
             spawn_cells: Vec::new(),
             tile_lookup: HashMap::with_capacity(grid_len.max(256)),
             next_tile_row: 0,
@@ -773,9 +784,14 @@ fn world_gen_pipeline_tick(
             let height_value = job.height_grid[idx];
             let position = Vec2::new(x as f32, y as f32);
 
+            let fam = default_terrain_families();
+            let biome_label = fam
+                .def(cell.terrain_family)
+                .map(|d| d.name.as_str())
+                .unwrap_or("unknown_family");
             *job
                 .biome_counts
-                .entry(format!("{:?}", cell.biome))
+                .entry(biome_label.to_string())
                 .or_insert(0) += 1;
 
             let tile_entity = commands
@@ -789,7 +805,7 @@ fn world_gen_pipeline_tick(
                     Height(height_value),
                     Moisture(cell.moisture),
                     Temperature(cell.temperature),
-                    TerrainType(cell.biome),
+                    TerrainType(cell.terrain_family),
                     Name::new(format!("Tile ({}, {})", x, y)),
                 ))
                 .id();
@@ -827,6 +843,7 @@ fn world_gen_pipeline_tick(
     if job.run_params.river_count > 0 || job.run_params.lake_count > 0 {
         let (tx, rx) = unbounded();
         let grid = job.height_grid.clone();
+        let moist = job.moisture_grid.clone();
         let gw = job.run_params.width;
         let gh = job.run_params.height;
         let rc = job.run_params.river_count;
@@ -834,7 +851,7 @@ fn world_gen_pipeline_tick(
         let tuning = job.run_params.biome_tuning.clone();
         std::thread::spawn(move || {
             let hp = HydrologyParams::from_biome_tuning(&tuning);
-            let r = compute_hydrology_world(gw, gh, &grid, &hp, rc, lc);
+            let r = compute_hydrology_world(gw, gh, &grid, Some(moist.as_slice()), &hp, rc, lc);
             let _ = tx.send(r);
         });
         job.hydro_rx = Some(rx);
@@ -903,16 +920,6 @@ fn generate_regions(params: &WorldGenParams, rng: &mut StdRng) -> Vec<Vec<Vorono
     }
 }
 
-// Determine biome type based on height, moisture, and temperature
-fn determine_biome(
-    height: f32,
-    moisture: f32,
-    temperature: f32,
-    tuning: &BiomeTuning,
-) -> TerrainClass {
-    classify_biome(height, moisture, temperature, tuning).terrain_class
-}
-
 fn region_entity_for_tile(
     geo_regions: &[GeoRegion],
     region_entities: &[Entity],
@@ -931,8 +938,11 @@ fn apply_shallow_water_visual(
     gy: f32,
     water_height: f32,
 ) {
+    let shallow = default_terrain_families()
+        .id("ShallowWater")
+        .expect("terrain family registry must define ShallowWater");
     commands.entity(tile).insert((
-        TerrainType(TerrainClass::ShallowWater),
+        TerrainType(shallow),
         Height(water_height),
         Moisture(0.95),
         Transform::from_xyz(gx, water_height * 20.0, gy),
@@ -1143,7 +1153,7 @@ mod hydrology_spawning_tests {
             dem[x as usize] = 0.95;
         }
         let p = HydrologyParams::default();
-        let r = compute_hydrology_world(w, h, &dem, &p, 2, 1);
+        let r = compute_hydrology_world(w, h, &dem, None, &p, 2, 1);
         assert!(r.rivers.len() <= 2);
         assert!(r.lakes.len() <= 1);
     }
@@ -1161,8 +1171,8 @@ mod hydrology_spawning_tests {
             }
         }
         let p = HydrologyParams::default();
-        let rect = compute_hydrology_rect(w, h, &dem, &p, 3);
-        let world = compute_hydrology_world(w, h, &dem, &p, 3, 0);
+        let rect = compute_hydrology_rect(w, h, &dem, &p, 3, None);
+        let world = compute_hydrology_world(w, h, &dem, None, &p, 3, 0);
         assert_eq!(world.accumulation, rect.accumulation);
         assert_eq!(world.river_mask, rect.river_mask);
         assert_eq!(world.lake_mask, rect.lake_mask);

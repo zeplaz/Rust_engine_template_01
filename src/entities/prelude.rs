@@ -1,9 +1,5 @@
-//! LEGACY SHIM — prefer explicit paths:
-//! - `crate::entities::production::*`
-//! - `crate::entities::vehicles::*`
-//! - `crate::entities::types::*` / `crate::entities::types_of::*` (shim)
+//! **Deprecated barrel** — no wildcard re-exports.
 //!
-//! Do not add new wildcard re-exports here.
-
-pub use crate::entities::production::*;
-pub use crate::entities::vehicles::*;
+//! Import explicitly, e.g.:
+//! - `crate::entities::production::{aluminum, concrete, core, power}`
+//! - `crate::entities::vehicles::{config, runtime, tools_ui, ...}`

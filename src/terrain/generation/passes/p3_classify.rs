@@ -1,6 +1,7 @@
-//! Pass 3 — fill `family` + `weights` using **only** [`classify_biome`](crate::terrain::biome::classify_biome); add primary `BiomeId` tag when present in registry.
+//! Pass 3 — fill `family` + `weights` using [`crate::terrain::family::classify_biome`]; add primary `BiomeId` tag when present in registry.
 
-use crate::terrain::biome::{classify_biome, BiomeId, BiomeTuning};
+use crate::terrain::biome::{BiomeId, BiomeTuning};
+use crate::terrain::family::{classify_biome, TerrainFamilyRegistry};
 use crate::terrain::generation::cell_matrix::ChunkCellMatrix;
 use crate::terrain::material::TagRegistry;
 
@@ -17,13 +18,18 @@ fn biome_primary_tag_name(id: BiomeId) -> &'static str {
 }
 
 /// Classifies each cell; **unions** primary-biome tag into existing `tags` when the name exists in `tag_registry`.
-pub fn classify_cells(matrix: &mut ChunkCellMatrix, tuning: &BiomeTuning, tag_registry: &TagRegistry) {
+pub fn classify_cells(
+    matrix: &mut ChunkCellMatrix,
+    tuning: &BiomeTuning,
+    tag_registry: &TagRegistry,
+    families: &TerrainFamilyRegistry,
+) {
     for i in 0..matrix.elevation.len() {
         let h = matrix.elevation[i];
         let m = matrix.moisture[i];
         let t = matrix.temperature[i];
-        let classification = classify_biome(h, m, t, tuning);
-        matrix.family[i] = classification.terrain_class;
+        let classification = classify_biome(h, m, t, tuning, families);
+        matrix.family[i] = classification.terrain_family;
         matrix.weights[i] = classification.biome_weights;
         let primary = classification.biome_weights.primary();
         let name = biome_primary_tag_name(primary);
@@ -38,6 +44,7 @@ pub fn classify_cells(matrix: &mut ChunkCellMatrix, tuning: &BiomeTuning, tag_re
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::terrain::family::{classify_biome, TerrainFamilyRegistry};
     use bevy::prelude::UVec2;
 
     fn assert_weights_close(a: crate::terrain::biome::BiomeWeights, b: crate::terrain::biome::BiomeWeights) {
@@ -58,19 +65,24 @@ mod tests {
             .join("assets/config/terrain/tag_registry.example.json");
         let tag_registry = TagRegistry::load_from_json(tag_path.to_str().unwrap()).unwrap();
 
+        let fam_path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("assets/config/terrain/terrain_family_registry.example.json");
+        let family_registry =
+            TerrainFamilyRegistry::load_from_json(fam_path.to_str().unwrap()).unwrap();
+
         let h = 0.55;
         let m = 0.5;
         let t = 0.48;
-        let expected = classify_biome(h, m, t, &tuning);
+        let expected = classify_biome(h, m, t, &tuning, &family_registry);
 
         let mut matrix = ChunkCellMatrix::new(UVec2::ONE);
         matrix.elevation[0] = h;
         matrix.moisture[0] = m;
         matrix.temperature[0] = t;
 
-        classify_cells(&mut matrix, &tuning, &tag_registry);
+        classify_cells(&mut matrix, &tuning, &tag_registry, &family_registry);
 
-        assert_eq!(matrix.family[0], expected.terrain_class);
+        assert_eq!(matrix.family[0], expected.terrain_family);
         assert_weights_close(matrix.weights[0], expected.biome_weights);
     }
 }
