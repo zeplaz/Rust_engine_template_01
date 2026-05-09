@@ -1,4 +1,4 @@
-//! Pick logistics HUD focus from a list (hotkey + toolbar + **Options** keybindings).
+//! Pick logistics HUD focus from a list (hotkey, **Options** keybindings, this egui panel).
 
 use bevy::prelude::*;
 use bevy_egui::{egui, EguiContexts, EguiPrimaryContextPass};
@@ -7,6 +7,7 @@ use crate::entities::production::core::{
     LogisticsSiteMember, LogisticsSiteRoot, ResourceStorage,
 };
 
+use crate::gui::ui_gates::in_simulation_or_editor;
 use crate::gui::input_bindings::InputBindings;
 use crate::gui::logistics_focus::HudLogisticsFocus;
 
@@ -26,8 +27,14 @@ pub struct LogisticsTargetsPanelPlugin;
 impl Plugin for LogisticsTargetsPanelPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<LogisticsTargetsPanelState>()
-            .add_systems(Update, toggle_logistics_targets_panel)
-            .add_systems(EguiPrimaryContextPass, logistics_targets_panel_ui);
+            .add_systems(
+                Update,
+                toggle_logistics_targets_panel.run_if(in_simulation_or_editor),
+            )
+            .add_systems(
+                EguiPrimaryContextPass,
+                logistics_targets_panel_ui.run_if(in_simulation_or_editor),
+            );
     }
 }
 

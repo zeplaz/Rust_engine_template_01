@@ -1,9 +1,9 @@
 use crate::entities::production::core::ManufacturingCorePlugin;
 use crate::entities::vehicles::tools_ui::RoadVehicleToolsUiPlugin;
 use crate::gui::{
-    editor::map_editor::MapEditorPlugin, BaseMenuPlugin, DiagnosticsUiPlugin,
-    FactionToolsUiPlugin, HudQuickMenuPlugin, InGameHudPlugin, KeybindingsOptionsPlugin,
-    LogisticsTargetsPanelPlugin, SplashPlugin,
+    editor::map_editor::MapEditorPlugin, AppShellPlugin, BaseMenuPlugin, DiagnosticsUiPlugin,
+    FactionToolsUiPlugin, InGameHudPlugin, KeybindingsOptionsPlugin,
+    LogisticsTargetsPanelPlugin, MainWorldCamera, MapCameraPlugin, SplashPlugin,
 };
 #[cfg(feature = "bevy_tilemap_adapter")]
 use crate::render::TilemapAdapterPlugin;
@@ -21,6 +21,7 @@ use crate::systems::{
 };
 use crate::systems::terrain::MaterialUnificationPlugin;
 use crate::terrain::generation::WorldGenToolsPlugin;
+use super::TestHarnessPlugin;
 use bevy::asset::AssetPlugin;
 use bevy::prelude::*;
 use bevy::window::{PresentMode, Window, WindowPlugin};
@@ -28,7 +29,7 @@ use bevy_egui::EguiPlugin;
 
 /// Root camera for **Bevy UI** (splash, in-game HUD). Without this, the window stays clear/black.
 fn spawn_primary_ui_camera(mut commands: Commands) {
-    commands.spawn(Camera2d);
+    commands.spawn((MainWorldCamera, Camera2d));
 }
 
 pub struct EnginePlugin;
@@ -54,9 +55,11 @@ impl Plugin for EnginePlugin {
                 }),
         )
             .add_systems(Startup, spawn_primary_ui_camera)
+            .add_plugins(TestHarnessPlugin)
             .add_plugins(EguiPlugin::default())
             .add_plugins(SplashPlugin)
             .add_plugins(BaseMenuPlugin)
+            .add_plugins(AppShellPlugin)
             .add_plugins(MapEditorPlugin)
             // Sim loop control (pause / step / speed / monotonic tick).
             .add_plugins(SimControlPlugin);
@@ -71,19 +74,20 @@ impl Plugin for EnginePlugin {
             // Nav: damage/speed adjustments after transport cost cache; motion stage after damage (S2).
             .add_plugins(NavigationSchedulePlugin)
             .add_plugins(DamageSystem)
-            .add_plugins(MaterialUnificationPlugin);
+            .add_plugins(MaterialUnificationPlugin)
+            .add_plugins(crate::strategic::StrategicFieldsPlugin);
         #[cfg(feature = "bevy_tilemap_adapter")]
         app.add_plugins(TilemapAdapterPlugin);
         // Plugin order still matters for init; cross-simulation ordering uses SystemSet edges
         // (see `SimControlSystemSet`, `TransportSchedule` — `prompts/guides/ecs_systems_schedule_runbook_v1.md`).
         app.add_plugins(KeybindingsOptionsPlugin)
+            .add_plugins(MapCameraPlugin)
             .add_plugins(DiagnosticsUiPlugin)
             .add_plugins(FactionToolsUiPlugin)
             .add_plugins(InGameHudPlugin)
             .add_plugins(LogisticsTargetsPanelPlugin)
             // World generation editor + runtime.
             .add_plugins(WorldGenToolsPlugin)
-            .add_plugins(HudQuickMenuPlugin)
             // Production stack.
             .add_plugins(ProductionRuntimePlugin)
             .add_plugins(ManufacturingCorePlugin)
@@ -93,7 +97,7 @@ impl Plugin for EnginePlugin {
             .add_plugins(RoadVehicleToolsUiPlugin);
 
         info!(
-            "Engine initialized. Key bindings default: F1 options · F3 diagnostics · F4 faction · F8 world gen · F9 logistics cycle · F10 logistics list · P pause sim · / egui scale — edit in Options; saved RON under user config path."
+            "Engine initialized. Optional: `--test weather` / `--test fire` for sample worlds. Key bindings: F1 options · F3 diagnostics · … — edit in Options; saved RON under user config path."
         );
     }
 }

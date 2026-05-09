@@ -4,7 +4,7 @@
 //! **Polygon / graph-first design** (macro regions, semantic terrain, coarse sim layers) is documented in
 //! [`voronoi_polygon_worlds_notes`](../../../prompts/guides/voronoi_polygon_worlds_notes.md.md).
 //! Voronoi site count here still maps tiles → region entities; optional [`WorldGenParams::strategic_field_coupling`]
-//! applies [`MacroStrategicKind`](super::polygon_world_semantics::MacroStrategicKind) nudges to moisture/temperature
+//! applies [`MacroTerrainSemantics`](super::polygon_world_semantics::MacroTerrainSemantics) nudges to moisture/temperature
 //! after noise sampling (structure-informed fields without replacing the fractal core).
 
 use std::collections::HashMap;
@@ -56,7 +56,7 @@ pub struct WorldGenParams {
     pub region_method: RegionMethod,
     pub region_iterations: u32,  // For centroidal relaxation
 
-    /// 0–~0.35: nudge moisture/temperature from [`MacroStrategicKind`] after noise; 0 still **classifies** every tile.
+    /// 0–~0.35: nudge moisture/temperature from [`MacroTerrainSemantics`](super::polygon_world_semantics::MacroTerrainSemantics) after noise; 0 still **classifies** every tile.
     pub strategic_field_coupling: f32,
     // Terrain / noise
     /// Multiplier on **world tile indices** into height noise (higher → higher spatial frequency → more features per map).
@@ -123,13 +123,13 @@ impl Default for WorldGenParams {
             domain_warp_strength: 0.32,
             terrain_detail_mix: 0.22,
             moisture_bias: 0.0,
-            temperature_bias: 0.0,
+            temperature_bias: 0.03,
             noise_sampling: NoiseSamplingTuning::default(),
             biome_tuning: BiomeTuning::default(),
             river_count: 5,
             lake_count: 3,
             mountain_threshold: 0.7,
-            island_mode: true,
+            island_mode: false,
             island_falloff: 3.0,
             tag_pool: TagSet::ALL,
         }
@@ -366,6 +366,7 @@ pub fn despawn_generated_world_entities(
     commands: &mut Commands,
     query: &Query<Entity, With<WorldMarker>>,
 ) {
+    commands.remove_resource::<MacroRegionRaster>();
     for entity in query.iter() {
         commands.entity(entity).despawn();
     }
@@ -378,6 +379,43 @@ pub struct RegionMarker;
 // Component to tag entities as tiles
 #[derive(Component)]
 pub struct TileMarker;
+
+/// Voronoi macro-region metadata on the region parent entity (`RegionMarker`).
+#[derive(Component, Clone, Copy, Debug)]
+pub struct MacroRegion {
+    /// Index 0 .. `num_regions`−1 (matches [`TileRegionIndex`] on child tiles).
+    pub index: u32,
+    /// Centroid of Voronoi sites in **world tile** XY (same space as tile `Transform` x/z).
+    pub site_center: Vec2,
+    /// Tiles assigned to this region after generation.
+    pub tile_count: u32,
+}
+
+/// Dense `width × height` Voronoi macro-region index per world tile (same layout as [`WorldGenActive::height_grid`]).
+#[derive(Resource, Clone, Debug, Default)]
+pub struct MacroRegionRaster {
+    pub width: u32,
+    pub height: u32,
+    pub indices: Vec<u32>,
+}
+
+impl MacroRegionRaster {
+    #[inline]
+    pub fn region_at(&self, x: u32, y: u32) -> Option<u32> {
+        if self.width == 0 || self.height == 0 {
+            return None;
+        }
+        if x >= self.width || y >= self.height {
+            return None;
+        }
+        let i = (y as usize) * (self.width as usize) + (x as usize);
+        self.indices.get(i).copied()
+    }
+}
+
+/// Voronoi region index for this tile (site id 0..`num_regions`−1). Used by editor region preview.
+#[derive(Component, Clone, Copy)]
+pub struct TileRegionIndex(pub u32);
 
 /// Marker for hydrology feature entities spawned during enhanced world gen.
 #[derive(Component)]
@@ -475,6 +513,8 @@ struct WorldGenActive {
     tiling_compute_rx: Option<Receiver<PrecomputedTiling>>,
     hydro_rx: Option<Receiver<HydrologyResult>>,
     hydro_queued_at: Option<Instant>,
+    /// Filled with Voronoi region index per tile; committed to [`MacroRegionRaster`] when generation finishes.
+    region_index_raster: Vec<u32>,
 }
 
 #[derive(Resource, Default)]
@@ -487,7 +527,8 @@ impl WorldGenJobSlot {
 }
 
 fn finalize_world_gen_job(
-    job: WorldGenActive,
+    commands: &mut Commands,
+    mut job: WorldGenActive,
     hydro: Option<&HydrologyResult>,
     last_debug: &mut WorldGenLastDebugReport,
     completed: &mut MessageWriter<WorldGenCompletedEvent>,
@@ -495,6 +536,32 @@ fn finalize_world_gen_job(
 ) {
     let phase = job.request_phase;
     let p = &job.run_params;
+    let expected = (p.width as usize).saturating_mul(p.height as usize);
+    if job.region_index_raster.len() == expected && expected > 0 {
+        commands.insert_resource(MacroRegionRaster {
+            width: p.width,
+            height: p.height,
+            indices: std::mem::take(&mut job.region_index_raster),
+        });
+    } else if expected > 0 {
+        warn!(
+            "world_gen: region_index_raster len {} != expected {}; MacroRegionRaster not updated",
+            job.region_index_raster.len(),
+            expected
+        );
+    }
+
+    for (i, &region_ent) in job.region_entities.iter().enumerate() {
+        let Some(gr) = job.geo_regions.get(i) else {
+            continue;
+        };
+        commands.entity(region_ent).insert(MacroRegion {
+            index: i as u32,
+            site_center: gr.center,
+            tile_count: gr.tiles.len() as u32,
+        });
+    }
+
     let phase_str = format!("{phase:?}");
     let profile_str = format!("{:?}", p.height_noise_profile);
     let region_str = format!("{:?}", p.region_method);
@@ -600,6 +667,7 @@ fn world_gen_pipeline_tick(
                         );
                     }
                     finalize_world_gen_job(
+                        &mut commands,
                         job,
                         Some(&hydro),
                         &mut last_debug,
@@ -636,6 +704,7 @@ fn world_gen_pipeline_tick(
                     job.height_grid = pre.height_grid;
                     job.moisture_grid = pre.moisture_grid;
                     job.spawn_cells = pre.cells;
+                    job.region_index_raster = vec![0u32; job.height_grid.len()];
                     job.tiling_compute_rx = None;
                     job.step = WorldGenPipelineStep::TilingSpawn;
                     job.next_tile_row = 0;
@@ -781,6 +850,7 @@ fn world_gen_pipeline_tick(
             tiling_compute_rx: Some(rx),
             hydro_rx: None,
             hydro_queued_at: None,
+            region_index_raster: Vec::new(),
         });
 
         progress.running = true;
@@ -823,9 +893,14 @@ fn world_gen_pipeline_tick(
                 .entry(biome_label.to_string())
                 .or_insert(0) += 1;
 
+            if idx < job.region_index_raster.len() {
+                job.region_index_raster[idx] = cell.region_index as u32;
+            }
+
             let tile_entity = commands
                 .spawn((
                     TileMarker,
+                    TileRegionIndex(cell.region_index as u32),
                     Transform::from_translation(Vec3::new(
                         x as f32,
                         height_value * 20.0,
@@ -893,7 +968,14 @@ fn world_gen_pipeline_tick(
     }
 
     let job = slot.0.take().expect("tiling done");
-    finalize_world_gen_job(job, None, &mut last_debug, &mut completed, &mut progress);
+    finalize_world_gen_job(
+        &mut commands,
+        job,
+        None,
+        &mut last_debug,
+        &mut completed,
+        &mut progress,
+    );
 }
 
 // Generate regions using the specified method

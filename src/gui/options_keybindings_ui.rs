@@ -24,6 +24,16 @@ pub enum BindingSlot {
     EguiUiScale,
     SimulationPause,
     CancelCapture,
+    MapPanNorth,
+    MapPanSouth,
+    MapPanWest,
+    MapPanEast,
+    MapPanFast,
+    MapMouseGrip,
+    MapZoomIn,
+    MapZoomOut,
+    MapRotateCcw,
+    MapRotateCw,
 }
 
 pub struct KeybindingsOptionsPlugin;
@@ -86,6 +96,16 @@ fn apply_binding_capture(
             BindingSlot::EguiUiScale => bindings.toggle_egui_ui_scale = k,
             BindingSlot::SimulationPause => bindings.toggle_simulation_pause = k,
             BindingSlot::CancelCapture => bindings.cancel_keybinding_capture = k,
+            BindingSlot::MapPanNorth => bindings.map_pan_north = k,
+            BindingSlot::MapPanSouth => bindings.map_pan_south = k,
+            BindingSlot::MapPanWest => bindings.map_pan_west = k,
+            BindingSlot::MapPanEast => bindings.map_pan_east = k,
+            BindingSlot::MapPanFast => bindings.map_pan_fast_modifier = k,
+            BindingSlot::MapMouseGrip => bindings.map_mouse_grip = k,
+            BindingSlot::MapZoomIn => bindings.map_zoom_in = k,
+            BindingSlot::MapZoomOut => bindings.map_zoom_out = k,
+            BindingSlot::MapRotateCcw => bindings.map_rotate_ccw = k,
+            BindingSlot::MapRotateCw => bindings.map_rotate_cw = k,
         }
         state.capture_slot = None;
         return;
@@ -104,6 +124,16 @@ fn slot_label_id(slot: BindingSlot) -> &'static str {
         BindingSlot::EguiUiScale => "bind_egui_scale",
         BindingSlot::SimulationPause => "bind_sim_pause",
         BindingSlot::CancelCapture => "bind_cancel_cap",
+        BindingSlot::MapPanNorth => "bind_map_n",
+        BindingSlot::MapPanSouth => "bind_map_s",
+        BindingSlot::MapPanWest => "bind_map_w",
+        BindingSlot::MapPanEast => "bind_map_e",
+        BindingSlot::MapPanFast => "bind_map_fast",
+        BindingSlot::MapMouseGrip => "bind_map_grip",
+        BindingSlot::MapZoomIn => "bind_map_zoom_in",
+        BindingSlot::MapZoomOut => "bind_map_zoom_out",
+        BindingSlot::MapRotateCcw => "bind_map_rot_ccw",
+        BindingSlot::MapRotateCw => "bind_map_rot_cw",
     }
 }
 
@@ -229,6 +259,70 @@ fn keybindings_options_ui(
             toggle_simulation_pause,
             BindingSlot::SimulationPause
         );
+        ui.separator();
+        ui.heading("Map camera (simulation + editor)");
+        ui.small("WASD, edge scroll, mouse wheel zoom; Space or middle mouse + drag to pan. Respects egui focus.");
+        row_combo!(
+            "Map pan north",
+            "",
+            map_pan_north,
+            BindingSlot::MapPanNorth
+        );
+        row_combo!(
+            "Map pan south",
+            "",
+            map_pan_south,
+            BindingSlot::MapPanSouth
+        );
+        row_combo!(
+            "Map pan west",
+            "",
+            map_pan_west,
+            BindingSlot::MapPanWest
+        );
+        row_combo!(
+            "Map pan east",
+            "",
+            map_pan_east,
+            BindingSlot::MapPanEast
+        );
+        row_combo!(
+            "Map pan speed boost (hold)",
+            "Multiplies keyboard and edge pan.",
+            map_pan_fast_modifier,
+            BindingSlot::MapPanFast
+        );
+        row_combo!(
+            "Map mouse pan grip (hold)",
+            "Hold and move mouse to pan; middle mouse also pans without this.",
+            map_mouse_grip,
+            BindingSlot::MapMouseGrip
+        );
+        row_combo!(
+            "Map zoom in (hold)",
+            "",
+            map_zoom_in,
+            BindingSlot::MapZoomIn
+        );
+        row_combo!(
+            "Map zoom out (hold)",
+            "",
+            map_zoom_out,
+            BindingSlot::MapZoomOut
+        );
+        row_combo!(
+            "Map rotate counter-clockwise",
+            "",
+            map_rotate_ccw,
+            BindingSlot::MapRotateCcw
+        );
+        row_combo!(
+            "Map rotate clockwise",
+            "",
+            map_rotate_cw,
+            BindingSlot::MapRotateCw
+        );
+        ui.separator();
         row_combo!(
             "Cancel keybinding capture",
             "Abort \"Press a key…\" in this panel without assigning.",

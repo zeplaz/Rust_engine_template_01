@@ -22,6 +22,16 @@ pub struct ChunkEcology {
     pub fire_risk: f32,
     /// Recovery rate toward biomass target after disturbance.
     pub regrowth_rate: f32,
+    /// Species / community drought appetite — rises when moisture tracks below need (design stub).
+    pub moisture_need: f32,
+    /// Erosion stability proxy (terrain mix + biomass roots).
+    pub root_strength: f32,
+    /// Canopy shading — scales with biomass; feeds microclimate stubs.
+    pub shade_factor: f32,
+    /// Harvest / extraction economy coupling (nominal units, stub).
+    pub harvest_value: f32,
+    /// Resistance to disease / pest pressure events (stub).
+    pub disease_resistance: f32,
 }
 
 impl Default for ChunkEcology {
@@ -30,6 +40,11 @@ impl Default for ChunkEcology {
             biomass: 0.35,
             fire_risk: 0.0,
             regrowth_rate: 0.12,
+            moisture_need: 0.42,
+            root_strength: 0.35,
+            shade_factor: 0.22,
+            harvest_value: 0.15,
+            disease_resistance: 0.55,
         }
     }
 }
@@ -115,7 +130,8 @@ pub(crate) fn integrate_chunk_ecology_step(
 
     eco.biomass = (eco.biomass - heat * 0.022 * dt_e).clamp(0.0, 1.0);
 
-    let dryness = (0.48 - mean_m).max(0.0);
+    let moisture_signal = mean_m * 0.58 + wx.soil_moisture * 0.42;
+    let dryness = (0.48 - moisture_signal).max(0.0);
     eco.fire_risk = (dryness * (mean_t + 0.12).max(0.0) * eco.biomass.powf(0.85)
         * (1.0 - wx.rain_intensity * 0.88)
         * (1.0 + wx.wind_speed * 0.35))
@@ -127,6 +143,19 @@ pub(crate) fn integrate_chunk_ecology_step(
         * suit.flora_density
         * (lod_s * 0.35 + 0.65))
     .clamp(0.0, 1.0);
+
+    let mk = (0.11 * dt_e).clamp(0.0, 0.28);
+    let need_target = (1.0 - suit.flora_density * 0.65 - moisture_signal * 0.35).clamp(0.0, 1.0);
+    eco.moisture_need = eco.moisture_need * (1.0 - mk) + need_target * mk;
+
+    eco.shade_factor = (eco.biomass * 0.92).clamp(0.0, 1.0);
+    eco.root_strength = ((mix.organic * 0.55 + mix.silt * 0.28 + (1.0 - mix.rock) * 0.22).min(1.0)
+        * 0.35
+        + eco.biomass * 0.55)
+    .clamp(0.0, 1.0);
+    eco.harvest_value = (eco.biomass * suit.crop_yield_factor * 0.85).clamp(0.0, 1.0);
+    eco.disease_resistance = (moisture_signal * 0.55 + (1.0 - heat) * 0.35 + eco.biomass * 0.12)
+        .clamp(0.0, 1.0);
 }
 
 /// Integrate biomass toward a **terrain + weather** carrying capacity; fire stress suppresses regrowth.
@@ -188,6 +217,7 @@ mod tests {
             wind_speed: 0.1,
             lightning_risk: 0.0,
             visibility_factor: 1.0,
+            soil_moisture: 0.5,
         };
         let lod_s = ChunkSimLod::Normal.dt_scale();
 
@@ -195,6 +225,11 @@ mod tests {
             biomass: 0.05,
             fire_risk: 0.0,
             regrowth_rate: 0.0,
+            moisture_need: 0.4,
+            root_strength: 0.3,
+            shade_factor: 0.1,
+            harvest_value: 0.05,
+            disease_resistance: 0.5,
         };
         let dt = 1.0 / 60.0_f32;
         for _ in 0..240 {

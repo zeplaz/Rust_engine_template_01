@@ -1,13 +1,18 @@
-//! Gameplay-facing **macro** terrain labels derived from continuous fields — aligns with
-//! [`voronoi_polygon_worlds_notes`](../../../prompts/guides/voronoi_polygon_worlds_notes.md.md)
-//! (graph-first worlds, strategic regions, semantics before pure tile noise).
+//! **Macro terrain semantics** — geography-derived affordances from height / moisture / temperature.
+//! Aligns with [`voronoi_polygon_worlds_notes`](../../../prompts/guides/voronoi_polygon_worlds_notes.md.md).
 //!
-//! Voronoi sites in [`super::world_generator_enhanced`] still control ECS grouping only; this layer
-//! tags each tile with a coarse **strategic kind** for AI / logistics / future coarse simulation.
+//! This is **not** operational simulation: faction control, threat envelopes, and fronts live in
+//! [`crate::strategic`] as continuous fields and graphs. Values here **feed** those systems (e.g. valley →
+//! logistics modifier, mountain → mobility cost baseline) but must not be confused with dynamic strategy.
+//!
+//! Voronoi sites in [`super::world_generator_enhanced`] control ECS grouping only; this enum tags each tile’s
+//! coarse **terrain role** for AI hints / generation nudges.
 
 use bevy::prelude::Component;
 
-/// Coarse strategic category for a single tile (Layer 0–style semantics, not biome materials).
+/// Terrain-derived affordance label (mountain barrier, floodplain, …). **Not** faction ownership or ZOC.
+///
+/// Prefer the name [`MacroTerrainSemantics`] when discussing design; `MacroStrategicKind` is the historical Rust identifier.
 #[derive(Component, Clone, Copy, Debug, PartialEq, Eq, Hash, Default)]
 #[repr(u8)]
 pub enum MacroStrategicKind {
@@ -26,6 +31,9 @@ pub enum MacroStrategicKind {
     /// Hot or temperate dry interior — supply / water stress semantics.
     AridBasin,
 }
+
+/// More accurate mental model: **terrain** semantics, not maneuver / operational strategy.
+pub type MacroTerrainSemantics = MacroStrategicKind;
 
 /// Rule-based classification from normalized height / moisture / temperature.
 #[inline]

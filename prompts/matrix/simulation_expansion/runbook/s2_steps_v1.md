@@ -32,7 +32,7 @@ Version: `v1.0.1`
 | **Verify** | `cargo check -p proc_A_dine01` |
 | **DoD** | One committed markdown lists proposed ECS types + consumers (mobility, power stubs). |
 
-**Result (2026-05-06):** **ChunkWeather** component + gap table §2.1; mobility/power still future consumers.
+**Result (2026-05-06):** **ChunkWeather** component + gap table §2.1; mobility/power still future consumers. **`soil_moisture`** (v1 follow-up 2026-05-09): derived per tick from cell moisture + rain; feeds [`ChunkEcology`](../../../../src/systems/ecology/chunk_ecology.rs) coupling.
 
 ---
 

@@ -12,7 +12,9 @@
 use bevy::prelude::*;
 use bevy_egui::{egui, EguiContexts, EguiPrimaryContextPass};
 
-use super::input_bindings::InputBindings;
+use crate::gui::ui_gates::in_simulation_or_editor;
+use crate::gui::input_bindings::InputBindings;
+use crate::engine::test_harness::ActiveTestScene;
 use crate::render::WeatherFireFieldDebugOverlay;
 use crate::systems::sim_control::{SimControlState, SimTick};
 use crate::systems::weather::{WeatherPrecipVisualSample, WeatherVisualSettings};
@@ -27,7 +29,10 @@ pub struct DiagnosticsUiState {
 
 impl Default for DiagnosticsUiState {
     fn default() -> Self {
-        Self { visible: true, fps_smoothed: 0.0 }
+        Self {
+            visible: false,
+            fps_smoothed: 0.0,
+        }
     }
 }
 
@@ -36,8 +41,14 @@ pub struct DiagnosticsUiPlugin;
 impl Plugin for DiagnosticsUiPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<DiagnosticsUiState>()
-            .add_systems(Update, (toggle_diagnostics_ui, sample_fps))
-            .add_systems(EguiPrimaryContextPass, diagnostics_ui_system);
+            .add_systems(
+                Update,
+                (toggle_diagnostics_ui, sample_fps).run_if(in_simulation_or_editor),
+            )
+            .add_systems(
+                EguiPrimaryContextPass,
+                diagnostics_ui_system.run_if(in_simulation_or_editor),
+            );
     }
 }
 
@@ -75,6 +86,7 @@ pub fn diagnostics_ui_system(
     mut wx: ResMut<WeatherVisualSettings>,
     wx_sample: Res<WeatherPrecipVisualSample>,
     mut gpu_field_debug: ResMut<WeatherFireFieldDebugOverlay>,
+    test_scene: Option<Res<ActiveTestScene>>,
 ) -> Result {
     if !state.visible {
         return Ok(());
@@ -93,6 +105,9 @@ pub fn diagnostics_ui_system(
             ui.label(format!("FPS (EMA): {:.1}", state.fps_smoothed));
             ui.label(format!("Sim tick:  {}", tick.0));
             ui.label(format!("Entities:  {entity_count}"));
+            if let Some(ts) = test_scene.as_ref() {
+                ui.label(format!("CLI test scene: {:?}", ts.0));
+            }
 
             ui.separator();
             ui.heading("Sim control");

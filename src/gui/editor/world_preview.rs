@@ -16,8 +16,10 @@ use crate::gui::editor::world_gen_ui::WorldGenUiState;
 use crate::systems::terrain::TerrainRegistriesHandles;
 use crate::terrain::ChunkCellKey;
 use crate::terrain::family::{TerrainFamilyId, TerrainFamilyRegistry};
+use crate::terrain::generation::passes::threshold_tags_for_scalars;
 use crate::terrain::generation::world_generator_enhanced::{
-    Height, Moisture, Temperature, TerrainType, TileMarker, WorldGenParams,
+    Height, MacroRegionRaster, Moisture, Temperature, TerrainType, TileMarker, TileRegionIndex,
+    WorldGenParams,
 };
 use crate::terrain::generation::{Chunk, ChunkCellMatrix, ChunkDerivedMetrics};
 use crate::terrain::mobility::{evaluate_tile, MobilityProfileRegistry, MovementHint};
@@ -26,6 +28,7 @@ use crate::terrain::material::{
     TagSet,
 };
 use bevy_egui::{egui, EguiPrimaryContextPass, EguiTextureHandle};
+use std::collections::HashMap;
 
 /// Highlight color for tag-overlay preview mode (U5).
 pub const TAG_OVERLAY_HIGHLIGHT: [u8; 4] = [255, 220, 0, 255];
@@ -164,6 +167,51 @@ pub fn slope_grade_for_world_tile(
     chunks: &[(IVec2, UVec2, &[f32])],
 ) -> Option<f32> {
     chunk_cell_layer_at_world_tile(tx, ty, chunks)
+}
+
+/// Cardinal-neighbor max \|Δelevation\| in **world tile** space (stitched from chunk slabs + tile fallback).
+pub fn slope_grade_from_world_elevation_neighbors(
+    tx: u32,
+    ty: u32,
+    world_w: u32,
+    world_h: u32,
+    center_h: f32,
+    elev_chunks: &[(IVec2, UVec2, &[f32])],
+    tile_height_lut: Option<&std::collections::HashMap<(u32, u32), f32>>,
+) -> f32 {
+    let mut max_d = 0.0f32;
+    for (dx, dy) in [(1i32, 0), (-1, 0), (0, 1), (0, -1)] {
+        let nx = tx as i32 + dx;
+        let ny = ty as i32 + dy;
+        let nh = if nx < 0 || ny < 0 || nx >= world_w as i32 || ny >= world_h as i32 {
+            center_h
+        } else {
+            let nxu = nx as u32;
+            let nyu = ny as u32;
+            chunk_cell_layer_at_world_tile(nxu, nyu, elev_chunks)
+                .or_else(|| {
+                    tile_height_lut.and_then(|m| m.get(&(nxu, nyu)).copied())
+                })
+                .unwrap_or(center_h)
+        };
+        max_d = max_d.max((center_h - nh).abs());
+    }
+    max_d
+}
+
+#[inline]
+fn voronoi_region_preview_rgba(region_index: u32) -> [u8; 4] {
+    let u = region_index
+        .wrapping_mul(1103515245)
+        .wrapping_add(12345)
+        .wrapping_mul(1103515245)
+        .wrapping_add(region_index);
+    [
+        (u & 0xff) as u8,
+        ((u >> 8) & 0xff) as u8,
+        ((u >> 16) & 0xff) as u8,
+        255,
+    ]
 }
 
 pub fn movement_hint_rgba(hint: &MovementHint) -> [u8; 4] {
@@ -456,12 +504,23 @@ pub fn update_world_preview_texture(
     world_preview_ui: Res<WorldPreviewUiState>,
     world_gen_ui_state: Res<WorldGenUiState>,
     world_gen_params: Res<WorldGenParams>,
+    macro_region_raster: Option<Res<MacroRegionRaster>>,
     handles: Res<TerrainRegistriesHandles>,
     materials: Res<Assets<MaterialRegistry>>,
     family_assets: Res<Assets<TerrainFamilyRegistry>>,
     tag_assets: Res<Assets<TagRegistry>>,
     mobility_assets: Res<Assets<MobilityProfileRegistry>>,
-    tile_query: Query<(&Transform, &Height, &Moisture, &Temperature, &TerrainType), With<TileMarker>>,
+    tile_query: Query<
+        (
+            &Transform,
+            &Height,
+            &Moisture,
+            &Temperature,
+            &TerrainType,
+            Option<&TileRegionIndex>,
+        ),
+        With<TileMarker>,
+    >,
     chunk_mats: Query<(&Chunk, &MaterializedChunk)>,
     chunk_cells: Query<(&Chunk, &ChunkCellMatrix)>,
     chunk_derived: Query<(&Chunk, &ChunkDerivedMetrics)>,
@@ -527,8 +586,17 @@ pub fn update_world_preview_texture(
     let tag_reg_opt = tag_assets.get(&handles.tag_registry);
     let mob_reg_opt = mobility_assets.get(&handles.mobility_profiles);
 
+    let mut tile_heights_lut: HashMap<(u32, u32), f32> = HashMap::new();
+    for (transform, tile_height, _, _, _, _) in tile_query.iter() {
+        tile_heights_lut.insert(
+            (transform.translation.x as u32, transform.translation.z as u32),
+            tile_height.0,
+        );
+    }
+    let tile_heights_ref = (!tile_heights_lut.is_empty()).then_some(&tile_heights_lut);
+
     // Draw tiles based on the preview mode
-    for (transform, tile_height, moisture, temperature, terrain) in tile_query.iter() {
+    for (transform, tile_height, moisture, temperature, terrain, region_ix) in tile_query.iter() {
         let x = transform.translation.x as usize;
         let y = transform.translation.z as usize;
         
@@ -588,23 +656,55 @@ pub fn update_world_preview_texture(
             PreviewMode::Tag => {
                 let tx = x as u32;
                 let ty = y as u32;
-                match cell_tags_for_world_tile(tx, ty, &tag_slices) {
-                    Some(ts) => tag_overlay_rgba_pool(&ts, &world_gen_params.tag_pool),
-                    None => [0, 0, 0, 0],
+                let h =
+                    chunk_cell_layer_at_world_tile(tx, ty, &elev_slices).unwrap_or(tile_height.0);
+                let m = chunk_cell_layer_at_world_tile(tx, ty, &moist_slices).unwrap_or(moisture.0);
+                let t =
+                    chunk_cell_layer_at_world_tile(tx, ty, &temp_slices).unwrap_or(temperature.0);
+                let mut ts = cell_tags_for_world_tile(tx, ty, &tag_slices).unwrap_or_default();
+                if ts == TagSet::default() {
+                    if let Some(reg) = tag_reg_opt {
+                        ts = threshold_tags_for_scalars(
+                            h,
+                            m,
+                            t,
+                            &world_gen_params.biome_tuning,
+                            reg,
+                            &world_gen_params.tag_pool,
+                        );
+                    }
                 }
+                tag_overlay_rgba_pool(&ts, &world_gen_params.tag_pool)
             }
             PreviewMode::Regions => {
-                // For region preview, we would need information about which region each tile belongs to
-                // For now, just default to black
-                [0, 0, 0, 255]
+                let tx = x as u32;
+                let ty = y as u32;
+                let from_raster = macro_region_raster
+                    .as_ref()
+                    .filter(|r| r.width == width && r.height == height)
+                    .and_then(|r| r.region_at(tx, ty));
+                let ri = from_raster
+                    .or_else(|| region_ix.map(|r| r.0))
+                    .unwrap_or(0);
+                voronoi_region_preview_rgba(ri)
             }
             PreviewMode::DerivedSlope => {
                 let tx = x as u32;
                 let ty = y as u32;
-                match slope_grade_for_world_tile(tx, ty, &slope_slices) {
-                    Some(s) => slope_grade_to_color(s),
-                    None => [0, 0, 0, 0],
-                }
+                let h0 =
+                    chunk_cell_layer_at_world_tile(tx, ty, &elev_slices).unwrap_or(tile_height.0);
+                let s = slope_grade_for_world_tile(tx, ty, &slope_slices).unwrap_or_else(|| {
+                    slope_grade_from_world_elevation_neighbors(
+                        tx,
+                        ty,
+                        width,
+                        height,
+                        h0,
+                        &elev_slices,
+                        tile_heights_ref,
+                    )
+                });
+                slope_grade_to_color(s)
             }
             PreviewMode::Mobility => {
                 let tx = x as u32;
@@ -615,7 +715,20 @@ pub fn update_world_preview_texture(
                             .mobility_profile_index
                             .min(mob_reg.profiles.len() - 1);
                         let profile = &mob_reg.profiles[pi];
-                        let slope = slope_grade_for_world_tile(tx, ty, &slope_slices).unwrap_or(0.0);
+                        let h0 = chunk_cell_layer_at_world_tile(tx, ty, &elev_slices)
+                            .unwrap_or(tile_height.0);
+                        let slope = slope_grade_for_world_tile(tx, ty, &slope_slices)
+                            .unwrap_or_else(|| {
+                                slope_grade_from_world_elevation_neighbors(
+                                    tx,
+                                    ty,
+                                    width,
+                                    height,
+                                    h0,
+                                    &elev_slices,
+                                    tile_heights_ref,
+                                )
+                            });
                         let tags = cell_tags_for_world_tile(tx, ty, &tag_slices).unwrap_or_default();
                         let terrain_family = chunk_cell_layer_at_world_tile(tx, ty, &family_slices)
                             .unwrap_or(terrain.0);

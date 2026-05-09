@@ -18,6 +18,8 @@ pub struct ChunkWeather {
     pub lightning_risk: f32,
     /// 1.0 = clear horizon; lower = worse (for combat / sensors stubs).
     pub visibility_factor: f32,
+    /// Chunk-scale soil moisture **derived** from cell means + rain (runbook coupling to ecology / hydrology).
+    pub soil_moisture: f32,
 }
 
 impl Default for ChunkWeather {
@@ -29,6 +31,7 @@ impl Default for ChunkWeather {
             wind_speed: 0.0,
             lightning_risk: 0.0,
             visibility_factor: 1.0,
+            soil_moisture: 0.45,
         }
     }
 }
@@ -64,6 +67,15 @@ pub(crate) fn spawn_chunk_weather_on_new_chunk(
     for entity in &q {
         commands.entity(entity).insert(ChunkWeather::default());
     }
+}
+
+fn matrix_mean_moisture(matrix: &ChunkCellMatrix) -> Option<f32> {
+    let n = (matrix.size.x * matrix.size.y) as usize;
+    if matrix.moisture.len() != n || n == 0 {
+        return None;
+    }
+    let sum: f32 = matrix.moisture.iter().sum();
+    Some(sum / n as f32)
 }
 
 fn targets_from_cell_matrix(matrix: &ChunkCellMatrix) -> Option<(f32, f32, f32, f32, f32)> {
@@ -136,6 +148,12 @@ pub fn weather_chunk_tick(
                     w.wind_speed = lerp(w.wind_speed, tw);
                     w.lightning_risk = lerp(w.lightning_risk, tl);
                 }
+                if let Some(mm) = matrix_mean_moisture(matrix) {
+                    let lerp = |a: f32, b: f32| a * (1.0 - k_drive) + b * k_drive;
+                    let soil_target =
+                        (mm * 0.82 + w.rain_intensity * 0.26).clamp(0.0, 1.0);
+                    w.soil_moisture = lerp(w.soil_moisture, soil_target);
+                }
             }
             None => {
                 w.rain_intensity *= 1.0 - k_decay;
@@ -143,6 +161,8 @@ pub fn weather_chunk_tick(
                 w.snow_depth *= 1.0 - k_decay * 0.5;
                 w.wind_speed *= 1.0 - k_decay * 0.7;
                 w.lightning_risk *= 1.0 - k_decay;
+                let lerp = |a: f32, b: f32| a * (1.0 - k_decay) + b * k_decay;
+                w.soil_moisture = lerp(w.soil_moisture, 0.38);
             }
         }
         w.rain_intensity = w.rain_intensity.max(0.0);
@@ -237,6 +257,7 @@ mod tests {
             wind_speed: 0.5,
             lightning_risk: 0.0,
             visibility_factor: 0.5,
+            soil_moisture: 0.45,
         });
 
         app.update();

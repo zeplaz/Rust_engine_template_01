@@ -25,7 +25,8 @@ fn update(@builtin(global_invocation_id) gid: vec3<u32>) {
     let uv = vec2<f32>(f32(gid.x) + 0.5, f32(gid.y) + 0.5) / vec2<f32>(f32(dims.x), f32(dims.y));
     let t = params.time_secs;
 
-    let old = textureLoad(prev_field, coord, 0);
+    // `texture_storage_2d`: `textureLoad` is (tex, coords) only — no mip level argument.
+    let old = textureLoad(prev_field, coord);
 
     let n1 = sin(uv.x * 6.28318 + t * 0.35) * cos(uv.y * 6.28318 - t * 0.22);
     let wind = params.extra_means.z;
@@ -35,7 +36,7 @@ fn update(@builtin(global_invocation_id) gid: vec3<u32>) {
         * (1.0 + params.extra_means.y * 0.35)
         * (1.0 + wind * 0.22);
 
-    let target = vec4<f32>(
+    let blend_target = vec4<f32>(
         params.means.x * clamp(0.55 + 0.45 * n1, 0.0, 1.5),
         params.means.y * clamp(0.45 + 0.55 * cos(uv.x * 12.0 + t * 0.4), 0.0, 1.5),
         params.means.z * fire_mul,
@@ -43,7 +44,7 @@ fn update(@builtin(global_invocation_id) gid: vec3<u32>) {
     );
 
     let m = params.blend_rate;
-    var blended = mix(old, target, m);
-    blended = blended * (1.0 - params.decay) + target * params.decay * 0.15;
+    var blended = mix(old, blend_target, m);
+    blended = blended * (1.0 - params.decay) + blend_target * params.decay * 0.15;
     textureStore(next_field, vec2<i32>(gid.xy), blended);
 }

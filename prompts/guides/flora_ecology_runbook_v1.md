@@ -1,8 +1,8 @@
 # Flora & ecology simulation runbook `v1`
 
-> **STATUS:** Draft **v1** — design scaffold. Implementation **Pending**.
+> **STATUS:** Draft **v1** — chunk **field scaffold** in code (`ChunkEcology` + `ChunkWeather.soil_moisture`); detailed succession / LOD still **Pending**.
 
-Version: `v1.0.0`  
+Version: `v1.0.1`  
 Parent: [`simulation_expansion_orchestrator_v1.md`](simulation_expansion_orchestrator_v1.md)
 
 ---

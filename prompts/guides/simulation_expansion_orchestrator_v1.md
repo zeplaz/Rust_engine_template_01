@@ -2,7 +2,7 @@
 
 > **STATUS:** Draft **v1** — **scaffolding only**. Defines layers, ownership, and cross-links. Per-domain matrices and atomic step packs are **Pending** until anchored (see [`system_runbook_authoring_meta_v1.md`](system_runbook_authoring_meta_v1.md)).
 
-Version: `v1.0.0`  
+Version: `v1.0.1`  
 Audience: agents and leads wiring **ontology → simulation execution**.
 
 **Entry index:** [`new_propsal_guide_may202608.md`](new_propsal_guide_may202608.md)
@@ -97,6 +97,32 @@ For **100k+ field entities** and **large worlds**, chunk-local **FixedUpdate** s
 | Petroleum | [`petroleum_industry_simulation_runbook_v1.md`](petroleum_industry_simulation_runbook_v1.md) |
 | Petroleum UI | [`ui/petroleum_industry_ui_snippet_v1.md`](ui/petroleum_industry_ui_snippet_v1.md) |
 | Python asset tools | [`python_asset_tools_alignment_runbook_v1.md`](python_asset_tools_alignment_runbook_v1.md) |
+
+### 6b. Strategic program (orchestrators + execution order)
+
+**Recommended sequencing:** [`strategic_program_execution_plan_v1.md`](strategic_program_execution_plan_v1.md)
+
+| Role | Doc |
+|:---|:---|
+| Strategic fields + AI (overlays, corridors, logistics/settlement/city AI, operational AI) | [`strategic_fields_and_ai_orchestrator_v1.md`](strategic_fields_and_ai_orchestrator_v1.md) |
+| Infrastructure + research (construction, resilience, capability ecosystem) | [`infrastructure_and_research_orchestrator_v1.md`](infrastructure_and_research_orchestrator_v1.md) |
+| Experience layer (HUD direction, GUI, camera) | [`experience_layer_orchestrator_v1.md`](experience_layer_orchestrator_v1.md) |
+| Doctrine ↔ sim acceptance | [`doctrine_simulation_alignment_runbook_v1.md`](doctrine_simulation_alignment_runbook_v1.md) |
+
+| Child runbook | Parent orchestrator |
+|:---|:---|
+| [`strategic_overlay_runbook_v1.md`](strategic_overlay_runbook_v1.md) | strategic_fields_and_ai |
+| [`infrastructure_corridor_runbook_v1.md`](infrastructure_corridor_runbook_v1.md) | strategic_fields_and_ai |
+| [`logistics_ai_runbook_v1.md`](logistics_ai_runbook_v1.md) | strategic_fields_and_ai |
+| [`settlement_growth_runbook_v1.md`](settlement_growth_runbook_v1.md) | strategic_fields_and_ai |
+| [`ai_city_planning_runbook_v1.md`](ai_city_planning_runbook_v1.md) | strategic_fields_and_ai |
+| [`ai_operational_warfare_runbook_v1.md`](ai_operational_warfare_runbook_v1.md) | strategic_fields_and_ai |
+| [`research_capability_ecosystem_runbook_v1.md`](research_capability_ecosystem_runbook_v1.md) | infrastructure_and_research |
+| [`infrastructure_construction_runbook_v1.md`](infrastructure_construction_runbook_v1.md) | infrastructure_and_research |
+| [`infrastructure_resilience_and_failure_runbook_v1.md`](infrastructure_resilience_and_failure_runbook_v1.md) | infrastructure_and_research *(also lists construction as runbook parent)* |
+| [`ui_operational_direction_runbook_v1.md`](ui_operational_direction_runbook_v1.md) | experience_layer |
+
+**Archived bundles (do not edit for authority):** [`base_ai_runbook_draft.md`](base_ai_runbook_draft.md), [`base_reserch_draft.md`](base_reserch_draft.md), [`base_doctrine_thoery.md`](base_doctrine_thoery.md), [`base_ui_direction_principls.md`](base_ui_direction_principls.md).
 
 ---
 

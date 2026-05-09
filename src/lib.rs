@@ -13,6 +13,7 @@ pub mod gui;
 pub mod io;
 pub mod render;
 pub mod systems;
+pub mod strategic;
 pub mod terrain;
 pub mod traits;
 pub mod utils;
@@ -22,3 +23,4 @@ pub mod idgen;
 // Re-export commonly used items
 pub use engine::EnginePlugin;
 pub use bevysubengines::WorldGeneratorSubenginePlugin;
+pub use strategic::{LogisticsGraph, StrategicFieldsPlugin};

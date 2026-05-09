@@ -63,10 +63,15 @@ fn splash_setup(mut commands: Commands, asset_server: Res<AssetServer>) {
 }
 
 fn countdown(
+    launch: Option<Res<crate::engine::EngineLaunchArgs>>,
     mut next_state: ResMut<NextState<AppStartState>>,
     time: Res<Time>,
     mut timer: ResMut<SplashTimer>,
 ) {
+    if launch.is_some_and(|l| l.test_mode()) {
+        NextState::set_if_neq(&mut *next_state, AppStartState::Menu);
+        return;
+    }
     if timer.tick(time.delta()).is_finished() {
         NextState::set_if_neq(&mut *next_state, AppStartState::Menu);
     }

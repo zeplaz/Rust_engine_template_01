@@ -17,6 +17,8 @@
 
 | File | Role |
 |:---|:---|
+| [`guides/README.md`](guides/README.md) | Guides hub — points at **INVENTORY** for status metadata |
+| [`guides/INVENTORY.md`](guides/INVENTORY.md) | Full guide list + **Active / Pending / Finished** (logical only) |
 | [`guides/ui_boundary_guide_v1.md`](guides/ui_boundary_guide_v1.md) | Bevy UI vs egui |
 | [`guides/system_refactor_NOTE.md`](guides/system_refactor_NOTE.md) | How to use RTF vs matrices |
 | [`guides/system_refactor.opai_.rtf`](guides/system_refactor.opai_.rtf) | Historical refactor essay |
