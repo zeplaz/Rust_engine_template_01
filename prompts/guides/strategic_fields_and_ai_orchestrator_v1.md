@@ -5,8 +5,8 @@
 Version: `v1.0.0`  
 Audience: agents sequencing overlays, corridors, logistics AI, settlement/city AI, and operational warfare AI.
 
-**Execution order** (detail + UI/research parallel tracks): [`strategic_program_execution_plan_v1.md`](strategic_program_execution_plan_v1.md)  
-**Design doctrine (checklist):** [`doctrine_simulation_alignment_runbook_v1.md`](doctrine_simulation_alignment_runbook_v1.md)
+**Execution plan:** [`strategic_program_execution_plan_v1.md`](strategic_program_execution_plan_v1.md)  
+**Per-runbook test rounds:** each child runbook has an **Execution rounds** section — run the listed `cargo test` filters before starting the next runbook’s next round.
 
 ---
 

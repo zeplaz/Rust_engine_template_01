@@ -12,6 +12,18 @@ Version: `v1.0.0`
 
 ---
 
+## Execution rounds (run tests after each round)
+
+| Round | Goal | Verify |
+|:---:|:---|:---|
+| **R1** | Corridor type + cost ranking stub | `cargo test -p proc_A_dine01 strategic::runbook_rounds::corridor::tests::round1_rank_prefers_high_throughput_lower_vuln` |
+| **R2** | Corridor sketches ↔ `InfrastructureGraph` / edges (construction runbook) | *pending* — add integration once graph owns corridor entities |
+| **R3** | AI expansion scoring uses [`corridor_total_cost`](../../src/strategic/runbook_rounds.rs) or successor | *pending* |
+
+**Code (stubs):** [`strategic::runbook_rounds::corridor`](../../src/strategic/runbook_rounds.rs).
+
+---
+
 ## 1. Core philosophy
 
 Infrastructure develops as **terrain-aware strategic corridors**, not click spam at disconnected points.
