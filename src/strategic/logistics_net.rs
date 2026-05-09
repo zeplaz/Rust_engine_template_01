@@ -135,4 +135,58 @@ mod tests {
         assert!((overlay.logistics_strength[0][0] - 1.0).abs() < 1e-4);
         assert!((overlay.logistics_strength[1][0] - 1.0).abs() < 1e-4);
     }
+
+    /// Runbook round — full disruption kills effective flow (`strategic_overlay_runbook_v1` / logistics coupling).
+    #[test]
+    fn logistics_full_disruption_zeroes_injection() {
+        let mut app = App::new();
+        app.add_plugins(MinimalPlugins)
+            .add_plugins(AssetPlugin::default())
+            .init_resource::<WorldGenParams>()
+            .init_resource::<LogisticsGraph>()
+            .add_plugins(MaterialUnificationPlugin)
+            .add_plugins(StrategicFieldsPlugin);
+
+        app.world_mut().insert_resource(LogisticsGraph {
+            nodes: vec![
+                LogisticsNode {
+                    id: LogisticsNodeId(0),
+                    throughput: 0.0,
+                    stockpile: 0.0,
+                    anchor: Some(ChunkCellKey::new(IVec2::ZERO, 0)),
+                },
+                LogisticsNode {
+                    id: LogisticsNodeId(1),
+                    throughput: 0.0,
+                    stockpile: 0.0,
+                    anchor: Some(ChunkCellKey::new(IVec2::ZERO, 1)),
+                },
+            ],
+            edges: vec![LogisticsEdge {
+                from: LogisticsNodeId(0),
+                to: LogisticsNodeId(1),
+                capacity: 10.0,
+                disruption: 1.0,
+                traversal_cost: 1.0,
+            }],
+        });
+
+        app.world_mut().spawn((
+            Chunk {
+                coord: IVec2::ZERO,
+            },
+            ChunkCellMatrix::new(UVec2::new(2, 1)),
+        ));
+
+        app.update();
+
+        let mut world_query = app.world_mut().query::<(&Chunk, &ChunkStrategicOverlay)>();
+        let (_, overlay) = world_query
+            .iter(app.world())
+            .next()
+            .expect("one chunk with overlay");
+
+        assert!((overlay.logistics_throughput[0]).abs() < 1e-6);
+        assert!((overlay.logistics_throughput[1]).abs() < 1e-6);
+    }
 }

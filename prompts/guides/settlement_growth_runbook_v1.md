@@ -12,6 +12,18 @@ Version: `v1.0.0`
 
 ---
 
+## Execution rounds (run tests after each round)
+
+| Round | Goal | Verify |
+|:---:|:---|:---|
+| **R1** | Settlement tier thresholds from population stub | `cargo test -p proc_A_dine01 strategic::runbook_rounds::settlement::tests::round1_lifecycle_thresholds_monotonic` |
+| **R2** | Migration drivers ↔ jobs/safety/housing signals | *pending* |
+| **R3** | Ecology coupling (fire/flood overlays) | *pending* |
+
+**Code (stubs):** [`strategic::runbook_rounds::settlement`](../../src/strategic/runbook_rounds.rs).
+
+---
+
 ## 1. Core philosophy
 
 Settlements emerge from:

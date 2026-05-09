@@ -20,9 +20,18 @@
 //! GPU note: layers are dense per chunk; diffusion and updates map cleanly to compute later.
 //!
 //! **Delivery phases:** `prompts/designer_questions/strategic_platforms/phased_engine_delivery_v1.md` (Phase 1a).
+//!
+//! **Runbook test rounds:** incremental stubs in [`runbook_rounds`](runbook_rounds.rs) mirror `prompts/guides/*_runbook_v1.md` execution tables.
 
+mod runbook_rounds;
 mod logistics_net;
 mod plugin;
+
+pub use runbook_rounds::city_planning::SettlementArchetype;
+pub use runbook_rounds::corridor::{corridor_total_cost, CorridorCost, CorridorType};
+pub use runbook_rounds::logistics_ai_policy::{effective_priority_weight, LogisticsPriority};
+pub use runbook_rounds::operational_warfare::{offensive_commit_score, DroneDoctrine};
+pub use runbook_rounds::settlement::{tier_from_population, SettlementTier};
 
 pub use logistics_net::logistics_net_inject_into_overlays;
 pub use plugin::StrategicFieldsPlugin;

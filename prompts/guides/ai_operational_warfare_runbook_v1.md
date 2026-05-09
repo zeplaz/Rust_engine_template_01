@@ -12,6 +12,18 @@ Version: `v1.0.0`
 
 ---
 
+## Execution rounds (run tests after each round)
+
+| Round | Goal | Verify |
+|:---:|:---|:---|
+| **R1** | Offensive commit score respects ammo + rail throughput stubs | `cargo test -p proc_A_dine01 strategic::runbook_rounds::operational_warfare::tests::round1_commit_needs_both_supply_signals` |
+| **R2** | `DroneDoctrine` drives plan variants (recon vs interdiction) | *pending* |
+| **R3** | Strike + attrition policy ↔ doctrine checklist | [`doctrine_simulation_alignment_runbook_v1.md`](doctrine_simulation_alignment_runbook_v1.md) §9 |
+
+**Code (stubs):** [`strategic::runbook_rounds::operational_warfare`](../../src/strategic/runbook_rounds.rs).
+
+---
+
 ## 1. Core philosophy
 
 Modern warfare AI reasons about:

@@ -12,6 +12,21 @@ Version: `v1.0.0`
 
 ---
 
+## Execution rounds (run tests after each round)
+
+Sequential delivery: finish round *N* before starting *N+1* for this runbook.
+
+| Round | Goal | Verify |
+|:---:|:---|:---|
+| **R1** | Chunk-aligned overlay buffers spawn with [`ChunkCellMatrix`](../../src/terrain/generation/cell_matrix.rs) | `cargo test -p proc_A_dine01 strategic::plugin::tests::strategic_overlay_spawns_with_chunk_matrix` |
+| **R2** | `LogisticsGraph` → per-cell `logistics_throughput` / `logistics_strength` inject | `cargo test -p proc_A_dine01 strategic::logistics_net::tests::logistics_edge_injects_throughput_at_anchors` |
+| **R3** | Disruption drives effective flow to zero (coupling contract) | `cargo test -p proc_A_dine01 strategic::logistics_net::tests::logistics_full_disruption_zeroes_injection` |
+| **R4+** | Faction slots, recon/EW/artillery writers, overlay UX toggles | Add tests per field owner; filter `cargo test -p proc_A_dine01 strategic::` |
+
+**Code:** [`ChunkStrategicOverlay`](../../src/strategic/mod.rs), [`StrategicFieldsPlugin`](../../src/strategic/plugin.rs), [`logistics_net_inject_into_overlays`](../../src/strategic/logistics_net.rs).
+
+---
+
 ## 1. Purpose
 
 Overlays represent:

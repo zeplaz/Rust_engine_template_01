@@ -12,6 +12,18 @@ Version: `v1.0.0`
 
 ---
 
+## Execution rounds (run tests after each round)
+
+| Round | Goal | Verify |
+|:---:|:---|:---|
+| **R1** | `SettlementArchetype` enum stable for data/tools | `cargo test -p proc_A_dine01 strategic::runbook_rounds::city_planning::tests::round1_archetypes_are_stable_enum` |
+| **R2** | Site scoring + district layout consumes overlays | *pending* |
+| **R3** | Utility/defensive urbanism ↔ construction graph | *pending* |
+
+**Code (stubs):** [`strategic::runbook_rounds::city_planning`](../../src/strategic/runbook_rounds.rs).
+
+---
+
 ## 1. Core philosophy
 
 City growth emerges from:

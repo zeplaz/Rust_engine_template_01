@@ -12,6 +12,18 @@ Version: `v1.0.0`
 
 ---
 
+## Execution rounds (run tests after each round)
+
+| Round | Goal | Verify |
+|:---:|:---|:---|
+| **R1** | Priority weighting stub (military under crisis) | `cargo test -p proc_A_dine01 strategic::runbook_rounds::logistics_ai_policy::tests::round1_military_weight_rises_under_crisis` |
+| **R2** | Reroute rules ↔ overlay congestion + graph damage | *pending* |
+| **R3** | Forecasting hooks (demand spikes / weather) | *pending* |
+
+**Code (stubs):** [`strategic::runbook_rounds::logistics_ai_policy`](../../src/strategic/runbook_rounds.rs). **Integrates with:** [`logistics_net_inject_into_overlays`](../../src/strategic/logistics_net.rs).
+
+---
+
 ## 1. Scope
 
 Logistics AI controls:
