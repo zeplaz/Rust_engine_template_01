@@ -1,14 +1,16 @@
 // GUI systems
 // Boundary: see prompts/guides/ui_boundary_guide_v1.md
-//   in_game_hud.rs, splash.rs, main_menu.rs  → native Bevy UI (Node)
-//   editor/*                                  → egui tooling
-//   agent_permissions_ui.rs                   → egui tooling
+//   splash, app_shell, in_game_hud → Bevy shell / simulation HUD
+//   editor/* + selected egui panels  → dev tooling (gated via ui_gates)
+//   agent_permissions_ui.rs          → egui tooling
 
+mod map_camera;
+mod app_shell;
 mod main_menu;
 mod splash;
+mod ui_gates;
 mod input_bindings;
 mod options_keybindings_ui;
-mod hud_quick_menu;
 mod logistics_focus;
 mod in_game_hud;
 mod logistics_targets_panel;
@@ -23,11 +25,13 @@ pub mod components;
 pub mod editor;
 
 // Public exports
+pub use app_shell::{AppShellPlugin, LoadStubPath};
+pub use map_camera::{MainWorldCamera, MapCameraPlugin};
 pub use main_menu::*;
 pub use splash::*;
 pub use input_bindings::*;
 pub use options_keybindings_ui::*;
-pub use hud_quick_menu::*;
+pub use ui_gates::*;
 pub use logistics_focus::*;
 pub use in_game_hud::*;
 pub use logistics_targets_panel::*;

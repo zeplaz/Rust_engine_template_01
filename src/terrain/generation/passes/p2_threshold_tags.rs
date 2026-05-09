@@ -23,6 +23,57 @@ fn insert_named(
     set.insert(id);
 }
 
+/// Threshold tags for one cell — same rules as [`apply_threshold_tags`], shared with world preview fallback.
+pub fn threshold_tags_for_scalars(
+    h: f32,
+    m: f32,
+    t: f32,
+    tuning: &BiomeTuning,
+    tag_registry: &TagRegistry,
+    tag_pool: &TagSet,
+) -> TagSet {
+    let n = &tuning.threshold_tag_names;
+    let mut tags = TagSet::default();
+    let lowland = h >= tuning.beach_height_max && h < tuning.mountain_height_min;
+    insert_named(&mut tags, tag_registry, &n.lowland, lowland, tag_pool);
+    insert_named(
+        &mut tags,
+        tag_registry,
+        &n.highland,
+        h >= tuning.mountain_height_min,
+        tag_pool,
+    );
+    insert_named(
+        &mut tags,
+        tag_registry,
+        &n.wet,
+        m >= tuning.wetland_moist_threshold,
+        tag_pool,
+    );
+    insert_named(
+        &mut tags,
+        tag_registry,
+        &n.dry,
+        m <= tuning.desert_moisture_max,
+        tag_pool,
+    );
+    insert_named(
+        &mut tags,
+        tag_registry,
+        &n.hot,
+        t >= tuning.hot_lowlands_temperature_min,
+        tag_pool,
+    );
+    insert_named(
+        &mut tags,
+        tag_registry,
+        &n.cold,
+        t <= tuning.tundra_temperature_max,
+        tag_pool,
+    );
+    tags
+}
+
 /// Writes **baseline** threshold tags into `matrix.tags` (replaces prior contents per cell).
 pub fn apply_threshold_tags(
     matrix: &mut ChunkCellMatrix,
@@ -30,50 +81,15 @@ pub fn apply_threshold_tags(
     tag_registry: &TagRegistry,
     tag_pool: &TagSet,
 ) {
-    let n = &tuning.threshold_tag_names;
     for i in 0..matrix.elevation.len() {
-        let h = matrix.elevation[i];
-        let m = matrix.moisture[i];
-        let t = matrix.temperature[i];
-        let mut tags = TagSet::default();
-        let lowland = h >= tuning.beach_height_max && h < tuning.mountain_height_min;
-        insert_named(&mut tags, tag_registry, &n.lowland, lowland, tag_pool);
-        insert_named(
-            &mut tags,
+        matrix.tags[i] = threshold_tags_for_scalars(
+            matrix.elevation[i],
+            matrix.moisture[i],
+            matrix.temperature[i],
+            tuning,
             tag_registry,
-            &n.highland,
-            h >= tuning.mountain_height_min,
             tag_pool,
         );
-        insert_named(
-            &mut tags,
-            tag_registry,
-            &n.wet,
-            m >= tuning.wetland_moist_threshold,
-            tag_pool,
-        );
-        insert_named(
-            &mut tags,
-            tag_registry,
-            &n.dry,
-            m <= tuning.desert_moisture_max,
-            tag_pool,
-        );
-        insert_named(
-            &mut tags,
-            tag_registry,
-            &n.hot,
-            t >= tuning.hot_lowlands_temperature_min,
-            tag_pool,
-        );
-        insert_named(
-            &mut tags,
-            tag_registry,
-            &n.cold,
-            t <= tuning.tundra_temperature_max,
-            tag_pool,
-        );
-        matrix.tags[i] = tags;
     }
 }
 

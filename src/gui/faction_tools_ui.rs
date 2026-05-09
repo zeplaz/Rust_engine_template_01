@@ -12,7 +12,8 @@
 use bevy::prelude::*;
 use bevy_egui::{egui, EguiContexts, EguiPrimaryContextPass};
 
-use super::input_bindings::InputBindings;
+use crate::gui::ui_gates::in_simulation_or_editor;
+use crate::gui::input_bindings::InputBindings;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum FactionToolsPanel {
@@ -39,8 +40,11 @@ pub struct FactionToolsUiPlugin;
 impl Plugin for FactionToolsUiPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<FactionToolsState>()
-            .add_systems(Update, toggle_faction_tools)
-            .add_systems(EguiPrimaryContextPass, faction_tools_ui_system);
+            .add_systems(Update, toggle_faction_tools.run_if(in_simulation_or_editor))
+            .add_systems(
+                EguiPrimaryContextPass,
+                faction_tools_ui_system.run_if(in_simulation_or_editor),
+            );
     }
 }
 

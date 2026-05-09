@@ -1,9 +1,9 @@
 ## UI Boundary Guide v1
 
-> **STATUS:** ✅ **Rules stable** for Bevy 0.15+ native UI vs egui split · ⏳ periodic audit that no egui leaks into in-game plugins.
+> **STATUS:** ✅ **Rules stable** · **Shell refactor (2026-05):** main menu = Bevy (`app_shell.rs`); dev egui (F3/F4/…) gated to simulation/editor via `ui_gates.rs`.
 
-Version: `v1.0.0`
-Audience: agents and contributors deciding which UI system to use for a given feature.
+Version: `v1.0.2`
+Audience: agents and contributors deciding which UI system to use for a given feature. Strategic layout and mockup epics: [`ui_operational_direction_runbook_v1.md`](ui_operational_direction_runbook_v1.md) · layer index: [`experience_layer_orchestrator_v1.md`](experience_layer_orchestrator_v1.md).
 
 ---
 
@@ -125,14 +125,25 @@ app.add_plugins(EguiPlugin::default())
 
 ---
 
+## Implementation alignment (shell vs dev workspace)
+
+- **Application shell:** `app_shell.rs` — main menu + load stub (Bevy UI only). World-gen flow may still open **egui** tooling while in `BaseState::MainMenu` when `WorldGenFlowState` is active (preview/full pipeline).
+- **Gameplay HUD:** `in_game_hud.rs` — logistics / placeholders only; **spawns when entering `BaseState::Simulation`** (not on main menu). No duplicate dev toolbars.
+- **Dev workspace (egui):** diagnostics, faction tools, logistics list — `EguiPrimaryContextPass` systems use `in_simulation_or_editor` (`ui_gates.rs`). Hotkeys (F3, F4, …) only affect tooling while in those modes.
+- **Strategic / field overlays:** prefer GPU/render layers (e.g. weather-fire compute field) over stacking **egui** windows for map truth.
+
+---
+
 ## GUI module layout (canonical)
 
 ```
 src/gui/
   splash.rs          → Bevy native UI  (splash screen)
-  main_menu.rs       → Bevy native UI  (main menu)  + egui for quick prototyping
+  app_shell.rs       → Bevy native UI  (main menu + load stub shell)
+  main_menu.rs       → states + shared UiState (no layout)
+  ui_gates.rs        → run_if helpers (shell vs dev separation)
   in_game_ui.rs      → LEGACY (rewrite using native Bevy UI + Node)
-  in_game_hud.rs     → Bevy native UI  (planned: health/resource HUD)
+  in_game_hud.rs     → Bevy native UI  (simulation HUD; logistics + tactical placeholders)
   ui_windows.rs      → shared Bevy UI helpers + egui scale config
   gui_assets.rs      → asset loading only
   gui_sets.rs        → SystemSet definitions only

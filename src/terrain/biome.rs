@@ -212,7 +212,7 @@ impl Default for BiomeTuning {
             boreal_moist_gain: 1.4,
             temperate_marine_weight: 1.0,
             temperate_alpine_suppress: 0.4,
-            temperate_floor: 0.05,
+            temperate_floor: 0.10,
             deep_water_height_max: 0.2,
             shallow_water_height_max: 0.35,
             beach_height_max: 0.38,

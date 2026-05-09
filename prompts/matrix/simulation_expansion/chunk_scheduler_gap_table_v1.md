@@ -2,8 +2,8 @@
 
 > **Parent:** [`../../guides/chunk_scheduler_runbook_v1.md`](../../guides/chunk_scheduler_runbook_v1.md) · **Step pack:** [`runbook/s1_steps_v1.md`](runbook/s1_steps_v1.md) (S1-S02 / S1-S03)
 
-Version: `v1.1.0`  
-**STATUS:** **Partial** — updated for `ChunkWeather` (2026-05-06).
+Version: `v1.1.1`  
+**STATUS:** **Partial** — updated for `ChunkWeather` + strategic overlays (2026-05-06).
 
 ---
 
@@ -23,6 +23,7 @@ Inventory **which simulation concerns** are already **chunk-scoped** vs **global
 | **Transport** | **None** in `systems/transport` (no `Chunk` symbol match) | `src/systems/transport/` | Convoy / vehicle state per save design | Cost caches when chunk inputs change |
 | **Damage** | **None** in `systems/damage` | `src/systems/damage/` | Building / vehicle damage if in save | Transient combat effects |
 | **Weather** | **Component on chunk entities** — `ChunkWeather` (`src/systems/weather/chunk_weather.rs`) for `Added<Chunk>`; tick honors `SimControlState` | `src/systems/weather/` (`WeatherPlugin`) | Chunk-entity components if saves include world | Regional / climate drivers recompute fast fields when designed |
+| **Strategic / operational fields** | **Strong** — `ChunkStrategicOverlay` on same entities as `ChunkCellMatrix` (after materialize); global `Resource` **`LogisticsGraph`** feeds edge flow into `logistics_throughput` | `src/strategic/` (`StrategicFieldsPlugin`, `logistics_net_inject_into_overlays`) | TBD — tick layers when saves need maneuver state | Throughput cleared + reinjected from graph each frame (v0); diffusion / units later |
 
 **Rule:** extend **ChunkDirty-style** invalidation only when a system’s inputs are **chunk-addressable** (registry hash, neighbor chunk, local policy). Do not duplicate global economies per chunk without an explicit LOD design.
 
@@ -52,5 +53,6 @@ Inventory **which simulation concerns** are already **chunk-scoped** vs **global
 
 ## Document history
 
+- **2026-05-06:** `v1.1.1` — **Strategic fields** row (`ChunkStrategicOverlay`, `LogisticsGraph` → chunk scalars).
 - **2026-05-06:** `v1.1.0` — **ChunkWeather** ECS + §2.1 field table; weather row **Applied** (chunk-component level).
 - **2026-05-06:** `v1.0.1` — Weather row cites `WeatherPlugin` scaffold (S2 ∥ S8).

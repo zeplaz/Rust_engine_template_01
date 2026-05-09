@@ -5,6 +5,7 @@
 use bevy::prelude::*;
 use bevy_egui::EguiPlugin;
 use proc_A_dine01::gui::KeybindingsOptionsPlugin;
+use proc_A_dine01::strategic::StrategicFieldsPlugin;
 use proc_A_dine01::systems::terrain::MaterialUnificationPlugin;
 use proc_A_dine01::terrain::generation::WorldGenToolsPlugin;
 
@@ -13,6 +14,7 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .add_plugins(EguiPlugin::default())
         .add_plugins(MaterialUnificationPlugin)
+        .add_plugins(StrategicFieldsPlugin)
         .add_plugins(KeybindingsOptionsPlugin)
         .add_plugins(WorldGenToolsPlugin)
         .add_systems(Startup, setup)

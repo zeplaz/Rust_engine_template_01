@@ -2,7 +2,7 @@
 
 > **Runbook:** [`../../guides/asset_system_audit_runbook_v1.md`](../../guides/asset_system_audit_runbook_v1.md) · **Step pack:** [`runbook/s0_steps_v1.md`](runbook/s0_steps_v1.md)
 
-Version: `v1.2.2`  
+Version: `v1.2.3`  
 **STATUS:** **Partial** — inventory pass from repo (2026-05-06); S0 step pack verified same day; rows below cite **primary** owners + anchors.
 
 ---
@@ -38,6 +38,9 @@ For each row: one **primary** runtime owner, **sim layer**, lifecycle, persisten
 | Legacy **trucks.dat** / **base_terrains.dat** | `io/serialization` (legacy paths) | legacy | static files | file-backed | `src/io/serialization/deserializers.rs` | **Legacy** — prefer registries + components |
 | Vehicle **fuel_type** / petroleum split (designer) | *not fully in Rust enum yet* | ontology / industry | — | — | Tooling: `asset config.py` `FUEL_TYPES`; engine alignment **Pending** | **Pending** |
 | Petroleum **crude / fractions** (designer) | *stubs / docs* | industry | — | — | Runbook: `petroleum_industry_simulation_runbook_v1.md` | **Pending** |
+| **Macro regions** (Voronoi skeleton) | `world_generator_enhanced` finalize + `despawn_generated_world_entities` | strategic grouping / saves partition | static after gen | raster optional in saves | `MacroRegion`, `MacroRegionRaster`, `TileRegionIndex`, `RegionMarker` — `src/terrain/generation/world_generator_enhanced.rs` | **Partial** |
+| **ChunkStrategicOverlay** (operational SOA) | `StrategicFieldsPlugin` | strategic **fields** (control, threat, logistics scalars per cell) | dynamic | TBD | `src/strategic/mod.rs`, `src/strategic/plugin.rs` (`ensure_chunk_strategic_overlays`) | **Partial** |
+| **LogisticsGraph** (Resource) + net → field | `logistics_net_inject_into_overlays` | sparse **graph** coupling into chunk logistics scalars | dynamic | TBD | `src/strategic/logistics_net.rs`; `LogisticsNode.anchor` → `ChunkCellKey` | **Partial** |
 
 ---
 
@@ -72,3 +75,4 @@ Loader registration parity (S0-S01): `material_plugin.rs` registers exactly thes
 - **2026-05-06:** `v1.2.0` — `AluminumRuntimePlugin` row; appendix A (ResourceType vs Python); loader registration verification note.
 - **2026-05-06:** `v1.2.1` — **Weather** row (`WeatherPlugin` scaffold); Appendix A: Python `Energy` aligned with Rust.
 - **2026-05-06:** `v1.2.2` — `ChunkWeather` implementation anchor.
+- **2026-05-06:** `v1.2.3` — **Macro regions** + **ChunkStrategicOverlay** + **LogisticsGraph** rows (strategic field + nets spine).

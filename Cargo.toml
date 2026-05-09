@@ -38,6 +38,7 @@ reqwest = { version = "0.11", features = ["json"] }
 # Pin companions from https://github.com/vladbat00/bevy_egui compatibility table at lock time.
 bevy = { version = "0.18", features = ["serialize"] }
 bevy_egui = "0.39"
+clap = { version = "4", features = ["derive"] }
 # Optional: re-add bevy-inspector-egui when a release matches this Bevy line without duplicating ECS.
 # bevy-inspector-egui = "…"
 # egui is provided transitively by bevy_egui unless you pin it explicitly.

@@ -119,7 +119,7 @@ impl Default for WorldGenParams {
             river_threshold: 0.45,
             lake_threshold: 0.55,
             mountain_threshold: 0.7,
-            island_mode: true,
+            island_mode: false,
             island_falloff: 3.0,
         }
     }

@@ -3,7 +3,7 @@
 use bevy::prelude::*;
 
 /// Resolved focus: a **site hub** (roll-up) or a **standalone** storage entity.
-/// Set by 3D pick, toolbar / panels strip, target-list window, cycle-focus hotkey, or captured bindings.
+/// Set by world pick, logistics target-list window, cycle-focus hotkey, or captured bindings.
 #[derive(Resource, Default, Debug)]
 pub struct HudLogisticsFocus {
     pub tracked_entity: Option<Entity>,

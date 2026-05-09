@@ -26,6 +26,30 @@ Phases are **reorderable** if dependencies change; each phase exits with **measu
 
 ---
 
+## Phase 1a — Strategic field shell (continuous operational map)
+
+**Purpose:** Wire **dynamic operational fields** (not Voronoi polygons) per [`ChunkStrategicOverlay`](../../src/strategic/mod.rs), aligned with [`ChunkCellMatrix`](../../src/terrain/generation/cell_matrix.rs).
+
+**Done (integration spine):**
+
+- [`StrategicFieldsPlugin`](../../src/strategic/plugin.rs) after [`MaterialUnificationPlugin`](../../src/systems/terrain/material_plugin.rs): every chunk with `ChunkCellMatrix` gets zero-filled SOA buffers (control, threat, recon, logistics, mobility, fire/smoke, civilian stability).
+- Types and architecture: [`crate::strategic`](../../src/strategic/mod.rs) (`MAX_STRATEGIC_FACTION_SLOTS`, `StrategicFieldCell`, [`LogisticsGraph`](../../src/strategic/mod.rs)).
+- Engine + `world_generator` bin load the plugin; unit test `strategic_overlay_spawns_with_chunk_matrix`.
+- **Nets → fields (v0):** [`LogisticsGraph`](../../src/strategic/mod.rs) is a **Bevy `Resource`** (default empty). [`LogisticsNode::anchor`](../../src/strategic/mod.rs) is an optional [`ChunkCellKey`](../../src/terrain/dynamic_overlay.rs). [`logistics_net_inject_into_overlays`](../../src/strategic/logistics_net.rs) runs after overlays exist: each edge contributes effective flow `capacity × (1 − disruption)` split across its two anchors into `logistics_throughput`; `logistics_strength[cell][0]` mirrors throughput clamped to **0..1** (aggregate / debug channel until per-faction routing). Unit test: `logistics_edge_injects_throughput_at_anchors`.
+
+**Next (ordered follow-ups — pick by dependency):**
+
+1. **Baseline seed** — optional one-shot: copy terrain priors into `mobility_cost` / `fire_risk` from chunk fields or [`MacroTerrainSemantics`](../../src/terrain/generation/polygon_world_semantics.rs) (affordance → modifier, not ownership).
+2. **Graph authoring** — build `LogisticsGraph` from road/rail/pipeline entities (or import); multi-hop flow / min-cut later.
+3. **Unit / intel sources** — emit into `threat`, `recon_confidence`, `faction_control` (discrete injectors; no full EW).
+4. **Diffusion / decay** — cheap CPU pass (later GPU): blur or PDE-like step on selected layers; couple smoke ↔ recon.
+5. **Derived blobs for AI/UI** — flood-fill or level-set on thresholds (contested belt = opposing control gradients); **never** replace with province reassignment.
+6. **Persistence** — save/load overlay slices + graph for Phase 6+ MP.
+
+**Exit:** Same as spine above for “done”; each follow-up adds a test or deterministic replay hook.
+
+---
+
 ## Phase 2 — Damage + power topology slice
 
 - **Damage uber-model** drives output derating (`production_economy/`).
@@ -72,5 +96,6 @@ Phases are **reorderable** if dependencies change; each phase exits with **measu
 
 ## Cross-links
 
+- Strategic spatial model (static vs fields vs graphs): [`src/strategic/mod.rs`](../../src/strategic/mod.rs)
 - Inspectors for each phase: `tools_ui/debug_perf_ui_split_v1.md`, `tooling_cross_domain_v1.md`
 - Implementation gates: `implementation_questions_v1.md`

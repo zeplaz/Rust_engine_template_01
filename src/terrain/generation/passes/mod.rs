@@ -12,7 +12,7 @@ pub mod p5_agent_overlay;
 pub mod p6_materialize;
 
 pub use p1_fields::fill_fields;
-pub use p2_threshold_tags::apply_threshold_tags;
+pub use p2_threshold_tags::{apply_threshold_tags, threshold_tags_for_scalars};
 pub use p3_classify::classify_cells;
 pub use p4_hydrology::{
     apply_hydrology, apply_hydrology_chunk, apply_hydrology_with_params,

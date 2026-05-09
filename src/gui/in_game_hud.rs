@@ -1,12 +1,13 @@
-// In-game HUD — site logistics (Workers & Resources / X4 style).
+// Gameplay HUD — **Bevy UI only** (logistics summary + command/alerts placeholders).
+// Dev tools (diagnostics, world gen, etc.) live in **egui** behind shortcuts; see `ui_boundary_guide_v1.md`.
 // G3B: prompts/matrix/gap_remediation/runbook/g3b_production_hud_steps_v1.md
 
 use std::collections::HashMap;
 
 use bevy::prelude::*;
 
-use crate::gui::editor::world_gen_ui::ToggleWorldGenUiEvent;
-use crate::gui::AppStartState;
+use crate::engine::BaseState;
+use crate::gui::ui_gates::in_simulation_or_editor;
 
 use crate::entities::production::core::{
     resolve_logistics_focus_entity, storage_entities_for_focus, LogisticsSiteMember,
@@ -16,10 +17,6 @@ use crate::entities::production::core::{
 
 use super::input_bindings::InputBindings;
 use super::logistics_focus::{HudAggregateSettings, HudLogisticsFocus};
-use super::options_keybindings_ui::KeybindingsUiState;
-use super::DiagnosticsUiState;
-use super::FactionToolsState;
-use super::LogisticsTargetsPanelState;
 
 #[derive(Component)]
 pub struct HudRoot;
@@ -30,36 +27,33 @@ pub struct ResourceDisplay;
 #[derive(Component)]
 struct LogisticsPickHookAttached;
 
-#[derive(Component, Clone, Copy)]
-enum HudToolbarAction {
-    Diagnostics,
-    FactionTools,
-    LogisticsList,
-    WorldGenerator,
-    KeyBindings,
-}
-
 pub struct InGameHudPlugin;
 
 impl Plugin for InGameHudPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<HudLogisticsFocus>()
             .init_resource::<HudAggregateSettings>()
-            .add_systems(OnEnter(AppStartState::Menu), spawn_hud)
+            .add_systems(OnEnter(BaseState::Simulation), spawn_gameplay_hud)
+            .add_systems(OnExit(BaseState::Simulation), despawn_gameplay_hud)
             .add_systems(
                 Update,
                 (
                     attach_storage_picking_hooks,
                     cycle_logistics_focus_dev,
-                    hud_toolbar_clicks,
                     update_site_logistics_hud,
                 )
-                    .run_if(not(in_state(AppStartState::Splash))),
+                    .run_if(in_simulation_or_editor),
             );
     }
 }
 
-fn spawn_hud(
+fn despawn_gameplay_hud(mut commands: Commands, q: Query<Entity, With<HudRoot>>) {
+    for e in &q {
+        commands.entity(e).despawn();
+    }
+}
+
+fn spawn_gameplay_hud(
     mut commands: Commands,
     bindings: Res<InputBindings>,
     existing: Query<Entity, With<HudRoot>>,
@@ -67,30 +61,11 @@ fn spawn_hud(
     if !existing.is_empty() {
         return;
     }
+
     let hint = format!(
-        "Site logistics — no focus ({} · {} · toolbar · click storage)",
+        "Logistics — select storage ({}) · list ({})",
         InputBindings::format_key(bindings.cycle_logistics_focus),
         InputBindings::format_key(bindings.toggle_logistics_targets_panel),
-    );
-    let diag_l = format!(
-        "Diag ({})",
-        InputBindings::format_key(bindings.toggle_diagnostics)
-    );
-    let fac_l = format!(
-        "Faction ({})",
-        InputBindings::format_key(bindings.toggle_faction_tools)
-    );
-    let log_l = format!(
-        "Logi ({})",
-        InputBindings::format_key(bindings.toggle_logistics_targets_panel)
-    );
-    let wor_l = format!(
-        "World ({})",
-        InputBindings::format_key(bindings.toggle_world_generator)
-    );
-    let key_l = format!(
-        "Keys ({})",
-        InputBindings::format_key(bindings.toggle_keybindings_options)
     );
 
     commands
@@ -99,56 +74,28 @@ fn spawn_hud(
                 position_type: PositionType::Absolute,
                 top: Val::Px(8.0),
                 left: Val::Px(8.0),
-                padding: UiRect::all(Val::Px(6.0)),
+                padding: UiRect::all(Val::Px(8.0)),
                 flex_direction: FlexDirection::Column,
-                row_gap: Val::Px(4.0),
-                max_width: Val::Px(420.0),
+                row_gap: Val::Px(6.0),
+                max_width: Val::Px(440.0),
                 ..default()
             },
             HudRoot,
         ))
         .with_children(|parent| {
-            parent
-                .spawn((
-                    Node {
-                        flex_direction: FlexDirection::Row,
-                        flex_wrap: FlexWrap::Wrap,
-                        column_gap: Val::Px(4.0),
-                        row_gap: Val::Px(4.0),
-                        ..default()
-                    },
-                ))
-                .with_children(|row| {
-                    for (label, action) in [
-                        (diag_l, HudToolbarAction::Diagnostics),
-                        (fac_l, HudToolbarAction::FactionTools),
-                        (log_l, HudToolbarAction::LogisticsList),
-                        (wor_l, HudToolbarAction::WorldGenerator),
-                        (key_l, HudToolbarAction::KeyBindings),
-                    ] {
-                        row.spawn((
-                            Button,
-                            Node {
-                                padding: UiRect::axes(Val::Px(8.0), Val::Px(3.0)),
-                                border_radius: BorderRadius::all(Val::Px(4.0)),
-                                ..default()
-                            },
-                            BackgroundColor(Color::srgb(0.18, 0.22, 0.32)),
-                            action,
-                        ))
-                        .with_children(|b| {
-                            b.spawn((
-                                Text::new(label),
-                                TextColor(Color::srgb(0.92, 0.94, 0.98)),
-                            ));
-                        });
-                    }
-                });
+            parent.spawn((
+                Text::new("Alerts & objectives — (hook sim events here)"),
+                TextColor(Color::srgb(0.75, 0.82, 0.95)),
+            ));
             parent.spawn((
                 Node { ..default() },
                 Text::new(hint),
-                TextColor(Color::srgb(0.75, 0.85, 1.0)),
+                TextColor(Color::srgb(0.72, 0.78, 0.88)),
                 ResourceDisplay,
+            ));
+            parent.spawn((
+                Text::new("Dev tools: F1 keys · F3 diagnostics · F8 world gen — not shown as HUD chrome."),
+                TextColor(Color::srgb(0.45, 0.5, 0.58)),
             ));
         });
 }
@@ -180,33 +127,6 @@ fn on_logistics_storage_clicked(
     let resolved = resolve_logistics_focus_entity(entity, member_of, is_hub);
     focus.tracked_entity = Some(resolved);
     click.propagate(false);
-}
-
-fn hud_toolbar_clicks(
-    interactions: Query<
-        (&Interaction, &HudToolbarAction),
-        (Changed<Interaction>, With<Button>),
-    >,
-    mut diag: ResMut<DiagnosticsUiState>,
-    mut faction: ResMut<FactionToolsState>,
-    mut logistics: ResMut<LogisticsTargetsPanelState>,
-    mut keys_ui: ResMut<KeybindingsUiState>,
-    mut worldgen_ev: MessageWriter<ToggleWorldGenUiEvent>,
-) {
-    for (interaction, action) in &interactions {
-        if *interaction != Interaction::Pressed {
-            continue;
-        }
-        match *action {
-            HudToolbarAction::Diagnostics => diag.visible = !diag.visible,
-            HudToolbarAction::FactionTools => faction.visible = !faction.visible,
-            HudToolbarAction::LogisticsList => logistics.visible = !logistics.visible,
-            HudToolbarAction::WorldGenerator => {
-                worldgen_ev.write(ToggleWorldGenUiEvent);
-            }
-            HudToolbarAction::KeyBindings => keys_ui.visible = !keys_ui.visible,
-        }
-    }
 }
 
 fn cycle_logistics_focus_dev(
@@ -283,7 +203,7 @@ fn update_site_logistics_hud(
 
     let summary = match focus.tracked_entity {
         None => format!(
-            "Site logistics — no focus\n({} cycle · {} list · toolbar · primary-click pickable storage)",
+            "Site logistics — no focus\n({} cycle · {} list · primary-click storage)",
             InputBindings::format_key(bindings.cycle_logistics_focus),
             InputBindings::format_key(bindings.toggle_logistics_targets_panel),
         ),

@@ -6,6 +6,7 @@
 //! and fallbacks tied to `InputBindings`):
 //! - Diagnostics, faction tools, logistics cycle / list, world gen, agent permissions, egui scale
 //! - Options window, simulation pause toggle (`SimControlState` via `sim_control`), capture cancel
+//! - Map camera: WASD / edge scroll / wheel+keys zoom / grip pan / rotate (`map_camera`)
 //!
 //! Reserved: capture flow uses [`InputBindings::cancel_keybinding_capture`] instead of a hardcoded key.
 
@@ -32,6 +33,20 @@ pub struct InputBindings {
     pub toggle_simulation_pause: KeyCode,
     /// While capturing a binding in the options UI, this key aborts capture (not written into RON as a game action).
     pub cancel_keybinding_capture: KeyCode,
+
+    // --- Map camera (`map_camera::MapCameraPlugin`) ---
+    pub map_pan_north: KeyCode,
+    pub map_pan_south: KeyCode,
+    pub map_pan_west: KeyCode,
+    pub map_pan_east: KeyCode,
+    /// Hold with WASD / edge pan for faster movement.
+    pub map_pan_fast_modifier: KeyCode,
+    /// Hold + mouse drag pans (middle mouse also pans without this).
+    pub map_mouse_grip: KeyCode,
+    pub map_zoom_in: KeyCode,
+    pub map_zoom_out: KeyCode,
+    pub map_rotate_ccw: KeyCode,
+    pub map_rotate_cw: KeyCode,
 }
 
 impl Default for InputBindings {
@@ -47,6 +62,16 @@ impl Default for InputBindings {
             toggle_egui_ui_scale: KeyCode::Slash,
             toggle_simulation_pause: KeyCode::KeyP,
             cancel_keybinding_capture: KeyCode::Escape,
+            map_pan_north: KeyCode::KeyW,
+            map_pan_south: KeyCode::KeyS,
+            map_pan_west: KeyCode::KeyA,
+            map_pan_east: KeyCode::KeyD,
+            map_pan_fast_modifier: KeyCode::ShiftLeft,
+            map_mouse_grip: KeyCode::Space,
+            map_zoom_in: KeyCode::Equal,
+            map_zoom_out: KeyCode::Minus,
+            map_rotate_ccw: KeyCode::Comma,
+            map_rotate_cw: KeyCode::Period,
         }
     }
 }
@@ -148,6 +173,11 @@ pub fn binding_preset_keys() -> &'static [KeyCode] {
         KeyCode::Backslash,
         KeyCode::Comma,
         KeyCode::Period,
+        KeyCode::Space,
+        KeyCode::ShiftLeft,
+        KeyCode::ShiftRight,
+        KeyCode::Equal,
+        KeyCode::Minus,
     ]
 }
 
