@@ -7,6 +7,9 @@ use std::collections::HashMap;
 use bevy::prelude::*;
 
 use crate::engine::BaseState;
+use crate::strategic::{
+    CityPlanningHints, LogisticsAiRuntime, OperationalTheaterSummary, MAX_STRATEGIC_FACTION_SLOTS,
+};
 use crate::gui::ui_gates::in_simulation_or_editor;
 
 use crate::entities::production::core::{
@@ -27,6 +30,9 @@ pub struct ResourceDisplay;
 #[derive(Component)]
 struct LogisticsPickHookAttached;
 
+#[derive(Component)]
+struct StrategicOpsHudLine;
+
 pub struct InGameHudPlugin;
 
 impl Plugin for InGameHudPlugin {
@@ -41,6 +47,7 @@ impl Plugin for InGameHudPlugin {
                     attach_storage_picking_hooks,
                     cycle_logistics_focus_dev,
                     update_site_logistics_hud,
+                    update_strategic_ops_hud,
                 )
                     .run_if(in_simulation_or_editor),
             );
@@ -86,6 +93,11 @@ fn spawn_gameplay_hud(
             parent.spawn((
                 Text::new("Alerts & objectives — (hook sim events here)"),
                 TextColor(Color::srgb(0.75, 0.82, 0.95)),
+            ));
+            parent.spawn((
+                Text::new("Strategic — theater / logistics AI (initializing…)"),
+                TextColor(Color::srgb(0.78, 0.74, 0.9)),
+                StrategicOpsHudLine,
             ));
             parent.spawn((
                 Node { ..default() },
@@ -179,6 +191,40 @@ fn merge_amounts_and_caps(
         }
     }
     (amounts, caps)
+}
+
+fn update_strategic_ops_hud(
+    theater: Res<OperationalTheaterSummary>,
+    logistics: Res<LogisticsAiRuntime>,
+    city: Res<CityPlanningHints>,
+    mut text_q: Query<&mut Text, With<StrategicOpsHudLine>>,
+) {
+    let mut t_alt = 0.0f32;
+    let mut n_alt = 0.0f32;
+    for i in 1..MAX_STRATEGIC_FACTION_SLOTS {
+        let a = theater.mean_threat_by_slot[i];
+        if a > 1e-4 || theater.mean_logistics_strength_by_slot[i] > 1e-4 {
+            t_alt += a;
+            n_alt += 1.0;
+        }
+    }
+    let alt_t = if n_alt > 0.0 { t_alt / n_alt } else { 0.0 };
+    let line = format!(
+        "Strategic — threat {:.2} / logi {:.2} (alt μT {:.2}) | congest {:.2} edge dmg {:.2} stock {:.2} industry {:.2} | site {:.2} util {:.2} rebuild {:.2}",
+        theater.mean_threat_by_slot[0],
+        theater.mean_logistics_strength_by_slot[0],
+        alt_t,
+        logistics.congestion_proxy,
+        logistics.mean_edge_damage,
+        logistics.stockpile_fill_ratio,
+        logistics.industrial_output_proxy,
+        city.last_best_site_score,
+        city.utility_redundancy_hint,
+        city.adaptive_rebuild_pressure,
+    );
+    for mut text in text_q.iter_mut() {
+        *text = Text::new(line.clone());
+    }
 }
 
 fn update_site_logistics_hud(

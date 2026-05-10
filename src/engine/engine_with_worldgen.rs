@@ -3,7 +3,7 @@ use crate::entities::vehicles::tools_ui::RoadVehicleToolsUiPlugin;
 use crate::gui::{
     editor::map_editor::MapEditorPlugin, AppShellPlugin, BaseMenuPlugin, DiagnosticsUiPlugin,
     FactionToolsUiPlugin, InGameHudPlugin, KeybindingsOptionsPlugin,
-    LogisticsTargetsPanelPlugin, MainWorldCamera, MapCameraPlugin, SplashPlugin,
+    GameplayCapturePlugin, LogisticsTargetsPanelPlugin, MainWorldCamera, MapCameraPlugin, SplashPlugin,
 };
 #[cfg(feature = "bevy_tilemap_adapter")]
 use crate::render::TilemapAdapterPlugin;
@@ -81,6 +81,7 @@ impl Plugin for EnginePlugin {
         // Plugin order still matters for init; cross-simulation ordering uses SystemSet edges
         // (see `SimControlSystemSet`, `TransportSchedule` — `prompts/guides/ecs_systems_schedule_runbook_v1.md`).
         app.add_plugins(KeybindingsOptionsPlugin)
+            .add_plugins(GameplayCapturePlugin)
             .add_plugins(MapCameraPlugin)
             .add_plugins(DiagnosticsUiPlugin)
             .add_plugins(FactionToolsUiPlugin)
@@ -97,7 +98,7 @@ impl Plugin for EnginePlugin {
             .add_plugins(RoadVehicleToolsUiPlugin);
 
         info!(
-            "Engine initialized. Optional: `--test weather` / `--test fire` for sample worlds. Key bindings: F1 options · F3 diagnostics · … — edit in Options; saved RON under user config path."
+            "Engine initialized. Optional: `--test weather` / `--test fire` for sample worlds. Keys: F1 options · F3 diagnostics · F11/F12 capture (edit in Options); RON under user config path · captures under APPDATA/proc_A_dine01/captures."
         );
     }
 }

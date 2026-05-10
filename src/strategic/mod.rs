@@ -28,11 +28,12 @@ mod logistics_net;
 mod plugin;
 mod program;
 mod sim;
+mod transport_bridge;
 
 pub use program::StrategicFieldsAndAiPlugin;
 pub use sim::{
     CityPlanningHints, InfrastructureCorridor, LogisticsAiRuntime, OperationalTheaterSummary,
-    SettlementSite, StrategicSimulationPlugin,
+    SettlementSite, StrategicSimulationPlugin, StrategicTransportCorridor,
 };
 
 pub use runbook_rounds::city_planning::{
@@ -55,6 +56,7 @@ pub use runbook_rounds::settlement::{
 
 pub use logistics_net::logistics_net_inject_into_overlays;
 pub use plugin::StrategicFieldsPlugin;
+pub use transport_bridge::StrategicRasterConfig;
 
 use bevy::prelude::{Component, IVec2, Resource, UVec2};
 
@@ -78,6 +80,10 @@ pub struct StrategicFieldCell {
     pub mobility_cost: f32,
     pub attrition_rate: f32,
     pub civilian_stability: f32,
+    /// Local routing congestion 0..1 (transport + field coupling).
+    pub routing_congestion: f32,
+    /// EW / comms denial proxy 0..1.
+    pub ew_denial: f32,
 }
 
 /// Chunk-aligned **SOA** operational overlay (same cell ordering as [`crate::terrain::generation::ChunkCellMatrix`] when sizes match).
@@ -96,6 +102,10 @@ pub struct ChunkStrategicOverlay {
     pub fire_risk: Vec<f32>,
     pub smoke_density: Vec<f32>,
     pub civilian_stability: Vec<f32>,
+    /// Routing stress from transport endpoints (R5+ channel).
+    pub routing_congestion: Vec<f32>,
+    /// EW / GNSS denial proxy field.
+    pub ew_denial: Vec<f32>,
 }
 
 impl ChunkStrategicOverlay {
@@ -117,6 +127,8 @@ impl ChunkStrategicOverlay {
             fire_risk: z_scalar(),
             smoke_density: z_scalar(),
             civilian_stability: z_scalar(),
+            routing_congestion: z_scalar(),
+            ew_denial: z_scalar(),
         }
     }
 

@@ -6,6 +6,7 @@
 //! and fallbacks tied to `InputBindings`):
 //! - Diagnostics, faction tools, logistics cycle / list, world gen, agent permissions, egui scale
 //! - Options window, simulation pause toggle (`SimControlState` via `sim_control`), capture cancel
+//! - Gameplay capture: window screenshots → PNG sequence + GIF (`gameplay_capture`)
 //! - Map camera: WASD / edge scroll / wheel+keys zoom / grip pan / rotate (`map_camera`)
 //!
 //! Reserved: capture flow uses [`InputBindings::cancel_keybinding_capture`] instead of a hardcoded key.
@@ -33,6 +34,9 @@ pub struct InputBindings {
     pub toggle_simulation_pause: KeyCode,
     /// While capturing a binding in the options UI, this key aborts capture (not written into RON as a game action).
     pub cancel_keybinding_capture: KeyCode,
+    /// Start full-window gameplay capture (PNG stream; stop builds `clip.gif`).
+    pub start_gameplay_recording: KeyCode,
+    pub stop_gameplay_recording: KeyCode,
 
     // --- Map camera (`map_camera::MapCameraPlugin`) ---
     pub map_pan_north: KeyCode,
@@ -62,6 +66,8 @@ impl Default for InputBindings {
             toggle_egui_ui_scale: KeyCode::Slash,
             toggle_simulation_pause: KeyCode::KeyP,
             cancel_keybinding_capture: KeyCode::Escape,
+            start_gameplay_recording: KeyCode::F11,
+            stop_gameplay_recording: KeyCode::F12,
             map_pan_north: KeyCode::KeyW,
             map_pan_south: KeyCode::KeyS,
             map_pan_west: KeyCode::KeyA,
