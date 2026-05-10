@@ -5,8 +5,7 @@
 Version: `v1.0.0`  
 Audience: agents sequencing overlays, corridors, logistics AI, settlement/city AI, and operational warfare AI.
 
-**Execution plan:** [`strategic_program_execution_plan_v1.md`](strategic_program_execution_plan_v1.md)  
-**Per-runbook test rounds:** each child runbook has an **Execution rounds** section — run the listed `cargo test` filters before starting the next runbook’s next round.
+**Bundled plugin (engine):** [`StrategicFieldsAndAiPlugin`](../../src/strategic/program.rs) = [`StrategicFieldsPlugin`](../../src/strategic/plugin.rs) (overlays + graph inject) + [`StrategicSimulationPlugin`](../../src/strategic/sim.rs) (coupling, settlement, corridor wear, aggregates). Wired from [`EnginePlugin`](../../src/engine/engine_with_worldgen.rs) and [`world_generator`](../../src/bin/world_generator.rs).
 
 ---
 

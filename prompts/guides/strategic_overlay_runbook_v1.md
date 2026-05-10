@@ -21,9 +21,12 @@ Sequential delivery: finish round *N* before starting *N+1* for this runbook.
 | **R1** | Chunk-aligned overlay buffers spawn with [`ChunkCellMatrix`](../../src/terrain/generation/cell_matrix.rs) | `cargo test -p proc_A_dine01 strategic::plugin::tests::strategic_overlay_spawns_with_chunk_matrix` |
 | **R2** | `LogisticsGraph` → per-cell `logistics_throughput` / `logistics_strength` inject | `cargo test -p proc_A_dine01 strategic::logistics_net::tests::logistics_edge_injects_throughput_at_anchors` |
 | **R3** | Disruption drives effective flow to zero (coupling contract) | `cargo test -p proc_A_dine01 strategic::logistics_net::tests::logistics_full_disruption_zeroes_injection` |
-| **R4+** | Faction slots, recon/EW/artillery writers, overlay UX toggles | Add tests per field owner; filter `cargo test -p proc_A_dine01 strategic::` |
+| **R4** | Faction-slot threat / recon / artillery writers on [`ChunkStrategicOverlay`](../../src/strategic/mod.rs) | `cargo test -p proc_A_dine01 strategic::plugin::tests::strategic_overlay_round4_faction_field_writes` |
+| **R5+** | Further field owners, EW, UX toggles | `cargo test -p proc_A_dine01 strategic::` (full strategic gate) |
 
 **Code:** [`ChunkStrategicOverlay`](../../src/strategic/mod.rs), [`StrategicFieldsPlugin`](../../src/strategic/plugin.rs), [`logistics_net_inject_into_overlays`](../../src/strategic/logistics_net.rs).
+
+**Live sim (after graph inject):** [`strategic_fields_coupling_tick`](../../src/strategic/sim.rs) updates `mobility_cost` from `logistics_throughput` and aggregates [`OperationalTheaterSummary`](../../src/strategic/sim.rs) / [`CityPlanningHints`](../../src/strategic/sim.rs) when settlements are anchored.
 
 ---
 

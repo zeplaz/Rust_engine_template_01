@@ -17,10 +17,12 @@ Version: `v1.0.0`
 | Round | Goal | Verify |
 |:---:|:---|:---|
 | **R1** | `SettlementArchetype` enum stable for data/tools | `cargo test -p proc_A_dine01 strategic::runbook_rounds::city_planning::tests::round1_archetypes_are_stable_enum` |
-| **R2** | Site scoring + district layout consumes overlays | *pending* |
-| **R3** | Utility/defensive urbanism ↔ construction graph | *pending* |
+| **R2** | Site score consumes logistics / flood / threat scalars | `cargo test -p proc_A_dine01 strategic::runbook_rounds::city_planning::tests::round2_site_score_prefers_logistics_over_flood` |
+| **R3** | Utility redundancy weight by archetype | `cargo test -p proc_A_dine01 strategic::runbook_rounds::city_planning::tests::round3_fortress_demands_higher_redundancy_than_village_ag` |
 
 **Code (stubs):** [`strategic::runbook_rounds::city_planning`](../../src/strategic/runbook_rounds.rs).
+
+**Live sim:** [`CityPlanningHints`](../../src/strategic/sim.rs).`last_best_site_score` from [`site_score`](../../src/strategic/runbook_rounds.rs) over matching chunk overlays in [`strategic_fields_coupling_tick`](../../src/strategic/sim.rs).
 
 ---
 
