@@ -2,7 +2,7 @@
 
 > **STATUS:** Draft **v1** — **recommended start order** across orchestrators and new runbooks.
 
-Version: `v1.0.0`  
+Version: `v1.0.1`  
 Parent index: [`simulation_expansion_orchestrator_v1.md`](simulation_expansion_orchestrator_v1.md)
 
 **Orchestrators:**
@@ -48,4 +48,6 @@ Parent index: [`simulation_expansion_orchestrator_v1.md`](simulation_expansion_o
 
 ## 4. “Start next” one-liner
 
-If nothing else is blocked: **finish P0, then P1 (`strategic_overlay`), then P2 (`infrastructure_construction` + corridor)** — that trio unblocks almost all downstream AI and UI visualization.
+**P0** (UX + doctrine) stays continuous. **P1** (strategic overlay MVP) has substantial wiring in-tree: chunk overlays, transport→graph→inject pipeline, dormant/dirty LOD, infra graph mirror, optional weather→recon coupling, HUD overlay toggles — see [`strategic_fields_and_ai_orchestrator_v1.md`](strategic_fields_and_ai_orchestrator_v1.md) §9. If unblocked, push **P2** (**[`infrastructure_construction_runbook_v1.md`](infrastructure_construction_runbook_v1.md)** + **[`infrastructure_corridor_runbook_v1.md`](infrastructure_corridor_runbook_v1.md)**): authoritative corridor geometry and construction state so [`InfrastructureCorridor`](../../src/strategic/sim.rs) wear and city AI consume **real** spans.
+
+> **Document history:** `v1.0.1` (2026-05-10) — §4 updated after P1 engineering landing (strategic + S2 consumer).

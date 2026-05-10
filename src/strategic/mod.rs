@@ -23,14 +23,26 @@
 //!
 //! **Runbook test rounds:** incremental stubs in [`runbook_rounds`](runbook_rounds.rs) mirror `prompts/guides/*_runbook_v1.md` execution tables.
 
+mod construction_book;
 mod runbook_rounds;
+mod infrastructure_graph;
 mod logistics_net;
 mod plugin;
 mod program;
+mod schedule;
 mod sim;
 mod transport_bridge;
 
+pub use construction_book::{
+    align_corridor_book_with_transport_directory, transport_directory_edge_signature,
+    CorridorConstructionBook, CorridorConstructionPhase, CorridorConstructionStatus,
+};
+pub use infrastructure_graph::{
+    InfrastructureEdge, InfrastructureGraph, InfrastructureGraphBridgePlugin, InfrastructureNetworkType,
+    InfrastructureNode,
+};
 pub use program::StrategicFieldsAndAiPlugin;
+pub use schedule::{StrategicOverlayCouplingScratch, StrategicOverlayDisplayPolicy};
 pub use sim::{
     CityPlanningHints, InfrastructureCorridor, LogisticsAiRuntime, OperationalTheaterSummary,
     SettlementSite, StrategicSimulationPlugin, StrategicTransportCorridor,
@@ -55,7 +67,7 @@ pub use runbook_rounds::settlement::{
 };
 
 pub use logistics_net::logistics_net_inject_into_overlays;
-pub use plugin::StrategicFieldsPlugin;
+pub use plugin::{StrategicFieldPipeline, StrategicFieldsPlugin};
 pub use transport_bridge::StrategicRasterConfig;
 
 use bevy::prelude::{Component, IVec2, Resource, UVec2};

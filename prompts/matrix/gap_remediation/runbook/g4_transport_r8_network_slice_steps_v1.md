@@ -36,7 +36,7 @@
 | Step | Result |
 |:---|:---|
 | **G4-T01** | `persistence.rs`: JSON parse + schema gate; `TransportNetworkPersistencePlugin` + `LoadTransportNetworkSnapshotFromDisk` hydrates world + updates `TransportLastHydratedSnapshot`. |
-| **G4-T02** | ** Save source of truth:** editor bake sets `TransportLastHydratedSnapshot`; `transport_network_snapshot_from_world` rebuilds DTO from runtime (edge meta stores head/tail/CP). `transport_network_snapshot_save_json_path` for tools. |
+| **G4-T02** | **Save source of truth:** editor bake sets `TransportLastHydratedSnapshot`; `transport_network_snapshot_from_world` rebuilds DTO from runtime. Canonical dev write: `transport_network_snapshot_save_ron_path`; JSON save remains for snippets/fixtures. |
 | **G4-T03** | Tests: `g4_fixture_load_hydrate_nonempty_topology`, `g4_round_trip_json_file_from_manifest`, `hydrate_then_snapshot_from_world_round_trip`; fixture `assets/test_fixtures/transport/network_chain_v1.json`. |
 | **G4-T04** | Matrix: **R8** → **partial**; hybrid matrix + this file + transport cross-links updated. Full **Applied** when wave **S** owns transport bytes inside world save. |
 

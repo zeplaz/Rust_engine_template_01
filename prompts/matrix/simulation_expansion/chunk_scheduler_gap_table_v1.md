@@ -2,8 +2,8 @@
 
 > **Parent:** [`../../guides/chunk_scheduler_runbook_v1.md`](../../guides/chunk_scheduler_runbook_v1.md) · **Step pack:** [`runbook/s1_steps_v1.md`](runbook/s1_steps_v1.md) (S1-S02 / S1-S03)
 
-Version: `v1.1.1`  
-**STATUS:** **Partial** — updated for `ChunkWeather` + strategic overlays (2026-05-06).
+Version: `v1.1.3`  
+**STATUS:** **Partial** — strategic **construction book** (corridor phase → capacity / wear) added 2026-05-10.
 
 ---
 
@@ -20,10 +20,10 @@ Inventory **which simulation concerns** are already **chunk-scoped** vs **global
 | Terrain **material pipeline** | **Strong** — `Chunk`, `ChunkCellMatrix`, `ChunkDirty`, `ChunkDependency`, `MaterializedChunk` | `src/systems/terrain/material_plugin.rs`; `src/terrain/material/`; `src/terrain/generation/` | Registry handles + authored tuning (assets); chunk **entity** state if saves include world tiles | Derived `ChunkDerivedMetrics`, materialize passes, dirty rebuilds |
 | **Dynamic terrain overlay** (mud, snow, …) | **Reads** `Chunk` + `ChunkCellMatrix`; stub writers | `src/terrain/dynamic_overlay.rs`; `material_plugin.rs` overlay systems | **Situational** — major overlays if design needs continuity | Decay / short-lived fields |
 | **Navigation / pathing** | **Weak** — comment references future spatial index + streaming | `src/systems/navigation/nav.rs` | Topology / built roads if persisted | Path caches, potential fields |
-| **Transport** | **None** in `systems/transport` (no `Chunk` symbol match) | `src/systems/transport/` | Convoy / vehicle state per save design | Cost caches when chunk inputs change |
+| **Transport** | **Graph + fields** are global (`TransportEdgeDirectory`, `TransportFieldStore`); **full engine** orders strategic graph sync **after** `TransportSchedule::CostCache` (`engine_with_worldgen.rs`) | `src/systems/transport/` | Convoy / vehicle state per save design | Cost caches; strategic `LogisticsGraph` rebuild reads latest edge costs |
 | **Damage** | **None** in `systems/damage` | `src/systems/damage/` | Building / vehicle damage if in save | Transient combat effects |
 | **Weather** | **Component on chunk entities** — `ChunkWeather` (`src/systems/weather/chunk_weather.rs`) for `Added<Chunk>`; tick honors `SimControlState` | `src/systems/weather/` (`WeatherPlugin`) | Chunk-entity components if saves include world | Regional / climate drivers recompute fast fields when designed |
-| **Strategic / operational fields** | **Strong** — `ChunkStrategicOverlay` on same entities as `ChunkCellMatrix` (after materialize); global `Resource` **`LogisticsGraph`** feeds edge flow into `logistics_throughput` | `src/strategic/` (`StrategicFieldsPlugin`, `logistics_net_inject_into_overlays`) | TBD — tick layers when saves need maneuver state | Throughput cleared + reinjected from graph each frame (v0); diffusion / units later |
+| **Strategic / operational fields** | **Strong** — `ChunkStrategicOverlay` on chunk entities; `StrategicFieldPipeline` **SystemSet** (ensure overlays → graph sync → transport scalar inject → logistics inject). **`StrategicOverlayCouplingScratch`** marks dirty chunks from injectors; coupling tick skips **dormant** LOD except dirty + periodic refresh (`sim.rs`). **`ChunkWeather`** (when present) scales **recon_confidence** via visibility/fog stub. **`InfrastructureGraph`** mirrors `LogisticsGraph` after overlay inject (`infrastructure_graph.rs`). HUD toggles **`StrategicOverlayDisplayPolicy`** (routing congestion / EW proxy fields). **`CorridorConstructionBook`** gates nominal **capacity / splat / wear** per transport edge id (`Planned` = no traffic; `InProgress` uses `progress`). | `src/strategic/` (`program.rs`, `plugin.rs`, `transport_bridge.rs`, `logistics_net.rs`, `schedule.rs`, `sim.rs`, `infrastructure_graph.rs`, `construction_book.rs`) | TBD — tick layers when saves need maneuver state | Throughput + graph reinject each frame (v0); weather-as-sensor coupling live (minimal) |
 
 **Rule:** extend **ChunkDirty-style** invalidation only when a system’s inputs are **chunk-addressable** (registry hash, neighbor chunk, local policy). Do not duplicate global economies per chunk without an explicit LOD design.
 
@@ -53,6 +53,8 @@ Inventory **which simulation concerns** are already **chunk-scoped** vs **global
 
 ## Document history
 
+- **2026-05-10:** `v1.1.3` — **CorridorConstructionBook** row detail in strategic fields cell; version bump.
+- **2026-05-10:** `v1.1.2` — Strategic pipeline ordering, dormant/dirty coupling, infra graph bridge, display policy, transport→engine schedule edge; **ChunkWeather** → recon stub in `sim.rs`.
 - **2026-05-06:** `v1.1.1` — **Strategic fields** row (`ChunkStrategicOverlay`, `LogisticsGraph` → chunk scalars).
 - **2026-05-06:** `v1.1.0` — **ChunkWeather** ECS + §2.1 field table; weather row **Applied** (chunk-component level).
 - **2026-05-06:** `v1.0.1` — Weather row cites `WeatherPlugin` scaffold (S2 ∥ S8).

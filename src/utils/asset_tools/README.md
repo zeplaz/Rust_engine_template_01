@@ -81,7 +81,7 @@ The asset editor is organized into several sections:
 
 1. Open **World generation** in the sidebar (map/globe icon).
 2. Use **Overview** for workflow; **Noise sampling** / **Biome tuning** for split editors (full biome object vs partial F8 UI); **Full JSON** for the whole `WorldGenTuningOverlay`.
-3. **Save active** writes `assets/config/world_gen_tuning.json` (same path as **F8** and `WORLD_GEN_TUNING_JSON_PATH`).
+3. **Save active** writes `assets/config/world_gen_tuning.json` (Python/editor interchange). The Bevy app prefers **`world_gen_tuning.ron`** when present on disk; F8 **Save tuning** writes RON (`WORLD_GEN_TUNING_RON_PATH`).
 4. Docs: [`08_world_gen_desktop_tool_v1.md`](../../../prompts/designer_questions/tools_ui/spec/08_world_gen_desktop_tool_v1.md), designer [`composite_style_worldgen_v1.md`](../../../prompts/designer_questions/terrain_world/composite_style_worldgen_v1.md), matrix [`composite_style_preview_integration_matrix_v1.md`](../../../prompts/matrix/terrain_biome/composite_style_preview_integration_matrix_v1.md).
 
 ## Development

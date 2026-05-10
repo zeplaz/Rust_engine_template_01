@@ -1,9 +1,9 @@
 //! Tooltip copy for World Generator controls (noise / biomes / hydrology coupling).
 
-pub const RELOAD_JSON: &str =
-    "Load `assets/config/world_gen_tuning.json` if present and merge `noise_sampling` + `biome_tuning` into the live sliders.";
-pub const SAVE_JSON: &str =
-    "Write current noise + biome tuning to the JSON overlay path (does not save width/height/seed/rivers here).";
+pub const RELOAD_TUNING: &str =
+    "Load `assets/config/world_gen_tuning.ron` if present, else `world_gen_tuning.json`, and merge `noise_sampling` + `biome_tuning` into the live sliders.";
+pub const SAVE_TUNING_RON: &str =
+    "Write current noise + biome tuning to `world_gen_tuning.ron` (does not save width/height/seed/rivers). Use the Python tool for JSON if needed.";
 pub const COPY_DEBUG_PATH: &str = "Copy the last debug report path to the clipboard.";
 
 pub const RESET_DEFAULTS: &str =

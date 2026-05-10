@@ -24,9 +24,9 @@ Keep **one coherent experience stack**:
 
 | Runbook | Role |
 |:---|:---|
-| [`ui_operational_direction_runbook_v1.md`](ui_operational_direction_runbook_v1.md) | Mockup-derived epics: command table, planner, war overlay, minimal HUD |
+| [`ui_operational_direction_runbook_v1.md`](ui_operational_direction_runbook_v1.md) | Mockup-derived epics: command table, planner, war overlay, minimal HUD *(2026-05-10: simulation HUD — strategic strip, overlay congestion/EW toggles live)* |
 | [`ui_boundary_guide_v1.md`](ui_boundary_guide_v1.md) | Authoritative Bevy vs egui split |
-| [`gui_runbook_v1.md`](gui_runbook_v1.md) | GUI integration harness |
+| [`gui_runbook_v1.md`](gui_runbook_v1.md) | GUI integration harness; dev diagnostics (**F3**) exposes strategic playtest controls ([`diagnostics_ui.rs`](../../src/gui/diagnostics_ui.rs)) |
 | [`camera_map_navigation_runbook_v1.md`](camera_map_navigation_runbook_v1.md) | Pan/zoom/rotate; respects egui capture |
 
 ---

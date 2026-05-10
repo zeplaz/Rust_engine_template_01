@@ -8,7 +8,8 @@ use bevy::prelude::*;
 
 use crate::engine::BaseState;
 use crate::strategic::{
-    CityPlanningHints, LogisticsAiRuntime, OperationalTheaterSummary, MAX_STRATEGIC_FACTION_SLOTS,
+    CityPlanningHints, LogisticsAiRuntime, OperationalTheaterSummary, StrategicOverlayDisplayPolicy,
+    MAX_STRATEGIC_FACTION_SLOTS,
 };
 use crate::gui::ui_gates::in_simulation_or_editor;
 
@@ -33,17 +34,25 @@ struct LogisticsPickHookAttached;
 #[derive(Component)]
 struct StrategicOpsHudLine;
 
+/// When **compact**, the strategic HUD shows a one-line summary; full line includes city-planning hints.
+#[derive(Resource, Clone, Copy, Debug, Default)]
+pub struct StrategicHudStripState {
+    pub compact: bool,
+}
+
 pub struct InGameHudPlugin;
 
 impl Plugin for InGameHudPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<HudLogisticsFocus>()
             .init_resource::<HudAggregateSettings>()
+            .init_resource::<StrategicHudStripState>()
             .add_systems(OnEnter(BaseState::Simulation), spawn_gameplay_hud)
             .add_systems(OnExit(BaseState::Simulation), despawn_gameplay_hud)
             .add_systems(
                 Update,
                 (
+                    strategic_hud_chrome_input,
                     attach_storage_picking_hooks,
                     cycle_logistics_focus_dev,
                     update_site_logistics_hud,
@@ -70,9 +79,12 @@ fn spawn_gameplay_hud(
     }
 
     let hint = format!(
-        "Logistics — select storage ({}) · list ({})",
+        "Logistics — select storage ({}) · list ({}) · Strategic — compact ({}) · overlays congest/ew ({}/{})",
         InputBindings::format_key(bindings.cycle_logistics_focus),
         InputBindings::format_key(bindings.toggle_logistics_targets_panel),
+        InputBindings::format_key(bindings.toggle_strategic_hud_strip_compact),
+        InputBindings::format_key(bindings.toggle_strategic_overlay_routing_congestion),
+        InputBindings::format_key(bindings.toggle_strategic_overlay_ew_denial),
     );
 
     commands
@@ -110,6 +122,23 @@ fn spawn_gameplay_hud(
                 TextColor(Color::srgb(0.45, 0.5, 0.58)),
             ));
         });
+}
+
+fn strategic_hud_chrome_input(
+    keys: Res<ButtonInput<KeyCode>>,
+    bindings: Res<InputBindings>,
+    mut policy: ResMut<StrategicOverlayDisplayPolicy>,
+    mut strip: ResMut<StrategicHudStripState>,
+) {
+    if keys.just_pressed(bindings.toggle_strategic_hud_strip_compact) {
+        strip.compact = !strip.compact;
+    }
+    if keys.just_pressed(bindings.toggle_strategic_overlay_routing_congestion) {
+        policy.apply_routing_congestion = !policy.apply_routing_congestion;
+    }
+    if keys.just_pressed(bindings.toggle_strategic_overlay_ew_denial) {
+        policy.apply_ew_denial = !policy.apply_ew_denial;
+    }
 }
 
 fn attach_storage_picking_hooks(
@@ -197,6 +226,8 @@ fn update_strategic_ops_hud(
     theater: Res<OperationalTheaterSummary>,
     logistics: Res<LogisticsAiRuntime>,
     city: Res<CityPlanningHints>,
+    policy: Res<StrategicOverlayDisplayPolicy>,
+    strip: Res<StrategicHudStripState>,
     mut text_q: Query<&mut Text, With<StrategicOpsHudLine>>,
 ) {
     let mut t_alt = 0.0f32;
@@ -209,19 +240,36 @@ fn update_strategic_ops_hud(
         }
     }
     let alt_t = if n_alt > 0.0 { t_alt / n_alt } else { 0.0 };
-    let line = format!(
-        "Strategic — threat {:.2} / logi {:.2} (alt μT {:.2}) | congest {:.2} edge dmg {:.2} stock {:.2} industry {:.2} | site {:.2} util {:.2} rebuild {:.2}",
-        theater.mean_threat_by_slot[0],
-        theater.mean_logistics_strength_by_slot[0],
-        alt_t,
-        logistics.congestion_proxy,
-        logistics.mean_edge_damage,
-        logistics.stockpile_fill_ratio,
-        logistics.industrial_output_proxy,
-        city.last_best_site_score,
-        city.utility_redundancy_hint,
-        city.adaptive_rebuild_pressure,
+    let layers = format!(
+        "layers C:{} E:{}",
+        if policy.apply_routing_congestion { "on" } else { "off" },
+        if policy.apply_ew_denial { "on" } else { "off" },
     );
+    let line = if strip.compact {
+        format!(
+            "Strategic — compact | T {:.2} L {:.2} | congest {:.2} dmg {:.2} | {}",
+            theater.mean_threat_by_slot[0],
+            theater.mean_logistics_strength_by_slot[0],
+            logistics.congestion_proxy,
+            logistics.mean_edge_damage,
+            layers,
+        )
+    } else {
+        format!(
+            "Strategic — threat {:.2} / logi {:.2} (alt μT {:.2}) | congest {:.2} edge dmg {:.2} stock {:.2} industry {:.2} | site {:.2} util {:.2} rebuild {:.2} | {}",
+            theater.mean_threat_by_slot[0],
+            theater.mean_logistics_strength_by_slot[0],
+            alt_t,
+            logistics.congestion_proxy,
+            logistics.mean_edge_damage,
+            logistics.stockpile_fill_ratio,
+            logistics.industrial_output_proxy,
+            city.last_best_site_score,
+            city.utility_redundancy_hint,
+            city.adaptive_rebuild_pressure,
+            layers,
+        )
+    };
     for mut text in text_q.iter_mut() {
         *text = Text::new(line.clone());
     }

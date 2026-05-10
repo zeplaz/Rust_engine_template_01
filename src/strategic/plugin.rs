@@ -3,20 +3,46 @@
 use bevy::prelude::*;
 
 use super::logistics_net::logistics_net_inject_into_overlays;
+use super::schedule::{StrategicOverlayCouplingScratch, StrategicOverlayDisplayPolicy};
 use super::transport_bridge::{
-    inject_transport_scalar_fields_into_overlays, maintain_strategic_corridor_entities,
-    sync_logistics_graph_from_transport, StrategicRasterConfig,
+    apply_corridor_construction_book_to_entities, inject_transport_scalar_fields_into_overlays,
+    maintain_strategic_corridor_entities, sync_logistics_graph_from_transport, StrategicRasterConfig,
 };
-use super::{ChunkStrategicOverlay, LogisticsGraph};
+use super::{ChunkStrategicOverlay, CorridorConstructionBook, LogisticsGraph};
+use super::construction_book::{
+    align_corridor_book_with_transport_directory, transport_directory_edge_signature,
+};
 use crate::systems::terrain::materialize_chunks;
 use crate::systems::transport::{TransportCostWeights, TransportEdgeDirectory, TransportFieldStore};
 use crate::terrain::generation::{Chunk, ChunkCellMatrix};
 
+/// Ordering buckets for strategic field pipeline (`chunk_scheduler_runbook_v1` / transport coupling).
+#[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
+pub enum StrategicFieldPipeline {
+    EnsureOverlays,
+    /// Rebuild [`LogisticsGraph`] from transport + corridor entities.
+    GraphSync,
+    InjectTransportScalars,
+    LogisticsNetInject,
+}
+
 fn ensure_chunk_strategic_overlays(
     mut commands: Commands,
     q: Query<(Entity, &Chunk, &ChunkCellMatrix), Without<ChunkStrategicOverlay>>,
+    mut config: ResMut<StrategicRasterConfig>,
+    mut warned_mismatch: Local<bool>,
 ) {
+    let mut first_size: Option<UVec2> = None;
     for (entity, chunk, matrix) in q.iter() {
+        if first_size.is_none() {
+            first_size = Some(matrix.size);
+        } else if !*warned_mismatch && first_size != Some(matrix.size) {
+            warn!(
+                "ChunkCellMatrix sizes differ across chunks; StrategicRasterConfig uses first seen {:?}",
+                first_size
+            );
+            *warned_mismatch = true;
+        }
         let n = ChunkStrategicOverlay::new(chunk.coord, matrix.size).len_cells();
         let expected = (matrix.size.x as usize).saturating_mul(matrix.size.y as usize);
         if n != expected {
@@ -29,6 +55,24 @@ fn ensure_chunk_strategic_overlays(
             .entity(entity)
             .insert(ChunkStrategicOverlay::new(chunk.coord, matrix.size));
     }
+    if let Some(sz) = first_size {
+        if config.cells_per_chunk != sz {
+            config.cells_per_chunk = sz;
+        }
+    }
+}
+
+fn sync_construction_book_after_transport_changes(
+    directory: Res<TransportEdgeDirectory>,
+    mut book: ResMut<CorridorConstructionBook>,
+    mut last_sig: Local<u64>,
+) {
+    let sig = transport_directory_edge_signature(&directory);
+    if sig == *last_sig {
+        return;
+    }
+    *last_sig = sig;
+    align_corridor_book_with_transport_directory(&directory, &mut book);
 }
 
 /// Spawns and keeps **zeroed** operational field buffers aligned with terrain chunks.
@@ -42,29 +86,45 @@ impl Plugin for StrategicFieldsPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<LogisticsGraph>()
             .init_resource::<StrategicRasterConfig>()
+            .init_resource::<StrategicOverlayCouplingScratch>()
+            .init_resource::<StrategicOverlayDisplayPolicy>()
+            .init_resource::<CorridorConstructionBook>()
             .init_resource::<TransportEdgeDirectory>()
             .init_resource::<TransportFieldStore>()
             .init_resource::<TransportCostWeights>()
-            .add_systems(Update, ensure_chunk_strategic_overlays.after(materialize_chunks))
+            .configure_sets(
+                Update,
+                (
+                    StrategicFieldPipeline::EnsureOverlays.after(materialize_chunks),
+                    StrategicFieldPipeline::GraphSync.after(StrategicFieldPipeline::EnsureOverlays),
+                    StrategicFieldPipeline::InjectTransportScalars.after(StrategicFieldPipeline::GraphSync),
+                    StrategicFieldPipeline::LogisticsNetInject
+                        .after(StrategicFieldPipeline::InjectTransportScalars),
+                ),
+            )
+            .add_systems(
+                Update,
+                ensure_chunk_strategic_overlays.in_set(StrategicFieldPipeline::EnsureOverlays),
+            )
             .add_systems(
                 Update,
                 (
-                    sync_logistics_graph_from_transport,
+                    sync_construction_book_after_transport_changes,
                     maintain_strategic_corridor_entities,
+                    apply_corridor_construction_book_to_entities,
+                    sync_logistics_graph_from_transport,
                 )
                     .chain()
-                    .after(ensure_chunk_strategic_overlays),
+                    .in_set(StrategicFieldPipeline::GraphSync),
             )
             .add_systems(
                 Update,
                 inject_transport_scalar_fields_into_overlays
-                    .after(ensure_chunk_strategic_overlays)
-                    .after(maintain_strategic_corridor_entities)
-                    .before(logistics_net_inject_into_overlays),
+                    .in_set(StrategicFieldPipeline::InjectTransportScalars),
             )
             .add_systems(
                 Update,
-                logistics_net_inject_into_overlays.after(inject_transport_scalar_fields_into_overlays),
+                logistics_net_inject_into_overlays.in_set(StrategicFieldPipeline::LogisticsNetInject),
             );
     }
 }
@@ -106,6 +166,9 @@ mod tests {
         assert_eq!(overlay.threat.len(), 6);
         assert_eq!(overlay.routing_congestion.len(), 6);
         assert_eq!(overlay.ew_denial.len(), 6);
+
+        let cfg = app.world().resource::<StrategicRasterConfig>();
+        assert_eq!(cfg.cells_per_chunk, UVec2::new(3, 2));
     }
 
     /// **R4** — faction-slot field writers (`strategic_overlay` runbook).

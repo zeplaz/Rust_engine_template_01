@@ -4,8 +4,8 @@
 //! - **Legacy ECS:** `src/entities/structure/components.rs` has **private** `Road` / `RoadSegment` / `RoadConnection` stubs (no world-gen spawn, not wired to runtime nav).
 //! - **Editor v1 pattern:** [`MapEditorRoadMarkerV1`] — tile-aligned scaffold; **`placement_seq`** preserves **click order** for bake (R9). Do not lexicographically sort tiles for transport graph building.
 //! - See also [`map_editor_matrix_v1.md`](../../../../prompts/matrix/map_editor/map_editor_matrix_v1.md) §5 · **R9 bake order:** [`../../../../prompts/matrix/transport/runbook/r9_authoring_bake_order_steps_v1.md`](../../../../prompts/matrix/transport/runbook/r9_authoring_bake_order_steps_v1.md).
-//! - **G4 dev:** Road tool — **Save / Load transport (dev JSON)** → `assets/saves/dev_transport_network.json` (paths via `CARGO_MANIFEST_DIR`).
-//! - **M5 / S stub:** **Save / Load hybrid (dev)** → `assets/saves/dev_world_hybrid_v0.sav` (header line + transport JSON body).
+//! - **G4 dev:** Road tool — **Save / Load transport (dev RON)** → `assets/saves/dev_transport_network.ron` (paths via `CARGO_MANIFEST_DIR`). `.json` fixtures still load when path ends in `.json`. Hydrating transport updates [`CorridorConstructionBook`](../../../strategic/construction_book.rs).
+//! - **M5 / S stub:** **Save / Load hybrid (dev)** → `assets/saves/dev_world_hybrid_v0.sav` (header line + transport **RON** body; JSON body still loads).
 //!
 //! ## Tile / pick convention (M3-S01)
 //! Matches [`crate::terrain::generation::world_generator_enhanced`] spawn layout:
@@ -37,9 +37,9 @@ use crate::terrain::generation::world_generator_enhanced::{
 };
 use crate::io::snapshot::{read_hybrid_world_snapshot_dev_v0, write_hybrid_world_snapshot_dev_v0};
 use crate::systems::transport::{
-    bake_snapshot_from_ordered_markers_with_world_positions, hydrate_transport_from_json_str,
+    bake_snapshot_from_ordered_markers_with_world_positions, hydrate_transport_from_snapshot_text,
     hydrate_transport_from_snapshot, transport_network_snapshot_from_world,
-    transport_network_snapshot_save_json_path, transport_network_snapshot_to_json_string,
+    transport_network_snapshot_save_ron_path, transport_network_snapshot_to_ron_string,
     LoadTransportNetworkSnapshotFromDisk, TransportEdgeDirectory, TransportFieldStore,
     TransportLastHydratedSnapshot, TransportNetworkSnapshot, TransportTopology,
 };
@@ -70,7 +70,7 @@ pub struct MapEditorLoadHybridWorldDevRequest;
 pub struct MapEditorRoadUndoRequest;
 
 fn dev_transport_network_save_path() -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR")).join("assets/saves/dev_transport_network.json")
+    Path::new(env!("CARGO_MANIFEST_DIR")).join("assets/saves/dev_transport_network.ron")
 }
 
 fn dev_hybrid_world_save_path() -> PathBuf {
@@ -679,8 +679,8 @@ fn map_editor_dev_save_transport(
         if let Some(parent) = path.parent() {
             let _ = std::fs::create_dir_all(parent);
         }
-        match transport_network_snapshot_save_json_path(&snap, &path) {
-            Ok(()) => info!("Saved transport R8 JSON to {}", path.display()),
+        match transport_network_snapshot_save_ron_path(&snap, &path) {
+            Ok(()) => info!("Saved transport R8 RON to {}", path.display()),
             Err(e) => warn!("Save transport failed: {e:?}"),
         }
     }
@@ -785,14 +785,14 @@ fn map_editor_dev_save_hybrid_world(
         if let Some(parent) = path.parent() {
             let _ = std::fs::create_dir_all(parent);
         }
-        let json = match transport_network_snapshot_to_json_string(&snap) {
+        let ron = match transport_network_snapshot_to_ron_string(&snap) {
             Ok(s) => s,
             Err(e) => {
-                warn!("Save hybrid: JSON error {e:?}");
+                warn!("Save hybrid: RON error {e:?}");
                 continue;
             }
         };
-        match write_hybrid_world_snapshot_dev_v0(&path, json.as_bytes()) {
+        match write_hybrid_world_snapshot_dev_v0(&path, ron.as_bytes()) {
             Ok(()) => info!("Saved hybrid dev snapshot to {}", path.display()),
             Err(e) => warn!("Save hybrid failed: {e:?}"),
         }
@@ -815,18 +815,18 @@ fn map_editor_dev_load_hybrid_world(
                 continue;
             }
         };
-        let json = match std::str::from_utf8(&body) {
+        let text = match std::str::from_utf8(&body) {
             Ok(s) => s,
             Err(e) => {
                 warn!("Load hybrid: body not UTF-8: {e:?}");
                 continue;
             }
         };
-        match hydrate_transport_from_json_str(
+        match hydrate_transport_from_snapshot_text(
             topology.as_mut(),
             fields.as_mut(),
             directory.as_mut(),
-            json,
+            text,
         ) {
             Ok(snap) => {
                 last.snapshot = Some(snap);

@@ -25,7 +25,9 @@ __all__ = [
     "rails_configs_dir",
     "building_types_index_json",
     "world_gen_tuning_json",
+    "world_gen_tuning_ron",
     "world_gen_tuning_example_json",
+    "world_gen_tuning_example_ron",
     "terrain_config_dir",
     "material_registry_json",
     "material_registry_example_json",
@@ -78,9 +80,11 @@ rails_configs_dir: Final[Path] = assets_dir / "configs" / "rails"
 # Index of BuildingType / examples — see dynamic_building_page + s_flagz.rs
 building_types_index_json: Final[Path] = buildings_configs_dir / "_building_types_index.json"
 
-# World generation overlay — matches `WORLD_GEN_TUNING_JSON_PATH` in `world_generator_enhanced.rs`
+# World generation overlay — JSON for Python editor; Rust prefers RON at `world_gen_tuning_ron` when present.
 world_gen_tuning_json: Final[Path] = assets_dir / "config" / "world_gen_tuning.json"
+world_gen_tuning_ron: Final[Path] = assets_dir / "config" / "world_gen_tuning.ron"
 world_gen_tuning_example_json: Final[Path] = assets_dir / "config" / "world_gen_tuning.example.json"
+world_gen_tuning_example_ron: Final[Path] = assets_dir / "config" / "world_gen_tuning.example.ron"
 
 # Terrain material / tag / rule configs — see `material_unification_matrix_v1.md`
 terrain_config_dir: Final[Path] = assets_dir / "config" / "terrain"
