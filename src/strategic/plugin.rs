@@ -80,4 +80,16 @@ mod tests {
         assert_eq!(overlay.faction_control.len(), 6);
         assert_eq!(overlay.threat.len(), 6);
     }
+
+    /// **R4** — faction-slot field writers (`strategic_overlay` runbook).
+    #[test]
+    fn strategic_overlay_round4_faction_field_writes() {
+        let mut o = ChunkStrategicOverlay::new(IVec2::ZERO, UVec2::new(2, 2));
+        assert!(o.set_faction_threat(0, 0, 0.7).is_ok());
+        assert!(o.set_recon_confidence(1, 0, 0.5).is_ok());
+        assert!(o.set_artillery_danger(2, 1, 0.9).is_ok());
+        assert!((o.threat[0][0] - 0.7).abs() < 1e-6);
+        assert!(o.set_faction_threat(99, 0, 1.0).is_err());
+        assert!(o.set_faction_threat(0, 20, 1.0).is_err());
+    }
 }

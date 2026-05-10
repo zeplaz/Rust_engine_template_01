@@ -17,10 +17,14 @@ Version: `v1.0.0`
 | Round | Goal | Verify |
 |:---:|:---|:---|
 | **R1** | Offensive commit score respects ammo + rail throughput stubs | `cargo test -p proc_A_dine01 strategic::runbook_rounds::operational_warfare::tests::round1_commit_needs_both_supply_signals` |
-| **R2** | `DroneDoctrine` drives plan variants (recon vs interdiction) | *pending* |
-| **R3** | Strike + attrition policy ↔ doctrine checklist | [`doctrine_simulation_alignment_runbook_v1.md`](doctrine_simulation_alignment_runbook_v1.md) §9 |
+| **R2** | `DroneDoctrine` modulates strike weight (recon vs saturation) | `cargo test -p proc_A_dine01 strategic::runbook_rounds::operational_warfare::tests::round2_recon_doctrine_lowers_strike_weight_vs_saturation` |
+| **R3** | Infrastructure-coupled strikes default (`doctrine_simulation_alignment` §9) | `cargo test -p proc_A_dine01 strategic::runbook_rounds::operational_warfare::tests::round3_infrastructure_coupling_policy_enabled_by_default` |
+
+Human checklist (anti-patterns, release gate): still [`doctrine_simulation_alignment_runbook_v1.md`](doctrine_simulation_alignment_runbook_v1.md) §9.
 
 **Code (stubs):** [`strategic::runbook_rounds::operational_warfare`](../../src/strategic/runbook_rounds.rs).
+
+**Live sim:** [`OperationalTheaterSummary`](../../src/strategic/sim.rs) (mean threat / logistics strength, faction slot 0) from [`strategic_fields_coupling_tick`](../../src/strategic/sim.rs); strike doctrine stubs remain in `runbook_rounds`.
 
 ---
 

@@ -26,12 +26,32 @@
 mod runbook_rounds;
 mod logistics_net;
 mod plugin;
+mod program;
+mod sim;
 
-pub use runbook_rounds::city_planning::SettlementArchetype;
-pub use runbook_rounds::corridor::{corridor_total_cost, CorridorCost, CorridorType};
-pub use runbook_rounds::logistics_ai_policy::{effective_priority_weight, LogisticsPriority};
-pub use runbook_rounds::operational_warfare::{offensive_commit_score, DroneDoctrine};
-pub use runbook_rounds::settlement::{tier_from_population, SettlementTier};
+pub use program::StrategicFieldsAndAiPlugin;
+pub use sim::{
+    CityPlanningHints, InfrastructureCorridor, LogisticsAiRuntime, OperationalTheaterSummary,
+    SettlementSite, StrategicSimulationPlugin,
+};
+
+pub use runbook_rounds::city_planning::{
+    site_score, utility_redundancy_weight, SettlementArchetype,
+};
+pub use runbook_rounds::corridor::{
+    corridor_capacity_weight, corridor_total_cost, pick_cheaper_corridor_index, CorridorCost,
+    CorridorType,
+};
+pub use runbook_rounds::logistics_ai_policy::{
+    demand_forecast, effective_priority_weight, reroute_recommended, LogisticsPriority,
+};
+pub use runbook_rounds::operational_warfare::{
+    doctrine_strike_weight, offensive_commit_score, DroneDoctrine,
+    INFRASTRUCTURE_COUPLED_STRIKES_DEFAULT,
+};
+pub use runbook_rounds::settlement::{
+    ecology_hazard_pressure, migration_pull, tier_from_population, SettlementTier,
+};
 
 pub use logistics_net::logistics_net_inject_into_overlays;
 pub use plugin::StrategicFieldsPlugin;
@@ -103,6 +123,48 @@ impl ChunkStrategicOverlay {
     #[inline]
     pub fn len_cells(&self) -> usize {
         self.faction_control.len()
+    }
+
+    /// Write **per-faction** threat for one cell (`strategic_overlay` runbook — faction slots / field writers).
+    pub fn set_faction_threat(
+        &mut self,
+        cell: usize,
+        faction_slot: usize,
+        value: f32,
+    ) -> Result<(), ()> {
+        if cell >= self.threat.len() || faction_slot >= MAX_STRATEGIC_FACTION_SLOTS {
+            return Err(());
+        }
+        self.threat[cell][faction_slot] = value;
+        Ok(())
+    }
+
+    /// Recon certainty for a faction slot (overlay writer stub).
+    pub fn set_recon_confidence(
+        &mut self,
+        cell: usize,
+        faction_slot: usize,
+        value: f32,
+    ) -> Result<(), ()> {
+        if cell >= self.recon_confidence.len() || faction_slot >= MAX_STRATEGIC_FACTION_SLOTS {
+            return Err(());
+        }
+        self.recon_confidence[cell][faction_slot] = value;
+        Ok(())
+    }
+
+    /// Artillery danger heat per faction slot.
+    pub fn set_artillery_danger(
+        &mut self,
+        cell: usize,
+        faction_slot: usize,
+        value: f32,
+    ) -> Result<(), ()> {
+        if cell >= self.artillery_danger.len() || faction_slot >= MAX_STRATEGIC_FACTION_SLOTS {
+            return Err(());
+        }
+        self.artillery_danger[cell][faction_slot] = value;
+        Ok(())
     }
 }
 

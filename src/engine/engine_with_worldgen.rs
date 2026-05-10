@@ -75,7 +75,7 @@ impl Plugin for EnginePlugin {
             .add_plugins(NavigationSchedulePlugin)
             .add_plugins(DamageSystem)
             .add_plugins(MaterialUnificationPlugin)
-            .add_plugins(crate::strategic::StrategicFieldsPlugin);
+            .add_plugins(crate::strategic::StrategicFieldsAndAiPlugin);
         #[cfg(feature = "bevy_tilemap_adapter")]
         app.add_plugins(TilemapAdapterPlugin);
         // Plugin order still matters for init; cross-simulation ordering uses SystemSet edges

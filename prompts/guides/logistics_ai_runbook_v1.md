@@ -17,10 +17,12 @@ Version: `v1.0.0`
 | Round | Goal | Verify |
 |:---:|:---|:---|
 | **R1** | Priority weighting stub (military under crisis) | `cargo test -p proc_A_dine01 strategic::runbook_rounds::logistics_ai_policy::tests::round1_military_weight_rises_under_crisis` |
-| **R2** | Reroute rules ↔ overlay congestion + graph damage | *pending* |
-| **R3** | Forecasting hooks (demand spikes / weather) | *pending* |
+| **R2** | Reroute when congestion + damage exceed threshold | `cargo test -p proc_A_dine01 strategic::runbook_rounds::logistics_ai_policy::tests::round2_reroute_when_congestion_and_damage_stack` |
+| **R3** | Demand forecast stub (offense + weather) | `cargo test -p proc_A_dine01 strategic::runbook_rounds::logistics_ai_policy::tests::round3_forecast_rises_with_offense_and_weather` |
 
 **Code (stubs):** [`strategic::runbook_rounds::logistics_ai_policy`](../../src/strategic/runbook_rounds.rs). **Integrates with:** [`logistics_net_inject_into_overlays`](../../src/strategic/logistics_net.rs).
+
+**Live sim:** [`LogisticsAiRuntime`](../../src/strategic/sim.rs).`congestion_proxy` from overlay throughput in [`strategic_fields_coupling_tick`](../../src/strategic/sim.rs).
 
 ---
 

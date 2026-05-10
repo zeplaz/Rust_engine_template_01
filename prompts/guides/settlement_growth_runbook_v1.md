@@ -17,10 +17,12 @@ Version: `v1.0.0`
 | Round | Goal | Verify |
 |:---:|:---|:---|
 | **R1** | Settlement tier thresholds from population stub | `cargo test -p proc_A_dine01 strategic::runbook_rounds::settlement::tests::round1_lifecycle_thresholds_monotonic` |
-| **R2** | Migration drivers ↔ jobs/safety/housing signals | *pending* |
-| **R3** | Ecology coupling (fire/flood overlays) | *pending* |
+| **R2** | Migration pull from jobs / safety / housing | `cargo test -p proc_A_dine01 strategic::runbook_rounds::settlement::tests::round2_migration_responds_to_jobs_and_safety` |
+| **R3** | Ecology hazard pressure (fire / flood overlays) | `cargo test -p proc_A_dine01 strategic::runbook_rounds::settlement::tests::round3_ecology_pressure_combines_fire_and_flood` |
 
 **Code (stubs):** [`strategic::runbook_rounds::settlement`](../../src/strategic/runbook_rounds.rs).
+
+**Live sim:** [`SettlementSite`](../../src/strategic/sim.rs) + population growth in [`settlement_and_corridor_tick`](../../src/strategic/sim.rs).
 
 ---
 

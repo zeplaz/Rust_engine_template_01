@@ -23,4 +23,4 @@ pub mod idgen;
 // Re-export commonly used items
 pub use engine::EnginePlugin;
 pub use bevysubengines::WorldGeneratorSubenginePlugin;
-pub use strategic::{LogisticsGraph, StrategicFieldsPlugin};
+pub use strategic::{LogisticsGraph, StrategicFieldsAndAiPlugin, StrategicFieldsPlugin};
