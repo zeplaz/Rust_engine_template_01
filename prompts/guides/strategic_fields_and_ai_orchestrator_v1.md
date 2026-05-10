@@ -88,3 +88,55 @@ flowchart TB
 2. **AI reads fields/graphs; writes intents** — not direct ad-hoc mutation of unrelated components.
 3. **No micro-only AI in operational runbook** — unit micro stays out of scope unless a separate runbook says otherwise.
 4. **`ASK:`** per [`system_runbook_authoring_meta_v1.md`](system_runbook_authoring_meta_v1.md) when anchors or matrices are missing.
+
+---
+
+## 6. Reconciling “6 + orchestrator” vs “2 orchestrators / 8 runbooks”
+
+- **This orchestrator lists 6 child runbooks** because [`base_ai_runbook_draft.md`](base_ai_runbook_draft.md) (archival) contained **six topical bundles**: city, operational warfare, logistics, strategic overlays, corridors, settlements. Each bundle became **one** `*_runbook_v1.md` above.
+- **A second program orchestrator** already exists beside this one: [`infrastructure_and_research_orchestrator_v1.md`](infrastructure_and_research_orchestrator_v1.md) (construction, resilience, research capability). Strategic AI **depends** on it for real nodes/edges; it is not duplicated inside the 6.
+- **“8”** is best read as **6 (strategic stack) + 2 (construction + resilience)** under the **infra/research** parent, *or* as **6 + research + construction** as three “pillars”—not as “two missing strategic runbooks.” If you had a different 8 in mind, add it explicitly here as `ASK:` once named.
+
+---
+
+## 7. Base “four docs” — where authority lives and what still gaps
+
+| Source draft | Canonical authority today | Coverage vs the 6 runbooks |
+|:---|:---|:---|
+| [`base_ai_runbook_draft.md`](base_ai_runbook_draft.md) | **§2 table** — these 6 runbooks | Intended full coverage of the pasted bundles; **§8** maps headings → runbook. |
+| [`base_doctrine_thoery.md`](base_doctrine_thoery.md) | [`doctrine_simulation_alignment_runbook_v1.md`](doctrine_simulation_alignment_runbook_v1.md) + [**`ai_operational_warfare_runbook_v1.md`**](ai_operational_warfare_runbook_v1.md) | **Deep** drone roles, EW effects chain, detection chain, “population stability / info war” — only **partly** reflected in code (round tests + stubs). **Gap:** explicit overlay channels + systems for EW and richer drone ecosystem unless folded into [`strategic_overlay_runbook_v1.md`](strategic_overlay_runbook_v1.md) **R5+**. |
+| [`base_reserch_draft.md`](base_reserch_draft.md) | [`infrastructure_and_research_orchestrator_v1.md`](infrastructure_and_research_orchestrator_v1.md) → [`research_capability_ecosystem_runbook_v1.md`](research_capability_ecosystem_runbook_v1.md) | **Out of scope** for the 6 — belongs to infra/research program, not this orchestrator. |
+| [`base_ui_direction_principls.md`](base_ui_direction_principls.md) | [`experience_layer_orchestrator_v1.md`](experience_layer_orchestrator_v1.md), [`ui_operational_direction_runbook_v1.md`](ui_operational_direction_runbook_v1.md) | **Gap:** player-facing **overlay toggles**, command-table layout, and **bottom context** tied to `OperationalTheaterSummary` / `CityPlanningHints` / corridor selection — wire in HUD per experience layer, not only Diagnostics. |
+
+**Cross-runbook gaps from the archived AI draft (not yet own runbook rounds):** GPU overlay **UX** knobs (draft “Overlay UX”); **adaptive rebuilding** after shocks (city + settlement); **logistics forecasting** hooked to real production/stockpile ECS; **informal settlements** / **dynamic adaptation** scalars on `SettlementSite` or successors.
+
+---
+
+## 8. `base_ai_runbook_draft.md` bundle → runbook map (traceability)
+
+Rough order in the archive file ≈ six pasted specs:
+
+| Archive block (headings) | Runbook |
+|:---|:---|
+| City formation, districts, utilities, defensive urbanism, overlay inputs | [`ai_city_planning_runbook_v1.md`](ai_city_planning_runbook_v1.md) |
+| Warfare layers, fronts, strikes, attrition, drone doctrine | [`ai_operational_warfare_runbook_v1.md`](ai_operational_warfare_runbook_v1.md) |
+| Logistics priorities, routing, stockpiles, forecasting | [`logistics_ai_runbook_v1.md`](logistics_ai_runbook_v1.md) |
+| Overlay categories, composition, GPU/UX | [`strategic_overlay_runbook_v1.md`](strategic_overlay_runbook_v1.md) |
+| Corridor types, scoring, redundancy, degradation | [`infrastructure_corridor_runbook_v1.md`](infrastructure_corridor_runbook_v1.md) |
+| Lifecycle, sprawl, migration, informal settlements, ecology | [`settlement_growth_runbook_v1.md`](settlement_growth_runbook_v1.md) |
+
+---
+
+## 9. Open wiring / implementation backlog (engineering)
+
+Check off as code catches up to the runbooks. **Owning code:** [`StrategicFieldsAndAiPlugin`](../../src/strategic/program.rs), [`strategic/sim.rs`](../../src/strategic/sim.rs), [`strategic/plugin.rs`](../../src/strategic/plugin.rs), [`strategic/logistics_net.rs`](../../src/strategic/logistics_net.rs).
+
+- [ ] **Corridors:** Spawn/maintain [`InfrastructureCorridor`](../../src/strategic/sim.rs) (or successors) from **real** construction/transport graph spans — not only stub wear on placeholder entities.
+- [ ] **Overlays R5+:** Writers for **EW** / richer **congestion** channels; optional **morale / instability**; align with [`chunk_scheduler_runbook_v1.md`](chunk_scheduler_runbook_v1.md) for dirty-region updates.
+- [ ] **Logistics AI:** Connect [`LogisticsAiRuntime`](../../src/strategic/sim.rs) to **production / stockpile / manifest** ECS (forecasting beyond `congestion_proxy`).
+- [ ] **Settlements:** Drive migration and informal-settlement pressure from **jobs / housing / safety** components, not only runbook stubs; add **dynamic adaptation** after disasters (doctrine alignment).
+- [ ] **City planning:** Feed [`CityPlanningHints`](../../src/strategic/sim.rs) from **district / utility** graph when [`infrastructure_construction_runbook_v1.md`](infrastructure_construction_runbook_v1.md) types exist; **adaptive rebuild** loop after damage.
+- [ ] **Operational:** [`OperationalTheaterSummary`](../../src/strategic/sim.rs) for **multi-faction** slots (not slot 0 means only); optional strike / interdiction **intent queue** (still non-micro).
+- [ ] **Experience layer:** Surface aggregates + overlay toggles in **game HUD** per [`ui_operational_direction_runbook_v1.md`](ui_operational_direction_runbook_v1.md) (command table / context tray).
+
+When a row closes, reference the **runbook round** or **integration test** name in the PR / commit message.

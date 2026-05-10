@@ -37,6 +37,8 @@ reqwest = { version = "0.11", features = ["json"] }
 # --- Bevy and UI (Bevy 0.18 line) ---
 # Pin companions from https://github.com/vladbat00/bevy_egui compatibility table at lock time.
 bevy = { version = "0.18", features = ["serialize"] }
+# PNG + GIF for gameplay capture (match `bevy_egui` → `arboard` → image 0.24 line).
+image = { version = "0.24", default-features = false, features = ["png", "gif"] }
 bevy_egui = "0.39"
 clap = { version = "4", features = ["derive"] }
 # Optional: re-add bevy-inspector-egui when a release matches this Bevy line without duplicating ECS.

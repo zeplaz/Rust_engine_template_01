@@ -23,6 +23,8 @@ pub enum BindingSlot {
     AgentPermissions,
     EguiUiScale,
     SimulationPause,
+    StartGameplayRecording,
+    StopGameplayRecording,
     CancelCapture,
     MapPanNorth,
     MapPanSouth,
@@ -95,6 +97,8 @@ fn apply_binding_capture(
             BindingSlot::AgentPermissions => bindings.toggle_agent_permissions = k,
             BindingSlot::EguiUiScale => bindings.toggle_egui_ui_scale = k,
             BindingSlot::SimulationPause => bindings.toggle_simulation_pause = k,
+            BindingSlot::StartGameplayRecording => bindings.start_gameplay_recording = k,
+            BindingSlot::StopGameplayRecording => bindings.stop_gameplay_recording = k,
             BindingSlot::CancelCapture => bindings.cancel_keybinding_capture = k,
             BindingSlot::MapPanNorth => bindings.map_pan_north = k,
             BindingSlot::MapPanSouth => bindings.map_pan_south = k,
@@ -123,6 +127,8 @@ fn slot_label_id(slot: BindingSlot) -> &'static str {
         BindingSlot::AgentPermissions => "bind_agents",
         BindingSlot::EguiUiScale => "bind_egui_scale",
         BindingSlot::SimulationPause => "bind_sim_pause",
+        BindingSlot::StartGameplayRecording => "bind_cap_start",
+        BindingSlot::StopGameplayRecording => "bind_cap_stop",
         BindingSlot::CancelCapture => "bind_cancel_cap",
         BindingSlot::MapPanNorth => "bind_map_n",
         BindingSlot::MapPanSouth => "bind_map_s",
@@ -258,6 +264,18 @@ fn keybindings_options_ui(
             "Flips SimControlState.paused (same as Diagnostics Play/Pause).",
             toggle_simulation_pause,
             BindingSlot::SimulationPause
+        );
+        row_combo!(
+            "Start gameplay capture (PNG + GIF on stop)",
+            "Writes frames under user captures folder; F12 (default) stops and builds clip.gif.",
+            start_gameplay_recording,
+            BindingSlot::StartGameplayRecording
+        );
+        row_combo!(
+            "Stop gameplay capture / encode GIF",
+            "Runs on a background thread; status in Diagnostics when F3 is open.",
+            stop_gameplay_recording,
+            BindingSlot::StopGameplayRecording
         );
         ui.separator();
         ui.heading("Map camera (simulation + editor)");

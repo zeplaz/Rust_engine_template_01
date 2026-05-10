@@ -13,6 +13,7 @@ use bevy::prelude::*;
 use bevy_egui::{egui, EguiContexts, EguiPrimaryContextPass};
 
 use crate::gui::ui_gates::in_simulation_or_editor;
+use crate::gui::gameplay_capture::GameplayRecorder;
 use crate::gui::input_bindings::InputBindings;
 use crate::engine::test_harness::ActiveTestScene;
 use crate::render::WeatherFireFieldDebugOverlay;
@@ -87,6 +88,7 @@ pub fn diagnostics_ui_system(
     wx_sample: Res<WeatherPrecipVisualSample>,
     mut gpu_field_debug: ResMut<WeatherFireFieldDebugOverlay>,
     test_scene: Option<Res<ActiveTestScene>>,
+    cap: Res<GameplayRecorder>,
 ) -> Result {
     if !state.visible {
         return Ok(());
@@ -107,6 +109,31 @@ pub fn diagnostics_ui_system(
             ui.label(format!("Entities:  {entity_count}"));
             if let Some(ts) = test_scene.as_ref() {
                 ui.label(format!("CLI test scene: {:?}", ts.0));
+            }
+
+            ui.separator();
+            ui.heading("Gameplay capture");
+            ui.small(format!(
+                "{} start · {} stop (Options to rebind)",
+                InputBindings::format_key(bindings.start_gameplay_recording),
+                InputBindings::format_key(bindings.stop_gameplay_recording)
+            ));
+            if cap.active {
+                if let Some(dir) = cap.session_dir.as_ref() {
+                    ui.colored_label(
+                        egui::Color32::RED,
+                        format!("● REC {} frames → {}", cap.frames_recorded, dir.display()),
+                    );
+                } else {
+                    ui.colored_label(egui::Color32::RED, "● REC");
+                }
+            } else if let Some(s) = cap.last_summary() {
+                ui.small(s);
+            } else {
+                ui.small(format!(
+                    "PNG folder + clip.gif under {}",
+                    GameplayRecorder::default_captures_root().display()
+                ));
             }
 
             ui.separator();

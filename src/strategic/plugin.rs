@@ -3,8 +3,13 @@
 use bevy::prelude::*;
 
 use super::logistics_net::logistics_net_inject_into_overlays;
+use super::transport_bridge::{
+    inject_transport_scalar_fields_into_overlays, maintain_strategic_corridor_entities,
+    sync_logistics_graph_from_transport, StrategicRasterConfig,
+};
 use super::{ChunkStrategicOverlay, LogisticsGraph};
 use crate::systems::terrain::materialize_chunks;
+use crate::systems::transport::{TransportCostWeights, TransportEdgeDirectory, TransportFieldStore};
 use crate::terrain::generation::{Chunk, ChunkCellMatrix};
 
 fn ensure_chunk_strategic_overlays(
@@ -36,10 +41,30 @@ pub struct StrategicFieldsPlugin;
 impl Plugin for StrategicFieldsPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<LogisticsGraph>()
+            .init_resource::<StrategicRasterConfig>()
+            .init_resource::<TransportEdgeDirectory>()
+            .init_resource::<TransportFieldStore>()
+            .init_resource::<TransportCostWeights>()
             .add_systems(Update, ensure_chunk_strategic_overlays.after(materialize_chunks))
             .add_systems(
                 Update,
-                logistics_net_inject_into_overlays.after(ensure_chunk_strategic_overlays),
+                (
+                    sync_logistics_graph_from_transport,
+                    maintain_strategic_corridor_entities,
+                )
+                    .chain()
+                    .after(ensure_chunk_strategic_overlays),
+            )
+            .add_systems(
+                Update,
+                inject_transport_scalar_fields_into_overlays
+                    .after(ensure_chunk_strategic_overlays)
+                    .after(maintain_strategic_corridor_entities)
+                    .before(logistics_net_inject_into_overlays),
+            )
+            .add_systems(
+                Update,
+                logistics_net_inject_into_overlays.after(inject_transport_scalar_fields_into_overlays),
             );
     }
 }
@@ -79,6 +104,8 @@ mod tests {
         assert_eq!(overlay.len_cells(), 6);
         assert_eq!(overlay.faction_control.len(), 6);
         assert_eq!(overlay.threat.len(), 6);
+        assert_eq!(overlay.routing_congestion.len(), 6);
+        assert_eq!(overlay.ew_denial.len(), 6);
     }
 
     /// **R4** — faction-slot field writers (`strategic_overlay` runbook).
