@@ -1,5 +1,5 @@
 //! **M5 / wave S** stub: hybrid-shaped **dev** snapshot (text header + body bytes).
-//! Body is **transport R8 JSON UTF-8** today; swap for **bincode/postcard** when matrix locks binary format.
+//! Body is **transport R8** UTF-8: **RON** canonical (editor); **JSON** still accepted on load (try RON then JSON).
 
 use serde::{Deserialize, Serialize};
 use std::fs;
@@ -16,7 +16,7 @@ pub struct WorldSnapshotHeaderDevV0 {
 
 const FORMAT_ID: &str = "hybrid_world_snapshot_dev_v0";
 
-/// Write **header** `\n` **body** (e.g. transport JSON bytes). Fits hybrid matrix “small header + bulk body” shape.
+/// Write **header** `\n` **body** (e.g. transport **RON** or JSON bytes). Fits hybrid matrix “small header + bulk body” shape.
 pub fn write_hybrid_world_snapshot_dev_v0(path: &Path, transport_body: &[u8]) -> io::Result<()> {
     let header = WorldSnapshotHeaderDevV0 {
         format: FORMAT_ID.into(),
@@ -31,7 +31,7 @@ pub fn write_hybrid_world_snapshot_dev_v0(path: &Path, transport_body: &[u8]) ->
     fs::write(path, out)
 }
 
-/// Read header + body. Does not decode transport (domain owns JSON/schema).
+/// Read header + body. Does not decode transport (domain owns RON/JSON schema).
 pub fn read_hybrid_world_snapshot_dev_v0(path: &Path) -> io::Result<(WorldSnapshotHeaderDevV0, Vec<u8>)> {
     let data = fs::read(path)?;
     let nl = data
@@ -66,7 +66,7 @@ mod tests {
 
     #[test]
     fn hybrid_dev_round_trip_header_and_len() {
-        let body = br#"{"schema_version":1,"nodes":[],"edges":[]}"#.to_vec();
+        let body = b"(schema_version:1,nodes:[],edges:[])".to_vec();
         let dir = std::env::temp_dir().join("hybrid_dev_test.sav");
         write_hybrid_world_snapshot_dev_v0(&dir, &body).unwrap();
         let (h, b) = read_hybrid_world_snapshot_dev_v0(&dir).unwrap();

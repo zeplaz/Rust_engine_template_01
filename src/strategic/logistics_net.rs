@@ -11,11 +11,14 @@ use bevy::prelude::*;
 use super::{ChunkStrategicOverlay, LogisticsGraph, LogisticsNode, LogisticsNodeId};
 use crate::terrain::generation::Chunk;
 
+use super::schedule::StrategicOverlayCouplingScratch;
+
 /// Clears per-cell net throughput, accumulates **effective** edge flow `capacity × (1 − disruption)` split
 /// across endpoints, then copies clamped throughput into `logistics_strength[i][0]` for quick AI/debug reads.
 pub fn logistics_net_inject_into_overlays(
     graph: Res<LogisticsGraph>,
     mut q: Query<(&Chunk, &mut ChunkStrategicOverlay)>,
+    mut scratch: ResMut<StrategicOverlayCouplingScratch>,
 ) {
     for (_chunk, mut overlay) in q.iter_mut() {
         overlay.logistics_throughput.fill(0.0);
@@ -44,6 +47,8 @@ pub fn logistics_net_inject_into_overlays(
             continue;
         };
         let half = eff * 0.5;
+        scratch.mark_dirty(ka.chunk);
+        scratch.mark_dirty(kb.chunk);
         *by_chunk
             .entry(ka.chunk)
             .or_default()

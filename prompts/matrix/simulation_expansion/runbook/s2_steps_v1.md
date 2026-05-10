@@ -3,8 +3,8 @@
 > **Parent:** [`../../guides/weather_simulation_runbook_v1.md`](../../guides/weather_simulation_runbook_v1.md)  
 > **Parallel with:** **S8** ([`python_asset_tools_alignment_runbook_v1.md`](../../guides/python_asset_tools_alignment_runbook_v1.md)) — different workstreams; see [`new_propsal_guide_may202608.md`](../../guides/new_propsal_guide_may202608.md) §5.
 
-Version: `v1.0.1`  
-**STATUS:** **In progress** — S2-S00..S2-S02 code landed 2026-05-06.
+Version: `v1.0.2`  
+**STATUS:** **S2-S00..S04 landed** — plugin + `ChunkWeather` + sim-gated tick + matrix row + **strategic overlay consumer** (2026-05-10). Further weather *effects* (mobility/power/full sensors) remain backlog.
 
 ---
 
@@ -64,7 +64,22 @@ Version: `v1.0.1`
 
 ---
 
+## S2-S04 — Strategic field consumer (sensor / recon stub)
+
+| Field | Content |
+|:---|:---|
+| **Goal** | One **read-only** consumer of [`ChunkWeather`](../../../../src/systems/weather/chunk_weather.rs) outside weather/ecology: **operational recon** field reacts to visibility + fog (aligns [`weather_simulation_runbook_v1.md`](../../guides/weather_simulation_runbook_v1.md) “sensors” with [`strategic_overlay_runbook_v1.md`](../../guides/strategic_overlay_runbook_v1.md)). |
+| **Anchor reads** | [`strategic_fields_and_ai_orchestrator_v1.md`](../../guides/strategic_fields_and_ai_orchestrator_v1.md); `src/strategic/sim.rs` (`strategic_fields_coupling_tick`) |
+| **Touch** | Rust: optional `ChunkWeather` on chunk entities; scale `recon_confidence` after EW term |
+| **Verify** | `cargo test -p proc_A_dine01 strategic` |
+| **DoD** | Missing `ChunkWeather` is a no-op (factor 1.0); no terrain ontology mutation |
+
+**Result (2026-05-10):** **`chunk_sensor_weather_factor`** in `sim.rs` — `visibility_factor` and `fog_density` damp recon per chunk when the component exists.
+
+---
+
 ## Document history
 
+- **2026-05-10:** `v1.0.2` — **S2-S04** strategic recon coupling; status header aligned with completed steps.
 - **2026-05-06:** Initial pack; S2-S00 executed; **S2 ∥ S8** policy in proposal index.
 - **2026-05-06:** `v1.0.1` — `ChunkWeather` + sim-gated tick (S2-S01/S2-S02).

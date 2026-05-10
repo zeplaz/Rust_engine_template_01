@@ -1,8 +1,8 @@
 # Simulation expansion — step packs (umbrella) `v1`
 
-> **STATUS:** **S0** + **S1** **verified**; **S2** + **S8** may proceed **in parallel** ([`s2_steps_v1.md`](s2_steps_v1.md), Python alignment runbook).
+> **STATUS:** **S0** + **S1** **verified**; **S2** step pack **S2-S00..S04** executed (weather scaffold + strategic recon consumer); **S8** may proceed **in parallel** ([`python_asset_tools_alignment_runbook_v1.md`](../../../guides/python_asset_tools_alignment_runbook_v1.md)).
 
-Version: `v1.0.5`
+Version: `v1.0.6`
 
 ---
 
@@ -77,6 +77,7 @@ This folder holds **implementation step packs** for the Unified Simulation Expan
 
 ## Document history
 
+- **2026-05-10:** `v1.0.6` — **S2-S04** (weather → strategic recon); README status synced.
 - **2026-05-06:** `v1.0.5` — **S2 ∥ S8**; [`s2_steps_v1.md`](s2_steps_v1.md); `WeatherPlugin` scaffold in engine.  
 - **2026-05-06:** `v1.0.4` — S0/S1 packs **verified**; [`chunk_scheduler_gap_table_v1.md`](../chunk_scheduler_gap_table_v1.md); matrix `v1.2.0`.
 - **2026-05-06:** `v1.0.3` — **S0** / **S1** step packs added (`s0_steps_v1.md`, `s1_steps_v1.md`).

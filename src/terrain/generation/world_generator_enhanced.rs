@@ -79,7 +79,7 @@ pub struct WorldGenParams {
 
     /// Channel frequencies / warp / detail — when loading chunk fields with [`crate::terrain::generation::passes::p1_fields::fill_fields`]
     /// and `tuning_overlay` is `None`, this is the tuning used (same path as [`crate::terrain::generation::world_generator_enhanced::generate_world`]).
-    /// Optionally overridden by JSON via `tuning_io` merge on startup.
+    /// Optionally overridden by `tuning_io` merge on startup (`world_gen_tuning.ron` preferred, else `.json`).
     pub noise_sampling: NoiseSamplingTuning,
     /// Biome weights + class thresholds — must stay aligned with [`crate::terrain::family::classify_biome`].
     pub biome_tuning: BiomeTuning,
@@ -1163,7 +1163,9 @@ fn world_gen_apply_completion(
     }
 }
 
-/// Default path for optional JSON overlay (`noise_sampling` + `biome_tuning`).
+/// Canonical overlay path — **RON** (`noise_sampling` + `biome_tuning`).
+pub const WORLD_GEN_TUNING_RON_PATH: &str = "assets/config/world_gen_tuning.ron";
+/// Legacy / Python tool path — **JSON** (same schema as RON).
 pub const WORLD_GEN_TUNING_JSON_PATH: &str = "assets/config/world_gen_tuning.json";
 
 // Plugin to register world generation systems
@@ -1179,7 +1181,7 @@ impl Plugin for WorldGeneratorPlugin {
             .init_state::<WorldGenFlowState>()
             .add_message::<GenerateWorldEvent>()
             .add_message::<WorldGenCompletedEvent>()
-            .add_systems(Startup, merge_world_gen_tuning_from_json)
+            .add_systems(Startup, merge_world_gen_tuning_overlay)
             .add_systems(
                 Update,
                 (
@@ -1192,8 +1194,11 @@ impl Plugin for WorldGeneratorPlugin {
     }
 }
 
-fn merge_world_gen_tuning_from_json(mut params: ResMut<WorldGenParams>) {
-    if let Ok(Some(overlay)) = tuning_io::load_overlay(WORLD_GEN_TUNING_JSON_PATH) {
+fn merge_world_gen_tuning_overlay(mut params: ResMut<WorldGenParams>) {
+    if let Ok(Some(overlay)) = tuning_io::load_overlay_prefer_ron(
+        std::path::Path::new(WORLD_GEN_TUNING_RON_PATH),
+        std::path::Path::new(WORLD_GEN_TUNING_JSON_PATH),
+    ) {
         if let Some(n) = overlay.noise_sampling {
             params.noise_sampling = n;
         }

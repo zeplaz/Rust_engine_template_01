@@ -1,6 +1,10 @@
-//! **G4** — **R8** `TransportNetworkSnapshot` JSON I/O + schema gate (dev/slice before hybrid binary body).
+//! **G4** — **R8** `TransportNetworkSnapshot` I/O + schema gate (dev/slice before hybrid binary body).
 //!
-//! Load/save does **not** invent gameplay rules: bytes → DTO → [`super::snapshot::hydrate_transport_from_snapshot`] only.
+//! **Format policy:** **RON** is the canonical on-disk format for editor/dev transport saves (matches Bevy/tooling
+//! patterns: `material_rules.ron`, keybindings RON, etc.). **JSON** remains for legacy fixtures and explicit
+//! `.json` paths / human-shared snippets. See `prompts/matrix/transport/runbook/ron_and_persistence_next_steps_v1.md`.
+//!
+//! Load/save does **not** invent gameplay rules: text → DTO → [`super::snapshot::hydrate_transport_from_snapshot`] only.
 
 use std::fs;
 use std::path::Path;
@@ -21,9 +25,21 @@ pub struct TransportLastHydratedSnapshot {
 #[derive(Debug)]
 pub enum TransportNetworkPersistenceError {
     Json(serde_json::Error),
+    /// RON parse or serialize (`Display` carries both `SpannedError` / serialization messages).
+    Ron(String),
     Io(std::io::Error),
     BadSchema { found: u32, expected: u32 },
     Hydrate(super::snapshot::HydrateError),
+}
+
+fn assert_schema_v1(snap: &TransportNetworkSnapshot) -> Result<(), TransportNetworkPersistenceError> {
+    if snap.schema_version != TRANSPORT_NETWORK_SCHEMA_V1 {
+        return Err(TransportNetworkPersistenceError::BadSchema {
+            found: snap.schema_version,
+            expected: TRANSPORT_NETWORK_SCHEMA_V1,
+        });
+    }
+    Ok(())
 }
 
 impl From<serde_json::Error> for TransportNetworkPersistenceError {
@@ -44,15 +60,33 @@ impl From<super::snapshot::HydrateError> for TransportNetworkPersistenceError {
     }
 }
 
-/// Parse JSON only; validates `schema_version` before hydrate.
+/// Parse **RON**; validates `schema_version` before returning.
+pub fn transport_network_snapshot_from_ron_str(s: &str) -> Result<TransportNetworkSnapshot, TransportNetworkPersistenceError> {
+    let snap: TransportNetworkSnapshot =
+        ron::de::from_str(s).map_err(|e| TransportNetworkPersistenceError::Ron(e.to_string()))?;
+    assert_schema_v1(&snap)?;
+    Ok(snap)
+}
+
+pub fn transport_network_snapshot_to_ron_string(snap: &TransportNetworkSnapshot) -> Result<String, TransportNetworkPersistenceError> {
+    let cfg = ron::ser::PrettyConfig::new().depth_limit(8).indentor("    ".into());
+    ron::ser::to_string_pretty(snap, cfg).map_err(|e| TransportNetworkPersistenceError::Ron(e.to_string()))
+}
+
+/// Canonical dev save — **RON** pretty.
+pub fn transport_network_snapshot_save_ron_path(
+    snap: &TransportNetworkSnapshot,
+    path: impl AsRef<Path>,
+) -> Result<(), TransportNetworkPersistenceError> {
+    let s = transport_network_snapshot_to_ron_string(snap)?;
+    fs::write(path.as_ref(), s)?;
+    Ok(())
+}
+
+/// Parse JSON only; validates `schema_version`. Prefer RON for new files; keep for fixtures and `.json` interchange.
 pub fn transport_network_snapshot_from_json_str(s: &str) -> Result<TransportNetworkSnapshot, TransportNetworkPersistenceError> {
     let snap: TransportNetworkSnapshot = serde_json::from_str(s)?;
-    if snap.schema_version != TRANSPORT_NETWORK_SCHEMA_V1 {
-        return Err(TransportNetworkPersistenceError::BadSchema {
-            found: snap.schema_version,
-            expected: TRANSPORT_NETWORK_SCHEMA_V1,
-        });
-    }
+    assert_schema_v1(&snap)?;
     Ok(snap)
 }
 
@@ -61,10 +95,23 @@ pub fn transport_network_snapshot_from_json_path(path: impl AsRef<Path>) -> Resu
     transport_network_snapshot_from_json_str(&bytes)
 }
 
+/// Dispatch by extension: `.json` → JSON; `.ron` → RON; **unknown / none** → RON then JSON fallback (older dev paths).
+pub fn transport_network_snapshot_from_path(path: &Path) -> Result<TransportNetworkSnapshot, TransportNetworkPersistenceError> {
+    let text = fs::read_to_string(path)?;
+    let ext = path.extension().and_then(|e| e.to_str()).map(|e| e.to_ascii_lowercase());
+    match ext.as_deref() {
+        Some("json") => transport_network_snapshot_from_json_str(&text),
+        Some("ron") => transport_network_snapshot_from_ron_str(&text),
+        None | Some(_) => transport_network_snapshot_from_ron_str(&text)
+            .or_else(|_| transport_network_snapshot_from_json_str(&text)),
+    }
+}
+
 pub fn transport_network_snapshot_to_json_string(snap: &TransportNetworkSnapshot) -> Result<String, TransportNetworkPersistenceError> {
     Ok(serde_json::to_string_pretty(snap)?)
 }
 
+/// **JSON** save for human-shared snippets / legacy only.
 pub fn transport_network_snapshot_save_json_path(
     snap: &TransportNetworkSnapshot,
     path: impl AsRef<Path>,
@@ -72,6 +119,19 @@ pub fn transport_network_snapshot_save_json_path(
     let s = transport_network_snapshot_to_json_string(snap)?;
     fs::write(path.as_ref(), s)?;
     Ok(())
+}
+
+/// UTF-8 body: **RON** first, then **JSON** (hybrid `.sav` transport body, clipboard paste, etc.).
+pub fn hydrate_transport_from_snapshot_text(
+    topology: &mut TransportTopology,
+    field_store: &mut TransportFieldStore,
+    edge_directory: &mut TransportEdgeDirectory,
+    text: &str,
+) -> Result<TransportNetworkSnapshot, TransportNetworkPersistenceError> {
+    let snap = transport_network_snapshot_from_ron_str(text)
+        .or_else(|_| transport_network_snapshot_from_json_str(text))?;
+    hydrate_transport_from_snapshot(topology, field_store, edge_directory, &snap)?;
+    Ok(snap)
 }
 
 /// Apply a JSON snapshot to ECS transport resources (main-thread **G4** boundary).
@@ -82,6 +142,18 @@ pub fn hydrate_transport_from_json_str(
     json: &str,
 ) -> Result<TransportNetworkSnapshot, TransportNetworkPersistenceError> {
     let snap = transport_network_snapshot_from_json_str(json)?;
+    hydrate_transport_from_snapshot(topology, field_store, edge_directory, &snap)?;
+    Ok(snap)
+}
+
+/// **RON** hydrate (convenience).
+pub fn hydrate_transport_from_ron_str(
+    topology: &mut TransportTopology,
+    field_store: &mut TransportFieldStore,
+    edge_directory: &mut TransportEdgeDirectory,
+    ron: &str,
+) -> Result<TransportNetworkSnapshot, TransportNetworkPersistenceError> {
+    let snap = transport_network_snapshot_from_ron_str(ron)?;
     hydrate_transport_from_snapshot(topology, field_store, edge_directory, &snap)?;
     Ok(snap)
 }
@@ -101,7 +173,7 @@ fn transport_network_persistence_on_load(
 ) {
     for msg in messages.read() {
         let path = Path::new(msg.path.as_ref());
-        match transport_network_snapshot_from_json_path(path) {
+        match transport_network_snapshot_from_path(path) {
             Ok(snap) => {
                 match hydrate_transport_from_snapshot(
                     topology.as_mut(),
@@ -172,7 +244,22 @@ mod tests {
         assert_eq!(js0, js1);
     }
 
-    /// **W4 / T-LANE-001** slice: one node fans out to two edges (junction seed).
+    #[test]
+    fn g4_chain_fixture_round_trips_json_to_ron_and_back() {
+        let s0 = transport_network_snapshot_from_json_str(fixture_chain_v1_json()).unwrap();
+        let ron = transport_network_snapshot_to_ron_string(&s0).unwrap();
+        let s1 = transport_network_snapshot_from_ron_str(&ron).unwrap();
+        assert_eq!(s0, s1);
+    }
+
+    #[test]
+    fn g4_from_path_respects_json_extension() {
+        let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("assets/test_fixtures/transport/network_chain_v1.json");
+        let s = transport_network_snapshot_from_path(&path).unwrap();
+        assert_eq!(s.edges.len(), 2);
+    }
+
     #[test]
     fn g4_fork_fixture_hydrate_two_edges_from_one_head() {
         let json = include_str!("../../../assets/test_fixtures/transport/network_fork_v1.json");

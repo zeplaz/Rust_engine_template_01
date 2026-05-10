@@ -13,7 +13,8 @@ use crate::systems::production::{
 use crate::systems::damage::DamageSystem;
 use crate::systems::navigation::NavigationSchedulePlugin;
 use crate::systems::sim_control::SimControlPlugin;
-use crate::systems::transport::TransportSimulationPlugin;
+use crate::systems::transport::{TransportSchedule, TransportSimulationPlugin};
+use crate::strategic::StrategicFieldPipeline;
 use crate::render::GpuWeatherFireFieldPlugin;
 use crate::systems::{
     configure_chunk_environment_sets,
@@ -76,6 +77,10 @@ impl Plugin for EnginePlugin {
             .add_plugins(DamageSystem)
             .add_plugins(MaterialUnificationPlugin)
             .add_plugins(crate::strategic::StrategicFieldsAndAiPlugin);
+        app.configure_sets(
+            Update,
+            StrategicFieldPipeline::GraphSync.after(TransportSchedule::CostCache),
+        );
         #[cfg(feature = "bevy_tilemap_adapter")]
         app.add_plugins(TilemapAdapterPlugin);
         // Plugin order still matters for init; cross-simulation ordering uses SystemSet edges

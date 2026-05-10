@@ -3,11 +3,11 @@ use bevy_egui::{egui, EguiContexts, EguiPrimaryContextPass};
 
 use crate::engine::{BaseState, WorldGenFlowState};
 use crate::gui::editor::world_preview::WorldPreviewUiState;
-use crate::terrain::generation::tuning_io::{load_overlay, WorldGenTuningOverlay};
+use crate::terrain::generation::tuning_io::{load_overlay_prefer_ron, save_overlay_ron, WorldGenTuningOverlay};
 use crate::terrain::generation::world_generator_enhanced::{
     despawn_generated_world_entities, GenerateWorldEvent, MAX_WORLD_GEN_AXIS, PREVIEW_WORLD_MAX_AXIS,
     RegionMethod, TerrainNoiseProfile, WorldGenParams, WorldGenPhase, WorldGenProgress, WorldMarker,
-    WORLD_GEN_TUNING_JSON_PATH,
+    WORLD_GEN_TUNING_JSON_PATH, WORLD_GEN_TUNING_RON_PATH,
 };
 use crate::terrain::generation::WorldGenLastDebugReport;
 
@@ -93,10 +93,13 @@ pub fn world_gen_ui_system(
                 .id_salt("world_gen_main_scroll")
                 .auto_shrink([false, false])
                 .show(ui, |ui| {
-            ui.label(format!("Optional overlay: {}", WORLD_GEN_TUNING_JSON_PATH));
+            ui.label(format!(
+                "Optional overlay: {} (else {})",
+                WORLD_GEN_TUNING_RON_PATH, WORLD_GEN_TUNING_JSON_PATH
+            ));
             ui.horizontal(|ui| {
-                if tt(ui.button("Reload tuning JSON"), hints::RELOAD_JSON).clicked() {
-                    match load_overlay(WORLD_GEN_TUNING_JSON_PATH)
+                if tt(ui.button("Reload tuning"), hints::RELOAD_TUNING).clicked() {
+                    match load_overlay_prefer_ron(WORLD_GEN_TUNING_RON_PATH, WORLD_GEN_TUNING_JSON_PATH)
                     {
                         Ok(Some(o)) => {
                             if let Some(n) = o.noise_sampling {
@@ -111,17 +114,14 @@ pub fn world_gen_ui_system(
                         Err(e) => *tuning_io_hint = format!("Reload error: {e}"),
                     }
                 }
-                if tt(ui.button("Save tuning JSON"), hints::SAVE_JSON).clicked() {
+                if tt(ui.button("Save tuning (RON)"), hints::SAVE_TUNING_RON).clicked() {
                     let overlay = WorldGenTuningOverlay {
                         noise_sampling: Some(world_gen_params.noise_sampling.clone()),
                         biome_tuning: Some(world_gen_params.biome_tuning.clone()),
                     };
-                    match serde_json::to_string_pretty(&overlay) {
-                        Ok(s) => match std::fs::write(WORLD_GEN_TUNING_JSON_PATH, s) {
-                            Ok(()) => *tuning_io_hint = "Saved overlay.".to_string(),
-                            Err(e) => *tuning_io_hint = format!("Write error: {e}"),
-                        },
-                        Err(e) => *tuning_io_hint = format!("Serialize error: {e}"),
+                    match save_overlay_ron(WORLD_GEN_TUNING_RON_PATH, &overlay) {
+                        Ok(()) => *tuning_io_hint = "Saved RON overlay.".to_string(),
+                        Err(e) => *tuning_io_hint = format!("Write error: {e}"),
                     }
                 }
             });

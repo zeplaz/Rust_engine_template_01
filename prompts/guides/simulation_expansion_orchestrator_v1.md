@@ -137,7 +137,7 @@ For **100k+ field entities** and **large worlds**, chunk-local **FixedUpdate** s
 
 ## 8. Step packs
 
-Umbrella index: [`../matrix/simulation_expansion/runbook/README.md`](../matrix/simulation_expansion/runbook/README.md) — **S0** [`s0_steps_v1.md`](../matrix/simulation_expansion/runbook/s0_steps_v1.md), **S1** [`s1_steps_v1.md`](../matrix/simulation_expansion/runbook/s1_steps_v1.md), **S2** [`s2_steps_v1.md`](../matrix/simulation_expansion/runbook/s2_steps_v1.md).
+Umbrella index: [`../matrix/simulation_expansion/runbook/README.md`](../matrix/simulation_expansion/runbook/README.md) — **S0** [`s0_steps_v1.md`](../matrix/simulation_expansion/runbook/s0_steps_v1.md), **S1** [`s1_steps_v1.md`](../matrix/simulation_expansion/runbook/s1_steps_v1.md), **S2** [`s2_steps_v1.md`](../matrix/simulation_expansion/runbook/s2_steps_v1.md) *(includes **S2-S04** weather → strategic recon consumer, 2026-05-10)*.
 
 **Sequencing:** **S0** (asset audit) before **broad S8** (Python asset tools) so editor taxonomies mirror **declared** engine ownership. **S0** and **S1** (chunk scheduler) may run **in parallel**; **S2** (weather) and **S8** may also run **in parallel** — see [`new_propsal_guide_may202608.md`](new_propsal_guide_may202608.md) §5.
 

@@ -19,6 +19,9 @@ pub enum BindingSlot {
     FactionTools,
     CycleLogistics,
     LogisticsTargets,
+    StrategicStripCompact,
+    StrategicOverlayCongestion,
+    StrategicOverlayEw,
     WorldGenerator,
     AgentPermissions,
     EguiUiScale,
@@ -93,6 +96,11 @@ fn apply_binding_capture(
             BindingSlot::FactionTools => bindings.toggle_faction_tools = k,
             BindingSlot::CycleLogistics => bindings.cycle_logistics_focus = k,
             BindingSlot::LogisticsTargets => bindings.toggle_logistics_targets_panel = k,
+            BindingSlot::StrategicStripCompact => bindings.toggle_strategic_hud_strip_compact = k,
+            BindingSlot::StrategicOverlayCongestion => {
+                bindings.toggle_strategic_overlay_routing_congestion = k
+            }
+            BindingSlot::StrategicOverlayEw => bindings.toggle_strategic_overlay_ew_denial = k,
             BindingSlot::WorldGenerator => bindings.toggle_world_generator = k,
             BindingSlot::AgentPermissions => bindings.toggle_agent_permissions = k,
             BindingSlot::EguiUiScale => bindings.toggle_egui_ui_scale = k,
@@ -123,6 +131,9 @@ fn slot_label_id(slot: BindingSlot) -> &'static str {
         BindingSlot::FactionTools => "bind_faction",
         BindingSlot::CycleLogistics => "bind_logi_cycle",
         BindingSlot::LogisticsTargets => "bind_logi_panel",
+        BindingSlot::StrategicStripCompact => "bind_strat_strip",
+        BindingSlot::StrategicOverlayCongestion => "bind_strat_cong",
+        BindingSlot::StrategicOverlayEw => "bind_strat_ew",
         BindingSlot::WorldGenerator => "bind_worldgen",
         BindingSlot::AgentPermissions => "bind_agents",
         BindingSlot::EguiUiScale => "bind_egui_scale",
@@ -240,6 +251,24 @@ fn keybindings_options_ui(
             "Pick inventory focus from a list.",
             toggle_logistics_targets_panel,
             BindingSlot::LogisticsTargets
+        );
+        row_combo!(
+            "Strategic HUD — compact strip",
+            "One-line strategic summary vs full theater / AI line.",
+            toggle_strategic_hud_strip_compact,
+            BindingSlot::StrategicStripCompact
+        );
+        row_combo!(
+            "Strategic overlay — routing congestion splats",
+            "Transport-derived routing congestion field into chunk overlays.",
+            toggle_strategic_overlay_routing_congestion,
+            BindingSlot::StrategicOverlayCongestion
+        );
+        row_combo!(
+            "Strategic overlay — EW / denial splats",
+            "Transport-derived EW / comms denial proxy field.",
+            toggle_strategic_overlay_ew_denial,
+            BindingSlot::StrategicOverlayEw
         );
         row_combo!(
             "World generator",

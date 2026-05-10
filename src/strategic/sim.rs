@@ -1,5 +1,7 @@
 //! Live **simulation hooks** for [`strategic_fields_and_ai_orchestrator_v1.md`](../../prompts/guides/strategic_fields_and_ai_orchestrator_v1.md)
 //! child runbooks — extends [`super::plugin::StrategicFieldsPlugin`] field buffers with coupling + AI-facing aggregates.
+//!
+//! Weather → recon (read-only): [`S2-S04`](../../prompts/matrix/simulation_expansion/runbook/s2_steps_v1.md) / `chunk_sensor_weather_factor`.
 
 use bevy::prelude::*;
 
@@ -10,8 +12,23 @@ use super::runbook_rounds::corridor::CorridorType;
 use super::runbook_rounds::settlement::{ecology_hazard_pressure, migration_pull};
 use super::transport_bridge::transport_mean_damage;
 use super::{ChunkStrategicOverlay, MAX_STRATEGIC_FACTION_SLOTS};
+use super::construction_book::CorridorConstructionStatus;
+use super::schedule::StrategicOverlayCouplingScratch;
 use crate::entities::production::core::{ResourceProducer, ResourceStorage, ResourceStorageCapacity};
+use crate::systems::chunk_sim_lod::ChunkSimLod;
 use crate::systems::transport::TransportFieldStore;
+use crate::systems::weather::ChunkWeather;
+use crate::terrain::generation::Chunk;
+
+#[inline]
+fn chunk_sensor_weather_factor(weather: Option<&ChunkWeather>) -> f32 {
+    let Some(w) = weather else {
+        return 1.0;
+    };
+    let vis = w.visibility_factor.clamp(0.0, 1.0);
+    let fog = 1.0 - w.fog_density.clamp(0.0, 1.0) * 0.55;
+    (vis * fog).clamp(0.05, 1.0)
+}
 
 /// Links [`InfrastructureCorridor`] wear to a live transport edge.
 #[derive(Component, Clone, Debug)]
@@ -136,7 +153,11 @@ impl Plugin for StrategicSimulationPlugin {
             )
             .add_systems(
                 Update,
-                settlement_and_corridor_tick.after(strategic_fields_coupling_tick),
+                strategic_city_planning_hints_tick.after(strategic_fields_coupling_tick),
+            )
+            .add_systems(
+                Update,
+                settlement_and_corridor_tick.after(strategic_city_planning_hints_tick),
             );
     }
 }
@@ -176,19 +197,28 @@ fn refresh_settlement_socio_signals(
     }
 }
 
-/// **strategic_overlay** + **logistics_ai** + **operational** + **city_planning** — one pass for overlay coupling and aggregates.
+/// **strategic_overlay** + **logistics_ai** + **operational** — overlay coupling and theater aggregates.
+/// [`strategic_city_planning_hints_tick`] fills [`CityPlanningHints`] from read-only overlay passes (avoids conflicting `Query`s).
 #[allow(clippy::too_many_arguments)]
 fn strategic_fields_coupling_tick(
-    mut overlays: Query<&mut ChunkStrategicOverlay>,
+    mut overlays: Query<(
+        &Chunk,
+        Option<&ChunkSimLod>,
+        Option<&ChunkWeather>,
+        &mut ChunkStrategicOverlay,
+    )>,
     transport_fields: Res<TransportFieldStore>,
+    mut scratch: ResMut<StrategicOverlayCouplingScratch>,
     mut logistics_ai: ResMut<LogisticsAiRuntime>,
     mut theater: ResMut<OperationalTheaterSummary>,
-    mut city: ResMut<CityPlanningHints>,
-    settlements: Query<&SettlementSite>,
     storages: Query<&ResourceStorage>,
     caps: Query<&ResourceStorageCapacity>,
     producers: Query<&ResourceProducer>,
 ) {
+    scratch.frame_counter = scratch.frame_counter.wrapping_add(1);
+    let global_refresh = scratch.dormant_global_refresh();
+    let dirty_snapshot: std::collections::HashSet<IVec2> = scratch.dirty_chunks.clone();
+
     let mut cong_acc = 0.0f32;
     let mut cong_n = 0.0f32;
     let mut ncells = 0.0f32;
@@ -196,21 +226,30 @@ fn strategic_fields_coupling_tick(
     let mut threat_acc = [0.0f32; MAX_STRATEGIC_FACTION_SLOTS];
     let mut logi_acc = [0.0f32; MAX_STRATEGIC_FACTION_SLOTS];
 
-    for mut o in &mut overlays {
+    for (chunk, lod_opt, weather, mut o) in overlays.iter_mut() {
+        let lod = lod_opt.copied().unwrap_or(ChunkSimLod::Normal);
+        let skip_cell_writes = matches!(lod, ChunkSimLod::Dormant)
+            && !dirty_snapshot.contains(&chunk.coord)
+            && !global_refresh;
+        let sensor_weather = chunk_sensor_weather_factor(weather);
+
         for i in 0..o.len_cells() {
             let t = o.logistics_throughput.get(i).copied().unwrap_or(0.0);
             let rc = o.routing_congestion.get(i).copied().unwrap_or(0.0);
             let ew = o.ew_denial.get(i).copied().unwrap_or(0.0);
-            o.mobility_cost[i] = (1.0 - t.clamp(0.0, 1.0) + 0.28 * rc).clamp(0.0, 1.0);
-            if i < o.civilian_stability.len() {
-                let th0 = o.threat[i][0].clamp(0.0, 1.0);
-                o.civilian_stability[i] =
-                    (0.65 * (1.0 - th0) + 0.35 * (1.0 - ew)).clamp(0.0, 1.0);
-            }
-            if i < o.recon_confidence.len() {
-                for slot in 0..MAX_STRATEGIC_FACTION_SLOTS {
-                    let base = o.recon_confidence[i][slot];
-                    o.recon_confidence[i][slot] = (base * (1.0 - ew * 0.65)).clamp(0.0, 1.0);
+            if !skip_cell_writes {
+                o.mobility_cost[i] = (1.0 - t.clamp(0.0, 1.0) + 0.28 * rc).clamp(0.0, 1.0);
+                if i < o.civilian_stability.len() {
+                    let th0 = o.threat[i][0].clamp(0.0, 1.0);
+                    o.civilian_stability[i] =
+                        (0.65 * (1.0 - th0) + 0.35 * (1.0 - ew)).clamp(0.0, 1.0);
+                }
+                if i < o.recon_confidence.len() {
+                    for slot in 0..MAX_STRATEGIC_FACTION_SLOTS {
+                        let base = o.recon_confidence[i][slot];
+                        o.recon_confidence[i][slot] =
+                            (base * (1.0 - ew * 0.65) * sensor_weather).clamp(0.0, 1.0);
+                    }
                 }
             }
             cong_acc += 1.0 - t.min(1.0);
@@ -222,6 +261,8 @@ fn strategic_fields_coupling_tick(
             }
         }
     }
+
+    scratch.dirty_chunks.clear();
 
     logistics_ai.congestion_proxy = if cong_n > 0.0 { cong_acc / cong_n } else { 0.0 };
     logistics_ai.mean_edge_damage = transport_mean_damage(&transport_fields);
@@ -264,7 +305,15 @@ fn strategic_fields_coupling_tick(
         theater.mean_logistics_strength_by_slot = [0.0; MAX_STRATEGIC_FACTION_SLOTS];
         theater.active_faction_slots = 0;
     }
+}
 
+fn strategic_city_planning_hints_tick(
+    overlays: Query<&ChunkStrategicOverlay>,
+    settlements: Query<&SettlementSite>,
+    logistics_ai: Res<LogisticsAiRuntime>,
+    theater: Res<OperationalTheaterSummary>,
+    mut city: ResMut<CityPlanningHints>,
+) {
     let dmg = logistics_ai.mean_edge_damage;
     let mean_th_s0 = theater.mean_threat_by_slot[0];
 
@@ -309,9 +358,11 @@ fn settlement_and_corridor_tick(
     time: Res<Time>,
     mut settlements: Query<&mut SettlementSite>,
     mut standalone_corridors: Query<&mut InfrastructureCorridor, Without<StrategicTransportCorridor>>,
-    mut linked_corridors: Query<
-        (&mut InfrastructureCorridor, &StrategicTransportCorridor),
-    >,
+    mut linked_corridors: Query<(
+        &mut InfrastructureCorridor,
+        &StrategicTransportCorridor,
+        &CorridorConstructionStatus,
+    )>,
     fields: Res<TransportFieldStore>,
 ) {
     let dt = time.delta_secs().clamp(0.0, 0.25);
@@ -335,9 +386,16 @@ fn settlement_and_corridor_tick(
     for mut c in &mut standalone_corridors {
         c.wear = (c.wear + wear_dt).min(1.0);
     }
-    for (mut c, link) in &mut linked_corridors {
+    for (mut c, link, cons) in &mut linked_corridors {
+        let tf = cons.traffic_factor();
+        if tf <= 0.0 {
+            c.wear = 0.0;
+            continue;
+        }
         if let Some(st) = fields.by_edge.get(&link.edge_id) {
-            c.wear = (st.damage * 0.55 + st.congestion * 0.35 + st.danger * 0.1).clamp(0.0, 1.0);
+            let raw =
+                (st.damage * 0.55 + st.congestion * 0.35 + st.danger * 0.1).clamp(0.0, 1.0);
+            c.wear = (raw * tf).min(1.0);
         }
     }
 }
@@ -347,7 +405,8 @@ mod tests {
     use super::*;
     use crate::strategic::logistics_net::logistics_net_inject_into_overlays;
     use crate::strategic::{
-        LogisticsEdge, LogisticsGraph, LogisticsNode, LogisticsNodeId, StrategicFieldsAndAiPlugin,
+        CorridorConstructionBook, CorridorConstructionPhase, LogisticsEdge, LogisticsGraph,
+        LogisticsNode, LogisticsNodeId, StrategicFieldsAndAiPlugin,
     };
     use crate::systems::terrain::MaterialUnificationPlugin;
     use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
@@ -432,11 +491,77 @@ mod tests {
     }
 
     #[test]
+    fn planned_transport_corridor_has_no_operational_wear() {
+        use crate::strategic::plugin::StrategicFieldsPlugin;
+        use crate::systems::transport::{
+            EdgeFieldState, TransportEdgeDirectory, TransportEdgeId, TransportEdgeMeta,
+            TransportFieldStore,
+        };
+
+        let mut app = App::new();
+        app.add_plugins(MinimalPlugins)
+            .add_plugins(StrategicFieldsPlugin)
+            .add_plugins(StrategicSimulationPlugin);
+
+        let eid = TransportEdgeId(11);
+        app.world_mut()
+            .resource_mut::<CorridorConstructionBook>()
+            .by_edge
+            .insert(
+                eid,
+                CorridorConstructionStatus {
+                    phase: CorridorConstructionPhase::Planned,
+                    progress: 0.0,
+                },
+            );
+        app.world_mut().insert_resource({
+            let mut d = TransportEdgeDirectory::default();
+            d.by_edge.insert(
+                eid,
+                TransportEdgeMeta {
+                    profile: "rail".into(),
+                    head_key: "t0_0".into(),
+                    tail_key: "t4_0".into(),
+                    ..default()
+                },
+            );
+            d
+        });
+        app.world_mut().insert_resource({
+            let mut f = TransportFieldStore::default();
+            f.by_edge.insert(
+                eid,
+                EdgeFieldState {
+                    damage: 1.0,
+                    congestion: 1.0,
+                    danger: 1.0,
+                    ..default()
+                },
+            );
+            f
+        });
+
+        app.update();
+
+        let mut q = app.world_mut().query::<(&InfrastructureCorridor, Option<&StrategicTransportCorridor>)>();
+        let linked_wear: Vec<f32> = q
+            .iter(app.world())
+            .filter(|(_, l)| l.is_some())
+            .map(|(c, _)| c.wear)
+            .collect();
+        assert!(
+            linked_wear.iter().all(|&w| w < 1e-4),
+            "planned corridor must not mirror heavy transport stress as wear"
+        );
+    }
+
+    #[test]
     fn simulation_plugin_orders_after_logistics_inject() {
         use crate::strategic::StrategicSimulationPlugin;
         let mut app = App::new();
         app.add_plugins(MinimalPlugins)
             .add_plugins(StrategicSimulationPlugin)
+            .init_resource::<crate::strategic::StrategicOverlayCouplingScratch>()
             .add_systems(Update, logistics_net_inject_into_overlays);
         app.world_mut().init_resource::<LogisticsGraph>();
         // would panic if schedule invalid

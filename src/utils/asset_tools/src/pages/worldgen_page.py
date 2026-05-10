@@ -1,4 +1,4 @@
-"""World generation tuning — edit `assets/config/world_gen_tuning.json` (same file as Bevy / F8 UI)."""
+"""World generation tuning — edit `assets/config/world_gen_tuning.json` (Python tool); game loads `world_gen_tuning.ron` first when present."""
 
 from __future__ import annotations
 

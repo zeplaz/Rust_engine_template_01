@@ -26,6 +26,12 @@ pub struct InputBindings {
     pub toggle_faction_tools: KeyCode,
     pub cycle_logistics_focus: KeyCode,
     pub toggle_logistics_targets_panel: KeyCode,
+    /// Compact one-line strategic summary in the in-game HUD (`InGameHudPlugin`).
+    pub toggle_strategic_hud_strip_compact: KeyCode,
+    /// Toggle painting **routing congestion** transport splats into [`ChunkStrategicOverlay`](crate::strategic::ChunkStrategicOverlay).
+    pub toggle_strategic_overlay_routing_congestion: KeyCode,
+    /// Toggle painting **EW / denial** proxy splats from transport fields.
+    pub toggle_strategic_overlay_ew_denial: KeyCode,
     pub toggle_world_generator: KeyCode,
     pub toggle_agent_permissions: KeyCode,
     /// Toggles egui scale compensation (`ui_windows::update_ui_scale_factor_system`).
@@ -61,6 +67,9 @@ impl Default for InputBindings {
             toggle_faction_tools: KeyCode::F4,
             cycle_logistics_focus: KeyCode::F9,
             toggle_logistics_targets_panel: KeyCode::F10,
+            toggle_strategic_hud_strip_compact: KeyCode::F5,
+            toggle_strategic_overlay_routing_congestion: KeyCode::Digit7,
+            toggle_strategic_overlay_ew_denial: KeyCode::Digit8,
             toggle_world_generator: KeyCode::F8,
             toggle_agent_permissions: KeyCode::F7,
             toggle_egui_ui_scale: KeyCode::Slash,

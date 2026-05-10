@@ -1,7 +1,8 @@
 //! Devtools diagnostics window — egui (`F3`).
 //!
 //! Purpose: minimal **iteration-loop UX** — see FPS, drive sim (pause/step/speed),
-//! count entities. Future tabs: streaming stats, ECS counters, channel drops.
+//! count entities. **F3** panel includes a **Playtest — strategic / doctrine** section
+//! (`CorridorConstructionBook`, theater summaries, doctrine & research reminders).
 //!
 //! Designer:
 //! - `prompts/designer_questions/tools_ui/spec/04_metrics_diagnostics.md`
@@ -18,7 +19,13 @@ use crate::gui::input_bindings::InputBindings;
 use crate::engine::test_harness::ActiveTestScene;
 use crate::render::WeatherFireFieldDebugOverlay;
 use crate::systems::sim_control::{SimControlState, SimTick};
+use crate::systems::transport::TransportEdgeDirectory;
 use crate::systems::weather::{WeatherPrecipVisualSample, WeatherVisualSettings};
+use crate::strategic::{
+    align_corridor_book_with_transport_directory, CorridorConstructionBook,
+    CorridorConstructionPhase, CorridorConstructionStatus, LogisticsAiRuntime,
+    OperationalTheaterSummary,
+};
 
 /// UI visibility + cheap rolling FPS estimate.
 #[derive(Resource, Debug, Clone)]
@@ -89,6 +96,10 @@ pub fn diagnostics_ui_system(
     mut gpu_field_debug: ResMut<WeatherFireFieldDebugOverlay>,
     test_scene: Option<Res<ActiveTestScene>>,
     cap: Res<GameplayRecorder>,
+    directory: Res<TransportEdgeDirectory>,
+    mut construction_book: ResMut<CorridorConstructionBook>,
+    theater: Option<Res<OperationalTheaterSummary>>,
+    logistics_ai: Option<Res<LogisticsAiRuntime>>,
 ) -> Result {
     if !state.visible {
         return Ok(());
@@ -173,6 +184,90 @@ pub fn diagnostics_ui_system(
                     wx_sample.chunk_count, wx_sample.rain, wx_sample.snow, wx_sample.fog
                 ));
             }
+
+            ui.separator();
+            egui::CollapsingHeader::new("Playtest — strategic / doctrine")
+                .default_open(false)
+                .show(ui, |ui| {
+                    ui.small("Bake/load transport (editor G4) auto-aligns the construction book: new edges → Completed; stale rows dropped; existing phases kept.");
+                    ui.label(format!(
+                        "Transport edges: {} · book rows: {}",
+                        directory.by_edge.len(),
+                        construction_book.by_edge.len()
+                    ));
+                    if let (Some(th), Some(la)) = (theater.as_deref(), logistics_ai.as_deref()) {
+                        ui.label(format!(
+                            "Theater μ threat[0]: {:.2} · μ logistics[0]: {:.2} · active faction slots: {}",
+                            th.mean_threat_by_slot[0],
+                            th.mean_logistics_strength_by_slot[0],
+                            th.active_faction_slots
+                        ));
+                        ui.label(format!(
+                            "Logistics AI: congest {:.2} · edge dmg {:.2} · stockpile fill {:.2} · industry proxy {:.2}",
+                            la.congestion_proxy,
+                            la.mean_edge_damage,
+                            la.stockpile_fill_ratio,
+                            la.industrial_output_proxy
+                        ));
+                    } else {
+                        ui.small("Theater / logistics AI resources not loaded (StrategicSimulationPlugin missing in this app).");
+                    }
+
+                    egui::CollapsingHeader::new("Doctrine checklist (traceability)")
+                        .default_open(false)
+                        .show(ui, |ui| {
+                            ui.small("Maps modern systems warfare targets → sim layers. Full: prompts/guides/doctrine_simulation_alignment_runbook_v1.md");
+                            ui.small("• Intel / recon fields ↔ drone & sensor coverage (recon_confidence + weather visibility).");
+                            ui.small("• EW ↔ routing_congestion / ew_denial overlay scalars (transport-derived + toggles).");
+                            ui.small("• Logistics attacks ↔ throughput collapse on LogisticsGraph + congestion proxy.");
+                            ui.small("• Infrastructure strikes ↔ disruption on edges + infra graph integrity (resilience runbook).");
+                        });
+
+                    egui::CollapsingHeader::new("Research program (design authority)")
+                        .default_open(false)
+                        .show(ui, |ui| {
+                            ui.small("Capability = institutions + industrial maturity + doctrine pressure — not an isolated tech-tree button.");
+                            ui.small("See: prompts/guides/research_capability_ecosystem_runbook_v1.md · orchestrator: infrastructure_and_research_orchestrator_v1.md");
+                        });
+
+                    ui.horizontal(|ui| {
+                        if ui.button("Re-align book ↔ directory").on_hover_text("Drop orphan book rows; add Completed for new edge ids; keep existing phases.").clicked() {
+                            align_corridor_book_with_transport_directory(&directory, construction_book.as_mut());
+                        }
+                        if ui.button("All edges → Completed").clicked() {
+                            for eid in directory.by_edge.keys() {
+                                construction_book.by_edge.insert(*eid, CorridorConstructionStatus::default());
+                            }
+                        }
+                    });
+
+                    let mut keys: Vec<_> = directory.by_edge.keys().copied().collect();
+                    keys.sort_by_key(|k| k.0);
+                    keys.truncate(24);
+                    if keys.is_empty() {
+                        ui.small("No transport edges — bake roads in map editor or load dev_transport_network.ron (or .json fixture).");
+                    } else {
+                        egui::ScrollArea::vertical().max_height(220.0).show(ui, |ui| {
+                            for eid in keys {
+                                let st = construction_book
+                                    .by_edge
+                                    .entry(eid)
+                                    .or_insert(CorridorConstructionStatus::default());
+                                ui.group(|ui| {
+                                    ui.label(format!("Edge {}", eid.0));
+                                    ui.horizontal(|ui| {
+                                        ui.radio_value(&mut st.phase, CorridorConstructionPhase::Planned, "Planned");
+                                        ui.radio_value(&mut st.phase, CorridorConstructionPhase::InProgress, "In progress");
+                                        ui.radio_value(&mut st.phase, CorridorConstructionPhase::Completed, "Completed");
+                                    });
+                                    if st.phase == CorridorConstructionPhase::InProgress {
+                                        ui.add(egui::Slider::new(&mut st.progress, 0.0..=1.0).text("Traffic progress"));
+                                    }
+                                });
+                            }
+                        });
+                    }
+                });
 
             // TODO: tabs — chunk streamer, production manifest summary, faction roster.
         });
