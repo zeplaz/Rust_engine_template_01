@@ -114,12 +114,16 @@ pub struct TerrainFamilyDef {
 pub const SUPPORTED_TERRAIN_FAMILY_REGISTRY_SCHEMA_VERSIONS: &[u32] = &[1];
 
 impl TerrainFamilyRegistry {
-    pub fn load_from_json(path: &str) -> std::io::Result<Self> {
-        let s = std::fs::read_to_string(path)?;
-        let file: TerrainFamilyRegistryFile = serde_json::from_str(&s).map_err(|e| {
-            std::io::Error::new(std::io::ErrorKind::InvalidData, format!("JSON: {e}"))
-        })?;
+    /// Load from **`*.ron`** or **`*.json`** (extension selects parser; unknown tries RON then JSON).
+    pub fn load_from_path(path: &str) -> std::io::Result<Self> {
+        let p = std::path::Path::new(path);
+        let file: TerrainFamilyRegistryFile =
+            crate::terrain::registry_serde_path::read_to_deserializable(p)?;
         Self::from_file(file).map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e))
+    }
+
+    pub fn load_from_json(path: &str) -> std::io::Result<Self> {
+        Self::load_from_path(path)
     }
 
     fn from_file(file: TerrainFamilyRegistryFile) -> Result<Self, String> {
@@ -228,17 +232,21 @@ impl AssetLoader for TerrainFamilyRegistryLoader {
         &self,
         reader: &mut dyn Reader,
         _settings: &Self::Settings,
-        _load_context: &mut LoadContext<'_>,
+        load_context: &mut LoadContext<'_>,
     ) -> Result<Self::Asset, Self::Error> {
         let mut bytes = Vec::new();
         reader.read_to_end(&mut bytes).await?;
-        let file: TerrainFamilyRegistryFile = serde_json::from_slice(&bytes)
+        let text = std::str::from_utf8(&bytes)
             .map_err(|e| TerrainFamilyRegistryLoaderError::Json(e.to_string()))?;
+        let ext = load_context.path().get_full_extension();
+        let file: TerrainFamilyRegistryFile =
+            crate::terrain::registry_serde_path::deserialize_from_str_with_extension_opt(text, ext.as_deref())
+                .map_err(|e| TerrainFamilyRegistryLoaderError::Json(e.to_string()))?;
         TerrainFamilyRegistry::from_file(file).map_err(TerrainFamilyRegistryLoaderError::Json)
     }
 
     fn extensions(&self) -> &[&str] {
-        &["terrain_family_registry.json"]
+        &["terrain_family_registry.json", "terrain_family_registry.ron"]
     }
 }
 
@@ -258,10 +266,12 @@ pub fn hash_terrain_family_registry(reg: &TerrainFamilyRegistry) -> u64 {
 pub fn default_terrain_families() -> &'static TerrainFamilyRegistry {
     static CACHE: std::sync::OnceLock<TerrainFamilyRegistry> = std::sync::OnceLock::new();
     CACHE.get_or_init(|| {
-        let path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("assets/config/terrain/terrain_family_registry.example.json");
-        TerrainFamilyRegistry::load_from_json(path.to_str().expect("utf8 path"))
-            .expect("load default terrain_family_registry.example.json")
+        let dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("assets/config/terrain/");
+        let ron = dir.join("terrain_family_registry.example.ron");
+        let json = dir.join("terrain_family_registry.example.json");
+        let path = if ron.exists() { ron } else { json };
+        TerrainFamilyRegistry::load_from_path(path.to_str().expect("utf8 path"))
+            .expect("load default terrain_family_registry example (.ron or .json)")
     })
 }
 
@@ -287,5 +297,22 @@ mod tests {
         let t = BiomeTuning::default();
         let c = classify_biome(0.55, 0.35, 0.48, &t, &r);
         assert_eq!(r.def(c.terrain_family).unwrap().name, "Grassland");
+    }
+
+    #[test]
+    fn example_json_matches_example_ron() {
+        let dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("assets/config/terrain/");
+        let rj =
+            TerrainFamilyRegistry::load_from_path(dir.join("terrain_family_registry.example.json").to_str().unwrap())
+                .unwrap();
+        let rr =
+            TerrainFamilyRegistry::load_from_path(dir.join("terrain_family_registry.example.ron").to_str().unwrap())
+                .unwrap();
+        assert_eq!(rj.schema_version, rr.schema_version);
+        assert_eq!(rj.families.len(), rr.families.len());
+        assert_eq!(
+            hash_terrain_family_registry(&rj),
+            hash_terrain_family_registry(&rr)
+        );
     }
 }

@@ -28,7 +28,7 @@ Each phase ships **loaders or I/O paths** plus **automated tests** before moving
 | Phase | Scope | Deliverables | Tests (minimum) |
 |:---|:---|:---|:---|
 | **P1** | **Tag registry** | Shared terrain registry text helper (recommended) or per-type dispatch; `tag_registry.example.ron`; wire all call sites that read tag JSON. | Parse `example.json` ⇄ RON round-trip (`serde_json::Value` or `PartialEq` structs); `from_path` respects `.json` / `.ron`; unknown extension → RON then JSON. |
-| **P2** | **Material registry** | `material_registry.example.ron`; path-based load; family resolution unchanged. | Same as P1; optional `CARGO_MANIFEST_DIR` load of example files. |
+| **P2** | **Material registry** | **`material_registry.example.ron` committed** (full mirror of JSON); path-based load; family resolution unchanged; parity tests in `registry.rs`. | Same as P1; startup / `WorldProfile` prefer `.ron` when present. |
 | **P3** | **Terrain family registry** | `terrain_family_registry.example.ron`; extend Bevy `AssetLoader` extensions if applicable. | Parse tests + smoke `hash_terrain_family_registry` / schema gate. |
 | **P4** | **Transport fixtures** | `assets/test_fixtures/transport/*.ron` mirrors; retire duplicate JSON when CI is RON-only. | G4 / `persistence` tests against `.ron` paths; keep one JSON regression test if needed. |
 | **P5** | **`plant_definitions`** | RON-first default or disk path + JSON fallback; document exception in module doc if JSON stays. | `include_str!` or path round-trip; boot-path smoke if wired. |

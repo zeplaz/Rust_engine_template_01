@@ -5,7 +5,7 @@ use std::fmt;
 
 use bevy::asset::{io::Reader, Asset, AssetLoader, LoadContext};
 use bevy::reflect::TypePath;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 /// Interned tag id (bit index into [`TagSet`], max **256** tags).
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
@@ -75,13 +75,13 @@ impl TagSet {
     }
 }
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct TagDef {
     pub name: String,
     pub category: String,
 }
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub(crate) struct TagRegistryFile {
     pub schema_version: u32,
     pub tags: Vec<TagDef>,
@@ -95,12 +95,14 @@ pub struct TagRegistry {
 }
 
 impl TagRegistry {
-    pub fn load_from_json(path: &str) -> std::io::Result<Self> {
-        let s = std::fs::read_to_string(path)?;
-        let file: TagRegistryFile = serde_json::from_str(&s).map_err(|e| {
-            std::io::Error::new(std::io::ErrorKind::InvalidData, format!("JSON: {e}"))
-        })?;
+    /// Load from **`*.ron`** or **`*.json`** (extension selects parser; unknown tries RON then JSON).
+    pub fn load_from_path(path: &std::path::Path) -> std::io::Result<Self> {
+        let file: TagRegistryFile = crate::terrain::registry_serde_path::read_to_deserializable(path)?;
         Ok(Self::from_file(file))
+    }
+
+    pub fn load_from_json(path: &str) -> std::io::Result<Self> {
+        Self::load_from_path(std::path::Path::new(path))
     }
 
     pub(crate) fn from_file(file: TagRegistryFile) -> Self {
@@ -169,16 +171,23 @@ impl AssetLoader for TagRegistryLoader {
         &self,
         reader: &mut dyn Reader,
         _settings: &Self::Settings,
-        _load_context: &mut LoadContext<'_>,
+        load_context: &mut LoadContext<'_>,
     ) -> Result<Self::Asset, Self::Error> {
         let mut bytes = Vec::new();
         reader.read_to_end(&mut bytes).await?;
-        let file: TagRegistryFile = serde_json::from_slice(&bytes)?;
+        let text = std::str::from_utf8(&bytes)
+            .map_err(|e| TagRegistryLoaderError::Json(format!("UTF-8: {e}")))?;
+        let ext = load_context.path().get_full_extension();
+        let file: TagRegistryFile = crate::terrain::registry_serde_path::deserialize_from_str_with_extension_opt(
+            text,
+            ext.as_deref(),
+        )
+        .map_err(|e| TagRegistryLoaderError::Json(e.to_string()))?;
         Ok(TagRegistry::from_file(file))
     }
 
     fn extensions(&self) -> &[&str] {
-        &["tag_registry.json"]
+        &["tag_registry.json", "tag_registry.ron"]
     }
 }
 
@@ -224,5 +233,38 @@ mod tests {
     fn tag_registry_loader_extensions() {
         let loader = TagRegistryLoader::default();
         assert!(loader.extensions().contains(&"tag_registry.json"));
+        assert!(loader.extensions().contains(&"tag_registry.ron"));
+    }
+
+    #[test]
+    fn tag_example_json_round_trips_ron() {
+        let json_path =
+            std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("assets/config/terrain/tag_registry.example.json");
+        let ron_path =
+            std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("assets/config/terrain/tag_registry.example.ron");
+        let j = TagRegistry::load_from_path(&json_path).unwrap();
+        let r = TagRegistry::load_from_path(&ron_path).unwrap();
+        assert_eq!(j.schema_version, r.schema_version);
+        assert_eq!(j.tags.len(), r.tags.len());
+        assert_eq!(j.name_to_id.len(), r.name_to_id.len());
+    }
+
+    #[test]
+    fn tag_load_respects_unknown_extension_as_loose_ron_json() {
+        let tmp = std::env::temp_dir().join("tag_registry_noext_test.txt");
+        let reg = TagRegistry::load_from_path(
+            &std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+                .join("assets/config/terrain/tag_registry.example.json"),
+        )
+        .unwrap();
+        let cfg = ron::ser::PrettyConfig::new().depth_limit(8).indentor("    ".into());
+        let body = TagRegistryFile {
+            schema_version: reg.schema_version,
+            tags: reg.tags.clone(),
+        };
+        let s = ron::ser::to_string_pretty(&body, cfg).unwrap();
+        std::fs::write(&tmp, &s).unwrap();
+        let _: TagRegistryFile = crate::terrain::registry_serde_path::read_to_deserializable(&tmp).unwrap();
+        let _ = std::fs::remove_file(&tmp);
     }
 }

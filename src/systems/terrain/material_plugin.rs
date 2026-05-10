@@ -1,6 +1,7 @@
 //! Terrain material registries + chunk materialization (material unification U5 / U7).
 
 use std::collections::HashMap;
+use std::path::PathBuf;
 
 use bevy::asset::{AssetEvent, AssetEventSystems};
 use bevy::prelude::*;
@@ -53,6 +54,43 @@ pub struct TerrainRegistriesHandles {
     pub mobility_profiles: Handle<MobilityProfileRegistry>,
 }
 
+fn terrain_config_dir() -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("assets/config/terrain")
+}
+
+fn example_terrain_family_registry_disk_path() -> PathBuf {
+    let dir = terrain_config_dir();
+    let ron = dir.join("terrain_family_registry.example.ron");
+    let json = dir.join("terrain_family_registry.example.json");
+    if ron.exists() {
+        ron
+    } else {
+        json
+    }
+}
+
+fn example_material_registry_disk_path() -> PathBuf {
+    let dir = terrain_config_dir();
+    let ron = dir.join("material_registry.example.ron");
+    let json = dir.join("material_registry.example.json");
+    if ron.exists() {
+        ron
+    } else {
+        json
+    }
+}
+
+fn example_tag_registry_disk_path() -> PathBuf {
+    let dir = terrain_config_dir();
+    let ron = dir.join("tag_registry.example.ron");
+    let json = dir.join("tag_registry.example.json");
+    if ron.exists() {
+        ron
+    } else {
+        json
+    }
+}
+
 fn terrain_registries_startup(
     mut commands: Commands,
     mut family_assets: ResMut<Assets<TerrainFamilyRegistry>>,
@@ -63,22 +101,19 @@ fn terrain_registries_startup(
 ) {
     let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     let fam = TerrainFamilyRegistry::load_from_json(
-        root
-            .join("assets/config/terrain/terrain_family_registry.example.json")
+        example_terrain_family_registry_disk_path()
             .to_str()
             .unwrap(),
     )
     .expect("load example terrain family registry");
     let mat = MaterialRegistry::load_from_json(
-        root
-            .join("assets/config/terrain/material_registry.example.json")
+        example_material_registry_disk_path()
             .to_str()
             .unwrap(),
     )
     .expect("load example material registry");
     let tag = TagRegistry::load_from_json(
-        root
-            .join("assets/config/terrain/tag_registry.example.json")
+        example_tag_registry_disk_path()
             .to_str()
             .unwrap(),
     )

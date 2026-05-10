@@ -70,4 +70,4 @@ Until these register real loaders, **production matrix “serialization plugin�
 - Chunk save policy / queues: `prompts/designer_questions/terrain_world/chunks_streaming_v1.md`
 - Production state & repair: `prompts/designer_questions/production_economy/`
 - **Implementation:** `terrain_world/implementation_questions_v1.md` (I/O §), `production_economy/implementation_questions_v1.md`
-- **Terrain materials:** persist `MaterialDef.name` (not raw `MaterialId`) — [`terrain_world/material_tag_rule_system_v1.md`](../../designer_questions/terrain_world/material_tag_rule_system_v1.md) · [`terrain_biome/material_unification_matrix_v1.md`](../terrain_biome/material_unification_matrix_v1.md)
+- **Terrain materials:** persist `MaterialDef.name` (not raw `MaterialId`) — [`terrain_world/material_tag_rule_system_v1.md`](../../designer_questions/terrain_world/material_tag_rule_system_v1.md) · [`terrain_biome/material_unification_matrix_v1.md`](../terrain_biome/material_unification_matrix_v1.md). **Authoring:** committed `material_registry.example.{json,ron}` and `tag_registry.example.{json,ron}` are mirrored; use `cargo test …material_full_example_json_and_ron…` after edits.

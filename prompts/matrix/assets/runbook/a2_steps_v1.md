@@ -12,9 +12,11 @@
 
 **Anchor reads:** [`../bevy_asset_config_migration_matrix_v1.md`](../bevy_asset_config_migration_matrix_v1.md) Terrain table · example file.
 
-**Touch:** [`../../../../assets/config/terrain/material_registry.example.json`](../../../../assets/config/terrain/material_registry.example.json) — fix only if audit fails.
+**Touch:** [`../../../../assets/config/terrain/material_registry.example.json`](../../../../assets/config/terrain/material_registry.example.json) — fix only if audit fails. After JSON edits, refresh the RON mirror: `cargo test emit_material_registry_example_ron_fixture -- --ignored --nocapture`, then commit both.
 
-**Verify:** `cargo check -p proc_A_dine01`
+**Also audit:** [`../../../../assets/config/terrain/material_registry.example.ron`](../../../../assets/config/terrain/material_registry.example.ron) — must match JSON (`terrain::material::registry::tests::material_full_example_json_and_ron_*`).
+
+**Verify:** `cargo test -p proc_A_dine01 terrain::material::registry::tests::material_full` · `cargo check -p proc_A_dine01`
 
 **Matrix update:** none.
 
@@ -27,9 +29,9 @@
 
 **Goal:** `schema_version` + `tags` array; each tag has `name`, `category`.
 
-**Touch:** [`../../../../assets/config/terrain/tag_registry.example.json`](../../../../assets/config/terrain/tag_registry.example.json).
+**Touch:** [`../../../../assets/config/terrain/tag_registry.example.json`](../../../../assets/config/terrain/tag_registry.example.json). Pair: [`tag_registry.example.ron`](../../../../assets/config/terrain/tag_registry.example.ron) must stay aligned (`terrain::material::tags::tests::tag_example_json_round_trips_ron`).
 
-**Verify:** `cargo check -p proc_A_dine01`
+**Verify:** `cargo test -p proc_A_dine01 terrain::material::tags::tests::tag_example_json_round_trips_ron` · `cargo check -p proc_A_dine01`
 
 **Definition of done:**
 - [ ] Audit clean or `ASK:`.

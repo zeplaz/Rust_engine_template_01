@@ -31,8 +31,10 @@ __all__ = [
     "terrain_config_dir",
     "material_registry_json",
     "material_registry_example_json",
+    "material_registry_example_ron",
     "tag_registry_json",
     "tag_registry_example_json",
+    "tag_registry_example_ron",
     "material_rules_ron",
     "material_rules_example_ron",
 ]
@@ -90,7 +92,9 @@ world_gen_tuning_example_ron: Final[Path] = assets_dir / "config" / "world_gen_t
 terrain_config_dir: Final[Path] = assets_dir / "config" / "terrain"
 material_registry_json: Final[Path] = terrain_config_dir / "material_registry.json"
 material_registry_example_json: Final[Path] = terrain_config_dir / "material_registry.example.json"
+material_registry_example_ron: Final[Path] = terrain_config_dir / "material_registry.example.ron"
 tag_registry_json: Final[Path] = terrain_config_dir / "tag_registry.json"
 tag_registry_example_json: Final[Path] = terrain_config_dir / "tag_registry.example.json"
+tag_registry_example_ron: Final[Path] = terrain_config_dir / "tag_registry.example.ron"
 material_rules_ron: Final[Path] = terrain_config_dir / "material_rules.ron"
 material_rules_example_ron: Final[Path] = terrain_config_dir / "material_rules.example.ron"

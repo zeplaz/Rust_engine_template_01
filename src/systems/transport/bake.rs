@@ -50,6 +50,7 @@ pub fn bake_snapshot_from_ordered_markers_with_world_positions(
             schema_version: TRANSPORT_NETWORK_SCHEMA_V1,
             nodes: vec![],
             edges: vec![],
+            construction: vec![],
         };
     }
 
@@ -86,6 +87,7 @@ pub fn bake_snapshot_from_ordered_markers_with_world_positions(
         schema_version: TRANSPORT_NETWORK_SCHEMA_V1,
         nodes,
         edges,
+        construction: vec![],
     }
 }
 
