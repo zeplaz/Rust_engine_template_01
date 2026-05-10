@@ -4,7 +4,7 @@ use std::path::Path;
 
 use bevy::asset::{io::Reader, Asset, AssetLoader, LoadContext};
 use bevy::reflect::TypePath;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::terrain::family::{TerrainFamilyId, TerrainFamilyRegistry};
 
@@ -69,7 +69,7 @@ impl MaterialDef {
     }
 }
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 struct MaterialDefFile {
     name: String,
     family: String,
@@ -78,7 +78,7 @@ struct MaterialDefFile {
     preview_color: [u8; 4],
 }
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 struct MaterialRegistryFile {
     pub schema_version: u32,
     pub materials: Vec<MaterialDefFile>,
@@ -103,41 +103,52 @@ pub fn family_default_material_def<'a>(
 /// Schema versions accepted when parsing registry JSON. Bump when breaking; document migration.
 pub const SUPPORTED_MATERIAL_REGISTRY_SCHEMA_VERSIONS: &[u32] = &[1, 2];
 
-fn default_family_registry_path() -> std::path::PathBuf {
-    std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("assets/config/terrain/terrain_family_registry.example.json")
+fn default_family_registry_disk_path() -> std::path::PathBuf {
+    let dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("assets/config/terrain/");
+    let ron = dir.join("terrain_family_registry.example.ron");
+    let json = dir.join("terrain_family_registry.example.json");
+    if ron.exists() {
+        ron
+    } else {
+        json
+    }
 }
 
 impl MaterialRegistry {
-    /// Load material JSON and resolve `family` strings using the default example terrain family registry path.
+    /// Load material registry from **`*.ron`** or **`*.json`**; resolves families via default example registry (`.ron` preferred when present).
     pub fn load_from_json(path: &str) -> std::io::Result<Self> {
-        let families = TerrainFamilyRegistry::load_from_json(
-            default_family_registry_path().to_str().unwrap(),
+        let families = TerrainFamilyRegistry::load_from_path(
+            default_family_registry_disk_path()
+                .to_str()
+                .ok_or_else(|| {
+                    std::io::Error::new(std::io::ErrorKind::InvalidInput, "family registry path not utf-8")
+                })?,
         )?;
-        let s = std::fs::read_to_string(path)?;
-        let file: MaterialRegistryFile = serde_json::from_str(&s).map_err(|e| {
-            std::io::Error::new(std::io::ErrorKind::InvalidData, format!("JSON: {e}"))
-        })?;
+        let file: MaterialRegistryFile =
+            crate::terrain::registry_serde_path::read_to_deserializable(Path::new(path))?;
         Self::from_file(file, &families).map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e))
     }
 
-    /// Resolve families using `terrain_family_registry.json` beside `material_registry.json` when present, else default example path.
+    /// Resolve families using `terrain_family_registry.example.{ron,json}` beside `material_path` when present, else default disk path (RON preferred).
     pub fn load_from_json_with_adjacent_families(material_path: &str) -> std::io::Result<Self> {
-        let mut fam_path = Path::new(material_path)
+        let parent = Path::new(material_path)
             .parent()
-            .unwrap_or_else(|| Path::new("."))
-            .join("terrain_family_registry.example.json");
-        if !fam_path.exists() {
-            fam_path = default_family_registry_path();
-        }
+            .unwrap_or_else(|| Path::new("."));
+        let ron = parent.join("terrain_family_registry.example.ron");
+        let json = parent.join("terrain_family_registry.example.json");
+        let families_path = if ron.exists() {
+            ron
+        } else if json.exists() {
+            json
+        } else {
+            default_family_registry_disk_path()
+        };
         let families =
-            TerrainFamilyRegistry::load_from_json(fam_path.to_str().ok_or_else(|| {
+            TerrainFamilyRegistry::load_from_path(families_path.to_str().ok_or_else(|| {
                 std::io::Error::new(std::io::ErrorKind::InvalidInput, "family path utf-8")
             })?)?;
-        let s = std::fs::read_to_string(material_path)?;
-        let file: MaterialRegistryFile = serde_json::from_str(&s).map_err(|e| {
-            std::io::Error::new(std::io::ErrorKind::InvalidData, format!("JSON: {e}"))
-        })?;
+        let file: MaterialRegistryFile =
+            crate::terrain::registry_serde_path::read_to_deserializable(Path::new(material_path))?;
         Self::from_file(file, &families).map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e))
     }
 
@@ -227,14 +238,20 @@ impl AssetLoader for MaterialRegistryLoader {
         &self,
         reader: &mut dyn Reader,
         _settings: &Self::Settings,
-        _load_context: &mut LoadContext<'_>,
+        load_context: &mut LoadContext<'_>,
     ) -> Result<Self::Asset, Self::Error> {
         let mut bytes = Vec::new();
         reader.read_to_end(&mut bytes).await?;
-        let file: MaterialRegistryFile = serde_json::from_slice(&bytes)?;
+        let text = std::str::from_utf8(&bytes).map_err(|e| {
+            MaterialRegistryLoaderError::Json(format!("UTF-8: {e}"))
+        })?;
+        let ext = load_context.path().get_full_extension();
+        let file: MaterialRegistryFile =
+            crate::terrain::registry_serde_path::deserialize_from_str_with_extension_opt(text, ext.as_deref())
+                .map_err(|e| MaterialRegistryLoaderError::Json(e.to_string()))?;
 
-        let families = TerrainFamilyRegistry::load_from_json(
-            default_family_registry_path().to_str().ok_or_else(|| {
+        let families = TerrainFamilyRegistry::load_from_path(
+            default_family_registry_disk_path().to_str().ok_or_else(|| {
                 MaterialRegistryLoaderError::Json("default family registry path not utf-8".into())
             })?,
         )?;
@@ -243,7 +260,7 @@ impl AssetLoader for MaterialRegistryLoader {
     }
 
     fn extensions(&self) -> &[&str] {
-        &["material_registry.json"]
+        &["material_registry.json", "material_registry.ron"]
     }
 }
 
@@ -257,8 +274,8 @@ mod tests {
     }
 
     fn families() -> TerrainFamilyRegistry {
-        TerrainFamilyRegistry::load_from_json(
-            default_family_registry_path().to_str().unwrap(),
+        TerrainFamilyRegistry::load_from_path(
+            default_family_registry_disk_path().to_str().unwrap(),
         )
         .unwrap()
     }
@@ -292,10 +309,86 @@ mod tests {
     #[test]
     fn material_registry_loader_extension() {
         let loader = MaterialRegistryLoader::default();
-        assert!(
-            loader.extensions().contains(&"material_registry.json"),
-            "extensions: {:?}",
-            loader.extensions()
+        assert!(loader.extensions().contains(&"material_registry.json"));
+        assert!(loader.extensions().contains(&"material_registry.ron"));
+    }
+
+    #[test]
+    fn material_example_json_round_trips_ron_wire_format() {
+        let path = example_material_registry_path();
+        let s = std::fs::read_to_string(&path).unwrap();
+        let file: MaterialRegistryFile = serde_json::from_str(&s).unwrap();
+        let cfg = ron::ser::PrettyConfig::new().depth_limit(64).indentor("    ".into());
+        let ron_s = ron::ser::to_string_pretty(&file, cfg).unwrap();
+        let file2: MaterialRegistryFile = ron::de::from_str(&ron_s).unwrap();
+        assert_eq!(
+            serde_json::to_value(&file).unwrap(),
+            serde_json::to_value(&file2).unwrap()
         );
+    }
+
+    #[test]
+    fn material_minimal_ron_loads_via_path() {
+        let path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("assets/config/terrain/material_registry_minimal.example.ron");
+        let reg = MaterialRegistry::load_from_json(path.to_str().unwrap()).unwrap();
+        assert_eq!(reg.schema_version, 2);
+        assert_eq!(reg.materials.len(), 1);
+        assert!(reg.name_to_id.contains_key("water_deep"));
+    }
+
+    #[test]
+    fn material_full_example_json_and_ron_decode_to_same_file() {
+        let dir =
+            std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("assets/config/terrain");
+        let j: MaterialRegistryFile =
+            crate::terrain::registry_serde_path::read_to_deserializable(
+                &dir.join("material_registry.example.json"),
+            )
+            .unwrap();
+        let r: MaterialRegistryFile =
+            crate::terrain::registry_serde_path::read_to_deserializable(
+                &dir.join("material_registry.example.ron"),
+            )
+            .unwrap();
+        assert_eq!(
+            serde_json::to_value(&j).unwrap(),
+            serde_json::to_value(&r).unwrap()
+        );
+    }
+
+    #[test]
+    fn material_full_example_json_and_ron_load_same_registry() {
+        let dir =
+            std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("assets/config/terrain");
+        let a =
+            MaterialRegistry::load_from_json(dir.join("material_registry.example.json").to_str().unwrap())
+                .unwrap();
+        let b =
+            MaterialRegistry::load_from_json(dir.join("material_registry.example.ron").to_str().unwrap())
+                .unwrap();
+        assert_eq!(a.schema_version, b.schema_version);
+        assert_eq!(a.materials.len(), b.materials.len());
+        assert_eq!(a.name_to_id, b.name_to_id);
+        for (ma, mb) in a.materials.iter().zip(b.materials.iter()) {
+            assert_eq!(ma.name, mb.name);
+            assert_eq!(ma.family, mb.family);
+            assert_eq!(ma.tags, mb.tags);
+            assert_eq!(ma.properties, mb.properties);
+            assert_eq!(ma.preview_color, mb.preview_color);
+        }
+    }
+
+    #[test]
+    #[ignore = "Regenerates material_registry.example.ron from JSON. Run: cargo test emit_material_registry_example_ron_fixture -- --ignored --nocapture"]
+    fn emit_material_registry_example_ron_fixture() {
+        let path = example_material_registry_path();
+        let s = std::fs::read_to_string(&path).unwrap();
+        let file: MaterialRegistryFile = serde_json::from_str(&s).unwrap();
+        let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("assets/config/terrain/material_registry.example.ron");
+        let cfg = ron::ser::PrettyConfig::new().depth_limit(64).indentor("    ".into());
+        let ron_s = ron::ser::to_string_pretty(&file, cfg).unwrap();
+        std::fs::write(&out, format!("{}\n", ron_s.trim_end())).unwrap();
     }
 }

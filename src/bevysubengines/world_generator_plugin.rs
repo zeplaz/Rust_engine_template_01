@@ -4,6 +4,7 @@ use rand::Rng;
 use serde::{Deserialize, Serialize};
 use std::fs::File;
 use std::io::Write;
+use std::path::Path;
 use crate::terrain::{
     additively_weighted_voronoi_diagram_generation,
     centroidal_voronoi_diagram_generation,
@@ -368,10 +369,12 @@ fn handle_save_world_event(
                 path.clone()
             } else {
                 // Default path
-                format!("world_{}x{}_seed_{}.json",
+                format!(
+                    "world_{}x{}_seed_{}.ron",
                     world_data.params.width,
                     world_data.params.height,
-                    world_data.params.seed)
+                    world_data.params.seed
+                )
             };
 
             save_world_data(world_data, &path);
@@ -612,19 +615,49 @@ fn generate_world_data(params: WorldGenParams) -> WorldData {
     }
 }
 
-// Save world data to file
+// Save world data: **`.ron`** default; **`.json`** when path ends in `.json`.
 fn save_world_data(world_data: &WorldData, path: &str) {
-    let json = serde_json::to_string_pretty(world_data).expect("Failed to serialize world data");
-    let mut file = File::create(path).expect("Failed to create file");
-    file.write_all(json.as_bytes()).expect("Failed to write file");
+    if let Err(e) = save_world_data_to_path(world_data, path) {
+        warn!("Failed to save world data: {}", e);
+    }
 }
 
-// Load world data from file
+fn save_world_data_to_path(world_data: &WorldData, path: &str) -> Result<(), String> {
+    let p = Path::new(path);
+    let ext = p
+        .extension()
+        .and_then(|e| e.to_str())
+        .map(|e| e.to_ascii_lowercase());
+    let data = match ext.as_deref() {
+        Some("json") => serde_json::to_string_pretty(world_data).map_err(|e| e.to_string())?,
+        None | Some("ron") | Some(_) => {
+            let cfg = ron::ser::PrettyConfig::new().depth_limit(16).indentor("    ".into());
+            ron::ser::to_string_pretty(world_data, cfg).map_err(|e| e.to_string())?
+        }
+    };
+    std::fs::write(path, data).map_err(|e| e.to_string())
+}
+
+// Load world data from file — **`.ron`** or **`.json`** (extension chooses; unknown tries RON then JSON).
 fn load_world_data(path: &str) -> Result<WorldData, String> {
-    let file = File::open(path).map_err(|e| format!("Failed to open file: {}", e))?;
-    let world_data: WorldData = serde_json::from_reader(file)
-        .map_err(|e| format!("Failed to parse JSON: {}", e))?;
-    Ok(world_data)
+    load_world_data_from_path(path)
+}
+
+fn load_world_data_from_path(path: &str) -> Result<WorldData, String> {
+    let p = Path::new(path);
+    let bytes = std::fs::read(path).map_err(|e| format!("Failed to open file: {}", e))?;
+    let text = std::str::from_utf8(&bytes).map_err(|e| format!("UTF-8: {}", e))?;
+    let ext = p
+        .extension()
+        .and_then(|e| e.to_str())
+        .map(|e| e.to_ascii_lowercase());
+    match ext.as_deref() {
+        Some("json") => serde_json::from_str(text).map_err(|e| format!("Failed to parse JSON: {}", e)),
+        Some("ron") => ron::de::from_str(text).map_err(|e| format!("Failed to parse RON: {}", e)),
+        None | Some(_) => ron::de::from_str(text)
+            .or_else(|_| serde_json::from_str(text))
+            .map_err(|e| format!("Failed to parse RON/JSON: {}", e)),
+    }
 }
 
 // Export world data to binary format for game engine consumption

@@ -56,7 +56,7 @@
 
 **Goal:** Land the runtime registry types and a JSON loader path that mirrors [`src/terrain/generation/tuning_io.rs`](../../../../src/terrain/generation/tuning_io.rs).
 
-**Anchor reads:** orchestrator §§1–2 · matrix §§1, 2, 4 · [`assets/config/terrain/material_registry.example.json`](../../../../assets/config/terrain/material_registry.example.json) · [`src/terrain/generation/tuning_io.rs`](../../../../src/terrain/generation/tuning_io.rs).
+**Anchor reads:** orchestrator §§1–2 · matrix §§1, 2, 4 · [`assets/config/terrain/material_registry.example.json`](../../../../assets/config/terrain/material_registry.example.json) · [`assets/config/terrain/material_registry.example.ron`](../../../../assets/config/terrain/material_registry.example.ron) · [`src/terrain/generation/tuning_io.rs`](../../../../src/terrain/generation/tuning_io.rs).
 
 **Touch:**
 - New `src/terrain/material/registry.rs` with:

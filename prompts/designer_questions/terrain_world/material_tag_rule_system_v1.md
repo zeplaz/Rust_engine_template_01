@@ -148,7 +148,7 @@ pub fn resolve_material(
 
 ### 4.1 `properties` — namespaces (schema v2+)
 
-`MaterialDef.properties` is **opaque JSON** in code (`serde_json::Value`). **`material_registry.example.json` uses `schema_version: 2`** and **dot-separated namespaces** so mods, AI context, and migrations stay unambiguous.
+`MaterialDef.properties` is **opaque JSON** in code (`serde_json::Value`). **`material_registry.example.json` uses `schema_version: 2`** and **dot-separated namespaces** so mods, AI context, and migrations stay unambiguous. A **RON mirror** [`material_registry.example.ron`](../../../assets/config/terrain/material_registry.example.ron) holds the same rows; keep it in sync when editing the JSON (see ignored emit test in `src/terrain/material/registry.rs`).
 
 **Required namespace prefixes (v1 convention):**
 

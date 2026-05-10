@@ -36,10 +36,14 @@ use crate::terrain::generation::world_generator_enhanced::{
     Height, TerrainType, TileMarker, WorldGenParams, WorldMarker,
 };
 use crate::io::snapshot::{read_hybrid_world_snapshot_dev_v0, write_hybrid_world_snapshot_dev_v0};
+use crate::strategic::{
+    apply_corridor_book_from_transport_snapshot, transport_construction_records_from_book,
+    CorridorConstructionBook,
+};
 use crate::systems::transport::{
     bake_snapshot_from_ordered_markers_with_world_positions, hydrate_transport_from_snapshot_text,
-    hydrate_transport_from_snapshot, transport_network_snapshot_from_world,
-    transport_network_snapshot_save_ron_path, transport_network_snapshot_to_ron_string,
+    hydrate_transport_from_snapshot, transport_network_snapshot_from_world_with_construction, transport_network_snapshot_save_ron_path,
+    transport_network_snapshot_to_ron_string,
     LoadTransportNetworkSnapshotFromDisk, TransportEdgeDirectory, TransportFieldStore,
     TransportLastHydratedSnapshot, TransportNetworkSnapshot, TransportTopology,
 };
@@ -665,12 +669,16 @@ fn map_editor_dev_save_transport(
     last: Res<TransportLastHydratedSnapshot>,
     topology: Res<TransportTopology>,
     directory: Res<TransportEdgeDirectory>,
+    book: Res<CorridorConstructionBook>,
 ) {
     for _ in events.read() {
-        let snap = last
-            .snapshot
-            .clone()
-            .or_else(|| transport_network_snapshot_from_world(&topology, &directory));
+        let construction = transport_construction_records_from_book(&book, &topology);
+        let snap = transport_network_snapshot_from_world_with_construction(
+            &topology,
+            &directory,
+            construction,
+        )
+        .or_else(|| last.snapshot.clone());
         let Some(snap) = snap else {
             warn!("Save transport: bake or load a graph first (nothing to save).");
             continue;
@@ -771,12 +779,16 @@ fn map_editor_dev_save_hybrid_world(
     last: Res<TransportLastHydratedSnapshot>,
     topology: Res<TransportTopology>,
     directory: Res<TransportEdgeDirectory>,
+    book: Res<CorridorConstructionBook>,
 ) {
     for _ in events.read() {
-        let snap = last
-            .snapshot
-            .clone()
-            .or_else(|| transport_network_snapshot_from_world(&topology, &directory));
+        let construction = transport_construction_records_from_book(&book, &topology);
+        let snap = transport_network_snapshot_from_world_with_construction(
+            &topology,
+            &directory,
+            construction,
+        )
+        .or_else(|| last.snapshot.clone());
         let Some(snap) = snap else {
             warn!("Save hybrid world: bake or load a graph first (nothing to save).");
             continue;
@@ -805,6 +817,7 @@ fn map_editor_dev_load_hybrid_world(
     mut fields: ResMut<TransportFieldStore>,
     mut directory: ResMut<TransportEdgeDirectory>,
     mut last: ResMut<TransportLastHydratedSnapshot>,
+    mut book: ResMut<CorridorConstructionBook>,
 ) {
     for _ in events.read() {
         let path = dev_hybrid_world_save_path();
@@ -829,6 +842,11 @@ fn map_editor_dev_load_hybrid_world(
             text,
         ) {
             Ok(snap) => {
+                apply_corridor_book_from_transport_snapshot(
+                    book.as_mut(),
+                    directory.as_ref(),
+                    &snap,
+                );
                 last.snapshot = Some(snap);
                 info!(
                     "Loaded hybrid dev transport ({} bytes, header v{})",

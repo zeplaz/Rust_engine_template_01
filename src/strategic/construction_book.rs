@@ -91,6 +91,74 @@ pub fn align_corridor_book_with_transport_directory(
     }
 }
 
+use crate::systems::transport::{TransportConstructionRecord, TransportNetworkSnapshot};
+use crate::systems::transport::{TransportEdgeDirectory, TransportTopology};
+
+/// Wire enum → snapshot string (stable for R8 / RON).
+pub fn corridor_phase_to_wire(phase: CorridorConstructionPhase) -> &'static str {
+    match phase {
+        CorridorConstructionPhase::Planned => "Planned",
+        CorridorConstructionPhase::InProgress => "InProgress",
+        CorridorConstructionPhase::Completed => "Completed",
+    }
+}
+
+pub fn corridor_phase_from_wire(s: &str) -> Option<CorridorConstructionPhase> {
+    match s {
+        "Planned" => Some(CorridorConstructionPhase::Planned),
+        "InProgress" => Some(CorridorConstructionPhase::InProgress),
+        "Completed" => Some(CorridorConstructionPhase::Completed),
+        _ => None,
+    }
+}
+
+/// Build R8 construction slice from the live book (only edges that exist in `topology`).
+pub fn transport_construction_records_from_book(
+    book: &CorridorConstructionBook,
+    topology: &TransportTopology,
+) -> Vec<TransportConstructionRecord> {
+    let mut ids: Vec<_> = topology.neighbors.keys().copied().collect();
+    ids.sort_by_key(|k| k.0);
+    ids
+        .into_iter()
+        .filter_map(|eid| {
+            book.by_edge.get(&eid).map(|st| TransportConstructionRecord {
+                edge_id: eid.0,
+                phase: corridor_phase_to_wire(st.phase).to_string(),
+                progress: st.progress,
+            })
+        })
+        .collect()
+}
+
+/// After **G4** hydrate: restore book from snapshot, or align from directory when `construction` is empty.
+pub fn apply_corridor_book_from_transport_snapshot(
+    book: &mut CorridorConstructionBook,
+    directory: &TransportEdgeDirectory,
+    snap: &TransportNetworkSnapshot,
+) {
+    if snap.construction.is_empty() {
+        align_corridor_book_with_transport_directory(directory, book);
+        return;
+    }
+    book.by_edge.clear();
+    for r in &snap.construction {
+        let eid = TransportEdgeId(r.edge_id);
+        if directory.by_edge.contains_key(&eid) {
+            let phase =
+                corridor_phase_from_wire(&r.phase).unwrap_or(CorridorConstructionPhase::Completed);
+            book.by_edge.insert(
+                eid,
+                CorridorConstructionStatus {
+                    phase,
+                    progress: r.progress,
+                },
+            );
+        }
+    }
+    align_corridor_book_with_transport_directory(directory, book);
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -141,6 +209,28 @@ mod tests {
         align_corridor_book_with_transport_directory(&dir, &mut book);
         assert_eq!(
             book.by_edge.get(&TransportEdgeId(2)).map(|s| s.phase),
+            Some(CorridorConstructionPhase::Planned)
+        );
+    }
+
+    #[test]
+    fn apply_from_snapshot_restores_planned_phase() {
+        let mut dir = TransportEdgeDirectory::default();
+        dir.by_edge.insert(TransportEdgeId(1), TransportEdgeMeta::default());
+        let mut book = CorridorConstructionBook::default();
+        let snap = crate::systems::transport::TransportNetworkSnapshot {
+            schema_version: 1,
+            nodes: vec![],
+            edges: vec![],
+            construction: vec![TransportConstructionRecord {
+                edge_id: 1,
+                phase: "Planned".into(),
+                progress: 0.0,
+            }],
+        };
+        apply_corridor_book_from_transport_snapshot(&mut book, &dir, &snap);
+        assert_eq!(
+            book.by_edge.get(&TransportEdgeId(1)).map(|s| s.phase),
             Some(CorridorConstructionPhase::Planned)
         );
     }

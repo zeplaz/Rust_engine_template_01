@@ -1,5 +1,6 @@
 // Terrain systems
 mod locational;
+mod registry_serde_path;
 mod tiles;
 mod tools;
 mod voronoi;

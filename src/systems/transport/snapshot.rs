@@ -10,6 +10,19 @@ use std::collections::HashSet;
 
 pub const TRANSPORT_NETWORK_SCHEMA_V1: u32 = 1;
 
+/// Optional **R8** construction slice (strategic corridor phases); empty ⇒ loaders only sync from topology.
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+pub struct TransportConstructionRecord {
+    pub edge_id: u64,
+    pub phase: String,
+    #[serde(default = "default_construction_progress")]
+    pub progress: f32,
+}
+
+fn default_construction_progress() -> f32 {
+    1.0
+}
+
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub struct TransportNetworkSnapshot {
     #[serde(default = "default_schema")]
@@ -18,6 +31,8 @@ pub struct TransportNetworkSnapshot {
     pub nodes: Vec<TransportNodeRecord>,
     #[serde(default)]
     pub edges: Vec<TransportEdgeRecord>,
+    #[serde(default)]
+    pub construction: Vec<TransportConstructionRecord>,
 }
 
 fn default_schema() -> u32 {
@@ -168,7 +183,19 @@ pub fn transport_network_snapshot_from_world(
         schema_version: TRANSPORT_NETWORK_SCHEMA_V1,
         nodes,
         edges,
+        construction: Vec::new(),
     })
+}
+
+/// Like [`transport_network_snapshot_from_world`], but attaches optional **construction** rows for strategic book hydrate.
+pub fn transport_network_snapshot_from_world_with_construction(
+    topology: &TransportTopology,
+    edge_directory: &TransportEdgeDirectory,
+    construction: Vec<TransportConstructionRecord>,
+) -> Option<TransportNetworkSnapshot> {
+    let mut s = transport_network_snapshot_from_world(topology, edge_directory)?;
+    s.construction = construction;
+    Some(s)
 }
 
 fn polyline_length(points: &[[f32; 3]]) -> f32 {
@@ -257,6 +284,7 @@ mod tests {
                     allowed_agents: vec!["road_vehicle".into()],
                 },
             ],
+            construction: vec![],
         }
     }
 

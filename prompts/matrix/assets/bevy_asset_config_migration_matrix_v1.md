@@ -35,8 +35,8 @@
 
 | Logical asset | Example on disk | Format | Target loader extension | `schema_version` | Loader / `Asset` |
 |:---|:---|:---|:---|:---:|:---:|
-| Material registry | `material_registry.example.json` | JSON | `.material_registry.json` | required | **Partial** — `MaterialRegistry` + `MaterialRegistryLoader` in [`src/terrain/material/registry.rs`](../../../src/terrain/material/registry.rs); `init_asset` / registration **U5** |
-| Tag registry | `tag_registry.example.json` | JSON | `.tag_registry.json` | required | Pending |
+| Material registry | `material_registry.example.json` · `material_registry.example.ron` (mirror) | JSON + RON | `.material_registry.{json,ron}` | required | **Partial** — `MaterialRegistry` + `MaterialRegistryLoader` in [`src/terrain/material/registry.rs`](../../../src/terrain/material/registry.rs); example RON/full parity tests; startup prefers `.ron` when present · **U5** |
+| Tag registry | `tag_registry.example.json` · `tag_registry.example.ron` (mirror) | JSON + RON | `.tag_registry.{json,ron}` | required | Pending |
 | Material rules | `material_rules.example.ron` | RON | `.material_rules.ron` | required | Pending |
 
 **Loader / Asset:** Material registry column reflects **U3-S04** (loader type in `src/`). Tag + rules loaders remain **Pending** until terrain **U5** bundles registration (see [`../terrain_biome/runbook/u5_steps_v1.md`](../terrain_biome/runbook/u5_steps_v1.md)). Full terrain pair gate remains **A3** in [`runbook/a3_steps_v1.md`](runbook/a3_steps_v1.md).

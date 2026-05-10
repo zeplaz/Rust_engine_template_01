@@ -34,8 +34,10 @@ mod sim;
 mod transport_bridge;
 
 pub use construction_book::{
-    align_corridor_book_with_transport_directory, transport_directory_edge_signature,
-    CorridorConstructionBook, CorridorConstructionPhase, CorridorConstructionStatus,
+    align_corridor_book_with_transport_directory, apply_corridor_book_from_transport_snapshot,
+    corridor_phase_from_wire, corridor_phase_to_wire, transport_construction_records_from_book,
+    transport_directory_edge_signature, CorridorConstructionBook, CorridorConstructionPhase,
+    CorridorConstructionStatus,
 };
 pub use infrastructure_graph::{
     InfrastructureEdge, InfrastructureGraph, InfrastructureGraphBridgePlugin, InfrastructureNetworkType,

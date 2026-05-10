@@ -170,6 +170,7 @@ fn transport_network_persistence_on_load(
     mut field_store: ResMut<TransportFieldStore>,
     mut edge_directory: ResMut<TransportEdgeDirectory>,
     mut last: ResMut<TransportLastHydratedSnapshot>,
+    mut construction_book: Option<ResMut<crate::strategic::CorridorConstructionBook>>,
 ) {
     for msg in messages.read() {
         let path = Path::new(msg.path.as_ref());
@@ -182,6 +183,13 @@ fn transport_network_persistence_on_load(
                     &snap,
                 ) {
                     Ok(()) => {
+                        if let Some(book) = construction_book.as_mut() {
+                            crate::strategic::apply_corridor_book_from_transport_snapshot(
+                                book,
+                                edge_directory.as_ref(),
+                                &snap,
+                            );
+                        }
                         last.snapshot = Some(snap);
                     }
                     Err(e) => {
@@ -250,6 +258,21 @@ mod tests {
         let ron = transport_network_snapshot_to_ron_string(&s0).unwrap();
         let s1 = transport_network_snapshot_from_ron_str(&ron).unwrap();
         assert_eq!(s0, s1);
+    }
+
+    #[test]
+    fn g4_fixture_ron_chain_loads_from_path() {
+        let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("assets/test_fixtures/transport/network_chain_v1.ron");
+        let s = transport_network_snapshot_from_path(&path).unwrap();
+        assert_eq!(s.edges.len(), 2);
+        let json_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("assets/test_fixtures/transport/network_chain_v1.json");
+        let sj = transport_network_snapshot_from_path(&json_path).unwrap();
+        assert_eq!(
+            serde_json::to_value(&s).unwrap(),
+            serde_json::to_value(&sj).unwrap()
+        );
     }
 
     #[test]

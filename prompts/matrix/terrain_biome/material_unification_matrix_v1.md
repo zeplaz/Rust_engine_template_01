@@ -48,15 +48,17 @@ Scope: One canonical chain `noise → ChunkCellMatrix → multi-pass tags → re
 | `assets/config/world_gen_tuning.example.json` | JSON | committed seed | n/a | Applied |
 | `assets/config/terrain/material_registry.json` | JSON | asset editor **Materials** page | *(proposed)* `Assets<MaterialRegistry>` | Pending |
 | `assets/config/terrain/material_registry.example.json` | JSON | committed seed | n/a | Applied |
+| `assets/config/terrain/material_registry.example.ron` | RON | committed mirror (sync with JSON; `cargo test …json_and_ron…`) | example + `WorldProfile` default | Applied |
 | `assets/config/terrain/tag_registry.json` | JSON | asset editor **Tags** page | *(proposed)* `Assets<TagRegistry>` | Pending |
 | `assets/config/terrain/tag_registry.example.json` | JSON | committed seed | n/a | Applied |
+| `assets/config/terrain/tag_registry.example.ron` | RON | committed mirror (sync with JSON) | example + `WorldProfile` default | Applied |
 | `assets/config/terrain/material_rules.ron` | RON | asset editor **Rules** page | *(proposed)* `Assets<RuleSet>` | Pending |
 | `assets/config/terrain/material_rules.example.ron` | RON | committed seed | n/a | Applied |
 
 **Format rule (locked):**
 
-- **JSON** for flat designer-edited tables (registries) — matches existing asset-editor habits and `world_gen_tuning.json`.
-- **RON** for the rule DSL — supports comments, tagged enums, nested predicates; aligns with [`bevy_asset_config_migration_matrix_v1.md`](../assets/bevy_asset_config_migration_matrix_v1.md) (**Terrain registry** subsection — target `AssetLoader` extensions) and [`serialization_hybrid_migration_matrix_v1.md`](../serialization/serialization_hybrid_migration_matrix_v1.md) ("move away from pure JSON for hand-edited heavy data").
+- **JSON** for flat designer-edited tables (registries) — matches existing asset-editor habits and `world_gen_tuning.json`. **Committed `*.example.json` and `*.example.ron` for material + tag registries stay in lockstep** (same serde shape; tests in `src/terrain/material/registry.rs` and `src/terrain/material/tags.rs`).
+- **RON** for the rule DSL — supports comments, tagged enums, nested predicates; aligns with [`bevy_asset_config_migration_matrix_v1.md`](../assets/bevy_asset_config_migration_matrix_v1.md) (**Terrain registry** subsection — target `AssetLoader` extensions) and [`serialization_hybrid_migration_matrix_v1.md`](../serialization/serialization_hybrid_migration_matrix_v1.md) ("move away from pure JSON for hand-edited heavy data"). **Example terrain registries:** engine prefers `.ron` on disk when both exist (startup + `WorldProfile`).
 
 ---
 
@@ -118,8 +120,8 @@ Scope: One canonical chain `noise → ChunkCellMatrix → multi-pass tags → re
 | Asset | Loader | Trigger | Re-run scope | Status |
 |:---|:---|:---|:---|:---:|
 | `WorldGenTuningOverlay` | manual + future watcher | F8 button / file watch | re-derive `BiomeTuning` + tag thresholds; rerun passes 2–6 | Partial (manual today) |
-| `MaterialRegistry` | `MaterialRegistryLoader`, `*.material_registry.json` | file watch | rebuild name→id; rerun pass 6 only | **Applied** |
-| `TagRegistry` | `TagRegistryLoader`, `*.tag_registry.json` | file watch | rebuild name→id; rerun passes 2–6 | **Applied** |
+| `MaterialRegistry` | `MaterialRegistryLoader`, `*.material_registry.{json,ron}` | file watch | rebuild name→id; rerun pass 6 only | **Applied** |
+| `TagRegistry` | `TagRegistryLoader`, `*.tag_registry.{json,ron}` | file watch | rebuild name→id; rerun passes 2–6 | **Applied** |
 | `RuleSet` | `RuleSetLoader`, `*.material_rules.ron` | file watch | re-sort rules; rerun pass 6 only | **Applied** |
 | `MobilityProfileRegistry` | loader `*.mobility_profiles.ron` | file watch | **`ASK:`** whether changes mark chunks dirty for preview-only vs full regen; today loaded at startup with terrain registries | **Partial** |
 
@@ -153,7 +155,7 @@ Scope: One canonical chain `noise → ChunkCellMatrix → multi-pass tags → re
 | Phase | Deliverable | Phase in this plan | Status |
 |:---:|:---|:---|:---:|
 | **U0** | This matrix + paired designer doc + cross-links | Phase 1 (markdown) | Applied |
-| **U1** | `material_registry.example.json`, `tag_registry.example.json`, `material_rules.example.ron` | Phase 2 (assets) | Applied |
+| **U1** | `material_registry.example.json` + `material_registry.example.ron`, `tag_registry.example.json` + `tag_registry.example.ron`, `material_rules.example.ron` | Phase 2 (assets) | Applied |
 | **U2** | Asset-editor **Materials**, **Tags**, **Rules** pages + nav + repo_paths | Phase 3 (Python) | Applied |
 | **U3** | Rust scaffolding: `MaterialId`, `MaterialDef`, `MaterialRegistry`, `TagId`, `TagRegistry`, `TagSet`, `MaterialRule`, `RuleSet`, `resolve_material` (loader + assets) | follow-up plan | **Applied** |
 | **U4** | `ChunkCellMatrix` + multi-pass pipeline (pass 1–4, 6 wired; pass 5 stub) | follow-up plan | **Applied** |
