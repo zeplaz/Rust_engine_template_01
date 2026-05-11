@@ -70,8 +70,8 @@ pub fn permissions_ui_system(
         ui_state.selected_agent = local_player_agent.as_ref().map(|lpa| lpa.agent_id);
     }
     
-    egui::Window::new("Agent Permissions")
-        .resizable(true)
+    crate::gui::std_floating(egui::Window::new("Agent Permissions"))
+        .default_size(egui::vec2(640.0, 480.0))
         .min_width(600.0)
         .show(contexts.ctx_mut()?, |ui| {
             ui.horizontal(|ui| {

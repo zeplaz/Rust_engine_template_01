@@ -110,11 +110,11 @@ pub fn diagnostics_ui_system(
     let entity_count = entities.iter().count();
     let ctx = contexts.ctx_mut()?;
 
-    egui::Window::new(format!(
+    crate::gui::std_floating(egui::Window::new(format!(
         "Diagnostics ({})",
         InputBindings::format_key(bindings.toggle_diagnostics)
-    ))
-        .resizable(true)
+    )))
+    .default_size(egui::vec2(420.0, 520.0))
         .collapsible(true)
         .show(ctx, |ui| {
             ui.label(format!("FPS (EMA): {:.1}", state.fps_smoothed));

@@ -78,15 +78,29 @@ fn spawn_gameplay_hud(
         return;
     }
 
-    let hint = format!(
-        "Logistics — select storage ({}) · list ({}) · Pressure composer ({}) · Strategic — compact ({}) · overlays congest/ew ({}/{})",
-        InputBindings::format_key(bindings.cycle_logistics_focus),
+    let tools = format!(
+        "Tools — Options/keys {} · Diagnostics {} (FPS, sim, theater threat & logistics μ) · Pressure {} · Faction {} · Logistics list {} · Cycle focus {} · World gen {} · Agent perms {} · Scenario (editor) {} · Minimap: egui window when raster fallback is active.",
+        InputBindings::format_key(bindings.toggle_keybindings_options),
+        InputBindings::format_key(bindings.toggle_diagnostics),
+        InputBindings::format_key(bindings.toggle_pressure_composer),
+        InputBindings::format_key(bindings.toggle_faction_tools),
         InputBindings::format_key(bindings.toggle_logistics_targets_panel),
+        InputBindings::format_key(bindings.cycle_logistics_focus),
+        InputBindings::format_key(bindings.toggle_world_generator),
+        InputBindings::format_key(bindings.toggle_agent_permissions),
+        InputBindings::format_key(bindings.toggle_scenario_script_panel),
+    );
+
+    let hint = format!(
+        "Logistics — select storage ({}) · pressure composer ({}) · Strategic — compact strip ({}) · overlays congest/ew ({}/{})",
+        InputBindings::format_key(bindings.cycle_logistics_focus),
         InputBindings::format_key(bindings.toggle_pressure_composer),
         InputBindings::format_key(bindings.toggle_strategic_hud_strip_compact),
         InputBindings::format_key(bindings.toggle_strategic_overlay_routing_congestion),
         InputBindings::format_key(bindings.toggle_strategic_overlay_ew_denial),
     );
+
+    let construction = "Construction — map buildings/rails in the Editor (terrain/road tools + bake). In-sim structure placement is not on a HUD hotkey yet; use production tooling when that UI is expanded.";
 
     commands
         .spawn((
@@ -97,7 +111,7 @@ fn spawn_gameplay_hud(
                 padding: UiRect::all(Val::Px(8.0)),
                 flex_direction: FlexDirection::Column,
                 row_gap: Val::Px(6.0),
-                max_width: Val::Px(440.0),
+                max_width: Val::Px(520.0),
                 ..default()
             },
             HudRoot,
@@ -113,13 +127,28 @@ fn spawn_gameplay_hud(
                 StrategicOpsHudLine,
             ));
             parent.spawn((
-                Node { ..default() },
+                Text::new(tools),
+                TextColor(Color::srgb(0.68, 0.74, 0.84)),
+            ));
+            parent.spawn((
                 Text::new(hint),
                 TextColor(Color::srgb(0.72, 0.78, 0.88)),
+            ));
+            parent.spawn((
+                Text::new("Site logistics — …"),
+                TextColor(Color::srgb(0.7, 0.76, 0.86)),
                 ResourceDisplay,
             ));
             parent.spawn((
-                Text::new("Dev tools: F1 keys · F3 diagnostics · F8 world gen — not shown as HUD chrome."),
+                Text::new(construction),
+                TextColor(Color::srgb(0.55, 0.6, 0.68)),
+            ));
+            parent.spawn((
+                Text::new("Threat & drone-adjacent readouts: see Diagnostics theater block and the strategic summary line below (not a separate F-key panel yet)."),
+                TextColor(Color::srgb(0.5, 0.56, 0.64)),
+            ));
+            parent.spawn((
+                Text::new("World gen / Editor: F8 opens generator; map editor palettes are in-editor egui."),
                 TextColor(Color::srgb(0.45, 0.5, 0.58)),
             ));
         });

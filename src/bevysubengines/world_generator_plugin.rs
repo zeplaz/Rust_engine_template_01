@@ -206,8 +206,8 @@ fn world_gen_ui_system(
         return Ok(());
     }
 
-    egui::Window::new("World Generator Subengine")
-        .resizable(true)
+    crate::gui::std_floating(egui::Window::new("World Generator Subengine"))
+        .default_size(egui::vec2(520.0, 600.0))
         .collapsible(true)
         .show(contexts.ctx_mut()?, |ui| {
             ui.heading("World Generator");

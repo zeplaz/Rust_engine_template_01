@@ -248,12 +248,11 @@ fn pressure_composer_egui_system(
     }
     let ctx = contexts.ctx_mut()?;
 
-    egui::Window::new(format!(
+    crate::gui::std_floating(egui::Window::new(format!(
         "Pressure composer — climate, not script ({})",
         InputBindings::format_key(bindings.toggle_pressure_composer)
-    ))
+    )))
     .default_size(egui::vec2(520.0, 620.0))
-    .resizable(true)
     .show(ctx, |ui| {
         ui.label(
             egui::RichText::new(

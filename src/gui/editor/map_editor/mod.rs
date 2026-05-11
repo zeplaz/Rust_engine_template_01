@@ -31,6 +31,7 @@ use bevy_egui::egui::{self, Sense};
 use bevy_egui::{EguiContexts, EguiPrimaryContextPass, EguiTextureHandle};
 
 use crate::engine::{BaseState, InGameEditorState, MainMenuState, WorldGenFlowState};
+use crate::gui::std_floating;
 use crate::gui::editor::editor_world_commit_bridge::{
     write_editor_world_grid_commit, EditorTileEditCommitted, EditorTileEditKind,
 };
@@ -38,7 +39,6 @@ use crate::gui::editor::scenario_script_panel::{
     scenario_editor_tools_entry_window, scenario_script_panel_system,
     toggle_scenario_script_panel_hotkey, ScenarioScriptPanelState,
 };
-use crate::gui::editor::world_preview::{preview_biome_rgba_for_tile, terrain_family_preview_rgba};
 use crate::gui::style::{framed_group, path_hint, section_heading, CmdHeadingStyle, UiPalette};
 use crate::systems::terrain::TerrainRegistriesHandles;
 use crate::terrain::editor::map_snapshot::{MapSnapshotCellV1, MapSnapshotV1, MAP_SNAPSHOT_SCHEMA_VERSION};
@@ -90,7 +90,7 @@ pub enum MapEditorMapSnapshotIoRequest {
     Load,
 }
 
-/// **R9:** undo last road-marker placement (stack captured **before** each click).
+/// **R9:** undo last road stroke (stack captured **before** each mouse-down on the minimap).
 #[derive(Message)]
 pub struct MapEditorRoadUndoRequest;
 
@@ -241,6 +241,79 @@ fn place_road_marker(
 /// Vertical exaggeration in world units; must stay in sync with world generator tile spawn.
 pub const HEIGHT_WORLD_SCALE: f32 = 20.0;
 
+/// Terrain brush footprint in the XZ tile plane (column = x, row = z).
+#[derive(Clone, Copy, PartialEq, Eq, Default, Debug)]
+pub enum MapEditorBrushShape {
+    #[default]
+    Disk,
+    Square,
+    Diamond,
+}
+
+impl MapEditorBrushShape {
+    const ALL: [Self; 3] = [Self::Disk, Self::Square, Self::Diamond];
+
+    fn label(self) -> &'static str {
+        match self {
+            Self::Disk => "Disk",
+            Self::Square => "Square",
+            Self::Diamond => "Diamond",
+        }
+    }
+}
+
+#[inline]
+fn tile_in_brush(
+    shape: MapEditorBrushShape,
+    cx: f32,
+    cy: f32,
+    tx: f32,
+    tz: f32,
+    r: f32,
+) -> bool {
+    let dx = tx - cx;
+    let dz = tz - cy;
+    match shape {
+        MapEditorBrushShape::Disk => dx * dx + dz * dz <= r * r,
+        MapEditorBrushShape::Square => dx.abs() <= r && dz.abs() <= r,
+        MapEditorBrushShape::Diamond => dx.abs() + dz.abs() <= r,
+    }
+}
+
+/// Raster-ordered grid cells from `(x0,y0)` to `(x1,y1)` inclusive (tile column, tile row).
+fn bresenham_tile_line(x0: u32, y0: u32, x1: u32, y1: u32) -> Vec<(u32, u32)> {
+    let mut out = Vec::new();
+    let xa = x0 as i32;
+    let ya = y0 as i32;
+    let xb = x1 as i32;
+    let yb = y1 as i32;
+    let dx = (xb - xa).abs();
+    let dy = -(yb - ya).abs();
+    let sx = if xa < xb { 1 } else { -1 };
+    let sy = if ya < yb { 1 } else { -1 };
+    let mut err = dx + dy;
+    let mut x = xa;
+    let mut y = ya;
+    loop {
+        if x >= 0 && y >= 0 {
+            out.push((x as u32, y as u32));
+        }
+        if x == xb && y == yb {
+            break;
+        }
+        let e2 = 2 * err;
+        if e2 >= dy {
+            err += dy;
+            x += sx;
+        }
+        if e2 <= dx {
+            err += dx;
+            y += sy;
+        }
+    }
+    out
+}
+
 /// Terrain tool sub-mode: height sculpt vs biome repaint.
 #[derive(Clone, Copy, PartialEq, Eq, Default, Debug)]
 pub enum MapEditorTerrainPaint {
@@ -256,6 +329,10 @@ pub enum MapEditorToolKind {
     Select,
     Terrain,
     Road,
+    /// Footprint placement — not yet implemented (see palette copy).
+    Building,
+    /// Curves / tiles distinct from roads — not yet implemented.
+    Rail,
 }
 
 impl MapEditorToolKind {
@@ -264,16 +341,26 @@ impl MapEditorToolKind {
             MapEditorToolKind::Select => InGameEditorState::Select,
             MapEditorToolKind::Terrain => InGameEditorState::Terrain,
             MapEditorToolKind::Road => InGameEditorState::Road,
+            MapEditorToolKind::Building => InGameEditorState::Create,
+            MapEditorToolKind::Rail => InGameEditorState::Rail,
         }
     }
 
-    const ALL: [Self; 3] = [Self::Select, Self::Terrain, Self::Road];
+    const ALL: [Self; 5] = [
+        Self::Select,
+        Self::Terrain,
+        Self::Road,
+        Self::Building,
+        Self::Rail,
+    ];
 
     fn label(self) -> &'static str {
         match self {
             MapEditorToolKind::Select => "Select",
             MapEditorToolKind::Terrain => "Terrain",
             MapEditorToolKind::Road => "Road",
+            MapEditorToolKind::Building => "Building (stub)",
+            MapEditorToolKind::Rail => "Rail (stub)",
         }
     }
 }
@@ -282,6 +369,7 @@ impl MapEditorToolKind {
 pub struct MapEditorTool {
     pub kind: MapEditorToolKind,
     pub brush_radius: f32,
+    pub brush_shape: MapEditorBrushShape,
     pub terrain_paint: MapEditorTerrainPaint,
     /// Biome family (manual override only) — dense id into [`TerrainFamilyRegistry`].
     pub paint_biome: TerrainFamilyId,
@@ -292,6 +380,7 @@ impl Default for MapEditorTool {
         Self {
             kind: MapEditorToolKind::default(),
             brush_radius: 3.0,
+            brush_shape: MapEditorBrushShape::default(),
             terrain_paint: MapEditorTerrainPaint::default(),
             paint_biome: DEFAULT_TERRAIN_FAMILY_ID,
         }
@@ -334,12 +423,20 @@ fn on_enter_editor(
     mut road_seq: ResMut<MapEditorRoadPlacementSeq>,
     mut undo: ResMut<MapEditorRoadUndoStack>,
     mut ghost: ResMut<RoadAuthoringGhostPreview>,
+    mut road_drag: ResMut<MapEditorRoadDragState>,
 ) {
     *tool = MapEditorTool::default();
     *road_seq = MapEditorRoadPlacementSeq::default();
     *undo = MapEditorRoadUndoStack::default();
     *ghost = RoadAuthoringGhostPreview::default();
+    *road_drag = MapEditorRoadDragState::default();
     NextState::set_if_neq(&mut *next_sub, InGameEditorState::Select);
+}
+
+/// While primary is held, extends polyline road placement between hovered minimap tiles.
+#[derive(Resource, Default)]
+pub struct MapEditorRoadDragState {
+    pub last_hover_tile: Option<(u32, u32)>,
 }
 
 /// Last-hovered tile from the minimap (`None` = off-map or not over minimap).
@@ -446,64 +543,36 @@ fn map_editor_raster_minimap(
     };
     let tex_w = map_tex.width as usize;
     let tex_h = map_tex.height as usize;
-    let len = 4 * tex_w * tex_h;
-    if data.len() != len {
-        data.resize(len, 0);
-    }
-    data.fill(0);
 
     let mat_slices: Vec<(IVec2, bevy::math::UVec2, &[MaterialId])> = vec![];
     let reg_opt = materials.get(&handles.material_registry);
     let fam_opt = Some(crate::terrain::default_terrain_families());
 
-    for (transform, terrain) in tile_q.iter() {
-        let x = transform.translation.x.round() as isize;
-        let y = transform.translation.z.round() as isize;
+    let tile_iter = tile_q.iter().filter_map(|(tf, terrain)| {
+        let x = tf.translation.x.round() as isize;
+        let y = tf.translation.z.round() as isize;
         if x < 0 || y < 0 {
-            continue;
+            return None;
         }
         let x = x as usize;
         let y = y as usize;
         if x >= tex_w || y >= tex_h {
-            continue;
+            return None;
         }
-        let pixel_index = 4 * (y * tex_w + x);
-        if pixel_index + 3 >= data.len() {
-            continue;
-        }
-        let color = match reg_opt {
-            Some(reg) => preview_biome_rgba_for_tile(
-                x as u32,
-                y as u32,
-                terrain.0,
-                &mat_slices,
-                reg,
-                fam_opt,
-            ),
-            None => terrain_family_preview_rgba(fam_opt, terrain.0),
-        };
-        data[pixel_index] = color[0];
-        data[pixel_index + 1] = color[1];
-        data[pixel_index + 2] = color[2];
-        data[pixel_index + 3] = color[3];
-    }
+        Some((x, y, terrain.0))
+    });
+    let road_iter = road_q.iter().map(|m| (m.tile_x as usize, m.tile_z as usize));
 
-    const ROAD_OVERLAY: [u8; 4] = [255, 120, 0, 255];
-    for marker in road_q.iter() {
-        let x = marker.tile_x as usize;
-        let y = marker.tile_z as usize;
-        if x >= tex_w || y >= tex_h {
-            continue;
-        }
-        let pixel_index = 4 * (y * tex_w + x);
-        if pixel_index + 3 >= data.len() {
-            continue;
-        }
-        data[pixel_index] = ROAD_OVERLAY[0];
-        data[pixel_index + 1] = ROAD_OVERLAY[1];
-        data[pixel_index + 2] = ROAD_OVERLAY[2];
-        data[pixel_index + 3] = ROAD_OVERLAY[3];
-    }
+    crate::gui::map_tile_raster::raster_tiles_and_roads_to_rgba(
+        data,
+        tex_w,
+        tex_h,
+        tile_iter,
+        road_iter,
+        &mat_slices,
+        reg_opt,
+        fam_opt,
+    );
 }
 
 fn terrain_family_combo(ui: &mut egui::Ui, current: &mut TerrainFamilyId) {
@@ -519,7 +588,7 @@ fn terrain_family_combo(ui: &mut egui::Ui, current: &mut TerrainFamilyId) {
         });
 }
 
-fn apply_brush_disk(
+fn apply_terrain_brush(
     tool: &MapEditorTool,
     center_x: u32,
     center_y: u32,
@@ -530,16 +599,13 @@ fn apply_brush_disk(
     height_delta_opt: Option<f32>,
 ) {
     let r = tool.brush_radius.max(1.0);
-    let r2 = r * r;
     let cx = center_x as f32;
     let cy = center_y as f32;
 
     for (mut tf, mut height, mut terrain) in tiles.iter_mut() {
         let tx = tf.translation.x;
         let tz = tf.translation.z;
-        let dx = tx - cx;
-        let dz = tz - cy;
-        if dx * dx + dz * dz > r2 {
+        if !tile_in_brush(tool.brush_shape, cx, cy, tx, tz, r) {
             continue;
         }
         match tool.kind {
@@ -573,6 +639,7 @@ fn map_editor_minimap_window(
     road_tf: Query<(&MapEditorRoadMarkerV1, &Transform), Without<TileMarker>>,
     mut road_undo: ResMut<MapEditorRoadUndoStack>,
     mut road_placement: ResMut<MapEditorRoadPlacementSeq>,
+    mut road_drag: ResMut<MapEditorRoadDragState>,
     mut tile_queries: ParamSet<(
         Query<
             (&mut Transform, &mut Height, &mut TerrainType),
@@ -593,10 +660,10 @@ fn map_editor_minimap_window(
         return Ok(());
     }
 
-    egui::Window::new("Map editor — minimap (pick / paint)")
-        .resizable(true)
+    std_floating(egui::Window::new("Map editor — minimap (pick / paint)"))
+        .default_size(egui::vec2(640.0, 520.0))
         .show(contexts.ctx_mut()?, |ui| {
-            ui.label(egui::RichText::new("TEMP-EGUI: one pixel ≈ one tile; Ctrl/⌘ + scroll to zoom.").weak());
+            ui.label(egui::RichText::new("TEMP-EGUI: one pixel ≈ one tile; Ctrl/⌘ + scroll to zoom. Road: click–drag on minimap to stroke a polyline (Ctrl/⌘+Z undoes last stroke).").weak());
             ui.small(format!(
                 "Coordinates: x = column, z = row; Y = Height × {HEIGHT_WORLD_SCALE} (see module docs)."
             ));
@@ -648,7 +715,7 @@ fn map_editor_minimap_window(
                             if primary {
                                 match tool.terrain_paint {
                                     MapEditorTerrainPaint::Height => {
-                                        apply_brush_disk(&tool, cx, cy, &mut tiles, Some(0.02));
+                                        apply_terrain_brush(&tool, cx, cy, &mut tiles, Some(0.02));
                                         emit_editor_tile_commit_for_brush(
                                             &mut edit_commits,
                                             &params,
@@ -659,7 +726,7 @@ fn map_editor_minimap_window(
                                         );
                                     }
                                     MapEditorTerrainPaint::Biome => {
-                                        apply_brush_disk(&tool, cx, cy, &mut tiles, None);
+                                        apply_terrain_brush(&tool, cx, cy, &mut tiles, None);
                                         emit_editor_tile_commit_for_brush(
                                             &mut edit_commits,
                                             &params,
@@ -675,7 +742,7 @@ fn map_editor_minimap_window(
                                 && scroll_delta != 0.0
                             {
                                 let step = (scroll_delta * 0.001).clamp(-0.08, 0.08);
-                                apply_brush_disk(&tool, cx, cy, &mut tiles, Some(step));
+                                apply_terrain_brush(&tool, cx, cy, &mut tiles, Some(step));
                                 emit_editor_tile_commit_for_brush(
                                     &mut edit_commits,
                                     &params,
@@ -685,32 +752,66 @@ fn map_editor_minimap_window(
                                     EditorTileEditKind::TerrainHeight,
                                 );
                             }
-                        } else if tool.kind == MapEditorToolKind::Road
-                            && resp.clicked_by(egui::PointerButton::Primary)
-                        {
-                            let hn = {
-                                let read = tile_queries.p1();
-                                height_at_tile(&read, cx, cy)
-                            };
-                            let before = RoadMarkerUndoFrame::capture(&road_tf);
-                            road_undo.push_frame(before);
-                            place_road_marker(
-                                &mut commands,
-                                &world_roots,
-                                &road_entities,
-                                &mut *road_placement,
-                                cx,
-                                cy,
-                                hn,
-                            );
-                            if params.width > 0 && params.height > 0 {
-                                edit_commits.write(EditorTileEditCommitted {
-                                    min_tile: UVec2::new(cx, cy),
-                                    max_tile: UVec2::new(cx, cy),
-                                    kind: EditorTileEditKind::RoadMarker,
-                                });
+                        } else if tool.kind == MapEditorToolKind::Road {
+                            let just_pressed = ui.ctx().input(|i| i.pointer.primary_pressed());
+                            let primary_down = ui.ctx().input(|i| i.pointer.primary_down());
+
+                            if just_pressed {
+                                let hn = {
+                                    let read = tile_queries.p1();
+                                    height_at_tile(&read, cx, cy)
+                                };
+                                let before = RoadMarkerUndoFrame::capture(&road_tf);
+                                road_undo.push_frame(before);
+                                place_road_marker(
+                                    &mut commands,
+                                    &world_roots,
+                                    &road_entities,
+                                    &mut *road_placement,
+                                    cx,
+                                    cy,
+                                    hn,
+                                );
+                                if params.width > 0 && params.height > 0 {
+                                    edit_commits.write(EditorTileEditCommitted {
+                                        min_tile: UVec2::new(cx, cy),
+                                        max_tile: UVec2::new(cx, cy),
+                                        kind: EditorTileEditKind::RoadMarker,
+                                    });
+                                }
+                                road_drag.last_hover_tile = Some((cx, cy));
+                            } else if primary_down {
+                                if let Some((lx, ly)) = road_drag.last_hover_tile {
+                                    if (lx, ly) != (cx, cy) {
+                                        let line = bresenham_tile_line(lx, ly, cx, cy);
+                                        let read = tile_queries.p1();
+                                        for (tx, tz) in line.into_iter().skip(1) {
+                                            let hn = height_at_tile(&read, tx, tz);
+                                            place_road_marker(
+                                                &mut commands,
+                                                &world_roots,
+                                                &road_entities,
+                                                &mut *road_placement,
+                                                tx,
+                                                tz,
+                                                hn,
+                                            );
+                                            if params.width > 0 && params.height > 0 {
+                                                edit_commits.write(EditorTileEditCommitted {
+                                                    min_tile: UVec2::new(tx, tz),
+                                                    max_tile: UVec2::new(tx, tz),
+                                                    kind: EditorTileEditKind::RoadMarker,
+                                                });
+                                            }
+                                        }
+                                        road_drag.last_hover_tile = Some((cx, cy));
+                                    }
+                                }
                             }
                         }
+                    }
+                    if tool.kind == MapEditorToolKind::Road && !primary {
+                        road_drag.last_hover_tile = None;
                     }
                 });
         });
@@ -1167,8 +1268,9 @@ fn map_editor_palette_system(
     mut map_snapshot_io: MessageWriter<MapEditorMapSnapshotIoRequest>,
     mut road_undo: MessageWriter<MapEditorRoadUndoRequest>,
 ) -> Result {
-    egui::Window::new("Map editor — tools (TEMP-EGUI)")
+    std_floating(egui::Window::new("Map editor — tools (TEMP-EGUI)"))
         .anchor(egui::Align2::LEFT_TOP, [8.0, 8.0])
+        .default_size(egui::vec2(360.0, 720.0))
         .collapsible(true)
         .show(contexts.ctx_mut()?, |ui| {
             ui.label(egui::RichText::new("TEMP-EGUI tool palette; replace with Bevy UI per gui_runbook.").weak());
@@ -1187,7 +1289,7 @@ fn map_editor_palette_system(
             ui.add_space(6.0);
 
             let prev = tool.kind;
-            ui.horizontal(|ui| {
+            ui.horizontal_wrapped(|ui| {
                 for k in MapEditorToolKind::ALL {
                     ui.radio_value(&mut tool.kind, k, k.label());
                 }
@@ -1199,7 +1301,7 @@ fn map_editor_palette_system(
             if tool.kind == MapEditorToolKind::Terrain {
                 ui.add_space(6.0);
                 ui.label("Terrain paint:");
-                ui.horizontal(|ui| {
+                ui.horizontal_wrapped(|ui| {
                     ui.radio_value(
                         &mut tool.terrain_paint,
                         MapEditorTerrainPaint::Height,
@@ -1214,9 +1316,16 @@ fn map_editor_palette_system(
                 if tool.terrain_paint == MapEditorTerrainPaint::Biome {
                     terrain_family_combo(ui, &mut tool.paint_biome);
                 }
+                ui.add_space(4.0);
+                ui.label("Brush footprint (XZ tile plane):");
+                ui.horizontal_wrapped(|ui| {
+                    for s in MapEditorBrushShape::ALL {
+                        ui.radio_value(&mut tool.brush_shape, s, s.label());
+                    }
+                });
             } else if tool.kind == MapEditorToolKind::Road {
                 ui.add_space(6.0);
-                ui.label("Road: click minimap tile to place/replace orange marker (TEMP-EGUI v1).");
+                ui.label("Road: click–drag on the minimap to stroke a polyline (orange markers). Single click still works.");
                 match ghost.snapshot.as_ref() {
                     Some(s) => ui
                         .label(
@@ -1238,8 +1347,10 @@ fn map_editor_palette_system(
                 }
                 ui.horizontal(|ui| {
                     if ui
-                        .button("Undo road marker")
-                        .on_hover_text("Restores markers before last click (stack ≤50). Ctrl/⌘+Z")
+                        .button("Undo last road stroke")
+                        .on_hover_text(
+                            "Restores all road markers to before this click–drag (stack ≤50). Ctrl/⌘+Z",
+                        )
                         .clicked()
                     {
                         road_undo.write(MapEditorRoadUndoRequest);
@@ -1288,6 +1399,17 @@ fn map_editor_palette_system(
                         load_hybrid.write(MapEditorLoadHybridWorldDevRequest);
                     }
                 });
+            } else if matches!(
+                tool.kind,
+                MapEditorToolKind::Building | MapEditorToolKind::Rail
+            ) {
+                ui.add_space(6.0);
+                ui.label(
+                    egui::RichText::new(
+                        "Stub tool — no map paint yet. Buildings: spawn via production/manufacturing flows when wired. Rails: use Road markers + Bake transport for now; dedicated rail curves are planned.",
+                    )
+                    .weak(),
+                );
             }
 
             ui.add_space(8.0);
@@ -1295,6 +1417,7 @@ fn map_editor_palette_system(
                 ui.label("Brush radius (tiles):");
                 ui.add(egui::Slider::new(&mut tool.brush_radius, 1.0..=32.0));
             });
+            ui.small("Brush radius and footprint apply to the Terrain tool only.");
             ui.add_space(8.0);
             ui.horizontal(|ui| {
                 if ui
@@ -1343,6 +1466,7 @@ impl Plugin for MapEditorPlugin {
             .add_message::<MapEditorRoadUndoRequest>()
             .init_resource::<MapEditorTool>()
             .init_resource::<MapEditorRoadPlacementSeq>()
+            .init_resource::<MapEditorRoadDragState>()
             .init_resource::<MapEditorRoadUndoStack>()
             .init_resource::<RoadAuthoringGhostPreview>()
             .init_resource::<MapEditorHover>()

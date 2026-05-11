@@ -62,12 +62,11 @@ fn logistics_targets_panel_ui(
     }
     let ctx = contexts.ctx_mut()?;
 
-    egui::Window::new(format!(
+    crate::gui::std_floating(egui::Window::new(format!(
         "Logistics targets ({})",
         InputBindings::format_key(bindings.toggle_logistics_targets_panel)
-    ))
-        .resizable(true)
-        .default_width(320.0)
+    )))
+    .default_size(egui::vec2(320.0, 440.0))
         .show(ctx, |ui| {
             ui.label("Set HUD inventory focus (physical storage / site hub).");
             ui.separator();

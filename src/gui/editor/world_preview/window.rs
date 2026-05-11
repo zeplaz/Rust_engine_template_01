@@ -9,6 +9,7 @@ use super::ui_statusbar::world_preview_status_bar;
 use super::ui_toolbar::world_preview_toolbar;
 use super::viewport::EditorViewport;
 use crate::gui::editor::world_gen_ui::WorldGenUiState;
+use crate::gui::std_floating;
 use crate::gui::style::neutral_image_tint;
 use crate::systems::terrain::TerrainRegistriesHandles;
 
@@ -42,42 +43,73 @@ pub fn display_world_preview(
     }
 
     let mut window_open = world_preview_ui.window_open;
-    egui::Window::new("World Preview")
-        .resizable(true)
-        .default_size([920.0, 640.0])
+    let panel_frame = egui::Frame::NONE;
+    std_floating(egui::Window::new("World Preview"))
+        .id(egui::Id::new("world_preview_main"))
+        .default_size([960.0, 680.0])
+        .min_size([480.0, 340.0])
         .open(&mut window_open)
         .show(contexts.ctx_mut()?, |ui| {
-            ui.vertical(|ui| {
-                world_preview_toolbar(
-                    ui,
-                    &mut world_gen_ui_state.preview_layers,
-                    &mut viewport,
-                    preview_texture.width,
-                    preview_texture.height,
-                );
+            // Top / bottom / central panels fill the window inner rect so the map track
+            // tracks resize smoothly (plain `vertical` + `horizontal` only shrink-wrap height).
+            egui::TopBottomPanel::top("world_preview_toolbar")
+                .frame(panel_frame)
+                .resizable(false)
+                .show_inside(ui, |ui| {
+                    world_preview_toolbar(
+                        ui,
+                        &mut world_gen_ui_state.preview_layers,
+                        &mut viewport,
+                        preview_texture.width,
+                        preview_texture.height,
+                    );
+                });
 
-                ui.horizontal_top(|ui| {
+            egui::TopBottomPanel::bottom("world_preview_status")
+                .frame(panel_frame)
+                .resizable(false)
+                .show_inside(ui, |ui| {
+                    world_preview_status_bar(
+                        ui,
+                        world_gen_ui_state.preview_layers,
+                        &viewport,
+                        preview_texture.width,
+                        preview_texture.height,
+                    );
+                });
+
+            egui::CentralPanel::default().frame(panel_frame).show_inside(ui, |ui| {
+                ui.horizontal(|ui| {
                     ui.vertical(|ui| {
                         ui.set_width(248.0);
-                        world_preview_sidebar(
-                            ui,
-                            &mut world_gen_ui_state,
-                            &mut world_gen_params,
-                            &handles,
-                            &tag_assets,
-                            &mobility_assets,
-                        );
-                        ui.separator();
-                        world_preview_minimap(ui, texture_id, preview_texture.width, preview_texture.height);
+                        egui::ScrollArea::vertical()
+                            .id_salt("world_preview_sidebar_scroll")
+                            .auto_shrink([false, false])
+                            .show(ui, |ui| {
+                                world_preview_sidebar(
+                                    ui,
+                                    &mut world_gen_ui_state,
+                                    &mut world_gen_params,
+                                    &handles,
+                                    &tag_assets,
+                                    &mobility_assets,
+                                );
+                                ui.separator();
+                                world_preview_minimap(
+                                    ui,
+                                    texture_id,
+                                    preview_texture.width,
+                                    preview_texture.height,
+                                );
+                            });
                     });
 
+                    ui.separator();
+
                     ui.vertical(|ui| {
-                        let sz = ui.available_size();
-                        let view_h = sz.y.max(200.0);
-                        let (rect, response) = ui.allocate_exact_size(
-                            egui::vec2(sz.x, view_h),
-                            egui::Sense::click_and_drag(),
-                        );
+                        let size = ui.available_size();
+                        let (rect, response) =
+                            ui.allocate_exact_size(size, egui::Sense::click_and_drag());
 
                         let z = viewport
                             .zoom
@@ -132,15 +164,6 @@ pub fn display_world_preview(
                         );
                     });
                 });
-
-                ui.separator();
-                world_preview_status_bar(
-                    ui,
-                    world_gen_ui_state.preview_layers,
-                    &viewport,
-                    preview_texture.width,
-                    preview_texture.height,
-                );
             });
         });
 

@@ -8,6 +8,7 @@ use bevy::prelude::*;
 use bevy_egui::egui;
 use bevy_egui::EguiContexts;
 
+use crate::gui::std_floating;
 use crate::gui::InputBindings;
 use crate::gui::style::{
     error_text, framed_group, muted_text, path_hint, primary_text, scenario_execution_badge,
@@ -76,10 +77,10 @@ pub fn scenario_editor_tools_entry_window(
     mut panel: ResMut<ScenarioScriptPanelState>,
     palette: Res<UiPalette>,
 ) -> Result {
-    egui::Window::new("Editor — Scenario tools")
+    std_floating(egui::Window::new("Editor — Scenario tools"))
         .anchor(egui::Align2::RIGHT_TOP, egui::vec2(-10.0, 52.0))
         .collapsible(true)
-        .default_width(260.0)
+        .default_size(egui::vec2(280.0, 220.0))
         .show(contexts.ctx_mut()?, |ui| {
             section_heading(
                 ui,
@@ -113,10 +114,11 @@ pub fn scenario_script_panel_system(
     palette: Res<UiPalette>,
 ) -> Result {
     let mut open = panel.window_open;
-    egui::Window::new("Scenario script — Editor / Scenario tools (TEMP-EGUI)")
+    std_floating(egui::Window::new(
+        "Scenario script — Editor / Scenario tools (TEMP-EGUI)",
+    ))
         .open(&mut open)
         .default_size([440.0, 560.0])
-        .resizable(true)
         .show(contexts.ctx_mut()?, |ui| {
             framed_group(ui, &palette, |ui| {
                 section_heading(ui, &palette, CmdHeadingStyle::Gt, "Scenario script runner");

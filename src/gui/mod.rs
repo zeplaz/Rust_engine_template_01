@@ -6,6 +6,8 @@
 //   agent_permissions_ui.rs         → egui tooling
 
 mod map_camera;
+pub mod map_tile_raster;
+pub mod egui_window;
 mod app_shell;
 mod main_menu;
 mod splash;
@@ -49,6 +51,7 @@ pub use style::{
     UiSpacing,
     UiThemePlugin,
 };
+pub use egui_window::std_floating;
 pub use map_camera::{MainWorldCamera, MapCameraPlugin};
 pub use main_menu::*;
 pub use splash::*;

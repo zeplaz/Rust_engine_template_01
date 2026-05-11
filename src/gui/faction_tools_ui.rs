@@ -68,11 +68,11 @@ pub fn faction_tools_ui_system(
     }
     let ctx = contexts.ctx_mut()?;
 
-    egui::Window::new(format!(
+    crate::gui::std_floating(egui::Window::new(format!(
         "Faction Tools ({})",
         InputBindings::format_key(bindings.toggle_faction_tools)
-    ))
-        .resizable(true)
+    )))
+    .default_size(egui::vec2(480.0, 420.0))
         .show(ctx, |ui| {
             ui.horizontal(|ui| {
                 ui.selectable_value(&mut state.active, FactionToolsPanel::Roster, "Roster");
