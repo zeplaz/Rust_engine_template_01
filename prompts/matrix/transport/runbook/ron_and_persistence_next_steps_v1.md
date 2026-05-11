@@ -13,7 +13,7 @@
 
 | Area | Today | Target / note |
 |:---|:---|:---|
-| Terrain registries | `*.tag_registry.json`, `material_registry.json`, … | RON loaders + `*.ron` examples; keep JSON loaders until matrix U3/U4 confirms. |
+| Terrain registries | `*.tag_registry.json`, `material_registry.json`, … | **Done (examples):** `*.example.ron` mirrors + extension dispatch; **active** `material_registry.json` may stay JSON for Python editor until bridge exports RON. |
 | `world_gen_tuning.json` | Python asset editor | **Exception:** keep JSON for tooling; runtime/editor canonical RON (`WORLD_GEN_TUNING_RON_PATH`) — see `tuning_io.rs`. |
 | `plant_definitions.json` | Embedded defaults | RON + `include_str!` or keep JSON with explicit rationale in module doc. |
 | World generator export | `world_*.json` in subengine | RON or binary snapshot per orchestrator. |
@@ -39,11 +39,13 @@ Each phase ships **loaders or I/O paths** plus **automated tests** before moving
 
 **Order rationale:** P1 should introduce the shared helper so P2–P3 stay small.
 
+**Status:** As of **2026-05-10**, phases **P1–P9** are implemented in-repo (verify with `cargo test -p proc_A_dine01`). Further work is optional cleanup (JSON fixture retirement) and tooling.
+
 ## Wiring follow-ups (execution)
 
-1. Add `*.ron` mirrors under `assets/test_fixtures/transport/` and retire duplicate JSON when CI uses RON only.
-2. **Construction book** in R8 snapshot extension fields (serde optional block) — separate PR.
-3. Document per-crate **format exceptions** in `AGENTS.md` or `system_runbook_authoring_meta` appendix.
-4. **Terrain registries** (material / tag / family JSON): add RON loaders + examples, same extension dispatch pattern as `tuning_io` / transport.
+1. **Transport fixtures:** `*.ron` present; optional — retire duplicate JSON when CI policy is RON-only.
+2. ~~Construction book in R8 snapshot~~ — landed (`construction_book` tests + hydrate).
+3. **Format exceptions:** keep `AGENTS.md` / authoring-meta in sync when adding new surfaces.
+4. ~~Terrain registry RON~~ — material / tag / family example `.ron` + loaders + `MaterialUnificationPlugin` registration.
 
-Version: `v1.1.0`
+Version: `v1.2.0`

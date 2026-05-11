@@ -11,12 +11,14 @@
 use bevy::prelude::*;
 
 use crate::entities::production::core::manufacturing::ManufacturingNode;
+use crate::systems::production::default_production_manifest;
 use crate::systems::sim_control::SimControlState;
 
 pub struct ManufacturingCorePlugin;
 
 impl Plugin for ManufacturingCorePlugin {
     fn build(&self, app: &mut App) {
+        app.insert_resource(default_production_manifest());
         app.add_systems(Update, tick_manufacturing_nodes);
     }
 }

@@ -35,6 +35,10 @@ pub struct NoiseSamplingTuning {
     pub detail_persistence_mul: f64,
     pub moisture_noise_scale_mul: f32,
     pub temperature_noise_scale_mul: f32,
+    /// Added to [`crate::terrain::generation::world_generator_enhanced::WorldGenParams::seed`] for the moisture fBm (default **1** preserves legacy `wrapping_add(1)`).
+    pub moisture_seed_offset: u64,
+    /// Added to world seed for the temperature fBm (default **2** preserves legacy `wrapping_add(2)`).
+    pub temperature_seed_offset: u64,
     /// Extra frequency multiplier inside `moisture_noise.get([nx * mul, ...])`.
     pub moisture_sample_freq_mul: f64,
     pub temperature_sample_freq_mul: f64,
@@ -59,6 +63,8 @@ impl Default for NoiseSamplingTuning {
             detail_persistence_mul: 0.85,
             moisture_noise_scale_mul: 1.5,
             temperature_noise_scale_mul: 0.8,
+            moisture_seed_offset: 1,
+            temperature_seed_offset: 2,
             moisture_sample_freq_mul: 1.5,
             temperature_sample_freq_mul: 0.8,
             warp_coord_frequency_mul: 0.07,

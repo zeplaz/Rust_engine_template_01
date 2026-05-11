@@ -17,8 +17,8 @@ Scope: Map **scalar fields**, **tuning JSON**, **preview paths**, **UI exposure*
 | Layer | Active symbol(s) | Sampler / builder | Seed / offset (today) | Status |
 |:---|:---|:---|:---|:---:|
 | **Elevation** | `Height` | `build_height_noise`, `sample_height_field` | `WorldGenParams.seed` via `TerrainNoiseProfile` path | Applied |
-| **Moisture** | `Moisture` | `build_fbm_perlin` | `params.seed.wrapping_add(1)` | Applied |
-| **Temperature** | `Temperature` | `build_fbm_perlin` | `params.seed.wrapping_add(2)` | Applied |
+| **Moisture** | `Moisture` | `build_fbm_perlin` | `params.seed + NoiseSamplingTuning.moisture_seed_offset` (default **1**) | Applied |
+| **Temperature** | `Temperature` | `build_fbm_perlin` | `params.seed + NoiseSamplingTuning.temperature_seed_offset` (default **2**) | Applied |
 | **Aux (warp / detail)** | (in height pipeline) | `build_fbm_perlin` warp + detail | `warp_seed_offset`, `detail_seed_offset` in `NoiseSamplingTuning` | Partial |
 | **Resources** | — *(proposed)* `ResourceField` | — | — | Pending |
 | **Threat / bases** | — | — | — | Pending |
@@ -42,7 +42,7 @@ Scope: Map **scalar fields**, **tuning JSON**, **preview paths**, **UI exposure*
 | `noise_sampling` | `NoiseSamplingTuning` | `WorldGenParams.noise_sampling` | Applied |
 | `biome_tuning` | `BiomeTuning` | `WorldGenParams.biome_tuning` | Applied |
 
-**Gap (P1):** explicit **`moisture_seed_offset`** / **`temperature_seed_offset`** in `NoiseSamplingTuning` (today hardcoded `+1` / `+2` in `generate_world`) — **Pending**; goal is tunable parity without behavior drift when defaults match.
+**P1 (moisture/temperature seed offsets):** explicit **`moisture_seed_offset`** / **`temperature_seed_offset`** in `NoiseSamplingTuning` — **Applied** (`terrain_noise.rs`, `build_world_noise_kernels`, [`p1_fields` test `moisture_seed_offset_changes_pass1_moisture`](../../../src/terrain/generation/passes/p1_fields.rs)).
 
 ---
 
@@ -136,7 +136,7 @@ Subset of fields — **Applied** if visible in [`world_gen_ui.rs`](../../../src/
 
 | Phase | Deliverable | Status |
 |:---:|:---|:---:|
-| **P1** | Add `moisture_seed_offset` / `temperature_seed_offset` to `NoiseSamplingTuning`; wire `generate_world`; extend example JSON + asset editor | Pending |
+| **P1** | Add `moisture_seed_offset` / `temperature_seed_offset` to `NoiseSamplingTuning`; wire `build_world_noise_kernels` (+ subengine duplicate); example JSON/RON; test `moisture_seed_offset_changes_pass1_moisture` | **Applied** |
 | **P2** | `ResourceField` + serializable patch layer; tile resolver extension | Pending |
 | **P3** | `WorldPreviewSamplerPlugin` (or equivalent) + CPU parallel buffer + `Image` upload; LOD pyramid | Pending |
 | **P4** | Chunk-keyed preview cache + dirty invalidation | Pending |

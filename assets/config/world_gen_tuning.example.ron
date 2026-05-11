@@ -9,6 +9,8 @@
         detail_persistence_mul: 0.85,
         moisture_noise_scale_mul: 1.5,
         temperature_noise_scale_mul: 0.8,
+        moisture_seed_offset: 1,
+        temperature_seed_offset: 2,
         moisture_sample_freq_mul: 1.5,
         temperature_sample_freq_mul: 0.8,
         warp_coord_frequency_mul: 0.07,

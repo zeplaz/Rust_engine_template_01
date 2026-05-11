@@ -203,11 +203,12 @@ pub fn diagnostics_ui_system(
                             th.active_faction_slots
                         ));
                         ui.label(format!(
-                            "Logistics AI: congest {:.2} · edge dmg {:.2} · stockpile fill {:.2} · industry proxy {:.2}",
+                            "Logistics AI: congest {:.2} · edge dmg {:.2} · stockpile fill {:.2} · industry proxy {:.2} · manifest domains {:.2}",
                             la.congestion_proxy,
                             la.mean_edge_damage,
                             la.stockpile_fill_ratio,
-                            la.industrial_output_proxy
+                            la.industrial_output_proxy,
+                            la.production_domain_proxy
                         ));
                     } else {
                         ui.small("Theater / logistics AI resources not loaded (StrategicSimulationPlugin missing in this app).");

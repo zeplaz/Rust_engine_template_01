@@ -1,0 +1,12 @@
+(
+    schema_version: 2,
+    materials: [
+        (
+            name: "water_deep",
+            family: "DeepWater",
+            tags: ["water", "fluid"],
+            properties: {},
+            preview_color: (20, 40, 90, 255),
+        ),
+    ],
+)

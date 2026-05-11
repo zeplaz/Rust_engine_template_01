@@ -84,4 +84,33 @@ mod tests {
             }
         }
     }
+
+    #[test]
+    fn moisture_seed_offset_changes_pass1_moisture() {
+        let mut params = WorldGenParams::default();
+        params.seed = 999;
+        params.width = 8;
+        params.height = 8;
+        params.island_mode = false;
+        let size = UVec2::new(4, 4);
+        let chunk_xy = IVec2::ZERO;
+
+        let mut m1 = ChunkCellMatrix::new(size);
+        let mut m2 = ChunkCellMatrix::new(size);
+        fill_fields(&mut m1, chunk_xy, &params, None);
+
+        let mut alt = params.noise_sampling.clone();
+        alt.moisture_seed_offset = params.noise_sampling.moisture_seed_offset.wrapping_add(77);
+        params.noise_sampling = alt;
+        fill_fields(&mut m2, chunk_xy, &params, None);
+
+        assert_ne!(
+            m1.moisture, m2.moisture,
+            "moisture channel should differ when moisture_seed_offset changes"
+        );
+        assert_eq!(
+            m1.elevation, m2.elevation,
+            "elevation should match when only moisture seed offset changes"
+        );
+    }
 }

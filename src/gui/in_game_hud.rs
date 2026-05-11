@@ -256,7 +256,7 @@ fn update_strategic_ops_hud(
         )
     } else {
         format!(
-            "Strategic — threat {:.2} / logi {:.2} (alt μT {:.2}) | congest {:.2} edge dmg {:.2} stock {:.2} industry {:.2} | site {:.2} util {:.2} rebuild {:.2} | {}",
+            "Strategic — threat {:.2} / logi {:.2} (alt μT {:.2}) | congest {:.2} edge dmg {:.2} stock {:.2} industry {:.2} manifest {:.2} | site {:.2} util {:.2} rebuild {:.2} | {}",
             theater.mean_threat_by_slot[0],
             theater.mean_logistics_strength_by_slot[0],
             alt_t,
@@ -264,6 +264,7 @@ fn update_strategic_ops_hud(
             logistics.mean_edge_damage,
             logistics.stockpile_fill_ratio,
             logistics.industrial_output_proxy,
+            logistics.production_domain_proxy,
             city.last_best_site_score,
             city.utility_redundancy_hint,
             city.adaptive_rebuild_pressure,
