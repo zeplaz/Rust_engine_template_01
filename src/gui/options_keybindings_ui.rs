@@ -175,12 +175,11 @@ fn keybindings_options_ui(
     let toggle_opts = bindings.toggle_keybindings_options;
     let path = InputBindings::default_input_bindings_ron_path();
 
-    egui::Window::new(format!(
+    crate::gui::std_floating(egui::Window::new(format!(
         "Options — key bindings ({})",
         InputBindings::format_key(toggle_opts)
-    ))
-    .resizable(true)
-    .default_width(420.0)
+    )))
+    .default_size(egui::vec2(420.0, 560.0))
     .show(ctx, |ui| {
         ui.label(format!(
             "Change shortcuts below. Use Capture… or the dropdown. {} cancels capture (configurable below).",

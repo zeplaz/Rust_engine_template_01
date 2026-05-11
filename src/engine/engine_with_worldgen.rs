@@ -17,7 +17,7 @@ use crate::scenario::ScenarioScriptingPlugin;
 use crate::systems::sim_control::SimControlPlugin;
 use crate::systems::transport::{TransportSchedule, TransportSimulationPlugin};
 use crate::strategic::StrategicFieldPipeline;
-use crate::render::GpuWeatherFireFieldPlugin;
+use crate::render::{GpuWeatherFireFieldPlugin, TileWorldFallbackPlugin};
 use crate::systems::{
     configure_chunk_environment_sets,
     ChunkEnvironmentPersistPlugin, ChunkSimLodPlugin, EcologyPlugin, FirePlugin, WeatherPlugin,
@@ -95,6 +95,7 @@ impl Plugin for EnginePlugin {
         app.add_plugins(KeybindingsOptionsPlugin)
             .add_plugins(GameplayCapturePlugin)
             .add_plugins(MapCameraPlugin)
+            .add_plugins(TileWorldFallbackPlugin)
             .add_plugins(DiagnosticsUiPlugin)
             .add_plugins(FactionToolsUiPlugin)
             .add_plugins(StrategicToolingPlugin)

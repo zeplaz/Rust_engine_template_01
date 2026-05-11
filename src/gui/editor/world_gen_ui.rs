@@ -3,6 +3,7 @@ use bevy_egui::{egui, EguiContexts, EguiPrimaryContextPass};
 
 use crate::engine::{BaseState, WorldGenFlowState};
 use crate::gui::editor::world_preview::WorldPreviewUiState;
+use crate::gui::std_floating;
 use crate::gui::style::{framed_group, path_hint, section_heading, CmdHeadingStyle, UiPalette};
 use crate::terrain::generation::tuning_io::{load_overlay_prefer_ron, save_overlay_ron, WorldGenTuningOverlay};
 use crate::terrain::generation::world_generator_enhanced::{
@@ -68,8 +69,8 @@ pub fn world_gen_ui_system(
         return Ok(());
     }
 
-    egui::Window::new("World Generator")
-        .resizable(true)
+    std_floating(egui::Window::new("World Generator"))
+        .default_size(egui::vec2(520.0, 640.0))
         .collapsible(true)
         .show(contexts.ctx_mut()?, |ui| {
             ui.heading("World Generator");
@@ -259,18 +260,71 @@ pub fn world_gen_ui_system(
                         );
                     }
 
-                    tt(
-                        ui.add(
-                            egui::Slider::new(&mut world_gen_params.strategic_field_coupling, 0.0..=0.35)
-                                .text("Strategic field blend (moisture/temp)"),
-                        ),
-                        hints::STRATEGIC_FIELD_COUPLING,
-                    );
+                    ui.small("Climate nudge from Voronoi sites: see **Climate variation** section below.")
+                        .on_hover_text(hints::STRATEGIC_FIELD_COUPLING);
 
                     ui.add_space(5.0);
                 });
+
+            egui::CollapsingHeader::new("Climate variation & pseudo–weather bands")
+                .default_open(true)
+                .show(ui, |ui| {
+                    ui.label(egui::RichText::new("Moisture / temperature fields").strong());
+                    ui.small(hints::CLIMATE_VARIATION_SECTION);
+                    ui.small(hints::CLIMATE_QUICK_TIP).on_hover_text(
+                        "Operational fronts & pressure systems live in the weather ECS later; world-gen noise here shapes believable *static* climate diversity.",
+                    );
+                    ui.add_space(6.0);
+                    tt(
+                        ui.add(egui::Slider::new(&mut world_gen_params.moisture_bias, -0.5..=0.5).text("Moisture bias (global wet/dry shift)")),
+                        hints::MOISTURE_BIAS,
+                    );
+                    tt(
+                        ui.add(egui::Slider::new(&mut world_gen_params.temperature_bias, -0.5..=0.5).text("Temperature bias (global hot/cold shift)")),
+                        hints::TEMP_BIAS,
+                    );
+                    ui.add_space(4.0);
+                    ui.label("Patch size & streakiness (pass-1 fBm):");
+                    let ns = &mut world_gen_params.noise_sampling;
+                    tt(
+                        ui.add(egui::Slider::new(&mut ns.moisture_noise_scale_mul, 0.3..=3.0).text("Moisture · patch scale ×")),
+                        hints::MOIST_FBMSCALE,
+                    );
+                    tt(
+                        ui.add(egui::Slider::new(&mut ns.temperature_noise_scale_mul, 0.3..=3.0).text("Temperature · patch scale ×")),
+                        hints::TEMP_FBMSCALE,
+                    );
+                    tt(
+                        ui.add(egui::Slider::new(&mut ns.moisture_sample_freq_mul, 0.1..=4.0).text("Moisture · fine detail / fronts freq ×")),
+                        hints::MOIST_FREQ_MUL,
+                    );
+                    tt(
+                        ui.add(egui::Slider::new(&mut ns.temperature_sample_freq_mul, 0.1..=4.0).text("Temperature · fine detail / fronts freq ×")),
+                        hints::TEMP_FREQ_MUL,
+                    );
+                    ui.add_space(6.0);
+                    egui::CollapsingHeader::new("Voronoi → climate provinces")
+                        .default_open(false)
+                        .show(ui, |ui| {
+                        ui.small(
+                            "Region sites nudge moisture/temperature before biomes — continent-scale *zones*.",
+                        );
+                        tt(
+                            ui.add(
+                                egui::Slider::new(&mut world_gen_params.strategic_field_coupling, 0.0..=0.35)
+                                    .text("Strategic field blend (regions → moisture/temp)"),
+                            ),
+                            hints::STRATEGIC_FIELD_COUPLING,
+                        );
+                    });
+                    egui::CollapsingHeader::new("Rim falloff (islands)")
+                        .default_open(false)
+                        .show(ui, |ui| {
+                        ui.small("Use **Feature Settings** → Island mode + falloff for edge sink toward water.");
+                    });
+                });
             
-            egui::CollapsingHeader::new("Terrain Settings")
+            egui::CollapsingHeader::new("Terrain Settings (height)")
                 .default_open(true)
                 .show(ui, |ui| {
                     ui.label("Height noise profile:");
@@ -335,21 +389,24 @@ pub fn world_gen_ui_system(
                             );
                         });
 
-                    tt(
-                        ui.add(egui::Slider::new(&mut world_gen_params.moisture_bias, -0.5..=0.5).text("Moisture Bias")),
-                        hints::MOISTURE_BIAS,
-                    );
-                    tt(
-                        ui.add(egui::Slider::new(&mut world_gen_params.temperature_bias, -0.5..=0.5).text("Temperature Bias")),
-                        hints::TEMP_BIAS,
+                    ui.label(
+                        egui::RichText::new("Moisture / temperature biases and fBm knobs live under **Climate variation** — this block is **elevation** only.")
+                            .small()
+                            .weak(),
                     );
 
                     ui.add_space(5.0);
                 });
             
-            egui::CollapsingHeader::new("Noise channels (advanced)")
+            egui::CollapsingHeader::new("Noise channels (warp, detail, coords)")
                 .default_open(false)
                 .show(ui, |ui| {
+                    ui.label(
+                        egui::RichText::new("Moisture/temperature **scale & freq** are in **Climate variation**. Here: domain warp, detail fBm, and coordinate transforms.")
+                            .small()
+                            .weak(),
+                    );
+                    ui.add_space(4.0);
                     let ns = &mut world_gen_params.noise_sampling;
                     tt(
                         ui.add(egui::Slider::new(&mut ns.warp_noise_scale_mul, 0.05..=1.0).text("Warp noise · scale ×")),
@@ -382,22 +439,6 @@ pub fn world_gen_ui_system(
                         );
                     });
                     tt(
-                        ui.add(egui::Slider::new(&mut ns.moisture_noise_scale_mul, 0.3..=3.0).text("Moisture fBm · scale ×")),
-                        hints::MOIST_FBMSCALE,
-                    );
-                    tt(
-                        ui.add(egui::Slider::new(&mut ns.temperature_noise_scale_mul, 0.3..=3.0).text("Temperature fBm · scale ×")),
-                        hints::TEMP_FBMSCALE,
-                    );
-                    tt(
-                        ui.add(egui::Slider::new(&mut ns.moisture_sample_freq_mul, 0.1..=4.0).text("Moisture sample freq ×")),
-                        hints::MOIST_FREQ_MUL,
-                    );
-                    tt(
-                        ui.add(egui::Slider::new(&mut ns.temperature_sample_freq_mul, 0.1..=4.0).text("Temperature sample freq ×")),
-                        hints::TEMP_FREQ_MUL,
-                    );
-                    tt(
                         ui.add(egui::Slider::new(&mut ns.warp_coord_frequency_mul, 0.02..=0.25).text("Warp coord frequency")),
                         hints::WARP_COORD_FREQ,
                     );
@@ -427,11 +468,11 @@ pub fn world_gen_ui_system(
                     );
                 });
             
-            egui::CollapsingHeader::new("Biome generator coupling")
-                .default_open(false)
+            egui::CollapsingHeader::new("Biomes & climate zones (thresholds)")
+                .default_open(true)
                 .show(ui, |ui| {
                     let b = &mut world_gen_params.biome_tuning;
-                    ui.label("Thresholds and soft weights used by `classify_biome` on the same height/moisture/temp maps as world gen.")
+                    ui.label("Where pass-1 **height / moisture / temperature** become named biomes. Tighter temp cuts → sharper polar/tropical contrast; moisture bands control wet belts vs arid interiors.")
                         .on_hover_text(hints::BIOME_SECTION);
                     tt(
                         ui.add(egui::Slider::new(&mut b.sea_level, 0.15..=0.55).text("Sea level (soft marine)")),

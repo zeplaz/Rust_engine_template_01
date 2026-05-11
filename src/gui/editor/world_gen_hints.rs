@@ -31,6 +31,11 @@ pub const REGION_ITERATIONS: &str =
 pub const STRATEGIC_FIELD_COUPLING: &str =
     "After fractal sampling, nudge moisture/temperature from polygon-world **strategic** kinds (see `prompts/guides/voronoi_polygon_worlds_notes.md.md`). 0 = classify tiles only; ~0.1–0.25 = gentle structure-aware climate.";
 
+pub const CLIMATE_VARIATION_SECTION: &str =
+    "Pass-1 **moisture** and **temperature** are separate fBm fields on the same tile grid. Scale = size of warm/cool or wet/dry patches (pseudo *synoptic* cells); frequency = finer streaks and fronts when combined with domain warp. This is not a full baroclinic weather sim — tune here for **diversity**, then sharpen edges under **Biomes & climate zones**.";
+pub const CLIMATE_QUICK_TIP: &str =
+    "Low temp scale + higher temp frequency → narrow alternating bands (cold/warm *stripes*). Higher moist scale + strategic region blend → continent-scale wet/dry provinces. Pair with **Terrain → domain warp** to shear bands into front-like curves.";
+
 pub const PROFILE_FBMPERLIN: &str =
     "Smooth fractional Brownian motion on Perlin — good default continents and soft coasts.";
 pub const PROFILE_RIDGED: &str =
