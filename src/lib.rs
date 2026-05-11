@@ -5,6 +5,7 @@
 #![allow(non_snake_case)]
 
 // Core modules
+pub mod ai;
 pub mod core;
 pub mod events;
 pub mod engine;
@@ -22,6 +23,7 @@ pub mod idgen;
 pub mod scenario;
 
 // Re-export commonly used items
+pub use ai::construction::{ConstructionAiConfig, ConstructionAiOwner, ConstructionAiPlugin};
 pub use engine::EnginePlugin;
 pub use bevysubengines::WorldGeneratorSubenginePlugin;
 pub use strategic::{LogisticsGraph, StrategicFieldsAndAiPlugin, StrategicFieldsPlugin};

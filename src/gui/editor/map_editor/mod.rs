@@ -39,7 +39,10 @@ use crate::gui::editor::scenario_script_panel::{
     scenario_editor_tools_entry_window, scenario_script_panel_system,
     toggle_scenario_script_panel_hotkey, ScenarioScriptPanelState,
 };
-use crate::gui::style::{framed_group, path_hint, section_heading, CmdHeadingStyle, UiPalette};
+use crate::gui::style::{
+    framed_group, muted_label, path_hint, primary_label, section_heading, v_space, weak_body,
+    CmdHeadingStyle, UiPalette, VertSpace,
+};
 use crate::systems::terrain::TerrainRegistriesHandles;
 use crate::terrain::editor::map_snapshot::{MapSnapshotCellV1, MapSnapshotV1, MAP_SNAPSHOT_SCHEMA_VERSION};
 use crate::terrain::family::{TerrainFamilyId, TerrainFamilyRegistry, DEFAULT_TERRAIN_FAMILY_ID};
@@ -651,6 +654,7 @@ fn map_editor_minimap_window(
         >,
     )>,
     mut edit_commits: MessageWriter<EditorTileEditCommitted>,
+    palette: Res<UiPalette>,
 ) -> Result {
     let texture_id = contexts.add_image(EguiTextureHandle::Strong(map_tex.texture.clone()));
     let tex_w = map_tex.width as f32;
@@ -663,10 +667,19 @@ fn map_editor_minimap_window(
     std_floating(egui::Window::new("Map editor — minimap (pick / paint)"))
         .default_size(egui::vec2(640.0, 520.0))
         .show(contexts.ctx_mut()?, |ui| {
-            ui.label(egui::RichText::new("TEMP-EGUI: one pixel ≈ one tile; Ctrl/⌘ + scroll to zoom. Road: click–drag on minimap to stroke a polyline (Ctrl/⌘+Z undoes last stroke).").weak());
-            ui.small(format!(
-                "Coordinates: x = column, z = row; Y = Height × {HEIGHT_WORLD_SCALE} (see module docs)."
-            ));
+            let pal: &UiPalette = &*palette;
+            weak_body(
+                ui,
+                pal,
+                "TEMP-EGUI: one pixel ≈ one tile; Ctrl/⌘ + scroll to zoom. Road: click–drag on minimap to stroke a polyline (Ctrl/⌘+Z undoes last stroke).",
+            );
+            muted_label(
+                ui,
+                pal,
+                format!(
+                    "Coordinates: x = column, z = row; Y = Height × {HEIGHT_WORLD_SCALE} (see module docs)."
+                ),
+            );
 
             let z = view.zoom.clamp(MapEditorGridView::ZOOM_MIN, MapEditorGridView::ZOOM_MAX);
             view.zoom = z;
@@ -1273,20 +1286,28 @@ fn map_editor_palette_system(
         .default_size(egui::vec2(360.0, 720.0))
         .collapsible(true)
         .show(contexts.ctx_mut()?, |ui| {
-            ui.label(egui::RichText::new("TEMP-EGUI tool palette; replace with Bevy UI per gui_runbook.").weak());
-            ui.add_space(6.0);
-            framed_group(ui, &palette, |ui| {
-                section_heading(ui, &palette, CmdHeadingStyle::Gt, "Chunk Settings");
-                path_hint(ui, &palette, "/assets/scenarios/test.ron");
-                ui.add_space(4.0);
-                ui.label(format!("Active tool: {:?}", tool.kind));
+            let pal: &UiPalette = &*palette;
+            // `UiSpacing` resource matches `Default`; local avoids extra `SystemParam` (system at cap).
+            let spacing = crate::gui::UiSpacing::default();
+            let sp = &spacing;
+            weak_body(
+                ui,
+                pal,
+                "TEMP-EGUI tool palette; replace with Bevy UI per gui_runbook.",
+            );
+            v_space(ui, sp, VertSpace::Inter);
+            framed_group(ui, pal, |ui| {
+                section_heading(ui, pal, CmdHeadingStyle::Gt, "Chunk Settings");
+                path_hint(ui, pal, "/assets/scenarios/test.ron");
+                v_space(ui, sp, VertSpace::Xs);
+                primary_label(ui, pal, format!("Active tool: {:?}", tool.kind));
                 if let Some((x, y)) = hover.tile {
-                    ui.label(format!("Hover tile: ({x}, {y})"));
+                    primary_label(ui, pal, format!("Hover tile: ({x}, {y})"));
                 } else {
-                    ui.label("Hover tile: off-map");
+                    muted_label(ui, pal, "Hover tile: off-map");
                 }
             });
-            ui.add_space(6.0);
+            v_space(ui, sp, VertSpace::Inter);
 
             let prev = tool.kind;
             ui.horizontal_wrapped(|ui| {
@@ -1299,8 +1320,8 @@ fn map_editor_palette_system(
             }
 
             if tool.kind == MapEditorToolKind::Terrain {
-                ui.add_space(6.0);
-                ui.label("Terrain paint:");
+                v_space(ui, sp, VertSpace::Inter);
+                primary_label(ui, pal, "Terrain paint:");
                 ui.horizontal_wrapped(|ui| {
                     ui.radio_value(
                         &mut tool.terrain_paint,
@@ -1316,28 +1337,30 @@ fn map_editor_palette_system(
                 if tool.terrain_paint == MapEditorTerrainPaint::Biome {
                     terrain_family_combo(ui, &mut tool.paint_biome);
                 }
-                ui.add_space(4.0);
-                ui.label("Brush footprint (XZ tile plane):");
+                v_space(ui, sp, VertSpace::Xs);
+                primary_label(ui, pal, "Brush footprint (XZ tile plane):");
                 ui.horizontal_wrapped(|ui| {
                     for s in MapEditorBrushShape::ALL {
                         ui.radio_value(&mut tool.brush_shape, s, s.label());
                     }
                 });
             } else if tool.kind == MapEditorToolKind::Road {
-                ui.add_space(6.0);
-                ui.label("Road: click–drag on the minimap to stroke a polyline (orange markers). Single click still works.");
+                v_space(ui, sp, VertSpace::Inter);
+                weak_body(
+                    ui,
+                    pal,
+                    "Road: click–drag on the minimap to stroke a polyline (orange markers). Single click still works.",
+                );
                 match ghost.snapshot.as_ref() {
-                    Some(s) => ui
-                        .label(
-                            egui::RichText::new(format!(
-                                "Ghost preview (not baked): {} edges — bake to hydrate runtime.",
-                                s.edges.len()
-                            ))
-                            .weak(),
+                    Some(s) => weak_body(
+                        ui,
+                        pal,
+                        format!(
+                            "Ghost preview (not baked): {} edges — bake to hydrate runtime.",
+                            s.edges.len()
                         ),
-                    None => ui.label(
-                        egui::RichText::new("Ghost preview: need ≥2 markers after dedup.").weak(),
                     ),
+                    None => weak_body(ui, pal, "Ghost preview: need ≥2 markers after dedup."),
                 };
                 let key_undo = ui.ctx().input(|i| {
                     i.key_pressed(egui::Key::Z) && (i.modifiers.ctrl || i.modifiers.command)
@@ -1363,7 +1386,7 @@ fn map_editor_palette_system(
                 {
                     bake_events.write(MapEditorBakeTransportRequest);
                 }
-                ui.add_space(4.0);
+                v_space(ui, sp, VertSpace::Xs);
                 ui.horizontal(|ui| {
                     if ui
                         .button("Save transport (dev JSON)")
@@ -1403,22 +1426,25 @@ fn map_editor_palette_system(
                 tool.kind,
                 MapEditorToolKind::Building | MapEditorToolKind::Rail
             ) {
-                ui.add_space(6.0);
-                ui.label(
-                    egui::RichText::new(
-                        "Stub tool — no map paint yet. Buildings: spawn via production/manufacturing flows when wired. Rails: use Road markers + Bake transport for now; dedicated rail curves are planned.",
-                    )
-                    .weak(),
+                v_space(ui, sp, VertSpace::Inter);
+                weak_body(
+                    ui,
+                    pal,
+                    "Stub tool — no map paint yet. Buildings: spawn via production/manufacturing flows when wired. Rails: use Road markers + Bake transport for now; dedicated rail curves are planned.",
                 );
             }
 
-            ui.add_space(8.0);
+            v_space(ui, sp, VertSpace::Sm);
             ui.horizontal(|ui| {
-                ui.label("Brush radius (tiles):");
+                primary_label(ui, pal, "Brush radius (tiles):");
                 ui.add(egui::Slider::new(&mut tool.brush_radius, 1.0..=32.0));
             });
-            ui.small("Brush radius and footprint apply to the Terrain tool only.");
-            ui.add_space(8.0);
+            muted_label(
+                ui,
+                pal,
+                "Brush radius and footprint apply to the Terrain tool only.",
+            );
+            v_space(ui, sp, VertSpace::Sm);
             ui.horizontal(|ui| {
                 if ui
                     .button("Save map grid (M5 RON)")
@@ -1436,7 +1462,7 @@ fn map_editor_palette_system(
                 }
             });
 
-            ui.add_space(12.0);
+            v_space(ui, sp, VertSpace::Md);
             ui.horizontal(|ui| {
                 if ui.button("Play (enter simulation)").clicked() {
                     NextState::set_if_neq(&mut *next_base, BaseState::Simulation);

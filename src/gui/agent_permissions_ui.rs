@@ -9,6 +9,10 @@ use crate::systems::agents::permissions::{
 use crate::systems::agents::agent_manager::AgentManager;
 use crate::events::ownership_events::FactionColors;
 use crate::gui::style::gameplay_color_swatch_egui;
+use crate::gui::style::{
+    muted_label, primary_label, section_heading, strong_body, v_space, warning_text, CmdHeadingStyle,
+    UiPalette, UiSpacing, VertSpace,
+};
 
 /// UI state for the permissions window
 #[derive(Resource)]
@@ -60,6 +64,8 @@ pub fn permissions_ui_system(
     game_time: Res<crate::systems::agents::permissions::GameTime>,
     mut grant_events: MessageWriter<PermissionGrantEvent>,
     mut revoke_events: MessageWriter<PermissionRevokeEvent>,
+    palette: Res<UiPalette>,
+    spacing: Res<UiSpacing>,
 ) -> Result {
     if !ui_state.visible {
         return Ok(());
@@ -74,8 +80,10 @@ pub fn permissions_ui_system(
         .default_size(egui::vec2(640.0, 480.0))
         .min_width(600.0)
         .show(contexts.ctx_mut()?, |ui| {
+            let pal: &UiPalette = &*palette;
+            let sp: &UiSpacing = &*spacing;
             ui.horizontal(|ui| {
-                ui.label("Viewing permissions for:");
+                primary_label(ui, pal, "Viewing permissions for:");
                 
                 egui::ComboBox::from_id_salt("agent_selector")
                     .selected_text(
@@ -134,12 +142,13 @@ pub fn permissions_ui_system(
                                 0.0,
                                 gameplay_color_swatch_egui(color)
                             );
-                            ui.add_space(25.0);
+                            v_space(ui, sp, VertSpace::Xl);
+                            v_space(ui, sp, VertSpace::Xs);
                             
                             ui.vertical(|ui| {
-                                ui.label(format!("Name: {}", agent.name));
-                                ui.label(format!("Type: {:?}", agent.agent_type));
-                                ui.label(format!("Faction: {}", 
+                                primary_label(ui, pal, format!("Name: {}", agent.name));
+                                primary_label(ui, pal, format!("Type: {:?}", agent.agent_type));
+                                primary_label(ui, pal, format!("Faction: {}", 
                                     agent_manager.get_agent_entity(agent.faction_id)
                                         .and_then(|e| agent_query.get(e).ok())
                                         .map(|(a, _)| a.name.clone())
@@ -232,12 +241,12 @@ pub fn permissions_ui_system(
                                 .min_col_width(100.0)
                                 .show(ui, |ui| {
                                     // Header
-                                    ui.label("Domain");
-                                    ui.label("Access Level");
-                                    ui.label("Granted By");
-                                    ui.label("Expiration");
-                                    ui.label("Limitations");
-                                    ui.label("Actions");
+                                    strong_body(ui, pal, "Domain");
+                                    strong_body(ui, pal, "Access Level");
+                                    strong_body(ui, pal, "Granted By");
+                                    strong_body(ui, pal, "Expiration");
+                                    strong_body(ui, pal, "Limitations");
+                                    strong_body(ui, pal, "Actions");
                                     ui.end_row();
                                     
                                     // List permissions
@@ -250,13 +259,13 @@ pub fn permissions_ui_system(
                                         }
                                         
                                         // Domain
-                                        ui.label(format!("{:?}", domain));
+                                        primary_label(ui, pal, format!("{:?}", domain));
                                         
                                         // Access Level
-                                        ui.label(format!("{:?}", grant.access_level));
+                                        primary_label(ui, pal, format!("{:?}", grant.access_level));
                                         
                                         // Granted By
-                                        ui.label(
+                                        primary_label(ui, pal,
                                             agent_manager.get_agent_entity(grant.grantor)
                                                 .and_then(|e| agent_query.get(e).ok())
                                                 .map(|(a, _)| a.name.clone())
@@ -267,12 +276,12 @@ pub fn permissions_ui_system(
                                         if let Some(exp) = grant.expiration {
                                             let time_left = exp - game_time.current_time;
                                             if time_left > 0.0 {
-                                                ui.label(format!("{:.1} hours left", time_left));
+                                                primary_label(ui, pal, format!("{:.1} hours left", time_left));
                                             } else {
-                                                ui.label("Expired");
+                                                warning_text(ui, pal, "Expired");
                                             }
                                         } else {
-                                            ui.label("Never");
+                                            muted_label(ui, pal, "Never");
                                         }
                                         
                                         // Limitations
@@ -288,9 +297,9 @@ pub fn permissions_ui_system(
                                         }
                                         
                                         if limitations.is_empty() {
-                                            ui.label("None");
+                                            muted_label(ui, pal, "None");
                                         } else {
-                                            ui.label(limitations.join(", "));
+                                            primary_label(ui, pal, limitations.join(", "));
                                         }
                                         
                                         // Actions
@@ -319,14 +328,14 @@ pub fn permissions_ui_system(
                             // Add new permission section
                             if local_player_agent.is_some() {
                                 ui.separator();
-                                ui.heading("Grant New Permission");
+                                section_heading(ui, pal, CmdHeadingStyle::Gt, "Grant New Permission");
                                 
                                 egui::Grid::new("grant_permission_grid")
                                     .spacing([5.0, 5.0])
                                     .min_col_width(100.0)
                                     .show(ui, |ui| {
                                         // Domain selection
-                                        ui.label("Domain:");
+                                        primary_label(ui, pal, "Domain:");
                                         let mut selected_domain = ui_state.filter_domain.unwrap_or(PermissionDomain::Observer);
                                         egui::ComboBox::from_id_salt("domain_selector")
                                             .selected_text(format!("{:?}", selected_domain))
@@ -363,7 +372,7 @@ pub fn permissions_ui_system(
                                         ui.end_row();
                                         
                                         // Access level selection
-                                        ui.label("Access Level:");
+                                        primary_label(ui, pal, "Access Level:");
                                         let mut selected_level = AccessLevel::ReadOnly;
                                         egui::ComboBox::from_id_salt("access_level_selector")
                                             .selected_text(format!("{:?}", selected_level))
@@ -385,7 +394,7 @@ pub fn permissions_ui_system(
                                         ui.end_row();
                                         
                                         // Expiration
-                                        ui.label("Expiration:");
+                                        primary_label(ui, pal, "Expiration:");
                                         let mut temp_grant = ui_state.temp_grant_expiration.is_some();
                                         if ui.checkbox(&mut temp_grant, "Temporary").changed() {
                                             if temp_grant {
@@ -397,7 +406,7 @@ pub fn permissions_ui_system(
                                         ui.end_row();
                                         
                                         if temp_grant {
-                                            ui.label("");
+                                            let _ = primary_label(ui, pal, " ");
                                             let mut hours = ui_state.temp_grant_expiration
                                                 .map(|t| t - game_time.current_time)
                                                 .unwrap_or(24.0);
@@ -412,7 +421,7 @@ pub fn permissions_ui_system(
                                         }
                                         
                                         // Grant button
-                                        ui.label("");
+                                        let _ = primary_label(ui, pal, " ");
                                         if ui.button("Grant Permission").clicked() {
                                             if let Some(local_id) = local_player_agent.as_ref().map(|lpa| lpa.agent_id) {
                                                 grant_events.write(PermissionGrantEvent {
@@ -439,7 +448,7 @@ pub fn permissions_ui_system(
                         // Delegated permissions section
                         if !permissions.delegated_to.is_empty() {
                             ui.separator();
-                            ui.heading("Delegated Permissions");
+                            section_heading(ui, pal, CmdHeadingStyle::Gt, "Delegated Permissions");
                             
                             egui::Grid::new("delegated_permissions_grid")
                                 .striped(true)
@@ -447,11 +456,11 @@ pub fn permissions_ui_system(
                                 .min_col_width(100.0)
                                 .show(ui, |ui| {
                                     // Header
-                                    ui.label("Delegated To");
-                                    ui.label("Domain");
-                                    ui.label("Access Level");
-                                    ui.label("Expiration");
-                                    ui.label("Actions");
+                                    strong_body(ui, pal, "Delegated To");
+                                    strong_body(ui, pal, "Domain");
+                                    strong_body(ui, pal, "Access Level");
+                                    strong_body(ui, pal, "Expiration");
+                                    strong_body(ui, pal, "Actions");
                                     ui.end_row();
                                     
                                     // List delegated permissions
@@ -465,7 +474,7 @@ pub fn permissions_ui_system(
                                             }
                                             
                                             // Delegated To
-                                            ui.label(
+                                            primary_label(ui, pal,
                                                 agent_manager.get_agent_entity(*delegate_id)
                                                     .and_then(|e| agent_query.get(e).ok())
                                                     .map(|(a, _)| a.name.clone())
@@ -473,21 +482,21 @@ pub fn permissions_ui_system(
                                             );
                                             
                                             // Domain
-                                            ui.label(format!("{:?}", grant.domain));
+                                            primary_label(ui, pal, format!("{:?}", grant.domain));
                                             
                                             // Access Level
-                                            ui.label(format!("{:?}", grant.access_level));
+                                            primary_label(ui, pal, format!("{:?}", grant.access_level));
                                             
                                             // Expiration
                                             if let Some(exp) = grant.expiration {
                                                 let time_left = exp - game_time.current_time;
                                                 if time_left > 0.0 {
-                                                    ui.label(format!("{:.1} hours left", time_left));
+                                                    primary_label(ui, pal, format!("{:.1} hours left", time_left));
                                                 } else {
-                                                    ui.label("Expired");
+                                                    warning_text(ui, pal, "Expired");
                                                 }
                                             } else {
-                                                ui.label("Never");
+                                                muted_label(ui, pal, "Never");
                                             }
                                             
                                             // Actions
@@ -512,7 +521,7 @@ pub fn permissions_ui_system(
                     }
                 }
             } else {
-                ui.heading("Select an agent to view permissions");
+                section_heading(ui, pal, CmdHeadingStyle::Gt, "Select an agent to view permissions");
             }
         });
     Ok(())

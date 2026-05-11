@@ -62,6 +62,7 @@ mod runbook_rounds;
 mod schedule;
 mod simulation_plugin;
 mod sim;
+mod site;
 mod spatial_network;
 mod network_flow;
 mod strategic_behavior_schedule;
@@ -138,6 +139,41 @@ pub use construction_book::{
     transport_directory_edge_signature, CorridorConstructionBook, CorridorConstructionPhase,
     CorridorConstructionStatus,
 };
+pub use site::{
+    apply_site_zone_emitters_to_overlays_system,
+    commit_construction_site_system,
+    evaluate_site_placement_stubs,
+    footprint_affected_chunk_coords,
+    site_advance_planned_to_under_construction_system,
+    site_construction_progression_system,
+    site_phase_from_corridor_coarse,
+    site_provisioning_system,
+    sync_zone_emitter_from_archetype_system,
+    validate_committed_site_terrain_system,
+    validate_network_access_for_site,
+    validate_site_placement_stubs,
+    validate_terrain_for_site,
+    zone_emitter_for_archetype,
+    CommitConstructionSiteEvent,
+    ConstructionSite,
+    FootprintTiles,
+    NetworkMask,
+    PlannedSite,
+    SiteArchetype,
+    SiteConstructionBook,
+    SiteConstructionPhase,
+    SiteConstructionRate,
+    SiteConstructionStatus,
+    SiteFootprint,
+    SiteId,
+    SiteIdIssuer,
+    SiteNetworkAttachment,
+    SiteOperationalStats,
+    SitePlacementValidation,
+    SiteResourceManifest,
+    SiteTerrainValidation,
+    ZoneEmitter,
+};
 pub use hybrid_brain::{
     apply_agent_intent, agent_decision_score, agent_decision_score_with_world, control_variance,
     fracture_pressure_exceeds, hybrid_action_base_value, hybrid_agent_intent_contribution_system,
@@ -184,7 +220,7 @@ pub use runbook_rounds::settlement::{
 };
 
 pub use logistics_net::logistics_net_inject_into_overlays;
-pub use plugin::{StrategicFieldPipeline, StrategicFieldsPlugin};
+pub use plugin::{InfrastructureSiteSet, StrategicFieldPipeline, StrategicFieldsPlugin};
 pub use transport_bridge::StrategicRasterConfig;
 pub use world_field_layers::{
     ChunkFieldCell, WorldFieldLayerConfig, WorldFieldLayerEpoch,

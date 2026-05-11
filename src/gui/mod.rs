@@ -5,6 +5,7 @@
 //   pressure_tooling.rs             → F2 pressure composer (egui) + Bevy strip
 //   agent_permissions_ui.rs         → egui tooling
 
+pub mod build;
 mod map_camera;
 pub mod map_tile_raster;
 pub mod egui_window;
@@ -32,24 +33,32 @@ pub mod editor;
 
 // Public exports
 pub use app_shell::{AppShellPlugin, LoadStubPath};
+pub use build::BuildPlanningPlugin;
 pub use style::{
     error_text,
     forbid_raw_colors,
     framed_group,
+    CmdUiMonoFont,
+    muted_label,
     muted_text,
     neutral_image_tint,
     path_hint,
+    primary_label,
     primary_text,
     scenario_execution_badge,
     section_heading,
     status_badge,
+    strong_body,
     success_text,
+    v_space,
     warning_text,
+    weak_body,
     CmdHeadingStyle,
     StatusTone,
     UiPalette,
     UiSpacing,
     UiThemePlugin,
+    VertSpace,
 };
 pub use egui_window::std_floating;
 pub use map_camera::{MainWorldCamera, MapCameraPlugin};

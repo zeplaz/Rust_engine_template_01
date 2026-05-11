@@ -13,7 +13,9 @@
 use bevy::prelude::*;
 use bevy_egui::{egui, EguiContexts, EguiPrimaryContextPass};
 
-use crate::gui::style::{error_text, UiPalette};
+use crate::gui::style::{
+    error_text, muted_label, primary_label, section_heading, CmdHeadingStyle, UiPalette,
+};
 use crate::gui::gameplay_capture::GameplayRecorder;
 use crate::gui::input_bindings::InputBindings;
 use crate::gui::ui_gates::in_simulation_or_editor;
@@ -117,20 +119,24 @@ pub fn diagnostics_ui_system(
     .default_size(egui::vec2(420.0, 520.0))
         .collapsible(true)
         .show(ctx, |ui| {
-            ui.label(format!("FPS (EMA): {:.1}", state.fps_smoothed));
-            ui.label(format!("Sim tick:  {}", tick.0));
-            ui.label(format!("Entities:  {entity_count}"));
+            primary_label(ui, &palette, format!("FPS (EMA): {:.1}", state.fps_smoothed));
+            primary_label(ui, &palette, format!("Sim tick:  {}", tick.0));
+            primary_label(ui, &palette, format!("Entities:  {entity_count}"));
             if let Some(ts) = test_scene.as_ref() {
-                ui.label(format!("CLI test scene: {:?}", ts.0));
+                primary_label(ui, &palette, format!("CLI test scene: {:?}", ts.0));
             }
 
             ui.separator();
-            ui.heading("Gameplay capture");
-            ui.small(format!(
-                "{} start · {} stop (Options to rebind)",
-                InputBindings::format_key(bindings.start_gameplay_recording),
-                InputBindings::format_key(bindings.stop_gameplay_recording)
-            ));
+            section_heading(ui, &palette, CmdHeadingStyle::Gt, "Gameplay capture");
+            muted_label(
+                ui,
+                &palette,
+                format!(
+                    "{} start · {} stop (Options to rebind)",
+                    InputBindings::format_key(bindings.start_gameplay_recording),
+                    InputBindings::format_key(bindings.stop_gameplay_recording)
+                ),
+            );
             if cap.active {
                 if let Some(dir) = cap.session_dir.as_ref() {
                     error_text(
@@ -142,16 +148,20 @@ pub fn diagnostics_ui_system(
                     error_text(ui, &palette, "● REC");
                 }
             } else if let Some(s) = cap.last_summary() {
-                ui.small(s);
+                muted_label(ui, &palette, s);
             } else {
-                ui.small(format!(
-                    "PNG folder + clip.gif under {}",
-                    GameplayRecorder::default_captures_root().display()
-                ));
+                muted_label(
+                    ui,
+                    &palette,
+                    format!(
+                        "PNG folder + clip.gif under {}",
+                        GameplayRecorder::default_captures_root().display()
+                    ),
+                );
             }
 
             ui.separator();
-            ui.heading("Sim control");
+            section_heading(ui, &palette, CmdHeadingStyle::Gt, "Sim control");
             ui.horizontal(|ui| {
                 if ui.button(if ctrl.paused { "Play" } else { "Pause" }).clicked() {
                     ctrl.paused = !ctrl.paused;
@@ -164,12 +174,16 @@ pub fn diagnostics_ui_system(
             ui.add(egui::Slider::new(&mut ctrl.speed, 0.0..=8.0).text("speed"));
 
             ui.separator();
-            ui.heading("GPU weather / fire field (compute)");
+            section_heading(ui, &palette, CmdHeadingStyle::Gt, "GPU weather / fire field (compute)");
             ui.checkbox(&mut gpu_field_debug.show, "Debug sprite (128² Rgba32Float field, bottom-left)");
-            ui.small("CPU uploads mean rain/snow/fog + mean chunk surface fire heat; WGSL relaxes a ping-pong texture. Visual-only.");
+            muted_label(
+                ui,
+                &palette,
+                "CPU uploads mean rain/snow/fog + mean chunk surface fire heat; WGSL relaxes a ping-pong texture. Visual-only.",
+            );
 
             ui.separator();
-            ui.heading("Weather FX (preview)");
+            section_heading(ui, &palette, CmdHeadingStyle::Gt, "Weather FX (preview)");
             ui.checkbox(&mut wx.enabled, "Enable weather VFX");
             ui.add_enabled_ui(wx.enabled, |ui| {
                 ui.checkbox(&mut wx.overlay, "Screen overlay (rain/fog tint)");
@@ -180,58 +194,114 @@ pub fn diagnostics_ui_system(
                 );
             });
             if wx_sample.chunk_count == 0 {
-                ui.small("No ChunkWeather yet — open map with materialized chunks or run a scene that spawns chunks.");
+                muted_label(
+                    ui,
+                    &palette,
+                    "No ChunkWeather yet — open map with materialized chunks or run a scene that spawns chunks.",
+                );
             } else {
-                ui.small(format!(
-                    "Mean precip sample ({} chunks): rain {:.2}, snow {:.2}, fog {:.2}",
-                    wx_sample.chunk_count, wx_sample.rain, wx_sample.snow, wx_sample.fog
-                ));
+                muted_label(
+                    ui,
+                    &palette,
+                    format!(
+                        "Mean precip sample ({} chunks): rain {:.2}, snow {:.2}, fog {:.2}",
+                        wx_sample.chunk_count, wx_sample.rain, wx_sample.snow, wx_sample.fog
+                    ),
+                );
             }
 
             ui.separator();
             egui::CollapsingHeader::new("Playtest — strategic / doctrine")
                 .default_open(false)
                 .show(ui, |ui| {
-                    ui.small("Bake/load transport (editor G4) auto-aligns the construction book: new edges → Completed; stale rows dropped; existing phases kept.");
-                    ui.label(format!(
-                        "Transport edges: {} · book rows: {}",
-                        directory.by_edge.len(),
-                        construction_book.by_edge.len()
-                    ));
+                    muted_label(
+                        ui,
+                        &palette,
+                        "Bake/load transport (editor G4) auto-aligns the construction book: new edges → Completed; stale rows dropped; existing phases kept.",
+                    );
+                    primary_label(
+                        ui,
+                        &palette,
+                        format!(
+                            "Transport edges: {} · book rows: {}",
+                            directory.by_edge.len(),
+                            construction_book.by_edge.len()
+                        ),
+                    );
                     if let (Some(th), Some(la)) = (theater.as_deref(), logistics_ai.as_deref()) {
-                        ui.label(format!(
-                            "Theater μ threat[0]: {:.2} · μ logistics[0]: {:.2} · active faction slots: {}",
-                            th.mean_threat_by_slot[0],
-                            th.mean_logistics_strength_by_slot[0],
-                            th.active_faction_slots
-                        ));
-                        ui.label(format!(
-                            "Logistics AI: congest {:.2} · edge dmg {:.2} · stockpile fill {:.2} · industry proxy {:.2} · manifest domains {:.2}",
-                            la.congestion_proxy,
-                            la.mean_edge_damage,
-                            la.stockpile_fill_ratio,
-                            la.industrial_output_proxy,
-                            la.production_domain_proxy
-                        ));
+                        primary_label(
+                            ui,
+                            &palette,
+                            format!(
+                                "Theater μ threat[0]: {:.2} · μ logistics[0]: {:.2} · active faction slots: {}",
+                                th.mean_threat_by_slot[0],
+                                th.mean_logistics_strength_by_slot[0],
+                                th.active_faction_slots
+                            ),
+                        );
+                        primary_label(
+                            ui,
+                            &palette,
+                            format!(
+                                "Logistics AI: congest {:.2} · edge dmg {:.2} · stockpile fill {:.2} · industry proxy {:.2} · manifest domains {:.2}",
+                                la.congestion_proxy,
+                                la.mean_edge_damage,
+                                la.stockpile_fill_ratio,
+                                la.industrial_output_proxy,
+                                la.production_domain_proxy
+                            ),
+                        );
                     } else {
-                        ui.small("Theater / logistics AI resources not loaded (StrategicSimulationPlugin missing in this app).");
+                        muted_label(
+                            ui,
+                            &palette,
+                            "Theater / logistics AI resources not loaded (StrategicSimulationPlugin missing in this app).",
+                        );
                     }
 
                     egui::CollapsingHeader::new("Doctrine checklist (traceability)")
                         .default_open(false)
                         .show(ui, |ui| {
-                            ui.small("Maps modern systems warfare targets → sim layers. Full: prompts/guides/doctrine_simulation_alignment_runbook_v1.md");
-                            ui.small("• Intel / recon fields ↔ drone & sensor coverage (recon_confidence + weather visibility).");
-                            ui.small("• EW ↔ routing_congestion / ew_denial overlay scalars (transport-derived + toggles).");
-                            ui.small("• Logistics attacks ↔ throughput collapse on LogisticsGraph + congestion proxy.");
-                            ui.small("• Infrastructure strikes ↔ disruption on edges + infra graph integrity (resilience runbook).");
+                            muted_label(
+                                ui,
+                                &palette,
+                                "Maps modern systems warfare targets → sim layers. Full: prompts/guides/doctrine_simulation_alignment_runbook_v1.md",
+                            );
+                            muted_label(
+                                ui,
+                                &palette,
+                                "• Intel / recon fields ↔ drone & sensor coverage (recon_confidence + weather visibility).",
+                            );
+                            muted_label(
+                                ui,
+                                &palette,
+                                "• EW ↔ routing_congestion / ew_denial overlay scalars (transport-derived + toggles).",
+                            );
+                            muted_label(
+                                ui,
+                                &palette,
+                                "• Logistics attacks ↔ throughput collapse on LogisticsGraph + congestion proxy.",
+                            );
+                            muted_label(
+                                ui,
+                                &palette,
+                                "• Infrastructure strikes ↔ disruption on edges + infra graph integrity (resilience runbook).",
+                            );
                         });
 
                     egui::CollapsingHeader::new("Research program (design authority)")
                         .default_open(false)
                         .show(ui, |ui| {
-                            ui.small("Capability = institutions + industrial maturity + doctrine pressure — not an isolated tech-tree button.");
-                            ui.small("See: prompts/guides/research_capability_ecosystem_runbook_v1.md · orchestrator: infrastructure_and_research_orchestrator_v1.md");
+                            muted_label(
+                                ui,
+                                &palette,
+                                "Capability = institutions + industrial maturity + doctrine pressure — not an isolated tech-tree button.",
+                            );
+                            muted_label(
+                                ui,
+                                &palette,
+                                "See: prompts/guides/research_capability_ecosystem_runbook_v1.md · orchestrator: infrastructure_and_research_orchestrator_v1.md",
+                            );
                         });
 
                     ui.horizontal(|ui| {
@@ -249,7 +319,11 @@ pub fn diagnostics_ui_system(
                     keys.sort_by_key(|k| k.0);
                     keys.truncate(24);
                     if keys.is_empty() {
-                        ui.small("No transport edges — bake roads in map editor or load dev_transport_network.ron (or .json fixture).");
+                        muted_label(
+                            ui,
+                            &palette,
+                            "No transport edges — bake roads in map editor or load dev_transport_network.ron (or .json fixture).",
+                        );
                     } else {
                         egui::ScrollArea::vertical().max_height(220.0).show(ui, |ui| {
                             for eid in keys {
@@ -258,7 +332,7 @@ pub fn diagnostics_ui_system(
                                     .entry(eid)
                                     .or_insert(CorridorConstructionStatus::default());
                                 ui.group(|ui| {
-                                    ui.label(format!("Edge {}", eid.0));
+                                    primary_label(ui, &palette, format!("Edge {}", eid.0));
                                     ui.horizontal(|ui| {
                                         ui.radio_value(&mut st.phase, CorridorConstructionPhase::Planned, "Planned");
                                         ui.radio_value(&mut st.phase, CorridorConstructionPhase::InProgress, "In progress");

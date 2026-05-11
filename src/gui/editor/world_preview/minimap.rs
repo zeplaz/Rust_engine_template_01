@@ -2,8 +2,16 @@
 
 use bevy_egui::egui;
 
-pub fn world_preview_minimap(ui: &mut egui::Ui, texture_id: egui::TextureId, tex_w: u32, tex_h: u32) {
-    ui.label(egui::RichText::new("Overview").small().strong());
+use crate::gui::style::{section_heading, CmdHeadingStyle, UiPalette};
+
+pub fn world_preview_minimap(
+    ui: &mut egui::Ui,
+    texture_id: egui::TextureId,
+    tex_w: u32,
+    tex_h: u32,
+    palette: &UiPalette,
+) {
+    section_heading(ui, palette, CmdHeadingStyle::None, "Overview");
     let max_side = 140.0f32;
     let tw = tex_w.max(1) as f32;
     let th = tex_h.max(1) as f32;

@@ -4,7 +4,10 @@ use bevy_egui::{egui, EguiContexts, EguiPrimaryContextPass};
 use crate::engine::{BaseState, WorldGenFlowState};
 use crate::gui::editor::world_preview::WorldPreviewUiState;
 use crate::gui::std_floating;
-use crate::gui::style::{framed_group, path_hint, section_heading, CmdHeadingStyle, UiPalette};
+use crate::gui::style::{
+    framed_group, muted_label, path_hint, primary_label, section_heading, strong_body, v_space,
+    weak_body, CmdHeadingStyle, UiPalette, UiSpacing, VertSpace,
+};
 use crate::terrain::generation::tuning_io::{load_overlay_prefer_ron, save_overlay_ron, WorldGenTuningOverlay};
 use crate::terrain::generation::world_generator_enhanced::{
     despawn_generated_world_entities, GenerateWorldEvent, MAX_WORLD_GEN_AXIS, PREVIEW_WORLD_MAX_AXIS,
@@ -61,6 +64,7 @@ pub fn world_gen_ui_system(
     mut tuning_io_hint: Local<String>,
     mut world_preview_ui: ResMut<WorldPreviewUiState>,
     palette: Res<UiPalette>,
+    spacing: Res<UiSpacing>,
     #[cfg(feature = "bevy_tilemap_adapter")] mut tile_layer_vis: Option<
         ResMut<crate::render::tilemap_adapter::TilemapLayerVisibility>,
     >,
@@ -73,33 +77,55 @@ pub fn world_gen_ui_system(
         .default_size(egui::vec2(520.0, 640.0))
         .collapsible(true)
         .show(contexts.ctx_mut()?, |ui| {
-            ui.heading("World Generator");
-            ui.label(egui::RichText::new(format!("Flow: {:?}", flow.get())).weak());
+            let pal: &UiPalette = &*palette;
+            let sp: &UiSpacing = &*spacing;
+            section_heading(ui, pal, CmdHeadingStyle::Gt, "World Generator");
+            weak_body(ui, pal, format!("Flow: {:?}", flow.get()));
             if progress.running {
                 ui.add(egui::ProgressBar::new(progress.fraction).show_percentage());
-                ui.label(egui::RichText::new(&progress.label).strong());
-                ui.small("Height field is sampled in parallel (CPU); tiles spawn in batches so the window keeps redrawing. Rivers/lakes remain the heaviest tail pass.");
-                ui.add_space(8.0);
+                strong_body(ui, pal, progress.label.as_str());
+                muted_label(
+                    ui,
+                    pal,
+                    "Height field is sampled in parallel (CPU); tiles spawn in batches so the window keeps redrawing. Rivers/lakes remain the heaviest tail pass.",
+                );
+                v_space(ui, sp, VertSpace::Sm);
             }
             if matches!(*flow.get(), WorldGenFlowState::PreviewReady | WorldGenFlowState::FullReady)
             {
-                ui.small("Review the preview / map, then run full generation, then confirm before entering simulation.");
+                muted_label(
+                    ui,
+                    pal,
+                    "Review the preview / map, then run full generation, then confirm before entering simulation.",
+                );
                 ui.checkbox(&mut world_preview_ui.window_open, "Show World Preview window");
-                ui.small("Preview layers and tag pool: use the World Preview panel (base combo + overlay toggles).");
-                ui.add_space(6.0);
+                muted_label(
+                    ui,
+                    pal,
+                    "Preview layers and tag pool: use the World Preview panel (base combo + overlay toggles).",
+                );
+                v_space(ui, sp, VertSpace::Sm);
             } else if matches!(*flow.get(), WorldGenFlowState::NewWorldSetup) {
-                ui.small("Adjust parameters, then generate a preview. Full world runs only after a preview exists.");
+                muted_label(
+                    ui,
+                    pal,
+                    "Adjust parameters, then generate a preview. Full world runs only after a preview exists.",
+                );
             }
-            ui.add_space(10.0);
+            v_space(ui, sp, VertSpace::Md);
 
             egui::ScrollArea::vertical()
                 .id_salt("world_gen_main_scroll")
                 .auto_shrink([false, false])
                 .show(ui, |ui| {
-            ui.label(format!(
-                "Optional overlay: {} (else {})",
-                WORLD_GEN_TUNING_RON_PATH, WORLD_GEN_TUNING_JSON_PATH
-            ));
+            primary_label(
+                ui,
+                pal,
+                format!(
+                    "Optional overlay: {} (else {})",
+                    WORLD_GEN_TUNING_RON_PATH, WORLD_GEN_TUNING_JSON_PATH
+                ),
+            );
             ui.horizontal(|ui| {
                 if tt(ui.button("Reload tuning"), hints::RELOAD_TUNING).clicked() {
                     match load_overlay_prefer_ron(WORLD_GEN_TUNING_RON_PATH, WORLD_GEN_TUNING_JSON_PATH)
@@ -129,7 +155,7 @@ pub fn world_gen_ui_system(
                 }
             });
             if !tuning_io_hint.is_empty() {
-                ui.small(&*tuning_io_hint);
+                muted_label(ui, pal, tuning_io_hint.as_str());
             }
             ui.horizontal(|ui| {
                 if tt(
@@ -143,20 +169,24 @@ pub fn world_gen_ui_system(
                         "Restored built-in defaults (new random seed).".to_string();
                 }
             });
-            ui.add_space(8.0);
+            v_space(ui, sp, VertSpace::Sm);
 
             egui::CollapsingHeader::new("Iteration / debug report")
                 .default_open(false)
                 .show(ui, |ui| {
-                    ui.small("After each preview or full run, a JSON file is written under `debug_runs/` in the repo \
+                    muted_label(
+                        ui,
+                        pal,
+                        "After each preview or full run, a JSON file is written under `debug_runs/` in the repo \
                          (timings, height stats, downsampled height sample, biome counts, hydrology summary). \
-                         Share that file when describing “change X → looks like Y”.")
-                        .on_hover_text(hints::DEBUG_SECTION);
-                    ui.add_space(6.0);
+                         Share that file when describing “change X → looks like Y”.",
+                    )
+                    .on_hover_text(hints::DEBUG_SECTION);
+                    v_space(ui, sp, VertSpace::Sm);
                     if last_debug.path.is_none() && last_debug.summary_one_line.is_empty() {
-                        ui.weak("No report yet — generate a world once.");
+                        weak_body(ui, pal, "No report yet — generate a world once.");
                     } else {
-                        ui.label(egui::RichText::new(&last_debug.summary_one_line).small());
+                        muted_label(ui, pal, last_debug.summary_one_line.as_str());
                         if let Some(ref p) = last_debug.path {
                             ui.monospace(p.display().to_string());
                             ui.horizontal(|ui| {
@@ -169,15 +199,15 @@ pub fn world_gen_ui_system(
                     }
                 });
 
-            ui.add_space(10.0);
+            v_space(ui, sp, VertSpace::Md);
             
             egui::CollapsingHeader::new("General Settings")
                 .default_open(true)
                 .show(ui, |ui| {
-                    framed_group(ui, &palette, |ui| {
-                        section_heading(ui, &palette, CmdHeadingStyle::Gt, "Chunk Settings");
-                        path_hint(ui, &palette, "/assets/scenarios/test.ron");
-                        ui.add_space(6.0);
+                    framed_group(ui, pal, |ui| {
+                        section_heading(ui, pal, CmdHeadingStyle::Gt, "Chunk Settings");
+                        path_hint(ui, pal, "/assets/scenarios/test.ron");
+                        v_space(ui, sp, VertSpace::Sm);
                         tt(
                             ui.add(
                                 egui::Slider::new(&mut world_gen_params.width, 128..=MAX_WORLD_GEN_AXIS)
@@ -192,29 +222,35 @@ pub fn world_gen_ui_system(
                             ),
                             hints::HEIGHT,
                         );
-                        ui.small(format!(
-                            "Preview pass uses a downscaled grid (max {} per side) for speed; full generation uses these sliders up to {}×{} tiles. Use World Preview zoom to inspect.",
-                            PREVIEW_WORLD_MAX_AXIS, MAX_WORLD_GEN_AXIS, MAX_WORLD_GEN_AXIS
-                        ));
+                        muted_label(
+                            ui,
+                            pal,
+                            format!(
+                                "Preview pass uses a downscaled grid (max {} per side) for speed; full generation uses these sliders up to {}×{} tiles. Use World Preview zoom to inspect.",
+                                PREVIEW_WORLD_MAX_AXIS, MAX_WORLD_GEN_AXIS, MAX_WORLD_GEN_AXIS
+                            ),
+                        );
 
                         ui.horizontal(|ui| {
                             if tt(ui.button("Random Seed"), hints::RANDOM_SEED).clicked() {
                                 world_gen_params.seed = rand::random();
                             }
                             tt(
-                                ui.label(format!("Seed: {}", world_gen_params.seed)),
+                                primary_label(ui, pal, format!("Seed: {}", world_gen_params.seed)),
                                 hints::SEED_LABEL,
                             );
                         });
 
-                        ui.add_space(5.0);
+                        v_space(ui, sp, VertSpace::Xs);
                     });
                 });
             
             egui::CollapsingHeader::new("Region Settings")
                 .default_open(true)
                 .show(ui, |ui| {
-                    ui.small(
+                    muted_label(
+                        ui,
+                        pal,
                         "Regions group tiles under Voronoi sites (strategic partitioning — see \
                          `prompts/guides/voronoi_polygon_worlds_notes.md.md`). \
                          They do not set height; optional **strategic semantics** below bias moisture/temperature slightly.",
@@ -224,7 +260,7 @@ pub fn world_gen_ui_system(
                         hints::NUM_REGIONS,
                     );
                     
-                    ui.label("Region Method:");
+                    primary_label(ui, pal, "Region Method:");
                     tt(
                         ui.radio_value(&mut world_gen_params.region_method, RegionMethod::Regular, "Regular Voronoi"),
                         hints::REGION_REGULAR,
@@ -260,21 +296,25 @@ pub fn world_gen_ui_system(
                         );
                     }
 
-                    ui.small("Climate nudge from Voronoi sites: see **Climate variation** section below.")
-                        .on_hover_text(hints::STRATEGIC_FIELD_COUPLING);
+                    muted_label(
+                        ui,
+                        pal,
+                        "Climate nudge from Voronoi sites: see **Climate variation** section below.",
+                    )
+                    .on_hover_text(hints::STRATEGIC_FIELD_COUPLING);
 
-                    ui.add_space(5.0);
+                    v_space(ui, sp, VertSpace::Xs);
                 });
 
             egui::CollapsingHeader::new("Climate variation & pseudo–weather bands")
                 .default_open(true)
                 .show(ui, |ui| {
-                    ui.label(egui::RichText::new("Moisture / temperature fields").strong());
-                    ui.small(hints::CLIMATE_VARIATION_SECTION);
-                    ui.small(hints::CLIMATE_QUICK_TIP).on_hover_text(
+                    section_heading(ui, pal, CmdHeadingStyle::None, "Moisture / temperature fields");
+                    muted_label(ui, pal, hints::CLIMATE_VARIATION_SECTION);
+                    muted_label(ui, pal, hints::CLIMATE_QUICK_TIP).on_hover_text(
                         "Operational fronts & pressure systems live in the weather ECS later; world-gen noise here shapes believable *static* climate diversity.",
                     );
-                    ui.add_space(6.0);
+                    v_space(ui, sp, VertSpace::Sm);
                     tt(
                         ui.add(egui::Slider::new(&mut world_gen_params.moisture_bias, -0.5..=0.5).text("Moisture bias (global wet/dry shift)")),
                         hints::MOISTURE_BIAS,
@@ -283,8 +323,8 @@ pub fn world_gen_ui_system(
                         ui.add(egui::Slider::new(&mut world_gen_params.temperature_bias, -0.5..=0.5).text("Temperature bias (global hot/cold shift)")),
                         hints::TEMP_BIAS,
                     );
-                    ui.add_space(4.0);
-                    ui.label("Patch size & streakiness (pass-1 fBm):");
+                    v_space(ui, sp, VertSpace::Xs);
+                    primary_label(ui, pal, "Patch size & streakiness (pass-1 fBm):");
                     let ns = &mut world_gen_params.noise_sampling;
                     tt(
                         ui.add(egui::Slider::new(&mut ns.moisture_noise_scale_mul, 0.3..=3.0).text("Moisture · patch scale ×")),
@@ -302,11 +342,13 @@ pub fn world_gen_ui_system(
                         ui.add(egui::Slider::new(&mut ns.temperature_sample_freq_mul, 0.1..=4.0).text("Temperature · fine detail / fronts freq ×")),
                         hints::TEMP_FREQ_MUL,
                     );
-                    ui.add_space(6.0);
+                    v_space(ui, sp, VertSpace::Sm);
                     egui::CollapsingHeader::new("Voronoi → climate provinces")
                         .default_open(false)
                         .show(ui, |ui| {
-                        ui.small(
+                        muted_label(
+                            ui,
+                            pal,
                             "Region sites nudge moisture/temperature before biomes — continent-scale *zones*.",
                         );
                         tt(
@@ -320,14 +362,18 @@ pub fn world_gen_ui_system(
                     egui::CollapsingHeader::new("Rim falloff (islands)")
                         .default_open(false)
                         .show(ui, |ui| {
-                        ui.small("Use **Feature Settings** → Island mode + falloff for edge sink toward water.");
+                        muted_label(
+                            ui,
+                            pal,
+                            "Use **Feature Settings** → Island mode + falloff for edge sink toward water.",
+                        );
                     });
                 });
             
             egui::CollapsingHeader::new("Terrain Settings (height)")
                 .default_open(true)
                 .show(ui, |ui| {
-                    ui.label("Height noise profile:");
+                    primary_label(ui, pal, "Height noise profile:");
                     tt(
                         ui.radio_value(&mut world_gen_params.height_noise_profile, TerrainNoiseProfile::FbmPerlin, "fBm · Perlin (baseline)"),
                         hints::PROFILE_FBMPERLIN,
@@ -353,7 +399,9 @@ pub fn world_gen_ui_system(
                         ui.add(egui::Slider::new(&mut world_gen_params.noise_scale, 0.01..=0.1).text("Noise Scale")),
                         hints::NOISE_SCALE,
                     );
-                    ui.small(
+                    muted_label(
+                        ui,
+                        pal,
                         "Higher scale = more hills/coast detail at the same map size (less one big smooth mass). \
                          Try ~0.04–0.07 on 512² if the default feels too blobby.",
                     );
@@ -373,8 +421,12 @@ pub fn world_gen_ui_system(
                     egui::CollapsingHeader::new("Post shaping (naturalistic pass)")
                         .default_open(false)
                         .show(ui, |ui| {
-                            ui.label("Applied after the main fractal: curve land/ocean contrast, warp coasts, add small-scale detail.")
-                                .on_hover_text(hints::POST_SHAPING_SECTION);
+                            primary_label(
+                                ui,
+                                pal,
+                                "Applied after the main fractal: curve land/ocean contrast, warp coasts, add small-scale detail.",
+                            )
+                            .on_hover_text(hints::POST_SHAPING_SECTION);
                             tt(
                                 ui.add(egui::Slider::new(&mut world_gen_params.height_curve_exponent, 0.35..=2.5).text("Height curve (1 = linear)")),
                                 hints::HEIGHT_CURVE,
@@ -389,24 +441,24 @@ pub fn world_gen_ui_system(
                             );
                         });
 
-                    ui.label(
-                        egui::RichText::new("Moisture / temperature biases and fBm knobs live under **Climate variation** — this block is **elevation** only.")
-                            .small()
-                            .weak(),
+                    weak_body(
+                        ui,
+                        pal,
+                        "Moisture / temperature biases and fBm knobs live under **Climate variation** — this block is **elevation** only.",
                     );
 
-                    ui.add_space(5.0);
+                    v_space(ui, sp, VertSpace::Xs);
                 });
             
             egui::CollapsingHeader::new("Noise channels (warp, detail, coords)")
                 .default_open(false)
                 .show(ui, |ui| {
-                    ui.label(
-                        egui::RichText::new("Moisture/temperature **scale & freq** are in **Climate variation**. Here: domain warp, detail fBm, and coordinate transforms.")
-                            .small()
-                            .weak(),
+                    weak_body(
+                        ui,
+                        pal,
+                        "Moisture/temperature **scale & freq** are in **Climate variation**. Here: domain warp, detail fBm, and coordinate transforms.",
                     );
-                    ui.add_space(4.0);
+                    v_space(ui, sp, VertSpace::Xs);
                     let ns = &mut world_gen_params.noise_sampling;
                     tt(
                         ui.add(egui::Slider::new(&mut ns.warp_noise_scale_mul, 0.05..=1.0).text("Warp noise · scale ×")),
@@ -417,7 +469,7 @@ pub fn world_gen_ui_system(
                         hints::WARP_OCTAVES,
                     );
                     ui.horizontal(|ui| {
-                        ui.label("Warp seed offset");
+                        primary_label(ui, pal, "Warp seed offset");
                         tt(
                             ui.add(egui::DragValue::new(&mut ns.warp_seed_offset).speed(1.0)),
                             hints::WARP_SEED_OFFSET,
@@ -432,7 +484,7 @@ pub fn world_gen_ui_system(
                         hints::DETAIL_OCTAVES,
                     );
                     ui.horizontal(|ui| {
-                        ui.label("Detail seed offset");
+                        primary_label(ui, pal, "Detail seed offset");
                         tt(
                             ui.add(egui::DragValue::new(&mut ns.detail_seed_offset).speed(1.0)),
                             hints::DETAIL_SEED_OFFSET,
@@ -472,7 +524,7 @@ pub fn world_gen_ui_system(
                 .default_open(true)
                 .show(ui, |ui| {
                     let b = &mut world_gen_params.biome_tuning;
-                    ui.label("Where pass-1 **height / moisture / temperature** become named biomes. Tighter temp cuts → sharper polar/tropical contrast; moisture bands control wet belts vs arid interiors.")
+                    muted_label(ui, pal, "Where pass-1 **height / moisture / temperature** become named biomes. Tighter temp cuts → sharper polar/tropical contrast; moisture bands control wet belts vs arid interiors.")
                         .on_hover_text(hints::BIOME_SECTION);
                     tt(
                         ui.add(egui::Slider::new(&mut b.sea_level, 0.15..=0.55).text("Sea level (soft marine)")),
@@ -551,7 +603,7 @@ pub fn world_gen_ui_system(
                         );
                     }
                     
-                    ui.add_space(5.0);
+                    v_space(ui, sp, VertSpace::Xs);
                 });
             
             #[cfg(feature = "bevy_tilemap_adapter")]
@@ -565,7 +617,8 @@ pub fn world_gen_ui_system(
                     });
             }
             
-            ui.add_space(20.0);
+            v_space(ui, sp, VertSpace::Lg);
+            v_space(ui, sp, VertSpace::Sm);
 
             let busy = progress.running;
 
@@ -602,7 +655,7 @@ pub fn world_gen_ui_system(
                         world_gen_ui_state.visible = false;
                     }
                 });
-                ui.add_space(10.0);
+                v_space(ui, sp, VertSpace::Md);
             } else if matches!(*flow.get(), WorldGenFlowState::PreviewReady) {
                 if tt(
                     ui.add_enabled(!busy, egui::Button::new("Discard preview")),
@@ -614,7 +667,7 @@ pub fn world_gen_ui_system(
                     NextState::set_if_neq(&mut *next_flow, WorldGenFlowState::Idle);
                     world_gen_ui_state.visible = false;
                 }
-                ui.add_space(10.0);
+                v_space(ui, sp, VertSpace::Md);
             }
 
             ui.horizontal(|ui| {

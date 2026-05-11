@@ -1,10 +1,10 @@
 use crate::entities::production::core::ManufacturingCorePlugin;
 use crate::entities::vehicles::tools_ui::RoadVehicleToolsUiPlugin;
 use crate::gui::{
-    editor::map_editor::MapEditorPlugin, AppShellPlugin, BaseMenuPlugin, DiagnosticsUiPlugin,
-    FactionToolsUiPlugin, GameplayCapturePlugin, InGameHudPlugin, KeybindingsOptionsPlugin,
-    LogisticsTargetsPanelPlugin, MainWorldCamera, MapCameraPlugin, SplashPlugin, StrategicToolingPlugin,
-    UiThemePlugin,
+    editor::map_editor::MapEditorPlugin, AppShellPlugin, BaseMenuPlugin, BuildPlanningPlugin,
+    DiagnosticsUiPlugin, FactionToolsUiPlugin, GameplayCapturePlugin, InGameHudPlugin,
+    KeybindingsOptionsPlugin, LogisticsTargetsPanelPlugin, MainWorldCamera, MapCameraPlugin, SplashPlugin,
+    StrategicToolingPlugin, UiThemePlugin,
 };
 #[cfg(feature = "bevy_tilemap_adapter")]
 use crate::render::TilemapAdapterPlugin;
@@ -100,6 +100,7 @@ impl Plugin for EnginePlugin {
             .add_plugins(FactionToolsUiPlugin)
             .add_plugins(StrategicToolingPlugin)
             .add_plugins(InGameHudPlugin)
+            .add_plugins(BuildPlanningPlugin)
             .add_plugins(LogisticsTargetsPanelPlugin)
             // World generation editor + runtime.
             .add_plugins(WorldGenToolsPlugin)

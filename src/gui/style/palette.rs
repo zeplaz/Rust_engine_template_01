@@ -1,9 +1,13 @@
-//! Token colors for egui + future Bevy UI. See `prompts/guides/ui_design_language_plan_v1.md`.
+//! Token colors for egui + future Bevy UI.
+//! Spec: `prompts/guides/ui_design_language_plan_v1.md`.
+//! Visual reference: [SAPIP / DATA_SYS_CMD](https://orgburo.org/sapip/data-sys-cmd-modelz/index.html)
+//! (wireframe CRT: black field, cyan labels, green data, magenta/red strokes — e.g.
+//! `org-cmd-terminal.jpg` on that surface).
 
 use bevy::prelude::*;
 use bevy_egui::egui::{self, Color32, CornerRadius, Stroke, Visuals};
 
-/// Authoritative dark-theme palette (Orgburo “CMD” + readable Rust-ecosystem contrast).
+/// Authoritative dark-theme palette ([SAPIP CMD](https://orgburo.org/sapip/) wireframe language).
 #[derive(Resource, Debug, Clone)]
 pub struct UiPalette {
     pub bg_app: Color32,
@@ -19,24 +23,36 @@ pub struct UiPalette {
     pub selection_bg: Color32,
     pub warn: Color32,
     pub danger: Color32,
+    /// 1px panel chrome (magenta family, `org-cmd-terminal` wireframes).
+    pub wire_magenta: Color32,
+    /// Axes / high-attention wire (red family).
+    pub wire_red: Color32,
+    /// Viewport / committed-highlight ring (gold, sparse use).
+    pub accent_gold: Color32,
 }
 
 impl Default for UiPalette {
     fn default() -> Self {
         Self {
-            bg_app: Color32::from_rgb(0x12, 0x12, 0x12),
-            bg_elevated: Color32::from_rgb(0x1c, 0x1e, 0x22),
-            bg_deep: Color32::from_rgb(0x0a, 0x0a, 0x0c),
-            bg_interactive: Color32::from_rgb(0x28, 0x2c, 0x34),
-            fg_primary: Color32::from_rgb(0xec, 0xee, 0xf6),
-            fg_muted: Color32::from_rgb(0x98, 0xa2, 0xb0),
+            // Pure black field; lifted panels stay near-black for scan contrast.
+            bg_app: Color32::BLACK,
+            bg_elevated: Color32::from_rgb(0x06, 0x08, 0x08),
+            bg_deep: Color32::BLACK,
+            bg_interactive: Color32::from_rgb(0x0c, 0x12, 0x12),
+            // Cyan/teal = primary labels (not warm white).
+            fg_primary: Color32::from_rgb(0x5e, 0xe0, 0xdc),
+            fg_muted: Color32::from_rgb(0x4a, 0x78, 0x78),
+            // Vibrant green = telemetry / OK rails / selection accent.
             accent_terminal: Color32::from_rgb(0x5d, 0xca, 0x31),
-            accent_action: Color32::from_rgb(0xf5, 0x7c, 0x00),
-            accent_hot: Color32::from_rgb(0xc6, 0x46, 0x00),
+            accent_action: Color32::from_rgb(0xf0, 0xa8, 0x28),
+            accent_hot: Color32::from_rgb(0xdc, 0x38, 0xb8),
             fg_on_accent: Color32::BLACK,
-            selection_bg: Color32::from_rgba_unmultiplied(0x5d, 0xca, 0x31, 0x35),
+            selection_bg: Color32::from_rgba_unmultiplied(0x5d, 0xca, 0x31, 0x40),
             warn: Color32::from_rgb(0xe9, 0xc4, 0x6a),
-            danger: Color32::from_rgb(0xf8, 0x71, 0x71),
+            danger: Color32::from_rgb(0xff, 0x44, 0x44),
+            wire_magenta: Color32::from_rgb(0xd9, 0x46, 0xef),
+            wire_red: Color32::from_rgb(0xff, 0x3d, 0x3d),
+            accent_gold: Color32::from_rgb(0xe8, 0xc0, 0x3a),
         }
     }
 }
@@ -48,34 +64,52 @@ impl UiPalette {
         let mut v = Visuals::dark();
         v.dark_mode = true;
         v.panel_fill = self.bg_app;
-        v.window_fill = self.bg_elevated;
+        v.window_fill = self.bg_app;
         v.extreme_bg_color = self.bg_deep;
-        v.faint_bg_color = self.bg_deep;
-        v.code_bg_color = Color32::from_rgb(0x14, 0x18, 0x14);
+        v.faint_bg_color = self.bg_elevated;
+        v.code_bg_color = Color32::from_rgb(0x06, 0x10, 0x0a);
 
         v.override_text_color = Some(self.fg_primary);
+        v.weak_text_color = Some(self.fg_muted);
+        v.weak_text_alpha = 0.7;
+
+        let sharp = CornerRadius::ZERO;
+        v.window_corner_radius = sharp;
+        v.menu_corner_radius = sharp;
+        v.window_stroke = Stroke::new(1.0, self.wire_magenta);
+        v.window_shadow = egui::epaint::Shadow::NONE;
+        v.popup_shadow = egui::epaint::Shadow::NONE;
 
         let w = &mut v.widgets;
+        w.noninteractive.corner_radius = sharp;
         w.noninteractive.bg_fill = self.bg_elevated;
         w.noninteractive.weak_bg_fill = self.bg_deep;
         w.noninteractive.fg_stroke = Stroke::new(1.0, self.fg_muted);
-        w.noninteractive.bg_stroke = Stroke::NONE;
+        let sep = self.wire_magenta;
+        w.noninteractive.bg_stroke = Stroke::new(
+            1.0,
+            Color32::from_rgba_unmultiplied(sep.r(), sep.g(), sep.b(), 70),
+        );
 
+        w.inactive.corner_radius = sharp;
         w.inactive.bg_fill = self.bg_interactive;
         w.inactive.weak_bg_fill = self.bg_app;
         w.inactive.fg_stroke = Stroke::new(1.0, self.fg_primary);
-        w.inactive.bg_stroke = Stroke::new(1.0, Color32::from_gray(45));
+        w.inactive.bg_stroke = Stroke::new(1.0, self.wire_magenta);
 
-        w.hovered.bg_fill = self.accent_hot;
-        w.hovered.weak_bg_fill = self.accent_hot.gamma_multiply(0.85);
-        w.hovered.fg_stroke = Stroke::new(1.0, self.fg_on_accent);
+        w.hovered.corner_radius = sharp;
+        w.hovered.bg_fill = self.bg_interactive;
+        w.hovered.weak_bg_fill = self.bg_deep;
+        w.hovered.fg_stroke = Stroke::new(1.0, self.fg_primary);
         w.hovered.bg_stroke = Stroke::new(1.0, self.accent_hot);
 
+        w.active.corner_radius = sharp;
         w.active.bg_fill = self.accent_action;
-        w.active.weak_bg_fill = self.accent_action.gamma_multiply(0.9);
+        w.active.weak_bg_fill = self.accent_action.gamma_multiply(0.92);
         w.active.fg_stroke = Stroke::new(1.0, self.fg_on_accent);
-        w.active.bg_stroke = Stroke::new(1.0, self.accent_action);
+        w.active.bg_stroke = Stroke::new(1.0, self.accent_gold);
 
+        w.open.corner_radius = sharp;
         w.open.fg_stroke = Stroke::new(1.0, self.accent_terminal);
 
         v.selection.bg_fill = self.selection_bg;
@@ -85,17 +119,59 @@ impl UiPalette {
         v.warn_fg_color = self.warn;
         v.error_fg_color = self.danger;
 
-        let r = CornerRadius::same(4);
-        v.window_corner_radius = r;
-        v.menu_corner_radius = r;
-        v.popup_shadow = egui::epaint::Shadow {
-            offset: [4, 8],
-            blur: 12,
-            spread: 0,
-            color: Color32::from_black_alpha(180),
-        };
-
         v
+    }
+
+    /// Bevy UI panel surface (cards / HUD chrome), aligned with [`Self::bg_elevated`].
+    #[must_use]
+    pub fn bevy_bg_elevated(&self) -> Color {
+        self.color32_to_bevy(self.bg_elevated)
+    }
+
+    /// Deepest backdrop (splash bleed, egui extreme bg).
+    #[must_use]
+    pub fn bevy_bg_deep(&self) -> Color {
+        self.color32_to_bevy(self.bg_deep)
+    }
+
+    #[must_use]
+    pub fn bevy_accent_terminal(&self) -> Color {
+        self.color32_to_bevy(self.accent_terminal)
+    }
+
+    #[must_use]
+    pub fn bevy_accent_action(&self) -> Color {
+        self.color32_to_bevy(self.accent_action)
+    }
+
+    /// Panel wire on Bevy nodes (parity with egui `window_stroke`).
+    #[must_use]
+    pub fn bevy_wire_magenta(&self) -> Color {
+        self.color32_to_bevy(self.wire_magenta)
+    }
+
+    /// Subtle stroke for HUD / panels — magenta wire at reduced alpha.
+    #[must_use]
+    pub fn bevy_border_subtle(&self) -> Color {
+        let m = self.wire_magenta;
+        Color::srgba(
+            m.r() as f32 / 255.0,
+            m.g() as f32 / 255.0,
+            m.b() as f32 / 255.0,
+            0.55,
+        )
+    }
+
+    /// Semitransparent HUD stack over the map (readability without a solid slab).
+    #[must_use]
+    pub fn bevy_hud_panel_fill(&self) -> Color {
+        let c = self.bg_elevated;
+        Color::srgba(
+            c.r() as f32 / 255.0,
+            c.g() as f32 / 255.0,
+            c.b() as f32 / 255.0,
+            0.92,
+        )
     }
 
     /// Bevy UI backdrop aligned with [`Self::bg_app`] (main menu / shell parity — optional use).
