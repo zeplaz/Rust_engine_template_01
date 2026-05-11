@@ -108,7 +108,7 @@ flowchart TB
 | [`base_reserch_draft.md`](base_reserch_draft.md) | [`infrastructure_and_research_orchestrator_v1.md`](infrastructure_and_research_orchestrator_v1.md) → [`research_capability_ecosystem_runbook_v1.md`](research_capability_ecosystem_runbook_v1.md) | **Out of scope** for the 6 — belongs to infra/research program, not this orchestrator. |
 | [`base_ui_direction_principls.md`](base_ui_direction_principls.md) | [`experience_layer_orchestrator_v1.md`](experience_layer_orchestrator_v1.md), [`ui_operational_direction_runbook_v1.md`](ui_operational_direction_runbook_v1.md) | **Gap:** command-table layout + rich bottom context tray. **Progress (2026-05-10):** simulation HUD — strategic strip compact mode + **overlay policy toggles** (routing congestion / EW proxy scalars) wired to [`StrategicOverlayDisplayPolicy`](../../src/strategic/schedule.rs). |
 
-**Cross-runbook gaps from the archived AI draft (not yet own runbook rounds):** GPU overlay **UX** knobs (draft “Overlay UX”); **adaptive rebuilding** after shocks (city + settlement); **logistics forecasting** hooked to real production/stockpile ECS; **informal settlements** / **dynamic adaptation** scalars on `SettlementSite` or successors.
+**Cross-runbook gaps from the archived AI draft (not yet own runbook rounds):** GPU overlay **UX** knobs (draft “Overlay UX”); **adaptive rebuilding** — *partial:* [`CityPlanningHints::adaptive_rebuild_pressure`](../../src/strategic/sim.rs) + settlement `adaptation_reserve` drift (§9); still open: district-scale rebuild intents and construction book coupling; **logistics forecasting** hooked to real production/stockpile ECS; **informal settlements** / **dynamic adaptation** scalars on `SettlementSite` or successors.
 
 ---
 

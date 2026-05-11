@@ -28,8 +28,7 @@ Keep **one coherent experience stack**:
 | [`ui_boundary_guide_v1.md`](ui_boundary_guide_v1.md) | Authoritative Bevy vs egui split |
 | [`gui_runbook_v1.md`](gui_runbook_v1.md) | GUI integration harness; dev diagnostics (**F3**) exposes strategic playtest controls ([`diagnostics_ui.rs`](../../src/gui/diagnostics_ui.rs)) |
 | [`camera_map_navigation_runbook_v1.md`](camera_map_navigation_runbook_v1.md) | Pan/zoom/rotate; respects egui capture |
-
----
+| [`scenario_campaign_scripted_tools_runbook_v1.md`](scenario_campaign_scripted_tools_runbook_v1.md) | Editor-time **scripted engine tools** for scenario/campaign authoring (TEMP-EGUI panel; prerequisite §4 before four implementation waves) |
 
 ## 3. Dependency sketch
 

@@ -2,8 +2,9 @@ use crate::entities::production::core::ManufacturingCorePlugin;
 use crate::entities::vehicles::tools_ui::RoadVehicleToolsUiPlugin;
 use crate::gui::{
     editor::map_editor::MapEditorPlugin, AppShellPlugin, BaseMenuPlugin, DiagnosticsUiPlugin,
-    FactionToolsUiPlugin, InGameHudPlugin, KeybindingsOptionsPlugin,
-    GameplayCapturePlugin, LogisticsTargetsPanelPlugin, MainWorldCamera, MapCameraPlugin, SplashPlugin,
+    FactionToolsUiPlugin, GameplayCapturePlugin, InGameHudPlugin, KeybindingsOptionsPlugin,
+    LogisticsTargetsPanelPlugin, MainWorldCamera, MapCameraPlugin, SplashPlugin, StrategicToolingPlugin,
+    UiThemePlugin,
 };
 #[cfg(feature = "bevy_tilemap_adapter")]
 use crate::render::TilemapAdapterPlugin;
@@ -12,6 +13,7 @@ use crate::systems::production::{
 };
 use crate::systems::damage::DamageSystem;
 use crate::systems::navigation::NavigationSchedulePlugin;
+use crate::scenario::ScenarioScriptingPlugin;
 use crate::systems::sim_control::SimControlPlugin;
 use crate::systems::transport::{TransportSchedule, TransportSimulationPlugin};
 use crate::strategic::StrategicFieldPipeline;
@@ -58,12 +60,15 @@ impl Plugin for EnginePlugin {
             .add_systems(Startup, spawn_primary_ui_camera)
             .add_plugins(TestHarnessPlugin)
             .add_plugins(EguiPlugin::default())
+            .add_plugins(UiThemePlugin)
             .add_plugins(SplashPlugin)
             .add_plugins(BaseMenuPlugin)
             .add_plugins(AppShellPlugin)
             .add_plugins(MapEditorPlugin)
             // Sim loop control (pause / step / speed / monotonic tick).
-            .add_plugins(SimControlPlugin);
+            .add_plugins(SimControlPlugin)
+            // Scenario script host (Wave 1): drains one step per frame before sim tick.
+            .add_plugins(ScenarioScriptingPlugin);
         configure_chunk_environment_sets(app);
         app.add_plugins(ChunkEnvironmentPersistPlugin)
             .add_plugins(ChunkSimLodPlugin)
@@ -76,7 +81,9 @@ impl Plugin for EnginePlugin {
             .add_plugins(NavigationSchedulePlugin)
             .add_plugins(DamageSystem)
             .add_plugins(MaterialUnificationPlugin)
-            .add_plugins(crate::strategic::StrategicFieldsAndAiPlugin);
+            .add_plugins(crate::gui::editor::editor_world_commit_bridge::EditorWorldCommitBridgePlugin)
+            .add_plugins(crate::strategic::StrategicFieldsAndAiPlugin)
+            .add_plugins(crate::strategic::GpuBridgePlugin);
         app.configure_sets(
             Update,
             StrategicFieldPipeline::GraphSync.after(TransportSchedule::CostCache),
@@ -90,6 +97,7 @@ impl Plugin for EnginePlugin {
             .add_plugins(MapCameraPlugin)
             .add_plugins(DiagnosticsUiPlugin)
             .add_plugins(FactionToolsUiPlugin)
+            .add_plugins(StrategicToolingPlugin)
             .add_plugins(InGameHudPlugin)
             .add_plugins(LogisticsTargetsPanelPlugin)
             // World generation editor + runtime.
@@ -103,7 +111,7 @@ impl Plugin for EnginePlugin {
             .add_plugins(RoadVehicleToolsUiPlugin);
 
         info!(
-            "Engine initialized. Optional: `--test weather` / `--test fire` for sample worlds. Keys: F1 options · F3 diagnostics · F11/F12 capture (edit in Options); RON under user config path · captures under APPDATA/proc_A_dine01/captures."
+            "Engine initialized. Optional: `--test weather` / `--test fire` for sample worlds. Keys: F1 options · F2 pressure composer · F3 diagnostics · F7 agent perms · F11/F12 capture; RON under user config · captures under APPDATA/proc_A_dine01/captures."
         );
     }
 }

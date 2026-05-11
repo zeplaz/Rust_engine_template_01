@@ -1,0 +1,20 @@
+(
+    schema_version: 2,
+
+    metadata: (
+        id: "wave1_minimal",
+        display_name: "Wave 1 Minimal",
+        author: Some("proc_A_dine01"),
+        description: Some("Minimal Wave 1 validation scenario"),
+    ),
+
+    steps: [
+        NoOp,
+        Log(
+            message: "Boot scenario",
+        ),
+        SimAdvance(
+            ticks: 0,
+        ),
+    ],
+)

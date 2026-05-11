@@ -17,6 +17,7 @@
 | **Active** | [`terrain_paired_runbooks_queue_v1.md`](terrain_paired_runbooks_queue_v1.md) | S/P/C queue |
 | **Active** | [`system_runbook_authoring_meta_v1.md`](system_runbook_authoring_meta_v1.md) | Meta template for other runbooks |
 | **Active** | [`map_editor_runbook_v1.md`](map_editor_runbook_v1.md) | Map editor M-steps |
+| **Pending** | [`scenario_campaign_scripted_tools_runbook_v1.md`](scenario_campaign_scripted_tools_runbook_v1.md) | Scripted engine host + scenario editor; §5 four waves after §4 gate |
 | **Active** | [`gui_runbook_v1.md`](gui_runbook_v1.md) | GUI / TEMP-EGUI |
 | **Active** | [`gap_remediation_runbook_v1.md`](gap_remediation_runbook_v1.md) | G-phases |
 | **Active** | [`implementation_gap_hunt_runbook_v1.md`](implementation_gap_hunt_runbook_v1.md) | Gap hunt companion G |
@@ -25,12 +26,17 @@
 | **Active** | [`flora_ecology_runbook_v1.md`](flora_ecology_runbook_v1.md) | Ecology / flora sim track |
 | **Active** | [`camera_map_navigation_runbook_v1.md`](camera_map_navigation_runbook_v1.md) | Map camera pan / zoom / rotate via `InputBindings` |
 | **Active** | [`voronoi_polygon_worlds_notes.md.md`](voronoi_polygon_worlds_notes.md.md) | Macro region / polygon design notes |
+| **Active** | [`simulation_expansion_orchestrator_v1.md`](simulation_expansion_orchestrator_v1.md) | Umbrella: sim layers, domain index; pairs with [`strategic_program_execution_plan_v1.md`](strategic_program_execution_plan_v1.md) |
+| **Active** | [`strategic_program_execution_plan_v1.md`](strategic_program_execution_plan_v1.md) | **P0–P8** execution order across orchestrators (**§4 = start next**) |
+| **Active** | [`strategic_fields_and_ai_orchestrator_v1.md`](strategic_fields_and_ai_orchestrator_v1.md) | Overlays, corridors, logistics/settlement/city/ops AI — **§9 backlog** |
+| **Active** | [`infrastructure_and_research_orchestrator_v1.md`](infrastructure_and_research_orchestrator_v1.md) | Construction, resilience, research capability index |
+| **Active** | [`experience_layer_orchestrator_v1.md`](experience_layer_orchestrator_v1.md) | HUD / camera / gameplay shell index |
+| **Active** | [`doctrine_simulation_alignment_runbook_v1.md`](doctrine_simulation_alignment_runbook_v1.md) | Doctrine ↔ sim alignment gate |
 | **Pending** | [`concrete_industry_sim_runbook_v1.md`](concrete_industry_sim_runbook_v1.md) | Domain sim |
 | **Pending** | [`petroleum_industry_simulation_runbook_v1.md`](petroleum_industry_simulation_runbook_v1.md) | Domain sim |
 | **Pending** | [`ui/petroleum_industry_ui_snippet_v1.md`](ui/petroleum_industry_ui_snippet_v1.md) | UI snippet |
 | **Pending** | [`fire_ecology_simulation_runbook_v1.md`](fire_ecology_simulation_runbook_v1.md) | Domain sim |
 | **Pending** | [`weather_simulation_runbook_v1.md`](weather_simulation_runbook_v1.md) | Domain sim |
-| **Pending** | [`simulation_expansion_orchestrator_v1.md`](simulation_expansion_orchestrator_v1.md) | Expansion orchestration |
 | **Pending** | [`chunk_scheduler_runbook_v1.md`](chunk_scheduler_runbook_v1.md) | Chunk scheduling |
 | **Pending** | [`python_asset_tools_alignment_runbook_v1.md`](python_asset_tools_alignment_runbook_v1.md) | Python tooling |
 | **Pending** | [`infrastructure_environment_integration_v1.md`](infrastructure_environment_integration_v1.md) | Infra integration |

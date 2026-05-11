@@ -1,6 +1,8 @@
 # M5 — Snapshot save / load `v1`
 
-> **Pair:** orchestrator [`../../../guides/map_editor_runbook_v1.md`](../../../guides/map_editor_runbook_v1.md) · matrix [`../map_editor_matrix_v1.md`](../map_editor_matrix_v1.md) §3 row **M5**. **Pre-req:** **M4** **Applied**.
+> **STATUS:** **Applied** (engineering, 2026-05). Matrix §3 and orchestrator §4 match. **Pair:** orchestrator [`../../../guides/map_editor_runbook_v1.md`](../../../guides/map_editor_runbook_v1.md) · matrix [`../map_editor_matrix_v1.md`](../map_editor_matrix_v1.md) §3 row **M5**. **Pre-req:** **M4** **Applied**.
+>
+> **Note:** v1 save/load is **palette buttons** in the map editor (single `MapEditorMapSnapshotIoRequest` message). **Main menu “Open in editor”** from a snapshot file is still optional / future — do not block M5 closure on it.
 
 **Halt rules:** orchestrator §6. **Names not ids** for materials/biomes in DTOs. Align with [`../serialization/serialization_hybrid_migration_matrix_v1.md`](../serialization/serialization_hybrid_migration_matrix_v1.md) — if row missing, **`ASK:`** and keep **Partial**.
 
@@ -8,7 +10,7 @@
 
 ### M5-S01 map snapshot DTO
 
-**Goal:** Add **`serde`** snapshot struct (width, height, cells: height + **`TerrainClass` name** + optional road flags) in a **single** module file; **no** stable `u16` material ids in v1 save.
+**Goal:** Add **`serde`** snapshot struct (width, height, cells: height + **terrain family name** (string registry key) + optional road flags) in a **single** module file; **no** stable `u16` material ids in v1 save.
 
 **Anchor reads:**
 
@@ -28,7 +30,7 @@
 
 **Definition of done:**
 
-- [ ] Unit test: **serialize → deserialize** minimal 1×1 snapshot.
+- [x] Unit test: **serialize → deserialize** (`map_snapshot_v1_round_trips_ron`).
 
 ---
 
@@ -55,23 +57,22 @@
 
 **Definition of done:**
 
-- [ ] File appears on disk after save from **Editor**.
+- [x] File appears on disk after save from **Editor** (palette → `assets/saves/maps/last.ron`).
 
 ---
 
-### M5-S03 load hydrate + menu open in editor
+### M5-S03 load hydrate + open in editor
 
-**Goal:** **Open in editor** on load menu deserializes snapshot and spawns tiles (reuse generator spawn helper or **`ASK:`** split if >3 files).
+**Goal:** Deserializing a snapshot **rebuilds tile ECS** in the editor (fixed dev path acceptable for v1).
 
 **Anchor reads:**
 
-1. [`../../../../src/gui/main_menu.rs`](../../../../src/gui/main_menu.rs).
-2. [`../../../../src/terrain/generation/world_generator_enhanced.rs`](../../../../src/terrain/generation/world_generator_enhanced.rs).
+1. [`../../../../src/gui/editor/map_editor/mod.rs`](../../../../src/gui/editor/map_editor/mod.rs) *(hydrate in `map_editor_map_snapshot_io`)*.
+2. [`../../../../src/terrain/generation/world_generator_enhanced.rs`](../../../../src/terrain/generation/world_generator_enhanced.rs) *(spawn patterns only if extending)*.
 
 **Touch:**
 
-- [`../../../../src/gui/main_menu.rs`](../../../../src/gui/main_menu.rs)
-- [`../../../../src/gui/editor/map_editor/mod.rs`](../../../../src/gui/editor/map_editor/mod.rs) *(hydrate entry)*
+- [`../../../../src/gui/editor/map_editor/mod.rs`](../../../../src/gui/editor/map_editor/mod.rs)
 
 **Verify:**
 
@@ -82,7 +83,7 @@
 
 **Definition of done:**
 
-- [ ] Stub path loads 1×1 test file without panic **or** documents **`ASK:`** for full ECS rebuild.
+- [x] **Load** from palette hydrates grid + road markers without panic (`assets/saves/maps/last.ron`). **Main menu** entry remains **future** (optional M5.x).
 
 ---
 
@@ -103,4 +104,4 @@
 
 **Definition of done:**
 
-- [ ] **M5** **Applied**.
+- [x] **M5** **Applied**.

@@ -2,7 +2,7 @@
 
 > **STATUS:** Documentation harness for **Rust phases M1–M5** — post-procedural **map editing** (routing, editor shell, brushes, roads, save/load). Pair with [`../matrix/map_editor/map_editor_matrix_v1.md`](../matrix/map_editor/map_editor_matrix_v1.md). **Execution:** one step pack at a time under [`../matrix/map_editor/runbook/`](../matrix/map_editor/runbook/README.md).
 
-Version: `v1.0.0`
+Version: `v1.0.1`
 Audience: agents (and humans) implementing the **alpha** world-map editor after [`world_generator_enhanced`](../../src/terrain/generation/world_generator_enhanced.rs) full generation.
 
 **Authoring compliance:** This orchestrator was created per [`system_runbook_authoring_meta_v1.md`](system_runbook_authoring_meta_v1.md) (structure mirrors [`terrain_unification_runbook_v1.md`](terrain_unification_runbook_v1.md)).
@@ -95,7 +95,7 @@ Mirrors [`map_editor_matrix_v1.md`](../matrix/map_editor/map_editor_matrix_v1.md
 | **M2** | [`runbook/m2_steps_v1.md`](../matrix/map_editor/runbook/m2_steps_v1.md) | Applied |
 | **M3** | [`runbook/m3_steps_v1.md`](../matrix/map_editor/runbook/m3_steps_v1.md) | Applied |
 | **M4** | [`runbook/m4_steps_v1.md`](../matrix/map_editor/runbook/m4_steps_v1.md) | Applied |
-| **M5** | [`runbook/m5_steps_v1.md`](../matrix/map_editor/runbook/m5_steps_v1.md) | Pending |
+| **M5** | [`runbook/m5_steps_v1.md`](../matrix/map_editor/runbook/m5_steps_v1.md) | **Applied** — RON snapshot [`terrain::editor::map_snapshot`](../../src/terrain/editor/map_snapshot.rs); editor I/O via [`MapEditorMapSnapshotIoRequest`](../../src/gui/editor/map_editor/mod.rs) (Save / Load) → `assets/saves/maps/last.ron`; palette buttons |
 
 **Sequencing rule:** finish **M*N*** before starting **M*N+1***.
 
@@ -150,6 +150,7 @@ Mirrors [`map_editor_matrix_v1.md`](../matrix/map_editor/map_editor_matrix_v1.md
 | [`engine_architecture_human_map_v1.md`](engine_architecture_human_map_v1.md) | Human map of engine layers |
 | [`gap_remediation_runbook_v1.md`](gap_remediation_runbook_v1.md) | G4 serialization when **M5** touches saves |
 | [`../designer_questions/map_editor/m1_execution_questions_v1.md`](../designer_questions/map_editor/m1_execution_questions_v1.md) | Human `ASK:` queue for halts (M1 seed doc; add M2+ siblings as phases run) |
+| [`scenario_campaign_scripted_tools_runbook_v1.md`](scenario_campaign_scripted_tools_runbook_v1.md) | **LoadMapSnapshot** script steps consume **M5** snapshots inside scenario editor tooling |
 
 ### 8b. Paired terrain note
 

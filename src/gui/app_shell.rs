@@ -5,6 +5,7 @@
 use crate::engine::states::{BaseState, MainMenuState, WorldGenFlowState};
 use crate::gui::AppStartState;
 use crate::gui::ui_windows::UiState;
+use crate::gui::UiPalette;
 use crate::terrain::generation::world_generator_enhanced::{
     despawn_generated_world_entities, WorldMarker,
 };
@@ -64,6 +65,7 @@ fn sync_menu_shell(
     main_q: Query<Entity, With<MainMenuShellRoot>>,
     load_q: Query<Entity, With<LoadMenuShellRoot>>,
     load_path: Res<LoadStubPath>,
+    palette: Res<UiPalette>,
 ) {
     if *app_start.get() != AppStartState::Menu || *base.get() != BaseState::MainMenu {
         for e in main_q.iter() {
@@ -83,7 +85,7 @@ fn sync_menu_shell(
                 }
             }
             if main_q.is_empty() {
-                spawn_main_menu(&mut commands, &asset_server, &mut ui_state);
+                spawn_main_menu(&mut commands, &asset_server, &mut ui_state, palette.as_ref());
             }
         }
         MainMenuState::Load => {
@@ -93,7 +95,7 @@ fn sync_menu_shell(
                 }
             }
             if load_q.is_empty() {
-                spawn_load_menu(&mut commands, &load_path);
+                spawn_load_menu(&mut commands, &load_path, palette.as_ref());
             }
         }
         MainMenuState::Settings | MainMenuState::Editor => {
@@ -107,9 +109,12 @@ fn sync_menu_shell(
     }
 }
 
-const MENU_BTN_BG: Color = Color::srgb(0.16, 0.2, 0.28);
-
-fn spawn_main_menu(commands: &mut Commands, asset_server: &AssetServer, ui_state: &mut UiState) {
+fn spawn_main_menu(
+    commands: &mut Commands,
+    asset_server: &AssetServer,
+    ui_state: &mut UiState,
+    palette: &UiPalette,
+) {
     if ui_state.font_handle.is_none() {
         ui_state.font_handle = Some(asset_server.load("fonts/FiraMono-Medium.ttf"));
     }
@@ -129,13 +134,13 @@ fn spawn_main_menu(commands: &mut Commands, asset_server: &AssetServer, ui_state
                 padding: UiRect::all(Val::Px(24.0)),
                 ..default()
             },
-            BackgroundColor(Color::srgb(0.06, 0.07, 0.1)),
+            BackgroundColor(palette.bevy_backdrop()),
             MainMenuShellRoot,
         ))
         .with_children(|parent| {
             parent.spawn((
                 Text::new("Proc Alpha Dine"),
-                TextColor(Color::srgb(0.92, 0.93, 0.96)),
+                TextColor(palette.bevy_primary_text()),
                 Node {
                     margin: UiRect::bottom(Val::Px(16.0)),
                     ..default()
@@ -159,20 +164,20 @@ fn spawn_main_menu(commands: &mut Commands, asset_server: &AssetServer, ui_state
                             border_radius,
                             ..default()
                         },
-                        BackgroundColor(MENU_BTN_BG),
+                        BackgroundColor(palette.bevy_button_idle()),
                     ))
                     .insert(action)
                     .with_children(|b| {
                         b.spawn((
                             Text::new(label),
-                            TextColor(Color::srgb(0.9, 0.92, 0.98)),
+                            TextColor(palette.bevy_primary_text()),
                         ));
                     });
             }
         });
 }
 
-fn spawn_load_menu(commands: &mut Commands, load_path: &LoadStubPath) {
+fn spawn_load_menu(commands: &mut Commands, load_path: &LoadStubPath, palette: &UiPalette) {
     let border_radius = BorderRadius::all(Val::Px(6.0));
     let path_display = load_path.0.clone();
 
@@ -189,19 +194,19 @@ fn spawn_load_menu(commands: &mut Commands, load_path: &LoadStubPath) {
                 padding: UiRect::all(Val::Px(24.0)),
                 ..default()
             },
-            BackgroundColor(Color::srgb(0.06, 0.07, 0.1)),
+            BackgroundColor(palette.bevy_backdrop()),
             LoadMenuShellRoot,
         ))
         .with_children(|parent| {
             parent.spawn((
                 Text::new("Load World (stub)"),
-                TextColor(Color::srgb(0.92, 0.93, 0.96)),
+                TextColor(palette.bevy_primary_text()),
             ));
             parent.spawn((
                 Text::new(
                     "No file picker yet — path is developer-configurable via LoadStubPath resource.",
                 ),
-                TextColor(Color::srgb(0.65, 0.72, 0.82)),
+                TextColor(palette.bevy_text_muted()),
                 Node {
                     max_width: Val::Px(520.0),
                     ..default()
@@ -209,7 +214,7 @@ fn spawn_load_menu(commands: &mut Commands, load_path: &LoadStubPath) {
             ));
             parent.spawn((
                 Text::new(format!("Path: {path_display}")),
-                TextColor(Color::srgb(0.78, 0.85, 0.95)),
+                TextColor(palette.bevy_secondary_text()),
             ));
             for (label, action) in [
                 ("Cancel", LoadMenuButtonAction::Cancel),
@@ -230,13 +235,13 @@ fn spawn_load_menu(commands: &mut Commands, load_path: &LoadStubPath) {
                             border_radius,
                             ..default()
                         },
-                        BackgroundColor(MENU_BTN_BG),
+                        BackgroundColor(palette.bevy_button_idle()),
                     ))
                     .insert(action)
                     .with_children(|b| {
                         b.spawn((
                             Text::new(label),
-                            TextColor(Color::srgb(0.9, 0.92, 0.98)),
+                            TextColor(palette.bevy_primary_text()),
                         ));
                     });
             }

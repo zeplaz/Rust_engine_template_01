@@ -32,10 +32,8 @@ pub enum UIRegion {
     MainWorld,
 }
 
-pub fn configure_visuals_system(mut contexts: EguiContexts) -> Result {
-    contexts.ctx_mut()?.set_visuals(egui::Visuals {
-        ..Default::default()
-    });
+/// Deprecated: global egui theme is applied by [`crate::gui::UiThemePlugin`] from [`crate::gui::UiPalette`].
+pub fn configure_visuals_system(_contexts: EguiContexts) -> Result {
     Ok(())
 }
 

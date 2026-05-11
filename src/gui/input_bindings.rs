@@ -23,9 +23,13 @@ use serde::{Deserialize, Serialize};
 pub struct InputBindings {
     pub toggle_keybindings_options: KeyCode,
     pub toggle_diagnostics: KeyCode,
+    /// Pressure composition tooling (egui + Bevy strip) — climate/mission packages, not quest scripting.
+    pub toggle_pressure_composer: KeyCode,
     pub toggle_faction_tools: KeyCode,
     pub cycle_logistics_focus: KeyCode,
     pub toggle_logistics_targets_panel: KeyCode,
+    /// Scenario script runner (`scenario_script_panel`, Editor). Default **F10**; logistics targets panel uses **F6** to avoid clash.
+    pub toggle_scenario_script_panel: KeyCode,
     /// Compact one-line strategic summary in the in-game HUD (`InGameHudPlugin`).
     pub toggle_strategic_hud_strip_compact: KeyCode,
     /// Toggle painting **routing congestion** transport splats into [`ChunkStrategicOverlay`](crate::strategic::ChunkStrategicOverlay).
@@ -64,9 +68,11 @@ impl Default for InputBindings {
         Self {
             toggle_keybindings_options: KeyCode::F1,
             toggle_diagnostics: KeyCode::F3,
+            toggle_pressure_composer: KeyCode::F2,
             toggle_faction_tools: KeyCode::F4,
             cycle_logistics_focus: KeyCode::F9,
-            toggle_logistics_targets_panel: KeyCode::F10,
+            toggle_logistics_targets_panel: KeyCode::F6,
+            toggle_scenario_script_panel: KeyCode::F10,
             toggle_strategic_hud_strip_compact: KeyCode::F5,
             toggle_strategic_overlay_routing_congestion: KeyCode::Digit7,
             toggle_strategic_overlay_ew_denial: KeyCode::Digit8,

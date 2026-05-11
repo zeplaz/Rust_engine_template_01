@@ -5,15 +5,15 @@
 use bevy::prelude::*;
 use bevy_ecs_tilemap::prelude::*;
 
-use crate::gui::editor::world_gen_ui::{PreviewMode, WorldGenUiState};
+use crate::gui::editor::world_preview::{tilemap_overlay_index_for_layers, PreviewLayers};
+use crate::gui::editor::world_gen_ui::WorldGenUiState;
 use crate::systems::terrain::TerrainRegistriesHandles;
-use crate::terrain::family::TerrainFamilyId;
 use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
 use crate::terrain::generation::{Chunk, ChunkCellMatrix, ChunkDerivedMetrics};
 use crate::terrain::material::{
     MaterialId, MaterialRegistry, MaterializedChunk, MaterializedResources, TagRegistry, TagSet,
 };
-use crate::terrain::mobility::{evaluate_tile, MobilityProfile, MobilityProfileRegistry, MovementHint};
+use crate::terrain::mobility::{evaluate_tile, MobilityProfile, MobilityProfileRegistry};
 use crate::terrain::{ChunkCellKey, DynamicTerrainOverlay};
 
 /// Three tilemaps per chunk: terrain (z=0), overlay preview (z=10), resources (z=20).
@@ -128,53 +128,6 @@ fn sync_material_indices_inner(
     }
 }
 
-fn terrain_family_overlay_index(id: TerrainFamilyId) -> u32 {
-    id.0 as u32
-}
-
-fn movement_hint_tile_index(hint: &MovementHint) -> u32 {
-    if hint.blocked {
-        255
-    } else {
-        let c = ((hint.cost_mul.clamp(1.0, 5.0) - 1.0) / 4.0 * 200.0
-            + hint.stuck_risk.clamp(0.0, 1.0) * 54.0)
-            .min(254.0);
-        c as u32
-    }
-}
-
-fn overlay_index_for_cell(
-    matrix: &ChunkCellMatrix,
-    x: u32,
-    y: u32,
-    mode: PreviewMode,
-    tag_pool: &TagSet,
-    derived_slope: Option<f32>,
-    mobility_hint: Option<&MovementHint>,
-) -> u32 {
-    let i = matrix.idx(x, y);
-    match mode {
-        PreviewMode::None => 0,
-        PreviewMode::Height => (matrix.elevation[i].clamp(0.0, 1.0) * 255.0) as u32,
-        PreviewMode::Moisture => (matrix.moisture[i].clamp(0.0, 1.0) * 255.0) as u32,
-        PreviewMode::Temperature => (matrix.temperature[i].clamp(0.0, 1.0) * 255.0) as u32,
-        PreviewMode::Biome => terrain_family_overlay_index(matrix.family[i]),
-        PreviewMode::Regions => 0,
-        PreviewMode::Tag => {
-            if matrix.tags[i].intersects(tag_pool) {
-                240
-            } else {
-                0
-            }
-        }
-        PreviewMode::DerivedSlope => {
-            let s = derived_slope.unwrap_or(0.0);
-            (s.clamp(0.0, 1.0) * 255.0) as u32
-        }
-        PreviewMode::Mobility => mobility_hint.map(movement_hint_tile_index).unwrap_or(0),
-    }
-}
-
 fn mobility_overlay_context<'a>(
     handles: Option<&'a TerrainRegistriesHandles>,
     tag_assets: Option<&'a Assets<TagRegistry>>,
@@ -186,7 +139,10 @@ fn mobility_overlay_context<'a>(
     &'a MobilityProfile,
     Option<&'a MaterialRegistry>,
 )> {
-    if ui.preview_mode != PreviewMode::Mobility {
+    if !ui
+        .preview_layers
+        .contains(PreviewLayers::MOBILITY_OVERLAY)
+    {
         return None;
     }
     let handles = handles?;
@@ -228,7 +184,7 @@ fn sync_overlay_layer_changed(
     mobility_assets: Option<Res<Assets<MobilityProfileRegistry>>>,
     material_assets: Option<Res<Assets<MaterialRegistry>>>,
 ) {
-    let mode = ui.preview_mode;
+    let layers = ui.preview_layers;
     let pool = params.tag_pool;
     let mob_ctx = mobility_overlay_context(
         handles.as_ref().map(|r| &**r),
@@ -246,7 +202,7 @@ fn sync_overlay_layer_changed(
             derived,
             mat_chunk,
             maps.overlay,
-            mode,
+            layers,
             &pool,
             &storages,
             mob_ctx,
@@ -275,7 +231,7 @@ fn sync_overlay_on_preview_change(
     if !ui.is_changed() && !params.is_changed() {
         return;
     }
-    let mode = ui.preview_mode;
+    let layers = ui.preview_layers;
     let pool = params.tag_pool;
     let mob_ctx = mobility_overlay_context(
         handles.as_ref().map(|r| &**r),
@@ -293,7 +249,7 @@ fn sync_overlay_on_preview_change(
             derived,
             mat_chunk,
             maps.overlay,
-            mode,
+            layers,
             &pool,
             &storages,
             mob_ctx,
@@ -309,7 +265,7 @@ fn apply_overlay_indices(
     derived: Option<&ChunkDerivedMetrics>,
     mat_chunk: &MaterializedChunk,
     tilemap: Entity,
-    mode: PreviewMode,
+    layers: PreviewLayers,
     tag_pool: &TagSet,
     storages: &Query<&TileStorage>,
     mobility_ctx: Option<(
@@ -356,11 +312,11 @@ fn apply_overlay_indices(
                     scale,
                 )
             });
-            let idx = overlay_index_for_cell(
+            let idx = tilemap_overlay_index_for_layers(
                 matrix,
                 x,
                 y,
-                mode,
+                layers,
                 tag_pool,
                 slope_cell,
                 mobility_hint.as_ref(),

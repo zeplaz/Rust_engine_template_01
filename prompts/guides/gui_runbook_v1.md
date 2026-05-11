@@ -2,10 +2,10 @@
 
 > **STATUS:** Active orchestrator for **G3** GUI remediation. This runbook sequences faction editor, production HUD, diagnostics, and runtime in-game UI sub-packs. Rust steps remain gated per surface until data source + authority are recorded.
 
-Version: `v1.0.1`
+Version: `v1.0.2`
 Audience: agents and humans replacing GUI TODOs with explicit, bounded UI behavior.
 
-**Closed / maintenance step history:** [`../legacy_runbooks/README.md`](../legacy_runbooks/README.md). **Active G3 work:** this runbook + [`../matrix/gap_remediation/runbook/`](../matrix/gap_remediation/runbook/README.md).
+**Closed / maintenance step history:** [`../legacy_runbooks/README.md`](../legacy_runbooks/README.md). **Active G3 work:** this runbook + [`../matrix/gap_remediation/runbook/`](../matrix/gap_remediation/runbook/README.md). **Shared look & feel (tokens, egui + Bevy UI):** [`ui_design_language_plan_v1.md`](ui_design_language_plan_v1.md).
 
 ---
 
@@ -37,6 +37,7 @@ If a step needs more than this, split or surface `ASK:` with **BQ-###** in the b
 | Pack | Role |
 |:---|:---|
 | [`../matrix/map_editor/runbook/README.md`](../matrix/map_editor/runbook/README.md) | **World map editor** M1–M5 — post-procedural brushes, roads, snapshots; orchestrator [`map_editor_runbook_v1.md`](map_editor_runbook_v1.md). Editor egui = **`TEMP-EGUI`** per §1. |
+| [`scenario_campaign_scripted_tools_runbook_v1.md`](scenario_campaign_scripted_tools_runbook_v1.md) | **Scenario / campaign** — **`src/gui/editor/scenario_script_panel.rs`** (`TEMP-EGUI`, Editor only): load/save `*.scenario.ron`, run/stop **`EngineScriptHost`**; runbook §5 waves |
 
 ---
 

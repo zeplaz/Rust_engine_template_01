@@ -12,10 +12,10 @@ Version: `v1.0.1`
 |:---|:---|:---|:---|
 | **S** | Serialization / hybrid wire | `prompts/guides/serialization_terrain_runbook_v1.md` | [`serialization_hybrid_migration_matrix_v1.md`](../matrix/serialization/serialization_hybrid_migration_matrix_v1.md) |
 | **A** | Bevy assets & hot-reload | `prompts/guides/bevy_asset_terrain_runbook_v1.md` | [`bevy_asset_config_migration_matrix_v1.md`](../matrix/assets/bevy_asset_config_migration_matrix_v1.md) |
-| **P** | Preview / composite UI | `prompts/guides/world_preview_runbook_v1.md` | [`composite_style_preview_integration_matrix_v1.md`](../matrix/terrain_biome/composite_style_preview_integration_matrix_v1.md) |
+| **P** | Preview / composite UI | [`world_preview_runbook_v1.md`](world_preview_runbook_v1.md) | [`composite_style_preview_integration_matrix_v1.md`](../matrix/terrain_biome/composite_style_preview_integration_matrix_v1.md) |
 | **C** | Chunk streaming / neighbors | `prompts/guides/chunk_streaming_terrain_runbook_v1.md` | [`terrain_world/chunks_streaming_v1.md`](../designer_questions/terrain_world/chunks_streaming_v1.md) + material matrix §§13–16 |
 
-Status of each file: **not created** until Q6 passes for that row — **except pair A (Bevy terrain): orchestrator + `matrix/assets/runbook/` committed; run A1–A3 there.** §8b in the terrain orchestrator lists the same four; keep paths in sync.
+Status of each file: **not created** until Q6 passes for that row — **except pair A (Bevy terrain): orchestrator + `matrix/assets/runbook/` committed; run A1–A3 there.** **Pair P (world preview):** roadmap orchestrator [`world_preview_runbook_v1.md`](world_preview_runbook_v1.md) is present (chunk-dirty / compositing / GPU stages + optimization note); matrix + U7 still own Applied/Partial rows. §8b in the terrain orchestrator lists the same four; keep paths in sync.
 
 ---
 

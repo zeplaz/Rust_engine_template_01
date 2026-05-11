@@ -1,4 +1,6 @@
 // World generation UI components
+pub mod editor_world_commit_bridge;
+pub mod scenario_script_panel;
 pub mod map_editor;
 pub mod world_gen_hints;
 pub mod world_gen_ui;

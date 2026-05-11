@@ -4,6 +4,7 @@ use bevy::prelude::*;
 use bevy_egui::{egui, EguiContexts, EguiPrimaryContextPass};
 
 use super::input_bindings::{binding_preset_keys, InputBindings};
+use super::style::{error_text, status_badge, warning_text, StatusTone, UiPalette};
 
 #[derive(Resource, Debug, Clone, Default)]
 pub struct KeybindingsUiState {
@@ -16,9 +17,11 @@ pub struct KeybindingsUiState {
 pub enum BindingSlot {
     ToggleOptions,
     Diagnostics,
+    PressureComposer,
     FactionTools,
     CycleLogistics,
     LogisticsTargets,
+    ScenarioScriptPanel,
     StrategicStripCompact,
     StrategicOverlayCongestion,
     StrategicOverlayEw,
@@ -93,9 +96,11 @@ fn apply_binding_capture(
         match slot {
             BindingSlot::ToggleOptions => bindings.toggle_keybindings_options = k,
             BindingSlot::Diagnostics => bindings.toggle_diagnostics = k,
+            BindingSlot::PressureComposer => bindings.toggle_pressure_composer = k,
             BindingSlot::FactionTools => bindings.toggle_faction_tools = k,
             BindingSlot::CycleLogistics => bindings.cycle_logistics_focus = k,
             BindingSlot::LogisticsTargets => bindings.toggle_logistics_targets_panel = k,
+            BindingSlot::ScenarioScriptPanel => bindings.toggle_scenario_script_panel = k,
             BindingSlot::StrategicStripCompact => bindings.toggle_strategic_hud_strip_compact = k,
             BindingSlot::StrategicOverlayCongestion => {
                 bindings.toggle_strategic_overlay_routing_congestion = k
@@ -128,9 +133,11 @@ fn slot_label_id(slot: BindingSlot) -> &'static str {
     match slot {
         BindingSlot::ToggleOptions => "bind_toggle_opts",
         BindingSlot::Diagnostics => "bind_diag",
+        BindingSlot::PressureComposer => "bind_pressure",
         BindingSlot::FactionTools => "bind_faction",
         BindingSlot::CycleLogistics => "bind_logi_cycle",
         BindingSlot::LogisticsTargets => "bind_logi_panel",
+        BindingSlot::ScenarioScriptPanel => "bind_scenario_script",
         BindingSlot::StrategicStripCompact => "bind_strat_strip",
         BindingSlot::StrategicOverlayCongestion => "bind_strat_cong",
         BindingSlot::StrategicOverlayEw => "bind_strat_ew",
@@ -158,6 +165,7 @@ fn keybindings_options_ui(
     mut contexts: EguiContexts,
     mut bindings: ResMut<InputBindings>,
     mut state: ResMut<KeybindingsUiState>,
+    palette: Res<UiPalette>,
 ) -> Result {
     if !state.visible {
         return Ok(());
@@ -180,10 +188,10 @@ fn keybindings_options_ui(
         ));
         ui.small(format!("RON file: {}", path.display()));
         if let Some(msg) = &state.last_io_message {
-            ui.colored_label(egui::Color32::LIGHT_RED, msg);
+            error_text(ui, &palette, msg.as_str());
         }
         if state.capture_slot.is_some() {
-            ui.colored_label(egui::Color32::LIGHT_BLUE, "Capturing…");
+            status_badge(ui, &palette, StatusTone::Info, "Capturing…");
         }
         ui.separator();
 
@@ -193,8 +201,9 @@ fn keybindings_options_ui(
                     ui.label(concat!($label, ":"));
                     let capturing = state.capture_slot == Some($slot);
                     if capturing {
-                        ui.colored_label(
-                            egui::Color32::YELLOW,
+                        warning_text(
+                            ui,
+                            &palette,
                             format!(
                                 "Press a key… ({} cancels)",
                                 InputBindings::format_key(bindings.cancel_keybinding_capture)
@@ -235,6 +244,12 @@ fn keybindings_options_ui(
             BindingSlot::Diagnostics
         );
         row_combo!(
+            "Pressure composer",
+            "World/faction/agent/mission pressure tooling + emergence log (default F2).",
+            toggle_pressure_composer,
+            BindingSlot::PressureComposer
+        );
+        row_combo!(
             "Faction tools",
             "Faction editor tooling.",
             toggle_faction_tools,
@@ -251,6 +266,12 @@ fn keybindings_options_ui(
             "Pick inventory focus from a list.",
             toggle_logistics_targets_panel,
             BindingSlot::LogisticsTargets
+        );
+        row_combo!(
+            "Scenario script panel (Editor)",
+            "Map editor — scenario tools / script runner (default F10).",
+            toggle_scenario_script_panel,
+            BindingSlot::ScenarioScriptPanel
         );
         row_combo!(
             "Strategic HUD — compact strip",

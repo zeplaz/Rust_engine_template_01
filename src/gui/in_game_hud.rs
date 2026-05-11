@@ -79,9 +79,10 @@ fn spawn_gameplay_hud(
     }
 
     let hint = format!(
-        "Logistics — select storage ({}) · list ({}) · Strategic — compact ({}) · overlays congest/ew ({}/{})",
+        "Logistics — select storage ({}) · list ({}) · Pressure composer ({}) · Strategic — compact ({}) · overlays congest/ew ({}/{})",
         InputBindings::format_key(bindings.cycle_logistics_focus),
         InputBindings::format_key(bindings.toggle_logistics_targets_panel),
+        InputBindings::format_key(bindings.toggle_pressure_composer),
         InputBindings::format_key(bindings.toggle_strategic_hud_strip_compact),
         InputBindings::format_key(bindings.toggle_strategic_overlay_routing_congestion),
         InputBindings::format_key(bindings.toggle_strategic_overlay_ew_denial),

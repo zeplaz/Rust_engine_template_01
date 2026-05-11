@@ -26,7 +26,7 @@ pub(crate) struct MobilityProfilesFile {
 }
 
 #[derive(Clone, Debug, Deserialize)]
-struct MobilityProfileFile {
+pub(crate) struct MobilityProfileFile {
     id: String,
     #[serde(default)]
     traction_requirement: f32,

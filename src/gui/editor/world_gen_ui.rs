@@ -3,6 +3,7 @@ use bevy_egui::{egui, EguiContexts, EguiPrimaryContextPass};
 
 use crate::engine::{BaseState, WorldGenFlowState};
 use crate::gui::editor::world_preview::WorldPreviewUiState;
+use crate::gui::style::{framed_group, path_hint, section_heading, CmdHeadingStyle, UiPalette};
 use crate::terrain::generation::tuning_io::{load_overlay_prefer_ron, save_overlay_ron, WorldGenTuningOverlay};
 use crate::terrain::generation::world_generator_enhanced::{
     despawn_generated_world_entities, GenerateWorldEvent, MAX_WORLD_GEN_AXIS, PREVIEW_WORLD_MAX_AXIS,
@@ -11,8 +12,8 @@ use crate::terrain::generation::world_generator_enhanced::{
 };
 use crate::terrain::generation::WorldGenLastDebugReport;
 
-// Re-export for `tilemap_adapter` and other call sites that imported `PreviewMode` from this module.
-pub use crate::gui::editor::world_preview::PreviewMode;
+// Re-export for `tilemap_adapter` and other call sites.
+pub use crate::gui::editor::world_preview::PreviewLayers;
 
 use super::world_gen_hints as hints;
 
@@ -24,7 +25,7 @@ fn tt(response: egui::Response, text: &'static str) -> egui::Response {
 #[derive(Resource)]
 pub struct WorldGenUiState {
     pub visible: bool,
-    pub preview_mode: crate::gui::editor::world_preview::PreviewMode,
+    pub preview_layers: PreviewLayers,
     /// Index into [`MobilityProfileRegistry::profiles`](crate::terrain::mobility::MobilityProfileRegistry).
     pub mobility_profile_index: usize,
 }
@@ -33,7 +34,7 @@ impl Default for WorldGenUiState {
     fn default() -> Self {
         Self {
             visible: false,
-            preview_mode: PreviewMode::None,
+            preview_layers: PreviewLayers::default(),
             mobility_profile_index: 0,
         }
     }
@@ -58,6 +59,7 @@ pub fn world_gen_ui_system(
     last_debug: Res<WorldGenLastDebugReport>,
     mut tuning_io_hint: Local<String>,
     mut world_preview_ui: ResMut<WorldPreviewUiState>,
+    palette: Res<UiPalette>,
     #[cfg(feature = "bevy_tilemap_adapter")] mut tile_layer_vis: Option<
         ResMut<crate::render::tilemap_adapter::TilemapLayerVisibility>,
     >,
@@ -82,7 +84,7 @@ pub fn world_gen_ui_system(
             {
                 ui.small("Review the preview / map, then run full generation, then confirm before entering simulation.");
                 ui.checkbox(&mut world_preview_ui.window_open, "Show World Preview window");
-                ui.small("Preview tint mode and tag pool: use the World Preview panel (◀ ▶ switch views without regen).");
+                ui.small("Preview layers and tag pool: use the World Preview panel (base combo + overlay toggles).");
                 ui.add_space(6.0);
             } else if matches!(*flow.get(), WorldGenFlowState::NewWorldSetup) {
                 ui.small("Adjust parameters, then generate a preview. Full world runs only after a preview exists.");
@@ -171,36 +173,41 @@ pub fn world_gen_ui_system(
             egui::CollapsingHeader::new("General Settings")
                 .default_open(true)
                 .show(ui, |ui| {
-                    tt(
-                        ui.add(
-                            egui::Slider::new(&mut world_gen_params.width, 128..=MAX_WORLD_GEN_AXIS)
-                                .text("Width"),
-                        ),
-                        hints::WIDTH,
-                    );
-                    tt(
-                        ui.add(
-                            egui::Slider::new(&mut world_gen_params.height, 128..=MAX_WORLD_GEN_AXIS)
-                                .text("Height"),
-                        ),
-                        hints::HEIGHT,
-                    );
-                    ui.small(format!(
-                        "Preview pass uses a downscaled grid (max {} per side) for speed; full generation uses these sliders up to {}×{} tiles. Use World Preview zoom to inspect.",
-                        PREVIEW_WORLD_MAX_AXIS, MAX_WORLD_GEN_AXIS, MAX_WORLD_GEN_AXIS
-                    ));
-                    
-                    ui.horizontal(|ui| {
-                        if tt(ui.button("Random Seed"), hints::RANDOM_SEED).clicked() {
-                            world_gen_params.seed = rand::random();
-                        }
+                    framed_group(ui, &palette, |ui| {
+                        section_heading(ui, &palette, CmdHeadingStyle::Gt, "Chunk Settings");
+                        path_hint(ui, &palette, "/assets/scenarios/test.ron");
+                        ui.add_space(6.0);
                         tt(
-                            ui.label(format!("Seed: {}", world_gen_params.seed)),
-                            hints::SEED_LABEL,
+                            ui.add(
+                                egui::Slider::new(&mut world_gen_params.width, 128..=MAX_WORLD_GEN_AXIS)
+                                    .text("Width"),
+                            ),
+                            hints::WIDTH,
                         );
+                        tt(
+                            ui.add(
+                                egui::Slider::new(&mut world_gen_params.height, 128..=MAX_WORLD_GEN_AXIS)
+                                    .text("Height"),
+                            ),
+                            hints::HEIGHT,
+                        );
+                        ui.small(format!(
+                            "Preview pass uses a downscaled grid (max {} per side) for speed; full generation uses these sliders up to {}×{} tiles. Use World Preview zoom to inspect.",
+                            PREVIEW_WORLD_MAX_AXIS, MAX_WORLD_GEN_AXIS, MAX_WORLD_GEN_AXIS
+                        ));
+
+                        ui.horizontal(|ui| {
+                            if tt(ui.button("Random Seed"), hints::RANDOM_SEED).clicked() {
+                                world_gen_params.seed = rand::random();
+                            }
+                            tt(
+                                ui.label(format!("Seed: {}", world_gen_params.seed)),
+                                hints::SEED_LABEL,
+                            );
+                        });
+
+                        ui.add_space(5.0);
                     });
-                    
-                    ui.add_space(5.0);
                 });
             
             egui::CollapsingHeader::new("Region Settings")

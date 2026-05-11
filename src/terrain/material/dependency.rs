@@ -28,6 +28,8 @@ pub struct ChunkDependency {
     pub rules_hash: u64,
     pub tags_hash: u64,
     pub tuning_hash: u64,
+    /// Inputs that affect **preview tinting** (registry / rules / tags / tuning / per-chunk noise id).
+    pub preview_hash: u64,
 }
 
 /// Bit *i* set ⇒ pass *(i+1)* must be re-run (`0b00111111` = passes 1–6).
@@ -182,13 +184,25 @@ pub fn compute_chunk_dependency(
     tags: &TagRegistry,
 ) -> ChunkDependency {
     let p1 = hash_pass1_bucket(params);
+    let registry_hash = hash_material_registry(reg);
+    let families_hash = hash_terrain_family_registry(families);
+    let rules_hash = hash_rule_set(rules);
+    let tags_hash = hash_tag_registry(tags);
+    let tuning_hash = hash_tuning_bucket(params);
+    let source_noise_id = source_noise_id_for_chunk(chunk_xy, p1);
+    let preview_hash = combine_u64(
+        combine_u64(registry_hash, rules_hash),
+        combine_u64(tags_hash, tuning_hash),
+    ) ^ families_hash
+        ^ source_noise_id;
     ChunkDependency {
-        source_noise_id: source_noise_id_for_chunk(chunk_xy, p1),
-        registry_hash: hash_material_registry(reg),
-        families_hash: hash_terrain_family_registry(families),
-        rules_hash: hash_rule_set(rules),
-        tags_hash: hash_tag_registry(tags),
-        tuning_hash: hash_tuning_bucket(params),
+        source_noise_id,
+        registry_hash,
+        families_hash,
+        rules_hash,
+        tags_hash,
+        tuning_hash,
+        preview_hash,
     }
 }
 

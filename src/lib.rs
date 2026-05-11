@@ -19,6 +19,7 @@ pub mod traits;
 pub mod utils;
 pub mod bevysubengines;
 pub mod idgen;
+pub mod scenario;
 
 // Re-export commonly used items
 pub use engine::EnginePlugin;

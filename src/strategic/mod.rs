@@ -1,5 +1,15 @@
 //! **Operational strategy** — continuous fields, sparse graphs, and derived blobs.
 //!
+//! ## Behavior scaffold (safe architecture)
+//!
+//! - **Layer 1** — [`behavior_entities`]: [`Agent`], [`Faction`], [`AgentFactionLink`].
+//! - **Layer 2** — [`behavior_interface`]: [`BehaviorModel`] trait, [`BehaviorContext`], [`DecisionSet`], evaluation hook.
+//! - **Authority / tooling** — [`behavior_pressure`] ([`PressureField`]) + [`behavior_script`] / [`behavior_mission`]:
+//!   **pressure composition** (climate cards, mission packages), not quest scripts or cutscene triggers.
+//! - **Layer 3** — control plane: scenarios / tools swap [`ActiveBehaviorModel`] and read [`DecisionPipelineSink`].
+//! - **Pipeline** — [`behavior_pipeline`]: composed score (traits + emotion + faction + script + environment).
+//! - **Fracture** — [`behavior_fracture`]: [`FractureEventBus`], meso drift, cohesion pressure, [`SubFactionStub`] hook.
+//!
 //! # Three spatial systems (do not collapse them)
 //!
 //! 1. **Static geographic skeleton** — Voronoi [`MacroRegion`](crate::terrain::generation::world_generator_enhanced::MacroRegion),
@@ -23,31 +33,122 @@
 //!
 //! **Runbook test rounds:** incremental stubs in [`runbook_rounds`](runbook_rounds.rs) mirror `prompts/guides/*_runbook_v1.md` execution tables.
 
+mod agent_batch_scoring;
+mod behavior_brain_plugin;
+mod behavior_emergence_log;
+mod behavior_entities;
+mod behavior_fracture;
+mod behavior_interface;
+mod behavior_plugin;
+mod behavior_pressure;
+mod behavior_script;
+mod behavior_mission;
+mod behavior_pipeline;
+mod build_order;
+mod faction_plugin;
+mod fracture_plugin;
 mod construction_book;
-mod runbook_rounds;
+mod frontline;
+mod gpu_bridge_plugin;
+mod hybrid_brain;
+mod hybrid_fields;
 mod infrastructure_graph;
 mod logistics_net;
+mod mission_plugin;
+mod node_field_profile;
 mod plugin;
 mod program;
+mod runbook_rounds;
 mod schedule;
+mod simulation_plugin;
 mod sim;
+mod strategic_behavior_schedule;
 mod transport_bridge;
+mod world_field_layers;
+mod world_read_snapshot;
+mod zones;
 
+pub use behavior_emergence_log::{
+    strategic_emergence_log_hybrid_resolution_system, StrategicEmergenceLog,
+};
+pub use behavior_entities::{
+    behavior_sync_entity_ids_system, Agent, AgentFactionLink, Faction,
+};
+pub use behavior_fracture::{
+    faction_cohesion_pressure_system, faction_internal_stage_system,
+    faction_meso_internal_tick_system, fracture_event_emit_system, fracture_probability_overlay_system,
+    sub_faction_stub_hook_system, FractureDriver, FractureEvent, FractureEventBus, FractureOverlaySettings,
+    FractureProbabilityOverlay, FractureSignal, FractureSignalBus, FractureSignalScratch, FractureStageScratch,
+    FractureType, SubFactionStub,
+};
+pub use agent_batch_scoring::{
+    agent_batch_cpu_score_system, resolve_agent_action, score_agent_cpu, AgentBatchScoringPlugin,
+    AgentCpuBatchScoring, AgentScoreInput, AgentScoreOutput, AgentScoreResult, BatchTacticalChoice,
+    GpuAgentScoringPipeline, WorldPressureSample,
+};
+pub use behavior_mission::{
+    active_missions_advance_elapsed_system, active_missions_expire_system,
+    mission_success_readout_note, narrative_mission_influence_apply_system,
+    pressure_field_from_active_missions_system, ActiveMissions, Mission, MissionId, MissionPressure,
+    Objective,
+};
+pub use build_order::{
+    process_build_order_queue_system, ApprovedBuildOrders, BuildOrder, BuildOrderQueue, BuildReason,
+    BuildSiteTile, StructureType,
+};
+pub use behavior_pipeline::{
+    compose_decision_score, decision_pipeline_composition_system, sample_decision_components,
+    DecisionScoreComponents,
+};
+pub use behavior_pressure::{PressureField, PressureProfile};
+pub use behavior_script::{Condition, IntentChannel, ScriptedIntentWeight, ScriptInfluence};
+pub use behavior_interface::{
+    behavior_model_evaluation_hook_system, ActiveBehaviorModel, BehaviorContext, BehaviorModel,
+    DecisionPipelineSink, DecisionSet, NoopBehaviorModel,
+};
+#[allow(deprecated)]
+pub use behavior_plugin::BehaviorScaffoldPlugin;
+pub use behavior_brain_plugin::BehaviorPlugin;
+pub use faction_plugin::FactionPlugin;
+pub use fracture_plugin::FracturePlugin;
+pub use frontline::{derive_frontline_from_control_system, FrontlineState};
+pub use gpu_bridge_plugin::{
+    AgentGpuPacket, AgentGpuResult, GpuBridgePlugin, GpuBridgeState, GpuSimLane,
+};
+pub use mission_plugin::MissionPlugin;
+pub use simulation_plugin::SimulationPlugin;
+pub use strategic_behavior_schedule::{StrategicBehaviorSchedule, StrategicBehaviorSchedulePlugin};
 pub use construction_book::{
     align_corridor_book_with_transport_directory, apply_corridor_book_from_transport_snapshot,
     corridor_phase_from_wire, corridor_phase_to_wire, transport_construction_records_from_book,
     transport_directory_edge_signature, CorridorConstructionBook, CorridorConstructionPhase,
     CorridorConstructionStatus,
 };
+pub use hybrid_brain::{
+    apply_agent_intent, agent_decision_score, agent_decision_score_with_world, control_variance,
+    fracture_pressure_exceeds, hybrid_action_base_value, hybrid_agent_intent_contribution_system,
+    hybrid_emotion_drift_system, hybrid_intent_reset_system, hybrid_phase_clock_tick_system,
+    hybrid_resolve_and_feedback_system, perceive_world, perceive_world_biased, resolution_masses,
+    resolve_world_state_from_masses, ActionWeights, HybridActionKind, HybridAgentEmotions,
+    HybridAgentTraits, HybridBeliefBias, HybridBrainSample, HybridResolutionMasses,
+    HybridResolutionTelemetry, HybridSimLastResolved, HybridSimPhaseClock, HybridSimScratch,
+    Perception, resolve_world_state, StateControlModel, WorldEvent, WorldIntentField,
+};
+pub use hybrid_fields::{
+    region_stats_spatial_smoothing_system, regional_target_from_world, smooth, RegionStats,
+    RegionalStatsOverlay, WorldFields,
+};
 pub use infrastructure_graph::{
     InfrastructureEdge, InfrastructureGraph, InfrastructureGraphBridgePlugin, InfrastructureNetworkType,
     InfrastructureNode,
 };
+pub use node_field_profile::{FieldContribution, FieldEmitterParent, NodeRole};
 pub use program::StrategicFieldsAndAiPlugin;
 pub use schedule::{StrategicOverlayCouplingScratch, StrategicOverlayDisplayPolicy};
 pub use sim::{
-    CityPlanningHints, InfrastructureCorridor, LogisticsAiRuntime, OperationalTheaterSummary,
-    SettlementSite, StrategicSimulationPlugin, StrategicTransportCorridor,
+    CityPlanningHints, HybridSimPipeline, InfrastructureCorridor, LogisticsAiRuntime,
+    OperationalTheaterSummary, SettlementSite, SimDebugView, StrategicSimulationPlugin,
+    StrategicTransportCorridor,
 };
 
 pub use runbook_rounds::city_planning::{
@@ -71,6 +172,11 @@ pub use runbook_rounds::settlement::{
 pub use logistics_net::logistics_net_inject_into_overlays;
 pub use plugin::{StrategicFieldPipeline, StrategicFieldsPlugin};
 pub use transport_bridge::StrategicRasterConfig;
+pub use world_field_layers::{
+    ChunkFieldCell, WorldFieldLayerConfig, WorldFieldLayerEpoch,
+};
+pub use world_read_snapshot::{world_read_snapshot_refresh_system, WorldReadSnapshot};
+pub use zones::{apply_zones_to_strategic_overlays_system, Zone, ZoneKind};
 
 use bevy::prelude::{Component, IVec2, Resource, UVec2};
 

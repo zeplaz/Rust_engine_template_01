@@ -6,6 +6,7 @@
 //! - See also [`map_editor_matrix_v1.md`](../../../../prompts/matrix/map_editor/map_editor_matrix_v1.md) §5 · **R9 bake order:** [`../../../../prompts/matrix/transport/runbook/r9_authoring_bake_order_steps_v1.md`](../../../../prompts/matrix/transport/runbook/r9_authoring_bake_order_steps_v1.md).
 //! - **G4 dev:** Road tool — **Save / Load transport (dev RON)** → `assets/saves/dev_transport_network.ron` (paths via `CARGO_MANIFEST_DIR`). `.json` fixtures still load when path ends in `.json`. Hydrating transport updates [`CorridorConstructionBook`](../../../strategic/construction_book.rs).
 //! - **M5:** **Save / Load map (RON)** → `assets/saves/maps/last.ron` (`crate::terrain::editor::map_snapshot`).
+//! - **Scenario Wave 2–4:** `scenario_script_panel` + **Scenario tools** entry window — `*.scenario.ron`, `RegisterObjectives` / `ScenarioObjectiveMarker`.
 //!
 //! ## Tile / pick convention (M3-S01)
 //! Matches [`crate::terrain::generation::world_generator_enhanced`] spawn layout:
@@ -30,7 +31,15 @@ use bevy_egui::egui::{self, Sense};
 use bevy_egui::{EguiContexts, EguiPrimaryContextPass, EguiTextureHandle};
 
 use crate::engine::{BaseState, InGameEditorState, MainMenuState, WorldGenFlowState};
+use crate::gui::editor::editor_world_commit_bridge::{
+    write_editor_world_grid_commit, EditorTileEditCommitted, EditorTileEditKind,
+};
+use crate::gui::editor::scenario_script_panel::{
+    scenario_editor_tools_entry_window, scenario_script_panel_system,
+    toggle_scenario_script_panel_hotkey, ScenarioScriptPanelState,
+};
 use crate::gui::editor::world_preview::{preview_biome_rgba_for_tile, terrain_family_preview_rgba};
+use crate::gui::style::{framed_group, path_hint, section_heading, CmdHeadingStyle, UiPalette};
 use crate::systems::terrain::TerrainRegistriesHandles;
 use crate::terrain::editor::map_snapshot::{MapSnapshotCellV1, MapSnapshotV1, MAP_SNAPSHOT_SCHEMA_VERSION};
 use crate::terrain::family::{TerrainFamilyId, TerrainFamilyRegistry, DEFAULT_TERRAIN_FAMILY_ID};
@@ -39,6 +48,7 @@ use crate::terrain::generation::world_generator_enhanced::{
     despawn_generated_world_entities, Height, Moisture, Temperature, TerrainType, TileMarker,
     TileRegionIndex, WorldGenParams, WorldMarker,
 };
+use crate::terrain::generation::brush_tile_inclusive_bounds;
 use crate::io::snapshot::{read_hybrid_world_snapshot_dev_v0, write_hybrid_world_snapshot_dev_v0};
 use crate::strategic::{
     apply_corridor_book_from_transport_snapshot, transport_construction_records_from_book,
@@ -292,6 +302,32 @@ fn sync_tool_to_substate(tool: &MapEditorTool, next_sub: &mut NextState<InGameEd
     NextState::set_if_neq(next_sub, tool.kind.to_in_game());
 }
 
+#[inline]
+fn emit_editor_tile_commit_for_brush(
+    edit_commits: &mut MessageWriter<EditorTileEditCommitted>,
+    params: &WorldGenParams,
+    cx: u32,
+    cy: u32,
+    radius: f32,
+    kind: EditorTileEditKind,
+) {
+    if params.width == 0 || params.height == 0 {
+        return;
+    }
+    let (mut min, mut max) = brush_tile_inclusive_bounds(cx, cy, radius);
+    let mx = params.width - 1;
+    let mz = params.height - 1;
+    min.x = min.x.min(mx);
+    min.y = min.y.min(mz);
+    max.x = max.x.min(mx);
+    max.y = max.y.min(mz);
+    edit_commits.write(EditorTileEditCommitted {
+        min_tile: min,
+        max_tile: max,
+        kind,
+    });
+}
+
 fn on_enter_editor(
     mut tool: ResMut<MapEditorTool>,
     mut next_sub: ResMut<NextState<InGameEditorState>>,
@@ -531,6 +567,7 @@ fn map_editor_minimap_window(
     mut view: ResMut<MapEditorGridView>,
     map_tex: Res<MapEditorMapTexture>,
     tool: Res<MapEditorTool>,
+    params: Res<WorldGenParams>,
     world_roots: Query<Entity, With<WorldMarker>>,
     road_entities: Query<(Entity, &MapEditorRoadMarkerV1)>,
     road_tf: Query<(&MapEditorRoadMarkerV1, &Transform), Without<TileMarker>>,
@@ -546,6 +583,7 @@ fn map_editor_minimap_window(
             (With<TileMarker>, Without<MapEditorRoadMarkerV1>),
         >,
     )>,
+    mut edit_commits: MessageWriter<EditorTileEditCommitted>,
 ) -> Result {
     let texture_id = contexts.add_image(EguiTextureHandle::Strong(map_tex.texture.clone()));
     let tex_w = map_tex.width as f32;
@@ -611,9 +649,25 @@ fn map_editor_minimap_window(
                                 match tool.terrain_paint {
                                     MapEditorTerrainPaint::Height => {
                                         apply_brush_disk(&tool, cx, cy, &mut tiles, Some(0.02));
+                                        emit_editor_tile_commit_for_brush(
+                                            &mut edit_commits,
+                                            &params,
+                                            cx,
+                                            cy,
+                                            tool.brush_radius,
+                                            EditorTileEditKind::TerrainHeight,
+                                        );
                                     }
                                     MapEditorTerrainPaint::Biome => {
                                         apply_brush_disk(&tool, cx, cy, &mut tiles, None);
+                                        emit_editor_tile_commit_for_brush(
+                                            &mut edit_commits,
+                                            &params,
+                                            cx,
+                                            cy,
+                                            tool.brush_radius,
+                                            EditorTileEditKind::TerrainBiome,
+                                        );
                                     }
                                 }
                             } else if tool.terrain_paint == MapEditorTerrainPaint::Height
@@ -622,6 +676,14 @@ fn map_editor_minimap_window(
                             {
                                 let step = (scroll_delta * 0.001).clamp(-0.08, 0.08);
                                 apply_brush_disk(&tool, cx, cy, &mut tiles, Some(step));
+                                emit_editor_tile_commit_for_brush(
+                                    &mut edit_commits,
+                                    &params,
+                                    cx,
+                                    cy,
+                                    tool.brush_radius,
+                                    EditorTileEditKind::TerrainHeight,
+                                );
                             }
                         } else if tool.kind == MapEditorToolKind::Road
                             && resp.clicked_by(egui::PointerButton::Primary)
@@ -641,6 +703,13 @@ fn map_editor_minimap_window(
                                 cy,
                                 hn,
                             );
+                            if params.width > 0 && params.height > 0 {
+                                edit_commits.write(EditorTileEditCommitted {
+                                    min_tile: UVec2::new(cx, cy),
+                                    max_tile: UVec2::new(cx, cy),
+                                    kind: EditorTileEditKind::RoadMarker,
+                                });
+                            }
                         }
                     }
                 });
@@ -656,6 +725,8 @@ fn map_editor_bake_transport(
     mut fields: ResMut<TransportFieldStore>,
     mut directory: ResMut<TransportEdgeDirectory>,
     mut last_hydrated: ResMut<TransportLastHydratedSnapshot>,
+    params: Res<WorldGenParams>,
+    mut edit_commits: MessageWriter<EditorTileEditCommitted>,
 ) {
     for _ in events.read() {
         let mut rows: Vec<(u32, u32, u32, Vec3)> = markers
@@ -673,6 +744,11 @@ fn map_editor_bake_transport(
         match hydrate_transport_from_snapshot(&mut topology, &mut fields, &mut directory, &snap) {
             Ok(()) => {
                 last_hydrated.snapshot = Some(snap);
+                write_editor_world_grid_commit(
+                    &mut edit_commits,
+                    &params,
+                    EditorTileEditKind::TransportTopology,
+                );
             }
             Err(e) => warn!("Bake transport hydrate failed: {e:?}"),
         }
@@ -886,6 +962,7 @@ fn map_editor_map_snapshot_io(
     mut ghost: ResMut<RoadAuthoringGhostPreview>,
     world_q: Query<Entity, With<WorldMarker>>,
     road_entities: Query<(Entity, &MapEditorRoadMarkerV1)>,
+    mut edit_commits: MessageWriter<EditorTileEditCommitted>,
 ) {
     for req in events.read() {
         match *req {
@@ -1062,6 +1139,11 @@ fn map_editor_map_snapshot_io(
                 }
 
                 info!("Loaded map snapshot {}×{} from {}", w, h, path.display());
+                write_editor_world_grid_commit(
+                    &mut edit_commits,
+                    &params,
+                    EditorTileEditKind::MapSnapshotImport,
+                );
             }
         }
     }
@@ -1074,9 +1156,9 @@ fn map_editor_palette_system(
     mut next_flow: ResMut<NextState<WorldGenFlowState>>,
     mut next_menu: ResMut<NextState<MainMenuState>>,
     mut next_sub: ResMut<NextState<InGameEditorState>>,
-    sub_state: Res<State<InGameEditorState>>,
     hover: Res<MapEditorHover>,
     ghost: Res<RoadAuthoringGhostPreview>,
+    palette: Res<UiPalette>,
     mut bake_events: MessageWriter<MapEditorBakeTransportRequest>,
     mut save_dev_transport: MessageWriter<MapEditorSaveDevTransportRequest>,
     mut load_dev_transport: MessageWriter<MapEditorLoadDevTransportRequest>,
@@ -1091,12 +1173,18 @@ fn map_editor_palette_system(
         .show(contexts.ctx_mut()?, |ui| {
             ui.label(egui::RichText::new("TEMP-EGUI tool palette; replace with Bevy UI per gui_runbook.").weak());
             ui.add_space(6.0);
-            ui.label(format!("Sub-state: {:?}", sub_state.get()));
-            if let Some((x, y)) = hover.tile {
-                ui.label(format!("Hover tile: ({x}, {y})"));
-            } else {
-                ui.label("Hover tile: off-map");
-            }
+            framed_group(ui, &palette, |ui| {
+                section_heading(ui, &palette, CmdHeadingStyle::Gt, "Chunk Settings");
+                path_hint(ui, &palette, "/assets/scenarios/test.ron");
+                ui.add_space(4.0);
+                ui.label(format!("Active tool: {:?}", tool.kind));
+                if let Some((x, y)) = hover.tile {
+                    ui.label(format!("Hover tile: ({x}, {y})"));
+                } else {
+                    ui.label("Hover tile: off-map");
+                }
+            });
+            ui.add_space(6.0);
 
             let prev = tool.kind;
             ui.horizontal(|ui| {
@@ -1260,6 +1348,7 @@ impl Plugin for MapEditorPlugin {
             .init_resource::<MapEditorHover>()
             .init_resource::<MapEditorGridView>()
             .init_resource::<MapEditorMapTexture>()
+            .init_resource::<ScenarioScriptPanelState>()
             .add_systems(OnEnter(BaseState::Editor), on_enter_editor)
             .add_systems(
                 Update,
@@ -1285,12 +1374,24 @@ impl Plugin for MapEditorPlugin {
                     .run_if(in_state(BaseState::Editor)),
             )
             .add_systems(
+                Update,
+                toggle_scenario_script_panel_hotkey.run_if(in_state(BaseState::Editor)),
+            )
+            .add_systems(
                 EguiPrimaryContextPass,
                 map_editor_minimap_window.run_if(in_state(BaseState::Editor)),
             )
             .add_systems(
                 EguiPrimaryContextPass,
                 map_editor_palette_system.run_if(in_state(BaseState::Editor)),
+            )
+            .add_systems(
+                EguiPrimaryContextPass,
+                scenario_editor_tools_entry_window.run_if(in_state(BaseState::Editor)),
+            )
+            .add_systems(
+                EguiPrimaryContextPass,
+                scenario_script_panel_system.run_if(in_state(BaseState::Editor)),
             );
     }
 }

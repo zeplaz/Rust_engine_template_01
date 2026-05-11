@@ -2,6 +2,8 @@
 
 **Goal:** unblock **iteration sims** with the smallest tools/UI surface, then layer real systems against existing prompts/matrices.
 
+**Macro program order (strategic / infra / UX):** see [`guides/strategic_program_execution_plan_v1.md`](guides/strategic_program_execution_plan_v1.md) §4 — use that for **P0–P8** sequencing; this file stays the **scaffold + population queue** for near-term code.
+
 **Read first:** `prompts/llm_agent_brief.md` § **Workflow — design Q&A vs implementation**.
 
 ---

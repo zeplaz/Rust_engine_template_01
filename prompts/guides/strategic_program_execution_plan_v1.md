@@ -2,7 +2,7 @@
 
 > **STATUS:** Draft **v1** — **recommended start order** across orchestrators and new runbooks.
 
-Version: `v1.0.1`  
+Version: `v1.0.2`  
 Parent index: [`simulation_expansion_orchestrator_v1.md`](simulation_expansion_orchestrator_v1.md)
 
 **Orchestrators:**
@@ -46,8 +46,14 @@ Parent index: [`simulation_expansion_orchestrator_v1.md`](simulation_expansion_o
 
 ---
 
-## 4. “Start next” one-liner
+## 4. “Start next” — current phase
 
-**P0** (UX + doctrine) stays continuous. **P1** (strategic overlay MVP) has substantial wiring in-tree: chunk overlays, transport→graph→inject pipeline, dormant/dirty LOD, infra graph mirror, optional weather→recon coupling, HUD overlay toggles — see [`strategic_fields_and_ai_orchestrator_v1.md`](strategic_fields_and_ai_orchestrator_v1.md) §9. If unblocked, push **P2** (**[`infrastructure_construction_runbook_v1.md`](infrastructure_construction_runbook_v1.md)** + **[`infrastructure_corridor_runbook_v1.md`](infrastructure_corridor_runbook_v1.md)**): authoritative corridor geometry and construction state so [`InfrastructureCorridor`](../../src/strategic/sim.rs) wear and city AI consume **real** spans.
+**P0** (UX + doctrine) stays continuous.
 
-> **Document history:** `v1.0.1` (2026-05-10) — §4 updated after P1 engineering landing (strategic + S2 consumer).
+**P1** (strategic overlay + coupling) is **partially landed**: chunk overlays, transport→graph→inject, dormant/dirty LOD coupling, infra graph mirror, weather→recon damp, HUD overlay policy toggles, multi-slot city/settlement hints + adaptive-rebuild pressure — see [`strategic_fields_and_ai_orchestrator_v1.md`](strategic_fields_and_ai_orchestrator_v1.md) §9. Next engineering emphasis on P1 is **morale/instability channels**, overlay diffusion, and GPU/UX knobs ([`strategic_overlay_runbook_v1.md`](strategic_overlay_runbook_v1.md) **R5+**), in parallel with P2 if staffing allows.
+
+**Next primary program phase (structural):** **P2** — **[`infrastructure_construction_runbook_v1.md`](infrastructure_construction_runbook_v1.md)** + **[`infrastructure_corridor_runbook_v1.md`](infrastructure_corridor_runbook_v1.md)** so **authoritative corridor geometry** and construction phases feed [`CorridorConstructionBook`](../../src/strategic/construction_book.rs) / [`InfrastructureCorridor`](../../src/strategic/sim.rs) beyond transport directory stubs. That unlocks **P3** (resilience → reroute) and deepens **P4** (logistics AI on real stress).
+
+**Adjacent product loops (non-blocking):** map editor **M1–M5** applied — see [`map_editor_runbook_v1.md`](map_editor_runbook_v1.md) §4; terrain preview **P** wave (`NoiseSamplingTuning` seed offsets) — see [`composite_style_preview_integration_matrix_v1.md`](../matrix/terrain_biome/composite_style_preview_integration_matrix_v1.md).
+
+> **Document history:** `v1.0.2` (2026-05-10) — §4 expanded: P1 partial vs P2 structural next; adjacent editor/preview pointers. `v1.0.1` — §4 after P1 landing + S2 consumer.
