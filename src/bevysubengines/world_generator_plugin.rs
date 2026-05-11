@@ -497,14 +497,14 @@ fn generate_world_data(params: WorldGenParams) -> WorldData {
     let moisture_noise = build_fbm_perlin(
         params.noise_scale * ns.moisture_noise_scale_mul,
         params.noise_octaves,
-        params.seed.wrapping_add(1),
+        params.seed.wrapping_add(ns.moisture_seed_offset),
         lac,
         per,
     );
     let temperature_noise = build_fbm_perlin(
         params.noise_scale * ns.temperature_noise_scale_mul,
         params.noise_octaves,
-        params.seed.wrapping_add(2),
+        params.seed.wrapping_add(ns.temperature_seed_offset),
         lac,
         per,
     );

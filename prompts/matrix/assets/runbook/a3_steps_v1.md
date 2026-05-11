@@ -6,7 +6,9 @@
 
 ### A3-S01 Post–U3-S04 loader column
 
-**Goal:** For each terrain registry row in [`../bevy_asset_config_migration_matrix_v1.md`](../bevy_asset_config_migration_matrix_v1.md), set **Loader / Asset** to **Partial** or **Applied** to match `src/` (not prose only).
+**Goal:** For each terrain registry row in [`../bevy_asset_config_migration_matrix_v1.md`](../bevy_asset_config_migration_matrix_v1.md), set **Loader / `Asset`** to **Partial** or **Applied** to match `src/` (not prose only).
+
+**Result (2026-05-10):** Material, tag, and rules loaders all register in [`MaterialUnificationPlugin`](../../../src/systems/terrain/material_plugin.rs); matrix Terrain table updated accordingly.
 
 **Anchor reads:** terrain [`material_unification_matrix_v1.md`](../terrain_biome/material_unification_matrix_v1.md) §10 · Bevy matrix Terrain table.
 

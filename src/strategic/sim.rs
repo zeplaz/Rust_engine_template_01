@@ -95,6 +95,8 @@ pub struct LogisticsAiRuntime {
     pub mean_edge_damage: f32,
     pub stockpile_fill_ratio: f32,
     pub industrial_output_proxy: f32,
+    /// 0..1 — normalized count of registered [`crate::systems::production::manifest::ProductionManifest`] domains (forecasting / AI context).
+    pub production_domain_proxy: f32,
 }
 
 /// **ai_operational_warfare_runbook** — rolled-up threat / sustain metrics per faction slot.
@@ -214,6 +216,7 @@ fn strategic_fields_coupling_tick(
     storages: Query<&ResourceStorage>,
     caps: Query<&ResourceStorageCapacity>,
     producers: Query<&ResourceProducer>,
+    production_manifest: Option<Res<crate::systems::production::ProductionManifest>>,
 ) {
     scratch.frame_counter = scratch.frame_counter.wrapping_add(1);
     let global_refresh = scratch.dormant_global_refresh();
@@ -289,6 +292,10 @@ fn strategic_fields_coupling_tick(
         .map(|p| p.production_rate * p.efficiency.max(0.01))
         .sum();
     logistics_ai.industrial_output_proxy = (prod_sum / 80.0).min(1.0);
+    logistics_ai.production_domain_proxy = production_manifest
+        .as_ref()
+        .map(|m| (m.domains.len() as f32 / 12.0).min(1.0))
+        .unwrap_or(0.0);
 
     if ncells > 0.0 {
         let mut active = 0usize;
@@ -310,12 +317,16 @@ fn strategic_fields_coupling_tick(
 fn strategic_city_planning_hints_tick(
     overlays: Query<&ChunkStrategicOverlay>,
     settlements: Query<&SettlementSite>,
+    corridors: Query<Entity, With<InfrastructureCorridor>>,
     logistics_ai: Res<LogisticsAiRuntime>,
     theater: Res<OperationalTheaterSummary>,
     mut city: ResMut<CityPlanningHints>,
 ) {
     let dmg = logistics_ai.mean_edge_damage;
-    let mean_th_s0 = theater.mean_threat_by_slot[0];
+    let slot_n = theater.active_faction_slots.min(MAX_STRATEGIC_FACTION_SLOTS).max(1);
+    let max_mean_th = (0..slot_n)
+        .map(|s| theater.mean_threat_by_slot[s])
+        .fold(0.0f32, |a, b| a.max(b));
 
     let mut best = f32::NEG_INFINITY;
     let mut arche_maj = SettlementArchetype::AgriculturalRegion;
@@ -332,30 +343,40 @@ fn strategic_city_planning_hints_tick(
                 continue;
             }
             let n = o.len_cells().max(1) as f32;
-            let mut ls = 0.0f32;
-            let mut th = 0.0f32;
+            let mut ls_acc = 0.0f32;
+            let mut th_acc = 0.0f32;
             let mut fr = 0.0f32;
             for i in 0..o.len_cells() {
-                ls += o.logistics_strength[i][0];
-                th += o.threat[i][0];
+                let mut ls = 0.0f32;
+                let mut th = 0.0f32;
+                for slot in 0..slot_n {
+                    ls += o.logistics_strength[i][slot];
+                    th = th.max(o.threat[i][slot]);
+                }
+                ls_acc += ls;
+                th_acc += th;
                 fr += o.fire_risk[i];
             }
-            let sc = site_score(ls / n, fr / n, th / n);
+            let sc = site_score(ls_acc / n, fr / n, th_acc / n);
             best = best.max(sc);
         }
     }
     city.last_best_site_score = if best.is_finite() { best } else { 0.0 };
     city.primary_archetype = arche_maj;
+    let corridor_n = corridors.iter().count() as f32;
+    let corridor_bonus = (corridor_n * 0.06).min(0.35);
     city.utility_redundancy_hint = (utility_redundancy_weight(arche_maj)
+        * (1.0 + corridor_bonus)
         * (1.0 - logistics_ai.congestion_proxy * 0.35 - dmg * 0.25))
         .clamp(0.15, 2.5);
-    city.adaptive_rebuild_pressure = (dmg * 0.55 + mean_th_s0 * 0.45).clamp(0.0, 1.0);
+    city.adaptive_rebuild_pressure = (dmg * 0.55 + max_mean_th * 0.45).clamp(0.0, 1.0);
 }
 
 /// **settlement_growth** + **infrastructure_corridor** maintenance.
 #[allow(clippy::type_complexity)]
 fn settlement_and_corridor_tick(
     time: Res<Time>,
+    hints: Res<CityPlanningHints>,
     mut settlements: Query<&mut SettlementSite>,
     mut standalone_corridors: Query<&mut InfrastructureCorridor, Without<StrategicTransportCorridor>>,
     mut linked_corridors: Query<(
@@ -367,12 +388,22 @@ fn settlement_and_corridor_tick(
 ) {
     let dt = time.delta_secs().clamp(0.0, 0.25);
     let wear_dt = dt * 0.01;
+    let p = hints.adaptive_rebuild_pressure;
     for mut s in &mut settlements {
         let pull = migration_pull(
             s.jobs_opportunity,
             s.public_safety,
             s.housing_supply,
         );
+        let adaptation_dt = dt * 60.0;
+        if p > 0.55 {
+            s.adaptation_reserve = (s.adaptation_reserve - 0.004 * p * adaptation_dt).max(0.0);
+        } else {
+            s.adaptation_reserve = (s.adaptation_reserve + 0.0025 * (1.0 - p) * adaptation_dt).min(1.0);
+        }
+        s.informal_pressure =
+            (s.informal_pressure + 0.015 * p * (1.0 - s.housing_supply) * dt).min(1.0);
+
         let rate = 2.0
             * s.water_access.clamp(0.0, 2.0)
             * (0.45 + 0.55 * pull)
@@ -408,6 +439,7 @@ mod tests {
         CorridorConstructionBook, CorridorConstructionPhase, LogisticsEdge, LogisticsGraph,
         LogisticsNode, LogisticsNodeId, StrategicFieldsAndAiPlugin,
     };
+    use crate::systems::production::default_production_manifest;
     use crate::systems::terrain::MaterialUnificationPlugin;
     use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
     use crate::terrain::generation::{Chunk, ChunkCellMatrix};
@@ -459,6 +491,8 @@ mod tests {
         app.world_mut()
             .spawn(InfrastructureCorridor::new(crate::strategic::CorridorType::Rail));
 
+        app.world_mut().insert_resource(default_production_manifest());
+
         for _ in 0..10 {
             app.update();
         }
@@ -478,6 +512,10 @@ mod tests {
         let la = app.world().resource::<LogisticsAiRuntime>();
         assert!(la.congestion_proxy >= 0.0);
         assert!(la.mean_edge_damage >= 0.0);
+        assert!(
+            la.production_domain_proxy > 0.0,
+            "ProductionManifest should drive production_domain_proxy in full engine stack"
+        );
 
         let od = app.world().resource::<OperationalTheaterSummary>();
         assert!(od.mean_logistics_strength_by_slot[0] >= 0.0);
@@ -488,6 +526,30 @@ mod tests {
             q.iter(app.world()).next().expect("chunk overlay")
         };
         assert!(ov.mobility_cost[0] < 1.0 || ov.logistics_throughput[0] > 0.0);
+    }
+
+    #[test]
+    fn adaptive_rebuild_uses_max_faction_mean_threat() {
+        let mut app = App::new();
+        app.add_plugins(MinimalPlugins)
+            .init_resource::<LogisticsAiRuntime>()
+            .init_resource::<OperationalTheaterSummary>()
+            .init_resource::<CityPlanningHints>();
+        app.world_mut().resource_mut::<LogisticsAiRuntime>().mean_edge_damage = 0.0;
+        {
+            let mut th = app.world_mut().resource_mut::<OperationalTheaterSummary>();
+            th.mean_threat_by_slot[0] = 0.05;
+            th.mean_threat_by_slot[1] = 0.92;
+            th.active_faction_slots = 2;
+        }
+        app.add_systems(Update, strategic_city_planning_hints_tick);
+        app.update();
+        let hints = app.world().resource::<CityPlanningHints>();
+        assert!(
+            hints.adaptive_rebuild_pressure > 0.4,
+            "expected peak faction threat to raise adaptive_rebuild_pressure, got {}",
+            hints.adaptive_rebuild_pressure
+        );
     }
 
     #[test]

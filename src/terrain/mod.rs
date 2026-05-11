@@ -14,6 +14,7 @@ pub mod material;
 pub mod generation;
 pub mod mobility;
 mod dynamic_overlay;
+pub mod editor;
 
 // Public exports
 pub use locational::*;

@@ -175,14 +175,14 @@ pub fn build_world_noise_kernels(params: &WorldGenParams, tuning: &NoiseSampling
     let moisture_noise = build_fbm_perlin(
         params.noise_scale * tuning.moisture_noise_scale_mul,
         params.noise_octaves,
-        params.seed.wrapping_add(1),
+        params.seed.wrapping_add(tuning.moisture_seed_offset),
         lac,
         per,
     );
     let temperature_noise = build_fbm_perlin(
         params.noise_scale * tuning.temperature_noise_scale_mul,
         params.noise_octaves,
-        params.seed.wrapping_add(2),
+        params.seed.wrapping_add(tuning.temperature_seed_offset),
         lac,
         per,
     );

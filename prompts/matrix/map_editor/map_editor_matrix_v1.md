@@ -39,7 +39,7 @@ Version: `v1.0.0`
 | **M2** | `MapEditorPlugin` shell, `run_if(Editor)`, mode resource, minimal palette | [`runbook/m2_steps_v1.md`](runbook/m2_steps_v1.md) | Applied |
 | **M3** | Height brush + biome repaint on tiles | [`runbook/m3_steps_v1.md`](runbook/m3_steps_v1.md) | Applied |
 | **M4** | Road / structure markers tile-aligned | [`runbook/m4_steps_v1.md`](runbook/m4_steps_v1.md) | Applied |
-| **M5** | Snapshot serde, save from editor, open saved map in editor | [`runbook/m5_steps_v1.md`](runbook/m5_steps_v1.md) | Pending |
+| **M5** | Snapshot serde, save from editor, open saved map in editor | [`runbook/m5_steps_v1.md`](runbook/m5_steps_v1.md) | **Applied** — `terrain::editor::map_snapshot`, RON `assets/saves/maps/last.ron`, palette buttons |
 
 ---
 

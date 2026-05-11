@@ -59,7 +59,7 @@ Same as [`terrain_unification_runbook_v1.md`](terrain_unification_runbook_v1.md)
 |:---:|:---|:---|:---:|
 | **A1** | [`a1_steps_v1.md`](a1_steps_v1.md) | Cross-links + terrain README + matrix pointers | Applied |
 | **A2** | [`a2_steps_v1.md`](a2_steps_v1.md) | Example file audits (`schema_version`, keys) | **Applied** (audits 2026-04-30 — examples compliant; matrix footnote added) |
-| **A3** | [`a3_steps_v1.md`](a3_steps_v1.md) | Integration gates after terrain U3 / U5 | Pending |
+| **A3** | [`a3_steps_v1.md`](a3_steps_v1.md) | Integration gates after terrain U3 / U5 | **Partial** — loaders registered in `MaterialUnificationPlugin` (A3-S01 truth); §4 close when step checklist complete |
 
 Update **Status** in this table when each phase’s **phase-close** step completes.
 

@@ -5,7 +5,7 @@
 //! - **Editor v1 pattern:** [`MapEditorRoadMarkerV1`] — tile-aligned scaffold; **`placement_seq`** preserves **click order** for bake (R9). Do not lexicographically sort tiles for transport graph building.
 //! - See also [`map_editor_matrix_v1.md`](../../../../prompts/matrix/map_editor/map_editor_matrix_v1.md) §5 · **R9 bake order:** [`../../../../prompts/matrix/transport/runbook/r9_authoring_bake_order_steps_v1.md`](../../../../prompts/matrix/transport/runbook/r9_authoring_bake_order_steps_v1.md).
 //! - **G4 dev:** Road tool — **Save / Load transport (dev RON)** → `assets/saves/dev_transport_network.ron` (paths via `CARGO_MANIFEST_DIR`). `.json` fixtures still load when path ends in `.json`. Hydrating transport updates [`CorridorConstructionBook`](../../../strategic/construction_book.rs).
-//! - **M5 / S stub:** **Save / Load hybrid (dev)** → `assets/saves/dev_world_hybrid_v0.sav` (header line + transport **RON** body; JSON body still loads).
+//! - **M5:** **Save / Load map (RON)** → `assets/saves/maps/last.ron` (`crate::terrain::editor::map_snapshot`).
 //!
 //! ## Tile / pick convention (M3-S01)
 //! Matches [`crate::terrain::generation::world_generator_enhanced`] spawn layout:
@@ -17,6 +17,7 @@
 //! ## Biome brush (M3-S03)
 //! Sets [`TerrainType`] directly — **no** [`classify_biome`](crate::terrain::biome::classify_biome); manual paint only.
 
+use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
@@ -31,9 +32,12 @@ use bevy_egui::{EguiContexts, EguiPrimaryContextPass, EguiTextureHandle};
 use crate::engine::{BaseState, InGameEditorState, MainMenuState, WorldGenFlowState};
 use crate::gui::editor::world_preview::{preview_biome_rgba_for_tile, terrain_family_preview_rgba};
 use crate::systems::terrain::TerrainRegistriesHandles;
-use crate::terrain::family::{TerrainFamilyId, DEFAULT_TERRAIN_FAMILY_ID};
+use crate::terrain::editor::map_snapshot::{MapSnapshotCellV1, MapSnapshotV1, MAP_SNAPSHOT_SCHEMA_VERSION};
+use crate::terrain::family::{TerrainFamilyId, TerrainFamilyRegistry, DEFAULT_TERRAIN_FAMILY_ID};
+use crate::terrain::generation::polygon_world_semantics::MacroStrategicKind;
 use crate::terrain::generation::world_generator_enhanced::{
-    Height, TerrainType, TileMarker, WorldGenParams, WorldMarker,
+    despawn_generated_world_entities, Height, Moisture, Temperature, TerrainType, TileMarker,
+    TileRegionIndex, WorldGenParams, WorldMarker,
 };
 use crate::io::snapshot::{read_hybrid_world_snapshot_dev_v0, write_hybrid_world_snapshot_dev_v0};
 use crate::strategic::{
@@ -69,6 +73,13 @@ pub struct MapEditorSaveHybridWorldDevRequest;
 #[derive(Message)]
 pub struct MapEditorLoadHybridWorldDevRequest;
 
+/// **M5:** save or load terrain grid snapshot at `assets/saves/maps/last.ron`.
+#[derive(Message, Clone, Copy)]
+pub enum MapEditorMapSnapshotIoRequest {
+    Save,
+    Load,
+}
+
 /// **R9:** undo last road-marker placement (stack captured **before** each click).
 #[derive(Message)]
 pub struct MapEditorRoadUndoRequest;
@@ -79,6 +90,10 @@ fn dev_transport_network_save_path() -> PathBuf {
 
 fn dev_hybrid_world_save_path() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("assets/saves/dev_world_hybrid_v0.sav")
+}
+
+fn dev_map_snapshot_path() -> PathBuf {
+    Path::new(env!("CARGO_MANIFEST_DIR")).join("assets/saves/maps/last.ron")
 }
 
 /// Live **preview** polyline from markers (R9 ghost) — not hydrated until **Bake**.
@@ -858,6 +873,200 @@ fn map_editor_dev_load_hybrid_world(
     }
 }
 
+fn map_editor_map_snapshot_io(
+    mut events: MessageReader<MapEditorMapSnapshotIoRequest>,
+    mut commands: Commands,
+    mut params: ResMut<WorldGenParams>,
+    tiles: Query<(&Transform, &Height, &TerrainType), With<TileMarker>>,
+    roads: Query<&MapEditorRoadMarkerV1>,
+    fam_assets: Res<Assets<TerrainFamilyRegistry>>,
+    handles: Res<TerrainRegistriesHandles>,
+    mut road_placement: ResMut<MapEditorRoadPlacementSeq>,
+    mut road_undo: ResMut<MapEditorRoadUndoStack>,
+    mut ghost: ResMut<RoadAuthoringGhostPreview>,
+    world_q: Query<Entity, With<WorldMarker>>,
+    road_entities: Query<(Entity, &MapEditorRoadMarkerV1)>,
+) {
+    for req in events.read() {
+        match *req {
+            MapEditorMapSnapshotIoRequest::Save => {
+                let Some(reg) = fam_assets.get(&handles.terrain_families) else {
+                    warn!("Save map snapshot: terrain family registry not loaded.");
+                    continue;
+                };
+                let w = params.width;
+                let h = params.height;
+                if w == 0 || h == 0 {
+                    warn!("Save map snapshot: world dimensions are zero.");
+                    continue;
+                }
+                let mut grid: Vec<Option<(f32, TerrainFamilyId)>> = vec![None; (w * h) as usize];
+                for (tf, he, terr) in &tiles {
+                    let x = tf.translation.x.round() as i32;
+                    let z = tf.translation.z.round() as i32;
+                    if x < 0 || z < 0 {
+                        continue;
+                    }
+                    let x = x as u32;
+                    let z = z as u32;
+                    if x >= w || z >= h {
+                        continue;
+                    }
+                    let i = (z * w + x) as usize;
+                    grid[i] = Some((he.0, terr.0));
+                }
+                let mut road_tiles = HashSet::new();
+                for m in &roads {
+                    road_tiles.insert((m.tile_x, m.tile_z));
+                }
+                let mut cells = Vec::with_capacity((w * h) as usize);
+                for z in 0..h {
+                    for x in 0..w {
+                        let i = (z * w + x) as usize;
+                        let (height, tid) = grid[i].unwrap_or((0.0, DEFAULT_TERRAIN_FAMILY_ID));
+                        let terrain_family = reg
+                            .def(tid)
+                            .map(|d| d.name.clone())
+                            .unwrap_or_else(|| "Grassland".to_string());
+                        cells.push(MapSnapshotCellV1 {
+                            height,
+                            terrain_family,
+                            road: road_tiles.contains(&(x, z)),
+                        });
+                    }
+                }
+                let snap = MapSnapshotV1 {
+                    schema_version: MAP_SNAPSHOT_SCHEMA_VERSION,
+                    width: w,
+                    height: h,
+                    cells,
+                };
+                let path = dev_map_snapshot_path();
+                if let Some(parent) = path.parent() {
+                    let _ = std::fs::create_dir_all(parent);
+                }
+                match snap.to_ron_string() {
+                    Ok(s) => match std::fs::write(&path, format!("{}\n", s.trim_end())) {
+                        Ok(()) => info!("Saved map snapshot to {}", path.display()),
+                        Err(e) => warn!("Save map snapshot failed: {e:?}"),
+                    },
+                    Err(e) => warn!("Save map snapshot RON: {e:?}"),
+                }
+            }
+            MapEditorMapSnapshotIoRequest::Load => {
+                let path = dev_map_snapshot_path();
+                let bytes = match std::fs::read(&path) {
+                    Ok(b) => b,
+                    Err(e) => {
+                        warn!("Load map snapshot: read {}: {e:?}", path.display());
+                        continue;
+                    }
+                };
+                let text = match std::str::from_utf8(&bytes) {
+                    Ok(s) => s,
+                    Err(e) => {
+                        warn!("Load map snapshot: UTF-8: {e:?}");
+                        continue;
+                    }
+                };
+                let snap = match MapSnapshotV1::from_ron_str(text) {
+                    Ok(s) => s,
+                    Err(e) => {
+                        warn!("Load map snapshot: RON: {e}");
+                        continue;
+                    }
+                };
+                if let Err(e) = snap.validate() {
+                    warn!("Load map snapshot: {e}");
+                    continue;
+                }
+                let Some(reg) = fam_assets.get(&handles.terrain_families) else {
+                    warn!("Load map snapshot: terrain family registry not loaded.");
+                    continue;
+                };
+                for (e, _) in road_entities.iter() {
+                    commands.entity(e).despawn();
+                }
+                despawn_generated_world_entities(&mut commands, &world_q);
+                params.width = snap.width;
+                params.height = snap.height;
+                *road_placement = MapEditorRoadPlacementSeq::default();
+                road_undo.frames.clear();
+                *ghost = RoadAuthoringGhostPreview::default();
+
+                let world_root = commands
+                    .spawn((WorldMarker, Name::new("Map snapshot world")))
+                    .id();
+
+                let w = snap.width;
+                let h = snap.height;
+                let mut idx = 0usize;
+                for z in 0..h {
+                    for x in 0..w {
+                        let cell = &snap.cells[idx];
+                        idx += 1;
+                        let tid = match reg.require_id(&cell.terrain_family) {
+                            Ok(id) => id,
+                            Err(_) => {
+                                warn!(
+                                    "Load map snapshot: unknown terrain family {:?}, using Grassland",
+                                    cell.terrain_family
+                                );
+                                DEFAULT_TERRAIN_FAMILY_ID
+                            }
+                        };
+                        let tile_e = commands
+                            .spawn((
+                                TileMarker,
+                                TileRegionIndex(0),
+                                Transform::from_translation(Vec3::new(
+                                    x as f32,
+                                    cell.height * HEIGHT_WORLD_SCALE,
+                                    z as f32,
+                                )),
+                                Height(cell.height),
+                                Moisture(0.5),
+                                Temperature(0.5),
+                                TerrainType(tid),
+                                MacroStrategicKind::default(),
+                                Name::new(format!("Tile ({x}, {z})")),
+                            ))
+                            .id();
+                        commands.entity(world_root).add_child(tile_e);
+                    }
+                }
+
+                idx = 0;
+                for z in 0..h {
+                    for x in 0..w {
+                        let cell = &snap.cells[idx];
+                        idx += 1;
+                        if !cell.road {
+                            continue;
+                        }
+                        let seq = road_placement.next;
+                        road_placement.next = road_placement.next.saturating_add(1);
+                        let y = cell.height * HEIGHT_WORLD_SCALE + 0.25;
+                        commands.entity(world_root).with_children(|parent| {
+                            parent.spawn((
+                                MapEditorRoadMarkerV1 {
+                                    tile_x: x,
+                                    tile_z: z,
+                                    placement_seq: seq,
+                                },
+                                Transform::from_translation(Vec3::new(x as f32, y, z as f32)),
+                                Name::new(format!("Road marker v1 ({x},{z}) seq={seq}")),
+                            ));
+                        });
+                    }
+                }
+
+                info!("Loaded map snapshot {}×{} from {}", w, h, path.display());
+            }
+        }
+    }
+}
+
 fn map_editor_palette_system(
     mut contexts: EguiContexts,
     mut tool: ResMut<MapEditorTool>,
@@ -873,6 +1082,7 @@ fn map_editor_palette_system(
     mut load_dev_transport: MessageWriter<MapEditorLoadDevTransportRequest>,
     mut save_hybrid: MessageWriter<MapEditorSaveHybridWorldDevRequest>,
     mut load_hybrid: MessageWriter<MapEditorLoadHybridWorldDevRequest>,
+    mut map_snapshot_io: MessageWriter<MapEditorMapSnapshotIoRequest>,
     mut road_undo: MessageWriter<MapEditorRoadUndoRequest>,
 ) -> Result {
     egui::Window::new("Map editor — tools (TEMP-EGUI)")
@@ -997,6 +1207,24 @@ fn map_editor_palette_system(
                 ui.label("Brush radius (tiles):");
                 ui.add(egui::Slider::new(&mut tool.brush_radius, 1.0..=32.0));
             });
+            ui.add_space(8.0);
+            ui.horizontal(|ui| {
+                if ui
+                    .button("Save map grid (M5 RON)")
+                    .on_hover_text(format!("Writes {}", dev_map_snapshot_path().display()))
+                    .clicked()
+                {
+                    map_snapshot_io.write(MapEditorMapSnapshotIoRequest::Save);
+                }
+                if ui
+                    .button("Load map grid (M5 RON)")
+                    .on_hover_text(format!("Reads {}", dev_map_snapshot_path().display()))
+                    .clicked()
+                {
+                    map_snapshot_io.write(MapEditorMapSnapshotIoRequest::Load);
+                }
+            });
+
             ui.add_space(12.0);
             ui.horizontal(|ui| {
                 if ui.button("Play (enter simulation)").clicked() {
@@ -1023,6 +1251,7 @@ impl Plugin for MapEditorPlugin {
             .add_message::<MapEditorLoadDevTransportRequest>()
             .add_message::<MapEditorSaveHybridWorldDevRequest>()
             .add_message::<MapEditorLoadHybridWorldDevRequest>()
+            .add_message::<MapEditorMapSnapshotIoRequest>()
             .add_message::<MapEditorRoadUndoRequest>()
             .init_resource::<MapEditorTool>()
             .init_resource::<MapEditorRoadPlacementSeq>()
@@ -1051,17 +1280,17 @@ impl Plugin for MapEditorPlugin {
                     map_editor_dev_load_transport,
                     map_editor_dev_save_hybrid_world,
                     map_editor_dev_load_hybrid_world,
+                    map_editor_map_snapshot_io,
                 )
                     .run_if(in_state(BaseState::Editor)),
             )
             .add_systems(
                 EguiPrimaryContextPass,
-                (
-                    map_editor_minimap_window,
-                    map_editor_palette_system,
-                )
-                    .chain()
-                    .run_if(in_state(BaseState::Editor)),
+                map_editor_minimap_window.run_if(in_state(BaseState::Editor)),
+            )
+            .add_systems(
+                EguiPrimaryContextPass,
+                map_editor_palette_system.run_if(in_state(BaseState::Editor)),
             );
     }
 }
