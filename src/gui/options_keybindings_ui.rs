@@ -4,7 +4,10 @@ use bevy::prelude::*;
 use bevy_egui::{egui, EguiContexts, EguiPrimaryContextPass};
 
 use super::input_bindings::{binding_preset_keys, InputBindings};
-use super::style::{error_text, status_badge, warning_text, StatusTone, UiPalette};
+use super::style::{
+    error_text, muted_label, primary_label, section_heading, status_badge, v_space, warning_text,
+    CmdHeadingStyle, StatusTone, UiPalette, UiSpacing, VertSpace,
+};
 
 #[derive(Resource, Debug, Clone, Default)]
 pub struct KeybindingsUiState {
@@ -23,8 +26,10 @@ pub enum BindingSlot {
     LogisticsTargets,
     ScenarioScriptPanel,
     StrategicStripCompact,
+    CommandLeftStack,
     StrategicOverlayCongestion,
     StrategicOverlayEw,
+    CycleBuildPlanningTool,
     WorldGenerator,
     AgentPermissions,
     EguiUiScale,
@@ -102,10 +107,12 @@ fn apply_binding_capture(
             BindingSlot::LogisticsTargets => bindings.toggle_logistics_targets_panel = k,
             BindingSlot::ScenarioScriptPanel => bindings.toggle_scenario_script_panel = k,
             BindingSlot::StrategicStripCompact => bindings.toggle_strategic_hud_strip_compact = k,
+            BindingSlot::CommandLeftStack => bindings.toggle_command_left_stack = k,
             BindingSlot::StrategicOverlayCongestion => {
                 bindings.toggle_strategic_overlay_routing_congestion = k
             }
             BindingSlot::StrategicOverlayEw => bindings.toggle_strategic_overlay_ew_denial = k,
+            BindingSlot::CycleBuildPlanningTool => bindings.cycle_build_planning_tool = k,
             BindingSlot::WorldGenerator => bindings.toggle_world_generator = k,
             BindingSlot::AgentPermissions => bindings.toggle_agent_permissions = k,
             BindingSlot::EguiUiScale => bindings.toggle_egui_ui_scale = k,
@@ -139,8 +146,10 @@ fn slot_label_id(slot: BindingSlot) -> &'static str {
         BindingSlot::LogisticsTargets => "bind_logi_panel",
         BindingSlot::ScenarioScriptPanel => "bind_scenario_script",
         BindingSlot::StrategicStripCompact => "bind_strat_strip",
+        BindingSlot::CommandLeftStack => "bind_cmd_left",
         BindingSlot::StrategicOverlayCongestion => "bind_strat_cong",
         BindingSlot::StrategicOverlayEw => "bind_strat_ew",
+        BindingSlot::CycleBuildPlanningTool => "bind_build_cycle",
         BindingSlot::WorldGenerator => "bind_worldgen",
         BindingSlot::AgentPermissions => "bind_agents",
         BindingSlot::EguiUiScale => "bind_egui_scale",
@@ -166,6 +175,7 @@ fn keybindings_options_ui(
     mut bindings: ResMut<InputBindings>,
     mut state: ResMut<KeybindingsUiState>,
     palette: Res<UiPalette>,
+    spacing: Res<UiSpacing>,
 ) -> Result {
     if !state.visible {
         return Ok(());
@@ -175,17 +185,22 @@ fn keybindings_options_ui(
     let toggle_opts = bindings.toggle_keybindings_options;
     let path = InputBindings::default_input_bindings_ron_path();
 
+    let sp: &UiSpacing = &spacing;
     crate::gui::std_floating(egui::Window::new(format!(
         "Options — key bindings ({})",
         InputBindings::format_key(toggle_opts)
     )))
     .default_size(egui::vec2(420.0, 560.0))
     .show(ctx, |ui| {
-        ui.label(format!(
-            "Change shortcuts below. Use Capture… or the dropdown. {} cancels capture (configurable below).",
-            InputBindings::format_key(bindings.cancel_keybinding_capture)
-        ));
-        ui.small(format!("RON file: {}", path.display()));
+        primary_label(
+            ui,
+            &palette,
+            format!(
+                "Change shortcuts below. Use Capture… or the dropdown. {} cancels capture (configurable below).",
+                InputBindings::format_key(bindings.cancel_keybinding_capture)
+            ),
+        );
+        muted_label(ui, &palette, format!("RON file: {}", path.display()));
         if let Some(msg) = &state.last_io_message {
             error_text(ui, &palette, msg.as_str());
         }
@@ -197,7 +212,7 @@ fn keybindings_options_ui(
         macro_rules! row_combo {
             ($label:expr, $hint:expr, $field:ident, $slot:expr) => {{
                 ui.horizontal(|ui| {
-                    ui.label(concat!($label, ":"));
+                    primary_label(ui, &palette, concat!($label, ":"));
                     let capturing = state.capture_slot == Some($slot);
                     if capturing {
                         warning_text(
@@ -225,8 +240,8 @@ fn keybindings_options_ui(
                         state.capture_slot = if capturing { None } else { Some($slot) };
                     }
                 });
-                ui.small($hint);
-                ui.add_space(4.0);
+                muted_label(ui, &palette, $hint);
+                v_space(ui, sp, VertSpace::Xs);
             }};
         }
 
@@ -279,6 +294,12 @@ fn keybindings_options_ui(
             BindingSlot::StrategicStripCompact
         );
         row_combo!(
+            "Command shell — collapse left context stack",
+            "Hides the logistics / tools panel under the ops strip; click « HUD when collapsed to reopen.",
+            toggle_command_left_stack,
+            BindingSlot::CommandLeftStack
+        );
+        row_combo!(
             "Strategic overlay — routing congestion splats",
             "Transport-derived routing congestion field into chunk overlays.",
             toggle_strategic_overlay_routing_congestion,
@@ -289,6 +310,12 @@ fn keybindings_options_ui(
             "Transport-derived EW / comms denial proxy field.",
             toggle_strategic_overlay_ew_denial,
             BindingSlot::StrategicOverlayEw
+        );
+        row_combo!(
+            "Cycle build / planning tool",
+            "Operational planning strip mode (roads → … → civil); shown on ops strip as BUILD line.",
+            cycle_build_planning_tool,
+            BindingSlot::CycleBuildPlanningTool
         );
         row_combo!(
             "World generator",
@@ -327,8 +354,12 @@ fn keybindings_options_ui(
             BindingSlot::StopGameplayRecording
         );
         ui.separator();
-        ui.heading("Map camera (simulation + editor)");
-        ui.small("WASD, edge scroll, mouse wheel zoom; Space or middle mouse + drag to pan. Respects egui focus.");
+        section_heading(ui, &palette, CmdHeadingStyle::Gt, "Map camera (simulation + editor)");
+        muted_label(
+            ui,
+            &palette,
+            "WASD, edge scroll, mouse wheel zoom; Space or middle mouse + drag to pan. Respects egui focus.",
+        );
         row_combo!(
             "Map pan north",
             "",

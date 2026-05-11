@@ -4,6 +4,8 @@
 
 use bevy::prelude::*;
 
+use crate::ai::construction::ConstructionAiPlugin;
+
 use super::agent_batch_scoring::AgentBatchScoringPlugin;
 use super::behavior_brain_plugin::BehaviorPlugin;
 use super::fracture_plugin::FracturePlugin;
@@ -31,6 +33,7 @@ impl Plugin for SimulationPlugin {
             BehaviorPlugin,
             FracturePlugin,
             FactionPlugin,
+            ConstructionAiPlugin,
         ));
     }
 }

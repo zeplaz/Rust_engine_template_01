@@ -12,7 +12,8 @@ use crate::gui::std_floating;
 use crate::gui::InputBindings;
 use crate::gui::style::{
     error_text, framed_group, muted_text, path_hint, primary_text, scenario_execution_badge,
-    section_heading, success_text, warning_text, CmdHeadingStyle, UiPalette,
+    section_heading, success_text, v_space, warning_text, CmdHeadingStyle, UiPalette, UiSpacing,
+    VertSpace,
 };
 use crate::scenario::scenario_steps::ScenarioStep;
 use crate::scenario::scenario_types::ScenarioFileV1;
@@ -76,24 +77,22 @@ pub fn scenario_editor_tools_entry_window(
     bindings: Res<InputBindings>,
     mut panel: ResMut<ScenarioScriptPanelState>,
     palette: Res<UiPalette>,
+    spacing: Res<UiSpacing>,
 ) -> Result {
+    let pal: &UiPalette = &palette;
+    let sp: &UiSpacing = &spacing;
     std_floating(egui::Window::new("Editor — Scenario tools"))
         .anchor(egui::Align2::RIGHT_TOP, egui::vec2(-10.0, 52.0))
         .collapsible(true)
         .default_size(egui::vec2(280.0, 220.0))
         .show(contexts.ctx_mut()?, |ui| {
-            section_heading(
-                ui,
-                &palette,
-                CmdHeadingStyle::Gt,
-                "Scenario tools",
-            );
-            muted_text(ui, &palette, "Script runner (*.scenario.ron)");
-            path_hint(ui, &palette, RUNBOOK_PATH);
-            ui.add_space(6.0);
+            section_heading(ui, pal, CmdHeadingStyle::Gt, "Scenario tools");
+            muted_text(ui, pal, "Script runner (*.scenario.ron)");
+            path_hint(ui, pal, RUNBOOK_PATH);
+            v_space(ui, sp, VertSpace::Inter);
             muted_text(
                 ui,
-                &palette,
+                pal,
                 format!("Toggle: {}", InputBindings::format_key(bindings.toggle_scenario_script_panel)),
             );
             if ui
@@ -112,7 +111,10 @@ pub fn scenario_script_panel_system(
     mut host: ResMut<EngineScriptHost>,
     mut panel: ResMut<ScenarioScriptPanelState>,
     palette: Res<UiPalette>,
+    spacing: Res<UiSpacing>,
 ) -> Result {
+    let pal: &UiPalette = &palette;
+    let sp: &UiSpacing = &spacing;
     let mut open = panel.window_open;
     std_floating(egui::Window::new(
         "Scenario script — Editor / Scenario tools (TEMP-EGUI)",
@@ -120,66 +122,66 @@ pub fn scenario_script_panel_system(
         .open(&mut open)
         .default_size([440.0, 560.0])
         .show(contexts.ctx_mut()?, |ui| {
-            framed_group(ui, &palette, |ui| {
-                section_heading(ui, &palette, CmdHeadingStyle::Gt, "Scenario script runner");
-                path_hint(ui, &palette, RUNBOOK_PATH);
-                ui.add_space(4.0);
+            framed_group(ui, pal, |ui| {
+                section_heading(ui, pal, CmdHeadingStyle::Gt, "Scenario script runner");
+                path_hint(ui, pal, RUNBOOK_PATH);
+                v_space(ui, sp, VertSpace::Xs);
                 muted_text(
                     ui,
-                    &palette,
+                    pal,
                     "One script step per frame. Wave 5+: dock into editor shell; today uses a standard egui window.",
                 );
             });
-            ui.add_space(6.0);
+            v_space(ui, sp, VertSpace::Inter);
 
             ui.collapsing("Help — scripting UX", |ui| {
                 muted_text(
                     ui,
-                    &palette,
+                    pal,
                     "Paths: relative to crate root or absolute (CARGO_MANIFEST_DIR).",
                 );
                 muted_text(
                     ui,
-                    &palette,
+                    pal,
                     "Load parses *.scenario.ron; validation errors block load; warnings allow load.",
                 );
                 muted_text(
                     ui,
-                    &palette,
+                    pal,
                     "Save writes full authoritative RON (lossless). Export JSON is runtime subset only.",
                 );
                 muted_text(
                     ui,
-                    &palette,
+                    pal,
                     "Stop pauses the queue; Run/resume continues or replays when the queue is empty.",
                 );
                 muted_text(
                     ui,
-                    &palette,
+                    pal,
                     "RegisterObjectives → ScenarioObjectiveMarker; clear_existing despawns only those markers.",
                 );
-                ui.add_space(4.0);
-                section_heading(ui, &palette, CmdHeadingStyle::Tilde, "Example scenarios");
-                path_hint(ui, &palette, "assets/scenarios/tests/minimal_wave1.scenario.ron");
-                path_hint(ui, &palette, "assets/scenarios/tests/wave3_objectives.scenario.ron");
+                v_space(ui, sp, VertSpace::Xs);
+                section_heading(ui, pal, CmdHeadingStyle::Tilde, "Example scenarios");
+                path_hint(ui, pal, "assets/scenarios/tests/minimal_wave1.scenario.ron");
+                path_hint(ui, pal, "assets/scenarios/tests/wave3_objectives.scenario.ron");
             });
-            ui.add_space(4.0);
+            v_space(ui, sp, VertSpace::Xs);
 
             section_heading(
                 ui,
-                &palette,
+                pal,
                 CmdHeadingStyle::None,
                 "Authoring: *.scenario.ron",
             );
             muted_text(
                 ui,
-                &palette,
+                pal,
                 "Stable objective_id, ObjectiveTargetRef, factions, tags.",
             );
-            ui.add_space(4.0);
+            v_space(ui, sp, VertSpace::Xs);
 
             ui.horizontal(|ui| {
-                muted_text(ui, &palette, "Path:");
+                muted_text(ui, pal, "Path:");
                 ui.text_edit_singleline(&mut panel.file_path)
                     .on_hover_text("Relative to project root, e.g. assets/scenarios/tests/wave3_objectives.scenario.ron");
             });
@@ -187,11 +189,11 @@ pub fn scenario_script_panel_system(
             if let Some(next) = host.pending_steps.front() {
                 muted_text(
                     ui,
-                    &palette,
+                    pal,
                     format!("Next step (preview): {next:?}"),
                 );
             } else if host.active_script.is_some() {
-                muted_text(ui, &palette, "Next step: (queue empty — use Run to replay)");
+                muted_text(ui, pal, "Next step: (queue empty — use Run to replay)");
             }
 
             ui.horizontal(|ui| {
@@ -310,17 +312,17 @@ pub fn scenario_script_panel_system(
                 }
             });
 
-            ui.add_space(4.0);
+            v_space(ui, sp, VertSpace::Xs);
             ui.horizontal(|ui| {
-                muted_text(ui, &palette, "State:");
-                scenario_execution_badge(ui, &palette, host.current_state);
-                muted_text(ui, &palette, "· pending:");
+                muted_text(ui, pal, "State:");
+                scenario_execution_badge(ui, pal, host.current_state);
+                muted_text(ui, pal, "· pending:");
                 ui.monospace(format!("{}", host.pending_steps.len()));
             });
 
             if let Some(report) = host.last_validation.as_ref() {
                 for w in &report.warnings {
-                    warning_text(ui, &palette, format!("Warning: {w}"));
+                    warning_text(ui, pal, format!("Warning: {w}"));
                 }
             }
 
@@ -335,20 +337,20 @@ pub fn scenario_script_panel_system(
                         || s.contains("Nothing to")
                         || s.starts_with("Read "));
                 if is_success {
-                    success_text(ui, &palette, s);
+                    success_text(ui, pal, s);
                 } else if is_warn {
-                    warning_text(ui, &palette, s);
+                    warning_text(ui, pal, s);
                 } else {
-                    primary_text(ui, &palette, s);
+                    primary_text(ui, pal, s);
                 }
             }
             if let Some(err) = &host.last_error {
-                error_text(ui, &palette, err.as_str());
+                error_text(ui, pal, err.as_str());
             }
 
             ui.collapsing("Objectives (inspector stub)", |ui| {
                 let Some(script) = host.active_script.as_ref() else {
-                    muted_text(ui, &palette, "Load a scenario to list objectives.");
+                    muted_text(ui, pal, "Load a scenario to list objectives.");
                     return;
                 };
                 for step in &script.steps {
@@ -372,10 +374,10 @@ pub fn scenario_script_panel_system(
                 }
             });
 
-            ui.add_space(6.0);
+            v_space(ui, sp, VertSpace::Inter);
             ui.checkbox(&mut panel.autoscroll_log, "Autoscroll log");
             ui.separator();
-            section_heading(ui, &palette, CmdHeadingStyle::None, "Execution log");
+            section_heading(ui, pal, CmdHeadingStyle::None, "Execution log");
             let log_len = host.execution_log.len();
             egui::ScrollArea::vertical()
                 .max_height(280.0)

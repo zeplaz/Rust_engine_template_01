@@ -2,8 +2,10 @@
 
 > **STATUS:** Draft **v1** — **live index** for simulation layers, ownership, and cross-links. Some domains still use placeholder step packs; treat this file as the **umbrella** and follow per-domain matrices + [`strategic_program_execution_plan_v1.md`](strategic_program_execution_plan_v1.md) for execution order.
 
-Version: `v1.0.2`  
+Version: `v1.0.3`  
 Audience: agents and leads wiring **ontology → simulation execution**.
+
+**Coding (P2 sites + construction):** Read [`infrastructure_and_research_orchestrator_v1.md`](infrastructure_and_research_orchestrator_v1.md) **§6** — pairs this umbrella with **IX** territorial canon and **I1** construction runbook (aligned §10 state machine).
 
 **Entry index:** [`new_propsal_guide_may202608.md`](new_propsal_guide_may202608.md)
 
@@ -104,6 +106,7 @@ For **100k+ field entities** and **large worlds**, chunk-local **FixedUpdate** s
 
 | Role | Doc |
 |:---|:---|
+| **Territorial infrastructure** (terrain → networks → sites → zones → pressure; construction schedule; chunk/GPU; AI build loop) | [`territorial_infrastructure_orchestration_v1.md`](territorial_infrastructure_orchestration_v1.md) |
 | Strategic fields + AI (overlays, corridors, logistics/settlement/city AI, operational AI) | [`strategic_fields_and_ai_orchestrator_v1.md`](strategic_fields_and_ai_orchestrator_v1.md) |
 | Infrastructure + research (construction, resilience, capability ecosystem) | [`infrastructure_and_research_orchestrator_v1.md`](infrastructure_and_research_orchestrator_v1.md) |
 | Experience layer (HUD direction, GUI, camera) | [`experience_layer_orchestrator_v1.md`](experience_layer_orchestrator_v1.md) |
@@ -148,3 +151,7 @@ When a domain gains a matrix, add phased step packs per [`system_runbook_authori
 ## 9. Master direction
 
 Target: **semantic world model** + **infrastructure simulation** + **field economics** + **hybrid agent simulation** + **environmental systems** + **chunked LOD ECS** — not a traditional RTS-only unit simulator.
+
+---
+
+**Document history:** `v1.0.3` — header: P2 coding entry via infra orchestrator §6 + I1/IX alignment. `v1.0.2` — prior draft.

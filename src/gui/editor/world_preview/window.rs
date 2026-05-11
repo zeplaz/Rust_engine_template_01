@@ -10,7 +10,7 @@ use super::ui_toolbar::world_preview_toolbar;
 use super::viewport::EditorViewport;
 use crate::gui::editor::world_gen_ui::WorldGenUiState;
 use crate::gui::std_floating;
-use crate::gui::style::neutral_image_tint;
+use crate::gui::style::{neutral_image_tint, UiPalette, UiSpacing};
 use crate::systems::terrain::TerrainRegistriesHandles;
 
 use bevy::math::Vec2;
@@ -28,6 +28,8 @@ pub fn display_world_preview(
     tag_assets: Res<Assets<crate::terrain::material::TagRegistry>>,
     mobility_assets: Res<Assets<crate::terrain::mobility::MobilityProfileRegistry>>,
     mut last_tex: Local<(u32, u32)>,
+    palette: Res<UiPalette>,
+    spacing: Res<UiSpacing>,
 ) -> Result {
     if !world_preview_ui.window_open {
         return Ok(());
@@ -50,6 +52,8 @@ pub fn display_world_preview(
         .min_size([480.0, 340.0])
         .open(&mut window_open)
         .show(contexts.ctx_mut()?, |ui| {
+            let pal: &UiPalette = &*palette;
+            let sp: &UiSpacing = &*spacing;
             // Top / bottom / central panels fill the window inner rect so the map track
             // tracks resize smoothly (plain `vertical` + `horizontal` only shrink-wrap height).
             egui::TopBottomPanel::top("world_preview_toolbar")
@@ -62,6 +66,7 @@ pub fn display_world_preview(
                         &mut viewport,
                         preview_texture.width,
                         preview_texture.height,
+                        pal,
                     );
                 });
 
@@ -75,6 +80,7 @@ pub fn display_world_preview(
                         &viewport,
                         preview_texture.width,
                         preview_texture.height,
+                        pal,
                     );
                 });
 
@@ -93,6 +99,8 @@ pub fn display_world_preview(
                                     &handles,
                                     &tag_assets,
                                     &mobility_assets,
+                                    pal,
+                                    sp,
                                 );
                                 ui.separator();
                                 world_preview_minimap(
@@ -100,6 +108,7 @@ pub fn display_world_preview(
                                     texture_id,
                                     preview_texture.width,
                                     preview_texture.height,
+                                    pal,
                                 );
                             });
                     });

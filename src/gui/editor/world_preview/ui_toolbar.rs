@@ -5,6 +5,7 @@ use bevy_egui::egui;
 use crate::gui::editor::world_gen_hints as hints;
 use crate::gui::editor::world_preview::layers::PreviewLayers;
 use crate::gui::editor::world_preview::viewport::EditorViewport;
+use crate::gui::style::{muted_label, section_heading, primary_label, CmdHeadingStyle, UiPalette};
 
 #[inline]
 fn tt(response: egui::Response, text: &'static str) -> egui::Response {
@@ -35,9 +36,10 @@ pub fn world_preview_toolbar(
     viewport: &mut EditorViewport,
     tex_w: u32,
     tex_h: u32,
+    palette: &UiPalette,
 ) {
     ui.horizontal_wrapped(|ui| {
-        ui.label(egui::RichText::new("Base").strong());
+        section_heading(ui, palette, CmdHeadingStyle::None, "Base");
         let mut base = layers.base_bits();
         egui::ComboBox::from_id_salt("world_preview_base_layer")
             .selected_text(base_layer_label(base))
@@ -55,7 +57,7 @@ pub fn world_preview_toolbar(
         layers.replace_base(base);
     });
     ui.horizontal_wrapped(|ui| {
-        ui.label(egui::RichText::new("Overlays").strong());
+        section_heading(ui, palette, CmdHeadingStyle::None, "Overlays");
         let mut tag = layers.contains(PreviewLayers::TAG_OVERLAY);
         if tt(ui.checkbox(&mut tag, "Tags"), hints::PREVIEW_TAG).changed() {
             *layers ^= PreviewLayers::TAG_OVERLAY;
@@ -70,7 +72,7 @@ pub fn world_preview_toolbar(
         }
     });
     ui.horizontal(|ui| {
-        ui.label("Zoom:");
+        primary_label(ui, palette, "Zoom:");
         ui.add(egui::Slider::new(
             &mut viewport.zoom,
             PreviewLayers::ZOOM_MIN..=PreviewLayers::ZOOM_MAX,
@@ -83,5 +85,9 @@ pub fn world_preview_toolbar(
             viewport.zoom = 1.0;
         }
     });
-    ui.small("Ctrl / ⌘ + scroll: zoom toward cursor. Middle-drag: pan.");
+    muted_label(
+        ui,
+        palette,
+        "Ctrl / ⌘ + scroll: zoom toward cursor. Middle-drag: pan.",
+    );
 }

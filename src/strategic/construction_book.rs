@@ -1,7 +1,9 @@
 //! **P2** construction ledger keyed by [`TransportEdgeId`](crate::systems::transport::TransportEdgeId).
 //!
+//! **Operational sites** use [`super::site::SiteConstructionBook`] and [`SiteConstructionPhase`](super::site::SiteConstructionPhase) per runbook §10.
+//!
 //! Drives strategic corridor entities and logistics capacity multipliers per
-//! [`infrastructure_construction_runbook_v1.md`](../../prompts/guides/infrastructure_construction_runbook_v1.md) §10 (construction states).
+//! [`infrastructure_construction_runbook_v1.md`](../../prompts/guides/infrastructure_construction_runbook_v1.md) §10 (corridor phase set; sites use full enum in `site`).
 
 use std::collections::HashMap;
 

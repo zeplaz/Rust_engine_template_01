@@ -4,6 +4,9 @@ use bevy_egui::egui;
 
 use crate::gui::editor::world_gen_hints as hints;
 use crate::gui::editor::world_gen_ui::WorldGenUiState;
+use crate::gui::style::{
+    muted_label, section_heading, v_space, CmdHeadingStyle, UiPalette, UiSpacing, VertSpace,
+};
 use crate::systems::terrain::TerrainRegistriesHandles;
 use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
 use crate::terrain::material::TagId;
@@ -21,10 +24,12 @@ pub fn world_preview_sidebar(
     handles: &TerrainRegistriesHandles,
     tag_assets: &Assets<crate::terrain::material::TagRegistry>,
     mobility_assets: &Assets<crate::terrain::mobility::MobilityProfileRegistry>,
+    palette: &UiPalette,
+    spacing: &UiSpacing,
 ) {
     if let Some(mob) = mobility_assets.get(&handles.mobility_profiles) {
         if !mob.profiles.is_empty() {
-            ui.label(egui::RichText::new("Mobility profile").strong());
+            section_heading(ui, palette, CmdHeadingStyle::None, "Mobility profile");
             let n = mob.profiles.len();
             let idx = world_gen_ui_state.mobility_profile_index.min(n - 1);
             world_gen_ui_state.mobility_profile_index = idx;
@@ -39,13 +44,15 @@ pub fn world_preview_sidebar(
             if sel != idx {
                 world_gen_ui_state.mobility_profile_index = sel;
             }
-            ui.add_space(8.0);
+            v_space(ui, spacing, VertSpace::Sm);
         }
     }
 
     if let Some(tag_reg) = tag_assets.get(&handles.tag_registry) {
-        ui.label(egui::RichText::new("Terrain tag pool").strong());
-        ui.small(
+        section_heading(ui, palette, CmdHeadingStyle::None, "Terrain tag pool");
+        muted_label(
+            ui,
+            palette,
             "Unchecked names are not written onto chunks; Tags overlay only highlights cells carrying checked tags.",
         );
         egui::ScrollArea::vertical()

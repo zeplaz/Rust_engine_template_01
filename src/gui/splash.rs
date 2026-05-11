@@ -1,10 +1,13 @@
 // Canonical Bevy native UI: splash screen.
 // Uses Node + required components pattern (Bevy 0.15+).
 // No egui here — this is in-game rendering, not tooling.
+// Backdrop: [`crate::gui::UiPalette::bevy_bg_deep`] (`ui_design_language_plan_v1.md`).
 
 use bevy::prelude::*;
 
 use bevy::ui::widget::ImageNode;
+
+use crate::gui::UiPalette;
 
 // Tag component marking entities spawned for the splash screen.
 #[derive(Component)]
@@ -32,7 +35,7 @@ pub enum AppStartState {
     Menu,
 }
 
-fn splash_setup(mut commands: Commands, asset_server: Res<AssetServer>) {
+fn splash_setup(mut commands: Commands, asset_server: Res<AssetServer>, palette: Res<UiPalette>) {
     let icon: Handle<Image> = asset_server.load("splash/splash_01.png");
 
     // Full-bleed color so the splash is visible even before `splash_01.png` finishes loading (or if the file is absent).
@@ -44,7 +47,7 @@ fn splash_setup(mut commands: Commands, asset_server: Res<AssetServer>) {
             justify_content: JustifyContent::Center,
             ..default()
         },
-        BackgroundColor(Color::srgb(0.07, 0.08, 0.11)),
+        BackgroundColor(palette.bevy_bg_deep()),
         OnSplashScreen,
     ))
     .with_children(|parent| {
@@ -82,6 +85,6 @@ fn despawn_splash(
     splash_query: Query<Entity, With<OnSplashScreen>>,
 ) {
     for entity in &splash_query {
-        commands.entity(entity).despawn();
+        commands.entity(entity).try_despawn();
     }
 }

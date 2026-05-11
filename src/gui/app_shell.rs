@@ -4,6 +4,7 @@
 
 use crate::engine::states::{BaseState, MainMenuState, WorldGenFlowState};
 use crate::gui::AppStartState;
+use crate::gui::CmdUiMonoFont;
 use crate::gui::ui_windows::UiState;
 use crate::gui::UiPalette;
 use crate::terrain::generation::world_generator_enhanced::{
@@ -66,6 +67,7 @@ fn sync_menu_shell(
     load_q: Query<Entity, With<LoadMenuShellRoot>>,
     load_path: Res<LoadStubPath>,
     palette: Res<UiPalette>,
+    cmd_mono: Res<CmdUiMonoFont>,
 ) {
     if *app_start.get() != AppStartState::Menu || *base.get() != BaseState::MainMenu {
         for e in main_q.iter() {
@@ -85,7 +87,13 @@ fn sync_menu_shell(
                 }
             }
             if main_q.is_empty() {
-                spawn_main_menu(&mut commands, &asset_server, &mut ui_state, palette.as_ref());
+                spawn_main_menu(
+                    &mut commands,
+                    &asset_server,
+                    &mut ui_state,
+                    palette.as_ref(),
+                    cmd_mono.as_ref(),
+                );
             }
         }
         MainMenuState::Load => {
@@ -95,7 +103,12 @@ fn sync_menu_shell(
                 }
             }
             if load_q.is_empty() {
-                spawn_load_menu(&mut commands, &load_path, palette.as_ref());
+                spawn_load_menu(
+                    &mut commands,
+                    &load_path,
+                    palette.as_ref(),
+                    cmd_mono.as_ref(),
+                );
             }
         }
         MainMenuState::Settings | MainMenuState::Editor => {
@@ -114,12 +127,15 @@ fn spawn_main_menu(
     asset_server: &AssetServer,
     ui_state: &mut UiState,
     palette: &UiPalette,
+    cmd_mono: &CmdUiMonoFont,
 ) {
     if ui_state.font_handle.is_none() {
         ui_state.font_handle = Some(asset_server.load("fonts/FiraMono-Medium.ttf"));
     }
 
-    let border_radius = BorderRadius::all(Val::Px(6.0));
+    let sharp = BorderRadius::ZERO;
+    let menu_pt = 16.0;
+    let tf = |pt: f32| TextFont::from_font_size(pt).with_font(cmd_mono.0.clone());
 
     commands
         .spawn((
@@ -140,6 +156,7 @@ fn spawn_main_menu(
         .with_children(|parent| {
             parent.spawn((
                 Text::new("Proc Alpha Dine"),
+                tf(20.0),
                 TextColor(palette.bevy_primary_text()),
                 Node {
                     margin: UiRect::bottom(Val::Px(16.0)),
@@ -161,15 +178,18 @@ fn spawn_main_menu(
                             padding: UiRect::axes(Val::Px(16.0), Val::Px(10.0)),
                             justify_content: JustifyContent::Center,
                             align_items: AlignItems::Center,
-                            border_radius,
+                            border: UiRect::all(Val::Px(1.0)),
+                            border_radius: sharp,
                             ..default()
                         },
                         BackgroundColor(palette.bevy_button_idle()),
+                        BorderColor::all(palette.bevy_wire_magenta()),
                     ))
                     .insert(action)
                     .with_children(|b| {
                         b.spawn((
                             Text::new(label),
+                            tf(menu_pt),
                             TextColor(palette.bevy_primary_text()),
                         ));
                     });
@@ -177,9 +197,16 @@ fn spawn_main_menu(
         });
 }
 
-fn spawn_load_menu(commands: &mut Commands, load_path: &LoadStubPath, palette: &UiPalette) {
-    let border_radius = BorderRadius::all(Val::Px(6.0));
+fn spawn_load_menu(
+    commands: &mut Commands,
+    load_path: &LoadStubPath,
+    palette: &UiPalette,
+    cmd_mono: &CmdUiMonoFont,
+) {
+    let sharp = BorderRadius::ZERO;
     let path_display = load_path.0.clone();
+    let menu_pt = 15.0;
+    let tf = |pt: f32| TextFont::from_font_size(pt).with_font(cmd_mono.0.clone());
 
     commands
         .spawn((
@@ -200,12 +227,14 @@ fn spawn_load_menu(commands: &mut Commands, load_path: &LoadStubPath, palette: &
         .with_children(|parent| {
             parent.spawn((
                 Text::new("Load World (stub)"),
+                tf(18.0),
                 TextColor(palette.bevy_primary_text()),
             ));
             parent.spawn((
                 Text::new(
                     "No file picker yet — path is developer-configurable via LoadStubPath resource.",
                 ),
+                tf(13.0),
                 TextColor(palette.bevy_text_muted()),
                 Node {
                     max_width: Val::Px(520.0),
@@ -214,6 +243,7 @@ fn spawn_load_menu(commands: &mut Commands, load_path: &LoadStubPath, palette: &
             ));
             parent.spawn((
                 Text::new(format!("Path: {path_display}")),
+                tf(13.0),
                 TextColor(palette.bevy_secondary_text()),
             ));
             for (label, action) in [
@@ -232,15 +262,18 @@ fn spawn_load_menu(commands: &mut Commands, load_path: &LoadStubPath, palette: &
                             padding: UiRect::axes(Val::Px(14.0), Val::Px(8.0)),
                             justify_content: JustifyContent::Center,
                             align_items: AlignItems::Center,
-                            border_radius,
+                            border: UiRect::all(Val::Px(1.0)),
+                            border_radius: sharp,
                             ..default()
                         },
                         BackgroundColor(palette.bevy_button_idle()),
+                        BorderColor::all(palette.bevy_wire_magenta()),
                     ))
                     .insert(action)
                     .with_children(|b| {
                         b.spawn((
                             Text::new(label),
+                            tf(menu_pt),
                             TextColor(palette.bevy_primary_text()),
                         ));
                     });

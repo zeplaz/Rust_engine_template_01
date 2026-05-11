@@ -32,10 +32,14 @@ pub struct InputBindings {
     pub toggle_scenario_script_panel: KeyCode,
     /// Compact one-line strategic summary in the in-game HUD (`InGameHudPlugin`).
     pub toggle_strategic_hud_strip_compact: KeyCode,
+    /// Collapse / expand the left command context stack (Bevy HUD panel under the operations strip).
+    pub toggle_command_left_stack: KeyCode,
     /// Toggle painting **routing congestion** transport splats into [`ChunkStrategicOverlay`](crate::strategic::ChunkStrategicOverlay).
     pub toggle_strategic_overlay_routing_congestion: KeyCode,
     /// Toggle painting **EW / denial** proxy splats from transport fields.
     pub toggle_strategic_overlay_ew_denial: KeyCode,
+    /// Cycle operational **build / planning** tool context (`gui::build::BuildStripState`; Bevy HUD shows active mode).
+    pub cycle_build_planning_tool: KeyCode,
     pub toggle_world_generator: KeyCode,
     pub toggle_agent_permissions: KeyCode,
     /// Toggles egui scale compensation (`ui_windows::update_ui_scale_factor_system`).
@@ -74,8 +78,10 @@ impl Default for InputBindings {
             toggle_logistics_targets_panel: KeyCode::F6,
             toggle_scenario_script_panel: KeyCode::F10,
             toggle_strategic_hud_strip_compact: KeyCode::F5,
+            toggle_command_left_stack: KeyCode::Backquote,
             toggle_strategic_overlay_routing_congestion: KeyCode::Digit7,
             toggle_strategic_overlay_ew_denial: KeyCode::Digit8,
+            cycle_build_planning_tool: KeyCode::Semicolon,
             toggle_world_generator: KeyCode::F8,
             toggle_agent_permissions: KeyCode::F7,
             toggle_egui_ui_scale: KeyCode::Slash,
@@ -102,6 +108,7 @@ impl InputBindings {
     pub fn format_key(code: KeyCode) -> String {
         match code {
             KeyCode::Slash => "/".to_string(),
+            KeyCode::Backquote => "`".to_string(),
             _ => format!("{code:?}"),
         }
     }
@@ -164,6 +171,7 @@ pub fn binding_preset_keys() -> &'static [KeyCode] {
         KeyCode::Digit7,
         KeyCode::Digit8,
         KeyCode::Digit9,
+        KeyCode::Semicolon,
         KeyCode::KeyA,
         KeyCode::KeyB,
         KeyCode::KeyC,
@@ -191,6 +199,7 @@ pub fn binding_preset_keys() -> &'static [KeyCode] {
         KeyCode::KeyY,
         KeyCode::KeyZ,
         KeyCode::Slash,
+        KeyCode::Backquote,
         KeyCode::Backslash,
         KeyCode::Comma,
         KeyCode::Period,

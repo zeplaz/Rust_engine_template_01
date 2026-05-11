@@ -10,6 +10,7 @@ use crate::entities::production::core::{
 use crate::gui::ui_gates::in_simulation_or_editor;
 use crate::gui::input_bindings::InputBindings;
 use crate::gui::logistics_focus::HudLogisticsFocus;
+use crate::gui::style::{primary_label, section_heading, CmdHeadingStyle, UiPalette};
 
 #[derive(Resource, Debug, Clone)]
 pub struct LogisticsTargetsPanelState {
@@ -56,6 +57,7 @@ fn logistics_targets_panel_ui(
     roots: Query<Entity, With<LogisticsSiteRoot>>,
     storages: Query<Entity, With<ResourceStorage>>,
     members: Query<&LogisticsSiteMember>,
+    palette: Res<UiPalette>,
 ) -> Result {
     if !state.visible {
         return Ok(());
@@ -68,16 +70,16 @@ fn logistics_targets_panel_ui(
     )))
     .default_size(egui::vec2(320.0, 440.0))
         .show(ctx, |ui| {
-            ui.label("Set HUD inventory focus (physical storage / site hub).");
+            primary_label(ui, palette.as_ref(), "Set HUD inventory focus (physical storage / site hub).");
             ui.separator();
-            ui.heading("Site hubs");
+            section_heading(ui, palette.as_ref(), CmdHeadingStyle::Gt, "Site hubs");
             for hub in roots.iter() {
                 if ui.button(format!("Hub {:?}", hub)).clicked() {
                     focus.tracked_entity = Some(hub);
                 }
             }
             ui.separator();
-            ui.heading("Storage entities");
+            section_heading(ui, palette.as_ref(), CmdHeadingStyle::Gt, "Storage entities");
             for e in storages.iter() {
                 let label = if members.get(e).is_ok() {
                     format!("{:?} (site member → uses hub focus)", e)
@@ -99,9 +101,9 @@ fn logistics_targets_panel_ui(
                 focus.tracked_entity = None;
             }
             if let Some(t) = focus.tracked_entity {
-                ui.label(format!("Current focus: {:?}", t));
+                primary_label(ui, palette.as_ref(), format!("Current focus: {:?}", t));
             } else {
-                ui.label("Current focus: none");
+                primary_label(ui, palette.as_ref(), "Current focus: none");
             }
         });
 

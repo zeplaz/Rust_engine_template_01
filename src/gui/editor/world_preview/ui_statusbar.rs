@@ -4,6 +4,7 @@ use bevy_egui::egui;
 
 use crate::gui::editor::world_preview::layers::PreviewLayers;
 use crate::gui::editor::world_preview::viewport::EditorViewport;
+use crate::gui::style::{primary_label, UiPalette};
 
 pub fn world_preview_status_bar(
     ui: &mut egui::Ui,
@@ -11,6 +12,7 @@ pub fn world_preview_status_bar(
     viewport: &EditorViewport,
     tex_w: u32,
     tex_h: u32,
+    palette: &UiPalette,
 ) {
     let hover = if let Some(t) = viewport.hovered_tile {
         format!("{} , {}", t.x, t.y)
@@ -47,12 +49,16 @@ pub fn world_preview_status_bar(
     if layers.contains(PreviewLayers::MOBILITY_OVERLAY) {
         parts.push("+mobility");
     }
-    ui.label(format!(
-        "Tile: {} | {}×{} world | z={:.2} | {}",
-        hover,
-        tex_w,
-        tex_h,
-        viewport.zoom,
-        parts.join(" ")
-    ));
+    primary_label(
+        ui,
+        palette,
+        format!(
+            "Tile: {} | {}×{} world | z={:.2} | {}",
+            hover,
+            tex_w,
+            tex_h,
+            viewport.zoom,
+            parts.join(" ")
+        ),
+    );
 }

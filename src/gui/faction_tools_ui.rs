@@ -14,6 +14,7 @@ use bevy_egui::{egui, EguiContexts, EguiPrimaryContextPass};
 
 use crate::gui::ui_gates::in_simulation_or_editor;
 use crate::gui::input_bindings::InputBindings;
+use crate::gui::style::{primary_label, UiPalette};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum FactionToolsPanel {
@@ -62,6 +63,7 @@ pub fn faction_tools_ui_system(
     mut contexts: EguiContexts,
     mut state: ResMut<FactionToolsState>,
     bindings: Res<InputBindings>,
+    palette: Res<UiPalette>,
 ) -> Result {
     if !state.visible {
         return Ok(());
@@ -84,19 +86,19 @@ pub fn faction_tools_ui_system(
 
             match state.active {
                 FactionToolsPanel::Roster => {
-                    ui.label("Roster — bind to FactionBlueprint store when available.");
+                    primary_label(ui, palette.as_ref(), "Roster — bind to FactionBlueprint store when available.");
                     // TODO: list + add/duplicate/retire (authority-gated).
                 }
                 FactionToolsPanel::Blueprint => {
-                    ui.label("Blueprint inspector — name, HSL color picker, tags, emblem.");
+                    primary_label(ui, palette.as_ref(), "Blueprint inspector — name, HSL color picker, tags, emblem.");
                     // TODO: bind selected FactionBlueprint fields.
                 }
                 FactionToolsPanel::Diplomacy => {
-                    ui.label("Diplomacy matrix — pairwise stances + interlocking modifiers.");
+                    primary_label(ui, palette.as_ref(), "Diplomacy matrix — pairwise stances + interlocking modifiers.");
                     // TODO: render N×N stance grid; integrate DiplomaticRelations permission gate.
                 }
                 FactionToolsPanel::ImportExport => {
-                    ui.label("Import/Export — RON blueprints (per assets matrix).");
+                    primary_label(ui, palette.as_ref(), "Import/Export — RON blueprints (per assets matrix).");
                     // TODO: file dialog (crate vs native — see implementation_questions §7).
                 }
             }

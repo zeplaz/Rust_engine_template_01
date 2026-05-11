@@ -18,9 +18,14 @@ use super::transport_bridge::{
 use super::world_read_snapshot::world_read_snapshot_refresh_system;
 use super::zones::apply_zones_to_strategic_overlays_system;
 use super::{
+    apply_site_zone_emitters_to_overlays_system, sync_zone_emitter_from_archetype_system,
     ApprovedBuildOrders, BuildOrderQueue, ChunkNetworkDigest, ChunkStrategicOverlay,
     CorridorConstructionBook, FrontlineState, InfrastructureGraph, LogisticsGraph,
-    SpatialNetworkGraph, WorldFieldLayerConfig, WorldFieldLayerEpoch, WorldReadSnapshot,
+    SiteConstructionBook, SiteIdIssuer, SpatialNetworkGraph, WorldFieldLayerConfig,
+    WorldFieldLayerEpoch, WorldReadSnapshot,
+    commit_construction_site_system, site_advance_planned_to_under_construction_system,
+    site_construction_progression_system, site_provisioning_system,
+    validate_committed_site_terrain_system,
 };
 use super::construction_book::{
     align_corridor_book_with_transport_directory, transport_directory_edge_signature,
@@ -45,6 +50,19 @@ pub enum StrategicFieldPipeline {
     NetworkFlow,
     /// Zones + frontline + planner read model (after logistics + network flow baselines).
     ZoneAndReadModel,
+}
+
+/// Site authority pipeline — runs after [`StrategicFieldPipeline::ZoneAndReadModel`] (P2).
+#[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
+pub enum InfrastructureSiteSet {
+    Planning,
+    Validation,
+    NetworkSolve,
+    Logistics,
+    Construction,
+    Provisioning,
+    OperationalZones,
+    PreviewInvalidation,
 }
 
 fn ensure_network_dirty_mask_on_overlays(
@@ -161,6 +179,9 @@ impl Plugin for StrategicFieldsPlugin {
             .init_resource::<ChunkNetworkDigest>()
             .init_resource::<SpatialNetworkGraph>()
             .init_resource::<InfrastructureGraph>()
+            .init_resource::<SiteConstructionBook>()
+            .init_resource::<SiteIdIssuer>()
+            .add_message::<super::CommitConstructionSiteEvent>()
             .configure_sets(
                 Update,
                 (
@@ -171,6 +192,14 @@ impl Plugin for StrategicFieldsPlugin {
                         .after(StrategicFieldPipeline::InjectTransportScalars),
                     StrategicFieldPipeline::NetworkFlow.after(StrategicFieldPipeline::LogisticsNetInject),
                     StrategicFieldPipeline::ZoneAndReadModel.after(StrategicFieldPipeline::NetworkFlow),
+                    InfrastructureSiteSet::Planning.after(StrategicFieldPipeline::ZoneAndReadModel),
+                    InfrastructureSiteSet::Validation.after(InfrastructureSiteSet::Planning),
+                    InfrastructureSiteSet::NetworkSolve.after(InfrastructureSiteSet::Validation),
+                    InfrastructureSiteSet::Logistics.after(InfrastructureSiteSet::NetworkSolve),
+                    InfrastructureSiteSet::Construction.after(InfrastructureSiteSet::Logistics),
+                    InfrastructureSiteSet::Provisioning.after(InfrastructureSiteSet::Construction),
+                    InfrastructureSiteSet::OperationalZones.after(InfrastructureSiteSet::Provisioning),
+                    InfrastructureSiteSet::PreviewInvalidation.after(InfrastructureSiteSet::OperationalZones),
                 ),
             )
             .add_systems(
@@ -226,6 +255,36 @@ impl Plugin for StrategicFieldsPlugin {
                 )
                     .chain()
                     .in_set(StrategicFieldPipeline::ZoneAndReadModel),
+            )
+            .add_systems(
+                Update,
+                commit_construction_site_system.in_set(InfrastructureSiteSet::Planning),
+            )
+            .add_systems(
+                Update,
+                (
+                    validate_committed_site_terrain_system,
+                    site_advance_planned_to_under_construction_system,
+                )
+                    .chain()
+                    .in_set(InfrastructureSiteSet::Validation),
+            )
+            .add_systems(
+                Update,
+                site_construction_progression_system.in_set(InfrastructureSiteSet::Construction),
+            )
+            .add_systems(
+                Update,
+                site_provisioning_system.in_set(InfrastructureSiteSet::Provisioning),
+            )
+            .add_systems(
+                Update,
+                (
+                    sync_zone_emitter_from_archetype_system,
+                    apply_site_zone_emitters_to_overlays_system,
+                )
+                    .chain()
+                    .in_set(InfrastructureSiteSet::OperationalZones),
             );
     }
 }
