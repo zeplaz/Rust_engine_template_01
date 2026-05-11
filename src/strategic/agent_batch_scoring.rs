@@ -10,6 +10,9 @@ use super::behavior_entities::Agent;
 use super::behavior_pressure::PressureField;
 use super::hybrid_brain::{HybridAgentEmotions, HybridAgentTraits};
 use super::hybrid_fields::WorldFields;
+use super::network_flow::{sample_network_flow_at_world_tile, NetworkFlowFieldSample};
+use super::spatial_network::SpatialNode;
+use super::plugin::StrategicFieldPipeline;
 
 // -----------------------------------------------------------------------------
 // IO types (GPU pack layout stub)
@@ -62,15 +65,36 @@ pub fn score_agent_cpu(
     traits: &HybridAgentTraits,
     emotions: &HybridAgentEmotions,
     world: &WorldPressureSample,
+    flow: &NetworkFlowFieldSample,
 ) -> AgentScoreOutput {
+    let logis = flow.logistics_flow.clamp(0.0, 1.0);
+    let ctrl = flow.control_pressure.clamp(0.0, 1.0);
+    let vis = flow.visibility.clamp(0.0, 1.0);
+    let pwr = flow.power_flow.clamp(0.0, 1.0);
+    let exposure = vis * (1.0 - ctrl * 0.35);
+
     AgentScoreOutput {
         aggression: traits.aggression
             + traits.cruelty * 0.5
             + emotions.anger
-            + world.war_tension * 0.35,
-        cooperation: traits.empathy + traits.rationality * 0.2 + emotions.confidence * 0.25,
-        fear: emotions.fear + traits.paranoia * 0.35 + world.instability * 0.4,
-        stability: traits.rationality + emotions.confidence * 0.45 - traits.instability * 0.4,
+            + world.war_tension * 0.35
+            + ctrl * 0.12
+            - exposure * 0.08,
+        cooperation: traits.empathy
+            + traits.rationality * 0.2
+            + emotions.confidence * 0.25
+            + logis * 0.15
+            + pwr * 0.06,
+        fear: emotions.fear
+            + traits.paranoia * 0.35
+            + world.instability * 0.4
+            + exposure * 0.18
+            - logis * 0.1,
+        stability: traits.rationality
+            + emotions.confidence * 0.45
+            - traits.instability * 0.4
+            + pwr * 0.05
+            + logis * 0.08,
     }
 }
 
@@ -107,12 +131,16 @@ pub struct GpuAgentScoringPipeline;
 pub fn agent_batch_cpu_score_system(
     world_f: Res<WorldFields>,
     pressure: Res<PressureField>,
+    overlays: Query<&super::ChunkStrategicOverlay>,
     mut commands: Commands,
-    q: Query<(Entity, &Agent), With<AgentCpuBatchScoring>>,
+    q: Query<(Entity, &Agent, Option<&SpatialNode>), With<AgentCpuBatchScoring>>,
 ) {
     let sample = WorldPressureSample::from_resources(&world_f, &pressure);
-    for (e, agent) in q.iter() {
-        let scores = score_agent_cpu(&agent.traits, &agent.emotional_state, &sample);
+    for (e, agent, spatial) in q.iter() {
+        let flow = spatial
+            .map(|sn| sample_network_flow_at_world_tile(&overlays, IVec2::new(sn.tile.x, sn.tile.z)))
+            .unwrap_or_default();
+        let scores = score_agent_cpu(&agent.traits, &agent.emotional_state, &sample, &flow);
         let last_choice = resolve_agent_action(scores);
         commands
             .entity(e)
@@ -124,8 +152,10 @@ pub struct AgentBatchScoringPlugin;
 
 impl Plugin for AgentBatchScoringPlugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<GpuAgentScoringPipeline>()
-            .add_systems(Update, agent_batch_cpu_score_system);
+        app.init_resource::<GpuAgentScoringPipeline>().add_systems(
+            Update,
+            agent_batch_cpu_score_system.after(StrategicFieldPipeline::ZoneAndReadModel),
+        );
     }
 }
 

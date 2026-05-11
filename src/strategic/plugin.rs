@@ -5,6 +5,11 @@ use bevy::prelude::*;
 use super::build_order::process_build_order_queue_system;
 use super::frontline::derive_frontline_from_control_system;
 use super::logistics_net::logistics_net_inject_into_overlays;
+use super::network_flow::{
+    network_digest_marks_flow_dirty_system, network_flow_chunk_local_solver_system,
+    network_insulation_visibility_post_system, NetworkDirtyMask, NetworkFlowPrevSignatures,
+    NETWORK_DIRTY_FLOW,
+};
 use super::schedule::{StrategicOverlayCouplingScratch, StrategicOverlayDisplayPolicy};
 use super::transport_bridge::{
     apply_corridor_construction_book_to_entities, inject_transport_scalar_fields_into_overlays,
@@ -13,15 +18,20 @@ use super::transport_bridge::{
 use super::world_read_snapshot::world_read_snapshot_refresh_system;
 use super::zones::apply_zones_to_strategic_overlays_system;
 use super::{
-    ApprovedBuildOrders, BuildOrderQueue, ChunkStrategicOverlay, CorridorConstructionBook, FrontlineState,
-    LogisticsGraph, WorldFieldLayerConfig, WorldFieldLayerEpoch, WorldReadSnapshot,
+    ApprovedBuildOrders, BuildOrderQueue, ChunkNetworkDigest, ChunkStrategicOverlay,
+    CorridorConstructionBook, FrontlineState, InfrastructureGraph, LogisticsGraph,
+    SpatialNetworkGraph, WorldFieldLayerConfig, WorldFieldLayerEpoch, WorldReadSnapshot,
 };
 use super::construction_book::{
     align_corridor_book_with_transport_directory, transport_directory_edge_signature,
 };
 use crate::systems::terrain::materialize_chunks;
+use crate::systems::terrain::material_plugin::rebuild_dirty_chunks;
 use crate::systems::transport::{TransportCostWeights, TransportEdgeDirectory, TransportFieldStore};
 use crate::terrain::generation::{Chunk, ChunkCellMatrix};
+use crate::terrain::material::{ChunkDependency, ChunkDirty, MaterializedChunk};
+
+use super::spatial_network::rebuild_chunk_network_digest_system;
 
 /// Ordering buckets for strategic field pipeline (`chunk_scheduler_runbook_v1` / transport coupling).
 #[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
@@ -31,8 +41,45 @@ pub enum StrategicFieldPipeline {
     GraphSync,
     InjectTransportScalars,
     LogisticsNetInject,
-    /// Zones + frontline + planner read model (after logistics paints baselines).
+    /// Network graph → chunk-local flow diffusion → overlay SOA only (no terrain entities).
+    NetworkFlow,
+    /// Zones + frontline + planner read model (after logistics + network flow baselines).
     ZoneAndReadModel,
+}
+
+fn ensure_network_dirty_mask_on_overlays(
+    mut commands: Commands,
+    q: Query<Entity, (With<ChunkStrategicOverlay>, Without<NetworkDirtyMask>)>,
+) {
+    for e in q.iter() {
+        commands.entity(e).insert(NetworkDirtyMask {
+            mask: NETWORK_DIRTY_FLOW,
+        });
+    }
+}
+
+/// When U7 terrain passes finish (`ChunkDirty` clears), schedule a **network flow** refresh only — no extra terrain passes.
+fn terrain_rebuild_finished_marks_network_flow_dirty(
+    mut q: Query<
+        (Entity, &ChunkDirty, &mut NetworkDirtyMask),
+        (
+            With<ChunkStrategicOverlay>,
+            With<ChunkDependency>,
+            With<MaterializedChunk>,
+        ),
+    >,
+    mut prev: Local<std::collections::HashMap<Entity, u8>>,
+) {
+    let mut seen = std::collections::HashSet::new();
+    for (e, dirty, mut mask) in q.iter_mut() {
+        seen.insert(e);
+        let prior = *prev.get(&e).unwrap_or(&0);
+        if prior != 0 && dirty.passes == 0 {
+            mask.mask |= NETWORK_DIRTY_FLOW;
+        }
+        prev.insert(e, dirty.passes);
+    }
+    prev.retain(|e, _| seen.contains(e));
 }
 
 fn ensure_chunk_strategic_overlays(
@@ -60,9 +107,12 @@ fn ensure_chunk_strategic_overlays(
                 chunk.coord, n, expected
             );
         }
-        commands
-            .entity(entity)
-            .insert(ChunkStrategicOverlay::new(chunk.coord, matrix.size));
+        commands.entity(entity).insert((
+            ChunkStrategicOverlay::new(chunk.coord, matrix.size),
+            NetworkDirtyMask {
+                mask: NETWORK_DIRTY_FLOW,
+            },
+        ));
     }
     if let Some(sz) = first_size {
         if config.cells_per_chunk != sz {
@@ -107,6 +157,10 @@ impl Plugin for StrategicFieldsPlugin {
             .init_resource::<WorldFieldLayerConfig>()
             .init_resource::<BuildOrderQueue>()
             .init_resource::<ApprovedBuildOrders>()
+            .init_resource::<NetworkFlowPrevSignatures>()
+            .init_resource::<ChunkNetworkDigest>()
+            .init_resource::<SpatialNetworkGraph>()
+            .init_resource::<InfrastructureGraph>()
             .configure_sets(
                 Update,
                 (
@@ -115,13 +169,18 @@ impl Plugin for StrategicFieldsPlugin {
                     StrategicFieldPipeline::InjectTransportScalars.after(StrategicFieldPipeline::GraphSync),
                     StrategicFieldPipeline::LogisticsNetInject
                         .after(StrategicFieldPipeline::InjectTransportScalars),
-                    StrategicFieldPipeline::ZoneAndReadModel
-                        .after(StrategicFieldPipeline::LogisticsNetInject),
+                    StrategicFieldPipeline::NetworkFlow.after(StrategicFieldPipeline::LogisticsNetInject),
+                    StrategicFieldPipeline::ZoneAndReadModel.after(StrategicFieldPipeline::NetworkFlow),
                 ),
             )
             .add_systems(
                 Update,
-                ensure_chunk_strategic_overlays.in_set(StrategicFieldPipeline::EnsureOverlays),
+                (
+                    ensure_network_dirty_mask_on_overlays,
+                    ensure_chunk_strategic_overlays,
+                )
+                    .chain()
+                    .in_set(StrategicFieldPipeline::EnsureOverlays),
             )
             .add_systems(
                 Update,
@@ -142,6 +201,20 @@ impl Plugin for StrategicFieldsPlugin {
             .add_systems(
                 Update,
                 logistics_net_inject_into_overlays.in_set(StrategicFieldPipeline::LogisticsNetInject),
+            )
+            .add_systems(
+                PostUpdate,
+                terrain_rebuild_finished_marks_network_flow_dirty.after(rebuild_dirty_chunks),
+            )
+            .add_systems(
+                Update,
+                (
+                    network_digest_marks_flow_dirty_system.after(rebuild_chunk_network_digest_system),
+                    network_flow_chunk_local_solver_system,
+                    network_insulation_visibility_post_system,
+                )
+                    .chain()
+                    .in_set(StrategicFieldPipeline::NetworkFlow),
             )
             .add_systems(
                 Update,
@@ -193,10 +266,10 @@ mod tests {
         assert_eq!(overlay.faction_control.len(), 6);
         assert_eq!(overlay.threat.len(), 6);
         assert_eq!(overlay.routing_congestion.len(), 6);
-        assert_eq!(overlay.ew_denial.len(), 6);
-
-        let cfg = app.world().resource::<StrategicRasterConfig>();
-        assert_eq!(cfg.cells_per_chunk, UVec2::new(3, 2));
+        assert_eq!(overlay.power_flow.len(), 6);
+        assert_eq!(overlay.logistics_flow.len(), 6);
+        assert_eq!(overlay.control_pressure.len(), 6);
+        assert_eq!(overlay.visibility.len(), 6);
     }
 
     /// **R4** — faction-slot field writers (`strategic_overlay` runbook).

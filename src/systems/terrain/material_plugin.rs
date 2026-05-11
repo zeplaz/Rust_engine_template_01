@@ -280,7 +280,7 @@ fn stitch_chunk_derived_slopes(
     }
 }
 
-fn rebuild_dirty_chunks(
+pub(crate) fn rebuild_dirty_chunks(
     handles: Res<TerrainRegistriesHandles>,
     family_assets: Res<Assets<TerrainFamilyRegistry>>,
     materials: Res<Assets<MaterialRegistry>>,
