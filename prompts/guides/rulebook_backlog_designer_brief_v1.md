@@ -2,7 +2,7 @@
 
 > **STATUS:** One-page **input** for designers and project leads before engineering runs [`terrain_paired_runbooks_queue_v1.md`](terrain_paired_runbooks_queue_v1.md) (**Q0–Q6**) or [`system_runbook_authoring_meta_v1.md`](system_runbook_authoring_meta_v1.md) to spawn new orchestrators. **No Rust** — decisions and scope only.
 
-Version: `v1.0.1`
+Version: `v1.0.3`
 
 ---
 
@@ -72,6 +72,7 @@ Use these ids in G3 **results** files and orchestrator notes. **Do not** paralle
 | **BQ-110** | **G4 serialization execution** — first domain DTO + register/load + ECS hydration test; hybrid matrix row; wave **S** | G4 pack · [`serialization_hybrid_migration_matrix_v1.md`](../matrix/serialization/serialization_hybrid_migration_matrix_v1.md) |
 | **BQ-111** | **G5 subsystem promotion** — navigation vs damage vs manufacturing **per finding**; optional matrices; before `G5-SNN` | G5 pack living queue |
 | **BQ-112** | **World map editor (M1–M5)** — FullReady→Editor routing, `TEMP-EGUI` palette, brushes, snapshot save/load vs **G4**/serialization matrix | [`map_editor_runbook_v1.md`](map_editor_runbook_v1.md) · [`map_editor_matrix_v1.md`](../matrix/map_editor/map_editor_matrix_v1.md) |
+| **BQ-113** | **Scenario scripting** — *W1–3 done* (`EngineScriptHost`, objectives, panel); *open:* **Wave 4** golden `golden_operational_minimal_v1`, §4c Q&A | [`scenario_campaign_scripted_tools_runbook_v1.md`](scenario_campaign_scripted_tools_runbook_v1.md) §4–6 |
 
 ### 4.1 G3 sub-pack §3 → BQ crosswalk
 
@@ -114,3 +115,4 @@ Before writing **G2** atomic Rust steps (after **G2-S00**), answer gap-hunt §5:
 | [`gap_remediation_runbook_v1.md`](gap_remediation_runbook_v1.md) | **G1** hydrology **Applied** (capsule + legacy full); active **G3** GUI; **G2–G5** parked until §4 **BQ-109+** |
 | [`../matrix/gap_remediation/runbook/g3_execution_cycle_v1.md`](../matrix/gap_remediation/runbook/g3_execution_cycle_v1.md) | **G3** step order: GUI and backlog orchestrators alternate; cycle **results** use **BQ-###** only |
 | [`developer_reflective_brief_v1.plan.md`](developer_reflective_brief_v1.plan.md) | Engineering fills IA + diagrams + decisions; ties **BQ-###** back into this brief |
+| [`scenario_campaign_scripted_tools_runbook_v1.md`](scenario_campaign_scripted_tools_runbook_v1.md) | Tracks scripted operational scenario tooling, `EngineScriptHost` execution, and golden replay fixtures |

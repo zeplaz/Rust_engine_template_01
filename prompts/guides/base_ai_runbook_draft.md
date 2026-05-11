@@ -1,4 +1,6 @@
 > **Superseded as authority:** split into standalone runbooks under [`strategic_fields_and_ai_orchestrator_v1.md`](strategic_fields_and_ai_orchestrator_v1.md) (see that file **§6–9** for runbook count vs infra sibling, base-doc gap map, and engineering backlog). Keep this file as an archival paste bundle only.
+>
+> **What to run next:** [`strategic_program_execution_plan_v1.md`](strategic_program_execution_plan_v1.md) §4 — phased order **P0–P8** across strategic, infrastructure/research, and experience orchestrators (do not implement from this archive alone).
 
 ai_city_planning_runbook_v1.md
 Version: v1.0.0

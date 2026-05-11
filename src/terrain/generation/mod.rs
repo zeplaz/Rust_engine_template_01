@@ -1,6 +1,9 @@
 // Terrain generation systems
 pub mod chunk;
+pub mod chunk_worldgen_scheduler;
 pub mod cell_matrix;
+pub mod tile_chunk_map;
+mod editor_chunk_tile_sync;
 pub mod derived;
 mod geo_plugin;
 mod world_generator;
@@ -18,6 +21,15 @@ pub use passes::{materialize, MaterializedChunkData};
 
 // Public exports
 pub use cell_matrix::ChunkCellMatrix;
+pub use chunk_worldgen_scheduler::{
+    dispatch_chunk_jobs, generate_chunk_cpu_height_moisture_temp, queue_mission_hint_jobs, queue_visible_chunks,
+    ChunkGenCameraWindow, ChunkGenConfig, ChunkGenJob, ChunkGenMissionChunkHints, ChunkGenQueue, ChunkGenReason,
+    ChunkTexturePatchQueue, ChunkWorldgenSchedulerPlugin, GpuChunkGenPipeline,
+};
+pub use tile_chunk_map::{
+    brush_tile_inclusive_bounds, tile_rect_to_chunk_coords, tile_to_chunk_coord,
+};
+pub use editor_chunk_tile_sync::sync_tile_markers_into_affected_chunk_matrices;
 pub use derived::{compute_slope_grade, stitch_all_chunk_slope_grades, stitch_chunk_slope_grades, ChunkDerivedMetrics};
 pub use chunk::Chunk;
 pub use geo_plugin::*;

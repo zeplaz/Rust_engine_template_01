@@ -13,9 +13,10 @@
 use bevy::prelude::*;
 use bevy_egui::{egui, EguiContexts, EguiPrimaryContextPass};
 
-use crate::gui::ui_gates::in_simulation_or_editor;
+use crate::gui::style::{error_text, UiPalette};
 use crate::gui::gameplay_capture::GameplayRecorder;
 use crate::gui::input_bindings::InputBindings;
+use crate::gui::ui_gates::in_simulation_or_editor;
 use crate::engine::test_harness::ActiveTestScene;
 use crate::render::WeatherFireFieldDebugOverlay;
 use crate::systems::sim_control::{SimControlState, SimTick};
@@ -100,6 +101,7 @@ pub fn diagnostics_ui_system(
     mut construction_book: ResMut<CorridorConstructionBook>,
     theater: Option<Res<OperationalTheaterSummary>>,
     logistics_ai: Option<Res<LogisticsAiRuntime>>,
+    palette: Res<UiPalette>,
 ) -> Result {
     if !state.visible {
         return Ok(());
@@ -131,12 +133,13 @@ pub fn diagnostics_ui_system(
             ));
             if cap.active {
                 if let Some(dir) = cap.session_dir.as_ref() {
-                    ui.colored_label(
-                        egui::Color32::RED,
+                    error_text(
+                        ui,
+                        &palette,
                         format!("● REC {} frames → {}", cap.frames_recorded, dir.display()),
                     );
                 } else {
-                    ui.colored_label(egui::Color32::RED, "● REC");
+                    error_text(ui, &palette, "● REC");
                 }
             } else if let Some(s) = cap.last_summary() {
                 ui.small(s);

@@ -12,7 +12,9 @@ use crate::terrain::generation::passes::{
 #[cfg(feature = "dev_tools")]
 use crate::terrain::generation::passes::materialize_traced;
 use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
-use crate::terrain::generation::{Chunk, ChunkCellMatrix, ChunkDerivedMetrics, stitch_chunk_slope_grades};
+use crate::terrain::generation::{
+    Chunk, ChunkCellMatrix, ChunkDerivedMetrics, ChunkWorldgenSchedulerPlugin, stitch_chunk_slope_grades,
+};
 use crate::terrain::{
     decay_dynamic_terrain_overlay, stub_accumulate_overlay_from_chunk_fields, ChunkCellKey,
     DynamicTerrainOverlay, TerrainFamilyRegistry, TerrainFamilyRegistryLoader,
@@ -22,9 +24,11 @@ use crate::terrain::material::{
     compute_chunk_dependency,
     hash_pass1_bucket,
     hash_tuning_bucket,
+    invalidate_world,
     lowest_dirty_pass,
     ChunkDependency,
     ChunkDirty,
+    InvalidationReason,
     MaterialRegistry,
     MaterialRegistryLoader,
     MaterializedChunk,
@@ -33,6 +37,7 @@ use crate::terrain::material::{
     RuleSetLoader,
     TagRegistry,
     TagRegistryLoader,
+    WorldPreviewState,
     WorldProfile,
     WorldProfileLoader,
     WorldProfileSelector,
@@ -152,26 +157,33 @@ fn mark_chunks_dirty_on_asset_change(
     mut tag: MessageReader<AssetEvent<TagRegistry>>,
     mut rule: MessageReader<AssetEvent<RuleSet>>,
     mut q: Query<&mut ChunkDirty, With<ChunkDependency>>,
+    mut preview_state: ResMut<WorldPreviewState>,
+    chunks: Query<&Chunk, With<ChunkDependency>>,
 ) {
     let mut mask = 0u8;
+    let mut reason: Option<InvalidationReason> = None;
     for e in fam.read() {
         if matches!(e, AssetEvent::Added { .. } | AssetEvent::Modified { .. }) {
             mask |= DIRTY_PASSES_2_THROUGH_6;
+            reason.get_or_insert(InvalidationReason::Registry);
         }
     }
     for e in mat.read() {
         if matches!(e, AssetEvent::Added { .. } | AssetEvent::Modified { .. }) {
             mask |= crate::terrain::material::dependency::DIRTY_PASS6;
+            reason.get_or_insert(InvalidationReason::Registry);
         }
     }
     for e in tag.read() {
         if matches!(e, AssetEvent::Added { .. } | AssetEvent::Modified { .. }) {
             mask |= DIRTY_PASSES_2_THROUGH_6;
+            reason.get_or_insert(InvalidationReason::Tags);
         }
     }
     for e in rule.read() {
         if matches!(e, AssetEvent::Added { .. } | AssetEvent::Modified { .. }) {
             mask |= DIRTY_PASS6;
+            reason.get_or_insert(InvalidationReason::Rules);
         }
     }
     if mask == 0 {
@@ -180,25 +192,32 @@ fn mark_chunks_dirty_on_asset_change(
     for mut d in q.iter_mut() {
         d.passes |= mask;
     }
+    let coords = chunks.iter().map(|c| c.coord);
+    invalidate_world(reason.unwrap_or(InvalidationReason::Registry), &mut preview_state, coords);
 }
 
 fn mark_chunks_dirty_on_world_gen_params_change(
     params: Res<WorldGenParams>,
     mut q: Query<&mut ChunkDirty, With<ChunkDependency>>,
+    mut preview_state: ResMut<WorldPreviewState>,
+    chunks: Query<&Chunk, With<ChunkDependency>>,
     mut prev1: Local<Option<u64>>,
     mut prev2: Local<Option<u64>>,
 ) {
     let h1 = hash_pass1_bucket(&params);
     let h2 = hash_tuning_bucket(&params);
     let mut mask = 0u8;
+    let mut preview_reason: Option<InvalidationReason> = None;
     if let Some(p1) = *prev1 {
         if p1 != h1 {
             mask |= DIRTY_ALL;
+            preview_reason.get_or_insert(InvalidationReason::Noise);
         }
     }
     if let Some(p2) = *prev2 {
         if p2 != h2 {
             mask |= DIRTY_PASSES_2_THROUGH_6;
+            preview_reason.get_or_insert(InvalidationReason::Tuning);
         }
     }
     *prev1 = Some(h1);
@@ -209,6 +228,15 @@ fn mark_chunks_dirty_on_world_gen_params_change(
     for mut d in q.iter_mut() {
         d.passes |= mask;
     }
+    if mask & DIRTY_ALL != 0 {
+        preview_reason = Some(InvalidationReason::Noise);
+    }
+    let coords = chunks.iter().map(|c| c.coord);
+    invalidate_world(
+        preview_reason.unwrap_or(InvalidationReason::Tuning),
+        &mut preview_state,
+        coords,
+    );
 }
 
 fn run_passes_from(
@@ -260,6 +288,8 @@ fn rebuild_dirty_chunks(
     rule_assets: Res<Assets<RuleSet>>,
     params: Res<WorldGenParams>,
     mut commands: Commands,
+    mut preview_state: ResMut<WorldPreviewState>,
+    all_chunks: Query<&Chunk, With<ChunkDependency>>,
     mut q: Query<
         (
             Entity,
@@ -284,6 +314,8 @@ fn rebuild_dirty_chunks(
         return;
     };
 
+    let mut any_preview_hash_change = false;
+
     for (entity, chunk, mut matrix, mut dirty, mut dep) in q.iter_mut() {
         if dirty.passes == 0 {
             continue;
@@ -291,6 +323,7 @@ fn rebuild_dirty_chunks(
         let Some(low) = lowest_dirty_pass(dirty.passes) else {
             continue;
         };
+        let old_preview_hash = dep.preview_hash;
         run_passes_from(
             low,
             &mut matrix,
@@ -324,7 +357,17 @@ fn rebuild_dirty_chunks(
             commands.entity(entity).insert(derived);
         }
         *dep = compute_chunk_dependency(chunk.coord, &params, reg, families, rule_set, tag_reg);
+        if dep.preview_hash != old_preview_hash {
+            any_preview_hash_change = true;
+        } else {
+            preview_state.dirty_queue.push(chunk.coord);
+        }
         dirty.passes = 0;
+    }
+
+    if any_preview_hash_change {
+        let coords = all_chunks.iter().map(|c| c.coord);
+        invalidate_world(InvalidationReason::Registry, &mut preview_state, coords);
     }
 }
 
@@ -336,6 +379,7 @@ pub fn materialize_chunks(
     rule_assets: Res<Assets<RuleSet>>,
     params: Res<WorldGenParams>,
     mut commands: Commands,
+    mut preview_state: ResMut<WorldPreviewState>,
     mut q: Query<
         (Entity, &Chunk, &mut ChunkCellMatrix),
         Without<MaterializedChunk>,
@@ -379,6 +423,7 @@ pub fn materialize_chunks(
         ));
         #[cfg(feature = "dev_tools")]
         commands.entity(entity).insert(trace);
+        preview_state.dirty_queue.push(chunk.coord);
     }
 }
 
@@ -441,6 +486,8 @@ pub struct MaterialUnificationPlugin;
 impl Plugin for MaterialUnificationPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<DynamicTerrainOverlay>()
+            .init_resource::<WorldPreviewState>()
+            .add_plugins(ChunkWorldgenSchedulerPlugin)
             .init_asset::<TerrainFamilyRegistry>()
             .register_asset_loader(TerrainFamilyRegistryLoader::default())
             .init_asset::<MaterialRegistry>()
@@ -521,6 +568,7 @@ mod tests {
                     rules_hash: 0,
                     tags_hash: 0,
                     tuning_hash: 0,
+                    preview_hash: 0,
                 },
                 ChunkDirty::default(),
                 MaterializedChunk {

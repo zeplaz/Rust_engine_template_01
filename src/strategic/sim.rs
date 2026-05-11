@@ -1,10 +1,21 @@
 //! Live **simulation hooks** for [`strategic_fields_and_ai_orchestrator_v1.md`](../../prompts/guides/strategic_fields_and_ai_orchestrator_v1.md)
 //! child runbooks — extends [`super::plugin::StrategicFieldsPlugin`] field buffers with coupling + AI-facing aggregates.
 //!
+//! **Hybrid layer:** PreUpdate [`super::hybrid_fields::region_stats_spatial_smoothing_system`]; Update
+//! [`super::WorldIntentField`] reset → emotion drift → agent contributions via [`HybridSimPipeline`]; PostUpdate
+//! [`super::hybrid_brain::hybrid_resolve_and_feedback_system`] then debug snapshots / phase clock. Terrain **world
+//! preview** stays read-only — no gameplay authority from preview.
+//!
 //! Weather → recon (read-only): [`S2-S04`](../../prompts/matrix/simulation_expansion/runbook/s2_steps_v1.md) / `chunk_sensor_weather_factor`.
 
 use bevy::prelude::*;
 
+use super::hybrid_fields::region_stats_spatial_smoothing_system;
+use super::hybrid_brain::{
+    hybrid_agent_intent_contribution_system, hybrid_emotion_drift_system, hybrid_intent_reset_system,
+    hybrid_phase_clock_tick_system, hybrid_resolve_and_feedback_system, HybridBrainSample, HybridSimLastResolved,
+    HybridSimPhaseClock, HybridSimScratch, WorldIntentField,
+};
 use super::logistics_net::logistics_net_inject_into_overlays;
 use super::runbook_rounds::city_planning::utility_redundancy_weight;
 use super::runbook_rounds::city_planning::{site_score, SettlementArchetype};
@@ -137,6 +148,65 @@ impl Default for CityPlanningHints {
     }
 }
 
+/// Runbook §10 — optional HUD / inspection (populate by enabling flags; cheap when off).
+#[derive(Resource, Clone, Debug)]
+pub struct SimDebugView {
+    pub show_intent_field: bool,
+    pub show_agent_emotions: bool,
+    pub show_faction_variance: bool,
+    pub show_resolution_masses: bool,
+    /// Snapshot after agent intent pass (approximate “why did war pressure rise?”).
+    pub last_intent_snapshot: WorldIntentField,
+    pub last_emotion_mean_fear: f32,
+    pub last_telemetry: Option<super::hybrid_brain::HybridResolutionTelemetry>,
+}
+
+impl Default for SimDebugView {
+    fn default() -> Self {
+        Self {
+            show_intent_field: false,
+            show_agent_emotions: false,
+            show_faction_variance: false,
+            show_resolution_masses: false,
+            last_intent_snapshot: WorldIntentField::default(),
+            last_emotion_mean_fear: 0.0,
+            last_telemetry: None,
+        }
+    }
+}
+
+fn hybrid_debug_snapshot_system(
+    mut debug: ResMut<SimDebugView>,
+    intent: Res<WorldIntentField>,
+    last: Res<HybridSimLastResolved>,
+    brains: Query<&HybridBrainSample>,
+) {
+    if debug.show_intent_field {
+        debug.last_intent_snapshot = intent.clone();
+    }
+    if debug.show_resolution_masses {
+        debug.last_telemetry = last.telemetry;
+    }
+    if debug.show_agent_emotions {
+        let mut n = 0usize;
+        let mut sum = 0.0f32;
+        for b in &brains {
+            sum += b.emotions.fear;
+            n += 1;
+        }
+        debug.last_emotion_mean_fear = if n > 0 { sum / n as f32 } else { 0.0 };
+    }
+}
+
+/// Stages for hybrid **Update**: intent reset → emotion drift → agent contributions (`resolve` in **PostUpdate**).
+/// Ordered after logistics overlay inject and before [`strategic_fields_coupling_tick`].
+#[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
+pub enum HybridSimPipeline {
+    IntentReset,
+    EmotionDrift,
+    AgentIntent,
+}
+
 pub struct StrategicSimulationPlugin;
 
 impl Plugin for StrategicSimulationPlugin {
@@ -145,6 +215,43 @@ impl Plugin for StrategicSimulationPlugin {
         app.init_resource::<LogisticsAiRuntime>()
             .init_resource::<OperationalTheaterSummary>()
             .init_resource::<CityPlanningHints>()
+            .init_resource::<super::WorldFields>()
+            .init_resource::<super::RegionalStatsOverlay>()
+            .init_resource::<WorldIntentField>()
+            .init_resource::<HybridSimScratch>()
+            .init_resource::<HybridSimLastResolved>()
+            .init_resource::<HybridSimPhaseClock>()
+            .init_resource::<SimDebugView>()
+            .add_systems(PreUpdate, region_stats_spatial_smoothing_system)
+            .configure_sets(
+                Update,
+                (
+                    HybridSimPipeline::EmotionDrift.after(HybridSimPipeline::IntentReset),
+                    HybridSimPipeline::AgentIntent.after(HybridSimPipeline::EmotionDrift),
+                    HybridSimPipeline::IntentReset.after(logistics_net_inject_into_overlays),
+                ),
+            )
+            .add_systems(
+                Update,
+                hybrid_intent_reset_system.in_set(HybridSimPipeline::IntentReset),
+            )
+            .add_systems(
+                Update,
+                hybrid_emotion_drift_system.in_set(HybridSimPipeline::EmotionDrift),
+            )
+            .add_systems(
+                Update,
+                hybrid_agent_intent_contribution_system.in_set(HybridSimPipeline::AgentIntent),
+            )
+            .add_systems(
+                PostUpdate,
+                (
+                    hybrid_resolve_and_feedback_system,
+                    hybrid_debug_snapshot_system,
+                    hybrid_phase_clock_tick_system,
+                )
+                    .chain(),
+            )
             .add_systems(
                 Update,
                 refresh_settlement_socio_signals.before(strategic_fields_coupling_tick),
@@ -562,6 +669,7 @@ mod tests {
 
         let mut app = App::new();
         app.add_plugins(MinimalPlugins)
+            .init_resource::<WorldGenParams>()
             .add_plugins(StrategicFieldsPlugin)
             .add_plugins(StrategicSimulationPlugin);
 
@@ -628,5 +736,57 @@ mod tests {
         app.world_mut().init_resource::<LogisticsGraph>();
         // would panic if schedule invalid
         app.update();
+    }
+
+    #[test]
+    fn behavioral_hybrid_mvp_smoke_ticks() {
+        use crate::strategic::{
+            HybridAgentEmotions, HybridAgentTraits, HybridBrainSample, HybridSimLastResolved,
+            HybridSimPhaseClock, SimDebugView, StrategicSimulationPlugin,
+        };
+
+        let mut app = App::new();
+        app.add_plugins(MinimalPlugins)
+            .add_plugins(StrategicSimulationPlugin)
+            .init_resource::<crate::strategic::StrategicOverlayCouplingScratch>()
+            .add_systems(Update, logistics_net_inject_into_overlays);
+        app.world_mut().init_resource::<LogisticsGraph>();
+
+        for _ in 0..8 {
+            app.world_mut().spawn(HybridBrainSample {
+                traits: HybridAgentTraits {
+                    cruelty: 0.35,
+                    rationality: 0.4,
+                    paranoia: 0.45,
+                    ambition: 0.25,
+                    ..Default::default()
+                },
+                emotions: HybridAgentEmotions {
+                    anger: 0.45,
+                    confidence: 0.5,
+                    fear: 0.25,
+                    fatigue: 0.0,
+                },
+            });
+        }
+
+        {
+            let mut d = app.world_mut().resource_mut::<SimDebugView>();
+            d.show_resolution_masses = true;
+            d.show_intent_field = true;
+        }
+
+        for _ in 0..20 {
+            app.update();
+        }
+
+        let last = app.world().resource::<HybridSimLastResolved>();
+        assert!(last.event.is_some());
+        assert!(last.telemetry.is_some());
+        assert_eq!(app.world().resource::<HybridSimPhaseClock>().tick, 20);
+
+        let dbg = app.world().resource::<SimDebugView>();
+        assert!(dbg.last_telemetry.is_some());
+        assert!(dbg.last_intent_snapshot.war_probability >= 0.0);
     }
 }

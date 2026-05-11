@@ -2,13 +2,20 @@
 
 use bevy::prelude::*;
 
+use super::build_order::process_build_order_queue_system;
+use super::frontline::derive_frontline_from_control_system;
 use super::logistics_net::logistics_net_inject_into_overlays;
 use super::schedule::{StrategicOverlayCouplingScratch, StrategicOverlayDisplayPolicy};
 use super::transport_bridge::{
     apply_corridor_construction_book_to_entities, inject_transport_scalar_fields_into_overlays,
     maintain_strategic_corridor_entities, sync_logistics_graph_from_transport, StrategicRasterConfig,
 };
-use super::{ChunkStrategicOverlay, CorridorConstructionBook, LogisticsGraph};
+use super::world_read_snapshot::world_read_snapshot_refresh_system;
+use super::zones::apply_zones_to_strategic_overlays_system;
+use super::{
+    ApprovedBuildOrders, BuildOrderQueue, ChunkStrategicOverlay, CorridorConstructionBook, FrontlineState,
+    LogisticsGraph, WorldFieldLayerConfig, WorldFieldLayerEpoch, WorldReadSnapshot,
+};
 use super::construction_book::{
     align_corridor_book_with_transport_directory, transport_directory_edge_signature,
 };
@@ -24,6 +31,8 @@ pub enum StrategicFieldPipeline {
     GraphSync,
     InjectTransportScalars,
     LogisticsNetInject,
+    /// Zones + frontline + planner read model (after logistics paints baselines).
+    ZoneAndReadModel,
 }
 
 fn ensure_chunk_strategic_overlays(
@@ -92,6 +101,12 @@ impl Plugin for StrategicFieldsPlugin {
             .init_resource::<TransportEdgeDirectory>()
             .init_resource::<TransportFieldStore>()
             .init_resource::<TransportCostWeights>()
+            .init_resource::<FrontlineState>()
+            .init_resource::<WorldReadSnapshot>()
+            .init_resource::<WorldFieldLayerEpoch>()
+            .init_resource::<WorldFieldLayerConfig>()
+            .init_resource::<BuildOrderQueue>()
+            .init_resource::<ApprovedBuildOrders>()
             .configure_sets(
                 Update,
                 (
@@ -100,6 +115,8 @@ impl Plugin for StrategicFieldsPlugin {
                     StrategicFieldPipeline::InjectTransportScalars.after(StrategicFieldPipeline::GraphSync),
                     StrategicFieldPipeline::LogisticsNetInject
                         .after(StrategicFieldPipeline::InjectTransportScalars),
+                    StrategicFieldPipeline::ZoneAndReadModel
+                        .after(StrategicFieldPipeline::LogisticsNetInject),
                 ),
             )
             .add_systems(
@@ -125,6 +142,17 @@ impl Plugin for StrategicFieldsPlugin {
             .add_systems(
                 Update,
                 logistics_net_inject_into_overlays.in_set(StrategicFieldPipeline::LogisticsNetInject),
+            )
+            .add_systems(
+                Update,
+                (
+                    apply_zones_to_strategic_overlays_system,
+                    derive_frontline_from_control_system,
+                    world_read_snapshot_refresh_system,
+                    process_build_order_queue_system,
+                )
+                    .chain()
+                    .in_set(StrategicFieldPipeline::ZoneAndReadModel),
             );
     }
 }

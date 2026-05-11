@@ -3,6 +3,7 @@
 mod registry;
 mod resolver;
 pub mod dependency;
+mod preview_invalidation;
 pub mod profile;
 pub mod runtime;
 mod rules;
@@ -22,6 +23,9 @@ pub use dependency::{
     hash_tuning_bucket, lowest_dirty_pass, source_noise_id_for_chunk, ChunkDependency, ChunkDirty,
     DIRTY_ALL, DIRTY_PASS1, DIRTY_PASS2, DIRTY_PASS3, DIRTY_PASS4, DIRTY_PASS5, DIRTY_PASS6,
     DIRTY_PASSES_2_THROUGH_6,
+};
+pub use preview_invalidation::{
+    invalidate_world, InvalidationReason, PreviewGenerationEpoch, WorldPreviewState,
 };
 pub use profile::{apply_profile, ProfileHandles, WorldProfile, WorldProfileLoader, WorldProfileSelector};
 

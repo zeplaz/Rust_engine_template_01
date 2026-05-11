@@ -1,0 +1,40 @@
+(
+    schema_version: 2,
+
+    metadata: (
+        id: "wave3_obj_demo",
+        display_name: "Wave 3 objectives demo",
+        author: Some("proc_A_dine01"),
+        description: Some("RegisterObjectives step + markers; hierarchical + tile target"),
+    ),
+
+    steps: [
+        Log(message: "Wave3 fixture start"),
+        RegisterObjectives(
+            clear_existing: true,
+            objectives: [
+                (
+                    objective_id: "cap_pass",
+                    kind: CaptureRegion,
+                    label: "Secure northern pass",
+                    target: Some(Region("region:test/north_pass")),
+                    region_key: None,
+                    owning_faction: Some("NATO"),
+                    opposing_faction: Some("Russia"),
+                    tags: ["logistics", "corridor"],
+                ),
+                (
+                    objective_id: "keep_line",
+                    kind: MaintainSupply,
+                    label: "Keep MSR open",
+                    target: None,
+                    region_key: None,
+                    owning_faction: None,
+                    opposing_faction: None,
+                    tags: [],
+                ),
+            ],
+        ),
+        NoOp,
+    ],
+)

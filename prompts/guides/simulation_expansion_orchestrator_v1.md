@@ -1,8 +1,8 @@
 # Simulation expansion orchestrator `v1`
 
-> **STATUS:** Draft **v1** — **scaffolding only**. Defines layers, ownership, and cross-links. Per-domain matrices and atomic step packs are **Pending** until anchored (see [`system_runbook_authoring_meta_v1.md`](system_runbook_authoring_meta_v1.md)).
+> **STATUS:** Draft **v1** — **live index** for simulation layers, ownership, and cross-links. Some domains still use placeholder step packs; treat this file as the **umbrella** and follow per-domain matrices + [`strategic_program_execution_plan_v1.md`](strategic_program_execution_plan_v1.md) for execution order.
 
-Version: `v1.0.1`  
+Version: `v1.0.2`  
 Audience: agents and leads wiring **ontology → simulation execution**.
 
 **Entry index:** [`new_propsal_guide_may202608.md`](new_propsal_guide_may202608.md)
@@ -100,7 +100,7 @@ For **100k+ field entities** and **large worlds**, chunk-local **FixedUpdate** s
 
 ### 6b. Strategic program (orchestrators + execution order)
 
-**Recommended sequencing:** [`strategic_program_execution_plan_v1.md`](strategic_program_execution_plan_v1.md)
+**Recommended sequencing:** [`strategic_program_execution_plan_v1.md`](strategic_program_execution_plan_v1.md) — read **§4** first for *start next* (partial **P1** in code today; primary structural push **P2** construction + corridors).
 
 | Role | Doc |
 |:---|:---|

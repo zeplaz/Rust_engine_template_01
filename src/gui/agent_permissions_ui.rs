@@ -8,6 +8,7 @@ use crate::systems::agents::permissions::{
 };
 use crate::systems::agents::agent_manager::AgentManager;
 use crate::events::ownership_events::FactionColors;
+use crate::gui::style::gameplay_color_swatch_egui;
 
 /// UI state for the permissions window
 #[derive(Resource)]
@@ -128,16 +129,10 @@ pub fn permissions_ui_system(
                                 ui.cursor().min,
                                 egui::vec2(20.0, 20.0)
                             );
-                            let srgba = color.to_srgba();
                             ui.painter().rect_filled(
                                 color_rect,
                                 0.0,
-                                egui::Color32::from_rgba_unmultiplied(
-                                    (srgba.red * 255.0) as u8,
-                                    (srgba.green * 255.0) as u8,
-                                    (srgba.blue * 255.0) as u8,
-                                    (srgba.alpha * 255.0) as u8,
-                                )
+                                gameplay_color_swatch_egui(color)
                             );
                             ui.add_space(25.0);
                             
