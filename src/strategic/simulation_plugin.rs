@@ -12,6 +12,7 @@ use super::mission_plugin::MissionPlugin;
 use super::faction_plugin::FactionPlugin;
 use super::plugin::StrategicFieldsPlugin;
 use super::sim::StrategicSimulationPlugin;
+use super::spatial_network::SpatialNetworkPlugin;
 use super::strategic_behavior_schedule::StrategicBehaviorSchedulePlugin;
 
 /// Core strategic + behavior stack: chunk overlays, construction bridge, hybrid sim, then phased behavior chain.
@@ -22,6 +23,7 @@ impl Plugin for SimulationPlugin {
         app.add_plugins((
             StrategicFieldsPlugin,
             InfrastructureGraphBridgePlugin,
+            SpatialNetworkPlugin,
             StrategicSimulationPlugin,
             StrategicBehaviorSchedulePlugin,
             MissionPlugin,

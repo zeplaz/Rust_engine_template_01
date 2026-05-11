@@ -62,6 +62,8 @@ mod runbook_rounds;
 mod schedule;
 mod simulation_plugin;
 mod sim;
+mod spatial_network;
+mod network_flow;
 mod strategic_behavior_schedule;
 mod transport_bridge;
 mod world_field_layers;
@@ -115,8 +117,20 @@ pub use frontline::{derive_frontline_from_control_system, FrontlineState};
 pub use gpu_bridge_plugin::{
     AgentGpuPacket, AgentGpuResult, GpuBridgePlugin, GpuBridgeState, GpuSimLane,
 };
+pub use network_flow::{
+    effective_visibility_sample, network_digest_marks_flow_dirty_system,
+    network_flow_chunk_local_solver_system, network_insulation_visibility_post_system,
+    sample_network_flow_at_world_tile, NetworkDirtyMask, NetworkFlowFieldSample,
+    NetworkFlowPrevSignatures, NETWORK_DIRTY_CONNECTIVITY, NETWORK_DIRTY_FLOW,
+};
 pub use mission_plugin::MissionPlugin;
 pub use simulation_plugin::SimulationPlugin;
+pub use spatial_network::{
+    rebuild_chunk_network_digest_system, ChunkNetworkDigest, ChunkNetworkSummary, LayerType,
+    NetworkAttachmentMask, NetworkFlowRules, NetworkInsulatedNode, NetworkMembership,
+    NetworkPrimitiveKind, NetworkType, SpatialNetworkEdge, SpatialNetworkGraph, SpatialNetworkPlugin,
+    SpatialNetworkPosition, SpatialNode,
+};
 pub use strategic_behavior_schedule::{StrategicBehaviorSchedule, StrategicBehaviorSchedulePlugin};
 pub use construction_book::{
     align_corridor_book_with_transport_directory, apply_corridor_book_from_transport_snapshot,
@@ -217,6 +231,14 @@ pub struct ChunkStrategicOverlay {
     pub artillery_danger: Vec<[f32; MAX_STRATEGIC_FACTION_SLOTS]>,
     pub logistics_strength: Vec<[f32; MAX_STRATEGIC_FACTION_SLOTS]>,
     pub logistics_throughput: Vec<f32>,
+    /// Network-flow solver: power grid / energy availability (0..1).
+    pub power_flow: Vec<f32>,
+    /// Network-flow solver: roads, pipes-as-pressure, logistics lanes (0..1).
+    pub logistics_flow: Vec<f32>,
+    /// Blended control from faction slots + logistics flow (0..1).
+    pub control_pressure: Vec<f32>,
+    /// Sensor / data-network derived visibility channel (0..1); modulated by EW + insulation pass.
+    pub visibility: Vec<f32>,
     pub mobility_cost: Vec<f32>,
     pub attrition_rate: Vec<f32>,
     pub fire_risk: Vec<f32>,
@@ -242,6 +264,10 @@ impl ChunkStrategicOverlay {
             artillery_danger: z_pack(),
             logistics_strength: z_pack(),
             logistics_throughput: z_scalar(),
+            power_flow: z_scalar(),
+            logistics_flow: z_scalar(),
+            control_pressure: z_scalar(),
+            visibility: z_scalar(),
             mobility_cost: z_scalar(),
             attrition_rate: z_scalar(),
             fire_risk: z_scalar(),

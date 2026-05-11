@@ -1,6 +1,9 @@
 //! Stub **infrastructure construction** graph (`infrastructure_construction_runbook_v1` §4–5) mirrored from the
 //! active [`LogisticsGraph`](super::LogisticsGraph) so integrity / maintenance consumers can attach without a
 //! second bake pass.
+//!
+//! **`InfrastructureNetworkType` is legacy / import-only.** Authoritative simulation uses [`crate::strategic::spatial_network::NetworkType`];
+//! convert at boundaries with `NetworkType::from(infra_enum)` only.
 
 use std::collections::HashMap;
 
