@@ -7,6 +7,7 @@ use bevy::prelude::*;
 
 use bevy::ui::widget::ImageNode;
 
+use crate::gui::gui_assets::SplashMenuAssets;
 use crate::gui::UiPalette;
 
 // Tag component marking entities spawned for the splash screen.
@@ -20,7 +21,8 @@ pub struct SplashPlugin;
 
 impl Plugin for SplashPlugin {
     fn build(&self, app: &mut App) {
-        app.init_state::<AppStartState>()
+        app.init_resource::<SplashMenuAssets>()
+            .init_state::<AppStartState>()
             .add_systems(OnEnter(AppStartState::Splash), splash_setup)
             .add_systems(Update, countdown.run_if(in_state(AppStartState::Splash)))
             .add_systems(OnExit(AppStartState::Splash), despawn_splash);
@@ -35,8 +37,8 @@ pub enum AppStartState {
     Menu,
 }
 
-fn splash_setup(mut commands: Commands, asset_server: Res<AssetServer>, palette: Res<UiPalette>) {
-    let icon: Handle<Image> = asset_server.load("splash/splash_01.png");
+fn splash_setup(mut commands: Commands, images: Res<SplashMenuAssets>, palette: Res<UiPalette>) {
+    let icon = images.splash.clone();
 
     // Full-bleed color so the splash is visible even before `splash_01.png` finishes loading (or if the file is absent).
     commands.spawn((

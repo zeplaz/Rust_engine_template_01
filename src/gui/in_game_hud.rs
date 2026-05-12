@@ -25,8 +25,8 @@ use crate::gui::hud::{
 use crate::gui::ui_gates::in_simulation_or_editor;
 
 use crate::entities::production::core::{
-    resolve_logistics_focus_entity, storage_entities_for_focus, LogisticsSiteMember,
-    LogisticsSiteRoot, ResourceConsumer, ResourceProducer, ResourceStorage,
+    resolve_logistics_focus_entity, resource_category_tag, storage_entities_for_focus,
+    LogisticsSiteMember, LogisticsSiteRoot, ResourceConsumer, ResourceProducer, ResourceStorage,
     ResourceStorageCapacity, ResourceType,
 };
 
@@ -579,10 +579,12 @@ fn update_operations_strip(
     logistics: Res<LogisticsAiRuntime>,
     missions: Res<ActiveMissions>,
     fracture: Res<FractureProbabilityOverlay>,
-    mut q_time: Query<&mut Text, With<OpsStripTime>>,
-    mut q_alerts: Query<&mut Text, With<OpsStripAlerts>>,
-    mut q_routes: Query<&mut Text, With<OpsStripIntelRoutes>>,
-    mut q_ew: Query<&mut Text, With<OpsStripIntelEw>>,
+    mut qs: ParamSet<(
+        Query<&mut Text, With<OpsStripTime>>,
+        Query<&mut Text, With<OpsStripAlerts>>,
+        Query<&mut Text, With<OpsStripIntelRoutes>>,
+        Query<&mut Text, With<OpsStripIntelEw>>,
+    )>,
 ) {
     let run = if ctrl.paused { "PAUSE" } else { "RUN" };
     let time_line = format!(
@@ -592,7 +594,7 @@ fn update_operations_strip(
         run,
         ctrl.speed
     );
-    for mut t in &mut q_time {
+    for mut t in qs.p0().iter_mut() {
         *t = Text::new(time_line.clone());
     }
 
@@ -613,7 +615,7 @@ fn update_operations_strip(
         theater.active_faction_slots,
         truncate_slot(mission_hint, 28),
     );
-    for mut t in &mut q_alerts {
+    for mut t in qs.p1().iter_mut() {
         *t = Text::new(alerts_line.clone());
     }
 
@@ -624,7 +626,7 @@ fn update_operations_strip(
         logistics.mean_edge_damage,
         logistics.stockpile_fill_ratio,
     );
-    for mut t in &mut q_routes {
+    for mut t in qs.p2().iter_mut() {
         *t = Text::new(routes.clone());
     }
 
@@ -634,7 +636,7 @@ fn update_operations_strip(
         fracture.mean_heuristic,
         logistics.industrial_output_proxy,
     );
-    for mut t in &mut q_ew {
+    for mut t in qs.p3().iter_mut() {
         *t = Text::new(ew.clone());
     }
 }
@@ -738,18 +740,21 @@ fn update_objectives_hud_line(
 
 fn sync_command_left_stack_visibility(
     state: Res<CommandLeftStackState>,
-    mut body: Query<&mut Visibility, With<LeftContextStackBody>>,
-    mut rail: Query<&mut Visibility, With<LeftContextRail>>,
+    mut q: ParamSet<(
+        Query<&mut Visibility, With<LeftContextStackBody>>,
+        Query<&mut Visibility, With<LeftContextRail>>,
+    )>,
 ) {
-    for mut v in &mut body {
-        *v = if state.collapsed {
+    let collapsed = state.collapsed;
+    for mut v in q.p0().iter_mut() {
+        *v = if collapsed {
             Visibility::Hidden
         } else {
             Visibility::Visible
         };
     }
-    for mut v in &mut rail {
-        *v = if state.collapsed {
+    for mut v in q.p1().iter_mut() {
+        *v = if collapsed {
             Visibility::Visible
         } else {
             Visibility::Hidden
@@ -1091,18 +1096,20 @@ fn format_merged_site_panel(
             };
             let bar = ascii_bar(stock, denom, 8);
             let flows = flow_suffix(ty, producer, consumer);
+            let tag = resource_category_tag(ty);
             let cap_hint = if cap > 0.001 {
                 format!("/{:.0}", cap)
             } else {
                 String::new()
             };
             format!(
-                "[{}] {} {:>8.1}{}{}",
+                "[{}] {} {:>8.1}{}{} · {}",
                 g,
                 bar,
                 stock,
                 cap_hint,
-                if flows.is_empty() { String::new() } else { flows }
+                if flows.is_empty() { String::new() } else { flows },
+                tag,
             )
         })
         .collect();

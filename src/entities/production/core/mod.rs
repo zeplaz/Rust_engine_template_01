@@ -14,3 +14,6 @@ pub use resources::*;
 pub use manufacturing::*;
 pub use manufacturing_plugin::*;
 pub use production_care::*;
+pub use production_utils::{
+    categorize_resources, resource_category_of, resource_category_tag, ResourceCategory,
+};

@@ -35,6 +35,6 @@ pub use dynamic_overlay::{
 };
 pub use fire::{
     ammo_dump_profile, fuel_depot_profile, fuel_material_def, lithium_battery_warehouse,
-    FuelMaterialDef, FuelMaterialKind, ScenarioHazardLayer, StructureFireProfile, VegetationFuelLayer,
-    layer_fuel_mass,
+    FuelLayer, FuelMaterialDef, FuelMaterialKind, ScenarioHazardLayer, StructureFireProfile,
+    VegetationFuelLayer, layer_fuel_mass,
 };

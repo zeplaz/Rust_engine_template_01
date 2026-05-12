@@ -1,4 +1,5 @@
 // Core engine functionality
+#[cfg(feature = "legacy_engine")]
 mod engine;
 mod engine_with_worldgen; // New engine implementation with world generation
 pub mod launch_args;

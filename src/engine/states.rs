@@ -98,20 +98,5 @@ pub enum InGameEditorState {
     Rail,
 }
 
-pub struct EngineState {
-    starting_up: bool,
-    quit: bool,
-    error: bool,
-    running: bool,
-}
-
-impl Default for EngineState {
-    fn default() -> Self {
-        EngineState {
-            starting_up: true,
-            quit: false,
-            error: false,
-            running: false,
-        }
-    }
-}
+// Legacy `EngineState` boot flags were removed: use [`BaseState`], [`WorldGenFlowState`], and
+// [`crate::systems::sim_control::SimControlState`] for lifecycle + sim cadence.

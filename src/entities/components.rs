@@ -7,8 +7,6 @@ use crate::entities::types_aliases::ResourceRequirementsMap;
 pub use crate::entities::types_of::{EmergencyType, MalfunctionType, OperationalStatus};
 use crate::idgen::EntityId;
 
-use std::time::Duration;
-
 #[derive(Clone, Debug, Component)]
 pub struct AgentOwnable {
     pub owner_id: EntityId,
@@ -34,9 +32,18 @@ pub struct Operational {
     pub operational_status: OperationalStatus,
 }
 
-struct MaintenanceTimer {
-    timer: Timer,
-    interval: Duration,
+/// Repeating maintenance interval for [`Operational`] — advanced by [`crate::entities::production::core::operational_maintenance_timer_tick`].
+#[derive(Component, Debug, Clone)]
+pub struct MaintenanceTimer {
+    pub check: Timer,
+}
+
+impl Default for MaintenanceTimer {
+    fn default() -> Self {
+        Self {
+            check: Timer::from_seconds(60.0, TimerMode::Repeating),
+        }
+    }
 }
 
 #[derive(Component)]

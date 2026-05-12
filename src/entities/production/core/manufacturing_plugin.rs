@@ -10,6 +10,7 @@
 
 use bevy::prelude::*;
 
+use crate::entities::components::{MaintenanceTimer, Operational};
 use crate::entities::production::core::manufacturing::ManufacturingNode;
 use crate::systems::production::default_production_manifest;
 use crate::systems::sim_control::SimControlState;
@@ -19,7 +20,10 @@ pub struct ManufacturingCorePlugin;
 impl Plugin for ManufacturingCorePlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(default_production_manifest());
-        app.add_systems(Update, tick_manufacturing_nodes);
+        app.add_systems(
+            Update,
+            (tick_manufacturing_nodes, operational_maintenance_timer_tick),
+        );
     }
 }
 
@@ -34,5 +38,29 @@ fn tick_manufacturing_nodes(
     for mut node in nodes.iter_mut() {
         // TODO: drive throughput vs blueprint, decay/efficiency curves, alert events.
         let _ = &mut *node;
+    }
+}
+
+/// Interval maintenance for entities with [`Operational`] + [`MaintenanceTimer`].
+fn operational_maintenance_timer_tick(
+    time: Res<Time>,
+    ctrl: Res<SimControlState>,
+    mut q: Query<(&mut Operational, &mut MaintenanceTimer)>,
+) {
+    if !ctrl.should_tick() {
+        return;
+    }
+    let dt = time.delta_secs() * ctrl.dt_scale();
+    if dt <= 0.0 {
+        return;
+    }
+    for (mut op, mut mt) in &mut q {
+        mt.check.tick(std::time::Duration::from_secs_f32(dt));
+        if mt.check.just_finished() {
+            if op.emergencies.is_empty() && op.malfunctions.is_empty() {
+                op.maintenance_level =
+                    (op.maintenance_level + 0.04 * (1.0 - op.maintenance_level)).min(1.0);
+            }
+        }
     }
 }

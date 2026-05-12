@@ -17,10 +17,11 @@ use crate::scenario::ScenarioScriptingPlugin;
 use crate::systems::sim_control::SimControlPlugin;
 use crate::systems::transport::{TransportSchedule, TransportSimulationPlugin};
 use crate::strategic::StrategicFieldPipeline;
-use crate::render::{GpuWeatherFireFieldPlugin, TileWorldFallbackPlugin};
+use crate::render::{GpuWeatherFireFieldPlugin, LocalLightPlugin, TileWorldFallbackPlugin};
 use crate::systems::{
     configure_chunk_environment_sets,
-    ChunkEnvironmentPersistPlugin, ChunkSimLodPlugin, EcologyPlugin, FirePlugin, WeatherPlugin,
+    AtmospherePlugin, ChunkEnvironmentPersistPlugin, ChunkSimLodPlugin, EcologyPlugin, FirePlugin,
+    WeatherPlugin,
 };
 use crate::systems::terrain::MaterialUnificationPlugin;
 use crate::terrain::generation::WorldGenToolsPlugin;
@@ -58,6 +59,7 @@ impl Plugin for EnginePlugin {
                 }),
         )
             .add_systems(Startup, spawn_primary_ui_camera)
+            .add_plugins(LocalLightPlugin)
             .add_plugins(TestHarnessPlugin)
             .add_plugins(EguiPlugin::default())
             .add_plugins(UiThemePlugin)
@@ -73,8 +75,9 @@ impl Plugin for EnginePlugin {
         app.add_plugins(ChunkEnvironmentPersistPlugin)
             .add_plugins(ChunkSimLodPlugin)
             .add_plugins(FirePlugin)
-            .add_plugins(WeatherPlugin)
             .add_plugins(EcologyPlugin)
+            .add_plugins(AtmospherePlugin)
+            .add_plugins(WeatherPlugin)
             .add_plugins(GpuWeatherFireFieldPlugin)
             .add_plugins(TransportSimulationPlugin)
             // Nav: damage/speed adjustments after transport cost cache; motion stage after damage (S2).
@@ -84,6 +87,22 @@ impl Plugin for EnginePlugin {
             .add_plugins(crate::gui::editor::editor_world_commit_bridge::EditorWorldCommitBridgePlugin)
             .add_plugins(crate::strategic::StrategicFieldsAndAiPlugin)
             .add_plugins(crate::strategic::GpuBridgePlugin);
+        // Fire visual extract: one sim pass → buffer; then pooled local lights collect messages.
+        app.configure_sets(
+            Update,
+            crate::render::extraction::FireExtractSet::BuildProfiles
+                .after(crate::systems::atmosphere::AtmospherePipelineSet::VisualExtract),
+        );
+        app.configure_sets(
+            Update,
+            crate::render::LocalLightExtractSet::Collect
+                .after(crate::render::extraction::FireExtractSet::EmitParticles),
+        );
+        app.configure_sets(
+            Update,
+            crate::systems::atmosphere::AtmospherePipelineSet::Diagnostics
+                .before(TransportSchedule::Topology),
+        );
         app.configure_sets(
             Update,
             StrategicFieldPipeline::GraphSync.after(TransportSchedule::CostCache),
@@ -114,7 +133,7 @@ impl Plugin for EnginePlugin {
             .add_plugins(RoadVehicleToolsUiPlugin);
 
         info!(
-            "Engine initialized. Optional: `--test weather` / `--test fire` for sample worlds. Keys: F1 options · F2 pressure composer · F3 diagnostics · F7 agent perms · F11/F12 capture; RON under user config · captures under APPDATA/proc_A_dine01/captures."
+            "Engine initialized. Optional: `--test weather` / `--test fire` / `--test atmosphere` / `--test visual` for sample worlds. Keys: F1 options · F2 pressure composer · F3 diagnostics · F7 agent perms · F11/F12 capture; RON under user config · captures under APPDATA/proc_A_dine01/captures."
         );
     }
 }

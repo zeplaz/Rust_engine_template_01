@@ -397,18 +397,27 @@ dynamic orange lighting
 flicker
 smoke shadowing
 nighttime visibility
-Fire Light Component
+Fire Light Emission (sim metadata)
+
+Chunk entities carry [`FireLightEmission`](crate::systems::fire::FireLightEmission): radius, base/current intensity, flicker — **not** a [`PointLight`]. Render pulls [`RequestLocalLight`](crate::render::RequestLocalLight) via [`extract_fire_light_emission_to_requests`](crate::render::extract_fire_lights::extract_fire_light_emission_to_requests) into the pooled local light path.
+
+```rust
 #[derive(Component)]
-pub struct FireLight {
+pub struct FireLightEmission {
     pub radius: f32,
-    pub intensity: f32,
+    pub base_intensity: f32,
+    pub current_intensity: f32,
+    pub flicker_strength: f32,
+    pub flicker_phase: f32,
 }
+```
 
 Intensity tied to:
 
 fire.heat
 * biomass
 * fuel_energy
+
 10. MISSION BUILDER OVERLAYS
 
 Expose atmosphere overlays.
@@ -938,26 +947,35 @@ Recommended order:
 Weather Update
 → Ecology Update
 → Fire Update
-→ Atmosphere Update
-→ Smoke Transport
-→ Particle Emitters
-→ Rendering Extraction
+→ Atmosphere Field + Advect
+→ Emitters (fuel-aware)
+→ Particles
+→ Coupling
+→ VisualExtract (sim → render snapshots)
+→ RenderPrep (shader handles / GPU bridge)
 → UI
 ```
 
 ---
 
-# 19. Camera Controls
+# 19. Field ownership & unified fuel row
 
-Required:
+Simulation should grow by **who owns which field**, not by feature-named mega-systems.
 
-| Control | Action |
-|---|---|
-| WASD | Pan |
-| Mouse Wheel | Zoom |
-| Q/E | Rotate |
-| Shift | Fast move |
-| Space | Pause sim |
+| Layer / field | Primary writers (CPU today) | Primary readers |
+|---|---|---|
+| Terrain substrate | materialization / hydrology | ecology, fire ignition |
+| Ecology / vegetation | `EcologyPlugin`, vegetation integrators | fuel profile, `FireFuelField` |
+| Fuel strata | `chunk_fuel_profile_tick` | combustion, surface fire |
+| Fire heat / overlay | `FirePlugin` (surface + overlay ticks) | smoke field, emitters, atmosphere blend |
+| Smoke chunk grid | `ChunkSmokeField` | atmosphere field fill, GPU debug |
+| Global atmosphere | `AtmospherePlugin` (fill, advect, blend) | logistics sample, visibility, render prep |
+| Particles / mesh VFX | future extraction → render | **no** authoritative smoke mass |
+| **VisualExtract** | `publish_sim_visual_extract` | `SimFireEmitterVisualExtract`, `SimChunkSmokeVisualExtract` (render reads only) |
+
+**Unified fuel row:** [`FuelLayer`](../../src/terrain/fire/fuel_layer.rs) is a single normalized struct (surface / shrub / canopy fuel, moisture, volatility, toxic smoke, burn temperature, ember proxy). Use [`FuelLayer::from_vegetation_strata`](../../src/terrain/fire/fuel_layer.rs) via [`ChunkFuelProfile::to_fuel_layer`](../../src/systems/fire/chunk_fuel_profile.rs) for wildland aggregates; use presets (`FuelLayer::forest`, `fuel_dump`, `battery_facility`, `concrete_building`) for industrial / structure scenarios until per-cell fuel grids land. Helpers `visual_fire_height` and `ember_rate_base` are intentionally cheap hooks for render and emitter tuning—wind still applied outside.
+
+Particles remain **garnish**; authoritative smoke stays **field-first** (`ChunkSmokeField` → `AtmosphereField`).
 
 ---
 

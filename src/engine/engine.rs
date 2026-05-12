@@ -1,8 +1,12 @@
-// LEGACY MODULE (not actively wired):
+// LEGACY MODULE (not wired by default):
+// Compile with `--features legacy_engine` to include this stub.
 // Canonical entry: `engine::engine_with_worldgen::EnginePlugin` (re-exported as `crate::engine::EnginePlugin`).
 use bevy::prelude::*;
 use bevy_egui::EguiPlugin;
 
+/// Superseded by `engine_with_worldgen::EnginePlugin` (the `EnginePlugin` this crate re-exports).
+/// Kept only so historical plugin wiring can be revived without rewriting `DefaultPlugins` + egui setup.
+#[allow(dead_code)]
 pub struct EnginePlugin {}
 
 impl Plugin for EnginePlugin {
