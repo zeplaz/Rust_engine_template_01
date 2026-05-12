@@ -20,14 +20,14 @@ use chunk_weather::{
     spawn_chunk_weather_on_new_chunk, update_global_renewable_weather_factors,
     weather_chunk_tick,
 };
-/// Owns climate → regional → chunk weather systems (chunk layer + diagnostics).
-pub struct WeatherPlugin;
 
-impl Plugin for WeatherPlugin {
+/// Chunk weather tick + spawn + renewables (no mesh/UI). Pairs with [`WeatherVisualPlugin`] for precipitation VFX.
+pub struct WeatherSimulationPlugin;
+
+impl Plugin for WeatherSimulationPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<WeatherSimDiagnostics>()
             .init_resource::<GlobalRenewableWeatherFactors>()
-            .add_plugins(WeatherVisualPlugin)
             .add_systems(
                 Update,
                 (
@@ -37,5 +37,14 @@ impl Plugin for WeatherPlugin {
                 )
                     .chain(),
             );
+    }
+}
+
+/// Owns climate → regional → chunk weather systems (simulation + diagnostics + precipitation visuals).
+pub struct WeatherPlugin;
+
+impl Plugin for WeatherPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_plugins((WeatherSimulationPlugin, WeatherVisualPlugin));
     }
 }

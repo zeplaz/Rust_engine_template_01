@@ -123,6 +123,8 @@ pub const PREVIEW_TEMP: &str =
     "Color by temperature — prefers chunk matrix when present; otherwise ECS tile temperature.";
 pub const PREVIEW_BIOME: &str =
     "Color by material preview / family default — prefers chunk classified `family` when present; otherwise ECS terrain class.";
+pub const PREVIEW_ECOLOGY: &str =
+    "Tint by continuous ecology: macro [`ChunkEcology`](crate::systems::ecology::ChunkEcology) + meso [`VegetationField`](crate::systems::ecology::VegetationField), weather, fuel, and surface heat — drought, burn scar, regrowth, snow (not static Forest green).";
 pub const PREVIEW_REGIONS: &str = "Tint tiles by Voronoi region index.";
 pub const PREVIEW_TAG: &str =
     "Highlight tiles whose material tags intersect the checked tag pool (below).";

@@ -7,4 +7,8 @@ use bevy::prelude::*;
 pub struct ChunkFireOverlay {
     pub heat: Vec<f32>,
     pub fuel: Vec<f32>,
+    /// Smoke density proxy per cell `[0, 1]` — feeds atmosphere / preview (`base_fire_sim.md`).
+    pub smoke: Vec<f32>,
+    /// Toxic products per cell `[0, 1]`.
+    pub toxic: Vec<f32>,
 }

@@ -28,9 +28,9 @@ use bevy::{
 };
 
 use crate::systems::ecology::ChunkEcology;
-use crate::systems::fire::chunk_fire_overlay_tick;
-use crate::systems::fire::chunk_surface_fire_tick;
-use crate::systems::fire::ChunkSurfaceFire;
+use crate::systems::fire::{
+    apply_ember_spot_ignitions, chunk_fire_overlay_tick, chunk_surface_fire_tick, ChunkSurfaceFire,
+};
 use crate::systems::weather::ChunkWeather;
 
 const SHADER_PATH: &str = "shaders/weather_fire_field.wgsl";
@@ -239,7 +239,8 @@ impl Plugin for GpuWeatherFireFieldPlugin {
                     maybe_spawn_debug_sprite.after(cleanup_debug_sprite),
                     sync_weather_fire_uniforms
                         .after(chunk_fire_overlay_tick)
-                        .after(chunk_surface_fire_tick),
+                        .after(chunk_surface_fire_tick)
+                        .after(apply_ember_spot_ignitions),
                     flip_debug_sprite_texture.after(sync_weather_fire_uniforms),
                 ),
             );

@@ -22,7 +22,11 @@ pub use chunk_environment_persist::{
 };
 pub use chunk_environment_set::configure_chunk_environment_sets;
 pub use chunk_sim_lod::{ChunkSimLod, ChunkSimLodPlugin};
-pub use ecology::{ChunkEcology, EcologyPlugin};
+pub use ecology::{
+    chunk_ecology_tick, derive_vegetation_structure, integrate_vegetation_field_step,
+    succession_stage_from_vegetation, ChunkEcology, EcologicalSuccessionStage, EcologyPlugin,
+    VegetationField, VegetationStructure,
+};
 pub use fire::*;
 pub use navigation::*;
 pub use production::*;

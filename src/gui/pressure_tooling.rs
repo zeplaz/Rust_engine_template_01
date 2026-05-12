@@ -22,8 +22,8 @@ use crate::gui::ui_gates::in_simulation_or_editor;
 use crate::strategic::{
     mission_success_readout_note, ActiveMissions, Agent, AgentFactionLink, DecisionPipelineSink,
     Faction, FractureOverlaySettings, FractureProbabilityOverlay, GpuBridgeState, HybridAgentTraits,
-    Mission as MissionT, MissionId, PressureField, PressureProfile, RegionalStatsOverlay, ScriptInfluence,
-    StrategicEmergenceLog, WorldFields,
+    Mission as MissionT, MissionId, MissionPressure, PressureField, PressureProfile, RegionalStatsOverlay,
+    ScriptInfluence, StrategicEmergenceLog, WorldFields,
 };
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -45,6 +45,7 @@ pub struct PressureComposerState {
     pub draft_duration: u64,
     pub draft_pressure: PressureProfile,
     pub draft_priority: f32,
+    pub draft_mission_pressure: MissionPressure,
     pub draft_bias: HybridAgentTraits,
     pub draft_success_label: String,
     pub draft_participants: Vec<Entity>,
@@ -64,6 +65,7 @@ impl Default for PressureComposerState {
                 instability: 0.12,
                 cohesion_drift: 0.08,
             },
+            draft_mission_pressure: MissionPressure::default(),
             draft_priority: 0.65,
             draft_bias: HybridAgentTraits {
                 paranoia: 0.05,
@@ -411,6 +413,11 @@ fn pressure_composer_egui_system(
             }
             PressureComposerTab::Mission => {
                 section_heading(ui, &palette, CmdHeadingStyle::Gt, "Mission composer (pressure package)");
+                muted_label(
+                    ui,
+                    &palette,
+                    "UX-5 / L6 — `MissionPressure` injects mood into participants each tick (same path as authored missions).",
+                );
                 ui.add(
                     egui::Slider::new(&mut state.draft_duration, 0..=20_000)
                         .text("duration_ticks (0 = until removed)"),
@@ -424,6 +431,31 @@ fn pressure_composer_egui_system(
                 ui.add(egui::Slider::new(&mut state.draft_pressure.aggression, 0.0..=1.0).text("aggression"));
                 ui.add(egui::Slider::new(&mut state.draft_pressure.instability, 0.0..=1.0).text("instability"));
                 ui.add(egui::Slider::new(&mut state.draft_pressure.cohesion_drift, 0.0..=1.0).text("cohesion_drift"));
+                muted_label(
+                    ui,
+                    &palette,
+                    "MissionPressure — trait / mood injection (authoring table: aggression, cooperation, fear, instability, paranoia):",
+                );
+                ui.add(
+                    egui::Slider::new(&mut state.draft_mission_pressure.aggression_bias, -0.5..=0.5)
+                        .text("aggression_bias"),
+                );
+                ui.add(
+                    egui::Slider::new(&mut state.draft_mission_pressure.cooperation_bias, -0.5..=0.5)
+                        .text("cooperation_bias (empathy path)"),
+                );
+                ui.add(
+                    egui::Slider::new(&mut state.draft_mission_pressure.fear_bias, -0.5..=0.5)
+                        .text("fear_bias (risk appetite)"),
+                );
+                ui.add(
+                    egui::Slider::new(&mut state.draft_mission_pressure.instability_bias, -0.5..=0.5)
+                        .text("instability_bias"),
+                );
+                ui.add(
+                    egui::Slider::new(&mut state.draft_mission_pressure.paranoia_bias, -0.5..=0.5)
+                        .text("paranoia_bias"),
+                );
                 muted_label(ui, &palette, "Trait bias (ScriptInfluence.bias_vector):");
                 ui.add(egui::Slider::new(&mut state.draft_bias.ambition, -0.2..=0.2).text("ambition Δ"));
                 ui.add(egui::Slider::new(&mut state.draft_bias.paranoia, -0.2..=0.2).text("paranoia Δ"));
@@ -483,6 +515,7 @@ fn pressure_composer_egui_system(
                     };
                     let mut m = MissionT::new(MissionId(scratch.next_mission_id), state.draft_participants.clone(), inf);
                     m.global_pressure = state.draft_pressure;
+                    m.pressure = state.draft_mission_pressure;
                     m.duration_ticks = dur;
                     m.success_readout_label = lab;
                     missions.missions.push(m);
@@ -500,6 +533,18 @@ fn pressure_composer_egui_system(
                             format!(
                                 "{:?} | elapsed {:?} / {:?} | n_part {}",
                                 m.id, m.ticks_elapsed, m.duration_ticks, m.participants.len()
+                            ),
+                        );
+                        primary_label(
+                            ui,
+                            &palette,
+                            format!(
+                                "MissionPressure: aggr {:+.2} coop {:+.2} fear {:+.2} inst {:+.2} par {:+.2}",
+                                m.pressure.aggression_bias,
+                                m.pressure.cooperation_bias,
+                                m.pressure.fear_bias,
+                                m.pressure.instability_bias,
+                                m.pressure.paranoia_bias
                             ),
                         );
                         let note =

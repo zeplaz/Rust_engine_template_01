@@ -1,5 +1,10 @@
 //! Chunk-scale **ecology** scalars (biomass / fire risk / regrowth) — CPU authority, fields-first.
 //!
+//! **Schedule:** [`ChunkEnvironmentSet::Ecology`](crate::systems::chunk_environment_set::ChunkEnvironmentSet)
+//! runs before [`ChunkEnvironmentSet::Fire`](crate::systems::chunk_environment_set::ChunkEnvironmentSet),
+//! so [`ChunkSurfaceFire`] heat is typically **end of prior tick** when integrating here (fuel derivation still
+//! sees fire‑ready meso fields the same frame).
+//!
 //! Pairs with [`crate::terrain::ecology::estimate_ecological_suitability`] and runbooks:
 //! [`prompts/guides/flora_ecology_runbook_v1.md`](../../../prompts/guides/flora_ecology_runbook_v1.md).
 
@@ -242,5 +247,58 @@ mod tests {
             eco.biomass
         );
         assert!(eco.fire_risk < 0.35);
+    }
+
+    #[test]
+    fn sustained_fire_heat_reduces_biomass() {
+        let mut matrix = ChunkCellMatrix::new(UVec2::new(2, 2));
+        for m in matrix.moisture.iter_mut() {
+            *m = 0.55;
+        }
+        for t in matrix.temperature.iter_mut() {
+            *t = 0.45;
+        }
+        let template = {
+            let mut w = BiomeWeights::default();
+            w.temperate = 0.9;
+            w
+        };
+        for ww in matrix.weights.iter_mut() {
+            *ww = template;
+        }
+
+        let wx = ChunkWeather {
+            rain_intensity: 0.15,
+            fog_density: 0.0,
+            snow_depth: 0.0,
+            wind_speed: 0.2,
+            lightning_risk: 0.0,
+            visibility_factor: 1.0,
+            soil_moisture: 0.45,
+        };
+        let lod_s = ChunkSimLod::Normal.dt_scale();
+        let dt = 1.0 / 60.0_f32;
+
+        let mut eco = ChunkEcology {
+            biomass: 0.6,
+            fire_risk: 0.0,
+            regrowth_rate: 0.0,
+            moisture_need: 0.4,
+            root_strength: 0.4,
+            shade_factor: 0.4,
+            harvest_value: 0.2,
+            disease_resistance: 0.5,
+        };
+        let heat = 0.85_f32;
+
+        for _ in 0..600 {
+            integrate_chunk_ecology_step(dt * lod_s, Some(&matrix), &wx, lod_s, heat, &mut eco);
+        }
+
+        assert!(
+            eco.biomass < 0.35,
+            "high surface heat should draw biomass down over time, got {}",
+            eco.biomass
+        );
     }
 }

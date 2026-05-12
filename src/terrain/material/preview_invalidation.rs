@@ -15,6 +15,10 @@ pub enum InvalidationReason {
     Tags,
     Tuning,
     Noise,
+    /// Ecology / strategic site / corridor footprint touched chunk raster.
+    StrategicInfrastructure,
+    /// Meso-scale vegetation, fuel, or burn fields changed — ecology preview layer.
+    EcologyFields,
 }
 
 /// Shared preview invalidation state (terrain + editor; no egui types).

@@ -139,3 +139,27 @@ fn map_camera_controls(
         transform.rotate_z(-ROTATE_STEP);
     }
 }
+
+/// Primary-window cursor (**logical** px) → world **XY** on the `z = 0` plane for orthographic [`Camera2d`].
+#[must_use]
+pub fn primary_cursor_world_xy(
+    camera: &Camera,
+    camera_transform: &GlobalTransform,
+    _window: &Window,
+    cursor_logical: Vec2,
+) -> Option<Vec2> {
+    let ray = camera
+        .viewport_to_world(camera_transform, cursor_logical)
+        .ok()?;
+    let o = ray.origin;
+    let d = ray.direction;
+    if d.z.abs() < 1e-5 {
+        return None;
+    }
+    let t = -o.z / d.z;
+    if !t.is_finite() {
+        return None;
+    }
+    let p = o + *d * t;
+    Some(Vec2::new(p.x, p.y))
+}

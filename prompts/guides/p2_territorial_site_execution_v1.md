@@ -3,7 +3,7 @@
 > **STATUS:** Execution index for **operational sites** (not instant building spawns).  
 > **Parent:** [`territorial_infrastructure_orchestration_v1.md`](territorial_infrastructure_orchestration_v1.md) · [`infrastructure_construction_runbook_v1.md`](infrastructure_construction_runbook_v1.md) §10–11 · **Code:** `src/strategic/site/`
 
-Version: `v1.0.1`
+Version: `v1.0.2`
 
 ---
 
@@ -72,20 +72,25 @@ pub enum InfrastructureSiteSet {
 
 ## Next phase backlog (sprint+1)
 
-Tracked in-session as implementation todos; execute in roughly this order:
+Execute **np-1 → np-6** in order. For each numbered round, use the same **3-step rhythm** (mirrors Cursor todos: `np-*-impl`, `np-*-verify`, `np-*-tests`):
 
-| ID | Work |
-|:---|:---|
-| **np-1** | Map pick → `GhostBuildCursor` (origin tile + footprint) driven by camera / pointer |
-| **np-2** | Ghost pipeline — `evaluate_site_placement_stubs` / full validator → scores + warnings on HUD (or compact toast) |
-| **np-3** | Confirm action — `queue_commit_construction_site` (`MessageWriter`) with owner `Entity` + `SiteArchetype` mapped from `ToolContext` |
-| **np-4** | **P2-H** — extend preview invalidation (`InvalidationReason` or equivalent) so site commits can mark strategic / U7 dirty where product requires terrain refresh |
-| **np-5** | **P2-B+** — replace stubs: slope/hydro/occupancy + transport graph sample in `SitePlacementValidation` |
-| **np-6** | **P2-G** — AI candidate sites (sparse grid or graph probes) → same validation → optional `CommitConstructionSiteEvent` |
+1. **Implement** — land the feature on a focused branch.  
+2. **Test round** — run **`cargo test`** (full suite) and fix regressions before merge.  
+3. **Add tests** — new automated tests that lock the behavior introduced in that round (unit or integration; headless-safe).
+
+| ID | Implement | Test round | New tests (examples) |
+|:---|:---|:---|:---|
+| **np-1** | Map pick → `GhostBuildCursor` (origin tile + footprint; camera / pointer) | Full `cargo test` | Pick → cursor ECS / resource state; tile math |
+| **np-2** | HUD (or strip) shows `SitePlacementValidation` scores + warnings for ghost | Full `cargo test` | Message/resource contract; formatting snapshot or query |
+| **np-3** | Confirm → `queue_commit_construction_site` (owner `Entity`, `ToolContext` → `SiteArchetype`) | Full `cargo test` | Event → `SiteConstructionBook` + bundle (existing patterns) |
+| **np-4** | **P2-H** — preview / `InvalidationReason` or chunk dirty hook on site commit | Full `cargo test` | Dirty mask / epoch / queue assertions |
+| **np-5** | **P2-B+** — real inputs in `SitePlacementValidation` (terrain, graph, occupancy) | Full `cargo test` | Per-gate tests with matrix / graph fixtures |
+| **np-6** | **P2-G** — AI candidate sites → shared validator → optional commit | Full `cargo test` | Scoring order; “no cheat” (calls same evaluate API) |
 
 ---
 
 ## Document history
 
+- `v1.0.2` — Backlog: **3-step rhythm** per round (implement → test round → new tests); table expanded.  
 - `v1.0.1` — Next-phase backlog + status of immediate sprint vs code.  
 - `v1.0.0` — P2-A–J index + sprint list; aligns with user P2 master execution order.

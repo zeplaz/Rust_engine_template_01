@@ -3,9 +3,11 @@
 //   splash, app_shell, in_game_hud → Bevy shell / simulation HUD
 //   editor/* + selected egui panels  → dev tooling (gated via ui_gates)
 //   pressure_tooling.rs             → F2 pressure composer (egui) + Bevy strip
+//   ai_explainability_ui.rs         → L7 pipeline + macro explain (default Insert)
 //   agent_permissions_ui.rs         → egui tooling
 
 pub mod build;
+pub mod hud;
 mod map_camera;
 pub mod map_tile_raster;
 pub mod egui_window;
@@ -25,6 +27,7 @@ mod gui_assets;
 mod gui_sets;
 mod ui_windows;
 mod agent_permissions_ui;
+mod ai_explainability_ui;
 mod diagnostics_ui;
 mod faction_tools_ui;
 pub mod style;
@@ -74,6 +77,7 @@ pub use logistics_targets_panel::*;
 pub use in_game_ui::*;
 pub use ui_windows::*;
 pub use agent_permissions_ui::*;
+pub use ai_explainability_ui::AiExplainabilityPlugin;
 pub use diagnostics_ui::*;
 pub use faction_tools_ui::*;
 pub use pressure_tooling::{

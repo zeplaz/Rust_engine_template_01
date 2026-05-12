@@ -27,6 +27,9 @@ pub fn world_preview_status_bar(
         if base.contains(PreviewLayers::REGIONS) {
             parts.push("regions");
         }
+        if base.contains(PreviewLayers::ECOLOGY) {
+            parts.push("ecology");
+        }
         if base.contains(PreviewLayers::BIOME) {
             parts.push("biome");
         }

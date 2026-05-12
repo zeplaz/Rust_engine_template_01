@@ -4,7 +4,7 @@
 //!
 //! **Inventory** (search `KeyCode::` outside this file — should only be defaults, presets, tests,
 //! and fallbacks tied to `InputBindings`):
-//! - Diagnostics, faction tools, logistics cycle / list, world gen, agent permissions, egui scale
+//! - Diagnostics, AI explainability (L7), faction tools, logistics cycle / list, world gen, agent permissions, egui scale
 //! - Options window, simulation pause toggle (`SimControlState` via `sim_control`), capture cancel
 //! - Gameplay capture: window screenshots → PNG sequence + GIF (`gameplay_capture`)
 //! - Map camera: WASD / edge scroll / wheel+keys zoom / grip pan / rotate (`map_camera`)
@@ -25,6 +25,8 @@ pub struct InputBindings {
     pub toggle_diagnostics: KeyCode,
     /// Pressure composition tooling (egui + Bevy strip) — climate/mission packages, not quest scripting.
     pub toggle_pressure_composer: KeyCode,
+    /// Toggle AI / pipeline **explainability** egui panel (L7 dev tooling; default Insert).
+    pub toggle_ai_explainability: KeyCode,
     pub toggle_faction_tools: KeyCode,
     pub cycle_logistics_focus: KeyCode,
     pub toggle_logistics_targets_panel: KeyCode,
@@ -40,6 +42,8 @@ pub struct InputBindings {
     pub toggle_strategic_overlay_ew_denial: KeyCode,
     /// Cycle operational **build / planning** tool context (`gui::build::BuildStripState`; Bevy HUD shows active mode).
     pub cycle_build_planning_tool: KeyCode,
+    /// Confirm ghost site placement (commits [`CommitConstructionSiteEvent`](crate::strategic::CommitConstructionSiteEvent) when valid).
+    pub confirm_build_placement: KeyCode,
     pub toggle_world_generator: KeyCode,
     pub toggle_agent_permissions: KeyCode,
     /// Toggles egui scale compensation (`ui_windows::update_ui_scale_factor_system`).
@@ -73,6 +77,7 @@ impl Default for InputBindings {
             toggle_keybindings_options: KeyCode::F1,
             toggle_diagnostics: KeyCode::F3,
             toggle_pressure_composer: KeyCode::F2,
+            toggle_ai_explainability: KeyCode::Insert,
             toggle_faction_tools: KeyCode::F4,
             cycle_logistics_focus: KeyCode::F9,
             toggle_logistics_targets_panel: KeyCode::F6,
@@ -82,6 +87,7 @@ impl Default for InputBindings {
             toggle_strategic_overlay_routing_congestion: KeyCode::Digit7,
             toggle_strategic_overlay_ew_denial: KeyCode::Digit8,
             cycle_build_planning_tool: KeyCode::Semicolon,
+            confirm_build_placement: KeyCode::Enter,
             toggle_world_generator: KeyCode::F8,
             toggle_agent_permissions: KeyCode::F7,
             toggle_egui_ui_scale: KeyCode::Slash,
@@ -161,6 +167,7 @@ pub fn binding_preset_keys() -> &'static [KeyCode] {
         KeyCode::F10,
         KeyCode::F11,
         KeyCode::F12,
+        KeyCode::Insert,
         KeyCode::Digit0,
         KeyCode::Digit1,
         KeyCode::Digit2,
@@ -203,6 +210,7 @@ pub fn binding_preset_keys() -> &'static [KeyCode] {
         KeyCode::Backslash,
         KeyCode::Comma,
         KeyCode::Period,
+        KeyCode::Enter,
         KeyCode::Space,
         KeyCode::ShiftLeft,
         KeyCode::ShiftRight,

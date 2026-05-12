@@ -1,8 +1,12 @@
 //! Full-world CPU raster into [`super::texture_cache::WorldPreviewTexture`], with chunk-diff partial updates.
 
+use super::ecology_preview::EcologyRasterChunkRow;
 use super::layers::PreviewLayers;
 use super::texture_cache::WorldPreviewTexture;
 use crate::gui::editor::world_gen_ui::WorldGenUiState;
+use crate::systems::ecology::{ChunkEcology, VegetationField};
+use crate::systems::fire::{ChunkSmokeField, ChunkSurfaceFire, FireFuelField};
+use crate::systems::weather::ChunkWeather;
 use crate::systems::terrain::TerrainRegistriesHandles;
 use crate::terrain::generation::world_generator_enhanced::{
     Height, MacroRegionRaster, Moisture, Temperature, TerrainType, TileMarker, TileRegionIndex,
@@ -38,6 +42,20 @@ pub(crate) struct WorldPreviewTileChunkQueries<'w, 's> {
     chunk_mats: Query<'w, 's, (&'static Chunk, &'static MaterializedChunk)>,
     chunk_cells: Query<'w, 's, (&'static Chunk, &'static ChunkCellMatrix)>,
     chunk_derived: Query<'w, 's, (&'static Chunk, &'static ChunkDerivedMetrics)>,
+    chunk_ecology_bundle: Query<
+        'w,
+        's,
+        (
+            &'static Chunk,
+            &'static ChunkCellMatrix,
+            Option<&'static ChunkEcology>,
+            Option<&'static VegetationField>,
+            Option<&'static ChunkWeather>,
+            Option<&'static FireFuelField>,
+            Option<&'static ChunkSurfaceFire>,
+            Option<&'static ChunkSmokeField>,
+        ),
+    >,
 }
 
 #[derive(Clone, Copy, Default)]
@@ -173,6 +191,22 @@ pub fn update_world_preview_texture(
         .iter()
         .map(|(c, d)| (c.coord, d.size, d.slope_grade.as_slice()))
         .collect();
+    let ecology_slices: Vec<EcologyRasterChunkRow> = queries
+        .chunk_ecology_bundle
+        .iter()
+        .map(|(c, m, eco, veg, wx, fuel, fire, smoke)| {
+            (
+                c.coord,
+                m.size,
+                eco.copied(),
+                veg.copied(),
+                wx.copied(),
+                fuel.copied(),
+                fire.map(|f| f.heat).unwrap_or(0.0),
+                smoke.copied(),
+            )
+        })
+        .collect();
     let reg_opt = materials.get(&handles.material_registry);
     let fam_opt = family_assets.get(&handles.terrain_families);
     let tag_reg_opt = tag_assets.get(&handles.tag_registry);
@@ -237,6 +271,7 @@ pub fn update_world_preview_texture(
             &overlay,
             mob_reg_opt,
             world_gen_ui_state.mobility_profile_index,
+            &ecology_slices,
         );
 
         data[pixel_index] = color[0];

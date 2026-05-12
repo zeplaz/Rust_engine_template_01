@@ -1,6 +1,7 @@
 //! Layer / overlay selection for world raster preview (bitflags — one implicit base + optional overlays).
 
 use super::color_presets::{height_to_color, moisture_to_color, temperature_to_color};
+use super::ecology_preview::{ecology_preview_rgba, ecology_sample_for_world_tile, EcologyRasterChunkRow};
 use super::overlays::{blend_overlay, movement_hint_rgba, slope_grade_to_color, voronoi_region_preview_rgba};
 use super::tile_sampling::{
     cell_tags_for_world_tile, chunk_cell_layer_at_world_tile, chunk_cell_key_for_world_tile,
@@ -19,7 +20,7 @@ use bevy::math::{IVec2, UVec2};
 use std::collections::HashMap;
 
 bitflags::bitflags! {
-    /// Composable preview: at most one **base** tint (priority: Regions > Biome > Height > Moisture > Temperature)
+    /// Composable preview: at most one **base** tint (priority: Regions > Ecology > Biome > Height > Moisture > Temperature)
     /// plus optional overlays (tag / slope / mobility).
     #[derive(Clone, Copy, PartialEq, Eq, Debug, Hash, Default)]
     pub struct PreviewLayers: u64 {
@@ -31,6 +32,8 @@ bitflags::bitflags! {
         const TAG_OVERLAY = 1 << 5;
         const DERIVED_SLOPE_OVERLAY = 1 << 6;
         const MOBILITY_OVERLAY = 1 << 7;
+        /// Continuous vegetation / fuel / climate tint ([`super::ecology_preview`]); not terrain family names.
+        const ECOLOGY = 1 << 8;
     }
 }
 
@@ -42,7 +45,8 @@ impl PreviewLayers {
         .union(PreviewLayers::MOISTURE)
         .union(PreviewLayers::TEMPERATURE)
         .union(PreviewLayers::BIOME)
-        .union(PreviewLayers::REGIONS);
+        .union(PreviewLayers::REGIONS)
+        .union(PreviewLayers::ECOLOGY);
 
     /// Bits selected for the mutual-exclusion **base** raster.
     #[inline]
@@ -74,6 +78,7 @@ impl PreviewLayers {
         mat_slices: &[(IVec2, UVec2, &[MaterialId])],
         reg_opt: Option<&MaterialRegistry>,
         fam_opt: Option<&TerrainFamilyRegistry>,
+        ecology_slices: &[EcologyRasterChunkRow],
     ) -> [u8; 4] {
         use super::color_presets::{preview_biome_rgba_for_tile, terrain_family_preview_rgba};
 
@@ -90,6 +95,10 @@ impl PreviewLayers {
                 .or_else(|| region_ix.map(|r| r.0))
                 .unwrap_or(0);
             return voronoi_region_preview_rgba(ri);
+        }
+        if base_bits.contains(PreviewLayers::ECOLOGY) {
+            let s = ecology_sample_for_world_tile(tx, ty, ecology_slices);
+            return ecology_preview_rgba(&s);
         }
         if base_bits.contains(PreviewLayers::BIOME) {
             let terrain_family = chunk_cell_layer_at_world_tile(tx, ty, family_slices)
@@ -151,6 +160,7 @@ impl PreviewLayers {
         overlay: &DynamicTerrainOverlay,
         mob_reg_opt: Option<&MobilityProfileRegistry>,
         mobility_profile_index: usize,
+        ecology_slices: &[EcologyRasterChunkRow],
     ) -> [u8; 4] {
         use super::color_presets::material_traction_mod_for_world_tile;
         use super::overlays::tag_overlay_rgba_pool;
@@ -173,6 +183,7 @@ impl PreviewLayers {
             mat_slices,
             reg_opt,
             fam_opt,
+            ecology_slices,
         );
 
         if self.contains(PreviewLayers::TAG_OVERLAY) {

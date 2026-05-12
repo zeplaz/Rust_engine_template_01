@@ -7,14 +7,21 @@ use std::collections::HashMap;
 
 use bevy::prelude::*;
 use bevy::ui::FocusPolicy;
+use bevy::ui::{ComputedNode, UiGlobalTransform, UiSystems};
+use bevy::window::PrimaryWindow;
 
 use crate::engine::BaseState;
 use crate::systems::sim_control::{SimControlState, SimTick};
 use crate::strategic::{
     ActiveMissions, CityPlanningHints, FractureProbabilityOverlay, LogisticsAiRuntime,
-    OperationalTheaterSummary, StrategicOverlayDisplayPolicy, MAX_STRATEGIC_FACTION_SLOTS,
+    NarrativeObservationBus, OperationalTheaterSummary, StrategicOverlayDisplayPolicy,
+    MAX_STRATEGIC_FACTION_SLOTS,
 };
-use crate::gui::build::{BuildOverlayVisibility, BuildStripState};
+use crate::gui::build::{BuildGhostState, BuildOverlayVisibility, BuildPlacementPreview, BuildStripState};
+use crate::gui::hud::{
+    update_developmental_cause_strip_system, update_developmental_context_strip_system,
+    DevelopmentalCauseStripLine, DevelopmentalCauseStripRoot, DevelopmentalContextStripLine,
+};
 use crate::gui::ui_gates::in_simulation_or_editor;
 
 use crate::entities::production::core::{
@@ -62,6 +69,10 @@ struct OpsStripIntelEw;
 #[derive(Component)]
 pub struct SimulationCommandShellRoot;
 
+/// Flex “hole” over the live map (world visible through this node). Used to gate map picks vs chrome.
+#[derive(Component)]
+pub struct SimulationMapViewportFill;
+
 #[derive(Component)]
 struct LeftContextRail;
 
@@ -70,6 +81,9 @@ struct LeftContextStackBody;
 
 #[derive(Component)]
 struct ObjectivesHudLine;
+
+#[derive(Component)]
+struct SimulationNarrativeFeedLine;
 
 const LEFT_CONTEXT_RAIL_W_PX: f32 = 36.0;
 
@@ -80,7 +94,33 @@ pub struct CommandLeftStackState {
 }
 const OPS_STRIP_H_PX: f32 = 38.0;
 const OPS_STRIP_MONO_PT: f32 = 13.0;
+/// L0 developmental context strip — always on in simulation shell (`developmental_ux_runbook_v1.md`).
+const DEV_CONTEXT_STRIP_H_PX: f32 = 26.0;
+const DEV_CONTEXT_MONO_PT: f32 = 11.5;
+/// L2 cause chain hint row (`developmental_ux_runbook_v1.md` § UX-2).
+const DEV_CAUSE_STRIP_H_PX: f32 = 22.0;
 const HUD_MONO_PT: f32 = 13.5;
+
+/// Logical (**window cursor**) AABB of the map viewport (`SimulationMapViewportFill`), updated after UI stack.
+#[derive(Resource, Clone, Copy, Debug, Default)]
+pub struct SimulationMapViewport {
+    pub valid: bool,
+    pub min: Vec2,
+    pub max: Vec2,
+}
+
+impl SimulationMapViewport {
+    /// `cursor` from [`Window::cursor_position`] (logical px).
+    #[inline]
+    #[must_use]
+    pub fn contains_cursor(self, cursor: Vec2) -> bool {
+        self.valid
+            && cursor.x >= self.min.x
+            && cursor.x <= self.max.x
+            && cursor.y >= self.min.y
+            && cursor.y <= self.max.y
+    }
+}
 
 /// When **compact**, the strategic HUD shows a one-line summary; full line includes city-planning hints.
 #[derive(Resource, Clone, Copy, Debug, Default)]
@@ -96,6 +136,7 @@ impl Plugin for InGameHudPlugin {
             .init_resource::<HudAggregateSettings>()
             .init_resource::<StrategicHudStripState>()
             .init_resource::<CommandLeftStackState>()
+            .init_resource::<SimulationMapViewport>()
             .add_systems(OnEnter(BaseState::Simulation), spawn_simulation_command_shell)
             .add_systems(
                 OnExit(BaseState::Simulation),
@@ -109,14 +150,85 @@ impl Plugin for InGameHudPlugin {
                     command_left_stack_rail_interaction,
                     attach_storage_picking_hooks,
                     cycle_logistics_focus_dev,
-                    update_operations_strip,
-                    update_objectives_hud_line,
-                    update_site_logistics_hud,
-                    update_strategic_ops_hud,
                 )
                     .run_if(in_simulation_or_editor),
+            )
+            .add_systems(
+                Update,
+                update_operations_strip.run_if(in_simulation_or_editor),
+            )
+            .add_systems(
+                Update,
+                update_ops_strip_build_line.run_if(in_simulation_or_editor),
+            )
+            .add_systems(
+                Update,
+                update_developmental_context_strip_system.run_if(in_simulation_or_editor),
+            )
+            .add_systems(
+                Update,
+                update_developmental_cause_strip_system.run_if(in_simulation_or_editor),
+            )
+            .add_systems(
+                Update,
+                update_objectives_hud_line.run_if(in_simulation_or_editor),
+            )
+            .add_systems(
+                Update,
+                update_simulation_narrative_feed_system.run_if(in_simulation_or_editor),
+            )
+            .add_systems(
+                Update,
+                update_site_logistics_hud.run_if(in_simulation_or_editor),
+            )
+            .add_systems(
+                Update,
+                update_strategic_ops_hud.run_if(in_simulation_or_editor),
+            )
+            .add_systems(
+                PostUpdate,
+                sync_simulation_map_viewport_system
+                    .run_if(in_simulation_or_editor)
+                    .after(UiSystems::Stack),
             );
     }
+}
+
+fn sync_simulation_map_viewport_system(
+    q: Query<(&ComputedNode, &UiGlobalTransform), With<SimulationMapViewportFill>>,
+    mut out: ResMut<SimulationMapViewport>,
+    win: Query<&Window, With<PrimaryWindow>>,
+) {
+    let Ok(w) = win.single() else {
+        out.valid = false;
+        return;
+    };
+    let scale = w.scale_factor().max(1e-6);
+    let Ok((node, xf)) = q.single() else {
+        out.valid = false;
+        return;
+    };
+    if node.is_empty() {
+        out.valid = false;
+        return;
+    }
+    let half = node.size() * 0.5;
+    let corners = [
+        Vec2::new(-half.x, -half.y),
+        Vec2::new(half.x, -half.y),
+        Vec2::new(half.x, half.y),
+        Vec2::new(-half.x, half.y),
+    ];
+    let mut pmin = Vec2::splat(f32::INFINITY);
+    let mut pmax = Vec2::splat(f32::NEG_INFINITY);
+    for c in corners {
+        let p = (*xf) * c;
+        pmin = pmin.min(p);
+        pmax = pmax.max(p);
+    }
+    out.min = pmin / scale;
+    out.max = pmax / scale;
+    out.valid = true;
 }
 
 fn despawn_simulation_command_shell(
@@ -261,6 +373,62 @@ fn spawn_simulation_command_shell(
                 .spawn((
                     Node {
                         width: Val::Percent(100.0),
+                        height: Val::Px(DEV_CONTEXT_STRIP_H_PX),
+                        padding: UiRect::axes(Val::Px(10.0), Val::Px(4.0)),
+                        flex_direction: FlexDirection::Row,
+                        align_items: AlignItems::Center,
+                        border: UiRect::bottom(Val::Px(1.0)),
+                        border_radius: BorderRadius::ZERO,
+                        ..default()
+                    },
+                    BackgroundColor(palette.bevy_hud_panel_fill()),
+                    strip_border,
+                    ZIndex(1150),
+                    Pickable::IGNORE,
+                    FocusPolicy::Pass,
+                ))
+                .with_children(|ctx_row| {
+                    ctx_row.spawn((
+                        Text::new("CONTEXT — …"),
+                        TextFont::from_font_size(DEV_CONTEXT_MONO_PT).with_font(font.clone()),
+                        TextColor(palette.bevy_secondary_text()),
+                        DevelopmentalContextStripLine,
+                    ));
+                });
+
+            shell
+                .spawn((
+                    Node {
+                        width: Val::Percent(100.0),
+                        height: Val::Px(DEV_CAUSE_STRIP_H_PX),
+                        padding: UiRect::axes(Val::Px(10.0), Val::Px(3.0)),
+                        flex_direction: FlexDirection::Row,
+                        align_items: AlignItems::Center,
+                        border: UiRect::bottom(Val::Px(1.0)),
+                        border_radius: BorderRadius::ZERO,
+                        ..default()
+                    },
+                    BackgroundColor(palette.bevy_hud_panel_fill()),
+                    strip_border,
+                    ZIndex(1140),
+                    Pickable::IGNORE,
+                    FocusPolicy::Pass,
+                    Visibility::Visible,
+                    DevelopmentalCauseStripRoot,
+                ))
+                .with_children(|cause_row| {
+                    cause_row.spawn((
+                        Text::new("CAUSE — …"),
+                        TextFont::from_font_size(DEV_CONTEXT_MONO_PT).with_font(font.clone()),
+                        TextColor(palette.bevy_text_muted()),
+                        DevelopmentalCauseStripLine,
+                    ));
+                });
+
+            shell
+                .spawn((
+                    Node {
+                        width: Val::Percent(100.0),
                         flex_grow: 1.0,
                         min_height: Val::Px(0.0),
                         flex_direction: FlexDirection::Row,
@@ -348,6 +516,12 @@ fn spawn_simulation_command_shell(
                                     StrategicOpsHudLine,
                                 ));
                                 parent.spawn((
+                                    Text::new("STORY — …"),
+                                    tf_hud(HUD_MONO_PT),
+                                    TextColor(palette.bevy_accent_terminal()),
+                                    SimulationNarrativeFeedLine,
+                                ));
+                                parent.spawn((
                                     Text::new(tools),
                                     tf_hud(HUD_MONO_PT),
                                     TextColor(palette.bevy_text_muted()),
@@ -390,6 +564,7 @@ fn spawn_simulation_command_shell(
                         },
                         Pickable::IGNORE,
                         FocusPolicy::Pass,
+                        SimulationMapViewportFill,
                     ));
                 });
         });
@@ -404,12 +579,9 @@ fn update_operations_strip(
     logistics: Res<LogisticsAiRuntime>,
     missions: Res<ActiveMissions>,
     fracture: Res<FractureProbabilityOverlay>,
-    build_strip: Res<BuildStripState>,
-    build_overlays: Res<BuildOverlayVisibility>,
     mut q_time: Query<&mut Text, With<OpsStripTime>>,
     mut q_alerts: Query<&mut Text, With<OpsStripAlerts>>,
     mut q_routes: Query<&mut Text, With<OpsStripIntelRoutes>>,
-    mut q_build: Query<&mut Text, With<OpsStripBuild>>,
     mut q_ew: Query<&mut Text, With<OpsStripIntelEw>>,
 ) {
     let run = if ctrl.paused { "PAUSE" } else { "RUN" };
@@ -456,17 +628,6 @@ fn update_operations_strip(
         *t = Text::new(routes.clone());
     }
 
-    let build = format!(
-        "BUILD  mode {}  (terrain {}  net {}  cost {})",
-        build_strip.active.label(),
-        if build_overlays.terrain { "on" } else { "off" },
-        if build_overlays.network { "on" } else { "off" },
-        if build_overlays.cost { "on" } else { "off" },
-    );
-    for mut t in &mut q_build {
-        *t = Text::new(build.clone());
-    }
-
     let ew = format!(
         "EW/DENY  layer {}  fract m {:.2}  ind prox {:.2}",
         if policy.apply_ew_denial { "on" } else { "off" },
@@ -475,6 +636,33 @@ fn update_operations_strip(
     );
     for mut t in &mut q_ew {
         *t = Text::new(ew.clone());
+    }
+}
+
+fn update_ops_strip_build_line(
+    build_strip: Res<BuildStripState>,
+    build_overlays: Res<BuildOverlayVisibility>,
+    build_ghost: Res<BuildGhostState>,
+    build_preview: Res<BuildPlacementPreview>,
+    mut q_build: Query<&mut Text, With<OpsStripBuild>>,
+) {
+    let ghost_hint = match build_ghost.origin {
+        Some(t) => format!("@{},{}", t.x, t.z),
+        None => "—".to_string(),
+    };
+    let pv = &build_preview.report;
+    let build = format!(
+        "BUILD  mode {}  ghost {}  val {}  commit {}  (terrain {}  net {}  cost {})",
+        build_strip.active.label(),
+        ghost_hint,
+        if pv.valid { "ok" } else { "no" },
+        if pv.allows_commit { "yes" } else { "no" },
+        if build_overlays.terrain { "on" } else { "off" },
+        if build_overlays.network { "on" } else { "off" },
+        if build_overlays.cost { "on" } else { "off" },
+    );
+    for mut t in &mut q_build {
+        *t = Text::new(build.clone());
     }
 }
 
@@ -498,6 +686,24 @@ fn truncate_slot(s: &str, max_chars: usize) -> String {
         return t.to_string();
     }
     format!("{}…", t.chars().take(max_chars.saturating_sub(1)).collect::<String>())
+}
+
+fn update_simulation_narrative_feed_system(
+    bus: Option<Res<NarrativeObservationBus>>,
+    mut q: Query<&mut Text, With<SimulationNarrativeFeedLine>>,
+) {
+    let Some(bus) = bus.as_ref() else {
+        return;
+    };
+    let tail = bus.format_hud_tail(2);
+    let line_display = if tail.is_empty() {
+        "STORY — Operational feed idle (routing / theater spikes enqueue lines here).".to_string()
+    } else {
+        format!("STORY — {tail}")
+    };
+    for mut t in &mut q {
+        *t = Text::new(line_display.clone());
+    }
 }
 
 fn update_objectives_hud_line(
@@ -912,6 +1118,19 @@ mod tests {
     fn bar_respects_capacity_denominator() {
         let b = ascii_bar(50.0, 100.0, 8);
         assert_eq!(b, "||||....");
+    }
+
+    #[test]
+    fn simulation_map_viewport_contains_cursor_respects_valid_and_aabb() {
+        let vp = SimulationMapViewport {
+            valid: true,
+            min: Vec2::new(10.0, 20.0),
+            max: Vec2::new(100.0, 200.0),
+        };
+        assert!(vp.contains_cursor(Vec2::new(50.0, 50.0)));
+        assert!(!vp.contains_cursor(Vec2::new(5.0, 50.0)));
+        let inv = SimulationMapViewport::default();
+        assert!(!inv.contains_cursor(Vec2::ZERO));
     }
 
     #[test]

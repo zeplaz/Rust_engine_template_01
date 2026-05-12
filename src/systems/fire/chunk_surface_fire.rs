@@ -5,7 +5,12 @@
 
 use bevy::prelude::*;
 
+use super::chunk_fuel_profile::ChunkFuelProfile;
+use super::combustion::{
+    crown_fire_intensity_boost, ecology_fire_risk_spark_factor, profile_spark_multiplier,
+};
 use super::types::ChunkFireOverlay;
+use super::fire_fuel::FireFuelField;
 use crate::systems::chunk_sim_lod::ChunkSimLod;
 use crate::systems::ecology::ChunkEcology;
 use crate::systems::sim_control::SimControlState;
@@ -44,6 +49,8 @@ pub fn chunk_surface_fire_tick(
             &ChunkWeather,
             Option<&ChunkSimLod>,
             Option<&ChunkEcology>,
+            Option<&ChunkFuelProfile>,
+            Option<&FireFuelField>,
             &mut ChunkSurfaceFire,
         ),
         Without<ChunkFireOverlay>,
@@ -57,7 +64,7 @@ pub fn chunk_surface_fire_tick(
         return;
     }
 
-    for (matrix, wx, lod, eco_opt, mut fire) in &mut query {
+    for (matrix, wx, lod, eco_opt, prof_opt, fuel_opt, mut fire) in &mut query {
         let lod_s = lod.map(|l| l.dt_scale()).unwrap_or(1.0);
         let dt_e = dt * lod_s;
 
@@ -79,8 +86,15 @@ pub fn chunk_surface_fire_tick(
         let warmth = (mean_t - 0.08).max(0.0);
         let rain_suppress: f32 = 1.0 - wx.rain_intensity * 0.78;
         let wind_boost = 1.0 + wx.wind_speed * 0.6;
-        let eco_mul = 1.0 + 0.95 * eco_opt.map(|e| e.fire_risk).unwrap_or(0.0);
-        let spark = (dryness * warmth * 3.5).min(0.08) * rain_suppress.max(0.0) * wind_boost * eco_mul;
+        let eco_boost = ecology_fire_risk_spark_factor(eco_opt.map(|e| e.fire_risk).unwrap_or(0.0));
+        let profile_mult = prof_opt.map(profile_spark_multiplier).unwrap_or(0.82);
+        let crown = fuel_opt.map(crown_fire_intensity_boost).unwrap_or(1.0);
+        let spark = (dryness * warmth * 3.5).min(0.08)
+            * rain_suppress.max(0.0)
+            * wind_boost
+            * eco_boost
+            * profile_mult
+            * crown;
 
         let wet_line = (mean_m * 0.12 + wx.rain_intensity * 0.18) * dt_e;
 
