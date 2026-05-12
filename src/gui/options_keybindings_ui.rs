@@ -20,6 +20,7 @@ pub struct KeybindingsUiState {
 pub enum BindingSlot {
     ToggleOptions,
     Diagnostics,
+    AiExplainability,
     PressureComposer,
     FactionTools,
     CycleLogistics,
@@ -30,6 +31,7 @@ pub enum BindingSlot {
     StrategicOverlayCongestion,
     StrategicOverlayEw,
     CycleBuildPlanningTool,
+    ConfirmBuildPlacement,
     WorldGenerator,
     AgentPermissions,
     EguiUiScale,
@@ -101,6 +103,7 @@ fn apply_binding_capture(
         match slot {
             BindingSlot::ToggleOptions => bindings.toggle_keybindings_options = k,
             BindingSlot::Diagnostics => bindings.toggle_diagnostics = k,
+            BindingSlot::AiExplainability => bindings.toggle_ai_explainability = k,
             BindingSlot::PressureComposer => bindings.toggle_pressure_composer = k,
             BindingSlot::FactionTools => bindings.toggle_faction_tools = k,
             BindingSlot::CycleLogistics => bindings.cycle_logistics_focus = k,
@@ -113,6 +116,7 @@ fn apply_binding_capture(
             }
             BindingSlot::StrategicOverlayEw => bindings.toggle_strategic_overlay_ew_denial = k,
             BindingSlot::CycleBuildPlanningTool => bindings.cycle_build_planning_tool = k,
+            BindingSlot::ConfirmBuildPlacement => bindings.confirm_build_placement = k,
             BindingSlot::WorldGenerator => bindings.toggle_world_generator = k,
             BindingSlot::AgentPermissions => bindings.toggle_agent_permissions = k,
             BindingSlot::EguiUiScale => bindings.toggle_egui_ui_scale = k,
@@ -140,6 +144,7 @@ fn slot_label_id(slot: BindingSlot) -> &'static str {
     match slot {
         BindingSlot::ToggleOptions => "bind_toggle_opts",
         BindingSlot::Diagnostics => "bind_diag",
+        BindingSlot::AiExplainability => "bind_ai_explain",
         BindingSlot::PressureComposer => "bind_pressure",
         BindingSlot::FactionTools => "bind_faction",
         BindingSlot::CycleLogistics => "bind_logi_cycle",
@@ -150,6 +155,7 @@ fn slot_label_id(slot: BindingSlot) -> &'static str {
         BindingSlot::StrategicOverlayCongestion => "bind_strat_cong",
         BindingSlot::StrategicOverlayEw => "bind_strat_ew",
         BindingSlot::CycleBuildPlanningTool => "bind_build_cycle",
+        BindingSlot::ConfirmBuildPlacement => "bind_build_confirm",
         BindingSlot::WorldGenerator => "bind_worldgen",
         BindingSlot::AgentPermissions => "bind_agents",
         BindingSlot::EguiUiScale => "bind_egui_scale",
@@ -258,6 +264,12 @@ fn keybindings_options_ui(
             BindingSlot::Diagnostics
         );
         row_combo!(
+            "AI explainability",
+            "L7 pipeline + macro resolution readout (default Insert).",
+            toggle_ai_explainability,
+            BindingSlot::AiExplainability
+        );
+        row_combo!(
             "Pressure composer",
             "World/faction/agent/mission pressure tooling + emergence log (default F2).",
             toggle_pressure_composer,
@@ -316,6 +328,12 @@ fn keybindings_options_ui(
             "Operational planning strip mode (roads → … → civil); shown on ops strip as BUILD line.",
             cycle_build_planning_tool,
             BindingSlot::CycleBuildPlanningTool
+        );
+        row_combo!(
+            "Confirm build placement",
+            "With a build tool active and a picked tile, commits the site if validation allows (default Enter).",
+            confirm_build_placement,
+            BindingSlot::ConfirmBuildPlacement
         );
         row_combo!(
             "World generator",

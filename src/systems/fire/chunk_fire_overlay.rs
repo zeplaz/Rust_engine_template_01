@@ -4,8 +4,14 @@
 
 use bevy::prelude::*;
 
+use super::chunk_fuel_profile::ChunkFuelProfile;
 use super::chunk_surface_fire::ChunkSurfaceFire;
+use super::combustion::{
+    crown_fire_intensity_boost, ecology_fire_risk_spark_factor, profile_spark_multiplier,
+    profile_weighted_smoke_toxic_explosion,
+};
 use super::types::ChunkFireOverlay;
+use super::fire_fuel::FireFuelField;
 use crate::systems::chunk_environment_persist::{ChunkEnvironmentDirty, ChunkEnvironmentPersistHooks};
 use crate::systems::chunk_sim_lod::ChunkSimLod;
 use crate::systems::ecology::ChunkEcology;
@@ -26,6 +32,8 @@ pub(crate) fn spawn_chunk_fire_overlay_on_matrix(
             ChunkFireOverlay {
                 heat: vec![0.0; n],
                 fuel: vec![1.0; n],
+                smoke: vec![0.0; n],
+                toxic: vec![0.0; n],
             },
             ChunkEnvironmentDirty::default(),
         ));
@@ -48,6 +56,8 @@ pub fn chunk_fire_overlay_tick(
         &ChunkWeather,
         Option<&ChunkSimLod>,
         Option<&ChunkEcology>,
+        Option<&ChunkFuelProfile>,
+        Option<&FireFuelField>,
         &mut ChunkFireOverlay,
         &mut ChunkSurfaceFire,
         &mut ChunkEnvironmentDirty,
@@ -63,7 +73,7 @@ pub fn chunk_fire_overlay_tick(
 
     let mut scratch: Vec<f32> = Vec::new();
 
-    for (entity, matrix, wx, lod, eco_opt, mut ovl, mut surf, mut dirty) in &mut q {
+    for (entity, matrix, wx, lod, eco_opt, prof_opt, fuel_opt, mut ovl, mut surf, mut dirty) in &mut q {
         let lod_s = lod.map(|l| l.dt_scale()).unwrap_or(1.0);
         let dt_e = dt * lod_s;
 
@@ -77,9 +87,20 @@ pub fn chunk_fire_overlay_tick(
             ovl.heat.resize(n, 0.0);
             ovl.fuel.resize(n, 1.0f32);
         }
+        if ovl.smoke.len() != n {
+            ovl.smoke.resize(n, 0.0);
+        }
+        if ovl.toxic.len() != n {
+            ovl.toxic.resize(n, 0.0);
+        }
 
         let fire_risk = eco_opt.map(|e| e.fire_risk).unwrap_or(0.0);
-        let eco_boost = 1.0 + 0.95 * fire_risk;
+        let eco_boost = ecology_fire_risk_spark_factor(fire_risk);
+        let profile_mult = prof_opt.map(profile_spark_multiplier).unwrap_or(0.82);
+        let crown = fuel_opt.map(crown_fire_intensity_boost).unwrap_or(1.0);
+        let (smoke_k, toxic_k, _) = prof_opt
+            .map(profile_weighted_smoke_toxic_explosion)
+            .unwrap_or((0.5, 0.12, 0.0));
 
         let rain_suppress = (1.0 - wx.rain_intensity * 0.78).max(0.0);
         let wind_boost = 1.0 + wx.wind_speed * 0.6;
@@ -94,8 +115,12 @@ pub fn chunk_fire_overlay_tick(
                 let t = matrix.temperature[i];
                 let dryness = (0.42 - m).max(0.0);
                 let warmth = (t - 0.08).max(0.0);
-                let spark =
-                    (dryness * warmth * 3.5).min(0.08) * rain_suppress * wind_boost * eco_boost;
+                let spark = (dryness * warmth * 3.5).min(0.08)
+                    * rain_suppress
+                    * wind_boost
+                    * eco_boost
+                    * profile_mult
+                    * crown;
 
                 let wet_line = (m * 0.12 + wx.rain_intensity * 0.18) * dt_e;
 
@@ -112,6 +137,13 @@ pub fn chunk_fire_overlay_tick(
                 ovl.fuel[i] = (ovl.fuel[i] - burn).clamp(0.0, 1.0);
                 ovl.fuel[i] =
                     (ovl.fuel[i] + wx.rain_intensity * 0.002 * dt_e).clamp(0.0, 1.0);
+
+                ovl.smoke[i] = (ovl.smoke[i] * (1.0 - dt_e * 1.15) + nh * smoke_k * 1.2 * dt_e
+                    - wx.rain_intensity * 0.18 * dt_e)
+                    .clamp(0.0, 1.0);
+                ovl.toxic[i] = (ovl.toxic[i] * (1.0 - dt_e * 0.95) + nh * toxic_k * 1.35 * dt_e
+                    - wx.rain_intensity * 0.12 * dt_e)
+                    .clamp(0.0, 1.0);
 
                 let mut sum = 0f32;
                 let mut cnt = 0u32;

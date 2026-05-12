@@ -1,4 +1,8 @@
 //! Terrain / material preview colors and scalar → RGBA mapping.
+//!
+//! For **living vegetation tint**, use [`crate::gui::editor::world_preview::ecology_preview`]
+//! (`vegetation_preview_rgba` / `ecology_preview_rgba`) driven by [`ChunkEcology`](crate::systems::ecology::ChunkEcology)
+//! + [`VegetationField`](crate::systems::ecology::VegetationField) — not static family names.
 
 use crate::terrain::family::{TerrainFamilyId, TerrainFamilyRegistry};
 use crate::terrain::material::{

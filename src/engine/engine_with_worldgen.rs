@@ -98,6 +98,7 @@ impl Plugin for EnginePlugin {
             .add_plugins(TileWorldFallbackPlugin)
             .add_plugins(DiagnosticsUiPlugin)
             .add_plugins(FactionToolsUiPlugin)
+            .add_plugins(crate::gui::AiExplainabilityPlugin)
             .add_plugins(StrategicToolingPlugin)
             .add_plugins(InGameHudPlugin)
             .add_plugins(BuildPlanningPlugin)

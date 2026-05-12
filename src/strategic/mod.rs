@@ -34,6 +34,7 @@
 //! **Runbook test rounds:** incremental stubs in [`runbook_rounds`](runbook_rounds.rs) mirror `prompts/guides/*_runbook_v1.md` execution tables.
 
 mod agent_batch_scoring;
+mod ai_explainability;
 mod behavior_brain_plugin;
 mod behavior_emergence_log;
 mod behavior_entities;
@@ -55,7 +56,9 @@ mod hybrid_fields;
 mod infrastructure_graph;
 mod logistics_net;
 mod mission_plugin;
+mod narrative_observation;
 mod node_field_profile;
+mod operational_dependency;
 mod plugin;
 mod program;
 mod runbook_rounds;
@@ -88,6 +91,10 @@ pub use agent_batch_scoring::{
     agent_batch_cpu_score_system, resolve_agent_action, score_agent_cpu, AgentBatchScoringPlugin,
     AgentCpuBatchScoring, AgentScoreInput, AgentScoreOutput, AgentScoreResult, BatchTacticalChoice,
     GpuAgentScoringPipeline, WorldPressureSample,
+};
+pub use ai_explainability::{
+    decision_explainability_capture_system, format_hybrid_telemetry_explain,
+    format_pipeline_contributors, DecisionExplainabilitySnapshot,
 };
 pub use behavior_mission::{
     active_missions_advance_elapsed_system, active_missions_expire_system,
@@ -125,6 +132,10 @@ pub use network_flow::{
     NetworkFlowPrevSignatures, NETWORK_DIRTY_CONNECTIVITY, NETWORK_DIRTY_FLOW,
 };
 pub use mission_plugin::MissionPlugin;
+pub use narrative_observation::{
+    narrative_observations_from_runtime_system, NarrativeCategory, NarrativeObservation,
+    NarrativeObservationBus,
+};
 pub use simulation_plugin::SimulationPlugin;
 pub use spatial_network::{
     rebuild_chunk_network_digest_system, ChunkNetworkDigest, ChunkNetworkSummary, LayerType,
@@ -142,6 +153,7 @@ pub use construction_book::{
 pub use site::{
     apply_site_zone_emitters_to_overlays_system,
     commit_construction_site_system,
+    evaluate_site_placement_at_world_tile,
     evaluate_site_placement_stubs,
     footprint_affected_chunk_coords,
     site_advance_planned_to_under_construction_system,
@@ -193,6 +205,12 @@ pub use infrastructure_graph::{
     InfrastructureNode,
 };
 pub use node_field_profile::{FieldContribution, FieldEmitterParent, NodeRole};
+pub use operational_dependency::{
+    composite_operational_stress_note, startup_spawn_operational_causality_anchors,
+    sync_site_operational_dependency_links_apply_system, trace_operational_cause_chain,
+    OperationalCausalityAnchors, OperationalDependencyKind, OperationalDependencyLink,
+    OperationalSupplyAnchor,
+};
 pub use program::StrategicFieldsAndAiPlugin;
 pub use schedule::{StrategicOverlayCouplingScratch, StrategicOverlayDisplayPolicy};
 pub use sim::{

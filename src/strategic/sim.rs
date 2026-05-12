@@ -215,6 +215,7 @@ impl Plugin for StrategicSimulationPlugin {
         app.init_resource::<LogisticsAiRuntime>()
             .init_resource::<OperationalTheaterSummary>()
             .init_resource::<CityPlanningHints>()
+            .init_resource::<super::NarrativeObservationBus>()
             .init_resource::<super::WorldFields>()
             .init_resource::<super::RegionalStatsOverlay>()
             .init_resource::<WorldIntentField>()
@@ -259,6 +260,10 @@ impl Plugin for StrategicSimulationPlugin {
             .add_systems(
                 Update,
                 strategic_fields_coupling_tick.after(logistics_net_inject_into_overlays),
+            )
+            .add_systems(
+                Update,
+                super::narrative_observations_from_runtime_system.after(strategic_fields_coupling_tick),
             )
             .add_systems(
                 Update,

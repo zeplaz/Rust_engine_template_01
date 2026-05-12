@@ -9,7 +9,7 @@ use crate::systems::chunk_sim_lod::ChunkSimLod;
 use crate::terrain::generation::{Chunk, ChunkCellMatrix};
 
 /// Local weather fields for one [`Chunk`] entity (rain, fog, snow depth, wind, lightning, visibility).
-#[derive(Component, Debug, Clone)]
+#[derive(Component, Debug, Clone, Copy)]
 pub struct ChunkWeather {
     pub rain_intensity: f32,
     pub fog_density: f32,

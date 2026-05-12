@@ -25,7 +25,8 @@ const BASE_MASK: PreviewLayers = PreviewLayers::HEIGHT
     .union(PreviewLayers::MOISTURE)
     .union(PreviewLayers::TEMPERATURE)
     .union(PreviewLayers::BIOME)
-    .union(PreviewLayers::REGIONS);
+    .union(PreviewLayers::REGIONS)
+    .union(PreviewLayers::ECOLOGY);
 
 /// One scalar per cell for the overlay tilemap — matches raster base/overlay priority.
 pub fn tilemap_overlay_index_for_layers(
@@ -59,6 +60,13 @@ pub fn tilemap_overlay_index_for_layers(
     let i = matrix.idx(x, y);
     if base.contains(PreviewLayers::REGIONS) {
         return 0;
+    }
+    if base.contains(PreviewLayers::ECOLOGY) {
+        // Stub index until tilemap carries `VegetationField` texels — blend matrix scalars as a cheap proxy.
+        let v = (matrix.moisture[i] * 0.55 + (1.0 - matrix.temperature[i].clamp(0.0, 1.0)) * 0.25
+            + matrix.elevation[i].clamp(0.0, 1.0) * 0.2)
+            .clamp(0.0, 1.0);
+        return (v * 255.0) as u32;
     }
     if base.contains(PreviewLayers::BIOME) {
         return terrain_family_overlay_index(matrix.family[i]);

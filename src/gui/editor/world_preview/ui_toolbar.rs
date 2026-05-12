@@ -17,6 +17,8 @@ fn base_layer_label(b: PreviewLayers) -> &'static str {
         "None"
     } else if b.contains(PreviewLayers::REGIONS) {
         "Regions"
+    } else if b.contains(PreviewLayers::ECOLOGY) {
+        "Ecology"
     } else if b.contains(PreviewLayers::BIOME) {
         "Biome"
     } else if b.contains(PreviewLayers::HEIGHT) {
@@ -52,6 +54,7 @@ pub fn world_preview_toolbar(
                     hints::PREVIEW_TEMP,
                 );
                 let _ = tt(ui.selectable_value(&mut base, PreviewLayers::BIOME, "Biome"), hints::PREVIEW_BIOME);
+                let _ = tt(ui.selectable_value(&mut base, PreviewLayers::ECOLOGY, "Ecology"), hints::PREVIEW_ECOLOGY);
                 let _ = tt(ui.selectable_value(&mut base, PreviewLayers::REGIONS, "Regions"), hints::PREVIEW_REGIONS);
             });
         layers.replace_base(base);

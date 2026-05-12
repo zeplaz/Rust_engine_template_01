@@ -19,6 +19,7 @@ use crate::strategic::build_order::BuildSiteTile;
 use crate::strategic::network_flow::{NetworkDirtyMask, NETWORK_DIRTY_FLOW};
 use crate::strategic::transport_bridge::StrategicRasterConfig;
 use crate::strategic::ChunkStrategicOverlay;
+use crate::terrain::material::{invalidate_world, InvalidationReason, WorldPreviewState};
 
 fn footprint_tiles(origin: BuildSiteTile, fp: FootprintTiles) -> Vec<IVec2> {
     let ox = origin.x as i32;
@@ -56,6 +57,7 @@ pub fn commit_construction_site_system(
     mut issuer: ResMut<SiteIdIssuer>,
     cfg: Option<Res<StrategicRasterConfig>>,
     mut overlays: Query<(&ChunkStrategicOverlay, &mut NetworkDirtyMask)>,
+    mut preview_state: Option<ResMut<WorldPreviewState>>,
 ) {
     for ev in reader.read() {
         let id = if ev.site_id == SiteId::UNASSIGNED {
@@ -102,16 +104,22 @@ pub fn commit_construction_site_system(
         ));
 
         if let Some(cfg) = cfg.as_ref() {
-            let affected: HashSet<IVec2> =
-                footprint_affected_chunk_coords(ev.origin, ev.footprint, cfg.cells_per_chunk)
-                    .into_iter()
-                    .collect();
+            let coords =
+                footprint_affected_chunk_coords(ev.origin, ev.footprint, cfg.cells_per_chunk);
+            let affected: HashSet<IVec2> = coords.iter().copied().collect();
             if !affected.is_empty() {
                 for (ov, mut mask) in overlays.iter_mut() {
                     if affected.contains(&ov.chunk_coord) {
                         mask.mask |= NETWORK_DIRTY_FLOW;
                     }
                 }
+            }
+            if let Some(mut preview) = preview_state.as_mut() {
+                invalidate_world(
+                    InvalidationReason::StrategicInfrastructure,
+                    &mut preview,
+                    coords.into_iter(),
+                );
             }
         }
     }

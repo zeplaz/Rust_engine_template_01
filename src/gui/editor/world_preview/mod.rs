@@ -3,6 +3,7 @@
 //! **Runbook:** `prompts/guides/world_preview_runbook_v1.md` (optimization order, U7 invalidation tie-in).
 
 mod color_presets;
+mod ecology_preview;
 mod interaction;
 pub mod layers;
 mod minimap;
@@ -19,6 +20,10 @@ mod window;
 mod cache;
 
 pub use color_presets::{preview_biome_rgba_for_tile, terrain_family_preview_rgba};
+pub use ecology_preview::{
+    blend_fire_overlay, ecology_preview_rgba, ecology_sample_for_world_tile, vegetation_preview_rgba,
+    EcologyGpuPassKind, EcologyPreviewSample, EcologyRasterChunkRow,
+};
 pub use layers::PreviewLayers;
 pub use overlays::{
     tag_overlay_rgba, tag_overlay_rgba_pool, TAG_OVERLAY_HIGHLIGHT,

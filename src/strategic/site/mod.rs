@@ -25,6 +25,7 @@ pub use systems::{
     site_advance_planned_to_under_construction_system, validate_committed_site_terrain_system,
 };
 pub use validation::{
+    evaluate_site_placement_at_world_tile,
     evaluate_site_placement_stubs, validate_network_access_for_site, validate_site_placement_stubs,
     validate_terrain_for_site, SitePlacementValidation,
 };
@@ -144,5 +145,38 @@ mod tests {
             assert_eq!(c.phase, SiteConstructionPhase::Planned);
             assert_ne!(c.site_id, 0);
         }
+    }
+
+    #[test]
+    fn commit_invalidates_world_preview_when_config_and_state_present() {
+        use crate::strategic::transport_bridge::StrategicRasterConfig;
+        use crate::terrain::material::WorldPreviewState;
+
+        let mut app = App::new();
+        app.add_plugins(MinimalPlugins)
+            .init_resource::<WorldPreviewState>()
+            .init_resource::<StrategicRasterConfig>()
+            .init_resource::<SiteConstructionBook>()
+            .init_resource::<SiteIdIssuer>()
+            .add_message::<CommitConstructionSiteEvent>()
+            .add_systems(Update, commit_construction_site_system);
+
+        let owner = app.world_mut().spawn_empty().id();
+        app.world_mut().write_message(CommitConstructionSiteEvent {
+            site_id: SiteId::UNASSIGNED,
+            owner,
+            archetype: SiteArchetype::Factory,
+            origin: BuildSiteTile { x: 0, z: 0 },
+            footprint: FootprintTiles {
+                width: 2,
+                depth: 2,
+            },
+            layer: LayerType::Surface,
+        });
+        app.update();
+
+        let preview = app.world().resource::<WorldPreviewState>();
+        assert!(preview.epoch.0 > 0);
+        assert!(!preview.dirty_queue.is_empty());
     }
 }

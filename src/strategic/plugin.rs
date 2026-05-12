@@ -18,7 +18,8 @@ use super::transport_bridge::{
 use super::world_read_snapshot::world_read_snapshot_refresh_system;
 use super::zones::apply_zones_to_strategic_overlays_system;
 use super::{
-    apply_site_zone_emitters_to_overlays_system, sync_zone_emitter_from_archetype_system,
+    apply_site_zone_emitters_to_overlays_system, startup_spawn_operational_causality_anchors,
+    sync_site_operational_dependency_links_apply_system, sync_zone_emitter_from_archetype_system,
     ApprovedBuildOrders, BuildOrderQueue, ChunkNetworkDigest, ChunkStrategicOverlay,
     CorridorConstructionBook, FrontlineState, InfrastructureGraph, LogisticsGraph,
     SiteConstructionBook, SiteIdIssuer, SpatialNetworkGraph, WorldFieldLayerConfig,
@@ -181,6 +182,7 @@ impl Plugin for StrategicFieldsPlugin {
             .init_resource::<InfrastructureGraph>()
             .init_resource::<SiteConstructionBook>()
             .init_resource::<SiteIdIssuer>()
+            .add_systems(Startup, startup_spawn_operational_causality_anchors)
             .add_message::<super::CommitConstructionSiteEvent>()
             .configure_sets(
                 Update,
@@ -276,6 +278,12 @@ impl Plugin for StrategicFieldsPlugin {
             .add_systems(
                 Update,
                 site_provisioning_system.in_set(InfrastructureSiteSet::Provisioning),
+            )
+            .add_systems(
+                Update,
+                sync_site_operational_dependency_links_apply_system
+                    .after(site_provisioning_system)
+                    .in_set(InfrastructureSiteSet::Provisioning),
             )
             .add_systems(
                 Update,

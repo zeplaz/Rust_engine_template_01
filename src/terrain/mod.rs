@@ -13,6 +13,7 @@ pub mod family;
 pub mod material;
 pub mod generation;
 pub mod mobility;
+pub mod fire;
 mod dynamic_overlay;
 pub mod editor;
 
@@ -31,4 +32,9 @@ pub use world::*;
 pub use dynamic_overlay::{
     decay_dynamic_terrain_overlay, stub_accumulate_overlay_from_chunk_fields, ChunkCellKey,
     DynamicTerrainOverlay,
+};
+pub use fire::{
+    ammo_dump_profile, fuel_depot_profile, fuel_material_def, lithium_battery_warehouse,
+    FuelMaterialDef, FuelMaterialKind, ScenarioHazardLayer, StructureFireProfile, VegetationFuelLayer,
+    layer_fuel_mass,
 };
