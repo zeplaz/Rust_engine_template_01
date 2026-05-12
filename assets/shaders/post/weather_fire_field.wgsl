@@ -1,4 +1,5 @@
 // Ping-pong GPU field: blends toward CPU-uploaded weather + fire means with spatial variation.
+// Asset path: `shaders/post/weather_fire_field.wgsl` — see `systems::atmosphere::gpu_paths::WEATHER_FIRE_FIELD_WGSL`.
 // Channels: R = rain-weighted signal, G = snow, B = fire heat, A = fog. Visual-only; gameplay reads CPU state.
 // extra_means: x = biomass, y = fire_risk, z = wind_speed, w = lightning — bias fire/smoke channel only.
 

@@ -1,4 +1,5 @@
-//! Precipitation **visual groundwork**: cheap full-view tint + GPU-mesh “particles” driven by mean [`ChunkWeather`].
+//! Precipitation **visual groundwork**: cheap full-view tint + GPU-mesh “particles” driven by mean weather
+//! from [`ClimateVisualAggregate`](crate::render::ClimateVisualAggregate) (synced in atmosphere visual extract).
 //!
 //! Not physically accurate—sets up ECS structure, hooks, and tunables for later art/VFX swaps.
 //! Overlay + flakes live under the primary [`Camera2d`] so they track the view.
@@ -8,7 +9,8 @@ use std::f32::consts::TAU;
 use bevy::prelude::*;
 use rand::{thread_rng, Rng};
 
-use super::chunk_weather::ChunkWeather;
+use crate::systems::atmosphere::pipeline::AtmospherePipelineSet;
+use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
 
 /// Enable / cap weather visuals (designer can toggle from diagnostics later).
 #[derive(Resource, Debug, Clone)]
@@ -30,7 +32,7 @@ impl Default for WeatherVisualSettings {
     }
 }
 
-/// Running mean of chunk weather used by overlay + particle density (updated each frame).
+/// Running mean of chunk weather used by overlay + particle density (updated from [`ClimateVisualAggregate`] each frame).
 #[derive(Resource, Debug, Clone, Copy, Default)]
 pub struct WeatherPrecipVisualSample {
     pub rain: f32,
@@ -66,38 +68,11 @@ struct WeatherVfxMaterials {
     overlay: Handle<ColorMaterial>,
 }
 
-fn sample_chunk_weather_for_visuals(
-    query: Query<&ChunkWeather>,
-    mut out: ResMut<WeatherPrecipVisualSample>,
-) {
-    let mut n = 0u32;
-    let mut rain = 0f32;
-    let mut snow = 0f32;
-    let mut fog = 0f32;
-    for w in &query {
-        n += 1;
-        rain += w.rain_intensity;
-        snow += w.snow_depth;
-        fog += w.fog_density;
-    }
-    if n == 0 {
-        *out = WeatherPrecipVisualSample::default();
-        return;
-    }
-    let nf = n as f32;
-    *out = WeatherPrecipVisualSample {
-        rain: rain / nf,
-        snow: snow / nf,
-        fog: fog / nf,
-        chunk_count: n,
-    };
-}
-
 fn attach_weather_vfx_to_camera(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
-    cameras: Query<Entity, With<Camera2d>>,
+    cameras: Query<Entity, With<crate::gui::MainWorldCamera>>,
     existing: Query<Entity, With<WeatherVfxCameraChild>>,
     settings: Res<WeatherVisualSettings>,
 ) {
@@ -187,11 +162,13 @@ fn update_overlay_from_weather(
     sample: Res<WeatherPrecipVisualSample>,
     mut materials: ResMut<Assets<ColorMaterial>>,
     vfx_mats: Option<Res<WeatherVfxMaterials>>,
+    mut last_alpha: Local<f32>,
 ) {
     let Some(handles) = vfx_mats else {
         return;
     };
     if !settings.enabled || !settings.overlay {
+        *last_alpha = -1.0;
         if let Some(m) = materials.get_mut(&handles.overlay) {
             m.color = Color::WHITE.with_alpha(0.0);
         }
@@ -200,6 +177,10 @@ fn update_overlay_from_weather(
     let rain = sample.rain.clamp(0.0, 1.0);
     let fog = sample.fog.clamp(0.0, 1.0);
     let alpha = (rain * 0.14 + fog * 0.1).min(0.45);
+    if (*last_alpha - alpha).abs() < 0.004 && *last_alpha >= 0.0 {
+        return;
+    }
+    *last_alpha = alpha;
     if let Some(m) = materials.get_mut(&handles.overlay) {
         m.color = Color::srgba(0.52, 0.58, 0.78, alpha);
     }
@@ -209,6 +190,7 @@ fn tick_precip_particles(
     time: Res<Time>,
     settings: Res<WeatherVisualSettings>,
     sample: Res<WeatherPrecipVisualSample>,
+    world: Option<Res<WorldGenParams>>,
     windows: Query<&Window, With<bevy::window::PrimaryWindow>>,
     mut q: Query<(&mut Transform, &mut Visibility, &mut PrecipParticle)>,
 ) {
@@ -217,10 +199,19 @@ fn tick_precip_particles(
     let snow = sample.snow.clamp(0.0, 1.0);
     let precip = (rain * 0.85 + snow * 0.65).clamp(0.0, 1.0);
 
+    let map_half = world
+        .as_ref()
+        .map(|p| (p.width.max(p.height) as f32 * 0.52).max(160.0))
+        .unwrap_or(0.0);
     let (mut hw, mut hh) = (960.0_f32, 540.0_f32);
     if let Ok(win) = windows.single() {
         hw = (win.width() * 0.5).max(200.0);
         hh = (win.height() * 0.5).max(200.0);
+    }
+    if map_half > 0.0 {
+        // Tie precip bounds to overworld size so flakes read as "over the map", not arbitrary screen HD.
+        hw = hw.min(map_half);
+        hh = hh.min(map_half);
     }
 
     for (mut xf, mut vis, mut p) in &mut q {
@@ -275,9 +266,8 @@ impl Plugin for WeatherVisualPlugin {
             .add_systems(
                 Update,
                 (
-                    sample_chunk_weather_for_visuals,
-                    update_overlay_from_weather.after(sample_chunk_weather_for_visuals),
-                    tick_precip_particles.after(sample_chunk_weather_for_visuals),
+                    update_overlay_from_weather.after(AtmospherePipelineSet::VisualExtract),
+                    tick_precip_particles.after(AtmospherePipelineSet::VisualExtract),
                 ),
             );
     }

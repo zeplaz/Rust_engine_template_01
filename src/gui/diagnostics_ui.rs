@@ -21,6 +21,7 @@ use crate::gui::input_bindings::InputBindings;
 use crate::gui::ui_gates::in_simulation_or_editor;
 use crate::engine::test_harness::ActiveTestScene;
 use crate::render::WeatherFireFieldDebugOverlay;
+use crate::systems::atmosphere::AtmosphereDiagnostics;
 use crate::systems::sim_control::{SimControlState, SimTick};
 use crate::systems::transport::TransportEdgeDirectory;
 use crate::systems::weather::{WeatherPrecipVisualSample, WeatherVisualSettings};
@@ -36,6 +37,8 @@ pub struct DiagnosticsUiState {
     pub visible: bool,
     /// Exponential-moving-average FPS; populated each frame from `Time::delta_secs()`.
     pub fps_smoothed: f32,
+    /// Last entity count (updated with FPS sampler).
+    pub entity_count: usize,
 }
 
 impl Default for DiagnosticsUiState {
@@ -43,6 +46,7 @@ impl Default for DiagnosticsUiState {
         Self {
             visible: false,
             fps_smoothed: 0.0,
+            entity_count: 0,
         }
     }
 }
@@ -73,7 +77,8 @@ fn toggle_diagnostics_ui(
     }
 }
 
-fn sample_fps(time: Res<Time>, mut state: ResMut<DiagnosticsUiState>) {
+fn sample_fps(time: Res<Time>, entities: Query<Entity>, mut state: ResMut<DiagnosticsUiState>) {
+    state.entity_count = entities.iter().count();
     let dt = time.delta_secs();
     if dt > f32::EPSILON {
         let inst = 1.0 / dt;
@@ -93,7 +98,6 @@ pub fn diagnostics_ui_system(
     bindings: Res<InputBindings>,
     mut ctrl: ResMut<SimControlState>,
     tick: Res<SimTick>,
-    entities: Query<Entity>,
     mut wx: ResMut<WeatherVisualSettings>,
     wx_sample: Res<WeatherPrecipVisualSample>,
     mut gpu_field_debug: ResMut<WeatherFireFieldDebugOverlay>,
@@ -104,12 +108,13 @@ pub fn diagnostics_ui_system(
     theater: Option<Res<OperationalTheaterSummary>>,
     logistics_ai: Option<Res<LogisticsAiRuntime>>,
     palette: Res<UiPalette>,
+    atm_diag: Option<Res<AtmosphereDiagnostics>>,
 ) -> Result {
     if !state.visible {
         return Ok(());
     }
 
-    let entity_count = entities.iter().count();
+    let entity_count = state.entity_count;
     let ctx = contexts.ctx_mut()?;
 
     crate::gui::std_floating(egui::Window::new(format!(
@@ -173,13 +178,78 @@ pub fn diagnostics_ui_system(
             });
             ui.add(egui::Slider::new(&mut ctrl.speed, 0.0..=8.0).text("speed"));
 
+            if let Some(d) = atm_diag.as_ref() {
+                ui.separator();
+                egui::CollapsingHeader::new("Atmosphere + visual extract (CPU)")
+                    .default_open(true)
+                    .show(ui, |ui| {
+                        section_heading(ui, &palette, CmdHeadingStyle::Gt, "Atmosphere (CPU field)");
+                        muted_label(
+                            ui,
+                            &palette,
+                            format!(
+                                "fill #{} · advect #{} · emitters #{} · particles #{} · coupling #{} · visual #{} · render_prep #{}",
+                                d.field_fill_runs,
+                                d.advect_runs,
+                                d.emitter_sync_runs,
+                                d.particle_controller_runs,
+                                d.coupling_runs,
+                                d.visual_extract_runs,
+                                d.render_prep_runs
+                            ),
+                        );
+                        muted_label(
+                            ui,
+                            &palette,
+                            format!(
+                                "mean smoke {:.3} · mean vis {:.3} · max toxic {:.3} · path vis {:.3} · path smoke {:.3} · extract emitters {} · smoke cells {}",
+                                d.last_mean_smoke,
+                                d.last_mean_visibility,
+                                d.last_max_toxicity,
+                                d.sample_path_visibility,
+                                d.sample_mean_smoke,
+                                d.last_emitter_extract_count,
+                                d.last_smoke_extract_count
+                            ),
+                        );
+                        let drift = [
+                            d.field_fill_runs,
+                            d.advect_runs,
+                            d.visual_extract_runs,
+                            d.last_emitter_extract_count as u64,
+                            d.last_smoke_extract_count as u64,
+                        ]
+                        .iter()
+                        .fold(0x9E37_79B9_7F4A_7C15u64, |a, &b| {
+                            a.wrapping_mul(31).wrapping_add(b)
+                        })
+                        ^ (d.last_mean_smoke.to_bits() as u64)
+                        ^ (d.last_mean_visibility.to_bits() as u64).rotate_left(17);
+                        muted_label(
+                            ui,
+                            &palette,
+                            format!("visual extract drift {:016x} (cheap fingerprint)", drift),
+                        );
+                        if d.mean_smoke_over_budget || d.max_toxicity_over_budget {
+                            error_text(
+                                ui,
+                                &palette,
+                                format!(
+                                    "Atmosphere perf: smoke_budget={} toxic_budget={}",
+                                    d.mean_smoke_over_budget, d.max_toxicity_over_budget
+                                ),
+                            );
+                        }
+                    });
+            }
+
             ui.separator();
             section_heading(ui, &palette, CmdHeadingStyle::Gt, "GPU weather / fire field (compute)");
             ui.checkbox(&mut gpu_field_debug.show, "Debug sprite (128² Rgba32Float field, bottom-left)");
             muted_label(
                 ui,
                 &palette,
-                "CPU uploads mean rain/snow/fog + mean chunk surface fire heat; WGSL relaxes a ping-pong texture. Visual-only.",
+                "CPU uploads mean rain/snow/fog + **fire from visual extract** (emitters); smoke extract biases heat; ecology means in extra. WGSL relaxes ping-pong. Visual-only.",
             );
 
             ui.separator();

@@ -1,13 +1,11 @@
 // Trait definitions
 mod agents;
-mod buildings;
 pub mod damage;
 mod ids;
 mod mask;
 mod rates;
 mod region;
 mod spacial;
-mod time;
 mod vehicles;
 
 // Public exports

@@ -1,14 +1,21 @@
 //! Raster [`TileMarker`] worlds to a single sprite when chunk tilemaps are absent (default build has no `bevy_tilemap_adapter`).
 //!
 //! Without this, generated tiles have no mesh/material and the main camera shows nothing.
+//!
+//! **Performance:** `tile_world_fallback_rasterize` only rewrites the CPU RGBA buffer when `(width, height, tile_count)`
+//! changes, so the main map + egui minimap are not thrashed every frame (reduces flicker and input lag).
+//!
+//! **Camera:** [`MainWorldCamera`] is centered on `(params.width/2, params.height/2)` in tile space; CLI `--test`
+//! modes apply extra orthographic scale so the overworld fills more of the window.
 
 use bevy::prelude::*;
 use bevy::render::render_resource::{Extent3d, TextureDescriptor, TextureDimension, TextureFormat, TextureUsages};
 
 use bevy_egui::{egui, EguiContexts, EguiPrimaryContextPass};
 
-use crate::engine::BaseState;
+use crate::engine::{ActiveTestScene, BaseState, TestScene};
 use crate::gui::MainWorldCamera;
+use crate::render::FireAtmosphereAggregate;
 use crate::gui::map_tile_raster::raster_tiles_and_roads_to_rgba;
 use crate::gui::std_floating;
 use crate::gui::editor::map_editor::MapEditorRoadMarkerV1;
@@ -70,15 +77,28 @@ impl Plugin for TileWorldFallbackPlugin {
 fn focus_main_camera_on_world_params(
     mut cam: Query<&mut Transform, With<MainWorldCamera>>,
     params: Res<WorldGenParams>,
+    test_scene: Option<Res<ActiveTestScene>>,
 ) {
     if params.width == 0 || params.height == 0 {
         return;
     }
     let cx = params.width as f32 * 0.5;
     let cy = params.height as f32 * 0.5;
+    // Larger scale = more zoom-in for this project (matches map scroll wheel).
+    let zoom = test_scene
+        .as_ref()
+        .map(|ts| match ts.0 {
+            TestScene::Weather => 1.25,
+            TestScene::Fire => 1.95,
+            TestScene::Atmosphere => 1.75,
+            TestScene::Visual => 2.1,
+            TestScene::None => 1.0,
+        })
+        .unwrap_or(1.0);
     for mut t in cam.iter_mut() {
         t.translation.x = cx;
         t.translation.y = cy;
+        t.scale = Vec3::splat(zoom);
     }
 }
 
@@ -164,13 +184,26 @@ fn tile_world_fallback_rasterize(
     materials: Res<Assets<MaterialRegistry>>,
     tile_q: Query<(&Transform, &TerrainType), With<TileMarker>>,
     road_q: Query<&MapEditorRoadMarkerV1>,
+    mut last_raster_key: Local<Option<(u32, u32, usize)>>,
 ) {
     if !matches!(base.get(), BaseState::Simulation | BaseState::Editor) {
+        *last_raster_key = None;
         return;
     }
     if state.sprite_entity.is_none() || state.image == Handle::default() {
+        *last_raster_key = None;
         return;
     }
+    let tile_count = tile_q.iter().count();
+    if tile_count == 0 {
+        *last_raster_key = None;
+        return;
+    }
+    let key = (state.last_w, state.last_h, tile_count);
+    if last_raster_key.as_ref() == Some(&key) {
+        return;
+    }
+    *last_raster_key = Some(key);
     let Some(image) = images.get_mut(&state.image) else {
         return;
     };
@@ -220,6 +253,7 @@ fn simulation_minimap_egui_window(
     base: Res<State<BaseState>>,
     mut minimap_ui: ResMut<SimMinimapUiState>,
     fallback: Res<TileWorldFallbackState>,
+    fire_atm: Option<Res<FireAtmosphereAggregate>>,
 ) -> Result {
     if !matches!(base.get(), BaseState::Simulation) {
         return Ok(());
@@ -239,6 +273,25 @@ fn simulation_minimap_egui_window(
         .open(&mut minimap_ui.open)
         .show(contexts.ctx_mut()?, |ui| {
             ui.label(egui::RichText::new("Overworld preview · close to hide").small().weak());
+            if let Some(agg) = fire_atm.as_ref() {
+                let s = agg.smoke_density.clamp(0.0, 1.0);
+                let vl = agg.visibility_loss.clamp(0.0, 1.0);
+                ui.label(
+                    egui::RichText::new(format!(
+                        "Fire extract: smoke {:.0}% · vis loss {:.0}% · heat {:.1}",
+                        s * 100.0,
+                        vl * 100.0,
+                        agg.heat_energy
+                    ))
+                    .small(),
+                );
+                ui.add(
+                    egui::ProgressBar::new(s)
+                        .fill(egui::Color32::from_rgb(200, 90, 40))
+                        .desired_width(ui.available_width())
+                        .show_percentage(),
+                );
+            }
             let max_side = 280.0;
             let scale = (max_side / w.max(h).max(1.0)).min(1.0);
             let dw = (w * scale).max(64.0);

@@ -1,8 +1,10 @@
 //! Ping-pong **GPU field** for weather + fire **visuals** (compute on `Rgba32Float` textures).
 //!
-//! - **CPU** uploads [`WeatherFireFieldUniforms`] from [`ChunkWeather`](crate::systems::weather::ChunkWeather)
-//!   and [`ChunkSurfaceFire`](crate::systems::fire::ChunkSurfaceFire).
-//! - **WGSL** (`assets/shaders/weather_fire_field.wgsl`) relaxes the field each frame.
+//! - **CPU** uploads [`WeatherFireFieldUniforms`] from [`ClimateVisualAggregate`](crate::render::ClimateVisualAggregate),
+//!   [`SimFireEmitterVisualExtract`] / [`SimChunkSmokeVisualExtract`](crate::render::sim_visual_extract)
+//!   (via [`crate::systems::atmosphere::gpu_field_bridge`]). No direct [`ChunkWeather`](crate::systems::weather::ChunkWeather) /
+//!   [`ChunkEcology`](crate::systems::ecology::ChunkEcology) queries in the bridge.
+//! - **WGSL** (`assets/shaders/post/weather_fire_field.wgsl`) relaxes the field each frame.
 //! - Optional **debug sprite** (see [`WeatherFireFieldDebugOverlay`]).
 //!
 //! This is **not** gameplay state; do not sample into sim without explicit readback.
@@ -27,13 +29,15 @@ use bevy::{
     shader::PipelineCacheError,
 };
 
-use crate::systems::ecology::ChunkEcology;
-use crate::systems::fire::{
-    apply_ember_spot_ignitions, chunk_fire_overlay_tick, chunk_surface_fire_tick, ChunkSurfaceFire,
-};
-use crate::systems::weather::ChunkWeather;
+use super::fire_smoke_shader_handles::load_fire_smoke_shader_handles;
+use super::fx_burst_request::{enqueue_fx_bursts_from_hot_emitters, FxParticleBurstRequest};
+use super::sim_visual_extract::{SimChunkSmokeVisualExtract, SimFireEmitterVisualExtract};
 
-const SHADER_PATH: &str = "shaders/weather_fire_field.wgsl";
+use crate::systems::atmosphere::{
+    update_fire_emitters_from_heat, AtmospherePipelineSet, WEATHER_FIRE_FIELD_WGSL,
+};
+
+const SHADER_PATH: &str = WEATHER_FIRE_FIELD_WGSL;
 pub const WEATHER_FIRE_FIELD_SIZE: UVec2 = UVec2::splat(128);
 const WORKGROUP: u32 = 8;
 
@@ -153,59 +157,6 @@ fn maybe_spawn_debug_sprite(
     gate.0 = true;
 }
 
-fn sync_weather_fire_uniforms(
-    time: Res<Time>,
-    wx: Query<&ChunkWeather>,
-    fire: Query<&ChunkSurfaceFire>,
-    eco: Query<&ChunkEcology>,
-    mut u: ResMut<WeatherFireFieldUniforms>,
-) {
-    let mut nw = 0u32;
-    let mut r = 0f32;
-    let mut s = 0f32;
-    let mut fg = 0f32;
-    let mut wind = 0f32;
-    let mut li = 0f32;
-    for w in &wx {
-        nw += 1;
-        r += w.rain_intensity;
-        s += w.snow_depth;
-        fg += w.fog_density;
-        wind += w.wind_speed;
-        li += w.lightning_risk;
-    }
-    let mut nf = 0u32;
-    let mut h_sum = 0f32;
-    for f in &fire {
-        nf += 1;
-        h_sum += f.heat;
-    }
-    let mut ne = 0u32;
-    let mut bio = 0f32;
-    let mut frisk = 0f32;
-    for e in &eco {
-        ne += 1;
-        bio += e.biomass;
-        frisk += e.fire_risk;
-    }
-
-    let nf_w = nw.max(1) as f32;
-    let nf_e = ne.max(1) as f32;
-    u.means = Vec4::new(
-        r / nf_w,
-        s / nf_w,
-        if nf > 0 { h_sum / nf.max(1) as f32 } else { 0.0 },
-        fg / nf_w,
-    );
-    u.extra_means = Vec4::new(
-        bio / nf_e,
-        frisk / nf_e,
-        wind / nf_w,
-        li / nf_w,
-    );
-    u.time_secs = time.elapsed_secs();
-}
-
 /// Match ping-pong write target (same pattern as Bevy `compute_shader_game_of_life` example).
 fn flip_debug_sprite_texture(
     tex: Res<WeatherFireFieldTextures>,
@@ -224,6 +175,8 @@ fn flip_debug_sprite_texture(
     }
 }
 
+fn stub_drain_fx_burst_requests(mut _reader: MessageReader<FxParticleBurstRequest>) {}
+
 pub struct GpuWeatherFireFieldPlugin;
 
 impl Plugin for GpuWeatherFireFieldPlugin {
@@ -231,23 +184,29 @@ impl Plugin for GpuWeatherFireFieldPlugin {
         app.init_resource::<WeatherFireFieldUniforms>()
             .init_resource::<WeatherFireFieldDebugOverlay>()
             .init_resource::<WeatherFieldDebugSpawned>()
-            .add_systems(Startup, startup_field_textures)
+            .add_systems(
+                Startup,
+                (startup_field_textures, load_fire_smoke_shader_handles).chain(),
+            )
+            .add_message::<FxParticleBurstRequest>()
             .add_systems(
                 Update,
                 (
                     cleanup_debug_sprite,
                     maybe_spawn_debug_sprite.after(cleanup_debug_sprite),
-                    sync_weather_fire_uniforms
-                        .after(chunk_fire_overlay_tick)
-                        .after(chunk_surface_fire_tick)
-                        .after(apply_ember_spot_ignitions),
-                    flip_debug_sprite_texture.after(sync_weather_fire_uniforms),
+                    flip_debug_sprite_texture,
+                    enqueue_fx_bursts_from_hot_emitters
+                        .in_set(AtmospherePipelineSet::Emitters)
+                        .after(update_fire_emitters_from_heat),
+                    stub_drain_fx_burst_requests.after(enqueue_fx_bursts_from_hot_emitters),
                 ),
             );
 
         app.add_plugins((
             ExtractResourcePlugin::<WeatherFireFieldUniforms>::default(),
             ExtractResourcePlugin::<WeatherFireFieldTextures>::default(),
+            ExtractResourcePlugin::<SimFireEmitterVisualExtract>::default(),
+            ExtractResourcePlugin::<SimChunkSmokeVisualExtract>::default(),
         ));
 
         let render_app = app.sub_app_mut(RenderApp);

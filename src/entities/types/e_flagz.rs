@@ -114,6 +114,36 @@ pub enum EmergencyType {
     None,
 }
 
+/// Facility / mission escalation band (see [`EmergencyType::default_severity`]).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum EmergencySeverity {
+    Extreme,
+    High,
+    Medium,
+    Low,
+}
+
+impl EmergencyType {
+    /// Default escalation band for facility / mission UX (wire into paths that branch on severity).
+    pub fn default_severity(self) -> EmergencySeverity {
+        match self {
+            EmergencyType::ReactorBreach | EmergencyType::DamBreach => EmergencySeverity::Extreme,
+            EmergencyType::CoolingFailure
+            | EmergencyType::StructuralCollapse
+            | EmergencyType::GridDisconnect => EmergencySeverity::High,
+            EmergencyType::FireOutbreak
+            | EmergencyType::FuelLeak
+            | EmergencyType::ElectricalShortCircuit
+            | EmergencyType::SubstationDisconnect
+            | EmergencyType::SubstationOverload => EmergencySeverity::Medium,
+            EmergencyType::VehicleCrash
+            | EmergencyType::BuildingEvacuation
+            | EmergencyType::CommunicationBlackout => EmergencySeverity::Low,
+            EmergencyType::None => EmergencySeverity::Low,
+        }
+    }
+}
+
 #[derive(
     Debug, Clone, Copy, Eq, PartialEq, Hash, Default, States, serde::Serialize, serde::Deserialize,
 )]
@@ -154,9 +184,20 @@ pub enum OperationalStatus {
     EnvironmentalShutdown,
 }
 
-enum EmergencySeverity {
-    Extreme,
-    High,
-    Medium,
-    Low,
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn reactor_maps_extreme() {
+        assert_eq!(
+            EmergencyType::ReactorBreach.default_severity(),
+            EmergencySeverity::Extreme
+        );
+    }
+
+    #[test]
+    fn none_maps_low() {
+        assert_eq!(EmergencyType::None.default_severity(), EmergencySeverity::Low);
+    }
 }

@@ -9,6 +9,8 @@ path = "src/lib.rs"
 
 [features]
 default = []
+# Historical `src/engine/engine.rs` stub (DefaultPlugins + egui only). Canonical: `engine_with_worldgen::EnginePlugin`.
+legacy_engine = []
 # Optional research / ML prototypes (`engine::lmodels`); **stub only** — linfa crates are declared for
 # future wiring; `cargo build --features research_lmodels` prints a `build.rs` warning. See module docs.
 research_lmodels = [
@@ -41,6 +43,7 @@ bevy = { version = "0.18", features = ["serialize"] }
 image = { version = "0.24", default-features = false, features = ["png", "gif"] }
 bevy_egui = "0.39"
 bitflags = "2"
+smallvec = "1.13"
 clap = { version = "4", features = ["derive"] }
 # Optional: re-add bevy-inspector-egui when a release matches this Bevy line without duplicating ECS.
 # bevy-inspector-egui = "…"

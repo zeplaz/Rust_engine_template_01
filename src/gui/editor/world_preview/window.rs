@@ -116,6 +116,8 @@ pub fn display_world_preview(
                     ui.separator();
 
                     ui.vertical(|ui| {
+                        let map_col_w = ui.available_width();
+                        ui.set_min_width(map_col_w.max(320.0));
                         let size = ui.available_size();
                         let (rect, response) =
                             ui.allocate_exact_size(size, egui::Sense::click_and_drag());

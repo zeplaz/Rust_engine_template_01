@@ -11,6 +11,7 @@ mod chunk_fuel_profile;
 mod chunk_smoke_field;
 mod chunk_surface_fire;
 mod ember_spot_ignition;
+mod fire_light_emission;
 pub mod combustion;
 mod fire_fuel;
 pub mod types;
@@ -18,10 +19,15 @@ pub mod types;
 pub(crate) use fire_fuel::{fire_fuel_field_tick, spawn_fire_fuel_field_on_new_chunk};
 
 pub use chunk_fuel_profile::{chunk_fuel_profile_from_vegetation, ChunkFuelProfile};
+pub use crate::terrain::fire::FuelLayer;
 pub use chunk_fire_overlay::chunk_fire_overlay_tick;
-pub use chunk_smoke_field::{chunk_smoke_field_tick, ChunkSmokeField};
+pub use chunk_smoke_field::{
+    chunk_smoke_field_pull_from_advected_atmosphere, chunk_smoke_field_tick, ChunkSmokeField,
+    ATMOSPHERE_TO_CHUNK_SMOKE_BLEND,
+};
 pub use fire_fuel::{derive_fire_fuel_from_vegetation, FireFuelField};
 pub use chunk_surface_fire::{chunk_surface_fire_tick, ChunkSurfaceFire};
+pub use fire_light_emission::FireLightEmission;
 pub use ember_spot_ignition::{
     apply_ember_spot_ignitions, emit_ember_spot_ignition_events, resolve_spot_ignite_cell,
     EmberSpotIgnitionEvent,
@@ -36,6 +42,9 @@ use crate::systems::chunk_environment_set::ChunkEnvironmentSet;
 use chunk_fire_overlay::spawn_chunk_fire_overlay_on_matrix;
 use chunk_smoke_field::spawn_chunk_smoke_field_on_new_chunk;
 use chunk_surface_fire::spawn_chunk_surface_fire_on_new_chunk;
+use fire_light_emission::{
+    maintain_fire_light_emission_from_surface_fire, update_fire_light_emission_flicker,
+};
 
 pub struct FirePlugin;
 
@@ -52,7 +61,15 @@ impl Plugin for FirePlugin {
                 emit_ember_spot_ignition_events.in_set(ChunkEnvironmentSet::Fire),
                 apply_ember_spot_ignitions.in_set(ChunkEnvironmentSet::Fire),
                 chunk_surface_fire_tick.in_set(ChunkEnvironmentSet::Fire),
-                chunk_smoke_field_tick.in_set(ChunkEnvironmentSet::Fire),
+                maintain_fire_light_emission_from_surface_fire
+                    .after(chunk_surface_fire_tick)
+                    .in_set(ChunkEnvironmentSet::Fire),
+                update_fire_light_emission_flicker
+                    .after(maintain_fire_light_emission_from_surface_fire)
+                    .in_set(ChunkEnvironmentSet::Fire),
+                chunk_smoke_field_tick
+                    .after(update_fire_light_emission_flicker)
+                    .in_set(ChunkEnvironmentSet::Fire),
             )
                 .chain(),
         );

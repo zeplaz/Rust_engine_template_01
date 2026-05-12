@@ -6,7 +6,7 @@ use proc_A_dine01::engine::{EngineLaunchArgs, EnginePlugin, TestWorldHarness};
 #[derive(Parser)]
 #[command(name = "proc_A_dine01")]
 struct Cli {
-    /// Load a small generated world and enter simulation with sim-debug defaults (`weather` | `fire`).
+    /// Load a generated world, enter simulation, and apply **VFX-oriented** defaults (`weather` | `fire` | `atmosphere` | `visual`).
     #[arg(long, value_name = "MODE")]
     test: Option<String>,
 }
@@ -19,6 +19,7 @@ fn main() {
             active: true,
             finished: false,
             phase: 0,
+            defaults_applied: false,
         }
     } else {
         TestWorldHarness::default()
