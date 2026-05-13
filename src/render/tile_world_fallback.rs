@@ -2,8 +2,12 @@
 //!
 //! Without this, generated tiles have no mesh/material and the main camera shows nothing.
 //!
-//! **Performance:** `tile_world_fallback_rasterize` only rewrites the CPU RGBA buffer when `(width, height, tile_count)`
-//! changes, so the main map + egui minimap are not thrashed every frame (reduces flicker and input lag).
+//! **Performance:** `tile_world_fallback_rasterize` rewrites the CPU RGBA buffer when
+//! [`TileWorldFallbackRasterDirty`] bumps (new sprite, new/changed tiles or roads), not only when
+//! `tile_count` changes — avoids stale maps when terrain edits keep the same count (`base_visual_dev01_plan_status` P0-A).
+//! **Fire tint:** after terrain + roads, applies [`crate::gui::map_tile_raster::apply_shared_fire_heat_to_rgba`]
+//! from [`crate::render::SharedOverlayFieldBuffers`] (same source as world preview); raster systems run in
+//! [`TileWorldFallbackAfterFireExtract`] **after** [`crate::render::FireVisualFrameSet::BuildProfiles`].
 //!
 //! **Camera:** [`MainWorldCamera`] is centered on `(params.width/2, params.height/2)` in tile space; CLI `--test`
 //! modes apply extra orthographic scale so the overworld fills more of the window.
@@ -13,14 +17,17 @@ use bevy::render::render_resource::{Extent3d, TextureDescriptor, TextureDimensio
 
 use bevy_egui::{egui, EguiContexts, EguiPrimaryContextPass};
 
-use crate::engine::{ActiveTestScene, BaseState, TestScene};
+use crate::engine::{ActiveTestScene, BaseState};
+use crate::gui::{default_map_zoom_for_world, MapCameraDesired};
 use crate::gui::MainWorldCamera;
+use crate::gui::map_tile_raster::{apply_shared_fire_heat_to_rgba, raster_tiles_and_roads_to_rgba};
 use crate::render::FireAtmosphereAggregate;
-use crate::gui::map_tile_raster::raster_tiles_and_roads_to_rgba;
+use crate::render::{FireVisualFrameSet, SharedOverlayFieldBuffers};
 use crate::gui::std_floating;
 use crate::gui::editor::map_editor::MapEditorRoadMarkerV1;
 use crate::systems::terrain::TerrainRegistriesHandles;
 use crate::terrain::generation::world_generator_enhanced::{TerrainType, TileMarker, WorldGenParams};
+use crate::terrain::generation::{Chunk, ChunkCellMatrix};
 use crate::terrain::material::MaterialRegistry;
 
 /// Marks the full-map fallback sprite entity.
@@ -48,12 +55,39 @@ impl Default for SimMinimapUiState {
     }
 }
 
+/// Bump this whenever overworld fallback pixels must be recomputed (see `mark_tile_world_fallback_dirty_on_changes`).
+#[derive(Resource, Debug, Clone, Copy, Default)]
+pub struct TileWorldFallbackRasterDirty {
+    revision: u64,
+}
+
+impl TileWorldFallbackRasterDirty {
+    #[inline]
+    pub fn revision(&self) -> u64 {
+        self.revision
+    }
+
+    /// Public hook for systems that mutate tiles/roads without triggering `Changed<>` filters the same frame.
+    pub fn bump(&mut self) {
+        self.revision = self.revision.wrapping_add(1);
+    }
+}
+
+/// Runs **after** [`FireVisualFrameSet::BuildProfiles`](crate::render::FireVisualFrameSet) so minimap RGBA sees fresh [`SharedOverlayFieldBuffers`].
+#[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
+pub struct TileWorldFallbackAfterFireExtract;
+
 pub struct TileWorldFallbackPlugin;
 
 impl Plugin for TileWorldFallbackPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<TileWorldFallbackState>()
             .init_resource::<SimMinimapUiState>()
+            .init_resource::<TileWorldFallbackRasterDirty>()
+            .configure_sets(
+                Update,
+                TileWorldFallbackAfterFireExtract.after(FireVisualFrameSet::BuildProfiles),
+            )
             .add_systems(
                 OnEnter(BaseState::Simulation),
                 focus_main_camera_on_world_params,
@@ -66,9 +100,11 @@ impl Plugin for TileWorldFallbackPlugin {
                 Update,
                 (
                     tile_world_fallback_sync_spawner,
+                    mark_tile_world_fallback_dirty_on_changes,
                     tile_world_fallback_rasterize,
                 )
-                    .chain(),
+                    .chain()
+                    .in_set(TileWorldFallbackAfterFireExtract),
             )
             .add_systems(EguiPrimaryContextPass, simulation_minimap_egui_window);
     }
@@ -78,28 +114,23 @@ fn focus_main_camera_on_world_params(
     mut cam: Query<&mut Transform, With<MainWorldCamera>>,
     params: Res<WorldGenParams>,
     test_scene: Option<Res<ActiveTestScene>>,
+    mut desired: ResMut<MapCameraDesired>,
 ) {
     if params.width == 0 || params.height == 0 {
         return;
     }
     let cx = params.width as f32 * 0.5;
     let cy = params.height as f32 * 0.5;
-    // Larger scale = more zoom-in for this project (matches map scroll wheel).
-    let zoom = test_scene
-        .as_ref()
-        .map(|ts| match ts.0 {
-            TestScene::Weather => 1.25,
-            TestScene::Fire => 1.95,
-            TestScene::Atmosphere => 1.75,
-            TestScene::Visual => 2.1,
-            TestScene::None => 1.0,
-        })
-        .unwrap_or(1.0);
+    let zoom = default_map_zoom_for_world(test_scene);
     for mut t in cam.iter_mut() {
         t.translation.x = cx;
         t.translation.y = cy;
         t.scale = Vec3::splat(zoom);
+        t.rotation = Quat::IDENTITY;
     }
+    desired.translation = Vec3::new(cx, cy, 0.0);
+    desired.scale = Vec3::splat(zoom);
+    desired.rotation = Quat::IDENTITY;
 }
 
 fn make_rgba_image(w: u32, h: u32) -> Image {
@@ -133,6 +164,7 @@ fn tile_world_fallback_sync_spawner(
     tiles: Query<(), With<TileMarker>>,
     #[cfg(feature = "bevy_tilemap_adapter")] chunk_maps: Query<(), With<crate::render::ChunkTilemaps>>,
     mut state: ResMut<TileWorldFallbackState>,
+    mut raster_dirty: ResMut<TileWorldFallbackRasterDirty>,
 ) {
     #[cfg(feature = "bevy_tilemap_adapter")]
     let active = !tiles.is_empty() && chunk_maps.is_empty();
@@ -173,6 +205,31 @@ fn tile_world_fallback_sync_spawner(
         state.image = image;
         state.last_w = w;
         state.last_h = h;
+        raster_dirty.bump();
+    }
+}
+
+fn mark_tile_world_fallback_dirty_on_changes(
+    mut dirty: ResMut<TileWorldFallbackRasterDirty>,
+    added_tiles: Query<(), Added<TileMarker>>,
+    changed_terrain: Query<(), (With<TileMarker>, Changed<TerrainType>)>,
+    added_roads: Query<(), Added<MapEditorRoadMarkerV1>>,
+    changed_roads: Query<(), Changed<MapEditorRoadMarkerV1>>,
+    handles: Res<TerrainRegistriesHandles>,
+    overlay: Res<SharedOverlayFieldBuffers>,
+    mut last_overlay_revision: Local<u64>,
+) {
+    if added_tiles.iter().next().is_some()
+        || changed_terrain.iter().next().is_some()
+        || added_roads.iter().next().is_some()
+        || changed_roads.iter().next().is_some()
+        || handles.is_changed()
+    {
+        dirty.bump();
+    }
+    if overlay.revision != *last_overlay_revision {
+        *last_overlay_revision = overlay.revision;
+        dirty.bump();
     }
 }
 
@@ -184,26 +241,27 @@ fn tile_world_fallback_rasterize(
     materials: Res<Assets<MaterialRegistry>>,
     tile_q: Query<(&Transform, &TerrainType), With<TileMarker>>,
     road_q: Query<&MapEditorRoadMarkerV1>,
-    mut last_raster_key: Local<Option<(u32, u32, usize)>>,
+    chunk_geom_q: Query<(&Chunk, &ChunkCellMatrix)>,
+    overlay: Res<SharedOverlayFieldBuffers>,
+    raster_dirty: Res<TileWorldFallbackRasterDirty>,
+    mut last_applied_revision: Local<Option<u64>>,
 ) {
     if !matches!(base.get(), BaseState::Simulation | BaseState::Editor) {
-        *last_raster_key = None;
+        *last_applied_revision = None;
         return;
     }
     if state.sprite_entity.is_none() || state.image == Handle::default() {
-        *last_raster_key = None;
+        *last_applied_revision = None;
         return;
     }
     let tile_count = tile_q.iter().count();
     if tile_count == 0 {
-        *last_raster_key = None;
         return;
     }
-    let key = (state.last_w, state.last_h, tile_count);
-    if last_raster_key.as_ref() == Some(&key) {
+    let rev = raster_dirty.revision();
+    if *last_applied_revision == Some(rev) {
         return;
     }
-    *last_raster_key = Some(key);
     let Some(image) = images.get_mut(&state.image) else {
         return;
     };
@@ -246,6 +304,17 @@ fn tile_world_fallback_rasterize(
         reg_opt,
         fam_opt,
     );
+
+    let chunk_geom: Vec<(bevy::math::IVec2, bevy::math::UVec2)> =
+        chunk_geom_q.iter().map(|(c, m)| (c.coord, m.size)).collect();
+    apply_shared_fire_heat_to_rgba(
+        data.as_mut_slice(),
+        tex_w,
+        tex_h,
+        &chunk_geom,
+        &overlay.chunk_fire_heat,
+    );
+    *last_applied_revision = Some(rev);
 }
 
 fn simulation_minimap_egui_window(
@@ -254,6 +323,8 @@ fn simulation_minimap_egui_window(
     mut minimap_ui: ResMut<SimMinimapUiState>,
     fallback: Res<TileWorldFallbackState>,
     fire_atm: Option<Res<FireAtmosphereAggregate>>,
+    mut tex_cache: Local<Option<(Handle<Image>, egui::TextureId)>>,
+    mut fire_label_cache: Local<Option<(f32, f32, f32, String)>>,
 ) -> Result {
     if !matches!(base.get(), BaseState::Simulation) {
         return Ok(());
@@ -262,7 +333,15 @@ fn simulation_minimap_egui_window(
         return Ok(());
     }
 
-    let tex_id = contexts.add_image(bevy_egui::EguiTextureHandle::Strong(fallback.image.clone()));
+    let handle = fallback.image.clone();
+    let tex_id = match tex_cache.as_ref() {
+        Some((h, id)) if *h == handle => *id,
+        _ => {
+            let id = contexts.add_image(bevy_egui::EguiTextureHandle::Strong(handle.clone()));
+            *tex_cache = Some((handle, id));
+            id
+        }
+    };
     let w = fallback.last_w as f32;
     let h = fallback.last_h as f32;
 
@@ -276,15 +355,29 @@ fn simulation_minimap_egui_window(
             if let Some(agg) = fire_atm.as_ref() {
                 let s = agg.smoke_density.clamp(0.0, 1.0);
                 let vl = agg.visibility_loss.clamp(0.0, 1.0);
-                ui.label(
-                    egui::RichText::new(format!(
+                let heat = agg.heat_energy;
+                let need_label = match fire_label_cache.as_ref() {
+                    Some((ps, pvl, ph, _)) => {
+                        (*ps - s).abs() > 0.01
+                            || (*pvl - vl).abs() > 0.01
+                            || (*ph - heat).abs() > 0.05
+                            || agg.is_changed()
+                    }
+                    None => true,
+                };
+                let label = if need_label {
+                    let t = format!(
                         "Fire extract: smoke {:.0}% · vis loss {:.0}% · heat {:.1}",
                         s * 100.0,
                         vl * 100.0,
-                        agg.heat_energy
-                    ))
-                    .small(),
-                );
+                        heat
+                    );
+                    *fire_label_cache = Some((s, vl, heat, t.clone()));
+                    t
+                } else {
+                    fire_label_cache.as_ref().unwrap().3.clone()
+                };
+                ui.label(egui::RichText::new(label).small());
                 ui.add(
                     egui::ProgressBar::new(s)
                         .fill(egui::Color32::from_rgb(200, 90, 40))

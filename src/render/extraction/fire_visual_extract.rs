@@ -1,29 +1,42 @@
-//! **Single** fire visual extraction pass: sim ECS → transient buffers → consumers (`base_fire2_smoke.md`).
+//! **Canonical CPU fire visual snapshot** — one ECS pass from sim → `FireVisualFrame` → derived overlay + GPU upload (`base_fire2_smoke.md`).
 //!
-//! Downstream systems (lights, smoke, fog, particles) must **not** re-query [`ChunkSurfaceFire`] etc.;
-//! they read [`FireVisualExtractBuffer`] and [`FireAtmosphereAggregate`] only.
+//! ## Contract (two CPU concepts)
+//! 1. **`FireVisualFrame`** — per-frame render snapshot: [`FireVisualGpuInstance`] rows (`FireVisualProxy`) + [`ChunkFireHeat`] chunk table. **Only** this module’s `extract_fire_visual_frame` reads [`ChunkSurfaceFire`] for visuals.
+//! 2. **`SharedOverlayFieldBuffers`** — **derived** chunk heat map for minimap / preview; filled **only** from `FireVisualFrame::chunk_heat` (no second ECS scan).
+//!
+//! GPU: `ExtractResource` copies `FireVisualFrame` to the render world; [`crate::render::gpu_weather_fire_field::prepare_fire_visual_gpu_storage`] uploads `instances` to storage. Render/compute must **not** read ECS or overlay ECS for fire rows—only the frame / GPU buffer.
 
 use bevy::prelude::*;
+use bevy::render::extract_resource::ExtractResource;
 
+use std::collections::HashMap;
+
+use crate::render::overlay_field_buffers::chunk_fire_heat_maps_differ;
+use crate::render::sim_visual_extract::{ChunkFireHeat, FireVisualGpuInstance, SimFireEmitterVisualExtract};
+use crate::render::SharedOverlayFieldBuffers;
 use crate::render::light::{LightCategory, RequestLocalLight};
 use crate::render::lighting::{
-    build_fire_light_clusters, FireLightCluster, FireLightEmission as ClusterEmission, FireLightType,
+    build_fire_light_clusters, FireLightCluster, FireLightEmission as VisFireLightSample, FireLightType,
 };
+use crate::systems::atmosphere::AtmosphereDiagnostics;
 use crate::systems::ecology::ChunkEcology;
-use crate::systems::fire::{ChunkFuelProfile, ChunkSmokeField, ChunkSurfaceFire, FireLightEmission};
+use crate::systems::fire::{
+    ChunkFuelProfile, ChunkSmokeField, ChunkSurfaceFire, FireLightEmission as SimFireLightEmission,
+};
 use crate::systems::weather::ChunkWeather;
 use crate::terrain::generation::{Chunk, ChunkCellMatrix};
 use crate::terrain::material::MaterializedChunk;
 
-use super::fire_emission_profile::{infer_fire_emission_profile, CombustionClass, FireEmissionProfile};
+use super::fire_emission_profile::infer_fire_emission_profile;
 
-/// Full rewrite each tick — **derived**, not sim truth.
-#[derive(Resource, Default, Debug)]
-pub struct FireVisualExtractBuffer {
-    pub emissions: Vec<FireEmissionProfile>,
+/// Canonical **CPU** fire visual snapshot for the frame (proxy rows + chunk heat). Not sim truth.
+#[derive(Resource, Default, Debug, Clone, ExtractResource)]
+pub struct FireVisualFrame {
+    pub instances: Vec<FireVisualGpuInstance>,
+    pub chunk_heat: Vec<ChunkFireHeat>,
 }
 
-/// Chunk-scale **regional** hints for fog / atmosphere (from emission buffer; no ECS scan).
+/// Chunk-scale **regional** hints for fog / atmosphere (from `FireVisualFrame::instances`; no ECS scan).
 #[derive(Resource, Default, Debug, Clone, Copy)]
 pub struct FireAtmosphereAggregate {
     pub smoke_density: f32,
@@ -40,8 +53,8 @@ struct FireClusterScratch {
 }
 
 #[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
-pub enum FireExtractSet {
-    /// One ECS pass → [`FireVisualExtractBuffer`].
+pub enum FireVisualFrameSet {
+    /// One ECS pass → [`FireVisualFrame`].
     BuildProfiles,
     /// Greedy merge → [`FireClusterScratch`].
     BuildClusters,
@@ -55,54 +68,98 @@ pub enum FireExtractSet {
     EmitParticles,
 }
 
-pub struct FireVisualExtractPlugin;
+pub struct FireVisualFramePlugin;
 
-impl Plugin for FireVisualExtractPlugin {
+impl Plugin for FireVisualFramePlugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<FireVisualExtractBuffer>()
+        app.init_resource::<FireVisualFrame>()
+            .init_resource::<SimFireEmitterVisualExtract>()
             .init_resource::<FireAtmosphereAggregate>()
             .init_resource::<FireClusterScratch>()
             .configure_sets(
                 Update,
                 (
-                    FireExtractSet::BuildClusters.after(FireExtractSet::BuildProfiles),
-                    FireExtractSet::BuildAtmosphere.after(FireExtractSet::BuildClusters),
-                    FireExtractSet::EmitLights.after(FireExtractSet::BuildAtmosphere),
-                    FireExtractSet::EmitSmoke.after(FireExtractSet::EmitLights),
-                    FireExtractSet::EmitParticles.after(FireExtractSet::EmitSmoke),
+                    FireVisualFrameSet::BuildClusters.after(FireVisualFrameSet::BuildProfiles),
+                    FireVisualFrameSet::BuildAtmosphere.after(FireVisualFrameSet::BuildClusters),
+                    FireVisualFrameSet::EmitLights.after(FireVisualFrameSet::BuildAtmosphere),
+                    FireVisualFrameSet::EmitSmoke.after(FireVisualFrameSet::EmitLights),
+                    FireVisualFrameSet::EmitParticles.after(FireVisualFrameSet::EmitSmoke),
                 ),
             )
             .add_systems(
                 Update,
-                rewrite_fire_visual_extract_buffer.in_set(FireExtractSet::BuildProfiles),
+                (
+                    extract_fire_visual_frame,
+                    sync_shared_overlay_from_frame,
+                    sync_sim_fire_emitter_visual_from_frame,
+                    sync_atmosphere_diag_fire_instance_count,
+                )
+                    .chain()
+                    .in_set(FireVisualFrameSet::BuildProfiles),
             )
             .add_systems(
                 Update,
-                build_fire_clusters_into_scratch.in_set(FireExtractSet::BuildClusters),
+                build_fire_clusters_into_scratch.in_set(FireVisualFrameSet::BuildClusters),
             )
             .add_systems(
                 Update,
-                aggregate_fire_atmosphere_from_buffer.in_set(FireExtractSet::BuildAtmosphere),
+                aggregate_fire_atmosphere_from_frame.in_set(FireVisualFrameSet::BuildAtmosphere),
             )
             .add_systems(
                 Update,
-                emit_fire_light_requests_from_cluster_scratch.in_set(FireExtractSet::EmitLights),
+                emit_fire_light_requests_from_cluster_scratch.in_set(FireVisualFrameSet::EmitLights),
             )
-            .add_systems(Update, fire_visual_emit_smoke_stub.in_set(FireExtractSet::EmitSmoke))
             .add_systems(
                 Update,
-                fire_visual_emit_particles_stub.in_set(FireExtractSet::EmitParticles),
+                fire_visual_emit_smoke_stub.in_set(FireVisualFrameSet::EmitSmoke),
+            )
+            .add_systems(
+                Update,
+                fire_visual_emit_particles_stub.in_set(FireVisualFrameSet::EmitParticles),
             );
     }
 }
 
-fn rewrite_fire_visual_extract_buffer(
-    mut buf: ResMut<FireVisualExtractBuffer>,
+fn sync_shared_overlay_from_frame(
+    frame: Res<FireVisualFrame>,
+    mut shared: ResMut<SharedOverlayFieldBuffers>,
+) {
+    let mut next = HashMap::new();
+    for h in &frame.chunk_heat {
+        let e = next.entry(h.chunk).or_insert(0.0);
+        *e = f32::max(*e, h.heat);
+    }
+    if chunk_fire_heat_maps_differ(&shared.chunk_fire_heat, &next) {
+        shared.chunk_fire_heat = next;
+        shared.bump();
+    }
+}
+
+fn sync_sim_fire_emitter_visual_from_frame(
+    frame: Res<FireVisualFrame>,
+    mut sim_fire: ResMut<SimFireEmitterVisualExtract>,
+) {
+    sim_fire.instances.clear();
+    sim_fire.instances.reserve(frame.instances.len());
+    for row in &frame.instances {
+        sim_fire.instances.push(row.to_fire_emitter_gpu());
+    }
+}
+
+fn sync_atmosphere_diag_fire_instance_count(
+    frame: Res<FireVisualFrame>,
+    mut diag: ResMut<AtmosphereDiagnostics>,
+) {
+    diag.last_emitter_extract_count = frame.instances.len();
+}
+
+fn extract_fire_visual_frame(
+    mut frame: ResMut<FireVisualFrame>,
     q: Query<(
         &Chunk,
         &ChunkCellMatrix,
         &ChunkSurfaceFire,
-        &FireLightEmission,
+        &SimFireLightEmission,
         Option<&ChunkSmokeField>,
         Option<&ChunkFuelProfile>,
         Option<&ChunkEcology>,
@@ -110,55 +167,56 @@ fn rewrite_fire_visual_extract_buffer(
         Option<&MaterializedChunk>,
     )>,
 ) {
-    buf.emissions.clear();
+    frame.instances.clear();
+    frame.chunk_heat.clear();
     for (chunk, matrix, fire, em, smoke, prof, eco, wx, mat_chunk) in &q {
-        buf.emissions.push(infer_fire_emission_profile(
+        let profile = infer_fire_emission_profile(
             chunk, fire, em, smoke, eco, prof, wx, matrix, mat_chunk,
-        ));
+        );
+        frame
+            .instances
+            .push(FireVisualGpuInstance::from(&profile));
+        frame.chunk_heat.push(ChunkFireHeat {
+            chunk: profile.chunk_coord,
+            heat: profile.heat,
+            smoke: profile.smoke_density,
+        });
     }
 }
 
 fn build_fire_clusters_into_scratch(
-    buf: Res<FireVisualExtractBuffer>,
+    frame: Res<FireVisualFrame>,
     mut scratch: ResMut<FireClusterScratch>,
 ) {
     scratch.clusters.clear();
-    let samples: Vec<ClusterEmission> = buf
-        .emissions
+    let samples: Vec<VisFireLightSample> = frame
+        .instances
         .iter()
-        .map(|p| ClusterEmission {
-            position: p.world_pos,
-            heat: p.heat,
-            luminosity: p.luminosity,
-            smoke_density: p.smoke_density,
-            radius: p.influence_radius,
-            priority: p.extract_priority,
-            fire_type: combustion_class_to_fire_light_type(p.combustion_class),
-        })
+        .map(FireVisualGpuInstance::cluster_emission)
         .collect();
     scratch.clusters = build_fire_light_clusters(&samples);
 }
 
-fn aggregate_fire_atmosphere_from_buffer(
+fn aggregate_fire_atmosphere_from_frame(
     mut agg: ResMut<FireAtmosphereAggregate>,
-    buf: Res<FireVisualExtractBuffer>,
+    frame: Res<FireVisualFrame>,
 ) {
-    if buf.emissions.is_empty() {
+    if frame.instances.is_empty() {
         *agg = FireAtmosphereAggregate::default();
         return;
     }
-    let n = buf.emissions.len() as f32;
+    let n = frame.instances.len() as f32;
     let mut total_smoke = 0f32;
     let mut mean_color = Vec3::ZERO;
     let mut heat_energy = 0f32;
     let mut ember = 0f32;
     let mut vis = 0f32;
-    for e in &buf.emissions {
-        total_smoke += e.smoke_density;
-        mean_color += e.smoke_color;
-        heat_energy += e.heat * e.luminosity.max(0.01);
-        ember += e.ember_rate;
-        vis += e.visibility_reduction;
+    for row in &frame.instances {
+        total_smoke += row.smoke_ember_vis_priority.x;
+        mean_color += row.smoke_color_toxic.xyz();
+        heat_energy += row.heat() * row.luminosity().max(0.01);
+        ember += row.smoke_ember_vis_priority.y;
+        vis += row.smoke_ember_vis_priority.z;
     }
     agg.smoke_density = (total_smoke / n).clamp(0.0, 1.0);
     agg.smoke_color = (mean_color / n.max(1.0)).clamp(Vec3::ZERO, Vec3::ONE);
@@ -175,16 +233,6 @@ fn emit_fire_light_requests_from_cluster_scratch(
 ) {
     for cluster in &scratch.clusters {
         writer.write(cluster_to_request(cluster));
-    }
-}
-
-fn combustion_class_to_fire_light_type(c: CombustionClass) -> FireLightType {
-    match c {
-        CombustionClass::Vegetation => FireLightType::Forest,
-        CombustionClass::Hydrocarbon => FireLightType::Fuel,
-        CombustionClass::Electrical => FireLightType::Electrical,
-        CombustionClass::Chemical => FireLightType::Chemical,
-        CombustionClass::Structural => FireLightType::Structure,
     }
 }
 
@@ -217,8 +265,8 @@ fn cluster_to_request(cluster: &FireLightCluster) -> RequestLocalLight {
     }
 }
 
-/// Stub: route [`FireVisualExtractBuffer`] → smoke volume / GPU when that path exists.
-fn fire_visual_emit_smoke_stub(_buf: Res<FireVisualExtractBuffer>) {}
+/// Stub: route [`FireVisualFrame`] → smoke volume / GPU when that path exists.
+fn fire_visual_emit_smoke_stub(_frame: Res<FireVisualFrame>) {}
 
-/// Stub: route buffer → particle burst requests when Hanabi bridge lands.
-fn fire_visual_emit_particles_stub(_buf: Res<FireVisualExtractBuffer>) {}
+/// Stub: route frame → particle burst requests when Hanabi bridge lands.
+fn fire_visual_emit_particles_stub(_frame: Res<FireVisualFrame>) {}

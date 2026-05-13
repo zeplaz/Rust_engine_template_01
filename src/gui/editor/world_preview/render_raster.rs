@@ -5,7 +5,8 @@ use super::layers::PreviewLayers;
 use super::texture_cache::WorldPreviewTexture;
 use crate::gui::editor::world_gen_ui::WorldGenUiState;
 use crate::systems::ecology::{ChunkEcology, VegetationField};
-use crate::systems::fire::{ChunkSmokeField, ChunkSurfaceFire, FireFuelField};
+use crate::render::SharedOverlayFieldBuffers;
+use crate::systems::fire::{ChunkSmokeField, FireFuelField};
 use crate::systems::weather::ChunkWeather;
 use crate::systems::terrain::TerrainRegistriesHandles;
 use crate::terrain::generation::world_generator_enhanced::{
@@ -52,10 +53,11 @@ pub(crate) struct WorldPreviewTileChunkQueries<'w, 's> {
             Option<&'static VegetationField>,
             Option<&'static ChunkWeather>,
             Option<&'static FireFuelField>,
-            Option<&'static ChunkSurfaceFire>,
             Option<&'static ChunkSmokeField>,
         ),
     >,
+    pub(crate) terrain_overlay: Res<'w, DynamicTerrainOverlay>,
+    pub(crate) shared_overlay_fields: Res<'w, SharedOverlayFieldBuffers>,
 }
 
 #[derive(Clone, Copy, Default)]
@@ -64,7 +66,14 @@ pub(crate) struct PreviewRasterScratch {
     last_layers: PreviewLayers,
     last_tex_w: u32,
     last_tex_h: u32,
+    last_shared_overlay_revision: u64,
     initialized: bool,
+}
+
+#[derive(Default)]
+pub(crate) struct PreviewRasterRuntime {
+    pub scratch: PreviewRasterScratch,
+    pub last_partial_raster_secs: f32,
 }
 
 #[inline]
@@ -91,6 +100,9 @@ fn tile_in_any_dirty_chunk(
         .any(|c| chunk_geom.get(c).is_some_and(|sz| tile_in_chunk_world_rect(tx, ty, *c, *sz)))
 }
 
+/// Cap partial preview CPU raster to ~12 Hz when only chunk dirty rects drive work (`base_visual_dev01` P0-C).
+const WORLD_PREVIEW_PARTIAL_MIN_INTERVAL_SECS: f32 = 1.0 / 12.0;
+
 pub fn update_world_preview_texture(
     mut images: ResMut<Assets<Image>>,
     preview_texture: Res<WorldPreviewTexture>,
@@ -105,11 +117,46 @@ pub fn update_world_preview_texture(
     tag_assets: Res<Assets<TagRegistry>>,
     mobility_assets: Res<Assets<MobilityProfileRegistry>>,
     queries: WorldPreviewTileChunkQueries,
-    overlay: Res<DynamicTerrainOverlay>,
-    mut scratch: Local<PreviewRasterScratch>,
+    time: Res<Time>,
+    mut runtime: Local<PreviewRasterRuntime>,
 ) {
     if !world_preview_ui.window_open && !world_gen_ui_state.visible {
         return;
+    }
+
+    let epoch = preview_state.epoch.0;
+    let layers = world_gen_ui_state.preview_layers;
+    let width = preview_texture.width;
+    let height = preview_texture.height;
+
+    let epoch_changed = runtime.scratch.last_epoch != epoch;
+    let layers_changed = runtime.scratch.last_layers != layers;
+    let tex_changed = runtime.scratch.last_tex_w != width || runtime.scratch.last_tex_h != height;
+    let need_full = !runtime.scratch.initialized
+        || epoch_changed
+        || layers_changed
+        || tex_changed;
+
+    let has_dirty = !preview_state.dirty_queue.is_empty();
+    let overlay_rev = queries.shared_overlay_fields.revision;
+    let overlay_revision_changed =
+        runtime.scratch.last_shared_overlay_revision != overlay_rev;
+
+    if !need_full && !has_dirty && !overlay_revision_changed {
+        return;
+    }
+
+    let overlay_only = overlay_revision_changed && !need_full && !has_dirty;
+
+    // Throttle partial dirty-chunk passes and fire-overlay-only full passes (~12 Hz).
+    if (has_dirty && !need_full) || overlay_only {
+        let now = time.elapsed_secs();
+        if now - runtime.last_partial_raster_secs < WORLD_PREVIEW_PARTIAL_MIN_INTERVAL_SECS {
+            return;
+        }
+        runtime.last_partial_raster_secs = now;
+    } else {
+        runtime.last_partial_raster_secs = time.elapsed_secs();
     }
 
     let image = match images.get_mut(&preview_texture.texture) {
@@ -117,8 +164,6 @@ pub fn update_world_preview_texture(
         None => return,
     };
 
-    let width = preview_texture.width;
-    let height = preview_texture.height;
     let tex_w = width as usize;
     let tex_h = height as usize;
     let len = 4 * tex_w * tex_h;
@@ -128,22 +173,9 @@ pub fn update_world_preview_texture(
     };
     data.resize(len, 0);
 
-    let epoch = preview_state.epoch.0;
     let drained_dirty: Vec<IVec2> = std::mem::take(&mut preview_state.dirty_queue);
     let dirty_set: HashSet<IVec2> = drained_dirty.into_iter().collect();
-    let layers = world_gen_ui_state.preview_layers;
-
-    let epoch_changed = scratch.last_epoch != epoch;
-    let layers_changed = scratch.last_layers != layers;
-    let tex_changed = scratch.last_tex_w != width || scratch.last_tex_h != height;
-    let need_full =
-        !scratch.initialized || epoch_changed || layers_changed || tex_changed;
-
     let partial_ok = !dirty_set.is_empty() && !need_full;
-
-    if !need_full && dirty_set.is_empty() {
-        return;
-    }
 
     if need_full {
         data.fill(0);
@@ -194,7 +226,7 @@ pub fn update_world_preview_texture(
     let ecology_slices: Vec<EcologyRasterChunkRow> = queries
         .chunk_ecology_bundle
         .iter()
-        .map(|(c, m, eco, veg, wx, fuel, fire, smoke)| {
+        .map(|(c, m, eco, veg, wx, fuel, smoke)| {
             (
                 c.coord,
                 m.size,
@@ -202,7 +234,7 @@ pub fn update_world_preview_texture(
                 veg.copied(),
                 wx.copied(),
                 fuel.copied(),
-                fire.map(|f| f.heat).unwrap_or(0.0),
+                queries.shared_overlay_fields.fire_surface_heat_at(c.coord),
                 smoke.copied(),
             )
         })
@@ -268,7 +300,7 @@ pub fn update_world_preview_texture(
             tile_heights_ref,
             &slope_slices,
             &chunk_geom,
-            &overlay,
+            &queries.terrain_overlay,
             mob_reg_opt,
             world_gen_ui_state.mobility_profile_index,
             &ecology_slices,
@@ -280,9 +312,12 @@ pub fn update_world_preview_texture(
         data[pixel_index + 3] = color[3];
     }
 
-    scratch.initialized = true;
-    scratch.last_epoch = epoch;
-    scratch.last_layers = layers;
-    scratch.last_tex_w = width;
-    scratch.last_tex_h = height;
+    runtime.scratch.initialized = true;
+    runtime.scratch.last_epoch = epoch;
+    runtime.scratch.last_layers = layers;
+    runtime.scratch.last_tex_w = width;
+    runtime.scratch.last_tex_h = height;
+    if overlay_revision_changed {
+        runtime.scratch.last_shared_overlay_revision = overlay_rev;
+    }
 }

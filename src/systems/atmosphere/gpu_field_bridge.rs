@@ -1,26 +1,24 @@
 //! Pushes [`crate::render::WeatherFireFieldUniforms`] from **visual extract** only (no sim chunk queries).
 //!
-//! Fire heat in the GPU field mean uses [`SimFireEmitterVisualExtract`] + [`SimChunkSmokeVisualExtract`].
+//! Fire heat in the GPU field mean uses [`crate::render::FireVisualFrame`] + [`SimChunkSmokeVisualExtract`].
 //! Weather / ecology means come from [`ClimateVisualAggregate`](crate::render::ClimateVisualAggregate)
 //! (filled in the same [`AtmospherePipelineSet::VisualExtract`](super::pipeline::AtmospherePipelineSet) chain).
 
 use bevy::prelude::*;
 
-use crate::render::{
-    ClimateVisualAggregate, SimChunkSmokeVisualExtract, SimFireEmitterVisualExtract,
-    WeatherFireFieldUniforms,
-};
+use crate::render::extraction::FireVisualFrame;
+use crate::render::{ClimateVisualAggregate, SimChunkSmokeVisualExtract, WeatherFireFieldUniforms};
 
 /// Mean emitter intensity × smoke/toxic bias (WGSL `means.z` fire channel).
 pub(crate) fn effective_fire_heat_for_gpu_field(
-    fire_ex: &SimFireEmitterVisualExtract,
+    fire_visual: &FireVisualFrame,
     smoke_ex: &SimChunkSmokeVisualExtract,
 ) -> f32 {
-    let n_emit = fire_ex.instances.len().max(1) as f32;
-    let fire_mean = fire_ex
+    let n_emit = fire_visual.instances.len().max(1) as f32;
+    let fire_mean = fire_visual
         .instances
         .iter()
-        .map(|i| i.params.x)
+        .map(|i| i.heat())
         .sum::<f32>()
         / n_emit;
 
@@ -49,7 +47,7 @@ pub(crate) fn effective_fire_heat_for_gpu_field(
 fn sync_gpu_weather_fire_uniforms_from_extract(
     time: Res<Time>,
     climate: Res<ClimateVisualAggregate>,
-    fire_ex: Res<SimFireEmitterVisualExtract>,
+    fire_visual: Option<Res<FireVisualFrame>>,
     smoke_ex: Res<SimChunkSmokeVisualExtract>,
     uniforms: Option<ResMut<WeatherFireFieldUniforms>>,
 ) {
@@ -57,7 +55,20 @@ fn sync_gpu_weather_fire_uniforms_from_extract(
         return;
     };
 
-    let heat_effective = effective_fire_heat_for_gpu_field(&fire_ex, &smoke_ex);
+    let heat_effective = match fire_visual.as_deref() {
+        Some(f) => effective_fire_heat_for_gpu_field(f, &smoke_ex),
+        None => effective_fire_heat_for_gpu_field(
+            &FireVisualFrame::default(),
+            &smoke_ex,
+        ),
+    };
+
+    let fire_n = fire_visual
+        .as_deref()
+        .map(|f| f.instances.len())
+        .unwrap_or(0);
+    u.fire_instance_count = (fire_n.min(u32::MAX as usize)) as u32;
+    u._fire_pad = UVec3::ZERO;
 
     u.means = Vec4::new(
         climate.mean_rain,
@@ -75,6 +86,7 @@ fn sync_gpu_weather_fire_uniforms_from_extract(
 }
 
 pub fn gpu_field_bridge_systems(app: &mut App) {
+    use crate::render::extraction::FireVisualFrameSet;
     use super::pipeline::AtmospherePipelineSet;
     use super::visual_extract::{
         publish_climate_visual_aggregate, publish_sim_visual_extract,
@@ -86,28 +98,33 @@ pub fn gpu_field_bridge_systems(app: &mut App) {
         (
             publish_climate_visual_aggregate,
             publish_sim_visual_extract,
-            sync_gpu_weather_fire_uniforms_from_extract
-                .after(publish_sim_visual_extract)
-                .after(publish_climate_visual_aggregate),
-            sync_weather_precip_sample_from_climate_aggregate
-                .after(sync_gpu_weather_fire_uniforms_from_extract),
+            sync_weather_precip_sample_from_climate_aggregate.after(publish_sim_visual_extract),
         )
             .chain()
             .in_set(AtmospherePipelineSet::VisualExtract),
+    )
+    .add_systems(
+        Update,
+        sync_gpu_weather_fire_uniforms_from_extract
+            .after(FireVisualFrameSet::BuildProfiles)
+            .after(publish_climate_visual_aggregate)
+            .after(publish_sim_visual_extract),
     );
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::render::{ChunkSmokeGpu, FireEmitterGpu};
+    use crate::render::extraction::FireVisualFrame;
+    use crate::render::sim_visual_extract::FireVisualGpuInstance;
+    use crate::render::ChunkSmokeGpu;
 
     #[test]
     fn effective_fire_heat_boosts_with_smoke_extract() {
-        let mut fire = SimFireEmitterVisualExtract::default();
-        fire.instances.push(FireEmitterGpu {
-            chunk_xy: Vec4::ZERO,
-            params: Vec4::new(0.5, 0.0, 0.0, 0.0),
+        let mut fire = FireVisualFrame::default();
+        fire.instances.push(FireVisualGpuInstance {
+            chunk_xy_heat_lum: Vec4::new(0.0, 0.0, 0.5, 0.0),
+            ..Default::default()
         });
         let mut smoke = SimChunkSmokeVisualExtract::default();
         smoke.instances.push(ChunkSmokeGpu {

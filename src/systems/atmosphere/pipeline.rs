@@ -21,7 +21,8 @@ pub enum AtmospherePipelineSet {
     Particles,
     /// Fold atmosphere into gameplay samples (logistics, LOS helpers).
     Coupling,
-    /// Sim → render-facing snapshots ([`crate::render::SimFireEmitterVisualExtract`], smoke extract).
+    /// Sim → render-facing snapshots ([`crate::render::SimChunkSmokeVisualExtract`], smoke only in `VisualExtract`).
+    /// Fire rows: main world [`crate::render::FireVisualFrame`] + render [`crate::render::FireVisualGpuInstanceStorage`].
     VisualExtract,
     /// Extraction hooks for render world (stubs until GPU layers land).
     RenderPrep,

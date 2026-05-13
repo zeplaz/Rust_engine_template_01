@@ -69,6 +69,16 @@ pub struct InputBindings {
     pub map_zoom_out: KeyCode,
     pub map_rotate_ccw: KeyCode,
     pub map_rotate_cw: KeyCode,
+    /// Toggle RTS edge scroll (default Scroll Lock).
+    pub map_toggle_edge_scroll: KeyCode,
+    /// Recenter on world bounds center (default Home).
+    pub map_recenter_world: KeyCode,
+    /// Reset orthographic zoom to scenario default (default Z).
+    pub map_reset_zoom: KeyCode,
+    /// Fit map to window in tile space (default B).
+    pub map_frame_world: KeyCode,
+    /// Cycle map camera mode label: Strategic → Tactical → Cinematic (default M).
+    pub map_cycle_camera_mode: KeyCode,
 }
 
 impl Default for InputBindings {
@@ -105,6 +115,11 @@ impl Default for InputBindings {
             map_zoom_out: KeyCode::Minus,
             map_rotate_ccw: KeyCode::Comma,
             map_rotate_cw: KeyCode::Period,
+            map_toggle_edge_scroll: KeyCode::ScrollLock,
+            map_recenter_world: KeyCode::Home,
+            map_reset_zoom: KeyCode::KeyZ,
+            map_frame_world: KeyCode::KeyB,
+            map_cycle_camera_mode: KeyCode::KeyM,
         }
     }
 }
@@ -216,6 +231,8 @@ pub fn binding_preset_keys() -> &'static [KeyCode] {
         KeyCode::ShiftRight,
         KeyCode::Equal,
         KeyCode::Minus,
+        KeyCode::Home,
+        KeyCode::ScrollLock,
     ]
 }
 

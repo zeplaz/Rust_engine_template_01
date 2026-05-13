@@ -1,13 +1,102 @@
 //! GPU-ready **snapshots** of sim-owned fire/smoke state (`prompts/guides/base_gui_next.md` Stage 2).
 //!
-//! Simulation systems **write** these resources; render passes read only them (no gameplay queries in render).
-//! `ExtractResource` copies the whole resource to the render world each frame (`gfx-extract-2` baseline);
-//! dedicated GPU buffer uploads from extracted `Vec`s remain future work.
+//! [`FireVisualGpuInstance`] is the packed **proxy row** (GPU storage layout); the canonical per-frame snapshot is
+//! [`crate::render::extraction::FireVisualFrame`] (instances + chunk heat). [`SimFireEmitterVisualExtract`]
+//! mirrors instance rows on the **main** world for legacy CPU/debug callers; the render world consumes
+//! [`crate::render::gpu_weather_fire_field::FireVisualGpuInstanceStorage`] instead of extracting that resource.
 //!
 //! [`ClimateVisualAggregate`] is the **single** world mean over chunk weather + ecology for GPU / overlay
 //! consumers; only [`crate::systems::atmosphere::visual_extract::publish_climate_visual_aggregate`] scans those components.
+use bevy::math::IVec2;
 use bevy::prelude::*;
 use bevy::render::extract_resource::ExtractResource;
+use bytemuck::{Pod, Zeroable};
+
+use crate::render::lighting::{FireLightEmission, FireLightType};
+
+/// Packed **std430-friendly** fire visual row (`vec4` lanes) for GPU storage + CPU clustering.
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Pod, Zeroable)]
+pub struct FireVisualGpuInstance {
+    /// Chunk grid `xy` as `f32`, `z` = heat `[0,1]`, `w` = luminosity.
+    pub chunk_xy_heat_lum: Vec4,
+    /// World sample `xyz`, `w` = influence radius.
+    pub world_xyz_radius: Vec4,
+    /// `x` smoke density, `y` ember rate, `z` visibility reduction, `w` extract priority.
+    pub smoke_ember_vis_priority: Vec4,
+    /// Smoke color `rgb`, `w` = toxic density `[0,1]`.
+    pub smoke_color_toxic: Vec4,
+    /// Fog tint `rgb`, `w` = combustion class ordinal `0..=4` for light typing.
+    pub fog_rgb_combust_ord: Vec4,
+}
+
+impl FireVisualGpuInstance {
+    #[inline]
+    pub fn chunk_grid_xy(&self) -> Vec2 {
+        self.chunk_xy_heat_lum.xy()
+    }
+
+    #[inline]
+    pub fn heat(&self) -> f32 {
+        self.chunk_xy_heat_lum.z
+    }
+
+    #[inline]
+    pub fn luminosity(&self) -> f32 {
+        self.chunk_xy_heat_lum.w
+    }
+
+    #[inline]
+    pub fn cluster_emission(&self) -> FireLightEmission {
+        FireLightEmission {
+            position: self.world_xyz_radius.xyz(),
+            heat: self.chunk_xy_heat_lum.z,
+            luminosity: self.chunk_xy_heat_lum.w,
+            smoke_density: self.smoke_ember_vis_priority.x,
+            radius: self.world_xyz_radius.w,
+            priority: self.smoke_ember_vis_priority.w,
+            fire_type: fire_light_type_from_combustion_ord(self.fog_rgb_combust_ord.w),
+        }
+    }
+
+    /// Row compatible with the former `FireEmitter`-driven extract (GPU field mean / burst hints).
+    #[inline]
+    pub fn to_fire_emitter_gpu(&self) -> FireEmitterGpu {
+        FireEmitterGpu {
+            chunk_xy: Vec4::new(
+                self.chunk_xy_heat_lum.x,
+                self.chunk_xy_heat_lum.y,
+                0.0,
+                0.0,
+            ),
+            params: Vec4::new(
+                self.chunk_xy_heat_lum.z,
+                self.smoke_ember_vis_priority.x,
+                self.smoke_ember_vis_priority.y,
+                self.smoke_color_toxic.w,
+            ),
+        }
+    }
+}
+
+/// One chunk’s **visual** heat + smoke scalars in the CPU snapshot (`FireVisualFrame::chunk_heat`).
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
+pub struct ChunkFireHeat {
+    pub chunk: IVec2,
+    pub heat: f32,
+    pub smoke: f32,
+}
+
+#[inline]
+fn fire_light_type_from_combustion_ord(ord: f32) -> FireLightType {
+    match ord.round().clamp(0.0, 4.0) as u8 {
+        1 => FireLightType::Fuel,
+        2 => FireLightType::Chemical,
+        3 => FireLightType::Electrical,
+        4 => FireLightType::Structure,
+        _ => FireLightType::Forest,
+    }
+}
 
 /// One chunk-aligned fire emitter row for instancing / compute (`base_gui_next.md`).
 #[repr(C)]
@@ -28,8 +117,8 @@ pub struct ChunkSmokeGpu {
     pub density_tox_vis: Vec4,
 }
 
-/// Latest fire emitter snapshot (cleared + refilled each extract tick).
-#[derive(Resource, Default, Clone, Debug, ExtractResource)]
+/// Latest fire emitter snapshot (cleared + refilled each extract tick on the **main** world only).
+#[derive(Resource, Default, Clone, Debug)]
 pub struct SimFireEmitterVisualExtract {
     pub instances: Vec<FireEmitterGpu>,
 }

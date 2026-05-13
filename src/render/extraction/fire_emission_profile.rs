@@ -4,8 +4,9 @@
 //! [`ChunkEcology`](crate::systems::ecology::ChunkEcology), fuel/material rows). **No** per-scenario fire ECS types;
 //! extend profiles as fuel / structure data grows.
 //!
-//! Populated only from [`super::fire_visual_extract::rewrite_fire_visual_extract_buffer`] (one ECS pass per frame).
+//! Populated only from [`super::fire_visual_extract::extract_fire_visual_frame`] (one ECS pass per frame).
 
+use bevy::math::IVec2;
 use bevy::prelude::*;
 
 use crate::systems::ecology::ChunkEcology;
@@ -14,6 +15,8 @@ use crate::systems::weather::ChunkWeather;
 use crate::terrain::family::{TerrainFamilyId, DEFAULT_TERRAIN_FAMILY_ID};
 use crate::terrain::generation::{Chunk, ChunkCellMatrix};
 use crate::terrain::material::{MaterialId, MaterializedChunk};
+
+use crate::render::sim_visual_extract::FireVisualGpuInstance;
 
 /// High-level combustion category for VFX / gameplay hints (not a separate sim system).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
@@ -29,6 +32,7 @@ pub enum CombustionClass {
 /// Master **visual** row for one burning chunk this frame (rewritten each extract tick; not sim state).
 #[derive(Clone, Copy, Debug)]
 pub struct FireEmissionProfile {
+    pub chunk_coord: IVec2,
     pub world_pos: Vec3,
     pub heat: f32,
     pub luminosity: f32,
@@ -43,6 +47,53 @@ pub struct FireEmissionProfile {
     pub extract_priority: f32,
     /// Physical influence radius for pooled lights (from sim emission).
     pub influence_radius: f32,
+}
+
+/// Canonical **render-facing** fire row (`P1-E`): packed GPU/storage layout in
+/// [`super::fire_visual_extract::FireVisualFrame::instances`] (one ECS extract pass per frame).
+pub type FireVisualProxy = FireVisualGpuInstance;
+
+#[inline]
+pub(crate) fn combustion_class_storage_ord(c: CombustionClass) -> f32 {
+    match c {
+        CombustionClass::Vegetation => 0.0,
+        CombustionClass::Hydrocarbon => 1.0,
+        CombustionClass::Chemical => 2.0,
+        CombustionClass::Electrical => 3.0,
+        CombustionClass::Structural => 4.0,
+    }
+}
+
+impl From<&FireEmissionProfile> for FireVisualGpuInstance {
+    fn from(p: &FireEmissionProfile) -> Self {
+        Self {
+            chunk_xy_heat_lum: Vec4::new(
+                p.chunk_coord.x as f32,
+                p.chunk_coord.y as f32,
+                p.heat,
+                p.luminosity,
+            ),
+            world_xyz_radius: Vec4::new(p.world_pos.x, p.world_pos.y, p.world_pos.z, p.influence_radius),
+            smoke_ember_vis_priority: Vec4::new(
+                p.smoke_density,
+                p.ember_rate,
+                p.visibility_reduction,
+                p.extract_priority,
+            ),
+            smoke_color_toxic: Vec4::new(
+                p.smoke_color.x,
+                p.smoke_color.y,
+                p.smoke_color.z,
+                p.toxic_density,
+            ),
+            fog_rgb_combust_ord: Vec4::new(
+                p.fog_tint.x,
+                p.fog_tint.y,
+                p.fog_tint.z,
+                combustion_class_storage_ord(p.combustion_class),
+            ),
+        }
+    }
 }
 
 #[inline]
@@ -96,7 +147,7 @@ pub fn infer_combustion_class(
     CombustionClass::Structural
 }
 
-/// Build one per-chunk profile for [`super::fire_visual_extract::FireVisualExtractBuffer`].
+/// Build one per-chunk profile for [`super::fire_visual_extract::FireVisualFrame`].
 pub fn infer_fire_emission_profile(
     chunk: &Chunk,
     fire: &ChunkSurfaceFire,
@@ -156,6 +207,7 @@ pub fn infer_fire_emission_profile(
         .clamp(0.0, 1.0);
 
     FireEmissionProfile {
+        chunk_coord: chunk.coord,
         world_pos,
         heat,
         luminosity,
@@ -225,6 +277,7 @@ mod tests {
         let m = minimal_matrix();
         let p = infer_fire_emission_profile(&chunk, &fire, &em, None, None, None, None, &m, None);
         assert_eq!(p.combustion_class, CombustionClass::Vegetation);
+        assert_eq!(p.chunk_coord, IVec2::ZERO);
         assert!(p.luminosity > 0.0);
         assert!(p.world_pos.z > 0.0);
     }
