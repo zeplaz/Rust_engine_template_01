@@ -5015,6 +5015,7 @@ dependencies = [
  "bevy_ecs_tilemap",
  "bevy_egui",
  "bitflags 2.11.1",
+ "bytemuck",
  "clap",
  "crossbeam-channel",
  "image 0.24.6",

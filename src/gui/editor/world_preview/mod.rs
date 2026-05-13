@@ -44,6 +44,13 @@ pub use window::display_world_preview;
 use bevy::prelude::*;
 use bevy_egui::EguiPrimaryContextPass;
 
+/// Ordering for world preview texture resize before CPU raster (`update_world_preview_texture` param count exceeds `chain()` tuple limits).
+#[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
+enum WorldPreviewRasterOrder {
+    SyncTextureSize,
+    RasterTiles,
+}
+
 /// Toggles for the World Preview egui window (independent of whether the World Generator panel is open).
 #[derive(Resource)]
 pub struct WorldPreviewUiState {
@@ -65,10 +72,18 @@ impl Plugin for WorldPreviewPlugin {
             .init_resource::<EditorViewport>()
             .init_resource::<WorldPreviewUiState>()
             .init_resource::<WorldPreviewChunkCaches>()
+            .configure_sets(
+                Update,
+                WorldPreviewRasterOrder::RasterTiles.after(WorldPreviewRasterOrder::SyncTextureSize),
+            )
             .add_systems(Startup, init_world_preview_texture)
             .add_systems(
                 Update,
-                (sync_world_preview_texture_size, render_raster::update_world_preview_texture).chain(),
+                (
+                    sync_world_preview_texture_size.in_set(WorldPreviewRasterOrder::SyncTextureSize),
+                    render_raster::update_world_preview_texture
+                        .in_set(WorldPreviewRasterOrder::RasterTiles),
+                ),
             )
             .add_systems(EguiPrimaryContextPass, display_world_preview);
     }

@@ -1,12 +1,12 @@
 //! Local pooled **point-light extraction** layer (Bevy 0.18 / wgpu).
 //!
 //! [`RequestLocalLight`](crate::render::light::RequestLocalLight) messages (fire path from
-//! [`FireVisualExtractBuffer`](crate::render::extraction::FireVisualExtractBuffer)); this plugin **collects**, **scores**,
+//! [`FireVisualFrame`](crate::render::extraction::FireVisualFrame)); this plugin **collects**, **scores**,
 //! **sorts**, and **truncates** into [`ActiveLights`], then syncs a **fixed pool** of [`PointLight`]
 //! entities (no per-frame spawn/despawn).
 //!
 //! Intended for:
-//! - fire lighting via [`crate::render::extraction::FireVisualExtractBuffer`] (single sim pass, then cluster emit)
+//! - fire lighting via [`crate::render::extraction::FireVisualFrame`] (single sim pass, then cluster emit)
 //! - explosion / vehicle / emergency lights (direct `RequestLocalLight` writers)
 //! - future camera-relative culling; clustering in [`crate::render::lighting`]
 //!
@@ -23,7 +23,7 @@ use bevy::prelude::*;
 use smallvec::SmallVec;
 
 use crate::gui::MainWorldCamera;
-use crate::render::extraction::FireVisualExtractPlugin;
+use crate::render::extraction::FireVisualFramePlugin;
 
 /// Cap on simultaneous CPU-driven local lights (matches slot entities).
 pub const MAX_ACTIVE_LOCAL_LIGHTS: usize = 16;
@@ -99,7 +99,7 @@ pub struct LocalLightPlugin;
 
 impl Plugin for LocalLightPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins(FireVisualExtractPlugin)
+        app.add_plugins(FireVisualFramePlugin)
             .init_resource::<ActiveLights>()
             .init_resource::<LocalLightSlotsSpawned>()
             .add_message::<RequestLocalLight>()

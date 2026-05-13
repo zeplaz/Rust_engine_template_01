@@ -17,7 +17,9 @@ use crate::strategic::{
     NarrativeObservationBus, OperationalTheaterSummary, StrategicOverlayDisplayPolicy,
     MAX_STRATEGIC_FACTION_SLOTS,
 };
-use crate::gui::build::{BuildGhostState, BuildOverlayVisibility, BuildPlacementPreview, BuildStripState};
+use crate::gui::build::{
+    BuildGhostState, BuildOverlayVisibility, BuildPlacementPreview, BuildStripState, ToolContext,
+};
 use crate::gui::hud::{
     update_developmental_cause_strip_system, update_developmental_context_strip_system,
     DevelopmentalCauseStripLine, DevelopmentalCauseStripRoot, DevelopmentalContextStripLine,
@@ -32,6 +34,7 @@ use crate::entities::production::core::{
 
 use super::input_bindings::InputBindings;
 use super::logistics_focus::{HudAggregateSettings, HudLogisticsFocus};
+use super::map_camera::{MapCameraDesired, MapCameraMode, MapCameraSettings};
 use super::{CmdUiMonoFont, UiPalette};
 
 #[derive(Component)]
@@ -58,6 +61,9 @@ struct OpsStripAlerts;
 
 #[derive(Component)]
 struct OpsStripIntelRoutes;
+
+#[derive(Component)]
+struct OpsStripMapCam;
 
 #[derive(Component)]
 struct OpsStripBuild;
@@ -160,6 +166,10 @@ impl Plugin for InGameHudPlugin {
             .add_systems(
                 Update,
                 update_ops_strip_build_line.run_if(in_simulation_or_editor),
+            )
+            .add_systems(
+                Update,
+                update_ops_strip_map_camera_line.run_if(in_simulation_or_editor),
             )
             .add_systems(
                 Update,
@@ -354,6 +364,12 @@ fn spawn_simulation_command_shell(
                         TextFont::from_font_size(fs).with_font(font.clone()),
                         TextColor(palette.bevy_secondary_text()),
                         OpsStripIntelRoutes,
+                    ));
+                    parent.spawn((
+                        Text::new("MAP —"),
+                        TextFont::from_font_size(fs).with_font(font.clone()),
+                        TextColor(palette.bevy_secondary_text()),
+                        OpsStripMapCam,
                     ));
                     parent.spawn((
                         Text::new("BUILD —"),
@@ -570,6 +586,19 @@ fn spawn_simulation_command_shell(
         });
 }
 
+/// Avoids `format!` + `Text` churn on the ops strip when inputs are unchanged (`base_visual_dev01` P0-D).
+#[derive(Default, Clone)]
+struct OpsStripDynamicCache {
+    time_fp: Option<(u64, bool, i32, u32)>,
+    time_line: String,
+    alerts_fp: Option<(usize, u32, u32, usize, i32, i32)>,
+    alerts_line: String,
+    routes_fp: Option<(bool, i32, i32, i32)>,
+    routes_line: String,
+    ew_fp: Option<(bool, i32, i32)>,
+    ew_line: String,
+}
+
 fn update_operations_strip(
     tick: Res<SimTick>,
     ctrl: Res<SimControlState>,
@@ -585,17 +614,28 @@ fn update_operations_strip(
         Query<&mut Text, With<OpsStripIntelRoutes>>,
         Query<&mut Text, With<OpsStripIntelEw>>,
     )>,
+    mut cache: Local<OpsStripDynamicCache>,
 ) {
-    let run = if ctrl.paused { "PAUSE" } else { "RUN" };
-    let time_line = format!(
-        "> TIME  wall {:>6.1}s  │  SIM n={}  {:<5}  v={:.1}x",
-        time.elapsed_secs(),
+    let wall_ds = (time.elapsed_secs() * 10.0).floor() as u32;
+    let time_fp = (
         tick.0,
-        run,
-        ctrl.speed
+        ctrl.paused,
+        (ctrl.speed * 100.0).round() as i32,
+        wall_ds,
     );
-    for mut t in qs.p0().iter_mut() {
-        *t = Text::new(time_line.clone());
+    if cache.time_fp != Some(time_fp) {
+        cache.time_fp = Some(time_fp);
+        let run = if ctrl.paused { "PAUSE" } else { "RUN" };
+        cache.time_line = format!(
+            "> TIME  wall {:>6.1}s  │  SIM n={}  {:<5}  v={:.1}x",
+            time.elapsed_secs(),
+            tick.0,
+            run,
+            ctrl.speed
+        );
+        for mut t in qs.p0().iter_mut() {
+            *t = Text::new(cache.time_line.clone());
+        }
     }
 
     let n_m = missions.missions.len();
@@ -607,37 +647,106 @@ fn update_operations_strip(
                 .or(m.objectives.first().map(|o| o.label.as_str()))
         })
         .unwrap_or("—");
-    let alerts_line = format!(
-        "ALERTS  msn {} | T0 {:.2} altμ {:.2} fac {} | {}",
+    let mhash = mission_hint.chars().fold(0u32, |a, c| a.wrapping_add(c as u32));
+    let alerts_fp = (
         n_m,
-        theater.mean_threat_by_slot[0],
-        alt_mean_threat(&theater),
+        mission_hint.len() as u32,
+        mhash,
         theater.active_faction_slots,
-        truncate_slot(mission_hint, 28),
+        (theater.mean_threat_by_slot[0] * 1000.0).round() as i32,
+        (alt_mean_threat(&theater) * 1000.0).round() as i32,
     );
-    for mut t in qs.p1().iter_mut() {
-        *t = Text::new(alerts_line.clone());
+    if cache.alerts_fp != Some(alerts_fp) {
+        cache.alerts_fp = Some(alerts_fp);
+        cache.alerts_line = format!(
+            "ALERTS  msn {} | T0 {:.2} altμ {:.2} fac {} | {}",
+            n_m,
+            theater.mean_threat_by_slot[0],
+            alt_mean_threat(&theater),
+            theater.active_faction_slots,
+            truncate_slot(mission_hint, 28),
+        );
+        for mut t in qs.p1().iter_mut() {
+            *t = Text::new(cache.alerts_line.clone());
+        }
     }
 
-    let routes = format!(
-        "ROUTES  layer {}  proxy {:.2}  edgeμ {:.2}  stock {:.2}",
-        if policy.apply_routing_congestion { "on" } else { "off" },
-        logistics.congestion_proxy,
-        logistics.mean_edge_damage,
-        logistics.stockpile_fill_ratio,
+    let routes_fp = (
+        policy.apply_routing_congestion,
+        (logistics.congestion_proxy * 10000.0).round() as i32,
+        (logistics.mean_edge_damage * 10000.0).round() as i32,
+        (logistics.stockpile_fill_ratio * 10000.0).round() as i32,
     );
-    for mut t in qs.p2().iter_mut() {
-        *t = Text::new(routes.clone());
+    if cache.routes_fp != Some(routes_fp) {
+        cache.routes_fp = Some(routes_fp);
+        cache.routes_line = format!(
+            "ROUTES  layer {}  proxy {:.2}  edgeμ {:.2}  stock {:.2}",
+            if policy.apply_routing_congestion { "on" } else { "off" },
+            logistics.congestion_proxy,
+            logistics.mean_edge_damage,
+            logistics.stockpile_fill_ratio,
+        );
+        for mut t in qs.p2().iter_mut() {
+            *t = Text::new(cache.routes_line.clone());
+        }
     }
 
-    let ew = format!(
-        "EW/DENY  layer {}  fract m {:.2}  ind prox {:.2}",
-        if policy.apply_ew_denial { "on" } else { "off" },
-        fracture.mean_heuristic,
-        logistics.industrial_output_proxy,
+    let ew_fp = (
+        policy.apply_ew_denial,
+        (fracture.mean_heuristic * 10000.0).round() as i32,
+        (logistics.industrial_output_proxy * 10000.0).round() as i32,
     );
-    for mut t in qs.p3().iter_mut() {
-        *t = Text::new(ew.clone());
+    if cache.ew_fp != Some(ew_fp) {
+        cache.ew_fp = Some(ew_fp);
+        cache.ew_line = format!(
+            "EW/DENY  layer {}  fract m {:.2}  ind prox {:.2}",
+            if policy.apply_ew_denial { "on" } else { "off" },
+            fracture.mean_heuristic,
+            logistics.industrial_output_proxy,
+        );
+        for mut t in qs.p3().iter_mut() {
+            *t = Text::new(cache.ew_line.clone());
+        }
+    }
+}
+
+fn update_ops_strip_map_camera_line(
+    settings: Res<MapCameraSettings>,
+    desired: Res<MapCameraDesired>,
+    mut q_map: Query<&mut Text, With<OpsStripMapCam>>,
+    mut fp_cache: Local<Option<(u8, bool, i32, i32)>>,
+) {
+    let mode_tag: u8 = match settings.mode {
+        MapCameraMode::Strategic => 0,
+        MapCameraMode::Tactical => 1,
+        MapCameraMode::Cinematic => 2,
+    };
+    let zoom_k = (desired.scale.x * 1000.0).round() as i32;
+    let yaw_deg = (desired.rotation.to_euler(EulerRot::ZYX).0.to_degrees() * 10.0).round() as i32;
+    let fp = (
+        mode_tag,
+        settings.edge_scroll_enabled,
+        zoom_k,
+        yaw_deg,
+    );
+    if fp_cache.as_ref() == Some(&fp) {
+        return;
+    }
+    *fp_cache = Some(fp);
+
+    let line = format!(
+        "MAP  {}  edge {}  zoom {:.2}  yaw {:.1}°",
+        settings.mode.label(),
+        if settings.edge_scroll_enabled {
+            "on"
+        } else {
+            "off"
+        },
+        desired.scale.x,
+        desired.rotation.to_euler(EulerRot::ZYX).0.to_degrees(),
+    );
+    for mut t in q_map.iter_mut() {
+        *t = Text::new(line.clone());
     }
 }
 
@@ -647,12 +756,51 @@ fn update_ops_strip_build_line(
     build_ghost: Res<BuildGhostState>,
     build_preview: Res<BuildPlacementPreview>,
     mut q_build: Query<&mut Text, With<OpsStripBuild>>,
+    mut fp_cache: Local<
+        Option<(
+            u8,
+            Option<(u32, u32)>,
+            u32,
+            u32,
+            bool,
+            bool,
+            bool,
+            bool,
+            bool,
+        )>,
+    >,
 ) {
+    let pv = &build_preview.report;
+    let active_tag: u8 = match build_strip.active {
+        ToolContext::None => 0,
+        ToolContext::Roads => 1,
+        ToolContext::Rail => 2,
+        ToolContext::Utilities => 3,
+        ToolContext::Military => 4,
+        ToolContext::Industry => 5,
+        ToolContext::Ecology => 6,
+        ToolContext::Civil => 7,
+    };
+    let fp = (
+        active_tag,
+        build_ghost.origin.map(|t| (t.x, t.z)),
+        build_ghost.footprint.width,
+        build_ghost.footprint.depth,
+        build_overlays.terrain,
+        build_overlays.network,
+        build_overlays.cost,
+        pv.valid,
+        pv.allows_commit,
+    );
+    if fp_cache.as_ref() == Some(&fp) {
+        return;
+    }
+    *fp_cache = Some(fp);
+
     let ghost_hint = match build_ghost.origin {
         Some(t) => format!("@{},{}", t.x, t.z),
         None => "—".to_string(),
     };
-    let pv = &build_preview.report;
     let build = format!(
         "BUILD  mode {}  ghost {}  val {}  commit {}  (terrain {}  net {}  cost {})",
         build_strip.active.label(),
@@ -693,6 +841,7 @@ fn truncate_slot(s: &str, max_chars: usize) -> String {
 fn update_simulation_narrative_feed_system(
     bus: Option<Res<NarrativeObservationBus>>,
     mut q: Query<&mut Text, With<SimulationNarrativeFeedLine>>,
+    mut last_line: Local<String>,
 ) {
     let Some(bus) = bus.as_ref() else {
         return;
@@ -703,6 +852,10 @@ fn update_simulation_narrative_feed_system(
     } else {
         format!("STORY — {tail}")
     };
+    if !bus.is_changed() && *last_line == line_display {
+        return;
+    }
+    *last_line = line_display.clone();
     for mut t in &mut q {
         *t = Text::new(line_display.clone());
     }

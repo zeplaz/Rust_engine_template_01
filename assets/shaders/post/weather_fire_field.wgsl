@@ -2,6 +2,7 @@
 // Asset path: `shaders/post/weather_fire_field.wgsl` — see `systems::atmosphere::gpu_paths::WEATHER_FIRE_FIELD_WGSL`.
 // Channels: R = rain-weighted signal, G = snow, B = fire heat, A = fog. Visual-only; gameplay reads CPU state.
 // extra_means: x = biomass, y = fire_risk, z = wind_speed, w = lightning — bias fire/smoke channel only.
+// @group(1): packed fire visual instances (see `FireVisualGpuInstance` in Rust).
 
 struct WeatherFireFieldUniforms {
     means: vec4<f32>, // rain, snow, fire_heat, fog
@@ -10,11 +11,23 @@ struct WeatherFireFieldUniforms {
     blend_rate: f32,
     decay: f32,
     _pad: f32,
+    fire_instance_count: u32,
+    _fire_pad: vec3<u32>,
+}
+
+struct FireVisualInstance {
+    chunk_xy_heat_lum: vec4<f32>,
+    world_xyz_radius: vec4<f32>,
+    smoke_ember_vis_priority: vec4<f32>,
+    smoke_color_toxic: vec4<f32>,
+    fog_rgb_combust_ord: vec4<f32>,
 }
 
 @group(0) @binding(0) var prev_field: texture_storage_2d<rgba32float, read>;
 @group(0) @binding(1) var next_field: texture_storage_2d<rgba32float, write>;
 @group(0) @binding(2) var<uniform> params: WeatherFireFieldUniforms;
+
+@group(1) @binding(0) var<storage, read> fire_instances: array<FireVisualInstance>;
 
 @compute @workgroup_size(8, 8)
 fn update(@builtin(global_invocation_id) gid: vec3<u32>) {
@@ -33,9 +46,14 @@ fn update(@builtin(global_invocation_id) gid: vec3<u32>) {
     let wind = params.extra_means.z;
     let uv_warp = uv + vec2<f32>(cos(t * 0.17), sin(t * 0.13)) * (0.035 + wind * 0.08);
     let n_fire = sin(uv_warp.x * 10.0 + t * 0.55) * cos(uv_warp.y * 8.0 - t * 0.31);
-    let fire_mul = clamp(0.35 + 0.65 * n_fire, 0.0, 1.5)
+    var fire_mul = clamp(0.35 + 0.65 * n_fire, 0.0, 1.5)
         * (1.0 + params.extra_means.y * 0.35)
         * (1.0 + wind * 0.22);
+
+    if params.fire_instance_count > 0u {
+        let h0 = fire_instances[0].chunk_xy_heat_lum.z;
+        fire_mul = fire_mul * (0.98 + 0.04 * clamp(h0, 0.0, 1.0));
+    }
 
     let blend_target = vec4<f32>(
         params.means.x * clamp(0.55 + 0.45 * n1, 0.0, 1.5),

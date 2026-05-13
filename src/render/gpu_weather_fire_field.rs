@@ -1,9 +1,11 @@
 //! Ping-pong **GPU field** for weather + fire **visuals** (compute on `Rgba32Float` textures).
 //!
 //! - **CPU** uploads [`WeatherFireFieldUniforms`] from [`ClimateVisualAggregate`](crate::render::ClimateVisualAggregate),
-//!   [`SimFireEmitterVisualExtract`] / [`SimChunkSmokeVisualExtract`](crate::render::sim_visual_extract)
+//! [`FireVisualFrame`](crate::render::extraction::FireVisualFrame) / [`SimChunkSmokeVisualExtract`](crate::render::sim_visual_extract::SimChunkSmokeVisualExtract)
 //!   (via [`crate::systems::atmosphere::gpu_field_bridge`]). No direct [`ChunkWeather`](crate::systems::weather::ChunkWeather) /
 //!   [`ChunkEcology`](crate::systems::ecology::ChunkEcology) queries in the bridge.
+//! - Packed fire instances are extracted to the render world and uploaded each frame into
+//!   [`FireVisualGpuInstanceStorage`] (wgpu storage buffer, group `@group(1)` in `weather_fire_field.wgsl`).
 //! - **WGSL** (`assets/shaders/post/weather_fire_field.wgsl`) relaxes the field each frame.
 //! - Optional **debug sprite** (see [`WeatherFireFieldDebugOverlay`]).
 //!
@@ -29,9 +31,12 @@ use bevy::{
     shader::PipelineCacheError,
 };
 
+use bytemuck;
+
+use super::extraction::FireVisualFrame;
 use super::fire_smoke_shader_handles::load_fire_smoke_shader_handles;
 use super::fx_burst_request::{enqueue_fx_bursts_from_hot_emitters, FxParticleBurstRequest};
-use super::sim_visual_extract::{SimChunkSmokeVisualExtract, SimFireEmitterVisualExtract};
+use super::sim_visual_extract::{FireVisualGpuInstance, SimChunkSmokeVisualExtract};
 
 use crate::systems::atmosphere::{
     update_fire_emitters_from_heat, AtmospherePipelineSet, WEATHER_FIRE_FIELD_WGSL,
@@ -63,6 +68,9 @@ pub struct WeatherFireFieldUniforms {
     pub blend_rate: f32,
     pub decay: f32,
     pub _pad: f32,
+    /// Number of valid rows in the fire visual storage buffer (WGSL reads `fire_instances[0..count)`).
+    pub fire_instance_count: u32,
+    pub _fire_pad: UVec3,
 }
 
 impl Default for WeatherFireFieldUniforms {
@@ -74,6 +82,8 @@ impl Default for WeatherFireFieldUniforms {
             blend_rate: 0.14,
             decay: 0.004,
             _pad: 0.0,
+            fire_instance_count: 0,
+            _fire_pad: UVec3::ZERO,
         }
     }
 }
@@ -89,6 +99,48 @@ pub(crate) struct DebugFieldSpriteTag;
 
 #[derive(Resource, Default)]
 struct WeatherFieldDebugSpawned(bool);
+
+/// GPU copy of [`FireVisualFrame::instances`] (render world). Bound at `@group(1) @binding(0)`.
+#[derive(Resource, Default)]
+pub struct FireVisualGpuInstanceStorage {
+    pub buffer: Option<Buffer>,
+    pub capacity_bytes: u64,
+    pub instance_count: u32,
+}
+
+fn prepare_fire_visual_gpu_storage(
+    extracted: Res<FireVisualFrame>,
+    mut storage: ResMut<FireVisualGpuInstanceStorage>,
+    render_device: Res<RenderDevice>,
+    queue: Res<RenderQueue>,
+) {
+    const STRIDE: usize = std::mem::size_of::<FireVisualGpuInstance>();
+    let rows = extracted.instances.as_slice();
+    let needed = (rows.len().max(1) * STRIDE) as u64;
+    let must_grow = storage
+        .buffer
+        .as_ref()
+        .map_or(true, |_| storage.capacity_bytes < needed);
+    if must_grow {
+        let size = needed.max(256).next_multiple_of(256);
+        let buffer = render_device.create_buffer(&BufferDescriptor {
+            label: Some("fire_visual_instances"),
+            size,
+            usage: BufferUsages::COPY_DST | BufferUsages::STORAGE,
+            mapped_at_creation: false,
+        });
+        storage.buffer = Some(buffer);
+        storage.capacity_bytes = size;
+    }
+    storage.instance_count = rows.len() as u32;
+    if let Some(buf) = storage.buffer.as_ref() {
+        if rows.is_empty() {
+            queue.write_buffer(buf, 0, &[0u8; STRIDE]);
+        } else {
+            queue.write_buffer(buf, 0, bytemuck::cast_slice(rows));
+        }
+    }
+}
 
 fn make_field_image() -> Image {
     let mut img = Image::new_target_texture(
@@ -205,16 +257,22 @@ impl Plugin for GpuWeatherFireFieldPlugin {
         app.add_plugins((
             ExtractResourcePlugin::<WeatherFireFieldUniforms>::default(),
             ExtractResourcePlugin::<WeatherFireFieldTextures>::default(),
-            ExtractResourcePlugin::<SimFireEmitterVisualExtract>::default(),
+            ExtractResourcePlugin::<FireVisualFrame>::default(),
             ExtractResourcePlugin::<SimChunkSmokeVisualExtract>::default(),
         ));
 
         let render_app = app.sub_app_mut(RenderApp);
         render_app
+            .init_resource::<FireVisualGpuInstanceStorage>()
             .add_systems(RenderStartup, init_weather_fire_pipeline)
             .add_systems(
                 Render,
-                prepare_field_bind_groups.in_set(RenderSystems::PrepareBindGroups),
+                (
+                    prepare_fire_visual_gpu_storage,
+                    prepare_field_bind_groups.after(prepare_fire_visual_gpu_storage),
+                )
+                    .chain()
+                    .in_set(RenderSystems::PrepareBindGroups),
             );
 
         let mut graph = render_app.world_mut().resource_mut::<RenderGraph>();
@@ -230,8 +288,12 @@ struct WeatherFireFieldLabel;
 struct WeatherFireFieldBindGroups([BindGroup; 2]);
 
 #[derive(Resource)]
+struct WeatherFireFieldFireBindGroup(BindGroup);
+
+#[derive(Resource)]
 struct WeatherFireFieldPipeline {
-    layout: BindGroupLayoutDescriptor,
+    field_layout: BindGroupLayoutDescriptor,
+    fire_layout: BindGroupLayoutDescriptor,
     update_pipeline: CachedComputePipelineId,
 }
 
@@ -241,6 +303,7 @@ fn prepare_field_bind_groups(
     gpu_images: Res<RenderAssets<GpuImage>>,
     textures: Res<WeatherFireFieldTextures>,
     uniforms: Res<WeatherFireFieldUniforms>,
+    storage: Res<FireVisualGpuInstanceStorage>,
     render_device: Res<RenderDevice>,
     pipeline_cache: Res<PipelineCache>,
     queue: Res<RenderQueue>,
@@ -251,17 +314,35 @@ fn prepare_field_bind_groups(
     let mut ub = UniformBuffer::from(uniforms.clone());
     ub.write_buffer(&render_device, &queue);
 
+    let field_gpu_layout = pipeline_cache.get_bind_group_layout(&pipeline.field_layout);
+    let fire_gpu_layout = pipeline_cache.get_bind_group_layout(&pipeline.fire_layout);
+
     let bg0 = render_device.create_bind_group(
         None,
-        &pipeline_cache.get_bind_group_layout(&pipeline.layout),
+        &field_gpu_layout,
         &BindGroupEntries::sequential((&va.texture_view, &vb.texture_view, &ub)),
     );
     let bg1 = render_device.create_bind_group(
         None,
-        &pipeline_cache.get_bind_group_layout(&pipeline.layout),
+        &field_gpu_layout,
         &BindGroupEntries::sequential((&vb.texture_view, &va.texture_view, &ub)),
     );
     commands.insert_resource(WeatherFireFieldBindGroups([bg0, bg1]));
+
+    let fire_buf = storage.buffer.as_ref().expect("fire visual GPU buffer must exist after prepare_fire_visual_gpu_storage");
+    let fire_bg = render_device.create_bind_group(
+        None,
+        &fire_gpu_layout,
+        &[BindGroupEntry {
+            binding: 0,
+            resource: BindingResource::Buffer(BufferBinding {
+                buffer: fire_buf,
+                offset: 0,
+                size: None,
+            }),
+        }],
+    );
+    commands.insert_resource(WeatherFireFieldFireBindGroup(fire_bg));
 }
 
 fn init_weather_fire_pipeline(
@@ -269,7 +350,7 @@ fn init_weather_fire_pipeline(
     asset_server: Res<AssetServer>,
     pipeline_cache: Res<PipelineCache>,
 ) {
-    let layout = BindGroupLayoutDescriptor::new(
+    let field_layout = BindGroupLayoutDescriptor::new(
         "WeatherFireField",
         &BindGroupLayoutEntries::sequential(
             ShaderStages::COMPUTE,
@@ -281,16 +362,31 @@ fn init_weather_fire_pipeline(
         ),
     );
 
+    let fire_layout = BindGroupLayoutDescriptor {
+        label: Cow::Borrowed("WeatherFireFieldFireInstances"),
+        entries: vec![BindGroupLayoutEntry {
+            binding: 0,
+            visibility: ShaderStages::COMPUTE,
+            ty: BindingType::Buffer {
+                ty: BufferBindingType::Storage { read_only: true },
+                has_dynamic_offset: false,
+                min_binding_size: None,
+            },
+            count: None,
+        }],
+    };
+
     let shader = asset_server.load(SHADER_PATH);
     let update_pipeline = pipeline_cache.queue_compute_pipeline(ComputePipelineDescriptor {
-        layout: vec![layout.clone()],
+        layout: vec![field_layout.clone(), fire_layout.clone()],
         shader,
         entry_point: Some(Cow::from("update")),
         ..default()
     });
 
     commands.insert_resource(WeatherFireFieldPipeline {
-        layout,
+        field_layout,
+        fire_layout,
         update_pipeline,
     });
 }
@@ -338,6 +434,7 @@ impl render_graph::Node for WeatherFireFieldNode {
         world: &World,
     ) -> Result<(), render_graph::NodeRunError> {
         let groups = &world.resource::<WeatherFireFieldBindGroups>().0;
+        let fire_bg = world.resource::<WeatherFireFieldFireBindGroup>();
         let cache = world.resource::<PipelineCache>();
         let pipeline = world.resource::<WeatherFireFieldPipeline>();
 
@@ -350,6 +447,7 @@ impl render_graph::Node for WeatherFireFieldNode {
             WfState::PingA => {
                 let pl = cache.get_compute_pipeline(pipeline.update_pipeline).unwrap();
                 pass.set_bind_group(0, &groups[0], &[]);
+                pass.set_bind_group(1, &fire_bg.0, &[]);
                 pass.set_pipeline(pl);
                 let dx = WEATHER_FIRE_FIELD_SIZE.x.div_ceil(WORKGROUP);
                 let dy = WEATHER_FIRE_FIELD_SIZE.y.div_ceil(WORKGROUP);
@@ -358,6 +456,7 @@ impl render_graph::Node for WeatherFireFieldNode {
             WfState::PingB => {
                 let pl = cache.get_compute_pipeline(pipeline.update_pipeline).unwrap();
                 pass.set_bind_group(0, &groups[1], &[]);
+                pass.set_bind_group(1, &fire_bg.0, &[]);
                 pass.set_pipeline(pl);
                 let dx = WEATHER_FIRE_FIELD_SIZE.x.div_ceil(WORKGROUP);
                 let dy = WEATHER_FIRE_FIELD_SIZE.y.div_ceil(WORKGROUP);

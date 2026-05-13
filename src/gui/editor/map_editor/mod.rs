@@ -427,12 +427,14 @@ fn on_enter_editor(
     mut undo: ResMut<MapEditorRoadUndoStack>,
     mut ghost: ResMut<RoadAuthoringGhostPreview>,
     mut road_drag: ResMut<MapEditorRoadDragState>,
+    mut minimap_dirty: ResMut<MapEditorMinimapRasterDirty>,
 ) {
     *tool = MapEditorTool::default();
     *road_seq = MapEditorRoadPlacementSeq::default();
     *undo = MapEditorRoadUndoStack::default();
     *ghost = RoadAuthoringGhostPreview::default();
     *road_drag = MapEditorRoadDragState::default();
+    minimap_dirty.bump();
     NextState::set_if_neq(&mut *next_sub, InGameEditorState::Select);
 }
 
@@ -469,6 +471,8 @@ pub struct MapEditorMapTexture {
     pub texture: Handle<Image>,
     pub width: u32,
     pub height: u32,
+    /// Stable egui binding; cleared when [`Self::texture`] is recreated (`P0` — no `add_image` every frame).
+    pub egui_texture_cache: Option<(Handle<Image>, egui::TextureId)>,
 }
 
 impl Default for MapEditorMapTexture {
@@ -477,7 +481,27 @@ impl Default for MapEditorMapTexture {
             texture: Handle::default(),
             width: 0,
             height: 0,
+            egui_texture_cache: None,
         }
+    }
+}
+
+/// **P0** dirty epoch for the map-editor CPU minimap — avoid full-grid raster every `Update` tick.
+#[derive(Resource, Debug, Clone, Copy, Default)]
+pub struct MapEditorMinimapRasterDirty {
+    revision: u64,
+}
+
+impl MapEditorMinimapRasterDirty {
+    #[inline]
+    #[must_use]
+    pub fn revision(&self) -> u64 {
+        self.revision
+    }
+
+    #[inline]
+    pub fn bump(&mut self) {
+        self.revision = self.revision.wrapping_add(1);
     }
 }
 
@@ -511,6 +535,7 @@ fn map_editor_sync_map_texture_size(
     mut images: ResMut<Assets<Image>>,
     params: Res<WorldGenParams>,
     mut map_tex: ResMut<MapEditorMapTexture>,
+    mut raster_dirty: ResMut<MapEditorMinimapRasterDirty>,
 ) {
     if map_tex.width == params.width && map_tex.height == params.height {
         if images.get(&map_tex.texture).is_some() {
@@ -528,6 +553,28 @@ fn map_editor_sync_map_texture_size(
     map_tex.texture = new_handle;
     map_tex.width = w;
     map_tex.height = h;
+    map_tex.egui_texture_cache = None;
+    raster_dirty.bump();
+}
+
+fn mark_map_editor_minimap_dirty(
+    mut dirty: ResMut<MapEditorMinimapRasterDirty>,
+    added_tiles: Query<(), Added<TileMarker>>,
+    changed_terrain: Query<(), (With<TileMarker>, Changed<TerrainType>)>,
+    changed_height: Query<(), (With<TileMarker>, Changed<Height>)>,
+    added_roads: Query<(), Added<MapEditorRoadMarkerV1>>,
+    changed_roads: Query<(), Changed<MapEditorRoadMarkerV1>>,
+    handles: Res<TerrainRegistriesHandles>,
+) {
+    if added_tiles.iter().next().is_some()
+        || changed_terrain.iter().next().is_some()
+        || changed_height.iter().next().is_some()
+        || added_roads.iter().next().is_some()
+        || changed_roads.iter().next().is_some()
+        || handles.is_changed()
+    {
+        dirty.bump();
+    }
 }
 
 fn map_editor_raster_minimap(
@@ -537,7 +584,13 @@ fn map_editor_raster_minimap(
     materials: Res<Assets<MaterialRegistry>>,
     tile_q: Query<(&Transform, &TerrainType), With<TileMarker>>,
     road_q: Query<&MapEditorRoadMarkerV1>,
+    raster_dirty: Res<MapEditorMinimapRasterDirty>,
+    mut last_applied_revision: Local<Option<u64>>,
 ) {
+    let rev = raster_dirty.revision();
+    if *last_applied_revision == Some(rev) {
+        return;
+    }
     let Some(image) = images.get_mut(&map_tex.texture) else {
         return;
     };
@@ -576,6 +629,7 @@ fn map_editor_raster_minimap(
         reg_opt,
         fam_opt,
     );
+    *last_applied_revision = Some(rev);
 }
 
 fn terrain_family_combo(ui: &mut egui::Ui, current: &mut TerrainFamilyId) {
@@ -634,7 +688,7 @@ fn map_editor_minimap_window(
     mut contexts: EguiContexts,
     mut hover: ResMut<MapEditorHover>,
     mut view: ResMut<MapEditorGridView>,
-    map_tex: Res<MapEditorMapTexture>,
+    mut map_tex: ResMut<MapEditorMapTexture>,
     tool: Res<MapEditorTool>,
     params: Res<WorldGenParams>,
     world_roots: Query<Entity, With<WorldMarker>>,
@@ -656,7 +710,18 @@ fn map_editor_minimap_window(
     mut edit_commits: MessageWriter<EditorTileEditCommitted>,
     palette: Res<UiPalette>,
 ) -> Result {
-    let texture_id = contexts.add_image(EguiTextureHandle::Strong(map_tex.texture.clone()));
+    let handle = map_tex.texture.clone();
+    let cache_hit = map_tex
+        .egui_texture_cache
+        .as_ref()
+        .and_then(|(h, id)| (*h == handle).then_some(*id));
+    let texture_id = if let Some(id) = cache_hit {
+        id
+    } else {
+        let id = contexts.add_image(EguiTextureHandle::Strong(handle.clone()));
+        map_tex.egui_texture_cache = Some((handle, id));
+        id
+    };
     let tex_w = map_tex.width as f32;
     let tex_h = map_tex.height as f32;
     if tex_w < 1.0 || tex_h < 1.0 {
@@ -1498,12 +1563,14 @@ impl Plugin for MapEditorPlugin {
             .init_resource::<MapEditorHover>()
             .init_resource::<MapEditorGridView>()
             .init_resource::<MapEditorMapTexture>()
+            .init_resource::<MapEditorMinimapRasterDirty>()
             .init_resource::<ScenarioScriptPanelState>()
             .add_systems(OnEnter(BaseState::Editor), on_enter_editor)
             .add_systems(
                 Update,
                 (
                     map_editor_sync_map_texture_size,
+                    mark_map_editor_minimap_dirty,
                     map_editor_raster_minimap,
                 )
                     .chain()

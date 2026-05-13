@@ -49,6 +49,11 @@ pub enum BindingSlot {
     MapZoomOut,
     MapRotateCcw,
     MapRotateCw,
+    MapToggleEdgeScroll,
+    MapRecenterWorld,
+    MapResetZoom,
+    MapFrameWorld,
+    MapCycleCameraMode,
 }
 
 pub struct KeybindingsOptionsPlugin;
@@ -134,6 +139,11 @@ fn apply_binding_capture(
             BindingSlot::MapZoomOut => bindings.map_zoom_out = k,
             BindingSlot::MapRotateCcw => bindings.map_rotate_ccw = k,
             BindingSlot::MapRotateCw => bindings.map_rotate_cw = k,
+            BindingSlot::MapToggleEdgeScroll => bindings.map_toggle_edge_scroll = k,
+            BindingSlot::MapRecenterWorld => bindings.map_recenter_world = k,
+            BindingSlot::MapResetZoom => bindings.map_reset_zoom = k,
+            BindingSlot::MapFrameWorld => bindings.map_frame_world = k,
+            BindingSlot::MapCycleCameraMode => bindings.map_cycle_camera_mode = k,
         }
         state.capture_slot = None;
         return;
@@ -173,6 +183,11 @@ fn slot_label_id(slot: BindingSlot) -> &'static str {
         BindingSlot::MapZoomOut => "bind_map_zoom_out",
         BindingSlot::MapRotateCcw => "bind_map_rot_ccw",
         BindingSlot::MapRotateCw => "bind_map_rot_cw",
+        BindingSlot::MapToggleEdgeScroll => "bind_map_edge_toggle",
+        BindingSlot::MapRecenterWorld => "bind_map_recenter",
+        BindingSlot::MapResetZoom => "bind_map_reset_zoom",
+        BindingSlot::MapFrameWorld => "bind_map_frame",
+        BindingSlot::MapCycleCameraMode => "bind_map_cam_mode",
     }
 }
 
@@ -437,6 +452,36 @@ fn keybindings_options_ui(
             "",
             map_rotate_cw,
             BindingSlot::MapRotateCw
+        );
+        row_combo!(
+            "Map — toggle edge scroll",
+            "RTS edge pan on/off (default Scroll Lock).",
+            map_toggle_edge_scroll,
+            BindingSlot::MapToggleEdgeScroll
+        );
+        row_combo!(
+            "Map — recenter on world",
+            "Pans to world bounds center (default Home). Double middle-click also recenters.",
+            map_recenter_world,
+            BindingSlot::MapRecenterWorld
+        );
+        row_combo!(
+            "Map — reset zoom",
+            "Restores default orthographic scale for the active test scene (default Z).",
+            map_reset_zoom,
+            BindingSlot::MapResetZoom
+        );
+        row_combo!(
+            "Map — frame world in window",
+            "Centers and picks a zoom to fit the map in the view (default B).",
+            map_frame_world,
+            BindingSlot::MapFrameWorld
+        );
+        row_combo!(
+            "Map — cycle camera mode",
+            "Strategic / Tactical / Cinematic label (default M).",
+            map_cycle_camera_mode,
+            BindingSlot::MapCycleCameraMode
         );
         ui.separator();
         row_combo!(

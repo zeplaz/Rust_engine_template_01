@@ -28,6 +28,7 @@ pub fn display_world_preview(
     tag_assets: Res<Assets<crate::terrain::material::TagRegistry>>,
     mobility_assets: Res<Assets<crate::terrain::mobility::MobilityProfileRegistry>>,
     mut last_tex: Local<(u32, u32)>,
+    mut egui_tex_cache: Local<Option<(Handle<Image>, egui::TextureId)>>,
     palette: Res<UiPalette>,
     spacing: Res<UiSpacing>,
 ) -> Result {
@@ -35,7 +36,15 @@ pub fn display_world_preview(
         return Ok(());
     }
 
-    let texture_id = contexts.add_image(EguiTextureHandle::Strong(preview_texture.texture.clone()));
+    let handle = preview_texture.texture.clone();
+    let texture_id = match egui_tex_cache.as_ref() {
+        Some((h, id)) if *h == handle => *id,
+        _ => {
+            let id = contexts.add_image(EguiTextureHandle::Strong(handle.clone()));
+            *egui_tex_cache = Some((handle, id));
+            id
+        }
+    };
     let tex_w = preview_texture.width as f32;
     let tex_h = preview_texture.height as f32;
 

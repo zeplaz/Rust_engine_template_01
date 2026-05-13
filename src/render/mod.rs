@@ -9,11 +9,15 @@ mod light;
 pub mod shaders;
 pub mod sim_visual_extract;
 mod tile_world_fallback;
+mod overlay_field_buffers;
 
 #[cfg(feature = "bevy_tilemap_adapter")]
 pub mod tilemap_adapter;
 
-pub use tile_world_fallback::{SimMinimapUiState, TileWorldFallbackPlugin, TileWorldFallbackSprite};
+pub use tile_world_fallback::{
+    SimMinimapUiState, TileWorldFallbackAfterFireExtract, TileWorldFallbackPlugin,
+    TileWorldFallbackRasterDirty, TileWorldFallbackSprite,
+};
 
 // Public exports
 pub use fire_smoke_shader_handles::{
@@ -21,11 +25,12 @@ pub use fire_smoke_shader_handles::{
 };
 pub use fx_burst_request::FxParticleBurstRequest;
 pub use gpu_weather_fire_field::{
-    GpuWeatherFireFieldPlugin, WeatherFireFieldDebugOverlay, WeatherFireFieldUniforms,
+    FireVisualGpuInstanceStorage, GpuWeatherFireFieldPlugin, WeatherFireFieldDebugOverlay,
+    WeatherFireFieldUniforms,
 };
 pub use sim_visual_extract::{
-    ChunkSmokeGpu, ClimateVisualAggregate, FireEmitterGpu, SimChunkSmokeVisualExtract,
-    SimFireEmitterVisualExtract,
+    ChunkFireHeat, ChunkSmokeGpu, ClimateVisualAggregate, FireEmitterGpu, FireVisualGpuInstance,
+    SimChunkSmokeVisualExtract, SimFireEmitterVisualExtract,
 };
 pub use lighting::{
     build_fire_light_clusters, FireLightCluster, FireLightEmission as FireLightEmissionSample,
@@ -34,7 +39,10 @@ pub use lighting::{
 pub use extraction::{
     infer_combustion_class, infer_fire_emission_profile, material_id_at_chunk_center,
     terrain_family_at_chunk_center, CombustionClass, FireAtmosphereAggregate, FireEmissionProfile,
-    FireExtractSet, FireVisualExtractBuffer, FireVisualExtractPlugin,
+    FireVisualFrame, FireVisualFramePlugin, FireVisualFrameSet, FireVisualProxy,
+};
+pub use overlay_field_buffers::{
+    SharedOverlayFieldBuffers, SharedOverlayFieldBuffersPlugin,
 };
 pub use light::*;
 

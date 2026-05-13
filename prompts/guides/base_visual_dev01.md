@@ -794,7 +794,7 @@ UiIntentSet
 Visual Extraction
 VisualExtractSet
 AtmosphereExtractSet
-FireExtractSet
+FireVisualFrameSet
 Cached Texture Systems
 MinimapUpdateSet
 OverlayTextureSet
@@ -820,7 +820,7 @@ simulation
 You already started this correctly with:
 
 FireAtmosphereAggregate
-FireVisualExtractBuffer
+FireVisualFrame
 
 Continue that architecture.
 
@@ -1338,7 +1338,7 @@ visibility
 This part is good:
 
 ChunkSurfaceFire
-→ FireVisualExtractBuffer
+→ FireVisualFrame
 → FireAtmosphereAggregate
 → Light Requests
 
@@ -1700,7 +1700,7 @@ Current Problem
 
 You currently have:
 
-FireVisualExtractBuffer
+FireVisualFrame
 Atmosphere smoke
 EmitSmoke stub
 Particle requests
@@ -1966,3 +1966,7 @@ Later
 incremental atmosphere
 FixedUpdate sim
 GPU particles
+
+---
+
+**Split for execution:** actionable checklist + statuses → [`base_visual_dev01_plan_status.md`](base_visual_dev01_plan_status.md). After P0/P1, sequencing and north-star → [`base_visual_dev01_roadmap_next.md`](base_visual_dev01_roadmap_next.md).

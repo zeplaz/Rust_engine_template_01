@@ -971,7 +971,7 @@ Simulation should grow by **who owns which field**, not by feature-named mega-sy
 | Smoke chunk grid | `ChunkSmokeField` | atmosphere field fill, GPU debug |
 | Global atmosphere | `AtmospherePlugin` (fill, advect, blend) | logistics sample, visibility, render prep |
 | Particles / mesh VFX | future extraction → render | **no** authoritative smoke mass |
-| **VisualExtract** | `publish_sim_visual_extract` | `SimFireEmitterVisualExtract`, `SimChunkSmokeVisualExtract` (render reads only) |
+| **VisualExtract** | `publish_sim_visual_extract` (smoke) + `FireVisualFramePlugin` → `extract_fire_visual_frame` (fire) | `SimChunkSmokeVisualExtract`; CPU `FireVisualFrame` → `SharedOverlayFieldBuffers` (heat map only from frame); render `ExtractResource` + `FireVisualGpuInstanceStorage`; `SimFireEmitterVisualExtract` (main-world mirror, not extracted) |
 
 **Unified fuel row:** [`FuelLayer`](../../src/terrain/fire/fuel_layer.rs) is a single normalized struct (surface / shrub / canopy fuel, moisture, volatility, toxic smoke, burn temperature, ember proxy). Use [`FuelLayer::from_vegetation_strata`](../../src/terrain/fire/fuel_layer.rs) via [`ChunkFuelProfile::to_fuel_layer`](../../src/systems/fire/chunk_fuel_profile.rs) for wildland aggregates; use presets (`FuelLayer::forest`, `fuel_dump`, `battery_facility`, `concrete_building`) for industrial / structure scenarios until per-cell fuel grids land. Helpers `visual_fire_height` and `ember_rate_base` are intentionally cheap hooks for render and emitter tuning—wind still applied outside.
 

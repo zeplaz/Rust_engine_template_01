@@ -16,6 +16,7 @@ mod main_menu;
 mod splash;
 mod ui_gates;
 mod input_bindings;
+mod input_frame;
 mod gameplay_capture;
 mod options_keybindings_ui;
 mod pressure_tooling;
@@ -64,10 +65,14 @@ pub use style::{
     VertSpace,
 };
 pub use egui_window::std_floating;
-pub use map_camera::{MainWorldCamera, MapCameraPlugin};
+pub use map_camera::{
+    default_map_zoom_for_world, MainWorldCamera, MapCameraDesired, MapCameraMode, MapCameraPlugin,
+    MapCameraSettings,
+};
 pub use main_menu::*;
 pub use splash::*;
 pub use input_bindings::*;
+pub use input_frame::{InputFrame, InputFramePlugin};
 pub use gameplay_capture::*;
 pub use options_keybindings_ui::*;
 pub use ui_gates::*;

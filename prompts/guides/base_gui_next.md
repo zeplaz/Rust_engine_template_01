@@ -78,7 +78,7 @@ pub struct AtmosphereVisualField {
 
 Simulation publishes into these.
 
-**Template repo:** `SimFireEmitterVisualExtract` / `SimChunkSmokeVisualExtract` in `src/render/sim_visual_extract.rs` are filled by `publish_sim_visual_extract` (`AtmospherePipelineSet::VisualExtract` in `src/systems/atmosphere/visual_extract.rs`). See also `base_fire2_smoke.md` §18–19.
+**Template repo:** `SimChunkSmokeVisualExtract` is filled by `publish_sim_visual_extract` (smoke only; `AtmospherePipelineSet::VisualExtract`). Fire: **one** CPU snapshot [`FireVisualFrame`](../../src/render/extraction/fire_visual_extract.rs) (`instances` + `chunk_heat`) from `FireVisualFramePlugin` / `extract_fire_visual_frame`; [`SharedOverlayFieldBuffers`](../../src/render/overlay_field_buffers.rs) is derived **only** from `FireVisualFrame::chunk_heat`. GPU upload: `FireVisualGpuInstanceStorage` (`GpuWeatherFireFieldPlugin`). Legacy mirror: `SimFireEmitterVisualExtract` (main world, not extracted). See `base_fire2_smoke.md` §18–19.
 
 Rendering ONLY reads these.
 

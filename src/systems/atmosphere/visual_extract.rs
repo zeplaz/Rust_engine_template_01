@@ -2,17 +2,13 @@
 
 use bevy::prelude::*;
 
-use crate::render::{
-    ChunkSmokeGpu, ClimateVisualAggregate, FireEmitterGpu, SimChunkSmokeVisualExtract,
-    SimFireEmitterVisualExtract,
-};
+use crate::render::{ChunkSmokeGpu, ClimateVisualAggregate, SimChunkSmokeVisualExtract};
 use crate::systems::ecology::ChunkEcology;
-use crate::systems::fire::{ChunkFuelProfile, ChunkSmokeField};
+use crate::systems::fire::ChunkSmokeField;
 use crate::systems::weather::{ChunkWeather, WeatherPrecipVisualSample};
 use crate::terrain::generation::Chunk;
 
 use super::diagnostics::AtmosphereDiagnostics;
-use super::emitter_sync::FireEmitter;
 
 const SMOKE_EXTRACT_EPS: f32 = 1e-4;
 
@@ -78,28 +74,14 @@ pub(crate) fn sync_weather_precip_sample_from_climate_aggregate(
     };
 }
 
+/// Chunk smoke only — fire rows come from [`crate::render::extraction::FireVisualFramePlugin`]
+/// ([`crate::render::FireVisualFrame`]) so we do not scan [`FireEmitter`] twice.
 pub(crate) fn publish_sim_visual_extract(
-    mut fire_out: ResMut<SimFireEmitterVisualExtract>,
     mut smoke_out: ResMut<SimChunkSmokeVisualExtract>,
     mut diag: ResMut<AtmosphereDiagnostics>,
-    emit_q: Query<(&Chunk, &FireEmitter, Option<&ChunkFuelProfile>)>,
     smoke_q: Query<(&Chunk, &ChunkSmokeField)>,
 ) {
-    fire_out.instances.clear();
     smoke_out.instances.clear();
-
-    for (chunk, em, prof) in &emit_q {
-        let toxic = prof.map(|p| p.to_fuel_layer().toxic_smoke).unwrap_or(0.0);
-        fire_out.instances.push(FireEmitterGpu {
-            chunk_xy: Vec4::new(
-                chunk.coord.x as f32,
-                chunk.coord.y as f32,
-                0.0,
-                0.0,
-            ),
-            params: Vec4::new(em.intensity, em.smoke_rate, em.ember_rate, toxic),
-        });
-    }
 
     for (chunk, smoke) in &smoke_q {
         if smoke.density <= SMOKE_EXTRACT_EPS && smoke.toxicity <= SMOKE_EXTRACT_EPS {
@@ -122,13 +104,11 @@ pub(crate) fn publish_sim_visual_extract(
     }
 
     diag.visual_extract_runs = diag.visual_extract_runs.wrapping_add(1);
-    diag.last_emitter_extract_count = fire_out.instances.len();
     diag.last_smoke_extract_count = smoke_out.instances.len();
 }
 
 pub fn visual_extract_systems(app: &mut App) {
-    app.init_resource::<SimFireEmitterVisualExtract>()
-        .init_resource::<SimChunkSmokeVisualExtract>()
+    app.init_resource::<SimChunkSmokeVisualExtract>()
         .init_resource::<ClimateVisualAggregate>()
         .init_resource::<WeatherPrecipVisualSample>();
 }

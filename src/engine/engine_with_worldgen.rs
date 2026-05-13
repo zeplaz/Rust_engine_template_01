@@ -17,7 +17,7 @@ use crate::scenario::ScenarioScriptingPlugin;
 use crate::systems::sim_control::SimControlPlugin;
 use crate::systems::transport::{TransportSchedule, TransportSimulationPlugin};
 use crate::strategic::StrategicFieldPipeline;
-use crate::render::{GpuWeatherFireFieldPlugin, LocalLightPlugin, TileWorldFallbackPlugin};
+use crate::render::{GpuWeatherFireFieldPlugin, LocalLightPlugin, SharedOverlayFieldBuffersPlugin, TileWorldFallbackPlugin};
 use crate::systems::{
     configure_chunk_environment_sets,
     AtmospherePlugin, ChunkEnvironmentPersistPlugin, ChunkSimLodPlugin, EcologyPlugin, FirePlugin,
@@ -90,13 +90,13 @@ impl Plugin for EnginePlugin {
         // Fire visual extract: one sim pass → buffer; then pooled local lights collect messages.
         app.configure_sets(
             Update,
-            crate::render::extraction::FireExtractSet::BuildProfiles
+            crate::render::extraction::FireVisualFrameSet::BuildProfiles
                 .after(crate::systems::atmosphere::AtmospherePipelineSet::VisualExtract),
         );
         app.configure_sets(
             Update,
             crate::render::LocalLightExtractSet::Collect
-                .after(crate::render::extraction::FireExtractSet::EmitParticles),
+                .after(crate::render::extraction::FireVisualFrameSet::EmitParticles),
         );
         app.configure_sets(
             Update,
@@ -115,6 +115,7 @@ impl Plugin for EnginePlugin {
             .add_plugins(GameplayCapturePlugin)
             .add_plugins(MapCameraPlugin)
             .add_plugins(TileWorldFallbackPlugin)
+            .add_plugins(SharedOverlayFieldBuffersPlugin)
             .add_plugins(DiagnosticsUiPlugin)
             .add_plugins(FactionToolsUiPlugin)
             .add_plugins(crate::gui::AiExplainabilityPlugin)
