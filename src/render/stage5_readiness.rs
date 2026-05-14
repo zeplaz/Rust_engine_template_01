@@ -29,6 +29,7 @@ pub struct Stage5ReadinessProfile {
     pub require_partial_metrics: bool,
     pub require_world_frame: bool,
     pub require_phase_f_proof: bool,
+    pub require_instanced_draw: bool,
 }
 
 impl Stage5ReadinessProfile {
@@ -39,6 +40,7 @@ impl Stage5ReadinessProfile {
         require_partial_metrics: true,
         require_world_frame: true,
         require_phase_f_proof: true,
+        require_instanced_draw: true,
     };
 
     pub const HEADLESS: Self = Self {
@@ -48,6 +50,7 @@ impl Stage5ReadinessProfile {
         require_partial_metrics: false,
         require_world_frame: false,
         require_phase_f_proof: false,
+        require_instanced_draw: false,
     };
 }
 
@@ -69,6 +72,7 @@ pub struct AppStage5ReadinessReport {
     pub overlay_from_shared_buffers_only: bool,
     pub particle_lod_scales: bool,
     pub phase_f_lod_proof_ok: bool,
+    pub instanced_dispatch_ok: bool,
     pub phase_f_ok: bool,
     pub projection_domains: u8,
     pub registered_producers: u32,
@@ -108,6 +112,7 @@ pub fn stage5_readiness_passes(report: &AppStage5ReadinessReport) -> bool {
         && report.overlay_from_shared_buffers_only
         && report.particle_lod_scales
         && report.phase_f_lod_proof_ok
+        && report.instanced_dispatch_ok
         && report.phase_d_ok
         && report.phase_f_ok
 }
@@ -127,6 +132,8 @@ pub fn evaluate_app_stage5_readiness(
     preview_cam: Option<Res<PreviewCameraState>>,
     preview_gpu: Option<Res<WorldPreviewGpuRuntime>>,
     phase_f: Option<Res<PhaseFLodProofReport>>,
+    indirect: Option<Res<crate::render::GpuIndirectDrawSpine>>,
+    draw_dispatch: Option<Res<crate::render::WorldFireParticleDrawDispatch>>,
 ) {
     report.violations.clear();
     report.registered_producers = REGISTERED_VISUAL_PRODUCERS.len() as u32;
@@ -203,7 +210,31 @@ pub fn evaluate_app_stage5_readiness(
         report.phase_f_lod_proof_ok = !profile.require_phase_f_proof;
     }
 
-    report.phase_f_ok = report.particle_lod_scales && report.phase_f_lod_proof_ok;
+    if let Some(policy) = policy.as_deref() {
+        if !policy.particle_policy.instanced_draw {
+            report.instanced_dispatch_ok = true;
+        } else if let (Some(indirect), Some(draw)) = (indirect.as_deref(), draw_dispatch.as_deref()) {
+            let cap = policy.gpu_budget.particle_rows_cap as u32;
+            let indirect_count = indirect.world_fire.instance_count;
+            let dispatch_count = draw.instance_count;
+            report.instanced_dispatch_ok = indirect_count == dispatch_count
+                && indirect_count <= cap
+                && (indirect_count == 0 || indirect.dispatch_count > 0);
+        } else {
+            report.instanced_dispatch_ok = !profile.require_instanced_draw;
+        }
+    } else {
+        report.instanced_dispatch_ok = !profile.require_instanced_draw;
+    }
+    if profile.require_instanced_draw && !report.instanced_dispatch_ok {
+        report
+            .violations
+            .push("Phase F instanced draw dispatch not aligned with policy".into());
+    }
+
+    report.phase_f_ok = report.particle_lod_scales
+        && report.phase_f_lod_proof_ok
+        && report.instanced_dispatch_ok;
     if profile.require_phase_f_proof && !report.phase_f_ok {
         report
             .violations
@@ -343,6 +374,7 @@ mod tests {
         report.gpu_field_authoritative = P2H_GPU_PARTIAL_WRITES_AUTHORITATIVE;
         report.overlay_from_shared_buffers_only = true;
         report.particle_lod_scales = true;
+        report.instanced_dispatch_ok = true;
         report.phase_f_ok = true;
         report.phase_d_ok = true;
         assert!(report.violations.is_empty());
@@ -388,6 +420,7 @@ mod tests {
             overlay_from_shared_buffers_only: true,
             particle_lod_scales: true,
             phase_f_lod_proof_ok: true,
+            instanced_dispatch_ok: true,
             phase_f_ok: true,
             projection_domains: 3,
             registered_producers: REGISTERED_VISUAL_PRODUCERS.len() as u32,

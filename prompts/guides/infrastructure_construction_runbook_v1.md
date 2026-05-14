@@ -6,7 +6,7 @@
 
 **Next-layer orchestration (sites, zones, schedule, GPU, AI):** [`territorial_infrastructure_orchestration_v1.md`](territorial_infrastructure_orchestration_v1.md)
 
-**Related:** [`infrastructure_resilience_and_failure_runbook_v1.md`](infrastructure_resilience_and_failure_runbook_v1.md), [`infrastructure_corridor_runbook_v1.md`](infrastructure_corridor_runbook_v1.md), [`terrain_unification_runbook_v1.md`](terrain_unification_runbook_v1.md), [`weather_simulation_runbook_v1.md`](weather_simulation_runbook_v1.md), [`fire_ecology_simulation_runbook_v1.md`](fire_ecology_simulation_runbook_v1.md), [`gap_remediation_runbook_v1.md`](gap_remediation_runbook_v1.md)
+**Related:** [`infrastructure_resilience_and_failure_runbook_v1.md`](infrastructure_resilience_and_failure_runbook_v1.md), [`infrastructure_corridor_runbook_v1.md`](infrastructure_corridor_runbook_v1.md), [`terrain_unification_runbook_v1.md`](terrain_unification_runbook_v1.md), [`weather_simulation_runbook_v1.md`](weather_simulation_runbook_v1.md), [`fire_ecology_simulation_runbook_v1.md`](fire_ecology_simulation_runbook_v1.md), [`gap_remediation_runbook_v1.md`](gap_remediation_runbook_v1.md), [`experience_layer_ux_hud_designer_brief_v1.md`](experience_layer_ux_hud_designer_brief_v1.md) §4 (**BQ-121** blueprint UX)
 
 **Source draft:** [`base_reserch_draft.md`](base_reserch_draft.md)
 

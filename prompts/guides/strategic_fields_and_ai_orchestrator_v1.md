@@ -78,6 +78,9 @@ flowchart TB
 | [`chunk_scheduler_runbook_v1.md`](chunk_scheduler_runbook_v1.md) | Scale / dirty-region scheduling for fields |
 | [`ui_boundary_guide_v1.md`](ui_boundary_guide_v1.md) | Gameplay UI vs dev egui |
 | [`experience_layer_orchestrator_v1.md`](experience_layer_orchestrator_v1.md) | HUD, overlays UX, camera |
+| [`simulation_explainability_runbook_v1.md`](simulation_explainability_runbook_v1.md) | L7 “why” surfaces for AI / pressure decisions |
+| [`legacy_cpp_repos_agent_communication_maps_v1.md`](legacy_cpp_repos_agent_communication_maps_v1.md) | External archive — comms planes, belief gap, utility masks (§8) |
+| [`base_behav_a.md`](base_behav_a.md) | Fractional behavior pipeline draft |
 | Source draft (archive) | [`base_ai_runbook_draft.md`](base_ai_runbook_draft.md) |
 
 ---
@@ -138,5 +141,7 @@ Check off as code catches up to the runbooks. **Owning code:** [`StrategicFields
 - [x] **City planning (partial):** [`strategic_city_planning_hints_tick`](../../src/strategic/sim.rs) aggregates **multi-slot** overlay logistics/threat for [`site_score`](../../src/strategic/runbook_rounds/city_planning.rs) and boosts [`utility_redundancy_hint`](../../src/strategic/sim.rs) from [`InfrastructureCorridor`](../../src/strategic/sim.rs) count. District/utility graph from construction runbook still future.
 - [x] **Operational (partial):** Theater means already span all slots in [`strategic_fields_coupling_tick`](../../src/strategic/sim.rs); city **adaptive rebuild** now uses **peak** mean threat across active faction slots. Multi-slot strike queue remains future.
 - [x] **Experience layer (partial):** In-game HUD — strategic ops line, **compact strip**, congestion/EW overlay toggles ([`in_game_hud.rs`](../../src/gui/in_game_hud.rs), keybindings). Still open: command-table shell, inspector tray, corridor-centric context panel.
+- [ ] **Comms / belief (Stage-7):** plane-separated dispatch, encounter memory, belief vs command picture — product locks [`stage7_behavioral_world_designer_brief_v1.md`](stage7_behavioral_world_designer_brief_v1.md) (**BQ-114–115**); contracts [`legacy_cpp_repos_agent_communication_maps_v1.md`](legacy_cpp_repos_agent_communication_maps_v1.md) §8; pipeline draft [`base_behav_a.md`](base_behav_a.md); explainability hooks [`simulation_explainability_runbook_v1.md`](simulation_explainability_runbook_v1.md).
+- [ ] **Utility mask authoring:** one owner per channel + registry legend — [`stage7_behavioral_world_designer_brief_v1.md`](stage7_behavioral_world_designer_brief_v1.md) §5 (**BQ-116**); editor/registry path [`map_editor_runbook_v1.md`](map_editor_runbook_v1.md); legacy art notes [`legacy_cpp_repos_agent_communication_maps_v1.md`](legacy_cpp_repos_agent_communication_maps_v1.md) §4.2 / §8.6; Wave **S** RON registries.
 
 When a row closes, reference the **runbook round** or **integration test** name in the PR / commit message.

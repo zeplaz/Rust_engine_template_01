@@ -6,6 +6,7 @@ use super::minimap::world_preview_minimap;
 use super::preview_render_contract::PreviewCameraState;
 use super::texture_cache::WorldPreviewTexture;
 use super::ui_sidebar::world_preview_sidebar;
+use super::registry_inspector::world_preview_registry_inspector;
 use super::ui_statusbar::world_preview_status_bar;
 use super::ui_toolbar::world_preview_toolbar;
 use super::viewport::EditorViewport;
@@ -28,6 +29,7 @@ pub fn display_world_preview(
     mut viewport: ResMut<EditorViewport>,
     handles: Res<TerrainRegistriesHandles>,
     tag_assets: Res<Assets<crate::terrain::material::TagRegistry>>,
+    material_assets: Res<Assets<crate::terrain::material::MaterialRegistry>>,
     mobility_assets: Res<Assets<crate::terrain::mobility::MobilityProfileRegistry>>,
     mut last_tex: Local<(u32, u32)>,
     mut egui_tex_cache: Local<Option<(Handle<Image>, egui::TextureId)>>,
@@ -114,6 +116,14 @@ pub fn display_world_preview(
                                     &handles,
                                     &tag_assets,
                                     &mobility_assets,
+                                    pal,
+                                    sp,
+                                );
+                                world_preview_registry_inspector(
+                                    ui,
+                                    &handles,
+                                    &material_assets,
+                                    &tag_assets,
                                     pal,
                                     sp,
                                 );

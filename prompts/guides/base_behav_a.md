@@ -1,3 +1,15 @@
+# Fractional behavioral simulation — draft runbook
+
+**Status:** Pending — promote to `base_behav_runbook_v1.md` with execution rounds + `cargo test` gates.
+
+**Parent (target):** [`simulation_expansion_orchestrator_v1.md`](simulation_expansion_orchestrator_v1.md) agent / belief layers · [`strategic_fields_and_ai_orchestrator_v1.md`](strategic_fields_and_ai_orchestrator_v1.md)
+
+**Archive / contracts:** [`legacy_cpp_repos_agent_communication_maps_v1.md`](legacy_cpp_repos_agent_communication_maps_v1.md) §8 · [`base_ai_runbook_draft.md`](base_ai_runbook_draft.md)
+
+**Explainability:** [`simulation_explainability_runbook_v1.md`](simulation_explainability_runbook_v1.md)
+
+---
+
 Below is your Fractional Behavioral Simulation v1 Runbook — written to plug directly into your existing engine style (U7 / terrain runbooks / ECS-first architecture), but focused on agents + statistical fields + faction fracture + emergent conflict.
 
 This is intentionally structured as execution steps, not theory, so it can become PR-sized work.

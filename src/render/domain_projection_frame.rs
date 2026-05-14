@@ -130,6 +130,13 @@ pub fn merge_domain_projection_into_representation(
         .active_rows
         .min(policy.gpu_budget.particle_rows_cap as u32) as usize;
     policy.gpu_budget.particle_rows_cap = particle_cap;
+    if projection.ecology.active_rows > 0 {
+        policy.overlay_policy.fire_heat = true;
+    }
+    if projection.logistics.active_rows > 0 {
+        policy.visibility.pathfinding_field = policy.visibility.pathfinding_field
+            || projection.logistics.active_rows > 0;
+    }
 }
 
 pub struct DomainProjectionFramePlugin;

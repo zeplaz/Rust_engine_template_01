@@ -354,6 +354,15 @@ Each outline:
 
 When authoring a per-system runbook, the agent **may cite outlines under "non-authoritative"** but **must not** copy outline values into invariants or step `Touch` lists.
 
+### 13b. External reference archives (read-only trees)
+
+When mining **read-only** codebases outside this repo (legacy C++, abandoned prototypes):
+
+- Park **file inventory** in companion `_*_file_inventory.txt` lists; keep the orchestrator/runbook body focused on **contracts** and **anti-patterns**.
+- Separate **A** (architectural extraction), **I** (inventoried only), and **X** (build/vendor/artifact) in a completeness section.
+- Link forward to **program tracks** (e.g. Wave S/P/C, visual spine, Stage-7) instead of inventing implementation in the archive doc.
+- Canonical example: [`legacy_cpp_repos_agent_communication_maps_v1.md`](legacy_cpp_repos_agent_communication_maps_v1.md).
+
 ---
 
 ## 14. Per-system authoring workflow (the agent's loop)

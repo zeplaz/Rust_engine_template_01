@@ -4,11 +4,11 @@
 
 **Parent:** [`experience_layer_orchestrator_v1.md`](experience_layer_orchestrator_v1.md) → [`simulation_expansion_orchestrator_v1.md`](simulation_expansion_orchestrator_v1.md)
 
-**Related:** [`ui_boundary_guide_v1.md`](ui_boundary_guide_v1.md), [`gui_runbook_v1.md`](gui_runbook_v1.md), [`camera_map_navigation_runbook_v1.md`](camera_map_navigation_runbook_v1.md), [`strategic_overlay_runbook_v1.md`](strategic_overlay_runbook_v1.md)
+**Related:** [`ui_boundary_guide_v1.md`](ui_boundary_guide_v1.md), [`gui_runbook_v1.md`](gui_runbook_v1.md), [`camera_map_navigation_runbook_v1.md`](camera_map_navigation_runbook_v1.md), [`strategic_overlay_runbook_v1.md`](strategic_overlay_runbook_v1.md), [`experience_layer_ux_hud_designer_brief_v1.md`](experience_layer_ux_hud_designer_brief_v1.md) (**BQ-119+**)
 
 **Source draft:** [`base_ui_direction_principls.md`](base_ui_direction_principls.md) *(historical filename: “principles” spelling)*
 
-Version: `v1.0.0`
+Version: `v1.0.1`
 
 ---
 
@@ -121,3 +121,11 @@ Bind inputs through [`InputBindings`](../../src/gui/input_bindings.rs) per [`cam
 ## 9. Long-term goal
 
 Players **operate** infrastructure — war, ecology, logistics — **through** the map and fields, with **minimal** structural HUD weight.
+
+---
+
+## 10. UX engineering roadmap (post Stage-5 EXIT)
+
+Authoritative detail: [`experience_layer_ux_hud_designer_brief_v1.md`](experience_layer_ux_hud_designer_brief_v1.md) — **BQ-119–123**.
+
+**Order:** Stage-5 stabilization → GPU minimap (**UX-1**) → construction blueprint (**UX-4**) → detached HUD (**UX-2**) → transmission widget (**UX-3**) → overlay + command shell (**UX-5** / **UX-6**) → campaign transmission scripting.

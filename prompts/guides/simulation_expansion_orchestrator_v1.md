@@ -2,7 +2,7 @@
 
 > **STATUS:** Draft **v1** — **live index** for simulation layers, ownership, and cross-links. Some domains still use placeholder step packs; treat this file as the **umbrella** and follow per-domain matrices + [`strategic_program_execution_plan_v1.md`](strategic_program_execution_plan_v1.md) for execution order.
 
-Version: `v1.0.3`  
+Version: `v1.0.4`  
 Audience: agents and leads wiring **ontology → simulation execution**.
 
 **Coding (P2 sites + construction):** Read [`infrastructure_and_research_orchestrator_v1.md`](infrastructure_and_research_orchestrator_v1.md) **§6** — pairs this umbrella with **IX** territorial canon and **I1** construction runbook (aligned §10 state machine).
@@ -39,6 +39,8 @@ Formalize **simulation ownership**, **system layering**, **execution ordering**,
 | **Industry** | Production + consumption | Recipes, throughput, batches |
 | **Logistics** | Movement + throughput | Convoys, queues, capacity |
 | **Agent layer** | Local incidents + events | ECS agents, incident messages |
+| **Communications** | Plane-separated command + line + hub traffic | Typed dispatch queues, `SimStepStamp` delivery |
+| **Belief / intel** | Per-actor picture vs world truth | Agent belief maps, stale intel, command estimates |
 | **Strategic field** | Large-scale pressure / flow | Statistical fields, LOD2 |
 | **Damage / decay** | Degradation | Integrity, maintenance |
 | **Weather / climate** | Environmental forcing | Climate → regional → chunk weather |
@@ -110,7 +112,12 @@ For **100k+ field entities** and **large worlds**, chunk-local **FixedUpdate** s
 | Strategic fields + AI (overlays, corridors, logistics/settlement/city AI, operational AI) | [`strategic_fields_and_ai_orchestrator_v1.md`](strategic_fields_and_ai_orchestrator_v1.md) |
 | Infrastructure + research (construction, resilience, capability ecosystem) | [`infrastructure_and_research_orchestrator_v1.md`](infrastructure_and_research_orchestrator_v1.md) |
 | Experience layer (HUD direction, GUI, camera) | [`experience_layer_orchestrator_v1.md`](experience_layer_orchestrator_v1.md) |
+| UX/HUD designer locks (minimap, transmission, construction) | [`experience_layer_ux_hud_designer_brief_v1.md`](experience_layer_ux_hud_designer_brief_v1.md) |
 | Doctrine ↔ sim acceptance | [`doctrine_simulation_alignment_runbook_v1.md`](doctrine_simulation_alignment_runbook_v1.md) |
+| Behavior / comms archive → Stage-7 contracts | [`legacy_cpp_repos_agent_communication_maps_v1.md`](legacy_cpp_repos_agent_communication_maps_v1.md) §8 |
+| Stage-7 designer locks (MVP, gates, ownership) | [`stage7_behavioral_world_designer_brief_v1.md`](stage7_behavioral_world_designer_brief_v1.md) |
+| Fractional behavior draft | [`base_behav_a.md`](base_behav_a.md) |
+| Explainability (L7) | [`simulation_explainability_runbook_v1.md`](simulation_explainability_runbook_v1.md) |
 
 | Child runbook | Parent orchestrator |
 |:---|:---|

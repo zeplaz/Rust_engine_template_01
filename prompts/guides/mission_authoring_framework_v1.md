@@ -2,8 +2,8 @@
 
 > **PURPOSE:** **L6** — campaigns manipulate **pressures, biases, constraints, relationships** — not hardcoded cinematic scripts. Sim produces consequences; missions **inject** operational conditions.
 
-**Version:** v1.0.0  
-**See also:** `developmental_ux_runbook_v1.md` (UX-5), `strategic_program_execution_plan_v1.md`, behavior / pressure docs.
+**Version:** v1.0.1  
+**See also:** `developmental_ux_runbook_v1.md` (UX-5), `strategic_program_execution_plan_v1.md`, behavior / pressure docs, [`stage7_behavioral_world_designer_brief_v1.md`](stage7_behavioral_world_designer_brief_v1.md) §10 (**BQ-117** acceptance fixtures).
 
 ---
 
@@ -43,6 +43,16 @@
 1. Schema: `MissionPressure` + binding to existing `PressureField` / mission components.
 2. Editor panel: inject, preview, diff against baseline world snapshot.
 3. Player: optional **briefing strip** summarizing active mission pressures (interpreted, not raw).
+
+### Acceptance fixtures (Stage-7 slice — **BQ-117**)
+
+| Fixture | Validates |
+|:---|:---|
+| Named scenario RON | pressure injection + mission load |
+| Overlay snapshot | field ownership + channel agreement |
+| Dispatch timeline | delay + queue ordering |
+| Explainability report | contributor buckets (recon, logistics, EW, doctrine, terrain, mission pressure) |
+| Golden replay | deterministic replay + explainability record |
 
 ---
 

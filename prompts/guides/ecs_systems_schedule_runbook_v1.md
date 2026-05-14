@@ -95,3 +95,6 @@ Update the table in `runbook/README.md` when a phase completes.
 | [`transport_code_implementation_plan_v1.md`](../designer_questions/transport/transport_code_implementation_plan_v1.md) | **W1–W5** after **S1** |
 | [`rulebook_drafts.md`](../designer_questions/transport/rulebook_drafts.md) | Logical sim schedule (topology → field → cost) |
 | [`../matrix/transport/road_rail_migration_matrix_v1.md`](../matrix/transport/road_rail_migration_matrix_v1.md) | R1–R10 gates |
+| [`strategic_fields_and_ai_orchestrator_v1.md`](strategic_fields_and_ai_orchestrator_v1.md) | [`StrategicFieldPipeline`](../../src/strategic/plugin.rs) ordering vs transport |
+| [`base_visual_world_representation_v1.md`](base_visual_world_representation_v1.md) | Atmosphere / fire visual schedule vs sim tick |
+| [`legacy_cpp_repos_agent_communication_maps_v1.md`](legacy_cpp_repos_agent_communication_maps_v1.md) §8.4 | Future **message-dispatch** system set (resource-owned queues; no second game loop) |

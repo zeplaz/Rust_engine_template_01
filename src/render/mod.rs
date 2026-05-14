@@ -25,6 +25,7 @@ mod logistics_visual_snapshot;
 mod ecology_visual_snapshot;
 mod visual_domain_snapshots;
 mod phase_f_lod_proof;
+mod stage6_virtualization;
 mod stage5_readiness;
 mod vt_app_integration;
 mod vt_ci_matrix;
@@ -89,6 +90,10 @@ pub use visual_domain_snapshots::{
     publish_ecology_visual_snapshot, publish_logistics_visual_snapshot,
 };
 pub use phase_f_lod_proof::{PhaseFLodProofPlugin, PhaseFLodProofReport};
+pub use stage6_virtualization::{
+    gather_stage6_readiness, stage6_readiness_passes, AsyncDomainApplyQueue, PagedAtlasResidency,
+    RuntimeAtlasSlot, Stage6ReadinessReport, Stage6VirtualizationFrame, Stage6VirtualizationPlugin,
+};
 pub use stage5_readiness::{
     evaluate_app_stage5_readiness, evaluate_stage5_spine_checklist, stage5_readiness_passes,
     AppStage5ReadinessReport, Stage5ReadinessPlugin, Stage5ReadinessProfile, Stage5SpineChecklist,

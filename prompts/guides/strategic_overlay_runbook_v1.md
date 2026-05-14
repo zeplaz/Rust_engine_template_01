@@ -4,7 +4,7 @@
 
 **Parent:** [`strategic_fields_and_ai_orchestrator_v1.md`](strategic_fields_and_ai_orchestrator_v1.md) → [`simulation_expansion_orchestrator_v1.md`](simulation_expansion_orchestrator_v1.md)
 
-**Related:** [`terrain_unification_runbook_v1.md`](terrain_unification_runbook_v1.md), [`weather_simulation_runbook_v1.md`](weather_simulation_runbook_v1.md), [`fire_ecology_simulation_runbook_v1.md`](fire_ecology_simulation_runbook_v1.md), [`chunk_scheduler_runbook_v1.md`](chunk_scheduler_runbook_v1.md), [`ui_operational_direction_runbook_v1.md`](ui_operational_direction_runbook_v1.md)
+**Related:** [`terrain_unification_runbook_v1.md`](terrain_unification_runbook_v1.md), [`weather_simulation_runbook_v1.md`](weather_simulation_runbook_v1.md), [`fire_ecology_simulation_runbook_v1.md`](fire_ecology_simulation_runbook_v1.md), [`chunk_scheduler_runbook_v1.md`](chunk_scheduler_runbook_v1.md), [`ui_operational_direction_runbook_v1.md`](ui_operational_direction_runbook_v1.md), [`base_visual_world_representation_v1.md`](base_visual_world_representation_v1.md), [`legacy_cpp_repos_agent_communication_maps_v1.md`](legacy_cpp_repos_agent_communication_maps_v1.md) §8.6
 
 **Source draft:** [`base_ai_runbook_draft.md`](base_ai_runbook_draft.md) (archived bundle)
 
@@ -22,7 +22,7 @@ Sequential delivery: finish round *N* before starting *N+1* for this runbook.
 | **R2** | `LogisticsGraph` → per-cell `logistics_throughput` / `logistics_strength` inject | `cargo test -p proc_A_dine01 strategic::logistics_net::tests::logistics_edge_injects_throughput_at_anchors` |
 | **R3** | Disruption drives effective flow to zero (coupling contract) | `cargo test -p proc_A_dine01 strategic::logistics_net::tests::logistics_full_disruption_zeroes_injection` |
 | **R4** | Faction-slot threat / recon / artillery writers on [`ChunkStrategicOverlay`](../../src/strategic/mod.rs) | `cargo test -p proc_A_dine01 strategic::plugin::tests::strategic_overlay_round4_faction_field_writes` |
-| **R5+** | Further field owners, EW, UX toggles | `cargo test -p proc_A_dine01 strategic::` (full strategic gate) |
+| **R5+** | Further field owners, EW, UX toggles, **utility-mask channel registry** | `cargo test -p proc_A_dine01 strategic::` (full strategic gate) |
 
 **Code:** [`ChunkStrategicOverlay`](../../src/strategic/mod.rs), [`StrategicFieldsPlugin`](../../src/strategic/plugin.rs), [`logistics_net_inject_into_overlays`](../../src/strategic/logistics_net.rs).
 

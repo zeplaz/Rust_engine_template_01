@@ -44,8 +44,9 @@ pub use incremental_schedule::{
     expand_diffusion_region, mirror_partial_write_metrics, weather_fire_field_full_texture_bytes,
 };
 pub use field_page_residency::{
-    sync_atmosphere_field_page_residency, AtmosphereFieldPage, AtmosphereFieldResidencyTable,
-    AtmospherePageEntry, ATMOSPHERE_FIELD_CHUNKS_PER_PAGE,
+    sync_atmosphere_field_page_residency, sync_atmosphere_field_page_table, AtmosphereFieldPage,
+    AtmosphereFieldPageTable, AtmosphereFieldResidencyTable, AtmospherePageEntry,
+    ATMOSPHERE_FIELD_CHUNKS_PER_PAGE,
 };
 pub use pipeline::{configure_atmosphere_pipeline_sets, AtmospherePipelineSet};
 pub use render_layers::AtmosphereRenderLayers;

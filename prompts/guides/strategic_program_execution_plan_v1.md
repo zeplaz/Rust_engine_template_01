@@ -2,7 +2,7 @@
 
 > **STATUS:** Draft **v1** — **recommended start order** across orchestrators and new runbooks.
 
-Version: `v1.0.3`  
+Version: `v1.0.5`  
 Parent index: [`simulation_expansion_orchestrator_v1.md`](simulation_expansion_orchestrator_v1.md)
 
 **Orchestrators:**
@@ -43,8 +43,9 @@ Parent index: [`simulation_expansion_orchestrator_v1.md`](simulation_expansion_o
 - **Track A (sim):** P1 → P2 → P3 → P4 following [`strategic_fields_and_ai_orchestrator_v1.md`](strategic_fields_and_ai_orchestrator_v1.md).
 - **Track B (infra/research):** P2 ↔ P8 design in lockstep; implementation weight shifts to P8 after [`concrete_industry_sim_runbook_v1.md`](concrete_industry_sim_runbook_v1.md) / [`petroleum_industry_simulation_runbook_v1.md`](petroleum_industry_simulation_runbook_v1.md) mature enough to feed **institutions** and **production maturity**.
 - **Track C (UX):** P0 continuous; revisit when each overlay milestone ships (inspectors, toggles, visual language).
-
----
+- **Track D (persistence / preview / streaming):** [`backlog_serialization_preview_streaming_runbook_v1.md`](backlog_serialization_preview_streaming_runbook_v1.md) **S → P → C** — lock save wire format and preview/streaming contracts before scaling overlay and belief consumers.
+- **Track E (visual spine):** [`base_visual_world_representation_v1.md`](base_visual_world_representation_v1.md) + [`base_visual_dev01_plan_status.md`](base_visual_dev01_plan_status.md) — representation authority, GPU field spine, VT discipline.
+- **Track F (behavior / comms graph — Stage-7):** [`legacy_cpp_repos_agent_communication_maps_v1.md`](legacy_cpp_repos_agent_communication_maps_v1.md) §8 + [`base_behav_a.md`](base_behav_a.md) — typed dispatch, belief gap, utility masks; **after** Track D **C** and Track E EXIT clauses for streamable fields.
 
 ## 4. “Start next” — current phase
 
@@ -58,4 +59,6 @@ Parent index: [`simulation_expansion_orchestrator_v1.md`](simulation_expansion_o
 
 **Adjacent product loops (non-blocking):** map editor **M1–M5** applied — see [`map_editor_runbook_v1.md`](map_editor_runbook_v1.md) §4; terrain preview **P** wave (`NoiseSamplingTuning` seed offsets) — see [`composite_style_preview_integration_matrix_v1.md`](../matrix/terrain_biome/composite_style_preview_integration_matrix_v1.md).
 
-> **Document history:** `v1.0.3` (2026-05-10) — §4: P2 points to I1 §10 + territorial IX alignment; infra orchestrator §6 coding kickoff; orchestrator pair called out. `v1.0.2` — §4 expanded: P1 partial vs P2 structural next; adjacent editor/preview pointers. `v1.0.1` — §4 after P1 landing + S2 consumer.
+**Parallel tracks (non-blocking but ordered):** **Track D** **S → P → C** per [`backlog_serialization_preview_streaming_runbook_v1.md`](backlog_serialization_preview_streaming_runbook_v1.md); **Track E** visual spine per [`base_visual_world_representation_v1.md`](base_visual_world_representation_v1.md); **Track F** behavior/comms contracts per [`stage7_behavioral_world_designer_brief_v1.md`](stage7_behavioral_world_designer_brief_v1.md) + [`legacy_cpp_repos_agent_communication_maps_v1.md`](legacy_cpp_repos_agent_communication_maps_v1.md) §8 — do not treat Stage-7 dispatch/belief as production-ready until **C** ghost bands and representation EXIT are met.
+
+> **Document history:** `v1.0.5` (2026-05-14) — Track F cites [`stage7_behavioral_world_designer_brief_v1.md`](stage7_behavioral_world_designer_brief_v1.md). `v1.0.4` (2026-05-14) — §3 Tracks D–F; §4 parallel-track ordering note. `v1.0.3` (2026-05-10) — §4: P2 points to I1 §10 + territorial IX alignment; infra orchestrator §6 coding kickoff; orchestrator pair called out. `v1.0.2` — §4 expanded: P1 partial vs P2 structural next; adjacent editor/preview pointers. `v1.0.1` — §4 after P1 landing + S2 consumer.

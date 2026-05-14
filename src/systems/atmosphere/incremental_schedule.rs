@@ -7,7 +7,11 @@ use std::collections::HashMap;
 
 use bevy::prelude::*;
 
-use super::field_page_residency::{sync_atmosphere_field_page_residency, AtmosphereFieldResidencyTable};
+use super::field_page_residency::{
+    sync_atmosphere_field_page_residency, sync_atmosphere_field_page_table,
+    AtmosphereFieldPageTable, AtmosphereFieldResidencyTable,
+    ATMOSPHERE_FIELD_CHUNKS_PER_PAGE,
+};
 
 use crate::render::gpu_weather_fire_field::{WeatherFireFieldTextures, WEATHER_FIRE_FIELD_SIZE};
 use crate::systems::sim_control::SimStepStamp;
@@ -94,6 +98,7 @@ pub struct AtmospherePartialWriteMetrics {
     pub full_field_dispatch_count: u32,
     pub full_field_fallback_active: bool,
     pub atlas_skip_count: u32,
+    pub resident_dirty_page_count: u32,
     pub last_partial_stamp: SimStepStamp,
     pub last_full_reconcile_stamp: SimStepStamp,
 }
@@ -193,6 +198,7 @@ pub fn register_atmosphere_incremental_schedule(app: &mut App) {
         .init_resource::<AtmosphereGpuFieldBridge>()
         .init_resource::<AtmosphereFieldAtlasCenter>()
         .init_resource::<AtmosphereFieldResidencyTable>()
+        .init_resource::<AtmosphereFieldPageTable>()
         .init_resource::<AtmospherePartialWriteMetrics>()
         .add_systems(
             Update,
@@ -200,7 +206,8 @@ pub fn register_atmosphere_incremental_schedule(app: &mut App) {
                 enqueue_atmosphere_dirty_regions_from_fire,
                 sync_atmosphere_field_atlas_center,
                 sync_atmosphere_field_page_residency.after(sync_atmosphere_field_atlas_center),
-                build_partial_gpu_uploads_from_queue.after(sync_atmosphere_field_page_residency),
+                sync_atmosphere_field_page_table.after(sync_atmosphere_field_page_residency),
+                build_partial_gpu_uploads_from_queue.after(sync_atmosphere_field_page_table),
                 apply_partial_field_updates_tick,
                 prepare_atmosphere_partial_texture_writes,
                 atmosphere_reconcile_tick,
@@ -273,10 +280,27 @@ pub fn sync_atmosphere_field_atlas_center(
 pub fn build_partial_gpu_uploads_from_queue(
     queue: Res<AtmosphereDirtyRegionQueue>,
     atlas: Res<AtmosphereFieldAtlasCenter>,
+    residency: Res<AtmosphereFieldResidencyTable>,
     mut plan: ResMut<AtmospherePartialUploadPlan>,
     mut metrics: ResMut<AtmospherePartialWriteMetrics>,
 ) {
-    plan.uploads = build_partial_gpu_uploads(&queue.regions, atlas.origin_chunk);
+    let dirty_pages = residency.dirty_resident_pages();
+    metrics.resident_dirty_page_count = dirty_pages.len() as u32;
+    let filtered_regions: Vec<_> = if dirty_pages.is_empty() {
+        queue.regions.clone()
+    } else {
+        queue
+            .regions
+            .iter()
+            .copied()
+            .filter(|region| {
+                dirty_pages.iter().any(|page| {
+                    dirty_region_overlaps_page(*region, page.page_coord)
+                })
+            })
+            .collect()
+    };
+    plan.uploads = build_partial_gpu_uploads(&filtered_regions, atlas.origin_chunk);
     metrics.atlas_skip_count = metrics.atlas_skip_count.saturating_add(
         queue
             .regions
@@ -285,14 +309,24 @@ pub fn build_partial_gpu_uploads_from_queue(
             .filter(|region| partial_upload_for_region(*region, atlas.origin_chunk).is_none())
             .count() as u32,
     );
-    metrics.dirty_region_count = queue.regions.len() as u32;
-    metrics.dirty_cell_count = queue
-        .regions
+    metrics.dirty_region_count = filtered_regions.len() as u32;
+    metrics.dirty_cell_count = filtered_regions
         .iter()
         .copied()
         .map(dirty_region_cell_count)
         .sum();
     metrics.full_field_texture_bytes = weather_fire_field_full_texture_bytes();
+}
+
+#[must_use]
+fn dirty_region_overlaps_page(region: AtmosphereDirtyRegion, page_coord: IVec2) -> bool {
+    let span = ATMOSPHERE_FIELD_CHUNKS_PER_PAGE.max(1);
+    let page_min = page_coord * span;
+    let page_max = page_min + IVec2::new(span - 1, span - 1);
+    region.min.x <= page_max.x
+        && region.max.x >= page_min.x
+        && region.min.y <= page_max.y
+        && region.max.y >= page_min.y
 }
 
 pub fn prepare_atmosphere_partial_texture_writes(
@@ -550,6 +584,18 @@ mod tests {
         assert!(field.cells.contains_key(&IVec2::new(4, 4)));
         assert!(field.cells.contains_key(&IVec2::new(3, 4)));
         assert!(field.cells.contains_key(&IVec2::new(5, 4)));
+    }
+
+    #[test]
+    fn dirty_region_overlaps_resident_page_span() {
+        let region = AtmosphereDirtyRegion {
+            min: IVec2::new(0, 0),
+            max: IVec2::new(1, 1),
+            stamp: SimStepStamp::new(1, 0),
+            mean_heat: 0.5,
+        };
+        assert!(dirty_region_overlaps_page(region, IVec2::ZERO));
+        assert!(!dirty_region_overlaps_page(region, IVec2::new(4, 0)));
     }
 
     #[test]

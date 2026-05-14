@@ -38,6 +38,7 @@ use super::map_camera::{MapCameraDesired, MapCameraMode, MapCameraSettings};
 use super::representation_policy::RepresentationResult;
 use super::view_representation::{camera_owner_label, ActiveCameraOwner, CameraOwner, CameraVisualState};
 use super::world_representation::{WorldLodBand, WorldRepresentationFrame};
+use crate::render::stage5_readiness_passes;
 use crate::render::GpuRepresentationMetrics;
 use super::{CmdUiMonoFont, UiPalette};
 
@@ -744,6 +745,7 @@ fn update_ops_strip_map_camera_line(
                 u32,
             ),
             (u32, u8, u32, u32, u32, u32),
+            (u8, u8, u8, u8, u8),
         )>,
     >,
 ) {
@@ -829,13 +831,22 @@ fn update_ops_strip_map_camera_line(
         fire_gpu_kb,
         overlay_gpu_kb,
     );
-    if fp_cache.as_ref() == Some(&(fp_a, fp_b0, fp_b1)) {
+    let fp_s5 = readiness.as_deref().map_or((0u8, 0, 0, 0, 0), |r| {
+        (
+            stage5_readiness_passes(r) as u8,
+            r.vt4_ok as u8,
+            r.vt5_ok as u8,
+            r.phase_d_ok as u8,
+            r.phase_f_ok as u8,
+        )
+    });
+    if fp_cache.as_ref() == Some(&(fp_a, fp_b0, fp_b1, fp_s5)) {
         return;
     }
-    *fp_cache = Some((fp_a, fp_b0, fp_b1));
+    *fp_cache = Some((fp_a, fp_b0, fp_b1, fp_s5));
 
     let line = format!(
-        "MAP  {}  edge {}  zoom {:.2}  yaw {:.1}°  |  CAM:{}  zα {:.2}  s{:02}c{:02}  |  LOD:{} fc{},{} r{} tick{}  |  REP:lod={} fire_gpu={}kb overlay_gpu={}kb partial_disp={} full_fallback={} dup_extract={} atlas_skip={} stamp={} rev={} draw={}",
+        "MAP  {}  edge {}  zoom {:.2}  yaw {:.1}°  |  CAM:{}  zα {:.2}  s{:02}c{:02}  |  LOD:{} fc{},{} r{} tick{}  |  REP:lod={} fire_gpu={}kb overlay_gpu={}kb partial_disp={} full_fallback={} dup_extract={} atlas_skip={} stamp={} rev={} draw={}  |  S5:{} vt4={} vt5={} ph_d={} ph_f={}",
         settings.mode.label(),
         if settings.edge_scroll_enabled {
             "on"
@@ -863,6 +874,11 @@ fn update_ops_strip_map_camera_line(
         policy.stamp.tick,
         overlay.fire_heat_overlay_revision,
         gpu_metrics.draw_instances,
+        fp_s5.0,
+        fp_s5.1,
+        fp_s5.2,
+        fp_s5.3,
+        fp_s5.4,
     );
     for mut t in q_map.iter_mut() {
         *t = Text::new(line.clone());

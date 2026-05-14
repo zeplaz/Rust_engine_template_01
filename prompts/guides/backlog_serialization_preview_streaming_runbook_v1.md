@@ -78,7 +78,7 @@ Every backlog step reads:
 
 **Open item:** `TileStorage` diff update contract — **BQ-101** in [`rulebook_backlog_designer_brief_v1.md`](rulebook_backlog_designer_brief_v1.md) §4.
 
----
+**Downstream:** Wave **C** ghost bands and stable chunk residency are prerequisites for **streamable** comms, belief fields, and utility-mask LOD in [`stage7_behavioral_world_designer_brief_v1.md`](stage7_behavioral_world_designer_brief_v1.md), [`legacy_cpp_repos_agent_communication_maps_v1.md`](legacy_cpp_repos_agent_communication_maps_v1.md) §8, and [`strategic_program_execution_plan_v1.md`](strategic_program_execution_plan_v1.md) Track F.
 
 ## 7. Prompt fragment
 

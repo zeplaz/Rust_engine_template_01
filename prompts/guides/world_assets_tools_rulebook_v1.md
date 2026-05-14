@@ -79,6 +79,8 @@ If smoke differs between the two commands, treat it as a **parity defect** and f
 | [`bevy_asset_terrain_runbook_v1.md`](bevy_asset_terrain_runbook_v1.md) | Asset / loader policy |
 | [`system_runbook_authoring_meta_v1.md`](system_runbook_authoring_meta_v1.md) | Template for sibling rulebooks |
 | [`ui_boundary_guide_v1.md`](ui_boundary_guide_v1.md) | UI/plugin boundaries (update when subengine vs canonical split changes) |
+| [`legacy_cpp_repos_agent_communication_maps_v1.md`](legacy_cpp_repos_agent_communication_maps_v1.md) | Utility / mask channel vocabulary for registries |
+| [`map_editor_runbook_v1.md`](map_editor_runbook_v1.md) | Future mask authoring in editor snapshots |
 
 ---
 

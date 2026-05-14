@@ -76,6 +76,9 @@ impl Plugin for EnginePlugin {
             .add_plugins(ScenarioScriptingPlugin);
         configure_chunk_environment_sets(app);
         app.add_plugins(ChunkEnvironmentPersistPlugin)
+            .add_plugins(crate::io::save::WorldSaveSpinePlugin)
+            .add_plugins(crate::io::streaming::StreamingSpinePlugin)
+            .add_plugins(crate::render::Stage6VirtualizationPlugin)
             .add_plugins(ChunkSimLodPlugin)
             .add_plugins(FirePlugin)
             .add_plugins(EcologyPlugin)
@@ -151,6 +154,7 @@ impl Plugin for EnginePlugin {
         // World preview GPU offscreen camera (`gpu_preview.rs`) only when full renderer is present.
         app.insert_resource(WorldPreviewGpuRuntime {
             offscreen_renderer_ready: true,
+            ..default()
         });
 
         info!(

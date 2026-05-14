@@ -41,7 +41,8 @@ These lift **meta-runbook §5** defaults, plus **map-editor-specific** rows from
 4. **Saves use names, not raw runtime ids** (meta §4). Snapshot DTOs use **material/biome names** or stable string keys agreed with [`serialization_hybrid_migration_matrix_v1.md`](../matrix/serialization/serialization_hybrid_migration_matrix_v1.md).
 5. **Hot-reload:** designer-edited **assets** still flow through `Assets<T>`; editor **does not** add a second file-watcher mutation path for tile height.
 6. **`ASK:` instead of inventing** paths, numeric tuning, or new states when the matrix marks a dependency unresolved.
-7. **egui in editor:** runtime panels are **`TEMP-EGUI`** until [`gui_runbook_v1.md`](gui_runbook_v1.md) signs off Bevy UI replacement — label new panels in code/comments per GUI runbook §1.
+7. **Utility / mask layers** (authoring): stable channel ids + serialized legend (RON per `AGENTS.md`); do not runtime-parse ad hoc RGB from gameplay code — see [`legacy_cpp_repos_agent_communication_maps_v1.md`](legacy_cpp_repos_agent_communication_maps_v1.md) §4.2 / §8.6 and [`strategic_overlay_runbook_v1.md`](strategic_overlay_runbook_v1.md) **R5+**.
+8. **egui in editor:** runtime panels are **`TEMP-EGUI`** until [`gui_runbook_v1.md`](gui_runbook_v1.md) signs off Bevy UI replacement — label new panels in code/comments per GUI runbook §1.
 
 ---
 
@@ -151,6 +152,8 @@ Mirrors [`map_editor_matrix_v1.md`](../matrix/map_editor/map_editor_matrix_v1.md
 | [`gap_remediation_runbook_v1.md`](gap_remediation_runbook_v1.md) | G4 serialization when **M5** touches saves |
 | [`../designer_questions/map_editor/m1_execution_questions_v1.md`](../designer_questions/map_editor/m1_execution_questions_v1.md) | Human `ASK:` queue for halts (M1 seed doc; add M2+ siblings as phases run) |
 | [`scenario_campaign_scripted_tools_runbook_v1.md`](scenario_campaign_scripted_tools_runbook_v1.md) | **LoadMapSnapshot** script steps consume **M5** snapshots inside scenario editor tooling |
+| [`legacy_cpp_repos_agent_communication_maps_v1.md`](legacy_cpp_repos_agent_communication_maps_v1.md) | Hit/utility mask vocabulary for future editor channels |
+| [`world_assets_tools_rulebook_v1.md`](world_assets_tools_rulebook_v1.md) | Registry / tooling parity for mask assets |
 
 ### 8b. Paired terrain note
 

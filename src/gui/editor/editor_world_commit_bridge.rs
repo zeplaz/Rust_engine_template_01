@@ -19,6 +19,8 @@ use crate::terrain::generation::{
 use crate::terrain::material::{
     invalidate_world, ChunkDependency, ChunkDirty, InvalidationReason, WorldPreviewState, DIRTY_ALL,
 };
+use crate::io::save::DirtyChunkSaveQueue;
+use crate::io::save::RequestWorldSaveFlush;
 
 /// What changed in the map editor (for logging / future AI read models).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -102,6 +104,8 @@ pub fn editor_world_commit_to_simulation_system(
     mut events: MessageReader<EditorTileEditCommitted>,
     mut queue: ResMut<ChunkGenQueue>,
     mut preview: ResMut<WorldPreviewState>,
+    save_dirty: Option<ResMut<DirtyChunkSaveQueue>>,
+    save_flush: Option<MessageWriter<RequestWorldSaveFlush>>,
     mut chunk_access: ParamSet<(
         Query<&ChunkCellMatrix, With<ChunkDependency>>,
         Query<(&Chunk, &mut ChunkCellMatrix), With<ChunkDependency>>,
@@ -145,6 +149,14 @@ pub fn editor_world_commit_to_simulation_system(
 
     for coord in &merged {
         queue.push_editor_edit(*coord);
+    }
+    if let Some(mut save_dirty) = save_dirty {
+        for coord in &merged {
+            save_dirty.enqueue(*coord);
+        }
+        if let Some(mut save_flush) = save_flush {
+            save_flush.write(RequestWorldSaveFlush);
+        }
     }
     for coord in &merged {
         for (chunk, mut dirty) in chunk_access.p2().iter_mut() {

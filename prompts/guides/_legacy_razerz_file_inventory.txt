@@ -1,0 +1,657 @@
+.vscode\launch.json
+.vscode\settings.json
+.vscode\tasks.json
+data_extrn\DEFUL_file_list_texture.xml
+data_extrn\load_list.xml
+data_extrn\neil\boat01.obj
+data_extrn\neil\boat01.ply
+data_extrn\neil\build_fracute_cellz.blend
+data_extrn\neil\car01.mtl
+data_extrn\neil\car01.obj
+data_extrn\neil\car01.ply
+data_extrn\neil\car02.mtl
+data_extrn\neil\car02.obj
+data_extrn\neil\car02.ply
+data_extrn\neil\car03.mtl
+data_extrn\neil\car03.obj
+data_extrn\neil\car03.ply
+data_extrn\neil\filelistNEIL_obj.xml
+data_extrn\neil\rail_strate_base_01.blend
+data_extrn\neil\rail_strate_base_01.blend1
+data_extrn\neil\rail_strate_base_01.mtl
+data_extrn\neil\rail_strate_base_01.obj
+data_extrn\neil\textures\endesga-32-32x.png
+data_extrn\neil\Train_centerd_01.mtl
+data_extrn\neil\train01.mtl
+data_extrn\neil\train01.obj
+data_extrn\neil\train01.ply
+data_extrn\neil\tree03.obj
+data_extrn\neil\tree03.ply
+data_extrn\neil\tree04.obj
+data_extrn\neil\tree04.ply
+data_extrn\neil\VEHICLES01.blend
+data_extrn\readme.md
+data_extrn\ship_A3\boat_Base_2.1.obj
+data_extrn\ship_A3\boat_Base_2.obj
+data_extrn\ship_A3\boat_Base.obj
+data_extrn\ship_A3\boat_Base.ply
+data_extrn\ship_A3\boat_Base2.abc
+data_extrn\ship_A3\boat_Base2.dae
+data_extrn\ship_A3\boat_Base2.ply
+data_extrn\ship_A3\boat_Base2.x3d
+data_extrn\ship_A3\Material.001 Base Color.png
+data_extrn\ship_A3\othz\NormalMap_1.png
+data_extrn\ship_A3\othz\NormalMap.png
+data_extrn\ship_A3\othz\NormalMap(1).png
+data_extrn\ship_A3\othz\NormalMap(2).png
+data_extrn\ship_A3\othz\Ship_A3_DispMap_INVERT.png
+data_extrn\ship_A3\othz\Ship_A3_DispMap.png
+data_extrn\ship_A3\othz\Ship_A3_INVERT_NM.png
+data_extrn\ship_A3\othz\Ship_A3_NM.png
+data_extrn\ship_A3\othz\Ship_A3.05_hight_normal.png
+data_extrn\ship_A3\othz\Ship_A3.05_SM01.png
+data_extrn\ship_A3\othz\Ship_A3.05_SM02.png
+data_extrn\ship_A3\othz\Ship_A3.05_SM03.png
+data_extrn\ship_A3\othz\Ship_A3.05_SM04.png
+data_extrn\ship_A3\othz\SpecularMap.png
+data_extrn\ship_A3\othz\SpecularMap(1).png
+data_extrn\ship_A3\othz\SpecularMap(2).png
+data_extrn\ship_A3\othz\SpecularMap(3).png
+data_extrn\ship_A3\Ship_A3_DispMap_INVERT.bmp
+data_extrn\ship_A3\Ship_A3_DispMap.bmp
+data_extrn\ship_A3\Ship_A3.05_hight_normal.bmp
+data_extrn\ship_A3\Ship_A3.05_INVERT_NM.bmp
+data_extrn\ship_A3\Ship_A3.05_INVERT_NM.png
+data_extrn\ship_A3\Ship_A3.06_hight_normal.bmp
+data_extrn\ship_A3\ship_base_A03.5.bmp
+data_extrn\ship_A3\ship_base_txCORD_txu.bmp
+data_extrn\ship_A3\ship_base_txCORD.bmp
+data_extrn\text_display\base_text_display.xml
+data_extrn\train_with_teztu.mtl
+data_extrn\train_with_teztu.obj
+engine_openGL\cmake\FindFreetype.cmake
+engine_openGL\cmake\FindGLFW.cmake
+engine_openGL\cmake\FindGLM.cmake
+engine_openGL\CMakeLists.txt
+engine_openGL\installinfo\fresh_history_manual.txt
+engine_openGL\installinfo\SETUP.txt
+engine_openGL\oubaoun_razzwer\fresh_history_manual.txt
+engine_openGL\oubaoun_razzwer\NEIL_IMPORT\boat\boat.mtl
+engine_openGL\oubaoun_razzwer\NEIL_IMPORT\boat\boat.obj
+engine_openGL\oubaoun_razzwer\NEIL_IMPORT\boat\boat.ply
+engine_openGL\oubaoun_razzwer\NEIL_IMPORT\boat\duffy drawing screenshot.bmp
+engine_openGL\oubaoun_razzwer\NEIL_IMPORT\boat\orgburo header white.bmp
+engine_openGL\oubaoun_razzwer\NEIL_IMPORT\column6.obj
+engine_openGL\oubaoun_razzwer\NEIL_IMPORT\mountain.obj
+engine_openGL\oubaoun_razzwer\NEIL_IMPORT\title01.obj
+engine_openGL\oubaoun_razzwer\NEIL_IMPORT\tree02.obj
+engine_openGL\oubaoun_razzwer\NEIL_IMPORT\tree02.ply
+engine_openGL\oubaoun_razzwer\NEIL_IMPORT\tree02yellow.mtl
+engine_openGL\oubaoun_razzwer\NEIL_IMPORT\tree02yellow.obj
+engine_openGL\oubaoun_razzwer\NEIL_IMPORT\tree02yellow.ply
+engine_openGL\oubaoun_razzwer\NEIL_IMPORT\tree03.obj
+engine_openGL\oubaoun_razzwer\NEIL_IMPORT\tree03.ply
+engine_openGL\oubaoun_razzwer\NEIL_IMPORT\tree04.obj
+engine_openGL\oubaoun_razzwer\NEIL_IMPORT\tree04.ply
+engine_openGL\oubaoun_razzwer\NEIL_IMPORT\trophy01.obj
+engine_openGL\oubaoun_razzwer\NEIL_IMPORT\yellowpaper.bmp
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\basez\3rdparty\frame_to_video.cpp
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\basez\3rdparty\frame_to_video.hpp
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\basez\3rdparty\freetype2\config\ftconfig.h
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\basez\3rdparty\freetype2\config\ftheader.h
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\basez\3rdparty\freetype2\config\ftmodule.h
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\basez\3rdparty\freetype2\config\ftoption.h
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\basez\3rdparty\freetype2\config\ftstdlib.h
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\basez\3rdparty\freetype2\freetype.h
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\basez\3rdparty\freetype2\ft2build.h
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\basez\3rdparty\freetype2\ftadvanc.h
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\basez\3rdparty\freetype2\ftautoh.h
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\basez\3rdparty\freetype2\ftbbox.h
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\basez\3rdparty\freetype2\ftbdf.h
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\basez\3rdparty\freetype2\ftbitmap.h
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\basez\3rdparty\freetype2\ftbzip2.h
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\basez\3rdparty\freetype2\ftcache.h
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\basez\3rdparty\freetype2\ftcffdrv.h
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\basez\3rdparty\freetype2\ftchapters.h
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\basez\3rdparty\freetype2\ftcid.h
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\basez\3rdparty\freetype2\fterrdef.h
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\basez\3rdparty\freetype2\fterrors.h
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\basez\3rdparty\freetype2\ftgasp.h
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\basez\3rdparty\freetype2\ftglyph.h
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\basez\3rdparty\freetype2\ftgxval.h
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\basez\3rdparty\freetype2\ftgzip.h
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\basez\3rdparty\freetype2\ftimage.h
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\basez\3rdparty\freetype2\ftincrem.h
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\basez\3rdparty\freetype2\ftlcdfil.h
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\basez\3rdparty\freetype2\ftlist.h
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\basez\3rdparty\freetype2\ftlzw.h
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\basez\3rdparty\freetype2\ftmac.h
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\basez\3rdparty\freetype2\ftmm.h
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\basez\3rdparty\freetype2\ftmodapi.h
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\basez\3rdparty\freetype2\ftmoderr.h
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\basez\3rdparty\freetype2\ftotval.h
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\basez\3rdparty\freetype2\ftoutln.h
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\basez\3rdparty\freetype2\ftpfr.h
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\basez\3rdparty\freetype2\ftrender.h
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\basez\3rdparty\freetype2\ftsizes.h
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\basez\3rdparty\freetype2\ftsnames.h
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\basez\3rdparty\freetype2\ftstroke.h
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\basez\3rdparty\freetype2\ftsynth.h
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\basez\3rdparty\freetype2\ftsystem.h
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\basez\3rdparty\freetype2\fttrigon.h
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\basez\3rdparty\freetype2\ftttdrv.h
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\basez\3rdparty\freetype2\fttypes.h
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\basez\3rdparty\freetype2\ftwinfnt.h
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\basez\3rdparty\freetype2\ftxf86.h
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\basez\3rdparty\freetype2\t1tables.h
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\basez\3rdparty\freetype2\ttnameid.h
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\basez\3rdparty\freetype2\tttables.h
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\basez\3rdparty\freetype2\tttags.h
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\basez\3rdparty\freetype2\ttunpat.h
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\basez\3rdparty\LICENSE
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\basez\3rdparty\LICENSE_cppsubprocess
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\basez\3rdparty\sb7ktx.cpp
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\basez\3rdparty\sb7ktx.h
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\basez\3rdparty\stb_image.h
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\basez\3rdparty\subprocess.hpp
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\basez\data_formz_lib.hpp
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\basez\errorhandler.hpp
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\basez\gl_lib_z.hpp
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\basez\io_utilityz.cpp
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\basez\io_utilityz.hpp
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\basez\lenz.hpp
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\basez\mathII.hpp
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\basez\mathz.hpp
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\basez\opengl_utilityz.cpp
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\basez\opengl_utilityz.hpp
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\basez\rez_utility_lib.hpp
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\basez\shader_lib.cpp
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\basez\shader_lib.hpp
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\basez\sym_object.hpp
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\basez\texture.cpp
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\basez\texture.hpp
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\data_extrn\DEFUL_file_list_texture.xml
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\data_extrn\load_list.xml
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\data_extrn\neil\boat\boat.mtl
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\data_extrn\neil\boat\boat.obj
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\data_extrn\neil\boat\boat.ply
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\data_extrn\neil\boat\duffy drawing screenshot.bmp
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\data_extrn\neil\boat\orgburo header white.bmp
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\data_extrn\neil\column6.obj
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\data_extrn\neil\dog.obj
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\data_extrn\neil\mountain.obj
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\data_extrn\neil\title01.obj
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\data_extrn\neil\tree01.obj
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\data_extrn\neil\tree02.obj
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\data_extrn\neil\tree02.ply
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\data_extrn\neil\tree02yellow.mtl
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\data_extrn\neil\tree02yellow.obj
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\data_extrn\neil\tree02yellow.ply
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\data_extrn\neil\trophy01.obj
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\data_extrn\readme.md
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\data_extrn\ship_A3\boat_Base_2.1.obj
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\data_extrn\ship_A3\boat_Base_2.obj
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\data_extrn\ship_A3\boat_Base.obj
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\data_extrn\ship_A3\boat_Base.ply
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\data_extrn\ship_A3\boat_Base2.abc
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\data_extrn\ship_A3\boat_Base2.dae
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\data_extrn\ship_A3\boat_Base2.ply
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\data_extrn\ship_A3\boat_Base2.x3d
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\data_extrn\ship_A3\Material.001 Base Color.png
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\data_extrn\ship_A3\othz\NormalMap.png
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\data_extrn\ship_A3\othz\NormalMap(1).png
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\data_extrn\ship_A3\othz\NormalMap(2).png
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\data_extrn\ship_A3\othz\Ship_A3_DispMap_INVERT.png
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\data_extrn\ship_A3\othz\Ship_A3_DispMap.png
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\data_extrn\ship_A3\othz\Ship_A3_INVERT_NM.png
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\data_extrn\ship_A3\othz\Ship_A3_NM.png
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\data_extrn\ship_A3\othz\Ship_A3.05_hight_normal.png
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\data_extrn\ship_A3\othz\Ship_A3.05_SM01.png
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\data_extrn\ship_A3\othz\Ship_A3.05_SM02.png
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\data_extrn\ship_A3\othz\Ship_A3.05_SM03.png
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\data_extrn\ship_A3\othz\Ship_A3.05_SM04.png
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\data_extrn\ship_A3\othz\SpecularMap.png
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\data_extrn\ship_A3\othz\SpecularMap(1).png
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\data_extrn\ship_A3\othz\SpecularMap(2).png
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\data_extrn\ship_A3\othz\SpecularMap(3).png
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\data_extrn\ship_A3\Ship_A3_DispMap_INVERT.bmp
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\data_extrn\ship_A3\Ship_A3_DispMap.bmp
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\data_extrn\ship_A3\Ship_A3.05_hight_normal.bmp
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\data_extrn\ship_A3\Ship_A3.05_INVERT_NM.bmp
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\data_extrn\ship_A3\Ship_A3.05_INVERT_NM.png
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\data_extrn\ship_A3\Ship_A3.06_hight_normal.bmp
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\data_extrn\ship_A3\ship_base_A03.5.bmp
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\data_extrn\ship_A3\ship_base_txCORD_txu.bmp
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\data_extrn\ship_A3\ship_base_txCORD.bmp
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\data_extrn\text_display\base_text_display.xml
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\MCP_cmd\arrangments.cpp
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\MCP_cmd\arrangments.hpp
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\MCP_cmd\écouterions_resourcer_CMD.hpp
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\MCP_cmd\engine.hpp
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\MCP_cmd\mcp_lib.hpp
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\MCP_cmd\readme.md
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\MCP_cmd\shader_pipeline_CMD.cpp
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\MCP_cmd\shader_pipeline_CMD.hpp
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\modualz\geometry\geometry.cpp
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\modualz\geometry\geometry.hpp
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\modualz\geometry\terrain.hpp
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\modualz\milieu\partical_env.cpp
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\modualz\milieu\partical_env.hpp
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\modualz\milieu\partical_lib.hpp
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\modualz\milieu\readME.md
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\modualz\milieu\readME.md.bak~
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\modualz\phyziz\partical_phycz.hpp
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\modualz\phyziz\pysic_lib.hpp
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\modualz\phyziz\springerz.hpp
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\modualz\readME.md
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\modualz\text_render\fonts\Cocktail_Regular.ttf
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\modualz\text_render\fonts\CODE3X.ttf
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\modualz\text_render\fonts\cp437_9x16.ktx
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\modualz\text_render\fonts\Maranallo.ttf
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\modualz\text_render\readME.md
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\modualz\text_render\text_render.cpp
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\modualz\text_render\text_render.hpp
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\parserz\geometry_parser.cpp
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\parserz\geometry_parser.hpp
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\parserz\model_parser.hpp
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\parserz\parse_table_ref.h
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\parserz\parserlib.cpp
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\parserz\parserlib.hpp
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\parserz\readme.md
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\parserz\shader_parser.cpp
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\parserz\shader_parser.hpp
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\parserz\texture_parser.cpp
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\parserz\texture_parser.hpp
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\readME.md
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\shaderzglsl\elemental\compute_partical\comput_expanse_BASE_A.glsl
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\shaderzglsl\elemental\compute_partical\frag_partical_BASE_A.glsl
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\shaderzglsl\elemental\compute_partical\vertex_partical_BASE_A.glsl
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\shaderzglsl\elemental\terrain\frag_terran_A.glsl
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\shaderzglsl\elemental\terrain\tessctrl_terran_A.glsl
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\shaderzglsl\elemental\terrain\tesseval_terran_A.glsl
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\shaderzglsl\elemental\terrain\vertex_terranpass_A.glsl
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\shaderzglsl\file_list_shader.xml
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\shaderzglsl\gui_base\frag_glyph_shaderbase_A.glsl
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\shaderzglsl\gui_base\vertex_glyph_shaderbase_A.glsl
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\shaderzglsl\modelz\frag_shader_lightC.glsl
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\shaderzglsl\modelz\vertex_shader_baseC.glsl
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\shaderzglsl\other_shaders.xml
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\ttestz\_[A_OQ_OQvio2_unitztz03338.avi
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\ttestz\.makefile.swp
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\ttestz\a.out
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\ttestz\bui_tstz2.cpp
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\ttestz\bui_tstz3.cpp
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\ttestz\build_readme.md
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\ttestz\cmdbuiild.txt
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\ttestz\log_sym_obj.txt
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\ttestz\Makefile
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\ttestz\Makefile_v1
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\ttestz\orgprogz
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\ttestz\run_baetez_.cpp
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\ttestz\spla_bk.out
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\ttestz\template_for_mainz_testz.cpp
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\ttestz\tesb.sh
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\ttestz\test_pars0.2main.cpp
+engine_openGL\oubaoun_razzwer\razerz____off_wokl\source\ttestz\withflorz.out
+engine_openGL\oubaoun_razzwer\SETUP.txt
+engine_openGL\readME.md
+engine_openGL\source\basez\3rdparty\b3BulletDefaultFileIO.h
+engine_openGL\source\basez\3rdparty\b3FileUtils.h
+engine_openGL\source\basez\3rdparty\b3Logging.cpp
+engine_openGL\source\basez\3rdparty\b3Logging.h
+engine_openGL\source\basez\3rdparty\b3ResourcePath.cpp
+engine_openGL\source\basez\3rdparty\b3ResourcePath.h
+engine_openGL\source\basez\3rdparty\CommonFileIOInterface.h
+engine_openGL\source\basez\3rdparty\frame_to_video.cpp
+engine_openGL\source\basez\3rdparty\frame_to_video.hpp
+engine_openGL\source\basez\3rdparty\LICENSE
+engine_openGL\source\basez\3rdparty\LICENSE_stb
+engine_openGL\source\basez\3rdparty\stb_image.h
+engine_openGL\source\basez\3rdparty\tiny_obj_loader.h
+engine_openGL\source\basez\cpp_libz_base.hpp
+engine_openGL\source\basez\errorhandler.hpp
+engine_openGL\source\basez\gl_lib_z.hpp
+engine_openGL\source\basez\io_utilityz.cpp
+engine_openGL\source\basez\io_utilityz.hpp
+engine_openGL\source\basez\lenz.hpp
+engine_openGL\source\basez\lighting_lib.hpp
+engine_openGL\source\basez\mathII.hpp
+engine_openGL\source\basez\mathz.hpp
+engine_openGL\source\basez\opengl_utilityz.cpp
+engine_openGL\source\basez\opengl_utilityz.hpp
+engine_openGL\source\basez\shader_lib.cpp
+engine_openGL\source\basez\shader_lib.hpp
+engine_openGL\source\basez\sym_object.cpp
+engine_openGL\source\basez\sym_object.hpp
+engine_openGL\source\basez\texture.cpp
+engine_openGL\source\basez\texture.hpp
+engine_openGL\source\CMakeLists.txt
+engine_openGL\source\extentionz\pars_hash.hpp
+engine_openGL\source\MCP_cmd\arragmentz.hpp
+engine_openGL\source\MCP_cmd\écouterions_resourcer_CMD.hpp
+engine_openGL\source\MCP_cmd\engine.cpp
+engine_openGL\source\MCP_cmd\engine.hpp
+engine_openGL\source\MCP_cmd\mcp_lib.hpp
+engine_openGL\source\MCP_cmd\periphery_input.cpp
+engine_openGL\source\MCP_cmd\periphery_input.hpp
+engine_openGL\source\MCP_cmd\readme.md
+engine_openGL\source\MCP_cmd\shader_pipeline_CMD.cpp
+engine_openGL\source\MCP_cmd\shader_pipeline_CMD.hpp
+engine_openGL\source\modualz\agentz\agent_decision_component.cpp
+engine_openGL\source\modualz\agentz\agent_decision_component.hpp
+engine_openGL\source\modualz\agentz\agent_sensor_memorx.cpp
+engine_openGL\source\modualz\agentz\agent_sensor_memorx.hpp
+engine_openGL\source\modualz\agentz\agenz_lib.hpp
+engine_openGL\source\modualz\agentz\formaion_mangt.hpp
+engine_openGL\source\modualz\committee\shadowz.hpp
+engine_openGL\source\modualz\committee\simula_entity.hpp
+engine_openGL\source\modualz\committee\telagraphie.hpp
+engine_openGL\source\modualz\context\screen_context_lib.hpp
+engine_openGL\source\modualz\context\text_render\fonts\Cocktail_Regular.ttf
+engine_openGL\source\modualz\context\text_render\fonts\CODE3X.ttf
+engine_openGL\source\modualz\context\text_render\fonts\cp437_9x16.ktx
+engine_openGL\source\modualz\context\text_render\fonts\Maranallo.ttf
+engine_openGL\source\modualz\context\text_render\readME.md
+engine_openGL\source\modualz\context\text_render\text_render.cpp
+engine_openGL\source\modualz\context\text_render\text_render.hpp
+engine_openGL\source\modualz\geometry\assimp_model.cpp
+engine_openGL\source\modualz\geometry\assimp_model.hpp
+engine_openGL\source\modualz\geometry\geometry.cpp
+engine_openGL\source\modualz\geometry\geometry.hpp
+engine_openGL\source\modualz\geometry\terrain.hpp
+engine_openGL\source\modualz\milieu\effectz.hpp
+engine_openGL\source\modualz\milieu\partical_env.cpp
+engine_openGL\source\modualz\milieu\partical_env.hpp
+engine_openGL\source\modualz\milieu\partical_lib.hpp
+engine_openGL\source\modualz\milieu\readME.md
+engine_openGL\source\modualz\phyziz\bullet_collision.cpp
+engine_openGL\source\modualz\phyziz\bullet_collision.hpp
+engine_openGL\source\modualz\phyziz\collision_AI.cpp
+engine_openGL\source\modualz\phyziz\collision_AI.hpp
+engine_openGL\source\modualz\phyziz\physiz_callbackz.hpp
+engine_openGL\source\modualz\phyziz\pysic_lib.cpp
+engine_openGL\source\modualz\phyziz\pysic_lib.hpp
+engine_openGL\source\parserz\asset_rez_listz.hpp
+engine_openGL\source\parserz\geometry_parser.cpp
+engine_openGL\source\parserz\geometry_parser.hpp
+engine_openGL\source\parserz\parse_table_ref.h
+engine_openGL\source\parserz\parserlib.cpp
+engine_openGL\source\parserz\parserlib.hpp
+engine_openGL\source\parserz\readme.md
+engine_openGL\source\parserz\shader_parser.cpp
+engine_openGL\source\parserz\shader_parser.hpp
+engine_openGL\source\readME.md
+engine_openGL\source\scene_gen\e_modifers_presetz.xml
+engine_openGL\source\scene_gen\emission_meterial_attr_A.xml
+engine_openGL\source\scene_gen\solestial_lighting_A.xml
+engine_openGL\source\ttestz\CMakeLists.txt
+engine_openGL\source\ttestz\func_par_test.cpp
+engine_openGL\source\ttestz\log_sym_obj.txt
+engine_openGL\source\ttestz\sysm_test.cpp
+engine_SDL_opengl\a.out
+engine_SDL_opengl\dod_entites.cpp
+engine_SDL_opengl\engine_MCP.cpp
+engine_SDL_opengl\engine_MCP.hpp
+engine_SDL_opengl\gcm.cache\hello.gcm
+engine_SDL_opengl\gcm.cache\test_mod.gcm
+engine_SDL_opengl\low_level_lib.hpp
+engine_SDL_opengl\main.cpp
+engine_SDL_opengl\modual_tst.cxx
+engine_SDL_opengl\opengl_lib.cpp
+engine_SDL_opengl\opengl_lib.hpp
+engine_SDL_opengl\README.md
+engine_SDL_opengl\renderer_MCP.hpp
+engine_SDL_opengl\static_interface.hpp
+engine_SDL_opengl\thread_lib_base.hpp
+gitup.sh
+gui\fluid_gui_opengl
+Images_captures_&old_data\capturez\_[A_OQ_OQvio2_unitztz03338.avi
+Images_captures_&old_data\capturez\_OQkjdkvioou.avi
+Images_captures_&old_data\capturez\ee.avi
+Images_captures_&old_data\capturez\esaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaalaozi02_Tue Mar  3 23_31_58 2020_.tga
+Images_captures_&old_data\capturez\esaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaalaozi02_Tue%20Mar%20%203%2023_31_58%202020%0A.png
+Images_captures_&old_data\capturez\hfiul_Tue Mar  3 23_31_34 2020_.tga
+Images_captures_&old_data\capturez\imagterz_Mon Mar  2 20_36_20 2020_.tga
+Images_captures_&old_data\capturez\imagterz_Mon%20Mar%20%202%2020_36_20%202020%0A.png
+Images_captures_&old_data\capturez\IMFRMZ_Mon Mar  2 20_40_01 2020_.tga
+Images_captures_&old_data\capturez\nisave_Thu Mar  5 00_10_30 2020_.tga
+Images_captures_&old_data\capturez\orgflmz_Sun Mar  1 12_53_08 2020_.tga
+Images_captures_&old_data\capturez\oskj_Sun Mar  1 13_01_19 2020_.tga
+Images_captures_&old_data\capturez\outsz_Tue Mar  3 23_29_39 2020_.tga
+Images_captures_&old_data\capturez\QFIVZd.avi
+Images_captures_&old_data\capturez\savtrrinz_Thu Mar  5 00_23_33 2020_.tga
+Images_captures_&old_data\capturez\savtrrinz_Thu%20Mar%20%205%2000_23_33%202020%0A.png
+Images_captures_&old_data\capturez\srenshot_Sun Mar  1 12_07_51 2020_.tga
+Images_captures_&old_data\capturez\ssssssssssssssqqqqsavwifream_Mon Mar  2 20_37_37 2020_.tga
+Images_captures_&old_data\capturez\ssssssssssssssqqqqsavwifream_Mon%20Mar%20%202%2020_37_37%202020%0A.png
+Images_captures_&old_data\capturez\tex2_Thu Mar  5 00_24_12 2020_.tga
+Images_captures_&old_data\capturez\v92_Tue Mar  3 23_32_08 2020_.tga
+Images_captures_&old_data\capturez\v92_Tue%20Mar%20%203%2023_32_08%202020%0A.png
+Images_captures_&old_data\capturez\vid.avi
+Images_captures_&old_data\capturez\vid.webm
+Images_captures_&old_data\capturez\wisave_Thu Mar  5 00_11_05 2020_.tga
+Images_captures_&old_data\capturez\wisave_Thu%20Mar%20%205%2000_11_05%202020%0A.png
+Images_captures_&old_data\cmd_genzbufz.png
+Images_captures_&old_data\images_ofprogress\gen_seniak_tres_treez_whpisz_smog.png
+Images_captures_&old_data\images_ofprogress\gen_seniak_tres_treez_whpisz_smog.tiff
+Images_captures_&old_data\images_ofprogress\processfogz_buffrendo.png
+Images_captures_&old_data\images_ofprogress\Screenshot from 2019-11-04 01-00-31.png
+Images_captures_&old_data\images_ofprogress\Screenshot from 2019-11-04 01-01-02.png
+Images_captures_&old_data\images_ofprogress\Screenshot from 2019-11-04 01-02-11.png
+Images_captures_&old_data\images_ofprogress\Screenshot from 2019-11-04 01-03-22.png
+Images_captures_&old_data\images_ofprogress\Screenshot from 2019-11-04 01-03-44.png
+Images_captures_&old_data\images_ofprogress\Screenshot from 2019-11-04 01-04-03.png
+Images_captures_&old_data\images_ofprogress\Screenshot from 2019-11-04 01-04-45.png
+Images_captures_&old_data\images_ofprogress\Screenshot from 2019-11-04 01-04-56.png
+Images_captures_&old_data\images_ofprogress\Screenshot from 2019-11-04 01-05-07.png
+Images_captures_&old_data\images_ofprogress\Screenshot from 2019-11-04 01-06-26.png
+Images_captures_&old_data\images_ofprogress\Screenshot from 2019-11-21 10-35-52.png
+Images_captures_&old_data\images_ofprogress\Screenshot from 2019-11-21 10-35-53.png
+Images_captures_&old_data\images_ofprogress\Screenshot from 2019-11-21 10-35-56.png
+Images_captures_&old_data\images_ofprogress\Screenshot from 2019-11-21 10-35-58.png
+Images_captures_&old_data\images_ofprogress\Screenshot from 2019-11-21 10-36-00.png
+Images_captures_&old_data\images_ofprogress\Screenshot from 2019-11-22 12-32-31.png
+Images_captures_&old_data\images_ofprogress\Screenshot from 2019-11-22 12-32-37.png
+Images_captures_&old_data\images_ofprogress\Screenshot from 2019-11-22 14-18-32.png
+Images_captures_&old_data\images_ofprogress\Screenshot from 2019-11-22 14-18-35.png
+Images_captures_&old_data\images_ofprogress\Screenshot from 2019-11-22 14-18-38.png
+Images_captures_&old_data\images_ofprogress\Screenshot from 2019-11-22 14-18-41.png
+Images_captures_&old_data\images_ofprogress\Screenshot from 2019-11-22 14-18-50.png
+Images_captures_&old_data\images_ofprogress\Screenshot from 2019-11-22 14-45-35.png
+Images_captures_&old_data\images_ofprogress\Screenshot from 2019-11-22 14-45-41.png
+Images_captures_&old_data\images_ofprogress\Screenshot from 2019-11-22 14-56-01.png
+Images_captures_&old_data\images_ofprogress\Screenshot from 2019-11-22 14-56-14.png
+Images_captures_&old_data\images_ofprogress\Screenshot from 2019-11-22 14-59-19.png
+Images_captures_&old_data\images_ofprogress\Screenshot from 2019-11-22 15-07-41.png
+Images_captures_&old_data\images_ofprogress\Screenshot from 2019-11-22 15-07-45.png
+Images_captures_&old_data\images_ofprogress\Screenshot from 2019-11-22 15-07-48.png
+Images_captures_&old_data\images_ofprogress\Screenshot from 2019-11-22 15-07-54.png
+Images_captures_&old_data\images_ofprogress\Screenshot from 2019-11-22 15-07-56.png
+Images_captures_&old_data\images_ofprogress\Screenshot from 2019-11-22 15-07-58.png
+Images_captures_&old_data\images_ofprogress\Screenshot from 2019-11-22 16-40-06.png
+Images_captures_&old_data\images_ofprogress\Screenshot from 2019-11-22 16-42-13.png
+Images_captures_&old_data\images_ofprogress\Screenshot from 2019-11-22 19-03-33.png
+Images_captures_&old_data\images_ofprogress\Screenshot from 2019-11-22 19-03-35.png
+Images_captures_&old_data\images_ofprogress\Screenshot from 2019-11-22 19-03-38.png
+Images_captures_&old_data\images_ofprogress\Screenshot from 2019-11-22 19-03-54.png
+Images_captures_&old_data\images_ofprogress\Screenshot from 2019-11-22 19-05-52.png
+Images_captures_&old_data\images_ofprogress\Screenshot from 2019-11-22 19-07-41.png
+Images_captures_&old_data\images_ofprogress\Screenshot from 2019-11-22 19-10-20.png
+Images_captures_&old_data\images_ofprogress\Screenshot from 2019-11-22 19-10-26.png
+Images_captures_&old_data\images_ofprogress\Screenshot from 2019-11-22 19-10-53.png
+Images_captures_&old_data\images_ofprogress\Screenshot from 2019-11-22 19-20-17.png
+Images_captures_&old_data\images_ofprogress\Screenshot from 2019-11-22 19-22-44.png
+Images_captures_&old_data\images_ofprogress\Screenshot from 2019-11-22 19-31-07.png
+Images_captures_&old_data\images_ofprogress\Screenshot from 2019-11-22 19-33-29.png
+Images_captures_&old_data\images_ofprogress\Screenshot from 2019-11-22 19-33-33.png
+Images_captures_&old_data\images_ofprogress\Screenshot from 2019-11-22 19-33-37.png
+Images_captures_&old_data\images_ofprogress\Screenshot from 2019-11-23 06-01-21.png
+Images_captures_&old_data\images_ofprogress\Screenshot from 2019-11-23 14-03-25.png
+Images_captures_&old_data\images_ofprogress\Screenshot from 2019-11-23 14-08-33.png
+Images_captures_&old_data\images_ofprogress\Screenshot from 2019-11-23 14-13-05.png
+Images_captures_&old_data\images_ofprogress\Screenshot from 2019-11-23 14-56-43.png
+Images_captures_&old_data\images_ofprogress\Screenshot from 2019-11-23 15-18-22.png
+Images_captures_&old_data\images_ofprogress\Screenshot from 2019-11-23 15-20-27.png
+Images_captures_&old_data\images_ofprogress\Screenshot from 2019-11-23 15-20-55.png
+Images_captures_&old_data\images_ofprogress\Screenshot from 2019-11-23 15-21-10.png
+Images_captures_&old_data\images_ofprogress\Screenshot from 2019-11-23 15-21-14.png
+Images_captures_&old_data\images_ofprogress\Screenshot from 2019-11-23 15-24-40.png
+Images_captures_&old_data\images_ofprogress\Screenshot from 2019-11-23 15-24-56.png
+Images_captures_&old_data\images_ofprogress\Screenshot from 2019-11-24 13-56-43.png
+Images_captures_&old_data\images_ofprogress\Screenshot from 2019-11-24 14-13-34.png
+Images_captures_&old_data\images_ofprogress\Screenshot from 2019-11-24 14-13-43.png
+Images_captures_&old_data\images_ofprogress\Screenshot from 2019-11-24 15-08-27.png
+Images_captures_&old_data\images_ofprogress\Screenshot from 2019-11-24 19-00-06.png
+Images_captures_&old_data\images_ofprogress\Screenshot from 2019-12-13 01-05-42.png
+Images_captures_&old_data\images_ofprogress\Screenshot from 2019-12-13 02-29-04.png
+Images_captures_&old_data\images_ofprogress\Screenshot from 2019-12-13 02-31-27.png
+Images_captures_&old_data\images_ofprogress\Screenshot from 2019-12-13 02-37-25.png
+Images_captures_&old_data\images_ofprogress\Screenshot from 2019-12-13 02-37-38.png
+Images_captures_&old_data\images_ofprogress\Screenshot from 2019-12-13 02-37-47.png
+Images_captures_&old_data\images_ofprogress\text_render_demo_Wed Jan  8 20_25_58 2020_.tga
+Images_captures_&old_data\images_ofprogress\tezMon Jan  6 18_33_37 2020_.tga
+Images_captures_&old_data\images_ofprogress\threfontz_07_45%202020%0A.png
+Images_captures_&old_data\images_ofprogress\threfontz_Mon Jan  6 22_07_45 2020_.tga
+Images_captures_&old_data\test_glphyrender01.png
+jpgen some work to be done.png
+landingz_0.02\.~lock.info_onfltk.odt#
+landingz_0.02\complieline.txt
+landingz_0.02\graphicz\gl_ctlr.cpp
+landingz_0.02\graphicz\gl_ctlr.hpp
+landingz_0.02\graphicz\gl_graphic.hpp
+landingz_0.02\graphicz\gui_opengl_uility.cpp
+landingz_0.02\graphicz\gui_opengl_uility.hpp
+landingz_0.02\graphicz\gui\base_h.hpp
+landingz_0.02\graphicz\gui\fl_base.cpp
+landingz_0.02\graphicz\shader_ctr\opengl_shader_base.hpp
+landingz_0.02\graphicz\soild_state_data.hpp
+landingz_0.02\graphicz\vulkan.hpp
+landingz_0.02\info_onfltk.odt
+landingz_0.02\infoz
+landingz_0.02\land_test.out
+landingz_0.02\landingz_modual\landingz_sql_db_cmd.cpp
+landingz_0.02\landingz_modual\landingz_sql_db_cmd.hpp
+landingz_0.02\landingz_modual\mem_reader.cpp
+landingz_0.02\landingz_modual\mem_reader.hpp
+landingz_0.02\landingz_modual\mmf_handler.cpp
+landingz_0.02\landingz_modual\mmf_handler.hpp
+landingz_0.02\landingz_modual\sql_hardcode.hpp
+landingz_0.02\landingz_modual\utilityz_header_ldingz.hpp
+landingz_0.02\main_landzETgui_t.cpp
+landingz_0.02\MCP_cmd\basez\engine_enum_defz.hpp
+landingz_0.02\MCP_cmd\basez\errorhandler.hpp
+landingz_0.02\MCP_cmd\basez\flag_templatez.hpp
+landingz_0.02\MCP_cmd\landingz_engine.cpp
+landingz_0.02\MCP_cmd\landingz_engine.hpp
+landingz_0.02\MCP_cmd\openGL_CMDer.hpp
+landingz_0.02\workbench_gui\landing_oSite_worksphere.code-workspace
+landingz_0.02\workbench_gui\mocup_flud.cpp
+landingz_0.02\workbench_gui\workbench_fluid_landingz
+landingz_0.02\workbench_gui\workbench_fluid_landingz.cxx
+landingz_0.02\workbench_gui\workbench_fluid_landingz.h
+level_builder\a.out
+level_builder\belave_square.png
+level_builder\bumpmap_out_image_sectorz.png
+level_builder\caz_default.png
+level_builder\defaul2t.png
+level_builder\default2.png
+level_builder\default3.jpg
+level_builder\fltkcompleline.rm
+level_builder\img141.jpg
+level_builder\scan_img141_componet.png
+level_builder\smape_Ed.cxx
+level_builder\smape_Ed.h
+level_builder\world_conversion_tool.cpp
+outtvz\sepiz_prozzoar_cour
+README.md
+shaderzglsl\elemental\compute_partical (copy)\compute_expanse_BASE_A.comp
+shaderzglsl\elemental\compute_partical (copy)\frag_partical_BASE_A.frag
+shaderzglsl\elemental\compute_partical (copy)\vertex_partical_BASE_A.vert
+shaderzglsl\elemental\compute_partical\compute_expanse_BASE_A.glsl
+shaderzglsl\elemental\compute_partical\frag_partical_BASE_A.glsl
+shaderzglsl\elemental\compute_partical\vertex_partical_BASE_A.glsl
+shaderzglsl\elemental\shadowz\frag_omn_drec_shadow_A.glsl
+shaderzglsl\elemental\shadowz\frag_render_with_omn.glsl
+shaderzglsl\elemental\shadowz\geom_omn_drec_shadow_A.glsl
+shaderzglsl\elemental\shadowz\vertex_omn_drec_shadow_A.vs
+shaderzglsl\elemental\terrain\frag_terran_A.glsl
+shaderzglsl\elemental\terrain\tessctrl_terran_A.glsl
+shaderzglsl\elemental\terrain\tesseval_terran_A.glsl
+shaderzglsl\elemental\terrain\vertex_terranpass_A.glsl
+shaderzglsl\elemental\terrain\with_distorion\tesseval_terran_inVerz_vulkan.glsl
+shaderzglsl\elemental\terrain\with_distorion\tessZctrl_terran_inVerz_vulkan.glsl
+shaderzglsl\elemental\terrain\with_distorion\vertex_terranpass_inVerz_vulkan.glsl
+shaderzglsl\file_list_shader.xml
+shaderzglsl\gl_shader_list.lst_dat
+shaderzglsl\modelz\frag_ai_model_A.glsl
+shaderzglsl\modelz\frag_shader_lightC.glsl
+shaderzglsl\modelz\vertex_ai_model_A.glsl
+shaderzglsl\modelz\vertex_shader_baseC.glsl
+shaderzglsl\modelz\vertex_shader_model_B.glsl
+shaderzglsl\other_shaders.xml
+shaderzglsl\precomplied\comp_computepartical_A.spv
+shaderzglsl\precomplied\frag_computepartical_A.spv
+shaderzglsl\precomplied\frag_glyph_A.spv
+shaderzglsl\precomplied\vert_computepartical_A.spv
+shaderzglsl\precomplied\vert_glyph_A.spv
+shaderzglsl\text\glyphs_base_A\frag_glyph_shaderbase_A.glsl
+shaderzglsl\text\glyphs_base_A\vertex_glyph_shaderbase_A.glsl
+vulkan_modual_01.01\.vscode\settings.json
+vulkan_modual_01.01\CMakeLists.txt
+vulkan_modual_01.01\complie_bitz\CMakeLists.txt
+vulkan_modual_01.01\complie_bitz\l_build.sh
+vulkan_modual_01.01\complie_bitz\makeback.mk
+vulkan_modual_01.01\complie_bitz\Makefile
+vulkan_modual_01.01\complie_bitz\oldCMakeLists.txt
+vulkan_modual_01.01\complie_bitz\win_Build.bat
+vulkan_modual_01.01\core
+vulkan_modual_01.01\debug.log
+vulkan_modual_01.01\headers\buffers.hpp
+vulkan_modual_01.01\headers\discrptoz.hpp
+vulkan_modual_01.01\headers\exrtn_vulkan.hpp
+vulkan_modual_01.01\headers\flag_templatez.hpp
+vulkan_modual_01.01\headers\partical_lib.hpp
+vulkan_modual_01.01\headers\vk_abstracionz.hpp
+vulkan_modual_01.01\headers\vk_debug.hpp
+vulkan_modual_01.01\headers\vk_shaderz.hpp
+vulkan_modual_01.01\headers\vulkan_api.hpp
+vulkan_modual_01.01\headers\vulkan_definz.hpp
+vulkan_modual_01.01\headers\vulkani_strucz.hpp
+vulkan_modual_01.01\l_build\old_shader
+vulkan_modual_01.01\Makefile
+vulkan_modual_01.01\objz\exrtn_vulkan.o
+vulkan_modual_01.01\objz\main.o
+vulkan_modual_01.01\objz\partical_lib.o
+vulkan_modual_01.01\objz\render_linux.o
+vulkan_modual_01.01\objz\swap_chain.o
+vulkan_modual_01.01\objz\vk_abstracionz.o
+vulkan_modual_01.01\objz\vk_shaderz.o
+vulkan_modual_01.01\objz\vulkan_api.o
+vulkan_modual_01.01\README.md
+vulkan_modual_01.01\shader dscprtior short.info
+vulkan_modual_01.01\shader_build_info.info
+vulkan_modual_01.01\shader_complie.sh
+vulkan_modual_01.01\smtest.out
+vulkan_modual_01.01\src\exrtn_vulkan.cpp
+vulkan_modual_01.01\src\main.cpp
+vulkan_modual_01.01\src\partical_lib.cpp
+vulkan_modual_01.01\src\render_linux.cpp
+vulkan_modual_01.01\src\swap_chain.cpp
+vulkan_modual_01.01\src\vk_abstracionz.cpp
+vulkan_modual_01.01\src\vk_shaderz.cpp
+vulkan_modual_01.01\src\vulkan_api.cpp
+vulkan_modual_01.01\vlkantest.out
+vulkan_modual_01.02\headerz\exrtn_vulkan.hpp
+vulkan_modual_01.02\headerz\flag_templatez.hpp
+vulkan_modual_01.02\headerz\lenz_vk.hpp
+vulkan_modual_01.02\headerz\scene.hpp
+vulkan_modual_01.02\headerz\symz.hpp
+vulkan_modual_01.02\headerz\vk_defintions.hpp
+vulkan_modual_01.02\headerz\vk_structz.hpp
+vulkan_modual_01.02\headerz\vulkan_api_02.hpp
+vulkan_modual_01.02\headerz\vulkan_app.hpp
+vulkan_modual_01.02\Makefile
+vulkan_modual_01.02\src\main.cpp
+vulkan_modual_01.02\src\scene.cpp
+vulkan_modual_01.02\src\symz.cpp
+vulkan_modual_01.02\src\vulkan_app.cpp

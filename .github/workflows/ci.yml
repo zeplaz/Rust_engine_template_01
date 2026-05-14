@@ -40,6 +40,15 @@ jobs:
       - name: cargo test (stage5 spine governance)
         run: cargo test -p proc_A_dine01 --lib stage5_spine_governance_matrix_passes
 
+      - name: cargo test (VT-4 / VT-5 CI matrix)
+        run: cargo test -p proc_A_dine01 --lib vt_ci_matrix
+
+      - name: cargo test (Stage 5 readiness)
+        run: cargo test -p proc_A_dine01 --lib stage5_readiness
+
+      - name: cargo test (Wave S save spine)
+        run: cargo test -p proc_A_dine01 --lib io::save
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
