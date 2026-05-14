@@ -10,6 +10,7 @@
 //!
 //! Pattern mirrors `crate::gui::agent_permissions_ui::permissions_ui_system`.
 
+use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 use bevy_egui::{egui, EguiContexts, EguiPrimaryContextPass};
 
@@ -20,7 +21,7 @@ use crate::gui::gameplay_capture::GameplayRecorder;
 use crate::gui::input_bindings::InputBindings;
 use crate::gui::ui_gates::in_simulation_or_editor;
 use crate::engine::test_harness::ActiveTestScene;
-use crate::render::WeatherFireFieldDebugOverlay;
+use crate::render::{AppStage5ReadinessReport, WeatherFireFieldDebugOverlay};
 use crate::systems::atmosphere::AtmosphereDiagnostics;
 use crate::systems::sim_control::{SimControlState, SimTick};
 use crate::systems::transport::TransportEdgeDirectory;
@@ -90,6 +91,13 @@ fn sample_fps(time: Res<Time>, entities: Query<Entity>, mut state: ResMut<Diagno
     }
 }
 
+/// Bundles optional spine diagnostics to stay within Bevy system-param limits.
+#[derive(SystemParam)]
+struct DiagnosticsSpinePanels<'w> {
+    atmosphere: Option<Res<'w, AtmosphereDiagnostics>>,
+    stage5: Option<Res<'w, AppStage5ReadinessReport>>,
+}
+
 /// Renders the panel; consumers add tabs by extending this system or chaining own systems
 /// in `EguiPrimaryContextPass` after this one.
 pub fn diagnostics_ui_system(
@@ -108,7 +116,7 @@ pub fn diagnostics_ui_system(
     theater: Option<Res<OperationalTheaterSummary>>,
     logistics_ai: Option<Res<LogisticsAiRuntime>>,
     palette: Res<UiPalette>,
-    atm_diag: Option<Res<AtmosphereDiagnostics>>,
+    spine: DiagnosticsSpinePanels,
 ) -> Result {
     if !state.visible {
         return Ok(());
@@ -178,7 +186,7 @@ pub fn diagnostics_ui_system(
             });
             ui.add(egui::Slider::new(&mut ctrl.speed, 0.0..=8.0).text("speed"));
 
-            if let Some(d) = atm_diag.as_ref() {
+            if let Some(d) = spine.atmosphere.as_ref() {
                 ui.separator();
                 egui::CollapsingHeader::new("Atmosphere + visual extract (CPU)")
                     .default_open(true)
@@ -212,6 +220,27 @@ pub fn diagnostics_ui_system(
                                 d.last_smoke_extract_count
                             ),
                         );
+                        let partial = &d.partial_write_metrics;
+                        let reconcile_age = partial
+                            .last_partial_stamp
+                            .tick
+                            .saturating_sub(partial.last_full_reconcile_stamp.tick);
+                        let full_mb = partial.full_field_texture_bytes as f64 / (1024.0 * 1024.0);
+                        let gpu_mb = partial.gpu_texture_upload_bytes as f64 / (1024.0 * 1024.0);
+                        muted_label(
+                            ui,
+                            &palette,
+                            format!(
+                                "ATM: dirty={} partial_uploads={} gpu_mb={:.3} full_mb={:.3} reconcile_age={} partial_disp={} full_fallback={}",
+                                partial.dirty_region_count,
+                                partial.gpu_texture_upload_count,
+                                gpu_mb,
+                                full_mb,
+                                reconcile_age,
+                                partial.partial_compute_dispatch_count,
+                                partial.full_field_fallback_active
+                            ),
+                        );
                         let drift = [
                             d.field_fill_runs,
                             d.advect_runs,
@@ -239,6 +268,37 @@ pub fn diagnostics_ui_system(
                                     d.mean_smoke_over_budget, d.max_toxicity_over_budget
                                 ),
                             );
+                        }
+                    });
+            }
+
+            if let Some(report) = spine.stage5.as_ref() {
+                ui.separator();
+                egui::CollapsingHeader::new("Stage 5 readiness")
+                    .default_open(report.violations.is_empty())
+                    .show(ui, |ui| {
+                        muted_label(
+                            ui,
+                            &palette,
+                            format!(
+                                "VT-4={} VT-5={} phase_d={} phase_f={} fire_extract={} gpu_field={} preview_gpu={} overlay_shared={} particle_lod={} phase_f_lod={} domains={} producers={} dup_extract={}",
+                                report.vt4_ok,
+                                report.vt5_ok,
+                                report.phase_d_ok,
+                                report.phase_f_ok,
+                                report.single_fire_extract,
+                                report.gpu_field_authoritative,
+                                report.preview_render_target_active,
+                                report.overlay_from_shared_buffers_only,
+                                report.particle_lod_scales,
+                                report.phase_f_lod_proof_ok,
+                                report.projection_domains,
+                                report.registered_producers,
+                                report.duplicate_visual_scan_count,
+                            ),
+                        );
+                        for violation in &report.violations {
+                            error_text(ui, &palette, violation);
                         }
                     });
             }

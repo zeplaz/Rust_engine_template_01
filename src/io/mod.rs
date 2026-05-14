@@ -7,6 +7,8 @@
 mod mouse;
 pub mod serialization;
 pub mod snapshot;
+pub mod streaming;
 
 pub use mouse::*;
 pub use snapshot::{read_hybrid_world_snapshot_dev_v0, write_hybrid_world_snapshot_dev_v0, WorldSnapshotHeaderDevV0};
+pub use streaming::{ChunkStreamingPriority, ChunkStreamingScheduler, StreamingSpinePlugin};

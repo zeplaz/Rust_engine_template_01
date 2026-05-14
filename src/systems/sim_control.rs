@@ -52,8 +52,36 @@ impl SimControlState {
 }
 
 /// Monotonic simulation tick counter; incremented when `SimControlState::should_tick()`.
-#[derive(Resource, Debug, Default, Clone, Copy)]
+#[derive(Resource, Debug, Default, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct SimTick(pub u64);
+
+/// Authoritative sim time in microseconds (monotonic while the sim advances).
+#[derive(Resource, Debug, Default, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct SimTimeMicros(pub u64);
+
+/// Phase **E1** cadence identity for render/compute snapshots (`base_visual_dev01_plan_status` § `phase-e-cadence-scale`).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Default)]
+pub struct SimStepStamp {
+    pub tick: u64,
+    pub sim_time_micros: u64,
+}
+
+impl SimStepStamp {
+    #[inline]
+    #[must_use]
+    pub const fn new(tick: u64, sim_time_micros: u64) -> Self {
+        Self {
+            tick,
+            sim_time_micros,
+        }
+    }
+
+    #[inline]
+    #[must_use]
+    pub fn from_tick(tick: SimTick, sim_time_micros: SimTimeMicros) -> Self {
+        Self::new(tick.0, sim_time_micros.0)
+    }
+}
 
 pub struct SimControlPlugin;
 
@@ -61,6 +89,8 @@ impl Plugin for SimControlPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<SimControlState>()
             .init_resource::<SimTick>()
+            .init_resource::<SimTimeMicros>()
+            .add_plugins(crate::systems::sim_frame_delta::SimFrameDeltaPlugin)
             .configure_sets(
                 Update,
                 (
@@ -89,11 +119,19 @@ fn keyboard_toggle_pause(
     }
 }
 
-fn advance_sim_tick(mut tick: ResMut<SimTick>, mut ctrl: ResMut<SimControlState>) {
-    if ctrl.should_tick() {
-        tick.0 = tick.0.wrapping_add(1);
-        if ctrl.steps_remaining > 0 {
-            ctrl.steps_remaining -= 1;
-        }
+fn advance_sim_tick(
+    time: Res<Time>,
+    mut tick: ResMut<SimTick>,
+    mut sim_time: ResMut<SimTimeMicros>,
+    mut ctrl: ResMut<SimControlState>,
+) {
+    if !ctrl.should_tick() {
+        return;
+    }
+    tick.0 = tick.0.wrapping_add(1);
+    let delta_micros = (time.delta_secs() * ctrl.speed.max(0.0) * 1_000_000.0) as u64;
+    sim_time.0 = sim_time.0.wrapping_add(delta_micros);
+    if ctrl.steps_remaining > 0 {
+        ctrl.steps_remaining -= 1;
     }
 }

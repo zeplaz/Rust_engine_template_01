@@ -4,6 +4,7 @@ use super::ecology_preview::EcologyRasterChunkRow;
 use super::layers::PreviewLayers;
 use super::texture_cache::WorldPreviewTexture;
 use crate::gui::editor::world_gen_ui::WorldGenUiState;
+use crate::gui::preview_partial_min_interval_from_hz;
 use crate::systems::ecology::{ChunkEcology, VegetationField};
 use crate::render::SharedOverlayFieldBuffers;
 use crate::systems::fire::{ChunkSmokeField, FireFuelField};
@@ -24,6 +25,13 @@ use bevy::ecs::system::SystemParam;
 use bevy::math::{IVec2, UVec2};
 use bevy::prelude::*;
 use std::collections::{HashMap, HashSet};
+
+#[derive(SystemParam)]
+pub(crate) struct WorldPreviewRasterImageTargets<'w> {
+    pub images: ResMut<'w, Assets<Image>>,
+    pub swap: ResMut<'w, crate::gui::SwapImageBuffers>,
+    pub preview_texture: Res<'w, WorldPreviewTexture>,
+}
 
 #[derive(SystemParam)]
 pub(crate) struct WorldPreviewTileChunkQueries<'w, 's> {
@@ -74,6 +82,7 @@ pub(crate) struct PreviewRasterScratch {
 pub(crate) struct PreviewRasterRuntime {
     pub scratch: PreviewRasterScratch,
     pub last_partial_raster_secs: f32,
+    pub visible_chunks: HashSet<IVec2>,
 }
 
 #[inline]
@@ -100,12 +109,13 @@ fn tile_in_any_dirty_chunk(
         .any(|c| chunk_geom.get(c).is_some_and(|sz| tile_in_chunk_world_rect(tx, ty, *c, *sz)))
 }
 
-/// Cap partial preview CPU raster to ~12 Hz when only chunk dirty rects drive work (`base_visual_dev01` P0-C).
-const WORLD_PREVIEW_PARTIAL_MIN_INTERVAL_SECS: f32 = 1.0 / 12.0;
+/// Cap partial preview CPU raster rate from [`super::PreviewRenderBudget::max_hz`] (synced from global visual budgets when present).
+fn world_preview_partial_min_interval_secs(preview_budget: &super::PreviewRenderBudget) -> f32 {
+    preview_partial_min_interval_from_hz(preview_budget.max_hz)
+}
 
 pub fn update_world_preview_texture(
-    mut images: ResMut<Assets<Image>>,
-    preview_texture: Res<WorldPreviewTexture>,
+    mut targets: WorldPreviewRasterImageTargets,
     world_preview_ui: Res<super::WorldPreviewUiState>,
     world_gen_ui_state: Res<WorldGenUiState>,
     world_gen_params: Res<WorldGenParams>,
@@ -119,6 +129,8 @@ pub fn update_world_preview_texture(
     queries: WorldPreviewTileChunkQueries,
     time: Res<Time>,
     mut runtime: Local<PreviewRasterRuntime>,
+    preview_budget: Res<super::PreviewRenderBudget>,
+    mut chunk_caches: ResMut<super::WorldPreviewChunkCaches>,
 ) {
     if !world_preview_ui.window_open && !world_gen_ui_state.visible {
         return;
@@ -126,8 +138,8 @@ pub fn update_world_preview_texture(
 
     let epoch = preview_state.epoch.0;
     let layers = world_gen_ui_state.preview_layers;
-    let width = preview_texture.width;
-    let height = preview_texture.height;
+    let width = targets.preview_texture.width;
+    let height = targets.preview_texture.height;
 
     let epoch_changed = runtime.scratch.last_epoch != epoch;
     let layers_changed = runtime.scratch.last_layers != layers;
@@ -148,10 +160,11 @@ pub fn update_world_preview_texture(
 
     let overlay_only = overlay_revision_changed && !need_full && !has_dirty;
 
-    // Throttle partial dirty-chunk passes and fire-overlay-only full passes (~12 Hz).
+    // Throttle partial dirty-chunk passes and fire-overlay-only full passes.
     if (has_dirty && !need_full) || overlay_only {
         let now = time.elapsed_secs();
-        if now - runtime.last_partial_raster_secs < WORLD_PREVIEW_PARTIAL_MIN_INTERVAL_SECS {
+        let min_dt = world_preview_partial_min_interval_secs(&preview_budget);
+        if now - runtime.last_partial_raster_secs < min_dt {
             return;
         }
         runtime.last_partial_raster_secs = now;
@@ -159,7 +172,14 @@ pub fn update_world_preview_texture(
         runtime.last_partial_raster_secs = time.elapsed_secs();
     }
 
-    let image = match images.get_mut(&preview_texture.texture) {
+    let write_handle = if targets.swap.back != Handle::default() {
+        targets.swap.back.clone()
+    } else {
+        targets.preview_texture.texture.clone()
+    };
+    let wrote_to_swap_back = targets.swap.back != Handle::default();
+
+    let image = match targets.images.get_mut(&write_handle) {
         Some(image) => image,
         None => return,
     };
@@ -175,6 +195,7 @@ pub fn update_world_preview_texture(
 
     let drained_dirty: Vec<IVec2> = std::mem::take(&mut preview_state.dirty_queue);
     let dirty_set: HashSet<IVec2> = drained_dirty.into_iter().collect();
+    runtime.visible_chunks = dirty_set.clone();
     let partial_ok = !dirty_set.is_empty() && !need_full;
 
     if need_full {
@@ -319,5 +340,25 @@ pub fn update_world_preview_texture(
     runtime.scratch.last_tex_h = height;
     if overlay_revision_changed {
         runtime.scratch.last_shared_overlay_revision = overlay_rev;
+    }
+
+    if partial_ok {
+        for coord in &dirty_set {
+            if let Some(&size) = chunk_geom_map.get(coord) {
+                super::cache::sync_chunk_preview_cache(
+                    *coord,
+                    size,
+                    data,
+                    tex_w,
+                    tex_h,
+                    &mut chunk_caches,
+                    overlay_rev,
+                );
+            }
+        }
+    }
+
+    if wrote_to_swap_back {
+        targets.swap.dirty = true;
     }
 }

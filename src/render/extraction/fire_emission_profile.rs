@@ -50,7 +50,7 @@ pub struct FireEmissionProfile {
 }
 
 /// Canonical **render-facing** fire row (`P1-E`): packed GPU/storage layout in
-/// [`super::fire_visual_extract::FireVisualFrame::instances`] (one ECS extract pass per frame).
+/// [`crate::render::sim_visual_extract::FireVisualFrame::instances`] (one ECS extract pass per frame).
 pub type FireVisualProxy = FireVisualGpuInstance;
 
 #[inline]
@@ -147,7 +147,7 @@ pub fn infer_combustion_class(
     CombustionClass::Structural
 }
 
-/// Build one per-chunk profile for [`super::fire_visual_extract::FireVisualFrame`].
+/// Build one per-chunk profile for [`crate::render::sim_visual_extract::FireVisualFrame`].
 pub fn infer_fire_emission_profile(
     chunk: &Chunk,
     fire: &ChunkSurfaceFire,

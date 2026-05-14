@@ -3,7 +3,6 @@
 //! **P1-F:** Input writes [`MapCameraDesired`]; a follow-up system lerps [`Transform`] toward it (smoothing).
 //! Skips input while egui wants the pointer or keyboard. Edge pan respects [`MapCameraSettings::edge_scroll_enabled`].
 
-use bevy::input::mouse::AccumulatedMouseScroll;
 use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
 use bevy_egui::EguiContexts;
@@ -13,6 +12,14 @@ use crate::engine::{ActiveTestScene, TestScene};
 use crate::gui::InputBindings;
 use crate::gui::InputFrame;
 use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
+
+/// Ordering for [`MapCameraPlugin`] so other GUI systems (e.g. view representation) can slot
+/// between input and smoothing.
+#[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
+pub enum MapCameraSystemSet {
+    ApplyInput,
+    Smooth,
+}
 
 /// Marker on the root [`Camera2d`] that carries world-space UI + weather VFX children.
 #[derive(Component)]
@@ -91,16 +98,22 @@ impl Plugin for MapCameraPlugin {
         app.init_resource::<MapCameraDesired>()
             .init_resource::<MapCameraSettings>()
             .add_plugins(crate::gui::InputFramePlugin)
+            .configure_sets(
+                Update,
+                MapCameraSystemSet::Smooth.after(MapCameraSystemSet::ApplyInput),
+            )
             .add_systems(
                 Update,
-                (map_camera_apply_input_to_desired, map_camera_smooth_toward_desired)
-                    .chain()
+                (
+                    map_camera_apply_input_to_desired.in_set(MapCameraSystemSet::ApplyInput),
+                    map_camera_smooth_toward_desired.in_set(MapCameraSystemSet::Smooth),
+                )
                     .run_if(in_simulation_or_editor_map),
             );
     }
 }
 
-fn in_simulation_or_editor_map(state: Res<State<BaseState>>) -> bool {
+pub(crate) fn in_simulation_or_editor_map(state: Res<State<BaseState>>) -> bool {
     matches!(
         state.get(),
         BaseState::Simulation | BaseState::Editor
@@ -115,6 +128,15 @@ const ZOOM_FACTOR: f32 = 1.08;
 pub const MAP_ZOOM_CLAMP: (f32, f32) = (0.35, 4.5);
 const ROTATE_STEP: f32 = 1.35_f32.to_radians();
 const SMOOTH_LAMBDA: f32 = 12.0;
+
+/// Normalized zoom in `[0, 1]` from [`MAP_ZOOM_CLAMP`] using logical map scale `scale.x`.
+#[inline]
+pub fn map_zoom_alpha(scale_x: f32) -> f32 {
+    let (lo, hi) = MAP_ZOOM_CLAMP;
+    let span = (hi - lo).max(1e-5);
+    let z = scale_x.clamp(lo, hi);
+    ((z - lo) / span).clamp(0.0, 1.0)
+}
 
 #[inline]
 fn test_scene_zoom(test_scene: Option<Res<ActiveTestScene>>) -> f32 {
@@ -142,7 +164,6 @@ fn map_camera_apply_input_to_desired(
     keys: Res<ButtonInput<KeyCode>>,
     mouse_btn: Res<ButtonInput<MouseButton>>,
     input_frame: Res<InputFrame>,
-    scroll_acc: Res<AccumulatedMouseScroll>,
     windows: Query<&Window, With<PrimaryWindow>>,
     mut contexts: EguiContexts,
     params: Res<WorldGenParams>,
@@ -288,7 +309,7 @@ fn map_camera_apply_input_to_desired(
         }
     }
 
-    let scroll = scroll_acc.delta.y + scroll_acc.delta.x * 0.25;
+    let scroll = input_frame.scroll_delta;
     if scroll.abs() >= f32::EPSILON {
         let z = ZOOM_FACTOR.powf(scroll.clamp(-5.0, 5.0));
         let s = (desired.scale.x * z).clamp(MAP_ZOOM_CLAMP.0, MAP_ZOOM_CLAMP.1);

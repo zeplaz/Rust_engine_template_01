@@ -1,12 +1,12 @@
 //! Local pooled **point-light extraction** layer (Bevy 0.18 / wgpu).
 //!
 //! [`RequestLocalLight`](crate::render::light::RequestLocalLight) messages (fire path from
-//! [`FireVisualFrame`](crate::render::extraction::FireVisualFrame)); this plugin **collects**, **scores**,
+//! [`FireVisualFrame`](crate::render::sim_visual_extract::FireVisualFrame)); this plugin **collects**, **scores**,
 //! **sorts**, and **truncates** into [`ActiveLights`], then syncs a **fixed pool** of [`PointLight`]
 //! entities (no per-frame spawn/despawn).
 //!
 //! Intended for:
-//! - fire lighting via [`crate::render::extraction::FireVisualFrame`] (single sim pass, then cluster emit)
+//! - fire lighting via [`crate::render::sim_visual_extract::FireVisualFrame`] (single sim pass, then cluster emit)
 //! - explosion / vehicle / emergency lights (direct `RequestLocalLight` writers)
 //! - future camera-relative culling; clustering in [`crate::render::lighting`]
 //!

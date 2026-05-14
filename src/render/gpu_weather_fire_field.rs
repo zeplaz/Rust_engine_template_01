@@ -1,12 +1,17 @@
 //! Ping-pong **GPU field** for weather + fire **visuals** (compute on `Rgba32Float` textures).
 //!
 //! - **CPU** uploads [`WeatherFireFieldUniforms`] from [`ClimateVisualAggregate`](crate::render::ClimateVisualAggregate),
-//! [`FireVisualFrame`](crate::render::extraction::FireVisualFrame) / [`SimChunkSmokeVisualExtract`](crate::render::sim_visual_extract::SimChunkSmokeVisualExtract)
+//! [`RenderProjectionGraph`](crate::render::extraction::RenderProjectionGraph) (fire node) / [`SimChunkSmokeVisualExtract`](crate::render::sim_visual_extract::SimChunkSmokeVisualExtract)
 //!   (via [`crate::systems::atmosphere::gpu_field_bridge`]). No direct [`ChunkWeather`](crate::systems::weather::ChunkWeather) /
 //!   [`ChunkEcology`](crate::systems::ecology::ChunkEcology) queries in the bridge.
-//! - Packed fire instances are extracted to the render world and uploaded each frame into
-//!   [`FireVisualGpuInstanceStorage`] (wgpu storage buffer, group `@group(1)` in `weather_fire_field.wgsl`).
+//! - Packed fire instances are extracted to the render world and uploaded each frame through
+//!   [`GPUBufferRegistry`](crate::render::GPUBufferRegistry) ([`FIRE_VISUAL_INSTANCES_BUFFER`](crate::render::FIRE_VISUAL_INSTANCES_BUFFER)).
 //! - **WGSL** (`assets/shaders/post/weather_fire_field.wgsl`) relaxes the field each frame.
+//! - P2-H partial dirty-rect uploads are planned on the main world ([`crate::systems::atmosphere::AtmosphereGpuFieldBridge`]),
+//!   extracted to [`super::atmosphere_partial_gpu::AtmospherePartialGpuExtract`], and written into both ping-pong
+//!   textures via [`super::atmosphere_partial_gpu::apply_partial_texture_writes`].
+//!   Until [`crate::systems::atmosphere::P2H_GPU_PARTIAL_WRITES_AUTHORITATIVE`] is true, this node still dispatches the full
+//!   `WEATHER_FIRE_FIELD_SIZE` compute pass each frame.
 //! - Optional **debug sprite** (see [`WeatherFireFieldDebugOverlay`]).
 //!
 //! This is **not** gameplay state; do not sample into sim without explicit readback.
@@ -31,16 +36,28 @@ use bevy::{
     shader::PipelineCacheError,
 };
 
-use bytemuck;
-
-use super::extraction::FireVisualFrame;
-use super::fire_smoke_shader_handles::load_fire_smoke_shader_handles;
-use super::fx_burst_request::{enqueue_fx_bursts_from_hot_emitters, FxParticleBurstRequest};
-use super::sim_visual_extract::{FireVisualGpuInstance, SimChunkSmokeVisualExtract};
-
-use crate::systems::atmosphere::{
-    update_fire_emitters_from_heat, AtmospherePipelineSet, WEATHER_FIRE_FIELD_WGSL,
+use crate::gui::representation_band_from_world_lod;
+use super::atmosphere_partial_gpu::{
+    apply_partial_texture_writes, sync_atmosphere_partial_gpu_extract, AtmospherePartialGpuExtract,
 };
+use super::extraction::RenderProjectionGraph;
+use super::gpu_representation_metrics::GpuRepresentationMetrics;
+use super::gpu_buffer_registry::{
+    BufferVisibility, GPUBufferRegistry, RegisteredBufferDescriptor,
+};
+use super::gpu_bind_group_registry::{
+    BindGroupBufferBinding, GPUBindGroupRegistry, WEATHER_FIRE_FIELD_FIRE_BIND_GROUP,
+};
+use super::domain_overlay_gpu::DomainOverlayGpuFrame;
+use super::gpu_packed_formats::{
+    ecology_overlay_row_format, fire_particle_instance_format, fire_visual_instance_format,
+    logistics_overlay_row_format, packed_byte_size,
+};
+use super::fire_smoke_shader_handles::load_fire_smoke_shader_handles;
+use super::gpu_particles::{WorldFireParticleFrame, WorldFireParticleGpuStorage};
+use super::sim_visual_extract::SimChunkSmokeVisualExtract;
+
+use crate::systems::atmosphere::{mirror_partial_write_metrics, AtmospherePipelineSet, P2H_GPU_PARTIAL_WRITES_AUTHORITATIVE, WEATHER_FIRE_FIELD_WGSL};
 
 const SHADER_PATH: &str = WEATHER_FIRE_FIELD_WGSL;
 pub const WEATHER_FIRE_FIELD_SIZE: UVec2 = UVec2::splat(128);
@@ -71,6 +88,10 @@ pub struct WeatherFireFieldUniforms {
     /// Number of valid rows in the fire visual storage buffer (WGSL reads `fire_instances[0..count)`).
     pub fire_instance_count: u32,
     pub _fire_pad: UVec3,
+    pub partial_origin: UVec2,
+    pub partial_extent: UVec2,
+    pub partial_active: u32,
+    pub _partial_dispatch_pad: u32,
 }
 
 impl Default for WeatherFireFieldUniforms {
@@ -84,6 +105,10 @@ impl Default for WeatherFireFieldUniforms {
             _pad: 0.0,
             fire_instance_count: 0,
             _fire_pad: UVec3::ZERO,
+            partial_origin: UVec2::ZERO,
+            partial_extent: UVec2::ZERO,
+            partial_active: 0,
+            _partial_dispatch_pad: 0,
         }
     }
 }
@@ -100,45 +125,160 @@ pub(crate) struct DebugFieldSpriteTag;
 #[derive(Resource, Default)]
 struct WeatherFieldDebugSpawned(bool);
 
-/// GPU copy of [`FireVisualFrame::instances`] (render world). Bound at `@group(1) @binding(0)`.
+/// Render-world view of the latest fire instance upload (count only; [`Buffer`] lives in [`GPUBufferRegistry`]).
 #[derive(Resource, Default)]
 pub struct FireVisualGpuInstanceStorage {
-    pub buffer: Option<Buffer>,
-    pub capacity_bytes: u64,
     pub instance_count: u32,
 }
 
 fn prepare_fire_visual_gpu_storage(
-    extracted: Res<FireVisualFrame>,
+    extracted: Res<RenderProjectionGraph>,
     mut storage: ResMut<FireVisualGpuInstanceStorage>,
+    mut metrics: ResMut<GpuRepresentationMetrics>,
+    mut registry: ResMut<GPUBufferRegistry>,
     render_device: Res<RenderDevice>,
     queue: Res<RenderQueue>,
 ) {
-    const STRIDE: usize = std::mem::size_of::<FireVisualGpuInstance>();
+    let format = fire_visual_instance_format();
+    let rows = extracted.fire.instance_buffer.as_slice();
+    let lod_cap = extracted.fire.gpu_instance_capacity;
+    let alloc_rows = if lod_cap == usize::MAX {
+        rows.len().max(1)
+    } else {
+        lod_cap.max(1)
+    };
+    let needed = packed_byte_size(format, alloc_rows);
+    let id = extracted.fire.buffer_id;
+    let stats = registry
+        .upload_pod_slice(
+            &render_device,
+            &queue,
+            RegisteredBufferDescriptor {
+                id,
+                size_bytes: needed,
+                usage: BufferUsages::COPY_DST | BufferUsages::STORAGE,
+                visibility: BufferVisibility::RenderOnly,
+                stride: format.stride,
+            },
+            alloc_rows,
+            rows,
+            extracted.fire.snapshot_stamp,
+        )
+        .expect("fire visual GPU buffer registration failed");
+    storage.instance_count = stats.active_rows;
+    let band = representation_band_from_world_lod(extracted.fire.lod);
+    metrics.record_fire_upload(
+        band,
+        stats.active_rows,
+        stats.upload_bytes,
+        stats.reserved_rows,
+        stats.active_rows,
+        stats.reserved_bytes,
+    );
+}
+
+fn prepare_fire_particle_gpu_storage(
+    extracted: Res<WorldFireParticleFrame>,
+    mut storage: ResMut<WorldFireParticleGpuStorage>,
+    mut metrics: ResMut<GpuRepresentationMetrics>,
+    mut registry: ResMut<GPUBufferRegistry>,
+    render_device: Res<RenderDevice>,
+    queue: Res<RenderQueue>,
+) {
+    let format = fire_particle_instance_format();
     let rows = extracted.instances.as_slice();
-    let needed = (rows.len().max(1) * STRIDE) as u64;
-    let must_grow = storage
-        .buffer
-        .as_ref()
-        .map_or(true, |_| storage.capacity_bytes < needed);
-    if must_grow {
-        let size = needed.max(256).next_multiple_of(256);
-        let buffer = render_device.create_buffer(&BufferDescriptor {
-            label: Some("fire_visual_instances"),
-            size,
+    let lod_cap = extracted.gpu_capacity;
+    let active_rows = if lod_cap == usize::MAX {
+        rows.len()
+    } else {
+        rows.len().min(lod_cap)
+    };
+    let upload_rows = &rows[..active_rows];
+    let alloc_rows = if lod_cap == usize::MAX {
+        upload_rows.len().max(1)
+    } else {
+        lod_cap.max(1)
+    };
+    let needed = packed_byte_size(format, alloc_rows);
+    let stats = registry
+        .upload_pod_slice(
+            &render_device,
+            &queue,
+            RegisteredBufferDescriptor {
+                id: format.buffer_id,
+                size_bytes: needed,
+                usage: BufferUsages::COPY_DST | BufferUsages::STORAGE,
+                visibility: BufferVisibility::RenderOnly,
+                stride: format.stride,
+            },
+            alloc_rows,
+            upload_rows,
+            extracted.snapshot_stamp,
+        )
+        .expect("fire particle GPU buffer registration failed");
+    storage.instance_count = stats.active_rows;
+    storage.expanded_vertex_count = stats.active_rows.saturating_mul(4);
+    metrics.record_particle_upload(
+        stats.active_rows,
+        stats.upload_bytes,
+        stats.reserved_bytes,
+    );
+}
+
+fn prepare_domain_overlay_gpu_storage(
+    extracted: Res<DomainOverlayGpuFrame>,
+    mut registry: ResMut<GPUBufferRegistry>,
+    mut metrics: ResMut<GpuRepresentationMetrics>,
+    render_device: Res<RenderDevice>,
+    queue: Res<RenderQueue>,
+) {
+    let stamp = extracted.stamp.tick;
+    let logistics_format = logistics_overlay_row_format();
+    let logistics_rows = extracted.logistics_rows.as_slice();
+    let logistics_needed = packed_byte_size(logistics_format, logistics_rows.len().max(1));
+    if let Ok(stats) = registry.upload_pod_slice(
+        &render_device,
+        &queue,
+        RegisteredBufferDescriptor {
+            id: logistics_format.buffer_id,
+            size_bytes: logistics_needed,
             usage: BufferUsages::COPY_DST | BufferUsages::STORAGE,
-            mapped_at_creation: false,
-        });
-        storage.buffer = Some(buffer);
-        storage.capacity_bytes = size;
+            visibility: BufferVisibility::RenderOnly,
+            stride: logistics_format.stride,
+        },
+        logistics_rows.len().max(1),
+        logistics_rows,
+        stamp,
+    ) {
+        metrics.record_domain_overlay_upload(
+            stats.upload_bytes,
+            stats.reserved_bytes,
+            stats.active_rows,
+        );
     }
-    storage.instance_count = rows.len() as u32;
-    if let Some(buf) = storage.buffer.as_ref() {
-        if rows.is_empty() {
-            queue.write_buffer(buf, 0, &[0u8; STRIDE]);
-        } else {
-            queue.write_buffer(buf, 0, bytemuck::cast_slice(rows));
-        }
+
+    let ecology_format = ecology_overlay_row_format();
+    let ecology_rows = extracted.ecology_rows.as_slice();
+    let ecology_needed = packed_byte_size(ecology_format, ecology_rows.len().max(1));
+    if let Ok(stats) = registry.upload_pod_slice(
+        &render_device,
+        &queue,
+        RegisteredBufferDescriptor {
+            id: ecology_format.buffer_id,
+            size_bytes: ecology_needed,
+            usage: BufferUsages::COPY_DST | BufferUsages::STORAGE,
+            visibility: BufferVisibility::RenderOnly,
+            stride: ecology_format.stride,
+        },
+        ecology_rows.len().max(1),
+        ecology_rows,
+        stamp,
+    ) {
+        metrics.record_domain_overlay_upload(
+            stats.upload_bytes,
+            stats.reserved_bytes,
+            stats.active_rows,
+        );
     }
 }
 
@@ -227,8 +367,6 @@ fn flip_debug_sprite_texture(
     }
 }
 
-fn stub_drain_fx_burst_requests(mut _reader: MessageReader<FxParticleBurstRequest>) {}
-
 pub struct GpuWeatherFireFieldPlugin;
 
 impl Plugin for GpuWeatherFireFieldPlugin {
@@ -240,36 +378,50 @@ impl Plugin for GpuWeatherFireFieldPlugin {
                 Startup,
                 (startup_field_textures, load_fire_smoke_shader_handles).chain(),
             )
-            .add_message::<FxParticleBurstRequest>()
             .add_systems(
                 Update,
                 (
                     cleanup_debug_sprite,
                     maybe_spawn_debug_sprite.after(cleanup_debug_sprite),
                     flip_debug_sprite_texture,
-                    enqueue_fx_bursts_from_hot_emitters
-                        .in_set(AtmospherePipelineSet::Emitters)
-                        .after(update_fire_emitters_from_heat),
-                    stub_drain_fx_burst_requests.after(enqueue_fx_bursts_from_hot_emitters),
                 ),
+            );
+
+        app.init_resource::<AtmospherePartialGpuExtract>()
+            .add_systems(
+                Update,
+                sync_atmosphere_partial_gpu_extract
+                    .after(mirror_partial_write_metrics)
+                    .in_set(AtmospherePipelineSet::FieldFill),
             );
 
         app.add_plugins((
             ExtractResourcePlugin::<WeatherFireFieldUniforms>::default(),
             ExtractResourcePlugin::<WeatherFireFieldTextures>::default(),
-            ExtractResourcePlugin::<FireVisualFrame>::default(),
+            ExtractResourcePlugin::<AtmospherePartialGpuExtract>::default(),
+            ExtractResourcePlugin::<RenderProjectionGraph>::default(),
+            ExtractResourcePlugin::<WorldFireParticleFrame>::default(),
+            ExtractResourcePlugin::<DomainOverlayGpuFrame>::default(),
             ExtractResourcePlugin::<SimChunkSmokeVisualExtract>::default(),
         ));
 
+        crate::render::register_world_fire_particle_draw(app);
         let render_app = app.sub_app_mut(RenderApp);
         render_app
+            .init_resource::<GPUBufferRegistry>()
+            .init_resource::<GPUBindGroupRegistry>()
             .init_resource::<FireVisualGpuInstanceStorage>()
+            .init_resource::<WorldFireParticleGpuStorage>()
+            .init_resource::<GpuRepresentationMetrics>()
             .add_systems(RenderStartup, init_weather_fire_pipeline)
             .add_systems(
                 Render,
                 (
-                    prepare_fire_visual_gpu_storage,
-                    prepare_field_bind_groups.after(prepare_fire_visual_gpu_storage),
+                    apply_partial_texture_writes,
+                    prepare_fire_visual_gpu_storage.after(apply_partial_texture_writes),
+                    prepare_fire_particle_gpu_storage.after(prepare_fire_visual_gpu_storage),
+                    prepare_domain_overlay_gpu_storage.after(prepare_fire_particle_gpu_storage),
+                    prepare_field_bind_groups.after(prepare_domain_overlay_gpu_storage),
                 )
                     .chain()
                     .in_set(RenderSystems::PrepareBindGroups),
@@ -302,8 +454,11 @@ fn prepare_field_bind_groups(
     pipeline: Res<WeatherFireFieldPipeline>,
     gpu_images: Res<RenderAssets<GpuImage>>,
     textures: Res<WeatherFireFieldTextures>,
-    uniforms: Res<WeatherFireFieldUniforms>,
-    storage: Res<FireVisualGpuInstanceStorage>,
+    mut uniforms: ResMut<WeatherFireFieldUniforms>,
+    partial: Res<AtmospherePartialGpuExtract>,
+    extracted: Res<RenderProjectionGraph>,
+    registry: Res<GPUBufferRegistry>,
+    mut bind_registry: ResMut<GPUBindGroupRegistry>,
     render_device: Res<RenderDevice>,
     pipeline_cache: Res<PipelineCache>,
     queue: Res<RenderQueue>,
@@ -311,7 +466,17 @@ fn prepare_field_bind_groups(
     let va = gpu_images.get(&textures.texture_a).unwrap();
     let vb = gpu_images.get(&textures.texture_b).unwrap();
 
-    let mut ub = UniformBuffer::from(uniforms.clone());
+    if P2H_GPU_PARTIAL_WRITES_AUTHORITATIVE && partial.partial_dispatch_active {
+        uniforms.partial_origin = partial.partial_dispatch_origin;
+        uniforms.partial_extent = partial.partial_dispatch_extent;
+        uniforms.partial_active = 1;
+    } else {
+        uniforms.partial_origin = UVec2::ZERO;
+        uniforms.partial_extent = UVec2::ZERO;
+        uniforms.partial_active = 0;
+    }
+
+    let mut ub = UniformBuffer::from((*uniforms).clone());
     ub.write_buffer(&render_device, &queue);
 
     let field_gpu_layout = pipeline_cache.get_bind_group_layout(&pipeline.field_layout);
@@ -329,20 +494,36 @@ fn prepare_field_bind_groups(
     );
     commands.insert_resource(WeatherFireFieldBindGroups([bg0, bg1]));
 
-    let fire_buf = storage.buffer.as_ref().expect("fire visual GPU buffer must exist after prepare_fire_visual_gpu_storage");
-    let fire_bg = render_device.create_bind_group(
-        None,
-        &fire_gpu_layout,
-        &[BindGroupEntry {
-            binding: 0,
-            resource: BindingResource::Buffer(BufferBinding {
-                buffer: fire_buf,
-                offset: 0,
-                size: None,
-            }),
-        }],
-    );
-    commands.insert_resource(WeatherFireFieldFireBindGroup(fire_bg));
+    let buffer_id = extracted.fire.buffer_id;
+    if !bind_registry.is_valid(WEATHER_FIRE_FIELD_FIRE_BIND_GROUP, &registry) {
+        let fire_buf = registry
+            .get(buffer_id)
+            .expect("fire visual GPU buffer must exist after prepare_fire_visual_gpu_storage");
+        let fire_bg = render_device.create_bind_group(
+            None,
+            &fire_gpu_layout,
+            &[BindGroupEntry {
+                binding: 0,
+                resource: BindingResource::Buffer(BufferBinding {
+                    buffer: &fire_buf.buffer,
+                    offset: 0,
+                    size: None,
+                }),
+            }],
+        );
+        bind_registry.insert(
+            WEATHER_FIRE_FIELD_FIRE_BIND_GROUP,
+            fire_bg,
+            vec![BindGroupBufferBinding {
+                buffer_id,
+                buffer_version: fire_buf.version,
+            }],
+        );
+    }
+    let fire_entry = bind_registry
+        .get(WEATHER_FIRE_FIELD_FIRE_BIND_GROUP)
+        .expect("fire bind group must exist after prepare");
+    commands.insert_resource(WeatherFireFieldFireBindGroup(fire_entry.bind_group.clone()));
 }
 
 fn init_weather_fire_pipeline(
@@ -437,10 +618,35 @@ impl render_graph::Node for WeatherFireFieldNode {
         let fire_bg = world.resource::<WeatherFireFieldFireBindGroup>();
         let cache = world.resource::<PipelineCache>();
         let pipeline = world.resource::<WeatherFireFieldPipeline>();
+        let partial = world.resource::<AtmospherePartialGpuExtract>();
+        let uniforms = world.resource::<WeatherFireFieldUniforms>();
 
         let mut pass = render_ctx
             .command_encoder()
             .begin_compute_pass(&ComputePassDescriptor::default());
+
+        let (dx, dy) = if P2H_GPU_PARTIAL_WRITES_AUTHORITATIVE && partial.partial_dispatch_active {
+            (
+                partial.partial_dispatch_extent.x.div_ceil(WORKGROUP),
+                partial.partial_dispatch_extent.y.div_ceil(WORKGROUP),
+            )
+        } else if P2H_GPU_PARTIAL_WRITES_AUTHORITATIVE && partial.full_field_fallback {
+            (
+                WEATHER_FIRE_FIELD_SIZE.x.div_ceil(WORKGROUP),
+                WEATHER_FIRE_FIELD_SIZE.y.div_ceil(WORKGROUP),
+            )
+        } else if P2H_GPU_PARTIAL_WRITES_AUTHORITATIVE {
+            (0, 0)
+        } else {
+            (
+                WEATHER_FIRE_FIELD_SIZE.x.div_ceil(WORKGROUP),
+                WEATHER_FIRE_FIELD_SIZE.y.div_ceil(WORKGROUP),
+            )
+        };
+
+        if dx == 0 || dy == 0 {
+            return Ok(());
+        }
 
         match self.state {
             WfState::Loading => {}
@@ -449,8 +655,6 @@ impl render_graph::Node for WeatherFireFieldNode {
                 pass.set_bind_group(0, &groups[0], &[]);
                 pass.set_bind_group(1, &fire_bg.0, &[]);
                 pass.set_pipeline(pl);
-                let dx = WEATHER_FIRE_FIELD_SIZE.x.div_ceil(WORKGROUP);
-                let dy = WEATHER_FIRE_FIELD_SIZE.y.div_ceil(WORKGROUP);
                 pass.dispatch_workgroups(dx, dy, 1);
             }
             WfState::PingB => {
@@ -458,11 +662,10 @@ impl render_graph::Node for WeatherFireFieldNode {
                 pass.set_bind_group(0, &groups[1], &[]);
                 pass.set_bind_group(1, &fire_bg.0, &[]);
                 pass.set_pipeline(pl);
-                let dx = WEATHER_FIRE_FIELD_SIZE.x.div_ceil(WORKGROUP);
-                let dy = WEATHER_FIRE_FIELD_SIZE.y.div_ceil(WORKGROUP);
                 pass.dispatch_workgroups(dx, dy, 1);
             }
         }
+        let _ = uniforms;
         Ok(())
     }
 }

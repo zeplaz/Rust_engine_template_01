@@ -74,8 +74,8 @@ pub(crate) fn sync_weather_precip_sample_from_climate_aggregate(
     };
 }
 
-/// Chunk smoke only — fire rows come from [`crate::render::extraction::FireVisualFramePlugin`]
-/// ([`crate::render::FireVisualFrame`]) so we do not scan [`FireEmitter`] twice.
+/// Chunk smoke only — fire truth rows live in [`crate::render::extraction::FireVisualFrame`]; GPU field reads
+/// [`crate::render::extraction::RenderProjectionGraph`] after [`crate::render::extraction::run_render_projection_graph`].
 pub(crate) fn publish_sim_visual_extract(
     mut smoke_out: ResMut<SimChunkSmokeVisualExtract>,
     mut diag: ResMut<AtmosphereDiagnostics>,

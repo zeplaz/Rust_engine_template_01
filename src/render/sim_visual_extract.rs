@@ -1,9 +1,10 @@
 //! GPU-ready **snapshots** of sim-owned fire/smoke state (`prompts/guides/base_gui_next.md` Stage 2).
 //!
-//! [`FireVisualGpuInstance`] is the packed **proxy row** (GPU storage layout); the canonical per-frame snapshot is
-//! [`crate::render::extraction::FireVisualFrame`] (instances + chunk heat). [`SimFireEmitterVisualExtract`]
-//! mirrors instance rows on the **main** world for legacy CPU/debug callers; the render world consumes
-//! [`crate::render::gpu_weather_fire_field::FireVisualGpuInstanceStorage`] instead of extracting that resource.
+//! [`FireVisualGpuInstance`] is the packed **proxy row** (GPU storage layout); the canonical per-frame **truth** snapshot is
+//! [`FireVisualFrame`] (full instances + chunk heat). [`crate::render::extraction::RenderProjectionGraph`] carries the
+//! LOD-shaped fire view for GPU upload. [`SimFireEmitterVisualExtract`] mirrors **full** truth instance rows on the
+//! **main** world for legacy CPU/debug callers; the render world uploads [`crate::render::gpu_weather_fire_field::FireVisualGpuInstanceStorage`]
+//! from extracted [`crate::render::extraction::RenderProjectionGraph`].
 //!
 //! [`ClimateVisualAggregate`] is the **single** world mean over chunk weather + ecology for GPU / overlay
 //! consumers; only [`crate::systems::atmosphere::visual_extract::publish_climate_visual_aggregate`] scans those components.
@@ -85,6 +86,16 @@ pub struct ChunkFireHeat {
     pub chunk: IVec2,
     pub heat: f32,
     pub smoke: f32,
+}
+
+use crate::systems::sim_control::SimStepStamp;
+
+/// Canonical **CPU** fire visual snapshot for the frame (full detail). Built by [`crate::render::extraction::fire_visual_extract::extract_fire_visual_frame`] only.
+#[derive(Resource, Default, Debug, Clone)]
+pub struct FireVisualFrame {
+    pub stamp: SimStepStamp,
+    pub instances: Vec<FireVisualGpuInstance>,
+    pub chunk_heat: Vec<ChunkFireHeat>,
 }
 
 #[inline]

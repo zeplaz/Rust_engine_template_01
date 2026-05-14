@@ -34,6 +34,12 @@ jobs:
       - name: cargo check (bevy_tilemap_adapter)
         run: cargo check -p proc_A_dine01 --features bevy_tilemap_adapter
 
+      - name: cargo test (lib)
+        run: cargo test -p proc_A_dine01 --lib
+
+      - name: cargo test (stage5 spine governance)
+        run: cargo test -p proc_A_dine01 --lib stage5_spine_governance_matrix_passes
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:

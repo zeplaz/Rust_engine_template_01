@@ -1970,3 +1970,5 @@ GPU particles
 ---
 
 **Split for execution:** actionable checklist + statuses → [`base_visual_dev01_plan_status.md`](base_visual_dev01_plan_status.md). After P0/P1, sequencing and north-star → [`base_visual_dev01_roadmap_next.md`](base_visual_dev01_roadmap_next.md).
+
+**View Representation Layer:** camera intent drives LOD, overlay weights, atmosphere vs world FX, preview mode, and extraction budgeting — see plan status *Rendering & extraction invariants* and `src/gui/view_representation.rs`. **Major refactors** follow plan status § *Major engineering ladder* (one **phase-level** todo with SUBTASKS / **BLOCKED BY** / **KNOWN FAILURE MODES** / exit criteria — not fragmented top-level D-1, E1-2, … todos).

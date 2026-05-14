@@ -1,13 +1,16 @@
 //! Shared overlay field buffers for **minimap + world preview** sampling (`base_visual_dev01` P1-G).
 //!
-//! Chunk heat in [`SharedOverlayFieldBuffers`] is **derived only** from [`FireVisualFrame::chunk_heat`](crate::render::extraction::FireVisualFrame) each frame;
+//! Chunk heat in [`SharedOverlayFieldBuffers`] is **derived only** from [`FireVisualFrame::chunk_heat`](crate::render::sim_visual_extract::FireVisualFrame) each frame;
 //! `revision` bumps when that map changes (rounded compare) so previews can invalidate cheaply.
+//! [`crate::gui::OverlayFieldFrame::fire_heat_overlay_revision`](crate::gui::OverlayFieldFrame) mirrors this revision for the overlay matrix (T3-C) without duplicating the map.
+//! **Invariant:** do not add a second ECS fire scan here — extend the View Representation / [`OverlayFieldFrame`](crate::gui::OverlayFieldFrame) matrix instead.
 
 use bevy::prelude::*;
 use std::collections::HashMap;
 
-#[derive(Resource, Default, Debug)]
+#[derive(Resource, Default, Debug, Clone)]
 pub struct SharedOverlayFieldBuffers {
+    pub stamp: crate::systems::sim_control::SimStepStamp,
     pub revision: u64,
     /// Chunk-grid visual surface heat (0..1), max per chunk — from fire visual extract, not sim ECS.
     pub chunk_fire_heat: HashMap<IVec2, f32>,

@@ -13,6 +13,10 @@ struct WeatherFireFieldUniforms {
     _pad: f32,
     fire_instance_count: u32,
     _fire_pad: vec3<u32>,
+    partial_origin: vec2<u32>,
+    partial_extent: vec2<u32>,
+    partial_active: u32,
+    _partial_pad: u32,
 }
 
 struct FireVisualInstance {
@@ -32,11 +36,22 @@ struct FireVisualInstance {
 @compute @workgroup_size(8, 8)
 fn update(@builtin(global_invocation_id) gid: vec3<u32>) {
     let dims = vec2<u32>(textureDimensions(prev_field));
-    if (gid.x >= dims.x || gid.y >= dims.y) {
+    var coord = vec2<i32>(i32(gid.x), i32(gid.y));
+    if params.partial_active != 0u {
+        if gid.x >= params.partial_extent.x || gid.y >= params.partial_extent.y {
+            return;
+        }
+        coord = vec2<i32>(
+            i32(params.partial_origin.x) + i32(gid.x),
+            i32(params.partial_origin.y) + i32(gid.y),
+        );
+    } else if gid.x >= dims.x || gid.y >= dims.y {
         return;
     }
-    let coord = vec2<i32>(i32(gid.x), i32(gid.y));
-    let uv = vec2<f32>(f32(gid.x) + 0.5, f32(gid.y) + 0.5) / vec2<f32>(f32(dims.x), f32(dims.y));
+    if coord.x < 0 || coord.y < 0 || coord.x >= i32(dims.x) || coord.y >= i32(dims.y) {
+        return;
+    }
+    let uv = vec2<f32>(f32(coord.x) + 0.5, f32(coord.y) + 0.5) / vec2<f32>(f32(dims.x), f32(dims.y));
     let t = params.time_secs;
 
     // `texture_storage_2d`: `textureLoad` is (tex, coords) only — no mip level argument.
@@ -65,5 +80,5 @@ fn update(@builtin(global_invocation_id) gid: vec3<u32>) {
     let m = params.blend_rate;
     var blended = mix(old, blend_target, m);
     blended = blended * (1.0 - params.decay) + blend_target * params.decay * 0.15;
-    textureStore(next_field, vec2<i32>(gid.xy), blended);
+    textureStore(next_field, coord, blended);
 }

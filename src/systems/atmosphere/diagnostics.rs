@@ -3,6 +3,7 @@
 use bevy::prelude::*;
 
 use super::field::AtmosphereField;
+use super::incremental_schedule::AtmospherePartialWriteMetrics;
 use super::perf_overlay::AtmospherePerfThresholds;
 use super::pipeline::AtmospherePipelineSet;
 
@@ -25,6 +26,10 @@ pub struct AtmosphereDiagnostics {
     /// Sample from [`super::visibility::visibility_between`] along a fixed probe segment (HUD / debug).
     pub sample_path_visibility: f32,
     pub sample_mean_smoke: f32,
+    pub partial_field_writes: u64,
+    pub full_field_reconciles: u64,
+    pub stale_partial_region_skips: u64,
+    pub partial_write_metrics: AtmospherePartialWriteMetrics,
 }
 
 fn atmosphere_diagnostics_sample(

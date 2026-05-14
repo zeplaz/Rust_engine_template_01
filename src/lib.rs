@@ -12,6 +12,7 @@ pub mod engine;
 pub mod entities;
 pub mod gui;
 pub mod io;
+pub mod compute;
 pub mod render;
 pub mod systems;
 pub mod strategic;

@@ -35,6 +35,10 @@ use crate::entities::production::core::{
 use super::input_bindings::InputBindings;
 use super::logistics_focus::{HudAggregateSettings, HudLogisticsFocus};
 use super::map_camera::{MapCameraDesired, MapCameraMode, MapCameraSettings};
+use super::representation_policy::RepresentationResult;
+use super::view_representation::{camera_owner_label, ActiveCameraOwner, CameraOwner, CameraVisualState};
+use super::world_representation::{WorldLodBand, WorldRepresentationFrame};
+use crate::render::GpuRepresentationMetrics;
 use super::{CmdUiMonoFont, UiPalette};
 
 #[derive(Component)]
@@ -713,8 +717,35 @@ fn update_operations_strip(
 fn update_ops_strip_map_camera_line(
     settings: Res<MapCameraSettings>,
     desired: Res<MapCameraDesired>,
+    active_cam: Res<ActiveCameraOwner>,
+    cam_vis: Res<CameraVisualState>,
+    world: Res<WorldRepresentationFrame>,
+    policy: Res<RepresentationResult>,
+    overlay: Res<crate::gui::OverlayFieldFrame>,
+    gpu_metrics: Res<GpuRepresentationMetrics>,
+    readiness: Option<Res<crate::render::AppStage5ReadinessReport>>,
+    partial_metrics: Option<Res<crate::systems::atmosphere::AtmospherePartialWriteMetrics>>,
     mut q_map: Query<&mut Text, With<OpsStripMapCam>>,
-    mut fp_cache: Local<Option<(u8, bool, i32, i32)>>,
+    mut fp_cache: Local<
+        Option<(
+            (u8, bool, i32, i32, u8, u64, i32, i32, i32),
+            (
+                u8,
+                i32,
+                i32,
+                i32,
+                u64,
+                u8,
+                u32,
+                u64,
+                u32,
+                u32,
+                u32,
+                u32,
+            ),
+            (u32, u8, u32, u32, u32, u32),
+        )>,
+    >,
 ) {
     let mode_tag: u8 = match settings.mode {
         MapCameraMode::Strategic => 0,
@@ -723,19 +754,88 @@ fn update_ops_strip_map_camera_line(
     };
     let zoom_k = (desired.scale.x * 1000.0).round() as i32;
     let yaw_deg = (desired.rotation.to_euler(EulerRot::ZYX).0.to_degrees() * 10.0).round() as i32;
-    let fp = (
+    let (ow_tag, ow_bits) = match &active_cam.owner {
+        CameraOwner::Player => (0u8, 0u64),
+        CameraOwner::CinematicTrack => (1u8, 0u64),
+        CameraOwner::Replay => (2u8, 0u64),
+        CameraOwner::FollowTarget(e) => (3u8, e.to_bits()),
+    };
+    let sw_i = (cam_vis.strategic_weight * 100.0).round() as i32;
+    let cw_i = (cam_vis.cinematic_weight * 100.0).round() as i32;
+    let za_i = (cam_vis.zoom_alpha * 100.0).round() as i32;
+    let lod_tag: u8 = match world.global_band() {
+        WorldLodBand::LocalTactical => 0,
+        WorldLodBand::Operational => 1,
+        WorldLodBand::Strategic => 2,
+        WorldLodBand::Macro => 3,
+    };
+    let fc_x = world.focus_chunk.x;
+    let fc_y = world.focus_chunk.y;
+    let ir = world.interest_radius_chunks;
+    let stamp = world.sim_step_stamp.tick;
+    let fp_a = (
         mode_tag,
         settings.edge_scroll_enabled,
         zoom_k,
         yaw_deg,
+        ow_tag,
+        ow_bits,
+        sw_i,
+        cw_i,
+        za_i,
     );
-    if fp_cache.as_ref() == Some(&fp) {
+    let stamp_tick = policy.stamp.tick.min(u32::MAX as u64) as u32;
+    let overlay_rev = overlay.fire_heat_overlay_revision.min(u64::from(u32::MAX)) as u32;
+    let partial_disp = partial_metrics
+        .as_deref()
+        .map(|m| m.partial_compute_dispatch_count)
+        .unwrap_or(0);
+    let full_fallback = partial_metrics
+        .as_deref()
+        .map(|m| m.full_field_fallback_active as u8)
+        .unwrap_or(0);
+    let atlas_skip = partial_metrics
+        .as_deref()
+        .map(|m| m.atlas_skip_count)
+        .unwrap_or(0);
+    let dup_extract = readiness
+        .as_deref()
+        .map(|r| r.duplicate_visual_scan_count)
+        .unwrap_or(0);
+    let fire_gpu_kb = (gpu_metrics.upload_bytes / 1024).min(u32::MAX as u64) as u32;
+    let overlay_gpu_kb = partial_metrics
+        .as_deref()
+        .map(|m| (m.gpu_texture_upload_bytes / 1024).min(u32::MAX as u64) as u32)
+        .unwrap_or(0);
+    let fp_b0 = (
+        lod_tag,
+        fc_x,
+        fc_y,
+        ir,
+        stamp,
+        policy.active_band as u8,
+        gpu_metrics.instance_rows,
+        gpu_metrics.upload_bytes,
+        gpu_metrics.dispatch_count,
+        stamp_tick,
+        overlay_rev,
+        gpu_metrics.draw_instances,
+    );
+    let fp_b1 = (
+        partial_disp,
+        full_fallback,
+        atlas_skip,
+        dup_extract,
+        fire_gpu_kb,
+        overlay_gpu_kb,
+    );
+    if fp_cache.as_ref() == Some(&(fp_a, fp_b0, fp_b1)) {
         return;
     }
-    *fp_cache = Some(fp);
+    *fp_cache = Some((fp_a, fp_b0, fp_b1));
 
     let line = format!(
-        "MAP  {}  edge {}  zoom {:.2}  yaw {:.1}°",
+        "MAP  {}  edge {}  zoom {:.2}  yaw {:.1}°  |  CAM:{}  zα {:.2}  s{:02}c{:02}  |  LOD:{} fc{},{} r{} tick{}  |  REP:lod={} fire_gpu={}kb overlay_gpu={}kb partial_disp={} full_fallback={} dup_extract={} atlas_skip={} stamp={} rev={} draw={}",
         settings.mode.label(),
         if settings.edge_scroll_enabled {
             "on"
@@ -744,6 +844,25 @@ fn update_ops_strip_map_camera_line(
         },
         desired.scale.x,
         desired.rotation.to_euler(EulerRot::ZYX).0.to_degrees(),
+        camera_owner_label(&active_cam.owner),
+        cam_vis.zoom_alpha,
+        sw_i,
+        cw_i,
+        world.global_band().short_label(),
+        world.focus_chunk.x,
+        world.focus_chunk.y,
+        world.interest_radius_chunks,
+        world.sim_step_stamp.tick,
+        policy.active_band.short_label(),
+        fire_gpu_kb,
+        overlay_gpu_kb,
+        partial_disp,
+        full_fallback,
+        dup_extract,
+        atlas_skip,
+        policy.stamp.tick,
+        overlay.fire_heat_overlay_revision,
+        gpu_metrics.draw_instances,
     );
     for mut t in q_map.iter_mut() {
         *t = Text::new(line.clone());
