@@ -29,6 +29,7 @@ mod tests {
             overlay_from_shared_buffers_only: true,
             particle_lod_scales: true,
             phase_f_lod_proof_ok: true,
+            instanced_dispatch_ok: true,
             projection_domains: 3,
             registered_producers: 1,
             duplicate_visual_scan_count: 0,

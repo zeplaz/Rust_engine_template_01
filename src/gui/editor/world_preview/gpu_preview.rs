@@ -6,15 +6,23 @@
 
 use std::collections::{HashMap, HashSet};
 
-use super::ecology_preview::blend_fire_overlay;
+use super::composite_preview_graph::composite_chunk_rgba;
+use super::CompositePreviewGraphResource;
+use super::ecology_preview::EcologyPreviewSample;
 use super::preview_render_contract::{PreviewCameraState, PreviewRenderMode, PreviewRenderTarget};
 use super::viewport::EditorViewport;
+use crate::gui::WorldRepresentationFrame;
+use crate::io::streaming::ghost_band_neighbor_coords_for_preview;
 use crate::render::SharedOverlayFieldBuffers;
+use crate::systems::ecology::{ChunkEcology, VegetationField};
+use crate::systems::fire::{ChunkSmokeField, FireFuelField};
 use crate::systems::terrain::TerrainRegistriesHandles;
+use crate::systems::weather::ChunkWeather;
 use crate::terrain::generation::Chunk;
 use crate::terrain::material::{MaterialId, MaterializedChunk, MaterialRegistry};
 
 use bevy::camera::{Camera, Camera2d, ClearColorConfig, RenderTarget};
+use bevy::ecs::system::SystemParam;
 use bevy::math::{IVec2, UVec2, Vec2};
 use bevy::prelude::*;
 
@@ -33,14 +41,22 @@ pub struct WorldPreviewGpuChunkQuad {
 #[derive(Resource, Debug, Clone, Copy)]
 pub struct WorldPreviewGpuRuntime {
     pub offscreen_renderer_ready: bool,
+    pub last_overlay_revision: u64,
 }
 
 impl Default for WorldPreviewGpuRuntime {
     fn default() -> Self {
         Self {
             offscreen_renderer_ready: false,
+            last_overlay_revision: 0,
         }
     }
+}
+
+#[derive(SystemParam)]
+pub(crate) struct WorldPreviewGpuTerrainAccess<'w> {
+    handles: Res<'w, TerrainRegistriesHandles>,
+    materials: Res<'w, Assets<MaterialRegistry>>,
 }
 
 #[must_use]
@@ -72,18 +88,6 @@ pub(crate) fn visible_chunk_coords_for_preview(
         }
     }
     out
-}
-
-fn materialized_chunk_base_rgba(chunk: &MaterializedChunk, reg: &MaterialRegistry) -> [u8; 4] {
-    let id = chunk
-        .materials
-        .first()
-        .copied()
-        .unwrap_or(MaterialId(0));
-    reg.materials
-        .get(id.0 as usize)
-        .map(|m| m.preview_color)
-        .unwrap_or([64, 64, 64, 255])
 }
 
 fn rgba_to_color(rgba: [u8; 4]) -> Color {
@@ -147,17 +151,24 @@ pub(crate) fn sync_world_preview_gpu_chunk_quads(
     preview_cam: Res<PreviewCameraState>,
     preview_target: Res<PreviewRenderTarget>,
     viewport: Res<EditorViewport>,
-    gpu_rt: Res<WorldPreviewGpuRuntime>,
+    mut gpu_rt: ResMut<WorldPreviewGpuRuntime>,
     shared_overlay: Res<SharedOverlayFieldBuffers>,
-    handles: Res<TerrainRegistriesHandles>,
-    materials: Res<Assets<MaterialRegistry>>,
+    preview_graph: Res<CompositePreviewGraphResource>,
+    world_frame: Res<WorldRepresentationFrame>,
+    terrain: WorldPreviewGpuTerrainAccess,
     chunk_mats: Query<(&Chunk, &MaterializedChunk)>,
-    q_cam: Query<Entity, With<WorldPreviewGpuCamera>>,
+    chunk_ecology: Query<(
+        &Chunk,
+        Option<&ChunkEcology>,
+        Option<&VegetationField>,
+        Option<&ChunkWeather>,
+        Option<&FireFuelField>,
+        Option<&ChunkSmokeField>,
+    )>,
     q_chunks: Query<(Entity, &WorldPreviewGpuChunkQuad)>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut color_materials: ResMut<Assets<ColorMaterial>>,
     mut swap: ResMut<crate::gui::SwapImageBuffers>,
-    mut last_overlay_revision: Local<u64>,
 ) {
     if !gpu_rt.offscreen_renderer_ready || preview_cam.mode != PreviewRenderMode::GpuRenderTarget {
         for (e, _) in q_chunks.iter() {
@@ -165,14 +176,15 @@ pub(crate) fn sync_world_preview_gpu_chunk_quads(
         }
         return;
     }
-    if q_cam.is_empty() || preview_target.size.x == 0 || preview_target.size.y == 0 {
+    if preview_target.size.x == 0 || preview_target.size.y == 0 {
         return;
     }
 
-    let reg = match materials.get(&handles.material_registry) {
+    let reg = match terrain.materials.get(&terrain.handles.material_registry) {
         Some(r) => r,
         None => return,
     };
+    let graph = preview_graph.0;
 
     let chunk_geom: Vec<(IVec2, UVec2)> = chunk_mats
         .iter()
@@ -186,12 +198,18 @@ pub(crate) fn sync_world_preview_gpu_chunk_quads(
             preview_target.size.y as f32,
         )
     };
-    let visible = visible_chunk_coords_for_preview(
+    let mut visible = visible_chunk_coords_for_preview(
         preview_cam.center,
         preview_cam.zoom,
         viewport_size,
         &chunk_geom,
     );
+    for coord in ghost_band_neighbor_coords_for_preview(
+        world_frame.focus_chunk,
+        world_frame.interest_radius_chunks.max(1),
+    ) {
+        visible.insert(coord);
+    }
 
     let mut live: HashMap<IVec2, Entity> = HashMap::new();
     for (e, quad) in q_chunks.iter() {
@@ -203,15 +221,36 @@ pub(crate) fn sync_world_preview_gpu_chunk_quads(
     }
 
     let overlay_revision = shared_overlay.revision;
-    let recolor = overlay_revision != *last_overlay_revision;
-    *last_overlay_revision = overlay_revision;
+    let recolor = overlay_revision != gpu_rt.last_overlay_revision;
+    gpu_rt.last_overlay_revision = overlay_revision;
+
+    let mut ecology_by_chunk: HashMap<IVec2, EcologyPreviewSample> = HashMap::new();
+    for (chunk, eco, veg, wx, fuel, smoke) in chunk_ecology.iter() {
+        let heat = shared_overlay.fire_surface_heat_at(chunk.coord);
+        ecology_by_chunk.insert(
+            chunk.coord,
+            EcologyPreviewSample::from_chunk_components(eco, veg, wx, fuel, heat, smoke),
+        );
+    }
 
     for (chunk, mat_chunk) in chunk_mats.iter() {
         if !visible.contains(&chunk.coord) {
             continue;
         }
         let heat = shared_overlay.fire_surface_heat_at(chunk.coord);
-        let rgba = blend_fire_overlay(materialized_chunk_base_rgba(mat_chunk, reg), heat, 0.0);
+        let smoke = ecology_by_chunk
+            .get(&chunk.coord)
+            .map(|sample| sample.smoke.density)
+            .unwrap_or(0.0);
+        let rgba = composite_chunk_rgba(
+            &graph,
+            mat_chunk,
+            reg,
+            ecology_by_chunk.get(&chunk.coord).copied(),
+            None,
+            heat,
+            smoke,
+        );
         let color = rgba_to_color(rgba);
         let sx = mat_chunk.size.x as f32;
         let sy = mat_chunk.size.y as f32;
@@ -278,6 +317,28 @@ pub(crate) fn sync_world_preview_offscreen_camera_transform(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    use super::super::composite_preview_graph::CompositePreviewGraph;
+    use super::super::layers::PreviewLayers;
+
+    #[test]
+    fn preview_chunk_rgba_prefers_ecology_sample_when_present() {
+        let reg = MaterialRegistry {
+            schema_version: 1,
+            materials: Vec::new(),
+            name_to_id: HashMap::new(),
+        };
+        let mat_chunk = MaterializedChunk {
+            size: UVec2::ONE,
+            materials: vec![MaterialId(0)],
+        };
+        let sample = EcologyPreviewSample::from_chunk_components(None, None, None, None, 0.4, None);
+        let ecology_graph = CompositePreviewGraph::from_layers(PreviewLayers::ECOLOGY);
+        let biome_graph = CompositePreviewGraph::from_layers(PreviewLayers::BIOME);
+        let with_eco = composite_chunk_rgba(&ecology_graph, &mat_chunk, &reg, Some(sample), None, 0.4, 0.0);
+        let material_only = composite_chunk_rgba(&biome_graph, &mat_chunk, &reg, None, None, 0.4, 0.0);
+        assert_ne!(with_eco, material_only);
+    }
 
     #[test]
     fn visible_chunks_follow_viewport_intersection() {

@@ -2,7 +2,7 @@
 
 > **STATUS:** One-page **input** for designers and project leads before engineering runs [`terrain_paired_runbooks_queue_v1.md`](terrain_paired_runbooks_queue_v1.md) (**Q0–Q6**) or [`system_runbook_authoring_meta_v1.md`](system_runbook_authoring_meta_v1.md) to spawn new orchestrators. **No Rust** — decisions and scope only.
 
-Version: `v1.0.3`
+Version: `v1.0.5`
 
 ---
 
@@ -73,6 +73,16 @@ Use these ids in G3 **results** files and orchestrator notes. **Do not** paralle
 | **BQ-111** | **G5 subsystem promotion** — navigation vs damage vs manufacturing **per finding**; optional matrices; before `G5-SNN` | G5 pack living queue |
 | **BQ-112** | **World map editor (M1–M5)** — FullReady→Editor routing, `TEMP-EGUI` palette, brushes, snapshot save/load vs **G4**/serialization matrix | [`map_editor_runbook_v1.md`](map_editor_runbook_v1.md) · [`map_editor_matrix_v1.md`](../matrix/map_editor/map_editor_matrix_v1.md) |
 | **BQ-113** | **Scenario scripting** — *W1–3 done* (`EngineScriptHost`, objectives, panel); *open:* **Wave 4** golden `golden_operational_minimal_v1`, §4c Q&A | [`scenario_campaign_scripted_tools_runbook_v1.md`](scenario_campaign_scripted_tools_runbook_v1.md) §4–6 |
+| **BQ-114** | **Stage-7 designer locks** — program gates, truth/belief separation, hub-isolated storage, save vs recompute, tooling split | [`stage7_behavioral_world_designer_brief_v1.md`](stage7_behavioral_world_designer_brief_v1.md) §1–9 |
+| **BQ-115** | **Track F MVP slice** — StrategicCommand + recon/logistics overlays + move/secure corridor + Threat/Logistics/Visibility channels | [`stage7_behavioral_world_designer_brief_v1.md`](stage7_behavioral_world_designer_brief_v1.md) §2–3 |
+| **BQ-116** | **Utility channel ownership + legend** — one owner per channel; registry-driven RGB; offline mask authoring until Wave **S**/**C** stable | [`stage7_behavioral_world_designer_brief_v1.md`](stage7_behavioral_world_designer_brief_v1.md) §5 |
+| **BQ-117** | **Stage-7 acceptance fixtures** — scenario RON, overlay snapshot, dispatch timeline, explainability report, golden replay | [`stage7_behavioral_world_designer_brief_v1.md`](stage7_behavioral_world_designer_brief_v1.md) §10 · [`mission_authoring_framework_v1.md`](mission_authoring_framework_v1.md) |
+| **BQ-118** | **Command shell UX order** — overlay toggles → command tray → intel timeline → command table; explainability HUD defaults | [`stage7_behavioral_world_designer_brief_v1.md`](stage7_behavioral_world_designer_brief_v1.md) §8 · [`experience_layer_ux_hud_designer_brief_v1.md`](experience_layer_ux_hud_designer_brief_v1.md) §5 |
+| **BQ-119** | **UX/HUD designer locks** — Stage-5 EXIT gates; UX-A–D tracks; single-spine consumption rule | [`experience_layer_ux_hud_designer_brief_v1.md`](experience_layer_ux_hud_designer_brief_v1.md) §1 |
+| **BQ-120** | **GPU minimap compositor** — M1–M3; `RenderTarget::Image`; egui display-only | [`experience_layer_ux_hud_designer_brief_v1.md`](experience_layer_ux_hud_designer_brief_v1.md) §2 · **UX-1** |
+| **BQ-121** | **Construction blueprint UX** — CSTR-1–3; ghost/approval ECS separation | [`experience_layer_ux_hud_designer_brief_v1.md`](experience_layer_ux_hud_designer_brief_v1.md) §4 · **UX-4** |
+| **BQ-122** | **Transmission / media widget** — queue, channels, GPU quad; not egui video | [`experience_layer_ux_hud_designer_brief_v1.md`](experience_layer_ux_hud_designer_brief_v1.md) §3 · **UX-3** |
+| **BQ-123** | **Detached HUD + overlay/command shell** — UX-2, UX-5, UX-6 after minimap + blueprint foundations | [`experience_layer_ux_hud_designer_brief_v1.md`](experience_layer_ux_hud_designer_brief_v1.md) §5–6 |
 
 ### 4.1 G3 sub-pack §3 → BQ crosswalk
 
@@ -116,3 +126,5 @@ Before writing **G2** atomic Rust steps (after **G2-S00**), answer gap-hunt §5:
 | [`../matrix/gap_remediation/runbook/g3_execution_cycle_v1.md`](../matrix/gap_remediation/runbook/g3_execution_cycle_v1.md) | **G3** step order: GUI and backlog orchestrators alternate; cycle **results** use **BQ-###** only |
 | [`developer_reflective_brief_v1.plan.md`](developer_reflective_brief_v1.plan.md) | Engineering fills IA + diagrams + decisions; ties **BQ-###** back into this brief |
 | [`scenario_campaign_scripted_tools_runbook_v1.md`](scenario_campaign_scripted_tools_runbook_v1.md) | Tracks scripted operational scenario tooling, `EngineScriptHost` execution, and golden replay fixtures |
+| [`stage7_behavioral_world_designer_brief_v1.md`](stage7_behavioral_world_designer_brief_v1.md) | Locked Stage-7 / Track F product input; **BQ-114–118** implementation anchors |
+| [`experience_layer_ux_hud_designer_brief_v1.md`](experience_layer_ux_hud_designer_brief_v1.md) | Locked UX-A–D / UX-1–6 HUD input; **BQ-119–123** |

@@ -2,8 +2,11 @@
 //! Today: one full CPU RGBA pass per update; roadmap: chunk-dirty atlas, composited layers, GPU path.
 //! **Phase D contract:** `preview_render_contract.rs` (`PreviewCameraState`, `PreviewRenderTarget`, `PreviewRenderBudget`) — separate from gameplay camera (`base_visual_dev01_plan_status.md` § `phase-d-preview-render-target`).
 //! **Runbook:** `prompts/guides/world_preview_runbook_v1.md` (optimization order, U7 invalidation tie-in).
+//! **Wave P:** `composite_preview_contract.rs` + `wave_p_readiness.rs` (consumer-only composite preview entry).
 
 mod color_presets;
+mod composite_preview_contract;
+mod composite_preview_graph;
 mod ecology_preview;
 mod gpu_preview;
 mod interaction;
@@ -12,6 +15,7 @@ mod minimap;
 mod overlays;
 mod preview_render_contract;
 mod preview_vt4;
+mod registry_inspector;
 mod render_raster;
 mod texture_cache;
 mod tile_sampling;
@@ -20,10 +24,19 @@ mod ui_sidebar;
 mod ui_statusbar;
 mod ui_toolbar;
 mod viewport;
+mod wave_p_readiness;
 mod window;
 mod cache;
 
-pub use color_presets::{preview_biome_rgba_for_tile, terrain_family_preview_rgba};
+pub use composite_preview_graph::{
+    chunk_base_rgba_for_graph, composite_chunk_rgba, materialized_chunk_base_rgba,
+    sync_composite_preview_graph_resource, CompositePreviewGraph, CompositePreviewGraphResource,
+};
+pub use composite_preview_contract::{
+    canonical_sources_for_layers, wave_p_consumer_contract_passes, CompositePreviewCanonicalSource,
+    CompositePreviewLayerBinding, WAVE_P_CONSUMER_ROOTS, WAVE_P_LAYER_BINDINGS,
+    WAVE_P_OPEN_BACKLOG_ITEMS,
+};
 pub use ecology_preview::{
     blend_fire_overlay, ecology_preview_rgba, ecology_sample_for_world_tile, vegetation_preview_rgba,
     EcologyGpuPassKind, EcologyPreviewSample, EcologyRasterChunkRow,
@@ -48,8 +61,9 @@ pub use texture_cache::{
 };
 pub use cache::WorldPreviewChunkCaches;
 pub use tilemap_bridge::tilemap_overlay_index_for_layers;
+pub use wave_p_readiness::{gather_wave_p_readiness, wave_p_readiness_passes, WavePReadinessReport};
+pub use color_presets::{preview_biome_rgba_for_tile, terrain_family_preview_rgba};
 pub use viewport::EditorViewport;
-
 pub use window::display_world_preview;
 
 use bevy::prelude::*;
@@ -82,6 +96,7 @@ pub struct WorldPreviewPlugin;
 impl Plugin for WorldPreviewPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(crate::render::Stage5ReadinessProfile::FULL_APP);
+        app.init_resource::<CompositePreviewGraphResource>();
         preview_render_contract::init_preview_render_contract_resources(app);
         app.init_resource::<crate::gui::SwapImageBuffers>()
             .init_resource::<WorldPreviewTexture>()
@@ -107,8 +122,10 @@ impl Plugin for WorldPreviewPlugin {
                 (
                     preview_render_contract::sync_preview_render_contract_system
                         .before(WorldPreviewRasterOrder::SyncTextureSize),
-                    preview_render_contract::sync_preview_path_authority
+                    composite_preview_graph::sync_composite_preview_graph_resource
                         .after(preview_render_contract::sync_preview_render_contract_system),
+                    preview_render_contract::sync_preview_path_authority
+                        .after(composite_preview_graph::sync_composite_preview_graph_resource),
                     sync_world_preview_texture_size.in_set(WorldPreviewRasterOrder::SyncTextureSize),
                     render_raster::update_world_preview_texture
                         .in_set(WorldPreviewRasterOrder::RasterTiles)

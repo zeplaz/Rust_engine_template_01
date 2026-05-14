@@ -167,6 +167,19 @@ fn floor_div(value: i32, divisor: i32) -> i32 {
     }
 }
 
+/// GPU page table mirror for partial compute dispatch (resident dirty pages).
+#[derive(Resource, Clone, Debug, Default)]
+pub struct AtmosphereFieldPageTable {
+    pub entries: Vec<AtmospherePageEntry>,
+}
+
+pub fn sync_atmosphere_field_page_table(
+    table: Res<AtmosphereFieldResidencyTable>,
+    mut gpu_table: ResMut<AtmosphereFieldPageTable>,
+) {
+    gpu_table.entries = table.gpu_page_entries();
+}
+
 pub fn sync_atmosphere_field_page_residency(
     fire: Option<Res<crate::render::sim_visual_extract::FireVisualFrame>>,
     mut table: ResMut<AtmosphereFieldResidencyTable>,
@@ -191,6 +204,17 @@ pub fn sync_atmosphere_field_page_residency(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn page_table_tracks_resident_gpu_entries() {
+        let mut table = AtmosphereFieldResidencyTable::with_capacity(4);
+        table.touch_chunk(IVec2::new(2, 2));
+        let gpu = AtmosphereFieldPageTable {
+            entries: table.gpu_page_entries(),
+        };
+        assert_eq!(gpu.entries.len(), 1);
+        assert_ne!(gpu.entries[0].valid, 0);
+    }
 
     #[test]
     fn page_coord_partitions_chunks_into_fixed_span() {

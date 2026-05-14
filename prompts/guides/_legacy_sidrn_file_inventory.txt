@@ -1,0 +1,248 @@
+.gitignore
+cmd_modual_Strat_\assents\.~lock.MBT_hit_utilitymap_top_0.1.ppm#
+cmd_modual_Strat_\assents\apc_hit_mapuitly_top0.1.png
+cmd_modual_Strat_\assents\apc_hit_mapuitly_top0.1.ppm
+cmd_modual_Strat_\assents\MBT_hit_utility_map_front_0.1.png
+cmd_modual_Strat_\assents\MBT_hit_utility_map_front_0.1.ppm
+cmd_modual_Strat_\assents\MBT_hit_utility_map_side0.1.png
+cmd_modual_Strat_\assents\MBT_hit_utility_map_side0.1.ppm
+cmd_modual_Strat_\assents\MBT_hit_utility_map0.1.png
+cmd_modual_Strat_\assents\MBT_hit_utility_map0.1.ppm
+cmd_modual_Strat_\assents\MBT_hit_utilitymap_top_0.1.ppm
+cmd_modual_Strat_\assents\MBT_HU_map_TOP0.1.png
+cmd_modual_Strat_\assents2_tarianz\3Barl_AA_side_BACK.xcf
+cmd_modual_Strat_\assents2_tarianz\3Barl_AA_side_FRONT.xcf
+cmd_modual_Strat_\assents2_tarianz\3Barl_AA_side_L.xcf
+cmd_modual_Strat_\assents2_tarianz\3Barl_AA_side_R.xcf
+cmd_modual_Strat_\assents2_tarianz\3Barl_AA_side_TOP.xcf
+cmd_modual_Strat_\assents2_tarianz\3Barl_AA.xcf
+cmd_modual_Strat_\assents2_tarianz\alngonorthbordertheater.xcf
+cmd_modual_Strat_\assents2_tarianz\asdmap.xcf
+cmd_modual_Strat_\assents2_tarianz\map_angl_uigev140ishmb.xcf
+cmd_modual_Strat_\assents2_tarianz\refgl_rendeing
+cmd_modual_Strat_\assents2_tarianz\road__1EW.ppm
+cmd_modual_Strat_\assents2_tarianz\road__1EW.xcf
+cmd_modual_Strat_\assents2_tarianz\smaspaceize.ppm
+cmd_modual_Strat_\assents2_tarianz\smaspaceize.xcf
+cmd_modual_Strat_\assents2_tarianz\smaspaceize2.ppm
+cmd_modual_Strat_\assents2_tarianz\smaspaceize3.xcf
+cmd_modual_Strat_\assents2_tarianz\TRASPORT_TRUCK_FE_01_TOP.xcf
+cmd_modual_Strat_\exmaplz\car.cpp
+cmd_modual_Strat_\GUI_cmd_sidrn_UML.mdj
+cmd_modual_Strat_\loose image and bits\facotyII.ppm
+cmd_modual_Strat_\loose image and bits\facotyII.xcf
+cmd_modual_Strat_\Models\battleship_flower_rendermodelz.mdj
+cmd_modual_Strat_\Models\scatwork on game.jpg
+cmd_modual_Strat_\source\cmd_buttonz.hpp
+cmd_modual_Strat_\source\cmd_managerz.hpp
+cmd_modual_Strat_\source\define_typedef_cmdz_.h
+cmd_modual_Strat_\source\di_testz_main.cpp
+cmd_modual_Strat_\source\Dialog.hpp
+cmd_modual_Strat_\source\GUI\_envo_workspace-SIDRN_workspace-cmd_modual_Strat_-source-.txt
+cmd_modual_Strat_\source\GUI\aeizizfl_2.ppm.ppm
+cmd_modual_Strat_\source\GUI\close_buttonz_DOWN.ppm
+cmd_modual_Strat_\source\GUI\close_buttonz_HOVER.ppm
+cmd_modual_Strat_\source\GUI\close_buttonz_OFF.ppm
+cmd_modual_Strat_\source\GUI\close_buttonz.xcf
+cmd_modual_Strat_\source\GUI\Confermz_buttonz_2.xcf
+cmd_modual_Strat_\source\GUI\Confermz_buttonz_2DOWN.ppm
+cmd_modual_Strat_\source\GUI\Confermz_buttonz_2HOVER.ppm
+cmd_modual_Strat_\source\GUI\Confermz_buttonz_2OFF.ppm
+cmd_modual_Strat_\source\GUI\Confermz_buttonz.xcf
+cmd_modual_Strat_\source\GUI\confermz_HOVER.ppm
+cmd_modual_Strat_\source\GUI\confermz_OFF.ppm
+cmd_modual_Strat_\source\GUI\menu_bar_01.ppm
+cmd_modual_Strat_\source\GUI\menu_bar_01.xcf
+cmd_modual_Strat_\source\GUI\oklz\baz_o1.ppm
+cmd_modual_Strat_\source\GUI\oklz\baz_o2.ppm
+cmd_modual_Strat_\source\GUI\oklz\baz_o3.ppm
+cmd_modual_Strat_\source\GUI\oklz\baz_o4.ppm
+cmd_modual_Strat_\source\GUI\re_size_icon_DOWN.ppm
+cmd_modual_Strat_\source\GUI\re_size_icon_HOVER.ppm
+cmd_modual_Strat_\source\GUI\re_size_icon_OFF.ppm
+cmd_modual_Strat_\source\GUI\re_size_icon_OFF.xcf
+cmd_modual_Strat_\source\GUI\re_size_icon.xcf
+cmd_modual_Strat_\source\GUI\sample_01_UI.png
+cmd_modual_Strat_\source\GUI\sample_01_UI.xcf
+cmd_modual_Strat_\source\GUI\sample_01_UIv02.png
+cmd_modual_Strat_\source\image_layar_cmd.hpp
+cmd_modual_Strat_\source\path_rez.hpp
+cmd_modual_Strat_\source\UI_kontrolUNIT.hpp
+disociruz_en_condiallaughi_.hpp
+Image_Process parts\BInarY_imag_anlizer_G\i0age1
+Image_Process parts\BInarY_imag_anlizer_G\i0age1.pgm
+Image_Process parts\BInarY_imag_anlizer_G\image_Byte8.cpp
+Image_Process parts\BInarY_imag_anlizer_G\image_Byte8.h
+Image_Process parts\BInarY_imag_anlizer_G\image_procczor_mrk_1001.cpp
+Image_Process parts\BInarY_imag_anlizer_G\image_procczor_mrk_1001.h
+Image_Process parts\BInarY_imag_anlizer_G\image1
+Image_Process parts\BInarY_imag_anlizer_G\main.cpp
+Image_Process parts\BInarY_imag_anlizer_G\main.v2.cpp
+Image_Process parts\BInarY_imag_anlizer_G\makefile
+Image_Process parts\BInarY_imag_anlizer_G\outpufile
+Image_Process parts\Refc_vison\clk_out
+Image_Process parts\Refc_vison\cmd_coven_text_01.png
+Image_Process parts\Refc_vison\cmd_coven_text_01.ppm
+Image_Process parts\Refc_vison\imagkjz_RGB.cpp
+Image_Process parts\Refc_vison\imagkjz_RGB.h
+Image_Process parts\Refc_vison\Incmp_refrences etc\data_streamlOader.cpp
+Image_Process parts\Refc_vison\Incmp_refrences etc\hista_ttlup.h
+Image_Process parts\Refc_vison\Incmp_refrences etc\Histagramz.h
+Image_Process parts\Refc_vison\Incmp_refrences etc\image_colour_RGB.CPP
+Image_Process parts\Refc_vison\Incmp_refrences etc\image_colour_RGB.h
+Image_Process parts\Refc_vison\Incmp_refrences etc\img_obkj.cpp
+Image_Process parts\Refc_vison\Incmp_refrences etc\img_obkj.h
+Image_Process parts\Refc_vison\Incmp_refrences etc\meanshfitz
+Image_Process parts\Refc_vison\Incmp_refrences etc\notezzz.h
+Image_Process parts\Refc_vison\Incmp_refrences etc\Objkfactory.h
+Image_Process parts\Refc_vison\Incmp_refrences etc\pix_fetr_host.h
+Image_Process parts\Refc_vison\Incmp_refrences etc\vrt_image0_2.h
+Image_Process parts\Refc_vison\Main.cpp
+Image_Process parts\Refc_vison\Mean_shifts.cpp
+Image_Process parts\Refc_vison\Mean_shifts.h
+Image_Process parts\Refc_vison\output\_outim.ppm
+Image_Process parts\Refc_vison\output\._outim.ppm
+Image_Process parts\Refc_vison\output\5555_outim.ppm
+Image_Process parts\Refc_vison\output\aaaaaaaaaaaaaaaaaaaaaaa_outim.ppm
+Image_Process parts\Refc_vison\output\anomolyz\ffff7_outim.ppm
+Image_Process parts\Refc_vison\output\anomolyz\gg_outim.ppm
+Image_Process parts\Refc_vison\output\anomolyz\mena_outim.ppm
+Image_Process parts\Refc_vison\output\anomolyz\road__1EW.ppm
+Image_Process parts\Refc_vison\output\anomolyz\test_02_outim.ppm
+Image_Process parts\Refc_vison\output\anomolyz\test3_outim.ppm
+Image_Process parts\Refc_vison\output\ddd_outim.ppm
+Image_Process parts\Refc_vison\output\example01nov28_outim.ppm
+Image_Process parts\Refc_vison\output\kjggkj_outim.ppm
+Image_Process parts\Refc_vison\output\mena_outim.ppm
+Image_Process parts\Refc_vison\output\out1_outim.ppm
+Image_Process parts\Refc_vison\output\outsecondthing_outim.ppm
+Image_Process parts\Refc_vison\output\some_outim.ppm
+Image_Process parts\Refc_vison\output\test_write_outim.ppm
+Image_Process parts\Refc_vison\output\tesz4_outim.ppm
+Image_Process parts\Refc_vison\pixel_feture_xy_RGB.cpp
+Image_Process parts\Refc_vison\pixel_feture_xy_RGB.h
+Image_Process parts\Refc_vison\RGB_pix_intzity.h
+Image_Process parts\Refc_vison\road__1EW.ppm
+Image_Process parts\Refc_vison\tools_for_imagescanz\data_streamlOaderbk.cpp
+Image_Process parts\Refc_vison\tools_for_imagescanz\draft_info_imgescannotesandfunctioz.cpp
+Image_Process parts\Refc_vison\tools_for_imagescanz\gamebasicV0.1.mdj
+Image_Process parts\Refc_vison\tools_for_imagescanz\imag_classoutlinez.h
+Image_Process parts\Refc_vison\tools_for_imagescanz\img116.tif
+Image_Process parts\Refc_vison\tools_for_imagescanz\img117.tif
+Image_Process parts\Refc_vison\tools_for_imagescanz\Objkfactorybk.h
+Image_Process parts\Refc_vison\tools_for_imagescanz\othjerininfo.txt
+Image_Process parts\reforcor_image_PMG_PROCZ\Assignment #02  CS.pdf
+Image_Process parts\reforcor_image_PMG_PROCZ\bitz\2.h
+Image_Process parts\reforcor_image_PMG_PROCZ\bitz\baisc.cpp
+Image_Process parts\reforcor_image_PMG_PROCZ\I_P_main.cpp
+Image_Process parts\reforcor_image_PMG_PROCZ\Image_PGM_P2.cpp
+Image_Process parts\reforcor_image_PMG_PROCZ\Image_PGM_P2.h
+Image_Process parts\reforcor_image_PMG_PROCZ\image_procczor_mrk_1022.cpp
+Image_Process parts\reforcor_image_PMG_PROCZ\image_procczor_mrk_1022.h
+Image_Process parts\reforcor_image_PMG_PROCZ\libs_modfied\Building.pgm
+Image_Process parts\reforcor_image_PMG_PROCZ\libs_modfied\glew_img_dislay.cpp
+Image_Process parts\reforcor_image_PMG_PROCZ\libs_modfied\glew_img_dislay.h
+Image_Process parts\reforcor_image_PMG_PROCZ\libs_modfied\MRI.pgm
+Image_Process parts\reforcor_image_PMG_PROCZ\libs_modfied\peppers.pgm
+Image_Process parts\reforcor_image_PMG_PROCZ\log_file.txt
+Image_Process parts\reforcor_image_PMG_PROCZ\output\for_report\3_outim.png
+Image_Process parts\reforcor_image_PMG_PROCZ\output\for_report\gahzl_outim.png
+Image_Process parts\reforcor_image_PMG_PROCZ\output\for_report\mask1_outim.png
+Image_Process parts\reforcor_image_PMG_PROCZ\output\for_report\out_2.png
+Image_Process parts\reforcor_image_PMG_PROCZ\output\oldnamz\3_outim.pgm
+Image_Process parts\reforcor_image_PMG_PROCZ\output\oldnamz\5_outim.pgm
+Image_Process parts\reforcor_image_PMG_PROCZ\output\oldnamz\alla3_outim.pgm
+Image_Process parts\reforcor_image_PMG_PROCZ\output\oldnamz\dsf_outim.pgm
+Image_Process parts\reforcor_image_PMG_PROCZ\output\oldnamz\export_outim.pgm
+Image_Process parts\reforcor_image_PMG_PROCZ\output\oldnamz\file1_outim.pgm
+Image_Process parts\reforcor_image_PMG_PROCZ\output\oldnamz\file2_outim.pgm
+Image_Process parts\reforcor_image_PMG_PROCZ\output\oldnamz\gahzl_outim.pgm
+Image_Process parts\reforcor_image_PMG_PROCZ\output\oldnamz\mask3_outim.pgm
+Image_Process parts\reforcor_image_PMG_PROCZ\output\oldnamz\mg1_outim.pgm
+Image_Process parts\reforcor_image_PMG_PROCZ\output\oldnamz\mg3_outim.pgm
+Image_Process parts\reforcor_image_PMG_PROCZ\output\oldnamz\newMASK1_outim.pgm
+Image_Process parts\reforcor_image_PMG_PROCZ\output\oldnamz\newmask2_outim.pgm
+Image_Process parts\reforcor_image_PMG_PROCZ\output\oldnamz\newmask3_outim.pgm
+Image_Process parts\reforcor_image_PMG_PROCZ\output\oldnamz\o3_outim.pgm
+Image_Process parts\reforcor_image_PMG_PROCZ\output\oldnamz\out1go_outim.pgm
+Image_Process parts\reforcor_image_PMG_PROCZ\output\oldnamz\sd_outim.pgm
+Image_Process parts\reforcor_image_PMG_PROCZ\output\oldnamz\via_outim.pgm
+Image_Process parts\reforcor_image_PMG_PROCZ\output\oldnamz\xcz_outim.pgm
+Image_Process parts\reforcor_image_PMG_PROCZ\outputfilenae
+Image_Process parts\reforcor_image_PMG_PROCZ\read.md
+Image_Process parts\reforcor_image_PMG_PROCZ\vrt_image.h
+Image_Process parts\reforcor_image_PMG_PROCZ\vrt_mask.h
+img141.jpg
+loc_map_cmd
+preformnacre scrtipingz
+README.md
+sda
+SIDRN_HUD_Overview_0_2.png
+sym_engine0.01_shirz\binary_tests\bina_tz
+sym_engine0.01_shirz\binary_tests\binarycv
+sym_engine0.01_shirz\binary_tests\input_testsfkm
+sym_engine0.01_shirz\binary_tests\majnta_curve_withUSB_inputshigt
+sym_engine0.01_shirz\binary_tests\model_test_lamdbz
+sym_engine0.01_shirz\binary_tests\opencvbuildcmd
+sym_engine0.01_shirz\binary_tests\otesz_out
+sym_engine0.01_shirz\binary_tests\out_ma21_covcolur_usb
+sym_engine0.01_shirz\Images of tests\corve_test_withusb_contrl_shiftinp.png
+sym_engine0.01_shirz\Images of tests\courve_labmdatestz02.png
+sym_engine0.01_shirz\Images of tests\courve_labmdatestz03.png
+sym_engine0.01_shirz\Images of tests\may21_usb_input_colorhagecoverest.png
+sym_engine0.01_shirz\modelz\earlyDtaftz\draftz_exloring_0_04.png
+sym_engine0.01_shirz\modelz\earlyDtaftz\draftz_exloring_01.png
+sym_engine0.01_shirz\modelz\earlyDtaftz\draftz_exloring_02.png
+sym_engine0.01_shirz\modelz\earlyDtaftz\draftz_exloring_03.png
+sym_engine0.01_shirz\modelz\earlyDtaftz\draftz_exloring_04.png
+sym_engine0.01_shirz\modelz\genreamwork0102.png
+sym_engine0.01_shirz\modelz\genrframwork01.png
+sym_engine0.01_shirz\modelz\noteszmathz.jpg
+sym_engine0.01_shirz\notez\img_scan_specs.rd
+sym_engine0.01_shirz\notez\log_file.txt
+sym_engine0.01_shirz\notez\Makefile
+sym_engine0.01_shirz\notez\noteagentz
+sym_engine0.01_shirz\notez\output_01
+sym_engine0.01_shirz\notez\refencenotez\member-function pointers...vratictemp_monitor
+sym_engine0.01_shirz\notez\refencenotez\Pixel_1xbyte.cpp
+sym_engine0.01_shirz\notez\refencenotez\timepoinfun.cpp
+sym_engine0.01_shirz\notez\reorz_img\2d_colourplane_map.png
+sym_engine0.01_shirz\notez\test_main_SIDRN.cpp
+sym_engine0.01_shirz\readME.md
+sym_engine0.01_shirz\sub_sytemz\_outdated_build_workfolder\B_box.hpp
+sym_engine0.01_shirz\sub_sytemz\_outdated_build_workfolder\b_menu.h
+sym_engine0.01_shirz\sub_sytemz\_outdated_build_workfolder\bina_tz2
+sym_engine0.01_shirz\sub_sytemz\_outdated_build_workfolder\box_test.cpp
+sym_engine0.01_shirz\sub_sytemz\_outdated_build_workfolder\curve_sf_dis2.h
+sym_engine0.01_shirz\sub_sytemz\_outdated_build_workfolder\Indeterminate.h
+sym_engine0.01_shirz\sub_sytemz\_outdated_build_workfolder\Math_lamdaz.hpp
+sym_engine0.01_shirz\sub_sytemz\_outdated_build_workfolder\otesz_out
+sym_engine0.01_shirz\sub_sytemz\_outdated_build_workfolder\p_nomi.h
+sym_engine0.01_shirz\sub_sytemz\_outdated_build_workfolder\polynomial.h
+sym_engine0.01_shirz\sub_sytemz\_outdated_build_workfolder\primary_test_workmain.cpp
+sym_engine0.01_shirz\sub_sytemz\_outdated_build_workfolder\res\audio\intotext_muz.ogg
+sym_engine0.01_shirz\sub_sytemz\_outdated_build_workfolder\res\tes3.mp4
+sym_engine0.01_shirz\sub_sytemz\_outdated_build_workfolder\tez_main_ind.cpp
+sym_engine0.01_shirz\sub_sytemz\_outdated_build_workfolder\timetez_out
+sym_engine0.01_shirz\sub_sytemz\_outdated_build_workfolder\USB_controler.h
+sym_engine0.01_shirz\sub_sytemz\_outdated_build_workfolder\usb_curv_vrtikdr_04.cpp
+sym_engine0.01_shirz\sub_sytemz\libz_andNotez\cemtystmez
+sym_engine0.01_shirz\sub_sytemz\libz_andNotez\classmodelsforSIRNfriesymz
+sym_engine0.01_shirz\sub_sytemz\libz_andNotez\enetiy_models_anddesign_cocnepts.h
+sym_engine0.01_shirz\sub_sytemz\libz_andNotez\GUI.h
+sym_engine0.01_shirz\sub_sytemz\libz_andNotez\neKmainIso.cpp
+sym_engine0.01_shirz\sub_sytemz\libz_andNotez\p_nomi_fail_raito.h
+sym_engine0.01_shirz\sub_sytemz\libz_andNotez\sharz_engine_loop.h
+sym_engine0.01_shirz\sub_sytemz\readME.md
+sym_engine0.01_shirz\sub_sytemz\sample_work_check.cpp
+sym_engine0.01_shirz\test_modualz\clk_test\clk_out
+sym_engine0.01_shirz\test_modualz\clk_test\clock_utility.cpp
+sym_engine0.01_shirz\test_modualz\clk_test\clock_utility.hpp
+sym_engine0.01_shirz\test_modualz\clk_test\tst_clk_main.cpp
+sym_engine0.01_shirz\test_modualz\curve_sf_dis.h
+sym_engine0.01_shirz\test_modualz\inpit_pluz_curvetest.cpp
+sym_engine0.01_shirz\test_modualz\input_test_main.cpp
+sym_engine0.01_shirz\test_modualz\modual_test_labzm.cpp
+sym_engine0.01_shirz\test_modualz\usb__colourchange_curvv_03.cpp
+sym_engine0.01_shirz\test_modualz\USB_controler.h
+tabz.hpp

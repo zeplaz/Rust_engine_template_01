@@ -375,6 +375,7 @@ impl render_graph::Node for WorldFireParticleDrawNode {
 
 pub fn sync_particle_draw_dispatch_from_policy(
     policy: Res<RepresentationResult>,
+    particles: Res<crate::render::gpu_particles::WorldFireParticleFrame>,
     mut draw: ResMut<WorldFireParticleDrawDispatch>,
     mut metrics: ResMut<GpuRepresentationMetrics>,
 ) {
@@ -383,7 +384,26 @@ pub fn sync_particle_draw_dispatch_from_policy(
         draw.instance_count = 0;
         metrics.record_draw_instances(0);
         metrics.record_dispatch_count(0);
+        return;
     }
+    let capacity = if particles.gpu_capacity == 0 {
+        0
+    } else {
+        particles.gpu_capacity.min(u32::MAX as usize) as u32
+    };
+    let capped = particles
+        .instances
+        .len()
+        .min(policy.gpu_budget.particle_rows_cap)
+        .min(capacity as usize) as u32;
+    draw.instance_count = capped;
+    draw.dispatch_count = if capped > 0 {
+        capped.div_ceil(PARTICLE_WORKGROUP)
+    } else {
+        0
+    };
+    metrics.record_draw_instances(capped);
+    metrics.record_dispatch_count(draw.dispatch_count);
 }
 
 #[cfg(test)]
@@ -393,10 +413,31 @@ mod tests {
     use crate::render::gpu_bind_group_registry::BindGroupId;
 
     #[test]
+    fn policy_sync_aligns_draw_dispatch_with_particles() {
+        let mut app = App::new();
+        app.init_resource::<WorldFireParticleDrawDispatch>();
+        app.init_resource::<GpuRepresentationMetrics>();
+        app.init_resource::<crate::render::gpu_particles::WorldFireParticleFrame>();
+        let mut particles = crate::render::gpu_particles::WorldFireParticleFrame::default();
+        particles.instances.resize(8, Default::default());
+        app.insert_resource(particles);
+        let mut policy = RepresentationResult::default();
+        policy.gpu_budget.particle_rows_cap = 3;
+        policy.particle_policy.instanced_draw = true;
+        app.insert_resource(policy);
+        app.add_systems(Update, sync_particle_draw_dispatch_from_policy);
+        app.update();
+        let draw = app.world().resource::<WorldFireParticleDrawDispatch>();
+        assert_eq!(draw.instance_count, 3);
+        assert_eq!(draw.dispatch_count, 1);
+    }
+
+    #[test]
     fn zero_particle_cap_zeroes_draw_dispatch() {
         let mut app = App::new();
         app.init_resource::<WorldFireParticleDrawDispatch>();
         app.init_resource::<GpuRepresentationMetrics>();
+        app.init_resource::<crate::render::gpu_particles::WorldFireParticleFrame>();
         app.insert_resource(RepresentationResult {
             active_band: RepresentationBand::Strategic,
             gpu_budget: GpuBudgetPolicy {

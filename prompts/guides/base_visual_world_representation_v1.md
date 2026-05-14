@@ -139,4 +139,15 @@ ECS SIM
 
 ---
 
-*Last edited: 2026-05-13 — locks dependency order + strict EXIT language for theme-3 / E1 / VT-4 / D / F.*
+## 8. Cross-links
+
+| Doc | Role |
+|:---|:---|
+| [`backlog_serialization_preview_streaming_runbook_v1.md`](backlog_serialization_preview_streaming_runbook_v1.md) | Wave **S/P/C** before scaling streamable overlay/belief consumers |
+| [`legacy_cpp_repos_agent_communication_maps_v1.md`](legacy_cpp_repos_agent_communication_maps_v1.md) | Stage-7 behavior/comms contracts (after spine EXIT) |
+| [`strategic_overlay_runbook_v1.md`](strategic_overlay_runbook_v1.md) | Overlay field owners feeding `FireVisualFrame` / shared buffers |
+| [`experience_layer_ux_hud_designer_brief_v1.md`](experience_layer_ux_hud_designer_brief_v1.md) | GPU minimap, transmission, construction blueprint, command shell — consume spine only (**BQ-119+**) |
+
+---
+
+*Last edited: 2026-05-14 — cross-link UX/HUD designer brief.*

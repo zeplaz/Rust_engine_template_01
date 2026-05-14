@@ -57,6 +57,7 @@ Extend rows for every asset class in the project.
 - [`new_propsal_guide_may202608.md`](new_propsal_guide_may202608.md) — config vs code ownership.  
 - [`implementation_gap_hunt_runbook_v1.md`](implementation_gap_hunt_runbook_v1.md) — find placeholder vs shipped behavior.  
 - [`world_assets_tools_rulebook_v1.md`](world_assets_tools_rulebook_v1.md) — tooling touches files, not sim internals.
+- [`legacy_cpp_repos_agent_communication_maps_v1.md`](legacy_cpp_repos_agent_communication_maps_v1.md) — utility / mask channel ownership when registries gain hit-map semantics.
 
 ---
 

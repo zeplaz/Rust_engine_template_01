@@ -292,6 +292,7 @@ mod tests {
     fn authoritative_surface_prefers_gpu_when_renderer_ready() {
         let gpu_rt = crate::gui::editor::world_preview::WorldPreviewGpuRuntime {
             offscreen_renderer_ready: true,
+            ..default()
         };
         let cam = PreviewCameraState {
             mode: PreviewRenderMode::GpuRenderTarget,
@@ -322,6 +323,7 @@ mod tests {
         };
         let gpu_rt = WorldPreviewGpuRuntime {
             offscreen_renderer_ready: true,
+            ..default()
         };
         assert_eq!(
             preview_authoritative_surface(&gpu_rt, &cam),
@@ -337,6 +339,7 @@ mod tests {
         };
         let gpu_rt = WorldPreviewGpuRuntime {
             offscreen_renderer_ready: true,
+            ..default()
         };
         assert_eq!(
             preview_authoritative_surface(&gpu_rt, &cam),
@@ -355,6 +358,7 @@ mod tests {
         };
         let gpu_rt = WorldPreviewGpuRuntime {
             offscreen_renderer_ready: true,
+            ..default()
         };
         assert_eq!(
             preview_authoritative_surface(&gpu_rt, &cam),

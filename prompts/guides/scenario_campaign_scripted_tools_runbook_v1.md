@@ -158,7 +158,9 @@ Execute **in order** — **§4b** satisfied (**[BQ-113](rulebook_backlog_designe
 | [`gui_runbook_v1.md`](gui_runbook_v1.md) | TEMP-EGUI, authority |
 | [`strategic_program_execution_plan_v1.md`](strategic_program_execution_plan_v1.md) | Macro P1–P8; **scenario scripting ≈ program P3** per §4a |
 | [`simulation_expansion_orchestrator_v1.md`](simulation_expansion_orchestrator_v1.md) | Scripts read fields; write **intents** through APIs only |
+| [`mission_authoring_framework_v1.md`](mission_authoring_framework_v1.md) | Mission / objective vocabulary for scripted waves |
 | [`rulebook_backlog_designer_brief_v1.md`](rulebook_backlog_designer_brief_v1.md) | **BQ-113** — scenario scripting + golden fixture governance |
+| [`experience_layer_ux_hud_designer_brief_v1.md`](experience_layer_ux_hud_designer_brief_v1.md) | Mission-driven **transmissions** after **UX-3** shell — not before |
 
 **Golden fixture (target path):** `assets/scenarios/tests/golden_operational_minimal_v1.scenario.ron`  
 **Wave 1 fixture:** `assets/scenarios/tests/minimal_wave1.scenario.ron` — `EngineScriptHost`, `scenario_wave1_*` tests (2026-05).  
