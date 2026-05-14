@@ -10,6 +10,7 @@ pub mod ecology;
 pub mod fire;
 pub mod navigation;
 pub mod production;
+pub mod sim_frame_delta;
 pub mod sim_control;
 pub mod terrain;
 pub mod transport;
@@ -51,6 +52,9 @@ pub use fire::*;
 pub use navigation::*;
 pub use production::*;
 pub use sim_control::*;
+pub use sim_frame_delta::{
+    CommittedSimReplayRing, ReplicationInterestPolicy, SimFrameDelta, SimFrameDeltaPlugin,
+};
 pub use terrain::*;
 pub use transport::*;
 pub use weather::*;

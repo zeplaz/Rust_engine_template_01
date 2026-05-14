@@ -1,13 +1,17 @@
 //! World raster preview — split into editor-style submodules (`viewport`, `layers`, raster, chrome).
 //! Today: one full CPU RGBA pass per update; roadmap: chunk-dirty atlas, composited layers, GPU path.
+//! **Phase D contract:** `preview_render_contract.rs` (`PreviewCameraState`, `PreviewRenderTarget`, `PreviewRenderBudget`) — separate from gameplay camera (`base_visual_dev01_plan_status.md` § `phase-d-preview-render-target`).
 //! **Runbook:** `prompts/guides/world_preview_runbook_v1.md` (optimization order, U7 invalidation tie-in).
 
 mod color_presets;
 mod ecology_preview;
+mod gpu_preview;
 mod interaction;
 pub mod layers;
 mod minimap;
 mod overlays;
+mod preview_render_contract;
+mod preview_vt4;
 mod render_raster;
 mod texture_cache;
 mod tile_sampling;
@@ -24,6 +28,13 @@ pub use ecology_preview::{
     blend_fire_overlay, ecology_preview_rgba, ecology_sample_for_world_tile, vegetation_preview_rgba,
     EcologyGpuPassKind, EcologyPreviewSample, EcologyRasterChunkRow,
 };
+pub use gpu_preview::WorldPreviewGpuRuntime;
+pub use preview_render_contract::{
+    preview_authoritative_surface, preview_gpu_authoritative_run_if, preview_uses_cpu_raster,
+    PreviewAuthoritativeSurface, PreviewCameraState, PreviewPathAuthority, PreviewPresentationDebug,
+    PreviewRenderBudget, PreviewRenderMode, PreviewRenderTarget,
+};
+pub use preview_vt4::capture_world_preview_vt4_probe;
 pub use layers::PreviewLayers;
 pub use overlays::{
     tag_overlay_rgba, tag_overlay_rgba_pool, TAG_OVERLAY_HIGHLIGHT,
@@ -44,11 +55,13 @@ pub use window::display_world_preview;
 use bevy::prelude::*;
 use bevy_egui::EguiPrimaryContextPass;
 
-/// Ordering for world preview texture resize before CPU raster (`update_world_preview_texture` param count exceeds `chain()` tuple limits).
+/// Ordering: resize → CPU raster → present swap (`base_visual_dev01_plan_status` § phase-d D-3).
 #[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
 enum WorldPreviewRasterOrder {
     SyncTextureSize,
     RasterTiles,
+    /// Runs after [`WorldPreviewRasterOrder::RasterTiles`] (CPU wrote `SwapImageBuffers::back`).
+    PresentSwap,
 }
 
 /// Toggles for the World Preview egui window (independent of whether the World Generator panel is open).
@@ -68,21 +81,52 @@ pub struct WorldPreviewPlugin;
 
 impl Plugin for WorldPreviewPlugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<WorldPreviewTexture>()
+        app.insert_resource(crate::render::Stage5ReadinessProfile::FULL_APP);
+        preview_render_contract::init_preview_render_contract_resources(app);
+        app.init_resource::<crate::gui::SwapImageBuffers>()
+            .init_resource::<WorldPreviewTexture>()
+            .init_resource::<gpu_preview::WorldPreviewGpuRuntime>()
+            .init_resource::<crate::render::WorldPreviewVt4Probe>()
             .init_resource::<EditorViewport>()
             .init_resource::<WorldPreviewUiState>()
             .init_resource::<WorldPreviewChunkCaches>()
             .configure_sets(
                 Update,
-                WorldPreviewRasterOrder::RasterTiles.after(WorldPreviewRasterOrder::SyncTextureSize),
+                (
+                    WorldPreviewRasterOrder::RasterTiles.after(WorldPreviewRasterOrder::SyncTextureSize),
+                    WorldPreviewRasterOrder::PresentSwap.after(WorldPreviewRasterOrder::RasterTiles),
+                ),
             )
             .add_systems(Startup, init_world_preview_texture)
             .add_systems(
+                Startup,
+                gpu_preview::prefer_gpu_preview_mode_when_renderer_ready,
+            )
+            .add_systems(
                 Update,
                 (
+                    preview_render_contract::sync_preview_render_contract_system
+                        .before(WorldPreviewRasterOrder::SyncTextureSize),
+                    preview_render_contract::sync_preview_path_authority
+                        .after(preview_render_contract::sync_preview_render_contract_system),
                     sync_world_preview_texture_size.in_set(WorldPreviewRasterOrder::SyncTextureSize),
                     render_raster::update_world_preview_texture
-                        .in_set(WorldPreviewRasterOrder::RasterTiles),
+                        .in_set(WorldPreviewRasterOrder::RasterTiles)
+                        .run_if(preview_render_contract::preview_uses_cpu_raster),
+                    texture_cache::present_world_preview_swap_after_raster
+                        .in_set(WorldPreviewRasterOrder::PresentSwap)
+                        .run_if(preview_render_contract::preview_uses_cpu_raster),
+                    texture_cache::present_world_preview_gpu_swap
+                        .in_set(WorldPreviewRasterOrder::PresentSwap)
+                        .run_if(preview_render_contract::preview_gpu_authoritative_run_if),
+                    gpu_preview::sync_world_preview_offscreen_camera
+                        .after(preview_render_contract::sync_preview_render_contract_system),
+                    gpu_preview::sync_world_preview_offscreen_camera_transform
+                        .after(gpu_preview::sync_world_preview_offscreen_camera),
+                    gpu_preview::sync_world_preview_gpu_chunk_quads
+                        .after(gpu_preview::sync_world_preview_offscreen_camera_transform),
+                    preview_vt4::capture_world_preview_vt4_probe
+                        .after(crate::render::extraction::FireVisualFrameSet::BuildProfiles),
                 ),
             )
             .add_systems(EguiPrimaryContextPass, display_world_preview);

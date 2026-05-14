@@ -21,6 +21,7 @@ use crate::engine::{ActiveTestScene, BaseState};
 use crate::gui::{default_map_zoom_for_world, MapCameraDesired};
 use crate::gui::MainWorldCamera;
 use crate::gui::map_tile_raster::{apply_shared_fire_heat_to_rgba, raster_tiles_and_roads_to_rgba};
+use crate::gui::preview_partial_min_interval_from_hz;
 use crate::render::FireAtmosphereAggregate;
 use crate::render::{FireVisualFrameSet, SharedOverlayFieldBuffers};
 use crate::gui::std_floating;
@@ -244,7 +245,10 @@ fn tile_world_fallback_rasterize(
     chunk_geom_q: Query<(&Chunk, &ChunkCellMatrix)>,
     overlay: Res<SharedOverlayFieldBuffers>,
     raster_dirty: Res<TileWorldFallbackRasterDirty>,
+    time: Res<Time>,
+    cadence: Option<Res<crate::gui::VisualCadence>>,
     mut last_applied_revision: Local<Option<u64>>,
+    mut cadence_acc: Local<f32>,
 ) {
     if !matches!(base.get(), BaseState::Simulation | BaseState::Editor) {
         *last_applied_revision = None;
@@ -262,6 +266,24 @@ fn tile_world_fallback_rasterize(
     if *last_applied_revision == Some(rev) {
         return;
     }
+
+    if let Some(c) = cadence.as_deref() {
+        let hz = if c.minimap_hz.is_finite() && c.minimap_hz > 0.25 {
+            c.minimap_hz
+        } else {
+            10.0
+        };
+        let interval = preview_partial_min_interval_from_hz(hz);
+        let force_immediate = last_applied_revision.is_none();
+        if !force_immediate {
+            *cadence_acc += time.delta_secs();
+            if *cadence_acc < interval {
+                return;
+            }
+            *cadence_acc -= interval;
+        }
+    }
+
     let Some(image) = images.get_mut(&state.image) else {
         return;
     };

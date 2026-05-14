@@ -30,5 +30,8 @@ mod tests {
             let s = std::fs::read_to_string(root.join(rel)).expect(rel);
             assert!(s.contains("@compute"), "{rel}");
         }
+        let fire = std::fs::read_to_string(root.join("assets/shaders/fire/fire_particle.wgsl"))
+            .expect("fire_particle.wgsl");
+        assert!(fire.contains("expand_instances"));
     }
 }

@@ -7,6 +7,7 @@ pub const ATMOSPHERE_SMOKE_COLUMN_WGSL: &str = "shaders/atmosphere/smoke_column.
 pub const ATMOSPHERE_HEAT_DISTORTION_WGSL: &str = "shaders/atmosphere/heat_distortion.wgsl";
 pub const ATMOSPHERE_ASHFALL_WGSL: &str = "shaders/atmosphere/ashfall.wgsl";
 pub const ATMOSPHERE_PARTICLE_INSTANCING_WGSL: &str = "shaders/atmosphere/particle_instancing.wgsl";
+pub const ATMOSPHERE_FIELD_PAGE_TABLE_WGSL: &str = "shaders/atmosphere/field_page_table.wgsl";
 
 /// Ping-pong weather + fire **field** compute (`GpuWeatherFireFieldPlugin`).
 pub const WEATHER_FIRE_FIELD_WGSL: &str = "shaders/post/weather_fire_field.wgsl";
@@ -22,6 +23,7 @@ mod tests {
             "assets/shaders/atmosphere/heat_distortion.wgsl",
             "assets/shaders/atmosphere/ashfall.wgsl",
             "assets/shaders/atmosphere/particle_instancing.wgsl",
+            "assets/shaders/atmosphere/field_page_table.wgsl",
             "assets/shaders/post/weather_fire_field.wgsl",
         ] {
             let p = root.join(rel);

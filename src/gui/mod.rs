@@ -9,6 +9,11 @@
 pub mod build;
 pub mod hud;
 mod map_camera;
+mod lod_zone_authoring;
+mod world_representation;
+mod representation_policy;
+mod representation_spine_audit;
+mod view_representation;
 pub mod map_tile_raster;
 pub mod egui_window;
 mod app_shell;
@@ -67,7 +72,35 @@ pub use style::{
 pub use egui_window::std_floating;
 pub use map_camera::{
     default_map_zoom_for_world, MainWorldCamera, MapCameraDesired, MapCameraMode, MapCameraPlugin,
-    MapCameraSettings,
+    MapCameraSettings, MapCameraSystemSet,
+};
+pub use representation_policy::{
+    build_representation_inputs, build_representation_result, FireVisualExtractPlan,
+    LodZoneClass, RepresentationBand,
+    RepresentationInputs, RepresentationResult, WorldRepresentationExtractPlan,
+    ComputeBudgetPolicy, GpuBudgetPolicy, OverlayPolicy, representation_band_from_world_lod,
+};
+pub use world_representation::{
+    compute_world_representation_frame, gather_lod_gameplay_signals, CameraLodState,
+    GlobalLodState, LodCell, LodGameplaySignals, LodGlobalRules,
+    LodInputs, LodZoneId, LodZoneRegistry, LodZoneSource, OperationalLodZone,
+    TacticalEscalation, TacticalLodBubble, TacticalLodBubbleRegistry, WorldLodBand, WorldLodBands,
+    WorldLodMap, WorldLodPolicyEngine, WorldRepresentationFrame, WorldRepresentationResolver,
+    WorldRepresentationSystemSet, WorldResolutionPolicy, WorldVisibilityMask, resolution_for_band,
+    visibility_for_band,
+};
+pub use representation_spine_audit::{
+    fire_visual_producer_count, VisualProducerRegistration, REGISTERED_VISUAL_PRODUCERS,
+};
+pub use view_representation::ViewRepresentationSystemSet;
+pub use view_representation::{
+    apply_camera_visual_from_map_snapshot,
+    camera_owner_label, on_visual_cadence_atmosphere, on_visual_cadence_minimap,
+    on_visual_cadence_overlay, on_visual_cadence_preview, preview_partial_min_interval_from_hz,
+    preview_partial_min_interval_secs, ActiveCameraOwner, AtmosphereFx, CameraIntent, CameraOwner,
+    CameraVisualState, FireLodSelection, FireVisualLod, FxVisibilitySettings, OverlayChannel,
+    OverlayFieldFrame, SwapImageBuffers, ViewRepresentationPlugin, VisualBudgetSettings,
+    VisualCadence, WorldFireFx,
 };
 pub use main_menu::*;
 pub use splash::*;

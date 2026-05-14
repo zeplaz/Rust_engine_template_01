@@ -4,6 +4,7 @@ use bevy_egui::egui;
 
 use crate::gui::editor::world_gen_hints as hints;
 use crate::gui::editor::world_preview::layers::PreviewLayers;
+use crate::gui::editor::world_preview::preview_render_contract::{PreviewCameraState, PreviewRenderMode};
 use crate::gui::editor::world_preview::viewport::EditorViewport;
 use crate::gui::style::{muted_label, section_heading, primary_label, CmdHeadingStyle, UiPalette};
 
@@ -36,6 +37,7 @@ pub fn world_preview_toolbar(
     ui: &mut egui::Ui,
     layers: &mut PreviewLayers,
     viewport: &mut EditorViewport,
+    preview_cam: &mut PreviewCameraState,
     tex_w: u32,
     tex_h: u32,
     palette: &UiPalette,
@@ -72,6 +74,22 @@ pub fn world_preview_toolbar(
         let mut mob = layers.contains(PreviewLayers::MOBILITY_OVERLAY);
         if tt(ui.checkbox(&mut mob, "Mobility"), hints::PREVIEW_MOBILITY).changed() {
             *layers ^= PreviewLayers::MOBILITY_OVERLAY;
+        }
+    });
+    ui.horizontal(|ui| {
+        section_heading(ui, palette, CmdHeadingStyle::None, "Render");
+        let mut gpu = preview_cam.mode == PreviewRenderMode::GpuRenderTarget;
+        if tt(
+            ui.checkbox(&mut gpu, "GPU target"),
+            "Bevy Camera2d → RenderTarget::Image; CPU raster stays available for VT-4 overlay agreement.",
+        )
+        .changed()
+        {
+            preview_cam.mode = if gpu {
+                PreviewRenderMode::GpuRenderTarget
+            } else {
+                PreviewRenderMode::CpuRaster
+            };
         }
     });
     ui.horizontal(|ui| {

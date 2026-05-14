@@ -3,6 +3,7 @@
 use super::interaction::{apply_pan, apply_zoom_toward, update_hover_tile};
 use super::layers::PreviewLayers;
 use super::minimap::world_preview_minimap;
+use super::preview_render_contract::PreviewCameraState;
 use super::texture_cache::WorldPreviewTexture;
 use super::ui_sidebar::world_preview_sidebar;
 use super::ui_statusbar::world_preview_status_bar;
@@ -20,6 +21,7 @@ use bevy_egui::{egui, EguiContexts, EguiTextureHandle};
 pub fn display_world_preview(
     mut contexts: EguiContexts,
     preview_texture: Res<WorldPreviewTexture>,
+    mut preview_cam: ResMut<PreviewCameraState>,
     mut world_preview_ui: ResMut<super::WorldPreviewUiState>,
     mut world_gen_ui_state: ResMut<WorldGenUiState>,
     mut world_gen_params: ResMut<crate::terrain::generation::world_generator_enhanced::WorldGenParams>,
@@ -36,20 +38,23 @@ pub fn display_world_preview(
         return Ok(());
     }
 
-    let handle = preview_texture.texture.clone();
+    let display_handle = preview_texture.texture.clone();
+    let disp_w = preview_texture.width;
+    let disp_h = preview_texture.height;
+
     let texture_id = match egui_tex_cache.as_ref() {
-        Some((h, id)) if *h == handle => *id,
+        Some((h, id)) if *h == display_handle => *id,
         _ => {
-            let id = contexts.add_image(EguiTextureHandle::Strong(handle.clone()));
-            *egui_tex_cache = Some((handle, id));
+            let id = contexts.add_image(EguiTextureHandle::Strong(display_handle.clone()));
+            *egui_tex_cache = Some((display_handle, id));
             id
         }
     };
-    let tex_w = preview_texture.width as f32;
-    let tex_h = preview_texture.height as f32;
+    let tex_w = disp_w as f32;
+    let tex_h = disp_h as f32;
 
-    if *last_tex != (preview_texture.width, preview_texture.height) {
-        *last_tex = (preview_texture.width, preview_texture.height);
+    if *last_tex != (disp_w, disp_h) {
+        *last_tex = (disp_w, disp_h);
         viewport.reset_camera_for_map(tex_w, tex_h);
     }
 
@@ -73,8 +78,9 @@ pub fn display_world_preview(
                         ui,
                         &mut world_gen_ui_state.preview_layers,
                         &mut viewport,
-                        preview_texture.width,
-                        preview_texture.height,
+                        &mut preview_cam,
+                        disp_w,
+                        disp_h,
                         pal,
                     );
                 });
@@ -87,8 +93,8 @@ pub fn display_world_preview(
                         ui,
                         world_gen_ui_state.preview_layers,
                         &viewport,
-                        preview_texture.width,
-                        preview_texture.height,
+                        disp_w,
+                        disp_h,
                         pal,
                     );
                 });
@@ -115,8 +121,8 @@ pub fn display_world_preview(
                                 world_preview_minimap(
                                     ui,
                                     texture_id,
-                                    preview_texture.width,
-                                    preview_texture.height,
+                                    disp_w,
+                                    disp_h,
                                     pal,
                                 );
                             });
@@ -159,8 +165,8 @@ pub fn display_world_preview(
                             ui.ctx().pointer_hover_pos(),
                             rect,
                             center,
-                            preview_texture.width,
-                            preview_texture.height,
+                            disp_w,
+                            disp_h,
                         );
 
                         let rect_min = egui::pos2(

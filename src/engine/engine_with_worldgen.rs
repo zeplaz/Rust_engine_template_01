@@ -1,10 +1,12 @@
 use crate::entities::production::core::ManufacturingCorePlugin;
 use crate::entities::vehicles::tools_ui::RoadVehicleToolsUiPlugin;
 use crate::gui::{
-    editor::map_editor::MapEditorPlugin, AppShellPlugin, BaseMenuPlugin, BuildPlanningPlugin,
-    DiagnosticsUiPlugin, FactionToolsUiPlugin, GameplayCapturePlugin, InGameHudPlugin,
-    KeybindingsOptionsPlugin, LogisticsTargetsPanelPlugin, MainWorldCamera, MapCameraPlugin, SplashPlugin,
-    StrategicToolingPlugin, UiThemePlugin,
+    editor::map_editor::MapEditorPlugin,
+    editor::world_preview::WorldPreviewGpuRuntime,
+    AppShellPlugin, BaseMenuPlugin, BuildPlanningPlugin, DiagnosticsUiPlugin, FactionToolsUiPlugin,
+    GameplayCapturePlugin, InGameHudPlugin, KeybindingsOptionsPlugin, LogisticsTargetsPanelPlugin,
+    MainWorldCamera, MapCameraPlugin, SplashPlugin, ViewRepresentationPlugin, StrategicToolingPlugin,
+    UiThemePlugin,
 };
 #[cfg(feature = "bevy_tilemap_adapter")]
 use crate::render::TilemapAdapterPlugin;
@@ -17,6 +19,7 @@ use crate::scenario::ScenarioScriptingPlugin;
 use crate::systems::sim_control::SimControlPlugin;
 use crate::systems::transport::{TransportSchedule, TransportSimulationPlugin};
 use crate::strategic::StrategicFieldPipeline;
+use crate::compute::ComputeDispatchPlugin;
 use crate::render::{GpuWeatherFireFieldPlugin, LocalLightPlugin, SharedOverlayFieldBuffersPlugin, TileWorldFallbackPlugin};
 use crate::systems::{
     configure_chunk_environment_sets,
@@ -96,7 +99,7 @@ impl Plugin for EnginePlugin {
         app.configure_sets(
             Update,
             crate::render::LocalLightExtractSet::Collect
-                .after(crate::render::extraction::FireVisualFrameSet::EmitParticles),
+                .after(crate::render::extraction::FireVisualFrameSet::ProjectGpu),
         );
         app.configure_sets(
             Update,
@@ -114,7 +117,19 @@ impl Plugin for EnginePlugin {
         app.add_plugins(KeybindingsOptionsPlugin)
             .add_plugins(GameplayCapturePlugin)
             .add_plugins(MapCameraPlugin)
-            .add_plugins(TileWorldFallbackPlugin)
+            .add_plugins(ViewRepresentationPlugin)
+            .add_plugins(ComputeDispatchPlugin);
+        app.configure_sets(
+            Update,
+            (
+                crate::compute::ComputeDispatchSystemSet::Dispatch
+                    .after(crate::gui::WorldRepresentationSystemSet::ComputeFrame)
+                    .after(crate::render::extraction::FireVisualFrameSet::BuildProfiles),
+                crate::render::extraction::FireVisualFrameSet::ProjectGpu
+                    .after(crate::compute::ComputeDispatchSystemSet::Dispatch),
+            ),
+        );
+        app.add_plugins(TileWorldFallbackPlugin)
             .add_plugins(SharedOverlayFieldBuffersPlugin)
             .add_plugins(DiagnosticsUiPlugin)
             .add_plugins(FactionToolsUiPlugin)
@@ -132,6 +147,11 @@ impl Plugin for EnginePlugin {
             .add_plugins(ProductionToolsUiPlugin)
             // Surface logistics tools.
             .add_plugins(RoadVehicleToolsUiPlugin);
+
+        // World preview GPU offscreen camera (`gpu_preview.rs`) only when full renderer is present.
+        app.insert_resource(WorldPreviewGpuRuntime {
+            offscreen_renderer_ready: true,
+        });
 
         info!(
             "Engine initialized. Optional: `--test weather` / `--test fire` / `--test atmosphere` / `--test visual` for sample worlds. Keys: F1 options · F2 pressure composer · F3 diagnostics · F7 agent perms · F11/F12 capture; RON under user config · captures under APPDATA/proc_A_dine01/captures."
