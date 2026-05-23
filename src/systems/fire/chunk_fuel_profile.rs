@@ -17,6 +17,10 @@ pub struct ChunkFuelProfile {
     pub canopy: VegetationFuelLayer,
     pub peat_depth: f32,
     pub suppression_difficulty: f32,
+    /// Ecology old-growth scalar copied for ignition / crown gating (F1).
+    pub old_growth: f32,
+    /// Sum of grass+brush+canopy wildland mass — ambient spark gate input.
+    pub wildland_fuel_mass: f32,
     /// When set, merged into [`Self::to_fuel_layer`] for emitters / smoke tint / logistics samples.
     pub structure_overlay: Option<FuelLayer>,
 }
@@ -58,6 +62,8 @@ impl Default for ChunkFuelProfile {
             },
             peat_depth: 0.0,
             suppression_difficulty: 0.35,
+            old_growth: 0.0,
+            wildland_fuel_mass: 0.0,
             structure_overlay: None,
         }
     }
@@ -70,24 +76,33 @@ pub fn chunk_fuel_profile_from_vegetation(veg: &VegetationField) -> ChunkFuelPro
     let us = veg.understory_density.clamp(0.0, 1.0);
     let gf = veg.ground_fuel.clamp(0.0, 1.0);
     let dry = veg.dryness.clamp(0.0, 1.0);
+    let og = veg.old_growth.clamp(0.0, 1.0);
+    p.old_growth = og;
 
-    p.grass.live_biomass = (gf * (1.0 - us * 0.65)).max(0.05);
-    p.grass.dead_biomass = (gf * dry * 0.85).max(0.02);
+    // Surface grass: thin unless ground fuel or old-growth understory supports it.
+    let grass_scale = if og < 0.15 && gf < 0.22 {
+        0.35
+    } else {
+        1.0
+    };
+    p.grass.live_biomass = (gf * (1.0 - us * 0.65) * grass_scale).max(0.02);
+    p.grass.dead_biomass = (gf * dry * (0.55 + og * 0.25) * grass_scale).max(0.01);
     p.grass.moisture = (1.0 - dry) * 0.45 + 0.12;
-    p.grass.ignition_bias = 0.45 + dry * 0.4;
+    p.grass.ignition_bias = (0.28 + dry * 0.35 + og * 0.12).min(0.95);
     p.grass.fuel_kind = FuelMaterialKind::Grass;
 
-    p.brush.live_biomass = (us * (1.0 - cd * 0.5)).max(0.02);
-    p.brush.dead_biomass = (us * dry * 0.7).max(0.02);
+    p.brush.live_biomass = (us * (1.0 - cd * 0.5) * (0.75 + og * 0.25)).max(0.02);
+    p.brush.dead_biomass = (us * dry * (0.45 + og * 0.4)).max(0.02);
     p.brush.moisture = (1.0 - dry) * 0.42 + 0.1;
-    p.brush.ignition_bias = 0.42 + dry * 0.38;
+    p.brush.ignition_bias = 0.35 + dry * 0.32 + og * 0.15;
     p.brush.fuel_kind = FuelMaterialKind::Brush;
 
-    p.canopy.live_biomass = (cd * 0.95).max(0.02);
-    p.canopy.dead_biomass = (cd * dry * 0.55).max(0.02);
+    // Crown / ladder fuels track old-growth for sustained crown-class burning.
+    p.canopy.live_biomass = (cd * (0.5 + og * 0.45)).max(0.02);
+    p.canopy.dead_biomass = (cd * dry * (0.3 + og * 0.55)).max(0.02);
     p.canopy.moisture = (1.0 - dry) * 0.38 + 0.08;
-    p.canopy.ignition_bias = 0.38 + dry * 0.42;
-    p.canopy.fuel_kind = if cd > 0.72 {
+    p.canopy.ignition_bias = 0.32 + dry * 0.38 + og * 0.22;
+    p.canopy.fuel_kind = if cd > 0.72 || og > 0.55 {
         FuelMaterialKind::Timber
     } else {
         FuelMaterialKind::Brush
@@ -102,6 +117,7 @@ pub fn chunk_fuel_profile_from_vegetation(veg: &VegetationField) -> ChunkFuelPro
         p.grass.ignition_bias = (p.grass.ignition_bias * 0.65 + d.burn_energy * 0.2).min(1.0);
     }
 
+    p.wildland_fuel_mass = super::combustion::profile_total_fuel_mass(&p);
     p
 }
 
@@ -132,6 +148,23 @@ mod tests {
         let row = p.to_fuel_layer();
         assert!(row.surface_fuel > 0.2 && row.surface_fuel <= 1.0);
         assert!(row.moisture > 0.2 && row.moisture < 0.95);
+    }
+
+    #[test]
+    fn old_growth_increases_wildland_mass_in_profile() {
+        let low = chunk_fuel_profile_from_vegetation(&VegetationField {
+            old_growth: 0.05,
+            ground_fuel: 0.2,
+            ..Default::default()
+        });
+        let high = chunk_fuel_profile_from_vegetation(&VegetationField {
+            old_growth: 0.7,
+            canopy_density: 0.6,
+            fuel_load: 0.65,
+            ..Default::default()
+        });
+        assert!(high.wildland_fuel_mass > low.wildland_fuel_mass);
+        assert!(high.old_growth > low.old_growth);
     }
 
     #[test]

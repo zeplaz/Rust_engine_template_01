@@ -7,6 +7,7 @@
 //! + [`ChunkSmokeField`](chunk_smoke_field::ChunkSmokeField) (`prompts/guides/base_fire_sim.md`).
 
 mod chunk_fire_overlay;
+mod surface_water;
 mod chunk_fuel_profile;
 mod chunk_smoke_field;
 mod chunk_surface_fire;
@@ -14,6 +15,7 @@ mod ember_spot_ignition;
 mod fire_light_emission;
 pub mod combustion;
 mod fire_fuel;
+pub mod live_proof;
 pub mod types;
 
 pub(crate) use fire_fuel::{fire_fuel_field_tick, spawn_fire_fuel_field_on_new_chunk};
@@ -31,6 +33,11 @@ pub use fire_light_emission::FireLightEmission;
 pub use ember_spot_ignition::{
     apply_ember_spot_ignitions, emit_ember_spot_ignition_events, resolve_spot_ignite_cell,
     EmberSpotIgnitionEvent,
+};
+pub use surface_water::{init_surface_water_fire_gate, SurfaceWaterFireGate};
+pub use live_proof::{
+    finalize_fire_ecology_witness_frame, write_fire_ecology_live_proof_system, FireEcologyLiveProofState,
+    FireEcologyWitness,
 };
 pub use types::ChunkFireOverlay;
 
@@ -50,7 +57,11 @@ pub struct FirePlugin;
 
 impl Plugin for FirePlugin {
     fn build(&self, app: &mut App) {
-        app.add_message::<ember_spot_ignition::EmberSpotIgnitionEvent>()
+        app.init_resource::<surface_water::SurfaceWaterFireGate>()
+            .init_resource::<live_proof::FireEcologyWitness>()
+            .init_resource::<live_proof::FireEcologyLiveProofState>()
+            .add_systems(Startup, surface_water::init_surface_water_fire_gate)
+            .add_message::<ember_spot_ignition::EmberSpotIgnitionEvent>()
             .add_systems(
             Update,
             (
@@ -58,6 +69,11 @@ impl Plugin for FirePlugin {
                 spawn_chunk_smoke_field_on_new_chunk.in_set(ChunkEnvironmentSet::Fire),
                 spawn_chunk_fire_overlay_on_matrix.in_set(ChunkEnvironmentSet::Fire),
                 chunk_fire_overlay_tick.in_set(ChunkEnvironmentSet::Fire),
+                live_proof::finalize_fire_ecology_witness_frame
+                    .after(chunk_fire_overlay_tick)
+                    .in_set(ChunkEnvironmentSet::Fire),
+                live_proof::write_fire_ecology_live_proof_system
+                    .after(live_proof::finalize_fire_ecology_witness_frame),
                 emit_ember_spot_ignition_events.in_set(ChunkEnvironmentSet::Fire),
                 apply_ember_spot_ignitions.in_set(ChunkEnvironmentSet::Fire),
                 chunk_surface_fire_tick.in_set(ChunkEnvironmentSet::Fire),
