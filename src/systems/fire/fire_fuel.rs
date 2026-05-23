@@ -39,9 +39,15 @@ pub fn derive_fire_fuel_from_vegetation(
     eco: &ChunkEcology,
 ) -> FireFuelField {
     let soil = wx.soil_moisture.clamp(0.0, 1.0);
-    let surface_fuel = (veg.ground_fuel * 0.85 + veg.understory_density * 0.25).clamp(0.0, 1.0);
-    let ladder_fuel = (veg.understory_density * veg.canopy_density * 1.15).clamp(0.0, 1.0);
-    let canopy_fuel = (veg.canopy_density * veg.fuel_load * (0.65 + veg.dryness * 0.35)).clamp(0.0, 1.0);
+    let og = veg.old_growth.clamp(0.0, 1.0);
+    let surface_fuel =
+        (veg.ground_fuel * (0.55 + og * 0.3) + veg.understory_density * 0.22).clamp(0.0, 1.0);
+    let ladder_fuel =
+        (veg.understory_density * veg.canopy_density * (0.85 + og * 0.45)).clamp(0.0, 1.0);
+    let canopy_fuel = (veg.canopy_density
+        * veg.fuel_load
+        * (0.35 + og * 0.55 + veg.dryness * 0.25))
+        .clamp(0.0, 1.0);
 
     let moisture_retention =
         (soil * 0.55 + (1.0 - veg.dryness) * 0.45 + wx.rain_intensity * 0.35).clamp(0.0, 1.0);
