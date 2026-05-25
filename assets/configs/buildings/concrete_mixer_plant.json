@@ -1,0 +1,20 @@
+{
+    "asset_name": "Concrete batching plant",
+    "asset_type": "Building",
+    "segment": "Industrial",
+    "description": "Mixes cement, aggregate, and water into Portland concrete",
+    "supply_chain": "concrete_portland",
+    "supply_chain_role": "concrete_mixer",
+    "concrete_type": "Portland",
+    "is_building": true,
+    "is_productive": true,
+    "building_size_x": 3,
+    "building_size_y": 2,
+    "building_height": 1,
+    "construction_cost": 900,
+    "power_generation": 0,
+    "power_consumption": 28,
+    "produces_resources": ["Concrete"],
+    "consumes_resources": ["Cement", "Water", "Gravel", "Chemicals", "Labour", "Electricity"],
+    "version": "1.0.0"
+}

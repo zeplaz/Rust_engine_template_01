@@ -1,12 +1,14 @@
 //! **VT-4** visual agreement — stamp + hash validation across fire snapshot consumers.
 //!
-//! All surfaces must derive from [`crate::render::sim_visual_extract::FireVisualFrame`] only.
+//! Tactical GPU surfaces agree with [`crate::render::fire_view_extract::tactical_fire_visual`] (view-culled).
+//! Shared overlay heat agrees with the full [`FireSimulationSnapshot`] (max-per-chunk), not the culled tactical frame.
 
 use bevy::prelude::*;
 
 use crate::gui::OverlayFieldFrame;
 use crate::render::extraction::RenderProjectionGraph;
 use crate::render::overlay_field_buffers::SharedOverlayFieldBuffers;
+use crate::render::{tactical_fire_visual, FireSimulationSnapshot, FireVisualFramesByView};
 use crate::render::sim_visual_extract::{ChunkFireHeat, FireVisualFrame};
 use crate::systems::sim_control::SimStepStamp;
 
@@ -52,6 +54,8 @@ pub struct VisualAgreementFrame {
     pub projected_instance_count: usize,
     pub preview_overlay_heat_hash: u64,
     pub preview_overlay_revision: u64,
+    /// Max-per-chunk hash from full [`FireSimulationSnapshot`] (overlay spine truth).
+    pub sim_overlay_heat_hash: u64,
     pub mismatch_count: u64,
 }
 
@@ -88,6 +92,19 @@ pub fn hash_chunk_fire_heat(rows: &[ChunkFireHeat]) -> u64 {
     hash
 }
 
+/// Same aggregation as [`sync_shared_overlay_from_simulation`] (max heat per chunk).
+#[must_use]
+pub fn hash_simulation_chunk_heat_for_overlay(sim: &FireSimulationSnapshot) -> u64 {
+    use std::collections::HashMap;
+    let mut map: HashMap<IVec2, f32> = HashMap::new();
+    for h in &sim.chunk_heat {
+        map.entry(h.chunk)
+            .and_modify(|e| *e = f32::max(*e, h.heat))
+            .or_insert(h.heat);
+    }
+    hash_shared_overlay_heat(&map)
+}
+
 #[must_use]
 pub fn hash_shared_overlay_heat(map: &std::collections::HashMap<IVec2, f32>) -> u64 {
     let rows: Vec<ChunkFireHeat> = map
@@ -119,7 +136,8 @@ pub fn assert_snapshot_stamp(
 }
 
 pub fn record_visual_agreement_frame(
-    fire: Res<FireVisualFrame>,
+    fire_by_view: Res<FireVisualFramesByView>,
+    sim: Res<FireSimulationSnapshot>,
     shared: Res<SharedOverlayFieldBuffers>,
     overlay: Res<OverlayFieldFrame>,
     projection: Option<Res<RenderProjectionGraph>>,
@@ -127,8 +145,10 @@ pub fn record_visual_agreement_frame(
     mut agreement: ResMut<VisualAgreementFrame>,
     mut overlay_debug: ResMut<OverlayAgreementDebug>,
 ) {
+    let fire = tactical_fire_visual(fire_by_view.as_ref());
     update_visual_agreement_frame(
-        fire.as_ref(),
+        fire,
+        sim.as_ref(),
         shared.as_ref(),
         overlay.as_ref(),
         projection.as_deref(),
@@ -145,16 +165,19 @@ pub fn record_visual_agreement_frame(
 
 pub fn update_visual_agreement_frame(
     fire: &FireVisualFrame,
+    sim: &FireSimulationSnapshot,
     shared: &SharedOverlayFieldBuffers,
     overlay: &OverlayFieldFrame,
     projection: Option<&RenderProjectionGraph>,
     preview_probe: Option<&WorldPreviewVt4Probe>,
     agreement: &mut VisualAgreementFrame,
 ) {
+    agreement.mismatch_count = 0;
     agreement.stamp = fire.stamp;
     agreement.fire_instance_count = fire.instances.len();
     agreement.chunk_heat_count = fire.chunk_heat.len();
     agreement.fire_heat_hash = hash_chunk_fire_heat(&fire.chunk_heat);
+    agreement.sim_overlay_heat_hash = hash_simulation_chunk_heat_for_overlay(sim);
     agreement.overlay_revision = overlay.fire_heat_overlay_revision;
 
     if let Some(graph) = projection.as_deref() {
@@ -199,11 +222,14 @@ pub fn update_visual_agreement_frame(
     }
 
     let overlay_hash = hash_shared_overlay_heat(&shared.chunk_fire_heat);
-    if overlay_hash != agreement.fire_heat_hash {
+    // PLAY-06c: empty sim snapshot + retained shared overlay is intentional — not a VT-4 failure.
+    let held_overlay_persist =
+        sim.chunk_heat.is_empty() && !shared.chunk_fire_heat.is_empty();
+    if !held_overlay_persist && overlay_hash != agreement.sim_overlay_heat_hash {
         agreement.mismatch_count = agreement.mismatch_count.wrapping_add(1);
         warn!(
-            "VT-4 fire heat hash mismatch: frame={} overlay={}",
-            agreement.fire_heat_hash, overlay_hash
+            "VT-4 overlay vs sim heat hash mismatch: sim={} overlay={} tactical_frame={}",
+            agreement.sim_overlay_heat_hash, overlay_hash, agreement.fire_heat_hash
         );
     }
 
@@ -218,11 +244,11 @@ pub fn update_visual_agreement_frame(
     }
 
     if let Some(probe) = preview_probe.as_deref() {
-        if probe.participates_in_vt4() && probe.overlay_heat_hash != agreement.fire_heat_hash {
+        if probe.participates_in_vt4() && probe.overlay_heat_hash != agreement.sim_overlay_heat_hash {
             agreement.mismatch_count = agreement.mismatch_count.wrapping_add(1);
             warn!(
-                "VT-4 world preview overlay hash mismatch: frame={} preview={}",
-                agreement.fire_heat_hash, probe.overlay_heat_hash
+                "VT-4 world preview overlay hash mismatch: sim={} preview={} tactical_frame={}",
+                agreement.sim_overlay_heat_hash, probe.overlay_heat_hash, agreement.fire_heat_hash
             );
         }
     }
@@ -232,6 +258,14 @@ pub fn update_visual_agreement_frame(
 mod tests {
     use super::*;
     use std::collections::HashMap;
+
+    fn sim_from_frame(frame: &FireVisualFrame) -> FireSimulationSnapshot {
+        FireSimulationSnapshot {
+            stamp: frame.stamp,
+            instances: frame.instances.clone(),
+            chunk_heat: frame.chunk_heat.clone(),
+        }
+    }
 
     #[test]
     fn projected_and_preview_hashes_match_frame_rows() {
@@ -261,9 +295,11 @@ mod tests {
             overlay_revision: 1,
             consumer_active: true,
         };
+        let sim = sim_from_frame(&frame);
         let mut agreement = VisualAgreementFrame::default();
         update_visual_agreement_frame(
             &frame,
+            &sim,
             &shared,
             &overlay,
             Some(&graph),
@@ -272,7 +308,7 @@ mod tests {
         );
         assert_eq!(agreement.mismatch_count, 0);
         assert_eq!(agreement.fire_heat_hash, agreement.projected_fire_heat_hash);
-        assert_eq!(agreement.fire_heat_hash, agreement.preview_overlay_heat_hash);
+        assert_eq!(agreement.sim_overlay_heat_hash, agreement.preview_overlay_heat_hash);
     }
 
     #[test]
@@ -304,10 +340,12 @@ mod tests {
             overlay_revision: 4,
             consumer_active: true,
         };
+        let sim = sim_from_frame(&frame);
         let mut agreement = VisualAgreementFrame::default();
         let mut overlay_debug = OverlayAgreementDebug::default();
         update_visual_agreement_frame(
             &frame,
+            &sim,
             &shared,
             &overlay,
             Some(&graph),
@@ -353,10 +391,12 @@ mod tests {
             overlay_revision: 9,
             consumer_active: true,
         };
+        let sim = sim_from_frame(&frame);
         let mut agreement = VisualAgreementFrame::default();
         let mut overlay_debug = OverlayAgreementDebug::default();
         update_visual_agreement_frame(
             &frame,
+            &sim,
             &shared,
             &overlay,
             Some(&graph),
@@ -372,6 +412,101 @@ mod tests {
         assert_eq!(overlay_debug.stamp, overlay.stamp);
         assert_eq!(overlay_debug.preview_revision, overlay_debug.overlay_revision);
         assert_eq!(agreement.mismatch_count, 0);
+    }
+
+    #[test]
+    fn overlay_agrees_when_tactical_frame_view_culled() {
+        let stamp = SimStepStamp::new(340, 76_083_967);
+        let sim_rows = vec![
+            ChunkFireHeat {
+                chunk: IVec2::new(10, 5),
+                heat: 0.8,
+                smoke: 0.0,
+            },
+            ChunkFireHeat {
+                chunk: IVec2::new(11, 6),
+                heat: 0.6,
+                smoke: 0.0,
+            },
+            ChunkFireHeat {
+                chunk: IVec2::new(12, 7),
+                heat: 0.4,
+                smoke: 0.0,
+            },
+        ];
+        let sim = FireSimulationSnapshot {
+            stamp,
+            instances: Vec::new(),
+            chunk_heat: sim_rows,
+        };
+        let tactical = FireVisualFrame {
+            stamp,
+            instances: Vec::new(),
+            chunk_heat: Vec::new(),
+        };
+        let mut shared = SharedOverlayFieldBuffers::default();
+        shared.stamp = stamp;
+        for h in &sim.chunk_heat {
+            shared
+                .chunk_fire_heat
+                .entry(h.chunk)
+                .and_modify(|e| *e = f32::max(*e, h.heat))
+                .or_insert(h.heat);
+        }
+        let overlay = OverlayFieldFrame {
+            stamp,
+            fields: HashMap::new(),
+            fire_heat_overlay_revision: 61,
+        };
+        let mut agreement = VisualAgreementFrame::default();
+        update_visual_agreement_frame(
+            &tactical,
+            &sim,
+            &shared,
+            &overlay,
+            None,
+            None,
+            &mut agreement,
+        );
+        assert_eq!(agreement.mismatch_count, 0);
+        assert_ne!(agreement.fire_heat_hash, agreement.sim_overlay_heat_hash);
+    }
+
+    #[test]
+    fn held_overlay_persist_skips_vt4_overlay_sim_mismatch() {
+        let stamp = SimStepStamp::new(99, 1_000);
+        let sim = FireSimulationSnapshot {
+            stamp,
+            instances: Vec::new(),
+            chunk_heat: Vec::new(),
+        };
+        let tactical = FireVisualFrame {
+            stamp,
+            instances: Vec::new(),
+            chunk_heat: Vec::new(),
+        };
+        let mut shared = SharedOverlayFieldBuffers::default();
+        shared.stamp = stamp;
+        shared
+            .chunk_fire_heat
+            .insert(IVec2::new(3, 4), 0.42);
+        let overlay = OverlayFieldFrame {
+            stamp,
+            fields: HashMap::new(),
+            fire_heat_overlay_revision: 1,
+        };
+        let mut agreement = VisualAgreementFrame::default();
+        update_visual_agreement_frame(
+            &tactical,
+            &sim,
+            &shared,
+            &overlay,
+            None,
+            None,
+            &mut agreement,
+        );
+        assert_eq!(agreement.mismatch_count, 0);
+        assert_ne!(agreement.sim_overlay_heat_hash, hash_shared_overlay_heat(&shared.chunk_fire_heat));
     }
 
     #[test]

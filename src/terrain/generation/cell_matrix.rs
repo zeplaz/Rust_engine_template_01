@@ -11,6 +11,7 @@ use crate::terrain::family::{TerrainFamilyId, DEFAULT_TERRAIN_FAMILY_ID};
 pub struct ChunkCellMatrix {
     pub size: UVec2,
     pub elevation: Vec<f32>,
+    /// Atmospheric humidity / rainfall dryness proxy — **not** standing surface water (see `flooded` tag + elevation).
     pub moisture: Vec<f32>,
     pub temperature: Vec<f32>,
     pub tags: Vec<TagSet>,

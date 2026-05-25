@@ -16,4 +16,6 @@ pub struct CommitConstructionSiteEvent {
     pub origin: BuildSiteTile,
     pub footprint: FootprintTiles,
     pub layer: LayerType,
+    /// Catalog row from `BuildingDefinitionRegistry` when placed from JSON/builtin intent.
+    pub catalog_id: Option<String>,
 }

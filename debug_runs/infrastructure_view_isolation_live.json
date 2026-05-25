@@ -1,0 +1,108 @@
+{
+  "_agent_meta": {
+    "agent_commands": [
+      "cargo test -p proc_A_dine01 render::view_runtime --lib"
+    ],
+    "docs": {
+      "compile_warnings": "src/dev/COMPILE_WARNINGS_TODOS.md",
+      "stage5_directive": "prompts/guides/stage5_convergence_directive_v1.md",
+      "viewport_recovery": "src/dev/recovery_viewport.md"
+    },
+    "logging_env": {
+      "ORCHESTRATOR_EXPORT_HEALTH": false,
+      "PERF": false,
+      "RUST_LOG": null,
+      "SIM_VIEW_SYNC_DEBUG": false,
+      "STAGE5_READINESS_VERBOSE": false,
+      "STAGE5_VERBOSE": false,
+      "VIEWPORT_AUTHORITY_DEBUG": false
+    },
+    "orchestrator": {
+      "build_report": "tools/orchestrator/reports/build_report.md",
+      "ci_entry": "tools/orchestrator/ci/run.ps1",
+      "continuation_queue": "tools/orchestrator/queues/continuation_queue.json",
+      "warning_registry": "tools/orchestrator/reports/warning_registry.md"
+    },
+    "profile": "INFRASTRUCTURE_VIEW_ISOLATION",
+    "related_proofs": [
+      "debug_runs/stage5_full_app_live.json",
+      "debug_runs/infrastructure_view_isolation_live.json",
+      "debug_runs/construction_stage_live.json",
+      "debug_runs/industrial_activation_live.json",
+      "debug_runs/fire_ecology_live.json",
+      "debug_runs/logistics_throughput_live.json",
+      "debug_runs/replay_editor_parity_live.json",
+      "debug_runs/orchestrator_thread_health.json",
+      "debug_runs/viewport_drift.json",
+      "debug_runs/viewport_authority_migration_witness.json",
+      "debug_runs/main_thread_orchestrator_live.json",
+      "debug_runs/stage6_virtualization_live.json",
+      "debug_runs/wave_s_hydrate_live.json",
+      "debug_runs/wave_p_live.json",
+      "debug_runs/wave_c_live.json",
+      "debug_runs/ui_shell_migration_live.json",
+      "debug_runs/minimap_compositor_live.json"
+    ],
+    "relative_path": "debug_runs/infrastructure_view_isolation_live.json",
+    "schema": "debug_run_envelope_v1",
+    "source_system": "view_runtime_live_proof",
+    "written_at_epoch_secs": 1779644695
+  },
+  "infrastructure_view_isolation_green": true,
+  "isolation": {
+    "minimap_main_lockstep_suspect": false,
+    "minimap_overlay_fire_heat": true,
+    "preview_main_lockstep_suspect": false,
+    "preview_overlay_fire_heat": true,
+    "simulation_map_shares_main_camera": true,
+    "vm08_overlay_masks_aligned": true,
+    "world_main_overlay_fire_heat": true
+  },
+  "profile": "INFRASTRUCTURE_VIEW_ISOLATION",
+  "trace": {
+    "enabled": false,
+    "entry_count": 0,
+    "violations": []
+  },
+  "vm_06": {
+    "resolved_viewports_cache_mirror": "view_runtime::sync_resolved_viewports_from_authority",
+    "resolved_viewports_measure_writer": "viewport_pipeline",
+    "view_manager_sole_writer": "sync_view_manager_bridge",
+    "view_projection_authority_pose_bus": true
+  },
+  "vm_07": {
+    "active_surface": null,
+    "authority_commit_system": "commit_deferred_map_view_poses_to_authority",
+    "blocks_world_main": false,
+    "deferred_input_hub": "MapViewInteractionByView"
+  },
+  "vm_08": {
+    "overlay_masks_aligned": true
+  },
+  "vm_10": {
+    "minimap_lockstep_suspect": false,
+    "preview_lockstep_suspect": false
+  },
+  "vm_11": {
+    "minimap_cap_respected": true,
+    "per_view_fire_instances": {
+      "Minimap": 0,
+      "SimulationMap": 0,
+      "WorldMain": 0,
+      "WorldPreview": 0
+    },
+    "preview_cap_respected": true,
+    "projection_fire_source": "WorldMain"
+  },
+  "vm_a": {
+    "authority_revision": 1764,
+    "dual_writer_pose_violation": false,
+    "minimap_shell_wrote_map_camera_desired": false,
+    "pose_writers": {
+      "Minimap": "MinimapShell",
+      "SimulationMap": "MapCameraInput",
+      "WorldMain": "MapCameraInput",
+      "WorldPreview": "PreviewPanel"
+    }
+  }
+}

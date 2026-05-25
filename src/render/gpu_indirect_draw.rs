@@ -5,6 +5,7 @@ use bevy::prelude::*;
 use crate::gui::RepresentationResult;
 use crate::render::gpu_particle_draw::WorldFireParticleDrawDispatch;
 use crate::render::gpu_particles::WorldFireParticleFrame;
+use crate::render::Stage5ReadinessProfile;
 
 /// Expanded billboard vertices per instanced fire particle row.
 pub const WORLD_FIRE_VERTICES_PER_INSTANCE: u32 = 4;
@@ -59,9 +60,23 @@ pub fn sync_world_fire_indirect_draw(
     policy: Res<RepresentationResult>,
     particles: Res<WorldFireParticleFrame>,
     draw: Res<WorldFireParticleDrawDispatch>,
+    profile: Res<Stage5ReadinessProfile>,
     mut spine: ResMut<GpuIndirectDrawSpine>,
 ) {
     *spine = compact_world_fire_indirect_draw(policy.as_ref(), particles.as_ref(), draw.as_ref());
+    if *profile == Stage5ReadinessProfile::FULL_APP
+        && policy.particle_policy.instanced_draw
+        && (spine.world_fire.instance_count != draw.instance_count
+            || (spine.world_fire.instance_count > 0 && spine.dispatch_count == 0))
+    {
+        warn!(
+            target: "stage5_gpu_indirect::live",
+            "STAGE5_GPU_INDIRECT_MISMATCH indirect_instances={} draw_instances={} dispatch_count={}",
+            spine.world_fire.instance_count,
+            draw.instance_count,
+            spine.dispatch_count,
+        );
+    }
 }
 
 pub struct GpuIndirectDrawSpinePlugin;
@@ -69,10 +84,10 @@ pub struct GpuIndirectDrawSpinePlugin;
 impl Plugin for GpuIndirectDrawSpinePlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<GpuIndirectDrawSpine>().add_systems(
-            Update,
+            PostUpdate,
             sync_world_fire_indirect_draw
-                .after(crate::render::sync_particle_draw_dispatch_from_policy)
-                .after(crate::render::extraction::FireVisualFrameSet::ProjectGpu),
+                .after(crate::render::extraction::FireVisualFrameSet::EmitParticles)
+                .after(crate::render::sync_particle_draw_dispatch_from_policy),
         );
     }
 }
@@ -81,6 +96,39 @@ impl Plugin for GpuIndirectDrawSpinePlugin {
 mod tests {
     use super::*;
     use crate::gui::{GpuBudgetPolicy, RepresentationBand, RepresentationResult};
+    use crate::render::gpu_representation_metrics::GpuRepresentationMetrics;
+
+    #[test]
+    fn instanced_spine_matches_draw_dispatch_after_policy_sync() {
+        let mut app = App::new();
+        app.init_resource::<WorldFireParticleDrawDispatch>();
+        app.init_resource::<GpuRepresentationMetrics>();
+        app.init_resource::<WorldFireParticleFrame>();
+        app.init_resource::<GpuIndirectDrawSpine>();
+        app.init_resource::<RepresentationResult>();
+        app.init_resource::<Stage5ReadinessProfile>();
+        let mut particles = WorldFireParticleFrame::default();
+        particles.instances.resize(8, Default::default());
+        app.insert_resource(particles);
+        let mut policy = RepresentationResult::default();
+        policy.gpu_budget.particle_rows_cap = 3;
+        policy.particle_policy.instanced_draw = true;
+        app.insert_resource(policy);
+        app.add_systems(
+            PostUpdate,
+            (
+                crate::render::sync_particle_draw_dispatch_from_policy,
+                sync_world_fire_indirect_draw,
+            )
+                .chain(),
+        );
+        app.update();
+        let draw = app.world().resource::<WorldFireParticleDrawDispatch>();
+        let spine = app.world().resource::<GpuIndirectDrawSpine>();
+        assert_eq!(spine.world_fire.instance_count, draw.instance_count);
+        assert_eq!(spine.dispatch_count, draw.dispatch_count);
+        assert_eq!(draw.instance_count, 3);
+    }
 
     #[test]
     fn zero_particle_cap_zeroes_indirect_args() {

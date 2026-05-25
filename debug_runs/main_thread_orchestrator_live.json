@@ -1,0 +1,325 @@
+{
+  "_agent_meta": {
+    "agent_commands": [
+      "cargo orchestrate --main-thread-shift --skip-cargo",
+      "cargo orchestrate --main-thread-shift",
+      ".\\tools\\orchestrator\\scripts\\main_thread_shift.ps1",
+      "cargo test -p proc_A_dine01 --lib stage5"
+    ],
+    "agents": {
+      "main_thread_orchestrator": ".cursor/agents/main-thread-orchestrator.md",
+      "sim_steward": ".cursor/agents/sim-steward.md"
+    },
+    "profile": "MAIN_THREAD_SHIFT",
+    "related_proofs": [
+      "debug_runs/stage5_full_app_live.json",
+      "debug_runs/viewport_drift.json",
+      "debug_runs/viewport_authority_migration_witness.json",
+      "debug_runs/infrastructure_view_isolation_live.json",
+      "debug_runs/orchestrator_thread_health.json"
+    ],
+    "relative_path": "debug_runs/main_thread_orchestrator_live.json",
+    "schema": "debug_run_envelope_v1",
+    "skills": [
+      "bevy-simulation-grade",
+      "debug-intelligence",
+      "cleanup-completion-intelligence"
+    ],
+    "source_system": "rust_engine_orchestrator::main_thread_shift"
+  },
+  "cleanup_classifications": [
+    {
+      "classification": "B_transitional",
+      "decision": "refactor",
+      "file": "src/bevysubengines/world_generator_plugin.rs",
+      "line": 170,
+      "marker_kind": "DEPRECATED",
+      "note": "deprecated API"
+    },
+    {
+      "classification": "B_transitional",
+      "decision": "refactor",
+      "file": "src/engine/lmodels/mod.rs",
+      "line": 19,
+      "marker_kind": "DEPRECATED",
+      "note": "deprecated API"
+    },
+    {
+      "classification": "B_transitional",
+      "decision": "refactor",
+      "file": "src/strategic/behavior_plugin.rs",
+      "line": 12,
+      "marker_kind": "DEPRECATED",
+      "note": "deprecated API"
+    },
+    {
+      "classification": "B_transitional",
+      "decision": "refactor",
+      "file": "src/terrain/bevy_terrain.rs",
+      "line": 21,
+      "marker_kind": "DEPRECATED",
+      "note": "deprecated API"
+    },
+    {
+      "classification": "B_transitional",
+      "decision": "refactor",
+      "file": "src/terrain/generation/world_generator_enhanced.rs",
+      "line": 441,
+      "marker_kind": "DEPRECATED",
+      "note": "deprecated API"
+    }
+  ],
+  "debug_routing": {
+    "affected": [
+      "ResolvedViewports:MED",
+      "ViewManager:LOW"
+    ],
+    "confidence": 0.699999988079071,
+    "evidence": [
+      "viewport_drift status=closed",
+      "1 ResMut write site(s) outside canonical path(s): [\"src/render/viewport_pipeline.rs\"]",
+      "2 ResMut write site(s) outside canonical path(s): [\"src/gui/view_authority.rs\"]"
+    ],
+    "id": "MAIN-THREAD-SHIFT-001",
+    "owner": "main-thread-orchestrator",
+    "recommendation": [
+      "Route to @coder: verify schedule order vs viewport_pipeline for ResolvedViewports",
+      "Route to @coder: verify schedule order vs viewport_pipeline for ViewManager"
+    ],
+    "root_cause": [
+      "Non-canonical ResMut writer(s) for ResolvedViewports",
+      "Non-canonical ResMut writer(s) for ViewManager"
+    ],
+    "severity": "MED"
+  },
+  "fail_cycle_ledger": {
+    "attempts": [
+      {
+        "channel": "tools/orchestrator/main_thread_shift",
+        "cycle": 2,
+        "note": "executable Shift A→B (no Task)",
+        "outcome": "yaml_emitted"
+      }
+    ],
+    "next_cycle": null,
+    "slice_id": "MAIN_THREAD_SHIFT"
+  },
+  "highest_severity": "MED",
+  "ok": true,
+  "profile": "MAIN_THREAD_SHIFT",
+  "run_id": "20260523_025533",
+  "shift": {
+    "A_observe": {
+      "authorities_observed": [
+        "ResolvedViewports",
+        "ViewManager"
+      ],
+      "lane": "MAIN_THREAD_SHIFT",
+      "marker_count": 66,
+      "orchestrator_annotation_count": 19,
+      "witnesses": [
+        {
+          "exists": true,
+          "path": "debug_runs/stage5_full_app_live.json",
+          "summary": {
+            "live_todo_all_done": true,
+            "map_mismatch_frames": 0,
+            "parse_ok": true,
+            "profile": "FULL_APP",
+            "readiness_passes": true,
+            "violation_count": 0
+          }
+        },
+        {
+          "exists": true,
+          "path": "debug_runs/viewport_drift.json",
+          "summary": {
+            "canonical_path": [
+              "semantic_viewport_from_map_fill",
+              "commit_authority_from_semantic",
+              "publish_simulation_map_viewport"
+            ],
+            "parse_ok": true,
+            "status": "closed"
+          }
+        },
+        {
+          "exists": true,
+          "path": "debug_runs/viewport_authority_migration_witness.json",
+          "summary": {
+            "parse_ok": true
+          }
+        },
+        {
+          "exists": true,
+          "path": "debug_runs/infrastructure_view_isolation_live.json",
+          "summary": {
+            "green": true,
+            "parse_ok": true,
+            "profile": "INFRASTRUCTURE_VIEW_ISOLATION"
+          }
+        },
+        {
+          "exists": false,
+          "path": "debug_runs/orchestrator_thread_health.json",
+          "summary": {
+            "missing": true,
+            "parse_ok": false
+          }
+        }
+      ]
+    },
+    "B_cleanup": [
+      {
+        "classification": "B_transitional",
+        "decision": "refactor",
+        "file": "src/bevysubengines/world_generator_plugin.rs",
+        "line": 170,
+        "marker_kind": "DEPRECATED",
+        "note": "deprecated API"
+      },
+      {
+        "classification": "B_transitional",
+        "decision": "refactor",
+        "file": "src/engine/lmodels/mod.rs",
+        "line": 19,
+        "marker_kind": "DEPRECATED",
+        "note": "deprecated API"
+      },
+      {
+        "classification": "B_transitional",
+        "decision": "refactor",
+        "file": "src/strategic/behavior_plugin.rs",
+        "line": 12,
+        "marker_kind": "DEPRECATED",
+        "note": "deprecated API"
+      },
+      {
+        "classification": "B_transitional",
+        "decision": "refactor",
+        "file": "src/terrain/bevy_terrain.rs",
+        "line": 21,
+        "marker_kind": "DEPRECATED",
+        "note": "deprecated API"
+      },
+      {
+        "classification": "B_transitional",
+        "decision": "refactor",
+        "file": "src/terrain/generation/world_generator_enhanced.rs",
+        "line": 441,
+        "marker_kind": "DEPRECATED",
+        "note": "deprecated API"
+      }
+    ],
+    "B_debug": {
+      "affected": [
+        "ResolvedViewports:MED",
+        "ViewManager:LOW"
+      ],
+      "confidence": 0.699999988079071,
+      "evidence": [
+        "viewport_drift status=closed",
+        "1 ResMut write site(s) outside canonical path(s): [\"src/render/viewport_pipeline.rs\"]",
+        "2 ResMut write site(s) outside canonical path(s): [\"src/gui/view_authority.rs\"]"
+      ],
+      "id": "MAIN-THREAD-SHIFT-001",
+      "owner": "main-thread-orchestrator",
+      "recommendation": [
+        "Route to @coder: verify schedule order vs viewport_pipeline for ResolvedViewports",
+        "Route to @coder: verify schedule order vs viewport_pipeline for ViewManager"
+      ],
+      "root_cause": [
+        "Non-canonical ResMut writer(s) for ResolvedViewports",
+        "Non-canonical ResMut writer(s) for ViewManager"
+      ],
+      "severity": "MED"
+    }
+  },
+  "simulation_grade": {
+    "authority_alerts": [
+      {
+        "message": "1 ResMut write site(s) outside canonical path(s): [\"src/render/viewport_pipeline.rs\"]",
+        "resource": "ResolvedViewports",
+        "severity": "MED",
+        "sites": [
+          {
+            "file": "src/render/view_runtime/commit.rs",
+            "line": 137,
+            "resource": "ResolvedViewports",
+            "symbol_hint": "mut resolved: ResMut<ResolvedViewports>,"
+          }
+        ]
+      },
+      {
+        "message": "2 ResMut write site(s) outside canonical path(s): [\"src/gui/view_authority.rs\"]",
+        "resource": "ViewManager",
+        "severity": "LOW",
+        "sites": [
+          {
+            "file": "src/gui/map_camera.rs",
+            "line": 567,
+            "resource": "ViewManager",
+            "symbol_hint": "mut view_manager: ResMut<ViewManager>,"
+          },
+          {
+            "file": "src/render/tile_world_fallback.rs",
+            "line": 352,
+            "resource": "ViewManager",
+            "symbol_hint": "mut view_manager: ResMut<ViewManager>,"
+          }
+        ]
+      }
+    ],
+    "authority_write_sites": [
+      {
+        "file": "src/gui/map_camera.rs",
+        "line": 567,
+        "resource": "ViewManager",
+        "symbol_hint": "mut view_manager: ResMut<ViewManager>,"
+      },
+      {
+        "file": "src/gui/view_authority.rs",
+        "line": 427,
+        "resource": "ViewManager",
+        "symbol_hint": "mut manager: ResMut<ViewManager>,"
+      },
+      {
+        "file": "src/render/tile_world_fallback.rs",
+        "line": 352,
+        "resource": "ViewManager",
+        "symbol_hint": "mut view_manager: ResMut<ViewManager>,"
+      },
+      {
+        "file": "src/render/viewport_pipeline.rs",
+        "line": 112,
+        "resource": "ResolvedViewports",
+        "symbol_hint": "mut resolved: ResMut<ResolvedViewports>,"
+      },
+      {
+        "file": "src/render/viewport_pipeline.rs",
+        "line": 202,
+        "resource": "ResolvedViewports",
+        "symbol_hint": "mut resolved: ResMut<ResolvedViewports>,"
+      },
+      {
+        "file": "src/render/viewport_pipeline.rs",
+        "line": 265,
+        "resource": "ResolvedViewports",
+        "symbol_hint": "mut resolved: ResMut<ResolvedViewports>,"
+      },
+      {
+        "file": "src/render/view_runtime/commit.rs",
+        "line": 137,
+        "resource": "ResolvedViewports",
+        "symbol_hint": "mut resolved: ResMut<ResolvedViewports>,"
+      }
+    ],
+    "principle": "single authority per resource",
+    "resolved_viewports_canonical": [
+      "src/render/viewport_pipeline.rs"
+    ],
+    "view_manager_canonical": [
+      "src/gui/view_authority.rs"
+    ]
+  }
+}

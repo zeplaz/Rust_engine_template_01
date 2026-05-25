@@ -1,0 +1,89 @@
+{
+  "_agent_meta": {
+    "agent_commands": [
+      "cargo test -p proc_A_dine01 --lib stage6",
+      "cargo run -p proc_A_dine01"
+    ],
+    "docs": {
+      "compile_warnings": "src/dev/COMPILE_WARNINGS_TODOS.md",
+      "stage5_directive": "prompts/guides/stage5_convergence_directive_v1.md",
+      "viewport_recovery": "src/dev/recovery_viewport.md"
+    },
+    "logging_env": {
+      "ORCHESTRATOR_EXPORT_HEALTH": false,
+      "PERF": false,
+      "RUST_LOG": null,
+      "SIM_VIEW_SYNC_DEBUG": false,
+      "STAGE5_READINESS_VERBOSE": false,
+      "STAGE5_VERBOSE": false,
+      "VIEWPORT_AUTHORITY_DEBUG": false
+    },
+    "orchestrator": {
+      "build_report": "tools/orchestrator/reports/build_report.md",
+      "ci_entry": "tools/orchestrator/ci/run.ps1",
+      "continuation_queue": "tools/orchestrator/queues/continuation_queue.json",
+      "warning_registry": "tools/orchestrator/reports/warning_registry.md"
+    },
+    "profile": "STAGE6_VIRTUALIZATION",
+    "related_proofs": [
+      "debug_runs/stage5_full_app_live.json",
+      "debug_runs/infrastructure_view_isolation_live.json",
+      "debug_runs/construction_stage_live.json",
+      "debug_runs/industrial_activation_live.json",
+      "debug_runs/fire_ecology_live.json",
+      "debug_runs/logistics_throughput_live.json",
+      "debug_runs/replay_editor_parity_live.json",
+      "debug_runs/orchestrator_thread_health.json",
+      "debug_runs/viewport_drift.json",
+      "debug_runs/viewport_authority_migration_witness.json",
+      "debug_runs/main_thread_orchestrator_live.json",
+      "debug_runs/stage6_virtualization_live.json",
+      "debug_runs/wave_s_hydrate_live.json",
+      "debug_runs/wave_p_live.json",
+      "debug_runs/wave_c_live.json",
+      "debug_runs/ui_shell_migration_live.json",
+      "debug_runs/minimap_compositor_live.json"
+    ],
+    "relative_path": "debug_runs/stage6_virtualization_live.json",
+    "schema": "debug_run_envelope_v1",
+    "source_system": "stage6_live_proof",
+    "written_at_epoch_secs": 1779644695
+  },
+  "frame": {
+    "active_atlas_slots": 1,
+    "consumer_window_len": 5041,
+    "core_chunk_count": 4761,
+    "focus_chunk": [
+      5,
+      5
+    ],
+    "ghost_chunk_count": 280,
+    "gpu_upload_bytes_frame": 0,
+    "per_view_window_count": 87,
+    "residency_chunk_count": 5041
+  },
+  "profile": "STAGE6_VIRTUALIZATION",
+  "stage6_readiness": {
+    "passes": false,
+    "report": {
+      "atlas_slots_active": false,
+      "projection_window_populated": true,
+      "residency_populated": true,
+      "wave_c_ok": true
+    },
+    "violations": [
+      "gpu_upload_inactive"
+    ]
+  },
+  "stage6_virtualization_green": false,
+  "vm_a_crosslink": {
+    "authority_revision": 1764,
+    "dual_writer_pose_violation": false,
+    "infrastructure_view_isolation_green": true
+  },
+  "wave_c": {
+    "open_backlog_items": 0,
+    "passes": true,
+    "prerequisites_ok": true
+  }
+}

@@ -4,13 +4,15 @@
 //! [`ChunkEcology`](crate::systems::ecology::ChunkEcology), fuel/material rows). **No** per-scenario fire ECS types;
 //! extend profiles as fuel / structure data grows.
 //!
-//! Populated only from [`super::fire_visual_extract::extract_fire_visual_frame`] (one ECS pass per frame).
+//! Populated only from [`super::fire_visual_extract::extract_fire_simulation_snapshot`] (one ECS pass per frame).
 
 use bevy::math::IVec2;
 use bevy::prelude::*;
 
 use crate::systems::ecology::ChunkEcology;
-use crate::systems::fire::{ChunkFuelProfile, ChunkSmokeField, ChunkSurfaceFire, FireLightEmission};
+use crate::systems::fire::{
+    ChunkFireOverlay, ChunkFuelProfile, ChunkSmokeField, ChunkSurfaceFire, FireLightEmission,
+};
 use crate::systems::weather::ChunkWeather;
 use crate::terrain::family::{TerrainFamilyId, DEFAULT_TERRAIN_FAMILY_ID};
 use crate::terrain::generation::{Chunk, ChunkCellMatrix};
@@ -148,9 +150,13 @@ pub fn infer_combustion_class(
 }
 
 /// Build one per-chunk profile for [`crate::render::sim_visual_extract::FireVisualFrame`].
+///
+/// When [`ChunkFireOverlay`] is present, **peak** cell heat is merged into the scalar used for VFX
+/// so per-cell burning is not averaged away against cold cells (fixes “sim fire, zero visual rows”).
 pub fn infer_fire_emission_profile(
     chunk: &Chunk,
     fire: &ChunkSurfaceFire,
+    overlay: Option<&ChunkFireOverlay>,
     em: &FireLightEmission,
     smoke: Option<&ChunkSmokeField>,
     eco: Option<&ChunkEcology>,
@@ -163,7 +169,7 @@ pub fn infer_fire_emission_profile(
     let sy = matrix.size.y as f32;
     let ox = chunk.coord.x as f32 * sx;
     let oy = chunk.coord.y as f32 * sy;
-    let world_pos = Vec3::new(ox + sx * 0.5, oy + sy * 0.5, 8.0);
+    let world_pos = Vec3::new(ox + sx * 0.5, oy + sy * 0.5, 0.0);
 
     let terrain = terrain_family_at_chunk_center(matrix);
     let material = materialized
@@ -171,7 +177,14 @@ pub fn infer_fire_emission_profile(
         .unwrap_or(MaterialId(0));
     let class = infer_combustion_class(terrain, material, eco, prof);
     let layer = prof.map(|p| p.to_fuel_layer()).unwrap_or_default();
-    let heat = fire.heat.clamp(0.0, 1.0);
+    let mut heat = fire.heat.clamp(0.0, 1.0);
+    if let Some(ovl) = overlay {
+        if !ovl.heat.is_empty() {
+            let peak = ovl.heat.iter().copied().fold(0.0f32, f32::max);
+            heat = heat.max(peak);
+        }
+    }
+    let heat = heat.clamp(0.0, 1.0);
     let bio = eco.map(|e| e.biomass).unwrap_or(0.35);
 
     let smoke_field = smoke.map(|s| s.density).unwrap_or(0.0);
@@ -249,7 +262,7 @@ fn smoke_color_for_class(class: CombustionClass, toxic: f32, heat: f32) -> Vec3 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::systems::fire::ChunkSurfaceFire;
+    use crate::systems::fire::{ChunkFireOverlay, ChunkSurfaceFire};
     use crate::terrain::generation::Chunk;
     use bevy::prelude::{IVec2, UVec2};
 
@@ -275,10 +288,40 @@ mod tests {
             extract_priority: 1.0,
         };
         let m = minimal_matrix();
-        let p = infer_fire_emission_profile(&chunk, &fire, &em, None, None, None, None, &m, None);
+        let p = infer_fire_emission_profile(&chunk, &fire, None, &em, None, None, None, None, &m, None);
         assert_eq!(p.combustion_class, CombustionClass::Vegetation);
         assert_eq!(p.chunk_coord, IVec2::ZERO);
         assert!(p.luminosity > 0.0);
-        assert!(p.world_pos.z > 0.0);
+        assert_eq!(p.world_pos.z, 0.0, "map-plane fire emitters use z=0 for Core2d");
+    }
+
+    #[test]
+    fn overlay_peak_heat_merged_into_profile_scalar() {
+        let chunk = Chunk {
+            coord: IVec2::ZERO,
+        };
+        let fire = ChunkSurfaceFire {
+            heat: 0.01,
+            fuel: 1.0,
+        };
+        let overlay = ChunkFireOverlay {
+            heat: vec![0.0, 0.0, 0.0, 0.55],
+            fuel: vec![1.0; 4],
+            smoke: vec![0.0; 4],
+            toxic: vec![0.0; 4],
+        };
+        let em = FireLightEmission {
+            radius: 100.0,
+            base_intensity: 1.0,
+            current_intensity: 1.0,
+            flicker_strength: 0.1,
+            flicker_phase: 0.0,
+            extract_priority: 1.0,
+        };
+        let m = minimal_matrix();
+        let p = infer_fire_emission_profile(
+            &chunk, &fire, Some(&overlay), &em, None, None, None, None, &m, None,
+        );
+        assert!((p.heat - 0.55).abs() < 1e-4, "expected peak overlay cell heat, got {}", p.heat);
     }
 }

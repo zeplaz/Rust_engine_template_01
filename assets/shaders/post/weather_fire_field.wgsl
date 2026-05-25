@@ -10,7 +10,7 @@ struct WeatherFireFieldUniforms {
     time_secs: f32,
     blend_rate: f32,
     decay: f32,
-    _pad: f32,
+    fire_propagate: f32,
     fire_instance_count: u32,
     _fire_pad: vec3<u32>,
     partial_origin: vec2<u32>,
@@ -80,5 +80,26 @@ fn update(@builtin(global_invocation_id) gid: vec3<u32>) {
     let m = params.blend_rate;
     var blended = mix(old, blend_target, m);
     blended = blended * (1.0 - params.decay) + blend_target * params.decay * 0.15;
+
+    // Visual-only fire propagation: 4-neighbor max on previous field, mixed by `fire_propagate`.
+    let dims_i = vec2<i32>(i32(dims.x), i32(dims.y));
+    let cx = clamp(coord.x, 0, dims_i.x - 1);
+    let cy = clamp(coord.y, 0, dims_i.y - 1);
+    let c0 = vec2<i32>(cx, cy);
+    let nbr_z = max(
+        max(
+            textureLoad(prev_field, vec2<i32>(clamp(coord.x + 1, 0, dims_i.x - 1), cy)).z,
+            textureLoad(prev_field, vec2<i32>(clamp(coord.x - 1, 0, dims_i.x - 1), cy)).z,
+        ),
+        max(
+            textureLoad(prev_field, vec2<i32>(cx, clamp(coord.y + 1, 0, dims_i.y - 1))).z,
+            textureLoad(prev_field, vec2<i32>(cx, clamp(coord.y - 1, 0, dims_i.y - 1))).z,
+        ),
+    );
+    let self_z = textureLoad(prev_field, c0).z;
+    let spread_z = max(self_z, nbr_z * 0.92);
+    let k = clamp(params.fire_propagate, 0.0, 0.55);
+    blended.z = mix(blended.z, spread_z, k);
+
     textureStore(next_field, coord, blended);
 }

@@ -15,6 +15,14 @@ pub struct TileStorageDiffChunk {
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct TileStorageDiffBatch {
     pub chunks: Vec<TileStorageDiffChunk>,
+    pub timing: TileStorageApplyTiming,
+}
+
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum TileStorageApplyTiming {
+    #[default]
+    AfterDomainReconstruct,
+    Bq101Deferred,
 }
 
 #[derive(Resource, Debug, Default, Clone)]

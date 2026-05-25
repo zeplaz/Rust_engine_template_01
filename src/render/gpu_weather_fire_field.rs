@@ -6,12 +6,13 @@
 //!   [`ChunkEcology`](crate::systems::ecology::ChunkEcology) queries in the bridge.
 //! - Packed fire instances are extracted to the render world and uploaded each frame through
 //!   [`GPUBufferRegistry`](crate::render::GPUBufferRegistry) ([`FIRE_VISUAL_INSTANCES_BUFFER`](crate::render::FIRE_VISUAL_INSTANCES_BUFFER)).
-//! - **WGSL** (`assets/shaders/post/weather_fire_field.wgsl`) relaxes the field each frame.
+//! - **WGSL** (`assets/shaders/post/weather_fire_field.wgsl`) relaxes the field each frame and applies a
+//!   lightweight **neighbor spread** on the fire channel (visual-only propagation on the ping-pong texture).
 //! - P2-H partial dirty-rect uploads are planned on the main world ([`crate::systems::atmosphere::AtmosphereGpuFieldBridge`]),
 //!   extracted to [`super::atmosphere_partial_gpu::AtmospherePartialGpuExtract`], and written into both ping-pong
 //!   textures via [`super::atmosphere_partial_gpu::apply_partial_texture_writes`].
-//!   Until [`crate::systems::atmosphere::P2H_GPU_PARTIAL_WRITES_AUTHORITATIVE`] is true, this node still dispatches the full
-//!   `WEATHER_FIRE_FIELD_SIZE` compute pass each frame.
+//!   When partial uploads are empty, full-field dispatch runs only after
+//!   [`crate::systems::atmosphere::AtmosphereGpuFieldBridge::pending_full_field_dispatch`] (reconcile), not every idle frame.
 //! - Optional **debug sprite** (see [`WeatherFireFieldDebugOverlay`]).
 //!
 //! This is **not** gameplay state; do not sample into sim without explicit readback.
@@ -36,7 +37,7 @@ use bevy::{
     shader::PipelineCacheError,
 };
 
-use crate::gui::representation_band_from_world_lod;
+use crate::gui::{representation_band_from_world_lod, GPU_FIRE_INSTANCE_BUDGET_CEILING};
 use super::atmosphere_partial_gpu::{
     apply_partial_texture_writes, sync_atmosphere_partial_gpu_extract, AtmospherePartialGpuExtract,
 };
@@ -84,8 +85,8 @@ pub struct WeatherFireFieldUniforms {
     pub time_secs: f32,
     pub blend_rate: f32,
     pub decay: f32,
-    pub _pad: f32,
-    /// Number of valid rows in the fire visual storage buffer (WGSL reads `fire_instances[0..count)`).
+    /// Neighbor blend strength for fire (channel **z**) on the GPU field; driven from representation band.
+    pub fire_propagate: f32,
     pub fire_instance_count: u32,
     pub _fire_pad: UVec3,
     pub partial_origin: UVec2,
@@ -102,7 +103,7 @@ impl Default for WeatherFireFieldUniforms {
             time_secs: 0.0,
             blend_rate: 0.14,
             decay: 0.004,
-            _pad: 0.0,
+            fire_propagate: 0.16,
             fire_instance_count: 0,
             _fire_pad: UVec3::ZERO,
             partial_origin: UVec2::ZERO,
@@ -177,7 +178,7 @@ fn prepare_fire_visual_gpu_storage(
     );
 }
 
-fn prepare_fire_particle_gpu_storage(
+pub(crate) fn prepare_fire_particle_gpu_storage(
     extracted: Res<WorldFireParticleFrame>,
     mut storage: ResMut<WorldFireParticleGpuStorage>,
     mut metrics: ResMut<GpuRepresentationMetrics>,
@@ -185,21 +186,41 @@ fn prepare_fire_particle_gpu_storage(
     render_device: Res<RenderDevice>,
     queue: Res<RenderQueue>,
 ) {
+    const HARD: usize = GPU_FIRE_INSTANCE_BUDGET_CEILING;
     let format = fire_particle_instance_format();
     let rows = extracted.instances.as_slice();
-    let lod_cap = extracted.gpu_capacity;
-    let active_rows = if lod_cap == usize::MAX {
-        rows.len()
+    let lod_raw = extracted.gpu_capacity;
+
+    if lod_raw == 0 {
+        storage.instance_count = 0;
+        storage.expanded_vertex_count = 0;
+        return;
+    }
+
+    let lod_cap = if lod_raw == usize::MAX {
+        HARD
     } else {
-        rows.len().min(lod_cap)
+        lod_raw.min(HARD)
     };
+    let active_rows = rows.len().min(lod_cap);
+    if active_rows == 0 {
+        storage.instance_count = 0;
+        storage.expanded_vertex_count = 0;
+        return;
+    }
+
     let upload_rows = &rows[..active_rows];
-    let alloc_rows = if lod_cap == usize::MAX {
-        upload_rows.len().max(1)
-    } else {
-        lod_cap.max(1)
-    };
+    let alloc_rows = lod_cap.max(upload_rows.len()).min(HARD).max(1);
     let needed = packed_byte_size(format, alloc_rows);
+    #[cfg(debug_assertions)]
+    {
+        let worst = packed_byte_size(format, HARD.max(1));
+        debug_assert!(
+            needed <= worst,
+            "fire particle registry alloc exceeds HARD ceiling (needed={needed}, worst={worst}, alloc_rows={alloc_rows})"
+        );
+    }
+    metrics.record_gpu_alloc_request(needed);
     let stats = registry
         .upload_pod_slice(
             &render_device,
@@ -225,8 +246,23 @@ fn prepare_fire_particle_gpu_storage(
     );
 }
 
+fn capped_overlay_rows<'a, T>(
+    rows: &'a [T],
+    stage6: Option<&crate::render::Stage6VirtualizationFrame>,
+) -> &'a [T] {
+    let Some(frame) = stage6 else {
+        return rows;
+    };
+    if frame.active_atlas_slots <= 1 || frame.consumer_window_coords.is_empty() {
+        return rows;
+    }
+    let cap = frame.consumer_window_coords.len().min(rows.len());
+    &rows[..cap]
+}
+
 fn prepare_domain_overlay_gpu_storage(
     extracted: Res<DomainOverlayGpuFrame>,
+    stage6: Option<Res<crate::render::Stage6VirtualizationFrame>>,
     mut registry: ResMut<GPUBufferRegistry>,
     mut metrics: ResMut<GpuRepresentationMetrics>,
     render_device: Res<RenderDevice>,
@@ -234,7 +270,7 @@ fn prepare_domain_overlay_gpu_storage(
 ) {
     let stamp = extracted.stamp.tick;
     let logistics_format = logistics_overlay_row_format();
-    let logistics_rows = extracted.logistics_rows.as_slice();
+    let logistics_rows = capped_overlay_rows(extracted.logistics_rows.as_slice(), stage6.as_deref());
     let logistics_needed = packed_byte_size(logistics_format, logistics_rows.len().max(1));
     if let Ok(stats) = registry.upload_pod_slice(
         &render_device,
@@ -258,7 +294,7 @@ fn prepare_domain_overlay_gpu_storage(
     }
 
     let ecology_format = ecology_overlay_row_format();
-    let ecology_rows = extracted.ecology_rows.as_slice();
+    let ecology_rows = capped_overlay_rows(extracted.ecology_rows.as_slice(), stage6.as_deref());
     let ecology_needed = packed_byte_size(ecology_format, ecology_rows.len().max(1));
     if let Ok(stats) = registry.upload_pod_slice(
         &render_device,
@@ -344,7 +380,7 @@ fn maybe_spawn_debug_sprite(
             custom_size: Some(WEATHER_FIRE_FIELD_SIZE.as_vec2() * 3.0),
             ..default()
         },
-        Transform::from_translation(Vec3::new(-580.0, -300.0, 2000.0)),
+        Transform::from_translation(Vec3::new(0.0, 0.0, 2000.0)),
     ));
     gate.0 = true;
 }
@@ -429,7 +465,10 @@ impl Plugin for GpuWeatherFireFieldPlugin {
 
         let mut graph = render_app.world_mut().resource_mut::<RenderGraph>();
         graph.add_node(WeatherFireFieldLabel, WeatherFireFieldNode::default());
-        graph.add_node_edge(WeatherFireFieldLabel, bevy::render::graph::CameraDriverLabel);
+        graph.add_node_edge(
+            WeatherFireFieldLabel,
+            crate::render::gpu_spark_compute::FireSparkComputeLabel,
+        );
     }
 }
 
@@ -437,7 +476,11 @@ impl Plugin for GpuWeatherFireFieldPlugin {
 struct WeatherFireFieldLabel;
 
 #[derive(Resource)]
-struct WeatherFireFieldBindGroups([BindGroup; 2]);
+struct WeatherFireFieldBindGroups {
+    field: [BindGroup; 2],
+    tex_a: AssetId<Image>,
+    tex_b: AssetId<Image>,
+}
 
 #[derive(Resource)]
 struct WeatherFireFieldFireBindGroup(BindGroup);
@@ -459,12 +502,15 @@ fn prepare_field_bind_groups(
     extracted: Res<RenderProjectionGraph>,
     registry: Res<GPUBufferRegistry>,
     mut bind_registry: ResMut<GPUBindGroupRegistry>,
+    existing: Option<Res<WeatherFireFieldBindGroups>>,
     render_device: Res<RenderDevice>,
     pipeline_cache: Res<PipelineCache>,
     queue: Res<RenderQueue>,
 ) {
     let va = gpu_images.get(&textures.texture_a).unwrap();
     let vb = gpu_images.get(&textures.texture_b).unwrap();
+    let tex_a = textures.texture_a.id();
+    let tex_b = textures.texture_b.id();
 
     if P2H_GPU_PARTIAL_WRITES_AUTHORITATIVE && partial.partial_dispatch_active {
         uniforms.partial_origin = partial.partial_dispatch_origin;
@@ -479,20 +525,29 @@ fn prepare_field_bind_groups(
     let mut ub = UniformBuffer::from((*uniforms).clone());
     ub.write_buffer(&render_device, &queue);
 
-    let field_gpu_layout = pipeline_cache.get_bind_group_layout(&pipeline.field_layout);
-    let fire_gpu_layout = pipeline_cache.get_bind_group_layout(&pipeline.fire_layout);
+    let textures_changed = existing
+        .as_ref()
+        .is_none_or(|g| g.tex_a != tex_a || g.tex_b != tex_b);
+    if textures_changed {
+        let field_gpu_layout = pipeline_cache.get_bind_group_layout(&pipeline.field_layout);
+        let bg0 = render_device.create_bind_group(
+            None,
+            &field_gpu_layout,
+            &BindGroupEntries::sequential((&va.texture_view, &vb.texture_view, &ub)),
+        );
+        let bg1 = render_device.create_bind_group(
+            None,
+            &field_gpu_layout,
+            &BindGroupEntries::sequential((&vb.texture_view, &va.texture_view, &ub)),
+        );
+        commands.insert_resource(WeatherFireFieldBindGroups {
+            field: [bg0, bg1],
+            tex_a,
+            tex_b,
+        });
+    }
 
-    let bg0 = render_device.create_bind_group(
-        None,
-        &field_gpu_layout,
-        &BindGroupEntries::sequential((&va.texture_view, &vb.texture_view, &ub)),
-    );
-    let bg1 = render_device.create_bind_group(
-        None,
-        &field_gpu_layout,
-        &BindGroupEntries::sequential((&vb.texture_view, &va.texture_view, &ub)),
-    );
-    commands.insert_resource(WeatherFireFieldBindGroups([bg0, bg1]));
+    let fire_gpu_layout = pipeline_cache.get_bind_group_layout(&pipeline.fire_layout);
 
     let buffer_id = extracted.fire.buffer_id;
     if !bind_registry.is_valid(WEATHER_FIRE_FIELD_FIRE_BIND_GROUP, &registry) {
@@ -614,7 +669,7 @@ impl render_graph::Node for WeatherFireFieldNode {
         render_ctx: &mut RenderContext,
         world: &World,
     ) -> Result<(), render_graph::NodeRunError> {
-        let groups = &world.resource::<WeatherFireFieldBindGroups>().0;
+        let groups = &world.resource::<WeatherFireFieldBindGroups>().field;
         let fire_bg = world.resource::<WeatherFireFieldFireBindGroup>();
         let cache = world.resource::<PipelineCache>();
         let pipeline = world.resource::<WeatherFireFieldPipeline>();

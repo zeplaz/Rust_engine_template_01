@@ -1,6 +1,6 @@
 //! Chunk heat **diffusion** compute kernel (CPU v1) with owned ping-pong buffers and GPU registry sync.
 //!
-//! Reads [`FireVisualFrame`] + [`WorldLodMap`] only; writes [`HeatDiffusionFieldBuffers`] (compute-owned).
+//! Reads [`crate::render::fire_chunk_runtime::FireSimulationSnapshot`] + [`WorldLodMap`] only; writes [`HeatDiffusionFieldBuffers`] (compute-owned).
 
 use std::collections::HashMap;
 
@@ -12,12 +12,13 @@ use bevy::render::{Render, RenderApp, RenderSystems};
 use bevy::render::renderer::{RenderDevice, RenderQueue};
 use bytemuck::{Pod, Zeroable};
 
-use crate::gui::{RepresentationResult, WorldLodBand, WorldLodMap, WorldRepresentationFrame};
+use crate::gui::{RepresentationResult, WorldLodBand, WorldLodMap};
+use crate::render::FireSimulationSnapshot;
 use crate::render::{
     heat_diffusion_cell_format, packed_byte_size, BufferVisibility, GPUBufferRegistry,
     HEAT_DIFFUSION_FIELD_BUFFER, LodBandBufferPolicy, RegisteredBufferDescriptor,
 };
-use crate::render::sim_visual_extract::{ChunkFireHeat, FireVisualFrame};
+use crate::render::sim_visual_extract::ChunkFireHeat;
 use crate::systems::sim_control::SimStepStamp;
 
 use super::frame_snapshots::NavFieldFrame;
@@ -134,7 +135,7 @@ fn chunk_key(chunk: IVec2) -> i64 {
 
 #[must_use]
 pub fn eligible_fire_rows<'a>(
-    fire: &'a FireVisualFrame,
+    fire: &'a FireSimulationSnapshot,
     lod_map: &'a WorldLodMap,
     fallback_band: WorldLodBand,
     policy: &RepresentationResult,
@@ -332,7 +333,7 @@ fn prepare_heat_diffusion_gpu_buffer(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::gui::LodCell;
+    use crate::gui::{LodCell, WorldRepresentationFrame};
 
     #[test]
     fn diffusion_spreads_heat_to_neighbor_chunk() {
@@ -352,7 +353,7 @@ mod tests {
 
     #[test]
     fn eligible_fire_rows_skip_macro_compute_band() {
-        let mut fire = FireVisualFrame::default();
+        let mut fire = FireSimulationSnapshot::default();
         fire.chunk_heat.push(ChunkFireHeat {
             chunk: IVec2::ZERO,
             heat: 0.8,
@@ -393,7 +394,7 @@ mod tests {
     #[test]
     fn advance_bumps_generation_and_stamp() {
         let mut field = HeatDiffusionFieldBuffers::default();
-        let mut fire = FireVisualFrame::default();
+        let mut fire = FireSimulationSnapshot::default();
         fire.stamp = SimStepStamp::new(7, 42);
         fire.chunk_heat.push(ChunkFireHeat {
             chunk: IVec2::ZERO,

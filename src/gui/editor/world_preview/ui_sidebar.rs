@@ -6,6 +6,7 @@ use crate::gui::editor::world_gen_hints as hints;
 use crate::gui::editor::world_gen_ui::WorldGenUiState;
 use crate::gui::style::{
     muted_label, section_heading, v_space, CmdHeadingStyle, UiPalette, UiSpacing, VertSpace,
+    widget_scroll_vertical_capped,
 };
 use crate::systems::terrain::TerrainRegistriesHandles;
 use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
@@ -55,10 +56,7 @@ pub fn world_preview_sidebar(
             palette,
             "Unchecked names are not written onto chunks; Tags overlay only highlights cells carrying checked tags.",
         );
-        egui::ScrollArea::vertical()
-            .max_height(220.0)
-            .id_salt("world_preview_tag_pool_scroll")
-            .show(ui, |ui| {
+        widget_scroll_vertical_capped("world_preview_tag_pool_scroll", 220.0).show(ui, |ui| {
                 for (i, t) in tag_reg.tags.iter().enumerate() {
                     let id = TagId(i as u16);
                     let mut on = world_gen_params.tag_pool.contains(id);

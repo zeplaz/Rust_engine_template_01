@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 use std::fs::File;
 use std::io::Write;
 use std::path::Path;
+use crate::gui::style::widget_scroll_vertical_fill;
 use crate::terrain::{
     additively_weighted_voronoi_diagram_generation,
     centroidal_voronoi_diagram_generation,
@@ -213,6 +214,7 @@ fn world_gen_ui_system(
             ui.heading("World Generator");
             ui.add_space(10.0);
 
+            widget_scroll_vertical_fill("world_generator_subengine_scroll", ui.available_height()).show(ui, |ui| {
             egui::CollapsingHeader::new("General Settings")
                 .default_open(true)
                 .show(ui, |ui| {
@@ -334,6 +336,7 @@ fn world_gen_ui_system(
                     ui.label(format!("Last Save: {}", path));
                 }
             }
+            });
         });
     Ok(())
 }

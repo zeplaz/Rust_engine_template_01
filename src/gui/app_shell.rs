@@ -3,14 +3,25 @@
 //! See `prompts/guides/ui_boundary_guide_v1.md` + shell refactor direction.
 
 use crate::engine::states::{BaseState, MainMenuState, WorldGenFlowState};
+use crate::engine::AppState;
+use crate::engine::ux_orchestration::{ux_begin_world_gen_from_menu, UxBridgeSet};
 use crate::gui::AppStartState;
 use crate::gui::CmdUiMonoFont;
 use crate::gui::ui_windows::UiState;
 use crate::gui::UiPalette;
+use crate::engine::DebugQuickWorldGenPending;
+use crate::engine::debug_maneuver::{DebugManeuver, FrameLayoutDebugSession};
+use crate::engine::{
+    arm_debug_quick_world_gen, TestScene, TestWorldHarness,
+};
+use crate::gui::editor::world_gen_ui::CancelActiveWorldGenEvent;
+use crate::gui::pause_menu_confirm::world_gen_work_active;
 use crate::terrain::generation::world_generator_enhanced::{
-    despawn_generated_world_entities, WorldMarker,
+    despawn_generated_world_entities, WorldGenJobSlot, WorldGenParams, WorldGenProgress,
+    WorldMarker,
 };
 use bevy::app::AppExit;
+use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 
 /// Root entity for the Bevy main-menu layout (despawned when leaving front-end menu).
@@ -24,7 +35,12 @@ pub struct LoadMenuShellRoot;
 #[derive(Component, Clone, Copy)]
 enum MainMenuButtonAction {
     NewWorld,
-    DebugEnter,
+    /// ① Frame / layout screen test (192², layout debug, stay open).
+    DebugFrameLayout,
+    /// ③ Demo debug world (192², auto gen, stay open).
+    DebugDemoOpen,
+    /// Fire + weather + atmosphere sandbox (320², stay open).
+    DebugVfxSandbox,
     OpenLoad,
     NewMapEditor,
     Quit,
@@ -49,16 +65,44 @@ impl Default for LoadStubPath {
 
 pub struct AppShellPlugin;
 
+#[derive(SystemParam)]
+struct MenuDebugBootstrap<'w> {
+    next_app: ResMut<'w, NextState<crate::engine::AppState>>,
+    next_wg: ResMut<'w, NextState<crate::engine::WorldGenState>>,
+    next_base: ResMut<'w, NextState<BaseState>>,
+    next_world_flow: ResMut<'w, NextState<WorldGenFlowState>>,
+    chrome_latch: ResMut<'w, crate::engine::WorldGenChromeLatch>,
+    world_gen_ui: ResMut<'w, crate::gui::editor::world_gen_ui::WorldGenUiState>,
+    world_preview_ui: ResMut<'w, crate::gui::editor::world_preview::WorldPreviewUiState>,
+    params: ResMut<'w, WorldGenParams>,
+    debug_quick: ResMut<'w, DebugQuickWorldGenPending>,
+    harness: ResMut<'w, TestWorldHarness>,
+    layout_session: ResMut<'w, FrameLayoutDebugSession>,
+    job: Res<'w, WorldGenJobSlot>,
+    progress: Res<'w, WorldGenProgress>,
+    cancel_world_gen: MessageWriter<'w, CancelActiveWorldGenEvent>,
+}
+
 impl Plugin for AppShellPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<LoadStubPath>()
-            .add_systems(Update, (sync_menu_shell, handle_main_menu_buttons, handle_load_menu_buttons));
+            .add_systems(
+                Update,
+                (
+                    sync_menu_shell,
+                    handle_main_menu_buttons,
+                    handle_main_menu_debug_buttons,
+                    handle_load_menu_buttons,
+                )
+                    .before(UxBridgeSet),
+            );
     }
 }
 
 fn sync_menu_shell(
     app_start: Res<State<AppStartState>>,
     base: Res<State<BaseState>>,
+    ux_app: Res<State<AppState>>,
     menu: Res<State<MainMenuState>>,
     mut commands: Commands,
     asset_server: Res<AssetServer>,
@@ -69,7 +113,11 @@ fn sync_menu_shell(
     palette: Res<UiPalette>,
     cmd_mono: Res<CmdUiMonoFont>,
 ) {
-    if *app_start.get() != AppStartState::Menu || *base.get() != BaseState::MainMenu {
+    // UX AppState wins over transient legacy BaseState flicker during world-gen bootstrap.
+    if *app_start.get() != AppStartState::Menu
+        || *base.get() != BaseState::MainMenu
+        || *ux_app.get() != AppState::Setup
+    {
         for e in main_q.iter() {
             commands.entity(e).despawn();
         }
@@ -165,7 +213,18 @@ fn spawn_main_menu(
             ));
             for (label, action) in [
                 ("New World", MainMenuButtonAction::NewWorld),
-                ("Enter simulation (debug)", MainMenuButtonAction::DebugEnter),
+                (
+                    "Debug ① — Frame layout test",
+                    MainMenuButtonAction::DebugFrameLayout,
+                ),
+                (
+                    "Debug ③ — Demo world (stay open)",
+                    MainMenuButtonAction::DebugDemoOpen,
+                ),
+                (
+                    "Debug — Fire + weather + atmosphere (stay open)",
+                    MainMenuButtonAction::DebugVfxSandbox,
+                ),
                 ("Load World", MainMenuButtonAction::OpenLoad),
                 ("New map in editor", MainMenuButtonAction::NewMapEditor),
                 ("Quit", MainMenuButtonAction::Quit),
@@ -174,7 +233,7 @@ fn spawn_main_menu(
                     .spawn((
                         Button,
                         Node {
-                            min_width: Val::Px(280.0),
+                            min_width: Val::Px(340.0),
                             padding: UiRect::axes(Val::Px(16.0), Val::Px(10.0)),
                             justify_content: JustifyContent::Center,
                             align_items: AlignItems::Center,
@@ -281,6 +340,57 @@ fn spawn_load_menu(
         });
 }
 
+#[allow(clippy::too_many_arguments)]
+fn begin_menu_debug_world_gen(
+    commands: &mut Commands,
+    world_roots: &Query<Entity, With<WorldMarker>>,
+    bootstrap: &mut MenuDebugBootstrap,
+    maneuver: DebugManeuver,
+    test_scene: TestScene,
+    world_size: u32,
+) {
+    // Arm first so `sync_legacy_to_ux` skips stale FullReady mirroring on the click frame.
+    arm_debug_quick_world_gen(
+        &mut bootstrap.debug_quick,
+        &mut bootstrap.harness,
+        maneuver,
+        test_scene,
+    );
+    if world_gen_work_active(&bootstrap.job, &bootstrap.progress) {
+        bootstrap.cancel_world_gen.write(CancelActiveWorldGenEvent);
+    }
+    despawn_generated_world_entities(commands, world_roots);
+    bootstrap.harness.logistics_visual_seeded = false;
+    NextState::set_if_neq(
+        &mut *bootstrap.next_world_flow,
+        WorldGenFlowState::Idle,
+    );
+    let mut p = WorldGenParams::default();
+    p.width = world_size;
+    p.height = world_size;
+    *bootstrap.params = p;
+    let size_label = format!("{}×{}", world_size, world_size);
+    bootstrap.world_gen_ui.visible = true;
+    bootstrap.layout_session.active = maneuver == DebugManeuver::FrameScreen;
+    ux_begin_world_gen_from_menu(
+        &mut bootstrap.next_app,
+        &mut bootstrap.next_wg,
+        &mut bootstrap.next_base,
+        &mut bootstrap.next_world_flow,
+        &mut bootstrap.chrome_latch,
+        &mut bootstrap.world_gen_ui,
+        &mut bootstrap.world_preview_ui,
+    );
+    info!(
+        target: "app_shell",
+        maneuver = maneuver.menu_label(),
+        test_scene = test_scene.menu_label(),
+        size = size_label,
+        "Debug from menu: preview → full → enter sim (stay open). \
+         Full capture auto-exit: `cargo run -p proc_A_dine01 -- --test visual`"
+    );
+}
+
 fn handle_main_menu_buttons(
     q: Query<
         (&Interaction, &MainMenuButtonAction),
@@ -292,6 +402,11 @@ fn handle_main_menu_buttons(
     mut next_menu: ResMut<NextState<MainMenuState>>,
     mut next_world_flow: ResMut<NextState<WorldGenFlowState>>,
     mut app_exit: MessageWriter<AppExit>,
+    mut next_app: ResMut<NextState<crate::engine::AppState>>,
+    mut next_wg: ResMut<NextState<crate::engine::WorldGenState>>,
+    mut chrome_latch: ResMut<crate::engine::WorldGenChromeLatch>,
+    mut world_gen_ui: ResMut<crate::gui::editor::world_gen_ui::WorldGenUiState>,
+    mut world_preview_ui: ResMut<crate::gui::editor::world_preview::WorldPreviewUiState>,
 ) {
     for (interaction, action) in &q {
         if *interaction != Interaction::Pressed {
@@ -300,10 +415,15 @@ fn handle_main_menu_buttons(
         match *action {
             MainMenuButtonAction::NewWorld => {
                 despawn_generated_world_entities(&mut commands, &world_roots);
-                NextState::set_if_neq(&mut *next_world_flow, WorldGenFlowState::NewWorldSetup);
-            }
-            MainMenuButtonAction::DebugEnter => {
-                NextState::set_if_neq(&mut *next_base, BaseState::Simulation);
+                ux_begin_world_gen_from_menu(
+                    &mut next_app,
+                    &mut next_wg,
+                    &mut next_base,
+                    &mut next_world_flow,
+                    &mut chrome_latch,
+                    &mut world_gen_ui,
+                    &mut world_preview_ui,
+                );
             }
             MainMenuButtonAction::OpenLoad => {
                 NextState::set_if_neq(&mut *next_world_flow, WorldGenFlowState::LoadingSave);
@@ -319,6 +439,58 @@ fn handle_main_menu_buttons(
             MainMenuButtonAction::Quit => {
                 app_exit.write(AppExit::Success);
             }
+            MainMenuButtonAction::DebugFrameLayout
+            | MainMenuButtonAction::DebugDemoOpen
+            | MainMenuButtonAction::DebugVfxSandbox => {}
+        }
+    }
+}
+
+fn handle_main_menu_debug_buttons(
+    q: Query<
+        (&Interaction, &MainMenuButtonAction),
+        (Changed<Interaction>, With<Button>),
+    >,
+    mut commands: Commands,
+    world_roots: Query<Entity, With<WorldMarker>>,
+    mut bootstrap: MenuDebugBootstrap,
+) {
+    for (interaction, action) in &q {
+        if *interaction != Interaction::Pressed {
+            continue;
+        }
+        match *action {
+            MainMenuButtonAction::DebugFrameLayout => {
+                begin_menu_debug_world_gen(
+                    &mut commands,
+                    &world_roots,
+                    &mut bootstrap,
+                    DebugManeuver::FrameScreen,
+                    TestScene::None,
+                    192,
+                );
+            }
+            MainMenuButtonAction::DebugDemoOpen => {
+                begin_menu_debug_world_gen(
+                    &mut commands,
+                    &world_roots,
+                    &mut bootstrap,
+                    DebugManeuver::DemoOpen,
+                    TestScene::None,
+                    192,
+                );
+            }
+            MainMenuButtonAction::DebugVfxSandbox => {
+                begin_menu_debug_world_gen(
+                    &mut commands,
+                    &world_roots,
+                    &mut bootstrap,
+                    DebugManeuver::DemoOpen,
+                    TestScene::VfxSandbox,
+                    320,
+                );
+            }
+            _ => {}
         }
     }
 }

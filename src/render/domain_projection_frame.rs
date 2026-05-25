@@ -4,6 +4,7 @@ use bevy::prelude::*;
 
 use crate::gui::RepresentationResult;
 use crate::render::extraction::RenderProjectionGraph;
+use crate::render::{tactical_fire_visual, FireVisualFramesByView};
 use crate::render::sim_visual_extract::FireVisualFrame;
 use crate::systems::atmosphere::AtmospherePartialWriteMetrics;
 use crate::systems::sim_control::SimStepStamp;
@@ -95,14 +96,15 @@ pub fn build_domain_projection_frame(
 }
 
 pub fn publish_domain_projection_frame(
-    fire: Res<FireVisualFrame>,
+    fire_by_view: Res<FireVisualFramesByView>,
     policy: Res<RepresentationResult>,
     graph: Res<RenderProjectionGraph>,
     partial_metrics: Option<Res<AtmospherePartialWriteMetrics>>,
     mut frame: ResMut<DomainProjectionFrame>,
 ) {
+    let fire = tactical_fire_visual(fire_by_view.as_ref());
     *frame = build_domain_projection_frame(
-        fire.as_ref(),
+        fire,
         policy.as_ref(),
         graph.as_ref(),
         partial_metrics.as_deref(),
@@ -112,30 +114,43 @@ pub fn publish_domain_projection_frame(
 pub fn merge_domain_projection_into_representation(
     projection: Res<DomainProjectionFrame>,
     mut policy: ResMut<RepresentationResult>,
+    mut perf: Option<ResMut<crate::render::FramePerf>>,
 ) {
+    let t0 = std::time::Instant::now();
     if projection.stamp != policy.stamp {
         return;
     }
-    let fire_cap = projection
-        .fire
-        .active_rows
-        .min(policy.gpu_budget.fire_instance_cap as u32) as usize;
-    policy.gpu_budget.fire_instance_cap = fire_cap;
-    policy.gpu_budget.active_capacity = policy
-        .gpu_budget
-        .active_capacity
-        .min(fire_cap as u32);
-    let particle_cap = projection
-        .fire
-        .active_rows
-        .min(policy.gpu_budget.particle_rows_cap as u32) as usize;
-    policy.gpu_budget.particle_rows_cap = particle_cap;
+    // Do not zero GPU caps when the projection graph is empty this frame — that disables
+    // instanced fire for the rest of the frame before PostUpdate extract repopulates rows.
+    if projection.fire.active_rows > 0 {
+        let fire_cap = projection
+            .fire
+            .active_rows
+            .min(policy.gpu_budget.fire_instance_cap as u32) as usize;
+        policy.gpu_budget.fire_instance_cap = fire_cap;
+        policy.gpu_budget.active_capacity = policy
+            .gpu_budget
+            .active_capacity
+            .min(fire_cap as u32);
+        let particle_cap = projection
+            .fire
+            .active_rows
+            .min(policy.gpu_budget.particle_rows_cap as u32) as usize;
+        policy.gpu_budget.particle_rows_cap = particle_cap;
+    }
     if projection.ecology.active_rows > 0 {
         policy.overlay_policy.fire_heat = true;
     }
     if projection.logistics.active_rows > 0 {
         policy.visibility.pathfinding_field = policy.visibility.pathfinding_field
             || projection.logistics.active_rows > 0;
+    }
+    if let Some(perf) = perf.as_mut() {
+        crate::render::record_frame_perf_ms(
+            perf,
+            t0.elapsed().as_secs_f32() * 1000.0,
+            crate::render::FramePerfSlot::DomainMerge,
+        );
     }
 }
 
@@ -179,5 +194,34 @@ mod tests {
         graph.ecology.active_rows = 3;
         let frame = build_domain_projection_frame(&fire, &policy, &graph, None);
         assert_eq!(frame.total_active_rows(), 6);
+    }
+
+    #[test]
+    fn merge_domain_projection_preserves_gpu_cap_when_fire_rows_empty() {
+        use bevy::ecs::system::RunSystemOnce;
+        use crate::systems::sim_control::SimStepStamp;
+
+        let stamp = SimStepStamp::default();
+        let mut world = World::new();
+        world.insert_resource(RepresentationResult {
+            stamp,
+            gpu_budget: GpuBudgetPolicy {
+                fire_instance_cap: 64,
+                particle_rows_cap: 64,
+                reserved_capacity: 64,
+                active_capacity: 64,
+            },
+            ..Default::default()
+        });
+        world.insert_resource(DomainProjectionFrame {
+            stamp,
+            ..Default::default()
+        });
+        world
+            .run_system_once(merge_domain_projection_into_representation)
+            .expect("merge system");
+        let policy = world.resource::<RepresentationResult>();
+        assert_eq!(policy.gpu_budget.fire_instance_cap, 64);
+        assert_eq!(policy.gpu_budget.particle_rows_cap, 64);
     }
 }

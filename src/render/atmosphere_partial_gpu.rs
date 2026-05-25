@@ -142,7 +142,9 @@ pub fn sync_atmosphere_partial_gpu_extract(
     fence: Option<Res<CommittedVisualSnapshotFence>>,
     mut out: ResMut<AtmospherePartialGpuExtract>,
     mut metrics: ResMut<AtmospherePartialWriteMetrics>,
+    mut perf: Option<ResMut<crate::render::FramePerf>>,
 ) {
+    let t0 = std::time::Instant::now();
     let fence_ref = fence.as_deref();
     out.uploads = collect_gpu_prepared_partial_uploads(
         &bridge,
@@ -169,14 +171,23 @@ pub fn sync_atmosphere_partial_gpu_extract(
         metrics.full_field_fallback_active = false;
     } else {
         out.partial_dispatch_active = false;
-        out.full_field_fallback = crate::systems::atmosphere::P2H_GPU_PARTIAL_WRITES_AUTHORITATIVE;
-        metrics.full_field_fallback_active = out.full_field_fallback;
-        if out.full_field_fallback {
+        let needs_full = bridge.pending_full_field_dispatch;
+        out.full_field_fallback = needs_full;
+        metrics.full_field_fallback_active = needs_full;
+        if needs_full {
             metrics.full_field_dispatch_count = metrics.full_field_dispatch_count.saturating_add(1);
+            bridge.pending_full_field_dispatch = false;
         }
     }
 
     bridge.pending_partial_uploads.clear();
+    if let Some(perf) = perf.as_mut() {
+        crate::render::record_frame_perf_ms(
+            perf,
+            t0.elapsed().as_secs_f32() * 1000.0,
+            crate::render::FramePerfSlot::AtmosphereExtract,
+        );
+    }
 }
 
 pub fn apply_partial_texture_writes(
@@ -321,6 +332,36 @@ mod tests {
         let uploads = collect_gpu_prepared_partial_uploads(&bridge, &field, IVec2::ZERO, None);
         assert!(!uploads.is_empty());
         assert_eq!(field.cells.get(&IVec2::new(20, 20)), Some(&0.25));
+    }
+
+    #[test]
+    fn idle_extract_skips_full_field_fallback_without_reconcile() {
+        let bridge = AtmosphereGpuFieldBridge::default();
+        assert!(!bridge.pending_full_field_dispatch);
+        let mut out = AtmospherePartialGpuExtract::default();
+        let mut metrics = AtmospherePartialWriteMetrics::default();
+        let uploads: Vec<GpuPreparedPartialUpload> = vec![];
+        if uploads.is_empty() {
+            out.partial_dispatch_active = false;
+            out.full_field_fallback = bridge.pending_full_field_dispatch;
+            metrics.full_field_fallback_active = out.full_field_fallback;
+        }
+        assert!(!out.full_field_fallback);
+        assert!(!metrics.full_field_fallback_active);
+    }
+
+    #[test]
+    fn reconcile_requests_one_full_field_dispatch() {
+        let bridge = AtmosphereGpuFieldBridge {
+            pending_full_field_dispatch: true,
+            ..Default::default()
+        };
+        let mut out = AtmospherePartialGpuExtract::default();
+        let uploads: Vec<GpuPreparedPartialUpload> = vec![];
+        if uploads.is_empty() {
+            out.full_field_fallback = bridge.pending_full_field_dispatch;
+        }
+        assert!(out.full_field_fallback);
     }
 
     #[test]

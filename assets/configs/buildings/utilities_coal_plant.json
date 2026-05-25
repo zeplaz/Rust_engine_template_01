@@ -1,0 +1,20 @@
+{
+    "asset_name": "Coal power plant (650 MW)",
+    "asset_type": "Building",
+    "segment": "Utilities",
+    "description": "Coal ultra-supercritical generation — registry-driven output",
+    "utility_role": "power_plant",
+    "plant_definition_id": "coal_ultra_supercritical_650mw_v1",
+    "is_building": true,
+    "is_power": true,
+    "is_productive": true,
+    "building_size_x": 6,
+    "building_size_y": 5,
+    "building_height": 3,
+    "construction_cost": 12000,
+    "power_consumption": 12,
+    "power_generation": 650,
+    "produces_resources": ["Electricity"],
+    "consumes_resources": ["Coal", "Water", "Labour"],
+    "version": "1.0.0"
+}

@@ -1,0 +1,20 @@
+{
+  "graph": {
+    "render_pipeline": {
+      "id": "render_pipeline",
+      "children": [
+        "RenderProjectionGraph",
+        "ResolvedViewports",
+        "fire_visual_extract",
+        "tile_world_fallback",
+        "visual_diagnostics"
+      ],
+      "notes": "CPU projection orchestrator → GPU-shaped views; viewport resolve follows GUI semantic authority"
+    }
+  },
+  "subsystem_owners": {
+    "RENDER / EXTRACTION / PIPELINE": "render_pipeline_agent",
+    "RENDER / FRAME_GRAPH / PIPELINE": "render_pipeline_agent",
+    "RENDER / VIEWPORT_RESOLVE / PIPELINE": "render_pipeline_agent"
+  }
+}

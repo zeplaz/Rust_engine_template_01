@@ -6,7 +6,7 @@ use bevy_egui::{egui, EguiContexts, EguiPrimaryContextPass};
 use super::input_bindings::{binding_preset_keys, InputBindings};
 use super::style::{
     error_text, muted_label, primary_label, section_heading, status_badge, v_space, warning_text,
-    CmdHeadingStyle, StatusTone, UiPalette, UiSpacing, VertSpace,
+    widget_scroll_vertical_fill, CmdHeadingStyle, StatusTone, UiPalette, UiSpacing, VertSpace,
 };
 
 #[derive(Resource, Debug, Clone, Default)]
@@ -230,6 +230,7 @@ fn keybindings_options_ui(
         }
         ui.separator();
 
+        widget_scroll_vertical_fill("options_keybindings_list_scroll", ui.available_height()).show(ui, |ui| {
         macro_rules! row_combo {
             ($label:expr, $hint:expr, $field:ident, $slot:expr) => {{
                 ui.horizontal(|ui| {
@@ -523,6 +524,7 @@ fn keybindings_options_ui(
             *bindings = InputBindings::default();
             state.last_io_message = Some("Reset to defaults (not saved until you Save).".into());
         }
+        });
     });
 
     Ok(())

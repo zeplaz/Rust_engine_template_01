@@ -5,10 +5,8 @@ use crate::gui::editor::world_preview::{
 };
 use crate::io::save::{SAVE_WORLD_MANIFEST_SCHEMA_VERSION, SAVED_CHUNK_BODY_SCHEMA_VERSION};
 
-pub const WAVE_C_OPEN_BACKLOG_ITEMS: &[&str] = &[
-    "TileStorage diff / smooth transition renderer contract (BQ-101)",
-    "optional ChunkCache disk tier thresholds",
-];
+/// Closed when `product_shell.ron` hydrate + `wave_c_live.json` tile apply witness ship (post–Stage 6).
+pub const WAVE_C_OPEN_BACKLOG_ITEMS: &[&str] = &[];
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub struct WaveCPrerequisitesReport {

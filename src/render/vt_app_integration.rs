@@ -8,6 +8,7 @@ mod tests {
     use crate::gui::OverlayFieldFrame;
     use crate::render::extraction::RenderProjectionGraph;
     use crate::render::sim_visual_extract::{ChunkFireHeat, FireVisualFrame};
+    use crate::render::FireSimulationSnapshot;
     use crate::render::visual_agreement::{
         hash_shared_overlay_heat, update_visual_agreement_frame, VisualAgreementFrame,
     };
@@ -45,10 +46,16 @@ mod tests {
             overlay_revision: 2,
             consumer_active: true,
         };
+        let sim = FireSimulationSnapshot {
+            stamp: frame.stamp,
+            instances: frame.instances.clone(),
+            chunk_heat: frame.chunk_heat.clone(),
+        };
         let mut agreement = VisualAgreementFrame::default();
         let mut overlay_debug = OverlayAgreementDebug::default();
         update_visual_agreement_frame(
             &frame,
+            &sim,
             &shared,
             &overlay,
             Some(&graph),

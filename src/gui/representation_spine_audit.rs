@@ -33,12 +33,14 @@ pub fn fire_visual_producer_count() -> u32 {
 }
 
 /// Paths that may call band tables when building [`super::RepresentationResult`].
+#[cfg(test)]
 pub const RESOLVER_DOMAIN_PATHS: &[&str] = &[
     "src/gui/world_representation.rs",
     "src/gui/representation_policy.rs",
 ];
 
 /// Paths that must not import `visibility_for_band` (policy bypass).
+#[cfg(test)]
 pub const POLICY_CONSUMER_PATHS: &[&str] = &[
     "src/compute/compute_dispatch_graph.rs",
     "src/compute/heat_diffusion.rs",
@@ -48,13 +50,17 @@ pub const POLICY_CONSUMER_PATHS: &[&str] = &[
     "src/systems/atmosphere/render_layers.rs",
 ];
 
-/// Sole ECS fire scan authority for visual snapshots (`FireVisualFrame`).
+/// Sole ECS fire scan authority for sim snapshots ([`crate::render::FireSimulationSnapshot`]) before view extraction
+/// (`FireVisualFramesByView` / legacy [`crate::render::sim_visual_extract::FireVisualFrame`]).
+#[cfg(test)]
 pub const FIRE_VISUAL_EXTRACT_AUTHORITY: &[&str] = &[
     "src/render/extraction/fire_visual_extract.rs",
     "src/render/extraction/fire_emission_profile.rs",
+    "src/render/fire_view_extract.rs",
 ];
 
 /// Render / preview / particle consumers must not query [`crate::systems::fire::ChunkSurfaceFire`].
+#[cfg(test)]
 pub const FIRE_VISUAL_CONSUMER_ROOTS: &[&str] = &[
     "src/render",
     "src/gui/editor/world_preview",

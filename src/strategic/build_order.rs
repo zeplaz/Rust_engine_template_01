@@ -27,7 +27,7 @@ pub enum BuildReason {
 }
 
 /// Authored / AI-proposed site in **world tile** coordinates (column, row / z).
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct BuildSiteTile {
     pub x: u32,
     pub z: u32,

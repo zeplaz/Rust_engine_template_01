@@ -198,4 +198,18 @@ Build order (product): overlay toggles → command tray → intel timeline → c
 
 ---
 
-**Document history:** `v1.0.0` (2026-05-14) — designer lock for UX-A–D and UX-1–6 roadmap.
+## 8. Implemented consumer scaffolding (2026-05-14)
+
+Parallel product-layer work stays **consumer-only** atop the representation spine:
+
+- **Unified shell:** `shell_framework.rs` hosts dock/minimize/resize/focus + Wave **S** layout DTOs; `shell_diagnostics.rs` tracks redraw/texture/visibility; `shell_persistence.rs` bundles layout/bookmarks/overlay presets.
+- **Stage 5/6 consumers:** `stage5_spine_consumer.rs` and `stage6_consumer.rs` render readiness/residency DTOs only (no metric ownership).
+- **Minimap:** egui consumer + optional `hud_native_minimap_window` stub; bookmarks/follow modes in `minimap_shell.rs` (**BQ-124** / **BQ-129** / **BQ-131**).
+- **Overlays:** `overlay_framework.rs` + overlay shell — descriptor/legend/opacity/blend mock consumers.
+- **Transmission:** queue + severity + DTO degradation placeholders; modular media provider kinds (`transmission_media.rs`).
+- **Construction:** ghost validity, obstruction hints, pending queue panel, Wave **S** blueprint preset hooks — commits via authoritative construction events only.
+- **Stage-7 UI:** intel/comms/dispatch/explainability mock viewers (`stage7_ui_shell.rs`, `explainability_viewer.rs`) — no comm authority.
+
+---
+
+**Document history:** `v1.0.0` (2026-05-14) — designer lock for UX-A–D and UX-1–6 roadmap; `v1.0.1` (2026-05-14) — §8 consumer scaffolding inventory.

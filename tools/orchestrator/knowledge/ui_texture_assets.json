@@ -1,0 +1,56 @@
+{
+  "schema": "ui_texture_assets_v1",
+  "updated": "2026-05-23",
+  "phase0_panels": {
+    "P1_alerts_badge": {
+      "path": "assets/ui/phase3/alert_badge_v2.png",
+      "size_px": [22, 22],
+      "nine_slice": null,
+      "status": "placeholder_optional_phase3"
+    },
+    "P2_tray_tab": {
+      "path": "assets/ui/phase3/tab_selected_v2.png",
+      "size_px": [56, 24],
+      "nine_slice": null,
+      "status": "flat_v2_sufficient_phase2a"
+    },
+    "P3_panel_sheet": {
+      "path": "assets/ui/phase3/panel_sheet_v2_9slice.png",
+      "size_px": [64, 64],
+      "nine_slice": { "left": 8, "right": 8, "top": 8, "bottom": 8 },
+      "status": "optional_phase3"
+    },
+    "P4_rail_icon": {
+      "path": "assets/ui/phase3/rail_stack_v2.png",
+      "size_px": [48, 48],
+      "status": "unicode_glyph_phase2a"
+    }
+  },
+  "palette_refs": [
+    "src/gui/style/palette.rs",
+    "prompts/guides/ui/design_theme.md"
+  ],
+  "phase4_icon_atlas": {
+    "atlas_png": "assets/textures/ui/icon_atlas_phase4_v1.png",
+    "cell_px": 32,
+    "grid": [8, 4],
+    "manifest_ron": "assets/configs/ui/icon_atlas_phase4.icon_atlas.ron",
+    "cells": {
+      "RD": { "tool_context": "Roads", "source": "textures/misc/railroad_track.png" },
+      "RL": { "tool_context": "Rail", "source": "textures/misc/railroad_track.png" },
+      "UT": {
+        "tool_context": "Utilities",
+        "source": "textures/power/tile_map_powerstuff_power_trasformer_oil_cooled_alpha.png",
+        "forbidden_alternate": "textures/power/tile_map_rust_dev_utils_alpha.png"
+      },
+      "IN": { "tool_context": "Industry", "source": "legacy_manifest:factory_silhouette" },
+      "CV": { "tool_context": "Civil", "source": "legacy_manifest:civic_silhouette" },
+      "UT_TX": { "source": "textures/power/tile_map_powerstuff_power_trasformer_oil_cooled_alpha.png", "qa_only": false },
+      "UT_MG": { "source": "textures/power/tile_map_rust_dev_utils_alpha.png", "qa_only": true },
+      "TRUCK": { "source": "textures/vehicles/civ_truck_01/tile_map_8_empty_miday.png" },
+      "URAL": { "source": "textures/vehicles/ural_01/tile_map_ural_01_empty_midday.png" },
+      "BUS": { "source": "textures/vehicles/bus_01/tilemap_bus_01_alpha.png" },
+      "P5_BR": { "source": "textures/misc/hjm-barrel_alpha.png", "panel": "petroleum_p5_tab" }
+    }
+  }
+}

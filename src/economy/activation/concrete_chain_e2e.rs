@@ -1,0 +1,373 @@
+//! Portland concrete chain E2E witness (IND-E01): mine → kiln → mixer operational in sim.
+
+use std::collections::HashMap;
+
+use bevy::prelude::*;
+
+use crate::construction::queue_commit_construction_site;
+use crate::economy::activation::{BuildingDefinitionRef, IndustrialFacilityActivated};
+use crate::economy::resource_flow::{ResourceFlowNode, ResourceFlowRegistry, ResourceFlowSimWitness};
+use crate::entities::production::concrete::{
+    AggregateMineRuntime, CementKilnRuntime, ConcreteMixerRuntime,
+};
+use crate::strategic::{
+    BuildSiteTile, CommitConstructionSiteEvent, ConstructionSite, FootprintTiles, LayerType,
+    PlannedSite, SiteArchetype, SiteConstructionBook, SiteConstructionPhase, SiteId,
+    SiteOperationalStats,
+};
+
+const PORTLAND_FOOTPRINT: FootprintTiles = FootprintTiles {
+    width: 3,
+    depth: 2,
+};
+
+pub const CONCRETE_PORTLAND_CHAIN: &str = "concrete_portland";
+
+pub const CONCRETE_PORTLAND_STEPS: &[&str] = &[
+    "concrete_aggregate_mine",
+    "concrete_cement_kiln",
+    "concrete_mixer_plant",
+];
+
+/// Live counters for `debug_runs/industrial_activation_live.json` (`concrete_chain_e2e` block).
+#[derive(Resource, Debug, Default, Clone)]
+pub struct ConcreteChainE2eWitness {
+    pub operational_mine: u32,
+    pub operational_kiln: u32,
+    pub operational_mixer: u32,
+    pub activated_mine: u32,
+    pub activated_kiln: u32,
+    pub activated_mixer: u32,
+    pub flow_edges: u32,
+    pub production_ticks: u32,
+    /// IND-E02: sites entered via [`CommitConstructionSiteEvent`] (construction spine), not direct spawn.
+    pub placed_via_construction: bool,
+    pub sites_committed: u32,
+}
+
+impl ConcreteChainE2eWitness {
+    #[must_use]
+    pub fn chain_operational(&self) -> bool {
+        self.operational_mine >= 1
+            && self.operational_kiln >= 1
+            && self.operational_mixer >= 1
+            && self.activated_mine >= 1
+            && self.activated_kiln >= 1
+            && self.activated_mixer >= 1
+    }
+
+    /// IND-E01 exit: full chain activated, linked, and at least one propagation tick.
+    #[must_use]
+    pub fn production_green(&self) -> bool {
+        self.chain_operational() && self.flow_edges >= 2 && self.production_ticks >= 1
+    }
+
+    /// IND-E02 exit: same chain metrics after construction commit path (in-play).
+    #[must_use]
+    pub fn in_play_green(&self) -> bool {
+        self.production_green() && self.placed_via_construction && self.sites_committed >= 3
+    }
+}
+
+fn count_for_catalog(
+    sites: &Query<(&ConstructionSite, &BuildingDefinitionRef)>,
+    activated: &Query<&BuildingDefinitionRef, With<IndustrialFacilityActivated>>,
+    catalog_id: &str,
+    operational_only: bool,
+) -> u32 {
+    if operational_only {
+        sites
+            .iter()
+            .filter(|(site, def_ref)| {
+                site.phase == SiteConstructionPhase::Operational
+                    && def_ref.catalog_id == catalog_id
+            })
+            .count() as u32
+    } else {
+        activated
+            .iter()
+            .filter(|def_ref| def_ref.catalog_id == catalog_id)
+            .count() as u32
+    }
+}
+
+fn count_portland_flow_edges(
+    flow: &ResourceFlowRegistry,
+    nodes: &Query<(Entity, &ResourceFlowNode)>,
+) -> u32 {
+    let catalog_by_entity: HashMap<Entity, &str> = nodes
+        .iter()
+        .map(|(e, node)| (e, node.catalog_id.as_str()))
+        .collect();
+    flow.edges
+        .iter()
+        .filter(|edge| {
+            let Some(from_id) = catalog_by_entity.get(&edge.from) else {
+                return false;
+            };
+            let Some(to_id) = catalog_by_entity.get(&edge.to) else {
+                return false;
+            };
+            matches!(
+                (from_id.as_ref(), to_id.as_ref()),
+                ("concrete_aggregate_mine", "concrete_cement_kiln")
+                    | ("concrete_cement_kiln", "concrete_mixer_plant")
+            )
+        })
+        .count() as u32
+}
+
+pub fn refresh_concrete_chain_e2e_witness_system(
+    mut witness: ResMut<ConcreteChainE2eWitness>,
+    flow: Res<ResourceFlowRegistry>,
+    flow_witness: Res<ResourceFlowSimWitness>,
+    sites: Query<(&ConstructionSite, &BuildingDefinitionRef)>,
+    activated: Query<&BuildingDefinitionRef, With<IndustrialFacilityActivated>>,
+    nodes: Query<(Entity, &ResourceFlowNode)>,
+) {
+    witness.operational_mine =
+        count_for_catalog(&sites, &activated, CONCRETE_PORTLAND_STEPS[0], true);
+    witness.operational_kiln =
+        count_for_catalog(&sites, &activated, CONCRETE_PORTLAND_STEPS[1], true);
+    witness.operational_mixer =
+        count_for_catalog(&sites, &activated, CONCRETE_PORTLAND_STEPS[2], true);
+    witness.activated_mine =
+        count_for_catalog(&sites, &activated, CONCRETE_PORTLAND_STEPS[0], false);
+    witness.activated_kiln =
+        count_for_catalog(&sites, &activated, CONCRETE_PORTLAND_STEPS[1], false);
+    witness.activated_mixer =
+        count_for_catalog(&sites, &activated, CONCRETE_PORTLAND_STEPS[2], false);
+    witness.flow_edges = count_portland_flow_edges(&flow, &nodes);
+    witness.production_ticks = flow_witness.ticks_propagated;
+}
+
+/// IND-E02: enqueue mine → kiln → mixer through the construction commit funnel.
+pub fn commit_concrete_portland_chain_in_play(
+    writer: &mut MessageWriter<CommitConstructionSiteEvent>,
+    witness: &mut ConcreteChainE2eWitness,
+    owner: Entity,
+    origin: BuildSiteTile,
+) {
+    let offsets = [(0i32, 0i32), (4, 0), (8, 0)];
+    for (catalog_id, (dx, dz)) in CONCRETE_PORTLAND_STEPS.iter().zip(offsets.iter()) {
+        let tile = BuildSiteTile {
+            x: origin.x.saturating_add(*dx as u32),
+            z: origin.z.saturating_add(*dz as u32),
+        };
+        queue_commit_construction_site(
+            writer,
+            owner,
+            SiteArchetype::Factory,
+            tile,
+            PORTLAND_FOOTPRINT,
+            LayerType::Surface,
+            Some((*catalog_id).to_string()),
+        );
+    }
+    witness.placed_via_construction = true;
+    witness.sites_committed = CONCRETE_PORTLAND_STEPS.len() as u32;
+}
+
+/// Proof fast-path after commit: move Portland steps to **Operational** with provisioning stats satisfied.
+pub fn fast_forward_portland_chain_sites_to_operational(
+    mut sites: Query<(
+        &BuildingDefinitionRef,
+        &mut ConstructionSite,
+        &mut SiteOperationalStats,
+        &PlannedSite,
+    )>,
+    mut book: ResMut<SiteConstructionBook>,
+) {
+    for (def_ref, mut site, mut stats, planned) in &mut sites {
+        if !CONCRETE_PORTLAND_STEPS
+            .iter()
+            .any(|id| *id == def_ref.catalog_id.as_str())
+        {
+            continue;
+        }
+        site.phase = SiteConstructionPhase::Operational;
+        site.operational_readiness = 1.0;
+        stats.power_ratio = 1.0;
+        stats.supply_ratio = 1.0;
+        stats.workforce_ratio = 1.0;
+        stats.integrity = 1.0;
+        if let Some(st) = book.by_site.get_mut(&planned.site_id) {
+            st.phase = SiteConstructionPhase::Operational;
+            st.progress = 1.0;
+        }
+    }
+}
+
+/// Spawn three operational Portland chain sites (construction spine satisfied via `PlannedSite`).
+pub fn spawn_concrete_portland_chain_operational(
+    commands: &mut Commands,
+    origin: BuildSiteTile,
+) -> [Entity; 3] {
+    let offsets = [(0i32, 0i32), (4, 0), (8, 0)];
+    let site_ids = [901u64, 902, 903];
+    let mut entities = [Entity::PLACEHOLDER; 3];
+    for (i, (catalog_id, (dx, dz))) in CONCRETE_PORTLAND_STEPS
+        .iter()
+        .zip(offsets.iter())
+        .enumerate()
+    {
+        let tile = BuildSiteTile {
+            x: origin.x.saturating_add(*dx as u32),
+            z: origin.z.saturating_add(*dz as u32),
+        };
+        entities[i] = commands
+            .spawn((
+                ConstructionSite {
+                    site_id: site_ids[i],
+                    owner: Entity::PLACEHOLDER,
+                    archetype: SiteArchetype::Factory,
+                    phase: SiteConstructionPhase::Operational,
+                    operational_readiness: 1.0,
+                },
+                PlannedSite {
+                    site_id: SiteId(site_ids[i]),
+                    origin: tile,
+                    footprint: FootprintTiles {
+                        width: 3,
+                        depth: 2,
+                    },
+                    archetype: SiteArchetype::Factory,
+                    layer: LayerType::Surface,
+                    catalog_id: Some((*catalog_id).into()),
+                },
+                BuildingDefinitionRef {
+                    catalog_id: (*catalog_id).into(),
+                },
+                Transform::from_translation(crate::economy::site_placement::site_world_position(
+                    tile,
+                )),
+                GlobalTransform::default(),
+            ))
+            .id();
+    }
+    entities
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::construction::{default_buildings_dir, load_building_definitions_from_dir};
+    use crate::economy::activation::activate_industrial_facilities_system;
+    use crate::economy::resource_flow::{
+        link_supply_chain_edges_system, register_resource_flow_nodes_system,
+    };
+    use crate::economy::ResourceFlowPlugin;
+    use crate::systems::sim_control::SimControlState;
+
+    fn assemble_chain_app() -> App {
+        let mut app = App::new();
+        app.add_plugins(MinimalPlugins);
+        app.insert_resource(load_building_definitions_from_dir(default_buildings_dir()));
+        app.insert_resource(SimControlState {
+            paused: false,
+            steps_remaining: 0,
+            speed: 1.0,
+        });
+        app.init_resource::<ConcreteChainE2eWitness>();
+        app.add_plugins(ResourceFlowPlugin);
+        app.add_systems(
+            Update,
+            (
+                activate_industrial_facilities_system,
+                register_resource_flow_nodes_system,
+                link_supply_chain_edges_system,
+                refresh_concrete_chain_e2e_witness_system,
+            )
+                .chain(),
+        );
+        app
+    }
+
+    #[test]
+    fn concrete_portland_chain_e2e_operational_production_tick() {
+        let mut app = assemble_chain_app();
+        spawn_concrete_portland_chain_operational(
+            &mut app.world_mut().commands(),
+            BuildSiteTile { x: 16, z: 16 },
+        );
+        for _ in 0..24 {
+            app.update();
+        }
+
+        let world = app.world_mut();
+        let mut mine_q = world.query_filtered::<Entity, With<AggregateMineRuntime>>();
+        let mine = mine_q
+            .iter(world)
+            .next()
+            .expect("mine runtime");
+        let mut kiln_q = world.query_filtered::<Entity, With<CementKilnRuntime>>();
+        let kiln = kiln_q
+            .iter(world)
+            .next()
+            .expect("kiln runtime");
+        let mut mixer_q = world.query_filtered::<Entity, With<ConcreteMixerRuntime>>();
+        let mixer = mixer_q
+            .iter(world)
+            .next()
+            .expect("mixer runtime");
+        assert_ne!(mine, kiln);
+        assert_ne!(kiln, mixer);
+
+        let flow = world.resource::<ResourceFlowRegistry>();
+        assert!(
+            flow.edges.len() >= 2,
+            "expected mine→kiln and kiln→mixer edges, got {}",
+            flow.edges.len()
+        );
+
+        let w = world.resource::<ConcreteChainE2eWitness>();
+        assert!(w.chain_operational(), "witness: {w:?}");
+        assert!(
+            w.production_green(),
+            "expected production tick + flow edges, witness: {w:?}"
+        );
+        assert!(!w.placed_via_construction);
+    }
+
+    #[test]
+    fn concrete_portland_chain_in_play_commit_and_production() {
+        use bevy::ecs::system::RunSystemOnce;
+
+        let mut app = assemble_chain_app();
+        app.init_resource::<SiteConstructionBook>()
+            .init_resource::<crate::strategic::SiteIdIssuer>()
+            .add_message::<CommitConstructionSiteEvent>()
+            .add_systems(
+                Update,
+                (
+                    crate::strategic::commit_construction_site_system,
+                    fast_forward_portland_chain_sites_to_operational,
+                )
+                    .chain()
+                    .before(activate_industrial_facilities_system),
+            );
+
+        let owner = app.world_mut().spawn_empty().id();
+        app.world_mut()
+            .run_system_once(
+                move |mut writer: MessageWriter<CommitConstructionSiteEvent>,
+                      mut witness: ResMut<ConcreteChainE2eWitness>| {
+                    commit_concrete_portland_chain_in_play(
+                        &mut writer,
+                        witness.as_mut(),
+                        owner,
+                        BuildSiteTile { x: 24, z: 24 },
+                    );
+                },
+            )
+            .expect("commit portland chain");
+
+        for _ in 0..32 {
+            app.update();
+        }
+
+        let w = app.world().resource::<ConcreteChainE2eWitness>();
+        assert!(w.placed_via_construction);
+        assert!(w.in_play_green(), "witness: {w:?}");
+    }
+}

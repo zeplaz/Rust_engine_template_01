@@ -31,7 +31,10 @@ use crate::terrain::family::{
     classify_biome, default_terrain_families, TerrainFamilyId, DEFAULT_TERRAIN_FAMILY_ID,
 };
 use crate::engine::WorldGenFlowState;
-use crate::terrain::generation::hydrology::{compute_hydrology_world, HydrologyParams, HydrologyResult};
+use crate::terrain::generation::hydrology::{
+    compute_hydrology_world, HydrologyParams, HydrologyResult,
+};
+use crate::render::{TileWorldFallbackRasterDirty, WaterSurfaceVisualCatalog};
 use crate::terrain::generation::world_gen_diagnostics::{
     summary_line, write_world_gen_debug_report, WorldGenLastDebugReport, WorldGenRunTiming,
 };
@@ -524,6 +527,10 @@ impl WorldGenJobSlot {
     pub fn is_busy(&self) -> bool {
         self.0.is_some()
     }
+
+    pub fn cancel(&mut self) {
+        self.0 = None;
+    }
 }
 
 fn finalize_world_gen_job(
@@ -620,6 +627,7 @@ fn world_gen_pipeline_tick(
     world_roots: Query<Entity, With<WorldMarker>>,
     mut completed: MessageWriter<WorldGenCompletedEvent>,
     mut last_debug: ResMut<WorldGenLastDebugReport>,
+    mut raster_dirty: Option<ResMut<TileWorldFallbackRasterDirty>>,
 ) {
     if let Some(job) = slot.0.as_mut() {
         if matches!(job.step, WorldGenPipelineStep::HydrologyPending) {
@@ -665,6 +673,11 @@ fn world_gen_pipeline_tick(
                             &job.region_entities,
                             &hydro,
                         );
+                    }
+                    let catalog = WaterSurfaceVisualCatalog::from_hydrology(&hydro, &job.run_params);
+                    commands.insert_resource(catalog);
+                    if let Some(dirty) = raster_dirty.as_mut() {
+                        dirty.bump();
                     }
                     finalize_world_gen_job(
                         &mut commands,
@@ -1181,11 +1194,13 @@ impl Plugin for WorldGeneratorPlugin {
             .init_state::<WorldGenFlowState>()
             .add_message::<GenerateWorldEvent>()
             .add_message::<WorldGenCompletedEvent>()
+            .add_message::<crate::gui::editor::world_gen_ui::CancelActiveWorldGenEvent>()
             .add_systems(Startup, merge_world_gen_tuning_overlay)
             .add_systems(
                 Update,
                 (
                     apply_generate_world_request,
+                    cancel_active_world_gen_on_request,
                     world_gen_pipeline_tick,
                     world_gen_apply_completion,
                 )
@@ -1208,24 +1223,50 @@ fn merge_world_gen_tuning_overlay(mut params: ResMut<WorldGenParams>) {
     }
 }
 
+fn cancel_active_world_gen_on_request(
+    mut events: MessageReader<crate::gui::editor::world_gen_ui::CancelActiveWorldGenEvent>,
+    mut slot: ResMut<WorldGenJobSlot>,
+    mut progress: ResMut<WorldGenProgress>,
+    mut commands: Commands,
+    world_roots: Query<Entity, With<WorldMarker>>,
+    mut next_flow: ResMut<NextState<WorldGenFlowState>>,
+    mut lifecycle: ResMut<crate::gui::editor::world_preview::WorldPreviewLifecycle>,
+) {
+    if events.read().next().is_none() {
+        return;
+    }
+    slot.cancel();
+    progress.running = false;
+    progress.fraction = 0.0;
+    progress.label.clear();
+    despawn_generated_world_entities(&mut commands, &world_roots);
+    NextState::set_if_neq(&mut *next_flow, WorldGenFlowState::Idle);
+    lifecycle.park_uninitialized();
+}
+
 fn apply_generate_world_request(
     mut events: MessageReader<GenerateWorldEvent>,
     mut params: ResMut<WorldGenParams>,
     mut pending: ResMut<WorldGenPending>,
     flow: Res<State<WorldGenFlowState>>,
     job_slot: Res<WorldGenJobSlot>,
+    debug_quick: Option<Res<crate::engine::DebugQuickWorldGenPending>>,
+    mut next_flow: ResMut<NextState<WorldGenFlowState>>,
 ) {
     for ev in events.read() {
         if job_slot.0.is_some() {
             warn!("World generation already running; duplicate request ignored.");
             continue;
         }
+        let mut promote_idle_to_setup = false;
         let allow = match (*flow.get(), ev.phase) {
-            (WorldGenFlowState::Idle, _) => {
+            (WorldGenFlowState::Idle, WorldGenPhase::Preview) => {
+                promote_idle_to_setup = true;
+                true
+            }
+            (WorldGenFlowState::Idle, WorldGenPhase::Full) => {
                 warn!(
-                    "Ignored {:?} world generation: use Main Menu → New World. \
-                     (Debug builds: F8 from simulation opens the tool into the setup flow.)",
-                    ev.phase
+                    "Ignored full world generation at Idle: use Main Menu → New World, then preview, then full."
                 );
                 false
             }
@@ -1239,6 +1280,11 @@ fn apply_generate_world_request(
                 );
                 false
             }
+            (WorldGenFlowState::FullReady, WorldGenPhase::Preview)
+                if debug_quick.as_ref().is_some_and(|p| p.active) =>
+            {
+                true
+            }
             (WorldGenFlowState::FullReady, _) => {
                 warn!(
                     "Ignored generation: confirm “Enter world” or discard the current world first."
@@ -1249,6 +1295,9 @@ fn apply_generate_world_request(
         };
         if !allow {
             continue;
+        }
+        if promote_idle_to_setup {
+            NextState::set_if_neq(&mut *next_flow, WorldGenFlowState::NewWorldSetup);
         }
         params.clone_from(&ev.params);
         pending.0 = Some(ev.phase);
@@ -1295,4 +1344,36 @@ mod hydrology_spawning_tests {
         assert_eq!(world.lake_mask, rect.lake_mask);
         assert!(world.lakes.is_empty());
     }
+
+    #[test]
+    fn world_gen_inserts_w1_green_water_catalog_from_hydro() {
+        use crate::render::WaterSurfaceVisualCatalog;
+        use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
+
+        // Mirror world-gen hydro finalize: `WaterSurfaceVisualCatalog::from_hydrology`.
+        let w = 32usize;
+        let h = 32usize;
+        let mut dem = vec![0.55f32; w * h];
+        for x in 4..28 {
+            dem[x] = 0.35;
+            dem[w + x] = 0.34;
+        }
+        let p = HydrologyParams::default();
+        let hydro = compute_hydrology_rect(w as u32, h as u32, &dem, &p, 2, None);
+        let mut params = WorldGenParams::default();
+        params.width = w as u32;
+        params.height = h as u32;
+        let catalog = WaterSurfaceVisualCatalog::from_hydrology(&hydro, &params);
+        assert!(
+            catalog.w1_green(),
+            "world-gen catalog must be non-empty on fixture DEM (segments={} tiles={})",
+            catalog.river_segments.len(),
+            catalog.river_tiles.len()
+        );
+        assert!(
+            !catalog.river_segments.is_empty() || !catalog.river_tiles.is_empty(),
+            "expected river geometry from hydrology finalize path"
+        );
+    }
+
 }

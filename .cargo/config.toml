@@ -1,0 +1,2 @@
+[alias]
+orchestrate = "run --manifest-path tools/orchestrator/Cargo.toml --"

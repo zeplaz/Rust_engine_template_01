@@ -11,7 +11,7 @@ use crate::events::ownership_events::FactionColors;
 use crate::gui::style::gameplay_color_swatch_egui;
 use crate::gui::style::{
     muted_label, primary_label, section_heading, strong_body, v_space, warning_text, CmdHeadingStyle,
-    UiPalette, UiSpacing, VertSpace,
+    UiPalette, UiSpacing, VertSpace, widget_scroll_vertical_fill,
 };
 
 /// UI state for the permissions window
@@ -234,7 +234,8 @@ pub fn permissions_ui_system(
                         });
                         
                         // Permissions table
-                        egui::ScrollArea::vertical().show(ui, |ui| {
+                        widget_scroll_vertical_fill("permissions_grid_scroll", ui.available_height())
+                            .show(ui, |ui| {
                             egui::Grid::new("permissions_grid")
                                 .striped(true)
                                 .spacing([5.0, 5.0])

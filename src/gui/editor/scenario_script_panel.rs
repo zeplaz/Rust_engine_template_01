@@ -12,8 +12,8 @@ use crate::gui::std_floating;
 use crate::gui::InputBindings;
 use crate::gui::style::{
     error_text, framed_group, muted_text, path_hint, primary_text, scenario_execution_badge,
-    section_heading, success_text, v_space, warning_text, CmdHeadingStyle, UiPalette, UiSpacing,
-    VertSpace,
+    section_heading, success_text, v_space, warning_text, widget_scroll_vertical_capped,
+    widget_scroll_vertical_fill, CmdHeadingStyle, UiPalette, UiSpacing, VertSpace,
 };
 use crate::scenario::scenario_steps::ScenarioStep;
 use crate::scenario::scenario_types::ScenarioFileV1;
@@ -43,8 +43,10 @@ pub struct ScenarioScriptPanelState {
     pub file_path: String,
     pub status_line: String,
     pub autoscroll_log: bool,
-    /// Window visibility (hotkey + palette can reopen).
+    /// Window visibility: hotkey + palette can reopen.
     pub window_open: bool,
+    /// **Editor — Scenario tools** anchor window (map-editor session only).
+    pub tools_entry_visible: bool,
     /// Wave 4+: camera / overlay focus for selected objective id.
     pub inspector_focus_id: Option<String>,
 }
@@ -55,7 +57,8 @@ impl Default for ScenarioScriptPanelState {
             file_path: "assets/scenarios/tests/minimal_wave1.scenario.ron".into(),
             status_line: String::new(),
             autoscroll_log: true,
-            window_open: true,
+            window_open: false,
+            tools_entry_visible: true,
             inspector_focus_id: None,
         }
     }
@@ -79,6 +82,9 @@ pub fn scenario_editor_tools_entry_window(
     palette: Res<UiPalette>,
     spacing: Res<UiSpacing>,
 ) -> Result {
+    if !panel.tools_entry_visible {
+        return Ok(());
+    }
     let pal: &UiPalette = &palette;
     let sp: &UiSpacing = &spacing;
     std_floating(egui::Window::new("Editor — Scenario tools"))
@@ -122,6 +128,7 @@ pub fn scenario_script_panel_system(
         .open(&mut open)
         .default_size([440.0, 560.0])
         .show(contexts.ctx_mut()?, |ui| {
+            widget_scroll_vertical_fill("scenario_script_panel_body_scroll", ui.available_height()).show(ui, |ui| {
             framed_group(ui, pal, |ui| {
                 section_heading(ui, pal, CmdHeadingStyle::Gt, "Scenario script runner");
                 path_hint(ui, pal, RUNBOOK_PATH);
@@ -373,14 +380,14 @@ pub fn scenario_script_panel_system(
                     }
                 }
             });
+            });
 
             v_space(ui, sp, VertSpace::Inter);
             ui.checkbox(&mut panel.autoscroll_log, "Autoscroll log");
             ui.separator();
             section_heading(ui, pal, CmdHeadingStyle::None, "Execution log");
             let log_len = host.execution_log.len();
-            egui::ScrollArea::vertical()
-                .max_height(280.0)
+            widget_scroll_vertical_capped("scenario_script_execution_log_scroll", 280.0)
                 .stick_to_bottom(panel.autoscroll_log)
                 .show(ui, |ui| {
                     let start = log_len.saturating_sub(200);

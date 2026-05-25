@@ -29,8 +29,10 @@ use super::{
     validate_committed_site_terrain_system,
 };
 use super::construction_book::{
-    align_corridor_book_with_transport_directory, transport_directory_edge_signature,
+    advance_corridor_construction_book_on_sim_tick, align_corridor_book_with_transport_directory,
+    transport_directory_edge_signature, CorridorConstructionTickConfig,
 };
+use crate::systems::sim_control::{SimControlState, SimControlSystemSet};
 use crate::systems::terrain::materialize_chunks;
 use crate::systems::terrain::material_plugin::rebuild_dirty_chunks;
 use crate::systems::transport::{TransportCostWeights, TransportEdgeDirectory, TransportFieldStore};
@@ -162,11 +164,13 @@ pub struct StrategicFieldsPlugin;
 
 impl Plugin for StrategicFieldsPlugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<LogisticsGraph>()
+        app.init_resource::<SimControlState>()
+            .init_resource::<LogisticsGraph>()
             .init_resource::<StrategicRasterConfig>()
             .init_resource::<StrategicOverlayCouplingScratch>()
             .init_resource::<StrategicOverlayDisplayPolicy>()
             .init_resource::<CorridorConstructionBook>()
+            .init_resource::<CorridorConstructionTickConfig>()
             .init_resource::<TransportEdgeDirectory>()
             .init_resource::<TransportFieldStore>()
             .init_resource::<TransportCostWeights>()
@@ -188,7 +192,9 @@ impl Plugin for StrategicFieldsPlugin {
                 Update,
                 (
                     StrategicFieldPipeline::EnsureOverlays.after(materialize_chunks),
-                    StrategicFieldPipeline::GraphSync.after(StrategicFieldPipeline::EnsureOverlays),
+                    StrategicFieldPipeline::GraphSync
+                        .after(StrategicFieldPipeline::EnsureOverlays)
+                        .after(SimControlSystemSet::AdvanceSimTick),
                     StrategicFieldPipeline::InjectTransportScalars.after(StrategicFieldPipeline::GraphSync),
                     StrategicFieldPipeline::LogisticsNetInject
                         .after(StrategicFieldPipeline::InjectTransportScalars),
@@ -203,6 +209,12 @@ impl Plugin for StrategicFieldsPlugin {
                     InfrastructureSiteSet::OperationalZones.after(InfrastructureSiteSet::Provisioning),
                     InfrastructureSiteSet::PreviewInvalidation.after(InfrastructureSiteSet::OperationalZones),
                 ),
+            )
+            .add_systems(
+                Update,
+                advance_corridor_construction_book_on_sim_tick
+                    .in_set(SimControlSystemSet::AdvanceSimTick)
+                    .after(crate::systems::sim_control::advance_sim_tick),
             )
             .add_systems(
                 Update,

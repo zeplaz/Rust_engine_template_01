@@ -1,0 +1,4 @@
+# Bevy 0.18 + this repo: use stable (beta rustc can mis-compile registry crates).
+[toolchain]
+channel = "stable"
+profile = "default"

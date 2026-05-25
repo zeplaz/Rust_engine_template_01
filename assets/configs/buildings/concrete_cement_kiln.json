@@ -1,0 +1,19 @@
+{
+    "asset_name": "Cement kiln",
+    "asset_type": "Building",
+    "segment": "Industrial",
+    "description": "Calcines limestone to cement clinker — high thermal and electrical load",
+    "supply_chain": "concrete_portland",
+    "supply_chain_role": "cement_kiln",
+    "is_building": true,
+    "is_productive": true,
+    "building_size_x": 4,
+    "building_size_y": 3,
+    "building_height": 2,
+    "construction_cost": 2200,
+    "power_generation": 0,
+    "power_consumption": 72,
+    "produces_resources": ["Cement"],
+    "consumes_resources": ["Limestone", "Coal", "Labour", "Electricity"],
+    "version": "1.0.0"
+}

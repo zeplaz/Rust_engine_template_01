@@ -10,9 +10,10 @@ use crossbeam_channel::{Receiver, Sender, TryRecvError};
 use crate::io::save::dto::SavedChunkBody;
 use crate::io::save::manifest::SaveWorldManifest;
 use crate::io::save::pipeline::{
-    build_incremental_save_manifest, chunk_artifact_path, compress_payload, write_artifact_atomic,
+    build_incremental_save_manifest, chunk_artifact_path, write_artifact_atomic,
     write_manifest_atomic, SavePipelineJob,
 };
+use crate::io::save::wire_format::compress_payload;
 use crate::io::save::registry_snapshot::write_registry_snapshot_artifacts;
 
 /// Request to flush dirty chunk bodies off the main thread.

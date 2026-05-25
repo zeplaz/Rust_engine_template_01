@@ -30,8 +30,9 @@ use bevy::render::render_resource::{
 use bevy_egui::egui::{self, Sense};
 use bevy_egui::{EguiContexts, EguiPrimaryContextPass, EguiTextureHandle};
 
-use crate::engine::{BaseState, InGameEditorState, MainMenuState, WorldGenFlowState};
+use crate::engine::{AppState, BaseState, InGameEditorState, MainMenuState, WorldGenFlowState};
 use crate::gui::std_floating;
+use crate::gui::ui_gates::map_editor_chrome_active;
 use crate::gui::editor::editor_world_commit_bridge::{
     write_editor_world_grid_commit, EditorTileEditCommitted, EditorTileEditKind,
 };
@@ -41,7 +42,7 @@ use crate::gui::editor::scenario_script_panel::{
 };
 use crate::gui::style::{
     framed_group, muted_label, path_hint, primary_label, section_heading, v_space, weak_body,
-    CmdHeadingStyle, UiPalette, VertSpace,
+    widget_scroll_both, widget_scroll_vertical_fill, CmdHeadingStyle, UiPalette, VertSpace,
 };
 use crate::systems::terrain::TerrainRegistriesHandles;
 use crate::terrain::editor::map_snapshot::{MapSnapshotCellV1, MapSnapshotV1, MAP_SNAPSHOT_SCHEMA_VERSION};
@@ -421,6 +422,7 @@ fn emit_editor_tile_commit_for_brush(
 }
 
 fn on_enter_editor(
+    app: Res<State<AppState>>,
     mut tool: ResMut<MapEditorTool>,
     mut next_sub: ResMut<NextState<InGameEditorState>>,
     mut road_seq: ResMut<MapEditorRoadPlacementSeq>,
@@ -429,6 +431,12 @@ fn on_enter_editor(
     mut road_drag: ResMut<MapEditorRoadDragState>,
     mut minimap_dirty: ResMut<MapEditorMinimapRasterDirty>,
 ) {
+    if matches!(
+        *app.get(),
+        AppState::WorldGen | AppState::InGame | AppState::Paused
+    ) {
+        return;
+    }
     *tool = MapEditorTool::default();
     *road_seq = MapEditorRoadPlacementSeq::default();
     *undo = MapEditorRoadUndoStack::default();
@@ -751,9 +759,7 @@ fn map_editor_minimap_window(
             let display_w = tex_w * z;
             let display_h = tex_h * z;
 
-            egui::ScrollArea::both()
-                .auto_shrink([false, false])
-                .show(ui, |ui| {
+            widget_scroll_both("map_editor_minimap_scroll").show(ui, |ui| {
                     let sized = egui::load::SizedTexture::new(texture_id, [display_w, display_h]);
                     let resp = ui.add(
                         egui::Image::new(sized)
@@ -1361,6 +1367,7 @@ fn map_editor_palette_system(
                 "TEMP-EGUI tool palette; replace with Bevy UI per gui_runbook.",
             );
             v_space(ui, sp, VertSpace::Inter);
+            widget_scroll_vertical_fill("map_editor_tools_scroll", ui.available_height()).show(ui, |ui| {
             framed_group(ui, pal, |ui| {
                 section_heading(ui, pal, CmdHeadingStyle::Gt, "Chunk Settings");
                 path_hint(ui, pal, "/assets/scenarios/test.ron");
@@ -1539,6 +1546,7 @@ fn map_editor_palette_system(
                     NextState::set_if_neq(&mut *next_menu, MainMenuState::MainMenu);
                 }
             });
+            });
         });
     Ok(())
 }
@@ -1574,7 +1582,7 @@ impl Plugin for MapEditorPlugin {
                     map_editor_raster_minimap,
                 )
                     .chain()
-                    .run_if(in_state(BaseState::Editor)),
+                    .run_if(map_editor_chrome_active),
             )
             .add_systems(
                 Update,
@@ -1588,27 +1596,27 @@ impl Plugin for MapEditorPlugin {
                     map_editor_dev_load_hybrid_world,
                     map_editor_map_snapshot_io,
                 )
-                    .run_if(in_state(BaseState::Editor)),
+                    .run_if(map_editor_chrome_active),
             )
             .add_systems(
                 Update,
-                toggle_scenario_script_panel_hotkey.run_if(in_state(BaseState::Editor)),
+                toggle_scenario_script_panel_hotkey.run_if(map_editor_chrome_active),
             )
             .add_systems(
                 EguiPrimaryContextPass,
-                map_editor_minimap_window.run_if(in_state(BaseState::Editor)),
+                map_editor_minimap_window.run_if(map_editor_chrome_active),
             )
             .add_systems(
                 EguiPrimaryContextPass,
-                map_editor_palette_system.run_if(in_state(BaseState::Editor)),
+                map_editor_palette_system.run_if(map_editor_chrome_active),
             )
             .add_systems(
                 EguiPrimaryContextPass,
-                scenario_editor_tools_entry_window.run_if(in_state(BaseState::Editor)),
+                scenario_editor_tools_entry_window.run_if(map_editor_chrome_active),
             )
             .add_systems(
                 EguiPrimaryContextPass,
-                scenario_script_panel_system.run_if(in_state(BaseState::Editor)),
+                scenario_script_panel_system.run_if(map_editor_chrome_active),
             );
     }
 }

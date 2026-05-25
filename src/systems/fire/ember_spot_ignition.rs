@@ -15,6 +15,7 @@ use crate::terrain::generation::{Chunk, ChunkCellMatrix};
 
 use super::chunk_surface_fire::ChunkSurfaceFire;
 use super::fire_fuel::FireFuelField;
+use super::surface_water::SurfaceWaterFireGate;
 use super::types::ChunkFireOverlay;
 
 /// Apply heat at a chunk cell. Consumed by [`apply_ember_spot_ignitions`]; safe for other systems to send.
@@ -85,6 +86,7 @@ pub fn emit_ember_spot_ignition_events(
     ctrl: Res<SimControlState>,
     time: Res<Time>,
     tick: Res<SimTick>,
+    water_gate: Res<SurfaceWaterFireGate>,
     mut writer: MessageWriter<EmberSpotIgnitionEvent>,
     q: Query<(
         &Chunk,
@@ -123,6 +125,9 @@ pub fn emit_ember_spot_ignition_events(
         for i in 0..n {
             if sent >= MAX_EMBERS_PER_CHUNK {
                 break;
+            }
+            if water_gate.cell_has_standing_water(matrix, i) {
+                continue;
             }
             let h = ovl.heat[i];
             if h < HEAT_MIN {
@@ -169,6 +174,7 @@ pub fn emit_ember_spot_ignition_events(
 
 pub fn apply_ember_spot_ignitions(
     mut reader: MessageReader<EmberSpotIgnitionEvent>,
+    water_gate: Res<SurfaceWaterFireGate>,
     mut hooks: ResMut<ChunkEnvironmentPersistHooks>,
     chunks: Query<(Entity, &Chunk), With<ChunkFireOverlay>>,
     mut q: Query<(
@@ -213,6 +219,9 @@ pub fn apply_ember_spot_ignitions(
         for (idx_u32, spark) in cells {
             let i = idx_u32 as usize;
             if i >= n {
+                continue;
+            }
+            if water_gate.cell_has_standing_water(matrix, i) {
                 continue;
             }
             let m = matrix.moisture.get(i).copied().unwrap_or(0.5);

@@ -4,7 +4,9 @@ use bevy::prelude::*;
 use bevy_egui::{egui, EguiContexts, EguiPrimaryContextPass};
 
 use crate::gui::input_bindings::InputBindings;
-use crate::gui::style::{muted_label, primary_label, section_heading, CmdHeadingStyle, UiPalette};
+use crate::gui::style::{
+    muted_label, primary_label, section_heading, widget_scroll_vertical_fill, CmdHeadingStyle, UiPalette,
+};
 use crate::gui::ui_gates::in_simulation_or_editor;
 use crate::strategic::{
     format_hybrid_telemetry_explain, DecisionExplainabilitySnapshot, HybridSimLastResolved,
@@ -69,49 +71,51 @@ fn ai_explainability_egui_system(
         );
         ui.separator();
 
-        section_heading(
-            ui,
-            &palette,
-            CmdHeadingStyle::Gt,
-            "Macro resolution (last hybrid tick)",
-        );
-        if let Some(last) = hybrid_last.as_ref() {
-            if let Some(ref tel) = last.telemetry {
-                for line in format_hybrid_telemetry_explain(tel) {
-                    primary_label(ui, &palette, line);
-                }
-            } else {
-                muted_label(ui, &palette, "No telemetry yet — advance simulation.");
-            }
-            if let Some(ev) = last.event {
-                muted_label(ui, &palette, format!("Last event enum: {ev:?}"));
-            }
-        } else {
-            muted_label(ui, &palette, "HybridSimLastResolved not loaded in this app.");
-        }
-
-        ui.separator();
-        section_heading(
-            ui,
-            &palette,
-            CmdHeadingStyle::Gt,
-            "Micro pipeline (strongest agent pulse)",
-        );
-        if let Some(s) = snap.as_ref() {
-            primary_label(
+        widget_scroll_vertical_fill("ai_explainability_body_scroll", ui.available_height()).show(ui, |ui| {
+            section_heading(
                 ui,
                 &palette,
-                format!(
-                    "SimTick {} | sample {:?} | composed {:.4}",
-                    s.sim_tick, s.sample_entity, s.composed
-                ),
+                CmdHeadingStyle::Gt,
+                "Macro resolution (last hybrid tick)",
             );
-            for line in &s.pipeline_contributors {
-                primary_label(ui, &palette, line.as_str());
+            if let Some(last) = hybrid_last.as_ref() {
+                if let Some(ref tel) = last.telemetry {
+                    for line in format_hybrid_telemetry_explain(tel) {
+                        primary_label(ui, &palette, line);
+                    }
+                } else {
+                    muted_label(ui, &palette, "No telemetry yet — advance simulation.");
+                }
+                if let Some(ev) = last.event {
+                    muted_label(ui, &palette, format!("Last event enum: {ev:?}"));
+                }
+            } else {
+                muted_label(ui, &palette, "HybridSimLastResolved not loaded in this app.");
             }
-        } else {
-            muted_label(ui, &palette, "DecisionExplainabilitySnapshot missing — load BehaviorPlugin stack.");
-        }
+
+            ui.separator();
+            section_heading(
+                ui,
+                &palette,
+                CmdHeadingStyle::Gt,
+                "Micro pipeline (strongest agent pulse)",
+            );
+            if let Some(s) = snap.as_ref() {
+                primary_label(
+                    ui,
+                    &palette,
+                    format!(
+                        "SimTick {} | sample {:?} | composed {:.4}",
+                        s.sim_tick, s.sample_entity, s.composed
+                    ),
+                );
+                for line in &s.pipeline_contributors {
+                    primary_label(ui, &palette, line.as_str());
+                }
+            } else {
+                muted_label(ui, &palette, "DecisionExplainabilitySnapshot missing — load BehaviorPlugin stack.");
+            }
+        });
     });
 
     Ok(())

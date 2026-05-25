@@ -2,7 +2,7 @@
 
 use bevy::prelude::*;
 
-use crate::gui::build::{BuildGhostState, BuildPlacementPreview, BuildStripState, ToolContext};
+use crate::construction::{BuildGhostState, BuildPlacementPreview, BuildStripState, ToolContext};
 use crate::gui::hud::strategic_preview::format_projected_commit_effects;
 use crate::gui::hud::tool_help;
 use crate::gui::hud::validation_feedback::{self, ValidationSeverity};
@@ -67,13 +67,13 @@ pub fn format_developmental_context_line(
 
     if preview.report.allows_commit {
         format!(
-            "CONTEXT — {heading} · {site} · ok to commit [{commit}] · cycle [{cycle}] · rotate map [{rot}] · {overlay}{warn_note}{projection_note}",
+            "CONTEXT — {heading} · {site} · ok to commit [{commit}] · shift+click queues blueprint · right-click clears ghost · cycle [{cycle}] · rotate map [{rot}] · {overlay}{warn_note}{projection_note}",
         )
     } else {
         let reason = validation_feedback::primary_validation_message(&preview.report)
             .unwrap_or_else(|| "Placement blocked.".into());
         format!(
-            "CONTEXT — {heading} · {site} · blocked: {reason} · [{cycle}] change mode · [{commit}] when valid · {overlay}",
+            "CONTEXT — {heading} · {site} · blocked: {reason} · [{cycle}] change mode · shift+click queue when valid · [{commit}] approve pending · right-click cancel · {overlay}",
         )
     }
 }

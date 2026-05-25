@@ -1,0 +1,18 @@
+{
+    "asset_name": "Alumina refinery (Bayer)",
+    "asset_type": "Building",
+    "segment": "Industrial",
+    "description": "Refines bauxite to alumina; caustic digestion and red mud handling",
+    "supply_chain": "aluminum_primary",
+    "supply_chain_role": "alumina_refinery",
+    "is_building": true,
+    "is_productive": true,
+    "building_size_x": 5,
+    "building_size_y": 4,
+    "building_height": 2,
+    "construction_cost": 3200,
+    "power_consumption": 85,
+    "produces_resources": ["Alumina"],
+    "consumes_resources": ["Bauxite", "Chemicals", "Water", "Labour", "Electricity"],
+    "version": "1.0.0"
+}

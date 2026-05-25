@@ -15,8 +15,27 @@ use super::schedule::StrategicOverlayCouplingScratch;
 
 /// Clears per-cell net throughput, accumulates **effective** edge flow `capacity × (1 − disruption)` split
 /// across endpoints, then copies clamped throughput into `logistics_strength[i][0]` for quick AI/debug reads.
+#[must_use]
+pub fn edge_flow_for_overlay(
+    edge: &super::LogisticsEdge,
+    solver: Option<&crate::economy::logistics::ThroughputSolverState>,
+) -> f32 {
+    if let Some(solver) = solver {
+        if let Some(tid) = edge.transport_edge {
+            let idx = tid.0 as usize;
+            if let Some(&load) = solver.load.get(idx) {
+                if load > 0.0 {
+                    return load;
+                }
+            }
+        }
+    }
+    edge.capacity * (1.0 - edge.disruption.clamp(0.0, 1.0))
+}
+
 pub fn logistics_net_inject_into_overlays(
     graph: Res<LogisticsGraph>,
+    solver: Option<Res<crate::economy::logistics::ThroughputSolverState>>,
     mut q: Query<(&Chunk, &mut ChunkStrategicOverlay)>,
     mut scratch: ResMut<StrategicOverlayCouplingScratch>,
 ) {
@@ -30,7 +49,7 @@ pub fn logistics_net_inject_into_overlays(
     let mut by_chunk: HashMap<IVec2, HashMap<usize, f32>> = HashMap::new();
 
     for edge in &graph.edges {
-        let eff = edge.capacity * (1.0 - edge.disruption.clamp(0.0, 1.0));
+        let eff = edge_flow_for_overlay(edge, solver.as_deref());
         if eff <= 0.0 {
             continue;
         }
@@ -93,10 +112,12 @@ mod tests {
             .add_plugins(AssetPlugin::default())
             .init_resource::<WorldGenParams>()
             .init_resource::<LogisticsGraph>()
-            .add_plugins(MaterialUnificationPlugin)
-            .add_plugins(StrategicFieldsPlugin);
+            .init_resource::<crate::strategic::StrategicOverlayCouplingScratch>()
+            .init_resource::<crate::strategic::StrategicOverlayDisplayPolicy>()
+            .add_systems(Update, logistics_net_inject_into_overlays);
 
         app.world_mut().insert_resource(LogisticsGraph {
+            revision: 1,
             nodes: vec![
                 LogisticsNode {
                     id: LogisticsNodeId(0),
@@ -114,6 +135,7 @@ mod tests {
             edges: vec![LogisticsEdge {
                 from: LogisticsNodeId(0),
                 to: LogisticsNodeId(1),
+                transport_edge: Some(crate::systems::transport::TransportEdgeId(0)),
                 capacity: 10.0,
                 disruption: 0.2,
                 traversal_cost: 1.0,
@@ -125,6 +147,7 @@ mod tests {
                 coord: IVec2::ZERO,
             },
             ChunkCellMatrix::new(UVec2::new(2, 1)),
+            ChunkStrategicOverlay::new(IVec2::ZERO, UVec2::new(2, 1)),
         ));
 
         app.update();
@@ -153,6 +176,7 @@ mod tests {
             .add_plugins(StrategicFieldsPlugin);
 
         app.world_mut().insert_resource(LogisticsGraph {
+            revision: 1,
             nodes: vec![
                 LogisticsNode {
                     id: LogisticsNodeId(0),
@@ -170,6 +194,7 @@ mod tests {
             edges: vec![LogisticsEdge {
                 from: LogisticsNodeId(0),
                 to: LogisticsNodeId(1),
+                transport_edge: Some(crate::systems::transport::TransportEdgeId(0)),
                 capacity: 10.0,
                 disruption: 1.0,
                 traversal_cost: 1.0,

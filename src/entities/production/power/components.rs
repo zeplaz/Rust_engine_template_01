@@ -54,7 +54,7 @@ pub struct PowerPlant {
 }
 
 //ElectricalGrid  needs TransformerComponent, PowerLineComponent, and ElectricalLoad
-#[derive(Component)]
+#[derive(Component, Default)]
 pub struct ElectricalGrid {
     pub members: HashSet<Entity>,
     pub connected_grids: HashSet<Entity>,

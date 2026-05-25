@@ -83,6 +83,8 @@ pub struct AtmosphereGpuFieldBridge {
     pub texture: Handle<Image>,
     pub pending_partial_uploads: Vec<AtmospherePartialUpload>,
     pub last_full_reconcile: SimStepStamp,
+    /// One-shot: next extract may run a full-field GPU dispatch (after reconcile), not every idle frame.
+    pub pending_full_field_dispatch: bool,
 }
 
 #[derive(Resource, Clone, Copy, Debug, Default)]
@@ -219,7 +221,7 @@ pub fn register_atmosphere_incremental_schedule(app: &mut App) {
 }
 
 pub fn enqueue_atmosphere_dirty_regions_from_fire(
-    fire: Option<Res<crate::render::sim_visual_extract::FireVisualFrame>>,
+    fire: Option<Res<crate::render::FireSimulationSnapshot>>,
     fence: Option<Res<crate::render::CommittedVisualSnapshotFence>>,
     mut queue: ResMut<AtmosphereDirtyRegionQueue>,
 ) {
@@ -259,7 +261,7 @@ pub fn enqueue_atmosphere_dirty_regions_from_fire(
 }
 
 pub fn sync_atmosphere_field_atlas_center(
-    fire: Option<Res<crate::render::sim_visual_extract::FireVisualFrame>>,
+    fire: Option<Res<crate::render::FireSimulationSnapshot>>,
     mut atlas: ResMut<AtmosphereFieldAtlasCenter>,
 ) {
     let Some(fire) = fire else {
@@ -446,6 +448,7 @@ pub fn atmosphere_reconcile_tick(
         .map(|f| f.fire)
         .unwrap_or_default();
     bridge.last_full_reconcile = reconcile_stamp;
+    bridge.pending_full_field_dispatch = true;
     metrics.last_full_reconcile_stamp = reconcile_stamp;
 }
 

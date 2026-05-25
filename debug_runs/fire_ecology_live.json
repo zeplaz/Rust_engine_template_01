@@ -1,0 +1,71 @@
+{
+  "_agent_meta": {
+    "agent_commands": [
+      "cargo test -p proc_A_dine01 --lib"
+    ],
+    "docs": {
+      "compile_warnings": "src/dev/COMPILE_WARNINGS_TODOS.md",
+      "stage5_directive": "prompts/guides/stage5_convergence_directive_v1.md",
+      "viewport_recovery": "src/dev/recovery_viewport.md"
+    },
+    "logging_env": {
+      "ORCHESTRATOR_EXPORT_HEALTH": false,
+      "PERF": false,
+      "RUST_LOG": null,
+      "SIM_VIEW_SYNC_DEBUG": false,
+      "STAGE5_READINESS_VERBOSE": false,
+      "STAGE5_VERBOSE": false,
+      "VIEWPORT_AUTHORITY_DEBUG": false
+    },
+    "orchestrator": {
+      "build_report": "tools/orchestrator/reports/build_report.md",
+      "ci_entry": "tools/orchestrator/ci/run.ps1",
+      "continuation_queue": "tools/orchestrator/queues/continuation_queue.json",
+      "warning_registry": "tools/orchestrator/reports/warning_registry.md"
+    },
+    "profile": "FIRE_ECOLOGY_F1",
+    "related_proofs": [
+      "debug_runs/stage5_full_app_live.json",
+      "debug_runs/infrastructure_view_isolation_live.json",
+      "debug_runs/construction_stage_live.json",
+      "debug_runs/industrial_activation_live.json",
+      "debug_runs/fire_ecology_live.json",
+      "debug_runs/logistics_throughput_live.json",
+      "debug_runs/replay_editor_parity_live.json",
+      "debug_runs/orchestrator_thread_health.json",
+      "debug_runs/viewport_drift.json",
+      "debug_runs/viewport_authority_migration_witness.json",
+      "debug_runs/main_thread_orchestrator_live.json",
+      "debug_runs/stage6_virtualization_live.json",
+      "debug_runs/wave_s_hydrate_live.json",
+      "debug_runs/wave_p_live.json",
+      "debug_runs/wave_c_live.json",
+      "debug_runs/ui_shell_migration_live.json",
+      "debug_runs/minimap_compositor_live.json"
+    ],
+    "relative_path": "debug_runs/fire_ecology_live.json",
+    "schema": "debug_run_envelope_v1",
+    "source_system": "fire_ecology_live_proof",
+    "written_at_epoch_secs": 1779644695
+  },
+  "f1_green": true,
+  "profile": "FIRE_ECOLOGY_F1",
+  "witness": {
+    "chunks_fuel_gated": 223,
+    "chunks_sampled": 9000,
+    "chunks_with_heat": 0,
+    "frames_sampled": 132,
+    "fuel_gate_active": true,
+    "fuel_gated_ignitions": 201186,
+    "fuel_gated_spark_ratio": 1.0,
+    "heat_mostly_stable": true,
+    "heat_spike_frames": 0,
+    "heat_stable_low_frames": 223,
+    "max_heat": 0.0,
+    "mean_fuel": 0.06000056490302086,
+    "mean_heat": 0.0,
+    "mean_old_growth": 0.08993491530418396,
+    "proof_json": true,
+    "ungated_spark_cells": 0
+  }
+}

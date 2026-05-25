@@ -181,7 +181,7 @@ pub fn sync_atmosphere_field_page_table(
 }
 
 pub fn sync_atmosphere_field_page_residency(
-    fire: Option<Res<crate::render::sim_visual_extract::FireVisualFrame>>,
+    fire: Option<Res<crate::render::FireSimulationSnapshot>>,
     mut table: ResMut<AtmosphereFieldResidencyTable>,
 ) {
     table.advance_frame();

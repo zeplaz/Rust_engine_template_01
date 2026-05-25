@@ -12,11 +12,13 @@ pub use fire_emission_profile::{
 };
 pub use crate::render::sim_visual_extract::FireVisualGpuInstance;
 pub use fire_visual_extract::{
-    FireAtmosphereAggregate, FireVisualFramePlugin, FireVisualFrameSet,
+    extract_fire_simulation_snapshot, sync_shared_overlay_from_simulation, FireAtmosphereAggregate,
+    FireVisualFramePlugin, FireVisualFrameSet,
 };
 pub use crate::render::sim_visual_extract::FireVisualFrame;
 pub use render_projection_graph::{
-    run_render_projection_graph, spatial_distribution_stats, FireProjectionNode,
-    ProjectionNodeTrait, RenderProjectionContext, RenderProjectionGraph,
+    projection_graph_build_signature, projection_graph_runtime_order_snapshot,
+    run_render_projection_graph, spatial_distribution_stats,
+    FireProjectionNode, ProjectionNodeTrait, RenderProjectionContext, RenderProjectionGraph,
     CLUSTERED_FIRE_INSTANCE_CAP,
 };

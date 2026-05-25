@@ -1,0 +1,6 @@
+(
+    label: "stage5_regression_default",
+    width: 320,
+    height: 320,
+    seed: 42,
+)

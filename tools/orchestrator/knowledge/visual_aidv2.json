@@ -1,0 +1,61 @@
+{
+  "graph": {
+    "visual_aidv2": {
+      "id": "visual_aidv2",
+      "children": [
+        "VISUAL-AID-V2-01",
+        "VISUAL-AID-V2-02",
+        "VISUAL-AID-V2-03",
+        "HudPanelState",
+        "FootprintTileRequest",
+        "TileReadabilityConfig",
+        "RepresentationResult",
+        "RenderProjectionGraph"
+      ],
+      "notes": "Parallel finish program — not Stage 5 FULL_APP exit"
+    }
+  },
+  "subsystem_owners": {
+    "EXPERIENCE / VISUAL_AID_V2": "visual_aidv2_agent",
+    "VA1 HUD": "ui_layout_agent",
+    "VA2 FOOTPRINT": "ui_layout_agent",
+    "VA3-VA6 READABILITY": "render_pipeline_agent"
+  },
+  "seed_continuation_tasks": [
+    {
+      "id": "visual_aidv2_lane",
+      "title": "Visual Aid v2 — HUD, footprint GPU, readability, LOD visual",
+      "risk": "MEDIUM",
+      "subsystem": "EXPERIENCE / VISUAL_AID_V2",
+      "deprecated_symbols": [
+        "HudOverlayTrayState::tray_expanded",
+        "TransmissionShellState::expanded",
+        "HudCommandShellLayout bool trays"
+      ],
+      "replacement_symbols": [
+        "HudPanelState",
+        "ConstructionVisualRequests::footprint_tiles",
+        "TileReadabilityConfig"
+      ],
+      "affected_systems": [
+        "dock_shell",
+        "construction visual authority",
+        "TileDebugInstanceMap",
+        "map_camera",
+        "world_representation"
+      ],
+      "blockers": [],
+      "recommended_agent": "visual_aidv2_agent",
+      "do_not_touch": false
+    }
+  ],
+  "phases": {
+    "va0": "Applied",
+    "va1": "Applied",
+    "va2": "Applied",
+    "va3": "Applied",
+    "va4": "Partial",
+    "va5": "Partial",
+    "va6": "Partial"
+  }
+}

@@ -1,5 +1,6 @@
 //! Wave S — world persistence spine (manifest + incremental chunk saves).
 
+mod autosave;
 mod apply;
 mod async_io;
 mod dirty_queue;
@@ -9,7 +10,12 @@ mod manifest;
 mod pipeline;
 mod registry_snapshot;
 mod snapshot_builder;
+mod transport_overlay;
+mod wave_s_artifacts;
+mod wave_s_live_proof;
+mod wire_format;
 
+pub use autosave::{tick_world_save_autosave, WorldSaveAutosaveSettings};
 pub use apply::{apply_pending_save_pipeline_jobs, apply_saved_body_to_materialized_chunk};
 pub use async_io::{poll_save_io_completions, SaveIoCompletion, SaveIoDispatcher, SaveIoWorkOrder};
 pub use dirty_queue::{
@@ -31,13 +37,32 @@ pub use manifest::{
 };
 pub use pipeline::{
     build_incremental_save_manifest, chunk_artifact_path, collect_chunk_save_snapshots,
-    compress_payload, flush_dirty_chunk_save_queue, flush_dirty_chunk_save_queue_sync,
+    flush_dirty_chunk_save_queue, flush_dirty_chunk_save_queue_sync,
     stage_dirty_chunk_save_jobs, write_artifact_atomic, write_manifest_atomic,
     PendingSaveApplyQueue, SaveFlushRequested, SavePipelineJob, WorldSaveBundleSettings,
     WorldSaveSeed, WorldSaveSpinePlugin,
 };
 pub use registry_snapshot::{
     build_default_registry_snapshot_refs, write_registry_snapshot_artifacts,
+};
+pub use transport_overlay::{transport_overlay_ref, TRANSPORT_OVERLAY_NAME};
+pub use wave_s_artifacts::{
+    apply_wave_s_shell_capture_requests, apply_wave_s_shell_restore_requests,
+    hydrate_wave_s_artifacts_from_bundle, product_shell_bundle_exists, read_blueprint_presets,
+    read_product_shell_bundle, try_autoload_wave_s_on_bundle_dir, wave_s_autoload_shell_enabled,
+    write_blueprint_presets, write_product_shell_bundle, WaveSImportedBlueprints,
+    WaveSShellCapturePending, WaveSShellHydrateState, WaveSShellHydrateWitness,
+    WaveSShellRestorePending, WAVE_S_BLUEPRINT_PRESETS_REL_PATH, WAVE_S_PRODUCT_SHELL_REL_PATH,
+};
+pub use wave_s_live_proof::{
+    build_wave_s_hydrate_proof_payload, write_wave_s_hydrate_live_proof_system, WaveSLiveProofState,
+    WAVE_S_HYDRATE_JSON,
+};
+pub use wire_format::{
+    active_chunk_artifact_body_kind, active_save_payload_compression, active_save_wire_format,
+    compress_payload, decompress_payload, unwrap_chunk_artifact_body, wrap_chunk_artifact_body,
+    SaveArtifactBodyKind, SavePayloadCompression, SaveWireFormat, SAVE_ARTIFACT_ENVELOPE_VERSION,
+    SAVE_ARTIFACT_MAGIC, SAVE_BINARY_BULK_DEFERRED,
 };
 pub use snapshot_builder::{
     build_chunk_save_snapshot_input, build_saved_chunk_body, tag_names_from_set,
@@ -49,7 +74,30 @@ mod wave_s_governance {
     use super::*;
 
     #[test]
+    fn wave_s_chunk_artifact_envelope_wraps_ron_identity() {
+        let body = SavedChunkBody {
+            schema_version: SAVED_CHUNK_BODY_SCHEMA_VERSION,
+            chunk: [0, 0],
+            cells: vec![SavedTerrainCell {
+                material_name: "grass".into(),
+                tags: vec!["wet".into()],
+            }],
+        };
+        let encoded = encode_chunk_body_ron(&body).unwrap();
+        let wrapped = compress_payload(&encoded);
+        assert_eq!(&wrapped[..4], SAVE_ARTIFACT_MAGIC);
+        assert_eq!(active_save_payload_compression(), SavePayloadCompression::Identity);
+        assert_eq!(active_chunk_artifact_body_kind(), SaveArtifactBodyKind::RonChunkTextual);
+        let decoded = decode_chunk_body_ron(unwrap_chunk_artifact_body(&wrapped).unwrap()).unwrap();
+        assert_eq!(decoded, body);
+    }
+
+    #[test]
     fn wave_s_wire_format_uses_material_and_tag_names() {
+        use crate::io::save::active_save_wire_format;
+        use crate::io::save::SaveWireFormat;
+
+        assert_eq!(active_save_wire_format(), SaveWireFormat::RonTextual);
         let body = SavedChunkBody {
             schema_version: SAVED_CHUNK_BODY_SCHEMA_VERSION,
             chunk: [0, 0],

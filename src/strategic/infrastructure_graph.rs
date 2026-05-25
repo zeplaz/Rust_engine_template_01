@@ -119,13 +119,10 @@ pub fn sync_infrastructure_graph_from_logistics(
         });
     }
 
-    let mut transport_ids: Vec<TransportEdgeId> = directory.by_edge.keys().copied().collect();
-    transport_ids.sort_by_key(|k| k.0);
-
     let mut edges = Vec::with_capacity(logistics.edges.len());
-    for (i, e) in logistics.edges.iter().enumerate() {
+    for e in logistics.edges.iter() {
         let disruption = e.disruption.clamp(0.0, 1.0);
-        let linked = transport_ids.get(i).copied();
+        let linked = e.transport_edge;
         edges.push(InfrastructureEdge {
             from: e.from.0 as u64,
             to: e.to.0 as u64,
@@ -150,6 +147,95 @@ fn tile_chunk_coord(tx: u32, tz: u32, cells: UVec2) -> IVec2 {
     let sx = cells.x.max(1);
     let sy = cells.y.max(1);
     IVec2::new((tx / sx) as i32, (tz / sy) as i32)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::strategic::{
+        LogisticsEdge, LogisticsGraph, LogisticsNode, LogisticsNodeId, StrategicRasterConfig,
+    };
+    use crate::systems::transport::TransportEdgeId;
+
+    #[test]
+    fn infra_pairs_by_transport_edge_not_directory_iteration_order() {
+        use bevy::app::App;
+        use bevy::MinimalPlugins;
+
+        let te_a = TransportEdgeId(7);
+        let te_b = TransportEdgeId(3);
+        let logistics = LogisticsGraph {
+            revision: 1,
+            nodes: vec![
+                LogisticsNode {
+                    id: LogisticsNodeId(0),
+                    throughput: 1.0,
+                    stockpile: 0.0,
+                    anchor: None,
+                },
+                LogisticsNode {
+                    id: LogisticsNodeId(1),
+                    throughput: 1.0,
+                    stockpile: 0.0,
+                    anchor: None,
+                },
+            ],
+            edges: vec![
+                LogisticsEdge {
+                    from: LogisticsNodeId(0),
+                    to: LogisticsNodeId(1),
+                    transport_edge: Some(te_a),
+                    capacity: 2.0,
+                    disruption: 0.0,
+                    traversal_cost: 1.0,
+                },
+                LogisticsEdge {
+                    from: LogisticsNodeId(1),
+                    to: LogisticsNodeId(0),
+                    transport_edge: Some(te_b),
+                    capacity: 1.0,
+                    disruption: 0.1,
+                    traversal_cost: 1.2,
+                },
+            ],
+        };
+
+        let mut dir = TransportEdgeDirectory::default();
+        for (id, _cap) in [(te_b, 1.0f32), (te_a, 2.0f32)] {
+            dir.by_edge.insert(
+                id,
+                crate::systems::transport::TransportEdgeMeta {
+                    head_key: "t0_0".into(),
+                    tail_key: "t1_0".into(),
+                    profile: "road".into(),
+                    corridor_class: crate::systems::transport::CorridorClass::Road,
+                    allowed_agents: vec!["road_vehicle".into()],
+                    control_points: vec![],
+                },
+            );
+        }
+
+        let mut app = App::new();
+        app.add_plugins(MinimalPlugins);
+        app.insert_resource(logistics);
+        app.insert_resource(dir);
+        app.insert_resource(StrategicRasterConfig::default());
+        app.init_resource::<InfrastructureGraph>();
+        app.add_systems(Update, sync_infrastructure_graph_from_logistics);
+        app.update();
+
+        let infra = app.world().resource::<InfrastructureGraph>();
+        assert_eq!(infra.edges.len(), 2);
+        let linked: Vec<_> = infra
+            .edges
+            .iter()
+            .map(|e| (e.throughput, e.linked_transport_edge))
+            .collect();
+        assert!(linked.contains(&(2.0, Some(te_a))));
+        assert!(linked.contains(&(1.0, Some(te_b))));
+        crate::dev::logistics_throughput_todos::LOG_A_07_INFRA_PAIRING_TEST_PASSED
+            .store(true, std::sync::atomic::Ordering::Relaxed);
+    }
 }
 
 pub struct InfrastructureGraphBridgePlugin;

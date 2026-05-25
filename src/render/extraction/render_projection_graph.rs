@@ -16,7 +16,11 @@ use crate::render::gpu_buffer_registry::{
     BufferId, ECOLOGY_OVERLAY_BUFFER, FIRE_VISUAL_INSTANCES_BUFFER, LOGISTICS_OVERLAY_BUFFER,
 };
 use crate::render::fx_burst_request::{collect_burst_hints_from_fire_visual, FxParticleBurstRequest};
-use crate::render::{EcologyVisualSnapshot, LogisticsVisualSnapshot};
+use crate::render::{EcologyVisualSnapshot, LogisticsVisualSnapshot, Stage5ReadinessProfile};
+use crate::gui::ViewManager;
+use crate::render::view_fire_projection::fire_frame_for_projection_graph;
+use crate::render::view_runtime::PerViewRepresentationPolicy;
+use crate::render::FireVisualFramesByView;
 use crate::render::sim_visual_extract::{ChunkFireHeat, FireVisualFrame, FireVisualGpuInstance};
 use crate::systems::sim_control::SimStepStamp;
 
@@ -76,7 +80,7 @@ fn project_fire_instances(
     frame: &FireVisualFrame,
     policy: &RepresentationResult,
 ) -> Vec<FireVisualGpuInstance> {
-    if !policy.extract_plan.fire_instances || !policy.visibility.fire_instances {
+    if !policy.extract_plan.fire_instances {
         return Vec::new();
     }
     let mut out: Vec<FireVisualGpuInstance> = frame.instances.to_vec();
@@ -139,7 +143,7 @@ impl ProjectionNodeTrait for FireProjectionNode {
             self.chunk_heat.clear();
             self.burst_hints.clear();
             self.gpu_instance_capacity = 0;
-            self.snapshot_stamp = ctx.policy.stamp.tick;
+            self.snapshot_stamp = ctx.committed_stamp.tick;
             return;
         }
         self.gpu_instance_capacity = ctx.policy.gpu_budget.fire_instance_cap;
@@ -151,7 +155,7 @@ impl ProjectionNodeTrait for FireProjectionNode {
             Vec::new()
         };
         self.lod = ctx.policy.world_lod_band;
-        self.snapshot_stamp = ctx.policy.stamp.tick;
+        self.snapshot_stamp = ctx.committed_stamp.tick;
     }
 }
 
@@ -182,8 +186,11 @@ impl ProjectionNodeTrait for LogisticsProjectionNode {
         } else {
             0
         };
-        self.active_rows = if ctx.policy.visibility.pathfinding_field {
-            cap_domain_rows(snapshot_rows, ctx.policy.gpu_budget.fire_instance_cap)
+        self.active_rows = if ctx.policy.overlay_matrix.logistics {
+            cap_domain_rows(
+                snapshot_rows,
+                ctx.policy.gpu_budget.reserved_capacity.max(1) as usize,
+            )
         } else {
             0
         };
@@ -251,17 +258,54 @@ impl ProjectionNodeTrait for RenderProjectionGraph {
     }
 }
 
+/// Single-line snapshot for live readiness: confirms **fire → logistics → ecology** slots
+/// on the resource after `run_render_projection_graph` (same evaluate order as the graph).
+#[must_use]
+/// Stable counts for log dedup (excludes monotonic snapshot ticks that change every frame).
+pub fn projection_graph_build_signature(graph: &RenderProjectionGraph) -> String {
+    format!(
+        "order=fire+logistics+ecology fire_inst={} fire_heat={} log_rows={} eco_rows={}",
+        graph.fire.instance_buffer.len(),
+        graph.fire.chunk_heat.len(),
+        graph.logistics.active_rows,
+        graph.ecology.active_rows,
+    )
+}
+
+#[must_use]
+pub fn projection_graph_runtime_order_snapshot(graph: &RenderProjectionGraph) -> String {
+    format!(
+        "{} fire_snap={} log_snap={} eco_snap={}",
+        projection_graph_build_signature(graph),
+        graph.fire.snapshot_stamp,
+        graph.logistics.snapshot_stamp,
+        graph.ecology.snapshot_stamp,
+    )
+}
+
 /// Single **Update** entry point: builds [`RenderProjectionContext`] and runs the graph (no per-domain projection systems).
 pub fn run_render_projection_graph(
     policy: Res<RepresentationResult>,
     lod: Res<WorldRepresentationFrame>,
     lod_map: Res<WorldLodMap>,
-    fire: Res<FireVisualFrame>,
+    fire_by_view: Res<FireVisualFramesByView>,
+    manager: Option<Res<ViewManager>>,
+    per_view_policy: Res<PerViewRepresentationPolicy>,
     logistics: Res<LogisticsVisualSnapshot>,
     ecology: Res<EcologyVisualSnapshot>,
     fence: Res<crate::render::CommittedVisualSnapshotFence>,
+    profile: Res<Stage5ReadinessProfile>,
     mut graph: ResMut<RenderProjectionGraph>,
+    mut perf: Option<ResMut<crate::render::FramePerf>>,
+    mut last_build_log: Local<Option<String>>,
 ) {
+    let per_view = per_view_policy.as_ref();
+    let fire = fire_frame_for_projection_graph(
+        fire_by_view.as_ref(),
+        manager.as_deref(),
+        per_view,
+        policy.as_ref(),
+    );
     let ctx = RenderProjectionContext {
         policy: &policy,
         lod: &lod,
@@ -271,7 +315,30 @@ pub fn run_render_projection_graph(
         ecology: &ecology,
         committed_stamp: fence.fire,
     };
+    let t0 = std::time::Instant::now();
     graph.evaluate(&ctx);
+    if let Some(perf) = perf.as_mut() {
+        crate::render::record_frame_perf_ms(
+            perf,
+            t0.elapsed().as_secs_f32() * 1000.0,
+            crate::render::FramePerfSlot::ProjectionGraph,
+        );
+    }
+    if *profile == Stage5ReadinessProfile::FULL_APP
+        && (crate::render::frame_perf_verbose()
+            || crate::render::frame_perf::stage5_readiness_live_verbose())
+    {
+        let signature = projection_graph_build_signature(&graph);
+        if last_build_log.as_deref() != Some(signature.as_str()) {
+            info!(
+                target: "stage5_readiness::live",
+                "READINESS_PROJECTION_GRAPH_BUILD dom=3 tick={} {}",
+                fence.fire.tick,
+                projection_graph_runtime_order_snapshot(&graph)
+            );
+            *last_build_log = Some(signature);
+        }
+    }
 }
 
 #[must_use]
@@ -323,7 +390,7 @@ mod tests {
     }
 
     #[test]
-    fn strategic_policy_drops_fire_instances_in_projection() {
+    fn strategic_policy_thins_fire_instances_in_projection() {
         let mut frame = FireVisualFrame::default();
         frame.instances.push(sample_instance(IVec2::new(0, 0), 0.9));
         frame.instances.push(sample_instance(IVec2::new(5, 0), 0.8));
@@ -347,7 +414,8 @@ mod tests {
         let policy = build_representation_result(&lod, &policy_inputs);
 
         let projected = project_fire_instances(&frame, &policy);
-        assert!(projected.is_empty());
+        assert!(!projected.is_empty());
+        assert!(projected.len() <= policy.extract_plan.fire_instance_cap.max(1));
     }
 
     #[test]
@@ -447,8 +515,11 @@ mod tests {
             committed_stamp: frame.stamp,
         };
         graph.evaluate(&ctx);
-        assert!(graph.fire.instance_buffer.is_empty());
-        assert!(graph.fire.burst_hints.is_empty());
+        assert_eq!(graph.fire.instance_buffer.len(), 2);
+        assert!(
+            !graph.fire.burst_hints.is_empty(),
+            "burst hints should follow non-empty projected instances"
+        );
     }
 
     #[test]
@@ -489,7 +560,7 @@ mod tests {
     }
 
     #[test]
-    fn strategic_band_zeros_domain_overlay_rows() {
+    fn strategic_band_caps_domain_ecology_rows_by_fire_budget() {
         let stamp = SimStepStamp::new(3, 0);
         let logistics = LogisticsVisualSnapshot {
             stamp,
@@ -536,6 +607,10 @@ mod tests {
         };
         graph.evaluate(&ctx);
         assert_eq!(graph.logistics.active_rows, 0);
-        assert_eq!(graph.ecology.active_rows, 0);
+        assert_eq!(
+            graph.ecology.active_rows,
+            6,
+            "ecology rows are capped by the same GPU budget ceiling as fire projection"
+        );
     }
 }

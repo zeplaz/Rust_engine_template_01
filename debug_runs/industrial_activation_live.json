@@ -1,0 +1,216 @@
+{
+  "_agent_meta": {
+    "agent_commands": [
+      "cargo test -p proc_A_dine01 economy:: --lib"
+    ],
+    "docs": {
+      "compile_warnings": "src/dev/COMPILE_WARNINGS_TODOS.md",
+      "stage5_directive": "prompts/guides/stage5_convergence_directive_v1.md",
+      "viewport_recovery": "src/dev/recovery_viewport.md"
+    },
+    "logging_env": {
+      "ORCHESTRATOR_EXPORT_HEALTH": false,
+      "PERF": false,
+      "RUST_LOG": null,
+      "SIM_VIEW_SYNC_DEBUG": false,
+      "STAGE5_READINESS_VERBOSE": false,
+      "STAGE5_VERBOSE": false,
+      "VIEWPORT_AUTHORITY_DEBUG": false
+    },
+    "orchestrator": {
+      "build_report": "tools/orchestrator/reports/build_report.md",
+      "ci_entry": "tools/orchestrator/ci/run.ps1",
+      "continuation_queue": "tools/orchestrator/queues/continuation_queue.json",
+      "warning_registry": "tools/orchestrator/reports/warning_registry.md"
+    },
+    "profile": "INDUSTRIAL_ACTIVATION",
+    "related_proofs": [
+      "debug_runs/stage5_full_app_live.json",
+      "debug_runs/infrastructure_view_isolation_live.json",
+      "debug_runs/construction_stage_live.json",
+      "debug_runs/industrial_activation_live.json",
+      "debug_runs/fire_ecology_live.json",
+      "debug_runs/logistics_throughput_live.json",
+      "debug_runs/replay_editor_parity_live.json",
+      "debug_runs/orchestrator_thread_health.json",
+      "debug_runs/viewport_drift.json",
+      "debug_runs/viewport_authority_migration_witness.json",
+      "debug_runs/main_thread_orchestrator_live.json",
+      "debug_runs/stage6_virtualization_live.json",
+      "debug_runs/wave_s_hydrate_live.json",
+      "debug_runs/wave_p_live.json",
+      "debug_runs/wave_c_live.json",
+      "debug_runs/ui_shell_migration_live.json",
+      "debug_runs/minimap_compositor_live.json"
+    ],
+    "relative_path": "debug_runs/industrial_activation_live.json",
+    "schema": "debug_run_envelope_v1",
+    "source_system": "industrial_activation_live_proof",
+    "written_at_epoch_secs": 1779646427
+  },
+  "activation_green": true,
+  "board": [
+    {
+      "id": "INDUSTRIAL-I1-01",
+      "status": "Done"
+    },
+    {
+      "id": "INDUSTRIAL-I1-02",
+      "status": "Done"
+    },
+    {
+      "id": "INDUSTRIAL-I1-03",
+      "status": "Done"
+    },
+    {
+      "id": "INDUSTRIAL-I1-04",
+      "status": "Done"
+    },
+    {
+      "id": "INDUSTRIAL-I1-05",
+      "status": "Done"
+    },
+    {
+      "id": "INDUSTRIAL-I1-06",
+      "status": "Done"
+    },
+    {
+      "id": "INDUSTRIAL-SC-01",
+      "status": "Done"
+    },
+    {
+      "id": "INDUSTRIAL-SC-02",
+      "status": "Done"
+    },
+    {
+      "id": "INDUSTRIAL-SC-03",
+      "status": "Done"
+    },
+    {
+      "id": "INDUSTRIAL-SC-04",
+      "status": "Done"
+    },
+    {
+      "id": "INDUSTRIAL-SC-05",
+      "status": "Done"
+    },
+    {
+      "id": "INDUSTRIAL-SC-06",
+      "status": "Done"
+    },
+    {
+      "id": "INDUSTRIAL-SC-07",
+      "status": "Done"
+    },
+    {
+      "id": "INDUSTRIAL-SC-08",
+      "status": "Done"
+    },
+    {
+      "id": "INDUSTRIAL-I2-01",
+      "status": "Done"
+    },
+    {
+      "id": "INDUSTRIAL-I2-02",
+      "status": "Done"
+    },
+    {
+      "id": "INDUSTRIAL-I2-03",
+      "status": "Done"
+    },
+    {
+      "id": "INDUSTRIAL-I2-04",
+      "status": "Done"
+    },
+    {
+      "id": "INDUSTRIAL-I2-05",
+      "status": "Done"
+    },
+    {
+      "id": "INDUSTRIAL-I2-06",
+      "status": "Done"
+    },
+    {
+      "id": "INDUSTRIAL-I2-07",
+      "status": "Done"
+    },
+    {
+      "id": "INDUSTRIAL-I3-01",
+      "status": "Done"
+    },
+    {
+      "id": "INDUSTRIAL-I3-02",
+      "status": "Done"
+    },
+    {
+      "id": "INDUSTRIAL-I3-03",
+      "status": "Done"
+    },
+    {
+      "id": "INDUSTRIAL-I3-04",
+      "status": "Done"
+    },
+    {
+      "id": "INDUSTRIAL-I3-05",
+      "status": "Done"
+    },
+    {
+      "id": "INDUSTRIAL-I4-01",
+      "status": "Done"
+    },
+    {
+      "id": "INDUSTRIAL-I4-02",
+      "status": "Done"
+    },
+    {
+      "id": "INDUSTRIAL-I4-03",
+      "status": "Done"
+    },
+    {
+      "id": "INDUSTRIAL-I4-04",
+      "status": "Done"
+    },
+    {
+      "id": "INDUSTRIAL-GOV-01",
+      "status": "Done"
+    }
+  ],
+  "concrete_chain_e2e": {
+    "activated_kiln": 1,
+    "activated_mine": 1,
+    "activated_mixer": 1,
+    "chain_id": "concrete_portland",
+    "chain_operational": true,
+    "flow_edges": 2,
+    "ind_e02_green": true,
+    "operational_kiln": 1,
+    "operational_mine": 1,
+    "operational_mixer": 1,
+    "placed_via_construction": true,
+    "production_green": true,
+    "production_ticks": 30,
+    "sites_committed": 3
+  },
+  "governance_violation_count": 0,
+  "open_todos": 0,
+  "profile": "INDUSTRIAL_ACTIVATION",
+  "spatial_district": {
+    "clustered_hosts": 0,
+    "dominant_load_ratio": 0.0,
+    "host_count": 0
+  },
+  "todo_total": 31,
+  "witness": {
+    "activation_system": true,
+    "catalog_id_on_commit": true,
+    "no_mega_factory_collapse": true,
+    "proof_json": true,
+    "register_node_on_activate": true,
+    "resource_flow_node": true,
+    "role_based_activation": true,
+    "supply_chain_catalog_complete": true,
+    "supply_chain_index": true,
+    "transformer_activation": true,
+    "transformer_catalog": true
+  }
+}

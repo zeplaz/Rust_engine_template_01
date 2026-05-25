@@ -1,0 +1,231 @@
+{
+  "timestamp_unix_ms": 1778798808194,
+  "frame_index": 354,
+  "sim_step_stamp": {
+    "tick": 355,
+    "sim_time_micros": 27431869
+  },
+  "camera_truth": [
+    {
+      "entity": 4294967273,
+      "camera_type": "main_world",
+      "priority": 0,
+      "active": true,
+      "projection": "orthographic",
+      "viewport_logical": {
+        "min_x": 0.0,
+        "min_y": 0.0,
+        "max_x": 1280.0,
+        "max_y": 720.0,
+        "width": 1280.0,
+        "height": 720.0
+      },
+      "viewport_physical": {
+        "min_x": 0.0,
+        "min_y": 0.0,
+        "max_x": 1280.0,
+        "max_y": 720.0,
+        "width": 1280.0,
+        "height": 720.0
+      },
+      "render_target": "screen"
+    }
+  ],
+  "viewport_ui_layout_truth": {
+    "egui": {
+      "world_preview_window": {
+        "min_x": 16.28125,
+        "min_y": 16.28125,
+        "max_x": 664.28125,
+        "max_y": 529.28125,
+        "width": 648.0,
+        "height": 513.0
+      },
+      "minimap_image": null,
+      "world_preview_viewport": {
+        "min_x": 287.84375,
+        "min_y": 143.375,
+        "max_x": 660.28125,
+        "max_y": 505.28125,
+        "width": 372.4375,
+        "height": 361.90625
+      },
+      "hud_shell_root": {
+        "min_x": 576.0,
+        "min_y": 94.0,
+        "max_x": 1274.0,
+        "max_y": 222.0,
+        "width": 698.0,
+        "height": 128.0
+      },
+      "minimap_window": {
+        "min_x": 11.625,
+        "min_y": 11.625,
+        "max_x": 424.71875,
+        "max_y": 385.875,
+        "width": 413.09375,
+        "height": 374.25
+      }
+    },
+    "computed_viewport_per_camera": {
+      "4294967273": {
+        "min_x": 0.0,
+        "min_y": 0.0,
+        "max_x": 1280.0,
+        "max_y": 720.0,
+        "width": 1280.0,
+        "height": 720.0
+      }
+    },
+    "egui_vs_gpu_viewport_mismatch": {}
+  },
+  "world_screen_projection_state": {
+    "camera_translation": {
+      "x": 160.0,
+      "y": 160.0
+    },
+    "camera_rotation_deg_z": 0.0,
+    "camera_zoom_scale": 2.1,
+    "visible_world_bounds": {
+      "min_x": -480.0,
+      "min_y": -200.0,
+      "max_x": 800.0,
+      "max_y": 520.0,
+      "width": 1280.0,
+      "height": 720.0
+    },
+    "map_display_rect": {
+      "min_x": 326.8625,
+      "min_y": 177.12813,
+      "max_x": 621.26245,
+      "max_y": 471.52814,
+      "width": 294.39996,
+      "height": 294.40002
+    },
+    "map_texture_uv_rect": {
+      "min_x": 0.0,
+      "min_y": 0.0,
+      "max_x": 1.0,
+      "max_y": 1.0,
+      "width": 1.0,
+      "height": 1.0
+    },
+    "world_origin_screen": {
+      "x": 563.8095,
+      "y": 436.1905
+    },
+    "world_origin_screen_sanity_ok": true
+  },
+  "particle_system_audit": [
+    {
+      "source": "fire_visual_frame",
+      "active_count": 0,
+      "coordinate_space": "world",
+      "camera_binding": 4294967273,
+      "inside_main_frustum": null,
+      "outside_main_frustum": null,
+      "bounds_world": null
+    },
+    {
+      "source": "sim_fire_emitter_extract",
+      "active_count": 0,
+      "coordinate_space": "world",
+      "camera_binding": 4294967273,
+      "inside_main_frustum": null,
+      "outside_main_frustum": null,
+      "bounds_world": null
+    },
+    {
+      "source": "world_fire_particle_frame",
+      "active_count": 0,
+      "coordinate_space": "world",
+      "camera_binding": 4294967273,
+      "inside_main_frustum": 0,
+      "outside_main_frustum": 0,
+      "bounds_world": null
+    }
+  ],
+  "render_pipeline_paths": [
+    {
+      "pass": "world_main_pass",
+      "active": true,
+      "gpu_path": true,
+      "cpu_path": true,
+      "fallback_active": true,
+      "notes": "MainWorldCamera + tile fallback sprite"
+    },
+    {
+      "pass": "preview_pass",
+      "active": true,
+      "gpu_path": true,
+      "cpu_path": false,
+      "fallback_active": false,
+      "notes": "authority=GpuRenderTarget mode=GpuRenderTarget"
+    },
+    {
+      "pass": "minimap_pass",
+      "active": true,
+      "gpu_path": false,
+      "cpu_path": true,
+      "fallback_active": true,
+      "notes": "source=CpuRaster presentation=SharedCpuRaster rev=25"
+    }
+  ],
+  "texture_gpu_state": [
+    {
+      "name": "world_preview_front",
+      "width": 320,
+      "height": 320,
+      "revision": 0,
+      "last_update_frame": 354,
+      "stale": true
+    },
+    {
+      "name": "world_preview_gpu_target",
+      "width": 512,
+      "height": 512,
+      "revision": 354,
+      "last_update_frame": 354,
+      "stale": true
+    },
+    {
+      "name": "minimap_fallback_raster",
+      "width": 320,
+      "height": 320,
+      "revision": 25,
+      "last_update_frame": 354,
+      "stale": false
+    },
+    {
+      "name": "shared_overlay_fields",
+      "width": 0,
+      "height": 0,
+      "revision": 0,
+      "last_update_frame": 354,
+      "stale": false
+    }
+  ],
+  "input_camera_feedback_loop": {
+    "map_camera_desired": {
+      "translation": {
+        "x": 160.0,
+        "y": 160.0
+      },
+      "scale": 2.1,
+      "rotation_deg_z": 0.0
+    },
+    "map_camera_desired_changed_this_frame": false,
+    "main_camera_transform_changed_this_frame": true,
+    "ui_updates_camera_this_frame": false,
+    "camera_updates_ui_this_frame": false,
+    "follow_mode": "Free"
+  },
+  "anomaly_flags": {
+    "viewport_zero_size_detected": false,
+    "camera_count_gt_one_world_camera": false,
+    "particle_screen_space_detected": false,
+    "render_target_mismatch": true,
+    "egui_rect_ne_viewport_rect": false,
+    "stale_texture_usage": true
+  }
+}

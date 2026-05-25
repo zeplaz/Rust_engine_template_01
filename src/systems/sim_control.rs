@@ -9,6 +9,7 @@
 //! [`SimControlSystemSet::AdvanceSimTick`] (see `TransportSimulationPlugin`).
 
 use bevy::prelude::*;
+use serde::{Deserialize, Serialize};
 
 use crate::gui::InputBindings;
 
@@ -60,7 +61,7 @@ pub struct SimTick(pub u64);
 pub struct SimTimeMicros(pub u64);
 
 /// Phase **E1** cadence identity for render/compute snapshots (`base_visual_dev01_plan_status` § `phase-e-cadence-scale`).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Default)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Default, Serialize, Deserialize)]
 pub struct SimStepStamp {
     pub tick: u64,
     pub sim_time_micros: u64,
@@ -119,7 +120,7 @@ fn keyboard_toggle_pause(
     }
 }
 
-fn advance_sim_tick(
+pub(crate) fn advance_sim_tick(
     time: Res<Time>,
     mut tick: ResMut<SimTick>,
     mut sim_time: ResMut<SimTimeMicros>,

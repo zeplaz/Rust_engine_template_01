@@ -1,0 +1,7 @@
+{
+  "artifact_path": "product_shell.ron",
+  "profile": "WAVE_S_SHELL_ROUNDTRIP",
+  "ron_body": "(schema_version:1,layout:(schema_version:1,widgets:[]),minimap_bookmarks:(schema_version:1,bookmarks:[]),overlay_presets:(schema_version:1,presets:[]),blueprint_preset_ref:None)",
+  "roundtrip_ok": true,
+  "schema_version": 1
+}

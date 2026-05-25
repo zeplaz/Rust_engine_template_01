@@ -2,6 +2,7 @@
 name = "proc_A_dine01"
 version = "0.1.1"
 edition = "2021"
+default-run = "proc_A_dine01"
 build = "build.rs"
 
 [lib]
@@ -24,6 +25,8 @@ research_lmodels = [
 bevy_tilemap_adapter = ["dep:bevy_ecs_tilemap"]
 # U7: rule-trace component + materialize tracing (no extra deps).
 dev_tools = []
+# Optional detached native minimap host (consumer-only; **BQ-131**).
+hud_native_minimap_window = []
 # `legacy_io_templates` removed 2026-04-26: src/io/templates.rs retired.
 
 [package.metadata.'cargo-features']
@@ -38,11 +41,12 @@ reqwest = { version = "0.11", features = ["json"] }
 
 # --- Bevy and UI (Bevy 0.18 line) ---
 # Pin companions from https://github.com/vladbat00/bevy_egui compatibility table at lock time.
-bevy = { version = "0.18", features = ["serialize"] }
+bevy = { version = "0.18", features = ["serialize", "bevy_gizmos", "bevy_gizmos_render"] }
 # PNG + GIF for gameplay capture (match `bevy_egui` → `arboard` → image 0.24 line).
 image = { version = "0.24", default-features = false, features = ["png", "gif"] }
 bevy_egui = "0.39"
 bitflags = "2"
+rustc-hash = "2.1"
 bytemuck = { version = "1.14", features = ["derive"] }
 smallvec = "1.13"
 clap = { version = "4", features = ["derive"] }
@@ -75,3 +79,7 @@ linfa-kernel = { version = "0.8.1", optional = true, default-features = false }
 
 [profile.dev.package."*"]
 opt-level = 3
+
+[lints.clippy]
+too_many_arguments = "allow"
+empty_line_after_outer_attr = "warn"

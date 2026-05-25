@@ -1,0 +1,19 @@
+(
+  schema_version: 1,
+  texture: "textures/ui/icon_atlas_phase4_v1.png",
+  cell_size: (32, 32),
+  atlas_size: (256, 128),
+  icons: {
+    "RD": (col: 0, row: 0),
+    "RL": (col: 1, row: 0),
+    "UT": (col: 2, row: 0),
+    "IN": (col: 3, row: 0),
+    "CV": (col: 4, row: 0),
+    "UT_TX": (col: 0, row: 1),
+    "UT_MG": (col: 1, row: 1),
+    "TRUCK": (col: 0, row: 2),
+    "URAL": (col: 1, row: 2),
+    "BUS": (col: 2, row: 2),
+    "P5_BR": (col: 0, row: 3),
+  },
+)

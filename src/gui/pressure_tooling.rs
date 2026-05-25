@@ -16,7 +16,7 @@ use bevy_egui::{egui, EguiContexts, EguiPrimaryContextPass};
 use crate::gui::input_bindings::InputBindings;
 use crate::gui::style::{
     muted_label, primary_label, section_heading, v_space, weak_body, CmdHeadingStyle, UiPalette,
-    VertSpace,
+    VertSpace, widget_scroll_vertical_capped, widget_scroll_vertical_fill,
 };
 use crate::gui::ui_gates::in_simulation_or_editor;
 use crate::strategic::{
@@ -304,7 +304,8 @@ fn pressure_composer_egui_system(
             ui.selectable_value(&mut state.tab, Log, "Event log");
         });
         ui.separator();
-
+        let body_height = ui.available_height();
+        widget_scroll_vertical_fill("pressure_composer_body_scroll", body_height).show(ui, |ui| {
         match state.tab {
             PressureComposerTab::World => {
                 section_heading(ui, &palette, CmdHeadingStyle::Gt, "World inspector");
@@ -319,7 +320,7 @@ fn pressure_composer_egui_system(
                 ui.add(egui::Slider::new(&mut pressure_field.instability, 0.0..=1.0).text("instability"));
                 ui.add(egui::Slider::new(&mut pressure_field.cohesion_drift, 0.0..=1.0).text("cohesion_drift"));
                 muted_label(ui, &palette, "Regional heat (sparse overlay):");
-                egui::ScrollArea::vertical().max_height(160.0).show(ui, |ui| {
+                widget_scroll_vertical_capped("pressure_regional_heat_scroll", 160.0).show(ui, |ui| {
                     let mut ids: Vec<u32> = regional.by_region_id.keys().copied().collect();
                     ids.sort_unstable();
                     for id in ids.iter().take(48) {
@@ -358,7 +359,7 @@ fn pressure_composer_egui_system(
             }
             PressureComposerTab::Agent => {
                 section_heading(ui, &palette, CmdHeadingStyle::Gt, "Agent trait inspector");
-                egui::ScrollArea::vertical().max_height(420.0).show(ui, |ui| {
+                widget_scroll_vertical_capped("pressure_agent_traits_scroll", 420.0).show(ui, |ui| {
                     for (e, agent, script) in agents.iter() {
                         let fac = links
                             .iter()
@@ -570,7 +571,7 @@ fn pressure_composer_egui_system(
                         fracture.mean_heuristic, fracture.max_heuristic
                     ),
                 );
-                egui::ScrollArea::vertical().max_height(480.0).show(ui, |ui| {
+                widget_scroll_vertical_capped("pressure_graph_scroll", 480.0).show(ui, |ui| {
                     primary_label(
                         ui,
                         &palette,
@@ -594,11 +595,12 @@ fn pressure_composer_egui_system(
             }
             PressureComposerTab::Log => {
                 section_heading(ui, &palette, CmdHeadingStyle::Gt, "Emergence event log");
-                egui::ScrollArea::vertical().max_height(520.0).show(ui, |ui| {
+                widget_scroll_vertical_capped("pressure_event_log_scroll", 520.0).show(ui, |ui| {
                     ui.monospace(log.tail_joined(120));
                 });
             }
         }
+        });
     });
 
     Ok(())

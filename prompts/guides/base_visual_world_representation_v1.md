@@ -1,7 +1,8 @@
 # World representation & GPU spine — strict execution order (v1)
 
 **Status:** architecture lock-in for `base_visual_dev01` visual program.  
-**Companion:** [`base_visual_dev01_plan_status.md`](base_visual_dev01_plan_status.md) (cards + tables).
+**Companion:** [`base_visual_dev01_plan_status.md`](base_visual_dev01_plan_status.md) (cards + tables).  
+**Governance:** [`stage5_convergence_directive_v1.md`](stage5_convergence_directive_v1.md) — convergent growth; Stage 5 primary lane, not feature freeze.
 
 This document overrides **only** the sequencing among **theme-3**, **phase-e (E1)**, **VT-4**, **phase-d**, and **phase-f** when they conflict with older “suggestive” tracker ordering. Meta items (`meta-no-temp-side-paths`, `meta-schedule-contracts`, …) may still run in parallel where they do not violate the invariants below.
 

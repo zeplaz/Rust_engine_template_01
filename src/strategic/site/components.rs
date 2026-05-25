@@ -162,6 +162,7 @@ pub struct PlannedSite {
     pub footprint: FootprintTiles,
     pub archetype: SiteArchetype,
     pub layer: LayerType,
+    pub catalog_id: Option<String>,
 }
 
 #[derive(Component, Debug, Clone, Copy)]

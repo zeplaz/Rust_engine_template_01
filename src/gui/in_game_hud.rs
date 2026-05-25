@@ -7,22 +7,29 @@ use std::collections::HashMap;
 
 use bevy::prelude::*;
 use bevy::ui::FocusPolicy;
-use bevy::ui::{ComputedNode, UiGlobalTransform, UiSystems};
+use bevy::ui::{ComputedNode, Display, UiGlobalTransform, UiSystems};
 use bevy::window::PrimaryWindow;
 
 use crate::engine::BaseState;
-use crate::systems::sim_control::{SimControlState, SimTick};
 use crate::strategic::{
-    ActiveMissions, CityPlanningHints, FractureProbabilityOverlay, LogisticsAiRuntime,
-    NarrativeObservationBus, OperationalTheaterSummary, StrategicOverlayDisplayPolicy,
-    MAX_STRATEGIC_FACTION_SLOTS,
+    ActiveMissions, CityPlanningHints, LogisticsAiRuntime, NarrativeObservationBus,
+    OperationalTheaterSummary, StrategicOverlayDisplayPolicy, MAX_STRATEGIC_FACTION_SLOTS,
 };
-use crate::gui::build::{
-    BuildGhostState, BuildOverlayVisibility, BuildPlacementPreview, BuildStripState, ToolContext,
-};
+use crate::construction::ToolContext;
 use crate::gui::hud::{
     update_developmental_cause_strip_system, update_developmental_context_strip_system,
-    DevelopmentalCauseStripLine, DevelopmentalCauseStripRoot, DevelopmentalContextStripLine,
+    tool_context_uses_icon_atlas, BuildRailRoot, BuildRailToolIcon, BuildRailToolLabel,
+    BuildRailToolSlot, ContextTrayBodyLine, ContextTrayBodyRoot,
+    ContextTrayRoot, ContextTrayTab, ContextTrayTabButton, ContextTrayTabLabel, IconId,
+    LogisticsVehicleChip, LogisticsVehicleChipIcon, LogisticsVehicleChipLabel,
+    LogisticsVehicleChipRow, PetroleumPanelTabIcon, PetroleumPanelTabLabel, PetroleumPanelTabRoot,
+    DevelopmentalCauseStripLine,
+    DevelopmentalCauseStripRoot, DevelopmentalContextStripLine, MapViewportFrameInset,
+    MinimapChromeRoot, MinimapGpuImageNode, OpsStripAlertBadge, OpsStripAlertBadgeText,
+    OpsStripAlerts, OpsStripIntel, OpsStripPower, OpsStripTime, OpsStripTrayAffordance,
+    OpsStripWeather, OpsStripZone, SimulationShellPhase2Plugin, BUILD_RAIL_W_PX,
+    COMMAND_LEFT_STACK_COLUMN_GAP_PX, CONTEXT_RAIL_W_PX, LEFT_CONTEXT_STACK_BODY_W_PX,
+    CONTEXT_TRAY_BODY_H_PX, CONTEXT_TRAY_TAB_H_PX, OPS_STRIP_TOP_OFFSET_PX, MAP_FRAME_INSET_PX,
 };
 use crate::gui::ui_gates::in_simulation_or_editor;
 
@@ -34,12 +41,6 @@ use crate::entities::production::core::{
 
 use super::input_bindings::InputBindings;
 use super::logistics_focus::{HudAggregateSettings, HudLogisticsFocus};
-use super::map_camera::{MapCameraDesired, MapCameraMode, MapCameraSettings};
-use super::representation_policy::RepresentationResult;
-use super::view_representation::{camera_owner_label, ActiveCameraOwner, CameraOwner, CameraVisualState};
-use super::world_representation::{WorldLodBand, WorldRepresentationFrame};
-use crate::render::stage5_readiness_passes;
-use crate::render::GpuRepresentationMetrics;
 use super::{CmdUiMonoFont, UiPalette};
 
 #[derive(Component)]
@@ -58,24 +59,6 @@ struct StrategicOpsHudLine;
 #[derive(Component)]
 pub struct OperationsStripRoot;
 
-#[derive(Component)]
-struct OpsStripTime;
-
-#[derive(Component)]
-struct OpsStripAlerts;
-
-#[derive(Component)]
-struct OpsStripIntelRoutes;
-
-#[derive(Component)]
-struct OpsStripMapCam;
-
-#[derive(Component)]
-struct OpsStripBuild;
-
-#[derive(Component)]
-struct OpsStripIntelEw;
-
 /// **Simulation** Bevy UI chrome: operations strip + left context column (`base_ui_direction_principls.md`).
 #[derive(Component)]
 pub struct SimulationCommandShellRoot;
@@ -84,6 +67,10 @@ pub struct SimulationCommandShellRoot;
 #[derive(Component)]
 pub struct SimulationMapViewportFill;
 
+/// Left command stack — **overlays** the map hole (does not shrink [`SimulationMapViewportFill`]).
+#[derive(Component)]
+struct CommandLeftStackOverlay;
+
 #[derive(Component)]
 struct LeftContextRail;
 
@@ -91,17 +78,32 @@ struct LeftContextRail;
 struct LeftContextStackBody;
 
 #[derive(Component)]
+struct LeftContextStackCollapse;
+
+#[derive(Component)]
 struct ObjectivesHudLine;
 
 #[derive(Component)]
 struct SimulationNarrativeFeedLine;
 
-const LEFT_CONTEXT_RAIL_W_PX: f32 = 36.0;
+pub(crate) const LEFT_CONTEXT_RAIL_W_PX: f32 = CONTEXT_RAIL_W_PX;
+/// Bottom context tray must not cover the fixed build rail column.
+pub(crate) const CONTEXT_TRAY_LEFT_INSET_PX: f32 =
+    LEFT_CONTEXT_RAIL_W_PX + COMMAND_LEFT_STACK_COLUMN_GAP_PX + BUILD_RAIL_W_PX;
+/// Fixed width for the expanded left command stack (prevents flex from squeezing `sim_map_fill`).
+pub(crate) const LEFT_CONTEXT_STACK_W_PX: f32 = LEFT_CONTEXT_STACK_BODY_W_PX;
 
 /// Collapse state for the left command stack (`toggle_command_left_stack` / rail button).
-#[derive(Resource, Clone, Copy, Debug, Default)]
+#[derive(Resource, Clone, Copy, Debug)]
 pub struct CommandLeftStackState {
     pub collapsed: bool,
+}
+
+impl Default for CommandLeftStackState {
+    fn default() -> Self {
+        // Bevy left stack is narrative-only; construction uses resizable egui `build_toolbox`.
+        Self { collapsed: true }
+    }
 }
 const OPS_STRIP_H_PX: f32 = 38.0;
 const OPS_STRIP_MONO_PT: f32 = 13.0;
@@ -112,7 +114,27 @@ const DEV_CONTEXT_MONO_PT: f32 = 11.5;
 const DEV_CAUSE_STRIP_H_PX: f32 = 22.0;
 const HUD_MONO_PT: f32 = 13.5;
 
-/// Logical (**window cursor**) AABB of the map viewport (`SimulationMapViewportFill`), updated after UI stack.
+/// Fixed chrome above the simulation map fill node (logical px).
+pub const SIMULATION_MAP_VIEWPORT_TOP_CHROME_PX: f32 = OPS_STRIP_TOP_OFFSET_PX
+    + OPS_STRIP_H_PX
+    + DEV_CONTEXT_STRIP_H_PX
+    + DEV_CAUSE_STRIP_H_PX;
+/// `center_row` padding (must match spawn — used for rescue-floor math).
+pub(crate) const CENTER_ROW_EDGE_PAD_PX: f32 = 8.0;
+#[inline]
+#[must_use]
+pub fn simulation_map_fallback_logical_extent(window: Vec2) -> Vec2 {
+    Vec2::new(
+        window.x.max(crate::gui::hud::VIEWPORT_SIM_MAP_SAFE_MIN_W),
+        window.y.max(crate::gui::hud::VIEWPORT_SIM_MAP_SAFE_MIN_H),
+    )
+}
+
+/// Presentation copy of [`crate::gui::AuthoritativeViewport`] (logical window coords).
+///
+/// Dimensions always match authoritative; `valid` is true only when the hole latch is settled
+/// (pointer hit-test / build overlays). Camera scissor and [`crate::render::ResolvedViewports`]
+/// use [`Self::is_adequate_for_camera`] (dimensions only — not gated on `valid`).
 #[derive(Resource, Clone, Copy, Debug, Default)]
 pub struct SimulationMapViewport {
     pub valid: bool,
@@ -120,7 +142,52 @@ pub struct SimulationMapViewport {
     pub max: Vec2,
 }
 
+/// Per-frame diagnostics for [`sync_simulation_map_viewport_system`] (`SIM_VIEW_SYNC_DEBUG`).
+#[derive(Resource, Clone, Copy, Debug, Default)]
+pub struct SimulationMapViewportTrace {
+    pub measured_valid: bool,
+    pub measured_size: Vec2,
+    pub committed_from_stable_hold: bool,
+    pub committed_size: Vec2,
+    pub settle_streak: u8,
+    pub layout_settled: bool,
+}
+
+/// Stable/pending hole internals for [`crate::render::visual_diagnostics`].
+#[derive(Resource, Clone, Copy, Debug, Default)]
+pub struct SimulationMapViewportDebug {
+    pub frozen: bool,
+    pub pending_min: Vec2,
+    pub pending_max: Vec2,
+    pub pending_wh: Vec2,
+    /// Last raw UI measure before commit (for overlay / authority trace).
+    pub measured_valid: bool,
+    pub measured_min: Vec2,
+    pub measured_max: Vec2,
+    /// Floor-stabilized semantic authority (`commit_authority_from_semantic`; sim_map_fill only).
+    pub solver_valid: bool,
+    pub solver_min: Vec2,
+    pub solver_max: Vec2,
+    /// Last hole-latch branch ([`crate::gui::authoritative_viewport::advance_simulation_map_hole_latch`]).
+    pub last_commit: &'static str,
+}
+
 impl SimulationMapViewport {
+    /// Logical hole size in window coordinates.
+    #[inline]
+    #[must_use]
+    pub fn logical_size(self) -> Vec2 {
+        (self.max - self.min).max(Vec2::ZERO)
+    }
+
+    /// Large enough for map camera scissor + orthographic fit (matches [`ViewportRectSanity`]).
+    /// Does **not** require [`Self::valid`] — render must not wait on hole latch settle.
+    #[inline]
+    #[must_use]
+    pub fn is_adequate_for_camera(self) -> bool {
+        crate::gui::authoritative_viewport::simulation_map_viewport_adequate_dims(self.min, self.max)
+    }
+
     /// `cursor` from [`Window::cursor_position`] (logical px).
     #[inline]
     #[must_use]
@@ -139,19 +206,43 @@ pub struct StrategicHudStripState {
     pub compact: bool,
 }
 
+/// PostUpdate ordering: measure Bevy UI map hole before camera scissor + ortho fit.
+#[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
+pub enum SimulationViewportSyncSet {
+    MeasureUiHole,
+    ApplyCameraScissor,
+}
+
 pub struct InGameHudPlugin;
 
 impl Plugin for InGameHudPlugin {
     fn build(&self, app: &mut App) {
+        app.configure_sets(
+            PostUpdate,
+            (
+                SimulationViewportSyncSet::MeasureUiHole,
+                SimulationViewportSyncSet::ApplyCameraScissor,
+            )
+                .chain(),
+        );
         app.init_resource::<HudLogisticsFocus>()
             .init_resource::<HudAggregateSettings>()
             .init_resource::<StrategicHudStripState>()
             .init_resource::<CommandLeftStackState>()
+            .init_resource::<crate::gui::AuthoritativeViewport>()
             .init_resource::<SimulationMapViewport>()
-            .add_systems(OnEnter(BaseState::Simulation), spawn_simulation_command_shell)
-            .add_systems(
-                OnExit(BaseState::Simulation),
-                despawn_simulation_command_shell,
+            .init_resource::<crate::gui::viewport_layout_solver::SemanticViewportRect>()
+            .init_resource::<SimulationMapViewportTrace>()
+            .init_resource::<SimulationMapViewportDebug>()
+            .init_resource::<crate::gui::SimulationMapViewportHoleLatch>()
+            .init_resource::<crate::gui::hud::ViewportRectSanity>()
+            .add_plugins(crate::gui::hud::ViewportIntegrityAssertPlugin)
+            .add_plugins(SimulationShellPhase2Plugin);
+        register_sim_command_shell_lifecycle(app);
+        app.add_systems(
+                Update,
+                reset_simulation_map_viewport_on_left_stack_toggle
+                    .run_if(in_simulation_or_editor),
             )
             .add_systems(
                 Update,
@@ -159,22 +250,11 @@ impl Plugin for InGameHudPlugin {
                     strategic_hud_chrome_input,
                     sync_command_left_stack_visibility,
                     command_left_stack_rail_interaction,
+                    left_context_stack_collapse_interaction,
                     attach_storage_picking_hooks,
                     cycle_logistics_focus_dev,
                 )
                     .run_if(in_simulation_or_editor),
-            )
-            .add_systems(
-                Update,
-                update_operations_strip.run_if(in_simulation_or_editor),
-            )
-            .add_systems(
-                Update,
-                update_ops_strip_build_line.run_if(in_simulation_or_editor),
-            )
-            .add_systems(
-                Update,
-                update_ops_strip_map_camera_line.run_if(in_simulation_or_editor),
             )
             .add_systems(
                 Update,
@@ -202,48 +282,119 @@ impl Plugin for InGameHudPlugin {
             )
             .add_systems(
                 PostUpdate,
-                sync_simulation_map_viewport_system
+                (
+                    sync_simulation_map_viewport_system,
+                    crate::render::view_runtime::commit_simulation_map_hole_to_authority,
+                )
+                    .chain()
                     .run_if(in_simulation_or_editor)
-                    .after(UiSystems::Stack),
+                    .after(UiSystems::Stack)
+                    .in_set(SimulationViewportSyncSet::MeasureUiHole),
             );
     }
 }
 
-fn sync_simulation_map_viewport_system(
+/// Sim Bevy shell lifecycle — **Simulation only** (never `AppState::WorldGen`; see `world_gen_chrome_contract`).
+fn register_sim_command_shell_lifecycle(app: &mut App) {
+    app.add_systems(OnEnter(BaseState::Simulation), spawn_simulation_command_shell)
+        .add_systems(
+            OnExit(BaseState::Simulation),
+            despawn_simulation_command_shell,
+        );
+}
+
+/// Left-stack show/hide changes flex width — reset settle so the map hole can be re-measured.
+fn reset_simulation_map_viewport_on_left_stack_toggle(
+    state: Res<CommandLeftStackState>,
+    mut latch: ResMut<crate::gui::SimulationMapViewportHoleLatch>,
+    mut last: Local<Option<bool>>,
+) {
+    let collapsed = state.collapsed;
+    if last.map_or(false, |p| p != collapsed) {
+        latch.reset_for_layout_change();
+    }
+    *last = Some(collapsed);
+}
+
+pub fn sync_simulation_map_viewport_system(
     q: Query<(&ComputedNode, &UiGlobalTransform), With<SimulationMapViewportFill>>,
+    mut authority: ResMut<crate::gui::AuthoritativeViewport>,
     mut out: ResMut<SimulationMapViewport>,
+    mut semantic: ResMut<crate::gui::viewport_layout_solver::SemanticViewportRect>,
+    mut trace: ResMut<SimulationMapViewportTrace>,
+    mut sim_dbg: ResMut<SimulationMapViewportDebug>,
+    mut latch: ResMut<crate::gui::SimulationMapViewportHoleLatch>,
+    mut cam_latch: ResMut<crate::gui::MainWorldCameraViewportLatch>,
     win: Query<&Window, With<PrimaryWindow>>,
+    mut sanity: ResMut<crate::gui::hud::ViewportRectSanity>,
+    mut generation: Local<u64>,
 ) {
     let Ok(w) = win.single() else {
         out.valid = false;
+        latch.hole_ready = false;
+        latch.settle_streak = 0;
         return;
     };
+    if w.width() < 32.0 || w.height() < 32.0 {
+        out.valid = false;
+        return;
+    }
     let scale = w.scale_factor().max(1e-6);
     let Ok((node, xf)) = q.single() else {
         out.valid = false;
         return;
     };
-    if node.is_empty() {
-        out.valid = false;
-        return;
+    let window_logical = Vec2::new(w.width(), w.height());
+    if latch.last_window_logical != Vec2::ZERO
+        && (window_logical - latch.last_window_logical).length_squared() > 4.0
+    {
+        latch.reset_for_layout_change();
+        cam_latch.using_hole = false;
+        cam_latch.valid_streak = 0;
+        cam_latch.invalid_streak = 0;
     }
-    let half = node.size() * 0.5;
-    let corners = [
-        Vec2::new(-half.x, -half.y),
-        Vec2::new(half.x, -half.y),
-        Vec2::new(half.x, half.y),
-        Vec2::new(-half.x, half.y),
-    ];
-    let mut pmin = Vec2::splat(f32::INFINITY);
-    let mut pmax = Vec2::splat(f32::NEG_INFINITY);
-    for c in corners {
-        let p = (*xf) * c;
-        pmin = pmin.min(p);
-        pmax = pmax.max(p);
+    let mut measured = crate::gui::authoritative_viewport::measure_sim_map_fill_viewport(
+        node,
+        xf,
+        scale,
+        window_logical,
+        sanity.as_mut(),
+    );
+
+    if crate::gui::hud::ui_layout_tree_debug_enabled() {
+        let (raw_min, raw_max) =
+            crate::gui::authoritative_viewport::measure_sim_map_fill_corners_crosscheck(
+                node, xf, scale,
+            );
+        let (cmin, cmax) = crate::gui::authoritative_viewport::clamp_simulation_map_aabb_to_window(
+            raw_min,
+            raw_max,
+            window_logical,
+        );
+        let d = (cmax - cmin) - (measured.max - measured.min);
+        if d.length() > 1.0 {
+            warn!(
+                target: "viewport_authority::measure",
+                ?d,
+                "ComputedNode center vs corner AABB mismatch"
+            );
+        }
     }
-    out.min = pmin / scale;
-    out.max = pmax / scale;
-    out.valid = true;
+
+    *generation = generation.wrapping_add(1);
+    measured.generation = *generation;
+
+    crate::gui::authoritative_viewport::publish_simulation_map_viewport(
+        &mut measured,
+        semantic.as_mut(),
+        latch.as_mut(),
+        out.as_mut(),
+        trace.as_mut(),
+        sim_dbg.as_mut(),
+        window_logical,
+        *generation,
+    );
+    *authority = measured;
 }
 
 fn despawn_simulation_command_shell(
@@ -271,7 +422,7 @@ fn spawn_simulation_command_shell(
     let tf_hud = |size: f32| TextFont::from_font_size(size).with_font(font.clone());
 
     let tools = format!(
-        "Tools — Options/keys {} · Diagnostics {} · Pressure {} · Faction {} · Logistics list {} · Cycle focus {} · World gen {} · Agent perms {} · Scenario (editor) {} · Collapse left stack {}.",
+        "Tools — Options/keys {} · Diagnostics {} · Pressure {} · Faction {} · Logistics list {} · Cycle focus {} · World gen {} · Agent perms {} · Collapse left stack {}.",
         InputBindings::format_key(bindings.toggle_keybindings_options),
         InputBindings::format_key(bindings.toggle_diagnostics),
         InputBindings::format_key(bindings.toggle_pressure_composer),
@@ -280,7 +431,6 @@ fn spawn_simulation_command_shell(
         InputBindings::format_key(bindings.cycle_logistics_focus),
         InputBindings::format_key(bindings.toggle_world_generator),
         InputBindings::format_key(bindings.toggle_agent_permissions),
-        InputBindings::format_key(bindings.toggle_scenario_script_panel),
         InputBindings::format_key(bindings.toggle_command_left_stack),
     );
 
@@ -295,7 +445,10 @@ fn spawn_simulation_command_shell(
         InputBindings::format_key(bindings.toggle_command_left_stack),
     );
 
-    let construction = "Construction — map buildings/rails in the Editor (terrain/road tools + bake). In-sim **planning strip**: cycle build mode with `;` (Options → Key bindings); ops strip shows BUILD line; ghost placement / commit wiring continues in P2-F.";
+    let construction = format!(
+        "Construction — left **Construction** toolbox (Residential / Roads / Rail / Mock shapes / …). Tile info labels {}. Optional: cycle tools with `;`. Shift+click queues blueprint; roads use segment draft until spline path.",
+        InputBindings::format_key(bindings.toggle_construction_tile_labels),
+    );
 
     let strip_border = BorderColor {
         left: Color::NONE,
@@ -312,94 +465,200 @@ fn spawn_simulation_command_shell(
                 top: Val::Px(0.0),
                 width: Val::Percent(100.0),
                 height: Val::Percent(100.0),
-                flex_direction: FlexDirection::Column,
-                align_items: AlignItems::Stretch,
                 ..default()
             },
             FocusPolicy::Pass,
             Pickable::IGNORE,
             ZIndex(750),
             SimulationCommandShellRoot,
+            crate::gui::hud::DebugLayoutTag("hud_root"),
+            Name::new("hud_root"),
         ))
         .with_children(|shell| {
             shell
                 .spawn((
                     Node {
+                        position_type: PositionType::Absolute,
+                        left: Val::Px(0.0),
+                        top: Val::Px(OPS_STRIP_TOP_OFFSET_PX),
                         width: Val::Percent(100.0),
                         height: Val::Px(OPS_STRIP_H_PX),
+                        min_height: Val::Px(OPS_STRIP_H_PX),
+                        max_height: Val::Px(OPS_STRIP_H_PX),
                         padding: UiRect::axes(Val::Px(10.0), Val::Px(6.0)),
                         flex_direction: FlexDirection::Row,
                         align_items: AlignItems::Center,
                         column_gap: Val::Px(14.0),
                         border: UiRect::bottom(Val::Px(1.0)),
                         border_radius: BorderRadius::ZERO,
+                        overflow: Overflow::clip(),
                         ..default()
                     },
-                    BackgroundColor(palette.bevy_hud_panel_fill()),
+                    BackgroundColor(palette.bevy_paper_fill()),
                     strip_border,
                     ZIndex(1200),
                     OperationsStripRoot,
                 ))
                 .with_children(|parent| {
-                    parent.spawn((
-                        Text::new("> TIME  …"),
-                        TextFont::from_font_size(fs).with_font(font.clone()),
-                        TextColor(palette.bevy_primary_text()),
-                        OpsStripTime,
-                    ));
                     parent
                         .spawn((
+                            Button,
                             Node {
-                                flex_grow: 1.0,
-                                min_width: Val::Px(120.0),
-                                justify_content: JustifyContent::Center,
+                                padding: UiRect::axes(Val::Px(6.0), Val::Px(3.0)),
                                 ..default()
                             },
+                            BackgroundColor(palette.bevy_paper_fill()),
+                            BorderColor::all(palette.bevy_border_subtle()),
+                            OpsStripZone::Time,
+                        ))
+                        .with_children(|z| {
+                            z.spawn((
+                                Text::new("T+00000  RUN    v=1.0x"),
+                                TextFont::from_font_size(fs).with_font(font.clone()),
+                                TextColor(palette.bevy_fg_data()),
+                                OpsStripTime,
+                            ));
+                        });
+                    parent
+                        .spawn((
+                            Button,
+                            Node {
+                                flex_grow: 1.0,
+                                min_width: Val::Px(100.0),
+                                justify_content: JustifyContent::Center,
+                                align_items: AlignItems::Center,
+                                column_gap: Val::Px(6.0),
+                                padding: UiRect::axes(Val::Px(4.0), Val::Px(2.0)),
+                                ..default()
+                            },
+                            BackgroundColor(Color::NONE),
+                            BorderColor::all(palette.bevy_border_subtle()),
+                            OpsStripZone::Alerts,
                         ))
                         .with_children(|c| {
                             c.spawn((
-                                Text::new("ALERTS  —"),
+                                Node {
+                                    width: Val::Px(22.0),
+                                    height: Val::Px(22.0),
+                                    justify_content: JustifyContent::Center,
+                                    align_items: AlignItems::Center,
+                                    border: UiRect::all(Val::Px(1.0)),
+                                    ..default()
+                                },
+                                BackgroundColor(palette.bevy_paper_fill()),
+                                BorderColor::all(palette.bevy_wire_magenta()),
+                                OpsStripAlertBadge,
+                            ))
+                            .with_children(|b| {
+                                b.spawn((
+                                    Text::new("◆0"),
+                                    TextFont::from_font_size(9.0).with_font(font.clone()),
+                                    TextColor(palette.bevy_fg_data()),
+                                    OpsStripAlertBadgeText,
+                                ));
+                            });
+                            c.spawn((
+                                Text::new("ALERTS  0"),
                                 TextFont::from_font_size(fs).with_font(font.clone()),
                                 TextColor(palette.bevy_text_muted()),
                                 OpsStripAlerts,
                             ));
                         });
-                    parent.spawn((
-                        Text::new("ROUTES —"),
-                        TextFont::from_font_size(fs).with_font(font.clone()),
-                        TextColor(palette.bevy_secondary_text()),
-                        OpsStripIntelRoutes,
-                    ));
-                    parent.spawn((
-                        Text::new("MAP —"),
-                        TextFont::from_font_size(fs).with_font(font.clone()),
-                        TextColor(palette.bevy_secondary_text()),
-                        OpsStripMapCam,
-                    ));
-                    parent.spawn((
-                        Text::new("BUILD —"),
-                        TextFont::from_font_size(fs).with_font(font.clone()),
-                        TextColor(palette.bevy_secondary_text()),
-                        OpsStripBuild,
-                    ));
-                    parent.spawn((
-                        Text::new("EW/DENY —"),
-                        TextFont::from_font_size(fs).with_font(font.clone()),
-                        TextColor(palette.bevy_secondary_text()),
-                        OpsStripIntelEw,
-                    ));
+                    parent
+                        .spawn((
+                            Button,
+                            Node {
+                                padding: UiRect::axes(Val::Px(4.0), Val::Px(2.0)),
+                                ..default()
+                            },
+                            BackgroundColor(Color::NONE),
+                            BorderColor::all(palette.bevy_border_subtle()),
+                            OpsStripZone::Intel,
+                        ))
+                        .with_children(|z| {
+                            z.spawn((
+                                Text::new("INTEL  —"),
+                                TextFont::from_font_size(fs).with_font(font.clone()),
+                                TextColor(palette.bevy_secondary_text()),
+                                OpsStripIntel,
+                            ));
+                        });
+                    parent
+                        .spawn((
+                            Button,
+                            Node {
+                                padding: UiRect::axes(Val::Px(4.0), Val::Px(2.0)),
+                                ..default()
+                            },
+                            BackgroundColor(Color::NONE),
+                            BorderColor::all(palette.bevy_border_subtle()),
+                            OpsStripZone::Weather,
+                        ))
+                        .with_children(|z| {
+                            z.spawn((
+                                Text::new("WX  —"),
+                                TextFont::from_font_size(fs).with_font(font.clone()),
+                                TextColor(palette.bevy_secondary_text()),
+                                OpsStripWeather,
+                            ));
+                        });
+                    parent
+                        .spawn((
+                            Button,
+                            Node {
+                                padding: UiRect::axes(Val::Px(4.0), Val::Px(2.0)),
+                                ..default()
+                            },
+                            BackgroundColor(Color::NONE),
+                            BorderColor::all(palette.bevy_border_subtle()),
+                            OpsStripZone::Power,
+                        ))
+                        .with_children(|z| {
+                            z.spawn((
+                                Text::new("PWR  —"),
+                                TextFont::from_font_size(fs).with_font(font.clone()),
+                                TextColor(palette.bevy_secondary_text()),
+                                OpsStripPower,
+                            ));
+                        });
+                    parent
+                        .spawn((
+                            Button,
+                            Node {
+                                padding: UiRect::axes(Val::Px(6.0), Val::Px(2.0)),
+                                margin: UiRect::left(Val::Px(4.0)),
+                                ..default()
+                            },
+                            BackgroundColor(Color::NONE),
+                            BorderColor::all(palette.bevy_border_subtle()),
+                            OpsStripZone::TrayAffordance,
+                        ))
+                        .with_children(|z| {
+                            z.spawn((
+                                Text::new("▼ TRAY"),
+                                TextFont::from_font_size(11.0).with_font(font.clone()),
+                                TextColor(palette.bevy_accent_terminal()),
+                                OpsStripTrayAffordance,
+                            ));
+                        });
                 });
 
             shell
                 .spawn((
                     Node {
+                        position_type: PositionType::Absolute,
+                        left: Val::Px(0.0),
+                        top: Val::Px(OPS_STRIP_TOP_OFFSET_PX + OPS_STRIP_H_PX),
                         width: Val::Percent(100.0),
                         height: Val::Px(DEV_CONTEXT_STRIP_H_PX),
+                        min_height: Val::Px(DEV_CONTEXT_STRIP_H_PX),
+                        max_height: Val::Px(DEV_CONTEXT_STRIP_H_PX),
                         padding: UiRect::axes(Val::Px(10.0), Val::Px(4.0)),
                         flex_direction: FlexDirection::Row,
                         align_items: AlignItems::Center,
                         border: UiRect::bottom(Val::Px(1.0)),
                         border_radius: BorderRadius::ZERO,
+                        overflow: Overflow::clip(),
                         ..default()
                     },
                     BackgroundColor(palette.bevy_hud_panel_fill()),
@@ -420,13 +679,19 @@ fn spawn_simulation_command_shell(
             shell
                 .spawn((
                     Node {
+                        position_type: PositionType::Absolute,
+                        left: Val::Px(0.0),
+                        top: Val::Px(OPS_STRIP_TOP_OFFSET_PX + OPS_STRIP_H_PX + DEV_CONTEXT_STRIP_H_PX),
                         width: Val::Percent(100.0),
                         height: Val::Px(DEV_CAUSE_STRIP_H_PX),
+                        min_height: Val::Px(DEV_CAUSE_STRIP_H_PX),
+                        max_height: Val::Px(DEV_CAUSE_STRIP_H_PX),
                         padding: UiRect::axes(Val::Px(10.0), Val::Px(3.0)),
                         flex_direction: FlexDirection::Row,
                         align_items: AlignItems::Center,
                         border: UiRect::bottom(Val::Px(1.0)),
                         border_radius: BorderRadius::ZERO,
+                        overflow: Overflow::clip(),
                         ..default()
                     },
                     BackgroundColor(palette.bevy_hud_panel_fill()),
@@ -446,523 +711,473 @@ fn spawn_simulation_command_shell(
                     ));
                 });
 
+            // Full-window map hole; ops/context/cause strips and left stack draw above (higher Z).
             shell
                 .spawn((
                     Node {
-                        width: Val::Percent(100.0),
-                        flex_grow: 1.0,
-                        min_height: Val::Px(0.0),
-                        flex_direction: FlexDirection::Row,
-                        align_items: AlignItems::FlexStart,
-                        padding: UiRect::new(
-                            Val::Px(8.0),
-                            Val::Px(6.0),
-                            Val::Px(8.0),
-                            Val::Px(8.0),
-                        ),
-                        column_gap: Val::Px(6.0),
+                        position_type: PositionType::Absolute,
+                        left: Val::Px(0.0),
+                        right: Val::Px(0.0),
+                        top: Val::Px(0.0),
+                        bottom: Val::Px(0.0),
+                        overflow: Overflow::clip(),
                         ..default()
                     },
                     Pickable::IGNORE,
                     FocusPolicy::Pass,
+                    ZIndex(100),
+                    crate::gui::hud::DebugLayoutTag("center_row"),
+                    Name::new("center_row"),
                 ))
                 .with_children(|row| {
                     row.spawn((
                         Node {
-                            flex_direction: FlexDirection::Row,
-                            align_items: AlignItems::FlexStart,
-                            column_gap: Val::Px(6.0),
-                            ..default()
-                        },
-                        Pickable::IGNORE,
-                        FocusPolicy::Pass,
-                    ))
-                    .with_children(|left_pack| {
-                        left_pack
-                            .spawn((
-                                Button,
-                                Node {
-                                    width: Val::Px(LEFT_CONTEXT_RAIL_W_PX),
-                                    min_height: Val::Px(120.0),
-                                    padding: UiRect::all(Val::Px(4.0)),
-                                    justify_content: JustifyContent::Center,
-                                    align_items: AlignItems::Center,
-                                    border: UiRect::all(Val::Px(1.0)),
-                                    border_radius: BorderRadius::ZERO,
-                                    ..default()
-                                },
-                                BackgroundColor(palette.bevy_hud_panel_fill()),
-                                BorderColor::all(palette.bevy_wire_magenta()),
-                                Visibility::Hidden,
-                                LeftContextRail,
-                                ZIndex(850),
-                            ))
-                            .with_children(|b| {
-                                b.spawn((
-                                    Text::new("«\nH\nU\nD"),
-                                    tf_hud(11.0),
-                                    TextColor(palette.bevy_accent_terminal()),
-                                ));
-                            });
-
-                        left_pack
-                            .spawn((
-                                Node {
-                                    padding: UiRect::all(Val::Px(10.0)),
-                                    flex_direction: FlexDirection::Column,
-                                    row_gap: Val::Px(8.0),
-                                    max_width: Val::Px(520.0),
-                                    border: UiRect::all(Val::Px(1.0)),
-                                    border_radius: BorderRadius::ZERO,
-                                    ..default()
-                                },
-                                BackgroundColor(palette.bevy_hud_panel_fill()),
-                                BorderColor::all(palette.bevy_wire_magenta()),
-                                Visibility::Visible,
-                                ZIndex(800),
-                                LeftContextStackBody,
-                                HudRoot,
-                            ))
-                            .with_children(|parent| {
-                                parent.spawn((
-                                    Text::new("> Alerts & objectives — …"),
-                                    tf_hud(HUD_MONO_PT),
-                                    TextColor(palette.bevy_accent_terminal()),
-                                    ObjectivesHudLine,
-                                ));
-                                parent.spawn((
-                                    Text::new("Strategic — theater / logistics AI (initializing…)"),
-                                    tf_hud(HUD_MONO_PT),
-                                    TextColor(palette.bevy_secondary_text()),
-                                    StrategicOpsHudLine,
-                                ));
-                                parent.spawn((
-                                    Text::new("STORY — …"),
-                                    tf_hud(HUD_MONO_PT),
-                                    TextColor(palette.bevy_accent_terminal()),
-                                    SimulationNarrativeFeedLine,
-                                ));
-                                parent.spawn((
-                                    Text::new(tools),
-                                    tf_hud(HUD_MONO_PT),
-                                    TextColor(palette.bevy_text_muted()),
-                                ));
-                                parent.spawn((
-                                    Text::new(hint),
-                                    tf_hud(HUD_MONO_PT),
-                                    TextColor(palette.bevy_secondary_text()),
-                                ));
-                                parent.spawn((
-                                    Text::new("Site logistics — …"),
-                                    tf_hud(HUD_MONO_PT),
-                                    TextColor(palette.bevy_primary_text()),
-                                    ResourceDisplay,
-                                ));
-                                parent.spawn((
-                                    Text::new(construction),
-                                    tf_hud(HUD_MONO_PT),
-                                    TextColor(palette.bevy_text_muted()),
-                                ));
-                                parent.spawn((
-                                    Text::new("Threat & drone-adjacent readouts: see Diagnostics theater block and the strategic summary line below (not a separate F-key panel yet)."),
-                                    tf_hud(HUD_MONO_PT),
-                                    TextColor(palette.bevy_text_muted()),
-                                ));
-                                parent.spawn((
-                                    Text::new("World gen / Editor: F8 opens generator; map editor palettes are in-editor egui."),
-                                    tf_hud(HUD_MONO_PT),
-                                    TextColor(palette.bevy_text_muted()),
-                                ));
-                            });
-                    });
-
-                    row.spawn((
-                        Node {
-                            flex_grow: 1.0,
-                            min_width: Val::Px(0.0),
-                            min_height: Val::Px(1.0),
+                            width: Val::Percent(100.0),
+                            height: Val::Percent(100.0),
+                            min_width: Val::Px(crate::gui::hud::VIEWPORT_SIM_MAP_LAYOUT_MIN_W),
+                            min_height: Val::Px(crate::gui::hud::VIEWPORT_SIM_MAP_LAYOUT_MIN_H),
+                            overflow: Overflow::clip(),
                             ..default()
                         },
                         Pickable::IGNORE,
                         FocusPolicy::Pass,
                         SimulationMapViewportFill,
+                        crate::gui::hud::DebugLayoutTag("sim_map_fill"),
+                        Name::new("sim_map_fill"),
+                    ))
+                    .with_children(|inset| {
+                        inset.spawn((
+                            Node {
+                                position_type: PositionType::Absolute,
+                                left: Val::Px(MAP_FRAME_INSET_PX),
+                                right: Val::Px(MAP_FRAME_INSET_PX),
+                                top: Val::Px(MAP_FRAME_INSET_PX),
+                                bottom: Val::Px(MAP_FRAME_INSET_PX),
+                                border: UiRect::all(Val::Px(1.0)),
+                                ..default()
+                            },
+                            Pickable::IGNORE,
+                            FocusPolicy::Pass,
+                            BorderColor::all(palette.bevy_wire_magenta().with_alpha(0.45)),
+                            MapViewportFrameInset,
+                            Name::new("map_viewport_frame_inset"),
+                        ));
+                    });
+                });
+
+            // Left stack overlays the map — does not participate in viewport measure.
+            shell
+                .spawn((
+                    Node {
+                        position_type: PositionType::Absolute,
+                        left: Val::Px(CENTER_ROW_EDGE_PAD_PX),
+                        top: Val::Px(SIMULATION_MAP_VIEWPORT_TOP_CHROME_PX),
+                        bottom: Val::Px(CENTER_ROW_EDGE_PAD_PX),
+                        flex_direction: FlexDirection::Row,
+                        align_items: AlignItems::Stretch,
+                        column_gap: Val::Px(COMMAND_LEFT_STACK_COLUMN_GAP_PX),
+                        overflow: Overflow::clip(),
+                        ..default()
+                    },
+                    FocusPolicy::Pass,
+                    ZIndex(900),
+                    CommandLeftStackOverlay,
+                    crate::gui::hud::DebugLayoutTag("left_stack_overlay"),
+                    Name::new("left_stack_overlay"),
+                ))
+                .with_children(|left_pack| {
+                    left_pack
+                        .spawn((
+                            Button,
+                            Node {
+                                width: Val::Px(LEFT_CONTEXT_RAIL_W_PX),
+                                min_height: Val::Px(120.0),
+                                padding: UiRect::all(Val::Px(4.0)),
+                                flex_direction: FlexDirection::Column,
+                                row_gap: Val::Px(4.0),
+                                justify_content: JustifyContent::FlexStart,
+                                align_items: AlignItems::Center,
+                                border: UiRect::all(Val::Px(1.0)),
+                                border_radius: BorderRadius::ZERO,
+                                ..default()
+                            },
+                            BackgroundColor(palette.bevy_hud_panel_fill()),
+                            BorderColor::all(palette.bevy_wire_magenta()),
+                            Visibility::Hidden,
+                            LeftContextRail,
+                        ))
+                        .with_children(|rail| {
+                            for icon in ["⏱", "⛭", "◎", "☰"] {
+                                rail.spawn((
+                                    Text::new(icon),
+                                    TextFont::from_font_size(14.0).with_font(font.clone()),
+                                    TextColor(palette.bevy_text_muted()),
+                                ));
+                            }
+                        });
+
+                    left_pack
+                        .spawn((
+                            Node {
+                                width: Val::Px(BUILD_RAIL_W_PX),
+                                height: Val::Percent(100.0),
+                                flex_direction: FlexDirection::Column,
+                                row_gap: Val::Px(4.0),
+                                padding: UiRect::all(Val::Px(4.0)),
+                                ..default()
+                            },
+                            ZIndex(920),
+                            BuildRailRoot,
+                            Name::new("build_rail"),
+                        ))
+                        .with_children(|rail| {
+                            for tool in [
+                                ToolContext::Roads,
+                                ToolContext::Rail,
+                                ToolContext::Utilities,
+                                ToolContext::Military,
+                                ToolContext::Industry,
+                                ToolContext::Ecology,
+                                ToolContext::Civil,
+                            ] {
+                                rail.spawn((
+                                    Button,
+                                    Node {
+                                        width: Val::Percent(100.0),
+                                        min_height: Val::Px(32.0),
+                                        padding: UiRect::axes(Val::Px(4.0), Val::Px(3.0)),
+                                        flex_direction: FlexDirection::Column,
+                                        align_items: AlignItems::Center,
+                                        justify_content: JustifyContent::Center,
+                                        border: UiRect::all(Val::Px(1.0)),
+                                        ..default()
+                                    },
+                                    BackgroundColor(palette.bevy_hud_panel_fill()),
+                                    BorderColor::all(palette.bevy_border_subtle()),
+                                    BuildRailToolSlot(tool),
+                                ))
+                                .with_children(|b| {
+                                    if tool_context_uses_icon_atlas(tool) {
+                                        b.spawn((
+                                            Node {
+                                                width: Val::Px(32.0),
+                                                height: Val::Px(32.0),
+                                                ..default()
+                                            },
+                                            BuildRailToolIcon,
+                                            bevy::ui::widget::ImageNode::default(),
+                                            Visibility::Hidden,
+                                        ));
+                                    }
+                                    b.spawn((
+                                        Text::new(tool.label()),
+                                        TextFont::from_font_size(10.0).with_font(font.clone()),
+                                        TextColor(palette.bevy_text_muted()),
+                                        BuildRailToolLabel,
+                                    ));
+                                });
+                            }
+                        });
+
+                    left_pack
+                        .spawn((
+                            Node {
+                                width: Val::Px(LEFT_CONTEXT_STACK_W_PX),
+                                height: Val::Percent(100.0),
+                                max_height: Val::Percent(100.0),
+                                flex_shrink: 0.0,
+                                padding: UiRect::all(Val::Px(10.0)),
+                                flex_direction: FlexDirection::Column,
+                                row_gap: Val::Px(8.0),
+                                border: UiRect::all(Val::Px(1.0)),
+                                border_radius: BorderRadius::ZERO,
+                                overflow: Overflow::clip(),
+                                ..default()
+                            },
+                            BackgroundColor(palette.bevy_hud_panel_fill()),
+                            BorderColor::all(palette.bevy_wire_magenta()),
+                            Visibility::Visible,
+                            ZIndex(910),
+                            LeftContextStackBody,
+                        ))
+                        .with_children(|parent| {
+                            parent
+                                .spawn((
+                                    Button,
+                                    Node {
+                                        align_self: AlignSelf::FlexEnd,
+                                        padding: UiRect::axes(Val::Px(6.0), Val::Px(2.0)),
+                                        ..default()
+                                    },
+                                    BackgroundColor(palette.bevy_hud_panel_fill()),
+                                    BorderColor::all(palette.bevy_border_subtle()),
+                                    LeftContextStackCollapse,
+                                ))
+                                .with_children(|b| {
+                                    b.spawn((
+                                        Text::new("◀"),
+                                        TextFont::from_font_size(12.0).with_font(font.clone()),
+                                        TextColor(palette.bevy_text_muted()),
+                                    ));
+                                });
+                            parent.spawn((
+                                Text::new("> Alerts & objectives — …"),
+                                tf_hud(HUD_MONO_PT),
+                                TextColor(palette.bevy_accent_terminal()),
+                                ObjectivesHudLine,
+                            ));
+                            parent.spawn((
+                                Text::new("Strategic — theater / logistics AI (initializing…)"),
+                                tf_hud(HUD_MONO_PT),
+                                TextColor(palette.bevy_secondary_text()),
+                                StrategicOpsHudLine,
+                            ));
+                            parent.spawn((
+                                Text::new("STORY — …"),
+                                tf_hud(HUD_MONO_PT),
+                                TextColor(palette.bevy_accent_terminal()),
+                                SimulationNarrativeFeedLine,
+                            ));
+                            parent.spawn((
+                                Text::new(tools),
+                                tf_hud(HUD_MONO_PT),
+                                TextColor(palette.bevy_text_muted()),
+                            ));
+                            parent.spawn((
+                                Text::new(hint),
+                                tf_hud(HUD_MONO_PT),
+                                TextColor(palette.bevy_secondary_text()),
+                            ));
+                            parent.spawn((
+                                Text::new("Site logistics — …"),
+                                tf_hud(HUD_MONO_PT),
+                                TextColor(palette.bevy_primary_text()),
+                                ResourceDisplay,
+                            ));
+                            parent.spawn((
+                                Text::new(construction),
+                                tf_hud(HUD_MONO_PT),
+                                TextColor(palette.bevy_text_muted()),
+                            ));
+                            parent.spawn((
+                                Text::new("Threat & drone-adjacent readouts: see Diagnostics theater block and the strategic summary line below (not a separate F-key panel yet)."),
+                                tf_hud(HUD_MONO_PT),
+                                TextColor(palette.bevy_text_muted()),
+                            ));
+                            parent.spawn((
+                                Text::new("World gen / Editor: F8 opens generator; map editor palettes are in-editor egui."),
+                                tf_hud(HUD_MONO_PT),
+                                TextColor(palette.bevy_text_muted()),
+                            ));
+                        });
+                });
+
+            shell
+                .spawn((
+                    Node {
+                        position_type: PositionType::Absolute,
+                        left: Val::Px(0.0),
+                        top: Val::Px(0.0),
+                        width: Val::Px(260.0),
+                        height: Val::Px(220.0),
+                        border: UiRect::all(Val::Px(1.0)),
+                        ..default()
+                    },
+                    Pickable::IGNORE,
+                    FocusPolicy::Pass,
+                    Visibility::Hidden,
+                    BorderColor::all(palette.bevy_wire_magenta().with_alpha(0.75)),
+                    BackgroundColor(Color::NONE),
+                    ZIndex(850),
+                    MinimapChromeRoot,
+                    Name::new("minimap_chrome_root"),
+                ))
+                .with_children(|gpu| {
+                    gpu.spawn((
+                        Node {
+                            width: Val::Percent(100.0),
+                            height: Val::Percent(100.0),
+                            ..default()
+                        },
+                        Visibility::Hidden,
+                        MinimapGpuImageNode,
+                        bevy::ui::widget::ImageNode::from(Handle::<Image>::default()),
                     ));
                 });
+
+            shell
+                .spawn((
+                    Node {
+                        position_type: PositionType::Absolute,
+                        left: Val::Px(CONTEXT_TRAY_LEFT_INSET_PX),
+                        right: Val::Px(0.0),
+                        bottom: Val::Px(0.0),
+                        height: Val::Px(CONTEXT_TRAY_TAB_H_PX),
+                        min_height: Val::Px(CONTEXT_TRAY_TAB_H_PX),
+                        flex_direction: FlexDirection::Column,
+                        ..default()
+                    },
+                    Visibility::Hidden,
+                    ZIndex(1100),
+                    ContextTrayRoot,
+                    Name::new("context_tray_root"),
+                ))
+                .with_children(|tray| {
+                    tray.spawn((
+                        Node {
+                            width: Val::Percent(100.0),
+                            height: Val::Px(CONTEXT_TRAY_TAB_H_PX),
+                            flex_direction: FlexDirection::Row,
+                            align_items: AlignItems::Center,
+                            column_gap: Val::Px(4.0),
+                            padding: UiRect::axes(Val::Px(8.0), Val::Px(4.0)),
+                            border: UiRect::top(Val::Px(1.0)),
+                            ..default()
+                        },
+                        BackgroundColor(palette.bevy_hud_panel_fill()),
+                        BorderColor {
+                            top: palette.bevy_wire_magenta(),
+                            ..BorderColor::all(Color::NONE)
+                        },
+                    ))
+                    .with_children(|tabs| {
+                        for tab in [
+                            ContextTrayTab::Alerts,
+                            ContextTrayTab::Intel,
+                            ContextTrayTab::Logistics,
+                            ContextTrayTab::Diagnostics,
+                        ] {
+                            tabs.spawn((
+                                Button,
+                                Node {
+                                    padding: UiRect::axes(Val::Px(8.0), Val::Px(4.0)),
+                                    border: UiRect::all(Val::Px(1.0)),
+                                    ..default()
+                                },
+                                BackgroundColor(palette.bevy_hud_panel_fill()),
+                                BorderColor::all(palette.bevy_wire_magenta().with_alpha(0.55)),
+                                ContextTrayTabButton(tab),
+                            ))
+                            .with_children(|b| {
+                                b.spawn((
+                                    Text::new(tab.label()),
+                                    TextFont::from_font_size(11.0).with_font(font.clone()),
+                                    TextColor(palette.bevy_secondary_text()),
+                                    ContextTrayTabLabel,
+                                ));
+                            });
+                        }
+                    });
+                    tray.spawn((
+                        Node {
+                            width: Val::Percent(100.0),
+                            height: Val::Px(CONTEXT_TRAY_BODY_H_PX),
+                            padding: UiRect::all(Val::Px(10.0)),
+                            ..default()
+                        },
+                        BackgroundColor(palette.bevy_bg_vellum()),
+                        ContextTrayBodyRoot,
+                    ))
+                    .with_children(|body| {
+                        body.spawn((
+                            Button,
+                            Node {
+                                width: Val::Percent(100.0),
+                                flex_direction: FlexDirection::Row,
+                                align_items: AlignItems::Center,
+                                column_gap: Val::Px(6.0),
+                                padding: UiRect::axes(Val::Px(6.0), Val::Px(4.0)),
+                                margin: UiRect::bottom(Val::Px(6.0)),
+                                border: UiRect::all(Val::Px(1.0)),
+                                ..default()
+                            },
+                            BackgroundColor(palette.bevy_hud_panel_fill()),
+                            BorderColor::all(palette.bevy_border_subtle()),
+                            Visibility::Hidden,
+                            PetroleumPanelTabRoot,
+                            Name::new("petroleum_panel_tab"),
+                        ))
+                        .with_children(|tab| {
+                            tab.spawn((
+                                Node {
+                                    width: Val::Px(24.0),
+                                    height: Val::Px(24.0),
+                                    flex_shrink: 0.0,
+                                    ..default()
+                                },
+                                PetroleumPanelTabIcon,
+                                bevy::ui::widget::ImageNode::default(),
+                            ));
+                            tab.spawn((
+                                Text::new("Petroleum"),
+                                TextFont::from_font_size(11.0).with_font(font.clone()),
+                                TextColor(palette.bevy_secondary_text()),
+                                PetroleumPanelTabLabel,
+                            ));
+                        });
+                        body.spawn((
+                            Node {
+                                width: Val::Percent(100.0),
+                                flex_direction: FlexDirection::Row,
+                                align_items: AlignItems::FlexStart,
+                                justify_content: JustifyContent::FlexStart,
+                                column_gap: Val::Px(6.0),
+                                margin: UiRect::bottom(Val::Px(6.0)),
+                                ..default()
+                            },
+                            Visibility::Hidden,
+                            LogisticsVehicleChipRow,
+                            Name::new("logistics_vehicle_chips"),
+                        ))
+                        .with_children(|row| {
+                            for (id, label) in [
+                                (IconId::Truck, "Truck"),
+                                (IconId::Ural, "Ural"),
+                                (IconId::Bus, "Bus"),
+                            ] {
+                                row.spawn((
+                                    Button,
+                                    Node {
+                                        flex_direction: FlexDirection::Column,
+                                        align_items: AlignItems::Center,
+                                        row_gap: Val::Px(2.0),
+                                        padding: UiRect::axes(Val::Px(4.0), Val::Px(3.0)),
+                                        border: UiRect::all(Val::Px(1.0)),
+                                        ..default()
+                                    },
+                                    BackgroundColor(palette.bevy_hud_panel_fill()),
+                                    BorderColor::all(palette.bevy_border_subtle()),
+                                    LogisticsVehicleChip(id),
+                                ))
+                                .with_children(|chip| {
+                                    chip.spawn((
+                                        Node {
+                                            width: Val::Px(24.0),
+                                            height: Val::Px(24.0),
+                                            flex_shrink: 0.0,
+                                            ..default()
+                                        },
+                                        LogisticsVehicleChipIcon,
+                                        bevy::ui::widget::ImageNode::default(),
+                                    ));
+                                    chip.spawn((
+                                        Text::new(label),
+                                        TextFont::from_font_size(9.0).with_font(font.clone()),
+                                        TextColor(palette.bevy_text_muted()),
+                                        LogisticsVehicleChipLabel,
+                                    ));
+                                });
+                            }
+                        });
+                        body.spawn((
+                            Text::new("CONTEXT — select a tab or click ALERTS on ops strip"),
+                            TextFont::from_font_size(DEV_CONTEXT_MONO_PT).with_font(font.clone()),
+                            TextColor(palette.bevy_secondary_text()),
+                            ContextTrayBodyLine,
+                        ));
+                    });
+                });
         });
-}
-
-/// Avoids `format!` + `Text` churn on the ops strip when inputs are unchanged (`base_visual_dev01` P0-D).
-#[derive(Default, Clone)]
-struct OpsStripDynamicCache {
-    time_fp: Option<(u64, bool, i32, u32)>,
-    time_line: String,
-    alerts_fp: Option<(usize, u32, u32, usize, i32, i32)>,
-    alerts_line: String,
-    routes_fp: Option<(bool, i32, i32, i32)>,
-    routes_line: String,
-    ew_fp: Option<(bool, i32, i32)>,
-    ew_line: String,
-}
-
-fn update_operations_strip(
-    tick: Res<SimTick>,
-    ctrl: Res<SimControlState>,
-    time: Res<Time>,
-    policy: Res<StrategicOverlayDisplayPolicy>,
-    theater: Res<OperationalTheaterSummary>,
-    logistics: Res<LogisticsAiRuntime>,
-    missions: Res<ActiveMissions>,
-    fracture: Res<FractureProbabilityOverlay>,
-    mut qs: ParamSet<(
-        Query<&mut Text, With<OpsStripTime>>,
-        Query<&mut Text, With<OpsStripAlerts>>,
-        Query<&mut Text, With<OpsStripIntelRoutes>>,
-        Query<&mut Text, With<OpsStripIntelEw>>,
-    )>,
-    mut cache: Local<OpsStripDynamicCache>,
-) {
-    let wall_ds = (time.elapsed_secs() * 10.0).floor() as u32;
-    let time_fp = (
-        tick.0,
-        ctrl.paused,
-        (ctrl.speed * 100.0).round() as i32,
-        wall_ds,
-    );
-    if cache.time_fp != Some(time_fp) {
-        cache.time_fp = Some(time_fp);
-        let run = if ctrl.paused { "PAUSE" } else { "RUN" };
-        cache.time_line = format!(
-            "> TIME  wall {:>6.1}s  │  SIM n={}  {:<5}  v={:.1}x",
-            time.elapsed_secs(),
-            tick.0,
-            run,
-            ctrl.speed
-        );
-        for mut t in qs.p0().iter_mut() {
-            *t = Text::new(cache.time_line.clone());
-        }
-    }
-
-    let n_m = missions.missions.len();
-    let m0 = missions.missions.first();
-    let mission_hint = m0
-        .and_then(|m| {
-            m.success_readout_label
-                .as_deref()
-                .or(m.objectives.first().map(|o| o.label.as_str()))
-        })
-        .unwrap_or("—");
-    let mhash = mission_hint.chars().fold(0u32, |a, c| a.wrapping_add(c as u32));
-    let alerts_fp = (
-        n_m,
-        mission_hint.len() as u32,
-        mhash,
-        theater.active_faction_slots,
-        (theater.mean_threat_by_slot[0] * 1000.0).round() as i32,
-        (alt_mean_threat(&theater) * 1000.0).round() as i32,
-    );
-    if cache.alerts_fp != Some(alerts_fp) {
-        cache.alerts_fp = Some(alerts_fp);
-        cache.alerts_line = format!(
-            "ALERTS  msn {} | T0 {:.2} altμ {:.2} fac {} | {}",
-            n_m,
-            theater.mean_threat_by_slot[0],
-            alt_mean_threat(&theater),
-            theater.active_faction_slots,
-            truncate_slot(mission_hint, 28),
-        );
-        for mut t in qs.p1().iter_mut() {
-            *t = Text::new(cache.alerts_line.clone());
-        }
-    }
-
-    let routes_fp = (
-        policy.apply_routing_congestion,
-        (logistics.congestion_proxy * 10000.0).round() as i32,
-        (logistics.mean_edge_damage * 10000.0).round() as i32,
-        (logistics.stockpile_fill_ratio * 10000.0).round() as i32,
-    );
-    if cache.routes_fp != Some(routes_fp) {
-        cache.routes_fp = Some(routes_fp);
-        cache.routes_line = format!(
-            "ROUTES  layer {}  proxy {:.2}  edgeμ {:.2}  stock {:.2}",
-            if policy.apply_routing_congestion { "on" } else { "off" },
-            logistics.congestion_proxy,
-            logistics.mean_edge_damage,
-            logistics.stockpile_fill_ratio,
-        );
-        for mut t in qs.p2().iter_mut() {
-            *t = Text::new(cache.routes_line.clone());
-        }
-    }
-
-    let ew_fp = (
-        policy.apply_ew_denial,
-        (fracture.mean_heuristic * 10000.0).round() as i32,
-        (logistics.industrial_output_proxy * 10000.0).round() as i32,
-    );
-    if cache.ew_fp != Some(ew_fp) {
-        cache.ew_fp = Some(ew_fp);
-        cache.ew_line = format!(
-            "EW/DENY  layer {}  fract m {:.2}  ind prox {:.2}",
-            if policy.apply_ew_denial { "on" } else { "off" },
-            fracture.mean_heuristic,
-            logistics.industrial_output_proxy,
-        );
-        for mut t in qs.p3().iter_mut() {
-            *t = Text::new(cache.ew_line.clone());
-        }
-    }
-}
-
-fn update_ops_strip_map_camera_line(
-    settings: Res<MapCameraSettings>,
-    desired: Res<MapCameraDesired>,
-    active_cam: Res<ActiveCameraOwner>,
-    cam_vis: Res<CameraVisualState>,
-    world: Res<WorldRepresentationFrame>,
-    policy: Res<RepresentationResult>,
-    overlay: Res<crate::gui::OverlayFieldFrame>,
-    gpu_metrics: Res<GpuRepresentationMetrics>,
-    readiness: Option<Res<crate::render::AppStage5ReadinessReport>>,
-    partial_metrics: Option<Res<crate::systems::atmosphere::AtmospherePartialWriteMetrics>>,
-    mut q_map: Query<&mut Text, With<OpsStripMapCam>>,
-    mut fp_cache: Local<
-        Option<(
-            (u8, bool, i32, i32, u8, u64, i32, i32, i32),
-            (
-                u8,
-                i32,
-                i32,
-                i32,
-                u64,
-                u8,
-                u32,
-                u64,
-                u32,
-                u32,
-                u32,
-                u32,
-            ),
-            (u32, u8, u32, u32, u32, u32),
-            (u8, u8, u8, u8, u8),
-        )>,
-    >,
-) {
-    let mode_tag: u8 = match settings.mode {
-        MapCameraMode::Strategic => 0,
-        MapCameraMode::Tactical => 1,
-        MapCameraMode::Cinematic => 2,
-    };
-    let zoom_k = (desired.scale.x * 1000.0).round() as i32;
-    let yaw_deg = (desired.rotation.to_euler(EulerRot::ZYX).0.to_degrees() * 10.0).round() as i32;
-    let (ow_tag, ow_bits) = match &active_cam.owner {
-        CameraOwner::Player => (0u8, 0u64),
-        CameraOwner::CinematicTrack => (1u8, 0u64),
-        CameraOwner::Replay => (2u8, 0u64),
-        CameraOwner::FollowTarget(e) => (3u8, e.to_bits()),
-    };
-    let sw_i = (cam_vis.strategic_weight * 100.0).round() as i32;
-    let cw_i = (cam_vis.cinematic_weight * 100.0).round() as i32;
-    let za_i = (cam_vis.zoom_alpha * 100.0).round() as i32;
-    let lod_tag: u8 = match world.global_band() {
-        WorldLodBand::LocalTactical => 0,
-        WorldLodBand::Operational => 1,
-        WorldLodBand::Strategic => 2,
-        WorldLodBand::Macro => 3,
-    };
-    let fc_x = world.focus_chunk.x;
-    let fc_y = world.focus_chunk.y;
-    let ir = world.interest_radius_chunks;
-    let stamp = world.sim_step_stamp.tick;
-    let fp_a = (
-        mode_tag,
-        settings.edge_scroll_enabled,
-        zoom_k,
-        yaw_deg,
-        ow_tag,
-        ow_bits,
-        sw_i,
-        cw_i,
-        za_i,
-    );
-    let stamp_tick = policy.stamp.tick.min(u32::MAX as u64) as u32;
-    let overlay_rev = overlay.fire_heat_overlay_revision.min(u64::from(u32::MAX)) as u32;
-    let partial_disp = partial_metrics
-        .as_deref()
-        .map(|m| m.partial_compute_dispatch_count)
-        .unwrap_or(0);
-    let full_fallback = partial_metrics
-        .as_deref()
-        .map(|m| m.full_field_fallback_active as u8)
-        .unwrap_or(0);
-    let atlas_skip = partial_metrics
-        .as_deref()
-        .map(|m| m.atlas_skip_count)
-        .unwrap_or(0);
-    let dup_extract = readiness
-        .as_deref()
-        .map(|r| r.duplicate_visual_scan_count)
-        .unwrap_or(0);
-    let fire_gpu_kb = (gpu_metrics.upload_bytes / 1024).min(u32::MAX as u64) as u32;
-    let overlay_gpu_kb = partial_metrics
-        .as_deref()
-        .map(|m| (m.gpu_texture_upload_bytes / 1024).min(u32::MAX as u64) as u32)
-        .unwrap_or(0);
-    let fp_b0 = (
-        lod_tag,
-        fc_x,
-        fc_y,
-        ir,
-        stamp,
-        policy.active_band as u8,
-        gpu_metrics.instance_rows,
-        gpu_metrics.upload_bytes,
-        gpu_metrics.dispatch_count,
-        stamp_tick,
-        overlay_rev,
-        gpu_metrics.draw_instances,
-    );
-    let fp_b1 = (
-        partial_disp,
-        full_fallback,
-        atlas_skip,
-        dup_extract,
-        fire_gpu_kb,
-        overlay_gpu_kb,
-    );
-    let fp_s5 = readiness.as_deref().map_or((0u8, 0, 0, 0, 0), |r| {
-        (
-            stage5_readiness_passes(r) as u8,
-            r.vt4_ok as u8,
-            r.vt5_ok as u8,
-            r.phase_d_ok as u8,
-            r.phase_f_ok as u8,
-        )
-    });
-    if fp_cache.as_ref() == Some(&(fp_a, fp_b0, fp_b1, fp_s5)) {
-        return;
-    }
-    *fp_cache = Some((fp_a, fp_b0, fp_b1, fp_s5));
-
-    let line = format!(
-        "MAP  {}  edge {}  zoom {:.2}  yaw {:.1}°  |  CAM:{}  zα {:.2}  s{:02}c{:02}  |  LOD:{} fc{},{} r{} tick{}  |  REP:lod={} fire_gpu={}kb overlay_gpu={}kb partial_disp={} full_fallback={} dup_extract={} atlas_skip={} stamp={} rev={} draw={}  |  S5:{} vt4={} vt5={} ph_d={} ph_f={}",
-        settings.mode.label(),
-        if settings.edge_scroll_enabled {
-            "on"
-        } else {
-            "off"
-        },
-        desired.scale.x,
-        desired.rotation.to_euler(EulerRot::ZYX).0.to_degrees(),
-        camera_owner_label(&active_cam.owner),
-        cam_vis.zoom_alpha,
-        sw_i,
-        cw_i,
-        world.global_band().short_label(),
-        world.focus_chunk.x,
-        world.focus_chunk.y,
-        world.interest_radius_chunks,
-        world.sim_step_stamp.tick,
-        policy.active_band.short_label(),
-        fire_gpu_kb,
-        overlay_gpu_kb,
-        partial_disp,
-        full_fallback,
-        dup_extract,
-        atlas_skip,
-        policy.stamp.tick,
-        overlay.fire_heat_overlay_revision,
-        gpu_metrics.draw_instances,
-        fp_s5.0,
-        fp_s5.1,
-        fp_s5.2,
-        fp_s5.3,
-        fp_s5.4,
-    );
-    for mut t in q_map.iter_mut() {
-        *t = Text::new(line.clone());
-    }
-}
-
-fn update_ops_strip_build_line(
-    build_strip: Res<BuildStripState>,
-    build_overlays: Res<BuildOverlayVisibility>,
-    build_ghost: Res<BuildGhostState>,
-    build_preview: Res<BuildPlacementPreview>,
-    mut q_build: Query<&mut Text, With<OpsStripBuild>>,
-    mut fp_cache: Local<
-        Option<(
-            u8,
-            Option<(u32, u32)>,
-            u32,
-            u32,
-            bool,
-            bool,
-            bool,
-            bool,
-            bool,
-        )>,
-    >,
-) {
-    let pv = &build_preview.report;
-    let active_tag: u8 = match build_strip.active {
-        ToolContext::None => 0,
-        ToolContext::Roads => 1,
-        ToolContext::Rail => 2,
-        ToolContext::Utilities => 3,
-        ToolContext::Military => 4,
-        ToolContext::Industry => 5,
-        ToolContext::Ecology => 6,
-        ToolContext::Civil => 7,
-    };
-    let fp = (
-        active_tag,
-        build_ghost.origin.map(|t| (t.x, t.z)),
-        build_ghost.footprint.width,
-        build_ghost.footprint.depth,
-        build_overlays.terrain,
-        build_overlays.network,
-        build_overlays.cost,
-        pv.valid,
-        pv.allows_commit,
-    );
-    if fp_cache.as_ref() == Some(&fp) {
-        return;
-    }
-    *fp_cache = Some(fp);
-
-    let ghost_hint = match build_ghost.origin {
-        Some(t) => format!("@{},{}", t.x, t.z),
-        None => "—".to_string(),
-    };
-    let build = format!(
-        "BUILD  mode {}  ghost {}  val {}  commit {}  (terrain {}  net {}  cost {})",
-        build_strip.active.label(),
-        ghost_hint,
-        if pv.valid { "ok" } else { "no" },
-        if pv.allows_commit { "yes" } else { "no" },
-        if build_overlays.terrain { "on" } else { "off" },
-        if build_overlays.network { "on" } else { "off" },
-        if build_overlays.cost { "on" } else { "off" },
-    );
-    for mut t in &mut q_build {
-        *t = Text::new(build.clone());
-    }
-}
-
-#[inline]
-fn alt_mean_threat(theater: &OperationalTheaterSummary) -> f32 {
-    let mut t_alt = 0.0f32;
-    let mut n_alt = 0.0f32;
-    for i in 1..MAX_STRATEGIC_FACTION_SLOTS {
-        let a = theater.mean_threat_by_slot[i];
-        if a > 1e-4 || theater.mean_logistics_strength_by_slot[i] > 1e-4 {
-            t_alt += a;
-            n_alt += 1.0;
-        }
-    }
-    if n_alt > 0.0 { t_alt / n_alt } else { 0.0 }
 }
 
 fn truncate_slot(s: &str, max_chars: usize) -> String {
@@ -1029,16 +1244,22 @@ fn update_objectives_hud_line(
 fn sync_command_left_stack_visibility(
     state: Res<CommandLeftStackState>,
     mut q: ParamSet<(
-        Query<&mut Visibility, With<LeftContextStackBody>>,
+        Query<(&mut Visibility, &mut Node), With<LeftContextStackBody>>,
         Query<&mut Visibility, With<LeftContextRail>>,
+        Query<(&mut Visibility, &mut Node), With<BuildRailRoot>>,
     )>,
 ) {
     let collapsed = state.collapsed;
-    for mut v in q.p0().iter_mut() {
+    for (mut v, mut node) in q.p0().iter_mut() {
         *v = if collapsed {
             Visibility::Hidden
         } else {
             Visibility::Visible
+        };
+        node.display = if collapsed {
+            Display::None
+        } else {
+            Display::Flex
         };
     }
     for mut v in q.p1().iter_mut() {
@@ -1047,6 +1268,10 @@ fn sync_command_left_stack_visibility(
         } else {
             Visibility::Hidden
         };
+    }
+    for (mut v, mut node) in q.p2().iter_mut() {
+        *v = Visibility::Visible;
+        node.display = Display::Flex;
     }
 }
 
@@ -1057,6 +1282,17 @@ fn command_left_stack_rail_interaction(
     for interaction in &q {
         if *interaction == Interaction::Pressed {
             state.collapsed = false;
+        }
+    }
+}
+
+fn left_context_stack_collapse_interaction(
+    q: Query<&Interaction, (Changed<Interaction>, With<LeftContextStackCollapse>)>,
+    mut state: ResMut<CommandLeftStackState>,
+) {
+    for interaction in &q {
+        if *interaction == Interaction::Pressed {
+            state.collapsed = true;
         }
     }
 }

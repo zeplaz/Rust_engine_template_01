@@ -1,0 +1,8 @@
+{
+  "artifact_path": "blueprints/presets.ron",
+  "preset_count": 1,
+  "profile": "WAVE_S_BLUEPRINT_ROUNDTRIP",
+  "ron_body": "(schema_version:1,presets:[(schema_version:1,label:\"depot_a\",archetype_tag:\"RailDepot\",origin_x:4,origin_z:8,footprint_width:2,footprint_depth:2,layer_tag:\"Surface\",rotation_quarter_turns:1,mirror_x:false)])",
+  "roundtrip_ok": true,
+  "schema_version": 1
+}

@@ -36,14 +36,28 @@ pub struct InputBindings {
     pub toggle_strategic_hud_strip_compact: KeyCode,
     /// Collapse / expand the left command context stack (Bevy HUD panel under the operations strip).
     pub toggle_command_left_stack: KeyCode,
+    /// Toggle docked left **status** side panel (`HudCommandShellLayout::status_side_panel_state`).
+    pub toggle_hud_status_side_panel: KeyCode,
     /// Toggle painting **routing congestion** transport splats into [`ChunkStrategicOverlay`](crate::strategic::ChunkStrategicOverlay).
     pub toggle_strategic_overlay_routing_congestion: KeyCode,
     /// Toggle painting **EW / denial** proxy splats from transport fields.
     pub toggle_strategic_overlay_ew_denial: KeyCode,
-    /// Cycle operational **build / planning** tool context (`gui::build::BuildStripState`; Bevy HUD shows active mode).
+    /// Cycle operational **build / planning** tool context (`construction::BuildStripState`; Bevy HUD shows active mode).
     pub cycle_build_planning_tool: KeyCode,
+    /// Toggle construction site / ghost **info labels** on the tactical map (tile outlines stay on).
+    pub toggle_construction_tile_labels: KeyCode,
     /// Confirm ghost site placement (commits [`CommitConstructionSiteEvent`](crate::strategic::CommitConstructionSiteEvent) when valid).
     pub confirm_build_placement: KeyCode,
+    /// Toggle simulation minimap egui shell.
+    pub toggle_sim_minimap: KeyCode,
+    /// Toggle transmission / briefing HUD widget.
+    pub toggle_transmission_widget: KeyCode,
+    /// Rotate build ghost footprint (quarter turns).
+    pub rotate_build_ghost: KeyCode,
+    /// Mirror build ghost on X axis.
+    pub mirror_build_ghost: KeyCode,
+    /// Clear pending blueprint queue while planning.
+    pub clear_pending_blueprints: KeyCode,
     pub toggle_world_generator: KeyCode,
     pub toggle_agent_permissions: KeyCode,
     /// Toggles egui scale compensation (`ui_windows::update_ui_scale_factor_system`).
@@ -94,10 +108,17 @@ impl Default for InputBindings {
             toggle_scenario_script_panel: KeyCode::F10,
             toggle_strategic_hud_strip_compact: KeyCode::F5,
             toggle_command_left_stack: KeyCode::Backquote,
+            toggle_hud_status_side_panel: KeyCode::Equal,
             toggle_strategic_overlay_routing_congestion: KeyCode::Digit7,
             toggle_strategic_overlay_ew_denial: KeyCode::Digit8,
             cycle_build_planning_tool: KeyCode::Semicolon,
+            toggle_construction_tile_labels: KeyCode::F7,
             confirm_build_placement: KeyCode::Enter,
+            toggle_sim_minimap: KeyCode::KeyN,
+            toggle_transmission_widget: KeyCode::KeyJ,
+            rotate_build_ghost: KeyCode::KeyR,
+            mirror_build_ghost: KeyCode::KeyX,
+            clear_pending_blueprints: KeyCode::Backspace,
             toggle_world_generator: KeyCode::F8,
             toggle_agent_permissions: KeyCode::F7,
             toggle_egui_ui_scale: KeyCode::Slash,

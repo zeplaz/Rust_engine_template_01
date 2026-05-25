@@ -83,6 +83,17 @@ Use these ids in G3 **results** files and orchestrator notes. **Do not** paralle
 | **BQ-121** | **Construction blueprint UX** — CSTR-1–3; ghost/approval ECS separation | [`experience_layer_ux_hud_designer_brief_v1.md`](experience_layer_ux_hud_designer_brief_v1.md) §4 · **UX-4** |
 | **BQ-122** | **Transmission / media widget** — queue, channels, GPU quad; not egui video | [`experience_layer_ux_hud_designer_brief_v1.md`](experience_layer_ux_hud_designer_brief_v1.md) §3 · **UX-3** |
 | **BQ-123** | **Detached HUD + overlay/command shell** — UX-2, UX-5, UX-6 after minimap + blueprint foundations | [`experience_layer_ux_hud_designer_brief_v1.md`](experience_layer_ux_hud_designer_brief_v1.md) §5–6 |
+| **BQ-124** | **GPU minimap compositor** — `RenderTarget::Image` consumer; egui display-only; no second fire extract | [`experience_layer_ux_hud_designer_brief_v1.md`](experience_layer_ux_hud_designer_brief_v1.md) §2 · **UX-1** |
+| **BQ-125** | **Stage-7 dispatch persistence** — per-plane queue save rows + delayed delivery semantics | [`stage7_behavioral_world_designer_brief_v1.md`](stage7_behavioral_world_designer_brief_v1.md) §3 · Wave **S** |
+| **BQ-126** | **Transmission media decode** — video/audio GPU upload path; channel knob + EW degradation | [`experience_layer_ux_hud_designer_brief_v1.md`](experience_layer_ux_hud_designer_brief_v1.md) §3 · **UX-3** |
+| **BQ-127** | **Intel timeline data source** — command shell third column; belief vs narrative bus vs dispatch envelope feed | [`experience_layer_ux_hud_designer_brief_v1.md`](experience_layer_ux_hud_designer_brief_v1.md) §5 · **UX-5** |
+| **BQ-128** | **Blueprint preset Wave S path** — on-disk RON location + editor round-trip beside live construction book | [`experience_layer_ux_hud_designer_brief_v1.md`](experience_layer_ux_hud_designer_brief_v1.md) §4 · **UX-4** |
+| **BQ-129** | **Minimap `RenderTarget::Image` owner** — compositor schedule vs egui consumer; no duplicate fire extract | [`experience_layer_ux_hud_designer_brief_v1.md`](experience_layer_ux_hud_designer_brief_v1.md) §2 · **UX-1** · **BQ-124** |
+| **BQ-130** | **HUD layout Wave S slot** — persist detached widget rects/minimized flags beside blueprint presets | [`experience_layer_ux_hud_designer_brief_v1.md`](experience_layer_ux_hud_designer_brief_v1.md) §5–6 · **UX-6** |
+| **BQ-131** | **Detached native minimap host** — optional `hud_native_minimap_window` feature; consumer-only of shared RT/overlays | [`experience_layer_ux_hud_designer_brief_v1.md`](experience_layer_ux_hud_designer_brief_v1.md) §2 · **UX-1** |
+| **BQ-132** | **Construction throughput / corridor-phase hints** — projected resource hints without alternate commit authority | [`experience_layer_ux_hud_designer_brief_v1.md`](experience_layer_ux_hud_designer_brief_v1.md) §4 · **UX-4** |
+| **BQ-133** | **Product shell Wave S binary envelope** — on-disk slot for `ProductShellPersistenceBundleR8` beside RON DTO bodies | [`experience_layer_ux_hud_designer_brief_v1.md`](experience_layer_ux_hud_designer_brief_v1.md) §8 |
+| **BQ-134** | **Stage 6 residency overlay feed** — authoritative chunk residency DTO source for HUD consumers | [`experience_layer_ux_hud_designer_brief_v1.md`](experience_layer_ux_hud_designer_brief_v1.md) §8 |
 
 ### 4.1 G3 sub-pack §3 → BQ crosswalk
 

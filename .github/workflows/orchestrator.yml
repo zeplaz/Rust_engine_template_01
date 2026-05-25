@@ -1,0 +1,16 @@
+name: Orchestrator CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+jobs:
+  orchestrate:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: CI pipeline
+        shell: pwsh
+        run: ./tools/orchestrator/ci/run.ps1

@@ -11,7 +11,9 @@ mod weather_visual;
 pub use chunk_weather::{
     ChunkWeather, GlobalRenewableWeatherFactors, WeatherSimDiagnostics,
 };
-pub use weather_visual::{WeatherPrecipVisualSample, WeatherVisualSettings, WeatherVisualPlugin};
+pub use weather_visual::{
+    WeatherPrecipVisualSample, WeatherVisualSettings, WeatherVisualPlugin, WeatherVfxCameraChild,
+};
 
 use bevy::prelude::*;
 

@@ -75,10 +75,8 @@ pub const WAVE_P_CONSUMER_ROOTS: &[&str] = &[
 ];
 
 /// Planned Wave P surfaces still gated on backlog choice (inspector host, direct-sample path).
-pub const WAVE_P_OPEN_BACKLOG_ITEMS: &[&str] = &[
-    "registry inspector table host (egui/F8 vs bevy-inspector vs asset tool)",
-    "direct-sample preview path (composite matrix P3)",
-];
+/// `wave_p_live.json` writer ships in `wave_p_live_proof.rs` (post–Stage 6).
+pub const WAVE_P_OPEN_BACKLOG_ITEMS: &[&str] = &[];
 
 #[must_use]
 pub fn canonical_sources_for_layers(layers: PreviewLayers) -> Vec<CompositePreviewCanonicalSource> {

@@ -1,2 +1,8 @@
 /target
 /.vscode
+
+# Orchestrator volatile history (reports/runbooks are committed when refreshed)
+/tools/orchestrator/history/run_*.json
+/tools/orchestrator/state/last_run.json
+/tools/orchestrator/target/
+/tools/orchestrator/queues/HANDOFF.md

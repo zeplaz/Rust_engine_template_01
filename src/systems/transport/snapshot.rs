@@ -121,6 +121,7 @@ pub fn hydrate_transport_from_snapshot(
             tid,
             TransportEdgeMeta {
                 profile: e.profile.clone(),
+                corridor_class: super::types::corridor_class_from_profile(&e.profile),
                 allowed_agents: e.allowed_agents.clone(),
                 head_key: e.head.clone(),
                 tail_key: e.tail.clone(),

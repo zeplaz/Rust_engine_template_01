@@ -1,0 +1,18 @@
+{
+    "asset_name": "Bauxite mine",
+    "asset_type": "Building",
+    "segment": "Industrial",
+    "description": "Open-pit bauxite extraction for alumina refining",
+    "supply_chain": "aluminum_primary",
+    "supply_chain_role": "bauxite_mine",
+    "is_building": true,
+    "is_productive": true,
+    "building_size_x": 4,
+    "building_size_y": 4,
+    "building_height": 1,
+    "construction_cost": 1200,
+    "power_consumption": 22,
+    "produces_resources": ["Bauxite"],
+    "consumes_resources": ["Labour", "Diesel", "Water"],
+    "version": "1.0.0"
+}

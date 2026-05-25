@@ -48,6 +48,7 @@ mod behavior_pipeline;
 mod build_order;
 mod faction_plugin;
 mod fracture_plugin;
+mod comms_contract;
 mod construction_book;
 mod frontline;
 mod gpu_bridge_plugin;
@@ -106,6 +107,11 @@ pub use build_order::{
     process_build_order_queue_system, ApprovedBuildOrders, BuildOrder, BuildOrderQueue, BuildReason,
     BuildSiteTile, StructureType,
 };
+pub use comms_contract::{
+    BeliefRecord, BeliefSnapshotDto, CommunicationPlane, DispatchEnvelope, DispatchMessage,
+    IntelConfidence, MissionIntent, OverlayChannelDescriptor, PlaneAuthority, StrategicOverlayType,
+    UtilityChannel,
+};
 pub use behavior_pipeline::{
     compose_decision_score, decision_pipeline_composition_system, sample_decision_components,
     DecisionScoreComponents,
@@ -145,10 +151,12 @@ pub use spatial_network::{
 };
 pub use strategic_behavior_schedule::{StrategicBehaviorSchedule, StrategicBehaviorSchedulePlugin};
 pub use construction_book::{
+    advance_corridor_construction_book_on_sim_tick, advance_corridor_construction_row,
     align_corridor_book_with_transport_directory, apply_corridor_book_from_transport_snapshot,
     corridor_phase_from_wire, corridor_phase_to_wire, transport_construction_records_from_book,
-    transport_directory_edge_signature, CorridorConstructionBook, CorridorConstructionPhase,
-    CorridorConstructionStatus,
+    transport_directory_edge_signature, ConstructionPhase, CorridorConstructionBook,
+    CorridorConstructionPhase, CorridorConstructionRow, CorridorConstructionStatus,
+    CorridorConstructionTickConfig, CorridorEdgeId,
 };
 pub use site::{
     apply_site_zone_emitters_to_overlays_system,
@@ -237,9 +245,9 @@ pub use runbook_rounds::settlement::{
     ecology_hazard_pressure, migration_pull, tier_from_population, SettlementTier,
 };
 
-pub use logistics_net::logistics_net_inject_into_overlays;
+pub use logistics_net::{edge_flow_for_overlay, logistics_net_inject_into_overlays};
 pub use plugin::{InfrastructureSiteSet, StrategicFieldPipeline, StrategicFieldsPlugin};
-pub use transport_bridge::StrategicRasterConfig;
+pub use transport_bridge::{rebuild_logistics_graph_from_transport, StrategicRasterConfig};
 pub use world_field_layers::{
     ChunkFieldCell, WorldFieldLayerConfig, WorldFieldLayerEpoch,
 };
@@ -396,14 +404,17 @@ pub struct LogisticsNode {
 pub struct LogisticsEdge {
     pub from: LogisticsNodeId,
     pub to: LogisticsNodeId,
+    /// Authoritative transport edge (LOG-A-03); `None` only for portal stub edges.
+    pub transport_edge: Option<crate::systems::transport::TransportEdgeId>,
     pub capacity: f32,
     pub disruption: f32,
     pub traversal_cost: f32,
 }
 
-/// Sparse network: capacity, degradation, and routing live here — not in Voronoi polygons.
+/// **Derived cache only** — rebuilt at `GraphSync`; never mutated during freight solve.
 #[derive(Resource, Clone, Debug, Default)]
 pub struct LogisticsGraph {
+    pub revision: u64,
     pub nodes: Vec<LogisticsNode>,
     pub edges: Vec<LogisticsEdge>,
 }

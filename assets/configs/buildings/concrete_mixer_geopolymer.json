@@ -1,0 +1,19 @@
+{
+    "asset_name": "Geopolymer batching plant",
+    "asset_type": "Building",
+    "segment": "Industrial",
+    "description": "Batch plant for geopolymer concrete",
+    "supply_chain": "concrete_geopolymer",
+    "supply_chain_role": "concrete_mixer",
+    "concrete_type": "Geopolymer",
+    "is_building": true,
+    "is_productive": true,
+    "building_size_x": 3,
+    "building_size_y": 2,
+    "building_height": 1,
+    "construction_cost": 850,
+    "power_consumption": 32,
+    "produces_resources": ["Concrete"],
+    "consumes_resources": ["Cement", "Water", "Chemicals", "Labour", "Electricity"],
+    "version": "1.0.0"
+}

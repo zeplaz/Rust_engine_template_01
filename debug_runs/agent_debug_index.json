@@ -1,0 +1,345 @@
+{
+  "_agent_meta": {
+    "agent_commands": [
+      "cargo test -p proc_A_dine01 --lib"
+    ],
+    "docs": {
+      "compile_warnings": "src/dev/COMPILE_WARNINGS_TODOS.md",
+      "stage5_directive": "prompts/guides/stage5_convergence_directive_v1.md",
+      "viewport_recovery": "src/dev/recovery_viewport.md"
+    },
+    "logging_env": {
+      "ORCHESTRATOR_EXPORT_HEALTH": false,
+      "PERF": false,
+      "RUST_LOG": null,
+      "SIM_VIEW_SYNC_DEBUG": false,
+      "STAGE5_READINESS_VERBOSE": false,
+      "STAGE5_VERBOSE": false,
+      "VIEWPORT_AUTHORITY_DEBUG": false
+    },
+    "orchestrator": {
+      "build_report": "tools/orchestrator/reports/build_report.md",
+      "ci_entry": "tools/orchestrator/ci/run.ps1",
+      "continuation_queue": "tools/orchestrator/queues/continuation_queue.json",
+      "warning_registry": "tools/orchestrator/reports/warning_registry.md"
+    },
+    "profile": "AGENT_DEBUG_INDEX",
+    "related_proofs": [
+      "debug_runs/stage5_full_app_live.json",
+      "debug_runs/infrastructure_view_isolation_live.json",
+      "debug_runs/construction_stage_live.json",
+      "debug_runs/industrial_activation_live.json",
+      "debug_runs/fire_ecology_live.json",
+      "debug_runs/logistics_throughput_live.json",
+      "debug_runs/replay_editor_parity_live.json",
+      "debug_runs/orchestrator_thread_health.json",
+      "debug_runs/viewport_drift.json",
+      "debug_runs/viewport_authority_migration_witness.json",
+      "debug_runs/main_thread_orchestrator_live.json",
+      "debug_runs/stage6_virtualization_live.json",
+      "debug_runs/wave_s_hydrate_live.json",
+      "debug_runs/wave_p_live.json",
+      "debug_runs/wave_c_live.json",
+      "debug_runs/ui_shell_migration_live.json",
+      "debug_runs/minimap_compositor_live.json"
+    ],
+    "relative_path": "debug_runs/agent_debug_index.json",
+    "schema": "debug_run_envelope_v1",
+    "source_system": "debug_run_envelope",
+    "written_at_epoch_secs": 1779646657
+  },
+  "profile": "AGENT_DEBUG_INDEX",
+  "proof_count": 17,
+  "proofs": [
+    {
+      "bytes": 15217,
+      "exists": true,
+      "modified_epoch_secs": 1779645881,
+      "path": "debug_runs/stage5_full_app_live.json",
+      "summary": {
+        "activation_green": null,
+        "infrastructure_view_isolation_green": null,
+        "operational_green": null,
+        "parity_green": null,
+        "parse_ok": true,
+        "profile": "FULL_APP",
+        "readiness_passes": true,
+        "readiness_violation_count": 0,
+        "stage6_virtualization_green": null,
+        "throughput_green": null
+      }
+    },
+    {
+      "bytes": 3730,
+      "exists": true,
+      "modified_epoch_secs": 1779644695,
+      "path": "debug_runs/infrastructure_view_isolation_live.json",
+      "summary": {
+        "activation_green": null,
+        "infrastructure_view_isolation_green": true,
+        "operational_green": null,
+        "parity_green": null,
+        "parse_ok": true,
+        "profile": "INFRASTRUCTURE_VIEW_ISOLATION",
+        "readiness_passes": null,
+        "readiness_violation_count": null,
+        "stage6_virtualization_green": null,
+        "throughput_green": null
+      }
+    },
+    {
+      "bytes": 9693,
+      "exists": true,
+      "modified_epoch_secs": 1779644898,
+      "path": "debug_runs/construction_stage_live.json",
+      "summary": {
+        "activation_green": null,
+        "infrastructure_view_isolation_green": null,
+        "operational_green": true,
+        "parity_green": null,
+        "parse_ok": true,
+        "profile": "CONSTRUCTION_STAGE",
+        "readiness_passes": null,
+        "readiness_violation_count": null,
+        "stage6_virtualization_green": null,
+        "throughput_green": null
+      }
+    },
+    {
+      "bytes": 5195,
+      "exists": true,
+      "modified_epoch_secs": 1779646427,
+      "path": "debug_runs/industrial_activation_live.json",
+      "summary": {
+        "activation_green": true,
+        "infrastructure_view_isolation_green": null,
+        "operational_green": null,
+        "parity_green": null,
+        "parse_ok": true,
+        "profile": "INDUSTRIAL_ACTIVATION",
+        "readiness_passes": null,
+        "readiness_violation_count": null,
+        "stage6_virtualization_green": null,
+        "throughput_green": null
+      }
+    },
+    {
+      "bytes": 2525,
+      "exists": true,
+      "modified_epoch_secs": 1779644695,
+      "path": "debug_runs/fire_ecology_live.json",
+      "summary": {
+        "activation_green": null,
+        "infrastructure_view_isolation_green": null,
+        "operational_green": null,
+        "parity_green": null,
+        "parse_ok": true,
+        "profile": "FIRE_ECOLOGY_F1",
+        "readiness_passes": null,
+        "readiness_violation_count": null,
+        "stage6_virtualization_green": null,
+        "throughput_green": null
+      }
+    },
+    {
+      "bytes": 2565,
+      "exists": true,
+      "modified_epoch_secs": 1779645873,
+      "path": "debug_runs/logistics_throughput_live.json",
+      "summary": {
+        "activation_green": null,
+        "infrastructure_view_isolation_green": null,
+        "operational_green": null,
+        "parity_green": null,
+        "parse_ok": true,
+        "profile": "LOGISTICS_THROUGHPUT",
+        "readiness_passes": null,
+        "readiness_violation_count": null,
+        "stage6_virtualization_green": null,
+        "throughput_green": false
+      }
+    },
+    {
+      "bytes": 0,
+      "exists": false,
+      "modified_epoch_secs": null,
+      "path": "debug_runs/replay_editor_parity_live.json",
+      "summary": {
+        "missing": true,
+        "parse_ok": false
+      }
+    },
+    {
+      "bytes": 0,
+      "exists": false,
+      "modified_epoch_secs": null,
+      "path": "debug_runs/orchestrator_thread_health.json",
+      "summary": {
+        "missing": true,
+        "parse_ok": false
+      }
+    },
+    {
+      "bytes": 574,
+      "exists": true,
+      "modified_epoch_secs": 1779573723,
+      "path": "debug_runs/viewport_drift.json",
+      "summary": {
+        "activation_green": null,
+        "infrastructure_view_isolation_green": null,
+        "operational_green": null,
+        "parity_green": null,
+        "parse_ok": true,
+        "profile": null,
+        "readiness_passes": null,
+        "readiness_violation_count": null,
+        "stage6_virtualization_green": null,
+        "throughput_green": null
+      }
+    },
+    {
+      "bytes": 1624,
+      "exists": true,
+      "modified_epoch_secs": 1779573723,
+      "path": "debug_runs/viewport_authority_migration_witness.json",
+      "summary": {
+        "activation_green": null,
+        "infrastructure_view_isolation_green": null,
+        "operational_green": null,
+        "parity_green": null,
+        "parse_ok": true,
+        "profile": null,
+        "readiness_passes": null,
+        "readiness_violation_count": null,
+        "stage6_virtualization_green": null,
+        "throughput_green": null
+      }
+    },
+    {
+      "bytes": 9926,
+      "exists": true,
+      "modified_epoch_secs": 1779504934,
+      "path": "debug_runs/main_thread_orchestrator_live.json",
+      "summary": {
+        "activation_green": null,
+        "infrastructure_view_isolation_green": null,
+        "operational_green": null,
+        "parity_green": null,
+        "parse_ok": true,
+        "profile": "MAIN_THREAD_SHIFT",
+        "readiness_passes": null,
+        "readiness_violation_count": null,
+        "stage6_virtualization_green": null,
+        "throughput_green": null
+      }
+    },
+    {
+      "bytes": 2891,
+      "exists": true,
+      "modified_epoch_secs": 1779644695,
+      "path": "debug_runs/stage6_virtualization_live.json",
+      "summary": {
+        "activation_green": null,
+        "infrastructure_view_isolation_green": null,
+        "operational_green": null,
+        "parity_green": null,
+        "parse_ok": true,
+        "profile": "STAGE6_VIRTUALIZATION",
+        "readiness_passes": false,
+        "readiness_violation_count": 1,
+        "stage6_virtualization_green": false,
+        "throughput_green": null
+      }
+    },
+    {
+      "bytes": 2183,
+      "exists": true,
+      "modified_epoch_secs": 1779644699,
+      "path": "debug_runs/wave_s_hydrate_live.json",
+      "summary": {
+        "activation_green": null,
+        "infrastructure_view_isolation_green": null,
+        "operational_green": null,
+        "parity_green": null,
+        "parse_ok": true,
+        "profile": "WAVE_S_HYDRATE",
+        "readiness_passes": null,
+        "readiness_violation_count": null,
+        "stage6_virtualization_green": null,
+        "throughput_green": null
+      }
+    },
+    {
+      "bytes": 2340,
+      "exists": true,
+      "modified_epoch_secs": 1779644699,
+      "path": "debug_runs/wave_p_live.json",
+      "summary": {
+        "activation_green": null,
+        "infrastructure_view_isolation_green": null,
+        "operational_green": null,
+        "parity_green": null,
+        "parse_ok": true,
+        "profile": "WAVE_P_PREVIEW",
+        "readiness_passes": null,
+        "readiness_violation_count": null,
+        "stage6_virtualization_green": null,
+        "throughput_green": null
+      }
+    },
+    {
+      "bytes": 2221,
+      "exists": true,
+      "modified_epoch_secs": 1779644699,
+      "path": "debug_runs/wave_c_live.json",
+      "summary": {
+        "activation_green": null,
+        "infrastructure_view_isolation_green": null,
+        "operational_green": null,
+        "parity_green": null,
+        "parse_ok": true,
+        "profile": "WAVE_C_STREAMING",
+        "readiness_passes": null,
+        "readiness_violation_count": null,
+        "stage6_virtualization_green": null,
+        "throughput_green": null
+      }
+    },
+    {
+      "bytes": 5450,
+      "exists": true,
+      "modified_epoch_secs": 1779646657,
+      "path": "debug_runs/ui_shell_migration_live.json",
+      "summary": {
+        "activation_green": null,
+        "infrastructure_view_isolation_green": null,
+        "operational_green": null,
+        "parity_green": null,
+        "parse_ok": true,
+        "profile": "UI_SHELL_MIGRATION_2B",
+        "readiness_passes": null,
+        "readiness_violation_count": null,
+        "stage6_virtualization_green": null,
+        "throughput_green": null
+      }
+    },
+    {
+      "bytes": 3226,
+      "exists": true,
+      "modified_epoch_secs": 1779646638,
+      "path": "debug_runs/minimap_compositor_live.json",
+      "summary": {
+        "activation_green": null,
+        "infrastructure_view_isolation_green": null,
+        "operational_green": null,
+        "parity_green": null,
+        "parse_ok": true,
+        "profile": null,
+        "readiness_passes": null,
+        "readiness_violation_count": null,
+        "stage6_virtualization_green": null,
+        "throughput_green": null
+      }
+    }
+  ]
+}
