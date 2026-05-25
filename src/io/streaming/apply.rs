@@ -1,4 +1,9 @@
 //! Main-thread ECS apply for Wave C streamed chunk bodies.
+//!
+//! **Invariant (S6-22):** `PendingStreamApplyQueue::ready_bodies` is drained only here on the
+//! main thread. TaskPool workers must not mutate ECS; they enqueue into the queue only.
+//! Schedule: `reconstruct_staged_chunks_into_cache` → `apply_pending_stream_chunk_bodies` →
+//! `clear_async_domain_apply_labels_after_stream_apply` (see `StreamingSpinePlugin`).
 
 use bevy::prelude::*;
 

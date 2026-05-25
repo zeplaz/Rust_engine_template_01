@@ -10,6 +10,9 @@ use bevy::prelude::*;
 
 use super::texture_cache::WorldPreviewTexture;
 use super::viewport::EditorViewport;
+use crate::gui::map_view::MapViewInstances;
+use crate::render::Stage5ReadinessProfile;
+use crate::render::{trace_camera_sync, trace_render_target, DebugRenderTraceConfig};
 
 /// How the world preview is produced (`GpuRenderTarget` reserved for Bevy camera → `RenderTarget` → egui).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
@@ -42,6 +45,7 @@ pub struct PreviewPathAuthority {
 pub fn sync_preview_path_authority(
     cam: Res<PreviewCameraState>,
     gpu_rt: Res<crate::gui::editor::world_preview::WorldPreviewGpuRuntime>,
+    profile: Res<Stage5ReadinessProfile>,
     mut authority: ResMut<PreviewPathAuthority>,
     mut debug: ResMut<PreviewPresentationDebug>,
 ) {
@@ -52,6 +56,16 @@ pub fn sync_preview_path_authority(
         PreviewAuthoritativeSurface::CpuSwap
     );
     debug.authoritative_surface = authority.authoritative_surface;
+    if *profile == Stage5ReadinessProfile::FULL_APP
+        && cam.mode == PreviewRenderMode::GpuRenderTarget
+        && authority.authoritative_surface == PreviewAuthoritativeSurface::CpuSwap
+    {
+        warn!(
+            target: "stage5_preview::live",
+            "STAGE5_PREVIEW_CPU_FALLBACK gpu_requested but surface=CpuSwap offscreen_ready={}",
+            gpu_rt.offscreen_renderer_ready,
+        );
+    }
 }
 
 /// Bevy schedule `run_if` — GPU preview owns the render target + swap presentation path.
@@ -60,7 +74,7 @@ pub fn preview_gpu_authoritative_run_if(
     cam: Res<PreviewCameraState>,
     gpu_rt: Res<super::WorldPreviewGpuRuntime>,
 ) -> bool {
-    preview_authoritative_surface(&gpu_rt, &cam) == PreviewAuthoritativeSurface::GpuRenderTarget
+    preview_gpu_authoritative(cam, gpu_rt)
 }
 
 #[must_use]
@@ -148,6 +162,7 @@ pub(crate) fn sync_preview_render_contract_resources(
     visual_cadence: Option<&crate::gui::VisualCadence>,
     visual_budgets: Option<&crate::gui::VisualBudgetSettings>,
     sync_tick: u64,
+    gpu_render_extent: Option<UVec2>,
 ) -> bool {
     budget.max_hz = visual_cadence
         .map(|c| c.preview_hz)
@@ -173,20 +188,17 @@ pub(crate) fn sync_preview_render_contract_resources(
                 || prev_image != target.image
         }
         PreviewRenderMode::GpuRenderTarget => {
-            let prev_center = preview_cam.center;
-            let prev_zoom = preview_cam.zoom;
             let prev_size = target.size;
             let prev_image = target.image.clone();
 
             preview_cam.center = viewport.camera_center;
             preview_cam.zoom = viewport.zoom;
             target.image = swap.front.clone();
-            target.size = UVec2::new(tex.width, tex.height);
+            target.size = gpu_render_extent
+                .filter(|extent| extent.x > 0 && extent.y > 0)
+                .unwrap_or_else(|| UVec2::new(tex.width, tex.height));
 
-            prev_center != preview_cam.center
-                || prev_zoom != preview_cam.zoom
-                || prev_size != target.size
-                || prev_image != target.image
+            prev_size != target.size || prev_image != target.image
         }
     };
     if changed {
@@ -206,7 +218,6 @@ pub fn preview_uses_cpu_raster(
 
 /// True when egui should sample [`PreviewRenderTarget`] instead of the CPU swap front.
 #[inline]
-#[allow(dead_code)]
 pub fn preview_gpu_authoritative(
     cam: Res<PreviewCameraState>,
     gpu_rt: Res<super::WorldPreviewGpuRuntime>,
@@ -218,17 +229,16 @@ pub fn preview_gpu_authoritative(
 pub(crate) fn ensure_gpu_preview_target_image(
     mode: PreviewRenderMode,
     target: &mut PreviewRenderTarget,
-    tex: &WorldPreviewTexture,
+    _tex: &WorldPreviewTexture,
     swap: &crate::gui::SwapImageBuffers,
 ) {
     if mode != PreviewRenderMode::GpuRenderTarget {
         return;
     }
-    if tex.width == 0 || tex.height == 0 {
+    if swap.front == Handle::default() {
         return;
     }
     target.image = swap.front.clone();
-    target.size = UVec2::new(tex.width, tex.height);
 }
 
 pub(crate) fn preview_image_asset_id_bits(handle: &Handle<Image>) -> u64 {
@@ -239,7 +249,7 @@ pub(crate) fn preview_image_asset_id_bits(handle: &Handle<Image>) -> u64 {
     h.finish()
 }
 
-pub(crate) fn init_preview_render_contract_resources(app: &mut App) {
+pub fn init_preview_render_contract_resources(app: &mut App) {
     app.init_resource::<PreviewCameraState>()
         .init_resource::<PreviewRenderTarget>()
         .init_resource::<PreviewRenderBudget>()
@@ -253,7 +263,7 @@ pub(crate) fn sync_preview_render_contract_system(
     mut debug: ResMut<PreviewPresentationDebug>,
     mut budget: ResMut<PreviewRenderBudget>,
     mut swap: ResMut<crate::gui::SwapImageBuffers>,
-    viewport: Res<EditorViewport>,
+    views: Res<MapViewInstances>,
     tex: Res<WorldPreviewTexture>,
     gpu_rt: Res<crate::gui::editor::world_preview::WorldPreviewGpuRuntime>,
     visual_cadence: Option<Res<crate::gui::VisualCadence>>,
@@ -267,20 +277,128 @@ pub(crate) fn sync_preview_render_contract_system(
         &mut preview_cam,
         &mut target,
         &mut debug,
-        &viewport,
+        &views.world_preview,
         &tex,
         &swap,
         &mut budget,
         vc,
         vb,
         *sync_tick,
+        None,
     );
     ensure_gpu_preview_target_image(preview_cam.mode, &mut target, &tex, &swap);
-    if changed && preview_cam.mode == PreviewRenderMode::GpuRenderTarget {
+    if changed && preview_cam.mode == PreviewRenderMode::CpuRaster {
         swap.dirty = true;
     }
     debug.last_front_asset_id_bits = preview_image_asset_id_bits(&target.image);
     debug.authoritative_surface = preview_authoritative_surface(&gpu_rt, &preview_cam);
+}
+
+pub(crate) fn sync_preview_render_contract_after_egui(
+    cfg: Res<DebugRenderTraceConfig>,
+    mut preview_cam: ResMut<PreviewCameraState>,
+    mut target: ResMut<PreviewRenderTarget>,
+    mut debug: ResMut<PreviewPresentationDebug>,
+    mut budget: ResMut<PreviewRenderBudget>,
+    mut swap: ResMut<crate::gui::SwapImageBuffers>,
+    views: Res<MapViewInstances>,
+    tex: Res<WorldPreviewTexture>,
+    gpu_rt: Res<crate::gui::editor::world_preview::WorldPreviewGpuRuntime>,
+    resolved: Res<crate::render::ResolvedViewports>,
+    visual_cadence: Option<Res<crate::gui::VisualCadence>>,
+    visual_budgets: Option<Res<crate::gui::VisualBudgetSettings>>,
+    mut sync_tick: Local<u64>,
+) {
+    if !resolved.world_preview.valid {
+        return;
+    }
+    *sync_tick = sync_tick.wrapping_add(1);
+    let vc = visual_cadence.as_deref();
+    let vb = visual_budgets.as_deref();
+    let gpu_extent = (preview_cam.mode == PreviewRenderMode::GpuRenderTarget)
+        .then_some(resolved.world_preview.physical_extent);
+    let prior_image = target.image.clone();
+    let changed = sync_preview_render_contract_resources(
+        &mut preview_cam,
+        &mut target,
+        &mut debug,
+        &views.world_preview,
+        &tex,
+        &swap,
+        &mut budget,
+        vc,
+        vb,
+        *sync_tick,
+        gpu_extent,
+    );
+    if preview_cam.mode == PreviewRenderMode::GpuRenderTarget {
+        target.image = prior_image;
+        if let Some(extent) = gpu_extent.filter(|extent| extent.x > 0 && extent.y > 0) {
+            target.size = extent;
+        }
+    } else {
+        ensure_gpu_preview_target_image(preview_cam.mode, &mut target, &tex, &swap);
+        if changed {
+            swap.dirty = true;
+        }
+    }
+    debug.last_front_asset_id_bits = preview_image_asset_id_bits(&target.image);
+    debug.authoritative_surface = preview_authoritative_surface(&gpu_rt, &preview_cam);
+    if cfg.camera_sync_trace {
+        trace_camera_sync(
+            &cfg,
+            &format!(
+                "preview_contract center=({:.1},{:.1}) zoom={:.3} mode={:?}",
+                preview_cam.center.x,
+                preview_cam.center.y,
+                preview_cam.zoom,
+                preview_cam.mode,
+            ),
+        );
+    }
+    if cfg.render_target_trace {
+        trace_render_target(
+            &cfg,
+            &format!(
+                "preview_target size={}x{} changed={} swap_dirty={}",
+                target.size.x,
+                target.size.y,
+                changed,
+                swap.dirty,
+            ),
+        );
+    }
+}
+
+pub(crate) fn sync_preview_render_target_from_presentation(
+    preview_cam: Res<PreviewCameraState>,
+    resolved: Res<crate::render::ResolvedViewports>,
+    bind_barrier: Res<super::render_target_barrier::WorldPreviewRenderTargetBindBarrier>,
+    mut target: ResMut<PreviewRenderTarget>,
+    swap: Res<crate::gui::SwapImageBuffers>,
+    registry: Res<super::render_target_barrier::WorldPreviewRenderTargetRegistry>,
+    mut mismatch: ResMut<crate::render::ViewportPresentationMismatch>,
+) {
+    if preview_cam.mode != PreviewRenderMode::GpuRenderTarget || registry.revision == 0 {
+        mismatch.stale_texture_binding = false;
+        mismatch.world_preview_extent_mismatch = false;
+        return;
+    }
+    let committed = registry.committed_image.clone();
+    if swap.front != Handle::default() {
+        target.image = swap.front.clone();
+    }
+    if registry.committed_size.x > 0 && registry.committed_size.y > 0 {
+        target.size = registry.committed_size;
+    }
+    let resize_in_flight = bind_barrier.pending.is_some();
+    mismatch.world_preview_extent_mismatch = !resize_in_flight
+        && resolved.world_preview.valid
+        && registry.committed_size != resolved.world_preview.physical_extent;
+    mismatch.stale_texture_binding = !resize_in_flight
+        && committed != Handle::default()
+        && (swap.front == Handle::default()
+            || (swap.front != committed && swap.back != committed));
 }
 
 #[cfg(test)]
@@ -386,7 +504,7 @@ mod tests {
         let swap = crate::gui::SwapImageBuffers::default();
 
         sync_preview_render_contract_resources(
-            &mut cam, &mut tgt, &mut dbg, &vp, &tex, &swap, &mut budget, None, None, 1,
+            &mut cam, &mut tgt, &mut dbg, &vp, &tex, &swap, &mut budget, None, None, 1, None,
         );
         assert_eq!(cam.center, vp.camera_center);
         assert_eq!(cam.zoom, vp.zoom);
@@ -426,6 +544,7 @@ mod tests {
             Some(&cadence),
             Some(&budgets),
             1,
+            None,
         );
         assert!((budget.max_hz - 7.5).abs() < 1e-5);
     }
@@ -458,7 +577,7 @@ mod tests {
         };
 
         sync_preview_render_contract_resources(
-            &mut cam, &mut tgt, &mut dbg, &vp, &tex, &swap, &mut budget, None, None, 1,
+            &mut cam, &mut tgt, &mut dbg, &vp, &tex, &swap, &mut budget, None, None, 1, None,
         );
         assert_eq!(cam.center, vp.camera_center);
         assert_eq!(cam.zoom, vp.zoom);

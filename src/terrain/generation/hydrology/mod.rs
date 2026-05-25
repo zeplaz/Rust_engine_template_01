@@ -4,7 +4,8 @@
 mod flow;
 
 pub use flow::{
-    compute_hydrology_rect, compute_hydrology_world, HydrologyResult, LakeRegion,
+    compute_hydrology_rect, compute_hydrology_world, flow_direction_grid, HydrologyResult,
+    LakeRegion,
 };
 
 use crate::terrain::biome::BiomeTuning;

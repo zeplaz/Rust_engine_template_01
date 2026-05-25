@@ -58,6 +58,7 @@ mod tests {
         update_world_preview_vt4_probe(
             &WorldPreviewUiState {
                 window_open: true,
+                ..Default::default()
             },
             &shared,
             &WorldPreviewGpuRuntime::default(),
@@ -89,6 +90,7 @@ mod tests {
         update_world_preview_vt4_probe(
             &WorldPreviewUiState {
                 window_open: false,
+                ..Default::default()
             },
             &shared,
             &WorldPreviewGpuRuntime::default(),

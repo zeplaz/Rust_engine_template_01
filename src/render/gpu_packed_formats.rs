@@ -8,10 +8,12 @@ pub const ECOLOGY_OVERLAY_ROW_FORMAT: PackedFormatId = PackedFormatId(5);
 use super::gpu_buffer_registry::{
     BufferId, ECOLOGY_OVERLAY_BUFFER, FIRE_PARTICLE_EXPANDED_VERTICES_BUFFER,
     FIRE_PARTICLE_INSTANCES_BUFFER, FIRE_VISUAL_INSTANCES_BUFFER, HEAT_DIFFUSION_FIELD_BUFFER,
-    LOGISTICS_OVERLAY_BUFFER,
+    LOGISTICS_OVERLAY_BUFFER, WATER_PARTICLE_EXPANDED_VERTICES_BUFFER,
+    WATER_PARTICLE_INSTANCES_BUFFER,
 };
 use crate::render::domain_overlay_gpu::{EcologyOverlayGpuRow, LogisticsOverlayGpuRow};
 use crate::render::gpu_particles::{GpuParticleInstance, GpuParticleQuadVertex};
+use crate::render::gpu_water_particles::{GpuWaterParticleInstance, GpuWaterParticleQuadVertex};
 use crate::render::sim_visual_extract::FireVisualGpuInstance;
 
 /// Stable numeric identity for a packed row layout (stride authority).
@@ -22,6 +24,8 @@ pub const FIRE_VISUAL_INSTANCE_FORMAT: PackedFormatId = PackedFormatId(1);
 pub const HEAT_DIFFUSION_CELL_FORMAT: PackedFormatId = PackedFormatId(2);
 pub const FIRE_PARTICLE_INSTANCE_FORMAT: PackedFormatId = PackedFormatId(3);
 pub const FIRE_PARTICLE_EXPANDED_VERTEX_FORMAT: PackedFormatId = PackedFormatId(6);
+pub const WATER_PARTICLE_INSTANCE_FORMAT: PackedFormatId = PackedFormatId(7);
+pub const WATER_PARTICLE_EXPANDED_VERTEX_FORMAT: PackedFormatId = PackedFormatId(8);
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct PackedBufferFormat {
@@ -56,6 +60,24 @@ pub const fn fire_particle_expanded_vertex_format() -> PackedBufferFormat {
         format_id: FIRE_PARTICLE_EXPANDED_VERTEX_FORMAT,
         buffer_id: FIRE_PARTICLE_EXPANDED_VERTICES_BUFFER,
         stride: std::mem::size_of::<GpuParticleQuadVertex>() as u32,
+    }
+}
+
+#[must_use]
+pub const fn water_particle_instance_format() -> PackedBufferFormat {
+    PackedBufferFormat {
+        format_id: WATER_PARTICLE_INSTANCE_FORMAT,
+        buffer_id: WATER_PARTICLE_INSTANCES_BUFFER,
+        stride: std::mem::size_of::<GpuWaterParticleInstance>() as u32,
+    }
+}
+
+#[must_use]
+pub const fn water_particle_expanded_vertex_format() -> PackedBufferFormat {
+    PackedBufferFormat {
+        format_id: WATER_PARTICLE_EXPANDED_VERTEX_FORMAT,
+        buffer_id: WATER_PARTICLE_EXPANDED_VERTICES_BUFFER,
+        stride: std::mem::size_of::<GpuWaterParticleQuadVertex>() as u32,
     }
 }
 

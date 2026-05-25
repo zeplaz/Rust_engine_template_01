@@ -1,0 +1,17 @@
+{
+    "asset_name": "Distribution transformer",
+    "asset_type": "Building",
+    "segment": "Utilities",
+    "description": "Step-down transformer — grid capacity bottleneck for industrial districts",
+    "utility_role": "transformer",
+    "is_building": true,
+    "is_power": true,
+    "building_size_x": 2,
+    "building_size_y": 2,
+    "building_height": 2,
+    "construction_cost": 800,
+    "power_consumption": 4,
+    "power_generation": 0,
+    "transfer_capacity_mva": 40,
+    "version": "1.0.0"
+}

@@ -1,0 +1,19 @@
+{
+    "asset_name": "Geopolymer cement kiln",
+    "asset_type": "Building",
+    "segment": "Industrial",
+    "description": "Lower-temperature binder production for geopolymer concrete",
+    "supply_chain": "concrete_geopolymer",
+    "supply_chain_role": "cement_kiln",
+    "concrete_type": "Geopolymer",
+    "is_building": true,
+    "is_productive": true,
+    "building_size_x": 3,
+    "building_size_y": 3,
+    "building_height": 2,
+    "construction_cost": 1800,
+    "power_consumption": 58,
+    "produces_resources": ["Cement"],
+    "consumes_resources": ["Limestone", "Chemicals", "Labour", "Electricity"],
+    "version": "1.0.0"
+}

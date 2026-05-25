@@ -1,0 +1,955 @@
+   Compiling proc-macro2 v1.0.94
+   Compiling unicode-ident v1.0.8
+   Compiling serde_core v1.0.228
+   Compiling autocfg v1.1.0
+   Compiling cfg-if v1.0.0
+   Compiling libm v0.2.16
+   Compiling serde v1.0.228
+   Compiling log v0.4.29
+   Compiling once_cell v1.21.4
+   Compiling pin-project-lite v0.2.17
+   Compiling crossbeam-utils v0.8.21
+   Compiling windows-link v0.2.1
+   Compiling num-traits v0.2.19
+   Compiling futures-core v0.3.28
+   Compiling equivalent v1.0.2
+   Compiling winnow v1.0.2
+   Compiling hashbrown v0.17.0
+   Compiling quote v1.0.39
+   Compiling syn v2.0.117
+   Compiling thiserror v2.0.18
+   Compiling winapi v0.3.9
+   Compiling toml_parser v1.1.2+spec-1.1.0
+   Compiling indexmap v2.14.0
+   Compiling winnow v0.7.15
+   Compiling toml_datetime v0.7.5+spec-1.1.0
+   Compiling foldhash v0.2.0
+   Compiling foldhash v0.1.5
+   Compiling hashbrown v0.15.5
+   Compiling hashbrown v0.16.1
+   Compiling version_check v0.9.4
+   Compiling parking v2.2.1
+   Compiling typewit_proc_macros v1.8.1
+   Compiling arrayvec v0.7.6
+   Compiling concurrent-queue v2.5.0
+   Compiling encase_derive_impl v0.12.0
+   Compiling toml_edit v0.23.10+spec-1.0.0
+   Compiling slab v0.4.8
+   Compiling getrandom v0.4.2
+   Compiling typewit v1.15.2
+   Compiling event-listener v5.4.1
+   Compiling windows-sys v0.61.2
+   Compiling konst_kernel v0.3.15
+   Compiling typeid v1.0.3
+   Compiling bevy_macro_utils v0.18.1
+   Compiling const_panic v0.2.7
+   Compiling rand_core v0.9.5
+   Compiling unicode-segmentation v1.13.2
+   Compiling rand v0.9.4
+   Compiling convert_case v0.10.0
+   Compiling event-listener-strategy v0.5.4
+   Compiling zerocopy v0.8.27
+   Compiling futures-io v0.3.28
+   Compiling bytemuck_derive v1.10.2
+   Compiling serde_derive v1.0.228
+   Compiling thiserror-impl v2.0.18
+   Compiling encase_derive v0.12.0
+   Compiling fastrand v2.4.1
+   Compiling spin v0.10.0
+   Compiling unicode-xid v0.2.6
+   Compiling zerocopy-derive v0.8.27
+   Compiling uuid v1.23.1
+   Compiling derive_more-impl v2.1.1
+   Compiling slotmap v1.1.1
+   Compiling thread_local v1.1.7
+   Compiling erased-serde v0.4.10
+   Compiling windows-link v0.1.3
+   Compiling bytemuck v1.25.0
+   Compiling futures-lite v2.6.1
+   Compiling tracing-core v0.1.36
+   Compiling bitflags v2.11.1
+   Compiling encase v0.12.0
+   Compiling memchr v2.8.0
+   Compiling glam v0.30.10
+   Compiling fixedbitset v0.5.7
+   Compiling atomic-waker v1.1.2
+   Compiling disqualified v1.0.0
+   Compiling async-task v4.7.1
+   Compiling bevy_reflect_derive v0.18.1
+   Compiling variadics_please v1.1.0
+   Compiling tracing-attributes v0.1.31
+   Compiling assert_type_match v0.1.1
+   Compiling async-channel v2.5.0
+   Compiling smallvec v1.15.1
+   Compiling wgpu-types v27.0.1
+   Compiling smol_str v0.2.2
+   Compiling bevy_platform v0.18.1
+   Compiling derive_more v2.1.1
+   Compiling bevy_utils v0.18.1
+   Compiling petgraph v0.8.3
+   Compiling bevy_ptr v0.18.1
+   Compiling downcast-rs v2.0.2
+   Compiling inventory v0.3.24
+   Compiling crossbeam-queue v0.3.8
+   Compiling windows-result v0.3.4
+   Compiling windows-strings v0.4.2
+   Compiling tracing v0.1.44
+   Compiling windows-implement v0.60.2
+   Compiling windows-interface v0.59.3
+   Compiling async-executor v1.14.0
+   Compiling nonmax v0.5.5
+   Compiling bevy_tasks v0.18.1
+   Compiling bevy_ecs_macros v0.18.1
+   Compiling bumpalo v3.12.0
+   Compiling windows-threading v0.1.0
+   Compiling windows-core v0.61.2
+   Compiling bevy_derive v0.18.1
+   Compiling ctrlc v3.5.2
+   Compiling windows-future v0.2.1
+   Compiling windows-collections v0.2.0
+   Compiling windows-numerics v0.2.0
+   Compiling windows v0.61.3
+   Compiling libc v0.2.186
+   Compiling futures-task v0.3.28
+   Compiling either v1.15.0
+   Compiling futures-util v0.3.28
+   Compiling futures-macro v0.3.28
+   Compiling bevy_reflect v0.18.1
+   Compiling windows_x86_64_msvc v0.52.6
+   Compiling pin-utils v0.1.0
+   Compiling half v2.7.1
+   Compiling aho-corasick v1.1.4
+   Compiling shlex v1.3.0
+   Compiling find-msvc-tools v0.1.9
+   Compiling simd-adler32 v0.3.9
+   Compiling crc32fast v1.3.2
+   Compiling ntapi v0.4.0
+   Compiling regex-syntax v0.8.10
+   Compiling cc v1.2.61
+   Compiling itertools v0.14.0
+   Compiling rand_distr v0.5.1
+   Compiling crossbeam-channel v0.5.8
+   Compiling regex-automata v0.4.14
+   Compiling cfg_aliases v0.2.1
+   Compiling adler2 v2.0.1
+   Compiling windows-targets v0.52.6
+   Compiling miniz_oxide v0.8.9
+   Compiling blake3 v1.8.5
+   Compiling bevy_ecs v0.18.1
+   Compiling bevy_math v0.18.1
+   Compiling piper v0.2.5
+   Compiling blocking v1.6.2
+   Compiling flate2 v1.1.9
+   Compiling async-lock v3.4.2
+   Compiling cpufeatures v0.3.0
+   Compiling constant_time_eq v0.4.2
+   Compiling arrayref v0.3.9
+   Compiling const-fnv1a-hash v1.1.0
+   Compiling lazy_static v1.4.0
+   Compiling async-fs v2.2.0
+   Compiling ron v0.12.1
+   Compiling bevy_asset_macros v0.18.1
+   Compiling async-broadcast v0.7.2
+   Compiling stackfuture v0.3.1
+   Compiling atomicow v1.2.0
+   Compiling sharded-slab v0.1.4
+   Compiling matchers v0.2.0
+   Compiling fdeflate v0.3.7
+   Compiling tracing-log v0.2.0
+   Compiling nu-ansi-term v0.50.3
+   Compiling raw-window-handle v0.6.2
+   Compiling pxfm v0.1.29
+   Compiling tracing-subscriber v0.3.23
+   Compiling png v0.18.1
+   Compiling bevy_app v0.18.1
+   Compiling bevy_time v0.18.1
+   Compiling moxcms v0.8.1
+   Compiling sysinfo v0.37.2
+   Compiling bevy_diagnostic v0.18.1
+   Compiling euclid v0.22.9
+   Compiling bevy_asset v0.18.1
+   Compiling svg_fmt v0.4.1
+   Compiling byteorder-lite v0.1.0
+   Compiling twox-hash v2.1.2
+   Compiling ruzstd v0.8.2
+   Compiling image v0.25.10
+   Compiling guillotiere v0.6.2
+   Compiling bevy_log v0.18.1
+   Compiling bevy_color v0.18.1
+   Compiling ktx2 v0.4.0
+   Compiling rectangle-pack v0.4.2
+   Compiling bevy_image v0.18.1
+   Compiling const_soft_float v0.1.4
+   Compiling constgebra v0.1.4
+   Compiling bevy_transform v0.18.1
+   Compiling hexasphere v16.0.0
+   Compiling bevy_input v0.18.1
+   Compiling rustc-hash v1.1.0
+   Compiling bevy_mikktspace v0.17.0-dev
+   Compiling bevy_mesh v0.18.1
+   Compiling bevy_window v0.18.1
+   Compiling winapi-util v0.1.5
+   Compiling parking_lot_core v0.9.12
+   Compiling termcolor v1.4.1
+   Compiling windows-result v0.2.0
+   Compiling naga v27.0.3
+   Compiling bevy_camera v0.18.1
+   Compiling unicode-width v0.1.10
+   Compiling tinyvec_macros v0.1.1
+   Compiling scopeguard v1.1.0
+   Compiling bit-vec v0.8.0
+   Compiling thiserror v1.0.69
+   Compiling bit-set v0.8.0
+   Compiling lock_api v0.4.14
+   Compiling tinyvec v1.11.0
+   Compiling codespan-reporting v0.12.0
+   Compiling windows-strings v0.1.0
+   Compiling spirv v0.3.0+sdk-1.3.268.0
+   Compiling windows-interface v0.58.0
+   Compiling windows-implement v0.58.0
+   Compiling thiserror-impl v1.0.69
+   Compiling core_maths v0.1.1
+   Compiling hexf-parse v0.2.1
+   Compiling windows-core v0.58.0
+   Compiling parking_lot v0.12.5
+   Compiling profiling v1.0.17
+   Compiling ash v0.38.0+1.3.281
+   Compiling windows v0.58.0
+   Compiling wgpu-hal v27.0.4
+   Compiling gpu-descriptor-types v0.2.0
+   Compiling gpu-alloc-types v0.3.0
+   Compiling libloading v0.8.9
+   Compiling presser v0.3.1
+   Compiling gpu-alloc v0.6.0
+   Compiling gpu-descriptor v0.3.2
+   Compiling ordered-float v5.3.0
+   Compiling range-alloc v0.1.3
+   Compiling renderdoc-sys v1.1.0
+   Compiling static_assertions v1.1.0
+   Compiling ttf-parser v0.25.1
+   Compiling gpu-allocator v0.27.0
+   Compiling wgpu-core v27.0.3
+   Compiling windows_x86_64_msvc v0.42.2
+   Compiling litrs v1.0.0
+   Compiling document-features v0.2.12
+   Compiling wgpu-core-deps-windows-linux-android v27.0.0
+   Compiling regex v1.12.3
+   Compiling wgpu v27.0.1
+   Compiling data-encoding v2.11.0
+   Compiling unicode-bidi v0.3.13
+   Compiling naga_oil v0.20.0
+   Compiling font-types v0.11.3
+   Compiling font-types v0.10.1
+   Compiling radsort v0.1.0
+   Compiling itoa v1.0.6
+   Compiling read-fonts v0.36.0
+   Compiling read-fonts v0.37.0
+   Compiling bevy_shader v0.18.1
+   Compiling offset-allocator v0.2.0
+   Compiling bevy_encase_derive v0.18.1
+   Compiling bevy_render_macros v0.18.1
+   Compiling enumn v0.1.14
+   Compiling yazi v0.2.1
+   Compiling bevy_render v0.18.1
+   Compiling skrifa v0.40.0
+   Compiling memmap2 v0.9.10
+   Compiling zeno v0.3.3
+   Compiling swash v0.2.7
+   Compiling fontdb v0.23.0
+   Compiling accesskit v0.21.1
+   Compiling harfrust v0.4.1
+   Compiling skrifa v0.39.0
+   Compiling bevy_core_pipeline v0.18.1
+   Compiling bevy_picking v0.18.1
+   Compiling unicode-linebreak v0.1.5
+   Compiling sys-locale v0.3.2
+   Compiling unicode-script v0.5.8
+   Compiling fnv v1.0.7
+   Compiling linebender_resource_handle v0.1.1
+   Compiling rangemap v1.7.1
+   Compiling self_cell v1.2.2
+   Compiling windows-targets v0.42.2
+   Compiling cosmic-text v0.16.0
+   Compiling percent-encoding v2.2.0
+   Compiling zmij v1.0.21
+   Compiling bytes v1.4.0
+   Compiling byteorder v1.4.3
+   Compiling bevy_text v0.18.1
+   Compiling windows-sys v0.45.0
+   Compiling tokio v1.27.0
+   Compiling serde_json v1.0.149
+   Compiling bevy_sprite v0.18.1
+   Compiling mio v0.8.6
+   Compiling windows-result v0.1.2
+   Compiling winit v0.30.13
+   Compiling socket2 v0.4.9
+   Compiling getrandom v0.1.16
+   Compiling windows-core v0.54.0
+   Compiling bevy_input_focus v0.18.1
+   Compiling accesskit_consumer v0.31.0
+   Compiling bevy_a11y v0.18.1
+   Compiling bevy_light v0.18.1
+   Compiling windows-sys v0.52.0
+   Compiling approx v0.5.1
+   Compiling indexmap v1.9.3
+   Compiling grid v1.0.1
+   Compiling cpal v0.15.3
+   Compiling dpi v0.1.2
+   Compiling inflections v1.1.1
+   Compiling cursor-icon v1.2.0
+   Compiling gltf-derive v1.4.1
+   Compiling taffy v0.9.2
+   Compiling accesskit_windows v0.29.2
+   Compiling windows v0.54.0
+   Compiling bevy_sprite_render v0.18.1
+   Compiling ogg v0.8.0
+   Compiling http v0.2.9
+   Compiling form_urlencoded v1.1.0
+   Compiling windows-sys v0.42.0
+   Compiling unicode-normalization v0.1.22
+   Compiling ppv-lite86 v0.2.21
+   Compiling ahash v0.8.12
+   Compiling num-integer v0.1.45
+   Compiling hashbrown v0.12.3
+   Compiling gilrs v0.11.1
+   Compiling httparse v1.8.0
+   Compiling native-tls v0.2.11
+   Compiling futures-channel v0.3.28
+   Compiling dasp_sample v0.11.0
+   Compiling futures-sink v0.3.28
+   Compiling tokio-util v0.7.7
+   Compiling idna v0.3.0
+   Compiling schannel v0.1.21
+   Compiling lewton v0.10.2
+   Compiling rand_core v0.5.1
+   Compiling accesskit_winit v0.29.2
+   Compiling bevy_ui v0.18.1
+   Compiling gltf-json v1.4.1
+   Compiling bevy_pbr v0.18.1
+   Compiling owned_ttf_parser v0.25.1
+   Compiling gilrs-core v0.6.7
+   Compiling emath v0.33.3
+   Compiling bevy_gizmos_macros v0.18.1
+   Compiling bevy_animation_macros v0.18.1
+   Compiling num-rational v0.4.1
+   Compiling vec_map v0.8.2
+   Compiling once_cell_polyfill v1.70.2
+   Compiling try-lock v0.2.4
+   Compiling str-buf v1.0.6
+   Compiling ab_glyph_rasterizer v0.1.8
+   Compiling paste v1.0.12
+   Compiling anstyle v1.0.14
+   Compiling utf8parse v0.2.2
+   Compiling anstyle-parse v0.2.7
+   Compiling anstyle-wincon v3.0.11
+   Compiling ab_glyph v0.2.32
+   Compiling error-code v2.3.1
+   Compiling want v0.3.0
+   Compiling bevy_animation v0.18.1
+   Compiling bevy_gizmos v0.18.1
+   Compiling ecolor v0.33.3
+   Compiling bevy_ui_render v0.18.1
+   Compiling gltf v1.4.1
+   Compiling rodio v0.20.1
+   Compiling bevy_winit v0.18.1
+   Compiling url v2.3.1
+   Compiling h2 v0.3.16
+   Compiling http-body v0.4.5
+   Compiling bevy_scene v0.18.1
+   Compiling safe_arch v0.7.4
+   Compiling bevy_state_macros v0.18.1
+   Compiling anstyle-query v1.1.5
+   Compiling crossbeam-epoch v0.9.18
+   Compiling matrixmultiply v0.3.9
+   Compiling getrandom v0.2.9
+   Compiling epaint_default_fonts v0.33.3
+   Compiling nohash-hasher v0.2.0
+   Compiling httpdate v1.0.2
+   Compiling typenum v1.18.0
+   Compiling tower-service v0.3.2
+   Compiling colorchoice v1.0.5
+   Compiling rayon-core v1.13.0
+   Compiling base64 v0.22.1
+   Compiling adler v1.0.2
+   Compiling is_terminal_polyfill v1.70.2
+   Compiling winreg v0.10.1
+   Compiling anstream v0.6.21
+   Compiling miniz_oxide v0.6.2
+   Compiling bevy_gltf v0.18.1
+   Compiling hyper v0.14.25
+   Compiling epaint v0.33.3
+   Compiling rand_core v0.6.4
+   Compiling bevy_state v0.18.1
+   Compiling crossbeam-deque v0.8.6
+   Compiling wide v0.7.32
+   Compiling tokio-native-tls v0.3.1
+   Compiling bevy_audio v0.18.1
+   Compiling bevy_gizmos_render v0.18.1
+   Compiling bevy_gilrs v0.18.1
+   Compiling clipboard-win v4.5.0
+   Compiling rand_chacha v0.2.2
+   Compiling bevy_post_process v0.18.1
+   Compiling bevy_anti_alias v0.18.1
+   Compiling num-complex v0.4.6
+   Compiling bitflags v1.3.2
+   Compiling clap_lex v1.1.0
+   Compiling heck v0.5.0
+   Compiling ryu v1.0.13
+   Compiling base64 v0.21.0
+   Compiling rawpointer v0.2.1
+   Compiling strsim v0.11.1
+   Compiling weezl v0.1.7
+   Compiling color_quant v1.1.0
+   Compiling gif v0.12.0
+   Compiling bevy_internal v0.18.1
+   Compiling clap_builder v4.5.60
+   Compiling serde_urlencoded v0.7.1
+   Compiling clap_derive v4.5.55
+   Compiling png v0.17.7
+   Compiling simba v0.8.1
+   Compiling rand v0.7.3
+   Compiling arboard v3.2.0
+   Compiling hyper-tls v0.5.0
+   Compiling egui v0.33.3
+   Compiling rand_chacha v0.3.1
+   Compiling webbrowser v1.0.6
+   Compiling rand_xorshift v0.2.0
+   Compiling nalgebra-macros v0.2.2
+   Compiling encoding_rs v0.8.32
+   Compiling ipnet v2.7.2
+   Compiling proc_A_dine01 v0.1.1 (C:\dev\github\Rust_engine_template_01)
+   Compiling mime v0.3.17
+   Compiling reqwest v0.11.16
+   Compiling bevy_egui v0.39.1
+   Compiling nalgebra v0.32.6
+   Compiling noise v0.8.2
+   Compiling rayon v1.12.0
+   Compiling rand v0.8.5
+   Compiling image v0.24.6
+   Compiling clap v4.5.60
+   Compiling bevy v0.18.1
+   Compiling ron v0.8.1
+   Compiling rustc-hash v2.1.2
+    Finished `release` profile [optimized] target(s) in 6m 22s
+     Running `C:\Users\oz_\AppData\Local\Temp\cursor-sandbox-cache\ea910b6c66b7456ea408ae54d28b6cee\cargo-target\release\proc_A_dine01.exe --test visual`
+2026-05-23T03:51:02.473987Z  INFO bevy_diagnostic::system_information_diagnostics_plugin::internal: SystemInfo { os: "Windows 10 Pro", kernel: "19045", cpu: "AMD Ryzen 7 7800X3D 8-Core Processor", core_count: "8", memory: "31.1 GiB" }
+2026-05-23T03:51:02.707098Z  INFO bevy_render::renderer: AdapterInfo { name: "AMD Radeon RX 7800 XT", vendor: 4098, device: 29822, device_type: DiscreteGpu, driver: "AMD proprietary driver", driver_info: "26.5.2 (LLPC)", backend: Vulkan }
+2026-05-23T03:51:03.053106Z  INFO proc_A_dine01::terrain::generation::world_generation_plugin: World Generation Tools initialized. Default key for UI is F8; change under Options ÔåÆ key bindings when KeybindingsOptionsPlugin is loaded.
+2026-05-23T03:51:03.053557Z  INFO proc_A_dine01::engine::engine_with_worldgen: Engine initialized. Optional: `--test weather` / `--test fire` / `--test atmosphere` / `--test visual` for sample worlds. Keys: F1 options ┬À F2 pressure composer ┬À F3 diagnostics ┬À F7 agent perms ┬À F11/F12 capture; RON under user config ┬À captures under APPDATA/proc_A_dine01/captures.
+2026-05-23T03:51:03.062800Z  INFO bevy_render::batching::gpu_preprocessing: GPU preprocessing is fully supported on this device.
+2026-05-23T03:51:03.064035Z  INFO bevy_egui::render: Using bindless_mode_array_size 16 (Device maximum 4294967295)
+2026-05-23T03:51:03.064189Z  INFO bevy_winit::system: Creating new window proc_A_dine01 (0v0)
+2026-05-23T03:51:03.120570Z  INFO visual_diag: VISUAL_DIAG active ÔÇö RUST_LOG=visual_diag=info,visual_diag::anomaly=warn
+2026-05-23T03:51:03.120570Z  INFO worldgen_chrome: WORLDGEN_CHROME_DEBUG active ÔÇö filter RUST_LOG=worldgen_chrome=info,worldgen_chrome::anomaly=warn,worldgen_chrome::preview_egui=warn
+2026-05-23T03:51:03.120629Z  INFO sim_view_sync: SIM_VIEW_SYNC_DEBUG active ÔÇö filter RUST_LOG=sim_view_sync=info,sim_view_sync::anomaly=warn
+2026-05-23T03:51:03.122959Z  INFO stage5_live_todos: STAGE5_ACTIVE_TODO subsystem=First(render_frame_start) spine_gate_seq=["TODO-01", "TODO-04", "TODO-06"] idx=0 id=TODO-01 status=InProgress file=src/render/stage5_readiness.rs system=Stage5ReadinessProfile, evaluate_app_stage5_readiness goal=Running-app readiness fence is proven: FULL_APP report fully populated each PostUpdate, not UNKNOWN. runtime_check=RUST_LOG=stage5_readiness::live=info shows READINESS_EVAL_BEGIN/END/FLAGS, READINESS_VIOLATION_SUMMARY, READINESS_FRAME_FENCE / READINESS_FRAME_FENCE_OK; inv increases. failure_mode=FULL_APP false-positive green or all gates UNKNOWN in windowed app.
+2026-05-23T03:51:03.148744Z  INFO proc_A_dine01::render::viewport_pipeline: resolved viewport=primary_window revision=1 logical=(1280.0,720.0) physical=1280x720
+2026-05-23T03:51:03.148792Z  INFO worldgen_chrome::open: CHROME_OPEN reason="ux_begin_world_gen_from_menu" world_gen_visible=true preview_window_open=true
+2026-05-23T03:51:03.148816Z  INFO proc_A_dine01::gui::editor::world_preview::preview_readiness: PREVIEW STATE: world=true cam=true tex=true proj=false state=Degraded world_ready=true camera_ready=true texture_ready=true projection_ready=false missing=Some("viewport_projection") contract_valid=false wp_half_x=0.0 wp_half_y=0.0 wp_logical_w=0.0 wp_logical_h=0.0 viewport_rev=1
+2026-05-23T03:51:03.148850Z  INFO stage5_live_todos: STAGE5_ACTIVE_TODO subsystem=map_camera_mirror_chain spine_gate_seq=["TODO-01", "TODO-04", "TODO-06"] idx=0 id=TODO-01 status=InProgress file=src/render/stage5_readiness.rs system=Stage5ReadinessProfile, evaluate_app_stage5_readiness goal=Running-app readiness fence is proven: FULL_APP report fully populated each PostUpdate, not UNKNOWN. runtime_check=RUST_LOG=stage5_readiness::live=info shows READINESS_EVAL_BEGIN/END/FLAGS, READINESS_VIOLATION_SUMMARY, READINESS_FRAME_FENCE / READINESS_FRAME_FENCE_OK; inv increases. failure_mode=FULL_APP false-positive green or all gates UNKNOWN in windowed app.
+2026-05-23T03:51:03.148878Z  INFO stage5_live_todos: STAGE5_MAP_CAMERA_HOOK post_mirror desired_xy=(0.00,0.00) zoom=1.0000 world_main_xy=(0.00,0.00) zoom=-1.0000 bridge_drift=2.0000
+2026-05-23T03:51:03.149783Z  INFO stage5_readiness::live: READINESS_PROJECTION_GRAPH_BUILD dom=3 tick=1 order=fire+logistics+ecology fire_inst=0 fire_heat=0 log_rows=0 eco_rows=0 fire_snap=1 log_snap=1 eco_snap=1
+2026-05-23T03:51:03.150175Z  INFO stage5_live_todos: STAGE5_ACTIVE_TODO subsystem=fire_extract_post spine_gate_seq=["TODO-01", "TODO-04", "TODO-06"] idx=0 id=TODO-01 status=InProgress file=src/render/stage5_readiness.rs system=Stage5ReadinessProfile, evaluate_app_stage5_readiness goal=Running-app readiness fence is proven: FULL_APP report fully populated each PostUpdate, not UNKNOWN. runtime_check=RUST_LOG=stage5_readiness::live=info shows READINESS_EVAL_BEGIN/END/FLAGS, READINESS_VIOLATION_SUMMARY, READINESS_FRAME_FENCE / READINESS_FRAME_FENCE_OK; inv increases. failure_mode=FULL_APP false-positive green or all gates UNKNOWN in windowed app.
+2026-05-23T03:51:03.150188Z  INFO stage5_live_todos: STAGE5_FIRE_HOOK fire_visual_producer_count=1 (expect 1 for FIRE-01)
+2026-05-23T03:51:03.150217Z  INFO stall: STALL after_tile_storage_apply: 25.23ms
+2026-05-23T03:51:03.150679Z  WARN proc_A_dine01::io::streaming::task_pool: stream hydrate skipped: missing save manifest at saves/incremental
+2026-05-23T03:51:03.150762Z  INFO stage5_live_todos: STAGE5_ACTIVE_TODO subsystem=representation_spine_post_merge spine_gate_seq=["TODO-01", "TODO-04", "TODO-06"] idx=0 id=TODO-01 status=InProgress file=src/render/stage5_readiness.rs system=Stage5ReadinessProfile, evaluate_app_stage5_readiness goal=Running-app readiness fence is proven: FULL_APP report fully populated each PostUpdate, not UNKNOWN. runtime_check=RUST_LOG=stage5_readiness::live=info shows READINESS_EVAL_BEGIN/END/FLAGS, READINESS_VIOLATION_SUMMARY, READINESS_FRAME_FENCE / READINESS_FRAME_FENCE_OK; inv increases. failure_mode=FULL_APP false-positive green or all gates UNKNOWN in windowed app.
+2026-05-23T03:51:03.150775Z  INFO stage5_live_todos: STAGE5_SPINE_HOOK policy_present=true graph_present=true fence_committed=true fence_fire_tick=1 world_frame_present=true overlay_rev=0 overlay_chunk_cells=0 atm_partial_dispatch=0 atm_gpu_tex_uploads=0 atm_full_field_fallback=false
+2026-05-23T03:51:03.151951Z  INFO industrial_activation_todos: INDUSTRIAL_ACTIVATION_GREEN
+2026-05-23T03:51:03.157142Z  INFO stall: STALL pre_egui: 6.92ms
+2026-05-23T03:51:03.157203Z  INFO stage5_live_todos: STAGE5_ACTIVE_TODO subsystem=evaluate_app_stage5_readiness spine_gate_seq=["TODO-01", "TODO-04", "TODO-06"] idx=0 id=TODO-01 status=InProgress file=src/render/stage5_readiness.rs system=Stage5ReadinessProfile, evaluate_app_stage5_readiness goal=Running-app readiness fence is proven: FULL_APP report fully populated each PostUpdate, not UNKNOWN. runtime_check=RUST_LOG=stage5_readiness::live=info shows READINESS_EVAL_BEGIN/END/FLAGS, READINESS_VIOLATION_SUMMARY, READINESS_FRAME_FENCE / READINESS_FRAME_FENCE_OK; inv increases. failure_mode=FULL_APP false-positive green or all gates UNKNOWN in windowed app.
+2026-05-23T03:51:03.157219Z  INFO stage5_live_todos: STAGE5_READINESS_HOOK passes=true violations_first=(none) producer_count=1
+2026-05-23T03:51:03.157223Z  INFO stage5_live_todos: STAGE5_TODO_BOARD_RECONCILE marked_done=10 reopened=0 done_count=10/13 inv=1
+2026-05-23T03:51:03.157248Z  INFO stage5_readiness::truth: 
+========== STAGE5_FULL_APP_TRUTH (post_update_invocation=1 sim_tick=0) ==========
+FULL_APP_PROFILE_ACTIVE: true
+stage5_readiness_passes: true
+--- AppStage5ReadinessReport (hard gates) ---
+vt4_ok: true  [src: evaluate_app_stage5_readiness / VtCiMatrixLiveReport OR VisualAgreementFrame]
+vt5_ok: true  [src: evaluate_app_stage5_readiness / VtCiMatrixLiveReport]
+single_fire_extract: true  [src: fire_visual_producer_count / REGISTERED_VISUAL_PRODUCERS]
+gpu_field_authoritative: true  [src: P2H_GPU_PARTIAL_WRITES_AUTHORITATIVE]
+preview_render_target_active: true  [src: preview_authoritative_surface]
+phase_d_ok: true  [derived: !require_preview || preview_render_target_active]
+overlay_from_shared_buffers_only: true  [src: SharedOverlayFieldBuffers resource exists]
+particle_lod_scales: true  [src: GpuRepresentationMetrics vs RepresentationResult band]
+phase_f_lod_proof_ok: true  [src: PhaseFLodProofReport]
+instanced_dispatch_ok: true  [src: GpuIndirectDrawSpine vs WorldFireParticleDrawDispatch]
+phase_f_ok: true  [derived: particle_lod_scales && phase_f_lod_proof_ok && instanced_dispatch_ok]
+projection_domains (report): 3  [src: RenderProjectionGraph via evaluate_stage5_spine_checklist]
+registered_producers: 2
+duplicate_visual_scan_count: 0
+--- violations (first = primary suspect) ---
+first: (none)
+all: []
+--- input wiring (MISSING = UNKNOWNÔåÆoperator FAIL) ---
+RepresentationResult: true
+WorldRepresentationFrame: true
+RenderProjectionGraph: true
+CommittedVisualSnapshotFence: true
+SharedOverlayFieldBuffers: true
+GpuRepresentationMetrics: true
+VisualAgreementFrame: true
+VtCiMatrixLiveReport: true
+AtmospherePartialWriteMetrics: true
+PreviewCameraState: true
+WorldPreviewGpuRuntime: true
+PhaseFLodProofReport: true
+GpuIndirectDrawSpine: true
+WorldFireParticleDrawDispatch: true
+FireSimulationSnapshot: true
+MISSING_WIRING_FULL_APP: none
+================================================================
+
+2026-05-23T03:51:03.158446Z  INFO worldgen_chrome::egui: WORLD_GEN_EGUI_DRAW preview_window_open=true flow=Idle
+2026-05-23T03:51:03.162160Z  INFO stage5_live_todos: STAGE5_ACTIVE_TODO subsystem=gpu_indirect_sync_post spine_gate_seq=["TODO-01", "TODO-04", "TODO-06"] idx=3 id=TODO-04 status=InProgress file=src/gui/map_camera.rs, src/gui/view_authority.rs system=ViewManager, MapCameraDesired, mirror + trace goal=ViewManager sole authority for WorldMain camera pose after bridge; MapCameraDesired only mirrored. runtime_check=FULL_APP + RUST_LOG=map_camera_desired::write=debug: MAP_CAMERA_DESIRED_WRITE lines from map_camera_apply_input_to_desired, tile_world_fallback::focus_main_camera_on_world_params, view_representation::apply_minimap_camera_intent when pose changes. failure_mode=minimap/world drift, dual-write inconsistency.
+2026-05-23T03:51:03.162173Z  INFO stage5_live_todos: STAGE5_GPU_HOOK indirect_instances=0 dispatch_count=0 draw_instances=0 (PHF-01 alignment)
+2026-05-23T03:51:03.162973Z  INFO worldgen_chrome::hud: HUD_SHELL_STATE (Editor/Simulation = HUD egui may run; MainMenu = player shell off) base=Res(State(MainMenu)) minimap_visible=true overlay_tray=false command_shell=false transmission=false
+2026-05-23T03:51:03.162957Z  INFO worldgen_chrome::trace: CHROME_STATE app=Res(State(Setup)) worldgen=Res(State(Idle)) base=Res(State(MainMenu)) flow=Res(State(Idle)) latch_dismissed=false world_gen_visible=true preview_window_open=true lifecycle=Uninitialized last_dismiss="never"
+2026-05-23T03:51:03.162991Z  INFO visual_diag: VISUAL_DIAG window frame=0 periodic=false win_logical=(1280, 720) win_physical=(1280, 720) scale=1.0 app=0 base=0 flow=0 worldgen=0 readiness_profile=Stage5ReadinessProfile { require_vt4: true, require_vt5: true, require_preview: true, require_partial_metrics: true, require_world_frame: true, require_phase_f_proof: true, require_instanced_draw: true }
+2026-05-23T03:51:03.162978Z  INFO sim_view_sync: SIM_VIEW_SYNC frame=0 win_logical=(1280, 720) win_physical=(1280, 720) sim_valid=false sim_adequate=false sim_min=Vec2(0.0, 0.0) sim_max=Vec2(0.0, 0.0) measured_valid=false measured_wh=Vec2(0.0, 0.0) committed_wh=Vec2(0.0, 0.0) sim_wh=Vec2(0.0, 0.0) settle_streak=0 layout_settled=false sim_held=false last_commit="" frozen=false pending_wh=Vec2(0.0, 0.0) cam_hole=false render_hole=false cam_invalid_streak=0 cam_valid_streak=0 cam_scissor=None ortho_fixed_wh=(0, 0) map_view_px=(0, 0) raster_rev=2 resolved_rev=1 app=0 base=0 flow=0 worldgen=0 cmd_shell=false overlay_tray=false transmission=false rect_sanity_issues=0 left_stack_collapsed=true map_cam_scale=Vec3(1.0, 1.0, 1.0) minimap_visible=true
+2026-05-23T03:51:03.163008Z  INFO visual_diag: VISUAL_DIAG sim_viewport frame=0 sim_valid=false sim_adequate=false sim_min=Vec2(0.0, 0.0) sim_max=Vec2(0.0, 0.0) sim_wh=(0, 0) measured_valid=false measured_wh=(0, 0) committed_wh=(0, 0) sim_held=false settle_streak=0 layout_settled=false frozen=false last_commit="" pending_wh=(0, 0) pending_min=Vec2(0.0, 0.0) pending_max=Vec2(0.0, 0.0)
+2026-05-23T03:51:03.163029Z  INFO visual_diag: VISUAL_DIAG camera frame=0 cam_desired_x=0.0 cam_desired_y=0.0 cam_zoom=1.0 latch_hole=false render_hole=false latch_invalid_streak=0 latch_valid_streak=0 cam_scissor=None ortho_fixed_w=0 ortho_fixed_h=0 map_view_px_w=0 map_view_px_h=0 world_w=320 world_h=320
+2026-05-23T03:51:03.163035Z  INFO visual_diag: VISUAL_DIAG resolved_viewports frame=0 resolved_rev=1 primary_valid=true primary_wh=(1280, 720) sim_resolved_valid=false sim_resolved_wh=(0, 0) preview_valid=false preview_wh=(0, 0) minimap_valid=false minimap_wh=(0, 0) mismatch_preview=false mismatch_minimap=false mismatch_sim_map=false mismatch_stale_tex=false
+2026-05-23T03:51:03.163040Z  INFO visual_diag: VISUAL_DIAG map_view_frames frame=0 world_preview_proj_rev=4294967297 minimap_proj_rev=4294967297 sim_map_proj_rev=3092376454400
+2026-05-23T03:51:03.163043Z  INFO visual_diag: VISUAL_DIAG map_presentation frame=0 wp_fit=Contain wp_viewport=UVec2(1, 1) wp_fit_scale=0.984375 wp_expected_fit_scale=0.984375 wp_zoom=0.0 mm_fit=Contain mm_viewport=UVec2(1, 1) mm_fit_scale=1.0
+2026-05-23T03:51:03.163050Z  INFO visual_diag: VISUAL_DIAG render_spine frame=0 raster_rev=2 repr_band=0 repr_lod="LocalTactical" particle_rows_cap=262144 visual_intent="Strategic" visual_zoom_alpha=0.5 fire_particle_rows=0 fire_particle_stamp=1 overlay_rev=0 overlay_chunk_cells=0 graph_fire_inst=0 graph_fire_heat=0 gpu_instance_rows=0 gpu_dispatch=0 gpu_draw=0
+2026-05-23T03:51:03.163055Z  INFO visual_diag: VISUAL_DIAG perf frame=0 tile_raster_ms=0.0 tile_raster_ran=false world_repr_ms=0.0 projection_graph_ms=0.0004000000189989805 domain_merge_ms=0.0 readiness_ms=0.04839999973773956 cpu_pre_egui_ms=0.0 cpu_egui_ms=0.0 cpu_post_egui_ms=0.0 gpu_gap_ms=0.0
+2026-05-23T03:51:03.163059Z  INFO visual_diag: VISUAL_DIAG hud_shell frame=0 cmd_shell=false overlay_tray=false transmission=false
+2026-05-23T03:51:03.163098Z  INFO perf: PERF wall=40.15 instr=0.05 gap=40.10 | cpu_pre_egui=34.20 cpu_egui=4.37 cpu_post_egui=1.58 gpu_gap=0.00 | spine=0.00 world_repr=0.00 graph=0.00 merge=0.00 atm=0.00 readiness=0.05 raster=0.00 (idle) | upd_attrib sum=2.76 pv_cpu=0.00 pv_gpu=0.03 fire=0.14 stream=1.00 map_fit=0.00 hud=0.00 wgen=1.58 | budget_sum=0.01 hud=0.00 overlay=0.00 raster_b=0.00 particles=0.00 residency=0.01 tex_reg=0.00 render_x=0.00 | egui_unbudgeted=4.37 | stall first+preupd=2.05 update=0.00 post_dom=0.00 post_vt=0.02 postÔåÆready=0.01 ready=0.08 postÔåÆegui=6.92 egui=4.24 post_egui=1.47 | stall_hits=[after_tile_storage_apply:25.2,pre_egui:6.9]
+2026-05-23T03:51:03.163113Z  INFO perf: PERF frame=40.2ms update=34.2ms egui=4.4ms preview=0.0ms streaming=1.0ms tile_apply=0.0ms viewport=0.0ms map_fit=0.0ms repr=0.0ms raster=0.0ms
+2026-05-23T03:51:03.163117Z  INFO stall: STALL culprit=after_tile_storage_apply duration=25.2ms frame=40.2ms
+2026-05-23T03:51:03.169527Z  INFO stage5_live_todos: STAGE5_ACTIVE_TODO subsystem=First(render_frame_start) spine_gate_seq=["TODO-01", "TODO-04", "TODO-06"] idx=3 id=TODO-04 status=InProgress file=src/gui/map_camera.rs, src/gui/view_authority.rs system=ViewManager, MapCameraDesired, mirror + trace goal=ViewManager sole authority for WorldMain camera pose after bridge; MapCameraDesired only mirrored. runtime_check=FULL_APP + RUST_LOG=map_camera_desired::write=debug: MAP_CAMERA_DESIRED_WRITE lines from map_camera_apply_input_to_desired, tile_world_fallback::focus_main_camera_on_world_params, view_representation::apply_minimap_camera_intent when pose changes. failure_mode=minimap/world drift, dual-write inconsistency.
+2026-05-23T03:51:03.170828Z  INFO proc_A_dine01::render::viewport_pipeline: resolved viewport=world_preview revision=2 logical=(512.0,512.0) physical=512x512
+2026-05-23T03:51:03.170857Z  INFO proc_A_dine01::gui::editor::world_preview::preview_readiness: PREVIEW STATE: world=true cam=true tex=true proj=true state=Ready world_ready=true camera_ready=true texture_ready=true projection_ready=true missing=None contract_valid=true wp_half_x=256.0 wp_half_y=256.0 wp_logical_w=512.0 wp_logical_h=512.0 viewport_rev=2
+2026-05-23T03:51:03.170873Z  INFO stage5_live_todos: STAGE5_ACTIVE_TODO subsystem=map_camera_mirror_chain spine_gate_seq=["TODO-01", "TODO-04", "TODO-06"] idx=3 id=TODO-04 status=InProgress file=src/gui/map_camera.rs, src/gui/view_authority.rs system=ViewManager, MapCameraDesired, mirror + trace goal=ViewManager sole authority for WorldMain camera pose after bridge; MapCameraDesired only mirrored. runtime_check=FULL_APP + RUST_LOG=map_camera_desired::write=debug: MAP_CAMERA_DESIRED_WRITE lines from map_camera_apply_input_to_desired, tile_world_fallback::focus_main_camera_on_world_params, view_representation::apply_minimap_camera_intent when pose changes. failure_mode=minimap/world drift, dual-write inconsistency.
+2026-05-23T03:51:03.170887Z  INFO stage5_live_todos: STAGE5_MAP_CAMERA_HOOK post_mirror desired_xy=(0.00,0.00) zoom=1.0000 world_main_xy=(0.00,0.00) zoom=1.0000 bridge_drift=0.0000
+2026-05-23T03:51:03.171270Z  INFO stage5_live_todos: STAGE5_ACTIVE_TODO subsystem=fire_extract_post spine_gate_seq=["TODO-01", "TODO-04", "TODO-06"] idx=3 id=TODO-04 status=InProgress file=src/gui/map_camera.rs, src/gui/view_authority.rs system=ViewManager, MapCameraDesired, mirror + trace goal=ViewManager sole authority for WorldMain camera pose after bridge; MapCameraDesired only mirrored. runtime_check=FULL_APP + RUST_LOG=map_camera_desired::write=debug: MAP_CAMERA_DESIRED_WRITE lines from map_camera_apply_input_to_desired, tile_world_fallback::focus_main_camera_on_world_params, view_representation::apply_minimap_camera_intent when pose changes. failure_mode=minimap/world drift, dual-write inconsistency.
+2026-05-23T03:51:03.171283Z  INFO stage5_live_todos: STAGE5_FIRE_HOOK fire_visual_producer_count=1 (expect 1 for FIRE-01)
+2026-05-23T03:51:03.171929Z  INFO stage5_live_todos: STAGE5_ACTIVE_TODO subsystem=representation_spine_post_merge spine_gate_seq=["TODO-01", "TODO-04", "TODO-06"] idx=3 id=TODO-04 status=InProgress file=src/gui/map_camera.rs, src/gui/view_authority.rs system=ViewManager, MapCameraDesired, mirror + trace goal=ViewManager sole authority for WorldMain camera pose after bridge; MapCameraDesired only mirrored. runtime_check=FULL_APP + RUST_LOG=map_camera_desired::write=debug: MAP_CAMERA_DESIRED_WRITE lines from map_camera_apply_input_to_desired, tile_world_fallback::focus_main_camera_on_world_params, view_representation::apply_minimap_camera_intent when pose changes. failure_mode=minimap/world drift, dual-write inconsistency.
+2026-05-23T03:51:03.171941Z  INFO stage5_live_todos: STAGE5_SPINE_HOOK policy_present=true graph_present=true fence_committed=true fence_fire_tick=2 world_frame_present=true overlay_rev=0 overlay_chunk_cells=0 atm_partial_dispatch=0 atm_gpu_tex_uploads=0 atm_full_field_fallback=false
+2026-05-23T03:51:03.172953Z  INFO industrial_activation_todos: INDUSTRIAL_ACTIVATION_GREEN
+2026-05-23T03:51:03.173050Z  INFO stage5_live_todos: STAGE5_ACTIVE_TODO subsystem=evaluate_app_stage5_readiness spine_gate_seq=["TODO-01", "TODO-04", "TODO-06"] idx=3 id=TODO-04 status=InProgress file=src/gui/map_camera.rs, src/gui/view_authority.rs system=ViewManager, MapCameraDesired, mirror + trace goal=ViewManager sole authority for WorldMain camera pose after bridge; MapCameraDesired only mirrored. runtime_check=FULL_APP + RUST_LOG=map_camera_desired::write=debug: MAP_CAMERA_DESIRED_WRITE lines from map_camera_apply_input_to_desired, tile_world_fallback::focus_main_camera_on_world_params, view_representation::apply_minimap_camera_intent when pose changes. failure_mode=minimap/world drift, dual-write inconsistency.
+2026-05-23T03:51:03.173062Z  INFO stage5_live_todos: STAGE5_READINESS_HOOK passes=true violations_first=(none) producer_count=1
+2026-05-23T03:51:03.173065Z  INFO stage5_live_todos: STAGE5_TODO_BOARD_RECONCILE marked_done=1 reopened=0 done_count=11/13 inv=2
+2026-05-23T03:51:03.173079Z  INFO stage5_readiness::truth: 
+========== STAGE5_FULL_APP_TRUTH (post_update_invocation=2 sim_tick=0) ==========
+FULL_APP_PROFILE_ACTIVE: true
+stage5_readiness_passes: true
+--- AppStage5ReadinessReport (hard gates) ---
+vt4_ok: true  [src: evaluate_app_stage5_readiness / VtCiMatrixLiveReport OR VisualAgreementFrame]
+vt5_ok: true  [src: evaluate_app_stage5_readiness / VtCiMatrixLiveReport]
+single_fire_extract: true  [src: fire_visual_producer_count / REGISTERED_VISUAL_PRODUCERS]
+gpu_field_authoritative: true  [src: P2H_GPU_PARTIAL_WRITES_AUTHORITATIVE]
+preview_render_target_active: true  [src: preview_authoritative_surface]
+phase_d_ok: true  [derived: !require_preview || preview_render_target_active]
+overlay_from_shared_buffers_only: true  [src: SharedOverlayFieldBuffers resource exists]
+particle_lod_scales: true  [src: GpuRepresentationMetrics vs RepresentationResult band]
+phase_f_lod_proof_ok: true  [src: PhaseFLodProofReport]
+instanced_dispatch_ok: true  [src: GpuIndirectDrawSpine vs WorldFireParticleDrawDispatch]
+phase_f_ok: true  [derived: particle_lod_scales && phase_f_lod_proof_ok && instanced_dispatch_ok]
+projection_domains (report): 3  [src: RenderProjectionGraph via evaluate_stage5_spine_checklist]
+registered_producers: 2
+duplicate_visual_scan_count: 0
+--- violations (first = primary suspect) ---
+first: (none)
+all: []
+--- input wiring (MISSING = UNKNOWNÔåÆoperator FAIL) ---
+RepresentationResult: true
+WorldRepresentationFrame: true
+RenderProjectionGraph: true
+CommittedVisualSnapshotFence: true
+SharedOverlayFieldBuffers: true
+GpuRepresentationMetrics: true
+VisualAgreementFrame: true
+VtCiMatrixLiveReport: true
+AtmospherePartialWriteMetrics: true
+PreviewCameraState: true
+WorldPreviewGpuRuntime: true
+PhaseFLodProofReport: true
+GpuIndirectDrawSpine: true
+WorldFireParticleDrawDispatch: true
+FireSimulationSnapshot: true
+MISSING_WIRING_FULL_APP: none
+================================================================
+
+2026-05-23T03:51:03.173140Z  INFO worldgen_chrome::egui: WORLD_GEN_EGUI_DRAW preview_window_open=true flow=Idle
+2026-05-23T03:51:03.185712Z  INFO stage5_live_todos: STAGE5_ACTIVE_TODO subsystem=gpu_indirect_sync_post spine_gate_seq=["TODO-01", "TODO-04", "TODO-06"] idx=4 id=TODO-05 status=InProgress file=src/gui/map_camera.rs system=map_camera_apply_input_to_desired, mirror_world_main_camera_from_map_desired goal=No hidden second writer path for world main camera (VM-09B closed). runtime_check=RUST_LOG=stage5_live_todos=info: STAGE5_MAP_CAMERA_HOOK post_mirror bridge_drift + desired vs WorldMain; no unexplained spikes. failure_mode=Jitter + desync minimap vs world.
+2026-05-23T03:51:03.185725Z  INFO stage5_live_todos: STAGE5_GPU_HOOK indirect_instances=0 dispatch_count=0 draw_instances=0 (PHF-01 alignment)
+2026-05-23T03:51:03.186048Z  INFO stall: STALL last: 9.73ms
+2026-05-23T03:51:03.186050Z  INFO worldgen_chrome::trace: CHROME_STATE app=Res(State(WorldGen)) worldgen=Res(State(Preview)) base=Res(State(MainMenu)) flow=Res(State(Idle)) latch_dismissed=false world_gen_visible=true preview_window_open=true lifecycle=ReadyToRender last_dismiss="never"
+2026-05-23T03:51:03.186068Z  INFO visual_diag: VISUAL_DIAG window frame=1 periodic=false win_logical=(1280, 720) win_physical=(1280, 720) scale=1.0 app=1 base=0 flow=0 worldgen=1 readiness_profile=Stage5ReadinessProfile { require_vt4: true, require_vt5: true, require_preview: true, require_partial_metrics: true, require_world_frame: true, require_phase_f_proof: true, require_instanced_draw: true }
+2026-05-23T03:51:03.186069Z  INFO sim_view_sync: SIM_VIEW_SYNC frame=1 win_logical=(1280, 720) win_physical=(1280, 720) sim_valid=false sim_adequate=false sim_min=Vec2(0.0, 0.0) sim_max=Vec2(0.0, 0.0) measured_valid=false measured_wh=Vec2(0.0, 0.0) committed_wh=Vec2(0.0, 0.0) sim_wh=Vec2(0.0, 0.0) settle_streak=0 layout_settled=false sim_held=false last_commit="" frozen=false pending_wh=Vec2(0.0, 0.0) cam_hole=false render_hole=false cam_invalid_streak=0 cam_valid_streak=0 cam_scissor=None ortho_fixed_wh=(0, 0) map_view_px=(0, 0) raster_rev=2 resolved_rev=2 app=1 base=0 flow=0 worldgen=1 cmd_shell=false overlay_tray=false transmission=false rect_sanity_issues=0 left_stack_collapsed=true map_cam_scale=Vec3(1.0, 1.0, 1.0) minimap_visible=true
+2026-05-23T03:51:03.186076Z  INFO visual_diag: VISUAL_DIAG sim_viewport frame=1 sim_valid=false sim_adequate=false sim_min=Vec2(0.0, 0.0) sim_max=Vec2(0.0, 0.0) sim_wh=(0, 0) measured_valid=false measured_wh=(0, 0) committed_wh=(0, 0) sim_held=false settle_streak=0 layout_settled=false frozen=false last_commit="" pending_wh=(0, 0) pending_min=Vec2(0.0, 0.0) pending_max=Vec2(0.0, 0.0)
+2026-05-23T03:51:03.186094Z  INFO visual_diag: VISUAL_DIAG camera frame=1 cam_desired_x=0.0 cam_desired_y=0.0 cam_zoom=1.0 latch_hole=false render_hole=false latch_invalid_streak=0 latch_valid_streak=0 cam_scissor=None ortho_fixed_w=0 ortho_fixed_h=0 map_view_px_w=0 map_view_px_h=0 world_w=320 world_h=320
+2026-05-23T03:51:03.186102Z  INFO visual_diag: VISUAL_DIAG resolved_viewports frame=1 resolved_rev=2 primary_valid=true primary_wh=(1280, 720) sim_resolved_valid=false sim_resolved_wh=(0, 0) preview_valid=true preview_wh=(512, 512) minimap_valid=false minimap_wh=(0, 0) mismatch_preview=false mismatch_minimap=false mismatch_sim_map=false mismatch_stale_tex=false
+2026-05-23T03:51:03.186107Z  INFO visual_diag: VISUAL_DIAG map_view_frames frame=1 world_preview_proj_rev=2199024256067 minimap_proj_rev=4296967304 sim_map_proj_rev=3092378454407
+2026-05-23T03:51:03.186111Z  INFO visual_diag: VISUAL_DIAG map_presentation frame=1 wp_fit=Contain wp_viewport=UVec2(512, 512) wp_fit_scale=1.10595703125 wp_expected_fit_scale=1.10595703125 wp_zoom=0.48344355821609497 mm_fit=Contain mm_viewport=UVec2(1, 1) mm_fit_scale=1.0
+2026-05-23T03:51:03.186117Z  INFO visual_diag: VISUAL_DIAG render_spine frame=1 raster_rev=2 repr_band=0 repr_lod="LocalTactical" particle_rows_cap=262144 visual_intent="Strategic" visual_zoom_alpha=0.5 fire_particle_rows=0 fire_particle_stamp=2 overlay_rev=0 overlay_chunk_cells=0 graph_fire_inst=0 graph_fire_heat=0 gpu_instance_rows=0 gpu_dispatch=0 gpu_draw=0
+2026-05-23T03:51:03.186122Z  INFO visual_diag: VISUAL_DIAG perf frame=1 tile_raster_ms=0.0 tile_raster_ran=false world_repr_ms=0.0 projection_graph_ms=0.0003000000142492354 domain_merge_ms=0.0 readiness_ms=0.027499999850988388 cpu_pre_egui_ms=0.0 cpu_egui_ms=0.0 cpu_post_egui_ms=0.0 gpu_gap_ms=0.0
+2026-05-23T03:51:03.186127Z  INFO visual_diag: VISUAL_DIAG hud_shell frame=1 cmd_shell=false overlay_tray=false transmission=false
+2026-05-23T03:51:03.186151Z  INFO perf: PERF wall=16.62 instr=0.03 gap=16.59 | cpu_pre_egui=3.49 cpu_egui=3.31 cpu_post_egui=9.82 gpu_gap=0.00 | spine=0.00 world_repr=0.00 graph=0.00 merge=0.00 atm=0.00 readiness=0.03 raster=0.00 (idle) | upd_attrib sum=1.90 pv_cpu=0.00 pv_gpu=0.01 fire=0.10 stream=0.61 map_fit=0.00 hud=0.00 wgen=1.19 | budget_sum=0.01 hud=0.00 overlay=0.00 raster_b=0.00 particles=0.00 residency=0.01 tex_reg=0.00 render_x=0.00 | egui_unbudgeted=3.31 | stall first+preupd=0.07 update=0.00 post_dom=0.00 post_vt=0.00 postÔåÆready=0.00 ready=0.06 postÔåÆegui=1.48 egui=3.23 post_egui=9.73 | stall_hits=[last:9.7]
+2026-05-23T03:51:03.186165Z  INFO perf: PERF frame=16.6ms update=3.5ms egui=3.3ms preview=0.0ms streaming=0.6ms tile_apply=0.0ms viewport=0.0ms map_fit=0.0ms repr=0.0ms raster=0.0ms
+2026-05-23T03:51:03.186169Z  INFO stall: STALL culprit=last duration=9.7ms frame=16.6ms
+2026-05-23T03:51:03.307109Z  INFO stage5_live_todos: STAGE5_ACTIVE_TODO subsystem=First(render_frame_start) spine_gate_seq=["TODO-01", "TODO-04", "TODO-06"] idx=4 id=TODO-05 status=InProgress file=src/gui/map_camera.rs system=map_camera_apply_input_to_desired, mirror_world_main_camera_from_map_desired goal=No hidden second writer path for world main camera (VM-09B closed). runtime_check=RUST_LOG=stage5_live_todos=info: STAGE5_MAP_CAMERA_HOOK post_mirror bridge_drift + desired vs WorldMain; no unexplained spikes. failure_mode=Jitter + desync minimap vs world.
+2026-05-23T03:51:03.308420Z  INFO proc_A_dine01::render::viewport_pipeline: resolved viewport=world_preview revision=3 logical=(373.4,361.9) physical=373x362
+2026-05-23T03:51:03.308596Z  INFO proc_A_dine01::gui::editor::world_preview::preview_readiness: PREVIEW STATE: world=false cam=true tex=true proj=true state=Loading world_ready=false camera_ready=true texture_ready=true projection_ready=true missing=Some("world_generation") contract_valid=true wp_half_x=186.71875 wp_half_y=180.953125 wp_logical_w=373.4375 wp_logical_h=361.90625 viewport_rev=4
+2026-05-23T03:51:03.309698Z  INFO stage5_live_todos: STAGE5_ACTIVE_TODO subsystem=map_camera_mirror_chain spine_gate_seq=["TODO-01", "TODO-04", "TODO-06"] idx=4 id=TODO-05 status=InProgress file=src/gui/map_camera.rs system=map_camera_apply_input_to_desired, mirror_world_main_camera_from_map_desired goal=No hidden second writer path for world main camera (VM-09B closed). runtime_check=RUST_LOG=stage5_live_todos=info: STAGE5_MAP_CAMERA_HOOK post_mirror bridge_drift + desired vs WorldMain; no unexplained spikes. failure_mode=Jitter + desync minimap vs world.
+2026-05-23T03:51:03.309710Z  INFO stage5_live_todos: STAGE5_MAP_CAMERA_HOOK post_mirror desired_xy=(160.00,160.00) zoom=1.0000 world_main_xy=(160.00,160.00) zoom=1.0000 bridge_drift=0.0000
+2026-05-23T03:51:03.309726Z  INFO construction_finish_todos: CONSTRUCTION_FINISH_COMPLETE done=8/8
+2026-05-23T03:51:03.309736Z  INFO construction_round2_todos: CONSTRUCTION_ROUND2_COMPLETE done=15/15
+2026-05-23T03:51:03.309741Z  INFO construction_round3_todos: CONSTRUCTION_ROUND3_COMPLETE done=27/27
+2026-05-23T03:51:03.309747Z  INFO construction_operational_todos: CONSTRUCTION_OPERATIONAL_GREEN
+2026-05-23T03:51:03.309961Z  INFO stage5_live_todos: STAGE5_ACTIVE_TODO subsystem=fire_extract_post spine_gate_seq=["TODO-01", "TODO-04", "TODO-06"] idx=4 id=TODO-05 status=InProgress file=src/gui/map_camera.rs system=map_camera_apply_input_to_desired, mirror_world_main_camera_from_map_desired goal=No hidden second writer path for world main camera (VM-09B closed). runtime_check=RUST_LOG=stage5_live_todos=info: STAGE5_MAP_CAMERA_HOOK post_mirror bridge_drift + desired vs WorldMain; no unexplained spikes. failure_mode=Jitter + desync minimap vs world.
+2026-05-23T03:51:03.309972Z  INFO stage5_live_todos: STAGE5_FIRE_HOOK fire_visual_producer_count=1 (expect 1 for FIRE-01)
+2026-05-23T03:51:03.310021Z  INFO world_representation::lod: WorldRepresentation: zoom=1.000 zoom_╬▒=0.157 ÔåÆ LOD band LocalTactical (LT)
+2026-05-23T03:51:03.311162Z  INFO stage5_live_todos: STAGE5_ACTIVE_TODO subsystem=representation_spine_post_merge spine_gate_seq=["TODO-01", "TODO-04", "TODO-06"] idx=4 id=TODO-05 status=InProgress file=src/gui/map_camera.rs system=map_camera_apply_input_to_desired, mirror_world_main_camera_from_map_desired goal=No hidden second writer path for world main camera (VM-09B closed). runtime_check=RUST_LOG=stage5_live_todos=info: STAGE5_MAP_CAMERA_HOOK post_mirror bridge_drift + desired vs WorldMain; no unexplained spikes. failure_mode=Jitter + desync minimap vs world.
+2026-05-23T03:51:03.311174Z  INFO stage5_live_todos: STAGE5_SPINE_HOOK policy_present=true graph_present=true fence_committed=true fence_fire_tick=3 world_frame_present=true overlay_rev=0 overlay_chunk_cells=0 atm_partial_dispatch=0 atm_gpu_tex_uploads=0 atm_full_field_fallback=false
+2026-05-23T03:51:03.312284Z  INFO industrial_activation_todos: INDUSTRIAL_ACTIVATION_GREEN
+2026-05-23T03:51:03.312390Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=UiMeasured valid=true min=Vec2(0.0, 0.0) max=Vec2(1280.0, 720.0) w=1280.0 h=720.0
+2026-05-23T03:51:03.312401Z  INFO viewport_authority::solver: VIEWPORT_SOLVER_TARGET node=SimMapFill valid=true rect.source=SimMapFill w=1280.0 h=720.0
+2026-05-23T03:51:03.312405Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=LayoutSolver valid=true min=Vec2(0.0, 0.0) max=Vec2(1280.0, 720.0) w=1280.0 h=720.0
+2026-05-23T03:51:03.312408Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=LayoutSolver valid=true min=Vec2(0.0, 0.0) max=Vec2(1280.0, 720.0) w=1280.0 h=720.0
+2026-05-23T03:51:03.312412Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=UiCommitted valid=true min=Vec2(0.0, 0.0) max=Vec2(1280.0, 720.0) w=1280.0 h=720.0
+2026-05-23T03:51:03.312425Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=CameraLatch valid=true min=Vec2(0.0, 0.0) max=Vec2(1280.0, 720.0) w=1280.0 h=720.0
+2026-05-23T03:51:03.312434Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=CameraApplied valid=true min=Vec2(0.0, 0.0) max=Vec2(1280.0, 720.0) w=1280.0 h=720.0
+2026-05-23T03:51:03.312454Z  INFO stage5_live_todos: STAGE5_ACTIVE_TODO subsystem=evaluate_app_stage5_readiness spine_gate_seq=["TODO-01", "TODO-04", "TODO-06"] idx=4 id=TODO-05 status=InProgress file=src/gui/map_camera.rs system=map_camera_apply_input_to_desired, mirror_world_main_camera_from_map_desired goal=No hidden second writer path for world main camera (VM-09B closed). runtime_check=RUST_LOG=stage5_live_todos=info: STAGE5_MAP_CAMERA_HOOK post_mirror bridge_drift + desired vs WorldMain; no unexplained spikes. failure_mode=Jitter + desync minimap vs world.
+2026-05-23T03:51:03.312466Z  INFO stage5_live_todos: STAGE5_READINESS_HOOK passes=true violations_first=(none) producer_count=1
+2026-05-23T03:51:03.312469Z  INFO stage5_live_todos: STAGE5_TODO_BOARD_RECONCILE marked_done=1 reopened=0 done_count=12/13 inv=3
+2026-05-23T03:51:03.312474Z  INFO visual_aidv2_live_todos: VISUAL_AID_V2_BOARD done=2/6 footprint_ok=false readability=false icons=0
+2026-05-23T03:51:03.312487Z  INFO stage5_readiness::truth: 
+========== STAGE5_FULL_APP_TRUTH (post_update_invocation=3 sim_tick=3) ==========
+FULL_APP_PROFILE_ACTIVE: true
+stage5_readiness_passes: true
+--- AppStage5ReadinessReport (hard gates) ---
+vt4_ok: true  [src: evaluate_app_stage5_readiness / VtCiMatrixLiveReport OR VisualAgreementFrame]
+vt5_ok: true  [src: evaluate_app_stage5_readiness / VtCiMatrixLiveReport]
+single_fire_extract: true  [src: fire_visual_producer_count / REGISTERED_VISUAL_PRODUCERS]
+gpu_field_authoritative: true  [src: P2H_GPU_PARTIAL_WRITES_AUTHORITATIVE]
+preview_render_target_active: true  [src: preview_authoritative_surface]
+phase_d_ok: true  [derived: !require_preview || preview_render_target_active]
+overlay_from_shared_buffers_only: true  [src: SharedOverlayFieldBuffers resource exists]
+particle_lod_scales: true  [src: GpuRepresentationMetrics vs RepresentationResult band]
+phase_f_lod_proof_ok: true  [src: PhaseFLodProofReport]
+instanced_dispatch_ok: true  [src: GpuIndirectDrawSpine vs WorldFireParticleDrawDispatch]
+phase_f_ok: true  [derived: particle_lod_scales && phase_f_lod_proof_ok && instanced_dispatch_ok]
+projection_domains (report): 3  [src: RenderProjectionGraph via evaluate_stage5_spine_checklist]
+registered_producers: 2
+duplicate_visual_scan_count: 0
+--- violations (first = primary suspect) ---
+first: (none)
+all: []
+--- input wiring (MISSING = UNKNOWNÔåÆoperator FAIL) ---
+RepresentationResult: true
+WorldRepresentationFrame: true
+RenderProjectionGraph: true
+CommittedVisualSnapshotFence: true
+SharedOverlayFieldBuffers: true
+GpuRepresentationMetrics: true
+VisualAgreementFrame: true
+VtCiMatrixLiveReport: true
+AtmospherePartialWriteMetrics: true
+PreviewCameraState: true
+WorldPreviewGpuRuntime: true
+PhaseFLodProofReport: true
+GpuIndirectDrawSpine: true
+WorldFireParticleDrawDispatch: true
+FireSimulationSnapshot: true
+MISSING_WIRING_FULL_APP: none
+================================================================
+
+2026-05-23T03:51:03.312886Z  INFO worldgen_chrome::egui: WORLD_GEN_EGUI_DRAW preview_window_open=true flow=NewWorldSetup
+2026-05-23T03:51:03.313729Z  WARN worldgen_chrome::preview_egui: PREVIEW_EGUI_REBIND (egui texture id churn ÔÇö flicker) rebinds_frame=1 rebinds_total=1 projection_revision=1554779161528 window_open=true preview_ready=false texture_bound=true lifecycle=ReadyToRender
+2026-05-23T03:51:03.315188Z ERROR wgpu::backend::wgpu_core: Handling wgpu errors as fatal by default
+
+thread 'Async Compute Task Pool (1)' (134580) panicked at C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\wgpu-27.0.1\src\backend\wgpu_core.rs:1365:26:
+wgpu error: Validation Error
+
+Caused by:
+  In Device::create_render_pipeline, label = 'fire_particle_raster'
+    Error matching ShaderStages(FRAGMENT) shader requirements against the pipeline
+      Shader global ResourceBinding { group: 0, binding: 0 } is not available in the pipeline layout
+        Visibility flags don't include the shader stage
+
+
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+2026-05-23T03:51:03.320799Z  INFO stage5_live_todos: STAGE5_ACTIVE_TODO subsystem=gpu_indirect_sync_post spine_gate_seq=["TODO-01", "TODO-04", "TODO-06"] idx=4 id=TODO-05 status=InProgress file=src/gui/map_camera.rs system=map_camera_apply_input_to_desired, mirror_world_main_camera_from_map_desired goal=No hidden second writer path for world main camera (VM-09B closed). runtime_check=RUST_LOG=stage5_live_todos=info: STAGE5_MAP_CAMERA_HOOK post_mirror bridge_drift + desired vs WorldMain; no unexplained spikes. failure_mode=Jitter + desync minimap vs world.
+2026-05-23T03:51:03.320809Z  INFO stage5_live_todos: STAGE5_GPU_HOOK indirect_instances=0 dispatch_count=0 draw_instances=0 (PHF-01 alignment)
+2026-05-23T03:51:03.320907Z  INFO stall: STALL last: 6.17ms
+2026-05-23T03:51:03.320906Z  INFO worldgen_chrome::trace: CHROME_STATE app=Res(State(WorldGen)) worldgen=Res(State(Idle)) base=Res(State(Editor)) flow=Res(State(NewWorldSetup)) latch_dismissed=false world_gen_visible=true preview_window_open=true lifecycle=ReadyToRender last_dismiss="never"
+2026-05-23T03:51:03.320909Z  WARN visual_diag::anomaly: RENDER_HOLE_FLIP frame=2 was=false now=true
+2026-05-23T03:51:03.320919Z  INFO worldgen_chrome::hud: HUD_SHELL_STATE (Editor/Simulation = HUD egui may run; MainMenu = player shell off) base=Res(State(Editor)) minimap_visible=true overlay_tray=false command_shell=false transmission=false
+2026-05-23T03:51:03.320925Z  WARN visual_diag::anomaly: CAMERA_SCISSOR_CHANGED frame=2 was=None now=Some((0, 0, 1280, 720))
+2026-05-23T03:51:03.320931Z  WARN visual_diag::anomaly: SIM_VIEWPORT_VALIDITY_CHANGED frame=2 was_valid=false now_valid=true
+2026-05-23T03:51:03.320933Z  WARN visual_diag::anomaly: SIM_COMMIT_BRANCH_CHANGED frame=2 was=0 now=2
+2026-05-23T03:51:03.320930Z  INFO sim_view_sync: SIM_VIEW_SYNC frame=2 win_logical=(1280, 720) win_physical=(1280, 720) sim_valid=true sim_adequate=true sim_min=Vec2(0.0, 0.0) sim_max=Vec2(1280.0, 720.0) measured_valid=true measured_wh=Vec2(1280.0, 720.0) committed_wh=Vec2(1280.0, 720.0) sim_wh=Vec2(1280.0, 720.0) settle_streak=1 layout_settled=false sim_held=false last_commit="hole_settling" frozen=false pending_wh=Vec2(1280.0, 720.0) cam_hole=true render_hole=true cam_invalid_streak=0 cam_valid_streak=1 cam_scissor=Some((0, 0, 1280, 720)) ortho_fixed_wh=(1280, 720) map_view_px=(1280, 720) raster_rev=2 resolved_rev=4 app=1 base=1 flow=1 worldgen=0 cmd_shell=false overlay_tray=false transmission=false rect_sanity_issues=0 left_stack_collapsed=true map_cam_scale=Vec3(1.0, 1.0, 1.0) minimap_visible=true
+2026-05-23T03:51:03.320936Z  INFO visual_diag: VISUAL_DIAG window frame=2 periodic=false win_logical=(1280, 720) win_physical=(1280, 720) scale=1.0 app=1 base=1 flow=1 worldgen=0 readiness_profile=Stage5ReadinessProfile { require_vt4: true, require_vt5: true, require_preview: true, require_partial_metrics: true, require_world_frame: true, require_phase_f_proof: true, require_instanced_draw: true }
+2026-05-23T03:51:03.320941Z  WARN sim_view_sync::anomaly: CAMERA_VIEWPORT_MODE_FLIP (full-window vs map-hole scissor) frame=2 was_hole=false now_hole=true
+2026-05-23T03:51:03.320943Z  INFO visual_diag: VISUAL_DIAG sim_viewport frame=2 sim_valid=true sim_adequate=true sim_min=Vec2(0.0, 0.0) sim_max=Vec2(1280.0, 720.0) sim_wh=(1280, 720) measured_valid=true measured_wh=(1280, 720) committed_wh=(1280, 720) sim_held=false settle_streak=1 layout_settled=false frozen=false last_commit="hole_settling" pending_wh=(1280, 720) pending_min=Vec2(0.0, 0.0) pending_max=Vec2(1280.0, 720.0)
+2026-05-23T03:51:03.320945Z  WARN sim_view_sync::anomaly: CAMERA_SCISSOR_CHANGED frame=2 was=None now=Some((0, 0, 1280, 720))
+2026-05-23T03:51:03.320948Z  INFO visual_diag: VISUAL_DIAG camera frame=2 cam_desired_x=160.0 cam_desired_y=160.0 cam_zoom=1.0 latch_hole=true render_hole=true latch_invalid_streak=0 latch_valid_streak=1 cam_scissor=Some((0, 0, 1280, 720)) ortho_fixed_w=1280 ortho_fixed_h=720 map_view_px_w=1280 map_view_px_h=720 world_w=320 world_h=320
+2026-05-23T03:51:03.320950Z  WARN sim_view_sync::anomaly: SIM_MAP_VIEWPORT_VALIDITY_CHANGED frame=2 was_valid=false now_valid=true was_adequate=false now_adequate=true
+2026-05-23T03:51:03.320952Z  INFO visual_diag: VISUAL_DIAG resolved_viewports frame=2 resolved_rev=4 primary_valid=true primary_wh=(1280, 720) sim_resolved_valid=false sim_resolved_wh=(0, 0) preview_valid=true preview_wh=(373, 362) minimap_valid=false minimap_wh=(0, 0) mismatch_preview=true mismatch_minimap=false mismatch_sim_map=false mismatch_stale_tex=false
+2026-05-23T03:51:03.320953Z  WARN sim_view_sync::anomaly: RENDER_MODE_FLIP (map-hole scissor vs full-window ÔÇö primary blink source) frame=2 was_render_hole=false now_render_hole=true was_scissor=None now_scissor=Some((0, 0, 1280, 720))
+2026-05-23T03:51:03.320955Z  INFO visual_diag: VISUAL_DIAG map_view_frames frame=2 world_preview_proj_rev=1554779161528 minimap_proj_rev=4296967304 sim_map_proj_rev=3092378454407
+2026-05-23T03:51:03.320961Z  INFO visual_diag: VISUAL_DIAG map_presentation frame=2 wp_fit=Contain wp_viewport=UVec2(373, 362) wp_fit_scale=1.10595703125 wp_expected_fit_scale=1.10595703125 wp_zoom=1.3519847393035889 mm_fit=Contain mm_viewport=UVec2(1, 1) mm_fit_scale=1.0
+2026-05-23T03:51:03.320968Z  INFO visual_diag: VISUAL_DIAG render_spine frame=2 raster_rev=2 repr_band=0 repr_lod="LocalTactical" particle_rows_cap=262144 visual_intent="Strategic" visual_zoom_alpha=0.00700009148567915 fire_particle_rows=0 fire_particle_stamp=3 overlay_rev=0 overlay_chunk_cells=0 graph_fire_inst=0 graph_fire_heat=0 gpu_instance_rows=0 gpu_dispatch=0 gpu_draw=0
+2026-05-23T03:51:03.320972Z  INFO visual_diag: VISUAL_DIAG perf frame=2 tile_raster_ms=0.0 tile_raster_ran=false world_repr_ms=0.0035000001080334187 projection_graph_ms=0.00020000000949949026 domain_merge_ms=0.00010000000474974513 readiness_ms=0.03200000151991844 cpu_pre_egui_ms=0.0 cpu_egui_ms=0.0 cpu_post_egui_ms=0.0 gpu_gap_ms=0.0
+2026-05-23T03:51:03.320976Z  INFO visual_diag: VISUAL_DIAG hud_shell frame=2 cmd_shell=false overlay_tray=false transmission=false
+2026-05-23T03:51:03.320984Z  WARN proc_A_dine01::gui::hud::frame_budget: frame budget anomaly FrameSpike: frame 131.8 ms (avg 131.8 ms)
+2026-05-23T03:51:03.320998Z  INFO perf: PERF wall=13.89 instr=0.04 gap=13.85 | cpu_pre_egui=5.25 cpu_egui=2.39 cpu_post_egui=6.25 gpu_gap=0.00 | spine=0.00 world_repr=0.00 graph=0.00 merge=0.00 atm=0.00 readiness=0.03 raster=0.00 (idle) | upd_attrib sum=2.44 pv_cpu=0.00 pv_gpu=0.00 fire=0.76 stream=1.12 map_fit=0.00 hud=0.04 wgen=0.51 | budget_sum=0.05 hud=0.04 overlay=0.00 raster_b=0.00 particles=0.00 residency=0.01 tex_reg=0.00 render_x=0.00 | egui_unbudgeted=2.34 | stall first+preupd=0.11 update=0.01 post_dom=0.01 post_vt=0.02 postÔåÆready=0.00 ready=0.12 postÔåÆegui=1.88 egui=2.25 post_egui=6.17 | stall_hits=[last:6.2]
+2026-05-23T03:51:03.321008Z  INFO perf: PERF frame=13.9ms update=5.3ms egui=2.4ms preview=0.0ms streaming=1.1ms tile_apply=0.0ms viewport=0.0ms map_fit=0.0ms repr=0.0ms raster=0.0ms
+2026-05-23T03:51:03.321012Z  INFO stall: STALL culprit=last duration=6.2ms frame=13.9ms
+2026-05-23T03:51:03.322208Z  INFO stage5_live_todos: STAGE5_ACTIVE_TODO subsystem=First(render_frame_start) spine_gate_seq=["TODO-01", "TODO-04", "TODO-06"] idx=4 id=TODO-05 status=InProgress file=src/gui/map_camera.rs system=map_camera_apply_input_to_desired, mirror_world_main_camera_from_map_desired goal=No hidden second writer path for world main camera (VM-09B closed). runtime_check=RUST_LOG=stage5_live_todos=info: STAGE5_MAP_CAMERA_HOOK post_mirror bridge_drift + desired vs WorldMain; no unexplained spikes. failure_mode=Jitter + desync minimap vs world.
+2026-05-23T03:51:03.322838Z  INFO proc_A_dine01::render::viewport_pipeline: resolved viewport=world_preview revision=5 logical=(372.4,361.9) physical=372x362
+2026-05-23T03:51:03.322855Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=ResolvedViewport valid=true min=Vec2(0.0, 0.0) max=Vec2(1280.0, 720.0) w=1280.0 h=720.0
+2026-05-23T03:51:03.322859Z  INFO proc_A_dine01::render::viewport_pipeline: resolved viewport=simulation_map revision=6 logical=(1280.0,720.0) physical=1280x720
+2026-05-23T03:51:03.322906Z  INFO proc_A_dine01::gui::editor::world_preview::preview_readiness: PREVIEW STATE: world=true cam=true tex=true proj=true state=Ready world_ready=true camera_ready=true texture_ready=true projection_ready=true missing=None contract_valid=true wp_half_x=186.21875 wp_half_y=180.953125 wp_logical_w=372.4375 wp_logical_h=361.90625 viewport_rev=7
+2026-05-23T03:51:03.323863Z  INFO stage5_live_todos: STAGE5_ACTIVE_TODO subsystem=map_camera_mirror_chain spine_gate_seq=["TODO-01", "TODO-04", "TODO-06"] idx=4 id=TODO-05 status=InProgress file=src/gui/map_camera.rs system=map_camera_apply_input_to_desired, mirror_world_main_camera_from_map_desired goal=No hidden second writer path for world main camera (VM-09B closed). runtime_check=RUST_LOG=stage5_live_todos=info: STAGE5_MAP_CAMERA_HOOK post_mirror bridge_drift + desired vs WorldMain; no unexplained spikes. failure_mode=Jitter + desync minimap vs world.
+2026-05-23T03:51:03.323874Z  INFO stage5_live_todos: STAGE5_MAP_CAMERA_HOOK post_mirror desired_xy=(160.00,160.00) zoom=1.0000 world_main_xy=(160.00,160.00) zoom=1.0000 bridge_drift=0.0000
+2026-05-23T03:51:03.323894Z  INFO construction_finish_todos: CONSTRUCTION_FINISH_COMPLETE done=8/8
+2026-05-23T03:51:03.323904Z  INFO construction_round2_todos: CONSTRUCTION_ROUND2_COMPLETE done=15/15
+2026-05-23T03:51:03.323910Z  INFO construction_round3_todos: CONSTRUCTION_ROUND3_COMPLETE done=27/27
+2026-05-23T03:51:03.323913Z  INFO construction_operational_todos: CONSTRUCTION_OPERATIONAL_GREEN
+2026-05-23T03:51:03.323949Z  INFO proc_A_dine01::terrain::generation::world_generator_enhanced: Generating Preview world with seed: 14094749050294109747 (320├ù320)
+2026-05-23T03:51:03.336405Z  INFO stage5_live_todos: STAGE5_ACTIVE_TODO subsystem=fire_extract_post spine_gate_seq=["TODO-01", "TODO-04", "TODO-06"] idx=4 id=TODO-05 status=InProgress file=src/gui/map_camera.rs system=map_camera_apply_input_to_desired, mirror_world_main_camera_from_map_desired goal=No hidden second writer path for world main camera (VM-09B closed). runtime_check=RUST_LOG=stage5_live_todos=info: STAGE5_MAP_CAMERA_HOOK post_mirror bridge_drift + desired vs WorldMain; no unexplained spikes. failure_mode=Jitter + desync minimap vs world.
+2026-05-23T03:51:03.336418Z  INFO stage5_live_todos: STAGE5_FIRE_HOOK fire_visual_producer_count=1 (expect 1 for FIRE-01)
+2026-05-23T03:51:03.336887Z  INFO stall: STALL after_tile_storage_apply: 14.62ms
+2026-05-23T03:51:03.337531Z  INFO stage5_live_todos: STAGE5_ACTIVE_TODO subsystem=representation_spine_post_merge spine_gate_seq=["TODO-01", "TODO-04", "TODO-06"] idx=4 id=TODO-05 status=InProgress file=src/gui/map_camera.rs system=map_camera_apply_input_to_desired, mirror_world_main_camera_from_map_desired goal=No hidden second writer path for world main camera (VM-09B closed). runtime_check=RUST_LOG=stage5_live_todos=info: STAGE5_MAP_CAMERA_HOOK post_mirror bridge_drift + desired vs WorldMain; no unexplained spikes. failure_mode=Jitter + desync minimap vs world.
+2026-05-23T03:51:03.337544Z  INFO stage5_live_todos: STAGE5_SPINE_HOOK policy_present=true graph_present=true fence_committed=true fence_fire_tick=4 world_frame_present=true overlay_rev=0 overlay_chunk_cells=0 atm_partial_dispatch=0 atm_gpu_tex_uploads=0 atm_full_field_fallback=false
+2026-05-23T03:51:03.338456Z  INFO industrial_activation_todos: INDUSTRIAL_ACTIVATION_GREEN
+2026-05-23T03:51:03.339275Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=UiMeasured valid=true min=Vec2(0.0, 0.0) max=Vec2(1280.0, 720.0) w=1280.0 h=720.0
+2026-05-23T03:51:03.346458Z  INFO viewport_authority::solver: VIEWPORT_SOLVER_TARGET node=SimMapFill valid=true rect.source=SimMapFill w=1280.0 h=720.0
+2026-05-23T03:51:03.346465Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=LayoutSolver valid=true min=Vec2(0.0, 0.0) max=Vec2(1280.0, 720.0) w=1280.0 h=720.0
+2026-05-23T03:51:03.346470Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=LayoutSolver valid=true min=Vec2(0.0, 0.0) max=Vec2(1280.0, 720.0) w=1280.0 h=720.0
+2026-05-23T03:51:03.346478Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=UiCommitted valid=true min=Vec2(0.0, 0.0) max=Vec2(1280.0, 720.0) w=1280.0 h=720.0
+2026-05-23T03:51:03.358005Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=CameraApplied valid=true min=Vec2(0.0, 0.0) max=Vec2(1280.0, 720.0) w=1280.0 h=720.0
+2026-05-23T03:51:03.378800Z ERROR wgpu::backend::wgpu_core: Handling wgpu errors as fatal by default
+
+thread 'Async Compute Task Pool (1)' (134580) panicked at C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\wgpu-27.0.1\src\backend\wgpu_core.rs:1365:26:
+wgpu error: Validation Error
+
+Caused by:
+  In Device::create_render_pipeline, label = 'fire_particle_raster'
+    Error matching ShaderStages(FRAGMENT) shader requirements against the pipeline
+      Shader global ResourceBinding { group: 0, binding: 0 } is not available in the pipeline layout
+        Visibility flags don't include the shader stage
+
+
+2026-05-23T03:51:03.433932Z  INFO stage5_live_todos: STAGE5_ACTIVE_TODO subsystem=evaluate_app_stage5_readiness spine_gate_seq=["TODO-01", "TODO-04", "TODO-06"] idx=4 id=TODO-05 status=InProgress file=src/gui/map_camera.rs system=map_camera_apply_input_to_desired, mirror_world_main_camera_from_map_desired goal=No hidden second writer path for world main camera (VM-09B closed). runtime_check=RUST_LOG=stage5_live_todos=info: STAGE5_MAP_CAMERA_HOOK post_mirror bridge_drift + desired vs WorldMain; no unexplained spikes. failure_mode=Jitter + desync minimap vs world.
+2026-05-23T03:51:03.433947Z  INFO stage5_live_todos: STAGE5_READINESS_HOOK passes=true violations_first=(none) producer_count=1
+2026-05-23T03:51:03.433952Z  INFO visual_aidv2_live_todos: VISUAL_AID_V2_BOARD done=3/6 footprint_ok=false readability=true icons=0
+2026-05-23T03:51:03.433968Z  INFO stage5_readiness::truth: 
+========== STAGE5_FULL_APP_TRUTH (post_update_invocation=4 sim_tick=4) ==========
+FULL_APP_PROFILE_ACTIVE: true
+stage5_readiness_passes: true
+--- AppStage5ReadinessReport (hard gates) ---
+vt4_ok: true  [src: evaluate_app_stage5_readiness / VtCiMatrixLiveReport OR VisualAgreementFrame]
+vt5_ok: true  [src: evaluate_app_stage5_readiness / VtCiMatrixLiveReport]
+single_fire_extract: true  [src: fire_visual_producer_count / REGISTERED_VISUAL_PRODUCERS]
+gpu_field_authoritative: true  [src: P2H_GPU_PARTIAL_WRITES_AUTHORITATIVE]
+preview_render_target_active: true  [src: preview_authoritative_surface]
+phase_d_ok: true  [derived: !require_preview || preview_render_target_active]
+overlay_from_shared_buffers_only: true  [src: SharedOverlayFieldBuffers resource exists]
+particle_lod_scales: true  [src: GpuRepresentationMetrics vs RepresentationResult band]
+phase_f_lod_proof_ok: true  [src: PhaseFLodProofReport]
+instanced_dispatch_ok: true  [src: GpuIndirectDrawSpine vs WorldFireParticleDrawDispatch]
+phase_f_ok: true  [derived: particle_lod_scales && phase_f_lod_proof_ok && instanced_dispatch_ok]
+projection_domains (report): 3  [src: RenderProjectionGraph via evaluate_stage5_spine_checklist]
+registered_producers: 2
+duplicate_visual_scan_count: 0
+--- violations (first = primary suspect) ---
+first: (none)
+all: []
+--- input wiring (MISSING = UNKNOWNÔåÆoperator FAIL) ---
+RepresentationResult: true
+WorldRepresentationFrame: true
+RenderProjectionGraph: true
+CommittedVisualSnapshotFence: true
+SharedOverlayFieldBuffers: true
+GpuRepresentationMetrics: true
+VisualAgreementFrame: true
+VtCiMatrixLiveReport: true
+AtmospherePartialWriteMetrics: true
+PreviewCameraState: true
+WorldPreviewGpuRuntime: true
+PhaseFLodProofReport: true
+GpuIndirectDrawSpine: true
+WorldFireParticleDrawDispatch: true
+FireSimulationSnapshot: true
+MISSING_WIRING_FULL_APP: none
+================================================================
+
+2026-05-23T03:51:03.433982Z ERROR wgpu::backend::wgpu_core: Handling wgpu errors as fatal by default
+2026-05-23T03:51:03.433974Z  INFO stall: STALL after_readiness: 94.68ms
+
+thread 'Async Compute Task Pool (1)' (134580) panicked at C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\wgpu-27.0.1\src\backend\wgpu_core.rs:1365:26:
+wgpu error: Validation Error
+
+Caused by:
+  In Device::create_render_pipeline, label = 'fire_particle_raster'
+    Error matching ShaderStages(FRAGMENT) shader requirements against the pipeline
+      Shader global ResourceBinding { group: 0, binding: 0 } is not available in the pipeline layout
+        Visibility flags don't include the shader stage
+
+2026-05-23T03:51:03.434164Z  INFO worldgen_chrome::egui: WORLD_GEN_EGUI_DRAW preview_window_open=true flow=Idle
+
+2026-05-23T03:51:03.442913Z  INFO stall: STALL post_egui: 8.94ms
+2026-05-23T03:51:03.443771Z  INFO stage5_live_todos: STAGE5_ACTIVE_TODO subsystem=gpu_indirect_sync_post spine_gate_seq=["TODO-01", "TODO-04", "TODO-06"] idx=4 id=TODO-05 status=InProgress file=src/gui/map_camera.rs system=map_camera_apply_input_to_desired, mirror_world_main_camera_from_map_desired goal=No hidden second writer path for world main camera (VM-09B closed). runtime_check=RUST_LOG=stage5_live_todos=info: STAGE5_MAP_CAMERA_HOOK post_mirror bridge_drift + desired vs WorldMain; no unexplained spikes. failure_mode=Jitter + desync minimap vs world.
+2026-05-23T03:51:03.443782Z  INFO stage5_live_todos: STAGE5_GPU_HOOK indirect_instances=0 dispatch_count=0 draw_instances=0 (PHF-01 alignment)
+2026-05-23T03:51:03.443872Z  INFO worldgen_chrome::trace: CHROME_STATE app=Res(State(WorldGen)) worldgen=Res(State(Preview)) base=Res(State(Editor)) flow=Res(State(Idle)) latch_dismissed=false world_gen_visible=true preview_window_open=true lifecycle=Rendering last_dismiss="never"
+2026-05-23T03:51:03.443873Z  INFO sim_view_sync: SIM_VIEW_SYNC frame=3 win_logical=(1280, 720) win_physical=(1280, 720) sim_valid=true sim_adequate=true sim_min=Vec2(0.0, 0.0) sim_max=Vec2(1280.0, 720.0) measured_valid=true measured_wh=Vec2(1280.0, 720.0) committed_wh=Vec2(1280.0, 720.0) sim_wh=Vec2(1280.0, 720.0) settle_streak=2 layout_settled=false sim_held=false last_commit="hole_settling" frozen=false pending_wh=Vec2(1280.0, 720.0) cam_hole=true render_hole=true cam_invalid_streak=0 cam_valid_streak=2 cam_scissor=Some((0, 0, 1280, 720)) ortho_fixed_wh=(1280, 720) map_view_px=(1280, 720) raster_rev=2 resolved_rev=7 app=1 base=1 flow=0 worldgen=1 cmd_shell=false overlay_tray=false transmission=false rect_sanity_issues=0 left_stack_collapsed=true map_cam_scale=Vec3(1.0, 1.0, 1.0) minimap_visible=true
+2026-05-23T03:51:03.443888Z  WARN visual_diag::anomaly: RESOLVED_SIM_MAP_VALIDITY_CHANGED frame=3 was=false now=true
+2026-05-23T03:51:03.443895Z  INFO visual_diag: VISUAL_DIAG window frame=3 periodic=false win_logical=(1280, 720) win_physical=(1280, 720) scale=1.0 app=1 base=1 flow=0 worldgen=1 readiness_profile=Stage5ReadinessProfile { require_vt4: true, require_vt5: true, require_preview: true, require_partial_metrics: true, require_world_frame: true, require_phase_f_proof: true, require_instanced_draw: true }
+2026-05-23T03:51:03.443901Z  INFO visual_diag: VISUAL_DIAG sim_viewport frame=3 sim_valid=true sim_adequate=true sim_min=Vec2(0.0, 0.0) sim_max=Vec2(1280.0, 720.0) sim_wh=(1280, 720) measured_valid=true measured_wh=(1280, 720) committed_wh=(1280, 720) sim_held=false settle_streak=2 layout_settled=false frozen=false last_commit="hole_settling" pending_wh=(1280, 720) pending_min=Vec2(0.0, 0.0) pending_max=Vec2(1280.0, 720.0)
+2026-05-23T03:51:03.443906Z  INFO visual_diag: VISUAL_DIAG camera frame=3 cam_desired_x=160.0 cam_desired_y=160.0 cam_zoom=1.0 latch_hole=true render_hole=true latch_invalid_streak=0 latch_valid_streak=2 cam_scissor=Some((0, 0, 1280, 720)) ortho_fixed_w=1280 ortho_fixed_h=720 map_view_px_w=1280 map_view_px_h=720 world_w=320 world_h=320
+2026-05-23T03:51:03.443910Z  INFO visual_diag: VISUAL_DIAG resolved_viewports frame=3 resolved_rev=7 primary_valid=true primary_wh=(1280, 720) sim_resolved_valid=true sim_resolved_wh=(1280, 720) preview_valid=true preview_wh=(372, 362) minimap_valid=false minimap_wh=(0, 0) mismatch_preview=true mismatch_minimap=false mismatch_sim_map=false mismatch_stale_tex=false
+2026-05-23T03:51:03.443914Z  INFO visual_diag: VISUAL_DIAG map_view_frames frame=3 world_preview_proj_rev=1554779161527 minimap_proj_rev=4296967304 sim_map_proj_rev=3092378454407
+2026-05-23T03:51:03.443916Z  INFO visual_diag: VISUAL_DIAG map_presentation frame=3 wp_fit=Contain wp_viewport=UVec2(372, 362) wp_fit_scale=1.10595703125 wp_expected_fit_scale=1.10595703125 wp_zoom=1.3743702173233032 mm_fit=Contain mm_viewport=UVec2(1, 1) mm_fit_scale=1.0
+2026-05-23T03:51:03.443921Z  INFO visual_diag: VISUAL_DIAG render_spine frame=3 raster_rev=2 repr_band=0 repr_lod="LocalTactical" particle_rows_cap=262144 visual_intent="Strategic" visual_zoom_alpha=0.00700009148567915 fire_particle_rows=0 fire_particle_stamp=4 overlay_rev=0 overlay_chunk_cells=0 graph_fire_inst=0 graph_fire_heat=0 gpu_instance_rows=0 gpu_dispatch=0 gpu_draw=0
+2026-05-23T03:51:03.443925Z  INFO visual_diag: VISUAL_DIAG perf frame=3 tile_raster_ms=0.0 tile_raster_ran=false world_repr_ms=0.004699999932199717 projection_graph_ms=0.0003000000142492354 domain_merge_ms=0.00010000000474974513 readiness_ms=0.03849999979138374 cpu_pre_egui_ms=0.0 cpu_egui_ms=0.0 cpu_post_egui_ms=0.0 gpu_gap_ms=0.0
+2026-05-23T03:51:03.443930Z  INFO visual_diag: VISUAL_DIAG hud_shell frame=3 cmd_shell=false overlay_tray=false transmission=false
+2026-05-23T03:51:03.443950Z  INFO perf: PERF wall=121.74 instr=0.04 gap=121.69 | cpu_pre_egui=17.06 cpu_egui=103.65 cpu_post_egui=1.03 gpu_gap=0.00 | spine=0.00 world_repr=0.00 graph=0.00 merge=0.00 atm=0.00 readiness=0.04 raster=0.00 (idle) | upd_attrib sum=1.53 pv_cpu=0.00 pv_gpu=0.00 fire=0.10 stream=1.06 map_fit=0.00 hud=0.02 wgen=0.33 | budget_sum=0.04 hud=0.02 overlay=0.00 raster_b=0.00 particles=0.00 residency=0.01 tex_reg=0.00 render_x=0.00 | egui_unbudgeted=103.63 | stall first+preupd=0.06 update=0.01 post_dom=0.01 post_vt=0.02 postÔåÆready=0.00 ready=94.68 postÔåÆegui=2.36 egui=8.94 post_egui=0.96 | stall_hits=[after_tile_storage_apply:14.6,after_readiness:94.7,post_egui:8.9]
+2026-05-23T03:51:03.443966Z  INFO perf: PERF frame=121.7ms update=17.1ms egui=103.7ms preview=0.0ms streaming=1.1ms tile_apply=0.0ms viewport=0.0ms map_fit=0.0ms repr=0.0ms raster=0.0ms
+2026-05-23T03:51:03.443970Z  INFO stall: STALL culprit=after_readiness duration=94.7ms frame=121.7ms
+2026-05-23T03:51:03.489579Z ERROR wgpu::backend::wgpu_core: Handling wgpu errors as fatal by default
+
+thread 'Async Compute Task Pool (0)' (22952) panicked at C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\wgpu-27.0.1\src\backend\wgpu_core.rs:1365:26:
+wgpu error: Validation Error
+
+Caused by:
+  In Device::create_render_pipeline, label = 'fire_particle_raster'
+    Error matching ShaderStages(FRAGMENT) shader requirements against the pipeline
+      Shader global ResourceBinding { group: 0, binding: 0 } is not available in the pipeline layout
+        Visibility flags don't include the shader stage
+
+
+2026-05-23T03:51:03.503945Z ERROR wgpu::backend::wgpu_core: Handling wgpu errors as fatal by default
+
+thread 'Async Compute Task Pool (1)' (134580) panicked at C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\wgpu-27.0.1\src\backend\wgpu_core.rs:1365:26:
+wgpu error: Validation Error
+
+Caused by:
+  In Device::create_render_pipeline, label = 'fire_particle_raster'
+    Error matching ShaderStages(FRAGMENT) shader requirements against the pipeline
+      Shader global ResourceBinding { group: 0, binding: 0 } is not available in the pipeline layout
+        Visibility flags don't include the shader stage
+
+
+2026-05-23T03:51:03.595543Z ERROR wgpu::backend::wgpu_core: Handling wgpu errors as fatal by default
+
+thread 'Async Compute Task Pool (1)' (134580) panicked at C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\wgpu-27.0.1\src\backend\wgpu_core.rs:1365:26:
+wgpu error: Validation Error
+
+Caused by:
+  In Device::create_render_pipeline, label = 'fire_particle_raster'
+    Error matching ShaderStages(FRAGMENT) shader requirements against the pipeline
+      Shader global ResourceBinding { group: 0, binding: 0 } is not available in the pipeline layout
+        Visibility flags don't include the shader stage
+
+
+2026-05-23T03:51:03.600147Z ERROR wgpu::backend::wgpu_core: Handling wgpu errors as fatal by default
+
+thread 'Async Compute Task Pool (1)' (134580) panicked at C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\wgpu-27.0.1\src\backend\wgpu_core.rs:1365:26:
+wgpu error: Validation Error
+
+Caused by:
+  In Device::create_render_pipeline, label = 'fire_particle_raster'
+    Error matching ShaderStages(FRAGMENT) shader requirements against the pipeline
+      Shader global ResourceBinding { group: 0, binding: 0 } is not available in the pipeline layout
+        Visibility flags don't include the shader stage
+
+
+Encountered a panic in system `bevy_render::render_resource::pipeline_cache::PipelineCache::process_pipeline_queue_system`!
+
+thread '<unnamed>' (124740) panicked at C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\wgpu-hal-27.0.4\src\vulkan\instance.rs:194:58:
+Trying to destroy a SurfaceAcquireSemaphores that is still in use by a SurfaceTexture
+stack backtrace:
+   0:     0x7ff680a88f80 - std::backtrace_rs::backtrace::win64::trace
+                               at /rustc/59807616e1fa2540724bfbac14d7976d7e4a3860/library\std\src\..\..\backtrace\src\backtrace\win64.rs:85
+   1:     0x7ff680a88f80 - std::backtrace_rs::backtrace::trace_unsynchronized
+                               at /rustc/59807616e1fa2540724bfbac14d7976d7e4a3860/library\std\src\..\..\backtrace\src\backtrace\mod.rs:66
+   2:     0x7ff680a88f80 - std::sys::backtrace::_print_fmt
+                               at /rustc/59807616e1fa2540724bfbac14d7976d7e4a3860/library\std\src\sys\backtrace.rs:74
+   3:     0x7ff680a88f80 - std::sys::backtrace::impl$0::print::impl$0::fmt
+                               at /rustc/59807616e1fa2540724bfbac14d7976d7e4a3860/library\std\src\sys\backtrace.rs:44
+   4:     0x7ff680a9e401 - core::fmt::write
+                               at /rustc/59807616e1fa2540724bfbac14d7976d7e4a3860/library\core\src\fmt\mod.rs:0
+   5:     0x7ff680a8ef44 - std::io::default_write_fmt
+                               at /rustc/59807616e1fa2540724bfbac14d7976d7e4a3860/library\std\src\io\mod.rs:639
+   6:     0x7ff680a8ef44 - std::io::Write::write_fmt<std::sys::stdio::windows::Stderr>
+                               at /rustc/59807616e1fa2540724bfbac14d7976d7e4a3860/library\std\src\io\mod.rs:1994
+   7:     0x7ff680a70022 - std::sys::backtrace::BacktraceLock::print
+                               at /rustc/59807616e1fa2540724bfbac14d7976d7e4a3860/library\std\src\sys\backtrace.rs:47
+   8:     0x7ff680a70022 - std::panicking::default_hook::closure$0
+                               at /rustc/59807616e1fa2540724bfbac14d7976d7e4a3860/library\std\src\panicking.rs:292
+   9:     0x7ff680a80dc7 - std::panicking::default_hook
+                               at /rustc/59807616e1fa2540724bfbac14d7976d7e4a3860/library\std\src\panicking.rs:319
+  10:     0x7ff680a810c4 - std::panicking::panic_with_hook
+                               at /rustc/59807616e1fa2540724bfbac14d7976d7e4a3860/library\std\src\panicking.rs:833
+  11:     0x7ff680a700f4 - std::panicking::panic_handler::closure$0
+                               at /rustc/59807616e1fa2540724bfbac14d7976d7e4a3860/library\std\src\panicking.rs:698
+  12:     0x7ff680a6dd8f - std::sys::backtrace::__rust_end_short_backtrace<std::panicking::panic_handler::closure_env$0,never$>
+                               at /rustc/59807616e1fa2540724bfbac14d7976d7e4a3860/library\std\src\sys\backtrace.rs:182
+  13:     0x7ff680a7097e - std::panicking::panic_handler
+                               at /rustc/59807616e1fa2540724bfbac14d7976d7e4a3860/library\std\src\panicking.rs:689
+  14:     0x7ff680c78f3d - core::panicking::panic_fmt
+                               at /rustc/59807616e1fa2540724bfbac14d7976d7e4a3860/library\core\src\panicking.rs:80
+  15:     0x7ff680c78c85 - core::panicking::panic_display
+                               at /rustc/59807616e1fa2540724bfbac14d7976d7e4a3860/library\core\src\panicking.rs:259
+  16:     0x7ff680c78c85 - core::option::expect_failed
+                               at /rustc/59807616e1fa2540724bfbac14d7976d7e4a3860/library\core\src\option.rs:2245
+  17:     0x7ff67f8d56cd - wgpu_hal::vulkan::instance::<impl wgpu_hal::vulkan::Instance>::from_raw::h4a277bbdb6876eb7
+  18:     0x7ff67f8d5833 - wgpu_hal::vulkan::instance::<impl wgpu_hal::Surface for wgpu_hal::vulkan::Surface>::unconfigure::hf0f6d5239d34e044
+  19:     0x7ff67f771fe4 - <wgpu_core::instance::Surface as core::ops::drop::Drop>::drop::h90553dc7e1b007b4
+  20:     0x7ff67f734f46 - alloc::sync::Arc<T,A>::drop_slow::h3b48b56652a9502e
+  21:     0x7ff67f767c36 - wgpu_core::instance::<impl wgpu_core::global::Global>::surface_drop::hb6eb25c7f229f1a8
+  22:     0x7ff67f6f38e2 - alloc::sync::Arc<T,A>::drop_slow::h34153b4d35afff20
+  23:     0x7ff67f52c30e - core::ptr::drop_in_place<(bevy_ecs::entity::Entity,bevy_render::view::window::SurfaceData)>::he8b7fa983dcf4060
+  24:     0x7ff67f565b3d - bevy_ecs::component::info::ComponentDescriptor::drop_ptr::h200ff6ddf2efd7c5
+  25:     0x7ff6808ae4d6 - bevy_ecs::storage::blob_array::BlobArray::drop::h4cee0f0840b16638
+  26:     0x7ff67c94e09c - <alloc::vec::Vec<T,A> as core::ops::drop::Drop>::drop::h12be03ff9cfa9585
+  27:     0x7ff67c94225c - core::ptr::drop_in_place<bevy_ecs::lifecycle::RemovedComponentMessages>::h73244968e2421947
+  28:     0x7ff67f54e20f - core::ptr::drop_in_place<bevy_app::sub_app::SubApp>::h38ee3d657c6ae696
+  29:     0x7ff67f5a5ac1 - core::ptr::drop_in_place<bevy_app::sub_app::SubApp>::h38ee3d657c6ae696
+  30:     0x7ff67f59e61e - std::sys::backtrace::__rust_begin_short_backtrace::hc8fa84ea80c910e3
+  31:     0x7ffbe9720430 - _CxxFrameHandler3
+  32:     0x7ffbe9713acd - is_exception_typeof
+  33:     0x7ffbe971f8b8 - _C_specific_handler
+  34:     0x7ffbe9712cd4 - is_exception_typeof
+  35:     0x7ffbe9720241 - _CxxFrameHandler3
+  36:     0x7ffc65b529ef - _chkstk
+  37:     0x7ffc65ae0939 - RtlUnwindEx
+  38:     0x7ffbe971fdae - _C_specific_handler
+  39:     0x7ffbe97118f2 - is_exception_typeof
+  40:     0x7ffbe9711d34 - is_exception_typeof
+  41:     0x7ffbe9712dc3 - is_exception_typeof
+  42:     0x7ffbe9720241 - _CxxFrameHandler3
+  43:     0x7ffc65b5296f - _chkstk
+  44:     0x7ffc65b02554 - RtlRaiseException
+  45:     0x7ffc65b022a7 - RtlRaiseException
+  46:     0x7ffc63445369 - RaiseException
+  47:     0x7ffbe97152c7 - CxxThrowException
+  48:     0x7ff680a8f12d - panic_unwind::imp::throw_exception
+                               at /rustc/59807616e1fa2540724bfbac14d7976d7e4a3860/library\panic_unwind\src\seh.rs:368
+  49:     0x7ff680a8f005 - panic_unwind::imp::panic
+                               at /rustc/59807616e1fa2540724bfbac14d7976d7e4a3860/library\panic_unwind\src\seh.rs:302
+  50:     0x7ff680a8f005 - panic_unwind::__rust_start_panic
+                               at /rustc/59807616e1fa2540724bfbac14d7976d7e4a3860/library\panic_unwind\src\lib.rs:108
+  51:     0x7ff680a7068f - std::panicking::rust_panic
+                               at /rustc/59807616e1fa2540724bfbac14d7976d7e4a3860/library\std\src\panicking.rs:886
+  52:     0x7ff680a80f0f - std::panicking::resume_unwind
+                               at /rustc/59807616e1fa2540724bfbac14d7976d7e4a3860/library\std\src\panicking.rs:877
+  53:     0x7ff680a80c1f - std::panic::resume_unwind
+                               at /rustc/59807616e1fa2540724bfbac14d7976d7e4a3860/library\std\src\panic.rs:391
+  54:     0x7ff6808b18a9 - <bevy_ecs::schedule::executor::multi_threaded::MultiThreadedExecutor as bevy_ecs::schedule::executor::SystemExecutor>::run::ha4f5dec29ff7435b
+  55:     0x7ff6808f6266 - bevy_ecs::schedule::schedule::Schedule::run::h0bfbb71ffd5a0e4b
+  56:     0x7ff68086f9d2 - bevy_ecs::world::World::schedule_scope::hca64048d11e008c7
+  57:     0x7ff68085c21a - bevy_app::sub_app::SubApp::update::h1c9c233a62d85687
+  58:     0x7ff67f59e2fc - std::sys::backtrace::__rust_begin_short_backtrace::hc8fa84ea80c910e3
+  59:     0x7ff67f63a7e0 - core::ops::function::FnOnce::call_once{{vtable.shim}}::h355675b3903c6398
+  60:     0x7ff680a87abc - std::sys::thread::windows::impl$0::new::thread_start
+                               at /rustc/59807616e1fa2540724bfbac14d7976d7e4a3860/library\std\src\sys\thread\windows.rs:58
+  61:     0x7ffc653b7374 - BaseThreadInitThunk
+  62:     0x7ffc65afcc91 - RtlUserThreadStart
+error: process didn't exit successfully: `C:\Users\oz_\AppData\Local\Temp\cursor-sandbox-cache\ea910b6c66b7456ea408ae54d28b6cee\cargo-target\release\proc_A_dine01.exe --test visual` (exit code: 0xc0000409, STATUS_STACK_BUFFER_OVERRUN)

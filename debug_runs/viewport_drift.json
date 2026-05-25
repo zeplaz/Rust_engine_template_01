@@ -1,0 +1,17 @@
+{
+  "witness": "viewport_authority_migration",
+  "status": "closed",
+  "canonical_path": [
+    "semantic_viewport_from_map_fill",
+    "commit_authority_from_semantic",
+    "publish_simulation_map_viewport"
+  ],
+  "removed_wrappers": [
+    "merge_measured_with_solver",
+    "solve_sim_viewport_from_map_fill",
+    "solve_viewport_rescue_floor"
+  ],
+  "debug_env": "SIM_VIEW_SYNC_DEBUG=1",
+  "integrity_plugin": "ViewportIntegrityAssertPlugin",
+  "notes": "Empty ViewportAuthorityDebugPlugin removed; integrity assert runs when VIEWPORT_AUTHORITY_DEBUG=1."
+}

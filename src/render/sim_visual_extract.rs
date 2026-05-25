@@ -14,6 +14,7 @@ use bevy::render::extract_resource::ExtractResource;
 use bytemuck::{Pod, Zeroable};
 
 use crate::render::lighting::{FireLightEmission, FireLightType};
+use crate::systems::sim_control::SimStepStamp;
 
 /// Packed **std430-friendly** fire visual row (`vec4` lanes) for GPU storage + CPU clustering.
 #[repr(C)]
@@ -21,7 +22,7 @@ use crate::render::lighting::{FireLightEmission, FireLightType};
 pub struct FireVisualGpuInstance {
     /// Chunk grid `xy` as `f32`, `z` = heat `[0,1]`, `w` = luminosity.
     pub chunk_xy_heat_lum: Vec4,
-    /// World sample `xyz`, `w` = influence radius.
+    /// World sample `xyz`, `w` = influence radius (**light falloff**, not billboard size — see Phase-F remap).
     pub world_xyz_radius: Vec4,
     /// `x` smoke density, `y` ember rate, `z` visibility reduction, `w` extract priority.
     pub smoke_ember_vis_priority: Vec4,
@@ -88,14 +89,41 @@ pub struct ChunkFireHeat {
     pub smoke: f32,
 }
 
-use crate::systems::sim_control::SimStepStamp;
+/// Heat above this counts as “active fire” for debug overlays / cheap visibility gates.
+/// Aligns with per-cell extinction in [`crate::systems::fire::chunk_fire_overlay`] / surface fire
+/// (`< 0.02` clamps to zero) so smolder near the floor is still visible to representation.
+pub const FIRE_VISUAL_ACTIVE_HEAT_EPS: f32 = 0.02;
 
-/// Canonical **CPU** fire visual snapshot for the frame (full detail). Built by [`crate::render::extraction::fire_visual_extract::extract_fire_visual_frame`] only.
+/// Canonical **CPU** fire visual snapshot for the frame (full detail). Filled by
+/// [`crate::render::extraction::fire_visual_extract::build_fire_visual_frame_from_simulation`] from
+/// [`crate::render::fire_chunk_runtime::FireSimulationSnapshot`] (simulation is ECS-only in `extract_fire_simulation_snapshot`).
 #[derive(Resource, Default, Debug, Clone)]
 pub struct FireVisualFrame {
     pub stamp: SimStepStamp,
     pub instances: Vec<FireVisualGpuInstance>,
     pub chunk_heat: Vec<ChunkFireHeat>,
+}
+
+impl FireVisualFrame {
+    /// Chunk indices with visual heat above [`FIRE_VISUAL_ACTIVE_HEAT_EPS`] in either instances or `chunk_heat`.
+    #[must_use]
+    pub fn chunk_coords_with_active_heat(&self) -> std::collections::HashSet<IVec2> {
+        use std::collections::HashSet;
+        let mut out = HashSet::default();
+        for row in &self.instances {
+            if row.heat() <= FIRE_VISUAL_ACTIVE_HEAT_EPS {
+                continue;
+            }
+            let xy = row.chunk_grid_xy();
+            out.insert(IVec2::new(xy.x as i32, xy.y as i32));
+        }
+        for h in &self.chunk_heat {
+            if h.heat > FIRE_VISUAL_ACTIVE_HEAT_EPS {
+                out.insert(h.chunk);
+            }
+        }
+        out
+    }
 }
 
 #[inline]

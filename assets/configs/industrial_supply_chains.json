@@ -1,0 +1,99 @@
+{
+  "schema_version": 1,
+  "description": "Authoritative multi-building supply chains. Each step has its own catalog JSON under assets/configs/buildings/. Power values are designer units (see economy/supply_chain.rs for MW mapping).",
+  "chains": {
+    "concrete_portland": {
+      "display_name": "Concrete (Portland)",
+      "concrete_type": "Portland",
+      "steps": [
+        {
+          "role": "aggregate_mine",
+          "catalog_id": "concrete_aggregate_mine",
+          "power_consumption": 18,
+          "produces": ["Gravel", "Limestone"],
+          "consumes": ["Labour", "Diesel"]
+        },
+        {
+          "role": "cement_kiln",
+          "catalog_id": "concrete_cement_kiln",
+          "power_consumption": 72,
+          "produces": ["Cement"],
+          "consumes": ["Limestone", "Coal", "Labour", "Electricity"]
+        },
+        {
+          "role": "concrete_mixer",
+          "catalog_id": "concrete_mixer_plant",
+          "power_consumption": 28,
+          "produces": ["Concrete"],
+          "consumes": ["Cement", "Water", "Gravel", "Chemicals", "Labour", "Electricity"]
+        },
+        {
+          "role": "integrated_plant",
+          "catalog_id": "concrete_basic_production_plant",
+          "note": "Legacy monolith — kiln + mixer in one footprint; prefer discrete steps for new layouts",
+          "power_consumption": 50,
+          "produces": ["Concrete"],
+          "consumes": ["Water", "Chemicals", "Labour", "Electricity"]
+        }
+      ]
+    },
+    "concrete_geopolymer": {
+      "display_name": "Concrete (Geopolymer)",
+      "concrete_type": "Geopolymer",
+      "steps": [
+        {
+          "role": "aggregate_mine",
+          "catalog_id": "concrete_aggregate_mine",
+          "power_consumption": 18
+        },
+        {
+          "role": "cement_kiln",
+          "catalog_id": "concrete_cement_kiln_geopolymer",
+          "power_consumption": 58,
+          "produces": ["Cement"],
+          "consumes": ["Limestone", "Chemicals", "Labour", "Electricity"]
+        },
+        {
+          "role": "concrete_mixer",
+          "catalog_id": "concrete_mixer_geopolymer",
+          "power_consumption": 32,
+          "produces": ["Concrete"],
+          "consumes": ["Cement", "Water", "Chemicals", "Labour", "Electricity"]
+        }
+      ]
+    },
+    "aluminum_primary": {
+      "display_name": "Aluminum primary (Hall–Héroult chain)",
+      "steps": [
+        {
+          "role": "bauxite_mine",
+          "catalog_id": "aluminum_bauxite_mine",
+          "power_consumption": 22,
+          "produces": ["Bauxite"],
+          "consumes": ["Labour", "Diesel", "Water"]
+        },
+        {
+          "role": "alumina_refinery",
+          "catalog_id": "aluminum_alumina_refinery",
+          "power_consumption": 85,
+          "produces": ["Alumina"],
+          "consumes": ["Bauxite", "Chemicals", "Water", "Labour", "Electricity"]
+        },
+        {
+          "role": "aluminum_smelter",
+          "catalog_id": "aluminum_smelter1",
+          "power_consumption": 200,
+          "produces": ["Aluminum", "Metal"],
+          "consumes": ["Alumina", "Electricity", "Labour"]
+        },
+        {
+          "role": "aluminum_fabrication",
+          "catalog_id": "aluminum_fabrication_plant",
+          "power_consumption": 48,
+          "produces": ["Aluminum"],
+          "consumes": ["Aluminum", "Electricity", "Labour"]
+        }
+      ]
+    }
+  }
+}

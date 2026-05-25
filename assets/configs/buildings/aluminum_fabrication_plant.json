@@ -1,0 +1,18 @@
+{
+    "asset_name": "Aluminum fabrication plant",
+    "asset_type": "Building",
+    "segment": "Industrial",
+    "description": "Extrusion / rolling / casting of smelted aluminum",
+    "supply_chain": "aluminum_primary",
+    "supply_chain_role": "aluminum_fabrication",
+    "is_building": true,
+    "is_productive": true,
+    "building_size_x": 4,
+    "building_size_y": 3,
+    "building_height": 1,
+    "construction_cost": 1800,
+    "power_consumption": 48,
+    "produces_resources": ["Aluminum"],
+    "consumes_resources": ["Aluminum", "Electricity", "Labour"],
+    "version": "1.0.0"
+}

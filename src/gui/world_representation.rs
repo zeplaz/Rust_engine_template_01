@@ -15,7 +15,7 @@ use crate::gui::map_camera::{
     in_simulation_or_editor_map, map_zoom_alpha, MapCameraDesired, MapCameraSettings,
     MapCameraSystemSet,
 };
-use crate::render::sim_visual_extract::FireVisualFrame;
+use crate::render::{ChunkFireHeat, FireSimulationSnapshot, Stage5LodBandLogWitness};
 use crate::systems::sim_control::{SimControlSystemSet, SimStepStamp, SimTick, SimTimeMicros};
 use crate::terrain::generation::{Chunk, ChunkCellMatrix};
 
@@ -50,12 +50,17 @@ impl WorldLodBand {
 #[derive(Resource, Clone, Copy, Debug)]
 pub struct GlobalLodState {
     pub default_band: WorldLodBand,
+    /// VA3: written by [`crate::gui::sync_tile_readability_witness`], read in LOD evaluate.
+    pub readability_zoom_floor: f32,
+    pub readability_screen_density: f32,
 }
 
 impl Default for GlobalLodState {
     fn default() -> Self {
         Self {
             default_band: WorldLodBand::Strategic,
+            readability_zoom_floor: 0.0,
+            readability_screen_density: 1.0,
         }
     }
 }
@@ -318,13 +323,12 @@ pub struct LodGameplaySignals {
 
 #[must_use]
 pub fn gather_lod_gameplay_signals(
-    fire: &FireVisualFrame,
+    fire_chunk_heat: &[ChunkFireHeat],
     agents: &AgentFrame,
     tactical: &TacticalLodBubbleRegistry,
 ) -> LodGameplaySignals {
-    let burning_chunks = fire.chunk_heat.len();
-    let max_heat = fire
-        .chunk_heat
+    let burning_chunks = fire_chunk_heat.len();
+    let max_heat = fire_chunk_heat
         .iter()
         .map(|row| row.heat)
         .fold(0.0f32, f32::max);
@@ -492,13 +496,15 @@ impl WorldLodPolicyEngine {
                 agent_steering: true,
             },
             WorldLodBand::Strategic => WorldVisibilityMask {
-                fire_instances: false,
+                // Keep fire instance **extraction** on at strategic zoom; throttle cost via
+                // [`WorldResolutionPolicy::fire_instance_cap`] + projection top-heat cap, not a hard bool gate.
+                fire_instances: true,
                 fire_chunk_heat: true,
                 pathfinding_field: false,
                 agent_steering: false,
             },
             WorldLodBand::Macro => WorldVisibilityMask {
-                fire_instances: false,
+                fire_instances: true,
                 fire_chunk_heat: true,
                 pathfinding_field: false,
                 agent_steering: false,
@@ -520,12 +526,12 @@ impl WorldLodPolicyEngine {
                 compute_dispatch_hz: 20.0,
             },
             WorldLodBand::Strategic => WorldResolutionPolicy {
-                fire_instance_cap: 0,
+                fire_instance_cap: 24,
                 chunk_heat_bin: 1,
                 compute_dispatch_hz: 10.0,
             },
             WorldLodBand::Macro => WorldResolutionPolicy {
-                fire_instance_cap: 0,
+                fire_instance_cap: 8,
                 chunk_heat_bin: 4,
                 compute_dispatch_hz: 1.0,
             },
@@ -659,7 +665,7 @@ pub fn compute_world_representation_frame(
     sim: Res<SimTick>,
     sim_time: Res<SimTimeMicros>,
     chunks: Query<(&Chunk, &ChunkCellMatrix)>,
-    fire: Res<FireVisualFrame>,
+    fire_sim: Res<FireSimulationSnapshot>,
     agents: Res<AgentFrame>,
     tactical: Res<TacticalLodBubbleRegistry>,
     global: Res<GlobalLodState>,
@@ -668,11 +674,12 @@ pub fn compute_world_representation_frame(
     mut engine: ResMut<WorldLodPolicyEngine>,
     mut frame: ResMut<WorldRepresentationFrame>,
     mut lod_map: ResMut<WorldLodMap>,
-    mut last_logged_band: Local<Option<WorldLodBand>>,
+    mut perf: Option<ResMut<crate::render::FramePerf>>,
 ) {
+    let t0 = std::time::Instant::now();
     let zoom = desired.scale.x;
-    let za = map_zoom_alpha(zoom);
     let translation = desired.translation.truncate();
+    let za = map_zoom_alpha(zoom);
     let velocity = if engine.camera.initialized {
         (translation - engine.camera.previous_translation).length() / time.delta_secs().max(1e-4)
     } else {
@@ -681,8 +688,8 @@ pub fn compute_world_representation_frame(
     engine.camera.previous_translation = translation;
     engine.camera.initialized = true;
 
-    let gameplay = gather_lod_gameplay_signals(&fire, &agents, &tactical);
-    let inputs = LodInputs {
+    let gameplay = gather_lod_gameplay_signals(&fire_sim.chunk_heat, &agents, &tactical);
+    let mut inputs = LodInputs {
         camera_position: translation,
         camera_distance: translation.length() * 1e-4,
         camera_velocity: velocity * 1e-3,
@@ -693,6 +700,7 @@ pub fn compute_world_representation_frame(
         combat_intensity: gameplay.combat_intensity,
         event_priority: gameplay.event_priority,
     };
+    crate::gui::apply_tile_readability_lod_bias(global.as_ref(), &mut inputs);
 
     let stamp = SimStepStamp::from_tick(*sim, *sim_time);
     let sz = tiles_per_chunk(&chunks);
@@ -721,20 +729,40 @@ pub fn compute_world_representation_frame(
     next.interest_radius_chunks = interest_radius_chunks;
     next.gameplay_importance = gameplay.gameplay_importance;
 
-    let band = next.global_band();
-    if last_logged_band.map(|b| b != band).unwrap_or(true) {
-        info!(
-            "WorldRepresentation: zoom={:.3} zoom_α={:.3} → LOD band {:?} ({})",
-            zoom,
-            za,
-            band,
-            band.short_label()
-        );
-        *last_logged_band = Some(band);
-    }
-
     *frame = next;
     *lod_map = map;
+    if let Some(perf) = perf.as_mut() {
+        crate::render::record_frame_perf_ms(
+            perf,
+            t0.elapsed().as_secs_f32() * 1000.0,
+            crate::render::FramePerfSlot::WorldRepr,
+        );
+    }
+}
+
+/// LOD band transition log + [`Stage5LodBandLogWitness`] (separate system: keeps `compute_world_representation_frame`
+/// within Bevy’s `.chain()` system-param limit).
+pub fn witness_stage5_lod_band_log_after_world_representation(
+    frame: Res<WorldRepresentationFrame>,
+    mut last_logged_band: Local<Option<WorldLodBand>>,
+    mut lod_band_witness: ResMut<Stage5LodBandLogWitness>,
+) {
+    let band = frame.global_band();
+    if last_logged_band.map(|b| b != band).unwrap_or(true) {
+        let za = map_zoom_alpha(frame.zoom);
+        if crate::render::frame_perf_verbose() {
+            info!(
+                target: "world_representation::lod",
+                "WorldRepresentation: zoom={:.3} zoom_α={:.3} → LOD band {:?} ({})",
+                frame.zoom,
+                za,
+                band,
+                band.short_label()
+            );
+        }
+        lod_band_witness.lod_band_log_emissions = lod_band_witness.lod_band_log_emissions.saturating_add(1);
+        *last_logged_band = Some(band);
+    }
 }
 
 pub fn apply_representation_result(
@@ -745,10 +773,18 @@ pub fn apply_representation_result(
     camera: Res<CameraVisualState>,
     budgets: Res<VisualBudgetSettings>,
     cadence: Res<VisualCadence>,
+    construction_phase: Option<Res<crate::construction::site_phase_tile_instances::ConstructionPhaseGpuChannel>>,
+    graph: Option<Res<crate::strategic::LogisticsGraph>>,
     mut policy: ResMut<RepresentationResult>,
 ) {
     let stamp = SimStepStamp::from_tick(*sim, *sim_time);
-    let inputs = build_representation_inputs(&camera, &zones, &budgets, &cadence, stamp);
+    let mut inputs = build_representation_inputs(&camera, &zones, &budgets, &cadence, stamp);
+    inputs.overlay_policy.construction_phase = construction_phase
+        .as_deref()
+        .is_some_and(|c| c.active);
+    inputs.overlay_policy.logistics = graph
+        .as_deref()
+        .is_some_and(|g| !g.edges.is_empty());
     *policy = build_representation_result(&frame, &inputs);
 }
 
@@ -757,6 +793,7 @@ pub(crate) fn register_world_representation_frame(app: &mut App) {
         Update,
         WorldRepresentationSystemSet::ComputeFrame
             .after(MapCameraSystemSet::Smooth)
+            .after(crate::gui::ViewAuthoritySystemSet::SyncViewManager)
             .after(SimControlSystemSet::AdvanceSimTick)
             .after(crate::render::extraction::FireVisualFrameSet::BuildProfiles)
             .before(crate::render::extraction::FireVisualFrameSet::ProjectGpu),
@@ -768,6 +805,7 @@ pub(crate) fn register_world_representation_frame(app: &mut App) {
         .init_resource::<WorldRepresentationResolver>()
         .init_resource::<WorldLodMap>()
         .init_resource::<WorldRepresentationFrame>()
+        .init_resource::<Stage5LodBandLogWitness>()
         .init_resource::<RepresentationResult>()
         .add_systems(
             Update,
@@ -775,6 +813,7 @@ pub(crate) fn register_world_representation_frame(app: &mut App) {
                 decay_tactical_lod_bubbles,
                 refresh_lod_zone_registry,
                 compute_world_representation_frame,
+                witness_stage5_lod_band_log_after_world_representation,
                 apply_representation_result,
             )
                 .chain()
@@ -925,17 +964,16 @@ mod tests {
 
     #[test]
     fn gather_lod_gameplay_signals_from_fire_and_agents() {
-        let mut fire = FireVisualFrame::default();
-        fire.chunk_heat.push(crate::render::sim_visual_extract::ChunkFireHeat {
+        let chunk_heat = vec![crate::render::sim_visual_extract::ChunkFireHeat {
             chunk: IVec2::ZERO,
             heat: 0.9,
             smoke: 0.2,
-        });
+        }];
         let agents = AgentFrame {
             agent_count: 128,
             ..Default::default()
         };
-        let signals = gather_lod_gameplay_signals(&fire, &agents, &TacticalLodBubbleRegistry::default());
+        let signals = gather_lod_gameplay_signals(&chunk_heat, &agents, &TacticalLodBubbleRegistry::default());
         assert!(signals.combat_intensity > 0.4);
         assert!(signals.ai_density > 0.0);
         assert!(signals.gameplay_importance > 0.4);

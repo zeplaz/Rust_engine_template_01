@@ -1,0 +1,350 @@
+   Compiling proc_A_dine01 v0.1.1 (C:\dev\github\Rust_engine_template_01)
+warning: unused import: `MAP_ZOOM_CLAMP`
+  --> src\gui\view_representation.rs:23:25
+   |
+23 |     MapCameraSystemSet, MAP_ZOOM_CLAMP,
+   |                         ^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `MaterialId`
+  --> src\gui\editor\world_preview\gpu_preview.rs:24:32
+   |
+24 | use crate::terrain::material::{MaterialId, MaterializedChunk, MaterialRegistry};
+   |                                ^^^^^^^^^^
+
+warning: unused import: `Vec3`
+ --> src\io\streaming\interest.rs:5:35
+  |
+5 | use bevy::prelude::{IVec2, UVec2, Vec3};
+  |                                   ^^^^
+
+warning: unused import: `TILE_STORAGE_DIFF_CONTRACT_BQ`
+ --> src\io\streaming\tile_storage_apply.rs:8:58
+  |
+8 |     PendingTileStorageDiffQueue, TileStorageApplyTiming, TILE_STORAGE_DIFF_CONTRACT_BQ,
+  |                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `WorldRepresentationFrame`
+  --> src\compute\heat_diffusion.rs:15:67
+   |
+15 | use crate::gui::{RepresentationResult, WorldLodBand, WorldLodMap, WorldRepresentationFrame};
+   |                                                                   ^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `BufferId` and `FIRE_PARTICLE_INSTANCES_BUFFER`
+  --> src\render\gpu_particles.rs:13:42
+   |
+13 | use crate::render::gpu_buffer_registry::{BufferId, FIRE_PARTICLE_INSTANCES_BUFFER};
+   |                                          ^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `BufferId`
+  --> src\render\gpu_particle_draw.rs:23:5
+   |
+23 |     BufferId, FIRE_PARTICLE_EXPANDED_VERTICES_BUFFER, FIRE_PARTICLE_INSTANCES_BUFFER,
+   |     ^^^^^^^^
+
+warning: unused import: `super::*`
+  --> src\render\visual_domain_snapshots.rs:68:9
+   |
+68 |     use super::*;
+   |         ^^^^^^^^
+
+warning: unused import: `crate::systems::sim_control::SimStepStamp`
+  --> src\render\visual_domain_snapshots.rs:69:9
+   |
+69 |     use crate::systems::sim_control::SimStepStamp;
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::systems::transport::TransportEdgeId`
+  --> src\render\visual_domain_snapshots.rs:70:9
+   |
+70 |     use crate::systems::transport::TransportEdgeId;
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `stage5_readiness_passes`
+  --> src\render\stage5_full_app_harness.rs:29:36
+   |
+29 |     evaluate_app_stage5_readiness, stage5_readiness_passes, AppStage5ReadinessReport,
+   |                                    ^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `build_deterministic_ci_scenario`
+  --> src\render\stage5_full_app_harness.rs:33:5
+   |
+33 |     build_deterministic_ci_scenario, run_vt4_ci_matrix, run_vt5_ci_spatial_matrix,
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused variable: `tex`
+   --> src\gui\editor\world_preview\preview_render_contract.rs:221:5
+    |
+221 |     tex: &WorldPreviewTexture,
+    |     ^^^ help: if this is intentional, prefix it with an underscore: `_tex`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: variable does not need to be mutable
+  --> src\gui\editor\world_preview\window.rs:78:9
+   |
+78 |     let mut controls = &mut state.controls;
+   |         ----^^^^^^^^
+   |         |
+   |         help: remove this `mut`
+   |
+   = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: variable does not need to be mutable
+  --> src\gui\editor\world_preview\window.rs:79:9
+   |
+79 |     let mut viewport = &mut state.viewport;
+   |         ----^^^^^^^^
+   |         |
+   |         help: remove this `mut`
+
+warning: variable does not need to be mutable
+  --> src\gui\editor\world_preview\window.rs:80:9
+   |
+80 |     let mut preview_cam = &mut state.preview_cam;
+   |         ----^^^^^^^^^^^
+   |         |
+   |         help: remove this `mut`
+
+warning: variable does not need to be mutable
+  --> src\gui\editor\world_preview\window.rs:82:9
+   |
+82 |     let mut viewport_authority = &mut state.viewport_authority;
+   |         ----^^^^^^^^^^^^^^^^^^
+   |         |
+   |         help: remove this `mut`
+
+warning: variable does not need to be mutable
+  --> src\gui\editor\world_preview\window.rs:84:9
+   |
+84 |     let mut world_gen_ui_state = &mut state.world_gen_ui_state;
+   |         ----^^^^^^^^^^^^^^^^^^
+   |         |
+   |         help: remove this `mut`
+
+warning: variable does not need to be mutable
+  --> src\gui\editor\world_preview\window.rs:85:9
+   |
+85 |     let mut world_gen_params = &mut state.world_gen_params;
+   |         ----^^^^^^^^^^^^^^^^
+   |         |
+   |         help: remove this `mut`
+
+warning: unused variable: `transform`
+   --> src\render\full_render_diagnostic.rs:468:41
+    |
+468 |     for (entity, camera, render_target, transform, projection, main_world, preview_gpu, weather_child) in
+    |                                         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_transform`
+
+warning: variable does not need to be mutable
+   --> src\render\tile_world_fallback.rs:408:5
+    |
+408 |     mut viewport: Option<ResMut<crate::gui::editor::world_preview::EditorViewport>>,
+    |     ----^^^^^^^^
+    |     |
+    |     help: remove this `mut`
+
+warning: type `DiagnosticsSpinePanels<'_>` is more private than the item `diagnostics_ui_system`
+   --> src\gui\diagnostics_ui.rs:108:1
+    |
+108 | / pub fn diagnostics_ui_system(
+109 | |     mut contexts: EguiContexts,
+110 | |     state: Res<DiagnosticsUiState>,
+111 | |     bindings: Res<InputBindings>,
+...   |
+124 | |     spine: DiagnosticsSpinePanels,
+125 | | ) -> Result {
+    | |___________^ function `diagnostics_ui_system` is reachable at visibility `pub`
+    |
+note: but type `DiagnosticsSpinePanels<'_>` is only usable at visibility `pub(self)`
+   --> src\gui\diagnostics_ui.rs:98:1
+    |
+ 98 | struct DiagnosticsSpinePanels<'w> {
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    = note: `#[warn(private_interfaces)]` on by default
+
+warning: type `WorldPreviewDisplayState<'_>` is more private than the item `display_world_preview`
+  --> src\gui\editor\world_preview\window.rs:46:1
+   |
+46 | / pub fn display_world_preview(
+47 | |     mut contexts: EguiContexts,
+48 | |     mut state: WorldPreviewDisplayState,
+49 | |     mut last_tex: Local<(u32, u32)>,
+50 | |     mut egui_tex_cache: Local<Option<(Handle<Image>, egui::TextureId)>>,
+51 | | ) -> Result {
+   | |___________^ function `display_world_preview` is reachable at visibility `pub`
+   |
+note: but type `WorldPreviewDisplayState<'_>` is only usable at visibility `pub(crate)`
+  --> src\gui\editor\world_preview\window.rs:28:1
+   |
+28 | pub(crate) struct WorldPreviewDisplayState<'w> {
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: type `FullRenderDiagnosticReads<'_>` is more private than the item `emit_full_render_diagnostic_snapshot`
+   --> src\render\full_render_diagnostic.rs:418:1
+    |
+418 | / pub fn emit_full_render_diagnostic_snapshot(
+419 | |     profile: Res<Stage5ReadinessProfile>,
+420 | |     mut gate: ResMut<FullRenderDiagnosticGate>,
+421 | |     reads: FullRenderDiagnosticReads,
+...   |
+437 | |     weather_vfx: Query<Entity, With<WeatherVfxCameraChild>>,
+438 | | ) {
+    | |_^ function `emit_full_render_diagnostic_snapshot` is reachable at visibility `pub`
+    |
+note: but type `FullRenderDiagnosticReads<'_>` is only usable at visibility `pub(self)`
+   --> src\render\full_render_diagnostic.rs:371:1
+    |
+371 | struct FullRenderDiagnosticReads<'w> {
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: type `FullRenderDiagnosticSurfaces<'_>` is more private than the item `emit_full_render_diagnostic_snapshot`
+   --> src\render\full_render_diagnostic.rs:418:1
+    |
+418 | / pub fn emit_full_render_diagnostic_snapshot(
+419 | |     profile: Res<Stage5ReadinessProfile>,
+420 | |     mut gate: ResMut<FullRenderDiagnosticGate>,
+421 | |     reads: FullRenderDiagnosticReads,
+...   |
+437 | |     weather_vfx: Query<Entity, With<WeatherVfxCameraChild>>,
+438 | | ) {
+    | |_^ function `emit_full_render_diagnostic_snapshot` is reachable at visibility `pub`
+    |
+note: but type `FullRenderDiagnosticSurfaces<'_>` is only usable at visibility `pub(self)`
+   --> src\render\full_render_diagnostic.rs:383:1
+    |
+383 | struct FullRenderDiagnosticSurfaces<'w> {
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: type `FullRenderDiagnosticRuntime<'_>` is more private than the item `emit_full_render_diagnostic_snapshot`
+   --> src\render\full_render_diagnostic.rs:418:1
+    |
+418 | / pub fn emit_full_render_diagnostic_snapshot(
+419 | |     profile: Res<Stage5ReadinessProfile>,
+420 | |     mut gate: ResMut<FullRenderDiagnosticGate>,
+421 | |     reads: FullRenderDiagnosticReads,
+...   |
+437 | |     weather_vfx: Query<Entity, With<WeatherVfxCameraChild>>,
+438 | | ) {
+    | |_^ function `emit_full_render_diagnostic_snapshot` is reachable at visibility `pub`
+    |
+note: but type `FullRenderDiagnosticRuntime<'_>` is only usable at visibility `pub(self)`
+   --> src\render\full_render_diagnostic.rs:404:1
+    |
+404 | struct FullRenderDiagnosticRuntime<'w> {
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: type alias `FireVisualLod` is never used
+   --> src\gui\representation_policy.rs:208:10
+    |
+208 | pub type FireVisualLod = RepresentationBand;
+    |          ^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: constant `RESOLVER_DOMAIN_PATHS` is never used
+  --> src\gui\representation_spine_audit.rs:36:11
+   |
+36 | pub const RESOLVER_DOMAIN_PATHS: &[&str] = &[
+   |           ^^^^^^^^^^^^^^^^^^^^^
+
+warning: constant `POLICY_CONSUMER_PATHS` is never used
+  --> src\gui\representation_spine_audit.rs:42:11
+   |
+42 | pub const POLICY_CONSUMER_PATHS: &[&str] = &[
+   |           ^^^^^^^^^^^^^^^^^^^^^
+
+warning: constant `FIRE_VISUAL_EXTRACT_AUTHORITY` is never used
+  --> src\gui\representation_spine_audit.rs:52:11
+   |
+52 | pub const FIRE_VISUAL_EXTRACT_AUTHORITY: &[&str] = &[
+   |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: constant `FIRE_VISUAL_CONSUMER_ROOTS` is never used
+  --> src\gui\representation_spine_audit.rs:58:11
+   |
+58 | pub const FIRE_VISUAL_CONSUMER_ROOTS: &[&str] = &[
+   |           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `direct_sample_cell_index` is never used
+  --> src\gui\editor\world_preview\composite_preview_direct_sample.rs:13:8
+   |
+13 | pub fn direct_sample_cell_index(size: UVec2, local_x: u32, local_y: u32) -> Option<usize> {
+   |        ^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `direct_sample_material_rgba` is never used
+  --> src\gui\editor\world_preview\composite_preview_direct_sample.rs:21:8
+   |
+21 | pub fn direct_sample_material_rgba(
+   |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `direct_sample_chunk_rgba` is never used
+  --> src\gui\editor\world_preview\composite_preview_direct_sample.rs:42:8
+   |
+42 | pub fn direct_sample_chunk_rgba(
+   |        ^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: variant `BevyInspector` is never constructed
+  --> src\gui\editor\world_preview\registry_inspector.rs:17:5
+   |
+14 | pub enum PreviewRegistryInspectorHost {
+   |          ---------------------------- variant in this enum
+...
+17 |     BevyInspector,
+   |     ^^^^^^^^^^^^^
+   |
+   = note: `PreviewRegistryInspectorHost` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: field `ui_probe` is never read
+   --> src\render\full_render_diagnostic.rs:379:5
+    |
+371 | struct FullRenderDiagnosticReads<'w> {
+    |        ------------------------- field in this struct
+...
+379 |     ui_probe: Res<'w, FullRenderUiLayoutProbe>,
+    |     ^^^^^^^^
+
+warning: function `hydrate_world_from_vt_ci_scenario` is never used
+  --> src\render\stage5_full_app_harness.rs:45:8
+   |
+45 | pub fn hydrate_world_from_vt_ci_scenario(world: &mut World, scenario: &Vt4CiScenario) {
+   |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `assemble_headless_full_app_readiness_app` is never used
+   --> src\render\stage5_full_app_harness.rs:133:8
+    |
+133 | pub fn assemble_headless_full_app_readiness_app() -> App {
+    |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: `proc_A_dine01` (lib) generated 38 warnings (run `cargo fix --lib -p proc_A_dine01` to apply 21 suggestions)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 18.42s
+     Running `target\debug\proc_A_dine01.exe --test visual --debug-viewport-trace --debug-camera-sync --debug-render-routing`
+2026-05-14T18:22:40.072443Z  WARN wgpu_hal::vulkan::instance: InstanceFlags::VALIDATION requested, but unable to find layer: VK_LAYER_KHRONOS_validation
+2026-05-14T18:22:40.073552Z  WARN wgpu_hal::vulkan::instance: GENERAL [Loader Message (0x0)]
+	windows_read_data_files_in_registry: Registry lookup failed to get layer manifest files.
+2026-05-14T18:22:40.073570Z  WARN wgpu_hal::vulkan::instance: 	objects: (type: INSTANCE, hndl: 0x1c7da1dda50, name: ?)
+2026-05-14T18:22:40.073578Z  WARN wgpu_hal::vulkan::instance: GENERAL [Loader Message (0x0)]
+	Removing layer VK_LAYER_AMD_switchable_graphics (C:\Windows\System32\DriverStore\FileRepository\u0200433.inf_amd64_4972d231f4dc3f24\B025963\amd-vulkan64.json) because it is a duplicate of VK_LAYER_AMD_switchable_graphics (C:\Windows\System32\DriverStore\FileRepository\amdvlk.inf_amd64_5fbac6977b9a8032\amd-vulkan64.json)
+2026-05-14T18:22:40.073582Z  WARN wgpu_hal::vulkan::instance: 	objects: (type: INSTANCE, hndl: 0x1c7da1dda50, name: ?)
+2026-05-14T18:22:40.695960Z DEBUG proc_A_dine01::gui::editor::world_preview: authority rev=1 gpu=true clip=[[243.0 161.6] - [783.0 597.6]] display=[[243.0 161.6] - [783.0 597.6]] logical=(540.0,436.0) physical=540x436 world=512x512
+2026-05-14T18:22:40.695976Z DEBUG proc_A_dine01::gui::view_representation: editor_viewport viewport_size=(540.0,436.0) camera_center=(256.0,256.0) zoom=1.000
+2026-05-14T18:22:40.696403Z DEBUG proc_A_dine01::render::tile_world_fallback: gpu_swap_resize extent=540x436 swap_dirty=true front_id=AssetId<bevy_image::image::Image>{ index: 12, generation: 0}
+2026-05-14T18:22:40.696423Z DEBUG proc_A_dine01::gui::view_representation: preview_contract center=(256.0,256.0) zoom=1.000 mode=GpuRenderTarget
+2026-05-14T18:22:40.696427Z DEBUG proc_A_dine01::render::tile_world_fallback: preview_target size=540x436 changed=true swap_dirty=true
+2026-05-14T18:22:40.696571Z DEBUG proc_A_dine01::gui::view_representation: preview_gpu_camera center=(256.0,256.0) zoom=1.000 ortho=(540.0,436.0) authority=(540.0,436.0)
+2026-05-14T18:22:40.713007Z  WARN proc_A_dine01::io::streaming::task_pool: stream hydrate worker failed: missing save manifest
+
+thread 'Compute Task Pool (3)' (56376) panicked at C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bevy_ecs-0.18.1\src\error\handler.rs:125:1:
+Encountered an error in system `bevy_render::camera::camera_system`: RenderTarget::Image missing (AssetId<bevy_image::image::Image>{ index: 13, generation: 0}): Make sure the Image's usages include RenderAssetUsages::MAIN_WORLD.
+
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+Encountered a panic in system `bevy_render::camera::camera_system`!
+2026-05-14T18:22:40.715393Z DEBUG proc_A_dine01::gui::editor::world_preview: authority rev=2 gpu=true clip=[[264.6 161.6] - [783.0 597.6]] display=[[264.6 161.6] - [783.0 597.6]] logical=(518.4,436.0) physical=518x436 world=320x320
+2026-05-14T18:22:40.715406Z DEBUG proc_A_dine01::gui::view_representation: editor_viewport viewport_size=(518.4,436.0) camera_center=(160.0,160.0) zoom=1.000
+2026-05-14T18:22:40.715868Z DEBUG proc_A_dine01::render::tile_world_fallback: gpu_swap_resize extent=518x436 swap_dirty=true front_id=AssetId<bevy_image::image::Image>{ index: 16, generation: 0}
+2026-05-14T18:22:40.715884Z DEBUG proc_A_dine01::gui::view_representation: preview_contract center=(160.0,160.0) zoom=1.000 mode=GpuRenderTarget
+2026-05-14T18:22:40.715887Z DEBUG proc_A_dine01::render::tile_world_fallback: preview_target size=518x436 changed=true swap_dirty=true
+2026-05-14T18:22:40.715961Z DEBUG proc_A_dine01::gui::view_representation: preview_gpu_camera center=(160.0,160.0) zoom=1.000 ortho=(518.4,436.0) authority=(518.4,436.0)
+Encountered a panic in system `bevy_app::main_schedule::Main::run_main`!
+error: process didn't exit successfully: `target\debug\proc_A_dine01.exe --test visual --debug-viewport-trace --debug-camera-sync --debug-render-routing` (exit code: 101)

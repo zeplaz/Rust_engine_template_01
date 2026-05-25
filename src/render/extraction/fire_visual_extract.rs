@@ -1,19 +1,38 @@
-//! **Canonical CPU fire visual snapshot** — one ECS pass from sim → [`FireVisualFrame`] (**full fidelity**) →
+//! **Fire sim → chunk runtime → view visibility → LOD → per-view frames** (CPU). ECS reads happen only in
+//! [`extract_fire_simulation_snapshot`]; [`crate::render::fire_view_extract::build_fire_visual_frames_by_view`] fills
+//! [`crate::render::fire_view_extract::FireVisualFramesByView`] using per-view [`VisibleFireChunkSet`] and
+//! [`WorldLodBand`](crate::gui::WorldLodBand)-clamped fire LOD. GPU / projection use [`crate::render::fire_view_extract::tactical_fire_visual`]
+//! ([`ViewId::WorldMain`]); other [`ViewId`]s read their entry directly.
 //! [`crate::render::extraction::RenderProjectionGraph`] (fire node evaluation) → render upload (`base_fire2_smoke.md`).
 //! [`crate::compute::ComputeDispatchGraph`] runs on the same snapshots **before** render projection (compute LOD policy).
 //!
 //! ## Contract
-//! 1. **`FireVisualFrame`** — full per-chunk snapshot: one [`FireVisualGpuInstance`] per burning chunk + full `chunk_heat`.
-//!    [`extract_fire_visual_frame`] is the **only** place that reads [`ChunkSurfaceFire`] for this snapshot; **no LOD** here.
-//! 2. **[`RenderProjectionGraph`]** — CPU projection orchestrator; fire node output is **extracted** for GPU instance upload.
-//! 3. **`SharedOverlayFieldBuffers`** — still derived **only** from `FireVisualFrame::chunk_heat` (overlay / minimap truth).
+//! 1. **`FireSimulationSnapshot`** — full per-chunk **sim** snapshot from one ECS pass (same rows as legacy `FireVisualFrame` source).
+//!    [`extract_fire_simulation_snapshot`] is the **only** place that reads [`ChunkSurfaceFire`] for this path.
+//! 2. **`FireVisualFramesByView`** — **render-facing** per view; must not read ECS fire components.
+//! 3. **[`RenderProjectionGraph`]** — CPU projection orchestrator; fire node output is **extracted** for GPU instance upload.
+//! 4. **`SharedOverlayFieldBuffers`** — derived from **full** [`FireSimulationSnapshot::chunk_heat`] (global overlay truth).
 
+use bevy::math::IVec2;
 use bevy::prelude::*;
 
 use std::collections::HashMap;
 
-use crate::render::overlay_field_buffers::chunk_fire_heat_maps_differ;
-use crate::render::sim_visual_extract::{ChunkFireHeat, FireVisualFrame, FireVisualGpuInstance, SimFireEmitterVisualExtract};
+use crate::gui::ViewAuthoritySystemSet;
+use crate::render::{
+    attrib_fire_pipeline_after, attrib_fire_pipeline_before,
+    build_fire_visual_frames_by_view, sync_active_fire_chunk_set, sync_fire_chunk_lod_from_snapshot,
+    sync_visible_fire_chunks_from_views, tactical_fire_visual, ActiveFireChunkSet, ChunkCoord, FireChunk,
+    FireChunkLodState, FireChunkRuntime, FireSimulationSnapshot, FireVisualFramesByView,
+    VisibleFireChunkSet, FIRE_SIM_CHUNK_ACTIVE_EPS,
+};
+use crate::render::overlay_field_buffers::{
+    chunk_fire_heat_maps_differ, CHUNK_FIRE_OVERLAY_DISPLAY_MIN,
+};
+use crate::render::sim_visual_extract::{
+    ChunkFireHeat, FireVisualGpuInstance, SimFireEmitterVisualExtract,
+    FIRE_VISUAL_ACTIVE_HEAT_EPS,
+};
 use crate::render::SharedOverlayFieldBuffers;
 use crate::render::light::{LightCategory, RequestLocalLight};
 use crate::render::lighting::{
@@ -22,7 +41,7 @@ use crate::render::lighting::{
 use crate::systems::atmosphere::AtmosphereDiagnostics;
 use crate::systems::ecology::ChunkEcology;
 use crate::systems::fire::{
-    ChunkFuelProfile, ChunkSmokeField, ChunkSurfaceFire, FireLightEmission as SimFireLightEmission,
+    ChunkFireOverlay, ChunkFuelProfile, ChunkSmokeField, ChunkSurfaceFire, FireLightEmission as SimFireLightEmission,
 };
 use crate::systems::weather::ChunkWeather;
 use crate::terrain::generation::{Chunk, ChunkCellMatrix};
@@ -51,7 +70,7 @@ struct FireClusterScratch {
 
 #[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
 pub enum FireVisualFrameSet {
-    /// One ECS pass → full [`FireVisualFrame`], overlay sync, diagnostics.
+    /// Sim ECS scan → [`FireSimulationSnapshot`] + [`FireChunkRuntime`]; stub view visibility + LOD; then [`FireVisualFrame`].
     BuildProfiles,
     /// Greedy merge → [`FireClusterScratch`].
     BuildClusters,
@@ -73,7 +92,13 @@ pub struct FireVisualFramePlugin;
 
 impl Plugin for FireVisualFramePlugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<FireVisualFrame>()
+        app.add_message::<RequestLocalLight>()
+            .configure_sets(Update, ViewAuthoritySystemSet::SyncViewManager)
+            .init_resource::<FireSimulationSnapshot>()
+            .init_resource::<FireChunkRuntime>()
+            .init_resource::<VisibleFireChunkSet>()
+            .init_resource::<FireChunkLodState>()
+            .init_resource::<FireVisualFramesByView>()
             .init_resource::<RenderProjectionGraph>()
             .init_resource::<CommittedVisualSnapshotFence>()
             .init_resource::<crate::render::LogisticsVisualSnapshot>()
@@ -82,10 +107,17 @@ impl Plugin for FireVisualFramePlugin {
             .init_resource::<FireAtmosphereAggregate>()
             .init_resource::<FireClusterScratch>()
             .init_resource::<WorldFireParticleFrame>()
+            .init_resource::<crate::render::gpu_particles::FireParticleCameraScale>()
             .init_resource::<crate::render::DomainOverlayGpuFrame>()
+            .init_resource::<ActiveFireChunkSet>()
+            .init_resource::<crate::render::Stage5FireViewChunkWitness>()
+            .init_resource::<crate::render::FirePlaybackStabilityWitness>()
+            .init_resource::<crate::render::Stage5ReadinessProfile>()
+            .init_resource::<crate::render::view_runtime::PerViewRepresentationPolicy>()
             .configure_sets(
                 Update,
                 (
+                    FireVisualFrameSet::BuildProfiles.after(ViewAuthoritySystemSet::SyncViewManager),
                     FireVisualFrameSet::BuildClusters.after(FireVisualFrameSet::BuildProfiles),
                     FireVisualFrameSet::BuildAtmosphere.after(FireVisualFrameSet::BuildClusters),
                     FireVisualFrameSet::EmitLights.after(FireVisualFrameSet::BuildAtmosphere),
@@ -98,11 +130,19 @@ impl Plugin for FireVisualFramePlugin {
             .add_systems(
                 Update,
                 (
-                    extract_fire_visual_frame,
-                    sync_shared_overlay_from_frame,
-                    sync_sim_fire_emitter_visual_from_frame,
-                    sync_atmosphere_diag_fire_instance_count,
-                    commit_fire_visual_snapshot,
+                    attrib_fire_pipeline_before,
+                    extract_fire_simulation_snapshot,
+                    sync_active_fire_chunk_set.after(extract_fire_simulation_snapshot),
+                    sync_shared_overlay_from_simulation.after(extract_fire_simulation_snapshot),
+                    sync_visible_fire_chunks_from_views.after(extract_fire_simulation_snapshot),
+                    sync_fire_chunk_lod_from_snapshot.after(extract_fire_simulation_snapshot),
+                    build_fire_visual_frames_by_view
+                        .after(sync_active_fire_chunk_set)
+                        .after(sync_visible_fire_chunks_from_views)
+                        .after(sync_fire_chunk_lod_from_snapshot),
+                    sync_sim_fire_emitter_visual_from_frame.after(build_fire_visual_frames_by_view),
+                    sync_atmosphere_diag_fire_instance_count.after(sync_sim_fire_emitter_visual_from_frame),
+                    commit_fire_visual_snapshot.after(sync_atmosphere_diag_fire_instance_count),
                 )
                     .chain()
                     .in_set(FireVisualFrameSet::BuildProfiles),
@@ -129,36 +169,78 @@ impl Plugin for FireVisualFramePlugin {
             )
             .add_systems(
                 Update,
-                emit_world_fire_particles_from_projection.in_set(FireVisualFrameSet::EmitParticles),
+                (
+                    crate::render::gpu_particles::sync_fire_particle_camera_scale,
+                    emit_world_fire_particles_from_projection,
+                )
+                    .chain()
+                    .in_set(FireVisualFrameSet::EmitParticles),
             )
             .add_systems(
                 Update,
                 crate::render::emit_domain_overlay_frame_from_projection
                     .in_set(FireVisualFrameSet::EmitDomainOverlays),
+            )
+            .add_systems(
+                Update,
+                attrib_fire_pipeline_after
+                    .after(emit_world_fire_particles_from_projection)
+                    .after(crate::render::emit_domain_overlay_frame_from_projection),
             );
     }
 }
 
-fn sync_shared_overlay_from_frame(
-    frame: Res<FireVisualFrame>,
+pub fn sync_shared_overlay_from_simulation(
+    sim: Res<FireSimulationSnapshot>,
+    residency: Option<Res<crate::io::streaming::ChunkResidencyTable>>,
     mut shared: ResMut<SharedOverlayFieldBuffers>,
+    profile: Res<crate::render::Stage5ReadinessProfile>,
+    mut fire_playback: ResMut<crate::render::FirePlaybackStabilityWitness>,
 ) {
-    shared.stamp = frame.stamp;
+    shared.stamp = sim.stamp;
     let mut next = HashMap::new();
-    for h in &frame.chunk_heat {
+    let residency = residency.as_deref();
+    for h in &sim.chunk_heat {
+        if h.heat < CHUNK_FIRE_OVERLAY_DISPLAY_MIN {
+            continue;
+        }
+        if let Some(table) = residency {
+            if !crate::render::chunk_in_residency_table(h.chunk, table) {
+                continue;
+            }
+        }
         let e = next.entry(h.chunk).or_insert(0.0);
         *e = f32::max(*e, h.heat);
     }
+    // PLAY-06c: one empty sim snapshot must not wipe overlay (minimap/world tint blink).
+    if next.is_empty() && !shared.chunk_fire_heat.is_empty() {
+        fire_playback.note_held_overlay_frame();
+        return;
+    }
+    fire_playback.held_empty_snapshot_frames = 0;
+    fire_playback.note_overlay_frame(next.len());
     if chunk_fire_heat_maps_differ(&shared.chunk_fire_heat, &next) {
-        shared.chunk_fire_heat = next;
-        shared.bump();
+            shared.chunk_fire_heat = next;
+            shared.bump();
+            if *profile == crate::render::Stage5ReadinessProfile::FULL_APP
+                && crate::render::frame_perf_verbose()
+            {
+                info!(
+                target: "stage5_overlay::live",
+                "STAGE5_OVERLAY_SHARED_BUFFERS revision={} chunk_cells={} sim_tick={}",
+                shared.revision,
+                shared.chunk_fire_heat.len(),
+                sim.stamp.tick,
+            );
+        }
     }
 }
 
 fn sync_sim_fire_emitter_visual_from_frame(
-    frame: Res<FireVisualFrame>,
+    by_view: Res<FireVisualFramesByView>,
     mut sim_fire: ResMut<SimFireEmitterVisualExtract>,
 ) {
+    let frame = tactical_fire_visual(by_view.as_ref());
     sim_fire.instances.clear();
     sim_fire.instances.reserve(frame.instances.len());
     for row in &frame.instances {
@@ -167,19 +249,22 @@ fn sync_sim_fire_emitter_visual_from_frame(
 }
 
 fn sync_atmosphere_diag_fire_instance_count(
-    frame: Res<FireVisualFrame>,
+    by_view: Res<FireVisualFramesByView>,
     mut diag: ResMut<AtmosphereDiagnostics>,
 ) {
+    let frame = tactical_fire_visual(by_view.as_ref());
     diag.last_emitter_extract_count = frame.instances.len();
 }
 
-fn extract_fire_visual_frame(
+pub fn extract_fire_simulation_snapshot(
     tick: Res<crate::systems::sim_control::SimTick>,
     sim_time: Res<crate::systems::sim_control::SimTimeMicros>,
-    mut frame: ResMut<FireVisualFrame>,
+    mut sim: ResMut<FireSimulationSnapshot>,
+    mut runtime: ResMut<FireChunkRuntime>,
     q: Query<(
         &Chunk,
         &ChunkCellMatrix,
+        Option<&ChunkFireOverlay>,
         &ChunkSurfaceFire,
         &SimFireLightEmission,
         Option<&ChunkSmokeField>,
@@ -189,27 +274,137 @@ fn extract_fire_visual_frame(
         Option<&MaterializedChunk>,
     )>,
 ) {
-    frame.stamp = crate::systems::sim_control::SimStepStamp::from_tick(*tick, *sim_time);
-    frame.instances.clear();
-    frame.chunk_heat.clear();
+    let stamp = crate::systems::sim_control::SimStepStamp::from_tick(*tick, *sim_time);
+    sim.stamp = stamp;
+    sim.instances.clear();
+    sim.chunk_heat.clear();
 
-    for (chunk, matrix, fire, em, smoke, prof, eco, wx, mat_chunk) in &q {
+    let prev = std::mem::take(&mut runtime.chunks);
+    let tick_u32 = tick.0.min(u64::from(u32::MAX)) as u32;
+
+    for (chunk, matrix, overlay, fire, em, smoke, prof, eco, wx, mat_chunk) in &q {
         let profile = infer_fire_emission_profile(
-            chunk, fire, em, smoke, eco, prof, wx, matrix, mat_chunk,
+            chunk, fire, overlay, em, smoke, eco, prof, wx, matrix, mat_chunk,
         );
-        frame.instances.push(FireVisualGpuInstance::from(&profile));
-        frame.chunk_heat.push(ChunkFireHeat {
-            chunk: profile.chunk_coord,
+        sim.instances.push(FireVisualGpuInstance::from(&profile));
+        let coord = profile.chunk_coord;
+        sim.chunk_heat.push(ChunkFireHeat {
+            chunk: coord,
             heat: profile.heat,
             smoke: profile.smoke_density,
         });
+
+        let visual_active = profile.heat > FIRE_VISUAL_ACTIVE_HEAT_EPS;
+        let active = profile.heat > FIRE_SIM_CHUNK_ACTIVE_EPS;
+        let last_active_tick = if active {
+            tick_u32
+        } else {
+            prev.get(&coord).map(|p| p.last_active_tick).unwrap_or(0)
+        };
+        let dirty = prev
+            .get(&coord)
+            .map(|p| {
+                (p.max_heat - profile.heat).abs() > 1e-4
+                    || p.visual_active != visual_active
+                    || (p.heat_sum - profile.heat).abs() > 1e-4
+            })
+            .unwrap_or(true);
+
+        runtime.chunks.insert(
+            coord,
+            FireChunk {
+                coord,
+                active,
+                visual_active,
+                heat_sum: profile.heat,
+                max_heat: profile.heat,
+                last_active_tick,
+                dirty,
+            },
+        );
+    }
+
+    // vm-08 / fire-active-chunk-runtime: rim chunks adjacent to burning sim cells stay visually active
+    // (CPU-only policy; GPU path still consumes the same snapshot).
+    const NEIGHBOR: [IVec2; 4] = [
+        IVec2::new(1, 0),
+        IVec2::new(-1, 0),
+        IVec2::new(0, 1),
+        IVec2::new(0, -1),
+    ];
+    let mut neighbor_glow: Vec<ChunkCoord> = Vec::new();
+    for (&c, ch) in &runtime.chunks {
+        if ch.visual_active {
+            continue;
+        }
+        for d in &NEIGHBOR {
+            let n = c + *d;
+            if runtime
+                .chunks
+                .get(&n)
+                .is_some_and(|x| x.max_heat > FIRE_VISUAL_ACTIVE_HEAT_EPS)
+            {
+                neighbor_glow.push(c);
+                break;
+            }
+        }
+    }
+    for c in neighbor_glow {
+        if let Some(ch) = runtime.chunks.get_mut(&c) {
+            if ch.max_heat <= FIRE_VISUAL_ACTIVE_HEAT_EPS {
+                ch.visual_active = true;
+                ch.last_active_tick = tick_u32;
+                ch.dirty = true;
+            }
+        }
+    }
+
+    // Cool-down: rim-only `visual_active` clears shortly after no adjacent burning chunk.
+    const RIM_VISUAL_HOLD_TICKS: u32 = 12;
+    #[derive(Clone, Copy)]
+    enum RimDecayOp {
+        RefreshTick,
+        ClearVisual,
+    }
+    let mut decay_ops: Vec<(ChunkCoord, RimDecayOp)> = Vec::new();
+    for (&coord, ch) in &runtime.chunks {
+        if ch.max_heat > FIRE_VISUAL_ACTIVE_HEAT_EPS || !ch.visual_active {
+            continue;
+        }
+        let neighbor_hot = NEIGHBOR.iter().any(|d| {
+            runtime
+                .chunks
+                .get(&(coord + *d))
+                .map(|n| n.max_heat > FIRE_VISUAL_ACTIVE_HEAT_EPS)
+                .unwrap_or(false)
+        });
+        if neighbor_hot {
+            decay_ops.push((coord, RimDecayOp::RefreshTick));
+        } else if tick_u32.saturating_sub(ch.last_active_tick) > RIM_VISUAL_HOLD_TICKS {
+            decay_ops.push((coord, RimDecayOp::ClearVisual));
+        }
+    }
+    for (coord, op) in decay_ops {
+        if let Some(ch) = runtime.chunks.get_mut(&coord) {
+            match op {
+                RimDecayOp::RefreshTick => {
+                    ch.last_active_tick = tick_u32;
+                    ch.dirty = true;
+                }
+                RimDecayOp::ClearVisual => {
+                    ch.visual_active = false;
+                    ch.dirty = true;
+                }
+            }
+        }
     }
 }
 
 fn build_fire_clusters_into_scratch(
-    frame: Res<FireVisualFrame>,
+    by_view: Res<FireVisualFramesByView>,
     mut scratch: ResMut<FireClusterScratch>,
 ) {
+    let frame = tactical_fire_visual(by_view.as_ref());
     scratch.clusters.clear();
     let samples: Vec<VisFireLightSample> = frame
         .instances
@@ -221,8 +416,9 @@ fn build_fire_clusters_into_scratch(
 
 fn aggregate_fire_atmosphere_from_frame(
     mut agg: ResMut<FireAtmosphereAggregate>,
-    frame: Res<FireVisualFrame>,
+    by_view: Res<FireVisualFramesByView>,
 ) {
+    let frame = tactical_fire_visual(by_view.as_ref());
     if frame.instances.is_empty() {
         *agg = FireAtmosphereAggregate::default();
         return;
@@ -288,7 +484,7 @@ fn cluster_to_request(cluster: &FireLightCluster) -> RequestLocalLight {
 }
 
 /// Stub: route [`FireVisualFrame`] → smoke volume / GPU when that path exists.
-fn fire_visual_emit_smoke_stub(_frame: Res<FireVisualFrame>) {}
+fn fire_visual_emit_smoke_stub(_by_view: Res<FireVisualFramesByView>) {}
 
 #[cfg(test)]
 mod vt1_full_world_fire_extract_tests {
@@ -299,7 +495,7 @@ mod vt1_full_world_fire_extract_tests {
     use crate::render::extraction::{
         RenderProjectionGraph, CLUSTERED_FIRE_INSTANCE_CAP,
     };
-    use crate::render::sim_visual_extract::FireVisualFrame;
+    use crate::render::{tactical_fire_visual, FireVisualFramesByView};
     use crate::gui::{
         build_representation_inputs, build_representation_result, LodInputs, LodZoneRegistry,
         RepresentationResult, VisualBudgetSettings, VisualCadence, WorldLodBand, WorldLodMap,
@@ -378,7 +574,8 @@ mod vt1_full_world_fire_extract_tests {
         sync_representation_policy(app.world_mut());
         app.update();
 
-        let frame = app.world().resource::<FireVisualFrame>();
+        let by_view = app.world().resource::<FireVisualFramesByView>();
+        let frame = tactical_fire_visual(by_view);
         assert_eq!(
             frame.instances.len(),
             3,
@@ -444,14 +641,15 @@ mod vt1_full_world_fire_extract_tests {
 
         app.update();
 
-        let frame = app.world().resource::<FireVisualFrame>();
+        let by_view = app.world().resource::<FireVisualFramesByView>();
+        let frame = tactical_fire_visual(by_view);
         assert_eq!(frame.instances.len(), 1);
         assert_eq!(frame.chunk_heat.len(), 1);
         assert_eq!(frame.chunk_heat[0].chunk, IVec2::new(1, 0));
 
         let graph = app.world().resource::<RenderProjectionGraph>();
         let gpu = &graph.fire;
-        assert!(gpu.instance_buffer.is_empty());
+        assert_eq!(gpu.instance_buffer.len(), 1);
         assert_eq!(gpu.chunk_heat.len(), 1);
     }
 
@@ -501,7 +699,8 @@ mod vt1_full_world_fire_extract_tests {
         sync_representation_policy(app.world_mut());
         app.update();
 
-        let frame = app.world().resource::<FireVisualFrame>();
+        let by_view = app.world().resource::<FireVisualFramesByView>();
+        let frame = tactical_fire_visual(by_view);
         assert_eq!(frame.chunk_heat.len(), n);
         assert_eq!(frame.instances.len(), n);
 
@@ -539,7 +738,8 @@ mod vt1_full_world_fire_extract_tests {
         sync_representation_policy(app.world_mut());
         app.update();
 
-        let frame = app.world().resource::<FireVisualFrame>();
+        let by_view = app.world().resource::<FireVisualFramesByView>();
+        let frame = tactical_fire_visual(by_view);
         let fence = app
             .world()
             .resource::<crate::render::CommittedVisualSnapshotFence>();

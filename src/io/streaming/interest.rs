@@ -2,7 +2,7 @@
 
 use std::collections::HashSet;
 
-use bevy::prelude::{IVec2, UVec2, Vec3};
+use bevy::prelude::{IVec2, UVec2};
 
 use crate::gui::{OperationalLodZone, WorldRepresentationFrame};
 
@@ -116,6 +116,7 @@ pub fn highest_priority_orb(orbs: &[InterestOrb]) -> Option<InterestOrb> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use bevy::prelude::Vec3;
     use crate::gui::{LodZoneClass, LodZoneSource, WorldLodBand};
 
     #[test]

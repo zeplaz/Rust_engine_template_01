@@ -55,7 +55,8 @@ impl PhaseFLodProofReport {
         let strategic_shrinks = self.strategic_upload_bytes == 0
             || self.full_upload_bytes == 0
             || self.strategic_upload_bytes <= self.full_upload_bytes;
-        let particles_shrink = self.strategic_particle_rows <= self.full_particle_rows;
+        let particles_shrink = self.full_particle_rows == 0
+            || self.strategic_particle_rows <= self.full_particle_rows;
         strategic_shrinks && particles_shrink && overlay_zero
     }
 }
@@ -78,6 +79,7 @@ impl Plugin for PhaseFLodProofPlugin {
         app.init_resource::<PhaseFLodProofReport>().add_systems(
             PostUpdate,
             record_phase_f_lod_proof_sample
+                .after(crate::render::sync_particle_draw_dispatch_from_policy)
                 .after(crate::render::extraction::FireVisualFrameSet::ProjectGpu),
         );
     }

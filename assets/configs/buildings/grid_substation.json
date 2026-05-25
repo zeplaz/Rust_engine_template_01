@@ -1,0 +1,17 @@
+{
+    "asset_name": "Grid substation",
+    "asset_type": "Building",
+    "segment": "Utilities",
+    "description": "Bulk power substation — feeds transformers and heavy industrial loads",
+    "utility_role": "substation",
+    "is_building": true,
+    "is_power": true,
+    "building_size_x": 4,
+    "building_size_y": 3,
+    "building_height": 2,
+    "construction_cost": 2400,
+    "power_consumption": 8,
+    "power_generation": 0,
+    "transfer_capacity_mva": 120,
+    "version": "1.0.0"
+}

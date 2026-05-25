@@ -1,4 +1,10 @@
 //! Load / hydrate helpers for Wave S save bundles.
+//!
+//! **On-disk layout (Wave S):** `{bundle_dir}/manifest.ron` + chunk artifacts referenced by manifest.
+//! **Product shell (BQ-133):** [`crate::io::save::WAVE_S_PRODUCT_SHELL_REL_PATH`] — RON
+//! [`ProductShellPersistenceBundleR8`]; fixture `debug_runs/wave_s_shell_roundtrip.json`.
+//! **Blueprints (BQ-128):** [`crate::io::save::WAVE_S_BLUEPRINT_PRESETS_REL_PATH`] — RON
+//! [`BlueprintPresetCollectionR8`]; fixture `debug_runs/wave_s_blueprint_roundtrip.json`.
 
 use std::fs;
 use std::io;
@@ -8,6 +14,7 @@ use bevy::prelude::IVec2;
 
 use crate::io::save::dto::{decode_chunk_body_ron, SavedChunkBody};
 use crate::io::save::manifest::{SaveWorldManifest, SAVE_WORLD_MANIFEST_SCHEMA_VERSION};
+use crate::io::save::wire_format::unwrap_chunk_artifact_body;
 
 pub fn read_manifest_from_bundle(bundle_dir: &Path) -> io::Result<SaveWorldManifest> {
     let bytes = fs::read(bundle_dir.join("manifest.ron"))?;
@@ -34,7 +41,8 @@ pub fn validate_manifest(manifest: &SaveWorldManifest) -> io::Result<()> {
 pub fn load_chunk_body_from_artifact(bundle_dir: &Path, artifact_path: &str) -> io::Result<SavedChunkBody> {
     let path = bundle_dir.join(artifact_path);
     let bytes = fs::read(path)?;
-    let body = decode_chunk_body_ron(&bytes).map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))?;
+    let payload = unwrap_chunk_artifact_body(&bytes)?;
+    let body = decode_chunk_body_ron(payload).map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))?;
     if body.schema_version != crate::io::save::dto::SAVED_CHUNK_BODY_SCHEMA_VERSION {
         return Err(io::Error::new(
             io::ErrorKind::InvalidData,
@@ -107,4 +115,18 @@ pub fn tag_sets_from_saved_body(
             set
         })
         .collect()
+}
+
+#[cfg(test)]
+mod hydrate_error_tests {
+    use super::*;
+    use std::path::PathBuf;
+
+    #[test]
+    fn read_manifest_missing_bundle_returns_not_found() {
+        let dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("target/wave_s_missing_bundle_test");
+        let _ = std::fs::remove_dir_all(&dir);
+        let err = read_manifest_from_bundle(&dir).unwrap_err();
+        assert_eq!(err.kind(), std::io::ErrorKind::NotFound);
+    }
 }

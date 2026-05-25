@@ -12,6 +12,14 @@ use crate::io::save::SavedChunkBody;
 use super::hydrate::{hydrate_stream_chunks_from_manifest, load_manifest_for_streaming};
 use super::{ChunkStreamStage, ChunkStreamingScheduler};
 
+#[derive(Resource, Default)]
+pub struct StreamHydrateDiagnostics {
+    pub logged_missing_manifest: bool,
+    pub suppressed_missing_manifest_warnings: u64,
+    pub last_failure_message: Option<String>,
+    pub suppressed_worker_failures: u64,
+}
+
 #[derive(Clone, Debug)]
 pub struct StreamIoWorkOrder {
     pub bundle_dir: PathBuf,
@@ -101,8 +109,23 @@ pub fn submit_stream_hydrate_work(
     settings: Res<crate::io::save::WorldSaveBundleSettings>,
     scheduler: Res<ChunkStreamingScheduler>,
     mut dispatcher: ResMut<ChunkStreamIoDispatcher>,
+    mut diagnostics: ResMut<StreamHydrateDiagnostics>,
 ) {
     if scheduler.pending_chunks.is_empty() || dispatcher.in_flight {
+        return;
+    }
+    if load_manifest_for_streaming(&settings.bundle_dir).is_none() {
+        if !diagnostics.logged_missing_manifest {
+            bevy::log::warn!(
+                target: "proc_A_dine01::io::streaming::task_pool",
+                "stream hydrate skipped: missing save manifest at {}",
+                settings.bundle_dir.display()
+            );
+            diagnostics.logged_missing_manifest = true;
+        } else {
+            diagnostics.suppressed_missing_manifest_warnings =
+                diagnostics.suppressed_missing_manifest_warnings.wrapping_add(1);
+        }
         return;
     }
     dispatcher.submit(StreamIoWorkOrder {
@@ -114,6 +137,7 @@ pub fn submit_stream_hydrate_work(
 pub fn poll_stream_hydrate_completions(
     mut dispatcher: ResMut<ChunkStreamIoDispatcher>,
     mut scheduler: ResMut<ChunkStreamingScheduler>,
+    mut diagnostics: ResMut<StreamHydrateDiagnostics>,
 ) {
     dispatcher.ensure_started();
     while let Some(completion) = dispatcher.poll_completion() {
@@ -127,7 +151,16 @@ pub fn poll_stream_hydrate_completions(
                 }
             }
             StreamIoCompletion::Failed(message) => {
-                bevy::log::warn!("stream hydrate worker failed: {message}");
+                if diagnostics.last_failure_message.as_deref() != Some(message.as_str()) {
+                    bevy::log::warn!(
+                        target: "proc_A_dine01::io::streaming::task_pool",
+                        "stream hydrate worker failed: {message}"
+                    );
+                    diagnostics.last_failure_message = Some(message);
+                } else {
+                    diagnostics.suppressed_worker_failures =
+                        diagnostics.suppressed_worker_failures.wrapping_add(1);
+                }
             }
         }
     }

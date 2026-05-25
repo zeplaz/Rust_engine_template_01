@@ -1,0 +1,4298 @@
+   Compiling proc_A_dine01 v0.1.1 (C:\dev\github\Rust_engine_template_01)
+warning: empty line after outer attribute
+   --> src\gui\map_presentation_diagnostics.rs:252:5
+    |
+252 | /     #[allow(clippy::too_many_arguments)]
+253 | |
+    | |_^
+254 |       pub fn record(
+    |       ------------- the attribute applies to this function
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#empty_line_after_outer_attr
+    = note: `#[warn(clippy::empty_line_after_outer_attr)]` on by default
+    = help: if the empty line is unintentional, remove it
+
+warning: empty line after outer attribute
+   --> src\io\save\pipeline.rs:131:1
+    |
+131 | / #[must_use]
+132 | |
+    | |_^
+133 |   pub fn chunk_artifact_path(bundle_dir: &Path, chunk: IVec2) -> PathBuf {
+    |   -------------------------- the attribute applies to this function
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#empty_line_after_outer_attr
+    = help: if the empty line is unintentional, remove it
+
+warning: empty line after outer attribute
+   --> src\io\save\pipeline.rs:145:1
+    |
+145 | / #[must_use]
+146 | |
+    | |_^
+147 |   pub fn build_incremental_save_manifest(
+    |   -------------------------------------- the attribute applies to this function
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#empty_line_after_outer_attr
+    = help: if the empty line is unintentional, remove it
+
+warning: empty line after outer attribute
+   --> src\io\save\pipeline.rs:265:1
+    |
+265 | / #[must_use]
+266 | |
+    | |_^
+267 |   pub fn collect_chunk_save_snapshots(
+    |   ----------------------------------- the attribute applies to this function
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#empty_line_after_outer_attr
+    = help: if the empty line is unintentional, remove it
+
+warning: empty line after doc comment
+   --> src\io\save\pipeline.rs:385:1
+    |
+385 | / /// Synchronous flush for tests and tooling (no async worker).
+386 | |
+    | |_^
+387 |   pub fn flush_dirty_chunk_save_queue_sync(
+    |   ---------------------------------------- the comment documents this function
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#empty_line_after_doc_comments
+    = note: `#[warn(clippy::empty_line_after_doc_comments)]` on by default
+    = help: if the empty line is unintentional, remove it
+
+warning: empty line after doc comment
+  --> src\render\fire_view_extract.rs:22:1
+   |
+22 | / /// World XY extent per chunk index step (aligned with [`crate::gui::camera_focus_debug::DEBUG_CHUNK_SPACING_WORLD`]).
+23 | |
+   | |_^
+24 |   pub const FIRE_VIEW_CHUNK_SPACING_WORLD: f32 = 64.0;
+   |   --------------------------------------- the comment documents this constant item
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#empty_line_after_doc_comments
+   = help: if the empty line is unintentional, remove it
+
+warning: empty line after outer attribute
+   --> src\dev\construction_round2_todos.rs:401:5
+    |
+401 | /     #[must_use]
+402 | |
+    | |_^
+403 |       pub fn open_count(&self) -> usize {
+    |       ----------------- the attribute applies to this function
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#empty_line_after_outer_attr
+    = help: if the empty line is unintentional, remove it
+
+warning: manual implementation of `.is_multiple_of()`
+  --> src\ai\construction\mod.rs:53:8
+   |
+53 |     if state.frame % cfg.frames_between_probes.max(1) != 0 {
+   |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: replace with: `!state.frame.is_multiple_of(cfg.frames_between_probes.max(1))`
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#manual_is_multiple_of
+   = note: `#[warn(clippy::manual_is_multiple_of)]` on by default
+
+warning: this `map_or` can be simplified
+  --> src\ai\construction\mod.rs:81:16
+   |
+81 |             if best.as_ref().map_or(true, |(_, s)| score > *s) {
+   |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#unnecessary_map_or
+   = note: `#[warn(clippy::unnecessary_map_or)]` on by default
+help: use `is_none_or` instead
+   |
+81 -             if best.as_ref().map_or(true, |(_, s)| score > *s) {
+81 +             if best.as_ref().is_none_or(|(_, s)| score > *s) {
+   |
+
+warning: this function has too many arguments (10/7)
+   --> src\engine\worldgen_chrome_debug.rs:133:1
+    |
+133 | / pub(crate) fn trace_worldgen_chrome_state_edges(
+134 | |     app: Res<State<AppState>>,
+135 | |     worldgen: Res<State<WorldGenState>>,
+136 | |     base: Res<State<BaseState>>,
+...   |
+143 | |     mut prev: Local<Option<ChromeSnapshot>>,
+144 | | ) {
+    | |_^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+    = note: `#[warn(clippy::too_many_arguments)]` on by default
+
+warning: this function has too many arguments (12/7)
+  --> src\engine\ux_orchestration.rs:68:1
+   |
+68 | / fn sync_legacy_to_ux(
+69 | |     base: Res<State<BaseState>>,
+70 | |     flow: Res<State<WorldGenFlowState>>,
+71 | |     menu: Res<State<InGameMenuState>>,
+...  |
+80 | |     mut next_pause: ResMut<NextState<PauseState>>,
+81 | | ) {
+   | |_^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: this function has too many arguments (9/7)
+   --> src\engine\ux_orchestration.rs:138:1
+    |
+138 | / fn bridge_ux_to_legacy(
+139 | |     app: Res<State<AppState>>,
+140 | |     worldgen: Res<State<WorldGenState>>,
+141 | |     flow: Res<State<WorldGenFlowState>>,
+...   |
+147 | |     mut pending: ResMut<PauseMenuPendingAction>,
+148 | | ) {
+    | |_^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: this function has too many arguments (13/7)
+   --> src\engine\test_harness.rs:95:1
+    |
+ 95 | / fn test_world_bootstrap(
+ 96 | |     launch: Option<Res<EngineLaunchArgs>>,
+ 97 | |     mut harness: ResMut<TestWorldHarness>,
+ 98 | |     flow: Res<State<WorldGenFlowState>>,
+...   |
+108 | |     test_scene_chunks: Query<Entity, With<TestSceneSimChunk>>,
+109 | | ) {
+    | |_^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: field assignment outside of initializer for an instance created with Default::default()
+   --> src\engine\test_harness.rs:127:13
+    |
+127 |             p.width = 320;
+    |             ^^^^^^^^^^^^^^
+    |
+note: consider initializing the variable with `terrain::generation::world_generator_enhanced::WorldGenParams { width: 320, height: 320, ..Default::default() }` and removing relevant reassignments
+   --> src\engine\test_harness.rs:125:13
+    |
+125 |             let mut p = WorldGenParams::default();
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#field_reassign_with_default
+    = note: `#[warn(clippy::field_reassign_with_default)]` on by default
+
+warning: manually reimplementing `div_ceil`
+   --> src\engine\test_harness.rs:204:14
+    |
+204 |     let nx = (params.width + slab_x - 1) / slab_x;
+    |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: consider using `.div_ceil()`: `params.width.div_ceil(slab_x)`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#manual_div_ceil
+    = note: `#[warn(clippy::manual_div_ceil)]` on by default
+
+warning: manually reimplementing `div_ceil`
+   --> src\engine\test_harness.rs:205:14
+    |
+205 |     let ny = (params.height + slab_y - 1) / slab_y;
+    |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: consider using `.div_ceil()`: `params.height.div_ceil(slab_y)`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#manual_div_ceil
+
+warning: this function has too many arguments (15/7)
+   --> src\engine\test_harness.rs:246:1
+    |
+246 | / fn apply_test_scene_defaults(
+247 | |     scene: Option<Res<ActiveTestScene>>,
+248 | |     mut harness: ResMut<TestWorldHarness>,
+249 | |     params: Res<WorldGenParams>,
+...   |
+261 | |     mut global_wind: Option<ResMut<GlobalWind>>,
+262 | | ) {
+    | |_^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: the variable `n` is used as a loop counter
+   --> src\engine\test_harness.rs:281:13
+    |
+281 |             for mut w in &mut wx_q {
+    |             ^^^^^^^^^^^^^^^^^^^^^^ help: consider using: `for (n, mut w) in (&mut wx_q).into_iter().enumerate()`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#explicit_counter_loop
+    = note: `#[warn(clippy::explicit_counter_loop)]` on by default
+
+warning: the variable `wn` is used as a loop counter
+   --> src\engine\test_harness.rs:302:13
+    |
+302 |             for mut w in &mut wx_q {
+    |             ^^^^^^^^^^^^^^^^^^^^^^ help: consider using: `for (wn, mut w) in (&mut wx_q).into_iter().enumerate()`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#explicit_counter_loop
+
+warning: the variable `fi` is used as a loop counter
+   --> src\engine\test_harness.rs:311:13
+    |
+311 |             for mut prof in &mut fuel_q {
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: consider using: `for (fi, mut prof) in (&mut fuel_q).into_iter().enumerate()`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#explicit_counter_loop
+
+warning: the variable `wn` is used as a loop counter
+   --> src\engine\test_harness.rs:330:13
+    |
+330 |             for mut w in &mut wx_q {
+    |             ^^^^^^^^^^^^^^^^^^^^^^ help: consider using: `for (wn, mut w) in (&mut wx_q).into_iter().enumerate()`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#explicit_counter_loop
+
+warning: the variable `fi` is used as a loop counter
+   --> src\engine\test_harness.rs:340:13
+    |
+340 |             for mut prof in &mut fuel_q {
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: consider using: `for (fi, mut prof) in (&mut fuel_q).into_iter().enumerate()`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#explicit_counter_loop
+
+warning: this `if` statement can be collapsed
+  --> src\entities\production\core\manufacturing_plugin.rs:59:9
+   |
+59 | /         if mt.check.just_finished() {
+60 | |             if op.emergencies.is_empty() && op.malfunctions.is_empty() {
+61 | |                 op.maintenance_level =
+62 | |                     (op.maintenance_level + 0.04 * (1.0 - op.maintenance_level)).min(1.0);
+63 | |             }
+64 | |         }
+   | |_________^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#collapsible_if
+   = note: `#[warn(clippy::collapsible_if)]` on by default
+help: collapse nested if block
+   |
+59 ~         if mt.check.just_finished()
+60 ~             && op.emergencies.is_empty() && op.malfunctions.is_empty() {
+61 |                 op.maintenance_level =
+62 |                     (op.maintenance_level + 0.04 * (1.0 - op.maintenance_level)).min(1.0);
+63 ~             }
+   |
+
+warning: very complex type used. Consider factoring parts into `type` definitions
+  --> src\entities\production\power\grid_topology.rs:32:16
+   |
+32 |       mut hosts: Query<
+   |  ________________^
+33 | |         (&Transform, &mut ElectricalGrid),
+34 | |         Or<(With<TransformerComponent>, With<PowerLineComponent>)>,
+35 | |     >,
+   | |_____^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#type_complexity
+   = note: `#[warn(clippy::type_complexity)]` on by default
+
+warning: very complex type used. Consider factoring parts into `type` definitions
+  --> src\entities\production\power\grid_topology.rs:36:16
+   |
+36 |     buildings: Query<(Entity, &Transform), (With<Building>, With<ElectricalComponent>)>,
+   |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#type_complexity
+
+warning: very complex type used. Consider factoring parts into `type` definitions
+  --> src\entities\production\power\grid_topology.rs:82:21
+   |
+82 |     live_grid_host: Query<Entity, Or<(With<TransformerComponent>, With<PowerLineComponent>)>>,
+   |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#type_complexity
+
+warning: very complex type used. Consider factoring parts into `type` definitions
+  --> src\entities\production\power\grid_topology.rs:96:12
+   |
+96 |       grids: Query<
+   |  ____________^
+97 | |         (Entity, &ElectricalGrid),
+98 | |         Or<(With<TransformerComponent>, With<PowerLineComponent>)>,
+99 | |     >,
+   | |_____^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#type_complexity
+
+warning: this `impl` can be derived
+   --> src\entities\production\power\plant_definition.rs:176:1
+    |
+176 | / impl Default for CapabilityFlags {
+177 | |     fn default() -> Self {
+178 | |         Self {
+179 | |             is_steam_cycle: false,
+...   |
+184 | | }
+    | |_^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#derivable_impls
+    = note: `#[warn(clippy::derivable_impls)]` on by default
+help: replace the manual implementation with a derive attribute
+    |
+167 + #[derive(Default)]
+168 | pub struct CapabilityFlags {
+    |
+
+warning: manual implementation of `.is_multiple_of()`
+  --> src\gui\debug\ui_layout_tree_debug.rs:51:43
+   |
+51 |     if !ui_layout_tree_debug_enabled() || frame.0 % 60 != 0 {
+   |                                           ^^^^^^^^^^^^^^^^^ help: replace with: `!frame.0.is_multiple_of(60)`
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#manual_is_multiple_of
+
+warning: this function has too many arguments (8/7)
+  --> src\gui\debug\ui_layout_tree_debug.rs:79:1
+   |
+79 | / fn recurse_tree(
+80 | |     entity: Entity,
+81 | |     target: Entity,
+82 | |     depth: usize,
+...  |
+87 | |     q_tag: &Query<&DebugLayoutTag>,
+88 | | ) {
+   | |_^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: this expression creates a reference which is immediately dereferenced by the compiler
+   --> src\gui\debug\ui_layout_tree_debug.rs:148:13
+    |
+148 |             &q_tag,
+    |             ^^^^^^ help: change this to: `q_tag`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#needless_borrow
+    = note: `#[warn(clippy::needless_borrow)]` on by default
+
+warning: this function has too many arguments (12/7)
+   --> src\gui\debug\ui_layout_tree_debug.rs:154:1
+    |
+154 | / pub fn dump_map_layout_chain(
+155 | |     frame: Res<FrameCount>,
+156 | |     win: Query<&Window, With<PrimaryWindow>>,
+157 | |     sim: Res<SimulationMapViewport>,
+...   |
+166 | |     child_of: Query<&ChildOf>,
+167 | | ) {
+    | |_^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: manual implementation of `.is_multiple_of()`
+   --> src\gui\debug\ui_layout_tree_debug.rs:168:43
+    |
+168 |     if !ui_layout_tree_debug_enabled() || frame.0 % 60 != 0 {
+    |                                           ^^^^^^^^^^^^^^^^^ help: replace with: `!frame.0.is_multiple_of(60)`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#manual_is_multiple_of
+
+warning: this `impl` can be derived
+  --> src\gui\hud\dock_shell.rs:42:1
+   |
+42 | / impl Default for HudOverlayTrayState {
+43 | |     fn default() -> Self {
+44 | |         Self {
+45 | |             recon_visible: false,
+...  |
+52 | | }
+   | |_^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#derivable_impls
+help: replace the manual implementation with a derive attribute
+   |
+34 + #[derive(Default)]
+35 | pub struct HudOverlayTrayState {
+   |
+
+warning: this `impl` can be derived
+  --> src\gui\hud\dock_shell.rs:63:1
+   |
+63 | / impl Default for HudCommandShellLayout {
+64 | |     fn default() -> Self {
+65 | |         Self {
+66 | |             overlay_tray_open: false,
+...  |
+72 | | }
+   | |_^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#derivable_impls
+help: replace the manual implementation with a derive attribute
+   |
+56 + #[derive(Default)]
+57 | pub struct HudCommandShellLayout {
+   |
+
+warning: this function has too many arguments (8/7)
+   --> src\gui\hud\dock_shell.rs:214:1
+    |
+214 | / pub fn draw_hud_overlay_tray_egui(
+215 | |     ctx: &mut egui::Context,
+216 | |     tray: &mut HudOverlayTrayState,
+217 | |     dock: &mut HudDockRegistry,
+...   |
+222 | |     pending_layout: &mut PendingHudLayoutCommit,
+223 | | ) {
+    | |_^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: this function has too many arguments (17/7)
+   --> src\gui\hud\dock_shell.rs:262:1
+    |
+262 | / pub fn draw_hud_command_shell_egui(
+263 | |     ctx: &mut egui::Context,
+264 | |     layout: &mut HudCommandShellLayout,
+265 | |     dock: &mut HudDockRegistry,
+...   |
+279 | |     pending_layout: &mut PendingHudLayoutCommit,
+280 | | ) {
+    | |_^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: this function has too many arguments (8/7)
+   --> src\gui\hud\dock_shell.rs:441:1
+    |
+441 | / pub fn draw_hud_dock_minimized_strip_egui(
+442 | |     ctx: &mut egui::Context,
+443 | |     policy: &super::widget_presentation::WidgetPresentationPolicy,
+444 | |     dock: &mut HudDockRegistry,
+...   |
+449 | |     update_budget: &mut ProductShellUpdateBudget,
+450 | | ) {
+    | |_^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: this `if` can be collapsed into the outer `match`
+   --> src\gui\hud\dock_shell.rs:467:33
+    |
+467 | / ...                   if policy.widget_enabled(HudWidgetId::Transmission) {
+468 | | ...                       transmission.active = true;
+469 | | ...                       transmission.minimized = false;
+470 | | ...                   }
+    | |_______________________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#collapsible_match
+    = note: `#[warn(clippy::collapsible_match)]` on by default
+help: collapse nested if block
+    |
+466 ~                             HudWidgetId::Transmission
+467 ~                                 if policy.widget_enabled(HudWidgetId::Transmission) => {
+468 |                                     transmission.active = true;
+469 |                                     transmission.minimized = false;
+470 ~                                 }
+    |
+
+warning: this function has too many arguments (14/7)
+   --> src\gui\hud\frame_budget_diagnostics.rs:288:1
+    |
+288 | / pub fn finalize_frame_budget_diagnostics(
+289 | |     time: Res<Time>,
+290 | |     mut budget: ResMut<FrameBudgetDiagnostics>,
+291 | |     shell_diag: Res<ProductShellDiagnostics>,
+...   |
+302 | |     mut scratch: Local<FinalizeFrameBudgetLocals>,
+303 | | ) {
+    | |_^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: this function has too many arguments (27/7)
+   --> src\gui\hud\hud_dev_overlay.rs:115:1
+    |
+115 | / pub fn draw_hud_dev_overlay_egui(
+116 | |     ctx: &mut egui::Context,
+117 | |     overlay: &HudDevOverlayState,
+118 | |     trace: &DebugRenderTraceConfig,
+...   |
+142 | |     density: &mut HudDensityProfile,
+143 | | ) {
+    | |_^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: this `impl` can be derived
+  --> src\gui\hud\overlay_shell.rs:32:1
+   |
+32 | / impl Default for OverlayShellState {
+33 | |     fn default() -> Self {
+34 | |         Self {
+35 | |             groups: [false, false, false, false],
+...  |
+39 | | }
+   | |_^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#derivable_impls
+help: replace the manual implementation with a derive attribute
+   |
+27 + #[derive(Default)]
+28 | pub struct OverlayShellState {
+   |
+
+warning: this function has too many arguments (12/7)
+  --> src\gui\hud\overlay_shell.rs:69:1
+   |
+69 | / pub fn draw_overlay_shell_egui(
+70 | |     ctx: &mut egui::Context,
+71 | |     shell: &mut OverlayShellState,
+72 | |     framework: &mut OverlayFrameworkState,
+...  |
+81 | |     pending_layout: &mut PendingHudLayoutCommit,
+82 | | ) {
+   | |_^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: this function has too many arguments (8/7)
+   --> src\gui\hud\stage6_telemetry.rs:92:1
+    |
+ 92 | / pub fn refresh_stage6_hud_telemetry(
+ 93 | |     frame: Res<Stage6VirtualizationFrame>,
+ 94 | |     residency: Res<ChunkResidencyTable>,
+ 95 | |     gpu: Option<Res<GpuRepresentationMetrics>>,
+...   |
+100 | |     mut last_upload: Local<u64>,
+101 | | ) {
+    | |_^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: this function has too many arguments (12/7)
+   --> src\gui\hud\transmission.rs:349:1
+    |
+349 | / pub fn draw_transmission_shell_egui(
+350 | |     ctx: &mut egui::Context,
+351 | |     policy: &crate::gui::hud::WidgetPresentationPolicy,
+352 | |     shell: &mut TransmissionShellState,
+...   |
+361 | |     pending_layout: &mut PendingHudLayoutCommit,
+362 | | ) {
+    | |_^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: casting to the same type is unnecessary (`u64` -> `u64`)
+   --> src\gui\hud\transmission.rs:488:44
+    |
+488 |                     let content_revision = envelope.message.command_id as u64;
+    |                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: try: `envelope.message.command_id`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#unnecessary_cast
+    = note: `#[warn(clippy::unnecessary_cast)]` on by default
+
+warning: this function has too many arguments (12/7)
+   --> src\gui\hud\sim_view_sync_debug.rs:153:1
+    |
+153 | / fn log_sync_edge(
+154 | |     frame: u64,
+155 | |     sig: SyncSignature,
+156 | |     prev: Option<SyncSignature>,
+...   |
+165 | |     minimap: &MinimapShellState,
+166 | | ) {
+    | |_^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: clamp-like pattern without using clamp function
+   --> src\gui\map_camera.rs:281:14
+    |
+281 |       let hi = hi_from_tile_span
+    |  ______________^
+282 | |         .max(fit * 14.0)
+283 | |         .max(8.0)
+284 | |         .min(2048.0);
+    | |____________________^
+    |
+    = note: clamp will panic if max < min, min.is_nan(), or max.is_nan()
+    = note: clamp returns NaN if the input is NaN
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#manual_clamp
+    = note: `#[warn(clippy::manual_clamp)]` on by default
+help: replace with clamp
+    |
+281 ~     let hi = hi_from_tile_span
+282 ~         .max(fit * 14.0).clamp(8.0, 2048.0);
+    |
+
+warning: this function has too many arguments (16/7)
+   --> src\gui\map_camera.rs:348:1
+    |
+348 | / fn map_camera_apply_input_to_desired(
+349 | |     time: Res<Time>,
+350 | |     state: Res<State<BaseState>>,
+351 | |     bindings: Res<InputBindings>,
+...   |
+364 | |     mut locals: Local<MapCameraInputLocals>,
+365 | | ) {
+    | |_^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: this function has too many arguments (8/7)
+   --> src\gui\map_camera.rs:568:1
+    |
+568 | / pub fn sync_main_world_camera_viewport_and_projection(
+569 | |     sim: Res<SimulationMapViewport>,
+570 | |     desired: Res<MapCameraDesired>,
+571 | |     params: Res<WorldGenParams>,
+...   |
+576 | |     mut q: Query<(&mut Camera, &mut Transform, &mut Projection), With<MainWorldCamera>>,
+577 | | ) {
+    | |_^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: this function has too many arguments (9/7)
+   --> src\gui\map_camera.rs:679:1
+    |
+679 | / fn map_camera_smooth_toward_desired(
+680 | |     cfg: Res<DebugRenderTraceConfig>,
+681 | |     time: Res<Time>,
+682 | |     state: Res<State<BaseState>>,
+...   |
+688 | |     mut last_trace: Local<u64>,
+689 | | ) {
+    | |_^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: manual implementation of `.is_multiple_of()`
+   --> src\gui\map_camera.rs:725:12
+    |
+725 |         if *last_trace % 30 == 0 {
+    |            ^^^^^^^^^^^^^^^^^^^^^ help: replace with: `(*last_trace).is_multiple_of(30)`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#manual_is_multiple_of
+
+warning: this function has too many arguments (9/7)
+  --> src\gui\map_view\consumers\minimap.rs:14:1
+   |
+14 | / pub fn resolve_minimap_egui_texture(
+15 | |     contexts: &mut EguiContexts,
+16 | |     shell: &mut MinimapShellState,
+17 | |     legacy: &mut SimMinimapUiState,
+...  |
+23 | |     interaction_frozen: bool,
+24 | | ) -> Option<egui::TextureId> {
+   | |____________________________^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: this function has too many arguments (9/7)
+  --> src\gui\map_view\presentation\display_transform.rs:47:5
+   |
+47 | /     pub fn from_fit_truth(
+48 | |         viewport_rect: egui::Rect,
+49 | |         texture_size: UVec2,
+50 | |         fit_mode: MapFitMode,
+...  |
+57 | |         contain_fit_authoritative: bool,
+58 | |     ) -> Self {
+   | |_____________^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: this function has too many arguments (10/7)
+   --> src\gui\map_view\presentation\stability.rs:189:1
+    |
+189 | / pub fn sync_map_view_ready_states(
+190 | |     frames: Res<ResolvedMapViewFrames>,
+191 | |     resolved: Res<ResolvedViewports>,
+192 | |     preview_tex: Res<WorldPreviewTexture>,
+...   |
+199 | |     mut ready: ResMut<MapViewReadyStates>,
+200 | | ) {
+    | |_^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: this function has too many arguments (11/7)
+  --> src\gui\map_view\projection\mod.rs:54:1
+   |
+54 | / pub fn sync_resolved_map_view_frames(
+55 | |     resolved: Res<ResolvedViewports>,
+56 | |     registry: Res<WorldPreviewRenderTargetRegistry>,
+57 | |     path: Res<PreviewPathAuthority>,
+...  |
+65 | |     update_attrib: Option<ResMut<crate::render::FrameUpdateAttrib>>,
+66 | | ) {
+   | |_^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: field assignment outside of initializer for an instance created with Default::default()
+   --> src\gui\map_view\view_state.rs:105:9
+    |
+105 |         minimap.zoom = 0.85;
+    |         ^^^^^^^^^^^^^^^^^^^^
+    |
+note: consider initializing the variable with `gui::map_view::view_state::MapViewState { zoom: 0.85, zoom_target: 0.85, viewport_size: Vec2::new(260.0, 220.0), fit_mode: MapFitMode::Cover, ..Default::default() }` and removing relevant reassignments
+   --> src\gui\map_view\view_state.rs:104:9
+    |
+104 |         let mut minimap = MapViewState::default();
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#field_reassign_with_default
+
+warning: this function has too many arguments (13/7)
+   --> src\gui\map_presentation_diagnostics.rs:141:5
+    |
+141 | /     pub fn record_fit_truth(
+142 | |
+143 | |         &mut self,
+...   |
+169 | |     ) {
+    | |_____^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: this `if` has identical blocks
+  --> src\gui\lod_zone_authoring.rs:60:29
+   |
+60 |       if population >= 50_000 {
+   |  _____________________________^
+61 | |         WorldLodBand::Operational
+62 | |     } else if population >= 5_000 {
+   | |_____^
+   |
+note: same as this
+  --> src\gui\lod_zone_authoring.rs:62:35
+   |
+62 |       } else if population >= 5_000 {
+   |  ___________________________________^
+63 | |         WorldLodBand::Operational
+64 | |     } else {
+   | |_____^
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#if_same_then_else
+   = note: `#[warn(clippy::if_same_then_else)]` on by default
+
+warning: this `impl` can be derived
+   --> src\gui\world_representation.rs:398:1
+    |
+398 | / impl Default for WorldLodPolicyEngine {
+399 | |     fn default() -> Self {
+400 | |         Self {
+401 | |             camera: CameraLodState::default(),
+...   |
+405 | | }
+    | |_^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#derivable_impls
+help: replace the manual implementation with a derive attribute
+    |
+393 + #[derive(Default)]
+394 | pub struct WorldLodPolicyEngine {
+    |
+
+warning: this function has too many arguments (10/7)
+   --> src\gui\world_representation.rs:550:5
+    |
+550 | /     pub fn resolve(
+551 | |         &self,
+552 | |         global: &GlobalLodState,
+553 | |         engine: &WorldLodPolicyEngine,
+...   |
+560 | |         stamp: SimStepStamp,
+561 | |     ) -> (WorldRepresentationFrame, WorldLodMap) {
+    | |________________________________________________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: this function has too many arguments (8/7)
+   --> src\gui\world_representation.rs:581:1
+    |
+581 | / fn build_world_lod_map(
+582 | |     stamp: SimStepStamp,
+583 | |     focus_chunk: IVec2,
+584 | |     interest_radius_chunks: i32,
+...   |
+589 | |     bubbles: &[TacticalLodBubble],
+590 | | ) -> WorldLodMap {
+    | |________________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: this function has too many arguments (16/7)
+   --> src\gui\world_representation.rs:656:1
+    |
+656 | / pub fn compute_world_representation_frame(
+657 | |     time: Res<Time>,
+658 | |     desired: Res<MapCameraDesired>,
+659 | |     _settings: Res<MapCameraSettings>,
+...   |
+672 | |     mut perf: Option<ResMut<crate::render::FramePerf>>,
+673 | | ) {
+    | |_^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: this function has too many arguments (8/7)
+   --> src\gui\world_representation.rs:762:1
+    |
+762 | / pub fn apply_representation_result(
+763 | |     sim: Res<SimTick>,
+764 | |     sim_time: Res<SimTimeMicros>,
+765 | |     frame: Res<WorldRepresentationFrame>,
+...   |
+770 | |     mut policy: ResMut<RepresentationResult>,
+771 | | ) {
+    | |_^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: this `impl` can be derived
+   --> src\gui\representation_policy.rs:190:1
+    |
+190 | / impl Default for RepresentationBudgets {
+191 | |     fn default() -> Self {
+192 | |         Self {
+193 | |             visual: VisualBudgetSettings::default(),
+...   |
+196 | | }
+    | |_^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#derivable_impls
+help: replace the manual implementation with a derive attribute
+    |
+186 + #[derive(Default)]
+187 | pub struct RepresentationBudgets {
+    |
+
+warning: this expression creates a reference which is immediately dereferenced by the compiler
+   --> src\gui\representation_policy.rs:275:63
+    |
+275 |         let preview_policy = preview_policy_from(active_band, &inputs);
+    |                                                               ^^^^^^^ help: change this to: `inputs`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#needless_borrow
+
+warning: this `impl` can be derived
+  --> src\gui\view_representation.rs:76:1
+   |
+76 | / impl Default for CameraIntent {
+77 | |     fn default() -> Self {
+78 | |         Self::Strategic
+79 | |     }
+80 | | }
+   | |_^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#derivable_impls
+help: replace the manual implementation with a derive attribute and mark the default variant
+   |
+68 + #[derive(Default)]
+69 | pub enum CameraIntent {
+70 ~     #[default]
+71 ~     Strategic,
+   |
+
+warning: this `impl` can be derived
+   --> src\gui\view_representation.rs:112:1
+    |
+112 | / impl Default for CameraOwner {
+113 | |     fn default() -> Self {
+114 | |         Self::Player
+115 | |     }
+116 | | }
+    | |_^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#derivable_impls
+help: replace the manual implementation with a derive attribute and mark the default variant
+    |
+105 + #[derive(Default)]
+106 | pub enum CameraOwner {
+107 ~     #[default]
+108 ~     Player,
+    |
+
+warning: this `impl` can be derived
+   --> src\gui\view_representation.rs:332:1
+    |
+332 | / impl Default for SwapImageBuffers {
+333 | |     fn default() -> Self {
+334 | |         Self {
+335 | |             front: Handle::default(),
+...   |
+340 | | }
+    | |_^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#derivable_impls
+help: replace the manual implementation with a derive attribute
+    |
+326 + #[derive(Default)]
+327 | pub struct SwapImageBuffers {
+    |
+
+warning: this function has too many arguments (8/7)
+  --> src\gui\map_tile_raster.rs:20:1
+   |
+20 | / pub fn raster_tiles_and_roads_to_rgba(
+21 | |     data: &mut Vec<u8>,
+22 | |     tex_w: usize,
+23 | |     tex_h: usize,
+...  |
+28 | |     fam_opt: Option<&TerrainFamilyRegistry>,
+29 | | ) {
+   | |_^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: this function has too many arguments (9/7)
+  --> src\gui\map_tile_raster.rs:44:1
+   |
+44 | / pub fn raster_sim_minimap_layered_to_rgba(
+45 | |     data: &mut Vec<u8>,
+46 | |     tex_w: usize,
+47 | |     tex_h: usize,
+...  |
+53 | |     fam_opt: Option<&TerrainFamilyRegistry>,
+54 | | ) {
+   | |_^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: this function has too many arguments (13/7)
+   --> src\gui\map_tile_raster.rs:95:1
+    |
+ 95 | / pub fn raster_sim_minimap_layered_to_subregion(
+ 96 | |     data: &mut [u8],
+ 97 | |     tex_w: usize,
+ 98 | |     tex_h: usize,
+...   |
+108 | |     fam_opt: Option<&TerrainFamilyRegistry>,
+109 | | ) {
+    | |_^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: this function has too many arguments (9/7)
+   --> src\gui\map_tile_raster.rs:200:1
+    |
+200 | / pub fn apply_shared_fire_heat_to_rgba_subregion(
+201 | |     data: &mut [u8],
+202 | |     tex_w: usize,
+203 | |     x0: usize,
+...   |
+209 | |     visibility_boost: f32,
+210 | | ) {
+    | |_^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: this function has a `#[must_use]` attribute with no message, but returns a type already marked as `#[must_use]`
+ --> src\gui\egui_window.rs:8:1
+  |
+8 | pub fn std_floating(w: egui::Window<'_>) -> egui::Window<'_> {
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |
+  = help: either add some descriptive message or remove the attribute
+  = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#double_must_use
+  = note: `#[warn(clippy::double_must_use)]` on by default
+
+warning: this function has too many arguments (12/7)
+  --> src\gui\app_shell.rs:61:1
+   |
+61 | / fn sync_menu_shell(
+62 | |     app_start: Res<State<AppStartState>>,
+63 | |     base: Res<State<BaseState>>,
+64 | |     ux_app: Res<State<AppState>>,
+...  |
+73 | |     cmd_mono: Res<CmdUiMonoFont>,
+74 | | ) {
+   | |_^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: very complex type used. Consider factoring parts into `type` definitions
+   --> src\gui\app_shell.rs:292:8
+    |
+292 |       q: Query<
+    |  ________^
+293 | |         (&Interaction, &MainMenuButtonAction),
+294 | |         (Changed<Interaction>, With<Button>),
+295 | |     >,
+    | |_____^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#type_complexity
+
+warning: this function has too many arguments (12/7)
+   --> src\gui\app_shell.rs:291:1
+    |
+291 | / fn handle_main_menu_buttons(
+292 | |     q: Query<
+293 | |         (&Interaction, &MainMenuButtonAction),
+294 | |         (Changed<Interaction>, With<Button>),
+...   |
+306 | |     mut world_preview_ui: ResMut<crate::gui::editor::world_preview::WorldPreviewUiState>,
+307 | | ) {
+    | |_^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: very complex type used. Consider factoring parts into `type` definitions
+   --> src\gui\app_shell.rs:347:8
+    |
+347 |       q: Query<
+    |  ________^
+348 | |         (&Interaction, &LoadMenuButtonAction),
+349 | |         (Changed<Interaction>, With<Button>),
+350 | |     >,
+    | |_____^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#type_complexity
+
+warning: manual implementation of `.is_multiple_of()`
+   --> src\gui\gameplay_capture.rs:193:37
+    |
+193 |     if recorder.frame_stride > 1 && recorder.stride_counter % recorder.frame_stride != 0 {
+    |                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: replace with: `!recorder.stride_counter.is_multiple_of(recorder.frame_stride)`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#manual_is_multiple_of
+
+warning: very complex type used. Consider factoring parts into `type` definitions
+   --> src\gui\pressure_tooling.rs:252:20
+    |
+252 |     mut faction_q: ParamSet<(Query<(Entity, &mut Faction)>, Query<&Faction>)>,
+    |                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#type_complexity
+
+warning: this function has too many arguments (16/7)
+   --> src\gui\pressure_tooling.rs:243:1
+    |
+243 | / fn pressure_composer_egui_system(
+244 | |     mut contexts: EguiContexts,
+245 | |     mut state: ResMut<PressureComposerState>,
+246 | |     mut scratch: ResMut<PressureComposerScratch>,
+...   |
+259 | |     mut fracture_settings: ResMut<FractureOverlaySettings>,
+260 | | ) -> Result {
+    | |___________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: this function has too many arguments (8/7)
+   --> src\gui\authoritative_viewport.rs:274:1
+    |
+274 | / pub fn publish_simulation_map_viewport(
+275 | |     authority: &mut AuthoritativeViewport,
+276 | |     semantic: &mut SemanticViewportRect,
+277 | |     latch: &mut SimulationMapViewportHoleLatch,
+...   |
+282 | |     generation: u64,
+283 | | ) {
+    | |_^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: this `map_or` can be simplified
+   --> src\gui\in_game_hud.rs:331:8
+    |
+331 |     if last.map_or(false, |p| p != collapsed) {
+    |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#unnecessary_map_or
+help: use `is_some_and` instead
+    |
+331 -     if last.map_or(false, |p| p != collapsed) {
+331 +     if last.is_some_and(|p| p != collapsed) {
+    |
+
+warning: this function has too many arguments (11/7)
+   --> src\gui\in_game_hud.rs:337:1
+    |
+337 | / pub fn sync_simulation_map_viewport_system(
+338 | |     q: Query<(&ComputedNode, &UiGlobalTransform), With<SimulationMapViewportFill>>,
+339 | |     mut authority: ResMut<crate::gui::AuthoritativeViewport>,
+340 | |     mut out: ResMut<SimulationMapViewport>,
+...   |
+348 | |     mut generation: Local<u64>,
+349 | | ) {
+    | |_^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: very complex type used. Consider factoring parts into `type` definitions
+   --> src\gui\in_game_hud.rs:825:13
+    |
+825 |       mut qs: ParamSet<(
+    |  _____________^
+826 | |         Query<&mut Text, With<OpsStripTime>>,
+827 | |         Query<&mut Text, With<OpsStripAlerts>>,
+828 | |         Query<&mut Text, With<OpsStripIntelRoutes>>,
+829 | |         Query<&mut Text, With<OpsStripIntelEw>>,
+830 | |     )>,
+    | |______^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#type_complexity
+
+warning: this function has too many arguments (10/7)
+   --> src\gui\in_game_hud.rs:816:1
+    |
+816 | / fn update_operations_strip(
+817 | |     tick: Res<SimTick>,
+818 | |     ctrl: Res<SimControlState>,
+819 | |     time: Res<Time>,
+...   |
+831 | |     mut cache: Local<OpsStripDynamicCache>,
+832 | | ) {
+    | |_^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: very complex type used. Consider factoring parts into `type` definitions
+   --> src\gui\in_game_hud.rs:941:19
+    |
+941 |       mut fp_cache: Local<
+    |  ___________________^
+942 | |         Option<(
+943 | |             (u8, bool, i32, i32, u8, u64, i32, i32, i32),
+...   |
+960 | |         )>,
+961 | |     >,
+    | |_____^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#type_complexity
+
+warning: this function has too many arguments (14/7)
+   --> src\gui\in_game_hud.rs:927:1
+    |
+927 | / fn update_ops_strip_map_camera_line(
+928 | |     settings: Res<MapCameraSettings>,
+929 | |     view_manager: Res<ViewManager>,
+930 | |     desired: Res<MapCameraDesired>,
+...   |
+961 | |     >,
+962 | | ) {
+    | |_^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: very complex type used. Consider factoring parts into `type` definitions
+    --> src\gui\in_game_hud.rs:1127:19
+     |
+1127 |       mut fp_cache: Local<
+     |  ___________________^
+1128 | |         Option<(
+1129 | |             u8,
+1130 | |             Option<(u32, u32)>,
+...    |
+1139 | |         )>,
+1140 | |     >,
+     | |_____^
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#type_complexity
+
+warning: very complex type used. Consider factoring parts into `type` definitions
+    --> src\gui\in_game_hud.rs:1267:12
+     |
+1267 |       mut q: ParamSet<(
+     |  ____________^
+1268 | |         Query<(&mut Visibility, &mut Node), With<LeftContextStackBody>>,
+1269 | |         Query<&mut Visibility, With<LeftContextRail>>,
+1270 | |     )>,
+     | |______^
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#type_complexity
+
+warning: this function has too many arguments (12/7)
+    --> src\gui\in_game_hud.rs:1462:1
+     |
+1462 | / fn update_site_logistics_hud(
+1463 | |     time: Res<Time>,
+1464 | |     mut settings: ResMut<HudAggregateSettings>,
+1465 | |     bindings: Res<InputBindings>,
+...    |
+1474 | |     mut text_q: Query<&mut Text, With<ResourceDisplay>>,
+1475 | | ) {
+     | |_^
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: this function has too many arguments (13/7)
+  --> src\gui\pause_menu_confirm.rs:44:1
+   |
+44 | / pub fn execute_pause_exit_to_world_gen(
+45 | |     commands: &mut Commands,
+46 | |     world_roots: &Query<Entity, With<WorldMarker>>,
+47 | |     chrome_latch: &mut WorldGenChromeLatch,
+...  |
+57 | |     progress: &WorldGenProgress,
+58 | | ) {
+   | |_^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: this function has too many arguments (12/7)
+  --> src\gui\pause_menu_confirm.rs:73:1
+   |
+73 | / pub fn execute_pause_exit_to_main_menu(
+74 | |     commands: &mut Commands,
+75 | |     world_roots: &Query<Entity, With<WorldMarker>>,
+76 | |     chrome_latch: &mut WorldGenChromeLatch,
+...  |
+85 | |     progress: &WorldGenProgress,
+86 | | ) {
+   | |_^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: this `impl` can be derived
+  --> src\gui\logistics_targets_panel.rs:22:1
+   |
+22 | / impl Default for LogisticsTargetsPanelState {
+23 | |     fn default() -> Self {
+24 | |         Self { visible: false }
+25 | |     }
+26 | | }
+   | |_^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#derivable_impls
+help: replace the manual implementation with a derive attribute
+   |
+18 + #[derive(Default)]
+19 | pub struct LogisticsTargetsPanelState {
+   |
+
+warning: this function has too many arguments (8/7)
+  --> src\gui\logistics_targets_panel.rs:54:1
+   |
+54 | / fn logistics_targets_panel_ui(
+55 | |     mut contexts: EguiContexts,
+56 | |     state: Res<LogisticsTargetsPanelState>,
+57 | |     bindings: Res<InputBindings>,
+...  |
+62 | |     palette: Res<UiPalette>,
+63 | | ) -> Result {
+   | |___________^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: deref which would be done by auto-deref
+  --> src\gui\agent_permissions_ui.rs:83:35
+   |
+83 |             let pal: &UiPalette = &*palette;
+   |                                   ^^^^^^^^^ help: try: `&palette`
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#explicit_auto_deref
+   = note: `#[warn(clippy::explicit_auto_deref)]` on by default
+
+warning: deref which would be done by auto-deref
+  --> src\gui\agent_permissions_ui.rs:84:34
+   |
+84 |             let sp: &UiSpacing = &*spacing;
+   |                                  ^^^^^^^^^ help: try: `&spacing`
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#explicit_auto_deref
+
+warning: this function has too many arguments (16/7)
+   --> src\gui\diagnostics_ui.rs:124:1
+    |
+124 | / pub fn diagnostics_ui_system(
+125 | |     mut contexts: EguiContexts,
+126 | |     state: Res<DiagnosticsUiState>,
+127 | |     bindings: Res<InputBindings>,
+...   |
+140 | |     spine: DiagnosticsSpinePanels,
+141 | | ) -> Result {
+    | |___________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: manual implementation of `.is_multiple_of()`
+   --> src\gui\camera_focus_debug.rs:137:40
+    |
+137 |     if tile_changed || fire_changed || *tick % 90 == 0 {
+    |                                        ^^^^^^^^^^^^^^^ help: replace with: `(*tick).is_multiple_of(90)`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#manual_is_multiple_of
+
+warning: this `impl` can be derived
+  --> src\gui\tile_debug_types.rs:78:1
+   |
+78 | / impl Default for FireDebugOverride {
+79 | |     fn default() -> Self {
+80 | |         Self {
+81 | |             force_visible: false,
+...  |
+84 | | }
+   | |_^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#derivable_impls
+help: replace the manual implementation with a derive attribute
+   |
+74 + #[derive(Default)]
+75 | pub struct FireDebugOverride {
+   |
+
+warning: this function has too many arguments (8/7)
+  --> src\gui\gpu_tile_debug.rs:48:1
+   |
+48 | / pub fn build_tile_debug_instances(
+49 | |     settings: Res<TileGpuDebugSettings>,
+50 | |     fire_override: Res<FireDebugOverride>,
+51 | |     debug: Res<CameraFocusDebug>,
+...  |
+56 | |     mut map: ResMut<TileDebugInstanceMap>,
+57 | | ) {
+   | |_^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: this function has a `#[must_use]` attribute with no message, but returns a type already marked as `#[must_use]`
+  --> src\gui\style\scroll.rs:13:1
+   |
+13 | pub fn widget_scroll_vertical(id_salt: impl std::hash::Hash) -> ScrollArea {
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = help: either add some descriptive message or remove the attribute
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#double_must_use
+
+warning: this function has a `#[must_use]` attribute with no message, but returns a type already marked as `#[must_use]`
+  --> src\gui\style\scroll.rs:19:1
+   |
+19 | pub fn widget_scroll_vertical_capped(id_salt: impl std::hash::Hash, max_height: f32) -> ScrollArea {
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = help: either add some descriptive message or remove the attribute
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#double_must_use
+
+warning: this function has a `#[must_use]` attribute with no message, but returns a type already marked as `#[must_use]`
+  --> src\gui\style\scroll.rs:29:1
+   |
+29 | pub fn widget_scroll_vertical_fill(id_salt: impl std::hash::Hash, available_height: f32) -> ScrollArea {
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = help: either add some descriptive message or remove the attribute
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#double_must_use
+
+warning: this function has a `#[must_use]` attribute with no message, but returns a type already marked as `#[must_use]`
+  --> src\gui\style\scroll.rs:39:1
+   |
+39 | pub fn widget_scroll_both(id_salt: impl std::hash::Hash) -> ScrollArea {
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = help: either add some descriptive message or remove the attribute
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#double_must_use
+
+warning: very complex type used. Consider factoring parts into `type` definitions
+   --> src\gui\editor\editor_world_commit_bridge.rs:109:23
+    |
+109 |       mut chunk_access: ParamSet<(
+    |  _______________________^
+110 | |         Query<&ChunkCellMatrix, With<ChunkDependency>>,
+111 | |         Query<(&Chunk, &mut ChunkCellMatrix), With<ChunkDependency>>,
+112 | |         Query<(&Chunk, &mut ChunkDirty), With<ChunkDependency>>,
+113 | |     )>,
+    | |______^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#type_complexity
+
+warning: this function has too many arguments (9/7)
+   --> src\gui\editor\editor_world_commit_bridge.rs:103:1
+    |
+103 | / pub fn editor_world_commit_to_simulation_system(
+104 | |     mut events: MessageReader<EditorTileEditCommitted>,
+105 | |     mut queue: ResMut<ChunkGenQueue>,
+106 | |     mut preview: ResMut<WorldPreviewState>,
+...   |
+116 | |     params: Res<WorldGenParams>,
+117 | | ) {
+    | |_^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: consider using `sort_by_key`
+   --> src\gui\editor\editor_world_commit_bridge.rs:135:5
+    |
+135 |     merged.sort_by(|a, b| (a.y, a.x).cmp(&(b.y, b.x)));
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#unnecessary_sort_by
+    = note: `#[warn(clippy::unnecessary_sort_by)]` on by default
+help: try
+    |
+135 -     merged.sort_by(|a, b| (a.y, a.x).cmp(&(b.y, b.x)));
+135 +     merged.sort_by_key(|a| (a.y, a.x));
+    |
+
+warning: unnecessary map of the identity function
+   --> src\gui\editor\map_editor\mod.rs:135:29
+    |
+135 |                   .into_iter()
+    |  _____________________________^
+136 | |                 .map(|(seq, tx, tz, pos)| (seq, tx, tz, pos))
+    | |_____________________________________________________________^ help: remove the call to `map`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#map_identity
+    = note: `#[warn(clippy::map_identity)]` on by default
+
+warning: very complex type used. Consider factoring parts into `type` definitions
+   --> src\gui\editor\map_editor\mod.rs:183:12
+    |
+183 |       tiles: &Query<
+    |  ____________^
+184 | |         (&Transform, &Height),
+185 | |         (With<TileMarker>, Without<MapEditorRoadMarkerV1>),
+186 | |     >,
+    | |_____^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#type_complexity
+
+warning: this `impl` can be derived
+   --> src\gui\editor\map_editor\mod.rs:478:1
+    |
+478 | / impl Default for MapEditorMapTexture {
+479 | |     fn default() -> Self {
+480 | |         Self {
+481 | |             texture: Handle::default(),
+...   |
+487 | | }
+    | |_^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#derivable_impls
+help: replace the manual implementation with a derive attribute
+    |
+470 + #[derive(Default)]
+471 | pub struct MapEditorMapTexture {
+    |
+
+warning: this `if` statement can be collapsed
+   --> src\gui\editor\map_editor\mod.rs:540:5
+    |
+540 | /     if map_tex.width == params.width && map_tex.height == params.height {
+541 | |         if images.get(&map_tex.texture).is_some() {
+542 | |             return;
+543 | |         }
+544 | |     }
+    | |_____^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#collapsible_if
+help: collapse nested if block
+    |
+540 ~     if map_tex.width == params.width && map_tex.height == params.height
+541 ~         && images.get(&map_tex.texture).is_some() {
+542 |             return;
+543 ~         }
+    |
+
+warning: this function has too many arguments (8/7)
+   --> src\gui\editor\map_editor\mod.rs:580:1
+    |
+580 | / fn map_editor_raster_minimap(
+581 | |     mut images: ResMut<Assets<Image>>,
+582 | |     map_tex: Res<MapEditorMapTexture>,
+583 | |     handles: Res<TerrainRegistriesHandles>,
+...   |
+588 | |     mut last_applied_revision: Local<Option<u64>>,
+589 | | ) {
+    | |_^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: very complex type used. Consider factoring parts into `type` definitions
+   --> src\gui\editor\map_editor\mod.rs:652:12
+    |
+652 |       tiles: &mut Query<
+    |  ____________^
+653 | |         (&mut Transform, &mut Height, &mut TerrainType),
+654 | |         (With<TileMarker>, Without<MapEditorRoadMarkerV1>),
+655 | |     >,
+    | |_____^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#type_complexity
+
+warning: you seem to be trying to use `match` for an equality check. Consider using `if`
+   --> src\gui\editor\map_editor\mod.rs:668:9
+    |
+668 | /         match tool.kind {
+669 | |             MapEditorToolKind::Terrain => match tool.terrain_paint {
+670 | |                 MapEditorTerrainPaint::Height => {
+671 | |                     if let Some(d) = height_delta_opt {
+...   |
+681 | |             _ => {}
+682 | |         }
+    | |_________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#single_match
+    = note: `#[warn(clippy::single_match)]` on by default
+help: try
+    |
+668 ~         if tool.kind == MapEditorToolKind::Terrain { match tool.terrain_paint {
+669 +             MapEditorTerrainPaint::Height => {
+670 +                 if let Some(d) = height_delta_opt {
+671 +                     let v = (height.0 + d).clamp(0.0, 1.0);
+672 +                     height.0 = v;
+673 +                     tf.translation.y = v * HEIGHT_WORLD_SCALE;
+674 +                 }
+675 +             }
+676 +             MapEditorTerrainPaint::Biome => {
+677 +                 terrain.0 = tool.paint_biome;
+678 +             }
+679 +         } }
+    |
+
+warning: very complex type used. Consider factoring parts into `type` definitions
+   --> src\gui\editor\map_editor\mod.rs:700:23
+    |
+700 |       mut tile_queries: ParamSet<(
+    |  _______________________^
+701 | |         Query<
+702 | |             (&mut Transform, &mut Height, &mut TerrainType),
+703 | |             (With<TileMarker>, Without<MapEditorRoadMarkerV1>),
+...   |
+708 | |         >,
+709 | |     )>,
+    | |______^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#type_complexity
+
+warning: this function has too many arguments (16/7)
+   --> src\gui\editor\map_editor\mod.rs:686:1
+    |
+686 | / fn map_editor_minimap_window(
+687 | |     mut commands: Commands,
+688 | |     mut contexts: EguiContexts,
+689 | |     mut hover: ResMut<MapEditorHover>,
+...   |
+711 | |     palette: Res<UiPalette>,
+712 | | ) -> Result {
+    | |___________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: deref which would be done by auto-deref
+   --> src\gui\editor\map_editor\mod.rs:735:35
+    |
+735 |             let pal: &UiPalette = &*palette;
+    |                                   ^^^^^^^^^ help: try: `&palette`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#explicit_auto_deref
+
+warning: deref which would be done by auto-deref
+   --> src\gui\editor\map_editor\mod.rs:846:37
+    |
+846 | ...                   &mut *road_placement,
+    |                       ^^^^^^^^^^^^^^^^^^^^ help: try: `&mut road_placement`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#explicit_auto_deref
+
+warning: deref which would be done by auto-deref
+   --> src\gui\editor\map_editor\mod.rs:870:49
+    |
+870 | ...                   &mut *road_placement,
+    |                       ^^^^^^^^^^^^^^^^^^^^ help: try: `&mut road_placement`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#explicit_auto_deref
+
+warning: this function has too many arguments (8/7)
+   --> src\gui\editor\map_editor\mod.rs:898:1
+    |
+898 | / fn map_editor_bake_transport(
+899 | |     mut events: MessageReader<MapEditorBakeTransportRequest>,
+900 | |     markers: Query<(&MapEditorRoadMarkerV1, &Transform)>,
+901 | |     mut topology: ResMut<TransportTopology>,
+...   |
+906 | |     mut edit_commits: MessageWriter<EditorTileEditCommitted>,
+907 | | ) {
+    | |_^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: this function has too many arguments (13/7)
+    --> src\gui\editor\map_editor\mod.rs:1129:1
+     |
+1129 | / fn map_editor_map_snapshot_io(
+1130 | |     mut events: MessageReader<MapEditorMapSnapshotIoRequest>,
+1131 | |     mut commands: Commands,
+1132 | |     mut params: ResMut<WorldGenParams>,
+...    |
+1142 | |     mut edit_commits: MessageWriter<EditorTileEditCommitted>,
+1143 | | ) {
+     | |_^
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: this function has too many arguments (16/7)
+    --> src\gui\editor\map_editor\mod.rs:1329:1
+     |
+1329 | / fn map_editor_palette_system(
+1330 | |     mut contexts: EguiContexts,
+1331 | |     mut tool: ResMut<MapEditorTool>,
+1332 | |     mut next_base: ResMut<NextState<BaseState>>,
+...    |
+1345 | |     mut road_undo: MessageWriter<MapEditorRoadUndoRequest>,
+1346 | | ) -> Result {
+     | |___________^
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: deref which would be done by auto-deref
+    --> src\gui\editor\map_editor\mod.rs:1352:35
+     |
+1352 |             let pal: &UiPalette = &*palette;
+     |                                   ^^^^^^^^^ help: try: `&palette`
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#explicit_auto_deref
+
+warning: this `impl` can be derived
+  --> src\gui\editor\world_gen_ui.rs:46:1
+   |
+46 | / impl Default for WorldGenUiState {
+47 | |     fn default() -> Self {
+48 | |         Self {
+49 | |             visible: false,
+...  |
+55 | | }
+   | |_^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#derivable_impls
+help: replace the manual implementation with a derive attribute
+   |
+37 + #[derive(Default)]
+38 | pub struct WorldGenUiState {
+   |
+
+warning: deref which would be done by auto-deref
+   --> src\gui\editor\world_gen_ui.rs:138:35
+    |
+138 |             let pal: &UiPalette = &*cx.palette;
+    |                                   ^^^^^^^^^^^^ help: try: `&cx.palette`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#explicit_auto_deref
+
+warning: deref which would be done by auto-deref
+   --> src\gui\editor\world_gen_ui.rs:139:34
+    |
+139 |             let sp: &UiSpacing = &*cx.spacing;
+    |                                  ^^^^^^^^^^^^ help: try: `&cx.spacing`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#explicit_auto_deref
+
+warning: this `impl` can be derived
+  --> src\gui\editor\world_preview\gpu_preview.rs:58:1
+   |
+58 | / impl Default for WorldPreviewGpuRuntime {
+59 | |     fn default() -> Self {
+60 | |         Self {
+61 | |             offscreen_renderer_ready: false,
+...  |
+65 | | }
+   | |_^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#derivable_impls
+help: replace the manual implementation with a derive attribute
+   |
+53 + #[derive(Default)]
+54 | pub struct WorldPreviewGpuRuntime {
+   |
+
+warning: this function has too many arguments (10/7)
+   --> src\gui\editor\world_preview\gpu_preview.rs:162:1
+    |
+162 | / pub(crate) fn sync_world_preview_offscreen_camera(
+163 | |     mut commands: Commands,
+164 | |     flow: Res<State<WorldGenFlowState>>,
+165 | |     job_slot: Res<WorldGenJobSlot>,
+...   |
+172 | |     mut q_gpu: Query<(Entity, &mut Camera), With<WorldPreviewGpuCamera>>,
+173 | | ) {
+    | |_^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: very complex type used. Consider factoring parts into `type` definitions
+   --> src\gui\editor\world_preview\gpu_preview.rs:249:20
+    |
+249 |       chunk_ecology: Query<
+    |  ____________________^
+250 | |         'w,
+251 | |         's,
+...   |
+259 | |         ),
+260 | |     >,
+    | |_____^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#type_complexity
+
+warning: this function has too many arguments (8/7)
+  --> src\gui\editor\world_preview\interaction.rs:37:1
+   |
+37 | / pub fn update_hover_tile(
+38 | |     viewport: &mut EditorViewport,
+39 | |     pointer_screen: Option<egui::Pos2>,
+40 | |     panel_rect: egui::Rect,
+...  |
+45 | |     camera_center: Vec2,
+46 | | ) {
+   | |_^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: this function has too many arguments (19/7)
+  --> src\gui\editor\world_preview\layers.rs:62:5
+   |
+62 | /     fn base_rgba_for_tile(
+63 | |         self,
+64 | |         tx: u32,
+65 | |         ty: u32,
+...  |
+81 | |         ecology_slices: &[EcologyRasterChunkRow],
+82 | |     ) -> [u8; 4] {
+   | |________________^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: this function has too many arguments (8/7)
+   --> src\gui\editor\world_preview\preview_lifecycle.rs:120:1
+    |
+120 | / pub fn advance_world_preview_lifecycle_system(
+121 | |     flow: Res<State<WorldGenFlowState>>,
+122 | |     job_slot: Res<WorldGenJobSlot>,
+123 | |     params: Res<WorldGenParams>,
+...   |
+128 | |     mut signals: ResMut<WorldPreviewLifecycleSignals>,
+129 | | ) {
+    | |_^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: this `if` has identical blocks
+   --> src\gui\editor\world_preview\preview_lifecycle.rs:168:77
+    |
+168 |               } else if !preview_state.dirty_queue.is_empty() && raster_wrote {
+    |  _____________________________________________________________________________^
+169 | |                 lifecycle.transition(PreviewLifecyclePhase::Rendering);
+170 | |             } else if raster_wrote && !present_committed {
+    | |_____________^
+    |
+note: same as this
+   --> src\gui\editor\world_preview\preview_lifecycle.rs:170:58
+    |
+170 |               } else if raster_wrote && !present_committed {
+    |  __________________________________________________________^
+171 | |                 lifecycle.transition(PreviewLifecyclePhase::Rendering);
+172 | |             }
+    | |_____________^
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#if_same_then_else
+
+warning: this function has too many arguments (10/7)
+   --> src\gui\editor\world_preview\preview_readiness.rs:154:1
+    |
+154 | / pub fn compute_world_preview_ready(
+155 | |     flow: WorldGenFlowState,
+156 | |     job_busy: bool,
+157 | |     viewport: &EditorViewport,
+...   |
+164 | |     resolved: &ResolvedViewports,
+165 | | ) -> bool {
+    | |_________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: very complex type used. Consider factoring parts into `type` definitions
+   --> src\gui\editor\world_preview\preview_readiness.rs:211:22
+    |
+211 |     mut last_logged: Local<Option<(PreviewState, bool, bool, bool, bool)>>,
+    |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#type_complexity
+
+warning: this function has too many arguments (15/7)
+   --> src\gui\editor\world_preview\preview_readiness.rs:196:1
+    |
+196 | / pub fn sync_world_preview_ready(
+197 | |     flow: Res<State<WorldGenFlowState>>,
+198 | |     job_slot: Res<WorldGenJobSlot>,
+199 | |     params: Res<WorldGenParams>,
+...   |
+211 | |     mut last_logged: Local<Option<(PreviewState, bool, bool, bool, bool)>>,
+212 | | ) {
+    | |_^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: this function has too many arguments (11/7)
+   --> src\gui\editor\world_preview\preview_render_contract.rs:154:1
+    |
+154 | / pub(crate) fn sync_preview_render_contract_resources(
+155 | |     preview_cam: &mut PreviewCameraState,
+156 | |     target: &mut PreviewRenderTarget,
+157 | |     debug: &mut PreviewPresentationDebug,
+...   |
+165 | |     gpu_render_extent: Option<UVec2>,
+166 | | ) -> bool {
+    | |_________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: this function has too many arguments (11/7)
+   --> src\gui\editor\world_preview\preview_render_contract.rs:260:1
+    |
+260 | / pub(crate) fn sync_preview_render_contract_system(
+261 | |     mut preview_cam: ResMut<PreviewCameraState>,
+262 | |     mut target: ResMut<PreviewRenderTarget>,
+263 | |     mut debug: ResMut<PreviewPresentationDebug>,
+...   |
+271 | |     mut sync_tick: Local<u64>,
+272 | | ) {
+    | |_^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: this function has too many arguments (13/7)
+   --> src\gui\editor\world_preview\preview_render_contract.rs:297:1
+    |
+297 | / pub(crate) fn sync_preview_render_contract_after_egui(
+298 | |     cfg: Res<DebugRenderTraceConfig>,
+299 | |     mut preview_cam: ResMut<PreviewCameraState>,
+300 | |     mut target: ResMut<PreviewRenderTarget>,
+...   |
+310 | |     mut sync_tick: Local<u64>,
+311 | | ) {
+    | |_^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: the borrowed expression implements the required traits
+  --> src\gui\editor\world_preview\registry_inspector.rs:45:9
+   |
+45 | / ...   &format!(
+46 | | ...       "Read-only view of canonical material and tag registries (host: {}). Edits belong in asset files or the desktop asset to...
+47 | | ...       host.label()
+48 | | ...   ),
+   | |_______^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#needless_borrows_for_generic_args
+   = note: `#[warn(clippy::needless_borrows_for_generic_args)]` on by default
+help: change this to
+   |
+45 ~         format!(
+46 +             "Read-only view of canonical material and tag registries (host: {}). Edits belong in asset files or the desktop asset tool.",
+47 +             host.label()
+48 ~         ),
+   |
+
+warning: the borrowed expression implements the required traits
+  --> src\gui\editor\world_preview\registry_inspector.rs:57:13
+   |
+57 | /             &format!(
+58 | |                 "Interchange: {} | {}",
+59 | |                 material_path.display(),
+60 | |                 tag_path.display()
+61 | |             ),
+   | |_____________^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#needless_borrows_for_generic_args
+help: change this to
+   |
+57 ~             format!(
+58 +                 "Interchange: {} | {}",
+59 +                 material_path.display(),
+60 +                 tag_path.display()
+61 ~             ),
+   |
+
+warning: very complex type used. Consider factoring parts into `type` definitions
+  --> src\gui\editor\world_preview\render_raster.rs:38:17
+   |
+38 |       tile_query: Query<
+   |  _________________^
+39 | |         'w,
+40 | |         's,
+...  |
+49 | |         With<TileMarker>,
+50 | |     >,
+   | |_____^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#type_complexity
+
+warning: very complex type used. Consider factoring parts into `type` definitions
+  --> src\gui\editor\world_preview\render_raster.rs:54:27
+   |
+54 |       chunk_ecology_bundle: Query<
+   |  ___________________________^
+55 | |         'w,
+56 | |         's,
+...  |
+65 | |         ),
+66 | |     >,
+   | |_____^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#type_complexity
+
+warning: this function has too many arguments (16/7)
+   --> src\gui\editor\world_preview\render_raster.rs:128:1
+    |
+128 | / pub fn update_world_preview_texture(
+129 | |     mut targets: WorldPreviewRasterImageTargets,
+130 | |     world_preview_ui: Res<super::WorldPreviewUiState>,
+131 | |     map_views: Res<MapViewInstances>,
+...   |
+144 | |     mut governance: PreviewRasterGovernance,
+145 | | ) {
+    | |_^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: called `.as_ref().map(|r| &**r)` on an `Option` value
+   --> src\gui\editor\world_preview\render_raster.rs:296:19
+    |
+296 |     let macro_r = macro_region_raster.as_ref().map(|r| &**r);
+    |                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: consider using as_deref: `macro_region_raster.as_deref()`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#option_as_ref_deref
+    = note: `#[warn(clippy::option_as_ref_deref)]` on by default
+
+warning: this function has too many arguments (11/7)
+   --> src\gui\editor\world_preview\texture_cache.rs:130:1
+    |
+130 | / pub fn present_world_preview_gpu_swap(
+131 | |     preview_ready: Res<super::preview_readiness::WorldPreviewReady>,
+132 | |     mut swap: ResMut<crate::gui::SwapImageBuffers>,
+133 | |     mut preview_tex: ResMut<WorldPreviewTexture>,
+...   |
+141 | |     mut lifecycle_signals: ResMut<super::preview_lifecycle::WorldPreviewLifecycleSignals>,
+142 | | ) {
+    | |_^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: this function has too many arguments (9/7)
+   --> src\gui\editor\world_preview\texture_cache.rs:210:1
+    |
+210 | / pub fn apply_world_preview_gpu_resize_request(
+211 | |     cfg: Res<DebugRenderTraceConfig>,
+212 | |     frame: Res<FrameCount>,
+213 | |     path: Res<PreviewPathAuthority>,
+...   |
+219 | |     mut registry: ResMut<WorldPreviewRenderTargetRegistry>,
+220 | | ) {
+    | |_^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: this function has too many arguments (8/7)
+  --> src\gui\editor\world_preview\ui_sidebar.rs:21:1
+   |
+21 | / pub fn world_preview_sidebar(
+22 | |     ui: &mut egui::Ui,
+23 | |     world_gen_ui_state: &mut WorldGenUiState,
+24 | |     world_gen_params: &mut WorldGenParams,
+...  |
+29 | |     spacing: &UiSpacing,
+30 | | ) {
+   | |_^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: manual implementation of `.is_multiple_of()`
+  --> src\gui\editor\world_preview\window.rs:88:16
+   |
+88 |             if n % 120 == 0 {
+   |                ^^^^^^^^^^^^ help: replace with: `n.is_multiple_of(120)`
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#manual_is_multiple_of
+
+warning: this expression creates a reference which is immediately dereferenced by the compiler
+   --> src\gui\editor\world_preview\window.rs:195:33
+    |
+195 | ...                   &handles,
+    |                       ^^^^^^^^ help: change this to: `handles`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#needless_borrow
+
+warning: this expression creates a reference which is immediately dereferenced by the compiler
+   --> src\gui\editor\world_preview\window.rs:196:33
+    |
+196 | ...                   &tag_assets,
+    |                       ^^^^^^^^^^^ help: change this to: `tag_assets`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#needless_borrow
+
+warning: this expression creates a reference which is immediately dereferenced by the compiler
+   --> src\gui\editor\world_preview\window.rs:197:33
+    |
+197 | ...                   &mobility_assets,
+    |                       ^^^^^^^^^^^^^^^^ help: change this to: `mobility_assets`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#needless_borrow
+
+warning: this expression creates a reference which is immediately dereferenced by the compiler
+   --> src\gui\editor\world_preview\window.rs:204:33
+    |
+204 | ...                   &handles,
+    |                       ^^^^^^^^ help: change this to: `handles`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#needless_borrow
+
+warning: this expression creates a reference which is immediately dereferenced by the compiler
+   --> src\gui\editor\world_preview\window.rs:205:33
+    |
+205 | ...                   &material_assets,
+    |                       ^^^^^^^^^^^^^^^^ help: change this to: `material_assets`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#needless_borrow
+
+warning: this expression creates a reference which is immediately dereferenced by the compiler
+   --> src\gui\editor\world_preview\window.rs:206:33
+    |
+206 | ...                   &tag_assets,
+    |                       ^^^^^^^^^^^ help: change this to: `tag_assets`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#needless_borrow
+
+warning: derefed type is same as origin
+   --> src\gui\editor\world_preview\window.rs:351:25
+    |
+351 |                         shell_diag.as_deref_mut(),
+    |                         ^^^^^^^^^^^^^^^^^^^^^^^^^ help: try: `shell_diag`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#needless_option_as_deref
+    = note: `#[warn(clippy::needless_option_as_deref)]` on by default
+
+warning: this `impl` can be derived
+   --> src\gui\editor\world_preview\mod.rs:141:1
+    |
+141 | / impl Default for WorldPreviewUiState {
+142 | |     fn default() -> Self {
+143 | |         Self {
+144 | |             window_open: false,
+...   |
+149 | | }
+    | |_^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#derivable_impls
+help: replace the manual implementation with a derive attribute
+    |
+135 + #[derive(Default)]
+136 | pub struct WorldPreviewUiState {
+    |
+
+warning: manually reimplementing `div_ceil`
+  --> src\io\save\apply.rs:56:22
+   |
+56 |         let height = (cell_count + width - 1) / width;
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: consider using `.div_ceil()`: `cell_count.div_ceil(width)`
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#manual_div_ceil
+
+warning: this function has a `#[must_use]` attribute with no message, but returns a type already marked as `#[must_use]`
+  --> src\io\save\dto.rs:23:1
+   |
+23 | pub fn encode_chunk_body_ron(body: &SavedChunkBody) -> Result<Vec<u8>, ron::Error> {
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = help: either add some descriptive message or remove the attribute
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#double_must_use
+
+warning: this function has a `#[must_use]` attribute with no message, but returns a type already marked as `#[must_use]`
+  --> src\io\save\dto.rs:28:1
+   |
+28 | pub fn decode_chunk_body_ron(bytes: &[u8]) -> Result<SavedChunkBody, String> {
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = help: either add some descriptive message or remove the attribute
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#double_must_use
+
+warning: this function has too many arguments (9/7)
+   --> src\io\save\pipeline.rs:299:1
+    |
+299 | / pub fn flush_dirty_chunk_save_queue(
+300 | |
+301 | |     settings: Res<WorldSaveBundleSettings>,
+...   |
+319 | | ) {
+    | |_^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: this `.filter_map(..)` can be written more simply using `.map(..)`
+  --> src\io\streaming\hydrate.rs:44:18
+   |
+44 |                   .filter_map(|body| {
+   |  __________________^
+45 | |                     let chunk = IVec2::new(body.chunk[0], body.chunk[1]);
+46 | |                     Some((chunk, body))
+47 | |                 })
+   | |__________________^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#unnecessary_filter_map
+   = note: `#[warn(clippy::unnecessary_filter_map)]` on by default
+
+warning: this `impl` can be derived
+   --> src\compute\compute_dispatch_graph.rs:93:1
+    |
+ 93 | / impl Default for ComputeDispatchGraph {
+ 94 | |     fn default() -> Self {
+ 95 | |         Self {
+ 96 | |             fire_influence: FireInfluenceDispatchNode::default(),
+...   |
+100 | | }
+    | |_^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#derivable_impls
+help: replace the manual implementation with a derive attribute
+    |
+ 88 + #[derive(Default)]
+ 89 | pub struct ComputeDispatchGraph {
+    |
+
+warning: this function has too many arguments (10/7)
+   --> src\compute\compute_dispatch_graph.rs:117:1
+    |
+117 | / pub fn run_compute_dispatch_graph(
+118 | |     time: Res<Time>,
+119 | |     policy: Res<RepresentationResult>,
+120 | |     lod: Res<WorldRepresentationFrame>,
+...   |
+127 | |     mut heat_field: ResMut<HeatDiffusionFieldBuffers>,
+128 | | ) {
+    | |_^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: this `impl` can be derived
+  --> src\render\debug_render_trace.rs:23:1
+   |
+23 | / impl Default for DebugRenderTraceConfig {
+24 | |     fn default() -> Self {
+25 | |         Self {
+26 | |             viewport_trace: false,
+...  |
+34 | | }
+   | |_^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#derivable_impls
+help: replace the manual implementation with a derive attribute
+   |
+12 + #[derive(Default)]
+13 | pub struct DebugRenderTraceConfig {
+   |
+
+warning: this function has too many arguments (10/7)
+  --> src\render\debug_viewport_overlay.rs:24:1
+   |
+24 | / pub fn draw_debug_viewport_overlay(
+25 | |     mut contexts: EguiContexts,
+26 | |     authority: Res<AuthoritativeViewport>,
+27 | |     sim: Res<SimulationMapViewport>,
+...  |
+34 | |     win: Query<&Window, With<PrimaryWindow>>,
+35 | | ) {
+   | |_^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: very complex type used. Consider factoring parts into `type` definitions
+   --> src\render\full_render_diagnostic.rs:452:14
+    |
+452 |       cameras: Query<(
+    |  ______________^
+453 | |         Entity,
+454 | |         &Camera,
+455 | |         &RenderTarget,
+...   |
+460 | |         Has<WeatherVfxCameraChild>,
+461 | |     )>,
+    | |______^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#type_complexity
+
+warning: this boolean expression can be simplified
+   --> src\render\full_render_diagnostic.rs:587:8
+    |
+587 |     if !surfaces.bind_barrier.pending.is_some() {
+    |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: try: `surfaces.bind_barrier.pending.is_none()`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#nonminimal_bool
+    = note: `#[warn(clippy::nonminimal_bool)]` on by default
+
+warning: this function has too many arguments (11/7)
+   --> src\render\full_render_diagnostic.rs:444:1
+    |
+444 | / pub(crate) fn emit_full_render_diagnostic_snapshot(
+445 | |     profile: Res<Stage5ReadinessProfile>,
+446 | |     mut gate: ResMut<FullRenderDiagnosticGate>,
+447 | |     mut summary: ResMut<FullRenderDiagnosticSummary>,
+...   |
+464 | |     weather_vfx: Query<Entity, With<WeatherVfxCameraChild>>,
+465 | | ) {
+    | |_^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: this function has too many arguments (10/7)
+   --> src\render\extraction\fire_emission_profile.rs:156:1
+    |
+156 | / pub fn infer_fire_emission_profile(
+157 | |     chunk: &Chunk,
+158 | |     fire: &ChunkSurfaceFire,
+159 | |     overlay: Option<&ChunkFireOverlay>,
+...   |
+166 | |     materialized: Option<&MaterializedChunk>,
+167 | | ) -> FireEmissionProfile {
+    | |________________________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: very complex type used. Consider factoring parts into `type` definitions
+   --> src\render\extraction\fire_visual_extract.rs:242:8
+    |
+242 |       q: Query<(
+    |  ________^
+243 | |         &Chunk,
+244 | |         &ChunkCellMatrix,
+245 | |         Option<&ChunkFireOverlay>,
+...   |
+252 | |         Option<&MaterializedChunk>,
+253 | |     )>,
+    | |______^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#type_complexity
+
+warning: this `impl` can be derived
+   --> src\render\extraction\render_projection_graph.rs:237:1
+    |
+237 | / impl Default for RenderProjectionGraph {
+238 | |     fn default() -> Self {
+239 | |         Self {
+240 | |             fire: FireProjectionNode::default(),
+...   |
+245 | | }
+    | |_^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#derivable_impls
+help: replace the manual implementation with a derive attribute
+    |
+231 + #[derive(Default)]
+232 | pub struct RenderProjectionGraph {
+    |
+
+warning: this function has too many arguments (10/7)
+   --> src\render\extraction\render_projection_graph.rs:272:1
+    |
+272 | / pub fn run_render_projection_graph(
+273 | |     policy: Res<RepresentationResult>,
+274 | |     lod: Res<WorldRepresentationFrame>,
+275 | |     lod_map: Res<WorldLodMap>,
+...   |
+282 | |     mut perf: Option<ResMut<crate::render::FramePerf>>,
+283 | | ) {
+    | |_^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: manual slice size calculation
+   --> src\render\gpu_buffer_registry.rs:278:28
+    |
+278 |         let upload_bytes = (data.len() * std::mem::size_of::<T>()) as u64;
+    |                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: try: `std::mem::size_of_val(data)`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#manual_slice_size_calculation
+    = note: `#[warn(clippy::manual_slice_size_calculation)]` on by default
+
+warning: manual slice size calculation
+   --> src\render\gpu_buffer_registry.rs:300:21
+    |
+300 |         let bytes = (data.len() * std::mem::size_of::<T>()) as u64;
+    |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: try: `std::mem::size_of_val(data)`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#manual_slice_size_calculation
+
+warning: clamp-like pattern without using clamp function
+   --> src\render\gpu_packed_formats.rs:115:42
+    |
+115 |             WorldLodBand::Operational => active.min(512).max(1),
+    |                                          ^^^^^^^^^^^^^^^^^^^^^^ help: replace with clamp: `active.clamp(1, 512)`
+    |
+    = note: clamp will panic if max < min
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#manual_clamp
+
+warning: clamp-like pattern without using clamp function
+   --> src\render\gpu_packed_formats.rs:116:40
+    |
+116 |             WorldLodBand::Strategic => active.min(128).max(1),
+    |                                        ^^^^^^^^^^^^^^^^^^^^^^ help: replace with clamp: `active.clamp(1, 128)`
+    |
+    = note: clamp will panic if max < min
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#manual_clamp
+
+warning: clamp-like pattern without using clamp function
+   --> src\render\gpu_packed_formats.rs:117:36
+    |
+117 |             WorldLodBand::Macro => active.min(32).max(1),
+    |                                    ^^^^^^^^^^^^^^^^^^^^^ help: replace with clamp: `active.clamp(1, 32)`
+    |
+    = note: clamp will panic if max < min
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#manual_clamp
+
+warning: doc list item without indentation
+ --> src\render\gpu_weather_fire_field.rs:4:5
+  |
+4 | //! [`RenderProjectionGraph`](crate::render::extraction::RenderProjectionGraph) (fire node) / [`SimChunkSmokeVisualExtract`](crate::r...
+  |     ^
+  |
+  = help: if this is supposed to be its own paragraph, add a blank line
+  = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#doc_lazy_continuation
+  = note: `#[warn(clippy::doc_lazy_continuation)]` on by default
+help: indent this line
+  |
+4 | //!   [`RenderProjectionGraph`](crate::render::extraction::RenderProjectionGraph) (fire node) / [`SimChunkSmokeVisualExtract`](crate::render::sim_visual_extract::SimChunkSmokeVisualExtract)
+  |     ++
+
+warning: this `impl` can be derived
+  --> src\render\gpu_weather_fire_field.rs:73:1
+   |
+73 | / impl Default for WeatherFireFieldDebugOverlay {
+74 | |     fn default() -> Self {
+75 | |         Self { show: false }
+76 | |     }
+77 | | }
+   | |_^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#derivable_impls
+help: replace the manual implementation with a derive attribute
+   |
+69 + #[derive(Default)]
+70 | pub struct WeatherFireFieldDebugOverlay {
+   |
+
+warning: clamp-like pattern without using clamp function
+   --> src\render\gpu_weather_fire_field.rs:213:22
+    |
+213 |     let alloc_rows = lod_cap.max(upload_rows.len()).min(HARD).max(1);
+    |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: replace with clamp: `lod_cap.max(upload_rows.len()).clamp(1, HARD)`
+    |
+    = note: clamp will panic if max < min
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#manual_clamp
+
+warning: this function has too many arguments (13/7)
+   --> src\render\gpu_weather_fire_field.rs:492:1
+    |
+492 | / fn prepare_field_bind_groups(
+493 | |     mut commands: Commands,
+494 | |     pipeline: Res<WeatherFireFieldPipeline>,
+495 | |     gpu_images: Res<RenderAssets<GpuImage>>,
+...   |
+505 | |     queue: Res<RenderQueue>,
+506 | | ) {
+    | |_^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: this expression creates a reference which is immediately dereferenced by the compiler
+   --> src\render\light.rs:173:31
+    |
+173 |         let s = score_request(&r, camera_pos);
+    |                               ^^ help: change this to: `r`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#needless_borrow
+
+warning: this `impl` can be derived
+  --> src\render\fire_chunk_runtime.rs:68:1
+   |
+68 | / impl Default for FireSimulationSnapshot {
+69 | |     fn default() -> Self {
+70 | |         Self {
+71 | |             stamp: SimStepStamp::default(),
+...  |
+76 | | }
+   | |_^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#derivable_impls
+help: replace the manual implementation with a derive attribute
+   |
+62 + #[derive(Default)]
+63 | pub struct FireSimulationSnapshot {
+   |
+
+warning: this function has too many arguments (8/7)
+   --> src\render\fire_view_extract.rs:215:1
+    |
+215 | / pub fn build_fire_visual_frames_by_view(
+216 | |     sim: Res<FireSimulationSnapshot>,
+217 | |     vis: Res<VisibleFireChunkSet>,
+218 | |     lod: Res<FireChunkLodState>,
+...   |
+223 | |     mut out: ResMut<FireVisualFramesByView>,
+224 | | ) {
+    | |_^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: this `impl` can be derived
+   --> src\render\tile_world_fallback.rs:116:1
+    |
+116 | / impl Default for TileWorldFallbackChunkGrid {
+117 | |     fn default() -> Self {
+118 | |         Self {
+119 | |             chunks_x: 0,
+...   |
+124 | | }
+    | |_^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#derivable_impls
+help: replace the manual implementation with a derive attribute
+    |
+110 + #[derive(Default)]
+111 | pub struct TileWorldFallbackChunkGrid {
+    |
+
+warning: very complex type used. Consider factoring parts into `type` definitions
+   --> src\render\tile_world_fallback.rs:206:14
+    |
+206 |       queries: &mut ParamSet<(
+    |  ______________^
+207 | |         Query<(
+208 | |             &Transform,
+209 | |             &TerrainType,
+...   |
+215 | |         Query<(&Chunk, &ChunkCellMatrix)>,
+216 | |     )>,
+    | |______^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#type_complexity
+
+warning: this function has too many arguments (8/7)
+   --> src\render\tile_world_fallback.rs:345:1
+    |
+345 | / fn focus_main_camera_on_world_params(
+346 | |     mut cam: Query<&mut Transform, With<MainWorldCamera>>,
+347 | |     params: Res<WorldGenParams>,
+348 | |     test_scene: Option<Res<ActiveTestScene>>,
+...   |
+353 | |     profile: Res<Stage5ReadinessProfile>,
+354 | | ) {
+    | |_^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: this function has too many arguments (11/7)
+   --> src\render\tile_world_fallback.rs:516:1
+    |
+516 | / fn mark_tile_world_fallback_dirty_on_changes(
+517 | |     mut dirty: ResMut<TileWorldFallbackRasterDirty>,
+518 | |     mut raster_ctrl: ResMut<TileWorldFallbackRasterCtrl>,
+519 | |     added_tiles: Query<&Transform, Added<TileMarker>>,
+...   |
+527 | |     mut last_overlay_revision: Local<u64>,
+528 | | ) {
+    | |_^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: casting to the same type is unnecessary (`i32` -> `i32`)
+   --> src\render\tile_world_fallback.rs:550:55
+    |
+550 |                 let tx = chunk_coord.x.saturating_mul(chunk_tiles as i32).max(0) as u32;
+    |                                                       ^^^^^^^^^^^^^^^^^^ help: try: `chunk_tiles`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#unnecessary_cast
+
+warning: casting to the same type is unnecessary (`i32` -> `i32`)
+   --> src\render\tile_world_fallback.rs:551:55
+    |
+551 |                 let tz = chunk_coord.y.saturating_mul(chunk_tiles as i32).max(0) as u32;
+    |                                                       ^^^^^^^^^^^^^^^^^^ help: try: `chunk_tiles`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#unnecessary_cast
+
+warning: this function has too many arguments (18/7)
+   --> src\render\tile_world_fallback.rs:562:1
+    |
+562 | / fn raster_tile_fallback_subregion(
+563 | |     images: &mut Assets<Image>,
+564 | |     handle: &Handle<Image>,
+565 | |     tex_w: usize,
+...   |
+580 | |     fire_heat_visibility_boost: f32,
+581 | | ) {
+    | |_^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: very complex type used. Consider factoring parts into `type` definitions
+   --> src\render\tile_world_fallback.rs:625:18
+    |
+625 |       mut queries: ParamSet<(
+    |  __________________^
+626 | |         Query<(
+627 | |             &Transform,
+628 | |             &TerrainType,
+...   |
+634 | |         Query<(&Chunk, &ChunkCellMatrix)>,
+635 | |     )>,
+    | |______^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#type_complexity
+
+warning: this function has too many arguments (13/7)
+   --> src\render\tile_world_fallback.rs:618:1
+    |
+618 | / fn tile_world_fallback_rasterize(
+619 | |     mut images: ResMut<Assets<Image>>,
+620 | |     state: Res<TileWorldFallbackState>,
+621 | |     handles: Res<TerrainRegistriesHandles>,
+...   |
+641 | |     cadence: Option<Res<crate::gui::VisualCadence>>,
+642 | | ) {
+    | |_^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: this expression creates a reference which is immediately dereferenced by the compiler
+   --> src\render\tile_world_fallback.rs:938:13
+    |
+938 |             &palette,
+    |             ^^^^^^^^ help: change this to: `palette`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#needless_borrow
+
+warning: manual implementation of `.is_multiple_of()`
+   --> src\render\gpu_particles.rs:194:16
+    |
+194 |             if *last_trace % 30 == 0 {
+    |                ^^^^^^^^^^^^^^^^^^^^^ help: replace with: `(*last_trace).is_multiple_of(30)`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#manual_is_multiple_of
+
+warning: this `impl` can be derived
+  --> src\render\gpu_particle_draw.rs:93:1
+   |
+93 | / impl Default for WorldFireParticleDrawNode {
+94 | |     fn default() -> Self {
+95 | |         Self { ready: false }
+96 | |     }
+97 | | }
+   | |_^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#derivable_impls
+help: replace the manual implementation with a derive attribute
+   |
+89 + #[derive(Default)]
+90 | struct WorldFireParticleDrawNode {
+   |
+
+warning: this function has too many arguments (10/7)
+   --> src\render\gpu_particle_draw.rs:215:1
+    |
+215 | / fn prepare_world_fire_particle_draw_bind_group(
+216 | |     pipeline: Res<WorldFireParticleDrawPipeline>,
+217 | |     mut registry: ResMut<GPUBufferRegistry>,
+218 | |     mut bind_registry: ResMut<GPUBindGroupRegistry>,
+...   |
+225 | |     storage: Option<Res<WorldFireParticleGpuStorage>>,
+226 | | ) {
+    | |_^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: this function has too many arguments (8/7)
+   --> src\render\visual_agreement.rs:138:1
+    |
+138 | / pub fn record_visual_agreement_frame(
+139 | |     fire_by_view: Res<FireVisualFramesByView>,
+140 | |     sim: Res<FireSimulationSnapshot>,
+141 | |     shared: Res<SharedOverlayFieldBuffers>,
+...   |
+146 | |     mut overlay_debug: ResMut<OverlayAgreementDebug>,
+147 | | ) {
+    | |_^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: derefed type is same as origin
+   --> src\render\visual_agreement.rs:183:26
+    |
+183 |     if let Some(graph) = projection.as_deref() {
+    |                          ^^^^^^^^^^^^^^^^^^^^^ help: try: `projection`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#needless_option_as_deref
+
+warning: derefed type is same as origin
+   --> src\render\visual_agreement.rs:191:26
+    |
+191 |     if let Some(probe) = preview_probe.as_deref() {
+    |                          ^^^^^^^^^^^^^^^^^^^^^^^^ help: try: `preview_probe`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#needless_option_as_deref
+
+warning: this `if` statement can be collapsed
+   --> src\render\visual_agreement.rs:233:5
+    |
+233 | /     if projection.is_some() {
+234 | |         if agreement.projected_fire_heat_hash != agreement.fire_heat_hash {
+235 | |             agreement.mismatch_count = agreement.mismatch_count.wrapping_add(1);
+236 | |             warn!(
+...   |
+241 | |     }
+    | |_____^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#collapsible_if
+help: collapse nested if block
+    |
+233 ~     if projection.is_some()
+234 ~         && agreement.projected_fire_heat_hash != agreement.fire_heat_hash {
+235 |             agreement.mismatch_count = agreement.mismatch_count.wrapping_add(1);
+...
+239 |             );
+240 ~         }
+    |
+
+warning: derefed type is same as origin
+   --> src\render\visual_agreement.rs:243:26
+    |
+243 |     if let Some(probe) = preview_probe.as_deref() {
+    |                          ^^^^^^^^^^^^^^^^^^^^^^^^ help: try: `preview_probe`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#needless_option_as_deref
+
+warning: field assignment outside of initializer for an instance created with Default::default()
+  --> src\render\vt_spatial_invariants.rs:16:5
+   |
+16 |     row.chunk_xy_heat_lum = Vec4::new(chunk.x as f32, chunk.y as f32, heat, 1.0);
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+note: consider initializing the variable with `render::sim_visual_extract::FireVisualGpuInstance { chunk_xy_heat_lum: Vec4::new(chunk.x as f32, chunk.y as f32, heat, 1.0), ..Default::default() }` and removing relevant reassignments
+  --> src\render\vt_spatial_invariants.rs:15:5
+   |
+15 |     let mut row = FireVisualGpuInstance::default();
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#field_reassign_with_default
+
+warning: deref which would be done by auto-deref
+   --> src\render\stage5_full_app_harness.rs:440:60
+    |
+440 |                 .map(|b| stage5_finish_todo_board_snapshot(&**b)),
+    |                                                            ^^^^ help: try: `b`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#explicit_auto_deref
+
+warning: this function has too many arguments (8/7)
+   --> src\render\stage5_full_app_harness.rs:695:1
+    |
+695 | / pub(crate) fn finalize_visual_full_app_live_probe(
+696 | |     launch: Option<Res<crate::engine::EngineLaunchArgs>>,
+697 | |     profile: Res<Stage5ReadinessProfile>,
+698 | |     report: Res<AppStage5ReadinessReport>,
+...   |
+703 | |     mut state: Local<VisualProbeFinalizeState>,
+704 | | ) {
+    | |_^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: manual implementation of `.is_multiple_of()`
+   --> src\render\stage5_readiness.rs:156:12
+    |
+156 |         || inv % READINESS_FULL_APP_SUCCESS_LOG_INTERVAL == 0
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: replace with: `inv.is_multiple_of(READINESS_FULL_APP_SUCCESS_LOG_INTERVAL)`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#manual_is_multiple_of
+
+warning: using `clone` on type `Stage5ReadinessProfile` which implements the `Copy` trait
+   --> src\render\stage5_readiness.rs:162:19
+    |
+162 |     let profile = world.resource::<Stage5ReadinessProfile>().clone();
+    |                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: try dereferencing it: `*world.resource::<Stage5ReadinessProfile>()`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#clone_on_copy
+    = note: `#[warn(clippy::clone_on_copy)]` on by default
+
+warning: redundant closure
+   --> src\render\stage5_readiness.rs:382:23
+    |
+382 |             graph.map(|g| projection_graph_runtime_order_snapshot(g));
+    |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: replace the closure with the function itself: `projection_graph_runtime_order_snapshot`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#redundant_closure
+    = note: `#[warn(clippy::redundant_closure)]` on by default
+
+warning: this function has too many arguments (15/7)
+   --> src\render\stage5_readiness.rs:551:5
+    |
+551 | /     fn capture(
+552 | |         policy: Option<&RepresentationResult>,
+553 | |         world: Option<&WorldRepresentationFrame>,
+554 | |         graph: Option<&RenderProjectionGraph>,
+...   |
+566 | |         fire: Option<&FireSimulationSnapshot>,
+567 | |     ) -> Self {
+    | |_____________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: manual implementation of `.is_multiple_of()`
+   --> src\render\stage5_readiness.rs:812:8
+    |
+812 |     if *tick % 30 == 0 {
+    |        ^^^^^^^^^^^^^^^ help: replace with: `(*tick).is_multiple_of(30)`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#manual_is_multiple_of
+
+warning: field assignment outside of initializer for an instance created with Default::default()
+  --> src\render\vt_ci_matrix.rs:86:5
+   |
+86 |     row.chunk_xy_heat_lum = Vec4::new(chunk.x as f32, chunk.y as f32, heat, 1.0);
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+note: consider initializing the variable with `render::sim_visual_extract::FireVisualGpuInstance { chunk_xy_heat_lum: Vec4::new(chunk.x as f32, chunk.y as f32, heat, 1.0), world_xyz_radius: Vec4::new(chunk.x as f32 * 64.0, chunk.y as f32 * 64.0, 0.0, 32.0), smoke_ember_vis_priority: Vec4::new(0.1, ember, 0.0, 1.0), ..Default::default() }` and removing relevant reassignments
+  --> src\render\vt_ci_matrix.rs:85:5
+   |
+85 |     let mut row = FireVisualGpuInstance::default();
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#field_reassign_with_default
+
+warning: field assignment outside of initializer for an instance created with Default::default()
+   --> src\render\vt_ci_matrix.rs:119:5
+    |
+119 |     shared.stamp = stamp;
+    |     ^^^^^^^^^^^^^^^^^^^^^
+    |
+note: consider initializing the variable with `render::overlay_field_buffers::SharedOverlayFieldBuffers { stamp: stamp, ..Default::default() }` and removing relevant reassignments
+   --> src\render\vt_ci_matrix.rs:118:5
+    |
+118 |     let mut shared = SharedOverlayFieldBuffers::default();
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#field_reassign_with_default
+
+warning: field assignment outside of initializer for an instance created with Default::default()
+   --> src\render\vt_ci_matrix.rs:131:5
+    |
+131 | /     lod.bands = WorldLodBands {
+132 | |         global: WorldLodBand::LocalTactical,
+133 | |     };
+    | |______^
+    |
+note: consider initializing the variable with `gui::world_representation::WorldRepresentationFrame { bands: WorldLodBands {
+              global: WorldLodBand::LocalTactical,
+          }, resolution: crate::gui::resolution_for_band(WorldLodBand::LocalTactical), ..Default::default() }` and removing relevant reassignments
+   --> src\render\vt_ci_matrix.rs:130:5
+    |
+130 |     let mut lod = WorldRepresentationFrame::default();
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#field_reassign_with_default
+
+warning: this function has too many arguments (8/7)
+   --> src\render\vt_ci_matrix.rs:196:1
+    |
+196 | / pub fn build_live_vt4_scenario(
+197 | |     fire: &FireVisualFrame,
+198 | |     sim: &FireSimulationSnapshot,
+199 | |     shared: &SharedOverlayFieldBuffers,
+...   |
+204 | |     fence: &CommittedVisualSnapshotFence,
+205 | | ) -> Vt4CiScenario {
+    | |__________________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: this function has too many arguments (11/7)
+   --> src\render\vt_ci_matrix.rs:314:1
+    |
+314 | / pub fn record_vt_ci_matrix_live(
+315 | |     fire_by_view: Res<FireVisualFramesByView>,
+316 | |     sim: Res<FireSimulationSnapshot>,
+317 | |     shared: Res<SharedOverlayFieldBuffers>,
+...   |
+325 | |     mut live: ResMut<VtCiMatrixLiveReport>,
+326 | | ) {
+    | |_^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: field assignment outside of initializer for an instance created with Default::default()
+   --> src\render\vt_ci_matrix.rs:387:9
+    |
+387 | /         row.chunk_xy_heat_lum = Vec4::new(
+388 | |             inst.world_xyz_heat.x / 64.0,
+389 | |             inst.world_xyz_heat.y / 64.0,
+390 | |             inst.world_xyz_heat.w,
+391 | |             1.0,
+392 | |         );
+    | |__________^
+    |
+note: consider initializing the variable with `render::sim_visual_extract::FireVisualGpuInstance { chunk_xy_heat_lum: Vec4::new(
+                  inst.world_xyz_heat.x / 64.0,
+                  inst.world_xyz_heat.y / 64.0,
+                  inst.world_xyz_heat.w,
+                  1.0,
+              ), ..Default::default() }` and removing relevant reassignments
+   --> src\render\vt_ci_matrix.rs:386:9
+    |
+386 |         let mut row = FireVisualGpuInstance::default();
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#field_reassign_with_default
+
+warning: this function has too many arguments (8/7)
+   --> src\render\viewport_pipeline.rs:105:1
+    |
+105 | / fn resolve_preview_viewport_requests(
+106 | |     pending_layout: Res<crate::gui::hud::PendingHudLayoutCommit>,
+107 | |     mut authority: ResMut<ViewportAuthority>,
+108 | |     windows: Query<&Window, With<PrimaryWindow>>,
+...   |
+113 | |     mut log_cache: ResMut<ViewportResolveLogCache>,
+114 | | ) {
+    | |_^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: this `if` has identical blocks
+   --> src\render\viewport_pipeline.rs:143:27
+    |
+143 |       let physical = if gpu {
+    |  ___________________________^
+144 | |         UVec2::new(
+145 | |             logical_size.x.round().max(1.0) as u32,
+146 | |             logical_size.y.round().max(1.0) as u32,
+147 | |         )
+148 | |     } else if req.world_extent == UVec2::ZERO {
+    | |_____^
+    |
+note: same as this
+   --> src\render\viewport_pipeline.rs:148:47
+    |
+148 |       } else if req.world_extent == UVec2::ZERO {
+    |  _______________________________________________^
+149 | |         UVec2::new(
+150 | |             logical_size.x.round().max(1.0) as u32,
+151 | |             logical_size.y.round().max(1.0) as u32,
+152 | |         )
+153 | |     } else {
+    | |_____^
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#if_same_then_else
+
+warning: this `impl` can be derived
+   --> src\systems\agents\permissions.rs:109:1
+    |
+109 | / impl Default for AgentPermissions {
+110 | |     fn default() -> Self {
+111 | |         Self {
+112 | |             permissions: HashMap::new(),
+...   |
+117 | | }
+    | |_^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#derivable_impls
+help: replace the manual implementation with a derive attribute
+    |
+103 + #[derive(Default)]
+104 | pub struct AgentPermissions {
+    |
+
+warning: use of `or_insert_with` to construct default value
+   --> src\systems\agents\permissions.rs:247:18
+    |
+247 |                 .or_insert_with(Vec::new)
+    |                  ^^^^^^^^^^^^^^^^^^^^^^^^ help: try: `or_default()`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#unwrap_or_default
+    = note: `#[warn(clippy::unwrap_or_default)]` on by default
+
+warning: this function has too many arguments (9/7)
+   --> src\systems\agents\permissions.rs:253:5
+    |
+253 | /     pub fn delegate_permission(
+254 | |         &mut self, 
+255 | |         to_agent_id: EntityId, 
+256 | |         domain: PermissionDomain, 
+...   |
+262 | |         condition: Option<PermissionCondition>,
+263 | |     ) -> Option<PermissionGrant> {
+    | |________________________________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: use of `or_insert_with` to construct default value
+   --> src\systems\agents\permissions.rs:292:14
+    |
+292 |             .or_insert_with(Vec::new)
+    |              ^^^^^^^^^^^^^^^^^^^^^^^^ help: try: `or_default()`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#unwrap_or_default
+
+warning: this `impl` can be derived
+  --> src\systems\agents\agent_manager.rs:19:1
+   |
+19 | / impl Default for AgentManager {
+20 | |     fn default() -> Self {
+21 | |         Self {
+22 | |             agents: HashMap::new(),
+...  |
+27 | | }
+   | |_^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#derivable_impls
+help: replace the manual implementation with a derive attribute
+   |
+13 + #[derive(Default)]
+14 | pub struct AgentManager {
+   |
+
+warning: this function has too many arguments (8/7)
+   --> src\systems\atmosphere\incremental_schedule.rs:424:1
+    |
+424 | / pub fn atmosphere_reconcile_tick(
+425 | |     time: Res<Time>,
+426 | |     schedule: Res<AtmosphereIncrementalSchedule>,
+427 | |     fence: Option<Res<crate::render::CommittedVisualSnapshotFence>>,
+...   |
+432 | |     mut full_acc: Local<f32>,
+433 | | ) {
+    | |_^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: this function has too many arguments (12/7)
+  --> src\systems\atmosphere\gpu_field_bridge.rs:80:1
+   |
+80 | / fn sync_gpu_weather_fire_uniforms_from_extract(
+81 | |     time: Res<Time>,
+82 | |     cadence: Option<Res<crate::gui::VisualCadence>>,
+83 | |     mut cadence_acc: Local<f32>,
+...  |
+92 | |     uniforms: Option<ResMut<WeatherFireFieldUniforms>>,
+93 | | ) {
+   | |_^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: struct `AtmosphereField` has a public `len` method, but no `is_empty` method
+  --> src\systems\atmosphere\field.rs:40:5
+   |
+40 |     pub fn len(&self) -> usize {
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#len_without_is_empty
+   = note: `#[warn(clippy::len_without_is_empty)]` on by default
+
+warning: this `impl` can be derived
+  --> src\systems\atmosphere\render_layers.rs:24:1
+   |
+24 | / impl Default for AtmosphereRenderLayers {
+25 | |     fn default() -> Self {
+26 | |         Self {
+27 | |             ground_haze: false,
+...  |
+33 | | }
+   | |_^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#derivable_impls
+help: replace the manual implementation with a derive attribute
+   |
+17 + #[derive(Default)]
+18 | pub struct AtmosphereRenderLayers {
+   |
+
+warning: this `impl` can be derived
+  --> src\systems\chunk_sim_lod.rs:34:1
+   |
+34 | / impl Default for ChunkSimLod {
+35 | |     fn default() -> Self {
+36 | |         ChunkSimLod::Normal
+37 | |     }
+38 | | }
+   | |_^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#derivable_impls
+help: replace the manual implementation with a derive attribute and mark the default variant
+   |
+15 + #[derive(Default)]
+16 | pub enum ChunkSimLod {
+17 |     /// Low fuel / calm weather ÔÇö cheaper ticks.
+18 |     Dormant,
+19 ~     #[default]
+20 ~     Normal,
+   |
+
+warning: very complex type used. Consider factoring parts into `type` definitions
+  --> src\systems\chunk_sim_lod.rs:51:12
+   |
+51 |       mut q: Query<(
+   |  ____________^
+52 | |         Option<&ChunkCellMatrix>,
+53 | |         Option<&ChunkSurfaceFire>,
+54 | |         Option<&ChunkWeather>,
+55 | |         &mut ChunkSimLod,
+56 | |     )>,
+   | |______^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#type_complexity
+
+warning: this `map_or` can be simplified
+  --> src\systems\chunk_sim_lod.rs:75:28
+   |
+75 |         let calm_surface = mean_m.map_or(true, |m| m > 0.28);
+   |                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#unnecessary_map_or
+help: use `is_none_or` instead
+   |
+75 -         let calm_surface = mean_m.map_or(true, |m| m > 0.28);
+75 +         let calm_surface = mean_m.is_none_or(|m| m > 0.28);
+   |
+
+warning: very complex type used. Consider factoring parts into `type` definitions
+   --> src\systems\ecology\chunk_ecology.rs:170:12
+    |
+170 |       mut q: Query<(
+    |  ____________^
+171 | |         Option<&ChunkCellMatrix>,
+172 | |         &ChunkWeather,
+173 | |         &ChunkSimLod,
+174 | |         Option<&ChunkSurfaceFire>,
+175 | |         &mut ChunkEcology,
+176 | |     )>,
+    | |______^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#type_complexity
+
+warning: clamp-like pattern without using clamp function
+   --> src\systems\ecology\vegetation_field.rs:130:26
+    |
+130 |     let dryness_target = (0.62 - moisture_signal).max(0.0).min(1.0)
+    |                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: replace with clamp: `(0.62 - moisture_signal).clamp(0.0, 1.0)`
+    |
+    = note: clamp will panic if max < min, min.is_nan(), or max.is_nan()
+    = note: clamp returns NaN if the input is NaN
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#manual_clamp
+
+warning: very complex type used. Consider factoring parts into `type` definitions
+   --> src\systems\ecology\vegetation_field.rs:235:12
+    |
+235 |       mut q: Query<(
+    |  ____________^
+236 | |         Option<&ChunkCellMatrix>,
+237 | |         &ChunkEcology,
+238 | |         &ChunkWeather,
+...   |
+241 | |         &mut VegetationField,
+242 | |     )>,
+    | |______^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#type_complexity
+
+warning: very complex type used. Consider factoring parts into `type` definitions
+  --> src\systems\fire\chunk_fire_overlay.rs:24:8
+   |
+24 |     q: Query<(Entity, &ChunkCellMatrix), (With<Chunk>, Without<ChunkFireOverlay>)>,
+   |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#type_complexity
+
+warning: very complex type used. Consider factoring parts into `type` definitions
+  --> src\systems\fire\chunk_fire_overlay.rs:53:12
+   |
+53 |       mut q: Query<(
+   |  ____________^
+54 | |         Entity,
+55 | |         &ChunkCellMatrix,
+56 | |         &ChunkWeather,
+...  |
+63 | |         &mut ChunkEnvironmentDirty,
+64 | |     )>,
+   | |______^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#type_complexity
+
+warning: the loop variable `i` is used to index `scratch`
+   --> src\systems\fire\chunk_fire_overlay.rs:176:18
+    |
+176 |         for i in 0..n {
+    |                  ^^^^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#needless_range_loop
+    = note: `#[warn(clippy::needless_range_loop)]` on by default
+help: consider using an iterator and enumerate()
+    |
+176 -         for i in 0..n {
+176 +         for (i, <item>) in scratch.iter().enumerate().take(n) {
+    |
+
+warning: very complex type used. Consider factoring parts into `type` definitions
+  --> src\systems\fire\chunk_smoke_field.rs:46:12
+   |
+46 |       mut q: Query<(
+   |  ____________^
+47 | |         &ChunkSurfaceFire,
+48 | |         Option<&ChunkFuelProfile>,
+49 | |         Option<&ChunkSimLod>,
+50 | |         &ChunkWeather,
+51 | |         &mut ChunkSmokeField,
+52 | |     )>,
+   | |______^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#type_complexity
+
+warning: very complex type used. Consider factoring parts into `type` definitions
+  --> src\systems\fire\chunk_surface_fire.rs:46:16
+   |
+46 |       mut query: Query<
+   |  ________________^
+47 | |         (
+48 | |             &ChunkCellMatrix,
+49 | |             &ChunkWeather,
+...  |
+56 | |         Without<ChunkFireOverlay>,
+57 | |     >,
+   | |_____^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#type_complexity
+
+warning: very complex type used. Consider factoring parts into `type` definitions
+  --> src\systems\fire\fire_light_emission.rs:33:8
+   |
+33 |       q: Query<(
+   |  ________^
+34 | |         Entity,
+35 | |         &Chunk,
+36 | |         &ChunkSurfaceFire,
+37 | |         Option<&ChunkEcology>,
+38 | |         Option<&FireLightEmission>,
+39 | |     )>,
+   | |______^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#type_complexity
+
+warning: this function has too many arguments (10/7)
+   --> src\systems\terrain\material_plugin.rs:283:1
+    |
+283 | / pub(crate) fn rebuild_dirty_chunks(
+284 | |     handles: Res<TerrainRegistriesHandles>,
+285 | |     family_assets: Res<Assets<TerrainFamilyRegistry>>,
+286 | |     materials: Res<Assets<MaterialRegistry>>,
+...   |
+302 | |     >,
+303 | | ) {
+    | |_^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: this function has too many arguments (9/7)
+   --> src\systems\terrain\material_plugin.rs:374:1
+    |
+374 | / pub fn materialize_chunks(
+375 | |     handles: Res<TerrainRegistriesHandles>,
+376 | |     family_assets: Res<Assets<TerrainFamilyRegistry>>,
+377 | |     materials: Res<Assets<MaterialRegistry>>,
+...   |
+386 | |     >,
+387 | | ) {
+    | |_^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: use of `default` to create a unit struct
+   --> src\systems\terrain\material_plugin.rs:492:36
+    |
+492 |             .register_asset_loader(TerrainFamilyRegistryLoader::default())
+    |                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#default_constructed_unit_structs
+    = note: `#[warn(clippy::default_constructed_unit_structs)]` on by default
+help: remove this call to `default`
+    |
+492 -             .register_asset_loader(TerrainFamilyRegistryLoader::default())
+492 +             .register_asset_loader(TerrainFamilyRegistryLoader)
+    |
+
+warning: use of `default` to create a unit struct
+   --> src\systems\terrain\material_plugin.rs:495:36
+    |
+495 |             .register_asset_loader(MobilityProfileRegistryLoader::default())
+    |                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#default_constructed_unit_structs
+help: remove this call to `default`
+    |
+495 -             .register_asset_loader(MobilityProfileRegistryLoader::default())
+495 +             .register_asset_loader(MobilityProfileRegistryLoader)
+    |
+
+warning: use of `default` to create a unit struct
+   --> src\systems\terrain\material_plugin.rs:499:36
+    |
+499 |             .register_asset_loader(MaterialRegistryLoader::default())
+    |                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#default_constructed_unit_structs
+help: remove this call to `default`
+    |
+499 -             .register_asset_loader(MaterialRegistryLoader::default())
+499 +             .register_asset_loader(MaterialRegistryLoader)
+    |
+
+warning: use of `default` to create a unit struct
+   --> src\systems\terrain\material_plugin.rs:500:36
+    |
+500 |             .register_asset_loader(TagRegistryLoader::default())
+    |                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#default_constructed_unit_structs
+help: remove this call to `default`
+    |
+500 -             .register_asset_loader(TagRegistryLoader::default())
+500 +             .register_asset_loader(TagRegistryLoader)
+    |
+
+warning: use of `default` to create a unit struct
+   --> src\systems\terrain\material_plugin.rs:501:36
+    |
+501 |             .register_asset_loader(RuleSetLoader::default())
+    |                                    ^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#default_constructed_unit_structs
+help: remove this call to `default`
+    |
+501 -             .register_asset_loader(RuleSetLoader::default())
+501 +             .register_asset_loader(RuleSetLoader)
+    |
+
+warning: use of `default` to create a unit struct
+   --> src\systems\terrain\material_plugin.rs:502:36
+    |
+502 |             .register_asset_loader(WorldProfileLoader::default())
+    |                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#default_constructed_unit_structs
+help: remove this call to `default`
+    |
+502 -             .register_asset_loader(WorldProfileLoader::default())
+502 +             .register_asset_loader(WorldProfileLoader)
+    |
+
+warning: closure called just once immediately after it was declared
+   --> src\systems\weather\chunk_weather.rs:165:17
+    |
+165 |                 w.soil_moisture = lerp(w.soil_moisture, 0.38);
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#redundant_closure_call
+    = note: `#[warn(clippy::redundant_closure_call)]` on by default
+
+warning: this function has too many arguments (9/7)
+   --> src\systems\weather\weather_visual.rs:237:1
+    |
+237 | / fn tick_precip_particles(
+238 | |     cfg: Res<DebugRenderTraceConfig>,
+239 | |     time: Res<Time>,
+240 | |     settings: Res<WeatherVisualSettings>,
+...   |
+246 | |     mut last_trace: Local<u64>,
+247 | | ) {
+    | |_^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: manual implementation of `.is_multiple_of()`
+   --> src\systems\weather\weather_visual.rs:318:12
+    |
+318 |         if *last_trace % 30 == 0 {
+    |            ^^^^^^^^^^^^^^^^^^^^^ help: replace with: `(*last_trace).is_multiple_of(30)`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#manual_is_multiple_of
+
+warning: this `impl` can be derived
+  --> src\strategic\behavior_entities.rs:40:1
+   |
+40 | / impl Default for AgentMode {
+41 | |     fn default() -> Self {
+42 | |         Self::Free
+43 | |     }
+44 | | }
+   | |_^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#derivable_impls
+help: replace the manual implementation with a derive attribute and mark the default variant
+   |
+31 + #[derive(Default)]
+32 | pub enum AgentMode {
+33 |     /// Fully ECS + traits / fuzzy; no mission bias.
+34 ~     #[default]
+35 ~     Free,
+   |
+
+warning: manual implementation of `.is_multiple_of()`
+   --> src\strategic\behavior_fracture.rs:156:8
+    |
+156 |     if clock.tick % 5 != 0 && clock.tick != 0 {
+    |        ^^^^^^^^^^^^^^^^^^^ help: replace with: `!clock.tick.is_multiple_of(5)`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#manual_is_multiple_of
+
+warning: this `map_or` can be simplified
+   --> src\strategic\behavior_mission.rs:99:9
+    |
+ 99 | /         m.duration_ticks
+100 | |             .map_or(true, |d| m.ticks_elapsed < d)
+    | |__________________________________________________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#unnecessary_map_or
+help: use `is_none_or` instead
+    |
+100 -             .map_or(true, |d| m.ticks_elapsed < d)
+100 +             .is_none_or(|d| m.ticks_elapsed < d)
+    |
+
+warning: very complex type used. Consider factoring parts into `type` definitions
+  --> src\strategic\plugin.rs:84:12
+   |
+84 |       mut q: Query<
+   |  ____________^
+85 | |         (Entity, &ChunkDirty, &mut NetworkDirtyMask),
+86 | |         (
+87 | |             With<ChunkStrategicOverlay>,
+...  |
+90 | |         ),
+91 | |     >,
+   | |_____^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#type_complexity
+
+warning: manual implementation of `.is_multiple_of()`
+  --> src\strategic\schedule.rs:36:16
+   |
+36 |             && self.frame_counter % self.dormant_refresh_interval == 0
+   |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: replace with: `self.frame_counter.is_multiple_of(self.dormant_refresh_interval)`
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#manual_is_multiple_of
+
+warning: clamp-like pattern without using clamp function
+   --> src\strategic\sim.rs:438:18
+    |
+438 |     let slot_n = theater.active_faction_slots.min(MAX_STRATEGIC_FACTION_SLOTS).max(1);
+    |                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: replace with clamp: `theater.active_faction_slots.clamp(1, MAX_STRATEGIC_FACTION_SLOTS)`
+    |
+    = note: clamp will panic if max < min
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#manual_clamp
+
+warning: `0usize` is never greater than `MAX_STRATEGIC_FACTION_SLOTS.saturating_sub(1)` and has therefore no effect
+  --> src\strategic\site\overlays.rs:55:16
+   |
+55 |     let slot = 0usize.min(MAX_STRATEGIC_FACTION_SLOTS.saturating_sub(1));
+   |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: try: `0usize`
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#unnecessary_min_or_max
+   = note: `#[warn(clippy::unnecessary_min_or_max)]` on by default
+
+warning: method `next` can be confused for the standard trait method `std::iter::Iterator::next`
+  --> src\strategic\site\resources.rs:24:5
+   |
+24 | /     pub fn next(&mut self) -> SiteId {
+25 | |         self.0 = self.0.wrapping_add(1);
+26 | |         if self.0 == 0 {
+27 | |             self.0 = 1;
+28 | |         }
+29 | |         SiteId(self.0)
+30 | |     }
+   | |_____^
+   |
+   = help: consider implementing the trait `std::iter::Iterator` or choosing a less ambiguous method name
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#should_implement_trait
+   = note: `#[warn(clippy::should_implement_trait)]` on by default
+
+warning: this expression creates a reference which is immediately dereferenced by the compiler
+   --> src\strategic\site\systems.rs:126:21
+    |
+126 |                     &mut preview,
+    |                     ^^^^^^^^^^^^ help: change this to: `preview`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#needless_borrow
+
+warning: this returns a `Result<_, ()>`
+   --> src\strategic\mod.rs:349:5
+    |
+349 | /     pub fn set_faction_threat(
+350 | |         &mut self,
+351 | |         cell: usize,
+352 | |         faction_slot: usize,
+353 | |         value: f32,
+354 | |     ) -> Result<(), ()> {
+    | |_______________________^
+    |
+    = help: use a custom `Error` type instead
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#result_unit_err
+    = note: `#[warn(clippy::result_unit_err)]` on by default
+
+warning: this returns a `Result<_, ()>`
+   --> src\strategic\mod.rs:363:5
+    |
+363 | /     pub fn set_recon_confidence(
+364 | |         &mut self,
+365 | |         cell: usize,
+366 | |         faction_slot: usize,
+367 | |         value: f32,
+368 | |     ) -> Result<(), ()> {
+    | |_______________________^
+    |
+    = help: use a custom `Error` type instead
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#result_unit_err
+
+warning: this returns a `Result<_, ()>`
+   --> src\strategic\mod.rs:377:5
+    |
+377 | /     pub fn set_artillery_danger(
+378 | |         &mut self,
+379 | |         cell: usize,
+380 | |         faction_slot: usize,
+381 | |         value: f32,
+382 | |     ) -> Result<(), ()> {
+    | |_______________________^
+    |
+    = help: use a custom `Error` type instead
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#result_unit_err
+
+warning: you should consider adding a `Default` implementation for `GeoRegion`
+  --> src\terrain\world.rs:25:5
+   |
+25 | /     pub fn new() -> Self {
+26 | |         Self {
+27 | |             id: EntityId::default(),
+28 | |             center: Vec2::ZERO,
+...  |
+33 | |     }
+   | |_____^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#new_without_default
+   = note: `#[warn(clippy::new_without_default)]` on by default
+help: try adding this
+   |
+24 + impl Default for GeoRegion {
+25 +     fn default() -> Self {
+26 +         Self::new()
+27 +     }
+28 + }
+   |
+
+warning: the borrowed expression implements the required traits
+  --> src\terrain\material\registry.rs:38:18
+   |
+38 |             .get(&Self::dotted("sim", key))
+   |                  ^^^^^^^^^^^^^^^^^^^^^^^^^ help: change this to: `Self::dotted("sim", key)`
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#needless_borrows_for_generic_args
+
+warning: the borrowed expression implements the required traits
+  --> src\terrain\material\registry.rs:45:18
+   |
+45 |             .get(&Self::dotted("build", key))
+   |                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: change this to: `Self::dotted("build", key)`
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#needless_borrows_for_generic_args
+
+warning: the borrowed expression implements the required traits
+  --> src\terrain\material\registry.rs:52:18
+   |
+52 |             .get(&Self::dotted("warfare", key))
+   |                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: change this to: `Self::dotted("warfare", key)`
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#needless_borrows_for_generic_args
+
+warning: the borrowed expression implements the required traits
+  --> src\terrain\material\registry.rs:59:18
+   |
+59 |             .get(&Self::dotted("facts", key))
+   |                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: change this to: `Self::dotted("facts", key)`
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#needless_borrows_for_generic_args
+
+warning: the borrowed expression implements the required traits
+  --> src\terrain\material\registry.rs:66:18
+   |
+66 |             .get(&Self::dotted("facts", key))
+   |                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: change this to: `Self::dotted("facts", key)`
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#needless_borrows_for_generic_args
+
+warning: the following explicit lifetimes could be elided: 'a
+  --> src\terrain\material\registry.rs:96:36
+   |
+96 | pub fn family_default_material_def<'a>(
+   |                                    ^^
+97 |     registry: &'a MaterialRegistry,
+   |                ^^
+98 |     family: TerrainFamilyId,
+99 | ) -> Option<&'a MaterialDef> {
+   |              ^^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#needless_lifetimes
+   = note: `#[warn(clippy::needless_lifetimes)]` on by default
+help: elide the lifetimes
+   |
+96 ~ pub fn family_default_material_def(
+97 ~     registry: &MaterialRegistry,
+98 |     family: TerrainFamilyId,
+99 ~ ) -> Option<&MaterialDef> {
+   |
+
+warning: this `impl` can be derived
+  --> src\terrain\generation\chunk_worldgen_scheduler.rs:88:1
+   |
+88 | / impl Default for ChunkGenQueue {
+89 | |     fn default() -> Self {
+90 | |         Self {
+91 | |             heap: BinaryHeap::new(),
+...  |
+96 | | }
+   | |_^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#derivable_impls
+help: replace the manual implementation with a derive attribute
+   |
+82 + #[derive(Default)]
+83 | pub struct ChunkGenQueue {
+   |
+
+warning: consider using `sort_by_key`
+  --> src\terrain\generation\tile_chunk_map.rs:55:5
+   |
+55 |     out.sort_by(|a, b| (a.y, a.x).cmp(&(b.y, b.x)));
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#unnecessary_sort_by
+help: try
+   |
+55 -     out.sort_by(|a, b| (a.y, a.x).cmp(&(b.y, b.x)));
+55 +     out.sort_by_key(|a| (a.y, a.x));
+   |
+
+warning: casting to the same type is unnecessary (`usize` -> `usize`)
+  --> src\terrain\generation\passes\p4_hydrology.rs:48:43
+   |
+48 |             let flooded = hydro.lake_mask[i as usize]
+   |                                           ^^^^^^^^^^ help: try: `i`
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#unnecessary_cast
+
+warning: casting to the same type is unnecessary (`usize` -> `usize`)
+  --> src\terrain\generation\passes\p4_hydrology.rs:50:37
+   |
+50 |                 || hydro.river_mask[i as usize];
+   |                                     ^^^^^^^^^^ help: try: `i`
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#unnecessary_cast
+
+warning: casting to the same type is unnecessary (`usize` -> `usize`)
+  --> src\terrain\generation\passes\p4_hydrology.rs:69:43
+   |
+69 |             let eroded = hydro.river_mask[i as usize]
+   |                                           ^^^^^^^^^^ help: try: `i`
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#unnecessary_cast
+
+warning: casting to the same type is unnecessary (`usize` -> `usize`)
+  --> src\terrain\generation\passes\p4_hydrology.rs:74:38
+   |
+74 |                 && (hydro.river_mask[i as usize] || matrix.moisture[i] >= tuning.wetland_moist_threshold);
+   |                                      ^^^^^^^^^^ help: try: `i`
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#unnecessary_cast
+
+warning: consider using `sort_by_key`
+   --> src\terrain\generation\hydrology\flow.rs:407:9
+    |
+407 |         r.lakes.sort_by(|a, b| b.cells.len().cmp(&a.cells.len()));
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#unnecessary_sort_by
+help: try
+    |
+407 -         r.lakes.sort_by(|a, b| b.cells.len().cmp(&a.cells.len()));
+407 +         r.lakes.sort_by_key(|b| std::cmp::Reverse(b.cells.len()));
+    |
+
+warning: this function has too many arguments (9/7)
+   --> src\terrain\generation\terrain_noise.rs:174:1
+    |
+174 | / pub fn sample_height_field(
+175 | |     height_noise: &HeightNoise,
+176 | |     warp_noise: &Fbm<Perlin>,
+177 | |     detail_noise: &Fbm<Perlin>,
+...   |
+183 | |     tuning: &NoiseSamplingTuning,
+184 | | ) -> f32 {
+    | |________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: this function has too many arguments (8/7)
+   --> src\terrain\generation\world_generator_enhanced.rs:618:1
+    |
+618 | / fn world_gen_pipeline_tick(
+619 | |     mut commands: Commands,
+620 | |     params: Res<WorldGenParams>,
+621 | |     mut pending: ResMut<WorldGenPending>,
+...   |
+626 | |     mut last_debug: ResMut<WorldGenLastDebugReport>,
+627 | | ) {
+    | |_^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: manually reimplementing `div_ceil`
+   --> src\terrain\generation\world_gen_diagnostics.rs:160:26
+    |
+160 |     let stride_guess_x = (w + ow - 1) / ow;
+    |                          ^^^^^^^^^^^^^^^^^ help: consider using `.div_ceil()`: `w.div_ceil(ow)`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#manual_div_ceil
+
+warning: this function has too many arguments (17/7)
+   --> src\terrain\generation\world_gen_diagnostics.rs:187:1
+    |
+187 | / pub fn write_world_gen_debug_report(
+188 | |     phase: &str,
+189 | |     seed: u64,
+190 | |     num_regions: u32,
+...   |
+204 | |     hydro: Option<&HydrologyResult>,
+205 | | ) -> std::io::Result<(PathBuf, WorldGenDebugReport)> {
+    | |____________________________________________________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: field assignment outside of initializer for an instance created with Default::default()
+   --> src\dev\construction_round2_todos.rs:421:5
+    |
+421 |     board.status = vec![TodoStatus::Open; CONSTRUCTION_ROUND2_TODO_COUNT];
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+note: consider initializing the variable with `dev::construction_round2_todos::ConstructionRound2TodoBoard { status: vec![TodoStatus::Open; CONSTRUCTION_ROUND2_TODO_COUNT] }` and removing relevant reassignments
+   --> src\dev\construction_round2_todos.rs:419:5
+    |
+419 |     let mut board = ConstructionRound2TodoBoard::default();
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#field_reassign_with_default
+
+warning: field assignment outside of initializer for an instance created with Default::default()
+   --> src\dev\construction_round3_todos.rs:354:5
+    |
+354 |     board.status = vec![TodoStatus::Open; CONSTRUCTION_ROUND3_TODO_COUNT];
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+note: consider initializing the variable with `dev::construction_round3_todos::ConstructionRound3TodoBoard { status: vec![TodoStatus::Open; CONSTRUCTION_ROUND3_TODO_COUNT] }` and removing relevant reassignments
+   --> src\dev\construction_round3_todos.rs:353:5
+    |
+353 |     let mut board = ConstructionRound3TodoBoard::default();
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#field_reassign_with_default
+
+warning: field assignment outside of initializer for an instance created with Default::default()
+   --> src\dev\construction_operational_todos.rs:139:5
+    |
+139 |     board.status = vec![TodoStatus::Open; CONSTRUCTION_OPERATIONAL_TODO_COUNT];
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+note: consider initializing the variable with `dev::construction_operational_todos::ConstructionOperationalTodoBoard { status: vec![TodoStatus::Open; CONSTRUCTION_OPERATIONAL_TODO_COUNT] }` and removing relevant reassignments
+   --> src\dev\construction_operational_todos.rs:138:5
+    |
+138 |     let mut board = ConstructionOperationalTodoBoard::default();
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#field_reassign_with_default
+
+warning: field assignment outside of initializer for an instance created with Default::default()
+   --> src\dev\industrial_activation_todos.rs:415:5
+    |
+415 |     board.status = vec![TodoStatus::Open; INDUSTRIAL_ACTIVATION_TODO_COUNT];
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+note: consider initializing the variable with `dev::industrial_activation_todos::IndustrialActivationTodoBoard { status: vec![TodoStatus::Open; INDUSTRIAL_ACTIVATION_TODO_COUNT] }` and removing relevant reassignments
+   --> src\dev\industrial_activation_todos.rs:414:5
+    |
+414 |     let mut board = IndustrialActivationTodoBoard::default();
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#field_reassign_with_default
+
+warning: using `clone` on type `RepresentationResult` which implements the `Copy` trait
+   --> src\dev\stage5_live_todos.rs:588:18
+    |
+588 |     let policy = world.resource::<RepresentationResult>().clone();
+    |                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: try dereferencing it: `*world.resource::<RepresentationResult>()`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#clone_on_copy
+
+warning: using `clone` on type `WorldFireParticleDrawDispatch` which implements the `Copy` trait
+   --> src\dev\stage5_live_todos.rs:590:16
+    |
+590 |     let draw = world.resource::<WorldFireParticleDrawDispatch>().clone();
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: try dereferencing it: `*world.resource::<WorldFireParticleDrawDispatch>()`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#clone_on_copy
+
+warning: this function has too many arguments (8/7)
+  --> src\construction\build_footprint_overlay.rs:17:1
+   |
+17 | / pub fn build_footprint_validity_overlay_egui(
+18 | |     mut contexts: EguiContexts,
+19 | |     base: Res<State<BaseState>>,
+20 | |     strip: Res<BuildStripState>,
+...  |
+25 | |     cam_q: Query<(&Camera, &GlobalTransform), With<MainWorldCamera>>,
+26 | | ) -> Result {
+   | |___________^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: this function has too many arguments (9/7)
+  --> src\construction\build_interaction.rs:49:1
+   |
+49 | / pub fn build_pick_ghost_tile_system(
+50 | |     buttons: Res<ButtonInput<MouseButton>>,
+51 | |     win: Query<&Window, With<PrimaryWindow>>,
+52 | |     cam_q: Query<(&Camera, &GlobalTransform), With<MainWorldCamera>>,
+...  |
+58 | |     mut egui_ctx: EguiContexts,
+59 | | ) {
+   | |_^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: this function has too many arguments (8/7)
+   --> src\construction\build_interaction.rs:163:1
+    |
+163 | / pub fn build_queue_blueprint_on_shift_click_system(
+164 | |     buttons: Res<ButtonInput<MouseButton>>,
+165 | |     keys: Res<ButtonInput<KeyCode>>,
+166 | |     strip: Res<BuildStripState>,
+...   |
+171 | |     mut pending: ResMut<PendingConstructionQueue>,
+172 | | ) {
+    | |_^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: this function has too many arguments (9/7)
+   --> src\construction\build_interaction.rs:211:1
+    |
+211 | / pub fn build_drag_paint_queue_system(
+212 | |     buttons: Res<ButtonInput<MouseButton>>,
+213 | |     keys: Res<ButtonInput<KeyCode>>,
+214 | |     strip: Res<BuildStripState>,
+...   |
+220 | |     mut last_tile: Local<Option<BuildSiteTile>>,
+221 | | ) {
+    | |_^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: this function has too many arguments (14/7)
+   --> src\construction\build_interaction.rs:298:1
+    |
+298 | / pub fn build_confirm_site_system(
+299 | |     keys: Res<ButtonInput<KeyCode>>,
+300 | |     bindings: Res<InputBindings>,
+301 | |     tool: Res<ActiveBuildTool>,
+...   |
+312 | |     sites: Query<(Entity, &SiteFootprint), With<crate::strategic::ConstructionSite>>,
+313 | | ) {
+    | |_^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: this function has too many arguments (8/7)
+  --> src\construction\build_mode.rs:68:1
+   |
+68 | / pub fn build_escape_cancel_system(
+69 | |     keys: Res<ButtonInput<KeyCode>>,
+70 | |     session: Res<ActiveToolSession>,
+71 | |     mut tool: ResMut<ActiveBuildTool>,
+...  |
+76 | |     mut zone: ResMut<ActiveZonePaint>,
+77 | | ) {
+   | |_^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: this function has too many arguments (13/7)
+   --> src\construction\construction_pipeline.rs:163:1
+    |
+163 | / pub fn execute_construction_plans_system(
+164 | |     mut commands: Commands,
+165 | |     mut queue: ResMut<ConstructionPlanQueue>,
+166 | |     mut roads: ResMut<ExecutedRoadNetwork>,
+...   |
+176 | |     rail: Res<super::rail::ActiveRailPlacement>,
+177 | | ) {
+    | |_^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: this function has too many arguments (11/7)
+   --> src\construction\construction_pipeline.rs:251:1
+    |
+251 | / fn apply_road_segment_to_world<M: Component + Copy>(
+252 | |     commands: &mut Commands,
+253 | |     roads: &mut ExecutedRoadNetwork,
+254 | |     params: &WorldGenParams,
+...   |
+262 | |     marker_component: M,
+263 | | ) -> Option<SegmentApplyResult> {
+    | |_______________________________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+error: this boolean expression contains a logic bug
+   --> src\construction\construction_stage_witness.rs:204:24
+    |
+204 |     w.history_labels = history.last_action_kind.is_some() || true;
+    |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: it would look like the following: `true`
+    |
+help: this expression can be optimized out by applying boolean operations to the outer expression
+   --> src\construction\construction_stage_witness.rs:204:24
+    |
+204 |     w.history_labels = history.last_action_kind.is_some() || true;
+    |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#overly_complex_bool_expr
+    = note: `#[deny(clippy::overly_complex_bool_expr)]` on by default
+
+warning: this expression creates a reference which is immediately dereferenced by the compiler
+  --> src\construction\demolish.rs:43:43
+   |
+43 |     let Some(world) = cursor_world_on_map(&window, cam, cam_xf, map_vp.as_ref()) else {
+   |                                           ^^^^^^^ help: change this to: `window`
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#needless_borrow
+
+warning: using `contains()` instead of `iter().any()` is more efficient
+  --> src\construction\demolish.rs:76:12
+   |
+76 |         if footprint.tiles.iter().any(|t| *t == target) {
+   |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: try: `footprint.tiles.contains(&target)`
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#manual_contains
+   = note: `#[warn(clippy::manual_contains)]` on by default
+
+warning: this function has too many arguments (12/7)
+  --> src\construction\pending_construction_panel.rs:17:1
+   |
+17 | / pub fn draw_pending_construction_queue_egui(
+18 | |     ctx: &mut egui::Context,
+19 | |     view: &ConstructionQueuePanelView,
+20 | |     dock: &mut HudDockRegistry,
+...  |
+29 | |     pending_layout: &mut PendingHudLayoutCommit,
+30 | | ) {
+   | |_^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: this `impl` can be derived
+  --> src\construction\build_state.rs:40:1
+   |
+40 | / impl Default for BuildPlacementPreview {
+41 | |     fn default() -> Self {
+42 | |         Self {
+43 | |             report: SitePlacementValidation::default(),
+...  |
+46 | | }
+   | |_^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#derivable_impls
+help: replace the manual implementation with a derive attribute
+   |
+36 + #[derive(Default)]
+37 | pub struct BuildPlacementPreview {
+   |
+
+warning: this function has too many arguments (15/7)
+   --> src\construction\history.rs:104:1
+    |
+104 | / pub fn construction_undo_input_system(
+105 | |     keyboard: Res<ButtonInput<KeyCode>>,
+106 | |     mut history: ResMut<ConstructionHistory>,
+107 | |     mut commands: Commands,
+...   |
+119 | |     zones: Query<Entity, With<Zone>>,
+120 | | ) {
+    | |_^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: this function has too many arguments (8/7)
+  --> src\construction\live_proof.rs:64:1
+   |
+64 | / fn build_proof_payload(
+65 | |     build_board: Option<&ConstructionLiveTodoBoard>,
+66 | |     phase2_board: Option<&ConstructionPhase2TodoBoard>,
+67 | |     phase2_witness: Option<&ConstructionPhase2Witness>,
+...  |
+72 | |     history: Option<&ConstructionHistory>,
+73 | | ) -> serde_json::Value {
+   | |______________________^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: this function has too many arguments (10/7)
+   --> src\construction\live_proof.rs:118:1
+    |
+118 | / pub fn write_construction_live_proof_system(
+119 | |     base: Res<State<BaseState>>,
+120 | |     mut state: ResMut<ConstructionLiveProofState>,
+121 | |     build_board: Option<Res<ConstructionLiveTodoBoard>>,
+...   |
+128 | |     history: Option<Res<ConstructionHistory>>,
+129 | | ) {
+    | |_^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: this function has too many arguments (9/7)
+  --> src\construction\roads\input.rs:63:1
+   |
+63 | / pub fn update_road_path_preview_system(
+64 | |     tool: Res<ActiveBuildTool>,
+65 | |     win: Query<&Window, With<PrimaryWindow>>,
+66 | |     cam_q: Query<(&Camera, &GlobalTransform), With<MainWorldCamera>>,
+...  |
+72 | |     mut egui_ctx: EguiContexts,
+73 | | ) {
+   | |_^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: this expression creates a reference which is immediately dereferenced by the compiler
+  --> src\construction\roads\input.rs:91:38
+   |
+91 |     let cursor = cursor_world_on_map(&window, cam, cam_xf, map_vp.as_ref())
+   |                                      ^^^^^^^ help: change this to: `window`
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#needless_borrow
+
+warning: this function has too many arguments (13/7)
+   --> src\construction\roads\input.rs:126:1
+    |
+126 | / pub fn road_path_input_system(
+127 | |     tool: Res<ActiveBuildTool>,
+128 | |     buttons: Res<ButtonInput<MouseButton>>,
+129 | |     keys: Res<ButtonInput<KeyCode>>,
+...   |
+139 | |     mut egui_ctx: EguiContexts,
+140 | | ) {
+    | |_^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: this expression creates a reference which is immediately dereferenced by the compiler
+   --> src\construction\roads\input.rs:156:41
+    |
+156 |     let Some(raw) = cursor_world_on_map(&window, cam, cam_xf, map_vp.as_ref()) else {
+    |                                         ^^^^^^^ help: change this to: `window`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#needless_borrow
+
+warning: this `map_or` can be simplified
+  --> src\construction\roads\pathing.rs:41:12
+   |
+41 |         if chain.last().copied().map_or(true, |last| (last - c).length_squared() > 0.01) {
+   |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#unnecessary_map_or
+help: use `is_none_or` instead
+   |
+41 -         if chain.last().copied().map_or(true, |last| (last - c).length_squared() > 0.01) {
+41 +         if chain.last().copied().is_none_or(|last| (last - c).length_squared() > 0.01) {
+   |
+
+warning: this function has too many arguments (13/7)
+  --> src\construction\roads\popup.rs:24:1
+   |
+24 | / pub fn draw_road_tool_popup_egui(
+25 | |     mut contexts: bevy_egui::EguiContexts,
+26 | |     tool: Res<ActiveBuildTool>,
+27 | |     placement: Res<ActiveRoadPlacement>,
+...  |
+37 | |     map_vp: Res<SimulationMapViewport>,
+38 | | ) -> Result {
+   | |___________^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: this function has too many arguments (9/7)
+  --> src\construction\rail\input.rs:29:1
+   |
+29 | / pub fn update_rail_path_preview_system(
+30 | |     tool: Res<ActiveBuildTool>,
+31 | |     win: Query<&Window, With<PrimaryWindow>>,
+32 | |     cam_q: Query<(&Camera, &GlobalTransform), With<MainWorldCamera>>,
+...  |
+38 | |     mut egui_ctx: EguiContexts,
+39 | | ) {
+   | |_^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: this expression creates a reference which is immediately dereferenced by the compiler
+  --> src\construction\rail\input.rs:57:38
+   |
+57 |     let cursor = cursor_world_on_map(&window, cam, cam_xf, map_vp.as_ref()).map(|w| {
+   |                                      ^^^^^^^ help: change this to: `window`
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#needless_borrow
+
+warning: this function has too many arguments (13/7)
+   --> src\construction\rail\input.rs:88:1
+    |
+ 88 | / pub fn rail_path_input_system(
+ 89 | |     tool: Res<ActiveBuildTool>,
+ 90 | |     buttons: Res<ButtonInput<MouseButton>>,
+ 91 | |     keys: Res<ButtonInput<KeyCode>>,
+...   |
+101 | |     mut egui_ctx: EguiContexts,
+102 | | ) {
+    | |_^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: this expression creates a reference which is immediately dereferenced by the compiler
+   --> src\construction\rail\input.rs:118:41
+    |
+118 |     let Some(raw) = cursor_world_on_map(&window, cam, cam_xf, map_vp.as_ref()) else {
+    |                                         ^^^^^^^ help: change this to: `window`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#needless_borrow
+
+warning: this `map_or` can be simplified
+  --> src\construction\rail\pathing.rs:26:12
+   |
+26 |         if chain.last().copied().map_or(true, |last| (last - c).length_squared() > 0.01) {
+   |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#unnecessary_map_or
+help: use `is_none_or` instead
+   |
+26 -         if chain.last().copied().map_or(true, |last| (last - c).length_squared() > 0.01) {
+26 +         if chain.last().copied().is_none_or(|last| (last - c).length_squared() > 0.01) {
+   |
+
+warning: this `if` statement can be collapsed
+  --> src\construction\snap.rs:64:9
+   |
+64 | /         if d2 <= radius * radius {
+65 | |             if best.map_or(true, |(bd, _)| d2 < bd) {
+66 | |                 best = Some((d2, *tile));
+67 | |             }
+68 | |         }
+   | |_________^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#collapsible_if
+help: collapse nested if block
+   |
+64 ~         if d2 <= radius * radius
+65 ~             && best.map_or(true, |(bd, _)| d2 < bd) {
+66 |                 best = Some((d2, *tile));
+67 ~             }
+   |
+
+warning: this `map_or` can be simplified
+  --> src\construction\snap.rs:65:16
+   |
+65 |             if best.map_or(true, |(bd, _)| d2 < bd) {
+   |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#unnecessary_map_or
+help: use `is_none_or` instead
+   |
+65 -             if best.map_or(true, |(bd, _)| d2 < bd) {
+65 +             if best.is_none_or(|(bd, _)| d2 < bd) {
+   |
+
+warning: this `map_or` can be simplified
+  --> src\construction\upgrade.rs:31:12
+   |
+31 |         if best.map_or(true, |(bd, _)| d2 < bd) {
+   |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#unnecessary_map_or
+help: use `is_none_or` instead
+   |
+31 -         if best.map_or(true, |(bd, _)| d2 < bd) {
+31 +         if best.is_none_or(|(bd, _)| d2 < bd) {
+   |
+
+warning: this function has too many arguments (13/7)
+  --> src\construction\zones\input.rs:59:1
+   |
+59 | / pub fn zone_paint_input_system(
+60 | |     buttons: Res<ButtonInput<MouseButton>>,
+61 | |     keys: Res<ButtonInput<KeyCode>>,
+62 | |     tool: Res<ActiveBuildTool>,
+...  |
+72 | |     mut last_tile: Local<Option<BuildSiteTile>>,
+73 | | ) {
+   | |_^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: this expression creates a reference which is immediately dereferenced by the compiler
+  --> src\construction\zones\input.rs:92:43
+   |
+92 |     let Some(world) = cursor_world_on_map(&window, cam, cam_xf, map_vp.as_ref()) else {
+   |                                           ^^^^^^^ help: change this to: `window`
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#needless_borrow
+
+warning: using `contains()` instead of `iter().any()` is more efficient
+  --> src\construction\zones\placement.rs:19:9
+   |
+19 |         self.painted.iter().any(|t| *t == tile)
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: try: `self.painted.contains(&tile)`
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#manual_contains
+
+warning: very complex type used. Consider factoring parts into `type` definitions
+  --> src\economy\activation\bridge.rs:65:8
+   |
+65 |       q: Query<
+   |  ________^
+66 | |         (Entity, &ConstructionSite, &BuildingDefinitionRef),
+67 | |         (
+68 | |             With<ConstructionSite>,
+...  |
+71 | |         ),
+72 | |     >,
+   | |_____^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#type_complexity
+
+warning: very complex type used. Consider factoring parts into `type` definitions
+  --> src\economy\concrete_batch.rs:26:8
+   |
+26 |       q: Query<
+   |  ________^
+27 | |         (Entity, &crate::economy::activation::BuildingDefinitionRef),
+28 | |         (
+29 | |             With<crate::economy::activation::IndustrialFacilityActivated>,
+30 | |             Without<ConcreteBatchRegistered>,
+31 | |         ),
+32 | |     >,
+   | |_____^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#type_complexity
+
+warning: very complex type used. Consider factoring parts into `type` definitions
+  --> src\economy\logistics_bridge.rs:19:8
+   |
+19 |       q: Query<
+   |  ________^
+20 | |         (Entity, &PlannedSite, &crate::economy::activation::BuildingDefinitionRef),
+21 | |         (
+22 | |             With<crate::economy::activation::IndustrialFacilityActivated>,
+23 | |             Without<FacilityLogisticsRegistered>,
+24 | |         ),
+25 | |     >,
+   | |_____^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#type_complexity
+
+warning: used `expect()` on `Some` value
+  --> src\economy\logistics_bridge.rs:46:38
+   |
+46 |             IndustrialDistrictAnchor(anchor.expect("anchor set")),
+   |                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the `Some` and `expect()`
+  --> src\economy\logistics_bridge.rs:35:22
+   |
+35 |         let anchor = Some(chunk_key_from_site_tile(planned.origin, cells));
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#unnecessary_literal_unwrap
+   = note: `#[warn(clippy::unnecessary_literal_unwrap)]` on by default
+
+warning: very complex type used. Consider factoring parts into `type` definitions
+   --> src\economy\resource_flow.rs:178:8
+    |
+178 |       q: Query<
+    |  ________^
+179 | |         (Entity, &crate::economy::activation::BuildingDefinitionRef),
+180 | |         (
+181 | |             With<crate::economy::activation::IndustrialFacilityActivated>,
+182 | |             Without<ResourceFlowNodeRegistered>,
+183 | |         ),
+184 | |     >,
+    | |_____^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#type_complexity
+
+warning: very complex type used. Consider factoring parts into `type` definitions
+   --> src\economy\resource_flow.rs:205:12
+    |
+205 |       nodes: Query<
+    |  ____________^
+206 | |         (
+207 | |             Entity,
+208 | |             &ResourceFlowNode,
+...   |
+211 | |         (With<ResourceFlowNodeRegistered>, Without<SupplyChainEdgesLinked>),
+212 | |     >,
+    | |_____^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#type_complexity
+
+warning: casting to the same type is unnecessary (`u32` -> `u32`)
+  --> src\economy\spatial_district.rs:21:14
+   |
+21 |     let tx = origin.x.max(0) as u32;
+   |              ^^^^^^^^^^^^^^^^^^^^^^ help: try: `origin.x.max(0)`
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#unnecessary_cast
+
+warning: `origin.x` is never smaller than `0` and has therefore no effect
+  --> src\economy\spatial_district.rs:21:14
+   |
+21 |     let tx = origin.x.max(0) as u32;
+   |              ^^^^^^^^^^^^^^^ help: try: `origin.x`
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#unnecessary_min_or_max
+
+warning: casting to the same type is unnecessary (`u32` -> `u32`)
+  --> src\economy\spatial_district.rs:22:14
+   |
+22 |     let tz = origin.z.max(0) as u32;
+   |              ^^^^^^^^^^^^^^^^^^^^^^ help: try: `origin.z.max(0)`
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#unnecessary_cast
+
+warning: `origin.z` is never smaller than `0` and has therefore no effect
+  --> src\economy\spatial_district.rs:22:14
+   |
+22 |     let tz = origin.z.max(0) as u32;
+   |              ^^^^^^^^^^^^^^^ help: try: `origin.z`
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#unnecessary_min_or_max
+
+warning: this function has too many arguments (8/7)
+   --> src\bevysubengines\world_generator_plugin.rs:188:1
+    |
+188 | / fn world_gen_ui_system(
+189 | |     mut contexts: EguiContexts,
+190 | |     mut world_gen_params: ResMut<WorldGenParams>,
+191 | |     mut world_gen_state: ResMut<WorldGenState>,
+...   |
+196 | |     bindings: Option<Res<crate::gui::InputBindings>>,
+197 | | ) -> Result {
+    | |___________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#too_many_arguments
+
+warning: this `impl` can be derived
+  --> src\scenario\script_host.rs:20:1
+   |
+20 | / impl Default for ScenarioExecutionState {
+21 | |     fn default() -> Self {
+22 | |         Self::Idle
+23 | |     }
+24 | | }
+   | |_^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/beta/index.html#derivable_impls
+help: replace the manual implementation with a derive attribute and mark the default variant
+   |
+13 + #[derive(Default)]
+14 | pub enum ScenarioExecutionState {
+15 ~     #[default]
+16 ~     Idle,
+   |
+
+warning: `proc_A_dine01` (lib) generated 332 warnings
+error: could not compile `proc_A_dine01` (lib) due to 1 previous error; 332 warnings emitted

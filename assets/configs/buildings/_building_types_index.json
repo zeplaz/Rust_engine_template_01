@@ -31,6 +31,19 @@
   ],
   "concrete_subtypes": ["Limecrete", "Portland", "Geopolymer", "Gypsum"],
   "mine_subtypes": ["Gravel", "Metal", "RareEarth", "Oil"],
+  "industrial_supply_chains_index": "assets/configs/industrial_supply_chains.json",
+  "supply_chain_building_catalog": [
+    "concrete_aggregate_mine",
+    "concrete_cement_kiln",
+    "concrete_mixer_plant",
+    "concrete_cement_kiln_geopolymer",
+    "concrete_mixer_geopolymer",
+    "concrete_basic_production_plant",
+    "aluminum_bauxite_mine",
+    "aluminum_alumina_refinery",
+    "aluminum_smelter1",
+    "aluminum_fabrication_plant"
+  ],
   "example_asset_files": [
     "assets/configs/buildings/new_building.json",
     "assets/configs/buildings/concrete_basic_production_plant.json",

@@ -14,7 +14,7 @@ use bevy_egui::{egui, EguiContexts, EguiPrimaryContextPass};
 
 use crate::gui::ui_gates::in_simulation_or_editor;
 use crate::gui::input_bindings::InputBindings;
-use crate::gui::style::{primary_label, UiPalette};
+use crate::gui::style::{primary_label, widget_scroll_vertical_fill, UiPalette};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum FactionToolsPanel {
@@ -84,24 +84,26 @@ pub fn faction_tools_ui_system(
             });
             ui.separator();
 
-            match state.active {
-                FactionToolsPanel::Roster => {
-                    primary_label(ui, palette.as_ref(), "Roster — bind to FactionBlueprint store when available.");
-                    // TODO: list + add/duplicate/retire (authority-gated).
+            widget_scroll_vertical_fill("faction_tools_body_scroll", ui.available_height()).show(ui, |ui| {
+                match state.active {
+                    FactionToolsPanel::Roster => {
+                        primary_label(ui, palette.as_ref(), "Roster — bind to FactionBlueprint store when available.");
+                        // TODO: list + add/duplicate/retire (authority-gated).
+                    }
+                    FactionToolsPanel::Blueprint => {
+                        primary_label(ui, palette.as_ref(), "Blueprint inspector — name, HSL color picker, tags, emblem.");
+                        // TODO: bind selected FactionBlueprint fields.
+                    }
+                    FactionToolsPanel::Diplomacy => {
+                        primary_label(ui, palette.as_ref(), "Diplomacy matrix — pairwise stances + interlocking modifiers.");
+                        // TODO: render N×N stance grid; integrate DiplomaticRelations permission gate.
+                    }
+                    FactionToolsPanel::ImportExport => {
+                        primary_label(ui, palette.as_ref(), "Import/Export — RON blueprints (per assets matrix).");
+                        // TODO: file dialog (crate vs native — see implementation_questions §7).
+                    }
                 }
-                FactionToolsPanel::Blueprint => {
-                    primary_label(ui, palette.as_ref(), "Blueprint inspector — name, HSL color picker, tags, emblem.");
-                    // TODO: bind selected FactionBlueprint fields.
-                }
-                FactionToolsPanel::Diplomacy => {
-                    primary_label(ui, palette.as_ref(), "Diplomacy matrix — pairwise stances + interlocking modifiers.");
-                    // TODO: render N×N stance grid; integrate DiplomaticRelations permission gate.
-                }
-                FactionToolsPanel::ImportExport => {
-                    primary_label(ui, palette.as_ref(), "Import/Export — RON blueprints (per assets matrix).");
-                    // TODO: file dialog (crate vs native — see implementation_questions §7).
-                }
-            }
+            });
         });
 
     Ok(())

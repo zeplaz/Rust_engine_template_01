@@ -1,0 +1,399 @@
+   Compiling proc_A_dine01 v0.1.1 (C:\dev\github\Rust_engine_template_01)
+warning: unused import: `ViewportRectSanity`
+  --> src\gui\hud\sim_view_sync_debug.rs:14:53
+   |
+14 | use crate::gui::hud::{HudDockRegistry, HudWidgetId, ViewportRectSanity};
+   |                                                     ^^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `crate::gui::CommandLeftStackState`
+  --> src\gui\hud\sim_view_sync_debug.rs:15:5
+   |
+15 | use crate::gui::CommandLeftStackState;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `MapCameraDesired`
+  --> src\gui\hud\sim_view_sync_debug.rs:17:79
+   |
+17 |     MainWorldCamera, MainWorldCameraOrthoTrace, MainWorldCameraViewportLatch, MapCameraDesired,
+   |                                                                               ^^^^^^^^^^^^^^^^
+
+warning: unused import: `MinimapShellState`
+  --> src\gui\hud\sim_view_sync_debug.rs:20:5
+   |
+20 |     MinimapShellState, SimulationMapViewport, SimulationMapViewportDebug, SimulationMapViewportTrace,
+   |     ^^^^^^^^^^^^^^^^^
+
+warning: unused import: `InGameMenuState`
+ --> src\gui\pause_menu_confirm.rs:5:40
+  |
+5 | use crate::engine::states::{BaseState, InGameMenuState, MainMenuState, WorldGenFlowState};
+  |                                        ^^^^^^^^^^^^^^^
+
+warning: use of deprecated function `gui::viewport_layout_solver::merge_measured_with_solver`: use commit_authority_from_semantic
+   --> src\gui\mod.rs:169:37
+    |
+169 |     commit_authority_from_semantic, merge_measured_with_solver, semantic_viewport_from_map_fill,
+    |                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(deprecated)]` on by default
+
+warning: use of deprecated function `gui::viewport_layout_solver::solve_sim_viewport_from_map_fill`: use semantic_viewport_from_map_fill
+   --> src\gui\mod.rs:170:5
+    |
+170 |     solve_sim_viewport_from_map_fill, stabilize_viewport_floor, viewport_rescue_floor,
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: variable does not need to be mutable
+   --> src\engine\ux_orchestration.rs:237:5
+    |
+237 |     mut world_gen_ui: ResMut<WorldGenUiState>,
+    |     ----^^^^^^^^^^^^
+    |     |
+    |     help: remove this `mut`
+    |
+    = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: variable does not need to be mutable
+   --> src\engine\ux_orchestration.rs:238:5
+    |
+238 |     mut preview_ui: ResMut<WorldPreviewUiState>,
+    |     ----^^^^^^^^^^
+    |     |
+    |     help: remove this `mut`
+
+warning: unused variable: `world_gen_ui`
+   --> src\engine\ux_orchestration.rs:237:5
+    |
+237 |     mut world_gen_ui: ResMut<WorldGenUiState>,
+    |     ^^^^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_world_gen_ui`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `preview_ui`
+   --> src\engine\ux_orchestration.rs:238:5
+    |
+238 |     mut preview_ui: ResMut<WorldPreviewUiState>,
+    |     ^^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_preview_ui`
+
+warning: unused variable: `q_children`
+   --> src\gui\debug\ui_layout_tree_debug.rs:161:5
+    |
+161 |     q_children: Query<&Children>,
+    |     ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_q_children`
+
+warning: variable does not need to be mutable
+   --> src\gui\viewport_layout_solver.rs:128:9
+    |
+128 |     let mut min = measured.min;
+    |         ----^^^
+    |         |
+    |         help: remove this `mut`
+
+warning: unused variable: `interaction_center`
+   --> src\gui\editor\world_preview\window.rs:329:25
+    |
+329 |                     let interaction_center = if gpu_painted {
+    |                         ^^^^^^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_interaction_center`
+
+warning: type `ChromeSnapshot` is more private than the item `trace_worldgen_chrome_state_edges`
+   --> src\engine\worldgen_chrome_debug.rs:133:1
+    |
+133 | / pub fn trace_worldgen_chrome_state_edges(
+134 | |     app: Res<State<AppState>>,
+135 | |     worldgen: Res<State<WorldGenState>>,
+136 | |     base: Res<State<BaseState>>,
+...   |
+143 | |     mut prev: Local<Option<ChromeSnapshot>>,
+144 | | ) {
+    | |_^ function `trace_worldgen_chrome_state_edges` is reachable at visibility `pub`
+    |
+note: but type `ChromeSnapshot` is only usable at visibility `pub(self)`
+   --> src\engine\worldgen_chrome_debug.rs:29:1
+    |
+ 29 | struct ChromeSnapshot {
+    | ^^^^^^^^^^^^^^^^^^^^^
+    = note: `#[warn(private_interfaces)]` on by default
+
+warning: type `SimViewSyncCtx<'_, '_>` is more private than the item `trace_sim_view_sync_state`
+   --> src\gui\hud\sim_view_sync_debug.rs:263:1
+    |
+263 | / pub fn trace_sim_view_sync_state(
+264 | |     cfg: Res<DebugRenderTraceConfig>,
+265 | |     frame: Res<FrameCount>,
+266 | |     ctx: SimViewSyncCtx,
+267 | |     mut last: Local<Option<SyncSignature>>,
+268 | | ) {
+    | |_^ function `trace_sim_view_sync_state` is reachable at visibility `pub`
+    |
+note: but type `SimViewSyncCtx<'_, '_>` is only usable at visibility `pub(self)`
+   --> src\gui\hud\sim_view_sync_debug.rs:127:1
+    |
+127 | struct SimViewSyncCtx<'w, 's> {
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: type `SyncSignature` is more private than the item `trace_sim_view_sync_state`
+   --> src\gui\hud\sim_view_sync_debug.rs:263:1
+    |
+263 | / pub fn trace_sim_view_sync_state(
+264 | |     cfg: Res<DebugRenderTraceConfig>,
+265 | |     frame: Res<FrameCount>,
+266 | |     ctx: SimViewSyncCtx,
+267 | |     mut last: Local<Option<SyncSignature>>,
+268 | | ) {
+    | |_^ function `trace_sim_view_sync_state` is reachable at visibility `pub`
+    |
+note: but type `SyncSignature` is only usable at visibility `pub(self)`
+   --> src\gui\hud\sim_view_sync_debug.rs:35:1
+    |
+ 35 | struct SyncSignature {
+    | ^^^^^^^^^^^^^^^^^^^^
+
+warning: type `PauseMenuNavParams<'_, '_>` is more private than the item `pause_menu_egui_system`
+  --> src\gui\in_game_pause_menu.rs:75:1
+   |
+75 | / pub(crate) fn pause_menu_egui_system(
+76 | |     mut contexts: EguiContexts,
+77 | |     menu: Res<State<InGameMenuState>>,
+78 | |     mut nav: PauseMenuNavParams,
+79 | |     mut wg: PauseMenuWorldGenParams,
+80 | | ) -> Result {
+   | |___________^ function `pause_menu_egui_system` is reachable at visibility `pub(in crate::gui)`
+   |
+note: but type `PauseMenuNavParams<'_, '_>` is only usable at visibility `pub(self)`
+  --> src\gui\in_game_pause_menu.rs:33:1
+   |
+33 | struct PauseMenuNavParams<'w, 's> {
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: type `PauseMenuWorldGenParams<'_>` is more private than the item `pause_menu_egui_system`
+  --> src\gui\in_game_pause_menu.rs:75:1
+   |
+75 | / pub(crate) fn pause_menu_egui_system(
+76 | |     mut contexts: EguiContexts,
+77 | |     menu: Res<State<InGameMenuState>>,
+78 | |     mut nav: PauseMenuNavParams,
+79 | |     mut wg: PauseMenuWorldGenParams,
+80 | | ) -> Result {
+   | |___________^ function `pause_menu_egui_system` is reachable at visibility `pub(in crate::gui)`
+   |
+note: but type `PauseMenuWorldGenParams<'_>` is only usable at visibility `pub(self)`
+  --> src\gui\in_game_pause_menu.rs:49:1
+   |
+49 | struct PauseMenuWorldGenParams<'w> {
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: type `VisualDiagCtx<'_, '_>` is more private than the item `trace_visual_diagnostics`
+   --> src\render\visual_diagnostics.rs:462:1
+    |
+462 | / pub fn trace_visual_diagnostics(
+463 | |     cfg: Res<DebugRenderTraceConfig>,
+464 | |     frame: Res<FrameCount>,
+465 | |     ctx: VisualDiagCtx,
+466 | |     mut last_sig: Local<Option<VisualDiagSignature>>,
+467 | |     mut last_periodic: Local<u64>,
+468 | | ) {
+    | |_^ function `trace_visual_diagnostics` is reachable at visibility `pub(in crate::render)`
+    |
+note: but type `VisualDiagCtx<'_, '_>` is only usable at visibility `pub(self)`
+   --> src\render\visual_diagnostics.rs:145:1
+    |
+145 | struct VisualDiagCtx<'w, 's> {
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: type `VisualDiagSignature` is more private than the item `trace_visual_diagnostics`
+   --> src\render\visual_diagnostics.rs:462:1
+    |
+462 | / pub fn trace_visual_diagnostics(
+463 | |     cfg: Res<DebugRenderTraceConfig>,
+464 | |     frame: Res<FrameCount>,
+465 | |     ctx: VisualDiagCtx,
+466 | |     mut last_sig: Local<Option<VisualDiagSignature>>,
+467 | |     mut last_periodic: Local<u64>,
+468 | | ) {
+    | |_^ function `trace_visual_diagnostics` is reachable at visibility `pub(in crate::render)`
+    |
+note: but type `VisualDiagSignature` is only usable at visibility `pub(self)`
+   --> src\render\visual_diagnostics.rs:43:1
+    |
+ 43 | struct VisualDiagSignature {
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `solve_viewport_rescue_floor` is never used
+   --> src\gui\viewport_layout_solver.rs:213:8
+    |
+213 | pub fn solve_viewport_rescue_floor(window: Vec2) -> SemanticViewportRect {
+    |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `frozen_exceeds_semantic_authority` is never used
+   --> src\gui\viewport_layout_solver.rs:237:8
+    |
+237 | pub fn frozen_exceeds_semantic_authority(
+    |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: `proc_A_dine01` (lib) generated 23 warnings (run `cargo fix --lib -p proc_A_dine01` to apply 12 suggestions)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 12.82s
+     Running `target\debug\proc_A_dine01.exe --test visual --debug-visual-diag`
+2026-05-20T04:02:14.648047Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=UiMeasured valid=false min=Vec2(0.0, 0.0) max=Vec2(0.0, 0.0) w=0.0 h=0.0
+2026-05-20T04:02:14.648093Z  INFO viewport_authority::solver: VIEWPORT_SOLVER_TARGET node=RescueFloor valid=true rect.source=RescueFloor w=1258.0 h=618.0
+2026-05-20T04:02:14.648099Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=LayoutSolver valid=true min=Vec2(8.0, 94.0) max=Vec2(1266.0, 712.0) w=1258.0 h=618.0
+2026-05-20T04:02:14.648103Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=UiCommitted valid=false min=Vec2(8.0, 94.0) max=Vec2(1266.0, 712.0) w=1258.0 h=618.0
+2026-05-20T04:02:14.648107Z ERROR viewport_authority::integrity: VIEWPORT_CHAIN solver != measured measured=Vec2(0.0, 0.0) solver=Vec2(1258.0, 618.0) dm=Vec2(1258.0, 618.0)
+2026-05-20T04:02:14.648111Z  WARN viewport_authority::drift: VIEWPORT_DRIFT measured vs committed delta=Vec2(-1258.0, -618.0) measured=Vec2(0.0, 0.0) committed=Vec2(1258.0, 618.0) hint="check AuthoritativeViewport vs SimulationMapViewport copy-through"
+2026-05-20T04:02:14.648133Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=CameraApplied valid=false min=Vec2(0.0, 0.0) max=Vec2(1280.0, 720.0) w=1280.0 h=720.0
+2026-05-20T04:02:14.910180Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=UiMeasured valid=true min=Vec2(456.0, 94.0) max=Vec2(1280.0, 712.0) w=824.0 h=618.0
+2026-05-20T04:02:14.925843Z  INFO viewport_authority::solver: VIEWPORT_SOLVER_TARGET node=SimMapFill valid=true rect.source=SimMapFill w=824.0 h=618.0
+2026-05-20T04:02:14.925850Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=LayoutSolver valid=true min=Vec2(456.0, 94.0) max=Vec2(1280.0, 712.0) w=824.0 h=618.0
+2026-05-20T04:02:14.925854Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=LayoutSolver valid=true min=Vec2(456.0, 94.0) max=Vec2(1280.0, 712.0) w=824.0 h=618.0
+2026-05-20T04:02:14.925857Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=UiCommitted valid=false min=Vec2(456.0, 94.0) max=Vec2(1280.0, 712.0) w=824.0 h=618.0
+2026-05-20T04:02:14.925912Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=CameraApplied valid=false min=Vec2(0.0, 0.0) max=Vec2(1280.0, 720.0) w=1280.0 h=720.0
+2026-05-20T04:02:14.942084Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=UiMeasured valid=true min=Vec2(456.0, 94.0) max=Vec2(1280.0, 712.0) w=824.0 h=618.0
+2026-05-20T04:02:14.942095Z  INFO viewport_authority::solver: VIEWPORT_SOLVER_TARGET node=SimMapFill valid=true rect.source=SimMapFill w=824.0 h=618.0
+2026-05-20T04:02:14.942099Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=LayoutSolver valid=true min=Vec2(456.0, 94.0) max=Vec2(1280.0, 712.0) w=824.0 h=618.0
+2026-05-20T04:02:14.942101Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=LayoutSolver valid=true min=Vec2(456.0, 94.0) max=Vec2(1280.0, 712.0) w=824.0 h=618.0
+2026-05-20T04:02:14.942104Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=UiCommitted valid=false min=Vec2(456.0, 94.0) max=Vec2(1280.0, 712.0) w=824.0 h=618.0
+2026-05-20T04:02:14.942114Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=CameraApplied valid=false min=Vec2(0.0, 0.0) max=Vec2(1280.0, 720.0) w=1280.0 h=720.0
+2026-05-20T04:02:14.985273Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=UiMeasured valid=true min=Vec2(456.0, 94.0) max=Vec2(1280.0, 712.0) w=824.0 h=618.0
+2026-05-20T04:02:14.985282Z  INFO viewport_authority::solver: VIEWPORT_SOLVER_TARGET node=SimMapFill valid=true rect.source=SimMapFill w=824.0 h=618.0
+2026-05-20T04:02:14.985286Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=LayoutSolver valid=true min=Vec2(456.0, 94.0) max=Vec2(1280.0, 712.0) w=824.0 h=618.0
+2026-05-20T04:02:14.985289Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=LayoutSolver valid=true min=Vec2(456.0, 94.0) max=Vec2(1280.0, 712.0) w=824.0 h=618.0
+2026-05-20T04:02:14.985291Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=UiCommitted valid=false min=Vec2(456.0, 94.0) max=Vec2(1280.0, 712.0) w=824.0 h=618.0
+2026-05-20T04:02:14.985307Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=CameraApplied valid=false min=Vec2(0.0, 0.0) max=Vec2(1280.0, 720.0) w=1280.0 h=720.0
+2026-05-20T04:02:15.027282Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=UiMeasured valid=true min=Vec2(456.0, 94.0) max=Vec2(1280.0, 712.0) w=824.0 h=618.0
+2026-05-20T04:02:15.027291Z  INFO viewport_authority::solver: VIEWPORT_SOLVER_TARGET node=SimMapFill valid=true rect.source=SimMapFill w=824.0 h=618.0
+2026-05-20T04:02:15.027295Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=LayoutSolver valid=true min=Vec2(456.0, 94.0) max=Vec2(1280.0, 712.0) w=824.0 h=618.0
+2026-05-20T04:02:15.027298Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=LayoutSolver valid=true min=Vec2(456.0, 94.0) max=Vec2(1280.0, 712.0) w=824.0 h=618.0
+2026-05-20T04:02:15.027300Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=UiCommitted valid=true min=Vec2(456.0, 94.0) max=Vec2(1280.0, 712.0) w=824.0 h=618.0
+2026-05-20T04:02:15.027312Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=CameraApplied valid=false min=Vec2(0.0, 0.0) max=Vec2(1280.0, 720.0) w=1280.0 h=720.0
+2026-05-20T04:02:15.052296Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=ResolvedViewport valid=true min=Vec2(456.0, 94.0) max=Vec2(1280.0, 712.0) w=824.0 h=618.0
+2026-05-20T04:02:15.061104Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=UiMeasured valid=true min=Vec2(456.0, 94.0) max=Vec2(1280.0, 712.0) w=824.0 h=618.0
+2026-05-20T04:02:15.061112Z  INFO viewport_authority::solver: VIEWPORT_SOLVER_TARGET node=SimMapFill valid=true rect.source=SimMapFill w=824.0 h=618.0
+2026-05-20T04:02:15.061116Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=LayoutSolver valid=true min=Vec2(456.0, 94.0) max=Vec2(1280.0, 712.0) w=824.0 h=618.0
+2026-05-20T04:02:15.061119Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=LayoutSolver valid=true min=Vec2(456.0, 94.0) max=Vec2(1280.0, 712.0) w=824.0 h=618.0
+2026-05-20T04:02:15.061193Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=UiCommitted valid=true min=Vec2(456.0, 94.0) max=Vec2(1280.0, 712.0) w=824.0 h=618.0
+2026-05-20T04:02:15.061203Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=CameraLatch valid=true min=Vec2(456.0, 94.0) max=Vec2(1280.0, 712.0) w=824.0 h=618.0
+2026-05-20T04:02:15.061206Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=CameraApplied valid=true min=Vec2(456.0, 94.0) max=Vec2(1280.0, 712.0) w=824.0 h=618.0
+2026-05-20T04:02:15.102858Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=ResolvedViewport valid=true min=Vec2(456.0, 94.0) max=Vec2(1280.0, 712.0) w=824.0 h=618.0
+2026-05-20T04:02:15.111628Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=UiMeasured valid=true min=Vec2(456.0, 93.0) max=Vec2(1266.0, 610.0) w=810.0 h=517.0
+2026-05-20T04:02:15.111637Z  INFO viewport_authority::solver: VIEWPORT_SOLVER_TARGET node=SimMapFill valid=true rect.source=SimMapFill w=810.0 h=517.0
+2026-05-20T04:02:15.111640Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=LayoutSolver valid=true min=Vec2(456.0, 93.0) max=Vec2(1266.0, 610.0) w=810.0 h=517.0
+2026-05-20T04:02:15.111644Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=LayoutSolver valid=true min=Vec2(456.0, 93.0) max=Vec2(1266.0, 610.0) w=810.0 h=517.0
+2026-05-20T04:02:15.111647Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=UiCommitted valid=true min=Vec2(456.0, 93.0) max=Vec2(1266.0, 610.0) w=810.0 h=517.0
+2026-05-20T04:02:15.111665Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=CameraApplied valid=true min=Vec2(456.0, 93.0) max=Vec2(1266.0, 610.0) w=810.0 h=517.0
+2026-05-20T04:02:15.154810Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=ResolvedViewport valid=true min=Vec2(456.0, 93.0) max=Vec2(1266.0, 610.0) w=810.0 h=517.0
+2026-05-20T04:02:15.163951Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=UiMeasured valid=true min=Vec2(456.0, 93.0) max=Vec2(1252.0, 509.0) w=796.0 h=416.0
+2026-05-20T04:02:15.163960Z  INFO viewport_authority::solver: VIEWPORT_SOLVER_TARGET node=SimMapFill valid=true rect.source=SimMapFill w=796.0 h=416.0
+2026-05-20T04:02:15.163963Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=LayoutSolver valid=true min=Vec2(456.0, 93.0) max=Vec2(1252.0, 509.0) w=796.0 h=416.0
+2026-05-20T04:02:15.163966Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=LayoutSolver valid=true min=Vec2(456.0, 93.0) max=Vec2(1252.0, 509.0) w=796.0 h=416.0
+2026-05-20T04:02:15.163969Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=UiCommitted valid=true min=Vec2(456.0, 93.0) max=Vec2(1252.0, 509.0) w=796.0 h=416.0
+2026-05-20T04:02:15.163989Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=CameraApplied valid=true min=Vec2(456.0, 93.0) max=Vec2(1252.0, 509.0) w=796.0 h=416.0
+2026-05-20T04:02:15.187392Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=ResolvedViewport valid=true min=Vec2(456.0, 93.0) max=Vec2(1252.0, 509.0) w=796.0 h=416.0
+2026-05-20T04:02:15.208990Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=UiMeasured valid=true min=Vec2(456.0, 93.0) max=Vec2(1238.0, 408.0) w=782.0 h=315.0
+2026-05-20T04:02:15.208999Z  INFO viewport_authority::solver: VIEWPORT_SOLVER_TARGET node=SimMapFill valid=true rect.source=SimMapFill w=782.0 h=315.0
+2026-05-20T04:02:15.209003Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=LayoutSolver valid=true min=Vec2(456.0, 93.0) max=Vec2(1238.0, 408.0) w=782.0 h=315.0
+2026-05-20T04:02:15.209006Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=LayoutSolver valid=true min=Vec2(456.0, 93.0) max=Vec2(1238.0, 408.0) w=782.0 h=315.0
+2026-05-20T04:02:15.209009Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=UiCommitted valid=true min=Vec2(456.0, 93.0) max=Vec2(1238.0, 408.0) w=782.0 h=315.0
+2026-05-20T04:02:15.209018Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=CameraApplied valid=true min=Vec2(456.0, 93.0) max=Vec2(1238.0, 408.0) w=782.0 h=315.0
+2026-05-20T04:02:15.242950Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=ResolvedViewport valid=true min=Vec2(456.0, 93.0) max=Vec2(1238.0, 408.0) w=782.0 h=315.0
+2026-05-20T04:02:15.252269Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=UiMeasured valid=true min=Vec2(456.0, 93.0) max=Vec2(1224.0, 393.0) w=768.0 h=300.0
+2026-05-20T04:02:15.252278Z  INFO viewport_authority::solver: VIEWPORT_SOLVER_TARGET node=SimMapFill valid=true rect.source=SimMapFill w=768.0 h=300.0
+2026-05-20T04:02:15.252281Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=LayoutSolver valid=true min=Vec2(456.0, 93.0) max=Vec2(1224.0, 393.0) w=768.0 h=300.0
+2026-05-20T04:02:15.252285Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=LayoutSolver valid=true min=Vec2(456.0, 93.0) max=Vec2(1224.0, 393.0) w=768.0 h=300.0
+2026-05-20T04:02:15.252288Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=UiCommitted valid=true min=Vec2(456.0, 93.0) max=Vec2(1224.0, 393.0) w=768.0 h=300.0
+2026-05-20T04:02:15.252314Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=CameraApplied valid=true min=Vec2(456.0, 93.0) max=Vec2(1224.0, 393.0) w=768.0 h=300.0
+2026-05-20T04:02:15.299185Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=ResolvedViewport valid=true min=Vec2(456.0, 93.0) max=Vec2(1224.0, 393.0) w=768.0 h=300.0
+2026-05-20T04:02:15.334158Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=UiMeasured valid=true min=Vec2(456.0, 93.0) max=Vec2(1210.0, 393.0) w=754.0 h=300.0
+2026-05-20T04:02:15.334169Z  INFO viewport_authority::solver: VIEWPORT_SOLVER_TARGET node=SimMapFill valid=true rect.source=SimMapFill w=754.0 h=300.0
+2026-05-20T04:02:15.334173Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=LayoutSolver valid=true min=Vec2(456.0, 93.0) max=Vec2(1210.0, 393.0) w=754.0 h=300.0
+2026-05-20T04:02:15.334176Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=LayoutSolver valid=true min=Vec2(456.0, 93.0) max=Vec2(1210.0, 393.0) w=754.0 h=300.0
+2026-05-20T04:02:15.334179Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=UiCommitted valid=true min=Vec2(456.0, 93.0) max=Vec2(1210.0, 393.0) w=754.0 h=300.0
+2026-05-20T04:02:15.334190Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=CameraApplied valid=true min=Vec2(456.0, 93.0) max=Vec2(1210.0, 393.0) w=754.0 h=300.0
+2026-05-20T04:02:15.359438Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=ResolvedViewport valid=true min=Vec2(456.0, 93.0) max=Vec2(1210.0, 393.0) w=754.0 h=300.0
+2026-05-20T04:02:15.368434Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=UiMeasured valid=true min=Vec2(456.0, 93.0) max=Vec2(1196.0, 393.0) w=740.0 h=300.0
+2026-05-20T04:02:15.368444Z  INFO viewport_authority::solver: VIEWPORT_SOLVER_TARGET node=SimMapFill valid=true rect.source=SimMapFill w=740.0 h=300.0
+2026-05-20T04:02:15.368447Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=LayoutSolver valid=true min=Vec2(456.0, 93.0) max=Vec2(1196.0, 393.0) w=740.0 h=300.0
+2026-05-20T04:02:15.368450Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=LayoutSolver valid=true min=Vec2(456.0, 93.0) max=Vec2(1196.0, 393.0) w=740.0 h=300.0
+2026-05-20T04:02:15.368453Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=UiCommitted valid=true min=Vec2(456.0, 93.0) max=Vec2(1196.0, 393.0) w=740.0 h=300.0
+2026-05-20T04:02:15.368463Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=CameraApplied valid=true min=Vec2(456.0, 93.0) max=Vec2(1196.0, 393.0) w=740.0 h=300.0
+2026-05-20T04:02:15.393094Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=ResolvedViewport valid=true min=Vec2(456.0, 93.0) max=Vec2(1196.0, 393.0) w=740.0 h=300.0
+2026-05-20T04:02:15.402208Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=UiMeasured valid=true min=Vec2(456.0, 93.0) max=Vec2(1182.0, 393.0) w=726.0 h=300.0
+2026-05-20T04:02:15.402227Z  INFO viewport_authority::solver: VIEWPORT_SOLVER_TARGET node=SimMapFill valid=true rect.source=SimMapFill w=726.0 h=300.0
+2026-05-20T04:02:15.402231Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=LayoutSolver valid=true min=Vec2(456.0, 93.0) max=Vec2(1182.0, 393.0) w=726.0 h=300.0
+2026-05-20T04:02:15.402234Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=LayoutSolver valid=true min=Vec2(456.0, 93.0) max=Vec2(1182.0, 393.0) w=726.0 h=300.0
+2026-05-20T04:02:15.402237Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=UiCommitted valid=true min=Vec2(456.0, 93.0) max=Vec2(1182.0, 393.0) w=726.0 h=300.0
+2026-05-20T04:02:15.402256Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=CameraApplied valid=true min=Vec2(456.0, 93.0) max=Vec2(1182.0, 393.0) w=726.0 h=300.0
+2026-05-20T04:02:15.435242Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=ResolvedViewport valid=true min=Vec2(456.0, 93.0) max=Vec2(1182.0, 393.0) w=726.0 h=300.0
+2026-05-20T04:02:15.448840Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=UiMeasured valid=true min=Vec2(456.0, 93.0) max=Vec2(1168.0, 393.0) w=712.0 h=300.0
+2026-05-20T04:02:15.448849Z  INFO viewport_authority::solver: VIEWPORT_SOLVER_TARGET node=SimMapFill valid=true rect.source=SimMapFill w=712.0 h=300.0
+2026-05-20T04:02:15.448852Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=LayoutSolver valid=true min=Vec2(456.0, 93.0) max=Vec2(1168.0, 393.0) w=712.0 h=300.0
+2026-05-20T04:02:15.448855Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=LayoutSolver valid=true min=Vec2(456.0, 93.0) max=Vec2(1168.0, 393.0) w=712.0 h=300.0
+2026-05-20T04:02:15.448858Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=UiCommitted valid=true min=Vec2(456.0, 93.0) max=Vec2(1168.0, 393.0) w=712.0 h=300.0
+2026-05-20T04:02:15.448875Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=CameraApplied valid=true min=Vec2(456.0, 93.0) max=Vec2(1168.0, 393.0) w=712.0 h=300.0
+2026-05-20T04:02:15.500711Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=ResolvedViewport valid=true min=Vec2(456.0, 93.0) max=Vec2(1168.0, 393.0) w=712.0 h=300.0
+2026-05-20T04:02:15.510016Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=UiMeasured valid=true min=Vec2(456.0, 93.0) max=Vec2(1154.0, 393.0) w=698.0 h=300.0
+2026-05-20T04:02:15.510026Z  INFO viewport_authority::solver: VIEWPORT_SOLVER_TARGET node=SimMapFill valid=true rect.source=SimMapFill w=698.0 h=300.0
+2026-05-20T04:02:15.510029Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=LayoutSolver valid=true min=Vec2(456.0, 93.0) max=Vec2(1154.0, 393.0) w=698.0 h=300.0
+2026-05-20T04:02:15.510032Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=LayoutSolver valid=true min=Vec2(456.0, 93.0) max=Vec2(1154.0, 393.0) w=698.0 h=300.0
+2026-05-20T04:02:15.510035Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=UiCommitted valid=true min=Vec2(456.0, 93.0) max=Vec2(1154.0, 393.0) w=698.0 h=300.0
+2026-05-20T04:02:15.510047Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=CameraApplied valid=true min=Vec2(456.0, 93.0) max=Vec2(1154.0, 393.0) w=698.0 h=300.0
+2026-05-20T04:02:15.552617Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=ResolvedViewport valid=true min=Vec2(456.0, 93.0) max=Vec2(1154.0, 393.0) w=698.0 h=300.0
+2026-05-20T04:02:15.561699Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=UiMeasured valid=true min=Vec2(456.0, 93.0) max=Vec2(1140.0, 393.0) w=684.0 h=300.0
+2026-05-20T04:02:15.561709Z  INFO viewport_authority::solver: VIEWPORT_SOLVER_TARGET node=SimMapFill valid=true rect.source=SimMapFill w=684.0 h=300.0
+2026-05-20T04:02:15.561712Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=LayoutSolver valid=true min=Vec2(456.0, 93.0) max=Vec2(1140.0, 393.0) w=684.0 h=300.0
+2026-05-20T04:02:15.561715Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=LayoutSolver valid=true min=Vec2(456.0, 93.0) max=Vec2(1140.0, 393.0) w=684.0 h=300.0
+2026-05-20T04:02:15.561718Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=UiCommitted valid=true min=Vec2(456.0, 93.0) max=Vec2(1140.0, 393.0) w=684.0 h=300.0
+2026-05-20T04:02:15.561741Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=CameraApplied valid=true min=Vec2(456.0, 93.0) max=Vec2(1140.0, 393.0) w=684.0 h=300.0
+2026-05-20T04:02:15.608874Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=ResolvedViewport valid=true min=Vec2(456.0, 93.0) max=Vec2(1140.0, 393.0) w=684.0 h=300.0
+2026-05-20T04:02:15.638612Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=UiMeasured valid=true min=Vec2(456.0, 93.0) max=Vec2(1126.0, 393.0) w=670.0 h=300.0
+2026-05-20T04:02:15.638621Z  INFO viewport_authority::solver: VIEWPORT_SOLVER_TARGET node=SimMapFill valid=true rect.source=SimMapFill w=670.0 h=300.0
+2026-05-20T04:02:15.638625Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=LayoutSolver valid=true min=Vec2(456.0, 93.0) max=Vec2(1126.0, 393.0) w=670.0 h=300.0
+2026-05-20T04:02:15.638628Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=LayoutSolver valid=true min=Vec2(456.0, 93.0) max=Vec2(1126.0, 393.0) w=670.0 h=300.0
+2026-05-20T04:02:15.638630Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=UiCommitted valid=true min=Vec2(456.0, 93.0) max=Vec2(1126.0, 393.0) w=670.0 h=300.0
+2026-05-20T04:02:15.638646Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=CameraApplied valid=true min=Vec2(456.0, 93.0) max=Vec2(1126.0, 393.0) w=670.0 h=300.0
+2026-05-20T04:02:15.714085Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=ResolvedViewport valid=true min=Vec2(456.0, 93.0) max=Vec2(1126.0, 393.0) w=670.0 h=300.0
+2026-05-20T04:02:15.723387Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=UiMeasured valid=true min=Vec2(456.0, 93.0) max=Vec2(1112.0, 393.0) w=656.0 h=300.0
+2026-05-20T04:02:15.723397Z  INFO viewport_authority::solver: VIEWPORT_SOLVER_TARGET node=SimMapFill valid=true rect.source=SimMapFill w=656.0 h=300.0
+2026-05-20T04:02:15.723400Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=LayoutSolver valid=true min=Vec2(456.0, 93.0) max=Vec2(1112.0, 393.0) w=656.0 h=300.0
+2026-05-20T04:02:15.723403Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=LayoutSolver valid=true min=Vec2(456.0, 93.0) max=Vec2(1112.0, 393.0) w=656.0 h=300.0
+2026-05-20T04:02:15.723406Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=UiCommitted valid=true min=Vec2(456.0, 93.0) max=Vec2(1112.0, 393.0) w=656.0 h=300.0
+2026-05-20T04:02:15.723420Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=CameraApplied valid=true min=Vec2(456.0, 93.0) max=Vec2(1112.0, 393.0) w=656.0 h=300.0
+2026-05-20T04:02:15.725933Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=ResolvedViewport valid=true min=Vec2(456.0, 93.0) max=Vec2(1112.0, 393.0) w=656.0 h=300.0
+2026-05-20T04:02:15.735140Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=UiMeasured valid=true min=Vec2(456.0, 93.0) max=Vec2(1098.0, 393.0) w=642.0 h=300.0
+2026-05-20T04:02:15.735150Z  INFO viewport_authority::solver: VIEWPORT_SOLVER_TARGET node=SimMapFill valid=true rect.source=SimMapFill w=642.0 h=300.0
+2026-05-20T04:02:15.735153Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=LayoutSolver valid=true min=Vec2(456.0, 93.0) max=Vec2(1098.0, 393.0) w=642.0 h=300.0
+2026-05-20T04:02:15.735156Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=LayoutSolver valid=true min=Vec2(456.0, 93.0) max=Vec2(1098.0, 393.0) w=642.0 h=300.0
+2026-05-20T04:02:15.735159Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=UiCommitted valid=true min=Vec2(456.0, 93.0) max=Vec2(1098.0, 393.0) w=642.0 h=300.0
+2026-05-20T04:02:15.735183Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=CameraApplied valid=true min=Vec2(456.0, 93.0) max=Vec2(1098.0, 393.0) w=642.0 h=300.0
+2026-05-20T04:02:15.756108Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=ResolvedViewport valid=true min=Vec2(456.0, 93.0) max=Vec2(1098.0, 393.0) w=642.0 h=300.0
+2026-05-20T04:02:15.790189Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=UiMeasured valid=true min=Vec2(456.0, 93.0) max=Vec2(1084.0, 393.0) w=628.0 h=300.0
+2026-05-20T04:02:15.790198Z  INFO viewport_authority::solver: VIEWPORT_SOLVER_TARGET node=SimMapFill valid=true rect.source=SimMapFill w=628.0 h=300.0
+2026-05-20T04:02:15.790202Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=LayoutSolver valid=true min=Vec2(456.0, 93.0) max=Vec2(1084.0, 393.0) w=628.0 h=300.0
+2026-05-20T04:02:15.790205Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=LayoutSolver valid=true min=Vec2(456.0, 93.0) max=Vec2(1084.0, 393.0) w=628.0 h=300.0
+2026-05-20T04:02:15.790208Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=UiCommitted valid=true min=Vec2(456.0, 93.0) max=Vec2(1084.0, 393.0) w=628.0 h=300.0
+2026-05-20T04:02:15.790230Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=CameraApplied valid=true min=Vec2(456.0, 93.0) max=Vec2(1084.0, 393.0) w=628.0 h=300.0
+2026-05-20T04:02:15.817020Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=ResolvedViewport valid=true min=Vec2(456.0, 93.0) max=Vec2(1084.0, 393.0) w=628.0 h=300.0
+2026-05-20T04:02:15.829714Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=UiMeasured valid=true min=Vec2(456.0, 93.0) max=Vec2(1070.0, 393.0) w=614.0 h=300.0
+2026-05-20T04:02:15.829723Z  INFO viewport_authority::solver: VIEWPORT_SOLVER_TARGET node=SimMapFill valid=true rect.source=SimMapFill w=614.0 h=300.0
+2026-05-20T04:02:15.829726Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=LayoutSolver valid=true min=Vec2(456.0, 93.0) max=Vec2(1070.0, 393.0) w=614.0 h=300.0
+2026-05-20T04:02:15.829729Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=LayoutSolver valid=true min=Vec2(456.0, 93.0) max=Vec2(1070.0, 393.0) w=614.0 h=300.0
+2026-05-20T04:02:15.829732Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=UiCommitted valid=true min=Vec2(456.0, 93.0) max=Vec2(1070.0, 393.0) w=614.0 h=300.0
+2026-05-20T04:02:15.829742Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=CameraApplied valid=true min=Vec2(456.0, 93.0) max=Vec2(1070.0, 393.0) w=614.0 h=300.0
+2026-05-20T04:02:15.852321Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=ResolvedViewport valid=true min=Vec2(456.0, 93.0) max=Vec2(1070.0, 393.0) w=614.0 h=300.0
+2026-05-20T04:02:15.861036Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=UiMeasured valid=true min=Vec2(456.0, 93.0) max=Vec2(1056.0, 393.0) w=600.0 h=300.0
+2026-05-20T04:02:15.861045Z  INFO viewport_authority::solver: VIEWPORT_SOLVER_TARGET node=SimMapFill valid=true rect.source=SimMapFill w=600.0 h=300.0
+2026-05-20T04:02:15.861048Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=LayoutSolver valid=true min=Vec2(456.0, 93.0) max=Vec2(1056.0, 393.0) w=600.0 h=300.0
+2026-05-20T04:02:15.861051Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=LayoutSolver valid=true min=Vec2(456.0, 93.0) max=Vec2(1056.0, 393.0) w=600.0 h=300.0
+2026-05-20T04:02:15.861054Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=UiCommitted valid=true min=Vec2(456.0, 93.0) max=Vec2(1056.0, 393.0) w=600.0 h=300.0
+2026-05-20T04:02:15.861073Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=CameraApplied valid=true min=Vec2(456.0, 93.0) max=Vec2(1056.0, 393.0) w=600.0 h=300.0
+2026-05-20T04:02:15.904413Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=ResolvedViewport valid=true min=Vec2(456.0, 93.0) max=Vec2(1056.0, 393.0) w=600.0 h=300.0
+2026-05-20T04:02:15.915082Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=UiMeasured valid=true min=Vec2(456.0, 93.0) max=Vec2(1042.0, 393.0) w=586.0 h=300.0
+2026-05-20T04:02:15.915091Z  INFO viewport_authority::solver: VIEWPORT_SOLVER_TARGET node=SimMapFill valid=true rect.source=SimMapFill w=586.0 h=300.0
+2026-05-20T04:02:15.915094Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=LayoutSolver valid=true min=Vec2(456.0, 93.0) max=Vec2(1042.0, 393.0) w=586.0 h=300.0
+2026-05-20T04:02:15.915098Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=LayoutSolver valid=true min=Vec2(456.0, 93.0) max=Vec2(1042.0, 393.0) w=586.0 h=300.0
+2026-05-20T04:02:15.915101Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=UiCommitted valid=true min=Vec2(456.0, 93.0) max=Vec2(1042.0, 393.0) w=586.0 h=300.0
+2026-05-20T04:02:15.915115Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=CameraApplied valid=true min=Vec2(456.0, 93.0) max=Vec2(1042.0, 393.0) w=586.0 h=300.0
+2026-05-20T04:02:15.959810Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=ResolvedViewport valid=true min=Vec2(456.0, 93.0) max=Vec2(1042.0, 393.0) w=586.0 h=300.0
+2026-05-20T04:02:15.991947Z  INFO viewport_authority: VIEWPORT_AUTHORITY source=UiMeasured valid=true min=Vec2(456.0, 94.0) max=Vec2(1028.0, 394.0) w=572.0 h=300.0

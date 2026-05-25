@@ -18,6 +18,9 @@
 | **VR-04** | `VT-5 spatial invariants failed` at inv≈108 (`fire_inst=2`) | **No** — not FULL_APP gate | `TRIAGE-VT-DEEP`, `TRIAGE-FIRE-EXTRACT` | Intermittent; see § VT-5 |
 | **VR-05** | `fire_inst` flicker (e.g. 22 → 0) while eval passes | No | `TRIAGE-FIRE-*` + fuel/old-growth | Sim/render contract; see § Fire |
 | **VR-06** | Visual test exits before inv 720 / no proof JSON | **Yes** if early crash | VR-01 | User logs show **pass** at 240/480/720+ after shader fix |
+| **VR-07** | `fire_particle_draw.wgsl`: `redefinition of alpha` (Naga) | **Yes** — fire raster pipeline fails | `fire_particle_draw.wgsl` | **Fixed 2026-05-23:** single `let alpha` expr |
+| **VR-08** | `fire_particle_raster`: globals binding not visible in FRAGMENT | **Yes** — wgpu panic + `STATUS_STACK_BUFFER_OVERRUN` | `gpu_fire_particle_raster.rs` | **Fixed 2026-05-23:** `ShaderStages::VERTEX_FRAGMENT` |
+| **VR-09** | Visual harness never writes JSON (fire rows 0, UX-06 done) | **Yes** — B1 proof stall | `stage5_full_app_harness.rs` | **Fixed 2026-05-23:** witness = `instanced_dispatch_ok` |
 
 ---
 

@@ -1,6 +1,8 @@
 # World preview & raster pipeline — runbook `v1`
 
-Version: `v1.0.1` (see §7 changelog)
+Version: `v1.0.2` (see §7 changelog)
+
+> **Chrome layout:** [`ui/world_map_preview_layout_decision_v1.md`](ui/world_map_preview_layout_decision_v1.md) §11 **SIGNED** (2026-05-24) — shell work via **UI-WP-LAYOUT-001**. This runbook covers **raster/GPU pipeline**; panel chrome is a separate slice.
 
 > **Pair:** terrain orchestrator [`terrain_unification_runbook_v1.md`](terrain_unification_runbook_v1.md) §8b · matrix [`../matrix/terrain_biome/composite_style_preview_integration_matrix_v1.md`](../matrix/terrain_biome/composite_style_preview_integration_matrix_v1.md) · invalidation / multi-layer context **U7** [`../matrix/terrain_biome/runbook/u7_steps_v1.md`](../matrix/terrain_biome/runbook/u7_steps_v1.md).
 
@@ -250,3 +252,4 @@ Goal: one place to tune colors before they become **shader constants**, **LUTs**
 |:---|:---|
 | 2026-05-10 | Initial runbook: Stages 2–4, explicit “no premature micro-opt” note, U7 alignment. |
 | 2026-05-10 | Invalidation ownership table, `ChunkTextureRect` authority, z-order invariant, `PreviewGenerationEpoch`, §2.1 no-gameplay rule, doc chain, P1+ token helpers sketch. |
+| 2026-05-24 | v1.0.2 — pointer to [`world_map_preview_layout_decision_v1.md`](ui/world_map_preview_layout_decision_v1.md); chrome refactors blocked until designer SIGNED. |

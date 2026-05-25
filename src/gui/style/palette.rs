@@ -29,6 +29,12 @@ pub struct UiPalette {
     pub wire_red: Color32,
     /// Viewport / committed-highlight ring (gold, sparse use).
     pub accent_gold: Color32,
+    /// Telemetry / tick data (green mono — `T+00042` ops strip).
+    pub fg_data: Color32,
+    /// Warm vellum panel wash (context tray selected tab).
+    pub bg_vellum: Color32,
+    /// Paper field wash (ops strip / archival panels).
+    pub bg_paper: Color32,
 }
 
 impl Default for UiPalette {
@@ -53,6 +59,9 @@ impl Default for UiPalette {
             wire_magenta: Color32::from_rgb(0xd9, 0x46, 0xef),
             wire_red: Color32::from_rgb(0xff, 0x3d, 0x3d),
             accent_gold: Color32::from_rgb(0xe8, 0xc0, 0x3a),
+            fg_data: Color32::from_rgb(0x5d, 0xca, 0x31),
+            bg_vellum: Color32::from_rgb(0x18, 0x16, 0x12),
+            bg_paper: Color32::from_rgb(0x0a, 0x0c, 0x0a),
         }
     }
 }
@@ -73,15 +82,15 @@ impl UiPalette {
         v.weak_text_color = Some(self.fg_muted);
         v.weak_text_alpha = 0.7;
 
-        let sharp = CornerRadius::ZERO;
-        v.window_corner_radius = sharp;
-        v.menu_corner_radius = sharp;
+        let soft = CornerRadius::same(4);
+        v.window_corner_radius = soft;
+        v.menu_corner_radius = soft;
         v.window_stroke = Stroke::new(1.0, self.wire_magenta);
         v.window_shadow = egui::epaint::Shadow::NONE;
         v.popup_shadow = egui::epaint::Shadow::NONE;
 
         let w = &mut v.widgets;
-        w.noninteractive.corner_radius = sharp;
+        w.noninteractive.corner_radius = soft;
         w.noninteractive.bg_fill = self.bg_elevated;
         w.noninteractive.weak_bg_fill = self.bg_deep;
         w.noninteractive.fg_stroke = Stroke::new(1.0, self.fg_muted);
@@ -91,25 +100,25 @@ impl UiPalette {
             Color32::from_rgba_unmultiplied(sep.r(), sep.g(), sep.b(), 70),
         );
 
-        w.inactive.corner_radius = sharp;
+        w.inactive.corner_radius = soft;
         w.inactive.bg_fill = self.bg_interactive;
         w.inactive.weak_bg_fill = self.bg_app;
         w.inactive.fg_stroke = Stroke::new(1.0, self.fg_primary);
         w.inactive.bg_stroke = Stroke::new(1.0, self.wire_magenta);
 
-        w.hovered.corner_radius = sharp;
+        w.hovered.corner_radius = soft;
         w.hovered.bg_fill = self.bg_interactive;
         w.hovered.weak_bg_fill = self.bg_deep;
         w.hovered.fg_stroke = Stroke::new(1.0, self.fg_primary);
         w.hovered.bg_stroke = Stroke::new(1.0, self.accent_hot);
 
-        w.active.corner_radius = sharp;
+        w.active.corner_radius = soft;
         w.active.bg_fill = self.accent_action;
         w.active.weak_bg_fill = self.accent_action.gamma_multiply(0.92);
         w.active.fg_stroke = Stroke::new(1.0, self.fg_on_accent);
         w.active.bg_stroke = Stroke::new(1.0, self.accent_gold);
 
-        w.open.corner_radius = sharp;
+        w.open.corner_radius = soft;
         w.open.fg_stroke = Stroke::new(1.0, self.accent_terminal);
 
         v.selection.bg_fill = self.selection_bg;
@@ -148,6 +157,11 @@ impl UiPalette {
     #[must_use]
     pub fn bevy_wire_magenta(&self) -> Color {
         self.color32_to_bevy(self.wire_magenta)
+    }
+
+    #[must_use]
+    pub fn bevy_accent_hot(&self) -> Color {
+        self.color32_to_bevy(self.accent_hot)
     }
 
     /// Subtle stroke for HUD / panels — magenta wire at reduced alpha.
@@ -208,6 +222,41 @@ impl UiPalette {
             ((p.b() as u16 + m.b() as u16) / 2) as u8,
             255,
         )
+    }
+
+    /// Ops strip paper field (`design_theme` archival wash).
+    #[must_use]
+    pub fn bevy_paper_fill(&self) -> Color {
+        let c = self.bg_paper;
+        Color::srgba(
+            c.r() as f32 / 255.0,
+            c.g() as f32 / 255.0,
+            c.b() as f32 / 255.0,
+            0.94,
+        )
+    }
+
+    /// Telemetry mono (`T+00042` tick line).
+    #[must_use]
+    pub fn bevy_fg_data(&self) -> Color {
+        self.color32_to_bevy(self.fg_data)
+    }
+
+    /// Selected context-tray tab wash.
+    #[must_use]
+    pub fn bevy_bg_vellum(&self) -> Color {
+        let c = self.bg_vellum;
+        Color::srgba(
+            c.r() as f32 / 255.0,
+            c.g() as f32 / 255.0,
+            c.b() as f32 / 255.0,
+            0.96,
+        )
+    }
+
+    #[must_use]
+    pub fn bevy_accent_gold(&self) -> Color {
+        self.color32_to_bevy(self.accent_gold)
     }
 
     fn color32_to_bevy(&self, c: Color32) -> Color {

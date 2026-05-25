@@ -1,0 +1,790 @@
+[
+  {
+    "id": "STAGE-TRACKS-INDEX",
+    "priority": 0,
+    "title": "Stage tracks hub — seven execution plans (designer + coder)",
+    "lane": "Planning",
+    "agent": "orchestrator",
+    "track": "META",
+    "witness": "src/dev/stage_tracks_execution_index_v1.md",
+    "commands": [],
+    "playbook": "tools/orchestrator/NEXT.md",
+    "docs": [
+      "src/dev/stage_tracks_execution_index_v1.md",
+      "src/dev/stages/stage7_play_plan_v1.md",
+      "src/dev/stages/vfx_phase2_closure_plan_v1.md",
+      "src/dev/stages/ui_phase4_execution_plan_v1.md",
+      "src/dev/stages/infra_55_execution_plan_v1.md",
+      "src/dev/stages/wave_c_depth_plan_v1.md",
+      "src/dev/stages/fire_sim_phase7_plan_v1.md",
+      "src/dev/stages/stage7_behavioral_plan_v1.md",
+      "src/dev/stages/water_vfx_closure_plan_v1.md"
+    ],
+    "source": "stage_tracks_execution_index_v1.md v1.1.0",
+    "status": "active"
+  },
+  {
+    "id": "WATER-W2-FOAM-001",
+    "priority": 1,
+    "title": "Water — bend foam + coast foam emitters (D-W07/D-W08)",
+    "lane": "VFX / FX-WATER",
+    "agent": "coder",
+    "track": "FX-WATER",
+    "witness": "debug_runs/stage5_full_app_live.json",
+    "commands": [
+      "cargo test -p proc_A_dine01 --lib gpu_water_particles stage5"
+    ],
+    "playbook": "tools/orchestrator/agents/render_pipeline_agent.md",
+    "docs": [
+      "src/dev/stages/water_vfx_closure_plan_v1.md",
+      "prompts/guides/ui/water_surface_vfx_coder_queue_v1.md",
+      "src/render/gpu_water_particles.rs"
+    ],
+    "source": "river_foam: 1 partial; coast_foam: 0 — track NOT CLOSED",
+    "status": "queued"
+  },
+  {
+    "id": "UI-SHELL-REFRESH-001",
+    "priority": 1,
+    "title": "UI Phase 2 — refresh ui_shell_migration_live.json (stale proof)",
+    "lane": "UI / UI-P2",
+    "agent": "coder",
+    "track": "UI-P2",
+    "witness": "debug_runs/ui_shell_migration_live.json",
+    "commands": [
+      "cargo test -p proc_A_dine01 --lib simulation_shell_phase2 stage5",
+      "cargo run -p proc_A_dine01 --release -- --test visual"
+    ],
+    "playbook": "tools/orchestrator/agents/ui_layout_agent.md",
+    "docs": [
+      "src/dev/stage_tracks_signoff_ledger_v1.md",
+      "src/dev/stage_coder_workboard_v1.md"
+    ],
+    "source": "phase2b_closed false in JSON but egui_pass_count 0 — replay interactions",
+    "status": "queued"
+  },
+  {
+    "id": "WATER-W1-OCEAN-001",
+    "priority": 1,
+    "title": "Water — ocean tiles + swell visible (D-W04)",
+    "lane": "VFX / FX-WATER",
+    "agent": "coder",
+    "track": "FX-WATER",
+    "witness": "debug_runs/stage5_full_app_live.json",
+    "commands": [
+      "cargo test -p proc_A_dine01 --lib water_surface_visual stage5"
+    ],
+    "playbook": "tools/orchestrator/agents/render_pipeline_agent.md",
+    "docs": [
+      "src/dev/stages/water_vfx_closure_plan_v1.md",
+      "assets/shaders/water/water_overlay.wgsl"
+    ],
+    "source": "water_ocean_tiles: 0 in witness",
+    "status": "queued"
+  },
+  {
+    "id": "WATER-DESIGN-001",
+    "priority": 2,
+    "title": "Water VFX — designer review vs mock (blocks CLOSED)",
+    "lane": "VFX / FX-WATER",
+    "agent": "designer",
+    "track": "FX-WATER",
+    "witness": "src/dev/water_vfx_review_record_v1.md",
+    "commands": [],
+    "playbook": "tools/orchestrator/agents/render_pipeline_agent.md",
+    "docs": [
+      "src/dev/stages/water_vfx_closure_plan_v1.md",
+      "src/dev/water_vfx_review_record_v1.md",
+      "assets/vfx/reference/water/water_surface_target_v1.png",
+      "prompts/guides/ui/vfx_post_implementation_review_v1.md"
+    ],
+    "source": "water_vfx_closure_plan_v1.md — SIGNED TUNE ROUND 2026-05-24",
+    "status": "done",
+    "notes": "Verdict TUNE — W-T01..W-T07; FX-WATER not CLOSED"
+  },
+  {
+    "id": "S7P-IND-001",
+    "priority": 1,
+    "title": "Stage 7 Play — industrial activation_green E2E",
+    "lane": "Product / S7-PLAY",
+    "agent": "coder",
+    "track": "S7-PLAY",
+    "witness": "debug_runs/industrial_activation_live.json",
+    "commands": [
+      "cargo test -p proc_A_dine01 --lib industrial_activation stage5",
+      "cargo run -p proc_A_dine01 --release -- --test visual"
+    ],
+    "playbook": "tools/orchestrator/agents/ui_layout_agent.md",
+    "docs": [
+      "src/dev/stages/stage7_play_plan_v1.md",
+      "src/dev/industrial_activation_pipeline.md",
+      "src/dev/stage7_play_scenario_v1.md"
+    ],
+    "source": "stage_tracks cycle 1 primary",
+    "status": "done",
+    "notes": "2026-05-24 — after FX-FIRE-SPARK Phase A; activation_green + concrete_chain_e2e.production_green; lib industrial_activation 3/3"
+  },
+  {
+    "id": "S7P-DESIGN-001",
+    "priority": 1,
+    "title": "Stage 7 Play — designer scenario script sign-off",
+    "lane": "Product / S7-PLAY",
+    "agent": "designer",
+    "track": "S7-PLAY",
+    "witness": "src/dev/stage7_play_scenario_v1.md",
+    "commands": [],
+    "playbook": "tools/orchestrator/agents/ui_layout_agent.md",
+    "docs": [
+      "src/dev/stages/stage7_play_plan_v1.md",
+      "src/dev/ui_construction_playtest_v1.md"
+    ],
+    "source": "stage7_play_plan_v1.md § designer",
+    "status": "queued"
+  },
+  {
+    "id": "UI4-DESIGN-001",
+    "priority": 2,
+    "title": "UI Phase 4 — D-04 slide sheet design (blocks LAYOUT-002)",
+    "lane": "UI / UI-P4",
+    "agent": "designer",
+    "track": "UI-P4",
+    "witness": "assets/ui/world_preview/slide_sheet_spec_v1.png",
+    "commands": [],
+    "playbook": "tools/orchestrator/agents/ui_layout_agent.md",
+    "docs": [
+      "src/dev/stages/ui_phase4_execution_plan_v1.md",
+      "prompts/guides/ui/world_map_preview_layout_decision_v1.md"
+    ],
+    "source": "ui_phase4_execution_plan_v1.md",
+    "status": "queued"
+  },
+  {
+    "id": "INFRA-PREFLIGHT-001",
+    "priority": 2,
+    "title": "Infra 5.5+ — sim-steward preflight",
+    "lane": "Infrastructure",
+    "agent": "sim-steward",
+    "track": "INFRA-55",
+    "witness": "debug_runs/infrastructure_view_isolation_live.json",
+    "commands": [
+      "cargo test -p proc_A_dine01 --lib stage5"
+    ],
+    "playbook": "tools/orchestrator/agents/viewport_cleanup_agent.md",
+    "docs": [
+      "src/dev/stages/infra_55_execution_plan_v1.md",
+      "src/dev/recovery_viewport.md"
+    ],
+    "source": "infra_55_execution_plan_v1.md",
+    "status": "queued"
+  },
+  {
+    "id": "S7B-DESIGN-001",
+    "priority": 5,
+    "title": "Stage 7 Behavioral — contract worksheet (gated)",
+    "lane": "Behavioral / S7-BEHAV",
+    "agent": "designer",
+    "track": "S7-BEHAV",
+    "witness": "prompts/guides/stage7_behavioral_decision_worksheet_v1.md",
+    "commands": [],
+    "playbook": "tools/orchestrator/agents/ui_layout_agent.md",
+    "docs": [
+      "src/dev/stages/stage7_behavioral_plan_v1.md",
+      "prompts/guides/stage7_behavioral_world_designer_brief_v1.md"
+    ],
+    "source": "stage7_behavioral_plan_v1.md — after UI-P4 + INFRA-VM09",
+    "status": "queued"
+  },
+  {
+    "id": "UI-WP-DESIGN",
+    "priority": 1,
+    "title": "World Map Preview layout — designer sign-off (D-01…D-12 + mock)",
+    "lane": "UI / World Preview chrome",
+    "agent": "designer",
+    "track": "UI-WP",
+    "witness": "prompts/guides/ui/world_map_preview_layout_decision_v1.md §11",
+    "commands": [],
+    "playbook": "tools/orchestrator/agents/ui_layout_agent.md",
+    "docs": [
+      "prompts/guides/ui/world_preview_layout_designer_next_steps_v1.md",
+      "prompts/guides/ui/world_preview_layout_decision_worksheet_v1.md",
+      "prompts/guides/ui/world_map_preview_layout_decision_v1.md",
+      "assets/ui/world_preview/layout_mock_v1.png"
+    ],
+    "source": "world_map_preview_layout_decision_v1.md §0 gate — blocks chrome until SIGNED",
+    "status": "done"
+  },
+  {
+    "id": "UI-WP-LAYOUT-001",
+    "priority": 1,
+    "title": "World Map Preview shell — implement signed D-01 (first coder slice)",
+    "lane": "UI / World Preview chrome",
+    "agent": "coder",
+    "track": "UI-WP",
+    "witness": "assets/ui/world_preview/layout_mock_v1.png",
+    "commands": [
+      "cargo test -p proc_A_dine01 --lib stage5"
+    ],
+    "playbook": "tools/orchestrator/agents/ui_layout_agent.md",
+    "docs": [
+      "prompts/guides/ui/ui_world_preview_coder_queue_v1.md",
+      "prompts/guides/ui/world_map_preview_layout_decision_v1.md",
+      "prompts/guides/ui/world_preview_visual_references_v1.md",
+      "prompts/guides/world_preview_runbook_v1.md",
+      "src/gui/editor/world_preview/window.rs"
+    ],
+    "source": "world_map_preview_layout_decision_v1.md §12 — SIGNED 2026-05-24; D-01 landed in world_preview/mod.rs + window.rs + world_gen_ui.rs",
+    "status": "done"
+  },
+  {
+    "id": "UI-WP-LAYOUT-D02-OPT",
+    "priority": 4,
+    "title": "World Preview D-02 — map ≥65% area (optional polish)",
+    "lane": "UI / World Preview chrome",
+    "agent": "coder",
+    "track": "UI-WP",
+    "witness": "prompts/guides/ui/world_preview_d02_map_dominance_signoff_v1.md",
+    "commands": [
+      "cargo test -p proc_A_dine01 --lib world_preview"
+    ],
+    "playbook": "tools/orchestrator/agents/ui_layout_agent.md",
+    "docs": [
+      "prompts/guides/ui/world_preview_d02_map_dominance_signoff_v1.md",
+      "prompts/guides/ui/world_preview_d01_shell_signoff_v1.md",
+      "src/gui/editor/world_preview/window.rs"
+    ],
+    "source": "D-02 A signed; does not block D-01 or LAYOUT-002",
+    "status": "queued",
+    "notes": "OPTIONAL — clamp sidebar/sheet; ratio test at 1920x1080"
+  },
+  {
+    "id": "UI-WP-LAYOUT-D07",
+    "priority": 3,
+    "title": "World Preview D-07 — corner overview inset (move off sidebar)",
+    "lane": "UI / World Preview chrome",
+    "agent": "coder",
+    "track": "UI-WP",
+    "witness": "prompts/guides/ui/world_preview_d_wp_track_signoff_v1.md",
+    "commands": [
+      "cargo test -p proc_A_dine01 --lib world_preview stage5"
+    ],
+    "playbook": "tools/orchestrator/agents/ui_layout_agent.md",
+    "docs": [
+      "prompts/guides/ui/world_preview_d_wp_track_signoff_v1.md",
+      "assets/ui/world_preview/layout_mock_v1.png",
+      "src/gui/editor/world_preview/window.rs"
+    ],
+    "source": "D-WP gap table — D-07 A signed; sidebar thumb today",
+    "status": "queued"
+  },
+  {
+    "id": "UI-P3-M2-001",
+    "priority": 1,
+    "title": "Phase 3 M2 — logistics heat layer on minimap compositor",
+    "lane": "UI / UX-E01",
+    "agent": "coder",
+    "track": "UI-P3",
+    "witness": "debug_runs/minimap_compositor_live.json",
+    "commands": [
+      "cargo test -p proc_A_dine01 --lib minimap_compositor stage5",
+      "cargo run -p proc_A_dine01 --release -- --test visual"
+    ],
+    "playbook": "tools/orchestrator/agents/ui_layout_agent.md",
+    "docs": [
+      "src/dev/ui_overhaul_plan.md",
+      "prompts/guides/ui/ui_phase3_coder_queue_v1.md",
+      "src/dev/ux_gpu_minimap_design_v1.md"
+    ],
+    "source": "ui_overhaul_plan.md § UI-P3-M2-001 — logistics_rows green 2026-05-24",
+    "status": "done",
+    "notes": "Superseded sign-off: src/dev/minimap_d_m2_signoff_v1.md (D-MINIMAP-M2)"
+  },
+  {
+    "id": "UI-P3-M2-TRAY-OPT",
+    "priority": 4,
+    "title": "Minimap M2 — HUD overlay tray → MinimapOverlayMask sync",
+    "lane": "UI / UX-E01",
+    "agent": "coder",
+    "track": "UI-P3",
+    "witness": "src/dev/minimap_d_m2_signoff_v1.md",
+    "commands": [
+      "cargo test -p proc_A_dine01 --lib minimap_compositor stage5"
+    ],
+    "playbook": "tools/orchestrator/agents/ui_layout_agent.md",
+    "docs": [
+      "src/dev/minimap_d_m2_signoff_v1.md",
+      "src/dev/ux_gpu_minimap_design_v1.md",
+      "src/gui/hud/dock_shell.rs",
+      "src/gui/minimap_shell.rs"
+    ],
+    "source": "D-MINIMAP-M2 M2-06 deferred — tray toggles not live-wired",
+    "status": "queued",
+    "notes": "OPTIONAL polish — defaults OK for M2 sign-off"
+  },
+  {
+    "id": "IND-E01",
+    "priority": 2,
+    "title": "Industrial activation E2E — concrete chain in sim",
+    "lane": "Product / Phase E",
+    "agent": "coder",
+    "track": "IND-E01",
+    "witness": "debug_runs/industrial_activation_live.json",
+    "commands": [
+      "cargo test -p proc_A_dine01 --lib stage5"
+    ],
+    "playbook": "tools/orchestrator/agents/ui_layout_agent.md",
+    "docs": [
+      "src/dev/industrial_activation_pipeline.md",
+      "src/dev/post_stage6_active_todos.md"
+    ],
+    "source": "post_stage6_active_todos.md launch queue P1",
+    "status": "done",
+    "notes": "2026-05-24 — same witness as S7P-IND-001; parallel to Coder A fire Phase A"
+  },
+  {
+    "id": "UI-P2A-F03",
+    "priority": 3,
+    "title": "Witness tail — ops_zone_hover_token (F-03 hover replay)",
+    "lane": "UI-P2A",
+    "agent": "coder",
+    "track": "UI-P2",
+    "witness": "debug_runs/ui_shell_migration_live.json",
+    "commands": [
+      "cargo run -p proc_A_dine01 -- --test frame"
+    ],
+    "playbook": "tools/orchestrator/agents/ui_layout_agent.md",
+    "docs": ["src/dev/ui_overhaul_plan.md"],
+    "source": "Passive proof — witness.ops_zone_hover_token false",
+    "status": "open"
+  },
+  {
+    "id": "UI-P2A-P4-AUTH",
+    "priority": 3,
+    "title": "Witness tail — build_rail_authoritative (rail click replay)",
+    "lane": "UI-P2A",
+    "agent": "coder",
+    "track": "UI-P2",
+    "witness": "debug_runs/ui_shell_migration_live.json",
+    "commands": [
+      "cargo run -p proc_A_dine01"
+    ],
+    "playbook": "tools/orchestrator/agents/ui_layout_agent.md",
+    "docs": ["src/dev/ui_overhaul_plan.md"],
+    "source": "Passive proof — witness.build_rail_authoritative false",
+    "status": "open"
+  },
+  {
+    "id": "UI-P2-GATE",
+    "priority": 0,
+    "title": "UI Phase 2 regression gate — sim-steward Shift C",
+    "lane": "UI",
+    "agent": "sim-steward",
+    "track": "UI-P2",
+    "witness": "debug_runs/ui_shell_migration_live.json",
+    "commands": [
+      "cargo test -p proc_A_dine01 --lib stage5",
+      "cargo test -p proc_A_dine01 --lib simulation_shell_phase2"
+    ],
+    "playbook": "tools/orchestrator/agents/ui_layout_agent.md",
+    "docs": ["src/dev/ui_overhaul_plan.md"],
+    "source": "sim-steward Shift C 2026-05-24 — CONDITIONAL(shell-only)",
+    "status": "done"
+  },
+  {
+    "id": "FX-FIRE-SPARK-DESIGN",
+    "priority": 2,
+    "title": "Fire pinpoint sparks — designer sign-off (D-F01…D-F10 + elemental refs)",
+    "lane": "VFX / Fire particles",
+    "agent": "designer",
+    "track": "FX-FIRE",
+    "witness": "src/dev/fire_particle_spark_design_plan_v1.md §11",
+    "commands": [],
+    "playbook": "tools/orchestrator/agents/render_pipeline_agent.md",
+    "docs": [
+      "prompts/guides/ui/fire_particle_spark_designer_brief_v1.md",
+      "prompts/guides/ui/fire_particle_spark_decision_worksheet_v1.md",
+      "prompts/guides/ui/fire_particle_legacy_elemental_reference_v1.md",
+      "src/dev/fire_particle_spark_design_plan_v1.md",
+      "assets/vfx/reference/elemental_sparks/README.md"
+    ],
+    "workflow_minutes": 60,
+    "workflow": [
+      "Confirm D-F01..D-F10 on worksheet (defaults: legacy pinpoint A/B)",
+      "Skim elemental/compute_partical/*.glsl on reference machine",
+      "Drop stills + fire_spark_target_v1.png under assets/vfx/reference/elemental_sparks/",
+      "Mark fire_particle_spark_design_plan_v1.md §11 SIGNED",
+      "Unblocks FX-FIRE-SPARK-001 (fire_particle_draw.wgsl / fire_particle.wgsl — no second extract)"
+    ],
+    "source": "Legacy ref elemental/compute_partical — SIGNED 2026-05-24",
+    "status": "done"
+  },
+  {
+    "id": "FX-FIRE-SPARK-001",
+    "priority": 1,
+    "title": "Fire pinpoint sparks — Phase A verify (visual vs target mock)",
+    "lane": "VFX / Fire particles",
+    "agent": "coder",
+    "track": "FX-FIRE",
+    "witness": "debug_runs/stage5_full_app_live.json",
+    "commands": [
+      "cargo test -p proc_A_dine01 --lib gpu_particles",
+      "cargo test -p proc_A_dine01 --lib stage5",
+      "cargo run -p proc_A_dine01 --release -- --test visual"
+    ],
+    "playbook": "tools/orchestrator/agents/render_pipeline_agent.md",
+    "docs": [
+      "prompts/guides/ui/fire_particle_spark_coder_queue_v1.md",
+      "assets/vfx/reference/elemental_sparks/fire_spark_target_v1.png"
+    ],
+    "source": "Phase A shader landed — operator visual verify vs fire_spark_target_v1.png",
+    "status": "done"
+  },
+  {
+    "id": "FX-FIRE-SPARK-002",
+    "priority": 1,
+    "title": "Fire sparks Phase B — compute advection (Coder A)",
+    "lane": "VFX / Fire particles",
+    "agent": "coder",
+    "track": "FX-FIRE",
+    "witness": "debug_runs/stage5_full_app_live.json",
+    "commands": [
+      "cargo test -p proc_A_dine01 --lib gpu_particles stage5"
+    ],
+    "playbook": "tools/orchestrator/agents/render_pipeline_agent.md",
+    "docs": [
+      "prompts/guides/ui/fire_particle_spark_coder_queue_v1.md",
+      "prompts/guides/ui/fire_particle_legacy_elemental_reference_v1.md",
+      "assets/shaders/fire/fire_spark_compute.wgsl"
+    ],
+    "source": "D-F02 A→B — gpu_spark_compute landed",
+    "status": "done"
+  },
+  {
+    "id": "FX-FIRE-SPARK-003",
+    "priority": 1,
+    "title": "Fire sparks witness + scatter/zoom caps (Coder B)",
+    "lane": "VFX / Fire particles",
+    "agent": "coder",
+    "track": "FX-FIRE",
+    "witness": "debug_runs/stage5_full_app_live.json",
+    "commands": [
+      "cargo test -p proc_A_dine01 --lib gpu_particles stage5"
+    ],
+    "playbook": "tools/orchestrator/agents/render_pipeline_agent.md",
+    "docs": [
+      "prompts/guides/ui/fire_particle_spark_coder_queue_v1.md",
+      "src/render/gpu_particles.rs",
+      "src/render/stage5_full_app_harness.rs"
+    ],
+    "source": "FX-L4 — spark_witness fields in stage5 JSON",
+    "status": "done"
+  },
+  {
+    "id": "FX-FIRE-SPARK-004",
+    "priority": 2,
+    "title": "Fire sparks — render above smoke field (Coder A, D-F10)",
+    "lane": "VFX / Fire particles",
+    "agent": "coder",
+    "track": "FX-FIRE",
+    "witness": "debug_runs/stage5_full_app_live.json",
+    "commands": [
+      "cargo run -p proc_A_dine01 --release -- --test visual"
+    ],
+    "playbook": "tools/orchestrator/agents/render_pipeline_agent.md",
+    "docs": [
+      "prompts/guides/ui/fire_particle_spark_coder_queue_v1.md",
+      "src/render/gpu_fire_particle_raster.rs",
+      "src/render/gpu_weather_fire_field.rs"
+    ],
+    "source": "relink_core2d done — smoke field audit → P2-FIRE-SPARK-010",
+    "status": "done"
+  },
+  {
+    "id": "FX-FIRE-SPARK-005",
+    "priority": 2,
+    "title": "Fire sparks — Spark vs Ember class split (Coder B)",
+    "lane": "VFX / Fire particles",
+    "agent": "coder",
+    "track": "FX-FIRE",
+    "witness": "debug_runs/stage5_full_app_live.json",
+    "commands": [
+      "cargo test -p proc_A_dine01 --lib gpu_particles"
+    ],
+    "playbook": "tools/orchestrator/agents/render_pipeline_agent.md",
+    "docs": [
+      "prompts/guides/ui/fire_particle_spark_coder_queue_v1.md",
+      "src/render/gpu_particles.rs"
+    ],
+    "source": "ParticleClass Spark/Ember landed",
+    "status": "done"
+  },
+  {
+    "id": "FX-FIRE-SPARK-006",
+    "priority": 3,
+    "title": "Fire sparks — per-view particle cull (Coder B, TRIAGE-PHASE-F-CULL)",
+    "lane": "VFX / Fire particles",
+    "agent": "coder",
+    "track": "FX-FIRE",
+    "witness": "debug_runs/stage5_full_app_live.json",
+    "commands": [
+      "cargo test -p proc_A_dine01 --lib stage5"
+    ],
+    "playbook": "tools/orchestrator/agents/render_pipeline_agent.md",
+    "docs": [
+      "prompts/guides/ui/fire_particle_spark_coder_queue_v1.md",
+      "src/dev/stage5_triage_backlog.md"
+    ],
+    "source": "is_tactical_fire_particle_view + view_culled witness",
+    "status": "done"
+  },
+  {
+    "id": "FX-WATER-DESIGN",
+    "priority": 3,
+    "title": "Water surface VFX — designer sign-off (lake / river / ocean)",
+    "lane": "VFX / Hydrology presentation",
+    "agent": "designer",
+    "track": "FX-WATER",
+    "witness": "src/dev/water_surface_vfx_design_plan_v1.md §11",
+    "commands": [],
+    "playbook": "tools/orchestrator/agents/render_pipeline_agent.md",
+    "docs": [
+      "src/dev/water_surface_vfx_design_plan_v1.md",
+      "prompts/guides/ui/water_surface_vfx_decision_worksheet_v1.md",
+      "assets/vfx/reference/water/water_surface_target_v1.png",
+      "assets/vfx/reference/hydrology_ships/"
+    ],
+    "workflow": [
+      "Confirm D-W01..D-W10 on worksheet",
+      "Review water_surface_target_v1.png (lake vs river vs ocean)",
+      "Mark water_surface_vfx_design_plan_v1.md §11 SIGNED",
+      "Unblocks FX-WATER-SHADER-001 then FX-WATER-PARTICLE-001"
+    ],
+    "source": "User request — rivers visually missing; lakes/oceans need motion + particles",
+    "status": "done"
+  },
+  {
+    "id": "FX-WATER-SHADER-001",
+    "priority": 1,
+    "title": "Water W1 — GPU overlay hook + D-W02/D-W03/D-W04 verify (Coder A)",
+    "lane": "VFX / Hydrology presentation",
+    "agent": "coder",
+    "track": "FX-WATER",
+    "witness": "debug_runs/stage5_full_app_live.json",
+    "commands": [
+      "cargo test -p proc_A_dine01 --lib water_surface_visual stage5",
+      "cargo run -p proc_A_dine01 --release -- --test visual"
+    ],
+    "playbook": "tools/orchestrator/agents/render_pipeline_agent.md",
+    "docs": [
+      "prompts/guides/ui/water_surface_vfx_coder_queue_v1.md",
+      "src/dev/water_surface_vfx_design_plan_v1.md",
+      "assets/shaders/water/water_overlay.wgsl",
+      "src/render/gpu_water_surface_draw.rs",
+      "src/engine/engine_with_worldgen.rs"
+    ],
+    "source": "register_water_surface_draw + water_overlay.wgsl landed",
+    "status": "done"
+  },
+  {
+    "id": "FX-WATER-SHADER-002",
+    "priority": 1,
+    "title": "Water W1 — witness water_w1_green (Coder B)",
+    "lane": "VFX / Hydrology presentation",
+    "agent": "coder",
+    "track": "FX-WATER",
+    "witness": "debug_runs/stage5_full_app_live.json",
+    "commands": [
+      "cargo test -p proc_A_dine01 --lib water_surface_visual"
+    ],
+    "playbook": "tools/orchestrator/agents/render_pipeline_agent.md",
+    "docs": [
+      "prompts/guides/ui/water_surface_vfx_coder_queue_v1.md",
+      "src/render/water_surface_visual.rs",
+      "src/render/stage5_full_app_harness.rs"
+    ],
+    "source": "water_w1_green + river counts in stage5 JSON",
+    "status": "done"
+  },
+  {
+    "id": "FX-WATER-PARTICLE-001",
+    "priority": 2,
+    "title": "Water W2 — WGSL spine pinpoint particles (Coder A, D-W05/D-W10)",
+    "lane": "VFX / Hydrology presentation",
+    "agent": "coder",
+    "track": "FX-WATER",
+    "witness": "debug_runs/stage5_full_app_live.json",
+    "commands": [
+      "cargo test -p proc_A_dine01 --lib stage5"
+    ],
+    "playbook": "tools/orchestrator/agents/render_pipeline_agent.md",
+    "docs": [
+      "prompts/guides/ui/water_surface_vfx_coder_queue_v1.md",
+      "assets/shaders/fire/fire_particle.wgsl",
+      "assets/shaders/fire/fire_particle_draw.wgsl"
+    ],
+    "source": "water_particle.wgsl + draw landed — Phase 2 visual proof",
+    "status": "done"
+  },
+  {
+    "id": "FX-WATER-PARTICLE-002",
+    "priority": 2,
+    "title": "Water W2 — emission profiles + zoom fade (Coder B, D-W06–D-W09)",
+    "lane": "VFX / Hydrology presentation",
+    "agent": "coder",
+    "track": "FX-WATER",
+    "witness": "debug_runs/stage5_full_app_live.json",
+    "commands": [
+      "cargo test -p proc_A_dine01 --lib stage5"
+    ],
+    "playbook": "tools/orchestrator/agents/render_pipeline_agent.md",
+    "docs": [
+      "prompts/guides/ui/water_surface_vfx_coder_queue_v1.md",
+      "src/render/water_surface_visual.rs"
+    ],
+    "source": "gpu_water_particles.rs profiles + caps landed",
+    "status": "done"
+  },
+  {
+    "id": "P2-VFX-VISUAL-001",
+    "priority": 1,
+    "title": "Phase 2 — tactical zoom visual proof (fire + water particle rows > 0)",
+    "lane": "VFX / Proof",
+    "agent": "coder",
+    "track": "P2-VFX",
+    "witness": "debug_runs/stage5_full_app_live.json",
+    "commands": [
+      "cargo test -p proc_A_dine01 --lib stage5",
+      "cargo run -p proc_A_dine01 --release -- --test visual"
+    ],
+    "playbook": "tools/orchestrator/agents/render_pipeline_agent.md",
+    "docs": [
+      "src/dev/vfx_coder_phase2_queue_v1.md",
+      "prompts/guides/ui/vfx_coder_phase2_starters_v1.md"
+    ],
+    "source": "Tactical camera + visibility + overlay spark bootstrap in visual proof path",
+    "status": "done"
+  },
+  {
+    "id": "P2-FIRE-SPARK-010",
+    "priority": 1,
+    "title": "Phase 2 — sparks above smoke weather overlay (audit)",
+    "lane": "VFX / Fire particles",
+    "agent": "coder",
+    "track": "FX-FIRE",
+    "witness": "debug_runs/stage5_full_app_live.json",
+    "commands": [
+      "cargo run -p proc_A_dine01 --release -- --test visual"
+    ],
+    "playbook": "tools/orchestrator/agents/render_pipeline_agent.md",
+    "docs": [
+      "src/dev/vfx_coder_phase2_queue_v1.md",
+      "src/render/gpu_weather_fire_field.rs",
+      "src/render/gpu_fire_particle_raster.rs"
+    ],
+    "source": "fire_sparks_above_smoke: true in stage5 witness 2026-05-24",
+    "status": "done"
+  },
+  {
+    "id": "P2-FIRE-SPARK-011",
+    "priority": 2,
+    "title": "Phase 2 — spark compute motion tuning (visible shower)",
+    "lane": "VFX / Fire particles",
+    "agent": "coder",
+    "track": "FX-FIRE",
+    "witness": "debug_runs/stage5_full_app_live.json",
+    "commands": [
+      "cargo test -p proc_A_dine01 --lib gpu_particles"
+    ],
+    "playbook": "tools/orchestrator/agents/render_pipeline_agent.md",
+    "docs": [
+      "src/dev/vfx_coder_phase2_queue_v1.md",
+      "assets/shaders/fire/fire_spark_compute.wgsl"
+    ],
+    "source": "Compute enabled but rows 0 without hot cells / tactical zoom",
+    "status": "queued"
+  },
+  {
+    "id": "P2-WATER-POLISH-001",
+    "priority": 2,
+    "title": "Phase 2 — river ribbon width + ocean tiles + CPU/GPU parity",
+    "lane": "VFX / Hydrology presentation",
+    "agent": "coder",
+    "track": "FX-WATER",
+    "witness": "debug_runs/stage5_full_app_live.json",
+    "commands": [
+      "cargo test -p proc_A_dine01 --lib water_surface_visual"
+    ],
+    "playbook": "tools/orchestrator/agents/render_pipeline_agent.md",
+    "docs": [
+      "src/dev/vfx_coder_phase2_queue_v1.md",
+      "src/render/water_surface_visual.rs"
+    ],
+    "source": "Rivers still hard to read; ocean_tiles often 0 in witness",
+    "status": "queued"
+  },
+  {
+    "id": "P2-VFX-WITNESS-001",
+    "priority": 1,
+    "title": "Phase 2 — tactical zoom unit tests (fire + water rows > 0)",
+    "lane": "VFX / Proof",
+    "agent": "coder",
+    "track": "P2-VFX",
+    "witness": "debug_runs/stage5_full_app_live.json",
+    "commands": [
+      "cargo test -p proc_A_dine01 --lib gpu_particles gpu_water"
+    ],
+    "playbook": "tools/orchestrator/agents/render_pipeline_agent.md",
+    "docs": [
+      "src/dev/vfx_coder_phase2_queue_v1.md",
+      "src/render/gpu_particles.rs",
+      "src/render/gpu_water_particles.rs"
+    ],
+    "source": "tactical_vfx_witness + gpu_particles tests green 2026-05-24",
+    "status": "done"
+  },
+  {
+    "id": "P2-WATER-WITNESS-002",
+    "priority": 2,
+    "title": "Phase 2 — water particle witness refresh at tactical zoom",
+    "lane": "VFX / Hydrology presentation",
+    "agent": "coder",
+    "track": "FX-WATER",
+    "witness": "debug_runs/stage5_full_app_live.json",
+    "commands": [
+      "cargo test -p proc_A_dine01 --lib stage5"
+    ],
+    "playbook": "tools/orchestrator/agents/render_pipeline_agent.md",
+    "docs": [
+      "src/dev/vfx_coder_phase2_queue_v1.md",
+      "src/render/stage5_full_app_harness.rs"
+    ],
+    "source": "water_particle_* fields exist but 0 at strategic zoom",
+    "status": "queued"
+  },
+  {
+    "id": "VFX-POST-REVIEW-DESIGN",
+    "priority": 4,
+    "title": "Post-implementation VFX review — D-VFX tactical vs mocks",
+    "lane": "VFX / Design QA",
+    "agent": "designer",
+    "track": "VFX-REVIEW",
+    "witness": "src/dev/vfx_design_review_record_v1.md",
+    "commands": [],
+    "playbook": "tools/orchestrator/agents/render_pipeline_agent.md",
+    "docs": [
+      "src/dev/vfx_design_review_record_v1.md",
+      "src/dev/water_vfx_review_record_v1.md",
+      "prompts/guides/ui/vfx_post_implementation_review_v1.md",
+      "assets/vfx/reference/elemental_sparks/fire_spark_target_v1.png",
+      "assets/vfx/reference/water/water_surface_target_v1.png",
+      "assets/vfx/reference/review_captures/README.md"
+    ],
+    "workflow": [
+      "P2-VFX-VISUAL-001 green — witness refreshed",
+      "D-VFX SIGNED TUNE — PNG captures still pending for ACCEPTED",
+      "Water detail: WATER-DESIGN-001 in water_vfx_review_record_v1.md"
+    ],
+    "source": "D-VFX v1.0.0 — fire 308 rows @ tactical; water TUNE per WATER-DESIGN-001",
+    "status": "done",
+    "notes": "SIGNED TUNE ROUND — not ACCEPTED until review_captures PNGs"
+  }
+]

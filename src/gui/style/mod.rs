@@ -1,17 +1,29 @@
 //! Shared UI tokens (`UiPalette`, spacing) and egui **Visuals** wiring.
 //! Spec: `prompts/guides/ui_design_language_plan_v1.md`.
 
+mod density;
 mod color_guard;
 mod fonts;
 mod palette;
+mod scroll;
 mod theme;
 
 use bevy::prelude::Color;
 use bevy::prelude::Resource;
 
+pub use density::{
+    apply_density_to_egui_style, apply_hud_density_profile, native_ui_pixels_per_point,
+    resolve_ui_scale, resolved_hud_pixels_per_point, reset_ui_scale_application_gate,
+    spacing_for_density, sync_egui_context_scale_factor, HudDensityProfile,
+    UiScaleApplicationGate, DEFAULT_UI_GLOBAL_SCALE, UI_GLOBAL_SCALE_STEP,
+};
 pub use color_guard::forbid_raw_colors;
 pub use fonts::CmdUiMonoFont;
 pub use palette::UiPalette;
+pub use scroll::{
+    apply_scroll_style, widget_scroll_both, widget_scroll_vertical, widget_scroll_vertical_capped,
+    widget_scroll_vertical_fill,
+};
 pub use theme::UiThemePlugin;
 
 use bevy_egui::egui;
@@ -209,6 +221,25 @@ pub fn neutral_image_tint() -> egui::Color32 {
     egui::Color32::WHITE
 }
 
+/// Four-step severity ramp (transmissions, alerts, dev overlay warnings).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum SeverityTone {
+    Routine,
+    Advisory,
+    Urgent,
+    Emergency,
+}
+
+#[inline]
+pub fn severity_tone_color(palette: &UiPalette, tone: SeverityTone) -> egui::Color32 {
+    match tone {
+        SeverityTone::Routine => palette.fg_muted,
+        SeverityTone::Advisory => palette.fg_primary,
+        SeverityTone::Urgent => palette.warn,
+        SeverityTone::Emergency => palette.danger,
+    }
+}
+
 /// Tonal palette for compact status lines (scenario, diagnostics, logistics).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum StatusTone {
@@ -262,7 +293,7 @@ pub fn framed_group<R>(
     egui::Frame::new()
         .fill(palette.bg_elevated)
         .stroke(egui::Stroke::new(1.0, palette.wire_magenta))
-        .corner_radius(egui::CornerRadius::ZERO)
+        .corner_radius(egui::CornerRadius::same(4))
         .inner_margin(egui::Margin::same(8))
         .show(ui, add_contents)
         .inner

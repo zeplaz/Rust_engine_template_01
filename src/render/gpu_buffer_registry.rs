@@ -1,5 +1,9 @@
 //! Typed, versioned GPU buffer authority for the render world.
 //!
+//! [`GPUBufferEntry::version`] changes **only when a new GPU `Buffer` is allocated** for that
+//! [`BufferId`] (create / grow). In-place `write` updates do **not** bump version so bind groups
+//! keyed by `(BufferId, version)` stay stable across per-frame uploads.
+//!
 //! All `RenderDevice::create_buffer` / `Queue::write_buffer` for registered buffers go through
 //! [`GPUBufferRegistry`]. Projection and compute graphs hold [`BufferId`] only.
 
@@ -27,6 +31,16 @@ pub const LOGISTICS_OVERLAY_BUFFER: BufferId = BufferId(4);
 pub const ECOLOGY_OVERLAY_BUFFER: BufferId = BufferId(5);
 /// Expanded instanced-quad vertices (4 verts per particle instance).
 pub const FIRE_PARTICLE_EXPANDED_VERTICES_BUFFER: BufferId = BufferId(6);
+/// Spark advection sim state (`fire_spark_compute.wgsl` / expand read).
+pub const FIRE_SPARK_STATE_BUFFER: BufferId = BufferId(8);
+/// Deduped fire attractor centers (max 24, heat as mass).
+pub const FIRE_SPARK_ATTRACTORS_BUFFER: BufferId = BufferId(9);
+/// World water particle instanced-quad rows.
+pub const WATER_PARTICLE_INSTANCES_BUFFER: BufferId = BufferId(10);
+/// Expanded water particle vertices (4 verts per instance).
+pub const WATER_PARTICLE_EXPANDED_VERTICES_BUFFER: BufferId = BufferId(11);
+/// Tile LOD / fire debug logical instances (`assets/shaders/debug/tile_debug_instanced.wgsl` group 1).
+pub const TILE_DEBUG_INSTANCES_BUFFER: BufferId = BufferId(7);
 
 /// Prevents accidental cross-graph buffer sharing until explicitly allowed.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -122,6 +136,8 @@ impl GPUBufferEntry {
 #[derive(Resource, Default)]
 pub struct GPUBufferRegistry {
     buffers: HashMap<BufferId, GPUBufferEntry>,
+    /// Monotonic token assigned on each new `wgpu::Buffer` allocation for a registered id.
+    allocation_serial: u64,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -138,6 +154,11 @@ pub fn row_capacity_bytes(stride: u32, rows: usize) -> u64 {
 }
 
 impl GPUBufferRegistry {
+    fn next_allocation_token(&mut self) -> u64 {
+        self.allocation_serial = self.allocation_serial.wrapping_add(1);
+        self.allocation_serial
+    }
+
     #[must_use]
     pub fn len(&self) -> usize {
         self.buffers.len()
@@ -183,6 +204,7 @@ impl GPUBufferRegistry {
             usage: desc.usage,
             mapped_at_creation: false,
         });
+        let version = self.next_allocation_token();
         self.buffers.insert(
             desc.id,
             GPUBufferEntry {
@@ -190,7 +212,7 @@ impl GPUBufferRegistry {
                 usage: desc.usage,
                 size_bytes: size,
                 stride: desc.stride,
-                version: 0,
+                version,
                 last_write_frame: 0,
                 visibility: desc.visibility,
                 reserved_rows,
@@ -270,7 +292,8 @@ impl GPUBufferRegistry {
         })
     }
 
-    /// Controlled upload path: validates size, bumps [`GPUBufferEntry::version`], writes bytes.
+    /// Controlled upload path: writes bytes in place. Does **not** bump [`GPUBufferEntry::version`]
+    /// (bind groups remain valid until the buffer is reallocated).
     pub fn write<T: Pod>(
         &mut self,
         queue: &RenderQueue,
@@ -290,7 +313,6 @@ impl GPUBufferRegistry {
                 capacity: entry.size_bytes,
             });
         }
-        entry.version = entry.version.wrapping_add(1);
         entry.last_write_frame = frame;
         entry.active_rows = data.len() as u32;
         entry.high_watermark_rows = entry.high_watermark_rows.max(entry.active_rows);
@@ -323,6 +345,7 @@ mod tests {
         assert_eq!(LOGISTICS_OVERLAY_BUFFER, BufferId(4));
         assert_eq!(ECOLOGY_OVERLAY_BUFFER, BufferId(5));
         assert_eq!(FIRE_PARTICLE_EXPANDED_VERTICES_BUFFER, BufferId(6));
+        assert_eq!(TILE_DEBUG_INSTANCES_BUFFER, BufferId(7));
     }
 
     #[test]

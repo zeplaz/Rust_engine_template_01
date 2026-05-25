@@ -1,0 +1,19 @@
+{
+  "graph": {
+    "map_view_spine": {
+      "id": "map_view_spine",
+      "children": [
+        "backend",
+        "texture_cache",
+        "presentation_state",
+        "resolved_frames",
+        "minimap_consumer",
+        "world_preview_consumer"
+      ],
+      "notes": "Shared map presentation spine — src/gui/map_view/"
+    }
+  },
+  "subsystem_owners": {
+    "GUI / MAP_VIEW / PRESENTATION_SPINE": "ui_layout_agent"
+  }
+}

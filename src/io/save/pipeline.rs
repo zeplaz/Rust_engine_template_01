@@ -22,6 +22,8 @@ use crate::io::save::dirty_queue::DirtyChunkSaveQueue;
 
 use crate::io::save::dto::encode_chunk_body_ron;
 
+use crate::io::save::wire_format;
+
 use crate::io::save::manifest::{
 
     build_save_world_manifest, ChunkSetRef, OverlaySnapshotRef, SaveWorldManifest,
@@ -99,16 +101,6 @@ impl Default for WorldSaveBundleSettings {
 #[derive(Resource, Debug, Default, Clone, Copy, PartialEq, Eq)]
 
 pub struct SaveFlushRequested(pub bool);
-
-
-
-#[must_use]
-
-pub fn compress_payload(bytes: &[u8]) -> Vec<u8> {
-
-    bytes.to_vec()
-
-}
 
 
 
@@ -232,7 +224,7 @@ pub fn stage_dirty_chunk_save_jobs(
 
         })?;
 
-        let compressed = compress_payload(&encoded);
+        let compressed = wire_format::compress_payload(&encoded);
 
         let artifact_path = chunk_artifact_path(bundle_dir, *coord);
 
@@ -471,6 +463,13 @@ impl Plugin for WorldSaveSpinePlugin {
             .init_resource::<SaveFlushRequested>()
 
             .init_resource::<SaveIoDispatcher>()
+            .init_resource::<crate::io::save::autosave::WorldSaveAutosaveSettings>()
+            .init_resource::<crate::io::save::WaveSShellCapturePending>()
+            .init_resource::<crate::io::save::WaveSShellRestorePending>()
+            .init_resource::<crate::io::save::WaveSShellHydrateState>()
+            .init_resource::<crate::io::save::WaveSShellHydrateWitness>()
+            .init_resource::<crate::io::save::WaveSImportedBlueprints>()
+            .init_resource::<crate::io::save::WaveSLiveProofState>()
 
             .add_message::<crate::io::save::dirty_queue::RequestWorldSaveFlush>()
 
@@ -486,11 +485,17 @@ impl Plugin for WorldSaveSpinePlugin {
 
                     crate::io::save::dirty_queue::arm_save_flush_from_requests,
 
+                    crate::io::save::autosave::tick_world_save_autosave,
+
                     flush_dirty_chunk_save_queue,
 
                     poll_save_io_completions,
 
                     crate::io::save::apply::apply_pending_save_pipeline_jobs,
+                    crate::io::save::apply_wave_s_shell_capture_requests,
+                    crate::io::save::try_autoload_wave_s_on_bundle_dir,
+                    crate::io::save::apply_wave_s_shell_restore_requests,
+                    crate::io::save::write_wave_s_hydrate_live_proof_system,
 
                 )
 
@@ -509,6 +514,7 @@ mod tests {
     use super::*;
 
     use crate::io::save::load::hydrate_chunk_bodies_from_manifest;
+    use crate::io::save::{unwrap_chunk_artifact_body, SAVE_ARTIFACT_MAGIC};
 
     use crate::io::save::snapshot_builder::tag_names_from_set;
 
@@ -630,7 +636,9 @@ mod tests {
 
         assert_eq!(ids, vec![crate::terrain::material::MaterialId(0)]);
 
-        let encoded = std::str::from_utf8(&jobs[0].body_bytes).unwrap();
+        assert_eq!(&jobs[0].body_bytes[..4], SAVE_ARTIFACT_MAGIC);
+        let payload = unwrap_chunk_artifact_body(&jobs[0].body_bytes).unwrap();
+        let encoded = String::from_utf8(payload.to_vec()).unwrap();
 
         assert!(!encoded.contains("MaterialId"));
 

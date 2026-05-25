@@ -9,6 +9,8 @@ use super::components::{
     SiteOperationalStats, SiteResourceManifest, SiteTerrainValidation,
 };
 use super::events::CommitConstructionSiteEvent;
+use crate::economy::activation::BuildingDefinitionRef;
+
 use super::overlays::zone_emitter_for_archetype;
 use super::resources::{
     FootprintTiles, SiteConstructionBook, SiteConstructionPhase, SiteConstructionStatus, SiteId,
@@ -76,13 +78,14 @@ pub fn commit_construction_site_system(
 
         let tiles = footprint_tiles(ev.origin, ev.footprint);
         let emitter = zone_emitter_for_archetype(ev.archetype);
-        commands.spawn((
+        let mut entity = commands.spawn((
             PlannedSite {
                 site_id: id,
                 origin: ev.origin,
                 footprint: ev.footprint,
                 archetype: ev.archetype,
                 layer: ev.layer,
+                catalog_id: ev.catalog_id.clone(),
             },
             ConstructionSite {
                 site_id: id.0,
@@ -102,6 +105,9 @@ pub fn commit_construction_site_system(
             SiteConstructionRate::default(),
             emitter,
         ));
+        if let Some(cid) = ev.catalog_id.clone() {
+            entity.insert(BuildingDefinitionRef { catalog_id: cid });
+        }
 
         if let Some(cfg) = cfg.as_ref() {
             let coords =

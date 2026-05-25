@@ -1,0 +1,759 @@
+   Compiling bevy_ecs v0.18.1
+   Compiling sysinfo v0.37.2
+   Compiling windows v0.58.0
+   Compiling gpu-descriptor-types v0.2.0
+   Compiling gpu-alloc-types v0.3.0
+   Compiling wgpu v27.0.1
+   Compiling windows_x86_64_msvc v0.42.2
+   Compiling naga_oil v0.20.0
+error: unexpected `self` parameter in function
+   --> C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bevy_ecs-0.18.1\src\entity\mod.rs:180:29
+    |
+180 |  unsafe { mem::transmute:: (self.0) }
+    |                             ^^^^ must be the first parameter of an associated function
+
+error: `Trait(...)` syntax does not support named parameters
+   --> C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bevy_ecs-0.18.1\src\entity\mod.rs:180:29
+    |
+180 |  unsafe { mem::transmute:: (self.0) }
+    |                             ^^^^ help: remove the parameter name
+
+error: expected one of `)`, `,`, or `:`, found `.`
+   --> C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bevy_ecs-0.18.1\src\entity\mod.rs:180:33
+    |
+180 |  unsafe { mem::transmute:: (self.0) }
+    |                         ----    ^ expected one of `)`, `,`, or `:`
+    |                         |
+    |                         while parsing this parenthesized list of type arguments starting here
+    |
+help: consider removing the `::` here to call the expression
+    |
+180 -  unsafe { mem::transmute:: (self.0) }
+180 +  unsafe { mem::transmute (self.0) }
+    |
+
+error: expected identifier, found `::`
+   --> C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bevy_ecs-0.18.1\src\entity\mod.rs:202:17
+    |
+202 |  match NonZero::::new(bits) {
+    |  -----          ^^ expected identifier
+    |  |
+    |  while parsing this `match` expression
+
+error: expected one of `!`, `(`, `+`, `::`, `<`, `where`, or `{`, found `,`
+    --> C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bevy_ecs-0.18.1\src\entity\mod.rs:904:45
+     |
+ 863 | impl Entities {
+     |               - while parsing this item list starting here
+...
+ 904 |  pub fn get(&self, entity: Entity) -> Result, InvalidEntityError> {
+     |                                             ^ expected one of 7 possible tokens
+...
+1140 | }
+     | - the item list ends here
+
+error: generic parameters without surrounding angle brackets
+    --> C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bevy_ecs-0.18.1\src\entity\mod.rs:1535:55
+     |
+1535 |  let mut entities = allocator.alloc_many(2048).collect:: >();
+     |                                                       ^^^^
+     |
+help: surround the type parameters with angle brackets
+     |
+1535 |  let mut entities = allocator.alloc_many(2048).collect<::>();
+     |                                                       +  ~
+
+   Compiling font-types v0.11.3
+   Compiling font-types v0.10.1
+   Compiling gpu-alloc v0.6.0
+   Compiling gpu-descriptor v0.3.2
+   Compiling radsort v0.1.0
+   Compiling itoa v1.0.6
+error[E0425]: cannot find type `H` in this scope
+   --> C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bevy_ecs-0.18.1\src\entity\mod.rs:478:30
+    |
+478 |  fn hash (&self, state: &mut H) {
+    |                              ^ not found in this scope
+
+error[E0425]: cannot find type `S` in this scope
+   --> C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bevy_ecs-0.18.1\src\entity\mod.rs:634:2
+    |
+634 |  S: serde::Serializer,
+    |  ^ not found in this scope
+
+error[E0425]: cannot find type `S` in this scope
+   --> C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bevy_ecs-0.18.1\src\entity\mod.rs:632:35
+    |
+632 |  fn serialize (&self, serializer: S) -> Result 
+    |                                   ^ not found in this scope
+
+error[E0425]: cannot find type `D` in this scope
+   --> C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bevy_ecs-0.18.1\src\entity\mod.rs:644:2
+    |
+644 |  D: serde::Deserializer<'de>,
+    |  ^ not found in this scope
+
+error[E0425]: cannot find type `D` in this scope
+   --> C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bevy_ecs-0.18.1\src\entity\mod.rs:642:32
+    |
+642 |  fn deserialize (deserializer: D) -> Result 
+    |                                ^ not found in this scope
+
+error[E0433]: cannot find type `D` in this scope
+   --> C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bevy_ecs-0.18.1\src\entity\mod.rs:649:17
+    |
+649 |  .ok_or_else(|| D::Error::custom("Attempting to deserialize an invalid entity."))
+    |                 ^ use of undeclared type `D`
+    |
+help: consider importing one of these items
+    |
+ 87 + use crate::entity::fmt::Error;
+    |
+ 87 + use std::error::Error;
+    |
+ 87 + use std::fmt::Error;
+    |
+ 87 + use std::io::Error;
+    |
+    = and 3 other candidates
+help: if you import `Error`, refer to it directly
+    |
+649 -  .ok_or_else(|| D::Error::custom("Attempting to deserialize an invalid entity."))
+649 +  .ok_or_else(|| Error::custom("Attempting to deserialize an invalid entity."))
+    |
+
+   Compiling read-fonts v0.36.0
+   Compiling read-fonts v0.37.0
+   Compiling offset-allocator v0.2.0
+   Compiling bevy_render_macros v0.18.1
+error[E0107]: missing generics for struct `Vec`
+   --> C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bevy_ecs-0.18.1\src\entity\mod.rs:708:8
+    |
+708 |  free: Vec,
+    |        ^^^ expected at least 1 generic argument
+    |
+note: struct defined here, with at least 1 generic parameter: `T`
+   --> C:\Users\oz_\.rustup\toolchains\beta-x86_64-pc-windows-msvc\lib/rustlib/src/rust\library\alloc\src\vec\mod.rs:438:12
+    |
+438 | pub struct Vec<T, #[unstable(feature = "allocator_api", issue = "32838")] A: Allocator = Global> {
+    |            ^^^ -
+help: add missing generic argument
+    |
+708 |  free: Vec<T>,
+    |           +++
+
+error[E0107]: missing generics for struct `core::ops::Range`
+   --> C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bevy_ecs-0.18.1\src\entity\mod.rs:827:18
+    |
+827 |  new: core::ops::Range,
+    |                  ^^^^^ expected 1 generic argument
+    |
+note: struct defined here, with 1 generic parameter: `Idx`
+   --> C:\Users\oz_\.rustup\toolchains\beta-x86_64-pc-windows-msvc\lib/rustlib/src/rust\library\core\src\ops\range.rs:82:12
+    |
+ 82 | pub struct Range<Idx> {
+    |            ^^^^^ ---
+help: add missing generic argument
+    |
+827 |  new: core::ops::Range<Idx>,
+    |                       +++++
+
+error[E0107]: missing generics for struct `Vec`
+   --> C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bevy_ecs-0.18.1\src\entity\mod.rs:860:8
+    |
+860 |  meta: Vec,
+    |        ^^^ expected at least 1 generic argument
+    |
+note: struct defined here, with at least 1 generic parameter: `T`
+   --> C:\Users\oz_\.rustup\toolchains\beta-x86_64-pc-windows-msvc\lib/rustlib/src/rust\library\alloc\src\vec\mod.rs:438:12
+    |
+438 | pub struct Vec<T, #[unstable(feature = "allocator_api", issue = "32838")] A: Allocator = Global> {
+    |            ^^^ -
+help: add missing generic argument
+    |
+860 |  meta: Vec<T>,
+    |           +++
+
+error[E0107]: missing generics for enum `core::option::Option`
+    --> C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bevy_ecs-0.18.1\src\entity\mod.rs:1217:12
+     |
+1217 |  location: Option,
+     |            ^^^^^^ expected 1 generic argument
+     |
+note: enum defined here, with 1 generic parameter: `T`
+    --> C:\Users\oz_\.rustup\toolchains\beta-x86_64-pc-windows-msvc\lib/rustlib/src/rust\library\core\src\option.rs:600:10
+     |
+ 600 | pub enum Option<T> {
+     |          ^^^^^^ -
+help: add missing generic argument
+     |
+1217 |  location: Option<T>,
+     |                  +++
+
+error[E0107]: missing generics for enum `core::result::Result`
+   --> C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bevy_ecs-0.18.1\src\entity\mod.rs:642:38
+    |
+642 |  fn deserialize (deserializer: D) -> Result 
+    |                                      ^^^^^^ expected 2 generic arguments
+    |
+note: enum defined here, with 2 generic parameters: `T`, `E`
+   --> C:\Users\oz_\.rustup\toolchains\beta-x86_64-pc-windows-msvc\lib/rustlib/src/rust\library\core\src\result.rs:557:10
+    |
+557 | pub enum Result<T, E> {
+    |          ^^^^^^ -  -
+help: add missing generic arguments
+    |
+642 |  fn deserialize (deserializer: D) -> Result<T, E> 
+    |                                            ++++++
+
+error[E0107]: missing generics for enum `core::option::Option`
+   --> C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bevy_ecs-0.18.1\src\entity\mod.rs:833:24
+    |
+833 |  fn next(&mut self) -> Option {
+    |                        ^^^^^^ expected 1 generic argument
+    |
+note: enum defined here, with 1 generic parameter: `T`
+   --> C:\Users\oz_\.rustup\toolchains\beta-x86_64-pc-windows-msvc\lib/rustlib/src/rust\library\core\src\option.rs:600:10
+    |
+600 | pub enum Option<T> {
+    |          ^^^^^^ -
+help: add missing generic argument
+    |
+833 |  fn next(&mut self) -> Option<T> {
+    |                              +++
+
+error[E0107]: missing generics for enum `core::option::Option`
+   --> C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bevy_ecs-0.18.1\src\entity\mod.rs:843:33
+    |
+843 |  fn size_hint(&self) -> (usize, Option) {
+    |                                 ^^^^^^ expected 1 generic argument
+    |
+note: enum defined here, with 1 generic parameter: `T`
+   --> C:\Users\oz_\.rustup\toolchains\beta-x86_64-pc-windows-msvc\lib/rustlib/src/rust\library\core\src\option.rs:600:10
+    |
+600 | pub enum Option<T> {
+    |          ^^^^^^ -
+help: add missing generic argument
+    |
+843 |  fn size_hint(&self) -> (usize, Option<T>) {
+    |                                       +++
+
+   Compiling bevy_encase_derive v0.18.1
+error[E0107]: missing generics for enum `core::result::Result`
+   --> C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bevy_ecs-0.18.1\src\entity\mod.rs:878:47
+    |
+878 |  pub fn get_spawned(&self, entity: Entity) -> Result {
+    |                                               ^^^^^^ expected 2 generic arguments
+    |
+note: enum defined here, with 2 generic parameters: `T`, `E`
+   --> C:\Users\oz_\.rustup\toolchains\beta-x86_64-pc-windows-msvc\lib/rustlib/src/rust\library\core\src\result.rs:557:10
+    |
+557 | pub enum Result<T, E> {
+    |          ^^^^^^ -  -
+help: add missing generic arguments
+    |
+878 |  pub fn get_spawned(&self, entity: Entity) -> Result<T, E> {
+    |                                                     ++++++
+
+error[E0107]: missing generics for enum `core::option::Option`
+   --> C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bevy_ecs-0.18.1\src\entity\mod.rs:162:43
+    |
+162 |  pub const fn from_raw_u32(index: u32) -> Option {
+    |                                           ^^^^^^ expected 1 generic argument
+    |
+note: enum defined here, with 1 generic parameter: `T`
+   --> C:\Users\oz_\.rustup\toolchains\beta-x86_64-pc-windows-msvc\lib/rustlib/src/rust\library\core\src\option.rs:600:10
+    |
+600 | pub enum Option<T> {
+    |          ^^^^^^ -
+help: add missing generic argument
+    |
+162 |  pub const fn from_raw_u32(index: u32) -> Option<T> {
+    |                                                 +++
+
+error[E0107]: missing generics for enum `core::option::Option`
+   --> C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bevy_ecs-0.18.1\src\entity\mod.rs:454:41
+    |
+454 |  fn partial_cmp(&self, other: &Self) -> Option {
+    |                                         ^^^^^^ expected 1 generic argument
+    |
+note: enum defined here, with 1 generic parameter: `T`
+   --> C:\Users\oz_\.rustup\toolchains\beta-x86_64-pc-windows-msvc\lib/rustlib/src/rust\library\core\src\option.rs:600:10
+    |
+600 | pub enum Option<T> {
+    |          ^^^^^^ -
+help: add missing generic argument
+    |
+454 |  fn partial_cmp(&self, other: &Self) -> Option<T> {
+    |                                               +++
+
+error[E0107]: missing generics for enum `core::option::Option`
+   --> C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bevy_ecs-0.18.1\src\entity\mod.rs:550:43
+    |
+550 |  pub const fn from_raw_u32(index: u32) -> Option {
+    |                                           ^^^^^^ expected 1 generic argument
+    |
+note: enum defined here, with 1 generic parameter: `T`
+   --> C:\Users\oz_\.rustup\toolchains\beta-x86_64-pc-windows-msvc\lib/rustlib/src/rust\library\core\src\option.rs:600:10
+    |
+600 | pub enum Option<T> {
+    |          ^^^^^^ -
+help: add missing generic argument
+    |
+550 |  pub const fn from_raw_u32(index: u32) -> Option<T> {
+    |                                                 +++
+
+error[E0107]: missing generics for enum `core::option::Option`
+   --> C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bevy_ecs-0.18.1\src\entity\mod.rs:590:43
+    |
+590 |  pub const fn try_from_bits(bits: u64) -> Option {
+    |                                           ^^^^^^ expected 1 generic argument
+    |
+note: enum defined here, with 1 generic parameter: `T`
+   --> C:\Users\oz_\.rustup\toolchains\beta-x86_64-pc-windows-msvc\lib/rustlib/src/rust\library\core\src\option.rs:600:10
+    |
+600 | pub enum Option<T> {
+    |          ^^^^^^ -
+help: add missing generic argument
+    |
+590 |  pub const fn try_from_bits(bits: u64) -> Option<T> {
+    |                                                 +++
+
+error[E0107]: missing generics for enum `core::result::Result`
+   --> C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bevy_ecs-0.18.1\src\entity\mod.rs:632:41
+    |
+632 |  fn serialize (&self, serializer: S) -> Result 
+    |                                         ^^^^^^ expected 2 generic arguments
+    |
+note: enum defined here, with 2 generic parameters: `T`, `E`
+   --> C:\Users\oz_\.rustup\toolchains\beta-x86_64-pc-windows-msvc\lib/rustlib/src/rust\library\core\src\result.rs:557:10
+    |
+557 | pub enum Result<T, E> {
+    |          ^^^^^^ -  -
+help: add missing generic arguments
+    |
+632 |  fn serialize (&self, serializer: S) -> Result<T, E> 
+    |                                               ++++++
+
+error[E0049]: method `hash` has 0 type parameters but its trait declaration has 1 type parameter
+   --> C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bevy_ecs-0.18.1\src\entity\mod.rs:478:9
+    |
+478 |  fn hash (&self, state: &mut H) {
+    |         ^ found 0 type parameters
+    |
+   ::: C:\Users\oz_\.rustup\toolchains\beta-x86_64-pc-windows-msvc\lib/rustlib/src/rust\library\core\src\hash\mod.rs:198:5
+    |
+198 |     fn hash<H: Hasher>(&self, state: &mut H);
+    |     ----------------------------------------- expected 1 type parameter
+
+error[E0049]: method `serialize` has 0 type parameters but its trait declaration has 1 type parameter
+   --> C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bevy_ecs-0.18.1\src\entity\mod.rs:632:14
+    |
+632 |    fn serialize (&self, serializer: S) -> Result 
+    |                ^ found 0 type parameters
+    |
+   ::: C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde_core-1.0.228\src\ser\mod.rs:265:5
+    |
+265 | /     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+266 | |     where
+267 | |         S: Serializer;
+    | |______________________- expected 1 type parameter
+
+error[E0049]: associated function `deserialize` has 0 type parameters but its trait declaration has 1 type parameter
+   --> C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bevy_ecs-0.18.1\src\entity\mod.rs:642:16
+    |
+642 |    fn deserialize (deserializer: D) -> Result 
+    |                  ^ found 0 type parameters
+    |
+   ::: C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde_core-1.0.228\src\de\mod.rs:561:5
+    |
+561 | /     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+562 | |     where
+563 | |         D: Deserializer<'de>;
+    | |_____________________________- expected 1 type parameter
+
+error[E0107]: missing generics for enum `core::option::Option`
+   --> C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bevy_ecs-0.18.1\src\entity\mod.rs:201:39
+    |
+201 |  const fn try_from_bits(bits: u32) -> Option {
+    |                                       ^^^^^^ expected 1 generic argument
+    |
+note: enum defined here, with 1 generic parameter: `T`
+   --> C:\Users\oz_\.rustup\toolchains\beta-x86_64-pc-windows-msvc\lib/rustlib/src/rust\library\core\src\option.rs:600:10
+    |
+600 | pub enum Option<T> {
+    |          ^^^^^^ -
+help: add missing generic argument
+    |
+201 |  const fn try_from_bits(bits: u32) -> Option<T> {
+    |                                             +++
+
+error[E0599]: no method named `update_existing_location` found for mutable reference `&mut Entities` in the current scope
+   --> C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bevy_ecs-0.18.1\src\bundle\insert.rs:227:30
+    |
+227 |                     entities.update_existing_location(
+    |                     ---------^^^^^^^^^^^^^^^^^^^^^^^^ method not found in `&mut Entities`
+
+error[E0599]: no method named `update_existing_location` found for mutable reference `&mut Entities` in the current scope
+   --> C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bevy_ecs-0.18.1\src\bundle\insert.rs:238:26
+    |
+238 |                 entities.update_existing_location(entity.index(), Some(new_location));
+    |                          ^^^^^^^^^^^^^^^^^^^^^^^^ method not found in `&mut Entities`
+
+error[E0599]: no method named `update_existing_location` found for mutable reference `&mut Entities` in the current scope
+   --> C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bevy_ecs-0.18.1\src\bundle\insert.rs:270:30
+    |
+270 |                     entities.update_existing_location(
+    |                     ---------^^^^^^^^^^^^^^^^^^^^^^^^ method not found in `&mut Entities`
+
+error[E0599]: no method named `update_existing_location` found for mutable reference `&mut Entities` in the current scope
+   --> C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bevy_ecs-0.18.1\src\bundle\insert.rs:284:26
+    |
+284 |                 entities.update_existing_location(entity.index(), Some(new_location));
+    |                          ^^^^^^^^^^^^^^^^^^^^^^^^ method not found in `&mut Entities`
+
+error[E0599]: no method named `update_existing_location` found for mutable reference `&mut Entities` in the current scope
+   --> C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bevy_ecs-0.18.1\src\bundle\insert.rs:292:30
+    |
+292 |                     entities.update_existing_location(
+    |                     ---------^^^^^^^^^^^^^^^^^^^^^^^^ method not found in `&mut Entities`
+
+error[E0599]: no method named `update_existing_location` found for struct `Entities` in the current scope
+   --> C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bevy_ecs-0.18.1\src\bundle\remove.rs:233:28
+    |
+233 |             world.entities.update_existing_location(
+    |             ---------------^^^^^^^^^^^^^^^^^^^^^^^^ method not found in `Entities`
+    |
+   ::: C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bevy_ecs-0.18.1\src\entity\mod.rs:859:1
+    |
+859 | pub struct Entities {
+    | ------------------- method `update_existing_location` not found for this struct
+
+error[E0599]: no method named `update_existing_location` found for struct `Entities` in the current scope
+   --> C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bevy_ecs-0.18.1\src\bundle\remove.rs:274:32
+    |
+274 |                 world.entities.update_existing_location(
+    |                 ---------------^^^^^^^^^^^^^^^^^^^^^^^^ method not found in `Entities`
+    |
+   ::: C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bevy_ecs-0.18.1\src\entity\mod.rs:859:1
+    |
+859 | pub struct Entities {
+    | ------------------- method `update_existing_location` not found for this struct
+
+error[E0599]: no method named `update_existing_location` found for struct `Entities` in the current scope
+   --> C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bevy_ecs-0.18.1\src\bundle\remove.rs:299:18
+    |
+297 | /             world
+298 | |                 .entities
+299 | |                 .update_existing_location(entity.index(), Some(new_location));
+    | |                 -^^^^^^^^^^^^^^^^^^^^^^^^ method not found in `Entities`
+    | |_________________|
+    |
+    |
+   ::: C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bevy_ecs-0.18.1\src\entity\mod.rs:859:1
+    |
+859 |   pub struct Entities {
+    |   ------------------- method `update_existing_location` not found for this struct
+
+error[E0599]: no method named `set_location` found for mutable reference `&mut Entities` in the current scope
+   --> C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bevy_ecs-0.18.1\src\bundle\spawner.rs:122:22
+    |
+122 |             entities.set_location(entity.index(), Some(location));
+    |                      ^^^^^^^^^^^^ method not found in `&mut Entities`
+
+error[E0599]: no method named `mark_spawned_or_despawned` found for mutable reference `&mut Entities` in the current scope
+   --> C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bevy_ecs-0.18.1\src\bundle\spawner.rs:123:22
+    |
+123 |             entities.mark_spawned_or_despawned(entity.index(), caller, self.change_tick);
+    |                      ^^^^^^^^^^^^^^^^^^^^^^^^^ method not found in `&mut Entities`
+
+error[E0599]: no method named `contains` found for struct `Entities` in the current scope
+   --> C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bevy_ecs-0.18.1\src\entity\clone_entities.rs:680:28
+    |
+680 |         if !world.entities.contains(target) {
+    |                            ^^^^^^^^ method not found in `Entities`
+    |
+   ::: C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bevy_ecs-0.18.1\src\entity\mod.rs:859:1
+    |
+859 | pub struct Entities {
+    | ------------------- method `contains` not found for this struct
+    |
+    = help: items from traits can only be used if the trait is implemented and in scope
+    = note: the following traits define an item `contains`, perhaps you need to implement one of them:
+            candidate #1: `Flags`
+            candidate #2: `RangeBounds`
+            candidate #3: `bevy_reflect::Set`
+
+error[E0599]: no method named `mark_free` found for struct `Entities` in the current scope
+   --> C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bevy_ecs-0.18.1\src\entity\map_entities.rs:355:18
+    |
+353 | /             world
+354 | |                 .entities
+355 | |                 .mark_free(self.dead_start.index(), self.generations)
+    | |                 -^^^^^^^^^ method not found in `Entities`
+    | |_________________|
+    |
+    |
+   ::: C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bevy_ecs-0.18.1\src\entity\mod.rs:859:1
+    |
+859 |   pub struct Entities {
+    |   ------------------- method `mark_free` not found for this struct
+
+error[E0599]: no method named `entity_get_spawned_or_despawned_unchecked` found for reference `&'w Entities` in the current scope
+   --> C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bevy_ecs-0.18.1\src\query\fetch.rs:729:18
+    |
+727 | /             fetch
+728 | |                 .entities
+729 | |                 .entity_get_spawned_or_despawned_unchecked(entity)
+    | |                 -^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ method not found in `&'w Entities`
+    | |_________________|
+    |
+
+error[E0599]: no method named `entity_get_spawned_or_despawned_unchecked` found for reference `&Entities` in the current scope
+    --> C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bevy_ecs-0.18.1\src\query\filter.rs:1234:18
+     |
+1232 | /             fetch
+1233 | |                 .entities
+1234 | |                 .entity_get_spawned_or_despawned_unchecked(entity)
+     | |                 -^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ method not found in `&Entities`
+     | |_________________|
+     |
+
+   Compiling enumn v0.1.14
+error[E0599]: no method named `get` found for reference `&'w Entities` in the current scope
+   --> C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bevy_ecs-0.18.1\src\system\commands\mod.rs:493:39
+    |
+493 |         let _location = self.entities.get(entity)?;
+    |                                       ^^^ method not found in `&'w Entities`
+    |
+    = help: items from traits can only be used if the trait is implemented and in scope
+    = note: the following traits define an item `get`, perhaps you need to implement one of them:
+            candidate #1: `Relationship`
+            candidate #2: `SliceIndex`
+            candidate #3: `bevy_reflect::Array`
+            candidate #4: `bevy_reflect::List`
+            candidate #5: `bevy_reflect::Map`
+            candidate #6: `bevy_reflect::Set`
+
+error[E0599]: no method named `update_existing_location` found for struct `Entities` in the current scope
+    --> C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bevy_ecs-0.18.1\src\world\entity_access\world_mut.rs:1644:18
+     |
+1641 |               let was_at = self
+     |  __________________________-
+1642 | |                 .world
+1643 | |                 .entities
+1644 | |                 .update_existing_location(self.entity.index(), None);
+     | |                 -^^^^^^^^^^^^^^^^^^^^^^^^ method not found in `Entities`
+     | |_________________|
+     |
+     |
+    ::: C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bevy_ecs-0.18.1\src\entity\mod.rs:859:1
+     |
+ 859 |   pub struct Entities {
+     |   ------------------- method `update_existing_location` not found for this struct
+
+error[E0599]: no method named `mark_spawned_or_despawned` found for struct `Entities` in the current scope
+    --> C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bevy_ecs-0.18.1\src\world\entity_access\world_mut.rs:1648:18
+     |
+1646 | /             self.world
+1647 | |                 .entities
+1648 | |                 .mark_spawned_or_despawned(self.entity.index(), caller, change_tick);
+     | |                 -^^^^^^^^^^^^^^^^^^^^^^^^^ method not found in `Entities`
+     | |_________________|
+     |
+     |
+    ::: C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bevy_ecs-0.18.1\src\entity\mod.rs:859:1
+     |
+ 859 |   pub struct Entities {
+     |   ------------------- method `mark_spawned_or_despawned` not found for this struct
+
+error[E0599]: no method named `update_existing_location` found for struct `Entities` in the current scope
+    --> C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bevy_ecs-0.18.1\src\world\entity_access\world_mut.rs:1661:41
+     |
+1661 |                     self.world.entities.update_existing_location(
+     |                     --------------------^^^^^^^^^^^^^^^^^^^^^^^^ method not found in `Entities`
+     |
+    ::: C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bevy_ecs-0.18.1\src\entity\mod.rs:859:1
+     |
+ 859 | pub struct Entities {
+     | ------------------- method `update_existing_location` not found for this struct
+
+error[E0599]: no method named `update_existing_location` found for struct `Entities` in the current scope
+    --> C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bevy_ecs-0.18.1\src\world\entity_access\world_mut.rs:1696:37
+     |
+1696 |                 self.world.entities.update_existing_location(
+     |                 --------------------^^^^^^^^^^^^^^^^^^^^^^^^ method not found in `Entities`
+     |
+    ::: C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bevy_ecs-0.18.1\src\entity\mod.rs:859:1
+     |
+ 859 | pub struct Entities {
+     | ------------------- method `update_existing_location` not found for this struct
+
+error[E0599]: no method named `mark_free` found for struct `Entities` in the current scope
+    --> C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bevy_ecs-0.18.1\src\world\entity_access\world_mut.rs:1712:52
+     |
+1712 |         self.entity = unsafe { self.world.entities.mark_free(self.entity.index(), 1) };
+     |                                                    ^^^^^^^^^ method not found in `Entities`
+     |
+    ::: C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bevy_ecs-0.18.1\src\entity\mod.rs:859:1
+     |
+ 859 | pub struct Entities {
+     | ------------------- method `mark_free` not found for this struct
+
+error[E0599]: no method named `get` found for struct `Entities` in the current scope
+    --> C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bevy_ecs-0.18.1\src\world\entity_access\world_mut.rs:1731:47
+     |
+1731 |         if let Ok(None) = self.world.entities.get(self.entity) {
+     |                                               ^^^ method not found in `Entities`
+     |
+    ::: C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bevy_ecs-0.18.1\src\entity\mod.rs:859:1
+     |
+ 859 | pub struct Entities {
+     | ------------------- method `get` not found for this struct
+     |
+     = help: items from traits can only be used if the trait is implemented and in scope
+     = note: the following traits define an item `get`, perhaps you need to implement one of them:
+             candidate #1: `Relationship`
+             candidate #2: `SliceIndex`
+             candidate #3: `bevy_reflect::Array`
+             candidate #4: `bevy_reflect::List`
+             candidate #5: `bevy_reflect::Map`
+             candidate #6: `bevy_reflect::Set`
+
+error[E0599]: no method named `entity_get_spawned_or_despawned_by` found for reference `&Entities` in the current scope
+    --> C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bevy_ecs-0.18.1\src\world\entity_access\world_mut.rs:2159:14
+     |
+2157 | /         self.world()
+2158 | |             .entities()
+2159 | |             .entity_get_spawned_or_despawned_by(self.entity)
+     | |             -^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ method not found in `&Entities`
+     | |_____________|
+     |
+
+error[E0599]: no method named `entity_get_spawned_or_despawned_unchecked` found for reference `&Entities` in the current scope
+    --> C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bevy_ecs-0.18.1\src\world\entity_access\world_mut.rs:2171:18
+     |
+2169 | /             self.world()
+2170 | |                 .entities()
+2171 | |                 .entity_get_spawned_or_despawned_unchecked(self.entity)
+     | |                 -^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ method not found in `&Entities`
+     | |_________________|
+     |
+
+error[E0599]: no method named `entity_get_spawned_or_despawned_by` found for reference `&Entities` in the current scope
+    --> C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bevy_ecs-0.18.1\src\world\unsafe_world_cell.rs:1146:14
+     |
+1144 | /         self.world()
+1145 | |             .entities()
+1146 | |             .entity_get_spawned_or_despawned_by(self.entity)
+     | |             -^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ method not found in `&Entities`
+     | |_____________|
+     |
+
+error[E0599]: no method named `entity_get_spawned_or_despawned_unchecked` found for reference `&Entities` in the current scope
+    --> C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bevy_ecs-0.18.1\src\world\unsafe_world_cell.rs:1156:18
+     |
+1154 | /             self.world()
+1155 | |                 .entities()
+1156 | |                 .entity_get_spawned_or_despawned_unchecked(self.entity)
+     | |                 -^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ method not found in `&Entities`
+     | |_________________|
+     |
+
+error[E0599]: no method named `count_spawned` found for struct `Entities` in the current scope
+   --> C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bevy_ecs-0.18.1\src\world\mod.rs:236:23
+    |
+236 |         self.entities.count_spawned()
+    |                       ^^^^^^^^^^^^^
+    |
+   ::: C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bevy_ecs-0.18.1\src\entity\mod.rs:859:1
+    |
+859 | pub struct Entities {
+    | ------------------- method `count_spawned` not found for this struct
+    |
+help: there is a method `get_spawned` with a similar name, but with different arguments
+   --> C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bevy_ecs-0.18.1\src\entity\mod.rs:878:2
+    |
+878 |  pub fn get_spawned(&self, entity: Entity) -> Result {
+    |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error[E0599]: no method named `check_can_spawn_at` found for struct `Entities` in the current scope
+    --> C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bevy_ecs-0.18.1\src\world\mod.rs:1067:23
+     |
+1067 |         self.entities.check_can_spawn_at(entity)?;
+     |                       ^^^^^^^^^^^^^^^^^^ method not found in `Entities`
+     |
+    ::: C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bevy_ecs-0.18.1\src\entity\mod.rs:859:1
+     |
+ 859 | pub struct Entities {
+     | ------------------- method `check_can_spawn_at` not found for this struct
+
+error[E0599]: no method named `check_can_spawn_at` found for struct `Entities` in the current scope
+    --> C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bevy_ecs-0.18.1\src\world\mod.rs:1124:23
+     |
+1124 |         self.entities.check_can_spawn_at(entity)?;
+     |                       ^^^^^^^^^^^^^^^^^^ method not found in `Entities`
+     |
+    ::: C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bevy_ecs-0.18.1\src\entity\mod.rs:859:1
+     |
+ 859 | pub struct Entities {
+     | ------------------- method `check_can_spawn_at` not found for this struct
+
+error[E0599]: no method named `set_location` found for struct `Entities` in the current scope
+    --> C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bevy_ecs-0.18.1\src\world\mod.rs:1147:40
+     |
+1147 |             let was_at = self.entities.set_location(entity.index(), Some(location));
+     |                                        ^^^^^^^^^^^^ method not found in `Entities`
+     |
+    ::: C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bevy_ecs-0.18.1\src\entity\mod.rs:859:1
+     |
+ 859 | pub struct Entities {
+     | ------------------- method `set_location` not found for this struct
+
+error[E0599]: no method named `mark_spawned_or_despawned` found for struct `Entities` in the current scope
+    --> C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bevy_ecs-0.18.1\src\world\mod.rs:1153:18
+     |
+1152 | /             self.entities
+1153 | |                 .mark_spawned_or_despawned(entity.index(), caller, change_tick);
+     | |                 -^^^^^^^^^^^^^^^^^^^^^^^^^ method not found in `Entities`
+     | |_________________|
+     |
+     |
+    ::: C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bevy_ecs-0.18.1\src\entity\mod.rs:859:1
+     |
+ 859 |   pub struct Entities {
+     |   ------------------- method `mark_spawned_or_despawned` not found for this struct
+
+error[E0599]: no method named `check_change_ticks` found for struct `Entities` in the current scope
+    --> C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bevy_ecs-0.18.1\src\world\mod.rs:3174:23
+     |
+3174 |         self.entities.check_change_ticks(check);
+     |                       ^^^^^^^^^^^^^^^^^^ method not found in `Entities`
+     |
+    ::: C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bevy_ecs-0.18.1\src\entity\mod.rs:859:1
+     |
+ 859 | pub struct Entities {
+     | ------------------- method `check_change_ticks` not found for this struct
+
+error[E0599]: no method named `count_spawned` found for struct `Entities` in the current scope
+    --> C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bevy_ecs-0.18.1\src\world\mod.rs:3769:51
+     |
+3769 |             .field("entity_count", &self.entities.count_spawned())
+     |                                                   ^^^^^^^^^^^^^
+     |
+    ::: C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bevy_ecs-0.18.1\src\entity\mod.rs:859:1
+     |
+ 859 | pub struct Entities {
+     | ------------------- method `count_spawned` not found for this struct
+     |
+help: there is a method `get_spawned` with a similar name, but with different arguments
+    --> C:\Users\oz_\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bevy_ecs-0.18.1\src\entity\mod.rs:878:2
+     |
+ 878 |  pub fn get_spawned(&self, entity: Entity) -> Result {
+     |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+   Compiling gpu-allocator v0.27.0
+Some errors have detailed explanations: E0049, E0107, E0425, E0433, E0599.
+For more information about an error, try `rustc --explain E0049`.
+error: could not compile `bevy_ecs` (lib) due to 61 previous errors
+warning: build failed, waiting for other jobs to finish...

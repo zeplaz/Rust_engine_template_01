@@ -82,6 +82,10 @@ pub struct GpuBudgetPolicy {
     pub active_capacity: u32,
 }
 
+/// When extract plan or resolution use `usize::MAX` ("no cap"), clamp to this for GPU buffers
+/// (fire instances, particle rows, expanded vertex staging) so wgpu never sees multi‑gigabyte requests.
+pub const GPU_FIRE_INSTANCE_BUDGET_CEILING: usize = 262_144;
+
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct ComputeBudgetPolicy {
     pub dispatch_hz: f32,
@@ -94,6 +98,8 @@ pub struct OverlayChannelMatrix {
     pub fire_heat: bool,
     pub logistics: bool,
     pub ecology: bool,
+    /// Construction site phase tiles (GPU tile-debug path).
+    pub construction_phase: bool,
     pub chunk_heat_bin: i32,
 }
 
@@ -103,6 +109,7 @@ impl Default for OverlayChannelMatrix {
             fire_heat: true,
             logistics: false,
             ecology: false,
+            construction_phase: false,
             chunk_heat_bin: 1,
         }
     }
@@ -151,6 +158,7 @@ pub struct OverlayPolicyInputs {
     pub fire_heat: bool,
     pub logistics: bool,
     pub ecology: bool,
+    pub construction_phase: bool,
 }
 
 impl Default for OverlayPolicyInputs {
@@ -159,6 +167,7 @@ impl Default for OverlayPolicyInputs {
             fire_heat: true,
             logistics: false,
             ecology: false,
+            construction_phase: false,
         }
     }
 }
@@ -204,9 +213,6 @@ pub struct RepresentationInputs {
     pub world_view_bounds: WorldViewBounds,
 }
 
-/// Rename track: `FireVisualLod` → [`RepresentationBand`].
-pub type FireVisualLod = RepresentationBand;
-
 /// Rename track: `FireVisualExtractPlan` → [`WorldRepresentationExtractPlan`].
 pub type FireVisualExtractPlan = WorldRepresentationExtractPlan;
 
@@ -224,6 +230,8 @@ pub struct RepresentationResult {
     pub preview_policy: PreviewRepresentationPolicy,
     pub particle_policy: ParticleRepresentationPolicy,
     pub visibility: WorldVisibilityMask,
+    /// Band-driven building mesh simplification (Visual Aid v2 VA4).
+    pub building_visual_simplified: bool,
 }
 
 impl Default for RepresentationResult {
@@ -253,6 +261,17 @@ impl Default for RepresentationResult {
             },
         )
     }
+}
+
+#[must_use]
+pub fn building_visual_simplified_for_band(band: WorldLodBand) -> bool {
+    matches!(band, WorldLodBand::Strategic | WorldLodBand::Macro)
+}
+
+#[must_use]
+pub fn building_visual_simplified_differs_across_bands() -> bool {
+    building_visual_simplified_for_band(WorldLodBand::LocalTactical)
+        != building_visual_simplified_for_band(WorldLodBand::Macro)
 }
 
 impl RepresentationResult {
@@ -285,6 +304,7 @@ impl RepresentationResult {
             preview_policy,
             particle_policy,
             visibility,
+            building_visual_simplified: building_visual_simplified_for_band(world_lod_band),
         }
     }
 
@@ -368,6 +388,7 @@ fn overlay_matrix_from(
         fire_heat: overlay.fire_heat && inputs.fire_heat,
         logistics: inputs.logistics,
         ecology: inputs.ecology,
+        construction_phase: inputs.construction_phase,
         chunk_heat_bin: overlay.chunk_heat_bin,
     }
 }
@@ -390,36 +411,57 @@ fn particle_policy_from(
     gpu_budget: &GpuBudgetPolicy,
     band: RepresentationBand,
 ) -> ParticleRepresentationPolicy {
-    let instanced_draw = !matches!(band, RepresentationBand::Strategic | RepresentationBand::Dormant)
-        && gpu_budget.particle_rows_cap > 0;
+    if gpu_budget.particle_rows_cap == 0 {
+        return ParticleRepresentationPolicy {
+            instanced_draw: false,
+            rows_cap: 0,
+        };
+    }
+    if matches!(band, RepresentationBand::Dormant) {
+        return ParticleRepresentationPolicy {
+            instanced_draw: false,
+            rows_cap: 0,
+        };
+    }
+    let scale = match band {
+        RepresentationBand::Full => 1.0f32,
+        RepresentationBand::Tactical => 0.92,
+        RepresentationBand::Strategic => 0.55,
+        RepresentationBand::OverlayOnly => 0.35,
+        RepresentationBand::Dormant => 0.0,
+    };
+    let rows_cap = (((gpu_budget.particle_rows_cap as f32) * scale).floor().max(1.0)) as usize;
+    let rows_cap = rows_cap.min(gpu_budget.particle_rows_cap);
     ParticleRepresentationPolicy {
-        instanced_draw,
-        rows_cap: gpu_budget.particle_rows_cap,
+        instanced_draw: true,
+        rows_cap,
     }
 }
 
 #[must_use]
 fn gpu_budget_from(
-    _resolution: &WorldResolutionPolicy,
+    resolution: &WorldResolutionPolicy,
     extract_plan: &WorldRepresentationExtractPlan,
 ) -> GpuBudgetPolicy {
-    let cap = if extract_plan.fire_instance_cap == usize::MAX {
-        extract_plan
-            .fire_instance_cap
-            .saturating_sub(0)
-            .min(u32::MAX as usize) as u32
-    } else {
-        extract_plan.fire_instance_cap as u32
-    };
+    let mut fire_cap = extract_plan.fire_instance_cap;
+    if fire_cap == usize::MAX {
+        fire_cap = resolution.fire_instance_cap;
+    }
+    if fire_cap == usize::MAX {
+        fire_cap = GPU_FIRE_INSTANCE_BUDGET_CEILING;
+    }
+    fire_cap = fire_cap.min(GPU_FIRE_INSTANCE_BUDGET_CEILING);
+
+    let cap_u32 = fire_cap.min(u32::MAX as usize) as u32;
     let active = if extract_plan.fire_instances {
-        cap
+        cap_u32
     } else {
         0
     };
     GpuBudgetPolicy {
-        fire_instance_cap: extract_plan.fire_instance_cap,
-        particle_rows_cap: extract_plan.fire_instance_cap,
-        reserved_capacity: cap.max(1),
+        fire_instance_cap: fire_cap,
+        particle_rows_cap: fire_cap,
+        reserved_capacity: cap_u32.max(1),
         active_capacity: active,
     }
 }
@@ -511,7 +553,8 @@ fn apply_zone_policy(
         result.gpu_budget.particle_rows_cap = result
             .gpu_budget
             .particle_rows_cap
-            .saturating_add((gpu_boost * 8.0).round() as usize);
+            .saturating_add((gpu_boost * 8.0).round() as usize)
+            .min(GPU_FIRE_INSTANCE_BUDGET_CEILING);
     }
     if compute_boost > 0.0 {
         result.compute_budget.dispatch_hz =
@@ -555,6 +598,16 @@ fn refresh_representation_result_from_lod_band(result: &mut RepresentationResult
     result.particle_policy = particle_policy_from(&result.gpu_budget, result.active_band);
 }
 
+pub fn sync_visual_aidv2_representation_witness(
+    rep: Res<RepresentationResult>,
+    zoom_bias: Res<crate::gui::tile_readability::ZoomVisualBias>,
+    mut witness: ResMut<crate::dev::VisualAidV2Witness>,
+) {
+    witness.lod_building_policy_differs_across_bands = building_visual_simplified_differs_across_bands();
+    witness.zoom_visual_bias_active = zoom_bias.enabled;
+    let _ = rep.building_visual_simplified;
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -562,6 +615,13 @@ mod tests {
     use crate::gui::world_representation::{
         LodZoneSource, OperationalLodZone, WorldLodBands,
     };
+
+    #[test]
+    fn representation_band_building_simplification_differs() {
+        assert!(building_visual_simplified_differs_across_bands());
+        assert!(!building_visual_simplified_for_band(WorldLodBand::LocalTactical));
+        assert!(building_visual_simplified_for_band(WorldLodBand::Macro));
+    }
 
     #[test]
     fn world_lod_band_maps_to_representation_band() {
@@ -605,7 +665,7 @@ mod tests {
     }
 
     #[test]
-    fn strategic_band_zeroes_gpu_instance_active_capacity() {
+    fn strategic_band_thins_fire_extract_but_keeps_projection_warm() {
         let frame = WorldRepresentationFrame {
             bands: WorldLodBands {
                 global: WorldLodBand::Strategic,
@@ -627,8 +687,9 @@ mod tests {
         );
         let result = build_representation_result(&frame, &inputs);
         assert_eq!(result.active_band, RepresentationBand::Strategic);
-        assert_eq!(result.gpu_budget.active_capacity, 0);
-        assert!(!result.extract_plan.fire_instances);
+        assert!(result.extract_plan.fire_instances);
+        assert!(result.gpu_budget.active_capacity > 0);
+        assert!(result.gpu_budget.active_capacity <= 24);
     }
 
     #[test]

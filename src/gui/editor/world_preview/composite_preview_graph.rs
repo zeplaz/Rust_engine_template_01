@@ -44,10 +44,10 @@ impl Default for CompositePreviewGraphResource {
 }
 
 pub fn sync_composite_preview_graph_resource(
-    world_gen_ui: Res<crate::gui::editor::world_gen_ui::WorldGenUiState>,
+    map_views: Res<crate::gui::MapViewInstances>,
     mut graph: ResMut<CompositePreviewGraphResource>,
 ) {
-    graph.0 = CompositePreviewGraph::from_layers(world_gen_ui.preview_layers);
+    graph.0 = CompositePreviewGraph::from_layers(map_views.world_preview.layers);
 }
 
 #[must_use]

@@ -16,8 +16,11 @@ use bevy_egui::{egui, EguiContexts, EguiPrimaryContextPass};
 
 use crate::gui::style::{
     error_text, muted_label, primary_label, section_heading, CmdHeadingStyle, UiPalette,
+    widget_scroll_vertical_capped, widget_scroll_vertical_fill,
 };
+use crate::gui::editor::world_preview::{PreviewPathAuthority, PreviewPresentationDebug};
 use crate::gui::gameplay_capture::GameplayRecorder;
+use crate::gui::representation_policy::RepresentationResult;
 use crate::gui::input_bindings::InputBindings;
 use crate::gui::ui_gates::in_simulation_or_editor;
 use crate::engine::test_harness::ActiveTestScene;
@@ -28,7 +31,7 @@ use crate::systems::transport::TransportEdgeDirectory;
 use crate::systems::weather::{WeatherPrecipVisualSample, WeatherVisualSettings};
 use crate::strategic::{
     align_corridor_book_with_transport_directory, CorridorConstructionBook,
-    CorridorConstructionPhase, CorridorConstructionStatus, LogisticsAiRuntime,
+    CorridorConstructionPhase, CorridorConstructionRow, LogisticsAiRuntime,
     OperationalTheaterSummary,
 };
 
@@ -40,6 +43,8 @@ pub struct DiagnosticsUiState {
     pub fps_smoothed: f32,
     /// Last entity count (updated with FPS sampler).
     pub entity_count: usize,
+    /// PLAY-01c: collapsing headers default open when true (editor profile).
+    pub sections_default_open: bool,
 }
 
 impl Default for DiagnosticsUiState {
@@ -48,6 +53,8 @@ impl Default for DiagnosticsUiState {
             visible: false,
             fps_smoothed: 0.0,
             entity_count: 0,
+            // PLAY-01c: collapsed in simulation; editor may set true on enter.
+            sections_default_open: false,
         }
     }
 }
@@ -78,8 +85,13 @@ fn toggle_diagnostics_ui(
     }
 }
 
-fn sample_fps(time: Res<Time>, entities: Query<Entity>, mut state: ResMut<DiagnosticsUiState>) {
-    state.entity_count = entities.iter().count();
+fn sample_fps(
+    time: Res<Time>,
+    entities: Query<Entity>,
+    mut state: ResMut<DiagnosticsUiState>,
+    mut entity_count_cache: Local<(f32, usize)>,
+    spike_guard: Option<Res<crate::engine::UxFrameSpikeGuard>>,
+) {
     let dt = time.delta_secs();
     if dt > f32::EPSILON {
         let inst = 1.0 / dt;
@@ -89,13 +101,28 @@ fn sample_fps(time: Res<Time>, entities: Query<Entity>, mut state: ResMut<Diagno
             state.fps_smoothed * 0.9 + inst * 0.1
         };
     }
+    // Full-world runs can have millions of entities; counting every frame dominated Update (~220ms).
+    entity_count_cache.0 += dt;
+    if state.visible
+        && !spike_guard.is_some_and(|g| g.suppress_optional_diagnostics)
+        && entity_count_cache.0 >= 0.5
+    {
+        entity_count_cache.0 = 0.0;
+        entity_count_cache.1 = entities.iter().len();
+    }
+    state.entity_count = entity_count_cache.1;
 }
 
 /// Bundles optional spine diagnostics to stay within Bevy system-param limits.
 #[derive(SystemParam)]
-struct DiagnosticsSpinePanels<'w> {
+pub struct DiagnosticsSpinePanels<'w> {
     atmosphere: Option<Res<'w, AtmosphereDiagnostics>>,
     stage5: Option<Res<'w, AppStage5ReadinessReport>>,
+    policy: Option<Res<'w, RepresentationResult>>,
+    preview_authority: Option<Res<'w, PreviewPathAuthority>>,
+    preview_debug: Option<Res<'w, PreviewPresentationDebug>>,
+    logistics_diag: Option<Res<'w, crate::economy::logistics::LogisticsDiagnostics>>,
+    logistics_rt: Option<Res<'w, crate::economy::logistics::LogisticsThroughputRuntimeWitness>>,
 }
 
 /// Renders the panel; consumers add tabs by extending this system or chaining own systems
@@ -132,11 +159,31 @@ pub fn diagnostics_ui_system(
     .default_size(egui::vec2(420.0, 520.0))
         .collapsible(true)
         .show(ctx, |ui| {
+            widget_scroll_vertical_fill("diagnostics_body_scroll", ui.available_height()).show(ui, |ui| {
             primary_label(ui, &palette, format!("FPS (EMA): {:.1}", state.fps_smoothed));
             primary_label(ui, &palette, format!("Sim tick:  {}", tick.0));
             primary_label(ui, &palette, format!("Entities:  {entity_count}"));
             if let Some(ts) = test_scene.as_ref() {
                 primary_label(ui, &palette, format!("CLI test scene: {:?}", ts.0));
+            }
+
+            if let (Some(ld), Some(rt)) = (
+                spine.logistics_diag.as_deref(),
+                spine.logistics_rt.as_deref(),
+            ) {
+                ui.separator();
+                section_heading(ui, &palette, CmdHeadingStyle::Gt, "Logistics throughput (LOG-D-05)");
+                primary_label(
+                    ui,
+                    &palette,
+                    format!(
+                        "Routes open: {} · blocked: {} · proofs: {} · saturation max: {:.2}",
+                        ld.routes_open,
+                        ld.routes_blocked,
+                        ld.proofs.len(),
+                        rt.edge_saturation_max
+                    ),
+                );
             }
 
             ui.separator();
@@ -189,7 +236,7 @@ pub fn diagnostics_ui_system(
             if let Some(d) = spine.atmosphere.as_ref() {
                 ui.separator();
                 egui::CollapsingHeader::new("Atmosphere + visual extract (CPU)")
-                    .default_open(true)
+                    .default_open(state.sections_default_open)
                     .show(ui, |ui| {
                         section_heading(ui, &palette, CmdHeadingStyle::Gt, "Atmosphere (CPU field)");
                         muted_label(
@@ -277,11 +324,17 @@ pub fn diagnostics_ui_system(
                 egui::CollapsingHeader::new("Stage 5 readiness")
                     .default_open(report.violations.is_empty())
                     .show(ui, |ui| {
+                        let stamp_tick = spine
+                            .policy
+                            .as_deref()
+                            .map(|policy| policy.stamp.tick)
+                            .unwrap_or(0);
                         muted_label(
                             ui,
                             &palette,
                             format!(
-                                "VT-4={} VT-5={} phase_d={} phase_f={} fire_extract={} gpu_field={} preview_gpu={} overlay_shared={} particle_lod={} phase_f_lod={} domains={} producers={} dup_extract={}",
+                                "stamp={} VT-4={} VT-5={} phase_d={} phase_f={} fire_extract={} gpu_field={} preview_gpu={} overlay_shared={} particle_lod={} phase_f_lod={} domains={} producers={} dup_extract={}",
+                                stamp_tick,
                                 report.vt4_ok,
                                 report.vt5_ok,
                                 report.phase_d_ok,
@@ -297,6 +350,30 @@ pub fn diagnostics_ui_system(
                                 report.duplicate_visual_scan_count,
                             ),
                         );
+                        if let Some(authority) = spine.preview_authority.as_deref() {
+                            muted_label(
+                                ui,
+                                &palette,
+                                format!(
+                                    "preview authority={:?} gpu_requested={} cpu_fallback={} gpu_present={}",
+                                    authority.authoritative_surface,
+                                    authority.gpu_render_target_requested,
+                                    authority.cpu_raster_fallback_active,
+                                    authority.gpu_present_count,
+                                ),
+                            );
+                        }
+                        if let Some(debug) = spine.preview_debug.as_deref() {
+                            muted_label(
+                                ui,
+                                &palette,
+                                format!(
+                                    "preview debug surface={:?} front_asset_bits={}",
+                                    debug.authoritative_surface,
+                                    debug.last_front_asset_id_bits,
+                                ),
+                            );
+                        }
                         for violation in &report.violations {
                             error_text(ui, &palette, violation);
                         }
@@ -318,6 +395,10 @@ pub fn diagnostics_ui_system(
             ui.add_enabled_ui(wx.enabled, |ui| {
                 ui.checkbox(&mut wx.overlay, "Screen overlay (rain/fog tint)");
                 ui.checkbox(&mut wx.particles, "Precip particles (streaks / flakes)");
+                ui.checkbox(
+                    &mut wx.background_aesthetic,
+                    "Background precip (zoomed-out digital AE)",
+                );
                 ui.add(
                     egui::Slider::new(&mut wx.max_precip_particles, 32usize..=512usize)
                         .text("Particle pool"),
@@ -355,7 +436,7 @@ pub fn diagnostics_ui_system(
                         format!(
                             "Transport edges: {} · book rows: {}",
                             directory.by_edge.len(),
-                            construction_book.by_edge.len()
+                            construction_book.rows.len()
                         ),
                     );
                     if let (Some(th), Some(la)) = (theater.as_deref(), logistics_ai.as_deref()) {
@@ -440,7 +521,9 @@ pub fn diagnostics_ui_system(
                         }
                         if ui.button("All edges → Completed").clicked() {
                             for eid in directory.by_edge.keys() {
-                                construction_book.by_edge.insert(*eid, CorridorConstructionStatus::default());
+                                construction_book
+                                    .rows
+                                    .insert(*eid, CorridorConstructionRow::completed(*eid));
                             }
                         }
                     });
@@ -455,21 +538,22 @@ pub fn diagnostics_ui_system(
                             "No transport edges — bake roads in map editor or load dev_transport_network.ron (or .json fixture).",
                         );
                     } else {
-                        egui::ScrollArea::vertical().max_height(220.0).show(ui, |ui| {
+                        widget_scroll_vertical_capped("diagnostics_transport_edges_scroll", 220.0)
+                            .show(ui, |ui| {
                             for eid in keys {
-                                let st = construction_book
-                                    .by_edge
+                                let row = construction_book
+                                    .rows
                                     .entry(eid)
-                                    .or_insert(CorridorConstructionStatus::default());
+                                    .or_insert_with(|| CorridorConstructionRow::completed(eid));
                                 ui.group(|ui| {
                                     primary_label(ui, &palette, format!("Edge {}", eid.0));
                                     ui.horizontal(|ui| {
-                                        ui.radio_value(&mut st.phase, CorridorConstructionPhase::Planned, "Planned");
-                                        ui.radio_value(&mut st.phase, CorridorConstructionPhase::InProgress, "In progress");
-                                        ui.radio_value(&mut st.phase, CorridorConstructionPhase::Completed, "Completed");
+                                        ui.radio_value(&mut row.phase, CorridorConstructionPhase::Planned, "Planned");
+                                        ui.radio_value(&mut row.phase, CorridorConstructionPhase::InProgress, "In progress");
+                                        ui.radio_value(&mut row.phase, CorridorConstructionPhase::Completed, "Completed");
                                     });
-                                    if st.phase == CorridorConstructionPhase::InProgress {
-                                        ui.add(egui::Slider::new(&mut st.progress, 0.0..=1.0).text("Traffic progress"));
+                                    if row.phase == CorridorConstructionPhase::InProgress {
+                                        ui.add(egui::Slider::new(&mut row.progress, 0.0..=1.0).text("Traffic progress"));
                                     }
                                 });
                             }
@@ -478,6 +562,7 @@ pub fn diagnostics_ui_system(
                 });
 
             // TODO: tabs — chunk streamer, production manifest summary, faction roster.
+            });
         });
 
     Ok(())

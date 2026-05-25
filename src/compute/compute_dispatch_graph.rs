@@ -8,7 +8,7 @@
 use bevy::prelude::*;
 
 use crate::gui::{RepresentationResult, WorldLodBand, WorldLodMap, WorldRepresentationFrame};
-use crate::render::sim_visual_extract::FireVisualFrame;
+use crate::render::FireSimulationSnapshot;
 
 use super::frame_snapshots::{AgentFrame, NavFieldFrame};
 use super::heat_diffusion::{
@@ -33,7 +33,7 @@ pub struct ComputeContext<'a> {
     pub lod_map: &'a WorldLodMap,
     pub agents: &'a AgentFrame,
     pub navigation: &'a NavFieldFrame,
-    pub fire: &'a FireVisualFrame,
+    pub fire: &'a FireSimulationSnapshot,
 }
 
 pub trait ComputeNodeTrait {
@@ -119,7 +119,7 @@ pub fn run_compute_dispatch_graph(
     policy: Res<RepresentationResult>,
     lod: Res<WorldRepresentationFrame>,
     lod_map: Res<WorldLodMap>,
-    fire: Res<FireVisualFrame>,
+    fire: Res<FireSimulationSnapshot>,
     mut agents: ResMut<AgentFrame>,
     mut navigation: ResMut<NavFieldFrame>,
     mut cadence: ResMut<ComputeDispatchCadence>,
@@ -165,6 +165,7 @@ impl Plugin for ComputeDispatchPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<AgentFrame>()
             .init_resource::<NavFieldFrame>()
+            .init_resource::<crate::render::FireSimulationSnapshot>()
             .init_resource::<ComputeDispatchCadence>()
             .init_resource::<ComputeDispatchGraph>()
             .init_resource::<HeatDiffusionFieldBuffers>();
@@ -184,9 +185,10 @@ mod tests {
         build_representation_inputs, build_representation_result, CameraVisualState, LodZoneRegistry,
         VisualBudgetSettings, VisualCadence,
     };
-    use crate::render::sim_visual_extract::{ChunkFireHeat, FireVisualFrame};
+    use crate::render::FireSimulationSnapshot;
+    use crate::render::sim_visual_extract::ChunkFireHeat;
 
-    fn policy_for(lod: &WorldRepresentationFrame, fire: &FireVisualFrame) -> RepresentationResult {
+    fn policy_for(lod: &WorldRepresentationFrame, fire: &FireSimulationSnapshot) -> RepresentationResult {
         let inputs = build_representation_inputs(
             &CameraVisualState::default(),
             &LodZoneRegistry::default(),
@@ -203,7 +205,7 @@ mod tests {
         let mut lod = WorldRepresentationFrame::default();
         lod.bands.global = WorldLodBand::Macro;
         lod.visibility.pathfinding_field = false;
-        let mut fire = FireVisualFrame::default();
+        let mut fire = FireSimulationSnapshot::default();
         fire.chunk_heat.push(ChunkFireHeat {
             chunk: IVec2::ZERO,
             heat: 0.5,
@@ -227,7 +229,7 @@ mod tests {
     fn local_tactical_dispatches_when_fire_heat_present() {
         let mut graph = ComputeDispatchGraph::default();
         let lod = WorldRepresentationFrame::default();
-        let mut fire = FireVisualFrame::default();
+        let mut fire = FireSimulationSnapshot::default();
         fire.chunk_heat.push(ChunkFireHeat::default());
         let lod_map = WorldLodMap::default();
         let policy = policy_for(&lod, &fire);
@@ -248,7 +250,7 @@ mod tests {
     fn spatial_map_skips_macro_compute_chunks() {
         let mut graph = ComputeDispatchGraph::default();
         let lod = WorldRepresentationFrame::default();
-        let mut fire = FireVisualFrame::default();
+        let mut fire = FireSimulationSnapshot::default();
         fire.chunk_heat.push(ChunkFireHeat {
             chunk: IVec2::new(0, 0),
             heat: 0.5,

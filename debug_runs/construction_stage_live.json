@@ -1,0 +1,482 @@
+{
+  "_agent_meta": {
+    "agent_commands": [
+      "cargo test -p proc_A_dine01 construction:: --lib",
+      "cargo run -p proc_A_dine01"
+    ],
+    "docs": {
+      "compile_warnings": "src/dev/COMPILE_WARNINGS_TODOS.md",
+      "stage5_directive": "prompts/guides/stage5_convergence_directive_v1.md",
+      "viewport_recovery": "src/dev/recovery_viewport.md"
+    },
+    "logging_env": {
+      "ORCHESTRATOR_EXPORT_HEALTH": false,
+      "PERF": false,
+      "RUST_LOG": null,
+      "SIM_VIEW_SYNC_DEBUG": false,
+      "STAGE5_READINESS_VERBOSE": false,
+      "STAGE5_VERBOSE": false,
+      "VIEWPORT_AUTHORITY_DEBUG": false
+    },
+    "orchestrator": {
+      "build_report": "tools/orchestrator/reports/build_report.md",
+      "ci_entry": "tools/orchestrator/ci/run.ps1",
+      "continuation_queue": "tools/orchestrator/queues/continuation_queue.json",
+      "warning_registry": "tools/orchestrator/reports/warning_registry.md"
+    },
+    "profile": "CONSTRUCTION_STAGE",
+    "related_proofs": [
+      "debug_runs/stage5_full_app_live.json",
+      "debug_runs/infrastructure_view_isolation_live.json",
+      "debug_runs/construction_stage_live.json",
+      "debug_runs/industrial_activation_live.json",
+      "debug_runs/fire_ecology_live.json",
+      "debug_runs/logistics_throughput_live.json",
+      "debug_runs/replay_editor_parity_live.json",
+      "debug_runs/orchestrator_thread_health.json",
+      "debug_runs/viewport_drift.json",
+      "debug_runs/viewport_authority_migration_witness.json",
+      "debug_runs/main_thread_orchestrator_live.json",
+      "debug_runs/stage6_virtualization_live.json",
+      "debug_runs/wave_s_hydrate_live.json",
+      "debug_runs/wave_p_live.json",
+      "debug_runs/wave_c_live.json",
+      "debug_runs/ui_shell_migration_live.json",
+      "debug_runs/minimap_compositor_live.json"
+    ],
+    "relative_path": "debug_runs/construction_stage_live.json",
+    "schema": "debug_run_envelope_v1",
+    "source_system": "construction_live_proof",
+    "written_at_epoch_secs": 1779644898
+  },
+  "build_p_star": [
+    {
+      "id": "BUILD-P0-01",
+      "status": "Done"
+    },
+    {
+      "id": "BUILD-P0-02",
+      "status": "Done"
+    },
+    {
+      "id": "BUILD-P0-03",
+      "status": "Done"
+    },
+    {
+      "id": "BUILD-P0-04",
+      "status": "Done"
+    },
+    {
+      "id": "BUILD-P1-01",
+      "status": "Done"
+    },
+    {
+      "id": "BUILD-P1-02",
+      "status": "Done"
+    },
+    {
+      "id": "BUILD-P1-03",
+      "status": "Done"
+    },
+    {
+      "id": "BUILD-P2-01",
+      "status": "Done"
+    },
+    {
+      "id": "BUILD-P2-02",
+      "status": "Done"
+    },
+    {
+      "id": "BUILD-P2-03",
+      "status": "Done"
+    },
+    {
+      "id": "BUILD-P2-04",
+      "status": "Done"
+    },
+    {
+      "id": "BUILD-P2-05",
+      "status": "Done"
+    },
+    {
+      "id": "BUILD-P3-01",
+      "status": "Done"
+    },
+    {
+      "id": "BUILD-P3-02",
+      "status": "Done"
+    },
+    {
+      "id": "BUILD-P3-03",
+      "status": "Done"
+    },
+    {
+      "id": "BUILD-P4-01",
+      "status": "Done"
+    },
+    {
+      "id": "BUILD-P4-02",
+      "status": "Done"
+    },
+    {
+      "id": "BUILD-P4-03",
+      "status": "Done"
+    },
+    {
+      "id": "BUILD-P5-01",
+      "status": "Done"
+    }
+  ],
+  "con_e01_p9_green": true,
+  "history": {
+    "last_action": null,
+    "redo_depth": 0,
+    "undo_depth": 0
+  },
+  "operational": [
+    {
+      "id": "CONSTRUCTION-OP-01",
+      "status": "Done"
+    },
+    {
+      "id": "CONSTRUCTION-OP-02",
+      "status": "Done"
+    },
+    {
+      "id": "CONSTRUCTION-OP-03",
+      "status": "Done"
+    },
+    {
+      "id": "CONSTRUCTION-OP-04",
+      "status": "Done"
+    },
+    {
+      "id": "CONSTRUCTION-OP-05",
+      "status": "Done"
+    },
+    {
+      "id": "CONSTRUCTION-OP-06",
+      "status": "Done"
+    },
+    {
+      "id": "CONSTRUCTION-OP-07",
+      "status": "Done"
+    },
+    {
+      "id": "CONSTRUCTION-OP-08",
+      "status": "Done"
+    }
+  ],
+  "operational_green": true,
+  "p9_build": [
+    {
+      "id": "PHASE2-BUILD-16",
+      "status": "Done"
+    },
+    {
+      "id": "PHASE2-BUILD-17",
+      "status": "Done"
+    },
+    {
+      "id": "PHASE2-BUILD-18",
+      "status": "Done"
+    },
+    {
+      "id": "PHASE2-BUILD-19",
+      "status": "Done"
+    },
+    {
+      "id": "PHASE2-BUILD-20",
+      "status": "Done"
+    }
+  ],
+  "p9_witness": {
+    "construction_proof_json": true,
+    "curved_road_spline": true,
+    "grid_and_node_snap": true,
+    "road_upgrade_lane": true,
+    "terrain_conform": true
+  },
+  "path_tool_feedback": {
+    "required_actions": [],
+    "snap_hint": null
+  },
+  "phase2_build": [
+    {
+      "id": "PHASE2-BUILD-01",
+      "status": "Done"
+    },
+    {
+      "id": "PHASE2-BUILD-02",
+      "status": "Done"
+    },
+    {
+      "id": "PHASE2-BUILD-03",
+      "status": "Done"
+    },
+    {
+      "id": "PHASE2-BUILD-04",
+      "status": "Done"
+    },
+    {
+      "id": "PHASE2-BUILD-05",
+      "status": "Done"
+    },
+    {
+      "id": "PHASE2-BUILD-06",
+      "status": "Done"
+    },
+    {
+      "id": "PHASE2-BUILD-07",
+      "status": "Done"
+    },
+    {
+      "id": "PHASE2-BUILD-08",
+      "status": "Done"
+    },
+    {
+      "id": "PHASE2-BUILD-09",
+      "status": "Done"
+    },
+    {
+      "id": "PHASE2-BUILD-10",
+      "status": "Done"
+    },
+    {
+      "id": "PHASE2-BUILD-11",
+      "status": "Done"
+    },
+    {
+      "id": "PHASE2-BUILD-12",
+      "status": "Done"
+    },
+    {
+      "id": "PHASE2-BUILD-13",
+      "status": "Done"
+    },
+    {
+      "id": "PHASE2-BUILD-14",
+      "status": "Done"
+    },
+    {
+      "id": "PHASE2-BUILD-15",
+      "status": "Done"
+    },
+    {
+      "id": "PHASE2-BUILD-16",
+      "status": "Done"
+    },
+    {
+      "id": "PHASE2-BUILD-17",
+      "status": "Done"
+    },
+    {
+      "id": "PHASE2-BUILD-18",
+      "status": "Done"
+    },
+    {
+      "id": "PHASE2-BUILD-19",
+      "status": "Done"
+    },
+    {
+      "id": "PHASE2-BUILD-20",
+      "status": "Done"
+    }
+  ],
+  "phase2_witness": {
+    "building_archetype_map": true,
+    "building_intent_pipeline": true,
+    "commercial_tool": true,
+    "construction_proof_json": true,
+    "curved_road_spline": true,
+    "demolish_execute": true,
+    "ghost_policy": true,
+    "grid_and_node_snap": true,
+    "industrial_tool": true,
+    "input_conflict_matrix": true,
+    "legacy_roads_removed": true,
+    "rail_module": true,
+    "road_cost_estimate": true,
+    "road_e2e_integration": true,
+    "road_upgrade_lane": true,
+    "shim_removed": true,
+    "terrain_conform": true,
+    "utilities_tool": true,
+    "zone_e2e_integration": true,
+    "zone_strategic_commit": true
+  },
+  "profile": "CONSTRUCTION_STAGE",
+  "rail_junction_count": 0,
+  "round2_build": [
+    {
+      "id": "CONSTRUCTION-R2-01",
+      "status": "Done"
+    },
+    {
+      "id": "CONSTRUCTION-R2-02",
+      "status": "Done"
+    },
+    {
+      "id": "CONSTRUCTION-R2-03",
+      "status": "Done"
+    },
+    {
+      "id": "CONSTRUCTION-R2-04",
+      "status": "Done"
+    },
+    {
+      "id": "CONSTRUCTION-R2-05",
+      "status": "Done"
+    },
+    {
+      "id": "CONSTRUCTION-R2-06",
+      "status": "Done"
+    },
+    {
+      "id": "CONSTRUCTION-R2-07",
+      "status": "Done"
+    },
+    {
+      "id": "CONSTRUCTION-R2-08",
+      "status": "Done"
+    },
+    {
+      "id": "CONSTRUCTION-R2-09",
+      "status": "Done"
+    },
+    {
+      "id": "CONSTRUCTION-R2-10",
+      "status": "Done"
+    },
+    {
+      "id": "CONSTRUCTION-R2-11",
+      "status": "Done"
+    },
+    {
+      "id": "CONSTRUCTION-R2-12",
+      "status": "Done"
+    },
+    {
+      "id": "CONSTRUCTION-R2-13",
+      "status": "Done"
+    },
+    {
+      "id": "CONSTRUCTION-R2-14",
+      "status": "Done"
+    },
+    {
+      "id": "CONSTRUCTION-R2-15",
+      "status": "Done"
+    }
+  ],
+  "round3_build": [
+    {
+      "id": "CONSTRUCTION-R3-A01",
+      "status": "Done"
+    },
+    {
+      "id": "CONSTRUCTION-R3-A02",
+      "status": "Done"
+    },
+    {
+      "id": "CONSTRUCTION-R3-A03",
+      "status": "Done"
+    },
+    {
+      "id": "CONSTRUCTION-R3-A04",
+      "status": "Done"
+    },
+    {
+      "id": "CONSTRUCTION-R3-A05",
+      "status": "Done"
+    },
+    {
+      "id": "CONSTRUCTION-R3-B01",
+      "status": "Done"
+    },
+    {
+      "id": "CONSTRUCTION-R3-B02",
+      "status": "Done"
+    },
+    {
+      "id": "CONSTRUCTION-R3-B03",
+      "status": "Done"
+    },
+    {
+      "id": "CONSTRUCTION-R3-B04",
+      "status": "Done"
+    },
+    {
+      "id": "CONSTRUCTION-R3-C01",
+      "status": "Done"
+    },
+    {
+      "id": "CONSTRUCTION-R3-C02",
+      "status": "Done"
+    },
+    {
+      "id": "CONSTRUCTION-R3-C03",
+      "status": "Done"
+    },
+    {
+      "id": "CONSTRUCTION-R3-D01",
+      "status": "Done"
+    },
+    {
+      "id": "CONSTRUCTION-R3-D02",
+      "status": "Done"
+    },
+    {
+      "id": "CONSTRUCTION-R3-D03",
+      "status": "Done"
+    },
+    {
+      "id": "CONSTRUCTION-R3-E01",
+      "status": "Done"
+    },
+    {
+      "id": "CONSTRUCTION-R3-E02",
+      "status": "Done"
+    },
+    {
+      "id": "CONSTRUCTION-R3-E03",
+      "status": "Done"
+    },
+    {
+      "id": "CONSTRUCTION-R3-F01",
+      "status": "Done"
+    },
+    {
+      "id": "CONSTRUCTION-R3-F02",
+      "status": "Done"
+    },
+    {
+      "id": "CONSTRUCTION-R3-F03",
+      "status": "Done"
+    },
+    {
+      "id": "CONSTRUCTION-R3-G01",
+      "status": "Done"
+    },
+    {
+      "id": "CONSTRUCTION-R3-G02",
+      "status": "Done"
+    },
+    {
+      "id": "CONSTRUCTION-R3-G03",
+      "status": "Done"
+    },
+    {
+      "id": "CONSTRUCTION-R3-H01",
+      "status": "Done"
+    },
+    {
+      "id": "CONSTRUCTION-R3-H02",
+      "status": "Done"
+    },
+    {
+      "id": "CONSTRUCTION-R3-H03",
+      "status": "Done"
+    }
+  ]
+}

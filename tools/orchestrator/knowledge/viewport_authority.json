@@ -1,0 +1,24 @@
+{
+  "graph": {
+    "viewport_authority": {
+      "id": "viewport_authority",
+      "children": [
+        "semantic_viewport",
+        "ui_measured_rect",
+        "camera_viewport",
+        "minimap_shell",
+        "world_preview",
+        "render_diagnostics",
+        "drift_detection"
+      ],
+      "notes": "Migration COMPLETE 2026-05-20 — witness debug_runs/viewport_authority_migration_witness.json"
+    }
+  },
+  "migrations": [],
+  "subsystem_owners": {
+    "GUI / VIEWPORT_AUTHORITY / SEMANTIC_SOLVER": "viewport_migration_agent",
+    "GUI / HUD / VIEWPORT_SYNC_DEBUG": "viewport_migration_agent"
+  },
+  "active_migrations": [],
+  "seed_continuation_tasks": []
+}

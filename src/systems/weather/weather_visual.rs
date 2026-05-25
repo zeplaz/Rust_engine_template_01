@@ -9,8 +9,13 @@ use std::f32::consts::TAU;
 use bevy::prelude::*;
 use rand::{thread_rng, Rng};
 
+use crate::gui::{camera_translation, camera_zoom, MapCameraDesired, ViewId, ViewManager, MAP_ZOOM_CLAMP};
+use crate::render::{resolved_particle_half_extents, ResolvedViewports, ViewportPipelineSet};
 use crate::systems::atmosphere::pipeline::AtmospherePipelineSet;
-use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
+use crate::render::ClimateVisualAggregate;
+use crate::render::{trace_particle_routing, DebugRenderTraceConfig};
+use crate::systems::weather::ChunkWeather;
+use crate::terrain::generation::Chunk;
 
 /// Enable / cap weather visuals (designer can toggle from diagnostics later).
 #[derive(Resource, Debug, Clone)]
@@ -18,6 +23,8 @@ pub struct WeatherVisualSettings {
     pub enabled: bool,
     pub overlay: bool,
     pub particles: bool,
+    /// Screen-space rain/snow streaks when zoomed out — “digital AE” background (separate from tactical precip).
+    pub background_aesthetic: bool,
     pub max_precip_particles: usize,
 }
 
@@ -27,6 +34,7 @@ impl Default for WeatherVisualSettings {
             enabled: true,
             overlay: true,
             particles: true,
+            background_aesthetic: true,
             max_precip_particles: 192,
         }
     }
@@ -42,7 +50,7 @@ pub struct WeatherPrecipVisualSample {
 }
 
 #[derive(Component)]
-pub(crate) struct WeatherVfxCameraChild;
+pub struct WeatherVfxCameraChild;
 
 #[derive(Component)]
 struct WeatherPrecipOverlay;
@@ -186,40 +194,105 @@ fn update_overlay_from_weather(
     }
 }
 
+fn sync_precip_sample_at_camera_focus(
+    climate: Res<ClimateVisualAggregate>,
+    view_manager: Res<ViewManager>,
+    desired: Res<MapCameraDesired>,
+    weather: Query<(&Chunk, &ChunkWeather)>,
+    mut sample: ResMut<WeatherPrecipVisualSample>,
+) {
+    let focus = camera_translation(&view_manager, ViewId::WorldMain)
+        .unwrap_or_else(|| desired.translation.truncate());
+    let mut local_rain = 0.0_f32;
+    let mut local_snow = 0.0_f32;
+    let mut local_fog = 0.0_f32;
+    let mut local_n = 0u32;
+    for (chunk, wx) in &weather {
+        let center = Vec2::new(chunk.coord.x as f32 + 0.5, chunk.coord.y as f32 + 0.5);
+        if focus.distance(center) > 2.5 {
+            continue;
+        }
+        local_n += 1;
+        local_rain += wx.rain_intensity;
+        local_snow += wx.snow_depth;
+        local_fog += wx.fog_density;
+    }
+
+    let background = 0.35_f32;
+    if local_n == 0 || climate.weather_chunk_count == 0 {
+        *sample = WeatherPrecipVisualSample {
+            rain: climate.mean_rain,
+            snow: climate.mean_snow,
+            fog: climate.mean_fog_density,
+            chunk_count: climate.weather_chunk_count,
+        };
+        return;
+    }
+    let local = local_n.max(1) as f32;
+    *sample = WeatherPrecipVisualSample {
+        rain: climate.mean_rain * background + (local_rain / local) * (1.0 - background),
+        snow: climate.mean_snow * background + (local_snow / local) * (1.0 - background),
+        fog: climate.mean_fog_density * background + (local_fog / local) * (1.0 - background),
+        chunk_count: climate.weather_chunk_count,
+    };
+}
+
 fn tick_precip_particles(
+    cfg: Res<DebugRenderTraceConfig>,
     time: Res<Time>,
     settings: Res<WeatherVisualSettings>,
     sample: Res<WeatherPrecipVisualSample>,
-    world: Option<Res<WorldGenParams>>,
-    windows: Query<&Window, With<bevy::window::PrimaryWindow>>,
+    view_manager: Res<ViewManager>,
+    desired: Res<MapCameraDesired>,
+    resolved: Res<ResolvedViewports>,
     mut q: Query<(&mut Transform, &mut Visibility, &mut PrecipParticle)>,
+    mut last_trace: Local<u64>,
 ) {
-    let dt = time.delta_secs();
+    // Keep precip visibly animating when sim dt stalls but wall clock advances (menu pause, hitch).
+    let dt = time.delta_secs().max(1.0 / 120.0);
     let rain = sample.rain.clamp(0.0, 1.0);
     let snow = sample.snow.clamp(0.0, 1.0);
     let precip = (rain * 0.85 + snow * 0.65).clamp(0.0, 1.0);
 
-    let map_half = world
-        .as_ref()
-        .map(|p| (p.width.max(p.height) as f32 * 0.52).max(160.0))
-        .unwrap_or(0.0);
-    let (mut hw, mut hh) = (960.0_f32, 540.0_f32);
-    if let Ok(win) = windows.single() {
-        hw = (win.width() * 0.5).max(200.0);
-        hh = (win.height() * 0.5).max(200.0);
+    let (hw, hh) = resolved_particle_half_extents(&resolved);
+    if cfg.particle_routing_trace && *last_trace != resolved.revision {
+        *last_trace = resolved.revision;
+        bevy::log::info!(
+            target: "proc_A_dine01::render::particle",
+            "precip half_extents=({hw:.1},{hh:.1}) revision={}",
+            resolved.revision,
+        );
     }
-    if map_half > 0.0 {
-        // Tie precip bounds to overworld size so flakes read as "over the map", not arbitrary screen HD.
-        hw = hw.min(map_half);
-        hh = hh.min(map_half);
-    }
+
+    let zoom = camera_zoom(&view_manager, ViewId::WorldMain)
+        .unwrap_or(desired.scale.x)
+        .clamp(MAP_ZOOM_CLAMP.0, MAP_ZOOM_CLAMP.1);
+    let zoom_t = ((MAP_ZOOM_CLAMP.1 - zoom) / (MAP_ZOOM_CLAMP.1 - MAP_ZOOM_CLAMP.0)).clamp(0.0, 1.0);
+    let focus_strength = 0.2 + 0.8 * zoom_t;
+    let background_strength = 0.15 + 0.35 * (1.0 - zoom_t);
+    let strength = (precip * focus_strength + precip * background_strength * 0.35).clamp(0.0, 1.0);
+    let climate_active = sample.chunk_count > 0
+        || sample.rain > 0.06
+        || sample.snow > 0.04
+        || sample.fog > 0.05;
+    let tactical_precip = zoom_t > 0.45;
 
     for (mut xf, mut vis, mut p) in &mut q {
         p.half_width = hw;
         p.half_height = hh;
 
-        let show = settings.enabled && settings.particles && sample.chunk_count > 0 && precip > 0.02;
-        if !show {
+        let show_tactical = settings.enabled
+            && settings.particles
+            && climate_active
+            && strength > 0.02
+            && tactical_precip;
+        let show_background = settings.enabled
+            && settings.particles
+            && settings.background_aesthetic
+            && climate_active
+            && precip > 0.04
+            && !tactical_precip;
+        if !show_tactical && !show_background {
             *vis = Visibility::Hidden;
             continue;
         }
@@ -234,13 +307,19 @@ fn tick_precip_particles(
         }
         *vis = Visibility::Visible;
 
+        let motion_strength = if show_background {
+            (precip * background_strength * 0.72).clamp(0.1, 0.5)
+        } else {
+            strength
+        };
+
         p.wobble += dt * 4.5;
         let side = match p.kind {
             PrecipKind::Rain => 0.0,
             PrecipKind::Snow => (p.wobble.sin() * 40.0 + p.wobble.cos() * 18.0) * dt,
         };
 
-        let fall = p.speed * dt * precip * 0.85;
+        let fall = p.speed * dt * motion_strength;
         xf.translation.x += side;
         xf.translation.y -= fall;
 
@@ -252,6 +331,25 @@ fn tick_precip_particles(
         }
         if xf.translation.x.abs() > p.half_width + margin {
             xf.translation.x = xf.translation.x.signum() * (p.half_width + margin);
+        }
+    }
+    if cfg.particle_routing_trace {
+        *last_trace = last_trace.wrapping_add(1);
+        if *last_trace % 30 == 0 {
+            let visible = q
+                .iter()
+                .filter(|(_, vis, _)| **vis == Visibility::Visible)
+                .count();
+            trace_particle_routing(
+                &cfg,
+                &format!(
+                    "weather_precip_particles coordinate_space=screen_hybrid active_count={visible} enabled={} particles={} zoom_t={:.2} strength={:.2}",
+                    settings.enabled,
+                    settings.particles,
+                    zoom_t,
+                    strength,
+                ),
+            );
         }
     }
 }
@@ -266,9 +364,15 @@ impl Plugin for WeatherVisualPlugin {
             .add_systems(
                 Update,
                 (
+                    sync_precip_sample_at_camera_focus
+                        .after(AtmospherePipelineSet::VisualExtract)
+                        .after(crate::gui::ViewAuthoritySystemSet::SyncViewManager),
                     update_overlay_from_weather.after(AtmospherePipelineSet::VisualExtract),
-                    tick_precip_particles.after(AtmospherePipelineSet::VisualExtract),
                 ),
+            )
+            .add_systems(
+                PostUpdate,
+                tick_precip_particles.after(ViewportPipelineSet::Resolve),
             );
     }
 }

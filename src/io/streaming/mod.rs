@@ -7,16 +7,24 @@ mod interest;
 mod preview_ghost;
 mod residency;
 mod task_pool;
+mod tile_storage_apply;
 mod tile_storage_contract;
 mod wave_c_prerequisites;
+mod wave_c_live_proof;
 mod wave_c_readiness;
 
 use bevy::prelude::*;
 
 use crate::gui::{LodZoneRegistry, WorldRepresentationFrame};
+use crate::render::{
+    attrib_streaming_reconstruct_after, attrib_streaming_reconstruct_before,
+};
 use crate::io::save::{SavedChunkBody, WorldSaveBundleSettings};
 
-pub use chunk_cache::{hash_saved_chunk_body, ChunkCache, ChunkCacheEntry};
+pub use chunk_cache::{
+    hash_saved_chunk_body, ChunkCache, ChunkCacheDiskSpill, ChunkCacheEntry, ChunkCacheTierSettings,
+    CHUNK_CACHE_DISK_TIER_OPEN,
+};
 pub use hydrate::{
     hydrate_all_manifest_chunks, hydrate_stream_chunks_from_manifest, load_manifest_for_streaming,
 };
@@ -34,7 +42,12 @@ pub use residency::{
 };
 pub use task_pool::{
     poll_stream_hydrate_completions, submit_stream_hydrate_work, ChunkStreamIoDispatcher,
-    StreamIoCompletion, StreamIoWorkOrder,
+    StreamHydrateDiagnostics, StreamIoCompletion, StreamIoWorkOrder,
+};
+pub use tile_storage_apply::{
+    apply_pending_tile_storage_diffs, tick_tile_storage_smooth_transitions,
+    tile_storage_indices_blending, tile_storage_indices_ready_for_render,
+    TileStorageApplyReport, TileStorageSmoothTransitionState,
 };
 pub use tile_storage_contract::{
     tile_storage_diff_for_chunk, PendingTileStorageDiffQueue, TileStorageDiffBatch,
@@ -241,7 +254,16 @@ pub fn sync_chunk_residency_from_scheduler(
     const CHUNK_TILES: UVec2 = UVec2::splat(32);
     let mut orbs = vec![primary_interest_orb(&world)];
     orbs.extend(interest_orbs_from_lod_zones(&zones.zones, CHUNK_TILES));
-    *table = build_residency_table(&orbs, &scheduler.pending_chunks);
+    // S6-12: residency must not stay empty when the scheduler has not enqueued yet — seed from focus window.
+    let core_coords = if scheduler.pending_chunks.is_empty() {
+        chunk_window_coords(
+            world.focus_chunk,
+            world.interest_radius_chunks.max(1),
+        )
+    } else {
+        scheduler.pending_chunks.clone()
+    };
+    *table = build_residency_table(&orbs, &core_coords);
 }
 
 pub fn hydrate_stream_jobs_from_save_bundle(
@@ -270,6 +292,8 @@ pub fn hydrate_stream_jobs_from_save_bundle(
 pub fn reconstruct_staged_chunks_into_cache(
     mut scheduler: ResMut<ChunkStreamingScheduler>,
     mut cache: ResMut<ChunkCache>,
+    tier: Res<ChunkCacheTierSettings>,
+    mut spill: ResMut<ChunkCacheDiskSpill>,
     mut tile_diffs: ResMut<PendingTileStorageDiffQueue>,
     mut apply_queue: ResMut<PendingStreamApplyQueue>,
 ) {
@@ -278,7 +302,7 @@ pub fn reconstruct_staged_chunks_into_cache(
     }
     for (coord, body) in scheduler.staged_chunk_bodies.drain(..) {
         let changed_tile_indices = (0..body.cells.len() as u32).collect();
-        cache.upsert_from_saved_body(coord, &body);
+        let _ = cache.upsert_from_saved_body(coord, &body, tier.as_ref(), spill.as_mut());
         apply_queue.ready_bodies.push((coord, body));
         tile_diffs
             .batch
@@ -313,6 +337,10 @@ pub fn finalize_stream_domain_reconstruct(
     }
 }
 
+fn stall_after_tile_storage_apply(mut watch: ResMut<crate::render::FrameStallWatch>) {
+    watch.checkpoint("after_tile_storage_apply");
+}
+
 pub struct StreamingSpinePlugin;
 
 impl Plugin for StreamingSpinePlugin {
@@ -320,9 +348,15 @@ impl Plugin for StreamingSpinePlugin {
         app.init_resource::<ChunkStreamingScheduler>()
             .init_resource::<ChunkResidencyTable>()
             .init_resource::<ChunkCache>()
+            .init_resource::<ChunkCacheTierSettings>()
+            .init_resource::<ChunkCacheDiskSpill>()
             .init_resource::<ChunkStreamIoDispatcher>()
+            .init_resource::<StreamHydrateDiagnostics>()
             .init_resource::<PendingStreamApplyQueue>()
             .init_resource::<PendingTileStorageDiffQueue>()
+            .init_resource::<TileStorageSmoothTransitionState>()
+            .init_resource::<TileStorageApplyReport>()
+            .init_resource::<wave_c_live_proof::WaveCLiveProofState>()
             .add_systems(
                 Update,
                 (
@@ -338,9 +372,17 @@ impl Plugin for StreamingSpinePlugin {
             .add_systems(
                 Update,
                 (
+                    attrib_streaming_reconstruct_before,
                     reconstruct_staged_chunks_into_cache,
                     apply::apply_pending_stream_chunk_bodies,
+                    crate::render::clear_async_domain_apply_labels_after_stream_apply
+                        .after(apply::apply_pending_stream_chunk_bodies),
+                    apply_pending_tile_storage_diffs,
+                    stall_after_tile_storage_apply,
                     finalize_stream_domain_reconstruct,
+                    tick_tile_storage_smooth_transitions,
+                    attrib_streaming_reconstruct_after,
+                    wave_c_live_proof::write_wave_c_live_proof_system,
                 )
                     .chain()
                     .after(crate::gui::WorldRepresentationSystemSet::ComputeFrame),
@@ -348,9 +390,30 @@ impl Plugin for StreamingSpinePlugin {
     }
 }
 
+pub use wave_c_live_proof::{WAVE_C_LIVE_JSON, WaveCLiveProofState};
+
+/// Main-thread ECS apply order (S6-22); must match `StreamingSpinePlugin` reconstruct chain.
+pub const STREAM_ECS_APPLY_CHAIN: [&str; 3] = [
+    "reconstruct_staged_chunks_into_cache",
+    "apply_pending_stream_chunk_bodies",
+    "clear_async_domain_apply_labels_after_stream_apply",
+];
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn stream_ecs_apply_chain_order_matches_streaming_spine_plugin() {
+        assert_eq!(
+            STREAM_ECS_APPLY_CHAIN,
+            [
+                "reconstruct_staged_chunks_into_cache",
+                "apply_pending_stream_chunk_bodies",
+                "clear_async_domain_apply_labels_after_stream_apply",
+            ]
+        );
+    }
 
     #[test]
     fn streaming_priority_prefers_visible_near_sim() {
@@ -378,6 +441,22 @@ mod tests {
         scheduler.enqueue_focus_window(IVec2::ZERO, 0, ChunkStreamingPriority::default(), 0.0);
         scheduler.advance_job_stages();
         assert_eq!(scheduler.jobs[0].stage, ChunkStreamStage::Deserialize);
+    }
+
+    #[test]
+    fn sync_chunk_residency_seeds_focus_window_when_scheduler_pending_empty() {
+        let world = WorldRepresentationFrame {
+            focus_chunk: IVec2::new(2, 3),
+            interest_radius_chunks: 1,
+            ..Default::default()
+        };
+        let orbs = vec![primary_interest_orb(&world)];
+        let table = build_residency_table(
+            &orbs,
+            &chunk_window_coords(world.focus_chunk, world.interest_radius_chunks.max(1)),
+        );
+        assert!(table.entries.contains_key(&world.focus_chunk));
+        assert!(table.entries.len() > 1);
     }
 
     #[test]

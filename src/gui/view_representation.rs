@@ -12,20 +12,29 @@ use bevy::prelude::*;
 use crate::compute::ComputeDispatchGraph;
 use crate::render::{
     record_visual_agreement_frame, GpuRepresentationMetrics, VisualAgreementFrame,
-    WorldFireParticleFrame,
+    ViewportPipelineSet, WorldFireParticleFrame,
 };
 use crate::render::extraction::RenderProjectionGraph;
 
 use super::representation_policy::RepresentationResult;
 
 use super::map_camera::{
-    in_simulation_or_editor_map, map_zoom_alpha, MapCameraDesired, MapCameraMode, MapCameraSettings,
-    MapCameraSystemSet, MAP_ZOOM_CLAMP,
+    in_simulation_or_editor_map, map_camera_viewport_pixels, map_zoom_alpha_with_limits,
+    map_zoom_limits_for_world, MapCameraDesired,
+    MapCameraMode, MapCameraSettings, MapCameraSystemSet, MAP_ZOOM_CLAMP,
+};
+use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
+use bevy::window::PrimaryWindow;
+use super::MinimapShellState;
+use crate::render::view_runtime::{
+    ViewAuthorityWriter, ViewProjectionAuthority, ViewRuntimeTrace, ViewSurfaceId,
 };
 
 pub fn apply_camera_visual_from_map_snapshot(
     settings: &MapCameraSettings,
     desired_scale_x: f32,
+    zoom_lo: f32,
+    zoom_hi: f32,
     visual: &mut CameraVisualState,
     fx: &mut FxVisibilitySettings,
 ) {
@@ -34,7 +43,7 @@ pub fn apply_camera_visual_from_map_snapshot(
         MapCameraMode::Tactical => CameraIntent::Tactical,
         MapCameraMode::Cinematic => CameraIntent::Cinematic,
     };
-    visual.zoom_alpha = map_zoom_alpha(desired_scale_x);
+    visual.zoom_alpha = map_zoom_alpha_with_limits(desired_scale_x, zoom_lo, zoom_hi);
 
     visual.strategic_weight = match settings.mode {
         MapCameraMode::Strategic => 1.0,
@@ -332,11 +341,11 @@ impl Default for SwapImageBuffers {
 }
 
 fn sync_overlay_field_frame_from_shared_fire(
-    fire: Option<Res<crate::render::sim_visual_extract::FireVisualFrame>>,
+    fire_sim: Option<Res<crate::render::FireSimulationSnapshot>>,
     shared: Option<Res<crate::render::SharedOverlayFieldBuffers>>,
     mut overlay: ResMut<OverlayFieldFrame>,
 ) {
-    if let Some(frame) = fire {
+    if let Some(frame) = fire_sim {
         overlay.stamp = frame.stamp;
     }
     if let Some(s) = shared {
@@ -349,11 +358,16 @@ fn sync_representation_metrics_for_hud(
     projection: Res<RenderProjectionGraph>,
     particles: Res<WorldFireParticleFrame>,
     compute: Res<ComputeDispatchGraph>,
+    draw: Res<crate::render::WorldFireParticleDrawDispatch>,
     mut metrics: ResMut<GpuRepresentationMetrics>,
 ) {
     metrics.active_band = policy.active_band;
     metrics.instance_rows = projection.fire.instance_buffer.len() as u32;
-    metrics.particle_rows = particles.instances.len() as u32;
+    metrics.particle_rows = if policy.particle_policy.instanced_draw {
+        draw.instance_count
+    } else {
+        particles.instances.len().min(projection.fire.instance_buffer.len()) as u32
+    };
     metrics.reserved_capacity = policy.gpu_budget.reserved_capacity;
     metrics.active_capacity = policy.gpu_budget.active_capacity;
     let mut dispatches = 0u32;
@@ -371,10 +385,54 @@ fn sync_representation_metrics_for_hud(
 
 #[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
 pub enum ViewRepresentationSystemSet {
+    UiCollect,
+    ResolveViewport,
+    CameraSync,
+    RenderTargets,
+    WorldRender,
+    PostFX,
     SyncOverlayField,
+    SyncRepresentationMetrics,
 }
 
 // --- Plugin -----------------------------------------------------------------
+
+/// VM-A: minimap shell focus updates **minimap presentation only** — never [`MapCameraDesired`].
+fn apply_minimap_camera_intent(
+    mut shell: ResMut<MinimapShellState>,
+    mut map_views: ResMut<super::MapViewInstances>,
+    mut authority: ResMut<ViewProjectionAuthority>,
+    mut trace: ResMut<ViewRuntimeTrace>,
+) {
+    let mut changed = false;
+    if let Some(world) = shell.pending_camera_focus_world.take() {
+        map_views.minimap.camera_center = world;
+        shell.focus_world_tile(world);
+        shell.diagnostic_ui_wrote_camera = true;
+        changed = true;
+    }
+    if let Some(zoom) = shell.pending_camera_focus_zoom.take() {
+        map_views.minimap.zoom = zoom;
+        map_views.minimap.zoom_target = zoom;
+        shell.zoom_target = zoom;
+        shell.clamp_zoom();
+        shell.zoom = shell.zoom_target;
+        changed = true;
+    }
+    if changed {
+        let cam = super::view_authority::ViewCameraState {
+            translation: map_views.minimap.camera_center,
+            zoom: map_views.minimap.zoom,
+            rotation: 0.0,
+        };
+        authority.commit_pose_traced(
+            ViewSurfaceId::Minimap,
+            cam,
+            ViewAuthorityWriter::MinimapShell,
+            trace.enabled.then_some(trace.as_mut()),
+        );
+    }
+}
 
 pub struct ViewRepresentationPlugin;
 
@@ -382,11 +440,14 @@ impl Plugin for ViewRepresentationPlugin {
     fn build(&self, app: &mut App) {
         super::world_representation::register_world_representation_frame(app);
         app.add_plugins(crate::render::Stage5ReadinessPlugin);
+        app.add_plugins(crate::render::FullRenderDiagnosticPlugin);
+        app.add_plugins(crate::render::MinimapCompositorPlugin);
         app.add_plugins(crate::render::VtCiMatrixPlugin);
         app.add_plugins(crate::render::PhaseFLodProofPlugin);
         app.add_plugins(crate::render::DomainProjectionFramePlugin);
         app.add_plugins(crate::render::GpuIndirectDrawSpinePlugin);
         app.add_plugins(crate::io::streaming::StreamingSpinePlugin);
+        app.add_plugins(super::map_view::MapViewPlugin);
         app.init_resource::<VisualAgreementFrame>()
             .init_resource::<crate::render::OverlayAgreementDebug>()
             .init_resource::<GpuRepresentationMetrics>()
@@ -398,11 +459,44 @@ impl Plugin for ViewRepresentationPlugin {
             .init_resource::<VisualCadence>()
             .init_resource::<ActiveCameraOwner>()
             .init_resource::<OverlayFieldFrame>()
+            .init_resource::<super::viewport_authority::ViewportAuthority>()
+            .init_resource::<super::view_representation_snapshot::ViewRepresentationSnapshot>()
             .add_systems(PreUpdate, sync_visual_cadence_from_visual_budget_settings)
+            .configure_sets(
+                Update,
+                (
+                    ViewRepresentationSystemSet::UiCollect,
+                    ViewRepresentationSystemSet::ResolveViewport,
+                    ViewRepresentationSystemSet::CameraSync,
+                    ViewRepresentationSystemSet::RenderTargets,
+                    ViewRepresentationSystemSet::WorldRender,
+                    ViewRepresentationSystemSet::PostFX,
+                )
+                    .chain(),
+            )
             .configure_sets(
                 Update,
                 ViewRepresentationSystemSet::SyncOverlayField
                     .after(crate::render::extraction::FireVisualFrameSet::BuildProfiles),
+            )
+            .add_systems(
+                Update,
+                apply_minimap_camera_intent
+                    .after(ViewportPipelineSet::Resolve)
+                    .after(MapCameraSystemSet::ApplyInput)
+                    .before(crate::gui::ViewAuthoritySystemSet::SyncViewManager)
+                    .in_set(ViewRepresentationSystemSet::ResolveViewport),
+            )
+            .add_systems(
+                Update,
+                super::view_representation_snapshot::build_view_representation_snapshot
+                    .after(crate::gui::ViewAuthoritySystemSet::SyncViewManager)
+                    .in_set(ViewRepresentationSystemSet::CameraSync),
+            )
+            .add_systems(
+                Update,
+                super::view_representation_snapshot::validate_view_representation_snapshot
+                    .in_set(ViewRepresentationSystemSet::PostFX),
             )
             .add_systems(
                 Update,
@@ -420,29 +514,30 @@ impl Plugin for ViewRepresentationPlugin {
                     .in_set(ViewRepresentationSystemSet::SyncOverlayField),
             )
             .add_systems(
-                Update,
-                sync_representation_metrics_for_hud
-                    .after(crate::render::extraction::FireVisualFrameSet::ProjectGpu)
-                    .after(crate::compute::ComputeDispatchSystemSet::Dispatch),
-            )
-            .add_systems(
-                Update,
-                crate::render::sync_particle_draw_dispatch_from_policy
+                PostUpdate,
+                (
+                    crate::render::sync_particle_draw_dispatch_from_policy,
+                    sync_representation_metrics_for_hud,
+                )
+                    .chain()
                     .after(crate::render::merge_domain_projection_into_representation)
-                    .after(crate::render::extraction::FireVisualFrameSet::ProjectGpu),
+                    .after(crate::render::extraction::FireVisualFrameSet::ProjectGpu)
+                    .after(crate::render::extraction::FireVisualFrameSet::EmitParticles)
+                    .in_set(ViewRepresentationSystemSet::SyncRepresentationMetrics),
             )
             .add_systems(
                 Update,
                 record_visual_agreement_frame
                     .after(ViewRepresentationSystemSet::SyncOverlayField)
+                    .after(crate::render::extraction::sync_shared_overlay_from_simulation)
                     .after(crate::render::extraction::FireVisualFrameSet::ProjectGpu)
                     .after(crate::gui::editor::world_preview::capture_world_preview_vt4_probe),
             )
             .add_systems(
                 Update,
                 sync_camera_visual_state_from_map_camera
-                    .after(MapCameraSystemSet::ApplyInput)
-                    .before(MapCameraSystemSet::Smooth)
+                    .after(MapCameraSystemSet::Smooth)
+                    .before(crate::gui::WorldRepresentationSystemSet::ComputeFrame)
                     .run_if(in_simulation_or_editor_map),
             );
     }
@@ -451,10 +546,31 @@ impl Plugin for ViewRepresentationPlugin {
 fn sync_camera_visual_state_from_map_camera(
     settings: Res<MapCameraSettings>,
     desired: Res<MapCameraDesired>,
+    params: Res<WorldGenParams>,
+    windows: Query<&Window, With<PrimaryWindow>>,
     mut visual: ResMut<CameraVisualState>,
     mut fx: ResMut<FxVisibilitySettings>,
 ) {
-    apply_camera_visual_from_map_snapshot(&settings, desired.scale.x, &mut visual, &mut fx);
+    let window_px = windows
+        .single()
+        .map(|w| Vec2::new(w.width().max(1.0), w.height().max(1.0)))
+        .unwrap_or(Vec2::new(1280.0, 720.0));
+    let viewport = map_camera_viewport_pixels(window_px, None);
+    let world_w = params.width as f32;
+    let world_h = params.height as f32;
+    let (zoom_lo, zoom_hi) = if world_w > 0.0 && world_h > 0.0 {
+        map_zoom_limits_for_world(world_w, world_h, viewport)
+    } else {
+        MAP_ZOOM_CLAMP
+    };
+    apply_camera_visual_from_map_snapshot(
+        &settings,
+        desired.scale.x,
+        zoom_lo,
+        zoom_hi,
+        &mut visual,
+        &mut fx,
+    );
 }
 
 #[cfg(test)]
@@ -511,7 +627,8 @@ mod tests {
         for i in 0..=500 {
             let t = i as f32 / 500.0;
             let s = lo - 2.0 + (hi - lo + 4.0) * t;
-            super::apply_camera_visual_from_map_snapshot(&settings, s, &mut visual, &mut fx);
+            let (lo, hi) = MAP_ZOOM_CLAMP;
+            super::apply_camera_visual_from_map_snapshot(&settings, s, lo, hi, &mut visual, &mut fx);
             assert!(
                 visual.zoom_alpha + 1e-5 >= prev_za,
                 "zoom_alpha regressed at scale={s}"

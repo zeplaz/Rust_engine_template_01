@@ -1,0 +1,238 @@
+warning: unused import: `ViewportRectSanity`
+  --> src\gui\hud\sim_view_sync_debug.rs:14:53
+   |
+14 | use crate::gui::hud::{HudDockRegistry, HudWidgetId, ViewportRectSanity};
+   |                                                     ^^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `crate::gui::CommandLeftStackState`
+  --> src\gui\hud\sim_view_sync_debug.rs:15:5
+   |
+15 | use crate::gui::CommandLeftStackState;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `MapCameraDesired`
+  --> src\gui\hud\sim_view_sync_debug.rs:17:79
+   |
+17 |     MainWorldCamera, MainWorldCameraOrthoTrace, MainWorldCameraViewportLatch, MapCameraDesired,
+   |                                                                               ^^^^^^^^^^^^^^^^
+
+warning: unused import: `MinimapShellState`
+  --> src\gui\hud\sim_view_sync_debug.rs:20:5
+   |
+20 |     MinimapShellState, SimulationMapViewport, SimulationMapViewportDebug, SimulationMapViewportTrace,
+   |     ^^^^^^^^^^^^^^^^^
+
+warning: unused import: `InGameMenuState`
+ --> src\gui\pause_menu_confirm.rs:5:40
+  |
+5 | use crate::engine::states::{BaseState, InGameMenuState, MainMenuState, WorldGenFlowState};
+  |                                        ^^^^^^^^^^^^^^^
+
+warning: use of deprecated function `gui::viewport_layout_solver::merge_measured_with_solver`: use commit_authority_from_semantic
+   --> src\gui\mod.rs:169:37
+    |
+169 |     commit_authority_from_semantic, merge_measured_with_solver, semantic_viewport_from_map_fill,
+    |                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(deprecated)]` on by default
+
+warning: use of deprecated function `gui::viewport_layout_solver::solve_sim_viewport_from_map_fill`: use semantic_viewport_from_map_fill
+   --> src\gui\mod.rs:170:5
+    |
+170 |     solve_sim_viewport_from_map_fill, stabilize_viewport_floor, viewport_rescue_floor,
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: variable does not need to be mutable
+   --> src\engine\ux_orchestration.rs:237:5
+    |
+237 |     mut world_gen_ui: ResMut<WorldGenUiState>,
+    |     ----^^^^^^^^^^^^
+    |     |
+    |     help: remove this `mut`
+    |
+    = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: variable does not need to be mutable
+   --> src\engine\ux_orchestration.rs:238:5
+    |
+238 |     mut preview_ui: ResMut<WorldPreviewUiState>,
+    |     ----^^^^^^^^^^
+    |     |
+    |     help: remove this `mut`
+
+warning: unused variable: `world_gen_ui`
+   --> src\engine\ux_orchestration.rs:237:5
+    |
+237 |     mut world_gen_ui: ResMut<WorldGenUiState>,
+    |     ^^^^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_world_gen_ui`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `preview_ui`
+   --> src\engine\ux_orchestration.rs:238:5
+    |
+238 |     mut preview_ui: ResMut<WorldPreviewUiState>,
+    |     ^^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_preview_ui`
+
+warning: unused variable: `q_children`
+   --> src\gui\debug\ui_layout_tree_debug.rs:161:5
+    |
+161 |     q_children: Query<&Children>,
+    |     ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_q_children`
+
+warning: variable does not need to be mutable
+   --> src\gui\viewport_layout_solver.rs:128:9
+    |
+128 |     let mut min = measured.min;
+    |         ----^^^
+    |         |
+    |         help: remove this `mut`
+
+warning: unused variable: `interaction_center`
+   --> src\gui\editor\world_preview\window.rs:329:25
+    |
+329 |                     let interaction_center = if gpu_painted {
+    |                         ^^^^^^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_interaction_center`
+
+warning: type `ChromeSnapshot` is more private than the item `trace_worldgen_chrome_state_edges`
+   --> src\engine\worldgen_chrome_debug.rs:133:1
+    |
+133 | / pub fn trace_worldgen_chrome_state_edges(
+134 | |     app: Res<State<AppState>>,
+135 | |     worldgen: Res<State<WorldGenState>>,
+136 | |     base: Res<State<BaseState>>,
+...   |
+143 | |     mut prev: Local<Option<ChromeSnapshot>>,
+144 | | ) {
+    | |_^ function `trace_worldgen_chrome_state_edges` is reachable at visibility `pub`
+    |
+note: but type `ChromeSnapshot` is only usable at visibility `pub(self)`
+   --> src\engine\worldgen_chrome_debug.rs:29:1
+    |
+ 29 | struct ChromeSnapshot {
+    | ^^^^^^^^^^^^^^^^^^^^^
+    = note: `#[warn(private_interfaces)]` on by default
+
+warning: type `SimViewSyncCtx<'_, '_>` is more private than the item `trace_sim_view_sync_state`
+   --> src\gui\hud\sim_view_sync_debug.rs:263:1
+    |
+263 | / pub fn trace_sim_view_sync_state(
+264 | |     cfg: Res<DebugRenderTraceConfig>,
+265 | |     frame: Res<FrameCount>,
+266 | |     ctx: SimViewSyncCtx,
+267 | |     mut last: Local<Option<SyncSignature>>,
+268 | | ) {
+    | |_^ function `trace_sim_view_sync_state` is reachable at visibility `pub`
+    |
+note: but type `SimViewSyncCtx<'_, '_>` is only usable at visibility `pub(self)`
+   --> src\gui\hud\sim_view_sync_debug.rs:127:1
+    |
+127 | struct SimViewSyncCtx<'w, 's> {
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: type `SyncSignature` is more private than the item `trace_sim_view_sync_state`
+   --> src\gui\hud\sim_view_sync_debug.rs:263:1
+    |
+263 | / pub fn trace_sim_view_sync_state(
+264 | |     cfg: Res<DebugRenderTraceConfig>,
+265 | |     frame: Res<FrameCount>,
+266 | |     ctx: SimViewSyncCtx,
+267 | |     mut last: Local<Option<SyncSignature>>,
+268 | | ) {
+    | |_^ function `trace_sim_view_sync_state` is reachable at visibility `pub`
+    |
+note: but type `SyncSignature` is only usable at visibility `pub(self)`
+   --> src\gui\hud\sim_view_sync_debug.rs:35:1
+    |
+ 35 | struct SyncSignature {
+    | ^^^^^^^^^^^^^^^^^^^^
+
+warning: type `PauseMenuNavParams<'_, '_>` is more private than the item `pause_menu_egui_system`
+  --> src\gui\in_game_pause_menu.rs:75:1
+   |
+75 | / pub(crate) fn pause_menu_egui_system(
+76 | |     mut contexts: EguiContexts,
+77 | |     menu: Res<State<InGameMenuState>>,
+78 | |     mut nav: PauseMenuNavParams,
+79 | |     mut wg: PauseMenuWorldGenParams,
+80 | | ) -> Result {
+   | |___________^ function `pause_menu_egui_system` is reachable at visibility `pub(in crate::gui)`
+   |
+note: but type `PauseMenuNavParams<'_, '_>` is only usable at visibility `pub(self)`
+  --> src\gui\in_game_pause_menu.rs:33:1
+   |
+33 | struct PauseMenuNavParams<'w, 's> {
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: type `PauseMenuWorldGenParams<'_>` is more private than the item `pause_menu_egui_system`
+  --> src\gui\in_game_pause_menu.rs:75:1
+   |
+75 | / pub(crate) fn pause_menu_egui_system(
+76 | |     mut contexts: EguiContexts,
+77 | |     menu: Res<State<InGameMenuState>>,
+78 | |     mut nav: PauseMenuNavParams,
+79 | |     mut wg: PauseMenuWorldGenParams,
+80 | | ) -> Result {
+   | |___________^ function `pause_menu_egui_system` is reachable at visibility `pub(in crate::gui)`
+   |
+note: but type `PauseMenuWorldGenParams<'_>` is only usable at visibility `pub(self)`
+  --> src\gui\in_game_pause_menu.rs:49:1
+   |
+49 | struct PauseMenuWorldGenParams<'w> {
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: type `VisualDiagCtx<'_, '_>` is more private than the item `trace_visual_diagnostics`
+   --> src\render\visual_diagnostics.rs:462:1
+    |
+462 | / pub fn trace_visual_diagnostics(
+463 | |     cfg: Res<DebugRenderTraceConfig>,
+464 | |     frame: Res<FrameCount>,
+465 | |     ctx: VisualDiagCtx,
+466 | |     mut last_sig: Local<Option<VisualDiagSignature>>,
+467 | |     mut last_periodic: Local<u64>,
+468 | | ) {
+    | |_^ function `trace_visual_diagnostics` is reachable at visibility `pub(in crate::render)`
+    |
+note: but type `VisualDiagCtx<'_, '_>` is only usable at visibility `pub(self)`
+   --> src\render\visual_diagnostics.rs:145:1
+    |
+145 | struct VisualDiagCtx<'w, 's> {
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: type `VisualDiagSignature` is more private than the item `trace_visual_diagnostics`
+   --> src\render\visual_diagnostics.rs:462:1
+    |
+462 | / pub fn trace_visual_diagnostics(
+463 | |     cfg: Res<DebugRenderTraceConfig>,
+464 | |     frame: Res<FrameCount>,
+465 | |     ctx: VisualDiagCtx,
+466 | |     mut last_sig: Local<Option<VisualDiagSignature>>,
+467 | |     mut last_periodic: Local<u64>,
+468 | | ) {
+    | |_^ function `trace_visual_diagnostics` is reachable at visibility `pub(in crate::render)`
+    |
+note: but type `VisualDiagSignature` is only usable at visibility `pub(self)`
+   --> src\render\visual_diagnostics.rs:43:1
+    |
+ 43 | struct VisualDiagSignature {
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `solve_viewport_rescue_floor` is never used
+   --> src\gui\viewport_layout_solver.rs:213:8
+    |
+213 | pub fn solve_viewport_rescue_floor(window: Vec2) -> SemanticViewportRect {
+    |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `frozen_exceeds_semantic_authority` is never used
+   --> src\gui\viewport_layout_solver.rs:237:8
+    |
+237 | pub fn frozen_exceeds_semantic_authority(
+    |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: `proc_A_dine01` (lib) generated 23 warnings (run `cargo fix --lib -p proc_A_dine01` to apply 12 suggestions)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.67s
+     Running `target\debug\proc_A_dine01.exe --test visual --debug-visual-diag`

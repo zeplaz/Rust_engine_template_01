@@ -3,7 +3,7 @@
 use super::ecology_preview::EcologyRasterChunkRow;
 use super::layers::PreviewLayers;
 use super::texture_cache::WorldPreviewTexture;
-use crate::gui::editor::world_gen_ui::WorldGenUiState;
+use crate::gui::map_view::MapViewInstances;
 use crate::gui::preview_partial_min_interval_from_hz;
 use crate::systems::ecology::{ChunkEcology, VegetationField};
 use crate::render::SharedOverlayFieldBuffers;
@@ -78,6 +78,17 @@ pub(crate) struct PreviewRasterScratch {
     initialized: bool,
 }
 
+#[derive(SystemParam)]
+pub(crate) struct PreviewRasterGovernance<'w> {
+    pub(crate) preview_budget: Res<'w, super::PreviewRenderBudget>,
+    pub(crate) world_frame: Res<'w, crate::gui::WorldRepresentationFrame>,
+    pub(crate) chunk_caches: ResMut<'w, super::WorldPreviewChunkCaches>,
+    pub(crate) lifecycle_signals: ResMut<'w, super::preview_lifecycle::WorldPreviewLifecycleSignals>,
+    pub(crate) preview_ready: Res<'w, super::preview_readiness::WorldPreviewReady>,
+    pub(crate) resolved: Res<'w, crate::render::ResolvedViewports>,
+    pub(crate) preview_render: ResMut<'w, super::preview_render_state::PreviewRenderState>,
+}
+
 #[derive(Default)]
 pub(crate) struct PreviewRasterRuntime {
     pub scratch: PreviewRasterScratch,
@@ -117,7 +128,8 @@ fn world_preview_partial_min_interval_secs(preview_budget: &super::PreviewRender
 pub fn update_world_preview_texture(
     mut targets: WorldPreviewRasterImageTargets,
     world_preview_ui: Res<super::WorldPreviewUiState>,
-    world_gen_ui_state: Res<WorldGenUiState>,
+    map_views: Res<MapViewInstances>,
+    world_gen_ui_state: Res<crate::gui::editor::world_gen_ui::WorldGenUiState>,
     world_gen_params: Res<WorldGenParams>,
     mut preview_state: ResMut<WorldPreviewState>,
     macro_region_raster: Option<Res<MacroRegionRaster>>,
@@ -129,15 +141,17 @@ pub fn update_world_preview_texture(
     queries: WorldPreviewTileChunkQueries,
     time: Res<Time>,
     mut runtime: Local<PreviewRasterRuntime>,
-    preview_budget: Res<super::PreviewRenderBudget>,
-    mut chunk_caches: ResMut<super::WorldPreviewChunkCaches>,
+    mut governance: PreviewRasterGovernance,
 ) {
     if !world_preview_ui.window_open && !world_gen_ui_state.visible {
         return;
     }
+    if !governance.preview_ready.0 {
+        return;
+    }
 
     let epoch = preview_state.epoch.0;
-    let layers = world_gen_ui_state.preview_layers;
+    let layers = map_views.world_preview.layers;
     let width = targets.preview_texture.width;
     let height = targets.preview_texture.height;
 
@@ -163,7 +177,7 @@ pub fn update_world_preview_texture(
     // Throttle partial dirty-chunk passes and fire-overlay-only full passes.
     if (has_dirty && !need_full) || overlay_only {
         let now = time.elapsed_secs();
-        let min_dt = world_preview_partial_min_interval_secs(&preview_budget);
+        let min_dt = world_preview_partial_min_interval_secs(&governance.preview_budget);
         if now - runtime.last_partial_raster_secs < min_dt {
             return;
         }
@@ -191,6 +205,12 @@ pub fn update_world_preview_texture(
         Some(d) => d,
         None => return,
     };
+    if need_full && !governance.resolved.world_preview.valid {
+        governance.preview_render.held_last_raster_due_to_invalid_viewport = true;
+        return;
+    }
+    governance.preview_render.held_last_raster_due_to_invalid_viewport = false;
+
     data.resize(len, 0);
 
     let drained_dirty: Vec<IVec2> = std::mem::take(&mut preview_state.dirty_queue);
@@ -343,15 +363,22 @@ pub fn update_world_preview_texture(
     }
 
     if partial_ok {
-        for coord in &dirty_set {
-            if let Some(&size) = chunk_geom_map.get(coord) {
+        let mut cache_coords: HashSet<IVec2> = dirty_set.clone();
+        for coord in crate::io::streaming::ghost_band_neighbor_coords_for_preview(
+            governance.world_frame.focus_chunk,
+            governance.world_frame.interest_radius_chunks.max(1),
+        ) {
+            cache_coords.insert(coord);
+        }
+        for coord in cache_coords {
+            if let Some(&size) = chunk_geom_map.get(&coord) {
                 super::cache::sync_chunk_preview_cache(
-                    *coord,
+                    coord,
                     size,
                     data,
                     tex_w,
                     tex_h,
-                    &mut chunk_caches,
+                    &mut governance.chunk_caches,
                     overlay_rev,
                 );
             }
@@ -361,4 +388,5 @@ pub fn update_world_preview_texture(
     if wrote_to_swap_back {
         targets.swap.dirty = true;
     }
+    super::preview_lifecycle::note_world_preview_raster_wrote(&mut governance.lifecycle_signals);
 }

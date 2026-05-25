@@ -1,0 +1,36 @@
+{
+  "graph": {
+    "stage5_readiness": {
+      "id": "stage5_readiness",
+      "children": [
+        "Stage5ReadinessProfile",
+        "STAGE5_TODOS",
+        "stage5_full_app_harness",
+        "RepresentationResult",
+        "FireVisualFrame"
+      ],
+      "notes": "Operational readiness gate — FULL_APP green in running app, not fixtures alone"
+    }
+  },
+  "subsystem_owners": {
+    "DEV / STAGE5 / READINESS": "stage5_readiness_agent"
+  },
+  "seed_continuation_tasks": [
+    {
+      "id": "stage5_full_app_exit",
+      "title": "Maintain FULL_APP readiness green in running app",
+      "risk": "HIGH",
+      "subsystem": "DEV / STAGE5",
+      "deprecated_symbols": [],
+      "replacement_symbols": [],
+      "affected_systems": [
+        "Stage5ReadinessProfile",
+        "STAGE5_TODOS",
+        "debug_runs/stage5_full_app_live.json"
+      ],
+      "blockers": [],
+      "recommended_agent": "stage5_readiness_agent",
+      "do_not_touch": false
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "witness_id": "viewport_authority_migration_2026-05-20",
+  "status": "COMPLETE",
+  "migration_id": "viewport_authority_refactor",
+  "completed_at": "2026-05-20",
+  "summary": "Deprecated viewport merge/solve wrappers removed; authoritative path is semantic_viewport_from_map_fill + commit_authority_from_semantic only.",
+  "removed_symbols": [
+    "merge_measured_with_solver",
+    "solve_sim_viewport_from_map_fill",
+    "solve_viewport_rescue_floor",
+    "SolvedViewportRect"
+  ],
+  "authoritative_symbols": [
+    "semantic_viewport_from_map_fill",
+    "commit_authority_from_semantic",
+    "viewport_rescue_floor",
+    "stabilize_viewport_floor",
+    "measure_sim_map_fill_viewport"
+  ],
+  "files": {
+    "measure": "src/gui/authoritative_viewport.rs",
+    "semantic_solver": "src/gui/viewport_layout_solver.rs",
+    "debug_trace": "src/gui/hud/viewport_authority_debug.rs",
+    "sync_trace": "src/gui/hud/sim_view_sync_debug.rs"
+  },
+  "remaining_staging": [
+    "frozen_exceeds_semantic_authority (tagged IN_PROGRESS — rescue/heal path)",
+    "src/viewport/ module split per recovery_viewport.md (not started)"
+  ],
+  "fixes_2026_05_20": [
+    "camera scissor decoupled from SimulationMapViewport::valid (hole latch)",
+    "is_adequate_for_camera uses dimensions only",
+    "tag_commit aligned to hole_* latch tags"
+  ],
+  "drift_repro": "SIM_VIEW_SYNC_DEBUG=1 or --debug-sim-view-sync; RUST_LOG=sim_view_sync=info,sim_view_sync::anomaly=warn",
+  "blockers_closed": [
+    "deprecated re-exports in gui/mod.rs removed",
+    "zero call sites for legacy merge pipeline"
+  ]
+}

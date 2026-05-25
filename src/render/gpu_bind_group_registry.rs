@@ -17,6 +17,18 @@ pub const WEATHER_FIRE_FIELD_FIRE_BIND_GROUP: BindGroupId = BindGroupId(1);
 pub const WORLD_FIRE_PARTICLE_DRAW_BIND_GROUP: BindGroupId = BindGroupId(2);
 /// Expanded instanced-quad vertices (`fire_particle.wgsl` group 2).
 pub const WORLD_FIRE_PARTICLE_EXPANDED_BIND_GROUP: BindGroupId = BindGroupId(3);
+/// Spark sim state for expand pass (`fire_particle.wgsl` group 3).
+pub const WORLD_FIRE_PARTICLE_SPARK_BIND_GROUP: BindGroupId = BindGroupId(4);
+/// Spark compute: instance storage (`fire_spark_compute.wgsl` group 1).
+pub const FIRE_SPARK_INSTANCES_BIND_GROUP: BindGroupId = BindGroupId(5);
+/// Spark compute: sim state read/write (`fire_spark_compute.wgsl` group 2).
+pub const FIRE_SPARK_STATE_BIND_GROUP: BindGroupId = BindGroupId(6);
+/// Spark compute: attractor storage (`fire_spark_compute.wgsl` group 3).
+pub const FIRE_SPARK_ATTRACTORS_BIND_GROUP: BindGroupId = BindGroupId(7);
+/// Water particle instancing compute pass (`water_particle.wgsl` group 1).
+pub const WORLD_WATER_PARTICLE_DRAW_BIND_GROUP: BindGroupId = BindGroupId(8);
+/// Expanded water particle vertices (`water_particle.wgsl` group 2).
+pub const WORLD_WATER_PARTICLE_EXPANDED_BIND_GROUP: BindGroupId = BindGroupId(9);
 
 /// Buffer dependency recorded when a bind group was built.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

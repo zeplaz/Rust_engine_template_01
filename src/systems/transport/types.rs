@@ -10,6 +10,36 @@ use std::collections::HashMap;
 )]
 pub struct TransportEdgeId(pub u64);
 
+/// Corridor family for cost, legality, congestion, maintenance (LOG-D-01).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Default, serde::Serialize, serde::Deserialize)]
+pub enum CorridorClass {
+    #[default]
+    Road,
+    Rail,
+    Maritime,
+    Conveyor,
+    Power,
+    Pipeline,
+}
+
+#[must_use]
+pub fn corridor_class_from_profile(profile: &str) -> CorridorClass {
+    let p = profile.to_ascii_lowercase();
+    if p.contains("rail") {
+        CorridorClass::Rail
+    } else if p.contains("maritime") || p.contains("port") {
+        CorridorClass::Maritime
+    } else if p.contains("conveyor") {
+        CorridorClass::Conveyor
+    } else if p.contains("power") || p.contains("grid") {
+        CorridorClass::Power
+    } else if p.contains("pipe") {
+        CorridorClass::Pipeline
+    } else {
+        CorridorClass::Road
+    }
+}
+
 /// Continuous pressure on one directed edge (Rulebook A).
 #[derive(Clone, Debug)]
 pub struct EdgeFieldState {
@@ -80,6 +110,7 @@ pub struct TransportEdgeDirectory {
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct TransportEdgeMeta {
     pub profile: String,
+    pub corridor_class: CorridorClass,
     pub allowed_agents: Vec<String>,
     pub head_key: String,
     pub tail_key: String,

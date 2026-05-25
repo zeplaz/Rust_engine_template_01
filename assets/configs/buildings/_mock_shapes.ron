@@ -1,0 +1,33 @@
+// Preset 0/1 footprint matrices for ghost preview (building editor export uses same layout).
+(
+    shapes: [
+        (
+            id: "shape_rectangle_2x2",
+            label: "Rectangle 2×2",
+            width: 2,
+            depth: 2,
+            cells: [1, 1, 1, 1],
+        ),
+        (
+            id: "shape_o_3x3",
+            label: "O-ring 3×3",
+            width: 3,
+            depth: 3,
+            cells: [1, 1, 1, 1, 0, 1, 1, 1, 1],
+        ),
+        (
+            id: "shape_t_3x3",
+            label: "T 3×3",
+            width: 3,
+            depth: 3,
+            cells: [1, 1, 1, 0, 1, 0, 0, 1, 0],
+        ),
+        (
+            id: "shape_l_3x2",
+            label: "L 3×2",
+            width: 3,
+            depth: 2,
+            cells: [1, 0, 0, 1, 1, 1],
+        ),
+    ],
+)

@@ -8,7 +8,7 @@
 
 **How to use:** Keep items **rough**; flip status when behavior matches the intent (not when every sub-bullet exists). Update dates in the status column when you touch an item.
 
-**2026-05-13 — spine slices landed; convergence target:** Gates **1–5** (policy spine, burst discipline, snapshot fence, VT-4/VT-5 harness, GPU metrics HUD) and post-gate scaffolds (zones in `apply_zone_policy`, Phase D contract + offscreen camera, Phase F registry upload + **LOD proof**, **P2-H hybrid reconcile** with authoritative GPU partial texture uploads + partial compute dispatch, **stage5-08** readiness/HUD/CI, logistics/ecology snapshots) are **in-tree** with `cargo test --lib` green. **Strict EXIT** per [`base_visual_world_representation_v1.md`](base_visual_world_representation_v1.md) and **Stage 5** still require **full-app VT surfaces**, **Phase D pixel parity** (CPU layers vs GPU quads), and **Phase F instanced draw** — not more side paths.
+**2026-05-23 — Stage 5 operational CLOSED:** `Stage5ReadinessProfile::FULL_APP` green in running app; witness [`debug_runs/stage5_full_app_live.json`](../../debug_runs/stage5_full_app_live.json); gate checklist [`src/dev/stage5_close_checklist.md`](../../src/dev/stage5_close_checklist.md). Deferred infra (VM-06…11, fire streaming, shell perf) → [`src/dev/stage5_triage_backlog.md`](../../src/dev/stage5_triage_backlog.md). Gates **1–5** spine slices remain **in-tree** with `cargo test -p proc_A_dine01 --lib stage5` green.
 
 ---
 
@@ -72,20 +72,20 @@
 
 ## Stage staging (convergence to Stage 5)
 
-| Stage | Focus | Status (2026-05-13) |
+| Stage | Focus | Status (2026-05-23) |
 |-------|--------|------------------------|
-| **0** | P0 latency + single fire snapshot path | ✓ enough for current milestone |
-| **1** | Policy scaffolding (`WorldLodMap`, zones, expanded `LodInputs`) | ✓ `world_representation.rs`, `lod_zone_authoring.rs`, `representation_policy.rs` |
-| **2** | **Authoritative resolver** — one `RepresentationResult` / frame policy; consumers read policy not raw zoom | ~ **Gates 1–2** in code; grep audit + doc in `representation_spine_audit.rs` |
-| **3** | **E1 + VT-4 strict** — `SimStepStamp`, snapshot fence, triple-surface agreement + VT-5 spatial | ~ fence + unit VT; **app-level** scene matrix open |
-| **4** | **Projection + registry** — graphs + `GPUBufferRegistry` sole upload | ~ fire + heat + particle rows; **draw** + domain buffers open |
-| **5** | **Scalable orchestration** — multi-domain snapshots, unified work graph | ~ logistics/ecology snapshot publish; projection nodes open |
+| **0** | P0 latency + single fire snapshot path | ✓ |
+| **1** | Policy scaffolding (`WorldLodMap`, zones, expanded `LodInputs`) | ✓ |
+| **2** | **Authoritative resolver** — one `RepresentationResult` / frame policy | ✓ operational (FULL_APP) |
+| **3** | **E1 + VT-4/VT-5** — fence, agreement harness | ✓ operational (`vt4_ok` / `vt5_ok` in live JSON) |
+| **4** | **Projection + registry** — graphs + instanced draw path | ✓ operational (`projection_domains=3`, Phase F live) |
+| **5** | **Operational exit** — FULL_APP readiness + live proof | ✓ **CLOSED (operational)** per close checklist §A |
 
-**Next real milestone:** app-level **VT-4/VT-5** + **Phase D world pixels** + **Phase F draw** + **P2-H reconcile** + **Stage 5 domain projection** (see IDE todos `next-09` … `next-06`).
+**Next milestone (post–Stage 5):** [`src/dev/stage5_5_open.md`](../../src/dev/stage5_5_open.md) — pick one track (default **5.5-A view runtime**). Deferred depth: [`src/dev/stage5_triage_backlog.md`](../../src/dev/stage5_triage_backlog.md).
 
-**Gates 1–5 (2026-05-13, in-tree):** `RepresentationInputs` → `WorldRepresentationResolver` / `build_representation_result` → `RepresentationResult` → `RenderProjectionGraph` / `ComputeDispatchGraph` → `GPUBufferRegistry`; `CommittedVisualSnapshotFence`; `FxParticleBurstRequest` projection-only; `GpuRepresentationMetrics` + HUD `REP` line.
+**Gates 1–5 (in-tree):** `RepresentationResult` → `RenderProjectionGraph` → `GPUBufferRegistry`; `CommittedVisualSnapshotFence`; shared overlays; `GpuRepresentationMetrics` + readiness HUD.
 
-**Still before declaring Stage 5:** instanced particle **draw**; GPU preview **world** pixels (not clear-color scaffold); atmosphere **hybrid reconcile**; logistics/ecology **projection nodes**; CI VT integration.
+**Not in Stage 5 gate (triage):** full per-view authority migration, fire sleep/streaming budgets, construction stage, Stage 6 virtualization.
 
 ---
 
@@ -421,7 +421,7 @@ Status: `○` not started · `~` in progress · `✓` done enough for current mi
 | P1-F | **Camera smoothing + `run_if`** (`CameraTarget` vs current `Transform`) | ✓ | `MapCameraDesired` + chained lerp; edge toggle / recenter / Z reset / B frame-world; ScrollLock edge; `focus_main_camera` syncs desired |
 | P1-G | **Shared minimap + preview overlay** (derived view model) | ✓ | `SharedOverlayFieldBuffers::chunk_fire_heat` **from `FireVisualFrame` only** (no second ECS fire scan); world preview + sim tile fallback / egui minimap via `apply_shared_fire_heat_to_rgba`; dirty on overlay `revision`; raster after `FireVisualFrameSet::BuildProfiles`. |
 | P2-H | **Incremental atmosphere** (dirty rects + periodic full refresh) | ✓ | CPU dirty-region scheduling + mirrored GPU subresource uploads + partial compute dispatch; full-field fallback only on reconcile cadence |
-| stage5-08 | **App readiness + MAP REP + CI** | ✓ | `stage5_readiness.rs` + `Stage5ReadinessProfile` (`HEADLESS` default; `FULL_APP` with preview); MAP REP HUD; F3 diagnostics; `vt_ci_matrix` fixture + CI `cargo test --lib` |
+| stage5-08 | **App readiness + MAP REP + CI** | ✓ **CLOSED (operational 2026-05-23)** | [`debug_runs/stage5_full_app_live.json`](../../debug_runs/stage5_full_app_live.json): `readiness.passes`, 13+8 todo boards Done, `stage5_closure` block, `_agent_meta` envelope. Sign-off: [`src/dev/stage5_close_checklist.md`](../../src/dev/stage5_close_checklist.md) §B. Refresh: `cargo run -p proc_A_dine01 -- --test visual`. |
 | P2-I | **FixedUpdate sim** (fire/ecology/logistics) vs Update input/camera/UI | ○ | Large ordering refactor |
 | P2-J | **GPU particles** (instanced quads → Hanabi/compute) | ~ | Post-LOD buffer upload ✓; **draw / strict F blocked** until authoritative resolver + VT-4 strict (§ *Stage staging*) |
 | **VT** | **`visual-test-matrix-upgrade`** (VT-1…VT-5 scenes + asserts) | ~ | VT-1 ✓; VT-2 ✓; VT-3–4 open; **VT-5 spatial distribution** open |

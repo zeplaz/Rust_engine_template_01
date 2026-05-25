@@ -410,6 +410,33 @@ pub fn compute_hydrology_world(
     r
 }
 
+/// D8 downstream unit flow vectors per cell (presentation-only; `[0,0]` where no downstream).
+pub fn flow_direction_grid(filled_dem: &[f32], w: usize, h: usize) -> Vec<[f32; 2]> {
+    let n = w.saturating_mul(h);
+    if filled_dem.len() != n || n == 0 {
+        return Vec::new();
+    }
+    let down = d8_downstream(filled_dem, w, h);
+    let mut out = vec![[0.0f32; 2]; n];
+    for y in 0..h as u32 {
+        for x in 0..w as u32 {
+            let i = idx(w, x, y);
+            let Some(j) = down[i] else {
+                continue;
+            };
+            let nx = (j % w) as i32;
+            let ny = (j / w) as i32;
+            let dx = nx - x as i32;
+            let dy = ny - y as i32;
+            let len = ((dx * dx + dy * dy) as f32).sqrt();
+            if len > 1e-5 {
+                out[i] = [dx as f32 / len, dy as f32 / len];
+            }
+        }
+    }
+    out
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

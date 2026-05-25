@@ -17,6 +17,10 @@ use crate::render::gpu_particles::{
     update_world_fire_particles_from_projection, WorldFireParticleFrame,
 };
 use crate::render::overlay_field_buffers::SharedOverlayFieldBuffers;
+use crate::render::{
+    fire_chunk_lod_state_from_simulation, tactical_fire_visual, FireSimulationSnapshot,
+    FireVisualFramesByView,
+};
 use crate::render::sim_visual_extract::{ChunkFireHeat, FireVisualFrame, FireVisualGpuInstance};
 use crate::render::visual_agreement::{
     hash_shared_overlay_heat, update_visual_agreement_frame, OverlayAgreementDebug,
@@ -68,6 +72,7 @@ impl Vt4CiReport {
 #[derive(Debug, Clone)]
 pub struct Vt4CiScenario {
     pub fire: FireVisualFrame,
+    pub sim: FireSimulationSnapshot,
     pub shared: SharedOverlayFieldBuffers,
     pub overlay: OverlayFieldFrame,
     pub graph: RenderProjectionGraph,
@@ -150,8 +155,21 @@ pub fn build_deterministic_ci_scenario() -> Vt4CiScenario {
     };
     graph.evaluate(&ctx);
 
+    let sim = FireSimulationSnapshot {
+        stamp: fire.stamp,
+        instances: fire.instances.clone(),
+        chunk_heat: fire.chunk_heat.clone(),
+    };
+    let chunk_lod = fire_chunk_lod_state_from_simulation(&sim);
+
     let mut particles = WorldFireParticleFrame::default();
-    update_world_fire_particles_from_projection(&graph, &mut particles);
+    update_world_fire_particles_from_projection(
+        &graph,
+        &mut particles,
+        Some(&chunk_lod),
+        crate::render::gpu_particles::FireParticleCameraScale::default(),
+        None,
+    );
 
     let preview_probe = WorldPreviewVt4Probe {
         stamp,
@@ -163,7 +181,8 @@ pub fn build_deterministic_ci_scenario() -> Vt4CiScenario {
     let fence = CommittedVisualSnapshotFence { fire: stamp };
 
     Vt4CiScenario {
-        fire,
+        fire: fire.clone(),
+        sim: sim.clone(),
         shared,
         overlay,
         graph,
@@ -177,6 +196,7 @@ pub fn build_deterministic_ci_scenario() -> Vt4CiScenario {
 #[must_use]
 pub fn build_live_vt4_scenario(
     fire: &FireVisualFrame,
+    sim: &FireSimulationSnapshot,
     shared: &SharedOverlayFieldBuffers,
     overlay: &OverlayFieldFrame,
     graph: &RenderProjectionGraph,
@@ -186,6 +206,7 @@ pub fn build_live_vt4_scenario(
 ) -> Vt4CiScenario {
     Vt4CiScenario {
         fire: fire.clone(),
+        sim: sim.clone(),
         shared: shared.clone(),
         overlay: overlay.clone(),
         graph: graph.clone(),
@@ -224,7 +245,7 @@ pub fn apply_vt4_ci_surface_checks(
             report.record_surface_mismatch(Vt4SurfaceId::WorldPreview);
         }
 
-        if scenario.preview_probe.overlay_heat_hash != agreement.fire_heat_hash {
+        if scenario.preview_probe.overlay_heat_hash != agreement.sim_overlay_heat_hash {
             report.record_surface_mismatch(Vt4SurfaceId::WorldPreview);
         }
     }
@@ -248,6 +269,7 @@ pub fn run_vt4_ci_matrix(
 
     update_visual_agreement_frame(
         &scenario.fire,
+        &scenario.sim,
         &scenario.shared,
         &scenario.overlay,
         Some(&scenario.graph),
@@ -291,7 +313,8 @@ pub struct VtCiMatrixLiveReport {
 }
 
 pub fn record_vt_ci_matrix_live(
-    fire: Res<FireVisualFrame>,
+    fire_by_view: Res<FireVisualFramesByView>,
+    sim: Res<FireSimulationSnapshot>,
     shared: Res<SharedOverlayFieldBuffers>,
     overlay: Res<OverlayFieldFrame>,
     graph: Res<RenderProjectionGraph>,
@@ -303,8 +326,10 @@ pub fn record_vt_ci_matrix_live(
     mut live: ResMut<VtCiMatrixLiveReport>,
 ) {
     let probe = preview_probe.as_deref().cloned().unwrap_or_default();
+    let fire = tactical_fire_visual(fire_by_view.as_ref());
     let scenario = build_live_vt4_scenario(
-        fire.as_ref(),
+        fire,
+        sim.as_ref(),
         shared.as_ref(),
         overlay.as_ref(),
         graph.as_ref(),
@@ -329,6 +354,16 @@ pub fn record_vt_ci_matrix_live(
             scenario.fire.stamp.tick
         );
     }
+}
+
+/// Deterministic full-app VT fixture used by readiness and integration tests.
+#[must_use]
+pub fn full_app_vt_ci_fixture_passes() -> bool {
+    let scenario = build_deterministic_ci_scenario();
+    let mut agreement = VisualAgreementFrame::default();
+    let mut report = Vt4CiReport::default();
+    run_vt4_ci_matrix(&scenario, &mut agreement, &mut report);
+    report.passes() && run_vt5_ci_spatial_matrix(&scenario)
 }
 
 pub struct VtCiMatrixPlugin;
@@ -456,6 +491,7 @@ mod tests {
         let scenario = build_deterministic_ci_scenario();
         let live = build_live_vt4_scenario(
             &scenario.fire,
+            &scenario.sim,
             &scenario.shared,
             &scenario.overlay,
             &scenario.graph,
@@ -468,6 +504,11 @@ mod tests {
         run_vt4_ci_matrix(&live, &mut agreement, &mut report);
         assert!(report.passes());
         assert!(run_vt5_ci_spatial_matrix(&live));
+    }
+
+    #[test]
+    fn full_app_vt_ci_fixture_passes_deterministic_scene() {
+        assert!(full_app_vt_ci_fixture_passes());
     }
 
     #[test]
@@ -486,6 +527,7 @@ mod tests {
 
     #[test]
     fn stage5_ci_core_readiness_fixture_passes() {
+        assert!(crate::render::vt_ci_matrix::full_app_vt_ci_fixture_passes());
         use crate::render::stage5_readiness::{stage5_readiness_passes, AppStage5ReadinessReport};
         use crate::systems::atmosphere::P2H_GPU_PARTIAL_WRITES_AUTHORITATIVE;
 

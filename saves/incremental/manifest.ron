@@ -1,0 +1,1 @@
+(schema_version:1,world_seed:0,chunk_sets:[],registries:[(registry_name:"material_registry",artifact_path:"registries/material_registry.ron"),(registry_name:"tag_registry",artifact_path:"registries/tag_registry.ron"),(registry_name:"terrain_family_registry",artifact_path:"registries/terrain_family_registry.ron")],overlays:[])

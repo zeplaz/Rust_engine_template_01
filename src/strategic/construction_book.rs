@@ -9,62 +9,165 @@ use std::collections::HashMap;
 
 use bevy::prelude::*;
 
+use crate::systems::sim_control::SimControlState;
 use crate::systems::transport::TransportEdgeId;
 
-/// High-level phase for a corridor span (edge). Matches runbook “plan → build → operate” at coarse granularity.
+pub type CorridorEdgeId = TransportEdgeId;
+
+/// High-level phase for a corridor span (edge).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
-pub enum CorridorConstructionPhase {
-    /// Routed / authorized; no operational traffic, no wear from transport fields.
+pub enum ConstructionPhase {
     Planned,
-    /// Partially open — `progress` scales traffic and wear.
     InProgress,
-    /// Fully open — full capacity and transport-linked wear.
     #[default]
     Completed,
 }
 
-/// Per-edge construction snapshot (gameplay / construction systems write into [`CorridorConstructionBook`]).
-#[derive(Clone, Copy, Debug, Component)]
+pub type CorridorConstructionPhase = ConstructionPhase;
+
+/// Authoritative per-edge construction row (book storage only).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct CorridorConstructionRow {
+    pub edge_id: CorridorEdgeId,
+    pub phase: ConstructionPhase,
+    pub progress: f32,
+}
+
+impl CorridorConstructionRow {
+    #[must_use]
+    pub fn completed(edge_id: CorridorEdgeId) -> Self {
+        Self {
+            edge_id,
+            phase: ConstructionPhase::Completed,
+            progress: 1.0,
+        }
+    }
+
+    #[must_use]
+    pub fn planned(edge_id: CorridorEdgeId) -> Self {
+        Self {
+            edge_id,
+            phase: ConstructionPhase::Planned,
+            progress: 0.0,
+        }
+    }
+
+    /// Derived operational multiplier (0 = not open).
+    #[inline]
+    pub fn traffic_factor(&self) -> f32 {
+        match self.phase {
+            ConstructionPhase::Planned => 0.0,
+            ConstructionPhase::InProgress => self.progress.clamp(0.0, 1.0),
+            ConstructionPhase::Completed => 1.0,
+        }
+    }
+}
+
+/// ECS mirror copied from the book during GraphSync (not authoritative).
+#[derive(Clone, Copy, Debug, PartialEq, Component)]
 pub struct CorridorConstructionStatus {
-    pub phase: CorridorConstructionPhase,
-    /// Only used when [`CorridorConstructionPhase::InProgress`]; ignored otherwise. Range **0..=1**.
+    pub phase: ConstructionPhase,
     pub progress: f32,
 }
 
 impl Default for CorridorConstructionStatus {
     fn default() -> Self {
         Self {
-            phase: CorridorConstructionPhase::Completed,
+            phase: ConstructionPhase::Completed,
             progress: 1.0,
         }
     }
 }
 
+impl From<CorridorConstructionRow> for CorridorConstructionStatus {
+    fn from(row: CorridorConstructionRow) -> Self {
+        Self {
+            phase: row.phase,
+            progress: row.progress,
+        }
+    }
+}
+
 impl CorridorConstructionStatus {
-    /// Multiplier for **operational** capacity, transport coupling, and wear (0 = not open).
     #[inline]
     pub fn traffic_factor(&self) -> f32 {
-        match self.phase {
-            CorridorConstructionPhase::Planned => 0.0,
-            CorridorConstructionPhase::InProgress => self.progress.clamp(0.0, 1.0),
-            CorridorConstructionPhase::Completed => 1.0,
+        CorridorConstructionRow {
+            edge_id: TransportEdgeId(0),
+            phase: self.phase,
+            progress: self.progress,
         }
+        .traffic_factor()
     }
 }
 
 /// Authoritative construction snapshot per transport edge. Missing entries ⇒ **completed** (legacy / baked edges).
 #[derive(Resource, Debug, Default)]
 pub struct CorridorConstructionBook {
-    pub by_edge: HashMap<TransportEdgeId, CorridorConstructionStatus>,
+    pub rows: HashMap<CorridorEdgeId, CorridorConstructionRow>,
+}
+
+/// Per-**sim-tick** construction progression (P2 MVP). Wall-clock is not used.
+#[derive(Resource, Debug, Clone)]
+pub struct CorridorConstructionTickConfig {
+    pub progress_per_tick: f32,
+}
+
+impl Default for CorridorConstructionTickConfig {
+    fn default() -> Self {
+        Self {
+            progress_per_tick: 0.1,
+        }
+    }
 }
 
 impl CorridorConstructionBook {
     #[inline]
-    pub fn traffic_factor(&self, eid: TransportEdgeId) -> f32 {
-        self.by_edge
+    pub fn traffic_factor(&self, eid: CorridorEdgeId) -> f32 {
+        self.rows
             .get(&eid)
-            .map(CorridorConstructionStatus::traffic_factor)
+            .map(CorridorConstructionRow::traffic_factor)
             .unwrap_or(1.0)
+    }
+
+    pub fn plan_edge(&mut self, eid: CorridorEdgeId) {
+        self.rows.insert(eid, CorridorConstructionRow::planned(eid));
+    }
+}
+
+/// Advance one row by a single sim tick (deterministic; no wall-clock).
+pub fn advance_corridor_construction_row(row: &mut CorridorConstructionRow, progress_per_tick: f32) {
+    match row.phase {
+        ConstructionPhase::Planned => {
+            row.phase = ConstructionPhase::InProgress;
+        }
+        ConstructionPhase::InProgress => {
+            row.progress += progress_per_tick;
+            if row.progress >= 1.0 {
+                row.progress = 1.0;
+                row.phase = ConstructionPhase::Completed;
+            }
+        }
+        ConstructionPhase::Completed => {}
+    }
+}
+
+/// Sole writer for corridor construction progress.
+pub fn advance_corridor_construction_book_on_sim_tick(
+    sim: Res<SimControlState>,
+    config: Res<CorridorConstructionTickConfig>,
+    mut book: ResMut<CorridorConstructionBook>,
+) {
+    if !sim.should_tick() {
+        return;
+    }
+    let step = config.progress_per_tick;
+    let mut edge_ids: Vec<_> = book.rows.keys().copied().collect();
+    edge_ids.sort_by_key(|id| id.0);
+    for edge_id in edge_ids {
+        let Some(row) = book.rows.get_mut(&edge_id) else {
+            continue;
+        };
+        advance_corridor_construction_row(row, step);
     }
 }
 
@@ -87,9 +190,12 @@ pub fn align_corridor_book_with_transport_directory(
     directory: &crate::systems::transport::TransportEdgeDirectory,
     book: &mut CorridorConstructionBook,
 ) {
-    book.by_edge.retain(|eid, _| directory.by_edge.contains_key(eid));
+    book.rows.retain(|eid, _| directory.by_edge.contains_key(eid));
     for eid in directory.by_edge.keys() {
-        book.by_edge.entry(*eid).or_insert(CorridorConstructionStatus::default());
+        book
+            .rows
+            .entry(*eid)
+            .or_insert_with(|| CorridorConstructionRow::completed(*eid));
     }
 }
 
@@ -97,19 +203,19 @@ use crate::systems::transport::{TransportConstructionRecord, TransportNetworkSna
 use crate::systems::transport::{TransportEdgeDirectory, TransportTopology};
 
 /// Wire enum → snapshot string (stable for R8 / RON).
-pub fn corridor_phase_to_wire(phase: CorridorConstructionPhase) -> &'static str {
+pub fn corridor_phase_to_wire(phase: ConstructionPhase) -> &'static str {
     match phase {
-        CorridorConstructionPhase::Planned => "Planned",
-        CorridorConstructionPhase::InProgress => "InProgress",
-        CorridorConstructionPhase::Completed => "Completed",
+        ConstructionPhase::Planned => "Planned",
+        ConstructionPhase::InProgress => "InProgress",
+        ConstructionPhase::Completed => "Completed",
     }
 }
 
-pub fn corridor_phase_from_wire(s: &str) -> Option<CorridorConstructionPhase> {
+pub fn corridor_phase_from_wire(s: &str) -> Option<ConstructionPhase> {
     match s {
-        "Planned" => Some(CorridorConstructionPhase::Planned),
-        "InProgress" => Some(CorridorConstructionPhase::InProgress),
-        "Completed" => Some(CorridorConstructionPhase::Completed),
+        "Planned" => Some(ConstructionPhase::Planned),
+        "InProgress" => Some(ConstructionPhase::InProgress),
+        "Completed" => Some(ConstructionPhase::Completed),
         _ => None,
     }
 }
@@ -124,10 +230,10 @@ pub fn transport_construction_records_from_book(
     ids
         .into_iter()
         .filter_map(|eid| {
-            book.by_edge.get(&eid).map(|st| TransportConstructionRecord {
+            book.rows.get(&eid).map(|row| TransportConstructionRecord {
                 edge_id: eid.0,
-                phase: corridor_phase_to_wire(st.phase).to_string(),
-                progress: st.progress,
+                phase: corridor_phase_to_wire(row.phase).to_string(),
+                progress: row.progress,
             })
         })
         .collect()
@@ -143,15 +249,15 @@ pub fn apply_corridor_book_from_transport_snapshot(
         align_corridor_book_with_transport_directory(directory, book);
         return;
     }
-    book.by_edge.clear();
+    book.rows.clear();
     for r in &snap.construction {
         let eid = TransportEdgeId(r.edge_id);
         if directory.by_edge.contains_key(&eid) {
-            let phase =
-                corridor_phase_from_wire(&r.phase).unwrap_or(CorridorConstructionPhase::Completed);
-            book.by_edge.insert(
+            let phase = corridor_phase_from_wire(&r.phase).unwrap_or(ConstructionPhase::Completed);
+            book.rows.insert(
                 eid,
-                CorridorConstructionStatus {
+                CorridorConstructionRow {
+                    edge_id: eid,
                     phase,
                     progress: r.progress,
                 },
@@ -178,40 +284,25 @@ mod tests {
             },
         );
         let mut book = CorridorConstructionBook::default();
-        book.by_edge.insert(
-            TransportEdgeId(99),
-            CorridorConstructionStatus {
-                phase: CorridorConstructionPhase::Planned,
-                progress: 0.0,
-            },
-        );
+        book.rows.insert(TransportEdgeId(99), CorridorConstructionRow::planned(TransportEdgeId(99)));
         align_corridor_book_with_transport_directory(&dir, &mut book);
-        assert!(!book.by_edge.contains_key(&TransportEdgeId(99)));
+        assert!(!book.rows.contains_key(&TransportEdgeId(99)));
         assert_eq!(
-            book.by_edge.get(&TransportEdgeId(1)).map(|s| s.phase),
-            Some(CorridorConstructionPhase::Completed)
+            book.rows.get(&TransportEdgeId(1)).map(|row| row.phase),
+            Some(ConstructionPhase::Completed)
         );
     }
 
     #[test]
     fn align_preserves_existing_phase_when_edge_still_present() {
         let mut dir = TransportEdgeDirectory::default();
-        dir.by_edge.insert(
-            TransportEdgeId(2),
-            TransportEdgeMeta::default(),
-        );
+        dir.by_edge.insert(TransportEdgeId(2), TransportEdgeMeta::default());
         let mut book = CorridorConstructionBook::default();
-        book.by_edge.insert(
-            TransportEdgeId(2),
-            CorridorConstructionStatus {
-                phase: CorridorConstructionPhase::Planned,
-                progress: 0.0,
-            },
-        );
+        book.rows.insert(TransportEdgeId(2), CorridorConstructionRow::planned(TransportEdgeId(2)));
         align_corridor_book_with_transport_directory(&dir, &mut book);
         assert_eq!(
-            book.by_edge.get(&TransportEdgeId(2)).map(|s| s.phase),
-            Some(CorridorConstructionPhase::Planned)
+            book.rows.get(&TransportEdgeId(2)).map(|row| row.phase),
+            Some(ConstructionPhase::Planned)
         );
     }
 
@@ -224,7 +315,7 @@ mod tests {
             schema_version: 1,
             nodes: vec![],
             edges: vec![],
-            construction: vec![TransportConstructionRecord {
+            construction: vec![crate::systems::transport::TransportConstructionRecord {
                 edge_id: 1,
                 phase: "Planned".into(),
                 progress: 0.0,
@@ -232,8 +323,54 @@ mod tests {
         };
         apply_corridor_book_from_transport_snapshot(&mut book, &dir, &snap);
         assert_eq!(
-            book.by_edge.get(&TransportEdgeId(1)).map(|s| s.phase),
-            Some(CorridorConstructionPhase::Planned)
+            book.rows.get(&TransportEdgeId(1)).map(|row| row.phase),
+            Some(ConstructionPhase::Planned)
         );
+    }
+
+    #[test]
+    fn planned_corridor_advances_to_completed_in_eleven_ticks() {
+        let mut row = CorridorConstructionRow::planned(TransportEdgeId(1));
+        for _ in 0..11 {
+            advance_corridor_construction_row(&mut row, 0.1);
+        }
+        assert_eq!(row.phase, ConstructionPhase::Completed);
+        assert!((row.progress - 1.0).abs() < 1e-6);
+    }
+
+    #[test]
+    fn sim_tick_advances_book_when_sim_runs() {
+        let mut app = App::new();
+        app.add_plugins(MinimalPlugins)
+            .init_resource::<SimControlState>()
+            .init_resource::<CorridorConstructionBook>()
+            .init_resource::<CorridorConstructionTickConfig>()
+            .add_systems(
+                Update,
+                advance_corridor_construction_book_on_sim_tick
+                    .in_set(crate::systems::sim_control::SimControlSystemSet::AdvanceSimTick),
+            );
+
+        app.world_mut()
+            .resource_mut::<CorridorConstructionBook>()
+            .plan_edge(TransportEdgeId(7));
+
+        for _ in 0..11 {
+            app.update();
+        }
+
+        let row = app
+            .world()
+            .resource::<CorridorConstructionBook>()
+            .rows
+            .get(&TransportEdgeId(7))
+            .expect("edge row");
+        assert_eq!(row.phase, ConstructionPhase::Completed);
+
+        app.world_mut().resource_mut::<SimControlState>().paused = true;
+        let before = app.world().resource::<CorridorConstructionBook>().rows.clone();
+        app.update();
+        let after = app.world().resource::<CorridorConstructionBook>().rows.clone();
+        assert_eq!(before, after);
     }
 }

@@ -73,8 +73,10 @@ pub fn rebuild_logistics_graph_from_transport(
     weights: &TransportCostWeights,
     cells: &StrategicRasterConfig,
     book: &CorridorConstructionBook,
+    topology_revision: u64,
 ) -> LogisticsGraph {
     let mut graph = LogisticsGraph::default();
+    graph.revision = topology_revision;
     if directory.by_edge.is_empty() {
         return graph;
     }
@@ -129,6 +131,7 @@ pub fn rebuild_logistics_graph_from_transport(
         edges_out.push(LogisticsEdge {
             from,
             to,
+            transport_edge: Some(eid),
             capacity,
             disruption,
             traversal_cost: cost,
@@ -146,12 +149,25 @@ pub fn sync_logistics_graph_from_transport(
     weights: Res<TransportCostWeights>,
     cells: Res<StrategicRasterConfig>,
     book: Res<CorridorConstructionBook>,
+    construction_rev: Option<Res<crate::construction::ConstructionWorldRevision>>,
     mut graph: ResMut<LogisticsGraph>,
 ) {
     if directory.by_edge.is_empty() {
+        graph.nodes.clear();
+        graph.edges.clear();
         return;
     }
-    *graph = rebuild_logistics_graph_from_transport(&directory, &fields, &weights, &cells, &book);
+    let sig = crate::strategic::transport_directory_edge_signature(&directory);
+    let rev = construction_rev.map(|r| r.revision).unwrap_or(0);
+    let topology_revision = sig ^ rev.rotate_left(17);
+    *graph = rebuild_logistics_graph_from_transport(
+        &directory,
+        &fields,
+        &weights,
+        &cells,
+        &book,
+        topology_revision,
+    );
 }
 
 /// Keeps [`CorridorConstructionStatus`] on corridor entities aligned with [`CorridorConstructionBook`].
@@ -161,9 +177,10 @@ pub fn apply_corridor_construction_book_to_entities(
 ) {
     for (link, mut st) in &mut q {
         let next = book
-            .by_edge
+            .rows
             .get(&link.edge_id)
             .copied()
+            .map(CorridorConstructionStatus::from)
             .unwrap_or_default();
         *st = next;
     }
@@ -280,9 +297,10 @@ pub fn maintain_strategic_corridor_entities(
             .map(|m| corridor_type_for_profile(&m.profile))
             .unwrap_or(CorridorType::Logistics);
         let construction = book
-            .by_edge
+            .rows
             .get(&eid)
             .copied()
+            .map(CorridorConstructionStatus::from)
             .unwrap_or_default();
         commands.spawn((
             InfrastructureCorridor::new(ctype),
@@ -296,6 +314,7 @@ pub fn maintain_strategic_corridor_entities(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::strategic::CorridorConstructionRow;
     use crate::systems::terrain::MaterialUnificationPlugin;
     use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
     use crate::terrain::generation::{Chunk, ChunkCellMatrix};
@@ -327,7 +346,14 @@ mod tests {
         let cells = StrategicRasterConfig {
             cells_per_chunk: UVec2::new(4, 4),
         };
-        let g = rebuild_logistics_graph_from_transport(&dir, &fields, &weights, &cells, &CorridorConstructionBook::default());
+        let g = rebuild_logistics_graph_from_transport(
+            &dir,
+            &fields,
+            &weights,
+            &cells,
+            &CorridorConstructionBook::default(),
+            1,
+        );
         assert_eq!(g.nodes.len(), 2);
         assert_eq!(g.edges.len(), 1);
     }
@@ -362,30 +388,29 @@ mod tests {
             &weights,
             &cells,
             &CorridorConstructionBook::default(),
+            1,
         );
         let base_cap = baseline.edges[0].capacity;
         assert!(base_cap > 0.0);
 
         let mut planned_book = CorridorConstructionBook::default();
-        planned_book.by_edge.insert(
+        planned_book.rows.insert(
             TransportEdgeId(0),
-            CorridorConstructionStatus {
-                phase: crate::strategic::CorridorConstructionPhase::Planned,
-                progress: 0.0,
-            },
+            CorridorConstructionRow::planned(TransportEdgeId(0)),
         );
-        let g2 = rebuild_logistics_graph_from_transport(&dir, &fields, &weights, &cells, &planned_book);
+        let g2 = rebuild_logistics_graph_from_transport(&dir, &fields, &weights, &cells, &planned_book, 2);
         assert!(g2.edges[0].capacity < 1e-5);
 
         let mut half_book = CorridorConstructionBook::default();
-        half_book.by_edge.insert(
+        half_book.rows.insert(
             TransportEdgeId(0),
-            CorridorConstructionStatus {
-                phase: crate::strategic::CorridorConstructionPhase::InProgress,
+            CorridorConstructionRow {
+                edge_id: TransportEdgeId(0),
+                phase: crate::strategic::ConstructionPhase::InProgress,
                 progress: 0.5,
             },
         );
-        let g3 = rebuild_logistics_graph_from_transport(&dir, &fields, &weights, &cells, &half_book);
+        let g3 = rebuild_logistics_graph_from_transport(&dir, &fields, &weights, &cells, &half_book, 3);
         assert!(g3.edges[0].capacity > 0.0);
         assert!(g3.edges[0].capacity < base_cap * 0.51);
     }

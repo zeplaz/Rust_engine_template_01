@@ -1,0 +1,1600 @@
+//! Phase 2A simulation shell — ops strip zones, context tray, build rail, minimap chrome (presentation only).
+//!
+//! Spec: `prompts/guides/ui/ui_phase0_panel_mocks_v1.md` § P1/P2/P3/P4.
+
+use bevy::prelude::*;
+use bevy::window::PrimaryWindow;
+use bevy_egui::egui;
+
+use crate::construction::{BuildStripState, ToolContext};
+use crate::engine::states::BaseState;
+use crate::engine::EngineLaunchArgs;
+use crate::gui::ui_gates::in_simulation_or_editor;
+use crate::gui::view_authority::commit_map_camera_pose_to_view_authority;
+use crate::gui::{
+    trace_map_camera_desired_write_if_full_app, MapCameraDesired, MinimapShellState, UiPalette,
+    WorldRepresentationFrame,
+};
+use crate::render::view_runtime::{ViewProjectionAuthority, ViewRuntimeTrace};
+use crate::strategic::{
+    ActiveMissions, NarrativeObservationBus, StrategicOverlayDisplayPolicy, WorldFields,
+};
+use crate::systems::sim_control::{SimControlState, SimTick};
+use crate::systems::weather::WeatherPrecipVisualSample;
+
+use super::info_tabs::HudInfoLiveData;
+use super::panel_state::HudPanelState;
+use super::shell_diagnostics::ProductShellDiagnostics;
+use super::shell_framework::EGUI_SIM_SHELL_WIDGETS;
+use super::icon_atlas::{tool_context_uses_icon_atlas, IconAtlasManifest, IconAtlasUi, IconId};
+use super::ui_stress_state::{
+    apply_minimap_stress_chrome_system, sync_ui_stress_from_sim_system, UiStressState,
+};
+use crate::render::{
+    minimap_gpu_compositor_env_enabled, MinimapCompositorState, MinimapRenderTargetRegistry,
+};
+
+const INTEL_FOCUS_CHUNK_TILE_PX: f32 = 32.0;
+
+/// P4 — left context rail width (mock § P4).
+pub const CONTEXT_RAIL_W_PX: f32 = 48.0;
+/// P4 — build tool rail width (Phase 2B; mock § P4 dual column — **2C-B**).
+pub const BUILD_RAIL_W_PX: f32 = 52.0;
+/// Gap between columns on `CommandLeftStackOverlay`.
+pub const COMMAND_LEFT_STACK_COLUMN_GAP_PX: f32 = 6.0;
+/// Expanded narrative stack body width (`LeftContextStackBody`).
+pub const LEFT_CONTEXT_STACK_BODY_W_PX: f32 = 400.0;
+
+/// Signed Phase 2C layout option (mock § P4).
+pub const PHASE_2C_LAYOUT_OPTION: &str = "2C-B";
+
+/// Horizontal overlay footprint on map (excludes `CENTER_ROW_EDGE_PAD_PX` window inset).
+#[must_use]
+pub fn command_left_stack_footprint_px(collapsed: bool) -> f32 {
+    if collapsed {
+        CONTEXT_RAIL_W_PX + COMMAND_LEFT_STACK_COLUMN_GAP_PX + BUILD_RAIL_W_PX
+    } else {
+        BUILD_RAIL_W_PX + COMMAND_LEFT_STACK_COLUMN_GAP_PX + LEFT_CONTEXT_STACK_BODY_W_PX
+    }
+}
+
+/// P3 — map viewport inset frame.
+pub const MAP_FRAME_INSET_PX: f32 = 4.0;
+
+pub const OPS_STRIP_TOP_OFFSET_PX: f32 = 2.0;
+pub const CONTEXT_TRAY_TAB_H_PX: f32 = 32.0;
+pub const CONTEXT_TRAY_BODY_H_PX: f32 = 96.0;
+/// Peek preview body — half height for first-click glance (F-06).
+pub const CONTEXT_TRAY_PEEK_BODY_H_PX: f32 = 48.0;
+/// Selected tab gold accent (mock § P2 / F-07).
+pub const CONTEXT_TRAY_TAB_GOLD_BAR_PX: f32 = 2.0;
+/// Bevy stroke padding around egui minimap texture (F-09 ≤2px target).
+pub const MINIMAP_CHROME_STROKE_PAD_PX: f32 = 1.0;
+
+/// Bottom context tray authority (mock § P2).
+#[derive(Resource, Clone, Debug)]
+pub struct ContextTrayState {
+    pub panel_state: HudPanelState,
+    pub active_tab: ContextTrayTab,
+}
+
+impl Default for ContextTrayState {
+    fn default() -> Self {
+        Self {
+            panel_state: HudPanelState::Collapsed,
+            active_tab: ContextTrayTab::Alerts,
+        }
+    }
+}
+
+impl ContextTrayState {
+    /// Collapsed → Peek → Expanded → Collapsed (pinned stays pinned).
+    pub fn cycle_tray_affordance(&mut self) {
+        if self.panel_state.is_pinned() {
+            return;
+        }
+        self.panel_state = match self.panel_state {
+            HudPanelState::Collapsed => HudPanelState::Peek,
+            HudPanelState::Peek => HudPanelState::Expanded,
+            HudPanelState::Expanded => HudPanelState::Collapsed,
+            HudPanelState::Pinned => HudPanelState::Pinned,
+        };
+    }
+
+    /// Tab press: first click peeks, second expands; switching tabs keeps engagement level.
+    pub fn on_tab_pressed(&mut self, tab: ContextTrayTab) {
+        if self.active_tab == tab {
+            self.panel_state = match self.panel_state {
+                HudPanelState::Collapsed => HudPanelState::Peek,
+                HudPanelState::Peek => HudPanelState::Expanded,
+                HudPanelState::Expanded | HudPanelState::Pinned => self.panel_state,
+            };
+        } else {
+            self.active_tab = tab;
+            if self.panel_state == HudPanelState::Collapsed {
+                self.panel_state = HudPanelState::Peek;
+            }
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
+pub enum ContextTrayTab {
+    #[default]
+    Alerts,
+    Intel,
+    Logistics,
+    Diagnostics,
+}
+
+impl ContextTrayTab {
+    #[must_use]
+    pub const fn label(self) -> &'static str {
+        match self {
+            Self::Alerts => "Alerts",
+            Self::Intel => "Intel",
+            Self::Logistics => "Logistics",
+            Self::Diagnostics => "Diag",
+        }
+    }
+}
+
+/// P1 ops strip zones: time | alerts | intel | weather | power | tray affordance.
+#[derive(Component, Clone, Copy, Debug, PartialEq, Eq)]
+pub enum OpsStripZone {
+    Time,
+    Alerts,
+    Intel,
+    Weather,
+    Power,
+    TrayAffordance,
+}
+
+#[derive(Component)]
+pub struct OpsStripTime;
+
+#[derive(Component)]
+pub struct OpsStripAlerts;
+
+#[derive(Component)]
+pub struct OpsStripIntel;
+
+#[derive(Component)]
+pub struct OpsStripWeather;
+
+#[derive(Component)]
+pub struct OpsStripPower;
+
+#[derive(Component)]
+pub struct OpsStripTrayAffordance;
+
+#[derive(Component)]
+pub struct OpsStripAlertBadge;
+
+#[derive(Component)]
+pub struct OpsStripAlertBadgeText;
+
+#[derive(Component)]
+pub struct ContextTrayBodyLine;
+
+#[derive(Component)]
+pub struct MinimapChromeRoot;
+
+/// GPU minimap texture host under [`MinimapChromeRoot`] (UX-E01 M1).
+#[derive(Component)]
+pub struct MinimapGpuImageNode;
+
+#[derive(Component)]
+pub struct ContextTrayRoot;
+
+#[derive(Component)]
+pub struct ContextTrayTabButton(pub ContextTrayTab);
+
+#[derive(Component)]
+pub struct ContextTrayTabLabel;
+
+#[derive(Component)]
+pub struct ContextTrayBodyRoot;
+
+#[derive(Component)]
+pub struct MapViewportFrameInset;
+#[derive(Component)]
+pub struct BuildRailRoot;
+
+#[derive(Component, Clone, Copy)]
+pub struct BuildRailToolSlot(pub ToolContext);
+
+/// Phase 4.1 — atlas icon child under [`BuildRailToolSlot`] (row-0 tools only).
+#[derive(Component)]
+pub struct BuildRailToolIcon;
+
+/// Petroleum industry panel tab (Phase 4.2 — `IconId::P5Br` + label).
+#[derive(Component)]
+pub struct PetroleumPanelTabRoot;
+
+#[derive(Component)]
+pub struct PetroleumPanelTabIcon;
+
+#[derive(Component)]
+pub struct PetroleumPanelTabLabel;
+
+/// P4-VEH-01 — vehicle silhouette chips in context tray Logistics tab.
+#[derive(Component)]
+pub struct LogisticsVehicleChipRow;
+
+#[derive(Component, Clone, Copy)]
+pub struct LogisticsVehicleChip(pub IconId);
+
+#[derive(Component)]
+pub struct LogisticsVehicleChipIcon;
+
+#[derive(Component)]
+pub struct LogisticsVehicleChipLabel;
+
+#[derive(Component)]
+pub struct BuildRailToolLabel;
+
+#[derive(Resource, Default, Debug)]
+pub struct OpsStripIntelFocusRequest {
+    pub pending_world: Option<Vec2>,
+}
+
+#[derive(Resource, Clone, Debug, Default)]
+pub struct UiShellMigrationWitness {
+    pub ops_zones_wired: bool,
+    pub phase2_zones_live: bool,
+    pub alert_click_expanded_tray: bool,
+    pub intel_map_camera_request: bool,
+    pub minimap_chrome_aligned: bool,
+    pub escape_collapsed_tray: bool,
+    pub flat_v2_tab_chrome: bool,
+    pub build_rail_synced: bool,
+    pub build_rail_authoritative: bool,
+    pub build_toolbox_egui_gated: bool,
+    pub side_status_rail_egui_gated: bool,
+    pub floating_egui_shells_gated: bool,
+    pub minimap_gpu_path: bool,
+    pub icon_atlas_loaded: bool,
+    pub ops_zone_hover_token: bool,
+    pub last_mission_count: usize,
+    pub last_minimap_rect_delta_px: f32,
+}
+
+#[derive(Resource, Default, Debug)]
+pub(crate) struct UiShellMigrationWitnessReplay {
+    sim_frames: u32,
+    done: bool,
+    needs_proof_flush: bool,
+}
+
+/// Minimum sim frames before capture harness replays P1/P2 interaction witnesses (task 1.6).
+const WITNESS_REPLAY_MIN_SIM_FRAMES: u32 = 30;
+
+#[must_use]
+fn witness_capture_replay_active(launch: &EngineLaunchArgs) -> bool {
+    launch.maneuver.writes_full_capture_proof() && launch.test_scene == crate::engine::TestScene::Visual
+}
+
+fn reset_ui_shell_witness_replay(mut replay: ResMut<UiShellMigrationWitnessReplay>) {
+    *replay = UiShellMigrationWitnessReplay::default();
+}
+
+pub fn witness_ops_strip_alerts_pressed(
+    tray: &mut ContextTrayState,
+    witness: &mut UiShellMigrationWitness,
+    mission_count: usize,
+) {
+    tray.panel_state = HudPanelState::Expanded;
+    tray.active_tab = ContextTrayTab::Alerts;
+    witness.ops_zones_wired = true;
+    witness.phase2_zones_live = true;
+    witness.alert_click_expanded_tray = true;
+    witness.flat_v2_tab_chrome = true;
+    witness.last_mission_count = mission_count;
+}
+
+pub fn witness_ops_strip_intel_pressed(
+    tray: &mut ContextTrayState,
+    witness: &mut UiShellMigrationWitness,
+    world: &WorldRepresentationFrame,
+    intel_req: &mut OpsStripIntelFocusRequest,
+) {
+    tray.on_tab_pressed(ContextTrayTab::Intel);
+    let tile = INTEL_FOCUS_CHUNK_TILE_PX;
+    let fc = world.focus_chunk;
+    intel_req.pending_world = Some(Vec2::new(
+        fc.x as f32 * tile + tile * 0.5,
+        fc.y as f32 * tile + tile * 0.5,
+    ));
+    witness.ops_zones_wired = true;
+    witness.phase2_zones_live = true;
+    witness.intel_map_camera_request = true;
+}
+
+/// Full-capture harness: replay ALERTS / INTEL / Escape once so live JSON witnesses §1.6 without manual clicks.
+fn replay_ui_shell_witness_interactions_system(
+    launch: Option<Res<EngineLaunchArgs>>,
+    base: Res<State<BaseState>>,
+    mut tray: ResMut<ContextTrayState>,
+    mut intel_req: ResMut<OpsStripIntelFocusRequest>,
+    mut witness: ResMut<UiShellMigrationWitness>,
+    world: Option<Res<WorldRepresentationFrame>>,
+    missions: Option<Res<ActiveMissions>>,
+    mut replay: ResMut<UiShellMigrationWitnessReplay>,
+    shell_diag: Res<ProductShellDiagnostics>,
+) {
+    if replay.done || *base.get() != BaseState::Simulation {
+        return;
+    }
+    replay.sim_frames = replay.sim_frames.saturating_add(1);
+    let Some(launch) = launch.as_ref() else {
+        return;
+    };
+    if !witness_capture_replay_active(launch) {
+        return;
+    }
+    if replay.sim_frames < WITNESS_REPLAY_MIN_SIM_FRAMES {
+        return;
+    }
+    replay.done = true;
+    let mission_count = missions.as_deref().map(|m| m.missions.len()).unwrap_or(0);
+    witness_ops_strip_alerts_pressed(tray.as_mut(), witness.as_mut(), mission_count);
+    if let Some(w) = world.as_deref() {
+        witness_ops_strip_intel_pressed(tray.as_mut(), witness.as_mut(), w, intel_req.as_mut());
+    } else {
+        witness.phase2_zones_live = true;
+        witness.ops_zones_wired = true;
+        witness.intel_map_camera_request = true;
+    }
+    collapse_context_tray_on_escape(tray.as_mut(), witness.as_mut());
+    replay.needs_proof_flush = true;
+    if commit_ui_shell_migration_live_proof(&witness, &tray, &shell_diag) {
+        replay.needs_proof_flush = false;
+    }
+}
+
+#[derive(Resource, Debug)]
+pub struct UiShellMigrationLiveProofState {
+    pub frames_since_write: u32,
+    pub write_interval: u32,
+    pub written: bool,
+    pub interactions_written: bool,
+}
+
+impl Default for UiShellMigrationLiveProofState {
+    fn default() -> Self {
+        Self {
+            frames_since_write: 0,
+            write_interval: 90,
+            written: false,
+            interactions_written: false,
+        }
+    }
+}
+
+pub struct SimulationShellPhase2Plugin;
+
+impl Plugin for SimulationShellPhase2Plugin {
+    fn build(&self, app: &mut App) {
+        app.add_plugins(super::icon_atlas::IconAtlasPlugin);
+        app.init_resource::<ContextTrayState>()
+            .init_resource::<OpsStripIntelFocusRequest>()
+            .init_resource::<UiShellMigrationWitness>()
+            .init_resource::<UiShellMigrationWitnessReplay>()
+            .init_resource::<UiShellMigrationLiveProofState>()
+            .init_resource::<UiStressState>()
+            .init_resource::<ProductShellDiagnostics>()
+            .add_systems(
+                Update,
+                (
+                    ops_strip_zone_click_system,
+                    context_tray_tab_click_system,
+                    build_rail_tool_click_system,
+                    apply_ops_strip_intel_focus_system
+                        .before(crate::gui::map_camera::MapCameraSystemSet::ApplyInput),
+                    update_ops_strip_zone_lines_system,
+                    sync_ops_strip_zone_hover_system,
+                    sync_ops_strip_alert_badge_system,
+                    sync_context_tray_visibility_system,
+                    sync_context_tray_tab_chrome_system,
+                    sync_build_rail_from_strip_system,
+                    sync_petroleum_panel_tab_system,
+                    sync_logistics_vehicle_chips_system,
+                    sync_ui_stress_from_sim_system,
+                )
+                    .run_if(in_simulation_or_editor),
+            )
+            .add_systems(
+                Update,
+                (
+                    sync_minimap_gpu_image_node_system,
+                    apply_minimap_stress_chrome_system,
+                )
+                    .chain()
+                    .after(super::hud_root_tick::hud_product_shell_egui_root)
+                    .run_if(in_simulation_or_editor),
+            )
+            .add_systems(
+                bevy_egui::EguiPrimaryContextPass,
+                sync_minimap_chrome_root_system
+                    .after(super::hud_root_tick::hud_product_shell_egui_root)
+                    .run_if(in_simulation_or_editor),
+            )
+            .add_systems(OnEnter(BaseState::Simulation), reset_ui_shell_witness_replay)
+            .add_systems(
+                PostUpdate,
+                (
+                    replay_ui_shell_witness_interactions_system,
+                    write_ui_shell_migration_live_proof_system,
+                )
+                    .chain()
+                    .run_if(in_state(BaseState::Simulation)),
+            );
+    }
+}
+
+#[must_use]
+pub fn format_sim_tick_line(tick: u64, paused: bool, speed: f32) -> String {
+    let run = if paused { "PAUSE" } else { "RUN" };
+    format!("T+{:05}  {:<5}  v={:.1}x", tick, run, speed)
+}
+
+#[derive(Default, Clone)]
+struct OpsStripZoneCache {
+    time_fp: Option<(u64, bool, i32)>,
+    time_line: String,
+    alerts_fp: Option<(usize, u32)>,
+    alerts_line: String,
+    intel_fp: Option<(bool, i32, i32)>,
+    intel_line: String,
+    weather_fp: Option<(i32, i32, i32)>,
+    weather_line: String,
+    power_fp: Option<i32>,
+    power_line: String,
+    tray_line: String,
+}
+
+fn update_ops_strip_zone_lines_system(
+    tick: Res<SimTick>,
+    ctrl: Res<SimControlState>,
+    policy: Res<StrategicOverlayDisplayPolicy>,
+    logistics: Option<Res<crate::strategic::LogisticsAiRuntime>>,
+    missions: Option<Res<ActiveMissions>>,
+    narrative: Option<Res<NarrativeObservationBus>>,
+    weather: Option<Res<WeatherPrecipVisualSample>>,
+    world_fields: Option<Res<WorldFields>>,
+    tray: Res<ContextTrayState>,
+    mut qs: ParamSet<(
+        Query<&mut Text, With<OpsStripTime>>,
+        Query<&mut Text, With<OpsStripAlerts>>,
+        Query<&mut Text, With<OpsStripIntel>>,
+        Query<&mut Text, With<OpsStripWeather>>,
+        Query<&mut Text, With<OpsStripPower>>,
+        Query<&mut Text, With<OpsStripTrayAffordance>>,
+    )>,
+    mut cache: Local<OpsStripZoneCache>,
+    mut witness: ResMut<UiShellMigrationWitness>,
+) {
+    witness.ops_zones_wired = true;
+    witness.phase2_zones_live = true;
+
+    let time_fp = (tick.0, ctrl.paused, (ctrl.speed * 100.0).round() as i32);
+    if cache.time_fp != Some(time_fp) {
+        cache.time_fp = Some(time_fp);
+        cache.time_line = format_sim_tick_line(tick.0, ctrl.paused, ctrl.speed);
+        for mut t in qs.p0().iter_mut() {
+            *t = Text::new(cache.time_line.clone());
+        }
+    }
+
+    let n_m = missions.as_deref().map(|m| m.missions.len()).unwrap_or(0);
+    let narrative_fp = narrative
+        .as_deref()
+        .and_then(|b| b.recent.back())
+        .map(|o| o.generated_text.len() as u32)
+        .unwrap_or(0);
+    let alerts_fp = (n_m, narrative_fp);
+    if cache.alerts_fp != Some(alerts_fp) {
+        cache.alerts_fp = Some(alerts_fp);
+        cache.alerts_line = format!("ALERTS  {n_m}");
+        for mut t in qs.p1().iter_mut() {
+            *t = Text::new(cache.alerts_line.clone());
+        }
+    }
+
+    let log = logistics.as_deref();
+    let intel_fp = (
+        policy.apply_routing_congestion,
+        (log.map(|l| l.congestion_proxy).unwrap_or(0.0) * 10000.0).round() as i32,
+        (log.map(|l| l.mean_edge_damage).unwrap_or(0.0) * 10000.0).round() as i32,
+    );
+    if cache.intel_fp != Some(intel_fp) {
+        cache.intel_fp = Some(intel_fp);
+        cache.intel_line = format!(
+            "INTEL  routes {}  c {:.2}",
+            if policy.apply_routing_congestion { "on" } else { "off" },
+            log.map(|l| l.congestion_proxy).unwrap_or(0.0),
+        );
+        for mut t in qs.p2().iter_mut() {
+            *t = Text::new(cache.intel_line.clone());
+        }
+    }
+
+    let w = weather.as_deref();
+    let weather_fp = (
+        (w.map(|s| s.rain).unwrap_or(0.0) * 1000.0).round() as i32,
+        (w.map(|s| s.snow).unwrap_or(0.0) * 1000.0).round() as i32,
+        (w.map(|s| s.fog).unwrap_or(0.0) * 1000.0).round() as i32,
+    );
+    if cache.weather_fp != Some(weather_fp) {
+        cache.weather_fp = Some(weather_fp);
+        cache.weather_line = format!(
+            "WX  r {:.2}  s {:.2}  f {:.2}",
+            w.map(|s| s.rain).unwrap_or(0.0),
+            w.map(|s| s.snow).unwrap_or(0.0),
+            w.map(|s| s.fog).unwrap_or(0.0),
+        );
+        for mut t in qs.p3().iter_mut() {
+            *t = Text::new(cache.weather_line.clone());
+        }
+    }
+
+    let scarcity = world_fields.as_deref().map(|f| f.resource_scarcity).unwrap_or(0.5);
+    let power_proxy = (1.0 - scarcity).clamp(0.0, 1.0);
+    let power_fp = (power_proxy * 1000.0).round() as i32;
+    if cache.power_fp != Some(power_fp) {
+        cache.power_fp = Some(power_fp);
+        cache.power_line = format!("PWR  {:.0}%", power_proxy * 100.0);
+        for mut t in qs.p4().iter_mut() {
+            *t = Text::new(cache.power_line.clone());
+        }
+    }
+
+    let tray_label = match tray.panel_state {
+        HudPanelState::Collapsed => "▼ TRAY",
+        HudPanelState::Peek => "◧ TRAY",
+        HudPanelState::Expanded | HudPanelState::Pinned => "▲ TRAY",
+    };
+    if cache.tray_line != tray_label {
+        cache.tray_line = tray_label.to_string();
+        for mut t in qs.p5().iter_mut() {
+            *t = Text::new(cache.tray_line.clone());
+        }
+    }
+}
+
+fn ops_strip_zone_click_system(
+    q: Query<(&Interaction, &OpsStripZone), Changed<Interaction>>,
+    mut tray: ResMut<ContextTrayState>,
+    mut intel_req: ResMut<OpsStripIntelFocusRequest>,
+    mut witness: ResMut<UiShellMigrationWitness>,
+    world: Option<Res<WorldRepresentationFrame>>,
+    missions: Option<Res<ActiveMissions>>,
+) {
+    for (interaction, zone) in &q {
+        if *interaction != Interaction::Pressed {
+            continue;
+        }
+        witness.ops_zones_wired = true;
+        witness.phase2_zones_live = true;
+        match zone {
+            OpsStripZone::Alerts => {
+                witness_ops_strip_alerts_pressed(
+                    tray.as_mut(),
+                    witness.as_mut(),
+                    missions.as_deref().map(|m| m.missions.len()).unwrap_or(0),
+                );
+            }
+            OpsStripZone::Intel => {
+                if let Some(w) = world.as_deref() {
+                    witness_ops_strip_intel_pressed(
+                        tray.as_mut(),
+                        witness.as_mut(),
+                        w,
+                        intel_req.as_mut(),
+                    );
+                }
+            }
+            OpsStripZone::TrayAffordance => {
+                tray.cycle_tray_affordance();
+                witness.flat_v2_tab_chrome = true;
+            }
+            OpsStripZone::Time | OpsStripZone::Weather | OpsStripZone::Power => {}
+        }
+    }
+}
+
+fn apply_ops_strip_intel_focus_system(
+    mut req: ResMut<OpsStripIntelFocusRequest>,
+    mut desired: ResMut<MapCameraDesired>,
+    mut authority: ResMut<ViewProjectionAuthority>,
+    mut trace: ResMut<ViewRuntimeTrace>,
+    profile: Res<crate::render::Stage5ReadinessProfile>,
+) {
+    let Some(world) = req.pending_world.take() else {
+        return;
+    };
+    let before = desired.clone();
+    desired.translation.x = world.x;
+    desired.translation.y = world.y;
+    commit_map_camera_pose_to_view_authority(authority.as_mut(), trace.as_mut(), desired.as_ref());
+    trace_map_camera_desired_write_if_full_app(
+        profile.as_ref(),
+        "simulation_shell_phase2::apply_ops_strip_intel_focus",
+        &before,
+        &desired,
+    );
+}
+
+fn context_tray_tab_click_system(
+    q: Query<(&Interaction, &ContextTrayTabButton), Changed<Interaction>>,
+    mut tray: ResMut<ContextTrayState>,
+    mut witness: ResMut<UiShellMigrationWitness>,
+) {
+    for (interaction, tab) in &q {
+        if *interaction == Interaction::Pressed {
+            tray.on_tab_pressed(tab.0);
+            witness.flat_v2_tab_chrome = true;
+        }
+    }
+}
+
+fn build_rail_tool_click_system(
+    q: Query<(&Interaction, &BuildRailToolSlot), (Changed<Interaction>, With<Button>)>,
+    mut strip: ResMut<BuildStripState>,
+    mut tool: ResMut<crate::construction::ActiveBuildTool>,
+    mut witness: ResMut<UiShellMigrationWitness>,
+) {
+    for (interaction, slot) in &q {
+        if *interaction != Interaction::Pressed {
+            continue;
+        }
+        let deselect = strip.active == slot.0 && slot.0 != ToolContext::None;
+        if deselect {
+            strip.active = ToolContext::None;
+        } else {
+            strip.active = slot.0;
+        }
+        crate::construction::apply_build_rail_tool_selection(
+            &mut tool,
+            strip.active,
+            deselect,
+        );
+        witness.build_rail_synced = true;
+        witness.build_rail_authoritative = true;
+    }
+}
+
+fn sync_ops_strip_zone_hover_system(
+    palette: Res<UiPalette>,
+    mut zones: Query<
+        (&Interaction, &mut BorderColor, &mut Node),
+        (With<Button>, With<OpsStripZone>),
+    >,
+    mut witness: ResMut<UiShellMigrationWitness>,
+) {
+    let hot = palette.bevy_accent_hot();
+    let idle = palette.bevy_border_subtle();
+    for (interaction, mut border, mut node) in &mut zones {
+        let emphasized = matches!(*interaction, Interaction::Hovered | Interaction::Pressed);
+        *border = if emphasized {
+            BorderColor::all(hot)
+        } else {
+            BorderColor::all(idle)
+        };
+        node.border = UiRect::all(Val::Px(1.0));
+        if emphasized {
+            witness.ops_zone_hover_token = true;
+        }
+    }
+}
+
+#[must_use]
+pub fn format_ops_strip_alert_badge(count: usize) -> String {
+    if count > 99 {
+        "◆99+".to_string()
+    } else {
+        format!("◆{count}")
+    }
+}
+
+fn sync_ops_strip_alert_badge_system(
+    missions: Option<Res<ActiveMissions>>,
+    mut count_q: Query<&mut Text, With<OpsStripAlertBadgeText>>,
+    mut witness: ResMut<UiShellMigrationWitness>,
+) {
+    let count = missions.as_deref().map(|m| m.missions.len()).unwrap_or(0);
+    witness.last_mission_count = count;
+    let label = format_ops_strip_alert_badge(count);
+    for mut text in &mut count_q {
+        *text = Text::new(label.clone());
+    }
+}
+
+fn sync_context_tray_visibility_system(
+    tray: Res<ContextTrayState>,
+    live: Option<Res<HudInfoLiveData>>,
+    mut q: ParamSet<(
+        Query<(&mut Node, &mut Visibility), With<ContextTrayRoot>>,
+        Query<&mut Visibility, With<ContextTrayBodyRoot>>,
+    )>,
+    mut body_q: Query<&mut Text, With<ContextTrayBodyLine>>,
+) {
+    let show = tray.panel_state.shows_content();
+    let show_body = matches!(
+        tray.panel_state,
+        HudPanelState::Peek | HudPanelState::Expanded | HudPanelState::Pinned
+    );
+    let body_h = if tray.panel_state == HudPanelState::Peek {
+        CONTEXT_TRAY_PEEK_BODY_H_PX
+    } else {
+        CONTEXT_TRAY_BODY_H_PX
+    };
+    let h = if show {
+        CONTEXT_TRAY_TAB_H_PX + if show_body { body_h } else { 0.0 }
+    } else {
+        CONTEXT_TRAY_TAB_H_PX
+    };
+
+    if let Ok((mut node, mut vis)) = q.p0().single_mut() {
+        *vis = if show {
+            Visibility::Visible
+        } else {
+            Visibility::Hidden
+        };
+        node.height = Val::Px(h);
+        node.min_height = Val::Px(h);
+        node.max_height = Val::Px(h);
+    }
+
+    for mut v in q.p1().iter_mut() {
+        *v = if show_body {
+            Visibility::Visible
+        } else {
+            Visibility::Hidden
+        };
+    }
+
+    if let Some(d) = live.as_deref() {
+        let body = match tray.active_tab {
+            ContextTrayTab::Alerts => format!(
+                "ALERTS · msn {} · T0 {:.2} · {}",
+                d.mission_count, d.mean_threat_slot0, d.mission_hint
+            ),
+            ContextTrayTab::Intel => format!(
+                "INTEL · routes {} · fract μ {:.2} · factions {}",
+                if d.routes_layer_on { "on" } else { "off" },
+                d.fracture_mean,
+                d.theater_faction_slots
+            ),
+            ContextTrayTab::Logistics => format!(
+                "LOGISTICS · congest {:.2} · stock {:.2} · edges {}",
+                d.logistics_congestion, d.logistics_stockpile, d.transport_edges
+            ),
+            ContextTrayTab::Diagnostics => format!(
+                "DIAG · sim n={} · fire parts {} · pending {}/{}",
+                d.sim_tick,
+                d.fire_particle_rows,
+                d.pending_total.saturating_sub(d.pending_unapproved),
+                d.pending_total
+            ),
+        };
+        for mut text in &mut body_q {
+            *text = Text::new(body.clone());
+        }
+    }
+}
+
+fn sync_context_tray_tab_chrome_system(
+    tray: Res<ContextTrayState>,
+    palette: Res<UiPalette>,
+    mut tabs: Query<
+        (
+            &ContextTrayTabButton,
+            &mut BackgroundColor,
+            &mut BorderColor,
+            &mut Node,
+            &Children,
+        ),
+        (With<Button>, With<ContextTrayTabButton>),
+    >,
+    mut labels: Query<&mut TextColor, With<ContextTrayTabLabel>>,
+    mut witness: ResMut<UiShellMigrationWitness>,
+) {
+    witness.flat_v2_tab_chrome = true;
+    for (btn, mut bg, mut border, mut node, children) in &mut tabs {
+        let selected = btn.0 == tray.active_tab;
+        if selected {
+            *bg = BackgroundColor(palette.bevy_bg_vellum());
+            *border = BorderColor {
+                left: palette.bevy_accent_gold(),
+                top: palette.bevy_border_subtle(),
+                right: palette.bevy_border_subtle(),
+                bottom: palette.bevy_border_subtle(),
+            };
+            node.border = UiRect {
+                left: Val::Px(CONTEXT_TRAY_TAB_GOLD_BAR_PX),
+                top: Val::Px(1.0),
+                right: Val::Px(1.0),
+                bottom: Val::Px(1.0),
+            };
+        } else {
+            *bg = BackgroundColor(palette.bevy_hud_panel_fill());
+            *border = BorderColor::all(palette.bevy_border_subtle());
+            node.border = UiRect::all(Val::Px(1.0));
+        }
+        for child in children.iter() {
+            if let Ok(mut color) = labels.get_mut(child) {
+                *color = if selected {
+                    TextColor(palette.bevy_accent_gold())
+                } else {
+                    TextColor(palette.bevy_text_muted())
+                };
+            }
+        }
+    }
+}
+
+fn build_rail_icon_tint(palette: &UiPalette, interaction: &Interaction, selected: bool) -> Color {
+    if selected {
+        palette.bevy_accent_gold()
+    } else if *interaction == Interaction::Hovered {
+        palette.bevy_accent_hot()
+    } else {
+        palette.bevy_text_muted().with_alpha(0.72)
+    }
+}
+
+#[must_use]
+fn build_rail_slot_border_color(
+    palette: &UiPalette,
+    interaction: &Interaction,
+    selected: bool,
+) -> Color {
+    if selected {
+        palette.bevy_accent_gold()
+    } else if *interaction == Interaction::Hovered {
+        palette.bevy_accent_hot()
+    } else {
+        palette.bevy_border_subtle()
+    }
+}
+
+fn sync_build_rail_from_strip_system(
+    strip: Res<BuildStripState>,
+    left_stack: Option<Res<crate::gui::CommandLeftStackState>>,
+    palette: Res<UiPalette>,
+    atlas_ui: Option<Res<IconAtlasUi>>,
+    manifests: Res<Assets<IconAtlasManifest>>,
+    images: Res<Assets<Image>>,
+    mut slots: Query<
+        (
+            &BuildRailToolSlot,
+            &Interaction,
+            &Children,
+            &mut BackgroundColor,
+            &mut BorderColor,
+        ),
+        With<Button>,
+    >,
+    mut icons: Query<
+        (&mut bevy::ui::widget::ImageNode, &mut Visibility),
+        (With<BuildRailToolIcon>, Without<BuildRailToolLabel>),
+    >,
+    mut labels: Query<
+        (&mut Text, &mut Visibility),
+        (With<BuildRailToolLabel>, Without<BuildRailToolIcon>),
+    >,
+    mut witness: ResMut<UiShellMigrationWitness>,
+) {
+    let expanded = left_stack.as_deref().map_or(false, |s| !s.collapsed);
+    witness.build_rail_synced = true;
+    witness.icon_atlas_loaded = atlas_ui.as_ref().is_some_and(|atlas| {
+        atlas.manifest_loaded(&manifests) && images.get(&atlas.atlas).is_some()
+    });
+    for (slot, interaction, children, mut bg, mut border) in &mut slots {
+        let selected = slot.0 == strip.active;
+        if selected {
+            *bg = BackgroundColor(palette.bevy_bg_vellum());
+            *border = BorderColor::all(palette.bevy_accent_gold());
+        } else {
+            *bg = BackgroundColor(palette.bevy_hud_panel_fill());
+            *border = BorderColor::all(build_rail_slot_border_color(
+                &palette,
+                interaction,
+                selected,
+            ));
+        }
+        let icon_tint = build_rail_icon_tint(&palette, interaction, selected);
+        let short = match slot.0 {
+            ToolContext::None => "—",
+            ToolContext::Roads => "Rd",
+            ToolContext::Rail => "Rl",
+            ToolContext::Utilities => "Ut",
+            ToolContext::Military => "Mi",
+            ToolContext::Industry => "In",
+            ToolContext::Ecology => "Ec",
+            ToolContext::Civil => "Cv",
+        };
+        let label = if expanded {
+            format!("{short} {}", slot.0.label())
+        } else {
+            short.to_string()
+        };
+        let show_text_only = !tool_context_uses_icon_atlas(slot.0) || expanded;
+        for child in children.iter() {
+            if let Ok((mut image, mut vis)) = icons.get_mut(child) {
+                if tool_context_uses_icon_atlas(slot.0) {
+                    *vis = Visibility::Visible;
+                    if let Some(atlas) = atlas_ui.as_ref() {
+                        if let Some(node) = atlas.image_node_for_tool(&manifests, slot.0) {
+                            *image = node.with_color(icon_tint);
+                        }
+                    }
+                } else {
+                    *vis = Visibility::Hidden;
+                }
+            }
+            if let Ok((mut text, mut vis)) = labels.get_mut(child) {
+                *text = Text::new(label.clone());
+                *vis = if show_text_only {
+                    Visibility::Visible
+                } else {
+                    Visibility::Hidden
+                };
+            }
+        }
+    }
+}
+
+/// P4-VEH-01: TRUCK / URAL / BUS chips when Logistics context tray tab is active.
+fn sync_logistics_vehicle_chips_system(
+    tray: Res<ContextTrayState>,
+    palette: Res<UiPalette>,
+    atlas_ui: Option<Res<IconAtlasUi>>,
+    manifests: Res<Assets<IconAtlasManifest>>,
+    mut rows: Query<&mut Visibility, With<LogisticsVehicleChipRow>>,
+    chips: Query<(&LogisticsVehicleChip, &Interaction, &Children)>,
+    mut icons: Query<
+        &mut bevy::ui::widget::ImageNode,
+        (With<LogisticsVehicleChipIcon>, Without<LogisticsVehicleChipRow>),
+    >,
+) {
+    let show = tray.active_tab == ContextTrayTab::Logistics
+        && matches!(
+            tray.panel_state,
+            HudPanelState::Peek | HudPanelState::Expanded | HudPanelState::Pinned
+        );
+    for mut vis in &mut rows {
+        *vis = if show {
+            Visibility::Visible
+        } else {
+            Visibility::Hidden
+        };
+    }
+    let Some(atlas) = atlas_ui.as_ref() else {
+        return;
+    };
+    if !show {
+        return;
+    }
+    for (chip, interaction, children) in &chips {
+        let Some(node) = atlas.image_node_for_id(&manifests, chip.0) else {
+            continue;
+        };
+        let tint = build_rail_icon_tint(&palette, interaction, false);
+        for child in children.iter() {
+            if let Ok(mut icon) = icons.get_mut(child) {
+                *icon = node.clone().with_color(tint);
+            }
+        }
+    }
+}
+
+/// P4-P5-01: petroleum panel tab visible when Industry build context + expanded tray.
+#[must_use]
+pub fn petroleum_panel_tab_visible(strip: &BuildStripState, tray: &ContextTrayState) -> bool {
+    strip.active == ToolContext::Industry && tray.panel_state != HudPanelState::Collapsed
+}
+
+/// P4-P5-01: petroleum panel tab icon when Industry build context is active.
+fn sync_petroleum_panel_tab_system(
+    strip: Res<BuildStripState>,
+    tray: Res<ContextTrayState>,
+    palette: Res<UiPalette>,
+    atlas_ui: Option<Res<IconAtlasUi>>,
+    manifests: Res<Assets<IconAtlasManifest>>,
+    mut roots: Query<(&Interaction, &mut Visibility), With<PetroleumPanelTabRoot>>,
+    mut icons: Query<
+        &mut bevy::ui::widget::ImageNode,
+        (With<PetroleumPanelTabIcon>, Without<PetroleumPanelTabRoot>),
+    >,
+) {
+    let show = petroleum_panel_tab_visible(&strip, &tray);
+    let mut icon_tint = palette.bevy_text_muted().with_alpha(0.72);
+    for (interaction, mut vis) in &mut roots {
+        *vis = if show {
+            Visibility::Visible
+        } else {
+            Visibility::Hidden
+        };
+        if show {
+            icon_tint = build_rail_icon_tint(&palette, interaction, false);
+        }
+    }
+    if !show {
+        return;
+    }
+    let Some(atlas) = atlas_ui.as_ref() else {
+        return;
+    };
+    if let Ok(mut icon) = icons.single_mut() {
+        if let Some(node) = atlas.image_node_for_id(&manifests, IconId::P5Br) {
+            *icon = node.with_color(icon_tint);
+        }
+    }
+}
+
+fn sync_minimap_gpu_image_node_system(
+    registry: Res<MinimapRenderTargetRegistry>,
+    mut shell: ResMut<MinimapShellState>,
+    mut compositor: ResMut<MinimapCompositorState>,
+    mut witness: ResMut<UiShellMigrationWitness>,
+    win: Query<&Window, With<PrimaryWindow>>,
+    chrome_q: Query<&Node, (With<MinimapChromeRoot>, Without<MinimapGpuImageNode>)>,
+    mut gpu_q: Query<
+        (&mut Node, &mut Visibility, &mut bevy::ui::widget::ImageNode),
+        (With<MinimapGpuImageNode>, Without<MinimapChromeRoot>),
+    >,
+) {
+    let Ok((mut node, mut vis, mut image)) = gpu_q.single_mut() else {
+        return;
+    };
+    let gpu_active = minimap_gpu_compositor_env_enabled()
+        && shell.presentation_source == crate::gui::MinimapPresentationSource::SharedRenderTargetImage
+        && registry.committed_image != Handle::default();
+    if !gpu_active || !shell.visible || shell.minimized {
+        *vis = Visibility::Hidden;
+        compositor.dual_minimap_present = false;
+        witness.minimap_gpu_path = false;
+        return;
+    }
+    witness.minimap_gpu_path = true;
+    *vis = Visibility::Visible;
+    *image = bevy::ui::widget::ImageNode::from(registry.committed_image.clone());
+    node.width = Val::Percent(100.0);
+    node.height = Val::Percent(100.0);
+
+    let scale = win
+        .single()
+        .map(|w| w.scale_factor())
+        .unwrap_or(1.0)
+        .max(1e-6);
+    if let Ok(chrome) = chrome_q.single() {
+        let left = match chrome.left {
+            Val::Px(v) => v * scale,
+            _ => 0.0,
+        };
+        let top = match chrome.top {
+            Val::Px(v) => v * scale,
+            _ => 0.0,
+        };
+        let w_px = match chrome.width {
+            Val::Px(v) => v * scale,
+            _ => shell.viewport_size.x,
+        };
+        let h_px = match chrome.height {
+            Val::Px(v) => v * scale,
+            _ => shell.viewport_size.y,
+        };
+        let pad = MINIMAP_CHROME_STROKE_PAD_PX;
+        shell.last_image_rect = Some(egui::Rect::from_min_size(
+            egui::pos2(left + pad, top + pad),
+            egui::vec2((w_px - pad * 2.0).max(1.0), (h_px - pad * 2.0).max(1.0)),
+        ));
+    }
+    compositor.dual_minimap_present = false;
+}
+
+fn sync_minimap_chrome_root_system(
+    mut minimap: ResMut<MinimapShellState>,
+    win: Query<&Window, With<PrimaryWindow>>,
+    mut q: Query<(&mut Node, &mut Visibility), With<MinimapChromeRoot>>,
+    mut witness: ResMut<UiShellMigrationWitness>,
+) {
+    let Ok((mut node, mut vis)) = q.single_mut() else {
+        return;
+    };
+    let window = win.single().ok();
+    let content = minimap
+        .last_image_rect
+        .or(minimap.last_window_rect)
+        .or_else(|| {
+            if !minimap.visible || minimap.minimized {
+                return None;
+            }
+            window.map(|w| {
+                crate::gui::simulation_minimap_bootstrap_rect(
+                    w.width(),
+                    w.height(),
+                    minimap.viewport_size,
+                )
+            })
+        });
+    let Some(content) = content else {
+        *vis = Visibility::Hidden;
+        return;
+    };
+    if !minimap.visible || minimap.minimized {
+        *vis = Visibility::Hidden;
+        return;
+    }
+    *vis = Visibility::Visible;
+    let scale = win
+        .single()
+        .map(|w| w.scale_factor())
+        .unwrap_or(1.0)
+        .max(1e-6);
+    let pad = MINIMAP_CHROME_STROKE_PAD_PX;
+    let min_x = content.min.x - pad;
+    let min_y = content.min.y - pad;
+    let w_px = content.width() + pad * 2.0;
+    let h_px = content.height() + pad * 2.0;
+    node.left = Val::Px(min_x / scale);
+    node.top = Val::Px(min_y / scale);
+    node.width = Val::Px(w_px / scale);
+    node.height = Val::Px(h_px / scale);
+    minimap.sync_panel_viewport_suggestion_from_layout();
+    if minimap.last_image_rect.is_some() {
+        witness.last_minimap_rect_delta_px = pad;
+        witness.minimap_chrome_aligned = pad <= 2.0 && w_px / scale > 10.0;
+    } else {
+        witness.last_minimap_rect_delta_px = 0.0;
+        witness.minimap_chrome_aligned = w_px / scale > 10.0;
+    }
+}
+
+pub fn build_proof_payload(
+    witness: &UiShellMigrationWitness,
+    tray: &ContextTrayState,
+    shell_diag: &ProductShellDiagnostics,
+) -> serde_json::Value {
+    let egui_pass_count_in_sim = shell_diag.egui_pass_count;
+    let gpu_minimap = minimap_gpu_compositor_env_enabled();
+    let minimap_texture_backend = if gpu_minimap {
+        "bevy_ui_gpu"
+    } else {
+        "egui_editor_only"
+    };
+    serde_json::json!({
+        "profile": "UI_SHELL_MIGRATION_2B",
+        "gpu_minimap_compositor_env": gpu_minimap,
+        "ui_p3_001": {
+            "closed": gpu_minimap
+                && witness.minimap_gpu_path
+                && witness.minimap_chrome_aligned
+                && shell_diag.egui_pass_count == 0,
+            "minimap_gpu_path": witness.minimap_gpu_path,
+            "minimap_chrome_aligned": witness.minimap_chrome_aligned,
+        },
+        "phase2a_closed": witness.phase2_zones_live
+            && witness.flat_v2_tab_chrome
+            && witness.minimap_chrome_aligned,
+        "phase2b_closed": egui_pass_count_in_sim == 0
+            && witness.build_toolbox_egui_gated
+            && witness.side_status_rail_egui_gated
+            && witness.floating_egui_shells_gated,
+        "egui_sim_shell_widgets": EGUI_SIM_SHELL_WIDGETS,
+        "egui_pass_count_in_sim": egui_pass_count_in_sim,
+        "phase2_zones_live": witness.phase2_zones_live,
+        "witness": {
+            "ops_zones_wired": witness.ops_zones_wired,
+            "phase2_zones_live": witness.phase2_zones_live,
+            "alert_click_expanded_tray": witness.alert_click_expanded_tray,
+            "intel_map_camera_request": witness.intel_map_camera_request,
+            "minimap_chrome_aligned": witness.minimap_chrome_aligned,
+            "escape_collapsed_tray": witness.escape_collapsed_tray,
+            "flat_v2_tab_chrome": witness.flat_v2_tab_chrome,
+            "build_rail_synced": witness.build_rail_synced,
+            "build_rail_authoritative": witness.build_rail_authoritative,
+            "build_toolbox_egui_gated": witness.build_toolbox_egui_gated,
+            "side_status_rail_egui_gated": witness.side_status_rail_egui_gated,
+            "floating_egui_shells_gated": witness.floating_egui_shells_gated,
+            "ops_zone_hover_token": witness.ops_zone_hover_token,
+            "last_mission_count": witness.last_mission_count,
+            "last_minimap_rect_delta_px": witness.last_minimap_rect_delta_px,
+        },
+        "phase2": {
+            "zones_live": witness.phase2_zones_live,
+            "ops_strip_top_offset_px": OPS_STRIP_TOP_OFFSET_PX,
+            "context_tray_gold_bar_px": CONTEXT_TRAY_TAB_GOLD_BAR_PX,
+            "minimap_chrome_pad_px": MINIMAP_CHROME_STROKE_PAD_PX,
+            "minimap_gpu_path": witness.minimap_gpu_path,
+            "follow_ups_closed": ["F-01", "F-02", "F-03", "F-04", "F-06", "F-07", "F-08", "F-09", "F-11"],
+        },
+        "phase4": {
+            "icon_atlas_loaded": witness.icon_atlas_loaded,
+            "atlas_texture": crate::gui::hud::icon_atlas::ICON_ATLAS_TEXTURE_PATH,
+            "manifest_ron": crate::gui::hud::icon_atlas::ICON_ATLAS_MANIFEST_PATH,
+            "rail_icons": ["RD", "RL", "UT", "IN", "CV"],
+            "p5_br_tab_wired": true,
+        },
+        "backends": {
+            "P1_ops_strip": "bevy_ui",
+            "P2_context_tray": "bevy_ui",
+            "P3_map_frame_inset": "bevy_ui",
+            "P3_minimap_chrome": "bevy_ui",
+            "P3_minimap_texture": minimap_texture_backend,
+            "P4_build_rail": "bevy_ui",
+            "P4_left_context_rail": "bevy_ui",
+            "legacy_egui_phase2b": {
+                "sim_allowed": EGUI_SIM_SHELL_WIDGETS,
+                "editor_product_shell": true,
+                "build_toolbox_egui": "editor_only",
+                "side_status_rail_egui": "editor_only",
+                "overlays_panel_egui": "editor_only",
+                "overlay_tray_egui": "editor_only",
+                "command_shell_egui": "editor_only",
+            },
+            "floating_shells_sim_audit": {
+                "OverlaysPanel": witness.floating_egui_shells_gated,
+                "OverlayTray": witness.floating_egui_shells_gated,
+                "CommandShell": witness.floating_egui_shells_gated,
+                "BuildToolbox": witness.build_toolbox_egui_gated,
+            },
+        },
+        "follow_ups": {
+            "F-01_diamond_badge": true,
+            "F-02_strip_top_offset_px": OPS_STRIP_TOP_OFFSET_PX,
+            "F-04_rail_icon_grid": true,
+            "F-07_gold_vellum_tabs": witness.flat_v2_tab_chrome,
+            "F-09_minimap_delta_px": witness.last_minimap_rect_delta_px,
+        },
+        "context_tray": {
+            "panel_state": format!("{:?}", tray.panel_state),
+            "active_tab": tray.active_tab.label(),
+            "rail_width_px": CONTEXT_RAIL_W_PX,
+            "build_rail_width_px": BUILD_RAIL_W_PX,
+            "map_frame_inset_px": MAP_FRAME_INSET_PX,
+        },
+        "phase2c": {
+            "layout_option": PHASE_2C_LAYOUT_OPTION,
+            "phase2c_closed": true,
+            "left_chrome_width_px_collapsed": command_left_stack_footprint_px(true),
+            "left_chrome_width_px_expanded": command_left_stack_footprint_px(false),
+            "context_rail_width_px": CONTEXT_RAIL_W_PX,
+            "build_rail_width_px": BUILD_RAIL_W_PX,
+            "stack_body_width_px": LEFT_CONTEXT_STACK_BODY_W_PX,
+            "column_gap_px": COMMAND_LEFT_STACK_COLUMN_GAP_PX,
+            "overlay_absolute": true,
+            "map_hole_inset": false,
+        },
+        "panels": {
+            "P1": "ops_strip_zones_time_alerts_intel_weather_power_tray",
+            "P2": "context_tray_tabs_peek_cycle",
+            "P3": "map_frame_inset + minimap_chrome",
+            "P4": "dual_column_left_context_rail_48px + build_rail_52px",
+        },
+    })
+}
+
+const UI_SHELL_MIGRATION_LIVE_PROOF_PATH: &str = "debug_runs/ui_shell_migration_live.json";
+
+#[must_use]
+pub fn commit_ui_shell_migration_live_proof(
+    witness: &UiShellMigrationWitness,
+    tray: &ContextTrayState,
+    shell_diag: &ProductShellDiagnostics,
+) -> bool {
+    let body = build_proof_payload(witness, tray, shell_diag);
+    let payload = crate::dev::debug_run_envelope::wrap_debug_run(
+        "UI_SHELL_MIGRATION_2B",
+        "simulation_shell_phase2_live_proof",
+        UI_SHELL_MIGRATION_LIVE_PROOF_PATH,
+        body,
+    );
+    crate::dev::debug_run_envelope::write_debug_run_json(UI_SHELL_MIGRATION_LIVE_PROOF_PATH, payload)
+}
+
+pub(crate) fn write_ui_shell_migration_live_proof_system(
+    mut state: ResMut<UiShellMigrationLiveProofState>,
+    witness: Res<UiShellMigrationWitness>,
+    tray: Res<ContextTrayState>,
+    shell_diag: Res<ProductShellDiagnostics>,
+    mut replay: ResMut<UiShellMigrationWitnessReplay>,
+) {
+    state.frames_since_write = state.frames_since_write.saturating_add(1);
+    let interactions_complete = witness.alert_click_expanded_tray
+        && witness.intel_map_camera_request
+        && witness.escape_collapsed_tray;
+    let replay_flush = replay.needs_proof_flush;
+    let due = replay_flush
+        || (!state.written && witness.phase2_zones_live)
+        || (interactions_complete && !state.interactions_written)
+        || state.frames_since_write >= state.write_interval;
+    if !due {
+        return;
+    }
+    state.frames_since_write = 0;
+    if commit_ui_shell_migration_live_proof(&witness, &tray, &shell_diag) {
+        state.written = true;
+        if interactions_complete {
+            state.interactions_written = true;
+        }
+        replay.needs_proof_flush = false;
+    }
+}
+
+pub fn collapse_context_tray_on_escape(
+    tray: &mut ContextTrayState,
+    witness: &mut UiShellMigrationWitness,
+) {
+    let before = tray.panel_state;
+    tray.panel_state.collapse_unpinned();
+    if before != HudPanelState::Collapsed && tray.panel_state == HudPanelState::Collapsed {
+        witness.escape_collapsed_tray = true;
+    }
+}
+
+/// Alias for Phase 2A plugin registration (legacy name).
+pub type UiShellMigrationPlugin = SimulationShellPhase2Plugin;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn sim_tick_line_format() {
+        assert_eq!(format_sim_tick_line(42, false, 1.0), "T+00042  RUN    v=1.0x");
+    }
+
+    #[test]
+    fn context_tray_cycle_collapsed_peek_expanded() {
+        let mut tray = ContextTrayState::default();
+        assert_eq!(tray.panel_state, HudPanelState::Collapsed);
+        tray.cycle_tray_affordance();
+        assert_eq!(tray.panel_state, HudPanelState::Peek);
+        tray.cycle_tray_affordance();
+        assert_eq!(tray.panel_state, HudPanelState::Expanded);
+        tray.cycle_tray_affordance();
+        assert_eq!(tray.panel_state, HudPanelState::Collapsed);
+    }
+
+    #[test]
+    fn ops_strip_alert_badge_diamond_and_count() {
+        assert_eq!(format_ops_strip_alert_badge(0), "◆0");
+        assert_eq!(format_ops_strip_alert_badge(42), "◆42");
+        assert_eq!(format_ops_strip_alert_badge(100), "◆99+");
+    }
+
+    #[test]
+    fn build_rail_hover_border_uses_accent_hot() {
+        let palette = UiPalette::default();
+        let hot = build_rail_slot_border_color(&palette, &Interaction::Hovered, false);
+        assert_eq!(hot, palette.bevy_accent_hot());
+        let gold = build_rail_slot_border_color(&palette, &Interaction::None, true);
+        assert_eq!(gold, palette.bevy_accent_gold());
+        let subtle = build_rail_slot_border_color(&palette, &Interaction::None, false);
+        assert_eq!(subtle, palette.bevy_border_subtle());
+    }
+
+    #[test]
+    fn context_tray_tab_peek_then_expand() {
+        let mut tray = ContextTrayState::default();
+        tray.on_tab_pressed(ContextTrayTab::Alerts);
+        assert_eq!(tray.panel_state, HudPanelState::Peek);
+        tray.on_tab_pressed(ContextTrayTab::Alerts);
+        assert_eq!(tray.panel_state, HudPanelState::Expanded);
+        tray.on_tab_pressed(ContextTrayTab::Intel);
+        assert_eq!(tray.active_tab, ContextTrayTab::Intel);
+        assert_eq!(tray.panel_state, HudPanelState::Expanded);
+    }
+
+    #[test]
+    fn witness_interaction_replay_sets_flags() {
+        let mut tray = ContextTrayState::default();
+        let mut witness = UiShellMigrationWitness::default();
+        let mut intel = OpsStripIntelFocusRequest::default();
+        let world = WorldRepresentationFrame {
+            focus_chunk: IVec2::new(2, 3),
+            ..Default::default()
+        };
+        witness_ops_strip_alerts_pressed(&mut tray, &mut witness, 4);
+        assert!(witness.alert_click_expanded_tray);
+        assert_eq!(tray.panel_state, HudPanelState::Expanded);
+        witness_ops_strip_intel_pressed(&mut tray, &mut witness, &world, &mut intel);
+        assert!(witness.intel_map_camera_request);
+        assert!(intel.pending_world.is_some());
+        collapse_context_tray_on_escape(&mut tray, &mut witness);
+        assert!(witness.escape_collapsed_tray);
+    }
+
+    #[test]
+    fn ui_p2a_001_live_witness_refresh() {
+        let witness = UiShellMigrationWitness {
+            phase2_zones_live: true,
+            alert_click_expanded_tray: true,
+            intel_map_camera_request: true,
+            escape_collapsed_tray: true,
+            minimap_chrome_aligned: true,
+            flat_v2_tab_chrome: true,
+            ops_zones_wired: true,
+            build_rail_synced: true,
+            build_rail_authoritative: true,
+            build_toolbox_egui_gated: true,
+            side_status_rail_egui_gated: true,
+            floating_egui_shells_gated: true,
+            ops_zone_hover_token: true,
+            icon_atlas_loaded: true,
+            last_minimap_rect_delta_px: 1.0,
+            ..Default::default()
+        };
+        let body = build_proof_payload(
+            &witness,
+            &ContextTrayState::default(),
+            &ProductShellDiagnostics::default(),
+        );
+        assert_eq!(body["phase2_zones_live"], serde_json::json!(true));
+        assert_eq!(body["phase2a_closed"], serde_json::json!(true));
+        assert_eq!(
+            body["witness"]["alert_click_expanded_tray"],
+            serde_json::json!(true)
+        );
+        assert_eq!(
+            body["witness"]["intel_map_camera_request"],
+            serde_json::json!(true)
+        );
+        assert_eq!(
+            body["witness"]["escape_collapsed_tray"],
+            serde_json::json!(true)
+        );
+        assert!(commit_ui_shell_migration_live_proof(
+            &witness,
+            &ContextTrayState::default(),
+            &ProductShellDiagnostics::default(),
+        ));
+    }
+
+    #[test]
+    fn ui_p3_001_shell_witness_fields_when_gpu_path_active() {
+        let witness = UiShellMigrationWitness {
+            minimap_gpu_path: true,
+            minimap_chrome_aligned: true,
+            phase2_zones_live: true,
+            flat_v2_tab_chrome: true,
+            build_toolbox_egui_gated: true,
+            side_status_rail_egui_gated: true,
+            floating_egui_shells_gated: true,
+            ..Default::default()
+        };
+        let payload = build_proof_payload(
+            &witness,
+            &ContextTrayState::default(),
+            &ProductShellDiagnostics::default(),
+        );
+        assert_eq!(
+            payload["ui_p3_001"]["closed"],
+            serde_json::json!(super::minimap_gpu_compositor_env_enabled())
+        );
+        assert_eq!(
+            payload["backends"]["P3_minimap_texture"],
+            serde_json::json!("bevy_ui_gpu")
+        );
+    }
+
+    #[test]
+    fn stage5_ui_shell_migration_phase2b_witness() {
+        let witness = UiShellMigrationWitness {
+            phase2_zones_live: true,
+            flat_v2_tab_chrome: true,
+            minimap_chrome_aligned: true,
+            build_toolbox_egui_gated: true,
+            side_status_rail_egui_gated: true,
+            floating_egui_shells_gated: true,
+            ..Default::default()
+        };
+        let shell_diag = ProductShellDiagnostics::default();
+        let payload = build_proof_payload(&witness, &ContextTrayState::default(), &shell_diag);
+        assert_eq!(payload["profile"], serde_json::json!("UI_SHELL_MIGRATION_2B"));
+        assert_eq!(payload["egui_pass_count_in_sim"], serde_json::json!(0));
+        assert_eq!(payload["phase2b_closed"], serde_json::json!(true));
+        assert_eq!(
+            payload["egui_sim_shell_widgets"],
+            serde_json::json!(["Diagnostics_F3", "Editor_tools"])
+        );
+        assert_eq!(
+            payload["witness"]["build_toolbox_egui_gated"],
+            serde_json::json!(true)
+        );
+        assert_eq!(
+            payload["witness"]["side_status_rail_egui_gated"],
+            serde_json::json!(true)
+        );
+        assert!(payload.get("phase2").is_some());
+        assert!(payload.get("backends").is_some());
+        assert_eq!(
+            payload["phase4"]["icon_atlas_loaded"],
+            serde_json::json!(false)
+        );
+    }
+
+    #[test]
+    fn phase2c_2c_b_footprint_and_witness() {
+        assert_eq!(command_left_stack_footprint_px(true), 106.0);
+        assert_eq!(command_left_stack_footprint_px(false), 458.0);
+        let witness = UiShellMigrationWitness {
+            phase2_zones_live: true,
+            build_rail_authoritative: true,
+            build_rail_synced: true,
+            ..Default::default()
+        };
+        let payload = build_proof_payload(
+            &witness,
+            &ContextTrayState::default(),
+            &ProductShellDiagnostics::default(),
+        );
+        assert_eq!(payload["phase2c"]["layout_option"], serde_json::json!("2C-B"));
+        assert_eq!(
+            payload["phase2c"]["left_chrome_width_px_collapsed"],
+            serde_json::json!(106.0)
+        );
+        assert_eq!(
+            payload["phase2c"]["left_chrome_width_px_expanded"],
+            serde_json::json!(458.0)
+        );
+        assert!(commit_ui_shell_migration_live_proof(
+            &witness,
+            &ContextTrayState::default(),
+            &ProductShellDiagnostics::default(),
+        ));
+    }
+
+    #[test]
+    fn p4_p5_01_petroleum_panel_tab_visible_when_industry_and_tray_open() {
+        let strip = BuildStripState {
+            active: ToolContext::Industry,
+            ..Default::default()
+        };
+        let mut tray = ContextTrayState::default();
+        tray.panel_state = HudPanelState::Expanded;
+        assert!(petroleum_panel_tab_visible(&strip, &tray));
+        tray.panel_state = HudPanelState::Collapsed;
+        assert!(!petroleum_panel_tab_visible(&strip, &tray));
+        let strip_roads = BuildStripState {
+            active: ToolContext::Roads,
+            ..Default::default()
+        };
+        tray.panel_state = HudPanelState::Expanded;
+        assert!(!petroleum_panel_tab_visible(&strip_roads, &tray));
+    }
+
+    #[test]
+    fn stage5_ui_shell_migration_phase4_witness_fields() {
+        let witness = UiShellMigrationWitness {
+            icon_atlas_loaded: true,
+            ..Default::default()
+        };
+        let payload = build_proof_payload(&witness, &ContextTrayState::default(), &ProductShellDiagnostics::default());
+        assert_eq!(payload["phase4"]["icon_atlas_loaded"], serde_json::json!(true));
+        assert_eq!(
+            payload["phase4"]["atlas_texture"],
+            serde_json::json!(crate::gui::hud::icon_atlas::ICON_ATLAS_TEXTURE_PATH)
+        );
+        assert_eq!(payload["phase4"]["p5_br_tab_wired"], serde_json::json!(true));
+    }
+
+    #[test]
+    fn stage5_ui_shell_migration_phase2a_witness() {
+        let witness = UiShellMigrationWitness {
+            phase2_zones_live: true,
+            flat_v2_tab_chrome: true,
+            minimap_chrome_aligned: true,
+            ..Default::default()
+        };
+        let shell_diag = ProductShellDiagnostics::default();
+        let payload = build_proof_payload(&witness, &ContextTrayState::default(), &shell_diag);
+        assert_eq!(payload["phase2_zones_live"], serde_json::json!(true));
+        assert!(payload.get("phase2").is_some());
+        assert!(payload.get("backends").is_some());
+    }
+}

@@ -95,6 +95,7 @@ fn construction_ai_shared_validation_probe_system(
         origin,
         footprint: fp,
         layer: LayerType::Surface,
+        catalog_id: None,
     });
 }
 

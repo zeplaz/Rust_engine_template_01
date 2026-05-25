@@ -6,7 +6,10 @@
 
 use bevy::prelude::*;
 
-use crate::gui::{preview_partial_min_interval_from_hz, CameraVisualState, FxVisibilitySettings};
+use crate::gui::{
+    preview_partial_min_interval_from_hz, CameraVisualState, FxVisibilitySettings, RepresentationBand,
+    RepresentationResult,
+};
 use crate::render::extraction::RenderProjectionGraph;
 use crate::render::{ClimateVisualAggregate, SimChunkSmokeVisualExtract, WeatherFireFieldUniforms};
 use super::incremental_schedule::AtmospherePartialFieldState;
@@ -63,6 +66,17 @@ pub(crate) fn blend_partial_field_heat(base: f32, partial: &AtmospherePartialFie
     (base * (1.0 - alpha) + bias * alpha).clamp(0.0, 1.85)
 }
 
+#[must_use]
+pub(crate) const fn fire_propagate_from_representation_band(band: RepresentationBand) -> f32 {
+    match band {
+        RepresentationBand::Full => 0.45,
+        RepresentationBand::Tactical => 0.35,
+        RepresentationBand::Strategic => 0.22,
+        RepresentationBand::OverlayOnly => 0.12,
+        RepresentationBand::Dormant => 0.0,
+    }
+}
+
 fn sync_gpu_weather_fire_uniforms_from_extract(
     time: Res<Time>,
     cadence: Option<Res<crate::gui::VisualCadence>>,
@@ -74,6 +88,7 @@ fn sync_gpu_weather_fire_uniforms_from_extract(
     partial_field: Option<Res<AtmospherePartialFieldState>>,
     fx_vis: Option<Res<FxVisibilitySettings>>,
     cam_vis: Option<Res<CameraVisualState>>,
+    rep: Option<Res<RepresentationResult>>,
     uniforms: Option<ResMut<WeatherFireFieldUniforms>>,
 ) {
     let Some(mut u) = uniforms else {
@@ -128,6 +143,12 @@ fn sync_gpu_weather_fire_uniforms_from_extract(
         .unwrap_or(0);
     u.fire_instance_count = (fire_n.min(u32::MAX as usize)) as u32;
     u._fire_pad = UVec3::ZERO;
+
+    let band = rep
+        .as_deref()
+        .map(|r| r.active_band)
+        .unwrap_or(RepresentationBand::Full);
+    u.fire_propagate = fire_propagate_from_representation_band(band);
 
     u.means = Vec4::new(
         climate.mean_rain,
@@ -205,5 +226,15 @@ mod tests {
         let h1 = effective_fire_heat_for_gpu_field(&fire, &smoke);
         assert!(h1 > h0);
         assert!(h1 > 0.5);
+    }
+
+    #[test]
+    fn fire_propagate_scales_down_by_representation_band() {
+        let full = fire_propagate_from_representation_band(RepresentationBand::Full);
+        let tac = fire_propagate_from_representation_band(RepresentationBand::Tactical);
+        let ovr = fire_propagate_from_representation_band(RepresentationBand::OverlayOnly);
+        assert!(full > tac);
+        assert!(tac > ovr);
+        assert_eq!(0.0, fire_propagate_from_representation_band(RepresentationBand::Dormant));
     }
 }

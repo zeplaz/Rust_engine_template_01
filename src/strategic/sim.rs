@@ -548,16 +548,17 @@ mod tests {
     use super::*;
     use crate::strategic::logistics_net::logistics_net_inject_into_overlays;
     use crate::strategic::{
-        CorridorConstructionBook, CorridorConstructionPhase, LogisticsEdge, LogisticsGraph,
-        LogisticsNode, LogisticsNodeId, StrategicFieldsAndAiPlugin,
+        CorridorConstructionBook, LogisticsGraph, StrategicFieldsAndAiPlugin, StrategicRasterConfig,
     };
     use crate::systems::production::default_production_manifest;
     use crate::systems::terrain::MaterialUnificationPlugin;
+    use crate::systems::transport::{TransportEdgeDirectory, TransportEdgeId, TransportEdgeMeta};
     use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
     use crate::terrain::generation::{Chunk, ChunkCellMatrix};
-    use crate::terrain::ChunkCellKey;
     use bevy::asset::AssetPlugin;
+    use bevy::prelude::UVec2;
     use bevy::time::TimeUpdateStrategy;
+    use std::collections::HashMap;
     use std::time::Duration;
 
     #[test]
@@ -566,33 +567,24 @@ mod tests {
         app.add_plugins(MinimalPlugins)
             .add_plugins(AssetPlugin::default())
             .init_resource::<WorldGenParams>()
-            .init_resource::<LogisticsGraph>()
             .add_plugins(MaterialUnificationPlugin)
             .add_plugins(StrategicFieldsAndAiPlugin)
             .insert_resource(TimeUpdateStrategy::ManualDuration(Duration::from_secs_f32(0.5)));
 
-        app.world_mut().insert_resource(LogisticsGraph {
-            nodes: vec![
-                LogisticsNode {
-                    id: LogisticsNodeId(0),
-                    throughput: 0.0,
-                    stockpile: 0.0,
-                    anchor: Some(ChunkCellKey::new(IVec2::ZERO, 0)),
+        // Non-empty transport directory so GraphSync does not clear the logistics graph each tick.
+        app.insert_resource(StrategicRasterConfig {
+            cells_per_chunk: UVec2::new(2, 1),
+        });
+        app.insert_resource(TransportEdgeDirectory {
+            by_edge: HashMap::from([(
+                TransportEdgeId(0),
+                TransportEdgeMeta {
+                    head_key: "t0_0".into(),
+                    tail_key: "t1_0".into(),
+                    profile: "road".into(),
+                    ..Default::default()
                 },
-                LogisticsNode {
-                    id: LogisticsNodeId(1),
-                    throughput: 0.0,
-                    stockpile: 0.0,
-                    anchor: Some(ChunkCellKey::new(IVec2::ZERO, 1)),
-                },
-            ],
-            edges: vec![LogisticsEdge {
-                from: LogisticsNodeId(0),
-                to: LogisticsNodeId(1),
-                capacity: 1.0,
-                disruption: 0.0,
-                traversal_cost: 1.0,
-            }],
+            )]),
         });
 
         app.world_mut().spawn((
@@ -616,10 +608,16 @@ mod tests {
         assert!(pop > 100, "population should grow");
 
         let wear = {
-            let mut q = app.world_mut().query::<&InfrastructureCorridor>();
-            q.iter(app.world()).next().expect("corridor").wear
+            let mut q = app
+                .world_mut()
+                .query::<(&InfrastructureCorridor, Option<&StrategicTransportCorridor>)>();
+            q.iter(app.world())
+                .filter(|(_, link)| link.is_none())
+                .map(|(c, _)| c.wear)
+                .max_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
+                .unwrap_or(0.0)
         };
-        assert!(wear > 0.0);
+        assert!(wear > 0.0, "standalone corridor wear should accumulate each tick");
 
         let la = app.world().resource::<LogisticsAiRuntime>();
         assert!(la.congestion_proxy >= 0.0);
@@ -681,14 +679,7 @@ mod tests {
         let eid = TransportEdgeId(11);
         app.world_mut()
             .resource_mut::<CorridorConstructionBook>()
-            .by_edge
-            .insert(
-                eid,
-                CorridorConstructionStatus {
-                    phase: CorridorConstructionPhase::Planned,
-                    progress: 0.0,
-                },
-            );
+            .plan_edge(eid);
         app.world_mut().insert_resource({
             let mut d = TransportEdgeDirectory::default();
             d.by_edge.insert(

@@ -21,6 +21,12 @@ pub const KNOWN_LIVE_PROOF_PATHS: &[&str] = &[
     "debug_runs/viewport_drift.json",
     "debug_runs/viewport_authority_migration_witness.json",
     "debug_runs/main_thread_orchestrator_live.json",
+    "debug_runs/stage6_virtualization_live.json",
+    "debug_runs/wave_s_hydrate_live.json",
+    "debug_runs/wave_p_live.json",
+    "debug_runs/wave_c_live.json",
+    "debug_runs/ui_shell_migration_live.json",
+    "debug_runs/minimap_compositor_live.json",
 ];
 
 pub const AGENT_DEBUG_INDEX_PATH: &str = "debug_runs/agent_debug_index.json";
@@ -76,6 +82,16 @@ pub fn agent_commands_for_profile(profile: &str) -> Vec<&'static str> {
             "RUST_LOG=stage5_readiness::live=info cargo run -p proc_A_dine01 -- --test visual",
             "cargo run --manifest-path tools/orchestrator/Cargo.toml -- --skip-clippy --skip-test",
         ],
+        "UI_SHELL_MIGRATION_2A" | "UI_SHELL_MIGRATION_2B" => vec![
+            "cargo test -p proc_A_dine01 --lib stage5",
+            "cargo test -p proc_A_dine01 --lib simulation_shell_phase2",
+            "cargo run -p proc_A_dine01 --release -- --test visual",
+        ],
+        "MINIMAP_COMPOSITOR_M1" => vec![
+            "cargo test -p proc_A_dine01 --lib stage5",
+            "cargo test -p proc_A_dine01 --lib minimap_compositor",
+            "MINIMAP_GPU_COMPOSITOR=1 cargo run -p proc_A_dine01 --release -- --test visual",
+        ],
         "CONSTRUCTION_STAGE" => vec![
             "cargo test -p proc_A_dine01 construction:: --lib",
             "cargo run -p proc_A_dine01",
@@ -85,6 +101,10 @@ pub fn agent_commands_for_profile(profile: &str) -> Vec<&'static str> {
         ],
         "INFRASTRUCTURE_VIEW_ISOLATION" => vec![
             "cargo test -p proc_A_dine01 render::view_runtime --lib",
+        ],
+        "STAGE6_VIRTUALIZATION" => vec![
+            "cargo test -p proc_A_dine01 --lib stage6",
+            "cargo run -p proc_A_dine01",
         ],
         "MAIN_THREAD_SHIFT" => vec![
             "cargo orchestrate --main-thread-shift --skip-cargo",
@@ -190,9 +210,11 @@ fn quick_extract_summary(text: &str) -> Value {
     let profile = v.get("profile").and_then(|p| p.as_str());
     let readiness_passes = v
         .pointer("/readiness/passes")
+        .or_else(|| v.pointer("/stage6_readiness/passes"))
         .and_then(|p| p.as_bool());
     let violations_len = v
         .pointer("/readiness/violations")
+        .or_else(|| v.pointer("/stage6_readiness/violations"))
         .and_then(|a| a.as_array())
         .map(|a| a.len());
     serde_json::json!({
@@ -207,6 +229,9 @@ fn quick_extract_summary(text: &str) -> Value {
             .get("infrastructure_view_isolation_green")
             .and_then(|b| b.as_bool()),
         "parity_green": v.get("parity_green").and_then(|b| b.as_bool()),
+        "stage6_virtualization_green": v
+            .get("stage6_virtualization_green")
+            .and_then(|b| b.as_bool()),
     })
 }
 

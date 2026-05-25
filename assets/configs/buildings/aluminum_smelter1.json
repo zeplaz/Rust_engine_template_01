@@ -2,7 +2,9 @@
     "asset_name": "Aluminum Smelter1",
     "asset_type": "Building",
     "segment": "Civilian",
-    "description": "Smelts aluminum from bauxite1",
+    "description": "Smelts aluminum from alumina (Hall–Héroult)",
+    "supply_chain": "aluminum_primary",
+    "supply_chain_role": "aluminum_smelter",
     "is_building": true,
     "is_vehicle": false,
     "is_power": false,
@@ -34,7 +36,7 @@
         "Aluminum"
     ],
     "consumes_resources": [
-        "RareEarth",
+        "Alumina",
         "Electricity",
         "Labour"
     ],

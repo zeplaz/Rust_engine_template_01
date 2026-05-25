@@ -51,6 +51,7 @@ Use the **same doc chain**; depth depends on mode.
 
 | Task | Read |
 |:---|:---|
+| Task subagent failed / Multitask quota | `prompts/guides/subagent_continuity_playbook_v1.md` + `tools/orchestrator/queues/HANDOFF.template.md` |
 | Any code change | `llm_agent_brief.md` + `prompts/matrix/repo/repo_boundary_matrix_v1.md` |
 | Terrain / world / theatre | `prompts/matrix/terrain_biome/terrain_biome_migration_matrix_v1.md` + `prompts/designer_questions/terrain_world/README.md` → **`terrain_world/spec/README.md`** for world gen, politics, cities, logistics |
 | Production | `prompts/matrix/production/production_migration_matrix_v1.md` + `prompts/designer_questions/production_economy/README.md` (+ `production_economy/spec/README.md` when scoping tools/saves) |

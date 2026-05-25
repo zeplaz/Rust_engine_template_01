@@ -1,0 +1,19 @@
+{
+    "asset_name": "Aggregate quarry / mine",
+    "asset_type": "Building",
+    "segment": "Industrial",
+    "description": "Extracts limestone and gravel for cement and concrete batching",
+    "supply_chain": "concrete_portland",
+    "supply_chain_role": "aggregate_mine",
+    "is_building": true,
+    "is_productive": true,
+    "building_size_x": 3,
+    "building_size_y": 3,
+    "building_height": 1,
+    "construction_cost": 600,
+    "power_generation": 0,
+    "power_consumption": 18,
+    "produces_resources": ["Gravel", "Limestone"],
+    "consumes_resources": ["Labour", "Diesel"],
+    "version": "1.0.0"
+}

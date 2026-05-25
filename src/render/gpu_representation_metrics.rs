@@ -18,6 +18,8 @@ pub struct GpuRepresentationMetrics {
     pub dispatch_count: u32,
     pub draw_instances: u32,
     pub active_allocations: u32,
+    /// Last single-buffer reservation request (e.g. particle / expanded scratch) in bytes.
+    pub gpu_last_alloc_request_bytes: u64,
 }
 
 impl GpuRepresentationMetrics {
@@ -69,6 +71,11 @@ impl GpuRepresentationMetrics {
     pub fn record_draw_instances(&mut self, count: u32) {
         self.draw_instances = count;
     }
+
+    /// Record a planned registry allocation size (debug / proof; does not replace reserved_bytes totals).
+    pub fn record_gpu_alloc_request(&mut self, needed_bytes: u64) {
+        self.gpu_last_alloc_request_bytes = needed_bytes;
+    }
 }
 
 #[cfg(test)]
@@ -91,5 +98,12 @@ mod tests {
         assert_eq!(metrics.instance_rows, 0);
         assert_eq!(metrics.upload_bytes, 0);
         assert_eq!(metrics.dispatch_count, 0);
+    }
+
+    #[test]
+    fn record_gpu_alloc_request_tracks_last_bytes() {
+        let mut m = GpuRepresentationMetrics::default();
+        m.record_gpu_alloc_request(64 * 1024);
+        assert_eq!(m.gpu_last_alloc_request_bytes, 64 * 1024);
     }
 }

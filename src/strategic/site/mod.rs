@@ -132,6 +132,7 @@ mod tests {
                 depth: 2,
             },
             layer: LayerType::Surface,
+            catalog_id: None,
         });
         app.update();
 
@@ -172,6 +173,7 @@ mod tests {
                 depth: 2,
             },
             layer: LayerType::Surface,
+            catalog_id: None,
         });
         app.update();
 

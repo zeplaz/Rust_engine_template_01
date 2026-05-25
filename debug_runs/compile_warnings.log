@@ -1,0 +1,162 @@
+   Compiling proc_A_dine01 v0.1.1 (C:\dev\github\Rust_engine_template_01)
+warning: unused import: `commit::commit_road_path_to_queue`
+  --> src\construction\roads\mod.rs:12:9
+   |
+12 | pub use commit::commit_road_path_to_queue;
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `IntersectionNode`
+  --> src\construction\roads\mod.rs:13:41
+   |
+13 | pub use intersections::{IntersectionId, IntersectionNode, IntersectionRegistry};
+   |                                         ^^^^^^^^^^^^^^^^
+
+warning: unused imports: `regenerate_road_segments`, `segment_preview_valid`, and `world_xy_to_tile`
+  --> src\construction\roads\mod.rs:19:19
+   |
+19 | pub use pathing::{regenerate_road_segments, segment_preview_valid, world_xy_to_tile};
+   |                   ^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^
+
+warning: unused import: `commit::commit_rail_path_to_queue`
+  --> src\construction\rail\mod.rs:11:9
+   |
+11 | pub use commit::commit_rail_path_to_queue;
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `RailSegmentPreview`
+  --> src\construction\rail\mod.rs:17:42
+   |
+17 | pub use placement::{ActiveRailPlacement, RailSegmentPreview};
+   |                                          ^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `RailJunctionRecord` and `RailNodeKind`
+  --> src\construction\rail\mod.rs:19:43
+   |
+19 | pub use junction::{RailJunctionAuthority, RailJunctionRecord, RailNodeKind};
+   |                                           ^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^
+
+warning: unused import: `super::build_tool_authority::RailType`
+  --> src\construction\rail\mod.rs:21:9
+   |
+21 | pub use super::build_tool_authority::RailType;
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `commit_painted_zones_to_pending` and `zone_tool_tag`
+  --> src\construction\zones\mod.rs:10:18
+   |
+10 | pub use commit::{commit_painted_zones_to_pending, spawn_zone_at_tile, zone_tool_tag};
+   |                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                      ^^^^^^^^^^^^^
+
+warning: unused imports: `default_buildings_dir` and `load_building_definitions_from_dir`
+ --> src\economy\activation\live_proof.rs:8:27
+  |
+8 | use crate::construction::{default_buildings_dir, load_building_definitions_from_dir};
+  |                           ^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused variable: `id`
+   --> src\construction\build_interaction.rs:358:29
+    |
+358 |     let BuildTool::Building(id) = tool.tool else {
+    |                             ^^ help: if this is intentional, prefix it with an underscore: `_id`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `frozen_exceeds_semantic_authority` is never used
+   --> src\gui\viewport_layout_solver.rs:198:8
+    |
+198 | pub fn frozen_exceeds_semantic_authority(
+    |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: fields `description` and `building_height` are never read
+  --> src\construction\building_definitions.rs:27:5
+   |
+21 | struct BuildingDefinitionFile {
+   |        ---------------------- fields in this struct
+...
+27 |     description: String,
+   |     ^^^^^^^^^^^
+...
+37 |     building_height: u32,
+   |     ^^^^^^^^^^^^^^^
+   |
+   = note: `BuildingDefinitionFile` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: function `shift_lmb_applies_to_active_tool` is never used
+   --> src\construction\build_tool_authority.rs:187:8
+    |
+187 | pub fn shift_lmb_applies_to_active_tool(tool: BuildTool) -> bool {
+    |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `shift_lmb_queues_building_blueprint` is never used
+   --> src\construction\build_tool_authority.rs:192:8
+    |
+192 | pub fn shift_lmb_queues_building_blueprint(tool: BuildTool) -> bool {
+    |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: field `required_actions` is never read
+  --> src\construction\construction_pipeline.rs:63:9
+   |
+61 | pub struct ConstructionValidation {
+   |            ---------------------- field in this struct
+62 |     pub valid: bool,
+63 |     pub required_actions: Vec<String>,
+   |         ^^^^^^^^^^^^^^^^
+   |
+   = note: `ConstructionValidation` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: variants `Switch` and `Junction` are never constructed
+  --> src\construction\rail\junction.rs:11:5
+   |
+10 | pub enum RailNodeKind {
+   |          ------------ variants in this enum
+11 |     Switch,
+   |     ^^^^^^
+12 |     Junction,
+   |     ^^^^^^^^
+   |
+   = note: `RailNodeKind` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: fields `tile`, `kind`, and `intersection` are never read
+  --> src\construction\rail\junction.rs:17:9
+   |
+16 | pub struct RailJunctionRecord {
+   |            ------------------ fields in this struct
+17 |     pub tile: BuildSiteTile,
+   |         ^^^^
+18 |     pub kind: RailNodeKind,
+   |         ^^^^
+19 |     pub intersection: Option<IntersectionId>,
+   |         ^^^^^^^^^^^^
+   |
+   = note: `RailJunctionRecord` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: field `junctions` is never read
+  --> src\construction\rail\junction.rs:24:9
+   |
+23 | pub struct RailJunctionAuthority {
+   |            --------------------- field in this struct
+24 |     pub junctions: Vec<RailJunctionRecord>,
+   |         ^^^^^^^^^
+   |
+   = note: `RailJunctionAuthority` has a derived impl for the trait `Debug`, but this is intentionally ignored during dead code analysis
+
+warning: method `register_switch` is never used
+  --> src\construction\rail\junction.rs:28:12
+   |
+27 | impl RailJunctionAuthority {
+   | -------------------------- method in this implementation
+28 |     pub fn register_switch(&mut self, tile: BuildSiteTile, intersection: Option<IntersectionId>) {
+   |            ^^^^^^^^^^^^^^^
+
+warning: enum `SnapTarget` is never used
+  --> src\construction\snap.rs:11:10
+   |
+11 | pub enum SnapTarget {
+   |          ^^^^^^^^^^
+
+warning: `proc_A_dine01` (lib) generated 20 warnings (run `cargo fix --lib -p proc_A_dine01` to apply 10 suggestions)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 55.56s
