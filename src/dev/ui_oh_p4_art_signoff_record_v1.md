@@ -15,6 +15,7 @@
 | **Layout mock** | [`assets/ui/phase4/icon_atlas_phase4_layout_mock.png`](../assets/ui/phase4/icon_atlas_phase4_layout_mock.png) |
 | **RON manifest** | [`assets/configs/ui/icon_atlas_phase4.icon_atlas.ron`](../assets/configs/ui/icon_atlas_phase4.icon_atlas.ron) (unchanged) |
 | **Witness JSON** | `debug_runs/ui_shell_migration_live.json` → `phase4` block |
+| **Wave 3 sheet** | [`ui_icon_atlas_sheet_v1.md`](ui_icon_atlas_sheet_v1.md) (`DESIGN-W3-P4-ATLAS-001` / **P4-ART-01**) |
 
 ---
 

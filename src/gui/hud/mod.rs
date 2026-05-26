@@ -75,7 +75,8 @@ pub use simulation_shell_phase2::{
     OpsStripWeather, OpsStripZone, OpsStripOrdersPendingText, LogisticsVehicleChip,
     LogisticsVehicleChipIcon,
     LogisticsVehicleChipLabel, LogisticsVehicleChipRow, PetroleumPanelTabIcon,
-    PetroleumPanelTabLabel, PetroleumPanelTabRoot, SimulationShellPhase2Plugin, UiShellMigrationLiveProofState,
+    PetroleumPanelTabLabel, PetroleumPanelTabRoot, SimulationShellPhase2Plugin,
+    OpsStripZoneLinesSet, UiShellMigrationLiveProofState,
     UiShellMigrationPlugin, UiShellMigrationWitness, CONTEXT_RAIL_W_PX, CONTEXT_TRAY_BODY_H_PX,
     CONTEXT_TRAY_TAB_H_PX, MAP_FRAME_INSET_PX, OPS_STRIP_TOP_OFFSET_PX,
 };
@@ -181,5 +182,8 @@ pub use layout_store::{
 pub use overlay_shell::{mock_overlay_channel_descriptors, OverlayShellPlugin, OverlayShellState};
 pub use stage7_ui_shell::{mock_belief_snapshots, mock_dispatch_envelopes, Stage7UiShellPlugin};
 pub use transmission::{TransmissionShellPlugin, TransmissionShellState};
-pub use transmission_media::{TransmissionMediaProviderKind, TransmissionMediaProviderRegistry};
+pub use transmission_media::{
+    seed_ux_e03_transmission_media_registry, ux_e03_coder_a_green,
+    TransmissionMediaProviderKind, TransmissionMediaProviderRegistry,
+};
 pub use validation_feedback::{ValidationDiagnostic, ValidationSeverity};

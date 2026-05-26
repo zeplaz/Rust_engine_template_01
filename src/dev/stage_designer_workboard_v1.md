@@ -26,6 +26,8 @@
 | **DESIGN-D-VFX-POST-001** | **SIGNED** 2026-05-25 **PASS** | [`vfx_design_review_record_v1.md`](vfx_design_review_record_v1.md) |
 | **UX-E02-BQ128-001** | **SIGNED** 2026-05-25 | [`bq128_editor_path_design_note_v1.md`](bq128_editor_path_design_note_v1.md) · plan [`bq128_editor_path_plan_v1.md`](bq128_editor_path_plan_v1.md) |
 | **S7B-DESIGN-001** | **SIGNED** 2026-05-25 | [`stage7_behavioral_decision_worksheet_v1.md`](../prompts/guides/stage7_behavioral_decision_worksheet_v1.md) · [`stage7_behavioral_d_signoff_v1.md`](stage7_behavioral_d_signoff_v1.md) |
+| **FIRE7-DESIGN-001** | **SIGNED** 2026-05-25 | [`fire_lod_player_read_v1.md`](fire_lod_player_read_v1.md) |
+| **S7P-DESIGN-002** | **SIGNED** 2026-05-25 | [`s7p_grid_overload_ux_note_v1.md`](s7p_grid_overload_ux_note_v1.md) |
 
 ---
 
@@ -42,7 +44,7 @@
 | ID | Notes |
 |:---|:---|
 | **VX-P0-04** | VFX **ACCEPTED** PNG round — harness already green; refresh captures under `assets/vfx/reference/review_captures/` if promoting mock compare |
-| **UX-E03** | Transmission stub design note — [`post_stage6_active_todos.md`](post_stage6_active_todos.md) · low priority |
+| **UX-E03** | ~~Transmission stub design note~~ **DONE** — [`ux_e03_transmission_shell_note_v1.md`](ux_e03_transmission_shell_note_v1.md) |
 
 ### Routed to `@coder` (not designer)
 

@@ -27,6 +27,7 @@ impl Plugin for IndustrialActivationPlugin {
             crate::economy::resource_flow::ResourceFlowPlugin,
             crate::economy::spatial_district::SpatialDistrictPlugin,
             crate::economy::logistics::LogisticsThroughputPlugin,
+            super::grid_overload_ux::GridOverloadUxPlugin,
         ));
         app.init_resource::<super::live_proof::IndustrialActivationLiveProofState>()
             .init_resource::<crate::dev::Stage7PlayLiveProofState>()
@@ -35,18 +36,24 @@ impl Plugin for IndustrialActivationPlugin {
             .add_plugins(crate::strategic::Stage7BehavioralPlugin)
             .init_resource::<super::concrete_chain_e2e::ConcreteChainE2eWitness>()
             .init_resource::<super::concrete_chain_e2e::Stage7PlayChainSeedState>()
+            .init_resource::<super::concrete_chain_e2e::IndE02DefaultPlaySeedState>()
             .init_resource::<super::concrete_chain_e2e::IndE03GridOverloadSeedState>();
         app.add_systems(
             OnEnter(crate::engine::states::BaseState::Simulation),
             (
                 super::concrete_chain_e2e::reset_stage7_play_chain_seed_on_enter_simulation,
+                super::concrete_chain_e2e::reset_ind_e02_default_play_seed_on_enter_simulation,
                 super::concrete_chain_e2e::reset_ind_e03_grid_overload_seed_on_enter_simulation,
             ),
         );
         app.add_systems(
             Update,
             (
+                super::concrete_chain_e2e::seed_ind_e02_default_play_once
+                    .before(crate::strategic::commit_construction_site_system),
                 super::concrete_chain_e2e::seed_stage7_play_concrete_chain_once,
+                super::concrete_chain_e2e::fast_forward_portland_chain_sites_to_operational
+                    .after(crate::strategic::commit_construction_site_system),
                 crate::economy::site_placement::ensure_site_world_transform_system,
                 activate_industrial_facilities_system,
                 crate::economy::logistics::register_facility_portals_system,

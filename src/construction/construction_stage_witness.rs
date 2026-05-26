@@ -25,6 +25,8 @@ pub struct ConstructionStageWitness {
     pub demolish_tool: bool,
     pub zone_paint: bool,
     pub module_split: bool,
+    /// CONSTRUCTION-MV-001 — ghosts routed via view manager / map projection (not egui-only).
+    pub multiview_ghosts_wired: bool,
 }
 
 fn module_exists(rel: &str) -> bool {
@@ -32,6 +34,8 @@ fn module_exists(rel: &str) -> bool {
 }
 
 pub fn refresh_construction_stage_witness(
+    base: Option<Res<State<crate::engine::states::BaseState>>>,
+    authority: Option<Res<crate::render::view_runtime::ViewProjectionAuthority>>,
     _tool: Res<super::ActiveBuildTool>,
     _mode: Res<super::BuildModeState>,
     _path: Res<super::roads::ActiveRoadPlacement>,
@@ -59,6 +63,25 @@ pub fn refresh_construction_stage_witness(
     w.zone_paint = module_exists("src/construction/zones/input.rs");
     w.module_split = !module_exists("src/gui/build/mod.rs")
         && module_exists("src/construction/mod.rs");
+    let modules_ok = module_exists("src/construction/map_egui_projection.rs")
+        && module_exists("src/construction/visual_authority.rs")
+        && (module_exists("src/construction/roads/ghost.rs") || module_exists("src/construction/zones/ghost.rs"));
+    let in_sim = matches!(
+        base.as_deref().map(|s| s.get()),
+        Some(crate::engine::states::BaseState::Simulation)
+    );
+    let authority_mv = authority
+        .as_deref()
+        .map(|a| {
+            use crate::render::view_runtime::ViewSurfaceId;
+            a.surface(ViewSurfaceId::SimulationMap).is_some()
+                || a.last_commit_revision > 0
+        })
+        .unwrap_or(false);
+    w.multiview_ghosts_wired = modules_ok
+        && w.ghost_commit_isolated
+        && w.road_ghost_draw
+        && (!in_sim || authority_mv);
 }
 
 pub fn sync_construction_live_todo_board_system(

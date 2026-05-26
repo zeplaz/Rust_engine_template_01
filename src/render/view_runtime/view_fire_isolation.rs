@@ -3,7 +3,8 @@
 use bevy::prelude::*;
 
 use crate::gui::{MapViewInstances, ViewId, ViewIsolationDiagnostics, ViewManager};
-use crate::render::fire_view_extract::FireVisualFramesByView;
+use crate::render::fire_chunk_runtime::{ActiveFireChunkSet, VisibleFireChunkSet};
+use crate::render::fire_view_extract::{per_view_fire_extract_bounded, FireVisualFramesByView};
 use crate::render::view_fire_projection::projection_fire_source_view;
 
 use super::ids::ViewSurfaceId;
@@ -19,6 +20,8 @@ pub struct ViewFireIsolationWitness {
     pub vm10_preview_lockstep: bool,
     pub vm11_minimap_cap_respected: bool,
     pub vm11_preview_cap_respected: bool,
+    /// F7-A-001 (FIRE-P7): per-view extract rows ⊆ [`VisibleFireChunkSet`] (vm08 fire isolation).
+    pub f7_a_per_view_extract_bounded: bool,
 }
 
 impl Default for ViewFireIsolationWitness {
@@ -32,6 +35,7 @@ impl Default for ViewFireIsolationWitness {
             vm10_preview_lockstep: false,
             vm11_minimap_cap_respected: true,
             vm11_preview_cap_respected: true,
+            f7_a_per_view_extract_bounded: false,
         }
     }
 }
@@ -54,6 +58,8 @@ pub fn overlay_masks_aligned_with_map_views(
 
 pub fn refresh_view_fire_isolation_witness(
     by_view: Res<FireVisualFramesByView>,
+    visible: Res<VisibleFireChunkSet>,
+    active: Res<ActiveFireChunkSet>,
     manager: Res<ViewManager>,
     map_views: Res<MapViewInstances>,
     isolation: Res<ViewIsolationDiagnostics>,
@@ -89,6 +95,8 @@ pub fn refresh_view_fire_isolation_witness(
         minimap_inst <= policy.fire_cap(ViewSurfaceId::Minimap);
     witness.vm11_preview_cap_respected =
         preview_inst <= policy.fire_cap(ViewSurfaceId::WorldPreview);
+    witness.f7_a_per_view_extract_bounded =
+        per_view_fire_extract_bounded(by_view.as_ref(), visible.as_ref(), active.as_ref());
 }
 
 #[cfg(test)]

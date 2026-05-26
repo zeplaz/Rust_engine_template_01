@@ -41,19 +41,21 @@
       "debug_runs/wave_p_live.json",
       "debug_runs/wave_c_live.json",
       "debug_runs/ui_shell_migration_live.json",
-      "debug_runs/minimap_compositor_live.json"
+      "debug_runs/minimap_compositor_live.json",
+      "debug_runs/stage7_behavioral_live.json",
+      "debug_runs/stage7_play_live.json"
     ],
     "relative_path": "debug_runs/wave_s_hydrate_live.json",
     "schema": "debug_run_envelope_v1",
-    "source_system": "wave_s_live_proof",
-    "written_at_epoch_secs": 1779644699
+    "source_system": "coder_b_wave3_hydrate_refresh",
+    "written_at_epoch_secs": 1779766108
   },
   "autoload_enabled": false,
-  "blueprint_count": 0,
+  "blueprint_count": 1,
   "last_error": null,
-  "layout_widget_count": 0,
+  "layout_widget_count": 4,
   "profile": "WAVE_S_HYDRATE",
   "restore_triggered": false,
-  "shell_loaded": false,
+  "shell_loaded": true,
   "wave_s_hydrate_green": true
 }

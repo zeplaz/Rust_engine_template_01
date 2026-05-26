@@ -81,7 +81,7 @@
 |:---|:---|:---:|
 | `readiness.passes` | `true` | **UI-OH-GATE-001** col updates |
 | `stage5_closure.passes` | `true` | **UI-OH-GATE-001** C |
-| `projection_graph.logistics_active_rows` | `0` | **STALE** — LOG-E01 refresh optional |
+| `projection_graph.logistics_active_rows` | `0` | **STALE** — see [`log_e01_full_app_witness_spec_v1.md`](log_e01_full_app_witness_spec_v1.md) |
 
 ---
 

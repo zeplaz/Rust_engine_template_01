@@ -27,11 +27,17 @@ pub mod steward_ui_oh_gate_proof;
 pub mod steward_w3_gate_proof;
 pub mod coder_a_ui_five_lane_proof;
 pub mod coder_a_ui_w3_p4_m3_proof;
+pub mod coder_a_dual_queue_closure_v1;
+pub mod coder_a_wave3_closure_v1;
+pub mod compile_hygiene_live;
 pub mod coder_b_ui_five_lane_proof;
 pub mod coder_b_ui_w3_witness_proof;
 pub mod coder_b_ui_w3_p6_proof;
 pub mod triage_vm09_v2_proof;
 pub mod s7b_m2_m3_coder_proof;
+pub mod coder_b_s7p_construction_mv_proof;
+pub mod coder_b_queue_bundle_proof;
+pub mod coder_b_wave3_bundle_proof;
 
 pub use stage5_live_todos::{
     hook_post_readiness_evaluate, mark_stage5_todo, register_stage5_todo_runtime_hooks,
@@ -99,3 +105,4 @@ pub use stage7_play_live_proof::{
     build_stage7_play_live_proof_payload, write_stage7_play_live_proof_system,
     Stage7PlayLiveProofState, STAGE7_PLAY_LIVE_JSON,
 };
+pub use coder_b_queue_bundle_proof::refresh_coder_b_queue_bundle_live_witnesses;

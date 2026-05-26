@@ -49,20 +49,41 @@
     ],
     "relative_path": "debug_runs/wave_p_live.json",
     "schema": "debug_run_envelope_v1",
-    "source_system": "wave_p_live_proof",
-    "written_at_epoch_secs": 1779748102
+    "source_system": "refresh_coder_a_ui_wp_wave_p_witness",
+    "written_at_epoch_secs": 1779766083
   },
   "cod_b_wp_witness_001_green": true,
+  "coder_a_ui_wp_queue_green": true,
   "profile": "WAVE_P_PREVIEW",
+  "ui_wp_l4_001": {
+    "composite_layer_bindings": 10,
+    "consumer_contract_ok": true,
+    "gate": "UI-WP-L4-001",
+    "ui_wp_l4_001_green": true
+  },
+  "ui_wp_l4_001_green": true,
   "ui_wp_layout_002": {
-    "d04_generator_sheet_open": true,
+    "d04_generator_sheet_open": false,
     "d04_map_dim_alpha": 102,
     "d04_sheet_body_wired": true,
-    "d04_sheet_width_px": 480.0,
+    "d04_sheet_width_px": 400.0,
     "d04_unified_workspace": true,
     "ui_wp_layout_002_green": true
   },
   "ui_wp_layout_002_green": true,
+  "ui_wp_layout_003": {
+    "d09_paper_frame_inset_px": 12.0,
+    "gate": "UI-WP-LAYOUT-003",
+    "ui_wp_layout_003_green": true
+  },
+  "ui_wp_layout_003_green": true,
+  "ui_wp_layout_d02": {
+    "d02_map_area_fraction": 0.7829861044883728,
+    "d02_map_min_area_frac": 0.6499999761581421,
+    "d02_sidebar_max_w": 220.0,
+    "ui_wp_layout_d02_opt_green": true
+  },
+  "ui_wp_layout_d02_opt_green": true,
   "ui_wp_layout_d07": {
     "d07_corner_inset_on_map": true,
     "d07_inset_side_px": 140.0,
@@ -70,6 +91,31 @@
     "ui_wp_layout_d07_green": true
   },
   "ui_wp_layout_d07_green": true,
+  "ui_wp_motion_001": {
+    "gate": "UI-WP-MOTION-001",
+    "motion_table": [
+      "pan",
+      "zoom",
+      "sheet_slide",
+      "corner_inset"
+    ],
+    "ui_wp_motion_001_green": true
+  },
+  "ui_wp_motion_001_green": true,
+  "ui_wp_pipeline": {
+    "consumer_contract_ok": true,
+    "gate": "UI-WP-PIPELINE",
+    "gpu_authoritative_surface": true,
+    "ui_wp_pipeline_green": true
+  },
+  "ui_wp_pipeline_green": true,
+  "ui_wp_visual_001": {
+    "gate": "UI-WP-VISUAL-001",
+    "gpu_authoritative_surface": true,
+    "green": true,
+    "lib_qualified": true,
+    "visual_signoff_pending": false
+  },
   "wave_p_green": true,
   "wave_p_readiness": {
     "passes": true,
@@ -77,7 +123,7 @@
       "composite_graph_sources": 4,
       "composite_layer_bindings": 10,
       "consumer_contract_ok": true,
-      "gpu_authoritative_surface": false,
+      "gpu_authoritative_surface": true,
       "open_backlog_items": 0,
       "save_chunk_schema_version": 1,
       "save_manifest_schema_version": 1

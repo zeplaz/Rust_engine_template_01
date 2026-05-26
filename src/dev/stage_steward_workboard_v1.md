@@ -24,6 +24,7 @@
 | **STEWARD-WITNESS-SYNC-001** | **DONE** | [`steward_witness_sync_gate_v1.md`](steward_witness_sync_gate_v1.md) **PASS (qualified)** |
 | **STEWARD-SPARK-VFX-001** | **DONE** | [`steward_spark_vfx_gate_v1.md`](steward_spark_vfx_gate_v1.md) **GO (qualified)** |
 | **S7B-PREFLIGHT-001** | **DONE** | [`steward_s7b_preflight_gate_v1.md`](steward_s7b_preflight_gate_v1.md) **GO (qualified)** |
+| **FIRE7-PREFLIGHT-001** | **DONE** | [`steward_fire7_preflight_gate_v1.md`](steward_fire7_preflight_gate_v1.md) **GO (qualified)** |
 | **UI-OH-GATE-001** | **DONE** | [`steward_ui_oh_gate_v1.md`](steward_ui_oh_gate_v1.md) **PASS (qualified)** |
 
 ---
@@ -189,6 +190,8 @@ Route: INFRA-PROJ2-001 or view_representation reader — delegate @coder if >3 f
 | S-VM-09 slice 1 | DONE |
 | STEWARD-WITNESS-SYNC-001 | DONE |
 | STEWARD-SPARK-VFX-001 | DONE |
+| **S7B-PREFLIGHT-001** | DONE |
+| **FIRE7-PREFLIGHT-001** | DONE |
 
 ---
 

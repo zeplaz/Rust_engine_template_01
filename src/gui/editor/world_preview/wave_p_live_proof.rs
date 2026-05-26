@@ -31,6 +31,7 @@ pub fn build_wave_p_live_proof_payload(
     report: &super::WavePReadinessReport,
     d04: Option<serde_json::Value>,
     d07: Option<serde_json::Value>,
+    d02: Option<serde_json::Value>,
 ) -> serde_json::Value {
     let passes = wave_p_readiness_passes(report);
     let mut body = serde_json::json!({
@@ -60,6 +61,15 @@ pub fn build_wave_p_live_proof_payload(
             body["ui_wp_layout_d07_green"] = serde_json::json!(green);
         }
         body["ui_wp_layout_d07"] = d07;
+    }
+    if let Some(d02) = d02 {
+        if let Some(green) = d02
+            .get("ui_wp_layout_d02_opt_green")
+            .and_then(|v| v.as_bool())
+        {
+            body["ui_wp_layout_d02_opt_green"] = serde_json::json!(green);
+        }
+        body["ui_wp_layout_d02"] = d02;
     }
     let layout_002 = body["ui_wp_layout_002_green"].as_bool().unwrap_or(false);
     let layout_d07 = body["ui_wp_layout_d07_green"].as_bool().unwrap_or(false);
@@ -162,7 +172,19 @@ pub fn write_wave_p_live_proof_system(
         },
         true,
     );
-    let body = build_wave_p_live_proof_payload(&report, Some(d04), Some(d07));
+    let (workspace_w, workspace_h) = preview_ui
+        .last_window_rect
+        .map(|r| (r.width(), r.height()))
+        .unwrap_or((super::D02_HD_BASELINE_W, super::D02_HD_BASELINE_H));
+    // D-02 acceptance is **baseline** chrome (generator sheet closed) per sign-off § Measurement.
+    let d02 = build_d02_layout_witness(
+        workspace_w,
+        workspace_h,
+        180.0_f32.min(super::d02_sidebar_max_width_px(workspace_w)),
+        false,
+        0.0,
+    );
+    let body = build_wave_p_live_proof_payload(&report, Some(d04), Some(d07), Some(d02));
     let wrapped = crate::dev::debug_run_envelope::wrap_debug_run(
         "WAVE_P_PREVIEW",
         "wave_p_live_proof",
@@ -177,7 +199,15 @@ pub fn write_wave_p_live_proof_system(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::gui::editor::world_preview::{d07_inset_side_px, d07_layout_witness};
+    use crate::gui::editor::world_preview::{
+        d02_sidebar_max_width_px, d07_inset_side_px, d07_layout_witness, D02_HD_BASELINE_H,
+        D02_HD_BASELINE_W,
+    };
+
+    fn hd_baseline_d02_witness_sheet_closed() -> serde_json::Value {
+        let sidebar = 180.0_f32.min(d02_sidebar_max_width_px(D02_HD_BASELINE_W));
+        build_d02_layout_witness(D02_HD_BASELINE_W, D02_HD_BASELINE_H, sidebar, false, 0.0)
+    }
 
     #[test]
     fn wave_p_live_payload_shape() {
@@ -189,7 +219,8 @@ mod tests {
             crate::gui::editor::world_preview::d07_inset_side_px(),
             true,
         );
-        let body = build_wave_p_live_proof_payload(&report, Some(d04), Some(d07));
+        let d02 = hd_baseline_d02_witness_sheet_closed();
+        let body = build_wave_p_live_proof_payload(&report, Some(d04), Some(d07), Some(d02));
         assert_eq!(
             body.pointer("/wave_p_readiness/passes")
                 .and_then(|v| v.as_bool()),
@@ -208,16 +239,21 @@ mod tests {
         assert_eq!(d04["d04_sheet_body_wired"], serde_json::json!(true));
     }
 
-    /// **COD-B-WP-WITNESS-001** — refresh `debug_runs/wave_p_live.json` (D-04 + D-07 + Wave P spine).
+    /// **COD-B-WP-WITNESS-001** — refresh `debug_runs/wave_p_live.json` (D-02 + D-04 + D-07 + Wave P spine).
     #[test]
     fn ui_wp_layout_002_writes_wave_p_live_json() {
         let authority = PreviewPathAuthority::default();
         let report = gather_wave_p_readiness(PreviewLayers::BIOME, &authority);
         let d04 = build_d04_layout_witness(true, true, 520.0);
         let d07 = build_d07_layout_witness(true, d07_inset_side_px(), true);
-        let body = build_wave_p_live_proof_payload(&report, Some(d04), Some(d07));
+        let d02 = hd_baseline_d02_witness_sheet_closed();
+        let body = build_wave_p_live_proof_payload(&report, Some(d04), Some(d07), Some(d02));
         assert!(body["ui_wp_layout_002_green"].as_bool().unwrap_or(false));
         assert!(body["ui_wp_layout_d07_green"].as_bool().unwrap_or(false));
+        assert!(
+            body["ui_wp_layout_d02_opt_green"].as_bool().unwrap_or(false),
+            "UI-WP-LAYOUT-D02-OPT: expected map dominance green at HD baseline (sheet closed)"
+        );
         assert!(
             body["wave_p_green"].as_bool().unwrap_or(false),
             "COD-B-WP-WITNESS-001: expected wave_p_green"
@@ -250,12 +286,14 @@ mod tests {
             &report,
             Some(build_d04_layout_witness(true, true, 520.0)),
             Some(build_d07_layout_witness(true, d07_inset_side_px(), true)),
+            Some(hd_baseline_d02_witness_sheet_closed()),
         );
         assert!(good["cod_b_wp_witness_001_green"].as_bool().unwrap_or(false));
         let bad_d07 = build_wave_p_live_proof_payload(
             &report,
             Some(build_d04_layout_witness(true, true, 520.0)),
             Some(build_d07_layout_witness(false, d07_inset_side_px(), true)),
+            Some(hd_baseline_d02_witness_sheet_closed()),
         );
         assert!(!bad_d07["cod_b_wp_witness_001_green"].as_bool().unwrap_or(true));
     }
@@ -321,6 +359,10 @@ mod tests {
         let v: serde_json::Value = serde_json::from_str(&text).expect("parse");
         assert!(v["ui_wp_layout_002_green"].as_bool().unwrap_or(false));
         assert!(v["ui_wp_layout_d07_green"].as_bool().unwrap_or(false));
+        assert!(
+            v["ui_wp_layout_d02_opt_green"].as_bool().unwrap_or(false),
+            "UI-WP-LAYOUT-D02-OPT: expected d02 witness in live json"
+        );
         assert!(v["wave_p_green"].as_bool().unwrap_or(false));
         assert!(v["cod_b_wp_witness_001_green"].as_bool().unwrap_or(false));
     }

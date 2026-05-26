@@ -61,6 +61,28 @@ Default proof uses `spawn_concrete_portland_chain_operational` — **not** const
 
 ---
 
+## IND-E02-DEFAULT-WITNESS (planner spec)
+
+**Queue ID:** **IND-E02-DEFAULT-WITNESS** · extends this reconcile doc.
+
+| Writer | JSON path | `ind_e02_green` | When to trust |
+|:---|:---|:---:|:---|
+| **Default seed** | `simulation_writes_industrial_activation_live_json` | `false` | E01/E03 + board only — **expected** |
+| **Commit path** | `simulation_writes_industrial_activation_live_json_ind_e02_in_play` | `true` | `placed_via_construction` + `sites_committed >= 3` |
+
+**Machine policy:**
+
+```text
+IND-E02 board [x]  :=  commit-path test green
+IND-E02 on disk    :=  false on default writer is NOT a failure
+```
+
+**post_stage6_active_todos.md row:** IND-E02 **[x]** = commit path proven; note default JSON may show `ind_e02_green: false`.
+
+**Do not** queue IND-E02 coder work when only the default witness file was read without the in-play test.
+
+---
+
 ## Verification
 
 ```powershell

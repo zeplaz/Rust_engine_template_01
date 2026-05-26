@@ -190,6 +190,7 @@ impl Plugin for EnginePlugin {
             .add_plugins(StrategicToolingPlugin)
             .add_plugins(InGameHudPlugin)
             .add_plugins(crate::gui::hud::SimulationSessionPlugin)
+            .add_plugins(crate::render::VfxCaptureHookPlugin)
             .add_plugins(MapCameraPlugin)
             .add_plugins(InGamePauseMenuPlugin)
             .add_plugins(TransmissionShellPlugin)

@@ -16,8 +16,9 @@ use crate::gui::hud::shell_framework::{
 };
 use crate::gui::hud::simulation_shell_phase2::UiShellMigrationWitness;
 use crate::gui::hud::{
-    ContextTrayState, HudCommandShellLayout, HudDockRegistry, HudOverlayTrayState, HudPanelState,
-    ProductShellUpdateBudget, ProductShellWidgetId, TransmissionShellState,
+    seed_ux_e03_transmission_media_registry, ContextTrayState, HudCommandShellLayout,
+    HudDockRegistry, HudOverlayTrayState, HudPanelState, ProductShellUpdateBudget,
+    ProductShellWidgetId, TransmissionMediaProviderRegistry, TransmissionShellState,
 };
 use crate::gui::{MinimapPresentationSource, MinimapShellState};
 use crate::engine::ActiveTestScene;
@@ -91,6 +92,16 @@ pub fn apply_simulation_hud_defaults(
     dock.slot_mut(ProductShellWidgetId::Minimap).visible = true;
     dock.slot_mut(ProductShellWidgetId::Minimap).minimized = false;
     sync_simulation_egui_shell_gate_witness(&dock, &layout, &mut witness);
+}
+
+/// UX-E03-CODER-A — seed transmission media registry on Simulation enter (read-only narrative lane).
+pub fn seed_ux_e03_transmission_on_simulation_enter(
+    mut registry: ResMut<TransmissionMediaProviderRegistry>,
+    mut witness: ResMut<UiShellMigrationWitness>,
+) {
+    seed_ux_e03_transmission_media_registry(&mut registry);
+    witness.ux_e03_media_registry_wired =
+        crate::gui::hud::transmission_media::ux_e03_coder_a_green(&registry);
 }
 
 /// Minimap + sim map presentation defaults on enter (keeps [`apply_simulation_hud_defaults`] under Bevy param cap).
@@ -262,7 +273,11 @@ impl Plugin for SimulationSessionPlugin {
         app.add_systems(OnEnter(BaseState::Simulation), apply_simulation_hud_defaults)
             .add_systems(
                 OnEnter(BaseState::Simulation),
-                apply_simulation_map_presentation_defaults.after(apply_simulation_hud_defaults),
+                seed_ux_e03_transmission_on_simulation_enter.after(apply_simulation_hud_defaults),
+            )
+            .add_systems(
+                OnEnter(BaseState::Simulation),
+                apply_simulation_map_presentation_defaults.after(seed_ux_e03_transmission_on_simulation_enter),
             )
             .add_systems(
                 OnEnter(BaseState::Simulation),

@@ -26,7 +26,7 @@
 | **IND-E03** post-Stage-6 exit | **DONE** — `ind_e03_green` |
 | **S7P-IND-002** / Stage 7 play optional step 8 | **DONE** — mirrored in `stage7_play_live.json` |
 | **Real smelter→grid load via activation** | **DEFERRED** — witness uses deterministic cluster |
-| **Player-facing overload UX** | **OPEN** (optional) — **S7P-DESIGN-002** |
+| **Player-facing overload UX** | **DONE** — [`s7p_grid_overload_ux_note_v1.md`](s7p_grid_overload_ux_note_v1.md) (**S7P-DESIGN-002**) |
 
 ---
 
@@ -236,7 +236,7 @@ No Rust
 | **INDUSTRIAL-I3-03** | `grid_distribution_transformer.json` placeable | coder |
 | **INDUSTRIAL-I3-04** | Activation spawns transformer from catalog | coder |
 | **INDUSTRIAL-I3-05** | Capacity bottleneck gameplay (not decorative) | coder + design |
-| **S7P-DESIGN-002** | Overload toast/tray copy | designer |
+| ~~**S7P-DESIGN-002**~~ | Overload toast/tray copy | **DONE** — design note on disk |
 | **IND-E03+** | Smelter `ElectricalComponent` from real activation loads | coder (future) |
 
 ---

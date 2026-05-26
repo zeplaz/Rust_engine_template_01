@@ -94,7 +94,7 @@ stage7_behavioral_live.json                   ☑ CURRENT
 | **S7P-IND-002** | Grid overload harness (I3-02) | coder | **DONE** | `industrial_i3_02_green` |
 | **S7P-STEWARD-001** | Play-exit witness bundle | sim-steward | **DONE** | `s7p_steward_green: true` |
 | **S7P-GRID-001** | Optional smelter load | coder | **DONE** (optional) | `s7p_grid_optional_green` — not in steward rollup |
-| **S7P-DESIGN-002** | Grid overload UX note | designer | **OPEN** (optional) | toast/tray — no Rust |
+| **S7P-DESIGN-002** | Grid overload UX note | designer | **DONE** | [`s7p_grid_overload_ux_note_v1.md`](s7p_grid_overload_ux_note_v1.md) |
 
 ### Witness bundle (CURRENT — refresh only)
 
@@ -128,7 +128,7 @@ cargo run -p proc_A_dine01 --release -- --test visual
 | **PLAN-STAGE7-BEHAVIORAL-001** | This full plan + track rollup | planner | **DONE** | — |
 | **S7B-DESIGN-001** | Decision worksheet **SIGNED** | designer | **DONE** | **S7B-PLAN-001** |
 | **S7B-DESIGN-002** | UX-D HUD hooks (orders-pending, queue timeline) | designer | **OPEN** | M2+ chrome |
-| **S7B-DESIGN-003** | Transmission shell note (UX-E03) | designer | **OPEN** (optional) | — |
+| **S7B-DESIGN-003** | Transmission shell note (UX-E03) | designer | **DONE** | [`ux_e03_transmission_shell_note_v1.md`](ux_e03_transmission_shell_note_v1.md) |
 | **S7B-PLAN-001** | [`stage7_behavioral_implementation_plan_v1.md`](stage7_behavioral_implementation_plan_v1.md) | planner | **DONE** | worksheet |
 | **S7B-PREFLIGHT-001** | Steward GO/NO-GO | sim-steward | **DONE** | [`steward_s7b_preflight_gate_v1.md`](steward_s7b_preflight_gate_v1.md) **GO** |
 | **S7B-M1-001** | ECS contract stubs + witness writer | coder | **DONE** | preflight GO |

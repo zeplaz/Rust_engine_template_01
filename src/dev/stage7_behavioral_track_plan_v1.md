@@ -6,7 +6,7 @@
 | **Version** | `1.1.0` |
 | **Date** | 2026-05-25 |
 | **Owner** | `@planner` (rollup) |
-| **Status** | **S7-PLAY CLOSED** · **S7-BEHAV PLANNING ACTIVE** |
+| **Status** | **S7-PLAY CLOSED** · **S7-BEHAV M1–M3 CLOSED** — rollup [`s7b_closure_plan_v1.md`](s7b_closure_plan_v1.md) |
 | **Full plan** | [`stage7_behavioral_full_plan_v1.md`](stage7_behavioral_full_plan_v1.md) — **PLAN-STAGE7-BEHAVIORAL-001** |
 | **Handoff** | [`stages/stage7_behavioral_planner_handoff_v1.md`](stages/stage7_behavioral_planner_handoff_v1.md) |
 | **Behavior track** | [`stages/stage7_behavioral_plan_v1.md`](stages/stage7_behavioral_plan_v1.md) |
@@ -24,8 +24,8 @@
 | Track | Verdict | Next |
 |:---|:---|:---|
 | **S7-PLAY** (product) | **CLOSED** | Maintain witnesses only — no feature rework |
-| **S7-BEHAV** (behavioral) | **PLANNING** | **S7B-DESIGN-001** **SIGNED** → **S7B-PLAN-001** → **S7B-M1-001** stubs |
-| **Infra coupling** | **Soft gate** | **TRIAGE-VM-09-v2** for full comm gameplay authority — **not** S7P blocker |
+| **S7-BEHAV** (behavioral) | **CLOSED** (maintain) | [`s7b_closure_plan_v1.md`](s7b_closure_plan_v1.md) — `s7b_steward_green: true` on disk |
+| **Infra coupling** | **DONE** | **TRIAGE-VM-09-v2** per fleet snapshot — maintain witness only |
 
 **Operational readiness:** Stage 5/6 + construction + industrial play are **closed**. Behavioral work is a **new product lane**, not a spine regression fix.
 
@@ -46,7 +46,7 @@
 | **S7P-IND-002** | Grid overload harness (I3-02) | coder | **DONE** | `industrial_activation` lib **5/5** · `industrial_i3_02_green` |
 | **S7P-STEWARD-001** | Play-exit witness bundle | sim-steward | **DONE** | `s7p_steward_green: true` |
 | **S7P-GRID-001** | Optional smelter load | coder | **DONE** (optional) | `s7p_grid_optional_green` — not in steward rollup |
-| **S7P-DESIGN-002** | Grid overload UX note | designer | **OPEN** (optional) | toast/tray — no Rust |
+| **S7P-DESIGN-002** | Grid overload UX note | designer | **DONE** | [`s7p_grid_overload_ux_note_v1.md`](s7p_grid_overload_ux_note_v1.md) → **B3** |
 
 ### Witness bundle (maintain — do not reopen track)
 

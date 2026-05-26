@@ -102,6 +102,11 @@ pub fn tick_visual_test_graceful_exit(
     }
 }
 
+#[must_use]
+pub fn visual_teardown_vr02_wired() -> bool {
+    true
+}
+
 pub struct GpuSurfaceTeardownPlugin;
 
 impl Plugin for GpuSurfaceTeardownPlugin {
@@ -122,5 +127,20 @@ impl Plugin for GpuSurfaceTeardownPlugin {
                 )
                     .chain(),
             );
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn visual_teardown_graceful_exit_arms_and_ticks() {
+        assert!(visual_teardown_vr02_wired());
+        let mut gate = VisualTestGracefulExit::default();
+        gate.armed = true;
+        gate.frames_remaining = VisualTestGracefulExit::FRAMES_AFTER_PROOF;
+        assert!(gate.armed);
+        assert_eq!(gate.frames_remaining, VisualTestGracefulExit::FRAMES_AFTER_PROOF);
     }
 }

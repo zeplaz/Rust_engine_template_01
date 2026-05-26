@@ -50,8 +50,8 @@
     ],
     "relative_path": "debug_runs/stage5_full_app_live.json",
     "schema": "debug_run_envelope_v1",
-    "source_system": "p2_fire_spark_011_stage5_witness_refresh",
-    "written_at_epoch_secs": 1779761163
+    "source_system": "log_e01_and_tactical_vfx_stage5_witness_refresh",
+    "written_at_epoch_secs": 1779766108
   },
   "agent_cleanup_hints": null,
   "authority_revisions": {
@@ -71,6 +71,18 @@
     "held_empty_snapshot_frames": 64,
     "stable": true,
     "stable_frame_threshold": 10
+  },
+  "log_e01_visual_confirm_001": {
+    "gate": "LOG-E01-VISUAL-CONFIRM-001",
+    "lib_fixture_green": true,
+    "lib_fixture_logistics_rows": 1,
+    "note": "Operator: cargo run -p proc_A_dine01 --release -- --test visual confirms runtime logistics_active_rows",
+    "visual_run_required": true
+  },
+  "log_e01_witness": {
+    "gate": "LOG-E01-WITNESS",
+    "green": true,
+    "logistics_active_rows": 1
   },
   "map_presentation_stability": {
     "fit_mode_mismatch": false,
@@ -206,13 +218,13 @@
     "fire_particle_view_culled": false,
     "fire_spark_011_green": true,
     "fire_spark_additive_blend": true,
-    "fire_spark_budget_capped": false,
+    "fire_spark_budget_capped": true,
     "fire_spark_compute_enabled": true,
     "fire_spark_phase": "A+B",
     "fire_spark_projection_view": "WorldMain",
-    "fire_spark_rows": 12,
+    "fire_spark_rows": 64,
     "fire_spark_scatter_max": 14,
-    "fire_spark_scatter_slots": 11,
+    "fire_spark_scatter_slots": 60,
     "fire_spark_tactical_proof_zoom_alpha": 0.8500000238418579,
     "fire_spark_zoom_alpha": 0.8500000238418579,
     "resolved_half_extents": {
@@ -228,7 +240,12 @@
         "x": 132.05859375,
         "y": 122.9780731201172
       }
-    }
+    },
+    "water_particle_river_streaks": 3,
+    "water_particle_rows": 19,
+    "water_particle_strategic_culled": false,
+    "water_particle_zoom_alpha": 0.75,
+    "water_shader_motion_always_on": true
   },
   "phase_f_live": {
     "draw_dispatch_instance_count": 0,
@@ -253,10 +270,10 @@
   },
   "profile": "FULL_APP",
   "projection_graph": {
-    "build_signature": "order=fire+logistics+ecology fire_inst=0 fire_heat=0 log_rows=0 eco_rows=100",
-    "ecology_active_rows": 100,
-    "logistics_active_rows": 0,
-    "runtime_order": "order=fire+logistics+ecology fire_inst=0 fire_heat=0 log_rows=0 eco_rows=100 fire_snap=121 log_snap=121 eco_snap=121"
+    "build_signature": "order=fire+logistics+ecology fire_inst=0 fire_heat=0 log_rows=1 eco_rows=0",
+    "ecology_active_rows": 0,
+    "logistics_active_rows": 1,
+    "runtime_order": "order=fire+logistics+ecology fire_inst=0 fire_heat=0 log_rows=1 eco_rows=0 fire_snap=1 log_snap=1 eco_snap=1"
   },
   "projection_state": {
     "active_band": "Full",
@@ -445,9 +462,9 @@
     "water_tactical_zoom": true,
     "water_w1_river_read_green": true,
     "water_w2_foam_001_green": true,
-    "water_witness_001_green": false,
-    "water_witness_foam_or_ocean_green": false,
-    "water_witness_rollup_green": false
+    "water_witness_001_green": true,
+    "water_witness_foam_or_ocean_green": true,
+    "water_witness_rollup_green": true
   },
   "test_scene": "visual",
   "texture_stale_reasons": {

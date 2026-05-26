@@ -5,7 +5,7 @@
 //! [`ViewId`]. When a view disables fire in [`ViewRenderPolicy::overlays`], its set is empty.
 //! [`WorldLodBand`] from the view clamps heat-derived [`FireLodBand`] (smoke vs flame at distance).
 
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::sync::OnceLock;
 
 use bevy::math::Rect;
@@ -27,6 +27,32 @@ use crate::render::sim_visual_extract::{FireVisualFrame, FireVisualGpuInstance};
 /// World XY extent per chunk index step (aligned with [`crate::gui::camera_focus_debug::DEBUG_CHUNK_SPACING_WORLD`]).
 
 pub const FIRE_VIEW_CHUNK_SPACING_WORLD: f32 = 64.0;
+
+/// Designer policy caps ([`fire_lod_player_read_v1.md`](../dev/fire_lod_player_read_v1.md) **FIRE7-DESIGN-001**).
+pub const FIRE_LOD_CAP_STRATEGIC: usize = 32;
+pub const FIRE_LOD_CAP_OPERATIONAL: usize = 128;
+pub const FIRE_LOD_CAP_TACTICAL: usize = 512;
+
+#[must_use]
+pub fn fire_lod_designer_table_wired() -> bool {
+    FIRE_LOD_CAP_STRATEGIC < FIRE_LOD_CAP_OPERATIONAL
+        && FIRE_LOD_CAP_OPERATIONAL < FIRE_LOD_CAP_TACTICAL
+}
+
+/// **FIRE7-F7-C-001** — designer LOD caps enforced in extract path.
+#[must_use]
+pub fn fire7_f7_c_001_green() -> bool {
+    fire_lod_designer_table_wired()
+}
+
+#[must_use]
+pub fn fire_cap_for_world_band(world: WorldLodBand) -> usize {
+    match world {
+        WorldLodBand::Macro | WorldLodBand::Strategic => FIRE_LOD_CAP_STRATEGIC,
+        WorldLodBand::Operational => FIRE_LOD_CAP_OPERATIONAL,
+        WorldLodBand::LocalTactical => FIRE_LOD_CAP_TACTICAL,
+    }
+}
 
 /// Per-view filtered fire frames (isolates minimap / preview from tactical extraction).
 #[derive(Resource, Default, Debug, Clone)]
@@ -177,19 +203,50 @@ fn apply_fire_lod_to_row(mut row: FireVisualGpuInstance, band: FireLodBand) -> O
     }
 }
 
-fn all_sim_chunk_coords(sim: &FireSimulationSnapshot) -> HashSet<ChunkCoord> {
-    let mut s: HashSet<ChunkCoord> = sim.chunk_heat.iter().map(|h| h.chunk).collect();
-    for row in &sim.instances {
-        s.insert(chunk_of_instance(row));
-    }
-    s
+/// F7-A-001: true when every instance / heat row lies in `allowed` (strict per-view extract).
+#[must_use]
+pub fn fire_visual_frame_within_visible_set(
+    frame: &FireVisualFrame,
+    allowed: &FxHashSet<ChunkCoord>,
+) -> bool {
+    frame
+        .instances
+        .iter()
+        .all(|row| allowed.contains(&chunk_of_instance(row)))
+        && frame
+            .chunk_heat
+            .iter()
+            .all(|h| allowed.contains(&h.chunk))
 }
 
-fn allowed_chunks_for_view(view_id: ViewId, vis: &VisibleFireChunkSet, sim: &FireSimulationSnapshot) -> FxHashSet<ChunkCoord> {
-    match vis.per_view.get(&view_id) {
-        Some(set) => set.clone(),
-        None => all_sim_chunk_coords(sim).into_iter().collect(),
+/// Per-view allowed chunks: present key → use set (empty = none); missing key → empty unless
+/// visibility writer never ran (`per_view` empty) → tactical views fall back to [`ActiveFireChunkSet`].
+fn allowed_chunks_for_view(
+    view_id: ViewId,
+    vis: &VisibleFireChunkSet,
+    active: &ActiveFireChunkSet,
+) -> FxHashSet<ChunkCoord> {
+    if let Some(set) = vis.per_view.get(&view_id) {
+        return set.clone();
     }
+    if vis.per_view.is_empty()
+        && matches!(view_id, ViewId::WorldMain | ViewId::SimulationMap)
+    {
+        return active.chunks.iter().copied().collect();
+    }
+    FxHashSet::default()
+}
+
+#[must_use]
+pub fn per_view_fire_extract_bounded(
+    by_view: &FireVisualFramesByView,
+    vis: &VisibleFireChunkSet,
+    active: &ActiveFireChunkSet,
+) -> bool {
+    by_view.by_id.iter().all(|(id, frame)| {
+        let allowed = allowed_chunks_for_view(*id, vis, active);
+        fire_visual_frame_within_visible_set(frame, &allowed)
+    })
 }
 
 fn build_frame_for_allowed(
@@ -264,7 +321,7 @@ pub fn build_fire_visual_frames_by_view(
         ViewId::Minimap,
         ViewId::SimulationMap,
     ] {
-        let allowed = allowed_chunks_for_view(id, &vis, &sim);
+        let allowed = allowed_chunks_for_view(id, &vis, &active);
         let world_band = if proof && matches!(id, ViewId::WorldMain | ViewId::SimulationMap) {
             WorldLodBand::LocalTactical
         } else {
@@ -275,8 +332,12 @@ pub fn build_fire_visual_frames_by_view(
                 .unwrap_or(default_band)
         };
         let mut frame = build_frame_for_allowed(&sim, &lod, &allowed, world_band);
-        if let Some(policy) = per_view_policy.as_deref() {
-            let cap = policy.fire_cap_for_view_id(id);
+        {
+            let design_cap = fire_cap_for_world_band(world_band);
+            let cap = per_view_policy
+                .as_deref()
+                .map(|p| p.fire_cap_for_view_id(id).min(design_cap))
+                .unwrap_or(design_cap);
             if frame.instances.len() > cap {
                 frame.instances.truncate(cap);
             }
@@ -300,6 +361,8 @@ pub fn build_fire_visual_frames_by_view(
         }
     }
     fire_chunk_witness.world_main_visible_orphan_chunks = orphans;
+    fire_chunk_witness.f7_a_per_view_extract_bounded =
+        per_view_fire_extract_bounded(&out, &vis, &active);
 }
 
 #[cfg(test)]
@@ -357,6 +420,101 @@ mod tests {
             clamp_fire_lod_for_world_band(WorldLodBand::LocalTactical, FireLodBand::FullFlame),
             FireLodBand::FullFlame
         );
+    }
+
+    #[test]
+    fn allowed_chunks_missing_view_key_is_empty_not_full_sim() {
+        let mut sim = FireSimulationSnapshot::default();
+        sim.chunk_heat.push(crate::render::sim_visual_extract::ChunkFireHeat {
+            chunk: IVec2::new(5, 5),
+            ..Default::default()
+        });
+        let vis = VisibleFireChunkSet::default();
+        let active = ActiveFireChunkSet::default();
+        let allowed = allowed_chunks_for_view(ViewId::Minimap, &vis, &active);
+        assert!(allowed.is_empty());
+    }
+
+    #[test]
+    fn per_view_fire_frames_respect_visible_sets() {
+        let mut sim = FireSimulationSnapshot::default();
+        let mut row = FireVisualGpuInstance::default();
+        row.chunk_xy_heat_lum = Vec4::new(128.0, 64.0, 0.0, 1.0);
+        sim.instances.push(row);
+        let chunk = chunk_of_instance(&sim.instances[0]);
+
+        let mut vis = VisibleFireChunkSet::default();
+        let mut wm = FxHashSet::default();
+        wm.insert(chunk);
+        vis.per_view.insert(ViewId::WorldMain, wm);
+        vis.per_view.insert(ViewId::Minimap, FxHashSet::default());
+
+        let wm_frame = build_frame_for_allowed(
+            &sim,
+            &FireChunkLodState::default(),
+            vis.per_view.get(&ViewId::WorldMain).unwrap(),
+            WorldLodBand::LocalTactical,
+        );
+        let mm_frame = build_frame_for_allowed(
+            &sim,
+            &FireChunkLodState::default(),
+            vis.per_view.get(&ViewId::Minimap).unwrap(),
+            WorldLodBand::Strategic,
+        );
+        assert_eq!(wm_frame.instances.len(), 1);
+        assert!(mm_frame.instances.is_empty());
+        assert!(fire_visual_frame_within_visible_set(
+            &wm_frame,
+            vis.per_view.get(&ViewId::WorldMain).unwrap()
+        ));
+        assert!(fire_visual_frame_within_visible_set(
+            &mm_frame,
+            vis.per_view.get(&ViewId::Minimap).unwrap()
+        ));
+    }
+
+    #[test]
+    fn f7_c_lod_caps_differ_strategic_vs_tactical() {
+        use crate::render::sim_visual_extract::{ChunkFireHeat, FireVisualGpuInstance};
+        let mut sim = FireSimulationSnapshot::default();
+        for i in 0..40i32 {
+            sim.chunk_heat.push(ChunkFireHeat {
+                chunk: IVec2::new(i, 0),
+                heat: 0.9,
+                smoke: 0.2,
+            });
+            sim.instances.push(FireVisualGpuInstance::default());
+        }
+        let lod = FireChunkLodState::default();
+        let mut allowed: FxHashSet<ChunkCoord> = (0..40).map(|i| IVec2::new(i, 0)).collect();
+        let mut strategic =
+            build_frame_for_allowed(&sim, &lod, &allowed, WorldLodBand::Strategic);
+        strategic
+            .instances
+            .truncate(fire_cap_for_world_band(WorldLodBand::Strategic));
+        let mut tactical =
+            build_frame_for_allowed(&sim, &lod, &allowed, WorldLodBand::LocalTactical);
+        tactical
+            .instances
+            .truncate(fire_cap_for_world_band(WorldLodBand::LocalTactical));
+        assert!(strategic.instances.len() <= FIRE_LOD_CAP_STRATEGIC);
+        assert!(tactical.instances.len() > strategic.instances.len());
+        assert!(fire_lod_designer_table_wired());
+    }
+
+    #[test]
+    fn per_view_fire_extract_bounded_catches_visible_leak() {
+        let mut by_view = FireVisualFramesByView::default();
+        let mut frame = FireVisualFrame::default();
+        frame.instances.push(FireVisualGpuInstance::default());
+        by_view.by_id.insert(ViewId::Minimap, frame);
+        let mut vis = VisibleFireChunkSet::default();
+        vis.per_view.insert(ViewId::Minimap, FxHashSet::default());
+        assert!(!per_view_fire_extract_bounded(
+            &by_view,
+            &vis,
+            &ActiveFireChunkSet::default()
+        ));
     }
 
     #[test]

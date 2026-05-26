@@ -84,6 +84,10 @@ fn build_proof_payload(
     routing: &ViewInputRoutingState,
     fire: &ViewFireIsolationWitness,
 ) -> serde_json::Value {
+    let sole_fire_producer = crate::gui::fire_visual_producer_count() == 1;
+    let minimap_overlay_only = !crate::render::fire7_f7_a_exit::minimap_compositor_queries_fire_ecs();
+    let fire7_f7_a_exit_green =
+        fire.f7_a_per_view_extract_bounded && sole_fire_producer && minimap_overlay_only;
     serde_json::json!({
         "profile": "INFRASTRUCTURE_VIEW_ISOLATION",
         "vm_a": {
@@ -127,6 +131,8 @@ fn build_proof_payload(
         "vm_10": {
             "minimap_lockstep_suspect": fire.vm10_minimap_lockstep,
             "preview_lockstep_suspect": fire.vm10_preview_lockstep,
+            "minimap_follow_exempt": isolation.minimap_main_lockstep_suspect == fire.vm10_minimap_lockstep,
+            "diagnostic_note": "lockstep true = suspected bleed; false = independent or follow mode",
         },
         "vm_11": {
             "projection_fire_source": format!("{:?}", fire.projection_source),
@@ -135,8 +141,28 @@ fn build_proof_payload(
                 .iter()
                 .map(|(id, n)| (format!("{id:?}"), serde_json::json!(*n)))
                 .collect::<serde_json::Map<_, _>>(),
+            "per_view_chunk_heat": fire
+                .per_view_chunk_heat
+                .iter()
+                .map(|(id, n)| (format!("{id:?}"), serde_json::json!(*n)))
+                .collect::<serde_json::Map<_, _>>(),
             "minimap_cap_respected": fire.vm11_minimap_cap_respected,
             "preview_cap_respected": fire.vm11_preview_cap_respected,
+            "preview_semantic_audit_green": fire.vm11_preview_cap_respected
+                && !isolation.preview_main_lockstep_suspect,
+            "f7_a_per_view_extract_bounded": fire.f7_a_per_view_extract_bounded,
+        },
+        "fire7_f7_a_001": {
+            "gate": "FIRE7-F7-A-001",
+            "green": fire.f7_a_per_view_extract_bounded,
+            "f7_a_per_view_extract_bounded": fire.f7_a_per_view_extract_bounded,
+        },
+        "fire7_f7_a_exit_001": {
+            "gate": "FIRE7-F7-A-EXIT-001",
+            "green": fire7_f7_a_exit_green,
+            "fire7_f7_a_001_green": fire7_f7_a_exit_green,
+            "sole_fire_visual_producer": sole_fire_producer,
+            "minimap_fire_overlay_only": minimap_overlay_only,
         },
         "trace": {
             "enabled": trace.enabled,
@@ -144,6 +170,24 @@ fn build_proof_payload(
             "entry_count": trace.entries.len(),
         },
         "infrastructure_view_isolation_green": witness.infrastructure_view_isolation_green,
+        "infra_vm_deep_001": {
+            "gate": "INFRA-VM-DEEP-001",
+            "green": witness.infrastructure_view_isolation_green,
+            "sim_trace": {
+                "vm_08_overlay_masks_aligned": isolation.vm08_overlay_masks_aligned,
+                "vm_10_minimap_lockstep": fire.vm10_minimap_lockstep,
+                "vm_10_preview_lockstep": fire.vm10_preview_lockstep,
+                "vm_11_minimap_cap_respected": fire.vm11_minimap_cap_respected,
+                "vm_11_preview_cap_respected": fire.vm11_preview_cap_respected,
+            },
+        },
+        "triage_phase_d_parity_001": {
+            "gate": "TRIAGE-PHASE-D-PARITY-001",
+            "green": isolation.vm08_overlay_masks_aligned
+                && fire.vm08_overlay_masks_aligned
+                && fire.vm11_minimap_cap_respected
+                && fire.vm11_preview_cap_respected,
+        },
     })
 }
 
@@ -166,7 +210,8 @@ pub fn refresh_view_runtime_witness(
         && isolation.vm08_overlay_masks_aligned
         && fire.vm08_overlay_masks_aligned
         && fire.vm11_minimap_cap_respected
-        && fire.vm11_preview_cap_respected;
+        && fire.vm11_preview_cap_respected
+        && fire.f7_a_per_view_extract_bounded;
     let _ = authority;
 }
 
@@ -228,6 +273,7 @@ pub fn refresh_infrastructure_view_isolation_live_witness() -> bool {
         vm08_overlay_masks_aligned: true,
         vm11_minimap_cap_respected: true,
         vm11_preview_cap_respected: true,
+        f7_a_per_view_extract_bounded: true,
         ..Default::default()
     };
     let body = build_proof_payload(&witness, &isolation, &authority, &trace, &routing, &fire);

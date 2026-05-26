@@ -39,7 +39,7 @@
 | **UI Phase 3 minimap** | compositor + M3/M4 plans | — | **CLOSED** | optional units/replay |
 | **Infra 5.5+** | [`vm09_slice2_closure_signoff_v1.md`](vm09_slice2_closure_signoff_v1.md) · [`infra_slice3_wc_d04_ops_f01_plan_v1.md`](infra_slice3_wc_d04_ops_f01_plan_v1.md) | operator | VM-09 + PROJ2 + WC-D04 **CLOSED** | **OPS-F01** · TRIAGE-VM-09-v2 deferred |
 | **Wave C depth** | [`stages/wave_c_depth_plan_v1.md`](stages/wave_c_depth_plan_v1.md) · [`post_stage6_infra_wave_c_plan_v1.md`](post_stage6_infra_wave_c_plan_v1.md) | operator | — | **WC-DEPTH-001** + **WC-D04** **done** |
-| **Fire sim Phase 7** | [`stages/fire_sim_phase7_plan_v1.md`](stages/fire_sim_phase7_plan_v1.md) | `@sim-steward` + `@coder` | `@planner` LOD | **FIRE7-PREFLIGHT** |
+| **Fire sim Phase 7** | [`stages/fire_sim_phase7_plan_v1.md`](stages/fire_sim_phase7_plan_v1.md) | `@coder` **F7-A-001** | `@planner` LOD · **FIRE7-DESIGN-001** | preflight **GO** [`steward_fire7_preflight_gate_v1.md`](steward_fire7_preflight_gate_v1.md) |
 | **Stage 7 Play** | [`stages/stage7_play_plan_v1.md`](stages/stage7_play_plan_v1.md) | — | **CLOSED** | maintain witnesses |
 | **Stage 7 Behavioral** | [`stage7_behavioral_implementation_plan_v1.md`](stage7_behavioral_implementation_plan_v1.md) · preflight **GO** | `@coder` | **S7B-M1-001** |
 

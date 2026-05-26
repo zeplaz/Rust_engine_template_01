@@ -254,6 +254,39 @@ VM-09: v2 for M2+ comm authority; M1 contracts OK under PROJ-2 policy
 
 ---
 
+## @designer FIRE7-DESIGN-001
+
+| Field | Value |
+|:---|:---|
+| **Status** | **DONE — SIGNED** |
+| **Signed** | 2026-05-25 |
+| **Witness** | [`fire_lod_player_read_v1.md`](fire_lod_player_read_v1.md) |
+| **Plan** | [`stages/fire_sim_phase7_plan_v1.md`](stages/fire_sim_phase7_plan_v1.md) · [`fire_sim_phase7_architecture_v1.md`](fire_sim_phase7_architecture_v1.md) |
+| **Unblocks** | **F7-C** policy caps (after **F7-A-001**); optional **FIRE7-DESIGN-002** |
+
+---
+
+## @designer S7P-DESIGN-002
+
+| Field | Value |
+|:---|:---|
+| **Status** | **DONE — SIGNED** |
+| **Signed** | 2026-05-25 |
+| **Witness** | [`s7p_grid_overload_ux_note_v1.md`](s7p_grid_overload_ux_note_v1.md) |
+| **Unblocks** | **S7P-GRID-UX-UI-001** (Coder B **B3**) · [`grid_overload_ux.rs`](../economy/activation/grid_overload_ux.rs) |
+
+### Copy-paste — @coder B3
+
+```
+Lane: S7P-GRID-UX-UI-001
+Read: src/dev/s7p_grid_overload_ux_note_v1.md
+      src/economy/activation/grid_overload_ux.rs
+Do: align GRID_OVERLOAD_TOAST_MESSAGE + PWR prefix; optional alerts tray row
+Exit: s7p_grid_ux_toast_ui_wired · s7p_grid_ux_001_green
+```
+
+---
+
 ## Active (remaining)
 
 | ID | Owner | Status |
@@ -267,6 +300,7 @@ VM-09: v2 for M2+ comm authority; M1 contracts OK under PROJ-2 policy
 
 | Version | Date | Notes |
 |:---|:---|:---|
+| v1.8.0 | 2026-05-25 | **FIRE7-DESIGN-001** LOD table · **S7P-DESIGN-002** grid overload UX note |
 | v1.7.0 | 2026-05-25 | **UI-OH-P4-ART-001** traced Phase 4 icon atlas **SIGNED** |
 | v1.6.0 | 2026-05-25 | **UI-OH-D2-SIGN-001** Phase 2 sign-off after **2A** mock parity |
 | v1.5.0 | 2026-05-25 | **S7B-DESIGN-001** behavioral worksheet **SIGNED** |

@@ -4,8 +4,9 @@
 |:---|:---|
 | **Track ID** | `FIRE-P7` |
 | **Version** | `1.0.0` |
-| **Status** | **PLANNING** (start after one Infra or VFX cycle) |
-| **Exit milestone** | **Fire Phase 7 preflight SIGNED** → implementation waves F7-A/B/C |
+| **Status** | **PREFLIGHT GO** — [`../steward_fire7_preflight_gate_v1.md`](../steward_fire7_preflight_gate_v1.md) (2026-05-25) |
+| **Exit milestone** | **F7-A-001** → F7-B/C implementation waves |
+| **Preflight gate** | [`../steward_fire7_preflight_gate_v1.md`](../steward_fire7_preflight_gate_v1.md) |
 | **F1 (done)** | [`../fire_ecology_f1_todos.md`](../fire_ecology_f1_todos.md) |
 | **Triage** | [`../stage5_triage_backlog.md`](../stage5_triage_backlog.md) T3 |
 
@@ -44,7 +45,7 @@ Per-view fire extract, streaming sleep/wake, and LOD tiers are **authoritative a
 
 ### FIRE7-PLAN-001 (before F7-A code)
 
-Deliver **one page** in `src/dev/fire_sim_phase7_architecture_v1.md`:
+Deliver **one page** in [`fire_sim_phase7_architecture_v1.md`](../fire_sim_phase7_architecture_v1.md) — **DONE** (2026-05-25):
 
 | Section | Content |
 |:---|:---|
@@ -53,7 +54,7 @@ Deliver **one page** in `src/dev/fire_sim_phase7_architecture_v1.md`:
 | LOD table | Band → instance cap → overlay bin |
 | Forbidden | Second global fire extract for minimap |
 
-**Blocks:** F7-A coder slices until planner doc exists.
+**Blocks:** **F7-A** until planner doc exists. **Blocks real F7-B/C** until **F7-A-001** closes (witness-only JSON does **not** count) — see architecture § Gate chain.
 
 ---
 
@@ -102,7 +103,7 @@ Do NOT: add MinimapOnly fire extract
 Verify: cargo test -p proc_A_dine01 --lib fire_view_extract stage5
 ```
 
-**Defer F7-B/C** until F7-A witness stable.
+**Defer F7-B/C** until **F7-A-001** **CLOSED** (code + lib tests + `fire7_f7_a_001_green`). **No** `fire_streaming_live.json` stub PRs.
 
 ---
 
@@ -112,7 +113,7 @@ Verify: cargo test -p proc_A_dine01 --lib fire_view_extract stage5
 |:---:|:---|
 | F0 | F1 ecology witness still green |
 | F1 | Planner architecture doc exists |
-| F2 | Designer LOD read table exists |
+| F2 | Designer LOD read table exists — [`fire_lod_player_read_v1.md`](../fire_lod_player_read_v1.md) **SIGNED** |
 | F3 | Steward preflight GO recorded |
 | F4 | No implementation until F1–F3 done |
 

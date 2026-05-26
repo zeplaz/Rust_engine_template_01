@@ -123,6 +123,7 @@ pub use strategic_command_queue::{
 pub use stage7_behavioral::{
     publish_stage7_behavioral_overlay_samples, seed_stage7_behavioral_overlay_resources,
     seed_stage7_behavioral_m2_lib_proof, seed_stage7_behavioral_witness_for_lib_proof,
+    seed_stage7_m4_playtest_enqueue,
     stage7_overlay_reader_sample_counts,
     sync_stage7_overlay_witness_from_reader_samples, Stage7BehavioralHud,
     Stage7BehavioralPlugin, Stage7BehavioralWitnessState, Stage7BeliefState,

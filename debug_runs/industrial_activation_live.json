@@ -48,9 +48,9 @@
     "relative_path": "debug_runs/industrial_activation_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "industrial_activation_live_proof",
-    "written_at_epoch_secs": 1779755990
+    "written_at_epoch_secs": 1779766168
   },
-  "activation_green": true,
+  "activation_green": false,
   "board": [
     {
       "id": "INDUSTRIAL-I1-01",
@@ -142,7 +142,7 @@
     },
     {
       "id": "INDUSTRIAL-I3-02",
-      "status": "Done"
+      "status": "Open"
     },
     {
       "id": "INDUSTRIAL-I3-03",
@@ -190,37 +190,46 @@
     "operational_mixer": 1,
     "placed_via_construction": true,
     "production_green": true,
-    "production_ticks": 146,
+    "production_ticks": 45,
     "sites_committed": 3
   },
   "governance_violation_count": 0,
   "grid_overload": {
-    "green": true,
+    "green": false,
     "grid_membership": true,
-    "grid_overload_hook": true,
-    "grid_overload_sim_green": true,
-    "ind_e03_green": true,
-    "ind_e03_witness_001_green": true,
-    "overload_events_total": 86,
+    "grid_overload_hook": false,
+    "grid_overload_sim_green": false,
+    "ind_e03_green": false,
+    "ind_e03_witness_001_green": false,
+    "overload_events_total": 0,
     "production_green": true
   },
   "ind_e03": {
-    "green": true,
+    "green": false,
     "grid_membership": true,
-    "grid_overload_hook": true,
-    "grid_overload_sim_green": true,
-    "ind_e03_green": true,
-    "ind_e03_witness_001_green": true,
-    "overload_events_total": 86,
+    "grid_overload_hook": false,
+    "grid_overload_sim_green": false,
+    "ind_e03_green": false,
+    "ind_e03_witness_001_green": false,
+    "overload_events_total": 0,
     "production_green": true
   },
-  "industrial_i3_02_green": true,
-  "open_todos": 0,
+  "industrial_i3_02_green": false,
+  "open_todos": 1,
   "profile": "INDUSTRIAL_ACTIVATION",
+  "s7p_grid_ux_001": {
+    "gate": "S7P-GRID-UX-001",
+    "green": false,
+    "toast_active": false,
+    "toast_armed": false,
+    "toast_message": "Grid overload — reduce smelter load or add transformer capacity",
+    "toast_shown_count": 0,
+    "toast_ui_wired": true
+  },
   "spatial_district": {
-    "clustered_hosts": 1,
-    "dominant_load_ratio": 2.0224716663360596,
-    "host_count": 1
+    "clustered_hosts": 0,
+    "dominant_load_ratio": 0.0,
+    "host_count": 0
   },
   "todo_total": 31,
   "witness": {

@@ -2,7 +2,8 @@
 
 | Field | Value |
 |:---|:---|
-| **Queue ID** | **DESIGN-W3-P4-ATLAS-001** |
+| **Queue ID** | **DESIGN-W3-P4-ATLAS-001** (alias **P4-ART-01** / **UI-OH-P4-ART-001**) |
+| **Sign-off record** | [`ui_oh_p4_art_signoff_record_v1.md`](ui_oh_p4_art_signoff_record_v1.md) |
 | **Track** | Wave 3 / UI Phase 4 |
 | **Version** | `1.0.0` |
 | **Date** | 2026-05-25 |

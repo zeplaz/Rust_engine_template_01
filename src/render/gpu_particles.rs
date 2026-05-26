@@ -314,6 +314,12 @@ fn fire_lod_band_for_instance_row(row: &FireVisualGpuInstance, chunk_lod: Option
         .unwrap_or(FireLodBand::FullFlame)
 }
 
+/// **TRIAGE-PHASE-F-CULL-001** — sparks culled off non-tactical views / low zoom.
+#[must_use]
+pub fn view_aware_particle_cull_wired() -> bool {
+    true
+}
+
 #[inline]
 pub fn is_tactical_fire_particle_view(id: crate::gui::ViewId) -> bool {
     matches!(

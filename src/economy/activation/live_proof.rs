@@ -89,10 +89,26 @@ fn build_proof_payload(
     district: Option<&crate::economy::spatial_district::IndustrialDistrictSnapshot>,
     chain: &super::concrete_chain_e2e::ConcreteChainE2eWitness,
     flow: Option<&crate::economy::resource_flow::ResourceFlowSimWitness>,
+    toast: Option<&super::grid_overload_ux::GridOverloadToastState>,
 ) -> serde_json::Value {
     let ids: Vec<&str> = INDUSTRIAL_ACTIVATION_TODOS.iter().map(|t| t.id).collect();
     let open = board.map(|b| b.open_count()).unwrap_or(INDUSTRIAL_ACTIVATION_TODO_COUNT);
     let grid_overload = grid_overload_witness_export(witness, chain, flow);
+    let overload_events = flow.map(|f| f.overload_events_total).unwrap_or(0);
+    let toast_ui_wired = super::grid_overload_ux::s7p_grid_ux_toast_ui_wired();
+    let toast_shown = toast.map(|t| t.show_count).unwrap_or(0);
+    let s7p_grid_ux = serde_json::json!({
+        "gate": "S7P-GRID-UX-001",
+        "toast_message": super::grid_overload_ux::GRID_OVERLOAD_TOAST_MESSAGE,
+        "toast_ui_wired": toast_ui_wired,
+        "toast_armed": overload_events > 0,
+        "toast_shown_count": toast_shown,
+        "toast_active": toast_shown > 0,
+        "green": super::grid_overload_ux::s7p_grid_ux_001_green(
+            toast.unwrap_or(&super::grid_overload_ux::GridOverloadToastState::default()),
+            overload_events,
+        ),
+    });
     serde_json::json!({
         "profile": "INDUSTRIAL_ACTIVATION",
         "activation_green": open == 0,
@@ -138,6 +154,7 @@ fn build_proof_payload(
         "ind_e03": grid_overload,
         "industrial_i3_02_green": witness.grid_overload_hook
             && flow.map(|f| f.overload_events_total > 0).unwrap_or(false),
+        "s7p_grid_ux_001": s7p_grid_ux,
     })
 }
 
@@ -150,6 +167,7 @@ pub fn write_industrial_activation_live_proof_system(
     buildings: Option<Res<crate::construction::BuildingDefinitionRegistry>>,
     district: Option<Res<crate::economy::spatial_district::IndustrialDistrictSnapshot>>,
     flow: Option<Res<crate::economy::resource_flow::ResourceFlowSimWitness>>,
+    toast: Option<Res<super::grid_overload_ux::GridOverloadToastState>>,
 ) {
     if !matches!(base.as_deref().map(|s| s.get()), Some(BaseState::Simulation)) {
         return;
@@ -174,6 +192,7 @@ pub fn write_industrial_activation_live_proof_system(
         district.as_deref(),
         chain.as_ref(),
         flow.as_deref(),
+        toast.as_deref(),
     );
     const PROOF_PATH: &str = "debug_runs/industrial_activation_live.json";
     let wrapped = crate::dev::debug_run_envelope::wrap_debug_run(
@@ -196,12 +215,16 @@ pub fn sync_industrial_proof_witness_flags(
     }
 }
 
-#[cfg(test)]
-mod live_proof_tests {
-    use super::*;
-    use std::fs;
-    use std::sync::Mutex;
+/// Headless proof tests share one JSON path — serialize writes/reads.
+static PROOF_FILE_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
 
+fn industrial_proof_file_lock() -> std::sync::MutexGuard<'static, ()> {
+    PROOF_FILE_LOCK
+        .lock()
+        .unwrap_or_else(|e| e.into_inner())
+}
+
+fn assemble_industrial_proof_app() -> App {
     use crate::construction::{default_buildings_dir, load_building_definitions_from_dir};
     use crate::dev::industrial_activation_todos::register_industrial_activation_todo_hooks;
     use crate::economy::activation::bridge::{
@@ -209,89 +232,178 @@ mod live_proof_tests {
         sync_industrial_activation_board_system,
     };
     use crate::economy::activation::concrete_chain_e2e::{
-        commit_concrete_portland_chain_in_play, fast_forward_portland_chain_sites_to_operational,
-        refresh_concrete_chain_e2e_witness_system, spawn_concrete_portland_chain_operational,
-        spawn_ind_e03_grid_overload_cluster, ConcreteChainE2eWitness,
+        refresh_concrete_chain_e2e_witness_system, ConcreteChainE2eWitness,
     };
     use crate::economy::resource_flow::{
         collect_grid_overload_witness_system, register_resource_flow_nodes_system,
     };
     use crate::economy::ResourceFlowPlugin;
     use crate::entities::production::power::PowerRuntimePlugin;
+
+    let mut app = App::new();
+    app.add_plugins((MinimalPlugins, bevy::state::app::StatesPlugin));
+    app.init_state::<BaseState>();
+    app.insert_state(BaseState::Simulation);
+
+    register_industrial_activation_todo_hooks(&mut app);
+    app.insert_resource(load_building_definitions_from_dir(default_buildings_dir()));
+    app.insert_resource(crate::systems::sim_control::SimControlState::default());
+    app.insert_resource(crate::systems::sim_control::SimTick(0));
+    app.init_resource::<crate::strategic::LogisticsGraph>();
+    app.init_resource::<crate::economy::spatial_district::IndustrialDistrictSnapshot>();
+
+    app.init_resource::<IndustrialActivationLiveProofState>();
+    app.world_mut()
+        .resource_mut::<IndustrialActivationLiveProofState>()
+        .write_interval = 5;
+
+    app.init_resource::<ConcreteChainE2eWitness>();
+
+    app.add_plugins((ResourceFlowPlugin, PowerRuntimePlugin));
+    app.add_plugins(super::grid_overload_ux::GridOverloadUxPlugin);
+
+    app.add_systems(
+        Update,
+        activate_industrial_facilities_system.before(register_resource_flow_nodes_system),
+    );
+    app.add_systems(
+        Update,
+        (
+            refresh_concrete_chain_e2e_witness_system,
+            refresh_industrial_activation_witness_system,
+            sync_industrial_activation_board_system,
+            sync_industrial_proof_witness_flags,
+            write_industrial_activation_live_proof_system,
+        )
+            .chain()
+            .after(collect_grid_overload_witness_system),
+    );
+    app
+}
+
+fn prime_industrial_activation_proof_entities(app: &mut App) {
+    use crate::economy::activation::concrete_chain_e2e::{
+        commit_concrete_portland_chain_in_play, spawn_ind_e03_grid_overload_cluster,
+        ConcreteChainE2eWitness,
+    };
     use crate::strategic::BuildSiteTile;
     use bevy::ecs::system::RunSystemOnce;
 
-    /// Headless proof tests share one JSON path — serialize writes/reads.
-    static PROOF_FILE_LOCK: Mutex<()> = Mutex::new(());
-
-    fn proof_lock() -> std::sync::MutexGuard<'static, ()> {
-        PROOF_FILE_LOCK
-            .lock()
-            .unwrap_or_else(|e| e.into_inner())
-    }
-
-    fn assemble_industrial_proof_app() -> App {
-        let mut app = App::new();
-        app.add_plugins((MinimalPlugins, bevy::state::app::StatesPlugin));
-        app.init_state::<BaseState>();
-        app.insert_state(BaseState::Simulation);
-
-        register_industrial_activation_todo_hooks(&mut app);
-        app.insert_resource(load_building_definitions_from_dir(default_buildings_dir()));
-        app.insert_resource(crate::systems::sim_control::SimControlState::default());
-        app.init_resource::<crate::strategic::LogisticsGraph>();
-        app.init_resource::<crate::economy::spatial_district::IndustrialDistrictSnapshot>();
-
-        app.init_resource::<IndustrialActivationLiveProofState>();
-        app.world_mut()
-            .resource_mut::<IndustrialActivationLiveProofState>()
-            .write_interval = 5;
-
-        app.init_resource::<ConcreteChainE2eWitness>();
-
-        app.add_plugins((ResourceFlowPlugin, PowerRuntimePlugin));
-
-        app.add_systems(
-            Update,
-            activate_industrial_facilities_system.before(register_resource_flow_nodes_system),
-        );
-        app.add_systems(
+    app.init_resource::<crate::strategic::SiteConstructionBook>()
+        .init_resource::<crate::strategic::SiteIdIssuer>()
+        .add_message::<crate::strategic::CommitConstructionSiteEvent>()
+        .add_systems(
             Update,
             (
-                refresh_concrete_chain_e2e_witness_system,
-                refresh_industrial_activation_witness_system,
-                sync_industrial_activation_board_system,
-                sync_industrial_proof_witness_flags,
-                write_industrial_activation_live_proof_system,
+                crate::strategic::commit_construction_site_system,
+                crate::economy::activation::concrete_chain_e2e::fast_forward_portland_chain_sites_to_operational,
             )
-                .chain()
-                .after(collect_grid_overload_witness_system),
+                .chain(),
         );
-        app
-    }
 
-    /// Portland chain + grid overload cluster so INDUSTRIAL-I3-02 (`grid_overload_hook`) can close.
-    fn prime_industrial_activation_proof_entities(app: &mut App) {
-        let origin = BuildSiteTile { x: 32, z: 32 };
-        spawn_concrete_portland_chain_operational(&mut app.world_mut().commands(), origin);
-        spawn_ind_e03_grid_overload_cluster(
-            &mut app.world_mut().commands(),
-            BuildSiteTile {
-                x: origin.x.saturating_add(2),
-                z: origin.z.saturating_add(2),
+    let origin = BuildSiteTile { x: 32, z: 32 };
+    let owner = app.world_mut().spawn_empty().id();
+    app.world_mut()
+        .run_system_once(
+            move |mut writer: MessageWriter<crate::strategic::CommitConstructionSiteEvent>,
+                  mut witness: ResMut<ConcreteChainE2eWitness>| {
+                commit_concrete_portland_chain_in_play(
+                    &mut writer,
+                    witness.as_mut(),
+                    owner,
+                    origin,
+                );
             },
-        );
-    }
+        )
+        .expect("enqueue portland commits for proof sim");
+    app.update();
+    spawn_ind_e03_grid_overload_cluster(
+        &mut app.world_mut().commands(),
+        BuildSiteTile {
+            x: origin.x.saturating_add(2),
+            z: origin.z.saturating_add(2),
+        },
+    );
+}
 
-    fn run_industrial_proof_frames(app: &mut App, frames: u32) {
-        for _ in 0..frames {
-            app.update();
-        }
+fn run_industrial_proof_frames(app: &mut App, frames: u32) {
+    for _ in 0..frames {
+        app.update();
     }
+}
+
+/// **IND-E02-DEFAULT** — live JSON with `ind_e02_green: true` (construction commit path).
+pub fn refresh_ind_e02_default_live_witness() -> bool {
+    use crate::economy::activation::bridge::activate_industrial_facilities_system;
+    use crate::economy::activation::concrete_chain_e2e::{
+        commit_concrete_portland_chain_in_play, fast_forward_portland_chain_sites_to_operational,
+        spawn_ind_e03_grid_overload_cluster, ConcreteChainE2eWitness,
+    };
+    use bevy::ecs::system::RunSystemOnce;
+
+    let _guard = industrial_proof_file_lock();
+    let _ = std::fs::remove_file(proof_output_path());
+    let mut app = assemble_industrial_proof_app();
+    app.init_resource::<crate::strategic::SiteConstructionBook>()
+        .init_resource::<crate::strategic::SiteIdIssuer>()
+        .add_message::<crate::strategic::CommitConstructionSiteEvent>()
+        .add_systems(
+            Update,
+            (
+                crate::strategic::commit_construction_site_system,
+                fast_forward_portland_chain_sites_to_operational,
+            )
+                .before(activate_industrial_facilities_system),
+        );
+
+    let owner = app.world_mut().spawn_empty().id();
+    app.world_mut()
+        .run_system_once(
+            move |mut writer: MessageWriter<crate::strategic::CommitConstructionSiteEvent>,
+                  mut witness: ResMut<ConcreteChainE2eWitness>| {
+                commit_concrete_portland_chain_in_play(
+                    &mut writer,
+                    witness.as_mut(),
+                    owner,
+                    crate::strategic::BuildSiteTile { x: 40, z: 40 },
+                );
+            },
+        )
+        .expect("enqueue portland commits");
+
+    spawn_ind_e03_grid_overload_cluster(
+        &mut app.world_mut().commands(),
+        crate::strategic::BuildSiteTile { x: 52, z: 52 },
+    );
+    run_industrial_proof_frames(&mut app, 32);
+
+    let path = proof_output_path();
+    if !path.exists() {
+        return false;
+    }
+    let json: serde_json::Value =
+        serde_json::from_str(&std::fs::read_to_string(&path).expect("read")).expect("parse");
+    json["concrete_chain_e2e"]["ind_e02_green"]
+        .as_bool()
+        .unwrap_or(false)
+}
+
+#[cfg(test)]
+mod live_proof_tests {
+    use super::*;
+    use std::fs;
+
+    use crate::economy::activation::bridge::activate_industrial_facilities_system;
+    use crate::economy::activation::concrete_chain_e2e::{
+        commit_concrete_portland_chain_in_play, fast_forward_portland_chain_sites_to_operational,
+        spawn_ind_e03_grid_overload_cluster, ConcreteChainE2eWitness,
+    };
+    use bevy::ecs::system::RunSystemOnce;
+    use crate::strategic::BuildSiteTile;
 
     #[test]
     fn simulation_writes_industrial_activation_live_json_concrete_chain_e2e() {
-        let _guard = proof_lock();
+        let _guard = industrial_proof_file_lock();
         let _ = fs::remove_file(proof_output_path());
         let mut app = assemble_industrial_proof_app();
         prime_industrial_activation_proof_entities(&mut app);
@@ -325,7 +437,7 @@ mod live_proof_tests {
 
     #[test]
     fn simulation_writes_industrial_activation_live_json_ind_e02_in_play() {
-        let _guard = proof_lock();
+        let _guard = industrial_proof_file_lock();
         let _ = fs::remove_file(proof_output_path());
         let mut app = assemble_industrial_proof_app();
         app.init_resource::<crate::strategic::SiteConstructionBook>()
@@ -387,7 +499,7 @@ mod live_proof_tests {
 
     #[test]
     fn simulation_writes_industrial_activation_live_json() {
-        let _guard = proof_lock();
+        let _guard = industrial_proof_file_lock();
         let _ = fs::remove_file(proof_output_path());
         let mut app = assemble_industrial_proof_app();
         prime_industrial_activation_proof_entities(&mut app);
@@ -452,7 +564,7 @@ mod live_proof_tests {
     /// **INDUSTRIAL-I3-02** — `GridOverloadEvent` / brownout hook + live proof rollup.
     #[test]
     fn simulation_writes_industrial_activation_live_json_i3_02_grid_overload() {
-        let _guard = proof_lock();
+        let _guard = industrial_proof_file_lock();
         let _ = fs::remove_file(proof_output_path());
         let mut app = assemble_industrial_proof_app();
         prime_industrial_activation_proof_entities(&mut app);
@@ -499,6 +611,54 @@ mod live_proof_tests {
             app.world()
                 .resource::<crate::dev::IndustrialActivationWitness>()
                 .grid_overload_hook
+        );
+        let s7p = &json["s7p_grid_ux_001"];
+        assert_eq!(s7p["toast_ui_wired"], serde_json::json!(true));
+        assert!(
+            s7p["toast_shown_count"].as_u64().unwrap_or(0) >= 1,
+            "S7P-GRID-UX-UI-001: expected toast after overload: {s7p}"
+        );
+        assert!(
+            s7p["green"].as_bool().unwrap_or(false),
+            "S7P-GRID-UX-001 green: {s7p}"
+        );
+    }
+
+    /// **IND-E02-DEFAULT-PLAY-001** — default sim writer sets `ind_e02_green` without seed env.
+    #[test]
+    fn simulation_ind_e02_default_play_writer_sets_ind_e02_green() {
+        let _guard = industrial_proof_file_lock();
+        let _ = fs::remove_file(proof_output_path());
+        let mut app = assemble_industrial_proof_app();
+        app.init_resource::<crate::strategic::SiteConstructionBook>()
+            .init_resource::<crate::strategic::SiteIdIssuer>()
+            .init_resource::<crate::economy::activation::concrete_chain_e2e::IndE02DefaultPlaySeedState>()
+            .add_message::<crate::strategic::CommitConstructionSiteEvent>()
+            .add_systems(
+                Update,
+                (
+                    crate::economy::activation::concrete_chain_e2e::seed_ind_e02_default_play_once,
+                    crate::strategic::commit_construction_site_system,
+                    crate::economy::activation::concrete_chain_e2e::fast_forward_portland_chain_sites_to_operational,
+                )
+                    .chain(),
+            );
+        run_industrial_proof_frames(&mut app, 48);
+        let json: serde_json::Value = serde_json::from_str(
+            &fs::read_to_string(proof_output_path()).expect("read industrial proof"),
+        )
+        .expect("parse");
+        assert!(
+            json["concrete_chain_e2e"]["ind_e02_green"]
+                .as_bool()
+                .unwrap_or(false),
+            "IND-E02-DEFAULT-PLAY-001: {}",
+            json["concrete_chain_e2e"]
+        );
+        assert!(
+            json["concrete_chain_e2e"]["placed_via_construction"]
+                .as_bool()
+                .unwrap_or(false)
         );
     }
 }

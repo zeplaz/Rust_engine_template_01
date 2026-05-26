@@ -85,14 +85,14 @@
 | 3 | Mock hero map read ([`layout_mock_v1.png`](../../../assets/ui/world_preview/layout_mock_v1.png)) | ☑ |
 | 4 | Parent §11 SIGNED | ☑ |
 | 5 | Optional coder slice scoped (no raster / motion) | ☑ |
-| 6 | Ratio enforcement in code | ☐ **optional** — **UI-WP-LAYOUT-D02-OPT** |
+| 6 | Ratio enforcement in code | ☑ **UI-WP-LAYOUT-D02-OPT** — `mod.rs` + `window.rs` + `wave_p_live_proof` |
 
 **Verdict:** ☑ **SIGNED** (design) · implementation **OPTIONAL**
 
 | Role | Date | Verdict | Notes |
 |:---|:---|:---|:---|
 | Designer | 2026-05-24 | **SIGNED** | D-02 A; does not block D-01 done |
-| Coder | — | **Optional** | Pick up **UI-WP-LAYOUT-D02-OPT** when scheduled |
+| Coder | 2026-05-25 | **DONE** | Sidebar clamp + `d02_map_dominance_hd_baseline_sheet_closed` lib test |
 
 ---
 

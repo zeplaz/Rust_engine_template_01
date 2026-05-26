@@ -2,42 +2,80 @@
 
 | Field | Value |
 |:---|:---|
-| **Version** | `1.3.0` |
-| **Date** | 2026-05-25 |
-| **Machine queue** | [`coder_active_queue.json`](../tools/orchestrator/queues/coder_active_queue.json) |
-| **Triage** | [`coder_triage_list_v1.md`](coder_triage_list_v1.md) |
-| **S7B plan** | [`stage7_behavioral_implementation_plan_v1.md`](stage7_behavioral_implementation_plan_v1.md) **SIGNED** |
+| **Version** | `1.6.0` |
+| **Date** | 2026-05-26 |
+| **Wave 3 full lists** | [`coder_wave3_full_todos_v1.md`](coder_wave3_full_todos_v1.md) |
+| **Checklist compact** | [`coder_dual_queue_todos_v2.md`](coder_dual_queue_todos_v2.md) |
+| **Machine queue** | [`coder_active_queue.json`](../tools/orchestrator/queues/coder_active_queue.json) v3.0 |
+| **Prior closure** | [`coder_dual_queue_todos_v1.md`](coder_dual_queue_todos_v1.md) — 28 IDs |
 
 ---
 
 ## Status snapshot
 
-| Queue ID | plan_doc | Status |
-|:---|:---|:---:|
-| ~~**S7B-PREFLIGHT-001**~~ | [`steward_s7b_preflight_gate_v1.md`](steward_s7b_preflight_gate_v1.md) | ☑ **GO** |
-| **S7B-M1-001** | impl plan + witness spec | ☑ **DONE** |
-| **UI-P5-PAUSE-001** | [`ui_oh_p5_001_plan_v1.md`](ui_oh_p5_001_plan_v1.md) | ☑ **CLOSED** |
-| **UI-P5-DESIGN-001** | `ui_phase5_pause_menu_plan_v1.md` | ☑ designer PASS — [`ui_p5_design_signoff_v1.md`](ui_p5_design_signoff_v1.md) |
-| **LOG-E01** | `logistics_projection_impl_plan_v1.md` | STALE_TIMESTAMP (content green) |
-| **TRIAGE-VM-09-v2** | [`triage_vm09_v2_invert_bridge_plan_v1.md`](triage_vm09_v2_invert_bridge_plan_v1.md) | ☑ **CLOSED** — `triage_vm09_v2_001_lib_bundle` |
-
----
-
-## S7B-M1-001 (next coder slice)
+**Wave 3 active** — pick **one P1** per coder per session.
 
 ```powershell
-cargo test -p proc_A_dine01 --lib comms_contract stage7_play
+cargo test -p proc_A_dine01 --lib stage5
+cargo test -p proc_A_dine01 --lib coder_a_dual_queue coder_b_queue_bundle
 ```
 
-**Read:** `src/dev/stage7_behavioral_implementation_plan_v1.md` · `src/strategic/comms_contract.rs`
-
-**Exit:** `debug_runs/stage7_behavioral_live.json` → `behavioral_contract_ok: true`, `s7b_m1_green: true`
+| Track | Coder A active | Coder B active | Blocked |
+|:---|:---:|:---:|:---|
+| Count | 12 queued | 15 queued | F7-B/C until **FIRE7-F7-A-EXIT-001** |
 
 ---
 
-## Operator
+## @coder A — P1 primary (pick one)
 
-| ID | Action |
+| ID | Task |
 |:---|:---|
-| **OPS-F01** | Dated 60s in `perf_attribution_60s.md` |
-| **OPS-F03** | Optional stage6 sim refresh |
+| **FIRE7-F7-A-EXIT-001** | F7-A **product** gate — unblocks F7-B/C |
+| **VFX-VISUAL-SIGNOFF-001** | `--test visual` P2 VFX |
+| **TRIAGE-GPU-TILE-WGSL-001** | WGSL instanced tiles |
+| **TRIAGE-VISUAL-TEARDOWN-001** | VR-02 teardown |
+| **UI-WP-VISUAL-001** | World preview visual sign-off |
+| **S7B-M4-SIM-001** | M4 play in sim |
+
+Full list: [`coder_dual_queue_todos_v2.md`](coder_dual_queue_todos_v2.md)
+
+---
+
+## @coder B — P1 primary (pick one)
+
+| ID | Task |
+|:---|:---|
+| **S7P-GRID-UX-UI-001** | Grid overload toast in sim |
+| **CONSTRUCTION-MV-SIM-001** | MV construction ghosts in sim |
+| **IND-E02-DEFAULT-PLAY-001** | Industrial default in play |
+| **UI-P3-M3-UNITS-001** | Minimap unit markers |
+| **REPLAY-PARITY-001** | Replay editor parity |
+
+Full list: [`coder_dual_queue_todos_v2.md`](coder_dual_queue_todos_v2.md)
+
+---
+
+## Suggested parallel pair (cycle 1)
+
+| Coder A | Coder B |
+|:---|:---|
+| **FIRE7-F7-A-EXIT-001** | **S7P-GRID-UX-UI-001** |
+
+Disjoint domains: fire extract vs industrial HUD.
+
+---
+
+## Operator / design
+
+| Owner | ID |
+|:---|:---|
+| @operator | OPS-F01 · OPS-F03 · VFX-CAPTURE-INSIM-001 |
+| @designer | FIRE7-DESIGN-001 · S7P-DESIGN-002 |
+
+---
+
+## Closed — do not re-queue
+
+Dual-queue v2 (28 IDs) · UI shell Wave 3 · S7B M1–M4 witness · minimap M1–M4 · VM-09 v2 · WC-D04
+
+**Note:** v2 **FIRE7-F7-A-001** = witness bundle only → product work is **FIRE7-F7-A-EXIT-001**.

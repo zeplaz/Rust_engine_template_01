@@ -366,6 +366,18 @@ pub fn full_app_vt_ci_fixture_passes() -> bool {
     report.passes() && run_vt5_ci_spatial_matrix(&scenario)
 }
 
+/// **STAGE5-VT-DEEP-001** — VT-4/5 matrix + camera-isolation surfaces exercised.
+#[must_use]
+pub fn stage5_vt_deep_001_green() -> bool {
+    if !full_app_vt_ci_fixture_passes() {
+        return false;
+    }
+    let scenario = build_deterministic_ci_scenario();
+    scenario.preview_probe.participates_in_vt4()
+        && scenario.fire.stamp.tick > 0
+        && !scenario.fire.instances.is_empty()
+}
+
 pub struct VtCiMatrixPlugin;
 
 impl Plugin for VtCiMatrixPlugin {

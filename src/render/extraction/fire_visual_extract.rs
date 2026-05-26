@@ -92,6 +92,7 @@ pub struct FireVisualFramePlugin;
 
 impl Plugin for FireVisualFramePlugin {
     fn build(&self, app: &mut App) {
+        app.add_plugins(crate::render::fire_streaming::FireStreamingPlugin);
         app.add_message::<RequestLocalLight>()
             .configure_sets(Update, ViewAuthoritySystemSet::SyncViewManager)
             .init_resource::<FireSimulationSnapshot>()
@@ -132,7 +133,10 @@ impl Plugin for FireVisualFramePlugin {
                 (
                     attrib_fire_pipeline_before,
                     extract_fire_simulation_snapshot,
-                    sync_active_fire_chunk_set.after(extract_fire_simulation_snapshot),
+                    crate::render::fire_streaming::apply_fire_streaming_sleep_wake_system
+                        .after(extract_fire_simulation_snapshot),
+                    sync_active_fire_chunk_set
+                        .after(crate::render::fire_streaming::apply_fire_streaming_sleep_wake_system),
                     sync_shared_overlay_from_simulation.after(extract_fire_simulation_snapshot),
                     sync_visible_fire_chunks_from_views.after(extract_fire_simulation_snapshot),
                     sync_fire_chunk_lod_from_snapshot.after(extract_fire_simulation_snapshot),

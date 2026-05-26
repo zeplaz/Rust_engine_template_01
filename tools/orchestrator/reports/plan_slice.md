@@ -1,6 +1,6 @@
 # Plan slice report
 
-Generated: epoch 1779508467 (orchestrator `--plan-slice`)
+Generated: epoch 1779763167 (orchestrator `--plan-slice`)
 
 ## Health
 
@@ -11,12 +11,12 @@ Generated: epoch 1779508467 (orchestrator `--plan-slice`)
 
 | Proof | Present | Green | Age (h) | Note |
 |-------|---------|-------|---------|------|
-| `debug_runs/stage5_full_app_live.json` | true | Some(true) | "1.4" | FULL_APP passes=true violations=0 |
-| `debug_runs/infrastructure_view_isolation_live.json` | true | None | "0.0" | per-view isolation |
-| `debug_runs/construction_stage_live.json` | true | None | "0.0" | construction boards |
-| `debug_runs/industrial_activation_live.json` | true | Some(true) | "0.0" | industrial activation |
-| `debug_runs/logistics_throughput_live.json` | true | Some(false) | "0.0" | open_todos=20 |
-| `debug_runs/fire_ecology_live.json` | true | Some(true) | "0.0" | mean_heat=0.000 |
+| `debug_runs/stage5_full_app_live.json` | true | Some(true) | "0.6" | FULL_APP passes=true violations=0 |
+| `debug_runs/infrastructure_view_isolation_live.json` | true | None | "0.2" | per-view isolation |
+| `debug_runs/construction_stage_live.json` | true | None | "2.0" | construction boards |
+| `debug_runs/industrial_activation_live.json` | true | Some(true) | "2.0" | industrial activation |
+| `debug_runs/logistics_throughput_live.json` | true | Some(false) | "2.0" | open_todos=14 |
+| `debug_runs/fire_ecology_live.json` | true | Some(true) | "2.0" | mean_heat=0.000 |
 | `debug_runs/replay_editor_parity_live.json` | false | None | "—" | missing — run proof command for this lane |
 | `debug_runs/main_thread_orchestrator_live.json` | true | None | "—" | orchestrator_shift |
 

@@ -22,6 +22,17 @@
 
 **Policy:** Do not fail IND-E02 when default proof JSON lacks `ind_e02_green` — seed path only.
 
+### IND-E02-DEFAULT-WITNESS (2026-05-25)
+
+| Check | Default JSON writer | Commit-path test |
+|:---|:---:|:---:|
+| `production_green` | ☑ | ☑ |
+| `ind_e02_green` | ☐ **by design** | ☑ |
+| `placed_via_construction` | `false` on seed | `true` in-play |
+| `sites_committed` | `0` on seed | `>= 3` in-play |
+
+**Planner spec:** [`ind_board_reconcile_plan_v1.md`](ind_board_reconcile_plan_v1.md) § IND-E02-DEFAULT-WITNESS.
+
 ---
 
 ## Ledger / board targets

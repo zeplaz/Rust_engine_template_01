@@ -76,12 +76,26 @@ Deliver: PASS/BLOCK in steward_w3_gate_v1.md
 
 See [`stage_steward_workboard_v1.md`](stage_steward_workboard_v1.md) § Done (2026-05-24–25).
 
+| ID | Verdict | Gate doc |
+|:---|:---|:---|
+| **S7B-PREFLIGHT-001** | **GO (qualified)** | [`steward_s7b_preflight_gate_v1.md`](steward_s7b_preflight_gate_v1.md) |
+| **FIRE7-PREFLIGHT-001** | **GO (qualified)** | [`steward_fire7_preflight_gate_v1.md`](steward_fire7_preflight_gate_v1.md) |
+
+**Verify (regression):**
+
+```powershell
+$env:CARGO_TARGET_DIR = "target\test-alt-steward"
+cargo test -p proc_A_dine01 --lib steward_s7b_preflight_001
+cargo test -p proc_A_dine01 --lib fire_view_extract fire_visual_extract stage5
+```
+
 ---
 
 ## Changelog
 
 | Version | Date | Notes |
 |:---|:---|:---|
+| v1.0.3 | 2026-05-26 | **S7B-PREFLIGHT-001** + **FIRE7-PREFLIGHT-001** recorded DONE |
 | v1.0.2 | 2026-05-26 | STEWARD-W3-GATE-001 **PASS**; UI-SHELL-REFRESH re-verified in same session |
 | v1.0.1 | 2026-05-25 | STEWARD-W3-GATE-001 → **HOLD**; Wave P witness-only note |
 | v1.0.0 | 2026-05-25 | STEWARD-W3-GATE-001 + UI-SHELL-REFRESH same-session todos |
