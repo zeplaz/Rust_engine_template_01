@@ -17,7 +17,10 @@ mod light;
 pub mod shaders;
 pub mod sim_visual_extract;
 mod fire_chunk_runtime;
+mod fire7_f7_a_exit;
+mod fire_streaming;
 mod fire_view_extract;
+mod vfx_capture_hook;
 mod tile_world_fallback;
 mod overlay_field_buffers;
 mod domain_overlay_gpu;
@@ -123,6 +126,7 @@ pub use gpu_particles::{
     FIRE_SPARK_STRATEGIC_ZOOM_ALPHA, FIRE_SPARK_TACTICAL_PROOF_ZOOM_ALPHA,
 };
 pub use stage5_full_app_harness::{
+    refresh_log_e01_and_tactical_vfx_stage5_live_witness,
     refresh_p2_fire_spark_011_stage5_live_witness, STAGE5_FULL_APP_LIVE_JSON,
 };
 pub use gpu_packed_formats::{
@@ -222,10 +226,23 @@ pub use fire_chunk_runtime::{
     sync_fire_chunk_lod_from_snapshot, ActiveFireChunkSet, ChunkCoord, FireChunk, FireChunkLodState,
     FireChunkRuntime, FireLodBand, FireSimulationSnapshot, VisibleFireChunkSet, FIRE_SIM_CHUNK_ACTIVE_EPS,
 };
-pub use fire_view_extract::{
-    build_fire_visual_frames_by_view, clamp_fire_lod_for_world_band, sync_visible_fire_chunks_from_views,
-    tactical_fire_visual, FireVisualFramesByView, FIRE_VIEW_CHUNK_SPACING_WORLD,
+pub use fire7_f7_a_exit::{
+    fire7_f7_a_exit_001_criteria, fire7_f7_a_exit_001_green, minimap_compositor_queries_fire_ecs,
+    Fire7F7AExitCriteria,
 };
+pub use fire_streaming::{
+    fire_streaming_b_green, refresh_fire_streaming_live_witness, FireStreamingPlugin,
+    FireStreamingWitness, FIRE_STREAMING_LIVE_JSON,
+};
+pub use fire_view_extract::{
+    build_fire_visual_frames_by_view, clamp_fire_lod_for_world_band, fire7_f7_c_001_green,
+    fire_cap_for_world_band, fire_lod_designer_table_wired, sync_visible_fire_chunks_from_views,
+    tactical_fire_visual, FireVisualFramesByView, FIRE_LOD_CAP_STRATEGIC, FIRE_LOD_CAP_TACTICAL,
+    FIRE_VIEW_CHUNK_SPACING_WORLD,
+};
+pub use gpu_particles::view_aware_particle_cull_wired;
+pub use gpu_surface_teardown::visual_teardown_vr02_wired;
+pub use vfx_capture_hook::{VfxCaptureHookPlugin, VfxCaptureHookState};
 pub use sim_visual_extract::{
     ChunkFireHeat, ChunkSmokeGpu, ClimateVisualAggregate, FireEmitterGpu, FireVisualFrame,
     FireVisualGpuInstance, SimChunkSmokeVisualExtract, SimFireEmitterVisualExtract,
@@ -256,7 +273,7 @@ pub use vt_ci_matrix::{
     apply_vt4_ci_report_to_overlay_debug, apply_vt4_ci_surface_checks, build_deterministic_ci_scenario,
     build_live_vt4_scenario, record_vt_ci_matrix_live, run_vt4_ci_matrix, run_vt5_ci_spatial_matrix,
     Vt4CiReport, Vt4CiScenario, Vt4SurfaceId, VtCiMatrixLiveReport, VtCiMatrixPlugin,
-    full_app_vt_ci_fixture_passes,
+    full_app_vt_ci_fixture_passes, stage5_vt_deep_001_green,
 };
 pub use domain_projection_frame::{
     build_domain_projection_frame, merge_domain_projection_into_representation,

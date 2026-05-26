@@ -2,8 +2,10 @@
 
 | Field | Value |
 |:---|:---|
-| **Version** | `1.6.0` |
-| **Date** | 2026-05-25 |
+| **Version** | `1.8.0` |
+| **Date** | 2026-05-26 |
+| **Coder todos** | [`coder_dual_queue_todos_v2.md`](coder_dual_queue_todos_v2.md) (wave 3) |
+| **Prior closure** | [`coder_dual_queue_todos_v1.md`](coder_dual_queue_todos_v1.md) |
 | **Fleet snapshot** | [`stage_tracks_fleet_snapshot_signoff_v1.md`](stage_tracks_fleet_snapshot_signoff_v1.md) (**PLAN-LEDGER-REFRESH-004**) |
 | **Fleet audit** | [`stage_tracks_audit_signoff_20260525.md`](stage_tracks_audit_signoff_20260525.md) v5 |
 | **Ledger** | [`stage_tracks_signoff_ledger_v1.md`](stage_tracks_signoff_ledger_v1.md) |
@@ -35,9 +37,27 @@ UI4 · S7P · VFX capture/post · WATER · UI-P2 · MINIMAP-M2/M3 spec · **DESI
 
 ---
 
-## Open todos (fleet truth)
+## Open todos (fleet truth) — wave 3
 
-### P1 — primary coder
+**Checklist:** [`coder_dual_queue_todos_v2.md`](coder_dual_queue_todos_v2.md) · **Assign list:** [`coder_dual_queue_v3.md`](coder_dual_queue_v3.md) · **Machine:** [`coder_active_queue.json`](../../tools/orchestrator/queues/coder_active_queue.json) v3.0
+
+### @coder A — P1 (pick one)
+
+See v2 todos — primary **FIRE7-F7-A-EXIT-001** (F7 product gate; v2 witness row is **not** this).
+
+### @coder B — P1 (pick one)
+
+See v2 todos — primary candidates: **S7P-GRID-UX-UI-001**, **CONSTRUCTION-MV-SIM-001**, **IND-E02-DEFAULT-PLAY-001**.
+
+### Blocked until F7-A-EXIT
+
+**FIRE7-F7-B-001** · **FIRE7-F7-C-001** — no witness-only stub PRs.
+
+### Historical — dual queue v2 (closed 2026-05-26)
+
+14 @coder A + 14 @coder B ☑ — [`coder_dual_queue_todos_v1.md`](coder_dual_queue_todos_v1.md). Do not re-assign unless regression.
+
+### P1 — primary coder (historical)
 
 | ID | Owner | Done when |
 |:---|:---|:---|
@@ -54,7 +74,7 @@ UI4 · S7P · VFX capture/post · WATER · UI-P2 · MINIMAP-M2/M3 spec · **DESI
 |:---|:---|:---|
 | **UI-P3-M3-UNITS-001** | @coder | Unit aggregation markers on minimap |
 | **UI-P3-M3-REPLAY-001** | @coder | Replay scrub ticks (replay parity) |
-| **UI-WP-LAYOUT-D02-OPT** | @coder | Map dominance ratio polish |
+| ~~**UI-WP-LAYOUT-D02-OPT**~~ | — | **DONE** — `d02_sidebar_max_width_px`, `ui_wp_layout_d02_opt_green` in `wave_p_live.json` |
 | **UI-WP-LAYOUT-003** / **UI-WP-MOTION-001** | @coder | WP-L1 paper / D-12 motion (deferred) |
 
 ### P3 — operator / infra
@@ -90,6 +110,8 @@ cargo test -p proc_A_dine01 --lib stage5 minimap_compositor wave_s wc_d04
 
 | Version | Date | Notes |
 |:---|:---|:---|
+| v1.8.0 | 2026-05-26 | Wave 3 — F7-A-EXIT split; pointer to coder_dual_queue_v3 |
+| v1.7.0 | 2026-05-26 | **coder_dual_queue_todos_v1** — 14 @coder A P1/P2 rows + machine queue v2.1 |
 | v1.6.0 | 2026-05-25 | **S7B-PLAN-001** SIGNED — preflight + M1 queued |
 | v1.5.0 | 2026-05-25 | **PLAN-LEDGER-REFRESH-003** — planner batch closed; audit v5 |
 | v1.4.0 | 2026-05-25 | **PLAN-LEDGER-REFRESH-002** fleet truth; queue restored; stage6 CURRENT |

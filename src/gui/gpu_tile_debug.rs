@@ -50,6 +50,16 @@ impl Plugin for GpuTileDebugPlugin {
     }
 }
 
+/// **TRIAGE-GPU-TILE-WGSL-001** — storage instanced WGSL present.
+#[must_use]
+pub fn triage_gpu_tile_wgsl_001_green() -> bool {
+    let path = std::path::Path::new("assets/shaders/debug/tile_debug_instanced.wgsl");
+    path.exists()
+        && std::fs::read_to_string(path)
+            .map(|s| s.contains("storage, read") && s.contains("tile_instance_color"))
+            .unwrap_or(false)
+}
+
 /// IN-C06: simulation uses GPU instanced tile debug; gizmo path only when explicitly disabled.
 fn enable_tile_gpu_instanced_authoritative(mut settings: ResMut<TileGpuDebugSettings>) {
     settings.use_batched_mesh_overlay = true;

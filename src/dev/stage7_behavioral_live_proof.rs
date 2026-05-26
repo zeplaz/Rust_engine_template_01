@@ -7,7 +7,7 @@ use bevy::prelude::*;
 use crate::engine::states::BaseState;
 use crate::strategic::{
     dispatch_delay_ticks, mission_kinds_supported, seed_stage7_behavioral_m2_lib_proof,
-    seed_stage7_behavioral_witness_for_lib_proof,
+    seed_stage7_behavioral_witness_for_lib_proof, seed_stage7_m4_playtest_enqueue,
     Stage7BehavioralHud, Stage7BehavioralWitnessState, Stage7BeliefState, StrategicCommandQueue,
 };
 
@@ -74,6 +74,16 @@ pub fn s7b_steward_green(m1: bool, m2: bool, m3: bool) -> bool {
 }
 
 #[must_use]
+pub fn s7b_m4_play_green(queue: &StrategicCommandQueue, witness: &Stage7BehavioralWitnessState) -> bool {
+    witness.s7b_m4_play_enqueue_wired && queue.pending_count() >= 1
+}
+
+#[must_use]
+pub fn s7b_tune_delay_001_green(delay_ticks: u32, delay_test_ok: bool) -> bool {
+    delay_ticks == 8 && delay_test_ok
+}
+
+#[must_use]
 pub fn s7b_m2_delay_test_ok() -> bool {
     use crate::systems::sim_control::SimStepStamp;
 
@@ -108,6 +118,8 @@ pub fn build_stage7_behavioral_live_proof_payload(
     let orders_hook = hud.orders_pending_ui_hook || behavioral.orders_pending_ui_hook;
     let s7b_m2 = s7b_m2_green(delay_ticks, delay_test_ok);
     let s7b_m3 = s7b_m3_green(behavioral);
+    let s7b_m4 = s7b_m4_play_green(queue, behavioral);
+    let s7b_tune_delay = s7b_tune_delay_001_green(delay_ticks, delay_test_ok);
     let gate = if s7b_m3 {
         "S7B-M3-001"
     } else if s7b_m2 {
@@ -141,6 +153,19 @@ pub fn build_stage7_behavioral_live_proof_payload(
         "s7b_m1_green": s7b_m1,
         "s7b_m2_green": s7b_m2,
         "s7b_m3_green": s7b_m3,
+        "s7b_m4_play_001": {
+            "gate": "S7B-M4-PLAY-001",
+            "green": s7b_m4,
+            "play_enqueue_wired": behavioral.s7b_m4_play_enqueue_wired,
+            "pending_dispatch_count": queue.pending_count(),
+        },
+        "s7b_tune_delay_001": {
+            "gate": "S7B-TUNE-DELAY-001",
+            "green": s7b_tune_delay,
+            "dispatch_delay_ticks": delay_ticks,
+        },
+        "s7b_m4_play_green": s7b_m4,
+        "s7b_tune_delay_001_green": s7b_tune_delay,
         "s7b_steward_green": s7b_steward_green(s7b_m1, s7b_m2, s7b_m3),
         "decisions": {
             "d_s7_01": "StrategicCommand_only",
@@ -203,6 +228,24 @@ pub fn refresh_s7b_m3_001_live_witness() -> bool {
     assert!(
         s7b_m3_green(&behavioral),
         "S7B-M3-001 overlay reader predicate"
+    );
+    let hud = Stage7BehavioralHud {
+        pending_orders: queue.pending_count(),
+        orders_pending_ui_hook: true,
+        orders_pending_label: format!("Orders pending: {}", queue.pending_count()),
+    };
+    commit_stage7_behavioral_live_proof(&queue, &behavioral, &hud)
+}
+
+/// **S7B-M4-PLAY-001** — playtest corridor enqueue → `pending_dispatch_count` > 0.
+#[must_use]
+pub fn refresh_s7b_m4_play_001_live_witness() -> bool {
+    let mut queue = StrategicCommandQueue::default();
+    let mut behavioral = Stage7BehavioralWitnessState::default();
+    seed_stage7_m4_playtest_enqueue(&mut queue, &mut behavioral);
+    assert!(
+        s7b_m4_play_green(&queue, &behavioral),
+        "S7B-M4-PLAY-001 enqueue predicate"
     );
     let hud = Stage7BehavioralHud {
         pending_orders: queue.pending_count(),

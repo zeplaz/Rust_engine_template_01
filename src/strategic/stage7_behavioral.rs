@@ -35,6 +35,8 @@ pub struct Stage7BehavioralWitnessState {
     pub recon_overlay_sample_count: u32,
     pub logistics_stress_sample_count: u32,
     pub delivered_dispatch_count: u64,
+    /// **S7B-M4-PLAY-001** — playtest Move/Secure corridor enqueue witnessed (not transmission UI).
+    pub s7b_m4_play_enqueue_wired: bool,
 }
 
 /// HUD DTO — ops strip orders-pending surface (**M2-B**).
@@ -91,6 +93,7 @@ impl Plugin for Stage7BehavioralPlugin {
 pub fn seed_stage7_behavioral_sim_session(
     mut queue: ResMut<StrategicCommandQueue>,
     mut beliefs: ResMut<Stage7BeliefState>,
+    mut witness: ResMut<Stage7BehavioralWitnessState>,
     tick: Res<SimTick>,
     sim_time: Res<SimTimeMicros>,
 ) {
@@ -123,6 +126,7 @@ pub fn seed_stage7_behavioral_sim_session(
             summary: "Logistics hub contested".into(),
         },
     ];
+    seed_stage7_m4_playtest_enqueue(&mut queue, &mut witness);
 }
 
 pub fn tick_strategic_command_queue_system(
@@ -393,6 +397,17 @@ pub fn seed_stage7_behavioral_witness_for_lib_proof(
     witness.recon_overlay_sample_count = recon_samples;
     witness.logistics_stress_overlay_enabled = logistics_samples > 0;
     witness.recon_overlay_enabled = recon_samples > 0;
+}
+
+/// **S7B-M4-PLAY-001** — lib / playtest hook: enqueue corridor missions (StrategicCommand only).
+pub fn seed_stage7_m4_playtest_enqueue(
+    queue: &mut StrategicCommandQueue,
+    witness: &mut Stage7BehavioralWitnessState,
+) {
+    let issued = SimStepStamp::new(10, 0);
+    enqueue_strategic_command(queue, issued, "S7B-M4-001 MoveCorridor playtest");
+    enqueue_strategic_command(queue, issued, "S7B-M4-001 SecureCorridor playtest");
+    witness.s7b_m4_play_enqueue_wired = true;
 }
 
 #[cfg(test)]

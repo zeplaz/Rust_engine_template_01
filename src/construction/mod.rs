@@ -120,6 +120,9 @@ pub use zones::{
     ActiveZonePaint,
 };
 
+#[cfg(test)]
+pub use live_proof::refresh_construction_mv_001_live_witness;
+
 use bevy::prelude::*;
 use bevy_egui::EguiPrimaryContextPass;
 

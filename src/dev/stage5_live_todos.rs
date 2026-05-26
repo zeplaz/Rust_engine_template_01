@@ -749,6 +749,7 @@ mod stage5_todo_board_tests {
         });
         world.insert_resource(Stage5FireViewChunkWitness {
             world_main_visible_orphan_chunks: 0,
+            f7_a_per_view_extract_bounded: true,
         });
         world.insert_resource(Stage5LodBandLogWitness {
             lod_band_log_emissions: 1,
@@ -800,6 +801,7 @@ mod stage5_todo_board_tests {
         let mut world = seed_predicate_close_world();
         world.insert_resource(Stage5FireViewChunkWitness {
             world_main_visible_orphan_chunks: 3,
+            f7_a_per_view_extract_bounded: true,
         });
         let report = all_green_readiness_report();
         sync_stage5_todo_board_predicates(&mut world, &report, true);

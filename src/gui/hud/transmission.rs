@@ -273,6 +273,7 @@ impl Plugin for TransmissionShellPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<TransmissionShellState>()
             .init_resource::<TransmissionMediaProvider>()
+            .init_resource::<super::transmission_media::TransmissionMediaProviderRegistry>()
             .add_systems(
                 Update,
                 (

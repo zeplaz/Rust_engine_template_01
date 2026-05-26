@@ -146,6 +146,24 @@
       "status": "done",
       "witness": "src/dev/stage7_behavioral_d_signoff_v1.md",
       "unblocks": ["S7B-PLAN-001"]
+    },
+    {
+      "id": "FIRE7-DESIGN-001",
+      "agent": "designer",
+      "signoff": "SIGNED",
+      "signed_date": "2026-05-25",
+      "status": "done",
+      "witness": "src/dev/fire_lod_player_read_v1.md",
+      "unblocks": ["FIRE7-F7-C-001"]
+    },
+    {
+      "id": "S7P-DESIGN-002",
+      "agent": "designer",
+      "signoff": "SIGNED",
+      "signed_date": "2026-05-25",
+      "status": "done",
+      "witness": "src/dev/s7p_grid_overload_ux_note_v1.md",
+      "unblocks": ["S7P-GRID-UX-UI-001"]
     }
   ],
   "optional_designer": [
@@ -155,7 +173,8 @@
     },
     {
       "id": "UX-E03",
-      "notes": "Transmission stub note — post_stage6_active_todos.md; low"
+      "status": "done",
+      "notes": "ux_e03_transmission_shell_note_v1.md (2026-05-25)"
     }
   ],
   "active": [

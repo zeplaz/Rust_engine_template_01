@@ -2,8 +2,10 @@
 
 | Field | Value |
 |:---|:---|
-| **Version** | `1.2.5` |
-| **Date** | 2026-05-25 |
+| **Version** | `1.4.0` |
+| **Date** | 2026-05-26 |
+| **Coder todos** | [`coder_wave3_full_todos_v1.md`](coder_wave3_full_todos_v1.md) |
+| **Prior closure** | [`coder_dual_queue_todos_v1.md`](coder_dual_queue_todos_v1.md) |
 | **Sign-off ledger** | [`stage_tracks_signoff_ledger_v1.md`](stage_tracks_signoff_ledger_v1.md) v1.2.5 |
 | **Open todos** | [`stage_open_todos_v1.md`](stage_open_todos_v1.md) v1.5.0 |
 | **Audit** | [`planner_status_audit_v5.md`](planner_status_audit_v5.md) |
@@ -31,22 +33,50 @@
 | IND-E03-CODER-A | INDUSTRIAL · [`industrial_grid_overload_impl_plan_v1.md`](industrial_grid_overload_impl_plan_v1.md) **DONE** |
 | **BQ-128-APPLY-001** | WAVE-S / UX-E02 | Preset **Apply ghost** ([`bq128_editor_path_design_note_v1.md`](bq128_editor_path_design_note_v1.md)) |
 | **UI-P5-PAUSE-001** | UI-P5 | Bevy pause — **CLOSED** — [`ui_oh_p5_001_plan_v1.md`](ui_oh_p5_001_plan_v1.md) |
+| **Dual-queue A+B (28 IDs)** | 2026-05-26 | [`coder_a_dual_queue_closure_v1.rs`](coder_a_dual_queue_closure_v1.rs) + [`coder_b_queue_bundle_proof.rs`](coder_b_queue_bundle_proof.rs) |
 
 ---
 
-## Execution queue (pick one)
+## Execution queue — wave 3
 
-**Mirrors:** [`active_coder_queue_v1.md`](active_coder_queue_v1.md) · [`coder_triage_list_v1.md`](coder_triage_list_v1.md) · [`continuation_queue.json`](../../tools/orchestrator/queues/continuation_queue.json)
+**Authority:** [`coder_dual_queue_v3.md`](coder_dual_queue_v3.md) · **Checklist:** [`coder_dual_queue_todos_v2.md`](coder_dual_queue_todos_v2.md) · **Machine:** [`coder_active_queue.json`](../../tools/orchestrator/queues/coder_active_queue.json) v3.0
 
-| Queue ID | When | Done when | Status |
-|:---|:---|:---|:---:|
-| ~~**S7B-M1-001**~~ | — | `s7b_m1_green: true` | ☑ |
-| **S7B-M2-001** | — | `dispatch_delay_ticks: 8`, `s7b_m2_green` | ☑ |
-| **S7B-M3-001** | — | overlays → `s7b_m3_green` | ☑ |
-| **OPS-F01** / **OPS-F03** | operator | 60s perf + optional sim stage6 refresh | ☐ |
-| **UI-P3-M3-UNITS-001** / **REPLAY-001** | Optional | M3 units / replay — witness `unit_marker_rows`, `replay_scrub_enabled` | ☑ |
-| **UI-WP-LAYOUT-D02-OPT** | Optional | D-02 map ≥65% — `d02_sidebar_max_width_px`, witness helper | ☑ |
-| **UI-P2A-F03 / P4-AUTH** | Witness tails | `ui_p2a_tail.*` green via replay + lib test | ☑ |
+**F7 split:** v2 **FIRE7-F7-A-001** = witness bundle ☑ · **FIRE7-F7-A-EXIT-001** = product gate ☐ (Coder A P1 #1)
+
+### @coder A — P1 (one primary)
+
+| ID | Task |
+|:---|:---|
+| **FIRE7-F7-A-EXIT-001** | F7-A product gate A1–A5 |
+| **VFX-VISUAL-SIGNOFF-001** | Visual run P2 sparks/water |
+| **TRIAGE-GPU-TILE-WGSL-001** | WGSL instanced tiles |
+| **TRIAGE-VISUAL-TEARDOWN-001** | VR-02 GPU exit |
+| **TRIAGE-PHASE-F-CULL-001** | Particle cull |
+| **UI-WP-VISUAL-001** | World preview visual sign-off |
+| **INFRA-GPU-TILE-GIZMO-001** | Drop gizmo fallback |
+| **S7B-M4-SIM-001** | M4 play in sim |
+
+### @coder B — P1 (one primary)
+
+| ID | Task |
+|:---|:---|
+| **IND-E02-DEFAULT-PLAY-001** | `ind_e02_green` in play |
+| **CONSTRUCTION-MV-SIM-001** | MV ghosts in sim |
+| **S7P-GRID-UX-UI-001** | Grid toast UI |
+| **LOG-E01-VISUAL-CONFIRM-001** | Logistics on visual |
+| **UI-P3-M3-UNITS-001** / **REPLAY-001** | Minimap M3 tails |
+| **REPLAY-PARITY-001** | Replay editor parity |
+| **UX-E02-APPLY-POLISH-001** | BQ-128 apply polish |
+| **WAVE-S-SHELL-POLISH-001** | Wave S shell edges |
+
+**Blocked until F7-A-EXIT:** FIRE7-F7-B-001 · FIRE7-F7-C-001
+
+### Operator / design (not coder queue)
+
+| Owner | ID |
+|:---|:---|
+| @operator | OPS-F01 · OPS-F03 · VFX-CAPTURE-INSIM-001 |
+| @designer | FIRE7-DESIGN-001 · S7P-DESIGN-002 |
 
 ---
 
@@ -54,7 +84,7 @@
 
 ```powershell
 cargo test -p proc_A_dine01 --lib stage5
-cargo run -p proc_A_dine01 --release -- --test visual
+cargo test -p proc_A_dine01 --lib coder_a_dual_queue coder_b_queue_bundle
 ```
 
 ---
@@ -63,6 +93,9 @@ cargo run -p proc_A_dine01 --release -- --test visual
 
 | Version | Date | Notes |
 |:---|:---|:---|
+| v1.4.0 | 2026-05-26 | Wave 3 queues — F7-A-EXIT split; 12 A + 15 B active rows |
+| v1.3.0 | 2026-05-26 | Dual-queue A+B closed — machine queue empty; next_lane only |
+| v1.2.6 | 2026-05-26 | **coder_dual_queue_todos_v1** — 14 @coder A execution rows |
 | v1.2.5 | 2026-05-25 | PLAN-LEDGER-REFRESH-003 — `plan_doc` + machine queues |
 | v1.2.4 | 2026-05-25 | PLAN-LEDGER-REFRESH-002 sync |
 | v1.2.3 | 2026-05-25 | Fleet reconcile: M4 witness refresh; TRAY-OPT + WC-D04 done; P1 = BQ-128-APPLY |

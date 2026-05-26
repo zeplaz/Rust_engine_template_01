@@ -33,6 +33,26 @@
       "notes": "Stage 7 Play scenario script; steward witness green 2026-05-25"
     },
     {
+      "id": "S7P-DESIGN-002",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-05-25",
+      "witness": "src/dev/s7p_grid_overload_ux_note_v1.md",
+      "unblocks": ["S7P-GRID-UX-UI-001"],
+      "notes": "Grid overload toast vs tray vs diagnostics; unblocks Coder B3"
+    },
+    {
+      "id": "FIRE7-DESIGN-001",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-05-25",
+      "witness": "src/dev/fire_lod_player_read_v1.md",
+      "unblocks": ["FIRE7-F7-C-001"],
+      "notes": "LOD player-read table; F7-C policy after F7-A-001"
+    },
+    {
       "id": "UI-OH-D2-SIGN-001",
       "aliases": ["UI-OH-D2", "DESIGN-UI-P2-SIGNOFF", "UI-P2-DESIGN"],
       "agent": "designer",
@@ -58,10 +78,13 @@
       "verdict": "PASS",
       "depends_on": ["PLAN-UI-P4-ATLAS-001"],
       "witness": "src/dev/ui_oh_p4_art_signoff_record_v1.md",
+      "wave3_sheet": "src/dev/ui_icon_atlas_sheet_v1.md",
       "brief": "prompts/guides/ui/ui_phase4_icon_atlas_brief_v1.md",
+      "witness_json": "debug_runs/ui_shell_migration_live.json",
       "artifacts": [
         "assets/textures/ui/icon_atlas_phase4_v1.png",
         "assets/ui/phase4/icon_atlas_phase4_layout_mock.png",
+        "src/dev/ui_icon_atlas_sheet_v1.md",
         "tools/orchestrator/scripts/bake_icon_atlas_phase4.py"
       ],
       "unblocks": ["P4-F03", "P4-VEH-01"],
@@ -180,8 +203,8 @@
       "track": "prompts/guides/ui/world_preview_d_wp_track_signoff_v1.md",
       "witness_json": "debug_runs/wave_p_live.json",
       "prereq_coder": "COD-B-WP-WITNESS-001",
-      "pass_slices": ["D-01", "D-04", "D-07"],
-      "deferred": ["D-05", "D-08", "D-09", "D-10", "D-12", "WP-L4", "UI-WP-LAYOUT-D02-OPT"],
+      "pass_slices": ["D-01", "D-02", "D-04", "D-07"],
+      "deferred": ["D-05", "D-08", "D-09", "D-10", "D-12", "WP-L4"],
       "notes": "Post-impl D-WP review; operational chrome green; not full mock parity"
     },
     {

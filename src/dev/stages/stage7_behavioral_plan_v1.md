@@ -68,9 +68,9 @@ Prove **StrategicCommand** plane: delayed dispatch, stale intel, logistics stres
 
 **Do not** assign pixels to egui product shell in sim — use Bevy chrome ([`ui_phase2b_egui_gate_plan_v1.md`](../../prompts/guides/ui/ui_phase2b_egui_gate_plan_v1.md)).
 
-### S7B-DESIGN-003 — Transmission shell note (UX-E03)
+### S7B-DESIGN-003 — Transmission shell note (UX-E03) — **DONE**
 
-One-page alignment: how behavioral comms relate to `transmission_media.rs` stub — editor vs sim visibility.
+[`ux_e03_transmission_shell_note_v1.md`](../ux_e03_transmission_shell_note_v1.md) — behavioral comms vs transmission shell; editor vs sim visibility.
 
 ---
 

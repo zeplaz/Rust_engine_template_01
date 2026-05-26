@@ -148,7 +148,9 @@ pub use camera_focus_debug::{
     fire_chunk_coords_above_visual_eps, CameraFocusDebug, CameraFocusDebugPlugin,
     DEBUG_CHUNK_SPACING_WORLD,
 };
-pub use gpu_tile_debug::{build_tile_debug_instances, GpuTileDebugPlugin};
+pub use gpu_tile_debug::{
+    build_tile_debug_instances, triage_gpu_tile_wgsl_001_green, GpuTileDebugPlugin,
+};
 pub use tile_readability::{
     apply_readability_to_lod_inputs, apply_tile_readability_lod_bias, readability_zoom_floor,
     screen_pixels_per_tile, TileReadabilityConfig, TileReadabilityPlugin,

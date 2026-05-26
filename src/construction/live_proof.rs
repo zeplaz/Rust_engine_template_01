@@ -76,6 +76,7 @@ fn build_proof_payload(
     round3_board: Option<&ConstructionRound3TodoBoard>,
     operational_board: Option<&ConstructionOperationalTodoBoard>,
     operational_witness: Option<&ConstructionOperationalWitness>,
+    stage_witness: Option<&super::ConstructionStageWitness>,
     history: Option<&ConstructionHistory>,
     path_feedback: Option<&super::path_feedback::ConstructionPathFeedback>,
     junction_count: usize,
@@ -136,6 +137,11 @@ fn build_proof_payload(
             "required_actions": f.required_actions,
         })),
         "rail_junction_count": junction_count,
+        "construction_mv_001": stage_witness.map(|w| serde_json::json!({
+            "gate": "CONSTRUCTION-MV-001",
+            "green": w.multiview_ghosts_wired && w.ghost_commit_isolated && w.road_ghost_draw,
+            "multiview_ghosts_wired": w.multiview_ghosts_wired,
+        })),
     })
 }
 
@@ -151,6 +157,7 @@ pub fn write_construction_live_proof_system(
     round3_board: Option<Res<ConstructionRound3TodoBoard>>,
     operational_board: Option<Res<ConstructionOperationalTodoBoard>>,
     operational_witness: Option<Res<ConstructionOperationalWitness>>,
+    stage_witness: Option<Res<super::ConstructionStageWitness>>,
     history: Option<Res<ConstructionHistory>>,
     path_feedback: Option<Res<super::path_feedback::ConstructionPathFeedback>>,
     junctions: Option<Res<super::rail::RailJunctionAuthority>>,
@@ -188,6 +195,7 @@ pub fn write_construction_live_proof_system(
         round3_board.as_deref(),
         operational_board.as_deref(),
         operational_for_payload.as_ref(),
+        stage_witness.as_deref(),
         history.as_deref(),
         path_feedback.as_deref(),
         junction_count,
@@ -249,6 +257,23 @@ mod live_proof_sim_tests {
     use super::super::sessions::ActiveToolSession;
     use super::super::zones::ActiveZonePaint;
 
+    /// **CONSTRUCTION-MV-001** — sim writer + multiview witness rollup.
+    pub fn refresh_construction_mv_001_live_witness() -> bool {
+        let _ = fs::remove_file(proof_output_path());
+        let mut app = assemble_construction_proof_sim_app();
+        for _ in 0..15 {
+            app.update();
+        }
+        let path = proof_output_path();
+        if !path.exists() {
+            return false;
+        }
+        let json: serde_json::Value =
+            serde_json::from_str(&fs::read_to_string(&path).expect("read proof json")).expect("parse");
+        json["construction_mv_001"]["green"].as_bool().unwrap_or(false)
+            && json["operational_green"].as_bool().unwrap_or(false)
+    }
+
     fn assemble_construction_proof_sim_app() -> App {
         let mut app = App::new();
         app.add_plugins((MinimalPlugins, bevy::state::app::StatesPlugin));
@@ -273,6 +298,7 @@ mod live_proof_sim_tests {
         app.init_resource::<IntersectionRegistry>();
         app.init_resource::<ConstructionPathFeedback>();
         app.init_resource::<RailJunctionAuthority>();
+        app.init_resource::<crate::render::view_runtime::ViewProjectionAuthority>();
         app.insert_resource(load_building_definitions_from_dir(default_buildings_dir()));
 
         app.world_mut()
@@ -300,6 +326,18 @@ mod live_proof_sim_tests {
             )
                 .chain(),
         );
+        {
+            use crate::gui::ViewCameraState;
+            use crate::render::view_runtime::{
+                ViewAuthorityWriter, ViewProjectionAuthority, ViewSurfaceId,
+            };
+            let mut auth = app.world_mut().resource_mut::<ViewProjectionAuthority>();
+            auth.commit_pose(
+                ViewSurfaceId::SimulationMap,
+                ViewCameraState::default(),
+                ViewAuthorityWriter::BridgeCompat,
+            );
+        }
         app
     }
 
@@ -333,5 +371,16 @@ mod live_proof_sim_tests {
         assert!(json.get("p9_build").is_some());
         assert!(app.world().resource::<ConstructionP9TodoBoard>().is_green());
         assert!(app.world().resource::<ConstructionLiveProofState>().written);
+        assert_eq!(
+            json["construction_mv_001"]["green"],
+            serde_json::json!(true),
+            "CONSTRUCTION-MV-001: {}",
+            json["construction_mv_001"]
+        );
     }
+}
+
+#[cfg(test)]
+pub fn refresh_construction_mv_001_live_witness() -> bool {
+    live_proof_sim_tests::refresh_construction_mv_001_live_witness()
 }

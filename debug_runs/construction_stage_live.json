@@ -49,7 +49,7 @@
     "relative_path": "debug_runs/construction_stage_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "construction_live_proof",
-    "written_at_epoch_secs": 1779755990
+    "written_at_epoch_secs": 1779766108
   },
   "build_p_star": [
     {
@@ -130,6 +130,11 @@
     }
   ],
   "con_e01_p9_green": true,
+  "construction_mv_001": {
+    "gate": "CONSTRUCTION-MV-001",
+    "green": true,
+    "multiview_ghosts_wired": true
+  },
   "history": {
     "last_action": null,
     "redo_depth": 0,

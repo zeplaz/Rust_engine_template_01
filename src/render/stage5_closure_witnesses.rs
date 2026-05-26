@@ -24,6 +24,8 @@ impl Default for Stage5MapCameraBridgeWitness {
 #[derive(Resource, Default, Debug, Clone, Copy)]
 pub struct Stage5FireViewChunkWitness {
     pub world_main_visible_orphan_chunks: u32,
+    /// F7-A-001: every [`crate::render::fire_view_extract::FireVisualFramesByView`] row ⊆ that view's visible set.
+    pub f7_a_per_view_extract_bounded: bool,
 }
 
 /// PLAY-06e: overlay heat persistence in sim / `--test visual` (not a Stage 5 gate).

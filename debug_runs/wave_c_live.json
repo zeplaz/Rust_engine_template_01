@@ -1,7 +1,8 @@
 {
   "_agent_meta": {
     "agent_commands": [
-      "cargo test -p proc_A_dine01 --lib"
+      "cargo test -p proc_A_dine01 --lib wc_depth_001",
+      "cargo test -p proc_A_dine01 --lib wave_c"
     ],
     "docs": {
       "compile_warnings": "src/dev/COMPILE_WARNINGS_TODOS.md",
@@ -41,19 +42,21 @@
       "debug_runs/wave_p_live.json",
       "debug_runs/wave_c_live.json",
       "debug_runs/ui_shell_migration_live.json",
-      "debug_runs/minimap_compositor_live.json"
+      "debug_runs/minimap_compositor_live.json",
+      "debug_runs/stage7_behavioral_live.json",
+      "debug_runs/stage7_play_live.json"
     ],
     "relative_path": "debug_runs/wave_c_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "wave_c_live_proof",
-    "written_at_epoch_secs": 1779725338
+    "written_at_epoch_secs": 1779764902
   },
   "profile": "WAVE_C_STREAMING",
   "tile_storage_apply": {
     "applied_chunks": 2,
     "contract_bq": "BQ-101",
     "last_timing": "AfterDomainReconstruct",
-    "pending_smooth_tiles": 4
+    "pending_smooth_tiles": 0
   },
   "wave_c_green": true,
   "wave_c_readiness": {

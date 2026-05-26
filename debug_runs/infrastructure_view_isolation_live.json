@@ -48,7 +48,30 @@
     "relative_path": "debug_runs/infrastructure_view_isolation_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_infrastructure_view_isolation_live_witness",
-    "written_at_epoch_secs": 1779761121
+    "written_at_epoch_secs": 1779766108
+  },
+  "fire7_f7_a_001": {
+    "f7_a_per_view_extract_bounded": true,
+    "gate": "FIRE7-F7-A-001",
+    "green": true
+  },
+  "fire7_f7_a_exit_001": {
+    "fire7_f7_a_001_green": true,
+    "gate": "FIRE7-F7-A-EXIT-001",
+    "green": true,
+    "minimap_fire_overlay_only": true,
+    "sole_fire_visual_producer": true
+  },
+  "infra_vm_deep_001": {
+    "gate": "INFRA-VM-DEEP-001",
+    "green": true,
+    "sim_trace": {
+      "vm_08_overlay_masks_aligned": true,
+      "vm_10_minimap_lockstep": false,
+      "vm_10_preview_lockstep": false,
+      "vm_11_minimap_cap_respected": true,
+      "vm_11_preview_cap_respected": true
+    }
   },
   "infrastructure_view_isolation_green": true,
   "isolation": {
@@ -65,6 +88,10 @@
     "enabled": false,
     "entry_count": 0,
     "violations": []
+  },
+  "triage_phase_d_parity_001": {
+    "gate": "TRIAGE-PHASE-D-PARITY-001",
+    "green": true
   },
   "vm_06": {
     "resolved_viewports_cache_mirror": "view_runtime::sync_resolved_viewports_from_authority",
@@ -89,13 +116,18 @@
     "view_representation_world_main_zoom": "resolve_world_main_camera_scale"
   },
   "vm_10": {
+    "diagnostic_note": "lockstep true = suspected bleed; false = independent or follow mode",
+    "minimap_follow_exempt": true,
     "minimap_lockstep_suspect": false,
     "preview_lockstep_suspect": false
   },
   "vm_11": {
+    "f7_a_per_view_extract_bounded": true,
     "minimap_cap_respected": true,
+    "per_view_chunk_heat": {},
     "per_view_fire_instances": {},
     "preview_cap_respected": true,
+    "preview_semantic_audit_green": true,
     "projection_fire_source": "WorldMain"
   },
   "vm_a": {

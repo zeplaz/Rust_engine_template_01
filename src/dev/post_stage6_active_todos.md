@@ -80,7 +80,7 @@
 | LOG-E01 | `log_rows` in FULL_APP | [x] | [`logistics_visual_lane_spec_v1.md`](logistics_visual_lane_spec_v1.md) — startup transport seed + `log_rows≥1` in visual run |
 | UX-E01 | GPU minimap M1+M2+M3 FoW/EW | [x] | **UI-P3-M4-001** FoW+EW — `ui_p3_m4_green` in `minimap_compositor_live.json`; units/replay optional |
 | UX-E02 | BQ-128 editor path | [x] design / [ ] apply | [`bq128_editor_path_plan_v1.md`](bq128_editor_path_plan_v1.md) (**PLAN-UX-BQ128-001**) · **BQ-128-APPLY-001** open |
-| UX-E03 | Transmission stub note | [ ] | `transmission_media.rs` |
+| UX-E03 | Transmission stub note | [x] | [`ux_e03_transmission_shell_note_v1.md`](ux_e03_transmission_shell_note_v1.md) · stub [`transmission_media.rs`](../gui/hud/transmission_media.rs) |
 
 ---
 

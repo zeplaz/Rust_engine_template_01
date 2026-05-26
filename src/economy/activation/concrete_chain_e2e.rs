@@ -294,6 +294,54 @@ pub fn reset_stage7_play_chain_seed_on_enter_simulation(
     seed.seeded = false;
 }
 
+/// **IND-E02-DEFAULT-PLAY-001** — default Simulation path: Portland chain via construction commit (no seed env).
+#[derive(Resource, Debug, Default)]
+pub struct IndE02DefaultPlaySeedState {
+    pub enqueued: bool,
+}
+
+pub fn reset_ind_e02_default_play_seed_on_enter_simulation(
+    mut seed: ResMut<IndE02DefaultPlaySeedState>,
+) {
+    *seed = IndE02DefaultPlaySeedState::default();
+}
+
+pub fn seed_ind_e02_default_play_once(
+    base: Res<State<crate::engine::states::BaseState>>,
+    mut seed: ResMut<IndE02DefaultPlaySeedState>,
+    mut witness: ResMut<ConcreteChainE2eWitness>,
+    sites: Query<&BuildingDefinitionRef, With<ConstructionSite>>,
+    mut writer: MessageWriter<CommitConstructionSiteEvent>,
+) {
+    if !matches!(base.get(), crate::engine::states::BaseState::Simulation) {
+        return;
+    }
+    if witness.in_play_green() {
+        return;
+    }
+    if witness.production_green() && !witness.placed_via_construction {
+        return;
+    }
+    if seed.enqueued {
+        return;
+    }
+    let has_portland = sites.iter().any(|d| {
+        CONCRETE_PORTLAND_STEPS
+            .iter()
+            .any(|id| *id == d.catalog_id.as_str())
+    });
+    if has_portland {
+        return;
+    }
+    commit_concrete_portland_chain_in_play(
+        &mut writer,
+        witness.as_mut(),
+        Entity::PLACEHOLDER,
+        BuildSiteTile { x: 40, z: 40 },
+    );
+    seed.enqueued = true;
+}
+
 /// **IND-E03-CODER-A** — one-shot grid overload cluster for live proof depth.
 /// Plan: `src/dev/industrial_grid_overload_impl_plan_v1.md` (PLAN-IND-E03-001).
 #[derive(Resource, Debug, Default)]

@@ -24,11 +24,11 @@
 |:---|:---|
 | **P4.1** — loader, rail RD…CV, manifest | **PASS** |
 | **P4-P5-01** — petroleum tab `P5Br` | **PASS** |
-| **P4-ART-01** — traced PNG | **OPEN** (optional) |
+| **P4-ART-01** — traced PNG | **DONE** — [`ui_oh_p4_art_signoff_record_v1.md`](ui_oh_p4_art_signoff_record_v1.md) · [`ui_icon_atlas_sheet_v1.md`](ui_icon_atlas_sheet_v1.md) |
 | **P4-VEH-01** / **P4-F03** / **P4-MI-EC** | **OPEN** / deferred |
 | **UI-OH-P4-001 rollup** | **PASS (qualified)** |
 
-**Qualified:** `phase4.icon_atlas_loaded: false` on disk while lib tests assert `true` — **STALE** until witness refresh; does **not** reopen **UI-P4-ATLAS-CODE**.
+**Qualified:** If `phase4.icon_atlas_loaded` is `false` on disk while lib tests are green, run witness refresh below — **STALE JSON only**; does **not** reopen **UI-P4-ATLAS-CODE** or **P4-ART-01** art.
 
 ---
 
@@ -43,7 +43,7 @@ P4.1  IconAtlasPlugin + rail RD…CV        ☑ UI-P4-ATLAS-CODE
         ▼
 P4-P5-01  Petroleum tab IconId::P5Br       ☑
         │
-        ├─► P4-ART-01  traced PNG           ☐ optional
+        ├─► P4-ART-01  traced PNG           ☑ DONE
         ├─► P4-VEH-01  vehicle row          ☐ deferred
         └─► P4-F03     hover border           ☐ optional
 ```
@@ -58,7 +58,7 @@ P4-P5-01  Petroleum tab IconId::P5Br       ☑
 | P4-2 | Atlas texture path | `phase4.atlas_texture` | `textures/ui/icon_atlas_phase4_v1.png` | ☑ |
 | P4-3 | Manifest path | `phase4.manifest_ron` | `configs/ui/icon_atlas_phase4.icon_atlas.ron` | ☑ |
 | P4-4 | Atlas loaded (lib) | `phase4.icon_atlas_loaded` | `true` in lib witness test | ☑ test |
-| P4-4b | Atlas loaded (disk) | `phase4.icon_atlas_loaded` | `true` after refresh | ☐ **STALE** |
+| P4-4b | Atlas loaded (disk) | `phase4.icon_atlas_loaded` | `true` after refresh | ☑ (`ui_shell_migration_live.json`) |
 | P4-5 | Build rail uses atlas | code `BuildRailToolIcon` + `tool_context_uses_icon_atlas` | wired | ☑ |
 
 **Lib anchor:**
@@ -126,7 +126,7 @@ Until `ui_oh_p4_001` block exists on disk, use **phase4** fields + lib tests as 
 
 | ID | Owner | plan_doc section |
 |:---|:---|:---|
-| **P4-ART-01** | @designer | Atlas plan § P4.2b |
+| **P4-ART-01** | @designer | **DONE** — traced atlas + sheet record |
 | **P4-VEH-01** | @coder | § P4.2c |
 | **P4-F03** | @coder | § P4.2d |
 | **P4-MI-EC** | @designer | § P4.2e — **DEFERRED** |

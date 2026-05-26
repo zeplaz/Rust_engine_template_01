@@ -2,7 +2,7 @@
 
 | Field | Value |
 |:---|:---|
-| **Version** | `2.6.0` |
+| **Version** | `2.7.0` |
 | **Date** | 2026-05-25 |
 | **Planner batch** | [`planner_queue_todos_v1.md`](planner_queue_todos_v1.md) |
 | **Ledger refresh** | [`stage_tracks_ledger_refresh_runbook_v1.md`](stage_tracks_ledger_refresh_runbook_v1.md) |
@@ -49,12 +49,26 @@ See [`planner_queue_todos_v1.md`](planner_queue_todos_v1.md) v1.1.0 — **batch 
 
 ---
 
+## Cycle 2026-05-25 (primary)
+
+See [`planner_queue_cycle_20260525_v1.md`](planner_queue_cycle_20260525_v1.md).
+
+| Queue ID | Deliverable | Status |
+|:---|:---|:---:|
+| **FIRE7-PLAN-001** | [`fire_sim_phase7_architecture_v1.md`](fire_sim_phase7_architecture_v1.md) | **DONE** |
+| **S7B-CLOSURE-PLAN-001** | [`s7b_closure_plan_v1.md`](s7b_closure_plan_v1.md) | **DONE** |
+| **LOG-E01-WITNESS-SPEC** | [`log_e01_full_app_witness_spec_v1.md`](log_e01_full_app_witness_spec_v1.md) | **DONE** |
+| **IND-E02-DEFAULT-WITNESS** | [`ind_board_reconcile_plan_v1.md`](ind_board_reconcile_plan_v1.md) § | **DONE** |
+
+---
+
 ## Next planner actions
 
 | Priority | Action |
 |:---:|:---|
-| 1 | **S7B-PREFLIGHT-001** → **S7B-M1-001** (plan **SIGNED**) |
+| 1 | **F7-B-001** / **FIRE7-DESIGN-001** | After F7-A witness stable · designer LOD table |
 | 2 | Re-run **PLAN-LEDGER-REFRESH** after coder cycles |
+| 3 | Optional P2: WP-L3/L4 motion — product call only |
 
 ---
 
@@ -62,6 +76,7 @@ See [`planner_queue_todos_v1.md`](planner_queue_todos_v1.md) v1.1.0 — **batch 
 
 | Version | Date | Notes |
 |:---|:---|:---|
+| v2.7.0 | 2026-05-25 | Cycle primary: FIRE7, S7B closure, LOG-E01 witness, IND-E02 default |
 | v2.6.0 | 2026-05-25 | PLAN-LEDGER-REFRESH-003 **CLOSED** — batch 12/12 |
 | v2.5.0 | 2026-05-25 | Planner batch 12 — [`planner_queue_todos_v1.md`](planner_queue_todos_v1.md); witness specs + IND reconcile |
 | v2.4.0 | 2026-05-25 | PLAN-UI-P5-PAUSE-001 — Phase 5 pause menu (lower priority P2) |

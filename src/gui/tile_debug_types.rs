@@ -91,7 +91,14 @@ impl Default for FireDebugOverride {
 }
 
 /// When true, keep the legacy gizmo overlay for chunk debug.
-pub fn tile_debug_use_gizmos_instead(settings: Res<TileGpuDebugSettings>) -> bool {
+pub fn tile_debug_use_gizmos_instead(
+    settings: Res<TileGpuDebugSettings>,
+    base: Res<State<crate::engine::states::BaseState>>,
+) -> bool {
+    if *base.get() == crate::engine::states::BaseState::Simulation && settings.use_batched_mesh_overlay
+    {
+        return false;
+    }
     !settings.use_batched_mesh_overlay
 }
 

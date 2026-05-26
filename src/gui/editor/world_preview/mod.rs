@@ -31,6 +31,7 @@ mod ui_toolbar;
 mod viewport;
 mod viewport_authority;
 mod viewport_suggestion;
+mod ui_wp_coder_a_witness;
 mod wave_p_live_proof;
 mod wave_p_readiness;
 mod window;
@@ -563,6 +564,7 @@ impl Plugin for WorldPreviewPlugin {
     }
 }
 
+pub use ui_wp_coder_a_witness::refresh_coder_a_ui_wp_wave_p_witness;
 pub use wave_p_live_proof::{WAVE_P_LIVE_JSON, WavePLiveProofState};
 
 #[cfg(test)]

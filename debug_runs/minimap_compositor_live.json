@@ -50,7 +50,7 @@
     "relative_path": "debug_runs/minimap_compositor_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "minimap_compositor_live_proof",
-    "written_at_epoch_secs": 1779761121
+    "written_at_epoch_secs": 1779766108
   },
   "composite_ok": true,
   "composite_path": "GpuCompute",
@@ -143,7 +143,7 @@
     "gate": "UI-W3-M3-001",
     "green": true,
     "operational_green": true,
-    "stage7_operational_green": true
+    "stage7_operational_green": false
   },
   "unit_marker_rows": 6,
   "units_heat_enabled": true

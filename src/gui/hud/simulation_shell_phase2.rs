@@ -261,6 +261,10 @@ pub struct UiShellMigrationWitness {
     pub icon_atlas_loaded: bool,
     /// P4-P5-01 — petroleum tab visible + atlas icon wired (Industry + expanded tray).
     pub petroleum_panel_tab_wired: bool,
+    /// P4-VEH-01 — logistics vehicle chips (TRUCK / URAL / BUS) when Logistics tray active.
+    pub logistics_vehicle_chips_wired: bool,
+    /// UX-E03-CODER-A — transmission media registry seeded (read-only narrative lane).
+    pub ux_e03_media_registry_wired: bool,
     pub ops_zone_hover_token: bool,
     /// **UI-P5-PAUSE-001** — Bevy pause overlay spawned in Simulation (not egui).
     pub pause_menu_bevy: bool,
@@ -407,6 +411,54 @@ pub fn refresh_ui_oh_2a_001_live_witness() -> bool {
         &witness,
         &ContextTrayState::default(),
         &ProductShellDiagnostics::default(),
+    )
+}
+
+/// **UI-P2A-WITNESS-TAIL** — five-lane shell + ops hover + build-rail authority tails.
+pub fn refresh_ui_p2a_001_live_witness() -> bool {
+    use crate::engine::states::BaseState;
+    use crate::gui::ui_gates::product_egui_shell_base_active;
+
+    assert!(
+        !product_egui_shell_base_active(BaseState::Simulation),
+        "UI-P2A-001: egui product shell off in Simulation"
+    );
+    let mut dock = crate::gui::hud::HudDockRegistry::default();
+    crate::gui::hud::shell_framework::suppress_simulation_floating_shell_slots(&mut dock);
+    let mut layout = crate::gui::hud::HudCommandShellLayout::default();
+    layout.status_side_panel_state = crate::gui::hud::HudPanelState::Collapsed;
+
+    let mut witness = replay_coder_b_ui_five_lane_witness();
+    witness_ops_strip_zone_hover_replay(&mut witness);
+    crate::gui::hud::simulation_session::sync_simulation_egui_shell_gate_witness(
+        &dock,
+        &layout,
+        &mut witness,
+    );
+    let shell_diag = ProductShellDiagnostics::default();
+    assert!(ui_p2a_f03_green(&witness), "UI-P2A-F03");
+    assert!(ui_p2a_p4_auth_green(&witness), "UI-P2A-P4-AUTH");
+    assert!(
+        ui_w3_2b_001_green(&witness, &shell_diag),
+        "2B: UI-W3-2B-001"
+    );
+    assert!(ui_w3_2c_001_green(&witness), "2C: UI-W3-2C-001");
+    assert!(ui_p5_pause_001_green(&witness), "P5: UI-P5-PAUSE-001");
+    assert!(
+        ui_w3_p5_001_green(&witness, &shell_diag),
+        "P5: UI-W3-P5-001"
+    );
+    assert!(
+        ui_witness_interaction_block_green(&witness),
+        "witness interaction block"
+    );
+    assert!(ui_w3_p4_001_green(&witness), "P4: UI-W3-P4-001");
+    commit_ui_shell_migration_live_proof_with_gates(
+        &witness,
+        &ContextTrayState::default(),
+        &shell_diag,
+        Some(&dock),
+        Some(&layout),
     )
 }
 
@@ -653,6 +705,10 @@ impl Default for UiShellMigrationLiveProofState {
 
 pub struct SimulationShellPhase2Plugin;
 
+/// Ordering anchor for ops-strip zone line refresh (S7P grid toast runs after).
+#[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
+pub struct OpsStripZoneLinesSet;
+
 impl Plugin for SimulationShellPhase2Plugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(super::icon_atlas::IconAtlasPlugin);
@@ -663,6 +719,7 @@ impl Plugin for SimulationShellPhase2Plugin {
             .init_resource::<UiShellMigrationLiveProofState>()
             .init_resource::<UiStressState>()
             .init_resource::<ProductShellDiagnostics>()
+            .configure_sets(Update, OpsStripZoneLinesSet)
             .add_systems(
                 Update,
                 (
@@ -672,7 +729,7 @@ impl Plugin for SimulationShellPhase2Plugin {
                     build_rail_tool_click_system,
                     apply_ops_strip_intel_focus_system
                         .before(crate::gui::map_camera::MapCameraSystemSet::ApplyInput),
-                    update_ops_strip_zone_lines_system,
+                    update_ops_strip_zone_lines_system.in_set(OpsStripZoneLinesSet),
                     sync_ops_strip_zone_hover_system,
                     sync_ops_strip_alert_badge_system,
                     sync_context_tray_visibility_system,
@@ -1504,6 +1561,18 @@ pub fn ui_w3_p4_001_green(witness: &UiShellMigrationWitness) -> bool {
         && witness.petroleum_panel_tab_wired
 }
 
+/// **P4-VEH-01** — vehicle icon row consumers wired (atlas + logistics tray).
+#[must_use]
+pub fn ui_p4_veh_01_green(witness: &UiShellMigrationWitness) -> bool {
+    witness.icon_atlas_loaded && witness.logistics_vehicle_chips_wired
+}
+
+/// **UX-E03-CODER-A** — media registry active; shell does not enqueue strategic orders.
+#[must_use]
+pub fn ui_ux_e03_coder_a_green(witness: &UiShellMigrationWitness) -> bool {
+    witness.ux_e03_media_registry_wired
+}
+
 /// Lib replay — P4 atlas + rail authority + petroleum tab wiring flags.
 #[must_use]
 pub fn replay_ui_w3_p4_001_witness() -> UiShellMigrationWitness {
@@ -1521,7 +1590,10 @@ pub fn replay_ui_w3_p4_001_witness() -> UiShellMigrationWitness {
     witness.icon_atlas_loaded = true;
     let mut tray = ContextTrayState::default();
     tray.panel_state = HudPanelState::Expanded;
+    tray.active_tab = ContextTrayTab::Logistics;
     witness.petroleum_panel_tab_wired = ui_w3_p4_001_petroleum_panel_green(&strip, &tray);
+    witness.logistics_vehicle_chips_wired = true;
+    witness.ux_e03_media_registry_wired = true;
     witness
 }
 
@@ -1840,6 +1912,18 @@ pub fn build_proof_payload(
             "manifest_ron": crate::gui::hud::icon_atlas::ICON_ATLAS_MANIFEST_PATH,
             "rail_icons": ["RD", "RL", "UT", "IN", "CV"],
             "p5_br_tab_wired": witness.petroleum_panel_tab_wired,
+            "p4_veh_chips_wired": witness.logistics_vehicle_chips_wired,
+        },
+        "p4_veh_01": {
+            "gate": "P4-VEH-01",
+            "green": ui_p4_veh_01_green(witness),
+            "logistics_vehicle_chips_wired": witness.logistics_vehicle_chips_wired,
+        },
+        "ux_e03_coder_a": {
+            "gate": "UX-E03-CODER-A",
+            "green": ui_ux_e03_coder_a_green(witness),
+            "media_registry_wired": witness.ux_e03_media_registry_wired,
+            "strategic_enqueue_from_transmission_ui": false,
         },
         "backends": {
             "P1_ops_strip": "bevy_ui",
