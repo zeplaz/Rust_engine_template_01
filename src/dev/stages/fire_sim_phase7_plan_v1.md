@@ -4,8 +4,9 @@
 |:---|:---|
 | **Track ID** | `FIRE-P7` |
 | **Version** | `1.0.0` |
-| **Status** | **PREFLIGHT GO** — [`../steward_fire7_preflight_gate_v1.md`](../steward_fire7_preflight_gate_v1.md) (2026-05-25) |
-| **Exit milestone** | **F7-A-001** → F7-B/C implementation waves |
+| **Status** | **TRACK CLOSED** (2026-05-26) — F7-A-EXIT + F7-B + F7-C witness green |
+| **Exit milestone** | Maintain regression · no new F7 scope without planner reopen |
+| **Orchestrator** | [`../orchestrator_signoff_snapshot_20260526_v1.md`](../orchestrator_signoff_snapshot_20260526_v1.md) |
 | **Preflight gate** | [`../steward_fire7_preflight_gate_v1.md`](../steward_fire7_preflight_gate_v1.md) |
 | **F1 (done)** | [`../fire_ecology_f1_todos.md`](../fire_ecology_f1_todos.md) |
 | **Triage** | [`../stage5_triage_backlog.md`](../stage5_triage_backlog.md) T3 |

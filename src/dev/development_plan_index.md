@@ -31,7 +31,7 @@ flowchart LR
 
 **Hub:** [`stage_tracks_execution_index_v1.md`](stage_tracks_execution_index_v1.md) — seven parallel tracks.
 
-**Sign-off (2026-05-25):** [`stage_tracks_signoff_ledger_v1.md`](stage_tracks_signoff_ledger_v1.md) v1.2.5 · **Planner batch (closed):** [`planner_queue_todos_v1.md`](planner_queue_todos_v1.md) · **Designer todos:** [`stage_designer_todos_v1.md`](stage_designer_todos_v1.md) · **Orchestrator registry:** [`designer_signoff_registry.json`](../tools/orchestrator/queues/designer_signoff_registry.json) · workboards: planner / designer / coder / steward
+**Sign-off (2026-05-26):** [`orchestrator_signoff_snapshot_20260526_v1.md`](orchestrator_signoff_snapshot_20260526_v1.md) · ledger [`stage_tracks_signoff_ledger_v1.md`](stage_tracks_signoff_ledger_v1.md) v1.2.6 · [`HANDOFF.md`](../tools/orchestrator/queues/HANDOFF.md) · **Planner batch (closed):** [`planner_queue_todos_v1.md`](planner_queue_todos_v1.md) · **Designer todos:** [`stage_designer_todos_v1.md`](stage_designer_todos_v1.md) · **Orchestrator registry:** [`designer_signoff_registry.json`](../tools/orchestrator/queues/designer_signoff_registry.json) · workboards: planner / designer / coder / steward
 
 **Witness specs:** [`wave_p_witness_spec_v1.md`](wave_p_witness_spec_v1.md) · [`ui_shell_witness_spec_v1.md`](ui_shell_witness_spec_v1.md) · [`industrial_activation_board_reconcile_v1.md`](industrial_activation_board_reconcile_v1.md)
 
@@ -53,6 +53,17 @@ flowchart LR
 | S7B post-M3 closure | [`s7b_closure_plan_v1.md`](s7b_closure_plan_v1.md) |
 | LOG-E01 witness spec | [`log_e01_full_app_witness_spec_v1.md`](log_e01_full_app_witness_spec_v1.md) |
 | Planner cycle board | [`planner_queue_cycle_20260525_v1.md`](planner_queue_cycle_20260525_v1.md) |
+| Construction MV sim | [`construction_multiview_sim_spec_v1.md`](construction_multiview_sim_spec_v1.md) |
+| IND-E02 default play | [`ind_e02_default_play_spec_v1.md`](ind_e02_default_play_spec_v1.md) |
+| Visual run acceptance | [`visual_run_acceptance_matrix_v1.md`](visual_run_acceptance_matrix_v1.md) (**PLAN-VISUAL-RUN-GATE-001**) |
+| Minimap M3 units + replay | [`minimap_m3_units_replay_impl_plan_v1.md`](minimap_m3_units_replay_impl_plan_v1.md) (**PLAN-M3-MINMAP-001**) |
+| F7-B streaming signoff | [`fire7_f7_b_streaming_impl_plan_v1.md`](fire7_f7_b_streaming_impl_plan_v1.md) |
+| F7-C LOD signoff | [`fire7_f7_c_lod_impl_plan_v1.md`](fire7_f7_c_lod_impl_plan_v1.md) |
+| LOG-E01 visual confirm | [`log_e01_visual_acceptance_v1.md`](log_e01_visual_acceptance_v1.md) |
+| Replay editor parity | [`replay_editor_parity_impl_plan_v1.md`](replay_editor_parity_impl_plan_v1.md) |
+| S7B M4 sim playtest | [`s7b_m4_sim_playtest_spec_v1.md`](s7b_m4_sim_playtest_spec_v1.md) |
+| VM-08 overlay parity stress | [`overlay_parity_stress_plan_v1.md`](overlay_parity_stress_plan_v1.md) |
+| Planner wave 4 audit | [`planner_status_audit_v7.md`](planner_status_audit_v7.md) (**PLAN-LEDGER-REFRESH-005**) |
 | Infra 5.5+ | [`stages/infra_55_execution_plan_v1.md`](stages/infra_55_execution_plan_v1.md) |
 | Wave C depth | [`stages/wave_c_depth_plan_v1.md`](stages/wave_c_depth_plan_v1.md) |
 | Fire sim Phase 7 | [`stages/fire_sim_phase7_plan_v1.md`](stages/fire_sim_phase7_plan_v1.md) |

@@ -2,8 +2,9 @@
 
 | Field | Value |
 |:---|:---|
-| **Version** | `1.5.0` |
-| **Date** | 2026-05-25 (orchestrator sync) |
+| **Version** | `1.6.0` |
+| **Date** | 2026-05-26 (orchestrator sync) |
+| **Snapshot** | [`orchestrator_signoff_snapshot_20260526_v1.md`](orchestrator_signoff_snapshot_20260526_v1.md) |
 | **Audit** | [`stage_tracks_audit_signoff_20260525.md`](stage_tracks_audit_signoff_20260525.md) |
 | **Owner** | `@orchestrator` / `@planner` |
 | **Sign-off ledger** | [`stage_tracks_signoff_ledger_v1.md`](stage_tracks_signoff_ledger_v1.md) ← **truth table** |
@@ -39,9 +40,9 @@
 | **UI Phase 3 minimap** | compositor + M3/M4 plans | — | **CLOSED** | optional units/replay |
 | **Infra 5.5+** | [`vm09_slice2_closure_signoff_v1.md`](vm09_slice2_closure_signoff_v1.md) · [`infra_slice3_wc_d04_ops_f01_plan_v1.md`](infra_slice3_wc_d04_ops_f01_plan_v1.md) | operator | VM-09 + PROJ2 + WC-D04 **CLOSED** | **OPS-F01** · TRIAGE-VM-09-v2 deferred |
 | **Wave C depth** | [`stages/wave_c_depth_plan_v1.md`](stages/wave_c_depth_plan_v1.md) · [`post_stage6_infra_wave_c_plan_v1.md`](post_stage6_infra_wave_c_plan_v1.md) | operator | — | **WC-DEPTH-001** + **WC-D04** **done** |
-| **Fire sim Phase 7** | [`stages/fire_sim_phase7_plan_v1.md`](stages/fire_sim_phase7_plan_v1.md) | `@coder` **F7-A-001** | `@planner` LOD · **FIRE7-DESIGN-001** | preflight **GO** [`steward_fire7_preflight_gate_v1.md`](steward_fire7_preflight_gate_v1.md) |
+| **Fire sim Phase 7** | [`stages/fire_sim_phase7_plan_v1.md`](stages/fire_sim_phase7_plan_v1.md) | — | **FIRE7-DESIGN-001 SIGNED** | **CLOSED** — F7-A/B/C witness green |
 | **Stage 7 Play** | [`stages/stage7_play_plan_v1.md`](stages/stage7_play_plan_v1.md) | — | **CLOSED** | maintain witnesses |
-| **Stage 7 Behavioral** | [`stage7_behavioral_implementation_plan_v1.md`](stage7_behavioral_implementation_plan_v1.md) · preflight **GO** | `@coder` | **S7B-M1-001** |
+| **Stage 7 Behavioral** | [`stage7_behavioral_implementation_plan_v1.md`](stage7_behavioral_implementation_plan_v1.md) | — | **S7B-DESIGN SIGNED** | **M1–M3 CLOSED** · M4 play tail optional |
 
 ---
 
@@ -59,7 +60,7 @@
 
 **Done (audit 2026-05-25):** S7-PLAY CLOSED · VFX-P2 + FX-WATER tactical witness · UI-P2 shell · UI-P4 LAYOUT-002 · UI-P3 M1–M4 · BQ-128-APPLY · WC-DEPTH · WC-D04 · INFRA-PROJ2 · planner batch 12/12
 
-**Active (one primary per cycle):** **OPS-F01** / **OPS-F03** (operator) · snapshot [`stage_tracks_fleet_snapshot_signoff_v1.md`](stage_tracks_fleet_snapshot_signoff_v1.md) — **S7B-M2/M3** **CLOSED** (`s7b_m2_m3_001_lib_bundle`)
+**Active (one primary per cycle):** **LOG-E01-VISUAL-CONFIRM** · **INFRA-VM-DEEP** · **OPS-F01/F03** (operator) — see [`orchestrator_signoff_snapshot_20260526_v1.md`](orchestrator_signoff_snapshot_20260526_v1.md) § Open
 
 ---
 
@@ -84,7 +85,7 @@ cargo run -p proc_A_dine01 --release -- --test visual
 |:---|:---|
 | **@coder** | [`stage_coder_workboard_v1.md`](stage_coder_workboard_v1.md) → track plan |
 | **@designer** | [`stage_designer_workboard_v1.md`](stage_designer_workboard_v1.md) |
-| **@orchestrator** | [`stage_tracks_signoff_ledger_v1.md`](stage_tracks_signoff_ledger_v1.md) · **PLAN-LEDGER-REFRESH** each cycle |
+| **@orchestrator** | [`orchestrator_signoff_snapshot_20260526_v1.md`](orchestrator_signoff_snapshot_20260526_v1.md) · [`HANDOFF.md`](../../tools/orchestrator/queues/HANDOFF.md) |
 | **@planner** | [`stage_planner_workboard_v1.md`](stage_planner_workboard_v1.md) |
 | **@sim-steward** | Infra + Fire7 preflight sections |
 

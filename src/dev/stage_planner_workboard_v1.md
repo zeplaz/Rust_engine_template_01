@@ -62,13 +62,18 @@ See [`planner_queue_cycle_20260525_v1.md`](planner_queue_cycle_20260525_v1.md).
 
 ---
 
-## Next planner actions
+## Next planner actions (wave 4)
 
 | Priority | Action |
 |:---:|:---|
-| 1 | **F7-B-001** / **FIRE7-DESIGN-001** | After F7-A witness stable · designer LOD table |
-| 2 | Re-run **PLAN-LEDGER-REFRESH** after coder cycles |
-| 3 | Optional P2: WP-L3/L4 motion — product call only |
+| ~~1~~ | **PLAN-F7-A-EXIT-001** — **DONE** — [`fire7_f7_a_exit_acceptance_v1.md`](fire7_f7_a_exit_acceptance_v1.md) |
+| 2 | **PLAN-CONSTRUCTION-MV-001** + **PLAN-IND-E02-PLAY-001** — **DONE** (specs signed; lib + disk green) |
+| 3 | **PLAN-F7-B/C** — draft; blocked on coder F7-A-EXIT |
+| ~~4~~ | **PLAN-VISUAL-RUN-GATE-001** + **PLAN-M3-MINMAP-001** — **DONE** |
+| ~~5~~ | **PLAN-LEDGER-REFRESH-005** — **DONE** — [`planner_status_audit_v7.md`](planner_status_audit_v7.md) |
+| **Next** | Operator lanes: visual sign-off, LOG-E01 visual, PHASE-D stress P2 |
+
+**Full list:** [`planner_wave4_todos_v1.md`](planner_wave4_todos_v1.md) · **Coder recap:** [`coder_fleet_return_recap_wave3_v1.md`](coder_fleet_return_recap_wave3_v1.md)
 
 ---
 
