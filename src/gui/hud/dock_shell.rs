@@ -6,7 +6,8 @@ use bevy_egui::egui;
 use crate::engine::states::BaseState;
 use crate::gui::input_bindings::InputBindings;
 use crate::gui::ui_gates::{in_simulation_or_editor, product_egui_shell_active};
-use crate::gui::{MinimapShellState, TransmissionShellState};
+use crate::gui::map_view::MapViewInstances;
+use crate::gui::{simulation_minimap_overlay_defaults, MinimapOverlayMask, MinimapShellState, TransmissionShellState};
 use crate::strategic::StrategicOverlayDisplayPolicy;
 
 use super::shell_diagnostics::ProductShellDiagnostics;
@@ -32,23 +33,61 @@ use crate::gui::style::{widget_scroll_vertical_fill, UiPalette};
 use crate::gui::WorldRepresentationFrame;
 use crate::render::AppStage5ReadinessReport;
 
-/// Overlay tray toggles — mirrors [`StrategicOverlayDisplayPolicy`] for HUD presentation.
+/// Overlay tray toggles — strategic policy + minimap compositor [`MinimapOverlayMask`] (UI-P3-M2-TRAY-OPT).
 #[derive(Resource, Clone, Debug)]
 pub struct HudOverlayTrayState {
     pub recon_visible: bool,
     pub logistics_stress_visible: bool,
     pub congestion_visible: bool,
+    pub fow_visible: bool,
     pub ew_visible: bool,
+    /// GPU minimap compositor heat channels (M2-06 — synced to [`MapViewInstances::minimap`]).
+    pub fire_heat: bool,
+    pub logistics_heat: bool,
+    pub construction_heat: bool,
+    pub ecology_heat: bool,
     pub tray_panel_state: HudPanelState,
+}
+
+impl HudOverlayTrayState {
+    #[must_use]
+    pub fn minimap_overlay_mask(&self) -> MinimapOverlayMask {
+        let base = simulation_minimap_overlay_defaults();
+        MinimapOverlayMask {
+            fire_heat: self.fire_heat,
+            logistics_heat: self.logistics_heat,
+            construction_heat: self.construction_heat,
+            ecology_heat: self.ecology_heat,
+            fow: self.fow_visible,
+            ew: self.ew_visible,
+            units: base.units,
+            replay_scrub: base.replay_scrub,
+        }
+    }
+
+    pub fn set_minimap_overlay_mask(&mut self, mask: MinimapOverlayMask) {
+        self.fire_heat = mask.fire_heat;
+        self.logistics_heat = mask.logistics_heat;
+        self.construction_heat = mask.construction_heat;
+        self.ecology_heat = mask.ecology_heat;
+        self.fow_visible = mask.fow;
+        self.ew_visible = mask.ew;
+    }
 }
 
 impl Default for HudOverlayTrayState {
     fn default() -> Self {
+        let mask = simulation_minimap_overlay_defaults();
         Self {
             recon_visible: false,
             logistics_stress_visible: false,
             congestion_visible: false,
-            ew_visible: false,
+            fow_visible: mask.fow,
+            ew_visible: mask.ew,
+            fire_heat: mask.fire_heat,
+            logistics_heat: mask.logistics_heat,
+            construction_heat: mask.construction_heat,
+            ecology_heat: mask.ecology_heat,
             tray_panel_state: HudPanelState::Collapsed,
         }
     }
@@ -117,6 +156,8 @@ impl Plugin for HudDockShellPlugin {
                 Update,
                 (
                     sync_hud_overlay_tray_to_policy,
+                    sync_hud_overlay_tray_to_minimap_overlays,
+                    sync_minimap_overlays_to_hud_tray,
                     mirror_hud_dock_registry_from_widgets,
                     sync_hud_shell_interaction_router,
                     hud_dock_shell_keyboard_toggle.run_if(product_egui_shell_active),
@@ -150,6 +191,39 @@ fn sync_hud_overlay_tray_to_policy(
     }
     policy.apply_routing_congestion = tray.congestion_visible;
     policy.apply_ew_denial = tray.ew_visible;
+}
+
+/// UI-P3-M2-TRAY-OPT — overlay tray checkboxes drive [`MapViewInstances::minimap`] compositor mask.
+fn sync_hud_overlay_tray_to_minimap_overlays(
+    base: Res<State<BaseState>>,
+    tray: Res<HudOverlayTrayState>,
+    mut map_views: ResMut<MapViewInstances>,
+) {
+    if !matches!(*base.get(), BaseState::Simulation) || !tray.is_changed() {
+        return;
+    }
+    let mask = tray.minimap_overlay_mask();
+    if map_views.minimap.overlays == mask {
+        return;
+    }
+    map_views.minimap.overlays = mask;
+    map_views.minimap.bump_revision();
+}
+
+/// Keep tray toggles aligned when minimap toolbar edits the same mask.
+fn sync_minimap_overlays_to_hud_tray(
+    base: Res<State<BaseState>>,
+    map_views: Res<MapViewInstances>,
+    mut tray: ResMut<HudOverlayTrayState>,
+) {
+    if !matches!(*base.get(), BaseState::Simulation) || !map_views.is_changed() {
+        return;
+    }
+    let mask = map_views.minimap.overlays;
+    if tray.minimap_overlay_mask() == mask {
+        return;
+    }
+    tray.set_minimap_overlay_mask(mask);
 }
 
 fn sync_hud_shell_interaction_router(
@@ -281,6 +355,12 @@ pub fn draw_hud_overlay_tray_egui(
             ui.checkbox(&mut tray.logistics_stress_visible, "Logistics stress");
             ui.checkbox(&mut tray.congestion_visible, "Congestion");
             ui.checkbox(&mut tray.ew_visible, "EW / denial");
+            ui.separator();
+            ui.label(egui::RichText::new("Minimap heat (GPU compositor)").strong());
+            ui.checkbox(&mut tray.fire_heat, "Fire heat");
+            ui.checkbox(&mut tray.logistics_heat, "Logistics heat");
+            ui.checkbox(&mut tray.construction_heat, "Construction heat");
+            ui.checkbox(&mut tray.ecology_heat, "Ecology heat");
         },
         widget_timing,
     ) {
@@ -594,5 +674,24 @@ mod tests {
         assert_eq!(layout.overlay_tray_state, HudPanelState::Collapsed);
         assert_eq!(layout.command_tray_state, HudPanelState::Collapsed);
         assert_eq!(layout.command_table_state, HudPanelState::Collapsed);
+    }
+
+    #[test]
+    fn overlay_tray_default_matches_simulation_minimap_mask() {
+        let tray = HudOverlayTrayState::default();
+        let expected = simulation_minimap_overlay_defaults();
+        assert_eq!(tray.minimap_overlay_mask(), expected);
+    }
+
+    #[test]
+    fn overlay_tray_minimap_mask_roundtrip() {
+        let mut tray = HudOverlayTrayState::default();
+        tray.logistics_heat = false;
+        tray.construction_heat = true;
+        let mask = tray.minimap_overlay_mask();
+        assert!(!mask.logistics_heat);
+        assert!(mask.construction_heat);
+        tray.set_minimap_overlay_mask(simulation_minimap_overlay_defaults());
+        assert!(tray.ecology_heat);
     }
 }

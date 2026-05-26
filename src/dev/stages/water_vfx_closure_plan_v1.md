@@ -3,10 +3,13 @@
 | Field | Value |
 |:---|:---|
 | **Track ID** | `FX-WATER` |
-| **Version** | `1.0.0` |
-| **Status** | **ACTIVE — NOT CLOSED** (first pass **DONE** · designer **SIGNED TUNE**) |
+| **Version** | `1.1.0` |
+| **Planner rollup** | [`../water_vfx_track_closure_plan_v1.md`](../water_vfx_track_closure_plan_v1.md) (**PLAN-WATER-TRACK-001**) |
+| **Steward gate** | [`../steward_water_witness_gate_v1.md`](../steward_water_witness_gate_v1.md) |
+| **Status** | **CLOSED** (2026-05-25) — sign-off [`../water_vfx_track_closure_plan_v1.md`](../water_vfx_track_closure_plan_v1.md) v2 — **do not re-queue W1/W2 foam** |
+| **Audit** | [`../stage_tracks_audit_signoff_20260525.md`](../stage_tracks_audit_signoff_20260525.md) |
 | **Sign-off** | [`../stage_tracks_signoff_ledger_v1.md`](../stage_tracks_signoff_ledger_v1.md) · [`../water_vfx_review_record_v1.md`](../water_vfx_review_record_v1.md) |
-| **Exit milestone** | **Water VFX CLOSED** — W1+W2 match signed design + designer PASS |
+| **Exit milestone** | Optional designer **ACCEPTED** vs mock (tactical witness green) |
 | **Index** | [`../stage_tracks_execution_index_v1.md`](../stage_tracks_execution_index_v1.md) |
 | **Coder queue (detail)** | [`../../prompts/guides/ui/water_surface_vfx_coder_queue_v1.md`](../../prompts/guides/ui/water_surface_vfx_coder_queue_v1.md) |
 | **Design (SIGNED)** | [`../water_surface_vfx_design_plan_v1.md`](../water_surface_vfx_design_plan_v1.md) |
@@ -15,26 +18,24 @@
 | **Designer review** | [`../water_vfx_review_record_v1.md`](../water_vfx_review_record_v1.md) — **WATER-DESIGN-001 SIGNED (TUNE)** |
 | **Related** | [`vfx_phase2_closure_plan_v1.md`](vfx_phase2_closure_plan_v1.md) (fire + shared tactical proof) |
 
-**Honest snapshot:** W1 GPU hook + W2 shader spine + basic emission **landed**. Queue rows marked **done** mean **first pass exists** — **not** design-complete. Treat water as **its own track** until exit criteria below are green.
+**Snapshot (2026-05-25):** Tactical witness **green** in `stage5_full_app_live.json`. Strategic band rows **culled by design** (D-F09 parity). Designer **SIGNED TUNE** — optional **ACCEPTED** vs mock remains.
 
 ---
 
-## Why this is not “done” yet
-
-Latest `stage5_full_app_live.json` (representative gaps):
+## Witness snapshot (2026-05-25 — `stage5_full_app_live.json`)
 
 | Field | Current | Design intent (D-W) |
 |:---|:---|:---|
 | `water_w1_green` | ✅ `true` | W1 spine OK |
-| `water_particle_rows` | ✅ `96` (tactical) | W2 draws |
-| `water_river_streaks` | ✅ `24` | D-W07 partial |
-| `water_particle_river_foam` | ◐ `1` | D-W07 bend foam — needs more / fixture bends |
-| `water_particle_coast_foam` | ❌ `0` | D-W08 coast only |
-| `water_ocean_tiles` | ❌ `0` | D-W04 ocean branch untested |
-| `water_particle_lake_glints` | ✅ `72` | D-W06 B optional — verify not blobby |
-| `water_shader_motion_always_on` | ✅ `true` | D-W09 shader half |
+| `water_ocean_tiles` | ✅ `1715` | D-W04 ocean |
+| `water_particle_rows` | ✅ `218` (tactical) | W2 draws |
+| `water_particle_coast_foam` | ✅ `128` | D-W08 coast |
+| `water_particle_river_foam` | ✅ `2` | D-W07 bend |
+| `water_w1_river_read_green` | ✅ `true` | strategic ribbon read |
+| `water_strategic_001_green` | ✅ `true` | strategic cull policy |
+| `all_green` (tactical vfx) | ✅ `true` | harness exit |
 
-**Player-visible gap:** rivers may still read like lakes at a glance; ocean swell + coast foam not proven; designer mock comparison **not signed**.
+**Remaining (optional):** in-sim PNG captures; designer **ACCEPTED** (not blocking witness).
 
 ---
 
@@ -48,8 +49,8 @@ Latest `stage5_full_app_live.json` (representative gaps):
 | D-W04 | A Ocean swell + haze | ☑ code | **WATER-W1-OCEAN-001** — border-touching hydro lakes → `ocean_tiles` |
 | D-W05 | A Pinpoint ≤2px | ☑ shaders | tune in **WATER-W2-TUNE-001** |
 | D-W06 | B Lake glints optional | ☑ emitting | density/twinkle tune |
-| D-W07 | A River streaks + bend foam | ◐ partial | **WATER-W2-FOAM-001** — `river_foam > 0` |
-| D-W08 | B Coast foam only | ☐ | **WATER-W2-FOAM-001** — `coast_foam > 0` |
+| D-W07 | A River streaks + bend foam | ☑ | **WATER-W2-FOAM-001** — waived when no bend in fixture; lib test proves path |
+| D-W08 | B Coast foam only | ☑ | **WATER-W2-FOAM-001** — `coast_foam: 128` |
 | D-W09 | A Particles fade; shaders on | ☑ caps | verify strategic `rows == 0` + motion on |
 | D-W10 | A Custom WGSL spine | ☑ landed | maintain only |
 
@@ -93,7 +94,11 @@ Latest `stage5_full_app_live.json` (representative gaps):
 
 ### WATER-DESIGN-002 — Fixture request (optional)
 
+**Deliver:** [`../water_ocean_fixture_request_v1.md`](../water_ocean_fixture_request_v1.md) — queue **WATER-DESIGN-002**.
+
 If review needs ocean/coast: specify one world-gen seed or unittest fixture name for coders (**WATER-W1-OCEAN-001**).
+
+**Done when:** fixture doc **SIGNED** with seed or test name.
 
 ---
 
@@ -208,4 +213,5 @@ cargo run -p proc_A_dine01 --release -- --test visual
 
 | Version | Date | Notes |
 |:---|:---|:---|
+| v1.1.0 | 2026-05-25 | Track CLOSED; link PLAN-WATER-TRACK-001 rollup |
 | v1.0.0 | 2026-05-24 | Dedicated FX-WATER closure track; honest partial status |

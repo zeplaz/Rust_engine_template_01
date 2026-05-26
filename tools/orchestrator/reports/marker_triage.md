@@ -3,7 +3,7 @@
 | Kind | File | Line | Notes |
 |------|------|-----:|-------|
 | DEPRECATED | `src/bevysubengines/world_generator_plugin.rs` | 170 | #[deprecated(note = "Use terrain::family::TerrainFamilyId")] |
-| VIEWPORT_AUTHORITY | `src/dev/debug_run_envelope.rs` | 71 | "VIEWPORT_AUTHORITY_DEBUG": env_flag("VIEWPORT_AUTHORITY_DEBUG"), |
+| VIEWPORT_AUTHORITY | `src/dev/debug_run_envelope.rs` | 73 | "VIEWPORT_AUTHORITY_DEBUG": env_flag("VIEWPORT_AUTHORITY_DEBUG"), |
 | TODO | `src/dev/stage5_live_todos.rs` | 13 | //! 1. **TODO-01** — runtime readiness fence (`evaluate_app_stage5_readiness`).  |
 | TODO | `src/dev/stage5_live_todos.rs` | 14 | //! 2. **TODO-04** — view authority (ViewManager vs `MapCameraDesired`). Real en |
 | TODO | `src/dev/stage5_live_todos.rs` | 15 | //! 3. **TODO-06** — `CommittedVisualSnapshotFence` / frame sync. Unlocks GPU +  |
@@ -46,12 +46,12 @@
 | TODO | `src/dev/stage5_live_todos.rs` | 850 | let i13 = STAGE5_TODOS.iter().position(/t/ t.id == "TODO-13").unwrap(); |
 | DEPRECATED | `src/engine/lmodels/mod.rs` | 19 | #[deprecated( |
 | TODO | `src/entities/production/core/manufacturing_plugin.rs` | 39 | // TODO: drive throughput vs blueprint, decay/efficiency curves, alert events. |
-| TODO | `src/gui/diagnostics_ui.rs` | 560 | // TODO: tabs — chunk streamer, production manifest summary, faction roster. |
+| TODO | `src/gui/diagnostics_ui.rs` | 564 | // TODO: tabs — chunk streamer, production manifest summary, faction roster. |
 | TODO | `src/gui/faction_tools_ui.rs` | 91 | // TODO: list + add/duplicate/retire (authority-gated). |
 | TODO | `src/gui/faction_tools_ui.rs` | 95 | // TODO: bind selected FactionBlueprint fields. |
 | TODO | `src/gui/faction_tools_ui.rs` | 99 | // TODO: render N×N stance grid; integrate DiplomaticRelations permission gate. |
 | TODO | `src/gui/faction_tools_ui.rs` | 103 | // TODO: file dialog (crate vs native — see implementation_questions §7). |
-| VIEWPORT_AUTHORITY | `src/gui/hud/mod.rs` | 155 | VIEWPORT_AUTHORITY_TARGET, |
+| VIEWPORT_AUTHORITY | `src/gui/hud/mod.rs` | 156 | VIEWPORT_AUTHORITY_TARGET, |
 | VIEWPORT_AUTHORITY | `src/gui/hud/viewport_authority_debug.rs` | 12 | pub const VIEWPORT_AUTHORITY_TARGET: &str = "viewport_authority"; |
 | VIEWPORT_AUTHORITY | `src/gui/hud/viewport_authority_debug.rs` | 146 | target: VIEWPORT_AUTHORITY_TARGET, |
 | VIEWPORT_AUTHORITY | `src/gui/hud/viewport_authority_debug.rs` | 153 | "VIEWPORT_AUTHORITY" |
@@ -67,7 +67,7 @@
 | TODO | `src/systems/production/serialization.rs` | 29 | // TODO: persist substation graph edges + plant specs as serializable DTOs. |
 | DEPRECATED | `src/terrain/bevy_terrain.rs` | 21 | #[deprecated(note = "Use terrain::family::TerrainFamilyId for dominant terrain f |
 | TODO | `src/terrain/generation/passes/p5_agent_overlay.rs` | 6 | // TODO: items 71–74 (`implementation_questions_v1.md`) |
-| DEPRECATED | `src/terrain/generation/world_generator_enhanced.rs` | 441 | #[deprecated(note = "Use terrain::family::TerrainFamilyId")] |
+| DEPRECATED | `src/terrain/generation/world_generator_enhanced.rs` | 444 | #[deprecated(note = "Use terrain::family::TerrainFamilyId")] |
 
 ## Triage policy
 

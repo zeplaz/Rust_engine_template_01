@@ -189,10 +189,27 @@ Lane playbooks: `tools/orchestrator/agents/stage5_readiness_agent.md`, `viewport
 
 ---
 
+## Steward workboard (active todos)
+
+**Authoritative checklist:** [`src/dev/stage_steward_workboard_v1.md`](../../src/dev/stage_steward_workboard_v1.md)
+
+| Priority | Parent / ID | Shifts |
+|:---|:---|:---|
+| **1** | **UI-SHELL-REFRESH-001** | `001-A` → `001-SIM` → `001-TEST` → (`001-VISUAL`) → `001-B` → `001-C` |
+| 2 | **STEWARD-WATER-WITNESS-001** | After ocean/foam coder slices |
+| 2 | **S7P-STEWARD-001** | After **S7P-DESIGN-001** signs scenario doc |
+| 4 | **STEWARD-VM-09-001** | Infra track — do not re-run slice 1 |
+
+**Ledger DONE (do not re-run):** UI-P2-GATE, UI-P3-PREFLIGHT, IND-E01-WITNESS, P2-VFX triage, UI-P3-M1-GATE, S-VM-09 slice 1.
+
+Queue rows: [`tools/orchestrator/queues/continuation_queue.json`](../../tools/orchestrator/queues/continuation_queue.json).
+
+---
+
 ## Required first step (every session)
 
-1. Confirm **lane** (Stage 5 / VM / construction / cleanup-only).
-2. If `HANDOFF.md` exists → resume from **Next shift** field.
+1. Confirm **lane** (Stage 5 / VM / construction / cleanup-only) — or resume **UI-SHELL-REFRESH-001** from workboard.
+2. If `HANDOFF.md` exists → resume from **Next todo** / shift field.
 3. Run Shift A unless user supplied a completed Shift A/B capsule.
 4. Attach skills mentally: simulation-grade invariants + debug compression + cleanup gate on deletes.
 

@@ -27,6 +27,8 @@ pub const KNOWN_LIVE_PROOF_PATHS: &[&str] = &[
     "debug_runs/wave_c_live.json",
     "debug_runs/ui_shell_migration_live.json",
     "debug_runs/minimap_compositor_live.json",
+    "debug_runs/stage7_behavioral_live.json",
+    "debug_runs/stage7_play_live.json",
 ];
 
 pub const AGENT_DEBUG_INDEX_PATH: &str = "debug_runs/agent_debug_index.json";
@@ -84,6 +86,7 @@ pub fn agent_commands_for_profile(profile: &str) -> Vec<&'static str> {
         ],
         "UI_SHELL_MIGRATION_2A" | "UI_SHELL_MIGRATION_2B" => vec![
             "cargo test -p proc_A_dine01 --lib stage5",
+            "cargo test -p proc_A_dine01 --lib ui_p2b",
             "cargo test -p proc_A_dine01 --lib simulation_shell_phase2",
             "cargo run -p proc_A_dine01 --release -- --test visual",
         ],
@@ -102,13 +105,27 @@ pub fn agent_commands_for_profile(profile: &str) -> Vec<&'static str> {
         "INFRASTRUCTURE_VIEW_ISOLATION" => vec![
             "cargo test -p proc_A_dine01 render::view_runtime --lib",
         ],
+        "WAVE_P_PREVIEW" => vec![
+            "cargo test -p proc_A_dine01 --lib ui_wp_layout_002_writes_wave_p_live_json",
+            "cargo test -p proc_A_dine01 --lib cod_b_wp_witness_001",
+            "cargo test -p proc_A_dine01 --lib wave_p_live_proof",
+        ],
         "STAGE6_VIRTUALIZATION" => vec![
             "cargo test -p proc_A_dine01 --lib stage6",
+            "cargo test -p proc_A_dine01 --lib wc_d04_coder_b",
             "cargo run -p proc_A_dine01",
         ],
         "MAIN_THREAD_SHIFT" => vec![
             "cargo orchestrate --main-thread-shift --skip-cargo",
             ".\\tools\\orchestrator\\scripts\\main_thread_shift.ps1",
+        ],
+        "WAVE_C_STREAMING" => vec![
+            "cargo test -p proc_A_dine01 --lib wc_depth_001",
+            "cargo test -p proc_A_dine01 --lib wave_c",
+        ],
+        "STAGE7_BEHAVIORAL" => vec![
+            "cargo test -p proc_A_dine01 --lib stage7_behavioral",
+            "cargo test -p proc_A_dine01 --lib stage7_play comms_contract",
         ],
         _ => vec!["cargo test -p proc_A_dine01 --lib"],
     }

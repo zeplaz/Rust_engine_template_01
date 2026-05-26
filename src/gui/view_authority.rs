@@ -2,8 +2,9 @@
 //!
 //! **View projection authority:** treat [`ViewManager`] as the read spine for per-view
 //! [`ViewCameraState`], [`ViewInstance::viewport_rect`], and [`ViewInstance::visible_world_rect`].
-//! Legacy [`MapCameraDesired`] is still the **compatibility write surface** for RTS / shell jumps;
-//! pose commits land on [`ViewProjectionAuthority`] (e.g. [`commit_map_camera_pose_to_view_authority`]).
+//! **TRIAGE-VM-09-v2:** [`MapCameraDesired`] is a **read-only compatibility mirror** — RTS input and shell
+//! jumps commit [`ViewProjectionAuthority`] first; [`derive_map_camera_desired_from_view_authority`]
+//! is the sole `ResMut<MapCameraDesired>` writer in production (see [`crate::gui::map_camera`]).
 //! **VM-06:** [`sync_view_manager_bridge`] is the **sole** `ResMut<ViewManager>` writer — it rebuilds the
 //! read model from authority after viewport resolve. [`sync_view_manager_world_main_from_authority`] is
 //! a test/helper partial sync only (not scheduled).
@@ -186,6 +187,27 @@ impl ViewManager {
     }
 }
 
+/// Build [`MapCameraDesired`] from authoritative WorldMain pose (**TRIAGE-VM-09-v2** derive shim).
+#[inline]
+#[must_use]
+pub fn map_camera_desired_from_view_authority(
+    authority: &crate::render::view_runtime::ViewProjectionAuthority,
+) -> MapCameraDesired {
+    use crate::render::view_runtime::ViewSurfaceId;
+
+    let Some(cam) = authority
+        .surface(ViewSurfaceId::WorldMain)
+        .map(|s| s.camera)
+    else {
+        return MapCameraDesired::default();
+    };
+    MapCameraDesired {
+        translation: Vec3::new(cam.translation.x, cam.translation.y, 999.0),
+        scale: Vec3::splat(cam.zoom.max(1e-4)),
+        rotation: Quat::from_rotation_z(cam.rotation),
+    }
+}
+
 /// Build [`ViewCameraState`] from gameplay [`MapCameraDesired`] (2D map plane; yaw lives in Quat but
 /// [`ViewCameraState::rotation`] stays 0 until per-view rotation is wired through the bridge).
 #[inline]
@@ -231,6 +253,18 @@ pub fn commit_map_camera_pose_to_view_authority(
             writer,
         );
     }
+}
+
+/// Commit a world XY focus jump on WorldMain (shell intel — authority before desired mirror).
+pub fn commit_world_main_map_focus(
+    authority: &mut crate::render::view_runtime::ViewProjectionAuthority,
+    trace: &mut crate::render::view_runtime::ViewRuntimeTrace,
+    world_xy: Vec2,
+) {
+    let mut desired = map_camera_desired_from_view_authority(authority);
+    desired.translation.x = world_xy.x;
+    desired.translation.y = world_xy.y;
+    commit_map_camera_pose_to_view_authority(authority, trace, &desired);
 }
 
 /// Partial read-model sync for tests — production uses [`sync_view_manager_bridge`] full rebuild.

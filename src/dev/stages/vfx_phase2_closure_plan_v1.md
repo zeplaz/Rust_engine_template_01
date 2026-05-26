@@ -3,18 +3,19 @@
 | Field | Value |
 |:---|:---|
 | **Track ID** | `VFX-P2` |
-| **Version** | `1.0.0` |
-| **Status** | **ACTIVE** — core **DONE** · tune **OPEN** |
-| **Exit milestone** | **VFX Phase 2 CLOSED** — fire tactical proof + compositing + designer ACCEPTED |
-| **Sign-off** | [`../stage_tracks_signoff_ledger_v1.md`](../stage_tracks_signoff_ledger_v1.md) · [`../vfx_design_review_record_v1.md`](../vfx_design_review_record_v1.md) **SIGNED TUNE** |
-| **Triage board** | [`../vfx_triage_v1.md`](../vfx_triage_v1.md) — **S-VFX** harness vs operator split |
-| **Water (separate track)** | [`water_vfx_closure_plan_v1.md`](water_vfx_closure_plan_v1.md) — **NOT CLOSED** |
+| **Version** | `1.1.0` |
+| **Status** | **CLOSED** (2026-05-25) — fire + water tracks signed |
+| **Exit milestone** | **VFX Phase 2 CLOSED** — tactical proof + **D-VFX PASS** |
+| **Fire closure** | [`../fire_spark_track_closure_plan_v1.md`](../fire_spark_track_closure_plan_v1.md) (**PLAN-FIRE-VFX-CLOSURE-001**) |
+| **Sign-off** | [`../stage_tracks_signoff_ledger_v1.md`](../stage_tracks_signoff_ledger_v1.md) · [`../vfx_design_review_record_v1.md`](../vfx_design_review_record_v1.md) **SIGNED PASS** |
+| **Triage board** | [`../vfx_triage_v1.md`](../vfx_triage_v1.md) — archive + operator P0 only |
+| **Water (separate track)** | [`water_vfx_track_closure_plan_v1.md`](../water_vfx_track_closure_plan_v1.md) v2 — **CLOSED** · do not re-queue foam |
 | **Queue (detail)** | [`../vfx_coder_phase2_queue_v1.md`](../vfx_coder_phase2_queue_v1.md) |
 | **Starters** | [`../../prompts/guides/ui/vfx_coder_phase2_starters_v1.md`](../../prompts/guides/ui/vfx_coder_phase2_starters_v1.md) |
 
 **Context:** Fire shaders/compute **landed**. `fire_spark_rows: 0` at **strategic** zoom is **correct** (D-F09). Closure = **tactical fire proof** + compositing + tuning.
 
-**Water is not part of this exit.** Use [`water_vfx_closure_plan_v1.md`](water_vfx_closure_plan_v1.md) — ocean, river read, bend/coast foam, designer mock PASS still open.
+**Water is not part of this exit.** FX-WATER **CLOSED** per [`water_vfx_track_closure_plan_v1.md`](../water_vfx_track_closure_plan_v1.md) — maintain regression only.
 
 ---
 
@@ -40,9 +41,9 @@
 | Compare water | vs `water_surface_target_v1.png` |
 | Record | [`../vfx_design_review_record_v1.md`](../vfx_design_review_record_v1.md) — **D-VFX** |
 
-**Status (2026-05-24):** ☑ **SIGNED — TUNE ROUND** — prerequisites met (`fire_spark_rows: 308`, tactical zoom 0.85); PNG captures pending; fire **F-T*** / water **W-T*** tickets open.
+**Status (2026-05-25):** ☑ **SIGNED — PASS** — after **P2-FIRE-SPARK-011**; see [`../fire_spark_track_closure_plan_v1.md`](../fire_spark_track_closure_plan_v1.md).
 
-**Does not block** coder slices; **VFX-P2 CLOSED** needs tune completion or designer **ACCEPTED**.
+**Optional:** interim PNGs on disk; formal **ACCEPTED** captures not track blockers.
 
 ### VFX2-DESIGN-002 — Spark read at tactical zoom (optional)
 
@@ -58,7 +59,7 @@ One mock annotation: acceptable spark density over burning cells (not blob). Att
 |:---|:---|:---|:---|
 | **P2-VFX-VISUAL-001** | Tactical visual harness | **DONE** | `fire_spark_rows: 308`, tactical gates green |
 | **P2-FIRE-SPARK-010** | Sparks above smoke | **DONE** | `fire_sparks_above_smoke: true` |
-| **P2-FIRE-SPARK-011** | Spark motion tuning | **OPEN** | F-T01/F-T03 in vfx_design_review_record |
+| **P2-FIRE-SPARK-011** | Spark motion tuning @ **0.85** | **DONE** | `fire_spark_011_green` in FULL_APP witness; captures PASS |
 
 ### Coder B (witness / CI)
 
@@ -113,4 +114,5 @@ FX-FIRE-SPARK-001…006, FX-WATER-SHADER/PARTICLE-001/002 — see queue § Done.
 
 | Version | Date | Notes |
 |:---|:---|:---|
+| v1.1.0 | 2026-05-25 | Link PLAN-FIRE-VFX-CLOSURE-001; D-VFX PASS |
 | v1.0.0 | 2026-05-24 | Closure plan aligned to landed code |

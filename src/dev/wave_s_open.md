@@ -10,7 +10,7 @@
 | Artifact | Path | DTO | BQ |
 |----------|------|-----|-----|
 | Product shell | `product_shell.ron` | `ProductShellPersistenceBundleR8` | BQ-133 |
-| Blueprint presets | `blueprints/presets.ron` | `BlueprintPresetCollectionR8` | BQ-128 |
+| Blueprint presets | `blueprints/presets.ron` | `BlueprintPresetCollectionR8` | BQ-128 — [`bq128_editor_path_plan_v1.md`](bq128_editor_path_plan_v1.md) · design [`bq128_editor_path_design_note_v1.md`](bq128_editor_path_design_note_v1.md) (**UX-E02 SIGNED**) · coder **BQ-128-APPLY-001** open |
 
 IO: [`src/io/save/wave_s_artifacts.rs`](../io/save/wave_s_artifacts.rs)  
 Loader docs: [`src/io/save/load.rs`](../io/save/load.rs)

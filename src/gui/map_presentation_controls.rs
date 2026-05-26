@@ -94,6 +94,26 @@ pub fn map_overlay_controls_ui(
         {
             presentation.bump_revision();
         }
+        if ui
+            .checkbox(
+                &mut presentation.overlays.construction_heat,
+                "Construction heat",
+            )
+            .on_hover_text("Corridor / site construction phases on minimap")
+            .changed()
+        {
+            presentation.bump_revision();
+        }
+        if ui
+            .checkbox(
+                &mut presentation.overlays.ecology_heat,
+                "Ecology heat",
+            )
+            .on_hover_text("Ecology macro band on minimap")
+            .changed()
+        {
+            presentation.bump_revision();
+        }
     });
     ui.horizontal(|ui| {
         ui.label("Follow");

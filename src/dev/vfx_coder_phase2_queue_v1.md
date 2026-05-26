@@ -11,7 +11,7 @@
 
 **Context:** Fire Phase A+B **code is largely landed**. Water W1/W2 **first pass landed** but track is **NOT CLOSED** — see [`stages/water_vfx_closure_plan_v1.md`](stages/water_vfx_closure_plan_v1.md) (ocean, bend/coast foam, river read, designer PASS). Witness JSON often shows `fire_spark_rows: 0` at **strategic** zoom — particles correctly cull (D-F09). Phase 2 fire = **prove, tune, integrate**; water = **closure track**.
 
-**Design gates:** **None blocking.** Optional: Phase 4 icon atlas PNG; **post-implementation VFX review** vs reference mocks (below).
+**Design gates:** **None blocking.** Optional: Phase 4 icon atlas PNG; post-implementation VFX review **done** — [`vfx_design_review_record_v1.md`](vfx_design_review_record_v1.md) (**D-VFX** / **VFX-POST-REVIEW-DESIGN**).
 
 ---
 

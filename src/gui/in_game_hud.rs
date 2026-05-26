@@ -803,7 +803,7 @@ fn spawn_simulation_command_shell(
                             },
                             BackgroundColor(palette.bevy_hud_panel_fill()),
                             BorderColor::all(palette.bevy_wire_magenta()),
-                            Visibility::Hidden,
+                            Visibility::Visible,
                             LeftContextRail,
                         ))
                         .with_children(|rail| {

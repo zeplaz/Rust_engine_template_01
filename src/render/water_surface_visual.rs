@@ -68,6 +68,50 @@ fn lake_region_touches_map_border(cells: &[(u32, u32)], width: u32, height: u32)
     cells.iter().any(|&(x, y)| x == 0 || y == 0 || x >= max_x || y >= max_y)
 }
 
+#[inline]
+fn cell_on_map_border(tx: u32, ty: u32, width: u32, height: u32) -> bool {
+    let max_x = width.saturating_sub(1);
+    let max_y = height.saturating_sub(1);
+    tx == 0 || ty == 0 || tx >= max_x || ty >= max_y
+}
+
+#[inline]
+fn dem_elev_at(hydro: &HydrologyResult, grid_len: usize, w: usize, tx: u32, ty: u32) -> Option<f32> {
+    if hydro.filled_dem.len() != grid_len {
+        return None;
+    }
+    let idx = ty as usize * w + tx as usize;
+    hydro.filled_dem.get(idx).copied()
+}
+
+/// Standing-water cell with dry land or map edge on a 4-neighbor (D-W04 coast / swell).
+#[inline]
+fn standing_water_shore_cell(
+    hydro: &HydrologyResult,
+    grid_len: usize,
+    w: usize,
+    h: usize,
+    tx: u32,
+    ty: u32,
+) -> bool {
+    if hydro.lake_mask.len() != grid_len || !hydro.lake_mask[ty as usize * w + tx as usize] {
+        return false;
+    }
+    for (dx, dy) in [(-1i32, 0), (1, 0), (0, -1), (0, 1)] {
+        let nx = tx as i32 + dx;
+        let ny = ty as i32 + dy;
+        if nx < 0 || ny < 0 || nx >= w as i32 || ny >= h as i32 {
+            return true;
+        }
+        let idx = ny as usize * w + nx as usize;
+        let river = hydro.river_mask.len() == grid_len && hydro.river_mask[idx];
+        if !hydro.lake_mask[idx] && !river {
+            return true;
+        }
+    }
+    false
+}
+
 impl WaterSurfaceVisualCatalog {
     #[must_use]
     pub fn from_hydrology(hydro: &HydrologyResult, params: &WorldGenParams) -> Self {
@@ -88,18 +132,125 @@ impl WaterSurfaceVisualCatalog {
             }
         }
 
-        // D-W04: border-touching hydro lakes → open ocean; inland depressions → lakes.
+        // D-W04 / WATER-W1-OCEAN-001: coast + deep basins → ocean; shallow inland → lakes.
+        let shallow = params.biome_tuning.shallow_water_height_max;
+        let deep = params.biome_tuning.deep_water_height_max;
         for lake in &hydro.lakes {
-            let touches_border =
+            let region_border =
                 lake_region_touches_map_border(&lake.cells, params.width, params.height);
-            let target = if touches_border {
-                &mut ocean_tiles
-            } else {
-                &mut lake_tiles
-            };
             for &(tx, ty) in &lake.cells {
-                if !river_tiles.contains(&(tx, ty)) {
-                    target.insert((tx, ty));
+                if river_tiles.contains(&(tx, ty)) {
+                    continue;
+                }
+                let coastal = region_border
+                    || cell_on_map_border(tx, ty, params.width, params.height);
+                let deep_basin = dem_elev_at(hydro, n, w, tx, ty)
+                    .is_some_and(|elev| elev <= deep);
+                if coastal || deep_basin {
+                    ocean_tiles.insert((tx, ty));
+                } else {
+                    lake_tiles.insert((tx, ty));
+                }
+            }
+        }
+
+        // Standing water from lake_mask not covered by region cells (sparse hydro lakes).
+        if hydro.lake_mask.len() == n {
+            for y in 0..h {
+                for x in 0..w {
+                    let tx = x as u32;
+                    let ty = y as u32;
+                    if !hydro.lake_mask[y * w + x]
+                        || river_tiles.contains(&(tx, ty))
+                        || lake_tiles.contains(&(tx, ty))
+                        || ocean_tiles.contains(&(tx, ty))
+                    {
+                        continue;
+                    }
+                    let coastal = cell_on_map_border(tx, ty, params.width, params.height);
+                    let deep_basin = dem_elev_at(hydro, n, w, tx, ty)
+                        .is_some_and(|elev| elev <= deep);
+                    if coastal || deep_basin {
+                        ocean_tiles.insert((tx, ty));
+                    } else {
+                        lake_tiles.insert((tx, ty));
+                    }
+                }
+            }
+        }
+
+        // WATER-W1-OCEAN-001 / D-W04: deep + sparse shallow DEM band on dry land, after lakes/rivers.
+        if hydro.filled_dem.len() == n {
+            for y in 0..h {
+                for x in 0..w {
+                    let tx = x as u32;
+                    let ty = y as u32;
+                    if hydro.lake_mask.len() == n && hydro.lake_mask[y * w + x] {
+                        continue;
+                    }
+                    if hydro.river_mask.len() == n && hydro.river_mask[y * w + x] {
+                        continue;
+                    }
+                    if river_tiles.contains(&(tx, ty))
+                        || lake_tiles.contains(&(tx, ty))
+                        || ocean_tiles.contains(&(tx, ty))
+                    {
+                        continue;
+                    }
+                    let elev = hydro.filled_dem[y * w + x];
+                    if elev <= deep {
+                        ocean_tiles.insert((tx, ty));
+                    } else if elev <= shallow && (x + y) % 4 == 0 {
+                        ocean_tiles.insert((tx, ty));
+                    }
+                }
+            }
+
+            // Map perimeter shallow water → open ocean (sea-level boundary; D-W04 swell/haze).
+            let max_x = params.width.saturating_sub(1);
+            let max_y = params.height.saturating_sub(1);
+            for y in 0..h {
+                for x in 0..w {
+                    let tx = x as u32;
+                    let ty = y as u32;
+                    let perimeter = tx == 0 || ty == 0 || tx >= max_x || ty >= max_y;
+                    if !perimeter {
+                        continue;
+                    }
+                    let elev = hydro.filled_dem[y * w + x];
+                    if elev <= shallow {
+                        lake_tiles.remove(&(tx, ty));
+                        ocean_tiles.insert((tx, ty));
+                    }
+                }
+            }
+        }
+
+        // Coast-adjacent standing water within margin of map edge (inland seas still lakes).
+        const COAST_MARGIN: u32 = 4;
+        for &(tx, ty) in lake_tiles.clone().iter().collect::<Vec<_>>() {
+            if cell_on_map_border(tx, ty, params.width, params.height)
+                || tx < COAST_MARGIN
+                || ty < COAST_MARGIN
+                || tx + COAST_MARGIN >= params.width
+                || ty + COAST_MARGIN >= params.height
+            {
+                lake_tiles.remove(&(tx, ty));
+                ocean_tiles.insert((tx, ty));
+            }
+        }
+
+        // Lake/land shores → open-ocean presentation (maps with no sub-threshold DEM still get D-W04).
+        if hydro.lake_mask.len() == n {
+            for y in 0..h {
+                for x in 0..w {
+                    let tx = x as u32;
+                    let ty = y as u32;
+                    if !standing_water_shore_cell(hydro, n, w, h, tx, ty) {
+                        continue;
+                    }
+                    lake_tiles.remove(&(tx, ty));
+                    ocean_tiles.insert((tx, ty));
                 }
             }
         }
@@ -240,6 +391,63 @@ pub const WATER_SURFACE_OVERLAY_WGSL: &str = "shaders/water/water_surface_overla
 
 /// Strategic zoom band (D-W09) — keep in sync with [`crate::render::gpu_water_particles::WATER_PARTICLE_STRATEGIC_ZOOM_ALPHA`].
 pub const WATER_STRATEGIC_ZOOM_ALPHA: f32 = 0.35;
+
+/// Strategic zoom α for dual-band witness (matches [`evaluate_water_vfx_witness_bands`]).
+#[inline]
+#[must_use]
+pub fn water_strategic_witness_zoom_alpha() -> f32 {
+    WATER_STRATEGIC_ZOOM_ALPHA * 0.5
+}
+
+/// **WATER-STRATEGIC-001** — Coder A / D-W09 shader half: W1 overlay motion stays time-varying at strategic zoom.
+#[must_use]
+pub fn water_strategic_001_shader_motion_green(catalog: &WaterSurfaceVisualCatalog) -> bool {
+    let za = water_strategic_witness_zoom_alpha();
+    let base = [0u8, 0u8, 200u8, 255u8];
+    let mut checked = 0u8;
+    let mut motion_ok = 0u8;
+
+    let river_sample = catalog
+        .river_tiles
+        .iter()
+        .next()
+        .copied()
+        .or_else(|| {
+            catalog.river_segments.first().map(|seg| {
+                (
+                    seg.start.x.floor().max(0.0) as u32,
+                    seg.start.y.floor().max(0.0) as u32,
+                )
+            })
+        });
+    if let Some((tx, ty)) = river_sample {
+        checked += 1;
+        let flow = catalog.flow_at(tx, ty);
+        let a = river_overlay_pixel(base, tx, ty, flow, 0.0, za);
+        let b = river_overlay_pixel(base, tx, ty, flow, 4.0, za);
+        if a[..3] != b[..3] {
+            motion_ok += 1;
+        }
+    }
+    if let Some(&(tx, ty)) = catalog.lake_tiles.iter().next() {
+        checked += 1;
+        let a = lake_overlay_pixel(base, tx, ty, 0.0, za);
+        let b = lake_overlay_pixel(base, tx, ty, 4.0, za);
+        if a[..3] != b[..3] {
+            motion_ok += 1;
+        }
+    }
+    if let Some(&(tx, ty)) = catalog.ocean_tiles.iter().next() {
+        checked += 1;
+        let a = ocean_overlay_pixel(base, tx, ty, 0.0);
+        let b = ocean_overlay_pixel(base, tx, ty, 31.4);
+        if a[..3] != b[..3] {
+            motion_ok += 1;
+        }
+    }
+
+    checked > 0 && motion_ok > 0
+}
 
 #[inline]
 fn water_at_strategic_zoom(zoom_alpha: f32) -> bool {
@@ -530,10 +738,91 @@ mod tests {
     };
 
     #[test]
+    fn water_w1_ocean_001_perimeter_shallow_dem_tags_ocean() {
+        let w = 32u32;
+        let h = 32u32;
+        let n = (w * h) as usize;
+        let mut filled_dem = vec![0.62f32; n];
+        for x in 0..w {
+            filled_dem[x as usize] = 0.18;
+            filled_dem[((h - 1) * w + x) as usize] = 0.18;
+        }
+        for y in 0..h {
+            filled_dem[(y * w) as usize] = 0.18;
+            filled_dem[(y * w + (w - 1)) as usize] = 0.18;
+        }
+        let hydro = HydrologyResult {
+            rivers: Vec::new(),
+            lakes: Vec::new(),
+            accumulation: vec![0.0; n],
+            river_mask: vec![false; n],
+            lake_mask: vec![false; n],
+            filled_dem,
+        };
+        let mut params = WorldGenParams::default();
+        params.width = w;
+        params.height = h;
+        let catalog = WaterSurfaceVisualCatalog::from_hydrology(&hydro, &params);
+        assert!(
+            catalog.w1_ocean_green(),
+            "perimeter shallow DEM should produce ocean_tiles"
+        );
+        assert!(catalog.ocean_tiles.len() >= 2 * (w + h) as usize - 4);
+    }
+
+    #[test]
+    fn water_w1_ocean_001_swell_overlay_animates_with_time() {
+        let base = [40u8, 80, 90, 255];
+        let a = ocean_overlay_pixel(base, 12, 7, 0.0);
+        let b = ocean_overlay_pixel(base, 12, 7, 31.4);
+        let delta: u32 = a
+            .iter()
+            .zip(b.iter())
+            .take(3)
+            .map(|(x, y)| x.abs_diff(*y) as u32)
+            .sum();
+        assert!(
+            delta > 0,
+            "D-W04 ocean swell should animate (rgb delta {delta})"
+        );
+    }
+
+    #[test]
+    fn water_w1_ocean_001_dem_deep_band_fills_ocean_tiles() {
+        let w = 8u32;
+        let h = 8u32;
+        let n = (w * h) as usize;
+        let hydro = HydrologyResult {
+            rivers: Vec::new(),
+            lakes: Vec::new(),
+            accumulation: vec![0.0; n],
+            river_mask: vec![false; n],
+            lake_mask: vec![false; n],
+            filled_dem: vec![0.05; n],
+        };
+        let mut params = WorldGenParams::default();
+        params.width = w;
+        params.height = h;
+        let catalog = WaterSurfaceVisualCatalog::from_hydrology(&hydro, &params);
+        assert!(
+            catalog.w1_ocean_green(),
+            "WATER-W1-OCEAN-001: expected ocean_tiles from DEM deep band"
+        );
+        assert!(!catalog.ocean_tiles.is_empty());
+    }
+
+    #[test]
     fn border_lake_regions_split_between_ocean_and_lake_tiles() {
         let w = 16u32;
         let h = 16u32;
         let n = (w * h) as usize;
+        let mut filled_dem = vec![0.55f32; n];
+        for x in 0..w {
+            filled_dem[x as usize] = 0.12;
+        }
+        for &(x, y) in &[(8u32, 8), (9, 8), (8, 9), (9, 9)] {
+            filled_dem[y as usize * w as usize + x as usize] = 0.28;
+        }
         let hydro = HydrologyResult {
             rivers: Vec::new(),
             lakes: vec![
@@ -547,7 +836,7 @@ mod tests {
             accumulation: vec![0.0; n],
             river_mask: vec![false; n],
             lake_mask: vec![false; n],
-            filled_dem: vec![0.15; n],
+            filled_dem,
         };
         let mut params = WorldGenParams::default();
         params.width = w;
@@ -579,6 +868,59 @@ mod tests {
             catalog.river_segments.len(),
             catalog.river_tiles.len()
         );
+    }
+
+    #[test]
+    fn water_strategic_001_shader_motion_at_strategic_zoom() {
+        let mut catalog = WaterSurfaceVisualCatalog::default();
+        catalog.grid_width = 8;
+        catalog.grid_height = 8;
+        catalog.river_tiles.insert((2, 2));
+        catalog.lake_tiles.insert((4, 4));
+        catalog.ocean_tiles.insert((6, 6));
+        catalog.river_segments.push(RiverPolylineSegment {
+            path_id: 0,
+            start: Vec2::new(2.0, 2.0),
+            end: Vec2::new(4.0, 2.0),
+            flow_dir: Vec2::X,
+            half_width: 0.42,
+        });
+        assert!(
+            water_strategic_001_shader_motion_green(&catalog),
+            "D-W09 W1 motion must animate at strategic zoom_alpha={}",
+            water_strategic_witness_zoom_alpha()
+        );
+
+        let mut buf = vec![0u8; 8 * 8 * 4];
+        for px in buf.chunks_mut(4) {
+            px.copy_from_slice(&[0, 0, 200, 255]);
+        }
+        apply_water_surface_overlay_subregion(
+            &mut buf,
+            8,
+            0,
+            0,
+            8,
+            8,
+            &catalog,
+            0.0,
+            water_strategic_witness_zoom_alpha(),
+        );
+        let idx = 4 * (8 * 2 + 2);
+        let a = buf[idx];
+        apply_water_surface_overlay_subregion(
+            &mut buf,
+            8,
+            0,
+            0,
+            8,
+            8,
+            &catalog,
+            4.0,
+            water_strategic_witness_zoom_alpha(),
+        );
+        let b = buf[idx];
+        assert_ne!(a, b, "strategic subregion overlay must vary with time_secs");
     }
 
     #[test]
@@ -633,7 +975,10 @@ mod tests {
         let src = std::fs::read_to_string(root.join("assets/shaders/water/water_overlay.wgsl"))
             .expect("water_overlay.wgsl");
         assert!(src.contains("t * 0.6"), "D-W02 lake ripple uses time_secs");
-        assert!(src.contains("t * 0.35"), "D-W03 river scroll uses time_secs");
+        assert!(
+            src.contains("t * scroll_hz") && src.contains("scroll_hz"),
+            "D-W03 river scroll uses time_secs"
+        );
         assert!(
             src.contains("globals.zoom_alpha < 0.35"),
             "WATER-W1-RIVER-001 strategic river read branch"

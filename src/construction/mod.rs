@@ -91,7 +91,7 @@ pub use supply_chain_role::IndustrialSupplyChainRole;
 pub use utility_infrastructure_role::UtilityInfrastructureRole;
 pub use building_definitions::{
     default_buildings_dir, init_building_definition_registry, load_building_definitions_from_dir,
-    BuildingDefinition, BuildingDefinitionRegistry,
+    mock_shapes_parity_green, BuildingDefinition, BuildingDefinitionRegistry,
 };
 pub use building_catalog::{
     ApartmentForm, ApartmentUnitKind, BuildingFamily, BuildingIntentPreview, DetachedResidenceForm,

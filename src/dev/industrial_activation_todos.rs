@@ -428,3 +428,28 @@ pub fn sync_industrial_activation_board_from_witness(
         );
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn industrial_activation_i3_02_predicate_grid_overload_hook() {
+        let mut w = IndustrialActivationWitness::default();
+        assert!(!industrial_activation_todo_predicate("INDUSTRIAL-I3-02", &w));
+        w.grid_overload_hook = true;
+        assert!(industrial_activation_todo_predicate("INDUSTRIAL-I3-02", &w));
+        let mut board = IndustrialActivationTodoBoard::default();
+        board.status = vec![TodoStatus::Open; INDUSTRIAL_ACTIVATION_TODO_COUNT];
+        board.sync_from_witness(&w);
+        let row = board
+            .status
+            .iter()
+            .zip(INDUSTRIAL_ACTIVATION_TODOS.iter())
+            .find(|(_, r)| r.id == "INDUSTRIAL-I3-02")
+            .map(|(s, _)| *s)
+            .expect("I3-02 row");
+        assert_eq!(row, TodoStatus::Done);
+        assert!(board.open_count() > 0, "other rows may stay open");
+    }
+}

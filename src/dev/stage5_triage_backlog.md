@@ -28,7 +28,7 @@ Items here **proved sticky** or **scope-heavy** during Stage 5 convergence. They
 | TRIAGE-VM-06 | Sole writer per `ViewId`; audit all pose paths | 5.5-infra | view-runtime / debug-intelligence | `base_finsh_5.md` §1 — **Done** (witness `vm_06`) |
 | TRIAGE-VM-07 | Input routing only through view authority | 5.5-infra | coder + designer | `base_finsh_5.md` §1 — **Done** (`input_routing.rs`, witness `vm_07`) |
 | TRIAGE-VM-08 | Filter / overlay isolation per view | 5.5-infra | coder | `base_finsh_5.md` §1 |
-| TRIAGE-VM-09 | Eliminate global `MapCameraDesired` as authority (invert bridge) | 5.5-infra | sim-steward | `base_finsh_5.md` vm-09b v2 — **slice 1 GO** [`vm09_gate_v1.md`](vm09_gate_v1.md); track still **open** |
+| TRIAGE-VM-09 | Eliminate global `MapCameraDesired` as authority (invert bridge) | 5.5-infra | sim-steward | **Slice 2 CLOSED** — [`vm09_slice2_closure_signoff_v1.md`](vm09_slice2_closure_signoff_v1.md); **v2 invert bridge** still **open** |
 | TRIAGE-VM-10 | Minimap vs main lockstep diagnostics hardening | 5.5-infra | debug-intelligence | `infrastructure_view_isolation_live.json` |
 | TRIAGE-VM-11 | Preview vs main semantic audit (beyond readiness flags) | 5.5-infra | designer + coder | `stage5_full_app_live.json` `view_isolation` |
 | TRIAGE-PROJ-2 | Sweep `world_to_screen` not via `ViewProjectionAuthority` | 5.5-infra | coder | `base_finsh_5.md` proj-2 |

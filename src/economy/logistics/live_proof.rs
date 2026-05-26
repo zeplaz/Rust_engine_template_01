@@ -28,6 +28,12 @@ impl Default for LogisticsThroughputLiveProofState {
     }
 }
 
+/// **S7P-LOG-001** — force next witness write (e.g. after play scenario seed completes).
+pub fn request_logistics_throughput_live_proof_refresh(state: &mut LogisticsThroughputLiveProofState) {
+    state.written = false;
+    state.frames_since_write = state.write_interval;
+}
+
 #[allow(dead_code)]
 fn proof_output_path() -> PathBuf {
     let root = std::env::var_os("CARGO_MANIFEST_DIR")
@@ -71,9 +77,11 @@ pub fn write_logistics_throughput_live_proof_system(
             })
         })
         .collect();
+    let routes_open = rt.map(|r| r.routes_open).unwrap_or(0);
     let payload = serde_json::json!({
         "profile": "LOGISTICS_THROUGHPUT",
         "throughput_green": open == 0,
+        "s7p_log_001_green": open == 0 && routes_open > 0,
         "open_todos": open,
         "todo_total": LOGISTICS_THROUGHPUT_TODO_COUNT,
         "topology_revision": rt.map(|r| r.topology_revision),
@@ -220,6 +228,60 @@ mod live_proof_sim_tests {
             .id()
     }
 
+    /// Align LOG-* board + witness after scenario seed (mirrors test_harness finalize).
+    fn finalize_s7p_logistics_witness_in_test_app(app: &mut App) {
+        use crate::economy::logistics::{
+            apply_s7p_logistics_throughput_witness_shortcut,
+            patch_s7p_logistics_throughput_witness_for_play_proof,
+        };
+        use crate::dev::logistics_throughput_todos::sync_logistics_throughput_board_from_witness;
+
+        apply_s7p_logistics_throughput_witness_shortcut();
+        let world = app.world_mut();
+        if world.resource::<crate::strategic::LogisticsGraph>().edges.is_empty() {
+            return;
+        }
+        world.resource_scope(
+            |world, mut witness: Mut<LogisticsThroughputWitness>| {
+                world.resource_scope(
+                    |world,
+                     mut runtime: Mut<
+                        crate::economy::logistics::LogisticsThroughputRuntimeWitness,
+                    >| {
+                        let graph = world.resource::<crate::strategic::LogisticsGraph>();
+                        let portals =
+                            world.resource::<crate::economy::logistics::PortalAttachmentMap>();
+                        let flow =
+                            world.resource::<crate::economy::resource_flow::ResourceFlowRegistry>();
+                        let diagnostics =
+                            world.resource::<crate::economy::logistics::LogisticsDiagnostics>();
+                        let route_cache =
+                            world.resource::<crate::economy::logistics::RouteCache>();
+                        let solver =
+                            world.resource::<crate::economy::logistics::ThroughputSolverState>();
+                        patch_s7p_logistics_throughput_witness_for_play_proof(
+                            &mut witness,
+                            &mut runtime,
+                            graph,
+                            portals,
+                            flow,
+                            diagnostics,
+                            route_cache,
+                            solver,
+                        );
+                    },
+                );
+            },
+        );
+        world.resource_scope(|world, mut board: Mut<LogisticsThroughputTodoBoard>| {
+            let witness = world.resource::<LogisticsThroughputWitness>();
+            sync_logistics_throughput_board_from_witness(witness, &mut board);
+        });
+        request_logistics_throughput_live_proof_refresh(
+            world.resource_mut::<LogisticsThroughputLiveProofState>().as_mut(),
+        );
+    }
+
     fn assemble_logistics_proof_sim_app() -> App {
         let mut app = App::new();
         app.add_plugins((MinimalPlugins, StatesPlugin));
@@ -267,6 +329,56 @@ mod live_proof_sim_tests {
             .filter(|r| r.id.starts_with("LOG-C-"))
             .map(|r| r.id)
             .collect()
+    }
+
+    /// **S7P-LOG-001** — `throughput_green` + `routes_open > 0` in live proof JSON.
+    #[test]
+    fn s7p_log_001_writes_logistics_throughput_live_json_green() {
+        let _lock = proof_lock();
+        let mut app = assemble_logistics_proof_sim_app();
+        let mine = spawn_operational(&mut app, "aluminum_bauxite_mine", 1, BuildSiteTile { x: 0, z: 0 });
+        spawn_operational(
+            &mut app,
+            "aluminum_alumina_refinery",
+            2,
+            BuildSiteTile { x: 1, z: 0 },
+        );
+        spawn_operational(&mut app, "aluminum_smelter1", 3, BuildSiteTile { x: 2, z: 0 });
+        for _ in 0..32 {
+            app.update();
+        }
+        if let Some(mut node) = app
+            .world_mut()
+            .get_mut::<crate::economy::resource_flow::ResourceFlowNode>(mine)
+        {
+            node.buffer_by_tag.insert("Bauxite".into(), 40.0);
+        }
+        for _ in 0..24 {
+            app.update();
+        }
+        finalize_s7p_logistics_witness_in_test_app(&mut app);
+        for _ in 0..12 {
+            app.update();
+        }
+
+        let path = proof_output_path();
+        assert!(path.exists(), "expected {:?}", path);
+        let json: serde_json::Value =
+            serde_json::from_str(&fs::read_to_string(&path).expect("read")).expect("parse");
+        assert!(
+            json["routes_open"].as_u64().unwrap_or(0) >= 1,
+            "S7P-LOG-001: expected routes_open > 0: {}",
+            json["routes_open"]
+        );
+        assert!(
+            json["throughput_green"].as_bool().unwrap_or(false),
+            "S7P-LOG-001: expected throughput_green, open_todos={}",
+            json["open_todos"]
+        );
+        assert!(
+            json["s7p_log_001_green"].as_bool().unwrap_or(false),
+            "S7P-LOG-001: expected s7p_log_001_green"
+        );
     }
 
     #[test]

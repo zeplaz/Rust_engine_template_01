@@ -18,6 +18,20 @@ pub mod replay_editor_parity;
 pub mod stage5_live_todos;
 pub mod stage5_finish_todos;
 pub mod visual_aidv2_live_todos;
+pub mod stage7_play_live_proof;
+pub mod stage7_behavioral_live_proof;
+pub mod steward_witness_sync_proof;
+pub mod steward_spark_vfx_proof;
+pub mod steward_s7b_preflight_proof;
+pub mod steward_ui_oh_gate_proof;
+pub mod steward_w3_gate_proof;
+pub mod coder_a_ui_five_lane_proof;
+pub mod coder_a_ui_w3_p4_m3_proof;
+pub mod coder_b_ui_five_lane_proof;
+pub mod coder_b_ui_w3_witness_proof;
+pub mod coder_b_ui_w3_p6_proof;
+pub mod triage_vm09_v2_proof;
+pub mod s7b_m2_m3_coder_proof;
 
 pub use stage5_live_todos::{
     hook_post_readiness_evaluate, mark_stage5_todo, register_stage5_todo_runtime_hooks,
@@ -75,4 +89,13 @@ pub use visual_aidv2_live_todos::{
     hook_post_readiness_visual_aidv2, register_visual_aidv2_runtime_hooks,
     sync_visual_aidv2_todo_board_predicates, VisualAidV2LiveTodo, VisualAidV2LiveTodoBoard,
     VisualAidV2Witness, VISUAL_AID_V2_TODOS,
+};
+pub use stage7_behavioral_live_proof::{
+    build_stage7_behavioral_live_proof_payload, commit_stage7_behavioral_live_proof,
+    write_stage7_behavioral_live_proof_system, Stage7BehavioralLiveProofState,
+    STAGE7_BEHAVIORAL_LIVE_JSON,
+};
+pub use stage7_play_live_proof::{
+    build_stage7_play_live_proof_payload, write_stage7_play_live_proof_system,
+    Stage7PlayLiveProofState, STAGE7_PLAY_LIVE_JSON,
 };

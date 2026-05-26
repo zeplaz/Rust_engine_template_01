@@ -21,6 +21,10 @@ pub enum ConstructionQueueIntent {
     Remove {
         index: usize,
     },
+    /// **BQ-128-APPLY-001** — apply imported Wave S preset to ghost (no queue / no commit).
+    ApplyImportedPreset {
+        preset_index: usize,
+    },
 }
 
 #[derive(Clone, Debug, Default)]
@@ -82,6 +86,10 @@ pub fn sync_construction_queue_panel_view(
 
 pub fn apply_construction_queue_intents(
     mut pending: ResMut<PendingConstructionQueue>,
+    mut ghost: ResMut<super::build_state::BuildGhostState>,
+    mut tool: ResMut<super::build_tool_authority::ActiveBuildTool>,
+    mut strip: ResMut<super::BuildStripState>,
+    imported: Option<Res<crate::io::save::WaveSImportedBlueprints>>,
     mut intents: MessageReader<ConstructionQueueIntent>,
 ) {
     for intent in intents.read() {
@@ -98,6 +106,23 @@ pub fn apply_construction_queue_intents(
                 }
             }
             ConstructionQueueIntent::Remove { index } => pending.remove_at(*index),
+            ConstructionQueueIntent::ApplyImportedPreset { preset_index } => {
+                let Some(collection) = imported
+                    .as_ref()
+                    .and_then(|w| w.collection.as_ref())
+                else {
+                    continue;
+                };
+                let Some(entry) = collection.presets.get(*preset_index) else {
+                    continue;
+                };
+                super::blueprint_preset::apply_blueprint_preset_to_build_ghost(
+                    entry,
+                    &mut ghost,
+                    &mut tool,
+                    &mut strip,
+                );
+            }
         }
     }
 }

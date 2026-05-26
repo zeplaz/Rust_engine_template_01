@@ -28,9 +28,8 @@ use crate::gui::{
     InputBindings, MapCameraDesired, MapPresentationDiagnostics, MapViewInstanceId,
     MinimapInteractionBuffer, MinimapPresentationSource, MinimapShellState,
     ResolvedMapViewFrames, ViewAuthoritySystemSet, ViewId, ViewManager,
-    commit_map_camera_pose_to_view_authority,
-    native_minimap_window_supported, trace_map_camera_desired_write_if_full_app, MAP_PANEL_INSET_PX,
-    map_surface_screen_to_world,
+    native_minimap_window_supported, MAP_PANEL_INSET_PX,
+    view_surface_screen_to_world,
 };
 use crate::gui::std_floating;
 use crate::gui::hud::cached_egui_texture::HudEguiTextureCache;
@@ -43,7 +42,7 @@ use crate::gui::MainWorldCamera;
 use crate::gui::editor::world_preview::layers::PreviewLayers;
 use crate::gui::{ensure_viewport_camera_initialized, fit_viewport_to_map};
 use crate::gui::preview_partial_min_interval_from_hz;
-use crate::render::{FireVisualFrameSet, SharedOverlayFieldBuffers, Stage5ReadinessProfile};
+use crate::render::{FireVisualFrameSet, SharedOverlayFieldBuffers};
 use crate::render::FireAtmosphereAggregate;
 use crate::gui::style::UiPalette;
 use crate::gui::editor::map_editor::MapEditorRoadMarkerV1;
@@ -349,15 +348,12 @@ fn focus_main_camera_on_world_params(
     test_scene: Option<Res<ActiveTestScene>>,
     windows: Query<&Window, With<bevy::window::PrimaryWindow>>,
     sim_viewport: Res<crate::gui::SimulationMapViewport>,
-    mut desired: ResMut<MapCameraDesired>,
     mut authority: ResMut<crate::render::view_runtime::ViewProjectionAuthority>,
     mut trace: ResMut<crate::render::view_runtime::ViewRuntimeTrace>,
-    profile: Res<Stage5ReadinessProfile>,
 ) {
     if params.width == 0 || params.height == 0 {
         return;
     }
-    let before = desired.clone();
     let cx = params.width as f32 * 0.5;
     let cy = params.height as f32 * 0.5;
     let world_w = params.width as f32;
@@ -395,15 +391,15 @@ fn focus_main_camera_on_world_params(
         t.scale = Vec3::splat(zoom);
         t.rotation = Quat::IDENTITY;
     }
-    desired.translation = Vec3::new(cx, cy, 0.0);
-    desired.scale = Vec3::splat(zoom);
-    desired.rotation = Quat::IDENTITY;
-    commit_map_camera_pose_to_view_authority(authority.as_mut(), trace.as_mut(), desired.as_ref());
-    trace_map_camera_desired_write_if_full_app(
-        profile.as_ref(),
-        "tile_world_fallback::focus_main_camera_on_world_params",
-        &before,
-        &desired,
+    let pose = MapCameraDesired {
+        translation: Vec3::new(cx, cy, 999.0),
+        scale: Vec3::splat(zoom),
+        rotation: Quat::IDENTITY,
+    };
+    crate::gui::commit_map_camera_pose_to_view_authority(
+        authority.as_mut(),
+        trace.as_mut(),
+        &pose,
     );
 }
 
@@ -729,11 +725,14 @@ fn tile_world_fallback_rasterize(
 
     let raster_started = FrameBudgetTimer::start();
     let zoom_alpha = crate::gui::map_zoom_alpha(camera.scale.x);
-    let fire_boost = if zoom_alpha < crate::render::gpu_particles::FIRE_SPARK_STRATEGIC_ZOOM_ALPHA {
+    // VX-P0-01: strategic zoom boost only on the main overworld raster — minimap stays 1.0 so
+    // optional fire-heat toggle does not wash the whole panel when zoomed out.
+    let fire_boost_main = if zoom_alpha < crate::render::gpu_particles::FIRE_SPARK_STRATEGIC_ZOOM_ALPHA {
         1.0
     } else {
         (1.0 + 0.85 / camera.scale.x.max(0.5)).clamp(1.0, 2.0)
     };
+    let fire_boost_minimap = 1.0;
     let time_secs = time.elapsed_secs();
     let water_catalog = water_catalog.as_deref();
 
@@ -804,7 +803,7 @@ fn tile_world_fallback_rasterize(
             fam_opt,
             &chunk_geom,
             overlay.as_ref(),
-            fire_boost,
+            fire_boost_main,
             water_catalog,
             time_secs,
             zoom_alpha,
@@ -836,7 +835,7 @@ fn tile_world_fallback_rasterize(
             fam_opt,
             &chunk_geom,
             overlay.as_ref(),
-            fire_boost,
+            fire_boost_minimap,
             water_catalog,
             time_secs,
             zoom_alpha,
@@ -939,6 +938,7 @@ pub fn draw_simulation_minimap_egui(
     tex_id: egui::TextureId,
     shell: &mut MinimapShellState,
     legacy: &mut SimMinimapUiState,
+    manager: &ViewManager,
     _desired: &MapCameraDesired,
     presentation: &mut MapViewState,
     dock: &mut crate::gui::hud::HudDockRegistry,
@@ -1116,15 +1116,18 @@ pub fn draw_simulation_minimap_egui(
         if response.clicked() || response.double_clicked() {
             if let Some(pos) = response.interact_pointer_pos() {
                 shell.last_image_rect = Some(image_rect);
-                let world = map_surface_screen_to_world(
+                let tex_w = w.max(1.0);
+                let tex_h = h.max(1.0);
+                if let Some(world) = view_surface_screen_to_world(
+                    manager,
+                    ViewId::Minimap,
                     pos,
                     image_rect,
-                    map_center,
-                    hit_zoom,
-                    w.max(1.0),
-                    h.max(1.0),
-                );
-                interaction.queue_focus(world, response.double_clicked());
+                    tex_w,
+                    tex_h,
+                ) {
+                    interaction.queue_focus(world, response.double_clicked());
+                }
             }
         }
     };

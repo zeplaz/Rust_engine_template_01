@@ -3,8 +3,11 @@
 | Field | Value |
 |:---|:---|
 | **Track ID** | `S7-BEHAV` |
-| **Version** | `1.0.0` |
-| **Status** | **GATED** — do not implement comm authority until prerequisites green |
+| **Version** | `1.2.0` |
+| **Full plan** | [`../stage7_behavioral_full_plan_v1.md`](../stage7_behavioral_full_plan_v1.md) (**PLAN-STAGE7-BEHAVIORAL-001**) |
+| **Track rollup** | [`../stage7_behavioral_track_plan_v1.md`](../stage7_behavioral_track_plan_v1.md) |
+| **Status** | **IMPLEMENTATION** — S7B-PLAN-001 **SIGNED**; **S7B-M1** queued |
+| **Impl plan** | [`../stage7_behavioral_implementation_plan_v1.md`](../stage7_behavioral_implementation_plan_v1.md) |
 | **Designer brief** | [`../../prompts/guides/stage7_behavioral_world_designer_brief_v1.md`](../../prompts/guides/stage7_behavioral_world_designer_brief_v1.md) |
 | **UI shell stub** | `src/gui/hud/stage7_ui_shell.rs` (contracts only) |
 
@@ -16,7 +19,9 @@
 |:---|:---|
 | Wave P operational | `wave_p_live.json` in sim |
 | UI Phase 4 D-04 | **UI-WP-LAYOUT-002** done |
-| Infra VM-09 slice 1 | **INFRA-VM09-001** done |
+| S7-PLAY product | `stage7_play_live.json` green |
+| Infra VM-09 slice 2 | **TRIAGE-VM-09-CODER-B** + **PROJ2** done |
+| Infra VM-09 v2 | **TRIAGE-VM-09-v2** open — soft gate for full comm authority |
 | UI Phase 2B | `phase2b_closed` |
 | Transmission UX stub note | `UX-E03` in post_stage6 board |
 
@@ -36,20 +41,20 @@ Prove **StrategicCommand** plane: delayed dispatch, stale intel, logistics stres
 
 ## @designer instructions (primary owner)
 
-### S7B-DESIGN-001 — Contract worksheet (required)
+### S7B-DESIGN-001 — Contract worksheet — **DONE SIGNED** (2026-05-25)
 
-**Template:** extend [`../../prompts/guides/stage7_behavioral_world_designer_brief_v1.md`](../../prompts/guides/stage7_behavioral_world_designer_brief_v1.md) with decision table:
+**Worksheet:** [`stage7_behavioral_decision_worksheet_v1.md`](../../prompts/guides/stage7_behavioral_decision_worksheet_v1.md) · **Sign-off:** [`stage7_behavioral_d_signoff_v1.md`](../stage7_behavioral_d_signoff_v1.md)
 
-| ID | Decision | Options | Pick |
-|:---|:---|:---|:---|
-| D-S7-01 | First comm plane | StrategicCommand only / + LogisticsHub | |
-| D-S7-02 | Overlay v1 | Recon + logistics stress / + EW | |
-| D-S7-03 | Mission v1 | Move + secure corridor / + defend | |
-| D-S7-04 | Delay model | Fixed ticks / distance-based | |
-| D-S7-05 | Intel stale UI | Tray badge / map tint / both | |
-| D-S7-06 | Explainability surface | F3 panel / context tray tab | |
+| ID | Pick |
+|:---|:---|
+| D-S7-01 | **A** StrategicCommand only |
+| D-S7-02 | **A** Recon + logistics stress |
+| D-S7-03 | **A** Move + secure corridor |
+| D-S7-04 | **A** Fixed ticks |
+| D-S7-05 | **A** Tray + map tint |
+| D-S7-06 | **C** F3 + context tray tab |
 
-**Deliver:** `prompts/guides/stage7_behavioral_decision_worksheet_v1.md` — **SIGNED** blocks planner.
+**Unblocks:** **S7B-PLAN-001**
 
 ### S7B-DESIGN-002 — UX-D HUD hooks
 
@@ -91,7 +96,7 @@ Produce `src/dev/stage7_behavioral_implementation_plan_v1.md`:
 
 ### Do not start until
 
-- S7B-DESIGN-001 **SIGNED**
+- S7B-DESIGN-001 **SIGNED** (2026-05-25 — [`stage7_behavioral_d_signoff_v1.md`](../stage7_behavioral_d_signoff_v1.md))
 - S7B-PLAN-001 published
 - Prerequisites table all ✅
 
@@ -138,4 +143,6 @@ When prerequisites claim green, verify:
 
 | Version | Date | Notes |
 |:---|:---|:---|
+| v1.2.0 | 2026-05-25 | Link full plan + worksheet draft path |
+| v1.1.0 | 2026-05-25 | S7-PLAY closed; link PLAN-STAGE7-BEHAVIORAL-001 |
 | v1.0.0 | 2026-05-24 | Gated behavioral track |

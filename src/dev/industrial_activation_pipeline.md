@@ -112,6 +112,8 @@ pub struct ResourceFlowNode {
 
 **Activation must:** insert `ElectricalComponent` on industrial buildings so grid rebuild associates loads within `GridConnectionRadiusSq` (~48 m).
 
+**IND-E03 witness (done):** [`industrial_grid_overload_impl_plan_v1.md`](industrial_grid_overload_impl_plan_v1.md) (**PLAN-IND-E03-001** / **IND-E03-CODER-A**) — `GridOverloadEvent` → `ind_e03_green` in `industrial_activation_live.json`.
+
 **Gameplay target:** smelter +220 MW equivalent → transformer stress → brownouts (design in [`power_damage_ui_persistence_v1.md`](../../prompts/designer_questions/production_economy/power_damage_ui_persistence_v1.md)).
 
 ---

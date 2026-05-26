@@ -41,22 +41,24 @@
       "debug_runs/wave_p_live.json",
       "debug_runs/wave_c_live.json",
       "debug_runs/ui_shell_migration_live.json",
-      "debug_runs/minimap_compositor_live.json"
+      "debug_runs/minimap_compositor_live.json",
+      "debug_runs/stage7_behavioral_live.json",
+      "debug_runs/stage7_play_live.json"
     ],
     "relative_path": "debug_runs/infrastructure_view_isolation_live.json",
     "schema": "debug_run_envelope_v1",
-    "source_system": "view_runtime_live_proof",
-    "written_at_epoch_secs": 1779644695
+    "source_system": "refresh_infrastructure_view_isolation_live_witness",
+    "written_at_epoch_secs": 1779761121
   },
   "infrastructure_view_isolation_green": true,
   "isolation": {
     "minimap_main_lockstep_suspect": false,
-    "minimap_overlay_fire_heat": true,
+    "minimap_overlay_fire_heat": false,
     "preview_main_lockstep_suspect": false,
-    "preview_overlay_fire_heat": true,
-    "simulation_map_shares_main_camera": true,
+    "preview_overlay_fire_heat": false,
+    "simulation_map_shares_main_camera": false,
     "vm08_overlay_masks_aligned": true,
-    "world_main_overlay_fire_heat": true
+    "world_main_overlay_fire_heat": false
   },
   "profile": "INFRASTRUCTURE_VIEW_ISOLATION",
   "trace": {
@@ -79,30 +81,27 @@
   "vm_08": {
     "overlay_masks_aligned": true
   },
+  "vm_09": {
+    "infra_proj2_001_green": true,
+    "invert_bridge": "ViewProjectionAuthority_write_MapCameraDesired_derive",
+    "triage_vm09_coder_b_green": true,
+    "triage_vm09_v2_green": true,
+    "view_representation_world_main_zoom": "resolve_world_main_camera_scale"
+  },
   "vm_10": {
     "minimap_lockstep_suspect": false,
     "preview_lockstep_suspect": false
   },
   "vm_11": {
     "minimap_cap_respected": true,
-    "per_view_fire_instances": {
-      "Minimap": 0,
-      "SimulationMap": 0,
-      "WorldMain": 0,
-      "WorldPreview": 0
-    },
+    "per_view_fire_instances": {},
     "preview_cap_respected": true,
     "projection_fire_source": "WorldMain"
   },
   "vm_a": {
-    "authority_revision": 1764,
+    "authority_revision": 0,
     "dual_writer_pose_violation": false,
     "minimap_shell_wrote_map_camera_desired": false,
-    "pose_writers": {
-      "Minimap": "MinimapShell",
-      "SimulationMap": "MapCameraInput",
-      "WorldMain": "MapCameraInput",
-      "WorldPreview": "PreviewPanel"
-    }
+    "pose_writers": {}
   }
 }

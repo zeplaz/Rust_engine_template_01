@@ -9,7 +9,10 @@ use super::viewport_rect_sanity::{ViewportRectIssueKind, ViewportRectSource};
 
 #[derive(Resource, Clone, Debug, Default)]
 pub struct ProductShellDiagnostics {
+    /// Lifetime product-shell egui passes (editor sessions can inflate before sim proof).
     pub egui_pass_count: u64,
+    /// **UI-P2B-CODER-B** — passes since last `OnEnter(Simulation)`; used for `phase2b_closed`.
+    pub egui_pass_count_sim_session: u64,
     pub last_frame_delta_secs: f32,
     pub texture_rebuilds: HashMap<ProductShellWidgetId, u64>,
     pub visible_widgets: HashMap<ProductShellWidgetId, bool>,
@@ -18,8 +21,19 @@ pub struct ProductShellDiagnostics {
 }
 
 impl ProductShellDiagnostics {
+    /// **UI-P2B-CODER-B** — clear cumulative counter at sim enter (PLAN-UI-SHELL-2B-001).
+    pub fn reset_egui_pass_count_for_simulation_session(&mut self) {
+        self.egui_pass_count = 0;
+        self.egui_pass_count_sim_session = 0;
+    }
+
     pub fn record_egui_pass(&mut self) {
         self.egui_pass_count = self.egui_pass_count.wrapping_add(1);
+    }
+
+    pub fn record_egui_pass_in_simulation(&mut self) {
+        self.record_egui_pass();
+        self.egui_pass_count_sim_session = self.egui_pass_count_sim_session.wrapping_add(1);
     }
 
     pub fn bump_texture_rebuild(&mut self, id: ProductShellWidgetId) {

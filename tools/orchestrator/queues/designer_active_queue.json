@@ -1,0 +1,172 @@
+{
+  "_meta": {
+    "version": "1.5.0",
+    "date": "2026-05-25",
+    "owner": "@designer",
+    "signoff_registry": "tools/orchestrator/queues/designer_signoff_registry.json",
+    "todo_board": "src/dev/stage_designer_todos_v1.md",
+    "machine_queue": "tools/orchestrator/queues/continuation_queue.json",
+    "workboard": "src/dev/stage_designer_workboard_v1.md",
+    "ledger": "src/dev/stage_tracks_signoff_ledger_v1.md"
+  },
+  "done": [
+    {
+      "id": "UI4-DESIGN-001",
+      "agent": "designer",
+      "signoff": "SIGNED",
+      "signed_date": "2026-05-24",
+      "status": "done",
+      "witness": "prompts/guides/ui/world_preview_d04_slide_sheet_spec_v1.md",
+      "unblocks": ["UI-WP-LAYOUT-002"]
+    },
+    {
+      "id": "S7P-DESIGN-001",
+      "agent": "designer",
+      "signoff": "SIGNED",
+      "signed_date": "2026-05-24",
+      "status": "done",
+      "witness": "src/dev/stage7_play_scenario_v1.md",
+      "unblocks": ["S7P-STEWARD-001"]
+    },
+    {
+      "id": "UI-OH-D2-SIGN-001",
+      "aliases": ["UI-OH-D2"],
+      "agent": "designer",
+      "depends_on": ["UI-OH-2A-001"],
+      "signoff": "SIGNED",
+      "signed_date": "2026-05-25",
+      "status": "done",
+      "verdict": "PASS",
+      "witness": "src/dev/ui_oh_d2_signoff_record_v1.md",
+      "brief": "prompts/guides/ui/ui_phase2_designer_signoff_v1.md"
+    },
+    {
+      "id": "UI-OH-P4-ART-001",
+      "aliases": ["P4-ART-01"],
+      "agent": "designer",
+      "signoff": "SIGNED",
+      "signed_date": "2026-05-25",
+      "status": "done",
+      "verdict": "PASS",
+      "witness": "src/dev/ui_oh_p4_art_signoff_record_v1.md",
+      "brief": "prompts/guides/ui/ui_phase4_icon_atlas_brief_v1.md"
+    },
+    {
+      "id": "DESIGN-UI-P2-SIGNOFF-001",
+      "aliases": ["DESIGN-UI-P2-SIGNOFF"],
+      "agent": "designer",
+      "signoff": "SIGNED",
+      "signed_date": "2026-05-24",
+      "status": "done",
+      "witness": "prompts/guides/ui/ui_phase2_designer_signoff_v1.md"
+    },
+    {
+      "id": "DESIGN-D-VFX-POST-001",
+      "aliases": ["D-VFX", "VFX-POST-REVIEW-DESIGN"],
+      "agent": "designer",
+      "depends_on": ["P2-FIRE-SPARK-011"],
+      "signoff": "SIGNED",
+      "signed_date": "2026-05-25",
+      "status": "done",
+      "verdict": "PASS",
+      "witness": "src/dev/vfx_design_review_record_v1.md",
+      "brief": "prompts/guides/ui/vfx_post_implementation_review_v1.md",
+      "notes": "After @coder A P2-FIRE-SPARK-011"
+    },
+    {
+      "id": "DESIGN-VFX-CAPTURE-001",
+      "aliases": ["VFX-CAPTURE-001"],
+      "agent": "designer",
+      "signoff": "SIGNED",
+      "signed_date": "2026-05-25",
+      "status": "done",
+      "witness": "assets/vfx/reference/review_captures/vfx_capture_status_20260525.md",
+      "verdict": "PASS",
+      "parent": "DESIGN-D-VFX-POST-001"
+    },
+    {
+      "id": "WATER-DESIGN-002",
+      "agent": "designer",
+      "signoff": "SIGNED",
+      "signed_date": "2026-05-24",
+      "status": "done",
+      "witness": "src/dev/water_ocean_fixture_request_v1.md",
+      "unblocks": ["WATER-W1-OCEAN-001"]
+    },
+    {
+      "id": "DESIGN-MINIMAP-M2-001",
+      "aliases": ["D-MINIMAP-M2", "MINIMAP-DESIGN-M2-001"],
+      "agent": "designer",
+      "signoff": "SIGNED",
+      "signed_date": "2026-05-24",
+      "status": "done",
+      "verdict": "M2 COMPLETE",
+      "witness": "src/dev/minimap_d_m2_signoff_v1.md",
+      "deferred": ["UI-P3-M2-TRAY-OPT"]
+    },
+    {
+      "id": "MINIMAP-DESIGN-M3-001",
+      "aliases": ["D-MINIMAP-M3"],
+      "agent": "designer",
+      "signoff": "SIGNED",
+      "signed_date": "2026-05-25",
+      "status": "done",
+      "witness": "prompts/guides/ui/minimap_m3_operational_overlay_spec_v1.md",
+      "unblocks": ["UI-P3-M4-001"]
+    },
+    {
+      "id": "DESIGN-D-WP-REVIEW-001",
+      "aliases": ["D-WP-REVIEW"],
+      "agent": "designer",
+      "signoff": "SIGNED",
+      "signed_date": "2026-05-25",
+      "status": "done",
+      "verdict": "PASS",
+      "witness": "src/dev/world_preview_d_wp_review_record_v1.md",
+      "brief": "prompts/guides/ui/world_preview_d_wp_post_impl_review_v1.md"
+    },
+    {
+      "id": "UX-E02-BQ128-001",
+      "aliases": ["BQ-128", "UX-E02"],
+      "agent": "designer",
+      "depends_on": [],
+      "parallel": true,
+      "signoff": "SIGNED",
+      "signed_date": "2026-05-25",
+      "status": "done",
+      "witness": "src/dev/bq128_editor_path_design_note_v1.md",
+      "unblocks": ["BQ-128-APPLY-001"],
+      "notes": "None (parallel)"
+    },
+    {
+      "id": "S7B-DESIGN-001",
+      "agent": "designer",
+      "signoff": "SIGNED",
+      "signed_date": "2026-05-25",
+      "status": "done",
+      "witness": "src/dev/stage7_behavioral_d_signoff_v1.md",
+      "unblocks": ["S7B-PLAN-001"]
+    }
+  ],
+  "optional_designer": [
+    {
+      "id": "VX-P0-04",
+      "notes": "VFX ACCEPTED PNG round — harness green; see vfx_triage_v1.md"
+    },
+    {
+      "id": "UX-E03",
+      "notes": "Transmission stub note — post_stage6_active_todos.md; low"
+    }
+  ],
+  "active": [
+    {
+      "id": "UI-P3-M2-TRAY-OPT",
+      "priority": 4,
+      "agent": "coder",
+      "track": "UI-P3",
+      "status": "queued",
+      "done_when": "overlay tray → MinimapOverlayMask live",
+      "notes": "OPTIONAL — M2 signed without tray bridge"
+    }
+  ]
+}

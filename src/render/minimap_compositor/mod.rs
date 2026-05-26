@@ -12,7 +12,13 @@ pub use diagnostics::{
 };
 
 pub use live_proof::{
-    build_minimap_compositor_proof_payload, commit_minimap_compositor_live_proof,
+    build_minimap_compositor_proof_payload, build_minimap_compositor_proof_payload_with_tray,
+    commit_minimap_compositor_live_proof, fixture_ui_oh_m2_001_compositor,
+    refresh_ui_oh_m2_001_live_witness, refresh_ui_w3_m2_001_live_witness,
+    refresh_ui_w3_m3_001_live_witness, refresh_ui_w3_m3_001_stage7_operational_witness,
+    ui_oh_m2_001_green, ui_w3_m3_001_green, ui_w3_m3_001_operational_green,
+    ui_p3_m2_minimap_acceptance_green, ui_p3_m3_minimap_acceptance_green,
+    ui_p3_m4_minimap_acceptance_green, ui_w3_m2_001_green,
     write_minimap_compositor_live_proof_system, MinimapCompositorLiveProofState,
 };
 pub use pass::{
@@ -47,7 +53,8 @@ impl Plugin for MinimapCompositorPlugin {
             .init_resource::<MinimapGpuCompositorDiagnostics>()
             .init_resource::<MinimapCompositorLiveProofState>()
             .init_resource::<MinimapCompositeHeatTextures>()
-            .init_resource::<MinimapCompositeDispatch>();
+            .init_resource::<MinimapCompositeDispatch>()
+            .init_resource::<crate::render::MinimapOperationalSnapshot>();
         register_minimap_composite_gpu(app);
         app.add_systems(
             Update,
@@ -81,12 +88,14 @@ impl Plugin for MinimapCompositorPlugin {
 
 #[cfg(test)]
 mod tests {
+    static MINIMAP_GPU_COMPOSITOR_ENV_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
+
     use super::render_target::minimap_rgba_image;
     use crate::gui::editor::world_preview::{
         PreviewPathAuthority, WorldPreviewRenderTargetRegistry, WorldPreviewTexture,
     };
     use crate::gui::{
-        resolve_minimap_texture_source, resolve_world_preview_texture_source,
+        resolve_minimap_texture_source, resolve_world_preview_texture_source, MapViewInstances,
         MinimapPresentationSource, MinimapShellState,
     };
     use crate::render::{MinimapRenderTargetRegistry, TileWorldFallbackState};
@@ -147,19 +156,73 @@ mod tests {
     }
 
     #[test]
+    fn ui_w3_m2_001_live_witness_refresh() {
+        use super::live_proof::{refresh_ui_w3_m2_001_live_witness, ui_w3_m2_001_green};
+        use crate::gui::hud::HudOverlayTrayState;
+
+        assert!(refresh_ui_w3_m2_001_live_witness());
+        let text = std::fs::read_to_string("debug_runs/minimap_compositor_live.json")
+            .expect("witness json");
+        let v: serde_json::Value = serde_json::from_str(&text).expect("parse");
+        assert_eq!(v["ui_w3_m2_001"]["green"], serde_json::json!(true));
+        assert_eq!(v["logistics_rows"], serde_json::json!(2));
+        assert_eq!(v["construction_rows"], serde_json::json!(18));
+        assert_eq!(v["logistics_heat_enabled"], serde_json::json!(true));
+        assert_eq!(v["construction_heat_enabled"], serde_json::json!(true));
+        let tray = HudOverlayTrayState::default();
+        let compositor = super::live_proof::fixture_ui_oh_m2_001_compositor(&tray);
+        assert!(ui_w3_m2_001_green(&compositor));
+    }
+
+    #[test]
+    fn ui_oh_m2_001_live_witness_refresh() {
+        use super::live_proof::{refresh_ui_oh_m2_001_live_witness, ui_oh_m2_001_green};
+        use crate::gui::hud::HudOverlayTrayState;
+
+        assert!(refresh_ui_oh_m2_001_live_witness());
+        let text = std::fs::read_to_string("debug_runs/minimap_compositor_live.json")
+            .expect("witness json");
+        let v: serde_json::Value = serde_json::from_str(&text).expect("parse");
+        assert_eq!(v["ui_oh_m2_001"]["green"], serde_json::json!(true));
+        assert_eq!(v["ui_w3_m2_001"]["green"], serde_json::json!(true));
+        assert_eq!(v["logistics_rows"], serde_json::json!(2));
+        assert_eq!(v["construction_rows"], serde_json::json!(18));
+        assert_eq!(v["logistics_heat_enabled"], serde_json::json!(true));
+        assert_eq!(v["construction_heat_enabled"], serde_json::json!(true));
+        assert_eq!(v["ui_p3_m2_green"], serde_json::json!(true));
+        assert_eq!(v["composite_path"], serde_json::json!("GpuCompute"));
+        let tray = HudOverlayTrayState::default();
+        let compositor = super::live_proof::fixture_ui_oh_m2_001_compositor(&tray);
+        assert!(ui_oh_m2_001_green(&compositor));
+    }
+
+    #[test]
     fn minimap_compositor_live_witness_refresh() {
         use super::diagnostics::MinimapGpuCompositorDiagnostics;
         use super::live_proof::commit_minimap_compositor_live_proof;
         use super::pass::MinimapCompositorState;
+        use crate::gui::hud::HudOverlayTrayState;
 
+        let tray = HudOverlayTrayState::default();
         let compositor = MinimapCompositorState {
             stamp: 4,
             compositor_revision: 2,
             dual_minimap_present: false,
             extent_match_px: 0.0,
             logistics_rows: 2,
-            fire_heat_enabled: true,
-            logistics_heat_enabled: true,
+            construction_rows: 18,
+            ecology_rows: 100,
+            fow_rows: 16,
+            ew_rows: 12,
+            fire_heat_enabled: tray.fire_heat,
+            logistics_heat_enabled: tray.logistics_heat,
+            construction_heat_enabled: tray.construction_heat,
+            ecology_heat_enabled: tray.ecology_heat,
+            fow_heat_enabled: true,
+            ew_heat_enabled: true,
+            units_heat_enabled: true,
+            unit_marker_rows: 6,
+            replay_scrub_enabled: true,
             composite_path: super::pass::MinimapCompositePath::GpuCompute,
             ..Default::default()
         };
@@ -180,6 +243,7 @@ mod tests {
             7,
             false,
             &diagnostics,
+            Some(&tray),
         ));
         let text = std::fs::read_to_string("debug_runs/minimap_compositor_live.json")
             .expect("witness json");
@@ -198,6 +262,41 @@ mod tests {
         assert_eq!(v["logistics_heat_enabled"], serde_json::json!(true));
         assert_eq!(v["composite_path"], serde_json::json!("GpuCompute"));
         assert_eq!(v["ui_p3_001_green"], serde_json::json!(true));
+        assert_eq!(v["ui_p3_m2_tray_opt_green"], serde_json::json!(true));
+        assert_eq!(v["ui_p3_m2_green"], serde_json::json!(true));
+        assert_eq!(v["ui_p3_m3_green"], serde_json::json!(true));
+        assert_eq!(v["ui_p3_m4_green"], serde_json::json!(true));
+        assert_eq!(v["fow_enabled"], serde_json::json!(true));
+        assert_eq!(v["ew_overlay_enabled"], serde_json::json!(true));
+        assert_eq!(v["fow_rows"], serde_json::json!(16));
+        assert_eq!(v["ew_rows"], serde_json::json!(12));
+        assert_eq!(v["construction_rows"], serde_json::json!(18));
+        assert_eq!(v["ecology_rows"], serde_json::json!(100));
+        assert_eq!(v["unit_marker_rows"], serde_json::json!(6));
+        assert_eq!(v["replay_scrub_enabled"], serde_json::json!(true));
+        assert_eq!(v["ui_p3_m3_units_001_green"], serde_json::json!(true));
+        assert_eq!(v["ui_p3_m3_replay_001_green"], serde_json::json!(true));
+    }
+
+    #[test]
+    fn ui_p3_m2_tray_opt_green_when_tray_matches_compositor() {
+        use super::live_proof::ui_p3_m2_tray_opt_green;
+        use super::pass::MinimapCompositorState;
+        use crate::gui::hud::HudOverlayTrayState;
+
+        let compositor = MinimapCompositorState {
+            fire_heat_enabled: true,
+            logistics_heat_enabled: true,
+            construction_heat_enabled: true,
+            ecology_heat_enabled: false,
+            ..Default::default()
+        };
+        let mut tray = HudOverlayTrayState::default();
+        tray.fire_heat = true;
+        tray.ecology_heat = false;
+        assert!(ui_p3_m2_tray_opt_green(&compositor, &tray));
+        tray.logistics_heat = false;
+        assert!(!ui_p3_m2_tray_opt_green(&compositor, &tray));
     }
 
     #[test]
@@ -224,6 +323,126 @@ mod tests {
         assert!(!dispatch.has_commit());
         dispatch.commit_stamp = 5;
         assert!(dispatch.has_commit());
+    }
+
+    #[test]
+    fn ui_p3_m2_acceptance_green_when_m2_channels_populated() {
+        use super::live_proof::ui_p3_m2_minimap_acceptance_green;
+        use super::pass::{MinimapCompositePath, MinimapCompositorState};
+
+        let compositor = MinimapCompositorState {
+            stamp: 2,
+            logistics_rows: 2,
+            construction_rows: 18,
+            ecology_rows: 100,
+            construction_heat_enabled: true,
+            ecology_heat_enabled: true,
+            logistics_heat_enabled: true,
+            composite_path: MinimapCompositePath::GpuCompute,
+            ..Default::default()
+        };
+        let mut registry = MinimapRenderTargetRegistry::default();
+        let mut images = Assets::<Image>::default();
+        registry.committed_image = images.add(super::render_target::minimap_rgba_image(64, 64));
+        let shell = MinimapShellState {
+            presentation_source: MinimapPresentationSource::SharedRenderTargetImage,
+            ..Default::default()
+        };
+        assert!(ui_p3_m2_minimap_acceptance_green(
+            &compositor, &registry, &shell, None
+        ));
+    }
+
+    #[test]
+    fn fow_ew_heat_upload_when_operational_snapshot_seeded() {
+        use super::composite::{upload_minimap_heat_textures, MinimapCompositeHeatTextures};
+        use crate::render::{seed_minimap_m3_fow_ew_witness, MinimapOperationalSnapshot};
+
+        let mut images = Assets::<Image>::default();
+        let mut heat = MinimapCompositeHeatTextures::default();
+        let mut map_views = MapViewInstances::default();
+        map_views.minimap.overlays = crate::gui::simulation_minimap_overlay_defaults();
+        let fallback = TileWorldFallbackState {
+            last_w: 64,
+            last_h: 64,
+            ..Default::default()
+        };
+        let mut operational = MinimapOperationalSnapshot::default();
+        seed_minimap_m3_fow_ew_witness(&mut operational);
+        use crate::render::seed_minimap_m3_units_replay_witness;
+        use crate::systems::sim_frame_delta::CommittedSimReplayRing;
+
+        seed_minimap_m3_units_replay_witness(&mut operational);
+        let mut replay = CommittedSimReplayRing::with_capacity(8);
+        replay.record_commit(crate::systems::sim_control::SimStepStamp::new(1, 0));
+        replay.record_commit(crate::systems::sim_control::SimStepStamp::new(2, 0));
+        let (ok, _, _, _, fow_rows, ew_rows, unit_rows, replay_on) = upload_minimap_heat_textures(
+            &mut images,
+            &mut heat,
+            None,
+            None,
+            None,
+            None,
+            Some(&operational),
+            None,
+            Some(&replay),
+            &map_views,
+            &fallback,
+            UVec2::new(32, 32),
+        );
+        assert!(ok);
+        assert!(fow_rows > 0);
+        assert!(ew_rows > 0);
+        assert!(unit_rows > 0);
+        assert!(replay_on);
+    }
+
+    #[test]
+    fn ui_p3_m4_001_fow_ew_green_when_enabled_and_rows() {
+        use super::live_proof::ui_p3_m4_minimap_acceptance_green;
+        use super::pass::MinimapCompositorState;
+
+        let off = MinimapCompositorState {
+            fow_heat_enabled: true,
+            ew_heat_enabled: true,
+            fow_rows: 0,
+            ew_rows: 0,
+            ..Default::default()
+        };
+        assert!(!ui_p3_m4_minimap_acceptance_green(&off));
+
+        let on = MinimapCompositorState {
+            fow_heat_enabled: true,
+            ew_heat_enabled: true,
+            fow_rows: 16,
+            ew_rows: 12,
+            ..Default::default()
+        };
+        assert!(ui_p3_m4_minimap_acceptance_green(&on));
+    }
+
+    /// **UI-P3-M3-001** — ecology (and construction) heat enabled with snapshot rows.
+    #[test]
+    fn ui_p3_m3_001_ecology_heat_green_when_enabled_and_rows() {
+        use super::live_proof::ui_p3_m3_minimap_acceptance_green;
+        use super::pass::MinimapCompositorState;
+
+        let ecology_only = MinimapCompositorState {
+            construction_heat_enabled: false,
+            ecology_heat_enabled: true,
+            ecology_rows: 42,
+            ..Default::default()
+        };
+        assert!(!ui_p3_m3_minimap_acceptance_green(&ecology_only));
+
+        let ecology_on = MinimapCompositorState {
+            construction_heat_enabled: true,
+            ecology_heat_enabled: true,
+            ecology_rows: 100,
+            construction_rows: 0,
+            ..Default::default()
+        };
+        assert!(ui_p3_m3_minimap_acceptance_green(&ecology_on));
     }
 
     #[test]
@@ -281,6 +500,9 @@ mod tests {
 
     #[test]
     fn gpu_compositor_env_default_on_when_unset() {
+        let _guard = MINIMAP_GPU_COMPOSITOR_ENV_LOCK
+            .lock()
+            .expect("MINIMAP_GPU_COMPOSITOR env tests");
         let prior = std::env::var("MINIMAP_GPU_COMPOSITOR").ok();
         std::env::remove_var("MINIMAP_GPU_COMPOSITOR");
         assert!(super::pass::minimap_gpu_compositor_env_enabled());
@@ -292,6 +514,9 @@ mod tests {
 
     #[test]
     fn gpu_compositor_env_cpu_opt_out() {
+        let _guard = MINIMAP_GPU_COMPOSITOR_ENV_LOCK
+            .lock()
+            .expect("MINIMAP_GPU_COMPOSITOR env tests");
         let prior = std::env::var("MINIMAP_GPU_COMPOSITOR").ok();
         std::env::set_var("MINIMAP_GPU_COMPOSITOR", "0");
         assert!(!super::pass::minimap_gpu_compositor_env_enabled());

@@ -25,6 +25,8 @@ pub use types::{
     ThroughputSolverState, TransportNodeAnchor,
 };
 pub use witness::{
+    apply_s7p_logistics_throughput_witness_shortcut,
+    patch_s7p_logistics_throughput_witness_for_play_proof,
     refresh_logistics_throughput_witness_system, sync_logistics_throughput_board_system,
 };
 

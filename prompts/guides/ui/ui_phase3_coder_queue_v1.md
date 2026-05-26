@@ -12,6 +12,10 @@
 
 **Rule:** One primary lane per session. Phase 2 is **CLOSED** — active work is M2+ and product lanes.
 
+**Naming (authoritative):** [`ui_phase3_minimap_track_naming_v1.md`](ui_phase3_minimap_track_naming_v1.md) — **`UI-P3-M3-001` = M2 construction/ecology**; **design M3 fog/EW/units = `UI-P3-M4-001` / `D-MINIMAP-M3`**.
+
+**M2 full plan (coder A):** [`ui_phase3_minimap_m2_impl_full_plan_v1.md`](ui_phase3_minimap_m2_impl_full_plan_v1.md) (**PLAN-UI-P3-M2-IMPL-001**).
+
 ---
 
 ## Status snapshot (2026-05-24)
@@ -51,11 +55,13 @@
 ## Priority order (pick one primary)
 
 ```text
-P1  Phase 3 task 3.4 (M2 logistics heat)     → UI-P3-M2-001
+P1  Design M3 fog/EW (NOT UI-P3-M3-001)      → UI-P3-M4-001
 P2  IND-E01 industrial chain                 → parallel, disjoint files
 P3  Phase 2 witness tail (optional)          → UI-P2A-F03 / UI-P2A-P4-AUTH
-P4  Phase 3 M3 / Phase 4 art                 → after M2 witness
+P4  M3 units / replay / Phase 4 art          → UI-P3-M3-UNITS-001, UI-P3-M3-REPLAY-001
 ```
+
+**M2 closed:** logistics + **UI-P3-M3-001** (`ui_p3_m2_green` / `ui_p3_m3_green`). See [`ui_p3_m4_minimap_coder_queue_v1.md`](../../../src/dev/ui_p3_m4_minimap_coder_queue_v1.md).
 
 ---
 
@@ -141,7 +147,8 @@ cargo run -p proc_A_dine01 --release -- --test visual
 | Industrial chain | `@coder` **IND-E01** (parallel) |
 | Witness tail (hover / rail) | `@coder` UI-P2A-F03 / P4-AUTH (optional) |
 | VT-4/VT-5 regression | `@sim-steward` before shell edits |
-| M3 overlay UX | `@designer` then `@coder` |
+| Design M3 fog/EW | `@coder` **UI-P3-M4-001** (design **SIGNED**) |
+| M3 units / replay | `@coder` **UI-P3-M3-UNITS-001** / **REPLAY-001** |
 
 ---
 

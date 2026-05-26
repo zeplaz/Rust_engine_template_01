@@ -42,12 +42,14 @@
       "debug_runs/wave_p_live.json",
       "debug_runs/wave_c_live.json",
       "debug_runs/ui_shell_migration_live.json",
-      "debug_runs/minimap_compositor_live.json"
+      "debug_runs/minimap_compositor_live.json",
+      "debug_runs/stage7_behavioral_live.json",
+      "debug_runs/stage7_play_live.json"
     ],
     "relative_path": "debug_runs/construction_stage_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "construction_live_proof",
-    "written_at_epoch_secs": 1779644898
+    "written_at_epoch_secs": 1779755990
   },
   "build_p_star": [
     {

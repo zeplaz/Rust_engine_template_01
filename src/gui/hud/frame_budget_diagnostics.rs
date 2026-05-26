@@ -21,8 +21,25 @@ const UPLOAD_STORM_BYTES: u64 = 256 * 1024;
 const VIEWPORT_CHURN_EVENTS: u64 = 4;
 const LAYOUT_INVALIDATION_EVENTS: u64 = 3;
 const ANOMALY_COOLDOWN_SECS: f32 = 2.0;
-const RESIDENCY_CHURN_CELL_DELTA: usize = 48;
+/// **WC-D04 / S6-26** — minimum residency cell delta before churn is considered (perf doc aligned).
+pub const RESIDENCY_CHURN_CELL_DELTA: usize = 48;
+/// Consecutive frames over threshold before `ResidencyChurn` anomaly fires.
+pub const RESIDENCY_CHURN_HYSTERESIS_FRAMES: u8 = 2;
+/// Suppress churn anomalies while residency table is bootstrapping after first populate.
+pub const RESIDENCY_CHURN_BOOTSTRAP_FRAMES: u64 = 45;
 const BUCKET_EMA_ALPHA: f32 = 0.12;
+
+/// **WC-D04-CODER-B** — hysteresis gate for residency churn warnings.
+#[must_use]
+pub fn residency_churn_should_report(
+    delta: usize,
+    streak: u8,
+    bootstrap_remaining: u64,
+) -> bool {
+    bootstrap_remaining == 0
+        && delta >= RESIDENCY_CHURN_CELL_DELTA
+        && streak >= RESIDENCY_CHURN_HYSTERESIS_FRAMES
+}
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum FrameBudgetBucket {
@@ -88,6 +105,8 @@ pub struct Stage6VirtualizationBudget {
     pub atlas_pressure: f32,
     pub dirty_region_count: u32,
     pub overlay_update_count: u32,
+    /// **WC-D04** — `ResidencyChurn` anomalies emitted this session (post-hysteresis).
+    pub residency_churn_anomalies_session: u32,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -129,6 +148,8 @@ pub struct FrameBudgetDiagnostics {
     pub stage6: Stage6VirtualizationBudget,
     pub last_anomaly: Option<FrameBudgetAnomalyReport>,
     pub anomaly_suppressed_total: u64,
+    /// **WC-D04** — residency churn anomalies after hysteresis (not cooldown-suppressed).
+    pub residency_churn_anomalies_session: u64,
     cooldowns: [f32; 5],
 }
 
@@ -156,6 +177,7 @@ impl Default for FrameBudgetDiagnostics {
             stage6: Stage6VirtualizationBudget::default(),
             last_anomaly: None,
             anomaly_suppressed_total: 0,
+            residency_churn_anomalies_session: 0,
             cooldowns: [0.0; 5],
         }
     }
@@ -242,6 +264,13 @@ impl FrameBudgetDiagnostics {
             return;
         }
         self.cooldowns[idx] = now_secs + ANOMALY_COOLDOWN_SECS;
+        if kind == FrameBudgetAnomalyKind::ResidencyChurn {
+            self.residency_churn_anomalies_session =
+                self.residency_churn_anomalies_session.saturating_add(1);
+            self.stage6.residency_churn_anomalies_session = self
+                .residency_churn_anomalies_session
+                .min(u32::MAX as u64) as u32;
+        }
         let report = FrameBudgetAnomalyReport {
             kind,
             detail: detail.clone(),
@@ -268,6 +297,8 @@ pub struct FinalizeFrameBudgetLocals {
     last_viewport_issues: u64,
     last_layout_captures: u64,
     last_residency_cells: usize,
+    residency_churn_streak: u8,
+    residency_bootstrap_remaining: u64,
 }
 
 impl FrameBudgetTimer {
@@ -349,9 +380,24 @@ pub fn finalize_frame_budget_diagnostics(
     let now = time.elapsed_secs();
     if let Some(frame) = stage6_frame.as_deref() {
         let cell_count = frame.residency_chunk_count;
+        if scratch.last_residency_cells == 0 && cell_count > 0 {
+            scratch.residency_bootstrap_remaining = RESIDENCY_CHURN_BOOTSTRAP_FRAMES;
+        }
+        if scratch.residency_bootstrap_remaining > 0 {
+            scratch.residency_bootstrap_remaining -= 1;
+        }
         if scratch.last_residency_cells > 0 {
             let delta = cell_count.abs_diff(scratch.last_residency_cells);
             if delta >= RESIDENCY_CHURN_CELL_DELTA {
+                scratch.residency_churn_streak = scratch.residency_churn_streak.saturating_add(1);
+            } else {
+                scratch.residency_churn_streak = 0;
+            }
+            if residency_churn_should_report(
+                delta,
+                scratch.residency_churn_streak,
+                scratch.residency_bootstrap_remaining,
+            ) {
                 budget.note_anomaly(
                     FrameBudgetAnomalyKind::ResidencyChurn,
                     format!(
@@ -360,6 +406,7 @@ pub fn finalize_frame_budget_diagnostics(
                     ),
                     now,
                 );
+                scratch.residency_churn_streak = 0;
             }
         }
         scratch.last_residency_cells = cell_count;
@@ -459,6 +506,21 @@ mod tests {
         let stats = budget.buckets[FrameBudgetBucket::HudShell.index()];
         assert!(stats.avg_ms > 10.0);
         assert_eq!(stats.last_ms, 20.0);
+    }
+
+    #[test]
+    fn wc_d04_residency_churn_hysteresis_blocks_single_frame_spike() {
+        assert!(!residency_churn_should_report(64, 1, 0));
+    }
+
+    #[test]
+    fn wc_d04_residency_churn_hysteresis_fires_after_two_frames() {
+        assert!(residency_churn_should_report(64, 2, 0));
+    }
+
+    #[test]
+    fn wc_d04_residency_churn_suppressed_during_bootstrap() {
+        assert!(!residency_churn_should_report(256, 3, 12));
     }
 
     #[test]

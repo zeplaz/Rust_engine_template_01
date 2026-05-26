@@ -224,6 +224,7 @@ pub fn hud_product_shell_egui_root(
             tex_id,
             &mut panels.minimap,
             &mut panels.legacy_minimap,
+            &panels.view_manager,
             &panels.map_desired,
             minimap_presentation,
             &mut panels.dock,

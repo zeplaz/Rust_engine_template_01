@@ -115,7 +115,7 @@ pub struct ResourceFlowEdge {
 | Id | Goal |
 |----|------|
 | `INDUSTRIAL-I3-01` | Industrial loads join `ElectricalGrid` rebuild |
-| `INDUSTRIAL-I3-02` | `GridOverloadEvent` / brownout when bus exceeded |
+| `INDUSTRIAL-I3-02` | `GridOverloadEvent` / brownout when bus exceeded — **DONE** · plan [`industrial_grid_overload_impl_plan_v1.md`](industrial_grid_overload_impl_plan_v1.md) |
 | `INDUSTRIAL-I3-03` | Transformer + substation **catalog JSON** (placeable utilities) |
 | `INDUSTRIAL-I3-04` | Activation spawns `TransformerComponent` / substation from catalog |
 | `INDUSTRIAL-I3-05` | Capacity bottleneck gameplay (not decorative transformers) |

@@ -5,7 +5,7 @@
 | **Version** | `1.1.0` |
 | **Date** | 2026-05-24 |
 | **Owner** | `@designer` → `@coder` **FX-FIRE-SPARK-001** |
-| **Status** | **SIGNED** (2026-05-24) — **FX-FIRE-SPARK-001 unblocked** |
+| **Status** | **SIGNED** (2026-05-24) — track **CLOSED** [`fire_spark_track_closure_plan_v1.md`](fire_spark_track_closure_plan_v1.md) |
 | **Brief** | [`fire_particle_spark_designer_brief_v1.md`](../prompts/guides/ui/fire_particle_spark_designer_brief_v1.md) |
 | **Worksheet** | [`fire_particle_spark_decision_worksheet_v1.md`](../prompts/guides/ui/fire_particle_spark_decision_worksheet_v1.md) |
 | **References** | [`assets/vfx/reference/elemental_sparks/`](../../assets/vfx/reference/elemental_sparks/) |

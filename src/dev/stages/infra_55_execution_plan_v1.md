@@ -74,7 +74,9 @@ issue:
 | ID | Goal | Source | Files (indicative) |
 |:---|:---|:---|:---|
 | **INFRA-VM09-001** | Document + fix one stray `MapCameraDesired` reader | TRIAGE-VM-09 | `gui/view_authority.rs`, call sites from grep |
-| **INFRA-PROJ2-001** | Route `world_to_screen` through `ViewProjectionAuthority` | TRIAGE-PROJ-2 | sweep ≤3 files per PR |
+| **PLAN-INFRA-PROJ2-001** | PROJ-2 sole writer + hit-test rollup | **DONE** (planner) | [`infra_proj2_sole_writer_plan_v1.md`](../infra_proj2_sole_writer_plan_v1.md) |
+| **INFRA-PROJ2-001** | Per-view hit-test (`ViewId::Minimap` / `WorldPreview`) | **DONE** | § PROJ2-A in plan |
+| **INFRA-PROJ2-CODER-B** | `ViewManager` sole `ResMut` writer (VM-06) | **DONE** | § PROJ2-B in plan |
 | **INFRA-VM10-001** | Minimap lockstep diagnostics hardening | TRIAGE-VM-10 | `infrastructure_view_isolation` writer |
 | **INFRA-VM11-001** | Preview semantic audit vs FULL_APP | TRIAGE-VM-11 | docs + 1–2 fixes |
 | **INFRA-GPU-TILE-001** | Instanced tile authoritative | TRIAGE-GPU-TILE | `gpu_tile_debug`, WGSL |

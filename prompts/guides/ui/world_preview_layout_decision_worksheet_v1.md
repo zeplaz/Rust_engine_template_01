@@ -55,6 +55,8 @@
 | **UI-WP-DESIGN** | `@designer` | **done** |
 | **UI-WP-LAYOUT-001** | `@coder` | **done** — D-01 shell · [`world_preview_d01_shell_signoff_v1.md`](world_preview_d01_shell_signoff_v1.md) |
 | **UI-WP-LAYOUT-D02-OPT** | `@coder` | **optional** — D-02 map ≥65% · [`world_preview_d02_map_dominance_signoff_v1.md`](world_preview_d02_map_dominance_signoff_v1.md) |
+| **UI4-DESIGN-001** | `@designer` | **done** — [`world_preview_d04_slide_sheet_spec_v1.md`](world_preview_d04_slide_sheet_spec_v1.md) |
+| **UI-WP-LAYOUT-002** | `@coder` | **done** — D-04 dim + sheet ([`world_preview_d04_slide_sheet_spec_v1.md`](world_preview_d04_slide_sheet_spec_v1.md)) |
 
 **Still deferred (WP-L3+):** motion §6 implementation, paper texture assets (WP-L1), terrain color key (WP-L4).
 

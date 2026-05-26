@@ -44,8 +44,8 @@ pub use commit::{
     sync_resolved_viewports_from_authority,
 };
 pub use live_proof::{
-    pose_writers_json, ViewRuntimeLiveProofState, ViewRuntimeWitness,
-    INFRASTRUCTURE_VIEW_ISOLATION_JSON,
+    pose_writers_json, refresh_infrastructure_view_isolation_live_witness,
+    ViewRuntimeLiveProofState, ViewRuntimeWitness, INFRASTRUCTURE_VIEW_ISOLATION_JSON,
 };
 pub use plugin::ViewRuntimePlugin;
 pub use surface::ViewSurface;

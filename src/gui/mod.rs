@@ -42,6 +42,7 @@ mod logistics_focus;
 mod authoritative_viewport;
 mod in_game_hud;
 mod in_game_pause_menu;
+mod pause_menu_bevy;
 mod pause_menu_confirm;
 mod logistics_targets_panel;
 #[cfg(feature = "legacy_engine")]
@@ -135,7 +136,8 @@ pub use map_camera::{
     map_zoom_limits_for_world, orthographic_fixed_world_span, primary_cursor_world_xy,
     MainWorldCamera,
     MainWorldCameraOrthoTrace, MainWorldCameraViewportLatch, MapCameraDesired, MapCameraMode,
-    MapCameraPlugin, MapCameraSettings, MapCameraSystemSet,     mirror_world_main_camera_from_map_desired,
+    MapCameraPlugin, MapCameraSettings, MapCameraSystemSet,
+    derive_map_camera_desired_from_view_authority, mirror_world_main_camera_from_map_desired,
     map_scale_for_zoom_alpha, map_zoom_alpha, map_zoom_alpha_with_limits,
     sim_map_cursor_world_xy, sim_map_image_rect,
     sim_map_screen_to_world_xy, sim_map_visible_world_span, sim_map_world_vec3_to_egui,
@@ -193,8 +195,9 @@ pub use viewport_authority::{
     ViewportRequest, VIEWPORT_PRIORITY_DEBUG, VIEWPORT_PRIORITY_MINIMAP, VIEWPORT_PRIORITY_PREVIEW,
 };
 pub use view_authority::{
-    commit_map_camera_pose_to_view_authority,
-    sync_view_manager_world_main_from_authority, view_camera_state_from_map_camera_desired,
+    commit_map_camera_pose_to_view_authority, commit_world_main_map_focus,
+    map_camera_desired_from_view_authority, sync_view_manager_world_main_from_authority,
+    view_camera_state_from_map_camera_desired,
     DebugFlags, OverlayMask, PerViewLodHints, ViewAuthorityPlugin, ViewAuthoritySystemSet,
     ViewCameraState, ViewCameraTag, ViewFilterMask, ViewId, ViewInstance, ViewInteractionState,
     ViewIsolationDiagnostics, ViewManager, ViewProjection, ViewRenderPolicy, ViewRenderTarget,
@@ -227,6 +230,7 @@ pub use ui_gates::*;
 pub use logistics_focus::*;
 pub use in_game_hud::*;
 pub use in_game_pause_menu::{toggle_pause_menu_on_escape, InGamePauseMenuPlugin};
+pub use pause_menu_bevy::{witness_pause_menu_bevy_replay, PauseMenuBevyPlugin};
 pub use pause_menu_confirm::PauseMenuPendingAction;
 pub use logistics_targets_panel::*;
 #[cfg(feature = "legacy_engine")]

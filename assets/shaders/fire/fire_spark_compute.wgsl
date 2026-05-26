@@ -74,7 +74,7 @@ fn advect_sparks(@builtin(global_invocation_id) gid: vec3<u32>) {
         let dist = att.xyz - state.pos.xyz;
         let d2 = max(dot(dist, dist), 0.01);
         val = vec4(
-            val.xyz + ((dt2 * att.w * 16.0) * normalize(dist)) / (d2 * 320.0),
+            val.xyz + ((dt2 * att.w * 26.0) * normalize(dist)) / (d2 * 260.0),
             0.0,
         );
     }

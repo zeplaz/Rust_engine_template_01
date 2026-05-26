@@ -44,11 +44,16 @@ Test: cargo test -p proc_A_dine01 --lib stage5
 |:---|:---|:---|
 | **UI-WP-LAYOUT-D02-OPT** | D-02 — clamp panels so map ≥ **65%** area at HD baseline | [`world_preview_d02_map_dominance_signoff_v1.md`](world_preview_d02_map_dominance_signoff_v1.md) |
 
+**Done (D-04):**
+
+| ID | Scope |
+|:---|:---|
+| **UI-WP-LAYOUT-002** | D-04 slide sheet body + dimmed map — [`world_preview_d04_slide_sheet_spec_v1.md`](world_preview_d04_slide_sheet_spec_v1.md) **SIGNED** |
+
 **Deferred slices:**
 
 | ID | Blocked by | Scope |
 |:---|:---|:---|
-| UI-WP-LAYOUT-002 | LAYOUT-001 | D-04 slide sheet body + dimmed map |
 | UI-WP-LAYOUT-003 | WP-L1 assets | Paper frames + D-09 offsets |
 | UI-WP-MOTION-001 | LAYOUT-001 | §6 motion table |
 | **WP-L4** | Signed refs + color key | Map look from `capturez` refs 01–06 · [`world_preview_visual_references_v1.md`](world_preview_visual_references_v1.md) |

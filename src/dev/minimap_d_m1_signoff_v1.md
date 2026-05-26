@@ -92,7 +92,7 @@
 | **UX-E01 / UI-P3-M1** | **done** |
 | **D-MINIMAP-M2** | **done** — [`minimap_d_m2_signoff_v1.md`](minimap_d_m2_signoff_v1.md) |
 | **UI-P3-M2-TRAY-OPT** | overlay tray → mask sync — optional |
-| **D-MINIMAP-M3** | fog/EW/units — design M3, not started |
+| **D-MINIMAP-M3** | [`minimap_d_m3_signoff_v1.md`](minimap_d_m3_signoff_v1.md) — design gate **SIGNED**; impl **OPEN** |
 
 ---
 

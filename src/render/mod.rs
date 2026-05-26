@@ -95,7 +95,8 @@ pub use gpu_water_particle_raster::{register_world_water_particle_raster, WaterP
 pub use gpu_water_particles::{
     emit_world_water_particles_from_catalog, evaluate_water_vfx_witness_bands,
     update_world_water_particles_from_catalog, water_strategic_001_green,
-    water_vfx_witness_json, water_witness_001_green, water_witness_foam_or_ocean_green,
+    water_vfx_witness_json, water_w2_foam_001_green, water_witness_001_green,
+    water_witness_foam_or_ocean_green, catalog_has_coast_ocean, catalog_has_river_bend,
     GpuWaterParticleInstance, GpuWaterParticleQuadVertex, GpuWaterParticlesPlugin,
     WaterParticleDensityScale, WaterParticleProfile, WaterParticleWitness,
     WaterVfxWitnessBands, WorldWaterParticleFrame, WATER_LAKE_GLINTS_PER_CHUNK,
@@ -105,19 +106,24 @@ pub use gpu_water_particles::{
 };
 pub use water_surface_visual::{
     apply_water_surface_overlay_subregion, sync_water_overlay_draw_frame, RiverPolylineSegment,
+    water_strategic_001_shader_motion_green, water_strategic_witness_zoom_alpha,
     WaterMotionAnchor, WaterOverlayDrawFrame, WaterSurfaceKind, WaterSurfaceVisualCatalog,
     WaterSurfaceVisualPlugin, WaterSurfaceVisualSet, WATER_SURFACE_OVERLAY_WGSL,
+    WATER_STRATEGIC_ZOOM_ALPHA,
 };
 pub use domain_overlay_gpu::{
     emit_domain_overlay_frame_from_projection, DomainOverlayGpuFrame, EcologyOverlayGpuRow,
     LogisticsOverlayGpuRow,
 };
 pub use gpu_particles::{
-    emit_world_fire_particles_from_projection, fire_spark_compute_enabled,
+    emit_world_fire_particles_from_projection, fire_spark_011_green, fire_spark_compute_enabled,
     seed_world_fire_particles_from_overlay_heat, sync_fire_particle_camera_scale,
     FireParticleCameraScale, FireSparkWitness, GpuParticleInstance, GpuParticleQuadVertex,
-    ParticleClass, WorldFireParticleFrame, WorldFireParticleGpuStorage,
-    FIRE_SPARK_SCATTER_MAX, FIRE_SPARK_STRATEGIC_ZOOM_ALPHA,
+    ParticleClass, WorldFireParticleFrame, WorldFireParticleGpuStorage, FIRE_SPARK_SCATTER_MAX,
+    FIRE_SPARK_STRATEGIC_ZOOM_ALPHA, FIRE_SPARK_TACTICAL_PROOF_ZOOM_ALPHA,
+};
+pub use stage5_full_app_harness::{
+    refresh_p2_fire_spark_011_stage5_live_witness, STAGE5_FULL_APP_LIVE_JSON,
 };
 pub use gpu_packed_formats::{
     ecology_overlay_row_format, fire_particle_expanded_vertex_format, fire_visual_instance_format,
@@ -151,6 +157,9 @@ pub use logistics_visual_snapshot::LogisticsVisualSnapshot;
 pub use ecology_visual_snapshot::EcologyVisualSnapshot;
 pub use visual_domain_snapshots::{
     fill_logistics_snapshot, publish_ecology_visual_snapshot, publish_logistics_visual_snapshot,
+    seed_minimap_m2_logistics_construction_witness, seed_minimap_m2_overlay_witness,
+    seed_minimap_m3_fow_ew_witness,
+    seed_minimap_m3_units_replay_witness, MinimapOperationalSnapshot,
 };
 pub use phase_f_lod_proof::{PhaseFLodProofPlugin, PhaseFLodProofReport};
 pub use gpu_surface_teardown::{GpuSurfaceTeardownPlugin, VisualTestGracefulExit};
@@ -159,8 +168,8 @@ pub use per_view_residency::{
     RESIDENCY_VIEW_CHUNK_SPACING_WORLD,
 };
 pub use stage6_live_proof::{
-    build_stage6_proof_payload, Stage6LiveProofState, Stage6VirtualizationWitness,
-    STAGE6_VIRTUALIZATION_JSON,
+    build_stage6_proof_payload, refresh_wc_d04_stage6_virtualization_live_witness,
+    Stage6LiveProofState, Stage6VirtualizationWitness, STAGE6_VIRTUALIZATION_JSON,
 };
 pub use view_fire_projection::{
     fire_frame_for_projection_graph, projection_fire_source_view,
@@ -193,7 +202,9 @@ pub use viewport_pipeline::{
     resolved_particle_half_extents, ResolvedViewport,
     ResolvedViewports, ViewportPipelinePlugin, ViewportPipelineSet, ViewportPresentationMismatch,
 };
-pub use view_runtime::ViewRuntimePlugin;
+pub use view_runtime::{
+    refresh_infrastructure_view_isolation_live_witness, ViewRuntimePlugin,
+};
 pub use full_render_diagnostic::{
     arm_full_render_diagnostic_for_full_app,
     full_render_diagnostic_has_critical_anomaly, note_full_render_camera_drove_ui_follow,
@@ -273,9 +284,10 @@ pub use gpu_indirect_draw::{
     GpuIndirectDrawSpinePlugin, WorldFireIndirectDrawArgs, WORLD_FIRE_VERTICES_PER_INSTANCE,
 };
 pub use minimap_compositor::{
-    build_minimap_compositor_proof_payload, minimap_gpu_compositor_env_enabled,
-    MinimapGpuCompositorDiagnostics,
-    MinimapCompositorPlugin, MinimapCompositorState, MinimapRenderTargetRegistry,
+    build_minimap_compositor_proof_payload, build_minimap_compositor_proof_payload_with_tray,
+    minimap_gpu_compositor_env_enabled, ui_p3_m2_minimap_acceptance_green,
+    ui_p3_m3_minimap_acceptance_green, MinimapGpuCompositorDiagnostics, MinimapCompositorPlugin,
+    MinimapCompositorState, MinimapRenderTargetRegistry,
 };
 pub use light::*;
 

@@ -53,6 +53,11 @@ fn main() {
             logistics_visual_seeded: false,
             concrete_chain_e2e_seeded: false,
             concrete_chain_seed_phase: 0,
+            s7p_logistics_throughput_seeded: false,
+            s7p_logistics_finalize_pending: false,
+            s7p_logistics_seed_phase: 0,
+            s7p_logistics_seed_ticks: 0,
+            minimap_m2_overlay_seeded: false,
         }
     } else {
         TestWorldHarness::default()

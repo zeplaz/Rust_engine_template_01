@@ -14,7 +14,11 @@ use crate::render::{
     EcologyVisualSnapshot, LogisticsVisualSnapshot, SharedOverlayFieldBuffers,
     TileWorldFallbackState,
 };
+use crate::render::visual_domain_snapshots::MinimapOperationalSnapshot;
 use crate::strategic::{ConstructionPhase, CorridorConstructionBook};
+use crate::systems::sim_frame_delta::CommittedSimReplayRing;
+
+const M3_UNIT_MARKER_CAP: usize = 8;
 
 pub const MINIMAP_COMPOSITE_SHADER: &str = "shaders/minimap/minimap_composite.wgsl";
 
@@ -54,6 +58,8 @@ pub struct MinimapCompositeHeatTextures {
     pub logistics: Handle<Image>,
     pub construction: Handle<Image>,
     pub ecology: Handle<Image>,
+    pub fow: Handle<Image>,
+    pub ew: Handle<Image>,
     pub extent: UVec2,
 }
 
@@ -67,6 +73,10 @@ pub struct MinimapCompositeParamsGpu {
     pub logistics_rows: u32,
     pub construction_rows: u32,
     pub ecology_rows: u32,
+    pub fow_heat_enabled: u32,
+    pub ew_heat_enabled: u32,
+    pub fow_rows: u32,
+    pub ew_rows: u32,
 }
 
 #[derive(Resource, Debug, Default, ExtractResource, Clone)]
@@ -171,6 +181,102 @@ fn fill_ecology_heat_from_snapshot(
     eco.ecology_chunk_count.max(eco.chunk_rows.len() as u32)
 }
 
+fn fill_operational_heat_layers(
+    fow_out: &mut [u8],
+    ew_out: &mut [u8],
+    w: u32,
+    h: u32,
+    operational: Option<&MinimapOperationalSnapshot>,
+    fow_enabled: bool,
+    ew_enabled: bool,
+) -> (u32, u32) {
+    let mut fow_rows = 0u32;
+    let mut ew_rows = 0u32;
+    if !fow_enabled && !ew_enabled {
+        return (fow_rows, ew_rows);
+    }
+    let Some(op) = operational else {
+        return (fow_rows, ew_rows);
+    };
+    if op.chunk_samples.is_empty() {
+        return (fow_rows, ew_rows);
+    }
+    let ww = w.max(1);
+    let hh = h.max(1);
+    for &(cx, cy, fow_veil, ew) in &op.chunk_samples {
+        let x = (cx as u32) % ww;
+        let y = (cy as u32) % hh;
+        let base = ((y * ww + x) * 4) as usize;
+        if fow_enabled && fow_veil > 0.0 && base < fow_out.len() {
+            let v = (fow_veil.clamp(0.0, 1.0) * 255.0) as u8;
+            fow_out[base] = fow_out[base].saturating_add(v);
+            fow_rows = fow_rows.saturating_add(1);
+        }
+        if ew_enabled && ew > 0.0 && base + 1 < ew_out.len() {
+            let v = (ew.clamp(0.0, 1.0) * 255.0) as u8;
+            ew_out[base + 1] = ew_out[base + 1].saturating_add(v);
+            ew_rows = ew_rows.saturating_add(1);
+        }
+    }
+    (fow_rows, ew_rows)
+}
+
+fn paint_unit_markers(
+    ew_out: &mut [u8],
+    w: u32,
+    h: u32,
+    operational: Option<&MinimapOperationalSnapshot>,
+    enabled: bool,
+) -> u32 {
+    if !enabled {
+        return 0;
+    }
+    let Some(op) = operational else {
+        return 0;
+    };
+    let ww = w.max(1);
+    let hh = h.max(1);
+    let mut count = 0u32;
+    for &(cx, cy) in op.unit_markers.iter().take(M3_UNIT_MARKER_CAP) {
+        let x = cx % ww;
+        let y = cy % hh;
+        let base = ((y * ww + x) * 4) as usize;
+        if base + 1 < ew_out.len() {
+            ew_out[base + 1] = ew_out[base + 1].saturating_add(200);
+            count = count.saturating_add(1);
+        }
+    }
+    count
+}
+
+fn paint_replay_scrub(
+    fow_out: &mut [u8],
+    w: u32,
+    h: u32,
+    replay: Option<&CommittedSimReplayRing>,
+    enabled: bool,
+) -> bool {
+    if !enabled {
+        return false;
+    }
+    let Some(ring) = replay else {
+        return false;
+    };
+    if ring.stamps.len() < 2 {
+        return false;
+    }
+    let ww = w.max(1);
+    let hh = h.max(1);
+    let x = (ww * 2 / 3).min(ww.saturating_sub(1));
+    for y in 0..hh {
+        let base = ((y * ww + x) * 4) as usize;
+        if base < fow_out.len() {
+            fow_out[base] = fow_out[base].saturating_add(102);
+        }
+    }
+    true
+}
+
 fn fill_logistics_heat_from_snapshot(
     out: &mut [u8],
     w: u32,
@@ -206,6 +312,8 @@ fn ensure_heat_textures(
         || heat.terrain == Handle::default()
         || heat.construction == Handle::default()
         || heat.ecology == Handle::default()
+        || heat.fow == Handle::default()
+        || heat.ew == Handle::default()
         || images.get(&heat.terrain).is_none()
     {
         heat.terrain = images.add(minimap_storage_rgba_image(extent.x, extent.y, "minimap_terrain_storage"));
@@ -216,6 +324,8 @@ fn ensure_heat_textures(
             images.add(minimap_storage_rgba_image(extent.x, extent.y, "minimap_construction_heat"));
         heat.ecology =
             images.add(minimap_storage_rgba_image(extent.x, extent.y, "minimap_ecology_heat"));
+        heat.fow = images.add(minimap_storage_rgba_image(extent.x, extent.y, "minimap_fow_veil"));
+        heat.ew = images.add(minimap_storage_rgba_image(extent.x, extent.y, "minimap_ew_stress"));
         heat.extent = extent;
     }
 }
@@ -246,11 +356,13 @@ pub fn upload_minimap_heat_textures(
     logistics: Option<&LogisticsVisualSnapshot>,
     construction_book: Option<&CorridorConstructionBook>,
     ecology: Option<&EcologyVisualSnapshot>,
+    operational: Option<&MinimapOperationalSnapshot>,
     construction_channel: Option<&ConstructionPhaseGpuChannel>,
+    replay: Option<&CommittedSimReplayRing>,
     map_views: &MapViewInstances,
     fallback: &TileWorldFallbackState,
     extent: UVec2,
-) -> (bool, u32, u32, u32) {
+) -> (bool, u32, u32, u32, u32, u32, u32, bool) {
     ensure_heat_textures(images, heat, extent);
     let w = extent.x;
     let h = extent.y;
@@ -310,7 +422,48 @@ pub fn upload_minimap_heat_textures(
     if let Some(img) = images.get_mut(&heat.ecology) {
         img.data = Some(ecology_buf);
     }
-    (true, logistics_rows, construction_rows, ecology_rows)
+
+    let mut fow_buf = vec![0u8; (w * h * 4) as usize];
+    let mut ew_buf = vec![0u8; (w * h * 4) as usize];
+    let (fow_rows, ew_rows) = fill_operational_heat_layers(
+        &mut fow_buf,
+        &mut ew_buf,
+        w,
+        h,
+        operational,
+        map_views.minimap.overlays.fow,
+        map_views.minimap.overlays.ew,
+    );
+    let unit_marker_rows = paint_unit_markers(
+        &mut ew_buf,
+        w,
+        h,
+        operational,
+        map_views.minimap.overlays.units,
+    );
+    let replay_scrub_enabled = paint_replay_scrub(
+        &mut fow_buf,
+        w,
+        h,
+        replay,
+        map_views.minimap.overlays.replay_scrub,
+    );
+    if let Some(img) = images.get_mut(&heat.fow) {
+        img.data = Some(fow_buf);
+    }
+    if let Some(img) = images.get_mut(&heat.ew) {
+        img.data = Some(ew_buf);
+    }
+    (
+        true,
+        logistics_rows,
+        construction_rows,
+        ecology_rows,
+        fow_rows,
+        ew_rows,
+        unit_marker_rows,
+        replay_scrub_enabled,
+    )
 }
 
 /// Copy authoritative terrain raster into storage-readable texture (raw bytes, no overlay blend).
@@ -395,11 +548,13 @@ mod tests {
             edge_rows: vec![(3, 0.8), (7, 0.5)],
             ..Default::default()
         };
-        let (ok, _, _, _) = upload_minimap_heat_textures(
+        let (ok, _, _, _, _, _, _, _) = upload_minimap_heat_textures(
             &mut images,
             &mut heat,
             None,
             Some(&logistics),
+            None,
+            None,
             None,
             None,
             None,
@@ -456,18 +611,25 @@ mod tests {
             ],
             ..Default::default()
         };
-        let (ok, _, construction_rows, ecology_rows) = upload_minimap_heat_textures(
-            &mut images,
-            &mut heat,
-            None,
-            None,
-            Some(&book),
-            Some(&ecology),
-            None,
-            &map_views,
-            &fallback,
-            UVec2::new(32, 32),
-        );
+        let mut operational = MinimapOperationalSnapshot::default();
+        crate::render::seed_minimap_m3_units_replay_witness(&mut operational);
+        let (ok, _, construction_rows, ecology_rows, _, _, unit_rows, replay_on) =
+            upload_minimap_heat_textures(
+                &mut images,
+                &mut heat,
+                None,
+                None,
+                Some(&book),
+                Some(&ecology),
+                Some(&operational),
+                None,
+                None,
+                &map_views,
+                &fallback,
+                UVec2::new(32, 32),
+            );
+        assert!(unit_rows > 0);
+        let _ = replay_on;
         assert!(ok);
         assert!(construction_rows > 0);
         assert!(ecology_rows > 0);

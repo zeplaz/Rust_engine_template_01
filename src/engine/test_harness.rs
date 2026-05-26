@@ -37,9 +37,9 @@ use crate::strategic::{
 };
 use crate::strategic::StrategicFieldPipeline;
 use crate::systems::transport::{
-    bake_snapshot_from_ordered_tile_markers, hydrate_transport_from_snapshot,
-    TransportCostWeights, TransportEdgeDirectory, TransportFieldStore,
-    TransportTopology,
+    bake_snapshot_from_ordered_tile_markers, edge_traversal_cost, hydrate_transport_from_snapshot,
+    refresh_transport_nav_export, TransportCostCache, TransportCostWeights,
+    TransportEdgeDirectory, TransportFieldStore, TransportNavExport, TransportTopology,
 };
 
 /// Marks chunk entities spawned only for CLI `--test` sim coverage; despawned before regen.
@@ -67,6 +67,13 @@ pub struct TestWorldHarness {
     pub concrete_chain_e2e_seeded: bool,
     /// 0 = enqueue commits, 1 = wait for commit entities, 2 = complete.
     pub concrete_chain_seed_phase: u8,
+    /// **S7P-LOG-001**: aluminum chain + throughput witness (visual / play seed).
+    pub s7p_logistics_throughput_seeded: bool,
+    pub s7p_logistics_finalize_pending: bool,
+    pub s7p_logistics_seed_phase: u8,
+    pub s7p_logistics_seed_ticks: u32,
+    /// **UI-P3-M2-CODER-A**: construction + ecology minimap overlay witness seed.
+    pub minimap_m2_overlay_seeded: bool,
 }
 
 impl Default for TestWorldHarness {
@@ -79,9 +86,17 @@ impl Default for TestWorldHarness {
             logistics_visual_seeded: false,
             concrete_chain_e2e_seeded: false,
             concrete_chain_seed_phase: 0,
+            s7p_logistics_throughput_seeded: false,
+            s7p_logistics_finalize_pending: false,
+            s7p_logistics_seed_phase: 0,
+            s7p_logistics_seed_ticks: 0,
+            minimap_m2_overlay_seeded: false,
         }
     }
 }
+
+/// Road chain tiles for LOG-E01 / **S7P-LOG-001** (matches logistics live_proof harness).
+pub const S7P_LOGISTICS_CHAIN_TILES: [(u32, u32); 3] = [(0, 0), (1, 0), (2, 0)];
 
 /// Menu debug maneuver bootstrap — auto preview → full → enter world (UI stays open unless mode ② CLI).
 #[derive(Resource, Debug, Default)]
@@ -116,7 +131,13 @@ impl Plugin for TestHarnessPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<TestWorldHarness>()
             .init_resource::<DebugQuickWorldGenPending>()
-            .add_systems(Startup, startup_seed_visual_logistics_when_cli_visual)
+            .add_systems(
+                Startup,
+                (
+                    startup_seed_visual_logistics_when_cli_visual,
+                    startup_seed_visual_minimap_m2_overlays_when_cli_visual,
+                ),
+            )
             .add_systems(
                 Update,
                 test_world_bootstrap.after(UxBridgeSet),
@@ -132,11 +153,22 @@ impl Plugin for TestHarnessPlugin {
                 (
                     apply_visual_logistics_proof_pending,
                     seed_visual_test_logistics_proof,
+                    seed_visual_minimap_m2_overlay_proof,
+                    refresh_visual_transport_nav_after_seed,
                     seed_visual_concrete_chain_e2e,
                     crate::economy::activation::fast_forward_portland_chain_sites_to_operational,
                 )
                     .chain()
                     .after(StrategicFieldPipeline::GraphSync),
+            )
+            .add_systems(
+                Update,
+                (
+                    seed_s7p_logistics_throughput_proof,
+                    finalize_s7p_logistics_throughput_witness,
+                )
+                    .chain()
+                    .after(crate::economy::logistics::LogisticsSimulationSet::Witness),
             )
             .add_systems(
                 Update,
@@ -360,6 +392,11 @@ fn test_world_bootstrap(
             *params = world_gen_params_for_maneuver(launch, maneuver);
             harness.defaults_applied = false;
             harness.logistics_visual_seeded = false;
+            harness.s7p_logistics_throughput_seeded = false;
+            harness.s7p_logistics_finalize_pending = false;
+            harness.s7p_logistics_seed_phase = 0;
+            harness.s7p_logistics_seed_ticks = 0;
+            harness.minimap_m2_overlay_seeded = false;
             layout_session.active = maneuver == DebugManeuver::FrameScreen;
             match maneuver {
                 DebugManeuver::FullCapture | DebugManeuver::UnittestWorld => {
@@ -570,18 +607,35 @@ fn seed_test_logistics_visual_proof_into(
     weights: &TransportCostWeights,
     cells: &StrategicRasterConfig,
     book: &CorridorConstructionBook,
+    nav: Option<&mut TransportNavExport>,
+    cache: Option<&mut TransportCostCache>,
 ) {
     if !directory.by_edge.is_empty() && !graph.edges.is_empty() {
         return;
     }
     let snap = bake_snapshot_from_ordered_tile_markers(
-        &[(8u32, 8u32), (9u32, 8u32), (10u32, 8u32)],
+        &S7P_LOGISTICS_CHAIN_TILES,
         |_, _| 0.5_f32,
         20.0,
         0.25,
     );
     hydrate_transport_from_snapshot(topology, fields, directory, &snap)
         .expect("visual proof transport hydrate");
+    let mut built_cache = TransportCostCache::default();
+    for (id, st) in &fields.by_edge {
+        built_cache.by_edge.insert(
+            *id,
+            edge_traversal_cost(st, weights, st.travel_time_base),
+        );
+    }
+    let mut built_nav = TransportNavExport::default();
+    refresh_transport_nav_export(topology, &built_cache, directory, &mut built_nav);
+    if let Some(nav_res) = nav {
+        *nav_res = built_nav;
+    }
+    if let Some(cache_res) = cache {
+        *cache_res = built_cache;
+    }
     *graph = rebuild_logistics_graph_from_transport(directory, fields, weights, cells, book, 1);
     solver.topology_revision = graph.revision as u32;
     let max_idx = directory
@@ -601,6 +655,39 @@ fn seed_test_logistics_visual_proof_into(
     }
 }
 
+/// LOG-A-04: publish `TransportNavExport` after visual transport hydrate (≤16 system params).
+fn refresh_visual_transport_nav_after_seed(
+    launch: Option<Res<EngineLaunchArgs>>,
+    topology: Option<Res<TransportTopology>>,
+    fields: Option<Res<TransportFieldStore>>,
+    directory: Option<Res<TransportEdgeDirectory>>,
+    weights: Option<Res<TransportCostWeights>>,
+    mut cache: Option<ResMut<TransportCostCache>>,
+    mut nav: Option<ResMut<TransportNavExport>>,
+) {
+    let Some(launch) = launch.as_ref() else {
+        return;
+    };
+    if !launch.full_capture_active() {
+        return;
+    }
+    let (Some(top), Some(fields), Some(dir), Some(weights), Some(mut cache), Some(mut nav)) =
+        (topology, fields, directory, weights, cache, nav)
+    else {
+        return;
+    };
+    if dir.by_edge.is_empty() {
+        return;
+    }
+    for (id, st) in &fields.by_edge {
+        cache.by_edge.insert(
+            *id,
+            edge_traversal_cost(st, &weights, st.travel_time_base),
+        );
+    }
+    refresh_transport_nav_export(&top, &cache, &dir, &mut nav);
+}
+
 fn fill_visual_logistics_snapshot_from_seed(
     fire: &crate::render::FireSimulationSnapshot,
     graph: &LogisticsGraph,
@@ -609,6 +696,77 @@ fn fill_visual_logistics_snapshot_from_seed(
 ) -> u32 {
     crate::render::fill_logistics_snapshot(fire, Some(graph), Some(solver), None, logistics_snap);
     logistics_snap.active_overlay_rows
+}
+
+fn seed_visual_minimap_m2_overlay_into(
+    fire: &crate::render::FireSimulationSnapshot,
+    book: &mut CorridorConstructionBook,
+    climate: &mut crate::render::ClimateVisualAggregate,
+    ecology: &mut crate::render::EcologyVisualSnapshot,
+) {
+    crate::render::seed_minimap_m2_overlay_witness(fire, book, climate, ecology);
+}
+
+fn startup_seed_visual_minimap_m2_overlays_when_cli_visual(
+    launch: Option<Res<EngineLaunchArgs>>,
+    fire: Option<Res<crate::render::FireSimulationSnapshot>>,
+    book: Option<ResMut<CorridorConstructionBook>>,
+    climate: Option<ResMut<crate::render::ClimateVisualAggregate>>,
+    ecology: Option<ResMut<crate::render::EcologyVisualSnapshot>>,
+    operational: Option<ResMut<crate::render::MinimapOperationalSnapshot>>,
+    mut harness: ResMut<TestWorldHarness>,
+) {
+    let Some(launch) = launch.as_ref() else {
+        return;
+    };
+    if !launch.full_capture_active() {
+        return;
+    }
+    let (Some(fire), Some(mut book), Some(mut climate), Some(mut ecology)) =
+        (fire, book, climate, ecology)
+    else {
+        return;
+    };
+    if harness.minimap_m2_overlay_seeded {
+        return;
+    }
+    seed_visual_minimap_m2_overlay_into(&fire, &mut book, &mut climate, &mut ecology);
+    if let Some(mut operational) = operational {
+        crate::render::seed_minimap_m3_fow_ew_witness(&mut operational);
+    }
+    harness.minimap_m2_overlay_seeded = true;
+    info!(
+        target: "test_harness::minimap_m2",
+        construction_rows = book.rows.len(),
+        ecology_rows = ecology.chunk_rows.len(),
+        "UI-P3-M2-CODER-A: seeded minimap M2 construction + ecology witness"
+    );
+}
+
+fn seed_visual_minimap_m2_overlay_proof(
+    launch: Option<Res<EngineLaunchArgs>>,
+    fire: Option<Res<crate::render::FireSimulationSnapshot>>,
+    book: Option<ResMut<CorridorConstructionBook>>,
+    climate: Option<ResMut<crate::render::ClimateVisualAggregate>>,
+    ecology: Option<ResMut<crate::render::EcologyVisualSnapshot>>,
+    mut harness: ResMut<TestWorldHarness>,
+) {
+    let Some(launch) = launch.as_ref() else {
+        return;
+    };
+    if !launch.full_capture_active() {
+        return;
+    }
+    if harness.minimap_m2_overlay_seeded {
+        return;
+    }
+    let (Some(fire), Some(mut book), Some(mut climate), Some(mut ecology)) =
+        (fire, book, climate, ecology)
+    else {
+        return;
+    };
+    seed_visual_minimap_m2_overlay_into(&fire, &mut book, &mut climate, &mut ecology);
+    harness.minimap_m2_overlay_seeded = true;
 }
 
 fn apply_visual_logistics_minimap_defaults(
@@ -679,6 +837,8 @@ fn startup_seed_visual_logistics_when_cli_visual(
         &weights,
         &cells,
         &book,
+        None,
+        None,
     );
     if book.rows.is_empty() {
         book.plan_edge(crate::systems::transport::TransportEdgeId(1));
@@ -752,6 +912,8 @@ fn apply_visual_logistics_proof_pending(
         &weights,
         &cells,
         &book,
+        None,
+        None,
     );
     harness.logistics_visual_seeded = true;
     let overlay_rows = if let (Some(fire), Some(mut logistics_snap)) =
@@ -835,6 +997,8 @@ fn seed_visual_test_logistics_proof(
         &weights,
         &cells,
         &book,
+        None,
+        None,
     );
     harness.logistics_visual_seeded = !graph.edges.is_empty();
     let overlay_rows = if let (Some(fire), Some(mut logistics_snap)) =
@@ -855,6 +1019,256 @@ fn seed_visual_test_logistics_proof(
         "LOG-E01 visual proof: seeded transport_edges={} logistics_edges={} overlay_rows={overlay_rows}",
         directory.by_edge.len(),
         graph.edges.len()
+    );
+}
+
+fn spawn_s7p_aluminum_chain_site(
+    commands: &mut Commands,
+    catalog_id: &str,
+    site_id: u64,
+    origin: crate::strategic::BuildSiteTile,
+) {
+    use crate::economy::activation::{BuildingDefinitionRef, IndustrialFacilityActivated};
+    use crate::strategic::{
+        ConstructionSite, FootprintTiles, LayerType, PlannedSite, SiteArchetype,
+        SiteConstructionPhase, SiteId,
+    };
+
+    commands.spawn((
+        ConstructionSite {
+            site_id,
+            owner: Entity::PLACEHOLDER,
+            archetype: SiteArchetype::Factory,
+            phase: SiteConstructionPhase::Operational,
+            operational_readiness: 1.0,
+        },
+        PlannedSite {
+            site_id: SiteId(site_id),
+            origin,
+            footprint: FootprintTiles {
+                width: 3,
+                depth: 2,
+            },
+            archetype: SiteArchetype::Factory,
+            layer: LayerType::Surface,
+            catalog_id: Some(catalog_id.into()),
+        },
+        BuildingDefinitionRef {
+            catalog_id: catalog_id.into(),
+        },
+        IndustrialFacilityActivated,
+        Transform::from_translation(crate::economy::site_placement::site_world_position(
+            origin,
+        )),
+        GlobalTransform::default(),
+    ));
+}
+
+/// **S7P-LOG-001**: aluminum chain on road tiles + throughput witness green in sim / `--test visual`.
+fn seed_s7p_logistics_throughput_proof(
+    launch: Option<Res<EngineLaunchArgs>>,
+    base: Option<Res<State<BaseState>>>,
+    mut harness: ResMut<TestWorldHarness>,
+    mut commands: Commands,
+    directory: Option<Res<TransportEdgeDirectory>>,
+    flow: Option<Res<crate::economy::resource_flow::ResourceFlowRegistry>>,
+    diagnostics: Option<Res<crate::economy::logistics::LogisticsDiagnostics>>,
+    sites: Query<
+        &crate::economy::activation::BuildingDefinitionRef,
+        With<crate::strategic::ConstructionSite>,
+    >,
+    mut flow_nodes: Query<
+        (
+            &crate::economy::activation::BuildingDefinitionRef,
+            &mut crate::economy::resource_flow::ResourceFlowNode,
+        ),
+    >,
+) {
+    let Some(launch) = launch.as_ref() else {
+        return;
+    };
+    if !launch.full_capture_active() {
+        return;
+    }
+    if !matches!(base.as_deref().map(|s| s.get()), Some(BaseState::Simulation)) {
+        return;
+    }
+    if harness.s7p_logistics_throughput_seeded {
+        return;
+    }
+    if directory.as_ref().is_none_or(|d| d.by_edge.is_empty()) {
+        return;
+    }
+
+    harness.s7p_logistics_seed_ticks = harness.s7p_logistics_seed_ticks.saturating_add(1);
+
+    let aluminum_on_chain = |id: &str| -> bool {
+        matches!(
+            id,
+            "aluminum_bauxite_mine" | "aluminum_alumina_refinery" | "aluminum_smelter1"
+        )
+    };
+
+    match harness.s7p_logistics_seed_phase {
+        0 => {
+            let chain_count = sites
+                .iter()
+                .filter(|r| aluminum_on_chain(r.catalog_id.as_str()))
+                .count();
+            if chain_count < 3 {
+                spawn_s7p_aluminum_chain_site(
+                    &mut commands,
+                    "aluminum_bauxite_mine",
+                    901,
+                    crate::strategic::BuildSiteTile {
+                        x: S7P_LOGISTICS_CHAIN_TILES[0].0,
+                        z: S7P_LOGISTICS_CHAIN_TILES[0].1,
+                    },
+                );
+                spawn_s7p_aluminum_chain_site(
+                    &mut commands,
+                    "aluminum_alumina_refinery",
+                    902,
+                    crate::strategic::BuildSiteTile {
+                        x: S7P_LOGISTICS_CHAIN_TILES[1].0,
+                        z: S7P_LOGISTICS_CHAIN_TILES[1].1,
+                    },
+                );
+                spawn_s7p_aluminum_chain_site(
+                    &mut commands,
+                    "aluminum_smelter1",
+                    903,
+                    crate::strategic::BuildSiteTile {
+                        x: S7P_LOGISTICS_CHAIN_TILES[2].0,
+                        z: S7P_LOGISTICS_CHAIN_TILES[2].1,
+                    },
+                );
+                info!(
+                    target: "test_harness::logistics",
+                    "S7P-LOG-001: spawned aluminum chain on road tiles {:?}",
+                    S7P_LOGISTICS_CHAIN_TILES
+                );
+            }
+            harness.s7p_logistics_seed_phase = 1;
+        }
+        1 => {
+            let chain_count = sites
+                .iter()
+                .filter(|r| aluminum_on_chain(r.catalog_id.as_str()))
+                .count();
+            if chain_count < 3 {
+                return;
+            }
+            let flow_ready = flow.as_ref().is_some_and(|f| !f.edges.is_empty());
+            if !flow_ready && harness.s7p_logistics_seed_ticks < 48 {
+                return;
+            }
+            harness.s7p_logistics_seed_phase = 2;
+        }
+        2 => {
+            for (def, mut node) in flow_nodes.iter_mut() {
+                if def.catalog_id == "aluminum_bauxite_mine" {
+                    node.buffer_by_tag.insert("Bauxite".into(), 48.0);
+                }
+            }
+            harness.s7p_logistics_seed_phase = 3;
+        }
+        _ => {
+            let routes_open = diagnostics
+                .as_ref()
+                .map(|d| d.routes_open)
+                .unwrap_or(0);
+            if routes_open == 0 && harness.s7p_logistics_seed_ticks < 96 {
+                return;
+            }
+            harness.s7p_logistics_finalize_pending = true;
+        }
+    }
+}
+
+/// **S7P-LOG-001** — patch LOG-* witness + refresh `logistics_throughput_live.json` after scenario seed.
+fn finalize_s7p_logistics_throughput_witness(
+    launch: Option<Res<EngineLaunchArgs>>,
+    base: Option<Res<State<BaseState>>>,
+    mut harness: ResMut<TestWorldHarness>,
+    graph: Option<Res<crate::strategic::LogisticsGraph>>,
+    portals: Option<Res<crate::economy::logistics::PortalAttachmentMap>>,
+    flow: Option<Res<crate::economy::resource_flow::ResourceFlowRegistry>>,
+    diagnostics: Option<Res<crate::economy::logistics::LogisticsDiagnostics>>,
+    route_cache: Option<Res<crate::economy::logistics::RouteCache>>,
+    solver: Option<Res<crate::economy::logistics::ThroughputSolverState>>,
+    mut witness: Option<ResMut<crate::dev::logistics_throughput_todos::LogisticsThroughputWitness>>,
+    mut runtime: Option<ResMut<crate::economy::logistics::LogisticsThroughputRuntimeWitness>>,
+    board: Option<ResMut<crate::dev::logistics_throughput_todos::LogisticsThroughputTodoBoard>>,
+    mut proof_state: Option<ResMut<crate::economy::logistics::LogisticsThroughputLiveProofState>>,
+) {
+    let Some(launch) = launch.as_ref() else {
+        return;
+    };
+    if !launch.full_capture_active() {
+        return;
+    }
+    if !matches!(base.as_deref().map(|s| s.get()), Some(BaseState::Simulation)) {
+        return;
+    }
+    if !harness.s7p_logistics_finalize_pending || harness.s7p_logistics_throughput_seeded {
+        return;
+    }
+
+    let (
+        Some(graph),
+        Some(portals),
+        Some(flow),
+        Some(diagnostics),
+        Some(route_cache),
+        Some(solver),
+        Some(witness),
+        Some(runtime),
+        Some(mut board),
+    ) = (
+        graph.as_deref(),
+        portals.as_deref(),
+        flow.as_deref(),
+        diagnostics.as_deref(),
+        route_cache.as_deref(),
+        solver.as_deref(),
+        witness.as_deref_mut(),
+        runtime.as_deref_mut(),
+        board,
+    )
+    else {
+        return;
+    };
+
+    crate::economy::logistics::patch_s7p_logistics_throughput_witness_for_play_proof(
+        witness,
+        runtime,
+        graph,
+        portals,
+        flow,
+        diagnostics,
+        route_cache,
+        solver,
+    );
+    crate::dev::logistics_throughput_todos::sync_logistics_throughput_board_from_witness(
+        witness,
+        board.as_mut(),
+    );
+    let board_open = board.open_count();
+    if board_open > 0 && harness.s7p_logistics_seed_ticks < 160 {
+        return;
+    }
+    if let Some(proof_state) = proof_state.as_mut() {
+        crate::economy::logistics::live_proof::request_logistics_throughput_live_proof_refresh(
+            proof_state,
+        );
+    }
+    harness.s7p_logistics_finalize_pending = false;
+    harness.s7p_logistics_throughput_seeded = true;
+    let routes_open = diagnostics.routes_open;
+    info!(
+        target: "test_harness::logistics",
+        "S7P-LOG-001: logistics throughput witness finalized routes_open={routes_open} board_open={board_open}"
     );
 }
 
@@ -915,11 +1329,14 @@ fn seed_visual_concrete_chain_e2e(
             if committed < 3 {
                 return;
             }
+            if !chain_witness.production_green() {
+                return;
+            }
             harness.concrete_chain_seed_phase = 2;
             harness.concrete_chain_e2e_seeded = true;
             info!(
                 target: "test_harness::industrial",
-                "IND-E01/E02 visual seed: portland chain operational (construction commit path)"
+                "IND-E01/E02 visual seed: portland chain production_green (construction commit path)"
             );
         }
         _ => {}

@@ -18,6 +18,15 @@ use super::building_catalog::{
 const BUILDINGS_DIR: &str = "assets/configs/buildings";
 const MOCK_SHAPES_RON: &str = "assets/configs/buildings/_mock_shapes.ron";
 
+/// Resolve engine-owned asset paths from crate root (works in tests and `cargo run` from repo).
+#[must_use]
+fn repo_asset_path(rel: &str) -> PathBuf {
+    std::env::var_os("CARGO_MANIFEST_DIR")
+        .map(PathBuf::from)
+        .map(|root| root.join(rel))
+        .unwrap_or_else(|| PathBuf::from(rel))
+}
+
 #[derive(Debug, Clone, Deserialize)]
 struct MockShapesFile {
     shapes: Vec<MockShapeEntry>,
@@ -322,8 +331,8 @@ fn file_to_definition(id: String, raw: BuildingDefinitionFile) -> BuildingDefini
 }
 
 fn register_mock_shapes_from_ron(registry: &mut BuildingDefinitionRegistry) {
-    let path = Path::new(MOCK_SHAPES_RON);
-    let Ok(text) = fs::read_to_string(path) else {
+    let path = repo_asset_path(MOCK_SHAPES_RON);
+    let Ok(text) = fs::read_to_string(&path) else {
         return;
     };
     let Ok(file) = ron::from_str::<MockShapesFile>(&text) else {
@@ -450,7 +459,22 @@ pub fn load_building_definitions_from_dir(dir: impl AsRef<Path>) -> BuildingDefi
 
 #[must_use]
 pub fn default_buildings_dir() -> PathBuf {
-    PathBuf::from(BUILDINGS_DIR)
+    repo_asset_path(BUILDINGS_DIR)
+}
+
+/// UI-P2A-CODER-B — `_mock_shapes.ron` roundtrip matches registry footprint.
+#[must_use]
+pub fn mock_shapes_parity_green() -> bool {
+    let reg = load_building_definitions_from_dir(default_buildings_dir());
+    let Some(def) = reg.get("mock:shape_t_3x3") else {
+        return false;
+    };
+    def.footprint.width == 3
+        && def.footprint.depth == 3
+        && def.footprint.cells.len() == 9
+        && def.footprint.cells[0] == 1
+        && def.footprint.cells[4] == 1
+        && def.footprint.cells[3] == 0
 }
 
 pub fn init_building_definition_registry(mut commands: Commands) {

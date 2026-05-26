@@ -2,11 +2,15 @@
 
 | Field | Value |
 |:---|:---|
-| **Version** | `1.0.1` |
-| **Date** | 2026-05-24 |
+| **Queue ID** | **PLAN-UI-P3-COMPOSITOR-001** (M1 spine) |
+| **Version** | `2.0.0` |
+| **Date** | 2026-05-25 |
 | **Promoted** | 2026-05-24 · **`UI-P2B-GATE` PASS** (witness bundle below) |
 | **Owner** | `@planner` (architecture) |
-| **Status** | **APPROVED** |
+| **Status** | **APPROVED** — M1 **CLOSED** |
+| **Full plan (M1+M2+M3)** | [`ui_phase3_minimap_compositor_full_plan_v1.md`](ui_phase3_minimap_compositor_full_plan_v1.md) |
+| **M2 implementation** | [`ui_phase3_minimap_m2_impl_full_plan_v1.md`](ui_phase3_minimap_m2_impl_full_plan_v1.md) — **only M2 has separate impl plan today** |
+| **M3 operational** | [`ui_phase3_minimap_compositor_full_plan_v1.md`](ui_phase3_minimap_compositor_full_plan_v1.md) § M3 |
 | **Prerequisite gate** | [`ui_phase2b_egui_gate_plan_v1.md`](ui_phase2b_egui_gate_plan_v1.md) · `debug_runs/ui_shell_migration_live.json` |
 | **Handoff chain** | **`@sim-steward` `UI-P3-PREFLIGHT`** → **`S-M1` gate** → **`@coder` `UI-P3-001`** |
 | **M1 gate** | [`minimap_m1_gate_v1.md`](../../../src/dev/minimap_m1_gate_v1.md) — **GO** 2026-05-24 |
@@ -15,11 +19,23 @@
 | **Design north star** | [`ux_gpu_minimap_design_v1.md`](../../../src/dev/ux_gpu_minimap_design_v1.md) |
 | **Archive (landed M1 detail)** | [`ui_phase3_minimap_compositor_plan.md`](../../../src/dev/ui_phase3_minimap_compositor_plan.md) · [`ui_phase3_gpu_minimap_m1_planner_v1.md`](ui_phase3_gpu_minimap_m1_planner_v1.md) |
 
-**No Rust in this deliverable.** Implementation follows steward preflight, then coder slice **`UI-P3-001`**.
+**No Rust in this deliverable.** **M1 spine** lives here; **M2** → impl full plan; **M3** → compositor full plan § M3.
 
 ---
 
-## Summary
+## Three-track hub
+
+| Track | Doc | Status |
+|:---|:---|:---|
+| **M1** — GPU spine, RT, no duplicate extract | **this file** § Summary–Handoff | **CLOSED** |
+| **M2** — logistics / construction / ecology heat | [`ui_phase3_minimap_m2_impl_full_plan_v1.md`](ui_phase3_minimap_m2_impl_full_plan_v1.md) | **CLOSED** |
+| **M3** — FoW / EW / units / replay | [`ui_phase3_minimap_compositor_full_plan_v1.md`](ui_phase3_minimap_compositor_full_plan_v1.md) § M3 | **PARTIAL** |
+
+**Naming:** [`ui_phase3_minimap_track_naming_v1.md`](ui_phase3_minimap_track_naming_v1.md).
+
+---
+
+## Summary (M1)
 
 Phase 3 moves minimap **pixels** off the egui world-image bridge onto a **dedicated GPU compositor** (`MinimapCompositorPlugin`) while Phase 2B keeps **simulation product-shell egui** retired. Presentation chrome stays **Bevy** (`MinimapChromeRoot` / `MinimapGpuImageNode` in `simulation_shell_phase2.rs`). The **map-view spine** (`map_view_spine.json`) still resolves frames and caches egui bindings — but on the GPU path `resolve_minimap_egui_texture` **clears** the minimap cache and returns `None`.
 
@@ -207,17 +223,28 @@ EguiPrimaryContextPass:
 
 ---
 
-## Overlay inputs (M1 + M2)
+## Overlay inputs
+
+### M1 (this plan — landed)
 
 | Input | Producer | Compositor use |
 |:---|:---|:---|
 | `TileWorldFallbackState` | Fallback raster | Terrain storage sync |
 | `SharedOverlayFieldBuffers` | `SyncOverlayField` | Fire heat texture upload |
-| `LogisticsVisualSnapshot` | LOG-E01 transport lane | Logistics heat (M2); `logistics_rows` witness |
-| `MinimapOverlayMask` | `MapViewInstances.minimap.overlays` | `fire_heat`, `logistics_heat` uniforms |
+| `MinimapOverlayMask` | `MapViewInstances.minimap.overlays` | `fire_heat` (+ M2/M3 bits when enabled) |
 | `ResolvedViewports.minimap_panel` | Viewport resolve | RT extent, `extent_match_px` |
 
-**M3 defer (out of `UI-P3-001`):** construction phase channel, ecology macro band, fog-of-war — [`ux_gpu_minimap_design_v1.md`](../../../src/dev/ux_gpu_minimap_design_v1.md) §4.
+### M2 (impl plan — not duplicated here)
+
+| Input | Plan |
+|:---|:---|
+| `LogisticsVisualSnapshot`, construction, ecology | [`ui_phase3_minimap_m2_impl_full_plan_v1.md`](ui_phase3_minimap_m2_impl_full_plan_v1.md) |
+
+### M3 (compositor full plan § M3)
+
+| Input | Plan |
+|:---|:---|
+| `MinimapOperationalSnapshot`, unit/replay snapshots | [`ui_phase3_minimap_compositor_full_plan_v1.md`](ui_phase3_minimap_compositor_full_plan_v1.md) § M3 · [`minimap_m3_operational_overlay_spec_v1.md`](minimap_m3_operational_overlay_spec_v1.md) |
 
 ---
 
@@ -363,15 +390,9 @@ cargo test -p proc_A_dine01 --lib stage5 minimap_compositor
 
 ---
 
-## Phase 3 forward queue (post-`UI-P3-001`)
+## Phase 3 forward queue (rollup)
 
-| ID | Owner | Goal |
-|:---|:---|:---|
-| **UI-P3-M2-001** | `@coder` | Logistics heat — **done** → **D-MINIMAP-M2** [`minimap_d_m2_signoff_v1.md`](../../../src/dev/minimap_d_m2_signoff_v1.md) |
-| **UI-P3-M3-001** | `@coder` | Construction / ecology — **done** (M2 channels; `ui_p3_m3_green`) |
-| **UI-P3-M2-TRAY-OPT** | `@coder` | Overlay tray → mask — **optional** |
-| **UI-P3-M4-001** | `@designer` + `@coder` | FoW + multirate polish per design doc |
-| **UI-P3-DEFAULT-001** | `@coder` | Remove env gate; GPU always on when RT valid (product decision) |
+See [`ui_phase3_minimap_compositor_full_plan_v1.md`](ui_phase3_minimap_compositor_full_plan_v1.md) for M2/M3 status. **Open:** **UI-P3-M3-UNITS-001**, **UI-P3-M3-REPLAY-001**, optional **UI-P3-DEFAULT-001** (drop env gate).
 
 ---
 
@@ -415,5 +436,6 @@ cargo test -p proc_A_dine01 --lib stage5 minimap_compositor
 
 | Version | Date | Notes |
 |:---|:---|:---|
+| v2.0.0 | 2026-05-25 | PLAN-UI-P3-COMPOSITOR-001 hub — M1 here; M2/M3 → full plan |
 | v1.0.1 | 2026-05-24 | **APPROVED** — `UI-P2B-GATE` PASS (witness bundle); handoffs unlocked |
 | v1.0.0 | 2026-05-24 | Initial DRAFT — UI-P2B-GATE, no-duplicate-extract, UI-P3-PREFLIGHT / UI-P3-001 handoffs |

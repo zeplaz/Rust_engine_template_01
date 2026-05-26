@@ -72,7 +72,8 @@ pub use simulation_shell_phase2::{
     ContextTrayTab, ContextTrayTabButton, ContextTrayTabLabel, MapViewportFrameInset,
     MinimapChromeRoot, MinimapGpuImageNode, OpsStripAlertBadge, OpsStripAlertBadgeText,
     OpsStripAlerts, OpsStripIntel, OpsStripPower, OpsStripTime, OpsStripTrayAffordance,
-    OpsStripWeather,     OpsStripZone, LogisticsVehicleChip, LogisticsVehicleChipIcon,
+    OpsStripWeather, OpsStripZone, OpsStripOrdersPendingText, LogisticsVehicleChip,
+    LogisticsVehicleChipIcon,
     LogisticsVehicleChipLabel, LogisticsVehicleChipRow, PetroleumPanelTabIcon,
     PetroleumPanelTabLabel, PetroleumPanelTabRoot, SimulationShellPhase2Plugin, UiShellMigrationLiveProofState,
     UiShellMigrationPlugin, UiShellMigrationWitness, CONTEXT_RAIL_W_PX, CONTEXT_TRAY_BODY_H_PX,
@@ -138,7 +139,8 @@ pub use world_interaction_diagnostics::{
 pub use frame_budget_diagnostics::{
     finalize_frame_budget_diagnostics, FrameBudgetAnomalyKind, FrameBudgetAnomalyReport,
     FrameBudgetBucket, FrameBudgetBucketStats, FrameBudgetDiagnostics, FrameBudgetTimer,
-    Stage6VirtualizationBudget, FRAME_HISTORY_LEN,
+    Stage6VirtualizationBudget, FRAME_HISTORY_LEN, RESIDENCY_CHURN_BOOTSTRAP_FRAMES,
+    RESIDENCY_CHURN_CELL_DELTA, RESIDENCY_CHURN_HYSTERESIS_FRAMES,
 };
 pub use sim_view_sync_debug::{sim_view_sync_debug_enabled, SimViewSyncDebugPlugin};
 pub use layout_debug::{

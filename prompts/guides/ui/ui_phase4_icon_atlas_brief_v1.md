@@ -2,8 +2,10 @@
 
 | Field | Value |
 |:---|:---|
-| **Version** | `1.2.0` |
-| **Date** | 2026-05-24 |
+| **Queue ID** | Design authority for **PLAN-UI-P4-ATLAS-001** |
+| **Planner plan** | [`ui_phase4_icon_atlas_plan_v1.md`](ui_phase4_icon_atlas_plan_v1.md) |
+| **Version** | `1.3.0` |
+| **Date** | 2026-05-25 |
 | **Owner** | `@designer` · **Phase 4.1 code** `@coder` |
 | **Parent** | [`legacy_asset_reference_manifest_v1.md`](legacy_asset_reference_manifest_v1.md) |
 | **Asset index** | [`tools/orchestrator/knowledge/ui_texture_assets.json`](../../../tools/orchestrator/knowledge/ui_texture_assets.json) |
@@ -12,8 +14,8 @@
 | **Icon language** | [`ui_icone_design_spec.md`](ui_icone_design_spec.md) |
 | **Petroleum tab** | [`petroleum_industry_ui_snippet_v1.md`](petroleum_industry_ui_snippet_v1.md) |
 
-**Status:** **Phase 4.1 CODE DONE** (2026-05-23) · **Phase 4.2 OPEN** · **P4-ART-01 optional** (traced atlas PNG — **placeholder kept**, not blocking).  
-**Witness:** `debug_runs/ui_shell_migration_live.json` → `phase4.icon_atlas_loaded: true` when sim runs with atlas assets present.
+**Status:** **Phase 4.1 CODE DONE** (2026-05-23) · **P4-P5-01 DONE** (2026-05-25) · **UI-OH-P4-ART-001 SIGNED** (2026-05-25) · **P4-VEH-01 OPEN** (optional).  
+**Witness:** `debug_runs/ui_shell_migration_live.json` → `phase4.icon_atlas_loaded`, `phase4.p5_br_tab_wired`.
 
 ---
 
@@ -83,9 +85,9 @@ pub const ICON_ATLAS_MANIFEST_PATH: &str = "configs/ui/icon_atlas_phase4.icon_at
 
 | Item | Owner | Notes |
 |:---|:---|:---|
-| Replace placeholder atlas with traced silhouettes | `@designer` **optional** | §4–§7 bake — **keep placeholder until drop** |
+| Replace placeholder atlas with traced silhouettes | `@designer` | ✅ **UI-OH-P4-ART-001** — [`ui_oh_p4_art_signoff_record_v1.md`](../../../src/dev/ui_oh_p4_art_signoff_record_v1.md) |
 | UT ≠ UT_MG blind acceptance | `@designer` + `@coder` | §5 — optional after art drop |
-| Wire `P5_BR` to petroleum tray tab | `@coder` | `IconId::P5Br` exists; no consumer yet |
+| Wire `P5_BR` to petroleum tray tab | `@coder` | **DONE** — `sync_petroleum_panel_tab_system`; witness `p5_br_tab_wired` |
 | Wire `TRUCK` / `URAL` / `BUS` | `@coder` | logistics / convoy UI when panel exists |
 | Hover border on build-rail slot | `@coder` | optional **P4-F03** |
 | `Mi` / `Ec` atlas cells | `@designer` | row 0 cols 5–6 reserved |
@@ -104,11 +106,11 @@ Replace Phase 2A **text-only** build-rail affordances (`Rd` / `Rl` / `Ut` / …)
 
 | Artifact | Path | Status |
 |:---|:---|:---|
-| Baked atlas PNG | `assets/textures/ui/icon_atlas_phase4_v1.png` | ⚠️ Placeholder (256×128, labeled cells) |
+| Baked atlas PNG | `assets/textures/ui/icon_atlas_phase4_v1.png` | ✅ Traced silhouettes (2026-05-25) |
 | UV manifest | `assets/configs/ui/icon_atlas_phase4.icon_atlas.ron` | ✅ Matches §3.1 grid |
 | Rust module | `src/gui/hud/icon_atlas.rs` | ✅ Phase 4.1 |
 | Knowledge row | `tools/orchestrator/knowledge/ui_texture_assets.json` | ✅ `phase4_icon_atlas` block |
-| Layout mock (optional) | `assets/ui/phase4/icon_atlas_phase4_layout_mock.png` | ☐ Not committed — current PNG doubles as layout stub |
+| Layout mock (optional) | `assets/ui/phase4/icon_atlas_phase4_layout_mock.png` | ✅ Copy of baked atlas |
 
 ---
 
@@ -331,30 +333,21 @@ cargo run -p proc_A_dine01 -- --test frame
 
 ### 11.2 Phase 4.2 — next tasks (priority order)
 
-#### P4-ART-01 — Swap atlas PNG (**optional** — placeholder kept)
+#### P4-ART-01 — Swap atlas PNG — **DONE** (2026-05-25)
 
-**Status (2026-05-23):** Traced silhouette bake not delivered. **Keep** current placeholder PNG in repo; Phase 4.1 code + witness remain valid.
+**Status:** Traced silhouette bake delivered — **UI-OH-P4-ART-001** **SIGNED — PASS**. Re-bake: `python tools/orchestrator/scripts/bake_icon_atlas_phase4.py`.
 
-**Input:** Designer replaces `assets/textures/ui/icon_atlas_phase4_v1.png` with traced silhouettes (§4–§7). **Keep** 256×128 and cell indices — no RON change unless grid moves.
+**Input:** Designer replaced `assets/textures/ui/icon_atlas_phase4_v1.png` with traced silhouettes (§4–§7). **Kept** 256×128 and cell indices — no RON change.
 
 **Coder:** After art drop, run frame test + confirm `witness.icon_atlas_loaded` still true. Optional: add lib test comparing UT vs UT_MG cell hash or visual snapshot row.
 
-#### P4-P5-01 — Petroleum tab icon
+#### P4-P5-01 — Petroleum tab icon — **DONE** (2026-05-25)
 
 **Goal:** Show `IconId::P5Br` on petroleum industry panel tab ([`petroleum_industry_ui_snippet_v1.md`](petroleum_industry_ui_snippet_v1.md)).
 
-**Pattern (reuse existing API):**
+**Landed:** `image_node_for_id` in [`icon_atlas.rs`](../../../src/gui/hud/icon_atlas.rs) · `sync_petroleum_panel_tab_system` in [`simulation_shell_phase2.rs`](../../../src/gui/hud/simulation_shell_phase2.rs) · witness `phase4.p5_br_tab_wired`.
 
-```rust
-// IconAtlasUi::image_node_for_tool pattern — add:
-pub fn image_node_for_id(
-    &self,
-    manifests: &Assets<IconAtlasManifest>,
-    id: IconId,
-) -> Option<bevy::ui::widget::ImageNode> { /* same as tool path */ }
-```
-
-**Files:** `icon_atlas.rs` (helper), petroleum panel host (TBD — likely egui tray or new Bevy tab when IND lane lands).
+**Planner rollup:** [`ui_phase4_icon_atlas_plan_v1.md`](ui_phase4_icon_atlas_plan_v1.md) § P4.2a.
 
 #### P4-VEH-01 — Vehicle row consumers
 
@@ -417,6 +410,7 @@ if let Some(node) = atlas.image_node_for_tool(&manifests, ToolContext::Utilities
 |:---|:---|
 | [`legacy_asset_reference_manifest_v1.md`](legacy_asset_reference_manifest_v1.md) | Parent path index + art credit |
 | [`ui_design_language_plan_v1.md`](../ui_design_language_plan_v1.md) | Token-first policy (P4 Bevy UI) |
+| [`ui_phase4_icon_atlas_plan_v1.md`](ui_phase4_icon_atlas_plan_v1.md) | **PLAN-UI-P4-ATLAS-001** — track map + gates |
 | [`ui_phase2_designer_signoff_v1.md`](ui_phase2_designer_signoff_v1.md) | F-03 hover / F-07 selected tab |
 | [`ui_operational_direction_runbook_v1.md`](../ui_operational_direction_runbook_v1.md) | Left mode rail ergonomics |
 
@@ -426,11 +420,11 @@ if let Some(node) = atlas.image_node_for_tool(&manifests, ToolContext::Utilities
 
 - [x] Grid layout + placeholder PNG committed (256×128).
 - [x] UT / UT_MG cells distinct in manifest (cols differ — `icon_atlas` unit test).
-- [ ] **Replace placeholder** with traced **32×32** silhouettes per §4–§7 and JSON `phase4_icon_atlas.cells`.
-- [ ] Transformer vs **generator trailer** blind test passed (§5) — **optional** after art drop.
-- [ ] All row-0 icons readable at 48px rail, collapsed stack.
-- [ ] Vehicles distinguishable by silhouette at 32px.
-- [ ] P5 barrel recognizable beside tab label.
+- [x] **Replace placeholder** with traced **32×32** silhouettes per §4–§7 and JSON `phase4_icon_atlas.cells`.
+- [ ] Transformer vs **generator trailer** blind test passed (§5) — **optional** @operator.
+- [x] All row-0 icons readable at 48px rail, collapsed stack.
+- [x] Vehicles distinguishable by silhouette at 32px.
+- [x] P5 barrel recognizable beside tab label.
 
 ---
 
@@ -440,4 +434,6 @@ if let Some(node) = atlas.image_node_for_tool(&manifests, ToolContext::Utilities
 |:---|:---|:---|
 | v1.0.0 | 2026-05-23 | Initial grid + Phase 4.1 handoff |
 | v1.1.1 | 2026-05-23 | Code snapshot; RON + witness |
+| v1.4.0 | 2026-05-25 | **UI-OH-P4-ART-001** traced atlas + bake script |
+| v1.3.0 | 2026-05-25 | P4-P5-01 closed; link PLAN-UI-P4-ATLAS-001 plan |
 | v1.2.0 | 2026-05-24 | Quick ref RD/RL/UT/IN/CV; §5 transformer ≠ generator trailer |

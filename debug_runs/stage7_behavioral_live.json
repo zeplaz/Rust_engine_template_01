@@ -1,0 +1,94 @@
+{
+  "_agent_meta": {
+    "agent_commands": [
+      "cargo test -p proc_A_dine01 --lib stage7_behavioral",
+      "cargo test -p proc_A_dine01 --lib stage7_play comms_contract"
+    ],
+    "docs": {
+      "compile_warnings": "src/dev/COMPILE_WARNINGS_TODOS.md",
+      "stage5_directive": "prompts/guides/stage5_convergence_directive_v1.md",
+      "viewport_recovery": "src/dev/recovery_viewport.md"
+    },
+    "logging_env": {
+      "ORCHESTRATOR_EXPORT_HEALTH": false,
+      "PERF": false,
+      "RUST_LOG": null,
+      "SIM_VIEW_SYNC_DEBUG": false,
+      "STAGE5_READINESS_VERBOSE": false,
+      "STAGE5_VERBOSE": false,
+      "VIEWPORT_AUTHORITY_DEBUG": false
+    },
+    "orchestrator": {
+      "build_report": "tools/orchestrator/reports/build_report.md",
+      "ci_entry": "tools/orchestrator/ci/run.ps1",
+      "continuation_queue": "tools/orchestrator/queues/continuation_queue.json",
+      "warning_registry": "tools/orchestrator/reports/warning_registry.md"
+    },
+    "profile": "STAGE7_BEHAVIORAL",
+    "related_proofs": [
+      "debug_runs/stage5_full_app_live.json",
+      "debug_runs/infrastructure_view_isolation_live.json",
+      "debug_runs/construction_stage_live.json",
+      "debug_runs/industrial_activation_live.json",
+      "debug_runs/fire_ecology_live.json",
+      "debug_runs/logistics_throughput_live.json",
+      "debug_runs/replay_editor_parity_live.json",
+      "debug_runs/orchestrator_thread_health.json",
+      "debug_runs/viewport_drift.json",
+      "debug_runs/viewport_authority_migration_witness.json",
+      "debug_runs/main_thread_orchestrator_live.json",
+      "debug_runs/stage6_virtualization_live.json",
+      "debug_runs/wave_s_hydrate_live.json",
+      "debug_runs/wave_p_live.json",
+      "debug_runs/wave_c_live.json",
+      "debug_runs/ui_shell_migration_live.json",
+      "debug_runs/minimap_compositor_live.json",
+      "debug_runs/stage7_behavioral_live.json",
+      "debug_runs/stage7_play_live.json"
+    ],
+    "relative_path": "debug_runs/stage7_behavioral_live.json",
+    "schema": "debug_run_envelope_v1",
+    "source_system": "stage7_behavioral_live_proof",
+    "written_at_epoch_secs": 1779756302
+  },
+  "behavioral_contract_ok": true,
+  "communication_plane_v1": "StrategicCommand",
+  "decisions": {
+    "d_s7_01": "StrategicCommand_only",
+    "d_s7_02": "Recon_logistics_stress",
+    "d_s7_03": "Move_secure_corridor",
+    "d_s7_04": "fixed_ticks",
+    "d_s7_05": "tray_and_map_tint",
+    "d_s7_06": "f3_and_context_tray"
+  },
+  "delivered_dispatch_count": 0,
+  "dispatch_delay_model": "fixed_ticks",
+  "dispatch_delay_ticks": 8,
+  "explainability_surface": "f3_and_context_tray",
+  "gate": "S7B-M3-001",
+  "impl_plan": "src/dev/stage7_behavioral_implementation_plan_v1.md",
+  "intel_stale_surface": "tray_and_map_tint",
+  "logistics_stress_overlay_enabled": true,
+  "logistics_stress_sample_count": 18,
+  "mission_kinds_supported": [
+    "MoveCorridor",
+    "SecureCorridor"
+  ],
+  "orders_pending_ui_hook": true,
+  "overlay_channels_v1": [
+    "Recon",
+    "LogisticsStress"
+  ],
+  "pending_dispatch_count": 1,
+  "profile": "STAGE7_BEHAVIORAL",
+  "recon_overlay_enabled": true,
+  "recon_overlay_sample_count": 100,
+  "s7b_m1_green": true,
+  "s7b_m2_green": true,
+  "s7b_m3_green": true,
+  "s7b_preflight_green": true,
+  "s7b_steward_green": true,
+  "s7p_play_witness_ok": true,
+  "stale_intel_surface": true,
+  "witness_spec": "src/dev/stage7_behavioral_live_witness_spec_v1.md"
+}

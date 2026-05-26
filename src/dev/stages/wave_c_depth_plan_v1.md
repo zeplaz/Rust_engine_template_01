@@ -3,8 +3,9 @@
 | Field | Value |
 |:---|:---|
 | **Track ID** | `WAVE-C` |
-| **Version** | `1.0.0` |
-| **Status** | **ACTIVE** |
+| **Version** | `1.1.0` |
+| **Status** | **ACTIVE** — **WC-D04** via [`../infra_slice3_wc_d04_ops_f01_plan_v1.md`](../infra_slice3_wc_d04_ops_f01_plan_v1.md) |
+| **Prereq** | **OPS-F01** operator sample |
 | **Exit milestone** | **Wave C operational** — churn tuned + backlog rows closed |
 | **Runbook** | [`../../prompts/guides/backlog_serialization_preview_streaming_runbook_v1.md`](../../prompts/guides/backlog_serialization_preview_streaming_runbook_v1.md) §6 |
 | **Prerequisite** | Stage 6 closed · Wave P operator refresh green |
@@ -39,7 +40,7 @@ Streaming apply behavior matches **Stage 6** `ChunkResidencyTable` + ghost-band 
 
 | ID | Goal | Files / area |
 |:---|:---|:---|
-| **WC-DEPTH-001** | Close one `WAVE_C_OPEN_BACKLOG_ITEMS` row | `wave_c_prerequisites.rs`, runbook row |
+| **WC-DEPTH-001** | Close one `WAVE_C_OPEN_BACKLOG_ITEMS` row | **DONE** — **BQ-101** · `wc_depth_001_green` |
 | **WC-DEPTH-002** | BQ-101 TileStorage diff witness | `wave_c_live_proof.rs`, apply report |
 | **WC-DEPTH-003** | Residency churn tune (WC-D04) | `stage6_virtualization.rs`, perf notes |
 | **WC-OPS-001** | Refresh stage6 JSON in sim | operator + `stage6_live_proof.rs` |
@@ -103,4 +104,5 @@ Verify: cargo test -p proc_A_dine01 --lib stage6
 
 | Version | Date | Notes |
 |:---|:---|:---|
+| v1.1.0 | 2026-05-25 | WC-D04 → infra_slice3 plan (Coder B) |
 | v1.0.0 | 2026-05-24 | Wave C depth plan |

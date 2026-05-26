@@ -390,7 +390,10 @@ impl Plugin for StreamingSpinePlugin {
     }
 }
 
-pub use wave_c_live_proof::{WAVE_C_LIVE_JSON, WaveCLiveProofState};
+pub use wave_c_live_proof::{
+    commit_wave_c_live_proof, wc_depth_001_green, WAVE_C_LIVE_JSON, WaveCLiveProofState,
+};
+pub use wave_c_prerequisites::WAVE_C_DEPTH_001_CLOSED_ITEM;
 
 /// Main-thread ECS apply order (S6-22); must match `StreamingSpinePlugin` reconstruct chain.
 pub const STREAM_ECS_APPLY_CHAIN: [&str; 3] = [

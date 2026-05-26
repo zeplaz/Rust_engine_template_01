@@ -1,88 +1,63 @@
-# Designer workboard `v1` (active)
+# Designer workboard `v1`
 
 | Field | Value |
 |:---|:---|
-| **Version** | `1.0.0` |
-| **Date** | 2026-05-24 |
+| **Version** | `1.6.1` |
+| **Date** | 2026-05-25 |
+| **Orchestrator registry** | [`tools/orchestrator/queues/designer_signoff_registry.json`](../../tools/orchestrator/queues/designer_signoff_registry.json) |
+| **Todo board** | [`stage_designer_todos_v1.md`](stage_designer_todos_v1.md) |
+| **Machine queue** | [`tools/orchestrator/queues/designer_active_queue.json`](../../tools/orchestrator/queues/designer_active_queue.json) |
 | **Sign-off ledger** | [`stage_tracks_signoff_ledger_v1.md`](stage_tracks_signoff_ledger_v1.md) |
 
-**Rule:** **SIGNED** items are complete for design. **OPEN** items block coders only where noted.
+---
+
+## @designer sign-offs — all **SIGNED** (orchestrator)
+
+| Queue ID | Sign-off | Witness |
+|:---|:---:|:---|
+| **UI4-DESIGN-001** | **SIGNED** 2026-05-24 | [`world_preview_d04_slide_sheet_spec_v1.md`](../prompts/guides/ui/world_preview_d04_slide_sheet_spec_v1.md) |
+| **S7P-DESIGN-001** | **SIGNED** 2026-05-24 | [`stage7_play_scenario_v1.md`](stage7_play_scenario_v1.md) |
+| **DESIGN-UI-P2-SIGNOFF-001** | **SIGNED** 2026-05-24 | [`ui_phase2_designer_signoff_v1.md`](../prompts/guides/ui/ui_phase2_designer_signoff_v1.md) |
+| **DESIGN-VFX-CAPTURE-001** | **SIGNED** 2026-05-25 **PASS** | [`vfx_capture_status_20260525.md`](../assets/vfx/reference/review_captures/vfx_capture_status_20260525.md) |
+| **WATER-DESIGN-002** | **SIGNED** 2026-05-24 | [`water_ocean_fixture_request_v1.md`](water_ocean_fixture_request_v1.md) |
+| **DESIGN-MINIMAP-M2-001** | **SIGNED** 2026-05-24 **M2 COMPLETE** | [`minimap_d_m2_signoff_v1.md`](minimap_d_m2_signoff_v1.md) |
+| **MINIMAP-DESIGN-M3-001** | **SIGNED** 2026-05-25 | [`minimap_m3_operational_overlay_spec_v1.md`](../prompts/guides/ui/minimap_m3_operational_overlay_spec_v1.md) · [`minimap_d_m3_signoff_v1.md`](minimap_d_m3_signoff_v1.md) |
+| **DESIGN-D-WP-REVIEW-001** | **SIGNED** 2026-05-25 **PASS** | [`world_preview_d_wp_review_record_v1.md`](world_preview_d_wp_review_record_v1.md) |
+| **DESIGN-D-VFX-POST-001** | **SIGNED** 2026-05-25 **PASS** | [`vfx_design_review_record_v1.md`](vfx_design_review_record_v1.md) |
+| **UX-E02-BQ128-001** | **SIGNED** 2026-05-25 | [`bq128_editor_path_design_note_v1.md`](bq128_editor_path_design_note_v1.md) · plan [`bq128_editor_path_plan_v1.md`](bq128_editor_path_plan_v1.md) |
+| **S7B-DESIGN-001** | **SIGNED** 2026-05-25 | [`stage7_behavioral_decision_worksheet_v1.md`](../prompts/guides/stage7_behavioral_decision_worksheet_v1.md) · [`stage7_behavioral_d_signoff_v1.md`](stage7_behavioral_d_signoff_v1.md) |
 
 ---
 
-## Done — no rework
+## Active
 
-| ID | Track | Deliverable | Record |
-|:---|:---|:---|:---|
-| **FX-WATER-DESIGN** | FX-WATER | D-W01…D-W10 worksheet | design plan §11 SIGNED |
-| **WATER-DESIGN-001** | FX-WATER | Review | [`water_vfx_review_record_v1.md`](water_vfx_review_record_v1.md) **SIGNED — TUNE** |
-| **D-VFX** | VFX-P2 | Fire+water review | [`vfx_design_review_record_v1.md`](vfx_design_review_record_v1.md) **SIGNED — TUNE** |
-| **FX-FIRE-SPARK-DESIGN** | FX-FIRE | D-F01…D-F10 | fire spark design plan SIGNED |
-| **UI-WP-DESIGN** | UI-P4 | D-01…D-12 layout | world_map_preview_layout_decision SIGNED |
-| **UI-P2-DESIGN** | UI-P2 | Phase 2 shell | ui_phase2_designer_signoff v2.2 SIGNED |
+| Queue ID | Owner | Status |
+|:---|:---|:---|
+| *(none — designer gates clear)* | | |
 
----
+**Status:** **idle** — all queue sign-offs **SIGNED**. No designer `@assign` until a new gate opens.
 
-## Active — do these
+### Optional / non-blocking (designer)
 
-### 1. S7P-DESIGN-001 — Stage 7 Play scenario (**blocks S7-PLAY exit**)
-
-**Read:** [`stages/stage7_play_plan_v1.md`](stages/stage7_play_plan_v1.md)
-
-**Edit:** [`stage7_play_scenario_v1.md`](stage7_play_scenario_v1.md)
-
-| Step | Action |
+| ID | Notes |
 |:---|:---|
-| 1 | Run sim or `--test visual` with concrete chain |
-| 2 | Check boxes in scenario table |
-| 3 | Set header **Status: SIGNED** when reproducible |
+| **VX-P0-04** | VFX **ACCEPTED** PNG round — harness already green; refresh captures under `assets/vfx/reference/review_captures/` if promoting mock compare |
+| **UX-E03** | Transmission stub design note — [`post_stage6_active_todos.md`](post_stage6_active_todos.md) · low priority |
 
-**Unblocks:** operator sign-off on Stage 7 Play track.
+### Routed to `@coder` (not designer)
 
----
-
-### 2. UI4-DESIGN-001 — World preview D-04 slide sheet (**blocks UI-WP-LAYOUT-002**)
-
-**Read:** [`stages/ui_phase4_execution_plan_v1.md`](stages/ui_phase4_execution_plan_v1.md) · [`world_map_preview_layout_decision_v1.md`](../prompts/guides/ui/world_map_preview_layout_decision_v1.md) § D-04
-
-**Deliver:**
-
-- `assets/ui/world_preview/slide_sheet_spec_v1.png` (or annotated mock)
-- Sheet height %, dimmed map treatment, entry control (tab/button)
-
-**Unblocks:** `@coder` **UI-WP-LAYOUT-002**.
-
----
-
-### 3. Operator VFX captures (**optional for ACCEPTED, not blocking coders**)
-
-**Read:** [`vfx_post_implementation_review_v1.md`](../prompts/guides/ui/vfx_post_implementation_review_v1.md)
-
-| PNG | Path |
+| ID | Notes |
 |:---|:---|
-| Fire tactical | `assets/vfx/reference/review_captures/fire_tactical_20260524.png` |
-| River tactical | `assets/vfx/reference/review_captures/water_river_tactical_20260524.png` |
-| Lake tactical | `assets/vfx/reference/review_captures/water_lake_tactical_20260524.png` |
+| **UI-P3-M2-TRAY-OPT** | Optional — overlay tray → `MinimapOverlayMask` (M2 deferred) |
 
-**After captures:** bump review records to **PASS** where mocks match.
+### Do not assign (complete)
 
----
-
-### 4. WATER-DESIGN-002 — Ocean fixture seed (optional)
-
-**Read:** [`water_vfx_review_record_v1.md`](water_vfx_review_record_v1.md) § re-review
-
-Name one world-gen seed or test fixture with `water_ocean_tiles > 0` for **@coder** **WATER-W1-OCEAN-001**.
-
----
-
-## Gated — do not start yet
-
-| ID | Prerequisite |
+| ID | Reason |
 |:---|:---|
-| **S7B-DESIGN-001** | UI-WP-LAYOUT-002 done + INFRA-VM09-001 |
-| **UI4-DESIGN-003** (WP-L4 map look) | After LAYOUT-002 |
-| **P4-ART-01** (icon atlas PNG) | Optional anytime |
+| **S7P-DESIGN-001** | Done — [`stage7_play_scenario_v1.md`](stage7_play_scenario_v1.md) |
+| **WATER-DESIGN-001** / **WATER-DESIGN-002** | Done — ocean fixture + [`water_vfx_review_record_v1.md`](water_vfx_review_record_v1.md) |
+| **UI4-DESIGN-001** | Done — D-04 slide sheet |
+| **VFX-POST-REVIEW-DESIGN** / **DESIGN-D-VFX-POST-001** | Done — alias **D-VFX** |
 
 ---
 
@@ -90,4 +65,8 @@ Name one world-gen seed or test fixture with `water_ocean_tiles > 0` for **@code
 
 | Version | Date | Notes |
 |:---|:---|:---|
-| v1.0.0 | 2026-05-24 | Active designer queue from sign-off ledger |
+| v1.6.1 | 2026-05-25 | Idle state — optional VX-P0-04 / UX-E03; do-not-assign list |
+| v1.6.0 | 2026-05-25 | **S7B-DESIGN-001** worksheet SIGNED |
+| v1.5.0 | 2026-05-25 | Six @designer todos + `designer_signoff_registry.json` |
+| v1.4.0 | 2026-05-25 | Five-todo closure |
+| v1.2.0 | 2026-05-24 | Initial batch |

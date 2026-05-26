@@ -13,6 +13,7 @@ STATUS (2026-05-22):
 | `SimulationMap` | Same group as WorldMain (shared camera policy) | `ViewportPipeline` | `MapViewInstances` extents from authority |
 | `Minimap` | `MinimapFollow` / `MinimapShell` only | `ViewportPipeline` | Must **not** write `MapCameraDesired` |
 | `WorldPreview` | `PreviewPanel` | `ViewportPipeline` | Editor panel state |
+| `ViewManager` read model | `sync_view_manager_bridge` | — | **Sole** `ResMut<ViewManager>` — [`infra_proj2_sole_writer_plan_v1.md`](infra_proj2_sole_writer_plan_v1.md) |
 | Fire extract caps | `PerViewRepresentationPolicy` | — | `build_fire_visual_frames_by_view` truncates per `ViewId` |
 | Chunk residency membership | `ChunkResidencyTable` via `sync_chunk_residency_from_scheduler` | — | Seeds focus window when scheduler pending empty (S6-12) |
 

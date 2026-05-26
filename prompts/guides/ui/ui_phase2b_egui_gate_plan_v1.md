@@ -2,16 +2,75 @@
 
 | Field | Value |
 |:---|:---|
-| **Version** | `1.0.0` |
-| **Date** | 2026-05-24 |
+| **Queue ID** | **PLAN-UI-SHELL-2B-001** |
+| **Version** | `1.2.0` |
+| **Date** | 2026-05-25 |
 | **Owner** | `@planner` (architecture) · **`UI-P2B-001`** `@coder` (implementation) |
-| **Status** | **CLOSED** in repo (2026-05-24) — this doc is the **authoritative gate spec** + **Phase 2B+ hardening** queue |
+| **Status** | **CLOSED** — **UI-SHELL-REFRESH-001** steward **PASS** (proof-only 2026-05-24) |
+| **Gate plan (partial)** | [`ui_phase2b_gate_plan_v1.md`](ui_phase2b_gate_plan_v1.md) (**PLAN-UI-SHELL-2B-001**) |
+| **Coder B tasks** | [`ui_p2b_coder_b_numbered_tasks_v1.md`](../../../src/dev/ui_p2b_coder_b_numbered_tasks_v1.md) |
+| **Steward** | [`stage_steward_workboard_v1.md`](../../../src/dev/stage_steward_workboard_v1.md) § UI-SHELL-REFRESH-001 |
+| **Master index** | [`ui_overhaul_plan.md`](../../../src/dev/ui_overhaul_plan.md) |
 | **Witness** | [`debug_runs/ui_shell_migration_live.json`](../../../debug_runs/ui_shell_migration_live.json) · profile **`UI_SHELL_MIGRATION_2B`** |
 | **Boundary** | [`ui_boundary_guide_v1.md`](../ui_boundary_guide_v1.md) |
 | **Coder queue (archive)** | [`ui_phase2_coder_queue_v1.md`](ui_phase2_coder_queue_v1.md) § Sprint 2–3 |
 | **Phase 2B+ coders** | [`vfx_coder_phase2_queue_v1.md`](../../../src/dev/vfx_coder_phase2_queue_v1.md) *(parallel product lane)* · **this doc § Phase 2B+** |
 
-**Planner checklist:** Embodies **UI-P2B-PLAN** (run_if, dock allowlist, witness metric, files, acceptance, rollback). No Rust in this deliverable.
+**Planner checklist:** Embodies **UI-P2B-PLAN** + **PLAN-UI-SHELL-2B-001** (2B egui gate, **UI-SHELL-REFRESH-001**, **UI-P2A** lanes). **Partial rollup:** gate plan + numbered **UI-P2B-CODER-B** tasks (above links). No Rust in this deliverable.
+
+---
+
+## Track rollup — UI-SHELL-REFRESH-001 · UI-P2A (post close)
+
+### Closure sequence
+
+```text
+DONE     UI-P2B-001 — egui product shell gated in Simulation
+DONE     UI-P2A-001 — phase2a zones + interaction witnesses
+DONE     UI-P2A-CODER-B — mock zone parity (ui_p2a_coder_b_green)
+DONE     UI-P2A-F03 / UI-P2A-P4-AUTH — ops hover + build rail authority
+DONE     UI-SHELL-REFRESH-001 — steward PASS (proof-only; refresh witness if JSON drifts)
+OPTIONAL UI-P2B-002…005 — counter reset, inner guards, smoke (2B+ hardening)
+```
+
+### Lane map
+
+| Lane ID | Domain | Owner | Status | Evidence |
+|:---|:---|:---|:---:|:---|
+| **UI-P2B-001** | egui retirement + Bevy shell authoritative | coder | **DONE** | `simulation_shell_phase2` tests |
+| **UI-P2A-001** | Phase 2A interaction + zones | coder | **DONE** | `phase2a_closed` in lib proof |
+| **UI-P2A-CODER-B** | Mock zone parity vs design | coder | **DONE** | `ui_p2a_coder_b.green: true` |
+| **UI-P2A-F03** | Ops strip zone hover token | coder | **DONE** | `ui_p2a_tail.f03_green: true` |
+| **UI-P2A-P4-AUTH** | Build rail → `BuildStripState` | coder | **DONE** | `ui_p2a_tail.p4_auth_green: true` |
+| **UI-SHELL-REFRESH-001** | Steward re-audit stale 2B JSON | sim-steward | **DONE** | PASS — no coder blockers |
+| **UI-P2-GATE** | Shell-only CONDITIONAL | sim-steward | **DONE** | Stage 5 spine green |
+
+### Fleet witness (2026-05-25 — honest)
+
+| Field | Value | Verdict |
+|:---|:---|:---|
+| `egui_pass_count_in_sim` | `0` | **CURRENT** — product shell not counting in sim |
+| `phase2b_closed` | may be `false` | **STALE** if `witness.*_gated` false at write time |
+| `witness.build_toolbox_egui_gated` | sync on `OnEnter(Simulation)` | Re-run sim enter + proof refresh |
+| `ui_p2a_coder_b.green` | `true` | **CURRENT** |
+| `ui_p2a_tail.*` | all `true` | **CURRENT** |
+| `phase2_zones_live` | `true` | **CURRENT** |
+
+**Policy:** Ledger **G-UI-P2B** stays **CLOSED** when steward **PASS** + lib tests green + `egui_pass_count_in_sim == 0`. Do **not** reopen **UI-P2B-001** because JSON `phase2b_closed` alone is false — run **UI-SHELL-REFRESH-001-C** refresh instead.
+
+```powershell
+cargo test -p proc_A_dine01 --lib simulation_shell_phase2 stage5
+cargo run -p proc_A_dine01 --release -- --test visual
+```
+
+### UI-SHELL-REFRESH-001 — steward shifts (archive)
+
+| Shift | Action | Result |
+|:---|:---|:---|
+| **001-A** | Read witness + PLAY-01 defaults | ☑ |
+| **001-TEST** | `simulation_shell_phase2` + `stage5` | ☑ |
+| **001-B** | **PASS** proof-only (no `@coder` blockers) | ☑ |
+| **001-C** | Refresh `ui_shell_migration_live.json` | ☑ (re-run if flags drift) |
 
 ---
 
@@ -441,4 +500,6 @@ Use when **UI-P2B-001** is done but witnesses or UX still fail operator smoke.
 
 | Version | Date | Notes |
 |:---|:---|:---|
+| v1.2.0 | 2026-05-25 | Link gate plan + UI-P2B-CODER-B numbered tasks |
+| v1.1.0 | 2026-05-25 | PLAN-UI-SHELL-2B-001 — UI-SHELL-REFRESH + UI-P2A lane rollup; fleet witness notes |
 | v1.0.0 | 2026-05-24 | Initial gate plan — UI-P2B-PLAN checklist; 2B closed + 2B+ queue |

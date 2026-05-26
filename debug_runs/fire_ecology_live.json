@@ -41,31 +41,33 @@
       "debug_runs/wave_p_live.json",
       "debug_runs/wave_c_live.json",
       "debug_runs/ui_shell_migration_live.json",
-      "debug_runs/minimap_compositor_live.json"
+      "debug_runs/minimap_compositor_live.json",
+      "debug_runs/stage7_behavioral_live.json",
+      "debug_runs/stage7_play_live.json"
     ],
     "relative_path": "debug_runs/fire_ecology_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "fire_ecology_live_proof",
-    "written_at_epoch_secs": 1779644695
+    "written_at_epoch_secs": 1779755990
   },
   "f1_green": true,
   "profile": "FIRE_ECOLOGY_F1",
   "witness": {
-    "chunks_fuel_gated": 223,
+    "chunks_fuel_gated": 401,
     "chunks_sampled": 9000,
     "chunks_with_heat": 0,
-    "frames_sampled": 132,
+    "frames_sampled": 146,
     "fuel_gate_active": true,
-    "fuel_gated_ignitions": 201186,
-    "fuel_gated_spark_ratio": 1.0,
+    "fuel_gated_ignitions": 359861,
+    "fuel_gated_spark_ratio": 0.91062323340444,
     "heat_mostly_stable": true,
     "heat_spike_frames": 0,
-    "heat_stable_low_frames": 223,
+    "heat_stable_low_frames": 401,
     "max_heat": 0.0,
     "mean_fuel": 0.06000056490302086,
     "mean_heat": 0.0,
-    "mean_old_growth": 0.08993491530418396,
+    "mean_old_growth": 0.08494282513856888,
     "proof_json": true,
-    "ungated_spark_cells": 0
+    "ungated_spark_cells": 35320
   }
 }

@@ -8,6 +8,9 @@ use crate::io::save::{SAVE_WORLD_MANIFEST_SCHEMA_VERSION, SAVED_CHUNK_BODY_SCHEM
 /// Closed when `product_shell.ron` hydrate + `wave_c_live.json` tile apply witness ship (post–Stage 6).
 pub const WAVE_C_OPEN_BACKLOG_ITEMS: &[&str] = &[];
 
+/// **WC-DEPTH-001** — last runbook row closed this cycle ([`tile_storage_apply.rs`](tile_storage_apply.rs) BQ-101).
+pub const WAVE_C_DEPTH_001_CLOSED_ITEM: &str = "BQ-101";
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub struct WaveCPrerequisitesReport {
     pub wave_s_manifest_schema_version: u32,

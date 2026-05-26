@@ -4,8 +4,9 @@
 |:---|:---|
 | **Track ID** | `S7-PLAY` |
 | **Version** | `1.0.0` |
-| **Status** | **ACTIVE** — coder **DONE** · designer **OPEN** |
-| **Exit milestone** | **Stage 7 Play SIGNED** — one sim session: build chain, see flow, industrial witness green |
+| **Status** | **CLOSED** (2026-05-25) |
+| **Exit milestone** | **Stage 7 Play CLOSED** — `stage7_play_live.json` + scenario **SIGNED** |
+| **Audit** | [`../stage_tracks_audit_signoff_20260525.md`](../stage_tracks_audit_signoff_20260525.md) |
 | **Sign-off** | [`../stage_tracks_signoff_ledger_v1.md`](../stage_tracks_signoff_ledger_v1.md) § S7-PLAY |
 | **Index** | [`../stage_tracks_execution_index_v1.md`](../stage_tracks_execution_index_v1.md) |
 
@@ -63,11 +64,11 @@ Read [`power_damage_ui_persistence_v1.md`](../../prompts/designer_questions/prod
 | **S7P-IND-001** | `activation_green` + board sync | **DONE** | `activation_green: true` 2026-05-24 |
 | **S7P-CON-001** | P9 catalog in sim | **DONE** | `con_e01_p9_green: true` |
 
-| ID | Goal | Files (≤3/step) | Prereq |
-|:---|:---|:---|:---|
-| **S7P-IND-002** | Power plant + transformer placeable activation | `economy/activation/`, `entities/production/` | S7P-IND-001 |
-| **S7P-LOG-001** | Scenario seed → throughput witness | transport seed, `logistics_throughput_live.json` writer | LOG-E01 code |
-| **S7P-GRID-001** | Smelter load → grid witness field | `PowerRuntimePlugin`, activation bridge | S7P-IND-001 |
+| ID | Goal | Files (≤3/step) | Prereq | Status |
+|:---|:---|:---|:---|:---|
+| **S7P-IND-002** | Power plant + transformer placeable activation | `economy/activation/`, `entities/production/` | S7P-IND-001 | open |
+| **S7P-LOG-001** | Scenario seed → throughput witness | transport seed, `logistics_throughput_live.json` writer | LOG-E01 code | **done** — `s7p_log_001_green` in `logistics_throughput_live.json` |
+| **S7P-GRID-001** | Smelter load → grid witness field | `PowerRuntimePlugin`, activation bridge | S7P-IND-001 | **optional DONE** — `ind_e03_green`; not in `s7p_steward_green` |
 
 **Authority:** [`industrial_activation_pipeline.md`](../industrial_activation_pipeline.md) — activation on `Operational` only; no second construction execute path.
 
