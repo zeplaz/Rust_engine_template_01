@@ -28,6 +28,22 @@ pub use theme::UiThemePlugin;
 
 use bevy_egui::egui;
 
+/// **PLAN-UI-THEME-MERGE-001** — default tokens + egui visuals wired (no parallel theme plugins).
+#[must_use]
+pub fn ui_theme_merge_contract_ok() -> bool {
+    let palette = UiPalette::default();
+    let visuals = palette.to_egui_visuals();
+    visuals.dark_mode
+        && palette.fg_primary != palette.bg_app
+        && palette.bevy_hud_panel_fill() != Color::NONE
+}
+
+/// **UI-W3-THEME-001** — Wave 3 alias for theme merge contract.
+#[must_use]
+pub fn ui_w3_theme_001_green() -> bool {
+    ui_theme_merge_contract_ok()
+}
+
 /// Spacing scale for egui layout — tokenized vertical rhythm ([`v_space`], [`VertSpace`]).
 #[derive(Debug, Clone, Resource)]
 pub struct UiSpacing {

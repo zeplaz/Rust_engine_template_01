@@ -3,6 +3,7 @@
 > **STATUS:** Locked product input for **behavior / command / comms / belief / utility masks** — **no Rust**. Engineering implements via contracts first, full sim after spine + Wave **S → P → C** gates.
 
 Version: `v1.0.0`  
+**Full plan:** [`../../src/dev/stage7_behavioral_full_plan_v1.md`](../../src/dev/stage7_behavioral_full_plan_v1.md) (**PLAN-STAGE7-BEHAVIORAL-001**) · worksheet [`stage7_behavioral_decision_worksheet_v1.md`](stage7_behavioral_decision_worksheet_v1.md)  
 **Parent:** [`strategic_program_execution_plan_v1.md`](strategic_program_execution_plan_v1.md) Track F · [`legacy_cpp_repos_agent_communication_maps_v1.md`](legacy_cpp_repos_agent_communication_maps_v1.md) §8  
 **Companions:** [`base_behav_a.md`](base_behav_a.md), [`simulation_explainability_runbook_v1.md`](simulation_explainability_runbook_v1.md), [`mission_authoring_framework_v1.md`](mission_authoring_framework_v1.md), [`experience_layer_ux_hud_designer_brief_v1.md`](experience_layer_ux_hud_designer_brief_v1.md) §5 (**UX-D**), [`rulebook_backlog_designer_brief_v1.md`](rulebook_backlog_designer_brief_v1.md) §4 (**BQ-114+**)
 

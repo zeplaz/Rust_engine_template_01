@@ -9,7 +9,10 @@ use std::f32::consts::TAU;
 use bevy::prelude::*;
 use rand::{thread_rng, Rng};
 
-use crate::gui::{camera_translation, camera_zoom, MapCameraDesired, ViewId, ViewManager, MAP_ZOOM_CLAMP};
+use crate::gui::{
+    camera_translation, camera_zoom, map_zoom_alpha, MapCameraDesired, ViewId, ViewManager,
+    MAP_ZOOM_CLAMP,
+};
 use crate::render::{resolved_particle_half_extents, ResolvedViewports, ViewportPipelineSet};
 use crate::systems::atmosphere::pipeline::AtmospherePipelineSet;
 use crate::render::ClimateVisualAggregate;
@@ -26,6 +29,57 @@ pub struct WeatherVisualSettings {
     /// Screen-space rain/snow streaks when zoomed out — “digital AE” background (separate from tactical precip).
     pub background_aesthetic: bool,
     pub max_precip_particles: usize,
+}
+
+/// **VX-P0-03** — tactical streaks above this [`map_zoom_alpha`] (zoomed in); background aesthetic below.
+pub const WEATHER_TACTICAL_PRECIP_ZOOM_ALPHA: f32 = 0.45;
+
+/// True when precip particles use the tactical (zoomed-in) band.
+#[inline]
+#[must_use]
+pub fn weather_precip_tactical_band(zoom_alpha: f32) -> bool {
+    zoom_alpha > WEATHER_TACTICAL_PRECIP_ZOOM_ALPHA
+}
+
+/// True when screen-space background rain/snow should run (zoomed out, climate active).
+#[must_use]
+pub fn weather_precip_show_background(
+    settings: &WeatherVisualSettings,
+    sample: &WeatherPrecipVisualSample,
+    precip: f32,
+    zoom_alpha: f32,
+    strength: f32,
+) -> bool {
+    let climate_active = sample.chunk_count > 0
+        || sample.rain > 0.06
+        || sample.snow > 0.04
+        || sample.fog > 0.05;
+    settings.enabled
+        && settings.particles
+        && settings.background_aesthetic
+        && climate_active
+        && precip > 0.04
+        && strength > 0.02
+        && !weather_precip_tactical_band(zoom_alpha)
+}
+
+/// True when tactical precip streaks should run (zoomed in, climate active).
+#[must_use]
+pub fn weather_precip_show_tactical(
+    settings: &WeatherVisualSettings,
+    sample: &WeatherPrecipVisualSample,
+    zoom_alpha: f32,
+    strength: f32,
+) -> bool {
+    let climate_active = sample.chunk_count > 0
+        || sample.rain > 0.06
+        || sample.snow > 0.04
+        || sample.fog > 0.05;
+    settings.enabled
+        && settings.particles
+        && climate_active
+        && strength > 0.02
+        && weather_precip_tactical_band(zoom_alpha)
 }
 
 impl Default for WeatherVisualSettings {
@@ -267,31 +321,19 @@ fn tick_precip_particles(
     let zoom = camera_zoom(&view_manager, ViewId::WorldMain)
         .unwrap_or(desired.scale.x)
         .clamp(MAP_ZOOM_CLAMP.0, MAP_ZOOM_CLAMP.1);
-    let zoom_t = ((MAP_ZOOM_CLAMP.1 - zoom) / (MAP_ZOOM_CLAMP.1 - MAP_ZOOM_CLAMP.0)).clamp(0.0, 1.0);
+    let zoom_alpha = map_zoom_alpha(zoom);
+    let zoom_t = 1.0 - zoom_alpha;
     let focus_strength = 0.2 + 0.8 * zoom_t;
     let background_strength = 0.15 + 0.35 * (1.0 - zoom_t);
     let strength = (precip * focus_strength + precip * background_strength * 0.35).clamp(0.0, 1.0);
-    let climate_active = sample.chunk_count > 0
-        || sample.rain > 0.06
-        || sample.snow > 0.04
-        || sample.fog > 0.05;
-    let tactical_precip = zoom_t > 0.45;
-
     for (mut xf, mut vis, mut p) in &mut q {
         p.half_width = hw;
         p.half_height = hh;
 
-        let show_tactical = settings.enabled
-            && settings.particles
-            && climate_active
-            && strength > 0.02
-            && tactical_precip;
-        let show_background = settings.enabled
-            && settings.particles
-            && settings.background_aesthetic
-            && climate_active
-            && precip > 0.04
-            && !tactical_precip;
+        let show_tactical =
+            weather_precip_show_tactical(&settings, &sample, zoom_alpha, strength);
+        let show_background =
+            weather_precip_show_background(&settings, &sample, precip, zoom_alpha, strength);
         if !show_tactical && !show_background {
             *vis = Visibility::Hidden;
             continue;
@@ -343,14 +385,74 @@ fn tick_precip_particles(
             trace_particle_routing(
                 &cfg,
                 &format!(
-                    "weather_precip_particles coordinate_space=screen_hybrid active_count={visible} enabled={} particles={} zoom_t={:.2} strength={:.2}",
+                    "weather_precip_particles coordinate_space=screen_hybrid active_count={visible} enabled={} particles={} zoom_alpha={:.2} zoom_t={:.2} strength={:.2}",
                     settings.enabled,
                     settings.particles,
+                    zoom_alpha,
                     zoom_t,
                     strength,
                 ),
             );
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::gui::map_scale_for_zoom_alpha;
+
+    fn rainy_sample() -> WeatherPrecipVisualSample {
+        WeatherPrecipVisualSample {
+            rain: 0.5,
+            snow: 0.2,
+            fog: 0.1,
+            chunk_count: 12,
+        }
+    }
+
+    #[test]
+    fn vx_p0_03_background_precip_when_zoomed_out() {
+        let settings = WeatherVisualSettings::default();
+        let sample = rainy_sample();
+        let zoom = map_scale_for_zoom_alpha(0.15, MAP_ZOOM_CLAMP.0, MAP_ZOOM_CLAMP.1);
+        let zoom_alpha = map_zoom_alpha(zoom);
+        assert!(
+            zoom_alpha < WEATHER_TACTICAL_PRECIP_ZOOM_ALPHA,
+            "expected strategic zoom band, got {zoom_alpha}"
+        );
+        assert!(!weather_precip_tactical_band(zoom_alpha));
+        assert!(weather_precip_show_background(
+            &settings, &sample, 0.5, zoom_alpha, 0.2
+        ));
+        assert!(!weather_precip_show_tactical(
+            &settings, &sample, zoom_alpha, 0.2
+        ));
+    }
+
+    #[test]
+    fn vx_p0_03_tactical_precip_when_zoomed_in() {
+        let settings = WeatherVisualSettings::default();
+        let sample = rainy_sample();
+        let zoom = map_scale_for_zoom_alpha(0.75, MAP_ZOOM_CLAMP.0, MAP_ZOOM_CLAMP.1);
+        let zoom_alpha = map_zoom_alpha(zoom);
+        assert!(weather_precip_tactical_band(zoom_alpha));
+        assert!(weather_precip_show_tactical(
+            &settings, &sample, zoom_alpha, 0.2
+        ));
+        assert!(!weather_precip_show_background(
+            &settings, &sample, 0.5, zoom_alpha, 0.2
+        ));
+    }
+
+    #[test]
+    fn vx_p0_03_background_respects_diagnostics_toggle() {
+        let mut settings = WeatherVisualSettings::default();
+        settings.background_aesthetic = false;
+        let sample = rainy_sample();
+        assert!(!weather_precip_show_background(
+            &settings, &sample, 0.5, 0.2, 0.2
+        ));
     }
 }
 

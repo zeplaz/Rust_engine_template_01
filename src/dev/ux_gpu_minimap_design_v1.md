@@ -116,12 +116,13 @@ pub struct MinimapCompositorState {
 - [x] Logistics heat from `LogisticsVisualSnapshot` (same rows as FULL_APP `log_rows`)
 - [x] Construction phase channel (`CorridorConstructionBook` + `construction_heat` compositor binding)
 - [x] Ecology macro band (`EcologyVisualSnapshot` + `ecology_heat` compositor binding)
-- [ ] Overlay tray bits → compositor uniforms (tray → policy bridge) — **UI-P3-M2-TRAY-OPT** optional
+- [x] Overlay tray bits → compositor uniforms (tray → policy bridge) — **UI-P3-M2-TRAY-OPT** (2026-05-23)
 
-### M3 — Operational shell
+### M3 — Operational shell — **DESIGN GATE SIGNED** [`minimap_d_m3_signoff_v1.md`](minimap_d_m3_signoff_v1.md)
 
-- [ ] Fog-of-war, EW, unit aggregation markers (Stage 7 brief alignment — **out of UI-P3-M3-001**)
+- [ ] Fog-of-war, EW, unit aggregation markers (Stage 7 brief alignment — **D-MINIMAP-M3**, not UI-P3-M3-001)
 - [ ] Replay / intel scrub markers
+- [ ] Spec: [`minimap_m3_operational_overlay_spec_v1.md`](../prompts/guides/ui/minimap_m3_operational_overlay_spec_v1.md)
 
 ---
 

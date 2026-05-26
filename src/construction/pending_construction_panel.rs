@@ -158,6 +158,33 @@ pub fn draw_pending_construction_queue_egui(
                     }
                 }
             });
+            if let Some(imported) = wave_s_imported.and_then(|w| w.collection.as_ref()) {
+                if !imported.presets.is_empty() {
+                    ui.separator();
+                    ui.label(
+                        egui::RichText::new("Wave S presets — Apply loads ghost only (Enter to commit)")
+                            .small()
+                            .weak(),
+                    );
+                    for (idx, preset) in imported.presets.iter().enumerate() {
+                        ui.horizontal(|ui| {
+                            ui.label(format!(
+                                "{} @ ({},{}) {}×{}",
+                                preset.label,
+                                preset.origin_x,
+                                preset.origin_z,
+                                preset.footprint_width,
+                                preset.footprint_depth
+                            ));
+                            if ui.button("Apply ghost").clicked() {
+                                intents.write(ConstructionQueueIntent::ApplyImportedPreset {
+                                    preset_index: idx,
+                                });
+                            }
+                        });
+                    }
+                }
+            }
             if let Some(ron) = preset_ron.as_ref() {
                 ui.label(egui::RichText::new(ron).monospace().small());
             }

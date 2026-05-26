@@ -3,6 +3,7 @@
 //
 // Package id `proc_A_dine01` is intentionally non–snake_case; renaming would churn imports/Cargo.
 #![allow(non_snake_case)]
+#![recursion_limit = "256"]
 
 // Core modules
 pub mod ai;

@@ -15,7 +15,8 @@ use bevy_egui::EguiContexts;
 
 use crate::engine::states::BaseState;
 use crate::engine::{ActiveTestScene, TestScene};
-use crate::gui::view_authority::commit_map_camera_pose_to_view_authority;
+use crate::gui::view_authority::map_camera_desired_from_view_authority;
+use crate::render::view_runtime::ViewProjectionAuthority;
 use crate::gui::ActiveMapViewInput;
 use crate::gui::{SimulationMapViewport, SimulationViewportSyncSet};
 use crate::gui::InputBindings;
@@ -38,6 +39,8 @@ pub const HYBRID_ORTO_CAMERA_SCAFFOLD: ScaffoldContract = ScaffoldContract {
 #[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
 pub enum MapCameraSystemSet {
     ApplyInput,
+    /// **TRIAGE-VM-09-v2:** mirror authority → [`MapCameraDesired`] before smooth / bridge.
+    DeriveDesired,
     Smooth,
 }
 
@@ -85,8 +88,8 @@ pub struct MainWorldCameraOrthoTrace {
 
 /// Logical pose after map input (smoothing target).
 ///
-/// **vm-09b:** RTS input mutates this resource, then [`commit_map_camera_pose_to_view_authority`]
-/// commits pose; [`crate::gui::ViewAuthoritySystemSet::SyncViewManager`] rebuilds [`crate::gui::ViewManager`].
+/// **TRIAGE-VM-09-v2:** RTS input commits [`ViewProjectionAuthority`] first; this resource is updated by
+/// [`derive_map_camera_desired_from_view_authority`] only (compatibility read surface for legacy APIs).
 /// Prefer
 /// [`crate::gui::camera_translation`] / [`crate::gui::camera_zoom`] for consumers that know a [`crate::gui::ViewId`].
 #[derive(Resource, Clone, Debug, PartialEq)]
@@ -194,7 +197,10 @@ impl Plugin for MapCameraPlugin {
             .add_plugins(crate::gui::InputFramePlugin)
             .configure_sets(
                 Update,
-                MapCameraSystemSet::Smooth.after(MapCameraSystemSet::ApplyInput),
+                (
+                    MapCameraSystemSet::DeriveDesired.after(MapCameraSystemSet::ApplyInput),
+                    MapCameraSystemSet::Smooth.after(MapCameraSystemSet::DeriveDesired),
+                ),
             )
             .add_systems(
                 Update,
@@ -204,9 +210,8 @@ impl Plugin for MapCameraPlugin {
             )
             .add_systems(
                 Update,
-                mirror_world_main_camera_from_map_desired
-                    .after(map_camera_apply_input_to_desired)
-                    .in_set(MapCameraSystemSet::ApplyInput)
+                derive_map_camera_desired_from_view_authority
+                    .in_set(MapCameraSystemSet::DeriveDesired)
                     .run_if(in_simulation_or_editor_map),
             )
             .init_resource::<MainWorldCameraViewportLatch>()
@@ -371,9 +376,8 @@ fn map_camera_apply_input_to_desired(
     params: Res<WorldGenParams>,
     active_map_surface: Res<ActiveMapViewInput>,
     mut settings: ResMut<MapCameraSettings>,
-    mut desired: ResMut<MapCameraDesired>,
+    mut authority: ResMut<ViewProjectionAuthority>,
     q_cam: Query<&Transform, With<MainWorldCamera>>,
-    profile: Res<Stage5ReadinessProfile>,
     mut locals: Local<MapCameraInputLocals>,
 ) {
     locals.before_apply = None;
@@ -403,16 +407,19 @@ fn map_camera_apply_input_to_desired(
         return;
     }
 
-    locals.before_apply = Some(desired.clone());
+    let mut desired = map_camera_desired_from_view_authority(authority.as_ref());
 
     if !locals.synced_from_cam {
         if let Ok(t) = q_cam.single() {
             desired.translation = t.translation;
             desired.scale = t.scale;
             desired.rotation = t.rotation;
+            commit_map_camera_pose_to_view_authority_simple(authority.as_mut(), &desired);
             locals.synced_from_cam = true;
         }
     }
+
+    locals.before_apply = Some(desired.clone());
 
     if keys.just_pressed(bindings.map_toggle_edge_scroll) {
         settings.edge_scroll_enabled = !settings.edge_scroll_enabled;
@@ -559,24 +566,49 @@ fn map_camera_apply_input_to_desired(
     desired.translation.y = clamped.y;
     desired.translation.z = 999.0;
 
-    if let Some(before) = locals.before_apply.take() {
-        trace_map_camera_desired_write_if_full_app(
-            profile.as_ref(),
-            "map_camera_apply_input_to_desired",
-            &before,
-            desired.as_ref(),
-        );
-    }
+    commit_map_camera_pose_to_view_authority_simple(authority.as_mut(), &desired);
 }
 
-/// VM-C C1 / VM-06: commit RTS pose to [`ViewProjectionAuthority`] only.
-/// [`ViewManager`] is rebuilt in [`crate::gui::ViewAuthoritySystemSet::SyncViewManager`].
-pub fn mirror_world_main_camera_from_map_desired(
-    desired: Res<MapCameraDesired>,
-    mut authority: ResMut<crate::render::view_runtime::ViewProjectionAuthority>,
-    mut trace: ResMut<crate::render::view_runtime::ViewRuntimeTrace>,
+/// RTS input → authority without trace param (keeps system under Bevy param limit).
+fn commit_map_camera_pose_to_view_authority_simple(
+    authority: &mut ViewProjectionAuthority,
+    desired: &MapCameraDesired,
 ) {
-    commit_map_camera_pose_to_view_authority(authority.as_mut(), trace.as_mut(), desired.as_ref());
+    use crate::render::view_runtime::ViewAuthorityWriter;
+    use crate::render::view_runtime::ViewSurfaceId;
+
+    let cam = crate::gui::view_authority::view_camera_state_from_map_camera_desired(desired);
+    authority.commit_pose(ViewSurfaceId::WorldMain, cam, ViewAuthorityWriter::MapCameraInput);
+    authority.commit_pose(
+        ViewSurfaceId::SimulationMap,
+        cam,
+        ViewAuthorityWriter::MapCameraInput,
+    );
+}
+
+/// **TRIAGE-VM-09-v2:** sole production writer to [`MapCameraDesired`] — mirror from WorldMain authority.
+pub fn derive_map_camera_desired_from_view_authority(
+    authority: Res<ViewProjectionAuthority>,
+    mut desired: ResMut<MapCameraDesired>,
+    profile: Res<Stage5ReadinessProfile>,
+) {
+    let before = desired.clone();
+    *desired = map_camera_desired_from_view_authority(authority.as_ref());
+    trace_map_camera_desired_write_if_full_app(
+        profile.as_ref(),
+        "derive_map_camera_desired_from_view_authority",
+        &before,
+        desired.as_ref(),
+    );
+}
+
+/// VM-09-v2 compat alias — authority → desired (no longer desired → authority).
+pub fn mirror_world_main_camera_from_map_desired(
+    authority: Res<ViewProjectionAuthority>,
+    desired: ResMut<MapCameraDesired>,
+    profile: Res<Stage5ReadinessProfile>,
+) {
+    derive_map_camera_desired_from_view_authority(authority, desired, profile);
 }
 
 /// After Bevy UI layout: apply scissor + orthographic fit from the **same** viewport decision.

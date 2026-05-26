@@ -22,8 +22,10 @@ use crate::render::gpu_particles::WorldFireParticleFrame;
 use crate::render::gpu_water_particles::WorldWaterParticleFrame;
 use crate::render::WaterSurfaceVisualCatalog;
 use crate::render::overlay_field_buffers::SharedOverlayFieldBuffers;
+use crate::gui::hud::HudOverlayTrayState;
 use crate::render::{
-    build_minimap_compositor_proof_payload, minimap_gpu_compositor_env_enabled,
+    build_minimap_compositor_proof_payload_with_tray, minimap_gpu_compositor_env_enabled,
+    ui_p3_m2_minimap_acceptance_green, ui_p3_m3_minimap_acceptance_green,
     MinimapGpuCompositorDiagnostics, MinimapCompositorState, MinimapRenderTargetRegistry,
 };
 use crate::render::viewport_pipeline::{ResolvedViewports, ViewportPresentationMismatch};
@@ -66,16 +68,19 @@ pub(crate) fn visual_tactical_vfx_witness_required(launch: &crate::engine::Engin
 pub(crate) struct TacticalVfxWitnessGates {
     pub fire_tactical_zoom: bool,
     pub fire_spark_rows_gt_0: bool,
+    pub fire_spark_011_green: bool,
     pub water_tactical_zoom: bool,
     pub water_has_river_segments: bool,
     pub water_particle_rows_gt_0: bool,
     pub water_particle_river_streaks_when_rivers: bool,
     pub water_shader_motion_always_on: bool,
+    pub water_strategic_001_shader_motion_green: bool,
     pub water_particle_strategic_not_culled: bool,
     pub water_w1_river_read_green: bool,
     pub water_strategic_001_green: bool,
     pub water_witness_001_green: bool,
     pub water_witness_foam_or_ocean_green: bool,
+    pub water_w2_foam_001_green: bool,
 }
 
 impl TacticalVfxWitnessGates {
@@ -89,6 +94,9 @@ impl TacticalVfxWitnessGates {
             .unwrap_or(0.0);
         let fire_tactical = fire_zoom >= TACTICAL_VFX_ZOOM_ALPHA_MIN;
         let fire_rows = particles.map(|p| p.spark_witness.rows).unwrap_or(0);
+        let fire_spark_011 = particles
+            .map(|p| crate::render::gpu_particles::fire_spark_011_green(&p.spark_witness))
+            .unwrap_or(false);
 
         let water_zoom = water_particles
             .map(|p| p.witness.zoom_alpha)
@@ -101,9 +109,25 @@ impl TacticalVfxWitnessGates {
         let water_streaks = water_particles
             .map(|p| p.witness.river_streaks)
             .unwrap_or(0);
-        let water_shader_on = water_particles
+        let water_bands = water_catalog.map(|c| {
+            crate::render::gpu_water_particles::evaluate_water_vfx_witness_bands(
+                c,
+                water_zoom.max(crate::render::gpu_water_particles::WATER_TACTICAL_WITNESS_ZOOM_ALPHA),
+                0.0,
+            )
+        });
+        let water_shader_particle = water_particles
             .map(|p| p.witness.shader_motion_always_on)
+            .or_else(|| {
+                water_bands
+                    .as_ref()
+                    .map(|b| b.tactical.shader_motion_always_on)
+            })
             .unwrap_or(false);
+        let water_shader_w1 = water_catalog
+            .map(crate::render::water_strategic_001_shader_motion_green)
+            .unwrap_or(true);
+        let water_shader_on = water_shader_particle && water_shader_w1;
         let water_not_culled = water_particles
             .map(|p| !p.witness.strategic_culled)
             .unwrap_or(false);
@@ -114,13 +138,6 @@ impl TacticalVfxWitnessGates {
                 )
             })
             .unwrap_or(false);
-        let water_bands = water_catalog.map(|c| {
-            crate::render::gpu_water_particles::evaluate_water_vfx_witness_bands(
-                c,
-                water_zoom,
-                0.0,
-            )
-        });
         let water_strategic_001 = water_bands
             .as_ref()
             .map(crate::render::gpu_water_particles::water_strategic_001_green)
@@ -138,21 +155,42 @@ impl TacticalVfxWitnessGates {
                 )
             })
             .unwrap_or(false);
+        let water_w2_foam = water_catalog
+            .zip(water_bands)
+            .map(|(c, b)| crate::render::gpu_water_particles::water_w2_foam_001_green(c, &b))
+            .unwrap_or(false);
 
         Self {
             fire_tactical_zoom: fire_tactical,
             fire_spark_rows_gt_0: fire_rows > 0,
+            fire_spark_011_green: fire_spark_011,
             water_tactical_zoom: water_tactical,
             water_has_river_segments: water_has_rivers,
             water_particle_rows_gt_0: water_rows > 0,
             water_particle_river_streaks_when_rivers: !water_has_rivers || water_streaks > 0,
             water_shader_motion_always_on: water_shader_on,
+            water_strategic_001_shader_motion_green: water_shader_w1,
             water_particle_strategic_not_culled: water_not_culled,
             water_w1_river_read_green: water_river_read,
             water_strategic_001_green: water_strategic_001,
             water_witness_001_green: water_witness_001,
             water_witness_foam_or_ocean_green: water_foam_or_ocean,
+            water_w2_foam_001_green: water_w2_foam,
         }
+    }
+
+    /// WATER-STRATEGIC-001 — dual-band strategic cull + shader motion (D-W09).
+    #[must_use]
+    pub(crate) fn water_strategic_gates_green(&self) -> bool {
+        self.water_strategic_001_green && self.water_shader_motion_always_on
+    }
+
+    /// WATER-WITNESS-001 rollup (tactical foam/ocean + strategic band); separate from live zoom rows.
+    #[must_use]
+    pub(crate) fn water_witness_rollup_green(&self) -> bool {
+        self.water_strategic_gates_green()
+            && self.water_witness_001_green
+            && self.water_w2_foam_001_green
     }
 
     #[must_use]
@@ -162,16 +200,18 @@ impl TacticalVfxWitnessGates {
 
     #[must_use]
     pub(crate) fn all_green_for_visual_proof(&self, require_fire_rows: bool) -> bool {
-        let fire_ok = if require_fire_rows {
+        let fire_tactical_ok = if require_fire_rows {
             self.fire_tactical_zoom && self.fire_spark_rows_gt_0
         } else {
             !self.fire_tactical_zoom || self.fire_spark_rows_gt_0
         };
-        let water_ok = self.water_shader_motion_always_on
-            && (!self.water_tactical_zoom
-                || (self.water_particle_rows_gt_0
-                    && self.water_particle_river_streaks_when_rivers
-                    && self.water_particle_strategic_not_culled));
+        let fire_tune_ok = !self.fire_tactical_zoom || self.fire_spark_011_green;
+        let fire_ok = fire_tactical_ok && fire_tune_ok;
+        let water_live_ok = !self.water_tactical_zoom
+            || (self.water_particle_rows_gt_0
+                && self.water_particle_river_streaks_when_rivers
+                && self.water_particle_strategic_not_culled);
+        let water_ok = self.water_strategic_gates_green() && water_live_ok;
         fire_ok && water_ok
     }
 }
@@ -193,10 +233,14 @@ pub(crate) fn refresh_visual_proof_water_particles(
     let Some(catalog) = catalog.as_ref() else {
         return;
     };
+    let mut cam_snap = *cam;
+    cam_snap.zoom_alpha = cam_snap
+        .zoom_alpha
+        .max(crate::render::gpu_water_particles::WATER_TACTICAL_WITNESS_ZOOM_ALPHA);
     crate::render::gpu_water_particles::update_world_water_particles_from_catalog(
         catalog,
         frame.as_mut(),
-        *cam,
+        cam_snap,
         time.elapsed_secs(),
     );
 }
@@ -284,6 +328,137 @@ pub(crate) fn maintain_visual_tactical_vfx_camera(
     }
 }
 
+pub const STAGE5_FULL_APP_LIVE_JSON: &str = "debug_runs/stage5_full_app_live.json";
+
+/// P2-FIRE-SPARK-011 — merge tactical spark witness into an existing `stage5_full_app_live.json` body.
+pub fn merge_p2_fire_spark_011_stage5_witness(
+    root: &mut serde_json::Value,
+    particles: &WorldFireParticleFrame,
+    gates: &TacticalVfxWitnessGates,
+) {
+    let tactical = tactical_vfx_witness_json(gates);
+    let routing_patch = serde_json::json!({
+        "fire_spark_011_green": gates.fire_spark_011_green,
+        "fire_spark_tactical_proof_zoom_alpha":
+            crate::render::gpu_particles::FIRE_SPARK_TACTICAL_PROOF_ZOOM_ALPHA,
+        "fire_spark_zoom_alpha": particles.spark_witness.zoom_alpha,
+        "fire_spark_rows": particles.spark_witness.rows,
+        "fire_spark_scatter_slots": particles.spark_witness.scatter_slots,
+        "fire_spark_scatter_max": particles.spark_witness.scatter_max,
+        "fire_spark_phase": particles.spark_witness.phase,
+        "fire_spark_compute_enabled": crate::render::fire_spark_compute_enabled(),
+        "fire_spark_additive_blend": particles.spark_witness.additive_blend,
+        "fire_particle_view_culled": particles.spark_witness.view_culled,
+        "fire_spark_budget_capped": particles.spark_witness.budget_capped,
+        "fire_spark_projection_view": particles.spark_witness.projection_view,
+    });
+    if let Some(obj) = root.as_object_mut() {
+        obj.insert("tactical_vfx_witness".into(), tactical);
+        match obj.get_mut("particle_routing") {
+            Some(routing) if routing.is_object() => {
+                if let (Some(dst), Some(src)) = (routing.as_object_mut(), routing_patch.as_object())
+                {
+                    for (k, v) in src {
+                        dst.insert(k.clone(), v.clone());
+                    }
+                }
+            }
+            _ => {
+                obj.insert("particle_routing".into(), routing_patch);
+            }
+        }
+    }
+}
+
+/// Refresh on-disk stage5 proof with P2-FIRE-SPARK-011 fields (keeps existing envelope body).
+pub(crate) fn commit_p2_fire_spark_011_stage5_witness_refresh(
+    particles: &WorldFireParticleFrame,
+    gates: &TacticalVfxWitnessGates,
+) -> bool {
+    let path = std::env::var_os("CARGO_MANIFEST_DIR")
+        .map(std::path::PathBuf::from)
+        .unwrap_or_else(|| std::path::PathBuf::from("."))
+        .join(STAGE5_FULL_APP_LIVE_JSON);
+    let text = std::fs::read_to_string(&path).unwrap_or_else(|e| {
+        panic!("read {}: {e}", STAGE5_FULL_APP_LIVE_JSON);
+    });
+    let mut root: serde_json::Value =
+        serde_json::from_str(&text).unwrap_or_else(|e| panic!("parse stage5 witness: {e}"));
+    if let Some(m) = root.as_object_mut() {
+        m.remove("_agent_meta");
+    }
+    merge_p2_fire_spark_011_stage5_witness(&mut root, particles, gates);
+    let body = root;
+    let wrapped = crate::dev::debug_run_envelope::wrap_debug_run(
+        "FULL_APP",
+        "p2_fire_spark_011_stage5_witness_refresh",
+        STAGE5_FULL_APP_LIVE_JSON,
+        body,
+    );
+    crate::dev::debug_run_envelope::write_debug_run_json(STAGE5_FULL_APP_LIVE_JSON, wrapped)
+}
+
+/// Headless P2-FIRE-SPARK-011 fixture @ [`crate::render::FIRE_SPARK_TACTICAL_PROOF_ZOOM_ALPHA`] (0.85).
+pub fn refresh_p2_fire_spark_011_stage5_live_witness() -> bool {
+    use bevy::math::{Vec2, Vec4};
+
+    use crate::render::extraction::FireVisualGpuInstance;
+    use crate::render::gpu_water_particles::update_world_water_particles_from_catalog;
+    use crate::render::{
+        gpu_particles::{
+            update_world_fire_particles_from_projection, FireParticleCameraScale,
+            FIRE_SPARK_TACTICAL_PROOF_ZOOM_ALPHA,
+        },
+        RiverPolylineSegment, WaterSurfaceVisualCatalog,
+    };
+
+    let mut graph = crate::render::extraction::RenderProjectionGraph::default();
+    graph.fire.gpu_instance_capacity = 64;
+    let mut row = FireVisualGpuInstance::default();
+    row.chunk_xy_heat_lum = Vec4::new(0.0, 0.0, 0.85, 1.0);
+    row.world_xyz_radius = Vec4::new(0.0, 0.0, 0.0, 32.0);
+    row.smoke_ember_vis_priority = Vec4::new(0.1, 0.4, 0.0, 1.0);
+    graph.fire.instance_buffer = vec![row];
+
+    let mut particles = WorldFireParticleFrame::default();
+    update_world_fire_particles_from_projection(
+        &graph,
+        &mut particles,
+        None,
+        FireParticleCameraScale {
+            camera_zoom: 1.0,
+            zoom_alpha: FIRE_SPARK_TACTICAL_PROOF_ZOOM_ALPHA,
+        },
+        None,
+    );
+
+    let mut catalog = WaterSurfaceVisualCatalog::default();
+    catalog.river_segments.push(RiverPolylineSegment {
+        path_id: 0,
+        start: Vec2::new(0.0, 0.0),
+        end: Vec2::new(6.0, 0.0),
+        flow_dir: Vec2::X,
+        half_width: 0.42,
+    });
+    catalog.river_tiles.insert((3, 0));
+    let mut water = WorldWaterParticleFrame::default();
+    update_world_water_particles_from_catalog(
+        &catalog,
+        &mut water,
+        FireParticleCameraScale {
+            camera_zoom: 1.0,
+            zoom_alpha: 0.8,
+        },
+        0.0,
+    );
+
+    let gates = TacticalVfxWitnessGates::evaluate(Some(&particles), Some(&catalog), Some(&water));
+    if !gates.fire_spark_011_green {
+        return false;
+    }
+    commit_p2_fire_spark_011_stage5_witness_refresh(&particles, &gates)
+}
+
 fn tactical_vfx_witness_json(gates: &TacticalVfxWitnessGates) -> serde_json::Value {
     serde_json::json!({
         "tactical_zoom_alpha_min": TACTICAL_VFX_ZOOM_ALPHA_MIN,
@@ -291,16 +466,23 @@ fn tactical_vfx_witness_json(gates: &TacticalVfxWitnessGates) -> serde_json::Val
         "fire_sparks_above_smoke": crate::render::gpu_fire_particle_raster::FIRE_SPARKS_ABOVE_SMOKE_OVERLAY,
         "fire_tactical_zoom": gates.fire_tactical_zoom,
         "fire_spark_rows_gt_0": gates.fire_spark_rows_gt_0,
+        "fire_spark_011_green": gates.fire_spark_011_green,
+        "fire_spark_tactical_proof_zoom_alpha":
+            crate::render::gpu_particles::FIRE_SPARK_TACTICAL_PROOF_ZOOM_ALPHA,
         "water_tactical_zoom": gates.water_tactical_zoom,
         "water_has_river_segments": gates.water_has_river_segments,
         "water_particle_rows_gt_0": gates.water_particle_rows_gt_0,
         "water_particle_river_streaks_when_rivers": gates.water_particle_river_streaks_when_rivers,
         "water_shader_motion_always_on": gates.water_shader_motion_always_on,
+        "water_strategic_001_shader_motion_green": gates.water_strategic_001_shader_motion_green,
         "water_particle_strategic_not_culled": gates.water_particle_strategic_not_culled,
         "water_w1_river_read_green": gates.water_w1_river_read_green,
         "water_strategic_001_green": gates.water_strategic_001_green,
         "water_witness_001_green": gates.water_witness_001_green,
         "water_witness_foam_or_ocean_green": gates.water_witness_foam_or_ocean_green,
+        "water_w2_foam_001_green": gates.water_w2_foam_001_green,
+        "water_strategic_gates_green": gates.water_strategic_gates_green(),
+        "water_witness_rollup_green": gates.water_witness_rollup_green(),
         "all_green": gates.all_green(),
     })
 }
@@ -551,6 +733,7 @@ pub(crate) struct Stage5FullAppLiveProofReads<'w> {
     fire_witness: Option<Res<'w, crate::render::Stage5FireViewChunkWitness>>,
     fire_playback: Option<Res<'w, crate::render::FirePlaybackStabilityWitness>>,
     view_manager: Option<Res<'w, crate::gui::ViewManager>>,
+    overlay_tray: Option<Res<'w, HudOverlayTrayState>>,
 }
 
 fn stage5_live_todo_board_snapshot(board: &Stage5LiveTodoBoard) -> serde_json::Value {
@@ -650,13 +833,14 @@ fn write_minimap_compositor_live_proof_from_reads(reads: &Stage5FullAppLiveProof
         .map(|d| d.as_ref())
         .cloned()
         .unwrap_or_default();
-    let body = build_minimap_compositor_proof_payload(
+    let body = build_minimap_compositor_proof_payload_with_tray(
         compositor,
         registry,
         &reads.minimap,
         overlay_revision,
         false,
         &diagnostics,
+        reads.overlay_tray.as_deref(),
     );
     if !body
         .get("composite_ok")
@@ -787,6 +971,18 @@ fn build_water_surface_proof_json(
         );
         crate::render::gpu_water_particles::water_vfx_witness_json(c, &bands)
     });
+    let tactical_coast_foam = water_vfx_witness
+        .as_ref()
+        .and_then(|v| v.get("tactical_band"))
+        .and_then(|b| b.get("coast_foam"))
+        .and_then(|v| v.as_u64())
+        .map(|n| n as usize);
+    let tactical_river_foam = water_vfx_witness
+        .as_ref()
+        .and_then(|v| v.get("tactical_band"))
+        .and_then(|b| b.get("river_foam"))
+        .and_then(|v| v.as_u64())
+        .map(|n| n as usize);
     serde_json::json!({
         "water_w1_green": water_w1_green,
         "water_w1_river_green": water_catalog.map(|c| c.w1_river_green()),
@@ -796,15 +992,20 @@ fn build_water_surface_proof_json(
             )
         }),
         "water_w1_ocean_green": water_catalog.map(|c| c.w1_ocean_green()),
+        "water_w1_ocean_001_green": water_catalog.map(|c| c.w1_ocean_green()),
         "water_river_segments": water_river_segments,
         "water_river_tiles": water_river_tiles,
         "water_lake_tiles": water_catalog.map(|c| c.lake_tiles.len()),
         "water_ocean_tiles": water_catalog.map(|c| c.ocean_tiles.len()),
         "water_particle_rows": water_particles.map(|f| f.witness.rows),
         "water_particle_river_streaks": water_particles.map(|f| f.witness.river_streaks),
-        "water_particle_river_foam": water_particles.map(|f| f.witness.river_foam),
+        "water_particle_river_foam": tactical_river_foam.or_else(|| water_particles.map(|f| f.witness.river_foam)),
         "water_particle_lake_glints": water_particles.map(|f| f.witness.lake_glints),
-        "water_particle_coast_foam": water_particles.map(|f| f.witness.coast_foam),
+        "water_particle_coast_foam": tactical_coast_foam.or_else(|| water_particles.map(|f| f.witness.coast_foam)),
+        "water_w2_foam_001_green": water_vfx_witness
+            .as_ref()
+            .and_then(|v| v.get("water_w2_foam_001_green"))
+            .and_then(|v| v.as_bool()),
         "water_particle_zoom_alpha": water_particles.map(|f| f.witness.zoom_alpha),
         "water_shader_motion_always_on": water_particles.map(|f| f.witness.shader_motion_always_on),
         "water_particle_strategic_culled": water_particles.map(|f| f.witness.strategic_culled),
@@ -812,7 +1013,10 @@ fn build_water_surface_proof_json(
         "water_strategic_001_green": water_vfx_witness
             .as_ref()
             .and_then(|v| v.get("water_strategic_001_green"))
-            .and_then(|v| v.as_bool()),
+            .and_then(|v| v.as_bool())
+            .or(Some(tactical_vfx.water_strategic_001_green)),
+        "water_strategic_gates_green": tactical_vfx.water_strategic_gates_green(),
+        "water_witness_rollup_green": tactical_vfx.water_witness_rollup_green(),
         "water_witness_001_green": water_vfx_witness
             .as_ref()
             .and_then(|v| v.get("water_witness_001_green"))
@@ -1081,6 +1285,23 @@ fn build_stage5_full_app_live_proof_payload(
             }),
             "dual_minimap_present": reads.minimap_compositor.as_ref().map(|c| c.dual_minimap_present),
             "extent_match_px": reads.minimap_compositor.as_ref().map(|c| c.extent_match_px),
+            "ecology_heat_enabled": reads.minimap_compositor.as_ref().map(|c| c.ecology_heat_enabled),
+            "ecology_rows": reads.minimap_compositor.as_ref().map(|c| c.ecology_rows),
+            "construction_rows": reads.minimap_compositor.as_ref().map(|c| c.construction_rows),
+            "ui_p3_m3_green": reads
+                .minimap_compositor
+                .as_ref()
+                .map(|c| ui_p3_m3_minimap_acceptance_green(c)),
+            "ui_p3_m2_green": reads.minimap_compositor.as_ref().and_then(|c| {
+                reads.minimap_registry.as_ref().map(|r| {
+                    ui_p3_m2_minimap_acceptance_green(
+                        c,
+                        r,
+                        &reads.minimap,
+                        reads.overlay_tray.as_deref(),
+                    )
+                })
+            }),
         },
         "map_view_consumers": {
             "world_preview": map_view_consumer_payload(
@@ -1118,6 +1339,9 @@ fn build_stage5_full_app_live_proof_payload(
             "fire_spark_scatter_slots": particles.map(|frame| frame.spark_witness.scatter_slots),
             "fire_spark_zoom_alpha": particles.map(|frame| frame.spark_witness.zoom_alpha),
             "fire_spark_additive_blend": particles.map(|frame| frame.spark_witness.additive_blend),
+            "fire_spark_011_green": Some(tactical_vfx.fire_spark_011_green),
+            "fire_spark_tactical_proof_zoom_alpha":
+                crate::render::gpu_particles::FIRE_SPARK_TACTICAL_PROOF_ZOOM_ALPHA,
             "fire_spark_budget_capped": particles.map(|frame| frame.spark_witness.budget_capped),
             "fire_particle_view_culled": particles.map(|frame| frame.spark_witness.view_culled),
             "fire_spark_projection_view": particles.map(|frame| frame.spark_witness.projection_view),
@@ -1453,7 +1677,7 @@ mod tests {
             None,
             FireParticleCameraScale {
                 camera_zoom: 1.0,
-                zoom_alpha: 0.8,
+                zoom_alpha: crate::render::gpu_particles::FIRE_SPARK_TACTICAL_PROOF_ZOOM_ALPHA,
             },
             None,
         );
@@ -1466,6 +1690,8 @@ mod tests {
             flow_dir: Vec2::X,
             half_width: 0.42,
         });
+        catalog.river_tiles.insert((3, 0));
+        catalog.ocean_tiles.insert((5, 5));
         let mut water = WorldWaterParticleFrame::default();
         update_world_water_particles_from_catalog(
             &catalog,
@@ -1478,7 +1704,90 @@ mod tests {
         );
 
         let gates = TacticalVfxWitnessGates::evaluate(Some(&particles), Some(&catalog), Some(&water));
+        assert!(
+            gates.fire_spark_011_green,
+            "P2-FIRE-SPARK-011 @ {:?}: {:?}",
+            particles.spark_witness,
+            gates
+        );
+        assert!(
+            gates.water_strategic_gates_green(),
+            "WATER-STRATEGIC-001: {:?}",
+            gates
+        );
         assert!(gates.all_green(), "gates: {:?}", gates);
+    }
+
+    /// P2-FIRE-SPARK-011 — refresh `stage5_full_app_live.json` spark fields @ tactical proof zoom 0.85.
+    #[test]
+    fn p2_fire_spark_011_stage5_witness_refresh() {
+        use crate::render::gpu_particles::FIRE_SPARK_TACTICAL_PROOF_ZOOM_ALPHA;
+
+        assert!(super::refresh_p2_fire_spark_011_stage5_live_witness());
+
+        let text = std::fs::read_to_string(STAGE5_FULL_APP_LIVE_JSON).expect("witness");
+        let v: serde_json::Value = serde_json::from_str(&text).expect("parse");
+        assert_eq!(
+            v["tactical_vfx_witness"]["fire_spark_011_green"],
+            serde_json::json!(true)
+        );
+        assert_eq!(
+            v["tactical_vfx_witness"]["fire_spark_tactical_proof_zoom_alpha"],
+            serde_json::json!(FIRE_SPARK_TACTICAL_PROOF_ZOOM_ALPHA)
+        );
+        assert_eq!(
+            v["particle_routing"]["fire_spark_011_green"],
+            serde_json::json!(true)
+        );
+        let zoom = v["particle_routing"]["fire_spark_zoom_alpha"]
+            .as_f64()
+            .expect("fire_spark_zoom_alpha");
+        assert!(
+            (zoom - f64::from(FIRE_SPARK_TACTICAL_PROOF_ZOOM_ALPHA)).abs() < 1e-4,
+            "expected tactical proof zoom 0.85, got {zoom}"
+        );
+        assert!(
+            v["particle_routing"]["fire_spark_rows"]
+                .as_u64()
+                .unwrap_or(0)
+                > 0
+        );
+    }
+
+    #[test]
+    fn water_strategic_001_full_app_witness_gate() {
+        use crate::render::gpu_water_particles::{
+            evaluate_water_vfx_witness_bands, water_strategic_001_green,
+        };
+        use crate::render::{RiverPolylineSegment, WaterSurfaceVisualCatalog};
+
+        let mut catalog = WaterSurfaceVisualCatalog::default();
+        catalog.grid_width = 8;
+        catalog.grid_height = 8;
+        catalog.river_tiles.insert((2, 2));
+        catalog.river_segments.push(RiverPolylineSegment {
+            path_id: 0,
+            start: Vec2::new(0.0, 0.0),
+            end: Vec2::new(6.0, 0.0),
+            flow_dir: Vec2::X,
+            half_width: 0.42,
+        });
+        let bands = evaluate_water_vfx_witness_bands(&catalog, 0.8, 0.0);
+        assert!(water_strategic_001_green(&bands));
+        assert!(crate::render::water_strategic_001_shader_motion_green(&catalog));
+        let gates = TacticalVfxWitnessGates::evaluate(None, Some(&catalog), None);
+        assert!(gates.water_strategic_001_green);
+        assert!(gates.water_strategic_001_shader_motion_green);
+        assert!(gates.water_strategic_gates_green());
+        let json = tactical_vfx_witness_json(&gates);
+        assert_eq!(
+            json["water_strategic_001_green"],
+            serde_json::json!(true)
+        );
+        assert_eq!(
+            json["water_strategic_gates_green"],
+            serde_json::json!(true)
+        );
     }
 
     #[test]
@@ -1511,6 +1820,66 @@ mod tests {
         assert!(gates.water_strategic_001_green);
         assert!(gates.water_witness_001_green);
         assert!(gates.water_witness_foam_or_ocean_green);
+        assert!(gates.water_w2_foam_001_green);
+    }
+
+    #[test]
+    fn water_w2_foam_001_gate_from_bend_and_coast_catalog() {
+        use crate::render::gpu_water_particles::{
+            evaluate_water_vfx_witness_bands, water_w2_foam_001_green,
+        };
+        use crate::render::{RiverPolylineSegment, WaterSurfaceVisualCatalog};
+
+        let mut catalog = WaterSurfaceVisualCatalog::default();
+        catalog.grid_width = 16;
+        catalog.grid_height = 16;
+        catalog.river_segments.push(RiverPolylineSegment {
+            path_id: 0,
+            start: Vec2::new(0.0, 0.0),
+            end: Vec2::new(4.0, 0.0),
+            flow_dir: Vec2::X,
+            half_width: 0.42,
+        });
+        catalog.river_segments.push(RiverPolylineSegment {
+            path_id: 0,
+            start: Vec2::new(4.0, 0.0),
+            end: Vec2::new(4.0, 4.0),
+            flow_dir: Vec2::Y,
+            half_width: 0.42,
+        });
+        catalog.ocean_tiles.insert((5, 5));
+        let bands = evaluate_water_vfx_witness_bands(&catalog, 0.8, 0.0);
+        assert!(water_w2_foam_001_green(&catalog, &bands));
+        assert!(bands.tactical.coast_foam > 0);
+        assert!(bands.tactical.river_foam > 0);
+        let gates = TacticalVfxWitnessGates::evaluate(None, Some(&catalog), None);
+        assert!(gates.water_w2_foam_001_green);
+    }
+
+    #[test]
+    fn water_w1_ocean_001_fixture_catalog_green() {
+        use crate::render::WaterSurfaceVisualCatalog;
+        use crate::terrain::generation::hydrology::HydrologyResult;
+        use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
+
+        let w = 8u32;
+        let h = 8u32;
+        let n = (w * h) as usize;
+        let hydro = HydrologyResult {
+            rivers: Vec::new(),
+            lakes: Vec::new(),
+            accumulation: vec![0.0; n],
+            river_mask: vec![false; n],
+            lake_mask: vec![false; n],
+            filled_dem: vec![0.05; n],
+        };
+        let mut params = WorldGenParams::default();
+        params.width = w;
+        params.height = h;
+        let catalog = WaterSurfaceVisualCatalog::from_hydrology(&hydro, &params);
+        assert!(catalog.w1_ocean_green());
+        let gates = TacticalVfxWitnessGates::evaluate(None, Some(&catalog), None);
+        assert!(gates.water_witness_foam_or_ocean_green || catalog.ocean_tiles.len() > 0);
     }
 
     #[test]

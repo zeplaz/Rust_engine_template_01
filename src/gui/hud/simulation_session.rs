@@ -25,13 +25,17 @@ use crate::gui::map_view::MapViewInstanceId;
 use crate::gui::MapViewInstances;
 use crate::gui::simulation_minimap_overlay_defaults;
 use crate::gui::{
-    commit_map_camera_pose_to_view_authority, map_camera_viewport_pixels, map_zoom_limits_for_world,
-    MapCameraDesired, SimulationMapViewport,
+    map_camera_viewport_pixels, map_zoom_limits_for_world, MapCameraDesired, SimulationMapViewport,
 };
 use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
 use crate::gui::MainWorldCamera;
 use crate::render::minimap_gpu_compositor_env_enabled;
-use crate::render::SharedOverlayFieldBuffers;
+use crate::render::{
+    seed_minimap_m2_overlay_witness, seed_minimap_m3_fow_ew_witness, EcologyVisualSnapshot,
+    FireSimulationSnapshot, MinimapOperationalSnapshot, SharedOverlayFieldBuffers,
+};
+use crate::render::sim_visual_extract::ClimateVisualAggregate;
+use crate::strategic::CorridorConstructionBook;
 use bevy::window::PrimaryWindow;
 
 /// Collapse layout + overlay tray state that drives floating egui shells (Sprint 3.2).
@@ -64,7 +68,9 @@ pub fn apply_simulation_hud_defaults(
     mut shell_budget: ResMut<ProductShellUpdateBudget>,
     mut diagnostics: ResMut<DiagnosticsUiState>,
     mut witness: ResMut<UiShellMigrationWitness>,
+    mut shell_diag: ResMut<crate::gui::hud::ProductShellDiagnostics>,
 ) {
+    shell_diag.reset_egui_pass_count_for_simulation_session();
     shell_budget.set_bypass_throttle(false);
     diagnostics.sections_default_open = false;
     dismiss_world_gen_preview_chrome(
@@ -91,6 +97,7 @@ pub fn apply_simulation_hud_defaults(
 pub fn apply_simulation_map_presentation_defaults(
     mut minimap: ResMut<MinimapShellState>,
     mut map_views: ResMut<MapViewInstances>,
+    mut tray: ResMut<HudOverlayTrayState>,
     mut presentation: ResMut<crate::gui::MapViewPresentationStates>,
     mut shared_overlay: ResMut<SharedOverlayFieldBuffers>,
     test_scene: Option<Res<ActiveTestScene>>,
@@ -101,8 +108,10 @@ pub fn apply_simulation_map_presentation_defaults(
     if minimap_gpu_compositor_env_enabled() {
         minimap.presentation_source = MinimapPresentationSource::SharedRenderTargetImage;
     }
-    map_views.minimap.overlays = simulation_minimap_overlay_defaults();
+    let mask = simulation_minimap_overlay_defaults();
+    map_views.minimap.overlays = mask;
     map_views.minimap.bump_revision();
+    tray.set_minimap_overlay_mask(mask);
     let sim_pres = presentation.get_mut(MapViewInstanceId::SimulationMap);
     sim_pres.overlays.fire_heat = false;
     sim_pres.bump_revision();
@@ -115,13 +124,40 @@ pub fn apply_simulation_map_presentation_defaults(
     }
 }
 
+/// UI-P3-M3-001 — ecology + construction snapshots before first GPU minimap composite.
+fn seed_minimap_m2_ecology_construction_on_simulation_enter(
+    fire: Option<Res<FireSimulationSnapshot>>,
+    book: Option<ResMut<CorridorConstructionBook>>,
+    climate: Option<ResMut<ClimateVisualAggregate>>,
+    ecology: Option<ResMut<EcologyVisualSnapshot>>,
+) {
+    let (Some(fire), Some(mut book), Some(mut climate), Some(mut ecology)) =
+        (fire, book, climate, ecology)
+    else {
+        return;
+    };
+    if ecology.chunk_rows.len() >= 100 && book.rows.len() >= 18 {
+        return;
+    }
+    seed_minimap_m2_overlay_witness(&fire, &mut book, &mut climate, &mut ecology);
+}
+
+/// **UI-P3-M4-001** — design M3 fog/EW snapshot (not **UI-P3-M3-001** M2 construction/ecology).
+fn seed_minimap_m3_fow_ew_on_simulation_enter(
+    operational: Option<ResMut<MinimapOperationalSnapshot>>,
+) {
+    let Some(mut operational) = operational else {
+        return;
+    };
+    seed_minimap_m3_fow_ew_witness(&mut operational);
+}
+
 /// Frame the whole world on normal sim enter (not CLI test scenes — those set tactical zoom).
 pub fn refit_simulation_map_camera_on_enter(
     test_scene: Option<Res<ActiveTestScene>>,
     params: Res<WorldGenParams>,
     sim_viewport: Res<SimulationMapViewport>,
     windows: Query<&Window, With<PrimaryWindow>>,
-    mut desired: ResMut<MapCameraDesired>,
     mut cam: Query<&mut Transform, With<MainWorldCamera>>,
     mut authority: ResMut<crate::render::view_runtime::ViewProjectionAuthority>,
     mut trace: ResMut<crate::render::view_runtime::ViewRuntimeTrace>,
@@ -144,16 +180,22 @@ pub fn refit_simulation_map_camera_on_enter(
     let fit = margin * (viewport.x / world_w).min(viewport.y / world_h);
     let zoom = fit.clamp(zoom_lo, zoom_hi);
     let center = Vec3::new(world_w * 0.5, world_h * 0.5, 0.0);
-    desired.translation = center;
-    desired.scale = Vec3::splat(zoom);
-    desired.rotation = Quat::IDENTITY;
+    let pose = MapCameraDesired {
+        translation: center,
+        scale: Vec3::splat(zoom),
+        rotation: Quat::IDENTITY,
+    };
+    crate::gui::view_authority::commit_map_camera_pose_to_view_authority(
+        authority.as_mut(),
+        trace.as_mut(),
+        &pose,
+    );
     for mut t in cam.iter_mut() {
         t.translation = center;
         t.translation.z = 999.0;
         t.scale = Vec3::splat(zoom);
         t.rotation = Quat::IDENTITY;
     }
-    commit_map_camera_pose_to_view_authority(authority.as_mut(), trace.as_mut(), desired.as_ref());
 }
 
 /// PLAY-01 Phase 2B: keep egui product shells closed in sim (Bevy rail is authoritative).
@@ -173,7 +215,8 @@ pub fn enforce_simulation_product_egui_gates(
     sync_simulation_egui_shell_gate_witness(&dock, &layout, &mut witness);
 }
 
-fn sync_simulation_egui_shell_gate_witness(
+/// **UI-P2B-001 / UI-P2B-CODER-B** — sync gate flags for live proof (`phase2b_closed`).
+pub(crate) fn sync_simulation_egui_shell_gate_witness(
     dock: &HudDockRegistry,
     layout: &HudCommandShellLayout,
     witness: &mut UiShellMigrationWitness,
@@ -223,8 +266,18 @@ impl Plugin for SimulationSessionPlugin {
             )
             .add_systems(
                 OnEnter(BaseState::Simulation),
-                refit_simulation_map_camera_on_enter
+                seed_minimap_m2_ecology_construction_on_simulation_enter
                     .after(apply_simulation_map_presentation_defaults),
+            )
+            .add_systems(
+                OnEnter(BaseState::Simulation),
+                seed_minimap_m3_fow_ew_on_simulation_enter
+                    .after(seed_minimap_m2_ecology_construction_on_simulation_enter),
+            )
+            .add_systems(
+                OnEnter(BaseState::Simulation),
+                refit_simulation_map_camera_on_enter
+                    .after(seed_minimap_m3_fow_ew_on_simulation_enter),
             )
             .add_systems(
                 Update,
@@ -241,6 +294,26 @@ impl Plugin for SimulationSessionPlugin {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// **VX-P0-01** — operator Simulation enters with fire CPU tint off (tray + sim map + overlay buffer).
+    #[test]
+    fn vx_p0_01_operator_simulation_fire_heat_off_by_default() {
+        assert!(!simulation_minimap_overlay_defaults().fire_heat);
+        let mask = simulation_minimap_overlay_defaults();
+        assert!(mask.logistics_heat);
+        assert!(!mask.fire_heat);
+    }
+
+    #[test]
+    fn ui_p2b_coder_b_resets_egui_pass_count_on_sim_enter() {
+        let mut diag = crate::gui::hud::ProductShellDiagnostics::default();
+        diag.record_egui_pass();
+        diag.record_egui_pass();
+        assert_eq!(diag.egui_pass_count, 2);
+        diag.reset_egui_pass_count_for_simulation_session();
+        assert_eq!(diag.egui_pass_count, 0);
+        assert_eq!(diag.egui_pass_count_sim_session, 0);
+    }
 
     #[test]
     fn simulation_egui_gate_witness_sync() {

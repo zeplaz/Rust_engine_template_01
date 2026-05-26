@@ -49,6 +49,9 @@ mod build_order;
 mod faction_plugin;
 mod fracture_plugin;
 mod comms_contract;
+mod mission_kind;
+mod strategic_command_queue;
+mod stage7_behavioral;
 mod construction_book;
 mod frontline;
 mod gpu_bridge_plugin;
@@ -111,6 +114,18 @@ pub use comms_contract::{
     BeliefRecord, BeliefSnapshotDto, CommunicationPlane, DispatchEnvelope, DispatchMessage,
     IntelConfidence, MissionIntent, OverlayChannelDescriptor, PlaneAuthority, StrategicOverlayType,
     UtilityChannel,
+};
+pub use mission_kind::{mission_kinds_supported, MissionKind};
+pub use strategic_command_queue::{
+    dispatch_delay_ticks, enqueue_strategic_command, tick_strategic_command_queue,
+    StrategicCommandQueue, DISPATCH_DELAY_TICKS,
+};
+pub use stage7_behavioral::{
+    publish_stage7_behavioral_overlay_samples, seed_stage7_behavioral_overlay_resources,
+    seed_stage7_behavioral_m2_lib_proof, seed_stage7_behavioral_witness_for_lib_proof,
+    stage7_overlay_reader_sample_counts,
+    sync_stage7_overlay_witness_from_reader_samples, Stage7BehavioralHud,
+    Stage7BehavioralPlugin, Stage7BehavioralWitnessState, Stage7BeliefState,
 };
 pub use behavior_pipeline::{
     compose_decision_score, decision_pipeline_composition_system, sample_decision_components,

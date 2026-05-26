@@ -2,8 +2,10 @@
 
 | Field | Value |
 |:---|:---|
-| **Version** | `1.1.1` |
-| **Date** | 2026-05-24 |
+| **Version** | `1.3.0` |
+| **Date** | 2026-05-25 |
+| **Phase 2+3 closure** | [`ui_overhaul_phase23_closure_plan_v1.md`](ui_overhaul_phase23_closure_plan_v1.md) (**PLAN-UI-OH-CLOSURE-004**) |
+| **Live witness rollup** | [`witness_status_live_v1.md`](witness_status_live_v1.md) |
 | **Owner** | `@orchestrator` / `ui_layout_agent` |
 | **Machine queue** | [`tools/orchestrator/queues/continuation_queue.json`](../../tools/orchestrator/queues/continuation_queue.json) |
 | **Playbook** | [`tools/orchestrator/agents/ui_layout_agent.md`](../../tools/orchestrator/agents/ui_layout_agent.md) |
@@ -12,9 +14,9 @@
 
 **Design gates (2026-05-24):** **No blocking gates** for coders. Optional: Phase 4 traced atlas PNG; post-implementation VFX review vs mocks ([`vfx_coder_phase2_queue_v1.md`](vfx_coder_phase2_queue_v1.md) § Post-implementation).
 
-**World Preview** (**D-WP**): [`world_preview_d_wp_track_signoff_v1.md`](../prompts/guides/ui/world_preview_d_wp_track_signoff_v1.md) · D-01 **done** ([`world_preview_d01_shell_signoff_v1.md`](../prompts/guides/ui/world_preview_d01_shell_signoff_v1.md)) · D-02 optional · **UI-WP-LAYOUT-002** queued.
+**World Preview** (**D-WP**): [`world_preview_d_wp_track_signoff_v1.md`](../prompts/guides/ui/world_preview_d_wp_track_signoff_v1.md) · **DESIGN-D-WP-REVIEW-001 PASS** ([`world_preview_d_wp_review_record_v1.md`](world_preview_d_wp_review_record_v1.md)) · D-01 + D-04 + D-07 **done** · D-02 optional.
 
-**GPU minimap** (**D-MINIMAP-M1/M2**): [`minimap_d_m1_signoff_v1.md`](minimap_d_m1_signoff_v1.md) · [`minimap_d_m2_signoff_v1.md`](minimap_d_m2_signoff_v1.md) — **done** 2026-05-24.
+**GPU minimap** (**D-MINIMAP-M1/M2** done · **M3** design gate): [`minimap_d_m1_signoff_v1.md`](minimap_d_m1_signoff_v1.md) · [`minimap_d_m2_signoff_v1.md`](minimap_d_m2_signoff_v1.md) · [`minimap_d_m3_signoff_v1.md`](minimap_d_m3_signoff_v1.md) — M3 impl **OPEN**.
 
 ---
 
@@ -27,15 +29,19 @@
 | **Phase 2A** | **CLOSED** | `phase2a_closed` + §1.6 interaction flags green (2026-05-24) |
 | **Phase 2B** | **CLOSED** | `phase2b_closed` · `egui_pass_count_in_sim: 0` (2026-05-24) |
 | **Phase 2C** | **CLOSED** | **2C-B** dual column — mock § P4 + witness `phase2c` (2026-05-24) |
-| **Phase 2 sign-off** | **SIGNED** | [`ui_phase2_designer_signoff_v1.md`](../prompts/guides/ui/ui_phase2_designer_signoff_v1.md) v2.2.0 — P4 **PASS** |
-| **Sim-steward gate** | **CLOSED** | **UI-P2-GATE** CONDITIONAL(shell-only) — spine green (2026-05-24) |
+| **Phase 2 sign-off** | **SIGNED** | [`ui_phase2_designer_signoff_v1.md`](../prompts/guides/ui/ui_phase2_designer_signoff_v1.md) v2.2.0 · **UI-OH-D2-SIGN-001** [`ui_oh_d2_signoff_record_v1.md`](ui_oh_d2_signoff_record_v1.md) |
+| **Phase 2+3 closure** | **CLOSED** | [`ui_overhaul_phase23_closure_plan_v1.md`](ui_overhaul_phase23_closure_plan_v1.md) — **PLAN-UI-OH-CLOSURE-004** (2026-05-25) |
+| **Sim-steward gate** | **CLOSED** | **UI-P2-GATE** + **UI-OH-GATE-001** PASS (2026-05-25) |
 | **Phase 3 M1** | **CLOSED** | `minimap_compositor_live.json` · `composite_ok` · `GpuCompute` path |
 | **Phase 3 M1.5** | **CLOSED** | GPU compute compositor; default `MINIMAP_GPU_COMPOSITOR` flip |
 | **Phase 3 M2** | **CLOSED** | Logistics heat — `logistics_rows: 2` in `minimap_compositor_live.json` (2026-05-24) |
 | **Phase 3 UI-P3-001** | **CLOSED** | GPU minimap sim default · `ui_p3_001_green` witness (2026-05-23) |
-| **Phase 4** | **PARTIAL** | Atlas code done · **optional** traced PNG · P5/vehicles open — [`ui_phase4_icon_atlas_brief_v1.md`](../prompts/guides/ui/ui_phase4_icon_atlas_brief_v1.md) |
+| **Phase 4** | **PARTIAL (qualified PASS)** | P4.1 + P5 tab + **UI-OH-P4-ART-001** traced atlas — [`ui_oh_p4_art_signoff_record_v1.md`](ui_oh_p4_art_signoff_record_v1.md) |
+| **Phase 5** | **PARTIAL (qualified PASS)** | P5-PAUSE-001 **CLOSED** — [`ui_oh_p5_001_plan_v1.md`](ui_oh_p5_001_plan_v1.md) · [`ui_phase5_pause_menu_plan_v1.md`](../prompts/guides/ui/ui_phase5_pause_menu_plan_v1.md) |
 
 **Witness profile:** `debug_runs/ui_shell_migration_live.json` → `UI_SHELL_MIGRATION_2B`
+
+**2B gate plan:** [`ui_phase2b_egui_gate_plan_v1.md`](../prompts/guides/ui/ui_phase2b_egui_gate_plan_v1.md) (**PLAN-UI-SHELL-2B-001**)
 
 ---
 
@@ -44,33 +50,47 @@
 | Slice ID | Agent | Status | Deliverable |
 |:---|:---|:---|:---|
 | **UI-P2-GATE** | `@sim-steward` | **done** | CONDITIONAL(shell-only) — spine green |
+| **UI-OH-GATE-001** | `@sim-steward` | **done** | 2A/2B + stage5 triage — [`steward_ui_oh_gate_v1.md`](steward_ui_oh_gate_v1.md) **PASS** |
 | **UI-P2A-001** | `@coder` | **done** | `phase2a_closed` + §1.6 flags |
-| **UI-P2-DESIGN** | `@designer` | **done** | Sign-off v2.1.1 **SIGNED** |
+| **UI-OH-2A-001** | `@coder` | **done** | alias **UI-P2A-001** — `ui_oh_2a_001.green` + `phase2_zones_live` |
+| **UI-P2-DESIGN** | `@designer` | **done** | Sign-off v2.2.0 **SIGNED** |
+| **UI-OH-D2-SIGN-001** | `@designer` | **done** | Phase 2 sign-off after **2A** mock parity — [`ui_oh_d2_signoff_record_v1.md`](ui_oh_d2_signoff_record_v1.md) |
 | **UI-P2B-001** | `@coder` | **done** | `phase2b_closed` |
+| **UI-W3-2B-001** | `@coder B` | **done** | alias 2B — `egui_pass_count_in_sim: 0` + `ui_w3_2b_001.green` |
+| **UI-W3-2C-001** | `@coder B` | **done** | **2C-B** mode rail 48px + build rail 52px — `ui_w3_2c_001.green` + `phase2c.phase2c_closed` |
+| **@coder A (5)** | `@coder A` | **done** | **2A + M2 + P4 + M3 + theme** — `coder_a_ui_five_lane_001_lib_bundle` |
+| **UI-W3-P4-001** | `@coder A` | **done** | Icon atlas + petroleum tab — `ui_w3_p4_001_live_witness_refresh` · `ui_w3_p4_001.green` |
+| **UI-W3-M3-001** | `@coder A` | **done** | Stage 7 operational minimap — `ui_w3_m3_001_stage7_operational_witness_refresh` · Track C + `s7b_m3_green` |
+| **@coder B (5)** | `@coder B` | **done** | **2B + 2C + P5 + witness + P4** — `coder_b_ui_five_lane_001_lib_bundle` |
 | **UI-P3-M1** | `@coder` | **done** | `minimap_compositor_live.json` green |
 
 | **UI-P3-M1.5** | `@coder` | **done** | GpuCompute compositor + default env flip |
-| **UI-P2A-F03** | `@coder` | **open** | `witness.ops_zone_hover_token: true` (interaction replay) |
-| **UI-P2A-P4-AUTH** | `@coder` | **open** | `witness.build_rail_authoritative: true` (rail click replay) |
-| **UI-P3-M2-001** | `@coder` | **done** | M2 logistics heat — `logistics_rows > 0` witness green |
+| **UI-P2A-F03** | `@coder` | **done** | `ui_p2a_tail.f03_green` + hover replay |
+| **UI-P2A-P4-AUTH** | `@coder` | **done** | `ui_p2a_tail.p4_auth_green` + rail authority replay |
+| **UI-OH-P5-001** | `@planner` | **done** | Phase 5 qualified PASS — [`ui_oh_p5_001_plan_v1.md`](ui_oh_p5_001_plan_v1.md) ← **PLAN-UI-P5-PAUSE-001** |
+| **UI-W3-P5-001** | `@coder B` | **done** | Wave 3 Bevy pause — `ui_w3_p5_001.green` + `pause_menu_bevy` + `egui_pass_count_in_sim: 0` |
+| **UI-W3-WITNESS-001** | `@coder B` | **done** | Lib refresh shell + infra + stage6 + minimap — `coder_b_ui_w3_witness_001_lib_bundle`; operator: `--test visual` |
+| **UI-W3-P6-001** | `@coder B` | **done** | Shell perf + multiview — `ui_w3_p6_001.green` · [`ui_phase6_shell_perf_multiview_plan_v1.md`](ui_phase6_shell_perf_multiview_plan_v1.md) |
+| **UI-OH-P4-ART-001** | `@designer` | **done** | Traced atlas — [`ui_oh_p4_art_signoff_record_v1.md`](ui_oh_p4_art_signoff_record_v1.md) |
 | **UI-P3-001** | `@coder` | **done** | GPU minimap operationalization — sim default + witness rollup |
-| **UI-P3-M3-001** | `@coder` | **done** | M3 construction + ecology heat on GPU compositor; witness `ui_p3_m3_green` |
+| **UI-P3-M3-001** | `@coder` | **done** | **M2** construction + ecology (`ui_p3_m3_green`) — not design M3; see [`ui_phase3_minimap_track_naming_v1.md`](../prompts/guides/ui/ui_phase3_minimap_track_naming_v1.md) |
+| **UI-OH-M3-001** | `@planner` | **done** | Phase 3 M2 construction/ecology qualified PASS — [`ui_oh_m3_001_plan_v1.md`](ui_oh_m3_001_plan_v1.md) ← **PLAN-UI-P3-M3-001** |
 | **IND-E01** | `@coder` | **queued** | [`industrial_activation_pipeline.md`](industrial_activation_pipeline.md) |
 
-**Next agent:** `@coder` **IND-E01** (parallel, disjoint files). Optional polish: **UI-P2A-F03** / **UI-P2A-P4-AUTH**. Forward: **UI-P3-M4-001** (FoW / multirate polish).
+**Next agent:** `@coder` **IND-E01** (parallel, disjoint files). Forward: **UI-P3-M4-001** (FoW / multirate polish).
 
 ---
 
-## Witness status (2026-05-24 audit)
+## Witness status (2026-05-25 — PLAN-UI-OH-CLOSURE-004)
 
-**`ui_shell_migration_live.json` may be STALE** (`phase2b_closed: false` while `egui_pass_count_in_sim: 0`). Treat as **proof refresh** needed — see **UI-SHELL-REFRESH-001** in [`stage_tracks_signoff_ledger_v1.md`](stage_tracks_signoff_ledger_v1.md). Do not assume Phase 2B code regressed without replaying sim interactions.
+**Authoritative rollup:** [`witness_status_live_v1.md`](witness_status_live_v1.md) · **Closure gates:** [`ui_overhaul_phase23_closure_plan_v1.md`](ui_overhaul_phase23_closure_plan_v1.md)
 
-Historical tail gaps (when witness refreshed):
+**`ui_shell_migration_live.json` refreshed** (2026-05-25): `phase2b_closed: true`, `egui_pass_count_in_sim: 0`, `ui_oh_2a_001/2b_001.green: true` — **UI-OH-GATE-001** **PASS (qualified)**.
+
+**P2A tail (2026-05-25):** `ui_p2a_tail.f03_green` / `p4_auth_green` via replay helpers + `--test visual` harness.
 
 | Field | Value | Fix slice |
 |:---|:---|:---|
-| `witness.ops_zone_hover_token` | `false` | **UI-P2A-F03** — hover ops zone in sim |
-| `witness.build_rail_authoritative` | `false` | **UI-P2A-P4-AUTH** — click build rail tool |
 | `phase2.minimap_gpu_path` | `false` | Shell proof during CPU-path frame; compositor witness has GPU green |
 
 ---
@@ -161,6 +181,7 @@ Run sim → hover ops zone → click build rail → refresh ui_shell_migration_l
 
 | Version | Date | Notes |
 |:---|:---|:---|
+| 1.2.0 | 2026-05-25 | **PLAN-UI-OH-CLOSURE-004** — Phase 2+3 closure plan + witness_status_live_v1 |
 | 1.1.1 | 2026-05-24 | Phase **2C** **DEFERRED** — Sprint 2C queue block; designer-first **2C-A/B/C/D** workflow |
 | 1.1.0 | 2026-05-24 | Phase 2 **SIGNED**; M1/M1.5 closed; M2 queued; witness tail documented |
 | 1.0.1 | 2026-05-24 | UI-P2A-001 + UI-P2-GATE closed |

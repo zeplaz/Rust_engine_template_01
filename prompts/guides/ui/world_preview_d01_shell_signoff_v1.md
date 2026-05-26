@@ -95,7 +95,7 @@
 | Slice | Status |
 |:---|:---|
 | **UI-WP-LAYOUT-001** (D-01 shell) | **done** |
-| **UI-WP-LAYOUT-002** (D-04 sheet body + dim) | queued |
+| **UI-WP-LAYOUT-002** (D-04 sheet body + dim) | **done** |
 | **UI-WP-LAYOUT-D02-OPT** (D-02 map ≥65%) | **optional** — [`world_preview_d02_map_dominance_signoff_v1.md`](world_preview_d02_map_dominance_signoff_v1.md) |
 | **UI-WP-MOTION-001** (§6 motion) | deferred |
 | **WP-L4** (map look from capturez) | deferred |

@@ -5,8 +5,10 @@
 | **Version** | `1.0.0` |
 | **Date** | 2026-05-24 |
 | **Owner** | `@designer` |
-| **Status** | **SIGNED — TUNE ROUND** (2026-05-24) — [`vfx_design_review_record_v1.md`](../../../src/dev/vfx_design_review_record_v1.md) (**D-VFX**) |
-| **When** | After Phase 2 coder slices land (especially **P2-VFX-VISUAL-001**, fire/water polish) |
+| **Status** | **DONE** — do **not** re-run; see [`vfx_design_review_record_v1.md`](../../../src/dev/vfx_design_review_record_v1.md) (**D-VFX**) |
+| **Canonical queue ID** | **DESIGN-D-VFX-POST-001** |
+| **Related** | **DESIGN-VFX-CAPTURE-001** (`VFX-CAPTURE-001`) — tactical PNGs · aliases **D-VFX** · **VFX-POST-REVIEW-DESIGN** |
+| **When** | After **@coder A** **P2-FIRE-SPARK-011** + **P2-VFX-VISUAL-001** green (signed 2026-05-25) |
 | **Coder queue** | [`vfx_coder_phase2_queue_v1.md`](../../../src/dev/vfx_coder_phase2_queue_v1.md) |
 | **Machine queue** | `VFX-POST-REVIEW-DESIGN` in [`continuation_queue.json`](../../../tools/orchestrator/queues/continuation_queue.json) |
 
@@ -14,9 +16,20 @@
 
 ## Purpose
 
-Confirm **in-engine** fire sparks and water surfaces match the **signed** design intent (D-F* / D-W*) using the reference mocks — not to re-open §11 sign-off, but to file **pass** or **tune** tickets for coders.
+Confirm **in-engine** fire sparks and water surfaces match the **signed** design intent (D-F* / D-W*) using the reference mocks.
 
-**Blocking:** nothing. **Output:** short verdict + optional capture PNGs under `assets/vfx/reference/review_captures/`.
+**Already completed elsewhere** — this brief is the **procedure**; the authoritative outcome lives in:
+
+| Artifact | Role |
+|:---|:---|
+| [`vfx_design_review_record_v1.md`](../../../src/dev/vfx_design_review_record_v1.md) | **D-VFX** — fire **PASS** (2026-05-25) |
+| [`water_vfx_review_record_v1.md`](../../../src/dev/water_vfx_review_record_v1.md) | **WATER-DESIGN-001** — water **PASS** |
+| [`vfx_capture_status_20260525.md`](../../../assets/vfx/reference/review_captures/vfx_capture_status_20260525.md) | Capture audit (**VFX-CAPTURE-001**) |
+| Interim PNGs | `review_captures/fire_tactical_20260524.png`, `water_*_20260524.png` |
+
+**Do not** open a second **VFX-POST-REVIEW-DESIGN** pass unless re-baselining after major shader changes.
+
+**Blocking:** nothing. **Output:** (historical) verdict + captures under `assets/vfx/reference/review_captures/`.
 
 ---
 
@@ -25,6 +38,7 @@ Confirm **in-engine** fire sparks and water surfaces match the **signed** design
 | Slice | Minimum evidence |
 |:---|:---|
 | **P2-VFX-VISUAL-001** | `debug_runs/stage5_full_app_live.json` refreshed at **tactical** zoom (`zoom_alpha ≥ 0.65`) |
+| **P2-FIRE-SPARK-011** (Coder A) | `fire_spark_011_green: true` @ `fire_spark_zoom_alpha: 0.85` — run **before** designer sign-off |
 | Fire | `fire_spark_rows > 0` when tactical; sparks visible in sim on fire cells |
 | Water | `water_w1_green: true`; rivers readable on map (not lake-only teal) |
 | Witness | `cargo test -p proc_A_dine01 --lib stage5` green |
@@ -152,17 +166,17 @@ Use this table; `@coder` picks slice from [`vfx_coder_phase2_queue_v1.md`](../..
 ## @designer copy-paste
 
 ```text
-@designer VFX-POST-REVIEW-DESIGN — post-implementation mock compare
+@designer VFX-POST-REVIEW-DESIGN — ALREADY DONE (alias D-VFX)
 
-Read: prompts/guides/ui/vfx_post_implementation_review_v1.md
-After: P2-VFX-VISUAL-001 green (tactical zoom, fire_spark_rows > 0)
+Do NOT re-run unless re-baselining shaders.
 
-Compare tactical captures vs:
-  assets/vfx/reference/elemental_sparks/fire_spark_target_v1.png
-  assets/vfx/reference/water/water_surface_target_v1.png
+Authority (complete):
+  src/dev/vfx_design_review_record_v1.md — SIGNED PASS 2026-05-25
+  src/dev/water_vfx_review_record_v1.md — water PASS
+  assets/vfx/reference/review_captures/vfx_capture_status_20260525.md
+  Queue: DESIGN-VFX-CAPTURE-001 done
 
-Save captures: assets/vfx/reference/review_captures/
-Outcome: PASS or TUNE tickets (does not block coders)
+Optional polish only: P2-FIRE-SPARK-011 (F-T03), operator refresh PNGs
 ```
 
 ---

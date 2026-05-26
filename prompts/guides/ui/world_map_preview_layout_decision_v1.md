@@ -26,7 +26,7 @@
 
 | Role | May do now | Still deferred |
 |:---|:---|:---|
-| **@coder** | **UI-WP-LAYOUT-002** — D-04 sheet body + dim; then motion / WP-L4 | D-01 shell **done** ([`world_preview_d01_shell_signoff_v1.md`](world_preview_d01_shell_signoff_v1.md)) |
+| **@coder** | **UI-WP-LAYOUT-D07** · optional D-02; motion / WP-L4 | D-01 + D-04 **done** ([`world_preview_d01_shell_signoff_v1.md`](world_preview_d01_shell_signoff_v1.md)) |
 | **@designer** | WP-L1 paper assets, terrain color key (WP-L4) | — |
 | **@planner** | Queue slices 002–004 | — |
 

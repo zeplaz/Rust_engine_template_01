@@ -46,17 +46,24 @@
     "relative_path": "debug_runs/wave_c_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "wave_c_live_proof",
-    "written_at_epoch_secs": 1779644699
+    "written_at_epoch_secs": 1779725338
   },
   "profile": "WAVE_C_STREAMING",
   "tile_storage_apply": {
-    "applied_chunks": 0,
+    "applied_chunks": 2,
+    "contract_bq": "BQ-101",
     "last_timing": "AfterDomainReconstruct",
-    "pending_smooth_tiles": 0
+    "pending_smooth_tiles": 4
   },
   "wave_c_green": true,
   "wave_c_readiness": {
     "open_backlog_items": 0,
     "passes": true
-  }
+  },
+  "wc_depth_001": {
+    "closed_backlog_item": "BQ-101",
+    "green": true,
+    "open_backlog_items": 0
+  },
+  "wc_depth_001_green": true
 }

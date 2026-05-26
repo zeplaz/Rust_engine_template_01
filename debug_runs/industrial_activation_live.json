@@ -41,12 +41,14 @@
       "debug_runs/wave_p_live.json",
       "debug_runs/wave_c_live.json",
       "debug_runs/ui_shell_migration_live.json",
-      "debug_runs/minimap_compositor_live.json"
+      "debug_runs/minimap_compositor_live.json",
+      "debug_runs/stage7_behavioral_live.json",
+      "debug_runs/stage7_play_live.json"
     ],
     "relative_path": "debug_runs/industrial_activation_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "industrial_activation_live_proof",
-    "written_at_epoch_secs": 1779646427
+    "written_at_epoch_secs": 1779755990
   },
   "activation_green": true,
   "board": [
@@ -188,16 +190,37 @@
     "operational_mixer": 1,
     "placed_via_construction": true,
     "production_green": true,
-    "production_ticks": 30,
+    "production_ticks": 146,
     "sites_committed": 3
   },
   "governance_violation_count": 0,
+  "grid_overload": {
+    "green": true,
+    "grid_membership": true,
+    "grid_overload_hook": true,
+    "grid_overload_sim_green": true,
+    "ind_e03_green": true,
+    "ind_e03_witness_001_green": true,
+    "overload_events_total": 86,
+    "production_green": true
+  },
+  "ind_e03": {
+    "green": true,
+    "grid_membership": true,
+    "grid_overload_hook": true,
+    "grid_overload_sim_green": true,
+    "ind_e03_green": true,
+    "ind_e03_witness_001_green": true,
+    "overload_events_total": 86,
+    "production_green": true
+  },
+  "industrial_i3_02_green": true,
   "open_todos": 0,
   "profile": "INDUSTRIAL_ACTIVATION",
   "spatial_district": {
-    "clustered_hosts": 0,
-    "dominant_load_ratio": 0.0,
-    "host_count": 0
+    "clustered_hosts": 1,
+    "dominant_load_ratio": 2.0224716663360596,
+    "host_count": 1
   },
   "todo_total": 31,
   "witness": {

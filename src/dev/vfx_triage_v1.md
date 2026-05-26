@@ -5,12 +5,14 @@
 | **Lane ID** | `S-VFX` |
 | **Date** | 2026-05-24 |
 | **Owner** | `@sim-steward` triage → `@coder` ×2 / `@designer` captures |
-| **Tracks** | [`stages/vfx_phase2_closure_plan_v1.md`](stages/vfx_phase2_closure_plan_v1.md) (`VFX-P2`) · [`stages/water_vfx_closure_plan_v1.md`](stages/water_vfx_closure_plan_v1.md) (`FX-WATER`) |
+| **Tracks** | [`fire_spark_track_closure_plan_v1.md`](fire_spark_track_closure_plan_v1.md) (`FX-FIRE`) · [`stages/vfx_phase2_closure_plan_v1.md`](stages/vfx_phase2_closure_plan_v1.md) (`VFX-P2`) · [`water_vfx_track_closure_plan_v1.md`](water_vfx_track_closure_plan_v1.md) (`FX-WATER`) |
 | **Queue** | [`tools/orchestrator/queues/continuation_queue.json`](../../tools/orchestrator/queues/continuation_queue.json) |
 | **Witness** | [`debug_runs/stage5_full_app_live.json`](../../debug_runs/stage5_full_app_live.json) |
 | **Reviews** | [`vfx_design_review_record_v1.md`](vfx_design_review_record_v1.md) (**D-VFX**) · [`water_vfx_review_record_v1.md`](water_vfx_review_record_v1.md) |
 
-**Rule:** Witness JSON at **tactical** zoom (`--test visual` / harness) is **not** the same problem as **normal Simulation** presentation (map-wide tint, default zoom). Triage both columns below.
+**Rule:** Witness JSON at **tactical** zoom (`--test visual` / harness) is **not** the same problem as **normal Simulation** presentation (map-wide tint, default zoom).
+
+> **PLAN-LEDGER-REFRESH-001 (2026-05-25):** **VFX-P2** and **FX-WATER** tracks are **CLOSED** in ledger + queue. This triage doc is **archive + operator P0** only — do **not** queue **WATER-W1/W2** or reopen **P2-VFX** coder slices without new contradicting proof.
 
 ---
 
@@ -18,11 +20,11 @@
 
 | Track | Harness / CI | Operator sim | Track **CLOSED**? |
 |:---|:---|:---|:---:|
-| **VFX-P2** (fire + shared proof) | ☑ **GREEN** — `tactical_vfx_witness.all_green: true`, `fire_spark_rows: 308`, tests 18+25 pass | ⚠ **OPEN** — full-map pink wash / non-pinpoint read reported; verify **not** VfxSandbox; `fire_heat` off on sim enter | ☐ |
-| **FX-WATER** | ☑ W1/W2 first pass; tactical particles **76–96** rows | ⚠ River vs lake read; **ocean/foam = 0** in witness | ☐ |
-| **D-VFX / WATER-DESIGN** | Prerequisites met | ☑ **SIGNED — TUNE ROUND**; PNG captures **PENDING** | ☐ |
+| **VFX-P2** (fire + shared proof) | ☑ **GREEN** | Optional P0 presentation read | ☑ **CLOSED** |
+| **FX-WATER** | ☑ tactical witness + designer **PASS** | Optional polish | ☑ **CLOSED** |
+| **DESIGN-D-VFX-POST-001** | **STEWARD-SPARK-VFX-001** + Coder **A** spark | ☑ **SIGNED — PASS** — **§12** reconfirmed 2026-05-25 | ☑ |
 
-**Primary lane after triage:** **P0 operator fire read** (presentation defaults + zoomed-out overlay) **in parallel with** **WATER-W1-OCEAN-001** + **WATER-W2-FOAM-001** (disjoint files).
+**Primary lanes now:** **S7B-PLAN-001** · **WC-DEPTH-001** · **S7B-M1-001** (after plan) — see [`stage_open_todos_v1.md`](stage_open_todos_v1.md).
 
 ---
 
@@ -56,9 +58,9 @@ cargo run -p proc_A_dine01 --release -- --test visual
 
 | ID | Symptom | Likely cause | Owner | Fix slice |
 |:---|:---|:---|:---|:---|
-| **VX-P0-01** | Full-map pink/red fire wash in **Simulation** | CPU `chunk_fire_heat` overlay + tile tint when `fire_heat` on; zoomed-out `fire_boost`; VfxSandbox seeds 28 fires | `@coder` | Verify `simulation_session` defaults (`fire_heat: false`); operator zoom **in** for sparks; diagnostics toggle |
+| ~~**VX-P0-01**~~ | ~~Full-map pink/red fire wash in **Simulation**~~ | **done** — `simulation_minimap_overlay_defaults().fire_heat: false`; sim map + tray on enter; minimap raster `fire_boost` capped at 1.0 | `@coder` | Operator: enable **Fire heat** in overlay tray when needed; zoom **in** for GPU sparks (VX-P0-02) |
 | **VX-P0-02** | “No pinpoint sparks” at default zoom | D-F09 **strategic cull** — sparks intentional at low `zoom_alpha` | `@operator` | Zoom to tactical (~40–70% map); compare vs `fire_spark_target_v1.png` |
-| **VX-P0-03** | Background rain/snow missing when zoomed out | Was `zoom_t > 0.45` gate — `background_aesthetic` path | `@coder` | Confirm `weather_visual.rs` + diagnostics toggle |
+| ~~**VX-P0-03**~~ | ~~Background rain/snow missing when zoomed out~~ | **done** — tactical band uses `map_zoom_alpha > 0.45`; background aesthetic when zoomed out (`weather_precip_show_background`) | `@coder` | Diagnostics: **Background precip (zoomed-out digital AE)**; `cargo test -p proc_A_dine01 --lib vx_p0_03` |
 | **VX-P0-04** | Tactical PNGs missing | Blocks **ACCEPTED** not coder queue | `@operator` / `@designer` | Save under `assets/vfx/reference/review_captures/` |
 
 **Do not** disable strategic cull globally to green witness — breaks D-F09 / D-W09.
@@ -71,7 +73,7 @@ cargo run -p proc_A_dine01 --release -- --test visual
 |:---:|:---|:---|:---|:---|
 | 1 | **WATER-W1-OCEAN-001** | queued | Coder A | `water_ocean_tiles > 0` in witness |
 | 1 | **WATER-W2-FOAM-001** | queued | Coder A | `river_foam` / `coast_foam` > 0 |
-| 2 | **P2-FIRE-SPARK-011** | queued | Coder A | F-T01/T03 shower read vs mock |
+| 2 | **P2-FIRE-SPARK-011** | **done** | Coder A | `fire_spark_011_green` @ zoom **0.85**; VFX-CAPTURE-001 PASS |
 | 2 | **P2-FIRE-SPARK-010** | queued | Coder A | Re-audit smoke pass if operator sees sparks under smoke |
 | 2 | **P2-VFX-WITNESS-001** | **partial** | Coder B | Lib tests exist; mark done when harness W-3 documented |
 | 3 | **P2-WATER-POLISH-001** | queued | Coder A | River ribbon read at strategic |
@@ -99,7 +101,7 @@ cargo run -p proc_A_dine01 --release -- --test visual
 | FX-FIRE-SPARK-001…006 | ☑ done | — |
 | P2-VFX-WITNESS-001 | ◐ **partial** | `gpu_particles` + `stage5_full_app_harness::tactical_vfx_*` green; close after doc line in `debug_runs/README.md` |
 | P2-FIRE-SPARK-010 | open | Only if operator reproduces smoke-over-spark |
-| P2-FIRE-SPARK-011 | open | After VX-P0-01 confirmed fixed in sim |
+| P2-FIRE-SPARK-011 | **done** | `fire_spark_011_green` + tactical proof @ **0.85** |
 | WATER-W1-OCEAN-001, WATER-W2-FOAM-001 | open | **Primary FX-WATER** |
 | FX-WATER track **CLOSED** | blocked | D-VFX + water witness exit + captures |
 
@@ -118,7 +120,7 @@ Designer             Re-run D-VFX → ACCEPTED when PNGs + W-T* closed
 
 ## HANDOFF one-liner
 
-**S-VFX:** Harness **green**; tracks **not CLOSED**. Fix **operator fire presentation (VX-P0-01)** and **water ocean/foam (W1/W2)** in parallel; capture tactical PNGs for designer **ACCEPTED**.
+**S-VFX:** Harness **green**; tracks **not CLOSED**. **VX-P0-01 done**; continue **water ocean/foam (W1/W2)** + tactical PNGs for designer **ACCEPTED**.
 
 ---
 

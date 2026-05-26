@@ -2,13 +2,16 @@
 
 | Field | Value |
 |:---|:---|
-| **Version** | `1.2.0` |
-| **Date** | 2026-05-24 |
+| **Version** | `1.5.0` |
+| **Date** | 2026-05-25 (orchestrator sync) |
+| **Audit** | [`stage_tracks_audit_signoff_20260525.md`](stage_tracks_audit_signoff_20260525.md) |
 | **Owner** | `@orchestrator` / `@planner` |
 | **Sign-off ledger** | [`stage_tracks_signoff_ledger_v1.md`](stage_tracks_signoff_ledger_v1.md) ← **truth table** |
 | **Designer board** | [`stage_designer_workboard_v1.md`](stage_designer_workboard_v1.md) |
 | **Coder board** | [`stage_coder_workboard_v1.md`](stage_coder_workboard_v1.md) |
+| **Planner board** | [`stage_planner_workboard_v1.md`](stage_planner_workboard_v1.md) |
 | **Machine queue** | [`tools/orchestrator/queues/continuation_queue.json`](../../tools/orchestrator/queues/continuation_queue.json) |
+| **Designer queue** | [`tools/orchestrator/queues/designer_active_queue.json`](../../tools/orchestrator/queues/designer_active_queue.json) |
 | **Coder hub** | [`coder_execution_plan_v1.md`](coder_execution_plan_v1.md) |
 
 **Rule:** One **primary track** per cycle. One **secondary** infra or witness row allowed. Witness JSON wins over markdown checkboxes.
@@ -30,14 +33,15 @@
 
 | Track | Plan | Primary agent | Designer? | First slice |
 |:---|:---|:---|:---:|:---|
-| **Stage 7 Play** | [`stages/stage7_play_plan_v1.md`](stages/stage7_play_plan_v1.md) | `@coder` + operator | `@designer` playtest | **S7P-DESIGN-001** · **S7P-LOG-001** (IND-001 **done**) |
-| **VFX Phase 2 closure** (fire + shared proof) | [`stages/vfx_phase2_closure_plan_v1.md`](stages/vfx_phase2_closure_plan_v1.md) · triage [`vfx_triage_v1.md`](vfx_triage_v1.md) | `@coder` ×2 | `@designer` post-review | **WATER-W1-OCEAN-001** · **VX-P0-01** operator fire read |
-| **Water VFX closure** | [`stages/water_vfx_closure_plan_v1.md`](stages/water_vfx_closure_plan_v1.md) | `@coder` A+B | **WATER-DESIGN-001** **done** (TUNE) | **WATER-W1-RIVER-001** · **WATER-W2-FOAM-001** |
-| **UI Phase 4** | [`stages/ui_phase4_execution_plan_v1.md`](stages/ui_phase4_execution_plan_v1.md) | `@coder` | **D-WP** [`world_preview_d_wp_track_signoff_v1.md`](../prompts/guides/ui/world_preview_d_wp_track_signoff_v1.md) | **UI-WP-LAYOUT-002** |
-| **Infra 5.5+** | [`stages/infra_55_execution_plan_v1.md`](stages/infra_55_execution_plan_v1.md) · gate [`vm09_gate_v1.md`](vm09_gate_v1.md) | `@sim-steward` → `@coder` | — | **INFRA-PROJ2-001** (VM09 s1 **done**) |
-| **Wave C depth** | [`stages/wave_c_depth_plan_v1.md`](stages/wave_c_depth_plan_v1.md) | `@coder` + operator | — | **WC-DEPTH-001** |
+| **VFX Phase 2 closure** (fire + shared proof) | [`stages/vfx_phase2_closure_plan_v1.md`](stages/vfx_phase2_closure_plan_v1.md) · triage [`vfx_triage_v1.md`](vfx_triage_v1.md) | — | **CLOSED** | maintain regression only |
+| **Water VFX closure** | [`water_vfx_track_closure_plan_v1.md`](water_vfx_track_closure_plan_v1.md) · [`stages/water_vfx_closure_plan_v1.md`](stages/water_vfx_closure_plan_v1.md) | — | **CLOSED** | maintain regression only |
+| **UI Phase 4** | [`stages/ui_phase4_execution_plan_v1.md`](stages/ui_phase4_execution_plan_v1.md) · handoff [`ui_phase4_handoff_plan_v1.md`](../prompts/guides/ui/ui_phase4_handoff_plan_v1.md) | `@coder` | **D-WP** + [`world_preview_product_full_plan_v1.md`](../prompts/guides/ui/world_preview_product_full_plan_v1.md) | optional D-02 · WP-L3/L4 |
+| **UI Phase 3 minimap** | compositor + M3/M4 plans | — | **CLOSED** | optional units/replay |
+| **Infra 5.5+** | [`vm09_slice2_closure_signoff_v1.md`](vm09_slice2_closure_signoff_v1.md) · [`infra_slice3_wc_d04_ops_f01_plan_v1.md`](infra_slice3_wc_d04_ops_f01_plan_v1.md) | operator | VM-09 + PROJ2 + WC-D04 **CLOSED** | **OPS-F01** · TRIAGE-VM-09-v2 deferred |
+| **Wave C depth** | [`stages/wave_c_depth_plan_v1.md`](stages/wave_c_depth_plan_v1.md) · [`post_stage6_infra_wave_c_plan_v1.md`](post_stage6_infra_wave_c_plan_v1.md) | operator | — | **WC-DEPTH-001** + **WC-D04** **done** |
 | **Fire sim Phase 7** | [`stages/fire_sim_phase7_plan_v1.md`](stages/fire_sim_phase7_plan_v1.md) | `@sim-steward` + `@coder` | `@planner` LOD | **FIRE7-PREFLIGHT** |
-| **Stage 7 Behavioral** | [`stages/stage7_behavioral_plan_v1.md`](stages/stage7_behavioral_plan_v1.md) | `@designer` → `@planner` | **required** | **S7B-DESIGN-001** |
+| **Stage 7 Play** | [`stages/stage7_play_plan_v1.md`](stages/stage7_play_plan_v1.md) | — | **CLOSED** | maintain witnesses |
+| **Stage 7 Behavioral** | [`stage7_behavioral_implementation_plan_v1.md`](stage7_behavioral_implementation_plan_v1.md) · preflight **GO** | `@coder` | **S7B-M1-001** |
 
 ---
 
@@ -45,15 +49,17 @@
 
 | Cycle | Primary track | Secondary | Milestone |
 |:---:|:---|:---|:---|
-| 1 | **Water VFX** closure | **UI-SHELL-REFRESH-001** | W-T02…T04 witness |
+| — | **UI shell 2B** | [`ui_phase2b_gate_plan_v1.md`](../prompts/guides/ui/ui_phase2b_gate_plan_v1.md) · [`ui_p2b_coder_b_numbered_tasks_v1.md`](ui_p2b_coder_b_numbered_tasks_v1.md) | — | **CLOSED** | **UI-P2B-CODER-B** tasks 1–6 done |
 | 2 | **Fire VFX** tune | Operator PNGs | F-T01…T03 |
-| 3 | **UI Phase 4** | — | UI4-DESIGN-001 → LAYOUT-002 |
+| 3 | **UI Phase 4** | — | D-04 **DONE**; next D-07 / optional D-02 |
 | 4 | **S7P-DESIGN-001** | — | Stage 7 Play designer SIGNED |
 | 5 | **Infra 5.5+** | PERF 60s | VM-09 (S-VM-09 code done; witness refresh) |
 | 6 | **Wave C** | — | depth + churn |
 | 7+ | **Behavioral / Fire P7** | — | gated |
 
-**Done (audit 2026-05-24):** S7P-IND-001 · P2-VFX-VISUAL-001 · FX-WATER first pass · UI-P3 minimap · UI-WP-LAYOUT-001
+**Done (audit 2026-05-25):** S7-PLAY CLOSED · VFX-P2 + FX-WATER tactical witness · UI-P2 shell · UI-P4 LAYOUT-002 · UI-P3 M1–M4 · BQ-128-APPLY · WC-DEPTH · WC-D04 · INFRA-PROJ2 · planner batch 12/12
+
+**Active (one primary per cycle):** **OPS-F01** / **OPS-F03** (operator) · snapshot [`stage_tracks_fleet_snapshot_signoff_v1.md`](stage_tracks_fleet_snapshot_signoff_v1.md) — **S7B-M2/M3** **CLOSED** (`s7b_m2_m3_001_lib_bundle`)
 
 ---
 
@@ -78,10 +84,9 @@ cargo run -p proc_A_dine01 --release -- --test visual
 |:---|:---|
 | **@coder** | [`stage_coder_workboard_v1.md`](stage_coder_workboard_v1.md) → track plan |
 | **@designer** | [`stage_designer_workboard_v1.md`](stage_designer_workboard_v1.md) |
-| **@orchestrator** | [`stage_tracks_signoff_ledger_v1.md`](stage_tracks_signoff_ledger_v1.md) |
+| **@orchestrator** | [`stage_tracks_signoff_ledger_v1.md`](stage_tracks_signoff_ledger_v1.md) · **PLAN-LEDGER-REFRESH** each cycle |
+| **@planner** | [`stage_planner_workboard_v1.md`](stage_planner_workboard_v1.md) |
 | **@sim-steward** | Infra + Fire7 preflight sections |
-| **@planner** | Behavioral + Fire7 LOD before large sim refactors |
-| **@orchestrator** | Pick cycle row; update `continuation_queue.json` status |
 
 ---
 
@@ -89,6 +94,9 @@ cargo run -p proc_A_dine01 --release -- --test visual
 
 | Version | Date | Notes |
 |:---|:---|:---|
+| v1.5.0 | 2026-05-25 | Orchestrator sync — active = S7B-PLAN-001; closed BQ-128/WC/PROJ2/VFX tracks |
+| v1.4.0 | 2026-05-25 | Ledger refresh audit — tactical VFX/water/S7/UI-P4 signed |
+| v1.3.0 | 2026-05-24 | Six PLAN deliverables + planner workboard + infra/wave execution plan |
 | v1.2.0 | 2026-05-24 | Sign-off ledger + designer/coder workboards; audit 2026-05-24 |
 | v1.1.0 | 2026-05-24 | Added **FX-WATER** dedicated closure track (not done) |
 | v1.0.0 | 2026-05-24 | Initial seven-track execution index |

@@ -1,7 +1,9 @@
 {
   "_agent_meta": {
     "agent_commands": [
-      "cargo test -p proc_A_dine01 --lib"
+      "cargo test -p proc_A_dine01 --lib ui_wp_layout_002_writes_wave_p_live_json",
+      "cargo test -p proc_A_dine01 --lib cod_b_wp_witness_001",
+      "cargo test -p proc_A_dine01 --lib wave_p_live_proof"
     ],
     "docs": {
       "compile_warnings": "src/dev/COMPILE_WARNINGS_TODOS.md",
@@ -41,22 +43,41 @@
       "debug_runs/wave_p_live.json",
       "debug_runs/wave_c_live.json",
       "debug_runs/ui_shell_migration_live.json",
-      "debug_runs/minimap_compositor_live.json"
+      "debug_runs/minimap_compositor_live.json",
+      "debug_runs/stage7_behavioral_live.json",
+      "debug_runs/stage7_play_live.json"
     ],
     "relative_path": "debug_runs/wave_p_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "wave_p_live_proof",
-    "written_at_epoch_secs": 1779644699
+    "written_at_epoch_secs": 1779748102
   },
+  "cod_b_wp_witness_001_green": true,
   "profile": "WAVE_P_PREVIEW",
+  "ui_wp_layout_002": {
+    "d04_generator_sheet_open": true,
+    "d04_map_dim_alpha": 102,
+    "d04_sheet_body_wired": true,
+    "d04_sheet_width_px": 480.0,
+    "d04_unified_workspace": true,
+    "ui_wp_layout_002_green": true
+  },
+  "ui_wp_layout_002_green": true,
+  "ui_wp_layout_d07": {
+    "d07_corner_inset_on_map": true,
+    "d07_inset_side_px": 140.0,
+    "d07_sidebar_minimap_removed": true,
+    "ui_wp_layout_d07_green": true
+  },
+  "ui_wp_layout_d07_green": true,
   "wave_p_green": true,
   "wave_p_readiness": {
     "passes": true,
     "report": {
-      "composite_graph_sources": 1,
+      "composite_graph_sources": 4,
       "composite_layer_bindings": 10,
       "consumer_contract_ok": true,
-      "gpu_authoritative_surface": true,
+      "gpu_authoritative_surface": false,
       "open_backlog_items": 0,
       "save_chunk_schema_version": 1,
       "save_manifest_schema_version": 1

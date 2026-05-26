@@ -2,7 +2,7 @@
 
 use super::interaction::{apply_pan, apply_zoom_toward, update_hover_tile};
 use super::layers::PreviewLayers;
-use super::minimap::world_preview_minimap;
+use super::minimap::paint_world_preview_minimap_corner_inset;
 use super::preview_render_contract::{
     preview_authoritative_surface, PreviewAuthoritativeSurface, PreviewCameraState,
 };
@@ -28,12 +28,12 @@ use crate::gui::map_view::{paint_map_display_debug_outlines, paint_map_view_plac
 use crate::gui::{
     world_preview::resolve_world_preview_egui_texture, ActiveMapViewInput, MapPresentationDiagnostics,
     MapShellPointerGate, MapViewInstanceId, MapViewTextureCache, ResolvedMapViewFrames,
-    MapViewInteractionByView,
+    MapViewInteractionByView, ViewManager,
 };
 use crate::gui::editor::world_gen_ui::{draw_world_gen_panel, WorldGenUiContext};
 use crate::gui::hud::HudDevOverlayState;
 use crate::gui::std_floating;
-use crate::gui::style::{neutral_image_tint, widget_scroll_vertical_fill, UiPalette, UiSpacing};
+use crate::gui::style::{neutral_image_tint, widget_scroll_vertical_fill};
 use crate::systems::terrain::TerrainRegistriesHandles;
 
 use bevy::ecs::system::SystemParam;
@@ -47,6 +47,7 @@ pub struct WorldPreviewDisplayState<'w> {
     preview_cam: ResMut<'w, PreviewCameraState>,
     viewport_requests: ResMut<'w, ViewportAuthority>,
     map_views: ResMut<'w, MapViewInstances>,
+    view_manager: Res<'w, ViewManager>,
     frames: Res<'w, ResolvedMapViewFrames>,
     map_ready: ResMut<'w, crate::gui::MapViewReadyStates>,
     tex_cache: ResMut<'w, MapViewTextureCache>,
@@ -74,6 +75,8 @@ pub(crate) fn display_world_preview(
     mut last_tex: Local<(u32, u32)>,
 ) -> Result {
     if !world_gen.world_preview_ui.window_open {
+        world_gen.world_preview_ui.d07_corner_inset_active = false;
+        world_gen.world_preview_ui.d07_inset_side_px = 0.0;
         clear_world_preview_viewport_requests(&mut state.viewport_requests);
         if state.active_map_input.0 == Some(MapViewInstanceId::WorldPreview) {
             state.active_map_input.0 = None;
@@ -135,14 +138,20 @@ pub(crate) fn display_world_preview(
     let mut window_open = world_gen.world_preview_ui.window_open;
     let panel_frame = egui::Frame::NONE;
     let unified = super::world_preview_unified_workspace(&world_gen.world_preview_ui);
+    let sheet_open = unified && world_gen.world_gen_ui_state.generator_sheet_open;
     let window_response = std_floating(egui::Window::new("Operational Archive — World Index"))
         .id(egui::Id::new("world_preview_workspace"))
         .default_size([960.0, 640.0])
         .min_size([640.0, 480.0])
         .open(&mut window_open)
         .show(contexts.ctx_mut()?, |ui| {
-            let pal: &UiPalette = &*world_gen.palette;
-            let sp: &UiSpacing = &*world_gen.spacing;
+            if sheet_open && ui.input(|i| i.key_pressed(egui::Key::Escape)) {
+                world_gen.world_gen_ui_state.generator_sheet_open = false;
+            }
+
+            let pal = world_gen.palette.clone();
+            let sp = world_gen.spacing.clone();
+            let sheet_width = super::d04_sheet_width_px(ui.available_width());
 
             egui::TopBottomPanel::top("world_preview_toolbar")
                 .frame(panel_frame)
@@ -155,7 +164,7 @@ pub(crate) fn display_world_preview(
                             preview_cam,
                             disp_w,
                             disp_h,
-                            pal,
+                            &pal,
                         );
                         if unified && world_gen.world_gen_ui_state.visible {
                             ui.separator();
@@ -188,15 +197,16 @@ pub(crate) fn display_world_preview(
                         view,
                         disp_w,
                         disp_h,
-                        pal,
+                        &pal,
                     );
                 });
 
+            let sidebar_max = super::d02_sidebar_max_width_px(ui.available_width());
             egui::SidePanel::left("world_preview_sidebar")
                 .frame(panel_frame)
                 .resizable(true)
-                .default_width(180.0)
-                .width_range(160.0..=260.0)
+                .default_width(180.0_f32.min(sidebar_max))
+                .width_range(super::D02_SIDEBAR_MIN_W..=sidebar_max)
                 .show_inside(ui, |ui| {
                     widget_scroll_vertical_fill("world_preview_sidebar_scroll", ui.available_height())
                         .show(ui, |ui| {
@@ -207,8 +217,8 @@ pub(crate) fn display_world_preview(
                                 &handles,
                                 &tag_assets,
                                 &mobility_assets,
-                                pal,
-                                sp,
+                                &pal,
+                                &sp,
                             );
                             world_preview_registry_inspector(
                                 ui,
@@ -216,27 +226,29 @@ pub(crate) fn display_world_preview(
                                 &handles,
                                 &material_assets,
                                 &tag_assets,
-                                pal,
-                                sp,
+                                &pal,
+                                &sp,
                             );
-                            ui.separator();
-                            if let Some(tex_id) = texture_id {
-                                world_preview_minimap(ui, tex_id, disp_w, disp_h, pal);
-                            }
                         });
                 });
 
-            if unified && world_gen.world_gen_ui_state.generator_sheet_open {
+            if sheet_open {
+                let sheet_id = egui::Id::new("world_gen_parameters_sheet");
+                ui.ctx().memory_mut(|m| m.request_focus(sheet_id));
                 egui::SidePanel::left("world_gen_parameters_sheet")
                     .frame(panel_frame)
                     .resizable(true)
-                    .default_width(520.0)
-                    .width_range(400.0..=720.0)
+                    .default_width(sheet_width)
+                    .width_range(super::D04_SHEET_WIDTH_MIN..=super::D04_SHEET_WIDTH_MAX)
                     .show_inside(ui, |ui| {
-                        draw_world_gen_panel(ui, &mut world_gen, &mut tuning_io_hint, true);
+                        ui.push_id(sheet_id, |ui| {
+                            draw_world_gen_panel(ui, &mut world_gen, &mut tuning_io_hint, true);
+                        });
                     });
             }
 
+            let mut d07_corner_active = false;
+            let mut d07_inset_side = 0.0f32;
             egui::CentralPanel::default()
                 .frame(panel_frame)
                 .show_inside(ui, |ui| {
@@ -355,14 +367,13 @@ pub(crate) fn display_world_preview(
                         image_rect.center()
                     };
                     update_hover_tile(
+                        &state.view_manager,
                         view,
                         ui.ctx().pointer_hover_pos(),
                         rect,
                         image_rect,
                         disp_w,
                         disp_h,
-                        zoom_vis,
-                        pan_vis,
                     );
 
                     write_world_preview_viewport_request(
@@ -392,6 +403,22 @@ pub(crate) fn display_world_preview(
                             rect,
                             world_gen.lifecycle.phase.placeholder_label(),
                         );
+                    }
+                    if sheet_open {
+                        let dim =
+                            egui::Color32::from_black_alpha(super::D04_MAP_DIM_ALPHA);
+                        painter.rect_filled(rect, 0.0, dim);
+                    }
+                    if let Some(tex_id) = texture_id {
+                        d07_inset_side = paint_world_preview_minimap_corner_inset(
+                            ui,
+                            rect,
+                            tex_id,
+                            disp_w,
+                            disp_h,
+                            &pal,
+                        );
+                        d07_corner_active = true;
                     }
                     if show_map_debug {
                         paint_map_display_debug_outlines(
@@ -431,6 +458,8 @@ pub(crate) fn display_world_preview(
                         egui::StrokeKind::Inside,
                     );
                 });
+            world_gen.world_preview_ui.d07_corner_inset_active = d07_corner_active;
+            world_gen.world_preview_ui.d07_inset_side_px = d07_inset_side;
         });
 
     if let Some(inner) = window_response {

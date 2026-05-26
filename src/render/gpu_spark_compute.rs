@@ -362,8 +362,8 @@ fn prepare_fire_spark_compute_bind_groups(
         delta_time: if dt > 0.0 { dt } else { 1.0 / 60.0 },
         instance_count: count,
         attractor_count: attractors.rows.len().min(MAX_ATTRACTORS) as u32,
-        lifetime_decay: 0.00085,
-        respawn_life: 4.5,
+        lifetime_decay: 0.00058,
+        respawn_life: 5.8,
         _pad: 0.0,
     };
     uniform_gpu.uniform.set(uniforms);

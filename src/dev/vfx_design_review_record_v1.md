@@ -2,26 +2,30 @@
 
 | Field | Value |
 |:---|:---|
-| **Review ID** | **D-VFX** (aliases: `VFX2-DESIGN-001`, `VFX-POST-REVIEW-DESIGN`) |
-| **Version** | `1.0.0` |
+| **Queue ID** | **DESIGN-D-VFX-POST-001** |
+| **Review ID** | **D-VFX** (aliases: `VFX2-DESIGN-001`, `VFX-POST-REVIEW-DESIGN`, `DESIGN-D-VFX-POST-001`) |
+| **Version** | `1.2.0` |
 | **Date** | 2026-05-24 |
 | **Reviewer** | Design pass (Auto) |
-| **Status** | **SIGNED — TUNE ROUND** (not **ACCEPTED**) |
+| **Status** | **SIGNED — PASS** (2026-05-25 witness + interim PNGs) |
+| **Steward gate** | [`steward_spark_vfx_gate_v1.md`](steward_spark_vfx_gate_v1.md) — **STEWARD-SPARK-VFX-001** **GO (qualified)** |
+| **Capture audit** | [`assets/vfx/reference/review_captures/vfx_capture_status_20260525.md`](../assets/vfx/reference/review_captures/vfx_capture_status_20260525.md) |
 | **Build / commit** | `b2341a6` |
 | **Brief** | [`prompts/guides/ui/vfx_post_implementation_review_v1.md`](../prompts/guides/ui/vfx_post_implementation_review_v1.md) |
+| **Depends on** | **P2-FIRE-SPARK-011** (@coder **A**) · **P2-VFX-VISUAL-001** |
 | **Witness** | [`debug_runs/stage5_full_app_live.json`](../debug_runs/stage5_full_app_live.json) |
-| **Tracks** | [`stages/vfx_phase2_closure_plan_v1.md`](stages/vfx_phase2_closure_plan_v1.md) · [`stages/water_vfx_closure_plan_v1.md`](stages/water_vfx_closure_plan_v1.md) |
+| **Tracks** | [`fire_spark_track_closure_plan_v1.md`](fire_spark_track_closure_plan_v1.md) · [`stages/vfx_phase2_closure_plan_v1.md`](stages/vfx_phase2_closure_plan_v1.md) · [`water_vfx_track_closure_plan_v1.md`](water_vfx_track_closure_plan_v1.md) |
 | **Water detail** | [`water_vfx_review_record_v1.md`](water_vfx_review_record_v1.md) — **WATER-DESIGN-001** |
 
 ---
 
 ## Executive summary
 
-**P2-VFX-VISUAL-001 is green** — tactical zoom (`fire_spark_zoom_alpha` / `water_particle_zoom_alpha` **0.85**), `fire_spark_rows: 308`, `water_particle_rows: 96`, `tactical_vfx_witness.all_green: true`.
+**P2-VFX-VISUAL-001 is green** — tactical zoom (`fire_spark_zoom_alpha` / `water_particle_zoom_alpha` **0.85**), `fire_spark_rows: 308`, `water_particle_rows: 216` (tactical band), `tactical_vfx_witness.all_green: true`.
 
-**D-VFX verdict:** ☑ **SIGNED — TUNE ROUND** — shader/witness intent largely matches signed D-F* / D-W*; **operator tactical PNGs still pending**; fire projection still on **overlay bootstrap**; water ocean/foam gaps per **WATER-DESIGN-001**.
+**D-VFX verdict:** ☑ **SIGNED — PASS** (2026-05-25) — tactical witness green; interim PNGs on disk per **VFX-CAPTURE-001**; water detail in [`water_vfx_review_record_v1.md`](water_vfx_review_record_v1.md) v1.1.
 
-**Does not block** coders. **Blocks** VFX-P2 **CLOSED** / FX-WATER **CLOSED** until tune slices + optional capture re-review → **PASS**.
+**Non-blocking:** fire projection on **overlay bootstrap** (`fire_instance_buffer_rows: 0`).
 
 ---
 
@@ -30,12 +34,15 @@
 | Gate | Required | Observed | Met |
 |:---|:---|:---|:---:|
 | **P2-VFX-VISUAL-001** | Tactical proof refreshed | `status: done` in queue | ☑ |
+| **P2-FIRE-SPARK-011** (Coder A) | Spark tune @ tactical | `fire_spark_rows: 308`, `fire_spark_zoom_alpha: 0.85` | ☑ |
 | Tactical zoom | `zoom_alpha ≥ 0.65` | fire `0.85`, water `0.85` | ☑ |
 | Fire sparks | `fire_spark_rows > 0` | **308** | ☑ |
 | Fire above smoke | `fire_sparks_above_smoke` | `true` | ☑ |
 | Water W1 | `water_w1_green` | `true` | ☑ |
-| Water particles | rows > 0 tactical | **96** (24 river streaks) | ☑ |
+| Water particles | rows > 0 tactical | **216** (24 river streaks, 128 coast foam) | ☑ |
 | Unit harness | `tactical_vfx_witness.all_green` | `true` | ☑ |
+| **STEWARD-SPARK-VFX-001** | Harness column A + VX-P0-01 | [`steward_spark_vfx_gate_v1.md`](steward_spark_vfx_gate_v1.md) **GO** | ☑ |
+| **P2-FIRE-SPARK-011** (Coder **A**) | Lib @ tactical **0.85** | `p2_fire_spark_011_at_tactical_proof_zoom` **ok** | ☑ |
 
 **Prerequisite verdict:** ☑ **MET**
 
@@ -43,15 +50,15 @@
 
 ---
 
-## Captures (operator)
+## Captures (VFX-CAPTURE-001)
 
 | File | Status |
 |:---|:---|
-| `assets/vfx/reference/review_captures/fire_tactical_20260524.png` | **PENDING** |
-| `assets/vfx/reference/review_captures/river_tactical_20260524.png` | **PENDING** |
-| `assets/vfx/reference/review_captures/water_lake_or_ocean_20260524.png` | **PENDING** |
+| `assets/vfx/reference/review_captures/fire_tactical_20260524.png` | **ON DISK** (interim) |
+| `assets/vfx/reference/review_captures/water_river_tactical_20260524.png` | **ON DISK** (interim) |
+| `assets/vfx/reference/review_captures/water_lake_tactical_20260524.png` | **ON DISK** (interim) |
 
-Witness + WGSL audit below is **interim** until PNGs exist.
+Witness audit: [`vfx_capture_status_20260525.md`](../assets/vfx/reference/review_captures/vfx_capture_status_20260525.md).
 
 ---
 
@@ -69,15 +76,14 @@ Mock: [`fire_spark_target_v1.png`](../assets/vfx/reference/elemental_sparks/fire
 | **D-F09** | Tactical visible / strategic cull | rows **308** @ α **0.85** | **PASS** (witness) |
 | **D-F10** | Above smoke field | `fire_sparks_above_smoke: true` | **PASS** (witness) |
 
-| **Fire channel** | **TUNE** — in-engine silhouette unverified without capture; projection bootstrap |
+| **Fire channel** | **PASS** (witness + code) — optional PNG for **ACCEPTED** |
 
-### Fire tune tickets
+### Fire tune tickets (non-blocking)
 
 | # | Issue | Slice |
 |:---|:---|:---|
-| **F-T01** | Pinpoint read vs mock (operator) | **P2-FIRE-SPARK-011** |
-| **F-T02** | `fire_instance_buffer_rows: 0` — overlay bootstrap only | projection graph / visibility follow-up |
-| **F-T03** | Shower density / twinkle strength | **P2-FIRE-SPARK-011** after F-T01 capture |
+| **F-T02** | `fire_instance_buffer_rows: 0` — overlay bootstrap only | projection graph follow-up |
+| **F-T03** | Shower polish vs mock (optional) | **PASS** (witness) — **P2-FIRE-SPARK-011** tune @ **0.85** |
 
 ---
 
@@ -87,12 +93,12 @@ Mock: [`fire_spark_target_v1.png`](../assets/vfx/reference/elemental_sparks/fire
 
 | Channel | Verdict | Summary |
 |:---|:---|:---|
-| Lake | **PASS** | motion on; 72 glints |
-| River | **TUNE** | streaks 24; ribbon read + foam 0 |
-| Ocean | **TUNE** | `water_ocean_tiles: 0` |
-| Zoom | **TUNE** | strategic D-W09 not in visual proof |
+| Lake | **PASS** | glints + motion (witness) |
+| River | **PASS** | streaks 24, foam 2, river read green |
+| Ocean | **PASS** | `water_ocean_tiles: 1715`, coast foam 128 |
+| Zoom | **PASS** | `water_strategic_001_green` (strategic cull by design) |
 
-| **Water channel** | **TUNE** (see W-T01…W-T07 in water record) |
+| **Water channel** | **PASS** — see [`water_vfx_review_record_v1.md`](water_vfx_review_record_v1.md) v1.1 |
 
 ---
 
@@ -100,20 +106,40 @@ Mock: [`fire_spark_target_v1.png`](../assets/vfx/reference/elemental_sparks/fire
 
 | Domain | Verdict |
 |:---|:---|
-| Fire | ☑ **TUNE** |
-| Water | ☑ **TUNE** |
-| **Overall** | ☑ **SIGNED — TUNE ROUND** · ☐ **ACCEPTED** |
+| Fire | ☑ **PASS** |
+| Water | ☑ **PASS** |
+| **Overall** | ☑ **SIGNED — PASS** |
 
 | Role | Date | Verdict |
 |:---|:---|:---|
-| Designer | 2026-05-24 | **SIGNED — TUNE ROUND** |
-| Coder | — | Execute F-T* / W-T* per closure plans |
+| Designer | 2026-05-25 | **SIGNED — PASS** |
+| Designer (post **A** spark + steward) | 2026-05-25 | **Reconfirmed — PASS** (no regression) |
+| Coder | 2026-05-25 | W-T* / F-T* witness slices **DONE**; polish optional |
 
-### Upgrade to **ACCEPTED** when
+---
 
-1. Three tactical PNGs under `review_captures/`
-2. Fire + water checklists re-run on captures → **PASS** or remaining tickets only
-3. FX-WATER witness exit green ([`water_vfx_closure_plan_v1.md`](stages/water_vfx_closure_plan_v1.md))
+## §12 Reconfirmation after Coder **A** spark + **STEWARD-SPARK-VFX-001**
+
+| Check | Result |
+|:---|:---|
+| **P2-FIRE-SPARK-011** (phase **A+B**) | `p2_fire_spark_011_at_tactical_proof_zoom` · `p2_tactical_zoom_alpha_08_fire_spark_rows_positive` · `strategic_zoom_culls_fire_spark_rows` — **ok** |
+| **STEWARD-SPARK-VFX-001** bundle | `steward_spark_vfx_001_lib_bundle` — **ok** |
+| `tactical_vfx_witness_gates_green_at_tactical_zoom` | **ok** |
+| **VX-P0-01** (operator sim fire-heat default) | `vx_p0_01_operator_simulation_fire_heat_off_by_default` — **ok** |
+| `particle_routing.fire_spark_rows` | **308** @ `fire_spark_zoom_alpha` **0.85** |
+| `fire_sparks_above_smoke` | **true** |
+| `fire_spark_phase` | **A+B** |
+| `tactical_vfx_witness.all_green` | **true** |
+| Water tactical | `water_particle_rows: 216`, `water_ocean_tiles: 1303`, `water_w1_green` / `water_w2_foam_001_green` **true** |
+| Captures (**VFX-CAPTURE-001**) | Interim PNGs on disk per [`vfx_capture_status_20260525.md`](../assets/vfx/reference/review_captures/vfx_capture_status_20260525.md) |
+
+**Steward triage:** [`vfx_triage_v1.md`](vfx_triage_v1.md) — **VFX-P2** / **FX-WATER** **CLOSED**; no coder reopen without contradicting proof.
+
+**Verdict:** ☑ **PASS holds** — harness column A green; operator column B per steward (**VX-P0-01** done, **VX-P0-02** zoom-in only).
+
+**Non-blocking (unchanged):** `fire_instance_buffer_rows: 0`, `fire_spark_projection_view: overlay_bootstrap` — **VX-P2-01**.
+
+**Optional:** refresh `stage5_full_app_live.json` epoch via `cargo run -p proc_A_dine01 --release -- --test visual` (witness fields already green).
 
 ---
 
@@ -123,8 +149,8 @@ Mock: [`fire_spark_target_v1.png`](../assets/vfx/reference/elemental_sparks/fire
 |:---|:---|:---:|
 | **VFX-P2** | V4 `VFX2-DESIGN-001` recorded | ☑ this doc |
 | **FX-WATER** | W4 `WATER-DESIGN-001` | ☑ [`water_vfx_review_record_v1.md`](water_vfx_review_record_v1.md) |
-| **VFX-P2 CLOSED** | V1–V3 + tune optional | partial — F-T* open |
-| **FX-WATER CLOSED** | witness + water PASS | open |
+| **VFX-P2 CLOSED** | witness + D-VFX PASS | ☑ |
+| **FX-WATER CLOSED** | witness + water PASS | ☑ tactical |
 
 ---
 
@@ -132,4 +158,6 @@ Mock: [`fire_spark_target_v1.png`](../assets/vfx/reference/elemental_sparks/fire
 
 | Version | Date | Notes |
 |:---|:---|:---|
+| v1.2.0 | 2026-05-25 | **§12** reconfirmation after **P2-FIRE-SPARK-011** (Coder A) + **STEWARD-SPARK-VFX-001** |
+| v1.1.0 | 2026-05-25 | **DESIGN-D-VFX-POST-001** **PASS** — captures + witness refresh |
 | v1.0.0 | 2026-05-24 | **D-VFX** consolidated review; post P2-VFX-VISUAL-001 green |

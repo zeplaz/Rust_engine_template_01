@@ -41,19 +41,22 @@
       "debug_runs/wave_p_live.json",
       "debug_runs/wave_c_live.json",
       "debug_runs/ui_shell_migration_live.json",
-      "debug_runs/minimap_compositor_live.json"
+      "debug_runs/minimap_compositor_live.json",
+      "debug_runs/stage7_behavioral_live.json",
+      "debug_runs/stage7_play_live.json"
     ],
     "relative_path": "debug_runs/logistics_throughput_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "logistics_throughput_live_proof",
-    "written_at_epoch_secs": 1779645873
+    "written_at_epoch_secs": 1779755990
   },
   "edge_saturation_max": 0.0,
-  "open_todos": 15,
+  "open_todos": 14,
   "profile": "LOGISTICS_THROUGHPUT",
   "route_proofs_sample": [],
-  "routes_blocked": 0,
+  "routes_blocked": 2,
   "routes_open": 0,
+  "s7p_log_001_green": false,
   "throughput_green": false,
   "todo_total": 24,
   "topology_revision": 1456375674,

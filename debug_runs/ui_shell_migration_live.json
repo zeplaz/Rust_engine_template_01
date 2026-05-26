@@ -2,6 +2,7 @@
   "_agent_meta": {
     "agent_commands": [
       "cargo test -p proc_A_dine01 --lib stage5",
+      "cargo test -p proc_A_dine01 --lib ui_p2b",
       "cargo test -p proc_A_dine01 --lib simulation_shell_phase2",
       "cargo run -p proc_A_dine01 --release -- --test visual"
     ],
@@ -43,12 +44,14 @@
       "debug_runs/wave_p_live.json",
       "debug_runs/wave_c_live.json",
       "debug_runs/ui_shell_migration_live.json",
-      "debug_runs/minimap_compositor_live.json"
+      "debug_runs/minimap_compositor_live.json",
+      "debug_runs/stage7_behavioral_live.json",
+      "debug_runs/stage7_play_live.json"
     ],
     "relative_path": "debug_runs/ui_shell_migration_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "simulation_shell_phase2_live_proof",
-    "written_at_epoch_secs": 1779646657
+    "written_at_epoch_secs": 1779761163
   },
   "backends": {
     "P1_ops_strip": "bevy_ui",
@@ -59,10 +62,10 @@
     "P4_build_rail": "bevy_ui",
     "P4_left_context_rail": "bevy_ui",
     "floating_shells_sim_audit": {
-      "BuildToolbox": false,
-      "CommandShell": false,
-      "OverlayTray": false,
-      "OverlaysPanel": false
+      "BuildToolbox": true,
+      "CommandShell": true,
+      "OverlayTray": true,
+      "OverlaysPanel": true
     },
     "legacy_egui_phase2b": {
       "build_toolbox_egui": "editor_only",
@@ -85,6 +88,7 @@
     "rail_width_px": 48.0
   },
   "egui_pass_count_in_sim": 0,
+  "egui_pass_count_lifetime": 0,
   "egui_sim_shell_widgets": [
     "Diagnostics_F3",
     "Editor_tools"
@@ -93,8 +97,8 @@
     "F-01_diamond_badge": true,
     "F-02_strip_top_offset_px": 2.0,
     "F-04_rail_icon_grid": true,
-    "F-07_gold_vellum_tabs": false,
-    "F-09_minimap_delta_px": 0.0
+    "F-07_gold_vellum_tabs": true,
+    "F-09_minimap_delta_px": 1.0
   },
   "gpu_minimap_compositor_env": true,
   "panels": {
@@ -122,8 +126,8 @@
     "zones_live": true
   },
   "phase2_zones_live": true,
-  "phase2a_closed": false,
-  "phase2b_closed": false,
+  "phase2a_closed": true,
+  "phase2b_closed": true,
   "phase2c": {
     "build_rail_width_px": 52.0,
     "column_gap_px": 6.0,
@@ -133,14 +137,14 @@
     "left_chrome_width_px_expanded": 458.0,
     "map_hole_inset": false,
     "overlay_absolute": true,
-    "phase2c_closed": true,
+    "phase2c_closed": false,
     "stack_body_width_px": 400.0
   },
   "phase4": {
     "atlas_texture": "textures/ui/icon_atlas_phase4_v1.png",
     "icon_atlas_loaded": false,
     "manifest_ron": "configs/ui/icon_atlas_phase4.icon_atlas.ron",
-    "p5_br_tab_wired": true,
+    "p5_br_tab_wired": false,
     "rail_icons": [
       "RD",
       "RL",
@@ -149,27 +153,122 @@
       "CV"
     ]
   },
+  "phase5": {
+    "pause_menu_bevy": true
+  },
   "profile": "UI_SHELL_MIGRATION_2B",
+  "ui_oh_2a_001": {
+    "gate": "UI-OH-2A-001",
+    "green": true,
+    "phase2_zones_live": true
+  },
+  "ui_oh_2b_001": {
+    "egui_pass_count_in_sim": 0,
+    "gate": "UI-OH-2B-001",
+    "green": true,
+    "product_egui_shell_in_simulation": false
+  },
+  "ui_oh_p5_001": {
+    "gate": "UI-OH-P5-001",
+    "green": true,
+    "pause_menu_bevy": true
+  },
+  "ui_p2a_coder_b": {
+    "green": false,
+    "mock_zone_parity": true,
+    "phase2_zones_live": true
+  },
+  "ui_p2a_tail": {
+    "build_rail_authoritative": false,
+    "f03_green": true,
+    "ops_zone_hover_token": true,
+    "p4_auth_green": false
+  },
+  "ui_p2b_coder_b": {
+    "build_toolbox_egui_gated": true,
+    "egui_pass_count_in_sim": 0,
+    "floating_egui_shells_gated": true,
+    "green": true,
+    "side_status_rail_egui_gated": true
+  },
+  "ui_p2b_coder_b_green": true,
   "ui_p3_001": {
     "closed": false,
-    "minimap_chrome_aligned": false,
+    "minimap_chrome_aligned": true,
     "minimap_gpu_path": false
   },
+  "ui_p5_pause_001_green": true,
+  "ui_w3_2a_001": {
+    "context_tray_wired": true,
+    "gate": "UI-W3-2A-001",
+    "green": true,
+    "ops_zones_wired": true,
+    "phase2_zones_live": true
+  },
+  "ui_w3_2b_001": {
+    "egui_pass_count_in_sim": 0,
+    "gate": "UI-W3-2B-001",
+    "green": true,
+    "product_egui_shell_in_simulation": false
+  },
+  "ui_w3_2c_001": {
+    "build_rail_authoritative": false,
+    "build_rail_width_px": 52.0,
+    "context_rail_width_px": 48.0,
+    "gate": "UI-W3-2C-001",
+    "green": false,
+    "layout_option": "2C-B",
+    "left_chrome_width_px_collapsed": 106.0
+  },
+  "ui_w3_p4_001": {
+    "gate": "UI-W3-P4-001",
+    "green": false,
+    "icon_atlas_loaded": false,
+    "p4_auth_green": false,
+    "p5_br_tab_wired": false,
+    "petroleum_panel_tab_wired": false
+  },
+  "ui_w3_p5_001": {
+    "egui_pass_count_in_sim": 0,
+    "gate": "UI-W3-P5-001",
+    "green": true,
+    "pause_menu_bevy": true
+  },
+  "ui_w3_p6_001": {
+    "egui_pass_count_in_sim": 0,
+    "gate": "UI-W3-P6-001",
+    "green": true,
+    "pause_menu_bevy": true,
+    "phase2b_closed": true,
+    "plan": "PLAN-UI-PHASE6-001",
+    "shell_perf_green": true
+  },
+  "ui_w3_theme_001": {
+    "gate": "PLAN-UI-THEME-MERGE-001",
+    "green": true
+  },
+  "ui_w3_witness_001": {
+    "gate": "UI-W3-WITNESS-001",
+    "green": false,
+    "lib_bundle": "coder_b_ui_w3_witness_001_lib_bundle",
+    "visual_operator": "cargo run -p proc_A_dine01 --release -- --test visual"
+  },
   "witness": {
-    "alert_click_expanded_tray": false,
-    "build_rail_authoritative": true,
-    "build_rail_synced": true,
-    "build_toolbox_egui_gated": false,
-    "escape_collapsed_tray": false,
-    "flat_v2_tab_chrome": false,
-    "floating_egui_shells_gated": false,
-    "intel_map_camera_request": false,
-    "last_minimap_rect_delta_px": 0.0,
-    "last_mission_count": 0,
-    "minimap_chrome_aligned": false,
-    "ops_zone_hover_token": false,
-    "ops_zones_wired": false,
+    "alert_click_expanded_tray": true,
+    "build_rail_authoritative": false,
+    "build_rail_synced": false,
+    "build_toolbox_egui_gated": true,
+    "escape_collapsed_tray": true,
+    "flat_v2_tab_chrome": true,
+    "floating_egui_shells_gated": true,
+    "intel_map_camera_request": true,
+    "interaction_block_green": false,
+    "last_minimap_rect_delta_px": 1.0,
+    "last_mission_count": 4,
+    "minimap_chrome_aligned": true,
+    "ops_zone_hover_token": true,
+    "ops_zones_wired": true,
     "phase2_zones_live": true,
-    "side_status_rail_egui_gated": false
+    "side_status_rail_egui_gated": true
   }
 }

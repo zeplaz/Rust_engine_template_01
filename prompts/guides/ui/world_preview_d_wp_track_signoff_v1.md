@@ -6,7 +6,8 @@
 | **Version** | `1.0.0` |
 | **Date** | 2026-05-24 |
 | **Owner** | `@designer` → `@coder` **UI-WP-*** slices |
-| **Status** | **SIGNED** (design) — **partial implementation** |
+| **Status** | **SIGNED** (design) — **operational chrome PASS** ([`world_preview_d_wp_review_record_v1.md`](../../../src/dev/world_preview_d_wp_review_record_v1.md)) |
+| **Post-impl review** | **DESIGN-D-WP-REVIEW-001** — **SIGNED PASS** 2026-05-25 |
 | **Parent gate** | [`world_map_preview_layout_decision_v1.md`](world_map_preview_layout_decision_v1.md) §5 (D-01…D-12) |
 | **Worksheet** | [`world_preview_layout_decision_worksheet_v1.md`](world_preview_layout_decision_worksheet_v1.md) |
 | **Coder queue** | [`ui_world_preview_coder_queue_v1.md`](ui_world_preview_coder_queue_v1.md) |
@@ -30,10 +31,10 @@
 | **D-01** | A | ☑ | ☑ **done** | [`world_preview_d01_shell_signoff_v1.md`](world_preview_d01_shell_signoff_v1.md) |
 | **D-02** | A | ☑ | ◐ optional | [`world_preview_d02_map_dominance_signoff_v1.md`](world_preview_d02_map_dominance_signoff_v1.md) |
 | **D-03** | A | ☑ | ☑ partial | Left sidebar stack in `window.rs` |
-| **D-04** | A | ☑ | ◐ stub | Slide sheet hook; body/dim → **UI-WP-LAYOUT-002** |
+| **D-04** | A | ☑ | ☑ **done** | Slide sheet + dim — **UI-WP-LAYOUT-002** · witness green |
 | **D-05** | B | ☑ | ☐ | Layer strip on map top — not landed |
 | **D-06** | A | ☑ | ☑ partial | Toolbar zoom/GPU in header |
-| **D-07** | A | ☑ | ☐ | **Gap:** sidebar thumb today; mock = **corner inset** 120–160px |
+| **D-07** | A | ☑ | ☑ **done** | Corner inset **140px** on map — **UI-WP-LAYOUT-D07** |
 | **D-08** | A | ☑ | ☐ | egui `Frame` only — WP-L1 paper textures deferred |
 | **D-09** | A | ☑ | ☐ | Fixed asymmetry offsets deferred |
 | **D-10** | A | ☑ | ☐ | Registration ticks — deferred |
@@ -70,13 +71,13 @@ From [`debug_runs/stage5_full_app_live.json`](../../../debug_runs/stage5_full_ap
 | **UI-WP-DESIGN** | D-01…D-12 worksheet + mock | **done** |
 | **UI-WP-LAYOUT-001** | D-01 | **done** |
 | **UI-WP-LAYOUT-D02-OPT** | D-02 | **optional** |
-| **UI-WP-LAYOUT-002** | D-04 | **queued** |
+| **UI-WP-LAYOUT-002** | D-04 | **done** — **UI4-DESIGN-001** **SIGNED**; dim + sheet in `window.rs` · witness `ui_wp_layout_002_green` |
 | **UI-WP-LAYOUT-003** | D-08, D-09, D-10 | deferred (WP-L1) |
 | **UI-WP-MOTION-001** | §6 + D-12 | deferred |
 | **WP-L4** | map look (capturez) | deferred |
-| *(new)* **UI-WP-LAYOUT-D07** | D-07 corner inset | **queued** — move minimap off sidebar |
+| **UI-WP-LAYOUT-D07** | D-07 corner inset | **done** |
 
-**Recommended next coder order:** **UI-WP-LAYOUT-002** (D-04) → **UI-WP-LAYOUT-D07** (D-07) → optional D-02 → motion.
+**Recommended next coder order:** optional **UI-WP-LAYOUT-D02-OPT** → **UI-WP-LAYOUT-003** / **UI-WP-MOTION-001** / **WP-L4**.
 
 ---
 
@@ -91,12 +92,13 @@ From [`debug_runs/stage5_full_app_live.json`](../../../debug_runs/stage5_full_ap
 | 5 | Honest gap table (D-05…D-12) | ☑ |
 | 6 | Track does **not** claim full mock parity | ☑ |
 
-**Verdict:** ☑ **SIGNED** (design complete; implementation **in progress**)
+**Verdict:** ☑ **SIGNED** (design complete; **D-01 / D-04 / D-07 PASS** per **DESIGN-D-WP-REVIEW-001**)
 
 | Role | Date | Verdict |
 |:---|:---|:---|
-| Designer | 2026-05-24 | **SIGNED** |
-| Coder | 2026-05-24 | **D-01 done**; remainder per slice table |
+| Designer | 2026-05-24 | **SIGNED** (worksheet + track) |
+| Designer | 2026-05-25 | **SIGNED — PASS** post-impl ([`world_preview_d_wp_review_record_v1.md`](../../../src/dev/world_preview_d_wp_review_record_v1.md)) |
+| Coder | 2026-05-25 | **D-01 / D-04 / D-07 done**; D-05…D-12 per slice table |
 
 ---
 
@@ -114,4 +116,5 @@ From [`debug_runs/stage5_full_app_live.json`](../../../debug_runs/stage5_full_ap
 
 | Version | Date | Notes |
 |:---|:---|:---|
+| v1.1.0 | 2026-05-25 | **DESIGN-D-WP-REVIEW-001** PASS; D-04 + D-07 coded |
 | v1.0.0 | 2026-05-24 | **D-WP** track rollup; D-01 done; D-07 gap documented |

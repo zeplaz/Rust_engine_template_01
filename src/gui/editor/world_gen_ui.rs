@@ -164,6 +164,16 @@ pub(crate) fn draw_world_gen_panel(
 ) {
             let pal: &UiPalette = &*cx.palette;
             let sp: &UiSpacing = &*cx.spacing;
+            if unified_workspace {
+                section_heading(ui, pal, CmdHeadingStyle::Gt, "World Generator — Parameters");
+                v_space(ui, sp, VertSpace::Sm);
+                muted_label(
+                    ui,
+                    pal,
+                    "D-04 slide sheet — map dims while this panel is open (Esc closes sheet in v2).",
+                );
+                v_space(ui, sp, VertSpace::Sm);
+            }
             weak_body(ui, pal, format!("Flow: {:?}", cx.flow.get()));
             if cx.progress.running {
                 ui.add(egui::ProgressBar::new(cx.progress.fraction).show_percentage());
@@ -806,6 +816,16 @@ pub(crate) fn draw_world_gen_panel(
                     }
                 }
             });
+
+            if unified_workspace {
+                v_space(ui, sp, VertSpace::Md);
+                ui.separator();
+                muted_label(
+                    ui,
+                    pal,
+                    "Footer — tuning I/O + generate actions above; witness: ui_wp_layout_002 in wave_p_live.json",
+                );
+            }
                 }); // world_gen_main_scroll
 }
 

@@ -55,7 +55,7 @@ M1 acceptance is **met** in witness + lib tests. Safe to treat **UI-P3-M1 / UX-E
 | Item | Status | Track |
 |:---|:---|:---|
 | `logistics_rows` in witness | `2` (M2-related) | OK if ≥0 at proof; M1 does not require LOG scenario |
-| `ecology_rows` / `construction_rows` | `0` in latest JSON | **M3** — `ui_p3_m3_green: false` expected |
+| `ecology_rows` / `construction_rows` | populated when M2 seeded | **UI-P3-M3-001** (M2) — `ui_p3_m3_green`; design M3 = **UI-P3-M4-001** |
 | `extent_match_px` | `0.0` in witness | A5 for UI-P3-001; M1 sign-off allows ◐ perf |
 | Operator PNG review | N/A for M1 | Designer M1 checklist already **SIGNED** |
 
@@ -113,7 +113,7 @@ cargo run -p proc_A_dine01 --release -- --test visual
 |:---|:---|:---|
 | **UI-P3-001** | `@coder` | Verify/harden if not already green; witness `ui_p3_001_green` already true |
 | **UI-P3-M2-TRAY-OPT** | `@coder` | Optional — overlay tray → mask |
-| **D-MINIMAP-M3** | design + coder | Fog/EW/units — not started |
+| **D-MINIMAP-M3** | design **SIGNED** / coder **OPEN** | [`minimap_d_m3_signoff_v1.md`](minimap_d_m3_signoff_v1.md) |
 
 ---
 

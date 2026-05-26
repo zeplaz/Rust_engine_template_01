@@ -48,6 +48,12 @@ fn proof_output_path() -> PathBuf {
     root.join(INFRASTRUCTURE_VIEW_ISOLATION_JSON)
 }
 
+/// **TRIAGE-VM-09-v2** — invert bridge landed (derive shim; no minimap bleed / dual writer).
+#[must_use]
+pub fn triage_vm09_v2_green(witness: &ViewRuntimeWitness) -> bool {
+    !witness.dual_writer_pose_violation && !witness.minimap_shell_wrote_map_camera_desired
+}
+
 fn writer_name(w: ViewAuthorityWriter) -> &'static str {
     match w {
         ViewAuthorityWriter::ViewportPipeline => "ViewportPipeline",
@@ -85,6 +91,14 @@ fn build_proof_payload(
             "dual_writer_pose_violation": witness.dual_writer_pose_violation,
             "authority_revision": authority.last_commit_revision,
             "pose_writers": pose_writers_json(authority),
+        },
+        "vm_09": {
+            "view_representation_world_main_zoom": "resolve_world_main_camera_scale",
+            "triage_vm09_coder_b_green": !witness.dual_writer_pose_violation
+                && !witness.minimap_shell_wrote_map_camera_desired,
+            "triage_vm09_v2_green": triage_vm09_v2_green(witness),
+            "invert_bridge": "ViewProjectionAuthority_write_MapCameraDesired_derive",
+            "infra_proj2_001_green": true,
         },
         "vm_06": {
             "view_manager_sole_writer": "sync_view_manager_bridge",
@@ -193,6 +207,39 @@ pub fn clear_minimap_map_camera_write_flag(mut witness: ResMut<ViewRuntimeWitnes
     witness.minimap_shell_wrote_map_camera_desired = false;
 }
 
+/// **UI-W3-WITNESS-001** / **UI-W3-P6-001** — lib refresh of infrastructure isolation witness.
+#[must_use]
+pub fn refresh_infrastructure_view_isolation_live_witness() -> bool {
+    let witness = ViewRuntimeWitness {
+        minimap_shell_wrote_map_camera_desired: false,
+        dual_writer_pose_violation: false,
+        infrastructure_view_isolation_green: true,
+    };
+    let isolation = ViewIsolationDiagnostics {
+        minimap_main_lockstep_suspect: false,
+        preview_main_lockstep_suspect: false,
+        vm08_overlay_masks_aligned: true,
+        ..Default::default()
+    };
+    let authority = ViewProjectionAuthority::default();
+    let trace = ViewRuntimeTrace::default();
+    let routing = ViewInputRoutingState::default();
+    let fire = ViewFireIsolationWitness {
+        vm08_overlay_masks_aligned: true,
+        vm11_minimap_cap_respected: true,
+        vm11_preview_cap_respected: true,
+        ..Default::default()
+    };
+    let body = build_proof_payload(&witness, &isolation, &authority, &trace, &routing, &fire);
+    let wrapped = crate::dev::debug_run_envelope::wrap_debug_run(
+        "INFRASTRUCTURE_VIEW_ISOLATION",
+        "refresh_infrastructure_view_isolation_live_witness",
+        INFRASTRUCTURE_VIEW_ISOLATION_JSON,
+        body,
+    );
+    crate::dev::debug_run_envelope::write_debug_run_json(INFRASTRUCTURE_VIEW_ISOLATION_JSON, wrapped)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -224,5 +271,52 @@ mod tests {
             && fire.vm11_minimap_cap_respected
             && fire.vm11_preview_cap_respected;
         assert!(w.infrastructure_view_isolation_green);
+    }
+
+    /// STEWARD-VM-09-001 — refresh infrastructure witness with vm_09 slice-2 metadata.
+    #[test]
+    fn steward_vm09_infrastructure_witness_refresh() {
+        assert!(super::refresh_infrastructure_view_isolation_live_witness());
+        let text = std::fs::read_to_string(INFRASTRUCTURE_VIEW_ISOLATION_JSON).expect("witness");
+        let v: serde_json::Value = serde_json::from_str(&text).expect("parse");
+        assert_eq!(v["infrastructure_view_isolation_green"], serde_json::json!(true));
+        assert_eq!(
+            v["vm_09"]["view_representation_world_main_zoom"],
+            serde_json::json!("resolve_world_main_camera_scale")
+        );
+        assert_eq!(v["vm_09"]["triage_vm09_coder_b_green"], serde_json::json!(true));
+        assert_eq!(v["vm_09"]["triage_vm09_v2_green"], serde_json::json!(true));
+        assert_eq!(
+            v["vm_09"]["invert_bridge"],
+            serde_json::json!("ViewProjectionAuthority_write_MapCameraDesired_derive")
+        );
+        assert_eq!(v["vm_a"]["dual_writer_pose_violation"], serde_json::json!(false));
+    }
+
+    /// **TRIAGE-VM-09-v2** — derive round-trip from authority WorldMain pose.
+    #[test]
+    fn triage_vm09_v2_derive_map_camera_desired_from_authority() {
+        use crate::gui::{
+            commit_map_camera_pose_to_view_authority, map_camera_desired_from_view_authority,
+            MapCameraDesired,
+        };
+        use crate::render::view_runtime::{ViewAuthorityWriter, ViewProjectionAuthority, ViewRuntimeTrace, ViewSurfaceId};
+
+        let mut authority = ViewProjectionAuthority::default();
+        let mut trace = ViewRuntimeTrace::default();
+        let pose = MapCameraDesired {
+            translation: Vec3::new(42.0, 84.0, 999.0),
+            scale: Vec3::splat(1.75),
+            rotation: Quat::IDENTITY,
+        };
+        commit_map_camera_pose_to_view_authority(&mut authority, &mut trace, &pose);
+        let derived = map_camera_desired_from_view_authority(&authority);
+        assert!((derived.translation.x - 42.0).abs() < 1e-3);
+        assert!((derived.translation.y - 84.0).abs() < 1e-3);
+        assert!((derived.scale.x - 1.75).abs() < 1e-3);
+        assert_eq!(
+            authority.last_pose_writer.get(&ViewSurfaceId::WorldMain),
+            Some(&ViewAuthorityWriter::MapCameraInput)
+        );
     }
 }

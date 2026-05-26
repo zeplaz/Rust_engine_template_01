@@ -35,8 +35,8 @@
 |:---|:---|:---|
 | **Stage 7 Play** | [`stages/stage7_play_plan_v1.md`](stages/stage7_play_plan_v1.md) | **S7P-IND-001** |
 | **VFX Phase 2** (fire) | [`stages/vfx_phase2_closure_plan_v1.md`](stages/vfx_phase2_closure_plan_v1.md) | **P2-FIRE-SPARK-010** |
-| **Water VFX** | [`stages/water_vfx_closure_plan_v1.md`](stages/water_vfx_closure_plan_v1.md) | **WATER-W2-FOAM-001** |
-| **UI Phase 4** | [`stages/ui_phase4_execution_plan_v1.md`](stages/ui_phase4_execution_plan_v1.md) | **UI-WP-LAYOUT-002** |
+| **Water VFX** | [`water_vfx_track_closure_plan_v1.md`](water_vfx_track_closure_plan_v1.md) | **CLOSED** — do not re-queue |
+| **UI Phase 4** | [`stages/ui_phase4_execution_plan_v1.md`](stages/ui_phase4_execution_plan_v1.md) | **UI-WP-LAYOUT-D07** (D-04 **done**) |
 | **Infra 5.5+** | [`stages/infra_55_execution_plan_v1.md`](stages/infra_55_execution_plan_v1.md) | **INFRA-VM09-001** |
 | **Wave C** | [`stages/wave_c_depth_plan_v1.md`](stages/wave_c_depth_plan_v1.md) | **WC-DEPTH-001** |
 | **Fire Phase 7** | [`stages/fire_sim_phase7_plan_v1.md`](stages/fire_sim_phase7_plan_v1.md) | planning only |
@@ -146,7 +146,7 @@ Do NOT: simulation_shell_phase2, minimap_compositor, world_preview/window.rs
 |:---:|:---|:---|:---|
 | **E-1** | Place aggregate mine → kiln → mixer via construction | `economy/activation/` | construction green |
 | **E-2** | Verify production ECS + flow edges | building JSON + activation bridge | `industrial_activation_live.json` |
-| **E-3** | Grid/substation stress optional (IND-E03) | utilities configs | overload flag if scoped |
+| **E-3** | Grid/substation stress (IND-E03) | **DONE** | [`industrial_grid_overload_impl_plan_v1.md`](industrial_grid_overload_impl_plan_v1.md) — **IND-E03-CODER-A** |
 
 ### Accept
 
@@ -275,9 +275,11 @@ Then **FX-FIRE-SPARK-005** (Spark/Ember class) → **006** (per-view cull).
 
 ---
 
-## Slice 9 — FX-WATER · Lake / river / ocean VFX (**dual @coder**)
+## Slice 9 — FX-WATER · Lake / river / ocean VFX — **CLOSED (archive)**
 
-**Design:** **SIGNED** · W1 **partial** (catalog + WGSL landed; GPU hook missing) · W2 **blocked**.
+**Sign-off:** [`water_vfx_track_closure_plan_v1.md`](water_vfx_track_closure_plan_v1.md) v2 (**PLAN-WATER-TRACK-001**) · steward **PASS** · **do not re-queue W1/W2 foam**.
+
+**Design:** **SIGNED** · W1/W2 **DONE** · `water_w2_foam_001_green: true` (river foam `0` waived on visual seed).
 
 **Dual queue:** [`water_surface_vfx_coder_queue_v1.md`](../prompts/guides/ui/water_surface_vfx_coder_queue_v1.md)
 
@@ -317,7 +319,7 @@ Do NOT: water_overlay.wgsl
 Verify: cargo test -p proc_A_dine01 --lib water_surface_visual
 ```
 
-**Blocks:** W2 until `water_w1_green: true`.
+**Blocks:** ~~W2 until `water_w1_green: true`~~ — **lifted**; track **CLOSED**.
 
 ---
 

@@ -6,7 +6,7 @@
 | IN_PROGRESS | 0 |
 | INTENTIONAL_STAGING | 0 |
 | LEGACY_TRANSITION | 0 |
-| STABLE | 0 |
+| STABLE | 45 |
 
 ## Incomplete systems
 

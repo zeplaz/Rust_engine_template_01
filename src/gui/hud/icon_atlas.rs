@@ -1,6 +1,6 @@
 //! Phase 4.1 — build-rail icon atlas (texture + RON UV manifest).
 //!
-//! Spec: `prompts/guides/ui/ui_phase4_icon_atlas_brief_v1.md` §10–§11.
+//! Spec: `prompts/guides/ui/ui_phase4_icon_atlas_plan_v1.md` · brief §10–§11.
 
 use std::collections::HashMap;
 use std::fmt;
@@ -117,7 +117,8 @@ impl IconAtlasUi {
         Some(
             bevy::ui::widget::ImageNode::new(self.atlas.clone())
                 .with_rect(rect)
-                .with_mode(bevy::ui::widget::NodeImageMode::Auto),
+                .with_mode(bevy::ui::widget::NodeImageMode::Auto)
+                .with_color(Color::WHITE),
         )
     }
 

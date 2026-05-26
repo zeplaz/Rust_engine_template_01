@@ -29,10 +29,24 @@ impl Plugin for IndustrialActivationPlugin {
             crate::economy::logistics::LogisticsThroughputPlugin,
         ));
         app.init_resource::<super::live_proof::IndustrialActivationLiveProofState>()
-            .init_resource::<super::concrete_chain_e2e::ConcreteChainE2eWitness>();
+            .init_resource::<crate::dev::Stage7PlayLiveProofState>()
+            .init_resource::<crate::dev::Stage7BehavioralLiveProofState>()
+            .init_resource::<crate::strategic::StrategicCommandQueue>()
+            .add_plugins(crate::strategic::Stage7BehavioralPlugin)
+            .init_resource::<super::concrete_chain_e2e::ConcreteChainE2eWitness>()
+            .init_resource::<super::concrete_chain_e2e::Stage7PlayChainSeedState>()
+            .init_resource::<super::concrete_chain_e2e::IndE03GridOverloadSeedState>();
+        app.add_systems(
+            OnEnter(crate::engine::states::BaseState::Simulation),
+            (
+                super::concrete_chain_e2e::reset_stage7_play_chain_seed_on_enter_simulation,
+                super::concrete_chain_e2e::reset_ind_e03_grid_overload_seed_on_enter_simulation,
+            ),
+        );
         app.add_systems(
             Update,
             (
+                super::concrete_chain_e2e::seed_stage7_play_concrete_chain_once,
                 crate::economy::site_placement::ensure_site_world_transform_system,
                 activate_industrial_facilities_system,
                 crate::economy::logistics::register_facility_portals_system,
@@ -42,14 +56,22 @@ impl Plugin for IndustrialActivationPlugin {
                 sync_industrial_activation_board_system,
                 super::live_proof::sync_industrial_proof_witness_flags,
                 super::live_proof::write_industrial_activation_live_proof_system,
+                crate::dev::write_stage7_play_live_proof_system,
+                crate::dev::write_stage7_behavioral_live_proof_system,
             )
                 .chain()
-                .after(crate::strategic::site_provisioning_system),
+                .after(crate::strategic::site_provisioning_system)
+                .after(crate::strategic::publish_stage7_behavioral_overlay_samples),
         );
         app.add_systems(
             Update,
             crate::economy::concrete_batch::tick_concrete_batch_cure_system
                 .run_if(crate::economy::resource_flow::economy_sim_running),
+        );
+        app.add_systems(
+            Update,
+            super::concrete_chain_e2e::seed_ind_e03_grid_overload_witness_once
+                .after(crate::economy::resource_flow::collect_grid_overload_witness_system),
         );
     }
 }
@@ -99,6 +121,7 @@ fn path_exists(p: &str) -> bool {
 pub fn refresh_industrial_activation_witness_system(
     mut w: ResMut<crate::dev::IndustrialActivationWitness>,
     buildings: Option<Res<BuildingDefinitionRegistry>>,
+    flow: Option<Res<crate::economy::resource_flow::ResourceFlowSimWitness>>,
 ) {
     w.catalog_id_on_commit = path_exists("src/strategic/site/events.rs")
         && path_exists("src/economy/activation/bridge.rs");
@@ -149,7 +172,10 @@ pub fn refresh_industrial_activation_witness_system(
         && w.transformer_activation;
 
     w.grid_membership = path_exists("src/entities/production/power/grid_topology.rs");
-    w.grid_overload_hook = w.grid_membership;
+    w.grid_overload_hook = w.grid_membership
+        && flow
+            .as_deref()
+            .is_some_and(|f| f.overload_events_total > 0);
     w.capacity_bottleneck = path_exists("src/economy/resource_flow.rs");
 
     w.logistics_node = path_exists("src/economy/logistics_bridge.rs");

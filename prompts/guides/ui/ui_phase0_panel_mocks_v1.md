@@ -88,4 +88,4 @@ Edge inset: overlay `left: 8px` (`CENTER_ROW_EDGE_PAD_PX`) — not counted in fo
 
 ## Designer sign-off
 
-See [`ui_phase2_designer_signoff_v1.md`](ui_phase2_designer_signoff_v1.md). **Lane index:** [`src/dev/ui_overhaul_plan.md`](../../../src/dev/ui_overhaul_plan.md).
+See [`ui_phase2_designer_signoff_v1.md`](ui_phase2_designer_signoff_v1.md) · **UI-OH-D2-SIGN-001:** [`ui_oh_d2_signoff_record_v1.md`](../../../src/dev/ui_oh_d2_signoff_record_v1.md). **Lane index:** [`src/dev/ui_overhaul_plan.md`](../../../src/dev/ui_overhaul_plan.md).

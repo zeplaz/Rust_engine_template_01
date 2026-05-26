@@ -8,8 +8,8 @@ use bevy::prelude::*;
 use crate::gui::{MapViewInstances, MinimapPresentationSource, MinimapShellState};
 use crate::construction::site_phase_tile_instances::ConstructionPhaseGpuChannel;
 use crate::render::{
-    EcologyVisualSnapshot, LogisticsVisualSnapshot, ResolvedViewports, SharedOverlayFieldBuffers,
-    TileWorldFallbackState,
+    EcologyVisualSnapshot, LogisticsVisualSnapshot, MinimapOperationalSnapshot, ResolvedViewports,
+    SharedOverlayFieldBuffers, TileWorldFallbackState,
 };
 use crate::strategic::{ConstructionPhase, CorridorConstructionBook};
 
@@ -36,7 +36,9 @@ pub struct MinimapCompositorHeatSources<'w> {
     pub logistics: Option<Res<'w, LogisticsVisualSnapshot>>,
     pub construction_book: Option<Res<'w, CorridorConstructionBook>>,
     pub ecology: Option<Res<'w, EcologyVisualSnapshot>>,
+    pub operational: Option<Res<'w, MinimapOperationalSnapshot>>,
     pub construction_channel: Option<Res<'w, ConstructionPhaseGpuChannel>>,
+    pub replay: Option<Res<'w, crate::systems::sim_frame_delta::CommittedSimReplayRing>>,
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -57,10 +59,17 @@ pub struct MinimapCompositorState {
     pub logistics_rows: u32,
     pub construction_rows: u32,
     pub ecology_rows: u32,
+    pub fow_rows: u32,
+    pub ew_rows: u32,
     pub fire_heat_enabled: bool,
     pub logistics_heat_enabled: bool,
     pub construction_heat_enabled: bool,
     pub ecology_heat_enabled: bool,
+    pub fow_heat_enabled: bool,
+    pub ew_heat_enabled: bool,
+    pub units_heat_enabled: bool,
+    pub unit_marker_rows: u32,
+    pub replay_scrub_enabled: bool,
 }
 
 #[must_use]
@@ -304,14 +313,25 @@ pub fn run_minimap_compositor_pass(
         diagnostics.record_skip(MinimapGpuSkipReason::UploadFailed);
         return;
     }
-    let (upload_ok, logistics_rows, construction_rows, ecology_rows) = upload_minimap_heat_textures(
+    let (
+        upload_ok,
+        logistics_rows,
+        construction_rows,
+        ecology_rows,
+        fow_rows,
+        ew_rows,
+        unit_marker_rows,
+        replay_scrub_enabled,
+    ) = upload_minimap_heat_textures(
         &mut images,
         &mut heat,
         heat_sources.overlay.as_deref(),
         heat_sources.logistics.as_deref(),
         heat_sources.construction_book.as_deref(),
         heat_sources.ecology.as_deref(),
+        heat_sources.operational.as_deref(),
         heat_sources.construction_channel.as_deref(),
+        heat_sources.replay.as_deref(),
         &map_views,
         &fallback,
         extent,
@@ -330,10 +350,14 @@ pub fn run_minimap_compositor_pass(
         logistics_heat_enabled: overlays.logistics_heat as u32,
         construction_heat_enabled: overlays.construction_heat as u32,
         ecology_heat_enabled: overlays.ecology_heat as u32,
+        fow_heat_enabled: overlays.fow as u32,
+        ew_heat_enabled: overlays.ew as u32,
         overlay_revision,
         logistics_rows,
         construction_rows,
         ecology_rows,
+        fow_rows,
+        ew_rows,
     };
     dispatch.commit_stamp = compositor.stamp;
 
@@ -350,10 +374,17 @@ pub fn run_minimap_compositor_pass(
     compositor.logistics_rows = logistics_rows;
     compositor.construction_rows = construction_rows;
     compositor.ecology_rows = ecology_rows;
+    compositor.fow_rows = fow_rows;
+    compositor.ew_rows = ew_rows;
     compositor.fire_heat_enabled = overlays.fire_heat;
     compositor.logistics_heat_enabled = overlays.logistics_heat;
     compositor.construction_heat_enabled = overlays.construction_heat;
     compositor.ecology_heat_enabled = overlays.ecology_heat;
+    compositor.fow_heat_enabled = overlays.fow;
+    compositor.ew_heat_enabled = overlays.ew;
+    compositor.units_heat_enabled = overlays.units;
+    compositor.unit_marker_rows = unit_marker_rows;
+    compositor.replay_scrub_enabled = replay_scrub_enabled;
     compositor.composite_path = MinimapCompositePath::GpuCompute;
     shell.compositor_revision = compositor.compositor_revision;
     shell.cached_texture_revision = compositor.stamp;

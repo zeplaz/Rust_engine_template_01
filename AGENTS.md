@@ -1,5 +1,13 @@
 # Agent / authoring notes
 
+## Single canonical worktree (required)
+
+**Primary (only):** `C:\dev\github\Rust_engine_template_01` · branch **`master`**.  
+All work merges **into master** — never treat `ds5i` as the integration target. Retire `C:\Users\oz_\.cursor\worktrees\Rust_engine_template_01\ds5i`.  
+Policy: [`src/dev/single_worktree_policy_v1.md`](src/dev/single_worktree_policy_v1.md). Gate record: [`src/dev/steward_w3_gate_v1.md`](src/dev/steward_w3_gate_v1.md).
+
+---
+
 ## Stage 5 convergence (primary lane)
 
 Visual / world representation work follows **convergent growth**, not a feature freeze. New systems must **attach to authoritative contracts** (`RepresentationResult`, `FireVisualFrame`, `SharedOverlayFieldBuffers`, projection graph, registry GPU upload) and must **not** introduce parallel extraction or duplicate LOD. Transitional scaffolds require a declared `ScaffoldContract` (`src/gui/representation_governance.rs`).

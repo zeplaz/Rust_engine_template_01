@@ -4,6 +4,7 @@
 |:---|:---|
 | **Version** | `2.2.0` |
 | **Date** | 2026-05-23 |
+| **Queue ID** | **DESIGN-UI-P2-SIGNOFF** |
 | **Reviewer** | Designer — **UI-P2-DESIGN** |
 | **Format** | Mirrors [`ui_phase1_designer_signoff_v1.md`](ui_phase1_designer_signoff_v1.md) |
 | **Mocks** | [`ui_phase0_panel_mocks_v1.md`](ui_phase0_panel_mocks_v1.md) |
@@ -90,7 +91,7 @@ Compared to [`ui_phase0_panel_mocks_v1.md`](ui_phase0_panel_mocks_v1.md) § Pane
 | Icon affordance | Tactical glyph column | `⏱` `⛭` `◎` `☰` on rail | ☑ |
 | Expand stack | Rail click / toggle key | `command_left_stack_rail_interaction` | ☑ |
 | Build tools | — | `BuildRailRoot` **52px** + `BuildStripState` sync | ◐ |
-| Phase 4 icons | Atlas rail icons | `IconAtlasPlugin` · **placeholder PNG kept** · witness `icon_atlas_loaded` | ◐ |
+| Phase 4 icons | Atlas rail icons | `IconAtlasPlugin` · traced PNG · witness `icon_atlas_loaded` | **PASS** |
 
 ### Phase 2C — deferred layout lane (`LeftContextStack` + `BuildRailRoot` vs P4 **48px** mock)
 
@@ -165,7 +166,7 @@ Edge inset: overlay `left: CENTER_ROW_EDGE_PAD_PX` (**8px**) from window edge �
 
 ### Optional — traced atlas PNG (Phase 4 art)
 
-**Disposition:** Keep [`icon_atlas_phase4_v1.png`](../../../assets/textures/ui/icon_atlas_phase4_v1.png) **placeholder** until designer delivers traced silhouettes per [`ui_phase4_icon_atlas_brief_v1.md`](ui_phase4_icon_atlas_brief_v1.md) §4–§7. **Not blocking** implementation or Phase 2 **SIGNED** — swap PNG only when art drops (same path, same RON grid).
+**Disposition:** [`icon_atlas_phase4_v1.png`](../../../assets/textures/ui/icon_atlas_phase4_v1.png) **traced silhouettes** delivered **UI-OH-P4-ART-001** (2026-05-25). Re-bake: `tools/orchestrator/scripts/bake_icon_atlas_phase4.py`.
 
 ---
 
@@ -198,7 +199,7 @@ Signed after **@coder item 1** (4.3 visual gate) without spine regression.
 
 1. ~~**4.3 visual gate**~~ — **done** (2026-05-24).
 2. ~~**F-03 (optional)**~~ — **done** (`ops_zone_hover_token: true`).
-3. **P4-ART-01 (optional)** — Traced atlas PNG when ready; **keep placeholder** until drop.
+3. ~~**P4-ART-01 (optional)**~~ — **done** — **UI-OH-P4-ART-001** traced atlas (2026-05-25).
 4. ~~**2C layout**~~ — **CLOSED** — **2C-B** signed 2026-05-24; mock § P4 + witness `phase2c` aligned. No coder layout change required.
 
 ---
@@ -209,6 +210,7 @@ Signed after **@coder item 1** (4.3 visual gate) without spine regression.
 |:---|:---|:---|:---|
 | Coder | 2026-05-24 | **4.3 + F-03** | Visual gate green; ops strip hover `bevy_accent_hot()` |
 | Designer | 2026-05-24 | **SIGNED** | v2.2 — 2C-B closed; P4 **PASS**; P4-ART optional |
+| Designer | 2026-05-25 | **UI-OH-D2-SIGN-001** | Post–2A mock parity witness — [`ui_oh_d2_signoff_record_v1.md`](../../../src/dev/ui_oh_d2_signoff_record_v1.md) **PASS** |
 | Designer | 2026-05-23 | **P4-ART hold** | Placeholder atlas kept — traced PNG not delivered |
 
 **Out of scope (Phase 2):** sim-side `BuildToolbox` catalog (PLAY-01); F3 editor egui removal; Phase 4 traced atlas (**designer-owned**, placeholder acceptable).
@@ -223,6 +225,7 @@ Signed after **@coder item 1** (4.3 visual gate) without spine regression.
 |:---|:---|:---|
 | v1.0.0 | 2026-05-23 | Initial checklist |
 | v1.6.0 | 2026-05-23 | UI-P2-DESIGN witness reconcile |
+| v2.3.0 | 2026-05-25 | **UI-OH-D2-SIGN-001** post–2A mock parity witness — [`ui_oh_d2_signoff_record_v1.md`](../../../src/dev/ui_oh_d2_signoff_record_v1.md) |
 | v2.2.1 | 2026-05-24 | @coder item 4 — designer picks **2C-A/B/C/D** first; coder implements after mock § P4 |
 | v2.2.0 | 2026-05-23 | Expanded Phase 2C layout defer — options 2C-A/B/C/D, width budget, exit criteria |
 | v2.1.1 | 2026-05-23 | P4-ART blocked on designer traced atlas; placeholder kept |

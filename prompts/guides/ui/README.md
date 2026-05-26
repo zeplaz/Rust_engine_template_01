@@ -9,7 +9,7 @@
 
 | Item | Notes |
 |:---|:---|
-| **Phase 4 icon atlas PNG** | Replace placeholder per [`ui_phase4_icon_atlas_brief_v1.md`](ui_phase4_icon_atlas_brief_v1.md) — code path already green |
+| **Phase 4 icon atlas PNG** | Optional **UI-OH-P4-ART-001** — [`ui_phase4_icon_atlas_brief_v1.md`](ui_phase4_icon_atlas_brief_v1.md) · **SIGNED** 2026-05-25 |
 | **VFX mock review** | [`vfx_post_implementation_review_v1.md`](vfx_post_implementation_review_v1.md) · captures in `assets/vfx/reference/review_captures/` |
 
 ---
@@ -22,15 +22,22 @@
 | **Phase 1** — theme / tokens | CLOSED | [`design_theme.md`](design_theme.md), [`palette_v2_tokens.md`](palette_v2_tokens.md) |
 | **Phase 2** — Bevy shell + egui dedupe | **CLOSED** | [`ui_overhaul_plan.md`](../../../src/dev/ui_overhaul_plan.md) |
 | **Phase 2 sign-off** | **SIGNED** | [`ui_phase2_designer_signoff_v1.md`](ui_phase2_designer_signoff_v1.md) v2.1.1 |
-| **Phase 3 M1/M1.5** — GPU minimap | **CLOSED** · plan **APPROVED** | [`ui_phase3_minimap_compositor_plan_v1.md`](ui_phase3_minimap_compositor_plan_v1.md) v1.0.1 · archive [`ui_phase3_minimap_compositor_plan.md`](../../../src/dev/ui_phase3_minimap_compositor_plan.md) |
-| **Phase 3 M2** — strategic overlays | **SIGNED** | [`minimap_d_m2_signoff_v1.md`](../../../src/dev/minimap_d_m2_signoff_v1.md) · [`ui_phase3_coder_queue_v1.md`](ui_phase3_coder_queue_v1.md) |
-| **Phase 4** — icon atlas | PARTIAL (code done) | [`ui_phase4_icon_atlas_brief_v1.md`](ui_phase4_icon_atlas_brief_v1.md) — **optional** traced PNG |
+| **Phase 3 GPU minimap** | M1/M2/M3 | [`ui_phase3_minimap_compositor_full_plan_v1.md`](ui_phase3_minimap_compositor_full_plan_v1.md) · M1 [`ui_phase3_minimap_compositor_plan_v1.md`](ui_phase3_minimap_compositor_plan_v1.md) · M2 [`ui_phase3_minimap_m2_impl_full_plan_v1.md`](ui_phase3_minimap_m2_impl_full_plan_v1.md) |
+| **Phase 3 M2** — strategic overlays | **CLOSED** | [`minimap_d_m2_signoff_v1.md`](../../../src/dev/minimap_d_m2_signoff_v1.md) · full plan [`ui_phase3_minimap_m2_impl_full_plan_v1.md`](ui_phase3_minimap_m2_impl_full_plan_v1.md) |
+| **Phase 4** — World Preview handoff | **CODER CLOSED** | D-04 + LAYOUT-002 done · optional WP-L3/L4 |
+| **Phase 4** — icon atlas / petroleum | P4.1+P5 **DONE** · art/vehicles open | [`ui_phase4_icon_atlas_plan_v1.md`](ui_phase4_icon_atlas_plan_v1.md) · brief [`ui_phase4_icon_atlas_brief_v1.md`](ui_phase4_icon_atlas_brief_v1.md) |
+| **UI Phase 2B egui gate** | **CLOSED** | [`ui_phase2b_gate_plan_v1.md`](ui_phase2b_gate_plan_v1.md) · tasks [`ui_p2b_coder_b_numbered_tasks_v1.md`](../../../src/dev/ui_p2b_coder_b_numbered_tasks_v1.md) |
+| **Phase 5** — pause menu | **OPEN (P2)** | [`ui_phase5_pause_menu_plan_v1.md`](ui_phase5_pause_menu_plan_v1.md) — scaffold egui partial |
+
+| **World Map Preview product** | **SIGNED** | [`world_preview_product_decision_v1.md`](world_preview_product_decision_v1.md) · full plan [`world_preview_product_full_plan_v1.md`](world_preview_product_full_plan_v1.md) |
 | **World Map Preview layout** | **SIGNED** | [`world_map_preview_layout_decision_v1.md`](world_map_preview_layout_decision_v1.md) · [**D-WP**](world_preview_d_wp_track_signoff_v1.md) · [D-01](world_preview_d01_shell_signoff_v1.md) · [D-02 opt](world_preview_d02_map_dominance_signoff_v1.md) |
+| **D-WP post-impl review** | **SIGNED PASS** | [`world_preview_d_wp_review_record_v1.md`](../../../src/dev/world_preview_d_wp_review_record_v1.md) · brief [`world_preview_d_wp_post_impl_review_v1.md`](world_preview_d_wp_post_impl_review_v1.md) |
 | **GPU minimap M1** | **SIGNED done** | [`minimap_d_m1_signoff_v1.md`](../../../src/dev/minimap_d_m1_signoff_v1.md) (**D-MINIMAP-M1**) |
 | **GPU minimap M2** | **SIGNED done** | [`minimap_d_m2_signoff_v1.md`](../../../src/dev/minimap_d_m2_signoff_v1.md) (**D-MINIMAP-M2**) |
-| **D-VFX** post-implementation review | **SIGNED TUNE** | [`vfx_design_review_record_v1.md`](../../../src/dev/vfx_design_review_record_v1.md) · brief [`vfx_post_implementation_review_v1.md`](vfx_post_implementation_review_v1.md) |
+| **GPU minimap M3** | **FoW+EW DONE** · units/replay optional | **UI-P3-M4-001** — not **UI-P3-M3-001** ([`ui_phase3_minimap_track_naming_v1.md`](ui_phase3_minimap_track_naming_v1.md)) |
+| **DESIGN-D-VFX-POST-001** | **SIGNED PASS** | [`vfx_design_review_record_v1.md`](../../../src/dev/vfx_design_review_record_v1.md) · closure [`fire_spark_track_closure_plan_v1.md`](../../../src/dev/fire_spark_track_closure_plan_v1.md) |
 | **Fire pinpoint sparks (VFX)** | **ACTIVE** | [`fire_particle_spark_coder_queue_v1.md`](fire_particle_spark_coder_queue_v1.md) · [`vfx_coder_phase2_queue_v1.md`](../../../src/dev/vfx_coder_phase2_queue_v1.md) |
-| **Water surface VFX** | **ACTIVE · NOT CLOSED** | [`water_vfx_closure_plan_v1.md`](../../../src/dev/stages/water_vfx_closure_plan_v1.md) · [`water_surface_vfx_coder_queue_v1.md`](water_surface_vfx_coder_queue_v1.md) |
+| **Water surface VFX** | **CLOSED** | [`water_vfx_track_closure_plan_v1.md`](../../../src/dev/water_vfx_track_closure_plan_v1.md) (**PLAN-WATER-TRACK-001** — do not re-queue W1/W2 foam) |
 
 ---
 
@@ -41,12 +48,13 @@
 | **P2-VFX-VISUAL-001** | `@coder` A | **queued** — tactical zoom; `fire_spark_rows` / `water_particle_*` > 0 |
 | **P2-VFX-WITNESS-001** | `@coder` B | **queued** — unit tests at `zoom_alpha ≥ 0.65` |
 | **P2-FIRE-SPARK-010** | `@coder` A | **queued** — sparks above smoke overlay |
-| **P2-FIRE-SPARK-011** | `@coder` A | queued — compute motion tuning |
+| **P2-FIRE-SPARK-011** | `@coder` A | **done** — unblocks **DESIGN-D-VFX-POST-001** |
+| **DESIGN-D-VFX-POST-001** | `@designer` | **done** — after **P2-FIRE-SPARK-011** |
 | **P2-WATER-POLISH-001** | `@coder` A | queued — river read / ocean tiles |
 | **P2-WATER-WITNESS-002** | `@coder` B | queued — refresh water particle JSON |
 | **UI-WP-LAYOUT-001** | `@coder` | **done** — D-01 unified workspace shell |
 | **IND-E01** | `@coder` B | queued — industrial chain |
-| **D-VFX** / VFX-POST-REVIEW | `@designer` | **done** — [`vfx_design_review_record_v1.md`](../../../src/dev/vfx_design_review_record_v1.md) **TUNE** |
+| **D-VFX** / VFX-POST-REVIEW | `@designer` | **done** — [`vfx_design_review_record_v1.md`](../../../src/dev/vfx_design_review_record_v1.md) **PASS** (same as **DESIGN-VFX-CAPTURE-001**) |
 
 **Done (no rework):** FX-FIRE-SPARK-001…006 · FX-WATER-SHADER-001/002 · FX-WATER-PARTICLE-001/002
 

@@ -1,13 +1,13 @@
 # Water surface VFX — dual @coder queue `v1`
 
-> **Active closure track:** [`src/dev/stages/water_vfx_closure_plan_v1.md`](../../../src/dev/stages/water_vfx_closure_plan_v1.md) — **NOT CLOSED** (first pass landed ≠ design done).  
+> **Track CLOSED:** [`src/dev/water_vfx_track_closure_plan_v1.md`](../../../src/dev/water_vfx_track_closure_plan_v1.md) (**PLAN-WATER-TRACK-001**) · coder detail [`water_vfx_closure_plan_v1.md`](../../../src/dev/stages/water_vfx_closure_plan_v1.md).  
 > **Fire / shared proof:** [`src/dev/vfx_coder_phase2_queue_v1.md`](../../../src/dev/vfx_coder_phase2_queue_v1.md).
 
 | Field | Value |
 |:---|:---|
-| **Version** | `1.2.0` |
-| **Sign-off** | [`../../src/dev/stage_tracks_signoff_ledger_v1.md`](../../src/dev/stage_tracks_signoff_ledger_v1.md) · **WATER-DESIGN-001 SIGNED TUNE** |
-| **Date** | 2026-05-24 |
+| **Version** | `1.3.0` |
+| **Sign-off** | [`../../src/dev/stage_tracks_signoff_ledger_v1.md`](../../src/dev/stage_tracks_signoff_ledger_v1.md) · **FX-WATER CLOSED** |
+| **Date** | 2026-05-25 |
 | **Track plan** | [`src/dev/stages/water_vfx_closure_plan_v1.md`](../../../src/dev/stages/water_vfx_closure_plan_v1.md) |
 | **Owner** | `@coder` ×2 · [`render_pipeline_agent.md`](../../../tools/orchestrator/agents/render_pipeline_agent.md) |
 | **Design gate** | **SIGNED** — [`water_surface_vfx_design_plan_v1.md`](../../../src/dev/water_surface_vfx_design_plan_v1.md) |
@@ -45,7 +45,7 @@
 | **W1** | FX-WATER-SHADER-001/002 | ☑ **first pass** | `water_w1_green`, GPU hook in `engine_with_worldgen.rs` |
 | **W1 gap** | Ocean + river **read** | ☑ | W1 slices landed; **WATER-WITNESS-001** / **WATER-STRATEGIC-001** dual-band JSON |
 | **W2** | FX-WATER-PARTICLE-001/002 | ☑ **first pass** | `water_particle_rows: 96` tactical; **foam counts 0** |
-| **Closure** | Track plan | ☐ **ACTIVE** | [`water_vfx_closure_plan_v1.md`](../../../src/dev/stages/water_vfx_closure_plan_v1.md) |
+| **Closure** | Track plan | ☑ **CLOSED** | W2 + strategic + **STEWARD-WATER-WITNESS-001 PASS** |
 
 **Landed (do not redo from scratch):**
 

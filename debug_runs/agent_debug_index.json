@@ -41,20 +41,22 @@
       "debug_runs/wave_p_live.json",
       "debug_runs/wave_c_live.json",
       "debug_runs/ui_shell_migration_live.json",
-      "debug_runs/minimap_compositor_live.json"
+      "debug_runs/minimap_compositor_live.json",
+      "debug_runs/stage7_behavioral_live.json",
+      "debug_runs/stage7_play_live.json"
     ],
     "relative_path": "debug_runs/agent_debug_index.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "debug_run_envelope",
-    "written_at_epoch_secs": 1779646657
+    "written_at_epoch_secs": 1779761163
   },
   "profile": "AGENT_DEBUG_INDEX",
-  "proof_count": 17,
+  "proof_count": 19,
   "proofs": [
     {
-      "bytes": 15217,
+      "bytes": 17721,
       "exists": true,
-      "modified_epoch_secs": 1779645881,
+      "modified_epoch_secs": 1779761163,
       "path": "debug_runs/stage5_full_app_live.json",
       "summary": {
         "activation_green": null,
@@ -70,9 +72,9 @@
       }
     },
     {
-      "bytes": 3730,
+      "bytes": 3879,
       "exists": true,
-      "modified_epoch_secs": 1779644695,
+      "modified_epoch_secs": 1779761121,
       "path": "debug_runs/infrastructure_view_isolation_live.json",
       "summary": {
         "activation_green": null,
@@ -88,9 +90,9 @@
       }
     },
     {
-      "bytes": 9693,
+      "bytes": 9783,
       "exists": true,
-      "modified_epoch_secs": 1779644898,
+      "modified_epoch_secs": 1779755990,
       "path": "debug_runs/construction_stage_live.json",
       "summary": {
         "activation_green": null,
@@ -106,9 +108,9 @@
       }
     },
     {
-      "bytes": 5195,
+      "bytes": 5871,
       "exists": true,
-      "modified_epoch_secs": 1779646427,
+      "modified_epoch_secs": 1779755990,
       "path": "debug_runs/industrial_activation_live.json",
       "summary": {
         "activation_green": true,
@@ -124,9 +126,9 @@
       }
     },
     {
-      "bytes": 2525,
+      "bytes": 2632,
       "exists": true,
-      "modified_epoch_secs": 1779644695,
+      "modified_epoch_secs": 1779755990,
       "path": "debug_runs/fire_ecology_live.json",
       "summary": {
         "activation_green": null,
@@ -142,9 +144,9 @@
       }
     },
     {
-      "bytes": 2565,
+      "bytes": 2685,
       "exists": true,
-      "modified_epoch_secs": 1779645873,
+      "modified_epoch_secs": 1779755990,
       "path": "debug_runs/logistics_throughput_live.json",
       "summary": {
         "activation_green": null,
@@ -234,9 +236,9 @@
       }
     },
     {
-      "bytes": 2891,
+      "bytes": 3085,
       "exists": true,
-      "modified_epoch_secs": 1779644695,
+      "modified_epoch_secs": 1779761121,
       "path": "debug_runs/stage6_virtualization_live.json",
       "summary": {
         "activation_green": null,
@@ -245,9 +247,9 @@
         "parity_green": null,
         "parse_ok": true,
         "profile": "STAGE6_VIRTUALIZATION",
-        "readiness_passes": false,
-        "readiness_violation_count": 1,
-        "stage6_virtualization_green": false,
+        "readiness_passes": true,
+        "readiness_violation_count": 0,
+        "stage6_virtualization_green": true,
         "throughput_green": null
       }
     },
@@ -270,9 +272,9 @@
       }
     },
     {
-      "bytes": 2340,
+      "bytes": 3111,
       "exists": true,
-      "modified_epoch_secs": 1779644699,
+      "modified_epoch_secs": 1779748102,
       "path": "debug_runs/wave_p_live.json",
       "summary": {
         "activation_green": null,
@@ -288,9 +290,9 @@
       }
     },
     {
-      "bytes": 2221,
+      "bytes": 2389,
       "exists": true,
-      "modified_epoch_secs": 1779644699,
+      "modified_epoch_secs": 1779725338,
       "path": "debug_runs/wave_c_live.json",
       "summary": {
         "activation_green": null,
@@ -306,9 +308,9 @@
       }
     },
     {
-      "bytes": 5450,
+      "bytes": 7995,
       "exists": true,
-      "modified_epoch_secs": 1779646657,
+      "modified_epoch_secs": 1779761163,
       "path": "debug_runs/ui_shell_migration_live.json",
       "summary": {
         "activation_green": null,
@@ -324,9 +326,9 @@
       }
     },
     {
-      "bytes": 3226,
+      "bytes": 4663,
       "exists": true,
-      "modified_epoch_secs": 1779646638,
+      "modified_epoch_secs": 1779761121,
       "path": "debug_runs/minimap_compositor_live.json",
       "summary": {
         "activation_green": null,
@@ -335,6 +337,42 @@
         "parity_green": null,
         "parse_ok": true,
         "profile": null,
+        "readiness_passes": null,
+        "readiness_violation_count": null,
+        "stage6_virtualization_green": null,
+        "throughput_green": null
+      }
+    },
+    {
+      "bytes": 3439,
+      "exists": true,
+      "modified_epoch_secs": 1779756302,
+      "path": "debug_runs/stage7_behavioral_live.json",
+      "summary": {
+        "activation_green": null,
+        "infrastructure_view_isolation_green": null,
+        "operational_green": null,
+        "parity_green": null,
+        "parse_ok": true,
+        "profile": "STAGE7_BEHAVIORAL",
+        "readiness_passes": null,
+        "readiness_violation_count": null,
+        "stage6_virtualization_green": null,
+        "throughput_green": null
+      }
+    },
+    {
+      "bytes": 2663,
+      "exists": true,
+      "modified_epoch_secs": 1779752966,
+      "path": "debug_runs/stage7_play_live.json",
+      "summary": {
+        "activation_green": true,
+        "infrastructure_view_isolation_green": null,
+        "operational_green": null,
+        "parity_green": null,
+        "parse_ok": true,
+        "profile": "STAGE7_PLAY",
         "readiness_passes": null,
         "readiness_violation_count": null,
         "stage6_virtualization_green": null,

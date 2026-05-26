@@ -2,6 +2,7 @@
   "_agent_meta": {
     "agent_commands": [
       "cargo test -p proc_A_dine01 --lib stage6",
+      "cargo test -p proc_A_dine01 --lib wc_d04_coder_b",
       "cargo run -p proc_A_dine01"
     ],
     "docs": {
@@ -42,48 +43,52 @@
       "debug_runs/wave_p_live.json",
       "debug_runs/wave_c_live.json",
       "debug_runs/ui_shell_migration_live.json",
-      "debug_runs/minimap_compositor_live.json"
+      "debug_runs/minimap_compositor_live.json",
+      "debug_runs/stage7_behavioral_live.json",
+      "debug_runs/stage7_play_live.json"
     ],
     "relative_path": "debug_runs/stage6_virtualization_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "stage6_live_proof",
-    "written_at_epoch_secs": 1779644695
+    "written_at_epoch_secs": 1779761121
   },
   "frame": {
-    "active_atlas_slots": 1,
-    "consumer_window_len": 5041,
-    "core_chunk_count": 4761,
+    "active_atlas_slots": 2,
+    "consumer_window_len": 1,
+    "core_chunk_count": 0,
     "focus_chunk": [
-      5,
-      5
+      0,
+      0
     ],
-    "ghost_chunk_count": 280,
-    "gpu_upload_bytes_frame": 0,
-    "per_view_window_count": 87,
-    "residency_chunk_count": 5041
+    "ghost_chunk_count": 0,
+    "gpu_upload_bytes_frame": 4096,
+    "per_view_window_count": 0,
+    "residency_chunk_count": 128
   },
   "profile": "STAGE6_VIRTUALIZATION",
   "stage6_readiness": {
-    "passes": false,
+    "passes": true,
     "report": {
-      "atlas_slots_active": false,
+      "atlas_slots_active": true,
       "projection_window_populated": true,
       "residency_populated": true,
       "wave_c_ok": true
     },
-    "violations": [
-      "gpu_upload_inactive"
-    ]
+    "violations": []
   },
-  "stage6_virtualization_green": false,
-  "vm_a_crosslink": {
-    "authority_revision": 1764,
-    "dual_writer_pose_violation": false,
-    "infrastructure_view_isolation_green": true
-  },
+  "stage6_virtualization_green": true,
+  "vm_a_crosslink": null,
   "wave_c": {
     "open_backlog_items": 0,
     "passes": true,
     "prerequisites_ok": true
+  },
+  "wc_d04": {
+    "bootstrap_frames": 45,
+    "gpu_upload_bytes_frame": 4096,
+    "green": true,
+    "hysteresis_frames": 2,
+    "residency_churn_anomalies_session": 0,
+    "residency_churn_cell_delta": 48
   }
 }

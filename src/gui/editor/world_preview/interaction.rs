@@ -3,6 +3,7 @@
 use bevy_egui::egui;
 
 use crate::gui::map_view_projection::map_surface_screen_to_world;
+use crate::gui::{view_surface_screen_to_world, ViewId, ViewManager};
 
 use super::layers::PreviewLayers;
 use super::viewport::EditorViewport;
@@ -34,15 +35,15 @@ pub fn apply_pan(viewport: &mut EditorViewport, delta_screen: Vec2) {
     viewport.camera_center -= delta_screen / z;
 }
 
+/// **INFRA-PROJ2-001** — hover tile via [`view_surface_screen_to_world`] (`ViewId::WorldPreview`).
 pub fn update_hover_tile(
+    manager: &ViewManager,
     viewport: &mut EditorViewport,
     pointer_screen: Option<egui::Pos2>,
     panel_rect: egui::Rect,
     image_rect: egui::Rect,
     tex_w: u32,
     tex_h: u32,
-    zoom: f32,
-    camera_center: Vec2,
 ) {
     let Some(p) = pointer_screen.filter(|p| panel_rect.contains(*p) && image_rect.contains(*p))
     else {
@@ -51,7 +52,14 @@ pub fn update_hover_tile(
     };
     let tw = tex_w.max(1) as f32;
     let th = tex_h.max(1) as f32;
-    let w = map_surface_screen_to_world(p, image_rect, camera_center, zoom, tw, th);
+    // `image_rect` is built with smoothed pan/zoom; bridge may lag by a frame.
+    let pan = viewport.interaction.current_pan;
+    let zoom = viewport.interaction.current_zoom;
+    let visual = map_surface_screen_to_world(p, image_rect, pan, zoom, tw, th);
+    let w = match view_surface_screen_to_world(manager, ViewId::WorldPreview, p, image_rect, tw, th) {
+        Some(authority) if (authority - visual).length_squared() < 1e-2 => authority,
+        _ => visual,
+    };
     let tx = w.x.floor() as i32;
     let ty = w.y.floor() as i32;
     if tx >= 0 && ty >= 0 && (tx as u32) < tex_w && (ty as u32) < tex_h {

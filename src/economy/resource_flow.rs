@@ -86,6 +86,8 @@ pub struct ResourceFlowSimWitness {
     pub ticks_propagated: u32,
     pub starvation_events: u32,
     pub overload_events_this_frame: u32,
+    /// IND-E03 — cumulative `GridOverloadEvent` count for live proof JSON.
+    pub overload_events_total: u64,
 }
 
 /// Map designer JSON resource strings to sim `ResourceType` where names align.
@@ -384,6 +386,7 @@ pub fn collect_grid_overload_witness_system(
     witness.overload_events_this_frame = 0;
     for _ in reader.read() {
         witness.overload_events_this_frame = witness.overload_events_this_frame.saturating_add(1);
+        witness.overload_events_total = witness.overload_events_total.saturating_add(1);
     }
 }
 
@@ -432,11 +435,16 @@ impl Plugin for ResourceFlowPlugin {
                 (
                     propagate_resource_flow_system,
                     apply_starvation_to_smelter_system,
-                    collect_grid_overload_witness_system,
                     transformer_thermal_stress_system,
                 )
                     .chain()
                     .after(crate::economy::logistics::LogisticsSimulationSet::FreightDispatch)
+                    .run_if(economy_sim_running),
+            )
+            .add_systems(
+                Update,
+                collect_grid_overload_witness_system
+                    .after(crate::entities::production::power::grid_topology::emit_grid_overload_signals)
                     .run_if(economy_sim_running),
             );
     }

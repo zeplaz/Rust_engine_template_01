@@ -248,6 +248,162 @@ pub fn spawn_concrete_portland_chain_operational(
     entities
 }
 
+/// One-shot Portland chain for **S7P-STEWARD-001** when `RUST_ENGINE_STAGE7_PLAY_SEED=1`.
+#[derive(Resource, Debug, Default)]
+pub struct Stage7PlayChainSeedState {
+    pub seeded: bool,
+}
+
+#[inline]
+fn stage7_play_seed_enabled() -> bool {
+    fn env_on(key: &str) -> bool {
+        std::env::var(key)
+            .ok()
+            .is_some_and(|v| v == "1" || v.eq_ignore_ascii_case("true"))
+    }
+    env_on("RUST_ENGINE_STAGE7_PLAY_SEED") || env_on("RUST_ENGINE_S7P_STEWARD")
+}
+
+pub fn seed_stage7_play_concrete_chain_once(
+    base: Res<State<crate::engine::states::BaseState>>,
+    mut seed: ResMut<Stage7PlayChainSeedState>,
+    mut witness: ResMut<ConcreteChainE2eWitness>,
+    mut commands: Commands,
+    def_ref: Query<&BuildingDefinitionRef>,
+) {
+    if seed.seeded || !matches!(base.get(), crate::engine::states::BaseState::Simulation) {
+        return;
+    }
+    if !stage7_play_seed_enabled() {
+        return;
+    }
+    let already = def_ref.iter().any(|d| d.catalog_id == CONCRETE_PORTLAND_STEPS[2]);
+    if already {
+        seed.seeded = true;
+        return;
+    }
+    spawn_concrete_portland_chain_operational(&mut commands, BuildSiteTile { x: 48, z: 48 });
+    witness.placed_via_construction = false;
+    witness.sites_committed = 0;
+    seed.seeded = true;
+}
+
+pub fn reset_stage7_play_chain_seed_on_enter_simulation(
+    mut seed: ResMut<Stage7PlayChainSeedState>,
+) {
+    seed.seeded = false;
+}
+
+/// **IND-E03-CODER-A** — one-shot grid overload cluster for live proof depth.
+/// Plan: `src/dev/industrial_grid_overload_impl_plan_v1.md` (PLAN-IND-E03-001).
+#[derive(Resource, Debug, Default)]
+pub struct IndE03GridOverloadSeedState {
+    pub seeded: bool,
+    pub cluster_spawned: bool,
+}
+
+#[inline]
+fn ind_e03_grid_seed_enabled(launch: Option<&crate::engine::launch_args::EngineLaunchArgs>) -> bool {
+    fn env_on(key: &str) -> bool {
+        std::env::var(key)
+            .ok()
+            .is_some_and(|v| v == "1" || v.eq_ignore_ascii_case("true"))
+    }
+    if env_on("RUST_ENGINE_IND_E03_SEED") || env_on("RUST_ENGINE_STAGE7_PLAY_SEED") {
+        return true;
+    }
+    launch.is_some_and(|l| l.full_capture_active())
+}
+
+/// Spawns transformer host + high-load members (mirrors `bridge` overload integration test).
+pub fn spawn_ind_e03_grid_overload_cluster(commands: &mut Commands, origin: BuildSiteTile) {
+    use crate::entities::production::power::{
+        ElectricalComponent, ElectricalGrid, TransformerComponent,
+    };
+    use crate::entities::structure::components::Building;
+    use crate::entities::types::s_flagz::BuildingType;
+
+    let base = crate::economy::site_placement::site_world_position(origin);
+    commands.spawn((
+        Transform::from_translation(base),
+        GlobalTransform::default(),
+        TransformerComponent {
+            input_voltage: 138_000.0,
+            output_voltage: 13_800.0,
+        },
+        ElectricalGrid::default(),
+        ElectricalComponent {
+            base_load: 0.1,
+            current_load: 0.1,
+            max_transfer: 2.0,
+            capacity: 2.0,
+        },
+        Building {
+            building_type: BuildingType::Generic,
+        },
+    ));
+    for i in 0..4 {
+        commands.spawn((
+            Transform::from_translation(base + Vec3::new(i as f32 * 8.0, 0.0, 0.0)),
+            GlobalTransform::default(),
+            Building {
+                building_type: BuildingType::Generic,
+            },
+            ElectricalComponent {
+                base_load: 2.0,
+                current_load: 2.0,
+                max_transfer: 2.0,
+                capacity: 0.0,
+            },
+        ));
+    }
+}
+
+pub fn reset_ind_e03_grid_overload_seed_on_enter_simulation(
+    mut seed: ResMut<IndE03GridOverloadSeedState>,
+) {
+    *seed = IndE03GridOverloadSeedState::default();
+}
+
+pub fn seed_ind_e03_grid_overload_witness_once(
+    launch: Option<Res<crate::engine::launch_args::EngineLaunchArgs>>,
+    base: Res<State<crate::engine::states::BaseState>>,
+    chain: Res<ConcreteChainE2eWitness>,
+    mut seed: ResMut<IndE03GridOverloadSeedState>,
+    mut commands: Commands,
+    flow: Option<Res<ResourceFlowSimWitness>>,
+) {
+    if !matches!(base.get(), crate::engine::states::BaseState::Simulation) {
+        return;
+    }
+    if seed.seeded || !ind_e03_grid_seed_enabled(launch.as_deref()) {
+        return;
+    }
+    if !chain.production_green() {
+        return;
+    }
+    if !seed.cluster_spawned {
+        spawn_ind_e03_grid_overload_cluster(
+            &mut commands,
+            BuildSiteTile { x: 50, z: 50 },
+        );
+        seed.cluster_spawned = true;
+        info!(
+            target: "economy::activation::ind_e03",
+            "IND-E03: spawned grid overload cluster for witness depth"
+        );
+        return;
+    }
+    if flow.as_ref().is_some_and(|f| f.overload_events_total > 0) {
+        seed.seeded = true;
+        info!(
+            target: "economy::activation::ind_e03",
+            "IND-E03: grid overload witness depth green (overload_events_total={})",
+            flow.as_ref().map(|f| f.overload_events_total).unwrap_or(0)
+        );
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

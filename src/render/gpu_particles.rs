@@ -83,6 +83,8 @@ pub const FIRE_SPARK_SCATTER_MAX: usize = 14;
 pub const FIRE_SPARK_MIN_ZOOM_ALPHA: f32 = 0.28;
 /// Full scatter density by this zoom band (tactical burn read).
 pub const FIRE_SPARK_FULL_SCATTER_ZOOM_ALPHA: f32 = 0.58;
+/// P2-FIRE-SPARK-011 / `--test visual` proof band (matches [`crate::gui::TACTICAL_VFX_PROOF_ZOOM_ALPHA`]).
+pub const FIRE_SPARK_TACTICAL_PROOF_ZOOM_ALPHA: f32 = 0.85;
 /// Legacy alias — tile fallback uses this for CPU heat boost cutoff.
 pub const FIRE_SPARK_STRATEGIC_ZOOM_ALPHA: f32 = FIRE_SPARK_MIN_ZOOM_ALPHA;
 /// When filled rows exceed this fraction of capacity, halve scatter per hot cell.
@@ -96,6 +98,16 @@ pub fn fire_spark_compute_enabled() -> bool {
         std::env::var("FIRE_SPARK_COMPUTE").as_deref(),
         Ok("0") | Ok("false") | Ok("off")
     )
+}
+
+/// P2-FIRE-SPARK-011 — tactical shower read @ proof zoom (D-F07 / F-T03).
+#[must_use]
+pub fn fire_spark_011_green(w: &FireSparkWitness) -> bool {
+    w.rows > 0
+        && w.scatter_slots >= 3
+        && w.zoom_alpha >= FIRE_SPARK_TACTICAL_PROOF_ZOOM_ALPHA * 0.75
+        && !w.view_culled
+        && w.additive_blend
 }
 
 #[inline]
@@ -324,9 +336,9 @@ fn fire_particle_scatter_count(heat: f32, zoom_alpha: f32, budget_pressure: f32)
         return 0;
     }
     let base = if heat >= 0.72 {
-        10
+        11
     } else if heat >= 0.48 {
-        7
+        8
     } else if heat >= 0.28 {
         4
     } else if heat >= 0.12 {
@@ -973,6 +985,25 @@ mod tests {
         assert!(pressured <= full);
         assert!(pressured >= 1);
         assert_eq!(pressured, full / 2);
+    }
+
+    /// P2-FIRE-SPARK-011 — shower read at tactical proof zoom (0.85).
+    #[test]
+    fn p2_fire_spark_011_at_tactical_proof_zoom() {
+        let mut graph = RenderProjectionGraph::default();
+        graph.fire.gpu_instance_capacity = 256;
+        graph.fire.instance_buffer = vec![sample_fire_row(IVec2::ZERO, 0.85, 0.5)];
+        let mut particles = WorldFireParticleFrame::default();
+        let cam = FireParticleCameraScale {
+            camera_zoom: 1.0,
+            zoom_alpha: FIRE_SPARK_TACTICAL_PROOF_ZOOM_ALPHA,
+        };
+        update_world_fire_particles_from_projection(&graph, &mut particles, None, cam, None);
+        assert!(
+            fire_spark_011_green(&particles.spark_witness),
+            "P2-FIRE-SPARK-011 witness: {:?}",
+            particles.spark_witness
+        );
     }
 
     /// P2-VFX-WITNESS-001 W-1 — tactical zoom must emit particle rows.

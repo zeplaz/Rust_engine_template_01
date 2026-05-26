@@ -1,0 +1,54 @@
+{
+  "_meta": {
+    "version": "1.0.0",
+    "date": "2026-05-25",
+    "cycle": "PLAN-LEDGER-REFRESH-004",
+    "triage": "src/dev/coder_triage_list_v1.md"
+  },
+  "done": [
+    {
+      "id": "S7B-M1-001",
+      "plan_doc": "src/dev/stage7_behavioral_implementation_plan_v1.md",
+      "witness": "debug_runs/stage7_behavioral_live.json",
+      "notes": "FLEET-SNAPSHOT-001 \u2014 s7b_m1_green"
+    },
+    {
+      "id": "UI-P5-PAUSE-001",
+      "plan_doc": "prompts/guides/ui/ui_phase5_pause_menu_plan_v1.md",
+      "witness": "debug_runs/ui_shell_migration_live.json",
+      "notes": "P5-PAUSE-001 CLOSED \u2014 lib green"
+    },
+    {
+      "id": "UI-P3-M3-001",
+      "plan_doc": "src/dev/plan_ui_p3_m3_operational_stage7_plan_v1.md",
+      "witness": "debug_runs/minimap_compositor_live.json"
+    },
+    {
+      "id": "TRIAGE-VM-09-v2",
+      "plan_doc": "src/dev/triage_vm09_v2_invert_bridge_plan_v1.md",
+      "witness": "debug_runs/infrastructure_view_isolation_live.json",
+      "notes": "invert bridge P1 — vm_09.triage_vm09_v2_green"
+    }
+  ],
+  "active": [],
+  "recently_closed": [
+    {
+      "id": "S7B-M2-001",
+      "agent": "coder",
+      "witness": "debug_runs/stage7_behavioral_live.json",
+      "completed_note": "dispatch_delay_ticks=8, s7b_m2_green"
+    },
+    {
+      "id": "S7B-M3-001",
+      "agent": "coder",
+      "witness": "debug_runs/stage7_behavioral_live.json",
+      "completed_note": "recon+logistics overlay publish, s7b_m3_green"
+    }
+  ],
+  "operator": [
+    {
+      "id": "OPS-F01",
+      "witness": "debug_runs/perf_attribution_60s.md"
+    }
+  ]
+}

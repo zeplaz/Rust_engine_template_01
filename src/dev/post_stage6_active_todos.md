@@ -8,7 +8,7 @@
 
 **Current phase:** **E — Product** (witness-driven). Phases A–D code lanes closed; operator refresh + Phase F ops run in parallel.
 
-**Stage tracks:** [`stage_tracks_signoff_ledger_v1.md`](stage_tracks_signoff_ledger_v1.md) · designer [`stage_designer_workboard_v1.md`](stage_designer_workboard_v1.md) · coder [`stage_coder_workboard_v1.md`](stage_coder_workboard_v1.md)
+**Stage tracks:** [`stage_tracks_signoff_ledger_v1.md`](stage_tracks_signoff_ledger_v1.md) · planner [`stage_planner_workboard_v1.md`](stage_planner_workboard_v1.md) · designer [`stage_designer_workboard_v1.md`](stage_designer_workboard_v1.md) · coder [`stage_coder_workboard_v1.md`](stage_coder_workboard_v1.md)
 
 **Operator refresh:** run sim → `wave_s_hydrate_live.json`, `wave_p_live.json`, `wave_c_live.json`, `stage6_virtualization_live.json`; `cargo run -p proc_A_dine01 --release -- --test visual` for Stage 5 regression.
 
@@ -50,6 +50,8 @@
 | IN-C06 | GPU tile authoritative | [x] | `OnEnter(Simulation)` enables instanced path; gizmo when `use_batched_mesh_overlay == false` |
 | IN-C07 | Viewport event-bus gap doc | [x] | vm09 audit + `recovery_viewport.md` |
 
+**Execution (PLAN-INFRA-SLICE2-001):** VM-09 [`vm09_slice2_closure_signoff_v1.md`](vm09_slice2_closure_signoff_v1.md) **CLOSED** · next [`infra_slice3_wc_d04_ops_f01_plan_v1.md`](infra_slice3_wc_d04_ops_f01_plan_v1.md) **OPS-F01** → **WC-D04** (Coder B)
+
 ---
 
 ## Phase D — Wave C ✅ CODE (sim refresh ops)
@@ -59,7 +61,9 @@
 | WC-D01 | Backlog item closed (live witness) | [x] | `wave_c_live_proof.rs`, empty `WAVE_C_OPEN_BACKLOG_ITEMS` |
 | WC-D02 | TileStorage in live JSON | [x] | `wave_c_live.json` `tile_storage_apply` |
 | WC-D03 | Missing manifest error test | [x] | `load.rs` `hydrate_error_tests` |
-| WC-D04 | Residency churn tune | [ ] | needs PERF-N01 60s capture |
+| WC-D04 | Residency churn tune | [x] coder | **WC-D04-CODER-B** hysteresis + witness `wc_d04` · operator **OPS-F03** sim refresh |
+
+**Execution (PLAN-INFRA-C-WC):** **WC-DEPTH-001** **done** (BQ-101) · **OPS-F03** stage6 JSON refresh
 
 ---
 
@@ -71,11 +75,11 @@
 | CON-E02 | Operational green | [x] | `CONSTRUCTION-OP-*` Done; refresh `construction_stage_live.json` in sim |
 | CON-E03 | Round 3 topology/visual | [x] | `CONSTRUCTION-R3-*` static Done — runtime reconcile via live JSON |
 | IND-E01 | Supply chain E2E | [x] | **DONE** — `activation_green: true` + `production_green` ([`stage_tracks_signoff_ledger_v1.md`](stage_tracks_signoff_ledger_v1.md)) |
-| IND-E02 | Concrete chain in play | [x] | Commit path (`placed_via_construction`) → `ind_e02_green` in live JSON |
-| IND-E03 | Grid/substation stress | [ ] | smelter load → `grid_overload` witness |
+| IND-E02 | Concrete chain in play | [x] commit / [ ] default JSON | **Commit path** only: `ind_e02_green` via `simulation_writes_industrial_activation_live_json_ind_e02_in_play`. Default writer keeps `ind_e02_green: false` — see [`ind_board_reconcile_plan_v1.md`](ind_board_reconcile_plan_v1.md) |
+| IND-E03 | Grid/substation stress | [x] | [`industrial_grid_overload_impl_plan_v1.md`](industrial_grid_overload_impl_plan_v1.md) — `ind_e03_green`; seed `RUST_ENGINE_IND_E03_SEED` |
 | LOG-E01 | `log_rows` in FULL_APP | [x] | [`logistics_visual_lane_spec_v1.md`](logistics_visual_lane_spec_v1.md) — startup transport seed + `log_rows≥1` in visual run |
-| UX-E01 | GPU minimap M1+M2 compositor | [x] | **DONE** — **D-MINIMAP-M1/M2** [`minimap_d_m1_signoff_v1.md`](minimap_d_m1_signoff_v1.md) [`minimap_d_m2_signoff_v1.md`](minimap_d_m2_signoff_v1.md) |
-| UX-E02 | BQ-128 editor path | [ ] | designer |
+| UX-E01 | GPU minimap M1+M2+M3 FoW/EW | [x] | **UI-P3-M4-001** FoW+EW — `ui_p3_m4_green` in `minimap_compositor_live.json`; units/replay optional |
+| UX-E02 | BQ-128 editor path | [x] design / [ ] apply | [`bq128_editor_path_plan_v1.md`](bq128_editor_path_plan_v1.md) (**PLAN-UX-BQ128-001**) · **BQ-128-APPLY-001** open |
 | UX-E03 | Transmission stub note | [ ] | `transmission_media.rs` |
 
 ---
@@ -96,10 +100,9 @@
 
 | Priority | IDs | Owner | Deliverable |
 |----------|-----|-------|-------------|
-| 1 | **IND-E01**, IND-E02 | coder + sim | Full concrete chain operational in sim; green `industrial_activation_live.json` |
-| 2 | **LOG-E01** | operator | Run `--test visual`; confirm `log_rows>0` |
-| 3 | **UX-E01 3.5 default flip** | ~~coder~~ | **DONE** 2026-05-24 |
-| 3b | **UX-E01 M2 logistics** | coder | [`ui_phase3_coder_queue_v1.md`](../prompts/guides/ui/ui_phase3_coder_queue_v1.md) §3.4 — `logistics_rows > 0` |
-| 4 | ~~CON-E01 (P9 verify)~~ | — | **DONE** — runtime `ConstructionP9TodoBoard` + live proof |
-| 5 | WP-B05, OPS-F02, OPS-F03 | operator | Refresh proof JSONs |
-| 6 | OPS-F01, WC-D04 | mto | 60s perf + residency churn |
+| 1 | **S7B-PREFLIGHT-001** | sim-steward | M1 preflight GO |
+| 2 | **S7B-M1-001** | coder | [`stage7_behavioral_implementation_plan_v1.md`](stage7_behavioral_implementation_plan_v1.md) |
+| 4 | **OPS-F01**, **OPS-F03** | operator | `perf_attribution_60s.md` + optional sim stage6 refresh |
+| — | ~~UX-E01 / UI-P3-M4~~ | — | **DONE** — minimap M1/M2/M3 FoW+EW |
+| — | ~~WC-D04~~ | — | **DONE** — `wc_d04.green` |
+| — | ~~IND-E01~~ | — | **DONE** |

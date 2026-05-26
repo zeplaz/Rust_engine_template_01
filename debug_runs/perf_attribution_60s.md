@@ -44,11 +44,13 @@ World-gen egui draw logs (`WORLD_GEN_EGUI_DRAW`) only emit when `WORLDGEN_CHROME
 
 ## Stage 6 frame budget (S6-26)
 
-When `Stage6VirtualizationFrame` residency cell count jumps by ≥128 between frames, `FrameBudgetDiagnostics` emits:
+When `Stage6VirtualizationFrame` residency cell count jumps by ≥**48** (`RESIDENCY_CHURN_CELL_DELTA`) for **2 consecutive frames** (hysteresis), outside a **45-frame bootstrap** window after first populate, `FrameBudgetDiagnostics` emits:
 
 ```text
-frame budget anomaly ResidencyChurn: residency cells changed by 256 (1113 → 1369)
+frame budget anomaly ResidencyChurn: residency cells changed by 64 (1113 → 1177)
 ```
+
+Single-frame spikes during streaming warm-up are suppressed (**WC-D04-CODER-B** / **WC-DEPTH-003**).
 
 Atlas pressure in the same HUD path uses `gpu_upload_bytes_frame` from the published S6 frame (not the legacy `active_atlas_slots / 3` heuristic).
 

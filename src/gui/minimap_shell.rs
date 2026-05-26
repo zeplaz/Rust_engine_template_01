@@ -21,21 +21,36 @@ pub struct MinimapOverlayMask {
     pub fire_heat: bool,
     /// Corridor traffic heat from [`crate::render::LogisticsVisualSnapshot`] (M2).
     pub logistics_heat: bool,
-    /// Corridor / site construction phase from [`CorridorConstructionBook`] + site footprints (M3).
+    /// Corridor / site construction phase — design **M2** (coder slice **UI-P3-M3-001**, not design M3).
     pub construction_heat: bool,
-    /// Ecology macro band from [`crate::render::EcologyVisualSnapshot`] (M3).
+    /// Ecology macro band — design **M2** (coder slice **UI-P3-M3-001**; fog/EW = **UI-P3-M4-001**).
     pub ecology_heat: bool,
+    /// Fog-of-war veil — design **M3** (**UI-P3-M4-001**).
+    pub fow: bool,
+    /// EW / denial stress — design **M3** (**UI-P3-M4-001**).
+    pub ew: bool,
+    /// Unit aggregation glyphs — **UI-P3-M3-UNITS-001** (M3-03).
+    pub units: bool,
+    /// Replay scrub tick — **UI-P3-M3-REPLAY-001** (M3-04).
+    pub replay_scrub: bool,
 }
 
-/// Default minimap overlay toggles for simulation (M2 logistics + M3 construction/ecology on).
+/// Default minimap overlay toggles for **operator Simulation** (VX-P0-01).
+///
+/// Fire heat stays **off** so ambient `chunk_fire_heat` does not paint a full-map pink wash at
+/// strategic zoom; operators enable **Fire heat** in the overlay tray or diagnostics when needed.
+/// M2 logistics / construction / ecology remain on for play-readability.
 #[must_use]
 pub const fn simulation_minimap_overlay_defaults() -> MinimapOverlayMask {
     MinimapOverlayMask {
-        fire_heat: true,
+        fire_heat: false,
         logistics_heat: true,
         construction_heat: true,
-        // Ecology macro heat tints most of the minimap warm — keep off unless explicitly enabled.
-        ecology_heat: false,
+        ecology_heat: true,
+        fow: true,
+        ew: true,
+        units: true,
+        replay_scrub: true,
     }
 }
 

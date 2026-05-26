@@ -79,6 +79,10 @@ mod tests {
                         logistics_heat: false,
                         construction_heat: false,
                         ecology_heat: false,
+                        fow: false,
+                        ew: false,
+                        units: false,
+                        replay_scrub: false,
                     },
                 },
                 ..Default::default()

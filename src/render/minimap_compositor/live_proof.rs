@@ -30,12 +30,270 @@ pub fn ui_p3_001_minimap_acceptance_green(
         && compositor.extent_match_px <= 1.0
 }
 
-/// UI-P3-M3-001 — construction + ecology overlay channels on GPU minimap.
+/// **UI-OH-M3-001** — M2 construction + ecology (**UI-P3-M3-001**); not design M3 (**UI-P3-M4-001**).
+#[must_use]
+pub fn ui_oh_m3_001_green(compositor: &MinimapCompositorState) -> bool {
+    ui_p3_m3_minimap_acceptance_green(compositor)
+}
+
+/// **UI-OH-M2-001** — M2 logistics + construction compositor channels (overhaul alias **UI-P3-M2-001** + construction slice).
+#[must_use]
+pub fn ui_oh_m2_001_green(compositor: &MinimapCompositorState) -> bool {
+    ui_w3_m2_001_green(compositor)
+}
+
+/// **UI-W3-M3-001** — M2 construction + ecology channels (coder-A alias; not design M4 fog/EW).
+#[must_use]
+pub fn ui_w3_m3_001_green(compositor: &MinimapCompositorState) -> bool {
+    ui_oh_m3_001_green(compositor)
+}
+
+/// **UI-W3-M3-001** — compositor M3 channels + GPU minimap acceptance (**UI-P3-001**).
+#[must_use]
+pub fn ui_w3_m3_001_operational_green(
+    compositor: &MinimapCompositorState,
+    registry: &MinimapRenderTargetRegistry,
+    shell: &MinimapShellState,
+) -> bool {
+    ui_w3_m3_001_green(compositor)
+        && ui_p3_001_minimap_acceptance_green(compositor, registry, shell)
+}
+
+/// **UI-W3-M3-001** — Track C: minimap operational + Stage 7 overlay readers (**S7B-M3-001**).
+#[must_use]
+pub fn ui_w3_m3_001_stage7_operational_green(
+    compositor: &MinimapCompositorState,
+    registry: &MinimapRenderTargetRegistry,
+    shell: &MinimapShellState,
+    stage7_overlay_reads_green: bool,
+) -> bool {
+    ui_w3_m3_001_operational_green(compositor, registry, shell) && stage7_overlay_reads_green
+}
+
+/// Headless M3 witness fixture — logistics + construction + ecology + fog/EW + units.
+#[must_use]
+pub fn fixture_ui_w3_m3_001_compositor(tray: &crate::gui::hud::HudOverlayTrayState) -> MinimapCompositorState {
+    fixture_ui_oh_m2_001_compositor(tray)
+}
+
+/// Writes `debug_runs/minimap_compositor_live.json` with **UI-W3-M3-001** / M2+M3 rollups green.
+pub fn refresh_ui_w3_m3_001_live_witness() -> bool {
+    use crate::gui::MinimapPresentationSource;
+
+    let tray = crate::gui::hud::HudOverlayTrayState::default();
+    let compositor = fixture_ui_w3_m3_001_compositor(&tray);
+    assert!(
+        ui_w3_m3_001_green(&compositor),
+        "UI-W3-M3-001 construction + ecology predicate"
+    );
+    assert!(
+        ui_w3_m2_001_green(&compositor),
+        "UI-W3-M2-001 logistics + construction predicate"
+    );
+    let mut registry = MinimapRenderTargetRegistry::default();
+    let mut images = Assets::<Image>::default();
+    registry.committed_size = UVec2::new(128, 128);
+    registry.revision = 2;
+    registry.committed_image =
+        images.add(super::render_target::minimap_rgba_image(128, 128));
+    let shell = MinimapShellState {
+        presentation_source: MinimapPresentationSource::SharedRenderTargetImage,
+        ..Default::default()
+    };
+    assert!(
+        ui_p3_001_minimap_acceptance_green(&compositor, &registry, &shell),
+        "UI-P3-001 minimap acceptance"
+    );
+    let diagnostics = MinimapGpuCompositorDiagnostics::default();
+    commit_minimap_compositor_live_proof(
+        &compositor,
+        &registry,
+        &shell,
+        7,
+        false,
+        &diagnostics,
+        Some(&tray),
+    )
+}
+
+/// Writes minimap + Stage 7 behavioral witnesses with **UI-W3-M3-001** operational rollup green.
+pub fn refresh_ui_w3_m3_001_stage7_operational_witness() -> bool {
+    use crate::dev::stage7_behavioral_live_proof::{
+        refresh_s7b_m3_001_live_witness, stage7_behavioral_live_s7b_m3_green,
+    };
+
+    assert!(
+        refresh_ui_w3_m3_001_live_witness(),
+        "minimap: M2 + M3 + UI-P3-001 acceptance"
+    );
+    assert!(
+        refresh_s7b_m3_001_live_witness(),
+        "stage7: S7B-M3 overlay readers"
+    );
+    assert!(
+        stage7_behavioral_live_s7b_m3_green(),
+        "stage7_behavioral_live.json s7b_m3_green"
+    );
+    true
+}
+
+#[cfg(test)]
+mod ui_w3_m3_001_tests {
+    use super::*;
+    use std::fs;
+    use std::path::PathBuf;
+
+    fn repo_root() -> PathBuf {
+        std::env::var_os("CARGO_MANIFEST_DIR")
+            .map(PathBuf::from)
+            .unwrap_or_else(|| PathBuf::from("."))
+    }
+
+    /// **UI-W3-M3-001** — Stage 7 operational minimap + overlay reader witness refresh.
+    #[test]
+    fn ui_w3_m3_001_stage7_operational_witness_refresh() {
+        assert!(refresh_ui_w3_m3_001_stage7_operational_witness());
+        let path = repo_root().join(PROOF_PATH);
+        let v: serde_json::Value =
+            serde_json::from_str(&fs::read_to_string(&path).expect("read")).expect("parse");
+        assert_eq!(v["ui_w3_m3_001"]["green"], serde_json::json!(true));
+        assert_eq!(v["ui_p3_001_green"], serde_json::json!(true));
+        assert_eq!(v["ui_p3_m3_green"], serde_json::json!(true));
+        let s7 = repo_root().join("debug_runs/stage7_behavioral_live.json");
+        let s7v: serde_json::Value =
+            serde_json::from_str(&fs::read_to_string(&s7).expect("read s7")).expect("parse");
+        assert_eq!(s7v["s7b_m3_green"], serde_json::json!(true));
+    }
+}
+
+/// **UI-W3-M2-001** — minimap M2 logistics + construction channels (`logistics_rows` + `construction_rows` > 0).
+#[must_use]
+pub fn ui_w3_m2_001_green(compositor: &MinimapCompositorState) -> bool {
+    compositor.logistics_heat_enabled
+        && compositor.logistics_rows > 0
+        && compositor.construction_heat_enabled
+        && compositor.construction_rows > 0
+}
+
+/// Headless M2 witness fixture — logistics + construction rows for lib proof refresh.
+#[must_use]
+pub fn fixture_ui_oh_m2_001_compositor(tray: &crate::gui::hud::HudOverlayTrayState) -> MinimapCompositorState {
+    MinimapCompositorState {
+        stamp: 4,
+        compositor_revision: 2,
+        dual_minimap_present: false,
+        extent_match_px: 0.0,
+        logistics_rows: 2,
+        construction_rows: 18,
+        ecology_rows: 100,
+        fow_rows: 16,
+        ew_rows: 12,
+        fire_heat_enabled: tray.fire_heat,
+        logistics_heat_enabled: tray.logistics_heat,
+        construction_heat_enabled: tray.construction_heat,
+        ecology_heat_enabled: tray.ecology_heat,
+        fow_heat_enabled: true,
+        ew_heat_enabled: true,
+        units_heat_enabled: true,
+        unit_marker_rows: 6,
+        replay_scrub_enabled: true,
+        composite_path: MinimapCompositePath::GpuCompute,
+        ..Default::default()
+    }
+}
+
+/// Writes `debug_runs/minimap_compositor_live.json` with **UI-W3-M2-001** / **UI-OH-M2-001** rollup green.
+pub fn refresh_ui_w3_m2_001_live_witness() -> bool {
+    refresh_ui_oh_m2_001_live_witness()
+}
+
+/// Writes `debug_runs/minimap_compositor_live.json` with **UI-OH-M2-001** rollup green.
+pub fn refresh_ui_oh_m2_001_live_witness() -> bool {
+    use crate::gui::MinimapPresentationSource;
+
+    let tray = crate::gui::hud::HudOverlayTrayState::default();
+    let compositor = fixture_ui_oh_m2_001_compositor(&tray);
+    assert!(
+        ui_oh_m2_001_green(&compositor),
+        "UI-OH-M2-001 logistics + construction predicate"
+    );
+    let mut registry = MinimapRenderTargetRegistry::default();
+    let mut images = Assets::<Image>::default();
+    registry.committed_size = UVec2::new(128, 128);
+    registry.revision = 2;
+    registry.committed_image =
+        images.add(super::render_target::minimap_rgba_image(128, 128));
+    let shell = MinimapShellState {
+        presentation_source: MinimapPresentationSource::SharedRenderTargetImage,
+        ..Default::default()
+    };
+    let diagnostics = MinimapGpuCompositorDiagnostics::default();
+    commit_minimap_compositor_live_proof(
+        &compositor,
+        &registry,
+        &shell,
+        7,
+        false,
+        &diagnostics,
+        Some(&tray),
+    )
+}
+
+/// UI-P3-M2-TRAY-OPT — tray mask fields match compositor uniform bits.
+#[must_use]
+pub fn ui_p3_m2_tray_opt_green(
+    compositor: &MinimapCompositorState,
+    tray: &crate::gui::hud::HudOverlayTrayState,
+) -> bool {
+    compositor.fire_heat_enabled == tray.fire_heat
+        && compositor.logistics_heat_enabled == tray.logistics_heat
+        && compositor.construction_heat_enabled == tray.construction_heat
+        && compositor.ecology_heat_enabled == tray.ecology_heat
+}
+
+/// **UI-P3-M4-001** — design **M3** fog-of-war + EW (not **UI-P3-M3-001** M2 construction/ecology).
+#[must_use]
+pub fn ui_p3_m4_minimap_acceptance_green(compositor: &MinimapCompositorState) -> bool {
+    compositor.fow_heat_enabled
+        && compositor.ew_heat_enabled
+        && compositor.fow_rows > 0
+        && compositor.ew_rows > 0
+}
+
+/// **UI-P3-M3-001** — design **M2** construction + ecology channels (not design M3 fog/EW).
+/// See [`ui_phase3_minimap_track_naming_v1.md`](../../../prompts/guides/ui/ui_phase3_minimap_track_naming_v1.md).
 #[must_use]
 pub fn ui_p3_m3_minimap_acceptance_green(compositor: &MinimapCompositorState) -> bool {
     compositor.construction_heat_enabled
         && compositor.ecology_heat_enabled
         && (compositor.construction_rows > 0 || compositor.ecology_rows > 0)
+}
+
+/// **UI-P3-M3-UNITS-001** — unit aggregation markers on minimap EW channel.
+#[must_use]
+pub fn ui_p3_m3_units_001_green(compositor: &MinimapCompositorState) -> bool {
+    compositor.units_heat_enabled && compositor.unit_marker_rows > 0
+}
+
+/// **UI-P3-M3-REPLAY-001** — replay scrub tick when timeline has depth.
+#[must_use]
+pub fn ui_p3_m3_replay_001_green(compositor: &MinimapCompositorState) -> bool {
+    compositor.replay_scrub_enabled
+}
+
+/// **UI-P3-M2-CODER-A** — M2 strategic overlays per [`ui_phase3_minimap_m2_impl_full_plan_v1.md`](../../../prompts/guides/ui/ui_phase3_minimap_m2_impl_full_plan_v1.md) and [`minimap_d_m2_signoff_v1.md`](../../dev/minimap_d_m2_signoff_v1.md).
+#[must_use]
+pub fn ui_p3_m2_minimap_acceptance_green(
+    compositor: &MinimapCompositorState,
+    registry: &MinimapRenderTargetRegistry,
+    shell: &MinimapShellState,
+    tray: Option<&crate::gui::hud::HudOverlayTrayState>,
+) -> bool {
+    ui_p3_001_minimap_acceptance_green(compositor, registry, shell)
+        && compositor.logistics_heat_enabled
+        && compositor.logistics_rows > 0
+        && ui_p3_m3_minimap_acceptance_green(compositor)
+        && tray.is_none_or(|t| ui_p3_m2_tray_opt_green(compositor, t))
 }
 
 #[derive(Resource, Debug, Default)]
@@ -54,14 +312,16 @@ pub fn commit_minimap_compositor_live_proof(
     overlay_revision: u64,
     ui_stress_wrote_sim: bool,
     diagnostics: &MinimapGpuCompositorDiagnostics,
+    tray: Option<&crate::gui::hud::HudOverlayTrayState>,
 ) -> bool {
-    let body = build_minimap_compositor_proof_payload(
+    let body = build_minimap_compositor_proof_payload_with_tray(
         compositor,
         registry,
         shell,
         overlay_revision,
         ui_stress_wrote_sim,
         diagnostics,
+        tray,
     );
     let payload = crate::dev::debug_run_envelope::wrap_debug_run(
         "MINIMAP_COMPOSITOR_M1",
@@ -70,6 +330,21 @@ pub fn commit_minimap_compositor_live_proof(
         body,
     );
     crate::dev::debug_run_envelope::write_debug_run_json(PROOF_PATH, payload)
+}
+
+#[must_use]
+fn ui_m2_logistics_construction_gate_json(
+    gate: &str,
+    compositor: &MinimapCompositorState,
+) -> serde_json::Value {
+    serde_json::json!({
+        "gate": gate,
+        "green": ui_w3_m2_001_green(compositor),
+        "logistics_rows": compositor.logistics_rows,
+        "construction_rows": compositor.construction_rows,
+        "logistics_heat_enabled": compositor.logistics_heat_enabled,
+        "construction_heat_enabled": compositor.construction_heat_enabled,
+    })
 }
 
 #[must_use]
@@ -85,7 +360,7 @@ pub fn build_minimap_compositor_proof_payload(
         MinimapPresentationSource::SharedCpuRaster => "SharedCpuRaster",
         MinimapPresentationSource::SharedRenderTargetImage => "SharedRenderTargetImage",
     };
-    serde_json::json!({
+    let mut body = serde_json::json!({
         "composite_ok": registry.committed_image != Handle::default() && compositor.stamp > 0,
         "stamp": compositor.stamp,
         "extent": {
@@ -111,10 +386,85 @@ pub fn build_minimap_compositor_proof_payload(
         "logistics_heat_enabled": compositor.logistics_heat_enabled,
         "construction_heat_enabled": compositor.construction_heat_enabled,
         "ecology_heat_enabled": compositor.ecology_heat_enabled,
+        "fow_enabled": compositor.fow_heat_enabled,
+        "ew_overlay_enabled": compositor.ew_heat_enabled,
+        "fow_rows": compositor.fow_rows,
+        "ew_rows": compositor.ew_rows,
+        "units_heat_enabled": compositor.units_heat_enabled,
+        "unit_marker_rows": compositor.unit_marker_rows,
+        "replay_scrub_enabled": compositor.replay_scrub_enabled,
+        "ui_p3_m3_units_001_green": ui_p3_m3_units_001_green(compositor),
+        "ui_p3_m3_replay_001_green": ui_p3_m3_replay_001_green(compositor),
         "gpu_budget": diagnostics_json_snapshot(diagnostics),
         "ui_p3_001_green": ui_p3_001_minimap_acceptance_green(compositor, registry, shell),
+        "ui_p3_m4_green": ui_p3_m4_minimap_acceptance_green(compositor),
         "ui_p3_m3_green": ui_p3_m3_minimap_acceptance_green(compositor),
-    })
+        "ui_p3_m2_green": ui_p3_m2_minimap_acceptance_green(compositor, registry, shell, None),
+        "ui_oh_m3_001": {
+            "gate": "UI-OH-M3-001",
+            "green": ui_oh_m3_001_green(compositor),
+            "construction_rows": compositor.construction_rows,
+            "ecology_rows": compositor.ecology_rows,
+            "construction_heat_enabled": compositor.construction_heat_enabled,
+            "ecology_heat_enabled": compositor.ecology_heat_enabled,
+        },
+    });
+    body["ui_oh_m2_001"] =
+        ui_m2_logistics_construction_gate_json("UI-OH-M2-001", compositor);
+    body["ui_w3_m2_001"] =
+        ui_m2_logistics_construction_gate_json("UI-W3-M2-001", compositor);
+    body["ui_w3_m3_001"] = serde_json::json!({
+        "gate": "UI-W3-M3-001",
+        "green": ui_w3_m3_001_green(compositor),
+        "operational_green": ui_w3_m3_001_operational_green(compositor, registry, shell),
+        "stage7_operational_green": ui_w3_m3_001_stage7_operational_green(
+            compositor,
+            registry,
+            shell,
+            crate::dev::stage7_behavioral_live_proof::stage7_behavioral_live_s7b_m3_green(),
+        ),
+        "construction_rows": compositor.construction_rows,
+        "ecology_rows": compositor.ecology_rows,
+        "construction_heat_enabled": compositor.construction_heat_enabled,
+        "ecology_heat_enabled": compositor.ecology_heat_enabled,
+    });
+    body
+}
+
+#[must_use]
+pub fn build_minimap_compositor_proof_payload_with_tray(
+    compositor: &MinimapCompositorState,
+    registry: &MinimapRenderTargetRegistry,
+    shell: &MinimapShellState,
+    overlay_revision: u64,
+    ui_stress_wrote_sim: bool,
+    diagnostics: &MinimapGpuCompositorDiagnostics,
+    tray: Option<&crate::gui::hud::HudOverlayTrayState>,
+) -> serde_json::Value {
+    let mut body = build_minimap_compositor_proof_payload(
+        compositor,
+        registry,
+        shell,
+        overlay_revision,
+        ui_stress_wrote_sim,
+        diagnostics,
+    );
+    body["ui_p3_m2_green"] = serde_json::json!(ui_p3_m2_minimap_acceptance_green(
+        compositor,
+        registry,
+        shell,
+        tray,
+    ));
+    if let Some(tray) = tray {
+        body["ui_p3_m2_tray_opt_green"] = serde_json::json!(ui_p3_m2_tray_opt_green(compositor, tray));
+        body["overlay_tray_minimap_mask"] = serde_json::json!({
+            "fire_heat": tray.fire_heat,
+            "logistics_heat": tray.logistics_heat,
+            "construction_heat": tray.construction_heat,
+            "ecology_heat": tray.ecology_heat,
+        });
+    }
+    body
 }
 
 pub fn write_minimap_compositor_live_proof_system(
@@ -122,6 +472,7 @@ pub fn write_minimap_compositor_live_proof_system(
     compositor: Res<MinimapCompositorState>,
     registry: Res<MinimapRenderTargetRegistry>,
     shell: Res<MinimapShellState>,
+    tray: Option<Res<crate::gui::hud::HudOverlayTrayState>>,
     overlay: Option<Res<SharedOverlayFieldBuffers>>,
     stress: Option<Res<UiStressState>>,
     diagnostics: Res<MinimapGpuCompositorDiagnostics>,
@@ -147,6 +498,7 @@ pub fn write_minimap_compositor_live_proof_system(
         overlay_revision,
         ui_stress_wrote_sim,
         &diagnostics,
+        tray.as_deref(),
     ) {
         state.written = true;
         if composite_ok {

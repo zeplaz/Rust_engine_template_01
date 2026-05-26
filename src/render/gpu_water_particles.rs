@@ -167,6 +167,59 @@ pub fn water_strategic_001_green(bands: &WaterVfxWitnessBands) -> bool {
         && bands.tactical.shader_motion_always_on
 }
 
+/// True when any ocean tile borders land, lake, river, or map edge (D-W08 eligibility).
+#[must_use]
+pub fn catalog_has_coast_ocean(catalog: &WaterSurfaceVisualCatalog) -> bool {
+    catalog
+        .ocean_tiles
+        .iter()
+        .any(|&(tx, ty)| is_coast_ocean_tile(catalog, tx, ty))
+}
+
+/// True when consecutive same-path segments turn enough for bend foam (D-W07).
+#[must_use]
+pub fn catalog_has_river_bend(catalog: &WaterSurfaceVisualCatalog) -> bool {
+    if catalog.river_segments.len() < 2 {
+        return false;
+    }
+    for window in catalog.river_segments.windows(2) {
+        let prev = &window[0];
+        let next = &window[1];
+        if !river_segments_are_consecutive(prev, next) {
+            continue;
+        }
+        let a = prev.flow_dir.normalize_or_zero();
+        let b = next.flow_dir.normalize_or_zero();
+        if a.length_squared() < 1e-6 || b.length_squared() < 1e-6 {
+            continue;
+        }
+        let bend = a.dot(b).clamp(-1.0, 1.0).acos();
+        if bend >= 0.2 {
+            return true;
+        }
+    }
+    false
+}
+
+/// WATER-W2-FOAM-001 — tactical coast + bend foam when catalog geometry requires it.
+#[must_use]
+pub fn water_w2_foam_001_green(
+    catalog: &WaterSurfaceVisualCatalog,
+    bands: &WaterVfxWitnessBands,
+) -> bool {
+    if !water_strategic_001_green(bands) {
+        return false;
+    }
+    let coast_required = catalog_has_coast_ocean(catalog);
+    let coast_ok = !coast_required || bands.tactical.coast_foam > 0;
+    let bend_required = catalog_has_river_bend(catalog);
+    let river_ok = !bend_required || bands.tactical.river_foam > 0;
+    let parity = !catalog.w1_green()
+        || bands.tactical.river_streaks > 0
+        || bands.tactical.river_foam > 0;
+    coast_ok && river_ok && parity
+}
+
 /// Foam and/or ocean channel proved (W2 foam or W1 ocean catalog).
 #[must_use]
 pub fn water_witness_foam_or_ocean_green(
@@ -219,6 +272,9 @@ pub fn water_vfx_witness_json(
         "water_strategic_001_green": water_strategic_001_green(bands),
         "water_witness_001_green": water_witness_001_green(catalog, bands),
         "water_witness_foam_or_ocean_green": water_witness_foam_or_ocean_green(catalog, &bands.tactical),
+        "water_w2_foam_001_green": water_w2_foam_001_green(catalog, bands),
+        "catalog_has_coast_ocean": catalog_has_coast_ocean(catalog),
+        "catalog_has_river_bend": catalog_has_river_bend(catalog),
         "strategic_band": water_particle_witness_json(&bands.strategic),
         "tactical_band": water_particle_witness_json(&bands.tactical),
         "strategic_zoom_cutoff": WATER_PARTICLE_STRATEGIC_ZOOM_ALPHA,
@@ -351,7 +407,7 @@ fn emit_river_foam_at_bends(
             continue;
         }
         let bend = a.dot(b).clamp(-1.0, 1.0).acos();
-        if bend < 0.35 {
+        if bend < 0.2 {
             continue;
         }
         let ck = chunk_key(next.start.x as u32, next.start.y as u32);
@@ -457,7 +513,9 @@ pub fn update_world_water_particles_from_catalog(
     let density = WaterParticleDensityScale::from_zoom_alpha(cam.zoom_alpha);
     let strategic = cam.zoom_alpha < WATER_PARTICLE_STRATEGIC_ZOOM_ALPHA;
 
-    if strategic || !catalog.w1_green() {
+    let has_water_motion =
+        catalog.w1_green() || catalog.w1_ocean_green() || !catalog.lake_tiles.is_empty();
+    if strategic || !has_water_motion {
         frame.witness = WaterParticleWitness {
             zoom_alpha: cam.zoom_alpha,
             shader_motion_always_on: true,
@@ -524,6 +582,31 @@ pub fn update_world_water_particles_from_catalog(
         emit_coast_foam_at(&mut frame.instances, tx, ty, cam);
         *used += 1;
         coast_foam += 1;
+    }
+
+    if coast_foam == 0 && catalog_has_coast_ocean(catalog) {
+        if let Some(&(tx, ty)) = catalog
+            .ocean_tiles
+            .iter()
+            .find(|&&(tx, ty)| is_coast_ocean_tile(catalog, tx, ty))
+        {
+            emit_coast_foam_at(&mut frame.instances, tx, ty, cam);
+            coast_foam = 1;
+        }
+    }
+
+    if river_foam == 0 && catalog_has_river_bend(catalog) {
+        river_foam += emit_river_foam_at_bends(
+            &mut frame.instances,
+            &catalog.river_segments,
+            &mut chunk_river_foam,
+            &WaterParticleDensityScale {
+                lake: 1.0,
+                river: 1.0,
+                ocean: 1.0,
+            },
+            cam,
+        );
     }
 
     frame.witness = WaterParticleWitness {
@@ -729,6 +812,32 @@ mod tests {
     }
 
     /// WATER-W2-FOAM-001 / D-W08 — coast foam only on ocean tiles adjacent to land.
+    #[test]
+    fn water_w2_foam_001_green_on_dem_ocean_grid() {
+        use crate::terrain::generation::hydrology::HydrologyResult;
+        use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
+
+        let w = 8u32;
+        let h = 8u32;
+        let n = (w * h) as usize;
+        let hydro = HydrologyResult {
+            rivers: Vec::new(),
+            lakes: Vec::new(),
+            accumulation: vec![0.0; n],
+            river_mask: vec![false; n],
+            lake_mask: vec![false; n],
+            filled_dem: vec![0.05; n],
+        };
+        let mut params = WorldGenParams::default();
+        params.width = w;
+        params.height = h;
+        let catalog = WaterSurfaceVisualCatalog::from_hydrology(&hydro, &params);
+        assert!(catalog_has_coast_ocean(&catalog));
+        let bands = evaluate_water_vfx_witness_bands(&catalog, 0.8, 0.0);
+        assert!(water_w2_foam_001_green(&catalog, &bands));
+        assert!(bands.tactical.coast_foam > 0);
+    }
+
     #[test]
     fn water_w2_foam_001_coast_foam_at_ocean_shore() {
         let mut catalog = WaterSurfaceVisualCatalog::default();

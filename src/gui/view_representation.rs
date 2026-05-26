@@ -2,8 +2,9 @@
 //! and FX class selection (not independent `if zoom` / `if tactical` branches).
 //!
 //! Design: `prompts/guides/base_visual_dev01_plan_status.md` (invariants + three themes).
-//! Today: [`CameraVisualState`] is synced from [`super::map_camera::MapCameraSettings`] /
-//! [`super::map_camera::MapCameraDesired`] until [`CameraIntent`] gains follow-target wiring.
+//! Today: [`CameraVisualState`] zoom is resolved from [`ViewManager`] WorldMain first
+//! ([`super::view_projection_authority::camera_zoom`]), with [`MapCameraDesired`] fallback
+//! (TRIAGE-VM-09-CODER-B / INFRA-VM09-002).
 
 use std::collections::HashMap;
 
@@ -20,9 +21,11 @@ use super::representation_policy::RepresentationResult;
 
 use super::map_camera::{
     in_simulation_or_editor_map, map_camera_viewport_pixels, map_zoom_alpha_with_limits,
-    map_zoom_limits_for_world, MapCameraDesired,
-    MapCameraMode, MapCameraSettings, MapCameraSystemSet, MAP_ZOOM_CLAMP,
+    map_zoom_limits_for_world, MapCameraDesired, MapCameraMode, MapCameraSettings,
+    MapCameraSystemSet, MAP_ZOOM_CLAMP,
 };
+use super::view_projection_authority::camera_zoom;
+use super::{ViewId, ViewManager};
 use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
 use bevy::window::PrimaryWindow;
 use super::MinimapShellState;
@@ -84,7 +87,7 @@ impl Default for CameraIntent {
 #[derive(Resource, Debug, Clone)]
 pub struct CameraVisualState {
     pub intent: CameraIntent,
-    /// Normalized zoom in `[0, 1]` from [`MAP_ZOOM_CLAMP`] using [`MapCameraDesired::scale`].
+    /// Normalized zoom in `[0, 1]` from WorldMain view authority scale (see [`resolve_world_main_camera_scale`]).
     pub zoom_alpha: f32,
     pub strategic_weight: f32,
     pub cinematic_weight: f32,
@@ -543,9 +546,23 @@ impl Plugin for ViewRepresentationPlugin {
     }
 }
 
+/// INFRA-VM09-002 / TRIAGE-VM-09-CODER-B: WorldMain zoom from view authority, not parallel desired scale.
+#[must_use]
+pub fn resolve_world_main_camera_scale(
+    view_manager: Option<&ViewManager>,
+    desired: Option<&MapCameraDesired>,
+) -> f32 {
+    view_manager
+        .and_then(|m| camera_zoom(m, ViewId::WorldMain))
+        .or_else(|| desired.map(|d| d.scale.x))
+        .unwrap_or(1.0)
+        .max(0.06)
+}
+
 fn sync_camera_visual_state_from_map_camera(
     settings: Res<MapCameraSettings>,
-    desired: Res<MapCameraDesired>,
+    desired: Option<Res<MapCameraDesired>>,
+    view_manager: Option<Res<ViewManager>>,
     params: Res<WorldGenParams>,
     windows: Query<&Window, With<PrimaryWindow>>,
     mut visual: ResMut<CameraVisualState>,
@@ -563,9 +580,13 @@ fn sync_camera_visual_state_from_map_camera(
     } else {
         MAP_ZOOM_CLAMP
     };
+    let scale_x = resolve_world_main_camera_scale(
+        view_manager.as_deref(),
+        desired.as_deref(),
+    );
     apply_camera_visual_from_map_snapshot(
         &settings,
-        desired.scale.x,
+        scale_x,
         zoom_lo,
         zoom_hi,
         &mut visual,
@@ -640,6 +661,39 @@ mod tests {
             prev_za = visual.zoom_alpha;
             prev_ob = fx.overlay_blend;
         }
+    }
+
+    #[test]
+    fn vm09_slice2_resolve_world_main_scale_prefers_view_manager() {
+        use crate::gui::{ViewCameraState, ViewInstance, ViewRenderTarget};
+
+        let mut manager = ViewManager::default();
+        manager.views.insert(
+            ViewId::WorldMain,
+            ViewInstance {
+                id: ViewId::WorldMain,
+                camera_entity: Entity::PLACEHOLDER,
+                render_target: ViewRenderTarget::PrimaryWindow,
+                camera: ViewCameraState {
+                    translation: Vec2::ZERO,
+                    zoom: 3.5,
+                    rotation: 0.0,
+                },
+                projection: Default::default(),
+                interaction_state: Default::default(),
+                viewport_rect: bevy::math::Rect::from_corners(Vec2::ZERO, Vec2::new(800.0, 600.0)),
+                render_policy: Default::default(),
+            },
+        );
+        let desired = MapCameraDesired {
+            scale: Vec3::splat(0.4),
+            ..Default::default()
+        };
+        let scale = super::resolve_world_main_camera_scale(Some(&manager), Some(&desired));
+        assert!(
+            (scale - 3.5).abs() < 1e-4,
+            "expected ViewManager WorldMain zoom, got {scale}"
+        );
     }
 
     #[test]
