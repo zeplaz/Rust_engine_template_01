@@ -13,10 +13,12 @@
 
 Sole fire extract spine and minimap buffer-only path **confirmed**. **F7-A-001** may proceed to `@coder` with ≤3-file budget.
 
-**Qualifiers (non-blocking for preflight):**
+**Post-preflight closure (2026-05-26):** **FIRE7-F7-A-EXIT-001**, **F7-B**, **F7-C** landed — `fire7_f7_a_exit_001.green` + `fire_streaming_live.json` green. **Do not** re-open without product scope change.
 
-- **FIRE7-DESIGN-001** LOD player-read table — [`fire_lod_player_read_v1.md`](fire_lod_player_read_v1.md) **SIGNED** 2026-05-25 (F7-C policy reference).
-- **Early F7-A scaffold** already in tree (`per_view_fire_extract_bounded`, `Stage5FireViewChunkWitness::f7_a_per_view_extract_bounded`) — coder completes hardening + witness wiring; **do not** add a second global extract or minimap ECS fire query.
+**Historical (resolved at preflight):**
+
+- **FIRE7-DESIGN-001** — **SIGNED** [`fire_lod_player_read_v1.md`](fire_lod_player_read_v1.md).
+- Sole-extract + minimap buffer path confirmed before F7-A exit wave.
 
 ---
 

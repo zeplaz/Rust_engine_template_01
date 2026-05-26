@@ -6,9 +6,11 @@
 
 |:---|:---|
 
-| **Version** | `1.2.5` |
+| **Version** | `1.2.6` |
 
-| **Date** | 2026-05-25 (**PLAN-LEDGER-REFRESH-003**) |
+| **Date** | 2026-05-26 (**ORCH-SIGNOFF-20260526**) |
+
+| **Snapshot** | [`orchestrator_signoff_snapshot_20260526_v1.md`](orchestrator_signoff_snapshot_20260526_v1.md) |
 
 | **Authority** | Witness JSON wins over markdown checkboxes |
 
@@ -31,34 +33,22 @@
 
 
 
-## Executive summary (2026-05-25)
+## Executive summary (2026-05-26)
 
-
+**Orchestrator snapshot:** [`orchestrator_signoff_snapshot_20260526_v1.md`](orchestrator_signoff_snapshot_20260526_v1.md)
 
 | Area | Verdict | Next |
-
 |:---|:---|:---|
-
-| **Stage 5 / 6 gates** | **CLOSED** | Maintain regression only |
-
-| **VFX tactical (fire)** | **WITNESS CLOSED** | Optional designer **ACCEPTED** + PNG captures |
-
-| **Water FX** | **TACTICAL WITNESS CLOSED** | Optional designer **ACCEPTED**; strategic cull by design |
-
-| **Industrial / S7 Play** | **CLOSED** (product) | `stage7_play_live.json` green · **S7P-LOG-001** throughput witness green |
-
-| **UI shell 2B** | **CLOSED** | **UI-SHELL-REFRESH-001 PASS** · `egui_pass_count_in_sim: 0` — [`ui_phase2b_egui_gate_plan_v1.md`](../prompts/guides/ui/ui_phase2b_egui_gate_plan_v1.md) |
-
-| **UI Phase 3 minimap** | **M1/M2/M3 FoW+EW** | `ui_p3_m2_green`, `ui_p3_m3_green`, **`ui_p3_m4_green`** (FoW/EW); units/replay optional |
-
-| **World Preview product** | **SIGNED** | [`world_preview_product_decision_v1.md`](../prompts/guides/ui/world_preview_product_decision_v1.md) |
-
-| **UI Phase 4** | **CODER CLOSED** | LAYOUT-002 + **D-07** (`ui_wp_layout_d07_green`); WP-L3/L4 optional |
-| **UI Phase 5** | **OPEN (P2)** | Pause menu plan signed — scaffold partial |
-
-| **Infra / Wave C** | **WC-D04 coder CLOSED** | **OPS-F01** operator open — [`infra_slice3_wc_d04_ops_f01_plan_v1.md`](infra_slice3_wc_d04_ops_f01_plan_v1.md) |
-
-| **Fire P7 / Behavioral** | **S7-PLAY closed** · **S7B-DESIGN-001 SIGNED** | **S7B-PLAN-001** planner next |
+| **Stage 5 / 6 gates** | **CLOSED** | `cargo test -p proc_A_dine01 --lib stage5` |
+| **Steward preflights** | **ALL CLOSED** | Regression only — see snapshot § Steward |
+| **Dual-queue + wave 3** | **CLOSED** | `coder_a_wave3` · `coder_b_wave3_bundle_001` |
+| **Fire P7 (F7-A/B/C)** | **CODER CLOSED** | `fire7_f7_a_exit_001` + `fire_streaming_live.json` green |
+| **Stage 7 Behavioral** | **M1–M3 CLOSED** | Qualified tail: `s7b_m4_play_green` optional sim |
+| **VFX / Water tactical** | **WITNESS CLOSED** | Operator PNG / `--test visual` optional |
+| **Industrial / S7 Play** | **CLOSED** | maintain witnesses |
+| **UI shell 2B / P3 minimap** | **CLOSED** | `phase2b_closed` · compositor M1–M4 |
+| **UI Phase 4 / 5** | **CODER CLOSED** (P5 save deferred) | WP-L3/L4 optional polish |
+| **Infra / Wave C** | **WC-D04 CLOSED** | **OPS-F01** / **INFRA-VM-DEEP** P2 tails |
 
 
 
@@ -279,11 +269,11 @@
 
 | **WAVE-C** | coder + operator | **PARTIAL CLOSED** | **WC-D04-CODER-B DONE** · **OPS-F01** open |
 
-| **FIRE-P7** | planner | **PLANNING** | arch doc first |
+| **FIRE-P7** | coder | **CLOSED** (2026-05-26) | F7-A-EXIT + F7-B + F7-C — [`fire_sim_phase7_architecture_v1.md`](fire_sim_phase7_architecture_v1.md) |
 
 | **PLAN-STAGE7-BEHAVIORAL** | planner | **DONE** | handoff v1 |
 
-| **S7-BEHAV** | — | **PLANNING** | **S7B-DESIGN-001** **SIGNED** → **S7B-PLAN-001** — [`stage7_behavioral_full_plan_v1.md`](stage7_behavioral_full_plan_v1.md) |
+| **S7-BEHAV** | coder | **M1–M3 CLOSED** | **S7B-PREFLIGHT GO** · qualified `s7b_m4_play_green` tail |
 
 
 
@@ -316,7 +306,11 @@
 | **4** | **UI-P3-M2-TRAY-OPT** | **DONE** |
 | **DONE** | **S7B-DESIGN-001** | worksheet **SIGNED** 2026-05-25 — [`stage7_behavioral_d_signoff_v1.md`](stage7_behavioral_d_signoff_v1.md) |
 | **DONE** | **S7B-PLAN-001** | [`stage7_behavioral_implementation_plan_v1.md`](stage7_behavioral_implementation_plan_v1.md) + [`stage7_behavioral_live_witness_spec_v1.md`](stage7_behavioral_live_witness_spec_v1.md) |
-| **OPEN** | **S7B-PREFLIGHT-001** / **S7B-M1-001** | steward → coder M1 |
+| **CLOSED** | **S7B-PREFLIGHT-001** | [`steward_s7b_preflight_gate_v1.md`](steward_s7b_preflight_gate_v1.md) **GO** |
+| **CLOSED** | **S7B-M1/M2/M3** | `stage7_behavioral_live.json` greens |
+| **QUALIFIED** | **S7B-M4-PLAY** | `s7b_m4_play_green: false` — optional sim |
+| **CLOSED** | **FIRE7-PREFLIGHT-001** | [`steward_fire7_preflight_gate_v1.md`](steward_fire7_preflight_gate_v1.md) **GO** |
+| **CLOSED** | **FIRE7-F7-A-EXIT / B / C** | infra + `fire_streaming_live.json` |
 
 
 

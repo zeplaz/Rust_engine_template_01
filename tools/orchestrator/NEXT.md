@@ -1,5 +1,7 @@
 # Next work queue (post-orchestrator)
 
+**Orchestrator routing (2026-05-26):** read [`queues/HANDOFF.md`](queues/HANDOFF.md) and [`src/dev/orchestrator_signoff_snapshot_20260526_v1.md`](../src/dev/orchestrator_signoff_snapshot_20260526_v1.md) first — steward preflights and wave 3 coders are **CLOSED**.
+
 **Gate:** `cargo orchestrate --skip-clippy --skip-test` → 0 issues (last: `20260522_021031`)
 
 ---
