@@ -4,6 +4,12 @@ Single map of **planning → proof → implementation** for this repo. Use with 
 
 ---
 
+## Coder fleet (active now)
+
+**Board:** [`coder_fleet_active_assignments_v1.md`](coder_fleet_active_assignments_v1.md) · [`tools/orchestrator/queues/HANDOFF.md`](../tools/orchestrator/queues/HANDOFF.md) · [`coder_active_queue.json`](../tools/orchestrator/queues/coder_active_queue.json)
+
+---
+
 ## Daily loop (recommended)
 
 ```mermaid

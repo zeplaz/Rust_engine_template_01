@@ -13,7 +13,7 @@
     "logging_env": {
       "ORCHESTRATOR_EXPORT_HEALTH": false,
       "PERF": false,
-      "RUST_LOG": null,
+      "RUST_LOG": "bevy_ecs::schedule=trace",
       "SIM_VIEW_SYNC_DEBUG": false,
       "STAGE5_READINESS_VERBOSE": false,
       "STAGE5_VERBOSE": false,
@@ -49,78 +49,39 @@
     ],
     "relative_path": "debug_runs/wave_p_live.json",
     "schema": "debug_run_envelope_v1",
-    "source_system": "refresh_coder_a_ui_wp_wave_p_witness",
-    "written_at_epoch_secs": 1779766083
+    "source_system": "wave_p_live_proof",
+    "written_at_epoch_secs": 1779825361
   },
-  "cod_b_wp_witness_001_green": true,
-  "coder_a_ui_wp_queue_green": true,
+  "cod_b_wp_witness_001_green": false,
   "profile": "WAVE_P_PREVIEW",
-  "ui_wp_l4_001": {
-    "composite_layer_bindings": 10,
-    "consumer_contract_ok": true,
-    "gate": "UI-WP-L4-001",
-    "ui_wp_l4_001_green": true
-  },
-  "ui_wp_l4_001_green": true,
   "ui_wp_layout_002": {
     "d04_generator_sheet_open": false,
     "d04_map_dim_alpha": 102,
     "d04_sheet_body_wired": true,
-    "d04_sheet_width_px": 400.0,
-    "d04_unified_workspace": true,
-    "ui_wp_layout_002_green": true
+    "d04_sheet_width_px": 720.0,
+    "d04_unified_workspace": false,
+    "ui_wp_layout_002_green": false
   },
-  "ui_wp_layout_002_green": true,
-  "ui_wp_layout_003": {
-    "d09_paper_frame_inset_px": 12.0,
-    "gate": "UI-WP-LAYOUT-003",
-    "ui_wp_layout_003_green": true
-  },
-  "ui_wp_layout_003_green": true,
+  "ui_wp_layout_002_green": false,
   "ui_wp_layout_d02": {
-    "d02_map_area_fraction": 0.7829861044883728,
+    "d02_map_area_fraction": 0.8244855999946594,
     "d02_map_min_area_frac": 0.6499999761581421,
     "d02_sidebar_max_w": 220.0,
     "ui_wp_layout_d02_opt_green": true
   },
   "ui_wp_layout_d02_opt_green": true,
   "ui_wp_layout_d07": {
-    "d07_corner_inset_on_map": true,
+    "d07_corner_inset_on_map": false,
     "d07_inset_side_px": 140.0,
     "d07_sidebar_minimap_removed": true,
-    "ui_wp_layout_d07_green": true
+    "ui_wp_layout_d07_green": false
   },
-  "ui_wp_layout_d07_green": true,
-  "ui_wp_motion_001": {
-    "gate": "UI-WP-MOTION-001",
-    "motion_table": [
-      "pan",
-      "zoom",
-      "sheet_slide",
-      "corner_inset"
-    ],
-    "ui_wp_motion_001_green": true
-  },
-  "ui_wp_motion_001_green": true,
-  "ui_wp_pipeline": {
-    "consumer_contract_ok": true,
-    "gate": "UI-WP-PIPELINE",
-    "gpu_authoritative_surface": true,
-    "ui_wp_pipeline_green": true
-  },
-  "ui_wp_pipeline_green": true,
-  "ui_wp_visual_001": {
-    "gate": "UI-WP-VISUAL-001",
-    "gpu_authoritative_surface": true,
-    "green": true,
-    "lib_qualified": true,
-    "visual_signoff_pending": false
-  },
+  "ui_wp_layout_d07_green": false,
   "wave_p_green": true,
   "wave_p_readiness": {
     "passes": true,
     "report": {
-      "composite_graph_sources": 4,
+      "composite_graph_sources": 1,
       "composite_layer_bindings": 10,
       "consumer_contract_ok": true,
       "gpu_authoritative_surface": true,

@@ -1,8 +1,26 @@
 {
   "_meta": {
-    "version": "1.5.0",
-    "date": "2026-05-25",
+    "version": "2.5.0",
+    "date": "2026-05-26",
     "owner": "@designer",
+    "wave": "designer_wave6_todos_v1.md",
+    "wave4_p1_open": 0,
+    "wave4_p1_done": 6,
+    "wave4_p2_open": 0,
+    "wave4_p2_done": 4,
+    "wave4_complete": true,
+    "wave5_p1_open": 0,
+    "wave5_p1_done": 9,
+    "wave5_p2_open": 0,
+    "wave5_p2_done": 0,
+    "wave5_complete": true,
+    "wave6_p1_open": 5,
+    "wave6_p1_done": 0,
+    "parametric_design_done": 1,
+    "wave6_p2_open": 0,
+    "wave6_p2_done": 0,
+    "wave6_complete": false,
+    "coder_recap": "src/dev/coder_fleet_return_recap_wave3_v1.md",
     "signoff_registry": "tools/orchestrator/queues/designer_signoff_registry.json",
     "todo_board": "src/dev/stage_designer_todos_v1.md",
     "machine_queue": "tools/orchestrator/queues/continuation_queue.json",
@@ -10,6 +28,26 @@
     "ledger": "src/dev/stage_tracks_signoff_ledger_v1.md"
   },
   "done": [
+    {
+      "id": "CONSTRUCTION-PARAM-DESIGN-001",
+      "agent": "designer",
+      "signoff": "SIGNED",
+      "signed_date": "2026-05-26",
+      "status": "done",
+      "verdict": "PASS (qualified)",
+      "witness": "src/dev/construction_parametric_placement_design_v1.md",
+      "plan_doc": "src/dev/plan_construction_parametric_placement_v1.md",
+      "spec_doc": "src/dev/construction_parametric_placement_spec_v1.md",
+      "unblocks": [
+        "CONSTRUCTION-PARAM-CODER-001",
+        "CONSTRUCTION-PARAM-CODER-002",
+        "CONSTRUCTION-PARAM-CODER-003",
+        "CONSTRUCTION-PARAM-CODER-004",
+        "CONSTRUCTION-PARAM-CODER-005",
+        "CONSTRUCTION-PARAM-CODER-006"
+      ],
+      "notes": "Tray mock, staged panel, ghost visual tokens; witness rollup pending construction_parametric_placement_001"
+    },
     {
       "id": "UI4-DESIGN-001",
       "agent": "designer",
@@ -164,6 +202,208 @@
       "status": "done",
       "witness": "src/dev/s7p_grid_overload_ux_note_v1.md",
       "unblocks": ["S7P-GRID-UX-UI-001"]
+    },
+    {
+      "id": "DESIGN-M3-UNITS-001",
+      "agent": "designer",
+      "signoff": "SIGNED",
+      "signed_date": "2026-05-26",
+      "status": "done",
+      "witness": "src/dev/minimap_unit_marker_visual_spec_v1.md",
+      "unblocks": ["UI-P3-M3-UNITS-001"]
+    },
+    {
+      "id": "DESIGN-M3-REPLAY-001",
+      "agent": "designer",
+      "signoff": "SIGNED",
+      "signed_date": "2026-05-26",
+      "status": "done",
+      "witness": "src/dev/minimap_replay_scrub_visual_spec_v1.md",
+      "unblocks": ["UI-P3-M3-REPLAY-001"]
+    },
+    {
+      "id": "DESIGN-CONSTRUCTION-MV-001",
+      "agent": "designer",
+      "signoff": "SIGNED",
+      "signed_date": "2026-05-26",
+      "status": "done",
+      "witness": "src/dev/construction_multiview_ghost_readability_v1.md",
+      "unblocks": ["CONSTRUCTION-MV-SIM-001"],
+      "notes": "Readability contract; sim witness already green"
+    },
+    {
+      "id": "DESIGN-VFX-VISUAL-ACCEPT-001",
+      "agent": "designer",
+      "signoff": "SIGNED",
+      "signed_date": "2026-05-26",
+      "status": "done",
+      "verdict": "PASS (qualified)",
+      "witness": "src/dev/vfx_visual_acceptance_record_v1.md",
+      "unblocks": ["VFX-VISUAL-SIGNOFF-001"]
+    },
+    {
+      "id": "DESIGN-WP-VISUAL-ACCEPT-001",
+      "agent": "designer",
+      "signoff": "SIGNED",
+      "signed_date": "2026-05-26",
+      "status": "done",
+      "verdict": "PASS (qualified)",
+      "witness": "src/dev/world_preview_visual_acceptance_record_v1.md",
+      "unblocks": ["UI-WP-VISUAL-001"]
+    },
+    {
+      "id": "DESIGN-S7P-TOAST-PASS-001",
+      "agent": "designer",
+      "signoff": "SIGNED",
+      "signed_date": "2026-05-26",
+      "status": "done",
+      "verdict": "PASS (qualified)",
+      "witness": "src/dev/s7p_grid_overload_ux_pass_record_v1.md",
+      "unblocks": ["S7P-GRID-UX-UI-001"],
+      "notes": "s7p_grid_ux_001 green on industrial_activation_live.json"
+    },
+    {
+      "id": "DESIGN-F7-B-DEBUG-001",
+      "agent": "designer",
+      "signoff": "SIGNED",
+      "signed_date": "2026-05-26",
+      "status": "done",
+      "witness": "src/dev/fire_streaming_debug_overlay_names_v1.md",
+      "notes": "FIRE7-DESIGN-002 F3 label contract; optional coder wire"
+    },
+    {
+      "id": "DESIGN-BQ128-APPLY-UX-001",
+      "agent": "designer",
+      "signoff": "SIGNED",
+      "signed_date": "2026-05-26",
+      "status": "done",
+      "verdict": "PASS (qualified)",
+      "witness": "src/dev/bq128_apply_ghost_ux_review_v1.md",
+      "unblocks": ["UX-E02-APPLY-POLISH-001"]
+    },
+    {
+      "id": "DESIGN-IND-E03-OPS-001",
+      "agent": "designer",
+      "signoff": "SIGNED",
+      "signed_date": "2026-05-26",
+      "status": "done",
+      "verdict": "PASS (qualified)",
+      "witness": "src/dev/ind_e03_ops_strip_polish_v1.md",
+      "unblocks": ["IND-E03-SIM-UX-001"]
+    },
+    {
+      "id": "DESIGN-VFX-CAPTURE-ROUND-002",
+      "agent": "designer",
+      "signoff": "SIGNED",
+      "signed_date": "2026-05-26",
+      "status": "done",
+      "verdict": "PASS (qualified)",
+      "witness": "assets/vfx/reference/review_captures/vfx_capture_status_wave4.md",
+      "aliases": ["VX-P0-04"],
+      "parent": "DESIGN-VFX-CAPTURE-001"
+    },
+    {
+      "id": "DESIGN-R4-CORRIDOR-001",
+      "agent": "designer",
+      "signoff": "SIGNED",
+      "signed_date": "2026-05-26",
+      "status": "done",
+      "verdict": "PASS",
+      "witness": "src/dev/construction_r4_corridor_map_ux_v1.md",
+      "witness_json": "debug_runs/construction_stage_live.json",
+      "unblocks": ["R4-CORRIDOR-001"]
+    },
+    {
+      "id": "DESIGN-R4-TRAY-001",
+      "agent": "designer",
+      "signoff": "SIGNED",
+      "signed_date": "2026-05-26",
+      "status": "done",
+      "verdict": "DEFER",
+      "witness": "src/dev/construction_r4_tray_legend_v1.md",
+      "unblocks": ["R4-TRAY-001"]
+    },
+    {
+      "id": "DESIGN-R4-MV-PASS-001",
+      "agent": "designer",
+      "signoff": "SIGNED",
+      "signed_date": "2026-05-26",
+      "status": "done",
+      "verdict": "DEFER",
+      "witness": "src/dev/construction_r4_mv_pass_record_v1.md",
+      "unblocks": ["R4-MV-GHOST-001"]
+    },
+    {
+      "id": "DESIGN-M3-DEPTH-001",
+      "agent": "designer",
+      "signoff": "SIGNED",
+      "signed_date": "2026-05-26",
+      "status": "done",
+      "verdict": "DEFER",
+      "witness": "src/dev/minimap_m3_unit_aggregation_visual_v1.md",
+      "unblocks": ["UI-P3-M3-DEPTH-001"]
+    },
+    {
+      "id": "DESIGN-REPLAY-LIVE-001",
+      "agent": "designer",
+      "signoff": "SIGNED",
+      "signed_date": "2026-05-26",
+      "status": "done",
+      "verdict": "DEFER",
+      "witness": "src/dev/minimap_replay_live_ring_visual_v1.md",
+      "unblocks": ["REPLAY-LIVE-RING-001"]
+    },
+    {
+      "id": "DESIGN-M3-TRAY-001",
+      "agent": "designer",
+      "signoff": "SIGNED",
+      "signed_date": "2026-05-26",
+      "status": "done",
+      "verdict": "PASS (qualified)",
+      "witness": "src/dev/minimap_m2_tray_overlay_bridge_v1.md",
+      "unblocks": ["UI-P3-M2-TRAY-OPT"]
+    },
+    {
+      "id": "DESIGN-F7-STREAM-001",
+      "agent": "designer",
+      "signoff": "SIGNED",
+      "signed_date": "2026-05-26",
+      "status": "done",
+      "verdict": "PASS",
+      "witness": "src/dev/fire_streaming_neighbor_wake_visual_v1.md",
+      "witness_json": "debug_runs/fire_streaming_live.json",
+      "unblocks": ["FIRE7-STREAM-NEIGHBOR-WAKE-001"]
+    },
+    {
+      "id": "DESIGN-F7-DEBUG-PASS-001",
+      "agent": "designer",
+      "signoff": "SIGNED",
+      "signed_date": "2026-05-26",
+      "status": "done",
+      "verdict": "DEFER",
+      "witness": "src/dev/fire7_f7_b_debug_pass_record_v1.md",
+      "unblocks": ["FIRE7-F7-B-DEBUG-UI-001"]
+    },
+    {
+      "id": "DESIGN-VT-SPREAD-001",
+      "agent": "designer",
+      "signoff": "SIGNED",
+      "signed_date": "2026-05-26",
+      "status": "done",
+      "verdict": "PASS (qualified)",
+      "witness": "src/dev/fire_vt_spread_visual_acceptance_v1.md",
+      "unblocks": ["STAGE5-VT-DEEP-001"]
+    },
+    {
+      "id": "WSS-DESIGN-GATE-001",
+      "agent": "designer",
+      "signoff": "SIGNED",
+      "signed_date": "2026-05-26",
+      "status": "done",
+      "verdict": "PASS (qualified)",
+      "witness": "src/dev/wssr_design_signoff_v1.md",
+      "brief": "src/dev/wssr_design_gate_brief_v1.md",
+      "unblocks": ["WSS-CHUNK-SLAB-001", "WSS-ATMOS-CLIPMAP-001", "WSS-HYDRO-RUNTIME-001"]
     }
   ],
   "optional_designer": [
@@ -178,6 +418,48 @@
     }
   ],
   "active": [
+    {
+      "id": "DESIGN-UI-P6-MULTIVIEW-001",
+      "agent": "designer",
+      "priority": 1,
+      "status": "queued",
+      "witness": "src/dev/ui_phase6_multiview_readability_v1.md",
+      "verdict": "DEFER"
+    },
+    {
+      "id": "DESIGN-THEME-COLLAGE-001",
+      "agent": "designer",
+      "priority": 2,
+      "status": "queued",
+      "witness": "src/dev/ui_theme_collage_delta_v1.md",
+      "verdict": "PASS (qualified)"
+    },
+    {
+      "id": "DESIGN-WP-QUALIFIED-UPGRADE-001",
+      "agent": "designer",
+      "priority": 3,
+      "status": "queued",
+      "witness": "src/dev/world_preview_visual_upgrade_checklist_v1.md",
+      "verdict": "PASS (qualified)"
+    },
+    {
+      "id": "DESIGN-VFX-CAPTURE-WAVE5-001",
+      "agent": "designer",
+      "priority": 4,
+      "status": "queued",
+      "witness": "assets/vfx/reference/review_captures/vfx_capture_status_wave5.md",
+      "verdict": "DEFER"
+    },
+    {
+      "id": "DESIGN-OPERATOR-VISUAL-BUNDLE-001",
+      "agent": "designer",
+      "priority": 5,
+      "status": "queued",
+      "witness": "src/dev/operator_visual_signoff_design_checklist_v1.md",
+      "verdict": "PASS (qualified)"
+    }
+  ],
+  "routed_to_coder": [
     {
       "id": "UI-P3-M2-TRAY-OPT",
       "priority": 4,

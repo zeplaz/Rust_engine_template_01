@@ -27,9 +27,9 @@ use crate::gui::{
     camera_translation, compute_map_fit_strict, ActiveMapViewInput,
     InputBindings, MapCameraDesired, MapPresentationDiagnostics, MapViewInstanceId,
     MinimapInteractionBuffer, MinimapPresentationSource, MinimapShellState,
-    ResolvedMapViewFrames, ViewAuthoritySystemSet, ViewId, ViewManager,
-    native_minimap_window_supported, MAP_PANEL_INSET_PX,
-    view_surface_screen_to_world,
+    ResolvedMapViewFrames, SimulationMapViewport, ViewAuthoritySystemSet, ViewId, ViewManager,
+    native_minimap_window_supported, paint_tactical_viewport_frame_on_minimap,
+    MAP_PANEL_INSET_PX, view_surface_screen_to_world,
 };
 use crate::gui::std_floating;
 use crate::gui::hud::cached_egui_texture::HudEguiTextureCache;
@@ -939,7 +939,8 @@ pub fn draw_simulation_minimap_egui(
     shell: &mut MinimapShellState,
     legacy: &mut SimMinimapUiState,
     manager: &ViewManager,
-    _desired: &MapCameraDesired,
+    desired: &MapCameraDesired,
+    sim_map_viewport: &SimulationMapViewport,
     presentation: &mut MapViewState,
     dock: &mut crate::gui::hud::HudDockRegistry,
     layout: &mut HudLayoutStore,
@@ -988,6 +989,10 @@ pub fn draw_simulation_minimap_egui(
             },
         );
         map_toolbar_minimap_zoom(ui, shell, presentation);
+        ui.checkbox(
+            &mut shell.show_tactical_viewport_frame,
+            "Show map view frame",
+        );
         ui.horizontal(|ui| {
             ui.checkbox(&mut shell.detached, "Detached");
         });
@@ -1091,6 +1096,19 @@ pub fn draw_simulation_minimap_egui(
         let hit_zoom = fit.scale.max(1e-6);
         let painter = ui.painter().with_clip_rect(panel_rect);
         painter.image(tex_id, image_rect, sample_uv, egui::Color32::WHITE);
+        if shell.show_tactical_viewport_frame {
+            paint_tactical_viewport_frame_on_minimap(
+                &painter,
+                palette,
+                manager,
+                desired,
+                sim_map_viewport,
+                w,
+                h,
+                image_rect,
+                sample_uv,
+            );
+        }
         shell.last_image_rect = Some(image_rect);
         map_presentation_diag.record_fit_truth(
             MapViewInstanceId::Minimap,

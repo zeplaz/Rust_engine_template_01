@@ -108,6 +108,8 @@ pub struct MinimapShellState {
     pub pending_camera_focus_zoom: Option<f32>,
     pub diagnostic_ui_wrote_camera: bool,
     pub diagnostic_camera_drove_ui: bool,
+    /// Draw gold frame for [`crate::gui::ViewId::WorldMain`] visible bounds on the minimap image.
+    pub show_tactical_viewport_frame: bool,
 }
 
 impl Default for MinimapShellState {
@@ -133,6 +135,7 @@ impl Default for MinimapShellState {
             pending_camera_focus_zoom: None,
             diagnostic_ui_wrote_camera: false,
             diagnostic_camera_drove_ui: false,
+            show_tactical_viewport_frame: true,
         }
     }
 }

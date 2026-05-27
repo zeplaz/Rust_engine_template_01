@@ -368,6 +368,7 @@ fn test_world_bootstrap(
     mut layout_session: ResMut<FrameLayoutDebugSession>,
     world_roots: Query<Entity, With<WorldMarker>>,
     test_scene_chunks: Query<Entity, With<TestSceneSimChunk>>,
+    mut stall: Local<(u8, u32)>,
 ) {
     let Some(launch) = launch.as_ref() else {
         return;
@@ -377,6 +378,24 @@ fn test_world_bootstrap(
     }
 
     let busy = progress.running || job.is_busy();
+
+    if stall.0 != harness.phase {
+        *stall = (harness.phase, 0);
+    } else {
+        stall.1 = stall.1.saturating_add(1);
+        if stall.1 > 0 && stall.1 % 180 == 0 {
+            info!(
+                target: "test_harness::bootstrap",
+                phase = harness.phase,
+                flow = ?flow.get(),
+                busy,
+                finished = harness.finished,
+                maneuver = ?launch.maneuver,
+                auto_exit = launch.visual_auto_exit,
+                "CLI test world-gen bootstrap still in progress (not frozen — world-gen or proof gate)"
+            );
+        }
+    }
 
     match harness.phase {
         0 => {

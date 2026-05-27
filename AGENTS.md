@@ -70,8 +70,9 @@ Copied from user profile into the repo so the team shares one definition. Each f
 | [`.cursor/agents/designer.md`](.cursor/agents/designer.md) | HUD, overlays, multiview UX, ghosts (presentation) | — |
 | [`.cursor/agents/sim-steward.md`](.cursor/agents/sim-steward.md) | **Simulation steward** — bevy-simulation-grade + debug-intelligence + cleanup-completion-intelligence; **sequential shifts A→B→C** in main chat when Task quota blocked | `coder` / `planner` / `designer` for out-of-scope slices |
 | [`.cursor/agents/main-thread-orchestrator.md`](.cursor/agents/main-thread-orchestrator.md) | **Main-thread continuity** — Task attempt + fail-cycle escalation + foreground queue when Task/debug/cleanup fail; never stop on usage errors | Runs Shift A→B→C inline or via `@sim-steward` |
+| [`.cursor/agents/coparent-orchestrator.md`](.cursor/agents/coparent-orchestrator.md) | **Secondary pathways** — parallel lanes (operator, VFX capture, designer tails, parametric placement); conflict matrix vs primary P1 | Promotes slices to `@orchestrator`; routes drift to `@sim-steward` |
 
-**Handoff chain (orchestrator.md):** `orchestrator` → **`planner`** (plan) → **`coder`** / **`designer`** (implement) → verification (`cargo check` / tests / witness JSON).
+**Handoff chain (orchestrator.md):** `orchestrator` → **`planner`** (plan) → **`coder`** / **`designer`** (implement) → verification (`cargo check` / tests / witness JSON). **`@coparent-orchestrator`** runs parallel secondary lanes without preempting primary P1.
 
 ### Subagent continuity (mission-critical)
 
@@ -80,7 +81,7 @@ Task background workers can fail with *“Switch to Auto”* — that blocks **T
 | Channel | When to use |
 |---------|-------------|
 | **Main chat (Auto)** | Default implementation after any Task failure |
-| **`@coder` / `@planner` / `@sim-steward` / `@main-thread-orchestrator` in chat** | Same roles as Task; `.cursor/agents/*` use `model: auto` (different meter than Task). **`@sim-steward`** = shifts A→B→C; **`@main-thread-orchestrator`** = Task fail-cycle + slice queue when Multitask/Task fails |
+| **`@coder` / `@planner` / `@sim-steward` / `@main-thread-orchestrator` / `@coparent-orchestrator` in chat** | Same roles as Task; `.cursor/agents/*` use `model: auto` (different meter than Task). **`@sim-steward`** = shifts A→B→C; **`@main-thread-orchestrator`** = Task fail-cycle + slice queue; **`@coparent-orchestrator`** = secondary parallel pathways |
 | **Task tool** | **Separate subagent quota** — when exhausted, **do not retry** (incl. `composer-2.5-fast`); use Auto / `@coder` |
 | **`HANDOFF.md`** | Session handoff — template: [`tools/orchestrator/queues/HANDOFF.template.md`](tools/orchestrator/queues/HANDOFF.template.md); script: `tools/orchestrator/invoke_handoff.ps1` |
 | **SDK `@cursor/sdk`** | Local `Agent.prompt` + `composer-2` when IDE Task pool is exhausted |
@@ -123,7 +124,8 @@ Index: [`.cursor/skills/README.md`](.cursor/skills/README.md).
 
 | Cursor agent | Repo playbook(s) | Also read |
 |--------------|------------------|-----------|
-| `orchestrator` | [`agent_queue.md`](tools/orchestrator/queues/agent_queue.md), all playbooks as needed | [`NEXT.md`](tools/orchestrator/NEXT.md), **debug-intelligence** for multi-domain drift; delegate drift/cleanup lanes to **`sim-steward`** |
+| `orchestrator` | [`agent_queue.md`](tools/orchestrator/queues/agent_queue.md), all playbooks as needed | [`NEXT.md`](tools/orchestrator/NEXT.md), **debug-intelligence** for multi-domain drift; delegate drift/cleanup lanes to **`sim-steward`**; parallel lanes to **`coparent-orchestrator`** |
+| `coparent-orchestrator` | [`HANDOFF.md`](tools/orchestrator/queues/HANDOFF.md), machine queues | **debug-intelligence** + **cleanup-completion-intelligence** + bevy-simulation-grade conflict matrix |
 | `planner` | `migration_tasks.md`, matrices | [`llm_agent_brief.md`](prompts/llm_agent_brief.md), **debug-intelligence** |
 | `coder` | `viewport_cleanup_agent`, `render_pipeline_agent`, `stage5_readiness_agent`, … | bevy-simulation-grade, **debug-intelligence**; **cleanup-completion-intelligence** before removals |
 | `designer` | `ui_layout_agent` | [`ui_boundary_guide_v1.md`](prompts/guides/ui_boundary_guide_v1.md) |

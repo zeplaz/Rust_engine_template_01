@@ -12,6 +12,6 @@
 
 **Post-impl review:** **DESIGN-D-VFX-POST-001** — [`vfx_design_review_record_v1.md`](../../../src/dev/vfx_design_review_record_v1.md) **SIGNED PASS** · [`water_vfx_review_record_v1.md`](../../../src/dev/water_vfx_review_record_v1.md) **PASS**
 
-**Capture status:** [`vfx_capture_status_20260525.md`](vfx_capture_status_20260525.md) — **DESIGN-VFX-CAPTURE-001** **DONE**
+**Capture status:** [`vfx_capture_status_20260525.md`](vfx_capture_status_20260525.md) — **DESIGN-VFX-CAPTURE-001** **DONE** · [`vfx_capture_status_wave4.md`](vfx_capture_status_wave4.md) — **DESIGN-VFX-CAPTURE-ROUND-002** **DONE** · [`vfx_capture_status_wave5.md`](vfx_capture_status_wave5.md) — **DESIGN-VFX-CAPTURE-WAVE5-001** **DEFER**
 
 **On disk:** `fire_tactical_20260524.png` · `water_river_tactical_20260524.png` · `water_lake_tactical_20260524.png` — replace with in-sim stills when convenient.

@@ -63,8 +63,8 @@ fn main() {
         TestWorldHarness::default()
     };
 
-    App::new()
-        .insert_resource(ClearColor(Color::srgb(0.0, 0.0, 0.0)))
+    let mut app = App::new();
+    app.insert_resource(ClearColor(Color::srgb(0.0, 0.0, 0.0)))
         .insert_resource(launch)
         .insert_resource(debug_trace)
         .insert_resource(harness)

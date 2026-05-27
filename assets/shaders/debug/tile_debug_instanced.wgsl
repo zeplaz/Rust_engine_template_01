@@ -4,9 +4,9 @@
 struct Globals {
     view_proj: mat4x4<f32>,
     instance_count: u32,
+    view_tint: u32, // TileDebugViewId: 0=WorldMain, 1=Preview, 2=Minimap, 3=SimulationMap
     _pad0: u32,
     _pad1: u32,
-    _pad2: u32,
 }
 
 @group(0) @binding(0)
@@ -72,6 +72,19 @@ fn tile_instance_color(flags: u32, phase_lod: u32) -> vec4<f32> {
     return vec4<f32>(0.12, 0.12, 0.14, 0.85);
 }
 
+fn apply_view_tint(color: vec4<f32>, view_id: u32) -> vec4<f32> {
+    if view_id == 1u {
+        return vec4<f32>(color.r * 0.94, color.g * 0.90, color.b * 1.06, color.a);
+    }
+    if view_id == 2u {
+        return vec4<f32>(color.r * 0.88, color.g * 0.95, color.b * 1.02, color.a);
+    }
+    if view_id == 3u {
+        return vec4<f32>(color.r * 0.96, color.g * 1.02, color.b * 0.94, color.a);
+    }
+    return color;
+}
+
 @vertex
 fn vs_main(
     @builtin(instance_index) instance_id: u32,
@@ -93,7 +106,7 @@ fn vs_main(
 
     var out: VertexOutput;
     out.clip_position = clip;
-    out.color = tile_instance_color(tile_row.flags, tile_row.lod);
+    out.color = apply_view_tint(tile_instance_color(tile_row.flags, tile_row.lod), globals.view_tint);
     return out;
 }
 

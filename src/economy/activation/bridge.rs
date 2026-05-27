@@ -55,20 +55,24 @@ impl Plugin for IndustrialActivationPlugin {
                 super::concrete_chain_e2e::fast_forward_portland_chain_sites_to_operational
                     .after(crate::strategic::commit_construction_site_system),
                 crate::economy::site_placement::ensure_site_world_transform_system,
-                activate_industrial_facilities_system,
+                activate_industrial_facilities_system
+                    .after(crate::strategic::site_provisioning_system),
                 crate::economy::logistics::register_facility_portals_system,
                 crate::economy::concrete_batch::register_concrete_batch_on_activation_system,
                 super::concrete_chain_e2e::refresh_concrete_chain_e2e_witness_system,
                 refresh_industrial_activation_witness_system,
                 sync_industrial_activation_board_system,
                 super::live_proof::sync_industrial_proof_witness_flags,
+            ),
+        );
+        app.add_systems(
+            Update,
+            (
                 super::live_proof::write_industrial_activation_live_proof_system,
                 crate::dev::write_stage7_play_live_proof_system,
                 crate::dev::write_stage7_behavioral_live_proof_system,
             )
-                .chain()
-                .after(crate::strategic::site_provisioning_system)
-                .after(crate::strategic::publish_stage7_behavioral_overlay_samples),
+                .after(super::live_proof::sync_industrial_proof_witness_flags),
         );
         app.add_systems(
             Update,

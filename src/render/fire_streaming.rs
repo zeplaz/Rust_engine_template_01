@@ -9,6 +9,10 @@ use crate::render::fire_chunk_runtime::{ActiveFireChunkSet, ChunkCoord, FireChun
 
 pub const FIRE_STREAMING_LIVE_JSON: &str = "debug_runs/fire_streaming_live.json";
 
+/// Ordering anchor for sleep/wake (single registration in [`crate::render::extraction::FireVisualFramePlugin`]).
+#[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
+pub struct FireStreamingSleepWakeSet;
+
 /// Chunks farther than this Chebyshev distance from focus may sleep (lose `visual_active`).
 pub const FIRE_STREAMING_SLEEP_RADIUS: i32 = 6;
 
@@ -190,16 +194,7 @@ pub struct FireStreamingPlugin;
 impl Plugin for FireStreamingPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<FireStreamingWitness>()
-            .init_resource::<FireStreamingLiveProofState>()
-            .add_systems(
-                Update,
-                (
-                    apply_fire_streaming_sleep_wake_system,
-                    write_fire_streaming_live_proof_system,
-                )
-                    .chain()
-                    .run_if(in_state(BaseState::Simulation)),
-            );
+            .init_resource::<FireStreamingLiveProofState>();
     }
 }
 

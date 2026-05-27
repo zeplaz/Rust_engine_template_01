@@ -172,6 +172,24 @@ impl ChunkStreamingScheduler {
             };
         }
     }
+
+    /// True when every pending chunk is already in the hot cache (steady-state after first load).
+    #[must_use]
+    pub fn all_pending_chunks_cached(&self, cache: &ChunkCache) -> bool {
+        !self.pending_chunks.is_empty()
+            && self
+                .pending_chunks
+                .iter()
+                .all(|coord| cache.get(*coord).is_some())
+    }
+
+    /// Drop job/staging queues once residency is warm so sync hydrate does not re-run every frame.
+    pub fn clear_jobs_if_fully_cached(&mut self, cache: &ChunkCache) {
+        if self.all_pending_chunks_cached(cache) {
+            self.jobs.clear();
+            self.staged_chunk_bodies.clear();
+        }
+    }
 }
 
 #[must_use]
@@ -229,6 +247,11 @@ pub fn schedule_chunk_streaming_from_interest(
     orbs.extend(interest_orbs_from_lod_zones(&zones.zones, CHUNK_TILES));
     let orbs = merge_interest_orbs_deduped(&orbs);
     let coords = merge_interest_chunk_coords(&orbs);
+    // PERF-PLAY-001: do not reset the streaming pipeline when the interest set
+    // is unchanged; re-enqueueing every frame forces repeated reconstruct/apply.
+    if scheduler.pending_chunks == coords {
+        return;
+    }
     let weights = ChunkStreamingPriority {
         distance_weight: -1.0,
         simulation_weight: 1.5,
@@ -269,19 +292,33 @@ pub fn sync_chunk_residency_from_scheduler(
 pub fn hydrate_stream_jobs_from_save_bundle(
     settings: Res<WorldSaveBundleSettings>,
     mut scheduler: ResMut<ChunkStreamingScheduler>,
+    cache: Res<ChunkCache>,
 ) {
-    if scheduler.jobs.is_empty() || !scheduler.staged_chunk_bodies.is_empty() {
+    if scheduler.pending_chunks.is_empty() {
+        return;
+    }
+    if scheduler.all_pending_chunks_cached(&cache) {
+        scheduler.clear_jobs_if_fully_cached(&cache);
+        return;
+    }
+    if !scheduler.staged_chunk_bodies.is_empty() {
+        return;
+    }
+    let missing: Vec<IVec2> = scheduler
+        .pending_chunks
+        .iter()
+        .copied()
+        .filter(|coord| cache.get(*coord).is_none())
+        .collect();
+    if missing.is_empty() {
+        scheduler.clear_jobs_if_fully_cached(&cache);
         return;
     }
     let Some(manifest) = load_manifest_for_streaming(&settings.bundle_dir) else {
         return;
     };
-    let chunks = scheduler.pending_chunks.clone();
-    if chunks.is_empty() {
-        return;
-    }
     scheduler.staged_chunk_bodies =
-        hydrate_stream_chunks_from_manifest(&settings.bundle_dir, &manifest, &chunks);
+        hydrate_stream_chunks_from_manifest(&settings.bundle_dir, &manifest, &missing);
     for job in &mut scheduler.jobs {
         if job.stage == ChunkStreamStage::Disk {
             job.stage = ChunkStreamStage::Deserialize;
@@ -301,6 +338,13 @@ pub fn reconstruct_staged_chunks_into_cache(
         return;
     }
     for (coord, body) in scheduler.staged_chunk_bodies.drain(..) {
+        let hash = hash_saved_chunk_body(&body);
+        if cache
+            .get(coord)
+            .is_some_and(|entry| entry.content_hash == hash)
+        {
+            continue;
+        }
         let changed_tile_indices = (0..body.cells.len() as u32).collect();
         let _ = cache.upsert_from_saved_body(coord, &body, tier.as_ref(), spill.as_mut());
         apply_queue.ready_bodies.push((coord, body));
@@ -326,15 +370,15 @@ pub fn finalize_stream_domain_reconstruct(
     mut scheduler: ResMut<ChunkStreamingScheduler>,
     cache: Res<ChunkCache>,
 ) {
-    if scheduler.jobs.is_empty() {
-        return;
+    if !scheduler.jobs.is_empty() {
+        let all_cached = scheduler.jobs.iter().all(|job| {
+            job.stage != ChunkStreamStage::DomainReconstruct || cache.get(job.chunk).is_some()
+        });
+        if all_cached {
+            scheduler.advance_job_stages();
+        }
     }
-    let all_cached = scheduler.jobs.iter().all(|job| {
-        job.stage != ChunkStreamStage::DomainReconstruct || cache.get(job.chunk).is_some()
-    });
-    if all_cached {
-        scheduler.advance_job_stages();
-    }
+    scheduler.clear_jobs_if_fully_cached(&cache);
 }
 
 fn stall_after_tile_storage_apply(mut watch: ResMut<crate::render::FrameStallWatch>) {

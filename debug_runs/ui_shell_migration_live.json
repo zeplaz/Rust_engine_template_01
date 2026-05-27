@@ -13,11 +13,11 @@
     },
     "logging_env": {
       "ORCHESTRATOR_EXPORT_HEALTH": false,
-      "PERF": false,
-      "RUST_LOG": null,
-      "SIM_VIEW_SYNC_DEBUG": false,
+      "PERF": true,
+      "RUST_LOG": "info",
+      "SIM_VIEW_SYNC_DEBUG": true,
       "STAGE5_READINESS_VERBOSE": false,
-      "STAGE5_VERBOSE": false,
+      "STAGE5_VERBOSE": true,
       "VIEWPORT_AUTHORITY_DEBUG": false
     },
     "orchestrator": {
@@ -51,7 +51,7 @@
     "relative_path": "debug_runs/ui_shell_migration_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "simulation_shell_phase2_live_proof",
-    "written_at_epoch_secs": 1779765462
+    "written_at_epoch_secs": 1779853066
   },
   "backends": {
     "P1_ops_strip": "bevy_ui",
@@ -81,7 +81,7 @@
     }
   },
   "context_tray": {
-    "active_tab": "Alerts",
+    "active_tab": "Intel",
     "build_rail_width_px": 52.0,
     "map_frame_inset_px": 4.0,
     "panel_state": "Collapsed",
@@ -126,7 +126,7 @@
       "F-11"
     ],
     "minimap_chrome_pad_px": 1.0,
-    "minimap_gpu_path": false,
+    "minimap_gpu_path": true,
     "ops_strip_top_offset_px": 2.0,
     "zones_live": true
   },
@@ -160,7 +160,7 @@
     ]
   },
   "phase5": {
-    "pause_menu_bevy": false
+    "pause_menu_bevy": true
   },
   "profile": "UI_SHELL_MIGRATION_2B",
   "ui_oh_2a_001": {
@@ -176,8 +176,8 @@
   },
   "ui_oh_p5_001": {
     "gate": "UI-OH-P5-001",
-    "green": false,
-    "pause_menu_bevy": false
+    "green": true,
+    "pause_menu_bevy": true
   },
   "ui_p2a_coder_b": {
     "green": true,
@@ -199,11 +199,11 @@
   },
   "ui_p2b_coder_b_green": true,
   "ui_p3_001": {
-    "closed": false,
+    "closed": true,
     "minimap_chrome_aligned": true,
-    "minimap_gpu_path": false
+    "minimap_gpu_path": true
   },
-  "ui_p5_pause_001_green": false,
+  "ui_p5_pause_001_green": true,
   "ui_w3_2a_001": {
     "context_tray_wired": true,
     "gate": "UI-W3-2A-001",
@@ -237,17 +237,17 @@
   "ui_w3_p5_001": {
     "egui_pass_count_in_sim": 0,
     "gate": "UI-W3-P5-001",
-    "green": false,
-    "pause_menu_bevy": false
+    "green": true,
+    "pause_menu_bevy": true
   },
   "ui_w3_p6_001": {
     "egui_pass_count_in_sim": 0,
     "gate": "UI-W3-P6-001",
-    "green": false,
-    "pause_menu_bevy": false,
+    "green": true,
+    "pause_menu_bevy": true,
     "phase2b_closed": true,
     "plan": "PLAN-UI-PHASE6-001",
-    "shell_perf_green": false
+    "shell_perf_green": true
   },
   "ui_w3_theme_001": {
     "gate": "PLAN-UI-THEME-MERGE-001",
@@ -261,8 +261,8 @@
   },
   "ux_e03_coder_a": {
     "gate": "UX-E03-CODER-A",
-    "green": false,
-    "media_registry_wired": false,
+    "green": true,
+    "media_registry_wired": true,
     "strategic_enqueue_from_transmission_ui": false
   },
   "witness": {
