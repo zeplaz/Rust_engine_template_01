@@ -32,6 +32,7 @@ fn pointer_bool(v: &Value, ptr: &str) -> bool {
 }
 
 /// Refresh Wave 3 Coder B witness JSONs (lib-only; session order 3→1→2→5…).
+#[cfg(test)]
 #[must_use]
 pub fn refresh_coder_b_wave3_bundle_live_witnesses() -> bool {
     use crate::dev::debug_run_envelope::refresh_agent_debug_index;

@@ -11,7 +11,7 @@
     "logging_env": {
       "ORCHESTRATOR_EXPORT_HEALTH": false,
       "PERF": false,
-      "RUST_LOG": null,
+      "RUST_LOG": "bevy_ecs::schedule=trace",
       "SIM_VIEW_SYNC_DEBUG": false,
       "STAGE5_READINESS_VERBOSE": false,
       "STAGE5_VERBOSE": false,
@@ -47,15 +47,15 @@
     ],
     "relative_path": "debug_runs/wave_s_hydrate_live.json",
     "schema": "debug_run_envelope_v1",
-    "source_system": "coder_b_wave3_hydrate_refresh",
-    "written_at_epoch_secs": 1779766108
+    "source_system": "wave_s_live_proof",
+    "written_at_epoch_secs": 1779825361
   },
   "autoload_enabled": false,
-  "blueprint_count": 1,
+  "blueprint_count": 0,
   "last_error": null,
-  "layout_widget_count": 4,
+  "layout_widget_count": 0,
   "profile": "WAVE_S_HYDRATE",
   "restore_triggered": false,
-  "shell_loaded": true,
+  "shell_loaded": false,
   "wave_s_hydrate_green": true
 }

@@ -10,11 +10,11 @@
     },
     "logging_env": {
       "ORCHESTRATOR_EXPORT_HEALTH": false,
-      "PERF": false,
-      "RUST_LOG": null,
-      "SIM_VIEW_SYNC_DEBUG": false,
+      "PERF": true,
+      "RUST_LOG": "info",
+      "SIM_VIEW_SYNC_DEBUG": true,
       "STAGE5_READINESS_VERBOSE": false,
-      "STAGE5_VERBOSE": false,
+      "STAGE5_VERBOSE": true,
       "VIEWPORT_AUTHORITY_DEBUG": false
     },
     "orchestrator": {
@@ -48,13 +48,13 @@
     "relative_path": "debug_runs/logistics_throughput_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "logistics_throughput_live_proof",
-    "written_at_epoch_secs": 1779755990
+    "written_at_epoch_secs": 1779853044
   },
   "edge_saturation_max": 0.0,
-  "open_todos": 14,
+  "open_todos": 15,
   "profile": "LOGISTICS_THROUGHPUT",
   "route_proofs_sample": [],
-  "routes_blocked": 2,
+  "routes_blocked": 0,
   "routes_open": 0,
   "s7p_log_001_green": false,
   "throughput_green": false,

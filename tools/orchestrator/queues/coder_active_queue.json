@@ -1,6 +1,6 @@
 {
   "_meta": {
-    "version": "3.0.0",
+    "version": "4.1.0",
     "date": "2026-05-26",
     "handoff": "src/dev/coder_dual_queue_v3.md",
     "todos": "src/dev/coder_wave3_full_todos_v1.md",
@@ -9,146 +9,131 @@
     "regression": "cargo test -p proc_A_dine01 --lib stage5",
     "closure_bundles": [
       "src/dev/coder_a_dual_queue_closure_v1.rs",
-      "src/dev/coder_b_queue_bundle_proof.rs"
+      "src/dev/coder_a_wave3_closure_v1.rs",
+      "src/dev/coder_a_infra_stress_closure_v1.rs",
+      "src/dev/coder_b_queue_bundle_proof.rs",
+      "src/dev/coder_b_wave3_bundle_proof.rs"
     ],
-    "verify": "cargo test -p proc_A_dine01 --lib coder_a_dual_queue coder_b_queue_bundle",
-    "rule": "Wave 3 — one P1 primary per session; F7-B/C blocked until FIRE7-F7-A-EXIT-001"
+    "verify": "cargo test -p proc_A_dine01 --lib coder_a_wave3 coder_b_wave3",
+    "rule": "Fleet reopened 2026-05-26 — PLAN-WAVE-6-001; active: populated",
+    "fleet_closed": false,
+    "audit": "src/dev/planner_status_audit_v8.md"
   },
   "coder_a": {
     "p1_pick_one": true,
+    "infra_stress_plan": "src/dev/coder_a_infra_stress_active_v1.md",
     "active": [
       {
-        "id": "FIRE7-F7-A-EXIT-001",
-        "task": "Close F7-A product gate A1–A5 (architecture exit, not v2 witness alone)",
-        "tier": "P1",
+        "id": "WSS-CHUNK-SLAB-001",
         "priority": 1,
-        "status": "queued",
-        "owner": "@coder A",
-        "plan_doc": "src/dev/fire_sim_phase7_architecture_v1.md",
-        "verify": "cargo test -p proc_A_dine01 --lib fire_view_extract fire_visual_extract stage5",
-        "blocks": ["FIRE7-F7-B-001", "FIRE7-F7-C-001"],
-        "notes": "v2 FIRE7-F7-A-001 = witness bundle only"
+        "status": "ready",
+        "plan_doc": "src/dev/wssr_plan_002_chunk_authority_v1.md",
+        "witness": "debug_runs/wss_substrate_live.json",
+        "notes": "design gate PASS qualified; hybrid assessment required; types + registry skeleton"
       },
       {
-        "id": "VFX-VISUAL-SIGNOFF-001",
-        "task": "--test visual sign-off for P2 sparks + water",
-        "tier": "P1",
+        "id": "F7-DEBUG-WIRE-001",
         "priority": 2,
-        "status": "queued",
-        "owner": "@coder A",
-        "plan_doc": "src/dev/vfx_coder_phase2_queue_v1.md",
-        "verify": "cargo run -p proc_A_dine01 --release -- --test visual"
+        "status": "ready",
+        "plan_doc": "src/dev/fire_streaming_debug_overlay_names_v1.md",
+        "witness": "debug_runs/fire_streaming_live.json",
+        "notes": "optional F3 label + gizmo legend alignment"
       },
       {
-        "id": "TRIAGE-GPU-TILE-WGSL-001",
-        "task": "WGSL storage instances + view-aware tile colors",
-        "tier": "P1",
-        "priority": 2,
-        "status": "queued",
-        "owner": "@coder A",
-        "plan_doc": "src/dev/stage5_triage_backlog.md",
-        "verify": "visual run without naga panic"
-      },
-      {
-        "id": "TRIAGE-VISUAL-TEARDOWN-001",
-        "task": "Graceful GPU surface exit VR-02",
-        "tier": "P1",
+        "id": "S7B-M4-LIVE-001",
         "priority": 3,
-        "status": "queued",
-        "owner": "@coder A",
-        "plan_doc": "src/dev/visual_run_blockers.md"
+        "status": "ready",
+        "plan_doc": "src/dev/s7b_m4_live_sim_playtest_plan_v1.md",
+        "witness": "debug_runs/stage7_behavioral_live.json",
+        "notes": "live sim enqueue wiring check vs lib-seeded witness"
       },
       {
-        "id": "TRIAGE-PHASE-F-CULL-001",
-        "task": "View-aware particle culling refinement",
-        "tier": "P1",
-        "priority": 3,
-        "status": "queued",
-        "owner": "@coder A",
-        "plan_doc": "src/dev/stage5_triage_backlog.md"
-      },
-      {
-        "id": "UI-WP-VISUAL-001",
-        "task": "World preview --test visual sign-off",
-        "tier": "P1",
-        "priority": 3,
-        "status": "queued",
-        "owner": "@coder A",
-        "plan_doc": "prompts/guides/ui/ui_world_preview_coder_queue_v1.md",
-        "witness": "debug_runs/wave_p_live.json"
-      },
-      {
-        "id": "INFRA-GPU-TILE-GIZMO-001",
-        "task": "Remove CPU gizmo fallback when instanced authoritative",
-        "tier": "P1",
-        "priority": 3,
-        "status": "queued",
-        "owner": "@coder A",
-        "plan_doc": "src/dev/stage5_triage_backlog.md"
-      },
-      {
-        "id": "S7B-M4-SIM-001",
-        "task": "M4 playtest hooks in sim beyond JSON writer",
-        "tier": "P1",
-        "priority": 3,
-        "status": "queued",
-        "owner": "@coder A",
-        "plan_doc": "src/dev/s7b_closure_plan_v1.md"
-      },
-      {
-        "id": "VFX-CAPTURE-HOOK-001",
-        "task": "In-sim PNG capture hooks for operator lane",
-        "tier": "P2",
-        "priority": 1,
-        "status": "queued",
-        "owner": "@coder A"
-      },
-      {
-        "id": "TRIAGE-COMPILE-HYGIENE-001",
-        "task": "Reconcile CW board vs live cargo warnings",
-        "tier": "P2",
-        "priority": 2,
-        "status": "queued",
-        "owner": "@coder A",
-        "plan_doc": "src/dev/COMPILE_WARNINGS_TODOS.md"
-      },
-      {
-        "id": "FIRE7-DESIGN-LOD-WIRE-001",
-        "task": "Wire designer LOD table into extract",
-        "tier": "P2",
-        "priority": 3,
-        "status": "blocked",
-        "owner": "@coder A",
-        "blocked_by": ["FIRE7-DESIGN-001", "FIRE7-F7-A-EXIT-001"]
-      },
-      {
-        "id": "STAGE5-VT-DEEP-001",
-        "task": "VT-4/5 camera isolation proof matrix",
-        "tier": "P2",
-        "priority": 3,
-        "status": "queued",
-        "owner": "@coder A"
+        "id": "FIRE-F2-EXTRACT-001",
+        "priority": 4,
+        "status": "ready",
+        "plan_doc": "src/dev/fire_ecology_f1_todos.md",
+        "witness": "debug_runs/fire_ecology_live.json",
+        "notes": "per-tile / hot-cell extract contract (non-FULL_APP gate)"
       }
     ],
-    "blocked_until_f7_a_exit": [
+    "done_infra_stress_2026_05_26": [
       {
-        "id": "FIRE7-F7-B-001",
-        "task": "Sleep/wake + neighbor wake streaming systems",
-        "blocked_by": ["FIRE7-F7-A-EXIT-001"],
-        "plan_doc": "src/dev/fire_sim_phase7_architecture_v1.md"
+        "id": "TRIAGE-PHASE-D-PARITY-001",
+        "priority": 1,
+        "status": "done",
+        "bundle": "phase_d_parity_stress.rs + coder_b_wave3",
+        "witness": "debug_runs/infrastructure_view_isolation_live.json",
+        "notes": "S1\u2013S3 lib-green; triage_phase_d_parity_001.stress in witness"
       },
       {
-        "id": "FIRE7-F7-C-001",
-        "task": "FireChunkLodState band caps in extract",
-        "blocked_by": ["FIRE7-F7-A-EXIT-001"],
-        "plan_doc": "src/dev/fire_sim_phase7_architecture_v1.md"
+        "id": "INFRA-VM-DEEP-001",
+        "priority": 2,
+        "status": "done",
+        "bundle": "coder_a_infra_stress_closure_v1",
+        "witness": "debug_runs/infrastructure_view_isolation_live.json",
+        "notes": "infra_vm_deep_001 source/sim_trace/sim_time_written; sim via write_view_runtime_live_proof_system"
+      },
+      {
+        "id": "STAGE6-OPS-WITNESS-001",
+        "priority": 3,
+        "status": "done",
+        "bundle": "coder_a_infra_stress_closure_v1",
+        "witness": "debug_runs/stage6_virtualization_live.json",
+        "notes": "stage6_ops_witness_001 + refresh_stage6_ops_witness_001_from_sim_resources"
       }
     ],
     "done_2026_05_26": [
       {
+        "id": "F7-STREAM-DEEP-001",
+        "status": "done",
+        "plan_doc": "src/dev/plan_f7_stream_exec_001_v1.md",
+        "witness": "debug_runs/fire_streaming_live.json",
+        "notes": "B-DEEP-1..3: deterministic neighbor wake; sleep radius derived from Stage6 residency; neighbor_wake_observed=true; green unchanged; regression guard: fire7_f7_a_exit_001.green=true"
+      },
+      {
+        "id": "FIRE7-F7-A-EXIT-001",
+        "status": "done",
+        "bundle": "coder_a_wave3_closure_v1",
+        "notes": "F7-A product gate A1\u2013A5 \u2014 fire7_f7_a_exit_001 green in infrastructure_view_isolation_live.json"
+      },
+      {
+        "id": "VFX-VISUAL-SIGNOFF-001",
+        "status": "done_qualified",
+        "bundle": "coder_a_wave3_closure_v1",
+        "witness": "debug_runs/stage5_full_app_live.json",
+        "notes": "tactical_vfx_witness all_green + vfx_visual_signoff_001; designer PASS qualified; --test visual optional"
+      },
+      {
+        "id": "TRIAGE-GPU-TILE-WGSL-001",
+        "status": "done",
+        "bundle": "coder_a_wave3_closure_v1",
+        "witness": "debug_runs/stage5_full_app_live.json",
+        "notes": "tile_debug_instanced.wgsl storage + view_tint/apply_view_tint; VR-01 fixed; triage_gpu_tile_wgsl_001 in stage5 JSON"
+      },
+      {
+        "id": "TRIAGE-PHASE-D-PARITY-001",
+        "status": "done",
+        "bundle": "coder_b_wave3_bundle_proof",
+        "witness": "debug_runs/infrastructure_view_isolation_live.json",
+        "notes": "VM-08 baseline + S1\u2013S3 overlay parity stress (phase_d_parity_stress.rs)"
+      },
+      {
+        "id": "FIRE7-F7-B-001",
+        "status": "done",
+        "bundle": "coder_a_wave3_closure_v1",
+        "witness": "debug_runs/fire_streaming_live.json",
+        "notes": "Same wave-3 pass as F7-A-EXIT \u2014 fire_streaming.rs runtime writer"
+      },
+      {
+        "id": "FIRE7-F7-C-001",
+        "status": "done",
+        "bundle": "coder_a_wave3_closure_v1",
+        "notes": "Same wave-3 pass \u2014 fire7_f7_c_001_green + designer LOD caps in extract"
+      },
+      {
         "id": "FIRE7-F7-A-001",
         "status": "done_witness_only",
-        "notes": "Dual-queue witness bundle — product exit is FIRE7-F7-A-EXIT-001 (wave 3)"
+        "notes": "Dual-queue witness bundle \u2014 product exit is FIRE7-F7-A-EXIT-001 (wave 3)"
       },
       {
         "id": "P2-FIRE-SPARK-010",
@@ -201,158 +186,185 @@
       {
         "id": "S7B-TUNE-DELAY-001",
         "status": "done"
+      },
+      {
+        "id": "TRIAGE-VISUAL-TEARDOWN-001",
+        "status": "done"
+      },
+      {
+        "id": "TRIAGE-PHASE-F-CULL-001",
+        "status": "done"
+      },
+      {
+        "id": "UI-WP-VISUAL-001",
+        "status": "done_qualified",
+        "notes": "visual sign-off validated via coder A wave-3 closure bundle"
+      },
+      {
+        "id": "INFRA-GPU-TILE-GIZMO-001",
+        "status": "done"
+      },
+      {
+        "id": "S7B-M4-SIM-001",
+        "status": "done"
+      },
+      {
+        "id": "VFX-CAPTURE-HOOK-001",
+        "status": "done"
+      },
+      {
+        "id": "TRIAGE-COMPILE-HYGIENE-001",
+        "status": "done"
+      },
+      {
+        "id": "FIRE7-DESIGN-LOD-WIRE-001",
+        "status": "done"
+      },
+      {
+        "id": "STAGE5-VT-DEEP-001",
+        "status": "done"
       }
     ]
   },
   "coder_b": {
     "p1_pick_one": true,
+    "parametric_placement": {
+      "rule": "After R4-MV-GHOST-001 unless product escalates; CONSTRUCTION-PARAM-DESIGN-001 PASS (qualified) 2026-05-26",
+      "plan_doc": "src/dev/plan_construction_parametric_placement_v1.md",
+      "exec_phases": "src/dev/plan_construction_param_exec_phases_v1.md",
+      "witness": "debug_runs/construction_stage_live.json",
+      "lanes": [
+        {
+          "id": "CONSTRUCTION-PARAM-CODER-001",
+          "phase": 1,
+          "status": "done",
+          "files": "src/construction/weighted_footprint.rs",
+          "notes": "weighted_raster_tests_green in construction_parametric_placement_001"
+        },
+        {
+          "id": "CONSTRUCTION-PARAM-CODER-002",
+          "phase": 2,
+          "status": "ready"
+        },
+        {
+          "id": "CONSTRUCTION-PARAM-CODER-003",
+          "phase": 1,
+          "status": "ready"
+        },
+        {
+          "id": "CONSTRUCTION-PARAM-CODER-004",
+          "phase": 3,
+          "status": "blocked_design"
+        },
+        {
+          "id": "CONSTRUCTION-PARAM-CODER-005",
+          "phase": 2,
+          "status": "blocked_design"
+        },
+        {
+          "id": "CONSTRUCTION-PARAM-CODER-006",
+          "phase": 4,
+          "status": "blocked_design"
+        }
+      ]
+    },
     "active": [
       {
-        "id": "IND-E02-DEFAULT-PLAY-001",
-        "task": "Default writer sets ind_e02_green in play",
-        "tier": "P1",
+        "id": "CONSTRUCTION-PARAM-CODER-002",
         "priority": 1,
-        "status": "queued",
-        "owner": "@coder B",
-        "plan_doc": "src/dev/ind_board_reconcile_plan_v1.md",
-        "witness": "debug_runs/industrial_activation_live.json"
+        "status": "ready",
+        "plan_doc": "src/dev/plan_construction_param_exec_phases_v1.md",
+        "witness": "debug_runs/construction_stage_live.json",
+        "notes": "P2-A: Enter commits ghost; remove Shift+LMB building queue; design PASS"
       },
       {
-        "id": "CONSTRUCTION-MV-SIM-001",
-        "task": "Multiview construction ghosts from sim live writer",
-        "tier": "P1",
-        "priority": 1,
-        "status": "queued",
-        "owner": "@coder B",
-        "plan_doc": "src/dev/ui_phase6_shell_perf_multiview_plan_v1.md",
-        "witness": "debug_runs/construction_stage_live.json"
-      },
-      {
-        "id": "S7P-GRID-UX-UI-001",
-        "task": "In-game grid overload toast (witness to UI)",
-        "tier": "P1",
-        "priority": 1,
-        "status": "queued",
-        "owner": "@coder B",
-        "plan_doc": "src/economy/activation/grid_overload_ux.rs",
-        "witness": "debug_runs/industrial_activation_live.json"
-      },
-      {
-        "id": "LOG-E01-VISUAL-CONFIRM-001",
-        "task": "Confirm logistics rows on --test visual run",
-        "tier": "P1",
+        "id": "CONSTRUCTION-PARAM-CODER-003",
         "priority": 2,
-        "status": "queued",
-        "owner": "@coder B",
-        "plan_doc": "src/dev/logistics_visual_lane_spec_v1.md"
+        "status": "ready",
+        "plan_doc": "src/dev/plan_construction_param_exec_phases_v1.md",
+        "witness": "debug_runs/construction_stage_live.json",
+        "notes": "P1-B: TileOccupationBook + commit overlap; after or parallel 002"
       },
       {
-        "id": "UI-P3-M3-UNITS-001",
-        "task": "Unit aggregation markers on minimap",
-        "tier": "P1",
+        "id": "R4-MV-GHOST-001",
+        "priority": 5,
+        "status": "deferred",
+        "plan_doc": "src/dev/plan_construction_r4_mv_exec_001_v1.md",
+        "witness": "debug_runs/construction_stage_live.json",
+        "notes": "construction_r4_mv_ghost_001 overlay tokens + legend"
+      },
+      {
+        "id": "M3-UNITS-DEPTH-001",
+        "priority": 3,
+        "status": "ready",
+        "plan_doc": "src/dev/plan_m3_depth_exec_001_v1.md",
+        "witness": "debug_runs/minimap_compositor_live.json",
+        "notes": "real unit marker reader + replay scrub when ring has >=2 stamps"
+      },
+      {
+        "id": "REPLAY-RING-LIVE-001",
+        "priority": 4,
+        "status": "ready",
+        "plan_doc": "src/dev/plan_replay_ring_exec_001_v1.md",
+        "witness": "debug_runs/replay_editor_parity_live.json",
+        "notes": "Simulation tick commits grow CommittedSimReplayRing (P2) while keeping REPLAY-PARITY-001 green"
+      },
+      {
+        "id": "UI-P3-M2-TRAY-OPT",
+        "priority": 5,
+        "status": "ready",
+        "plan_doc": "src/dev/minimap_m2_tray_overlay_bridge_v1.md",
+        "witness": "debug_runs/minimap_compositor_live.json",
+        "notes": "overlay tray → MinimapOverlayMask bridge; preserve ui_p3_m2_tray_opt_green"
+      },
+      {
+        "id": "CONSTRUCTION-PARAM-CODER-004",
         "priority": 2,
-        "status": "queued",
-        "owner": "@coder B",
-        "plan_doc": "src/dev/ui_p3_m4_minimap_coder_queue_v1.md"
+        "status": "blocked_design",
+        "plan_doc": "src/dev/plan_construction_param_exec_phases_v1.md",
+        "notes": "Phase 3 staged panel"
       },
       {
-        "id": "UI-P3-M3-REPLAY-001",
-        "task": "Replay scrub ticks on minimap",
-        "tier": "P1",
+        "id": "CONSTRUCTION-PARAM-CODER-005",
         "priority": 2,
-        "status": "queued",
-        "owner": "@coder B",
-        "plan_doc": "src/dev/ui_oh_m3_001_plan_v1.md"
+        "status": "blocked_design",
+        "plan_doc": "src/dev/plan_construction_param_exec_phases_v1.md",
+        "notes": "Phase 2 partial-alpha visual authority"
       },
       {
-        "id": "REPLAY-PARITY-001",
-        "task": "Deterministic replay + editor parity",
-        "tier": "P1",
-        "priority": 3,
-        "status": "queued",
-        "owner": "@coder B",
-        "witness": "debug_runs/replay_editor_parity_live.json"
-      },
-      {
-        "id": "TRIAGE-PHASE-D-PARITY-001",
-        "task": "Overlay parity stress / edge cases",
-        "tier": "P1",
-        "priority": 3,
-        "status": "queued",
-        "owner": "@coder B"
-      },
-      {
-        "id": "UX-E02-APPLY-POLISH-001",
-        "task": "BQ-128 preset apply ghost polish",
-        "tier": "P1",
-        "priority": 3,
-        "status": "queued",
-        "owner": "@coder B",
-        "plan_doc": "src/dev/bq128_editor_path_plan_v1.md"
-      },
-      {
-        "id": "WAVE-S-SHELL-POLISH-001",
-        "task": "Wave S dock/shell edge cases after hydrate",
-        "tier": "P1",
-        "priority": 3,
-        "status": "queued",
-        "owner": "@coder B",
-        "plan_doc": "src/dev/wave_s_open.md"
-      },
-      {
-        "id": "IND-E03-SIM-UX-001",
-        "task": "Grid overload ops strip polish",
-        "tier": "P2",
-        "priority": 1,
-        "status": "queued",
-        "owner": "@coder B"
-      },
-      {
-        "id": "CONSTRUCTION-R4-PREP-001",
-        "task": "Round 4 catalog reconcile prep",
-        "tier": "P2",
+        "id": "CONSTRUCTION-PARAM-CODER-006",
         "priority": 2,
-        "status": "queued",
-        "owner": "@coder B"
-      },
-      {
-        "id": "INFRA-VM-DEEP-001",
-        "task": "Extended VM sim-time traces",
-        "tier": "P2",
-        "priority": 2,
-        "status": "queued",
-        "owner": "@coder B"
-      },
-      {
-        "id": "STAGE6-OPS-WITNESS-001",
-        "task": "Sim-time stage6 refresh helper",
-        "tier": "P2",
-        "priority": 3,
-        "status": "queued",
-        "owner": "@coder B"
-      },
-      {
-        "id": "S7B-M3-SIM-001",
-        "task": "M3 overlays exercised in sim session",
-        "tier": "P2",
-        "priority": 3,
-        "status": "queued",
-        "owner": "@coder B"
-      }
-    ],
-    "blocked_until_f7_a_exit": [
-      {
-        "id": "FIRE7-F7-B-001",
-        "task": "Streaming + fire_streaming_live.json runtime writer",
-        "blocked_by": ["FIRE7-F7-A-EXIT-001"]
-      },
-      {
-        "id": "FIRE7-F7-C-001",
-        "task": "LOD tier enforcement in extract",
-        "blocked_by": ["FIRE7-F7-A-EXIT-001"]
+        "status": "blocked_design",
+        "plan_doc": "src/dev/plan_construction_param_exec_phases_v1.md",
+        "notes": "Phase 4 economy scale activation"
       }
     ],
     "done_2026_05_26": [
+      {
+        "id": "CONSTRUCTION-PARAM-CODER-000",
+        "status": "done",
+        "witness": "debug_runs/construction_stage_live.json",
+        "notes": "construction_parametric_placement_001 witness scaffold (green false)"
+      },
+      {
+        "id": "CONSTRUCTION-PARAM-CODER-001",
+        "status": "done",
+        "witness": "debug_runs/construction_stage_live.json",
+        "notes": "Phase 1 weighted_footprint.rs; weighted_raster_tests_green=true"
+      },
+      {
+        "id": "R4-CORRIDOR-001",
+        "status": "done",
+        "witness": "debug_runs/construction_stage_live.json",
+        "notes": "construction_r4_corridor_001.green (product_board_open=true) + R8 corridor slice wired"
+      },
+      {
+        "id": "TRIAGE-PHASE-D-PARITY-001",
+        "status": "done",
+        "bundle": "coder_b_wave3_bundle_proof",
+        "witness": "debug_runs/infrastructure_view_isolation_live.json",
+        "notes": "S1\u2013S3 stress in phase_d_parity_stress.rs; triage_phase_d_parity_001.stress + green"
+      },
       {
         "id": "LOG-E01-WITNESS",
         "status": "done"
@@ -360,7 +372,7 @@
       {
         "id": "IND-E02-DEFAULT",
         "status": "done",
-        "notes": "lib refresh path — play default is IND-E02-DEFAULT-PLAY-001"
+        "notes": "lib refresh path \u2014 play default is IND-E02-DEFAULT-PLAY-001"
       },
       {
         "id": "P2-VFX-WITNESS-001",
@@ -403,13 +415,108 @@
         "status": "done"
       },
       {
+        "id": "S7P-GRID-UX-UI-001",
+        "status": "done",
+        "bundle": "coder_b_wave3_bundle_proof",
+        "witness": "debug_runs/industrial_activation_live.json",
+        "notes": "GridOverloadUxPlugin; PWR ops-strip toast; s7p_grid_ux_001.green + toast_shown_count"
+      },
+      {
+        "id": "IND-E02-DEFAULT-PLAY-001",
+        "status": "done",
+        "bundle": "coder_b_wave3_bundle_proof",
+        "witness": "debug_runs/industrial_activation_live.json",
+        "notes": "seed_ind_e02_default_play_once; ind_e02_green + placed_via_construction"
+      },
+      {
+        "id": "CONSTRUCTION-MV-SIM-001",
+        "status": "done",
+        "bundle": "coder_b_wave3_bundle_proof",
+        "witness": "debug_runs/construction_stage_live.json",
+        "notes": "construction_mv_001.green; refresh_construction_mv_001_live_witness"
+      },
+      {
+        "id": "UI-P3-M3-UNITS-001",
+        "status": "done",
+        "bundle": "coder_b_wave3_bundle_proof",
+        "witness": "debug_runs/minimap_compositor_live.json",
+        "notes": "ui_p3_m3_units_001_green; unit_marker_rows in compositor state"
+      },
+      {
+        "id": "UI-P3-M3-REPLAY-001",
+        "status": "done",
+        "bundle": "coder_b_wave3_bundle_proof",
+        "witness": "debug_runs/minimap_compositor_live.json",
+        "notes": "ui_p3_m3_replay_001_green; replay_scrub_enabled"
+      },
+      {
+        "id": "UX-E02-APPLY-POLISH-001",
+        "status": "done",
+        "bundle": "construction/blueprint_preset.rs",
+        "witness": "debug_runs/wave_s_blueprint_roundtrip.json",
+        "notes": "apply_blueprint_preset_to_build_ghost + wave_s_shell_roundtrip roundtrip_ok"
+      },
+      {
+        "id": "WAVE-S-SHELL-POLISH-001",
+        "status": "done",
+        "bundle": "coder_b_wave3_bundle_proof",
+        "witness": "debug_runs/wave_s_hydrate_live.json",
+        "notes": "wave_s_hydrate_green; dock_shell hydrate chrome"
+      },
+      {
+        "id": "IND-E03-SIM-UX-001",
+        "status": "done",
+        "bundle": "coder_b_wave3_bundle_proof",
+        "witness": "debug_runs/industrial_activation_live.json",
+        "notes": "ind_e03_green + S7P PWR toast (pairs with S7P-GRID-UX-UI-001)"
+      },
+      {
+        "id": "REPLAY-PARITY-001",
+        "status": "done",
+        "bundle": "coder_b_wave3_bundle_proof",
+        "witness": "debug_runs/replay_editor_parity_live.json"
+      },
+      {
+        "id": "INFRA-VM-DEEP-001",
+        "status": "done",
+        "bundle": "coder_b_wave3_bundle_proof",
+        "witness": "debug_runs/infrastructure_view_isolation_live.json"
+      },
+      {
+        "id": "STAGE6-OPS-WITNESS-001",
+        "status": "done",
+        "bundle": "coder_b_wave3_bundle_proof",
+        "witness": "debug_runs/stage6_virtualization_live.json"
+      },
+      {
+        "id": "S7B-M3-SIM-001",
+        "status": "done",
+        "bundle": "coder_b_wave3_bundle_proof",
+        "witness": "debug_runs/stage7_behavioral_live.json",
+        "notes": "s7b_m3_green; refresh_ui_w3_m3_001_stage7_operational_witness"
+      },
+      {
         "id": "CONSTRUCTION-MV-001",
-        "status": "done_qualified"
+        "status": "done",
+        "notes": "superseded by CONSTRUCTION-MV-SIM-001"
       },
       {
         "id": "S7P-GRID-UX-001",
-        "status": "done_qualified",
-        "notes": "witness only — UI is S7P-GRID-UX-UI-001"
+        "status": "done",
+        "notes": "superseded by S7P-GRID-UX-UI-001"
+      },
+      {
+        "id": "LOG-E01-VISUAL-CONFIRM-001",
+        "status": "done",
+        "bundle": "stage5_full_app_harness::log_e01_visual_confirm_001_qualified_close",
+        "witness": "debug_runs/stage5_full_app_live.json",
+        "notes": "qualified_close + logistics_active_rows>0; optional operator --test visual upgrade"
+      },
+      {
+        "id": "CONSTRUCTION-R4-PREP-001",
+        "status": "done",
+        "witness": "debug_runs/construction_stage_live.json",
+        "notes": "construction_r4_prep_001.green; prep index v1; product board closed"
       }
     ]
   },
@@ -441,5 +548,7 @@
       "owner": "@designer",
       "supports": "S7P-GRID-UX-UI-001"
     }
-  ]
+  ],
+  "active": [],
+  "done": []
 }

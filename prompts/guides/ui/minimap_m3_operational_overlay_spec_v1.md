@@ -67,6 +67,8 @@ terrain / fallback
 | Cap | 8 markers per visible minimap extent at strategic zoom |
 | Toggle | `MinimapOverlayMask.units` |
 
+**Coder spec (SIGNED):** [`minimap_unit_marker_visual_spec_v1.md`](../../../src/dev/minimap_unit_marker_visual_spec_v1.md) — **DESIGN-M3-UNITS-001**
+
 ### M3-04 Replay scrub
 
 | Token | Value |
@@ -74,6 +76,8 @@ terrain / fallback
 | Tick | 1px vertical line, registration magenta @ 40% |
 | When | replay timeline resource active |
 | Toggle | `MinimapOverlayMask.replay_scrub` |
+
+**Coder spec (SIGNED):** [`minimap_replay_scrub_visual_spec_v1.md`](../../../src/dev/minimap_replay_scrub_visual_spec_v1.md) — **DESIGN-M3-REPLAY-001**
 
 ---
 

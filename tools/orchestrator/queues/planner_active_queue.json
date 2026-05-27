@@ -1,11 +1,16 @@
 {
   "_meta": {
-    "version": "1.0.0",
-    "date": "2026-05-25",
-    "cycle": "PLAN-LEDGER-REFRESH-004",
-    "checklist": "src/dev/plan_ledger_refresh_004_checklist_v1.md",
-    "batch": "src/dev/planner_queue_ui_batch_v2.md",
-    "audit": "src/dev/planner_status_audit_v6.md"
+    "version": "2.2.0",
+    "date": "2026-05-26",
+    "cycle": "PLAN-WAVE-4",
+    "checklist": "src/dev/planner_wave4_todos_v1.md",
+    "coder_recap": "src/dev/coder_fleet_return_recap_wave3_v1.md",
+    "audit": "src/dev/planner_status_audit_v8.md",
+    "wave4_closed": true,
+    "wave5_checklist": "src/dev/planner_wave5_todos_v1.md",
+    "wave6_policy": "product Round 4 open or P2 depth only",
+    "delivery_matrix": "src/dev/planner_delivery_signoff_matrix_v1.md",
+    "fleet_closed": true
   },
   "done": [
     {
@@ -19,83 +24,265 @@
       "id": "PLAN-UI-OH-CLOSURE-004",
       "status": "done",
       "plan_doc": "src/dev/ui_overhaul_phase23_closure_plan_v1.md",
-      "witness": "src/dev/ui_overhaul_phase23_closure_plan_v1.md",
-      "completed": "2026-05-25",
-      "notes": "UI batch v2 \u2014 spec only"
+      "completed": "2026-05-25"
     },
     {
       "id": "PLAN-UI-P5-PAUSE-001",
       "status": "done",
       "plan_doc": "prompts/guides/ui/ui_phase5_pause_menu_plan_v1.md",
-      "witness": "prompts/guides/ui/ui_phase5_pause_menu_plan_v1.md",
-      "completed": "2026-05-25",
-      "notes": "UI batch v2 \u2014 spec only"
+      "completed": "2026-05-25"
     },
     {
       "id": "PLAN-UI-P4-ATLAS-001",
       "status": "done",
       "plan_doc": "prompts/guides/ui/ui_phase4_icon_atlas_plan_v1.md",
-      "witness": "prompts/guides/ui/ui_phase4_icon_atlas_plan_v1.md",
-      "completed": "2026-05-25",
-      "notes": "UI batch v2 \u2014 spec only"
+      "completed": "2026-05-25"
     },
     {
       "id": "PLAN-UI-P3-M3-001",
       "status": "done",
       "plan_doc": "src/dev/plan_ui_p3_m3_operational_stage7_plan_v1.md",
-      "witness": "src/dev/plan_ui_p3_m3_operational_stage7_plan_v1.md",
-      "completed": "2026-05-25",
-      "notes": "UI batch v2 \u2014 spec only"
+      "completed": "2026-05-25"
     },
     {
       "id": "PLAN-UI-PHASE6-001",
       "status": "done",
       "plan_doc": "src/dev/ui_phase6_shell_perf_multiview_plan_v1.md",
-      "witness": "src/dev/ui_phase6_shell_perf_multiview_plan_v1.md",
-      "completed": "2026-05-25",
-      "notes": "UI batch v2 \u2014 spec only"
+      "completed": "2026-05-25"
     },
     {
       "id": "PLAN-UI-2C-001",
       "status": "done",
       "plan_doc": "src/dev/ui_phase2c_left_command_rail_plan_v1.md",
-      "witness": "src/dev/ui_phase2c_left_command_rail_plan_v1.md",
-      "completed": "2026-05-25",
-      "notes": "UI batch v2 \u2014 spec only"
+      "completed": "2026-05-25"
     },
     {
       "id": "PLAN-UI-THEME-MERGE-001",
       "status": "done",
       "plan_doc": "src/dev/ui_theme_merge_impl_spec_v1.md",
-      "witness": "src/dev/ui_theme_merge_impl_spec_v1.md",
-      "completed": "2026-05-25",
-      "notes": "UI batch v2 \u2014 spec only"
+      "completed": "2026-05-25"
     },
     {
       "id": "TRIAGE-VM-09-v2-PLAN",
       "status": "done",
       "plan_doc": "src/dev/triage_vm09_v2_invert_bridge_plan_v1.md",
       "completed": "2026-05-25",
-      "notes": "planner spec SIGNED; impl CLOSED 2026-05-26"
+      "notes": "impl CLOSED 2026-05-26"
+    },
+    {
+      "id": "PLAN-F7-A-EXIT-001",
+      "status": "done",
+      "completed": "2026-05-26",
+      "plan_doc": "src/dev/fire7_f7_a_exit_acceptance_v1.md",
+      "unblocks": ["FIRE7-F7-A-EXIT-001"]
+    },
+    {
+      "id": "PLAN-F7-B-STREAM-001",
+      "status": "done",
+      "completed": "2026-05-26",
+      "plan_doc": "src/dev/fire7_f7_b_streaming_impl_plan_v1.md",
+      "unblocks": ["FIRE7-F7-B-001"]
+    },
+    {
+      "id": "PLAN-F7-C-LOD-001",
+      "status": "done",
+      "completed": "2026-05-26",
+      "plan_doc": "src/dev/fire7_f7_c_lod_impl_plan_v1.md",
+      "unblocks": ["FIRE7-F7-C-001"]
+    },
+    {
+      "id": "PLAN-CONSTRUCTION-MV-001",
+      "status": "done",
+      "plan_doc": "src/dev/construction_multiview_sim_spec_v1.md",
+      "unblocks": ["CONSTRUCTION-MV-SIM-001"],
+      "completed": "2026-05-26"
+    },
+    {
+      "id": "PLAN-IND-E02-PLAY-001",
+      "status": "done",
+      "plan_doc": "src/dev/ind_e02_default_play_spec_v1.md",
+      "unblocks": ["IND-E02-DEFAULT-PLAY-001"],
+      "completed": "2026-05-26"
+    },
+    {
+      "id": "PLAN-VISUAL-RUN-GATE-001",
+      "status": "done",
+      "plan_doc": "src/dev/visual_run_acceptance_matrix_v1.md",
+      "unblocks": ["VFX-VISUAL-SIGNOFF-001", "UI-WP-VISUAL-001"],
+      "completed": "2026-05-26"
+    },
+    {
+      "id": "PLAN-M3-MINMAP-001",
+      "status": "done",
+      "plan_doc": "src/dev/minimap_m3_units_replay_impl_plan_v1.md",
+      "unblocks": ["UI-P3-M3-UNITS-001", "UI-P3-M3-REPLAY-001"],
+      "completed": "2026-05-26"
+    },
+    {
+      "id": "PLAN-LOG-E01-VISUAL-001",
+      "status": "done",
+      "plan_doc": "src/dev/log_e01_visual_acceptance_v1.md",
+      "unblocks": ["LOG-E01-VISUAL-CONFIRM-001"],
+      "completed": "2026-05-26"
+    },
+    {
+      "id": "PLAN-REPLAY-PARITY-001",
+      "status": "done",
+      "plan_doc": "src/dev/replay_editor_parity_impl_plan_v1.md",
+      "unblocks": ["REPLAY-PARITY-001"],
+      "completed": "2026-05-26"
+    },
+    {
+      "id": "PLAN-S7B-M4-SIM-001",
+      "status": "done",
+      "plan_doc": "src/dev/s7b_m4_sim_playtest_spec_v1.md",
+      "unblocks": ["S7B-M4-SIM-001"],
+      "completed": "2026-05-26"
+    },
+    {
+      "id": "PLAN-PHASE-D-PARITY-001",
+      "status": "done",
+      "plan_doc": "src/dev/overlay_parity_stress_plan_v1.md",
+      "unblocks": ["TRIAGE-PHASE-D-PARITY-001"],
+      "completed": "2026-05-26",
+      "notes": "baseline VM-08 CLOSED; stress S1-S3 P2"
+    },
+    {
+      "id": "PLAN-LEDGER-REFRESH-005",
+      "status": "done",
+      "plan_doc": "src/dev/plan_ledger_refresh_005_checklist_v1.md",
+      "witness": "src/dev/planner_status_audit_v7.md",
+      "completed": "2026-05-26"
     }
   ],
-  "recently_closed": [
+  "active": [
+    {
+      "id": "PLAN-OPERATOR-VISUAL-BUNDLE-001",
+      "priority": 1,
+      "status": "done",
+      "plan_doc": "src/dev/operator_visual_signoff_bundle_plan_v1.md",
+      "unblocks": ["LOG-E01-VISUAL-CONFIRM-001", "VFX-VISUAL-SIGNOFF-001", "UI-WP-VISUAL-001"],
+      "completed": "2026-05-26",
+      "notes": "operator runbook SIGNED; execution = cargo run --test visual"
+    },
+    {
+      "id": "PLAN-S7B-M4-LIVE-001",
+      "priority": 1,
+      "status": "done",
+      "plan_doc": "src/dev/s7b_m4_live_sim_playtest_plan_v1.md",
+      "unblocks": ["S7B-M4-LIVE-001"],
+      "completed": "2026-05-26"
+    },
+    {
+      "id": "PLAN-M3-PRODUCT-DEPTH-001",
+      "priority": 2,
+      "status": "done",
+      "plan_doc": "src/dev/m3_minimap_product_depth_plan_v1.md",
+      "completed": "2026-05-26",
+      "notes": "P2 optional"
+    },
+    {
+      "id": "PLAN-F7-STREAM-DEEP-001",
+      "priority": 2,
+      "status": "done",
+      "plan_doc": "src/dev/fire7_streaming_depth_plan_v1.md",
+      "completed": "2026-05-26",
+      "notes": "P2 optional"
+    },
+    {
+      "id": "PLAN-REPLAY-LIVE-RING-001",
+      "priority": 2,
+      "status": "done",
+      "plan_doc": "src/dev/replay_live_ring_impl_plan_v1.md",
+      "completed": "2026-05-26",
+      "notes": "P2 optional"
+    },
+    {
+      "id": "PLAN-CONSTRUCTION-R4-001",
+      "priority": 3,
+      "status": "done",
+      "plan_doc": "src/dev/construction_round4_product_gate_plan_v1.md",
+      "completed": "2026-05-26",
+      "notes": "blocked on product board"
+    },
+    {
+      "id": "R4-PLAN-001",
+      "status": "done",
+      "plan_doc": "src/dev/construction_round4_corridor_phase_spec_v1.md",
+      "unblocks": ["R4-CORRIDOR-001"],
+      "completed": "2026-05-26"
+    },
+    {
+      "id": "R4-PLAN-002",
+      "status": "done",
+      "plan_doc": "src/dev/construction_round4_multiview_ghost_presets_v1.md",
+      "unblocks": ["R4-MV-GHOST-001"],
+      "completed": "2026-05-26"
+    },
+    {
+      "id": "PLAN-OPS-F01-F03-001",
+      "priority": 3,
+      "status": "done",
+      "plan_doc": "src/dev/operator_ops_witness_refresh_plan_v1.md",
+      "completed": "2026-05-26"
+    },
+    {
+      "id": "PLAN-LEDGER-REFRESH-006",
+      "status": "done",
+      "plan_doc": "src/dev/plan_ledger_refresh_006_checklist_v1.md",
+      "witness": "src/dev/planner_status_audit_v8.md",
+      "completed": "2026-05-26"
+    },
+    {
+      "id": "PLAN-CONSTRUCTION-PARAM-001",
+      "status": "done",
+      "plan_doc": "src/dev/plan_construction_parametric_placement_v1.md",
+      "exec_phases": "src/dev/plan_construction_param_exec_phases_v1.md",
+      "wave_board": "src/dev/planner_wave6_parametric_todos_v1.md",
+      "unblocks": ["CONSTRUCTION-PARAM-DESIGN-001"],
+      "completed": "2026-05-26",
+      "notes": "TileOccupationBook resource; 4x4 raster; Enter-commit buildings; coders blocked until design PASS"
+    }
+  ],
+  "active": [
+    {
+      "id": "PLAN-CONSTRUCTION-R4-EXEC-001",
+      "priority": 3,
+      "status": "queued",
+      "plan_doc": "src/dev/plan_construction_r4_exec_001_v1.md",
+      "unblocks": ["R4-CORRIDOR-001"]
+    },
+    {
+      "id": "PLAN-CONSTRUCTION-R4-MV-EXEC-001",
+      "priority": 3,
+      "status": "queued",
+      "plan_doc": "src/dev/plan_construction_r4_mv_exec_001_v1.md",
+      "unblocks": ["R4-MV-GHOST-001"]
+    },
+    {
+      "id": "PLAN-M3-DEPTH-EXEC-001",
+      "priority": 2,
+      "status": "queued",
+      "plan_doc": "src/dev/plan_m3_depth_exec_001_v1.md",
+      "unblocks": ["M3-UNITS-DEPTH-001"]
+    },
+    {
+      "id": "PLAN-F7-STREAM-EXEC-001",
+      "priority": 2,
+      "status": "queued",
+      "plan_doc": "src/dev/plan_f7_stream_exec_001_v1.md",
+      "unblocks": ["F7-STREAM-DEEP-001"]
+    }
+  ],
+  "recently_closed_coder": [
     {
       "id": "TRIAGE-VM-09-v2",
       "status": "done",
       "plan_doc": "src/dev/triage_vm09_v2_invert_bridge_plan_v1.md",
       "agent": "coder",
       "completed": "2026-05-26",
-      "witness": "debug_runs/infrastructure_view_isolation_live.json",
-      "notes": "triage_vm09_v2_green; derive MapCameraDesired sole writer"
+      "witness": "debug_runs/infrastructure_view_isolation_live.json"
     }
   ],
-  "active": [
-    {
-      "id": "S7B-PREFLIGHT-001",
-      "status": "queued",
-      "plan_doc": "src/dev/stage7_behavioral_implementation_plan_v1.md",
-      "agent": "sim-steward"
-    }
-  ]
+  "legacy_active": []
 }

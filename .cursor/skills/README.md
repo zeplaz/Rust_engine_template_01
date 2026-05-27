@@ -33,6 +33,7 @@ Merged from `prompts/rough_agents/` (`debug_intel_a1.skill.md`, `cleanup_a1.skil
 |-------|--------|---------|
 | [**sim-steward**](../agents/sim-steward.md) | `@sim-steward` | bevy-simulation-grade + debug-intelligence + cleanup-completion-intelligence; **Shift A→B→C** in main chat when Task subagents are blocked |
 | [**main-thread-orchestrator**](../agents/main-thread-orchestrator.md) | `@main-thread-orchestrator` | Task fail-cycle + foreground slice queue; pairs with sim-steward shifts when Multitask/Task quota fails |
+| [**coparent-orchestrator**](../agents/coparent-orchestrator.md) | `@coparent-orchestrator` | Secondary parallel pathways (operator, VFX, designer tails); debug + cleanup + sim-grade conflict matrix vs primary `@orchestrator` P1 |
 
 ## Related
 

@@ -56,7 +56,9 @@ pub struct MainWorldCameraViewportLatch {
     pub valid_streak: u8,
 }
 
-const CAM_HOLE_VALID_STREAK: u8 = 1;
+// MAP-BLINK-001: require a short adequacy streak before enabling hole scissor.
+// This avoids one-frame full-window<->hole mode churn during WorldGen->Simulation handoff.
+const CAM_HOLE_VALID_STREAK: u8 = 3;
 
 impl MainWorldCameraViewportLatch {
     /// Returns whether the camera should use the sim-map hole scissor this frame.
@@ -281,7 +283,8 @@ pub fn map_zoom_limits_for_world(world_w: f32, world_h: f32, viewport: Vec2) -> 
     let h = world_h.max(1.0);
     let vp = Vec2::new(viewport.x.max(1.0), viewport.y.max(1.0));
     let fit = (vp.x / w).min(vp.y / h) * 0.92;
-    let lo = (fit * 0.18).clamp(0.06, fit.max(0.12));
+    // Allow full-world strategic view (~6% of fit-to-world zoom).
+    let lo = (fit * 0.06).max(0.04);
     // Allow zoom until ~8 tiles span the shorter viewport edge (tile inspection on 4k+ worlds).
     let min_span_tiles = 8.0_f32;
     let hi_from_tile_span = vp.x.min(vp.y) / min_span_tiles;
@@ -394,11 +397,33 @@ fn map_camera_apply_input_to_desired(
         return;
     };
     let pointer_over_ui = ctx.wants_pointer_input() || ctx.wants_keyboard_input();
-    if pointer_over_ui {
+    let window_px = windows
+        .single()
+        .map(|w| Vec2::new(w.width().max(1.0), w.height().max(1.0)))
+        .unwrap_or(Vec2::new(1280.0, 720.0));
+    let cursor_over_sim_map = windows.single().ok().and_then(|window| {
+        window.cursor_position().map(|cursor| {
+            if sim_viewport.is_adequate_for_camera() {
+                cursor.x >= sim_viewport.min.x
+                    && cursor.x <= sim_viewport.max.x
+                    && cursor.y >= sim_viewport.min.y
+                    && cursor.y <= sim_viewport.max.y
+            } else {
+                // WorldGen / layout settle: allow wheel zoom on the full client area.
+                cursor.x >= 0.0
+                    && cursor.y >= 0.0
+                    && cursor.x <= window_px.x
+                    && cursor.y <= window_px.y
+            }
+        })
+    }).unwrap_or(false);
+
+    if active_map_surface.blocks_main_world_map_camera_input() {
         return;
     }
 
-    if active_map_surface.blocks_main_world_map_camera_input() {
+    // MAP-ZOOM-001: egui panels (world-gen chrome) steal wheel unless cursor is over the map hole.
+    if pointer_over_ui && !cursor_over_sim_map {
         return;
     }
 
@@ -463,10 +488,6 @@ fn map_camera_apply_input_to_desired(
         desired.scale = Vec3::splat(default_z);
     }
 
-    let window_px = windows
-        .single()
-        .map(|w| Vec2::new(w.width().max(1.0), w.height().max(1.0)))
-        .unwrap_or(Vec2::new(1280.0, 720.0));
     let viewport = map_camera_viewport_pixels(window_px, Some(sim_viewport.as_ref()));
     let world = Vec2::new(world_w, world_h);
     let (zoom_lo, zoom_hi) = map_zoom_limits_for_world(world_w, world_h, viewport);

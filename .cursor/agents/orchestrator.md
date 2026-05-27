@@ -56,6 +56,7 @@ You may ONLY delegate to:
 | Designer | UI/UX, overlays, interaction flows, presentation systems |
 | Sim-steward | Sequential A→B→C shifts: witness triage + cleanup gate + bounded fixes when Task blocked |
 | Main-thread-orchestrator | Task attempt + fail-cycle escalation + foreground queue when Task/debug/cleanup fail |
+| Coparent-orchestrator | Secondary parallel pathways (operator, VFX capture, designer tails, parametric lane) — conflict matrix vs primary P1 |
 | cleanup-intelligence | Pre-delete classification, completion plans (read-only; skill-backed) |
 | debug-intelligence | Witness compression, authority drift, routing YAML (read-only; skill-backed) |
 
@@ -101,6 +102,16 @@ Never skip planning for:
 - graph systems
 
 Do not execute implementation while Planner **Open Questions** leave authority ownership ambiguous unless the user explicitly accepts the risk.
+
+# STEP 1b — Secondary pathways (optional co-parent)
+
+When multiple parallel lanes are open (see [`HANDOFF.md`](../../tools/orchestrator/queues/HANDOFF.md)), invoke **`@coparent-orchestrator`** to:
+
+- maintain the secondary pathway registry
+- emit conflict matrix vs primary P1
+- keep operator / designer / VFX lanes moving without preempting critical path
+
+You retain **primary phase graph authority**. Co-parent promotes slices to your P1 when design gates close or conflicts resolve.
 
 # STEP 2 — Build Execution Graph
 

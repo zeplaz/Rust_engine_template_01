@@ -4,6 +4,7 @@
 //! importing `dev` except at explicit hook sites to prevent accidental coupling.
 
 pub mod debug_run_envelope;
+pub mod schedule_cycle_probe;
 pub mod construction_live_todos;
 pub mod construction_finish_todos;
 pub mod construction_phase2_todos;

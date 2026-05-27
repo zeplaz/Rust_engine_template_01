@@ -2,7 +2,8 @@
 
 ## Project Cursor agents (`.cursor/agents/`)
 
-- `@orchestrator` — `.cursor/agents/orchestrator.md`
+- `@orchestrator` — `.cursor/agents/orchestrator.md` (primary critical path)
+- `@coparent-orchestrator` — `.cursor/agents/coparent-orchestrator.md` (secondary parallel pathways)
 - `@planner` — `.cursor/agents/planner.md`
 - `@coder` — `.cursor/agents/coder.md`
 - `@designer` — `.cursor/agents/designer.md`

@@ -1,7 +1,7 @@
 {
     "_meta": {
-    "version": "1.4.0",
-    "date": "2026-05-25",
+    "version": "1.5.0",
+    "date": "2026-05-26",
     "owner": "@designer",
     "purpose": "Orchestrator-readable designer sign-offs — status SIGNED + witness path per @designer todo",
     "human_board": "src/dev/stage_designer_todos_v1.md",
@@ -43,6 +43,17 @@
       "notes": "Grid overload toast vs tray vs diagnostics; unblocks Coder B3"
     },
     {
+      "id": "DESIGN-S7P-TOAST-PASS-001",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-05-26",
+      "verdict": "PASS (qualified)",
+      "witness": "src/dev/s7p_grid_overload_ux_pass_record_v1.md",
+      "unblocks": ["S7P-GRID-UX-UI-001"],
+      "prereq": "S7P-DESIGN-002"
+    },
+    {
       "id": "FIRE7-DESIGN-001",
       "agent": "designer",
       "status": "done",
@@ -51,6 +62,95 @@
       "witness": "src/dev/fire_lod_player_read_v1.md",
       "unblocks": ["FIRE7-F7-C-001"],
       "notes": "LOD player-read table; F7-C policy after F7-A-001"
+    },
+    {
+      "id": "DESIGN-M3-UNITS-001",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-05-26",
+      "witness": "src/dev/minimap_unit_marker_visual_spec_v1.md",
+      "unblocks": ["UI-P3-M3-UNITS-001"]
+    },
+    {
+      "id": "DESIGN-M3-REPLAY-001",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-05-26",
+      "witness": "src/dev/minimap_replay_scrub_visual_spec_v1.md",
+      "unblocks": ["UI-P3-M3-REPLAY-001"]
+    },
+    {
+      "id": "DESIGN-CONSTRUCTION-MV-001",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-05-26",
+      "witness": "src/dev/construction_multiview_ghost_readability_v1.md",
+      "unblocks": ["CONSTRUCTION-MV-SIM-001"],
+      "notes": "DQ-POST-04 readability; sim witness green"
+    },
+    {
+      "id": "DESIGN-VFX-VISUAL-ACCEPT-001",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-05-26",
+      "verdict": "PASS (qualified)",
+      "witness": "src/dev/vfx_visual_acceptance_record_v1.md",
+      "unblocks": ["VFX-VISUAL-SIGNOFF-001"]
+    },
+    {
+      "id": "DESIGN-WP-VISUAL-ACCEPT-001",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-05-26",
+      "verdict": "PASS (qualified)",
+      "witness": "src/dev/world_preview_visual_acceptance_record_v1.md",
+      "unblocks": ["UI-WP-VISUAL-001"]
+    },
+    {
+      "id": "DESIGN-F7-B-DEBUG-001",
+      "aliases": ["FIRE7-DESIGN-002"],
+      "agent": "designer",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-05-26",
+      "witness": "src/dev/fire_streaming_debug_overlay_names_v1.md",
+      "notes": "F3 + gizmo label contract for F7-B streaming"
+    },
+    {
+      "id": "DESIGN-BQ128-APPLY-UX-001",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-05-26",
+      "verdict": "PASS (qualified)",
+      "witness": "src/dev/bq128_apply_ghost_ux_review_v1.md",
+      "unblocks": ["UX-E02-APPLY-POLISH-001"]
+    },
+    {
+      "id": "DESIGN-IND-E03-OPS-001",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-05-26",
+      "verdict": "PASS (qualified)",
+      "witness": "src/dev/ind_e03_ops_strip_polish_v1.md",
+      "unblocks": ["IND-E03-SIM-UX-001"]
+    },
+    {
+      "id": "DESIGN-VFX-CAPTURE-ROUND-002",
+      "aliases": ["VX-P0-04"],
+      "agent": "designer",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-05-26",
+      "verdict": "PASS (qualified)",
+      "witness": "assets/vfx/reference/review_captures/vfx_capture_status_wave4.md",
+      "parent": "DESIGN-VFX-CAPTURE-001"
     },
     {
       "id": "UI-OH-D2-SIGN-001",
@@ -237,6 +337,179 @@
       "unblocks": ["S7B-PLAN-001", "S7B-M1-001"],
       "vm09_policy": "PROJ-2 + worksheet; v2 for M2+ comm authority only",
       "notes": "D-S7-01..06 locked; no Rust; planner handoff next"
+    },
+    {
+      "id": "DESIGN-R4-CORRIDOR-001",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-05-26",
+      "verdict": "PASS",
+      "witness": "src/dev/construction_r4_corridor_map_ux_v1.md",
+      "witness_json": "debug_runs/construction_stage_live.json",
+      "pass_pointers": ["/construction_r4_corridor_001/green", "/construction_r4_corridor_001/corridor_phase_visual_wired"],
+      "unblocks": ["R4-CORRIDOR-001"]
+    },
+    {
+      "id": "DESIGN-R4-TRAY-001",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-05-26",
+      "verdict": "DEFER",
+      "witness": "src/dev/construction_r4_tray_legend_v1.md",
+      "unblocks": ["R4-TRAY-001"]
+    },
+    {
+      "id": "DESIGN-R4-MV-PASS-001",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-05-26",
+      "verdict": "DEFER",
+      "witness": "src/dev/construction_r4_mv_pass_record_v1.md",
+      "unblocks": ["R4-MV-GHOST-001"]
+    },
+    {
+      "id": "DESIGN-M3-DEPTH-001",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-05-26",
+      "verdict": "DEFER",
+      "witness": "src/dev/minimap_m3_unit_aggregation_visual_v1.md",
+      "unblocks": ["UI-P3-M3-DEPTH-001"]
+    },
+    {
+      "id": "DESIGN-REPLAY-LIVE-001",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-05-26",
+      "verdict": "DEFER",
+      "witness": "src/dev/minimap_replay_live_ring_visual_v1.md",
+      "unblocks": ["REPLAY-LIVE-RING-001"]
+    },
+    {
+      "id": "DESIGN-M3-TRAY-001",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-05-26",
+      "verdict": "PASS (qualified)",
+      "witness": "src/dev/minimap_m2_tray_overlay_bridge_v1.md",
+      "unblocks": ["UI-P3-M2-TRAY-OPT"]
+    },
+    {
+      "id": "DESIGN-F7-STREAM-001",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-05-26",
+      "verdict": "PASS",
+      "witness": "src/dev/fire_streaming_neighbor_wake_visual_v1.md",
+      "witness_json": "debug_runs/fire_streaming_live.json",
+      "pass_pointers": ["/neighbor_wake_observed", "/green"],
+      "unblocks": ["F7-STREAM-DEEP-001"]
+    },
+    {
+      "id": "DESIGN-F7-DEBUG-PASS-001",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-05-26",
+      "verdict": "DEFER",
+      "witness": "src/dev/fire7_f7_b_debug_pass_record_v1.md",
+      "unblocks": ["FIRE7-F7-B-DEBUG-UI-001"]
+    },
+    {
+      "id": "DESIGN-VT-SPREAD-001",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-05-26",
+      "verdict": "PASS (qualified)",
+      "witness": "src/dev/fire_vt_spread_visual_acceptance_v1.md",
+      "unblocks": ["STAGE5-VT-DEEP-001"]
+    },
+    {
+      "id": "DESIGN-UI-P6-MULTIVIEW-001",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-05-26",
+      "verdict": "DEFER",
+      "witness": "src/dev/ui_phase6_multiview_readability_v1.md",
+      "unblocks": ["UI-W3-P6-001"]
+    },
+    {
+      "id": "DESIGN-THEME-COLLAGE-001",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-05-26",
+      "verdict": "PASS (qualified)",
+      "witness": "src/dev/ui_theme_collage_delta_v1.md",
+      "unblocks": ["PLAN-UI-THEME-MERGE-001"]
+    },
+    {
+      "id": "DESIGN-WP-QUALIFIED-UPGRADE-001",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-05-26",
+      "verdict": "PASS (qualified)",
+      "witness": "src/dev/world_preview_visual_upgrade_checklist_v1.md",
+      "unblocks": ["UI-WP-VISUAL-001"]
+    },
+    {
+      "id": "DESIGN-VFX-CAPTURE-WAVE5-001",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-05-26",
+      "verdict": "DEFER",
+      "witness": "assets/vfx/reference/review_captures/vfx_capture_status_wave5.md",
+      "unblocks": ["VFX-CAPTURE-WAVE5"]
+    },
+    {
+      "id": "DESIGN-OPERATOR-VISUAL-BUNDLE-001",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-05-26",
+      "verdict": "PASS (qualified)",
+      "witness": "src/dev/operator_visual_signoff_design_checklist_v1.md",
+      "unblocks": ["PLAN-OPERATOR-VISUAL-BUNDLE-001"]
+    },
+    {
+      "id": "CONSTRUCTION-PARAM-DESIGN-001",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-05-26",
+      "verdict": "PASS (qualified)",
+      "witness": "src/dev/construction_parametric_placement_design_v1.md",
+      "witness_json": "debug_runs/construction_stage_live.json",
+      "pass_pointers": [
+        "/construction_parametric_placement_001/green"
+      ],
+      "deliverables": [
+        "src/dev/construction_parametric_placement_design_v1.md",
+        "src/dev/construction_parametric_tray_mock_v1.md",
+        "src/dev/construction_parametric_staged_panel_v1.md",
+        "src/dev/construction_parametric_ghost_visual_v1.md",
+        "src/dev/construction_parametric_design_signoff_v1.md"
+      ],
+      "unblocks": [
+        "CONSTRUCTION-PARAM-CODER-001",
+        "CONSTRUCTION-PARAM-CODER-002",
+        "CONSTRUCTION-PARAM-CODER-003",
+        "CONSTRUCTION-PARAM-CODER-004",
+        "CONSTRUCTION-PARAM-CODER-005",
+        "CONSTRUCTION-PARAM-CODER-006"
+      ],
+      "depends_on": ["PLAN-CONSTRUCTION-PARAM-001"]
     }
   ]
 }

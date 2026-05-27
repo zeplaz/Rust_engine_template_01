@@ -115,6 +115,7 @@ impl Plugin for FireVisualFramePlugin {
             .init_resource::<crate::render::FirePlaybackStabilityWitness>()
             .init_resource::<crate::render::Stage5ReadinessProfile>()
             .init_resource::<crate::render::view_runtime::PerViewRepresentationPolicy>()
+            .configure_sets(Update, crate::render::fire_streaming::FireStreamingSleepWakeSet)
             .configure_sets(
                 Update,
                 (
@@ -131,12 +132,19 @@ impl Plugin for FireVisualFramePlugin {
             .add_systems(
                 Update,
                 (
+                    crate::render::fire_streaming::apply_fire_streaming_sleep_wake_system
+                        .after(extract_fire_simulation_snapshot)
+                        .in_set(crate::render::fire_streaming::FireStreamingSleepWakeSet),
+                    sync_active_fire_chunk_set
+                        .after(crate::render::fire_streaming::FireStreamingSleepWakeSet)
+                        .before(build_fire_visual_frames_by_view),
+                ),
+            )
+            .add_systems(
+                Update,
+                (
                     attrib_fire_pipeline_before,
                     extract_fire_simulation_snapshot,
-                    crate::render::fire_streaming::apply_fire_streaming_sleep_wake_system
-                        .after(extract_fire_simulation_snapshot),
-                    sync_active_fire_chunk_set
-                        .after(crate::render::fire_streaming::apply_fire_streaming_sleep_wake_system),
                     sync_shared_overlay_from_simulation.after(extract_fire_simulation_snapshot),
                     sync_visible_fire_chunks_from_views.after(extract_fire_simulation_snapshot),
                     sync_fire_chunk_lod_from_snapshot.after(extract_fire_simulation_snapshot),
@@ -150,6 +158,12 @@ impl Plugin for FireVisualFramePlugin {
                 )
                     .chain()
                     .in_set(FireVisualFrameSet::BuildProfiles),
+            )
+            .add_systems(
+                Update,
+                crate::render::fire_streaming::write_fire_streaming_live_proof_system
+                    .after(FireVisualFrameSet::BuildProfiles)
+                    .run_if(in_state(crate::engine::states::BaseState::Simulation)),
             )
             .add_systems(
                 Update,

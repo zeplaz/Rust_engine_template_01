@@ -10,7 +10,7 @@ use crossbeam_channel::{Receiver, Sender, TryRecvError};
 use crate::io::save::SavedChunkBody;
 
 use super::hydrate::{hydrate_stream_chunks_from_manifest, load_manifest_for_streaming};
-use super::{ChunkStreamStage, ChunkStreamingScheduler};
+use super::{ChunkCache, ChunkStreamStage, ChunkStreamingScheduler};
 
 #[derive(Resource, Default)]
 pub struct StreamHydrateDiagnostics {
@@ -108,10 +108,22 @@ fn run_stream_io_work_order(order: StreamIoWorkOrder) -> StreamIoCompletion {
 pub fn submit_stream_hydrate_work(
     settings: Res<crate::io::save::WorldSaveBundleSettings>,
     scheduler: Res<ChunkStreamingScheduler>,
+    cache: Res<ChunkCache>,
     mut dispatcher: ResMut<ChunkStreamIoDispatcher>,
     mut diagnostics: ResMut<StreamHydrateDiagnostics>,
 ) {
     if scheduler.pending_chunks.is_empty() || dispatcher.in_flight {
+        return;
+    }
+    // PERF-PLAY-001: only hydrate chunks not already in the hot cache — re-submitting the full
+    // pending window every completion frame was forcing ~650ms reconstruct/apply loops.
+    let chunks: Vec<IVec2> = scheduler
+        .pending_chunks
+        .iter()
+        .copied()
+        .filter(|coord| cache.get(*coord).is_none())
+        .collect();
+    if chunks.is_empty() {
         return;
     }
     if load_manifest_for_streaming(&settings.bundle_dir).is_none() {
@@ -130,7 +142,7 @@ pub fn submit_stream_hydrate_work(
     }
     dispatcher.submit(StreamIoWorkOrder {
         bundle_dir: settings.bundle_dir.clone(),
-        chunks: scheduler.pending_chunks.clone(),
+        chunks,
     });
 }
 

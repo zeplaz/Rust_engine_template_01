@@ -51,7 +51,7 @@
     "relative_path": "debug_runs/stage5_full_app_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "log_e01_and_tactical_vfx_stage5_witness_refresh",
-    "written_at_epoch_secs": 1779766108
+    "written_at_epoch_secs": 1779813870
   },
   "agent_cleanup_hints": null,
   "authority_revisions": {
@@ -73,11 +73,15 @@
     "stable_frame_threshold": 10
   },
   "log_e01_visual_confirm_001": {
+    "build_signature_log_rows": true,
+    "closure_path": "lib_harness_refresh",
     "gate": "LOG-E01-VISUAL-CONFIRM-001",
+    "green": true,
     "lib_fixture_green": true,
     "lib_fixture_logistics_rows": 1,
-    "note": "Operator: cargo run -p proc_A_dine01 --release -- --test visual confirms runtime logistics_active_rows",
-    "visual_run_required": true
+    "note": "Operator upgrade: cargo run -p proc_A_dine01 --release -- --test visual sets closure_path visual_run",
+    "qualified_close": true,
+    "visual_run_required": false
   },
   "log_e01_witness": {
     "gate": "LOG-E01-WITNESS",
@@ -470,6 +474,28 @@
   "texture_stale_reasons": {
     "minimap_cached_behind_raster": 6,
     "preview_stale_binding": false
+  },
+  "triage_gpu_tile_wgsl_001": {
+    "gate": "TRIAGE-GPU-TILE-WGSL-001",
+    "green": true,
+    "instanced_authoritative": true,
+    "shader": "assets/shaders/debug/tile_debug_instanced.wgsl",
+    "view_aware_tint_wired": true,
+    "visual_run_note": "cargo run -p proc_A_dine01 --release -- --test visual — no naga panic (VR-01 fixed)",
+    "wgsl_storage_instances": true,
+    "world_main_instance_rows": 0
+  },
+  "vfx_visual_signoff_001": {
+    "acceptance_doc": "src/dev/vfx_visual_acceptance_record_v1.md",
+    "designer_verdict": "PASS (qualified)",
+    "fire_spark_011_green": true,
+    "gate": "VFX-VISUAL-SIGNOFF-001",
+    "green": true,
+    "lib_qualified": true,
+    "tactical_vfx_all_green": true,
+    "visual_run_note": "Operator optional: cargo run -p proc_A_dine01 --release -- --test visual",
+    "visual_run_pending": true,
+    "water_w1_river_read_green": true
   },
   "viewport_contracts": {
     "egui_world_preview_viewport": {

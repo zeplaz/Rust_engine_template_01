@@ -727,7 +727,8 @@ fn trace_live_full_app_readiness_violations(
     let stamp_tick = truth_inputs.stamp_tick;
     let passes = stage5_readiness_passes(&report);
 
-    let boot_window = f < 32;
+    // PERF-PLAY-001: was `f < 32` and logged ~86ms/frame of readiness truth during boot.
+    let boot_window = f == 1;
     let periodic = f.is_multiple_of(480);
     let pass_changed = last_emit.map(|(p, _)| p != passes).unwrap_or(true);
     let should_emit =

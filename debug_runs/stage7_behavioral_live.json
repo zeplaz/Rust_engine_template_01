@@ -49,7 +49,7 @@
     "relative_path": "debug_runs/stage7_behavioral_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "stage7_behavioral_live_proof",
-    "written_at_epoch_secs": 1779766108
+    "written_at_epoch_secs": 1779813381
   },
   "behavioral_contract_ok": true,
   "communication_plane_v1": "StrategicCommand",

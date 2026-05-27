@@ -1,0 +1,267 @@
+2026-05-26T20:48:27.347204Z  INFO bevy_diagnostic::system_information_diagnostics_plugin::internal: SystemInfo { os: "Windows 10 Pro", kernel: "19045", cpu: "AMD Ryzen 7 7800X3D 8-Core Processor", core_count: "8", memory: "31.1 GiB" }
+2026-05-26T20:48:27.396918Z  WARN wgpu_hal::vulkan::instance: InstanceFlags::VALIDATION requested, but unable to find layer: VK_LAYER_KHRONOS_validation
+2026-05-26T20:48:27.397668Z  INFO wgpu_hal::vulkan::instance: GENERAL [Loader Message (0x0)]
+	No valid vk_loader_settings.json file found, no loader settings will be active
+2026-05-26T20:48:27.398495Z  INFO wgpu_hal::vulkan::instance: 	objects: (type: INSTANCE, hndl: 0x154d14aa450, name: ?)
+2026-05-26T20:48:27.398813Z  INFO wgpu_hal::vulkan::instance: GENERAL [Loader Message (0x0)]
+	windows_get_app_package_manifest_path: Failed to find mapping layers packages by family name
+2026-05-26T20:48:27.398953Z  INFO wgpu_hal::vulkan::instance: 	objects: (type: INSTANCE, hndl: 0x154d14aa450, name: ?)
+2026-05-26T20:48:27.399086Z  INFO wgpu_hal::vulkan::instance: GENERAL [Loader Message (0x0)]
+	Checking for Layer Manifest files in Registry at HKEY_LOCAL_MACHINE\SOFTWARE\Khronos\Vulkan\ImplicitLayers
+2026-05-26T20:48:27.399219Z  INFO wgpu_hal::vulkan::instance: 	objects: (type: INSTANCE, hndl: 0x154d14aa450, name: ?)
+2026-05-26T20:48:27.399455Z  INFO wgpu_hal::vulkan::instance: GENERAL [Loader Message (0x0)]
+	windows_add_json_entry: Located json file "C:\Windows\System32\DriverStore\FileRepository\amdvlk.inf_amd64_9f009a63c54e26dc\amd-vulkan64.json" from PnP registry: E
+2026-05-26T20:48:27.399587Z  INFO wgpu_hal::vulkan::instance: 	objects: (type: INSTANCE, hndl: 0x154d14aa450, name: ?)
+2026-05-26T20:48:27.399788Z  INFO wgpu_hal::vulkan::instance: GENERAL [Loader Message (0x0)]
+	windows_add_json_entry: Located json file "C:\Windows\System32\DriverStore\FileRepository\u0200690.inf_amd64_68df361886f7d87c\B026020\amd-vulkan64.json" from PnP registry: E
+2026-05-26T20:48:27.399904Z  INFO wgpu_hal::vulkan::instance: 	objects: (type: INSTANCE, hndl: 0x154d14aa450, name: ?)
+2026-05-26T20:48:27.400054Z  INFO wgpu_hal::vulkan::instance: GENERAL [Loader Message (0x0)]
+	Located json file "C:\ProgramData\obs-studio-hook\obs-vulkan64.json" from registry "HKEY_LOCAL_MACHINE\SOFTWARE\Khronos\Vulkan\ImplicitLayers"
+2026-05-26T20:48:27.400180Z  INFO wgpu_hal::vulkan::instance: 	objects: (type: INSTANCE, hndl: 0x154d14aa450, name: ?)
+2026-05-26T20:48:27.400317Z  INFO wgpu_hal::vulkan::instance: GENERAL [Loader Message (0x0)]
+	Located json file "C:\Program Files (x86)\Steam\SteamOverlayVulkanLayer64.json" from registry "HKEY_LOCAL_MACHINE\SOFTWARE\Khronos\Vulkan\ImplicitLayers"
+2026-05-26T20:48:27.400456Z  INFO wgpu_hal::vulkan::instance: 	objects: (type: INSTANCE, hndl: 0x154d14aa450, name: ?)
+2026-05-26T20:48:27.400594Z  INFO wgpu_hal::vulkan::instance: GENERAL [Loader Message (0x0)]
+	Located json file "C:\Program Files (x86)\Steam\SteamFossilizeVulkanLayer64.json" from registry "HKEY_LOCAL_MACHINE\SOFTWARE\Khronos\Vulkan\ImplicitLayers"
+2026-05-26T20:48:27.400732Z  INFO wgpu_hal::vulkan::instance: 	objects: (type: INSTANCE, hndl: 0x154d14aa450, name: ?)
+2026-05-26T20:48:27.400945Z  INFO wgpu_hal::vulkan::instance: GENERAL [Loader Message (0x0)]
+	Found manifest file C:\Windows\System32\DriverStore\FileRepository\amdvlk.inf_amd64_9f009a63c54e26dc\amd-vulkan64.json (file version 1.0.0)
+2026-05-26T20:48:27.401069Z  INFO wgpu_hal::vulkan::instance: 	objects: (type: INSTANCE, hndl: 0x154d14aa450, name: ?)
+2026-05-26T20:48:27.401264Z  INFO wgpu_hal::vulkan::instance: GENERAL [Loader Message (0x0)]
+	Found manifest file C:\Windows\System32\DriverStore\FileRepository\u0200690.inf_amd64_68df361886f7d87c\B026020\amd-vulkan64.json (file version 1.0.0)
+2026-05-26T20:48:27.401393Z  INFO wgpu_hal::vulkan::instance: 	objects: (type: INSTANCE, hndl: 0x154d14aa450, name: ?)
+2026-05-26T20:48:27.401587Z  INFO wgpu_hal::vulkan::instance: GENERAL [Loader Message (0x0)]
+	Found manifest file C:\ProgramData\obs-studio-hook\obs-vulkan64.json (file version 1.1.2)
+2026-05-26T20:48:27.401709Z  INFO wgpu_hal::vulkan::instance: 	objects: (type: INSTANCE, hndl: 0x154d14aa450, name: ?)
+2026-05-26T20:48:27.401960Z  INFO wgpu_hal::vulkan::instance: GENERAL [Loader Message (0x0)]
+	Found manifest file C:\Program Files (x86)\Steam\SteamOverlayVulkanLayer64.json (file version 1.0.0)
+2026-05-26T20:48:27.402089Z  INFO wgpu_hal::vulkan::instance: 	objects: (type: INSTANCE, hndl: 0x154d14aa450, name: ?)
+2026-05-26T20:48:27.402291Z  INFO wgpu_hal::vulkan::instance: GENERAL [Loader Message (0x0)]
+	Found manifest file C:\Program Files (x86)\Steam\SteamFossilizeVulkanLayer64.json (file version 1.0.0)
+2026-05-26T20:48:27.402423Z  INFO wgpu_hal::vulkan::instance: 	objects: (type: INSTANCE, hndl: 0x154d14aa450, name: ?)
+2026-05-26T20:48:27.402554Z  INFO wgpu_hal::vulkan::instance: GENERAL [Loader Message (0x0)]
+	Checking for Layer Manifest files in Registry at HKEY_LOCAL_MACHINE\SOFTWARE\Khronos\Vulkan\ExplicitLayers
+2026-05-26T20:48:27.402670Z  INFO wgpu_hal::vulkan::instance: 	objects: (type: INSTANCE, hndl: 0x154d14aa450, name: ?)
+2026-05-26T20:48:27.402894Z  INFO wgpu_hal::vulkan::instance: GENERAL [Loader Message (0x0)]
+	windows_get_device_registry_files: opening device PCI\VEN_1002&DEV_747E&SUBSYS_475D1DA2&REV_C8\6&820efcb&0&00000009
+2026-05-26T20:48:27.403018Z  INFO wgpu_hal::vulkan::instance: 	objects: (type: INSTANCE, hndl: 0x154d14aa450, name: ?)
+2026-05-26T20:48:27.403162Z  INFO wgpu_hal::vulkan::instance: GENERAL [Loader Message (0x0)]
+	windows_get_device_registry_entry: Device ID(1) Does not contain a value for "VulkanExplicitLayers"
+2026-05-26T20:48:27.403276Z  INFO wgpu_hal::vulkan::instance: 	objects: (type: INSTANCE, hndl: 0x154d14aa450, name: ?)
+2026-05-26T20:48:27.403396Z  INFO wgpu_hal::vulkan::instance: GENERAL [Loader Message (0x0)]
+	windows_get_device_registry_files: Opening child device 2 - SWD\DRIVERENUM\AMDCP&7&38383951&0
+2026-05-26T20:48:27.403508Z  INFO wgpu_hal::vulkan::instance: 	objects: (type: INSTANCE, hndl: 0x154d14aa450, name: ?)
+2026-05-26T20:48:27.403644Z  INFO wgpu_hal::vulkan::instance: GENERAL [Loader Message (0x0)]
+	windows_get_device_registry_entry: Device ID(2) Does not contain a value for "VulkanExplicitLayers"
+2026-05-26T20:48:27.403761Z  INFO wgpu_hal::vulkan::instance: 	objects: (type: INSTANCE, hndl: 0x154d14aa450, name: ?)
+2026-05-26T20:48:27.403881Z  INFO wgpu_hal::vulkan::instance: GENERAL [Loader Message (0x0)]
+	windows_get_device_registry_files: Opening child device 3 - SWD\DRIVERENUM\AMDFDANS&7&38383951&0
+2026-05-26T20:48:27.403990Z  INFO wgpu_hal::vulkan::instance: 	objects: (type: INSTANCE, hndl: 0x154d14aa450, name: ?)
+2026-05-26T20:48:27.404116Z  INFO wgpu_hal::vulkan::instance: GENERAL [Loader Message (0x0)]
+	windows_get_device_registry_entry: Device ID(3) Does not contain a value for "VulkanExplicitLayers"
+2026-05-26T20:48:27.404229Z  INFO wgpu_hal::vulkan::instance: 	objects: (type: INSTANCE, hndl: 0x154d14aa450, name: ?)
+2026-05-26T20:48:27.404349Z  INFO wgpu_hal::vulkan::instance: GENERAL [Loader Message (0x0)]
+	windows_get_device_registry_files: Opening child device 4 - SWD\DRIVERENUM\AMDOCL&7&38383951&0
+2026-05-26T20:48:27.404461Z  INFO wgpu_hal::vulkan::instance: 	objects: (type: INSTANCE, hndl: 0x154d14aa450, name: ?)
+2026-05-26T20:48:27.404595Z  INFO wgpu_hal::vulkan::instance: GENERAL [Loader Message (0x0)]
+	windows_get_device_registry_entry: Device ID(4) Does not contain a value for "VulkanExplicitLayers"
+2026-05-26T20:48:27.404696Z  INFO wgpu_hal::vulkan::instance: 	objects: (type: INSTANCE, hndl: 0x154d14aa450, name: ?)
+2026-05-26T20:48:27.404842Z  INFO wgpu_hal::vulkan::instance: GENERAL [Loader Message (0x0)]
+	windows_get_device_registry_files: Opening child device 5 - SWD\DRIVERENUM\AMDOGL&7&38383951&0
+2026-05-26T20:48:27.404956Z  INFO wgpu_hal::vulkan::instance: 	objects: (type: INSTANCE, hndl: 0x154d14aa450, name: ?)
+2026-05-26T20:48:27.405105Z  INFO wgpu_hal::vulkan::instance: GENERAL [Loader Message (0x0)]
+	windows_get_device_registry_entry: Device ID(5) Does not contain a value for "VulkanExplicitLayers"
+2026-05-26T20:48:27.405219Z  INFO wgpu_hal::vulkan::instance: 	objects: (type: INSTANCE, hndl: 0x154d14aa450, name: ?)
+2026-05-26T20:48:27.405379Z  INFO wgpu_hal::vulkan::instance: GENERAL [Loader Message (0x0)]
+	windows_get_device_registry_files: Opening child device 6 - SWD\DRIVERENUM\AMDVLK&7&38383951&0
+2026-05-26T20:48:27.405490Z  INFO wgpu_hal::vulkan::instance: 	objects: (type: INSTANCE, hndl: 0x154d14aa450, name: ?)
+2026-05-26T20:48:27.405624Z  INFO wgpu_hal::vulkan::instance: GENERAL [Loader Message (0x0)]
+	windows_get_device_registry_entry: Device ID(6) Does not contain a value for "VulkanExplicitLayers"
+2026-05-26T20:48:27.405739Z  INFO wgpu_hal::vulkan::instance: 	objects: (type: INSTANCE, hndl: 0x154d14aa450, name: ?)
+2026-05-26T20:48:27.405857Z  INFO wgpu_hal::vulkan::instance: GENERAL [Loader Message (0x0)]
+	windows_get_device_registry_files: Opening child device 7 - SWD\DRIVERENUM\AMDWIN&7&38383951&0
+2026-05-26T20:48:27.405985Z  INFO wgpu_hal::vulkan::instance: 	objects: (type: INSTANCE, hndl: 0x154d14aa450, name: ?)
+2026-05-26T20:48:27.406144Z  INFO wgpu_hal::vulkan::instance: GENERAL [Loader Message (0x0)]
+	windows_get_device_registry_entry: Device ID(7) Does not contain a value for "VulkanExplicitLayers"
+2026-05-26T20:48:27.406270Z  INFO wgpu_hal::vulkan::instance: 	objects: (type: INSTANCE, hndl: 0x154d14aa450, name: ?)
+2026-05-26T20:48:27.406399Z  INFO wgpu_hal::vulkan::instance: GENERAL [Loader Message (0x0)]
+	windows_get_device_registry_files: Opening child device 8 - DISPLAY\ACR0B4B\7&38383951&0&UID768
+2026-05-26T20:48:27.406512Z  INFO wgpu_hal::vulkan::instance: 	objects: (type: INSTANCE, hndl: 0x154d14aa450, name: ?)
+2026-05-26T20:48:27.406656Z  INFO wgpu_hal::vulkan::instance: GENERAL [Loader Message (0x0)]
+	windows_get_device_registry_files: opening device PCI\VEN_1002&DEV_164E&SUBSYS_7E511462&REV_CB\4&a90de2f&0&0041
+2026-05-26T20:48:27.406782Z  INFO wgpu_hal::vulkan::instance: 	objects: (type: INSTANCE, hndl: 0x154d14aa450, name: ?)
+2026-05-26T20:48:27.406945Z  INFO wgpu_hal::vulkan::instance: GENERAL [Loader Message (0x0)]
+	windows_get_device_registry_entry: Device ID(9) Does not contain a value for "VulkanExplicitLayers"
+2026-05-26T20:48:27.407070Z  INFO wgpu_hal::vulkan::instance: 	objects: (type: INSTANCE, hndl: 0x154d14aa450, name: ?)
+2026-05-26T20:48:27.407207Z  INFO wgpu_hal::vulkan::instance: GENERAL [Loader Message (0x0)]
+	windows_get_device_registry_files: Opening child device 10 - SWD\DRIVERENUM\AMDFDANS&5&A8B92B7&0
+2026-05-26T20:48:27.407327Z  INFO wgpu_hal::vulkan::instance: 	objects: (type: INSTANCE, hndl: 0x154d14aa450, name: ?)
+2026-05-26T20:48:27.407463Z  INFO wgpu_hal::vulkan::instance: GENERAL [Loader Message (0x0)]
+	windows_get_device_registry_entry: Device ID(10) Does not contain a value for "VulkanExplicitLayers"
+2026-05-26T20:48:27.407576Z  INFO wgpu_hal::vulkan::instance: 	objects: (type: INSTANCE, hndl: 0x154d14aa450, name: ?)
+2026-05-26T20:48:27.407695Z  INFO wgpu_hal::vulkan::instance: GENERAL [Loader Message (0x0)]
+	windows_get_device_registry_files: Opening child device 11 - SWD\DRIVERENUM\AMDOCL&5&A8B92B7&0
+2026-05-26T20:48:27.407829Z  INFO wgpu_hal::vulkan::instance: 	objects: (type: INSTANCE, hndl: 0x154d14aa450, name: ?)
+2026-05-26T20:48:27.407961Z  INFO wgpu_hal::vulkan::instance: GENERAL [Loader Message (0x0)]
+	windows_get_device_registry_entry: Device ID(11) Does not contain a value for "VulkanExplicitLayers"
+2026-05-26T20:48:27.408071Z  INFO wgpu_hal::vulkan::instance: 	objects: (type: INSTANCE, hndl: 0x154d14aa450, name: ?)
+2026-05-26T20:48:27.408207Z  INFO wgpu_hal::vulkan::instance: GENERAL [Loader Message (0x0)]
+	windows_get_device_registry_files: Opening child device 12 - SWD\DRIVERENUM\AMDWIN&5&A8B92B7&0
+2026-05-26T20:48:27.408320Z  INFO wgpu_hal::vulkan::instance: 	objects: (type: INSTANCE, hndl: 0x154d14aa450, name: ?)
+2026-05-26T20:48:27.408454Z  INFO wgpu_hal::vulkan::instance: GENERAL [Loader Message (0x0)]
+	windows_get_device_registry_entry: Device ID(12) Does not contain a value for "VulkanExplicitLayers"
+2026-05-26T20:48:27.408567Z  INFO wgpu_hal::vulkan::instance: 	objects: (type: INSTANCE, hndl: 0x154d14aa450, name: ?)
+2026-05-26T20:48:27.408675Z  INFO wgpu_hal::vulkan::instance: GENERAL [Loader Message (0x0)]
+	windows_get_device_registry_files: found no registry files
+2026-05-26T20:48:27.408768Z  INFO wgpu_hal::vulkan::instance: 	objects: (type: INSTANCE, hndl: 0x154d14aa450, name: ?)
+2026-05-26T20:48:27.408892Z  INFO wgpu_hal::vulkan::instance: GENERAL [Loader Message (0x0)]
+	Found no registry files in HKEY_CURRENT_USER\SOFTWARE\Khronos\Vulkan\ExplicitLayers
+2026-05-26T20:48:27.409011Z  INFO wgpu_hal::vulkan::instance: 	objects: (type: INSTANCE, hndl: 0x154d14aa450, name: ?)
+2026-05-26T20:48:27.409135Z  WARN wgpu_hal::vulkan::instance: GENERAL [Loader Message (0x0)]
+	windows_read_data_files_in_registry: Registry lookup failed to get layer manifest files.
+2026-05-26T20:48:27.409270Z  WARN wgpu_hal::vulkan::instance: 	objects: (type: INSTANCE, hndl: 0x154d14aa450, name: ?)
+2026-05-26T20:48:27.409398Z  WARN wgpu_hal::vulkan::instance: GENERAL [Loader Message (0x0)]
+	Removing layer VK_LAYER_AMD_switchable_graphics (C:\Windows\System32\DriverStore\FileRepository\u0200690.inf_amd64_68df361886f7d87c\B026020\amd-vulkan64.json) because it is a duplicate of VK_LAYER_AMD_switchable_graphics (C:\Windows\System32\DriverStore\FileRepository\amdvlk.inf_amd64_9f009a63c54e26dc\amd-vulkan64.json)
+2026-05-26T20:48:27.409530Z  WARN wgpu_hal::vulkan::instance: 	objects: (type: INSTANCE, hndl: 0x154d14aa450, name: ?)
+2026-05-26T20:48:27.409728Z  INFO wgpu_hal::vulkan::instance: GENERAL [Loader Message (0x0)]
+	windows_get_app_package_manifest_path: Failed to find mapping layers packages by family name
+2026-05-26T20:48:27.409866Z  INFO wgpu_hal::vulkan::instance: 	objects: (type: INSTANCE, hndl: 0x154d14aa450, name: ?)
+2026-05-26T20:48:27.409997Z  INFO wgpu_hal::vulkan::instance: GENERAL [Loader Message (0x0)]
+	Checking for Driver Manifest files in Registry at HKEY_LOCAL_MACHINE\SOFTWARE\Khronos\Vulkan\Drivers
+2026-05-26T20:48:27.410125Z  INFO wgpu_hal::vulkan::instance: 	objects: (type: INSTANCE, hndl: 0x154d14aa450, name: ?)
+2026-05-26T20:48:27.410332Z  INFO wgpu_hal::vulkan::instance: GENERAL [Loader Message (0x0)]
+	windows_add_json_entry: Located json file "C:\Windows\System32\DriverStore\FileRepository\amdvlk.inf_amd64_9f009a63c54e26dc\amd-vulkan64.json" from PnP registry: E
+2026-05-26T20:48:27.410452Z  INFO wgpu_hal::vulkan::instance: 	objects: (type: INSTANCE, hndl: 0x154d14aa450, name: ?)
+2026-05-26T20:48:27.410625Z  INFO wgpu_hal::vulkan::instance: GENERAL [Loader Message (0x0)]
+	windows_add_json_entry: Located json file "C:\Windows\System32\DriverStore\FileRepository\u0200690.inf_amd64_68df361886f7d87c\B026020\amd-vulkan64.json" from PnP registry: E
+2026-05-26T20:48:27.410761Z  INFO wgpu_hal::vulkan::instance: 	objects: (type: INSTANCE, hndl: 0x154d14aa450, name: ?)
+2026-05-26T20:48:27.411068Z  INFO wgpu_hal::vulkan::instance: GENERAL [Loader Message (0x0)]
+	Found no registry files in HKEY_LOCAL_MACHINE\SOFTWARE\Khronos\Vulkan\Drivers
+2026-05-26T20:48:27.411196Z  INFO wgpu_hal::vulkan::instance: 	objects: (type: INSTANCE, hndl: 0x154d14aa450, name: ?)
+2026-05-26T20:48:27.411378Z  INFO wgpu_hal::vulkan::instance: GENERAL [Loader Message (0x0)]
+	Found ICD manifest file C:\Windows\System32\DriverStore\FileRepository\amdvlk.inf_amd64_9f009a63c54e26dc\amd-vulkan64.json, version 1.0.0
+2026-05-26T20:48:27.411485Z  INFO wgpu_hal::vulkan::instance: 	objects: (type: INSTANCE, hndl: 0x154d14aa450, name: ?)
+2026-05-26T20:48:27.411682Z  INFO wgpu_hal::vulkan::instance: GENERAL [Loader Message (0x0)]
+	Found ICD manifest file C:\Windows\System32\DriverStore\FileRepository\u0200690.inf_amd64_68df361886f7d87c\B026020\amd-vulkan64.json, version 1.0.0
+2026-05-26T20:48:27.411815Z  INFO wgpu_hal::vulkan::instance: 	objects: (type: INSTANCE, hndl: 0x154d14aa450, name: ?)
+2026-05-26T20:48:27.412506Z  INFO wgpu_hal::vulkan::instance: GENERAL [Loader Message (0x0)]
+	Insert instance layer "VK_LAYER_OBS_HOOK" (C:\ProgramData\obs-studio-hook\graphics-hook64.dll)
+2026-05-26T20:48:27.412642Z  INFO wgpu_hal::vulkan::instance: 	objects: (type: INSTANCE, hndl: 0x154d14aa450, name: ?)
+2026-05-26T20:48:27.412862Z  INFO wgpu_hal::vulkan::instance: GENERAL [Loader Message (0x0)]
+	Insert instance layer "VK_LAYER_AMD_switchable_graphics" (C:\Windows\System32\DriverStore\FileRepository\amdvlk.inf_amd64_9f009a63c54e26dc\amdvlk64.dll)
+2026-05-26T20:48:27.412976Z  INFO wgpu_hal::vulkan::instance: 	objects: (type: INSTANCE, hndl: 0x154d14aa450, name: ?)
+2026-05-26T20:48:27.413203Z  INFO wgpu_hal::vulkan::instance: GENERAL [Loader Message (0x0)]
+	vkCreateInstance layer callstack setup to:
+2026-05-26T20:48:27.413315Z  INFO wgpu_hal::vulkan::instance: 	objects: (type: INSTANCE, hndl: 0x154d14aa450, name: ?)
+2026-05-26T20:48:27.413427Z  INFO wgpu_hal::vulkan::instance: GENERAL [Loader Message (0x0)]
+	   <Application>
+2026-05-26T20:48:27.413539Z  INFO wgpu_hal::vulkan::instance: 	objects: (type: INSTANCE, hndl: 0x154d14aa450, name: ?)
+2026-05-26T20:48:27.413650Z  INFO wgpu_hal::vulkan::instance: GENERAL [Loader Message (0x0)]
+	     ||
+2026-05-26T20:48:27.413767Z  INFO wgpu_hal::vulkan::instance: 	objects: (type: INSTANCE, hndl: 0x154d14aa450, name: ?)
+2026-05-26T20:48:27.413880Z  INFO wgpu_hal::vulkan::instance: GENERAL [Loader Message (0x0)]
+	   <Loader>
+2026-05-26T20:48:27.413995Z  INFO wgpu_hal::vulkan::instance: 	objects: (type: INSTANCE, hndl: 0x154d14aa450, name: ?)
+2026-05-26T20:48:27.414127Z  INFO wgpu_hal::vulkan::instance: GENERAL [Loader Message (0x0)]
+	     ||
+2026-05-26T20:48:27.414243Z  INFO wgpu_hal::vulkan::instance: 	objects: (type: INSTANCE, hndl: 0x154d14aa450, name: ?)
+2026-05-26T20:48:27.414357Z  INFO wgpu_hal::vulkan::instance: GENERAL [Loader Message (0x0)]
+	   VK_LAYER_AMD_switchable_graphics
+2026-05-26T20:48:27.414471Z  INFO wgpu_hal::vulkan::instance: 	objects: (type: INSTANCE, hndl: 0x154d14aa450, name: ?)
+2026-05-26T20:48:27.414584Z  INFO wgpu_hal::vulkan::instance: GENERAL [Loader Message (0x0)]
+	           Type: Implicit
+2026-05-26T20:48:27.414701Z  INFO wgpu_hal::vulkan::instance: 	objects: (type: INSTANCE, hndl: 0x154d14aa450, name: ?)
+2026-05-26T20:48:27.414840Z  INFO wgpu_hal::vulkan::instance: GENERAL [Loader Message (0x0)]
+	           Enabled By: Implicit Layer
+2026-05-26T20:48:27.414953Z  INFO wgpu_hal::vulkan::instance: 	objects: (type: INSTANCE, hndl: 0x154d14aa450, name: ?)
+2026-05-26T20:48:27.415071Z  INFO wgpu_hal::vulkan::instance: GENERAL [Loader Message (0x0)]
+	               Disable Env Var:  DISABLE_LAYER_AMD_SWITCHABLE_GRAPHICS_1
+2026-05-26T20:48:27.415184Z  INFO wgpu_hal::vulkan::instance: 	objects: (type: INSTANCE, hndl: 0x154d14aa450, name: ?)
+2026-05-26T20:48:27.415296Z  INFO wgpu_hal::vulkan::instance: GENERAL [Loader Message (0x0)]
+	           Manifest: C:\Windows\System32\DriverStore\FileRepository\amdvlk.inf_amd64_9f009a63c54e26dc\amd-vulkan64.json
+2026-05-26T20:48:27.415408Z  INFO wgpu_hal::vulkan::instance: 	objects: (type: INSTANCE, hndl: 0x154d14aa450, name: ?)
+2026-05-26T20:48:27.415520Z  INFO wgpu_hal::vulkan::instance: GENERAL [Loader Message (0x0)]
+	           Library:  C:\Windows\System32\DriverStore\FileRepository\amdvlk.inf_amd64_9f009a63c54e26dc\amdvlk64.dll
+2026-05-26T20:48:27.415633Z  INFO wgpu_hal::vulkan::instance: 	objects: (type: INSTANCE, hndl: 0x154d14aa450, name: ?)
+2026-05-26T20:48:27.415744Z  INFO wgpu_hal::vulkan::instance: GENERAL [Loader Message (0x0)]
+	     ||
+2026-05-26T20:48:27.415868Z  INFO wgpu_hal::vulkan::instance: 	objects: (type: INSTANCE, hndl: 0x154d14aa450, name: ?)
+2026-05-26T20:48:27.415992Z  INFO wgpu_hal::vulkan::instance: GENERAL [Loader Message (0x0)]
+	   VK_LAYER_OBS_HOOK
+2026-05-26T20:48:27.416106Z  INFO wgpu_hal::vulkan::instance: 	objects: (type: INSTANCE, hndl: 0x154d14aa450, name: ?)
+2026-05-26T20:48:27.416223Z  INFO wgpu_hal::vulkan::instance: GENERAL [Loader Message (0x0)]
+	           Type: Implicit
+2026-05-26T20:48:27.416336Z  INFO wgpu_hal::vulkan::instance: 	objects: (type: INSTANCE, hndl: 0x154d14aa450, name: ?)
+2026-05-26T20:48:27.416439Z  INFO wgpu_hal::vulkan::instance: GENERAL [Loader Message (0x0)]
+	           Enabled By: Implicit Layer
+2026-05-26T20:48:27.416541Z  INFO wgpu_hal::vulkan::instance: 	objects: (type: INSTANCE, hndl: 0x154d14aa450, name: ?)
+2026-05-26T20:48:27.416648Z  INFO wgpu_hal::vulkan::instance: GENERAL [Loader Message (0x0)]
+	               Disable Env Var:  DISABLE_VULKAN_OBS_CAPTURE
+2026-05-26T20:48:27.416761Z  INFO wgpu_hal::vulkan::instance: 	objects: (type: INSTANCE, hndl: 0x154d14aa450, name: ?)
+2026-05-26T20:48:27.416864Z  INFO wgpu_hal::vulkan::instance: GENERAL [Loader Message (0x0)]
+	           Manifest: C:\ProgramData\obs-studio-hook\obs-vulkan64.json
+2026-05-26T20:48:27.416960Z  INFO wgpu_hal::vulkan::instance: 	objects: (type: INSTANCE, hndl: 0x154d14aa450, name: ?)
+2026-05-26T20:48:27.417071Z  INFO wgpu_hal::vulkan::instance: GENERAL [Loader Message (0x0)]
+	           Library:  C:\ProgramData\obs-studio-hook\graphics-hook64.dll
+2026-05-26T20:48:27.417183Z  INFO wgpu_hal::vulkan::instance: 	objects: (type: INSTANCE, hndl: 0x154d14aa450, name: ?)
+2026-05-26T20:48:27.417294Z  INFO wgpu_hal::vulkan::instance: GENERAL [Loader Message (0x0)]
+	     ||
+2026-05-26T20:48:27.417406Z  INFO wgpu_hal::vulkan::instance: 	objects: (type: INSTANCE, hndl: 0x154d14aa450, name: ?)
+2026-05-26T20:48:27.417516Z  INFO wgpu_hal::vulkan::instance: GENERAL [Loader Message (0x0)]
+	   <Drivers>
+2026-05-26T20:48:27.417627Z  INFO wgpu_hal::vulkan::instance: 	objects: (type: INSTANCE, hndl: 0x154d14aa450, name: ?)
+2026-05-26T20:48:27.464319Z  INFO wgpu_hal::vulkan::instance: Enabling debug utils
+2026-05-26T20:48:27.625001Z  INFO bevy_render::renderer: AdapterInfo { name: "AMD Radeon RX 7800 XT", vendor: 4098, device: 29822, device_type: DiscreteGpu, driver: "AMD proprietary driver", driver_info: "26.5.2 (LLPC)", backend: Vulkan }
+2026-05-26T20:48:27.626063Z  INFO wgpu_hal::vulkan::instance: GENERAL [Loader Message (0x0)]
+	Inserted device layer "VK_LAYER_OBS_HOOK" (C:\ProgramData\obs-studio-hook\graphics-hook64.dll)
+2026-05-26T20:48:27.626203Z  INFO wgpu_hal::vulkan::instance: 	objects: (type: INSTANCE, hndl: 0x154d14aa450, name: ?)
+2026-05-26T20:48:27.626331Z  INFO wgpu_hal::vulkan::instance: GENERAL [Loader Message (0x0)]
+	Failed to find vkGetDeviceProcAddr in layer "C:\Windows\System32\DriverStore\FileRepository\amdvlk.inf_amd64_9f009a63c54e26dc\amdvlk64.dll"
+2026-05-26T20:48:27.626452Z  INFO wgpu_hal::vulkan::instance: 	objects: (type: INSTANCE, hndl: 0x154d14aa450, name: ?)
+2026-05-26T20:48:27.626565Z  INFO wgpu_hal::vulkan::instance: GENERAL [Loader Message (0x0)]
+	vkCreateDevice layer callstack setup to:
+2026-05-26T20:48:27.626659Z  INFO wgpu_hal::vulkan::instance: 	objects: (type: INSTANCE, hndl: 0x154d14aa450, name: ?)
+2026-05-26T20:48:27.626783Z  INFO wgpu_hal::vulkan::instance: GENERAL [Loader Message (0x0)]
+	   <Application>
+2026-05-26T20:48:27.626908Z  INFO wgpu_hal::vulkan::instance: 	objects: (type: INSTANCE, hndl: 0x154d14aa450, name: ?)
+2026-05-26T20:48:27.627024Z  INFO wgpu_hal::vulkan::instance: GENERAL [Loader Message (0x0)]
+	     ||
+2026-05-26T20:48:27.627151Z  INFO wgpu_hal::vulkan::instance: 	objects: (type: INSTANCE, hndl: 0x154d14aa450, name: ?)
+2026-05-26T20:48:27.627273Z  INFO wgpu_hal::vulkan::instance: GENERAL [Loader Message (0x0)]
+	   <Loader>
+2026-05-26T20:48:27.627406Z  INFO wgpu_hal::vulkan::instance: 	objects: (type: INSTANCE, hndl: 0x154d14aa450, name: ?)
+2026-05-26T20:48:27.627519Z  INFO wgpu_hal::vulkan::instance: GENERAL [Loader Message (0x0)]
+	     ||
+2026-05-26T20:48:27.627632Z  INFO wgpu_hal::vulkan::instance: 	objects: (type: INSTANCE, hndl: 0x154d14aa450, name: ?)
+2026-05-26T20:48:27.627743Z  INFO wgpu_hal::vulkan::instance: GENERAL [Loader Message (0x0)]
+	   VK_LAYER_OBS_HOOK
+2026-05-26T20:48:27.627857Z  INFO wgpu_hal::vulkan::instance: 	objects: (type: INSTANCE, hndl: 0x154d14aa450, name: ?)
+2026-05-26T20:48:27.627970Z  INFO wgpu_hal::vulkan::instance: GENERAL [Loader Message (0x0)]
+	           Type: Implicit
+2026-05-26T20:48:27.628068Z  INFO wgpu_hal::vulkan::instance: 	objects: (type: INSTANCE, hndl: 0x154d14aa450, name: ?)
+2026-05-26T20:48:27.628181Z  INFO wgpu_hal::vulkan::instance: GENERAL [Loader Message (0x0)]
+	           Enabled By: Implicit Layer
+2026-05-26T20:48:27.628290Z  INFO wgpu_hal::vulkan::instance: 	objects: (type: INSTANCE, hndl: 0x154d14aa450, name: ?)
+2026-05-26T20:48:27.628405Z  INFO wgpu_hal::vulkan::instance: GENERAL [Loader Message (0x0)]
+	               Disable Env Var:  DISABLE_VULKAN_OBS_CAPTURE
+2026-05-26T20:48:27.628510Z  INFO wgpu_hal::vulkan::instance: 	objects: (type: INSTANCE, hndl: 0x154d14aa450, name: ?)
+2026-05-26T20:48:27.628623Z  INFO wgpu_hal::vulkan::instance: GENERAL [Loader Message (0x0)]
+	           Manifest: C:\ProgramData\obs-studio-hook\obs-vulkan64.json
+2026-05-26T20:48:27.628714Z  INFO wgpu_hal::vulkan::instance: 	objects: (type: INSTANCE, hndl: 0x154d14aa450, name: ?)
+2026-05-26T20:48:27.628827Z  INFO wgpu_hal::vulkan::instance: GENERAL [Loader Message (0x0)]
+	           Library:  C:\ProgramData\obs-studio-hook\graphics-hook64.dll
+2026-05-26T20:48:27.628929Z  INFO wgpu_hal::vulkan::instance: 	objects: (type: INSTANCE, hndl: 0x154d14aa450, name: ?)
+2026-05-26T20:48:27.629038Z  INFO wgpu_hal::vulkan::instance: GENERAL [Loader Message (0x0)]
+	     ||
+2026-05-26T20:48:27.629142Z  INFO wgpu_hal::vulkan::instance: 	objects: (type: INSTANCE, hndl: 0x154d14aa450, name: ?)
+2026-05-26T20:48:27.629254Z  INFO wgpu_hal::vulkan::instance: GENERAL [Loader Message (0x0)]
+	   <Device>
+2026-05-26T20:48:27.629367Z  INFO wgpu_hal::vulkan::instance: 	objects: (type: INSTANCE, hndl: 0x154d14aa450, name: ?)
+2026-05-26T20:48:27.629626Z  INFO wgpu_hal::vulkan::instance: GENERAL [Loader Message (0x0)]
+	       Using "AMD Radeon RX 7800 XT" with driver: "C:\Windows\System32\DriverStore\FileRepository\amdvlk.inf_amd64_9f009a63c54e26dc\amdvlk64.dll"
+2026-05-26T20:48:27.629734Z  INFO wgpu_hal::vulkan::instance: 	objects: (type: INSTANCE, hndl: 0x154d14aa450, name: ?)
+2026-05-26T20:48:27.903320Z  INFO proc_A_dine01::terrain::generation::world_generation_plugin: World Generation Tools initialized. Default key for UI is F8; change under Options → key bindings when KeybindingsOptionsPlugin is loaded.
+2026-05-26T20:48:27.904619Z  INFO proc_A_dine01::engine::engine_with_worldgen: Engine initialized. Debug maneuvers: ① `--test frame` (layout, stay open) · ② `--test visual`/`capture` (proof + exit) · ③ menu Demo world · `unittest` fixture · `--test weather`/`fire`/`atmosphere`. Keys: F1 options · F2 pressure · F3 diagnostics · F7 agent perms · F11/F12 capture.
+2026-05-26T20:48:27.916624Z  INFO bevy_render::batching::gpu_preprocessing: GPU preprocessing is fully supported on this device.
+2026-05-26T20:48:27.918116Z  INFO bevy_egui::render: Using bindless_mode_array_size 16 (Device maximum 4294967295)
+2026-05-26T20:48:27.963503Z  INFO bevy_winit::system: Creating new window proc_A_dine01 (0v0)

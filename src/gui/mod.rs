@@ -9,6 +9,7 @@
 pub mod debug;
 pub mod hud;
 mod minimap_shell;
+mod minimap_viewport_frame;
 mod map_camera;
 mod map_view;
 mod map_presentation_controls;
@@ -71,6 +72,10 @@ pub use minimap_shell::{
     minimap_uv_to_world_tile, native_minimap_window_supported, simulation_minimap_bootstrap_rect,
     simulation_minimap_overlay_defaults, MinimapCameraBookmark, MinimapFollowMode,
     MinimapOverlayMask, MinimapPresentationMode, MinimapPresentationSource, MinimapShellState,
+};
+pub use minimap_viewport_frame::{
+    paint_tactical_viewport_frame_on_minimap, tactical_visible_world_rect,
+    world_tile_to_minimap_screen,
 };
 pub use map_presentation_controls::map_overlay_controls_ui;
 pub use map_presentation_diagnostics::{

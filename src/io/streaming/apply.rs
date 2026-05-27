@@ -5,6 +5,8 @@
 //! Schedule: `reconstruct_staged_chunks_into_cache` → `apply_pending_stream_chunk_bodies` →
 //! `clear_async_domain_apply_labels_after_stream_apply` (see `StreamingSpinePlugin`).
 
+use std::collections::HashMap;
+
 use bevy::prelude::*;
 
 use crate::io::save::apply_saved_body_to_materialized_chunk;
@@ -36,22 +38,26 @@ pub fn apply_pending_stream_chunk_bodies(
         return;
     };
     let bodies = std::mem::take(&mut apply_queue.ready_bodies);
+    let mut coord_to_entity: HashMap<IVec2, Entity> = HashMap::with_capacity(chunks.iter().len());
+    for (entity, chunk, _, _) in chunks.iter() {
+        coord_to_entity.insert(chunk.coord, entity);
+    }
     let mut touched = Vec::new();
     for (coord, body) in bodies {
-        for (_entity, chunk, mut mat_chunk, mut cell_matrix) in chunks.iter_mut() {
-            if chunk.coord != coord {
-                continue;
-            }
-            if apply_saved_body_to_materialized_chunk(
-                &mut mat_chunk,
-                cell_matrix.as_deref_mut(),
-                &body,
-                material_registry,
-                tag_registry,
-            ) {
-                touched.push(coord);
-            }
-            break;
+        let Some(&entity) = coord_to_entity.get(&coord) else {
+            continue;
+        };
+        let Ok((_entity, _chunk, mut mat_chunk, mut cell_matrix)) = chunks.get_mut(entity) else {
+            continue;
+        };
+        if apply_saved_body_to_materialized_chunk(
+            &mut mat_chunk,
+            cell_matrix.as_deref_mut(),
+            &body,
+            material_registry,
+            tag_registry,
+        ) {
+            touched.push(coord);
         }
     }
     if let Some(preview) = preview.as_mut() {

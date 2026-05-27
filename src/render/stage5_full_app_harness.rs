@@ -1684,8 +1684,11 @@ pub(crate) fn finalize_visual_full_app_live_probe(
                 target_streak = FINISH_UX06_STREAK_DONE,
                 frames_after_capture = state.frames_since_capture,
                 last_blocker = ?blocker,
-                "FULL_APP visual probe timed out waiting for FINISH-UX-06 streak (app keeps running)"
+                "FULL_APP visual probe timed out waiting for FINISH-UX-06 streak"
             );
+            if launch.visual_auto_exit && !visual_exit.armed {
+                crate::render::gpu_surface_teardown::arm_visual_test_graceful_exit(visual_exit);
+            }
             return;
         }
         if streak_n >= state.last_logged_streak.saturating_add(15)
