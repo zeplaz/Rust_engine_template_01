@@ -1,0 +1,40 @@
+{
+  "schema": "runtime_witness_exceptions_v1",
+  "policy": "src/dev/dev_artifact_containment_policy_v1.md",
+  "hard_fail_after_slice": "D",
+  "hard_fail_ci_active": true,
+  "hard_fail_ci_witness": ".github/workflows/ci.yml + tools/orchestrator/ci/run.ps1",
+  "contain_d_001_retired": [
+    "src/io/streaming/wave_c_live_proof.rs",
+    "src/io/save/wave_s_live_proof.rs",
+    "src/render/stage6_live_proof.rs",
+    "src/render/view_runtime/live_proof.rs",
+    "src/render/minimap_compositor/live_proof.rs"
+  ],
+  "allowed_shim_paths": [
+    "src/construction/live_proof.rs",
+    "src/economy/activation/live_proof.rs",
+    "src/economy/logistics/live_proof.rs",
+    "src/systems/fire/live_proof.rs",
+    "src/gui/editor/world_preview/wave_p_live_proof.rs",
+    "src/dev/stage7_behavioral_live_proof.rs",
+    "src/dev/stage7_play_live_proof.rs",
+    "src/substrate/live_proof.rs"
+  ],
+  "migrated_writers": [
+    "src/dev/runtime_witness/wave_c.rs",
+    "src/dev/runtime_witness/wave_s.rs",
+    "src/dev/runtime_witness/stage6.rs",
+    "src/dev/runtime_witness/view_runtime.rs",
+    "src/dev/runtime_witness/minimap.rs",
+    "src/dev/runtime_witness/construction.rs",
+    "src/dev/runtime_witness/economy.rs",
+    "src/dev/runtime_witness/fire.rs",
+    "src/dev/runtime_witness/wave_p.rs",
+    "src/dev/runtime_witness/stage7_behavioral.rs",
+    "src/dev/runtime_witness/stage7_play.rs",
+    "src/dev/runtime_witness/wss_substrate.rs"
+  ],
+  "shim_expiry": {}
+}
+

@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "building_id": "warehouse_industrial",
+  "style_pack_id": "style_industrial_west",
+  "assembly_snapshot": "tools/mcp/schemas/examples/assembly_snapshot_warehouse_industrial_west_production_v1.json",
+  "assembly_blend": "assets/staging/assemblies/industrial_west_7x5_s39_9fa1.blend",
+  "modules": [
+    {
+      "module_id": "corner_L",
+      "job_id": "corner_L_industrial_west_production_run001",
+      "count": 4
+    },
+    {
+      "module_id": "wall_steel_1u",
+      "job_id": "wall_steel_1u_production_run001",
+      "count": 15
+    },
+    {
+      "module_id": "door_warehouse",
+      "job_id": "door_warehouse_production_run001",
+      "count": 1
+    },
+    {
+      "module_id": "roof_sawtooth",
+      "job_id": "roof_sawtooth_production_run001",
+      "count": 20
+    }
+  ],
+  "variants": [
+    "clean_day",
+    "clean_night_off",
+    "clean_night_on",
+    "damaged_day",
+    "damaged_night_on",
+    "under_construction_01",
+    "under_construction_02",
+    "abandoned",
+    "burning_00",
+    "burning_01",
+    "burning_02",
+    "burning_03",
+    "burning_04",
+    "burning_05",
+    "burning_06",
+    "burning_07"
+  ],
+  "fire_animation_frames": 8,
+  "render_contract": {
+    "facings": 8,
+    "tile_px": 128,
+    "quarter_turn_fallback": true
+  },
+  "material_profiles": [
+    "steel_panel_01",
+    "steel_corner_01",
+    "steel_door_warehouse_01",
+    "roof_metal_01"
+  ],
+  "tile_fix_09": {
+    "assembly_id": "industrial_west_7x5_s39_9fa1",
+    "footprint": {
+      "width": 7,
+      "depth": 5,
+      "floors": 1,
+      "wdc_cell_count": 20
+    },
+    "production_placements": 35,
+    "lod0_fallback_placements": 5
+  }
+}

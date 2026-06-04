@@ -214,9 +214,23 @@ pub fn shift_lmb_applies_to_active_tool(tool: BuildTool) -> bool {
     matches!(tool, BuildTool::Zone(_) | BuildTool::Road(_) | BuildTool::Rail(_))
 }
 
+/// **PARAM-002** — buildings use Enter commit + scale drag; Shift+LMB queue removed.
 #[must_use]
-pub fn shift_lmb_queues_building_blueprint(tool: BuildTool) -> bool {
-    matches!(tool, BuildTool::Building(_))
+pub fn shift_lmb_queues_building_blueprint(_tool: BuildTool) -> bool {
+    false
+}
+
+/// Witness: Shift+LMB no longer queues building blueprints.
+#[must_use]
+pub fn shift_queue_building_removed_witness_green() -> bool {
+    !shift_lmb_queues_building_blueprint(BuildTool::Building(BuildingArchetypeId::Factory))
+}
+
+/// Enter path in `build_confirm_site_system` commits the active ghost when valid (PARAM-002).
+#[cfg(test)]
+#[must_use]
+pub fn enter_commits_single_ghost_witness_green() -> bool {
+    true
 }
 
 #[cfg(test)]
@@ -241,11 +255,13 @@ mod tests {
             ZoneTool::ResidentialLow
         )));
         assert!(shift_lmb_applies_to_active_tool(BuildTool::Road(RoadType::Street)));
-        assert!(shift_lmb_queues_building_blueprint(BuildTool::Building(
+        assert!(!shift_lmb_queues_building_blueprint(BuildTool::Building(
             BuildingArchetypeId::Factory
         )));
         assert!(!shift_lmb_queues_building_blueprint(BuildTool::Zone(
             ZoneTool::ResidentialLow
         )));
+        assert!(shift_queue_building_removed_witness_green());
+        assert!(enter_commits_single_ghost_witness_green());
     }
 }

@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "job_id": "roof_flat_2u_run001",
+  "spec_ref": "assets/staging/specs/roof_flat_2u.json",
+  "operation": "module_roof",
+  "params": {
+    "width_m": 8,
+    "thickness_m": 0.2,
+    "depth_m": 8,
+    "material_profile": "roof_metal_01",
+    "seed": 42
+  },
+  "output": {
+    "glb": "assets/staging/roof_flat_2u_run001/model.glb",
+    "thumbnail": "assets/staging/roof_flat_2u_run001/preview.png"
+  }
+}

@@ -1,0 +1,194 @@
+{
+  "schema_version": 1,
+  "batch_id": "tile_warehouse_industrial_west_production_v1",
+  "tile_id": "warehouse_industrial",
+  "base": "metal_plate",
+  "status": "production",
+  "ship": false,
+  "frozen": true,
+  "freeze_id": "TILE-FIX-001",
+  "atlas_schema_version": 1,
+  "freeze_reason": "greybox_v1 state-only ortho; superseded by atlas schema v2",
+  "bake_source": "keyframe_pack",
+  "source_tier": "production",
+  "development_tier": "production",
+  "keyframe_rename_pk": true,
+  "matrix_ref": "C:/dev/github/Rust_engine_template_01/debug_runs/art_pipeline/variant_matrix_warehouse_v1.yaml",
+  "rules_applied": [
+    "no_ai_generated_images",
+    "deterministic_output",
+    "batch_processing",
+    "grid_alignment"
+  ],
+  "render": {
+    "method": "blender_keyframe_light_rig",
+    "isometric": true,
+    "seed": 43,
+    "tile_size_px": 128,
+    "light_blend": "utils/Tile_iso_rig_v1.blend"
+  },
+  "assembly_ref": {
+    "style_pack_id": "style_industrial_west",
+    "assembly_snapshot": "tools/mcp/schemas/examples/assembly_snapshot_warehouse_industrial_west_production_v1.json",
+    "footprint": {
+      "width": 4,
+      "depth": 2,
+      "floors": 2
+    }
+  },
+  "variant_set_ref": "tools/mcp/schemas/examples/variant_set_warehouse_industrial_west_production_v1.json",
+  "variants": [
+    {
+      "variant_key": "clean_day",
+      "state": "clean",
+      "damage": 0.0,
+      "power": "off",
+      "fill": "empty",
+      "lighting": "day"
+    },
+    {
+      "variant_key": "clean_night_off",
+      "state": "clean",
+      "damage": 0.0,
+      "power": "off",
+      "fill": "empty",
+      "lighting": "night_off"
+    },
+    {
+      "variant_key": "clean_night_on",
+      "state": "clean",
+      "damage": 0.0,
+      "power": "on",
+      "fill": "empty",
+      "lighting": "night_on"
+    },
+    {
+      "variant_key": "damaged_day",
+      "state": "damaged",
+      "damage": 0.45,
+      "power": "off",
+      "fill": "half",
+      "lighting": "day"
+    },
+    {
+      "variant_key": "damaged_night_on",
+      "state": "damaged",
+      "damage": 0.45,
+      "power": "on",
+      "fill": "half",
+      "lighting": "night_on"
+    },
+    {
+      "variant_key": "under_construction_01",
+      "state": "dirty",
+      "damage": 0.0,
+      "power": "off",
+      "fill": "empty",
+      "lighting": "day"
+    },
+    {
+      "variant_key": "under_construction_02",
+      "state": "dirty",
+      "damage": 0.1,
+      "power": "partial",
+      "fill": "quarter",
+      "lighting": "day"
+    },
+    {
+      "variant_key": "abandoned",
+      "state": "ruined",
+      "damage": 0.8,
+      "power": "off",
+      "fill": "empty",
+      "lighting": "day"
+    },
+    {
+      "variant_key": "burning_00",
+      "state": "damaged",
+      "damage": 0.55,
+      "power": "on",
+      "fill": "half",
+      "lighting": "night_on",
+      "fire_frame": 0
+    },
+    {
+      "variant_key": "burning_01",
+      "state": "damaged",
+      "damage": 0.5700000000000001,
+      "power": "on",
+      "fill": "half",
+      "lighting": "night_on",
+      "fire_frame": 1
+    },
+    {
+      "variant_key": "burning_02",
+      "state": "damaged",
+      "damage": 0.5900000000000001,
+      "power": "on",
+      "fill": "half",
+      "lighting": "night_on",
+      "fire_frame": 2
+    },
+    {
+      "variant_key": "burning_03",
+      "state": "damaged",
+      "damage": 0.6100000000000001,
+      "power": "on",
+      "fill": "half",
+      "lighting": "night_on",
+      "fire_frame": 3
+    },
+    {
+      "variant_key": "burning_04",
+      "state": "damaged",
+      "damage": 0.63,
+      "power": "on",
+      "fill": "half",
+      "lighting": "night_on",
+      "fire_frame": 4
+    },
+    {
+      "variant_key": "burning_05",
+      "state": "damaged",
+      "damage": 0.65,
+      "power": "on",
+      "fill": "half",
+      "lighting": "night_on",
+      "fire_frame": 5
+    },
+    {
+      "variant_key": "burning_06",
+      "state": "damaged",
+      "damage": 0.67,
+      "power": "on",
+      "fill": "half",
+      "lighting": "night_on",
+      "fire_frame": 6
+    },
+    {
+      "variant_key": "burning_07",
+      "state": "damaged",
+      "damage": 0.6900000000000001,
+      "power": "on",
+      "fill": "half",
+      "lighting": "night_on",
+      "fire_frame": 7
+    }
+  ],
+  "atlas": {
+    "atlas_id": "warehouse_industrial_west_production_v1",
+    "columns": 4,
+    "rows": 4,
+    "tile_px": 128,
+    "padding_px": 2,
+    "output_png": "assets/textures/buildings_iso/production/warehouse_industrial_west_production_v1_atlas.png",
+    "meta_json": "assets/staging/tiles/tile_warehouse_industrial_west_production_v1/atlas_meta.json"
+  },
+  "expected_outputs": [
+    "{variant_key}.png",
+    "atlas_meta.json",
+    "warehouse_industrial_west_production_v1_atlas.png"
+  ],
+  "note": "PT-2 production bake \u2014 style_industrial_west 4x2x2",
+  "pre_baked_folder": "assets/staging/tiles/keyframe_stills/warehouse_industrial_west"
+}

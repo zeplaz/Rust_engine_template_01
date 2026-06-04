@@ -1,0 +1,50 @@
+{
+  "program_id": "MCP-PROD-PILOT-ROWHOUSE-001",
+  "task_id": "MCP-PT-1-003",
+  "gate": "G4-keyframe",
+  "green": true,
+  "updated": "2026-06-02",
+  "_agent_meta": {
+    "agent": "designer-mcp",
+    "commands": [
+      "copy production stills → assets/staging/tiles/keyframe_stills/rowhouse_victorian/",
+      "python -m rust_engine_mcp.cli tile-atlas-pack assets/staging/tiles/keyframe_stills/rowhouse_victorian -pk"
+    ],
+    "bake_spine": "src/dev/design_tile_bake_spine_convergence_v1.md",
+    "signoff_yaml": "debug_runs/art_pipeline/rowhouse_victorian_production_signoff.yaml"
+  },
+  "batch_id": "tile_rowhouse_victorian_production_v1",
+  "bake_source": "keyframe_pack",
+  "source_tier": "production",
+  "proceed_ship": true,
+  "lod0_pilot": {
+    "batch_id": "tile_rowhouse_victorian_pilot_v1",
+    "g4_valid": false,
+    "superseded": true,
+    "reason": "ortho smoke seeds — identical damaged/clean hashes; not keyframe_pack"
+  },
+  "keyframe_stills": {
+    "folder": "assets/staging/tiles/keyframe_stills/rowhouse_victorian/",
+    "variant_count": 14,
+    "unique_sha256_groups": 14,
+    "tile_px": 128,
+    "minimum_review_keys": ["clean_day", "clean_night_on", "damaged_night_on"],
+    "pack_atlas_staging": "assets/staging/tiles/keyframe_stills/rowhouse_victorian/tile_map_keyframe_stills_rowhouse_victorian.png"
+  },
+  "g4_gates": {
+    "g4_0_matrix_and_spine": "pass",
+    "g4_1_source_tier_production": "pass",
+    "g4_2_reference_tags_present": "pass",
+    "g4_3_keyframe_minimum_stills_review": "pass",
+    "g4_4_full_matrix_keys_packed": "pass",
+    "g4_5_night_damaged_iso_readable_128px": "pass",
+    "g4_6_fire_frames_distinct": "pass",
+    "g4_7_no_smoke_greybox_modules": "pass",
+    "g4_8_proceed_ship": "pass"
+  },
+  "lod0_ortho_atlas_g4": "rejected",
+  "qualified_notes": [
+    "PG-3 live W3 may tune night emission brightness — keyframe rig reads darker than lod0 ortho pilot"
+  ],
+  "next": "tile-batch-run with pre_baked_folder=keyframe_stills; PG-3 w3_live_tactical_review"
+}

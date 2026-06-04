@@ -1,0 +1,11 @@
+{
+  "profile_id": "vent_metal_01",
+  "seed": 1263,
+  "generator": "steel",
+  "size": 256,
+  "paths": {
+    "albedo": "assets/materials/textures/vent_metal_01/albedo.png",
+    "normal": "assets/materials/textures/vent_metal_01/normal.png",
+    "roughness": "assets/materials/textures/vent_metal_01/roughness.png"
+  }
+}

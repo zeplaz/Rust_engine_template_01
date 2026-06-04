@@ -1,0 +1,47 @@
+(
+  schema_version: 1,
+  roads: [
+    (
+      id: "default_road",
+      road_type: "LocalStreet",
+      lanes: 2,
+      speed_limit_kmh: 50,
+      surface_tags: ["road", "paved", "local"],
+      turn_radius_m: 12.0,
+      base_cost: 1.0,
+      allowed_agents: ["wheeled", "foot"],
+    ),
+    (
+      id: "highway_arterial",
+      road_type: "ArterialRoad",
+      lanes: 4,
+      speed_limit_kmh: 80,
+      surface_tags: ["road", "paved", "highway"],
+      turn_radius_m: 40.0,
+      base_cost: 0.85,
+      allowed_agents: ["wheeled", "heavy"],
+    ),
+  ],
+  rails: [
+    (
+      id: "standard_gauge_freight",
+      gauge: "Standard1435mm",
+      electrification: "None",
+      tracks: 1,
+      max_speed_kmh: 90,
+      turn_radius_m: 300.0,
+      base_cost: 0.7,
+      allowed_agents: ["rail", "freight"],
+    ),
+    (
+      id: "electrified_passenger",
+      gauge: "Standard1435mm",
+      electrification: "AC25KV",
+      tracks: 2,
+      max_speed_kmh: 160,
+      turn_radius_m: 450.0,
+      base_cost: 0.65,
+      allowed_agents: ["rail", "passenger"],
+    ),
+  ],
+)

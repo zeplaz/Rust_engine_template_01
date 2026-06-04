@@ -1,0 +1,16 @@
+Error: Cannot render, no camera
+Blender 5.1.2 (hash ec6e62d40fa9 built 2026-05-19 01:37:34)
+
+Blender quit
+Traceback (most recent call last):
+  File "C:\dev\github\Rust_engine_template_01\tools\mcp\blender\scripts\run_tile_job.py", line 67, in <module>
+    main()
+    ~~~~^^
+  File "C:\dev\github\Rust_engine_template_01\tools\mcp\blender\scripts\run_tile_job.py", line 63, in main
+    _OPS[operation](job, repo_root=repo)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dev\github\Rust_engine_template_01\tools\mcp\blender\scripts\ops\tile_ortho_bake.py", line 169, in bake
+    bpy.ops.render.render(write_still=True)
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+RuntimeError: Error: Cannot render, no camera
+

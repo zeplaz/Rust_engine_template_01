@@ -1,0 +1,86 @@
+{
+  "batch_id": "kit_lod0_002",
+  "_agent_meta": {
+    "agent": "coder-mcp",
+    "updated_at": "2026-06-02T23:30:33.689482+00:00",
+    "rules_applied": [
+      "no_ai_generated_images",
+      "deterministic_output",
+      "batch_processing",
+      "grid_alignment",
+      "canonical_module_ids_only"
+    ]
+  },
+  "gates": {
+    "G0": "pass",
+    "G1": "pass",
+    "G2": "pass",
+    "G3": "pass",
+    "G4": "pass",
+    "G5": "pass"
+  },
+  "modules": [
+    {
+      "asset_id": "wall_wood_1u",
+      "job_id": "wall_wood_1u_lod0_run001",
+      "status": "promoted",
+      "registered": true,
+      "valid": true,
+      "vertex_count": 24,
+      "promoted_path": "assets/models/modules/wall_wood_1u_lod0_run001/model.glb",
+      "module_id": "wall_wood_1u",
+      "batch_id": "kit_lod0_002"
+    },
+    {
+      "asset_id": "wall_steel_1u",
+      "job_id": "wall_steel_1u_lod0_run001",
+      "status": "promoted",
+      "registered": true,
+      "valid": true,
+      "vertex_count": 24,
+      "promoted_path": "assets/models/modules/wall_steel_1u_lod0_run001/model.glb",
+      "module_id": "wall_steel_1u",
+      "batch_id": "kit_lod0_002"
+    },
+    {
+      "asset_id": "roof_flat",
+      "job_id": "roof_flat_lod0_run001",
+      "status": "promoted",
+      "registered": true,
+      "valid": true,
+      "vertex_count": 24,
+      "promoted_path": "assets/models/modules/roof_flat_lod0_run001/model.glb",
+      "module_id": "roof_flat",
+      "batch_id": "kit_lod0_002"
+    },
+    {
+      "asset_id": "door_shop",
+      "job_id": "door_shop_lod0_run001",
+      "status": "promoted",
+      "registered": true,
+      "valid": true,
+      "vertex_count": 44,
+      "promoted_path": "assets/models/modules/door_shop_lod0_run001/model.glb",
+      "module_id": "door_shop",
+      "batch_id": "kit_lod0_002"
+    },
+    {
+      "asset_id": "win_double_1u",
+      "job_id": "win_double_1u_lod0_run001",
+      "status": "promoted",
+      "registered": true,
+      "valid": true,
+      "vertex_count": 48,
+      "promoted_path": "assets/models/modules/win_double_1u_lod0_run001/model.glb",
+      "module_id": "win_double_1u",
+      "batch_id": "kit_lod0_002"
+    }
+  ],
+  "promoted_count": 5,
+  "registered_count": 5,
+  "failed": [],
+  "module_index": "assets/configs/buildings/_module_index.ron",
+  "index_entry_count": 41,
+  "batch_registered_count": 5,
+  "next": "@designer-mcp kit_lod0_003 G0-G1"
+}

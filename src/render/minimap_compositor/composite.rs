@@ -612,7 +612,39 @@ mod tests {
             ..Default::default()
         };
         let mut operational = MinimapOperationalSnapshot::default();
-        crate::render::seed_minimap_m3_units_replay_witness(&mut operational);
+        use crate::strategic::{LogisticsEdge, LogisticsGraph, LogisticsNode, LogisticsNodeId};
+        use crate::terrain::ChunkCellKey;
+        let mut graph = LogisticsGraph::default();
+        graph.nodes = vec![
+            LogisticsNode {
+                id: LogisticsNodeId(0),
+                throughput: 1.0,
+                stockpile: 0.0,
+                anchor: Some(ChunkCellKey::new(IVec2::new(1, 2), 0)),
+            },
+            LogisticsNode {
+                id: LogisticsNodeId(1),
+                throughput: 1.0,
+                stockpile: 0.0,
+                anchor: Some(ChunkCellKey::new(IVec2::new(3, 2), 0)),
+            },
+        ];
+        graph.edges.push(LogisticsEdge {
+            from: LogisticsNodeId(0),
+            to: LogisticsNodeId(1),
+            transport_edge: Some(crate::systems::transport::TransportEdgeId(1)),
+            capacity: 1.0,
+            disruption: 0.0,
+            traversal_cost: 1.0,
+        });
+        crate::render::fill_minimap_unit_markers_from_logistics(
+            Some(&graph),
+            None,
+            None,
+            None,
+            [].into_iter(),
+            &mut operational.unit_markers,
+        );
         let (ok, _, construction_rows, ecology_rows, _, _, unit_rows, replay_on) =
             upload_minimap_heat_textures(
                 &mut images,

@@ -7,7 +7,20 @@
 | **Version** | `1.0.0` |
 | **Date** | 2026-05-26 |
 | **Coder lane** | **M3-UNITS-DEPTH-001** (coder B secondary; product depth) |
-| **Status** | queued (exec plan, not witness close) |
+| **Status** | **READY (planner finalized)** — active next-phase coder B plan |
+
+**Planner sign-off:** PASS (2026-05-27). Queue alignment: archived `PLAN-M3-DEPTH-EXEC-001`.
+
+---
+
+## Coder handoff (acceptance)
+
+| Field | Value |
+|:---|:---|
+| **Witness** | `debug_runs/minimap_compositor_live.json` |
+| **Unblocks** | `M3-UNITS-DEPTH-001` |
+| **Acceptance** | `ui_p3_m3_units_001_green=true` AND `unit_marker_rows>0` (real reader, not seed coords); `ui_p3_m3_replay_001_green=true` when `replay_scrub_enabled` and ring `len>=2` |
+| **Verify** | `cargo test -p proc_A_dine01 --lib ui_p3_m3_units minimap_compositor` |
 
 ---
 

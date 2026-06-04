@@ -1,0 +1,57 @@
+{
+  "program_id": "PLAN-TILE-FIX-AUTO-BUILD-001",
+  "task_id": "TILE-FIX-09-PHASE-C",
+  "gate": "G4-minimum-stills",
+  "green": false,
+  "updated": "2026-06-03T20:44:31.582287+00:00",
+  "matrix": {
+    "states": 3,
+    "facings": 8,
+    "cells": 24
+  },
+  "cli_steps": [
+    {
+      "step": 1,
+      "cli": "validate-report visual_config assets/configs/buildings/visual_config_warehouse_industrial_west_v2.json",
+      "status": "passed"
+    },
+    {
+      "step": 2,
+      "cli": "validate-report atlas_meta_v2 assets/staging/tiles/tile_warehouse_industrial_v2_minimum_g4/atlas_meta.json",
+      "status": "passed"
+    },
+    {
+      "step": 3,
+      "cli": "write-tile-fix-10-witness --building <building_definition>",
+      "status": "failed",
+      "written": "C:\\dev\\github\\Rust_engine_template_01\\debug_runs\\art_pipeline\\tile_fix_10_warehouse_industrial_live.json"
+    },
+    {
+      "step": 4,
+      "cli": "validate-report tile_promotion tools/mcp/schemas/examples/building_definition_warehouse_industrial_west_production_v1.json",
+      "status": "passed"
+    }
+  ],
+  "tile_fix_10": "C:\\dev\\github\\Rust_engine_template_01\\debug_runs\\art_pipeline\\tile_fix_10_warehouse_industrial_live.json",
+  "promotion_validation": {
+    "schema_version": 1,
+    "validator": "tile",
+    "status": "passed",
+    "compression_level": 3,
+    "summary": "tile_promotion: 0 error(s), shell_ok=True",
+    "error_count": 0,
+    "warning_count": 0,
+    "errors": [],
+    "known_fixes": [],
+    "raw_log_path": "",
+    "confidence": 1.0
+  },
+  "minimum_g4_ship": true,
+  "art_quality": "rejected_headless_procedural",
+  "proceed_ship": false,
+  "proceed_ship_basis": "blocked \u2014 schema may pass but art_quality != keyframe_manual (see slice v2)",
+  "_agent_meta": {
+    "agent": "designer-mcp",
+    "lane": "cli_validate_report"
+  }
+}

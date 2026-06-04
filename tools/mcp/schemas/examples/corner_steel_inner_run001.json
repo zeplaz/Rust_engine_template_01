@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "job_id": "corner_steel_inner_run001",
+  "spec_ref": "assets/staging/specs/corner_steel_inner.json",
+  "operation": "module_prop",
+  "params": {
+    "width_m": 2,
+    "height_m": 3,
+    "depth_m": 0.15,
+    "material_profile": "steel_corner_01",
+    "seed": 42
+  },
+  "output": {
+    "glb": "assets/staging/corner_steel_inner_run001/model.glb",
+    "thumbnail": "assets/staging/corner_steel_inner_run001/preview.png"
+  }
+}

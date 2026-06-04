@@ -1,0 +1,18 @@
+// Registered by rust_engine_mcp.tile_index — variant UVs in linked meta_json.
+// warehouse_industrial_west_v2 DE-INDEXED 2026-06-03 — human G4 rejected headless slabs (see mcp_pilot_grammar_001_rejected_live.json)
+(
+    schema_version: 1,
+    entries: [
+        (
+            atlas_id: "rowhouse_victorian_pilot_v1",
+            batch_id: "tile_rowhouse_victorian_pilot_v1",
+            assembly_id: "victorian_4x3_s42_a7cb",
+            tile_id: "rowhouse_victorian",
+            atlas_png: "assets/textures/tiles/rowhouse_victorian_pilot_v1_atlas.png",
+            meta_json: "assets/staging/tiles/tile_rowhouse_victorian_pilot_v1/atlas_meta.json",
+            development_tier: "lod0",
+            style_pack_id: "style_victorian",
+            ship_allowed: false,
+        ),
+    ],
+)

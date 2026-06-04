@@ -22,10 +22,13 @@ pub mod traits;
 pub mod utils;
 pub mod dev;
 pub mod construction;
+pub mod preview;
+pub mod infrastructure;
 pub mod economy;
 pub mod bevysubengines;
 pub mod idgen;
 pub mod scenario;
+pub mod substrate;
 
 // Re-export commonly used items
 pub use ai::construction::{ConstructionAiConfig, ConstructionAiOwner, ConstructionAiPlugin};

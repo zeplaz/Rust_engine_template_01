@@ -48,7 +48,9 @@ The following files are **rough concept notes** from earlier ideation. They **do
 
 ## 2. Target architecture (authoritative direction)
 
-**Invalid long-term (legacy):** private `Road { lanes, surface }`, empty `RoadSegment` / `RoadConnection` in `src/entities/structure/components.rs` — not spawned, not serialized.
+**Design digest (world layers + corridor model):** [`src/dev/world_layer_infrastructure_model_v1.md`](../../../src/dev/world_layer_infrastructure_model_v1.md) — tiles = terrain only; transport/utilities = graph networks.
+
+**Invalid long-term (legacy):** private `Road { lanes, surface }`, empty `RoadSegment` / `RoadConnection` in `src/entities/structure/components.rs` — not spawned, not serialized; **`TerrainFeatures.road` / `.track`** tile booleans.
 
 **Target (conceptual):**
 

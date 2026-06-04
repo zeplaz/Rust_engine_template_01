@@ -1,0 +1,63 @@
+batch_id: kit_lod0_002
+order_id: MCP-C0-003
+designer_mcp: sign-off
+development_tier: lod0
+proceed_promote: yes
+rules_check:
+  passed: true
+  blocked_by: []
+  batch_id: kit_lod0_002
+  seed: 42
+silhouette_read:
+  wall_wood_1u:
+    readable: yes
+    profile: flat
+    sim_read: "1u rural wood facade bay"
+    vertex_count: 24
+  wall_steel_1u:
+    readable: yes
+    profile: flat
+    sim_read: "1u industrial steel panel bay"
+    vertex_count: 24
+  roof_flat:
+    readable: yes
+    profile: flat
+    sim_read: "1u flat roof slab at roof_ridge — acceptable at lod0"
+    vertex_count: 24
+  door_shop:
+    readable: yes
+    profile: shop
+    sim_read: "2x2.5m shop frame opening — not solid cube"
+    vertex_count: 44
+  win_double_1u:
+    readable: yes
+    profile: frame_mullion
+    sim_read: "4m bay with mullion — double-pane readable at lod0"
+    vertex_count: 48
+modules:
+  - module_id: wall_wood_1u
+    job_id: wall_wood_1u_lod0_run001
+    valid: true
+    pbr_status: shipped
+  - module_id: wall_steel_1u
+    job_id: wall_steel_1u_lod0_run001
+    valid: true
+    pbr_status: deferred
+  - module_id: roof_flat
+    job_id: roof_flat_lod0_run001
+    valid: true
+    pbr_status: shipped
+  - module_id: door_shop
+    job_id: door_shop_lod0_run001
+    valid: true
+    pbr_status: deferred
+  - module_id: win_double_1u
+    job_id: win_double_1u_lod0_run001
+    valid: true
+    pbr_status: deferred
+replaces_smoke_rows:
+  - wall_wood_1u
+  - wall_steel_1u
+  - door_shop_1u
+  - window_double_1u
+next: "@coder MCP-E0-001 registry tier filter"

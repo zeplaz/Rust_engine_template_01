@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "batch_id": "tile_bunker_military_pilot_v1",
+  "tile_id": "bunker_military",
+  "atlas_id": "bunker_military_pilot_v1",
+  "atlas_png": "C:\\dev\\github\\Rust_engine_template_01\\assets\\textures\\tiles\\bunker_military_pilot_v1_atlas.png",
+  "columns": 2,
+  "rows": 1,
+  "tile_px": 128,
+  "variant_count": 2,
+  "tiles": [
+    {
+      "variant_key": "clean_day",
+      "png": "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_bunker_military_pilot_v1\\clean_day.png",
+      "grid": [
+        0,
+        0
+      ],
+      "uv": [
+        0.0,
+        0.0,
+        0.5,
+        1.0
+      ]
+    },
+    {
+      "variant_key": "damaged_night_on",
+      "png": "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_bunker_military_pilot_v1\\damaged_night_on.png",
+      "grid": [
+        1,
+        0
+      ],
+      "uv": [
+        0.5,
+        0.0,
+        0.5,
+        1.0
+      ]
+    }
+  ]
+}

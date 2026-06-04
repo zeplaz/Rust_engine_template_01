@@ -32,7 +32,7 @@ mod viewport;
 mod viewport_authority;
 mod viewport_suggestion;
 mod ui_wp_coder_a_witness;
-mod wave_p_live_proof;
+mod wave_p_witness;
 mod wave_p_readiness;
 mod window;
 mod cache;
@@ -421,7 +421,7 @@ impl Plugin for WorldPreviewPlugin {
             .init_resource::<WorldPreviewReady>()
             .init_resource::<WorldPreviewReadinessDiagnostics>()
             .init_resource::<PreviewRenderState>()
-            .init_resource::<wave_p_live_proof::WavePLiveProofState>()
+            .init_resource::<wave_p_witness::WavePLiveProofState>()
             .init_resource::<crate::gui::hud::ViewportRectSanity>()
             .configure_sets(
                 Update,
@@ -558,14 +558,18 @@ impl Plugin for WorldPreviewPlugin {
             )
             .add_systems(
                 Update,
-                wave_p_live_proof::write_wave_p_live_proof_system
+                wave_p_witness::write_wave_p_witness_system
                     .run_if(in_state(crate::engine::states::BaseState::Simulation)),
             );
     }
 }
 
 pub use ui_wp_coder_a_witness::refresh_coder_a_ui_wp_wave_p_witness;
-pub use wave_p_live_proof::{WAVE_P_LIVE_JSON, WavePLiveProofState};
+pub use wave_p_witness::{
+    build_d02_layout_witness, build_d04_layout_witness, build_d07_layout_witness,
+    build_ui_phase4_wp_tail_witness, build_wave_p_witness_payload, WAVE_P_LIVE_JSON,
+    WavePLiveProofState,
+};
 
 #[cfg(test)]
 mod tests {
@@ -667,7 +671,7 @@ mod tests {
     fn d02_map_dominance_hd_baseline_sheet_closed() {
         assert!(d02_layout_witness_hd_baseline_sheet_closed());
         assert!(d02_sidebar_max_width_px(D02_HD_BASELINE_W) <= 220.0);
-        let w = crate::gui::editor::world_preview::wave_p_live_proof::build_d02_layout_witness(
+        let w = crate::gui::editor::world_preview::wave_p_witness::build_d02_layout_witness(
             D02_HD_BASELINE_W,
             D02_HD_BASELINE_H,
             180.0,

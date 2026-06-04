@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "job_id": "tile_tile_rowhouse_victorian_production_v1_burning_06",
+  "operation": "tile_variant_bake",
+  "mode": "assembly",
+  "variant": {
+    "variant_key": "burning_06",
+    "state": "damaged",
+    "damage": 0.67,
+    "power": "on",
+    "fill": "half",
+    "lighting": "night_on",
+    "fire_frame": 6
+  },
+  "render": {
+    "method": "blender_keyframe_light_rig",
+    "isometric": true,
+    "seed": 42,
+    "tile_size_px": 128,
+    "light_blend": "utils/Light_keysshotsetup.blend"
+  },
+  "light_blend": "C:\\dev\\github\\Rust_engine_template_01\\utils\\Light_keysshotsetup.blend",
+  "output": {
+    "png": "assets/staging/tiles/tile_rowhouse_victorian_production_v1/burning_06.png"
+  },
+  "assembly_blend": "assets/staging/assemblies/victorian_4x3_s42_a7cb.blend"
+}

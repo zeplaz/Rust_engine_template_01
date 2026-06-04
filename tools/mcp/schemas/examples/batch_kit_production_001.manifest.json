@@ -1,0 +1,84 @@
+{
+  "schema_version": 1,
+  "batch_id": "kit_production_001",
+  "development_tier": "production",
+  "pilot_scope": "MCP-PROD-PILOT-ROWHOUSE-001",
+  "pilot_archetype": "rowhouse",
+  "pilot_style_pack_id": "style_victorian",
+  "plan_ref": "src/dev/mcp_fleet_production_pilot_rowhouse_v1.md",
+  "wave": "001",
+  "module_count": 5,
+  "modules": [
+    {
+      "module_id": "wall_brick_1u",
+      "style_pack_id": "style_victorian",
+      "material_id": "brick_red_01",
+      "profile": "brick",
+      "pbr_status": "shipped",
+      "development_tier": "production",
+      "assembly_slot": "wall_1u",
+      "asset_id": "wall_brick_1u",
+      "job_id": "wall_brick_1u_production_run001",
+      "status": "promoted"
+    },
+    {
+      "module_id": "corner_L",
+      "style_pack_id": "style_victorian",
+      "material_id": "brick_red_01",
+      "profile": "corner_l",
+      "pbr_status": "shipped",
+      "development_tier": "production",
+      "assembly_slot": "corner_outer",
+      "asset_id": "corner_L",
+      "job_id": "corner_L_production_run001",
+      "status": "promoted"
+    },
+    {
+      "module_id": "door_residential",
+      "style_pack_id": "style_victorian",
+      "material_id": "brick_red_01",
+      "profile": "residential",
+      "pbr_status": "shipped",
+      "development_tier": "production",
+      "assembly_slot": "door_default",
+      "asset_id": "door_residential",
+      "job_id": "door_residential_production_run001",
+      "status": "promoted"
+    },
+    {
+      "module_id": "roof_pitched_gable",
+      "style_pack_id": "style_victorian",
+      "material_id": "brick_red_01",
+      "profile": "pitched",
+      "pbr_status": "shipped",
+      "development_tier": "production",
+      "assembly_slot": "roof_default",
+      "asset_id": "roof_pitched_gable",
+      "job_id": "roof_pitched_gable_production_run001",
+      "status": "promoted"
+    },
+    {
+      "module_id": "prop_chimney",
+      "style_pack_id": "style_victorian",
+      "material_id": "brick_red_01",
+      "profile": "chimney",
+      "pbr_status": "shipped",
+      "development_tier": "production",
+      "assembly_slot": "prop_clutter",
+      "asset_id": "prop_chimney",
+      "job_id": "prop_chimney_production_run001",
+      "status": "promoted"
+    }
+  ],
+  "note": "Orchestrator slice: Victorian rowhouse only \u2014 not multi-style wall sweep. See mcp_fleet_production_pilot_rowhouse_v1.md",
+  "rules_applied": [
+    "no_ai_generated_images",
+    "deterministic_output",
+    "batch_processing",
+    "grid_alignment",
+    "canonical_module_ids_only",
+    "tier_production_pbr_shipped"
+  ],
+  "witness": "debug_runs/art_pipeline/kit_production_001_live.json",
+  "gate": "G5"
+}

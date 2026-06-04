@@ -1,0 +1,36 @@
+{
+  "batch_id": "kit_lod0_002",
+  "all_pass": true,
+  "modules": [
+    {
+      "module_id": "wall_wood_1u",
+      "status": "passed",
+      "vertex_count": 24,
+      "errors": []
+    },
+    {
+      "module_id": "wall_steel_1u",
+      "status": "passed",
+      "vertex_count": 24,
+      "errors": []
+    },
+    {
+      "module_id": "roof_flat",
+      "status": "passed",
+      "vertex_count": 24,
+      "errors": []
+    },
+    {
+      "module_id": "door_shop",
+      "status": "passed",
+      "vertex_count": 44,
+      "errors": []
+    },
+    {
+      "module_id": "win_double_1u",
+      "status": "passed",
+      "vertex_count": 48,
+      "errors": []
+    }
+  ]
+}

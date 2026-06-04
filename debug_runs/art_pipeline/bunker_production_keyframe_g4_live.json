@@ -1,0 +1,49 @@
+{
+  "program_id": "MCP-EXPORT-PILOT-KEYFRAMES-G4",
+  "pilot": "bunker_military",
+  "batch_id": "tile_bunker_military_production_v1",
+  "generated_at": "2026-06-03T03:17:46.730731+00:00",
+  "keyframe_stills_folder": "assets/staging/tiles/keyframe_stills/bunker_military",
+  "gates": {
+    "g4_0_matrix_and_spine": "pass",
+    "g4_1_source_tier_production": "pass",
+    "g4_2_reference_tags_present": "pass",
+    "g4_3_keyframe_minimum_stills_review": "pass",
+    "g4_4_full_matrix_keys_packed": "pass",
+    "g4_5_night_damaged_iso_readable_128px": "pass",
+    "g4_6_fire_frames_distinct": "pass",
+    "g4_7_no_smoke_greybox_modules": "pass",
+    "g4_8_proceed_ship": "pass"
+  },
+  "green": true,
+  "minimum_review": {
+    "clean_day": {
+      "path": "assets/staging/tiles/keyframe_stills/bunker_military/clean_day.png",
+      "exists": true,
+      "bytes": 13203,
+      "width": 128,
+      "height": 128,
+      "ok": true
+    },
+    "clean_night_on": {
+      "path": "assets/staging/tiles/keyframe_stills/bunker_military/clean_night_on.png",
+      "exists": true,
+      "bytes": 11600,
+      "width": 128,
+      "height": 128,
+      "ok": true
+    },
+    "damaged_night_on": {
+      "path": "assets/staging/tiles/keyframe_stills/bunker_military/damaged_night_on.png",
+      "exists": true,
+      "bytes": 11551,
+      "width": 128,
+      "height": 128,
+      "ok": true
+    }
+  },
+  "variant_count": 15,
+  "stills_ok_count": 15,
+  "lod0_ortho_atlas_g4": "rejected",
+  "bake_source": "keyframe_pack"
+}

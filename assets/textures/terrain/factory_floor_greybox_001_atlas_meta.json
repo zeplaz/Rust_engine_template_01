@@ -1,0 +1,97 @@
+{
+  "schema_version": 1,
+  "batch_id": "tile_factory_floor_greybox_001",
+  "tile_id": "factory_floor",
+  "atlas_id": "factory_floor_greybox_001",
+  "atlas_png": "C:\\dev\\github\\Rust_engine_template_01\\assets\\textures\\terrain\\factory_floor_greybox_001_atlas.png",
+  "columns": 4,
+  "rows": 2,
+  "tile_px": 128,
+  "variant_count": 6,
+  "tiles": [
+    {
+      "variant_key": "clean_d00_off_empty_day",
+      "png": "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_factory_floor_greybox_001\\clean_d00_off_empty_day.png",
+      "grid": [
+        0,
+        0
+      ],
+      "uv": [
+        0.0,
+        0.0,
+        0.25,
+        0.5
+      ]
+    },
+    {
+      "variant_key": "clean_d00_on_half_night_on",
+      "png": "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_factory_floor_greybox_001\\clean_d00_on_half_night_on.png",
+      "grid": [
+        1,
+        0
+      ],
+      "uv": [
+        0.25,
+        0.0,
+        0.25,
+        0.5
+      ]
+    },
+    {
+      "variant_key": "damaged_d45_off_empty_day",
+      "png": "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_factory_floor_greybox_001\\damaged_d45_off_empty_day.png",
+      "grid": [
+        2,
+        0
+      ],
+      "uv": [
+        0.5,
+        0.0,
+        0.25,
+        0.5
+      ]
+    },
+    {
+      "variant_key": "damaged_d45_on_quarter_night_on",
+      "png": "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_factory_floor_greybox_001\\damaged_d45_on_quarter_night_on.png",
+      "grid": [
+        3,
+        0
+      ],
+      "uv": [
+        0.75,
+        0.0,
+        0.25,
+        0.5
+      ]
+    },
+    {
+      "variant_key": "dirty_d15_partial_half_night_off",
+      "png": "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_factory_floor_greybox_001\\dirty_d15_partial_half_night_off.png",
+      "grid": [
+        0,
+        1
+      ],
+      "uv": [
+        0.0,
+        0.5,
+        0.25,
+        0.5
+      ]
+    },
+    {
+      "variant_key": "ruined_d85_off_empty_day",
+      "png": "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_factory_floor_greybox_001\\ruined_d85_off_empty_day.png",
+      "grid": [
+        1,
+        1
+      ],
+      "uv": [
+        0.25,
+        0.5,
+        0.25,
+        0.5
+      ]
+    }
+  ]
+}

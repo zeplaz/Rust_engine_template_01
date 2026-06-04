@@ -48,11 +48,11 @@
 ## Recommended lanes (priority)
 
 
-| Lane               | Owner            | Exit                                                                                       |
-| ------------------ | ---------------- | ------------------------------------------------------------------------------------------ |
-| **PERF-PLAY-001**  | Coder            | `--release` play path ≥30 fps; readiness log throttled; no per-frame stdout in green state |
-| **MAP-BLINK-001**  | Coder + debug    | Repro log + fix overlay hold / fire_inst stability (VR-05)                                 |
-| **MINIMAP-UX-001** | Designer + coder | Tray: layer toggles, zoom, follow mode, bookmark; spec in M3 depth plan                    |
+| Lane              | Owner              | Exit                                                                                       |                                                                         |     |     |
+| ----------------- | ------------------ | ------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------- | --- | --- |
+| **PERF-PLAY-001** | Coder              | `--release` play path ≥30 fps; readiness log throttled; no per-frame stdout in green state |                                                                         |     |     |
+| **MAP-BLINK-001** | Coder + debug      | **FIX LANDED** — [`map_blink_001_repro_v1.md`](map_blink_001_repro_v1.md) (PLAY-06d + warmup + projection lag hold) | Verify in `--release` play |     |     |
+| **MINIMAP-UX-001** | Designer + coder   | **SPEC PASS** — [`minimap_ux_v1.md`](minimap_ux_v1.md) (tray toggles, zoom, follow, bookmarks) | Coder polish open |     |     |
 
 
 ---
@@ -60,7 +60,8 @@
 ## Commands for next capture
 
 ```powershell
-$env:RUST_LOG='info'
+# PERF-PLAY-001: throttle targets — do not use bare `RUST_LOG=info` (enables stage5_live_todos spam with STAGE5_VERBOSE).
+$env:RUST_LOG='warn,stage5_readiness::live=info,proc_A_dine01=info'
 cargo run -p proc_A_dine01 --release
 # Or layout test (stays open):
 cargo run -p proc_A_dine01 --release -- --test frame
@@ -73,8 +74,6 @@ Paste stderr highlights (bootstrap, readiness, VT-5, overlay revision) under **L
 ## Logs
 
 *(paste terminal excerpts here)*
-
-
 
 phase_d_ok: true  [derived: !require_preview || preview_render_target_active]
 
@@ -3770,10 +3769,7 @@ MISSING_WIRING_FULL_APP: none
 
 2026-05-26T20:53:04.561073Z  INFO stall: STALL culprit=after_tile_storage_apply duration=812.5ms frame=1009.6ms
 
-
-
-
-read
+# read
 2026-05-27T03:24:28.724025Z  INFO visual_diag: VISUAL_DIAG window frame=24 periodic=false win_logical=(1280, 720) win_physical=(1280, 720) scale=1.0 app=1 base=1 flow=2 worldgen=3 readiness_profile=Stage5ReadinessProfile { require_vt4: true, require_vt5: true, require_preview: true, require_partial_metrics: true, require_world_frame: true, require_phase_f_proof: true, require_instanced_draw: true }
 2026-05-27T03:24:28.724024Z  INFO sim_view_sync: SIM_VIEW_SYNC frame=24 win_logical=(1280, 720) win_physical=(1280, 720) sim_valid=false sim_adequate=false sim_min=Vec2(0.0, 0.0) sim_max=Vec2(0.0, 0.0) measured_valid=false measured_wh=Vec2(0.0, 0.0) committed_wh=Vec2(0.0, 0.0) sim_wh=Vec2(0.0, 0.0) settle_streak=0 layout_settled=false sim_held=false last_commit="" frozen=false pending_wh=Vec2(0.0, 0.0) cam_hole=false render_hole=false cam_invalid_streak=24 cam_valid_streak=0 cam_scissor=None ortho_fixed_wh=(17, 9) map_view_px=(1280, 720) raster_rev=15 resolved_rev=43 app=1 base=1 flow=2 worldgen=3 cmd_shell=false overlay_tray=false transmission=false rect_sanity_issues=0 left_stack_collapsed=true map_cam_scale=Vec3(76.55589, 76.55589, 76.55589) minimap_visible=true
 2026-05-27T03:24:28.724435Z  INFO visual_diag: VISUAL_DIAG sim_viewport frame=24 sim_valid=false sim_adequate=false sim_min=Vec2(0.0, 0.0) sim_max=Vec2(0.0, 0.0) sim_wh=(0, 0) measured_valid=false measured_wh=(0, 0) committed_wh=(0, 0) sim_held=false settle_streak=0 layout_settled=false frozen=false last_commit="" pending_wh=(0, 0) pending_min=Vec2(0.0, 0.0) pending_max=Vec2(0.0, 0.0)
@@ -3845,9 +3841,8 @@ GpuIndirectDrawSpine: true
 WorldFireParticleDrawDispatch: true
 FireSimulationSnapshot: true
 MISSING_WIRING_FULL_APP: none
-================================================================
 
-2026-05-27T03:24:29.455302Z  INFO worldgen_chrome::trace: CHROME_STATE app=Res(State(WorldGen)) worldgen=Res(State(Ready)) base=Res(State(Editor)) flow=Res(State(PreviewReady)) latch_dismissed=false world_gen_visible=true preview_window_open=true lifecycle=GeneratingWorld last_dismiss="never"
+# 2026-05-27T03:24:29.455302Z  INFO worldgen_chrome::trace: CHROME_STATE app=Res(State(WorldGen)) worldgen=Res(State(Ready)) base=Res(State(Editor)) flow=Res(State(PreviewReady)) latch_dismissed=false world_gen_visible=true preview_window_open=true lifecycle=GeneratingWorld last_dismiss="never"
 2026-05-27T03:24:29.455317Z  INFO visual_diag: VISUAL_DIAG window frame=25 periodic=false win_logical=(1280, 720) win_physical=(1280, 720) scale=1.0 app=1 base=1 flow=2 worldgen=3 readiness_profile=Stage5ReadinessProfile { require_vt4: true, require_vt5: true, require_preview: true, require_partial_metrics: true, require_world_frame: true, require_phase_f_proof: true, require_instanced_draw: true }
 2026-05-27T03:24:29.455721Z  INFO visual_diag: VISUAL_DIAG sim_viewport frame=25 sim_valid=false sim_adequate=false sim_min=Vec2(0.0, 0.0) sim_max=Vec2(0.0, 0.0) sim_wh=(0, 0) measured_valid=false measured_wh=(0, 0) committed_wh=(0, 0) sim_held=false settle_streak=0 layout_settled=false frozen=false last_commit="" pending_wh=(0, 0) pending_min=Vec2(0.0, 0.0) pending_max=Vec2(0.0, 0.0)
 2026-05-27T03:24:29.455317Z  INFO sim_view_sync: SIM_VIEW_SYNC frame=25 win_logical=(1280, 720) win_physical=(1280, 720) sim_valid=false sim_adequate=false sim_min=Vec2(0.0, 0.0) sim_max=Vec2(0.0, 0.0) measured_valid=false measured_wh=Vec2(0.0, 0.0) committed_wh=Vec2(0.0, 0.0) sim_wh=Vec2(0.0, 0.0) settle_streak=0 layout_settled=false sim_held=false last_commit="" frozen=false pending_wh=Vec2(0.0, 0.0) cam_hole=false render_hole=false cam_invalid_streak=25 cam_valid_streak=0 cam_scissor=None ortho_fixed_wh=(17, 9) map_view_px=(1280, 720) raster_rev=15 resolved_rev=45 app=1 base=1 flow=2 worldgen=3 cmd_shell=false overlay_tray=false transmission=false rect_sanity_issues=0 left_stack_collapsed=true map_cam_scale=Vec3(76.55589, 76.55589, 76.55589) minimap_visible=true
@@ -3917,9 +3912,8 @@ GpuIndirectDrawSpine: true
 WorldFireParticleDrawDispatch: true
 FireSimulationSnapshot: true
 MISSING_WIRING_FULL_APP: none
-================================================================
 
-2026-05-27T03:24:30.442214Z  INFO visual_diag: VISUAL_DIAG window frame=26 periodic=false win_logical=(1280, 720) win_physical=(1280, 720) scale=1.0 app=1 base=1 flow=2 worldgen=3 readiness_profile=Stage5ReadinessProfile { require_vt4: true, require_vt5: true, require_preview: true, require_partial_metrics: true, require_world_frame: true, require_phase_f_proof: true, require_instanced_draw: true }
+# 2026-05-27T03:24:30.442214Z  INFO visual_diag: VISUAL_DIAG window frame=26 periodic=false win_logical=(1280, 720) win_physical=(1280, 720) scale=1.0 app=1 base=1 flow=2 worldgen=3 readiness_profile=Stage5ReadinessProfile { require_vt4: true, require_vt5: true, require_preview: true, require_partial_metrics: true, require_world_frame: true, require_phase_f_proof: true, require_instanced_draw: true }
 2026-05-27T03:24:30.442213Z  INFO sim_view_sync: SIM_VIEW_SYNC frame=26 win_logical=(1280, 720) win_physical=(1280, 720) sim_valid=false sim_adequate=false sim_min=Vec2(0.0, 0.0) sim_max=Vec2(0.0, 0.0) measured_valid=false measured_wh=Vec2(0.0, 0.0) committed_wh=Vec2(0.0, 0.0) sim_wh=Vec2(0.0, 0.0) settle_streak=0 layout_settled=false sim_held=false last_commit="" frozen=false pending_wh=Vec2(0.0, 0.0) cam_hole=false render_hole=false cam_invalid_streak=26 cam_valid_streak=0 cam_scissor=None ortho_fixed_wh=(17, 9) map_view_px=(1280, 720) raster_rev=15 resolved_rev=47 app=1 base=1 flow=2 worldgen=3 cmd_shell=false overlay_tray=false transmission=false rect_sanity_issues=0 left_stack_collapsed=true map_cam_scale=Vec3(76.55589, 76.55589, 76.55589) minimap_visible=true
 2026-05-27T03:24:30.442363Z  INFO visual_diag: VISUAL_DIAG sim_viewport frame=26 sim_valid=false sim_adequate=false sim_min=Vec2(0.0, 0.0) sim_max=Vec2(0.0, 0.0) sim_wh=(0, 0) measured_valid=false measured_wh=(0, 0) committed_wh=(0, 0) sim_held=false settle_streak=0 layout_settled=false frozen=false last_commit="" pending_wh=(0, 0) pending_min=Vec2(0.0, 0.0) pending_max=Vec2(0.0, 0.0)
 2026-05-27T03:24:30.442889Z  INFO visual_diag: VISUAL_DIAG camera frame=26 cam_desired_x=160.0 cam_desired_y=160.0 cam_zoom=76.55589294433594 latch_hole=false render_hole=false latch_invalid_streak=26 latch_valid_streak=0 cam_scissor=None ortho_fixed_w=17 ortho_fixed_h=9 map_view_px_w=1280 map_view_px_h=720 world_w=320 world_h=320
@@ -3990,9 +3984,8 @@ GpuIndirectDrawSpine: true
 WorldFireParticleDrawDispatch: true
 FireSimulationSnapshot: true
 MISSING_WIRING_FULL_APP: none
-================================================================
 
-2026-05-27T03:24:31.292841Z  INFO visual_diag: VISUAL_DIAG window frame=27 periodic=false win_logical=(1280, 720) win_physical=(1280, 720) scale=1.0 app=1 base=1 flow=2 worldgen=3 readiness_profile=Stage5ReadinessProfile { require_vt4: true, require_vt5: true, require_preview: true, require_partial_metrics: true, require_world_frame: true, require_phase_f_proof: true, require_instanced_draw: true }
+# 2026-05-27T03:24:31.292841Z  INFO visual_diag: VISUAL_DIAG window frame=27 periodic=false win_logical=(1280, 720) win_physical=(1280, 720) scale=1.0 app=1 base=1 flow=2 worldgen=3 readiness_profile=Stage5ReadinessProfile { require_vt4: true, require_vt5: true, require_preview: true, require_partial_metrics: true, require_world_frame: true, require_phase_f_proof: true, require_instanced_draw: true }
 2026-05-27T03:24:31.292841Z  INFO sim_view_sync: SIM_VIEW_SYNC frame=27 win_logical=(1280, 720) win_physical=(1280, 720) sim_valid=false sim_adequate=false sim_min=Vec2(0.0, 0.0) sim_max=Vec2(0.0, 0.0) measured_valid=false measured_wh=Vec2(0.0, 0.0) committed_wh=Vec2(0.0, 0.0) sim_wh=Vec2(0.0, 0.0) settle_streak=0 layout_settled=false sim_held=false last_commit="" frozen=false pending_wh=Vec2(0.0, 0.0) cam_hole=false render_hole=false cam_invalid_streak=27 cam_valid_streak=0 cam_scissor=None ortho_fixed_wh=(17, 9) map_view_px=(1280, 720) raster_rev=15 resolved_rev=49 app=1 base=1 flow=2 worldgen=3 cmd_shell=false overlay_tray=false transmission=false rect_sanity_issues=0 left_stack_collapsed=true map_cam_scale=Vec3(76.55589, 76.55589, 76.55589) minimap_visible=true
 2026-05-27T03:24:31.292993Z  INFO visual_diag: VISUAL_DIAG sim_viewport frame=27 sim_valid=false sim_adequate=false sim_min=Vec2(0.0, 0.0) sim_max=Vec2(0.0, 0.0) sim_wh=(0, 0) measured_valid=false measured_wh=(0, 0) committed_wh=(0, 0) sim_held=false settle_streak=0 layout_settled=false frozen=false last_commit="" pending_wh=(0, 0) pending_min=Vec2(0.0, 0.0) pending_max=Vec2(0.0, 0.0)
 2026-05-27T03:24:31.293521Z  INFO visual_diag: VISUAL_DIAG camera frame=27 cam_desired_x=160.0 cam_desired_y=160.0 cam_zoom=76.55589294433594 latch_hole=false render_hole=false latch_invalid_streak=27 latch_valid_streak=0 cam_scissor=None ortho_fixed_w=17 ortho_fixed_h=9 map_view_px_w=1280 map_view_px_h=720 world_w=320 world_h=320
@@ -4063,9 +4056,8 @@ GpuIndirectDrawSpine: true
 WorldFireParticleDrawDispatch: true
 FireSimulationSnapshot: true
 MISSING_WIRING_FULL_APP: none
-================================================================
 
-2026-05-27T03:24:32.174419Z  INFO stall: STALL last: 68.51ms
+# 2026-05-27T03:24:32.174419Z  INFO stall: STALL last: 68.51ms
 2026-05-27T03:24:32.174436Z  INFO visual_diag: VISUAL_DIAG window frame=28 periodic=false win_logical=(1280, 720) win_physical=(1280, 720) scale=1.0 app=1 base=1 flow=2 worldgen=3 readiness_profile=Stage5ReadinessProfile { require_vt4: true, require_vt5: true, require_preview: true, require_partial_metrics: true, require_world_frame: true, require_phase_f_proof: true, require_instanced_draw: true }
 2026-05-27T03:24:32.174436Z  INFO sim_view_sync: SIM_VIEW_SYNC frame=28 win_logical=(1280, 720) win_physical=(1280, 720) sim_valid=false sim_adequate=false sim_min=Vec2(0.0, 0.0) sim_max=Vec2(0.0, 0.0) measured_valid=false measured_wh=Vec2(0.0, 0.0) committed_wh=Vec2(0.0, 0.0) sim_wh=Vec2(0.0, 0.0) settle_streak=0 layout_settled=false sim_held=false last_commit="" frozen=false pending_wh=Vec2(0.0, 0.0) cam_hole=false render_hole=false cam_invalid_streak=28 cam_valid_streak=0 cam_scissor=None ortho_fixed_wh=(17, 9) map_view_px=(1280, 720) raster_rev=15 resolved_rev=51 app=1 base=1 flow=2 worldgen=3 cmd_shell=false overlay_tray=false transmission=false rect_sanity_issues=0 left_stack_collapsed=true map_cam_scale=Vec3(76.55589, 76.55589, 76.55589) minimap_visible=true
 2026-05-27T03:24:32.206351Z  INFO visual_diag: VISUAL_DIAG sim_viewport frame=28 sim_valid=false sim_adequate=false sim_min=Vec2(0.0, 0.0) sim_max=Vec2(0.0, 0.0) sim_wh=(0, 0) measured_valid=false measured_wh=(0, 0) committed_wh=(0, 0) sim_held=false settle_streak=0 layout_settled=false frozen=false last_commit="" pending_wh=(0, 0) pending_min=Vec2(0.0, 0.0) pending_max=Vec2(0.0, 0.0)
@@ -4134,9 +4126,8 @@ GpuIndirectDrawSpine: true
 WorldFireParticleDrawDispatch: true
 FireSimulationSnapshot: true
 MISSING_WIRING_FULL_APP: none
-================================================================
 
-2026-05-27T03:24:33.665976Z  INFO stage5_readiness::live: READINESS_FRAME_FENCE_OK eval_inv=30 frame_tick=30 passes=true
+# 2026-05-27T03:24:33.665976Z  INFO stage5_readiness::live: READINESS_FRAME_FENCE_OK eval_inv=30 frame_tick=30 passes=true
 2026-05-27T03:24:33.665990Z  INFO visual_diag: VISUAL_DIAG window frame=29 periodic=false win_logical=(1280, 720) win_physical=(1280, 720) scale=1.0 app=1 base=1 flow=2 worldgen=3 readiness_profile=Stage5ReadinessProfile { require_vt4: true, require_vt5: true, require_preview: true, require_partial_metrics: true, require_world_frame: true, require_phase_f_proof: true, require_instanced_draw: true }
 2026-05-27T03:24:33.665989Z  INFO sim_view_sync: SIM_VIEW_SYNC frame=29 win_logical=(1280, 720) win_physical=(1280, 720) sim_valid=false sim_adequate=false sim_min=Vec2(0.0, 0.0) sim_max=Vec2(0.0, 0.0) measured_valid=false measured_wh=Vec2(0.0, 0.0) committed_wh=Vec2(0.0, 0.0) sim_wh=Vec2(0.0, 0.0) settle_streak=0 layout_settled=false sim_held=false last_commit="" frozen=false pending_wh=Vec2(0.0, 0.0) cam_hole=false render_hole=false cam_invalid_streak=29 cam_valid_streak=0 cam_scissor=None ortho_fixed_wh=(17, 9) map_view_px=(1280, 720) raster_rev=15 resolved_rev=53 app=1 base=1 flow=2 worldgen=3 cmd_shell=false overlay_tray=false transmission=false rect_sanity_issues=0 left_stack_collapsed=true map_cam_scale=Vec3(76.55589, 76.55589, 76.55589) minimap_visible=true
 2026-05-27T03:24:33.666203Z  INFO visual_diag: VISUAL_DIAG sim_viewport frame=29 sim_valid=false sim_adequate=false sim_min=Vec2(0.0, 0.0) sim_max=Vec2(0.0, 0.0) sim_wh=(0, 0) measured_valid=false measured_wh=(0, 0) committed_wh=(0, 0) sim_held=false settle_streak=0 layout_settled=false frozen=false last_commit="" pending_wh=(0, 0) pending_min=Vec2(0.0, 0.0) pending_max=Vec2(0.0, 0.0)
@@ -4204,7 +4195,6 @@ GpuIndirectDrawSpine: true
 WorldFireParticleDrawDispatch: true
 FireSimulationSnapshot: true
 MISSING_WIRING_FULL_APP: none
-================================================================
 
 2026-05-27T03:24:34.431416Z  INFO visual_diag: VISUAL_DIAG window frame=30 periodic=false win_logical=(1280, 720) win_physical=(1280, 720) scale=1.0 app=1 base=1 flow=2 worldgen=3 readiness_profile=Stage5ReadinessProfile { require_vt4: true, require_vt5: true, require_preview: true, require_partial_metrics: true, require_world_frame: true, require_phase_f_proof: true, require_instanced_draw: true }
 2026-05-27T03:24:34.431417Z  INFO sim_view_sync: SIM_VIEW_SYNC frame=30 win_logical=(1280, 720) win_physical=(1280, 720) sim_valid=false sim_adequate=false sim_min=Vec2(0.0, 0.0) sim_max=Vec2(0.0, 0.0) measured_valid=false measured_wh=Vec2(0.0, 0.0) committed_wh=Vec2(0.0, 0.0) sim_wh=Vec2(0.0, 0.0) settle_streak=0 layout_settled=false sim_held=false last_commit="" frozen=false pending_wh=Vec2(0.0, 0.0) cam_hole=false render_hole=false cam_invalid_streak=30 cam_valid_streak=0 cam_scissor=None ortho_fixed_wh=(17, 9) map_view_px=(1280, 720) raster_rev=15 resolved_rev=55 app=1 base=1 flow=2 worldgen=3 cmd_shell=false overlay_tray=false transmission=false rect_sanity_issues=0 left_stack_collapsed=true map_cam_scale=Vec3(76.55589, 76.55589, 76.55589) minimap_visible=true

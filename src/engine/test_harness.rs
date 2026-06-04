@@ -74,6 +74,8 @@ pub struct TestWorldHarness {
     pub s7p_logistics_seed_ticks: u32,
     /// **UI-P3-M2-CODER-A**: construction + ecology minimap overlay witness seed.
     pub minimap_m2_overlay_seeded: bool,
+    /// Frames since `BaseState::Simulation` — spreads heavy seeds across ticks (VISUAL-STALL-SURFACE-001).
+    pub post_enter_sim_frame: u32,
 }
 
 impl Default for TestWorldHarness {
@@ -91,8 +93,21 @@ impl Default for TestWorldHarness {
             s7p_logistics_seed_phase: 0,
             s7p_logistics_seed_ticks: 0,
             minimap_m2_overlay_seeded: false,
+            post_enter_sim_frame: 0,
         }
     }
+}
+
+fn reset_post_enter_sim_frame_on_enter(mut harness: ResMut<TestWorldHarness>) {
+    harness.post_enter_sim_frame = 0;
+}
+
+fn advance_post_enter_sim_frame(mut harness: ResMut<TestWorldHarness>) {
+    harness.post_enter_sim_frame = harness.post_enter_sim_frame.saturating_add(1);
+}
+
+fn post_enter_sim_frame_at_least(n: u32) -> impl Fn(Res<TestWorldHarness>) -> bool + Clone {
+    move |harness: Res<TestWorldHarness>| harness.post_enter_sim_frame >= n
 }
 
 /// Road chain tiles for LOG-E01 / **S7P-LOG-001** (matches logistics live_proof harness).
@@ -125,18 +140,44 @@ pub fn arm_debug_quick_world_gen(
     }
 }
 
+/// Inactive harness resources for menu debug + optional CLI `--test` (DEHACK-ENG-001).
+pub struct TestHarnessStatePlugin;
+
+impl Plugin for TestHarnessStatePlugin {
+    fn build(&self, app: &mut App) {
+        app.init_resource::<TestWorldHarness>()
+            .init_resource::<DebugQuickWorldGenPending>();
+    }
+}
+
+/// Main-menu debug maneuver bootstrap only (preview → full → enter world).
+pub struct TestHarnessMenuPlugin;
+
+impl Plugin for TestHarnessMenuPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_systems(Update, debug_quick_world_bootstrap.after(UxBridgeSet));
+    }
+}
+
+/// CLI `--test` seeds, scene slabs, and proof wiring (not registered in default ship launch).
 pub struct TestHarnessPlugin;
 
 impl Plugin for TestHarnessPlugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<TestWorldHarness>()
-            .init_resource::<DebugQuickWorldGenPending>()
-            .add_systems(
+        app.add_systems(
                 Startup,
                 (
                     startup_seed_visual_logistics_when_cli_visual,
                     startup_seed_visual_minimap_m2_overlays_when_cli_visual,
                 ),
+            )
+            .add_systems(
+                OnEnter(BaseState::Simulation),
+                reset_post_enter_sim_frame_on_enter,
+            )
+            .add_systems(
+                Update,
+                advance_post_enter_sim_frame.run_if(in_state(BaseState::Simulation)),
             )
             .add_systems(
                 Update,
@@ -146,20 +187,41 @@ impl Plugin for TestHarnessPlugin {
                 Update,
                 spawn_test_scene_chunk_slabs_once
                     .before(materialize_chunks)
-                    .run_if(in_state(BaseState::Simulation)),
+                    .run_if(in_state(BaseState::Simulation))
+                    .run_if(post_enter_sim_frame_at_least(1)),
             )
             .add_systems(
                 Update,
                 (
                     apply_visual_logistics_proof_pending,
                     seed_visual_test_logistics_proof,
+                )
+                    .chain()
+                    .after(StrategicFieldPipeline::GraphSync)
+                    .run_if(in_state(BaseState::Simulation))
+                    .run_if(post_enter_sim_frame_at_least(3)),
+            )
+            .add_systems(
+                Update,
+                (
                     seed_visual_minimap_m2_overlay_proof,
                     refresh_visual_transport_nav_after_seed,
+                )
+                    .chain()
+                    .after(StrategicFieldPipeline::GraphSync)
+                    .run_if(in_state(BaseState::Simulation))
+                    .run_if(post_enter_sim_frame_at_least(2)),
+            )
+            .add_systems(
+                Update,
+                (
                     seed_visual_concrete_chain_e2e,
                     crate::economy::activation::fast_forward_portland_chain_sites_to_operational,
                 )
                     .chain()
-                    .after(StrategicFieldPipeline::GraphSync),
+                    .after(StrategicFieldPipeline::GraphSync)
+                    .run_if(in_state(BaseState::Simulation))
+                    .run_if(post_enter_sim_frame_at_least(4)),
             )
             .add_systems(
                 Update,
@@ -172,14 +234,11 @@ impl Plugin for TestHarnessPlugin {
             )
             .add_systems(
                 Update,
-                debug_quick_world_bootstrap.after(UxBridgeSet),
-            )
-            .add_systems(
-                Update,
                 apply_test_scene_defaults
                     .after(spawn_test_scene_chunk_slabs_once)
                     .after(ChunkEnvironmentSet::Fire)
-                    .run_if(in_state(BaseState::Simulation)),
+                    .run_if(in_state(BaseState::Simulation))
+                    .run_if(post_enter_sim_frame_at_least(2)),
             )
             .add_systems(
                 Update,
@@ -672,6 +731,12 @@ fn seed_test_logistics_visual_proof_into(
         solver.load[idx] = edge.capacity * 0.45;
         solver.capacity[idx] = edge.capacity;
     }
+    for (id, st) in fields.by_edge.iter_mut() {
+        let idx = id.0 as usize;
+        if idx < solver.capacity.len() && solver.capacity[idx] > 0.01 {
+            st.congestion = (solver.load[idx] / solver.capacity[idx]).clamp(0.08, 1.0);
+        }
+    }
 }
 
 /// LOG-A-04: publish `TransportNavExport` after visual transport hydrate (≤16 system params).
@@ -681,8 +746,8 @@ fn refresh_visual_transport_nav_after_seed(
     fields: Option<Res<TransportFieldStore>>,
     directory: Option<Res<TransportEdgeDirectory>>,
     weights: Option<Res<TransportCostWeights>>,
-    mut cache: Option<ResMut<TransportCostCache>>,
-    mut nav: Option<ResMut<TransportNavExport>>,
+    cache: Option<ResMut<TransportCostCache>>,
+    nav: Option<ResMut<TransportNavExport>>,
 ) {
     let Some(launch) = launch.as_ref() else {
         return;
@@ -1071,6 +1136,7 @@ fn spawn_s7p_aluminum_chain_site(
             archetype: SiteArchetype::Factory,
             layer: LayerType::Surface,
             catalog_id: Some(catalog_id.into()),
+            placement: None,
         },
         BuildingDefinitionRef {
             catalog_id: catalog_id.into(),
@@ -1259,7 +1325,7 @@ fn finalize_s7p_logistics_throughput_witness(
         return;
     };
 
-    crate::economy::logistics::patch_s7p_logistics_throughput_witness_for_play_proof(
+    crate::economy::logistics::align_logistics_throughput_witness_from_live_sim(
         witness,
         runtime,
         graph,
@@ -1274,11 +1340,17 @@ fn finalize_s7p_logistics_throughput_witness(
         board.as_mut(),
     );
     let board_open = board.open_count();
+    if diagnostics.routes_open == 0 && harness.s7p_logistics_seed_ticks < 160 {
+        return;
+    }
     if board_open > 0 && harness.s7p_logistics_seed_ticks < 160 {
         return;
     }
+    if diagnostics.routes_open == 0 {
+        return;
+    }
     if let Some(proof_state) = proof_state.as_mut() {
-        crate::economy::logistics::live_proof::request_logistics_throughput_live_proof_refresh(
+        crate::economy::logistics::witness_collectors::request_logistics_throughput_live_proof_refresh(
             proof_state,
         );
     }

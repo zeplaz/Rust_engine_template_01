@@ -3,12 +3,12 @@
 | Field | Value |
 |:---|:---|
 | **Queue ID** | **PLAN-DELIVERY-SIGNOFF-001** |
-| **Version** | `1.0.0` |
-| **Date** | 2026-05-26 |
+| **Version** | `1.1.0` |
+| **Date** | 2026-05-27 |
 | **Owner** | `@planner` |
 | **Status** | **SIGNED** |
 | **Wave 4 board** | [`planner_wave4_todos_v1.md`](planner_wave4_todos_v1.md) — **12/12** |
-| **Audit** | [`planner_status_audit_v7.md`](planner_status_audit_v7.md) |
+| **Audit** | [`planner_status_audit_v10.md`](planner_status_audit_v10.md) |
 | **Orchestrator** | [`orchestrator_signoff_snapshot_20260526_v1.md`](orchestrator_signoff_snapshot_20260526_v1.md) |
 | **Next plans** | [`planner_wave5_todos_v1.md`](planner_wave5_todos_v1.md) |
 
@@ -69,12 +69,21 @@ cargo test -p proc_A_dine01 --lib coder_a_wave3_closure coder_b_wave3_bundle_001
 | [`coder_a_wave3_closure_v1.rs`](coder_a_wave3_closure_v1.rs) | F7-A/B/C, VFX qualified, S7B M4 lib refresh, infra |
 | [`coder_b_wave3_bundle_proof.rs`](coder_b_wave3_bundle_proof.rs) | IND-E02, CONSTRUCTION-MV, REPLAY, PHASE-D, LOG-E01 lib |
 
-**Round 4:** **R4-PLAN-001/002 SIGNED** — impl blocked until `product_board_open`.  
-**Active coder queue:** **LOG-E01-VISUAL-CONFIRM-001** (operator).
+**Round 4 + parametric + M3/replay:** **CLOSED** per audit v9 — do not re-plan archived exec docs.
 
 ---
 
-## STALE vs CURRENT (2026-05-26)
+## Wave 6/7 — planner P1 prep (2026-05-27)
+
+| ID | plan_doc | P | C | Notes |
+|:---|:---|:---:|:---:|:---|
+| **PLAN-CONSTRUCTION-HYDRO-COUPLING-001** | [`plan_construction_hydro_coupling_001_v1.md`](plan_construction_hydro_coupling_001_v1.md) | ☑ | ◐ | B-H2 ready; witness field pending impl |
+| **PLAN-WSS-SLAB-PR-3-EXEC-001** | [`plan_wss_slab_pr3_exec_001_v1.md`](plan_wss_slab_pr3_exec_001_v1.md) | ☑ | ◐ | After PR-2 signed |
+| **PLAN-LEDGER-REFRESH-007** | [`planner_status_audit_v9.md`](planner_status_audit_v9.md) | ☑ | — | Fleet reconcile |
+
+---
+
+## STALE vs CURRENT (2026-05-27)
 
 | Witness | Field | Verdict | Action |
 |:---|:---|:---:|:---|
@@ -90,3 +99,4 @@ cargo test -p proc_A_dine01 --lib coder_a_wave3_closure coder_b_wave3_bundle_001
 | Version | Date | Notes |
 |:---|:---|:---|
 | v1.0.0 | 2026-05-26 | Post wave 4 delivery audit + wave 5 routing |
+| v1.1.0 | 2026-05-27 | Audit v9; P1 hydro + PR-3; R4/M3 closed |

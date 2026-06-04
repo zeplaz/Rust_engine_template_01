@@ -1,0 +1,58 @@
+{
+  "batch_id": "kit_lod0_003",
+  "all_pass": true,
+  "g1_spec": [
+    {
+      "module_id": "wall_concrete_2u",
+      "status": "passed",
+      "errors": []
+    },
+    {
+      "module_id": "roof_sawtooth",
+      "status": "passed",
+      "errors": []
+    },
+    {
+      "module_id": "door_warehouse",
+      "status": "passed",
+      "errors": []
+    },
+    {
+      "module_id": "win_industrial_3u",
+      "status": "passed",
+      "errors": []
+    },
+    {
+      "module_id": "prop_vent",
+      "status": "passed",
+      "errors": []
+    }
+  ],
+  "g1_job": [
+    {
+      "module_id": "wall_concrete_2u",
+      "status": "passed",
+      "errors": []
+    },
+    {
+      "module_id": "roof_sawtooth",
+      "status": "passed",
+      "errors": []
+    },
+    {
+      "module_id": "door_warehouse",
+      "status": "passed",
+      "errors": []
+    },
+    {
+      "module_id": "win_industrial_3u",
+      "status": "passed",
+      "errors": []
+    },
+    {
+      "module_id": "prop_vent",
+      "status": "passed",
+      "errors": []
+    }
+  ]
+}

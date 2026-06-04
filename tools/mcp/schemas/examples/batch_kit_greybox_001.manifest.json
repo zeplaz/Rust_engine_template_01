@@ -1,0 +1,85 @@
+{
+  "schema_version": 1,
+  "batch_id": "kit_greybox_001",
+  "description": "First greybox module batch — designer-mcp AssetSpecs + geometry jobs (wave 1 complete)",
+  "plan_ref": "src/dev/plan_mcp_pipeline_recovery_and_agent_fleet_v1.md",
+  "rules_applied": [
+    "no_ai_generated_images",
+    "deterministic_output",
+    "batch_processing",
+    "grid_alignment"
+  ],
+  "witness": "debug_runs/art_pipeline/kit_greybox_001_live.json",
+  "signoff": "debug_runs/art_pipeline/kit_greybox_001_signoff.yaml",
+  "modules": [
+    {
+      "asset_id": "wall_brick_1u",
+      "job_id": "wall_brick_1u_example",
+      "job_example": "tools/mcp/schemas/examples/wall_job.example.json",
+      "spec_example": "assets/staging/specs/wall_brick_1u.example.json",
+      "status": "example_shipped"
+    },
+    {
+      "asset_id": "wall_concrete_2u",
+      "job_id": "wall_concrete_2u_run001",
+      "archetype": "module_wall",
+      "status": "promoted"
+    },
+    {
+      "asset_id": "roof_flat_2u",
+      "job_id": "roof_flat_2u_run001",
+      "archetype": "module_roof",
+      "status": "promoted"
+    },
+    {
+      "asset_id": "door_industrial_1u",
+      "job_id": "door_industrial_1u_run001",
+      "archetype": "module_door",
+      "status": "promoted"
+    },
+    {
+      "asset_id": "wall_wood_1u",
+      "job_id": "wall_wood_1u_run001",
+      "archetype": "module_wall",
+      "status": "promoted"
+    },
+    {
+      "asset_id": "wall_steel_1u",
+      "job_id": "wall_steel_1u_run001",
+      "archetype": "module_wall",
+      "status": "promoted"
+    },
+    {
+      "asset_id": "wall_glass_1u",
+      "job_id": "wall_glass_1u_run001",
+      "archetype": "module_wall",
+      "status": "promoted"
+    },
+    {
+      "asset_id": "roof_pitched_2u",
+      "job_id": "roof_pitched_2u_run001",
+      "archetype": "module_roof",
+      "status": "promoted"
+    },
+    {
+      "asset_id": "door_warehouse_2u",
+      "job_id": "door_warehouse_2u_run001",
+      "archetype": "module_door",
+      "status": "promoted"
+    },
+    {
+      "asset_id": "door_shop_1u",
+      "job_id": "door_shop_1u_run001",
+      "archetype": "module_door",
+      "status": "promoted"
+    },
+    {
+      "asset_id": "roof_industrial_shed_2u",
+      "job_id": "roof_industrial_shed_2u_run001",
+      "archetype": "module_roof",
+      "status": "promoted"
+    }
+  ],
+  "next_agent": "@coder-mcp",
+  "gate": "G4"
+}

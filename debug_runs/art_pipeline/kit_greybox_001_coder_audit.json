@@ -1,0 +1,87 @@
+{
+  "batch_id": "kit_greybox_001",
+  "auditor": "coder-mcp",
+  "proceed": true,
+  "asset_id_job_id_drift": "confirmed",
+  "greybox_vertex_note": "24 vertices per module = single axis-aligned box; acceptable for kit_greybox_001 LOD0",
+  "validate_glb_results": [
+    {
+      "job_id": "wall_concrete_2u_run001",
+      "valid": true,
+      "vertex_count": 24,
+      "issues": []
+    },
+    {
+      "job_id": "roof_flat_2u_run001",
+      "valid": true,
+      "vertex_count": 24,
+      "issues": []
+    },
+    {
+      "job_id": "door_industrial_1u_run001",
+      "valid": true,
+      "vertex_count": 24,
+      "issues": []
+    },
+    {
+      "job_id": "wall_wood_1u_run001",
+      "valid": true,
+      "vertex_count": 24,
+      "issues": []
+    },
+    {
+      "job_id": "wall_steel_1u_run001",
+      "valid": true,
+      "vertex_count": 24,
+      "issues": []
+    },
+    {
+      "job_id": "wall_glass_1u_run001",
+      "valid": true,
+      "vertex_count": 24,
+      "issues": []
+    },
+    {
+      "job_id": "roof_pitched_2u_run001",
+      "valid": true,
+      "vertex_count": 24,
+      "issues": []
+    },
+    {
+      "job_id": "door_warehouse_2u_run001",
+      "valid": true,
+      "vertex_count": 24,
+      "issues": []
+    },
+    {
+      "job_id": "door_shop_1u_run001",
+      "valid": true,
+      "vertex_count": 24,
+      "issues": []
+    },
+    {
+      "job_id": "roof_industrial_shed_2u_run001",
+      "valid": true,
+      "vertex_count": 24,
+      "issues": []
+    }
+  ],
+  "grid_exceptions": [
+    {
+      "asset_id": "door_shop_1u",
+      "job_id": "door_shop_1u_run001",
+      "width_m": 2.0,
+      "grid_units": [
+        1,
+        1
+      ],
+      "verdict": "documented_exception"
+    }
+  ],
+  "batch_script_fix": "tools/mcp/scripts/kit_greybox_001_batch.py targets assets/staging/specs/",
+  "g5": {
+    "status": "pass",
+    "index": "assets/configs/buildings/_module_index.ron",
+    "json_mirror": "assets/configs/buildings/_module_index.json"
+  }
+}

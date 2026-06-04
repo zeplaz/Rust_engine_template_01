@@ -1,0 +1,31 @@
+proceed: yes
+asset_id_job_id_drift: confirmed
+issues:
+  - severity: info
+    path: assets/models/modules/*
+    finding: Promoted folders use job_id (*_run001); catalog module_id lives in *.module.json sidecar — index must map both.
+    fix: G5 library.register_module writes module_id + job_id + glb per entry (implemented).
+  - severity: info
+    path: assets/models/modules/*/model.glb
+    finding: All kit_greybox_001 greybox modules report 24 vertices (single cube primitive) — acceptable for LOD0 greybox.
+    fix: Documented in kit_greybox_001_coder_audit.json; PG-2 may increase verts for window frame+glass after re-bake.
+  - severity: warn
+    path: assets/staging/specs/door_shop_1u.json
+    finding: door_shop_1u mesh is 2m wide while grid_units remain [1,1] — sub-1u width greybox exception.
+    fix: Documented exception; designer sign-off notes retained; no auto-reject at G5.
+  - severity: fix
+    path: tools/mcp/schemas/examples/_kit_greybox_001_batch.py
+    finding: Batch helper wrote specs to examples/specs/ instead of assets/staging/specs/.
+    fix: Moved to tools/mcp/scripts/kit_greybox_001_batch.py with correct paths; removed duplicate.
+  - severity: fix
+    path: tools/mcp/schemas/geometry_job_v1.schema.json
+    finding: module_window / module_prop listed in enum before bpy ops matched spec (wave 2 now shipped).
+    fix: bpy ops implemented; schema documents seed under params.
+grid_violations:
+  - asset_id: door_shop_1u
+    note: 2m width, grid_units [1,1] — signed greybox exception
+schema_impl_gaps:
+  - gap: tile.generate execution
+    status: PLANNED — draft only per session rules
+  - gap: art_validator Rust crate
+    status: DEFER stretch G1

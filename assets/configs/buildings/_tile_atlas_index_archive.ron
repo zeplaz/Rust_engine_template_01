@@ -1,0 +1,214 @@
+// Retired tile atlases — NOT loaded by TileAtlasRegistry at runtime (archive registry only).
+
+// TILE-FIX-001: greybox production v1 → assets/archive/greybox_tile_production_v1_frozen_2026-06/
+
+// Lod0 pilots → assets/archive/lod0_tile_pilots_2026-06/
+
+(
+
+    schema_version: 1,
+
+    entries: [
+
+        (
+
+            atlas_id: "bunker_military_pilot_v1",
+
+            batch_id: "tile_bunker_military_pilot_v1",
+
+            assembly_id: "military_6x3_s46_fbad",
+
+            tile_id: "bunker_military",
+
+            atlas_png: "assets/archive/lod0_tile_pilots_2026-06/bunker_military_pilot_v1_atlas.png",
+
+            meta_json: "assets/staging/tiles/tile_bunker_military_pilot_v1/atlas_meta.json",
+
+            development_tier: "lod0",
+
+            style_pack_id: "style_military",
+
+            ship_allowed: false,
+
+        ),
+
+        (
+
+            atlas_id: "rowhouse_victorian_pilot_v1",
+
+            batch_id: "tile_rowhouse_victorian_pilot_v1",
+
+            assembly_id: "victorian_4x3_s42_a7cb",
+
+            tile_id: "rowhouse_victorian",
+
+            atlas_png: "assets/archive/lod0_tile_pilots_2026-06/rowhouse_victorian_pilot_v1_atlas.png",
+
+            meta_json: "assets/staging/tiles/tile_rowhouse_victorian_pilot_v1/atlas_meta.json",
+
+            development_tier: "lod0",
+
+            style_pack_id: "style_victorian",
+
+            ship_allowed: false,
+
+        ),
+
+        (
+
+            atlas_id: "shopfront_colonial_pilot_v1",
+
+            batch_id: "tile_shopfront_colonial_pilot_v1",
+
+            assembly_id: "colonial_3x3_s44_cf75",
+
+            tile_id: "shopfront_colonial",
+
+            atlas_png: "assets/archive/lod0_tile_pilots_2026-06/shopfront_colonial_pilot_v1_atlas.png",
+
+            meta_json: "assets/staging/tiles/tile_shopfront_colonial_pilot_v1/atlas_meta.json",
+
+            development_tier: "lod0",
+
+            style_pack_id: "style_colonial",
+
+            ship_allowed: false,
+
+        ),
+
+        (
+
+            atlas_id: "warehouse_industrial_west_pilot_v1",
+
+            batch_id: "tile_warehouse_industrial_west_pilot_v1",
+
+            assembly_id: "industrial_west_4x2_s43_a879",
+
+            tile_id: "warehouse_industrial",
+
+            atlas_png: "assets/archive/lod0_tile_pilots_2026-06/warehouse_industrial_west_pilot_v1_atlas.png",
+
+            meta_json: "assets/staging/tiles/tile_warehouse_industrial_west_pilot_v1/atlas_meta.json",
+
+            development_tier: "lod0",
+
+            style_pack_id: "style_industrial_west",
+
+            ship_allowed: false,
+
+        ),
+
+        (
+
+            atlas_id: "bunker_military_production_v1",
+
+            batch_id: "tile_bunker_military_production_v1",
+
+            assembly_id: "military_6x3_s46_fbad",
+
+            tile_id: "bunker_military",
+
+            atlas_png: "assets/archive/greybox_tile_production_v1_frozen_2026-06/atlases/bunker_military_production_v1_atlas.png",
+
+            meta_json: "assets/archive/greybox_tile_production_v1_frozen_2026-06/staging/tile_bunker_military_production_v1/atlas_meta.json",
+
+            development_tier: "greybox_frozen_v1",
+
+            style_pack_id: "style_military",
+
+            ship_allowed: false,
+
+        ),
+
+        (
+
+            atlas_id: "missile_silo_military_production_v1",
+
+            batch_id: "tile_missile_silo_military_production_v1",
+
+            assembly_id: "missile_silo_6x3_s46_msl1",
+
+            tile_id: "missile_silo_military",
+
+            atlas_png: "assets/archive/greybox_tile_production_v1_frozen_2026-06/atlases/missile_silo_military_production_v1_atlas.png",
+
+            meta_json: "assets/archive/greybox_tile_production_v1_frozen_2026-06/staging/tile_missile_silo_military_production_v1/atlas_meta.json",
+
+            development_tier: "greybox_frozen_v1",
+
+            style_pack_id: "style_military",
+
+            ship_allowed: false,
+
+        ),
+
+        (
+
+            atlas_id: "rowhouse_victorian_production_v1",
+
+            batch_id: "tile_rowhouse_victorian_production_v1",
+
+            assembly_id: "victorian_4x3_s42_a7cb",
+
+            tile_id: "rowhouse_victorian",
+
+            atlas_png: "assets/archive/greybox_tile_production_v1_frozen_2026-06/atlases/rowhouse_victorian_production_v1_atlas.png",
+
+            meta_json: "assets/archive/greybox_tile_production_v1_frozen_2026-06/staging/tile_rowhouse_victorian_production_v1/atlas_meta.json",
+
+            development_tier: "greybox_frozen_v1",
+
+            style_pack_id: "style_victorian",
+
+            ship_allowed: false,
+
+        ),
+
+        (
+
+            atlas_id: "shopfront_colonial_production_v1",
+
+            batch_id: "tile_shopfront_colonial_production_v1",
+
+            assembly_id: "colonial_3x3_s44_cf75",
+
+            tile_id: "shopfront_colonial",
+
+            atlas_png: "assets/archive/greybox_tile_production_v1_frozen_2026-06/atlases/shopfront_colonial_production_v1_atlas.png",
+
+            meta_json: "assets/archive/greybox_tile_production_v1_frozen_2026-06/staging/tile_shopfront_colonial_production_v1/atlas_meta.json",
+
+            development_tier: "greybox_frozen_v1",
+
+            style_pack_id: "style_colonial",
+
+            ship_allowed: false,
+
+        ),
+
+        (
+
+            atlas_id: "warehouse_industrial_west_production_v1",
+
+            batch_id: "tile_warehouse_industrial_west_production_v1",
+
+            assembly_id: "industrial_west_4x2_s43_a879",
+
+            tile_id: "warehouse_industrial",
+
+            atlas_png: "assets/archive/greybox_tile_production_v1_frozen_2026-06/atlases/warehouse_industrial_west_production_v1_atlas.png",
+
+            meta_json: "assets/archive/greybox_tile_production_v1_frozen_2026-06/staging/tile_warehouse_industrial_west_production_v1/atlas_meta.json",
+
+            development_tier: "greybox_frozen_v1",
+
+            style_pack_id: "style_industrial_west",
+
+            ship_allowed: false,
+
+        ),
+
+    ],
+
+)
+

@@ -21,10 +21,9 @@ fn read_json(rel: &str) -> Value {
 #[cfg(test)]
 #[must_use]
 pub fn refresh_s7p_grid_ux_and_construction_mv_witnesses() -> bool {
-    assert!(
-        crate::economy::activation::refresh_ind_e02_default_live_witness(),
-        "IND-E02 seeds grid overload cluster"
-    );
+    let ind_e02 = crate::economy::activation::refresh_ind_e02_default_live_witness()
+        || crate::economy::activation::refresh_ind_e02_default_play_002_live_witness();
+    assert!(ind_e02, "IND-E02 seeds grid overload cluster");
     assert!(
         crate::construction::refresh_construction_mv_001_live_witness(),
         "CONSTRUCTION-MV-001 sim writer"

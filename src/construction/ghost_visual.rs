@@ -36,3 +36,21 @@ pub fn footprint_risky_color() -> egui::Color32 {
 pub fn footprint_invalid_color() -> egui::Color32 {
     egui::Color32::from_rgba_unmultiplied(180, 48, 48, 240)
 }
+
+/// R4 corridor edge — planned (`#E8B040` @ 180/255).
+#[must_use]
+pub fn corridor_planned_color() -> egui::Color32 {
+    egui::Color32::from_rgba_unmultiplied(232, 176, 64, 180)
+}
+
+/// R4 corridor edge — in progress (`#50A0E8` @ 200/255).
+#[must_use]
+pub fn corridor_in_progress_color() -> egui::Color32 {
+    egui::Color32::from_rgba_unmultiplied(80, 160, 232, 200)
+}
+
+#[must_use]
+pub fn corridor_phase_tokens_wired_green() -> bool {
+    corridor_planned_color() == egui::Color32::from_rgba_unmultiplied(232, 176, 64, 180)
+        && corridor_in_progress_color() == egui::Color32::from_rgba_unmultiplied(80, 160, 232, 200)
+}

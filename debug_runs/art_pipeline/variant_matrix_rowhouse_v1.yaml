@@ -1,0 +1,129 @@
+# variant_matrix_rowhouse_v1.yaml — MCP-PT-1-002
+program_id: PLAN-PROC-TILE-PROD-001
+task_id: MCP-PT-1-002
+archetype: rowhouse
+usage_bias: [residential, rowhouse, multi_floor]
+primary_style_pack: style_victorian
+production_bar: src/dev/design_procedural_tile_production_bar_v1.md
+catalog: assets/configs/buildings/_variant_catalog.ron
+
+pilot:
+  lod0_batch_id: tile_rowhouse_victorian_pilot_v1
+  production_batch_id: tile_rowhouse_victorian_production_v1
+  footprint: { width: 4, depth: 3, floors: 2 }
+  assembly_id_lod0: victorian_4x3_s42_a7cb
+  tile_id: rowhouse_victorian
+
+reference_tags_policy:
+  required_on_production_snapshot: true
+  min_tags: 1
+  format: "ref:<source>:<id>"
+
+variant_keys:
+  clean_day:
+    required: true
+    group: operational
+    sim_resolution: [operational, day, damage_low, power_any]
+  clean_night_off:
+    required: true
+    group: operational
+    sim_resolution: [operational, night, power_off]
+  clean_night_on:
+    required: true
+    group: operational
+    sim_resolution: [operational, night, power_on]
+  damaged_day:
+    required: true
+    group: damage
+    sim_resolution: [damage_mid, day]
+  damaged_night_on:
+    required: true
+    group: damage
+    sim_resolution: [damage_mid, night, power_on]
+  under_construction_01:
+    required: true
+    group: construction
+    sim_resolution: [planning, in_progress_early]
+  under_construction_02:
+    required: false
+    group: construction
+  abandoned:
+    required: false
+    group: lifecycle
+  ruined:
+    required: false
+    group: lifecycle
+  burning_00:
+    required: true
+    group: fire
+    frame_index: 0
+  burning_01: { required: true, group: fire, frame_index: 1 }
+  burning_02: { required: true, group: fire, frame_index: 2 }
+  burning_03: { required: true, group: fire, frame_index: 3 }
+  burning_04: { required: true, group: fire, frame_index: 4 }
+  burning_05: { required: true, group: fire, frame_index: 5 }
+  burning_06: { required: true, group: fire, frame_index: 6 }
+  burning_07: { required: true, group: fire, frame_index: 7 }
+
+required_key_count: 14  # 6 operational/construction + 8 fire
+minimum_pt2_bake: 6      # TILE-PROD-001 before fire wave
+g4_signoff: debug_runs/art_pipeline/rowhouse_victorian_production_signoff.yaml
+
+bake_spine:
+  design_ref: src/dev/design_tile_bake_spine_convergence_v1.md
+  ship_bake_source: keyframe_pack
+  ci_bake_source: smoke_ortho_headless
+  lod0_pilot_atlas_ship_allowed: false
+  light_blend: utils/Light_keysshotsetup.blend
+  keyframe_tool: utils/keyframe_render.py
+  pack_cli: "python -m rust_engine_mcp.cli tile-atlas-pack <folder> -pk"
+
+keyframe_stills:
+  export_folder: assets/staging/tiles/keyframe_stills/rowhouse_victorian/
+  naming: "{variant_key}.png"
+  g4_review_mode: keyframe_stills  # not lod0 ortho atlas
+  g4_minimum_review_keys:
+    - clean_day
+    - clean_night_on
+    - damaged_night_on
+  full_matrix_keys: 14
+  lod0_pilot_batch: tile_rowhouse_victorian_pilot_v1
+  lod0_pilot_g4_valid: false
+
+style_packs:
+  style_victorian:
+    applicable: true
+    role: primary
+    district_one_liner: "Brick rowhouse with chimney and pitched roof"
+    reference_tag_hints: ["ref:survey:rowhouse-victorian-pilot", "ref:osm:building=house"]
+    roof_slot: roof_pitched_gable
+    prop_clutter: prop_chimney
+  style_colonial:
+    applicable: true
+    role: alternate
+    district_one_liner: "Colonial brick shopfront with arched windows"
+    reference_tag_hints: ["ref:survey:colonial-rowhouse-adapt"]
+    notes: "Same rowhouse footprint; door_civic + win_arched_1u swap"
+  style_rural:
+    applicable: true
+    role: alternate
+    district_one_liner: "Wood-clad rural duplex with hip roof"
+    reference_tag_hints: ["ref:survey:rural-rowhouse"]
+    roof_slot: roof_pitched_hip
+  style_modern:
+    applicable: false
+    reason: "Curtain wall grammar — use shopfront archetype for glass-heavy facades"
+  style_industrial_west:
+    applicable: false
+    reason: "Sawtooth industrial grammar — use warehouse archetype"
+  style_industrial_soviet:
+    applicable: false
+    reason: "Panel factory grammar — use warehouse archetype"
+  style_military:
+    applicable: false
+    reason: "Bunker grammar — use bunker archetype"
+
+g0_rules:
+  reference_tags_required: true
+  source_tier_ship: production
+  reject_lod0_when_ship: true

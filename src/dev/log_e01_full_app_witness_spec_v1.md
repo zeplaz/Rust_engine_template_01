@@ -39,6 +39,8 @@
 | File | Field | Green when |
 |:---|:---|:---|
 | `stage5_full_app_live.json` | `projection_graph.logistics_active_rows` | **> 0** after visual/harness refresh |
+| `stage5_full_app_live.json` | `log_e01_visual_confirm_001.log_e01_fixture_green` | `true` on fixture (`capture_lane: "lib_fixture"`) |
+| `stage5_full_app_live.json` | `log_e01_visual_confirm_001.full_visual_confirm` | `true` only on visual run (`capture_lane: "visual_run"`) |
 | `stage5_full_app_live.json` | `readiness.passes` | `true` (independent — spine may pass with STALE log_rows) |
 | `stage5_full_app_live.json` | `build_signature` | contains `log_rows=N` with **N > 0** when logistics lane exercised |
 | `logistics_throughput_live.json` | `s7p_log_001_green` / `throughput_green` | play path — **not** merged into stage5 JSON |
@@ -51,6 +53,7 @@
 | Observation | Verdict | Action |
 |:---|:---|:---|
 | `logistics_active_rows: 0` but `readiness.passes: true` | **STALE** | Operator: `--test visual` or harness test |
+| `log_e01_fixture_green: true` and `full_visual_confirm: false` | **Fixture-only** | Do not treat as operator visual closure |
 | `logistics_active_rows: 0` but `minimap_compositor_live.json` `logistics_rows: 2` | **STALE** stage5 only | Do **not** fail UI-OH / M2 closure |
 | Lib seed tests pass, disk old timestamp | **STALE** | Re-run witness writer |
 | `logistics_active_rows > 0` after refresh | **CURRENT** | Close LOG-E01 operator row |

@@ -1,0 +1,12 @@
+{
+  "phase": "B",
+  "plan": "PLAN-MODULE-KIT-PRODUCTION-001",
+  "status": "pass",
+  "schema": {
+    "asset_spec_v1": ["development_tier", "pbr_status", "batch_id", "module_id_alias_of"],
+    "geometry_job_v1": ["development_tier", "batch_id", "params.profile"]
+  },
+  "index_fields": ["development_tier", "pbr_status", "stylepack_visible"],
+  "tier_rules": ["TIER-001", "TIER-002", "TIER-003", "TIER-004", "TIER-005", "TIER-006"],
+  "index_path": "assets/configs/buildings/_module_index.ron"
+}

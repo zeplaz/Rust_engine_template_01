@@ -1,0 +1,51 @@
+{
+  "program_id": "PLAN-PROC-TILE-PROD-001",
+  "task_id": "MCP-PT-1-001",
+  "gate": "PT-1",
+  "green": true,
+  "updated": "2026-06-03",
+  "_agent_meta": {
+    "agent": "designer-mcp",
+    "orders": "src/dev/mcp_fleet_procedural_tiles_production_orders_v1.md"
+  },
+  "checklist": {
+    "PT-1-001_production_bar": {
+      "status": "pass",
+      "deliverable": "src/dev/design_procedural_tile_production_bar_v1.md"
+    },
+    "PT-1-002_variant_matrices": {
+      "status": "pass",
+      "archetypes": 4,
+      "style_packs_per_matrix": 7,
+      "keyframe_spine_wired": true,
+      "witness": "debug_runs/art_pipeline/pt1_keyframe_g4_live.json",
+      "files": [
+        "debug_runs/art_pipeline/variant_matrix_rowhouse_v1.yaml",
+        "debug_runs/art_pipeline/variant_matrix_warehouse_v1.yaml",
+        "debug_runs/art_pipeline/variant_matrix_shopfront_v1.yaml",
+        "debug_runs/art_pipeline/variant_matrix_bunker_v1.yaml"
+      ]
+    },
+    "PT-1-003_g4_signoff": {
+      "status": "pass",
+      "mode": "keyframe_stills",
+      "template": "debug_runs/art_pipeline/tile_production_signoff_template.yaml",
+      "lod0_ortho_g4_valid": false,
+      "bunker_lod0_atlas_g4": "fail",
+      "per_archetype_stubs": [
+        "debug_runs/art_pipeline/rowhouse_victorian_production_signoff.yaml",
+        "debug_runs/art_pipeline/warehouse_industrial_west_production_signoff.yaml",
+        "debug_runs/art_pipeline/shopfront_colonial_production_signoff.yaml",
+        "debug_runs/art_pipeline/bunker_military_production_signoff.yaml"
+      ],
+      "note": "G4-0 matrix+spine pass on 4 archetypes; G4-3 pending keyframe export; bunker lod0 ortho failed"
+    },
+    "PT-1-004_reference_tags": {
+      "status": "pass",
+      "policy_in": "design_procedural_tile_production_bar_v1.md",
+      "enforced_in": "variant_matrix_* g0_rules.reference_tags_required"
+    }
+  },
+  "unblocks": ["MCP-PT-2-001"],
+  "next": "@coder-mcp PT-2 — kit_production_001 + production re-bake per variant_matrix_*"
+}

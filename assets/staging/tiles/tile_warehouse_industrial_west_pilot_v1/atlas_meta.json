@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "batch_id": "tile_warehouse_industrial_west_pilot_v1",
+  "tile_id": "warehouse_industrial",
+  "atlas_id": "warehouse_industrial_west_pilot_v1",
+  "atlas_png": "C:\\dev\\github\\Rust_engine_template_01\\assets\\textures\\tiles\\warehouse_industrial_west_pilot_v1_atlas.png",
+  "columns": 2,
+  "rows": 1,
+  "tile_px": 128,
+  "variant_count": 2,
+  "tiles": [
+    {
+      "variant_key": "clean_day",
+      "png": "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_warehouse_industrial_west_pilot_v1\\clean_day.png",
+      "grid": [
+        0,
+        0
+      ],
+      "uv": [
+        0.0,
+        0.0,
+        0.5,
+        1.0
+      ]
+    },
+    {
+      "variant_key": "damaged_night_on",
+      "png": "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_warehouse_industrial_west_pilot_v1\\damaged_night_on.png",
+      "grid": [
+        1,
+        0
+      ],
+      "uv": [
+        0.5,
+        0.0,
+        0.5,
+        1.0
+      ]
+    }
+  ]
+}

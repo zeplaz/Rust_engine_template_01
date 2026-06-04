@@ -7,6 +7,7 @@ use crate::dev::industrial_activation_todos::{
     sync_industrial_activation_board_from_witness, IndustrialActivationTodoBoard,
 };
 use crate::economy::supply_chain::insert_supply_chain_runtime_for_catalog;
+use crate::infrastructure::{UtilityConnection, UtilityNetworkKind};
 use crate::strategic::{ConstructionSite, SiteConstructionPhase};
 
 /// Catalog row chosen at placement — authoritative link to `assets/configs/buildings/*.json`.
@@ -29,7 +30,7 @@ impl Plugin for IndustrialActivationPlugin {
             crate::economy::logistics::LogisticsThroughputPlugin,
             super::grid_overload_ux::GridOverloadUxPlugin,
         ));
-        app.init_resource::<super::live_proof::IndustrialActivationLiveProofState>()
+        app.init_resource::<super::witness_collectors::IndustrialActivationLiveProofState>()
             .init_resource::<crate::dev::Stage7PlayLiveProofState>()
             .init_resource::<crate::dev::Stage7BehavioralLiveProofState>()
             .init_resource::<crate::strategic::StrategicCommandQueue>()
@@ -37,13 +38,15 @@ impl Plugin for IndustrialActivationPlugin {
             .init_resource::<super::concrete_chain_e2e::ConcreteChainE2eWitness>()
             .init_resource::<super::concrete_chain_e2e::Stage7PlayChainSeedState>()
             .init_resource::<super::concrete_chain_e2e::IndE02DefaultPlaySeedState>()
-            .init_resource::<super::concrete_chain_e2e::IndE03GridOverloadSeedState>();
+            .init_resource::<super::concrete_chain_e2e::IndE03GridOverloadSeedState>()
+            .init_resource::<super::concrete_chain_e2e::RowhouseVictorianDemoSeedState>();
         app.add_systems(
             OnEnter(crate::engine::states::BaseState::Simulation),
             (
                 super::concrete_chain_e2e::reset_stage7_play_chain_seed_on_enter_simulation,
                 super::concrete_chain_e2e::reset_ind_e02_default_play_seed_on_enter_simulation,
                 super::concrete_chain_e2e::reset_ind_e03_grid_overload_seed_on_enter_simulation,
+                super::concrete_chain_e2e::reset_rowhouse_victorian_demo_seed_on_enter_simulation,
             ),
         );
         app.add_systems(
@@ -51,6 +54,9 @@ impl Plugin for IndustrialActivationPlugin {
             (
                 super::concrete_chain_e2e::seed_ind_e02_default_play_once
                     .before(crate::strategic::commit_construction_site_system),
+                super::concrete_chain_e2e::seed_rowhouse_victorian_production_demo_once
+                    .after(crate::strategic::commit_construction_site_system)
+                    .after(super::concrete_chain_e2e::fast_forward_portland_chain_sites_to_operational),
                 super::concrete_chain_e2e::seed_stage7_play_concrete_chain_once,
                 super::concrete_chain_e2e::fast_forward_portland_chain_sites_to_operational
                     .after(crate::strategic::commit_construction_site_system),
@@ -62,17 +68,19 @@ impl Plugin for IndustrialActivationPlugin {
                 super::concrete_chain_e2e::refresh_concrete_chain_e2e_witness_system,
                 refresh_industrial_activation_witness_system,
                 sync_industrial_activation_board_system,
-                super::live_proof::sync_industrial_proof_witness_flags,
+                super::witness_collectors::sync_industrial_proof_witness_flags,
             ),
         );
         app.add_systems(
             Update,
             (
-                super::live_proof::write_industrial_activation_live_proof_system,
-                crate::dev::write_stage7_play_live_proof_system,
-                crate::dev::write_stage7_behavioral_live_proof_system,
+                super::witness_collectors::write_industrial_activation_live_proof_system,
+                crate::dev::write_stage7_play_witness_system,
+                crate::dev::write_stage7_behavioral_witness_system
+                    .after(crate::strategic::publish_stage7_behavioral_overlay_samples)
+                    .after(crate::strategic::tick_strategic_command_queue_system),
             )
-                .after(super::live_proof::sync_industrial_proof_witness_flags),
+                .after(super::witness_collectors::sync_industrial_proof_witness_flags),
         );
         app.add_systems(
             Update,
@@ -111,8 +119,17 @@ pub fn activate_industrial_facilities_system(
         if site.phase != SiteConstructionPhase::Operational {
             continue;
         }
+        let network_id = entity.to_bits();
+        let utility = UtilityConnection {
+            network_id,
+            kind: UtilityNetworkKind::Power,
+            demand: 1.0,
+            connected: true,
+        };
         if def_ref.catalog_id.is_empty() || def_ref.catalog_id.starts_with("builtin:") {
-            commands.entity(entity).insert(IndustrialFacilityActivated);
+            commands
+                .entity(entity)
+                .insert((IndustrialFacilityActivated, utility));
             continue;
         }
         insert_supply_chain_runtime_for_catalog(
@@ -121,7 +138,9 @@ pub fn activate_industrial_facilities_system(
             def_ref.catalog_id.as_str(),
             registry.as_ref(),
         );
-        commands.entity(entity).insert(IndustrialFacilityActivated);
+        commands
+            .entity(entity)
+            .insert((IndustrialFacilityActivated, utility));
     }
 }
 

@@ -1,0 +1,140 @@
+{
+  "batch_id": "kit_greybox_003",
+  "_agent_meta": {
+    "agent": "coder-mcp",
+    "updated_at": "2026-06-02T22:57:15.427723+00:00",
+    "rules_applied": [
+      "no_ai_generated_images",
+      "deterministic_output",
+      "batch_processing",
+      "grid_alignment"
+    ]
+  },
+  "gates": {
+    "G0": "pass",
+    "G1": "pass",
+    "G2": "pass",
+    "G3": "pass",
+    "G4": "pass",
+    "G5": "pass"
+  },
+  "modules": [
+    {
+      "asset_id": "wall_brick_2u",
+      "job_id": "wall_brick_2u_run001",
+      "status": "promoted",
+      "registered": true,
+      "valid": true,
+      "vertex_count": 24,
+      "promoted_path": "assets/models/modules/wall_brick_2u_run001/model.glb",
+      "module_id": "wall_brick_2u",
+      "batch_id": "kit_greybox_003"
+    },
+    {
+      "asset_id": "wall_concrete_1u",
+      "job_id": "wall_concrete_1u_run001",
+      "status": "promoted",
+      "registered": true,
+      "valid": true,
+      "vertex_count": 24,
+      "promoted_path": "assets/models/modules/wall_concrete_1u_run001/model.glb",
+      "module_id": "wall_concrete_1u",
+      "batch_id": "kit_greybox_003"
+    },
+    {
+      "asset_id": "wall_wood_2u",
+      "job_id": "wall_wood_2u_run001",
+      "status": "promoted",
+      "registered": true,
+      "valid": true,
+      "vertex_count": 24,
+      "promoted_path": "assets/models/modules/wall_wood_2u_run001/model.glb",
+      "module_id": "wall_wood_2u",
+      "batch_id": "kit_greybox_003"
+    },
+    {
+      "asset_id": "wall_industrial_panel_2u",
+      "job_id": "wall_industrial_panel_2u_run001",
+      "status": "promoted",
+      "registered": true,
+      "valid": true,
+      "vertex_count": 24,
+      "promoted_path": "assets/models/modules/wall_industrial_panel_2u_run001/model.glb",
+      "module_id": "wall_industrial_panel_2u",
+      "batch_id": "kit_greybox_003"
+    },
+    {
+      "asset_id": "window_single_1u",
+      "job_id": "window_single_1u_run001",
+      "status": "promoted",
+      "registered": true,
+      "valid": true,
+      "vertex_count": 48,
+      "promoted_path": "assets/models/modules/window_single_1u_run001/model.glb",
+      "module_id": "window_single_1u",
+      "batch_id": "kit_greybox_003"
+    },
+    {
+      "asset_id": "window_double_1u",
+      "job_id": "window_double_1u_run001",
+      "status": "promoted",
+      "registered": true,
+      "valid": true,
+      "vertex_count": 48,
+      "promoted_path": "assets/models/modules/window_double_1u_run001/model.glb",
+      "module_id": "window_double_1u",
+      "batch_id": "kit_greybox_003"
+    },
+    {
+      "asset_id": "door_residential_1u",
+      "job_id": "door_residential_1u_run001",
+      "status": "promoted",
+      "registered": true,
+      "valid": true,
+      "vertex_count": 24,
+      "promoted_path": "assets/models/modules/door_residential_1u_run001/model.glb",
+      "module_id": "door_residential_1u",
+      "batch_id": "kit_greybox_003"
+    },
+    {
+      "asset_id": "door_garage_2u",
+      "job_id": "door_garage_2u_run001",
+      "status": "promoted",
+      "registered": true,
+      "valid": true,
+      "vertex_count": 24,
+      "promoted_path": "assets/models/modules/door_garage_2u_run001/model.glb",
+      "module_id": "door_garage_2u",
+      "batch_id": "kit_greybox_003"
+    },
+    {
+      "asset_id": "roof_sawtooth_2u",
+      "job_id": "roof_sawtooth_2u_run001",
+      "status": "promoted",
+      "registered": true,
+      "valid": true,
+      "vertex_count": 24,
+      "promoted_path": "assets/models/modules/roof_sawtooth_2u_run001/model.glb",
+      "module_id": "roof_sawtooth_2u",
+      "batch_id": "kit_greybox_003"
+    },
+    {
+      "asset_id": "prop_chimney_1u",
+      "job_id": "prop_chimney_1u_run001",
+      "status": "promoted",
+      "registered": true,
+      "valid": true,
+      "vertex_count": 24,
+      "promoted_path": "assets/models/modules/prop_chimney_1u_run001/model.glb",
+      "module_id": "prop_chimney_1u",
+      "batch_id": "kit_greybox_003"
+    }
+  ],
+  "promoted_count": 10,
+  "registered_count": 10,
+  "failed": [],
+  "module_index": "assets/configs/buildings/_module_index.ron",
+  "index_entry_count": 31,
+  "batch_registered_count": 10,
+  "next": "@designer-mcp kit_greybox_004 or PBR profile expansion"
+}

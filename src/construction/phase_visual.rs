@@ -113,12 +113,9 @@ pub fn draw_construction_phase_labels_egui(
             continue;
         }
         let color = phase_color(site.phase);
-        for local in &footprint.tiles {
-            let world = Vec3::new(
-                planned.origin.x as f32 + local.x as f32 + 0.5,
-                0.0,
-                planned.origin.z as f32 + local.y as f32 + 0.5,
-            );
+        // `SiteFootprint.tiles` stores absolute world tile indices (see `footprint_tiles` in site commit).
+        for tile in &footprint.tiles {
+            let world = Vec3::new(tile.x as f32 + 0.5, 0.0, tile.y as f32 + 0.5);
             let Some(pos) = world_to_sim_map_egui(
                 world,
                 authority.as_deref(),
@@ -141,12 +138,8 @@ pub fn draw_construction_phase_labels_egui(
         if settings.show_tile_info_labels
             && !matches!(site.phase, SiteConstructionPhase::Operational)
         {
-            if let Some(local) = footprint.tiles.first() {
-                let label_world = Vec3::new(
-                    planned.origin.x as f32 + local.x as f32 + 0.5,
-                    0.0,
-                    planned.origin.z as f32 + local.y as f32 + 0.5,
-                );
+            if let Some(tile) = footprint.tiles.first() {
+                let label_world = Vec3::new(tile.x as f32 + 0.5, 0.0, tile.y as f32 + 0.5);
                 if let Some(label_pos) = world_to_sim_map_egui(
                     label_world,
                     authority.as_deref(),

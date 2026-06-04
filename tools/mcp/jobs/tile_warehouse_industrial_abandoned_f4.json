@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "job_id": "tile_warehouse_industrial_abandoned_f4",
+  "operation": "tile_variant_bake",
+  "mode": "assembly",
+  "assembly_blend": "assets/staging/assemblies/industrial_west_4x2_s43_a879.blend",
+  "variant": {
+    "state": "ruined",
+    "damage": 0.8,
+    "power": "off",
+    "fill": "empty",
+    "lighting": "day",
+    "variant_key": "abandoned"
+  },
+  "render": {
+    "method": "blender_keyframe_light_rig",
+    "seed": 43,
+    "tile_size_px": 128,
+    "camera_elevation_deg": 35.264,
+    "facing": 4,
+    "facing_yaw_deg": 180.0
+  },
+  "output": {
+    "png": "assets/staging/tiles/tile_warehouse_industrial_v2_minimum_g4/abandoned_f4.png"
+  },
+  "light_blend": "C:\\dev\\github\\Rust_engine_template_01\\utils\\Light_keysshotsetup.blend"
+}

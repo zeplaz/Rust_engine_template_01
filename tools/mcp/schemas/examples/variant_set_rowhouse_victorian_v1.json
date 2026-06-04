@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "variant_set_id": "rowhouse_victorian_night_damage",
+  "assembly_id": "victorian_4x3_s42_a7cb",
+  "style_pack_id": "style_victorian",
+  "seed": 42,
+  "axes": {
+    "state": [
+      "clean",
+      "dirty",
+      "damaged",
+      "ruined"
+    ],
+    "power": [
+      "off",
+      "partial",
+      "on"
+    ],
+    "fill": [
+      "empty",
+      "half",
+      "full"
+    ],
+    "lighting": [
+      "day",
+      "night_off",
+      "night_on"
+    ]
+  },
+  "variants": [
+    {
+      "variant_key": "clean_day",
+      "tags": [
+        "default",
+        "stylepack_victorian"
+      ],
+      "layers": {
+        "lighting": {
+          "lighting": "day",
+          "power": "off"
+        },
+        "damage": {
+          "state": "clean",
+          "damage": 0.0
+        },
+        "fill": {
+          "fill": "empty"
+        }
+      },
+      "bake": {
+        "status": "done",
+        "png": "assets/staging/tiles/victorian_4x3_s42_a7cb/clean_day.png",
+        "last_job_id": "tile_victorian_4x3_s42_a7cb_clean_day"
+      }
+    },
+    {
+      "variant_key": "damaged_night_on",
+      "tags": [
+        "sim_night",
+        "power_grid_on"
+      ],
+      "layers": {
+        "lighting": {
+          "lighting": "night_on",
+          "power": "on",
+          "night_lights": true,
+          "emissive_strength": 0.8
+        },
+        "damage": {
+          "state": "damaged",
+          "damage": 0.45
+        },
+        "fill": {
+          "fill": "half"
+        },
+        "material": {
+          "wall_material": "brick_red_01"
+        }
+      }
+    }
+  ]
+}

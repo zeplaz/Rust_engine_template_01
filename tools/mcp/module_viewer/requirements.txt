@@ -1,0 +1,4 @@
+# Optional — 3D preview button only (browser preview works without these)
+# trimesh.viewer.windowed explicitly rejects pyglet 2.x — use latest 1.5.x
+trimesh>=4.0
+pyglet>=1.5.27,<2

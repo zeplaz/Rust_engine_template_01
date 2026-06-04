@@ -1,0 +1,12 @@
+{
+  "job_id": "prop_smoke_example",
+  "status": "done",
+  "log_path": "C:\\dev\\github\\Rust_engine_template_01\\debug_runs\\art_pipeline\\prop_smoke_example.log",
+  "outputs": [
+    "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\prop_smoke_example\\model.glb"
+  ],
+  "error": null,
+  "spec_ref": "assets/staging/specs/corner_concrete_outer.json",
+  "job_path": "C:\\dev\\github\\Rust_engine_template_01\\tools\\mcp\\schemas\\examples\\prop_smoke.example.json",
+  "updated_at": 1780430665.7362428
+}

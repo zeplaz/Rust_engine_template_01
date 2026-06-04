@@ -1,0 +1,12 @@
+{
+  "job_id": "window_smoke_example",
+  "status": "done",
+  "log_path": "C:\\dev\\github\\Rust_engine_template_01\\debug_runs\\art_pipeline\\window_smoke_example.log",
+  "outputs": [
+    "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\window_smoke_example\\model.glb"
+  ],
+  "error": null,
+  "spec_ref": "assets/staging/specs/window_industrial_1u.json",
+  "job_path": "C:\\dev\\github\\Rust_engine_template_01\\tools\\mcp\\schemas\\examples\\window_smoke.example.json",
+  "updated_at": 1780430664.6106272
+}

@@ -1,0 +1,50 @@
+{
+  "program_id": "PLAN-PROC-TILE-PROD-001",
+  "gate_id": "TILE-PROD-001",
+  "green": true,
+  "production_atlas_count": 4,
+  "minimum_variant_count": 6,
+  "atlases": [
+    {
+      "atlas_id": "bunker_military_production_v1",
+      "batch_id": "tile_bunker_military_production_v1",
+      "variant_count": 14,
+      "has_clean_night_on": true,
+      "has_burning_00": true,
+      "dry_run": false,
+      "pass": true
+    },
+    {
+      "atlas_id": "rowhouse_victorian_production_v1",
+      "batch_id": "tile_rowhouse_victorian_production_v1",
+      "variant_count": 14,
+      "has_clean_night_on": true,
+      "has_burning_00": true,
+      "dry_run": false,
+      "pass": true
+    },
+    {
+      "atlas_id": "shopfront_colonial_production_v1",
+      "batch_id": "tile_shopfront_colonial_production_v1",
+      "variant_count": 14,
+      "has_clean_night_on": true,
+      "has_burning_00": true,
+      "dry_run": false,
+      "pass": true
+    },
+    {
+      "atlas_id": "warehouse_industrial_west_production_v1",
+      "batch_id": "tile_warehouse_industrial_west_production_v1",
+      "variant_count": 14,
+      "has_clean_night_on": true,
+      "has_burning_00": true,
+      "dry_run": false,
+      "pass": true
+    }
+  ],
+  "_agent_meta": {
+    "agent": "coder-mcp",
+    "updated_at": "2026-06-03T02:54:05.383095+00:00",
+    "program": "MCP-PT-2-001"
+  }
+}

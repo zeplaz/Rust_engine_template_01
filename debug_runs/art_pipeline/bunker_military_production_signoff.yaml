@@ -1,0 +1,68 @@
+# bunker_military_production_signoff.yaml — G4 keyframe stills (lod0 ortho rejected)
+program_id: PLAN-PROC-TILE-PROD-001
+task_id: MCP-PT-1-003
+gate: G4
+designer_mcp: production_keyframe_signoff
+production_bar: src/dev/design_procedural_tile_production_bar_v1.md
+bake_spine: src/dev/design_tile_bake_spine_convergence_v1.md
+variant_matrix: debug_runs/art_pipeline/variant_matrix_bunker_v1.yaml
+
+archetype: bunker
+primary_style_pack: style_military
+batch_id: tile_bunker_military_production_v1
+atlas_id: bunker_military_production_v1
+assembly_id: military_6x3_s46_fbad
+source_tier: production
+g4_review_mode: keyframe_stills
+reviewed_at: "2026-06-03"
+proceed_ship: no
+freeze_id: TILE-FIX-001
+
+lod0_pilot:
+  batch_id: tile_bunker_military_pilot_v1
+  g4_valid: false
+  lod0_ortho_atlas_g4: fail
+  visual_qa: debug_runs/art_pipeline/tile_bunker_military_pilot_visual_qa.yaml
+  superseded_by: tile_bunker_military_production_v1
+
+lod0_ortho_atlas_g4: rejected
+
+reference_tags:
+  - "ref:survey:bunker-military-pilot"
+  - "mcp_export_pilot_keyframes_g4"
+
+keyframe_stills:
+  export_folder: assets/staging/tiles/keyframe_stills/bunker_military/
+  minimum_review_keys: [clean_day, clean_night_on, damaged_night_on]
+  still_paths:
+    clean_day: assets/staging/tiles/keyframe_stills/bunker_military/clean_day.png
+    clean_night_on: assets/staging/tiles/keyframe_stills/bunker_military/clean_night_on.png
+    damaged_night_on: assets/staging/tiles/keyframe_stills/bunker_military/damaged_night_on.png
+  pack_command: "python -m rust_engine_mcp.cli tile-atlas-pack assets/staging/tiles/keyframe_stills/bunker_military -pk"
+
+witness:
+  g4_live: debug_runs/art_pipeline/bunker_production_keyframe_g4_live.json
+  atlas_png: assets/textures/buildings_iso/production/bunker_military_production_v1_atlas.png
+
+g4_gates:
+  g4_0_matrix_and_spine: pass
+  g4_1_source_tier_production: pass
+  g4_2_reference_tags_present: pass
+  g4_3_keyframe_minimum_stills_review: pass
+  g4_4_full_matrix_keys_packed: pass
+  g4_5_night_damaged_iso_readable_128px: pass
+  g4_6_fire_frames_distinct: pass
+  g4_7_no_smoke_greybox_modules: pass
+  g4_8_proceed_ship: pass
+
+district_one_liner: "Hardened bunker with slit windows and parapet roof"
+required_variant_keys: 15
+variant_keys_baked: 15
+designer_review:
+  framing: "Re-framed keyframe export — 6x3 silhouette readable (lod0 edge-on fail superseded)"
+  night_emissive: "Slit-window glow on night_on variants"
+
+notes: "Bunker G4 on keyframe_pack only — never promote lod0 ortho pilot atlas."
+
+blocked_by: []
+next: "Missile silo phase-2 prop_missile_pad mesh; shopfront colonial G4 when unfreezed"

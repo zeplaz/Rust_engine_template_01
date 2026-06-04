@@ -113,6 +113,34 @@ pub fn highest_priority_orb(orbs: &[InterestOrb]) -> Option<InterestOrb> {
     orbs.iter().copied().max_by_key(|orb| orb.priority)
 }
 
+/// Keep the nearest chunks to focus when merged interest becomes too large.
+#[must_use]
+pub fn cap_chunk_coords_by_focus(mut coords: Vec<IVec2>, focus: IVec2, max: usize) -> Vec<IVec2> {
+    if max == 0 || coords.len() <= max {
+        return coords;
+    }
+    coords.sort_by(|a, b| {
+        let da = (*a - focus).as_vec2().length_squared();
+        let db = (*b - focus).as_vec2().length_squared();
+        da.total_cmp(&db)
+            .then_with(|| a.y.cmp(&b.y))
+            .then_with(|| a.x.cmp(&b.x))
+    });
+    coords.truncate(max);
+    coords
+}
+
+/// Stable signature for a sorted interest chunk set (scheduler diff / diagnostics).
+#[must_use]
+pub fn interest_chunk_set_signature(coords: &[IVec2]) -> u64 {
+    let mut h: u64 = coords.len() as u64;
+    for c in coords {
+        h = h.wrapping_mul(31).wrapping_add(c.x as u64);
+        h = h.wrapping_mul(31).wrapping_add(c.y as u64);
+    }
+    h
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -158,6 +186,25 @@ mod tests {
         ];
         let merged = merge_interest_chunk_coords(&orbs);
         assert_eq!(merged.len(), 2);
+    }
+
+    #[test]
+    fn interest_chunk_set_signature_stable() {
+        let a = interest_chunk_set_signature(&[IVec2::new(1, 2), IVec2::new(3, 4)]);
+        let b = interest_chunk_set_signature(&[IVec2::new(1, 2), IVec2::new(3, 4)]);
+        assert_eq!(a, b);
+    }
+
+    #[test]
+    fn cap_chunk_coords_by_focus_limits_to_nearest() {
+        let coords = vec![
+            IVec2::new(100, 0),
+            IVec2::new(2, 0),
+            IVec2::new(1, 0),
+            IVec2::new(50, 0),
+        ];
+        let capped = cap_chunk_coords_by_focus(coords, IVec2::ZERO, 2);
+        assert_eq!(capped, vec![IVec2::new(1, 0), IVec2::new(2, 0)]);
     }
 
     #[test]

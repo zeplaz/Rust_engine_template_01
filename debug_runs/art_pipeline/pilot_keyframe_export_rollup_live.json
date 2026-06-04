@@ -1,0 +1,781 @@
+{
+  "pilots": {
+    "rowhouse_victorian": {
+      "pilot": "rowhouse_victorian",
+      "snapshot": {
+        "assembly_id": "victorian_4x3_s42_a7cb",
+        "production_snapshot": "tools/mcp/schemas/examples/assembly_snapshot_rowhouse_victorian_production_v1.json",
+        "keyframe_folder": "assets/staging/tiles/keyframe_stills/rowhouse_victorian"
+      },
+      "keyframe": {
+        "ok": true,
+        "status": "keyframe_headless_export_done",
+        "bake_source": "keyframe_pack",
+        "export_mode": "headless_light_rig",
+        "variant_count": 14,
+        "png_paths": [
+          "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_rowhouse_victorian_production_v1\\clean_day.png",
+          "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_rowhouse_victorian_production_v1\\clean_night_off.png",
+          "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_rowhouse_victorian_production_v1\\clean_night_on.png",
+          "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_rowhouse_victorian_production_v1\\damaged_day.png",
+          "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_rowhouse_victorian_production_v1\\damaged_night_on.png",
+          "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_rowhouse_victorian_production_v1\\under_construction_01.png",
+          "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_rowhouse_victorian_production_v1\\burning_00.png",
+          "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_rowhouse_victorian_production_v1\\burning_01.png",
+          "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_rowhouse_victorian_production_v1\\burning_02.png",
+          "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_rowhouse_victorian_production_v1\\burning_03.png",
+          "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_rowhouse_victorian_production_v1\\burning_04.png",
+          "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_rowhouse_victorian_production_v1\\burning_05.png",
+          "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_rowhouse_victorian_production_v1\\burning_06.png",
+          "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_rowhouse_victorian_production_v1\\burning_07.png"
+        ],
+        "bake_results": [
+          {
+            "job_id": "tile_tile_rowhouse_victorian_production_v1_clean_day",
+            "variant_key": "clean_day",
+            "status": "done",
+            "error": null
+          },
+          {
+            "job_id": "tile_tile_rowhouse_victorian_production_v1_clean_night_off",
+            "variant_key": "clean_night_off",
+            "status": "done",
+            "error": null
+          },
+          {
+            "job_id": "tile_tile_rowhouse_victorian_production_v1_clean_night_on",
+            "variant_key": "clean_night_on",
+            "status": "done",
+            "error": null
+          },
+          {
+            "job_id": "tile_tile_rowhouse_victorian_production_v1_damaged_day",
+            "variant_key": "damaged_day",
+            "status": "done",
+            "error": null
+          },
+          {
+            "job_id": "tile_tile_rowhouse_victorian_production_v1_damaged_night_on",
+            "variant_key": "damaged_night_on",
+            "status": "done",
+            "error": null
+          },
+          {
+            "job_id": "tile_tile_rowhouse_victorian_production_v1_under_construction_01",
+            "variant_key": "under_construction_01",
+            "status": "done",
+            "error": null
+          },
+          {
+            "job_id": "tile_tile_rowhouse_victorian_production_v1_burning_00",
+            "variant_key": "burning_00",
+            "status": "done",
+            "error": null
+          },
+          {
+            "job_id": "tile_tile_rowhouse_victorian_production_v1_burning_01",
+            "variant_key": "burning_01",
+            "status": "done",
+            "error": null
+          },
+          {
+            "job_id": "tile_tile_rowhouse_victorian_production_v1_burning_02",
+            "variant_key": "burning_02",
+            "status": "done",
+            "error": null
+          },
+          {
+            "job_id": "tile_tile_rowhouse_victorian_production_v1_burning_03",
+            "variant_key": "burning_03",
+            "status": "done",
+            "error": null
+          },
+          {
+            "job_id": "tile_tile_rowhouse_victorian_production_v1_burning_04",
+            "variant_key": "burning_04",
+            "status": "done",
+            "error": null
+          },
+          {
+            "job_id": "tile_tile_rowhouse_victorian_production_v1_burning_05",
+            "variant_key": "burning_05",
+            "status": "done",
+            "error": null
+          },
+          {
+            "job_id": "tile_tile_rowhouse_victorian_production_v1_burning_06",
+            "variant_key": "burning_06",
+            "status": "done",
+            "error": null
+          },
+          {
+            "job_id": "tile_tile_rowhouse_victorian_production_v1_burning_07",
+            "variant_key": "burning_07",
+            "status": "done",
+            "error": null
+          }
+        ],
+        "keyframe_stills_folder": "assets/staging/tiles/keyframe_stills/rowhouse_victorian",
+        "copied_to_stills": [
+          "assets/staging/tiles/keyframe_stills/rowhouse_victorian/burning_00.png",
+          "assets/staging/tiles/keyframe_stills/rowhouse_victorian/burning_01.png",
+          "assets/staging/tiles/keyframe_stills/rowhouse_victorian/burning_02.png",
+          "assets/staging/tiles/keyframe_stills/rowhouse_victorian/burning_03.png",
+          "assets/staging/tiles/keyframe_stills/rowhouse_victorian/burning_04.png",
+          "assets/staging/tiles/keyframe_stills/rowhouse_victorian/burning_05.png",
+          "assets/staging/tiles/keyframe_stills/rowhouse_victorian/burning_06.png",
+          "assets/staging/tiles/keyframe_stills/rowhouse_victorian/burning_07.png",
+          "assets/staging/tiles/keyframe_stills/rowhouse_victorian/clean_day.png",
+          "assets/staging/tiles/keyframe_stills/rowhouse_victorian/clean_night_off.png",
+          "assets/staging/tiles/keyframe_stills/rowhouse_victorian/clean_night_on.png",
+          "assets/staging/tiles/keyframe_stills/rowhouse_victorian/damaged_day.png",
+          "assets/staging/tiles/keyframe_stills/rowhouse_victorian/damaged_night_on.png",
+          "assets/staging/tiles/keyframe_stills/rowhouse_victorian/under_construction_01.png"
+        ]
+      },
+      "g4": {
+        "program_id": "MCP-EXPORT-PILOT-KEYFRAMES-G4",
+        "pilot": "rowhouse_victorian",
+        "batch_id": "tile_rowhouse_victorian_production_v1",
+        "generated_at": "2026-06-03T03:14:12.236113+00:00",
+        "keyframe_stills_folder": "assets/staging/tiles/keyframe_stills/rowhouse_victorian",
+        "gates": {
+          "g4_0_matrix_and_spine": "pass",
+          "g4_1_source_tier_production": "pass",
+          "g4_2_reference_tags_present": "pass",
+          "g4_3_keyframe_minimum_stills_review": "pass",
+          "g4_4_full_matrix_keys_packed": "pass",
+          "g4_5_night_damaged_iso_readable_128px": "pass",
+          "g4_6_fire_frames_distinct": "pass",
+          "g4_7_no_smoke_greybox_modules": "pass",
+          "g4_8_proceed_ship": "pass"
+        },
+        "green": true,
+        "minimum_review": {
+          "clean_day": {
+            "path": "assets/staging/tiles/keyframe_stills/rowhouse_victorian/clean_day.png",
+            "exists": true,
+            "bytes": 13256,
+            "width": 128,
+            "height": 128,
+            "ok": true
+          },
+          "clean_night_on": {
+            "path": "assets/staging/tiles/keyframe_stills/rowhouse_victorian/clean_night_on.png",
+            "exists": true,
+            "bytes": 12758,
+            "width": 128,
+            "height": 128,
+            "ok": true
+          },
+          "damaged_night_on": {
+            "path": "assets/staging/tiles/keyframe_stills/rowhouse_victorian/damaged_night_on.png",
+            "exists": true,
+            "bytes": 12826,
+            "width": 128,
+            "height": 128,
+            "ok": true
+          }
+        },
+        "variant_count": 14,
+        "stills_ok_count": 14,
+        "lod0_ortho_atlas_g4": "rejected",
+        "bake_source": "keyframe_pack"
+      },
+      "green": true
+    },
+    "warehouse_industrial_west": {
+      "pilot": "warehouse_industrial_west",
+      "snapshot": {
+        "assembly_id": "industrial_west_4x2_s43_a879",
+        "production_snapshot": "tools/mcp/schemas/examples/assembly_snapshot_warehouse_industrial_west_production_v1.json",
+        "keyframe_folder": "assets/staging/tiles/keyframe_stills/warehouse_industrial_west"
+      },
+      "keyframe": {
+        "ok": true,
+        "status": "keyframe_headless_export_done",
+        "bake_source": "keyframe_pack",
+        "export_mode": "headless_light_rig",
+        "variant_count": 16,
+        "png_paths": [
+          "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_warehouse_industrial_west_production_v1\\clean_day.png",
+          "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_warehouse_industrial_west_production_v1\\clean_night_off.png",
+          "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_warehouse_industrial_west_production_v1\\clean_night_on.png",
+          "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_warehouse_industrial_west_production_v1\\damaged_day.png",
+          "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_warehouse_industrial_west_production_v1\\damaged_night_on.png",
+          "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_warehouse_industrial_west_production_v1\\under_construction_01.png",
+          "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_warehouse_industrial_west_production_v1\\under_construction_02.png",
+          "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_warehouse_industrial_west_production_v1\\abandoned.png",
+          "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_warehouse_industrial_west_production_v1\\burning_00.png",
+          "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_warehouse_industrial_west_production_v1\\burning_01.png",
+          "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_warehouse_industrial_west_production_v1\\burning_02.png",
+          "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_warehouse_industrial_west_production_v1\\burning_03.png",
+          "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_warehouse_industrial_west_production_v1\\burning_04.png",
+          "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_warehouse_industrial_west_production_v1\\burning_05.png",
+          "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_warehouse_industrial_west_production_v1\\burning_06.png",
+          "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_warehouse_industrial_west_production_v1\\burning_07.png"
+        ],
+        "bake_results": [
+          {
+            "job_id": "tile_tile_warehouse_industrial_west_production_v1_clean_day",
+            "variant_key": "clean_day",
+            "status": "done",
+            "error": null
+          },
+          {
+            "job_id": "tile_tile_warehouse_industrial_west_production_v1_clean_night_off",
+            "variant_key": "clean_night_off",
+            "status": "done",
+            "error": null
+          },
+          {
+            "job_id": "tile_tile_warehouse_industrial_west_production_v1_clean_night_on",
+            "variant_key": "clean_night_on",
+            "status": "done",
+            "error": null
+          },
+          {
+            "job_id": "tile_tile_warehouse_industrial_west_production_v1_damaged_day",
+            "variant_key": "damaged_day",
+            "status": "done",
+            "error": null
+          },
+          {
+            "job_id": "tile_tile_warehouse_industrial_west_production_v1_damaged_night_on",
+            "variant_key": "damaged_night_on",
+            "status": "done",
+            "error": null
+          },
+          {
+            "job_id": "tile_tile_warehouse_industrial_west_production_v1_under_construction_01",
+            "variant_key": "under_construction_01",
+            "status": "done",
+            "error": null
+          },
+          {
+            "job_id": "tile_tile_warehouse_industrial_west_production_v1_under_construction_02",
+            "variant_key": "under_construction_02",
+            "status": "done",
+            "error": null
+          },
+          {
+            "job_id": "tile_tile_warehouse_industrial_west_production_v1_abandoned",
+            "variant_key": "abandoned",
+            "status": "done",
+            "error": null
+          },
+          {
+            "job_id": "tile_tile_warehouse_industrial_west_production_v1_burning_00",
+            "variant_key": "burning_00",
+            "status": "done",
+            "error": null
+          },
+          {
+            "job_id": "tile_tile_warehouse_industrial_west_production_v1_burning_01",
+            "variant_key": "burning_01",
+            "status": "done",
+            "error": null
+          },
+          {
+            "job_id": "tile_tile_warehouse_industrial_west_production_v1_burning_02",
+            "variant_key": "burning_02",
+            "status": "done",
+            "error": null
+          },
+          {
+            "job_id": "tile_tile_warehouse_industrial_west_production_v1_burning_03",
+            "variant_key": "burning_03",
+            "status": "done",
+            "error": null
+          },
+          {
+            "job_id": "tile_tile_warehouse_industrial_west_production_v1_burning_04",
+            "variant_key": "burning_04",
+            "status": "done",
+            "error": null
+          },
+          {
+            "job_id": "tile_tile_warehouse_industrial_west_production_v1_burning_05",
+            "variant_key": "burning_05",
+            "status": "done",
+            "error": null
+          },
+          {
+            "job_id": "tile_tile_warehouse_industrial_west_production_v1_burning_06",
+            "variant_key": "burning_06",
+            "status": "done",
+            "error": null
+          },
+          {
+            "job_id": "tile_tile_warehouse_industrial_west_production_v1_burning_07",
+            "variant_key": "burning_07",
+            "status": "done",
+            "error": null
+          }
+        ],
+        "keyframe_stills_folder": "assets/staging/tiles/keyframe_stills/warehouse_industrial_west",
+        "copied_to_stills": [
+          "assets/staging/tiles/keyframe_stills/warehouse_industrial_west/abandoned.png",
+          "assets/staging/tiles/keyframe_stills/warehouse_industrial_west/burning_00.png",
+          "assets/staging/tiles/keyframe_stills/warehouse_industrial_west/burning_01.png",
+          "assets/staging/tiles/keyframe_stills/warehouse_industrial_west/burning_02.png",
+          "assets/staging/tiles/keyframe_stills/warehouse_industrial_west/burning_03.png",
+          "assets/staging/tiles/keyframe_stills/warehouse_industrial_west/burning_04.png",
+          "assets/staging/tiles/keyframe_stills/warehouse_industrial_west/burning_05.png",
+          "assets/staging/tiles/keyframe_stills/warehouse_industrial_west/burning_06.png",
+          "assets/staging/tiles/keyframe_stills/warehouse_industrial_west/burning_07.png",
+          "assets/staging/tiles/keyframe_stills/warehouse_industrial_west/clean_day.png",
+          "assets/staging/tiles/keyframe_stills/warehouse_industrial_west/clean_night_off.png",
+          "assets/staging/tiles/keyframe_stills/warehouse_industrial_west/clean_night_on.png",
+          "assets/staging/tiles/keyframe_stills/warehouse_industrial_west/damaged_day.png",
+          "assets/staging/tiles/keyframe_stills/warehouse_industrial_west/damaged_night_on.png",
+          "assets/staging/tiles/keyframe_stills/warehouse_industrial_west/under_construction_01.png",
+          "assets/staging/tiles/keyframe_stills/warehouse_industrial_west/under_construction_02.png"
+        ]
+      },
+      "g4": {
+        "program_id": "MCP-EXPORT-PILOT-KEYFRAMES-G4",
+        "pilot": "warehouse_industrial_west",
+        "batch_id": "tile_warehouse_industrial_west_production_v1",
+        "generated_at": "2026-06-03T03:15:24.950735+00:00",
+        "keyframe_stills_folder": "assets/staging/tiles/keyframe_stills/warehouse_industrial_west",
+        "gates": {
+          "g4_0_matrix_and_spine": "pass",
+          "g4_1_source_tier_production": "pass",
+          "g4_2_reference_tags_present": "pass",
+          "g4_3_keyframe_minimum_stills_review": "pass",
+          "g4_4_full_matrix_keys_packed": "pass",
+          "g4_5_night_damaged_iso_readable_128px": "pass",
+          "g4_6_fire_frames_distinct": "pass",
+          "g4_7_no_smoke_greybox_modules": "pass",
+          "g4_8_proceed_ship": "pass"
+        },
+        "green": true,
+        "minimum_review": {
+          "clean_day": {
+            "path": "assets/staging/tiles/keyframe_stills/warehouse_industrial_west/clean_day.png",
+            "exists": true,
+            "bytes": 13784,
+            "width": 128,
+            "height": 128,
+            "ok": true
+          },
+          "clean_night_on": {
+            "path": "assets/staging/tiles/keyframe_stills/warehouse_industrial_west/clean_night_on.png",
+            "exists": true,
+            "bytes": 12417,
+            "width": 128,
+            "height": 128,
+            "ok": true
+          },
+          "damaged_night_on": {
+            "path": "assets/staging/tiles/keyframe_stills/warehouse_industrial_west/damaged_night_on.png",
+            "exists": true,
+            "bytes": 12545,
+            "width": 128,
+            "height": 128,
+            "ok": true
+          }
+        },
+        "variant_count": 16,
+        "stills_ok_count": 16,
+        "lod0_ortho_atlas_g4": "rejected",
+        "bake_source": "keyframe_pack"
+      },
+      "green": true
+    },
+    "shopfront_colonial": {
+      "pilot": "shopfront_colonial",
+      "snapshot": {
+        "assembly_id": "colonial_3x3_s44_cf75",
+        "production_snapshot": "tools/mcp/schemas/examples/assembly_snapshot_shopfront_colonial_production_v1.json",
+        "keyframe_folder": "assets/staging/tiles/keyframe_stills/shopfront_colonial"
+      },
+      "keyframe": {
+        "ok": true,
+        "status": "keyframe_headless_export_done",
+        "bake_source": "keyframe_pack",
+        "export_mode": "headless_light_rig",
+        "variant_count": 16,
+        "png_paths": [
+          "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_shopfront_colonial_production_v1\\clean_day.png",
+          "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_shopfront_colonial_production_v1\\clean_night_off.png",
+          "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_shopfront_colonial_production_v1\\clean_night_on.png",
+          "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_shopfront_colonial_production_v1\\damaged_day.png",
+          "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_shopfront_colonial_production_v1\\damaged_night_on.png",
+          "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_shopfront_colonial_production_v1\\under_construction_01.png",
+          "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_shopfront_colonial_production_v1\\under_construction_02.png",
+          "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_shopfront_colonial_production_v1\\abandoned.png",
+          "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_shopfront_colonial_production_v1\\burning_00.png",
+          "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_shopfront_colonial_production_v1\\burning_01.png",
+          "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_shopfront_colonial_production_v1\\burning_02.png",
+          "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_shopfront_colonial_production_v1\\burning_03.png",
+          "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_shopfront_colonial_production_v1\\burning_04.png",
+          "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_shopfront_colonial_production_v1\\burning_05.png",
+          "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_shopfront_colonial_production_v1\\burning_06.png",
+          "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_shopfront_colonial_production_v1\\burning_07.png"
+        ],
+        "bake_results": [
+          {
+            "job_id": "tile_tile_shopfront_colonial_production_v1_clean_day",
+            "variant_key": "clean_day",
+            "status": "done",
+            "error": null
+          },
+          {
+            "job_id": "tile_tile_shopfront_colonial_production_v1_clean_night_off",
+            "variant_key": "clean_night_off",
+            "status": "done",
+            "error": null
+          },
+          {
+            "job_id": "tile_tile_shopfront_colonial_production_v1_clean_night_on",
+            "variant_key": "clean_night_on",
+            "status": "done",
+            "error": null
+          },
+          {
+            "job_id": "tile_tile_shopfront_colonial_production_v1_damaged_day",
+            "variant_key": "damaged_day",
+            "status": "done",
+            "error": null
+          },
+          {
+            "job_id": "tile_tile_shopfront_colonial_production_v1_damaged_night_on",
+            "variant_key": "damaged_night_on",
+            "status": "done",
+            "error": null
+          },
+          {
+            "job_id": "tile_tile_shopfront_colonial_production_v1_under_construction_01",
+            "variant_key": "under_construction_01",
+            "status": "done",
+            "error": null
+          },
+          {
+            "job_id": "tile_tile_shopfront_colonial_production_v1_under_construction_02",
+            "variant_key": "under_construction_02",
+            "status": "done",
+            "error": null
+          },
+          {
+            "job_id": "tile_tile_shopfront_colonial_production_v1_abandoned",
+            "variant_key": "abandoned",
+            "status": "done",
+            "error": null
+          },
+          {
+            "job_id": "tile_tile_shopfront_colonial_production_v1_burning_00",
+            "variant_key": "burning_00",
+            "status": "done",
+            "error": null
+          },
+          {
+            "job_id": "tile_tile_shopfront_colonial_production_v1_burning_01",
+            "variant_key": "burning_01",
+            "status": "done",
+            "error": null
+          },
+          {
+            "job_id": "tile_tile_shopfront_colonial_production_v1_burning_02",
+            "variant_key": "burning_02",
+            "status": "done",
+            "error": null
+          },
+          {
+            "job_id": "tile_tile_shopfront_colonial_production_v1_burning_03",
+            "variant_key": "burning_03",
+            "status": "done",
+            "error": null
+          },
+          {
+            "job_id": "tile_tile_shopfront_colonial_production_v1_burning_04",
+            "variant_key": "burning_04",
+            "status": "done",
+            "error": null
+          },
+          {
+            "job_id": "tile_tile_shopfront_colonial_production_v1_burning_05",
+            "variant_key": "burning_05",
+            "status": "done",
+            "error": null
+          },
+          {
+            "job_id": "tile_tile_shopfront_colonial_production_v1_burning_06",
+            "variant_key": "burning_06",
+            "status": "done",
+            "error": null
+          },
+          {
+            "job_id": "tile_tile_shopfront_colonial_production_v1_burning_07",
+            "variant_key": "burning_07",
+            "status": "done",
+            "error": null
+          }
+        ],
+        "keyframe_stills_folder": "assets/staging/tiles/keyframe_stills/shopfront_colonial",
+        "copied_to_stills": [
+          "assets/staging/tiles/keyframe_stills/shopfront_colonial/abandoned.png",
+          "assets/staging/tiles/keyframe_stills/shopfront_colonial/burning_00.png",
+          "assets/staging/tiles/keyframe_stills/shopfront_colonial/burning_01.png",
+          "assets/staging/tiles/keyframe_stills/shopfront_colonial/burning_02.png",
+          "assets/staging/tiles/keyframe_stills/shopfront_colonial/burning_03.png",
+          "assets/staging/tiles/keyframe_stills/shopfront_colonial/burning_04.png",
+          "assets/staging/tiles/keyframe_stills/shopfront_colonial/burning_05.png",
+          "assets/staging/tiles/keyframe_stills/shopfront_colonial/burning_06.png",
+          "assets/staging/tiles/keyframe_stills/shopfront_colonial/burning_07.png",
+          "assets/staging/tiles/keyframe_stills/shopfront_colonial/clean_day.png",
+          "assets/staging/tiles/keyframe_stills/shopfront_colonial/clean_night_off.png",
+          "assets/staging/tiles/keyframe_stills/shopfront_colonial/clean_night_on.png",
+          "assets/staging/tiles/keyframe_stills/shopfront_colonial/damaged_day.png",
+          "assets/staging/tiles/keyframe_stills/shopfront_colonial/damaged_night_on.png",
+          "assets/staging/tiles/keyframe_stills/shopfront_colonial/under_construction_01.png",
+          "assets/staging/tiles/keyframe_stills/shopfront_colonial/under_construction_02.png"
+        ]
+      },
+      "g4": {
+        "program_id": "MCP-EXPORT-PILOT-KEYFRAMES-G4",
+        "pilot": "shopfront_colonial",
+        "batch_id": "tile_shopfront_colonial_production_v1",
+        "generated_at": "2026-06-03T03:16:37.316141+00:00",
+        "keyframe_stills_folder": "assets/staging/tiles/keyframe_stills/shopfront_colonial",
+        "gates": {
+          "g4_0_matrix_and_spine": "pass",
+          "g4_1_source_tier_production": "pass",
+          "g4_2_reference_tags_present": "pass",
+          "g4_3_keyframe_minimum_stills_review": "pass",
+          "g4_4_full_matrix_keys_packed": "pass",
+          "g4_5_night_damaged_iso_readable_128px": "pass",
+          "g4_6_fire_frames_distinct": "pass",
+          "g4_7_no_smoke_greybox_modules": "pass",
+          "g4_8_proceed_ship": "pass"
+        },
+        "green": true,
+        "minimum_review": {
+          "clean_day": {
+            "path": "assets/staging/tiles/keyframe_stills/shopfront_colonial/clean_day.png",
+            "exists": true,
+            "bytes": 12627,
+            "width": 128,
+            "height": 128,
+            "ok": true
+          },
+          "clean_night_on": {
+            "path": "assets/staging/tiles/keyframe_stills/shopfront_colonial/clean_night_on.png",
+            "exists": true,
+            "bytes": 12113,
+            "width": 128,
+            "height": 128,
+            "ok": true
+          },
+          "damaged_night_on": {
+            "path": "assets/staging/tiles/keyframe_stills/shopfront_colonial/damaged_night_on.png",
+            "exists": true,
+            "bytes": 12121,
+            "width": 128,
+            "height": 128,
+            "ok": true
+          }
+        },
+        "variant_count": 16,
+        "stills_ok_count": 16,
+        "lod0_ortho_atlas_g4": "rejected",
+        "bake_source": "keyframe_pack"
+      },
+      "green": true
+    },
+    "bunker_military": {
+      "pilot": "bunker_military",
+      "snapshot": {
+        "assembly_id": "military_6x3_s46_fbad",
+        "production_snapshot": "tools/mcp/schemas/examples/assembly_snapshot_bunker_military_production_v1.json",
+        "keyframe_folder": "assets/staging/tiles/keyframe_stills/bunker_military"
+      },
+      "keyframe": {
+        "ok": true,
+        "status": "keyframe_headless_export_done",
+        "bake_source": "keyframe_pack",
+        "export_mode": "headless_light_rig",
+        "variant_count": 15,
+        "png_paths": [
+          "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_bunker_military_production_v1\\clean_day.png",
+          "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_bunker_military_production_v1\\clean_night_off.png",
+          "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_bunker_military_production_v1\\clean_night_on.png",
+          "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_bunker_military_production_v1\\damaged_day.png",
+          "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_bunker_military_production_v1\\damaged_night_on.png",
+          "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_bunker_military_production_v1\\abandoned.png",
+          "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_bunker_military_production_v1\\ruined.png",
+          "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_bunker_military_production_v1\\burning_00.png",
+          "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_bunker_military_production_v1\\burning_01.png",
+          "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_bunker_military_production_v1\\burning_02.png",
+          "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_bunker_military_production_v1\\burning_03.png",
+          "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_bunker_military_production_v1\\burning_04.png",
+          "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_bunker_military_production_v1\\burning_05.png",
+          "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_bunker_military_production_v1\\burning_06.png",
+          "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_bunker_military_production_v1\\burning_07.png"
+        ],
+        "bake_results": [
+          {
+            "job_id": "tile_tile_bunker_military_production_v1_clean_day",
+            "variant_key": "clean_day",
+            "status": "done",
+            "error": null
+          },
+          {
+            "job_id": "tile_tile_bunker_military_production_v1_clean_night_off",
+            "variant_key": "clean_night_off",
+            "status": "done",
+            "error": null
+          },
+          {
+            "job_id": "tile_tile_bunker_military_production_v1_clean_night_on",
+            "variant_key": "clean_night_on",
+            "status": "done",
+            "error": null
+          },
+          {
+            "job_id": "tile_tile_bunker_military_production_v1_damaged_day",
+            "variant_key": "damaged_day",
+            "status": "done",
+            "error": null
+          },
+          {
+            "job_id": "tile_tile_bunker_military_production_v1_damaged_night_on",
+            "variant_key": "damaged_night_on",
+            "status": "done",
+            "error": null
+          },
+          {
+            "job_id": "tile_tile_bunker_military_production_v1_abandoned",
+            "variant_key": "abandoned",
+            "status": "done",
+            "error": null
+          },
+          {
+            "job_id": "tile_tile_bunker_military_production_v1_ruined",
+            "variant_key": "ruined",
+            "status": "done",
+            "error": null
+          },
+          {
+            "job_id": "tile_tile_bunker_military_production_v1_burning_00",
+            "variant_key": "burning_00",
+            "status": "done",
+            "error": null
+          },
+          {
+            "job_id": "tile_tile_bunker_military_production_v1_burning_01",
+            "variant_key": "burning_01",
+            "status": "done",
+            "error": null
+          },
+          {
+            "job_id": "tile_tile_bunker_military_production_v1_burning_02",
+            "variant_key": "burning_02",
+            "status": "done",
+            "error": null
+          },
+          {
+            "job_id": "tile_tile_bunker_military_production_v1_burning_03",
+            "variant_key": "burning_03",
+            "status": "done",
+            "error": null
+          },
+          {
+            "job_id": "tile_tile_bunker_military_production_v1_burning_04",
+            "variant_key": "burning_04",
+            "status": "done",
+            "error": null
+          },
+          {
+            "job_id": "tile_tile_bunker_military_production_v1_burning_05",
+            "variant_key": "burning_05",
+            "status": "done",
+            "error": null
+          },
+          {
+            "job_id": "tile_tile_bunker_military_production_v1_burning_06",
+            "variant_key": "burning_06",
+            "status": "done",
+            "error": null
+          },
+          {
+            "job_id": "tile_tile_bunker_military_production_v1_burning_07",
+            "variant_key": "burning_07",
+            "status": "done",
+            "error": null
+          }
+        ],
+        "keyframe_stills_folder": "assets/staging/tiles/keyframe_stills/bunker_military",
+        "copied_to_stills": [
+          "assets/staging/tiles/keyframe_stills/bunker_military/abandoned.png",
+          "assets/staging/tiles/keyframe_stills/bunker_military/burning_00.png",
+          "assets/staging/tiles/keyframe_stills/bunker_military/burning_01.png",
+          "assets/staging/tiles/keyframe_stills/bunker_military/burning_02.png",
+          "assets/staging/tiles/keyframe_stills/bunker_military/burning_03.png",
+          "assets/staging/tiles/keyframe_stills/bunker_military/burning_04.png",
+          "assets/staging/tiles/keyframe_stills/bunker_military/burning_05.png",
+          "assets/staging/tiles/keyframe_stills/bunker_military/burning_06.png",
+          "assets/staging/tiles/keyframe_stills/bunker_military/burning_07.png",
+          "assets/staging/tiles/keyframe_stills/bunker_military/clean_day.png",
+          "assets/staging/tiles/keyframe_stills/bunker_military/clean_night_off.png",
+          "assets/staging/tiles/keyframe_stills/bunker_military/clean_night_on.png",
+          "assets/staging/tiles/keyframe_stills/bunker_military/damaged_day.png",
+          "assets/staging/tiles/keyframe_stills/bunker_military/damaged_night_on.png",
+          "assets/staging/tiles/keyframe_stills/bunker_military/ruined.png"
+        ]
+      },
+      "g4": {
+        "program_id": "MCP-EXPORT-PILOT-KEYFRAMES-G4",
+        "pilot": "bunker_military",
+        "batch_id": "tile_bunker_military_production_v1",
+        "generated_at": "2026-06-03T03:17:46.730731+00:00",
+        "keyframe_stills_folder": "assets/staging/tiles/keyframe_stills/bunker_military",
+        "gates": {
+          "g4_0_matrix_and_spine": "pass",
+          "g4_1_source_tier_production": "pass",
+          "g4_2_reference_tags_present": "pass",
+          "g4_3_keyframe_minimum_stills_review": "pass",
+          "g4_4_full_matrix_keys_packed": "pass",
+          "g4_5_night_damaged_iso_readable_128px": "pass",
+          "g4_6_fire_frames_distinct": "pass",
+          "g4_7_no_smoke_greybox_modules": "pass",
+          "g4_8_proceed_ship": "pass"
+        },
+        "green": true,
+        "minimum_review": {
+          "clean_day": {
+            "path": "assets/staging/tiles/keyframe_stills/bunker_military/clean_day.png",
+            "exists": true,
+            "bytes": 13203,
+            "width": 128,
+            "height": 128,
+            "ok": true
+          },
+          "clean_night_on": {
+            "path": "assets/staging/tiles/keyframe_stills/bunker_military/clean_night_on.png",
+            "exists": true,
+            "bytes": 11600,
+            "width": 128,
+            "height": 128,
+            "ok": true
+          },
+          "damaged_night_on": {
+            "path": "assets/staging/tiles/keyframe_stills/bunker_military/damaged_night_on.png",
+            "exists": true,
+            "bytes": 11551,
+            "width": 128,
+            "height": 128,
+            "ok": true
+          }
+        },
+        "variant_count": 15,
+        "stills_ok_count": 15,
+        "lod0_ortho_atlas_g4": "rejected",
+        "bake_source": "keyframe_pack"
+      },
+      "green": true
+    }
+  },
+  "green": true
+}

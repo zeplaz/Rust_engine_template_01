@@ -8,6 +8,8 @@ pub mod ux_states;
 pub mod debug_maneuver;
 pub mod launch_args;
 pub mod states;
+pub mod play_scenario;
+/// CLI/menu test worlds — import `engine::test_harness::*` internally; not re-exported at `engine::*` root.
 pub mod test_harness;
 mod transitions;
 mod sets;
@@ -33,9 +35,13 @@ pub use debug_maneuver::{
 };
 pub use launch_args::{EngineLaunchArgs, TestScene};
 pub use states::*;
-pub use test_harness::{
-    ActiveTestScene, DebugQuickWorldGenPending, TestHarnessPlugin, TestWorldHarness,
-    arm_debug_quick_world_gen,
+pub use play_scenario::{
+    active_play_truth_env_seeds, default_play_blocked_by_env_seeds, ActivePlayScenario,
+    DefaultIndustrialPlayState, PlayScenarioId, PlayScenarioPlugin,
+    DEFAULT_INDUSTRIAL_LOGISTICS_CHAIN_TILES, DEFAULT_INDUSTRIAL_MIN_WORLD_TILES,
+    DEFAULT_INDUSTRIAL_PORTLAND_ORIGIN, PLAY_SCENARIO_LIVE_JSON, PLAY_TRUTH_FORBIDDEN_ENV_SEEDS,
 };
+/// Active only while a CLI `--test` world is in sim (zoom/fire defaults). Not harness control state.
+pub use test_harness::ActiveTestScene;
 pub use transitions::*;
 pub use sets::*;

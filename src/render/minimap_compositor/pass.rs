@@ -149,16 +149,66 @@ pub fn commit_minimap_render_target_bind_system(
     );
 }
 
+#[must_use]
+pub fn minimap_gpu_compositor_default_on_unset() -> bool {
+    std::env::var("MINIMAP_GPU_COMPOSITOR").is_err()
+}
+
+/// **PERF-VIS-P1B-GPU-DEFAULT-001** — Simulation GPU minimap path without `RASTER_*` / explicit env.
+#[must_use]
+pub fn perf_vis_p1b_gpu_default_001_green(
+    shell: &MinimapShellState,
+    registry: &MinimapRenderTargetRegistry,
+    compositor: &MinimapCompositorState,
+) -> bool {
+    minimap_gpu_compositor_env_enabled()
+        && shell.presentation_source == MinimapPresentationSource::SharedRenderTargetImage
+        && registry.committed_image != Handle::default()
+        && compositor.stamp > 0
+        && compositor.composite_path == MinimapCompositePath::GpuCompute
+}
+
+#[must_use]
+pub(crate) fn perf_vis_p1b_witness_json(
+    shell: &MinimapShellState,
+    registry: &MinimapRenderTargetRegistry,
+    compositor: &MinimapCompositorState,
+) -> serde_json::Value {
+    serde_json::json!({
+        "gate": "PERF-VIS-P1B-GPU-DEFAULT-001",
+        "green": perf_vis_p1b_gpu_default_001_green(shell, registry, compositor),
+        "gpu_compositor_default_on": minimap_gpu_compositor_default_on_unset(),
+        "gpu_compositor_env": minimap_gpu_compositor_env_enabled(),
+        "presentation_source": match shell.presentation_source {
+            MinimapPresentationSource::SharedCpuRaster => "SharedCpuRaster",
+            MinimapPresentationSource::SharedRenderTargetImage => "SharedRenderTargetImage",
+        },
+        "raster_env_required": false,
+    })
+}
+
+/// P1-B: Simulation minimap binds GPU RT when compositor has committed; CPU fallback until then.
 pub fn sync_minimap_presentation_source(
+    base: Res<State<crate::engine::states::BaseState>>,
     mut shell: ResMut<MinimapShellState>,
     registry: Res<MinimapRenderTargetRegistry>,
+    compositor: Res<MinimapCompositorState>,
 ) {
-    if !minimap_gpu_compositor_env_enabled() {
+    if !matches!(base.get(), crate::engine::states::BaseState::Simulation) {
         return;
     }
-    if registry.committed_image != Handle::default() && registry.revision > 0 {
-        shell.presentation_source = MinimapPresentationSource::SharedRenderTargetImage;
+    if !minimap_gpu_compositor_env_enabled() {
+        shell.presentation_source = MinimapPresentationSource::SharedCpuRaster;
+        return;
     }
+    let composite_ok = registry.committed_image != Handle::default()
+        && registry.revision > 0
+        && compositor.stamp > 0;
+    shell.presentation_source = if composite_ok {
+        MinimapPresentationSource::SharedRenderTargetImage
+    } else {
+        MinimapPresentationSource::SharedCpuRaster
+    };
 }
 
 pub fn run_minimap_compositor_pass(

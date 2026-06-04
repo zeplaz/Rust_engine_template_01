@@ -9,6 +9,7 @@
 | **Version** | `1.0.0` |
 | **Date** | 2026-05-26 |
 | **Owner** | `@designer` |
+| **Status** | **SIGNED** · **PASS** (CONSTRUCTION-PARAM-DESIGN-001) |
 | **Authority** | `src/construction/visual_authority.rs` (**CODER-005**) |
 | **No Rust** | Tokens + alpha rules only |
 

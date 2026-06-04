@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "categories": {
+    "location": {
+      "label": "Location",
+      "description": "Where on the footprint / relative to street",
+      "tags": [
+        { "id": "street_facing", "label": "Street facing", "grammar_use": "facade.primary" },
+        { "id": "corner", "label": "Corner", "grammar_use": "token.C" },
+        { "id": "rear", "label": "Rear", "grammar_use": "facade.secondary" },
+        { "id": "interior", "label": "Interior court", "grammar_use": "massing.yard_interior" },
+        { "id": "yard_facing", "label": "Yard facing", "grammar_use": "massing.yard" },
+        { "id": "alley_facing", "label": "Alley facing", "grammar_use": "facade.service" }
+      ]
+    },
+    "architectural": {
+      "label": "Architectural",
+      "description": "Building family / district style",
+      "tags": [
+        { "id": "industrial", "label": "Industrial" },
+        { "id": "commercial", "label": "Commercial" },
+        { "id": "residential", "label": "Residential" },
+        { "id": "military", "label": "Military" },
+        { "id": "civic", "label": "Civic" },
+        { "id": "agricultural", "label": "Agricultural" }
+      ]
+    },
+    "detail": {
+      "label": "Detail",
+      "description": "Attached equipment / ornament",
+      "tags": [
+        { "id": "pipework", "label": "Pipe runs" },
+        { "id": "stack", "label": "Stack / chimney" },
+        { "id": "ventilation", "label": "Ventilation" },
+        { "id": "loading_dock", "label": "Loading dock" },
+        { "id": "signage", "label": "Signage" },
+        { "id": "light_fixture", "label": "Light fixture" },
+        { "id": "ac_unit", "label": "AC unit" },
+        { "id": "crane", "label": "Crane" },
+        { "id": "platform", "label": "Platform" },
+        { "id": "window_band", "label": "Window band" },
+        { "id": "door_rollup", "label": "Roll-up door" }
+      ]
+    },
+    "condition": {
+      "label": "Condition",
+      "description": "Age / damage band (ties to variant graph)",
+      "tags": [
+        { "id": "clean", "label": "Clean" },
+        { "id": "weathered", "label": "Weathered" },
+        { "id": "damaged", "label": "Damaged" },
+        { "id": "abandoned", "label": "Abandoned" },
+        { "id": "construction", "label": "Under construction" },
+        { "id": "fire", "label": "Fire damage" }
+      ]
+    }
+  },
+  "legacy_flat_map": {
+    "exterior": { "category": "location", "tag_id": "street_facing" },
+    "interior": { "category": "location", "tag_id": "interior" },
+    "wall": { "category": "architectural", "tag_id": "industrial" },
+    "door": { "category": "detail", "tag_id": "door_rollup" },
+    "corner": { "category": "location", "tag_id": "corner" },
+    "roof": { "category": "architectural", "tag_id": "industrial" },
+    "industrial": { "category": "architectural", "tag_id": "industrial" },
+    "weathered": { "category": "condition", "tag_id": "weathered" },
+    "clean": { "category": "condition", "tag_id": "clean" },
+    "damaged": { "category": "condition", "tag_id": "damaged" },
+    "night": { "category": "condition", "tag_id": "clean" }
+  }
+}

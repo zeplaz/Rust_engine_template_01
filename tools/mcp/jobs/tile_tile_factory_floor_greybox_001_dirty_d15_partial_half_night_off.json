@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "job_id": "tile_tile_factory_floor_greybox_001_dirty_d15_partial_half_night_off",
+  "operation": "tile_variant_bake",
+  "mode": "terrain",
+  "variant": {
+    "state": "dirty",
+    "damage": 0.15,
+    "power": "partial",
+    "fill": "half",
+    "lighting": "night_off",
+    "variant_key": "dirty_d15_partial_half_night_off"
+  },
+  "render": {
+    "method": "blender_orthographic_iso",
+    "isometric": true,
+    "seed": 42,
+    "tile_size_px": 128,
+    "camera_elevation_deg": 35.264
+  },
+  "light_blend": "C:\\dev\\github\\Rust_engine_template_01\\utils\\Tile_iso_rig_v1.blend",
+  "output": {
+    "png": "assets/staging/tiles/tile_factory_floor_greybox_001/dirty_d15_partial_half_night_off.png"
+  },
+  "terrain_base": "concrete"
+}

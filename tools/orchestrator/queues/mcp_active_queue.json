@@ -1,0 +1,120 @@
+{
+  "schema_version": 5,
+  "program_id": "MCP-PROD-SPRINT-ROWHOUSE-001",
+  "updated": "2026-06-03",
+  "program_green": true,
+  "production_pilot_active": true,
+  "authoritative_docs": [
+    "src/dev/mcp_fleet_production_sprint_rowhouse_v1.md",
+    "src/dev/mcp_fleet_production_pilot_rowhouse_v1.md"
+  ],
+  "witness": "debug_runs/art_pipeline/procedural_tiles_production_bake_live.json",
+  "snap": "tools/orchestrator/queues/mcp_orchestrator_snap_CURRENT.md",
+  "handoff_section": "tools/orchestrator/queues/HANDOFF.md#production-sprint-rowhouse",
+  "unfrozen": ["kit_production_001", "tile_rowhouse_victorian_production_v1"],
+  "frozen": [
+    "kit_production_002+",
+    "kit_greybox_004+",
+    "tile.generate",
+    "manual_blender_primary",
+    "tile_batch_warehouse_industrial_west_production_v1",
+    "tile_batch_shopfront_colonial_production_v1",
+    "tile_batch_bunker_military_production_v1",
+    "variant_matrix_warehouse_v1",
+    "variant_matrix_shopfront_v1",
+    "variant_matrix_bunker_v1"
+  ],
+  "week1_coder_mcp_first": true,
+  "tasks": [
+    {
+      "id": "MCP-PROD-B2",
+      "week": 1,
+      "agent": "coder-mcp",
+      "priority": "P0",
+      "status": "ready",
+      "goal": "validate_asset_report tier rules (Phase B2)",
+      "plan_ref": "plan_module_kit_production_tier_v1.md#phase-b"
+    },
+    {
+      "id": "MCP-PROD-C-PILOT",
+      "week": 1,
+      "agent": "coder-mcp",
+      "priority": "P0",
+      "status": "ready",
+      "blocked_by": [],
+      "goal": "bpy profiles wall/door/window/roof rowhouse",
+      "manifest": "tools/mcp/schemas/examples/batch_kit_production_001.manifest.json"
+    },
+    {
+      "id": "MCP-PROD-PBR-PILOT",
+      "week": 1,
+      "agent": "designer-mcp",
+      "priority": "P0",
+      "status": "ready",
+      "goal": "Material Maker doc or PBR waiver + tileable set ids",
+      "acceptance": ["pbr_pilot_rowhouse_witness.yaml"]
+    },
+    {
+      "id": "MCP-PROD-MOD-G0-G5",
+      "week": 2,
+      "track": "modules",
+      "agent": "designer-mcp",
+      "priority": "P0",
+      "status": "blocked",
+      "blocked_by": ["MCP-PROD-C-PILOT", "MCP-PROD-PBR-PILOT", "MCP-PROD-B2"],
+      "goal": "kit_production_001 G0-G5 promote production modules",
+      "witness": "debug_runs/art_pipeline/rowhouse_production_module_g0_rules.yaml"
+    },
+    {
+      "id": "MCP-PROD-ATLAS-G0-G4",
+      "week": 2,
+      "track": "atlas",
+      "agent": "designer-mcp",
+      "priority": "P1",
+      "status": "blocked",
+      "blocked_by": ["MCP-PROD-MOD-G0-G5"],
+      "goal": "keyframe pack + rowhouse_victorian_production_signoff proceed_ship yes",
+      "batch": "tools/mcp/schemas/examples/tile_batch_rowhouse_victorian_production_v1.json"
+    },
+    {
+      "id": "MCP-PROD-TILE-VAL",
+      "week": 2,
+      "agent": "coder-mcp",
+      "priority": "P1",
+      "status": "blocked",
+      "blocked_by": ["MCP-PROD-ATLAS-G0-G4"],
+      "goal": "tile_batch_validate keyframe_pack + variant_matrix_expand"
+    },
+    {
+      "id": "MCP-PROD-INDEX",
+      "week": 2,
+      "agent": "coder-mcp",
+      "priority": "P2",
+      "status": "blocked",
+      "blocked_by": ["MCP-PROD-ATLAS-G0-G4"],
+      "goal": "_tile_atlas_index.ron production row ship_allowed true"
+    },
+    {
+      "id": "ENG-PT-4-001",
+      "week": 3,
+      "agent": "coder",
+      "priority": "P1",
+      "status": "done",
+      "blocked_by": ["MCP-PROD-INDEX"],
+      "goal": "TileVariantResolver + map_tile_atlas_stamp + rowhouse play demo"
+    },
+    {
+      "id": "ENG-PT-5-001",
+      "week": 3,
+      "agent": "coder",
+      "priority": "P2",
+      "status": "blocked",
+      "blocked_by": ["ENG-PT-4-001"],
+      "goal": "fire frame tick + dirty stamp"
+    }
+  ],
+  "archive_done": {
+    "art_program_green": "2026-06-03",
+    "tile_lod0_pilot": "tile_rowhouse_victorian_pilot_v1"
+  }
+}

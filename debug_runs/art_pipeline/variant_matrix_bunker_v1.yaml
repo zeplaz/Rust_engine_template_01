@@ -1,0 +1,126 @@
+# variant_matrix_bunker_v1.yaml — MCP-PT-1-002
+program_id: PLAN-PROC-TILE-PROD-001
+task_id: MCP-PT-1-002
+archetype: bunker
+usage_bias: [military, bunker, hardened]
+primary_style_pack: style_military
+production_bar: src/dev/design_procedural_tile_production_bar_v1.md
+catalog: assets/configs/buildings/_variant_catalog.ron
+
+pilot:
+  lod0_batch_id: tile_bunker_military_pilot_v1
+  production_batch_id: tile_bunker_military_production_v1
+  footprint: { width: 6, depth: 3, floors: 1 }
+  assembly_id_lod0: military_6x3_s46_fbad
+  tile_id: bunker_military
+
+reference_tags_policy:
+  required_on_production_snapshot: true
+  min_tags: 1
+  format: "ref:<source>:<id>"
+
+variant_keys:
+  clean_day:
+    required: true
+    group: operational
+  clean_night_off:
+    required: true
+    group: operational
+  clean_night_on:
+    required: true
+    group: operational
+    notes: "Slit window emissive minimal — low glow acceptable"
+  damaged_day:
+    required: true
+    group: damage
+  damaged_night_on:
+    required: true
+    group: damage
+    notes: "Required for G4-3 minimum review (slit windows + damage)"
+  under_construction_01:
+    required: false
+    group: construction
+    notes: "Bunkers often skip scaffold read — optional"
+  abandoned:
+    required: true
+    group: lifecycle
+  ruined:
+    required: true
+    group: lifecycle
+    notes: "Collapsed bunker rubble read required for military archetype"
+  burning_00:
+    required: true
+    group: fire
+    frame_index: 0
+  burning_01: { required: true, group: fire, frame_index: 1 }
+  burning_02: { required: true, group: fire, frame_index: 2 }
+  burning_03: { required: true, group: fire, frame_index: 3 }
+  burning_04: { required: true, group: fire, frame_index: 4 }
+  burning_05: { required: true, group: fire, frame_index: 5 }
+  burning_06: { required: true, group: fire, frame_index: 6 }
+  burning_07: { required: true, group: fire, frame_index: 7 }
+
+required_key_count: 15  # 7 lifecycle-heavy + 8 fire
+minimum_pt2_bake: 6
+g4_signoff: debug_runs/art_pipeline/bunker_military_production_signoff.yaml
+
+bake_spine:
+  design_ref: src/dev/design_tile_bake_spine_convergence_v1.md
+  ship_bake_source: keyframe_pack
+  ci_bake_source: smoke_ortho_headless
+  lod0_pilot_atlas_ship_allowed: false
+  light_blend: utils/Light_keysshotsetup.blend
+  keyframe_tool: utils/keyframe_render.py
+  pack_cli: "python -m rust_engine_mcp.cli tile-atlas-pack <folder> -pk"
+
+keyframe_stills:
+  export_folder: assets/staging/tiles/keyframe_stills/bunker_military/
+  naming: "{variant_key}.png"
+  g4_review_mode: keyframe_stills
+  g4_minimum_review_keys:
+    - clean_day
+    - clean_night_on
+    - damaged_night_on
+  full_matrix_keys: 15
+  lod0_pilot_batch: tile_bunker_military_pilot_v1
+  lod0_pilot_g4_valid: false
+  lod0_pilot_visual_qa: debug_runs/art_pipeline/tile_bunker_military_pilot_visual_qa.yaml
+  lod0_pilot_g4_verdict: fail  # edge-on slabs — do not sign G4 on lod0 ortho atlas
+
+style_packs:
+  style_military:
+    applicable: true
+    role: primary
+    district_one_liner: "Hardened bunker with slit windows and parapet roof"
+    reference_tag_hints: ["ref:survey:bunker-military", "ref:osm:bunker_type=pillbox"]
+    wall_slot: wall_military_bunker_1u
+    prop_clutter: prop_tank
+  style_industrial_soviet:
+    applicable: true
+    role: alternate
+    district_one_liner: "Soviet hardened depot — concrete panels, industrial gate"
+    reference_tag_hints: ["ref:survey:soviet-hardened-shed"]
+    door_slot: door_gate_industrial
+  style_industrial_west:
+    applicable: true
+    role: stretch
+    district_one_liner: "Reinforced logistics bunker — steel cladding"
+    reference_tag_hints: ["ref:survey:industrial-bunker-adapt"]
+    notes: "Stretch — steel wall on wide 6x3 footprint; designer review at G4"
+  style_victorian:
+    applicable: false
+    reason: "Residential grammar — use rowhouse archetype"
+  style_colonial:
+    applicable: false
+    reason: "Commercial grammar — use shopfront archetype"
+  style_modern:
+    applicable: false
+    reason: "Glass curtain grammar incompatible with bunker read"
+  style_rural:
+    applicable: false
+    reason: "Farm grammar — use rowhouse archetype"
+
+g0_rules:
+  reference_tags_required: true
+  source_tier_ship: production
+  reject_lod0_when_ship: true

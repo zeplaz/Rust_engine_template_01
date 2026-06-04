@@ -1,0 +1,11 @@
+{
+  "profile_id": "glass_warehouse_01",
+  "seed": 1804,
+  "generator": "steel",
+  "size": 256,
+  "paths": {
+    "albedo": "assets/materials/textures/glass_warehouse_01/albedo.png",
+    "normal": "assets/materials/textures/glass_warehouse_01/normal.png",
+    "roughness": "assets/materials/textures/glass_warehouse_01/roughness.png"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "profile_id": "brick_red_01",
+  "seed": 42,
+  "generator": "brick",
+  "size": 512,
+  "paths": {
+    "albedo": "assets/materials/textures/brick_red_01/albedo.png",
+    "normal": "assets/materials/textures/brick_red_01/normal.png",
+    "roughness": "assets/materials/textures/brick_red_01/roughness.png"
+  }
+}

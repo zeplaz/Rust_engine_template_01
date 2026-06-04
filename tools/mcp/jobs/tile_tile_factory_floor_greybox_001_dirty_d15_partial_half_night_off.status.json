@@ -1,0 +1,10 @@
+{
+  "job_id": "tile_tile_factory_floor_greybox_001_dirty_d15_partial_half_night_off",
+  "status": "done",
+  "outputs": [
+    "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_factory_floor_greybox_001\\dirty_d15_partial_half_night_off.png"
+  ],
+  "dry_run": true,
+  "operation": "tile_variant_bake",
+  "updated_at": 1780511828.8219628
+}

@@ -1,0 +1,11 @@
+{
+  "profile_id": "roof_tile_01",
+  "seed": 44,
+  "generator": "concrete",
+  "size": 512,
+  "paths": {
+    "albedo": "assets/materials/textures/roof_tile_01/albedo.png",
+    "normal": "assets/materials/textures/roof_tile_01/normal.png",
+    "roughness": "assets/materials/textures/roof_tile_01/roughness.png"
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "program_id": "MCP-ART-PROGRAM-GREEN-001",
+  "updated": "2026-06-03",
+  "green": true,
+  "authoritative_docs": [
+    "src/dev/mcp_art_program_green_gates_v1.md",
+    "src/dev/mcp_fleet_production_pilot_rowhouse_v1.md"
+  ],
+  "snap": "tools/orchestrator/queues/mcp_orchestrator_snap_CURRENT.md",
+  "strong": {
+    "lod0_modules": "50/50",
+    "style_packs": 7,
+    "pg2_witness": "debug_runs/procedural_assembly_live.json",
+    "tile_batch_run_real": true,
+    "tile_atlas_registry": true,
+    "mcp_pytest": "39/39"
+  },
+  "gates": {
+    "ART-APS-USE": { "status": "pass" },
+    "TILE-REAL-001": { "status": "pass" },
+    "PG-2-WIT": { "status": "pass" },
+    "TILE-ENGINE-001": { "status": "pass" }
+  },
+  "frozen": [
+    "kit_production_002+",
+    "kit_greybox_004+",
+    "tile.generate single-tile",
+    "manual_blender_primary",
+    "production_tile_batches_except_rowhouse_victorian"
+  ],
+  "unfrozen_pilot": {
+    "program_id": "MCP-PROD-PILOT-ROWHOUSE-001",
+    "kit_production_001": true,
+    "tile_rowhouse_victorian_production_v1": true
+  },
+  "active_tasks_note": "Art program green closed; production pilot rowhouse active",
+  "active_tasks": []
+}

@@ -45,10 +45,11 @@ use super::worldgen_chrome_debug::WorldGenChromeDebugPlugin;
 use crate::gui::debug::UiLayoutTreeDebugPlugin;
 use crate::gui::hud::SimViewSyncDebugPlugin;
 use crate::render::{DebugViewportOverlayPlugin, VisualDiagnosticsPlugin};
-use super::TestHarnessPlugin;
+use super::test_harness::{TestHarnessMenuPlugin, TestHarnessPlugin, TestHarnessStatePlugin};
 use super::DebugManeuverPlugin;
 use bevy::asset::AssetPlugin;
 use bevy::prelude::*;
+use bevy::winit::{UpdateMode, WinitSettings};
 use bevy::window::{PresentMode, Window, WindowPlugin};
 use bevy_egui::EguiPlugin;
 
@@ -88,9 +89,14 @@ impl Plugin for EnginePlugin {
                     ..default()
                 }),
         )
+            // PERF-PLAY: keep simulation in continuous mode; reactive low-power mode can sleep
+            // near 1s between frames and makes camera/minimap feel "broken" under active play.
+            .insert_resource(WinitSettings {
+                focused_mode: UpdateMode::Continuous,
+                unfocused_mode: UpdateMode::Continuous,
+            })
             .add_systems(Startup, spawn_primary_ui_camera)
             .add_plugins(LocalLightPlugin)
-            .add_plugins(TestHarnessPlugin)
             .add_plugins(DebugManeuverPlugin)
             .add_plugins(EguiPlugin::default())
             .add_plugins(UiThemePlugin)
@@ -112,7 +118,8 @@ impl Plugin for EnginePlugin {
             // Scenario script host (Wave 1): drains one step per frame before sim tick.
             .add_plugins(ScenarioScriptingPlugin);
         configure_chunk_environment_sets(app);
-        app.add_plugins(ChunkEnvironmentPersistPlugin)
+        app.add_plugins(crate::substrate::SubstratePlugin)
+            .add_plugins(ChunkEnvironmentPersistPlugin)
             .add_plugins(crate::io::save::WorldSaveSpinePlugin)
             .add_plugins(crate::render::Stage6VirtualizationPlugin)
             .add_plugins(ChunkSimLodPlugin)
@@ -122,7 +129,10 @@ impl Plugin for EnginePlugin {
             .add_plugins(WeatherPlugin)
             .add_plugins(FramePerfPlugin)
             .add_plugins(GpuWeatherFireFieldPlugin)
+            .add_plugins(crate::infrastructure::InfrastructureProfilesPlugin)
+            .add_plugins(crate::infrastructure::InfrastructureTransportPlugin)
             .add_plugins(TransportSimulationPlugin)
+            .add_plugins(crate::engine::PlayScenarioPlugin)
             // Nav: damage/speed adjustments after transport cost cache; motion stage after damage (S2).
             .add_plugins(NavigationSchedulePlugin)
             .add_plugins(DamageSystem)
@@ -130,6 +140,10 @@ impl Plugin for EnginePlugin {
             .add_plugins(crate::gui::editor::editor_world_commit_bridge::EditorWorldCommitBridgePlugin)
             .add_plugins(crate::strategic::StrategicFieldsAndAiPlugin)
             .add_plugins(crate::strategic::GpuBridgePlugin);
+        if crate::render::hanabi_witness::hanabi_l3_plugin_wired() {
+            #[cfg(feature = "hanabi_l3")]
+            app.add_plugins(crate::render::hanabi_embellishment::HanabiEmbellishmentPlugin);
+        }
         // Fire visual extract: one sim pass → buffer; then pooled local lights collect messages.
         app.configure_sets(
             Update,
@@ -162,7 +176,16 @@ impl Plugin for EnginePlugin {
             .add_plugins(crate::gui::StrategicIconInstancesPlugin)
             .add_plugins(ViewRepresentationPlugin)
             .add_plugins(StallWatchPlugin)
+            .add_plugins(crate::render::VisualReadinessWitnessPlugin)
             .add_plugins(ComputeDispatchPlugin);
+        app.add_plugins((TestHarnessStatePlugin, TestHarnessMenuPlugin));
+        let test_mode = app
+            .world()
+            .get_resource::<crate::engine::EngineLaunchArgs>()
+            .is_some_and(|launch| launch.test_mode());
+        if test_mode {
+            app.add_plugins(TestHarnessPlugin);
+        }
         init_preview_render_contract_resources(app);
         app.insert_resource(Stage5ReadinessProfile::FULL_APP);
         app.configure_sets(
@@ -176,6 +199,7 @@ impl Plugin for EnginePlugin {
             ),
         );
         app.add_plugins(TileWorldFallbackPlugin)
+            .add_plugins(crate::render::TacticalVectorOverlayPlugin)
             .add_plugins(WaterSurfaceVisualPlugin)
             .add_plugins(GpuWaterParticlesPlugin);
         register_water_surface_draw(app);

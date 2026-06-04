@@ -60,19 +60,33 @@ FULL_APP green means the **spine is authoritative and measurable** in the runnin
 
 ### 1. Cursor custom agents (authoritative roles) — [`.cursor/agents/`](.cursor/agents/)
 
-Copied from user profile into the repo so the team shares one definition. Each file uses **`model: auto`** in frontmatter (agent picker or `@orchestrator` / `@planner` / `@coder` / `@designer` / `@sim-steward`).
+Copied from user profile into the repo so the team shares one definition. Each file uses **`model: auto`** in frontmatter (agent picker or `@orchestrator` / `@planner` / `@coder` / `@designer` / **`@orchestrator-mcp` / `@planner-mcp` / `@coder-mcp` / `@designer-mcp`** / `@sim-steward`).
 
 | Agent file | Role | Delegates to |
 |------------|------|--------------|
 | [`.cursor/agents/orchestrator.md`](.cursor/agents/orchestrator.md) | Sequencing only — never writes production code | `planner` first, then `coder` / `designer` |
+| [`.cursor/agents/orchestrator-mcp.md`](.cursor/agents/orchestrator-mcp.md) | **MCP art pipeline** sequencing — gates spec→validate→promote | `planner-mcp` → `designer-mcp` → `coder-mcp` |
 | [`.cursor/agents/planner.md`](.cursor/agents/planner.md) | Architecture plans, phases, authority map (readonly) | — |
+| [`.cursor/agents/planner-mcp.md`](.cursor/agents/planner-mcp.md) | MCP toolchain architecture — schemas, tool categories, batch rollout | — |
 | [`.cursor/agents/coder.md`](.cursor/agents/coder.md) | ECS, render, viewport, logistics, diagnostics `src/` | — |
+| [`.cursor/agents/coder-mcp.md`](.cursor/agents/coder-mcp.md) | `tools/mcp/` Python/CLI, bpy ops, validators | — |
 | [`.cursor/agents/designer.md`](.cursor/agents/designer.md) | HUD, overlays, multiview UX, ghosts (presentation) | — |
+| [`.cursor/agents/designer-mcp.md`](.cursor/agents/designer-mcp.md) | MCP art pipeline — AssetSpec, quality gates; **critiques orders**, no shortcuts | MCP skills · `@coder-mcp` for tool execution |
 | [`.cursor/agents/sim-steward.md`](.cursor/agents/sim-steward.md) | **Simulation steward** — bevy-simulation-grade + debug-intelligence + cleanup-completion-intelligence; **sequential shifts A→B→C** in main chat when Task quota blocked | `coder` / `planner` / `designer` for out-of-scope slices |
 | [`.cursor/agents/main-thread-orchestrator.md`](.cursor/agents/main-thread-orchestrator.md) | **Main-thread continuity** — Task attempt + fail-cycle escalation + foreground queue when Task/debug/cleanup fail; never stop on usage errors | Runs Shift A→B→C inline or via `@sim-steward` |
 | [`.cursor/agents/coparent-orchestrator.md`](.cursor/agents/coparent-orchestrator.md) | **Secondary pathways** — parallel lanes (operator, VFX capture, designer tails, parametric placement); conflict matrix vs primary P1 | Promotes slices to `@orchestrator`; routes drift to `@sim-steward` |
 
-**Handoff chain (orchestrator.md):** `orchestrator` → **`planner`** (plan) → **`coder`** / **`designer`** (implement) → verification (`cargo check` / tests / witness JSON). **`@coparent-orchestrator`** runs parallel secondary lanes without preempting primary P1.
+**Handoff chain (orchestrator.md):** `orchestrator` → **`planner`** (plan) → **`coder`** / **`designer`** (implement) → verification (`cargo check` / tests / witness JSON).
+
+**MCP art pipeline (separate lane):** `orchestrator-mcp` → `designer-mcp` (spec + run jobs) → `coder-mcp` (toolchain) → validate → promote → **`coder`** (Bevy registry). **Consumers** (`coder`, `designer`, `planner`) **use** MCP via CLI/validation-first — they **do not** build `tools/mcp/`. Guide: [`src/dev/agent_mcp_consumer_guide_v1.md`](src/dev/agent_mcp_consumer_guide_v1.md). Skills: `.cursor/skills/mcp-asset-pipeline`, `mcp-production-rules`, `validation-first`.
+
+**Construction + growth product lane:** [`src/dev/construction_economy_growth_vision_v1.md`](src/dev/construction_economy_growth_vision_v1.md) · index [`src/dev/construction_procedural_growth_index_v1.md`](src/dev/construction_procedural_growth_index_v1.md) · fleet prompts [`src/dev/fleet_longrun_prompts_20260602_v1.md`](src/dev/fleet_longrun_prompts_20260602_v1.md).
+
+**MCP art lane (orchestrator-mcp.md):** `orchestrator-mcp` → **`planner-mcp`** (if architecture) → **`designer-mcp`** (critique + spec + sign-off) → **`coder-mcp`** (toolchain) → validate → promote → registry.
+
+**Iso tile bake spine (mandatory for ship art):** [`src/dev/design_tile_bake_spine_convergence_v1.md`](src/dev/design_tile_bake_spine_convergence_v1.md) — production = `Light_keysshotsetup.blend` + `utils/keyframe_render.py` → `tile-atlas-pack` (tilemapgen). **`tile_ortho_bake` / lod0 pilot atlases are CI/smoke only** — not building production templates. Agents/skills: `tile-generation`, `mcp-production-rules` (`bake_source: keyframe_pack` when `ship: true`).
+
+**`@coparent-orchestrator`** runs parallel secondary lanes without preempting primary P1.
 
 ### Subagent continuity (mission-critical)
 
@@ -125,10 +139,14 @@ Index: [`.cursor/skills/README.md`](.cursor/skills/README.md).
 | Cursor agent | Repo playbook(s) | Also read |
 |--------------|------------------|-----------|
 | `orchestrator` | [`agent_queue.md`](tools/orchestrator/queues/agent_queue.md), all playbooks as needed | [`NEXT.md`](tools/orchestrator/NEXT.md), **debug-intelligence** for multi-domain drift; delegate drift/cleanup lanes to **`sim-steward`**; parallel lanes to **`coparent-orchestrator`** |
+| `orchestrator-mcp` | MCP exec plan, [`tools/mcp/README.md`](tools/mcp/README.md) | All four MCP skills; **`designer-mcp`** gate before tool tasks |
 | `coparent-orchestrator` | [`HANDOFF.md`](tools/orchestrator/queues/HANDOFF.md), machine queues | **debug-intelligence** + **cleanup-completion-intelligence** + bevy-simulation-grade conflict matrix |
 | `planner` | `migration_tasks.md`, matrices | [`llm_agent_brief.md`](prompts/llm_agent_brief.md), **debug-intelligence** |
+| `planner-mcp` | MCP exec plan, MCP drafts | All four MCP skills |
 | `coder` | `viewport_cleanup_agent`, `render_pipeline_agent`, `stage5_readiness_agent`, … | bevy-simulation-grade, **debug-intelligence**; **cleanup-completion-intelligence** before removals |
+| `coder-mcp` | [`tools/mcp/MICRO_TOOLS_REGISTRY_v1.md`](tools/mcp/MICRO_TOOLS_REGISTRY_v1.md) | All four MCP skills |
 | `designer` | `ui_layout_agent` | [`ui_boundary_guide_v1.md`](prompts/guides/ui_boundary_guide_v1.md) |
+| `designer-mcp` | MCP art exec plan | All four MCP skills |
 | `sim-steward` | `stage5_readiness_agent`, `viewport_cleanup_agent`, `render_pipeline_agent` | All three skills (personal **bevy-simulation-grade** + project **debug-intelligence** + **cleanup-completion-intelligence**); [`subagent_continuity_playbook_v1.md`](prompts/guides/subagent_continuity_playbook_v1.md) |
 | `main-thread-orchestrator` | Same as sim-steward + orchestrator continuity §10 | Fail-cycle ledger in `HANDOFF.md`; [`main-thread-orchestrator.md`](.cursor/agents/main-thread-orchestrator.md) |
 

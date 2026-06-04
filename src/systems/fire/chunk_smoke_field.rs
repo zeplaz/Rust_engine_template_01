@@ -43,6 +43,7 @@ pub(crate) fn spawn_chunk_smoke_field_on_new_chunk(
 pub fn chunk_smoke_field_tick(
     ctrl: Res<SimControlState>,
     time: Res<Time>,
+    ecs_retire: Option<Res<crate::substrate::EcsRetireState>>,
     mut q: Query<(
         &ChunkSurfaceFire,
         Option<&ChunkFuelProfile>,
@@ -52,6 +53,12 @@ pub fn chunk_smoke_field_tick(
     )>,
 ) {
     if !ctrl.should_tick() {
+        return;
+    }
+    if ecs_retire
+        .as_ref()
+        .is_some_and(|r| r.smoke_cutover_complete && !r.hybrid_smoke_authoritative)
+    {
         return;
     }
     let dt = time.delta_secs() * ctrl.dt_scale();

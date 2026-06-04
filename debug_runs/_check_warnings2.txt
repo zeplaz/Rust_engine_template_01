@@ -1,0 +1,4 @@
+   Compiling proc_A_dine01 v0.1.1 (C:\dev\github\Rust_engine_template_01)
+src\render\frame_perf.rs:319:8: warning: function `perf_play_quiet_defaults_recommended` is never used
+warning: `proc_A_dine01` (lib) generated 1 warning
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 20.87s

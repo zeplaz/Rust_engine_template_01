@@ -7,7 +7,7 @@
 | **Version** | `1.0.0` |
 | **Date** | 2026-05-26 |
 | **Coder lane** | **F7-STREAM-DEEP-001** (coder A primary; product depth) |
-| **Status** | queued (exec plan, not witness close) |
+| **Status** | implemented (2026-05-26) — keep for regression + witness refresh |
 
 ---
 

@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "job_id": "tile_tile_shopfront_colonial_production_v1_under_construction_02",
+  "operation": "tile_variant_bake",
+  "mode": "assembly",
+  "variant": {
+    "variant_key": "under_construction_02",
+    "state": "dirty",
+    "damage": 0.1,
+    "power": "partial",
+    "fill": "quarter",
+    "lighting": "day"
+  },
+  "render": {
+    "method": "blender_keyframe_light_rig",
+    "isometric": true,
+    "seed": 44,
+    "tile_size_px": 128,
+    "light_blend": "utils/Light_keysshotsetup.blend"
+  },
+  "light_blend": "C:\\dev\\github\\Rust_engine_template_01\\utils\\Light_keysshotsetup.blend",
+  "output": {
+    "png": "assets/staging/tiles/tile_shopfront_colonial_production_v1/under_construction_02.png"
+  },
+  "assembly_blend": "assets/staging/assemblies/colonial_3x3_s44_cf75.blend"
+}

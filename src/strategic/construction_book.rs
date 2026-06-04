@@ -267,6 +267,49 @@ pub fn apply_corridor_book_from_transport_snapshot(
     align_corridor_book_with_transport_directory(directory, book);
 }
 
+#[must_use]
+pub fn corridor_r8_roundtrip_witness_green() -> bool {
+    corridor_r8_roundtrip_self_check().is_ok()
+}
+
+fn corridor_r8_roundtrip_self_check() -> Result<(), &'static str> {
+    let mut dir = crate::systems::transport::TransportEdgeDirectory::default();
+    dir.by_edge.insert(
+        TransportEdgeId(1),
+        crate::systems::transport::TransportEdgeMeta::default(),
+    );
+    let mut book = CorridorConstructionBook::default();
+    let snap = crate::systems::transport::TransportNetworkSnapshot {
+        schema_version: 1,
+        nodes: vec![],
+        edges: vec![],
+        construction: vec![crate::systems::transport::TransportConstructionRecord {
+            edge_id: 1,
+            phase: "Planned".into(),
+            progress: 0.0,
+        }],
+    };
+    apply_corridor_book_from_transport_snapshot(&mut book, &dir, &snap);
+    if book.rows.get(&TransportEdgeId(1)).map(|r| r.phase) != Some(ConstructionPhase::Planned) {
+        return Err("phase");
+    }
+    Ok(())
+}
+
+#[must_use]
+pub fn corridor_sim_tick_writer_witness_green() -> bool {
+    corridor_sim_tick_writer_self_check().is_ok()
+}
+
+fn corridor_sim_tick_writer_self_check() -> Result<(), &'static str> {
+    let mut row = CorridorConstructionRow::planned(TransportEdgeId(3));
+    advance_corridor_construction_row(&mut row, 0.1);
+    if row.phase == ConstructionPhase::Planned {
+        return Err("should_advance");
+    }
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

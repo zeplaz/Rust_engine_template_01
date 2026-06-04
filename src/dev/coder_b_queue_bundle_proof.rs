@@ -37,24 +37,21 @@ fn pointer_u64(v: &Value, ptr: &str) -> u64 {
 /// Refresh all Coder B optional + active witness JSONs (lib-only).
 pub fn refresh_coder_b_queue_bundle_live_witnesses() -> bool {
     use crate::dev::debug_run_envelope::refresh_agent_debug_index;
-    use crate::economy::activation::refresh_ind_e02_default_live_witness;
+    use crate::economy::activation::refresh_ind_e02_default_play_002_live_witness;
     use crate::gui::editor::world_preview::refresh_coder_a_ui_wp_wave_p_witness;
     use crate::gui::hud::simulation_shell_phase2::refresh_ui_p2a_001_live_witness;
-    use crate::io::streaming::{
-        commit_wave_c_live_proof, gather_wave_c_readiness, TileStorageApplyReport,
-    };
-    use crate::render::{
-        refresh_infrastructure_view_isolation_live_witness,
-        refresh_log_e01_and_tactical_vfx_stage5_live_witness,
-    };
+    use crate::dev::runtime_witness::wave_c::commit_wave_c_live_proof;
+    use crate::io::streaming::{gather_wave_c_readiness, TileStorageApplyReport};
+    use crate::dev::runtime_witness::refresh_infrastructure_view_isolation_live_witness;
+    use crate::render::stage5_full_app_harness::refresh_log_e01_and_tactical_vfx_stage5_live_witness;
 
     assert!(
         refresh_log_e01_and_tactical_vfx_stage5_live_witness(),
         "LOG-E01-WITNESS + P2-VFX-WITNESS-001 + P2-WATER-WITNESS-002"
     );
     assert!(
-        refresh_ind_e02_default_live_witness(),
-        "IND-E02-DEFAULT"
+        refresh_ind_e02_default_play_002_live_witness(),
+        "IND-E02-DEFAULT-PLAY-002"
     );
     assert!(
         refresh_ui_p2a_001_live_witness(),

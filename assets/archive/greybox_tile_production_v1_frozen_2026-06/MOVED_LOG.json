@@ -1,0 +1,86 @@
+{
+  "freeze_id": "TILE-FIX-001",
+  "moved_at": "2026-06-03T14:07:45.614722+00:00",
+  "policy": "src/dev/tile_greybox_production_frozen_v1.md",
+  "moves": [
+    {
+      "action": "moved",
+      "src": "C:\\dev\\github\\Rust_engine_template_01\\assets\\textures\\buildings_iso\\production\\bunker_military_production_v1_atlas.png",
+      "dst": "C:\\dev\\github\\Rust_engine_template_01\\assets\\archive\\greybox_tile_production_v1_frozen_2026-06\\atlases\\bunker_military_production_v1_atlas.png"
+    },
+    {
+      "action": "moved",
+      "src": "C:\\dev\\github\\Rust_engine_template_01\\assets\\textures\\buildings_iso\\production\\missile_silo_military_production_v1_atlas.png",
+      "dst": "C:\\dev\\github\\Rust_engine_template_01\\assets\\archive\\greybox_tile_production_v1_frozen_2026-06\\atlases\\missile_silo_military_production_v1_atlas.png"
+    },
+    {
+      "action": "moved",
+      "src": "C:\\dev\\github\\Rust_engine_template_01\\assets\\textures\\buildings_iso\\production\\rowhouse_victorian_production_v1_atlas.png",
+      "dst": "C:\\dev\\github\\Rust_engine_template_01\\assets\\archive\\greybox_tile_production_v1_frozen_2026-06\\atlases\\rowhouse_victorian_production_v1_atlas.png"
+    },
+    {
+      "action": "moved",
+      "src": "C:\\dev\\github\\Rust_engine_template_01\\assets\\textures\\buildings_iso\\production\\shopfront_colonial_production_v1_atlas.png",
+      "dst": "C:\\dev\\github\\Rust_engine_template_01\\assets\\archive\\greybox_tile_production_v1_frozen_2026-06\\atlases\\shopfront_colonial_production_v1_atlas.png"
+    },
+    {
+      "action": "moved",
+      "src": "C:\\dev\\github\\Rust_engine_template_01\\assets\\textures\\buildings_iso\\production\\warehouse_industrial_west_production_v1_atlas.png",
+      "dst": "C:\\dev\\github\\Rust_engine_template_01\\assets\\archive\\greybox_tile_production_v1_frozen_2026-06\\atlases\\warehouse_industrial_west_production_v1_atlas.png"
+    },
+    {
+      "action": "moved",
+      "src": "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_bunker_military_production_v1",
+      "dst": "C:\\dev\\github\\Rust_engine_template_01\\assets\\archive\\greybox_tile_production_v1_frozen_2026-06\\staging\\tile_bunker_military_production_v1"
+    },
+    {
+      "action": "moved",
+      "src": "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_missile_silo_military_production_v1",
+      "dst": "C:\\dev\\github\\Rust_engine_template_01\\assets\\archive\\greybox_tile_production_v1_frozen_2026-06\\staging\\tile_missile_silo_military_production_v1"
+    },
+    {
+      "action": "moved",
+      "src": "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_rowhouse_victorian_production_v1",
+      "dst": "C:\\dev\\github\\Rust_engine_template_01\\assets\\archive\\greybox_tile_production_v1_frozen_2026-06\\staging\\tile_rowhouse_victorian_production_v1"
+    },
+    {
+      "action": "moved",
+      "src": "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_shopfront_colonial_production_v1",
+      "dst": "C:\\dev\\github\\Rust_engine_template_01\\assets\\archive\\greybox_tile_production_v1_frozen_2026-06\\staging\\tile_shopfront_colonial_production_v1"
+    },
+    {
+      "action": "moved",
+      "src": "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_warehouse_industrial_west_production_v1",
+      "dst": "C:\\dev\\github\\Rust_engine_template_01\\assets\\archive\\greybox_tile_production_v1_frozen_2026-06\\staging\\tile_warehouse_industrial_west_production_v1"
+    },
+    {
+      "action": "moved",
+      "src": "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\keyframe_stills\\bunker_military",
+      "dst": "C:\\dev\\github\\Rust_engine_template_01\\assets\\archive\\greybox_tile_production_v1_frozen_2026-06\\keyframe_stills\\bunker_military"
+    },
+    {
+      "action": "moved",
+      "src": "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\keyframe_stills\\missile_silo_military",
+      "dst": "C:\\dev\\github\\Rust_engine_template_01\\assets\\archive\\greybox_tile_production_v1_frozen_2026-06\\keyframe_stills\\missile_silo_military"
+    },
+    {
+      "action": "moved",
+      "src": "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\keyframe_stills\\rowhouse_victorian",
+      "dst": "C:\\dev\\github\\Rust_engine_template_01\\assets\\archive\\greybox_tile_production_v1_frozen_2026-06\\keyframe_stills\\rowhouse_victorian"
+    },
+    {
+      "action": "moved",
+      "src": "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\keyframe_stills\\shopfront_colonial",
+      "dst": "C:\\dev\\github\\Rust_engine_template_01\\assets\\archive\\greybox_tile_production_v1_frozen_2026-06\\keyframe_stills\\shopfront_colonial"
+    },
+    {
+      "action": "moved",
+      "src": "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\keyframe_stills\\warehouse_industrial_west",
+      "dst": "C:\\dev\\github\\Rust_engine_template_01\\assets\\archive\\greybox_tile_production_v1_frozen_2026-06\\keyframe_stills\\warehouse_industrial_west"
+    },
+    {
+      "action": "rmdir_empty",
+      "path": "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\keyframe_stills"
+    }
+  ]
+}

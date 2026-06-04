@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "job_id": "door_warehouse_lod0_run001",
+  "batch_id": "kit_lod0_003",
+  "development_tier": "lod0",
+  "spec_ref": "assets/staging/specs/door_warehouse.json",
+  "operation": "module_door",
+  "params": {
+    "width_m": 4,
+    "height_m": 3,
+    "depth_m": 0.25,
+    "material_profile": "steel_door_warehouse_01",
+    "seed": 42,
+    "profile": "frame"
+  },
+  "output": {
+    "glb": "assets/staging/door_warehouse_lod0_run001/model.glb",
+    "thumbnail": "assets/staging/door_warehouse_lod0_run001/preview.png"
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "job_id": "door_shop_1u_run001",
+  "spec_ref": "assets/staging/specs/door_shop_1u.json",
+  "operation": "module_door",
+  "params": {
+    "width_m": 2,
+    "height_m": 2.5,
+    "depth_m": 0.15,
+    "material_profile": "shop_door_01",
+    "seed": 42
+  },
+  "output": {
+    "glb": "assets/staging/door_shop_1u_run001/model.glb",
+    "thumbnail": "assets/staging/door_shop_1u_run001/preview.png"
+  }
+}

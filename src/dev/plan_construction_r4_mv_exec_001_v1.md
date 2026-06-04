@@ -8,7 +8,20 @@
 | **Version** | `1.0.0` |
 | **Date** | 2026-05-26 |
 | **Coder lane** | **R4-MV-GHOST-001** (product gate) |
-| **Status** | queued (exec plan, not witness close) |
+| **Status** | **READY (planner finalized)** — coder lane `R4-MV-GHOST-001` |
+
+**Planner sign-off:** PASS (2026-05-27). Queue: `tools/orchestrator/queues/planner_active_queue.json` → archived `PLAN-CONSTRUCTION-R4-MV-EXEC-001`.
+
+---
+
+## Coder handoff (acceptance)
+
+| Field | Value |
+|:---|:---|
+| **Witness** | `debug_runs/construction_stage_live.json` → `construction_r4_mv_ghost_001` |
+| **Unblocks** | `R4-MV-GHOST-001` |
+| **Green rollup** | `construction_r4_mv_ghost_001.green` := `mv_001_still_green` AND `corridor_overlay_tokens_wired` AND `legend_wired` |
+| **Verify** | `cargo test -p proc_A_dine01 --lib simulation_writes_construction_stage_live_json construction_mv` |
 
 ---
 

@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "job_id": "tile_tile_factory_floor_greybox_001_ruined_d85_off_empty_day",
+  "operation": "tile_variant_bake",
+  "mode": "terrain",
+  "variant": {
+    "state": "ruined",
+    "damage": 0.85,
+    "power": "off",
+    "fill": "empty",
+    "lighting": "day",
+    "variant_key": "ruined_d85_off_empty_day"
+  },
+  "render": {
+    "method": "blender_orthographic_iso",
+    "isometric": true,
+    "seed": 42,
+    "tile_size_px": 128,
+    "camera_elevation_deg": 35.264
+  },
+  "light_blend": "C:\\dev\\github\\Rust_engine_template_01\\utils\\Tile_iso_rig_v1.blend",
+  "output": {
+    "png": "assets/staging/tiles/tile_factory_floor_greybox_001/ruined_d85_off_empty_day.png"
+  },
+  "terrain_base": "concrete"
+}

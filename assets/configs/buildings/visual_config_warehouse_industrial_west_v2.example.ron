@@ -1,0 +1,36 @@
+// TILE-FIX-002 example — target contract for warehouse v2 bake (not ship art until lookups filled).
+(
+    schema_version: 1,
+    tile_id: "warehouse_industrial",
+    atlas_id: "warehouse_industrial_west_v2",
+    batch_id: "tile_warehouse_industrial_west_v2",
+    assembly_id: "industrial_west_4x2_s43_a879",
+    render_contract: (
+        facings: 8,
+        quarter_turn_fallback: true,
+        tile_px: 128,
+    ),
+    states: [
+        "clean_day",
+        "clean_night_off",
+        "clean_night_on",
+        "damaged_day",
+        "damaged_night_on",
+        "under_construction_01",
+        "under_construction_02",
+        "abandoned",
+    ],
+    fire: (
+        key_prefix: "burning_",
+        frame_count: 8,
+        frame_period_ms: 125,
+    ),
+    ship_minimum_states: [
+        "clean_day",
+        "clean_night_on",
+        "damaged_night_on",
+        "under_construction_02",
+        "abandoned",
+        "burning_00",
+    ],
+)

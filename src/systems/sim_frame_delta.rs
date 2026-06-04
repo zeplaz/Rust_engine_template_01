@@ -26,7 +26,7 @@ impl SimFrameDelta {
 }
 
 /// Ring buffer of committed visual stamps for replay / scrub / rewind hooks.
-#[derive(Resource, Debug, Clone, Default)]
+#[derive(Resource, Debug, Clone)]
 pub struct CommittedSimReplayRing {
     pub stamps: VecDeque<SimStepStamp>,
     pub capacity: usize,
@@ -58,6 +58,13 @@ impl CommittedSimReplayRing {
     #[must_use]
     pub fn latest(&self) -> Option<SimStepStamp> {
         self.stamps.back().copied()
+    }
+}
+
+impl Default for CommittedSimReplayRing {
+    fn default() -> Self {
+        // Runtime default must hold at least a short replay window so minimap scrub can activate.
+        Self::with_capacity(64)
     }
 }
 

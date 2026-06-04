@@ -26,12 +26,17 @@ fn pointer_bool(v: &Value, ptr: &str) -> bool {
 /// Refresh lib witnesses for both active infra/stress gates.
 #[must_use]
 pub fn refresh_coder_a_infra_stress_closure() -> bool {
+    use crate::dev::runtime_witness::{
+        refresh_infrastructure_view_isolation_live_witness,
+        refresh_wc_d04_stage6_virtualization_live_witness,
+    };
+
     assert!(
-        crate::render::refresh_infrastructure_view_isolation_live_witness(),
+        refresh_infrastructure_view_isolation_live_witness(),
         "INFRA-VM-DEEP-001 lib path"
     );
     assert!(
-        crate::render::refresh_wc_d04_stage6_virtualization_live_witness(),
+        refresh_wc_d04_stage6_virtualization_live_witness(),
         "STAGE6-OPS-WITNESS-001 lib path (wc_d04 bundle)"
     );
     true

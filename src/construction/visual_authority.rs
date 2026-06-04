@@ -43,6 +43,8 @@ pub enum FootprintTileColorKind {
 pub struct FootprintTileRequest {
     pub tile: IVec2,
     pub color_kind: FootprintTileColorKind,
+    /// Partial-alpha weight from parametric raster (`α = weight`, capped at 1).
+    pub weight: f32,
 }
 
 #[derive(Resource, Debug, Default)]
@@ -51,6 +53,7 @@ pub struct ConstructionVisualRequests {
     pub zone_tiles: Vec<ZoneTileRequest>,
     pub control_points: Vec<(Vec3, egui::Color32)>,
     pub footprint_tiles: Vec<FootprintTileRequest>,
+    pub corridor_paths: Vec<super::round4_corridor::CorridorPhasePathRequest>,
 }
 
 impl ConstructionVisualRequests {
@@ -59,46 +62,90 @@ impl ConstructionVisualRequests {
         self.zone_tiles.clear();
         self.control_points.clear();
         self.footprint_tiles.clear();
+        self.corridor_paths.clear();
     }
 }
 
-/// Fill per-tile footprint requests from active building ghost (view-only).
+fn color_kind_for_staged_validity(
+    validity: crate::construction::staged_ghost_panel::StagedValidity,
+) -> FootprintTileColorKind {
+    use crate::construction::staged_ghost_panel::StagedValidity;
+    match validity {
+        StagedValidity::Ok => FootprintTileColorKind::Valid,
+        StagedValidity::Warn => FootprintTileColorKind::Risky,
+        StagedValidity::Bad => FootprintTileColorKind::Invalid,
+    }
+}
+
+fn push_weighted_footprint_tiles(
+    out: &mut Vec<FootprintTileRequest>,
+    weights: &[(IVec2, f32)],
+    kind: FootprintTileColorKind,
+) {
+    for &(tile, w) in weights {
+        if w > 0.001 {
+            out.push(FootprintTileRequest {
+                tile,
+                color_kind: kind,
+                weight: w.clamp(0.05, 1.0),
+            });
+        }
+    }
+}
+
+/// Fill per-tile footprint requests from active ghost + staged book (view-only, partial-alpha).
 pub fn sync_footprint_visual_requests(
     strip: Res<crate::construction::build_strip::BuildStripState>,
     ghost: Res<crate::construction::build_state::BuildGhostState>,
     preview: Res<crate::construction::build_state::BuildPlacementPreview>,
     tool: Res<crate::construction::build_tool_authority::ActiveBuildTool>,
+    registry: Res<crate::construction::building_definitions::BuildingDefinitionRegistry>,
+    staged: Res<crate::construction::staged_ghost_panel::StagedPlacementBook>,
     settings: Res<crate::construction::tile_visual::ConstructionTileVisualSettings>,
     mut requests: ResMut<ConstructionVisualRequests>,
 ) {
     use crate::construction::build_confidence::{confidence_from_validation, BuildConfidence};
+    use crate::construction::build_interaction::placement_snapshot_for_building;
     use crate::construction::build_strip::ToolContext;
     use crate::construction::building_catalog::FootprintMatrix;
     if strip.active == ToolContext::None || !settings.show_occupation_tiles {
         return;
     }
-    let Some(origin) = ghost.origin else {
-        return;
-    };
-    let kind = match confidence_from_validation(&preview.report) {
+    let ghost_kind = match confidence_from_validation(&preview.report) {
         BuildConfidence::Perfect | BuildConfidence::Good => FootprintTileColorKind::Valid,
         BuildConfidence::Risky => FootprintTileColorKind::Risky,
         BuildConfidence::Invalid => FootprintTileColorKind::Invalid,
     };
-    let ox = origin.x as i32;
-    let oz = origin.z as i32;
-    let matrix = tool
-        .building_intent
-        .as_ref()
-        .map(|i| i.footprint.clone())
-        .unwrap_or_else(|| {
-            FootprintMatrix::from_size(ghost.footprint.width, ghost.footprint.depth, true)
-        });
-    for (dx, dz) in matrix.occupied_local_offsets() {
-        let tile = IVec2::new(ox + dx as i32, oz + dz as i32);
-        requests
-            .footprint_tiles
-            .push(FootprintTileRequest { tile, color_kind: kind });
+    if let Some(origin) = ghost.origin {
+        if let Some(snapshot) = placement_snapshot_for_building(&tool, &registry, &ghost, origin) {
+            push_weighted_footprint_tiles(
+                &mut requests.footprint_tiles,
+                &snapshot.weights,
+                ghost_kind,
+            );
+        } else {
+            let ox = origin.x as i32;
+            let oz = origin.z as i32;
+            let matrix = tool
+                .building_intent
+                .as_ref()
+                .map(|i| i.footprint.clone())
+                .unwrap_or_else(|| {
+                    FootprintMatrix::from_size(ghost.footprint.width, ghost.footprint.depth, true)
+                });
+            for (dx, dz) in matrix.occupied_local_offsets() {
+                let tile = IVec2::new(ox + dx as i32, oz + dz as i32);
+                requests.footprint_tiles.push(FootprintTileRequest {
+                    tile,
+                    color_kind: ghost_kind,
+                    weight: 1.0,
+                });
+            }
+        }
+    }
+    for row in &staged.rows {
+        let kind = color_kind_for_staged_validity(row.validity);
+        push_weighted_footprint_tiles(&mut requests.footprint_tiles, &row.footprint_weights, kind);
     }
 }
 
@@ -128,13 +175,38 @@ mod footprint_tests {
         });
         app.insert_resource(BuildPlacementPreview::default());
         app.insert_resource(crate::construction::build_tool_authority::ActiveBuildTool::default());
+        app.insert_resource(crate::construction::building_definitions::BuildingDefinitionRegistry::default());
+        app.insert_resource(crate::construction::staged_ghost_panel::StagedPlacementBook::default());
         app.insert_resource(crate::construction::tile_visual::ConstructionTileVisualSettings::default());
         app.insert_resource(ConstructionVisualRequests::default());
         app.add_systems(Update, sync_footprint_visual_requests);
         app.update();
         let reqs = app.world().resource::<ConstructionVisualRequests>();
         assert_eq!(reqs.footprint_tiles.len(), 6);
+        assert!(reqs.footprint_tiles.iter().all(|t| (t.weight - 1.0).abs() < 1e-5));
     }
+
+    #[test]
+    fn partial_alpha_parametric_witness() {
+        assert!(partial_alpha_parametric_witness_green());
+    }
+}
+
+/// **PARAM-005** — weighted raster produces sub-unity tile weights for map overlay.
+#[must_use]
+pub fn partial_alpha_parametric_witness_green() -> bool {
+    use crate::construction::building_catalog::FootprintMatrix;
+    use crate::construction::weighted_footprint::{
+        rasterize_with_effective_scale, PlacementParams, WEIGHT_OMIT_THRESHOLD,
+    };
+
+    let base = FootprintMatrix::from_size(2, 2, true);
+    let origin = BuildSiteTile { x: 1, z: 1 };
+    let (_, weighted) =
+        rasterize_with_effective_scale(&base, PlacementParams::identity(1.24), origin);
+    weighted.weights.iter().any(|(_, w)| {
+        *w >= WEIGHT_OMIT_THRESHOLD && *w > 0.0 && *w < 1.0
+    })
 }
 
 pub fn draw_construction_visual_requests_egui(
@@ -145,7 +217,12 @@ pub fn draw_construction_visual_requests_egui(
     map_vp: Res<SimulationMapViewport>,
     params: Res<WorldGenParams>,
 ) -> Result {
-    if requests.paths.is_empty() && requests.zone_tiles.is_empty() && requests.control_points.is_empty() {
+    if requests.paths.is_empty()
+        && requests.zone_tiles.is_empty()
+        && requests.control_points.is_empty()
+        && requests.footprint_tiles.is_empty()
+        && requests.corridor_paths.is_empty()
+    {
         return Ok(());
     }
     if !map_vp.is_adequate_for_camera() {
@@ -186,6 +263,21 @@ pub fn draw_construction_visual_requests_egui(
             );
         }
     }
+
+    super::round4_corridor::draw_corridor_phase_paths(
+        &painter,
+        &requests.corridor_paths,
+        |world| {
+            world_to_sim_map_egui(
+                world,
+                authority.as_deref(),
+                desired.as_ref(),
+                map_vp.as_ref(),
+                params.as_ref(),
+            )
+        },
+        zoom,
+    );
 
     for path in &requests.paths {
         let Some(a) =
@@ -236,6 +328,29 @@ pub fn draw_construction_visual_requests_egui(
             let r = (5.0 * zoom.sqrt()).clamp(3.0, 14.0);
             painter.circle_filled(screen, r, *color);
         }
+    }
+
+    for tile in &requests.footprint_tiles {
+        let world = Vec3::new(tile.tile.x as f32 + 0.5, 0.0, tile.tile.y as f32 + 0.5);
+        let Some(screen) = world_to_sim_map_egui(
+            world,
+            authority.as_deref(),
+            desired.as_ref(),
+            map_vp.as_ref(),
+            params.as_ref(),
+        ) else {
+            continue;
+        };
+        let base = match tile.color_kind {
+            FootprintTileColorKind::Valid => super::ghost_visual::footprint_valid_color(),
+            FootprintTileColorKind::Risky => super::ghost_visual::footprint_risky_color(),
+            FootprintTileColorKind::Invalid => super::ghost_visual::footprint_invalid_color(),
+        };
+        let alpha = (base.a() as f32 * tile.weight).round() as u8;
+        let color = egui::Color32::from_rgba_unmultiplied(base.r(), base.g(), base.b(), alpha);
+        let side = tile_px * 0.92;
+        let rect = egui::Rect::from_center_size(screen, egui::vec2(side, side));
+        painter.rect_filled(rect, 1.0, color);
     }
     Ok(())
 }

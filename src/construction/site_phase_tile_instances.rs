@@ -61,18 +61,15 @@ pub fn push_site_phase_tile_instances(
         .per_view
         .entry(TileDebugViewId::WorldMain)
         .or_default();
-    for (site, planned, footprint) in &sites {
+    for (site, _planned, footprint) in &sites {
         if matches!(site.phase, SiteConstructionPhase::Abandoned) {
             continue;
         }
         let lod = phase_lod(site.phase);
         let flags = tile_flags::CONSTRUCTION_SITE;
-        for local in &footprint.tiles {
+        for tile in &footprint.tiles {
             rows.push(TileDebugInstance {
-                world_pos: [
-                    planned.origin.x as f32 + local.x as f32 + 0.5,
-                    planned.origin.z as f32 + local.y as f32 + 0.5,
-                ],
+                world_pos: [tile.x as f32 + 0.5, tile.y as f32 + 0.5],
                 size,
                 lod,
                 flags,

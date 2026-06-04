@@ -14,7 +14,7 @@ pub mod material;
 pub mod generation;
 pub mod mobility;
 pub mod fire;
-mod dynamic_overlay;
+pub mod dynamic_overlay;
 pub mod editor;
 
 // Public exports
@@ -30,8 +30,8 @@ pub use tiles::*;
 pub use voronoi::*;
 pub use world::*;
 pub use dynamic_overlay::{
-    decay_dynamic_terrain_overlay, stub_accumulate_overlay_from_chunk_fields, ChunkCellKey,
-    DynamicTerrainOverlay,
+    apply_chunk_weather_to_dynamic_overlay, decay_dynamic_terrain_overlay,
+    overlay_mud_at, stub_accumulate_overlay_from_chunk_fields, ChunkCellKey, DynamicTerrainOverlay,
 };
 pub use fire::{
     ammo_dump_profile, fuel_depot_profile, fuel_material_def, lithium_battery_warehouse,

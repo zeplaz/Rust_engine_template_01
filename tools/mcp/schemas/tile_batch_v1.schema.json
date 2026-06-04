@@ -1,0 +1,86 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://rust-engine.local/schemas/tile_batch_v1.schema.json",
+  "title": "tile_batch_v1",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "batch_id",
+    "tile_id",
+    "base",
+    "rules_applied",
+    "render",
+    "variants",
+    "atlas"
+  ],
+  "additionalProperties": true,
+  "properties": {
+    "schema_version": { "const": 1 },
+    "batch_id": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+    "tile_id": { "type": "string", "minLength": 1 },
+    "tile": { "type": "string" },
+    "base": {
+      "type": "string",
+      "enum": ["wood", "stone", "concrete", "dirt", "asphalt", "metal_plate"]
+    },
+    "status": { "type": "string" },
+    "rules_applied": {
+      "type": "array",
+      "minItems": 4,
+      "items": { "type": "string" }
+    },
+    "render": {
+      "type": "object",
+      "required": ["method", "seed"],
+      "properties": {
+        "method": { "const": "blender_orthographic_iso" },
+        "isometric": { "type": "boolean" },
+        "seed": { "type": "integer" },
+        "tile_size_px": { "type": "integer", "minimum": 32 },
+        "camera_elevation_deg": { "type": "number" }
+      }
+    },
+    "variants": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "required": ["state", "damage", "power", "lighting"],
+        "properties": {
+          "variant_key": { "type": "string" },
+          "state": {
+            "type": "string",
+            "enum": ["clean", "dirty", "damaged", "ruined"]
+          },
+          "damage": { "type": "number", "minimum": 0, "maximum": 1 },
+          "power": { "type": "string", "enum": ["off", "partial", "on"] },
+          "fill": {
+            "type": "string",
+            "enum": ["empty", "quarter", "half", "full"]
+          },
+          "lighting": {
+            "type": "string",
+            "enum": ["day", "night_off", "night_on"]
+          }
+        }
+      }
+    },
+    "atlas": {
+      "type": "object",
+      "required": ["atlas_id", "columns", "rows", "tile_px"],
+      "properties": {
+        "atlas_id": { "type": "string" },
+        "columns": { "type": "integer", "minimum": 1 },
+        "rows": { "type": "integer", "minimum": 1 },
+        "tile_px": { "type": "integer", "minimum": 32 },
+        "padding_px": { "type": "integer", "minimum": 0 },
+        "output_png": { "type": "string" },
+        "meta_json": { "type": "string" }
+      }
+    },
+    "expected_outputs": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  }
+}

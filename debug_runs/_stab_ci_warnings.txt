@@ -1,0 +1,216 @@
+    Blocking waiting for file lock on artifact directory
+   Compiling proc_A_dine01 v0.1.1 (C:\dev\github\Rust_engine_template_01)
+error: unused import: `bevy::prelude::*`
+ --> src\gui\editor\world_preview\wave_p_witness.rs:5:5
+  |
+5 | use bevy::prelude::*;
+  |     ^^^^^^^^^^^^^^^^
+  |
+  = note: `-D unused-imports` implied by `-D warnings`
+  = help: to override `-D warnings` add `#[allow(unused_imports)]`
+
+error: unused imports: `PreviewLayers`, `PreviewPathAuthority`, and `gather_wave_p_readiness`
+ --> src\gui\editor\world_preview\wave_p_witness.rs:8:5
+  |
+8 |     gather_wave_p_readiness, wave_p_readiness_passes, PreviewLayers, PreviewPathAuthority,
+  |     ^^^^^^^^^^^^^^^^^^^^^^^                           ^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^
+
+error: unused import: `LOGISTICS_THROUGHPUT_TODO_COUNT`
+ --> src\dev\runtime_witness\economy.rs:9:63
+  |
+9 |     LogisticsThroughputTodoBoard, LogisticsThroughputWitness, LOGISTICS_THROUGHPUT_TODO_COUNT,
+  |                                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: unused import: `crate::engine::states::BaseState`
+  --> src\construction\witness_collectors.rs:26:5
+   |
+26 | use crate::engine::states::BaseState;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: unused import: `CONSTRUCTION_STAGE_JSON`
+   --> src\construction\witness_collectors.rs:232:71
+    |
+232 |     write_construction_live_proof_system, ConstructionLiveProofState, CONSTRUCTION_STAGE_JSON,
+    |                                                                       ^^^^^^^^^^^^^^^^^^^^^^^
+
+error: unused import: `CorridorConstructionRow`
+ --> src\construction\round4_corridor.rs:7:50
+  |
+7 |     ConstructionPhase, CorridorConstructionBook, CorridorConstructionRow,
+  |                                                  ^^^^^^^^^^^^^^^^^^^^^^^
+
+error: unused import: `INDUSTRIAL_ACTIVATION_JSON`
+   --> src\economy\activation\witness_collectors.rs:166:5
+    |
+166 |     INDUSTRIAL_ACTIVATION_JSON,
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: variable does not need to be mutable
+   --> src\render\stage5_full_app_harness.rs:732:9
+    |
+732 |     let mut graph = log_e01_f2_combined_projection_fixture();
+    |         ----^^^^^
+    |         |
+    |         help: remove this `mut`
+    |
+    = note: `-D unused-mut` implied by `-D warnings`
+    = help: to override `-D warnings` add `#[allow(unused_mut)]`
+
+error: variable does not need to be mutable
+  --> src\render\gpu_surface_teardown.rs:44:5
+   |
+44 |     mut cameras: Query<&mut Camera>,
+   |     ----^^^^^^^
+   |     |
+   |     help: remove this `mut`
+
+error: variable does not need to be mutable
+   --> src\systems\terrain\material_plugin.rs:434:5
+    |
+434 |     mut overlay: ResMut<DynamicTerrainOverlay>,
+    |     ----^^^^^^^
+    |     |
+    |     help: remove this `mut`
+
+error: variable does not need to be mutable
+   --> src\systems\terrain\material_plugin.rs:435:5
+    |
+435 |     mut substrate: Option<ResMut<WorldSubstrateRegistry>>,
+    |     ----^^^^^^^^^
+    |     |
+    |     help: remove this `mut`
+
+error: variable does not need to be mutable
+   --> src\systems\terrain\material_plugin.rs:443:5
+    |
+443 |     mut overlay: ResMut<DynamicTerrainOverlay>,
+    |     ----^^^^^^^
+    |     |
+    |     help: remove this `mut`
+
+error: variable does not need to be mutable
+   --> src\systems\terrain\material_plugin.rs:444:5
+    |
+444 |     mut substrate: Option<ResMut<WorldSubstrateRegistry>>,
+    |     ----^^^^^^^^^
+    |     |
+    |     help: remove this `mut`
+
+error: variable does not need to be mutable
+   --> src\systems\terrain\material_plugin.rs:452:5
+    |
+452 |     mut overlay: ResMut<DynamicTerrainOverlay>,
+    |     ----^^^^^^^
+    |     |
+    |     help: remove this `mut`
+
+error: variable does not need to be mutable
+   --> src\systems\terrain\material_plugin.rs:453:5
+    |
+453 |     mut substrate: Option<ResMut<WorldSubstrateRegistry>>,
+    |     ----^^^^^^^^^
+    |     |
+    |     help: remove this `mut`
+
+error: variable does not need to be mutable
+  --> src\construction\parametric_commit.rs:64:9
+   |
+64 |     let mut tz = z;
+   |         ----^^
+   |         |
+   |         help: remove this `mut`
+
+error: variable does not need to be mutable
+   --> src\substrate\post_spine.rs:101:5
+    |
+101 |     mut registry: Option<ResMut<WorldSubstrateRegistry>>,
+    |     ----^^^^^^^^
+    |     |
+    |     help: remove this `mut`
+
+error: variable does not need to be mutable
+   --> src\substrate\post_spine.rs:127:5
+    |
+127 |     mut registry: Option<ResMut<WorldSubstrateRegistry>>,
+    |     ----^^^^^^^^
+    |     |
+    |     help: remove this `mut`
+
+error: variable does not need to be mutable
+   --> src\substrate\post_spine.rs:150:5
+    |
+150 |     mut out: Option<ResMut<GlobalRenewableWeatherFactors>>,
+    |     ----^^^
+    |     |
+    |     help: remove this `mut`
+
+error: function `refresh_fire_streaming_live_witness` is never used
+   --> src\render\fire_streaming.rs:137:8
+    |
+137 | pub fn refresh_fire_streaming_live_witness() -> bool {
+    |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: `-D dead-code` implied by `-D warnings`
+    = help: to override `-D warnings` add `#[expect(dead_code)]` or `#[allow(dead_code)]`
+
+error: function `merge_tactical_vfx_stage5_witness` is never used
+   --> src\render\stage5_full_app_harness.rs:384:8
+    |
+384 | pub fn merge_tactical_vfx_stage5_witness(
+    |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: function `log_e01_projection_graph_fixture` is never used
+   --> src\render\stage5_full_app_harness.rs:563:8
+    |
+563 | pub fn log_e01_projection_graph_fixture() -> RenderProjectionGraph {
+    |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: function `log_e01_f2_combined_projection_fixture` is never used
+   --> src\render\stage5_full_app_harness.rs:621:8
+    |
+621 | pub fn log_e01_f2_combined_projection_fixture() -> RenderProjectionGraph {
+    |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: function `merge_visual_perf_witness_stage5` is never used
+   --> src\render\stage5_full_app_harness.rs:628:8
+    |
+628 | pub fn merge_visual_perf_witness_stage5(root: &mut serde_json::Value) {
+    |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: function `refresh_stage5_visual_perf_witness_on_disk` is never used
+   --> src\render\stage5_full_app_harness.rs:656:8
+    |
+656 | pub fn refresh_stage5_visual_perf_witness_on_disk() -> bool {
+    |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: function `merge_log_e01_stage5_witness` is never used
+   --> src\render\stage5_full_app_harness.rs:692:8
+    |
+692 | pub fn merge_log_e01_stage5_witness(root: &mut serde_json::Value, graph: &RenderProjectionGraph) {
+    |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: function `refresh_log_e01_and_tactical_vfx_stage5_live_witness` is never used
+   --> src\render\stage5_full_app_harness.rs:731:8
+    |
+731 | pub fn refresh_log_e01_and_tactical_vfx_stage5_live_witness() -> bool {
+    |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: function `refresh_log_e01_fullapp_upgrade_001_live_witness` is never used
+   --> src\render\stage5_full_app_harness.rs:816:8
+    |
+816 | pub fn refresh_log_e01_fullapp_upgrade_001_live_witness() -> bool {
+    |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: function `refresh_p2_fire_spark_011_stage5_live_witness` is never used
+   --> src\render\stage5_full_app_harness.rs:861:8
+    |
+861 | pub fn refresh_p2_fire_spark_011_stage5_live_witness() -> bool {
+    |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: function `stab_vt_001_witness` is never used
+   --> src\render\vt_ci_matrix.rs:407:8
+    |
+407 | pub fn stab_vt_001_witness() -> serde_json::Value {
+    |        ^^^^^^^^^^^^^^^^^^^
+
+error: could not compile `proc_A_dine01` (lib) due to 30 previous errors

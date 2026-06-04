@@ -8,6 +8,7 @@
 | **Version** | `1.0.0` |
 | **Date** | 2026-05-26 |
 | **Owner** | `@designer` |
+| **Status** | **SIGNED** · **PASS** (CONSTRUCTION-PARAM-DESIGN-001) |
 | **Implementation owner** | `src/construction/staged_ghost_panel.rs` (**CODER-004**) |
 | **No Rust** | Column layout + states + button copy only |
 
@@ -148,10 +149,16 @@ Map draw uses ghost visual spec (red weights) — panel does not duplicate map f
 
 ---
 
+## Polish (v2)
+
+Interaction polish: [`construction_parametric_staging_ux_v2.md`](construction_parametric_staging_ux_v2.md) (**DESIGN-PARAM-STAGING-POLISH-002** PASS).
+
+---
+
 ## Coder mapping
 
 | Lane | Deliverable |
 |:---|:---|
-| **CONSTRUCTION-PARAM-CODER-004** | `staged_ghost_panel.rs` + footer buttons |
+| **CONSTRUCTION-PARAM-CODER-004** | `staged_ghost_panel.rs` + footer buttons + v2 polish |
 | **CONSTRUCTION-PARAM-CODER-003** | Drain approved → `CommitConstructionSiteEvent` |
 | **CONSTRUCTION-PARAM-CODER-001** | Validity column from weighted overlap |

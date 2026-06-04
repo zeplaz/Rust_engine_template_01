@@ -1,0 +1,66 @@
+{
+  "program_id": "PLAN-PROC-TILE-PROD-001",
+  "task_id": "MCP-PT-1-001",
+  "gate": "PT-1-keyframe-G4",
+  "green": false,
+  "freeze_id": "TILE-FIX-001",
+  "freeze_reason": "greybox production v1 frozen; PNG-exists gates revoked",
+  "updated": "2026-06-03",
+  "_agent_meta": {
+    "agent": "coder-mcp",
+    "bake_spine": "src/dev/design_tile_bake_spine_convergence_v1.md",
+    "export_script": "tools/mcp/scripts/mcp_export_pilot_keyframes_g4.py",
+    "rollup": "debug_runs/art_pipeline/pilot_keyframe_export_rollup_live.json"
+  },
+  "policy": {
+    "g4_review_mode": "keyframe_stills",
+    "lod0_ortho_atlas_g4_valid": false,
+    "ship_bake_source": "keyframe_pack",
+    "headless_export": "RUST_ENGINE_TILE_KEYFRAME_HEADLESS=1"
+  },
+  "fixes": {
+    "bunker_camera_framing": "tile_ortho_bake._frame_assembly_camera wide_x path + tile_keyframe_bake always re-frame",
+    "night_emissive": "tile_keyframe_bake._apply_night_emission for PG-3 brightness",
+    "production_glb_fallback": "remap_assembly_snapshot_to_production lod0 mesh when kit_production GLB missing",
+    "variant_matrix_parser": "variant_keys block includes 4-space continuations; ship_minimum merged into expand"
+  },
+  "g4_signoffs": {
+    "rowhouse_victorian": {
+      "g4_3_keyframe_minimum": "pass",
+      "proceed_ship": "yes",
+      "witness": "debug_runs/art_pipeline/rowhouse_production_keyframe_g4_live.json"
+    },
+    "warehouse_industrial_west": {
+      "g4_3_keyframe_minimum": "pass",
+      "proceed_ship": "yes",
+      "witness": "debug_runs/art_pipeline/warehouse_production_keyframe_g4_live.json"
+    },
+    "shopfront_colonial": {
+      "g4_3_keyframe_minimum": "pass",
+      "proceed_ship": "yes",
+      "witness": "debug_runs/art_pipeline/shopfront_production_keyframe_g4_live.json"
+    },
+    "bunker_military": {
+      "g4_3_keyframe_minimum": "pass",
+      "lod0_ortho_g4": "rejected",
+      "proceed_ship": "yes",
+      "witness": "debug_runs/art_pipeline/bunker_production_keyframe_g4_live.json",
+      "note": "Keyframe stills exported; lod0 ortho pilot remains fail — do not promote"
+    }
+  },
+  "keyframe_export_folders": [
+    "assets/staging/tiles/keyframe_stills/rowhouse_victorian/",
+    "assets/staging/tiles/keyframe_stills/warehouse_industrial_west/",
+    "assets/staging/tiles/keyframe_stills/shopfront_colonial/",
+    "assets/staging/tiles/keyframe_stills/bunker_military/",
+    "assets/staging/tiles/keyframe_stills/missile_silo_military/"
+  ],
+  "missile_silo_phase1": {
+    "batch_id": "tile_missile_silo_military_production_v1",
+    "mesh_derivative": "bunker_6x3",
+    "proceed_ship": "yes_qualified"
+  },
+  "pg3_w3_live_tactical_review": "pass",
+  "industrial_military_witness": "debug_runs/art_pipeline/industrial_military_tile_art_live.json",
+  "next": "prop_missile_pad bespoke mesh; optional FULL_APP viewport spot-check"
+}

@@ -1,0 +1,14 @@
+batch_id: kit_greybox_003
+designer_mcp: rules_audit
+rules_check:
+  passed: true
+  blocked_by: []
+  batch_id: kit_greybox_003
+  seed: 42
+  proceed: yes
+order_critique:
+  - "Batch fills 10 kit inventory gaps (walls x4, windows x2, doors x2, roof x1, prop x1) not present in _module_index.json (21 entries)."
+  - "All ops SHIPPED per geometry_operations — no tile.generate, no module_window/prop blockers."
+  - "Grid 4m/unit on primary facades; door_residential_1u sub-1u width (1.2m) documented as kit residential greybox."
+  - "roof_sawtooth_2u uses flat slab at 0.4m — references greybox:sawtooth_via_slab until pitched bpy ships."
+  - "Promotion deferred until G3 validate_asset_report green on all staging GLBs (G4 sign-off gate)."

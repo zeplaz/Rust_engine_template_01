@@ -1,0 +1,11 @@
+   Compiling proc_A_dine01 v0.1.1 (C:\dev\github\Rust_engine_template_01)
+error: unused import: `crate::render::ProjectionNodeTrait`
+  --> src\render\stage5_full_app_harness.rs:20:5
+   |
+20 | use crate::render::ProjectionNodeTrait;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `-D unused-imports` implied by `-D warnings`
+   = help: to override `-D warnings` add `#[allow(unused_imports)]`
+
+error: could not compile `proc_A_dine01` (lib) due to 1 previous error

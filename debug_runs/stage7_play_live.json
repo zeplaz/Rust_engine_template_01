@@ -43,12 +43,15 @@
       "debug_runs/ui_shell_migration_live.json",
       "debug_runs/minimap_compositor_live.json",
       "debug_runs/stage7_behavioral_live.json",
-      "debug_runs/stage7_play_live.json"
+      "debug_runs/stage7_play_live.json",
+      "debug_runs/wss_substrate_live.json",
+      "debug_runs/f2_smoke_pipeline_live.json",
+      "debug_runs/play_scenario_live.json"
     ],
     "relative_path": "debug_runs/stage7_play_live.json",
     "schema": "debug_run_envelope_v1",
-    "source_system": "stage7_play_live_proof",
-    "written_at_epoch_secs": 1779752966
+    "source_system": "stage7_play_witness",
+    "written_at_epoch_secs": 1780455043
   },
   "activation_green": true,
   "concrete_chain_e2e": {

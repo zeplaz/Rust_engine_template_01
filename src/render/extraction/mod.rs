@@ -4,6 +4,9 @@ mod fire_emission_profile;
 mod frame_snapshot;
 mod fire_visual_extract;
 mod render_projection_graph;
+mod procedural_build_extract;
+mod procedural_module_extract;
+mod smoke_visual_extract;
 
 pub use frame_snapshot::ExtractFrameSnapshot;
 pub use fire_emission_profile::{
@@ -15,10 +18,19 @@ pub use fire_visual_extract::{
     extract_fire_simulation_snapshot, sync_shared_overlay_from_simulation, FireAtmosphereAggregate,
     FireVisualFramePlugin, FireVisualFrameSet,
 };
+pub use smoke_visual_extract::{build_smoke_visual_extract, SmokeVisualBridgeWitness};
 pub use crate::render::sim_visual_extract::FireVisualFrame;
+pub use procedural_build_extract::{
+    assemble_procedural_build_instances, extract_procedural_build_assembly,
+    ProceduralBuildExtract, ProceduralBuildInstance,
+};
+pub use procedural_module_extract::{
+    load_procedural_module_scenes, scene_for_module, sync_procedural_module_visual_policy,
+    ProceduralModuleSceneCatalog, ProceduralModuleVisualPolicy,
+};
 pub use render_projection_graph::{
+    f2_tactical_fire_projection_fixture, fire_projection_stamp_aligned,
     projection_graph_build_signature, projection_graph_runtime_order_snapshot,
-    run_render_projection_graph, spatial_distribution_stats,
-    FireProjectionNode, ProjectionNodeTrait, RenderProjectionContext, RenderProjectionGraph,
-    CLUSTERED_FIRE_INSTANCE_CAP,
+    run_render_projection_graph, spatial_distribution_stats, FireProjectionNode, ProjectionNodeTrait,
+    RenderProjectionContext, RenderProjectionGraph, CLUSTERED_FIRE_INSTANCE_CAP,
 };

@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "asset_id": "win_strip_2u",
+  "archetype": "module_window",
+  "style_pack": "style_modern",
+  "development_tier": "lod0",
+  "pbr_status": "deferred",
+  "batch_id": "kit_lod0_005",
+  "module": {
+    "grid_units": [
+      2,
+      1
+    ],
+    "snap": "floor_edge",
+    "pivot": "bottom_center"
+  },
+  "dimensions_m": {
+    "w": 8,
+    "h": 1.0,
+    "d": 0.1
+  },
+  "material_profile": "glass_panel_01",
+  "references": []
+}

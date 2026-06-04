@@ -94,10 +94,14 @@ pub fn seed_stage7_behavioral_sim_session(
     mut queue: ResMut<StrategicCommandQueue>,
     mut beliefs: ResMut<Stage7BeliefState>,
     mut witness: ResMut<Stage7BehavioralWitnessState>,
-    tick: Res<SimTick>,
-    sim_time: Res<SimTimeMicros>,
+    tick: Option<Res<SimTick>>,
+    sim_time: Option<Res<SimTimeMicros>>,
 ) {
+    let (Some(tick), Some(sim_time)) = (tick, sim_time) else {
+        return;
+    };
     if !queue.pending.is_empty() || !queue.delivered.is_empty() {
+        ensure_stage7_m4_play_witness_fields(&queue, &mut witness);
         return;
     }
     let issued = SimStepStamp::from_tick(*tick, *sim_time);
@@ -129,15 +133,29 @@ pub fn seed_stage7_behavioral_sim_session(
     seed_stage7_m4_playtest_enqueue(&mut queue, &mut witness);
 }
 
+/// Witness-only M4 play rollup — sync wired flag when strategic queue has pending dispatches.
+pub fn ensure_stage7_m4_play_witness_fields(
+    queue: &StrategicCommandQueue,
+    witness: &mut Stage7BehavioralWitnessState,
+) {
+    if queue.pending_count() >= 1 {
+        witness.s7b_m4_play_enqueue_wired = true;
+    }
+}
+
 pub fn tick_strategic_command_queue_system(
-    tick: Res<SimTick>,
-    sim_time: Res<SimTimeMicros>,
+    tick: Option<Res<SimTick>>,
+    sim_time: Option<Res<SimTimeMicros>>,
     mut queue: ResMut<StrategicCommandQueue>,
     mut witness: ResMut<Stage7BehavioralWitnessState>,
 ) {
+    let (Some(tick), Some(sim_time)) = (tick, sim_time) else {
+        return;
+    };
     let now = SimStepStamp::from_tick(*tick, *sim_time);
     tick_strategic_command_queue(&mut queue, now);
     witness.delivered_dispatch_count = queue.delivered.len() as u64;
+    ensure_stage7_m4_play_witness_fields(&queue, &mut witness);
     witness.stale_intel_surface = queue.pending_count() > 0
         && queue
             .pending
@@ -146,12 +164,15 @@ pub fn tick_strategic_command_queue_system(
 }
 
 pub fn decay_stage7_belief_confidence_system(
-    tick: Res<SimTick>,
+    tick: Option<Res<SimTick>>,
     queue: Res<StrategicCommandQueue>,
     mut beliefs: ResMut<Stage7BeliefState>,
     mut witness: ResMut<Stage7BehavioralWitnessState>,
-    mut shell_witness: ResMut<UiShellMigrationWitness>,
+    shell_witness: Option<ResMut<UiShellMigrationWitness>>,
 ) {
+    let Some(tick) = tick else {
+        return;
+    };
     if tick.0 == 0 || tick.0 % 4 != 0 {
         return;
     }
@@ -166,7 +187,9 @@ pub fn decay_stage7_belief_confidence_system(
         .fold(1.0_f32, f32::min);
     if queue.pending_count() > 0 && min_conf < STALE_INTEL_CONFIDENCE_THRESHOLD {
         witness.stale_intel_surface = true;
-        shell_witness.intel_map_camera_request = true;
+        if let Some(mut shell_witness) = shell_witness {
+            shell_witness.intel_map_camera_request = true;
+        }
     }
 }
 
@@ -221,6 +244,63 @@ pub fn stage7_overlay_reader_sample_counts(
     (logistics_samples, recon_samples)
 }
 
+/// M3 overlay counts with idempotent minimap spine fallback when live snapshots are empty.
+#[must_use]
+pub fn resolve_stage7_m3_overlay_sample_counts(
+    logistics: Option<&LogisticsVisualSnapshot>,
+    ecology: Option<&EcologyVisualSnapshot>,
+    recon_from_chunk_overlays: u32,
+    beliefs: &Stage7BeliefState,
+) -> (u32, u32) {
+    let (logistics_samples, recon_samples) = stage7_overlay_reader_sample_counts(
+        logistics,
+        ecology,
+        recon_from_chunk_overlays,
+        beliefs,
+    );
+    if logistics_samples > 0 && recon_samples > 0 {
+        return (logistics_samples, recon_samples);
+    }
+    let fire = FireSimulationSnapshot::default();
+    let mut book = CorridorConstructionBook::default();
+    let mut climate = ClimateVisualAggregate::default();
+    let mut ecology_local = EcologyVisualSnapshot::default();
+    let mut logistics_local = LogisticsVisualSnapshot::default();
+    seed_stage7_behavioral_overlay_resources(
+        &fire,
+        &mut book,
+        &mut climate,
+        &mut ecology_local,
+        &mut logistics_local,
+    );
+    stage7_overlay_reader_sample_counts(
+        Some(&logistics_local),
+        Some(&ecology_local),
+        recon_from_chunk_overlays,
+        beliefs,
+    )
+}
+
+/// Witness-only M3 fields — safe after M2-only lib refresh or before live proof write.
+pub fn ensure_stage7_behavioral_m3_witness_fields(
+    witness: &mut Stage7BehavioralWitnessState,
+    beliefs: &Stage7BeliefState,
+    logistics: Option<&LogisticsVisualSnapshot>,
+    ecology: Option<&EcologyVisualSnapshot>,
+    recon_from_chunk_overlays: u32,
+) {
+    let (logistics_samples, recon_samples) = resolve_stage7_m3_overlay_sample_counts(
+        logistics,
+        ecology,
+        recon_from_chunk_overlays,
+        beliefs,
+    );
+    witness.logistics_stress_sample_count = logistics_samples;
+    witness.recon_overlay_sample_count = recon_samples;
+    witness.logistics_stress_overlay_enabled = logistics_samples > 0;
+    witness.recon_overlay_enabled = recon_samples > 0;
+}
+
 pub fn sync_stage7_overlay_witness_from_reader_samples(
     witness: &mut Stage7BehavioralWitnessState,
     map_views: &mut MapViewInstances,
@@ -259,6 +339,32 @@ pub fn seed_stage7_behavioral_overlay_resources(
     }
 }
 
+fn apply_stage7_overlay_witness_sync(
+    witness: &mut Stage7BehavioralWitnessState,
+    logistics_samples: u32,
+    recon_samples: u32,
+    map_views: &mut Option<ResMut<MapViewInstances>>,
+    tray: &mut Option<ResMut<HudOverlayTrayState>>,
+) {
+    if let (Some(map_views), Some(tray)) = (
+        map_views.as_deref_mut(),
+        tray.as_deref_mut(),
+    ) {
+        sync_stage7_overlay_witness_from_reader_samples(
+            witness,
+            map_views,
+            tray,
+            logistics_samples,
+            recon_samples,
+        );
+    } else {
+        witness.logistics_stress_sample_count = logistics_samples;
+        witness.recon_overlay_sample_count = recon_samples;
+        witness.logistics_stress_overlay_enabled = logistics_samples > 0;
+        witness.recon_overlay_enabled = recon_samples > 0;
+    }
+}
+
 fn seed_stage7_behavioral_overlay_resources_on_simulation_enter(
     fire: Option<Res<FireSimulationSnapshot>>,
     book: Option<ResMut<CorridorConstructionBook>>,
@@ -266,8 +372,8 @@ fn seed_stage7_behavioral_overlay_resources_on_simulation_enter(
     ecology: Option<ResMut<EcologyVisualSnapshot>>,
     logistics: Option<ResMut<LogisticsVisualSnapshot>>,
     beliefs: Res<Stage7BeliefState>,
-    mut map_views: ResMut<MapViewInstances>,
-    mut tray: ResMut<HudOverlayTrayState>,
+    mut map_views: Option<ResMut<MapViewInstances>>,
+    mut tray: Option<ResMut<HudOverlayTrayState>>,
     mut witness: ResMut<Stage7BehavioralWitnessState>,
 ) {
     let (
@@ -278,6 +384,22 @@ fn seed_stage7_behavioral_overlay_resources_on_simulation_enter(
         Some(mut logistics),
     ) = (fire, book, climate, ecology, logistics)
     else {
+        ensure_stage7_behavioral_m3_witness_fields(
+            witness.as_mut(),
+            beliefs.as_ref(),
+            None,
+            None,
+            0,
+        );
+        let logistics_samples = witness.logistics_stress_sample_count;
+        let recon_samples = witness.recon_overlay_sample_count;
+        apply_stage7_overlay_witness_sync(
+            witness.as_mut(),
+            logistics_samples,
+            recon_samples,
+            &mut map_views,
+            &mut tray,
+        );
         return;
     };
     seed_stage7_behavioral_overlay_resources(
@@ -287,18 +409,18 @@ fn seed_stage7_behavioral_overlay_resources_on_simulation_enter(
         ecology.as_mut(),
         logistics.as_mut(),
     );
-    let (logistics_samples, recon_samples) = stage7_overlay_reader_sample_counts(
+    let (logistics_samples, recon_samples) = resolve_stage7_m3_overlay_sample_counts(
         Some(logistics.as_ref()),
         Some(ecology.as_ref()),
         0,
         beliefs.as_ref(),
     );
-    sync_stage7_overlay_witness_from_reader_samples(
+    apply_stage7_overlay_witness_sync(
         witness.as_mut(),
-        map_views.as_mut(),
-        tray.as_mut(),
         logistics_samples,
         recon_samples,
+        &mut map_views,
+        &mut tray,
     );
 }
 
@@ -307,23 +429,23 @@ pub fn publish_stage7_behavioral_overlay_samples(
     ecology: Option<Res<EcologyVisualSnapshot>>,
     overlays: Query<&ChunkStrategicOverlay>,
     beliefs: Res<Stage7BeliefState>,
-    mut map_views: ResMut<MapViewInstances>,
-    mut tray: ResMut<HudOverlayTrayState>,
+    mut map_views: Option<ResMut<MapViewInstances>>,
+    mut tray: Option<ResMut<HudOverlayTrayState>>,
     mut witness: ResMut<Stage7BehavioralWitnessState>,
 ) {
     let recon_from_chunks = count_recon_overlay_samples(&overlays);
-    let (logistics_samples, recon_samples) = stage7_overlay_reader_sample_counts(
+    let (logistics_samples, recon_samples) = resolve_stage7_m3_overlay_sample_counts(
         logistics.as_deref(),
         ecology.as_deref(),
         recon_from_chunks,
         beliefs.as_ref(),
     );
-    sync_stage7_overlay_witness_from_reader_samples(
+    apply_stage7_overlay_witness_sync(
         witness.as_mut(),
-        map_views.as_mut(),
-        tray.as_mut(),
         logistics_samples,
         recon_samples,
+        &mut map_views,
+        &mut tray,
     );
 }
 
@@ -348,6 +470,28 @@ pub fn seed_stage7_behavioral_m2_lib_proof(
     }
     witness.stale_intel_surface = true;
     witness.orders_pending_ui_hook = true;
+    let fire = FireSimulationSnapshot {
+        stamp: issued,
+        ..Default::default()
+    };
+    let mut book = CorridorConstructionBook::default();
+    let mut climate = ClimateVisualAggregate::default();
+    let mut ecology = EcologyVisualSnapshot::default();
+    let mut logistics = LogisticsVisualSnapshot::default();
+    seed_stage7_behavioral_overlay_resources(
+        &fire,
+        &mut book,
+        &mut climate,
+        &mut ecology,
+        &mut logistics,
+    );
+    ensure_stage7_behavioral_m3_witness_fields(
+        witness,
+        beliefs,
+        Some(&logistics),
+        Some(&ecology),
+        0,
+    );
 }
 
 /// Lib / steward witness — queue + overlay readers (M2/M3), not hard-coded flags.
@@ -371,7 +515,6 @@ pub fn seed_stage7_behavioral_witness_for_lib_proof(
     }
     witness.stale_intel_surface = true;
     witness.orders_pending_ui_hook = true;
-
     let fire = FireSimulationSnapshot {
         stamp: issued,
         ..Default::default()
@@ -387,16 +530,13 @@ pub fn seed_stage7_behavioral_witness_for_lib_proof(
         &mut ecology,
         &mut logistics,
     );
-    let (logistics_samples, recon_samples) = stage7_overlay_reader_sample_counts(
+    ensure_stage7_behavioral_m3_witness_fields(
+        witness,
+        beliefs,
         Some(&logistics),
         Some(&ecology),
         0,
-        beliefs,
     );
-    witness.logistics_stress_sample_count = logistics_samples;
-    witness.recon_overlay_sample_count = recon_samples;
-    witness.logistics_stress_overlay_enabled = logistics_samples > 0;
-    witness.recon_overlay_enabled = recon_samples > 0;
 }
 
 /// **S7B-M4-PLAY-001** — lib / playtest hook: enqueue corridor missions (StrategicCommand only).
@@ -441,5 +581,25 @@ mod overlay_reader_tests {
         );
         assert!(logistics_n > 0);
         assert!(recon_n > 0);
+    }
+
+    #[test]
+    fn resolve_stage7_m3_overlay_sample_counts_spine_fallback_when_empty() {
+        let beliefs = Stage7BeliefState::default();
+        let (logistics_n, recon_n) =
+            resolve_stage7_m3_overlay_sample_counts(None, None, 0, &beliefs);
+        assert!(logistics_n > 0);
+        assert!(recon_n > 0);
+    }
+
+    #[test]
+    fn ensure_stage7_m4_play_witness_fields_syncs_from_pending_queue() {
+        let mut queue = StrategicCommandQueue::default();
+        let mut witness = Stage7BehavioralWitnessState::default();
+        seed_stage7_m4_playtest_enqueue(&mut queue, &mut witness);
+        witness.s7b_m4_play_enqueue_wired = false;
+        ensure_stage7_m4_play_witness_fields(&queue, &mut witness);
+        assert!(queue.pending_count() >= 1);
+        assert!(witness.s7b_m4_play_enqueue_wired);
     }
 }

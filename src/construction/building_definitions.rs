@@ -81,6 +81,9 @@ struct BuildingDefinitionFile {
     plant_definition_id: Option<String>,
     #[serde(default)]
     transfer_capacity_mva: f32,
+    /// MCP module catalog id — mesh resolved from `_module_index.ron` when set.
+    #[serde(default)]
+    procedural_module_id: Option<String>,
 }
 
 fn default_one() -> u32 {
@@ -109,6 +112,12 @@ pub struct BuildingDefinition {
     pub plant_definition_id: Option<String>,
     pub transfer_capacity_mva: f32,
     pub is_productive: bool,
+    /// Catalog module id (`wall_concrete_2u`, …) from MCP promote/register.
+    pub procedural_module_id: Option<String>,
+    /// Repo-relative GLB from module index (set at registry load).
+    pub procedural_glb_path: Option<String>,
+    /// Bevy asset path (no `assets/` prefix) for `AssetServer::load`.
+    pub procedural_glb_asset: Option<String>,
 }
 
 #[derive(Resource, Debug, Default)]
@@ -327,6 +336,9 @@ fn file_to_definition(id: String, raw: BuildingDefinitionFile) -> BuildingDefini
         plant_definition_id: raw.plant_definition_id.clone(),
         transfer_capacity_mva: raw.transfer_capacity_mva,
         is_productive: raw.is_productive,
+        procedural_module_id: raw.procedural_module_id.clone(),
+        procedural_glb_path: None,
+        procedural_glb_asset: None,
     }
 }
 
@@ -377,6 +389,9 @@ fn register_mock_shapes_from_ron(registry: &mut BuildingDefinitionRegistry) {
             plant_definition_id: None,
             transfer_capacity_mva: 0.0,
             is_productive: false,
+            procedural_module_id: None,
+            procedural_glb_path: None,
+            procedural_glb_asset: None,
         };
         registry.by_id.insert(id, def);
     }
@@ -412,8 +427,33 @@ fn register_builtin_apartments(registry: &mut BuildingDefinitionRegistry) {
             plant_definition_id: None,
             transfer_capacity_mva: 0.0,
             is_productive: false,
+            procedural_module_id: None,
+            procedural_glb_path: None,
+            procedural_glb_asset: None,
         };
         registry.by_id.insert(def.id.clone(), def);
+    }
+}
+
+impl BuildingDefinitionRegistry {
+    /// Resolve Bevy asset path: building row `procedural_module_id` or direct module catalog id.
+    #[must_use]
+    pub fn procedural_glb_asset<'a>(
+        &'a self,
+        modules: &'a super::procedural::ProceduralModuleRegistry,
+        catalog_or_module_id: &str,
+    ) -> Option<&'a str> {
+        if let Some(def) = self.get(catalog_or_module_id) {
+            if let Some(asset) = def.procedural_glb_asset.as_deref() {
+                return Some(asset);
+            }
+            if let Some(module_id) = def.procedural_module_id.as_deref() {
+                if let Some(asset) = modules.stylepack_glb_asset(module_id) {
+                    return Some(asset);
+                }
+            }
+        }
+        modules.stylepack_glb_asset(catalog_or_module_id)
     }
 }
 
@@ -477,8 +517,30 @@ pub fn mock_shapes_parity_green() -> bool {
         && def.footprint.cells[3] == 0
 }
 
-pub fn init_building_definition_registry(mut commands: Commands) {
-    let registry = load_building_definitions_from_dir(default_buildings_dir());
+pub fn attach_procedural_glb_paths(
+    buildings: &mut BuildingDefinitionRegistry,
+    modules: &super::procedural::ProceduralModuleRegistry,
+) {
+    for def in buildings.by_id.values_mut() {
+        let Some(module_id) = def.procedural_module_id.as_deref() else {
+            continue;
+        };
+        let Some(entry) = modules.stylepack_entry(module_id) else {
+            continue;
+        };
+        def.procedural_glb_path = Some(entry.glb_path.clone());
+        def.procedural_glb_asset = Some(entry.glb_asset.clone());
+    }
+}
+
+pub fn init_building_definition_registry(
+    mut commands: Commands,
+    modules: Option<Res<super::procedural::ProceduralModuleRegistry>>,
+) {
+    let mut registry = load_building_definitions_from_dir(default_buildings_dir());
+    if let Some(modules) = modules {
+        attach_procedural_glb_paths(&mut registry, &modules);
+    }
     commands.insert_resource(registry);
 }
 
@@ -508,6 +570,7 @@ mod tests {
             utility_role: None,
             plant_definition_id: None,
             transfer_capacity_mva: 0.0,
+            procedural_module_id: None,
         };
         let def = file_to_definition("test_bad_mega".into(), raw);
         assert_eq!(def.family, BuildingFamily::Industry);

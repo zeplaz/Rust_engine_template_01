@@ -120,12 +120,26 @@ cargo test -p proc_A_dine01 --lib stage6_live_proof wc_d04 -- --test-threads=1
 
 ---
 
+## INFRA-VM-FOLLOWON-001 — **DONE (qualified)** 2026-05-27
+
+| | |
+|:---|:---|
+| **Queue** | Moved to `coder_a.done_2026_05_27` — **not** a separate implementation slice |
+| **Rationale** | Phase C IN-C01..07 + stress bundle (parity / VM-deep / stage6 ops) already green on disk |
+| **Witness** | `debug_runs/infrastructure_view_isolation_live.json` → rollup `infrastructure_view_isolation_green: true` |
+| **Deferred** | Parity **S4/S5** (visual sim) — optional; `coder_active_queue.json` → `deferred_optional` |
+
+**Do not reopen** unless VM-06..11 regression or new planner exec supersedes Phase C.
+
+---
+
 ## Session order (recommended)
 
 ```
 1. TRIAGE-PHASE-D-PARITY-001  → skip (done)
-2. INFRA-VM-DEEP-001          → sim_trace + source discriminator
-3. STAGE6-OPS-WITNESS-001     → stage6_ops_witness_001 block + helper
+2. INFRA-VM-DEEP-001          → skip (done)
+3. STAGE6-OPS-WITNESS-001     → skip (done)
+4. INFRA-VM-FOLLOWON-001      → skip (done_qualified — duplicate tail)
 ```
 
 ## Copy-paste — @coder A pick INFRA-VM-DEEP

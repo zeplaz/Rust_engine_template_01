@@ -5,9 +5,13 @@ use bevy::prelude::*;
 use bevy_egui::{EguiContexts, EguiPrimaryContextPass};
 
 use crate::construction::{
-    draw_pending_construction_queue_egui, ConstructionQueueIntent, ConstructionQueuePanelView,
-    PendingConstructionQueue,
+    draw_pending_construction_queue_egui, ConstructionBlueprintImportUi, ConstructionQueueIntent,
+    ConstructionQueuePanelView, PendingConstructionQueue,
 };
+use crate::gui::construction_growth_inspector::{
+    draw_organic_growth_inspector_egui, GrowthInspectorUiState,
+};
+use crate::strategic::settlement::{AutoBuildPolicyBook, GrowthProposalQueue};
 use crate::gui::MapFitValidationLog;
 use crate::gui::ui_gates::product_egui_shell_active;
 use crate::gui::{
@@ -64,6 +68,7 @@ pub struct HudRootTickPlugin;
 
 impl Plugin for HudRootTickPlugin {
     fn build(&self, app: &mut App) {
+        app.init_resource::<GrowthInspectorUiState>();
         app.add_systems(
             EguiPrimaryContextPass,
             hud_product_shell_egui_root
@@ -135,6 +140,9 @@ pub struct HudProductShellEguiParams<'w> {
     per_view_lod: Res<'w, crate::gui::PerViewLodHints>,
     view_isolation: Res<'w, crate::gui::ViewIsolationDiagnostics>,
     update_attrib: Option<ResMut<'w, crate::render::FrameUpdateAttrib>>,
+    growth_ui: ResMut<'w, GrowthInspectorUiState>,
+    growth_queue: ResMut<'w, GrowthProposalQueue>,
+    growth_policy: Option<Res<'w, AutoBuildPolicyBook>>,
 }
 
 /// One egui context pass for docked HUD widgets; individual drawers early-out when suspended.
@@ -151,6 +159,7 @@ pub fn hud_product_shell_egui_root(
     left_stack: Option<Res<CommandLeftStackState>>,
     mut construction_intents: MessageWriter<ConstructionQueueIntent>,
     pending: Res<PendingConstructionQueue>,
+    mut construction_import_ui: ResMut<ConstructionBlueprintImportUi>,
     mut construction_preset_ron: Local<Option<String>>,
     mut minimap_legend_revision: Local<u64>,
 ) -> Result {
@@ -383,6 +392,13 @@ pub fn hud_product_shell_egui_root(
         panels.world_interaction.as_deref(),
         &mut panels.pending_layout,
         Some(panels.wave_s_imported.as_ref()),
+        &mut construction_import_ui,
+    );
+    draw_organic_growth_inspector_egui(
+        ctx,
+        panels.growth_ui,
+        panels.growth_queue,
+        panels.growth_policy,
     );
     draw_hud_dev_overlay_egui(
         ctx,

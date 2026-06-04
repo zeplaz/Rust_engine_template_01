@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "asset_id": "prop_chimney",
+  "archetype": "module_prop",
+  "batch_id": "kit_production_001",
+  "style_pack": "style_victorian",
+  "development_tier": "production",
+  "pbr_status": "shipped",
+  "material_profile": "brick_red_01",
+  "module": {
+    "grid_units": [1, 1],
+    "snap": "roof_surface",
+    "pivot": "bottom_center"
+  },
+  "dimensions_m": { "w": 0.8, "h": 1.6, "d": 0.8 },
+  "references": []
+}

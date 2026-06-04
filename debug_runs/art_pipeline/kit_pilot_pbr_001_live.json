@@ -1,0 +1,39 @@
+{
+  "batch_id": "kit_pilot_pbr_001",
+  "status": "pass",
+  "material_mode": "pbr_profile",
+  "texture_generator": "procedural_tile_v1",
+  "registry": "assets/materials/profiles/material_profiles_v1.json",
+  "modules": [
+    {
+      "asset_id": "wall_concrete_2u",
+      "job_id": "wall_concrete_2u_run001",
+      "material_profile": "concrete_grey_01",
+      "file_bytes": 679496,
+      "promoted": true
+    },
+    {
+      "asset_id": "wall_wood_1u",
+      "job_id": "wall_wood_1u_run001",
+      "material_profile": "wood_plank_01",
+      "file_bytes": 603852,
+      "promoted": true
+    },
+    {
+      "asset_id": "door_industrial_1u",
+      "job_id": "door_industrial_1u_run001",
+      "material_profile": "steel_door_01",
+      "file_bytes": 517364,
+      "promoted": true
+    },
+    {
+      "asset_id": "wall_brick_1u",
+      "job_id": "wall_brick_1u_example",
+      "material_profile": "brick_red_01",
+      "file_bytes": 571248,
+      "promoted": true
+    }
+  ],
+  "remaining_greybox_modules": 17,
+  "next": "Add Material Maker profiles; extend reexport script per batch or run full kit with matching material_profile ids"
+}

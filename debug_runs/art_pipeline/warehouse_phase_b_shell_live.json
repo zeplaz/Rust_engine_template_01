@@ -1,0 +1,26 @@
+{
+  "program_id": "PLAN-TILE-FIX-AUTO-BUILD-001",
+  "task_id": "TILE-FIX-PHASE-B",
+  "gate": "warehouse-shell-production",
+  "green": true,
+  "updated": "2026-06-02",
+  "shell_modules": {
+    "wall_steel_1u": "wall_steel_1u_production_run001",
+    "roof_sawtooth": "roof_sawtooth_production_run001",
+    "corner_L": "corner_L_production_run001"
+  },
+  "promoted_glb": [
+    "assets/models/modules/wall_steel_1u_production_run001/model.glb",
+    "assets/models/modules/roof_sawtooth_production_run001/model.glb"
+  ],
+  "material_profiles_generated": ["steel_panel_01", "roof_metal_01"],
+  "files_updated": [
+    "tools/mcp/schemas/examples/building_definition_warehouse_industrial_west_production_v1.json",
+    "tools/mcp/schemas/examples/assembly_snapshot_warehouse_industrial_west_production_v1.json",
+    "assets/configs/buildings/visual_config_warehouse_industrial_west_v2.json",
+    "debug_runs/art_pipeline/warehouse_state_facing_matrix_v1.yaml"
+  ],
+  "compile_plan": "debug_runs/art_pipeline/warehouse_industrial_compile_plan_v1.json",
+  "next_command": "python tools/mcp/scripts/tile_compile_minimum_bake.py --building tools/mcp/schemas/examples/building_definition_warehouse_industrial_west_production_v1.json",
+  "_agent_meta": { "agent": "coder-mcp", "phase": "B-after-A" }
+}

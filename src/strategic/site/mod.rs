@@ -6,9 +6,11 @@ mod components;
 mod events;
 mod logistics;
 mod overlays;
+mod parametric;
 mod provisioning;
 mod resources;
 mod systems;
+mod tile_occupation;
 mod validation;
 
 pub use components::*;
@@ -24,6 +26,10 @@ pub use systems::{
     commit_construction_site_system, footprint_affected_chunk_coords,
     site_advance_planned_to_under_construction_system, validate_committed_site_terrain_system,
 };
+pub use parametric::{
+    commit_carries_scale_and_weights_witness_green, CommittedPlacementSnapshot,
+};
+pub use tile_occupation::{overlap_blocks_commit_witness_green, TileOccupationBook};
 pub use validation::{
     evaluate_site_placement_at_world_tile,
     evaluate_site_placement_stubs, validate_network_access_for_site, validate_site_placement_stubs,
@@ -133,6 +139,7 @@ mod tests {
             },
             layer: LayerType::Surface,
             catalog_id: None,
+            placement: None,
         });
         app.update();
 
@@ -145,6 +152,10 @@ mod tests {
             let (_p, c) = q.iter(world).next().expect("site bundle");
             assert_eq!(c.phase, SiteConstructionPhase::Planned);
             assert_ne!(c.site_id, 0);
+            let mut stage_q = world.query::<&crate::construction::SiteStageProgress>();
+            assert_eq!(stage_q.iter(world).count(), 1);
+            let stage = stage_q.iter(world).next().expect("stage progress");
+            assert!(stage.progress < 0.01);
         }
     }
 
@@ -174,6 +185,7 @@ mod tests {
             },
             layer: LayerType::Surface,
             catalog_id: None,
+            placement: None,
         });
         app.update();
 

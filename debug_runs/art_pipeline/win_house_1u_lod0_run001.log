@@ -1,0 +1,11 @@
+INFO Draco mesh compression is available, use library at C:\Program Files (x86)\Steam\steamapps\common\Blender\5.1\scripts\addons_core\io_scene_gltf2\extern_draco.dll
+19:38:18 | INFO: Starting glTF 2.0 export
+19:38:18 | INFO: Extracting primitive: Cube
+19:38:18 | INFO: Primitives created: 1
+19:38:18 | INFO: Finished glTF 2.0 export in 0.036511898040771484 s
+
+EXPORT_MODE pbr_profile profile=glass_panel_01
+EXPORT_OK C:\dev\github\Rust_engine_template_01\assets\staging\win_house_1u_lod0_run001\model.glb
+Blender 5.1.2 (hash ec6e62d40fa9 built 2026-05-19 01:37:34)
+
+Blender quit

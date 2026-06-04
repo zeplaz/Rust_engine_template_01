@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "job_id": "roof_sawtooth_production_run001",
+  "batch_id": "kit_production_001",
+  "development_tier": "production",
+  "spec_ref": "assets/staging/specs/roof_sawtooth_production.json",
+  "operation": "module_roof",
+  "params": {
+    "width_m": 8,
+    "thickness_m": 0.3,
+    "depth_m": 8,
+    "material_profile": "roof_metal_01",
+    "seed": 42011,
+    "profile": "sawtooth",
+    "pitch_height_m": 0.4
+  },
+  "output": {
+    "glb": "assets/staging/roof_sawtooth_production_run001/model.glb",
+    "thumbnail": "assets/staging/roof_sawtooth_production_run001/preview.png"
+  }
+}

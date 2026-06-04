@@ -16,10 +16,10 @@
 
 | Gate | Path | Status |
 |:---|:---|:---:|
-| **WSS-DESIGN-GATE-001** (parent) | [`wssr_design_gate_brief_v1.md`](wssr_design_gate_brief_v1.md) + deliverable [`wssr_design_signoff_v1.md`](wssr_design_signoff_v1.md) | **OPEN** |
-| **WSS-DESIGN-GATE-001** (slab preflight) | [`wss_design_gate_001_v1.md`](wss_design_gate_001_v1.md) — G1–G6 operational checklist | **PENDING** |
+| **WSS-DESIGN-GATE-001** (parent) | [`wssr_design_signoff_v1.md`](wssr_design_signoff_v1.md) | **PASS (qualified)** ☑ |
+| **WSS-DESIGN-GATE-001** (slab preflight) | [`wss_design_gate_001_v1.md`](wss_design_gate_001_v1.md) — **G1–G2/G6 ☑** · G3–G4 steward | **qualified** |
 
-Both must PASS before `@coder` assignment.
+**Coder may start** on qualified parent + G1–G2; full preflight `pass: true` after steward G3–G4.
 
 ---
 
@@ -57,8 +57,8 @@ Gate checklist lives in [`wss_design_gate_001_v1.md`](wss_design_gate_001_v1.md)
 
 | # | Check | Owner |
 |:---:|:---|:---|
-| G1 | Hybrid migration UX documented — operators/devs know ECS components still live | `@designer` |
-| G2 | Diagnostics overlay names for slab `resident` / `dirty` / `chunk_count` | `@designer` |
+| G1 | Hybrid migration UX documented — operators/devs know ECS components still live | `@designer` | ☑ |
+| G2 | Diagnostics overlay names for slab `resident` / `dirty` / `chunk_count` | `@designer` | ☑ |
 | G3 | No player-facing regression from plugin init (empty world, editor, sim) | `@sim-steward` |
 | G4 | `ChunkEnvironmentSet` ordering preserved — witness or lib test | `@sim-steward` |
 | G5 | Module path **`src/substrate/`** confirmed (this exec plan) | `@planner` ☑ |

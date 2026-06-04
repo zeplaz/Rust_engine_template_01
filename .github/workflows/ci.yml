@@ -28,8 +28,23 @@ jobs:
             libudev-dev \
             libasound2-dev
 
+      - name: live_proof containment scan (HardFail — DEV-CONTAIN-HARDFAIL-CI-001)
+        shell: pwsh
+        run: ./tools/orchestrator/scripts/check_live_proof_containment.ps1 -HardFail
+
+      - name: visual runbook — no RASTER_* in clean recipe (P1-C)
+        shell: pwsh
+        run: ./tools/orchestrator/scripts/check_visual_runbook_no_raster_env.ps1
+
       - name: cargo check (default features)
         run: cargo check -p proc_A_dine01
+        env:
+          RUNTIME_WITNESS_WRITES_FORCE_OFF: "1"
+
+      - name: cargo rustc lib (-D warnings) (STAB-CI-001)
+        run: cargo rustc -p proc_A_dine01 --lib -- -D warnings
+        env:
+          RUNTIME_WITNESS_WRITES_FORCE_OFF: "1"
 
       - name: cargo check (bevy_tilemap_adapter)
         run: cargo check -p proc_A_dine01 --features bevy_tilemap_adapter

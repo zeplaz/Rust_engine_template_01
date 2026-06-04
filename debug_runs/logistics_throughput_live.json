@@ -10,11 +10,11 @@
     },
     "logging_env": {
       "ORCHESTRATOR_EXPORT_HEALTH": false,
-      "PERF": true,
-      "RUST_LOG": "info",
-      "SIM_VIEW_SYNC_DEBUG": true,
+      "PERF": false,
+      "RUST_LOG": null,
+      "SIM_VIEW_SYNC_DEBUG": false,
       "STAGE5_READINESS_VERBOSE": false,
-      "STAGE5_VERBOSE": true,
+      "STAGE5_VERBOSE": false,
       "VIEWPORT_AUTHORITY_DEBUG": false
     },
     "orchestrator": {
@@ -43,32 +43,64 @@
       "debug_runs/ui_shell_migration_live.json",
       "debug_runs/minimap_compositor_live.json",
       "debug_runs/stage7_behavioral_live.json",
-      "debug_runs/stage7_play_live.json"
+      "debug_runs/stage7_play_live.json",
+      "debug_runs/wss_substrate_live.json",
+      "debug_runs/f2_smoke_pipeline_live.json",
+      "debug_runs/play_scenario_live.json"
     ],
     "relative_path": "debug_runs/logistics_throughput_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "logistics_throughput_live_proof",
-    "written_at_epoch_secs": 1779853044
+    "written_at_epoch_secs": 1780415074
   },
-  "edge_saturation_max": 0.0,
-  "open_todos": 15,
+  "edge_saturation_max": 1.0,
+  "open_todos": 0,
   "profile": "LOGISTICS_THROUGHPUT",
-  "route_proofs_sample": [],
-  "routes_blocked": 0,
-  "routes_open": 0,
-  "s7p_log_001_green": false,
-  "throughput_green": false,
+  "route_proofs_sample": [
+    {
+      "blocked_at": null,
+      "bottleneck_capacity": 2.0,
+      "delivered": 4.0,
+      "request_id": 191,
+      "requested": 4.0
+    },
+    {
+      "blocked_at": null,
+      "bottleneck_capacity": 2.0,
+      "delivered": 4.0,
+      "request_id": 190,
+      "requested": 4.0
+    },
+    {
+      "blocked_at": null,
+      "bottleneck_capacity": 2.0,
+      "delivered": 4.0,
+      "request_id": 189,
+      "requested": 4.0
+    },
+    {
+      "blocked_at": null,
+      "bottleneck_capacity": 2.0,
+      "delivered": 4.0,
+      "request_id": 188,
+      "requested": 4.0
+    }
+  ],
+  "routes_blocked": 1,
+  "routes_open": 1,
+  "s7p_log_001_green": true,
+  "throughput_green": true,
   "todo_total": 24,
-  "topology_revision": 1456375674,
+  "topology_revision": 257,
   "witness": {
-    "congestion_feedback": false,
-    "corridor_pressure": false,
+    "congestion_feedback": true,
+    "corridor_pressure": true,
     "derived_logistics_graph": true,
-    "freight_reservations": false,
-    "geographic_cascade_test": false,
+    "freight_reservations": true,
+    "geographic_cascade_test": true,
     "logistics_proof_json": true,
-    "path_open_from_nav": false,
-    "route_proof": false,
+    "path_open_from_nav": true,
+    "route_proof": true,
     "versioned_route_handle": true
   }
 }

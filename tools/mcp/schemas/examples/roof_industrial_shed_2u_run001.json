@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "job_id": "roof_industrial_shed_2u_run001",
+  "spec_ref": "assets/staging/specs/roof_industrial_shed_2u.json",
+  "operation": "module_roof",
+  "params": {
+    "width_m": 8,
+    "thickness_m": 0.3,
+    "depth_m": 10,
+    "material_profile": "roof_metal_shed_01",
+    "seed": 42
+  },
+  "output": {
+    "glb": "assets/staging/roof_industrial_shed_2u_run001/model.glb",
+    "thumbnail": "assets/staging/roof_industrial_shed_2u_run001/preview.png"
+  }
+}

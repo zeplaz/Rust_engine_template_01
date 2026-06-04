@@ -1,0 +1,15 @@
+batch_id: kit_lod0_001
+designer_mcp: rules_audit
+rules_check:
+  passed: true
+  blocked_by: []
+  batch_id: kit_lod0_001
+  development_tier: lod0
+  seed: 42
+  proceed: yes
+order_critique:
+  - "Five canonical module_ids only (wall_brick_1u, wall_concrete_1u, roof_pitched_gable, door_residential, win_single_1u) — matches kit inventory section 208-224."
+  - "batch_id kit_lod0_001 — not kit_greybox_* (frozen smoke). development_tier lod0 on every spec/job."
+  - "No greybox:* references. bpy profiles required for roof (pitched_gable), door (residential frame), window (frame_mullion)."
+  - "PBR shipped on brick/concrete/wood where texture sets exist; roof_tile_01 + glass_panel_01 deferred OK at lod0 per tier policy."
+  - "G4 requires explicit silhouette_read per module before promote — PG-2 may load lod0 rows only."

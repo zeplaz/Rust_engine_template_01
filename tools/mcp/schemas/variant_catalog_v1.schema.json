@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "variant_catalog_v1.schema.json",
+  "title": "VariantCatalogV1",
+  "type": "object",
+  "required": ["schema_version", "program_id", "default_fallback_key", "canonical_variant_keys", "ship_minimum_keys"],
+  "properties": {
+    "schema_version": { "type": "integer", "minimum": 1 },
+    "program_id": { "type": "string" },
+    "default_fallback_key": { "type": "string" },
+    "canonical_variant_keys": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^[a-z0-9_]+$" },
+      "minItems": 1
+    },
+    "ship_minimum_keys": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^[a-z0-9_]+$" },
+      "minItems": 6
+    },
+    "fire": {
+      "type": "object",
+      "properties": {
+        "key_prefix": { "type": "string" },
+        "frame_count": { "type": "integer", "minimum": 1, "maximum": 32 },
+        "frame_period_ms": { "type": "integer", "minimum": 1 },
+        "heat_threshold": { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    },
+    "damage_bands": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["max", "suffix"],
+        "properties": {
+          "max": { "type": "number" },
+          "suffix": { "type": "string" }
+        }
+      }
+    },
+    "construction_phase_keys": { "type": "object" },
+    "lighting_composite": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["night", "power_on", "key"],
+        "properties": {
+          "night": { "type": "boolean" },
+          "power_on": { "type": "boolean" },
+          "key": { "type": "string" }
+        }
+      }
+    },
+    "damaged_lighting_composite": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["night", "power_on", "key"],
+        "properties": {
+          "night": { "type": "boolean" },
+          "power_on": { "type": "boolean" },
+          "key": { "type": "string" }
+        }
+      }
+    }
+  }
+}

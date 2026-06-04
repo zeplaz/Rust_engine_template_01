@@ -154,6 +154,14 @@ pub fn merge_domain_projection_into_representation(
     }
 }
 
+pub fn stall_checkpoint_before_domain_merge(mut watch: ResMut<crate::render::FrameStallWatch>) {
+    watch.checkpoint("before_domain_merge");
+}
+
+pub fn stall_checkpoint_after_domain_merge(mut watch: ResMut<crate::render::FrameStallWatch>) {
+    watch.checkpoint("after_domain_merge");
+}
+
 pub struct DomainProjectionFramePlugin;
 
 impl Plugin for DomainProjectionFramePlugin {
@@ -162,7 +170,10 @@ impl Plugin for DomainProjectionFramePlugin {
             Update,
             (
                 publish_domain_projection_frame,
+                crate::render::stall_checkpoint_post_fire_project,
+                stall_checkpoint_before_domain_merge,
                 merge_domain_projection_into_representation,
+                stall_checkpoint_after_domain_merge,
             )
                 .chain()
                 .after(crate::render::extraction::FireVisualFrameSet::ProjectGpu)

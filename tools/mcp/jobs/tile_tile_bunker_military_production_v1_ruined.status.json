@@ -1,0 +1,12 @@
+{
+  "job_id": "tile_tile_bunker_military_production_v1_ruined",
+  "status": "done",
+  "log_path": "C:\\dev\\github\\Rust_engine_template_01\\debug_runs\\art_pipeline\\tile_tile_bunker_military_production_v1_ruined.log",
+  "outputs": [
+    "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_bunker_military_production_v1\\ruined.png"
+  ],
+  "error": null,
+  "operation": "tile_variant_bake",
+  "job_path": "C:\\dev\\github\\Rust_engine_template_01\\tools\\mcp\\jobs\\tile_tile_bunker_military_production_v1_ruined.json",
+  "updated_at": 1780456628.5396097
+}

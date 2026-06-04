@@ -10,6 +10,9 @@
 
 **Rule:** One **P1** primary per session (≤3 files). If a row is **blocked**, use **Start instead** for that session.
 
+> **Archive status (2026-05-27):** Wave-3 rows here are closure/reference.  
+> Live coder work is tracked in `coder_active_queue.json` `next_phase` and `src/dev/stage_coder_workboard_v1.md`.
+
 **Regression (every slice):**
 
 ```powershell

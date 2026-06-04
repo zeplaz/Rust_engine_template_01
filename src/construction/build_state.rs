@@ -14,6 +14,8 @@ pub struct BuildGhostState {
     pub rotation_quarter_turns: u8,
     pub mirror_x: bool,
     pub drag_active: bool,
+    /// Parametric scale drag (Shift+vertical in product UX); clamped at raster time.
+    pub scale_factor: f32,
 }
 
 impl Default for BuildGhostState {
@@ -27,6 +29,7 @@ impl Default for BuildGhostState {
             rotation_quarter_turns: 0,
             mirror_x: false,
             drag_active: false,
+            scale_factor: 1.0,
         }
     }
 }

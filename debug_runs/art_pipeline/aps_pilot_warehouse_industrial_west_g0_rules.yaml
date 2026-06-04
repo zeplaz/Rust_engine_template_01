@@ -1,0 +1,16 @@
+batch_id: tile_warehouse_industrial_west_pilot_v1
+designer_mcp: aps_pilot_rules_audit
+program_id: MCP-FLEET-APS-PILOT-002
+rules_check:
+  passed: true
+  blocked_by: []
+  batch_id: tile_warehouse_industrial_west_pilot_v1
+  assembly_id: industrial_west_4x2_s43_a879
+  variant_set_id: warehouse_industrial_west_day_night
+  style_pack_id: style_industrial_west
+  footprint: { width: 4, depth: 2, floors: 2 }
+  proceed: yes
+order_critique:
+  - "assembly_id industrial_west_4x2_s43_a879 matches variant_set + tile_batch assembly_ref."
+  - "Footprint 4x2x2 × style_industrial_west — distinct from rowhouse_victorian pilot."
+  - "Validate-only; bake via tile-batch-run after TILE-REAL-001 queue."

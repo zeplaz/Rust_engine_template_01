@@ -1,0 +1,91 @@
+{
+  "batch_id": "tile_factory_floor_greybox_001",
+  "lane": "tile_batch",
+  "_agent_meta": {
+    "agent": "coder-mcp",
+    "updated_at": "2026-06-03T18:37:10.128575+00:00",
+    "program": "MCP-TILE-CLOSE-001",
+    "dry_run": true
+  },
+  "gates": {
+    "G0": "pass",
+    "G1": "pass",
+    "G2": "pass",
+    "G3": "pass",
+    "G4": "planned",
+    "G5": "planned"
+  },
+  "green": true,
+  "png_count": 6,
+  "png_dimensions": [
+    {
+      "file": "clean_d00_off_empty_day.png",
+      "bytes": 67,
+      "width": 1,
+      "height": 1
+    },
+    {
+      "file": "clean_d00_on_half_night_on.png",
+      "bytes": 67,
+      "width": 1,
+      "height": 1
+    },
+    {
+      "file": "damaged_d45_off_empty_day.png",
+      "bytes": 67,
+      "width": 1,
+      "height": 1
+    },
+    {
+      "file": "damaged_d45_on_quarter_night_on.png",
+      "bytes": 67,
+      "width": 1,
+      "height": 1
+    },
+    {
+      "file": "dirty_d15_partial_half_night_off.png",
+      "bytes": 67,
+      "width": 1,
+      "height": 1
+    },
+    {
+      "file": "ruined_d85_off_empty_day.png",
+      "bytes": 67,
+      "width": 1,
+      "height": 1
+    }
+  ],
+  "real_bake": false,
+  "atlas_path": "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\x\\atlas.png",
+  "meta_json": "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\x\\atlas_meta.json",
+  "batch_status": {
+    "batch_id": "tile_factory_floor_greybox_001",
+    "status": "done",
+    "bake_source": "smoke_ortho_headless",
+    "variant_count": 6,
+    "png_paths": [
+      "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_factory_floor_greybox_001\\clean_d00_off_empty_day.png",
+      "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_factory_floor_greybox_001\\clean_d00_on_half_night_on.png",
+      "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_factory_floor_greybox_001\\damaged_d45_off_empty_day.png",
+      "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_factory_floor_greybox_001\\damaged_d45_on_quarter_night_on.png",
+      "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_factory_floor_greybox_001\\dirty_d15_partial_half_night_off.png",
+      "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_factory_floor_greybox_001\\ruined_d85_off_empty_day.png"
+    ],
+    "atlas_path": "C:\\dev\\github\\Rust_engine_template_01\\assets\\textures\\terrain\\factory_floor_greybox_001_atlas.png",
+    "meta_json": "assets/textures/terrain/factory_floor_greybox_001_atlas_meta.json",
+    "dry_run": true
+  },
+  "automation": "headless_only",
+  "smoke_fallback_used": false,
+  "gate_id": "TILE-REAL-001",
+  "atlas_schema_version": 1,
+  "atlas_v2_lookup_ok": true,
+  "frozen": false,
+  "png_exists_only_rejected": true,
+  "tile_id": "factory_floor",
+  "assembly_ref": null,
+  "variant_set_ref": null,
+  "source_tier": null,
+  "development_tier": null,
+  "ship": null
+}

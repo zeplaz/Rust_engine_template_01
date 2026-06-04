@@ -41,8 +41,11 @@ pub fn s7p_grid_ux_001_green(toast: &GridOverloadToastState, overload_events: u6
 pub fn ingest_grid_overload_toast_system(
     mut reader: MessageReader<GridOverloadEvent>,
     mut toast: ResMut<GridOverloadToastState>,
-    tick: Res<SimTick>,
+    tick: Option<Res<SimTick>>,
 ) {
+    let Some(tick) = tick else {
+        return;
+    };
     for _ in reader.read() {
         toast.show_count = toast.show_count.saturating_add(1);
         toast.active_until_tick = tick.0.saturating_add(GRID_OVERLOAD_TOAST_TICKS);
@@ -53,7 +56,7 @@ pub fn ingest_grid_overload_toast_system(
 /// Flash **PWR** ops-strip zone with overload copy while toast is active.
 pub fn apply_grid_overload_ops_strip_toast_system(
     base: Res<State<BaseState>>,
-    tick: Res<SimTick>,
+    tick: Option<Res<SimTick>>,
     toast: Res<GridOverloadToastState>,
     mut power: Query<&mut Text, With<OpsStripPower>>,
     shell_witness: Option<ResMut<UiShellMigrationWitness>>,
@@ -61,6 +64,9 @@ pub fn apply_grid_overload_ops_strip_toast_system(
     if *base.get() != BaseState::Simulation {
         return;
     }
+    let Some(tick) = tick else {
+        return;
+    };
     if !toast.active_at(tick.0) {
         return;
     }

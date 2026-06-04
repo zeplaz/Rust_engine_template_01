@@ -23,11 +23,13 @@ use super::building_definitions::BuildingDefinitionRegistry;
 use super::residential_menu::{draw_intent_preview, draw_residential_submenu};
 use super::mock_shapes_menu::draw_mock_shapes_submenu;
 use super::utilities_menu::draw_utilities_submenu;
+use crate::strategic::CorridorConstructionBook;
 
 pub fn draw_build_toolbox_egui(
     mut contexts: bevy_egui::EguiContexts,
     mut tool: ResMut<ActiveBuildTool>,
     registry: Res<BuildingDefinitionRegistry>,
+    corridor_book: Option<Res<CorridorConstructionBook>>,
     mut dock: ResMut<HudDockRegistry>,
     mut layout_store: ResMut<HudLayoutStore>,
     mut update_budget: ResMut<ProductShellUpdateBudget>,
@@ -180,6 +182,9 @@ pub fn draw_build_toolbox_egui(
         if let Some(intent) = tool.building_intent.as_ref() {
             ui.separator();
             draw_intent_preview(ui, intent);
+        }
+        if let Some(book) = corridor_book.as_ref() {
+            super::round4_corridor::draw_r4_corridor_tray_legend(ui, &tool, book);
         }
     }) {
         if pending_layout.can_emit_layout_capture() {

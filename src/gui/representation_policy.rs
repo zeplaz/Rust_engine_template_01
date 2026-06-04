@@ -232,6 +232,8 @@ pub struct RepresentationResult {
     pub visibility: WorldVisibilityMask,
     /// Band-driven building mesh simplification (Visual Aid v2 VA4).
     pub building_visual_simplified: bool,
+    /// When true, promoted MCP module GLBs may spawn (tactical / operational bands).
+    pub procedural_module_meshes: bool,
 }
 
 impl Default for RepresentationResult {
@@ -305,6 +307,7 @@ impl RepresentationResult {
             particle_policy,
             visibility,
             building_visual_simplified: building_visual_simplified_for_band(world_lod_band),
+            procedural_module_meshes: !building_visual_simplified_for_band(world_lod_band),
         }
     }
 

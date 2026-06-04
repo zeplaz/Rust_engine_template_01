@@ -11,6 +11,9 @@
 
 **Rule:** One **P1 primary** per session (≤3 files). Witness JSON wins. Do **not** re-queue v2 § Done unless regression fails.
 
+> **Archive status (2026-05-27):** This document is historical wave-3 execution context.  
+> Use `tools/orchestrator/queues/coder_active_queue.json` + `src/dev/stage_coder_workboard_v1.md` for live assignments.
+
 **Regression (every slice):**
 
 ```powershell

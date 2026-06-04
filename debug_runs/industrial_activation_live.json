@@ -43,12 +43,16 @@
       "debug_runs/ui_shell_migration_live.json",
       "debug_runs/minimap_compositor_live.json",
       "debug_runs/stage7_behavioral_live.json",
-      "debug_runs/stage7_play_live.json"
+      "debug_runs/stage7_play_live.json",
+      "debug_runs/wss_substrate_live.json",
+      "debug_runs/f2_smoke_pipeline_live.json",
+      "debug_runs/play_scenario_live.json",
+      "debug_runs/transport_network_live.json"
     ],
     "relative_path": "debug_runs/industrial_activation_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "industrial_activation_live_proof",
-    "written_at_epoch_secs": 1779821726
+    "written_at_epoch_secs": 1780456677
   },
   "activation_green": true,
   "board": [
@@ -190,7 +194,7 @@
     "operational_mixer": 1,
     "placed_via_construction": true,
     "production_green": true,
-    "production_ticks": 30,
+    "production_ticks": 65,
     "sites_committed": 3
   },
   "governance_violation_count": 0,
@@ -201,8 +205,18 @@
     "grid_overload_sim_green": true,
     "ind_e03_green": true,
     "ind_e03_witness_001_green": true,
-    "overload_events_total": 30,
+    "overload_events_total": 64,
     "production_green": true
+  },
+  "ind_e02_default_play_002": {
+    "env_seeds_required": false,
+    "gate": "IND-E02-DEFAULT-PLAY-002",
+    "green": true,
+    "ind_e02_green": true,
+    "placed_via_construction": true,
+    "requires_rust_engine_ind_e02_seed": false,
+    "sites_committed": 3,
+    "writer": "seed_ind_e02_default_play_once"
   },
   "ind_e03": {
     "green": true,
@@ -211,7 +225,7 @@
     "grid_overload_sim_green": true,
     "ind_e03_green": true,
     "ind_e03_witness_001_green": true,
-    "overload_events_total": 30,
+    "overload_events_total": 64,
     "production_green": true
   },
   "industrial_i3_02_green": true,
@@ -223,7 +237,7 @@
     "toast_active": true,
     "toast_armed": true,
     "toast_message": "Grid overload — reduce smelter load or add transformer capacity",
-    "toast_shown_count": 29,
+    "toast_shown_count": 63,
     "toast_ui_wired": true
   },
   "spatial_district": {

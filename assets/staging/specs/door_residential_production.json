@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "asset_id": "door_residential",
+  "archetype": "module_door",
+  "batch_id": "kit_production_001",
+  "style_pack": "style_victorian",
+  "development_tier": "production",
+  "pbr_status": "shipped",
+  "material_profile": "wood_plank_01",
+  "module": {
+    "grid_units": [1, 2],
+    "snap": "floor_edge",
+    "pivot": "bottom_center"
+  },
+  "dimensions_m": { "w": 1.2, "h": 2.2, "d": 0.15 },
+  "references": []
+}

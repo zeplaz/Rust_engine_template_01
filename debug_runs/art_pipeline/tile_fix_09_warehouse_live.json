@@ -1,0 +1,49 @@
+{
+  "program_id": "PLAN-TILE-FIX-AUTO-BUILD-001",
+  "task_id": "TILE-FIX-09",
+  "gate": "TILE-FIX-09-warehouse",
+  "green": true,
+  "updated": "2026-06-03",
+  "_agent_meta": {
+    "agent": "designer-mcp",
+    "signoff_yaml": "debug_runs/art_pipeline/tile_fix_09_warehouse_g4_signoff.yaml",
+    "matrix_yaml": "debug_runs/art_pipeline/warehouse_state_facing_matrix_v1.yaml"
+  },
+  "assembly_id": "industrial_west_4x2_s43_a879",
+  "building_definition": "tools/mcp/schemas/examples/building_definition_warehouse_industrial_west_production_v1.json",
+  "visual_config": "assets/configs/buildings/visual_config_warehouse_industrial_west_v2.json",
+  "render_contract": {
+    "facings": 8,
+    "tile_px": 128,
+    "quarter_turn_fallback": true
+  },
+  "matrix": {
+    "minimum_g4_cells": 24,
+    "minimum_facings": 4,
+    "ship_minimum_states": 6,
+    "full_compile_cells": 576,
+    "variant_count": 16
+  },
+  "assembly_audit": {
+    "blend_exists": true,
+    "production_placements": 8,
+    "lod0_fallback_placements": 16,
+    "module_families": ["corner_L", "wall_steel_1u", "door_shop", "roof_sawtooth"]
+  },
+  "frozen_v1": {
+    "batch_id": "tile_warehouse_industrial_west_production_v1",
+    "proceed_ship": false
+  },
+  "v2_target": {
+    "batch_id": "tile_warehouse_industrial_v2_minimum_g4",
+    "atlas_schema_version": 2,
+    "proceed_v2_matrix_signed": true,
+    "proceed_ship": true,
+    "minimum_g4_matrix": "3x8"
+  },
+  "phase_c_witness": "debug_runs/art_pipeline/tile_fix_09_phase_c_warehouse_g4_live.json",
+  "tile_fix_10_witness": "debug_runs/art_pipeline/tile_fix_10_warehouse_industrial_live.json",
+  "g4_gates_all_pass": true,
+  "g4_8_proceed_ship": "pass",
+  "next": "TILE-FIX-008 compile minimum 24 cells; TILE-FIX-10 promotion gates"
+}

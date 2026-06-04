@@ -85,6 +85,7 @@ pub fn execute_demolish_at_tile(
         &SiteFootprint,
         Option<&BuildingDefinitionRef>,
     )>,
+    mut occupation: Option<&mut crate::strategic::TileOccupationBook>,
 ) -> (u32, Vec<CommitConstructionSiteEvent>) {
     let target = IVec2::new(tile.x as i32, tile.z as i32);
     let mut n = 0u32;
@@ -101,7 +102,13 @@ pub fn execute_demolish_at_tile(
             footprint: planned.footprint,
             layer: planned.layer,
             catalog_id: catalog.map(|c| c.catalog_id.clone()),
+            placement: planned.placement.clone(),
         });
+        if planned.placement.is_some() {
+            if let Some(book) = occupation.as_mut() {
+                book.remove_site(SiteId(site.site_id));
+            }
+        }
         commands.entity(entity).despawn();
         n += 1;
     }

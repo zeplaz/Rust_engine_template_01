@@ -1,0 +1,189 @@
+{
+  "batch_id": "tile_warehouse_industrial_west_production_v1",
+  "lane": "tile_batch",
+  "_agent_meta": {
+    "agent": "coder-mcp",
+    "updated_at": "2026-06-03T03:21:08.731355+00:00",
+    "program": "MCP-TILE-CLOSE-001",
+    "dry_run": false
+  },
+  "gates": {
+    "G0": "pass",
+    "G1": "pass",
+    "G2": "pass",
+    "G3": "pass",
+    "G4": "planned",
+    "G5": "planned"
+  },
+  "green": true,
+  "png_count": 16,
+  "png_dimensions": [
+    {
+      "file": "abandoned.png",
+      "bytes": 13792,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "file": "burning_00.png",
+      "bytes": 12557,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "file": "burning_01.png",
+      "bytes": 12589,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "file": "burning_02.png",
+      "bytes": 12545,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "file": "burning_03.png",
+      "bytes": 12445,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "file": "burning_04.png",
+      "bytes": 12451,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "file": "burning_05.png",
+      "bytes": 12562,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "file": "burning_06.png",
+      "bytes": 12537,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "file": "burning_07.png",
+      "bytes": 12609,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "file": "clean_day.png",
+      "bytes": 13784,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "file": "clean_night_off.png",
+      "bytes": 13778,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "file": "clean_night_on.png",
+      "bytes": 12417,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "file": "damaged_day.png",
+      "bytes": 13791,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "file": "damaged_night_on.png",
+      "bytes": 12545,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "file": "under_construction_01.png",
+      "bytes": 13790,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "file": "under_construction_02.png",
+      "bytes": 13785,
+      "width": 128,
+      "height": 128
+    }
+  ],
+  "real_bake": true,
+  "atlas_path": "C:\\dev\\github\\Rust_engine_template_01\\assets\\textures\\buildings_iso\\production\\warehouse_industrial_west_production_v1_atlas.png",
+  "meta_json": "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_warehouse_industrial_west_production_v1\\atlas_meta.json",
+  "batch_status": {
+    "batch_id": "tile_warehouse_industrial_west_production_v1",
+    "status": "done",
+    "bake_source": "keyframe_pack",
+    "variant_count": 16,
+    "png_paths": [
+      "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_warehouse_industrial_west_production_v1\\clean_day.png",
+      "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_warehouse_industrial_west_production_v1\\clean_night_off.png",
+      "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_warehouse_industrial_west_production_v1\\clean_night_on.png",
+      "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_warehouse_industrial_west_production_v1\\damaged_day.png",
+      "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_warehouse_industrial_west_production_v1\\damaged_night_on.png",
+      "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_warehouse_industrial_west_production_v1\\under_construction_01.png",
+      "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_warehouse_industrial_west_production_v1\\under_construction_02.png",
+      "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_warehouse_industrial_west_production_v1\\abandoned.png",
+      "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_warehouse_industrial_west_production_v1\\burning_00.png",
+      "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_warehouse_industrial_west_production_v1\\burning_01.png",
+      "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_warehouse_industrial_west_production_v1\\burning_02.png",
+      "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_warehouse_industrial_west_production_v1\\burning_03.png",
+      "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_warehouse_industrial_west_production_v1\\burning_04.png",
+      "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_warehouse_industrial_west_production_v1\\burning_05.png",
+      "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_warehouse_industrial_west_production_v1\\burning_06.png",
+      "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_warehouse_industrial_west_production_v1\\burning_07.png"
+    ],
+    "atlas_path": "C:\\dev\\github\\Rust_engine_template_01\\assets\\textures\\buildings_iso\\production\\warehouse_industrial_west_production_v1_atlas.png",
+    "meta_json": "assets/staging/tiles/tile_warehouse_industrial_west_production_v1/atlas_meta.json",
+    "dry_run": false
+  },
+  "automation": "headless_only",
+  "smoke_fallback_used": false,
+  "gate_id": "TILE-REAL-001",
+  "tile_id": "warehouse_industrial",
+  "assembly_ref": {
+    "style_pack_id": "style_industrial_west",
+    "assembly_snapshot": "tools/mcp/schemas/examples/assembly_snapshot_warehouse_industrial_west_production_v1.json",
+    "footprint": {
+      "width": 4,
+      "depth": 2,
+      "floors": 2
+    }
+  },
+  "variant_set_ref": "tools/mcp/schemas/examples/variant_set_warehouse_industrial_west_production_v1.json",
+  "source_tier": "production",
+  "development_tier": "production",
+  "ship": true,
+  "tile_atlas_index": {
+    "ok": true,
+    "entry": {
+      "atlas_id": "warehouse_industrial_west_production_v1",
+      "batch_id": "tile_warehouse_industrial_west_production_v1",
+      "assembly_id": "industrial_west_4x2_s43_a879",
+      "tile_id": "warehouse_industrial",
+      "atlas_png": "assets/textures/buildings_iso/production/warehouse_industrial_west_production_v1_atlas.png",
+      "meta_json": "assets/staging/tiles/tile_warehouse_industrial_west_production_v1/atlas_meta.json",
+      "development_tier": "production",
+      "style_pack_id": "style_industrial_west",
+      "ship_allowed": true
+    },
+    "written": "C:\\dev\\github\\Rust_engine_template_01\\assets\\configs\\buildings\\_tile_atlas_index.ron",
+    "json_mirror": "C:\\dev\\github\\Rust_engine_template_01\\assets\\configs\\buildings\\_tile_atlas_index.json",
+    "entry_count": 5,
+    "atlas_ids": [
+      "bunker_military_production_v1",
+      "rowhouse_victorian_pilot_v1",
+      "rowhouse_victorian_production_v1",
+      "shopfront_colonial_production_v1",
+      "warehouse_industrial_west_production_v1"
+    ]
+  }
+}

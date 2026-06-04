@@ -1,0 +1,12 @@
+{
+  "job_id": "tile_tile_rowhouse_victorian_production_v1_burning_03",
+  "status": "done",
+  "log_path": "C:\\dev\\github\\Rust_engine_template_01\\debug_runs\\art_pipeline\\tile_tile_rowhouse_victorian_production_v1_burning_03.log",
+  "outputs": [
+    "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_rowhouse_victorian_production_v1\\burning_03.png"
+  ],
+  "error": null,
+  "operation": "tile_variant_bake",
+  "job_path": "C:\\dev\\github\\Rust_engine_template_01\\tools\\mcp\\jobs\\tile_tile_rowhouse_victorian_production_v1_burning_03.json",
+  "updated_at": 1780456421.9865963
+}

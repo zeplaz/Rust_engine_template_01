@@ -1,0 +1,10 @@
+{
+  "job_id": "tile_tile_factory_floor_greybox_001_damaged_d45_off_empty_day",
+  "status": "done",
+  "outputs": [
+    "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_factory_floor_greybox_001\\damaged_d45_off_empty_day.png"
+  ],
+  "dry_run": true,
+  "operation": "tile_variant_bake",
+  "updated_at": 1780511828.8104799
+}

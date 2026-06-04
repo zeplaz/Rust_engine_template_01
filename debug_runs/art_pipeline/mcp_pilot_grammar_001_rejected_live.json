@@ -1,0 +1,35 @@
+{
+  "slice_id": "MCP-PILOT-GRAMMAR-001",
+  "gate": "human_g4_eyeball",
+  "green": false,
+  "proceed_ship": false,
+  "art_quality": "rejected_headless_procedural",
+  "human_verdict": "unacceptable",
+  "reviewed_at": "2026-06-03",
+  "reviewer": "operator",
+  "findings": [
+    "Grey untextured slab geometry — not a warehouse silhouette",
+    "Vehicle/truck geometry visible in burning stills",
+    "No readable difference between clean_day, clean_night, burning, abandoned variants",
+    "Fake keyframe_manual.export marker masked headless blender_keyframe_light_rig output",
+    "Facing rotation missing: clean_day f0..f7 are pixel-identical (0% diff); clean_night_on all 8 identical"
+  ],
+  "sample_stills": [
+    "assets/staging/tiles/tile_warehouse_industrial_v2_minimum_g4/clean_day_f0.png",
+    "assets/staging/tiles/tile_warehouse_industrial_v2_minimum_g4/burning_00_f4.png",
+    "assets/staging/tiles/tile_warehouse_industrial_v2_minimum_g4/clean_night_on_f4.png"
+  ],
+  "staging_folder": "assets/staging/tiles/tile_warehouse_industrial_v2_minimum_g4",
+  "index_status": "de_indexed",
+  "next_path": "Real manual keyframe_render.py in Blender UI — see pilot_grammar_001_g4_checklist_v1.md Phase 4",
+  "blocked_by": [
+    "human_g4_rejected",
+    "materials_not_applied_in_render",
+    "headless_bake_not_ship_art"
+  ],
+  "_agent_meta": {
+    "agent": "operator",
+    "lane": "human_g4_rejection",
+    "policy": "src/dev/mcp_orchestrator_tile_fix_warehouse_slice_v2.md"
+  }
+}

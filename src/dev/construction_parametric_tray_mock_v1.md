@@ -8,6 +8,7 @@
 | **Version** | `1.0.0` |
 | **Date** | 2026-05-26 |
 | **Owner** | `@designer` |
+| **Status** | **SIGNED** · **PASS** (CONSTRUCTION-PARAM-DESIGN-001) |
 | **Host** | Bevy `ContextTrayRoot` · **Build** context (when `ActiveBuildTool` = building) |
 | **Rail reference** | [`construction_r4_tray_legend_v1.md`](construction_r4_tray_legend_v1.md) — **48+52** legend footer unchanged; parametric block sits **above** R4 corridor legend |
 | **Mock style** | [`ui_phase0_panel_mocks_v1.md`](../prompts/guides/ui/ui_phase0_panel_mocks_v1.md) (flat v2 chrome, wire labels) |
@@ -170,4 +171,4 @@ RMB / Esc: clear ghost
 |:---|:---|
 | **CONSTRUCTION-PARAM-CODER-002** | Hint strings + toggle resource |
 | **CONSTRUCTION-PARAM-CODER-004** | Tray readout egui |
-| **CONSTRUCTION-PARAM-CODER-006** | Economy preview numbers in readout |
+| **CONSTRUCTION-PARAM-CODER-006** | Economy preview — full contract [`construction_parametric_scale_hud_v1.md`](construction_parametric_scale_hud_v1.md) |

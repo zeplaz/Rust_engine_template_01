@@ -2,111 +2,77 @@
 
 | Field | Value |
 |:---|:---|
-| **Version** | `1.0.0` |
-| **Date** | 2026-05-26 |
-| **Machine queue** | [`tools/orchestrator/queues/coder_active_queue.json`](../tools/orchestrator/queues/coder_active_queue.json) |
-| **Rule** | One **primary** per coder per session; parallel only when **file domains disjoint** |
-
-**Gates closed:** WSS-DESIGN-GATE-001 **PASS (qualified)** · CONSTRUCTION-PARAM-DESIGN-001 **PASS (qualified)** · PLAN-CONSTRUCTION-PARAM **SIGNED**
+| **Version** | `1.2.3` |
+| **Date** | 2026-05-27 |
+| **START HERE** | [`coder_unblock_dispatch_v1.md`](coder_unblock_dispatch_v1.md) |
+| **Machine queue** | [`tools/orchestrator/queues/coder_active_queue.json`](../tools/orchestrator/queues/coder_active_queue.json) v4.2+ |
 
 ---
 
-## Parallel fleet (start today)
+## Pick ONE primary per coder (today)
 
 | Coder | P1 (now) | P2 (next) | Do not touch |
 |:---|:---|:---|:---|
-| **A** | **WSS-CHUNK-SLAB-001** | **FIRE-F2-EXTRACT-001** | `src/construction/*` |
-| **B** | **CONSTRUCTION-PARAM-CODER-002** (P2-A input) | **CONSTRUCTION-PARAM-CODER-003** (P1-B `TileOccupationBook`) | `src/substrate/*` |
-| **B** (alt) | **M3-UNITS-DEPTH-001** | **REPLAY-RING-LIVE-001** | if construction saturated |
+| **A** | **WSS-ATMOS-CLIPMAP-001** | **WSS-HYDRO-RUNTIME-001** / **S7B-M4-LIVE-001** | `src/construction/*` |
+| **B** | **closed** — regression guard (`construction` + `coder_b_*` bundles) | `src/substrate/active_runtime.rs` (Coder A mutex) |
 
-**Defer:** **R4-MV-GHOST-001** (fights parametric `visual_authority.rs` Phase 2-B).
+**Witness truth:** `wss_substrate_live.json` `green: true` and `construction_parametric_placement_001.green: true` (parametric 002..006 closed).
 
 ---
 
-## @coder A — WSS-CHUNK-SLAB-001
+## @coder A — WSS-CHUNK-SLAB-001 (closed)
 
 | Field | Value |
 |:---|:---|
 | **Plan** | [`plan_wss_chunk_slab_exec_001_v1.md`](plan_wss_chunk_slab_exec_001_v1.md) |
-| **Design** | [`wssr_design_signoff_v1.md`](wssr_design_signoff_v1.md) |
-| **Orders** | [`wssr_coder_hybrid_orders_v1.md`](wssr_coder_hybrid_orders_v1.md) |
-| **Witness** | `debug_runs/wss_substrate_live.json` |
-| **Module** | `src/substrate/` (new) |
-
-**Exit this session:** CS-001..CS-004 — types, registry, hydrate stub, witness writer (all flags false, `green: false`).
-
-**Hybrid default:** `ChunkWeather` / `ChunkSurfaceFire` **unchanged** — no sim tick writes to slab.
+| **Witness** | `debug_runs/wss_substrate_live.json` → `green: true` |
+| **Next** | Move to A-W2 (`plan_wss_atmos_clipmap_exec_001_v1.md`) |
 
 ```powershell
 cargo test -p proc_A_dine01 --lib wss_substrate
-cargo test -p proc_A_dine01 --lib stage5 fire_streaming
 ```
 
 ---
 
-## @coder A — FIRE-F2-EXTRACT-001 (after or second session)
+## @coder A — FIRE-F2-EXTRACT-001 (P2 or parallel)
 
 | Field | Value |
 |:---|:---|
-| **Plan** | [`fire_ecology_f1_todos.md`](fire_ecology_f1_todos.md) F2-01..04 · charter [`planner_elemental_vfx_domain_charter_v1.md`](planner_elemental_vfx_domain_charter_v1.md) |
-| **Witness** | `fire_ecology_live.json`, `stage5_full_app_live.json` (`fire_instance_buffer_rows`) |
-| **Goal** | Projection-graph fire instances — close **VX-P2-01** |
+| **Plan** | [`plan_fire_f2_extract_exec_001_v1.md`](plan_fire_f2_extract_exec_001_v1.md) |
+| **Witness** | `stage5_full_app_live.json` — `fire_instance_buffer_rows > 0` |
 
-**Files:** `fire_view_extract.rs`, `render_projection_graph`, extraction — **no substrate**.
+**Blocked for primary until slab green:** WSS-ATMOS-CLIPMAP-001 · WSS-HYDRO-RUNTIME-001
 
 ---
 
-## @coder B — CONSTRUCTION-PARAM-CODER-002 (Phase 2)
+## @coder B — B-H2 closed (lane drained)
 
 | Field | Value |
 |:---|:---|
-| **Plan** | [`plan_construction_param_exec_phases_v1.md`](plan_construction_param_exec_phases_v1.md) **P2-A** |
-| **Design** | [`construction_parametric_design_signoff_v1.md`](construction_parametric_design_signoff_v1.md) |
-| **Prereq** | **CODER-001** ☑ `weighted_footprint.rs` |
-| **Witness flags** | `shift_queue_building_removed`, `enter_commits_single_ghost` |
-
-**Files (≤3):** `build_state.rs`, `build_interaction.rs`, `build_tool_authority.rs`
-
-**Rules:** Buildings only — roads/rail/zone unchanged. Enter commits ghost; remove Shift+LMB building queue.
+| **Closed** | **CONSTRUCTION-PARAM-CODER-002..006** · **R4** · **M3/replay/tray** · **WSS-HYDRO-BOUNDARY-001** |
+| **Witness** | `wss_hydro_runtime_001.construction_hydro_coupling_wired: true` · `construction_events_drained: 1` |
+| **Next** | Await planner next exec slice |
 
 ```powershell
 cargo test -p proc_A_dine01 --lib construction
+cargo test -p proc_A_dine01 --lib coder_b_wave3 coder_b_queue_bundle
 ```
 
 ---
 
-## @coder B — CONSTRUCTION-PARAM-CODER-003 (Phase 1 tail)
+## Planner docs (not blank — use these)
 
-| Field | Value |
+| Doc | Coder slice |
 |:---|:---|
-| **Plan** | **P1-B** in [`plan_construction_param_exec_phases_v1.md`](plan_construction_param_exec_phases_v1.md) |
-| **Files (≤3):** `src/strategic/site/tile_occupation.rs`, `components.rs`, `mod.rs` |
-| **Witness** | `overlap_blocks_commit`, `commit_carries_scale_and_weights` |
+| [`plan_fire_f2_extract_exec_001_v1.md`](plan_fire_f2_extract_exec_001_v1.md) | A-V2 |
+| [`plan_wss_smoke_bridge_exec_001_v1.md`](plan_wss_smoke_bridge_exec_001_v1.md) | A-V3 |
+| [`plan_m3_depth_exec_001_v1.md`](plan_m3_depth_exec_001_v1.md) | B primary |
+| [`plan_replay_ring_exec_001_v1.md`](plan_replay_ring_exec_001_v1.md) | B secondary |
 
-**Can run after P2-A** or **parallel** if different coder — same owner B sequential recommended.
-
----
-
-## @coder B — M3-UNITS-DEPTH-001 (disjoint lane)
-
-| Field | Value |
-|:---|:---|
-| **Plan** | [`plan_m3_depth_exec_001_v1.md`](plan_m3_depth_exec_001_v1.md) |
-| **Design** | [`minimap_m3_unit_aggregation_visual_v1.md`](minimap_m3_unit_aggregation_visual_v1.md) |
-| **Witness** | `minimap_compositor_live.json` |
-
-**No** `src/construction/` except if minimap reader only touches gui/compositor.
+**Draft only:** [`plan_wss_slab_pr2_dual_write_v1.md`](plan_wss_slab_pr2_dual_write_v1.md) · [`weather_simulation_runbook_v2_plan_v1.md`](weather_simulation_runbook_v2_plan_v1.md)
 
 ---
 
-## Done — do not re-open
+## Deferred
 
-F7-STREAM-DEEP · R4-CORRIDOR · CONSTRUCTION-PARAM-CODER-000/001 · wave 3 closure bundles
-
----
-
-## Changelog
-
-| Version | Date | Notes |
-|:---|:---|:---|
-| v1.0.0 | 2026-05-26 | Fleet reopened after planner + design gates |
+None — R4-MV-GHOST-001 closed (`construction_r4_mv_ghost_001.green: true`).

@@ -6,7 +6,7 @@
 | **Version** | `1.0.0` |
 | **Date** | 2026-05-26 |
 | **Owner** | `@designer` |
-| **Verdict** | **DEFER** (per-view VM alignment is green, but full `UI-W3-P6-001` witness rollup is currently false in `ui_shell_migration_live.json`) |
+| **Verdict** | **PASS (qualified)** — readability contract + acceptance checklist **complete**; flip to **PASS** when `ui_shell_migration_live.json` → `/ui_w3_p6_001/green` |
 | **Unblocks** | `UI-W3-P6-001` (coder B) |
 | **Witness (VM alignment)** | `debug_runs/infrastructure_view_isolation_live.json` → `/vm_08/overlay_masks_aligned` and `/vm_11/minimap_cap_respected` and `/infrastructure_view_isolation_green` |
 | **Witness (stage6 green)** | `debug_runs/stage6_virtualization_live.json` → `/stage6_virtualization_green` |
@@ -48,4 +48,24 @@ Editor / WorldGen shows:
 2. VM-11 respects minimap cap and does not exceed contracted zoom bounds.
 3. Sim HUD matches PLAY-01: no editor-only panels appear in simulation.
 
-*** End Patch
+---
+
+## Sign-off promotion (2026-05-26)
+
+| Criterion | Status |
+|:---|:---|
+| VM-08 `/vm_08/overlay_masks_aligned` | ✓ per infrastructure witness |
+| VM-11 `/vm_11/minimap_cap_respected` | ✓ per infrastructure witness |
+| `/infrastructure_view_isolation_green` | ✓ |
+| Acceptance checklist §1–3 | ✓ design-complete |
+| `/ui_w3_p6_001/green` | ✗ — **qualified** until coder B rollup |
+
+**Policy:** Same as wave 5 DEFER→PASS (qualified) rows — spec sufficient to code **UI-W3-P6-001**; witness rollup is implementation gate only.
+
+---
+
+## Sign-off
+
+| Role | Verdict | Date |
+|:---|:---|:---|
+| `@designer` | **PASS (qualified)** | 2026-05-26 |

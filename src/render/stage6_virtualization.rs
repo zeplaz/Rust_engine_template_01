@@ -2,7 +2,7 @@
 
 use bevy::prelude::*;
 
-use crate::render::stage6_live_proof::{
+use crate::dev::runtime_witness::stage6::{
     refresh_stage6_virtualization_witness, write_stage6_virtualization_live_proof_system,
     Stage6LiveProofState, Stage6VirtualizationWitness,
 };
@@ -227,7 +227,10 @@ impl Plugin for Stage6VirtualizationPlugin {
             .init_resource::<ResidencyDrivenConsumerWindow>()
             .init_resource::<PerViewResidencyConsumerWindow>()
             .init_resource::<Stage6VirtualizationWitness>()
-            .init_resource::<Stage6LiveProofState>()
+            .insert_resource(Stage6LiveProofState {
+                write_interval: 90,
+                ..Default::default()
+            })
             .add_plugins(ExtractResourcePlugin::<Stage6VirtualizationFrame>::default())
             .add_systems(
                 Update,

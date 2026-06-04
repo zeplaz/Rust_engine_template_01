@@ -227,7 +227,12 @@ pub fn construction_redo_input_system(
         }
         ConstructionAction::DemolishedSites(events) => {
             for ev in events {
-                super::demolish::execute_demolish_at_tile(&mut commands, ev.origin, &sites);
+                super::demolish::execute_demolish_at_tile(
+                    &mut commands,
+                    ev.origin,
+                    &sites,
+                    None,
+                );
             }
         }
         // Site/zone redo needs spawn replay (undo despawn only); demolish redo above.
@@ -342,6 +347,7 @@ mod tests {
             },
             layer: LayerType::Surface,
             catalog_id: Some("test_factory".into()),
+            placement: None,
         };
         record_demolish_execution(&mut history, vec![ev.clone()]);
         match &history.undo_stack[0] {
@@ -355,6 +361,8 @@ mod tests {
 }
 
 /// Advance survey phases before strategic logistics takes UnderConstruction.
+/// Superseded by [`advance_site_construction_tick_system`]; remove when CON-P2 schedule lands.
+#[allow(dead_code)]
 pub fn advance_early_construction_phases_system(
     time: Res<Time>,
     mut q: Query<(&mut ConstructionSite, &PlannedSite)>,

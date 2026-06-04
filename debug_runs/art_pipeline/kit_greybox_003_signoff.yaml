@@ -1,0 +1,71 @@
+batch_id: kit_greybox_003
+designer_mcp: sign-off
+proceed_promote: yes
+rules_check:
+  passed: true
+  blocked_by: []
+  batch_id: kit_greybox_003
+  seed: 42
+modules:
+  - asset_id: wall_brick_2u
+    job_id: wall_brick_2u_run001
+    kit_ref: wall_brick_2u
+    valid: true
+    vertex_count: 24
+    notes: 8x3x0.3m; PBR brick_red_01 when textures present
+  - asset_id: wall_concrete_1u
+    job_id: wall_concrete_1u_run001
+    kit_ref: wall_concrete_1u
+    valid: true
+    vertex_count: 24
+    notes: 4x3x0.3m grid [1,1]
+  - asset_id: wall_wood_2u
+    job_id: wall_wood_2u_run001
+    kit_ref: wall_wood_2u
+    valid: true
+    vertex_count: 24
+    notes: 8x3x0.25m style_rural
+  - asset_id: wall_industrial_panel_2u
+    job_id: wall_industrial_panel_2u_run001
+    kit_ref: wall_industrial_panel_2u
+    valid: true
+    vertex_count: 24
+    notes: thin steel panel 0.12m depth; greybox tint only (no steel_panel texture yet)
+  - asset_id: window_single_1u
+    job_id: window_single_1u_run001
+    kit_ref: win_single_1u
+    valid: true
+    vertex_count: 48
+    notes: 4x1.2m sill panel; 48 verts acceptable
+  - asset_id: window_double_1u
+    job_id: window_double_1u_run001
+    kit_ref: win_double_1u
+    valid: true
+    vertex_count: 48
+    notes: 4x1.5m panel
+  - asset_id: door_residential_1u
+    job_id: door_residential_1u_run001
+    kit_ref: door_residential
+    valid: true
+    vertex_count: 24
+    notes: sub-1u width 1.2m residential greybox
+  - asset_id: door_garage_2u
+    job_id: door_garage_2u_run001
+    kit_ref: door_garage
+    valid: true
+    vertex_count: 24
+    notes: 4x3x0.2m grid [2,1]
+  - asset_id: roof_sawtooth_2u
+    job_id: roof_sawtooth_2u_run001
+    kit_ref: roof_sawtooth
+    valid: true
+    vertex_count: 24
+    notes: greybox:sawtooth_via_slab at 0.4m thickness
+  - asset_id: prop_chimney_1u
+    job_id: prop_chimney_1u_run001
+    kit_ref: prop_chimney
+    valid: true
+    vertex_count: 24
+    notes: 1.5x4x1.5m roof_ridge snap
+index_after_batch: 31
+remaining_kit_targets: 29

@@ -1,0 +1,53 @@
+---
+description: Validation-first agent workflow — structured reports, not raw logs
+alwaysApply: true
+---
+
+# Validation First
+
+Agents must **not** inspect raw command output when a validator exists.
+
+## Preferred flow
+
+```text
+Task request
+  → Validator (MCP tool or CLI validate-report)
+  → ValidationReport JSON (compression level 3–4)
+  → Agent reasons on structured fields only
+```
+
+## Raw logs
+
+Request raw logs **only** when:
+- `confidence < 0.7` on the report, or
+- `errors` is empty but status is `failed`, or
+- user explicitly asks for full output
+
+Raw logs are written to `debug_runs/validators/` — agents read the **path** from `raw_log_path`, not the contents, unless escalation is required.
+
+## Validators (shipped)
+
+| Validator | MCP tool | CLI |
+|-----------|----------|-----|
+| cargo | `validate_cargo_report` | `validate-report cargo [--cached]` |
+| bevy | `validate_bevy_report` | `validate-report bevy` |
+| MCP spec | `validate_report` mcp_spec | `validate-report mcp_spec <path>` |
+| MCP job | `validate_report` mcp_job | `validate-report mcp_job <path>` |
+| GLB asset | `validate_asset_report` | `validate-report asset_glb <path>` |
+
+Orchestrator cache: `tools/orchestrator/state/last_run.json` via `--cached` / `use_cached=true`.
+
+## Compression levels
+
+| Level | Agent sees |
+|-------|------------|
+| 1 | Up to 50 issues + raw_log_path |
+| 2 | Up to 20 issues |
+| 3 | Up to 8 issues + known_fixes (default) |
+| 4 | summary + known_fixes only |
+
+## All agents
+
+Applies to `@coder`, `@designer`, `@orchestrator`, `@planner`, `@coder-mcp`, `@designer-mcp`, `@orchestrator-mcp`, `@sim-steward`.
+
+Plan: `src/dev/plan_validation_runtime_v1.md`

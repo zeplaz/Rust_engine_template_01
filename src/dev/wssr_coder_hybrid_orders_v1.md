@@ -2,7 +2,7 @@
 
 | Field | Value |
 |:---|:---|
-| **Version** | `1.0.0` |
+| **Version** | `1.1.0` |
 | **Date** | 2026-05-26 |
 | **Owner** | `@orchestrator` |
 | **Prereq** | **WSS-DESIGN-GATE-001** **PASS (qualified)** on [`wssr_design_signoff_v1.md`](wssr_design_signoff_v1.md) (2026-05-26) |
@@ -45,8 +45,8 @@ regression: cargo test -p proc_A_dine01 --lib ...
 | Priority | ID | Owner | Plan | Parallel? |
 |:---:|:---|:---|:---|:---:|
 | 1 | **WSS-CHUNK-SLAB-001** | @coder A or substrate lane | WSS-PLAN-002 | — |
-| 2 | **WSS-ATMOS-CLIPMAP-001** | @coder A (atmosphere) | WSS-PLAN-004 | After slab **types** exist |
-| 3 | **WSS-HYDRO-RUNTIME-001** | @coder B or terrain lane | WSS-PLAN-003 | After gen→slab hydrate path designed |
+| 2 | **WSS-ATMOS-CLIPMAP-001** | @coder A (atmosphere) | [`plan_wss_atmos_clipmap_exec_001_v1.md`](plan_wss_atmos_clipmap_exec_001_v1.md) | After slab **types** exist |
+| 3 | **WSS-HYDRO-RUNTIME-001** | @coder B or terrain lane | [`plan_wss_hydro_runtime_exec_001_v1.md`](plan_wss_hydro_runtime_exec_001_v1.md) | After `hydrate_wired` |
 | — | **Hanabi spike** | @coder or experiments/ | index § Hanabi | **Non-blocking** — no main plugin merge |
 
 **Parallel with WSS (disjoint files):**
@@ -59,43 +59,41 @@ regression: cargo test -p proc_A_dine01 --lib ...
 
 ---
 
-## WSS-CHUNK-SLAB-001 — exec sketch (planner/coder)
+## WSS-CHUNK-SLAB-001 — execute plan
 
-**Goal:** Types + `WorldSubstrateRegistry` + witness skeleton — **no domain migration yet**.
-
-| Task | Files (≤3) | Proof |
-|:---|:---|:---|
-| C1 | `ChunkKey`, `ChunkSlab<T>`, `WorldSubstrateRegistry` scaffold | unit tests: insert/dirty/resident |
-| C2 | `wss_substrate_live.json` writer stub in dev or substrate module | all flags false, `green: false` |
-| C3 | Hybrid note: map `ChunkWeather` / fire components → future slab slots | assessment yaml |
+**Full plan:** [`plan_wss_chunk_slab_exec_001_v1.md`](plan_wss_chunk_slab_exec_001_v1.md) — CS-001…CS-006, witness `gate: WSS-CHUNK-SLAB-001`.
 
 ```powershell
-cargo test -p proc_A_dine01 --lib wss_substrate  # when module exists
+cargo test -p proc_A_dine01 --lib substrate
 ```
 
 ---
 
-## WSS-ATMOS-CLIPMAP-001 — exec sketch
+## WSS-ATMOS-CLIPMAP-001 — execute plan
 
-**Goal:** Clipmap **types + sim vs render separation** — do **not** delete `AtmosphereField` 128² until bridge exists.
+**Full plan:** [`plan_wss_atmos_clipmap_exec_001_v1.md`](plan_wss_atmos_clipmap_exec_001_v1.md) — AC-001…AC-008, witness `wss_atmos_clipmap_001`.
 
 | Hybrid default | |
 |:---|:---|
-| New `AtmosphereClipmapSim` resource alongside existing field | |
-| `fire_visual_emit_smoke_stub` → bridge plan only in assessment | |
-| Keep CPU precip until designer approves GPU migration | |
+| `AtmosphereClipmapStack` L0–L3 alongside legacy `AtmosphereField` L1 alias | |
+| `AtmosphereRenderClipmap` ≠ sim stack | |
+| Remove `fire_visual_emit_smoke_stub` when extract node green | |
+
+**Blocked until:** `slab_registry_present` + full `WorldChunkState` types.
 
 ---
 
-## WSS-HYDRO-RUNTIME-001 — exec sketch
+## WSS-HYDRO-RUNTIME-001 — execute plan
 
-**Goal:** `ChunkSlab<HydrologyState>` + scheduler sketch — **FluidDomain forbidden**.
+**Full plan:** [`plan_wss_hydro_runtime_exec_001_v1.md`](plan_wss_hydro_runtime_exec_001_v1.md) — HY-001…HY-008, witness `wss_hydro_runtime_001`.
 
 | Hybrid default | |
 |:---|:---|
-| `HydrologyResult` / markers from terrain gen → slab hydrate | |
-| `gpu_water_*` remains L3 — ocean_mask in hydrology slab | |
-| Maintain `water_w1_green` regression | |
+| `HydrologyResult` → slab hydrate on spawn | |
+| Tier 1 background + Tier 2 deep solve scheduler | |
+| `gpu_water_*` L3 consumer only — **FluidDomain forbidden** | |
+
+**Blocked until:** `hydrate_wired` from WSS-CHUNK-SLAB-001.
 
 ---
 
@@ -124,4 +122,5 @@ cargo test -p proc_A_dine01 --lib wss_substrate
 
 | Version | Date | Notes |
 |:---|:---|:---|
+| v1.1.0 | 2026-05-26 | Full exec plans for ATMOS + HYDRO slices |
 | v1.0.0 | 2026-05-26 | Hybrid orders + design gate prereq |

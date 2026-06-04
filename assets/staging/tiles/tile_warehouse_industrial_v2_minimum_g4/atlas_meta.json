@@ -1,0 +1,404 @@
+{
+  "schema_version": 2,
+  "atlas_id": "warehouse_industrial_west_v2",
+  "batch_id": "tile_warehouse_industrial_v2_minimum_g4",
+  "tile_id": "warehouse_industrial",
+  "atlas_png": "assets/staging/tiles/tile_warehouse_industrial_v2_minimum_g4/warehouse_industrial_west_v2_atlas.png",
+  "visual_config": "assets/configs/buildings/visual_config_warehouse_industrial_west_v2.json",
+  "columns": 8,
+  "rows": 3,
+  "tile_px": 128,
+  "render_contract": {
+    "facings": 8,
+    "tile_px": 128,
+    "quarter_turn_fallback": true
+  },
+  "lookups": [
+    {
+      "variant": "clean_day",
+      "facing": 0,
+      "frame": 0,
+      "grid": [
+        0,
+        0
+      ],
+      "uv": [
+        0.0,
+        0.0,
+        0.125,
+        0.3333333333333333
+      ],
+      "png": "clean_day_f0.png"
+    },
+    {
+      "variant": "clean_day",
+      "facing": 1,
+      "frame": 0,
+      "grid": [
+        1,
+        0
+      ],
+      "uv": [
+        0.125,
+        0.0,
+        0.125,
+        0.3333333333333333
+      ],
+      "png": "clean_day_f1.png"
+    },
+    {
+      "variant": "clean_day",
+      "facing": 2,
+      "frame": 0,
+      "grid": [
+        2,
+        0
+      ],
+      "uv": [
+        0.25,
+        0.0,
+        0.125,
+        0.3333333333333333
+      ],
+      "png": "clean_day_f2.png"
+    },
+    {
+      "variant": "clean_day",
+      "facing": 3,
+      "frame": 0,
+      "grid": [
+        3,
+        0
+      ],
+      "uv": [
+        0.375,
+        0.0,
+        0.125,
+        0.3333333333333333
+      ],
+      "png": "clean_day_f3.png"
+    },
+    {
+      "variant": "clean_day",
+      "facing": 4,
+      "frame": 0,
+      "grid": [
+        4,
+        0
+      ],
+      "uv": [
+        0.5,
+        0.0,
+        0.125,
+        0.3333333333333333
+      ],
+      "png": "clean_day_f4.png"
+    },
+    {
+      "variant": "clean_day",
+      "facing": 5,
+      "frame": 0,
+      "grid": [
+        5,
+        0
+      ],
+      "uv": [
+        0.625,
+        0.0,
+        0.125,
+        0.3333333333333333
+      ],
+      "png": "clean_day_f5.png"
+    },
+    {
+      "variant": "clean_day",
+      "facing": 6,
+      "frame": 0,
+      "grid": [
+        6,
+        0
+      ],
+      "uv": [
+        0.75,
+        0.0,
+        0.125,
+        0.3333333333333333
+      ],
+      "png": "clean_day_f6.png"
+    },
+    {
+      "variant": "clean_day",
+      "facing": 7,
+      "frame": 0,
+      "grid": [
+        7,
+        0
+      ],
+      "uv": [
+        0.875,
+        0.0,
+        0.125,
+        0.3333333333333333
+      ],
+      "png": "clean_day_f7.png"
+    },
+    {
+      "variant": "clean_night_on",
+      "facing": 0,
+      "frame": 0,
+      "grid": [
+        0,
+        1
+      ],
+      "uv": [
+        0.0,
+        0.3333333333333333,
+        0.125,
+        0.3333333333333333
+      ],
+      "png": "clean_night_on_f0.png"
+    },
+    {
+      "variant": "clean_night_on",
+      "facing": 1,
+      "frame": 0,
+      "grid": [
+        1,
+        1
+      ],
+      "uv": [
+        0.125,
+        0.3333333333333333,
+        0.125,
+        0.3333333333333333
+      ],
+      "png": "clean_night_on_f1.png"
+    },
+    {
+      "variant": "clean_night_on",
+      "facing": 2,
+      "frame": 0,
+      "grid": [
+        2,
+        1
+      ],
+      "uv": [
+        0.25,
+        0.3333333333333333,
+        0.125,
+        0.3333333333333333
+      ],
+      "png": "clean_night_on_f2.png"
+    },
+    {
+      "variant": "clean_night_on",
+      "facing": 3,
+      "frame": 0,
+      "grid": [
+        3,
+        1
+      ],
+      "uv": [
+        0.375,
+        0.3333333333333333,
+        0.125,
+        0.3333333333333333
+      ],
+      "png": "clean_night_on_f3.png"
+    },
+    {
+      "variant": "clean_night_on",
+      "facing": 4,
+      "frame": 0,
+      "grid": [
+        4,
+        1
+      ],
+      "uv": [
+        0.5,
+        0.3333333333333333,
+        0.125,
+        0.3333333333333333
+      ],
+      "png": "clean_night_on_f4.png"
+    },
+    {
+      "variant": "clean_night_on",
+      "facing": 5,
+      "frame": 0,
+      "grid": [
+        5,
+        1
+      ],
+      "uv": [
+        0.625,
+        0.3333333333333333,
+        0.125,
+        0.3333333333333333
+      ],
+      "png": "clean_night_on_f5.png"
+    },
+    {
+      "variant": "clean_night_on",
+      "facing": 6,
+      "frame": 0,
+      "grid": [
+        6,
+        1
+      ],
+      "uv": [
+        0.75,
+        0.3333333333333333,
+        0.125,
+        0.3333333333333333
+      ],
+      "png": "clean_night_on_f6.png"
+    },
+    {
+      "variant": "clean_night_on",
+      "facing": 7,
+      "frame": 0,
+      "grid": [
+        7,
+        1
+      ],
+      "uv": [
+        0.875,
+        0.3333333333333333,
+        0.125,
+        0.3333333333333333
+      ],
+      "png": "clean_night_on_f7.png"
+    },
+    {
+      "variant": "damaged_night_on",
+      "facing": 0,
+      "frame": 0,
+      "grid": [
+        0,
+        2
+      ],
+      "uv": [
+        0.0,
+        0.6666666666666666,
+        0.125,
+        0.3333333333333333
+      ],
+      "png": "damaged_night_on_f0.png"
+    },
+    {
+      "variant": "damaged_night_on",
+      "facing": 1,
+      "frame": 0,
+      "grid": [
+        1,
+        2
+      ],
+      "uv": [
+        0.125,
+        0.6666666666666666,
+        0.125,
+        0.3333333333333333
+      ],
+      "png": "damaged_night_on_f1.png"
+    },
+    {
+      "variant": "damaged_night_on",
+      "facing": 2,
+      "frame": 0,
+      "grid": [
+        2,
+        2
+      ],
+      "uv": [
+        0.25,
+        0.6666666666666666,
+        0.125,
+        0.3333333333333333
+      ],
+      "png": "damaged_night_on_f2.png"
+    },
+    {
+      "variant": "damaged_night_on",
+      "facing": 3,
+      "frame": 0,
+      "grid": [
+        3,
+        2
+      ],
+      "uv": [
+        0.375,
+        0.6666666666666666,
+        0.125,
+        0.3333333333333333
+      ],
+      "png": "damaged_night_on_f3.png"
+    },
+    {
+      "variant": "damaged_night_on",
+      "facing": 4,
+      "frame": 0,
+      "grid": [
+        4,
+        2
+      ],
+      "uv": [
+        0.5,
+        0.6666666666666666,
+        0.125,
+        0.3333333333333333
+      ],
+      "png": "damaged_night_on_f4.png"
+    },
+    {
+      "variant": "damaged_night_on",
+      "facing": 5,
+      "frame": 0,
+      "grid": [
+        5,
+        2
+      ],
+      "uv": [
+        0.625,
+        0.6666666666666666,
+        0.125,
+        0.3333333333333333
+      ],
+      "png": "damaged_night_on_f5.png"
+    },
+    {
+      "variant": "damaged_night_on",
+      "facing": 6,
+      "frame": 0,
+      "grid": [
+        6,
+        2
+      ],
+      "uv": [
+        0.75,
+        0.6666666666666666,
+        0.125,
+        0.3333333333333333
+      ],
+      "png": "damaged_night_on_f6.png"
+    },
+    {
+      "variant": "damaged_night_on",
+      "facing": 7,
+      "frame": 0,
+      "grid": [
+        7,
+        2
+      ],
+      "uv": [
+        0.875,
+        0.6666666666666666,
+        0.125,
+        0.3333333333333333
+      ],
+      "png": "damaged_night_on_f7.png"
+    }
+  ],
+  "minimum_g4_ship": false,
+  "lookup_mode": "minimum_g4"
+}

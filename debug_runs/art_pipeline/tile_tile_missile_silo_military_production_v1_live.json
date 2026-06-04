@@ -1,0 +1,183 @@
+{
+  "batch_id": "tile_missile_silo_military_production_v1",
+  "lane": "tile_batch",
+  "_agent_meta": {
+    "agent": "coder-mcp",
+    "updated_at": "2026-06-03T03:21:34.369266+00:00",
+    "program": "MCP-TILE-CLOSE-001",
+    "dry_run": false
+  },
+  "gates": {
+    "G0": "pass",
+    "G1": "pass",
+    "G2": "pass",
+    "G3": "pass",
+    "G4": "planned",
+    "G5": "planned"
+  },
+  "green": true,
+  "png_count": 15,
+  "png_dimensions": [
+    {
+      "file": "abandoned.png",
+      "bytes": 13203,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "file": "burning_00.png",
+      "bytes": 11691,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "file": "burning_01.png",
+      "bytes": 11657,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "file": "burning_02.png",
+      "bytes": 11605,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "file": "burning_03.png",
+      "bytes": 11651,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "file": "burning_04.png",
+      "bytes": 11568,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "file": "burning_05.png",
+      "bytes": 11585,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "file": "burning_06.png",
+      "bytes": 11606,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "file": "burning_07.png",
+      "bytes": 11622,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "file": "clean_day.png",
+      "bytes": 13203,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "file": "clean_night_off.png",
+      "bytes": 13203,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "file": "clean_night_on.png",
+      "bytes": 11600,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "file": "damaged_day.png",
+      "bytes": 13203,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "file": "damaged_night_on.png",
+      "bytes": 11551,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "file": "ruined.png",
+      "bytes": 13203,
+      "width": 128,
+      "height": 128
+    }
+  ],
+  "real_bake": true,
+  "atlas_path": "C:\\dev\\github\\Rust_engine_template_01\\assets\\textures\\buildings_iso\\production\\missile_silo_military_production_v1_atlas.png",
+  "meta_json": "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_missile_silo_military_production_v1\\atlas_meta.json",
+  "batch_status": {
+    "batch_id": "tile_missile_silo_military_production_v1",
+    "status": "done",
+    "bake_source": "keyframe_pack",
+    "variant_count": 15,
+    "png_paths": [
+      "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_missile_silo_military_production_v1\\clean_day.png",
+      "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_missile_silo_military_production_v1\\clean_night_off.png",
+      "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_missile_silo_military_production_v1\\clean_night_on.png",
+      "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_missile_silo_military_production_v1\\damaged_day.png",
+      "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_missile_silo_military_production_v1\\damaged_night_on.png",
+      "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_missile_silo_military_production_v1\\abandoned.png",
+      "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_missile_silo_military_production_v1\\ruined.png",
+      "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_missile_silo_military_production_v1\\burning_00.png",
+      "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_missile_silo_military_production_v1\\burning_01.png",
+      "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_missile_silo_military_production_v1\\burning_02.png",
+      "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_missile_silo_military_production_v1\\burning_03.png",
+      "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_missile_silo_military_production_v1\\burning_04.png",
+      "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_missile_silo_military_production_v1\\burning_05.png",
+      "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_missile_silo_military_production_v1\\burning_06.png",
+      "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_missile_silo_military_production_v1\\burning_07.png"
+    ],
+    "atlas_path": "C:\\dev\\github\\Rust_engine_template_01\\assets\\textures\\buildings_iso\\production\\missile_silo_military_production_v1_atlas.png",
+    "meta_json": "assets/staging/tiles/tile_missile_silo_military_production_v1/atlas_meta.json",
+    "dry_run": false
+  },
+  "automation": "headless_only",
+  "smoke_fallback_used": false,
+  "gate_id": "TILE-REAL-001",
+  "tile_id": "missile_silo_military",
+  "assembly_ref": {
+    "style_pack_id": "style_military",
+    "assembly_snapshot": "tools/mcp/schemas/examples/assembly_snapshot_missile_silo_military_production_v1.json",
+    "footprint": {
+      "width": 6,
+      "depth": 3,
+      "floors": 1
+    }
+  },
+  "variant_set_ref": "tools/mcp/schemas/examples/variant_set_bunker_military_production_v1.json",
+  "source_tier": "production",
+  "development_tier": "production",
+  "ship": true,
+  "tile_atlas_index": {
+    "ok": true,
+    "entry": {
+      "atlas_id": "missile_silo_military_production_v1",
+      "batch_id": "tile_missile_silo_military_production_v1",
+      "assembly_id": "missile_silo_6x3_s46_msl1",
+      "tile_id": "missile_silo_military",
+      "atlas_png": "assets/textures/buildings_iso/production/missile_silo_military_production_v1_atlas.png",
+      "meta_json": "assets/staging/tiles/tile_missile_silo_military_production_v1/atlas_meta.json",
+      "development_tier": "production",
+      "style_pack_id": "style_military",
+      "ship_allowed": true
+    },
+    "written": "C:\\dev\\github\\Rust_engine_template_01\\assets\\configs\\buildings\\_tile_atlas_index.ron",
+    "json_mirror": "C:\\dev\\github\\Rust_engine_template_01\\assets\\configs\\buildings\\_tile_atlas_index.json",
+    "entry_count": 6,
+    "atlas_ids": [
+      "bunker_military_production_v1",
+      "missile_silo_military_production_v1",
+      "rowhouse_victorian_pilot_v1",
+      "rowhouse_victorian_production_v1",
+      "shopfront_colonial_production_v1",
+      "warehouse_industrial_west_production_v1"
+    ]
+  }
+}

@@ -25,8 +25,8 @@
 
 | ☐/☑ | # | Exec ID | Deliverable | Owner | Witness |
 |:---:|---:|:---|:---|:---|:---|
-| ☐ | 5 | **PLAN-CONSTRUCTION-R4-EXEC-001** | Expand `R4-PLAN-001` into phased impl | @coder B | `construction_stage_live.json` (`construction_r4_corridor_001`) |
-| ☐ | 6 | **PLAN-CONSTRUCTION-R4-MV-EXEC-001** | Implement `R4-MV-GHOST-001` paired with `R4-PLAN-002` | @coder B | `construction_stage_live.json` (`construction_r4_mv_ghost_001`) |
+| ☑ | 5 | **PLAN-CONSTRUCTION-R4-EXEC-001** | Expand `R4-PLAN-001` into phased impl | @planner | `construction_stage_live.json` (`construction_r4_corridor_001`) |
+| ☑ | 6 | **PLAN-CONSTRUCTION-R4-MV-EXEC-001** | Implement `R4-MV-GHOST-001` paired with `R4-PLAN-002` | @planner | `construction_stage_live.json` (`construction_r4_mv_ghost_001`) |
 
 ---
 
@@ -34,7 +34,7 @@
 
 | ☐/☑ | # | Exec ID | Deliverable | Owner | Witness |
 |:---:|---:|:---|:---|:---|:---|
-| ☐ | 7 | **PLAN-M3-DEPTH-EXEC-001** | Expand `m3_minimap_product_depth_plan_v1.md` into full impl | @coder B | `minimap_compositor_live.json` |
+| ☑ | 7 | **PLAN-M3-DEPTH-EXEC-001** | Expand `m3_minimap_product_depth_plan_v1.md` into full impl | @planner | `minimap_compositor_live.json` |
 
 ---
 
@@ -42,7 +42,7 @@
 
 | ☐/☑ | # | Exec ID | Deliverable | Owner | Witness |
 |:---:|---:|:---|:---|:---|:---|
-| ☐ | 8 | **PLAN-F7-STREAM-EXEC-001** | Expand `fire7_streaming_depth_plan_v1.md` into full impl | @coder A | `fire_streaming_live.json` |
+| ☑ | 8 | **PLAN-F7-STREAM-EXEC-001** | Expand `fire7_streaming_depth_plan_v1.md` into full impl | @planner | `fire_streaming_live.json` |
 
 ---
 
@@ -50,7 +50,7 @@
 
 | ☐/☑ | # | Exec ID | Deliverable | Owner |
 |:---:|---:|:---|:---|:---|
-| ☐ | 9 | **PLAN-REPLAY-RING-EXEC-001** | Expand `replay_live_ring_impl_plan_v1.md` | @coder B |
+| ☑ | 9 | **PLAN-REPLAY-RING-EXEC-001** | Expand `replay_live_ring_impl_plan_v1.md` | @planner |
 | ☐ | 10 | **PLAN-S7B-M4-LIVE-EXEC-001** | Expand `s7b_m4_live_sim_playtest_plan_v1.md` | @coder A |
 
 ---
@@ -92,8 +92,8 @@
 | ☐/☑ | # | Exec ID | Deliverable | Owner | Witness |
 |:---:|---:|:---|:---|:---|:---|
 | ☑ | 14 | **PLAN-CONSTRUCTION-PARAM-001** | [`plan_construction_parametric_placement_v1.md`](plan_construction_parametric_placement_v1.md) **SIGNED** | @planner | — |
-| ☐ | 15 | **CONSTRUCTION-PARAM-DESIGN-001** | UX tray + staged panel | @designer | design record |
-| ☐ | 16 | **CONSTRUCTION-PARAM-CODER-001…006** | Phased impl per [`plan_construction_param_exec_phases_v1.md`](plan_construction_param_exec_phases_v1.md) | @coder B | `construction_parametric_placement_001` |
+| ☑ | 15 | **CONSTRUCTION-PARAM-DESIGN-001** | UX tray + staged panel | @designer | signoff record |
+| ☑ | 16 | **CONSTRUCTION-PARAM-CODER-001…006** | Phased impl per [`plan_construction_param_exec_phases_v1.md`](plan_construction_param_exec_phases_v1.md) | @coder B | `construction_parametric_placement_001.green: true` |
 
 Board: [`planner_wave6_parametric_todos_v1.md`](planner_wave6_parametric_todos_v1.md)
 

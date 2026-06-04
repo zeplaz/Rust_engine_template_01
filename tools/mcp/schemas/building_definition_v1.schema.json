@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "building_definition_v1.schema.json",
+  "title": "BuildingDefinitionV1",
+  "description": "TILE-FIX-007 — modules + variant enum drive bake matrix (variant × facing × frame).",
+  "type": "object",
+  "required": ["schema_version", "building_id", "modules", "variants", "render_contract"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "building_id": { "type": "string", "pattern": "^[a-z0-9_]+$" },
+    "style_pack_id": { "type": "string" },
+    "assembly_snapshot": { "type": "string", "description": "Repo-relative assembly snapshot JSON" },
+    "assembly_blend": { "type": "string", "description": "Repo-relative assembled.blend" },
+    "modules": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["module_id", "job_id"],
+        "properties": {
+          "module_id": { "type": "string" },
+          "job_id": { "type": "string" },
+          "count": { "type": "integer", "minimum": 1 }
+        },
+        "additionalProperties": false
+      }
+    },
+    "variants": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "pattern": "^[a-z0-9_]+$" }
+    },
+    "fire_animation_frames": { "type": "integer", "minimum": 0, "maximum": 31 },
+    "render_contract": {
+      "type": "object",
+      "required": ["facings"],
+      "properties": {
+        "facings": { "type": "integer", "enum": [4, 8] },
+        "tile_px": { "type": "integer", "minimum": 16 },
+        "quarter_turn_fallback": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    },
+    "material_profiles": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  },
+  "additionalProperties": false
+}

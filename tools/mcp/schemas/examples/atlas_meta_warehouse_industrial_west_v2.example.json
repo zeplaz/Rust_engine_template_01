@@ -1,0 +1,32 @@
+{
+  "schema_version": 2,
+  "atlas_id": "warehouse_industrial_west_v2",
+  "batch_id": "tile_warehouse_industrial_west_v2",
+  "tile_id": "warehouse_industrial",
+  "atlas_png": "assets/textures/buildings_iso/production/warehouse_industrial_west_v2_atlas.png",
+  "visual_config": "assets/configs/buildings/visual_config_warehouse_industrial_west_v2.example.json",
+  "columns": 8,
+  "rows": 48,
+  "tile_px": 128,
+  "render_contract": {
+    "facings": 8,
+    "tile_px": 128,
+    "quarter_turn_fallback": true
+  },
+  "lookups": [
+    {
+      "variant": "clean_day",
+      "facing": 0,
+      "frame": 0,
+      "grid": [0, 0],
+      "uv": [0.0, 0.0, 0.125, 0.020833333]
+    },
+    {
+      "variant": "clean_day",
+      "facing": 1,
+      "frame": 0,
+      "grid": [1, 0],
+      "uv": [0.125, 0.0, 0.125, 0.020833333]
+    }
+  ]
+}

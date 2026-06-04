@@ -1,0 +1,12 @@
+{
+  "batch_id": "tile_rowhouse_victorian_pilot_v1",
+  "status": "done",
+  "variant_count": 2,
+  "png_paths": [
+    "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_rowhouse_victorian_pilot_v1\\clean_day.png",
+    "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_rowhouse_victorian_pilot_v1\\damaged_night_on.png"
+  ],
+  "atlas_path": "C:\\dev\\github\\Rust_engine_template_01\\assets\\textures\\tiles\\rowhouse_victorian_pilot_v1_atlas.png",
+  "meta_json": "assets/staging/tiles/tile_rowhouse_victorian_pilot_v1/atlas_meta.json",
+  "dry_run": false
+}

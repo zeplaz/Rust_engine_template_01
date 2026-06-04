@@ -1,0 +1,22 @@
+{
+  "gate_id": "APS-PREVIEW-002",
+  "green": true,
+  "mode": "browser_threejs",
+  "assembly_id": "industrial_west_7x5_s39_9fa1",
+  "snapshot": "tools/mcp/schemas/examples/assembly_snapshot_warehouse_industrial_west_production_v1.json",
+  "modules_loaded": 40,
+  "modules_requested": 40,
+  "missing_glb": [],
+  "material_profiles_sample": [
+    "roof_metal_01",
+    "steel_corner_01",
+    "steel_door_warehouse_01",
+    "steel_panel_01"
+  ],
+  "preview_url": "http://127.0.0.1:54846/",
+  "preview_url_hint": "Open in browser while this process runs. CLI without --serve-seconds exits and kills the server.",
+  "server_note": "",
+  "preview_job": "debug_runs/preview_jobs/preview_assembly_snapshot_warehouse_industrial_west_production_v1_76bb3003.json",
+  "png": "debug_runs/preview_jobs/industrial_west_7x5_s39_9fa1_thumb.png",
+  "elapsed_ms": 0
+}

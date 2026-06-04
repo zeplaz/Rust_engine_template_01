@@ -1,0 +1,89 @@
+{
+  "schema_version": 1,
+  "entries": [
+    {
+      "signature": "E0308_type_mismatch",
+      "match": { "rustc_code": "E0308" },
+      "fix": "Align types at the assignment/call site; check generic params and & vs owned.",
+      "confidence": 0.85
+    },
+    {
+      "signature": "E0432_unresolved_import",
+      "match": { "rustc_code": "E0432" },
+      "fix": "Add import or fix module path; run cargo check after moving the symbol.",
+      "confidence": 0.9
+    },
+    {
+      "signature": "E0609_missing_field",
+      "match": { "rustc_code": "E0609" },
+      "fix": "Field name typo or wrong struct; check Bevy component/query field names.",
+      "confidence": 0.88
+    },
+    {
+      "signature": "bevy_add_system_deprecated",
+      "match": { "kind": "BevyVersionIssue", "api": "add_system" },
+      "fix": "Use add_systems(ScheduleLabel, system_fn) — Bevy 0.13+ schedule API.",
+      "confidence": 0.95
+    },
+    {
+      "signature": "bevy_add_systems_old",
+      "match": { "kind": "BevyVersionIssue", "api": "add_system_to_stage" },
+      "fix": "Use add_systems(CoreSystemSet::..., system) with CoreSystemSet chain.",
+      "confidence": 0.92
+    },
+    {
+      "signature": "mcp_missing_seed",
+      "match": { "kind": "MissingField", "field": "seed" },
+      "fix": "Add params.seed: 42 to geometry_job_v1 when dimensions or material vary.",
+      "confidence": 0.98
+    },
+    {
+      "signature": "glb_no_vertices",
+      "match": { "kind": "EmptyMesh" },
+      "fix": "Re-run geometry_run_job; check Blender export log in debug_runs/art_pipeline/.",
+      "confidence": 0.9
+    },
+    {
+      "signature": "tier_silhouette_insufficient",
+      "match": { "kind": "SilhouetteInsufficient" },
+      "fix": "Use bpy archetype profile (pitched/sawtooth/arched) — not primitive_cube_add; batch kit_lod0_* or kit_production_*.",
+      "confidence": 0.95
+    },
+    {
+      "signature": "tier_batch_retired",
+      "match": { "kind": "BatchRetired" },
+      "fix": "Stop kit_greybox_* — use kit_lod0_* or kit_production_* per plan_module_kit_production_tier_v1.md.",
+      "confidence": 0.99
+    },
+    {
+      "signature": "tier_smoke_stylepack",
+      "match": { "kind": "SmokeAsProduction" },
+      "fix": "Set development_tier: smoke for harness only; re-promote under canonical module_id as lod0/production.",
+      "confidence": 0.98
+    },
+    {
+      "signature": "tier_missing_production",
+      "match": { "signature": "tier_missing_production" },
+      "fix": "Set development_tier: production on AssetSpec and geometry job for kit_production_* batches.",
+      "confidence": 0.99
+    },
+    {
+      "signature": "tier_pbr_not_shipped",
+      "match": { "kind": "PbrNotShipped" },
+      "fix": "Production tier requires pbr_status: shipped before promote (Material Maker lane).",
+      "confidence": 0.95
+    },
+    {
+      "signature": "tier_unknown_module_id",
+      "match": { "kind": "UnknownModuleId" },
+      "fix": "Use canonical module_id from design_procedural_module_kit_v1.md inventory (50 IDs).",
+      "confidence": 0.97
+    },
+    {
+      "signature": "tier_missing_pbr_status",
+      "match": { "signature": "tier_missing_pbr_status" },
+      "fix": "Add pbr_status: deferred (lod0) or shipped (production) to AssetSpec.",
+      "confidence": 0.98
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "job_id": "prop_tank_lod0_run001",
+  "status": "done",
+  "log_path": "C:\\dev\\github\\Rust_engine_template_01\\debug_runs\\art_pipeline\\prop_tank_lod0_run001.log",
+  "outputs": [
+    "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\prop_tank_lod0_run001\\model.glb"
+  ],
+  "error": null,
+  "spec_ref": "assets/staging/specs/prop_tank.json",
+  "job_path": "C:\\dev\\github\\Rust_engine_template_01\\tools\\mcp\\schemas\\examples\\prop_tank_lod0_run001.json",
+  "updated_at": 1780443541.985945
+}

@@ -1,0 +1,85 @@
+{
+  "batch_id": "kit_lod0_006",
+  "_agent_meta": {
+    "agent": "coder-mcp",
+    "updated_at": "2026-06-02T23:37:48.872451+00:00",
+    "rules_applied": [
+      "no_ai_generated_images",
+      "deterministic_output",
+      "batch_processing",
+      "grid_alignment",
+      "canonical_module_ids_only"
+    ]
+  },
+  "gates": {
+    "G0": "pass",
+    "G1": "pass",
+    "G2": "pass",
+    "G3": "pass",
+    "G4": "pass",
+    "G5": "pass"
+  },
+  "modules": [
+    {
+      "asset_id": "wall_military_bunker_1u",
+      "job_id": "wall_military_bunker_1u_lod0_run001",
+      "status": "promoted",
+      "registered": true,
+      "valid": true,
+      "vertex_count": 24,
+      "promoted_path": "assets/models/modules/wall_military_bunker_1u_lod0_run001/model.glb",
+      "module_id": "wall_military_bunker_1u",
+      "batch_id": "kit_lod0_006"
+    },
+    {
+      "asset_id": "roof_parapet",
+      "job_id": "roof_parapet_lod0_run001",
+      "status": "promoted",
+      "registered": true,
+      "valid": true,
+      "vertex_count": 24,
+      "promoted_path": "assets/models/modules/roof_parapet_lod0_run001/model.glb",
+      "module_id": "roof_parapet",
+      "batch_id": "kit_lod0_006"
+    },
+    {
+      "asset_id": "door_civic",
+      "job_id": "door_civic_lod0_run001",
+      "status": "promoted",
+      "registered": true,
+      "valid": true,
+      "vertex_count": 44,
+      "promoted_path": "assets/models/modules/door_civic_lod0_run001/model.glb",
+      "module_id": "door_civic",
+      "batch_id": "kit_lod0_006"
+    },
+    {
+      "asset_id": "win_shop_2u",
+      "job_id": "win_shop_2u_lod0_run001",
+      "status": "promoted",
+      "registered": true,
+      "valid": true,
+      "vertex_count": 48,
+      "promoted_path": "assets/models/modules/win_shop_2u_lod0_run001/model.glb",
+      "module_id": "win_shop_2u",
+      "batch_id": "kit_lod0_006"
+    },
+    {
+      "asset_id": "prop_light",
+      "job_id": "prop_light_lod0_run001",
+      "status": "promoted",
+      "registered": true,
+      "valid": true,
+      "vertex_count": 24,
+      "promoted_path": "assets/models/modules/prop_light_lod0_run001/model.glb",
+      "module_id": "prop_light",
+      "batch_id": "kit_lod0_006"
+    }
+  ],
+  "promoted_count": 5,
+  "registered_count": 5,
+  "failed": [],
+  "module_index": "assets/configs/buildings/_module_index.ron",
+  "index_entry_count": 61,
+  "batch_registered_count": 5
+}

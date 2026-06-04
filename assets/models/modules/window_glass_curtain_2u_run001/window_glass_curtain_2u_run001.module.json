@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "asset_id": "window_glass_curtain_2u",
+  "archetype": "module_window",
+  "style_pack": "style_modern",
+  "module": {
+    "grid_units": [
+      2,
+      1
+    ],
+    "snap": "floor_edge",
+    "pivot": "bottom_center"
+  },
+  "dimensions_m": {
+    "w": 8,
+    "h": 3.0,
+    "d": 0.08
+  },
+  "material_profile": "glass_curtain_01",
+  "references": []
+}

@@ -44,39 +44,43 @@
   {
     "id": "SLICE-MD-F2-01",
     "priority": 4,
-    "title": "Per-tile / hot-cell extract contract for GPU (`TRIAGE-FIRE-EXTRACT`)",
+    "title": "FIRE-F2-EXTRACT-001 — projection-graph fire instances (VX-P2-01)",
     "lane": "Fire",
     "agent": "coder",
     "track": "5.5-E",
-    "witness": "debug_runs/fire_ecology_live.json",
+    "witness": "debug_runs/stage5_full_app_live.json",
     "commands": [
-      "cargo test -p proc_A_dine01 fire:: --lib",
-      "cargo run -p proc_A_dine01 --release -- --test visual"
+      "cargo test -p proc_A_dine01 --lib render_projection_graph fire_visual_extract",
+      "cargo test -p proc_A_dine01 --lib tactical_vfx stage5"
     ],
     "playbook": "tools/orchestrator/agents/render_pipeline_agent.md",
     "docs": [
+      "src/dev/plan_fire_f2_extract_exec_001_v1.md",
       "src/dev/fire_ecology_f1_todos.md"
     ],
-    "source": "markdown:src/dev/fire_ecology_f1_todos.md",
+    "source": "PLAN-FIRE-F2-EXEC-001",
+    "coder_slice": "FIRE-F2-EXTRACT-001",
     "status": "ready"
   },
   {
     "id": "SLICE-MD-F2-02",
     "priority": 4,
-    "title": "Smoke beyond stub (`chunk_smoke_field` + render)",
+    "title": "WSS-SMOKE-BRIDGE-001 — smoke Layer A → Layer B extract",
     "lane": "Fire",
     "agent": "coder",
     "track": "5.5-E",
-    "witness": "debug_runs/fire_ecology_live.json",
+    "witness": "debug_runs/wss_substrate_live.json",
     "commands": [
-      "cargo test -p proc_A_dine01 fire:: --lib",
-      "cargo run -p proc_A_dine01 --release -- --test visual"
+      "cargo test -p proc_A_dine01 --lib fire_visual_extract atmosphere",
+      "cargo test -p proc_A_dine01 --lib fire_ecology"
     ],
     "playbook": "tools/orchestrator/agents/render_pipeline_agent.md",
     "docs": [
-      "src/dev/fire_ecology_f1_todos.md"
+      "src/dev/plan_wss_smoke_bridge_exec_001_v1.md",
+      "src/dev/wssr_plan_004_atmosphere_unification_v1.md"
     ],
-    "source": "markdown:src/dev/fire_ecology_f1_todos.md",
+    "source": "PLAN-WSS-SMOKE-BRIDGE-001",
+    "coder_slice": "WSS-SMOKE-BRIDGE-001",
     "status": "ready"
   },
   {

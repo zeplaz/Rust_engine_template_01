@@ -11,7 +11,7 @@
 | **Owner** | `@planner` |
 | **Status** | **SIGNED** |
 | **Prior art** | [`base_fire2_smoke.md`](../prompts/guides/base_fire2_smoke.md) · [`weather_simulation_runbook_v1.md`](../prompts/guides/weather_simulation_runbook_v1.md) |
-| **Coder unblock** | **WSS-ATMOS-CLIPMAP-001** |
+| **Coder unblock** | **WSS-ATMOS-CLIPMAP-001** — exec [`plan_wss_atmos_clipmap_exec_001_v1.md`](plan_wss_atmos_clipmap_exec_001_v1.md) |
 
 **No Rust in this deliverable.** Replace fixed 128² `AtmosphereField` thinking with **hierarchical simulation clipmaps**. **Contamination is separate** from `AtmosphereCell`. Hanabi: **spike now**, integrate later.
 

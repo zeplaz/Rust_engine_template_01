@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "batch_id": "kit_lod0_003",
+  "description": "LOD0 wave \u2014 kit_lod0_003 from plan_kit_lod0_roadmap_v1.md",
+  "plan_ref": "src/dev/plan_kit_lod0_roadmap_v1.md",
+  "development_tier": "lod0",
+  "witness": "debug_runs/art_pipeline/kit_lod0_003_live.json",
+  "rules_applied": [
+    "no_ai_generated_images",
+    "deterministic_output",
+    "batch_processing",
+    "grid_alignment",
+    "canonical_module_ids_only"
+  ],
+  "modules": [
+    {
+      "asset_id": "wall_concrete_2u",
+      "job_id": "wall_concrete_2u_lod0_run001",
+      "archetype": "module_wall",
+      "development_tier": "lod0",
+      "pbr_status": "deferred",
+      "profile": "flat",
+      "status": "spec_pending"
+    },
+    {
+      "asset_id": "roof_sawtooth",
+      "job_id": "roof_sawtooth_lod0_run001",
+      "archetype": "module_roof",
+      "development_tier": "lod0",
+      "pbr_status": "deferred",
+      "profile": "sawtooth",
+      "status": "spec_pending"
+    },
+    {
+      "asset_id": "door_warehouse",
+      "job_id": "door_warehouse_lod0_run001",
+      "archetype": "module_door",
+      "development_tier": "lod0",
+      "pbr_status": "deferred",
+      "profile": "frame",
+      "status": "spec_pending"
+    },
+    {
+      "asset_id": "win_industrial_3u",
+      "job_id": "win_industrial_3u_lod0_run001",
+      "archetype": "module_window",
+      "development_tier": "lod0",
+      "pbr_status": "deferred",
+      "profile": "strip",
+      "status": "spec_pending"
+    },
+    {
+      "asset_id": "prop_vent",
+      "job_id": "prop_vent_lod0_run001",
+      "archetype": "module_prop",
+      "development_tier": "lod0",
+      "pbr_status": "deferred",
+      "profile": "box",
+      "status": "spec_pending"
+    }
+  ],
+  "next_agent": "@coder-mcp",
+  "gate": "G1"
+}

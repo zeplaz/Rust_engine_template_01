@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "job_id": "tile_tile_warehouse_industrial_west_pilot_v1_damaged_night_on",
+  "operation": "tile_variant_bake",
+  "mode": "assembly",
+  "variant": {
+    "variant_key": "damaged_night_on",
+    "state": "damaged",
+    "damage": 0.45,
+    "power": "on",
+    "fill": "half",
+    "lighting": "night_on"
+  },
+  "render": {
+    "method": "blender_orthographic_iso",
+    "isometric": true,
+    "seed": 43,
+    "tile_size_px": 128,
+    "camera_elevation_deg": 35.264
+  },
+  "light_blend": "C:\\dev\\github\\Rust_engine_template_01\\utils\\Light_keysshotsetup.blend",
+  "output": {
+    "png": "assets/staging/tiles/tile_warehouse_industrial_west_pilot_v1/damaged_night_on.png"
+  },
+  "assembly_blend": "assets/staging/assemblies/industrial_west_4x2_s43_a879.blend"
+}

@@ -1,0 +1,82 @@
+{
+  "batch_id": "tile_rowhouse_victorian_pilot_v1",
+  "lane": "tile_batch",
+  "_agent_meta": {
+    "agent": "coder-mcp",
+    "updated_at": "2026-06-03T00:56:15.217840+00:00",
+    "program": "MCP-TILE-CLOSE-001",
+    "dry_run": false
+  },
+  "gates": {
+    "G0": "pass",
+    "G1": "pass",
+    "G2": "pass",
+    "G3": "pass",
+    "G4": "planned",
+    "G5": "planned"
+  },
+  "green": true,
+  "png_count": 2,
+  "png_dimensions": [
+    {
+      "file": "clean_day.png",
+      "bytes": 21303,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "file": "damaged_night_on.png",
+      "bytes": 21303,
+      "width": 128,
+      "height": 128
+    }
+  ],
+  "real_bake": true,
+  "atlas_path": "C:\\dev\\github\\Rust_engine_template_01\\assets\\textures\\tiles\\rowhouse_victorian_pilot_v1_atlas.png",
+  "meta_json": "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_rowhouse_victorian_pilot_v1\\atlas_meta.json",
+  "batch_status": {
+    "batch_id": "tile_rowhouse_victorian_pilot_v1",
+    "status": "done",
+    "variant_count": 2,
+    "png_paths": [
+      "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_rowhouse_victorian_pilot_v1\\clean_day.png",
+      "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_rowhouse_victorian_pilot_v1\\damaged_night_on.png"
+    ],
+    "atlas_path": "C:\\dev\\github\\Rust_engine_template_01\\assets\\textures\\tiles\\rowhouse_victorian_pilot_v1_atlas.png",
+    "meta_json": "assets/staging/tiles/tile_rowhouse_victorian_pilot_v1/atlas_meta.json",
+    "dry_run": false
+  },
+  "automation": "headless_only",
+  "smoke_fallback_used": false,
+  "gate_id": "TILE-REAL-001",
+  "tile_id": "rowhouse_victorian",
+  "assembly_ref": {
+    "style_pack_id": "style_victorian",
+    "assembly_snapshot": "tools/mcp/schemas/examples/assembly_snapshot_rowhouse_victorian_v1.json",
+    "footprint": {
+      "width": 4,
+      "depth": 3,
+      "floors": 2
+    }
+  },
+  "variant_set_ref": "tools/mcp/schemas/examples/variant_set_rowhouse_victorian_v1.json",
+  "tile_atlas_index": {
+    "ok": true,
+    "entry": {
+      "atlas_id": "rowhouse_victorian_pilot_v1",
+      "batch_id": "tile_rowhouse_victorian_pilot_v1",
+      "assembly_id": "victorian_4x3_s42_a7cb",
+      "tile_id": "rowhouse_victorian",
+      "atlas_png": "assets/textures/tiles/rowhouse_victorian_pilot_v1_atlas.png",
+      "meta_json": "assets/staging/tiles/tile_rowhouse_victorian_pilot_v1/atlas_meta.json",
+      "development_tier": "lod0",
+      "style_pack_id": "style_victorian"
+    },
+    "written": "C:\\dev\\github\\Rust_engine_template_01\\assets\\configs\\buildings\\_tile_atlas_index.ron",
+    "json_mirror": "C:\\dev\\github\\Rust_engine_template_01\\assets\\configs\\buildings\\_tile_atlas_index.json",
+    "entry_count": 1,
+    "atlas_ids": [
+      "rowhouse_victorian_pilot_v1"
+    ]
+  }
+}

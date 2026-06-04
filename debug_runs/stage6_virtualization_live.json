@@ -13,7 +13,7 @@
     "logging_env": {
       "ORCHESTRATOR_EXPORT_HEALTH": false,
       "PERF": false,
-      "RUST_LOG": "bevy_ecs::schedule=trace",
+      "RUST_LOG": null,
       "SIM_VIEW_SYNC_DEBUG": false,
       "STAGE5_READINESS_VERBOSE": false,
       "STAGE5_VERBOSE": false,
@@ -45,45 +45,49 @@
       "debug_runs/ui_shell_migration_live.json",
       "debug_runs/minimap_compositor_live.json",
       "debug_runs/stage7_behavioral_live.json",
-      "debug_runs/stage7_play_live.json"
+      "debug_runs/stage7_play_live.json",
+      "debug_runs/wss_substrate_live.json",
+      "debug_runs/f2_smoke_pipeline_live.json",
+      "debug_runs/play_scenario_live.json",
+      "debug_runs/transport_network_live.json"
     ],
     "relative_path": "debug_runs/stage6_virtualization_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "stage6_live_proof",
-    "written_at_epoch_secs": 1779825311
+    "written_at_epoch_secs": 1780456285
   },
   "frame": {
     "active_atlas_slots": 2,
-    "consumer_window_len": 5041,
-    "core_chunk_count": 4761,
+    "consumer_window_len": 1,
+    "core_chunk_count": 0,
     "focus_chunk": [
-      3,
-      3
+      0,
+      0
     ],
-    "ghost_chunk_count": 280,
-    "gpu_upload_bytes_frame": 0,
-    "per_view_window_count": 63,
-    "residency_chunk_count": 5041
+    "ghost_chunk_count": 0,
+    "gpu_upload_bytes_frame": 4096,
+    "per_view_window_count": 0,
+    "residency_chunk_count": 128
+  },
+  "infra_slice3_001": {
+    "gate": "INFRA-SLICE3-001",
+    "green": true,
+    "ops_f01_section_present": true,
+    "wc_d04_green": true
   },
   "profile": "STAGE6_VIRTUALIZATION",
   "stage6_readiness": {
-    "passes": false,
+    "passes": true,
     "report": {
-      "atlas_slots_active": false,
+      "atlas_slots_active": true,
       "projection_window_populated": true,
       "residency_populated": true,
       "wave_c_ok": true
     },
-    "violations": [
-      "gpu_upload_inactive"
-    ]
+    "violations": []
   },
-  "stage6_virtualization_green": false,
-  "vm_a_crosslink": {
-    "authority_revision": 3148,
-    "dual_writer_pose_violation": false,
-    "infrastructure_view_isolation_green": true
-  },
+  "stage6_virtualization_green": true,
+  "vm_a_crosslink": null,
   "wave_c": {
     "open_backlog_items": 0,
     "passes": true,
@@ -91,8 +95,8 @@
   },
   "wc_d04": {
     "bootstrap_frames": 45,
-    "gpu_upload_bytes_frame": 0,
-    "green": false,
+    "gpu_upload_bytes_frame": 4096,
+    "green": true,
     "hysteresis_frames": 2,
     "residency_churn_anomalies_session": 0,
     "residency_churn_cell_delta": 48

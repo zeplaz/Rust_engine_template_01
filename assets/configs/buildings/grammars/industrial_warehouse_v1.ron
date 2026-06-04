@@ -1,0 +1,68 @@
+(
+    schema_version: 1,
+    grammar_id: "industrial_warehouse_v1",
+    archetype: (
+        id: "IndustrialWarehouse",
+        usage: "warehouse",
+        footprint_bounds: (
+            min_width: 4,
+            max_width: 12,
+            min_depth: 3,
+            max_depth: 10,
+            min_floors: 1,
+            max_floors: 2,
+        ),
+    ),
+    massing: (
+        strategies: [
+            (id: "long_hall", weight: 35, width_depth_ratio: 2.0, footprint_mode: "rect"),
+            (id: "double_hall", weight: 30, width_depth_ratio: 1.45, footprint_mode: "rect"),
+            (id: "l_shape", weight: 20, footprint_mode: "l_shape"),
+            (id: "yard_complex", weight: 15, footprint_mode: "yard_interior"),
+        ],
+    ),
+    roof: (
+        default_slot: "roof_default",
+        by_massing: [
+            (massing_id: "long_hall", slot: "roof_industrial"),
+            (massing_id: "yard_complex", slot: "roof_flat"),
+        ],
+    ),
+    facade: (
+        window_slot: "window_industrial",
+        door_slot: "door_wide",
+        wall_slot: "wall_1u",
+        placement_tags: ["exterior", "industrial", "street_facing"],
+    ),
+    detail: (
+        prop_slot: "prop_clutter",
+        density: 0.35,
+        tags: ["vent", "pipe", "platform"],
+    ),
+    age: (
+        bands: [
+            (id: "new", weight: 40, variant_tags: ["clean"]),
+            (id: "weathered", weight: 45, variant_tags: ["clean", "weathered"]),
+            (id: "abandoned", weight: 15, variant_tags: ["abandoned", "damaged"]),
+        ],
+    ),
+    district_styles: [
+        (
+            id: "industrial_west",
+            style_pack_id: "style_industrial_west",
+            style_tags: ["steel", "sawtooth", "metal"],
+            zoning: "industrial",
+            material_profiles: {
+                "wall_1u": "steel_panel_01",
+                "wall_2u": "steel_panel_01",
+                "door_default": "steel_door_warehouse_01",
+                "door_wide": "steel_door_warehouse_01",
+                "corner_outer": "steel_corner_01",
+                "roof_default": "roof_metal_01",
+                "roof_industrial": "roof_metal_01",
+                "roof_flat": "roof_metal_01",
+                "window_industrial": "glass_panel_01",
+            },
+        ),
+    ],
+)

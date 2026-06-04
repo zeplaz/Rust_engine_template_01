@@ -1,0 +1,104 @@
+{
+  "_agent_meta": {
+    "agent_commands": [
+      "cargo test -p proc_A_dine01 --lib"
+    ],
+    "docs": {
+      "compile_warnings": "src/dev/COMPILE_WARNINGS_TODOS.md",
+      "stage5_directive": "prompts/guides/stage5_convergence_directive_v1.md",
+      "viewport_recovery": "src/dev/recovery_viewport.md"
+    },
+    "logging_env": {
+      "ORCHESTRATOR_EXPORT_HEALTH": false,
+      "PERF": false,
+      "RUST_LOG": null,
+      "SIM_VIEW_SYNC_DEBUG": false,
+      "STAGE5_READINESS_VERBOSE": false,
+      "STAGE5_VERBOSE": false,
+      "VIEWPORT_AUTHORITY_DEBUG": false
+    },
+    "orchestrator": {
+      "build_report": "tools/orchestrator/reports/build_report.md",
+      "ci_entry": "tools/orchestrator/ci/run.ps1",
+      "continuation_queue": "tools/orchestrator/queues/continuation_queue.json",
+      "warning_registry": "tools/orchestrator/reports/warning_registry.md"
+    },
+    "profile": "procedural_assembly",
+    "related_proofs": [
+      "debug_runs/stage5_full_app_live.json",
+      "debug_runs/infrastructure_view_isolation_live.json",
+      "debug_runs/construction_stage_live.json",
+      "debug_runs/industrial_activation_live.json",
+      "debug_runs/fire_ecology_live.json",
+      "debug_runs/logistics_throughput_live.json",
+      "debug_runs/replay_editor_parity_live.json",
+      "debug_runs/orchestrator_thread_health.json",
+      "debug_runs/viewport_drift.json",
+      "debug_runs/viewport_authority_migration_witness.json",
+      "debug_runs/main_thread_orchestrator_live.json",
+      "debug_runs/stage6_virtualization_live.json",
+      "debug_runs/wave_s_hydrate_live.json",
+      "debug_runs/wave_p_live.json",
+      "debug_runs/wave_c_live.json",
+      "debug_runs/ui_shell_migration_live.json",
+      "debug_runs/minimap_compositor_live.json",
+      "debug_runs/stage7_behavioral_live.json",
+      "debug_runs/stage7_play_live.json",
+      "debug_runs/wss_substrate_live.json",
+      "debug_runs/f2_smoke_pipeline_live.json",
+      "debug_runs/play_scenario_live.json",
+      "debug_runs/transport_network_live.json"
+    ],
+    "relative_path": "debug_runs/procedural_assembly_live.json",
+    "schema": "debug_run_envelope_v1",
+    "source_system": "refresh_procedural_assembly_live_witness",
+    "written_at_epoch_secs": 1780512739
+  },
+  "assembly_id": "victorian_4x2_s1_d8e2",
+  "assembly_snapshot_path": "assets/staging/assemblies/victorian_4x2_s1_d8e2.json",
+  "auto_001_contract": true,
+  "footprint_cells": 16,
+  "grammar_diversity": {
+    "error": null,
+    "gate_id": "PG-QUALITY-002",
+    "grammar_gate_id": "PG-QUALITY-001",
+    "grammar_witness_path": "debug_runs/grammar_diversity_witness.json",
+    "green": true,
+    "metrics": {
+      "archetype_id": "IndustrialWarehouse",
+      "district_style": "industrial_west",
+      "footprint_silhouette_count": 24,
+      "massing_strategies": [
+        "double_hall",
+        "l_shape",
+        "long_hall",
+        "yard_complex"
+      ],
+      "massing_strategy_count": 4,
+      "roof_slot_count": 3,
+      "roof_slots": [
+        "roof_default",
+        "roof_flat",
+        "roof_industrial"
+      ],
+      "seeds_swept": 64
+    },
+    "pilot_archetype_id": "IndustrialWarehouse",
+    "pilot_district_style": "industrial_west"
+  },
+  "grammar_diversity_green": true,
+  "green": true,
+  "module_ids_used": [
+    "corner_L",
+    "wall_brick_1u",
+    "door_residential",
+    "roof_pitched_gable"
+  ],
+  "module_placements_count": 24,
+  "pg2_wired": true,
+  "slots_resolve_lod0": true,
+  "smoke_fallback_used": false,
+  "style_pack_count": 7,
+  "style_pack_id": "style_victorian",
+  "style_packs_loaded": true
+}

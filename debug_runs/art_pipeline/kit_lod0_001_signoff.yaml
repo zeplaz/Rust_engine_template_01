@@ -1,0 +1,65 @@
+batch_id: kit_lod0_001
+designer_mcp: sign-off
+development_tier: lod0
+proceed_promote: yes
+rules_check:
+  passed: true
+  blocked_by: []
+  batch_id: kit_lod0_001
+  seed: 42
+silhouette_read:
+  wall_brick_1u:
+    readable: yes
+    profile: flat
+    sim_read: "1u brick facade bay — flat panel OK at lod0"
+    vertex_count: 24
+  wall_concrete_1u:
+    readable: yes
+    profile: flat
+    sim_read: "1u concrete facade bay"
+    vertex_count: 24
+  roof_pitched_gable:
+    readable: yes
+    profile: pitched_gable
+    sim_read: "Dual-slope gable readable in iso — not flat slab cheat"
+    vertex_count: 48
+  door_residential:
+    readable: yes
+    profile: residential
+    sim_read: "Frame + opening silhouette at 1.0m residential width"
+    vertex_count: 44
+  win_single_1u:
+    readable: yes
+    profile: frame_mullion
+    sim_read: "4m bay with vertical mullion — not flat glass panel"
+    vertex_count: 48
+modules:
+  - module_id: wall_brick_1u
+    job_id: wall_brick_1u_lod0_run001
+    valid: true
+    pbr_status: shipped
+    notes: brick_red_01 textures embedded
+  - module_id: wall_concrete_1u
+    job_id: wall_concrete_1u_lod0_run001
+    valid: true
+    pbr_status: shipped
+    notes: concrete_grey_01 textures embedded
+  - module_id: roof_pitched_gable
+    job_id: roof_pitched_gable_lod0_run001
+    valid: true
+    pbr_status: deferred
+    notes: roof_tile_01 procedural set; pitched slopes joined
+  - module_id: door_residential
+    job_id: door_residential_lod0_run001
+    valid: true
+    pbr_status: shipped
+    notes: wood_plank_01 frame profile
+  - module_id: win_single_1u
+    job_id: win_single_1u_lod0_run001
+    valid: true
+    pbr_status: deferred
+    notes: glass_panel_01 + mullion mesh
+replaces_smoke_rows:
+  - wall_brick_1u
+  - wall_concrete_1u
+next: "promote + library_register with development_tier lod0; @coder E1 StylePack filter"

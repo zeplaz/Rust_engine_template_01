@@ -1,0 +1,96 @@
+{
+  "witness_id": "pbr_pilot_rowhouse_live",
+  "sprint": "MCP-PROD-PBR-PILOT",
+  "batch_id": "kit_production_001",
+  "generated_at": "2026-06-03T02:04:44.656835+00:00",
+  "doc_ref": "src/dev/pbr_pilot_rowhouse_material_maker_v1.md",
+  "tileable_allowlist": [
+    "brick_red_01",
+    "concrete_grey_01",
+    "glass_panel_01",
+    "roof_metal_01",
+    "roof_tile_01",
+    "steel_panel_01",
+    "stucco_cream_01",
+    "wood_plank_01"
+  ],
+  "production_specs": [
+    {
+      "spec": "assets/staging/specs/wall_brick_1u_production.json",
+      "asset_id": "wall_brick_1u",
+      "pbr_status": "shipped",
+      "material_profile": "brick_red_01",
+      "tier_ok": true,
+      "issues": []
+    },
+    {
+      "spec": "assets/staging/specs/corner_L_production.json",
+      "asset_id": "corner_L",
+      "pbr_status": "shipped",
+      "material_profile": "brick_red_01",
+      "tier_ok": true,
+      "issues": []
+    },
+    {
+      "spec": "assets/staging/specs/door_residential_production.json",
+      "asset_id": "door_residential",
+      "pbr_status": "shipped",
+      "material_profile": "wood_plank_01",
+      "tier_ok": true,
+      "issues": []
+    },
+    {
+      "spec": "assets/staging/specs/roof_pitched_gable_production.json",
+      "asset_id": "roof_pitched_gable",
+      "pbr_status": "shipped",
+      "material_profile": "roof_tile_01",
+      "tier_ok": true,
+      "issues": []
+    },
+    {
+      "spec": "assets/staging/specs/prop_chimney_production.json",
+      "asset_id": "prop_chimney",
+      "pbr_status": "shipped",
+      "material_profile": "brick_red_01",
+      "tier_ok": true,
+      "issues": []
+    }
+  ],
+  "production_jobs": [
+    "tools/mcp/schemas/examples/wall_brick_1u_production_run001.json",
+    "tools/mcp/schemas/examples/corner_L_production_run001.json",
+    "tools/mcp/schemas/examples/door_residential_production_run001.json",
+    "tools/mcp/schemas/examples/roof_pitched_gable_production_run001.json",
+    "tools/mcp/schemas/examples/prop_chimney_production_run001.json"
+  ],
+  "promote_gate": {
+    "pbr_status": "shipped",
+    "material_profile_required": true,
+    "enforce_on": "validate_asset_glb + promote_module"
+  },
+  "bpy_profiles": {
+    "module_wall": [
+      "brick",
+      "recess",
+      "flat"
+    ],
+    "module_door": [
+      "residential",
+      "frame"
+    ],
+    "module_window": [
+      "mullion",
+      "arched"
+    ],
+    "module_roof": [
+      "pitched",
+      "shed",
+      "sawtooth"
+    ],
+    "module_prop": [
+      "corner_l",
+      "chimney",
+      "vent"
+    ]
+  }
+}

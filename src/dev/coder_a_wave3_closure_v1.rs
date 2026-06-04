@@ -32,16 +32,23 @@ fn pointer_bool(v: &Value, ptr: &str) -> bool {
 /// Refresh witnesses + assert all 14 coder-A wave-3 exit criteria (lib path).
 #[must_use]
 pub fn refresh_coder_a_wave3_14_closure() -> bool {
+    use crate::dev::runtime_witness::{
+        refresh_infrastructure_view_isolation_live_witness,
+        refresh_wc_d04_stage6_virtualization_live_witness,
+    };
+    use crate::render::stage5_full_app_harness::refresh_log_e01_and_tactical_vfx_stage5_live_witness;
+    use crate::render::fire_streaming::refresh_fire_streaming_live_witness;
+
     assert!(
-        crate::render::refresh_infrastructure_view_isolation_live_witness(),
+        refresh_infrastructure_view_isolation_live_witness(),
         "FIRE7-F7-A-EXIT-001"
     );
     assert!(
-        crate::render::refresh_log_e01_and_tactical_vfx_stage5_live_witness(),
+        refresh_log_e01_and_tactical_vfx_stage5_live_witness(),
         "VFX-VISUAL-SIGNOFF-001 lib tactical VFX"
     );
     assert!(
-        crate::render::refresh_fire_streaming_live_witness(),
+        refresh_fire_streaming_live_witness(),
         "FIRE7-F7-B-001"
     );
     assert!(
@@ -49,7 +56,7 @@ pub fn refresh_coder_a_wave3_14_closure() -> bool {
         "UI-WP-VISUAL-001 / pipeline"
     );
     assert!(
-        crate::dev::stage7_behavioral_live_proof::refresh_s7b_m4_play_001_live_witness(),
+        crate::dev::stage7_behavioral_witness::refresh_s7b_m4_play_001_live_witness(),
         "S7B-M4-SIM-001"
     );
     assert!(

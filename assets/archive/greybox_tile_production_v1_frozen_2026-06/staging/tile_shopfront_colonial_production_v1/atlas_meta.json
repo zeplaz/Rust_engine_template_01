@@ -1,0 +1,211 @@
+{
+  "schema_version": 1,
+  "batch_id": "tile_shopfront_colonial_production_v1",
+  "tile_id": "shopfront_colonial",
+  "atlas_id": "shopfront_colonial_production_v1",
+  "atlas_png": "assets/archive/greybox_tile_production_v1_frozen_2026-06/atlases/shopfront_colonial_production_v1_atlas.png",
+  "columns": 4,
+  "rows": 4,
+  "tile_px": 128,
+  "variant_count": 14,
+  "tiles": [
+    {
+      "variant_key": "clean_day",
+      "png": "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_shopfront_colonial_production_v1\\clean_day.png",
+      "grid": [
+        0,
+        0
+      ],
+      "uv": [
+        0.0,
+        0.0,
+        0.25,
+        0.25
+      ]
+    },
+    {
+      "variant_key": "clean_night_off",
+      "png": "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_shopfront_colonial_production_v1\\clean_night_off.png",
+      "grid": [
+        1,
+        0
+      ],
+      "uv": [
+        0.25,
+        0.0,
+        0.25,
+        0.25
+      ]
+    },
+    {
+      "variant_key": "clean_night_on",
+      "png": "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_shopfront_colonial_production_v1\\clean_night_on.png",
+      "grid": [
+        2,
+        0
+      ],
+      "uv": [
+        0.5,
+        0.0,
+        0.25,
+        0.25
+      ]
+    },
+    {
+      "variant_key": "damaged_day",
+      "png": "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_shopfront_colonial_production_v1\\damaged_day.png",
+      "grid": [
+        3,
+        0
+      ],
+      "uv": [
+        0.75,
+        0.0,
+        0.25,
+        0.25
+      ]
+    },
+    {
+      "variant_key": "under_construction_01",
+      "png": "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_shopfront_colonial_production_v1\\under_construction_01.png",
+      "grid": [
+        0,
+        1
+      ],
+      "uv": [
+        0.0,
+        0.25,
+        0.25,
+        0.25
+      ]
+    },
+    {
+      "variant_key": "abandoned",
+      "png": "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_shopfront_colonial_production_v1\\abandoned.png",
+      "grid": [
+        1,
+        1
+      ],
+      "uv": [
+        0.25,
+        0.25,
+        0.25,
+        0.25
+      ]
+    },
+    {
+      "variant_key": "burning_00",
+      "png": "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_shopfront_colonial_production_v1\\burning_00.png",
+      "grid": [
+        2,
+        1
+      ],
+      "uv": [
+        0.5,
+        0.25,
+        0.25,
+        0.25
+      ]
+    },
+    {
+      "variant_key": "burning_01",
+      "png": "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_shopfront_colonial_production_v1\\burning_01.png",
+      "grid": [
+        3,
+        1
+      ],
+      "uv": [
+        0.75,
+        0.25,
+        0.25,
+        0.25
+      ]
+    },
+    {
+      "variant_key": "burning_02",
+      "png": "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_shopfront_colonial_production_v1\\burning_02.png",
+      "grid": [
+        0,
+        2
+      ],
+      "uv": [
+        0.0,
+        0.5,
+        0.25,
+        0.25
+      ]
+    },
+    {
+      "variant_key": "burning_03",
+      "png": "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_shopfront_colonial_production_v1\\burning_03.png",
+      "grid": [
+        1,
+        2
+      ],
+      "uv": [
+        0.25,
+        0.5,
+        0.25,
+        0.25
+      ]
+    },
+    {
+      "variant_key": "burning_04",
+      "png": "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_shopfront_colonial_production_v1\\burning_04.png",
+      "grid": [
+        2,
+        2
+      ],
+      "uv": [
+        0.5,
+        0.5,
+        0.25,
+        0.25
+      ]
+    },
+    {
+      "variant_key": "burning_05",
+      "png": "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_shopfront_colonial_production_v1\\burning_05.png",
+      "grid": [
+        3,
+        2
+      ],
+      "uv": [
+        0.75,
+        0.5,
+        0.25,
+        0.25
+      ]
+    },
+    {
+      "variant_key": "burning_06",
+      "png": "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_shopfront_colonial_production_v1\\burning_06.png",
+      "grid": [
+        0,
+        3
+      ],
+      "uv": [
+        0.0,
+        0.75,
+        0.25,
+        0.25
+      ]
+    },
+    {
+      "variant_key": "burning_07",
+      "png": "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_shopfront_colonial_production_v1\\burning_07.png",
+      "grid": [
+        1,
+        3
+      ],
+      "uv": [
+        0.25,
+        0.75,
+        0.25,
+        0.25
+      ]
+    }
+  ],
+  "frozen": true,
+  "freeze_id": "TILE-FIX-001"
+}

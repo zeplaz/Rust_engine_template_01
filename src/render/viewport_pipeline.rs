@@ -19,6 +19,15 @@ use crate::gui::{
 const LAYOUT_EPS: f32 = 0.5;
 /// Minimum logical px for the simulation map hole — smaller reads as a layout defect.
 const SIM_MAP_MIN_LOGICAL_EXTENT: f32 = 8.0;
+/// Below this, primary swapchain present is suppressed (VISUAL-STALL-SURFACE-001).
+pub const PRIMARY_WINDOW_MIN_LOGICAL_PX: f32 = 32.0;
+
+/// Raw Bevy window logical size — do not clamp to 1×1 before this check.
+#[inline]
+#[must_use]
+pub fn primary_window_logical_presentable(width: f32, height: f32) -> bool {
+    width >= PRIMARY_WINDOW_MIN_LOGICAL_PX && height >= PRIMARY_WINDOW_MIN_LOGICAL_PX
+}
 
 /// True when the sim-map UI hole is invalid or spills outside the primary window (not “smaller than fullscreen”).
 #[must_use]
@@ -205,13 +214,18 @@ fn resolve_primary_and_simulation_viewports(
 ) {
     let mut primary = ResolvedViewport::default();
     if let Ok(win) = windows.single() {
-        let w = win.width().max(1.0);
-        let h = win.height().max(1.0);
-        primary.logical_size = Vec2::new(w, h);
-        primary.physical_extent = UVec2::new(w.round() as u32, h.round() as u32);
-        primary.world_extent = primary.physical_extent;
-        primary.half_extents = Vec2::new(w * 0.5, h * 0.5);
-        primary.valid = true;
+        let raw_w = win.width();
+        let raw_h = win.height();
+        if primary_window_logical_presentable(raw_w, raw_h) {
+            primary.logical_size = Vec2::new(raw_w, raw_h);
+            primary.physical_extent = UVec2::new(raw_w.round() as u32, raw_h.round() as u32);
+            primary.world_extent = primary.physical_extent;
+            primary.half_extents = Vec2::new(raw_w * 0.5, raw_h * 0.5);
+            primary.valid = true;
+        } else {
+            primary.logical_size = Vec2::new(raw_w.max(0.0), raw_h.max(0.0));
+            primary.valid = false;
+        }
     }
 
     let mut sim = authority
@@ -370,6 +384,13 @@ mod tests {
         };
         let primary = Vec2::new(1280.0, 720.0);
         assert!(!simulation_map_viewport_defect(&sim, primary));
+    }
+
+    #[test]
+    fn primary_window_zero_size_not_presentable() {
+        assert!(!primary_window_logical_presentable(0.0, 720.0));
+        assert!(!primary_window_logical_presentable(1.0, 1.0));
+        assert!(primary_window_logical_presentable(32.0, 32.0));
     }
 
     #[test]

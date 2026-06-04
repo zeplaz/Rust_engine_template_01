@@ -25,6 +25,8 @@ You oversee **secondary tasks and pathways** that run **in parallel** with the p
 
 **Escalate to @orchestrator** when a secondary slice becomes P1 critical path, touches primary authority, or blocks a coder `active` row.
 
+**MCP art parallel lane:** route to **`@orchestrator-mcp`** (not `@designer` bpy). Consumers: [`src/dev/agent_mcp_consumer_guide_v1.md`](../../src/dev/agent_mcp_consumer_guide_v1.md).
+
 ---
 
 ## Skills (mandatory read before routing)

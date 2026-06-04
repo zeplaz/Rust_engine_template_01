@@ -112,13 +112,17 @@ pub fn apply_simulation_map_presentation_defaults(
     mut presentation: ResMut<crate::gui::MapViewPresentationStates>,
     mut shared_overlay: ResMut<SharedOverlayFieldBuffers>,
     test_scene: Option<Res<ActiveTestScene>>,
+    _scenario: Option<Res<crate::engine::ActivePlayScenario>>,
     primary_window: Query<&Window, With<PrimaryWindow>>,
 ) {
     minimap.visible = true;
     minimap.minimized = false;
-    if minimap_gpu_compositor_env_enabled() {
-        minimap.presentation_source = MinimapPresentationSource::SharedRenderTargetImage;
-    }
+    // P1-B: GPU minimap when compositor env on; [`sync_minimap_presentation_source`] falls back until RT committed.
+    minimap.presentation_source = if minimap_gpu_compositor_env_enabled() {
+        MinimapPresentationSource::SharedRenderTargetImage
+    } else {
+        MinimapPresentationSource::SharedCpuRaster
+    };
     let mask = simulation_minimap_overlay_defaults();
     map_views.minimap.overlays = mask;
     map_views.minimap.bump_revision();

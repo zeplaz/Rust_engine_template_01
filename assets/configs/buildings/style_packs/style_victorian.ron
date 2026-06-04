@@ -1,0 +1,19 @@
+(
+    schema_version: 1,
+    style_pack_id: "style_victorian",
+    label: "Victorian",
+    usage_bias: ["residential", "commercial"],
+    style_tags: ["brick", "residential", "pitched_roof"],
+    slots: (
+        wall_1u: "wall_brick_1u",
+        wall_2u: "wall_brick_2u",
+        door_default: "door_residential",
+        window_1u: "win_single_1u",
+        window_2u: "win_double_1u",
+        roof_default: "roof_pitched_gable",
+        roof_flat: "roof_flat",
+        corner_outer: "corner_L",
+        prop_clutter: "prop_chimney",
+    ),
+    fallback_policy: "hide_slot",
+)

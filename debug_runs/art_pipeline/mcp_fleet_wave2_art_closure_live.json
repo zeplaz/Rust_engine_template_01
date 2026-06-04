@@ -1,0 +1,65 @@
+{
+  "program": "MCP-FLEET-WAVE2-001",
+  "stream": "ART",
+  "agent": "coder-mcp",
+  "index_entry_count": 81,
+  "lod0_rows": 50,
+  "stylepack_visible_rows": 50,
+  "lod0_batches": {
+    "kit_lod0_007": 5,
+    "kit_lod0_008": 5,
+    "kit_lod0_009": 5,
+    "kit_lod0_006": 5,
+    "kit_lod0_004": 5,
+    "kit_lod0_005": 5,
+    "kit_lod0_001": 5,
+    "kit_lod0_002": 5,
+    "kit_lod0_003": 5,
+    "kit_lod0_010": 5
+  },
+  "canonical_50_covered": true,
+  "missing_canonical": [],
+  "witnesses": [
+    {
+      "batch": "kit_lod0_001",
+      "G5": "pass"
+    },
+    {
+      "batch": "kit_lod0_002",
+      "G5": "pass"
+    },
+    {
+      "batch": "kit_lod0_003",
+      "G5": "pass"
+    },
+    {
+      "batch": "kit_lod0_004",
+      "G5": "pass"
+    },
+    {
+      "batch": "kit_lod0_005",
+      "G5": "pass"
+    },
+    {
+      "batch": "kit_lod0_006",
+      "G5": "pass"
+    },
+    {
+      "batch": "kit_lod0_007",
+      "G5": "pass"
+    },
+    {
+      "batch": "kit_lod0_008",
+      "G5": "pass"
+    },
+    {
+      "batch": "kit_lod0_009",
+      "G5": "pass"
+    },
+    {
+      "batch": "kit_lod0_010",
+      "G5": "pass"
+    }
+  ],
+  "milestone": "50/50 lod0 kit complete"
+}

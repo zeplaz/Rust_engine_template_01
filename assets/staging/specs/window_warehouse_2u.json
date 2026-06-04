@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "asset_id": "window_warehouse_2u",
+  "archetype": "module_window",
+  "style_pack": "style_industrial_west",
+  "module": {
+    "grid_units": [
+      2,
+      1
+    ],
+    "snap": "floor_edge",
+    "pivot": "bottom_center"
+  },
+  "dimensions_m": {
+    "w": 8,
+    "h": 2.5,
+    "d": 0.15
+  },
+  "material_profile": "glass_warehouse_01",
+  "references": []
+}

@@ -1,0 +1,12 @@
+00:03.328  blend            | Read blend: "C:\dev\github\Rust_engine_template_01\assets\staging\assemblies\victorian_4x3_s42_a7cb.blend"
+00:04.953  gpu.texture      | ERROR Failed to create GPU texture from Blender image
+00:04.953  gpu.texture      | ERROR Failed to create GPU texture from Blender image
+00:04.953  gpu.texture      | ERROR Failed to create GPU texture from Blender image
+00:04.953  gpu.texture      | ERROR Failed to create GPU texture from Blender image
+00:04.953  gpu.texture      | ERROR Failed to create GPU texture from Blender image
+00:04.953  gpu.texture      | ERROR Failed to create GPU texture from Blender image
+00:05.531  render           | Saved: 'C:\dev\github\Rust_engine_template_01\assets\staging\tiles\tile_rowhouse_victorian_production_v1\burning_05.png'
+TILE_KEYFRAME_OK C:\dev\github\Rust_engine_template_01\assets\staging\tiles\tile_rowhouse_victorian_production_v1\burning_05.png
+Blender 5.1.2 (hash ec6e62d40fa9 built 2026-05-19 01:37:34)
+
+Blender quit

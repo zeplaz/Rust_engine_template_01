@@ -1,0 +1,12 @@
+{
+  "job_id": "asm_victorian_4x3_s42_a7cb",
+  "status": "done",
+  "log_path": "C:\\dev\\github\\Rust_engine_template_01\\debug_runs\\art_pipeline\\asm_victorian_4x3_s42_a7cb.log",
+  "outputs": [
+    "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\assemblies\\victorian_4x3_s42_a7cb.blend"
+  ],
+  "error": null,
+  "operation": "assembly_build",
+  "job_path": "C:\\dev\\github\\Rust_engine_template_01\\tools\\mcp\\jobs\\asm_victorian_4x3_s42_a7cb.json",
+  "updated_at": 1780502679.226962
+}

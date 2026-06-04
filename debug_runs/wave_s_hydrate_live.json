@@ -11,7 +11,7 @@
     "logging_env": {
       "ORCHESTRATOR_EXPORT_HEALTH": false,
       "PERF": false,
-      "RUST_LOG": "bevy_ecs::schedule=trace",
+      "RUST_LOG": null,
       "SIM_VIEW_SYNC_DEBUG": false,
       "STAGE5_READINESS_VERBOSE": false,
       "STAGE5_VERBOSE": false,
@@ -43,19 +43,33 @@
       "debug_runs/ui_shell_migration_live.json",
       "debug_runs/minimap_compositor_live.json",
       "debug_runs/stage7_behavioral_live.json",
-      "debug_runs/stage7_play_live.json"
+      "debug_runs/stage7_play_live.json",
+      "debug_runs/wss_substrate_live.json",
+      "debug_runs/f2_smoke_pipeline_live.json",
+      "debug_runs/play_scenario_live.json",
+      "debug_runs/transport_network_live.json"
     ],
     "relative_path": "debug_runs/wave_s_hydrate_live.json",
     "schema": "debug_run_envelope_v1",
-    "source_system": "wave_s_live_proof",
-    "written_at_epoch_secs": 1779825361
+    "source_system": "refresh_bq128_apply_live_witnesses",
+    "written_at_epoch_secs": 1780456352
   },
   "autoload_enabled": false,
-  "blueprint_count": 0,
+  "blueprint_count": 1,
+  "bq128_apply_ghost_001": {
+    "apply_imported_preset_wired": true,
+    "gate": "BQ-128-APPLY-001",
+    "green": true
+  },
+  "bq128_apply_merge_replace_002": {
+    "gate": "BQ-128-APPLY-002",
+    "green": true,
+    "import_wave_s_presets_wired": true
+  },
   "last_error": null,
-  "layout_widget_count": 0,
+  "layout_widget_count": 4,
   "profile": "WAVE_S_HYDRATE",
   "restore_triggered": false,
-  "shell_loaded": false,
+  "shell_loaded": true,
   "wave_s_hydrate_green": true
 }

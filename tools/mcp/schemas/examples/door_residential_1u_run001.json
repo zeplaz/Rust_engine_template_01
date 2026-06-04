@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "job_id": "door_residential_1u_run001",
+  "spec_ref": "assets/staging/specs/door_residential_1u.json",
+  "operation": "module_door",
+  "params": {
+    "width_m": 1.2,
+    "height_m": 2.4,
+    "depth_m": 0.12,
+    "material_profile": "wood_plank_01",
+    "seed": 42
+  },
+  "output": {
+    "glb": "assets/staging/door_residential_1u_run001/model.glb",
+    "thumbnail": "assets/staging/door_residential_1u_run001/preview.png"
+  }
+}

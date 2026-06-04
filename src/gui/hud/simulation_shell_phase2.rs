@@ -532,6 +532,50 @@ pub fn ui_oh_p5_001_green(witness: &UiShellMigrationWitness) -> bool {
     ui_p5_pause_001_green(witness)
 }
 
+/// Read **UI-P3-001** acceptance from compositor witness (`debug_runs/minimap_compositor_live.json`).
+#[must_use]
+pub fn minimap_compositor_ui_p3_001_green_from_disk() -> bool {
+    use crate::dev::runtime_witness::MINIMAP_COMPOSITOR_JSON;
+
+    let raw = std::fs::read_to_string(MINIMAP_COMPOSITOR_JSON).unwrap_or_default();
+    let v: serde_json::Value = serde_json::from_str(&raw).unwrap_or(serde_json::Value::Null);
+    v["ui_p3_001_green"].as_bool().unwrap_or(false)
+}
+
+/// **UI-P3-SHELL-ROLLUP-001** — shell `ui_p3_001.closed` when compositor authority or GPU path green.
+#[must_use]
+pub fn ui_p3_001_shell_closed(
+    witness: &UiShellMigrationWitness,
+    shell_diag: &ProductShellDiagnostics,
+) -> bool {
+    let shell_aligned = witness.minimap_chrome_aligned
+        && shell_diag.egui_pass_count_sim_session == 0;
+    if minimap_compositor_ui_p3_001_green_from_disk() {
+        return shell_aligned;
+    }
+    minimap_gpu_compositor_env_enabled() && witness.minimap_gpu_path && shell_aligned
+}
+
+/// **UI-OH-P4-001** — P4.1 rail + build-rail authority (atlas paths are compile-time constants).
+#[must_use]
+pub fn ui_oh_p4_001_p4_1_green(witness: &UiShellMigrationWitness) -> bool {
+    ui_p2a_p4_auth_green(witness)
+}
+
+/// **UI-OH-P4-001** — P4-P5-01 petroleum tab wiring.
+#[must_use]
+pub fn ui_oh_p4_001_p5_br_green(witness: &UiShellMigrationWitness) -> bool {
+    witness.petroleum_panel_tab_wired
+}
+
+/// **UI-OH-P4-001** — OH rollup for icon atlas + build rail + petroleum tab.
+#[must_use]
+pub fn ui_oh_p4_001_green(witness: &UiShellMigrationWitness) -> bool {
+    ui_oh_p4_001_p4_1_green(witness)
+        && ui_oh_p4_001_p5_br_green(witness)
+        && witness.icon_atlas_loaded
+}
+
 /// **UI-W3-P5-001** — Wave 3 Bevy pause menu (no egui pause overlay in Simulation).
 #[must_use]
 pub fn ui_w3_p5_001_green(
@@ -1649,6 +1693,7 @@ pub fn replay_coder_b_ui_five_lane_witness() -> UiShellMigrationWitness {
     };
     witness.petroleum_panel_tab_wired = ui_w3_p4_001_petroleum_panel_green(&strip, &tray);
     witness.minimap_chrome_aligned = true;
+    witness.minimap_gpu_path = true;
     witness.last_minimap_rect_delta_px = MINIMAP_CHROME_STROKE_PAD_PX;
     witness.mock_zone_parity = crate::construction::mock_shapes_parity_green();
     crate::gui::witness_pause_menu_bevy_replay(&mut witness);
@@ -1769,10 +1814,10 @@ pub fn build_proof_payload(
         "profile": "UI_SHELL_MIGRATION_2B",
         "gpu_minimap_compositor_env": gpu_minimap,
         "ui_p3_001": {
-            "closed": gpu_minimap
-                && witness.minimap_gpu_path
-                && witness.minimap_chrome_aligned
-                && shell_diag.egui_pass_count_sim_session == 0,
+            "gate": "UI-P3-SHELL-ROLLUP-001",
+            "closed": ui_p3_001_shell_closed(witness, shell_diag),
+            "compositor_authoritative": minimap_compositor_ui_p3_001_green_from_disk(),
+            "compositor_ui_p3_001_green": minimap_compositor_ui_p3_001_green_from_disk(),
             "minimap_gpu_path": witness.minimap_gpu_path,
             "minimap_chrome_aligned": witness.minimap_chrome_aligned,
         },
@@ -1816,6 +1861,13 @@ pub fn build_proof_payload(
             "p4_auth_green": ui_p2a_p4_auth_green(witness),
             "petroleum_panel_tab_wired": witness.petroleum_panel_tab_wired,
             "p5_br_tab_wired": witness.petroleum_panel_tab_wired,
+        },
+        "ui_oh_p4_001": {
+            "gate": "UI-OH-P4-001",
+            "green": ui_oh_p4_001_green(witness),
+            "p4_1_green": ui_oh_p4_001_p4_1_green(witness),
+            "p5_br_green": ui_oh_p4_001_p5_br_green(witness),
+            "icon_atlas_loaded": witness.icon_atlas_loaded,
         },
         "ui_w3_theme_001": {
             "gate": "PLAN-UI-THEME-MERGE-001",
@@ -1985,6 +2037,98 @@ pub fn build_proof_payload(
 }
 
 const UI_SHELL_MIGRATION_LIVE_PROOF_PATH: &str = "debug_runs/ui_shell_migration_live.json";
+
+/// **UI-P3-SHELL-ROLLUP-001** — compositor authority + five-lane shell tails → `ui_p3_001.closed`.
+pub fn refresh_ui_p3_shell_rollup_001_live_witness() -> bool {
+    assert!(
+        refresh_coder_b_ui_five_lane_witness(),
+        "UI-P3-SHELL-ROLLUP-001: five-lane shell refresh"
+    );
+    let text = std::fs::read_to_string(UI_SHELL_MIGRATION_LIVE_PROOF_PATH).unwrap_or_default();
+    let body: serde_json::Value = serde_json::from_str(&text).unwrap_or(serde_json::Value::Null);
+    assert!(
+        body["ui_p3_001"]["closed"].as_bool().unwrap_or(false),
+        "ui_p3_001.closed"
+    );
+    assert!(
+        body["ui_p3_001"]["compositor_authoritative"]
+            .as_bool()
+            .unwrap_or(false),
+        "ui_p3_001.compositor_authoritative"
+    );
+    true
+}
+
+/// **UI-OH-P4-001** — phase4 rollup + optional `ui_oh_p4_001` block (preserves five-lane fields).
+pub fn refresh_ui_oh_p4_001_live_witness() -> bool {
+    assert!(
+        refresh_coder_b_ui_five_lane_witness(),
+        "UI-OH-P4-001: five-lane shell refresh"
+    );
+    let text = std::fs::read_to_string(UI_SHELL_MIGRATION_LIVE_PROOF_PATH).unwrap_or_default();
+    let body: serde_json::Value = serde_json::from_str(&text).unwrap_or(serde_json::Value::Null);
+    assert!(
+        body["ui_oh_p4_001"]["green"].as_bool().unwrap_or(false),
+        "ui_oh_p4_001.green"
+    );
+    assert!(
+        body["phase4"]["icon_atlas_loaded"].as_bool().unwrap_or(false),
+        "phase4.icon_atlas_loaded"
+    );
+    true
+}
+
+/// **UI-OH-P5-001** — Bevy pause menu OH rollup (alias of five-lane P5 refresh).
+pub fn refresh_ui_oh_p5_001_live_witness() -> bool {
+    assert!(
+        refresh_coder_b_ui_five_lane_witness(),
+        "UI-OH-P5-001: five-lane shell refresh"
+    );
+    let text = std::fs::read_to_string(UI_SHELL_MIGRATION_LIVE_PROOF_PATH).unwrap_or_default();
+    let body: serde_json::Value = serde_json::from_str(&text).unwrap_or(serde_json::Value::Null);
+    assert!(
+        body["ui_oh_p5_001"]["green"].as_bool().unwrap_or(false),
+        "ui_oh_p5_001.green"
+    );
+    assert!(
+        body["phase5"]["pause_menu_bevy"].as_bool().unwrap_or(false),
+        "phase5.pause_menu_bevy"
+    );
+    true
+}
+
+/// **@coder B** — P3 shell rollup + OH P4/P5 tails in one lib witness pass.
+pub fn refresh_coder_b_ui_shell_tail_closure_witness() -> bool {
+    assert!(
+        refresh_coder_b_ui_five_lane_witness(),
+        "coder B shell tail: five-lane refresh"
+    );
+    let text = std::fs::read_to_string(UI_SHELL_MIGRATION_LIVE_PROOF_PATH).unwrap_or_default();
+    let body: serde_json::Value = serde_json::from_str(&text).unwrap_or(serde_json::Value::Null);
+    assert!(
+        body["ui_p3_001"]["closed"].as_bool().unwrap_or(false),
+        "ui_p3_001.closed"
+    );
+    assert!(
+        body["ui_p3_001"]["compositor_authoritative"]
+            .as_bool()
+            .unwrap_or(false),
+        "ui_p3_001.compositor_authoritative"
+    );
+    assert!(
+        body["ui_oh_p4_001"]["green"].as_bool().unwrap_or(false),
+        "ui_oh_p4_001.green"
+    );
+    assert!(
+        body["ui_oh_p5_001"]["green"].as_bool().unwrap_or(false),
+        "ui_oh_p5_001.green"
+    );
+    assert!(
+        body["phase5"]["pause_menu_bevy"].as_bool().unwrap_or(false),
+        "phase5.pause_menu_bevy"
+    );
+    true
+}
 
 #[cfg(test)]
 static UI_SHELL_MIGRATION_PROOF_FILE_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
@@ -2370,19 +2514,41 @@ mod tests {
             floating_egui_shells_gated: true,
             ..Default::default()
         };
+        let shell_diag = ProductShellDiagnostics::default();
         let payload = build_proof_payload(
             &witness,
             &ContextTrayState::default(),
-            &ProductShellDiagnostics::default(),
+            &shell_diag,
         );
+        let compositor_green = super::minimap_compositor_ui_p3_001_green_from_disk();
         assert_eq!(
             payload["ui_p3_001"]["closed"],
-            serde_json::json!(super::minimap_gpu_compositor_env_enabled())
+            serde_json::json!(super::ui_p3_001_shell_closed(&witness, &shell_diag))
+        );
+        assert_eq!(
+            payload["ui_p3_001"]["compositor_authoritative"],
+            serde_json::json!(compositor_green)
         );
         assert_eq!(
             payload["backends"]["P3_minimap_texture"],
             serde_json::json!("bevy_ui_gpu")
         );
+    }
+
+    /// **UI-P3-SHELL-ROLLUP-001** + **UI-OH-P4-001** + **UI-OH-P5-001** — shell tail closure refresh.
+    #[test]
+    fn ui_shell_tail_closure_live_witness_refresh() {
+        assert!(super::refresh_coder_b_ui_shell_tail_closure_witness());
+        let text = std::fs::read_to_string(UI_SHELL_MIGRATION_LIVE_PROOF_PATH).expect("witness");
+        let body: serde_json::Value = serde_json::from_str(&text).expect("parse");
+        assert_eq!(body["ui_p3_001"]["closed"], serde_json::json!(true));
+        assert_eq!(
+            body["ui_p3_001"]["compositor_authoritative"],
+            serde_json::json!(true)
+        );
+        assert_eq!(body["ui_oh_p4_001"]["green"], serde_json::json!(true));
+        assert_eq!(body["ui_oh_p5_001"]["green"], serde_json::json!(true));
+        assert_eq!(body["phase5"]["pause_menu_bevy"], serde_json::json!(true));
     }
 
     /// **UI-OH-2B-001** — product-shell egui hidden in Simulation; shell witness sim pass count 0.

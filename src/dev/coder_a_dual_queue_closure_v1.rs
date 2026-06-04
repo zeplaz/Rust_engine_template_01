@@ -34,11 +34,14 @@ fn pointer_bool(v: &Value, ptr: &str) -> bool {
 pub fn refresh_coder_a_dual_queue_14_closure() -> bool {
     use crate::gui::editor::world_preview::refresh_coder_a_ui_wp_wave_p_witness;
     use crate::gui::hud::simulation_shell_phase2::refresh_ui_w3_p4_001_live_witness;
-    use crate::render::{
+    use crate::dev::runtime_witness::{
         refresh_infrastructure_view_isolation_live_witness,
-        refresh_log_e01_and_tactical_vfx_stage5_live_witness,
+        refresh_wc_d04_stage6_virtualization_live_witness,
     };
-    use crate::render::refresh_wc_d04_stage6_virtualization_live_witness;
+    use crate::render::stage5_full_app_harness::{
+        refresh_log_e01_and_tactical_vfx_stage5_live_witness,
+        refresh_log_e01_fullapp_upgrade_001_live_witness,
+    };
 
     assert!(
         refresh_infrastructure_view_isolation_live_witness(),
@@ -49,16 +52,24 @@ pub fn refresh_coder_a_dual_queue_14_closure() -> bool {
         "P2-FIRE-SPARK-010/011 + P2-WATER-POLISH-001 stage5 tactical VFX"
     );
     assert!(
+        refresh_log_e01_fullapp_upgrade_001_live_witness(),
+        "LOG-E01-FULLAPP-UPGRADE-001 — fixture/visual keys refreshed"
+    );
+    assert!(
         refresh_ui_w3_p4_001_live_witness(),
         "P4-VEH-01 + UX-E03 shell witness"
     );
     assert!(
-        crate::dev::stage7_behavioral_live_proof::refresh_s7b_m2_001_live_witness(),
+        crate::dev::stage7_behavioral_witness::refresh_s7b_m2_001_live_witness(),
         "S7B-TUNE-DELAY-001 via M2 delay witness"
     );
     assert!(
-        crate::dev::stage7_behavioral_live_proof::refresh_s7b_m4_play_001_live_witness(),
-        "S7B-M4-PLAY-001 (after M2 — last writer wins)"
+        crate::dev::stage7_behavioral_witness::refresh_s7b_m3_steward_remedy_001_live_witness(),
+        "S7B-M3-STEWARD-REMEDY-001 — s7b_m3_green + s7b_steward_green"
+    );
+    assert!(
+        crate::dev::stage7_behavioral_witness::refresh_s7b_m4_play_remedy_001_live_witness(),
+        "S7B-M4-PLAY-REMEDY-001 — last writer for s7b_m4_play_green"
     );
     assert!(
         refresh_coder_a_ui_wp_wave_p_witness(),
@@ -104,6 +115,14 @@ mod tests {
             instanced_draw || instanced_dispatch,
             "INFRA-GPU-TILE-001: instanced path"
         );
+        assert_eq!(
+            stage5["log_e01_fullapp_upgrade_001"]["full_visual_confirm"],
+            Value::Bool(false)
+        );
+        assert_eq!(
+            stage5["log_e01_visual_confirm_001"]["log_e01_fixture_green"],
+            Value::Bool(true)
+        );
 
         let shell = read_json(UI_SHELL);
         assert_eq!(shell["p4_veh_01"]["green"], Value::Bool(true));
@@ -114,6 +133,8 @@ mod tests {
         );
 
         let stage7 = read_json(STAGE7);
+        assert_eq!(stage7["s7b_m3_green"], Value::Bool(true));
+        assert_eq!(stage7["s7b_steward_green"], Value::Bool(true));
         assert_eq!(stage7["s7b_m4_play_001"]["green"], Value::Bool(true));
         assert_eq!(stage7["s7b_tune_delay_001"]["green"], Value::Bool(true));
         assert_eq!(stage7["s7b_tune_delay_001"]["dispatch_delay_ticks"], Value::from(8));

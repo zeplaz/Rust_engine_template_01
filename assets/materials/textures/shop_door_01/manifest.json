@@ -1,0 +1,11 @@
+{
+  "profile_id": "shop_door_01",
+  "seed": 1165,
+  "generator": "concrete",
+  "size": 256,
+  "paths": {
+    "albedo": "assets/materials/textures/shop_door_01/albedo.png",
+    "normal": "assets/materials/textures/shop_door_01/normal.png",
+    "roughness": "assets/materials/textures/shop_door_01/roughness.png"
+  }
+}

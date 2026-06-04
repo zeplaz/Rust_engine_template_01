@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "batch_id": "kit_industrial_west_production_001",
+  "style_pack_id": "style_industrial_west",
+  "audit_id": "PG-MODULE-AUDIT-002",
+  "modules": [
+    {
+      "module_id": "prop_vent",
+      "job_id": "prop_vent_production_run001",
+      "priority": "P2",
+      "lod0_source": "prop_vent_lod0_run001",
+      "status": "spec_ready"
+    },
+    {
+      "module_id": "roof_shed",
+      "job_id": "roof_shed_production_run001",
+      "priority": "P2",
+      "lod0_source": "roof_shed_lod0_run001",
+      "status": "spec_ready"
+    }
+  ],
+  "witness": "debug_runs/art_pipeline/pg_module_audit_002_live.json"
+}

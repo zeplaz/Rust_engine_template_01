@@ -1,0 +1,12 @@
+{
+  "job_id": "asm_industrial_west_4x2_s43_a879",
+  "status": "done",
+  "log_path": "C:\\dev\\github\\Rust_engine_template_01\\debug_runs\\art_pipeline\\asm_industrial_west_4x2_s43_a879.log",
+  "outputs": [
+    "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\assemblies\\industrial_west_4x2_s43_a879.blend"
+  ],
+  "error": null,
+  "operation": "assembly_build",
+  "job_path": "C:\\dev\\github\\Rust_engine_template_01\\tools\\mcp\\jobs\\asm_industrial_west_4x2_s43_a879.json",
+  "updated_at": 1780513482.1663961
+}

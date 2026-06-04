@@ -114,9 +114,9 @@ pub fn build_ui_wp_visual_001_witness(report: &super::WavePReadinessReport) -> s
 /// **UI-WP-PIPELINE** … **LAYOUT-003** — refresh `debug_runs/wave_p_live.json`.
 #[must_use]
 pub fn refresh_coder_a_ui_wp_wave_p_witness() -> bool {
-    use super::wave_p_live_proof::{
+    use super::wave_p_witness::{
         build_d02_layout_witness, build_d04_layout_witness, build_d07_layout_witness,
-        build_wave_p_live_proof_payload, WAVE_P_LIVE_JSON,
+        build_wave_p_witness_payload, WAVE_P_LIVE_JSON,
     };
 
     let authority = PreviewPathAuthority {
@@ -134,7 +134,7 @@ pub fn refresh_coder_a_ui_wp_wave_p_witness() -> bool {
         false,
         0.0,
     );
-    let mut body = build_wave_p_live_proof_payload(&report, Some(d04), Some(d07), Some(d02));
+    let mut body = build_wave_p_witness_payload(&report, Some(d04), Some(d07), Some(d02));
     merge_coder_a_ui_wp_witness_blocks(&mut body, &report);
     let wrapped = crate::dev::debug_run_envelope::wrap_debug_run(
         "WAVE_P_PREVIEW",

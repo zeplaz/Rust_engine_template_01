@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "batch_id": "kit_lod0_001",
+  "description": "LOD0 canonical slice — 5 kit inventory modules, real profiles, no greybox cheats",
+  "plan_ref": "src/dev/plan_module_kit_production_tier_v1.md",
+  "kit_ref": "src/dev/design_procedural_module_kit_v1.md",
+  "development_tier": "lod0",
+  "witness": "debug_runs/art_pipeline/kit_lod0_001_live.json",
+  "signoff": "debug_runs/art_pipeline/kit_lod0_001_signoff.yaml",
+  "rules_applied": [
+    "no_ai_generated_images",
+    "deterministic_output",
+    "batch_processing",
+    "grid_alignment",
+    "canonical_module_ids_only"
+  ],
+  "modules": [
+    {"asset_id": "wall_brick_1u", "job_id": "wall_brick_1u_lod0_run001", "archetype": "module_wall", "profile": "flat", "pbr_status": "shipped", "status": "promoted"},
+    {"asset_id": "wall_concrete_1u", "job_id": "wall_concrete_1u_lod0_run001", "archetype": "module_wall", "profile": "flat", "pbr_status": "shipped", "status": "promoted"},
+    {"asset_id": "roof_pitched_gable", "job_id": "roof_pitched_gable_lod0_run001", "archetype": "module_roof", "profile": "pitched_gable", "pbr_status": "deferred", "status": "promoted"},
+    {"asset_id": "door_residential", "job_id": "door_residential_lod0_run001", "archetype": "module_door", "profile": "residential", "pbr_status": "shipped", "status": "promoted"},
+    {"asset_id": "win_single_1u", "job_id": "win_single_1u_lod0_run001", "archetype": "module_window", "profile": "frame_mullion", "pbr_status": "deferred", "status": "promoted"}
+  ],
+  "next_agent": "@coder",
+  "gate": "G5"
+}

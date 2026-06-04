@@ -1250,7 +1250,7 @@ fn apply_generate_world_request(
     mut pending: ResMut<WorldGenPending>,
     flow: Res<State<WorldGenFlowState>>,
     job_slot: Res<WorldGenJobSlot>,
-    debug_quick: Option<Res<crate::engine::DebugQuickWorldGenPending>>,
+    debug_quick: Option<Res<crate::engine::test_harness::DebugQuickWorldGenPending>>,
     mut next_flow: ResMut<NextState<WorldGenFlowState>>,
 ) {
     for ev in events.read() {

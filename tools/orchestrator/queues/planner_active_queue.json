@@ -1,11 +1,13 @@
 {
   "_meta": {
-    "version": "2.2.0",
-    "date": "2026-05-26",
-    "cycle": "PLAN-WAVE-4",
+    "version": "3.2.0",
+    "date": "2026-05-27",
+    "cycle": "PLAN-PARALLEL-WAVE-001",
+    "parallel_workboard": "src/dev/planner_parallel_workboard_v1.md",
+    "parallel_checklist": "src/dev/planner_wave7_parallel_todos_v1.md",
     "checklist": "src/dev/planner_wave4_todos_v1.md",
     "coder_recap": "src/dev/coder_fleet_return_recap_wave3_v1.md",
-    "audit": "src/dev/planner_status_audit_v8.md",
+    "audit": "src/dev/planner_status_audit_v18.md",
     "wave4_closed": true,
     "wave5_checklist": "src/dev/planner_wave5_todos_v1.md",
     "wave6_policy": "product Round 4 open or P2 depth only",
@@ -155,7 +157,7 @@
       "completed": "2026-05-26"
     }
   ],
-  "active": [
+  "wave6_archive": [
     {
       "id": "PLAN-OPERATOR-VISUAL-BUNDLE-001",
       "priority": 1,
@@ -180,6 +182,17 @@
       "plan_doc": "src/dev/m3_minimap_product_depth_plan_v1.md",
       "completed": "2026-05-26",
       "notes": "P2 optional"
+    },
+    {
+      "id": "PLAN-F7-STREAM-EXEC-001",
+      "priority": 2,
+      "status": "done",
+      "plan_doc": "src/dev/plan_f7_stream_exec_001_v1.md",
+      "witness": "debug_runs/fire_streaming_live.json",
+      "unblocks": ["F7-STREAM-DEEP-001"],
+      "completed": "2026-05-26",
+      "acceptance": "neighbor_wake_observed=true; FIRE7-F7-B-001 remains green; no F7-A exit regression",
+      "notes": "Execution landed; archived from active queue"
     },
     {
       "id": "PLAN-F7-STREAM-DEEP-001",
@@ -242,38 +255,394 @@
       "unblocks": ["CONSTRUCTION-PARAM-DESIGN-001"],
       "completed": "2026-05-26",
       "notes": "TileOccupationBook resource; 4x4 raster; Enter-commit buildings; coders blocked until design PASS"
-    }
-  ],
-  "active": [
+    },
+    {
+      "id": "PLAN-FIRE-F2-EXEC-001",
+      "status": "done",
+      "plan_doc": "src/dev/plan_fire_f2_extract_exec_001_v1.md",
+      "workboard": "src/dev/planner_parallel_workboard_v1.md",
+      "unblocks": ["FIRE-F2-EXTRACT-001", "A-V2"],
+      "completed": "2026-05-26",
+      "notes": "P0 parallel wave — READY for coder A-V2"
+    },
+    {
+      "id": "PLAN-CONSTRUCTION-PARAM-P3P4-001",
+      "status": "done",
+      "plan_doc": "src/dev/plan_construction_param_exec_phases_v1.md",
+      "workboard": "src/dev/planner_parallel_workboard_v1.md",
+      "unblocks": ["CONSTRUCTION-PARAM-CODER-004", "CONSTRUCTION-PARAM-CODER-006", "B-C4", "B-C5"],
+      "completed": "2026-05-26",
+      "notes": "P3/P4 expanded in exec phases doc"
+    },
+    {
+      "id": "PLAN-WSS-SMOKE-BRIDGE-001",
+      "status": "done",
+      "plan_doc": "src/dev/plan_wss_smoke_bridge_exec_001_v1.md",
+      "workboard": "src/dev/planner_parallel_workboard_v1.md",
+      "unblocks": ["WSS-SMOKE-BRIDGE-001", "A-V3", "A-W4"],
+      "completed": "2026-05-26",
+      "notes": "P0 — smoke bridge exec for A-V3"
+    },
+    {
+      "id": "WEATHER-SIM-PLAN-001",
+      "status": "done",
+      "plan_doc": "src/dev/weather_simulation_runbook_v2_plan_v1.md",
+      "workboard": "src/dev/planner_parallel_workboard_v1.md",
+      "completed": "2026-05-27",
+      "notes": "P1 SIGNED v1.0.0 (2026-05-27) — checkpoint met: wss_atmos_clipmap_001.green"
+    },
+    {
+      "id": "PLAN-WSS-SLAB-PR-2-EXEC-001",
+      "status": "done",
+      "plan_doc": "src/dev/plan_wss_slab_pr2_dual_write_v1.md",
+      "workboard": "src/dev/planner_parallel_workboard_v1.md",
+      "unblocks": ["WSS-SLAB-PR-2"],
+      "completed": "2026-05-27",
+      "notes": "P1 SIGNED v1.0.0 (2026-05-27) — checkpoint met: wss_chunk_slab_001.green + hydrate_wired"
+    },
     {
       "id": "PLAN-CONSTRUCTION-R4-EXEC-001",
       "priority": 3,
-      "status": "queued",
+      "status": "done",
       "plan_doc": "src/dev/plan_construction_r4_exec_001_v1.md",
-      "unblocks": ["R4-CORRIDOR-001"]
+      "witness": "debug_runs/construction_stage_live.json",
+      "unblocks": ["R4-CORRIDOR-001"],
+      "acceptance": "construction_r4_corridor_001.green with product_board_open + r8_roundtrip_ok + corridor_phase_visual_wired",
+      "completed": "2026-05-27",
+      "notes": "Exec plan READY (planner finalized); phased R4-C1..C5"
     },
     {
       "id": "PLAN-CONSTRUCTION-R4-MV-EXEC-001",
       "priority": 3,
-      "status": "queued",
+      "status": "done",
       "plan_doc": "src/dev/plan_construction_r4_mv_exec_001_v1.md",
-      "unblocks": ["R4-MV-GHOST-001"]
+      "witness": "debug_runs/construction_stage_live.json",
+      "unblocks": ["R4-MV-GHOST-001"],
+      "acceptance": "construction_r4_mv_ghost_001.green with corridor_overlay_tokens_wired + legend_wired + mv_001_still_green",
+      "completed": "2026-05-27",
+      "notes": "Exec plan READY (planner finalized); MV overlay + legend witness"
     },
     {
       "id": "PLAN-M3-DEPTH-EXEC-001",
       "priority": 2,
-      "status": "queued",
+      "status": "done",
       "plan_doc": "src/dev/plan_m3_depth_exec_001_v1.md",
-      "unblocks": ["M3-UNITS-DEPTH-001"]
+      "witness": "debug_runs/minimap_compositor_live.json",
+      "unblocks": ["M3-UNITS-DEPTH-001"],
+      "acceptance": "ui_p3_m3_units_001_green=true and ui_p3_m3_replay_001_green=true with real reader + live ring threshold",
+      "completed": "2026-05-27",
+      "notes": "Finalized + archived; coder B primary handoff"
     },
     {
-      "id": "PLAN-F7-STREAM-EXEC-001",
+      "id": "PLAN-REPLAY-RING-EXEC-001",
       "priority": 2,
-      "status": "queued",
-      "plan_doc": "src/dev/plan_f7_stream_exec_001_v1.md",
-      "unblocks": ["F7-STREAM-DEEP-001"]
+      "status": "done",
+      "plan_doc": "src/dev/plan_replay_ring_exec_001_v1.md",
+      "witness": "debug_runs/replay_editor_parity_live.json",
+      "unblocks": ["REPLAY-RING-LIVE-001"],
+      "acceptance": "parity_green=true and replay_ring_len>=2; minimap replay_scrub_enabled=true",
+      "completed": "2026-05-27",
+      "notes": "Finalized + archived; coder B secondary handoff"
+    },
+    {
+      "id": "PLAN-CONSTRUCTION-HYDRO-COUPLING-001",
+      "priority": 1,
+      "status": "done",
+      "plan_doc": "src/dev/plan_construction_hydro_coupling_001_v1.md",
+      "witness": "debug_runs/wss_substrate_live.json",
+      "unblocks": ["WSS-HYDRO-BOUNDARY-001"],
+      "acceptance": "wss_hydro_runtime_001.construction_hydro_coupling_wired=true; execute emits ConstructionComplete, preview emits zero",
+      "completed": "2026-05-27",
+      "notes": "Event bus spec READY — B-H2"
+    },
+    {
+      "id": "PLAN-WSS-SLAB-PR-3-EXEC-001",
+      "priority": 1,
+      "status": "done",
+      "plan_doc": "src/dev/plan_wss_slab_pr3_exec_001_v1.md",
+      "witness": "debug_runs/wss_substrate_live.json",
+      "unblocks": ["WSS-SLAB-PR-3"],
+      "acceptance": "active_runtime_wired=true and active_runtime_activate_test_ok=true; wss_chunk_slab_001.green preserved",
+      "completed": "2026-05-27",
+      "notes": "PR-3 exec READY after PR-2 signed"
+    },
+    {
+      "id": "PLAN-LEDGER-REFRESH-007",
+      "status": "done",
+      "plan_doc": "src/dev/plan_ledger_refresh_007_checklist_v1.md",
+      "witness": "src/dev/planner_status_audit_v9.md",
+      "completed": "2026-05-27",
+      "notes": "Audit v9 SIGNED — post-drain fleet truth"
+    },
+    {
+      "id": "PLAN-WSS-ACTIVE-CHUNK-001",
+      "priority": 2,
+      "status": "done",
+      "plan_doc": "src/dev/plan_wss_active_chunk_001_v1.md",
+      "witness": "debug_runs/wss_substrate_live.json",
+      "unblocks": ["WSS-SLAB-PR-3"],
+      "acceptance": "active_runtime_policy_wired=true and active_runtime_cap_respected; PR-3 criteria table wired",
+      "completed": "2026-05-27",
+      "notes": "Hot-region policy READY — pairs PR-3 exec"
+    },
+    {
+      "id": "PLAN-HANABI-ADOPTION-001",
+      "priority": 2,
+      "status": "done",
+      "plan_doc": "src/dev/plan_hanabi_adoption_v1.md",
+      "witness": "experiments/hanabi_validation/report_v1.md",
+      "unblocks": ["H-A-SPIKE-001"],
+      "acceptance": "spike report_v1.md vs DESIGN-HANABI-BOUNDS; Bevy 0.18 gate; no main plugin until H-A2",
+      "completed": "2026-05-27",
+      "notes": "L3 embellishment charter READY"
+    },
+    {
+      "id": "PLAN-OPS-WITNESS-CADENCE-001",
+      "priority": 2,
+      "status": "done",
+      "plan_doc": "src/dev/plan_ops_witness_cadence_001_v1.md",
+      "unblocks": ["OPS-WITNESS-CADENCE"],
+      "acceptance": "operator matrix covers wss + construction + stage5 post-merge bundle",
+      "completed": "2026-05-27",
+      "notes": "Operator playbook READY"
+    },
+    {
+      "id": "PLAN-LEDGER-REFRESH-008",
+      "status": "done",
+      "plan_doc": "src/dev/plan_ledger_refresh_008_checklist_v1.md",
+      "witness": "src/dev/planner_status_audit_v10.md",
+      "completed": "2026-05-27",
+      "notes": "Audit v10 SIGNED — wave6_archive witness reconcile"
+    },
+    {
+      "id": "PLAN-ELEMENTAL-WAVE2-INDEX-001",
+      "status": "done",
+      "plan_doc": "src/dev/plan_elemental_wave2_index_001_v1.md",
+      "unblocks": ["OPERATOR-NAV", "CODER-NAV"],
+      "completed": "2026-05-27",
+      "notes": "Navigation index SIGNED"
+    },
+    {
+      "id": "PLAN-WSS-HYBRID-RETIRE-PR4-001",
+      "status": "done",
+      "plan_doc": "src/dev/plan_wss_hybrid_retire_pr4_001_v1.md",
+      "witness": "debug_runs/wss_substrate_live.json",
+      "unblocks": ["WSS-SLAB-PR-4", "WSS-SLAB-PR-5"],
+      "acceptance": "PR-4 persist_roundtrip_ok; PR-5 ecs_retire_fixture_green after drift window",
+      "completed": "2026-05-27",
+      "notes": "READY — prereq PR-3 CLOSED on disk"
+    },
+    {
+      "id": "PLAN-BQ128-APPLY-EXEC-001",
+      "status": "done",
+      "plan_doc": "src/dev/plan_bq128_apply_exec_001_v1.md",
+      "witness": "debug_runs/wave_s_blueprint_roundtrip.json",
+      "unblocks": ["BQ-128-APPLY-001"],
+      "acceptance": "roundtrip_ok=true; apply_sets_ghost_without_commit; enter_commit_unchanged",
+      "completed": "2026-05-27",
+      "notes": "READY — roundtrip green; apply ghost OPEN for coder"
+    },
+    {
+      "id": "PLAN-LEDGER-REFRESH-009",
+      "status": "done",
+      "plan_doc": "src/dev/plan_ledger_refresh_009_checklist_v1.md",
+      "witness": "src/dev/planner_status_audit_v12.md",
+      "completed": "2026-05-27",
+      "notes": "Audit v12 SIGNED — wave 4 planner picks reconcile"
+    },
+    {
+      "id": "PLAN-WSS-PR4-EXEC-001",
+      "status": "done",
+      "plan_doc": "src/dev/plan_wss_pr4_exec_001_v1.md",
+      "witness": "debug_runs/wss_substrate_live.json",
+      "unblocks": ["WSS-SLAB-PR-4"],
+      "acceptance": "substrate_persist_roundtrip_ok; dynamic_overlay_migrated",
+      "completed": "2026-05-27",
+      "notes": "PR4-1..3 exec READY — coder A primary"
+    },
+    {
+      "id": "PLAN-IND-E02-PLAY-EXEC-001",
+      "status": "done",
+      "plan_doc": "src/dev/plan_ind_e02_play_exec_001_v1.md",
+      "witness": "debug_runs/industrial_activation_live.json",
+      "unblocks": ["IND-E02-DEFAULT-PLAY-002"],
+      "acceptance": "ind_e02_green; default_play_writer; no seed_only_path",
+      "completed": "2026-05-27",
+      "notes": "IND-E02-EX-1..3 exec READY — coder B primary"
+    },
+    {
+      "id": "PLAN-LEDGER-REFRESH-010",
+      "status": "done",
+      "plan_doc": "src/dev/plan_ledger_refresh_010_checklist_v1.md",
+      "witness": "src/dev/planner_status_audit_v14.md",
+      "completed": "2026-05-27",
+      "notes": "Audit v14 SIGNED — full coder-return reconcile"
+    },
+    {
+      "id": "PLAN-WSS-PR5-SMOKE-PROD-001",
+      "status": "done",
+      "plan_doc": "src/dev/plan_wss_pr5_smoke_prod_001_v1.md",
+      "witness": "debug_runs/wss_substrate_live.json",
+      "unblocks": ["WSS-PR5-SMOKE-PROD-001"],
+      "acceptance": "hybrid_ecs_smoke_authoritative false; ecs_retire_smoke_prod_green",
+      "completed": "2026-05-27",
+      "notes": "PR5-SM-1..3 exec READY — live sim cutover"
+    },
+    {
+      "id": "PLAN-HANABI-H-A2-EXEC-001",
+      "status": "done",
+      "plan_doc": "src/dev/plan_hanabi_h_a2_exec_001_v1.md",
+      "witness": "stage5_full_app_live.json",
+      "unblocks": ["H-A2-001"],
+      "acceptance": "hanabi_spike_report_present; hanabi_l3 feature only",
+      "completed": "2026-05-27",
+      "notes": "H-A2-1..3 exec READY — no default EnginePlugin Hanabi"
+    },
+    {
+      "id": "PLAN-STAGE7-M3-STEWARD-001",
+      "status": "done",
+      "plan_doc": "src/dev/plan_stage7_m3_steward_001_v1.md",
+      "witness": "debug_runs/stage7_behavioral_live.json",
+      "unblocks": ["S7B-M3-STEWARD-REMEDY-001"],
+      "acceptance": "s7b_m3_green=true and s7b_steward_green=true on disk after Simulation proof write",
+      "completed": "2026-05-27",
+      "notes": "READY for @coder B P1 — disk regression 2026-05-27"
+    },
+    {
+      "id": "PLAN-CONSTRUCTION-R4-PRODUCT-OPEN-001",
+      "status": "done",
+      "plan_doc": "src/dev/plan_construction_r4_product_open_001_v1.md",
+      "witness": "debug_runs/construction_stage_live.json",
+      "unblocks": [],
+      "acceptance": "product_board_open policy documented; board OPEN on disk with R4 witnesses green",
+      "completed": "2026-05-27",
+      "notes": "SIGNED policy — optional; no new R4 impl until product names scope"
+    },
+    {
+      "id": "PLAN-CONSTRUCTION-STAGE-PIPELINE-002",
+      "status": "done",
+      "signoff": "SIGNED",
+      "plan_doc": "src/dev/plan_construction_stage_pipeline_exec_002_v1.md",
+      "unblocks": ["CON-P2-001", "CON-P2-002", "CON-P2-003"],
+      "acceptance": "CON-P2-001..003; SiteConstructionPhase only; no parallel ConstructionStage",
+      "completed": "2026-06-02",
+      "notes": "Phase 2 exec — primary coder pull now"
+    },
+    {
+      "id": "PLAN-PROC-BUILD-EXEC-001",
+      "status": "done",
+      "signoff": "SIGNED",
+      "plan_doc": "src/dev/plan_procedural_build_gen_exec_001_v1.md",
+      "parent": "src/dev/construction_procedural_buildings_plan_v1.md",
+      "unblocks": ["PROC-PG-1-001", "PROC-PG-2-001", "PROC-PG-3-001", "PROC-PG-4-001"],
+      "acceptance": "PG-1..4 phased; no 500 JSON catalog strategy",
+      "completed": "2026-06-02",
+      "notes": "Horizon after CON-P2-003 + scaling audit"
+    },
+    {
+      "id": "PLAN-ORGANIC-GROWTH-EXEC-001",
+      "status": "done",
+      "signoff": "SIGNED",
+      "plan_doc": "src/dev/plan_organic_growth_exec_001_v1.md",
+      "parent": "src/dev/construction_procedural_buildings_plan_v1.md",
+      "unblocks": ["PROC-OG-1-001", "PROC-OG-2-001", "PROC-OG-3-001", "PROC-OG-4-001"],
+      "acceptance": "OG-1..4; queue-only growth; same execute funnel",
+      "completed": "2026-06-02",
+      "notes": "Horizon after P5 district book minimal"
+    },
+    {
+      "id": "PLAN-AUDIT-018",
+      "status": "done",
+      "signoff": "SIGNED",
+      "plan_doc": "src/dev/planner_status_audit_v18.md",
+      "checklist": "src/dev/plan_ledger_refresh_018_checklist_v1.md",
+      "acceptance": "Per-witness playability + production surface + proof grade",
+      "completed": "2026-06-02"
+    },
+    {
+      "id": "PLAN-G-PLAY-001",
+      "status": "done",
+      "signoff": "SIGNED",
+      "plan_doc": "src/dev/play_scenario_acceptance_runbook_v1.md",
+      "acceptance": "Operator + designer G-PLAY-01 script; operator execution pending",
+      "completed": "2026-06-02"
+    },
+    {
+      "id": "PLAN-STABLE-P2-SIGN",
+      "status": "done",
+      "signoff": "SIGNED",
+      "plan_doc": "src/dev/fleet_stability_phase2_dispatch_v1.md",
+      "witness": "src/dev/planner_status_audit_v18.md",
+      "acceptance": "coder_a/coder_b active[] aligned with P2 + dual track",
+      "completed": "2026-06-02"
+    },
+    {
+      "id": "PLAN-SETTLEMENT-HIERARCHY-005",
+      "status": "done",
+      "signoff": "SIGNED",
+      "plan_doc": "src/dev/plan_settlement_hierarchy_exec_005_v1.md",
+      "design_input": "src/dev/design_settlement_hierarchy_read_v1.md",
+      "unblocks": ["SET-P5-001", "SET-P5-002", "SET-P5-003", "PROC-OG-4-001", "INFRA-E5-001"],
+      "acceptance": "G-TOWN-ONE; TownBook/DistrictBook/BlockBook; SET-P5 PR train",
+      "completed": "2026-06-02",
+      "notes": "SET-P5-003 witness unblocked — CON-P2 green on disk"
+    },
+    {
+      "id": "PLAN-CONSTRUCTION-SCALING-AUDIT-003",
+      "status": "done",
+      "signoff": "SIGNED",
+      "plan_doc": "src/dev/plan_construction_scaling_audit_exec_003_v1.md",
+      "design_input": "src/dev/design_construction_scaling_read_v1.md",
+      "unblocks": ["CON-P3-S1", "CON-P3-S2", "CON-P3-S3", "CON-P3-WIT"],
+      "acceptance": "S1–S6 matrix; B-half done; A-half + witness refresh open",
+      "completed": "2026-06-02",
+      "witness_prereq": "construction_site_stage_pipeline_001.green true on disk"
+    },
+    {
+      "id": "PLAN-ART-DESIGN-INBOUND-ALIGN-001",
+      "status": "done",
+      "signoff": "SIGNED",
+      "plan_doc": "src/dev/plan_art_design_inbound_alignment_v1.md",
+      "source": "prompts/art_desgin_inbound.md",
+      "acceptance": "Fit matrix; district rules; validation in module kit; no duplicate sim systems",
+      "completed": "2026-06-02"
     }
   ],
+  "active": [
+    {
+      "id": "PLAN-AUDIT-019",
+      "status": "ready",
+      "blocked_by": ["CON-P3-S1", "CON-P3-S2", "CON-P3-S3", "CON-P3-WIT"],
+      "deliverable": "src/dev/planner_status_audit_v19.md",
+      "checklist": "src/dev/plan_ledger_refresh_019_checklist_v1.md",
+      "notes": "Reconcile coder_active_queue.json vs debug_runs/ after CON-P3 disk green"
+    }
+  ],
+  "construction_program": {
+    "alignment_hub": "src/dev/planner_program_alignment_v1.md",
+    "proc_growth_index": "src/dev/construction_procedural_growth_index_v1.md",
+    "roadmap": "src/dev/construction_product_roadmap_phases_2_10_v1.md",
+    "active_phase": "3",
+    "exec_doc": "src/dev/plan_construction_scaling_audit_exec_003_v1.md",
+    "stage_pipeline_exec": "src/dev/plan_construction_stage_pipeline_exec_002_v1.md",
+    "settlement_exec": "src/dev/plan_settlement_hierarchy_exec_005_v1.md",
+    "scaling_exec": "src/dev/plan_construction_scaling_audit_exec_003_v1.md",
+    "coder_unblocks": ["CON-P3-S1", "CON-P3-S2", "CON-P3-S3", "CON-P3-WIT"],
+    "horizon": ["SET-P5-001", "PROC-PG-1-001", "PROC-OG-1-001"],
+    "after_p3": ["SET-P5-003", "PROC-PG-2-001"]
+  },
+  "next_phase": {
+    "phase_id": "DUAL-TRACK-2026-06",
+    "alignment_hub": "src/dev/planner_program_alignment_v1.md",
+    "proc_growth_index": "src/dev/construction_procedural_growth_index_v1.md",
+    "stability_plan": "src/dev/plan_fleet_stability_integrity_001_v1.md",
+    "p2_dispatch": "src/dev/fleet_stability_phase2_dispatch_v1.md",
+    "audit": "src/dev/planner_status_audit_v18.md",
+    "checklist": "src/dev/plan_ledger_refresh_018_checklist_v1.md",
+    "primary_theme": "CON-P2 + INFRA-E0 (coders)",
+    "secondary_theme": "PHASE-STABLE P2 tails (G-PLAY-01 operator)",
+    "rule": "Phase 3 scaling SIGNED; audit v19 after CON-P3-WIT on disk"
+  },
   "recently_closed_coder": [
     {
       "id": "TRIAGE-VM-09-v2",

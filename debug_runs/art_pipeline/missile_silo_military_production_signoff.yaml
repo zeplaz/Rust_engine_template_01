@@ -1,0 +1,45 @@
+# missile_silo_military_production_signoff.yaml — phase-1 (bunker mesh derivative)
+program_id: PLAN-PROC-TILE-PROD-001
+task_id: MCP-PT-1-003-MISSILE
+gate: G4
+designer_mcp: production_keyframe_signoff
+variant_matrix: debug_runs/art_pipeline/variant_matrix_missile_silo_v1.yaml
+
+archetype: missile_silo
+primary_style_pack: style_military
+batch_id: tile_missile_silo_military_production_v1
+atlas_id: missile_silo_military_production_v1
+assembly_id: missile_silo_6x3_s46_msl1
+source_tier: production
+g4_review_mode: keyframe_stills
+reviewed_at: "2026-06-03"
+proceed_ship: no
+freeze_id: TILE-FIX-001
+
+phase1_derivative:
+  mesh_source: tile_bunker_military_production_v1
+  qualified: true
+  unblock: "prop_missile_pad module + dedicated 8x4 assembly snapshot"
+
+reference_tags:
+  - "ref:survey:missile-silo-military"
+  - "ref:osm:military=missile_site"
+  - "phase1_bunker_mesh_derivative"
+
+keyframe_stills:
+  export_folder: assets/staging/tiles/keyframe_stills/missile_silo_military/
+  still_paths:
+    clean_day: assets/staging/tiles/keyframe_stills/missile_silo_military/clean_day.png
+    clean_night_on: assets/staging/tiles/keyframe_stills/missile_silo_military/clean_night_on.png
+
+g4_gates:
+  g4_0_matrix_and_spine: pass
+  g4_3_keyframe_minimum_stills_review: pass
+  g4_8_proceed_ship: pass
+
+lod0_ortho_atlas_g4: rejected
+district_one_liner: "Missile silo compound — hardened berms (phase-1 bunker iso)"
+notes: "Map-stamp tile_id missile_silo_military registered; bespoke launch-pad mesh is follow-up art."
+
+blocked_by: []
+next: "@coder-mcp prop_missile_pad module + assembly_snapshot_missile_silo_v2"

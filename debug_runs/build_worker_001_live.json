@@ -1,0 +1,41 @@
+{
+  "gate_id": "BUILD-WORKER-001",
+  "ok": true,
+  "status": "done",
+  "assembly_id": "industrial_west_7x5_s39_9fa1",
+  "snapshot": "tools/mcp/schemas/examples/assembly_snapshot_warehouse_industrial_west_production_v1.json",
+  "blend_path": "assets/staging/assemblies/industrial_west_7x5_s39_9fa1.blend",
+  "materials": {
+    "profiles_requested": [
+      "roof_metal_01",
+      "steel_corner_01",
+      "steel_door_warehouse_01",
+      "steel_panel_01"
+    ],
+    "generated": [],
+    "missing_pilot": [],
+    "ok": true
+  },
+  "build": {
+    "ok": true,
+    "job_id": "asm_industrial_west_7x5_s39_9fa1",
+    "status": "done",
+    "blend_path": "assets/staging/assemblies/industrial_west_7x5_s39_9fa1.blend",
+    "outputs": [
+      "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\assemblies\\industrial_west_7x5_s39_9fa1.blend"
+    ],
+    "error": null
+  },
+  "authority": "snapshot material_profile \u2192 assembly_import apply_material_profile_to_meshes",
+  "render": {
+    "ok": true,
+    "status": "done",
+    "method": "keyframe_minimum_cell",
+    "variant_key": "clean_day",
+    "facing": 0,
+    "preview_png": "assets/staging/tiles/tile_warehouse_industrial_v2_minimum_g4/clean_day_f0.png",
+    "job_id": "tile_warehouse_industrial_clean_day_f0",
+    "error": null
+  },
+  "preview_png": "assets/staging/tiles/tile_warehouse_industrial_v2_minimum_g4/clean_day_f0.png"
+}

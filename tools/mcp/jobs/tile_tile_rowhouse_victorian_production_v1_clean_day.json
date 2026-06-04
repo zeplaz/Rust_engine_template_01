@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "job_id": "tile_tile_rowhouse_victorian_production_v1_clean_day",
+  "operation": "tile_variant_bake",
+  "mode": "assembly",
+  "variant": {
+    "variant_key": "clean_day",
+    "state": "clean",
+    "damage": 0.0,
+    "power": "off",
+    "fill": "empty",
+    "lighting": "day"
+  },
+  "render": {
+    "method": "blender_keyframe_light_rig",
+    "isometric": true,
+    "seed": 42,
+    "tile_size_px": 128,
+    "light_blend": "utils/Light_keysshotsetup.blend"
+  },
+  "light_blend": "C:\\dev\\github\\Rust_engine_template_01\\utils\\Light_keysshotsetup.blend",
+  "output": {
+    "png": "assets/staging/tiles/tile_rowhouse_victorian_production_v1/clean_day.png"
+  },
+  "assembly_blend": "assets/staging/assemblies/victorian_4x3_s42_a7cb.blend"
+}

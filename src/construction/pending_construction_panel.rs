@@ -11,8 +11,10 @@ use crate::gui::hud::{
     WorldInteractionDiagnostics,
 };
 
-use super::blueprint_preset::blueprint_collection_from_pending;
-use super::construction_queue_intent::{ConstructionQueueIntent, ConstructionQueuePanelView};
+use super::blueprint_preset::{blueprint_collection_from_pending, BlueprintImportQueueMode};
+use super::construction_queue_intent::{
+    ConstructionBlueprintImportUi, ConstructionQueueIntent, ConstructionQueuePanelView,
+};
 use super::pending_construction::PendingConstructionQueue;
 
 pub fn draw_pending_construction_queue_egui(
@@ -29,6 +31,7 @@ pub fn draw_pending_construction_queue_egui(
     world_interaction: Option<&WorldInteractionDiagnostics>,
     pending_layout: &mut PendingHudLayoutCommit,
     wave_s_imported: Option<&crate::io::save::WaveSImportedBlueprints>,
+    import_ui: &mut ConstructionBlueprintImportUi,
 ) {
     let mut open = dock.slot(HudWidgetId::ConstructionQueue).visible;
     if view.total_count == 0 && !open {
@@ -147,14 +150,62 @@ pub fn draw_pending_construction_queue_egui(
                     *preset_ron = ron::ser::to_string(&collection).ok();
                 }
                 if let Some(imported) = wave_s_imported.and_then(|w| w.collection.as_ref()) {
-                    if ui
-                        .button(format!(
-                            "Import Wave S presets ({})",
-                            imported.presets.len()
-                        ))
-                        .clicked()
-                    {
-                        *preset_ron = ron::ser::to_string(imported).ok();
+                    if !imported.presets.is_empty() {
+                        ui.horizontal(|ui| {
+                            ui.label("Import mode:");
+                            ui.radio_value(
+                                &mut import_ui.mode,
+                                BlueprintImportQueueMode::Append,
+                                "Append queue",
+                            );
+                            ui.radio_value(
+                                &mut import_ui.mode,
+                                BlueprintImportQueueMode::Replace,
+                                "Replace queue",
+                            );
+                        });
+                        let replace_blocked = matches!(
+                            import_ui.mode,
+                            BlueprintImportQueueMode::Replace
+                        ) && !pending.entries.is_empty();
+                        if replace_blocked {
+                            ui.checkbox(
+                                &mut import_ui.replace_confirm,
+                                format!(
+                                    "Clear {} existing row(s) before import",
+                                    pending.entries.len()
+                                ),
+                            );
+                        } else {
+                            import_ui.replace_confirm = false;
+                        }
+                        let import_enabled = !replace_blocked || import_ui.replace_confirm;
+                        ui.horizontal(|ui| {
+                            ui.add_enabled_ui(import_enabled, |ui| {
+                                if ui
+                                    .button(format!(
+                                        "Import to queue ({})",
+                                        imported.presets.len()
+                                    ))
+                                    .clicked()
+                                {
+                                    intents.write(ConstructionQueueIntent::ImportWaveSPresets {
+                                        mode: import_ui.mode,
+                                        replace_confirmed: import_ui.replace_confirm,
+                                    });
+                                    import_ui.replace_confirm = false;
+                                }
+                            });
+                            if ui
+                                .button(format!(
+                                    "Copy presets RON ({})",
+                                    imported.presets.len()
+                                ))
+                                .clicked()
+                            {
+                                *preset_ron = ron::ser::to_string(imported).ok();
+                            }
+                        });
                     }
                 }
             });

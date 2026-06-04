@@ -1,0 +1,25 @@
+{
+  "batch_id": "tile_rowhouse_victorian_production_v1",
+  "status": "done",
+  "bake_source": "keyframe_pack",
+  "variant_count": 14,
+  "png_paths": [
+    "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_rowhouse_victorian_production_v1\\clean_day.png",
+    "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_rowhouse_victorian_production_v1\\clean_night_off.png",
+    "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_rowhouse_victorian_production_v1\\clean_night_on.png",
+    "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_rowhouse_victorian_production_v1\\damaged_day.png",
+    "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_rowhouse_victorian_production_v1\\damaged_night_on.png",
+    "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_rowhouse_victorian_production_v1\\under_construction_01.png",
+    "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_rowhouse_victorian_production_v1\\burning_00.png",
+    "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_rowhouse_victorian_production_v1\\burning_01.png",
+    "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_rowhouse_victorian_production_v1\\burning_02.png",
+    "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_rowhouse_victorian_production_v1\\burning_03.png",
+    "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_rowhouse_victorian_production_v1\\burning_04.png",
+    "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_rowhouse_victorian_production_v1\\burning_05.png",
+    "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_rowhouse_victorian_production_v1\\burning_06.png",
+    "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_rowhouse_victorian_production_v1\\burning_07.png"
+  ],
+  "atlas_path": "C:\\dev\\github\\Rust_engine_template_01\\assets\\textures\\buildings_iso\\production\\rowhouse_victorian_production_v1_atlas.png",
+  "meta_json": "assets/staging/tiles/tile_rowhouse_victorian_production_v1/atlas_meta.json",
+  "dry_run": false
+}

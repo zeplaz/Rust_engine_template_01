@@ -1,0 +1,27 @@
+[package]
+name = "hanabi_validation"
+version = "0.1.0"
+edition = "2021"
+publish = false
+description = "H-A-SPIKE-001 — Bevy 0.18 + bevy_hanabi Layer-3 bounds validation (experiments only)"
+
+[lib]
+path = "src/lib.rs"
+
+[[bin]]
+name = "hanabi_validation"
+path = "src/main.rs"
+
+[dependencies]
+bevy = { version = "0.18", default-features = false, features = [
+    "bevy_asset",
+    "bevy_log",
+    "bevy_state",
+    "bevy_window",
+    "bevy_winit",
+    "bevy_render",
+    "bevy_core_pipeline",
+    "bevy_pbr",
+    "x11",
+] }
+bevy_hanabi = { version = "0.18", default-features = false, features = ["3d"] }

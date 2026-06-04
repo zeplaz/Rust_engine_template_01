@@ -143,11 +143,16 @@ pub fn sync_visible_fire_chunks_from_views(
         } else {
             visible_chunks_for_view(view, &active)
         };
-        let surface = ViewSurfaceId::from_view_id(id);
-        if let Some(windows) = per_view_windows {
-            list.retain(|c| per_view_residency_contains(surface, *c, windows));
-        } else if let Some(table) = residency {
-            list.retain(|c| chunk_in_residency_table(*c, table));
+        // F2-PR-2: tactical visual proof must not residency-cull all seeded fire chunks.
+        let skip_residency_cull =
+            proof && matches!(id, ViewId::WorldMain | ViewId::SimulationMap);
+        if !skip_residency_cull {
+            let surface = ViewSurfaceId::from_view_id(id);
+            if let Some(windows) = per_view_windows {
+                list.retain(|c| per_view_residency_contains(surface, *c, windows));
+            } else if let Some(table) = residency {
+                list.retain(|c| chunk_in_residency_table(*c, table));
+            }
         }
         visible.per_view.insert(id, list);
     }

@@ -21,9 +21,19 @@ pub enum LegacyTerrainType {
 #[deprecated(note = "Use terrain::family::TerrainFamilyId for dominant terrain family on tiles / chunks")]
 pub type TerrainType = LegacyTerrainType;
 
+/// Legacy per-tile transport flags — **deprecated** (INFRA-E0-002).
+/// Authoritative corridors live in `TransportNetworkSnapshot` / `TransportGraph`, not terrain tiles.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, Default)]
 pub struct TerrainFeatures {
+    #[deprecated(
+        since = "2026-05-28",
+        note = "INFRA-E0-002: use transport graph / map editor road markers — not tile flags"
+    )]
     pub road: bool,
+    #[deprecated(
+        since = "2026-05-28",
+        note = "INFRA-E0-002: use transport graph rail edges — not tile flags"
+    )]
     pub track: bool,
 }
 

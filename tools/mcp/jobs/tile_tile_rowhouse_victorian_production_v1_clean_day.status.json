@@ -1,0 +1,10 @@
+{
+  "job_id": "tile_tile_rowhouse_victorian_production_v1_clean_day",
+  "status": "done",
+  "outputs": [
+    "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_rowhouse_victorian_production_v1\\clean_day.png"
+  ],
+  "dry_run": true,
+  "operation": "tile_variant_bake",
+  "updated_at": 1780456690.389524
+}

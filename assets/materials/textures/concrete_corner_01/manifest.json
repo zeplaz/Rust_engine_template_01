@@ -1,0 +1,11 @@
+{
+  "profile_id": "concrete_corner_01",
+  "seed": 1787,
+  "generator": "concrete",
+  "size": 256,
+  "paths": {
+    "albedo": "assets/materials/textures/concrete_corner_01/albedo.png",
+    "normal": "assets/materials/textures/concrete_corner_01/normal.png",
+    "roughness": "assets/materials/textures/concrete_corner_01/roughness.png"
+  }
+}

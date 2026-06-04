@@ -113,7 +113,7 @@ mod tests {
             &ProductShellDiagnostics::default(),
         ));
 
-        use crate::dev::stage7_behavioral_live_proof::refresh_s7b_steward_001_live_witness;
+        use crate::dev::stage7_behavioral_witness::refresh_s7b_steward_001_live_witness;
         assert!(
             refresh_s7b_steward_001_live_witness(),
             "stage7 behavioral steward witness refresh"

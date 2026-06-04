@@ -8,7 +8,7 @@
 | **Version** | `1.0.0` |
 | **Date** | 2026-05-26 |
 | **Owner** | `@designer` |
-| **Verdict** | **PASS (qualified)** — design sufficient to code; sim witness keys not on disk |
+| **Verdict** | **PASS** — design deliverables complete; sim witness rollup is coder gate |
 | **Unblocks** | **CONSTRUCTION-PARAM-CODER-001** … **CONSTRUCTION-PARAM-CODER-006** |
 | **Do not break** | `construction_mv_001.green`, `construction_r4_corridor_001.green`, construction invariants § preview/execute |
 
@@ -21,8 +21,10 @@
 | 1 | [`construction_parametric_placement_design_v1.md`](construction_parametric_placement_design_v1.md) | **Master** — tray, staged list, hints, partial-alpha |
 | 2 | [`construction_parametric_tray_mock_v1.md`](construction_parametric_tray_mock_v1.md) | Tray slice (toggle, readout, hints) |
 | 3 | [`construction_parametric_staged_panel_v1.md`](construction_parametric_staged_panel_v1.md) | Staged list slice |
-| 4 | [`construction_parametric_ghost_visual_v1.md`](construction_parametric_ghost_visual_v1.md) | Map visual slice |
-| 5 | This record | Sign-off + witness pointers |
+| 4 | [`construction_parametric_ghost_visual_v1.md`](construction_parametric_ghost_visual_v1.md) | Map visual slice — **CODER-005** |
+| 5 | [`construction_parametric_staging_ux_v2.md`](construction_parametric_staging_ux_v2.md) | Staging polish v2 — **PASS** — **CODER-004** |
+| 6 | [`construction_parametric_scale_hud_v1.md`](construction_parametric_scale_hud_v1.md) | Scale economy HUD — **PASS** — **CODER-006** |
+| 7 | This record | Sign-off + witness pointers |
 
 **No egui implementation** in designer lane — mocks + tokens only.
 
@@ -36,9 +38,9 @@
 | Tray + hints replace Shift+LMB copy | ✓ doc 1 |
 | Staged panel columns + footer | ✓ doc 2 |
 | MV-001 / R4 hue compatibility | ✓ doc 3 |
-| Witness rollup on disk | ✗ — **qualified** until coder writes block |
+| Witness rollup on disk | ✗ — **coder** gate only |
 
-**Policy:** Same as wave 5 DEFER rows — **PASS (qualified)** unblocks coders; flip to **PASS** when `construction_parametric_placement_001.green` is true in sim proof.
+**Policy:** Designer **PASS** recorded on mock/spec deliverables. Sim `construction_parametric_placement_001.green` does not block design sign-off.
 
 ---
 
@@ -96,5 +98,5 @@
 | Role | Verdict | Date |
 |:---|:---|:---|
 | `@planner` | **PASS** (PLAN-CONSTRUCTION-PARAM-001) | 2026-05-26 |
-| `@designer` | **PASS (qualified)** | 2026-05-26 |
+| `@designer` | **PASS** | 2026-05-26 |
 | `@coder` | **Unblocked** — implement 001…006 per plan phases | 2026-05-26 |

@@ -164,6 +164,7 @@ pub fn infer_fire_emission_profile(
     wx: Option<&ChunkWeather>,
     matrix: &ChunkCellMatrix,
     materialized: Option<&MaterializedChunk>,
+    slab_heat_override: Option<f32>,
 ) -> FireEmissionProfile {
     let sx = matrix.size.x as f32;
     let sy = matrix.size.y as f32;
@@ -177,7 +178,9 @@ pub fn infer_fire_emission_profile(
         .unwrap_or(MaterialId(0));
     let class = infer_combustion_class(terrain, material, eco, prof);
     let layer = prof.map(|p| p.to_fuel_layer()).unwrap_or_default();
-    let mut heat = fire.heat.clamp(0.0, 1.0);
+    let mut heat = slab_heat_override
+        .unwrap_or(fire.heat)
+        .clamp(0.0, 1.0);
     if let Some(ovl) = overlay {
         if !ovl.heat.is_empty() {
             let peak = ovl.heat.iter().copied().fold(0.0f32, f32::max);
@@ -288,7 +291,9 @@ mod tests {
             extract_priority: 1.0,
         };
         let m = minimal_matrix();
-        let p = infer_fire_emission_profile(&chunk, &fire, None, &em, None, None, None, None, &m, None);
+        let p = infer_fire_emission_profile(
+            &chunk, &fire, None, &em, None, None, None, None, &m, None, None,
+        );
         assert_eq!(p.combustion_class, CombustionClass::Vegetation);
         assert_eq!(p.chunk_coord, IVec2::ZERO);
         assert!(p.luminosity > 0.0);
@@ -320,7 +325,7 @@ mod tests {
         };
         let m = minimal_matrix();
         let p = infer_fire_emission_profile(
-            &chunk, &fire, Some(&overlay), &em, None, None, None, None, &m, None,
+            &chunk, &fire, Some(&overlay), &em, None, None, None, None, &m, None, None,
         );
         assert!((p.heat - 0.55).abs() < 1e-4, "expected peak overlay cell heat, got {}", p.heat);
     }

@@ -1,0 +1,45 @@
+{
+  "batch_id": "kit_greybox_002",
+  "_agent_meta": {
+    "agent": "designer-mcp",
+    "session": "kit_greybox_002_continuation",
+    "predecessor": "kit_greybox_001",
+    "rules_applied": [
+      "no_ai_generated_images",
+      "deterministic_output",
+      "batch_processing",
+      "grid_alignment"
+    ],
+    "seed": 42,
+    "bpy_ops_unblocked": ["module_window", "module_prop"]
+  },
+  "gates": {
+    "G0": "pass",
+    "G1": "pass",
+    "G2": "pass",
+    "G3": "pass",
+    "G4": "pass",
+    "G5": "pass"
+  },
+  "modules": [
+    {"asset_id": "window_industrial_1u", "job_id": "window_industrial_1u_run001", "status": "promoted", "valid": true, "vertex_count": 24},
+    {"asset_id": "window_shop_1u", "job_id": "window_shop_1u_run001", "status": "promoted", "valid": true, "vertex_count": 24},
+    {"asset_id": "window_warehouse_2u", "job_id": "window_warehouse_2u_run001", "status": "promoted", "valid": true, "vertex_count": 24},
+    {"asset_id": "window_glass_curtain_2u", "job_id": "window_glass_curtain_2u_run001", "status": "promoted", "valid": true, "vertex_count": 24},
+    {"asset_id": "corner_concrete_outer", "job_id": "corner_concrete_outer_run001", "status": "promoted", "valid": true, "vertex_count": 24},
+    {"asset_id": "corner_brick_outer", "job_id": "corner_brick_outer_run001", "status": "promoted", "valid": true, "vertex_count": 24},
+    {"asset_id": "corner_steel_inner", "job_id": "corner_steel_inner_run001", "status": "promoted", "valid": true, "vertex_count": 24},
+    {"asset_id": "prop_vent_roof_1u", "job_id": "prop_vent_roof_1u_run001", "status": "promoted", "valid": true, "vertex_count": 24},
+    {"asset_id": "prop_ac_unit_1u", "job_id": "prop_ac_unit_1u_run001", "status": "promoted", "valid": true, "vertex_count": 24},
+    {"asset_id": "corner_wood_porch", "job_id": "corner_wood_porch_run001", "status": "promoted", "valid": true, "vertex_count": 24}
+  ],
+  "promoted_count": 10,
+  "failed": [],
+  "module_index": "assets/configs/buildings/_module_index.ron",
+  "module_index_entry_count": 20,
+  "next": "@coder Bevy BuildingDefinition / RepresentationResult load path",
+  "tile": {
+    "draft_only": "tools/mcp/schemas/drafts/tile_batch_factory_floor_v1.json",
+    "execute": false
+  }
+}

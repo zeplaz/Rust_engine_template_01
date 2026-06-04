@@ -75,7 +75,7 @@ pub const WAVE_P_CONSUMER_ROOTS: &[&str] = &[
 ];
 
 /// Planned Wave P surfaces still gated on backlog choice (inspector host, direct-sample path).
-/// `wave_p_live.json` writer ships in `wave_p_live_proof.rs` (post–Stage 6).
+/// `wave_p_live.json` writer ships in `wave_p_witness.rs` (post–Stage 6).
 pub const WAVE_P_OPEN_BACKLOG_ITEMS: &[&str] = &[];
 
 #[must_use]

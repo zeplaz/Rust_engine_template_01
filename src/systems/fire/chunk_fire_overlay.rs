@@ -13,7 +13,7 @@ use super::combustion::{
     profile_spark_multiplier_gated, profile_weighted_smoke_toxic_explosion,
     fuel_ignition_gate, MIN_CELL_FUEL_FOR_SPREAD, DEFAULT_CELL_FUEL_SEED,
 };
-use super::live_proof::FireEcologyWitness;
+use super::witness_collectors::FireEcologyWitness;
 use super::types::ChunkFireOverlay;
 use super::fire_fuel::FireFuelField;
 use crate::systems::chunk_environment_persist::{ChunkEnvironmentDirty, ChunkEnvironmentPersistHooks};

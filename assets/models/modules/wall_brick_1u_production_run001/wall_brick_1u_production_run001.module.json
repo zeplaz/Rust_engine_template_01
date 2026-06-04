@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "asset_id": "wall_brick_1u",
+  "archetype": "module_wall",
+  "batch_id": "kit_production_001",
+  "style_pack": "style_victorian",
+  "development_tier": "production",
+  "pbr_status": "shipped",
+  "material_profile": "brick_red_01",
+  "module": {
+    "grid_units": [1, 1],
+    "snap": "floor_edge",
+    "pivot": "bottom_center"
+  },
+  "dimensions_m": { "w": 4, "h": 3, "d": 0.3 },
+  "references": []
+}

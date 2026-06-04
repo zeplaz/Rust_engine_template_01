@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "asset_id": "door_warehouse",
+  "archetype": "module_door",
+  "style_pack": "style_industrial_west",
+  "development_tier": "production",
+  "pbr_status": "shipped",
+  "batch_id": "kit_industrial_west_production_001",
+  "module": {
+    "grid_units": [
+      2,
+      1
+    ],
+    "snap": "floor_edge",
+    "pivot": "bottom_center"
+  },
+  "dimensions_m": {
+    "w": 4,
+    "h": 3,
+    "d": 0.25
+  },
+  "material_profile": "steel_door_warehouse_01",
+  "references": [
+    "ref:audit:PG-MODULE-AUDIT-002",
+    "ref:kit:kit_industrial_west_production_001"
+  ]
+}

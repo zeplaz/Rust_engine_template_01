@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "job_id": "tile_warehouse_industrial_clean_night_on_f3",
+  "operation": "tile_variant_bake",
+  "mode": "assembly",
+  "assembly_blend": "assets/staging/assemblies/industrial_west_4x2_s43_a879.blend",
+  "variant": {
+    "state": "clean",
+    "damage": 0.0,
+    "power": "on",
+    "fill": "empty",
+    "lighting": "night_on",
+    "variant_key": "clean_night_on"
+  },
+  "render": {
+    "method": "blender_keyframe_light_rig",
+    "seed": 43,
+    "tile_size_px": 128,
+    "camera_elevation_deg": 35.264,
+    "facing": 3,
+    "facing_yaw_deg": 135.0
+  },
+  "output": {
+    "png": "assets/staging/tiles/tile_warehouse_industrial_v2_minimum_g4/clean_night_on_f3.png"
+  },
+  "light_blend": "C:\\dev\\github\\Rust_engine_template_01\\utils\\Tile_iso_rig_v1.blend"
+}

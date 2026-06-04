@@ -1,0 +1,11 @@
+{
+  "batch_id": "kit_greybox_001",
+  "gate": "G5",
+  "status": "pass",
+  "module_index": "assets/configs/buildings/_module_index.ron",
+  "json_mirror": "assets/configs/buildings/_module_index.json",
+  "registered_count": 10,
+  "index_entry_count": 20,
+  "witness": "debug_runs/art_pipeline/kit_greybox_001_live.json",
+  "coder_audit": "debug_runs/art_pipeline/kit_greybox_001_coder_audit.json"
+}

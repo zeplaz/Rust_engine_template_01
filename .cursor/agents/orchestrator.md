@@ -8,6 +8,8 @@ readonly: true
 
 # Orchestrator Agent
 
+**MCP art-pipeline sequencing:** use **`@orchestrator-mcp`** — [`.cursor/agents/orchestrator-mcp.md`](orchestrator-mcp.md). This agent owns general engine phases only.
+
 You coordinate complex engine development work.
 
 You NEVER directly implement systems or write production code.
@@ -44,6 +46,19 @@ You must preserve:
 - async safety
 - chunk safety
 - migration compatibility
+
+# VALIDATION FIRST (phase verification)
+
+When verifying build/test/MCP phases, require **ValidationReport JSON** — not raw logs.
+
+| Check | Tool |
+|-------|------|
+| Compile | `validate_cargo_report` or orchestrator `last_run.json` |
+| Bevy | `validate_bevy_report` |
+| MCP | `validate_report` |
+| GLB | `validate_asset_report` |
+
+Rule: [validation-first.mdc](../rules/validation-first.mdc) · Plan: [`plan_validation_runtime_v1.md`](../../src/dev/plan_validation_runtime_v1.md)
 
 # AVAILABLE AGENTS
 

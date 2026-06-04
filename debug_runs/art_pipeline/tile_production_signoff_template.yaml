@@ -1,0 +1,54 @@
+# tile_production_signoff_template.yaml — MCP-PT-1-003 (G4 keyframe still sign-off)
+# Production ship art = keyframe_render stills → tile-atlas-pack. NOT lod0 ortho atlas.
+program_id: PLAN-PROC-TILE-PROD-001
+task_id: MCP-PT-1-003
+gate: G4
+designer_mcp: production_keyframe_signoff
+production_bar: src/dev/design_procedural_tile_production_bar_v1.md
+bake_spine: src/dev/design_tile_bake_spine_convergence_v1.md
+variant_matrix: debug_runs/art_pipeline/variant_matrix_<archetype>_v1.yaml
+
+archetype: pending
+primary_style_pack: pending
+batch_id: pending
+atlas_id: pending
+assembly_id: pending
+source_tier: production
+g4_review_mode: keyframe_stills  # never lod0 ortho pilot atlas for ship G4
+reviewed_at: null
+proceed_ship: pending
+
+lod0_pilot:
+  batch_id: pending
+  g4_valid: false
+  note: "CI/smoke only — DESIGN-TILE-SPINE-001"
+
+keyframe_stills:
+  export_folder: assets/staging/tiles/keyframe_stills/<slug>/
+  minimum_review_keys:
+    - clean_day
+    - clean_night_on
+    - damaged_night_on
+  still_paths: {}  # variant_key → repo-relative PNG after export
+  pack_command: "python -m rust_engine_mcp.cli tile-atlas-pack <folder> -pk"
+
+witness:
+  bake_witness: debug_runs/art_pipeline/procedural_tiles_production_bake_live.json
+  atlas_meta: assets/staging/tiles/<batch_id>/atlas_meta.json
+  atlas_png: assets/textures/tiles/<atlas_id>_atlas.png
+
+g4_gates:
+  g4_0_matrix_and_spine: pending      # PT-1 matrix + keyframe_pack contract
+  g4_1_source_tier_production: pending
+  g4_2_reference_tags_present: pending
+  g4_3_keyframe_minimum_stills_review: pending  # 3 stills at 128px iso
+  g4_4_full_matrix_keys_packed: pending
+  g4_5_night_damaged_iso_readable_128px: pending
+  g4_6_fire_frames_distinct: pending
+  g4_7_no_smoke_greybox_modules: pending
+  g4_8_proceed_ship: pending
+
+lod0_ortho_atlas_g4: rejected  # always for ship path
+
+blocked_by: []
+next: "Export keyframe stills → designer G4-3 → tile-atlas-pack → register"

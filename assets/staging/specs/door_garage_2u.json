@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "asset_id": "door_garage_2u",
+  "archetype": "module_door",
+  "style_pack": "style_industrial_west",
+  "module": {
+    "grid_units": [
+      2,
+      1
+    ],
+    "snap": "floor_edge",
+    "pivot": "bottom_center"
+  },
+  "dimensions_m": {
+    "w": 4,
+    "h": 3,
+    "d": 0.2
+  },
+  "material_profile": "steel_door_01",
+  "references": [
+    "kit:door_garage"
+  ]
+}

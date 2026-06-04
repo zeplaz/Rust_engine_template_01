@@ -1,0 +1,32 @@
+{
+  "gate_id": "PILOT-GRAMMAR-001-GRAMMAR-E2E",
+  "green": true,
+  "archetype_id": "IndustrialWarehouse",
+  "district_style": "industrial_west",
+  "assembly_id": "industrial_west_8x9_s43_f75a",
+  "written_path": "assets/staging/assemblies/industrial_west_8x9_s43_f75a.json",
+  "grammar_rule_chain": {
+    "footprint_mode": "yard_interior",
+    "archetype": "IndustrialWarehouse",
+    "massing": "yard_complex",
+    "roof": "roof_flat",
+    "facade": "facade_v1",
+    "detail": "prop_clutter",
+    "age": "weathered"
+  },
+  "grammar_verify": "passed",
+  "grammar_verify_summary": "GRAMMAR-GEN-VERIFY-001: 0 error(s) footprint=8x9x1 placements=60",
+  "material_profiles_on_all_placements": true,
+  "placement_count": 60,
+  "not_placement_only": true,
+  "reference_tags_sample": [
+    "grammar:industrial_warehouse_v1",
+    "archetype:IndustrialWarehouse",
+    "district:industrial_west",
+    "massing:yard_complex",
+    "age:weathered",
+    "building_grammar_v1",
+    "chain:archetype:IndustrialWarehouse",
+    "chain:district_style:industrial_west"
+  ]
+}

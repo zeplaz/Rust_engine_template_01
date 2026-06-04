@@ -1,0 +1,143 @@
+{
+  "_agent_meta": {
+    "agent_commands": [
+      "cargo test -p proc_A_dine01 --lib"
+    ],
+    "docs": {
+      "compile_warnings": "src/dev/COMPILE_WARNINGS_TODOS.md",
+      "stage5_directive": "prompts/guides/stage5_convergence_directive_v1.md",
+      "viewport_recovery": "src/dev/recovery_viewport.md"
+    },
+    "logging_env": {
+      "ORCHESTRATOR_EXPORT_HEALTH": false,
+      "PERF": false,
+      "RUST_LOG": null,
+      "SIM_VIEW_SYNC_DEBUG": false,
+      "STAGE5_READINESS_VERBOSE": false,
+      "STAGE5_VERBOSE": false,
+      "VIEWPORT_AUTHORITY_DEBUG": false
+    },
+    "orchestrator": {
+      "build_report": "tools/orchestrator/reports/build_report.md",
+      "ci_entry": "tools/orchestrator/ci/run.ps1",
+      "continuation_queue": "tools/orchestrator/queues/continuation_queue.json",
+      "warning_registry": "tools/orchestrator/reports/warning_registry.md"
+    },
+    "profile": "construction",
+    "related_proofs": [
+      "debug_runs/stage5_full_app_live.json",
+      "debug_runs/infrastructure_view_isolation_live.json",
+      "debug_runs/construction_stage_live.json",
+      "debug_runs/industrial_activation_live.json",
+      "debug_runs/fire_ecology_live.json",
+      "debug_runs/logistics_throughput_live.json",
+      "debug_runs/replay_editor_parity_live.json",
+      "debug_runs/orchestrator_thread_health.json",
+      "debug_runs/viewport_drift.json",
+      "debug_runs/viewport_authority_migration_witness.json",
+      "debug_runs/main_thread_orchestrator_live.json",
+      "debug_runs/stage6_virtualization_live.json",
+      "debug_runs/wave_s_hydrate_live.json",
+      "debug_runs/wave_p_live.json",
+      "debug_runs/wave_c_live.json",
+      "debug_runs/ui_shell_migration_live.json",
+      "debug_runs/minimap_compositor_live.json",
+      "debug_runs/stage7_behavioral_live.json",
+      "debug_runs/stage7_play_live.json",
+      "debug_runs/wss_substrate_live.json",
+      "debug_runs/f2_smoke_pipeline_live.json",
+      "debug_runs/play_scenario_live.json",
+      "debug_runs/transport_network_live.json"
+    ],
+    "relative_path": "debug_runs/procedural_tiles_runtime_live.json",
+    "schema": "debug_run_envelope_v1",
+    "source_system": "refresh_procedural_tiles_runtime_live_witness",
+    "written_at_epoch_secs": 1780512526
+  },
+  "cases": [
+    {
+      "animation_frame": null,
+      "damage": 0.0,
+      "expected_variant_key": "clean_day",
+      "fire_heat": 0.0,
+      "night": false,
+      "phase": "Operational",
+      "power_on": false,
+      "sim_tick": 0,
+      "stamp_applied": true,
+      "variant_key": "clean_day"
+    },
+    {
+      "animation_frame": null,
+      "damage": 0.0,
+      "expected_variant_key": "clean_night_on",
+      "fire_heat": 0.0,
+      "night": true,
+      "phase": "Operational",
+      "power_on": true,
+      "sim_tick": 0,
+      "stamp_applied": true,
+      "variant_key": "clean_night_on"
+    },
+    {
+      "animation_frame": null,
+      "damage": 0.0,
+      "expected_variant_key": "under_construction_02",
+      "fire_heat": 0.0,
+      "night": false,
+      "phase": "UnderConstruction",
+      "power_on": false,
+      "sim_tick": 0,
+      "stamp_applied": true,
+      "variant_key": "under_construction_02"
+    },
+    {
+      "animation_frame": null,
+      "damage": 0.0,
+      "expected_variant_key": "abandoned",
+      "fire_heat": 0.0,
+      "night": false,
+      "phase": "Abandoned",
+      "power_on": false,
+      "sim_tick": 0,
+      "stamp_applied": true,
+      "variant_key": "abandoned"
+    },
+    {
+      "animation_frame": 0,
+      "damage": 0.0,
+      "expected_variant_key": "burning_00",
+      "fire_heat": 0.8999999761581421,
+      "night": true,
+      "phase": "Operational",
+      "power_on": false,
+      "sim_tick": 0,
+      "stamp_applied": true,
+      "variant_key": "burning_00"
+    },
+    {
+      "animation_frame": 0,
+      "damage": 0.0,
+      "expected_variant_key": "burning_01",
+      "fire_heat": 0.8999999761581421,
+      "night": true,
+      "phase": "Operational",
+      "power_on": false,
+      "sim_tick": 120,
+      "stamp_applied": true,
+      "variant_key": "burning_00"
+    }
+  ],
+  "catalog_loaded": true,
+  "damage_variant_wired": true,
+  "eng_pt_4_001_rowhouse_map_stamp": false,
+  "eng_pt_4_002_warehouse_map_stamp": false,
+  "gate_id": "TILE-PROD-003",
+  "green": false,
+  "pg2_suppression": "ProceduralTilePrimaryActive",
+  "power_night_inputs_wired": true,
+  "resolver_version": "pt4_v1",
+  "smoke_fallback_used": true,
+  "tile_fix_10_warehouse_witness": false,
+  "warehouse_v2_index_registered": false
+}

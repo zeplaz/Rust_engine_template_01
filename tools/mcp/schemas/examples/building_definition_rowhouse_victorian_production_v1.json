@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "building_id": "rowhouse_victorian",
+  "style_pack_id": "style_victorian",
+  "assembly_snapshot": "tools/mcp/schemas/examples/assembly_snapshot_rowhouse_victorian_production_v1.json",
+  "assembly_blend": "assets/staging/assemblies/victorian_4x3_s42_a7cb.blend",
+  "modules": [
+    { "module_id": "corner_L", "job_id": "corner_L_production_run001", "count": 4 },
+    { "module_id": "wall_brick_1u", "job_id": "wall_brick_1u_production_run001", "count": 8 },
+    { "module_id": "door_standard", "job_id": "door_standard_production_run001", "count": 1 },
+    { "module_id": "roof_flat", "job_id": "roof_flat_production_run001", "count": 4 },
+    { "module_id": "window_standard", "job_id": "window_standard_production_run001", "count": 4 }
+  ],
+  "variants": [
+    "clean_day",
+    "clean_night_off",
+    "clean_night_on",
+    "damaged_day",
+    "damaged_night_on",
+    "under_construction_01",
+    "under_construction_02",
+    "under_construction_03",
+    "abandoned",
+    "ruined",
+    "burning_00",
+    "burning_01",
+    "burning_02",
+    "burning_03",
+    "burning_04",
+    "burning_05",
+    "burning_06",
+    "burning_07"
+  ],
+  "fire_animation_frames": 8,
+  "render_contract": {
+    "facings": 8,
+    "tile_px": 128,
+    "quarter_turn_fallback": true
+  },
+  "material_profiles": ["brick_red_01", "roof_tile_01", "wood_plank_01"]
+}

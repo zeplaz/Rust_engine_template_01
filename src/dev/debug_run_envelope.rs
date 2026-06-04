@@ -29,6 +29,10 @@ pub const KNOWN_LIVE_PROOF_PATHS: &[&str] = &[
     "debug_runs/minimap_compositor_live.json",
     "debug_runs/stage7_behavioral_live.json",
     "debug_runs/stage7_play_live.json",
+    "debug_runs/wss_substrate_live.json",
+    "debug_runs/f2_smoke_pipeline_live.json",
+    "debug_runs/play_scenario_live.json",
+    "debug_runs/transport_network_live.json",
 ];
 
 pub const AGENT_DEBUG_INDEX_PATH: &str = "debug_runs/agent_debug_index.json";
@@ -108,7 +112,7 @@ pub fn agent_commands_for_profile(profile: &str) -> Vec<&'static str> {
         "WAVE_P_PREVIEW" => vec![
             "cargo test -p proc_A_dine01 --lib ui_wp_layout_002_writes_wave_p_live_json",
             "cargo test -p proc_A_dine01 --lib cod_b_wp_witness_001",
-            "cargo test -p proc_A_dine01 --lib wave_p_live_proof",
+            "cargo test -p proc_A_dine01 --lib wave_p_witness",
         ],
         "STAGE6_VIRTUALIZATION" => vec![
             "cargo test -p proc_A_dine01 --lib stage6",
@@ -126,6 +130,10 @@ pub fn agent_commands_for_profile(profile: &str) -> Vec<&'static str> {
         "STAGE7_BEHAVIORAL" => vec![
             "cargo test -p proc_A_dine01 --lib stage7_behavioral",
             "cargo test -p proc_A_dine01 --lib stage7_play comms_contract",
+        ],
+        "WSS_SUBSTRATE" => vec![
+            "cargo test -p proc_A_dine01 --lib wss_substrate",
+            "cargo test -p proc_A_dine01 --lib stage5 fire_streaming gpu_particles",
         ],
         _ => vec!["cargo test -p proc_A_dine01 --lib"],
     }

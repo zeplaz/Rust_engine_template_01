@@ -494,7 +494,12 @@ pub fn update_world_fire_particles_from_projection(
             break;
         }
     }
-    if frame.instances.is_empty() && !graph.fire.chunk_heat.is_empty() {
+    let mut witness_projection_view = projection_label;
+    // F2-PR-3: chunk_heat bootstrap only when projection graph instance_buffer is empty.
+    if frame.instances.is_empty()
+        && graph.fire.instance_buffer.is_empty()
+        && !graph.fire.chunk_heat.is_empty()
+    {
         for ch in &graph.fire.chunk_heat {
             if ch.heat < 0.12 {
                 continue;
@@ -526,6 +531,9 @@ pub fn update_world_fire_particles_from_projection(
                 break;
             }
         }
+        if !frame.instances.is_empty() {
+            witness_projection_view = "chunk_heat_fallback";
+        }
     }
     frame.instances.sort_by_key(|row| {
         ParticleClass::from_class_id(row.ember_class_radius_smoke.y).transparent_draw_order()
@@ -539,7 +547,7 @@ pub fn update_world_fire_particles_from_projection(
         additive_blend: true,
         budget_capped,
         view_culled: false,
-        projection_view: projection_label,
+        projection_view: witness_projection_view,
     };
 }
 
@@ -747,6 +755,34 @@ mod tests {
             particles.instances[0].ember_class_radius_smoke.y,
             ParticleClass::Spark.as_f32()
         );
+        assert_eq!(particles.spark_witness.projection_view, "WorldMain");
+    }
+
+    #[test]
+    fn chunk_heat_fallback_only_when_instance_buffer_empty() {
+        let mut graph = RenderProjectionGraph::default();
+        graph.fire.chunk_heat.push(crate::render::sim_visual_extract::ChunkFireHeat {
+            chunk: IVec2::ZERO,
+            heat: 0.9,
+            smoke: 0.0,
+        });
+        let cam = FireParticleCameraScale {
+            camera_zoom: 1.0,
+            zoom_alpha: 0.72,
+        };
+        let mut particles = WorldFireParticleFrame::default();
+        update_world_fire_particles_from_projection(&graph, &mut particles, None, cam, None);
+        assert_eq!(particles.spark_witness.projection_view, "chunk_heat_fallback");
+
+        let mut row = FireVisualGpuInstance::default();
+        row.chunk_xy_heat_lum = Vec4::new(0.0, 0.0, 0.85, 1.0);
+        row.world_xyz_radius = Vec4::new(0.0, 0.0, 0.0, 24.0);
+        row.smoke_ember_vis_priority = Vec4::new(0.1, 0.5, 0.0, 1.0);
+        graph.fire.instance_buffer.push(row);
+        let mut native = WorldFireParticleFrame::default();
+        update_world_fire_particles_from_projection(&graph, &mut native, None, cam, None);
+        assert_eq!(native.spark_witness.projection_view, "WorldMain");
+        assert_ne!(native.spark_witness.projection_view, "chunk_heat_fallback");
     }
 
     #[test]
