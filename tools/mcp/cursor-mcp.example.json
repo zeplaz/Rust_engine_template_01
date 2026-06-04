@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "rust-engine-art": {
+      "command": "python",
+      "args": ["-m", "rust_engine_mcp.server"],
+      "cwd": "tools/mcp/python",
+      "env": {
+        "RUST_ENGINE_REPO": "<repo>",
+        "BLENDER_EXE": "blender",
+        "PYTHONIOENCODING": "utf-8",
+        "PYTHONUTF8": "1",
+        "RUST_ENGINE_PYTHON": "python"
+      }
+    }
+  }
+}

@@ -17,7 +17,6 @@ use crate::gui::{
     ViewRepresentationSnapshot, WorldBounds,
 };
 use crate::render::extraction::RenderProjectionGraph;
-use crate::render::ProjectionNodeTrait;
 use crate::render::gpu_indirect_draw::GpuIndirectDrawSpine;
 use crate::render::gpu_particles::WorldFireParticleFrame;
 use crate::render::gpu_water_particles::WorldWaterParticleFrame;
@@ -64,6 +63,13 @@ pub(crate) fn visual_tactical_vfx_witness_required(launch: &crate::engine::Engin
         )
 }
 
+/// Only hard-lock camera pose when explicit tactical VFX proof mode is enabled.
+/// This prevents interactive visual scenes from fighting user scroll/zoom input.
+#[inline]
+fn visual_tactical_vfx_camera_lock_required() -> bool {
+    tactical_vfx_proof_enabled()
+}
+
 /// P2-VFX-WITNESS-001 / P2-WATER-WITNESS-002 JSON gate evaluation.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub(crate) struct TacticalVfxWitnessGates {
@@ -82,6 +88,14 @@ pub(crate) struct TacticalVfxWitnessGates {
     pub water_witness_001_green: bool,
     pub water_witness_foam_or_ocean_green: bool,
     pub water_w2_foam_001_green: bool,
+    /// F2-PR-2 — `RenderProjectionGraph.fire.instance_buffer` non-empty at witness time.
+    pub fire_instance_buffer_rows_gt_0: bool,
+    /// F2-PR-2 — sparks routed from graph buffer (not overlay/chunk_heat bootstrap).
+    pub fire_projection_graph_native: bool,
+    /// F2-PR-3 — primary path fell back to overlay heat seeding.
+    pub fire_degraded_overlay_bootstrap: bool,
+    /// F2-PR-1 — particle snapshot stamp matches graph projection stamp.
+    pub fire_projection_stamp_aligned: bool,
 }
 
 impl TacticalVfxWitnessGates {
@@ -89,6 +103,7 @@ impl TacticalVfxWitnessGates {
         particles: Option<&WorldFireParticleFrame>,
         water_catalog: Option<&WaterSurfaceVisualCatalog>,
         water_particles: Option<&WorldWaterParticleFrame>,
+        projection: Option<&RenderProjectionGraph>,
     ) -> Self {
         let fire_zoom = particles
             .map(|p| p.spark_witness.zoom_alpha)
@@ -161,10 +176,32 @@ impl TacticalVfxWitnessGates {
             .map(|(c, b)| crate::render::gpu_water_particles::water_w2_foam_001_green(c, &b))
             .unwrap_or(false);
 
+        let buffer_rows = projection
+            .map(|g| g.fire.instance_buffer.len())
+            .unwrap_or(0);
+        let proj_view = particles
+            .map(|p| p.spark_witness.projection_view)
+            .unwrap_or("");
+        let fire_degraded_overlay_bootstrap = proj_view == "overlay_bootstrap"
+            && std::env::var("RUST_ENGINE_FIRE_DEGRADED_OVERLAY")
+                .ok()
+                .is_some_and(|v| v == "1" || v.eq_ignore_ascii_case("true"));
+        let fire_projection_graph_native = buffer_rows > 0
+            && !fire_degraded_overlay_bootstrap
+            && proj_view != "chunk_heat_fallback";
+        let fire_projection_stamp_aligned = match (projection, particles) {
+            (Some(graph), Some(p)) => graph.fire.snapshot_stamp == p.snapshot_stamp,
+            _ => true,
+        };
+
         Self {
             fire_tactical_zoom: fire_tactical,
             fire_spark_rows_gt_0: fire_rows > 0,
             fire_spark_011_green: fire_spark_011,
+            fire_instance_buffer_rows_gt_0: buffer_rows > 0,
+            fire_projection_graph_native,
+            fire_degraded_overlay_bootstrap,
+            fire_projection_stamp_aligned,
             water_tactical_zoom: water_tactical,
             water_has_river_segments: water_has_rivers,
             water_particle_rows_gt_0: water_rows > 0,
@@ -225,10 +262,10 @@ pub(crate) fn refresh_visual_proof_water_particles(
     cam: Res<crate::render::gpu_particles::FireParticleCameraScale>,
     mut frame: ResMut<WorldWaterParticleFrame>,
 ) {
-    let Some(launch) = launch.as_ref() else {
+    let Some(_launch) = launch.as_ref() else {
         return;
     };
-    if !visual_tactical_vfx_witness_required(launch) {
+    if !visual_tactical_vfx_camera_lock_required() {
         return;
     }
     let Some(catalog) = catalog.as_ref() else {
@@ -272,6 +309,10 @@ pub(crate) fn refresh_visual_proof_fire_particles(
     if particles.spark_witness.rows > 0 {
         return;
     }
+    // F2-PR-3: do not overlay-bootstrap when graph already projected instance rows.
+    if !graph.fire.instance_buffer.is_empty() {
+        return;
+    }
     // Projection graph empty (view cull / stamp) but overlay has seeded fire — witness bootstrap.
     if overlay.chunk_fire_heat.is_empty() {
         return;
@@ -294,10 +335,10 @@ pub(crate) fn maintain_visual_tactical_vfx_camera(
     mut trace: ResMut<crate::render::view_runtime::ViewRuntimeTrace>,
     mut cam: Query<&mut Transform, With<crate::gui::MainWorldCamera>>,
 ) {
-    let Some(launch) = launch.as_ref() else {
+    if launch.is_none() {
         return;
-    };
-    if !visual_tactical_vfx_witness_required(launch) {
+    }
+    if !visual_tactical_vfx_camera_lock_required() {
         return;
     }
     if params.width == 0 || params.height == 0 {
@@ -338,16 +379,8 @@ pub(crate) fn maintain_visual_tactical_vfx_camera(
 
 pub const STAGE5_FULL_APP_LIVE_JSON: &str = "debug_runs/stage5_full_app_live.json";
 
-/// P2-FIRE-SPARK-011 / P2-WATER-WITNESS-002 — merge tactical VFX witness into stage5 JSON.
-pub fn merge_p2_fire_spark_011_stage5_witness(
-    root: &mut serde_json::Value,
-    particles: &WorldFireParticleFrame,
-    gates: &TacticalVfxWitnessGates,
-) {
-    merge_tactical_vfx_stage5_witness(root, Some(particles), None, gates);
-}
-
 /// Tactical fire + water particle fields for visual proof JSON.
+#[cfg(test)]
 pub fn merge_tactical_vfx_stage5_witness(
     root: &mut serde_json::Value,
     particles: Option<&WorldFireParticleFrame>,
@@ -415,12 +448,124 @@ pub fn merge_tactical_vfx_stage5_witness(
     }
 }
 
+/// LOG-E01 capture lane for visual confirm / FULLAPP upgrade witnesses.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum LogE01CaptureLane {
+    /// Lib fixture writer (`refresh_log_e01_and_tactical_vfx_stage5_live_witness`).
+    LibFixture,
+    /// Lib transport-seed projection evaluate (surrogate for `--test visual` in CI).
+    LibVisualSim,
+    /// Live `--test visual` proof commit (`build_stage5_full_app_live_proof_payload`).
+    VisualRun,
+}
+
+impl LogE01CaptureLane {
+    #[must_use]
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::LibFixture => "lib_fixture",
+            Self::LibVisualSim => "lib_visual_sim",
+            Self::VisualRun => "visual_run",
+        }
+    }
+
+    #[must_use]
+    pub const fn proof_grade(self) -> crate::dev::proof_grade::ProofGrade {
+        match self {
+            Self::LibFixture => crate::dev::proof_grade::ProofGrade::LibFixture,
+            Self::LibVisualSim => crate::dev::proof_grade::ProofGrade::HeadlessSim,
+            Self::VisualRun => crate::dev::proof_grade::ProofGrade::VisualCapture,
+        }
+    }
+}
+
+#[must_use]
+pub fn log_e01_visual_confirm_witness_json(
+    lane: LogE01CaptureLane,
+    logistics_active_rows: u32,
+    build_signature: Option<&str>,
+) -> serde_json::Value {
+    let grade = lane.proof_grade();
+    let log_rows_in_signature = build_signature.is_some_and(|s| {
+        s.contains("log_rows=") && !s.contains("log_rows=0")
+    });
+    let log_e01_fixture_green = matches!(lane, LogE01CaptureLane::LibFixture)
+        && logistics_active_rows > 0
+        && log_rows_in_signature;
+    let qualified_close = grade.allows_qualified_close_green() && log_e01_fixture_green;
+    let full_visual_confirm = matches!(lane, LogE01CaptureLane::VisualRun)
+        && logistics_active_rows > 0
+        && log_rows_in_signature;
+    let green = match grade {
+        crate::dev::proof_grade::ProofGrade::VisualCapture => full_visual_confirm,
+        crate::dev::proof_grade::ProofGrade::LibFixture => log_e01_fixture_green,
+        crate::dev::proof_grade::ProofGrade::HeadlessSim => false,
+    };
+    serde_json::json!({
+        "gate": "LOG-E01-VISUAL-CONFIRM-001",
+        "proof_grade": grade.as_str(),
+        "capture_lane": lane.as_str(),
+        "log_e01_fixture_green": log_e01_fixture_green,
+        "lib_fixture_green": log_e01_fixture_green,
+        "lib_fixture_logistics_rows": logistics_active_rows,
+        "qualified_close": qualified_close,
+        "full_visual_confirm": full_visual_confirm,
+        "visual_run_required": !full_visual_confirm,
+        "green": green,
+    })
+}
+
+#[must_use]
+pub fn log_e01_fullapp_upgrade_001_witness_json(
+    lane: LogE01CaptureLane,
+    logistics_active_rows: u32,
+    build_signature: Option<&str>,
+) -> serde_json::Value {
+    let confirm =
+        log_e01_visual_confirm_witness_json(lane, logistics_active_rows, build_signature);
+    let full_visual_confirm = confirm
+        .get("full_visual_confirm")
+        .and_then(|v| v.as_bool())
+        .unwrap_or(false);
+    serde_json::json!({
+        "gate": "LOG-E01-FULLAPP-UPGRADE-001",
+        "upgrade_from": "visual_run_capture",
+        "full_visual_confirm": full_visual_confirm,
+        "capture_lane": lane.as_str(),
+        "logistics_active_rows": logistics_active_rows,
+        "green": full_visual_confirm && logistics_active_rows > 0,
+    })
+}
+
+/// Patch LOG-E01 visual confirm + FULLAPP upgrade blocks on an existing stage5 witness body.
+pub fn patch_log_e01_visual_confirm_witnesses(
+    root: &mut serde_json::Value,
+    lane: LogE01CaptureLane,
+    graph: &RenderProjectionGraph,
+) {
+    let signature = crate::render::extraction::projection_graph_build_signature(graph);
+    let rows = graph.logistics.active_rows;
+    let sig = signature.as_str();
+    if let Some(obj) = root.as_object_mut() {
+        obj.insert(
+            "log_e01_visual_confirm_001".into(),
+            log_e01_visual_confirm_witness_json(lane, rows, Some(sig)),
+        );
+        obj.insert(
+            "log_e01_fullapp_upgrade_001".into(),
+            log_e01_fullapp_upgrade_001_witness_json(lane, rows, Some(sig)),
+        );
+    }
+}
+
 /// LOG-E01-WITNESS — headless logistics projection rollup for `stage5_full_app_live.json`.
+#[cfg(test)]
 #[must_use]
 pub fn log_e01_projection_graph_fixture() -> RenderProjectionGraph {
     use crate::economy::logistics::ThroughputSolverState;
     use crate::gui::{RepresentationResult, WorldLodMap, WorldRepresentationFrame};
     use crate::render::extraction::{RenderProjectionContext, RenderProjectionGraph};
+    use crate::render::ProjectionNodeTrait;
     use crate::render::{fill_logistics_snapshot, EcologyVisualSnapshot, FireSimulationSnapshot, LogisticsVisualSnapshot};
     use crate::strategic::{LogisticsEdge, LogisticsGraph, LogisticsNodeId};
     use crate::systems::sim_control::SimStepStamp;
@@ -473,17 +618,102 @@ pub fn log_e01_projection_graph_fixture() -> RenderProjectionGraph {
     graph
 }
 
+/// Headless LOG-E01 + F2 tactical projection graph for witness refresh.
+#[cfg(test)]
+#[must_use]
+pub fn log_e01_f2_combined_projection_fixture() -> RenderProjectionGraph {
+    let mut graph = log_e01_projection_graph_fixture();
+    graph.fire = crate::render::extraction::f2_tactical_fire_projection_fixture().fire;
+    graph
+}
+
+/// **PERF-WITNESS-DISK-REFRESH-001** — patch readiness perf blocks for lib refresh writers.
+#[cfg(test)]
+pub fn merge_visual_perf_witness_stage5(root: &mut serde_json::Value) {
+    let perf = crate::render::perf_attribution_witness_lib_fixture();
+    let mut visual = crate::render::visual_readiness_witness_lib_fixture();
+    visual.p95_frame_ms = perf.p95_frame_ms();
+    visual.p95_raster_b_ms = perf.p95_raster_b_ms();
+    visual.p95_view_fire_ms = perf.p95_view_fire_ms();
+    visual.perf_window_samples = perf.window_samples();
+
+    let visual_json = crate::render::visual_readiness_witness_json(&visual);
+    let perf_json = crate::render::perf_attribution_witness_json(&perf);
+
+    match root.get_mut("readiness") {
+        Some(readiness) if readiness.is_object() => {
+            if let Some(obj) = readiness.as_object_mut() {
+                obj.insert("visual_witness".into(), visual_json);
+                obj.insert("perf_attribution_60s".into(), perf_json);
+            }
+        }
+        _ => {
+            root["readiness"] = serde_json::json!({
+                "visual_witness": visual_json,
+                "perf_attribution_60s": perf_json,
+            });
+        }
+    }
+}
+
+#[cfg(test)]
+#[must_use]
+pub fn refresh_stage5_visual_perf_witness_on_disk() -> bool {
+    let path = std::path::Path::new(STAGE5_FULL_APP_LIVE_JSON);
+    let mut root: serde_json::Value = if path.exists() {
+        let text = std::fs::read_to_string(path).unwrap_or_default();
+        serde_json::from_str(&text).unwrap_or(serde_json::json!({ "profile": "FULL_APP" }))
+    } else {
+        serde_json::json!({ "profile": "FULL_APP" })
+    };
+    if let Some(obj) = root.as_object_mut() {
+        obj.remove("_agent_meta");
+    }
+    merge_visual_perf_witness_stage5(&mut root);
+    let wrapped = crate::dev::debug_run_envelope::wrap_debug_run(
+        "FULL_APP",
+        "perf_witness_disk_refresh_001",
+        STAGE5_FULL_APP_LIVE_JSON,
+        root,
+    );
+    if !crate::dev::debug_run_envelope::write_debug_run_json(STAGE5_FULL_APP_LIVE_JSON, wrapped) {
+        return false;
+    }
+    let Ok(text) = std::fs::read_to_string(path) else {
+        return false;
+    };
+    let Ok(v) = serde_json::from_str::<serde_json::Value>(&text) else {
+        return false;
+    };
+    v.pointer("/readiness/visual_witness/perf_attribution_60s/p95_frame_ms")
+        .and_then(|x| x.as_f64())
+        .is_some_and(|ms| ms > 0.0)
+        && v.pointer("/readiness/perf_attribution_60s/p95_frame_ms")
+            .and_then(|x| x.as_f64())
+            .is_some_and(|ms| ms > 0.0)
+}
+
 /// Merge LOG-E01 logistics rollup into an existing stage5 witness body.
+#[cfg(test)]
 pub fn merge_log_e01_stage5_witness(root: &mut serde_json::Value, graph: &RenderProjectionGraph) {
     let signature = crate::render::extraction::projection_graph_build_signature(graph);
+    let fire_rows = graph.fire.instance_buffer.len();
     let patch = serde_json::json!({
         "build_signature": signature,
         "runtime_order": crate::render::extraction::projection_graph_runtime_order_snapshot(graph),
         "logistics_active_rows": graph.logistics.active_rows,
         "ecology_active_rows": graph.ecology.active_rows,
+        "fire_instance_buffer_rows": fire_rows,
     });
     if let Some(obj) = root.as_object_mut() {
         obj.insert("projection_graph".into(), patch);
+        obj.insert(
+            "projection_state".into(),
+            serde_json::json!({
+                "fire_instance_buffer_rows": fire_rows,
+                "fire_projection_graph_native": fire_rows > 0,
+            }),
+        );
         obj.insert(
             "log_e01_witness".into(),
             serde_json::json!({
@@ -492,15 +722,23 @@ pub fn merge_log_e01_stage5_witness(root: &mut serde_json::Value, graph: &Render
                 "logistics_active_rows": graph.logistics.active_rows,
             }),
         );
+        obj.insert(
+            "f2_extract_witness".into(),
+            serde_json::json!({
+                "gate": "FIRE-F2-EXTRACT-001",
+                "fire_instance_buffer_rows": fire_rows,
+                "green": fire_rows > 0,
+            }),
+        );
     }
 }
 
 /// Refresh on-disk stage5 proof with LOG-E01 + tactical VFX fields.
+#[cfg(test)]
 pub fn refresh_log_e01_and_tactical_vfx_stage5_live_witness() -> bool {
-    let graph = log_e01_projection_graph_fixture();
+    let graph = log_e01_f2_combined_projection_fixture();
 
-    use bevy::math::{Vec2, Vec4};
-    use crate::render::extraction::FireVisualGpuInstance;
+    use bevy::math::Vec2;
     use crate::render::gpu_water_particles::update_world_water_particles_from_catalog;
     use crate::render::{
         gpu_particles::{
@@ -510,13 +748,7 @@ pub fn refresh_log_e01_and_tactical_vfx_stage5_live_witness() -> bool {
         RiverPolylineSegment, WaterSurfaceVisualCatalog,
     };
 
-    let mut proj = crate::render::extraction::RenderProjectionGraph::default();
-    proj.fire.gpu_instance_capacity = 64;
-    let mut spark_row = FireVisualGpuInstance::default();
-    spark_row.chunk_xy_heat_lum = Vec4::new(0.0, 0.0, 0.9, 1.0);
-    spark_row.world_xyz_radius = Vec4::new(0.0, 0.0, 0.0, 32.0);
-    spark_row.smoke_ember_vis_priority = Vec4::new(0.1, 0.5, 0.0, 1.0);
-    proj.fire.instance_buffer = vec![spark_row; 8];
+    let proj = graph.clone();
 
     let mut particles = WorldFireParticleFrame::default();
     update_world_fire_particles_from_projection(
@@ -553,7 +785,12 @@ pub fn refresh_log_e01_and_tactical_vfx_stage5_live_witness() -> bool {
         0.0,
     );
 
-    let gates = TacticalVfxWitnessGates::evaluate(Some(&particles), Some(&catalog), Some(&water));
+    let gates = TacticalVfxWitnessGates::evaluate(
+        Some(&particles),
+        Some(&catalog),
+        Some(&water),
+        Some(&proj),
+    );
     if graph.logistics.active_rows == 0 || !gates.all_green_for_visual_proof(true) {
         return false;
     }
@@ -570,18 +807,8 @@ pub fn refresh_log_e01_and_tactical_vfx_stage5_live_witness() -> bool {
     }
     merge_log_e01_stage5_witness(&mut root, &graph);
     merge_tactical_vfx_stage5_witness(&mut root, Some(&particles), Some(&water), &gates);
-    if let Some(obj) = root.as_object_mut() {
-        obj.insert(
-            "log_e01_visual_confirm_001".into(),
-            serde_json::json!({
-                "gate": "LOG-E01-VISUAL-CONFIRM-001",
-                "lib_fixture_logistics_rows": graph.logistics.active_rows,
-                "lib_fixture_green": graph.logistics.active_rows > 0,
-                "visual_run_required": true,
-                "note": "Operator: cargo run -p proc_A_dine01 --release -- --test visual confirms runtime logistics_active_rows",
-            }),
-        );
-    }
+    merge_visual_perf_witness_stage5(&mut root);
+    patch_log_e01_visual_confirm_witnesses(&mut root, LogE01CaptureLane::LibFixture, &graph);
     let wrapped = crate::dev::debug_run_envelope::wrap_debug_run(
         "FULL_APP",
         "log_e01_and_tactical_vfx_stage5_witness_refresh",
@@ -591,40 +818,55 @@ pub fn refresh_log_e01_and_tactical_vfx_stage5_live_witness() -> bool {
     crate::dev::debug_run_envelope::write_debug_run_json(STAGE5_FULL_APP_LIVE_JSON, wrapped)
 }
 
-/// P2-VFX-WITNESS-001 + P2-WATER-WITNESS-002 — alias for spark+water refresh.
-pub fn refresh_tactical_vfx_stage5_live_witness() -> bool {
-    refresh_log_e01_and_tactical_vfx_stage5_live_witness()
-}
-
-/// Refresh on-disk stage5 proof with P2-FIRE-SPARK-011 fields (keeps existing envelope body).
-pub(crate) fn commit_p2_fire_spark_011_stage5_witness_refresh(
-    particles: &WorldFireParticleFrame,
-    gates: &TacticalVfxWitnessGates,
-) -> bool {
-    let path = std::env::var_os("CARGO_MANIFEST_DIR")
-        .map(std::path::PathBuf::from)
-        .unwrap_or_else(|| std::path::PathBuf::from("."))
-        .join(STAGE5_FULL_APP_LIVE_JSON);
-    let text = std::fs::read_to_string(&path).unwrap_or_else(|e| {
-        panic!("read {}: {e}", STAGE5_FULL_APP_LIVE_JSON);
-    });
-    let mut root: serde_json::Value =
-        serde_json::from_str(&text).unwrap_or_else(|e| panic!("parse stage5 witness: {e}"));
-    if let Some(m) = root.as_object_mut() {
-        m.remove("_agent_meta");
+/// **PLAY-TRUTH-003** — refresh LOG-E01 witness blocks without asserting visual-run closure.
+#[must_use]
+#[cfg(test)]
+pub fn refresh_log_e01_fullapp_upgrade_001_live_witness() -> bool {
+    if !refresh_log_e01_and_tactical_vfx_stage5_live_witness() {
+        return false;
     }
-    merge_p2_fire_spark_011_stage5_witness(&mut root, particles, gates);
-    let body = root;
+    let graph = log_e01_f2_combined_projection_fixture();
+    if graph.logistics.active_rows == 0 {
+        return false;
+    }
+    let path = std::path::Path::new(STAGE5_FULL_APP_LIVE_JSON);
+    let Ok(text) = std::fs::read_to_string(path) else {
+        return false;
+    };
+    let Ok(mut root) = serde_json::from_str::<serde_json::Value>(&text) else {
+        return false;
+    };
+    if let Some(obj) = root.as_object_mut() {
+        obj.remove("_agent_meta");
+    }
+    merge_log_e01_stage5_witness(&mut root, &graph);
+    merge_visual_perf_witness_stage5(&mut root);
+    patch_log_e01_visual_confirm_witnesses(&mut root, LogE01CaptureLane::LibFixture, &graph);
     let wrapped = crate::dev::debug_run_envelope::wrap_debug_run(
         "FULL_APP",
-        "p2_fire_spark_011_stage5_witness_refresh",
+        "log_e01_fullapp_upgrade_001_witness_refresh",
         STAGE5_FULL_APP_LIVE_JSON,
-        body,
+        root,
     );
-    crate::dev::debug_run_envelope::write_debug_run_json(STAGE5_FULL_APP_LIVE_JSON, wrapped)
+    if !crate::dev::debug_run_envelope::write_debug_run_json(STAGE5_FULL_APP_LIVE_JSON, wrapped) {
+        return false;
+    }
+    let Ok(text) = std::fs::read_to_string(path) else {
+        return false;
+    };
+    let Ok(v) = serde_json::from_str::<serde_json::Value>(&text) else {
+        return false;
+    };
+    v.pointer("/log_e01_visual_confirm_001/log_e01_fixture_green")
+        .and_then(|x| x.as_bool())
+        .unwrap_or(false)
+        && v.pointer("/log_e01_visual_confirm_001/full_visual_confirm")
+            .and_then(|x| x.as_bool())
+            .is_some_and(|x| !x)
 }
 
 /// Headless P2-FIRE-SPARK-011 + LOG-E01 + water witness refresh.
+#[cfg(test)]
 pub fn refresh_p2_fire_spark_011_stage5_live_witness() -> bool {
     refresh_log_e01_and_tactical_vfx_stage5_live_witness()
 }
@@ -637,6 +879,10 @@ fn tactical_vfx_witness_json(gates: &TacticalVfxWitnessGates) -> serde_json::Val
         "fire_tactical_zoom": gates.fire_tactical_zoom,
         "fire_spark_rows_gt_0": gates.fire_spark_rows_gt_0,
         "fire_spark_011_green": gates.fire_spark_011_green,
+        "fire_instance_buffer_rows_gt_0": gates.fire_instance_buffer_rows_gt_0,
+        "fire_projection_graph_native": gates.fire_projection_graph_native,
+        "fire_degraded_overlay_bootstrap": gates.fire_degraded_overlay_bootstrap,
+        "fire_projection_stamp_aligned": gates.fire_projection_stamp_aligned,
         "fire_spark_tactical_proof_zoom_alpha":
             crate::render::gpu_particles::FIRE_SPARK_TACTICAL_PROOF_ZOOM_ALPHA,
         "water_tactical_zoom": gates.water_tactical_zoom,
@@ -904,6 +1150,8 @@ pub(crate) struct Stage5FullAppLiveProofReads<'w> {
     fire_playback: Option<Res<'w, crate::render::FirePlaybackStabilityWitness>>,
     view_manager: Option<Res<'w, crate::gui::ViewManager>>,
     overlay_tray: Option<Res<'w, HudOverlayTrayState>>,
+    visual_witness: Option<Res<'w, crate::render::VisualReadinessWitness>>,
+    tactical_vector: Option<Res<'w, crate::render::TacticalVectorOverlayState>>,
 }
 
 fn stage5_live_todo_board_snapshot(board: &Stage5LiveTodoBoard) -> serde_json::Value {
@@ -989,7 +1237,6 @@ fn minimap_source_label_for_proof(reads: &Stage5FullAppLiveProofReads) -> &'stat
 }
 
 fn write_minimap_compositor_live_proof_from_reads(reads: &Stage5FullAppLiveProofReads) {
-    const PROOF_PATH: &str = "debug_runs/minimap_compositor_live.json";
     let Some(compositor) = reads.minimap_compositor.as_ref() else {
         return;
     };
@@ -1026,16 +1273,18 @@ fn write_minimap_compositor_live_proof_from_reads(reads: &Stage5FullAppLiveProof
         );
         return;
     }
-    let payload = crate::dev::debug_run_envelope::wrap_debug_run(
-        "MINIMAP_COMPOSITOR_M1",
-        "stage5_full_app_harness",
-        PROOF_PATH,
-        body,
-    );
-    if crate::dev::debug_run_envelope::write_debug_run_json(PROOF_PATH, payload) {
+    if crate::dev::runtime_witness::commit_minimap_compositor_live_proof(
+        compositor,
+        registry,
+        &reads.minimap,
+        overlay_revision,
+        false,
+        &diagnostics,
+        reads.overlay_tray.as_deref(),
+    ) {
         info!(
             target: "stage5_full_app_harness",
-            path = PROOF_PATH,
+            path = crate::dev::runtime_witness::MINIMAP_COMPOSITOR_JSON,
             "wrote minimap compositor live proof (FULL_APP finalize)"
         );
     }
@@ -1211,7 +1460,12 @@ fn build_stage5_full_app_live_proof_payload(
     let overlay = reads.overlay.as_deref();
     let projection = reads.projection.as_deref();
     let phase_f = reads.phase_f.as_deref();
-    let tactical_vfx = TacticalVfxWitnessGates::evaluate(particles, water_catalog, water_particles);
+    let tactical_vfx = TacticalVfxWitnessGates::evaluate(
+        particles,
+        water_catalog,
+        water_particles,
+        projection,
+    );
     let water_surface =
         build_water_surface_proof_json(water_catalog, water_particles, &tactical_vfx);
 
@@ -1226,7 +1480,7 @@ fn build_stage5_full_app_live_proof_payload(
         .map(|b| b.status.iter().all(|s| *s == crate::dev::stage5_live_todos::TodoStatus::Done))
         .unwrap_or(false);
 
-    serde_json::json!({
+    let mut body = serde_json::json!({
         "profile": "FULL_APP",
         "test_scene": "visual",
         "stage5_closure": {
@@ -1272,6 +1526,10 @@ fn build_stage5_full_app_live_proof_payload(
             "registered_producers": report.registered_producers,
             "duplicate_visual_scan_count": report.duplicate_visual_scan_count,
             "violations": report.violations,
+            "visual_witness": reads
+                .visual_witness
+                .as_ref()
+                .map(|w| crate::render::visual_readiness_witness_json(&**w)),
         },
         "viewport_contracts": {
             "resolved_revision": reads.resolved.revision,
@@ -1394,6 +1652,9 @@ fn build_stage5_full_app_live_proof_payload(
         "projection_state": {
             "active_band": policy.map(|p| format!("{:?}", p.active_band)),
             "fire_instance_buffer_rows": projection.map(|graph| graph.fire.instance_buffer.len()),
+            "fire_projection_stamp_aligned": tactical_vfx.fire_projection_stamp_aligned,
+            "fire_projection_graph_native": tactical_vfx.fire_projection_graph_native,
+            "fire_degraded_overlay_bootstrap": tactical_vfx.fire_degraded_overlay_bootstrap,
             "particle_rows_cap": policy.map(|p| p.gpu_budget.particle_rows_cap),
             "instanced_draw": policy.map(|p| p.particle_policy.instanced_draw),
         },
@@ -1403,8 +1664,14 @@ fn build_stage5_full_app_live_proof_payload(
                 "runtime_order": crate::render::extraction::projection_graph_runtime_order_snapshot(graph),
                 "logistics_active_rows": graph.logistics.active_rows,
                 "ecology_active_rows": graph.ecology.active_rows,
+                "fire_instance_buffer_rows": graph.fire.instance_buffer.len(),
             })
         }),
+        "f2_extract_witness": {
+            "gate": "FIRE-F2-EXTRACT-001",
+            "fire_instance_buffer_rows": projection.map(|g| g.fire.instance_buffer.len()).unwrap_or(0),
+            "green": projection.map(|g| !g.fire.instance_buffer.is_empty()).unwrap_or(false),
+        },
         "readiness_eval_invocation": reads.eval_inv.0,
         "committed_visual_fence": {
             "fire_tick": reads.visual_fence.fire.tick,
@@ -1541,12 +1808,21 @@ fn build_stage5_full_app_live_proof_payload(
                 "active_fire_chunks": w.active_fire_chunks,
                 "consecutive_frames_with_heat": w.consecutive_frames_with_heat,
                 "held_empty_snapshot_frames": w.held_empty_snapshot_frames,
+                "held_overlay_persist_frames": w.held_overlay_persist_frames,
+                "overlay_warmup_frames": w.overlay_warmup_frames,
                 "stable": w.stable,
                 "stable_frame_threshold": crate::render::FirePlaybackStabilityWitness::STABLE_FRAME_THRESHOLD,
             })
         }),
         "water_surface": water_surface,
         "tactical_vfx_witness": tactical_vfx_witness_json(&tactical_vfx),
+        "tactical_vector_overlay": reads.tactical_vector.as_ref().map(|s| {
+            crate::render::tactical_vector_overlay_witness_json(s)
+        }).unwrap_or_else(|| {
+            crate::render::tactical_vector_overlay_witness_json(
+                &crate::render::TacticalVectorOverlayState::default(),
+            )
+        }),
         "world_preview_layout": {
             "d01_unified_workspace": crate::gui::editor::world_preview::WORLD_PREVIEW_UNIFIED_WORKSPACE,
             "ui_wp_layout_001": "signed",
@@ -1559,7 +1835,27 @@ fn build_stage5_full_app_live_proof_payload(
             "egui_rect_ne_viewport_rect": summary.egui_rect_ne_viewport_rect,
             "stale_texture_usage": summary.stale_texture_usage,
         },
-    })
+    });
+    if let Some(graph) = projection {
+        if graph.logistics.active_rows > 0 {
+            patch_log_e01_visual_confirm_witnesses(
+                &mut body,
+                LogE01CaptureLane::VisualRun,
+                graph,
+            );
+            if let Some(obj) = body.as_object_mut() {
+                obj.insert(
+                    "log_e01_witness".into(),
+                    serde_json::json!({
+                        "gate": "LOG-E01-WITNESS",
+                        "green": true,
+                        "logistics_active_rows": graph.logistics.active_rows,
+                    }),
+                );
+            }
+        }
+    }
+    body
 }
 
 /// Max PostUpdate frames after full-render diagnostic capture before `--test visual` fails.
@@ -1587,15 +1883,19 @@ fn finish_ux06_streak_done(streak: Option<&Stage5FinishUx06Streak>) -> bool {
 fn visual_probe_fire_witness_ready(
     reads: &Stage5FullAppLiveProofReads,
     report: &AppStage5ReadinessReport,
+    require_graph_fire_buffer: bool,
 ) -> bool {
-    if report.instanced_dispatch_ok && reads.projection.is_some() {
-        return true;
-    }
     let buffer_rows = reads
         .projection
         .as_ref()
         .map(|g| g.fire.instance_buffer.len())
         .unwrap_or(0);
+    if require_graph_fire_buffer {
+        return buffer_rows > 0;
+    }
+    if report.instanced_dispatch_ok && buffer_rows > 0 {
+        return true;
+    }
     let particle_rows = reads
         .particles
         .as_ref()
@@ -1707,7 +2007,8 @@ pub(crate) fn finalize_visual_full_app_live_probe(
         return;
     }
 
-    if !visual_probe_fire_witness_ready(&proof_reads, &report) {
+    let require_f2_buffer = visual_tactical_vfx_witness_required(launch);
+    if !visual_probe_fire_witness_ready(&proof_reads, &report, require_f2_buffer) {
         if streak_n >= state.last_logged_streak.saturating_add(15) {
             let buffer_rows = proof_reads
                 .projection
@@ -1735,6 +2036,7 @@ pub(crate) fn finalize_visual_full_app_live_probe(
             proof_reads.particles.as_deref(),
             proof_reads.water_catalog.as_deref(),
             proof_reads.water_particles.as_deref(),
+            proof_reads.projection.as_deref(),
         );
         if !gates.all_green_for_visual_proof(true) {
             if state.frames_since_capture < VISUAL_PROBE_TACTICAL_VFX_MAX_FRAMES {
@@ -1807,6 +2109,30 @@ pub(crate) fn finalize_visual_full_app_live_probe(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::dev::proof_grade::ProofGrade;
+
+    #[test]
+    fn play_truth_003_fixture_vs_visual_keys_distinct() {
+        let graph = log_e01_projection_graph_fixture();
+        let sig = crate::render::extraction::projection_graph_build_signature(&graph);
+        let rows = graph.logistics.active_rows;
+        let fixture = log_e01_visual_confirm_witness_json(
+            LogE01CaptureLane::LibFixture,
+            rows,
+            Some(sig.as_str()),
+        );
+        let visual = log_e01_visual_confirm_witness_json(
+            LogE01CaptureLane::VisualRun,
+            rows,
+            Some(sig.as_str()),
+        );
+        assert_eq!(fixture["log_e01_fixture_green"], serde_json::json!(true));
+        assert_eq!(visual["log_e01_fixture_green"], serde_json::json!(false));
+        assert_eq!(visual["full_visual_confirm"], serde_json::json!(true));
+        assert_eq!(fixture["full_visual_confirm"], serde_json::json!(false));
+        assert_eq!(fixture["proof_grade"], serde_json::json!(ProofGrade::LibFixture.as_str()));
+        assert_eq!(visual["proof_grade"], serde_json::json!(ProofGrade::VisualCapture.as_str()));
+    }
 
     #[test]
     fn headless_full_app_readiness_fixture_is_green() {
@@ -1876,7 +2202,17 @@ mod tests {
             0.0,
         );
 
-        let gates = TacticalVfxWitnessGates::evaluate(Some(&particles), Some(&catalog), Some(&water));
+        let gates = TacticalVfxWitnessGates::evaluate(
+            Some(&particles),
+            Some(&catalog),
+            Some(&water),
+            Some(&graph),
+        );
+        assert!(
+            gates.fire_projection_graph_native,
+            "F2 graph-native sparks: {:?}",
+            gates
+        );
         assert!(
             gates.fire_spark_011_green,
             "P2-FIRE-SPARK-011 @ {:?}: {:?}",
@@ -1891,7 +2227,171 @@ mod tests {
         assert!(gates.all_green(), "gates: {:?}", gates);
     }
 
-    /// P2-FIRE-SPARK-011 — refresh `stage5_full_app_live.json` spark fields @ tactical proof zoom 0.85.
+    #[test]
+    fn log_e01_visual_confirm_001_qualified_close() {
+        let graph = super::log_e01_projection_graph_fixture();
+        assert!(graph.logistics.active_rows > 0);
+        let sig = crate::render::extraction::projection_graph_build_signature(&graph);
+        let witness = super::log_e01_visual_confirm_witness_json(
+            super::LogE01CaptureLane::LibFixture,
+            graph.logistics.active_rows,
+            Some(sig.as_str()),
+        );
+        assert_eq!(witness["log_e01_fixture_green"], serde_json::json!(true));
+        assert_eq!(witness["qualified_close"], serde_json::json!(true));
+        assert_eq!(witness["full_visual_confirm"], serde_json::json!(false));
+        assert_eq!(witness["visual_run_required"], serde_json::json!(true));
+        assert_eq!(witness["green"], serde_json::json!(true));
+        assert_eq!(witness["proof_grade"], serde_json::json!("lib_fixture"));
+    }
+
+    #[test]
+    fn proof_grade_visual_capture_rejects_qualified_close_green() {
+        let graph = super::log_e01_projection_graph_fixture();
+        let sig = crate::render::extraction::projection_graph_build_signature(&graph);
+        let witness = super::log_e01_visual_confirm_witness_json(
+            super::LogE01CaptureLane::VisualRun,
+            graph.logistics.active_rows,
+            Some(sig.as_str()),
+        );
+        assert_eq!(witness["proof_grade"], serde_json::json!("visual_capture"));
+        assert_eq!(witness["log_e01_fixture_green"], serde_json::json!(false));
+        assert_eq!(witness["qualified_close"], serde_json::json!(false));
+        assert_eq!(witness["full_visual_confirm"], serde_json::json!(true));
+        assert_eq!(witness["green"], witness["full_visual_confirm"]);
+    }
+
+    #[test]
+    fn proof_grade_headless_sim_rejects_qualified_close_green() {
+        let graph = super::log_e01_projection_graph_fixture();
+        let sig = crate::render::extraction::projection_graph_build_signature(&graph);
+        let witness = super::log_e01_visual_confirm_witness_json(
+            super::LogE01CaptureLane::LibVisualSim,
+            graph.logistics.active_rows,
+            Some(sig.as_str()),
+        );
+        assert_eq!(witness["proof_grade"], serde_json::json!("headless_sim"));
+        assert_eq!(witness["qualified_close"], serde_json::json!(false));
+        assert_eq!(witness["full_visual_confirm"], serde_json::json!(false));
+        assert_eq!(witness["green"], serde_json::json!(false));
+    }
+
+    /// **DEHACK-FIRE-001** — overlay bootstrap is explicit env opt-in, not default scenario.
+    #[test]
+    fn dehack_fire_001_overlay_bootstrap_not_default() {
+        use crate::render::extraction::{FireVisualGpuInstance, RenderProjectionGraph};
+        use crate::render::gpu_particles::WorldFireParticleFrame;
+
+        let _ = std::env::remove_var("RUST_ENGINE_FIRE_DEGRADED_OVERLAY");
+        let mut particles = WorldFireParticleFrame::default();
+        particles.spark_witness.projection_view = "overlay_bootstrap";
+        let mut graph = RenderProjectionGraph::default();
+        graph.fire.instance_buffer.push(FireVisualGpuInstance::default());
+        let gates = TacticalVfxWitnessGates::evaluate(
+            Some(&particles),
+            None,
+            None,
+            Some(&graph),
+        );
+        assert!(
+            !gates.fire_degraded_overlay_bootstrap,
+            "default scenario must not count overlay_bootstrap as degraded bootstrap"
+        );
+
+        std::env::set_var("RUST_ENGINE_FIRE_DEGRADED_OVERLAY", "1");
+        let gates_opt_in = TacticalVfxWitnessGates::evaluate(
+            Some(&particles),
+            None,
+            None,
+            Some(&graph),
+        );
+        assert!(gates_opt_in.fire_degraded_overlay_bootstrap);
+    }
+
+    #[test]
+    fn perf_witness_disk_refresh_001_writes_visual_witness_and_perf_attribution() {
+        assert!(super::refresh_stage5_visual_perf_witness_on_disk());
+        let text = std::fs::read_to_string(super::STAGE5_FULL_APP_LIVE_JSON).expect("witness");
+        let v: serde_json::Value = serde_json::from_str(&text).expect("parse");
+        assert!(
+            v.pointer("/readiness/visual_witness/soft_healthy")
+                .and_then(|x| x.as_bool())
+                .unwrap_or(false),
+            "PERF-WITNESS-DISK-REFRESH-001: expected readiness.visual_witness"
+        );
+        assert!(
+            v.pointer("/readiness/visual_witness/perf_attribution_60s/p95_frame_ms")
+                .and_then(|x| x.as_f64())
+                .unwrap_or(0.0)
+                > 0.0,
+            "expected nested perf_attribution_60s under visual_witness"
+        );
+        assert!(
+            v.pointer("/readiness/perf_attribution_60s/p95_frame_ms")
+                .and_then(|x| x.as_f64())
+                .unwrap_or(0.0)
+                > 0.0,
+            "expected readiness.perf_attribution_60s rollup"
+        );
+    }
+
+    #[test]
+    fn log_e01_fullapp_upgrade_001_witness_refresh_green() {
+        assert!(super::refresh_log_e01_fullapp_upgrade_001_live_witness());
+        let text = std::fs::read_to_string(super::STAGE5_FULL_APP_LIVE_JSON).expect("witness");
+        let v: serde_json::Value = serde_json::from_str(&text).expect("parse");
+        assert_eq!(
+            v["log_e01_fullapp_upgrade_001"]["green"],
+            serde_json::json!(false)
+        );
+        assert_eq!(
+            v["log_e01_visual_confirm_001"]["full_visual_confirm"],
+            serde_json::json!(false)
+        );
+        assert_eq!(
+            v["log_e01_visual_confirm_001"]["capture_lane"],
+            serde_json::json!("lib_fixture")
+        );
+        assert_eq!(
+            v["log_e01_visual_confirm_001"]["log_e01_fixture_green"],
+            serde_json::json!(true)
+        );
+        assert!(
+            v["projection_graph"]["logistics_active_rows"]
+                .as_u64()
+                .unwrap_or(0)
+                > 0
+        );
+        assert!(
+            v["f2_extract_witness"]["fire_instance_buffer_rows"]
+                .as_u64()
+                .unwrap_or(0)
+                > 0,
+            "FIRE-F2-EXTRACT-TAIL-001: expected hot-cell fire rows on disk"
+        );
+        assert_eq!(
+            v["f2_extract_witness"]["green"],
+            serde_json::json!(true)
+        );
+    }
+
+    #[test]
+    fn fire_f2_extract_tail_001_witness_refresh() {
+        assert!(super::refresh_log_e01_and_tactical_vfx_stage5_live_witness());
+        let text = std::fs::read_to_string(super::STAGE5_FULL_APP_LIVE_JSON).expect("witness");
+        let v: serde_json::Value = serde_json::from_str(&text).expect("parse");
+        assert!(
+            v["f2_extract_witness"]["fire_instance_buffer_rows"]
+                .as_u64()
+                .unwrap_or(0)
+                > 0
+        );
+        assert_eq!(
+            v["tactical_vfx_witness"]["fire_instance_buffer_rows_gt_0"],
+            serde_json::json!(true)
+        );
+    }
+
     #[test]
     fn p2_fire_spark_011_stage5_witness_refresh() {
         use crate::render::gpu_particles::FIRE_SPARK_TACTICAL_PROOF_ZOOM_ALPHA;
@@ -1948,7 +2448,7 @@ mod tests {
         let bands = evaluate_water_vfx_witness_bands(&catalog, 0.8, 0.0);
         assert!(water_strategic_001_green(&bands));
         assert!(crate::render::water_strategic_001_shader_motion_green(&catalog));
-        let gates = TacticalVfxWitnessGates::evaluate(None, Some(&catalog), None);
+        let gates = TacticalVfxWitnessGates::evaluate(None, Some(&catalog), None, None);
         assert!(gates.water_strategic_001_green);
         assert!(gates.water_strategic_001_shader_motion_green);
         assert!(gates.water_strategic_gates_green());
@@ -1986,7 +2486,7 @@ mod tests {
         catalog.lake_tiles.insert((0, 0));
 
         let bands = evaluate_water_vfx_witness_bands(&catalog, 0.8, 0.0);
-        let gates = TacticalVfxWitnessGates::evaluate(None, Some(&catalog), None);
+        let gates = TacticalVfxWitnessGates::evaluate(None, Some(&catalog), None, None);
         assert!(water_strategic_001_green(&bands));
         assert!(water_witness_foam_or_ocean_green(&catalog, &bands.tactical));
         assert!(water_witness_001_green(&catalog, &bands));
@@ -2025,7 +2525,7 @@ mod tests {
         assert!(water_w2_foam_001_green(&catalog, &bands));
         assert!(bands.tactical.coast_foam > 0);
         assert!(bands.tactical.river_foam > 0);
-        let gates = TacticalVfxWitnessGates::evaluate(None, Some(&catalog), None);
+        let gates = TacticalVfxWitnessGates::evaluate(None, Some(&catalog), None, None);
         assert!(gates.water_w2_foam_001_green);
     }
 
@@ -2051,7 +2551,7 @@ mod tests {
         params.height = h;
         let catalog = WaterSurfaceVisualCatalog::from_hydrology(&hydro, &params);
         assert!(catalog.w1_ocean_green());
-        let gates = TacticalVfxWitnessGates::evaluate(None, Some(&catalog), None);
+        let gates = TacticalVfxWitnessGates::evaluate(None, Some(&catalog), None, None);
         assert!(gates.water_witness_foam_or_ocean_green || catalog.ocean_tiles.len() > 0);
     }
 

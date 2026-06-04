@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "batch_id": "kit_pilot_pbr_001",
+  "description": "First real PBR module slice — procedural tileable textures (Material Maker Tier 3 replacement path)",
+  "rules_applied": [
+    "no_ai_generated_images",
+    "deterministic_output",
+    "grid_alignment"
+  ],
+  "material_profiles": [
+    "brick_red_01",
+    "concrete_grey_01",
+    "wood_plank_01",
+    "steel_door_01",
+    "roof_metal_01"
+  ],
+  "modules_pilot": [
+    {
+      "asset_id": "wall_concrete_2u",
+      "job_id": "wall_concrete_2u_run001",
+      "material_profile": "concrete_grey_01"
+    },
+    {
+      "asset_id": "wall_wood_1u",
+      "job_id": "wall_wood_1u_run001",
+      "material_profile": "wood_plank_01"
+    },
+    {
+      "asset_id": "door_industrial_1u",
+      "job_id": "door_industrial_1u_run001",
+      "material_profile": "steel_door_01"
+    },
+    {
+      "asset_id": "wall_brick_1u",
+      "job_id": "wall_brick_1u_example",
+      "material_profile": "brick_red_01"
+    }
+  ],
+  "next": "Expand profiles via Material Maker CLI; re-run reexport_pilot_pbr.ps1 pattern per batch"
+}

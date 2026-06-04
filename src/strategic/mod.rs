@@ -70,6 +70,7 @@ mod schedule;
 mod simulation_plugin;
 mod sim;
 mod site;
+pub mod settlement;
 mod spatial_network;
 mod network_flow;
 mod strategic_behavior_schedule;
@@ -121,11 +122,12 @@ pub use strategic_command_queue::{
     StrategicCommandQueue, DISPATCH_DELAY_TICKS,
 };
 pub use stage7_behavioral::{
-    publish_stage7_behavioral_overlay_samples, seed_stage7_behavioral_overlay_resources,
+    ensure_stage7_behavioral_m3_witness_fields, ensure_stage7_m4_play_witness_fields,
+    publish_stage7_behavioral_overlay_samples, resolve_stage7_m3_overlay_sample_counts, seed_stage7_behavioral_overlay_resources,
     seed_stage7_behavioral_m2_lib_proof, seed_stage7_behavioral_witness_for_lib_proof,
-    seed_stage7_m4_playtest_enqueue,
-    stage7_overlay_reader_sample_counts,
-    sync_stage7_overlay_witness_from_reader_samples, Stage7BehavioralHud,
+    seed_stage7_m4_playtest_enqueue, stage7_overlay_reader_sample_counts,
+    sync_stage7_overlay_witness_from_reader_samples, tick_strategic_command_queue_system,
+    Stage7BehavioralHud,
     Stage7BehavioralPlugin, Stage7BehavioralWitnessState, Stage7BeliefState,
 };
 pub use behavior_pipeline::{
@@ -169,7 +171,8 @@ pub use strategic_behavior_schedule::{StrategicBehaviorSchedule, StrategicBehavi
 pub use construction_book::{
     advance_corridor_construction_book_on_sim_tick, advance_corridor_construction_row,
     align_corridor_book_with_transport_directory, apply_corridor_book_from_transport_snapshot,
-    corridor_phase_from_wire, corridor_phase_to_wire, transport_construction_records_from_book,
+    corridor_phase_from_wire, corridor_phase_to_wire, corridor_r8_roundtrip_witness_green,
+    corridor_sim_tick_writer_witness_green, transport_construction_records_from_book,
     transport_directory_edge_signature, ConstructionPhase, CorridorConstructionBook,
     CorridorConstructionPhase, CorridorConstructionRow, CorridorConstructionStatus,
     CorridorConstructionTickConfig, CorridorEdgeId,
@@ -190,9 +193,16 @@ pub use site::{
     validate_site_placement_stubs,
     validate_terrain_for_site,
     zone_emitter_for_archetype,
+    BuildingScaleParams,
     CommitConstructionSiteEvent,
+    CommittedPlacementSnapshot,
+    commit_carries_scale_and_weights_witness_green,
+    overlap_blocks_commit_witness_green,
     ConstructionSite,
     FootprintTiles,
+    ProceduralBuildingSpec,
+    SiteWeightedFootprint,
+    TileOccupationBook,
     NetworkMask,
     PlannedSite,
     SiteArchetype,
@@ -209,6 +219,15 @@ pub use site::{
     SiteResourceManifest,
     SiteTerrainValidation,
     ZoneEmitter,
+};
+pub use settlement::{
+    construction_organic_growth_001_witness_green, set_p5_002_block_assignment_witness_green,
+    assign_block_for_tile, register_site_on_commit, AutoBuildPolicy, AutoBuildPolicyBook,
+    BlockBook, BlockId, BlockRecord, BuildingUsage, DevelopmentPressure, DevelopmentPressureBook,
+    DistrictBook, DistrictId, DistrictMetrics, DistrictMetricsBook, DistrictRecord,
+    GrowthActorLayer, GrowthProposal, GrowthProposalGhostState, GrowthProposalQueue,
+    GrowthReasonCode, MarketSaturation, MarketSaturationBook, SettlementPlugin, TownBook,
+    TownId, TownRecord, ZoningClass,
 };
 pub use hybrid_brain::{
     apply_agent_intent, agent_decision_score, agent_decision_score_with_world, control_variance,

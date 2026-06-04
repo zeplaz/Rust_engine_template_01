@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "program_id": "PLAN-PROC-TILE-PROD-001",
+  "default_fallback_key": "clean_day",
+  "canonical_variant_keys": [
+    "clean_day",
+    "clean_night_off",
+    "clean_night_on",
+    "damaged_day",
+    "damaged_night_on",
+    "under_construction_01",
+    "under_construction_02",
+    "under_construction_03",
+    "abandoned",
+    "ruined",
+    "burning_00",
+    "burning_01",
+    "burning_02",
+    "burning_03",
+    "burning_04",
+    "burning_05",
+    "burning_06",
+    "burning_07"
+  ],
+  "fire": {
+    "key_prefix": "burning_",
+    "frame_count": 8,
+    "frame_period_ms": 125,
+    "heat_threshold": 0.35
+  },
+  "damage_bands": [
+    { "max": 0.25, "suffix": "clean" },
+    { "max": 0.75, "suffix": "damaged" },
+    { "max": 1.0, "suffix": "ruined" }
+  ],
+  "construction_phase_keys": {
+    "Planned": "under_construction_01",
+    "Surveying": "under_construction_01",
+    "Clearing": "under_construction_01",
+    "Foundation": "under_construction_02",
+    "UnderConstruction": "under_construction_02",
+    "Provisioning": "under_construction_03",
+    "Operational": null,
+    "Damaged": null,
+    "Offline": "damaged_day",
+    "Abandoned": "abandoned"
+  },
+  "lighting_composite": [
+    { "night": false, "power_on": false, "key": "clean_day" },
+    { "night": false, "power_on": true, "key": "clean_day" },
+    { "night": true, "power_on": false, "key": "clean_night_off" },
+    { "night": true, "power_on": true, "key": "clean_night_on" }
+  ],
+  "damaged_lighting_composite": [
+    { "night": false, "power_on": false, "key": "damaged_day" },
+    { "night": true, "power_on": false, "key": "damaged_day" },
+    { "night": true, "power_on": true, "key": "damaged_night_on" }
+  ],
+  "ship_minimum_keys": [
+    "clean_day",
+    "clean_night_on",
+    "damaged_night_on",
+    "under_construction_02",
+    "abandoned",
+    "burning_00"
+  ]
+}

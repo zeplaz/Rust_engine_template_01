@@ -1,0 +1,11 @@
+{
+  "profile_id": "steel_door_warehouse_01",
+  "seed": 42012,
+  "generator": "steel",
+  "size": 512,
+  "paths": {
+    "albedo": "assets/materials/textures/steel_door_warehouse_01/albedo.png",
+    "normal": "assets/materials/textures/steel_door_warehouse_01/normal.png",
+    "roughness": "assets/materials/textures/steel_door_warehouse_01/roughness.png"
+  }
+}

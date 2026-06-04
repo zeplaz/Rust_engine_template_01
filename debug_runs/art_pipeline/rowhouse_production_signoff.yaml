@@ -1,0 +1,11 @@
+# rowhouse_production_signoff.yaml — G4 checklist (rowhouse pilot only)
+canonical: debug_runs/art_pipeline/rowhouse_victorian_production_signoff.yaml
+program_id: MCP-PROD-PILOT-ROWHOUSE-001
+task_id: MCP-PROD-G0-001
+gate: G4
+status: pass
+g0_witness: debug_runs/art_pipeline/rowhouse_production_g0_rules.yaml
+g4_witness: debug_runs/art_pipeline/rowhouse_keyframe_g4_live.json
+proceed_ship: no
+freeze_id: TILE-FIX-001
+note: "G0 pass (MCP-PROD-G0-001). G4 pass on keyframe stills — lod0 ortho pilot superseded."

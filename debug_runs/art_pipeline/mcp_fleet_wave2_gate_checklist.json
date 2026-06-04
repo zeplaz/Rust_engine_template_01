@@ -1,0 +1,140 @@
+{
+  "program_id": "MCP-FLEET-WAVE2-001",
+  "updated": "2026-06-02",
+  "scope": "coder-mcp + designer-mcp lanes — ART 003-010, DATA style packs, TILE schema stub, batch runner",
+  "green": false,
+  "wave3_active": true,
+  "wave3_doc": "src/dev/mcp_fleet_wave3_engine_orders_v1.md",
+  "snap": "tools/orchestrator/queues/mcp_orchestrator_snap_CURRENT.md",
+  "overall_note": "Wave 2 ART+DATA+TILE schema CLOSED. Wave 3 ENGINE+UX active. Planner/designer-mcp/coder-mcp DRAINED.",
+  "coverage": {
+    "canonical_modules": 50,
+    "lod0_promoted_unique": 50,
+    "lod0_batches_g5_pass": 10,
+    "smoke_rows_index": 31,
+    "style_pack_ron_files": 7
+  },
+  "tasks_executed": {
+    "MCP-D0-003": "done",
+    "MCP-C0-004": "done",
+    "MCP-D0-004": "done",
+    "MCP-C0-005": "done",
+    "MCP-D0-005": "done",
+    "MCP-C0-006": "done",
+    "MCP-D0-006": "done",
+    "MCP-C0-007": "done",
+    "MCP-D0-007": "done",
+    "MCP-C0-008": "done",
+    "MCP-D0-008": "done",
+    "MCP-C0-009": "done",
+    "MCP-D0-009": "done",
+    "MCP-C0-010": "done",
+    "MCP-D0-010": "done",
+    "MCP-C0-011": "done",
+    "MCP-C0-012": "done",
+    "MCP-D0-SP-001": "done",
+    "MCP-D0-SP-002": "done",
+    "MCP-T0-002": "done"
+  },
+  "streams": {
+    "PLANNER": {
+      "tasks": ["MCP-PLN-SP-001", "MCP-PLN-PG2-001", "MCP-T0-001"],
+      "status": "done",
+      "gates": {
+        "G0_rules_signed": "pass",
+        "G1_schema_draft": "pass",
+        "G2_implementation": "n/a"
+      }
+    },
+    "ART": {
+      "status": "done",
+      "milestone": "50/50 canonical lod0 in _module_index.ron",
+      "batch_runner": "tools/mcp/scripts/kit_lod0_batch_runner.py",
+      "gates": {
+        "G0_rules": "pass",
+        "G1_spec_job_validate": "pass",
+        "G2_geometry": "pass",
+        "G3_asset_validate": "pass",
+        "G4_signoff": "pass",
+        "G5_promote_witness": "pass"
+      },
+      "batches": {
+        "kit_lod0_001": "pass",
+        "kit_lod0_002": "pass",
+        "kit_lod0_003": "pass",
+        "kit_lod0_004": "pass",
+        "kit_lod0_005": "pass",
+        "kit_lod0_006": "pass",
+        "kit_lod0_007": "pass",
+        "kit_lod0_008": "pass",
+        "kit_lod0_009": "pass",
+        "kit_lod0_010": "pass"
+      },
+      "batches_done": 10,
+      "batches_total": 10,
+      "pytest": "23/23 pass"
+    },
+    "DATA": {
+      "status": "done",
+      "gates": {
+        "G0_style_pack_schema": "pass",
+        "G1_seven_ron_specs": "pass",
+        "G2_manifest_witness": "pass"
+      },
+      "witness": "debug_runs/art_pipeline/style_packs_manifest_live.json",
+      "pack_files": "assets/configs/buildings/style_packs/style_*.ron"
+    },
+    "ENGINE": {
+      "status": "pending",
+      "next": ["MCP-PG-1-001", "MCP-PG-2-001", "MCP-PG-2-002", "MCP-PG-2-WIT"],
+      "gates": {
+        "G0_pg_exec_signed": "pass",
+        "G1_types_loaders": "pending",
+        "G2_footprint_extract": "pending",
+        "G3_representation_wire": "pending",
+        "G4_procedural_assembly_witness": "pending"
+      },
+      "registry_tier_filter": "pass",
+      "module_index_tests": "6/6 pass"
+    },
+    "TILE": {
+      "status": "schema_done",
+      "gates": {
+        "G0_tile_plan_signed": "pass",
+        "G1_tile_batch_v1_schema_json": "pass",
+        "G2_validate_report_stub": "pass",
+        "G3_bake_execution": "frozen"
+      },
+      "schema": "tools/mcp/schemas/tile_batch_v1.schema.json",
+      "validate_example": "tools/mcp/schemas/examples/tile_batch_factory_floor_v1.json"
+    },
+    "UX": {
+      "status": "pending",
+      "next": ["MCP-DUX-PG2-001"],
+      "gates": {
+        "G0_player_read_doc": "pending"
+      }
+    }
+  },
+  "evidence": {
+    "gate_checklist": "debug_runs/art_pipeline/mcp_fleet_wave2_gate_checklist.json",
+    "lod0_live_witnesses": "debug_runs/art_pipeline/kit_lod0_001_live.json … kit_lod0_010_live.json",
+    "style_packs_manifest": "debug_runs/art_pipeline/style_packs_manifest_live.json",
+    "module_index": "assets/configs/buildings/_module_index.ron",
+    "plan_style_pack_ron_v1": "src/dev/plan_style_pack_ron_v1.md",
+    "plan_procedural_build_exec": "src/dev/plan_procedural_build_gen_exec_001_v1.md",
+    "plan_tile_batch": "src/dev/plan_tile_batch_v1_planner_mcp_v1.md"
+  },
+  "dispatch_complete": [
+    "@designer-mcp MCP-D0-003 … D0-010 G0-G1",
+    "@coder-mcp MCP-C0-004 … C0-011 G2-G5",
+    "@coder-mcp MCP-C0-012 batch runner",
+    "@designer-mcp MCP-D0-SP-001 + MCP-D0-SP-002",
+    "@coder-mcp MCP-T0-002 tile_batch validate stub"
+  ],
+  "dispatch_remaining": [
+    "@coder MCP-PG-1-001 → MCP-PG-2-001",
+    "@designer MCP-DUX-PG2-001",
+    "@designer-mcp MCP-T0-003 validate-only tile draft (after PG-1 optional)"
+  ]
+}

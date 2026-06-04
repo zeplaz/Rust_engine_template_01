@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "job_id": "asm_military_6x3_s46_fbad",
+  "operation": "assembly_build",
+  "assembly_snapshot": "assets/staging/assemblies/military_6x3_s46_fbad.json",
+  "output": {
+    "blend": "assets/staging/assemblies/military_6x3_s46_fbad.blend"
+  }
+}

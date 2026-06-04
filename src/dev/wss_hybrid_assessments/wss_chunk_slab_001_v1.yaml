@@ -1,0 +1,26 @@
+# WSS-CHUNK-SLAB-001 — Hybrid Assessment (mandatory per wssr_coder_hybrid_orders_v1.md)
+slice_id: WSS-CHUNK-SLAB-001
+incumbent_authority: >-
+  Chunk+ChunkCellMatrix entities; ChunkWeather/ChunkSurfaceFire/ChunkEcology components;
+  DynamicTerrainOverlay resource; AtmosphereField 128² (incremental_schedule);
+  FireVisualFramesByView + Stage6 ChunkResidencyTable; gpu_water_* L3 tactical look
+wss_plan_asks: Single WorldSubstrateRegistry + ChunkSlab<WorldChunkState> as L1 persist authority with ECS hybrid for hot regions only
+options:
+  A: adopt WSS as written — retire ECS chunk components in PR-1
+  B: hybrid — types + registry + witness; ECS sim authoritative until PR-2 dual-write
+  C: defer slab — keep scattered components
+chosen: B
+hybrid_shape: >-
+  ChunkSlab<WorldChunkState> + WorldSubstrateRegistry for hydrate/persist target;
+  ChunkWeather + fire/ecology ECS remain sole sim writers; AtmosphereField 128² and
+  ChunkWeather untouched until WSS-ATMOS-CLIPMAP-001 bridge; no render/extract slab reads
+preserves:
+  - fire_streaming_live.json per-view extract greens
+  - stage5 tactical_vfx / water_w1_w2 witnesses
+  - AtmosphereField grid (no deletion)
+  - ChunkWeather component authority
+regression: cargo test -p proc_A_dine01 --lib stage5 fire_streaming gpu_particles wss_substrate
+bridge_notes:
+  atmos: alias AtmosphereField → clipmap L1 in WSS-ATMOS-CLIPMAP-001 (assessment required there)
+  hydro: gen → slab hydrate only; gpu_water_* stays L3 read-only consumer
+  weather_fire: dual_write shim WSS-SLAB-PR-2; drift witness dual_write_drift_max

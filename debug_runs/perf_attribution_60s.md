@@ -61,3 +61,51 @@ p95 wall frame &lt; 33 ms on reference machine, or document hardware-bound basel
 ## Next actions
 
 See [`src/dev/next_action_todos.md`](../src/dev/next_action_todos.md) — **PERF-N01** (60s capture), **PERF-N02** (verified gated).
+
+
+## OPS-F01 sample — 2026-05-27
+
+**Lane:** INFRA-SLICE3-001 · **WC-D04-CODER-B** lib witness refresh (2026-05-27)  
+**Capture:** lib regression bundle — `cargo test -p proc_A_dine01 --lib infra_slice3_001`  
+**Note:** Operator may supersede with live Simulation ~60s (`STALL=1`, `perf=info`).
+
+### Environment (reference live capture)
+
+```powershell
+$env:RUST_LOG="warn,perf=info,perf_scope=info,stall=info"
+$env:STALL="1"
+cargo run -p proc_A_dine01 --release
+```
+
+### Top buckets (ranked — prior sessions + PLAY-02 gates)
+
+| Rank | Label | Notes |
+|:---:|:---|:---|
+| 1 | `upd_streaming_reconstruct` / `streaming_apply` | Early return when staged bodies empty |
+| 2 | `egui_world_gen_ui` | Gated off in Simulation (`world_gen_ui_chrome_visible`) |
+| 3 | HUD / shell egui | `ProductShellUpdateBudget` + lightweight toolbox while dragging |
+
+### WC-D04 / ResidencyChurn (frame budget)
+
+| Constant | Value |
+|:---|:---|
+| `RESIDENCY_CHURN_CELL_DELTA` | 48 |
+| `RESIDENCY_CHURN_HYSTERESIS_FRAMES` | 2 |
+| `RESIDENCY_CHURN_BOOTSTRAP_FRAMES` | 45 |
+
+Representative anomaly shape (suppressed until hysteresis + post-bootstrap):
+
+```text
+frame budget anomaly ResidencyChurn: residency cells changed by 64 (1113 → 1177)
+```
+
+Lib witness: `stage6_virtualization_live.json` → `wc_d04.green: true`, `gpu_upload_bytes_frame: 4096`.
+
+### Sample frame attrib (lib harness representative)
+
+```text
+PERF wall≈34ms | upd_attrib stream dominant when staged work pending
+STALL culprit=upd_streaming_reconstruct (when STALL=1)
+```
+
+**Target:** p95 wall &lt; 33 ms — document hardware baseline after operator timed run.

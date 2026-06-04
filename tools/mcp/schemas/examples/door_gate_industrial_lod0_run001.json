@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "job_id": "door_gate_industrial_lod0_run001",
+  "batch_id": "kit_lod0_009",
+  "development_tier": "lod0",
+  "spec_ref": "assets/staging/specs/door_gate_industrial.json",
+  "operation": "module_door",
+  "params": {
+    "width_m": 16,
+    "height_m": 4,
+    "depth_m": 0.3,
+    "material_profile": "steel_panel_01",
+    "seed": 42,
+    "profile": "frame"
+  },
+  "output": {
+    "glb": "assets/staging/door_gate_industrial_lod0_run001/model.glb",
+    "thumbnail": "assets/staging/door_gate_industrial_lod0_run001/preview.png"
+  }
+}

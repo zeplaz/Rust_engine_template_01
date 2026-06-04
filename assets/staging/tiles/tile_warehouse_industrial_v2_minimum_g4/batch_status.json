@@ -1,0 +1,16 @@
+{
+  "batch_id": "tile_warehouse_industrial_v2_minimum_g4",
+  "status": "rejected",
+  "rejection_reason": "human_g4_rejected_headless_procedural",
+  "art_quality": "rejected_headless_procedural",
+  "bake_source": "keyframe_pack",
+  "render_method": "blender_keyframe_light_rig",
+  "minimum_g4_cells": 24,
+  "lookup_count": 24,
+  "atlas_path": "assets/staging/tiles/tile_warehouse_industrial_v2_minimum_g4/warehouse_industrial_west_v2_atlas.png",
+  "meta_json": "assets/staging/tiles/tile_warehouse_industrial_v2_minimum_g4/atlas_meta.json",
+  "dry_run": false,
+  "atlas_meta_v2_valid": true,
+  "promotion_valid": false,
+  "minimum_g4_ship": false
+}

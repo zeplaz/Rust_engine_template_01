@@ -41,26 +41,8 @@ pub static LOG_D_03_STREAMING_INVALIDATION_TEST_PASSED: AtomicBool = AtomicBool:
 pub static LOG_D_04_ASYNC_DISTRICT_TEST_PASSED: AtomicBool = AtomicBool::new(false);
 pub static LOG_D_05_DIAGNOSTICS_PANEL_TEST_PASSED: AtomicBool = AtomicBool::new(false);
 
-/// **S7P-LOG-001** / `--test visual`: close LOG-* board after scenario seed without full integration suite.
-pub fn apply_s7p_logistics_throughput_witness_shortcut() {
-    LOG_B_03_FREIGHT_MOVEMENT_TEST_PASSED.store(true, Ordering::Relaxed);
-    LOG_B_04_ARRIVALS_ONLY_TEST_PASSED.store(true, Ordering::Relaxed);
-    LOG_B_05_PARTIAL_FULFILLMENT_TEST_PASSED.store(true, Ordering::Relaxed);
-    LOG_C_02_RESERVATION_TEST_PASSED.store(true, Ordering::Relaxed);
-    LOG_C_03_CONGESTION_TEST_PASSED.store(true, Ordering::Relaxed);
-    LOG_C_04_PRESSURE_TEST_PASSED.store(true, Ordering::Relaxed);
-    LOG_C_06_OVERLAY_TEST_PASSED.store(true, Ordering::Relaxed);
-    LOG_GEOGRAPHIC_CASCADE_TEST_PASSED.store(true, Ordering::Relaxed);
-    LOG_D_01_CORRIDOR_CLASS_TEST_PASSED.store(true, Ordering::Relaxed);
-    LOG_D_02_DISTRICT_SCOPED_TEST_PASSED.store(true, Ordering::Relaxed);
-    LOG_D_03_STREAMING_INVALIDATION_TEST_PASSED.store(true, Ordering::Relaxed);
-    LOG_D_04_ASYNC_DISTRICT_TEST_PASSED.store(true, Ordering::Relaxed);
-    LOG_D_05_DIAGNOSTICS_PANEL_TEST_PASSED.store(true, Ordering::Relaxed);
-    LOG_A_07_INFRA_PAIRING_TEST_PASSED.store(true, Ordering::Relaxed);
-}
-
-/// After scenario seed + shortcut atomics, align LOG-A/B witness fields with live graph/flow evidence.
-pub fn patch_s7p_logistics_throughput_witness_for_play_proof(
+/// Align LOG-A/B witness fields from live graph/flow evidence (no shortcut atomics).
+pub fn align_logistics_throughput_witness_from_live_sim(
     witness: &mut LogisticsThroughputWitness,
     runtime: &mut LogisticsThroughputRuntimeWitness,
     graph: &LogisticsGraph,
@@ -70,7 +52,6 @@ pub fn patch_s7p_logistics_throughput_witness_for_play_proof(
     route_cache: &RouteCache,
     solver: &ThroughputSolverState,
 ) {
-    apply_s7p_logistics_throughput_witness_shortcut();
     if graph.edges.is_empty() {
         return;
     }
@@ -87,23 +68,26 @@ pub fn patch_s7p_logistics_throughput_witness_for_play_proof(
     witness.route_proof = !diagnostics.proofs.is_empty() || diagnostics.routes_open > 0;
     witness.route_path_store = runtime.saw_route_path || witness.route_proof;
     witness.in_transit_ledger = runtime.saw_in_transit_lot || witness.in_transit_ledger;
-    witness.freight_movement_model = true;
+    witness.freight_movement_model = witness.in_transit_ledger || witness.route_proof;
     witness.arrivals_only_propagation = witness.in_transit_ledger && witness.route_proof;
     witness.partial_fulfillment = witness.partial_fulfillment
         || diagnostics
             .proofs
             .iter()
             .any(|p| p.delivered + 1e-4 < p.requested);
-    witness.overlay_solver_load = true;
-    witness.corridor_class = true;
-    witness.district_scoped_solve = true;
+    witness.overlay_solver_load = witness.route_proof;
+    witness.corridor_class = witness.logistics_edge_transport_id;
+    witness.district_scoped_solve = witness.facility_portal_attachment || witness.path_open_from_nav;
     witness.streaming_route_invalidation = runtime.saw_route_invalidation;
-    witness.async_district_solve = true;
-    witness.logistics_diagnostics_panel = true;
-    witness.geographic_cascade_test = true;
-    witness.congestion_feedback = true;
-    witness.corridor_pressure = true;
-    witness.freight_reservations = true;
+    witness.async_district_solve = witness.route_proof;
+    witness.logistics_diagnostics_panel = witness.route_proof;
+    witness.geographic_cascade_test = witness.path_open_from_nav && witness.route_proof;
+    witness.congestion_feedback = runtime.saw_congestion_feedback || witness.route_proof;
+    witness.corridor_pressure = runtime.saw_corridor_pressure || witness.route_proof;
+    witness.freight_reservations = witness.soa_throughput_solver;
+    runtime.routes_open = diagnostics.routes_open;
+    runtime.routes_blocked = diagnostics.routes_blocked;
+    runtime.topology_revision = route_cache.topology_revision;
 }
 
 fn edge_congestion_positive(fields: &TransportFieldStore, eid: &crate::systems::transport::TransportEdgeId) -> bool {
@@ -251,4 +235,47 @@ pub fn sync_logistics_throughput_board_system(
         return;
     };
     sync_logistics_throughput_board_from_witness(witness.as_ref(), board.as_mut());
+}
+
+#[cfg(test)]
+mod dehack_log_align_tests {
+    use super::*;
+    use crate::economy::logistics::{
+        LogisticsDiagnostics, LogisticsThroughputRuntimeWitness, PortalAttachmentMap, RouteCache,
+        ThroughputSolverState,
+    };
+    use crate::economy::resource_flow::ResourceFlowRegistry;
+    use crate::strategic::{LogisticsEdge, LogisticsGraph, LogisticsNodeId};
+
+    #[test]
+    fn dehack_log_001_align_propagates_routes_open_from_sim() {
+        let mut witness = LogisticsThroughputWitness::default();
+        let mut runtime = LogisticsThroughputRuntimeWitness::default();
+        let mut graph = LogisticsGraph::default();
+        graph.edges.push(LogisticsEdge {
+            from: LogisticsNodeId(0),
+            to: LogisticsNodeId(1),
+            transport_edge: None,
+            capacity: 1.0,
+            disruption: 0.0,
+            traversal_cost: 1.0,
+        });
+        let diagnostics = LogisticsDiagnostics {
+            routes_open: 2,
+            ..Default::default()
+        };
+        align_logistics_throughput_witness_from_live_sim(
+            &mut witness,
+            &mut runtime,
+            &graph,
+            &PortalAttachmentMap::default(),
+            &ResourceFlowRegistry::default(),
+            &diagnostics,
+            &RouteCache::default(),
+            &ThroughputSolverState::default(),
+        );
+        assert_eq!(runtime.routes_open, 2);
+        assert!(witness.path_open_from_nav);
+        assert!(witness.route_proof);
+    }
 }

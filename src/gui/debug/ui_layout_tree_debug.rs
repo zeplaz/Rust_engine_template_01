@@ -1,6 +1,6 @@
 //! Full Bevy UI hierarchy trace + MAP_LAYOUT_CHAIN ancestry summary.
 //!
-//! Enable: `UI_LAYOUT_DEBUG=1` or `STAGE5_VERBOSE=1`.
+//! Enable: `UI_LAYOUT_DEBUG=1`.
 //! Filter: `RUST_LOG=ui_layout_tree=info,ui_layout_tree::chain=info,ui_layout_tree::audit=warn`
 
 use bevy::diagnostic::FrameCount;
@@ -25,12 +25,20 @@ pub fn ui_layout_tree_debug_enabled() -> bool {
     static ENV: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
     *ENV.get_or_init(|| {
         std::env::var_os("UI_LAYOUT_DEBUG").is_some()
-            || std::env::var_os("STAGE5_VERBOSE").is_some()
     })
 }
 
-fn layout_debug_active(session: Option<Res<crate::engine::FrameLayoutDebugSession>>) -> bool {
+fn layout_debug_active(session: Option<&Res<crate::engine::FrameLayoutDebugSession>>) -> bool {
     ui_layout_tree_debug_enabled() || session.is_some_and(|s| s.active)
+}
+
+#[inline]
+fn layout_debug_interval_frames(session: Option<&Res<crate::engine::FrameLayoutDebugSession>>) -> u32 {
+    if session.is_some_and(|s| s.active) {
+        60
+    } else {
+        600
+    }
 }
 
 fn format_val(v: Val) -> String {
@@ -53,7 +61,9 @@ pub fn dump_ui_layout_tree(
     q_tag: Query<&DebugLayoutTag>,
     q_fill: Query<Entity, With<SimulationMapViewportFill>>,
 ) {
-    if !layout_debug_active(layout_session) || frame.0 % 60 != 0 {
+    if !layout_debug_active(layout_session.as_ref())
+        || frame.0 % layout_debug_interval_frames(layout_session.as_ref()) != 0
+    {
         return;
     }
     let Ok(target) = q_fill.single() else {
@@ -171,7 +181,9 @@ pub fn dump_map_layout_chain(
     q_fill: Query<Entity, With<SimulationMapViewportFill>>,
     child_of: Query<&ChildOf>,
 ) {
-    if !layout_debug_active(layout_session) || frame.0 % 60 != 0 {
+    if !layout_debug_active(layout_session.as_ref())
+        || frame.0 % layout_debug_interval_frames(layout_session.as_ref()) != 0
+    {
         return;
     }
     let Ok(window) = win.single() else {

@@ -1,0 +1,12 @@
+{
+  "job_id": "asm_victorian_5x3_s99_6916",
+  "status": "done",
+  "log_path": "debug_runs/art_pipeline/asm_victorian_5x3_s99_6916.log",
+  "outputs": [
+    "assets/staging/assemblies/victorian_5x3_s99_6916.blend"
+  ],
+  "error": null,
+  "operation": "assembly_build",
+  "job_path": "tools/mcp/jobs/asm_victorian_5x3_s99_6916.json",
+  "updated_at": 1780502679.976661
+}

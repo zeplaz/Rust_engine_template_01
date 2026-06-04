@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "visual_config_v1.schema.json",
+  "title": "BuildingVisualConfigV1",
+  "description": "TILE-FIX-002 — runtime + bake contract: facings, states, animation frames per variant family.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "tile_id",
+    "atlas_id",
+    "render_contract",
+    "states"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "tile_id": { "type": "string", "minLength": 1 },
+    "atlas_id": { "type": "string", "minLength": 1 },
+    "batch_id": { "type": "string" },
+    "assembly_id": { "type": "string" },
+    "render_contract": {
+      "type": "object",
+      "required": ["facings"],
+      "properties": {
+        "facings": { "type": "integer", "enum": [4, 8] },
+        "quarter_turn_fallback": { "type": "boolean" },
+        "tile_px": { "type": "integer", "minimum": 16 }
+      },
+      "additionalProperties": false
+    },
+    "states": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "pattern": "^[a-z0-9_]+$" }
+    },
+    "fire": {
+      "type": "object",
+      "properties": {
+        "key_prefix": { "type": "string" },
+        "frame_count": { "type": "integer", "minimum": 1, "maximum": 32 },
+        "frame_period_ms": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "night_emission_atlases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["variant_suffix", "emission_level"],
+        "properties": {
+          "variant_suffix": { "type": "string" },
+          "emission_level": { "type": "number", "minimum": 0 }
+        }
+      }
+    },
+    "ship_minimum_states": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^[a-z0-9_]+$" },
+      "minItems": 1
+    },
+    "minimum_g4_states": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^[a-z0-9_]+$" },
+      "minItems": 1,
+      "maxItems": 24,
+      "description": "TILE-FIX-09 minimum G4 states (default 3 × 8 facings = 24 cells)"
+    },
+    "minimum_g4_facings": {
+      "type": "array",
+      "items": { "type": "integer", "minimum": 0, "maximum": 7 },
+      "minItems": 1,
+      "description": "TILE-FIX-09 pilot facings (default 0..7)"
+    },
+    "minimum_g4_cells": {
+      "type": "integer",
+      "const": 24,
+      "description": "TILE-FIX-08 minimum bake matrix size"
+    }
+  },
+  "additionalProperties": false
+}

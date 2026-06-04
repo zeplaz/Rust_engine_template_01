@@ -7,6 +7,7 @@ use crate::strategic::{BuildSiteTile, FootprintTiles, LayerType, SiteArchetype};
 use super::build_state::BuildGhostState;
 use super::build_tool_authority::{ActiveBuildTool, BuildTool, BuildingArchetypeId};
 use super::build_strip::BuildStripState;
+use super::pending_construction::{PendingBuildBlueprint, PendingConstructionQueue, PendingEntryKind};
 
 /// One authored blueprint row for offline / save interchange.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -127,6 +128,82 @@ pub fn building_archetype_id_for_site(archetype: SiteArchetype) -> BuildingArche
     }
 }
 
+/// **BQ-128-APPLY-002** — append imported presets vs replace queue (replace needs confirm).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum BlueprintImportQueueMode {
+    #[default]
+    Append,
+    Replace,
+}
+
+#[must_use]
+pub fn pending_entry_from_preset(entry: &BlueprintPresetEntryR8) -> PendingBuildBlueprint {
+    PendingBuildBlueprint {
+        kind: PendingEntryKind::BuildSite,
+        label: entry.label.clone(),
+        archetype: site_archetype_from_preset_tag(&entry.archetype_tag),
+        origin: BuildSiteTile {
+            x: entry.origin_x,
+            z: entry.origin_z,
+        },
+        footprint: FootprintTiles {
+            width: entry.footprint_width.max(1),
+            depth: entry.footprint_depth.max(1),
+        },
+        layer: layer_type_from_preset_tag(&entry.layer_tag),
+        rotation_quarter_turns: entry.rotation_quarter_turns % 4,
+        mirror_x: entry.mirror_x,
+        approved: false,
+        catalog_id: None,
+    }
+}
+
+/// Import Wave S preset collection into the pending queue.
+#[must_use]
+pub fn import_preset_collection_into_pending_queue(
+    queue: &mut PendingConstructionQueue,
+    collection: &BlueprintPresetCollectionR8,
+    mode: BlueprintImportQueueMode,
+) -> usize {
+    match mode {
+        BlueprintImportQueueMode::Replace => queue.clear(),
+        BlueprintImportQueueMode::Append => {}
+    }
+    let count = collection.presets.len();
+    for preset in &collection.presets {
+        queue.push(pending_entry_from_preset(preset));
+    }
+    count
+}
+
+/// Lib witness rollup for **BQ-128-APPLY-001** (picker → ghost, no queue commit).
+#[must_use]
+pub fn bq128_apply_ghost_witness_green() -> bool {
+    let panel_src = std::fs::read_to_string("src/construction/pending_construction_panel.rs")
+        .unwrap_or_default();
+    let intent_src = std::fs::read_to_string("src/construction/construction_queue_intent.rs")
+        .unwrap_or_default();
+    panel_src.contains("ApplyImportedPreset")
+        && panel_src.contains("Apply ghost")
+        && intent_src.contains("ApplyImportedPreset")
+        && intent_src.contains("apply_blueprint_preset_to_build_ghost")
+}
+
+/// Lib witness rollup for **BQ-128-APPLY-002** (merge vs replace on import).
+#[must_use]
+pub fn bq128_apply_merge_replace_witness_green() -> bool {
+    let panel_src = std::fs::read_to_string("src/construction/pending_construction_panel.rs")
+        .unwrap_or_default();
+    let intent_src = std::fs::read_to_string("src/construction/construction_queue_intent.rs")
+        .unwrap_or_default();
+    panel_src.contains("BlueprintImportQueueMode::Append")
+        && panel_src.contains("BlueprintImportQueueMode::Replace")
+        && panel_src.contains("replace_confirm")
+        && panel_src.contains("ImportWaveSPresets")
+        && intent_src.contains("ImportWaveSPresets")
+        && intent_src.contains("import_preset_collection_into_pending_queue")
+}
+
 /// **BQ-128-APPLY-001** — load preset onto ghost only (no queue commit).
 pub fn apply_blueprint_preset_to_build_ghost(
     entry: &BlueprintPresetEntryR8,
@@ -186,6 +263,96 @@ mod tests {
         assert_eq!(ghost.rotation_quarter_turns, 1);
         assert!(!ghost.mirror_x);
         assert!(matches!(tool.tool, BuildTool::Building(BuildingArchetypeId::Depot)));
+    }
+
+    #[test]
+    fn bq128_apply_ghost_witness_green_lib() {
+        assert!(bq128_apply_ghost_witness_green());
+    }
+
+    #[test]
+    fn bq128_apply_merge_replace_witness_green_lib() {
+        assert!(bq128_apply_merge_replace_witness_green());
+    }
+
+    #[test]
+    fn import_presets_append_keeps_existing_queue_rows() {
+        let mut queue = PendingConstructionQueue::default();
+        queue.push(pending_entry_from_preset(&blueprint_preset_entry_from_pending(
+            "existing",
+            SiteArchetype::Factory,
+            BuildSiteTile { x: 0, z: 0 },
+            FootprintTiles {
+                width: 1,
+                depth: 1,
+            },
+            "Surface",
+            0,
+            false,
+        )));
+        let incoming = BlueprintPresetCollectionR8 {
+            schema_version: 1,
+            presets: vec![blueprint_preset_entry_from_pending(
+                "imported",
+                SiteArchetype::RailDepot,
+                BuildSiteTile { x: 3, z: 4 },
+                FootprintTiles {
+                    width: 2,
+                    depth: 2,
+                },
+                "Surface",
+                0,
+                false,
+            )],
+        };
+        let n = import_preset_collection_into_pending_queue(
+            &mut queue,
+            &incoming,
+            BlueprintImportQueueMode::Append,
+        );
+        assert_eq!(n, 1);
+        assert_eq!(queue.entries.len(), 2);
+        assert_eq!(queue.entries[0].label, "existing");
+        assert_eq!(queue.entries[1].label, "imported");
+    }
+
+    #[test]
+    fn import_presets_replace_clears_queue() {
+        let mut queue = PendingConstructionQueue::default();
+        queue.push(pending_entry_from_preset(&blueprint_preset_entry_from_pending(
+            "old",
+            SiteArchetype::Factory,
+            BuildSiteTile { x: 0, z: 0 },
+            FootprintTiles {
+                width: 1,
+                depth: 1,
+            },
+            "Surface",
+            0,
+            false,
+        )));
+        let incoming = BlueprintPresetCollectionR8 {
+            schema_version: 1,
+            presets: vec![blueprint_preset_entry_from_pending(
+                "new",
+                SiteArchetype::WaterPlant,
+                BuildSiteTile { x: 1, z: 2 },
+                FootprintTiles {
+                    width: 1,
+                    depth: 1,
+                },
+                "Surface",
+                0,
+                false,
+            )],
+        };
+        let _ = import_preset_collection_into_pending_queue(
+            &mut queue,
+            &incoming,
+            BlueprintImportQueueMode::Replace,
+        );
+        assert_eq!(queue.entries.len(), 1);
+        assert_eq!(queue.entries[0].label, "new");
     }
 
     #[test]

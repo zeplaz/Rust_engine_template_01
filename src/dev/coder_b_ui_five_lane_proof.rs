@@ -22,6 +22,7 @@ const FIVE_LANE_SHELL: &[&str] = &[
     "/ui_w3_p5_001/green",
     "/witness/interaction_block_green",
     "/ui_w3_p4_001/green",
+    "/ui_oh_p4_001/green",
     "/phase4/icon_atlas_loaded",
     "/phase4/p5_br_tab_wired",
 ];

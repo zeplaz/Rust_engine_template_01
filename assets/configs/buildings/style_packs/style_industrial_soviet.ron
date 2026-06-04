@@ -1,0 +1,18 @@
+(
+    schema_version: 1,
+    style_pack_id: "style_industrial_soviet",
+    label: "Industrial Soviet",
+    usage_bias: ["industrial", "factory"],
+    style_tags: ["concrete", "panel", "flat"],
+    slots: (
+        wall_1u: "wall_concrete_1u",
+        wall_2u: "wall_concrete_2u",
+        door_default: "door_factory",
+        door_wide: "door_gate_industrial",
+        window_industrial: "win_industrial_3u",
+        roof_default: "roof_sawtooth",
+        roof_flat: "roof_flat",
+        prop_clutter: "prop_transformer",
+    ),
+    fallback_policy: "hide_slot",
+)

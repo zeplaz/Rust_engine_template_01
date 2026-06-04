@@ -1,0 +1,79 @@
+batch_id: kit_greybox_001
+designer_mcp: sign-off
+proceed_promote: yes
+rules_check:
+  passed: true
+  blocked_by: []
+  batch_id: kit_greybox_001
+  seed: 42
+modules:
+  - asset_id: wall_brick_1u
+    job_id: wall_brick_1u_example
+    valid: true
+    vertex_count: 24
+    notes: example_shipped; verify-only this batch
+  - asset_id: wall_concrete_2u
+    job_id: wall_concrete_2u_run001
+    valid: true
+    vertex_count: 24
+    notes: 8x3x0.3m; grid [2,1]
+  - asset_id: roof_flat_2u
+    job_id: roof_flat_2u_run001
+    valid: true
+    vertex_count: 24
+    notes: 8x0.2x8m slab; snap roof_ridge
+  - asset_id: door_industrial_1u
+    job_id: door_industrial_1u_run001
+    valid: true
+    vertex_count: 24
+    notes: 2x3x0.2m
+  - asset_id: wall_wood_1u
+    job_id: wall_wood_1u_run001
+    valid: true
+    vertex_count: 24
+    notes: style_rural
+  - asset_id: wall_steel_1u
+    job_id: wall_steel_1u_run001
+    valid: true
+    vertex_count: 24
+    notes: style_industrial_west
+  - asset_id: wall_glass_1u
+    job_id: wall_glass_1u_run001
+    valid: true
+    vertex_count: 24
+    notes: style_modern thin panel
+  - asset_id: roof_pitched_2u
+    job_id: roof_pitched_2u_run001
+    valid: true
+    vertex_count: 24
+    notes: greybox pitched via 1.5m slab (references greybox:pitched_via_slab)
+  - asset_id: door_warehouse_2u
+    job_id: door_warehouse_2u_run001
+    valid: true
+    vertex_count: 24
+    notes: 4x4x0.25m; grid [2,1]
+  - asset_id: door_shop_1u
+    job_id: door_shop_1u_run001
+    valid: true
+    vertex_count: 24
+    notes: 2x2.5x0.15m; sub-1u width greybox
+  - asset_id: roof_industrial_shed_2u
+    job_id: roof_industrial_shed_2u_run001
+    valid: true
+    vertex_count: 24
+    notes: 8x0.3x10m; grid [2,3] depth span
+style_pack_slice:
+  style_industrial_west:
+    - wall_brick_1u
+    - wall_concrete_2u
+    - wall_steel_1u
+    - roof_flat_2u
+    - door_industrial_1u
+    - door_warehouse_2u
+    - roof_industrial_shed_2u
+  style_rural:
+    - wall_wood_1u
+    - roof_pitched_2u
+  style_modern:
+    - wall_glass_1u
+    - door_shop_1u

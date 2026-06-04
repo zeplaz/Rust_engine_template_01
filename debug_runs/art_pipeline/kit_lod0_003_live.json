@@ -1,0 +1,86 @@
+{
+  "batch_id": "kit_lod0_003",
+  "_agent_meta": {
+    "agent": "coder-mcp",
+    "updated_at": "2026-06-02T23:36:49.443400+00:00",
+    "rules_applied": [
+      "no_ai_generated_images",
+      "deterministic_output",
+      "batch_processing",
+      "grid_alignment",
+      "canonical_module_ids_only"
+    ]
+  },
+  "gates": {
+    "G0": "pass",
+    "G1": "pass",
+    "G2": "pass",
+    "G3": "pass",
+    "G4": "pass",
+    "G5": "pass"
+  },
+  "modules": [
+    {
+      "asset_id": "wall_concrete_2u",
+      "job_id": "wall_concrete_2u_lod0_run001",
+      "status": "promoted",
+      "registered": true,
+      "valid": true,
+      "vertex_count": 24,
+      "promoted_path": "assets/models/modules/wall_concrete_2u_lod0_run001/model.glb",
+      "module_id": "wall_concrete_2u",
+      "batch_id": "kit_lod0_003"
+    },
+    {
+      "asset_id": "roof_sawtooth",
+      "job_id": "roof_sawtooth_lod0_run001",
+      "status": "promoted",
+      "registered": true,
+      "valid": true,
+      "vertex_count": 192,
+      "promoted_path": "assets/models/modules/roof_sawtooth_lod0_run001/model.glb",
+      "module_id": "roof_sawtooth",
+      "batch_id": "kit_lod0_003"
+    },
+    {
+      "asset_id": "door_warehouse",
+      "job_id": "door_warehouse_lod0_run001",
+      "status": "promoted",
+      "registered": true,
+      "valid": true,
+      "vertex_count": 44,
+      "promoted_path": "assets/models/modules/door_warehouse_lod0_run001/model.glb",
+      "module_id": "door_warehouse",
+      "batch_id": "kit_lod0_003"
+    },
+    {
+      "asset_id": "win_industrial_3u",
+      "job_id": "win_industrial_3u_lod0_run001",
+      "status": "promoted",
+      "registered": true,
+      "valid": true,
+      "vertex_count": 96,
+      "promoted_path": "assets/models/modules/win_industrial_3u_lod0_run001/model.glb",
+      "module_id": "win_industrial_3u",
+      "batch_id": "kit_lod0_003"
+    },
+    {
+      "asset_id": "prop_vent",
+      "job_id": "prop_vent_lod0_run001",
+      "status": "promoted",
+      "registered": true,
+      "valid": true,
+      "vertex_count": 48,
+      "promoted_path": "assets/models/modules/prop_vent_lod0_run001/model.glb",
+      "module_id": "prop_vent",
+      "batch_id": "kit_lod0_003"
+    }
+  ],
+  "promoted_count": 5,
+  "registered_count": 5,
+  "failed": [],
+  "module_index": "assets/configs/buildings/_module_index.ron",
+  "index_entry_count": 53,
+  "batch_registered_count": 5,
+  "next": "@designer-mcp kit_lod0_004 G0-G1"
+}

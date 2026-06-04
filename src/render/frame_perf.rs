@@ -314,6 +314,12 @@ pub fn frame_perf_verbose() -> bool {
             .is_some_and(|v| v == "1" || v.eq_ignore_ascii_case("true"))
 }
 
+/// **PERF-PLAY-001** — default play logging: avoid `STAGE5_VERBOSE` / `STAGE5_READINESS_VERBOSE` in `--release`.
+#[must_use]
+pub fn perf_play_quiet_defaults_recommended() -> bool {
+    !frame_perf_verbose() && !stage5_readiness_live_verbose()
+}
+
 /// Per-frame readiness/projection trace (`READINESS_*` at info). Off by default — success path is throttled.
 #[must_use]
 pub fn stage5_readiness_live_verbose() -> bool {
@@ -424,6 +430,7 @@ pub fn emit_frame_perf_summary(
     stall: Option<Res<crate::render::FrameStallWatch>>,
     shell: Option<Res<crate::gui::hud::ProductShellDiagnostics>>,
     budget: Option<Res<crate::gui::hud::FrameBudgetDiagnostics>>,
+    raster_policy: Option<Res<crate::render::TileFallbackRasterPolicy>>,
 ) {
     perf.frame_index = perf.frame_index.wrapping_add(1);
     let shell_wall_ms = shell
@@ -508,16 +515,26 @@ pub fn emit_frame_perf_summary(
         }
     }
 
+    if let Some(p) = raster_policy.as_deref() {
+        line.push_str(&format!(
+            " | raster_cap={} minimap_cpu={}",
+            p.chunks_per_frame,
+            if p.cpu_minimap_pass { 1 } else { 0 }
+        ));
+    }
+
     if let Some(s) = stall.as_deref() {
         let sp = &s.spans;
         line.push_str(&format!(
-            " | stall first+preupd={:.2} update={:.2} post_dom={:.2} post_vt={:.2} post→ready={:.2} ready={:.2} post→egui={:.2} egui={:.2} post_egui={:.2}",
+            " | stall first+preupd={:.2} update={:.2} merge={:.2} post_main={:.2} post_vt={:.2} post→ready={:.2} ready={:.2} post_vt→egui={:.2} post→egui={:.2} egui={:.2} post_egui={:.2}",
             sp.first_to_preupdate_ms,
             sp.update_ms,
-            sp.postupdate_domain_merge_ms,
+            sp.domain_merge_ms,
+            sp.postupdate_main_ms,
             sp.postupdate_vt_ci_ms,
             sp.postupdate_to_readiness_ms,
             sp.readiness_ms,
+            sp.post_vt_to_pre_egui_ms,
             sp.post_readiness_to_pre_egui_ms,
             sp.egui_ms,
             sp.post_egui_to_last_ms,
@@ -530,6 +547,36 @@ pub fn emit_frame_perf_summary(
                 .collect::<Vec<_>>()
                 .join(",");
             line.push_str(&format!(" | stall_hits=[{detail}]"));
+        }
+        let to_map_ms = if sp.update_pre_map_camera_ms > 0.0 || sp.map_camera_chain_ms > 0.0 {
+            sp.update_pre_map_camera_ms + sp.map_camera_chain_ms
+        } else {
+            sp.after_map_camera_smooth_ms
+        };
+        if sp.first_to_preupdate_ms > 0.5
+            || to_map_ms > 0.5
+            || sp.update_pre_map_camera_ms > 0.5
+            || sp.map_camera_chain_ms > 0.5
+            || sp.after_view_sync_ms > 0.5
+            || sp.after_fire_build_ms > 0.5
+            || sp.before_world_repr_ms > 0.5
+            || sp.post_world_repr_ms > 0.5
+            || sp.post_fire_project_ms > 0.5
+            || sp.post_streaming_spine_ms > 0.5
+        {
+            line.push_str(&format!(
+                " | upd_span preupd={:.2} pre_map={:.2} map_cam={:.2} to_map={:.2} map_view={:.2} view_fire={:.2} fire_repr={:.2} repr={:.2} fire_proj={:.2} stream_late={:.2}",
+                sp.first_to_preupdate_ms,
+                sp.update_pre_map_camera_ms,
+                sp.map_camera_chain_ms,
+                to_map_ms,
+                sp.after_view_sync_ms,
+                sp.after_fire_build_ms,
+                sp.before_world_repr_ms,
+                sp.post_world_repr_ms,
+                sp.post_fire_project_ms,
+                sp.post_streaming_spine_ms,
+            ));
         }
     }
 
@@ -562,10 +609,28 @@ pub fn emit_frame_perf_summary(
             raster_ms,
         );
         let stall_hit = stall.and_then(|s| {
+            let sp = &s.spans;
+            let to_map_ms = if sp.update_pre_map_camera_ms > 0.0 || sp.map_camera_chain_ms > 0.0 {
+                sp.update_pre_map_camera_ms + sp.map_camera_chain_ms
+            } else {
+                sp.after_map_camera_smooth_ms
+            };
             s.segments
                 .iter()
+                .filter(|(label, _)| {
+                    // Wall segment can include unordered Update work before map camera; prefer upd_span total.
+                    *label != "after_map_camera_smooth"
+                        || sp.update_pre_map_camera_ms <= 0.0
+                        || sp.map_camera_chain_ms <= 0.0
+                })
                 .max_by(|a, b| a.1.partial_cmp(&b.1).unwrap())
-                .map(|(label, ms)| (label.to_string(), *ms))
+                .map(|(label, ms)| {
+                    if *label == "after_map_camera_smooth" && to_map_ms > *ms {
+                        ("to_map_unordered".to_string(), to_map_ms)
+                    } else {
+                        (label.to_string(), *ms)
+                    }
+                })
         });
         let attrib_hit = [
             ("preview_cpu", attrib_snap.preview_cpu_raster_ms),

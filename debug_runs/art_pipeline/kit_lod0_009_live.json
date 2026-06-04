@@ -1,0 +1,85 @@
+{
+  "batch_id": "kit_lod0_009",
+  "_agent_meta": {
+    "agent": "coder-mcp",
+    "updated_at": "2026-06-02T23:38:56.878824+00:00",
+    "rules_applied": [
+      "no_ai_generated_images",
+      "deterministic_output",
+      "batch_processing",
+      "grid_alignment",
+      "canonical_module_ids_only"
+    ]
+  },
+  "gates": {
+    "G0": "pass",
+    "G1": "pass",
+    "G2": "pass",
+    "G3": "pass",
+    "G4": "pass",
+    "G5": "pass"
+  },
+  "modules": [
+    {
+      "asset_id": "door_double_shop",
+      "job_id": "door_double_shop_lod0_run001",
+      "status": "promoted",
+      "registered": true,
+      "valid": true,
+      "vertex_count": 44,
+      "promoted_path": "assets/models/modules/door_double_shop_lod0_run001/model.glb",
+      "module_id": "door_double_shop",
+      "batch_id": "kit_lod0_009"
+    },
+    {
+      "asset_id": "door_gate_industrial",
+      "job_id": "door_gate_industrial_lod0_run001",
+      "status": "promoted",
+      "registered": true,
+      "valid": true,
+      "vertex_count": 44,
+      "promoted_path": "assets/models/modules/door_gate_industrial_lod0_run001/model.glb",
+      "module_id": "door_gate_industrial",
+      "batch_id": "kit_lod0_009"
+    },
+    {
+      "asset_id": "win_bunker_slit",
+      "job_id": "win_bunker_slit_lod0_run001",
+      "status": "promoted",
+      "registered": true,
+      "valid": true,
+      "vertex_count": 96,
+      "promoted_path": "assets/models/modules/win_bunker_slit_lod0_run001/model.glb",
+      "module_id": "win_bunker_slit",
+      "batch_id": "kit_lod0_009"
+    },
+    {
+      "asset_id": "win_skylight_1u",
+      "job_id": "win_skylight_1u_lod0_run001",
+      "status": "promoted",
+      "registered": true,
+      "valid": true,
+      "vertex_count": 48,
+      "promoted_path": "assets/models/modules/win_skylight_1u_lod0_run001/model.glb",
+      "module_id": "win_skylight_1u",
+      "batch_id": "kit_lod0_009"
+    },
+    {
+      "asset_id": "corner_parapet",
+      "job_id": "corner_parapet_lod0_run001",
+      "status": "promoted",
+      "registered": true,
+      "valid": true,
+      "vertex_count": 48,
+      "promoted_path": "assets/models/modules/corner_parapet_lod0_run001/model.glb",
+      "module_id": "corner_parapet",
+      "batch_id": "kit_lod0_009"
+    }
+  ],
+  "promoted_count": 5,
+  "registered_count": 5,
+  "failed": [],
+  "module_index": "assets/configs/buildings/_module_index.ron",
+  "index_entry_count": 81,
+  "batch_registered_count": 5
+}

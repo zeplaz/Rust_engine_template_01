@@ -1,0 +1,43 @@
+{
+  "program_id": "MCP-PT-2-001",
+  "task": "production batch author",
+  "green": true,
+  "pilots": [
+    {
+      "slug": "rowhouse_victorian",
+      "batch_id": "tile_rowhouse_victorian_production_v1",
+      "atlas_id": "rowhouse_victorian_production_v1",
+      "variant_count": 14,
+      "assembly_id": "victorian_4x3_s42_a7cb",
+      "tile_batch": "tools/mcp/schemas/examples/tile_batch_rowhouse_victorian_production_v1.json",
+      "variant_set": "tools/mcp/schemas/examples/variant_set_rowhouse_victorian_production_v1.json"
+    },
+    {
+      "slug": "warehouse_industrial_west",
+      "batch_id": "tile_warehouse_industrial_west_production_v1",
+      "atlas_id": "warehouse_industrial_west_production_v1",
+      "variant_count": 14,
+      "assembly_id": "industrial_west_4x2_s43_a879",
+      "tile_batch": "tools/mcp/schemas/examples/tile_batch_warehouse_industrial_west_production_v1.json",
+      "variant_set": "tools/mcp/schemas/examples/variant_set_warehouse_industrial_west_production_v1.json"
+    },
+    {
+      "slug": "shopfront_colonial",
+      "batch_id": "tile_shopfront_colonial_production_v1",
+      "atlas_id": "shopfront_colonial_production_v1",
+      "variant_count": 14,
+      "assembly_id": "colonial_3x3_s44_cf75",
+      "tile_batch": "tools/mcp/schemas/examples/tile_batch_shopfront_colonial_production_v1.json",
+      "variant_set": "tools/mcp/schemas/examples/variant_set_shopfront_colonial_production_v1.json"
+    },
+    {
+      "slug": "bunker_military",
+      "batch_id": "tile_bunker_military_production_v1",
+      "atlas_id": "bunker_military_production_v1",
+      "variant_count": 14,
+      "assembly_id": "military_6x3_s46_fbad",
+      "tile_batch": "tools/mcp/schemas/examples/tile_batch_bunker_military_production_v1.json",
+      "variant_set": "tools/mcp/schemas/examples/variant_set_bunker_military_production_v1.json"
+    }
+  ]
+}

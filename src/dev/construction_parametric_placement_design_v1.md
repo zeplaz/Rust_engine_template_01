@@ -9,11 +9,23 @@
 | **Version** | `1.0.0` |
 | **Date** | 2026-05-26 |
 | **Owner** | `@designer` |
-| **Verdict** | **PASS (qualified)** |
+| **Verdict** | **PASS** |
+| **Status** | **SIGNED** |
 | **Unblocks** | **CONSTRUCTION-PARAM-CODER-001** … **006** |
 | **No Rust** | Tray · staged list · hints · partial-alpha — implementation in coder lanes |
 
-**Slice docs (same content, split for review):** [`construction_parametric_tray_mock_v1.md`](construction_parametric_tray_mock_v1.md) · [`construction_parametric_staged_panel_v1.md`](construction_parametric_staged_panel_v1.md) · [`construction_parametric_ghost_visual_v1.md`](construction_parametric_ghost_visual_v1.md)
+---
+
+## Deliverable index (CONSTRUCTION-PARAM-DESIGN-001)
+
+| # | Deliverable | File | § in this doc |
+|:---:|:---|:---|:---:|
+| 1 | **Tray toggle mock** | [`construction_parametric_tray_mock_v1.md`](construction_parametric_tray_mock_v1.md) | §1–2, §4 |
+| 2 | **Staged-list columns** | [`construction_parametric_staged_panel_v1.md`](construction_parametric_staged_panel_v1.md) | §3 |
+| 3 | **Tool hints** | §4 + tray mock § Tool hint strings | §4 |
+| 4 | **Partial-alpha ghost spec** | [`construction_parametric_ghost_visual_v1.md`](construction_parametric_ghost_visual_v1.md) | §5 |
+
+**Follow-on polish (P0, separate queue IDs):** [`construction_parametric_staging_ux_v2.md`](construction_parametric_staging_ux_v2.md) · [`construction_parametric_scale_hud_v1.md`](construction_parametric_scale_hud_v1.md)
 
 ---
 
@@ -309,12 +321,12 @@ parametric_overlap_hue      = #B43030  // footprint_invalid_color
 
 ---
 
-## 9 — Witness (qualified until coder)
+## 9 — Witness (coder rollup — not a design gate)
 
 **File:** `debug_runs/construction_stage_live.json`  
 **Block:** `construction_parametric_placement_001`
 
-Designer **PASS (qualified)** until rollup `green: true`. See [`construction_parametric_design_signoff_v1.md`](construction_parametric_design_signoff_v1.md) for pointer table.
+Designer **PASS** is recorded on **design deliverables** (toggle, columns, hints, partial-alpha). Sim witness `green` is a **coder** acceptance gate — see [`construction_parametric_design_signoff_v1.md`](construction_parametric_design_signoff_v1.md).
 
 ---
 
@@ -322,6 +334,6 @@ Designer **PASS (qualified)** until rollup `green: true`. See [`construction_par
 
 | Role | Verdict | Date |
 |:---|:---|:---|
-| `@designer` | **PASS (qualified)** | 2026-05-26 |
-| `@planner` | **PASS** (plan signed) | 2026-05-26 |
-| `@coder` | **Unblocked** | 2026-05-26 |
+| `@designer` | **PASS** — CONSTRUCTION-PARAM-DESIGN-001 complete | 2026-05-26 |
+| `@planner` | **PASS** — [`plan_construction_parametric_placement_v1.md`](plan_construction_parametric_placement_v1.md) | 2026-05-26 |
+| `@coder` | **Unblocked** — implement 001…006 | 2026-05-26 |

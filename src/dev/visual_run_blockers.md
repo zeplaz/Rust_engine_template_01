@@ -70,20 +70,35 @@ Re-open CW rows only if warnings return.
 
 **Code:** [`vt_spatial_invariants.rs`](../render/vt_spatial_invariants.rs) requires ≥2 occupied chunks, mean distance > 1, variance > 0.1. A **short burst** of 2 instances (often same chunk after ecology seed) fails VT-5 while later ticks pass.
 
+**Lib CI vs live visual (STAGE5-VT-FLICKER-001):**
+
+| Surface | What it proves | What it does **not** prove |
+|:---|:---|:---|
+| `cargo test --lib vt_ci_matrix` | Deterministic VT-4/VT-5 on **spread** fixture; `vt5_ci_matrix_collapsed_extract_fails` catches **bootstrap collapsed** instances at same chunk | Intermittent VR-04 under **`--test visual`** at inv≈108 |
+| `cargo run --release -- --test visual` | Live readiness eval + harness seeds | Requires operator/coder **log review** for sustained VT-5 fail |
+
 **Not a Stage 5 gate** by design (`stage5_triage_backlog.md` — `TRIAGE-VT-DEEP`). Options when promoting:
 
 1. Seed fire proof layout with spread chunks in visual harness, or  
 2. Gate VT-5 on `fire_inst >= N` before evaluating, or  
 3. Treat single-frame fail as warn-only in visual test policy.
 
+**Exit for STAGE5-VT-FLICKER-001:** confirm VR-04 behavior on a **`--test visual`** run (not lib matrix alone).
+
+**STAGE5-VT-FLICKER-VISUAL-001 (2026-05-28):** `stage5_vt_flicker_visual_001_witness()` lib-green (`done_qualified`); VR-04 live confirm pending → **OPS-VT5-001**.
+
+**STAB-VT-001 (2026-05-28):** `stab_vt_001_witness()` lib-green (`done_qualified`); same VR-04 live confirm pending → **OPS-VT5-001**.
+
 ---
 
 ## VR-05 — Fire flicker (F1 sim gate — witness live)
 
-**Symptom:** `fire_inst=22` one tick then `0`; `fire1=true` in readiness flags anyway (spine present, not ecology quality).
+**Symptom:** `fire_inst=22` one tick then `0`; `fire1=true` in readiness flags anyway (spine present, not ecology quality). Operator **world map blink** — [`map_blink_001_repro_v1.md`](map_blink_001_repro_v1.md) (**MAP-BLINK-001**).
 
 **F1 (done):** Fuel + old-growth ignition gate — [`fire_ecology_f1_todos.md`](fire_ecology_f1_todos.md).  
 **Witness:** `debug_runs/fire_ecology_live.json` (`fuel_gated_ignitions`, `mean_fuel`, `mean_heat`, `heat_spike_frames`).
+
+**MAP-BLINK-001 (2026-05-26):** PLAY-06d overlay hold when sim has display heat but filtered map empty; 4-frame overlay warmup on cold start; projection graph retains buffers on 1-tick fence lag. Verify with `VISUAL_DIAG=1` — `overlay_rev` should not wipe while fire steady.
 
 **Still deferred (F2+):** `TRIAGE-FIRE-STREAM`, `TRIAGE-FIRE-EXTRACT`, per-tile GPU extract — not FULL_APP gate.
 

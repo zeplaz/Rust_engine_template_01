@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "job_id": "window_smoke_example",
+  "spec_ref": "assets/staging/specs/window_industrial_1u.json",
+  "operation": "module_window",
+  "params": {
+    "width_m": 2.0,
+    "height_m": 1.5,
+    "depth_m": 0.12,
+    "material_profile": "glass_industrial_01",
+    "seed": 42
+  },
+  "output": {
+    "glb": "assets/staging/window_smoke_example/model.glb"
+  }
+}

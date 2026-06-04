@@ -1,0 +1,135 @@
+# variant_matrix_warehouse_v1.yaml — MCP-PT-1-002
+program_id: PLAN-PROC-TILE-PROD-001
+task_id: MCP-PT-1-002
+archetype: warehouse
+usage_bias: [industrial, warehouse, logistics]
+primary_style_pack: style_industrial_west
+production_bar: src/dev/design_procedural_tile_production_bar_v1.md
+catalog: assets/configs/buildings/_variant_catalog.ron
+
+pilot:
+  lod0_batch_id: tile_warehouse_industrial_west_pilot_v1
+  production_batch_id: tile_warehouse_industrial_west_production_v1
+  footprint: { width: 4, depth: 2, floors: 2 }
+  assembly_id_lod0: industrial_west_4x2_s43_a879
+  tile_id: warehouse_industrial
+
+reference_tags_policy:
+  required_on_production_snapshot: true
+  min_tags: 1
+  format: "ref:<source>:<id>"
+
+variant_keys:
+  clean_day:
+    required: true
+    group: operational
+  clean_night_off:
+    required: true
+    group: operational
+  clean_night_on:
+    required: true
+    group: operational
+  damaged_day:
+    required: true
+    group: damage
+  damaged_night_on:
+    required: true
+    group: damage
+  under_construction_01:
+    required: true
+    group: construction
+  under_construction_02:
+    required: true
+    group: construction
+    notes: "Industrial sites show mid-build cladding — required for warehouse"
+  abandoned:
+    required: false
+    group: lifecycle
+  ruined:
+    required: false
+    group: lifecycle
+  burning_00:
+    required: true
+    group: fire
+    frame_index: 0
+  burning_01: { required: true, group: fire, frame_index: 1 }
+  burning_02: { required: true, group: fire, frame_index: 2 }
+  burning_03: { required: true, group: fire, frame_index: 3 }
+  burning_04: { required: true, group: fire, frame_index: 4 }
+  burning_05: { required: true, group: fire, frame_index: 5 }
+  burning_06: { required: true, group: fire, frame_index: 6 }
+  burning_07: { required: true, group: fire, frame_index: 7 }
+
+required_key_count: 15  # 7 incl. UC02 + 8 fire
+minimum_pt2_bake: 6
+g4_signoff: debug_runs/art_pipeline/warehouse_industrial_west_production_signoff.yaml
+tile_fix_09:
+  task_id: TILE-FIX-09
+  state_facing_matrix: debug_runs/art_pipeline/warehouse_state_facing_matrix_v1.yaml
+  building_definition: tools/mcp/schemas/examples/building_definition_warehouse_industrial_west_production_v1.json
+  visual_config_v2: assets/configs/buildings/visual_config_warehouse_industrial_west_v2.json
+  g4_signoff: debug_runs/art_pipeline/tile_fix_09_warehouse_g4_signoff.yaml
+  v2_batch_id: tile_warehouse_industrial_west_v2
+  v1_frozen: true
+
+bake_spine:
+  design_ref: src/dev/design_tile_bake_spine_convergence_v1.md
+  ship_bake_source: keyframe_pack
+  ci_bake_source: smoke_ortho_headless
+  lod0_pilot_atlas_ship_allowed: false
+  light_blend: utils/Light_keysshotsetup.blend
+  keyframe_tool: utils/keyframe_render.py
+  pack_cli: "python -m rust_engine_mcp.cli tile-atlas-pack <folder> -pk"
+
+keyframe_stills:
+  export_folder: assets/staging/tiles/keyframe_stills/warehouse_industrial/
+  naming: "{variant_key}_f{facing}_frame{frame}.png"
+  legacy_state_only_folder: assets/staging/tiles/keyframe_stills/warehouse_industrial_west/
+  g4_review_mode: keyframe_stills
+  g4_minimum_review_keys:
+    - clean_day
+    - clean_night_on
+    - damaged_night_on
+  full_matrix_keys: 15
+  lod0_pilot_batch: tile_warehouse_industrial_west_pilot_v1
+  lod0_pilot_g4_valid: false
+
+style_packs:
+  style_industrial_west:
+    applicable: true
+    role: primary
+    district_one_liner: "Steel warehouse with sawtooth roof and vent clutter"
+    reference_tag_hints: ["ref:survey:warehouse-industrial-west", "ref:osm:building=industrial"]
+    roof_slot: roof_sawtooth
+    prop_clutter: prop_vent
+  style_industrial_soviet:
+    applicable: true
+    role: alternate
+    district_one_liner: "Concrete panel factory with flat roof and transformer yard"
+    reference_tag_hints: ["ref:survey:factory-soviet-panel"]
+    roof_slot: roof_sawtooth
+    prop_clutter: prop_transformer
+  style_modern:
+    applicable: true
+    role: alternate
+    district_one_liner: "Glass-and-panel logistics hall with flat roof"
+    reference_tag_hints: ["ref:survey:modern-warehouse"]
+    roof_slot: roof_flat
+    prop_clutter: prop_ac
+  style_victorian:
+    applicable: false
+    reason: "Brick residential grammar — use rowhouse archetype"
+  style_colonial:
+    applicable: false
+    reason: "Civic shopfront grammar — use shopfront archetype"
+  style_rural:
+    applicable: false
+    reason: "Farm residential grammar — use rowhouse archetype"
+  style_military:
+    applicable: false
+    reason: "Bunker grammar — use bunker archetype"
+
+g0_rules:
+  reference_tags_required: true
+  source_tier_ship: production
+  reject_lod0_when_ship: true

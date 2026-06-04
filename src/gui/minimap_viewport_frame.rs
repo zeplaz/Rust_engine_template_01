@@ -33,6 +33,9 @@ pub fn world_tile_to_minimap_screen(
 }
 
 /// Visible world-tile AABB for the tactical (WorldMain) camera.
+///
+/// Uses the same [`sim_map_visible_world_span`] contract as the main map ortho hole so the
+/// minimap frame tracks pan/zoom when the measured sim-map viewport is valid.
 #[must_use]
 pub fn tactical_visible_world_rect(
     manager: &ViewManager,
@@ -41,16 +44,24 @@ pub fn tactical_visible_world_rect(
     tex_w: f32,
     tex_h: f32,
 ) -> Option<Rect> {
+    let (cam, zoom) = manager
+        .view(ViewId::WorldMain)
+        .map(|v| (v.camera.translation, v.camera.zoom))
+        .unwrap_or_else(|| (desired.translation.truncate(), desired.scale.x));
+
     if sim_viewport.is_adequate_for_camera() {
-        let cam = desired.translation.truncate();
-        let zoom = desired.scale.x.max(1e-4);
+        let zoom = zoom.max(1e-4);
         let (fw, fh) = sim_map_visible_world_span(sim_viewport, zoom, tex_w, tex_h);
-        return Some(clamp_world_rect_to_map(
-            Rect::from_center_half_size(cam, Vec2::new(fw * 0.5, fh * 0.5)),
-            tex_w,
-            tex_h,
-        ));
+        if fw > 1e-3 && fh > 1e-3 {
+            return Some(clamp_world_rect_to_map(
+                Rect::from_center_half_size(cam, Vec2::new(fw * 0.5, fh * 0.5)),
+                tex_w,
+                tex_h,
+            ));
+        }
     }
+
+    // Early boot: ViewManager rect before sim viewport measure is ready.
     if let Some(view) = manager.view(ViewId::WorldMain) {
         let r = view.visible_world_rect();
         if r.width() > 1e-3 && r.height() > 1e-3 {
@@ -114,11 +125,12 @@ pub fn paint_tactical_viewport_frame_on_minimap(
     if frame.width() < 0.5 || frame.height() < 0.5 {
         return;
     }
-    const MIN_FRAME_PX: f32 = 12.0;
-    if frame.width() < MIN_FRAME_PX || frame.height() < MIN_FRAME_PX {
+    // Only bump sub-pixel frames so zoom/pan tracking stays faithful when zoomed in.
+    const MIN_VISIBLE_PX: f32 = 2.0;
+    if frame.width() < MIN_VISIBLE_PX || frame.height() < MIN_VISIBLE_PX {
         let cx = frame.center().x;
         let cy = frame.center().y;
-        let scale = (MIN_FRAME_PX / frame.width().max(frame.height())).max(1.0);
+        let scale = (MIN_VISIBLE_PX / frame.width().max(frame.height())).max(1.0);
         let w = (frame.width() * scale).min(image_rect.width());
         let h = (frame.height() * scale).min(image_rect.height());
         frame = egui::Rect::from_center_size(egui::pos2(cx, cy), egui::vec2(w, h));

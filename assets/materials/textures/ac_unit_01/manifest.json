@@ -1,0 +1,11 @@
+{
+  "profile_id": "ac_unit_01",
+  "seed": 931,
+  "generator": "concrete",
+  "size": 256,
+  "paths": {
+    "albedo": "assets/materials/textures/ac_unit_01/albedo.png",
+    "normal": "assets/materials/textures/ac_unit_01/normal.png",
+    "roughness": "assets/materials/textures/ac_unit_01/roughness.png"
+  }
+}

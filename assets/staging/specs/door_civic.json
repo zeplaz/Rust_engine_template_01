@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "asset_id": "door_civic",
+  "archetype": "module_door",
+  "style_pack": "style_colonial",
+  "development_tier": "lod0",
+  "pbr_status": "deferred",
+  "batch_id": "kit_lod0_006",
+  "module": {
+    "grid_units": [
+      1,
+      1
+    ],
+    "snap": "floor_edge",
+    "pivot": "bottom_center"
+  },
+  "dimensions_m": {
+    "w": 1.5,
+    "h": 2.4,
+    "d": 0.15
+  },
+  "material_profile": "wood_plank_01",
+  "references": []
+}

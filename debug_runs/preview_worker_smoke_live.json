@@ -1,0 +1,16 @@
+{
+  "gate_id": "APS-PREVIEW-004",
+  "green": true,
+  "mode": "bevy_worker",
+  "png": "debug_runs/preview_jobs/industrial_west_7x5_s39_9fa1_thumb.png",
+  "modules_loaded": 40,
+  "elapsed_ms": 29532,
+  "missing_glb": [],
+  "bevy_status": {
+    "status": "done",
+    "png": "debug_runs/preview_jobs/industrial_west_7x5_s39_9fa1_thumb.png",
+    "elapsed_ms": 2290,
+    "modules_loaded": 40,
+    "mode": "bevy_worker"
+  }
+}

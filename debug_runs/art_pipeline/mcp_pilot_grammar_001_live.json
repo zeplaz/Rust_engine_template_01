@@ -1,0 +1,15 @@
+{
+  "slice_id": "MCP-PILOT-GRAMMAR-001",
+  "green": false,
+  "proceed_ship": false,
+  "art_quality": "rejected_headless_procedural",
+  "supersedes": "2026-06-03T20:13:33 false-green run",
+  "human_verdict": "unacceptable",
+  "rejection_witness": "debug_runs/art_pipeline/mcp_pilot_grammar_001_rejected_live.json",
+  "findings_summary": "Grey slabs, truck in burning still, no variant differentiation — headless bake mislabeled keyframe_manual",
+  "updated": "2026-06-03T21:00:00+00:00",
+  "_agent_meta": {
+    "agent": "operator",
+    "lane": "human_g4_rejection"
+  }
+}

@@ -478,6 +478,7 @@ mod tests {
                     archetype: SiteArchetype::Factory,
                     layer: LayerType::Surface,
                     catalog_id: Some(catalog_id.into()),
+                    placement: None,
                 },
                 BuildingDefinitionRef {
                     catalog_id: catalog_id.into(),

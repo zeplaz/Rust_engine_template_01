@@ -8,7 +8,7 @@
 | **Date** | 2026-05-26 |
 | **Owner** | `@designer` |
 | **Blocks** | **WSS-CHUNK-SLAB-001**, **WSS-ATMOS-CLIPMAP-001**, **WSS-HYDRO-RUNTIME-001** (no substrate Rust until PASS) |
-| **Status** | **SIGNED** — see [`wssr_design_signoff_v1.md`](wssr_design_signoff_v1.md) |
+| **Status** | **CLOSED** — parent 4/4 + G1–G2/G6 — [`wss_design_gate_parent_closure_v1.md`](wss_design_gate_parent_closure_v1.md) |
 
 **Rule:** Design / evaluation / sign-off only. No Rust. Coders implement **after** this gate — not in parallel with first substrate slice unless planner explicitly waives one row.
 
@@ -84,6 +84,15 @@ Sign-off table:
 | Hanabi spike | | experiments only |
 
 **Unblocks:** coder orders in [`wssr_coder_hybrid_orders_v1.md`](wssr_coder_hybrid_orders_v1.md)
+
+### 5–6. Slab preflight designer slices (G1–G2)
+
+| Deliverable | Path | Status |
+|:---|:---|:---:|
+| Diagnostics hybrid copy | [`wss_substrate_diagnostics_copy_v1.md`](wss_substrate_diagnostics_copy_v1.md) | ☑ |
+| Overlay + witness key names | [`wss_substrate_debug_overlay_names_v1.md`](wss_substrate_debug_overlay_names_v1.md) | ☑ |
+
+Preflight checklist: [`wss_design_gate_001_v1.md`](wss_design_gate_001_v1.md) — steward **G3–G4** still open for full `pass: true`.
 
 ---
 

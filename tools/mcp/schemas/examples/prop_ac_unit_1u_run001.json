@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "job_id": "prop_ac_unit_1u_run001",
+  "spec_ref": "assets/staging/specs/prop_ac_unit_1u.json",
+  "operation": "module_prop",
+  "params": {
+    "width_m": 1.5,
+    "height_m": 1.2,
+    "depth_m": 1.5,
+    "material_profile": "ac_unit_01",
+    "seed": 42
+  },
+  "output": {
+    "glb": "assets/staging/prop_ac_unit_1u_run001/model.glb",
+    "thumbnail": "assets/staging/prop_ac_unit_1u_run001/preview.png"
+  }
+}

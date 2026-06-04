@@ -8,7 +8,8 @@
 | **Date** | 2026-05-26 |
 | **Owner** | `@planner` |
 | **Status** | **SIGNED** |
-| **Coder unblock** | **WSS-CHUNK-SLAB-001** — exec [`plan_wss_chunk_slab_exec_001_v1.md`](plan_wss_chunk_slab_exec_001_v1.md); **blocked** until [`wss_design_gate_001_v1.md`](wss_design_gate_001_v1.md) PASS |
+| **Coder unblock** | **WSS-CHUNK-SLAB-001** — exec [`plan_wss_chunk_slab_exec_001_v1.md`](plan_wss_chunk_slab_exec_001_v1.md); design gate **PASS (qualified)** |
+| **Downstream** | [`plan_wss_atmos_clipmap_exec_001_v1.md`](plan_wss_atmos_clipmap_exec_001_v1.md) · [`plan_wss_hydro_runtime_exec_001_v1.md`](plan_wss_hydro_runtime_exec_001_v1.md) |
 
 **No Rust in this deliverable.** Structs below are **expanded target shapes** — implement fully, not as stubs-to-forget.
 

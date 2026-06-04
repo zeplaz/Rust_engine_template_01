@@ -3,6 +3,7 @@
 use bevy::prelude::*;
 
 use super::components::SiteArchetype;
+use super::parametric::CommittedPlacementSnapshot;
 use super::resources::{FootprintTiles, SiteId};
 use crate::strategic::build_order::BuildSiteTile;
 use crate::strategic::spatial_network::LayerType;
@@ -18,4 +19,6 @@ pub struct CommitConstructionSiteEvent {
     pub layer: LayerType,
     /// Catalog row from `BuildingDefinitionRegistry` when placed from JSON/builtin intent.
     pub catalog_id: Option<String>,
+    /// Parametric weighted footprint (preview + commit share raster in `crate::construction`).
+    pub placement: Option<CommittedPlacementSnapshot>,
 }

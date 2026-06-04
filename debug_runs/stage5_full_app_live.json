@@ -46,42 +46,59 @@
       "debug_runs/ui_shell_migration_live.json",
       "debug_runs/minimap_compositor_live.json",
       "debug_runs/stage7_behavioral_live.json",
-      "debug_runs/stage7_play_live.json"
+      "debug_runs/stage7_play_live.json",
+      "debug_runs/wss_substrate_live.json",
+      "debug_runs/f2_smoke_pipeline_live.json",
+      "debug_runs/play_scenario_live.json"
     ],
     "relative_path": "debug_runs/stage5_full_app_live.json",
     "schema": "debug_run_envelope_v1",
-    "source_system": "log_e01_and_tactical_vfx_stage5_witness_refresh",
-    "written_at_epoch_secs": 1779813870
+    "source_system": "log_e01_fullapp_upgrade_001_witness_refresh",
+    "written_at_epoch_secs": 1780455044
   },
   "agent_cleanup_hints": null,
   "authority_revisions": {
     "overlay_fields": 3,
-    "preview_viewport_authority": 109,
-    "render_target_registry": 3,
-    "resolved_viewports": 109
+    "preview_viewport_authority": 71,
+    "render_target_registry": 2,
+    "resolved_viewports": 71
   },
   "committed_visual_fence": {
-    "fire_sim_time_micros": 11523107,
+    "fire_sim_time_micros": 29519587,
     "fire_tick": 121
   },
   "diagnostic_captured": true,
+  "f2_extract_witness": {
+    "fire_instance_buffer_rows": 1,
+    "gate": "FIRE-F2-EXTRACT-001",
+    "green": true
+  },
   "fire_playback": {
     "active_fire_chunks": 28,
-    "consecutive_frames_with_heat": 65,
-    "held_empty_snapshot_frames": 64,
+    "consecutive_frames_with_heat": 84,
+    "held_empty_snapshot_frames": 83,
     "stable": true,
     "stable_frame_threshold": 10
   },
+  "log_e01_fullapp_upgrade_001": {
+    "capture_lane": "lib_fixture",
+    "full_visual_confirm": false,
+    "gate": "LOG-E01-FULLAPP-UPGRADE-001",
+    "green": false,
+    "logistics_active_rows": 1,
+    "upgrade_from": "visual_run_capture"
+  },
   "log_e01_visual_confirm_001": {
-    "build_signature_log_rows": true,
-    "closure_path": "lib_harness_refresh",
+    "capture_lane": "lib_fixture",
+    "full_visual_confirm": false,
     "gate": "LOG-E01-VISUAL-CONFIRM-001",
     "green": true,
     "lib_fixture_green": true,
     "lib_fixture_logistics_rows": 1,
-    "note": "Operator upgrade: cargo run -p proc_A_dine01 --release -- --test visual sets closure_path visual_run",
+    "log_e01_fixture_green": true,
+    "proof_grade": "lib_fixture",
     "qualified_close": true,
-    "visual_run_required": false
+    "visual_run_required": true
   },
   "log_e01_witness": {
     "gate": "LOG-E01-WITNESS",
@@ -111,7 +128,7 @@
       "image_rect": null,
       "overlay_revision": 3,
       "padding": 0.0,
-      "presentation_revision": 70,
+      "presentation_revision": 89,
       "projection_revision": 944893805417,
       "stale_binding_count_frame": 0,
       "texture_rebinds_frame": 0,
@@ -138,16 +155,16 @@
       "allocated_rect": {
         "height": 594.3125,
         "max": {
-          "x": 1511.65625,
+          "x": 1869.78125,
           "y": 674.28125
         },
         "min": {
-          "x": 785.0625,
+          "x": 1143.21875,
           "y": 79.96875
         },
-        "width": 726.59375
+        "width": 726.5625
       },
-      "aspect_panel": 1.2225786447525024,
+      "aspect_panel": 1.2225260734558103,
       "aspect_texture": 1.0,
       "camera_zoom": 1.7086485624313354,
       "fit_mode": "Contain",
@@ -159,19 +176,19 @@
       "image_rect": {
         "height": 586.3125,
         "max": {
-          "x": 1441.515625,
+          "x": 1799.65625,
           "y": 670.28125
         },
         "min": {
-          "x": 855.203125,
+          "x": 1213.34375,
           "y": 83.96875
         },
         "width": 586.3125
       },
       "overlay_revision": 3,
       "padding": 4.0,
-      "presentation_revision": 54,
-      "projection_revision": 2551213574563,
+      "presentation_revision": 35,
+      "projection_revision": 2551212574560,
       "stale_binding_count_frame": 0,
       "texture_rebinds_frame": 0,
       "texture_rebinds_total": 2,
@@ -195,10 +212,10 @@
     }
   },
   "minimap_source": {
-    "cached_texture_revision": 6,
+    "cached_texture_revision": 14,
     "composite_ok": true,
     "compositor_revision": 1,
-    "construction_rows": 18,
+    "construction_rows": 36,
     "dual_minimap_present": false,
     "ecology_heat_enabled": true,
     "ecology_rows": 100,
@@ -212,7 +229,7 @@
     "presentation_source": "GpuRenderTarget",
     "rt_bound": true,
     "shared_projection": true,
-    "stamp": 6,
+    "stamp": 14,
     "ui_p3_m2_green": true,
     "ui_p3_m3_green": true
   },
@@ -222,13 +239,13 @@
     "fire_particle_view_culled": false,
     "fire_spark_011_green": true,
     "fire_spark_additive_blend": true,
-    "fire_spark_budget_capped": true,
+    "fire_spark_budget_capped": false,
     "fire_spark_compute_enabled": true,
     "fire_spark_phase": "A+B",
     "fire_spark_projection_view": "WorldMain",
-    "fire_spark_rows": 64,
+    "fire_spark_rows": 12,
     "fire_spark_scatter_max": 14,
-    "fire_spark_scatter_slots": 60,
+    "fire_spark_scatter_slots": 11,
     "fire_spark_tactical_proof_zoom_alpha": 0.8500000238418579,
     "fire_spark_zoom_alpha": 0.8500000238418579,
     "resolved_half_extents": {
@@ -274,16 +291,15 @@
   },
   "profile": "FULL_APP",
   "projection_graph": {
-    "build_signature": "order=fire+logistics+ecology fire_inst=0 fire_heat=0 log_rows=1 eco_rows=0",
+    "build_signature": "order=fire+logistics+ecology fire_inst=1 fire_heat=1 log_rows=1 eco_rows=0",
     "ecology_active_rows": 0,
+    "fire_instance_buffer_rows": 1,
     "logistics_active_rows": 1,
-    "runtime_order": "order=fire+logistics+ecology fire_inst=0 fire_heat=0 log_rows=1 eco_rows=0 fire_snap=1 log_snap=1 eco_snap=1"
+    "runtime_order": "order=fire+logistics+ecology fire_inst=1 fire_heat=1 log_rows=1 eco_rows=0 fire_snap=9 log_snap=1 eco_snap=1"
   },
   "projection_state": {
-    "active_band": "Full",
-    "fire_instance_buffer_rows": 0,
-    "instanced_draw": true,
-    "particle_rows_cap": 262144
+    "fire_instance_buffer_rows": 1,
+    "fire_projection_graph_native": true
   },
   "readiness": {
     "duplicate_visual_scan_count": 0,
@@ -334,8 +350,8 @@
       ]
     },
     "live_todo_board": {
-      "all_done": false,
-      "done_count": 11,
+      "all_done": true,
+      "done_count": 13,
       "registry_len": 13,
       "rows": [
         {
@@ -352,11 +368,11 @@
         },
         {
           "id": "TODO-04",
-          "status": "InProgress"
+          "status": "Done"
         },
         {
           "id": "TODO-05",
-          "status": "InProgress"
+          "status": "Done"
         },
         {
           "id": "TODO-06",
@@ -395,6 +411,14 @@
     "overlay_from_shared_buffers_only": true,
     "particle_lod_scales": true,
     "passes": true,
+    "perf_attribution_60s": {
+      "frames_recorded": 720,
+      "p95_frame_ms": 24.0,
+      "p95_raster_b_ms": 8.399999618530273,
+      "p95_view_fire_ms": 2.879999876022339,
+      "window_samples": 720,
+      "window_target_frames": 3600
+    },
     "phase_d_ok": true,
     "phase_f_lod_proof_ok": true,
     "phase_f_ok": true,
@@ -403,6 +427,37 @@
     "registered_producers": 2,
     "single_fire_extract": true,
     "violations": [],
+    "visual_witness": {
+      "frame_budget": {
+        "avg_ms": 18.0,
+        "last_frame_ms": 20.0,
+        "max_ms": 42.0
+      },
+      "frames_sampled": 120,
+      "perf_attribution_60s": {
+        "p95_frame_ms": 24.0,
+        "p95_raster_b_ms": 8.399999618530273,
+        "p95_view_fire_ms": 2.879999876022339,
+        "window_samples": 720
+      },
+      "post_vt_to_pre_egui_ms": 4.5,
+      "primary_window_presentable": true,
+      "primary_window_wh": {
+        "x": 1280.0,
+        "y": 720.0
+      },
+      "sim_valid_streak": 12,
+      "soft_healthy": true,
+      "tile_raster_budget": {
+        "chunks_per_frame": 4,
+        "effective_chunks_per_frame": 4,
+        "last_raster_ms": 6.0,
+        "minimap_cpu_allowed": false
+      },
+      "viewport": {
+        "render_hole_steady_flip_count": 0
+      }
+    },
     "vt4_ok": true,
     "vt5_ok": true
   },
@@ -416,7 +471,7 @@
     "viewport_zero_size_detected": false
   },
   "render_targets": {
-    "committed_revision": 3,
+    "committed_revision": 2,
     "committed_size": {
       "x": 727,
       "y": 594
@@ -430,11 +485,11 @@
         "x": 727,
         "y": 594
       },
-      "version": 3
+      "version": 2
     }
   },
   "sim_step_stamp": {
-    "sim_time_micros": 11523107,
+    "sim_time_micros": 29519587,
     "tick": 121
   },
   "stage5_closure": {
@@ -443,11 +498,15 @@
     "not_gate": "VM-06..11, full fire streaming, gpu-tile gizmo removal, construction stage",
     "operational_gate": "FULL_APP",
     "passes": true,
-    "spine_todos_all_done": false,
+    "spine_todos_all_done": true,
     "triage_backlog": "src/dev/stage5_triage_backlog.md"
   },
   "tactical_vfx_witness": {
     "all_green": true,
+    "fire_degraded_overlay_bootstrap": false,
+    "fire_instance_buffer_rows_gt_0": true,
+    "fire_projection_graph_native": true,
+    "fire_projection_stamp_aligned": true,
     "fire_spark_011_green": true,
     "fire_spark_rows_gt_0": true,
     "fire_spark_tactical_proof_zoom_alpha": 0.8500000238418579,
@@ -472,35 +531,13 @@
   },
   "test_scene": "visual",
   "texture_stale_reasons": {
-    "minimap_cached_behind_raster": 6,
+    "minimap_cached_behind_raster": 14,
     "preview_stale_binding": false
-  },
-  "triage_gpu_tile_wgsl_001": {
-    "gate": "TRIAGE-GPU-TILE-WGSL-001",
-    "green": true,
-    "instanced_authoritative": true,
-    "shader": "assets/shaders/debug/tile_debug_instanced.wgsl",
-    "view_aware_tint_wired": true,
-    "visual_run_note": "cargo run -p proc_A_dine01 --release -- --test visual — no naga panic (VR-01 fixed)",
-    "wgsl_storage_instances": true,
-    "world_main_instance_rows": 0
-  },
-  "vfx_visual_signoff_001": {
-    "acceptance_doc": "src/dev/vfx_visual_acceptance_record_v1.md",
-    "designer_verdict": "PASS (qualified)",
-    "fire_spark_011_green": true,
-    "gate": "VFX-VISUAL-SIGNOFF-001",
-    "green": true,
-    "lib_qualified": true,
-    "tactical_vfx_all_green": true,
-    "visual_run_note": "Operator optional: cargo run -p proc_A_dine01 --release -- --test visual",
-    "visual_run_pending": true,
-    "water_w1_river_read_green": true
   },
   "viewport_contracts": {
     "egui_world_preview_viewport": {
       "height": 594.3125,
-      "width": 726.59375
+      "width": 726.5625
     },
     "minimap_panel": {
       "logical_size": {
@@ -523,16 +560,16 @@
       "committed": true,
       "gpu_authoritative": true,
       "logical_viewport": {
-        "x": 726.59375,
+        "x": 726.5625,
         "y": 594.3125
       },
       "physical_render_extent": {
         "x": 727,
         "y": 594
       },
-      "revision": 109
+      "revision": 71
     },
-    "resolved_revision": 109,
+    "resolved_revision": 71,
     "simulation_map": {
       "max": {
         "x": 1280.0,
@@ -552,7 +589,7 @@
       "preview_overlay_fire_heat": true,
       "simulation_map_shares_main_camera": true,
       "view_runtime": {
-        "authority_revision": 1482,
+        "authority_revision": 1800,
         "pose_writers": {
           "Minimap": "MinimapShell",
           "SimulationMap": "MapCameraInput",
@@ -561,7 +598,7 @@
         },
         "world_preview_logical": {
           "valid": true,
-          "x": 726.59375,
+          "x": 726.5625,
           "y": 594.3125
         }
       },
@@ -585,12 +622,12 @@
       },
       "viewport": {
         "height": 594.3125,
-        "width": 726.59375
+        "width": 726.5625
       }
     },
     "world_preview": {
       "logical_size": {
-        "x": 726.59375,
+        "x": 726.5625,
         "y": 594.3125
       },
       "physical_extent": {
@@ -629,13 +666,13 @@
       "water_witness_foam_or_ocean_green": true,
       "water_witness_rollup_green": true
     },
-    "water_lake_tiles": 23249,
-    "water_ocean_tiles": 1512,
-    "water_particle_coast_foam": 128,
-    "water_particle_lake_glints": 64,
-    "water_particle_river_foam": 5,
+    "water_lake_tiles": 6941,
+    "water_ocean_tiles": 2897,
+    "water_particle_coast_foam": 144,
+    "water_particle_lake_glints": 72,
+    "water_particle_river_foam": 7,
     "water_particle_river_streaks": 24,
-    "water_particle_rows": 221,
+    "water_particle_rows": 247,
     "water_particle_strategic_culled": false,
     "water_particle_zoom_alpha": 0.8500000238418579,
     "water_river_segments": 15,
@@ -658,11 +695,11 @@
       },
       "strategic_zoom_cutoff": 0.3499999940395355,
       "tactical_band": {
-        "coast_foam": 128,
-        "lake_glints": 64,
-        "river_foam": 5,
+        "coast_foam": 144,
+        "lake_glints": 72,
+        "river_foam": 7,
         "river_streaks": 24,
-        "rows": 221,
+        "rows": 247,
         "shader_motion_always_on": true,
         "strategic_culled": false,
         "zoom_alpha": 0.8500000238418579

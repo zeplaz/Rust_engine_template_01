@@ -50,6 +50,7 @@ pub(crate) struct SyncSignature {
     view_px: (u32, u32),
     raster_rev: u64,
     resolved_rev: u64,
+    resolved_sim_valid: bool,
     app: u8,
     base: u8,
     flow: u8,
@@ -236,6 +237,17 @@ fn log_sync_edge(
                 "SIM_MAP_VIEWPORT_VALIDITY_CHANGED"
             );
         }
+        // Contract check: camera-side sim validity should track resolved simulation-map validity.
+        if sig.sim_valid != sig.resolved_sim_valid {
+            warn!(
+                target: "sim_view_sync::anomaly",
+                frame,
+                sim_valid = sig.sim_valid,
+                resolved_sim_valid = sig.resolved_sim_valid,
+                cam_scissor = ?sig.cam_scissor,
+                "SIM_VALID_CONTRACT_DRIFT (camera validity diverged from resolved viewport)"
+            );
+        }
         if sig.render_hole != sig.cam_hole {
             warn!(
                 target: "sim_view_sync::anomaly",
@@ -316,6 +328,7 @@ pub(crate) fn trace_sim_view_sync_state(
         view_px: pack_vec2(ctx.ortho.view_pixels),
         raster_rev: ctx.raster_dirty.revision(),
         resolved_rev: ctx.resolved.revision,
+        resolved_sim_valid: ctx.resolved.simulation_map.valid,
         app: tag_app(*ctx.app.get()),
         base: tag_base(*ctx.base.get()),
         flow: tag_flow(*ctx.flow.get()),

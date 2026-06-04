@@ -1,0 +1,11 @@
+{
+  "profile_id": "roof_metal_shed_01",
+  "seed": 1771,
+  "generator": "steel",
+  "size": 256,
+  "paths": {
+    "albedo": "assets/materials/textures/roof_metal_shed_01/albedo.png",
+    "normal": "assets/materials/textures/roof_metal_shed_01/normal.png",
+    "roughness": "assets/materials/textures/roof_metal_shed_01/roughness.png"
+  }
+}

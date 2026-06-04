@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://rust-engine.local/schemas/assembly_build_job_v1.schema.json",
+  "title": "assembly_build_job_v1",
+  "type": "object",
+  "required": ["schema_version", "job_id", "operation", "assembly_snapshot", "output"],
+  "additionalProperties": true,
+  "properties": {
+    "schema_version": { "const": 1 },
+    "job_id": { "type": "string", "minLength": 1 },
+    "operation": { "const": "assembly_build" },
+    "assembly_snapshot": { "type": "string", "minLength": 1 },
+    "light_blend": { "type": "string" },
+    "output": {
+      "type": "object",
+      "required": ["blend"],
+      "properties": {
+        "blend": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

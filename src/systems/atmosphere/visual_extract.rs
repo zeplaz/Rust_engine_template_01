@@ -79,28 +79,69 @@ pub(crate) fn sync_weather_precip_sample_from_climate_aggregate(
 pub(crate) fn publish_sim_visual_extract(
     mut smoke_out: ResMut<SimChunkSmokeVisualExtract>,
     mut diag: ResMut<AtmosphereDiagnostics>,
+    ecs_retire: Option<Res<crate::substrate::EcsRetireState>>,
+    substrate: Option<Res<crate::substrate::WorldSubstrateRegistry>>,
     smoke_q: Query<(&Chunk, &ChunkSmokeField)>,
 ) {
     smoke_out.instances.clear();
 
-    for (chunk, smoke) in &smoke_q {
-        if smoke.density <= SMOKE_EXTRACT_EPS && smoke.toxicity <= SMOKE_EXTRACT_EPS {
-            continue;
+    let slab_smoke_extract = ecs_retire
+        .as_ref()
+        .is_some_and(|r| r.smoke_cutover_complete && !r.hybrid_smoke_authoritative)
+        && substrate.is_some();
+
+    if slab_smoke_extract {
+        if let Some(reg) = substrate.as_ref() {
+            for (key, state) in &reg.chunks.chunks {
+                if !reg.chunks.is_resident(*key) {
+                    continue;
+                }
+                let density = state
+                    .contamination
+                    .airborne
+                    .first()
+                    .copied()
+                    .unwrap_or(0.0);
+                if density <= SMOKE_EXTRACT_EPS {
+                    continue;
+                }
+                let coord = IVec2::from(*key);
+                smoke_out.instances.push(ChunkSmokeGpu {
+                    chunk_xy: Vec4::new(coord.x as f32, coord.y as f32, 0.0, 0.0),
+                    density_tox_vis: Vec4::new(
+                        density,
+                        state
+                            .contamination
+                            .airborne
+                            .get(1)
+                            .copied()
+                            .unwrap_or(density * 0.2),
+                        0.0,
+                        0.0,
+                    ),
+                });
+            }
         }
-        smoke_out.instances.push(ChunkSmokeGpu {
-            chunk_xy: Vec4::new(
-                chunk.coord.x as f32,
-                chunk.coord.y as f32,
-                0.0,
-                0.0,
-            ),
-            density_tox_vis: Vec4::new(
-                smoke.density,
-                smoke.toxicity,
-                smoke.visibility_penalty,
-                0.0,
-            ),
-        });
+    } else {
+        for (chunk, smoke) in &smoke_q {
+            if smoke.density <= SMOKE_EXTRACT_EPS && smoke.toxicity <= SMOKE_EXTRACT_EPS {
+                continue;
+            }
+            smoke_out.instances.push(ChunkSmokeGpu {
+                chunk_xy: Vec4::new(
+                    chunk.coord.x as f32,
+                    chunk.coord.y as f32,
+                    0.0,
+                    0.0,
+                ),
+                density_tox_vis: Vec4::new(
+                    smoke.density,
+                    smoke.toxicity,
+                    smoke.visibility_penalty,
+                    0.0,
+                ),
+            });
+        }
     }
 
     diag.visual_extract_runs = diag.visual_extract_runs.wrapping_add(1);

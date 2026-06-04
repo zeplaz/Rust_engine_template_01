@@ -5,9 +5,11 @@ use std::collections::HashSet;
 use bevy::prelude::*;
 
 use super::components::{
-    ConstructionSite, PlannedSite, SiteConstructionRate, SiteFootprint, SiteNetworkAttachment,
-    SiteOperationalStats, SiteResourceManifest, SiteTerrainValidation,
+    BuildingScaleParams, ConstructionSite, PlannedSite, SiteConstructionRate, SiteFootprint,
+    SiteNetworkAttachment, SiteOperationalStats, SiteResourceManifest, SiteStageProgress,
+    SiteTerrainValidation, SiteWeightedFootprint,
 };
+use super::tile_occupation::TileOccupationBook;
 use super::events::CommitConstructionSiteEvent;
 use crate::economy::activation::BuildingDefinitionRef;
 
@@ -57,16 +59,44 @@ pub fn commit_construction_site_system(
     mut reader: MessageReader<CommitConstructionSiteEvent>,
     mut book: ResMut<SiteConstructionBook>,
     mut issuer: ResMut<SiteIdIssuer>,
+    mut occupation_book: Option<ResMut<TileOccupationBook>>,
     cfg: Option<Res<StrategicRasterConfig>>,
     mut overlays: Query<(&ChunkStrategicOverlay, &mut NetworkDirtyMask)>,
     mut preview_state: Option<ResMut<WorldPreviewState>>,
+    mut hydro_queue: Option<ResMut<crate::substrate::hydrology::HydrologyEventQueue>>,
+    mut hydro_coupling: Option<ResMut<crate::substrate::hydrology::HydrologyConstructionCouplingWitness>>,
+    district_book: Option<Res<super::super::settlement::DistrictBook>>,
+    mut block_book: Option<ResMut<super::super::settlement::BlockBook>>,
 ) {
     for ev in reader.read() {
+        if let Some(placement) = ev.placement.as_ref() {
+            let Some(occ) = occupation_book.as_mut() else {
+                warn!(
+                    "commit_construction_site: parametric placement without TileOccupationBook at {:?}",
+                    placement.origin
+                );
+                continue;
+            };
+            if !occ.can_apply(&placement.weights) {
+                warn!(
+                    "commit_construction_site: weighted overlap rejected at {:?}",
+                    placement.origin
+                );
+                continue;
+            }
+        }
+
         let id = if ev.site_id == SiteId::UNASSIGNED {
             issuer.next()
         } else {
             ev.site_id
         };
+
+        if let Some(placement) = ev.placement.as_ref() {
+            if let Some(occ) = occupation_book.as_mut() {
+                occ.apply_site(id, &placement.weights);
+            }
+        }
 
         book.by_site.insert(
             id,
@@ -77,6 +107,7 @@ pub fn commit_construction_site_system(
         );
 
         let tiles = footprint_tiles(ev.origin, ev.footprint);
+        let block_tiles = tiles.clone();
         let emitter = zone_emitter_for_archetype(ev.archetype);
         let mut entity = commands.spawn((
             PlannedSite {
@@ -86,6 +117,7 @@ pub fn commit_construction_site_system(
                 archetype: ev.archetype,
                 layer: ev.layer,
                 catalog_id: ev.catalog_id.clone(),
+                placement: ev.placement.clone(),
             },
             ConstructionSite {
                 site_id: id.0,
@@ -94,6 +126,7 @@ pub fn commit_construction_site_system(
                 phase: SiteConstructionPhase::Planned,
                 operational_readiness: 0.0,
             },
+            SiteStageProgress::default(),
             SiteFootprint {
                 tiles,
                 layer: ev.layer,
@@ -107,6 +140,25 @@ pub fn commit_construction_site_system(
         ));
         if let Some(cid) = ev.catalog_id.clone() {
             entity.insert(BuildingDefinitionRef { catalog_id: cid });
+        }
+        if let Some(placement) = ev.placement.as_ref() {
+            entity.insert((
+                SiteWeightedFootprint {
+                    weights: placement.weights.clone(),
+                },
+                BuildingScaleParams {
+                    scale_factor: placement.scale_factor,
+                    effective_scale: placement.effective_scale,
+                },
+            ));
+        }
+        if let Some(request) = crate::construction::procedural_building_request_from_commit(
+            id,
+            ev.archetype,
+            ev.footprint,
+            ev.placement.as_ref(),
+        ) {
+            entity.insert(super::components::ProceduralBuildingSpec(request));
         }
 
         if let Some(cfg) = cfg.as_ref() {
@@ -128,6 +180,25 @@ pub fn commit_construction_site_system(
                 );
             }
         }
+
+        if let (Some(districts), Some(blocks)) = (district_book.as_ref(), block_book.as_mut()) {
+            crate::strategic::register_site_on_commit(districts, blocks, id, &block_tiles);
+        }
+
+        if let (Some(cfg), Some(hydro), Some(coupling)) = (
+            cfg.as_ref(),
+            hydro_queue.as_mut(),
+            hydro_coupling.as_mut(),
+        ) {
+            crate::construction::emit_site_execute_hydro_dirty(
+                hydro,
+                coupling,
+                id.0,
+                ev.origin,
+                ev.footprint,
+                cfg.cells_per_chunk,
+            );
+        }
     }
 }
 
@@ -148,7 +219,7 @@ pub fn site_advance_planned_to_under_construction_system(
         &SiteTerrainValidation,
         &PlannedSite,
         &mut SiteResourceManifest,
-    )>,
+    ), Without<SiteStageProgress>>,
     mut book: ResMut<SiteConstructionBook>,
 ) {
     for (mut site, terrain, planned, mut manifest) in &mut q {

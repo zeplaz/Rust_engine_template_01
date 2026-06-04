@@ -11,7 +11,13 @@ use crate::strategic::{
 };
 use crate::systems::transport::bake_snapshot_from_ordered_tile_markers;
 use crate::systems::transport::{
-    hydrate_transport_from_snapshot, TransportEdgeDirectory, TransportFieldStore, TransportTopology,
+    hydrate_transport_from_snapshot, TransportEdgeDirectory, TransportEdgeId, TransportFieldStore,
+    TransportTopology,
+};
+
+use super::corridor_transport::{
+    apply_rail_profile_to_edge, find_edge_id_for_segment, planned_construction_record,
+    SimCorridorEdgeBinding,
 };
 use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
 
@@ -158,6 +164,8 @@ pub fn validate_construction_plans_system(
 struct SegmentApplyResult {
     tiles_added: Vec<BuildSiteTile>,
     marker_entities: Vec<Entity>,
+    edge_id: Option<TransportEdgeId>,
+    construction_record: Option<crate::systems::transport::TransportConstructionRecord>,
 }
 
 pub fn execute_construction_plans_system(
@@ -174,8 +182,15 @@ pub fn execute_construction_plans_system(
     mut intersections: ResMut<super::roads::IntersectionRegistry>,
     params: Res<WorldGenParams>,
     rail: Res<super::rail::ActiveRailPlacement>,
+    raster_cfg: Option<Res<crate::strategic::StrategicRasterConfig>>,
+    mut hydro_queue: Option<ResMut<crate::substrate::hydrology::HydrologyEventQueue>>,
+    mut hydro_coupling: Option<ResMut<crate::substrate::hydrology::HydrologyConstructionCouplingWitness>>,
 ) {
     let mut executed = false;
+    let cells_per_chunk = raster_cfg
+        .as_deref()
+        .map(|c| c.cells_per_chunk)
+        .unwrap_or(bevy::math::UVec2::new(32, 32));
     for plan in &mut queue.plans {
         if plan.status != ConstructionStatus::Validated {
             continue;
@@ -199,6 +214,8 @@ pub fn execute_construction_plans_system(
                 head,
                 tail,
                 SimRoadSegmentMarker,
+                false,
+                None,
             ),
             ConstructionType::RailSegment { head, tail } => {
                 let hy = conform_world_y(head.x as f32 + 0.5, head.z as f32 + 0.5, &params);
@@ -219,6 +236,8 @@ pub fn execute_construction_plans_system(
                         head,
                         tail,
                         SimRailSegmentMarker,
+                        true,
+                        Some(rail.profile_id.as_str()),
                     )
                 }
             }
@@ -236,9 +255,18 @@ pub fn execute_construction_plans_system(
             }
             super::history::record_road_execution(
                 history.as_mut(),
-                apply.tiles_added,
+                apply.tiles_added.clone(),
                 apply.marker_entities,
             );
+            if let (Some(hydro), Some(coupling)) = (hydro_queue.as_mut(), hydro_coupling.as_mut()) {
+                super::hydro_coupling::emit_road_execute_hydro_dirty(
+                    hydro,
+                    coupling,
+                    plan.id,
+                    &apply.tiles_added,
+                    cells_per_chunk,
+                );
+            }
         } else {
             plan.status = ConstructionStatus::Failed;
         }
@@ -260,6 +288,8 @@ fn apply_road_segment_to_world<M: Component + Copy>(
     head: BuildSiteTile,
     tail: BuildSiteTile,
     marker_component: M,
+    is_rail: bool,
+    rail_profile_id: Option<&str>,
 ) -> Option<SegmentApplyResult> {
     let validation = validate_road_segment(head, tail, params);
     if !validation.valid {
@@ -295,18 +325,42 @@ fn apply_road_segment_to_world<M: Component + Copy>(
     if snap.edges.is_empty() {
         return None;
     }
+    let edge_count_before = topology.neighbors.len();
     if hydrate_transport_from_snapshot(topology, fields, directory, &snap).is_err() {
         return None;
     }
+    let edge_count_after = topology.neighbors.len();
     align_corridor_book_with_transport_directory(directory, corridor_book);
-    if let Some(edge_id) = directory
+
+    let segment_edge = find_edge_id_for_segment(directory, head, tail);
+    if let Some(edge_id) = segment_edge {
+        corridor_book.plan_edge(edge_id);
+        if is_rail {
+            let profile_id = rail_profile_id.unwrap_or("default_rail");
+            apply_rail_profile_to_edge(directory, edge_id, profile_id, &["train".into()]);
+        }
+    } else if let Some(edge_id) = directory
         .by_edge
         .keys()
         .max_by_key(|id| id.0)
         .copied()
+        .filter(|_| edge_count_after > edge_count_before)
     {
         corridor_book.plan_edge(edge_id);
+        if is_rail {
+            let profile_id = rail_profile_id.unwrap_or("default_rail");
+            apply_rail_profile_to_edge(directory, edge_id, profile_id, &["train".into()]);
+        }
     }
+    let bound_edge = segment_edge.or_else(|| {
+        directory
+            .by_edge
+            .keys()
+            .max_by_key(|id| id.0)
+            .copied()
+            .filter(|_| edge_count_after > edge_count_before)
+    });
+    let construction_record = bound_edge.map(planned_construction_record);
     for mut mask in overlays.iter_mut() {
         mask.mask |= NETWORK_DIRTY_FLOW | NETWORK_DIRTY_CONNECTIVITY;
     }
@@ -316,6 +370,7 @@ fn apply_road_segment_to_world<M: Component + Copy>(
         head,
         marker_component,
         "path",
+        bound_edge,
     )];
     if tail != head {
         marker_entities.push(spawn_path_marker(
@@ -324,11 +379,14 @@ fn apply_road_segment_to_world<M: Component + Copy>(
             tail,
             marker_component,
             "path",
+            bound_edge,
         ));
     }
     Some(SegmentApplyResult {
         tiles_added,
         marker_entities,
+        edge_id: bound_edge,
+        construction_record,
     })
 }
 
@@ -383,6 +441,7 @@ pub(crate) fn replay_road_tiles_for_redo<M: Component + Copy>(
         head,
         marker_component,
         "path",
+        None,
     )];
     if tail != head {
         marker_entities.push(spawn_path_marker(
@@ -391,6 +450,7 @@ pub(crate) fn replay_road_tiles_for_redo<M: Component + Copy>(
             tail,
             marker_component,
             "path",
+            None,
         ));
     }
     let _ = params;
@@ -403,17 +463,22 @@ fn spawn_path_marker<M: Component + Copy>(
     tile: BuildSiteTile,
     marker: M,
     label: &str,
+    edge_id: Option<TransportEdgeId>,
 ) -> Entity {
     let seq = roads.marker_seq;
     roads.marker_seq = roads.marker_seq.saturating_add(1);
     let y = 0.5 * ROAD_MARKER_Y_SCALE + ROAD_MARKER_Y_BIAS;
-    commands
+    let entity = commands
         .spawn((
             marker,
             Transform::from_translation(Vec3::new(tile.x as f32, y, tile.z as f32)),
             Name::new(format!("Sim {label} ({},{}) seq={seq}", tile.x, tile.z)),
         ))
-        .id()
+        .id();
+    if let Some(eid) = edge_id {
+        commands.entity(entity).insert(SimCorridorEdgeBinding { edge_id: eid });
+    }
+    entity
 }
 
 #[cfg(test)]

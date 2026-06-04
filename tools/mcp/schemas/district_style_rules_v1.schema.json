@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://rust-engine.local/schemas/district_style_rules_v1.json",
+  "title": "DistrictStyleRules",
+  "description": "District-level procedural rules — allowed archetypes/roofs/styles. Sim selects from rules; does not spawn meshes directly.",
+  "type": "object",
+  "required": ["schema_version", "district_id", "zoning_default"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "district_id": { "type": "string" },
+    "zoning_default": {
+      "type": "string",
+      "enum": ["residential", "commercial", "industrial", "mixed_use", "civic", "rural", "port", "railway"]
+    },
+    "allowed_archetypes": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "e.g. warehouse, factory, apartment_midrise"
+    },
+    "allowed_roof_modules": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "e.g. roof_flat, roof_sawtooth"
+    },
+    "preferred_style_pack": { "type": "string" },
+    "style_tags": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "port_district, railway_district, dense_urban, …"
+    }
+  },
+  "additionalProperties": false
+}

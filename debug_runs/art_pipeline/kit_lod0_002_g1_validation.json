@@ -1,0 +1,58 @@
+{
+  "batch_id": "kit_lod0_002",
+  "all_pass": true,
+  "g1_spec": [
+    {
+      "module_id": "wall_wood_1u",
+      "status": "passed",
+      "errors": []
+    },
+    {
+      "module_id": "wall_steel_1u",
+      "status": "passed",
+      "errors": []
+    },
+    {
+      "module_id": "roof_flat",
+      "status": "passed",
+      "errors": []
+    },
+    {
+      "module_id": "door_shop",
+      "status": "passed",
+      "errors": []
+    },
+    {
+      "module_id": "win_double_1u",
+      "status": "passed",
+      "errors": []
+    }
+  ],
+  "g1_job": [
+    {
+      "module_id": "wall_wood_1u",
+      "status": "passed",
+      "errors": []
+    },
+    {
+      "module_id": "wall_steel_1u",
+      "status": "passed",
+      "errors": []
+    },
+    {
+      "module_id": "roof_flat",
+      "status": "passed",
+      "errors": []
+    },
+    {
+      "module_id": "door_shop",
+      "status": "passed",
+      "errors": []
+    },
+    {
+      "module_id": "win_double_1u",
+      "status": "passed",
+      "errors": []
+    }
+  ]
+}

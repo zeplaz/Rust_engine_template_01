@@ -19,6 +19,8 @@ pub struct ActiveRailPlacement {
     /// Minimum horizontal turn radius (tiles) — rail rejects tight corners.
     pub min_curve_radius: f32,
     pub max_slope: f32,
+    /// **INFRA-E2-004** — selected corridor profile id for execute.
+    pub profile_id: String,
 }
 
 impl Default for ActiveRailPlacement {
@@ -29,6 +31,7 @@ impl Default for ActiveRailPlacement {
             width: 6.0,
             min_curve_radius: 3.0,
             max_slope: 0.12,
+            profile_id: "default_rail".into(),
         }
     }
 }

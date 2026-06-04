@@ -1,0 +1,497 @@
+{
+  "schema_version": 1,
+  "assembly_id": "victorian_4x2_s1_d8e2",
+  "style_pack_id": "style_victorian",
+  "source_tier": "lod0",
+  "procedural_rules_version": "pg2_wdc_v1",
+  "reference_tags": [],
+  "seed": 1,
+  "footprint": {
+    "width": 4,
+    "depth": 2,
+    "floors": 2,
+    "wdc_cell_count": 16
+  },
+  "module_placements": [
+    {
+      "module_id": "corner_L",
+      "job_id": "corner_L_lod0_run001",
+      "slot_key": "corner_outer",
+      "token": "C",
+      "grid_x": 0,
+      "grid_y": 0,
+      "floor": 0,
+      "glb_path": "assets/models/modules/corner_L_lod0_run001/model.glb",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "module_id": "wall_brick_1u",
+      "job_id": "wall_brick_1u_lod0_run001",
+      "slot_key": "wall_1u",
+      "token": "W",
+      "grid_x": 1,
+      "grid_y": 0,
+      "floor": 0,
+      "glb_path": "assets/models/modules/wall_brick_1u_lod0_run001/model.glb",
+      "position": [
+        1.0,
+        0.0,
+        0.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "module_id": "door_residential",
+      "job_id": "door_residential_lod0_run001",
+      "slot_key": "door_default",
+      "token": "D",
+      "grid_x": 2,
+      "grid_y": 0,
+      "floor": 0,
+      "glb_path": "assets/models/modules/door_residential_lod0_run001/model.glb",
+      "position": [
+        2.0,
+        0.0,
+        0.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "module_id": "corner_L",
+      "job_id": "corner_L_lod0_run001",
+      "slot_key": "corner_outer",
+      "token": "C",
+      "grid_x": 3,
+      "grid_y": 0,
+      "floor": 0,
+      "glb_path": "assets/models/modules/corner_L_lod0_run001/model.glb",
+      "position": [
+        3.0,
+        0.0,
+        0.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "module_id": "corner_L",
+      "job_id": "corner_L_lod0_run001",
+      "slot_key": "corner_outer",
+      "token": "C",
+      "grid_x": 0,
+      "grid_y": 1,
+      "floor": 0,
+      "glb_path": "assets/models/modules/corner_L_lod0_run001/model.glb",
+      "position": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "module_id": "wall_brick_1u",
+      "job_id": "wall_brick_1u_lod0_run001",
+      "slot_key": "wall_1u",
+      "token": "W",
+      "grid_x": 1,
+      "grid_y": 1,
+      "floor": 0,
+      "glb_path": "assets/models/modules/wall_brick_1u_lod0_run001/model.glb",
+      "position": [
+        1.0,
+        0.0,
+        1.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "module_id": "wall_brick_1u",
+      "job_id": "wall_brick_1u_lod0_run001",
+      "slot_key": "wall_1u",
+      "token": "W",
+      "grid_x": 2,
+      "grid_y": 1,
+      "floor": 0,
+      "glb_path": "assets/models/modules/wall_brick_1u_lod0_run001/model.glb",
+      "position": [
+        2.0,
+        0.0,
+        1.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "module_id": "corner_L",
+      "job_id": "corner_L_lod0_run001",
+      "slot_key": "corner_outer",
+      "token": "C",
+      "grid_x": 3,
+      "grid_y": 1,
+      "floor": 0,
+      "glb_path": "assets/models/modules/corner_L_lod0_run001/model.glb",
+      "position": [
+        3.0,
+        0.0,
+        1.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "module_id": "corner_L",
+      "job_id": "corner_L_lod0_run001",
+      "slot_key": "corner_outer",
+      "token": "C",
+      "grid_x": 0,
+      "grid_y": 0,
+      "floor": 1,
+      "glb_path": "assets/models/modules/corner_L_lod0_run001/model.glb",
+      "position": [
+        0.0,
+        3.0,
+        0.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "module_id": "wall_brick_1u",
+      "job_id": "wall_brick_1u_lod0_run001",
+      "slot_key": "wall_1u",
+      "token": "W",
+      "grid_x": 1,
+      "grid_y": 0,
+      "floor": 1,
+      "glb_path": "assets/models/modules/wall_brick_1u_lod0_run001/model.glb",
+      "position": [
+        1.0,
+        3.0,
+        0.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "module_id": "wall_brick_1u",
+      "job_id": "wall_brick_1u_lod0_run001",
+      "slot_key": "wall_1u",
+      "token": "W",
+      "grid_x": 2,
+      "grid_y": 0,
+      "floor": 1,
+      "glb_path": "assets/models/modules/wall_brick_1u_lod0_run001/model.glb",
+      "position": [
+        2.0,
+        3.0,
+        0.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "module_id": "corner_L",
+      "job_id": "corner_L_lod0_run001",
+      "slot_key": "corner_outer",
+      "token": "C",
+      "grid_x": 3,
+      "grid_y": 0,
+      "floor": 1,
+      "glb_path": "assets/models/modules/corner_L_lod0_run001/model.glb",
+      "position": [
+        3.0,
+        3.0,
+        0.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "module_id": "corner_L",
+      "job_id": "corner_L_lod0_run001",
+      "slot_key": "corner_outer",
+      "token": "C",
+      "grid_x": 0,
+      "grid_y": 1,
+      "floor": 1,
+      "glb_path": "assets/models/modules/corner_L_lod0_run001/model.glb",
+      "position": [
+        0.0,
+        3.0,
+        1.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "module_id": "wall_brick_1u",
+      "job_id": "wall_brick_1u_lod0_run001",
+      "slot_key": "wall_1u",
+      "token": "W",
+      "grid_x": 1,
+      "grid_y": 1,
+      "floor": 1,
+      "glb_path": "assets/models/modules/wall_brick_1u_lod0_run001/model.glb",
+      "position": [
+        1.0,
+        3.0,
+        1.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "module_id": "wall_brick_1u",
+      "job_id": "wall_brick_1u_lod0_run001",
+      "slot_key": "wall_1u",
+      "token": "W",
+      "grid_x": 2,
+      "grid_y": 1,
+      "floor": 1,
+      "glb_path": "assets/models/modules/wall_brick_1u_lod0_run001/model.glb",
+      "position": [
+        2.0,
+        3.0,
+        1.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "module_id": "corner_L",
+      "job_id": "corner_L_lod0_run001",
+      "slot_key": "corner_outer",
+      "token": "C",
+      "grid_x": 3,
+      "grid_y": 1,
+      "floor": 1,
+      "glb_path": "assets/models/modules/corner_L_lod0_run001/model.glb",
+      "position": [
+        3.0,
+        3.0,
+        1.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "module_id": "roof_pitched_gable",
+      "job_id": "roof_pitched_gable_lod0_run001",
+      "slot_key": "roof_default",
+      "token": "R",
+      "grid_x": 0,
+      "grid_y": 0,
+      "floor": 2,
+      "glb_path": "assets/models/modules/roof_pitched_gable_lod0_run001/model.glb",
+      "position": [
+        0.0,
+        6.0,
+        0.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "module_id": "roof_pitched_gable",
+      "job_id": "roof_pitched_gable_lod0_run001",
+      "slot_key": "roof_default",
+      "token": "R",
+      "grid_x": 1,
+      "grid_y": 0,
+      "floor": 2,
+      "glb_path": "assets/models/modules/roof_pitched_gable_lod0_run001/model.glb",
+      "position": [
+        1.0,
+        6.0,
+        0.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "module_id": "roof_pitched_gable",
+      "job_id": "roof_pitched_gable_lod0_run001",
+      "slot_key": "roof_default",
+      "token": "R",
+      "grid_x": 2,
+      "grid_y": 0,
+      "floor": 2,
+      "glb_path": "assets/models/modules/roof_pitched_gable_lod0_run001/model.glb",
+      "position": [
+        2.0,
+        6.0,
+        0.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "module_id": "roof_pitched_gable",
+      "job_id": "roof_pitched_gable_lod0_run001",
+      "slot_key": "roof_default",
+      "token": "R",
+      "grid_x": 3,
+      "grid_y": 0,
+      "floor": 2,
+      "glb_path": "assets/models/modules/roof_pitched_gable_lod0_run001/model.glb",
+      "position": [
+        3.0,
+        6.0,
+        0.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "module_id": "roof_pitched_gable",
+      "job_id": "roof_pitched_gable_lod0_run001",
+      "slot_key": "roof_default",
+      "token": "R",
+      "grid_x": 0,
+      "grid_y": 1,
+      "floor": 2,
+      "glb_path": "assets/models/modules/roof_pitched_gable_lod0_run001/model.glb",
+      "position": [
+        0.0,
+        6.0,
+        1.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "module_id": "roof_pitched_gable",
+      "job_id": "roof_pitched_gable_lod0_run001",
+      "slot_key": "roof_default",
+      "token": "R",
+      "grid_x": 1,
+      "grid_y": 1,
+      "floor": 2,
+      "glb_path": "assets/models/modules/roof_pitched_gable_lod0_run001/model.glb",
+      "position": [
+        1.0,
+        6.0,
+        1.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "module_id": "roof_pitched_gable",
+      "job_id": "roof_pitched_gable_lod0_run001",
+      "slot_key": "roof_default",
+      "token": "R",
+      "grid_x": 2,
+      "grid_y": 1,
+      "floor": 2,
+      "glb_path": "assets/models/modules/roof_pitched_gable_lod0_run001/model.glb",
+      "position": [
+        2.0,
+        6.0,
+        1.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "module_id": "roof_pitched_gable",
+      "job_id": "roof_pitched_gable_lod0_run001",
+      "slot_key": "roof_default",
+      "token": "R",
+      "grid_x": 3,
+      "grid_y": 1,
+      "floor": 2,
+      "glb_path": "assets/models/modules/roof_pitched_gable_lod0_run001/model.glb",
+      "position": [
+        3.0,
+        6.0,
+        1.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    }
+  ]
+}

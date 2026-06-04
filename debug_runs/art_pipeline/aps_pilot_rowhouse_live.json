@@ -1,0 +1,66 @@
+{
+  "program_id": "MCP-FLEET-APS-PILOT-001",
+  "task_id": "MCP-APS-PILOT-001",
+  "gate": "ART-APS-USE",
+  "lane": "aps_pilot_validate_only",
+  "green": true,
+  "validate_only": true,
+  "promote": false,
+  "real_bake": false,
+  "_agent_meta": {
+    "agent": "designer",
+    "source_system": "MCP-APS-PILOT-001",
+    "updated_at": "2026-06-02",
+    "design_charter": "src/dev/design_art_pipeline_suite_v1.md",
+    "orders": "src/dev/mcp_fleet_aps_pilot_orders_v1.md"
+  },
+  "assembly_id": "victorian_4x3_s42_a7cb",
+  "variant_set_id": "rowhouse_victorian_night_damage",
+  "style_pack_id": "style_victorian",
+  "footprint": { "width": 4, "depth": 3, "floors": 2 },
+  "artifacts": {
+    "assembly_snapshot": "tools/mcp/schemas/examples/assembly_snapshot_rowhouse_victorian_v1.json",
+    "variant_set": "tools/mcp/schemas/examples/variant_set_rowhouse_victorian_v1.json",
+    "tile_batch": "tools/mcp/schemas/examples/tile_batch_rowhouse_victorian_pilot_v1.json",
+    "g0_rules": "debug_runs/art_pipeline/aps_pilot_rowhouse_g0_rules.yaml"
+  },
+  "aps_flow": [
+    "Catalog (lod0 modules in assembly snapshot)",
+    "Assembly (assembly_snapshot_rowhouse_victorian_v1.json)",
+    "Variants (variant_set_rowhouse_victorian_v1.json — clean_day, damaged_night_on)",
+    "Atlas contract (tile_batch_rowhouse_victorian_pilot_v1.json — bake deferred to TILE-REAL-001)"
+  ],
+  "cli_commands": [
+    "python -m rust_engine_mcp.cli variant-set-validate tools/mcp/schemas/examples/variant_set_rowhouse_victorian_v1.json",
+    "python -m rust_engine_mcp.cli validate-report tile_batch tools/mcp/schemas/examples/tile_batch_rowhouse_victorian_pilot_v1.json",
+    "python -c \"from rust_engine_mcp.assembly import load_assembly_snapshot; load_assembly_snapshot('tools/mcp/schemas/examples/assembly_snapshot_rowhouse_victorian_v1.json')\""
+  ],
+  "validations": {
+    "variant_set_validate": {
+      "status": "pass",
+      "valid": true,
+      "variant_count": 2
+    },
+    "tile_batch_validate_report": {
+      "status": "pass",
+      "error_count": 0,
+      "warning_count": 0,
+      "variants": 2,
+      "base": "stone"
+    },
+    "assembly_snapshot_schema": {
+      "status": "pass",
+      "assembly_id": "victorian_4x3_s42_a7cb",
+      "module_placements_count": 30
+    }
+  },
+  "suite_tabs_documented": [
+    "Catalog",
+    "Assembly",
+    "Variants",
+    "Atlas"
+  ],
+  "smoke_fallback_used": false,
+  "next": "@coder-mcp MCP-TILE-REAL-001 tile-batch-run (RUST_ENGINE_TILE_DRY_RUN unset)",
+  "note": "Separate from PG-2 UX sign-off (procedural_assembly_pg2_signoff.yaml). Real bake witness: debug_runs/art_pipeline/tile_tile_rowhouse_victorian_pilot_v1_live.json when TILE-REAL-001 runs."
+}

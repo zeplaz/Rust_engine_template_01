@@ -6,6 +6,8 @@ use super::resources::{FootprintTiles, SiteConstructionPhase, SiteId};
 use crate::strategic::build_order::BuildSiteTile;
 use crate::strategic::spatial_network::LayerType;
 
+pub use crate::construction::{ClearingSubstep, SiteStageProgress};
+
 // -----------------------------------------------------------------------------
 // Site identity & lifecycle
 // -----------------------------------------------------------------------------
@@ -43,6 +45,23 @@ pub struct SiteFootprint {
     pub tiles: Vec<IVec2>,
     pub layer: LayerType,
 }
+
+/// Authoritative sparse weights for a committed parametric site.
+#[derive(Component, Debug, Clone)]
+pub struct SiteWeightedFootprint {
+    pub weights: Vec<(IVec2, f32)>,
+}
+
+/// Scale exponents applied at industrial activation (Phase 4 hooks).
+#[derive(Component, Debug, Clone, Copy)]
+pub struct BuildingScaleParams {
+    pub scale_factor: f32,
+    pub effective_scale: f32,
+}
+
+/// PG-3 — procedural assembly request derived at commit; read by render extract + tile atlas stamp.
+#[derive(Component, Debug, Clone)]
+pub struct ProceduralBuildingSpec(pub crate::construction::procedural::ProceduralBuildingRequest);
 
 #[derive(Component, Debug, Clone)]
 pub struct SiteResourceManifest {
@@ -163,6 +182,7 @@ pub struct PlannedSite {
     pub archetype: SiteArchetype,
     pub layer: LayerType,
     pub catalog_id: Option<String>,
+    pub placement: Option<super::parametric::CommittedPlacementSnapshot>,
 }
 
 #[derive(Component, Debug, Clone, Copy)]

@@ -24,7 +24,11 @@ use crate::gui::representation_policy::RepresentationResult;
 use crate::gui::input_bindings::InputBindings;
 use crate::gui::ui_gates::in_simulation_or_editor;
 use crate::engine::test_harness::ActiveTestScene;
-use crate::render::{AppStage5ReadinessReport, WeatherFireFieldDebugOverlay};
+use crate::render::{
+    fire_streaming_b_green, ActiveFireChunkSet, AppStage5ReadinessReport, FireChunkRuntime,
+    FireStreamingLiveProofState, FireStreamingWitness, WeatherFireFieldDebugOverlay,
+    FIRE_SIM_CHUNK_ACTIVE_EPS, FIRE_STREAMING_SLEEP_RADIUS,
+};
 use crate::systems::atmosphere::AtmosphereDiagnostics;
 use crate::systems::sim_control::{SimControlState, SimTick};
 use crate::systems::transport::TransportEdgeDirectory;
@@ -123,6 +127,13 @@ pub struct DiagnosticsSpinePanels<'w> {
     preview_debug: Option<Res<'w, PreviewPresentationDebug>>,
     logistics_diag: Option<Res<'w, crate::economy::logistics::LogisticsDiagnostics>>,
     logistics_rt: Option<Res<'w, crate::economy::logistics::LogisticsThroughputRuntimeWitness>>,
+    fire_witness: Option<Res<'w, FireStreamingWitness>>,
+    fire_active: Option<Res<'w, ActiveFireChunkSet>>,
+    fire_runtime: Option<Res<'w, FireChunkRuntime>>,
+    fire_proof: Option<Res<'w, FireStreamingLiveProofState>>,
+    test_scene: Option<Res<'w, ActiveTestScene>>,
+    theater: Option<Res<'w, OperationalTheaterSummary>>,
+    logistics_ai: Option<Res<'w, LogisticsAiRuntime>>,
 }
 
 /// Renders the panel; consumers add tabs by extending this system or chaining own systems
@@ -136,12 +147,9 @@ pub fn diagnostics_ui_system(
     mut wx: ResMut<WeatherVisualSettings>,
     wx_sample: Res<WeatherPrecipVisualSample>,
     mut gpu_field_debug: ResMut<WeatherFireFieldDebugOverlay>,
-    test_scene: Option<Res<ActiveTestScene>>,
     cap: Res<GameplayRecorder>,
     directory: Res<TransportEdgeDirectory>,
     mut construction_book: ResMut<CorridorConstructionBook>,
-    theater: Option<Res<OperationalTheaterSummary>>,
-    logistics_ai: Option<Res<LogisticsAiRuntime>>,
     palette: Res<UiPalette>,
     spine: DiagnosticsSpinePanels,
 ) -> Result {
@@ -163,7 +171,7 @@ pub fn diagnostics_ui_system(
             primary_label(ui, &palette, format!("FPS (EMA): {:.1}", state.fps_smoothed));
             primary_label(ui, &palette, format!("Sim tick:  {}", tick.0));
             primary_label(ui, &palette, format!("Entities:  {entity_count}"));
-            if let Some(ts) = test_scene.as_ref() {
+            if let Some(ts) = spine.test_scene.as_ref() {
                 primary_label(ui, &palette, format!("CLI test scene: {:?}", ts.0));
             }
 
@@ -380,6 +388,102 @@ pub fn diagnostics_ui_system(
                     });
             }
 
+            if spine.fire_witness.is_some() {
+                ui.separator();
+                let witness = spine.fire_witness.as_deref();
+                let active = spine.fire_active.as_deref();
+                let runtime = spine.fire_runtime.as_deref();
+                let green = match (witness, active) {
+                    (Some(w), Some(a)) => fire_streaming_b_green(w, a),
+                    _ => false,
+                };
+                egui::CollapsingHeader::new("Fire Phase 7 — chunk streaming (F7-B)")
+                    .default_open(state.sections_default_open)
+                    .show(ui, |ui| {
+                        muted_label(
+                            ui,
+                            &palette,
+                            format!("F7B gate=FIRE7-F7-B-001 green={green}"),
+                        );
+                        if let Some(w) = witness {
+                            muted_label(
+                                ui,
+                                &palette,
+                                format!(
+                                    "F7B focus_chunk=({}, {}) sleep_r={}",
+                                    w.focus_chunk.x,
+                                    w.focus_chunk.y,
+                                    FIRE_STREAMING_SLEEP_RADIUS,
+                                ),
+                            );
+                            let active_count = active.map(|a| a.chunks.len()).unwrap_or(0);
+                            muted_label(
+                                ui,
+                                &palette,
+                                format!(
+                                    "F7B sleep={} wake={} active={}",
+                                    w.sleep_transitions, w.wake_transitions, active_count,
+                                ),
+                            );
+                        }
+                        let runtime_writer = spine
+                            .fire_proof
+                            .as_deref()
+                            .map(|p| p.written)
+                            .unwrap_or(false);
+                        muted_label(
+                            ui,
+                            &palette,
+                            format!("F7B runtime_writer={runtime_writer}"),
+                        );
+                        if let Some(rt) = runtime {
+                            let vis = rt.chunks.values().filter(|c| c.visual_active).count();
+                            let sim = rt
+                                .chunks
+                                .values()
+                                .filter(|c| {
+                                    c.active || c.max_heat > FIRE_SIM_CHUNK_ACTIVE_EPS
+                                })
+                                .count();
+                            let tot = rt.chunks.len();
+                            muted_label(
+                                ui,
+                                &palette,
+                                format!(
+                                    "F7B visual_active={vis} sim_active={sim} total_chunks={tot}"
+                                ),
+                            );
+                        }
+                        ui.separator();
+                        section_heading(
+                            ui,
+                            &palette,
+                            CmdHeadingStyle::Gt,
+                            "Map gizmo legend (focus / tile debug)",
+                        );
+                        muted_label(
+                            ui,
+                            &palette,
+                            "Focus chunk — gold #F2D926 — camera-derived focus tile",
+                        );
+                        muted_label(
+                            ui,
+                            &palette,
+                            "Fire active — red #FF261E — chunk in fire-active union",
+                        );
+                        muted_label(
+                            ui,
+                            &palette,
+                            "Terrain resident — green #33BF40 — chunk entity present",
+                        );
+                        muted_label(
+                            ui,
+                            &palette,
+                            "Empty — dark gray #1E1E24 — no terrain / no fire",
+                        );
+                    });
+            }
+
             ui.separator();
             section_heading(ui, &palette, CmdHeadingStyle::Gt, "GPU weather / fire field (compute)");
             ui.checkbox(&mut gpu_field_debug.show, "Debug sprite (128² Rgba32Float field, bottom-left)");
@@ -439,7 +543,9 @@ pub fn diagnostics_ui_system(
                             construction_book.rows.len()
                         ),
                     );
-                    if let (Some(th), Some(la)) = (theater.as_deref(), logistics_ai.as_deref()) {
+                    if let (Some(th), Some(la)) =
+                        (spine.theater.as_deref(), spine.logistics_ai.as_deref())
+                    {
                         primary_label(
                             ui,
                             &palette,

@@ -7,7 +7,20 @@
 | **Version** | `1.0.0` |
 | **Date** | 2026-05-26 |
 | **Coder lane** | **R4-CORRIDOR-001** (product gate) |
-| **Status** | queued (exec plan, not witness close) |
+| **Status** | **READY (planner finalized)** — coder lane `R4-CORRIDOR-001` |
+
+**Planner sign-off:** PASS (2026-05-27). Queue: `tools/orchestrator/queues/planner_active_queue.json` → archived `PLAN-CONSTRUCTION-R4-EXEC-001`.
+
+---
+
+## Coder handoff (acceptance)
+
+| Field | Value |
+|:---|:---|
+| **Witness** | `debug_runs/construction_stage_live.json` → `construction_r4_corridor_001` |
+| **Unblocks** | `R4-CORRIDOR-001` |
+| **Green rollup** | `construction_r4_corridor_001.green` with `product_board_open`, `r8_roundtrip_ok`, `corridor_phase_visual_wired`, sim tick writer, book counters |
+| **Verify** | `cargo test -p proc_A_dine01 --lib corridor_construction transport::persistence simulation_writes_construction_stage_live_json` |
 
 ---
 

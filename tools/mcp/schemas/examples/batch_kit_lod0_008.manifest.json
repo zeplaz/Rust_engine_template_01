@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "batch_id": "kit_lod0_008",
+  "description": "LOD0 wave \u2014 kit_lod0_008 from plan_kit_lod0_roadmap_v1.md",
+  "plan_ref": "src/dev/plan_kit_lod0_roadmap_v1.md",
+  "development_tier": "lod0",
+  "witness": "debug_runs/art_pipeline/kit_lod0_008_live.json",
+  "rules_applied": [
+    "no_ai_generated_images",
+    "deterministic_output",
+    "batch_processing",
+    "grid_alignment",
+    "canonical_module_ids_only"
+  ],
+  "modules": [
+    {
+      "asset_id": "roof_bunker",
+      "job_id": "roof_bunker_lod0_run001",
+      "archetype": "module_roof",
+      "development_tier": "lod0",
+      "pbr_status": "deferred",
+      "profile": "flat",
+      "status": "promoted"
+    },
+    {
+      "asset_id": "roof_canopy",
+      "job_id": "roof_canopy_lod0_run001",
+      "archetype": "module_roof",
+      "development_tier": "lod0",
+      "pbr_status": "deferred",
+      "profile": "shed",
+      "status": "promoted"
+    },
+    {
+      "asset_id": "door_factory",
+      "job_id": "door_factory_lod0_run001",
+      "archetype": "module_door",
+      "development_tier": "lod0",
+      "pbr_status": "deferred",
+      "profile": "frame",
+      "status": "promoted"
+    },
+    {
+      "asset_id": "win_office_1u",
+      "job_id": "win_office_1u_lod0_run001",
+      "archetype": "module_window",
+      "development_tier": "lod0",
+      "pbr_status": "deferred",
+      "profile": "frame_mullion",
+      "status": "promoted"
+    },
+    {
+      "asset_id": "corner_T",
+      "job_id": "corner_T_lod0_run001",
+      "archetype": "module_prop",
+      "development_tier": "lod0",
+      "pbr_status": "deferred",
+      "profile": "box",
+      "status": "promoted"
+    }
+  ],
+  "next_agent": "@coder-mcp",
+  "gate": "G5"
+}

@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "operation": "preview_assembly",
+  "job_id": "preview_industrial_west_4x2_s43_a879_preview_tmp_e4d59aed",
+  "assembly_snapshot": "debug_runs/preview_jobs/industrial_west_4x2_s43_a879_preview_tmp.json",
+  "camera": {
+    "preset": "iso_ne",
+    "distance_m": 24.0
+  },
+  "output": {
+    "png": "debug_runs/preview_jobs/industrial_west_4x2_s43_a879_thumb.png",
+    "width": 512,
+    "height": 512
+  }
+}

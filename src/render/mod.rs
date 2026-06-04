@@ -18,10 +18,12 @@ pub mod shaders;
 pub mod sim_visual_extract;
 mod fire_chunk_runtime;
 mod fire7_f7_a_exit;
-mod fire_streaming;
+pub(crate) mod fire_streaming;
 mod fire_view_extract;
 mod vfx_capture_hook;
 mod tile_world_fallback;
+mod tactical_vector_overlay;
+mod visual_perf_budget;
 mod overlay_field_buffers;
 mod domain_overlay_gpu;
 mod gpu_particles;
@@ -41,20 +43,24 @@ mod ecology_visual_snapshot;
 mod visual_domain_snapshots;
 mod phase_f_lod_proof;
 mod per_view_residency;
-mod stage6_live_proof;
 mod stage6_virtualization;
 mod view_fire_projection;
-mod stage5_full_app_harness;
+pub(crate) mod stage5_full_app_harness;
 mod stage5_readiness;
 mod stage5_closure_witnesses;
+pub mod hanabi_embellishment;
+pub mod hanabi_witness;
 mod vt_app_integration;
 mod vt_ci_matrix;
+mod infrastructure_overlay;
 mod viewport_pipeline;
 pub mod view_runtime;
 mod spine_governance_matrix;
 mod domain_projection_frame;
 mod frame_perf;
 mod stall_watch;
+mod visual_readiness_witness;
+mod perf_attribution_witness;
 mod gpu_indirect_draw;
 mod gpu_tile_debug_buffer;
 mod gpu_tile_debug_draw;
@@ -67,9 +73,17 @@ pub mod tilemap_adapter;
 
 pub use tile_world_fallback::{
     draw_simulation_minimap_egui, simulation_minimap_egui_texture, SimMinimapUiState,
-    TileWorldFallbackAfterFireExtract, TileWorldFallbackChunkGrid, TileWorldFallbackPlugin,
-    TileWorldFallbackRasterCtrl, TileWorldFallbackRasterDirty, TileWorldFallbackSprite,
-    TileWorldFallbackState, RASTER_CHUNK_TILES,
+    TileFallbackRasterPolicy, TileWorldFallbackAfterFireExtract, TileWorldFallbackChunkGrid,
+    TileWorldFallbackPlugin, TileWorldFallbackRasterCtrl, TileWorldFallbackRasterDirty,
+    TileWorldFallbackSprite, TileWorldFallbackState, RASTER_CHUNK_TILES,
+};
+pub use tactical_vector_overlay::{
+    sync_tactical_vector_overlay_from_projection, tactical_vector_overlay_witness_json,
+    TacticalVectorOverlayPlugin, TacticalVectorOverlayState,
+};
+pub use visual_perf_budget::{
+    sync_tile_raster_spike_feedback_system, FireExtractCadence, FireExtractClock,
+    TileRasterBudget, TileRasterSpikeFeedback, RASTER_SPIKE_EMA_MS, RASTER_SPIKE_FRAME_MS,
 };
 pub use crate::gui::{MinimapOverlayMask, MinimapPresentationMode, MinimapShellState};
 
@@ -121,13 +135,13 @@ pub use domain_overlay_gpu::{
 pub use gpu_particles::{
     emit_world_fire_particles_from_projection, fire_spark_011_green, fire_spark_compute_enabled,
     seed_world_fire_particles_from_overlay_heat, sync_fire_particle_camera_scale,
+    update_world_fire_particles_from_projection,
     FireParticleCameraScale, FireSparkWitness, GpuParticleInstance, GpuParticleQuadVertex,
     ParticleClass, WorldFireParticleFrame, WorldFireParticleGpuStorage, FIRE_SPARK_SCATTER_MAX,
     FIRE_SPARK_STRATEGIC_ZOOM_ALPHA, FIRE_SPARK_TACTICAL_PROOF_ZOOM_ALPHA,
 };
 pub use stage5_full_app_harness::{
-    refresh_log_e01_and_tactical_vfx_stage5_live_witness,
-    refresh_p2_fire_spark_011_stage5_live_witness, STAGE5_FULL_APP_LIVE_JSON,
+    LogE01CaptureLane, STAGE5_FULL_APP_LIVE_JSON,
 };
 pub use gpu_packed_formats::{
     ecology_overlay_row_format, fire_particle_expanded_vertex_format, fire_visual_instance_format,
@@ -160,10 +174,12 @@ pub use vt_spatial_invariants::{
 pub use logistics_visual_snapshot::LogisticsVisualSnapshot;
 pub use ecology_visual_snapshot::EcologyVisualSnapshot;
 pub use visual_domain_snapshots::{
-    fill_logistics_snapshot, publish_ecology_visual_snapshot, publish_logistics_visual_snapshot,
-    seed_minimap_m2_logistics_construction_witness, seed_minimap_m2_overlay_witness,
-    seed_minimap_m3_fow_ew_witness,
-    seed_minimap_m3_units_replay_witness, MinimapOperationalSnapshot,
+    fill_logistics_snapshot, fill_minimap_unit_markers_from_logistics,
+    publish_ecology_visual_snapshot, publish_logistics_visual_snapshot,
+    publish_minimap_operational_unit_markers_system, seed_minimap_m2_logistics_construction_witness,
+    seed_minimap_m2_overlay_witness, seed_minimap_m3_fow_ew_witness,
+    seed_minimap_m3_units_replay_witness, unit_markers_real_reader_witness_green,
+    MinimapOperationalSnapshot, MINIMAP_UNIT_MARKER_SNAPSHOT_CAP,
 };
 pub use phase_f_lod_proof::{PhaseFLodProofPlugin, PhaseFLodProofReport};
 pub use gpu_surface_teardown::{GpuSurfaceTeardownPlugin, VisualTestGracefulExit};
@@ -171,8 +187,8 @@ pub use per_view_residency::{
     per_view_residency_contains, residency_coords_for_view_instance, PerViewResidencyConsumerWindow,
     RESIDENCY_VIEW_CHUNK_SPACING_WORLD,
 };
-pub use stage6_live_proof::{
-    build_stage6_proof_payload, refresh_wc_d04_stage6_virtualization_live_witness,
+pub use crate::dev::runtime_witness::stage6::{
+    build_stage6_proof_payload, write_ops_f01_perf_attribution_section,
     Stage6LiveProofState, Stage6VirtualizationWitness, STAGE6_VIRTUALIZATION_JSON,
 };
 pub use view_fire_projection::{
@@ -194,7 +210,7 @@ pub use stage5_closure_witnesses::{
 pub use stage5_readiness::{
     evaluate_app_stage5_readiness, evaluate_stage5_spine_checklist, stage5_readiness_passes,
     AppStage5ReadinessReport, Stage5ReadinessEvalInvocation, Stage5ReadinessPlugin,
-    Stage5ReadinessProfile, Stage5SpineChecklist,
+    Stage5ReadinessProfile, Stage5SpineChecklist, PERF_PLAY_READINESS_GREEN_LOG_INTERVAL,
 };
 pub use debug_render_trace::{
     trace_camera_sync, trace_particle_routing, trace_render_target, trace_viewport,
@@ -203,12 +219,11 @@ pub use debug_render_trace::{
 pub use visual_diagnostics::{visual_diag_enabled, VisualDiagnosticsPlugin, VISUAL_DIAG_TARGET};
 pub use debug_viewport_overlay::{debug_viewport_overlay_enabled, DebugViewportOverlayPlugin};
 pub use viewport_pipeline::{
-    resolved_particle_half_extents, ResolvedViewport,
+    primary_window_logical_presentable, resolved_particle_half_extents, ResolvedViewport,
     ResolvedViewports, ViewportPipelinePlugin, ViewportPipelineSet, ViewportPresentationMismatch,
+    PRIMARY_WINDOW_MIN_LOGICAL_PX,
 };
-pub use view_runtime::{
-    refresh_infrastructure_view_isolation_live_witness, ViewRuntimePlugin,
-};
+pub use view_runtime::ViewRuntimePlugin;
 pub use full_render_diagnostic::{
     arm_full_render_diagnostic_for_full_app,
     full_render_diagnostic_has_critical_anomaly, note_full_render_camera_drove_ui_follow,
@@ -231,8 +246,8 @@ pub use fire7_f7_a_exit::{
     Fire7F7AExitCriteria,
 };
 pub use fire_streaming::{
-    fire_streaming_b_green, refresh_fire_streaming_live_witness, FireStreamingPlugin,
-    FireStreamingWitness, FIRE_STREAMING_LIVE_JSON,
+    fire_streaming_b_green, FireStreamingLiveProofState,
+    FireStreamingPlugin, FireStreamingWitness, FIRE_STREAMING_LIVE_JSON, FIRE_STREAMING_SLEEP_RADIUS,
 };
 pub use fire_view_extract::{
     build_fire_visual_frames_by_view, clamp_fire_lod_for_world_band, fire7_f7_c_001_green,
@@ -273,7 +288,7 @@ pub use vt_ci_matrix::{
     apply_vt4_ci_report_to_overlay_debug, apply_vt4_ci_surface_checks, build_deterministic_ci_scenario,
     build_live_vt4_scenario, record_vt_ci_matrix_live, run_vt4_ci_matrix, run_vt5_ci_spatial_matrix,
     Vt4CiReport, Vt4CiScenario, Vt4SurfaceId, VtCiMatrixLiveReport, VtCiMatrixPlugin,
-    full_app_vt_ci_fixture_passes, stage5_vt_deep_001_green,
+    full_app_vt_ci_fixture_passes, stage5_vt_deep_001_green, stage5_vt_flicker_visual_001_witness,
 };
 pub use domain_projection_frame::{
     build_domain_projection_frame, merge_domain_projection_into_representation,
@@ -292,7 +307,19 @@ pub use frame_perf::{
     PerfScope,
 };
 pub use stall_watch::{
-    stall_watch_enabled, FrameScheduleSpans, FrameStallWatch, StallWatchPlugin, STALL_THRESHOLD_MS,
+    stall_checkpoint_before_world_repr, stall_checkpoint_post_fire_project, stall_checkpoint_post_streaming_spine,
+    stall_checkpoint_post_world_repr, stall_watch_enabled, FrameScheduleSpans, FrameStallWatch,
+    StallWatchPlugin, STALL_THRESHOLD_MS,
+};
+pub use perf_attribution_witness::{
+    perf_attribution_witness_json, perf_attribution_witness_lib_fixture,
+    reset_perf_attribution_witness_on_enter_simulation, sync_perf_attribution_witness_system,
+    PerfAttributionWitness, PERF_ATTRIBUTION_WINDOW,
+};
+pub use visual_readiness_witness::{
+    reset_visual_readiness_witness_on_enter_simulation, sync_visual_readiness_witness_system,
+    visual_readiness_witness_json, visual_readiness_witness_lib_fixture, VisualReadinessWitness,
+    VisualReadinessWitnessPlugin,
 };
 pub use gpu_tile_debug_buffer::register_tile_debug_instance_storage_upload;
 pub use gpu_tile_debug_draw::register_tile_debug_instanced_draw;

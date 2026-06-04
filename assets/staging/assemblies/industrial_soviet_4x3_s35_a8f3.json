@@ -1,0 +1,317 @@
+{
+  "schema_version": 1,
+  "assembly_id": "industrial_soviet_4x3_s35_a8f3",
+  "style_pack_id": "style_industrial_soviet",
+  "source_tier": "production",
+  "procedural_rules_version": "pg2_wdc_v1",
+  "reference_tags": [],
+  "seed": 35,
+  "footprint": {
+    "width": 4,
+    "depth": 3,
+    "floors": 2,
+    "wdc_cell_count": 20
+  },
+  "module_placements": [
+    {
+      "module_id": "roof_sawtooth",
+      "job_id": "roof_sawtooth_production_run001",
+      "slot_key": "roof_default",
+      "token": "R",
+      "grid_x": 0,
+      "grid_y": 0,
+      "floor": 2,
+      "glb_path": "assets/models/modules/roof_sawtooth_production_run001/model.glb",
+      "position": [
+        0.0,
+        6.0,
+        0.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "roof_sawtooth_0_0_f2",
+      "material_profile": "roof_metal_01",
+      "placement_tags": [
+        "exterior",
+        "roof"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production"
+    },
+    {
+      "module_id": "roof_sawtooth",
+      "job_id": "roof_sawtooth_production_run001",
+      "slot_key": "roof_default",
+      "token": "R",
+      "grid_x": 1,
+      "grid_y": 0,
+      "floor": 2,
+      "glb_path": "assets/models/modules/roof_sawtooth_production_run001/model.glb",
+      "position": [
+        1.0,
+        6.0,
+        0.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "roof_sawtooth_1_0_f2",
+      "material_profile": "roof_metal_01",
+      "placement_tags": [
+        "exterior",
+        "roof"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production"
+    },
+    {
+      "module_id": "roof_sawtooth",
+      "job_id": "roof_sawtooth_production_run001",
+      "slot_key": "roof_default",
+      "token": "R",
+      "grid_x": 2,
+      "grid_y": 0,
+      "floor": 2,
+      "glb_path": "assets/models/modules/roof_sawtooth_production_run001/model.glb",
+      "position": [
+        2.0,
+        6.0,
+        0.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "roof_sawtooth_2_0_f2",
+      "material_profile": "roof_metal_01",
+      "placement_tags": [
+        "exterior",
+        "roof"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production"
+    },
+    {
+      "module_id": "roof_sawtooth",
+      "job_id": "roof_sawtooth_production_run001",
+      "slot_key": "roof_default",
+      "token": "R",
+      "grid_x": 3,
+      "grid_y": 0,
+      "floor": 2,
+      "glb_path": "assets/models/modules/roof_sawtooth_production_run001/model.glb",
+      "position": [
+        3.0,
+        6.0,
+        0.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "roof_sawtooth_3_0_f2",
+      "material_profile": "roof_metal_01",
+      "placement_tags": [
+        "exterior",
+        "roof"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production"
+    },
+    {
+      "module_id": "roof_sawtooth",
+      "job_id": "roof_sawtooth_production_run001",
+      "slot_key": "roof_default",
+      "token": "R",
+      "grid_x": 0,
+      "grid_y": 1,
+      "floor": 2,
+      "glb_path": "assets/models/modules/roof_sawtooth_production_run001/model.glb",
+      "position": [
+        0.0,
+        6.0,
+        1.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "roof_sawtooth_0_1_f2",
+      "material_profile": "roof_metal_01",
+      "placement_tags": [
+        "exterior",
+        "roof"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production"
+    },
+    {
+      "module_id": "roof_sawtooth",
+      "job_id": "roof_sawtooth_production_run001",
+      "slot_key": "roof_default",
+      "token": "R",
+      "grid_x": 3,
+      "grid_y": 1,
+      "floor": 2,
+      "glb_path": "assets/models/modules/roof_sawtooth_production_run001/model.glb",
+      "position": [
+        3.0,
+        6.0,
+        1.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "roof_sawtooth_3_1_f2",
+      "material_profile": "roof_metal_01",
+      "placement_tags": [
+        "exterior",
+        "roof"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production"
+    },
+    {
+      "module_id": "roof_sawtooth",
+      "job_id": "roof_sawtooth_production_run001",
+      "slot_key": "roof_default",
+      "token": "R",
+      "grid_x": 0,
+      "grid_y": 2,
+      "floor": 2,
+      "glb_path": "assets/models/modules/roof_sawtooth_production_run001/model.glb",
+      "position": [
+        0.0,
+        6.0,
+        2.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "roof_sawtooth_0_2_f2",
+      "material_profile": "roof_metal_01",
+      "placement_tags": [
+        "exterior",
+        "roof"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production"
+    },
+    {
+      "module_id": "roof_sawtooth",
+      "job_id": "roof_sawtooth_production_run001",
+      "slot_key": "roof_default",
+      "token": "R",
+      "grid_x": 1,
+      "grid_y": 2,
+      "floor": 2,
+      "glb_path": "assets/models/modules/roof_sawtooth_production_run001/model.glb",
+      "position": [
+        1.0,
+        6.0,
+        2.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "roof_sawtooth_1_2_f2",
+      "material_profile": "roof_metal_01",
+      "placement_tags": [
+        "exterior",
+        "roof"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production"
+    },
+    {
+      "module_id": "roof_sawtooth",
+      "job_id": "roof_sawtooth_production_run001",
+      "slot_key": "roof_default",
+      "token": "R",
+      "grid_x": 2,
+      "grid_y": 2,
+      "floor": 2,
+      "glb_path": "assets/models/modules/roof_sawtooth_production_run001/model.glb",
+      "position": [
+        2.0,
+        6.0,
+        2.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "roof_sawtooth_2_2_f2",
+      "material_profile": "roof_metal_01",
+      "placement_tags": [
+        "exterior",
+        "roof"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production"
+    },
+    {
+      "module_id": "roof_sawtooth",
+      "job_id": "roof_sawtooth_production_run001",
+      "slot_key": "roof_default",
+      "token": "R",
+      "grid_x": 3,
+      "grid_y": 2,
+      "floor": 2,
+      "glb_path": "assets/models/modules/roof_sawtooth_production_run001/model.glb",
+      "position": [
+        3.0,
+        6.0,
+        2.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "roof_sawtooth_3_2_f2",
+      "material_profile": "roof_metal_01",
+      "placement_tags": [
+        "exterior",
+        "roof"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production"
+    }
+  ]
+}

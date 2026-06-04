@@ -1,18 +1,23 @@
 //! Async world streaming spine — priority scoring, staging, and upload enqueue.
 
 mod apply;
+mod budget;
 mod chunk_cache;
+mod diagnostics;
 mod hydrate;
 mod interest;
+mod manifest_cache;
 mod preview_ghost;
 mod residency;
 mod task_pool;
 mod tile_storage_apply;
 mod tile_storage_contract;
 mod wave_c_prerequisites;
-mod wave_c_live_proof;
+
+use crate::dev::runtime_witness::wave_c;
 mod wave_c_readiness;
 
+use bevy::diagnostic::FrameCount;
 use bevy::prelude::*;
 
 use crate::gui::{LodZoneRegistry, WorldRepresentationFrame};
@@ -28,11 +33,14 @@ pub use chunk_cache::{
 pub use hydrate::{
     hydrate_all_manifest_chunks, hydrate_stream_chunks_from_manifest, load_manifest_for_streaming,
 };
+pub use budget::{stream_sync_hydrate_enabled, StreamingSpineBudget};
 pub use interest::{
-    highest_priority_orb, interest_orbs_from_lod_zones, merge_interest_chunk_coords,
-    merge_interest_chunk_coords_with_ghost_bands, merge_interest_orbs_deduped,
-    primary_interest_orb, priority_for_chunk, InterestOrb, InterestOrbKind,
+    cap_chunk_coords_by_focus, highest_priority_orb, interest_chunk_set_signature, interest_orbs_from_lod_zones,
+    merge_interest_chunk_coords, merge_interest_chunk_coords_with_ghost_bands,
+    merge_interest_orbs_deduped, primary_interest_orb, priority_for_chunk, InterestOrb,
+    InterestOrbKind,
 };
+pub use manifest_cache::StreamingManifestCache;
 pub use preview_ghost::{
     ghost_band_neighbor_coords_for_preview, preview_coords_with_ghost_bands,
 };
@@ -50,8 +58,8 @@ pub use tile_storage_apply::{
     TileStorageApplyReport, TileStorageSmoothTransitionState,
 };
 pub use tile_storage_contract::{
-    tile_storage_diff_for_chunk, PendingTileStorageDiffQueue, TileStorageDiffBatch,
-    TileStorageDiffChunk, TILE_STORAGE_DIFF_CONTRACT_BQ,
+    tile_storage_diff_for_chunk, PendingTileStorageDiffQueue, TileStorageApplyTiming,
+    TileStorageDiffBatch, TileStorageDiffChunk, TILE_STORAGE_DIFF_CONTRACT_BQ,
 };
 pub use wave_c_prerequisites::{
     gather_wave_c_prerequisites, wave_c_prerequisites_passes, WaveCPrerequisitesReport,
@@ -59,6 +67,10 @@ pub use wave_c_prerequisites::{
 };
 pub use wave_c_readiness::{
     gather_wave_c_readiness, wave_c_readiness_passes, WaveCReadinessReport,
+};
+pub use diagnostics::{
+    log_pending_chunks_changed, refresh_streaming_spine_warm_gate, stream_spine_diag_enabled,
+    StreamingSpineDiagState, StreamingSpineWarmGate, StreamSpineWorkKind,
 };
 
 /// Chunk streaming priority inputs (distance, simulation, visibility).
@@ -102,6 +114,8 @@ pub struct ChunkStreamingScheduler {
     pub pending_chunks: Vec<IVec2>,
     pub jobs: Vec<ChunkStreamJob>,
     pub staged_chunk_bodies: Vec<(IVec2, SavedChunkBody)>,
+    /// Signature of last merged interest set ([`interest_chunk_set_signature`]).
+    pub interest_signature: u64,
 }
 
 impl ChunkStreamingScheduler {
@@ -143,23 +157,136 @@ impl ChunkStreamingScheduler {
         visible_radius: i32,
         orb_priority: impl Fn(IVec2) -> u8,
     ) {
-        self.pending_chunks = chunks.to_vec();
-        self.jobs.clear();
-        self.staged_chunk_bodies.clear();
-        for &chunk in chunks {
-            let distance = (chunk - focus).as_vec2().length();
-            let visible = distance <= visible_radius as f32;
-            let priority = weights.score(distance, sim_importance, visible)
-                + orb_priority(chunk) as f32 * 0.01;
+        self.sync_interest_targets(chunks, focus, weights, sim_importance, visible_radius, orb_priority);
+    }
+
+    fn job_priority_for_chunk(
+        chunk: IVec2,
+        focus: IVec2,
+        weights: ChunkStreamingPriority,
+        sim_importance: f32,
+        visible_radius: i32,
+        orb_priority: &impl Fn(IVec2) -> u8,
+    ) -> f32 {
+        let distance = (chunk - focus).as_vec2().length();
+        let visible = distance <= visible_radius as f32;
+        weights.score(distance, sim_importance, visible) + orb_priority(chunk) as f32 * 0.01
+    }
+
+    /// Merge full interest (all LOD zones + focus) without clearing in-flight staged bodies.
+    pub fn sync_interest_targets(
+        &mut self,
+        desired: &[IVec2],
+        focus: IVec2,
+        weights: ChunkStreamingPriority,
+        sim_importance: f32,
+        visible_radius: i32,
+        orb_priority: impl Fn(IVec2) -> u8,
+    ) {
+        use std::collections::HashSet;
+
+        let priority_fn = &orb_priority;
+        let desired_set: HashSet<IVec2> = desired.iter().copied().collect();
+        self.pending_chunks.retain(|c| desired_set.contains(c));
+        self.jobs.retain(|j| desired_set.contains(&j.chunk));
+
+        for &chunk in desired {
+            if let Some(job) = self.jobs.iter_mut().find(|j| j.chunk == chunk) {
+                job.priority = Self::job_priority_for_chunk(
+                    chunk,
+                    focus,
+                    weights,
+                    sim_importance,
+                    visible_radius,
+                    priority_fn,
+                );
+                continue;
+            }
+            self.pending_chunks.push(chunk);
             self.jobs.push(ChunkStreamJob {
                 chunk,
                 stage: ChunkStreamStage::Disk,
-                priority,
+                priority: Self::job_priority_for_chunk(
+                    chunk,
+                    focus,
+                    weights,
+                    sim_importance,
+                    visible_radius,
+                    priority_fn,
+                ),
             });
         }
-        self
-            .jobs
-            .sort_by(|a, b| b.priority.partial_cmp(&a.priority).unwrap_or(std::cmp::Ordering::Equal));
+
+        self.pending_chunks.sort_by_key(|c| (c.y, c.x));
+        self.jobs.sort_by(|a, b| {
+            b.priority
+                .partial_cmp(&a.priority)
+                .unwrap_or(std::cmp::Ordering::Equal)
+        });
+    }
+
+    /// Refresh priorities when the camera moves but the interest set is unchanged.
+    pub fn refresh_interest_priorities(
+        &mut self,
+        focus: IVec2,
+        weights: ChunkStreamingPriority,
+        sim_importance: f32,
+        visible_radius: i32,
+        orb_priority: impl Fn(IVec2) -> u8,
+    ) {
+        let priority_fn = &orb_priority;
+        for job in &mut self.jobs {
+            job.priority = Self::job_priority_for_chunk(
+                job.chunk,
+                focus,
+                weights,
+                sim_importance,
+                visible_radius,
+                priority_fn,
+            );
+        }
+        self.jobs.sort_by(|a, b| {
+            b.priority
+                .partial_cmp(&a.priority)
+                .unwrap_or(std::cmp::Ordering::Equal)
+        });
+    }
+
+    /// Highest-priority chunks still missing from the hot cache (jobs are sorted desc).
+    #[must_use]
+    pub fn select_disk_hydrate_batch(&self, cache: &ChunkCache, max: usize) -> Vec<IVec2> {
+        let mut out = Vec::with_capacity(max.min(self.jobs.len()));
+        for job in &self.jobs {
+            if out.len() >= max {
+                break;
+            }
+            if cache.get(job.chunk).is_some() {
+                continue;
+            }
+            if job.stage != ChunkStreamStage::Disk {
+                continue;
+            }
+            out.push(job.chunk);
+        }
+        out
+    }
+
+    pub fn advance_jobs_for_cached_chunks(&mut self, cache: &ChunkCache) {
+        for job in &mut self.jobs {
+            if cache.get(job.chunk).is_some() && job.stage == ChunkStreamStage::Disk {
+                job.stage = ChunkStreamStage::Deserialize;
+            }
+        }
+    }
+
+    pub fn note_chunks_hydrated(&mut self, coords: &[IVec2]) {
+        use std::collections::HashSet;
+        let hydrated: HashSet<IVec2> = coords.iter().copied().collect();
+        for job in &mut self.jobs {
+            if hydrated.contains(&job.chunk) && job.stage == ChunkStreamStage::Disk {
+                job.stage = ChunkStreamStage::Deserialize;
+            }
+        }
     }
 
     pub fn advance_job_stages(&mut self) {
@@ -241,30 +368,84 @@ pub fn schedule_chunk_streaming_from_interest(
     world: Res<WorldRepresentationFrame>,
     zones: Res<LodZoneRegistry>,
     mut scheduler: ResMut<ChunkStreamingScheduler>,
+    cache: Res<ChunkCache>,
+    frame: Res<FrameCount>,
+    mut diag: ResMut<StreamingSpineDiagState>,
+    budget: Res<StreamingSpineBudget>,
 ) {
     const CHUNK_TILES: UVec2 = UVec2::splat(32);
+    if stream_spine_diag_enabled() && !diag.logged_budget_config {
+        bevy::log::info!(
+            target: "proc_A_dine01::io::streaming::diag",
+            hydrate_budget = budget.max_hydrate_chunks_per_frame,
+            reconstruct_budget = budget.max_reconstruct_chunks_per_frame,
+            max_pending_chunks = budget.max_pending_chunks,
+            sync_hydrate = stream_sync_hydrate_enabled(),
+            "STREAM budget config"
+        );
+        diag.logged_budget_config = true;
+    }
     let mut orbs = vec![primary_interest_orb(&world)];
     orbs.extend(interest_orbs_from_lod_zones(&zones.zones, CHUNK_TILES));
     let orbs = merge_interest_orbs_deduped(&orbs);
-    let coords = merge_interest_chunk_coords(&orbs);
-    // PERF-PLAY-001: do not reset the streaming pipeline when the interest set
-    // is unchanged; re-enqueueing every frame forces repeated reconstruct/apply.
-    if scheduler.pending_chunks == coords {
-        return;
+    let merged_coords = merge_interest_chunk_coords(&orbs);
+    let coords = cap_chunk_coords_by_focus(
+        merged_coords,
+        world.focus_chunk,
+        budget.max_pending_chunks,
+    );
+    if stream_spine_diag_enabled()
+        && coords.len() >= budget.max_pending_chunks
+        && frame.0.saturating_sub(diag.last_pending_over_cap_frame) >= 30
+    {
+        bevy::log::warn!(
+            target: "proc_A_dine01::io::streaming::diag",
+            frame = frame.0,
+            capped_pending_len = coords.len(),
+            cap = budget.max_pending_chunks,
+            "STREAM pending set reached cap; far-field chunks deferred"
+        );
+        diag.last_pending_over_cap_frame = frame.0;
     }
+    let sig = interest_chunk_set_signature(&coords);
     let weights = ChunkStreamingPriority {
         distance_weight: -1.0,
         simulation_weight: 1.5,
         visibility_weight: 2.0,
     };
     let orb_priority = |coord: IVec2| priority_for_chunk(coord, &orbs);
-    scheduler.enqueue_chunk_coords(
+    let visible_radius = world.interest_radius_chunks.max(1);
+
+    if scheduler.interest_signature == sig {
+        scheduler.refresh_interest_priorities(
+            world.focus_chunk,
+            weights,
+            world.gameplay_importance,
+            visible_radius,
+            orb_priority,
+        );
+        scheduler.advance_jobs_for_cached_chunks(&cache);
+        if scheduler.all_pending_chunks_cached(&cache) {
+            scheduler.clear_jobs_if_fully_cached(&cache);
+        }
+        return;
+    }
+
+    scheduler.interest_signature = sig;
+    scheduler.sync_interest_targets(
         &coords,
         world.focus_chunk,
         weights,
         world.gameplay_importance,
-        world.interest_radius_chunks.max(1),
+        visible_radius,
         orb_priority,
+    );
+    scheduler.advance_jobs_for_cached_chunks(&cache);
+    log_pending_chunks_changed(
+        frame.0,
+        world.interest_radius_chunks,
+        &scheduler,
+        &mut diag,
     );
 }
 
@@ -293,7 +474,15 @@ pub fn hydrate_stream_jobs_from_save_bundle(
     settings: Res<WorldSaveBundleSettings>,
     mut scheduler: ResMut<ChunkStreamingScheduler>,
     cache: Res<ChunkCache>,
+    dispatcher: Res<ChunkStreamIoDispatcher>,
+    budget: Res<StreamingSpineBudget>,
+    mut manifest_cache: ResMut<StreamingManifestCache>,
+    frame: Res<FrameCount>,
+    mut diag: ResMut<StreamingSpineDiagState>,
 ) {
+    if !stream_sync_hydrate_enabled() {
+        return;
+    }
     if scheduler.pending_chunks.is_empty() {
         return;
     }
@@ -301,30 +490,37 @@ pub fn hydrate_stream_jobs_from_save_bundle(
         scheduler.clear_jobs_if_fully_cached(&cache);
         return;
     }
-    if !scheduler.staged_chunk_bodies.is_empty() {
+    if !scheduler.staged_chunk_bodies.is_empty() || dispatcher.in_flight {
         return;
     }
-    let missing: Vec<IVec2> = scheduler
-        .pending_chunks
-        .iter()
-        .copied()
-        .filter(|coord| cache.get(*coord).is_none())
-        .collect();
-    if missing.is_empty() {
+    let batch = scheduler.select_disk_hydrate_batch(&cache, budget.max_hydrate_chunks_per_frame);
+    if batch.is_empty() {
         scheduler.clear_jobs_if_fully_cached(&cache);
         return;
     }
-    let Some(manifest) = load_manifest_for_streaming(&settings.bundle_dir) else {
+    let Some(manifest) = manifest_cache.manifest_for_bundle(&settings.bundle_dir) else {
         return;
     };
-    scheduler.staged_chunk_bodies =
-        hydrate_stream_chunks_from_manifest(&settings.bundle_dir, &manifest, &missing);
-    for job in &mut scheduler.jobs {
-        if job.stage == ChunkStreamStage::Disk {
-            job.stage = ChunkStreamStage::Deserialize;
-        }
+    if stream_spine_diag_enabled() {
+        bevy::log::info!(
+            target: "proc_A_dine01::io::streaming::diag",
+            frame = frame.0,
+            hydrate_batch = batch.len(),
+            pending_len = scheduler.pending_chunks.len(),
+            jobs = scheduler.jobs.len(),
+            "STREAM hydrate_stream_jobs_from_save_bundle (sync fallback)"
+        );
+        diag.last_logged_frame = frame.0;
     }
+    let bodies =
+        hydrate_stream_chunks_from_manifest(&settings.bundle_dir, manifest, &batch);
+    let hydrated: Vec<IVec2> = bodies.iter().map(|(c, _)| *c).collect();
+    scheduler.staged_chunk_bodies.extend(bodies);
+    scheduler.note_chunks_hydrated(&hydrated);
 }
+
+/// Default reconstruct batch when [`StreamingSpineBudget`] is absent (tests).
+pub const MAX_RECONSTRUCT_CHUNKS_PER_FRAME: usize = 8;
 
 pub fn reconstruct_staged_chunks_into_cache(
     mut scheduler: ResMut<ChunkStreamingScheduler>,
@@ -333,11 +529,17 @@ pub fn reconstruct_staged_chunks_into_cache(
     mut spill: ResMut<ChunkCacheDiskSpill>,
     mut tile_diffs: ResMut<PendingTileStorageDiffQueue>,
     mut apply_queue: ResMut<PendingStreamApplyQueue>,
+    budget: Res<StreamingSpineBudget>,
 ) {
     if scheduler.staged_chunk_bodies.is_empty() {
         return;
     }
-    for (coord, body) in scheduler.staged_chunk_bodies.drain(..) {
+    let batch_len = scheduler
+        .staged_chunk_bodies
+        .len()
+        .min(budget.max_reconstruct_chunks_per_frame);
+    let batch: Vec<_> = scheduler.staged_chunk_bodies.drain(..batch_len).collect();
+    for (coord, body) in batch {
         let hash = hash_saved_chunk_body(&body);
         if cache
             .get(coord)
@@ -400,7 +602,11 @@ impl Plugin for StreamingSpinePlugin {
             .init_resource::<PendingTileStorageDiffQueue>()
             .init_resource::<TileStorageSmoothTransitionState>()
             .init_resource::<TileStorageApplyReport>()
-            .init_resource::<wave_c_live_proof::WaveCLiveProofState>()
+            .init_resource::<wave_c::WaveCLiveProofState>()
+            .init_resource::<StreamingSpineWarmGate>()
+            .init_resource::<StreamingSpineDiagState>()
+            .init_resource::<StreamingSpineBudget>()
+            .init_resource::<StreamingManifestCache>()
             .add_systems(
                 Update,
                 (
@@ -416,25 +622,36 @@ impl Plugin for StreamingSpinePlugin {
             .add_systems(
                 Update,
                 (
+                    diagnostics::refresh_streaming_spine_warm_gate_system,
                     attrib_streaming_reconstruct_before,
-                    reconstruct_staged_chunks_into_cache,
-                    apply::apply_pending_stream_chunk_bodies,
+                    reconstruct_staged_chunks_into_cache
+                        .run_if(diagnostics::streaming_warm_gate_allows_reconstruct()),
+                    apply::apply_pending_stream_chunk_bodies
+                        .run_if(diagnostics::streaming_warm_gate_allows_reconstruct()),
                     crate::render::clear_async_domain_apply_labels_after_stream_apply
-                        .after(apply::apply_pending_stream_chunk_bodies),
-                    apply_pending_tile_storage_diffs,
+                        .after(apply::apply_pending_stream_chunk_bodies)
+                        .run_if(diagnostics::streaming_warm_gate_allows_reconstruct()),
+                    apply_pending_tile_storage_diffs
+                        .run_if(diagnostics::streaming_warm_gate_allows_reconstruct()),
                     stall_after_tile_storage_apply,
                     finalize_stream_domain_reconstruct,
                     tick_tile_storage_smooth_transitions,
                     attrib_streaming_reconstruct_after,
-                    wave_c_live_proof::write_wave_c_live_proof_system,
+                    diagnostics::log_streaming_spine_frame_summary_system,
+                    wave_c::write_wave_c_live_proof_system,
                 )
                     .chain()
                     .after(crate::gui::WorldRepresentationSystemSet::ComputeFrame),
+            )
+            .add_systems(
+                Update,
+                crate::render::stall_checkpoint_post_streaming_spine
+                    .after(wave_c::write_wave_c_live_proof_system),
             );
     }
 }
 
-pub use wave_c_live_proof::{
+pub use crate::dev::runtime_witness::wave_c::{
     commit_wave_c_live_proof, wc_depth_001_green, WAVE_C_LIVE_JSON, WaveCLiveProofState,
 };
 pub use wave_c_prerequisites::WAVE_C_DEPTH_001_CLOSED_ITEM;
@@ -460,6 +677,54 @@ mod tests {
                 "clear_async_domain_apply_labels_after_stream_apply",
             ]
         );
+    }
+
+    #[test]
+    fn reconstruct_batch_cap_limits_per_frame_work() {
+        assert_eq!(MAX_RECONSTRUCT_CHUNKS_PER_FRAME, 8);
+    }
+
+    #[test]
+    fn sync_interest_targets_preserves_staged_bodies() {
+        let mut scheduler = ChunkStreamingScheduler::default();
+        scheduler
+            .staged_chunk_bodies
+            .push((IVec2::ZERO, SavedChunkBody {
+                schema_version: crate::io::save::SAVED_CHUNK_BODY_SCHEMA_VERSION,
+                chunk: [0, 0],
+                cells: Vec::new(),
+            }));
+        let weights = ChunkStreamingPriority::default();
+        scheduler.sync_interest_targets(
+            &[IVec2::ZERO, IVec2::ONE],
+            IVec2::ZERO,
+            weights,
+            0.0,
+            1,
+            |_| 0,
+        );
+        assert_eq!(scheduler.staged_chunk_bodies.len(), 1);
+        assert_eq!(scheduler.pending_chunks.len(), 2);
+    }
+
+    #[test]
+    fn select_disk_hydrate_batch_respects_job_priority_order() {
+        let mut scheduler = ChunkStreamingScheduler::default();
+        scheduler.jobs = vec![
+            ChunkStreamJob {
+                chunk: IVec2::new(0, 0),
+                stage: ChunkStreamStage::Disk,
+                priority: 1.0,
+            },
+            ChunkStreamJob {
+                chunk: IVec2::new(5, 5),
+                stage: ChunkStreamStage::Disk,
+                priority: 10.0,
+            },
+        ];
+        let cache = ChunkCache::default();
+        let batch = scheduler.select_disk_hydrate_batch(&cache, 1);
+        assert_eq!(batch, vec![IVec2::new(5, 5)]);
     }
 
     #[test]

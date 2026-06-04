@@ -57,8 +57,16 @@ pub fn push_footprint_tile_instances(
     if requests.footprint_tiles.is_empty() {
         return;
     }
-    // World-space half-extent: one tactical tile ≈ 1.0 unit (zoom handled by map projection).
-    let size = 0.48;
+    // Match ortho tile extent: fixed world half-size scaled by camera zoom (see LOD debug path).
+    let cam_scale = _authority
+        .as_ref()
+        .and_then(|a| {
+            a.surface(crate::render::view_runtime::ViewSurfaceId::SimulationMap)
+                .or_else(|| a.surface(crate::render::view_runtime::ViewSurfaceId::WorldMain))
+        })
+        .map(|s| s.camera.zoom.abs().max(0.001))
+        .unwrap_or_else(|| _desired.scale.x.abs().max(0.001));
+    let size = (0.48 / cam_scale).clamp(0.08, 2.0);
     let rows = map
         .per_view
         .entry(TileDebugViewId::WorldMain)

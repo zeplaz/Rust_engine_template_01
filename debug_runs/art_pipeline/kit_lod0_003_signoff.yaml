@@ -1,0 +1,64 @@
+batch_id: kit_lod0_003
+order_id: MCP-C0-004
+designer_mcp: sign-off
+development_tier: lod0
+proceed_promote: yes
+rules_check:
+  passed: true
+  blocked_by: []
+  batch_id: kit_lod0_003
+  seed: 42
+silhouette_read:
+  wall_concrete_2u:
+    readable: yes
+    profile: flat
+    sim_read: "2u industrial concrete panel bay — 8m facade span"
+    vertex_count: 24
+  roof_sawtooth:
+    readable: yes
+    profile: sawtooth
+    sim_read: "2x2 sawtooth industrial roof — multi-slope readable at lod0"
+    vertex_count: 192
+  door_warehouse:
+    readable: yes
+    profile: frame
+    sim_read: "4x3m warehouse frame opening — not solid cube"
+    vertex_count: 44
+  win_industrial_3u:
+    readable: yes
+    profile: strip
+    sim_read: "12m industrial strip glazing — 3u bay readable"
+    vertex_count: 96
+  prop_vent:
+    readable: yes
+    profile: vent
+    sim_read: "Roof vent cap + base — first lod0 prop for PG-2 clutter"
+    vertex_count: 48
+modules:
+  - module_id: wall_concrete_2u
+    job_id: wall_concrete_2u_lod0_run001
+    valid: true
+    pbr_status: deferred
+  - module_id: roof_sawtooth
+    job_id: roof_sawtooth_lod0_run001
+    valid: true
+    pbr_status: deferred
+  - module_id: door_warehouse
+    job_id: door_warehouse_lod0_run001
+    valid: true
+    pbr_status: deferred
+  - module_id: win_industrial_3u
+    job_id: win_industrial_3u_lod0_run001
+    valid: true
+    pbr_status: deferred
+  - module_id: prop_vent
+    job_id: prop_vent_lod0_run001
+    valid: true
+    pbr_status: deferred
+replaces_smoke_rows:
+  - wall_concrete_2u
+  - roof_sawtooth_2u
+  - door_warehouse_2u
+  - window_industrial_1u
+  - prop_vent_roof_1u
+next: "@designer-mcp kit_lod0_004 G0-G1"

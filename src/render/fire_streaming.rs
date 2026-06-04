@@ -133,6 +133,7 @@ pub fn write_fire_streaming_live_proof_system(
 }
 
 /// Lib refresh of `debug_runs/fire_streaming_live.json` (minimal harness).
+#[cfg(test)]
 #[must_use]
 pub fn refresh_fire_streaming_live_witness() -> bool {
     use crate::render::fire_chunk_runtime::{ActiveFireChunkSet, FireChunk, FireChunkRuntime};

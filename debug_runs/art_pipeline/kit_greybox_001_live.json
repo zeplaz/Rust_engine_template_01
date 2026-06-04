@@ -1,0 +1,148 @@
+{
+  "batch_id": "kit_greybox_001",
+  "_agent_meta": {
+    "agent": "coder-mcp",
+    "updated_at": "2026-06-02T20:03:46.626369+00:00",
+    "rules_applied": [
+      "no_ai_generated_images",
+      "deterministic_output",
+      "batch_processing",
+      "grid_alignment"
+    ]
+  },
+  "gates": {
+    "G0": "pass",
+    "G1": "pass",
+    "G2": "pass",
+    "G3": "pass",
+    "G4": "pass",
+    "G5": "pass"
+  },
+  "modules": [
+    {
+      "asset_id": "wall_brick_1u",
+      "job_id": "wall_brick_1u_example",
+      "status": "example_shipped",
+      "registered": false,
+      "valid": true,
+      "vertex_count": 24
+    },
+    {
+      "asset_id": "wall_concrete_2u",
+      "job_id": "wall_concrete_2u_run001",
+      "status": "promoted",
+      "registered": true,
+      "valid": true,
+      "vertex_count": 24,
+      "promoted_path": "assets/models/modules/wall_concrete_2u_run001/model.glb",
+      "module_id": "wall_concrete_2u",
+      "batch_id": "kit_greybox_001"
+    },
+    {
+      "asset_id": "roof_flat_2u",
+      "job_id": "roof_flat_2u_run001",
+      "status": "promoted",
+      "registered": true,
+      "valid": true,
+      "vertex_count": 24,
+      "promoted_path": "assets/models/modules/roof_flat_2u_run001/model.glb",
+      "module_id": "roof_flat_2u",
+      "batch_id": "kit_greybox_001"
+    },
+    {
+      "asset_id": "door_industrial_1u",
+      "job_id": "door_industrial_1u_run001",
+      "status": "promoted",
+      "registered": true,
+      "valid": true,
+      "vertex_count": 24,
+      "promoted_path": "assets/models/modules/door_industrial_1u_run001/model.glb",
+      "module_id": "door_industrial_1u",
+      "batch_id": "kit_greybox_001"
+    },
+    {
+      "asset_id": "wall_wood_1u",
+      "job_id": "wall_wood_1u_run001",
+      "status": "promoted",
+      "registered": true,
+      "valid": true,
+      "vertex_count": 24,
+      "promoted_path": "assets/models/modules/wall_wood_1u_run001/model.glb",
+      "module_id": "wall_wood_1u",
+      "batch_id": "kit_greybox_001"
+    },
+    {
+      "asset_id": "wall_steel_1u",
+      "job_id": "wall_steel_1u_run001",
+      "status": "promoted",
+      "registered": true,
+      "valid": true,
+      "vertex_count": 24,
+      "promoted_path": "assets/models/modules/wall_steel_1u_run001/model.glb",
+      "module_id": "wall_steel_1u",
+      "batch_id": "kit_greybox_001"
+    },
+    {
+      "asset_id": "wall_glass_1u",
+      "job_id": "wall_glass_1u_run001",
+      "status": "promoted",
+      "registered": true,
+      "valid": true,
+      "vertex_count": 24,
+      "promoted_path": "assets/models/modules/wall_glass_1u_run001/model.glb",
+      "module_id": "wall_glass_1u",
+      "batch_id": "kit_greybox_001"
+    },
+    {
+      "asset_id": "roof_pitched_2u",
+      "job_id": "roof_pitched_2u_run001",
+      "status": "promoted",
+      "registered": true,
+      "valid": true,
+      "vertex_count": 24,
+      "promoted_path": "assets/models/modules/roof_pitched_2u_run001/model.glb",
+      "module_id": "roof_pitched_2u",
+      "batch_id": "kit_greybox_001"
+    },
+    {
+      "asset_id": "door_warehouse_2u",
+      "job_id": "door_warehouse_2u_run001",
+      "status": "promoted",
+      "registered": true,
+      "valid": true,
+      "vertex_count": 24,
+      "promoted_path": "assets/models/modules/door_warehouse_2u_run001/model.glb",
+      "module_id": "door_warehouse_2u",
+      "batch_id": "kit_greybox_001"
+    },
+    {
+      "asset_id": "door_shop_1u",
+      "job_id": "door_shop_1u_run001",
+      "status": "promoted",
+      "registered": true,
+      "valid": true,
+      "vertex_count": 24,
+      "promoted_path": "assets/models/modules/door_shop_1u_run001/model.glb",
+      "module_id": "door_shop_1u",
+      "batch_id": "kit_greybox_001"
+    },
+    {
+      "asset_id": "roof_industrial_shed_2u",
+      "job_id": "roof_industrial_shed_2u_run001",
+      "status": "promoted",
+      "registered": true,
+      "valid": true,
+      "vertex_count": 24,
+      "promoted_path": "assets/models/modules/roof_industrial_shed_2u_run001/model.glb",
+      "module_id": "roof_industrial_shed_2u",
+      "batch_id": "kit_greybox_001"
+    }
+  ],
+  "promoted_count": 10,
+  "registered_count": 10,
+  "failed": [],
+  "module_index": "assets/configs/buildings/_module_index.ron",
+  "index_entry_count": 20,
+  "batch_registered_count": 10,
+  "next": "@designer-mcp kit_greybox_002"
+}

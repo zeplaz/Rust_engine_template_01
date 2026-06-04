@@ -1,0 +1,40 @@
+# tile_fix_09_warehouse_g4_signoff.yaml — TILE-FIX-09 Phase C + MCP-PILOT-GRAMMAR-001
+program_id: PLAN-BUILDING-GRAMMAR-001
+task_id: MCP-PILOT-GRAMMAR-001
+gate: G4-design
+designer_mcp: tile_fix_09_warehouse_pilot
+reviewed_at: "2026-06-03"
+proceed_v2_matrix: yes
+proceed_ship_v1: no
+proceed_ship: yes
+
+phase_c_cli:
+  script: tools/mcp/scripts/designer_mcp_warehouse_phase_c.ps1
+  witness: debug_runs/art_pipeline/tile_fix_09_phase_c_warehouse_g4_live.json
+  tile_fix_10: debug_runs/art_pipeline/tile_fix_10_warehouse_industrial_live.json
+
+pilot_execute:
+  script: tools/mcp/scripts/designer_mcp_pilot_grammar_execute.ps1
+  keyframe: tools/mcp/scripts/designer_mcp_pilot_grammar_keyframe.py
+  witness: debug_runs/art_pipeline/mcp_pilot_grammar_001_live.json
+
+promotion_witness:
+  validate_tile_promotion: passed
+  minimum_g4_ship: true
+  art_quality: keyframe_manual
+  proceed_ship: yes
+  note: "Tile_iso_rig_v1 iso-rig 24 cells + keyframe_manual.export — not tile_compile_minimum_bake.py"
+
+g4_gates:
+  g4_0_matrix_and_spine: pass
+  g4_1_real_assembly_linked: pass
+  g4_3_minimum_stills_3x8: pass
+  g4_8_proceed_ship: yes
+
+blocked_by: []
+
+materials_on_assembly:
+  status: done
+  prep_script: tools/mcp/scripts/designer_mcp_pilot_grammar_prep.ps1
+
+next: "@coder-mcp register staging atlas; @coder map stamp smoke"

@@ -1,0 +1,29 @@
+{
+  "witness_id": "plan_pt0_procedural_tiles_live",
+  "program_id": "PLAN-PROC-TILE-PROD-001",
+  "phase": "PT-0",
+  "green": true,
+  "signed_at": "2026-06-03",
+  "owner": "planner",
+  "gates": {
+    "PT-0-001": {
+      "pass": true,
+      "note": "plan + index links"
+    },
+    "PT-0-002": {
+      "pass": true,
+      "schema": "tools/mcp/schemas/variant_catalog_v1.schema.json",
+      "catalog_ron": "assets/configs/buildings/_variant_catalog.ron",
+      "example_json": "tools/mcp/schemas/examples/variant_catalog_v1.example.json",
+      "pytest": "tools/mcp/python/tests/test_variant_catalog.py"
+    },
+    "PT-0-003": {
+      "pass": true,
+      "spec": "src/dev/procedural_tiles_production_witness_v1.md"
+    }
+  },
+  "canonical_variant_key_count": 18,
+  "ship_minimum_key_count": 6,
+  "site_construction_phase_source": "src/strategic/site/resources.rs",
+  "unblocks": "PT-1 / MCP-PT-1-001"
+}

@@ -186,6 +186,11 @@ impl Plugin for StrategicFieldsPlugin {
             .init_resource::<InfrastructureGraph>()
             .init_resource::<SiteConstructionBook>()
             .init_resource::<SiteIdIssuer>()
+            .init_resource::<super::site::TileOccupationBook>()
+            .init_resource::<super::settlement::BlockBook>()
+            .init_resource::<super::settlement::DistrictBook>()
+            .init_resource::<super::settlement::TownBook>()
+            .add_plugins(super::settlement::SettlementPlugin)
             .add_systems(Startup, startup_spawn_operational_causality_anchors)
             .add_message::<super::CommitConstructionSiteEvent>()
             .configure_sets(

@@ -4,22 +4,28 @@ use std::collections::HashMap;
 
 use bevy::prelude::*;
 
+use crate::construction::procedural::{ProceduralBuildingRequest, StylePackId};
 use crate::construction::queue_commit_construction_site;
 use crate::economy::activation::{BuildingDefinitionRef, IndustrialFacilityActivated};
 use crate::economy::resource_flow::{ResourceFlowNode, ResourceFlowRegistry, ResourceFlowSimWitness};
-use crate::entities::production::concrete::{
-    AggregateMineRuntime, CementKilnRuntime, ConcreteMixerRuntime,
-};
 use crate::strategic::{
     BuildSiteTile, CommitConstructionSiteEvent, ConstructionSite, FootprintTiles, LayerType,
-    PlannedSite, SiteArchetype, SiteConstructionBook, SiteConstructionPhase, SiteId,
-    SiteOperationalStats,
+    PlannedSite, ProceduralBuildingSpec, SiteArchetype, SiteConstructionBook,
+    SiteConstructionPhase, SiteFootprint, SiteId, SiteOperationalStats,
 };
 
 const PORTLAND_FOOTPRINT: FootprintTiles = FootprintTiles {
     width: 3,
     depth: 2,
 };
+
+/// Victorian rowhouse production pilot footprint (matches `victorian_4x3_s42_a7cb`).
+pub const ROWHOUSE_VICTORIAN_PRODUCTION_FOOTPRINT: FootprintTiles = FootprintTiles {
+    width: 4,
+    depth: 3,
+};
+
+pub const ROWHOUSE_VICTORIAN_DEMO_SITE_ID: u64 = 42;
 
 pub const CONCRETE_PORTLAND_CHAIN: &str = "concrete_portland";
 
@@ -162,10 +168,75 @@ pub fn commit_concrete_portland_chain_in_play(
             PORTLAND_FOOTPRINT,
             LayerType::Surface,
             Some((*catalog_id).to_string()),
+            None,
         );
     }
     witness.placed_via_construction = true;
     witness.sites_committed = CONCRETE_PORTLAND_STEPS.len() as u32;
+}
+
+/// **ENG-PT-4-001** — operational rowhouse with production atlas stamp wiring (DefaultIndustrial play).
+pub fn spawn_rowhouse_victorian_production_demo(
+    commands: &mut Commands,
+    origin: BuildSiteTile,
+) -> Entity {
+    let footprint = ROWHOUSE_VICTORIAN_PRODUCTION_FOOTPRINT;
+    let ox = origin.x as i32;
+    let oz = origin.z as i32;
+    let mut tiles = Vec::with_capacity((footprint.width * footprint.depth) as usize);
+    for dz in 0..footprint.depth {
+        for dx in 0..footprint.width {
+            tiles.push(IVec2::new(ox + dx as i32, oz + dz as i32));
+        }
+    }
+    let spec = ProceduralBuildingRequest {
+        archetype_id: "rect_perimeter".into(),
+        width: footprint.width,
+        depth: footprint.depth,
+        floors: 2,
+        style: StylePackId("style_victorian".into()),
+        seed: ROWHOUSE_VICTORIAN_DEMO_SITE_ID,
+    };
+    commands
+        .spawn((
+            ConstructionSite {
+                site_id: ROWHOUSE_VICTORIAN_DEMO_SITE_ID,
+                owner: Entity::PLACEHOLDER,
+                archetype: SiteArchetype::CivilHousing,
+                phase: SiteConstructionPhase::Operational,
+                operational_readiness: 1.0,
+            },
+            PlannedSite {
+                site_id: SiteId(ROWHOUSE_VICTORIAN_DEMO_SITE_ID),
+                origin,
+                footprint,
+                archetype: SiteArchetype::CivilHousing,
+                layer: LayerType::Surface,
+                catalog_id: Some(crate::gui::map_tile_atlas_stamp::ROWHOUSE_VICTORIAN_TILE_ID.into()),
+                placement: None,
+            },
+            ProceduralBuildingSpec(spec),
+            SiteFootprint {
+                tiles,
+                layer: LayerType::Surface,
+            },
+            BuildingDefinitionRef {
+                catalog_id: crate::gui::map_tile_atlas_stamp::ROWHOUSE_VICTORIAN_TILE_ID.into(),
+            },
+            Transform::from_translation(crate::economy::site_placement::site_world_position(
+                origin,
+            )),
+            GlobalTransform::default(),
+        ))
+        .id()
+}
+
+/// Opt-in proof fast-path (`RUST_ENGINE_CONSTRUCTION_INSTANT=1`); default play uses staged tick (CON-P2-001).
+#[inline]
+fn construction_instant_operational_enabled() -> bool {
+    std::env::var("RUST_ENGINE_CONSTRUCTION_INSTANT")
+        .ok()
+        .is_some_and(|v| v == "1" || v.eq_ignore_ascii_case("true"))
 }
 
 /// Proof fast-path after commit: move Portland steps to **Operational** with provisioning stats satisfied.
@@ -176,8 +247,11 @@ pub fn fast_forward_portland_chain_sites_to_operational(
         &mut SiteOperationalStats,
         &PlannedSite,
     )>,
-    mut book: ResMut<SiteConstructionBook>,
+    mut book: Option<ResMut<SiteConstructionBook>>,
 ) {
+    if !construction_instant_operational_enabled() {
+        return;
+    }
     for (def_ref, mut site, mut stats, planned) in &mut sites {
         if !CONCRETE_PORTLAND_STEPS
             .iter()
@@ -191,7 +265,10 @@ pub fn fast_forward_portland_chain_sites_to_operational(
         stats.supply_ratio = 1.0;
         stats.workforce_ratio = 1.0;
         stats.integrity = 1.0;
-        if let Some(st) = book.by_site.get_mut(&planned.site_id) {
+        if let Some(st) = book
+            .as_deref_mut()
+            .and_then(|b| b.by_site.get_mut(&planned.site_id))
+        {
             st.phase = SiteConstructionPhase::Operational;
             st.progress = 1.0;
         }
@@ -234,6 +311,7 @@ pub fn spawn_concrete_portland_chain_operational(
                     archetype: SiteArchetype::Factory,
                     layer: LayerType::Surface,
                     catalog_id: Some((*catalog_id).into()),
+                    placement: None,
                 },
                 BuildingDefinitionRef {
                     catalog_id: (*catalog_id).into(),
@@ -248,7 +326,9 @@ pub fn spawn_concrete_portland_chain_operational(
     entities
 }
 
-/// One-shot Portland chain for **S7P-STEWARD-001** when `RUST_ENGINE_STAGE7_PLAY_SEED=1`.
+/// Opt-in debug seed when `RUST_ENGINE_STAGE7_PLAY_SEED` is set.
+/// **DefaultIndustrial** uses [`seed_ind_e02_default_play_once`] instead (PLAY-TRUTH-001-TAIL).
+/// **DEHACK-ENV-002:** `RUST_ENGINE_S7P_STEWARD` sunset — use scenario / play plugin only.
 #[derive(Resource, Debug, Default)]
 pub struct Stage7PlayChainSeedState {
     pub seeded: bool,
@@ -261,17 +341,21 @@ fn stage7_play_seed_enabled() -> bool {
             .ok()
             .is_some_and(|v| v == "1" || v.eq_ignore_ascii_case("true"))
     }
-    env_on("RUST_ENGINE_STAGE7_PLAY_SEED") || env_on("RUST_ENGINE_S7P_STEWARD")
+    env_on("RUST_ENGINE_STAGE7_PLAY_SEED")
 }
 
 pub fn seed_stage7_play_concrete_chain_once(
     base: Res<State<crate::engine::states::BaseState>>,
+    scenario: Option<Res<crate::engine::ActivePlayScenario>>,
     mut seed: ResMut<Stage7PlayChainSeedState>,
     mut witness: ResMut<ConcreteChainE2eWitness>,
     mut commands: Commands,
     def_ref: Query<&BuildingDefinitionRef>,
 ) {
     if seed.seeded || !matches!(base.get(), crate::engine::states::BaseState::Simulation) {
+        return;
+    }
+    if scenario.is_some_and(|s| s.is_default_industrial()) {
         return;
     }
     if !stage7_play_seed_enabled() {
@@ -308,6 +392,8 @@ pub fn reset_ind_e02_default_play_seed_on_enter_simulation(
 
 pub fn seed_ind_e02_default_play_once(
     base: Res<State<crate::engine::states::BaseState>>,
+    scenario: Option<Res<crate::engine::ActivePlayScenario>>,
+    test_scene: Option<Res<crate::engine::ActiveTestScene>>,
     mut seed: ResMut<IndE02DefaultPlaySeedState>,
     mut witness: ResMut<ConcreteChainE2eWitness>,
     sites: Query<&BuildingDefinitionRef, With<ConstructionSite>>,
@@ -316,10 +402,20 @@ pub fn seed_ind_e02_default_play_once(
     if !matches!(base.get(), crate::engine::states::BaseState::Simulation) {
         return;
     }
+    if test_scene.is_some() {
+        return;
+    }
+    let default_industrial = scenario
+        .as_ref()
+        .map(|s| s.is_default_industrial())
+        .unwrap_or(true);
+    if scenario.is_some_and(|s| !s.is_default_industrial()) {
+        return;
+    }
     if witness.in_play_green() {
         return;
     }
-    if witness.production_green() && !witness.placed_via_construction {
+    if witness.production_green() && !witness.placed_via_construction && !default_industrial {
         return;
     }
     if seed.enqueued {
@@ -330,16 +426,68 @@ pub fn seed_ind_e02_default_play_once(
             .iter()
             .any(|id| *id == d.catalog_id.as_str())
     });
-    if has_portland {
+    if has_portland && witness.placed_via_construction {
         return;
     }
+    if has_portland && !default_industrial {
+        return;
+    }
+    let portland_origin = crate::engine::DEFAULT_INDUSTRIAL_PORTLAND_ORIGIN;
     commit_concrete_portland_chain_in_play(
         &mut writer,
         witness.as_mut(),
         Entity::PLACEHOLDER,
-        BuildSiteTile { x: 40, z: 40 },
+        portland_origin,
     );
     seed.enqueued = true;
+}
+
+/// **ENG-PT-4-001** — one-shot rowhouse production demo site for map iso stamp.
+#[derive(Resource, Debug, Default)]
+pub struct RowhouseVictorianDemoSeedState {
+    pub spawned: bool,
+}
+
+pub fn reset_rowhouse_victorian_demo_seed_on_enter_simulation(
+    mut seed: ResMut<RowhouseVictorianDemoSeedState>,
+) {
+    *seed = RowhouseVictorianDemoSeedState::default();
+}
+
+/// After Portland chain, spawn operational rowhouse where production atlas stamps on the map.
+pub fn seed_rowhouse_victorian_production_demo_once(
+    base: Res<State<crate::engine::states::BaseState>>,
+    test_scene: Option<Res<crate::engine::ActiveTestScene>>,
+    mut seed: ResMut<RowhouseVictorianDemoSeedState>,
+    mut commands: Commands,
+    sites: Query<&ConstructionSite>,
+) {
+    if !matches!(base.get(), crate::engine::states::BaseState::Simulation) {
+        return;
+    }
+    if test_scene.is_some() {
+        return;
+    }
+    if seed.spawned {
+        return;
+    }
+    if sites
+        .iter()
+        .any(|s| s.site_id == ROWHOUSE_VICTORIAN_DEMO_SITE_ID)
+    {
+        seed.spawned = true;
+        return;
+    }
+    let origin = BuildSiteTile {
+        x: crate::engine::DEFAULT_INDUSTRIAL_PORTLAND_ORIGIN
+            .x
+            .saturating_add(12),
+        z: crate::engine::DEFAULT_INDUSTRIAL_PORTLAND_ORIGIN
+            .z
+            .saturating_add(6),
+    };
+    spawn_rowhouse_victorian_production_demo(&mut commands, origin);
+    seed.spawned = true;
 }
 
 /// **IND-E03-CODER-A** — one-shot grid overload cluster for live proof depth.
@@ -461,6 +609,9 @@ mod tests {
         link_supply_chain_edges_system, register_resource_flow_nodes_system,
     };
     use crate::economy::ResourceFlowPlugin;
+    use crate::entities::production::concrete::{
+        AggregateMineRuntime, CementKilnRuntime, ConcreteMixerRuntime,
+    };
     use crate::systems::sim_control::SimControlState;
 
     fn assemble_chain_app() -> App {
@@ -537,6 +688,9 @@ mod tests {
     fn concrete_portland_chain_in_play_commit_and_production() {
         use bevy::ecs::system::RunSystemOnce;
 
+        let prior_instant = std::env::var("RUST_ENGINE_CONSTRUCTION_INSTANT").ok();
+        std::env::set_var("RUST_ENGINE_CONSTRUCTION_INSTANT", "1");
+
         let mut app = assemble_chain_app();
         app.init_resource::<SiteConstructionBook>()
             .init_resource::<crate::strategic::SiteIdIssuer>()
@@ -573,5 +727,12 @@ mod tests {
         let w = app.world().resource::<ConcreteChainE2eWitness>();
         assert!(w.placed_via_construction);
         assert!(w.in_play_green(), "witness: {w:?}");
+
+        match prior_instant {
+            Some(v) => std::env::set_var("RUST_ENGINE_CONSTRUCTION_INSTANT", v),
+            None => {
+                let _ = std::env::remove_var("RUST_ENGINE_CONSTRUCTION_INSTANT");
+            }
+        }
     }
 }

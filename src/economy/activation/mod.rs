@@ -3,7 +3,8 @@
 mod bridge;
 mod concrete_chain_e2e;
 pub mod grid_overload_ux;
-mod live_proof;
+mod witness_collectors;
+pub mod scale;
 
 pub use grid_overload_ux::{
     apply_grid_overload_ops_strip_toast_system, ingest_grid_overload_toast_system,
@@ -27,7 +28,15 @@ pub use bridge::{
     BuildingDefinitionRef, IndustrialFacilityActivated,
 };
 pub use bridge::IndustrialActivationPlugin;
-pub use live_proof::{
-    refresh_ind_e02_default_live_witness, sync_industrial_proof_witness_flags,
-    write_industrial_activation_live_proof_system, IndustrialActivationLiveProofState,
+pub use witness_collectors::{
+    build_industrial_activation_proof_payload, refresh_ind_e02_default_live_witness,
+    sync_industrial_proof_witness_flags, write_industrial_activation_live_proof_system,
+    IndustrialActivationLiveProofState,
+};
+
+#[cfg(test)]
+pub use witness_collectors::refresh_ind_e02_default_play_002_live_witness;
+pub use scale::{
+    apply_placement_scale_to_facility, economy_scales_at_activation_witness_green,
+    production_multiplier, DEFAULT_K_PROD,
 };

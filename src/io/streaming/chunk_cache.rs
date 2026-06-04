@@ -21,7 +21,7 @@ pub struct ChunkCacheTierSettings {
 impl Default for ChunkCacheTierSettings {
     fn default() -> Self {
         Self {
-            max_hot_entries: 256,
+            max_hot_entries: 2048,
             spill_dir: PathBuf::from("cache/chunk_spill"),
         }
     }

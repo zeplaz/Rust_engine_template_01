@@ -1,0 +1,19 @@
+(
+    schema_version: 1,
+    style_pack_id: "style_colonial",
+    label: "Colonial",
+    usage_bias: ["civic", "commercial"],
+    style_tags: ["brick", "colonial", "canopy"],
+    slots: (
+        wall_1u: "wall_brick_1u",
+        wall_2u: "wall_brick_2u",
+        door_default: "door_civic",
+        door_wide: "door_double_shop",
+        window_1u: "win_arched_1u",
+        window_2u: "win_shop_2u",
+        roof_default: "roof_pitched_gable",
+        roof_flat: "roof_canopy",
+        corner_outer: "corner_T",
+    ),
+    fallback_policy: "hide_slot",
+)

@@ -6,7 +6,7 @@
 | **Version** | `1.0.0` |
 | **Date** | 2026-05-26 |
 | **Owner** | `@designer` |
-| **Verdict** | **DEFER** (live ring growth states require runtime evidence; base scrub affordance is already green) |
+| **Verdict** | **PASS** — superseded by [`minimap_replay_pass_002_v1.md`](minimap_replay_pass_002_v1.md) (**DESIGN-M3-REPLAY-PASS-002**, 2026-05-27) |
 | **Unblocks** | `REPLAY-LIVE-RING-001` (coder B3/B4) |
 | **Witness (base scrub)** | `debug_runs/minimap_compositor_live.json` → `/replay_scrub_enabled` and `/ui_p3_m3_replay_001_green` |
 | **Do not break** | `/ui_p3_m3_replay_001_green` |

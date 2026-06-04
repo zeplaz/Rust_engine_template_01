@@ -1,0 +1,74 @@
+{
+  "schema_version": 1,
+  "variant_set_id": "bunker_military_day_night",
+  "assembly_id": "military_6x3_s46_fbad",
+  "style_pack_id": "style_military",
+  "seed": 46,
+  "axes": {
+    "state": [
+      "clean",
+      "dirty",
+      "damaged",
+      "ruined"
+    ],
+    "power": [
+      "off",
+      "partial",
+      "on"
+    ],
+    "fill": [
+      "empty",
+      "half",
+      "full"
+    ],
+    "lighting": [
+      "day",
+      "night_off",
+      "night_on"
+    ]
+  },
+  "variants": [
+    {
+      "variant_key": "clean_day",
+      "tags": [
+        "default",
+        "style_military"
+      ],
+      "layers": {
+        "lighting": {
+          "lighting": "day",
+          "power": "off"
+        },
+        "damage": {
+          "state": "clean",
+          "damage": 0.0
+        },
+        "fill": {
+          "fill": "empty"
+        }
+      }
+    },
+    {
+      "variant_key": "damaged_night_on",
+      "tags": [
+        "sim_night",
+        "power_grid_on"
+      ],
+      "layers": {
+        "lighting": {
+          "lighting": "night_on",
+          "power": "on",
+          "night_lights": true,
+          "emissive_strength": 0.8
+        },
+        "damage": {
+          "state": "damaged",
+          "damage": 0.45
+        },
+        "fill": {
+          "fill": "half"
+        }
+      }
+    }
+  ]
+}

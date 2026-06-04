@@ -10,7 +10,10 @@ use crossbeam_channel::{Receiver, Sender, TryRecvError};
 use crate::io::save::SavedChunkBody;
 
 use super::hydrate::{hydrate_stream_chunks_from_manifest, load_manifest_for_streaming};
-use super::{ChunkCache, ChunkStreamStage, ChunkStreamingScheduler};
+use super::{
+    budget::StreamingSpineBudget, manifest_cache::StreamingManifestCache, ChunkCache,
+    ChunkStreamingScheduler, stream_spine_diag_enabled,
+};
 
 #[derive(Resource, Default)]
 pub struct StreamHydrateDiagnostics {
@@ -109,24 +112,23 @@ pub fn submit_stream_hydrate_work(
     settings: Res<crate::io::save::WorldSaveBundleSettings>,
     scheduler: Res<ChunkStreamingScheduler>,
     cache: Res<ChunkCache>,
+    budget: Res<StreamingSpineBudget>,
+    mut manifest_cache: ResMut<StreamingManifestCache>,
     mut dispatcher: ResMut<ChunkStreamIoDispatcher>,
     mut diagnostics: ResMut<StreamHydrateDiagnostics>,
 ) {
     if scheduler.pending_chunks.is_empty() || dispatcher.in_flight {
         return;
     }
-    // PERF-PLAY-001: only hydrate chunks not already in the hot cache — re-submitting the full
-    // pending window every completion frame was forcing ~650ms reconstruct/apply loops.
-    let chunks: Vec<IVec2> = scheduler
-        .pending_chunks
-        .iter()
-        .copied()
-        .filter(|coord| cache.get(*coord).is_none())
-        .collect();
+    // PERF-PLAY-001: priority-budgeted batch — full interest set stays registered; IO is spread across frames.
+    let chunks = scheduler.select_disk_hydrate_batch(&cache, budget.max_hydrate_chunks_per_frame);
     if chunks.is_empty() {
         return;
     }
-    if load_manifest_for_streaming(&settings.bundle_dir).is_none() {
+    if manifest_cache
+        .manifest_for_bundle(&settings.bundle_dir)
+        .is_none()
+    {
         if !diagnostics.logged_missing_manifest {
             bevy::log::warn!(
                 target: "proc_A_dine01::io::streaming::task_pool",
@@ -139,6 +141,14 @@ pub fn submit_stream_hydrate_work(
                 diagnostics.suppressed_missing_manifest_warnings.wrapping_add(1);
         }
         return;
+    }
+    if stream_spine_diag_enabled() {
+        bevy::log::info!(
+            target: "proc_A_dine01::io::streaming::diag",
+            async_batch = chunks.len(),
+            pending_len = scheduler.pending_chunks.len(),
+            "STREAM hydrate async submit"
+        );
     }
     dispatcher.submit(StreamIoWorkOrder {
         bundle_dir: settings.bundle_dir.clone(),
@@ -155,12 +165,9 @@ pub fn poll_stream_hydrate_completions(
     while let Some(completion) = dispatcher.poll_completion() {
         match completion {
             StreamIoCompletion::Ready(bodies) => {
-                scheduler.staged_chunk_bodies = bodies;
-                for job in &mut scheduler.jobs {
-                    if job.stage == ChunkStreamStage::Disk {
-                        job.stage = ChunkStreamStage::Deserialize;
-                    }
-                }
+                let hydrated: Vec<IVec2> = bodies.iter().map(|(c, _)| *c).collect();
+                scheduler.staged_chunk_bodies.extend(bodies);
+                scheduler.note_chunks_hydrated(&hydrated);
             }
             StreamIoCompletion::Failed(message) => {
                 if diagnostics.last_failure_message.as_deref() != Some(message.as_str()) {

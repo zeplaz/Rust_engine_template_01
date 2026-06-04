@@ -5,7 +5,9 @@
 
 use bevy::app::AppExit;
 use bevy::prelude::*;
-use bevy::window::WindowCloseRequested;
+use bevy::window::{PrimaryWindow, WindowCloseRequested};
+
+use crate::render::primary_window_logical_presentable;
 
 use crate::engine::{EngineLaunchArgs, TestScene};
 use crate::engine::debug_maneuver::{DebugManeuver, GRACEFUL_EXIT_FRAMES_AFTER_PROOF};
@@ -34,6 +36,20 @@ fn deactivate_all_cameras(mut cameras: Query<&mut Camera>) {
     for mut camera in &mut cameras {
         camera.is_active = false;
     }
+}
+
+/// VISUAL-STALL-SURFACE-001: skip GPU present while primary window is 0×0 / sub-threshold (resize teardown).
+pub fn suppress_render_when_primary_window_degenerate(
+    windows: Query<&Window, With<PrimaryWindow>>,
+    cameras: Query<&mut Camera>,
+) {
+    let Ok(win) = windows.single() else {
+        return;
+    };
+    if primary_window_logical_presentable(win.width(), win.height()) {
+        return;
+    }
+    deactivate_all_cameras(cameras);
 }
 
 pub fn deactivate_cameras_on_window_close(
@@ -117,6 +133,7 @@ impl Plugin for GpuSurfaceTeardownPlugin {
                 (
                     deactivate_cameras_on_window_close,
                     deactivate_cameras_on_app_exit,
+                    suppress_render_when_primary_window_degenerate,
                 ),
             )
             .add_systems(

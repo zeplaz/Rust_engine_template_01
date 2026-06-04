@@ -123,7 +123,7 @@ pub fn sync_construction_finish_board_system(
 }
 
 pub fn refresh_construction_phase2_witness_system(
-    proof: Option<Res<super::live_proof::ConstructionLiveProofState>>,
+    proof: Option<Res<super::witness_collectors::ConstructionLiveProofState>>,
     placement: Res<super::roads::ActiveRoadPlacement>,
     registry: Option<Res<super::building_definitions::BuildingDefinitionRegistry>>,
     mut w: ResMut<crate::dev::construction_phase2_todos::ConstructionPhase2Witness>,
@@ -267,7 +267,7 @@ pub fn sync_construction_round3_board_system(
 pub fn refresh_construction_operational_witness_system(
     session: Res<super::sessions::ActiveToolSession>,
     _history: Res<super::history::ConstructionHistory>,
-    proof: Option<Res<super::live_proof::ConstructionLiveProofState>>,
+    proof: Option<Res<super::witness_collectors::ConstructionLiveProofState>>,
     registry: Option<Res<super::building_definitions::BuildingDefinitionRegistry>>,
     mut w: ResMut<crate::dev::construction_operational_todos::ConstructionOperationalWitness>,
 ) {

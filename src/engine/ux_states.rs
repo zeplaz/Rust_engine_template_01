@@ -76,7 +76,7 @@ pub struct UxFrameSpikeGuard {
 impl Default for UxFrameSpikeGuard {
     fn default() -> Self {
         Self {
-            max_ms: 250.0,
+            max_ms: 33.0,
             last_frame_ms: 0.0,
             spike_active: false,
             suppress_preview_this_frame: false,

@@ -4,9 +4,11 @@ use crate::engine::states::BaseState;
 use crate::gui::ViewAuthoritySystemSet;
 
 use super::authority::ViewProjectionAuthority;
-use super::live_proof::{
-    clear_minimap_map_camera_write_flag, refresh_view_runtime_witness,
-    write_view_runtime_live_proof_system, ViewRuntimeLiveProofState, ViewRuntimeWitness,
+use super::witness_state::{
+    clear_minimap_map_camera_write_flag, refresh_view_runtime_witness, ViewRuntimeWitness,
+};
+use crate::dev::runtime_witness::view_runtime::{
+    write_view_runtime_live_proof_system, ViewRuntimeLiveProofState,
 };
 use super::view_fire_isolation::{
     refresh_view_fire_isolation_witness, ViewFireIsolationWitness,

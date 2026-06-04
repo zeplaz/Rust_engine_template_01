@@ -1,0 +1,12 @@
+{
+  "job_id": "roof_shed_lod0_run001",
+  "status": "done",
+  "log_path": "debug_runs/art_pipeline/roof_shed_lod0_run001.log",
+  "outputs": [
+    "assets/staging/roof_shed_lod0_run001/model.glb"
+  ],
+  "error": null,
+  "spec_ref": "assets/staging/specs/roof_shed.json",
+  "job_path": "tools/mcp/schemas/examples/roof_shed_lod0_run001.json",
+  "updated_at": 1780443452.1837788
+}

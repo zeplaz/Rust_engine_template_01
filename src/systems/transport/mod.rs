@@ -69,8 +69,24 @@ impl Plugin for TransportSimulationPlugin {
     }
 }
 
-fn transport_topology_tick(_topology: Res<TransportTopology>) {
-    // W1: fill from editor bake / procedural generator.
+fn transport_topology_tick(
+    graph: Option<Res<crate::infrastructure::transport::TransportGraph>>,
+    mut topology: ResMut<TransportTopology>,
+    mut field_store: ResMut<TransportFieldStore>,
+    mut edge_directory: ResMut<TransportEdgeDirectory>,
+) {
+    let Some(graph) = graph else {
+        return;
+    };
+    if graph.edges.is_empty() {
+        return;
+    }
+    crate::infrastructure::transport::sync_transport_runtime_from_graph(
+        graph.as_ref(),
+        &mut topology,
+        &mut field_store,
+        &mut edge_directory,
+    );
 }
 
 fn transport_field_integrate(

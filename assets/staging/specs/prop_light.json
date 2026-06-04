@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "asset_id": "prop_light",
+  "archetype": "module_prop",
+  "style_pack": "style_industrial_west",
+  "development_tier": "lod0",
+  "pbr_status": "deferred",
+  "batch_id": "kit_lod0_006",
+  "module": {
+    "grid_units": [
+      1,
+      1
+    ],
+    "snap": "roof_ridge",
+    "pivot": "bottom_center"
+  },
+  "dimensions_m": {
+    "w": 0.4,
+    "h": 2.5,
+    "d": 0.4
+  },
+  "material_profile": "steel_panel_01",
+  "references": []
+}

@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 use clap::Parser;
-use proc_A_dine01::engine::{EngineLaunchArgs, EnginePlugin, TestWorldHarness};
+use proc_A_dine01::engine::{EngineLaunchArgs, EnginePlugin};
+use proc_A_dine01::engine::test_harness::TestWorldHarness;
 use proc_A_dine01::render::DebugRenderTraceConfig;
 
 /// Game / engine binary (Bevy).
@@ -44,8 +45,13 @@ fn main() {
         cli.debug_sim_view_sync,
         cli.debug_visual_diag,
     );
-    let harness = if launch.test_mode() {
-        TestWorldHarness {
+    let test_mode = launch.test_mode();
+    let mut app = App::new();
+    app.insert_resource(ClearColor(Color::srgb(0.0, 0.0, 0.0)))
+        .insert_resource(launch)
+        .insert_resource(debug_trace);
+    if test_mode {
+        app.insert_resource(TestWorldHarness {
             active: true,
             finished: false,
             phase: 0,
@@ -58,16 +64,8 @@ fn main() {
             s7p_logistics_seed_phase: 0,
             s7p_logistics_seed_ticks: 0,
             minimap_m2_overlay_seeded: false,
-        }
-    } else {
-        TestWorldHarness::default()
-    };
-
-    let mut app = App::new();
-    app.insert_resource(ClearColor(Color::srgb(0.0, 0.0, 0.0)))
-        .insert_resource(launch)
-        .insert_resource(debug_trace)
-        .insert_resource(harness)
-        .add_plugins(EnginePlugin)
-        .run();
+            post_enter_sim_frame: 0,
+        });
+    }
+    app.add_plugins(EnginePlugin).run();
 }

@@ -28,6 +28,8 @@ mod viewport_layout_solver;
 mod view_authority;
 mod view_projection_authority;
 pub mod map_tile_raster;
+pub mod map_tile_atlas_stamp;
+pub mod construction_growth_inspector;
 pub mod egui_window;
 mod app_shell;
 mod main_menu;
@@ -133,14 +135,15 @@ pub use style::{
 };
 pub use egui_window::std_floating;
 pub use authoritative_viewport::{
-    measure_sim_map_fill_viewport, AuthoritativeViewport, CENTER_ROW_HORIZONTAL_PAD_PX,
-    SimulationMapViewportHoleLatch,
+    bootstrap_authoritative_viewport_on_enter_simulation, measure_sim_map_fill_viewport,
+    AuthoritativeViewport, CENTER_ROW_HORIZONTAL_PAD_PX, SimulationMapViewportHoleLatch,
 };
 pub use map_camera::{
     default_map_zoom_for_world, in_simulation_or_editor_map, map_camera_viewport_pixels,
     map_zoom_limits_for_world, orthographic_fixed_world_span, primary_cursor_world_xy,
     MainWorldCamera,
     MainWorldCameraOrthoTrace, MainWorldCameraViewportLatch, MapCameraDesired, MapCameraMode,
+    reset_main_world_camera_viewport_latch_on_enter_simulation,
     MapCameraPlugin, MapCameraSettings, MapCameraSystemSet,
     derive_map_camera_desired_from_view_authority, mirror_world_main_camera_from_map_desired,
     map_scale_for_zoom_alpha, map_zoom_alpha, map_zoom_alpha_with_limits,

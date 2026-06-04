@@ -1,0 +1,132 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://rust-engine.local/schemas/aps_tag_taxonomy_v1.schema.json",
+  "title": "aps_tag_taxonomy_v1",
+  "description": "APS-TAGS-001 — categorized semantic tags for assembly nodes, grammar rules, and APS UI.",
+  "type": "object",
+  "required": ["schema_version", "categories"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "const": 1 },
+    "categories": {
+      "type": "object",
+      "required": ["location", "architectural", "detail", "condition"],
+      "additionalProperties": false,
+      "properties": {
+        "location": { "$ref": "#/$defs/tag_category" },
+        "architectural": { "$ref": "#/$defs/tag_category" },
+        "detail": { "$ref": "#/$defs/tag_category" },
+        "condition": { "$ref": "#/$defs/tag_category" }
+      }
+    },
+    "legacy_flat_map": {
+      "type": "object",
+      "description": "APS-UI flat checkbox id → { category, tag_id }",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["category", "tag_id"],
+        "properties": {
+          "category": {
+            "type": "string",
+            "enum": ["location", "architectural", "detail", "condition"]
+          },
+          "tag_id": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "tag_category": {
+      "type": "object",
+      "required": ["label", "tags"],
+      "properties": {
+        "label": { "type": "string" },
+        "description": { "type": "string" },
+        "tags": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["id", "label"],
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_]*$"
+              },
+              "label": { "type": "string" },
+              "grammar_use": {
+                "type": "string",
+                "description": "How BuildingGrammar rules match this tag"
+              }
+            }
+          }
+        }
+      }
+    },
+    "semantic_tags": {
+      "type": "object",
+      "description": "ARCH-ASSEMBLY-GRAPH-002 — categorized tags on a placement node",
+      "properties": {
+        "location": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/location_tag_id" }
+        },
+        "architectural": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/architectural_tag_id" }
+        },
+        "detail": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/detail_tag_id" }
+        },
+        "condition": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/condition_tag_id" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "location_tag_id": {
+      "type": "string",
+      "enum": [
+        "street_facing",
+        "corner",
+        "rear",
+        "interior",
+        "yard_facing",
+        "alley_facing"
+      ]
+    },
+    "architectural_tag_id": {
+      "type": "string",
+      "enum": [
+        "industrial",
+        "commercial",
+        "residential",
+        "military",
+        "civic",
+        "agricultural"
+      ]
+    },
+    "detail_tag_id": {
+      "type": "string",
+      "enum": [
+        "pipework",
+        "stack",
+        "ventilation",
+        "loading_dock",
+        "signage",
+        "light_fixture",
+        "ac_unit",
+        "crane",
+        "platform",
+        "window_band",
+        "door_rollup"
+      ]
+    },
+    "condition_tag_id": {
+      "type": "string",
+      "enum": ["clean", "weathered", "damaged", "abandoned", "construction", "fire"]
+    }
+  }
+}

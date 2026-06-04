@@ -1,0 +1,21 @@
+(
+    schema_version: 1,
+    style_pack_id: "style_industrial_west",
+    label: "Industrial West",
+    usage_bias: ["industrial", "warehouse"],
+    style_tags: ["steel", "sawtooth", "metal"],
+    slots: (
+        wall_1u: "wall_steel_1u",
+        wall_2u: "wall_concrete_2u",
+        door_default: "door_warehouse",
+        door_wide: "door_warehouse",
+        window_1u: "win_double_1u",
+        window_industrial: "win_industrial_3u",
+        roof_default: "roof_sawtooth",
+        roof_industrial: "roof_shed",
+        roof_flat: "roof_metal_low",
+        corner_outer: "corner_L",
+        prop_clutter: "prop_vent",
+    ),
+    fallback_policy: "hide_slot",
+)

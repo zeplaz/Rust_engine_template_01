@@ -6,6 +6,7 @@
 | **Deliverable** | 4 of 4 — formal sign-off |
 | **Parent brief** | [`wssr_design_gate_brief_v1.md`](wssr_design_gate_brief_v1.md) |
 | **Companion deliverables** | [`wssr_identity_alignment_record_v1.md`](wssr_identity_alignment_record_v1.md) · [`wssr_readability_impact_v1.md`](wssr_readability_impact_v1.md) · [`wssr_migration_visual_contract_v1.md`](wssr_migration_visual_contract_v1.md) |
+| **Slab preflight (G1–G2)** | [`wss_substrate_diagnostics_copy_v1.md`](wss_substrate_diagnostics_copy_v1.md) · [`wss_substrate_debug_overlay_names_v1.md`](wss_substrate_debug_overlay_names_v1.md) · closure [`wss_design_gate_parent_closure_v1.md`](wss_design_gate_parent_closure_v1.md) |
 | **Version** | `1.0.0` |
 | **Date** | 2026-05-26 |
 | **Owner** | `@designer` |

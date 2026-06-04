@@ -10,6 +10,7 @@
 
 use bevy::prelude::*;
 use bevy::ui::{ComputedNode, UiGlobalTransform};
+use bevy::window::PrimaryWindow;
 
 use crate::gui::hud::{
     trace_viewport_authority, trace_viewport_chain_integrity, trace_viewport_drift,
@@ -393,7 +394,53 @@ pub fn publish_simulation_map_viewport(
         out.logical_size(),
         present,
     );
-    trace_viewport_drift(ui_raw.logical_size(), out.logical_size());
+    let measured_for_drift = if ui_raw.valid {
+        ui_raw.logical_size()
+    } else {
+        authority.logical_size()
+    };
+    trace_viewport_drift(measured_for_drift, out.logical_size());
+}
+
+/// Seed authoritative + presentation viewport from window chrome on enter-sim (before egui measure).
+pub fn bootstrap_authoritative_viewport_on_enter_simulation(
+    windows: Query<&Window, With<PrimaryWindow>>,
+    mut authority: ResMut<AuthoritativeViewport>,
+    mut semantic: ResMut<SemanticViewportRect>,
+    mut latch: ResMut<SimulationMapViewportHoleLatch>,
+    mut sim: ResMut<SimulationMapViewport>,
+    mut trace: ResMut<SimulationMapViewportTrace>,
+    mut sim_dbg: ResMut<SimulationMapViewportDebug>,
+) {
+    let Ok(win) = windows.single() else {
+        return;
+    };
+    if !crate::render::primary_window_logical_presentable(win.width(), win.height()) {
+        return;
+    }
+    let window = Vec2::new(win.width(), win.height());
+    let (min, max) = expected_sim_map_fill_aabb(window);
+    authority.valid = true;
+    authority.min = min;
+    authority.max = max;
+    authority.generation = authority.generation.wrapping_add(1);
+    *semantic = semantic_viewport_from_map_fill(true, min, max);
+    latch.hole_ready = true;
+    latch.settle_streak = HOLE_SETTLE_STREAK;
+    latch.last_commit = "enter_sim_bootstrap";
+    latch.last_window_logical = window;
+    latch.last_measured_size = (max - min).max(Vec2::ZERO);
+    *sim = authority.to_simulation_map_viewport(true);
+    trace.measured_valid = true;
+    trace.measured_size = latch.last_measured_size;
+    trace.committed_size = sim.logical_size();
+    trace.committed_from_stable_hold = true;
+    trace.layout_settled = true;
+    sim_dbg.measured_valid = true;
+    sim_dbg.measured_min = min;
+    sim_dbg.measured_max = max;
+    sim_dbg.frozen = true;
+    sim_dbg.last_commit = latch.last_commit;
 }
 
 #[cfg(test)]

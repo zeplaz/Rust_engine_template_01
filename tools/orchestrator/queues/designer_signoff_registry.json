@@ -1,7 +1,15 @@
 {
     "_meta": {
-    "version": "1.5.0",
-    "date": "2026-05-26",
+    "version": "2.4.0",
+    "date": "2026-06-02",
+    "mode": "on_call",
+    "on_call_playbook": "src/dev/designer_oncall_absorption_v1.md",
+    "longrun_closed": "DESIGN-PROC-MODULE-KIT-001, DESIGN-ORGANIC-GROWTH-UX-001, DESIGN-CONSTRUCTION-STAGE-READ-001, DESIGN-CONSTRUCTION-SCALING-READ-001, DESIGN-INFRA-NETWORK-OVERLAY-001, DESIGN-SETTLEMENT-HIERARCHY-READ-001",
+    "wave4_designer_closed": "DESIGN-HANABI-SPIKE-REVIEW-001, DESIGN-VFX-CAPTURE-ROUND-003, DESIGN-PR4-RETIRE-UX-001",
+    "on_call_absorption_2026_06_02": "DESIGN-PR4-RETIRE-UX-001 qualified→PASS",
+    "on_call_closed": "DESIGN-VISUAL-PERF-DEGRADE-001",
+    "stability_phase2_closed": "DESIGN-G-PLAY-001, DESIGN-WSS-HYDRO-READ-001, DESIGN-PERF-DEGRADE-VALIDATE-001, DESIGN-R4-UX-001",
+    "on_call_hold": "DESIGN-S7B-M4-PLAY-READ-001, DESIGN-HANABI-H-A2-PROD-001",
     "owner": "@designer",
     "purpose": "Orchestrator-readable designer sign-offs — status SIGNED + witness path per @designer todo",
     "human_board": "src/dev/stage_designer_todos_v1.md",
@@ -126,10 +134,13 @@
       "agent": "designer",
       "status": "done",
       "signoff": "SIGNED",
-      "signed_date": "2026-05-26",
-      "verdict": "PASS (qualified)",
+      "signed_date": "2026-05-27",
+      "verdict": "PASS",
       "witness": "src/dev/bq128_apply_ghost_ux_review_v1.md",
-      "unblocks": ["UX-E02-APPLY-POLISH-001"]
+      "witness_json": "debug_runs/wave_s_blueprint_roundtrip.json",
+      "pass_pointers": ["/roundtrip_ok"],
+      "unblocks": ["BQ-128-APPLY-001", "UX-E02-APPLY-POLISH-001"],
+      "notes": "Preset picker → ghost flow signed; roundtrip_ok witness green"
     },
     {
       "id": "DESIGN-IND-E03-OPS-001",
@@ -438,8 +449,9 @@
       "status": "done",
       "signoff": "SIGNED",
       "signed_date": "2026-05-26",
-      "verdict": "DEFER",
+      "verdict": "PASS (qualified)",
       "witness": "src/dev/ui_phase6_multiview_readability_v1.md",
+      "pass_pointers": ["/ui_w3_p6_001/green"],
       "unblocks": ["UI-W3-P6-001"]
     },
     {
@@ -468,9 +480,21 @@
       "status": "done",
       "signoff": "SIGNED",
       "signed_date": "2026-05-26",
-      "verdict": "DEFER",
+      "verdict": "PASS (qualified)",
       "witness": "assets/vfx/reference/review_captures/vfx_capture_status_wave5.md",
+      "witness_json": "debug_runs/stage5_full_app_live.json",
+      "pass_pointers": ["/tactical_vfx_witness/all_green"],
       "unblocks": ["VFX-CAPTURE-WAVE5"]
+    },
+    {
+      "id": "DESIGN-HYDRO-PLAYER-READ-001",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-05-26",
+      "verdict": "PASS",
+      "witness": "src/dev/wss_hydrology_player_read_v1.md",
+      "unblocks": ["WSS-HYDRO-RUNTIME-001", "B-H1"]
     },
     {
       "id": "DESIGN-OPERATOR-VISUAL-BUNDLE-001",
@@ -483,12 +507,23 @@
       "unblocks": ["PLAN-OPERATOR-VISUAL-BUNDLE-001"]
     },
     {
+      "id": "DESIGN-ATMOS-CLIPMAP-READ-001",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-05-27",
+      "verdict": "PASS",
+      "witness": "src/dev/wss_contamination_visual_language_v1.md",
+      "unblocks": ["A-W2", "WSS-ATMOS-CLIPMAP-001"],
+      "notes": "Readability pass accepted from contamination visual language doc."
+    },
+    {
       "id": "CONSTRUCTION-PARAM-DESIGN-001",
       "agent": "designer",
       "status": "done",
       "signoff": "SIGNED",
       "signed_date": "2026-05-26",
-      "verdict": "PASS (qualified)",
+      "verdict": "PASS",
       "witness": "src/dev/construction_parametric_placement_design_v1.md",
       "witness_json": "debug_runs/construction_stage_live.json",
       "pass_pointers": [
@@ -510,6 +545,369 @@
         "CONSTRUCTION-PARAM-CODER-006"
       ],
       "depends_on": ["PLAN-CONSTRUCTION-PARAM-001"]
+    },
+    {
+      "id": "DESIGN-PARAM-STAGING-POLISH-002",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-05-26",
+      "verdict": "PASS",
+      "witness": "src/dev/construction_parametric_staging_ux_v2.md",
+      "unblocks": ["CONSTRUCTION-PARAM-CODER-004", "B-C4"],
+      "notes": "Replaces blocked_design on PARAM-004"
+    },
+    {
+      "id": "DESIGN-PARAM-SCALE-HUD-001",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-05-26",
+      "verdict": "PASS",
+      "witness": "src/dev/construction_parametric_scale_hud_v1.md",
+      "unblocks": ["CONSTRUCTION-PARAM-CODER-006", "B-C5"],
+      "notes": "Tray economy readout; PARAM-006 not blocked_design"
+    },
+    {
+      "id": "DESIGN-CONTAMINATION-001",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-05-26",
+      "verdict": "PASS",
+      "witness": "src/dev/wss_contamination_visual_language_v1.md",
+      "unblocks": ["A-W2", "WSS-ATMOS-CLIPMAP-001"]
+    },
+    {
+      "id": "DESIGN-SMOKE-LAYER-AB-001",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-05-26",
+      "verdict": "PASS",
+      "witness": "src/dev/wss_smoke_layer_a_b_visual_v1.md",
+      "unblocks": ["A-V3", "WSS-SMOKE-BRIDGE-001"]
+    },
+    {
+      "id": "WSS-DESIGN-GATE-001",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-05-26",
+      "verdict": "PASS (qualified)",
+      "witness": "src/dev/wssr_design_signoff_v1.md",
+      "brief": "src/dev/wssr_design_gate_brief_v1.md",
+      "slab_preflight": "src/dev/wss_design_gate_parent_closure_v1.md",
+      "deliverables": [
+        "src/dev/wssr_identity_alignment_record_v1.md",
+        "src/dev/wssr_readability_impact_v1.md",
+        "src/dev/wssr_migration_visual_contract_v1.md",
+        "src/dev/wss_substrate_diagnostics_copy_v1.md",
+        "src/dev/wss_substrate_debug_overlay_names_v1.md"
+      ],
+      "unblocks": ["WSS-CHUNK-SLAB-001", "WSS-ATMOS-CLIPMAP-001", "WSS-HYDRO-RUNTIME-001"]
+    },
+    {
+      "id": "DESIGN-F2-EXTRACT-READ-001",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-05-27",
+      "verdict": "PASS",
+      "witness": "src/dev/fire_f2_extract_readability_pass_001.md",
+      "witness_json": "debug_runs/stage5_full_app_live.json",
+      "pass_pointers": [
+        "/f2_extract_witness/green",
+        "/f2_extract_witness/fire_instance_buffer_rows",
+        "/projection_graph/fire_instance_buffer_rows"
+      ],
+      "unblocks": ["FIRE-F2-EXTRACT-001", "A-V2"]
+    },
+    {
+      "id": "DESIGN-WSS-DIAGNOSTICS-PASS-002",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-05-27",
+      "verdict": "PASS",
+      "witness": "src/dev/wss_diagnostics_pass_002.md",
+      "witness_json": "debug_runs/wss_substrate_live.json",
+      "pass_pointers": [
+        "/green",
+        "/chunk_count",
+        "/resident_count",
+        "/dirty_count"
+      ],
+      "unblocks": ["WSS-CHUNK-SLAB-001", "A-W1", "A-W2"]
+    },
+    {
+      "id": "DESIGN-DUAL-WRITE-UX-001",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-05-27",
+      "verdict": "PASS",
+      "witness": "src/dev/wss_dual_write_transition_ux_001.md",
+      "witness_json": "debug_runs/wss_substrate_live.json",
+      "pass_pointers": [
+        "/dual_write_shim_enabled",
+        "/dual_write_drift_max",
+        "/green"
+      ],
+      "unblocks": ["PLAN-WSS-SLAB-PR-2", "WSS-SLAB-PR-2", "DESIGN-DUAL-WRITE-FULL-PASS-001"]
+    },
+    {
+      "id": "DESIGN-DUAL-WRITE-FULL-PASS-001",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-05-27",
+      "verdict": "PASS",
+      "witness": "src/dev/wss_dual_write_transition_ux_001.md",
+      "witness_json": "debug_runs/wss_substrate_live.json",
+      "pass_pointers": [
+        "/dual_write_shim_enabled",
+        "/dual_write_drift_max"
+      ],
+      "prereq": "DESIGN-DUAL-WRITE-UX-001",
+      "unblocks": ["PLAN-WSS-HYBRID-RETIRE-PR4-001"],
+      "notes": "Full PASS after shim on + drift_max=0; player footnote + F3 labels in witness doc v1.1"
+    },
+    {
+      "id": "DESIGN-ACTIVE-RUNTIME-READ-001",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-05-27",
+      "verdict": "PASS",
+      "witness": "src/dev/plan_wss_active_chunk_001_v1.md",
+      "witness_json": "debug_runs/wss_substrate_live.json",
+      "pass_pointers": [
+        "/active_runtime_wired",
+        "/active_runtime_policy_wired",
+        "/active_runtime_cap_respected",
+        "/active_runtime_activate_test_ok",
+        "/active_runtime_entity_count"
+      ],
+      "unblocks": ["PLAN-WSS-HYBRID-RETIRE-PR4-001", "WSS-SLAB-PR-3"],
+      "notes": "Player read: cap 64; reason labels FireFront/FloodSolve/HydrologyEvent/Construction/PlayerProximity; sim-focus only — no per-camera activation"
+    },
+    {
+      "id": "DESIGN-R4-MV-POST-PARAM-001",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-05-27",
+      "verdict": "PASS",
+      "witness": "src/dev/construction_r4_mv_post_param_001.md",
+      "witness_json": "debug_runs/construction_stage_live.json",
+      "pass_pointers": [
+        "/construction_parametric_placement_001/green",
+        "/construction_r4_mv_ghost_001/green"
+      ],
+      "unblocks": ["R4-MV-GHOST-001", "B-C3"]
+    },
+    {
+      "id": "DESIGN-M3-REPLAY-PASS-002",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-05-27",
+      "verdict": "PASS",
+      "witness": "src/dev/minimap_replay_pass_002_v1.md",
+      "witness_json": "debug_runs/minimap_compositor_live.json",
+      "pass_pointers": ["/replay_scrub_enabled", "/ui_p3_m3_replay_001_green"],
+      "unblocks": ["REPLAY-RING-LIVE-001", "M3-UNITS-DEPTH-001"]
+    },
+    {
+      "id": "DESIGN-HANABI-BOUNDS-001",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-05-27",
+      "verdict": "PASS (qualified)",
+      "witness": "src/dev/hanabi_event_vfx_style_bounds_v1.md",
+      "unblocks": ["H-A", "W4-C-event-embellishment"]
+    },
+    {
+      "id": "DESIGN-IDENTITY-CHECKPOINT-001",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-05-27",
+      "verdict": "PASS",
+      "witness": "src/dev/project_identity_guard_rail_v1.md",
+      "unblocks": ["wssr_hybrid_assessment_review", "steward_identity_checkpoint"]
+    },
+    {
+      "id": "DESIGN-HANABI-SPIKE-REVIEW-001",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-05-27",
+      "verdict": "PASS (qualified)",
+      "witness": "src/dev/hanabi_spike_review_h_a2_gate_v1.md",
+      "spike_report": "experiments/hanabi_validation/report_v1.md",
+      "bounds": "src/dev/hanabi_event_vfx_style_bounds_v1.md",
+      "h_a2_gate": "CLEARED (qualified)",
+      "witness_json": "debug_runs/stage5_full_app_live.json",
+      "pass_pointers": ["/tactical_vfx_witness/all_green"],
+      "unblocks": ["H-A2", "hanabi_l3", "PLAN-HANABI-ADOPTION-001"]
+    },
+    {
+      "id": "DESIGN-VFX-CAPTURE-ROUND-003",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-05-27",
+      "verdict": "PASS (qualified)",
+      "witness": "assets/vfx/reference/review_captures/vfx_capture_status_wave6.md",
+      "witness_json": "debug_runs/stage5_full_app_live.json",
+      "pass_pointers": ["/tactical_vfx_witness/all_green", "/f2_extract_witness/green"],
+      "parent": "DESIGN-VFX-CAPTURE-WAVE5-001",
+      "unblocks": ["VX-P0-04", "VFX-CAPTURE-WAVE6"]
+    },
+    {
+      "id": "DESIGN-PR4-RETIRE-UX-001",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-05-27",
+      "absorption_date": "2026-06-02",
+      "verdict": "PASS",
+      "witness": "src/dev/wss_pr4_retire_cutover_ux_v1.md",
+      "witness_json": "debug_runs/wss_substrate_live.json",
+      "pass_pointers": [
+        "/substrate_persist_roundtrip_ok",
+        "/dynamic_overlay_migrated",
+        "/ecs_retire_fixture_green",
+        "/hybrid_ecs_weather_authoritative",
+        "/hybrid_ecs_fire_authoritative",
+        "/hybrid_ecs_smoke_authoritative",
+        "/ecs_retire_smoke_prod_green",
+        "/ecs_retire_smoke_cutover_complete"
+      ],
+      "unblocks": ["WSS-SLAB-PR-5", "WSS-PR5-SMOKE-PROD-001", "diagnostics_ui WSS section"],
+      "notes": "Smoke prod closed; PR5-SMOKE-CLOSED player footnote enabled"
+    },
+    {
+      "id": "DESIGN-PROC-ART-ACCEPTANCE-001",
+      "agent": "designer",
+      "status": "ready",
+      "signoff": "PENDING",
+      "witness": "src/dev/design_procedural_art_acceptance_v1.md",
+      "trigger": "art assets in assets/meshes/buildings/modules/",
+      "unblocks": ["PROC-PG-2 textured LOD"]
+    },
+    {
+      "id": "DESIGN-VISUAL-PERF-DEGRADE-001",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-05-28",
+      "verdict": "PASS",
+      "witness": "src/dev/visual_perf_spike_degrade_ux_v1.md",
+      "unblocks": ["PERF-P2-TILE-RASTER-BUDGET-001", "PERF-P2-FIRE-EXTRACT-CADENCE-001"]
+    },
+    {
+      "id": "DESIGN-G-PLAY-001",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-05-28",
+      "verdict": "PASS (qualified)",
+      "witness": "src/dev/play_scenario_acceptance_runbook_v1.md",
+      "unblocks": ["G-PLAY-001-BLOCKERS", "G-PLAY-01"]
+    },
+    {
+      "id": "DESIGN-WSS-HYDRO-READ-001",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-05-28",
+      "verdict": "PASS",
+      "witness": "src/dev/wss_hydro_read_feature_pass_001.md",
+      "unblocks": ["FEAT-WSS-HYDRO-READ-001"]
+    },
+    {
+      "id": "DESIGN-PERF-DEGRADE-VALIDATE-001",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-05-28",
+      "verdict": "PASS (qualified)",
+      "witness": "src/dev/visual_perf_spike_degrade_validate_001_v1.md",
+      "unblocks": ["PERF-P2-TILE-RASTER-BUDGET-001", "PERF-P2-FIRE-EXTRACT-CADENCE-001"]
+    },
+    {
+      "id": "DESIGN-R4-UX-001",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-05-28",
+      "verdict": "PASS",
+      "witness": "src/dev/construction_r4_product_slice_ux_v1.md",
+      "unblocks": ["CONSTRUCTION-R4-PRODUCT-001"]
+    },
+    {
+      "id": "DESIGN-PROC-MODULE-KIT-001",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-06-02",
+      "verdict": "PASS",
+      "witness": "src/dev/design_procedural_module_kit_v1.md",
+      "unblocks": ["PROC-PG-2-001"]
+    },
+    {
+      "id": "DESIGN-ORGANIC-GROWTH-UX-001",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-06-02",
+      "verdict": "PASS",
+      "witness": "src/dev/design_organic_growth_ux_v1.md",
+      "unblocks": ["PROC-OG-3-001"]
+    },
+    {
+      "id": "DESIGN-CONSTRUCTION-STAGE-READ-001",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-06-02",
+      "verdict": "PASS",
+      "witness": "src/dev/design_construction_site_stage_read_v1.md",
+      "unblocks": ["CON-P2"]
+    },
+    {
+      "id": "DESIGN-CONSTRUCTION-SCALING-READ-001",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-06-02",
+      "verdict": "PASS",
+      "witness": "src/dev/design_construction_scaling_read_v1.md",
+      "unblocks": ["CON-P3-S1", "CON-P3-S2", "CON-P3-S3", "CON-P3-S4", "CON-P3-S5", "CON-P3-S6"]
+    },
+    {
+      "id": "DESIGN-INFRA-NETWORK-OVERLAY-001",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-06-02",
+      "verdict": "PASS",
+      "witness": "src/dev/design_infra_network_overlay_v1.md",
+      "unblocks": ["INFRA-E6-003", "INFRA-E6-004"]
+    },
+    {
+      "id": "DESIGN-SETTLEMENT-HIERARCHY-READ-001",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-06-02",
+      "verdict": "PASS",
+      "witness": "src/dev/design_settlement_hierarchy_read_v1.md",
+      "unblocks": ["PROC-OG-4-001", "PLAN-SETTLEMENT-HIERARCHY-005"]
     }
   ]
 }

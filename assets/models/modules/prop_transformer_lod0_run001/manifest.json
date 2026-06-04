@@ -1,0 +1,20 @@
+{
+  "job_id": "prop_transformer_lod0_run001",
+  "glb": "assets/models/modules/prop_transformer_lod0_run001/model.glb",
+  "valid": true,
+  "vertex_count": 24,
+  "batch_id": "",
+  "validation": {
+    "schema_version": 1,
+    "validator": "asset_glb",
+    "status": "passed",
+    "compression_level": 1,
+    "summary": "model.glb: verts=24 tier=lod0 arch=module_prop profile=box",
+    "error_count": 0,
+    "warning_count": 0,
+    "errors": [],
+    "known_fixes": [],
+    "raw_log_path": "",
+    "confidence": 1.0
+  }
+}

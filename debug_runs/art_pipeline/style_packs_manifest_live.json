@@ -1,0 +1,24 @@
+{
+  "pack_count": 7,
+  "pack_ids": [
+    "style_victorian",
+    "style_modern",
+    "style_industrial_west",
+    "style_industrial_soviet",
+    "style_military",
+    "style_rural",
+    "style_colonial"
+  ],
+  "slots_per_pack": {
+    "style_victorian": 9,
+    "style_modern": 9,
+    "style_industrial_west": 11,
+    "style_industrial_soviet": 8,
+    "style_military": 8,
+    "style_rural": 9,
+    "style_colonial": 9
+  },
+  "unresolved_slots": [],
+  "lod0_module_refs": 50,
+  "green": true
+}

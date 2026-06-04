@@ -1,0 +1,85 @@
+{
+  "batch_id": "kit_lod0_007",
+  "_agent_meta": {
+    "agent": "coder-mcp",
+    "updated_at": "2026-06-02T23:38:22.641585+00:00",
+    "rules_applied": [
+      "no_ai_generated_images",
+      "deterministic_output",
+      "batch_processing",
+      "grid_alignment",
+      "canonical_module_ids_only"
+    ]
+  },
+  "gates": {
+    "G0": "pass",
+    "G1": "pass",
+    "G2": "pass",
+    "G3": "pass",
+    "G4": "pass",
+    "G5": "pass"
+  },
+  "modules": [
+    {
+      "asset_id": "roof_metal_low",
+      "job_id": "roof_metal_low_lod0_run001",
+      "status": "promoted",
+      "registered": true,
+      "valid": true,
+      "vertex_count": 24,
+      "promoted_path": "assets/models/modules/roof_metal_low_lod0_run001/model.glb",
+      "module_id": "roof_metal_low",
+      "batch_id": "kit_lod0_007"
+    },
+    {
+      "asset_id": "roof_tile",
+      "job_id": "roof_tile_lod0_run001",
+      "status": "promoted",
+      "registered": true,
+      "valid": true,
+      "vertex_count": 24,
+      "promoted_path": "assets/models/modules/roof_tile_lod0_run001/model.glb",
+      "module_id": "roof_tile",
+      "batch_id": "kit_lod0_007"
+    },
+    {
+      "asset_id": "door_military",
+      "job_id": "door_military_lod0_run001",
+      "status": "promoted",
+      "registered": true,
+      "valid": true,
+      "vertex_count": 44,
+      "promoted_path": "assets/models/modules/door_military_lod0_run001/model.glb",
+      "module_id": "door_military",
+      "batch_id": "kit_lod0_007"
+    },
+    {
+      "asset_id": "win_house_1u",
+      "job_id": "win_house_1u_lod0_run001",
+      "status": "promoted",
+      "registered": true,
+      "valid": true,
+      "vertex_count": 48,
+      "promoted_path": "assets/models/modules/win_house_1u_lod0_run001/model.glb",
+      "module_id": "win_house_1u",
+      "batch_id": "kit_lod0_007"
+    },
+    {
+      "asset_id": "corner_L",
+      "job_id": "corner_L_lod0_run001",
+      "status": "promoted",
+      "registered": true,
+      "valid": true,
+      "vertex_count": 48,
+      "promoted_path": "assets/models/modules/corner_L_lod0_run001/model.glb",
+      "module_id": "corner_L",
+      "batch_id": "kit_lod0_007"
+    }
+  ],
+  "promoted_count": 5,
+  "registered_count": 5,
+  "failed": [],
+  "module_index": "assets/configs/buildings/_module_index.ron",
+  "index_entry_count": 66,
+  "batch_registered_count": 5
+}

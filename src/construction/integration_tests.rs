@@ -59,6 +59,183 @@ fn road_e2e_queue_validate_segments() {
 }
 
 #[test]
+fn hydro_coupling_execute_plan_emits_preview_validate_does_not() {
+    use super::construction_pipeline::{
+        execute_construction_plans_system, validate_construction_plans_system,
+        ConstructionPlanQueue, ConstructionWorldRevision,
+        ExecutedRoadNetwork,
+    };
+    use crate::substrate::hydrology::{
+        HydrologyConstructionCouplingWitness, HydrologyDirtyReason, HydrologyEventQueue,
+    };
+    use crate::systems::transport::{
+        TransportCostCache, TransportCostWeights, TransportEdgeDirectory, TransportFieldStore,
+        TransportTopology,
+    };
+    use crate::strategic::CorridorConstructionBook;
+    use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
+    use bevy::state::app::StatesPlugin;
+
+    let params = WorldGenParams {
+        width: 64,
+        height: 64,
+        ..Default::default()
+    };
+    let mut queue = ConstructionPlanQueue::default();
+    queue.enqueue(ConstructionIntent {
+        entity_type: ConstructionType::RoadSegment {
+            head: BuildSiteTile { x: 1, z: 1 },
+            tail: BuildSiteTile { x: 3, z: 1 },
+        },
+        world_position: Vec2::ZERO,
+        rotation: 0.0,
+    });
+
+    let mut app = App::new();
+    app.add_plugins((MinimalPlugins, StatesPlugin))
+        .init_resource::<ConstructionPlanQueue>()
+        .init_resource::<ExecutedRoadNetwork>()
+        .init_resource::<ConstructionWorldRevision>()
+        .init_resource::<TransportTopology>()
+        .init_resource::<TransportFieldStore>()
+        .init_resource::<TransportEdgeDirectory>()
+        .init_resource::<TransportCostCache>()
+        .init_resource::<TransportCostWeights>()
+        .init_resource::<CorridorConstructionBook>()
+        .init_resource::<super::rail::ActiveRailPlacement>()
+        .init_resource::<super::roads::IntersectionRegistry>()
+        .init_resource::<super::history::ConstructionHistory>()
+        .init_resource::<HydrologyEventQueue>()
+        .init_resource::<HydrologyConstructionCouplingWitness>()
+        .insert_resource(params)
+        .insert_resource(queue)
+        .add_systems(Update, validate_construction_plans_system);
+
+    {
+        let mut coupling = app.world_mut().resource_mut::<HydrologyConstructionCouplingWitness>();
+        coupling.bridge_registered = true;
+    }
+
+    app.update();
+    assert!(
+        app.world()
+            .resource::<HydrologyEventQueue>()
+            .pending
+            .is_empty(),
+        "validate-only tick must not emit hydrology events"
+    );
+
+    app.add_systems(Update, execute_construction_plans_system);
+    app.update();
+    let hydro = app.world().resource::<HydrologyEventQueue>();
+    assert!(!hydro.pending.is_empty(), "execute must enqueue hydrology dirty events");
+    assert!(hydro.pending.iter().all(|e| matches!(
+        e.reason,
+        HydrologyDirtyReason::ConstructionComplete { .. }
+    )));
+    let coupling = app.world().resource::<HydrologyConstructionCouplingWitness>();
+    assert_eq!(coupling.preview_emit_count, 0);
+    assert!(coupling.execute_emit_count > 0);
+}
+
+#[test]
+fn infra_e2_003_execute_road_increments_transport_binds_markers_and_paths() {
+    use super::construction_pipeline::{
+        execute_construction_plans_system, validate_construction_plans_system,
+        ConstructionPlanQueue, ConstructionWorldRevision, ExecutedRoadNetwork, SimRoadSegmentMarker,
+    };
+    use super::corridor_transport::SimCorridorEdgeBinding;
+    use crate::economy::logistics::routes::path_edges_between_tiles;
+    use crate::economy::resource_flow::TransportMode;
+    use crate::systems::transport::{
+        edge_traversal_cost, refresh_transport_nav_export, TransportCostCache, TransportCostWeights,
+        TransportEdgeDirectory, TransportEdgeId, TransportFieldStore, TransportNavExport, TransportTopology,
+    };
+    use crate::strategic::CorridorConstructionBook;
+    use bevy::state::app::StatesPlugin;
+
+    let params = WorldGenParams {
+        width: 64,
+        height: 64,
+        ..Default::default()
+    };
+    let mut queue = ConstructionPlanQueue::default();
+    queue.enqueue(ConstructionIntent {
+        entity_type: ConstructionType::RoadSegment {
+            head: BuildSiteTile { x: 1, z: 1 },
+            tail: BuildSiteTile { x: 3, z: 1 },
+        },
+        world_position: Vec2::ZERO,
+        rotation: 0.0,
+    });
+
+    let mut app = App::new();
+    app.add_plugins((MinimalPlugins, StatesPlugin))
+        .init_resource::<ConstructionPlanQueue>()
+        .init_resource::<ExecutedRoadNetwork>()
+        .init_resource::<ConstructionWorldRevision>()
+        .init_resource::<TransportTopology>()
+        .init_resource::<TransportFieldStore>()
+        .init_resource::<TransportEdgeDirectory>()
+        .init_resource::<TransportCostCache>()
+        .init_resource::<TransportCostWeights>()
+        .init_resource::<TransportNavExport>()
+        .init_resource::<CorridorConstructionBook>()
+        .init_resource::<super::rail::ActiveRailPlacement>()
+        .init_resource::<super::roads::IntersectionRegistry>()
+        .init_resource::<super::history::ConstructionHistory>()
+        .insert_resource(params)
+        .insert_resource(queue)
+        .add_systems(
+            Update,
+            (
+                validate_construction_plans_system,
+                execute_construction_plans_system,
+            )
+                .chain(),
+        );
+
+    app.update();
+
+    let topo = app.world().resource::<TransportTopology>();
+    assert_eq!(topo.neighbors.len(), 1, "execute should add one transport edge");
+
+    let bindings: Vec<TransportEdgeId> = {
+        let world = app.world_mut();
+        world
+            .query_filtered::<&SimCorridorEdgeBinding, With<SimRoadSegmentMarker>>()
+            .iter(world)
+            .map(|b| b.edge_id)
+            .collect()
+    };
+    assert_eq!(bindings.len(), 2, "head + tail markers bind to edge");
+    assert!(bindings.iter().all(|id| *id == bindings[0]));
+
+    let book = app.world().resource::<CorridorConstructionBook>();
+    assert!(book.rows.contains_key(&bindings[0]));
+
+    let top = app.world().resource::<TransportTopology>();
+    let field = app.world().resource::<TransportFieldStore>();
+    let dir = app.world().resource::<TransportEdgeDirectory>();
+    let weights = app.world().resource::<TransportCostWeights>().clone();
+    let mut cache = TransportCostCache::default();
+    for (id, st) in &field.by_edge {
+        cache.by_edge.insert(*id, edge_traversal_cost(st, &weights, st.travel_time_base));
+    }
+    let mut nav = TransportNavExport::default();
+    refresh_transport_nav_export(top, &cache, dir, &mut nav);
+
+    let path = path_edges_between_tiles(
+        &nav,
+        dir,
+        BuildSiteTile { x: 1, z: 1 },
+        BuildSiteTile { x: 3, z: 1 },
+        TransportMode::Truck,
+    );
+    assert!(path.is_some(), "logistics path should exist after corridor execute");
+}
+
+#[test]
 fn zone_paint_queues_zone_pending_kind() {
     let mut pending = PendingConstructionQueue::default();
     let mut paint = ActiveZonePaint::default();
@@ -122,7 +299,7 @@ fn input_conflict_matrix_gates() {
     assert!(!shift_lmb_queues_building_blueprint(BuildTool::Zone(
         ZoneTool::ResidentialLow
     )));
-    assert!(shift_lmb_queues_building_blueprint(BuildTool::Building(
+    assert!(!shift_lmb_queues_building_blueprint(BuildTool::Building(
         BuildingArchetypeId::Housing
     )));
 }

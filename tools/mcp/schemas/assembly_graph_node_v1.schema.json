@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://rust-engine.local/schemas/assembly_graph_node_v1.schema.json",
+  "title": "assembly_graph_node_v1",
+  "description": "ARCH-001 + ARCH-003 + ARCH-ASSEMBLY-GRAPH-002 — semantic assembly graph node.",
+  "type": "object",
+  "required": ["module_id", "slot_key", "grid_x", "grid_y", "floor"],
+  "additionalProperties": true,
+  "properties": {
+    "node_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Stable id: {module_id}_{grid_x}_{grid_y}_f{floor}"
+    },
+    "role": {
+      "type": "string",
+      "enum": [
+        "primary_wall",
+        "secondary_wall",
+        "corner",
+        "door",
+        "window",
+        "roof",
+        "parapet",
+        "stack",
+        "vent",
+        "platform",
+        "sign",
+        "detail_prop"
+      ],
+      "description": "ARCH-ASSEMBLY-GRAPH-002 — semantic slot role"
+    },
+    "module_id": { "type": "string" },
+    "job_id": { "type": "string" },
+    "slot_key": { "type": "string" },
+    "token": { "type": "string", "enum": ["W", "D", "C", "R"] },
+    "grid_x": { "type": "integer", "minimum": 0 },
+    "grid_y": { "type": "integer", "minimum": 0 },
+    "floor": { "type": "integer", "minimum": 0 },
+    "glb_path": { "type": "string" },
+    "position": {
+      "type": "array",
+      "items": { "type": "number" },
+      "minItems": 3,
+      "maxItems": 3
+    },
+    "rotation_euler": {
+      "type": "array",
+      "items": { "type": "number" },
+      "minItems": 3,
+      "maxItems": 3
+    },
+    "material_profile": {
+      "type": "string",
+      "minLength": 1,
+      "description": "ARCH-003 — PBR profile id"
+    },
+    "style": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Facade / district style slice (e.g. industrial_west)"
+    },
+    "weathering": {
+      "type": "string",
+      "enum": ["clean", "light", "medium", "heavy"],
+      "description": "ARCH-ASSEMBLY-GRAPH-002 — surface age band"
+    },
+    "semantic_tags": {
+      "$ref": "https://rust-engine.local/schemas/aps_tag_taxonomy_v1.schema.json#/$defs/semantic_tags"
+    },
+    "placement_tags": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Legacy flat tags — prefer semantic_tags; keep in sync until APS-TAGS-002"
+    },
+    "variant_tags": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Variant graph hints"
+    },
+    "lod_policy": {
+      "type": "string",
+      "enum": ["lod0", "production", "hero"]
+    },
+    "mesh_tier_fallback": { "type": "string" }
+  }
+}

@@ -7,7 +7,20 @@
 | **Version** | `1.0.0` |
 | **Date** | 2026-05-26 |
 | **Coder lane** | **REPLAY-RING-LIVE-001** (coder B) |
-| **Status** | queued (exec plan; witness close handled by lane exit tests) |
+| **Status** | **READY (planner finalized)** — active next-phase coder B plan |
+
+**Planner sign-off:** PASS (2026-05-27). Queue alignment: archived `PLAN-REPLAY-RING-EXEC-001`.
+
+---
+
+## Coder handoff (acceptance)
+
+| Field | Value |
+|:---|:---|
+| **Witness (parity)** | `debug_runs/replay_editor_parity_live.json` → `parity_green=true`, `replay_ring_len>=2` |
+| **Witness (minimap)** | `debug_runs/minimap_compositor_live.json` → `replay_scrub_enabled=true`, `ui_p3_m3_replay_001_green=true` |
+| **Unblocks** | `REPLAY-RING-LIVE-001` |
+| **Verify** | `cargo test -p proc_A_dine01 --lib replay_editor_parity minimap_compositor` |
 
 ---
 

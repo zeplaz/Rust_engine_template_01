@@ -1,0 +1,361 @@
+{
+  "schema_version": 1,
+  "variant_set_id": "shopfront_colonial_production_v1",
+  "assembly_id": "colonial_3x3_s44_cf75",
+  "style_pack_id": "style_colonial",
+  "seed": 44,
+  "variants": [
+    {
+      "variant_key": "clean_day",
+      "sim_tags": [
+        "sim_operational",
+        "sim_day",
+        "sim_power_any"
+      ],
+      "tags": [
+        "sim_operational",
+        "sim_day",
+        "sim_power_any"
+      ],
+      "layers": {
+        "lighting": {
+          "lighting": "day",
+          "power": "off",
+          "night_lights": false
+        },
+        "damage": {
+          "state": "clean",
+          "damage": 0.0
+        },
+        "fill": {
+          "fill": "empty"
+        }
+      }
+    },
+    {
+      "variant_key": "clean_night_off",
+      "sim_tags": [
+        "sim_operational",
+        "sim_night",
+        "sim_power_off"
+      ],
+      "tags": [
+        "sim_operational",
+        "sim_night",
+        "sim_power_off"
+      ],
+      "layers": {
+        "lighting": {
+          "lighting": "night_off",
+          "power": "off",
+          "night_lights": false
+        },
+        "damage": {
+          "state": "clean",
+          "damage": 0.0
+        },
+        "fill": {
+          "fill": "empty"
+        }
+      }
+    },
+    {
+      "variant_key": "clean_night_on",
+      "sim_tags": [
+        "sim_operational",
+        "sim_night",
+        "sim_power_on"
+      ],
+      "tags": [
+        "sim_operational",
+        "sim_night",
+        "sim_power_on"
+      ],
+      "layers": {
+        "lighting": {
+          "lighting": "night_on",
+          "power": "on",
+          "night_lights": true
+        },
+        "damage": {
+          "state": "clean",
+          "damage": 0.0
+        },
+        "fill": {
+          "fill": "empty"
+        }
+      }
+    },
+    {
+      "variant_key": "damaged_day",
+      "sim_tags": [
+        "sim_damage_mid",
+        "sim_day"
+      ],
+      "tags": [
+        "sim_damage_mid",
+        "sim_day"
+      ],
+      "layers": {
+        "lighting": {
+          "lighting": "day",
+          "power": "off",
+          "night_lights": false
+        },
+        "damage": {
+          "state": "damaged",
+          "damage": 0.45
+        },
+        "fill": {
+          "fill": "half"
+        }
+      }
+    },
+    {
+      "variant_key": "under_construction_01",
+      "sim_tags": [
+        "sim_construction_early"
+      ],
+      "tags": [
+        "sim_construction_early"
+      ],
+      "layers": {
+        "lighting": {
+          "lighting": "day",
+          "power": "off",
+          "night_lights": false
+        },
+        "damage": {
+          "state": "dirty",
+          "damage": 0.0
+        },
+        "fill": {
+          "fill": "empty"
+        }
+      }
+    },
+    {
+      "variant_key": "abandoned",
+      "sim_tags": [
+        "sim_abandoned"
+      ],
+      "tags": [
+        "sim_abandoned"
+      ],
+      "layers": {
+        "lighting": {
+          "lighting": "day",
+          "power": "off",
+          "night_lights": false
+        },
+        "damage": {
+          "state": "ruined",
+          "damage": 0.8
+        },
+        "fill": {
+          "fill": "empty"
+        }
+      }
+    },
+    {
+      "variant_key": "burning_00",
+      "sim_tags": [
+        "sim_fire",
+        "sim_fire_frame_0"
+      ],
+      "tags": [
+        "sim_fire",
+        "sim_fire_frame_0"
+      ],
+      "layers": {
+        "lighting": {
+          "lighting": "night_on",
+          "power": "on",
+          "night_lights": true
+        },
+        "damage": {
+          "state": "damaged",
+          "damage": 0.55
+        },
+        "fill": {
+          "fill": "half"
+        }
+      }
+    },
+    {
+      "variant_key": "burning_01",
+      "sim_tags": [
+        "sim_fire",
+        "sim_fire_frame_1"
+      ],
+      "tags": [
+        "sim_fire",
+        "sim_fire_frame_1"
+      ],
+      "layers": {
+        "lighting": {
+          "lighting": "night_on",
+          "power": "on",
+          "night_lights": true
+        },
+        "damage": {
+          "state": "damaged",
+          "damage": 0.5700000000000001
+        },
+        "fill": {
+          "fill": "half"
+        }
+      }
+    },
+    {
+      "variant_key": "burning_02",
+      "sim_tags": [
+        "sim_fire",
+        "sim_fire_frame_2"
+      ],
+      "tags": [
+        "sim_fire",
+        "sim_fire_frame_2"
+      ],
+      "layers": {
+        "lighting": {
+          "lighting": "night_on",
+          "power": "on",
+          "night_lights": true
+        },
+        "damage": {
+          "state": "damaged",
+          "damage": 0.5900000000000001
+        },
+        "fill": {
+          "fill": "half"
+        }
+      }
+    },
+    {
+      "variant_key": "burning_03",
+      "sim_tags": [
+        "sim_fire",
+        "sim_fire_frame_3"
+      ],
+      "tags": [
+        "sim_fire",
+        "sim_fire_frame_3"
+      ],
+      "layers": {
+        "lighting": {
+          "lighting": "night_on",
+          "power": "on",
+          "night_lights": true
+        },
+        "damage": {
+          "state": "damaged",
+          "damage": 0.6100000000000001
+        },
+        "fill": {
+          "fill": "half"
+        }
+      }
+    },
+    {
+      "variant_key": "burning_04",
+      "sim_tags": [
+        "sim_fire",
+        "sim_fire_frame_4"
+      ],
+      "tags": [
+        "sim_fire",
+        "sim_fire_frame_4"
+      ],
+      "layers": {
+        "lighting": {
+          "lighting": "night_on",
+          "power": "on",
+          "night_lights": true
+        },
+        "damage": {
+          "state": "damaged",
+          "damage": 0.63
+        },
+        "fill": {
+          "fill": "half"
+        }
+      }
+    },
+    {
+      "variant_key": "burning_05",
+      "sim_tags": [
+        "sim_fire",
+        "sim_fire_frame_5"
+      ],
+      "tags": [
+        "sim_fire",
+        "sim_fire_frame_5"
+      ],
+      "layers": {
+        "lighting": {
+          "lighting": "night_on",
+          "power": "on",
+          "night_lights": true
+        },
+        "damage": {
+          "state": "damaged",
+          "damage": 0.65
+        },
+        "fill": {
+          "fill": "half"
+        }
+      }
+    },
+    {
+      "variant_key": "burning_06",
+      "sim_tags": [
+        "sim_fire",
+        "sim_fire_frame_6"
+      ],
+      "tags": [
+        "sim_fire",
+        "sim_fire_frame_6"
+      ],
+      "layers": {
+        "lighting": {
+          "lighting": "night_on",
+          "power": "on",
+          "night_lights": true
+        },
+        "damage": {
+          "state": "damaged",
+          "damage": 0.67
+        },
+        "fill": {
+          "fill": "half"
+        }
+      }
+    },
+    {
+      "variant_key": "burning_07",
+      "sim_tags": [
+        "sim_fire",
+        "sim_fire_frame_7"
+      ],
+      "tags": [
+        "sim_fire",
+        "sim_fire_frame_7"
+      ],
+      "layers": {
+        "lighting": {
+          "lighting": "night_on",
+          "power": "on",
+          "night_lights": true
+        },
+        "damage": {
+          "state": "damaged",
+          "damage": 0.6900000000000001
+        },
+        "fill": {
+          "fill": "half"
+        }
+      }
+    }
+  ]
+}

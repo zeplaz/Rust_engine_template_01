@@ -1,0 +1,76 @@
+{
+  "batch_id": "kit_greybox_003",
+  "modules": [
+    {
+      "asset_id": "wall_brick_2u",
+      "job_id": "wall_brick_2u_run001",
+      "valid": true,
+      "vertex_count": null,
+      "file_bytes": null
+    },
+    {
+      "asset_id": "wall_concrete_1u",
+      "job_id": "wall_concrete_1u_run001",
+      "valid": true,
+      "vertex_count": null,
+      "file_bytes": null
+    },
+    {
+      "asset_id": "wall_wood_2u",
+      "job_id": "wall_wood_2u_run001",
+      "valid": true,
+      "vertex_count": null,
+      "file_bytes": null
+    },
+    {
+      "asset_id": "wall_industrial_panel_2u",
+      "job_id": "wall_industrial_panel_2u_run001",
+      "valid": true,
+      "vertex_count": null,
+      "file_bytes": null
+    },
+    {
+      "asset_id": "window_single_1u",
+      "job_id": "window_single_1u_run001",
+      "valid": true,
+      "vertex_count": null,
+      "file_bytes": null
+    },
+    {
+      "asset_id": "window_double_1u",
+      "job_id": "window_double_1u_run001",
+      "valid": true,
+      "vertex_count": null,
+      "file_bytes": null
+    },
+    {
+      "asset_id": "door_residential_1u",
+      "job_id": "door_residential_1u_run001",
+      "valid": true,
+      "vertex_count": null,
+      "file_bytes": null
+    },
+    {
+      "asset_id": "door_garage_2u",
+      "job_id": "door_garage_2u_run001",
+      "valid": true,
+      "vertex_count": null,
+      "file_bytes": null
+    },
+    {
+      "asset_id": "roof_sawtooth_2u",
+      "job_id": "roof_sawtooth_2u_run001",
+      "valid": true,
+      "vertex_count": null,
+      "file_bytes": null
+    },
+    {
+      "asset_id": "prop_chimney_1u",
+      "job_id": "prop_chimney_1u_run001",
+      "valid": true,
+      "vertex_count": null,
+      "file_bytes": null
+    }
+  ],
+  "all_green": true
+}

@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "asset_id": "corner_wood_porch",
+  "archetype": "module_prop",
+  "style_pack": "style_rural",
+  "module": {
+    "grid_units": [
+      1,
+      1
+    ],
+    "snap": "floor_edge",
+    "pivot": "bottom_center"
+  },
+  "dimensions_m": {
+    "w": 3,
+    "h": 2.5,
+    "d": 3
+  },
+  "material_profile": "wood_porch_corner_01",
+  "references": []
+}

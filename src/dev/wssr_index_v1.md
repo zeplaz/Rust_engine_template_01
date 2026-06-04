@@ -42,7 +42,11 @@ VISUALIZATION
 | Queue ID | Document | Scope |
 |:---|:---|:---|
 | **WSS-PLAN-002** | [`wssr_plan_002_chunk_authority_v1.md`](wssr_plan_002_chunk_authority_v1.md) | Chunk slabs, hybrid ECS, writers/readers/persist matrix |
-| **WSS-EXEC-001** | [`plan_wss_chunk_slab_exec_001_v1.md`](plan_wss_chunk_slab_exec_001_v1.md) | **WSS-CHUNK-SLAB-001** — blocked on [`wss_design_gate_001_v1.md`](wss_design_gate_001_v1.md) |
+| **WSS-EXEC-001** | [`plan_wss_chunk_slab_exec_001_v1.md`](plan_wss_chunk_slab_exec_001_v1.md) | **WSS-CHUNK-SLAB-001** — design gate **PASS (qualified)** |
+| **WSS-EXEC-SMOKE-001** | [`plan_wss_smoke_bridge_exec_001_v1.md`](plan_wss_smoke_bridge_exec_001_v1.md) | **WSS-SMOKE-BRIDGE-001** — A-V3 |
+| **F2-EXEC-001** | [`plan_fire_f2_extract_exec_001_v1.md`](plan_fire_f2_extract_exec_001_v1.md) | **FIRE-F2-EXTRACT-001** — A-V2 / VX-P2-01 |
+| **WSS-EXEC-ATMOS-001** | [`plan_wss_atmos_clipmap_exec_001_v1.md`](plan_wss_atmos_clipmap_exec_001_v1.md) | **WSS-ATMOS-CLIPMAP-001** — after slab types |
+| **WSS-EXEC-HYDRO-001** | [`plan_wss_hydro_runtime_exec_001_v1.md`](plan_wss_hydro_runtime_exec_001_v1.md) | **WSS-HYDRO-RUNTIME-001** — after slab hydrate |
 | **WSS-PLAN-003** | [`wssr_plan_003_hydrology_runtime_v1.md`](wssr_plan_003_hydrology_runtime_v1.md) | Hydrology as terrain-coupled substrate; event-driven runtime |
 | **WSS-PLAN-004** | [`wssr_plan_004_atmosphere_unification_v1.md`](wssr_plan_004_atmosphere_unification_v1.md) | Atmosphere clipmaps, contamination split, smoke/dust/weather spine |
 
@@ -105,13 +109,16 @@ Z CONSUMES immutable snapshot (L3 GPU / Hanabi / composites)
 
 ```text
 WSS-PLAN-001 index (this doc)           ☑ SIGNED
-WSS-DESIGN-GATE-001                   ☑ SIGNED — [`wssr_design_signoff_v1.md`](wssr_design_signoff_v1.md)
-WSS-PLAN-002 chunk authority            ☑ SIGNED — coder: WSS-CHUNK-SLAB-001 (design gate PASS qualified)
-WSS-PLAN-004 atmosphere unification     ◐ parallel with 002 after slab types
-WSS-PLAN-003 hydrology runtime          ◐ after 002 slab types + hydrate design
+WSS-ROUTING-001 dependency tree         ☑ [`wssr_dependency_routing_v1.md`](wssr_dependency_routing_v1.md)
+WSS-DESIGN-GATE-001                   ☑ parent CLOSED
+WSS-CHUNK-SLAB-001                    ☑ types READY · ◐ sim spawn hydrate (CS-003)
+WSS-ATMOS-CLIPMAP-001                 ☑ GO NOW (types) — [`plan_wss_atmos_clipmap_exec_001_v1.md`](plan_wss_atmos_clipmap_exec_001_v1.md)
+WSS-HYDRO-RUNTIME-001                 ◐ BLOCKED until hydrate_wired on Chunk spawn
+WSS-PLAN-004 atmosphere unification     ◐ coder: WSS-ATMOS-CLIPMAP-001
+WSS-PLAN-003 hydrology runtime          ◐ coder: WSS-HYDRO-RUNTIME-001
 Hanabi validation spike                 ◐ non-blocking (experiments/) — design signoff on scope
 Extraction stability gate               ◐ blocks F2 hot-cell (F-T02, VM-08)
-bevy_vector_shapes adoption             ◐ tactical overlay slice
+bevy_vector_shapes adoption             **PARTIAL** — `bevy_vector_shapes` 0.12 + tactical wire draw (`tactical_vector_overlay.rs`)
 ```
 
 **Design-before-code policy (2026-05-26):** [@designer](wssr_design_gate_brief_v1.md) evaluates identity/ethos and mandates **hybrid** where incumbent systems are superior · [@coder](wssr_coder_hybrid_orders_v1.md) must file Hybrid Assessment per slice.

@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "batch_id": "kit_greybox_003",
+  "description": "Kit gap slice — modules from design_procedural_module_kit_v1 not in _module_index",
+  "plan_ref": "src/dev/design_procedural_module_kit_v1.md",
+  "rules_applied": [
+    "no_ai_generated_images",
+    "deterministic_output",
+    "batch_processing",
+    "grid_alignment"
+  ],
+  "witness": "debug_runs/art_pipeline/kit_greybox_003_live.json",
+  "signoff": "debug_runs/art_pipeline/kit_greybox_003_signoff.yaml",
+  "modules": [
+    {"asset_id": "wall_brick_2u", "job_id": "wall_brick_2u_run001", "kit_ref": "wall_brick_2u", "archetype": "module_wall", "status": "promoted"},
+    {"asset_id": "wall_concrete_1u", "job_id": "wall_concrete_1u_run001", "kit_ref": "wall_concrete_1u", "archetype": "module_wall", "status": "promoted"},
+    {"asset_id": "wall_wood_2u", "job_id": "wall_wood_2u_run001", "kit_ref": "wall_wood_2u", "archetype": "module_wall", "status": "promoted"},
+    {"asset_id": "wall_industrial_panel_2u", "job_id": "wall_industrial_panel_2u_run001", "kit_ref": "wall_industrial_panel_2u", "archetype": "module_wall", "status": "promoted"},
+    {"asset_id": "window_single_1u", "job_id": "window_single_1u_run001", "kit_ref": "win_single_1u", "archetype": "module_window", "status": "promoted"},
+    {"asset_id": "window_double_1u", "job_id": "window_double_1u_run001", "kit_ref": "win_double_1u", "archetype": "module_window", "status": "promoted"},
+    {"asset_id": "door_residential_1u", "job_id": "door_residential_1u_run001", "kit_ref": "door_residential", "archetype": "module_door", "status": "promoted"},
+    {"asset_id": "door_garage_2u", "job_id": "door_garage_2u_run001", "kit_ref": "door_garage", "archetype": "module_door", "status": "promoted"},
+    {"asset_id": "roof_sawtooth_2u", "job_id": "roof_sawtooth_2u_run001", "kit_ref": "roof_sawtooth", "archetype": "module_roof", "status": "promoted"},
+    {"asset_id": "prop_chimney_1u", "job_id": "prop_chimney_1u_run001", "kit_ref": "prop_chimney", "archetype": "module_prop", "status": "promoted"}
+  ],
+  "next_agent": "@designer-mcp",
+  "gate": "G5"
+}

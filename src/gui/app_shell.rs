@@ -9,11 +9,11 @@ use crate::gui::AppStartState;
 use crate::gui::CmdUiMonoFont;
 use crate::gui::ui_windows::UiState;
 use crate::gui::UiPalette;
-use crate::engine::DebugQuickWorldGenPending;
 use crate::engine::debug_maneuver::{DebugManeuver, FrameLayoutDebugSession};
-use crate::engine::{
-    arm_debug_quick_world_gen, TestScene, TestWorldHarness,
+use crate::engine::test_harness::{
+    arm_debug_quick_world_gen, DebugQuickWorldGenPending, TestWorldHarness,
 };
+use crate::engine::TestScene;
 use crate::gui::editor::world_gen_ui::CancelActiveWorldGenEvent;
 use crate::gui::pause_menu_confirm::world_gen_work_active;
 use crate::terrain::generation::world_generator_enhanced::{

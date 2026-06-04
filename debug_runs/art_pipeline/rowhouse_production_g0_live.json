@@ -1,0 +1,32 @@
+{
+  "program_id": "MCP-PROD-PILOT-ROWHOUSE-001",
+  "task_id": "MCP-PROD-G0-001",
+  "gate": "G0",
+  "green": true,
+  "updated": "2026-06-03",
+  "_agent_meta": {
+    "agent": "designer-mcp",
+    "orders": "src/dev/mcp_fleet_production_pilot_rowhouse_v1.md",
+    "scope": "rowhouse_victorian_only"
+  },
+  "batch_id": "tile_rowhouse_victorian_production_v1",
+  "variant_set_id": "rowhouse_victorian_production_v1",
+  "assembly_id": "victorian_4x3_s42_a7cb",
+  "style_pack_id": "style_victorian",
+  "proceed_production_bake": true,
+  "g0_rules": "debug_runs/art_pipeline/rowhouse_production_g0_rules.yaml",
+  "validations": {
+    "variant_set_validate": "pass",
+    "tile_batch_validate_report": "pass"
+  },
+  "blocked_by": [
+    "MCP-PROD-MOD-G0-G5",
+    "assembly_snapshot_production_tier",
+    "reference_tags_on_production_snapshot"
+  ],
+  "scope_guard": {
+    "other_archetypes_edited": false
+  },
+  "unblocks": ["MCP-PROD-KIT-001", "MCP-PROD-TILE-001"],
+  "next": "@coder-mcp kit_production_001 then production assembly snapshot + keyframe pack"
+}

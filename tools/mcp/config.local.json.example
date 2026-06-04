@@ -1,0 +1,2 @@
+# Copy to tools/mcp/config.local.json to override paths on this machine (optional).
+# config.defaults.json already points at Steam Blender 5.1.

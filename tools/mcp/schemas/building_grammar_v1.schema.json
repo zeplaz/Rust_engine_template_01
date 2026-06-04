@@ -1,0 +1,200 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "building_grammar_v1.schema.json",
+  "title": "BuildingGrammarV1",
+  "description": "ARCH-BUILD-GRAMMAR-001 — hierarchical grammar: archetype → massing → roof → facade → detail → age. Drives generate(archetype, district_style, seed) before footprint fill.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "grammar_id",
+    "archetype",
+    "massing",
+    "roof",
+    "facade",
+    "detail",
+    "age",
+    "district_styles"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "grammar_id": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+    "archetype": { "$ref": "#/$defs/archetype_rule" },
+    "massing": { "$ref": "#/$defs/massing_rule" },
+    "roof": { "$ref": "#/$defs/roof_rule" },
+    "facade": { "$ref": "#/$defs/facade_rule" },
+    "detail": { "$ref": "#/$defs/detail_rule" },
+    "age": { "$ref": "#/$defs/age_rule" },
+    "district_styles": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/district_style_binding" }
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "footprint_bounds": {
+      "type": "object",
+      "required": ["min_width", "max_width", "min_depth", "max_depth", "min_floors", "max_floors"],
+      "properties": {
+        "min_width": { "type": "integer", "minimum": 2 },
+        "max_width": { "type": "integer", "minimum": 2 },
+        "min_depth": { "type": "integer", "minimum": 2 },
+        "max_depth": { "type": "integer", "minimum": 2 },
+        "min_floors": { "type": "integer", "minimum": 1 },
+        "max_floors": { "type": "integer", "minimum": 1 }
+      },
+      "additionalProperties": false
+    },
+    "archetype_rule": {
+      "type": "object",
+      "required": ["id", "usage", "footprint_bounds"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_]*$" },
+        "usage": {
+          "type": "string",
+          "enum": [
+            "residential",
+            "commercial",
+            "industrial",
+            "office",
+            "government",
+            "military",
+            "warehouse",
+            "farm",
+            "civic",
+            "bunker",
+            "factory"
+          ]
+        },
+        "footprint_bounds": { "$ref": "#/$defs/footprint_bounds" }
+      },
+      "additionalProperties": false
+    },
+    "massing_strategy": {
+      "type": "object",
+      "required": ["id", "weight"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "enum": ["long_hall", "double_hall", "l_shape", "yard_complex"]
+        },
+        "weight": { "type": "integer", "minimum": 1, "maximum": 100 },
+        "width_depth_ratio": {
+          "type": "number",
+          "minimum": 1.0,
+          "description": "Target W/D for long_hall / double_hall"
+        },
+        "footprint_mode": {
+          "type": "string",
+          "enum": ["rect", "l_shape", "yard_interior"],
+          "default": "rect"
+        }
+      },
+      "additionalProperties": false
+    },
+    "massing_rule": {
+      "type": "object",
+      "required": ["strategies"],
+      "properties": {
+        "strategies": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/massing_strategy" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "slot_override": {
+      "type": "object",
+      "required": ["slot_key", "module_slot"],
+      "properties": {
+        "slot_key": { "type": "string" },
+        "module_slot": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "roof_rule": {
+      "type": "object",
+      "required": ["default_slot"],
+      "properties": {
+        "default_slot": { "type": "string" },
+        "by_massing": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["massing_id", "slot"],
+            "properties": {
+              "massing_id": { "type": "string" },
+              "slot": { "type": "string" }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "facade_rule": {
+      "type": "object",
+      "properties": {
+        "window_slot": { "type": "string" },
+        "door_slot": { "type": "string" },
+        "wall_slot": { "type": "string" },
+        "placement_tags": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "detail_rule": {
+      "type": "object",
+      "properties": {
+        "prop_slot": { "type": "string" },
+        "density": { "type": "number", "minimum": 0.0, "maximum": 1.0 },
+        "tags": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": false
+    },
+    "age_rule": {
+      "type": "object",
+      "required": ["bands"],
+      "properties": {
+        "bands": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["id", "weight", "variant_tags"],
+            "properties": {
+              "id": { "type": "string" },
+              "weight": { "type": "integer", "minimum": 1 },
+              "variant_tags": {
+                "type": "array",
+                "items": { "type": "string" },
+                "minItems": 1
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "district_style_binding": {
+      "type": "object",
+      "required": ["id", "style_pack_id"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+        "style_pack_id": { "type": "string" },
+        "style_tags": { "type": "array", "items": { "type": "string" } },
+        "zoning": { "type": "string" },
+        "material_profiles": {
+          "type": "object",
+          "description": "PG-MATERIAL-GENERATION-001 — style-pack slot key → material_profile id",
+          "additionalProperties": { "type": "string", "minLength": 1 }
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

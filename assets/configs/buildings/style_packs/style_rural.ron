@@ -1,0 +1,19 @@
+(
+    schema_version: 1,
+    style_pack_id: "style_rural",
+    label: "Rural",
+    usage_bias: ["residential", "farm"],
+    style_tags: ["wood", "rural", "pitched_roof"],
+    slots: (
+        wall_1u: "wall_wood_1u",
+        wall_2u: "wall_wood_2u",
+        door_default: "door_residential",
+        door_wide: "door_garage",
+        window_1u: "win_house_1u",
+        window_2u: "win_shop_2u",
+        roof_default: "roof_pitched_hip",
+        roof_flat: "roof_tile",
+        prop_clutter: "prop_fence",
+    ),
+    fallback_policy: "hide_slot",
+)

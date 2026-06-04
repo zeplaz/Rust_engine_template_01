@@ -7,6 +7,8 @@ tools: ['read', 'edit', 'search', 'execute', 'agent', 'context7/*', 'github/*', 
 
 # Coder Agent
 
+**MCP art toolchain (`tools/mcp/` Python, bpy, validators):** use **`@coder-mcp`** — [`.cursor/agents/coder-mcp.md`](coder-mcp.md). This agent owns general Bevy `src/` implementation only.
+
 You write production code.
 
 You implement:
@@ -39,6 +41,33 @@ You must preserve:
 - async safety
 - compatibility bridges
 - diagnostics continuity
+
+# VALIDATION FIRST (required)
+
+Attach skill: [validation-first](../skills/validation-first/SKILL.md)
+
+After `cargo check`, `cargo test`, or build commands:
+
+1. Run **`validate-report cargo`** (MCP `validate_cargo_report` or CLI) — **do not paste raw compiler output**
+2. Reason on `ValidationReport` fields: `status`, `errors[]`, `known_fixes[]`
+3. Use `--cached` when `cargo orchestrate` already ran
+4. Request raw logs only if `confidence < 0.7`
+
+```powershell
+python -m rust_engine_mcp.cli validate-report cargo --compress 3
+python -m rust_engine_mcp.cli validate-report bevy -p proc_A_dine01
+```
+
+Plan: [`src/dev/plan_validation_runtime_v1.md`](../../src/dev/plan_validation_runtime_v1.md)
+
+# MCP CONSUMER (validate only — do not build tools)
+
+Read: [`src/dev/agent_mcp_consumer_guide_v1.md`](../../src/dev/agent_mcp_consumer_guide_v1.md)
+
+- **Implement** Bevy/ECS/construction/growth in `src/`.
+- **Request** module GLBs via `@designer-mcp` when PROC-PG-2 needs assets.
+- **Verify** promoted assets: `validate-report asset_glb` — reject smoke tier in production paths.
+- **Route** MCP bugs to `@coder-mcp`; AssetSpec to `@designer-mcp`.
 
 # REQUIRED FIRST STEP
 

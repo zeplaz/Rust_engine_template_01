@@ -1,0 +1,101 @@
+# warehouse_state_facing_matrix_v1.yaml — TILE-FIX-09 designer matrix (state × facing × frame)
+program_id: PLAN-TILE-FIX-AUTO-BUILD-001
+task_id: TILE-FIX-09
+owner: designer-mcp
+building_definition: tools/mcp/schemas/examples/building_definition_warehouse_industrial_west_production_v1.json
+visual_config: assets/configs/buildings/visual_config_warehouse_industrial_west_v2.json
+atlas_target: warehouse_industrial_west_v2
+bake_spine: src/dev/design_tile_bake_spine_convergence_v1.md
+variant_matrix: debug_runs/art_pipeline/variant_matrix_warehouse_v1.yaml
+
+archetype: warehouse
+tile_id: warehouse_industrial
+style_pack: style_industrial_west
+assembly:
+  assembly_id: industrial_west_7x5_s39_9fa1
+  snapshot: tools/mcp/schemas/examples/assembly_snapshot_warehouse_industrial_west_production_v1.json
+  blend: assets/staging/assemblies/industrial_west_7x5_s39_9fa1.blend
+  source_tier: production
+  footprint: { width: 7, depth: 5, floors: 1 }
+  module_families:
+    corner_L: corner_L_lod0_run001
+    wall_steel_1u: wall_steel_1u_production_run001
+    door_warehouse: door_warehouse_lod0_run001
+    roof_sawtooth: roof_sawtooth_production_run001
+  placement_counts:
+    production_glb: 35
+    lod0_fallback: 5
+  district_one_liner: "Steel warehouse with sawtooth roof and vent clutter"
+
+render_contract:
+  facings: 8
+  facing_labels: [N, NE, E, SE, S, SW, W, NW]
+  yaw_step_deg: 45
+  quarter_turn_fallback: true
+  tile_px: 128
+  naming: "{variant_key}_f{facing}_frame{frame}.png"
+
+states:
+  operational: [clean_day, clean_night_off, clean_night_on]
+  damage: [damaged_day, damaged_night_on]
+  construction: [under_construction_01, under_construction_02]
+  lifecycle: [abandoned]
+  fire:
+    key_prefix: burning_
+    frame_count: 8
+    frame_period_ms: 125
+
+ship_minimum_states:
+  - clean_day
+  - clean_night_on
+  - damaged_night_on
+  - under_construction_02
+  - abandoned
+  - burning_00
+
+minimum_g4_matrix:
+  description: "Phase C ship pilot — 3 states × 8 facings (frame 0)"
+  states: [clean_day, clean_night_on, damaged_night_on]
+  facings: 8
+  facing_indices: [0, 1, 2, 3, 4, 5, 6, 7]
+  cell_count: 24
+  still_folder: assets/staging/tiles/tile_warehouse_industrial_v2_minimum_g4/
+  atlas_meta: assets/staging/tiles/tile_warehouse_industrial_v2_minimum_g4/atlas_meta.json
+  minimum_g4_ship: true
+
+full_compile_matrix:
+  facings: 8
+  variant_count: 16
+  fire_frames: 8
+  cell_count: 576
+  compile_plan: debug_runs/art_pipeline/warehouse_industrial_compile_plan_v1.json
+
+minimum_review_cells:
+  - { variant: clean_day, facing: 0, note: "Canonical iso — sawtooth readable" }
+  - { variant: clean_day, facing: 2, note: "90° quarter — roof profile vs rowhouse gable" }
+  - { variant: clean_night_on, facing: 0, note: "PG-3 emissive boost on slit/yard lights" }
+  - { variant: damaged_night_on, facing: 4, note: "Damage + night readable" }
+  - { variant: under_construction_02, facing: 0, note: "Mid-build cladding" }
+  - { variant: burning_00, facing: 0, note: "Fire strip frame 0" }
+  - { variant: burning_00, facing: 4, note: "Fire facing parity" }
+
+frozen_v1:
+  batch_id: tile_warehouse_industrial_west_production_v1
+  proceed_ship: no
+  reason: TILE-FIX-001 greybox state-only atlas
+
+v2_promotion:
+  batch_id: tile_warehouse_industrial_west_v2
+  atlas_schema_version: 2
+  blocked_until: minimum_g4_matrix baked + atlas_meta v2 lookups complete
+
+g4_design_gates:
+  matrix_authored: pass
+  real_assembly_blend_present: pass
+  production_shell_glbs: pass
+  minimum_3x8_baked: pass
+  greybox_v1_not_ship: pass
+  proceed_ship: yes
+  promotion_witness: debug_runs/art_pipeline/tile_fix_10_warehouse_industrial_live.json
+
+notes: "Phase C — 3 states × 8 facings baked; proceed_ship from minimum_g4_ship + validate_tile_promotion. door_shop lod0 acceptable for minimum pilot."

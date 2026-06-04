@@ -20,8 +20,10 @@
 
 ## Next (F2+ — triage, not F1)
 
-- [ ] **F2-01** Per-tile / hot-cell extract contract for GPU (`TRIAGE-FIRE-EXTRACT`)
-- [ ] **F2-02** Smoke beyond stub (`chunk_smoke_field` + render)
+> **Coder routing (2026-05-26):** **F2-01** / **F2-02** implement from **exec plans**, not this checklist alone — [`tools/orchestrator/queues/coder_active_queue.json`](../tools/orchestrator/queues/coder_active_queue.json) · [`plan_fire_f2_extract_exec_001_v1.md`](plan_fire_f2_extract_exec_001_v1.md) · [`plan_wss_smoke_bridge_exec_001_v1.md`](plan_wss_smoke_bridge_exec_001_v1.md)
+
+- [ ] **F2-01** → **FIRE-F2-EXTRACT-001** — [`plan_fire_f2_extract_exec_001_v1.md`](plan_fire_f2_extract_exec_001_v1.md) (witness: `stage5_full_app_live.json`)
+- [ ] **F2-02** → **WSS-SMOKE-BRIDGE-001** — [`plan_wss_smoke_bridge_exec_001_v1.md`](plan_wss_smoke_bridge_exec_001_v1.md)
 - [ ] **F2-03** Fuel-linked spread (ember + neighbor fuel depletion)
 - [ ] **F2-04** Align `fire_inst` readiness metric with sim heat stability in proof JSON
 

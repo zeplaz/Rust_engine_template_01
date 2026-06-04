@@ -1,0 +1,129 @@
+# variant_matrix_shopfront_v1.yaml — MCP-PT-1-002
+program_id: PLAN-PROC-TILE-PROD-001
+task_id: MCP-PT-1-002
+archetype: shopfront
+usage_bias: [civic, commercial, street_front]
+primary_style_pack: style_colonial
+production_bar: src/dev/design_procedural_tile_production_bar_v1.md
+catalog: assets/configs/buildings/_variant_catalog.ron
+
+pilot:
+  lod0_batch_id: tile_shopfront_colonial_pilot_v1
+  production_batch_id: tile_shopfront_colonial_production_v1
+  footprint: { width: 3, depth: 3, floors: 2 }
+  assembly_id_lod0: colonial_3x3_s44_cf75
+  tile_id: shopfront_colonial
+
+reference_tags_policy:
+  required_on_production_snapshot: true
+  min_tags: 1
+  format: "ref:<source>:<id>"
+
+variant_keys:
+  clean_day:
+    required: true
+    group: operational
+  clean_night_off:
+    required: true
+    group: operational
+  clean_night_on:
+    required: true
+    group: operational
+    notes: "Shop window glow critical for G4-5 on shopfront archetype"
+  damaged_day:
+    required: true
+    group: damage
+  damaged_night_on:
+    required: true
+    group: damage
+  under_construction_01:
+    required: true
+    group: construction
+  under_construction_02:
+    required: false
+    group: construction
+  abandoned:
+    required: true
+    group: lifecycle
+    notes: "Boarded shopfront read — required for commercial lifecycle"
+  ruined:
+    required: false
+    group: lifecycle
+  burning_00:
+    required: true
+    group: fire
+    frame_index: 0
+  burning_01: { required: true, group: fire, frame_index: 1 }
+  burning_02: { required: true, group: fire, frame_index: 2 }
+  burning_03: { required: true, group: fire, frame_index: 3 }
+  burning_04: { required: true, group: fire, frame_index: 4 }
+  burning_05: { required: true, group: fire, frame_index: 5 }
+  burning_06: { required: true, group: fire, frame_index: 6 }
+  burning_07: { required: true, group: fire, frame_index: 7 }
+
+required_key_count: 15  # 7 incl. abandoned + 8 fire
+minimum_pt2_bake: 6
+g4_signoff: debug_runs/art_pipeline/shopfront_colonial_production_signoff.yaml
+
+bake_spine:
+  design_ref: src/dev/design_tile_bake_spine_convergence_v1.md
+  ship_bake_source: keyframe_pack
+  ci_bake_source: smoke_ortho_headless
+  lod0_pilot_atlas_ship_allowed: false
+  light_blend: utils/Light_keysshotsetup.blend
+  keyframe_tool: utils/keyframe_render.py
+  pack_cli: "python -m rust_engine_mcp.cli tile-atlas-pack <folder> -pk"
+
+keyframe_stills:
+  export_folder: assets/staging/tiles/keyframe_stills/shopfront_colonial/
+  naming: "{variant_key}.png"
+  g4_review_mode: keyframe_stills
+  g4_minimum_review_keys:
+    - clean_day
+    - clean_night_on
+    - damaged_night_on
+  full_matrix_keys: 15
+  lod0_pilot_batch: tile_shopfront_colonial_pilot_v1
+  lod0_pilot_g4_valid: false
+
+style_packs:
+  style_colonial:
+    applicable: true
+    role: primary
+    district_one_liner: "Colonial civic shopfront with arched windows and canopy option"
+    reference_tag_hints: ["ref:survey:shopfront-colonial", "ref:osm:building=commercial"]
+    door_slot: door_civic
+    window_slot: win_arched_1u
+  style_victorian:
+    applicable: true
+    role: alternate
+    district_one_liner: "Victorian street shop with residential door scale"
+    reference_tag_hints: ["ref:survey:victorian-shopfront"]
+    door_slot: door_residential
+  style_modern:
+    applicable: true
+    role: alternate
+    district_one_liner: "Modern glass strip storefront with office door"
+    reference_tag_hints: ["ref:survey:modern-retail"]
+    door_slot: door_office
+    wall_slot: wall_glass_curtain_1u
+  style_rural:
+    applicable: true
+    role: stretch
+    district_one_liner: "Rural general store — wood facade, smaller bays"
+    reference_tag_hints: ["ref:survey:rural-storefront"]
+    notes: "Stretch — verify win_house_1u bay width at 3x3 footprint"
+  style_industrial_west:
+    applicable: false
+    reason: "Warehouse door scale — use warehouse archetype"
+  style_industrial_soviet:
+    applicable: false
+    reason: "Factory gate grammar — use warehouse archetype"
+  style_military:
+    applicable: false
+    reason: "Bunker slit windows — use bunker archetype"
+
+g0_rules:
+  reference_tags_required: true
+  source_tier_ship: production
+  reject_lod0_when_ship: true

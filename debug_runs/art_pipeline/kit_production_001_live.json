@@ -1,0 +1,86 @@
+{
+  "batch_id": "kit_production_001",
+  "_agent_meta": {
+    "agent": "coder-mcp",
+    "updated_at": "2026-06-03T02:06:45.548654+00:00",
+    "rules_applied": [
+      "no_ai_generated_images",
+      "deterministic_output",
+      "batch_processing",
+      "grid_alignment",
+      "canonical_module_ids_only",
+      "tier_production_pbr_shipped"
+    ]
+  },
+  "gates": {
+    "G0": "pass",
+    "G1": "pass",
+    "G2": "pass",
+    "G3": "pass",
+    "G4": "pass",
+    "G5": "pass"
+  },
+  "modules": [
+    {
+      "asset_id": "wall_brick_1u",
+      "job_id": "wall_brick_1u_production_run001",
+      "status": "promoted",
+      "registered": true,
+      "valid": true,
+      "vertex_count": 192,
+      "promoted_path": "assets/models/modules/wall_brick_1u_production_run001/model.glb",
+      "module_id": "wall_brick_1u",
+      "batch_id": "kit_production_001"
+    },
+    {
+      "asset_id": "corner_L",
+      "job_id": "corner_L_production_run001",
+      "status": "promoted",
+      "registered": true,
+      "valid": true,
+      "vertex_count": 48,
+      "promoted_path": "assets/models/modules/corner_L_production_run001/model.glb",
+      "module_id": "corner_L",
+      "batch_id": "kit_production_001"
+    },
+    {
+      "asset_id": "door_residential",
+      "job_id": "door_residential_production_run001",
+      "status": "promoted",
+      "registered": true,
+      "valid": true,
+      "vertex_count": 44,
+      "promoted_path": "assets/models/modules/door_residential_production_run001/model.glb",
+      "module_id": "door_residential",
+      "batch_id": "kit_production_001"
+    },
+    {
+      "asset_id": "roof_pitched_gable",
+      "job_id": "roof_pitched_gable_production_run001",
+      "status": "promoted",
+      "registered": true,
+      "valid": true,
+      "vertex_count": 48,
+      "promoted_path": "assets/models/modules/roof_pitched_gable_production_run001/model.glb",
+      "module_id": "roof_pitched_gable",
+      "batch_id": "kit_production_001"
+    },
+    {
+      "asset_id": "prop_chimney",
+      "job_id": "prop_chimney_production_run001",
+      "status": "promoted",
+      "registered": true,
+      "valid": true,
+      "vertex_count": 72,
+      "promoted_path": "assets/models/modules/prop_chimney_production_run001/model.glb",
+      "module_id": "prop_chimney",
+      "batch_id": "kit_production_001"
+    }
+  ],
+  "promoted_count": 5,
+  "registered_count": 5,
+  "failed": [],
+  "module_index": "assets/configs/buildings/_module_index.ron",
+  "index_entry_count": 86,
+  "batch_registered_count": 5
+}

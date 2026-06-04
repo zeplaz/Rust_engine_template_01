@@ -17,6 +17,9 @@ pub struct SharedOverlayFieldBuffers {
     pub chunk_fire_heat: HashMap<IVec2, f32>,
 }
 
+/// MAP-BLINK-001 — cold-start overlay ramp length (frames).
+pub const OVERLAY_WARMUP_BLEND_FRAMES: u32 = 8;
+
 /// Minimum per-chunk heat delta before overlay revision bumps (reduces minimap/world raster churn).
 pub const CHUNK_FIRE_HEAT_OVERLAY_EPS: f32 = 0.028;
 

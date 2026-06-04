@@ -1,0 +1,24 @@
+# Visual QA — tile_bunker_military_pilot_v1 (lod0 APS proof)
+# Verdict: FAIL — do not ship; not comparable to assets/textures/power rotation atlases.
+
+atlas_id: bunker_military_pilot_v1
+batch_id: tile_bunker_military_pilot_v1
+development_tier: lod0
+lod0_atlas_ship_allowed: false
+visual_qa: fail
+reviewed_at: 2026-06-03
+
+findings:
+  - atlas is 2x1 variant sheet (clean_day | damaged_night_on), not 8-view rotation like power UI sprites
+  - bake shows edge-on wall slabs + pink missing-texture door, not readable 6x3 bunker silhouette
+  - witness gates G0-G3 green = pipeline smoke only, not art sign-off
+  - variant_matrix requires 8+ keys; pilot baked 2 (automation subset)
+
+compare:
+  power: assets/textures/power/tile_map_* — hand-authored iso rotation grid for build-rail icons
+  bunker_pilot: assembly ortho bake — different contract (state variants on one building view)
+
+next:
+  - lod0 pilot atlas remains fail — use keyframe_stills/bunker_military (G4 green 2026-06-03)
+  - promote production atlas after tile-batch-run register — not lod0 pilot
+  - never promote lod0 pilot to FULL_APP (design_procedural_tile_production_bar_v1.md)

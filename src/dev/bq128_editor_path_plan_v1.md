@@ -23,8 +23,8 @@
 |:---|:---|:---|:---:|
 | **Design** | **UX-E02-BQ128-001** | `@designer` | **CLOSED** — design note **SIGNED** |
 | **MVP IO** | **WS-A01…A04** (Wave S) | `@coder` | **DONE** — RON round-trip + import/export buffer |
-| **Phase 2a** | **BQ-128-APPLY-001** | `@coder` | **OPEN** — preset picker → ghost |
-| **Phase 2b** | **BQ-128-APPLY-002** | `@coder` | **OPEN** (optional) — merge vs replace on import |
+| **Phase 2a** | **BQ-128-APPLY-001** | `@coder` | **DONE** — preset picker → ghost |
+| **Phase 2b** | **BQ-128-APPLY-002** | `@coder` | **DONE** — merge vs replace on import |
 | **Phase 2c** | **BQ-128-EXT-001** | docs | **DEFERRED** — offline `presets.ron` edit |
 
 **Does not block:** Stage 5 FULL_APP, minimap compositor, VM-09, industrial activation.
@@ -40,9 +40,9 @@ UX-E02-BQ128-001 (designer path)                 ☑ SIGNED 2026-05-25
 WS-A03 / wave_s blueprint RON + hydrate          ☑ roundtrip_ok
         │
         ▼
-BQ-128-APPLY-001 (preset picker → ghost)         ☐ OPEN
+BQ-128-APPLY-001 (preset picker → ghost)         ☑ DONE
         │
-        ├─► BQ-128-APPLY-002 (merge/replace)       ☐ optional
+        ├─► BQ-128-APPLY-002 (merge/replace)       ☑ DONE
         └─► BQ-128-EXT-001 (external editor)       ☐ deferred
 ```
 
@@ -87,7 +87,7 @@ cargo test -p proc_A_dine01 --lib wave_s construction::
 
 ---
 
-## BQ-128-APPLY-001 — preset picker → ghost (**OPEN**)
+## BQ-128-APPLY-001 — preset picker → ghost (**DONE**)
 
 **Unblocked by:** **UX-E02** sign-off (this plan).
 
@@ -130,7 +130,7 @@ Witness: manual — Apply sets ghost; Enter still required to commit
 
 ---
 
-## BQ-128-APPLY-002 — merge vs replace (**OPEN**, optional)
+## BQ-128-APPLY-002 — merge vs replace (**DONE**)
 
 | UX | Append imported presets to queue vs replace with confirm |
 |:---|:---|
@@ -167,7 +167,7 @@ Witness: manual — Apply sets ghost; Enter still required to commit
 |:---|:---|:---|
 | Planner | 2026-05-25 | **SIGNED** — PLAN-UX-BQ128-001 |
 | Designer UX-E02 | 2026-05-25 | **SIGNED** — UX-E02-BQ128-001 |
-| Coder APPLY-001 | — | **OPEN** |
+| Coder APPLY-001 | 2026-05-27 | **DONE** |
 
 ---
 

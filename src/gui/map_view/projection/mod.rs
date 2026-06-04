@@ -13,7 +13,7 @@ use crate::gui::editor::world_preview::{
 };
 use crate::render::MinimapRenderTargetRegistry;
 use crate::gui::view_representation_snapshot::ViewRepresentationSnapshot;
-use crate::gui::MinimapShellState;
+use crate::gui::{MapPresentationDiagnostics, MinimapShellState};
 use crate::render::{
     ResolvedViewports, SharedOverlayFieldBuffers, TileWorldFallbackRasterDirty,
     TileWorldFallbackState,
@@ -64,6 +64,7 @@ pub fn sync_resolved_map_view_frames(
     overlay: Option<Res<SharedOverlayFieldBuffers>>,
     snapshot: Res<ViewRepresentationSnapshot>,
     mut frames: ResMut<ResolvedMapViewFrames>,
+    mut map_pres: Option<ResMut<MapPresentationDiagnostics>>,
     update_attrib: Option<ResMut<crate::render::FrameUpdateAttrib>>,
 ) {
     let t0 = std::time::Instant::now();
@@ -113,9 +114,9 @@ pub fn sync_resolved_map_view_frames(
         texture_source: minimap_source,
         viewport_extent: minimap_extent,
         overlay_revision,
-        world_bounds: Rect::from_center_size(
-            minimap.world_center,
-            Vec2::new(minimap.viewport_size.x.max(1.0), minimap.viewport_size.y.max(1.0)),
+        world_bounds: Rect::from_corners(
+            Vec2::ZERO,
+            Vec2::new(fallback.last_w.max(1) as f32, fallback.last_h.max(1) as f32),
         ),
     };
 
@@ -142,6 +143,11 @@ pub fn sync_resolved_map_view_frames(
         overlay_revision,
         world_bounds,
     };
+
+    if let Some(map_pres) = map_pres.as_mut() {
+        map_pres.world_preview.viewport_extent = frames.world_preview.viewport_extent;
+        map_pres.minimap.viewport_extent = frames.minimap.viewport_extent;
+    }
 
     crate::render::record_viewport_sync_ms(
         update_attrib,

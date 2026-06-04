@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "job_id": "corner_L_industrial_west_production_run001",
+  "batch_id": "kit_industrial_west_production_001",
+  "development_tier": "production",
+  "spec_ref": "assets/staging/specs/corner_L_industrial_west_production.json",
+  "operation": "module_prop",
+  "params": {
+    "width_m": 2,
+    "height_m": 3,
+    "depth_m": 2,
+    "material_profile": "steel_corner_01",
+    "seed": 42,
+    "profile": "box",
+    "prop_kind": "l_corner"
+  },
+  "output": {
+    "glb": "assets/staging/corner_L_industrial_west_production_run001/model.glb",
+    "thumbnail": "assets/staging/corner_L_industrial_west_production_run001/preview.png"
+  }
+}

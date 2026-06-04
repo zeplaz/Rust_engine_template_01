@@ -41,7 +41,6 @@ pub fn visual_diag_enabled(cfg: Option<&DebugRenderTraceConfig>) -> bool {
 
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub(crate) struct VisualDiagSignature {
-    frame: u64,
     win: (u32, u32),
     sim_valid: bool,
     sim_frozen: bool,
@@ -429,20 +428,24 @@ fn log_visual_diag_snapshot(frame: u64, periodic: bool, ctx: &VisualDiagCtx, cam
     );
 }
 
-fn log_visual_diag_anomalies(prev: VisualDiagSignature, sig: VisualDiagSignature) {
+fn log_visual_diag_anomalies(frame: u64, prev: VisualDiagSignature, sig: VisualDiagSignature) {
     if prev.render_hole != sig.render_hole {
-        warn!(
-            target: "visual_diag::anomaly",
-            frame = sig.frame,
-            was = prev.render_hole,
-            now = sig.render_hole,
-            "RENDER_HOLE_FLIP"
-        );
+        // Enter-hole on Simulation bootstrap is expected once (PERF-VIS-003).
+        let bootstrap_enter_hole = !prev.render_hole && sig.render_hole;
+        if !bootstrap_enter_hole {
+            warn!(
+                target: "visual_diag::anomaly",
+                frame,
+                was = prev.render_hole,
+                now = sig.render_hole,
+                "RENDER_HOLE_FLIP"
+            );
+        }
     }
     if prev.scissor != sig.scissor {
         warn!(
             target: "visual_diag::anomaly",
-            frame = sig.frame,
+            frame,
             was = ?prev.scissor,
             now = ?sig.scissor,
             "CAMERA_SCISSOR_CHANGED"
@@ -451,7 +454,7 @@ fn log_visual_diag_anomalies(prev: VisualDiagSignature, sig: VisualDiagSignature
     if prev.sim_valid != sig.sim_valid {
         warn!(
             target: "visual_diag::anomaly",
-            frame = sig.frame,
+            frame,
             was_valid = prev.sim_valid,
             now_valid = sig.sim_valid,
             "SIM_VIEWPORT_VALIDITY_CHANGED"
@@ -460,7 +463,7 @@ fn log_visual_diag_anomalies(prev: VisualDiagSignature, sig: VisualDiagSignature
     if prev.resolved_sim_valid != sig.resolved_sim_valid {
         warn!(
             target: "visual_diag::anomaly",
-            frame = sig.frame,
+            frame,
             was = prev.resolved_sim_valid,
             now = sig.resolved_sim_valid,
             "RESOLVED_SIM_MAP_VALIDITY_CHANGED"
@@ -469,7 +472,7 @@ fn log_visual_diag_anomalies(prev: VisualDiagSignature, sig: VisualDiagSignature
     if prev.commit_tag != sig.commit_tag {
         warn!(
             target: "visual_diag::anomaly",
-            frame = sig.frame,
+            frame,
             was = prev.commit_tag,
             now = sig.commit_tag,
             "SIM_COMMIT_BRANCH_CHANGED"
@@ -481,7 +484,7 @@ fn log_visual_diag_anomalies(prev: VisualDiagSignature, sig: VisualDiagSignature
         if dw > 16 || dh > 8 {
             warn!(
                 target: "visual_diag::anomaly",
-                frame = sig.frame,
+                frame,
                 was = ?prev.view_px,
                 now = ?sig.view_px,
                 delta_w = dw,
@@ -516,7 +519,6 @@ pub(crate) fn trace_visual_diagnostics(
     let frame_n = u64::from(frame.0);
     let cam_vp = ctx.cam.single().ok().and_then(|c| c.viewport.clone());
     let sig = VisualDiagSignature {
-        frame: frame_n,
         win: ctx
             .windows
             .single()
@@ -559,7 +561,7 @@ pub(crate) fn trace_visual_diagnostics(
 
     if let Some(prev) = *last_sig {
         if edge {
-            log_visual_diag_anomalies(prev, sig);
+            log_visual_diag_anomalies(frame_n, prev, sig);
         }
     }
 

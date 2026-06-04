@@ -1,0 +1,11 @@
+batch_id: kit_lod0_002
+gate: G0
+development_tier: lod0
+rules:
+  batch_id: kit_lod0_002
+  canonical_module_ids_only: true
+  no_greybox_refs: true
+  seed: 42
+notes:
+  - "batch_id kit_lod0_002 — not kit_greybox_* (frozen smoke). development_tier lod0 on every spec/job."
+  - "Profiles: wall flat, roof flat, door shop, window frame_mullion double bay."

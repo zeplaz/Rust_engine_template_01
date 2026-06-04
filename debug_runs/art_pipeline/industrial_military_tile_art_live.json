@@ -1,0 +1,52 @@
+{
+  "program_id": "PLAN-PROC-TILE-PROD-001",
+  "lane": "industrial-military-keyframe",
+  "green": false,
+  "freeze_id": "TILE-FIX-001",
+  "freeze_reason": "greybox production v1 de-indexed; awaiting atlas schema v2",
+  "updated": "2026-06-03",
+  "_agent_meta": {
+    "agent": "designer-mcp",
+    "bake_spine": "src/dev/design_tile_bake_spine_convergence_v1.md",
+    "export_rollup": "debug_runs/art_pipeline/pilot_keyframe_export_rollup_live.json",
+    "pg3_witness": "debug_runs/pg3_w3_tactical_review_live.json"
+  },
+  "bake_source": "keyframe_pack",
+  "lod0_ortho_ship": false,
+  "lanes": {
+    "factory_warehouse": {
+      "archetype": "warehouse",
+      "role": "factory_industrial",
+      "style_pack": "style_industrial_west",
+      "batch_id": "tile_warehouse_industrial_west_production_v1",
+      "atlas": "assets/textures/buildings_iso/production/warehouse_industrial_west_production_v1_atlas.png",
+      "g4": "pass",
+      "signoff": "debug_runs/art_pipeline/warehouse_industrial_west_production_signoff.yaml"
+    },
+    "bunker": {
+      "archetype": "bunker",
+      "style_pack": "style_military",
+      "batch_id": "tile_bunker_military_production_v1",
+      "atlas": "assets/textures/buildings_iso/production/bunker_military_production_v1_atlas.png",
+      "g4": "pass",
+      "signoff": "debug_runs/art_pipeline/bunker_military_production_signoff.yaml"
+    },
+    "missile_silo": {
+      "archetype": "missile_silo",
+      "style_pack": "style_military",
+      "batch_id": "tile_missile_silo_military_production_v1",
+      "atlas": "assets/textures/buildings_iso/production/missile_silo_military_production_v1_atlas.png",
+      "g4": "pass_qualified_phase1",
+      "phase1_mesh": "bunker_6x3_derivative",
+      "signoff": "debug_runs/art_pipeline/missile_silo_military_production_signoff.yaml"
+    },
+    "rowhouse": {
+      "batch_id": "tile_rowhouse_victorian_production_v1",
+      "g4": "pass",
+      "pg3_pack_a": true
+    }
+  },
+  "pg3_w3_live_tactical_review": "pass",
+  "tile_atlas_index_count": 6,
+  "next": "prop_missile_pad mesh; shopfront colonial production G4; FULL_APP live viewport spot-check optional"
+}

@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "updated": "2026-06-03",
+  "lanes": {
+    "A_terrain_surface": {
+      "description": "Ground/floor/road iso cells — tileable surface art",
+      "paths": [
+        "assets/textures/terrain/",
+        "assets/textures/tiles/factory_floor_*",
+        "assets/tiled/",
+        "assets/config/terrain/"
+      ]
+    },
+    "B_iso_stamp_vehicles": {
+      "description": "8-view rotation atlases + cargo/light states",
+      "paths": ["assets/textures/vehicles/"],
+      "index": "assets/configs/vehicles/vehicle_configs.json"
+    },
+    "B_iso_stamp_power_ui": {
+      "description": "Build-rail / utility iso icon sheets",
+      "paths": ["assets/textures/power/"]
+    },
+    "B_iso_stamp_buildings": {
+      "description": "Whole-building iso — state variants (keyframe_pack)",
+      "paths": [
+        "assets/textures/buildings_iso/production/",
+        "assets/archive/lod0_tile_pilots_2026-06/"
+      ],
+      "active_index": "assets/configs/buildings/_tile_atlas_index.ron",
+      "archive_index": "assets/configs/buildings/_tile_atlas_index_archive.ron"
+    },
+    "C_modules_3d": {
+      "description": "Procedural kit GLBs — assembled in 3D, not map-per-cell",
+      "paths": ["assets/models/modules/"],
+      "index": "assets/configs/buildings/_module_index.ron"
+    }
+  },
+  "quarantine": {
+    "lod0_building_pilots": {
+      "manifest": "assets/archive/lod0_tile_pilots_2026-06/MANIFEST.yaml",
+      "runtime_stamp": false
+    }
+  }
+}

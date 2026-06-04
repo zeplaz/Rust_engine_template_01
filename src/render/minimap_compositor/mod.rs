@@ -1,9 +1,9 @@
 //! UX-E01 M1 — dedicated minimap GPU compositor RT (separate from world-preview authority).
 
+mod witness_collectors;
 mod composite;
 mod diagnostics;
 mod gpu_compute;
-mod live_proof;
 mod pass;
 mod render_target;
 
@@ -11,24 +11,31 @@ pub use diagnostics::{
     diagnostics_json_snapshot, minimap_gpu_debug_logging_enabled, MinimapGpuCompositorDiagnostics,
 };
 
-pub use live_proof::{
+pub use witness_collectors::{
     build_minimap_compositor_proof_payload, build_minimap_compositor_proof_payload_with_tray,
-    commit_minimap_compositor_live_proof, fixture_ui_oh_m2_001_compositor,
-    refresh_ui_oh_m2_001_live_witness, refresh_ui_w3_m2_001_live_witness,
-    refresh_ui_w3_m3_001_live_witness, refresh_ui_w3_m3_001_stage7_operational_witness,
-    ui_oh_m2_001_green, ui_w3_m3_001_green, ui_w3_m3_001_operational_green,
-    ui_p3_m2_minimap_acceptance_green, ui_p3_m3_minimap_acceptance_green,
-    ui_p3_m4_minimap_acceptance_green, ui_w3_m2_001_green,
-    write_minimap_compositor_live_proof_system, MinimapCompositorLiveProofState,
+    fixture_ui_oh_m2_001_compositor, fixture_ui_w3_m3_001_compositor,
+    ui_oh_m2_001_green, ui_oh_m3_001_green, ui_w3_m3_001_green, ui_w3_m3_001_operational_green,
+    ui_w3_m3_001_stage7_operational_green, ui_p3_m2_minimap_acceptance_green,
+    ui_p3_m2_tray_opt_green, ui_p3_m3_minimap_acceptance_green, ui_p3_m3_replay_001_green,
+    ui_p3_m3_units_001_green, ui_p3_m4_minimap_acceptance_green, ui_p3_001_minimap_acceptance_green,
+    ui_w3_m2_001_green,
+};
+pub use crate::dev::runtime_witness::minimap::{
+    commit_minimap_compositor_live_proof,
+    refresh_perf_vis_p1b_gpu_default_live_witness, refresh_ui_oh_m2_001_live_witness,
+    refresh_ui_w3_m2_001_live_witness, refresh_ui_w3_m3_001_live_witness,
+    refresh_ui_w3_m3_001_stage7_operational_witness, write_minimap_compositor_live_proof_system,
+    MinimapCompositorLiveProofState,
 };
 pub use pass::{
     apply_minimap_gpu_resize_request, commit_minimap_render_target_bind_system,
-    minimap_gpu_compositor_env_enabled, queue_minimap_render_target_resize,
+    minimap_gpu_compositor_default_on_unset, minimap_gpu_compositor_env_enabled,
+    perf_vis_p1b_gpu_default_001_green, queue_minimap_render_target_resize,
     run_minimap_compositor_pass, sync_minimap_presentation_source, MinimapCompositePath,
     MinimapCompositorState,
 };
 pub use render_target::{
-    committed_minimap_render_target_handle, try_commit_minimap_render_target,
+    committed_minimap_render_target_handle, minimap_rgba_image, try_commit_minimap_render_target,
     MinimapGpuResizeQueue, MinimapRenderTargetBindBarrier, MinimapRenderTargetRegistry,
 };
 
@@ -128,7 +135,7 @@ mod tests {
     #[test]
     fn minimap_compositor_proof_payload_fields() {
         use super::diagnostics::MinimapGpuCompositorDiagnostics;
-        use super::live_proof::build_minimap_compositor_proof_payload;
+        use super::witness_collectors::build_minimap_compositor_proof_payload;
         use super::pass::MinimapCompositorState;
 
         let compositor = MinimapCompositorState {
@@ -157,7 +164,7 @@ mod tests {
 
     #[test]
     fn ui_w3_m2_001_live_witness_refresh() {
-        use super::live_proof::{refresh_ui_w3_m2_001_live_witness, ui_w3_m2_001_green};
+        use super::{refresh_ui_w3_m2_001_live_witness, ui_w3_m2_001_green};
         use crate::gui::hud::HudOverlayTrayState;
 
         assert!(refresh_ui_w3_m2_001_live_witness());
@@ -170,13 +177,13 @@ mod tests {
         assert_eq!(v["logistics_heat_enabled"], serde_json::json!(true));
         assert_eq!(v["construction_heat_enabled"], serde_json::json!(true));
         let tray = HudOverlayTrayState::default();
-        let compositor = super::live_proof::fixture_ui_oh_m2_001_compositor(&tray);
+        let compositor = super::witness_collectors::fixture_ui_oh_m2_001_compositor(&tray);
         assert!(ui_w3_m2_001_green(&compositor));
     }
 
     #[test]
     fn ui_oh_m2_001_live_witness_refresh() {
-        use super::live_proof::{refresh_ui_oh_m2_001_live_witness, ui_oh_m2_001_green};
+        use super::{refresh_ui_oh_m2_001_live_witness, ui_oh_m2_001_green};
         use crate::gui::hud::HudOverlayTrayState;
 
         assert!(refresh_ui_oh_m2_001_live_witness());
@@ -192,14 +199,14 @@ mod tests {
         assert_eq!(v["ui_p3_m2_green"], serde_json::json!(true));
         assert_eq!(v["composite_path"], serde_json::json!("GpuCompute"));
         let tray = HudOverlayTrayState::default();
-        let compositor = super::live_proof::fixture_ui_oh_m2_001_compositor(&tray);
+        let compositor = super::witness_collectors::fixture_ui_oh_m2_001_compositor(&tray);
         assert!(ui_oh_m2_001_green(&compositor));
     }
 
     #[test]
     fn minimap_compositor_live_witness_refresh() {
         use super::diagnostics::MinimapGpuCompositorDiagnostics;
-        use super::live_proof::commit_minimap_compositor_live_proof;
+        use crate::dev::runtime_witness::commit_minimap_compositor_live_proof;
         use super::pass::MinimapCompositorState;
         use crate::gui::hud::HudOverlayTrayState;
 
@@ -280,7 +287,7 @@ mod tests {
 
     #[test]
     fn ui_p3_m2_tray_opt_green_when_tray_matches_compositor() {
-        use super::live_proof::ui_p3_m2_tray_opt_green;
+        use super::witness_collectors::ui_p3_m2_tray_opt_green;
         use super::pass::MinimapCompositorState;
         use crate::gui::hud::HudOverlayTrayState;
 
@@ -327,7 +334,7 @@ mod tests {
 
     #[test]
     fn ui_p3_m2_acceptance_green_when_m2_channels_populated() {
-        use super::live_proof::ui_p3_m2_minimap_acceptance_green;
+        use super::witness_collectors::ui_p3_m2_minimap_acceptance_green;
         use super::pass::{MinimapCompositePath, MinimapCompositorState};
 
         let compositor = MinimapCompositorState {
@@ -399,7 +406,7 @@ mod tests {
 
     #[test]
     fn ui_p3_m4_001_fow_ew_green_when_enabled_and_rows() {
-        use super::live_proof::ui_p3_m4_minimap_acceptance_green;
+        use super::witness_collectors::ui_p3_m4_minimap_acceptance_green;
         use super::pass::MinimapCompositorState;
 
         let off = MinimapCompositorState {
@@ -424,7 +431,7 @@ mod tests {
     /// **UI-P3-M3-001** — ecology (and construction) heat enabled with snapshot rows.
     #[test]
     fn ui_p3_m3_001_ecology_heat_green_when_enabled_and_rows() {
-        use super::live_proof::ui_p3_m3_minimap_acceptance_green;
+        use super::witness_collectors::ui_p3_m3_minimap_acceptance_green;
         use super::pass::MinimapCompositorState;
 
         let ecology_only = MinimapCompositorState {
@@ -447,7 +454,7 @@ mod tests {
 
     #[test]
     fn ui_p3_m3_acceptance_green_when_construction_or_ecology_rows() {
-        use super::live_proof::ui_p3_m3_minimap_acceptance_green;
+        use super::witness_collectors::ui_p3_m3_minimap_acceptance_green;
         use super::pass::MinimapCompositorState;
 
         let compositor = MinimapCompositorState {
@@ -475,7 +482,7 @@ mod tests {
 
     #[test]
     fn ui_p3_001_acceptance_green_when_gpu_composite_stable() {
-        use super::live_proof::ui_p3_001_minimap_acceptance_green;
+        use super::witness_collectors::ui_p3_001_minimap_acceptance_green;
         use super::pass::{MinimapCompositePath, MinimapCompositorState};
 
         let compositor = MinimapCompositorState {
@@ -523,6 +530,85 @@ mod tests {
         match prior {
             Some(v) => std::env::set_var("MINIMAP_GPU_COMPOSITOR", v),
             None => std::env::remove_var("MINIMAP_GPU_COMPOSITOR"),
+        }
+    }
+
+    /// **PERF-VIS-P1B-GPU-DEFAULT-001** — GPU default + disk witness without `RASTER_*` / `MINIMAP_GPU_COMPOSITOR=1`.
+    #[test]
+    fn perf_vis_p1b_gpu_default_001_without_raster_env() {
+        use bevy::state::app::StatesPlugin;
+        use crate::engine::states::BaseState;
+        use crate::gui::MinimapPresentationSource;
+
+        let _guard = MINIMAP_GPU_COMPOSITOR_ENV_LOCK
+            .lock()
+            .expect("MINIMAP_GPU_COMPOSITOR env tests");
+        let prior_gpu = std::env::var("MINIMAP_GPU_COMPOSITOR").ok();
+        let prior_raster_minimap = std::env::var("RASTER_MINIMAP").ok();
+        let prior_raster_chunks = std::env::var("RASTER_CHUNKS_PER_FRAME").ok();
+        std::env::remove_var("MINIMAP_GPU_COMPOSITOR");
+        std::env::remove_var("RASTER_MINIMAP");
+        std::env::remove_var("RASTER_CHUNKS_PER_FRAME");
+        assert!(super::pass::minimap_gpu_compositor_env_enabled());
+        assert!(super::pass::minimap_gpu_compositor_default_on_unset());
+
+        let mut app = App::new();
+        app.add_plugins((MinimalPlugins, StatesPlugin));
+        app.init_state::<BaseState>();
+        app.insert_state(BaseState::Simulation);
+        app.init_resource::<MinimapShellState>();
+        app.init_resource::<MinimapRenderTargetRegistry>();
+        app.init_resource::<super::MinimapCompositorState>();
+        app.add_systems(Update, super::pass::sync_minimap_presentation_source);
+        {
+            let mut registry = app.world_mut().resource_mut::<MinimapRenderTargetRegistry>();
+            let mut images = Assets::<Image>::default();
+            registry.committed_size = UVec2::new(64, 64);
+            registry.revision = 1;
+            registry.committed_image = images.add(super::render_target::minimap_rgba_image(64, 64));
+        }
+        {
+            let mut compositor = app.world_mut().resource_mut::<super::MinimapCompositorState>();
+            compositor.stamp = 3;
+            compositor.composite_path = super::MinimapCompositePath::GpuCompute;
+        }
+        app.update();
+        let shell = app.world().resource::<MinimapShellState>();
+        assert_eq!(
+            shell.presentation_source,
+            MinimapPresentationSource::SharedRenderTargetImage
+        );
+
+        assert!(super::refresh_perf_vis_p1b_gpu_default_live_witness());
+        let text = std::fs::read_to_string("debug_runs/minimap_compositor_live.json")
+            .expect("witness json");
+        let v: serde_json::Value = serde_json::from_str(&text).expect("parse");
+        assert_eq!(
+            v["presentation_source"],
+            serde_json::json!("SharedRenderTargetImage")
+        );
+        assert!(
+            v["perf_vis_p1b_gpu_default_001"]["green"]
+                .as_bool()
+                .unwrap_or(false)
+        );
+        assert!(
+            !v["perf_vis_p1b_gpu_default_001"]["raster_env_required"]
+                .as_bool()
+                .unwrap_or(true)
+        );
+
+        match prior_gpu {
+            Some(v) => std::env::set_var("MINIMAP_GPU_COMPOSITOR", v),
+            None => std::env::remove_var("MINIMAP_GPU_COMPOSITOR"),
+        }
+        match prior_raster_minimap {
+            Some(v) => std::env::set_var("RASTER_MINIMAP", v),
+            None => std::env::remove_var("RASTER_MINIMAP"),
+        }
+        match prior_raster_chunks {
+            Some(v) => std::env::set_var("RASTER_CHUNKS_PER_FRAME", v),
+            None => std::env::remove_var("RASTER_CHUNKS_PER_FRAME"),
         }
     }
 }

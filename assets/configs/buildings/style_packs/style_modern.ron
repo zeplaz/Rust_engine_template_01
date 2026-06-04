@@ -1,0 +1,19 @@
+(
+    schema_version: 1,
+    style_pack_id: "style_modern",
+    label: "Modern",
+    usage_bias: ["commercial", "office"],
+    style_tags: ["glass", "curtain", "flat_roof"],
+    slots: (
+        wall_1u: "wall_glass_curtain_1u",
+        wall_2u: "wall_industrial_panel_2u",
+        door_default: "door_office",
+        window_1u: "win_office_1u",
+        window_2u: "win_strip_2u",
+        window_industrial: "win_industrial_3u",
+        roof_default: "roof_flat",
+        roof_flat: "roof_flat",
+        prop_clutter: "prop_ac",
+    ),
+    fallback_policy: "hide_slot",
+)

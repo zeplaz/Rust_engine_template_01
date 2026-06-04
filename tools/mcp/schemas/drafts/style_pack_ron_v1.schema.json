@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://rust-engine.local/schemas/style_pack_ron_v1.json",
+  "title": "StylePackRonV1",
+  "description": "JSON interchange mirror of style pack RON for validate_report; engine loads RON from assets/configs/buildings/style_packs/",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "style_pack_id",
+    "label",
+    "usage_bias",
+    "style_tags",
+    "slots",
+    "fallback_policy"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "style_pack_id": {
+      "type": "string",
+      "pattern": "^style_[a-z][a-z0-9_]*$"
+    },
+    "label": { "type": "string", "minLength": 1 },
+    "usage_bias": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 1
+    },
+    "style_tags": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 1
+    },
+    "slots": {
+      "type": "object",
+      "minProperties": 5,
+      "properties": {
+        "wall_1u": { "type": "string" },
+        "wall_2u": { "type": "string" },
+        "door_default": { "type": "string" },
+        "door_wide": { "type": "string" },
+        "window_1u": { "type": "string" },
+        "window_2u": { "type": "string" },
+        "window_industrial": { "type": "string" },
+        "roof_default": { "type": "string" },
+        "roof_flat": { "type": "string" },
+        "roof_industrial": { "type": "string" },
+        "corner_outer": { "type": "string" },
+        "corner_inner": { "type": "string" },
+        "prop_clutter": { "type": "string" }
+      },
+      "additionalProperties": {
+        "oneOf": [
+          { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+          { "type": "null" }
+        ]
+      }
+    },
+    "fallback_policy": {
+      "type": "string",
+      "enum": ["hide_slot", "primitive_footprint"]
+    }
+  },
+  "additionalProperties": false
+}

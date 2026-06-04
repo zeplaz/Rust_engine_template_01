@@ -1,0 +1,27 @@
+{
+  "assembly_id": "victorian_4x3_s42_a7cb",
+  "variant_key": "damaged_night_on",
+  "intent": "add_warm_window_lights",
+  "current_layers": {
+    "lighting": {
+      "power": "on"
+    }
+  },
+  "generated_at": "2026-06-03T00:27:46.440355+00:00",
+  "proposal": {
+    "schema_version": 1,
+    "assembly_id": "victorian_4x3_s42_a7cb",
+    "variant_key": "damaged_night_on",
+    "intent": "add_warm_window_lights",
+    "constraints": [],
+    "reference_tags": [],
+    "patch": [
+      {
+        "op": "add",
+        "path": "/variants/0/tags/-",
+        "value": "agent_request_add_warm_window_lights"
+      }
+    ],
+    "note": "tagged for agent review \u2014 refine intent string for layer patch"
+  }
+}

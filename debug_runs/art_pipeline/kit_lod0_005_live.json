@@ -1,0 +1,85 @@
+{
+  "batch_id": "kit_lod0_005",
+  "_agent_meta": {
+    "agent": "coder-mcp",
+    "updated_at": "2026-06-02T23:37:36.865674+00:00",
+    "rules_applied": [
+      "no_ai_generated_images",
+      "deterministic_output",
+      "batch_processing",
+      "grid_alignment",
+      "canonical_module_ids_only"
+    ]
+  },
+  "gates": {
+    "G0": "pass",
+    "G1": "pass",
+    "G2": "pass",
+    "G3": "pass",
+    "G4": "pass",
+    "G5": "pass"
+  },
+  "modules": [
+    {
+      "asset_id": "wall_glass_curtain_1u",
+      "job_id": "wall_glass_curtain_1u_lod0_run001",
+      "status": "promoted",
+      "registered": true,
+      "valid": true,
+      "vertex_count": 24,
+      "promoted_path": "assets/models/modules/wall_glass_curtain_1u_lod0_run001/model.glb",
+      "module_id": "wall_glass_curtain_1u",
+      "batch_id": "kit_lod0_005"
+    },
+    {
+      "asset_id": "wall_industrial_panel_2u",
+      "job_id": "wall_industrial_panel_2u_lod0_run001",
+      "status": "promoted",
+      "registered": true,
+      "valid": true,
+      "vertex_count": 24,
+      "promoted_path": "assets/models/modules/wall_industrial_panel_2u_lod0_run001/model.glb",
+      "module_id": "wall_industrial_panel_2u",
+      "batch_id": "kit_lod0_005"
+    },
+    {
+      "asset_id": "roof_shed",
+      "job_id": "roof_shed_lod0_run001",
+      "status": "promoted",
+      "registered": true,
+      "valid": true,
+      "vertex_count": 48,
+      "promoted_path": "assets/models/modules/roof_shed_lod0_run001/model.glb",
+      "module_id": "roof_shed",
+      "batch_id": "kit_lod0_005"
+    },
+    {
+      "asset_id": "door_office",
+      "job_id": "door_office_lod0_run001",
+      "status": "promoted",
+      "registered": true,
+      "valid": true,
+      "vertex_count": 44,
+      "promoted_path": "assets/models/modules/door_office_lod0_run001/model.glb",
+      "module_id": "door_office",
+      "batch_id": "kit_lod0_005"
+    },
+    {
+      "asset_id": "win_strip_2u",
+      "job_id": "win_strip_2u_lod0_run001",
+      "status": "promoted",
+      "registered": true,
+      "valid": true,
+      "vertex_count": 96,
+      "promoted_path": "assets/models/modules/win_strip_2u_lod0_run001/model.glb",
+      "module_id": "win_strip_2u",
+      "batch_id": "kit_lod0_005"
+    }
+  ],
+  "promoted_count": 5,
+  "registered_count": 5,
+  "failed": [],
+  "module_index": "assets/configs/buildings/_module_index.ron",
+  "index_entry_count": 56,
+  "batch_registered_count": 5
+}

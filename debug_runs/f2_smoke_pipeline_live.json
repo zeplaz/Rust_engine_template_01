@@ -1,0 +1,104 @@
+{
+  "_agent_meta": {
+    "agent_commands": [
+      "cargo test -p proc_A_dine01 --lib"
+    ],
+    "docs": {
+      "compile_warnings": "src/dev/COMPILE_WARNINGS_TODOS.md",
+      "stage5_directive": "prompts/guides/stage5_convergence_directive_v1.md",
+      "viewport_recovery": "src/dev/recovery_viewport.md"
+    },
+    "logging_env": {
+      "ORCHESTRATOR_EXPORT_HEALTH": false,
+      "PERF": false,
+      "RUST_LOG": null,
+      "SIM_VIEW_SYNC_DEBUG": false,
+      "STAGE5_READINESS_VERBOSE": false,
+      "STAGE5_VERBOSE": false,
+      "VIEWPORT_AUTHORITY_DEBUG": false
+    },
+    "orchestrator": {
+      "build_report": "tools/orchestrator/reports/build_report.md",
+      "ci_entry": "tools/orchestrator/ci/run.ps1",
+      "continuation_queue": "tools/orchestrator/queues/continuation_queue.json",
+      "warning_registry": "tools/orchestrator/reports/warning_registry.md"
+    },
+    "profile": "F2_SMOKE_PIPELINE",
+    "related_proofs": [
+      "debug_runs/stage5_full_app_live.json",
+      "debug_runs/infrastructure_view_isolation_live.json",
+      "debug_runs/construction_stage_live.json",
+      "debug_runs/industrial_activation_live.json",
+      "debug_runs/fire_ecology_live.json",
+      "debug_runs/logistics_throughput_live.json",
+      "debug_runs/replay_editor_parity_live.json",
+      "debug_runs/orchestrator_thread_health.json",
+      "debug_runs/viewport_drift.json",
+      "debug_runs/viewport_authority_migration_witness.json",
+      "debug_runs/main_thread_orchestrator_live.json",
+      "debug_runs/stage6_virtualization_live.json",
+      "debug_runs/wave_s_hydrate_live.json",
+      "debug_runs/wave_p_live.json",
+      "debug_runs/wave_c_live.json",
+      "debug_runs/ui_shell_migration_live.json",
+      "debug_runs/minimap_compositor_live.json",
+      "debug_runs/stage7_behavioral_live.json",
+      "debug_runs/stage7_play_live.json",
+      "debug_runs/wss_substrate_live.json",
+      "debug_runs/f2_smoke_pipeline_live.json",
+      "debug_runs/play_scenario_live.json"
+    ],
+    "relative_path": "debug_runs/f2_smoke_pipeline_live.json",
+    "schema": "debug_run_envelope_v1",
+    "source_system": "refresh_f2_smoke_pipeline_live_witness",
+    "written_at_epoch_secs": 1780455042
+  },
+  "checks": {
+    "f2_fixture_buffer_nonempty": true,
+    "mini_chunk_heat_rows_gt_0": true,
+    "mini_graph_native_sparks": true,
+    "mini_particle_rows_gt_0": true,
+    "mini_projection_rows_gt_0": true,
+    "mini_projection_view_not_overlay_bootstrap": true,
+    "mini_smoke_density_sum_gt_0": true,
+    "mini_smoke_extract_wired": true,
+    "mini_stamp_aligned": true,
+    "stamp_mismatch_guard": true
+  },
+  "f2_fixture": {
+    "fire_chunk_heat_rows": 1,
+    "fire_instance_buffer_rows": 1,
+    "snapshot_stamp": 9
+  },
+  "gate": "F2-SMOKE-PIPELINE-DEBUG",
+  "green": true,
+  "mini_pipeline": {
+    "fire_chunk_heat_rows": 1,
+    "fire_instance_buffer_rows": 1,
+    "fire_projection_graph_native": true,
+    "fire_projection_stamp_aligned": true,
+    "fire_spark_projection_view": "WorldMain",
+    "particle_rows": 12,
+    "smoke_density_sum": 0.41999998688697815,
+    "smoke_extract_wired": true
+  },
+  "pass": true,
+  "stage5_crosscheck": {
+    "fire_instance_buffer_rows": 1,
+    "fire_spark_overlay_bootstrap": false,
+    "held_empty_snapshot_frames": 83,
+    "overlay_hold_frames_high_but_buffer_ok": true,
+    "particle_rows": 0,
+    "present": true,
+    "stall_risk_sparks_without_graph_buffer": false,
+    "visual_probe_caps": {
+      "tactical_vfx_max_frames": 900,
+      "ux06_max_frames": 2400
+    }
+  },
+  "stall_identifiers": {
+    "overlay_bootstrap_only_when_graph_buffer_empty": true,
+    "residency_cull_skipped_on_visual_proof": true,
+    "visual_commit_requires_graph_buffer_when_tactical_proof": true
+  }
+}

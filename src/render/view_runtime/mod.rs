@@ -8,7 +8,7 @@ mod bridge;
 mod commit;
 mod ids;
 mod input_routing;
-mod live_proof;
+mod witness_state;
 mod layers;
 mod passes;
 mod per_view_policy;
@@ -43,9 +43,13 @@ pub use commit::{
     resolved_viewport_from_render_contract, resolved_viewport_from_surface,
     sync_resolved_viewports_from_authority,
 };
-pub use live_proof::{
-    pose_writers_json, refresh_infrastructure_view_isolation_live_witness,
-    ViewRuntimeLiveProofState, ViewRuntimeWitness, INFRASTRUCTURE_VIEW_ISOLATION_JSON,
+pub use witness_state::{
+    clear_minimap_map_camera_write_flag, pose_writers_json, refresh_view_runtime_witness,
+    triage_vm09_v2_green, ViewRuntimeWitness,
+};
+pub use crate::dev::runtime_witness::view_runtime::{
+    write_view_runtime_live_proof_system,
+    ViewRuntimeLiveProofState, INFRASTRUCTURE_VIEW_ISOLATION_JSON,
 };
 pub use plugin::ViewRuntimePlugin;
 pub use surface::ViewSurface;

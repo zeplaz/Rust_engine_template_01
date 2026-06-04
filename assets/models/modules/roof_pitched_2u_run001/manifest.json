@@ -1,0 +1,7 @@
+{
+  "job_id": "roof_pitched_2u_run001",
+  "glb": "assets/models/modules/roof_pitched_2u_run001/model.glb",
+  "valid": true,
+  "vertex_count": 24,
+  "batch_id": "kit_greybox_001"
+}

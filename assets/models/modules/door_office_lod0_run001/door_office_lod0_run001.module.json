@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "asset_id": "door_office",
+  "archetype": "module_door",
+  "style_pack": "style_modern",
+  "development_tier": "lod0",
+  "pbr_status": "deferred",
+  "batch_id": "kit_lod0_005",
+  "module": {
+    "grid_units": [
+      1,
+      1
+    ],
+    "snap": "floor_edge",
+    "pivot": "bottom_center"
+  },
+  "dimensions_m": {
+    "w": 1.2,
+    "h": 2.2,
+    "d": 0.12
+  },
+  "material_profile": "glass_panel_01",
+  "references": []
+}

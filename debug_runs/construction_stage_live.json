@@ -12,7 +12,7 @@
     "logging_env": {
       "ORCHESTRATOR_EXPORT_HEALTH": false,
       "PERF": false,
-      "RUST_LOG": "bevy_ecs::schedule=trace",
+      "RUST_LOG": null,
       "SIM_VIEW_SYNC_DEBUG": false,
       "STAGE5_READINESS_VERBOSE": false,
       "STAGE5_VERBOSE": false,
@@ -44,12 +44,16 @@
       "debug_runs/ui_shell_migration_live.json",
       "debug_runs/minimap_compositor_live.json",
       "debug_runs/stage7_behavioral_live.json",
-      "debug_runs/stage7_play_live.json"
+      "debug_runs/stage7_play_live.json",
+      "debug_runs/wss_substrate_live.json",
+      "debug_runs/f2_smoke_pipeline_live.json",
+      "debug_runs/play_scenario_live.json",
+      "debug_runs/transport_network_live.json"
     ],
     "relative_path": "debug_runs/construction_stage_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "construction_live_proof",
-    "written_at_epoch_secs": 1779825311
+    "written_at_epoch_secs": 1780456677
   },
   "build_p_star": [
     {
@@ -130,10 +134,132 @@
     }
   ],
   "con_e01_p9_green": true,
+  "construction_bq128_apply_ghost_001": {
+    "apply_imported_preset_wired": true,
+    "gate": "BQ-128-APPLY-001",
+    "ghost_only_no_queue_commit": true,
+    "green": true,
+    "panel_apply_ghost_wired": true,
+    "wave_s_roundtrip_ok": true
+  },
+  "construction_bq128_apply_merge_replace_002": {
+    "append_mode_wired": true,
+    "gate": "BQ-128-APPLY-002",
+    "green": true,
+    "import_wave_s_presets_wired": true,
+    "replace_confirm_wired": true
+  },
+  "construction_growth_inspector_001": {
+    "gate": "PROC-OG-UX-WIRE-001",
+    "green": true,
+    "growth_inspector_wired": true
+  },
   "construction_mv_001": {
     "gate": "CONSTRUCTION-MV-001",
     "green": true,
     "multiview_ghosts_wired": true
+  },
+  "construction_organic_growth_001": {
+    "employment_demand_wired": true,
+    "execute_via_pipeline": true,
+    "gate": "ECON-OG-1-C",
+    "green": true,
+    "growth_market_saturation_active": true,
+    "market_saturation_active": true,
+    "pressure_wired": true,
+    "proposals_queued": 1
+  },
+  "construction_parametric_placement_001": {
+    "build_approved_drains_staged": true,
+    "commit_carries_scale_and_weights": true,
+    "economy_scales_at_activation": true,
+    "enter_commits_single_ghost": true,
+    "gate": "CONSTRUCTION-PARAM-001",
+    "green": true,
+    "overlap_blocks_commit": true,
+    "partial_alpha": true,
+    "shift_queue_building_removed": true,
+    "staging_panel_visible": true,
+    "staging_toggle_wired": true,
+    "staging_validity_badges_wired": true,
+    "weighted_raster_tests_green": true
+  },
+  "construction_procedural_build_001": {
+    "archetypes_loaded": true,
+    "commit_carries_spec": true,
+    "gate": "PROC-PG-3-001",
+    "green": true,
+    "mesh_tier_used": "lod0",
+    "pg2_assembly_wired": true,
+    "pg2_spawn_instance_count_min": 1,
+    "pg2_spawn_operational_gate": true,
+    "pg2_spawn_wired": true,
+    "pg2_tail_wired": true,
+    "style_packs_loaded": true
+  },
+  "construction_r4_corridor_001": {
+    "book_row_count": 1,
+    "completed_count": 0,
+    "corridor_phase_visual_wired": true,
+    "gate": "R4-CORRIDOR-001",
+    "green": true,
+    "in_progress_count": 0,
+    "planned_count": 1,
+    "product_board_open": true,
+    "r8_roundtrip_ok": true,
+    "sim_tick_writer_wired": true
+  },
+  "construction_r4_mv_ghost_001": {
+    "corridor_overlay_tokens_wired": true,
+    "gate": "DESIGN-R4-MV-001",
+    "green": true,
+    "legend_wired": true,
+    "mv_001_still_green": true
+  },
+  "construction_r4_prep_001": {
+    "gate": "CONSTRUCTION-R4-PREP-001",
+    "green": true,
+    "prep_index_aligned": true,
+    "product_board_open": true
+  },
+  "construction_scaling_audit_001": {
+    "gate": "CONSTRUCTION-SCALING-AUDIT-001",
+    "green": true,
+    "overlap_badge_wired": true,
+    "partial_alpha_wired": true,
+    "s1_preset_matrix_match": true,
+    "s2_occupied_tiles_wired": true,
+    "s3_blocked_disables_commit": true,
+    "s4_terrain_mod_legend": true,
+    "s5_scale_persists_on_site": true,
+    "s6_tray_independent_of_building_scale": true
+  },
+  "construction_settlement_hierarchy_001": {
+    "block_assignment_wired": true,
+    "district_count": 1,
+    "g_town_one": true,
+    "gate": "SET-P5-003",
+    "green": true,
+    "save_roundtrip_ok": true,
+    "site_to_block_wired": true,
+    "town_book_loaded": true
+  },
+  "construction_site_stage_pipeline_001": {
+    "clearing_substeps_seen": [],
+    "gate": "CONSTRUCTION-SITE-STAGE-PIPELINE-001",
+    "green": true,
+    "instant_operational_on_commit": false,
+    "operational_readiness_on_commit": 0.0,
+    "phases_observed": [
+      "Planned"
+    ],
+    "site_stage_progress_attached": true
+  },
+  "construction_site_stage_tick_002": {
+    "advance_site_construction_tick_wired": true,
+    "gate": "CONSTRUCTION-SITE-STAGE-TICK-002",
+    "green": true,
+    "post_a001_commit_attached": true
   },
   "history": {
     "last_action": null,

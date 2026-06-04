@@ -1,0 +1,7 @@
+﻿{
+    "valid":  true,
+    "status":  "pass",
+    "batch_id":  "smoke_geometry",
+    "job_id":  "wall_brick_1u_example",
+    "glb":  "assets/staging/wall_brick_1u_example/model.glb"
+}

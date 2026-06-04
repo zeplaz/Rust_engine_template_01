@@ -54,15 +54,21 @@ pub struct MainWorldCameraViewportLatch {
     pub using_hole: bool,
     pub invalid_streak: u8,
     pub valid_streak: u8,
+    /// Steady-state hole toggles after bootstrap enter-hole (PERF-VIS-003 witness).
+    pub steady_flip_count: u32,
+    bootstrap_hole_committed: bool,
 }
 
 // MAP-BLINK-001: require a short adequacy streak before enabling hole scissor.
 // This avoids one-frame full-window<->hole mode churn during WorldGen->Simulation handoff.
 const CAM_HOLE_VALID_STREAK: u8 = 3;
+/// Symmetric release — one inadequate layout frame must not drop hole scissor (ortho/viewport mismatch blink).
+const CAM_HOLE_INVALID_STREAK: u8 = 2;
 
 impl MainWorldCameraViewportLatch {
     /// Returns whether the camera should use the sim-map hole scissor this frame.
     pub fn advance(&mut self, sim_adequate: bool) -> bool {
+        let was = self.using_hole;
         if sim_adequate {
             self.valid_streak = self.valid_streak.saturating_add(1);
             self.invalid_streak = 0;
@@ -72,11 +78,25 @@ impl MainWorldCameraViewportLatch {
         } else {
             self.invalid_streak = self.invalid_streak.saturating_add(1);
             self.valid_streak = 0;
-            // Release on first inadequate frame — delayed release caused scissor/ortho mismatch blink.
-            self.using_hole = false;
+            if self.using_hole && self.invalid_streak >= CAM_HOLE_INVALID_STREAK {
+                self.using_hole = false;
+            }
+        }
+        if self.using_hole != was {
+            if !was && self.using_hole && !self.bootstrap_hole_committed {
+                self.bootstrap_hole_committed = true;
+            } else {
+                self.steady_flip_count = self.steady_flip_count.saturating_add(1);
+            }
         }
         self.using_hole
     }
+}
+
+pub fn reset_main_world_camera_viewport_latch_on_enter_simulation(
+    mut latch: ResMut<MainWorldCameraViewportLatch>,
+) {
+    *latch = MainWorldCameraViewportLatch::default();
 }
 
 /// Last orthographic fit written by [`sync_main_world_camera_viewport_and_projection`] (debug).
@@ -244,9 +264,9 @@ const EDGE_FRACTION: f32 = 0.06;
 const KEY_PAN: f32 = 520.0;
 const EDGE_PAN: f32 = 340.0;
 const GRIP_PAN: f32 = 620.0;
-const ZOOM_FACTOR: f32 = 1.08;
+const ZOOM_FACTOR: f32 = 1.20;
 /// Fallback zoom limits when viewport/world size is unknown.
-pub const MAP_ZOOM_CLAMP: (f32, f32) = (0.35, 4.5);
+pub const MAP_ZOOM_CLAMP: (f32, f32) = (0.35, 10000.0);
 
 /// Logical pixel size for map camera math — prefer the simulation map viewport hole when valid.
 #[must_use]
@@ -283,15 +303,12 @@ pub fn map_zoom_limits_for_world(world_w: f32, world_h: f32, viewport: Vec2) -> 
     let h = world_h.max(1.0);
     let vp = Vec2::new(viewport.x.max(1.0), viewport.y.max(1.0));
     let fit = (vp.x / w).min(vp.y / h) * 0.92;
-    // Allow full-world strategic view (~6% of fit-to-world zoom).
-    let lo = (fit * 0.06).max(0.04);
+    // Allow deep strategic zoom-out (~2% of fit-to-world zoom) for full operational context.
+    let lo = (fit * 0.02).max(0.02);
     // Allow zoom until ~8 tiles span the shorter viewport edge (tile inspection on 4k+ worlds).
     let min_span_tiles = 8.0_f32;
     let hi_from_tile_span = vp.x.min(vp.y) / min_span_tiles;
-    let hi = hi_from_tile_span
-        .max(fit * 14.0)
-        .max(8.0)
-        .min(2048.0);
+    let hi = hi_from_tile_span.max(fit * 14.0).max(8.0).min(1000000.0);
     (lo, hi)
 }
 
@@ -320,6 +337,8 @@ pub fn clamp_map_camera_translation_xy(
 }
 const ROTATE_STEP: f32 = 1.35_f32.to_radians();
 const SMOOTH_LAMBDA: f32 = 12.0;
+/// Cap smoothing dt so multi-second frame spikes do not overshoot pan/zoom lerp.
+const MAX_CAMERA_SMOOTH_DT_SECS: f32 = 0.05;
 
 /// Normalized zoom in `[0, 1]` from [`MAP_ZOOM_CLAMP`] using logical map scale `scale.x`.
 #[inline]
@@ -396,7 +415,9 @@ fn map_camera_apply_input_to_desired(
     let Ok(ctx) = contexts.ctx_mut() else {
         return;
     };
-    let pointer_over_ui = ctx.wants_pointer_input() || ctx.wants_keyboard_input();
+    // Do not block map wheel/pan just because some text widget has keyboard focus.
+    // Input should be gated by pointer ownership, then by whether the pointer is over the map.
+    let pointer_over_ui = ctx.wants_pointer_input();
     let window_px = windows
         .single()
         .map(|w| Vec2::new(w.width().max(1.0), w.height().max(1.0)))
@@ -558,7 +579,7 @@ fn map_camera_apply_input_to_desired(
         desired.scale = Vec3::splat(s);
     }
 
-    let zoom_key = 1.65 * dt;
+    let zoom_key = 4.0 * dt;
     if keys.pressed(bindings.map_zoom_in) {
         let s = (desired.scale.x * (1.0 + zoom_key)).clamp(zoom_lo, zoom_hi);
         desired.scale = Vec3::splat(s);
@@ -648,8 +669,17 @@ pub fn sync_main_world_camera_viewport_and_projection(
     };
     let Ok(win) = windows.single() else {
         camera.viewport = None;
+        camera.is_active = false;
         return;
     };
+
+    if !crate::render::primary_window_logical_presentable(win.width(), win.height())
+    {
+        camera.viewport = None;
+        camera.is_active = false;
+        return;
+    }
+    camera.is_active = true;
 
     let window_px = Vec2::new(win.width().max(1.0), win.height().max(1.0));
     let sim_adequate = sim.is_adequate_for_camera();
@@ -664,6 +694,9 @@ pub fn sync_main_world_camera_viewport_and_projection(
         );
     }
 
+    const MIN_HOLE_PHYSICAL_PX: u32 = 32;
+
+    let mut use_hole_scissor = render_hole;
     if render_hole {
         let scale = win.resolution.scale_factor().max(1e-6);
         let phys_w = win.physical_width().max(1);
@@ -678,20 +711,27 @@ pub fn sync_main_world_camera_viewport_and_projection(
             camera.viewport = None;
             latch.using_hole = false;
             latch.invalid_streak = u8::MAX;
+            use_hole_scissor = false;
         } else {
             size_w = size_w.min(phys_w - pos_x);
             size_h = size_h.min(phys_h - pos_y);
-            camera.viewport = Some(bevy::camera::Viewport {
-                physical_position: UVec2::new(pos_x, pos_y),
-                physical_size: UVec2::new(size_w, size_h),
-                depth: 0.0..1.0,
-            });
+            if size_w < MIN_HOLE_PHYSICAL_PX || size_h < MIN_HOLE_PHYSICAL_PX {
+                // MAP-SCISSOR-HEAL: degenerate 1×1 scissor while ortho still fits full window.
+                camera.viewport = None;
+                use_hole_scissor = false;
+            } else {
+                camera.viewport = Some(bevy::camera::Viewport {
+                    physical_position: UVec2::new(pos_x, pos_y),
+                    physical_size: UVec2::new(size_w, size_h),
+                    depth: 0.0..1.0,
+                });
+            }
         }
     } else {
         camera.viewport = None;
     }
 
-    let view_px = if render_hole {
+    let view_px = if render_hole && sim_adequate {
         sim.logical_size()
     } else {
         window_px
@@ -704,9 +744,9 @@ pub fn sync_main_world_camera_viewport_and_projection(
     ortho_trace.fixed_width = fixed_w;
     ortho_trace.fixed_height = fixed_h;
     ortho_trace.view_pixels = view_px;
-    ortho_trace.using_hole = render_hole;
+    ortho_trace.using_hole = render_hole && sim_adequate;
 
-    if render_hole {
+    if use_hole_scissor {
         crate::gui::hud::trace_viewport_authority(
             crate::gui::hud::ViewportAuthoritySource::CameraApplied,
             sim.min,
@@ -758,7 +798,7 @@ fn map_camera_smooth_toward_desired(
     if !matches!(state.get(), BaseState::Simulation | BaseState::Editor) {
         return;
     }
-    let dt = time.delta_secs();
+    let dt = time.delta_secs().clamp(0.0, MAX_CAMERA_SMOOTH_DT_SECS);
     if dt <= 0.0 {
         return;
     }

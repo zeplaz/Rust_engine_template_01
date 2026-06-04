@@ -257,6 +257,6 @@ Roads / rail / zone paint: Shift semantics **unchanged** (path finalize / batch 
 | Role | Status | Date |
 |:---|:---|:---|
 | Product / user intent | **Captured** | 2026-05-26 |
-| Designer UX | **PASS (qualified)** — [`construction_parametric_placement_design_v1.md`](construction_parametric_placement_design_v1.md) | 2026-05-26 |
+| Designer UX | **PASS** — [`construction_parametric_placement_design_v1.md`](construction_parametric_placement_design_v1.md) | 2026-05-26 |
 | Planner authority | **PASS** ([`plan_construction_parametric_placement_v1.md`](plan_construction_parametric_placement_v1.md)) | 2026-05-26 |
 | Coder implementation | **Unblocked** — **CONSTRUCTION-PARAM-CODER-001…006** | 2026-05-26 |

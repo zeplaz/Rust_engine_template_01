@@ -1,15 +1,17 @@
 //! Logistics throughput — transport-graph freight causality (LOG-A…D).
 
 pub mod async_district;
-pub mod live_proof;
 pub mod portals;
+pub mod witness;
+#[cfg(test)]
+pub mod witness_fixture;
+pub mod witness_collectors;
 pub mod propagation;
 pub mod routes;
 pub mod solver;
 pub mod types;
-pub mod witness;
 
-pub use live_proof::LogisticsThroughputLiveProofState;
+pub use witness_collectors::LogisticsThroughputLiveProofState;
 pub use portals::{
     register_facility_portals_system, rebuild_portal_attachment_map_system,
 };
@@ -25,8 +27,7 @@ pub use types::{
     ThroughputSolverState, TransportNodeAnchor,
 };
 pub use witness::{
-    apply_s7p_logistics_throughput_witness_shortcut,
-    patch_s7p_logistics_throughput_witness_for_play_proof,
+    align_logistics_throughput_witness_from_live_sim,
     refresh_logistics_throughput_witness_system, sync_logistics_throughput_board_system,
 };
 
@@ -62,7 +63,7 @@ impl Plugin for LogisticsThroughputPlugin {
             .init_resource::<LogisticsDiagnostics>()
             .init_resource::<LogisticsThroughputRuntimeWitness>()
             .init_resource::<async_district::AsyncDistrictSolveQueue>()
-            .init_resource::<live_proof::LogisticsThroughputLiveProofState>()
+            .init_resource::<witness_collectors::LogisticsThroughputLiveProofState>()
             .init_resource::<crate::dev::logistics_throughput_todos::LogisticsThroughputWitness>()
             .configure_sets(
                 Update,
@@ -133,7 +134,7 @@ impl Plugin for LogisticsThroughputPlugin {
                 (
                     refresh_logistics_throughput_witness_system,
                     sync_logistics_throughput_board_system,
-                    live_proof::write_logistics_throughput_live_proof_system,
+                    witness_collectors::write_logistics_throughput_live_proof_system,
                 )
                     .chain()
                     .in_set(LogisticsSimulationSet::Witness),

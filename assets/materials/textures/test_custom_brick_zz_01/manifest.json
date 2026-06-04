@@ -1,0 +1,11 @@
+{
+  "profile_id": "test_custom_brick_zz_01",
+  "seed": 2359,
+  "generator": "brick",
+  "size": 64,
+  "paths": {
+    "albedo": "assets/materials/textures/test_custom_brick_zz_01/albedo.png",
+    "normal": "assets/materials/textures/test_custom_brick_zz_01/normal.png",
+    "roughness": "assets/materials/textures/test_custom_brick_zz_01/roughness.png"
+  }
+}

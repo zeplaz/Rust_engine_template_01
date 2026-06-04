@@ -44,12 +44,15 @@
       "debug_runs/ui_shell_migration_live.json",
       "debug_runs/minimap_compositor_live.json",
       "debug_runs/stage7_behavioral_live.json",
-      "debug_runs/stage7_play_live.json"
+      "debug_runs/stage7_play_live.json",
+      "debug_runs/wss_substrate_live.json",
+      "debug_runs/f2_smoke_pipeline_live.json",
+      "debug_runs/play_scenario_live.json"
     ],
     "relative_path": "debug_runs/stage7_behavioral_live.json",
     "schema": "debug_run_envelope_v1",
-    "source_system": "stage7_behavioral_live_proof",
-    "written_at_epoch_secs": 1779813381
+    "source_system": "stage7_behavioral_witness",
+    "written_at_epoch_secs": 1780455043
   },
   "behavioral_contract_ok": true,
   "communication_plane_v1": "StrategicCommand",
@@ -88,11 +91,11 @@
   "s7b_m3_green": true,
   "s7b_m4_play_001": {
     "gate": "S7B-M4-PLAY-001",
-    "green": false,
+    "green": true,
     "pending_dispatch_count": 1,
-    "play_enqueue_wired": false
+    "play_enqueue_wired": true
   },
-  "s7b_m4_play_green": false,
+  "s7b_m4_play_green": true,
   "s7b_preflight_green": true,
   "s7b_steward_green": true,
   "s7b_tune_delay_001": {

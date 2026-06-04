@@ -39,9 +39,8 @@ mod tests {
     /// STEWARD-SPARK-VFX-001 — stage5 tactical fire spark harness gates.
     #[test]
     fn steward_spark_vfx_001_lib_bundle() {
-        use crate::render::{
-            refresh_p2_fire_spark_011_stage5_live_witness, FIRE_SPARK_TACTICAL_PROOF_ZOOM_ALPHA,
-        };
+        use crate::render::stage5_full_app_harness::refresh_p2_fire_spark_011_stage5_live_witness;
+        use crate::render::FIRE_SPARK_TACTICAL_PROOF_ZOOM_ALPHA;
 
         assert!(refresh_p2_fire_spark_011_stage5_live_witness());
 

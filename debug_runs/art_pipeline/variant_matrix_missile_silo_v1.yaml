@@ -1,0 +1,37 @@
+# variant_matrix_missile_silo_v1.yaml — military missile site (phase-1 bunker mesh)
+program_id: PLAN-PROC-TILE-PROD-001
+task_id: MCP-PT-1-002
+archetype: missile_silo
+usage_bias: [military, missile_base, hardened, strategic]
+primary_style_pack: style_military
+production_bar: src/dev/design_procedural_tile_production_bar_v1.md
+catalog: assets/configs/buildings/_variant_catalog.ron
+
+pilot:
+  production_batch_id: tile_missile_silo_military_production_v1
+  footprint: { width: 6, depth: 3, floors: 1 }
+  assembly_id: missile_silo_6x3_s46_msl1
+  tile_id: missile_silo_military
+  phase1_mesh_derivative: tile_bunker_military_production_v1
+
+bake_spine:
+  design_ref: src/dev/design_tile_bake_spine_convergence_v1.md
+  ship_bake_source: keyframe_pack
+  lod0_pilot_atlas_ship_allowed: false
+
+keyframe_stills:
+  export_folder: assets/staging/tiles/keyframe_stills/missile_silo_military/
+  g4_minimum_review_keys: [clean_day, clean_night_on, damaged_night_on]
+  full_matrix_keys: 15
+
+g4_signoff: debug_runs/art_pipeline/missile_silo_military_production_signoff.yaml
+
+style_packs:
+  style_military:
+    applicable: true
+    role: primary
+    district_one_liner: "Missile silo compound with hardened berms and launch pad clutter"
+    reference_tag_hints: ["ref:survey:missile-silo-military", "ref:osm:military=missile_site"]
+    wall_slot: wall_military_bunker_1u
+    prop_clutter: prop_tank
+    phase1_note: "Iso stills use bunker 6x3 mesh until prop_missile_pad module is authored"

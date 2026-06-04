@@ -47,10 +47,11 @@ const MAP_BRIDGE_STABLE_FRAMES: u32 = 6;
 const STAGE5_ALL_DONE_LOG_INTERVAL_INV: u32 = 120;
 
 /// Per-frame STAGE5_* hook lines (`STAGE5_SPINE_HOOK`, `STAGE5_FIRE_HOOK`, …) are expensive at INFO.
-/// Set `STAGE5_VERBOSE=1` to enable them; readiness eval logs stay on `stage5_readiness::live=info`.
+/// Keep them opt-in via `STAGE5_PER_FRAME_HOOKS=1`; readiness eval logs stay on
+/// `stage5_readiness::live=info`.
 #[inline]
 fn stage5_per_frame_hooks_verbose() -> bool {
-    std::env::var_os("STAGE5_VERBOSE").is_some()
+    std::env::var_os("STAGE5_PER_FRAME_HOOKS").is_some()
 }
 
 /// Live operator status for a tracked Stage 5 closure item.

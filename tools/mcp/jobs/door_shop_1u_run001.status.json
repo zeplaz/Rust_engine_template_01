@@ -1,0 +1,12 @@
+{
+  "job_id": "door_shop_1u_run001",
+  "status": "done",
+  "log_path": "debug_runs/art_pipeline/door_shop_1u_run001.log",
+  "outputs": [
+    "assets/staging/door_shop_1u_run001/model.glb"
+  ],
+  "error": null,
+  "spec_ref": "assets/staging/specs/door_shop_1u.json",
+  "job_path": "tools/mcp/schemas/examples/door_shop_1u_run001.json",
+  "updated_at": 1780436698.5037854
+}

@@ -4,6 +4,9 @@
 //! importing `dev` except at explicit hook sites to prevent accidental coupling.
 
 pub mod debug_run_envelope;
+pub mod stage7_play_witness;
+pub mod stage7_behavioral_witness;
+pub mod runtime_witness;
 pub mod schedule_cycle_probe;
 pub mod construction_live_todos;
 pub mod construction_finish_todos;
@@ -15,29 +18,52 @@ pub mod construction_operational_todos;
 pub mod industrial_activation_todos;
 pub mod logistics_throughput_todos;
 pub mod orchestrator_health;
+pub mod proof_grade;
 pub mod replay_editor_parity;
 pub mod stage5_live_todos;
 pub mod stage5_finish_todos;
 pub mod visual_aidv2_live_todos;
-pub mod stage7_play_live_proof;
-pub mod stage7_behavioral_live_proof;
+// Lib witness refresh bundles — compiled only for `cargo test --lib` (not runtime).
+#[cfg(test)]
 pub mod steward_witness_sync_proof;
+#[cfg(test)]
 pub mod steward_spark_vfx_proof;
+#[cfg(test)]
 pub mod steward_s7b_preflight_proof;
+#[cfg(test)]
 pub mod steward_ui_oh_gate_proof;
+#[cfg(test)]
 pub mod steward_w3_gate_proof;
+#[cfg(test)]
 pub mod coder_a_ui_five_lane_proof;
+#[cfg(test)]
 pub mod coder_a_ui_w3_p4_m3_proof;
+#[cfg(test)]
 pub mod coder_a_dual_queue_closure_v1;
+#[cfg(test)]
 pub mod coder_a_wave3_closure_v1;
+#[cfg(test)]
+pub mod coder_a_infra_stress_closure_v1;
 pub mod compile_hygiene_live;
+pub mod f2_smoke_pipeline_debug;
+#[cfg(test)]
 pub mod coder_b_ui_five_lane_proof;
+#[cfg(test)]
+pub mod coder_b_ui_shell_tail_closure_v1;
+#[cfg(test)]
 pub mod coder_b_ui_w3_witness_proof;
+#[cfg(test)]
 pub mod coder_b_ui_w3_p6_proof;
+#[cfg(test)]
 pub mod triage_vm09_v2_proof;
+#[cfg(test)]
 pub mod s7b_m2_m3_coder_proof;
+#[cfg(test)]
 pub mod coder_b_s7p_construction_mv_proof;
+pub mod transport_network_live_proof;
+#[cfg(test)]
 pub mod coder_b_queue_bundle_proof;
+#[cfg(test)]
 pub mod coder_b_wave3_bundle_proof;
 
 pub use stage5_live_todos::{
@@ -51,6 +77,11 @@ pub use orchestrator_health::{
 pub use debug_run_envelope::{
     debug_runs_dir, refresh_agent_debug_index, wrap_debug_run, write_debug_run_json,
     AGENT_DEBUG_INDEX_PATH, ENVELOPE_SCHEMA,
+};
+pub use runtime_witness::{
+    witness_gate_snapshot, witness_writes_enabled, write_enveloped_witness,
+    write_enveloped_witness_unchecked, LiveProofCadence, MIGRATION_SHIM_PATHS,
+    ENV_RUNTIME_WITNESS_WRITES, ENV_RUNTIME_WITNESS_WRITES_FORCE_OFF,
 };
 pub use stage5_finish_todos::{
     finish_ux06_frame_predicate, sync_stage5_finish_todo_board, Stage5FinishTodoBoard,
@@ -97,13 +128,16 @@ pub use visual_aidv2_live_todos::{
     sync_visual_aidv2_todo_board_predicates, VisualAidV2LiveTodo, VisualAidV2LiveTodoBoard,
     VisualAidV2Witness, VISUAL_AID_V2_TODOS,
 };
-pub use stage7_behavioral_live_proof::{
-    build_stage7_behavioral_live_proof_payload, commit_stage7_behavioral_live_proof,
-    write_stage7_behavioral_live_proof_system, Stage7BehavioralLiveProofState,
+pub use stage7_behavioral_witness::{
+    build_stage7_behavioral_witness_payload, commit_stage7_behavioral_witness,
+    refresh_s7b_m3_steward_remedy_001_live_witness, refresh_s7b_m4_play_remedy_001_live_witness,
+    refresh_s7b_steward_001_live_witness,
+    write_stage7_behavioral_witness_system, Stage7BehavioralLiveProofState,
     STAGE7_BEHAVIORAL_LIVE_JSON,
 };
-pub use stage7_play_live_proof::{
-    build_stage7_play_live_proof_payload, write_stage7_play_live_proof_system,
+pub use stage7_play_witness::{
+    build_stage7_play_witness_payload, write_stage7_play_witness_system,
     Stage7PlayLiveProofState, STAGE7_PLAY_LIVE_JSON,
 };
+#[cfg(test)]
 pub use coder_b_queue_bundle_proof::refresh_coder_b_queue_bundle_live_witnesses;

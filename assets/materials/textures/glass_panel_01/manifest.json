@@ -1,0 +1,11 @@
+{
+  "profile_id": "glass_panel_01",
+  "seed": 45,
+  "generator": "steel",
+  "size": 512,
+  "paths": {
+    "albedo": "assets/materials/textures/glass_panel_01/albedo.png",
+    "normal": "assets/materials/textures/glass_panel_01/normal.png",
+    "roughness": "assets/materials/textures/glass_panel_01/roughness.png"
+  }
+}

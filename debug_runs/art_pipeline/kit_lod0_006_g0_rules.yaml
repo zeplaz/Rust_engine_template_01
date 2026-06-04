@@ -1,0 +1,8 @@
+batch_id: kit_lod0_006
+gate: G0
+development_tier: lod0
+rules:
+  batch_id: kit_lod0_006
+  canonical_module_ids_only: true
+  no_greybox_refs: true
+  seed: 42

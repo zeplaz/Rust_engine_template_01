@@ -58,7 +58,7 @@ pub fn infra_vm09_stray_map_camera_writer_audit_green() -> bool {
 /// Refreshes infrastructure witness + agent index.
 pub fn refresh_triage_vm09_v2_live_witness() -> bool {
     use crate::dev::debug_run_envelope::refresh_agent_debug_index;
-    use crate::render::refresh_infrastructure_view_isolation_live_witness;
+    use crate::dev::runtime_witness::refresh_infrastructure_view_isolation_live_witness;
 
     assert!(
         refresh_infrastructure_view_isolation_live_witness(),

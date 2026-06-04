@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "asset_id": "corner_steel_inner",
+  "archetype": "module_prop",
+  "style_pack": "style_industrial_west",
+  "module": {
+    "grid_units": [
+      1,
+      1
+    ],
+    "snap": "floor_edge",
+    "pivot": "bottom_center"
+  },
+  "dimensions_m": {
+    "w": 2,
+    "h": 3,
+    "d": 0.15
+  },
+  "material_profile": "steel_corner_01",
+  "references": []
+}

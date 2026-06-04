@@ -1,0 +1,85 @@
+{
+  "batch_id": "kit_lod0_010",
+  "_agent_meta": {
+    "agent": "coder-mcp",
+    "updated_at": "2026-06-02T23:39:11.131987+00:00",
+    "rules_applied": [
+      "no_ai_generated_images",
+      "deterministic_output",
+      "batch_processing",
+      "grid_alignment",
+      "canonical_module_ids_only"
+    ]
+  },
+  "gates": {
+    "G0": "pass",
+    "G1": "pass",
+    "G2": "pass",
+    "G3": "pass",
+    "G4": "pass",
+    "G5": "pass"
+  },
+  "modules": [
+    {
+      "asset_id": "prop_fence",
+      "job_id": "prop_fence_lod0_run001",
+      "status": "promoted",
+      "registered": true,
+      "valid": true,
+      "vertex_count": 24,
+      "promoted_path": "assets/models/modules/prop_fence_lod0_run001/model.glb",
+      "module_id": "prop_fence",
+      "batch_id": "kit_lod0_010"
+    },
+    {
+      "asset_id": "prop_tank",
+      "job_id": "prop_tank_lod0_run001",
+      "status": "promoted",
+      "registered": true,
+      "valid": true,
+      "vertex_count": 24,
+      "promoted_path": "assets/models/modules/prop_tank_lod0_run001/model.glb",
+      "module_id": "prop_tank",
+      "batch_id": "kit_lod0_010"
+    },
+    {
+      "asset_id": "prop_transformer",
+      "job_id": "prop_transformer_lod0_run001",
+      "status": "promoted",
+      "registered": true,
+      "valid": true,
+      "vertex_count": 24,
+      "promoted_path": "assets/models/modules/prop_transformer_lod0_run001/model.glb",
+      "module_id": "prop_transformer",
+      "batch_id": "kit_lod0_010"
+    },
+    {
+      "asset_id": "prop_ac",
+      "job_id": "prop_ac_lod0_run001",
+      "status": "promoted",
+      "registered": true,
+      "valid": true,
+      "vertex_count": 48,
+      "promoted_path": "assets/models/modules/prop_ac_lod0_run001/model.glb",
+      "module_id": "prop_ac",
+      "batch_id": "kit_lod0_010"
+    },
+    {
+      "asset_id": "prop_chimney",
+      "job_id": "prop_chimney_lod0_run001",
+      "status": "promoted",
+      "registered": true,
+      "valid": true,
+      "vertex_count": 24,
+      "promoted_path": "assets/models/modules/prop_chimney_lod0_run001/model.glb",
+      "module_id": "prop_chimney",
+      "batch_id": "kit_lod0_010"
+    }
+  ],
+  "promoted_count": 5,
+  "registered_count": 5,
+  "failed": [],
+  "module_index": "assets/configs/buildings/_module_index.ron",
+  "index_entry_count": 81,
+  "batch_registered_count": 5
+}

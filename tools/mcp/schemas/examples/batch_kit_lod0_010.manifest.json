@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "batch_id": "kit_lod0_010",
+  "description": "LOD0 wave \u2014 kit_lod0_010 from plan_kit_lod0_roadmap_v1.md",
+  "plan_ref": "src/dev/plan_kit_lod0_roadmap_v1.md",
+  "development_tier": "lod0",
+  "witness": "debug_runs/art_pipeline/kit_lod0_010_live.json",
+  "rules_applied": [
+    "no_ai_generated_images",
+    "deterministic_output",
+    "batch_processing",
+    "grid_alignment",
+    "canonical_module_ids_only"
+  ],
+  "modules": [
+    {
+      "asset_id": "prop_fence",
+      "job_id": "prop_fence_lod0_run001",
+      "archetype": "module_prop",
+      "development_tier": "lod0",
+      "pbr_status": "deferred",
+      "profile": "box",
+      "status": "promoted"
+    },
+    {
+      "asset_id": "prop_tank",
+      "job_id": "prop_tank_lod0_run001",
+      "archetype": "module_prop",
+      "development_tier": "lod0",
+      "pbr_status": "deferred",
+      "profile": "box",
+      "status": "promoted"
+    },
+    {
+      "asset_id": "prop_transformer",
+      "job_id": "prop_transformer_lod0_run001",
+      "archetype": "module_prop",
+      "development_tier": "lod0",
+      "pbr_status": "deferred",
+      "profile": "box",
+      "status": "promoted"
+    },
+    {
+      "asset_id": "prop_ac",
+      "job_id": "prop_ac_lod0_run001",
+      "archetype": "module_prop",
+      "development_tier": "lod0",
+      "pbr_status": "deferred",
+      "profile": "box",
+      "status": "promoted"
+    },
+    {
+      "asset_id": "prop_chimney",
+      "job_id": "prop_chimney_lod0_run001",
+      "archetype": "module_prop",
+      "development_tier": "lod0",
+      "pbr_status": "deferred",
+      "profile": "box",
+      "status": "promoted"
+    }
+  ],
+  "next_agent": "@coder-mcp",
+  "gate": "G5"
+}

@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "job_id": "win_arched_1u_lod0_run001",
+  "batch_id": "kit_lod0_004",
+  "development_tier": "lod0",
+  "spec_ref": "assets/staging/specs/win_arched_1u.json",
+  "operation": "module_window",
+  "params": {
+    "width_m": 4,
+    "height_m": 1.4,
+    "depth_m": 0.12,
+    "material_profile": "glass_panel_01",
+    "seed": 42,
+    "profile": "arched"
+  },
+  "output": {
+    "glb": "assets/staging/win_arched_1u_lod0_run001/model.glb",
+    "thumbnail": "assets/staging/win_arched_1u_lod0_run001/preview.png"
+  }
+}

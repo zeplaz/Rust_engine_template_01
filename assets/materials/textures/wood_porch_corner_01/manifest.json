@@ -1,0 +1,11 @@
+{
+  "profile_id": "wood_porch_corner_01",
+  "seed": 2012,
+  "generator": "wood",
+  "size": 256,
+  "paths": {
+    "albedo": "assets/materials/textures/wood_porch_corner_01/albedo.png",
+    "normal": "assets/materials/textures/wood_porch_corner_01/normal.png",
+    "roughness": "assets/materials/textures/wood_porch_corner_01/roughness.png"
+  }
+}

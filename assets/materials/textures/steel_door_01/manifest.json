@@ -1,0 +1,11 @@
+{
+  "profile_id": "steel_door_01",
+  "seed": 42,
+  "generator": "steel",
+  "size": 512,
+  "paths": {
+    "albedo": "assets/materials/textures/steel_door_01/albedo.png",
+    "normal": "assets/materials/textures/steel_door_01/normal.png",
+    "roughness": "assets/materials/textures/steel_door_01/roughness.png"
+  }
+}

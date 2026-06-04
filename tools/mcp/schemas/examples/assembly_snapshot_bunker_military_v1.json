@@ -1,0 +1,578 @@
+{
+  "schema_version": 1,
+  "assembly_id": "military_6x3_s46_fbad",
+  "style_pack_id": "style_military",
+  "source_tier": "lod0",
+  "procedural_rules_version": "pg2_wdc_v1",
+  "reference_tags": [],
+  "seed": 46,
+  "footprint": {
+    "width": 6,
+    "depth": 3,
+    "floors": 1,
+    "wdc_cell_count": 14
+  },
+  "module_placements": [
+    {
+      "module_id": "corner_parapet",
+      "job_id": "corner_parapet_lod0_run001",
+      "slot_key": "corner_outer",
+      "token": "C",
+      "grid_x": 0,
+      "grid_y": 0,
+      "floor": 0,
+      "glb_path": "assets/models/modules/corner_parapet_lod0_run001/model.glb",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "module_id": "wall_military_bunker_1u",
+      "job_id": "wall_military_bunker_1u_lod0_run001",
+      "slot_key": "wall_1u",
+      "token": "W",
+      "grid_x": 1,
+      "grid_y": 0,
+      "floor": 0,
+      "glb_path": "assets/models/modules/wall_military_bunker_1u_lod0_run001/model.glb",
+      "position": [
+        1.0,
+        0.0,
+        0.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "module_id": "wall_military_bunker_1u",
+      "job_id": "wall_military_bunker_1u_lod0_run001",
+      "slot_key": "wall_1u",
+      "token": "W",
+      "grid_x": 2,
+      "grid_y": 0,
+      "floor": 0,
+      "glb_path": "assets/models/modules/wall_military_bunker_1u_lod0_run001/model.glb",
+      "position": [
+        2.0,
+        0.0,
+        0.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "module_id": "door_military",
+      "job_id": "door_military_lod0_run001",
+      "slot_key": "door_default",
+      "token": "D",
+      "grid_x": 3,
+      "grid_y": 0,
+      "floor": 0,
+      "glb_path": "assets/models/modules/door_military_lod0_run001/model.glb",
+      "position": [
+        3.0,
+        0.0,
+        0.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "module_id": "wall_military_bunker_1u",
+      "job_id": "wall_military_bunker_1u_lod0_run001",
+      "slot_key": "wall_1u",
+      "token": "W",
+      "grid_x": 4,
+      "grid_y": 0,
+      "floor": 0,
+      "glb_path": "assets/models/modules/wall_military_bunker_1u_lod0_run001/model.glb",
+      "position": [
+        4.0,
+        0.0,
+        0.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "module_id": "corner_parapet",
+      "job_id": "corner_parapet_lod0_run001",
+      "slot_key": "corner_outer",
+      "token": "C",
+      "grid_x": 5,
+      "grid_y": 0,
+      "floor": 0,
+      "glb_path": "assets/models/modules/corner_parapet_lod0_run001/model.glb",
+      "position": [
+        5.0,
+        0.0,
+        0.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "module_id": "wall_military_bunker_1u",
+      "job_id": "wall_military_bunker_1u_lod0_run001",
+      "slot_key": "wall_1u",
+      "token": "W",
+      "grid_x": 0,
+      "grid_y": 1,
+      "floor": 0,
+      "glb_path": "assets/models/modules/wall_military_bunker_1u_lod0_run001/model.glb",
+      "position": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "module_id": "wall_military_bunker_1u",
+      "job_id": "wall_military_bunker_1u_lod0_run001",
+      "slot_key": "wall_1u",
+      "token": "W",
+      "grid_x": 5,
+      "grid_y": 1,
+      "floor": 0,
+      "glb_path": "assets/models/modules/wall_military_bunker_1u_lod0_run001/model.glb",
+      "position": [
+        5.0,
+        0.0,
+        1.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "module_id": "corner_parapet",
+      "job_id": "corner_parapet_lod0_run001",
+      "slot_key": "corner_outer",
+      "token": "C",
+      "grid_x": 0,
+      "grid_y": 2,
+      "floor": 0,
+      "glb_path": "assets/models/modules/corner_parapet_lod0_run001/model.glb",
+      "position": [
+        0.0,
+        0.0,
+        2.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "module_id": "wall_military_bunker_1u",
+      "job_id": "wall_military_bunker_1u_lod0_run001",
+      "slot_key": "wall_1u",
+      "token": "W",
+      "grid_x": 1,
+      "grid_y": 2,
+      "floor": 0,
+      "glb_path": "assets/models/modules/wall_military_bunker_1u_lod0_run001/model.glb",
+      "position": [
+        1.0,
+        0.0,
+        2.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "module_id": "wall_military_bunker_1u",
+      "job_id": "wall_military_bunker_1u_lod0_run001",
+      "slot_key": "wall_1u",
+      "token": "W",
+      "grid_x": 2,
+      "grid_y": 2,
+      "floor": 0,
+      "glb_path": "assets/models/modules/wall_military_bunker_1u_lod0_run001/model.glb",
+      "position": [
+        2.0,
+        0.0,
+        2.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "module_id": "wall_military_bunker_1u",
+      "job_id": "wall_military_bunker_1u_lod0_run001",
+      "slot_key": "wall_1u",
+      "token": "W",
+      "grid_x": 3,
+      "grid_y": 2,
+      "floor": 0,
+      "glb_path": "assets/models/modules/wall_military_bunker_1u_lod0_run001/model.glb",
+      "position": [
+        3.0,
+        0.0,
+        2.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "module_id": "wall_military_bunker_1u",
+      "job_id": "wall_military_bunker_1u_lod0_run001",
+      "slot_key": "wall_1u",
+      "token": "W",
+      "grid_x": 4,
+      "grid_y": 2,
+      "floor": 0,
+      "glb_path": "assets/models/modules/wall_military_bunker_1u_lod0_run001/model.glb",
+      "position": [
+        4.0,
+        0.0,
+        2.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "module_id": "corner_parapet",
+      "job_id": "corner_parapet_lod0_run001",
+      "slot_key": "corner_outer",
+      "token": "C",
+      "grid_x": 5,
+      "grid_y": 2,
+      "floor": 0,
+      "glb_path": "assets/models/modules/corner_parapet_lod0_run001/model.glb",
+      "position": [
+        5.0,
+        0.0,
+        2.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "module_id": "roof_bunker",
+      "job_id": "roof_bunker_lod0_run001",
+      "slot_key": "roof_default",
+      "token": "R",
+      "grid_x": 0,
+      "grid_y": 0,
+      "floor": 1,
+      "glb_path": "assets/models/modules/roof_bunker_lod0_run001/model.glb",
+      "position": [
+        0.0,
+        3.0,
+        0.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "module_id": "roof_bunker",
+      "job_id": "roof_bunker_lod0_run001",
+      "slot_key": "roof_default",
+      "token": "R",
+      "grid_x": 1,
+      "grid_y": 0,
+      "floor": 1,
+      "glb_path": "assets/models/modules/roof_bunker_lod0_run001/model.glb",
+      "position": [
+        1.0,
+        3.0,
+        0.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "module_id": "roof_bunker",
+      "job_id": "roof_bunker_lod0_run001",
+      "slot_key": "roof_default",
+      "token": "R",
+      "grid_x": 2,
+      "grid_y": 0,
+      "floor": 1,
+      "glb_path": "assets/models/modules/roof_bunker_lod0_run001/model.glb",
+      "position": [
+        2.0,
+        3.0,
+        0.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "module_id": "roof_bunker",
+      "job_id": "roof_bunker_lod0_run001",
+      "slot_key": "roof_default",
+      "token": "R",
+      "grid_x": 3,
+      "grid_y": 0,
+      "floor": 1,
+      "glb_path": "assets/models/modules/roof_bunker_lod0_run001/model.glb",
+      "position": [
+        3.0,
+        3.0,
+        0.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "module_id": "roof_bunker",
+      "job_id": "roof_bunker_lod0_run001",
+      "slot_key": "roof_default",
+      "token": "R",
+      "grid_x": 4,
+      "grid_y": 0,
+      "floor": 1,
+      "glb_path": "assets/models/modules/roof_bunker_lod0_run001/model.glb",
+      "position": [
+        4.0,
+        3.0,
+        0.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "module_id": "roof_bunker",
+      "job_id": "roof_bunker_lod0_run001",
+      "slot_key": "roof_default",
+      "token": "R",
+      "grid_x": 5,
+      "grid_y": 0,
+      "floor": 1,
+      "glb_path": "assets/models/modules/roof_bunker_lod0_run001/model.glb",
+      "position": [
+        5.0,
+        3.0,
+        0.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "module_id": "roof_bunker",
+      "job_id": "roof_bunker_lod0_run001",
+      "slot_key": "roof_default",
+      "token": "R",
+      "grid_x": 0,
+      "grid_y": 1,
+      "floor": 1,
+      "glb_path": "assets/models/modules/roof_bunker_lod0_run001/model.glb",
+      "position": [
+        0.0,
+        3.0,
+        1.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "module_id": "roof_bunker",
+      "job_id": "roof_bunker_lod0_run001",
+      "slot_key": "roof_default",
+      "token": "R",
+      "grid_x": 5,
+      "grid_y": 1,
+      "floor": 1,
+      "glb_path": "assets/models/modules/roof_bunker_lod0_run001/model.glb",
+      "position": [
+        5.0,
+        3.0,
+        1.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "module_id": "roof_bunker",
+      "job_id": "roof_bunker_lod0_run001",
+      "slot_key": "roof_default",
+      "token": "R",
+      "grid_x": 0,
+      "grid_y": 2,
+      "floor": 1,
+      "glb_path": "assets/models/modules/roof_bunker_lod0_run001/model.glb",
+      "position": [
+        0.0,
+        3.0,
+        2.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "module_id": "roof_bunker",
+      "job_id": "roof_bunker_lod0_run001",
+      "slot_key": "roof_default",
+      "token": "R",
+      "grid_x": 1,
+      "grid_y": 2,
+      "floor": 1,
+      "glb_path": "assets/models/modules/roof_bunker_lod0_run001/model.glb",
+      "position": [
+        1.0,
+        3.0,
+        2.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "module_id": "roof_bunker",
+      "job_id": "roof_bunker_lod0_run001",
+      "slot_key": "roof_default",
+      "token": "R",
+      "grid_x": 2,
+      "grid_y": 2,
+      "floor": 1,
+      "glb_path": "assets/models/modules/roof_bunker_lod0_run001/model.glb",
+      "position": [
+        2.0,
+        3.0,
+        2.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "module_id": "roof_bunker",
+      "job_id": "roof_bunker_lod0_run001",
+      "slot_key": "roof_default",
+      "token": "R",
+      "grid_x": 3,
+      "grid_y": 2,
+      "floor": 1,
+      "glb_path": "assets/models/modules/roof_bunker_lod0_run001/model.glb",
+      "position": [
+        3.0,
+        3.0,
+        2.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "module_id": "roof_bunker",
+      "job_id": "roof_bunker_lod0_run001",
+      "slot_key": "roof_default",
+      "token": "R",
+      "grid_x": 4,
+      "grid_y": 2,
+      "floor": 1,
+      "glb_path": "assets/models/modules/roof_bunker_lod0_run001/model.glb",
+      "position": [
+        4.0,
+        3.0,
+        2.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "module_id": "roof_bunker",
+      "job_id": "roof_bunker_lod0_run001",
+      "slot_key": "roof_default",
+      "token": "R",
+      "grid_x": 5,
+      "grid_y": 2,
+      "floor": 1,
+      "glb_path": "assets/models/modules/roof_bunker_lod0_run001/model.glb",
+      "position": [
+        5.0,
+        3.0,
+        2.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    }
+  ],
+  "written_path": "assets/staging/assemblies/military_6x3_s46_fbad.json"
+}

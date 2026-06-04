@@ -1,0 +1,25 @@
+{
+  "gate_id": "GRAMMAR-MCP-LANE",
+  "green": true,
+  "slices": {
+    "MCP-APS-TAGS-002": "aps_tags.py + assembly_panel semantic_tags",
+    "MCP-APS-GRAMMAR-INSPECTOR-001": "grammar_inspector.py",
+    "MCP-APS-UI-003b": "footprint_canvas.py + archetype generate"
+  },
+  "archetype_id": "IndustrialWarehouse",
+  "grammar_rule_chain": {
+    "footprint_mode": "yard_interior",
+    "archetype": "IndustrialWarehouse",
+    "massing": "yard_complex",
+    "roof": "roof_flat",
+    "facade": "facade_v1",
+    "detail": "prop_clutter",
+    "age": "weathered"
+  },
+  "sample_semantic_tags": {
+    "location": [
+      "street_facing",
+      "corner"
+    ]
+  }
+}

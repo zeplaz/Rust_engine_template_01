@@ -45,7 +45,10 @@ use crate::gui::style::{
     widget_scroll_both, widget_scroll_vertical_fill, CmdHeadingStyle, UiPalette, VertSpace,
 };
 use crate::systems::terrain::TerrainRegistriesHandles;
-use crate::terrain::editor::map_snapshot::{MapSnapshotCellV1, MapSnapshotV1, MAP_SNAPSHOT_SCHEMA_VERSION};
+use crate::terrain::editor::map_snapshot::{
+    load_map_snapshot_from_ron, map_snapshot_v1_to_v2, MapSnapshotCellV1, MapSnapshotV1,
+    MAP_SNAPSHOT_SCHEMA_VERSION,
+};
 use crate::terrain::family::{TerrainFamilyId, TerrainFamilyRegistry, DEFAULT_TERRAIN_FAMILY_ID};
 use crate::terrain::generation::polygon_world_semantics::MacroStrategicKind;
 use crate::terrain::generation::world_generator_enhanced::{
@@ -1203,11 +1206,12 @@ fn map_editor_map_snapshot_io(
                     height: h,
                     cells,
                 };
+                let snap_v2 = map_snapshot_v1_to_v2(&snap);
                 let path = dev_map_snapshot_path();
                 if let Some(parent) = path.parent() {
                     let _ = std::fs::create_dir_all(parent);
                 }
-                match snap.to_ron_string() {
+                match snap_v2.to_ron_string() {
                     Ok(s) => match std::fs::write(&path, format!("{}\n", s.trim_end())) {
                         Ok(()) => info!("Saved map snapshot to {}", path.display()),
                         Err(e) => warn!("Save map snapshot failed: {e:?}"),
@@ -1231,7 +1235,7 @@ fn map_editor_map_snapshot_io(
                         continue;
                     }
                 };
-                let snap = match MapSnapshotV1::from_ron_str(text) {
+                let snap = match load_map_snapshot_from_ron(text) {
                     Ok(s) => s,
                     Err(e) => {
                         warn!("Load map snapshot: RON: {e}");

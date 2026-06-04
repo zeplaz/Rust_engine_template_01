@@ -1,0 +1,11 @@
+{
+  "profile_id": "wood_plank_01",
+  "seed": 42,
+  "generator": "wood",
+  "size": 512,
+  "paths": {
+    "albedo": "assets/materials/textures/wood_plank_01/albedo.png",
+    "normal": "assets/materials/textures/wood_plank_01/normal.png",
+    "roughness": "assets/materials/textures/wood_plank_01/roughness.png"
+  }
+}

@@ -651,8 +651,19 @@ fn tiles_per_chunk(chunks: &Query<(&Chunk, &ChunkCellMatrix)>) -> UVec2 {
         .unwrap_or(UVec2::new(32, 32))
 }
 
+/// Quantize zoom α so scroll wheel does not re-enqueue streaming every tick (0.1 bands).
+pub const INTEREST_ZOOM_QUANTUM: f32 = 0.1;
+
 #[inline]
-fn interest_radius_chunks_from_zoom_alpha(zoom_alpha: f32) -> i32 {
+#[must_use]
+pub fn quantize_zoom_alpha_for_interest(zoom_alpha: f32) -> f32 {
+    let a = zoom_alpha.clamp(0.0, 1.0);
+    (a / INTEREST_ZOOM_QUANTUM).round() * INTEREST_ZOOM_QUANTUM
+}
+
+#[inline]
+#[must_use]
+pub fn interest_radius_chunks_from_zoom_alpha(zoom_alpha: f32) -> i32 {
     let a = zoom_alpha.clamp(0.0, 1.0);
     let r = (6.0 + a * 28.0).round() as i32;
     r.clamp(4, 48)
@@ -706,7 +717,8 @@ pub fn compute_world_representation_frame(
     let sz = tiles_per_chunk(&chunks);
     let cw = sz.x.max(1) as f32;
     let ch = sz.y.max(1) as f32;
-    let interest_radius_chunks = interest_radius_chunks_from_zoom_alpha(za);
+    let interest_radius_chunks =
+        interest_radius_chunks_from_zoom_alpha(quantize_zoom_alpha_for_interest(za));
     let focus_chunk = IVec2::new(
         (desired.translation.x / cw).floor() as i32,
         (desired.translation.y / ch).floor() as i32,
@@ -765,6 +777,32 @@ pub fn witness_stage5_lod_band_log_after_world_representation(
     }
 }
 
+/// PT-4-003 — production iso atlas demotes PG-2 mesh extract when any site is covered.
+pub fn sync_procedural_tile_primary_active(
+    registry: Option<Res<crate::construction::procedural::TileAtlasRegistry>>,
+    sites: Query<(
+        &crate::strategic::PlannedSite,
+        Option<&crate::strategic::ProceduralBuildingSpec>,
+    )>,
+    mut flag: ResMut<crate::construction::procedural::ProceduralTilePrimaryActive>,
+) {
+    flag.0 = false;
+    let Some(registry) = registry else {
+        return;
+    };
+    for (planned, spec) in &sites {
+        let entry = crate::gui::map_tile_atlas_stamp::resolve_atlas_entry_for_planned_site(
+            &registry,
+            planned,
+            spec.as_deref(),
+        );
+        if entry.is_some_and(crate::construction::procedural::production_atlas_covers_assembly) {
+            flag.0 = true;
+            return;
+        }
+    }
+}
+
 pub fn apply_representation_result(
     sim: Res<SimTick>,
     sim_time: Res<SimTimeMicros>,
@@ -775,6 +813,7 @@ pub fn apply_representation_result(
     cadence: Res<VisualCadence>,
     construction_phase: Option<Res<crate::construction::site_phase_tile_instances::ConstructionPhaseGpuChannel>>,
     graph: Option<Res<crate::strategic::LogisticsGraph>>,
+    tile_primary: Option<Res<crate::construction::procedural::ProceduralTilePrimaryActive>>,
     mut policy: ResMut<RepresentationResult>,
 ) {
     let stamp = SimStepStamp::from_tick(*sim, *sim_time);
@@ -786,6 +825,11 @@ pub fn apply_representation_result(
         .as_deref()
         .is_some_and(|g| !g.edges.is_empty());
     *policy = build_representation_result(&frame, &inputs);
+    if tile_primary.as_deref().is_some_and(|f| f.0)
+        && std::env::var_os("RUST_ENGINE_FORCE_PG2_MESHES").is_none()
+    {
+        policy.procedural_module_meshes = false;
+    }
 }
 
 pub(crate) fn register_world_representation_frame(app: &mut App) {
@@ -807,14 +851,38 @@ pub(crate) fn register_world_representation_frame(app: &mut App) {
         .init_resource::<WorldRepresentationFrame>()
         .init_resource::<Stage5LodBandLogWitness>()
         .init_resource::<RepresentationResult>()
+        .init_resource::<crate::render::extraction::ProceduralModuleSceneCatalog>()
+        .init_resource::<crate::render::extraction::ProceduralModuleVisualPolicy>()
+        .init_resource::<crate::render::extraction::ProceduralBuildExtract>()
+        .init_resource::<crate::construction::ProceduralAssemblyRequest>()
+        .add_systems(
+            Startup,
+            (
+                crate::construction::procedural::init_procedural_module_registry,
+                crate::construction::procedural::init_style_pack_registry,
+                crate::construction::procedural::init_variant_catalog,
+                crate::render::extraction::load_procedural_module_scenes,
+            )
+                .chain(),
+        )
+        .init_resource::<crate::construction::ProceduralTilePrimaryActive>()
         .add_systems(
             Update,
             (
                 decay_tactical_lod_bubbles,
                 refresh_lod_zone_registry,
+                crate::render::stall_checkpoint_before_world_repr,
+                sync_procedural_tile_primary_active,
                 compute_world_representation_frame,
                 witness_stage5_lod_band_log_after_world_representation,
                 apply_representation_result,
+                crate::render::extraction::sync_procedural_module_visual_policy,
+                crate::construction::sync_procedural_assembly_request_from_sites,
+                crate::render::extraction::extract_procedural_build_assembly,
+                crate::construction::spawn_procedural_build_on_site_operational
+                    .after(crate::construction::advance_site_construction_tick_system)
+                    .after(crate::render::extraction::extract_procedural_build_assembly),
+                crate::render::stall_checkpoint_post_world_repr,
             )
                 .chain()
                 .in_set(WorldRepresentationSystemSet::ComputeFrame)
@@ -826,6 +894,15 @@ pub(crate) fn register_world_representation_frame(app: &mut App) {
 mod tests {
     use super::*;
     use bevy::MinimalPlugins;
+
+    #[test]
+    fn interest_radius_stable_within_zoom_quantum_band() {
+        let a = interest_radius_chunks_from_zoom_alpha(quantize_zoom_alpha_for_interest(0.14));
+        let b = interest_radius_chunks_from_zoom_alpha(quantize_zoom_alpha_for_interest(0.16));
+        assert_eq!(a, b);
+        let c = interest_radius_chunks_from_zoom_alpha(quantize_zoom_alpha_for_interest(0.24));
+        assert_ne!(a, c);
+    }
 
     #[test]
     fn representation_resolver_resources_register() {

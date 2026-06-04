@@ -1,0 +1,65 @@
+{
+  "program_id": "MCP-FLEET-APS-PILOT-002",
+  "task": "Repeat pilot 3 footprints × style packs",
+  "gate": "ART-APS-USE",
+  "green": true,
+  "validate_only": true,
+  "updated": "2026-06-02",
+  "_agent_meta": {
+    "agent": "designer-mcp",
+    "author_script": "tools/mcp/scripts/aps_pilot_batch_author.py"
+  },
+  "tile_atlas_index": "assets/configs/buildings/_tile_atlas_index.ron",
+  "index_entry_count": 4,
+  "pilots_new": [
+    {
+      "slug": "warehouse_industrial_west",
+      "assembly_id": "industrial_west_4x2_s43_a879",
+      "batch_id": "tile_warehouse_industrial_west_pilot_v1",
+      "atlas_id": "warehouse_industrial_west_pilot_v1",
+      "style_pack_id": "style_industrial_west",
+      "footprint": { "width": 4, "depth": 2, "floors": 2 },
+      "assembly_snapshot": "tools/mcp/schemas/examples/assembly_snapshot_warehouse_industrial_west_v1.json",
+      "variant_set": "tools/mcp/schemas/examples/variant_set_warehouse_industrial_west_v1.json",
+      "tile_batch": "tools/mcp/schemas/examples/tile_batch_warehouse_industrial_west_pilot_v1.json",
+      "g0_rules": "debug_runs/art_pipeline/aps_pilot_warehouse_industrial_west_g0_rules.yaml",
+      "validations": { "variant_set": "pass", "tile_batch": "pass", "errors": 0 }
+    },
+    {
+      "slug": "shopfront_colonial",
+      "assembly_id": "colonial_3x3_s44_cf75",
+      "batch_id": "tile_shopfront_colonial_pilot_v1",
+      "atlas_id": "shopfront_colonial_pilot_v1",
+      "style_pack_id": "style_colonial",
+      "footprint": { "width": 3, "depth": 3, "floors": 2 },
+      "assembly_snapshot": "tools/mcp/schemas/examples/assembly_snapshot_shopfront_colonial_v1.json",
+      "variant_set": "tools/mcp/schemas/examples/variant_set_shopfront_colonial_v1.json",
+      "tile_batch": "tools/mcp/schemas/examples/tile_batch_shopfront_colonial_pilot_v1.json",
+      "g0_rules": "debug_runs/art_pipeline/aps_pilot_shopfront_colonial_g0_rules.yaml",
+      "validations": { "variant_set": "pass", "tile_batch": "pass", "errors": 0 }
+    },
+    {
+      "slug": "bunker_military",
+      "assembly_id": "military_6x3_s46_fbad",
+      "batch_id": "tile_bunker_military_pilot_v1",
+      "atlas_id": "bunker_military_pilot_v1",
+      "style_pack_id": "style_military",
+      "footprint": { "width": 6, "depth": 3, "floors": 1 },
+      "assembly_snapshot": "tools/mcp/schemas/examples/assembly_snapshot_bunker_military_v1.json",
+      "variant_set": "tools/mcp/schemas/examples/variant_set_bunker_military_v1.json",
+      "tile_batch": "tools/mcp/schemas/examples/tile_batch_bunker_military_pilot_v1.json",
+      "g0_rules": "debug_runs/art_pipeline/aps_pilot_bunker_military_g0_rules.yaml",
+      "validations": { "variant_set": "pass", "tile_batch": "pass", "errors": 0 }
+    }
+  ],
+  "pilots_prior": {
+    "slug": "rowhouse_victorian",
+    "tile_batch": "tools/mcp/schemas/examples/tile_batch_rowhouse_victorian_pilot_v1.json",
+    "witness": "debug_runs/art_pipeline/aps_pilot_rowhouse_live.json"
+  },
+  "cli_validate": [
+    "python -m rust_engine_mcp.cli variant-set-validate tools/mcp/schemas/examples/variant_set_<slug>_v1.json",
+    "python -m rust_engine_mcp.cli validate-report tile_batch tools/mcp/schemas/examples/tile_batch_<slug>_pilot_v1.json"
+  ],
+  "next": "@coder-mcp TILE-REAL-001 — tile-batch-run each batch_id (real bake + tile-atlas-register)"
+}

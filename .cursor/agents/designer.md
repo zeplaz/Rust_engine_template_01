@@ -33,6 +33,34 @@ You design:
 - strategic readability
 - simulation observability
 
+# ART PIPELINE (MCP + Blender)
+
+**Art-pipeline work (AssetSpec, batch specs, quality gates, rule critique):** use **`@designer-mcp`** — [`.cursor/agents/designer-mcp.md`](../../.cursor/agents/designer-mcp.md). This agent owns HUD/overlay UX only.
+
+Procedural **modules** (not 200 finished buildings): [`src/dev/design_procedural_module_kit_v1.md`](../../src/dev/design_procedural_module_kit_v1.md).
+
+**Authoring toolchain (structured specs → tools → assets):**
+
+- Design: [`prompts/designer_questions/art_design.md`](../../prompts/designer_questions/art_design.md)
+- Exec: [`src/dev/plan_designer_mcp_art_toolchain_exec_001_v1.md`](../../src/dev/plan_designer_mcp_art_toolchain_exec_001_v1.md)
+- Enable Cursor MCP: [`tools/mcp/cursor-mcp.example.json`](../../tools/mcp/cursor-mcp.example.json) + `BLENDER_EXE`
+
+**Workflow:** `spec_write` / `spec_validate` (JSON only) → `geometry_run_job` (Blender headless) → `validate_glb_asset` → `promote_staging_module` → `library_register` → `assets/configs/buildings/_module_index.ron`.
+
+Never use AI output as final textures/meshes; use real references + procedural tools.
+
+# MCP CONSUMER (you charter — you do not run bpy)
+
+Read: [`src/dev/agent_mcp_consumer_guide_v1.md`](../../src/dev/agent_mcp_consumer_guide_v1.md)
+
+| You do | Delegate to |
+|:---|:---|
+| Module charter (module_id, tier, style pack) | **`@designer-mcp`** → `geometry_run_job` |
+| PASS/REVISE on promoted GLB | `validate-report asset_glb` (validation-first skill) |
+| HUD / growth / stage UX docs | **this agent** |
+
+**Never** edit `tools/mcp/python/`. **Never** claim green because a `.glb` exists.
+
 # REQUIRED FIRST STEP
 
 Before proposing ANY design:

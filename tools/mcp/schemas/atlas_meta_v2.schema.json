@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "atlas_meta_v2.schema.json",
+  "title": "AtlasMetaV2",
+  "description": "TILE-FIX-002 — variant × facing × frame UV lookups (replaces v1 variant_key-only rows).",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "atlas_id",
+    "batch_id",
+    "tile_id",
+    "atlas_png",
+    "render_contract",
+    "lookups"
+  ],
+  "properties": {
+    "schema_version": { "const": 2 },
+    "atlas_id": { "type": "string", "minLength": 1 },
+    "batch_id": { "type": "string", "minLength": 1 },
+    "tile_id": { "type": "string", "minLength": 1 },
+    "atlas_png": { "type": "string", "minLength": 1 },
+    "visual_config": { "type": "string", "description": "Repo-relative path to visual_config.ron" },
+    "minimum_g4_ship": { "type": "boolean", "description": "TILE-FIX-010: lookups satisfy ship_minimum × pilot facings only" },
+    "lookup_mode": { "type": "string", "enum": ["full", "minimum_g4"] },
+    "columns": { "type": "integer", "minimum": 1 },
+    "rows": { "type": "integer", "minimum": 1 },
+    "tile_px": { "type": "integer", "minimum": 16 },
+    "render_contract": {
+      "type": "object",
+      "required": ["facings", "tile_px"],
+      "properties": {
+        "facings": { "type": "integer", "enum": [4, 8] },
+        "tile_px": { "type": "integer", "minimum": 16 },
+        "quarter_turn_fallback": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    },
+    "lookups": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["variant", "facing", "frame", "uv"],
+        "properties": {
+          "variant": { "type": "string", "pattern": "^[a-z0-9_]+$" },
+          "facing": { "type": "integer", "minimum": 0, "maximum": 7 },
+          "frame": { "type": "integer", "minimum": 0, "maximum": 31 },
+          "grid": {
+            "type": "array",
+            "items": { "type": "integer", "minimum": 0 },
+            "minItems": 2,
+            "maxItems": 2
+          },
+          "uv": {
+            "type": "array",
+            "items": { "type": "number" },
+            "minItems": 4,
+            "maxItems": 4
+          },
+          "png": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

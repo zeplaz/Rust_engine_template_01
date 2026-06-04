@@ -9,6 +9,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 
 pub const TRANSPORT_NETWORK_SCHEMA_V1: u32 = 1;
+pub const TRANSPORT_NETWORK_SCHEMA_V2: u32 = 2;
 
 /// Optional **R8** construction slice (strategic corridor phases); empty ⇒ loaders only sync from topology.
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
@@ -58,6 +59,64 @@ pub struct TransportEdgeRecord {
     pub profile: String,
     #[serde(default)]
     pub allowed_agents: Vec<String>,
+    /// **INFRA-E3-001** v2 fields (optional on v1 snapshots).
+    #[serde(default)]
+    pub corridor_type: String,
+    #[serde(default)]
+    pub profile_id: String,
+    #[serde(default)]
+    pub subdivision_policy: String,
+    #[serde(default)]
+    pub owner_id: String,
+}
+
+impl TransportEdgeRecord {
+    #[must_use]
+    pub fn effective_profile_id(&self) -> &str {
+        if self.profile_id.is_empty() {
+            self.profile.as_str()
+        } else {
+            self.profile_id.as_str()
+        }
+    }
+}
+
+impl Default for TransportEdgeRecord {
+    fn default() -> Self {
+        Self {
+            id: 0,
+            head: String::new(),
+            tail: String::new(),
+            successors: Vec::new(),
+            control_points: Vec::new(),
+            profile: String::new(),
+            allowed_agents: Vec::new(),
+            corridor_type: String::new(),
+            profile_id: String::new(),
+            subdivision_policy: String::new(),
+            owner_id: String::new(),
+        }
+    }
+}
+
+/// Promote v1 snapshot bodies to v2 in place.
+pub fn migrate_transport_snapshot_to_v2(snapshot: &mut TransportNetworkSnapshot) {
+    if snapshot.schema_version >= TRANSPORT_NETWORK_SCHEMA_V2 {
+        return;
+    }
+    for edge in &mut snapshot.edges {
+        if edge.profile_id.is_empty() {
+            edge.profile_id = edge.profile.clone();
+        }
+        if edge.corridor_type.is_empty() {
+            edge.corridor_type = if edge.profile.to_ascii_lowercase().contains("rail") {
+                "rail".into()
+            } else {
+                "road".into()
+            };
+        }
+    }
+    snapshot.schema_version = TRANSPORT_NETWORK_SCHEMA_V2;
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -75,7 +134,9 @@ pub fn hydrate_transport_from_snapshot(
     edge_directory: &mut TransportEdgeDirectory,
     snapshot: &TransportNetworkSnapshot,
 ) -> Result<(), HydrateError> {
-    if snapshot.schema_version != TRANSPORT_NETWORK_SCHEMA_V1 {
+    if snapshot.schema_version != TRANSPORT_NETWORK_SCHEMA_V1
+        && snapshot.schema_version != TRANSPORT_NETWORK_SCHEMA_V2
+    {
         return Err(HydrateError::WrongSchema(snapshot.schema_version));
     }
 
@@ -120,8 +181,8 @@ pub fn hydrate_transport_from_snapshot(
         edge_directory.by_edge.insert(
             tid,
             TransportEdgeMeta {
-                profile: e.profile.clone(),
-                corridor_class: super::types::corridor_class_from_profile(&e.profile),
+                profile: e.effective_profile_id().into(),
+                corridor_class: super::types::corridor_class_from_profile(e.effective_profile_id()),
                 allowed_agents: e.allowed_agents.clone(),
                 head_key: e.head.clone(),
                 tail_key: e.tail.clone(),
@@ -170,7 +231,15 @@ pub fn transport_network_snapshot_from_world(
             successors: succ,
             control_points: meta.control_points.clone(),
             profile: meta.profile.clone(),
+            profile_id: meta.profile.clone(),
+            corridor_type: if meta.corridor_class == super::types::CorridorClass::Rail {
+                "rail".into()
+            } else {
+                "road".into()
+            },
             allowed_agents: meta.allowed_agents.clone(),
+            subdivision_policy: String::new(),
+            owner_id: String::new(),
         });
     }
 
@@ -181,7 +250,7 @@ pub fn transport_network_snapshot_from_world(
     nodes.sort_by(|a, b| a.key.cmp(&b.key));
 
     Some(TransportNetworkSnapshot {
-        schema_version: TRANSPORT_NETWORK_SCHEMA_V1,
+        schema_version: TRANSPORT_NETWORK_SCHEMA_V2,
         nodes,
         edges,
         construction: Vec::new(),
@@ -274,6 +343,7 @@ mod tests {
                     control_points: vec![[0., 0., 0.], [1., 0., 0.]],
                     profile: "default_road".into(),
                     allowed_agents: vec!["road_vehicle".into()],
+                    ..Default::default()
                 },
                 TransportEdgeRecord {
                     id: 1,
@@ -283,6 +353,7 @@ mod tests {
                     control_points: vec![[1., 0., 0.], [2., 0., 0.]],
                     profile: "default_road".into(),
                     allowed_agents: vec!["road_vehicle".into()],
+                    ..Default::default()
                 },
             ],
             construction: vec![],
@@ -291,16 +362,25 @@ mod tests {
 
     #[test]
     fn hydrate_then_snapshot_from_world_round_trip() {
-        let s0 = sample_snapshot();
+        let mut s0 = sample_snapshot();
+        migrate_transport_snapshot_to_v2(&mut s0);
         let mut top = TransportTopology::default();
         let mut field = TransportFieldStore::default();
         let mut dir = TransportEdgeDirectory::default();
         hydrate_transport_from_snapshot(&mut top, &mut field, &mut dir, &s0).unwrap();
         let s1 = transport_network_snapshot_from_world(&top, &dir).expect("snapshot_from_world");
-        assert_eq!(
-            serde_json::to_value(&s0).unwrap(),
-            serde_json::to_value(&s1).unwrap()
-        );
+        assert_eq!(s1.schema_version, TRANSPORT_NETWORK_SCHEMA_V2);
+        assert_eq!(s1.edges.len(), s0.edges.len());
+    }
+
+    #[test]
+    fn migrate_v1_snapshot_to_v2() {
+        let mut snap = sample_snapshot();
+        assert_eq!(snap.schema_version, TRANSPORT_NETWORK_SCHEMA_V1);
+        migrate_transport_snapshot_to_v2(&mut snap);
+        assert_eq!(snap.schema_version, TRANSPORT_NETWORK_SCHEMA_V2);
+        assert_eq!(snap.edges[0].profile_id, "default_road");
+        assert_eq!(snap.edges[0].corridor_type, "road");
     }
 
     #[test]

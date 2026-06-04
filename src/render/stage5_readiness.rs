@@ -136,7 +136,9 @@ pub fn stage5_readiness_passes(report: &AppStage5ReadinessReport) -> bool {
 }
 
 /// When FULL_APP passes, logging every frame to the Windows console can cost **~200ms/update** (stdout lock).
-const READINESS_FULL_APP_SUCCESS_LOG_INTERVAL: u32 = 240;
+/// Shared by eval logs, frame fence, and live-todo hooks (**PERF-PLAY-001**).
+pub const PERF_PLAY_READINESS_GREEN_LOG_INTERVAL: u32 = 240;
+const READINESS_FULL_APP_SUCCESS_LOG_INTERVAL: u32 = PERF_PLAY_READINESS_GREEN_LOG_INTERVAL;
 
 #[inline]
 fn stage5_readiness_live_verbose_logs() -> bool {
@@ -149,10 +151,13 @@ fn readiness_full_app_live_log_this_frame(
     passes: bool,
     violations_empty: bool,
 ) -> bool {
-    stage5_readiness_live_verbose_logs()
-        || !passes
-        || !violations_empty
-        || inv % READINESS_FULL_APP_SUCCESS_LOG_INTERVAL == 0
+    if stage5_readiness_live_verbose_logs() || !passes || !violations_empty {
+        return true;
+    }
+    if !crate::render::frame_perf::perf_play_quiet_defaults_recommended() {
+        return true;
+    }
+    inv % READINESS_FULL_APP_SUCCESS_LOG_INTERVAL == 0
 }
 
 pub fn evaluate_app_stage5_readiness(world: &mut World) {
@@ -778,7 +783,7 @@ fn sync_live_preview_authority_for_full_app(
 }
 
 /// End-of-frame line: confirms **PostUpdate readiness** is visible to the rest of the frame loop
-/// (`Last` runs after `PostUpdate`). When failing, logs every frame; when passing, every 30 frames.
+/// (`Last` runs after `PostUpdate`). When failing, logs every frame; when passing, throttled (**PERF-PLAY-001**).
 fn stage5_readiness_live_full_app_frame_fence(
     profile: Res<Stage5ReadinessProfile>,
     report: Res<AppStage5ReadinessReport>,
@@ -809,7 +814,7 @@ fn stage5_readiness_live_full_app_frame_fence(
         );
         return;
     }
-    if *tick % 30 == 0 {
+    if *tick % PERF_PLAY_READINESS_GREEN_LOG_INTERVAL == 0 {
         info!(
             target: "stage5_readiness::live",
             "READINESS_FRAME_FENCE_OK eval_inv={} frame_tick={} passes=true",
@@ -987,6 +992,28 @@ mod tests {
         let report = app.world().resource::<AppStage5ReadinessReport>();
         assert!(report.violations.is_empty(), "{:?}", report.violations);
         assert!(stage5_readiness_passes(report));
+    }
+
+    #[test]
+    fn perf_play_001_green_readiness_eval_log_throttled() {
+        assert!(
+            crate::render::frame_perf::perf_play_quiet_defaults_recommended(),
+            "test assumes quiet play defaults (no PERF / STAGE5_READINESS_VERBOSE)"
+        );
+        assert!(!readiness_full_app_live_log_this_frame(1, true, true));
+        assert!(!readiness_full_app_live_log_this_frame(2, true, true));
+        assert!(!readiness_full_app_live_log_this_frame(239, true, true));
+        assert!(readiness_full_app_live_log_this_frame(
+            PERF_PLAY_READINESS_GREEN_LOG_INTERVAL,
+            true,
+            true
+        ));
+        assert!(readiness_full_app_live_log_this_frame(2, false, true));
+
+        std::env::set_var("PERF", "1");
+        assert!(!crate::render::frame_perf::perf_play_quiet_defaults_recommended());
+        assert!(readiness_full_app_live_log_this_frame(2, true, true));
+        std::env::remove_var("PERF");
     }
 
     #[test]

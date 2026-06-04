@@ -1,0 +1,19 @@
+batch_id: tile_rowhouse_victorian_pilot_v1
+designer_mcp: aps_pilot_rules_audit
+program_id: MCP-FLEET-APS-PILOT-001
+task_id: MCP-APS-PILOT-001
+rules_check:
+  passed: true
+  blocked_by: []
+  batch_id: tile_rowhouse_victorian_pilot_v1
+  assembly_id: victorian_4x3_s42_a7cb
+  variant_set_id: rowhouse_victorian_night_damage
+  style_pack_id: style_victorian
+  footprint: { width: 4, depth: 3, floors: 2 }
+  proceed: yes
+order_critique:
+  - "assembly_id victorian_4x3_s42_a7cb matches across assembly_snapshot_rowhouse_victorian_v1.json and variant_set_rowhouse_victorian_v1.json."
+  - "tile_batch includes assembly_ref + variant_set_ref per mcp_art_program_green_gates_v1.md — not terrain-only factory_floor pattern."
+  - "Two explicit variants (clean_day, damaged_night_on) aligned with variant_set layers — no unseeded expansion."
+  - "Validate-only gate: no promote, no TILE-REAL-001 bake in this witness — coder-mcp owns real bake separately."
+  - "lod0 source_tier on assembly snapshot — production PBR deferred; APS pilot proves Catalog→Assembly→Variants→Atlas contract."

@@ -1,0 +1,917 @@
+{
+  "schema_version": 1,
+  "assembly_id": "victorian_4x3_s42_a7cb",
+  "style_pack_id": "style_victorian",
+  "source_tier": "lod0",
+  "procedural_rules_version": "pg2_wdc_v1",
+  "reference_tags": [],
+  "seed": 42,
+  "footprint": {
+    "width": 4,
+    "depth": 3,
+    "floors": 2,
+    "wdc_cell_count": 20
+  },
+  "module_placements": [
+    {
+      "module_id": "corner_L",
+      "job_id": "corner_L_lod0_run001",
+      "slot_key": "corner_outer",
+      "token": "C",
+      "grid_x": 0,
+      "grid_y": 0,
+      "floor": 0,
+      "glb_path": "assets/models/modules/corner_L_lod0_run001/model.glb",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "corner_L_0_0_f0",
+      "material_profile": "concrete_grey_01",
+      "placement_tags": [
+        "exterior",
+        "corner"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "lod0"
+    },
+    {
+      "module_id": "wall_brick_1u",
+      "job_id": "wall_brick_1u_lod0_run001",
+      "slot_key": "wall_1u",
+      "token": "W",
+      "grid_x": 1,
+      "grid_y": 0,
+      "floor": 0,
+      "glb_path": "assets/models/modules/wall_brick_1u_lod0_run001/model.glb",
+      "position": [
+        1.0,
+        0.0,
+        0.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "wall_brick_1u_1_0_f0",
+      "material_profile": "brick_red_01",
+      "placement_tags": [
+        "exterior",
+        "wall"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "lod0"
+    },
+    {
+      "module_id": "door_residential",
+      "job_id": "door_residential_lod0_run001",
+      "slot_key": "door_default",
+      "token": "D",
+      "grid_x": 2,
+      "grid_y": 0,
+      "floor": 0,
+      "glb_path": "assets/models/modules/door_residential_lod0_run001/model.glb",
+      "position": [
+        2.0,
+        0.0,
+        0.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "door_residential_2_0_f0",
+      "material_profile": "wood_plank_01",
+      "placement_tags": [
+        "exterior",
+        "door"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "lod0"
+    },
+    {
+      "module_id": "corner_L",
+      "job_id": "corner_L_lod0_run001",
+      "slot_key": "corner_outer",
+      "token": "C",
+      "grid_x": 3,
+      "grid_y": 0,
+      "floor": 0,
+      "glb_path": "assets/models/modules/corner_L_lod0_run001/model.glb",
+      "position": [
+        3.0,
+        0.0,
+        0.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "corner_L_3_0_f0",
+      "material_profile": "concrete_grey_01",
+      "placement_tags": [
+        "exterior",
+        "corner"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "lod0"
+    },
+    {
+      "module_id": "wall_brick_1u",
+      "job_id": "wall_brick_1u_lod0_run001",
+      "slot_key": "wall_1u",
+      "token": "W",
+      "grid_x": 0,
+      "grid_y": 1,
+      "floor": 0,
+      "glb_path": "assets/models/modules/wall_brick_1u_lod0_run001/model.glb",
+      "position": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "wall_brick_1u_0_1_f0",
+      "material_profile": "brick_red_01",
+      "placement_tags": [
+        "exterior",
+        "wall"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "lod0"
+    },
+    {
+      "module_id": "wall_brick_1u",
+      "job_id": "wall_brick_1u_lod0_run001",
+      "slot_key": "wall_1u",
+      "token": "W",
+      "grid_x": 3,
+      "grid_y": 1,
+      "floor": 0,
+      "glb_path": "assets/models/modules/wall_brick_1u_lod0_run001/model.glb",
+      "position": [
+        3.0,
+        0.0,
+        1.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "wall_brick_1u_3_1_f0",
+      "material_profile": "brick_red_01",
+      "placement_tags": [
+        "exterior",
+        "wall"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "lod0"
+    },
+    {
+      "module_id": "corner_L",
+      "job_id": "corner_L_lod0_run001",
+      "slot_key": "corner_outer",
+      "token": "C",
+      "grid_x": 0,
+      "grid_y": 2,
+      "floor": 0,
+      "glb_path": "assets/models/modules/corner_L_lod0_run001/model.glb",
+      "position": [
+        0.0,
+        0.0,
+        2.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "corner_L_0_2_f0",
+      "material_profile": "concrete_grey_01",
+      "placement_tags": [
+        "exterior",
+        "corner"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "lod0"
+    },
+    {
+      "module_id": "wall_brick_1u",
+      "job_id": "wall_brick_1u_lod0_run001",
+      "slot_key": "wall_1u",
+      "token": "W",
+      "grid_x": 1,
+      "grid_y": 2,
+      "floor": 0,
+      "glb_path": "assets/models/modules/wall_brick_1u_lod0_run001/model.glb",
+      "position": [
+        1.0,
+        0.0,
+        2.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "wall_brick_1u_1_2_f0",
+      "material_profile": "brick_red_01",
+      "placement_tags": [
+        "exterior",
+        "wall"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "lod0"
+    },
+    {
+      "module_id": "wall_brick_1u",
+      "job_id": "wall_brick_1u_lod0_run001",
+      "slot_key": "wall_1u",
+      "token": "W",
+      "grid_x": 2,
+      "grid_y": 2,
+      "floor": 0,
+      "glb_path": "assets/models/modules/wall_brick_1u_lod0_run001/model.glb",
+      "position": [
+        2.0,
+        0.0,
+        2.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "wall_brick_1u_2_2_f0",
+      "material_profile": "brick_red_01",
+      "placement_tags": [
+        "exterior",
+        "wall"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "lod0"
+    },
+    {
+      "module_id": "corner_L",
+      "job_id": "corner_L_lod0_run001",
+      "slot_key": "corner_outer",
+      "token": "C",
+      "grid_x": 3,
+      "grid_y": 2,
+      "floor": 0,
+      "glb_path": "assets/models/modules/corner_L_lod0_run001/model.glb",
+      "position": [
+        3.0,
+        0.0,
+        2.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "corner_L_3_2_f0",
+      "material_profile": "concrete_grey_01",
+      "placement_tags": [
+        "exterior",
+        "corner"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "lod0"
+    },
+    {
+      "module_id": "corner_L",
+      "job_id": "corner_L_lod0_run001",
+      "slot_key": "corner_outer",
+      "token": "C",
+      "grid_x": 0,
+      "grid_y": 0,
+      "floor": 1,
+      "glb_path": "assets/models/modules/corner_L_lod0_run001/model.glb",
+      "position": [
+        0.0,
+        3.0,
+        0.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "corner_L_0_0_f1",
+      "material_profile": "concrete_grey_01",
+      "placement_tags": [
+        "exterior",
+        "corner"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "lod0"
+    },
+    {
+      "module_id": "wall_brick_1u",
+      "job_id": "wall_brick_1u_lod0_run001",
+      "slot_key": "wall_1u",
+      "token": "W",
+      "grid_x": 1,
+      "grid_y": 0,
+      "floor": 1,
+      "glb_path": "assets/models/modules/wall_brick_1u_lod0_run001/model.glb",
+      "position": [
+        1.0,
+        3.0,
+        0.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "wall_brick_1u_1_0_f1",
+      "material_profile": "brick_red_01",
+      "placement_tags": [
+        "exterior",
+        "wall"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "lod0"
+    },
+    {
+      "module_id": "wall_brick_1u",
+      "job_id": "wall_brick_1u_lod0_run001",
+      "slot_key": "wall_1u",
+      "token": "W",
+      "grid_x": 2,
+      "grid_y": 0,
+      "floor": 1,
+      "glb_path": "assets/models/modules/wall_brick_1u_lod0_run001/model.glb",
+      "position": [
+        2.0,
+        3.0,
+        0.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "wall_brick_1u_2_0_f1",
+      "material_profile": "brick_red_01",
+      "placement_tags": [
+        "exterior",
+        "wall"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "lod0"
+    },
+    {
+      "module_id": "corner_L",
+      "job_id": "corner_L_lod0_run001",
+      "slot_key": "corner_outer",
+      "token": "C",
+      "grid_x": 3,
+      "grid_y": 0,
+      "floor": 1,
+      "glb_path": "assets/models/modules/corner_L_lod0_run001/model.glb",
+      "position": [
+        3.0,
+        3.0,
+        0.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "corner_L_3_0_f1",
+      "material_profile": "concrete_grey_01",
+      "placement_tags": [
+        "exterior",
+        "corner"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "lod0"
+    },
+    {
+      "module_id": "wall_brick_1u",
+      "job_id": "wall_brick_1u_lod0_run001",
+      "slot_key": "wall_1u",
+      "token": "W",
+      "grid_x": 0,
+      "grid_y": 1,
+      "floor": 1,
+      "glb_path": "assets/models/modules/wall_brick_1u_lod0_run001/model.glb",
+      "position": [
+        0.0,
+        3.0,
+        1.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "wall_brick_1u_0_1_f1",
+      "material_profile": "brick_red_01",
+      "placement_tags": [
+        "exterior",
+        "wall"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "lod0"
+    },
+    {
+      "module_id": "wall_brick_1u",
+      "job_id": "wall_brick_1u_lod0_run001",
+      "slot_key": "wall_1u",
+      "token": "W",
+      "grid_x": 3,
+      "grid_y": 1,
+      "floor": 1,
+      "glb_path": "assets/models/modules/wall_brick_1u_lod0_run001/model.glb",
+      "position": [
+        3.0,
+        3.0,
+        1.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "wall_brick_1u_3_1_f1",
+      "material_profile": "brick_red_01",
+      "placement_tags": [
+        "exterior",
+        "wall"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "lod0"
+    },
+    {
+      "module_id": "corner_L",
+      "job_id": "corner_L_lod0_run001",
+      "slot_key": "corner_outer",
+      "token": "C",
+      "grid_x": 0,
+      "grid_y": 2,
+      "floor": 1,
+      "glb_path": "assets/models/modules/corner_L_lod0_run001/model.glb",
+      "position": [
+        0.0,
+        3.0,
+        2.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "corner_L_0_2_f1",
+      "material_profile": "concrete_grey_01",
+      "placement_tags": [
+        "exterior",
+        "corner"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "lod0"
+    },
+    {
+      "module_id": "wall_brick_1u",
+      "job_id": "wall_brick_1u_lod0_run001",
+      "slot_key": "wall_1u",
+      "token": "W",
+      "grid_x": 1,
+      "grid_y": 2,
+      "floor": 1,
+      "glb_path": "assets/models/modules/wall_brick_1u_lod0_run001/model.glb",
+      "position": [
+        1.0,
+        3.0,
+        2.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "wall_brick_1u_1_2_f1",
+      "material_profile": "brick_red_01",
+      "placement_tags": [
+        "exterior",
+        "wall"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "lod0"
+    },
+    {
+      "module_id": "wall_brick_1u",
+      "job_id": "wall_brick_1u_lod0_run001",
+      "slot_key": "wall_1u",
+      "token": "W",
+      "grid_x": 2,
+      "grid_y": 2,
+      "floor": 1,
+      "glb_path": "assets/models/modules/wall_brick_1u_lod0_run001/model.glb",
+      "position": [
+        2.0,
+        3.0,
+        2.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "wall_brick_1u_2_2_f1",
+      "material_profile": "brick_red_01",
+      "placement_tags": [
+        "exterior",
+        "wall"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "lod0"
+    },
+    {
+      "module_id": "corner_L",
+      "job_id": "corner_L_lod0_run001",
+      "slot_key": "corner_outer",
+      "token": "C",
+      "grid_x": 3,
+      "grid_y": 2,
+      "floor": 1,
+      "glb_path": "assets/models/modules/corner_L_lod0_run001/model.glb",
+      "position": [
+        3.0,
+        3.0,
+        2.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "corner_L_3_2_f1",
+      "material_profile": "concrete_grey_01",
+      "placement_tags": [
+        "exterior",
+        "corner"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "lod0"
+    },
+    {
+      "module_id": "roof_pitched_gable",
+      "job_id": "roof_pitched_gable_lod0_run001",
+      "slot_key": "roof_default",
+      "token": "R",
+      "grid_x": 0,
+      "grid_y": 0,
+      "floor": 2,
+      "glb_path": "assets/models/modules/roof_pitched_gable_lod0_run001/model.glb",
+      "position": [
+        0.0,
+        6.0,
+        0.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "roof_pitched_gable_0_0_f2",
+      "material_profile": "roof_tile_01",
+      "placement_tags": [
+        "exterior",
+        "roof"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "lod0"
+    },
+    {
+      "module_id": "roof_pitched_gable",
+      "job_id": "roof_pitched_gable_lod0_run001",
+      "slot_key": "roof_default",
+      "token": "R",
+      "grid_x": 1,
+      "grid_y": 0,
+      "floor": 2,
+      "glb_path": "assets/models/modules/roof_pitched_gable_lod0_run001/model.glb",
+      "position": [
+        1.0,
+        6.0,
+        0.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "roof_pitched_gable_1_0_f2",
+      "material_profile": "roof_tile_01",
+      "placement_tags": [
+        "exterior",
+        "roof"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "lod0"
+    },
+    {
+      "module_id": "roof_pitched_gable",
+      "job_id": "roof_pitched_gable_lod0_run001",
+      "slot_key": "roof_default",
+      "token": "R",
+      "grid_x": 2,
+      "grid_y": 0,
+      "floor": 2,
+      "glb_path": "assets/models/modules/roof_pitched_gable_lod0_run001/model.glb",
+      "position": [
+        2.0,
+        6.0,
+        0.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "roof_pitched_gable_2_0_f2",
+      "material_profile": "roof_tile_01",
+      "placement_tags": [
+        "exterior",
+        "roof"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "lod0"
+    },
+    {
+      "module_id": "roof_pitched_gable",
+      "job_id": "roof_pitched_gable_lod0_run001",
+      "slot_key": "roof_default",
+      "token": "R",
+      "grid_x": 3,
+      "grid_y": 0,
+      "floor": 2,
+      "glb_path": "assets/models/modules/roof_pitched_gable_lod0_run001/model.glb",
+      "position": [
+        3.0,
+        6.0,
+        0.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "roof_pitched_gable_3_0_f2",
+      "material_profile": "roof_tile_01",
+      "placement_tags": [
+        "exterior",
+        "roof"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "lod0"
+    },
+    {
+      "module_id": "roof_pitched_gable",
+      "job_id": "roof_pitched_gable_lod0_run001",
+      "slot_key": "roof_default",
+      "token": "R",
+      "grid_x": 0,
+      "grid_y": 1,
+      "floor": 2,
+      "glb_path": "assets/models/modules/roof_pitched_gable_lod0_run001/model.glb",
+      "position": [
+        0.0,
+        6.0,
+        1.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "roof_pitched_gable_0_1_f2",
+      "material_profile": "roof_tile_01",
+      "placement_tags": [
+        "exterior",
+        "roof"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "lod0"
+    },
+    {
+      "module_id": "roof_pitched_gable",
+      "job_id": "roof_pitched_gable_lod0_run001",
+      "slot_key": "roof_default",
+      "token": "R",
+      "grid_x": 3,
+      "grid_y": 1,
+      "floor": 2,
+      "glb_path": "assets/models/modules/roof_pitched_gable_lod0_run001/model.glb",
+      "position": [
+        3.0,
+        6.0,
+        1.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "roof_pitched_gable_3_1_f2",
+      "material_profile": "roof_tile_01",
+      "placement_tags": [
+        "exterior",
+        "roof"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "lod0"
+    },
+    {
+      "module_id": "roof_pitched_gable",
+      "job_id": "roof_pitched_gable_lod0_run001",
+      "slot_key": "roof_default",
+      "token": "R",
+      "grid_x": 0,
+      "grid_y": 2,
+      "floor": 2,
+      "glb_path": "assets/models/modules/roof_pitched_gable_lod0_run001/model.glb",
+      "position": [
+        0.0,
+        6.0,
+        2.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "roof_pitched_gable_0_2_f2",
+      "material_profile": "roof_tile_01",
+      "placement_tags": [
+        "exterior",
+        "roof"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "lod0"
+    },
+    {
+      "module_id": "roof_pitched_gable",
+      "job_id": "roof_pitched_gable_lod0_run001",
+      "slot_key": "roof_default",
+      "token": "R",
+      "grid_x": 1,
+      "grid_y": 2,
+      "floor": 2,
+      "glb_path": "assets/models/modules/roof_pitched_gable_lod0_run001/model.glb",
+      "position": [
+        1.0,
+        6.0,
+        2.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "roof_pitched_gable_1_2_f2",
+      "material_profile": "roof_tile_01",
+      "placement_tags": [
+        "exterior",
+        "roof"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "lod0"
+    },
+    {
+      "module_id": "roof_pitched_gable",
+      "job_id": "roof_pitched_gable_lod0_run001",
+      "slot_key": "roof_default",
+      "token": "R",
+      "grid_x": 2,
+      "grid_y": 2,
+      "floor": 2,
+      "glb_path": "assets/models/modules/roof_pitched_gable_lod0_run001/model.glb",
+      "position": [
+        2.0,
+        6.0,
+        2.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "roof_pitched_gable_2_2_f2",
+      "material_profile": "roof_tile_01",
+      "placement_tags": [
+        "exterior",
+        "roof"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "lod0"
+    },
+    {
+      "module_id": "roof_pitched_gable",
+      "job_id": "roof_pitched_gable_lod0_run001",
+      "slot_key": "roof_default",
+      "token": "R",
+      "grid_x": 3,
+      "grid_y": 2,
+      "floor": 2,
+      "glb_path": "assets/models/modules/roof_pitched_gable_lod0_run001/model.glb",
+      "position": [
+        3.0,
+        6.0,
+        2.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "roof_pitched_gable_3_2_f2",
+      "material_profile": "roof_tile_01",
+      "placement_tags": [
+        "exterior",
+        "roof"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "lod0"
+    }
+  ]
+}

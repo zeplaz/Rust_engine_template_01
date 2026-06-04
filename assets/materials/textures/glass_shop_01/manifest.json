@@ -1,0 +1,11 @@
+{
+  "profile_id": "glass_shop_01",
+  "seed": 1267,
+  "generator": "steel",
+  "size": 256,
+  "paths": {
+    "albedo": "assets/materials/textures/glass_shop_01/albedo.png",
+    "normal": "assets/materials/textures/glass_shop_01/normal.png",
+    "roughness": "assets/materials/textures/glass_shop_01/roughness.png"
+  }
+}

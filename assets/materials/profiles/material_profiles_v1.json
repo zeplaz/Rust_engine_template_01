@@ -1,0 +1,280 @@
+{
+  "schema_version": 1,
+  "generator": "procedural_tile_v1",
+  "note": "Deterministic tileable sets \u2014 replace with Material Maker CLI when Tier 3 ships",
+  "profiles": {
+    "brick_red_01": {
+      "generator": "brick",
+      "seed": 42,
+      "metallic": 0.0,
+      "roughness_base": 0.82,
+      "category": "residential/brick",
+      "label": "Brick Red 01",
+      "textures": {
+        "albedo": "assets/materials/textures/brick_red_01/albedo.png",
+        "normal": "assets/materials/textures/brick_red_01/normal.png",
+        "roughness": "assets/materials/textures/brick_red_01/roughness.png"
+      }
+    },
+    "concrete_grey_01": {
+      "generator": "concrete",
+      "seed": 42,
+      "metallic": 0.0,
+      "roughness_base": 0.88,
+      "category": "industrial/concrete",
+      "label": "Concrete Grey 01",
+      "textures": {
+        "albedo": "assets/materials/textures/concrete_grey_01/albedo.png",
+        "normal": "assets/materials/textures/concrete_grey_01/normal.png",
+        "roughness": "assets/materials/textures/concrete_grey_01/roughness.png"
+      }
+    },
+    "wood_plank_01": {
+      "generator": "wood",
+      "seed": 42,
+      "metallic": 0.0,
+      "roughness_base": 0.72,
+      "category": "residential/wood",
+      "label": "Wood Plank 01",
+      "textures": {
+        "albedo": "assets/materials/textures/wood_plank_01/albedo.png",
+        "normal": "assets/materials/textures/wood_plank_01/normal.png",
+        "roughness": "assets/materials/textures/wood_plank_01/roughness.png"
+      }
+    },
+    "steel_door_01": {
+      "generator": "steel",
+      "seed": 42,
+      "metallic": 0.85,
+      "roughness_base": 0.35,
+      "category": "industrial/steel",
+      "label": "Steel Door 01",
+      "textures": {
+        "albedo": "assets/materials/textures/steel_door_01/albedo.png",
+        "normal": "assets/materials/textures/steel_door_01/normal.png",
+        "roughness": "assets/materials/textures/steel_door_01/roughness.png"
+      }
+    },
+    "steel_door_warehouse_01": {
+      "generator": "steel",
+      "seed": 42012,
+      "metallic": 0.88,
+      "roughness_base": 0.32,
+      "category": "industrial/steel",
+      "label": "Steel Door Warehouse 01",
+      "textures": {
+        "albedo": "assets/materials/textures/steel_door_warehouse_01/albedo.png",
+        "normal": "assets/materials/textures/steel_door_warehouse_01/normal.png",
+        "roughness": "assets/materials/textures/steel_door_warehouse_01/roughness.png"
+      }
+    },
+    "steel_corner_01": {
+      "generator": "steel",
+      "seed": 42013,
+      "metallic": 0.85,
+      "roughness_base": 0.4,
+      "category": "industrial/steel",
+      "label": "Steel Corner 01",
+      "textures": {
+        "albedo": "assets/materials/textures/steel_corner_01/albedo.png",
+        "normal": "assets/materials/textures/steel_corner_01/normal.png",
+        "roughness": "assets/materials/textures/steel_corner_01/roughness.png"
+      }
+    },
+    "roof_tile_01": {
+      "generator": "concrete",
+      "seed": 44,
+      "metallic": 0.0,
+      "roughness_base": 0.75,
+      "category": "roof",
+      "label": "Roof Tile 01",
+      "textures": {
+        "albedo": "assets/materials/textures/roof_tile_01/albedo.png",
+        "normal": "assets/materials/textures/roof_tile_01/normal.png",
+        "roughness": "assets/materials/textures/roof_tile_01/roughness.png"
+      }
+    },
+    "glass_panel_01": {
+      "generator": "steel",
+      "seed": 45,
+      "metallic": 0.1,
+      "roughness_base": 0.15,
+      "category": "glass",
+      "label": "Glass Panel 01",
+      "textures": {
+        "albedo": "assets/materials/textures/glass_panel_01/albedo.png",
+        "normal": "assets/materials/textures/glass_panel_01/normal.png",
+        "roughness": "assets/materials/textures/glass_panel_01/roughness.png"
+      }
+    },
+    "steel_panel_01": {
+      "generator": "steel",
+      "seed": 42010,
+      "metallic": 0.85,
+      "roughness_base": 0.42,
+      "category": "industrial/steel",
+      "label": "Steel Panel 01",
+      "textures": {
+        "albedo": "assets/materials/textures/steel_panel_01/albedo.png",
+        "normal": "assets/materials/textures/steel_panel_01/normal.png",
+        "roughness": "assets/materials/textures/steel_panel_01/roughness.png"
+      }
+    },
+    "roof_metal_01": {
+      "generator": "steel",
+      "seed": 42011,
+      "metallic": 0.9,
+      "roughness_base": 0.38,
+      "category": "industrial/steel",
+      "label": "Roof Metal 01",
+      "textures": {
+        "albedo": "assets/materials/textures/roof_metal_01/albedo.png",
+        "normal": "assets/materials/textures/roof_metal_01/normal.png",
+        "roughness": "assets/materials/textures/roof_metal_01/roughness.png"
+      }
+    },
+    "ac_unit_01": {
+      "generator": "concrete",
+      "seed": 931,
+      "metallic": 0.0,
+      "roughness_base": 0.75,
+      "category": "other",
+      "label": "Ac Unit 01",
+      "textures": {
+        "albedo": "assets/materials/textures/ac_unit_01/albedo.png",
+        "normal": "assets/materials/textures/ac_unit_01/normal.png",
+        "roughness": "assets/materials/textures/ac_unit_01/roughness.png"
+      }
+    },
+    "brick_corner_01": {
+      "generator": "brick",
+      "seed": 1459,
+      "metallic": 0.0,
+      "roughness_base": 0.75,
+      "category": "residential/brick",
+      "label": "Brick Corner 01",
+      "textures": {
+        "albedo": "assets/materials/textures/brick_corner_01/albedo.png",
+        "normal": "assets/materials/textures/brick_corner_01/normal.png",
+        "roughness": "assets/materials/textures/brick_corner_01/roughness.png"
+      }
+    },
+    "concrete_corner_01": {
+      "generator": "concrete",
+      "seed": 1787,
+      "metallic": 0.0,
+      "roughness_base": 0.75,
+      "category": "industrial/concrete",
+      "label": "Concrete Corner 01",
+      "textures": {
+        "albedo": "assets/materials/textures/concrete_corner_01/albedo.png",
+        "normal": "assets/materials/textures/concrete_corner_01/normal.png",
+        "roughness": "assets/materials/textures/concrete_corner_01/roughness.png"
+      }
+    },
+    "glass_curtain_01": {
+      "generator": "steel",
+      "seed": 1583,
+      "metallic": 0.85,
+      "roughness_base": 0.4,
+      "category": "glass",
+      "label": "Glass Curtain 01",
+      "textures": {
+        "albedo": "assets/materials/textures/glass_curtain_01/albedo.png",
+        "normal": "assets/materials/textures/glass_curtain_01/normal.png",
+        "roughness": "assets/materials/textures/glass_curtain_01/roughness.png"
+      }
+    },
+    "glass_industrial_01": {
+      "generator": "steel",
+      "seed": 1912,
+      "metallic": 0.85,
+      "roughness_base": 0.4,
+      "category": "glass",
+      "label": "Glass Industrial 01",
+      "textures": {
+        "albedo": "assets/materials/textures/glass_industrial_01/albedo.png",
+        "normal": "assets/materials/textures/glass_industrial_01/normal.png",
+        "roughness": "assets/materials/textures/glass_industrial_01/roughness.png"
+      }
+    },
+    "glass_shop_01": {
+      "generator": "steel",
+      "seed": 1267,
+      "metallic": 0.85,
+      "roughness_base": 0.4,
+      "category": "glass",
+      "label": "Glass Shop 01",
+      "textures": {
+        "albedo": "assets/materials/textures/glass_shop_01/albedo.png",
+        "normal": "assets/materials/textures/glass_shop_01/normal.png",
+        "roughness": "assets/materials/textures/glass_shop_01/roughness.png"
+      }
+    },
+    "glass_warehouse_01": {
+      "generator": "steel",
+      "seed": 1804,
+      "metallic": 0.85,
+      "roughness_base": 0.4,
+      "category": "glass",
+      "label": "Glass Warehouse 01",
+      "textures": {
+        "albedo": "assets/materials/textures/glass_warehouse_01/albedo.png",
+        "normal": "assets/materials/textures/glass_warehouse_01/normal.png",
+        "roughness": "assets/materials/textures/glass_warehouse_01/roughness.png"
+      }
+    },
+    "roof_metal_shed_01": {
+      "generator": "steel",
+      "seed": 1771,
+      "metallic": 0.85,
+      "roughness_base": 0.4,
+      "category": "industrial/steel",
+      "label": "Roof Metal Shed 01",
+      "textures": {
+        "albedo": "assets/materials/textures/roof_metal_shed_01/albedo.png",
+        "normal": "assets/materials/textures/roof_metal_shed_01/normal.png",
+        "roughness": "assets/materials/textures/roof_metal_shed_01/roughness.png"
+      }
+    },
+    "shop_door_01": {
+      "generator": "concrete",
+      "seed": 1165,
+      "metallic": 0.0,
+      "roughness_base": 0.75,
+      "category": "other",
+      "label": "Shop Door 01",
+      "textures": {
+        "albedo": "assets/materials/textures/shop_door_01/albedo.png",
+        "normal": "assets/materials/textures/shop_door_01/normal.png",
+        "roughness": "assets/materials/textures/shop_door_01/roughness.png"
+      }
+    },
+    "vent_metal_01": {
+      "generator": "steel",
+      "seed": 1263,
+      "metallic": 0.85,
+      "roughness_base": 0.4,
+      "category": "industrial/steel",
+      "label": "Vent Metal 01",
+      "textures": {
+        "albedo": "assets/materials/textures/vent_metal_01/albedo.png",
+        "normal": "assets/materials/textures/vent_metal_01/normal.png",
+        "roughness": "assets/materials/textures/vent_metal_01/roughness.png"
+      }
+    },
+    "wood_porch_corner_01": {
+      "generator": "wood",
+      "seed": 2012,
+      "metallic": 0.0,
+      "roughness_base": 0.75,
+      "category": "residential/wood",
+      "label": "Wood Porch Corner 01",
+      "textures": {
+        "albedo": "assets/materials/textures/wood_porch_corner_01/albedo.png",
+        "normal": "assets/materials/textures/wood_porch_corner_01/normal.png",
+        "roughness": "assets/materials/textures/wood_porch_corner_01/roughness.png"
+      }
+    }
+  }
+}

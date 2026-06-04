@@ -80,6 +80,7 @@ pub fn bake_snapshot_from_ordered_markers_with_world_positions(
             control_points: vec![[p0.x, p0.y, p0.z], [p1.x, p1.y, p1.z]],
             profile: DEFAULT_ROAD_PROFILE.into(),
             allowed_agents: vec!["road_vehicle".into()],
+            ..Default::default()
         });
     }
 

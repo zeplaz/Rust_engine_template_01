@@ -1,0 +1,84 @@
+# procedural_assembly_pg2_signoff.yaml — MCP-DUX-PG2-001 / post MCP-PG-2-WIT
+program_id: MCP-FLEET-WAVE3-ENGINE-001
+task_id: MCP-DUX-PG2-002
+witness: debug_runs/procedural_assembly_live.json
+design_charter: src/dev/design_procedural_assembly_read_v1.md
+reviewer: designer
+reviewed_at: "2026-06-03"
+proceed_player_visible: yes
+
+w3_live_tactical_review:
+  status: pass
+  trigger: "PROC-PG-3-001 green — runbook src/dev/pg3_w3_live_tactical_review_runbook_v1.md"
+  duration_min: 15
+  footprint: "4x3 victorian rowhouse vs 4x2 industrial_west factory witness"
+  pack_a: style_victorian
+  pack_b: style_industrial_west
+  viewport: tactical_zoom_default
+  layout: side_by_side_same_footprint
+  rubric_gates: [W2, W3, W4, W5]
+  checks:
+    - wall_family_distinguishable_without_labels
+    - roof_profile_distinguishable_without_labels
+    - door_width_cue_readable
+    - no_smoke_greybox_cubes
+    - missing_slot_shows_gap_not_wrong_mesh
+  module_ids_must_differ:
+    - wall_1u_or_wall_2u
+    - roof_default
+    - prop_clutter
+  district_one_liner_a: "Brick house with chimney"
+  district_one_liner_b: "Steel factory with sawtooth roof"
+  screenshot_paths:
+    - debug_runs/art_pipeline/w3_captures/victorian_4x3_tactical.png
+    - debug_runs/art_pipeline/w3_captures/industrial_west_4x2_tactical.png
+    - debug_runs/art_pipeline/w3_captures/victorian_4x3_tactical_night_on.png
+    - debug_runs/art_pipeline/w3_captures/industrial_west_4x2_tactical_night_on.png
+    - debug_runs/art_pipeline/w3_captures/pg3_side_by_side_day.png
+    - debug_runs/art_pipeline/w3_captures/pg3_side_by_side_night_on.png
+  reviewed_at: "2026-06-03"
+  witness: debug_runs/pg3_w3_tactical_review_live.json
+  notes: "Night emissive readable on keyframe night_on; wall/roof families distinguishable at iso + PG-3 spawn green."
+
+witness_keys:
+  pg2_wired: pass
+  smoke_fallback_used: pass
+  footprint_cells: pass
+  green: pass
+
+style_pack_swap:
+  footprint: "4x2_witness"
+  pack_a: style_victorian
+  pack_b: style_industrial_west
+  module_ids_must_differ:
+    - wall slot (wall_1u or wall_2u)
+    - roof slot (roof_default)
+    - prop_clutter
+  same_footprint_token_count: true
+  result: pass
+
+player_read_lod0:
+  wall_family_distinguishable: pass
+  roof_profile_distinguishable: pass
+  door_width_distinguishable: pass
+  district_one_liner_a: "Brick house with chimney"
+  district_one_liner_b: "Steel factory with sawtooth roof"
+  notes: "lod0 meshes low-poly; production keyframe atlases registered for map stamp."
+
+failure_modes:
+  hide_slot_when_missing: pass
+  gap_preferred_over_wrong_mesh: pass
+  f3_copy_present: pass
+
+quality_debt_acknowledged:
+  lod0_pbr_mostly_deferred: true
+  production_tier_scheduled: true
+  smoke_never_player_visible: pass
+
+modules_used:
+  all_lod0_tier: pass
+  no_kit_greybox_job_ids: pass
+  canonical_module_ids_only: pass
+
+blocked_by: []
+next: "PG-4 grammar optional; industrial/military tile lanes registered (factory/bunker/missile)"

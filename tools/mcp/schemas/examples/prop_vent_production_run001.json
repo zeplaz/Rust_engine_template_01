@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "job_id": "prop_vent_production_run001",
+  "batch_id": "kit_industrial_west_production_001",
+  "development_tier": "production",
+  "spec_ref": "assets/staging/specs/prop_vent_production.json",
+  "operation": "module_prop",
+  "params": {
+    "width_m": 1,
+    "height_m": 0.4,
+    "depth_m": 1,
+    "material_profile": "steel_panel_01",
+    "seed": 42,
+    "profile": "box",
+    "prop_kind": "vent"
+  },
+  "output": {
+    "glb": "assets/staging/prop_vent_production_run001/model.glb",
+    "thumbnail": "assets/staging/prop_vent_production_run001/preview.png"
+  }
+}

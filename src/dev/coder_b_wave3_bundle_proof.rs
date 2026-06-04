@@ -38,15 +38,15 @@ pub fn refresh_coder_b_wave3_bundle_live_witnesses() -> bool {
     use crate::dev::debug_run_envelope::refresh_agent_debug_index;
     use crate::construction::refresh_construction_mv_001_live_witness;
     use crate::dev::replay_editor_parity::refresh_replay_editor_parity_live_witness;
-    use crate::dev::stage7_behavioral_live_proof::refresh_s7b_m3_001_live_witness;
-    use crate::economy::activation::refresh_ind_e02_default_live_witness;
+    use crate::dev::stage7_behavioral_witness::refresh_s7b_m3_steward_remedy_001_live_witness;
+    use crate::economy::activation::refresh_ind_e02_default_play_002_live_witness;
     use crate::io::save::build_wave_s_hydrate_proof_payload;
     use crate::io::save::WaveSShellHydrateWitness;
-    use crate::render::{
+    use crate::dev::runtime_witness::{
+        refresh_infra_slice3_001_live_witnesses,
         refresh_infrastructure_view_isolation_live_witness,
-        refresh_log_e01_and_tactical_vfx_stage5_live_witness,
-        refresh_wc_d04_stage6_virtualization_live_witness,
     };
+    use crate::render::stage5_full_app_harness::refresh_log_e01_and_tactical_vfx_stage5_live_witness;
     use crate::render::minimap_compositor::refresh_ui_w3_m3_001_live_witness;
 
     assert!(
@@ -54,8 +54,8 @@ pub fn refresh_coder_b_wave3_bundle_live_witnesses() -> bool {
         "LOG-E01 lib + LOG-E01-VISUAL-CONFIRM fixture"
     );
     assert!(
-        refresh_ind_e02_default_live_witness(),
-        "IND-E02-DEFAULT-PLAY-001"
+        refresh_ind_e02_default_play_002_live_witness(),
+        "IND-E02-DEFAULT-PLAY-002"
     );
     assert!(
         refresh_construction_mv_001_live_witness(),
@@ -74,12 +74,12 @@ pub fn refresh_coder_b_wave3_bundle_live_witnesses() -> bool {
         "INFRA-VM-DEEP-001 + TRIAGE-PHASE-D-PARITY-001"
     );
     assert!(
-        refresh_wc_d04_stage6_virtualization_live_witness(),
-        "STAGE6-OPS-WITNESS-001"
+        refresh_infra_slice3_001_live_witnesses(),
+        "INFRA-SLICE3-001 / STAGE6-OPS-WITNESS-001"
     );
     assert!(
-        refresh_s7b_m3_001_live_witness(),
-        "S7B-M3-SIM-001"
+        refresh_s7b_m3_steward_remedy_001_live_witness(),
+        "S7B-M3-STEWARD-REMEDY-001"
     );
 
     let hydrate_body = build_wave_s_hydrate_proof_payload(&WaveSShellHydrateWitness {

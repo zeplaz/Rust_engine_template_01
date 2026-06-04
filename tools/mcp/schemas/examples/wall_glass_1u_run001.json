@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "job_id": "wall_glass_1u_run001",
+  "spec_ref": "assets/staging/specs/wall_glass_1u.json",
+  "operation": "module_wall",
+  "params": {
+    "width_m": 4,
+    "height_m": 3,
+    "depth_m": 0.1,
+    "material_profile": "glass_panel_01",
+    "seed": 42
+  },
+  "output": {
+    "glb": "assets/staging/wall_glass_1u_run001/model.glb",
+    "thumbnail": "assets/staging/wall_glass_1u_run001/preview.png"
+  }
+}

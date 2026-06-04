@@ -1,74 +1,68 @@
-# Designer workboard `v1`
+# Designer workboard — on-call
 
 | Field | Value |
 |:---|:---|
-| **Version** | `1.6.1` |
-| **Date** | 2026-05-25 |
-| **Orchestrator registry** | [`tools/orchestrator/queues/designer_signoff_registry.json`](../../tools/orchestrator/queues/designer_signoff_registry.json) |
-| **Todo board** | [`stage_designer_todos_v1.md`](stage_designer_todos_v1.md) |
-| **Machine queue** | [`tools/orchestrator/queues/designer_active_queue.json`](../../tools/orchestrator/queues/designer_active_queue.json) |
-| **Sign-off ledger** | [`stage_tracks_signoff_ledger_v1.md`](stage_tracks_signoff_ledger_v1.md) |
+| **Version** | `3.2.0` |
+| **Date** | 2026-06-02 |
+| **Mode** | **On-call** — industrial/military tile lanes + PG-3 W3 **pass** |
+| **Playbook** | [`designer_oncall_absorption_v1.md`](designer_oncall_absorption_v1.md) |
+| **Registry** | [`designer_signoff_registry.json`](../../tools/orchestrator/queues/designer_signoff_registry.json) v2.4 |
+
+**Rule:** design/spec/signoff only; no Rust. **Do not** re-queue P0–P5 long-run IDs.
 
 ---
 
-## @designer sign-offs — all **SIGNED** (orchestrator)
+## On-call — first applicable row
 
-| Queue ID | Sign-off | Witness |
-|:---|:---:|:---|
-| **UI4-DESIGN-001** | **SIGNED** 2026-05-24 | [`world_preview_d04_slide_sheet_spec_v1.md`](../prompts/guides/ui/world_preview_d04_slide_sheet_spec_v1.md) |
-| **S7P-DESIGN-001** | **SIGNED** 2026-05-24 | [`stage7_play_scenario_v1.md`](stage7_play_scenario_v1.md) |
-| **DESIGN-UI-P2-SIGNOFF-001** | **SIGNED** 2026-05-24 | [`ui_phase2_designer_signoff_v1.md`](../prompts/guides/ui/ui_phase2_designer_signoff_v1.md) |
-| **DESIGN-VFX-CAPTURE-001** | **SIGNED** 2026-05-25 **PASS** | [`vfx_capture_status_20260525.md`](../assets/vfx/reference/review_captures/vfx_capture_status_20260525.md) |
-| **WATER-DESIGN-002** | **SIGNED** 2026-05-24 | [`water_ocean_fixture_request_v1.md`](water_ocean_fixture_request_v1.md) |
-| **DESIGN-MINIMAP-M2-001** | **SIGNED** 2026-05-24 **M2 COMPLETE** | [`minimap_d_m2_signoff_v1.md`](minimap_d_m2_signoff_v1.md) |
-| **MINIMAP-DESIGN-M3-001** | **SIGNED** 2026-05-25 | [`minimap_m3_operational_overlay_spec_v1.md`](../prompts/guides/ui/minimap_m3_operational_overlay_spec_v1.md) · [`minimap_d_m3_signoff_v1.md`](minimap_d_m3_signoff_v1.md) |
-| **DESIGN-D-WP-REVIEW-001** | **SIGNED** 2026-05-25 **PASS** | [`world_preview_d_wp_review_record_v1.md`](world_preview_d_wp_review_record_v1.md) |
-| **DESIGN-D-VFX-POST-001** | **SIGNED** 2026-05-25 **PASS** | [`vfx_design_review_record_v1.md`](vfx_design_review_record_v1.md) |
-| **UX-E02-BQ128-001** | **SIGNED** 2026-05-25 | [`bq128_editor_path_design_note_v1.md`](bq128_editor_path_design_note_v1.md) · plan [`bq128_editor_path_plan_v1.md`](bq128_editor_path_plan_v1.md) |
-| **S7B-DESIGN-001** | **SIGNED** 2026-05-25 | [`stage7_behavioral_decision_worksheet_v1.md`](../prompts/guides/stage7_behavioral_decision_worksheet_v1.md) · [`stage7_behavioral_d_signoff_v1.md`](stage7_behavioral_d_signoff_v1.md) |
-| **FIRE7-DESIGN-001** | **SIGNED** 2026-05-25 | [`fire_lod_player_read_v1.md`](fire_lod_player_read_v1.md) |
-| **S7P-DESIGN-002** | **SIGNED** 2026-05-25 | [`s7p_grid_overload_ux_note_v1.md`](s7p_grid_overload_ux_note_v1.md) |
+| Priority | Lane | Action | Status |
+|:---:|:---|:---|:---|
+| 0 | **PG-3 live W3** | Victorian vs `style_industrial_west` — witness [`pg3_w3_tactical_review_live.json`](../../debug_runs/pg3_w3_tactical_review_live.json) · captures [`w3_captures/`](../../debug_runs/art_pipeline/w3_captures/) | **Done** — `w3_live_tactical_review.status: pass` |
+| 1 | **Implementation review** | When `@coder` notifies PR — slice→doc map in playbook | **Idle** |
+| 2 | **Absorption** | **DESIGN-PR4-RETIRE-UX-001** qualified→**PASS** (smoke witness) | **Done** 2026-06-02 |
+| 3 | **Production pilot** | **MCP-PROD-ROWHOUSE-SIGNOFF** — rowhouse production G4 only ([`mcp_fleet_production_pilot_rowhouse_v1.md`](mcp_fleet_production_pilot_rowhouse_v1.md)) | **READY** (after coder-mcp TILE) |
+| 4 | **Artist (hold)** | **DESIGN-PROC-ART-ACCEPTANCE-001** — full 50 modules | **HOLD** until rowhouse pilot closes |
+| 5 | **Operator** | **G-PLAY-01** — `@operator` runs runbook | **Pending** |
+| — | **Hold** | Hanabi H-A2 prod, S7B play read, R4 product board | See below |
 
 ---
 
-## Active
+## Long-run six phases — closed (do not reopen)
 
-| Queue ID | Owner | Status |
+| P | ID | Deliverable | Verdict |
+|:---:|:---|:---|:---|
+| P0 | **DESIGN-PROC-MODULE-KIT-001** | [`design_procedural_module_kit_v1.md`](design_procedural_module_kit_v1.md) | **PASS** |
+| P1 | **DESIGN-ORGANIC-GROWTH-UX-001** | [`design_organic_growth_ux_v1.md`](design_organic_growth_ux_v1.md) | **PASS** |
+| P2 | **DESIGN-CONSTRUCTION-STAGE-READ-001** | [`design_construction_site_stage_read_v1.md`](design_construction_site_stage_read_v1.md) | **PASS** |
+| P3 | **DESIGN-CONSTRUCTION-SCALING-READ-001** | [`design_construction_scaling_read_v1.md`](design_construction_scaling_read_v1.md) | **PASS** |
+| P4 | **DESIGN-INFRA-NETWORK-OVERLAY-001** | [`design_infra_network_overlay_v1.md`](design_infra_network_overlay_v1.md) | **PASS** |
+| P5 | **DESIGN-SETTLEMENT-HIERARCHY-READ-001** | [`design_settlement_hierarchy_read_v1.md`](design_settlement_hierarchy_read_v1.md) | **PASS** |
+
+---
+
+## Holds (product-triggered)
+
+| ID | Trigger | Status |
 |:---|:---|:---|
-| *(none — designer gates clear)* | | |
-
-**Status:** **idle** — all queue sign-offs **SIGNED**. No designer `@assign` until a new gate opens.
-
-### Optional / non-blocking (designer)
-
-| ID | Notes |
-|:---|:---|
-| **VX-P0-04** | VFX **ACCEPTED** PNG round — harness already green; refresh captures under `assets/vfx/reference/review_captures/` if promoting mock compare |
-| **UX-E03** | ~~Transmission stub design note~~ **DONE** — [`ux_e03_transmission_shell_note_v1.md`](ux_e03_transmission_shell_note_v1.md) |
-
-### Routed to `@coder` (not designer)
-
-| ID | Notes |
-|:---|:---|
-| **UI-P3-M2-TRAY-OPT** | Optional — overlay tray → `MinimapOverlayMask` (M2 deferred) |
-
-### Do not assign (complete)
-
-| ID | Reason |
-|:---|:---|
-| **S7P-DESIGN-001** | Done — [`stage7_play_scenario_v1.md`](stage7_play_scenario_v1.md) |
-| **WATER-DESIGN-001** / **WATER-DESIGN-002** | Done — ocean fixture + [`water_vfx_review_record_v1.md`](water_vfx_review_record_v1.md) |
-| **UI4-DESIGN-001** | Done — D-04 slide sheet |
-| **VFX-POST-REVIEW-DESIGN** / **DESIGN-D-VFX-POST-001** | Done — alias **D-VFX** |
+| **DESIGN-HANABI-H-A2-PROD-001** | `hanabi_l3` on default binary + merged | **HOLD** (`hanabi_l3_plugin_wired: false`) |
+| **DESIGN-PR4-RETIRE-UX smoke tail** | `hybrid_ecs_smoke_authoritative == true` | **Closed** — absorbed to full PASS |
+| **DESIGN-S7B-M4-PLAY-READ-001** | `@coder B` requests enqueue UX | **DEFER** |
+| **DESIGN-CONSTRUCTION-R4-PRODUCT-001** | Planner product board | **Planner only** |
 
 ---
 
-## Changelog
+## Implementation review map (idle until notify)
 
-| Version | Date | Notes |
-|:---|:---|:---|
-| v1.6.1 | 2026-05-25 | Idle state — optional VX-P0-04 / UX-E03; do-not-assign list |
-| v1.6.0 | 2026-05-25 | **S7B-DESIGN-001** worksheet SIGNED |
-| v1.5.0 | 2026-05-25 | Six @designer todos + `designer_signoff_registry.json` |
-| v1.4.0 | 2026-05-25 | Five-todo closure |
-| v1.2.0 | 2026-05-24 | Initial batch |
+| Slice | PASS doc |
+|:---|:---|
+| CON-P2-* | [`design_construction_site_stage_read_v1.md`](design_construction_site_stage_read_v1.md) |
+| CON-P3-S* | [`design_construction_scaling_read_v1.md`](design_construction_scaling_read_v1.md) |
+| INFRA-E6-003/004 | [`design_infra_network_overlay_v1.md`](design_infra_network_overlay_v1.md) |
+| PROC-PG-2-001 | [`design_procedural_module_kit_v1.md`](design_procedural_module_kit_v1.md) |
+| PROC-OG-3-001 | [`design_organic_growth_ux_v1.md`](design_organic_growth_ux_v1.md) |
+| Settlement UI | [`design_settlement_hierarchy_read_v1.md`](design_settlement_hierarchy_read_v1.md) |
+
+---
+
+## Prior batches
+
+Stability P1–P4, wave4/5/6, proc long-run — registry `signoffs` / queue `done`.

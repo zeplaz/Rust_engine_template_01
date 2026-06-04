@@ -1,0 +1,11 @@
+{
+  "profile_id": "steel_corner_01",
+  "seed": 42013,
+  "generator": "steel",
+  "size": 512,
+  "paths": {
+    "albedo": "assets/materials/textures/steel_corner_01/albedo.png",
+    "normal": "assets/materials/textures/steel_corner_01/normal.png",
+    "roughness": "assets/materials/textures/steel_corner_01/roughness.png"
+  }
+}

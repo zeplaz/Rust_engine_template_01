@@ -4,9 +4,72 @@ Single map of **planning → proof → implementation** for this repo. Use with 
 
 ---
 
+## Designer art MCP + Blender (2026-06-02)
+
+**Design:** [`prompts/designer_questions/art_design.md`](../prompts/designer_questions/art_design.md) · [`prompts/art_desgin_inbound.md`](../prompts/art_desgin_inbound.md)  
+**Art alignment:** [`plan_art_design_inbound_alignment_v1.md`](plan_art_design_inbound_alignment_v1.md) · **Exec:** [`plan_designer_mcp_art_toolchain_exec_001_v1.md`](plan_designer_mcp_art_toolchain_exec_001_v1.md) · **Tools:** [`tools/mcp/README.md`](../tools/mcp/README.md)
+
+**Start:** [`designer_mcp_onboarding_v1.md`](designer_mcp_onboarding_v1.md) · run [`tools/mcp/install_designer_mcp.ps1`](../../tools/mcp/install_designer_mcp.ps1) · restart Cursor for MCP
+
+**Feeds:** procedural module kit (50 greybox), construction Phase 4 placeholder art, `assets/configs/buildings/`.
+
+**Production iso tiles (ACTIVE):** [`plan_procedural_building_tiles_production_v1.md`](plan_procedural_building_tiles_production_v1.md) — sim→variant, `kit_production_*`, fire frames; witness [`procedural_tiles_production_witness_v1.md`](procedural_tiles_production_witness_v1.md). **Bake spine (mandatory):** [`design_tile_bake_spine_convergence_v1.md`](design_tile_bake_spine_convergence_v1.md) — keyframe → tilemapgen; ortho stub CI-only.
+
+---
+
+## Planner alignment (read first)
+
+**Hub:** [`planner_program_alignment_v1.md`](planner_program_alignment_v1.md) — construction **1→11** vs infrastructure **E0–E6** vs PHASE-STABLE; **dual track** (no single primary).
+
+| Track | Start here |
+|:---|:---|
+| **Construction P3 (now)** | [`plan_construction_scaling_audit_exec_003_v1.md`](plan_construction_scaling_audit_exec_003_v1.md) — **A: CON-P3-S1..S3 + WIT** · **B: S4–S6 done** |
+| **Settlement P5** | [`plan_settlement_hierarchy_exec_005_v1.md`](plan_settlement_hierarchy_exec_005_v1.md) — **SET-P5-001..003 done on disk** |
+| **Coder workload** | [`fleet_coder_workload_queue_20260602_v1.md`](fleet_coder_workload_queue_20260602_v1.md) — machine queue `v5.4.0` |
+| **Procedural + organic (after P2)** | [`construction_procedural_growth_index_v1.md`](construction_procedural_growth_index_v1.md) · **Growth actors:** [`plan_econ_growth_actors_exec_001_v1.md`](plan_econ_growth_actors_exec_001_v1.md) |
+| **Infrastructure (parallel E0, gated)** | [`plan_infrastructure_world_layers_exec_001_v1.md`](plan_infrastructure_world_layers_exec_001_v1.md) |
+| **Proof / cfg (P1 done)** | [`plan_fleet_stability_integrity_exec_002_v1.md`](plan_fleet_stability_integrity_exec_002_v1.md) |
+
+**Dual track:** both programs advance — [`coder_unified_backlog_v1.md`](coder_unified_backlog_v1.md) (Coder A / B columns + § Horizon proc/growth).
+
+**Fleet snapshot (2026-06-02):** [`fleet_snapshot_20260602_v3.md`](fleet_snapshot_20260602_v3.md) · **Coder workload:** [`fleet_coder_workload_queue_20260602_v1.md`](fleet_coder_workload_queue_20260602_v1.md)  
+**Planner / designer prompts (post long-run):** [`fleet_planner_designer_prompts_20260602_v2.md`](fleet_planner_designer_prompts_20260602_v2.md) · coders: [`fleet_longrun_prompts_20260602_v1.md`](fleet_longrun_prompts_20260602_v1.md) `v1.2`  
+**MCP consumers:** [`agent_mcp_consumer_guide_v1.md`](agent_mcp_consumer_guide_v1.md) · **Economy vision:** [`construction_economy_growth_vision_v1.md`](construction_economy_growth_vision_v1.md)  
+**Coder orders (econ growth):** [`fleet_coder_orders_econ_growth_20260602_v1.md`](fleet_coder_orders_econ_growth_20260602_v1.md) · exec [`plan_econ_growth_actors_exec_001_v1.md`](plan_econ_growth_actors_exec_001_v1.md)
+
+---
+
+## Infrastructure program (2026-06-02 — full coder workboard)
+
+**Design:** [`world_layer_infrastructure_model_v1.md`](world_layer_infrastructure_model_v1.md) — tiles = terrain only; corridors + utilities = graphs.
+
+**Exec:** [`plan_infrastructure_world_layers_exec_001_v1.md`](plan_infrastructure_world_layers_exec_001_v1.md) — **6 epics, 25 PRs, ~12–14 weeks**. Start **Epic 0** (`INFRA-E0-001` profile registry + `INFRA-E0-002` tile deprecation).
+
+**Matrix:** [`prompts/matrix/transport/road_rail_migration_matrix_v1.md`](../../prompts/matrix/transport/road_rail_migration_matrix_v1.md) (R1–R10 traceability in exec doc).
+
+**Not the same lane as** PHASE-STABLE DEHACK (`plan_fleet_stability_integrity_exec_002_v1.md`) — run infrastructure on a dedicated branch/train when possible.
+
+---
+
+## Fleet snapshot (2026-05-28)
+
+**Phase index (authoritative):** [`plan_fleet_stability_integrity_001_v1.md`](plan_fleet_stability_integrity_001_v1.md) · **PHASE-STABLE-2026-06** — **P2 signed**  
+**Exec P1 (closed):** [`plan_fleet_stability_integrity_exec_002_v1.md`](plan_fleet_stability_integrity_exec_002_v1.md) · **Dispatch P2 (signed):** [`fleet_stability_phase2_dispatch_v1.md`](fleet_stability_phase2_dispatch_v1.md) · P1: [`fleet_stability_coder_dispatch_v1.md`](fleet_stability_coder_dispatch_v1.md)  
+**G-PLAY runbook:** [`play_scenario_acceptance_runbook_v1.md`](play_scenario_acceptance_runbook_v1.md)  
+**Sweep:** [`production_jank_sweep_20260602_v1.md`](production_jank_sweep_20260602_v1.md) · **Env:** [`runtime_env_policy_registry_v1.md`](runtime_env_policy_registry_v1.md)  
+**Audit:** [`planner_status_audit_v18.md`](planner_status_audit_v18.md) · checklist [`plan_ledger_refresh_018_checklist_v1.md`](plan_ledger_refresh_018_checklist_v1.md)  
+**Prior audit:** [`planner_status_audit_v17.md`](planner_status_audit_v17.md) · [`plan_ledger_refresh_017_checklist_v1.md`](plan_ledger_refresh_017_checklist_v1.md)
+**Prior phase (closed):** [`plan_fleet_phase_next_001_v1.md`](plan_fleet_phase_next_001_v1.md) · audit v16 · [`fleet_coder_workboard_20260528_v3.md`](fleet_coder_workboard_20260528_v3.md)
+
+**New gates:** G-PLAY-01 (10 min default sim) · G-PROOF-01 (no witness shortcuts in visual capture). Lib fixture green ≠ ship sign-off. **P1 cfg rule:** DEHACK slices close on compile boundary, not runtime guard alone.
+
 ## Coder fleet (active now)
 
-**Board:** [`coder_fleet_active_assignments_v1.md`](coder_fleet_active_assignments_v1.md) · [`tools/orchestrator/queues/HANDOFF.md`](../tools/orchestrator/queues/HANDOFF.md) · [`coder_active_queue.json`](../tools/orchestrator/queues/coder_active_queue.json)
+**PHASE-STABLE dispatch (signed):** [`fleet_stability_phase2_dispatch_v1.md`](fleet_stability_phase2_dispatch_v1.md) · [`coder_active_queue.json`](../tools/orchestrator/queues/coder_active_queue.json) v5.3 · [`HANDOFF.md`](../tools/orchestrator/queues/HANDOFF.md)
+
+**Implement next (construction + infra):** A → **CON-P2-001** · B → **CON-P2-002** (then unified backlog rows). **P2 stability tails** remain in `active[]` when not blocked.
+
+**Archive / matrix:** [`coder_unblock_dispatch_v1.md`](coder_unblock_dispatch_v1.md) · [`coder_fleet_multistage_matrix_v1.md`](coder_fleet_multistage_matrix_v1.md) · [`coder_dual_queue_multistage_v1.md`](coder_dual_queue_multistage_v1.md) · parallel boards [`planner_parallel_workboard_v1.md`](planner_parallel_workboard_v1.md) · [`designer_parallel_workboard_v1.md`](designer_parallel_workboard_v1.md)
 
 ---
 
@@ -41,7 +104,7 @@ flowchart LR
 
 **Witness specs:** [`wave_p_witness_spec_v1.md`](wave_p_witness_spec_v1.md) · [`ui_shell_witness_spec_v1.md`](ui_shell_witness_spec_v1.md) · [`industrial_activation_board_reconcile_v1.md`](industrial_activation_board_reconcile_v1.md)
 
-**Machine queues (003):** [`planner_active_queue.json`](../tools/orchestrator/queues/planner_active_queue.json) · [`coder_active_queue.json`](../tools/orchestrator/queues/coder_active_queue.json) · [`planner_status_audit_v5.md`](planner_status_audit_v5.md)
+**Machine queues (003):** [`planner_active_queue.json`](../tools/orchestrator/queues/planner_active_queue.json) · [`coder_active_queue.json`](../tools/orchestrator/queues/coder_active_queue.json) · [`planner_status_audit_v16.md`](planner_status_audit_v16.md) (**PLAN-LEDGER-REFRESH-016**)
 
 | Track | Plan |
 |-------|------|
@@ -67,9 +130,17 @@ flowchart LR
 | F7-C LOD signoff | [`fire7_f7_c_lod_impl_plan_v1.md`](fire7_f7_c_lod_impl_plan_v1.md) |
 | LOG-E01 visual confirm | [`log_e01_visual_acceptance_v1.md`](log_e01_visual_acceptance_v1.md) |
 | Replay editor parity | [`replay_editor_parity_impl_plan_v1.md`](replay_editor_parity_impl_plan_v1.md) |
-| S7B M4 sim playtest | [`s7b_m4_sim_playtest_spec_v1.md`](s7b_m4_sim_playtest_spec_v1.md) |
+| S7B M4 sim playtest | [`s7b_m4_sim_playtest_spec_v1.md`](s7b_m4_sim_playtest_spec_v1.md) · exec [`plan_stage7_m4_play_001_v1.md`](plan_stage7_m4_play_001_v1.md) |
 | VM-08 overlay parity stress | [`overlay_parity_stress_plan_v1.md`](overlay_parity_stress_plan_v1.md) |
-| Planner wave 4 audit | [`planner_status_audit_v7.md`](planner_status_audit_v7.md) (**PLAN-LEDGER-REFRESH-005**) |
+| Planner audit (fleet) | [`planner_status_audit_v14.md`](planner_status_audit_v14.md) (**PLAN-LEDGER-REFRESH-010**) |
+| Elemental nav index | [`plan_elemental_wave2_index_001_v1.md`](plan_elemental_wave2_index_001_v1.md) v1.1 |
+| WSS PR-5 smoke prod exec | [`plan_wss_pr5_smoke_prod_001_v1.md`](plan_wss_pr5_smoke_prod_001_v1.md) |
+| Hanabi H-A2 exec | [`plan_hanabi_h_a2_exec_001_v1.md`](plan_hanabi_h_a2_exec_001_v1.md) |
+| WSS PR-4 exec | [`plan_wss_pr4_exec_001_v1.md`](plan_wss_pr4_exec_001_v1.md) |
+| IND-E02 play exec | [`plan_ind_e02_play_exec_001_v1.md`](plan_ind_e02_play_exec_001_v1.md) |
+| Procedural buildings | [`construction_procedural_buildings_plan_v1.md`](construction_procedural_buildings_plan_v1.md) |
+| Organic growth exec | [`plan_organic_growth_exec_001_v1.md`](plan_organic_growth_exec_001_v1.md) |
+| WSS hybrid retire (criteria) | [`plan_wss_hybrid_retire_pr4_001_v1.md`](plan_wss_hybrid_retire_pr4_001_v1.md) |
 | Infra 5.5+ | [`stages/infra_55_execution_plan_v1.md`](stages/infra_55_execution_plan_v1.md) |
 | Wave C depth | [`stages/wave_c_depth_plan_v1.md`](stages/wave_c_depth_plan_v1.md) |
 | Fire sim Phase 7 | [`stages/fire_sim_phase7_plan_v1.md`](stages/fire_sim_phase7_plan_v1.md) |

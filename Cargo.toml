@@ -1,3 +1,7 @@
+[workspace]
+members = [".", "experiments/hanabi_validation"]
+resolver = "2"
+
 [package]
 name = "proc_A_dine01"
 version = "0.1.1"
@@ -8,8 +12,14 @@ build = "build.rs"
 [lib]
 path = "src/lib.rs"
 
+[[bin]]
+name = "bevy_preview_worker"
+path = "src/bin/bevy_preview_worker.rs"
+
 [features]
 default = []
+# H-A2: optional Hanabi L3 embellishment (no default EnginePlugin registration).
+hanabi_l3 = ["dep:bevy_hanabi"]
 # Historical `src/engine/engine.rs` stub (DefaultPlugins + egui only). Canonical: `engine_with_worldgen::EnginePlugin`.
 legacy_engine = []
 # Optional research / ML prototypes (`engine::lmodels`); **stub only** — linfa crates are declared for
@@ -25,6 +35,8 @@ research_lmodels = [
 bevy_tilemap_adapter = ["dep:bevy_ecs_tilemap"]
 # U7: rule-trace component + materialize tracing (no extra deps).
 dev_tools = []
+# INFRA-E0-003: opt-in legacy ECS `Road` / `Rrails` stubs under `entities::structure`.
+legacy_transport_ecs_stubs = []
 # Optional detached native minimap host (consumer-only; **BQ-131**).
 hud_native_minimap_window = []
 # `legacy_io_templates` removed 2026-04-26: src/io/templates.rs retired.
@@ -38,6 +50,7 @@ serde_json = "1.0"
 crossbeam-channel = "0.5"
 ron = "0.8"
 reqwest = { version = "0.11", features = ["json"] }
+sha2 = "0.10"
 
 # --- Bevy and UI (Bevy 0.18 line) ---
 # Pin companions from https://github.com/vladbat00/bevy_egui compatibility table at lock time.
@@ -61,6 +74,8 @@ rand = "0.8.5"
 rand_chacha = "0.3.1"
 nalgebra = "0.32.2"
 bevy_ecs_tilemap = { version = "0.18.1", optional = true, default-features = false }
+bevy_hanabi = { version = "0.18", optional = true, default-features = false, features = ["3d"] }
+bevy_vector_shapes = "0.12.0"
 
 # Optional linfa stack for `research_lmodels` — **not integrated** in `engine::lmodels` yet (stub module).
 linfa = { version = "0.8.1", optional = true, default-features = false }

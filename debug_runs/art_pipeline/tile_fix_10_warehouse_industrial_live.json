@@ -1,0 +1,33 @@
+{
+  "program_id": "PLAN-TILE-FIX-AUTO-BUILD-001",
+  "task_id": "TILE-FIX-10",
+  "gate": "TILE-FIX-10-promotion",
+  "green": false,
+  "schema_validation_passed": true,
+  "art_quality": "rejected_headless_procedural",
+  "updated": "2026-06-03T20:44:31.573644+00:00",
+  "building_id": "warehouse_industrial",
+  "minimum_g4_cells": 24,
+  "shell_production_ready": true,
+  "shell_blockers": [],
+  "promotion_validation": {
+    "schema_version": 1,
+    "validator": "tile",
+    "status": "passed",
+    "compression_level": 3,
+    "summary": "tile_promotion: 0 error(s), shell_ok=True",
+    "error_count": 0,
+    "warning_count": 0,
+    "errors": [],
+    "known_fixes": [],
+    "raw_log_path": "",
+    "confidence": 1.0
+  },
+  "pipeline_summary": {},
+  "meta_json": "assets/staging/tiles/tile_warehouse_industrial_v2_minimum_g4/atlas_meta.json",
+  "_agent_meta": {
+    "agent": "coder-mcp",
+    "lane": "tile_compile_minimum"
+  },
+  "freeze_reason": "TILE-FIX-010 schema pass only \u2014 headless tile_keyframe_bake is not ship art; export manual keyframe_render stills and add keyframe_manual.export marker"
+}

@@ -1,0 +1,12 @@
+{
+  "job_id": "asm_military_6x3_s46_fbad",
+  "status": "done",
+  "log_path": "debug_runs/art_pipeline/asm_military_6x3_s46_fbad.log",
+  "outputs": [
+    "assets/staging/assemblies/military_6x3_s46_fbad.blend"
+  ],
+  "error": null,
+  "operation": "assembly_build",
+  "job_path": "tools/mcp/jobs/asm_military_6x3_s46_fbad.json",
+  "updated_at": 1780502677.1881874
+}

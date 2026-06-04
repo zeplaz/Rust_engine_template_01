@@ -166,7 +166,7 @@ fn logistics_log_b_app() -> App {
     use crate::dev::industrial_activation_todos::register_industrial_activation_todo_hooks;
     use crate::dev::logistics_throughput_todos::register_logistics_throughput_todo_hooks;
     use crate::engine::states::BaseState;
-    use crate::systems::sim_control::SimControlState;
+    use crate::systems::sim_control::{SimControlState, SimTick, SimTimeMicros};
     use bevy::state::app::StatesPlugin;
 
     let mut app = App::new();
@@ -187,6 +187,26 @@ fn logistics_log_b_app() -> App {
         steps_remaining: 0,
         speed: 1.0,
     });
+    // Stage7 OnEnter(Simulation) seeds require sim clock resources without full SimControlPlugin.
+    app.init_resource::<SimTick>();
+    app.init_resource::<SimTimeMicros>();
+    app
+}
+
+/// Route-cache invalidation only — no Simulation / industrial activation (avoids stage7 + play seeds).
+fn logistics_route_invalidation_app() -> App {
+    use crate::systems::sim_control::SimControlState;
+
+    let mut app = App::new();
+    app.add_plugins(MinimalPlugins);
+    hydrate_chain(&mut app);
+    app.insert_resource(SimControlState {
+        paused: false,
+        steps_remaining: 0,
+        speed: 1.0,
+    });
+    app.init_resource::<crate::economy::resource_flow::ResourceFlowRegistry>();
+    app.add_plugins(crate::economy::logistics::LogisticsThroughputPlugin);
     app
 }
 
@@ -216,6 +236,7 @@ fn spawn_facility(app: &mut App, catalog_id: &str, site_id: u64, origin: BuildSi
                 archetype: SiteArchetype::Factory,
                 layer: LayerType::Surface,
                 catalog_id: Some(catalog_id.into()),
+                placement: None,
             },
             BuildingDefinitionRef {
                 catalog_id: catalog_id.into(),
@@ -579,9 +600,8 @@ fn log_d_streaming_route_invalidation_on_construction_bump() {
 
     LOG_D_03_STREAMING_INVALIDATION_TEST_PASSED.store(false, std::sync::atomic::Ordering::Relaxed);
 
-    let mut app = logistics_log_b_app();
-    setup_aluminum_chain_facilities(&mut app);
-    for _ in 0..8 {
+    let mut app = logistics_route_invalidation_app();
+    for _ in 0..2 {
         app.update();
     }
     let topo_before = app.world().resource::<RouteCache>().topology_revision;

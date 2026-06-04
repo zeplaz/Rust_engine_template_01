@@ -3,7 +3,8 @@
 use bevy::prelude::*;
 
 use crate::strategic::{
-    BuildSiteTile, CommitConstructionSiteEvent, FootprintTiles, LayerType, SiteArchetype, SiteId,
+    BuildSiteTile, CommitConstructionSiteEvent, CommittedPlacementSnapshot, FootprintTiles,
+    LayerType, SiteArchetype, SiteId,
 };
 
 pub fn queue_commit_construction_site(
@@ -14,6 +15,7 @@ pub fn queue_commit_construction_site(
     footprint: FootprintTiles,
     layer: LayerType,
     catalog_id: Option<String>,
+    placement: Option<CommittedPlacementSnapshot>,
 ) {
     writer.write(CommitConstructionSiteEvent {
         site_id: SiteId::UNASSIGNED,
@@ -23,5 +25,6 @@ pub fn queue_commit_construction_site(
         footprint,
         layer,
         catalog_id,
+        placement,
     });
 }

@@ -77,7 +77,7 @@ pub fn refresh_ui_w3_witness_001_live_witness() -> bool {
     use crate::dev::debug_run_envelope::refresh_agent_debug_index;
     use crate::gui::hud::simulation_shell_phase2::refresh_coder_b_ui_five_lane_witness;
     use crate::render::minimap_compositor::refresh_ui_w3_m2_001_live_witness;
-    use crate::render::{
+    use crate::dev::runtime_witness::{
         refresh_infrastructure_view_isolation_live_witness,
         refresh_wc_d04_stage6_virtualization_live_witness,
     };

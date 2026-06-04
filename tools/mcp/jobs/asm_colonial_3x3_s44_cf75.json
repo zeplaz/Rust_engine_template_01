@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "job_id": "asm_colonial_3x3_s44_cf75",
+  "operation": "assembly_build",
+  "assembly_snapshot": "assets/staging/assemblies/colonial_3x3_s44_cf75.json",
+  "output": {
+    "blend": "assets/staging/assemblies/colonial_3x3_s44_cf75.blend"
+  }
+}

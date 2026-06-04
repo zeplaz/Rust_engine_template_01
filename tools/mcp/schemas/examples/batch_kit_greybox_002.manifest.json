@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "batch_id": "kit_greybox_002",
+  "description": "Wave 2 — windows, corners, props (bpy ops shipped; designer may re-run batch)",
+  "plan_ref": "src/dev/plan_mcp_pipeline_recovery_and_agent_fleet_v1.md",
+  "predecessor": "kit_greybox_001",
+  "witness": "debug_runs/art_pipeline/kit_greybox_002_live.json",
+  "rules_applied": [
+    "no_ai_generated_images",
+    "deterministic_output",
+    "batch_processing",
+    "grid_alignment"
+  ],
+  "modules": [
+    {"asset_id": "window_industrial_1u", "job_id": "window_industrial_1u_run001", "archetype": "module_window", "status": "promoted"},
+    {"asset_id": "window_shop_1u", "job_id": "window_shop_1u_run001", "archetype": "module_window", "status": "promoted"},
+    {"asset_id": "window_warehouse_2u", "job_id": "window_warehouse_2u_run001", "archetype": "module_window", "status": "promoted"},
+    {"asset_id": "window_glass_curtain_2u", "job_id": "window_glass_curtain_2u_run001", "archetype": "module_window", "status": "promoted"},
+    {"asset_id": "corner_concrete_outer", "job_id": "corner_concrete_outer_run001", "archetype": "module_prop", "status": "promoted"},
+    {"asset_id": "corner_brick_outer", "job_id": "corner_brick_outer_run001", "archetype": "module_prop", "status": "promoted"},
+    {"asset_id": "corner_steel_inner", "job_id": "corner_steel_inner_run001", "archetype": "module_prop", "status": "promoted"},
+    {"asset_id": "prop_vent_roof_1u", "job_id": "prop_vent_roof_1u_run001", "archetype": "module_prop", "status": "promoted"},
+    {"asset_id": "prop_ac_unit_1u", "job_id": "prop_ac_unit_1u_run001", "archetype": "module_prop", "status": "promoted"},
+    {"asset_id": "corner_wood_porch", "job_id": "corner_wood_porch_run001", "archetype": "module_prop", "status": "promoted"}
+  ],
+  "next_agent": "@designer-mcp",
+  "gate": "G5",
+  "bpy_ops": "ready",
+  "status_note": "module_window + module_prop shipped; re-bake optional for higher vertex counts"
+}

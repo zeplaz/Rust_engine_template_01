@@ -1,0 +1,12 @@
+{
+  "job_id": "prop_smoke_example",
+  "status": "done",
+  "log_path": "debug_runs/art_pipeline/prop_smoke_example.log",
+  "outputs": [
+    "assets/staging/prop_smoke_example/model.glb"
+  ],
+  "error": null,
+  "spec_ref": "assets/staging/specs/corner_concrete_outer.json",
+  "job_path": "tools/mcp/schemas/examples/prop_smoke.example.json",
+  "updated_at": 1780430665.7362428
+}

@@ -12,7 +12,6 @@ mod registry_snapshot;
 mod snapshot_builder;
 mod transport_overlay;
 mod wave_s_artifacts;
-mod wave_s_live_proof;
 mod wire_format;
 
 pub use autosave::{tick_world_save_autosave, WorldSaveAutosaveSettings};
@@ -45,7 +44,10 @@ pub use pipeline::{
 pub use registry_snapshot::{
     build_default_registry_snapshot_refs, write_registry_snapshot_artifacts,
 };
-pub use transport_overlay::{transport_overlay_ref, TRANSPORT_OVERLAY_NAME};
+pub use transport_overlay::{
+    read_transport_snapshot_ron, transport_overlay_ref, write_transport_snapshot_ron,
+    TRANSPORT_OVERLAY_NAME,
+};
 pub use wave_s_artifacts::{
     apply_wave_s_shell_capture_requests, apply_wave_s_shell_restore_requests,
     hydrate_wave_s_artifacts_from_bundle, product_shell_bundle_exists, read_blueprint_presets,
@@ -54,7 +56,7 @@ pub use wave_s_artifacts::{
     WaveSShellCapturePending, WaveSShellHydrateState, WaveSShellHydrateWitness,
     WaveSShellRestorePending, WAVE_S_BLUEPRINT_PRESETS_REL_PATH, WAVE_S_PRODUCT_SHELL_REL_PATH,
 };
-pub use wave_s_live_proof::{
+pub use crate::dev::runtime_witness::wave_s::{
     build_wave_s_hydrate_proof_payload, write_wave_s_hydrate_live_proof_system, WaveSLiveProofState,
     WAVE_S_HYDRATE_JSON,
 };

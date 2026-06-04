@@ -1,0 +1,12 @@
+{
+  "job_id": "asm_colonial_3x3_s44_cf75",
+  "status": "done",
+  "log_path": "debug_runs/art_pipeline/asm_colonial_3x3_s44_cf75.log",
+  "outputs": [
+    "assets/staging/assemblies/colonial_3x3_s44_cf75.blend"
+  ],
+  "error": null,
+  "operation": "assembly_build",
+  "job_path": "tools/mcp/jobs/asm_colonial_3x3_s44_cf75.json",
+  "updated_at": 1780502675.8330483
+}

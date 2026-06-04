@@ -1,0 +1,327 @@
+[
+  {
+    "id": "PLAN-APS-TAGS-001",
+    "priority": 1,
+    "title": "Tag taxonomy schema \u2014 Location / Architectural / Detail / Condition",
+    "lane": "grammar-planner",
+    "agent": "planner",
+    "stop_point": true,
+    "depends_on": [],
+    "status": "done",
+    "note": "2026-06-02 aps_tag_taxonomy_v1.schema.json + aps_tags_001_v1.md",
+    "deliverable": "tools/mcp/schemas/aps_tag_taxonomy_v1.schema.json + src/dev/aps_tags_001_v1.md",
+    "docs": [
+      "src/dev/plan_building_grammar_evolution_v1.md"
+    ]
+  },
+  {
+    "id": "PLAN-ARCH-ASSEMBLY-GRAPH-002",
+    "priority": 2,
+    "title": "Assembly node semantic fields \u2014 role, style, weathering, tags",
+    "lane": "grammar-planner",
+    "agent": "planner",
+    "stop_point": true,
+    "depends_on": [],
+    "status": "done",
+    "note": "2026-06-02 assembly_graph_node_v1 bump + arch_assembly_graph_002_v1.md + snapshot grammar_rule_chain",
+    "deliverable": "tools/mcp/schemas/assembly_graph_node_v1.schema.json bump + plan cross-link",
+    "docs": [
+      "tools/mcp/schemas/assembly_graph_node_v1.schema.json"
+    ]
+  },
+  {
+    "id": "PLAN-APS-PREVIEW-004",
+    "priority": 5,
+    "title": "Bevy preview worker architecture (doc only)",
+    "lane": "grammar-planner",
+    "agent": "planner",
+    "depends_on": [
+      "PLAN-APS-TAGS-001"
+    ],
+    "status": "done",
+    "note": "2026-06-02 aps_preview_004_bevy_worker_v1.md",
+    "deliverable": "src/dev/aps_preview_004_bevy_worker_v1.md",
+    "docs": []
+  },
+  {
+    "id": "CODER-PG-QUALITY-001",
+    "priority": 1,
+    "title": "Grammar diversity witness \u2014 seed sweep metrics",
+    "lane": "grammar-coder",
+    "agent": "coder",
+    "stop_point": true,
+    "depends_on": [
+      "ARCH-BUILD-GRAMMAR-002"
+    ],
+    "status": "done",
+    "witness": "debug_runs/grammar_diversity_witness.json",
+    "commands": [
+      "cargo test -p proc_A_dine01 --lib construction::procedural::building_grammar"
+    ],
+    "docs": [
+      "src/construction/procedural/building_grammar.rs"
+    ],
+    "note": "debug_runs/grammar_diversity_witness.json green",
+    "updated_at": "2026-06-03T18:51:44.510802+00:00"
+  },
+  {
+    "id": "CODER-SNAPSHOT-GRAMMAR-WIRE",
+    "priority": 2,
+    "title": "assembly_snapshot uses GrammarGenerateResult + rule_chain",
+    "lane": "grammar-coder",
+    "agent": "coder",
+    "depends_on": [
+      "ARCH-BUILD-GRAMMAR-002",
+      "PLAN-ARCH-ASSEMBLY-GRAPH-002"
+    ],
+    "status": "done",
+    "deliverable": "src/construction/procedural/assembly_snapshot.rs",
+    "docs": [
+      "src/dev/arch_build_grammar_001_schema_v1.md",
+      "src/dev/arch_assembly_graph_002_v1.md"
+    ]
+  },
+  {
+    "id": "CODER-PG-QUALITY-002",
+    "priority": 3,
+    "title": "Optional: hook PG-2 witness to grammar massing diversity",
+    "lane": "grammar-coder",
+    "agent": "coder",
+    "depends_on": [
+      "CODER-PG-QUALITY-001"
+    ],
+    "status": "done",
+    "docs": [
+      "debug_runs/procedural_assembly_live.json"
+    ],
+    "started_at": "2026-06-03T18:49:48.055620+00:00",
+    "note": "procedural_assembly_live.json grammar_diversity hook green",
+    "updated_at": "2026-06-03T18:52:03.913587+00:00"
+  },
+  {
+    "id": "DESIGN-PG-MODULE-AUDIT-001",
+    "priority": 1,
+    "title": "Module kit category audit \u2014 warehouse / industrial west",
+    "lane": "grammar-designer",
+    "agent": "designer",
+    "stop_point": true,
+    "depends_on": [],
+    "status": "done",
+    "note": "2026-06-02 pg_module_audit_warehouse_v1.md \u2014 2 production modules in pack; PG-MODULE-AUDIT-002 job list drafted",
+    "deliverable": "src/dev/pg_module_audit_warehouse_v1.md",
+    "docs": [
+      "assets/configs/buildings/_module_index.ron"
+    ]
+  },
+  {
+    "id": "DESIGN-PILOT-GRAMMAR-001-PREP",
+    "priority": 2,
+    "title": "PILOT G4 checklist \u2014 grammar \u2192 manual keyframe \u2192 G4",
+    "lane": "grammar-designer",
+    "agent": "designer",
+    "depends_on": [
+      "DESIGN-PG-MODULE-AUDIT-001"
+    ],
+    "status": "done",
+    "note": "2026-06-02 pilot_grammar_001_g4_checklist_v1.md \u2014 manual keyframe path; headless minimum bake rejected per slice v2",
+    "blocked_by": [
+      "MCP-APS-UI-003b",
+      "manual-keyframe-not-run"
+    ],
+    "fallback_when_blocked": "DESIGN-PG-MODULE-AUDIT-001",
+    "deliverable": "src/dev/pilot_grammar_001_g4_checklist_v1.md",
+    "docs": [
+      "src/dev/mcp_orchestrator_tile_fix_warehouse_slice_v2.md",
+      "utils/TILE_ISO_RIG_README.md"
+    ]
+  },
+  {
+    "id": "MCP-APS-TAGS-002",
+    "priority": 1,
+    "title": "APS + grammar filter by tag category",
+    "lane": "grammar-mcp",
+    "agent": "coder-mcp",
+    "depends_on": [
+      "PLAN-APS-TAGS-001"
+    ],
+    "status": "done",
+    "deliverable": "art_pipeline_suite/assembly_panel.py semantic_tags UI",
+    "docs": [
+      "src/dev/aps_tags_001_v1.md"
+    ],
+    "started_at": "2026-06-03T18:55:51.357950+00:00",
+    "note": "aps_tags.py + semantic_tags UI in assembly_panel",
+    "updated_at": "2026-06-03T19:00:26.149206+00:00"
+  },
+  {
+    "id": "MCP-APS-GRAMMAR-INSPECTOR-001",
+    "priority": 2,
+    "title": "Grammar inspector panel \u2014 rule_chain from snapshot",
+    "lane": "grammar-mcp",
+    "agent": "coder-mcp",
+    "depends_on": [
+      "PLAN-APS-TAGS-001",
+      "CODER-SNAPSHOT-GRAMMAR-WIRE"
+    ],
+    "status": "done",
+    "note": "grammar_inspector.py rule_chain panel",
+    "docs": [
+      "src/dev/arch_assembly_graph_002_v1.md"
+    ],
+    "updated_at": "2026-06-03T19:00:26.385089+00:00"
+  },
+  {
+    "id": "MCP-APS-UI-003b",
+    "priority": 3,
+    "title": "Footprint grid + heatmap + archetype picker",
+    "lane": "grammar-mcp",
+    "agent": "coder-mcp",
+    "depends_on": [
+      "PLAN-APS-TAGS-001"
+    ],
+    "status": "done",
+    "docs": [
+      "src/dev/plan_building_grammar_evolution_v1.md"
+    ],
+    "note": "footprint_canvas + archetype/district grammar generate",
+    "updated_at": "2026-06-03T19:00:26.620615+00:00"
+  },
+  {
+    "id": "PLAN-ARCH-PBG-MASSING-001",
+    "priority": 0,
+    "title": "PBG massing placement: perimeter grid vs mesh-face (doc gate)",
+    "lane": "grammar-planner",
+    "agent": "planner",
+    "stop_point": true,
+    "depends_on": [],
+    "status": "done",
+    "deliverable": "src/dev/arch_pbg_massing_placement_v1.md",
+    "note": "2026-06-03 thin slice — no generator change until ARCH-PBG-MASSING-002 gate",
+    "docs": [
+      "prompts/planner_fix_auto_build.md"
+    ]
+  },
+  {
+    "id": "PLAN-ARCH-MATERIAL-AUTHORITY-001",
+    "priority": 0,
+    "title": "Material authority in snapshot/APS \u2014 not Blender UI (planner L1315+)",
+    "lane": "grammar-planner",
+    "agent": "planner",
+    "stop_point": true,
+    "depends_on": [],
+    "status": "done",
+    "note": "2026-06-03 arch_material_authority_001_v1.md \u2014 blocks pilot until APS material browser + preview + PG-MATERIAL-GENERATION",
+    "deliverable": "src/dev/arch_material_authority_001_v1.md",
+    "docs": [
+      "prompts/planner_fix_auto_build.md"
+    ]
+  },
+  {
+    "id": "MCP-APS-MATERIAL-BROWSER-001",
+    "priority": 2,
+    "title": "APS material library with thumbnails \u2014 apply to slot",
+    "lane": "grammar-mcp",
+    "agent": "coder-mcp",
+    "depends_on": [
+      "PLAN-ARCH-MATERIAL-AUTHORITY-001"
+    ],
+    "status": "done",
+    "deliverable": "rust_engine_mcp/material_profiles.py + art_pipeline_suite/material_browser.py",
+    "witness": "debug_runs/aps_material_browser_live.json",
+    "note": "2026-06-03 thumbnail grid + click-apply \u2192 update_placement on snapshot",
+    "docs": [
+      "src/dev/arch_material_authority_001_v1.md",
+      "assets/materials/profiles/material_profiles_v1.json"
+    ],
+    "updated_at": "2026-06-03T20:00:00+00:00"
+  },
+  {
+    "id": "CODER-PG-MATERIAL-GENERATION-001",
+    "priority": 2,
+    "title": "Grammar/generator emits material_profile per placement",
+    "lane": "grammar-coder",
+    "agent": "coder",
+    "depends_on": [
+      "PLAN-ARCH-MATERIAL-AUTHORITY-001",
+      "CODER-SNAPSHOT-GRAMMAR-WIRE"
+    ],
+    "status": "done",
+    "docs": [
+      "src/construction/procedural/building_grammar.rs",
+      "tools/mcp/python/rust_engine_mcp/building_grammar.py"
+    ],
+    "note": "district material_profiles + weathering on all grammar placements; schema bump; pytest+cargo green",
+    "updated_at": "2026-06-03T19:40:05.498756+00:00"
+  },
+  {
+    "id": "APS-PREVIEW-002",
+    "priority": 3,
+    "title": "Assembly tab multi-GLB preview (three.js fallback + Bevy job contract)",
+    "lane": "grammar-mcp",
+    "agent": "coder-mcp",
+    "depends_on": [
+      "MCP-APS-UI-003b",
+      "MCP-APS-MATERIAL-BROWSER-001",
+      "CODER-PG-MATERIAL-GENERATION-001",
+      "PLAN-APS-PREVIEW-004"
+    ],
+    "status": "done",
+    "deliverable": "rust_engine_mcp/assembly_preview.py + art_pipeline_suite/assembly_preview_panel.py",
+    "witness": "debug_runs/aps_preview_002_live.json",
+    "commands": [
+      "python -m rust_engine_mcp.cli preview-assembly tools/mcp/schemas/examples/assembly_snapshot_warehouse_industrial_west_production_v1.json --no-browser --write-witness"
+    ],
+    "docs": [
+      "src/dev/aps_preview_004_bevy_worker_v1.md",
+      "src/dev/arch_material_authority_001_v1.md"
+    ],
+    "note": "three.js multi-GLB + APS panel + preview-assembly CLI; witness green",
+    "updated_at": "2026-06-03T20:02:58.077725+00:00"
+  },
+  {
+    "id": "PILOT-GRAMMAR-E2E-001",
+    "priority": 3,
+    "title": "Grammar E2E witness — IndustrialWarehouse not placement-only",
+    "lane": "grammar-coder",
+    "agent": "coder-mcp",
+    "depends_on": [
+      "CODER-PG-MATERIAL-GENERATION-001",
+      "MCP-APS-UI-003b"
+    ],
+    "status": "done",
+    "witness": "debug_runs/pilot_grammar_001_grammar_e2e_live.json",
+    "deliverable": "src/dev/pilot_grammar_001_execution_v1.md",
+    "note": "2026-06-03 generate+grammar_verify+material_profile on all placements green",
+    "docs": [
+      "src/dev/pilot_grammar_001_execution_v1.md"
+    ]
+  },
+  {
+    "id": "MCP-PILOT-GRAMMAR-001",
+    "priority": 4,
+    "title": "Warehouse ship: manual keyframe + designer G4 (Track B)",
+    "lane": "grammar-mcp",
+    "agent": "designer-mcp",
+    "depends_on": [
+      "DESIGN-PILOT-GRAMMAR-001-PREP",
+      "MCP-APS-UI-003b",
+      "MCP-APS-MATERIAL-BROWSER-001",
+      "CODER-PG-MATERIAL-GENERATION-001",
+      "APS-PREVIEW-002"
+    ],
+    "status": "blocked",
+    "blocked_by": [
+      "human_g4_rejected",
+      "headless_bake_not_ship_art",
+      "real_keyframe_render_required"
+    ],
+    "note": "Operator rejected stills 2026-06-03 — grey slabs, truck in frame, no variant read. Witness: mcp_pilot_grammar_001_rejected_live.json. Index de-indexed.",
+    "witness": "debug_runs/art_pipeline/mcp_pilot_grammar_001_rejected_live.json",
+    "docs": [
+      "src/dev/pilot_grammar_001_g4_checklist_v1.md",
+      "src/dev/mcp_orchestrator_tile_fix_warehouse_slice_v2.md"
+    ],
+    "started_at": "2026-06-03T20:09:57.937481+00:00",
+    "updated_at": "2026-06-03T20:13:33.370206+00:00"
+  }
+]

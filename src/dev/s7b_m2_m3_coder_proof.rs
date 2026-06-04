@@ -52,7 +52,7 @@ fn pointer_u64(v: &Value, ptr: &str) -> u64 {
 
 /// M2 dispatch delay + M3 overlay readers + minimap cross-check.
 pub fn refresh_s7b_m2_m3_001_live_witness() -> bool {
-    use crate::dev::stage7_behavioral_live_proof::{
+    use crate::dev::stage7_behavioral_witness::{
         refresh_s7b_m2_001_live_witness, refresh_s7b_m3_001_live_witness,
     };
     use crate::render::minimap_compositor::refresh_ui_w3_m3_001_live_witness;
@@ -68,6 +68,11 @@ pub fn refresh_s7b_m2_m3_001_live_witness() -> bool {
     assert!(
         refresh_ui_w3_m3_001_live_witness(),
         "minimap M3 compositor witness"
+    );
+    use crate::dev::stage7_behavioral_witness::refresh_s7b_m3_steward_remedy_001_live_witness;
+    assert!(
+        refresh_s7b_m3_steward_remedy_001_live_witness(),
+        "S7B-M3-STEWARD-REMEDY-001 rollup on disk"
     );
     true
 }

@@ -136,9 +136,34 @@ impl Default for FireProjectionNode {
     }
 }
 
+fn fire_projection_stamp_lag(fire: &FireVisualFrame, committed: SimStepStamp) -> u64 {
+    if fire.stamp.tick >= committed.tick {
+        fire.stamp.tick.saturating_sub(committed.tick)
+    } else {
+        u64::MAX
+    }
+}
+
+/// F2-PR-1 — witness hook: extract stamp matches committed fence, or ≤1-tick hold with retained buffer.
+#[must_use]
+pub fn fire_projection_stamp_aligned(fire: &FireVisualFrame, committed: SimStepStamp) -> bool {
+    if fire.stamp == committed {
+        return true;
+    }
+    fire_projection_stamp_lag(fire, committed) <= 1
+}
+
 impl ProjectionNodeTrait for FireProjectionNode {
     fn evaluate(&mut self, ctx: &RenderProjectionContext<'_>) {
         if ctx.fire.stamp != ctx.committed_stamp {
+            // MAP-BLINK-001 / VR-05: fence can trail fire extract by one tick — do not zero graph.
+            let lag = fire_projection_stamp_lag(ctx.fire, ctx.committed_stamp);
+            if lag <= 1
+                && (!self.instance_buffer.is_empty() || !self.chunk_heat.is_empty())
+            {
+                self.snapshot_stamp = ctx.committed_stamp.tick;
+                return;
+            }
             self.instance_buffer.clear();
             self.chunk_heat.clear();
             self.burst_hints.clear();
@@ -281,6 +306,60 @@ pub fn projection_graph_runtime_order_snapshot(graph: &RenderProjectionGraph) ->
         graph.logistics.snapshot_stamp,
         graph.ecology.snapshot_stamp,
     )
+}
+
+/// F2-PR-2 — headless tactical fixture: non-empty `fire.instance_buffer` via `project_fire_instances`.
+#[must_use]
+pub fn f2_tactical_fire_projection_fixture() -> RenderProjectionGraph {
+    use bevy::math::{IVec2, Vec4};
+    use crate::gui::{
+        build_representation_inputs, build_representation_result, resolution_for_band, LodZoneRegistry,
+        VisualBudgetSettings, VisualCadence, WorldLodBand, WorldLodMap, WorldRepresentationFrame,
+    };
+    use crate::render::sim_visual_extract::{ChunkFireHeat, FireVisualFrame, FireVisualGpuInstance};
+    use crate::systems::sim_control::SimStepStamp;
+
+    let stamp = SimStepStamp::new(9, 0);
+    let mut fire_frame = FireVisualFrame::default();
+    fire_frame.stamp = stamp;
+    let mut row = FireVisualGpuInstance::default();
+    row.chunk_xy_heat_lum = Vec4::new(2.0, 3.0, 0.85, 1.0);
+    row.world_xyz_radius = Vec4::new(160.0, 224.0, 0.0, 32.0);
+    row.smoke_ember_vis_priority = Vec4::new(0.12, 0.45, 0.0, 1.0);
+    fire_frame.instances.push(row);
+    fire_frame.chunk_heat.push(ChunkFireHeat {
+        chunk: IVec2::new(2, 3),
+        heat: 0.85,
+        smoke: 0.3,
+    });
+
+    let mut lod = WorldRepresentationFrame::default();
+    lod.bands.global = WorldLodBand::LocalTactical;
+    lod.resolution = resolution_for_band(WorldLodBand::LocalTactical);
+    let lod_map = WorldLodMap::default();
+    let policy_inputs = build_representation_inputs(
+        &crate::gui::CameraVisualState::default(),
+        &LodZoneRegistry::default(),
+        &VisualBudgetSettings::default(),
+        &VisualCadence::from(&VisualBudgetSettings::default()),
+        stamp,
+    );
+    let policy = build_representation_result(&lod, &policy_inputs);
+
+    let logistics = LogisticsVisualSnapshot::default();
+    let ecology = EcologyVisualSnapshot::default();
+    let ctx = RenderProjectionContext {
+        policy: &policy,
+        lod: &lod,
+        lod_map: &lod_map,
+        fire: &fire_frame,
+        logistics: &logistics,
+        ecology: &ecology,
+        committed_stamp: stamp,
+    };
+    let mut graph = RenderProjectionGraph::default();
+    graph.evaluate(&ctx);
+    graph
 }
 
 /// Single **Update** entry point: builds [`RenderProjectionContext`] and runs the graph (no per-domain projection systems).
@@ -479,6 +558,47 @@ mod tests {
     }
 
     #[test]
+    fn committed_stamp_one_tick_lag_holds_prior_projection() {
+        let mut frame = FireVisualFrame::default();
+        frame.stamp = crate::systems::sim_control::SimStepStamp::new(2, 0);
+        frame.instances.push(sample_instance(IVec2::new(0, 0), 0.95));
+
+        let lod = WorldRepresentationFrame::default();
+        let lod_map = WorldLodMap::default();
+        let policy_inputs = build_representation_inputs(
+            &crate::gui::CameraVisualState::default(),
+            &LodZoneRegistry::default(),
+            &VisualBudgetSettings::default(),
+            &VisualCadence::from(&VisualBudgetSettings::default()),
+            frame.stamp,
+        );
+        let policy = build_representation_result(&lod, &policy_inputs);
+
+        let mut graph = RenderProjectionGraph::default();
+        graph.fire.instance_buffer.push(sample_instance(IVec2::new(1, 1), 0.8));
+        graph.fire.chunk_heat.push(ChunkFireHeat {
+            chunk: IVec2::new(1, 1),
+            heat: 0.8,
+            smoke: 0.1,
+        });
+
+        let logistics = LogisticsVisualSnapshot::default();
+        let ecology = EcologyVisualSnapshot::default();
+        let ctx = RenderProjectionContext {
+            policy: &policy,
+            lod: &lod,
+            lod_map: &lod_map,
+            fire: &frame,
+            logistics: &logistics,
+            ecology: &ecology,
+            committed_stamp: crate::systems::sim_control::SimStepStamp::new(1, 0),
+        };
+        graph.evaluate(&ctx);
+        assert_eq!(graph.fire.instance_buffer.len(), 1);
+        assert_eq!(graph.fire.chunk_heat.len(), 1);
+    }
+
+    #[test]
     fn burst_hints_follow_projected_instances_not_raw_frame() {
         let mut frame = FireVisualFrame::default();
         frame.instances.push(sample_instance(IVec2::new(0, 0), 0.95));
@@ -520,6 +640,33 @@ mod tests {
             !graph.fire.burst_hints.is_empty(),
             "burst hints should follow non-empty projected instances"
         );
+    }
+
+    #[test]
+    fn tactical_projection_fills_fire_instance_buffer() {
+        let graph = super::f2_tactical_fire_projection_fixture();
+        assert!(
+            !graph.fire.instance_buffer.is_empty(),
+            "F2-PR-2 tactical fixture must populate instance_buffer"
+        );
+        assert_eq!(graph.fire.snapshot_stamp, 9);
+    }
+
+    #[test]
+    fn fire_projection_stamp_aligned_allows_one_tick_lag() {
+        let mut frame = FireVisualFrame::default();
+        frame.stamp = SimStepStamp::new(5, 0);
+        let committed = SimStepStamp::new(4, 0);
+        assert!(fire_projection_stamp_aligned(&frame, committed));
+        frame.stamp = SimStepStamp::new(7, 0);
+        assert!(!fire_projection_stamp_aligned(&frame, committed));
+        assert!(fire_projection_stamp_aligned(
+            &FireVisualFrame {
+                stamp: committed,
+                ..Default::default()
+            },
+            committed,
+        ));
     }
 
     #[test]

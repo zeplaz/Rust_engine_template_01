@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://rust-engine.local/schemas/geometry_job_v1.json",
+  "title": "GeometryJob",
+  "type": "object",
+  "required": ["schema_version", "job_id", "operation", "output"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "job_id": { "type": "string" },
+    "spec_ref": { "type": "string" },
+    "batch_id": { "type": "string" },
+    "development_tier": {
+      "type": "string",
+      "enum": ["smoke", "lod0", "production"]
+    },
+    "operation": {
+      "type": "string",
+      "enum": ["module_wall", "module_roof", "module_door", "module_window", "module_prop"]
+    },
+    "params": {
+      "type": "object",
+      "properties": {
+        "seed": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Required when using material_profile or other variation params; default dimensions may omit seed."
+        },
+        "profile": {
+          "type": "string",
+          "description": "Roof: flat|pitched|shed|sawtooth. Window: flat|mullion|arched|curtain."
+        }
+      },
+      "additionalProperties": true
+    },
+    "output": {
+      "type": "object",
+      "required": ["glb"],
+      "properties": {
+        "glb": { "type": "string" },
+        "thumbnail": { "type": "string" }
+      }
+    }
+  },
+  "additionalProperties": false
+}

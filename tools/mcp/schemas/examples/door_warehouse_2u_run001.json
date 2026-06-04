@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "job_id": "door_warehouse_2u_run001",
+  "spec_ref": "assets/staging/specs/door_warehouse_2u.json",
+  "operation": "module_door",
+  "params": {
+    "width_m": 4,
+    "height_m": 4,
+    "depth_m": 0.25,
+    "material_profile": "steel_door_warehouse_01",
+    "seed": 42
+  },
+  "output": {
+    "glb": "assets/staging/door_warehouse_2u_run001/model.glb",
+    "thumbnail": "assets/staging/door_warehouse_2u_run001/preview.png"
+  }
+}
