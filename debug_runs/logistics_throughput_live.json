@@ -21,6 +21,9 @@
       "build_report": "tools/orchestrator/reports/build_report.md",
       "ci_entry": "tools/orchestrator/ci/run.ps1",
       "continuation_queue": "tools/orchestrator/queues/continuation_queue.json",
+      "ops_report_latest": "debug_runs/agent_ops/ops_report_latest.json",
+      "ops_scan": "tools/orchestrator/scripts/ops_intelligence_scan.ps1",
+      "unified_witness_index": "debug_runs/unified_witness_index.json",
       "warning_registry": "tools/orchestrator/reports/warning_registry.md"
     },
     "profile": "LOGISTICS_THROUGHPUT",
@@ -46,52 +49,64 @@
       "debug_runs/stage7_play_live.json",
       "debug_runs/wss_substrate_live.json",
       "debug_runs/f2_smoke_pipeline_live.json",
-      "debug_runs/play_scenario_live.json"
+      "debug_runs/play_scenario_live.json",
+      "debug_runs/transport_network_live.json",
+      "debug_runs/econ_og_save_live.json",
+      "debug_runs/weather_sim_live.json",
+      "debug_runs/fire_streaming_live.json",
+      "debug_runs/procedural_tiles_runtime_live.json",
+      "debug_runs/procedural_assembly_live.json",
+      "debug_runs/grammar_diversity_witness.json",
+      "debug_runs/pg3_w3_tactical_review_live.json",
+      "debug_runs/compile_hygiene_live.json"
     ],
     "relative_path": "debug_runs/logistics_throughput_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "logistics_throughput_live_proof",
-    "written_at_epoch_secs": 1780415074
+    "written_at_epoch_secs": 1780868351
   },
   "edge_saturation_max": 1.0,
+  "graph_only_paths": true,
+  "infra_e5_002_green": true,
+  "no_harness_tile_paint": true,
   "open_todos": 0,
   "profile": "LOGISTICS_THROUGHPUT",
   "route_proofs_sample": [
     {
       "blocked_at": null,
       "bottleneck_capacity": 2.0,
-      "delivered": 4.0,
-      "request_id": 191,
+      "delivered": 2.0,
+      "request_id": 98,
       "requested": 4.0
     },
     {
       "blocked_at": null,
       "bottleneck_capacity": 2.0,
-      "delivered": 4.0,
-      "request_id": 190,
+      "delivered": 2.0,
+      "request_id": 97,
       "requested": 4.0
     },
     {
       "blocked_at": null,
       "bottleneck_capacity": 2.0,
-      "delivered": 4.0,
-      "request_id": 189,
+      "delivered": 2.0,
+      "request_id": 96,
       "requested": 4.0
     },
     {
       "blocked_at": null,
       "bottleneck_capacity": 2.0,
-      "delivered": 4.0,
-      "request_id": 188,
+      "delivered": 2.0,
+      "request_id": 95,
       "requested": 4.0
     }
   ],
-  "routes_blocked": 1,
-  "routes_open": 1,
+  "routes_blocked": 0,
+  "routes_open": 2,
   "s7p_log_001_green": true,
   "throughput_green": true,
   "todo_total": 24,
-  "topology_revision": 257,
+  "topology_revision": 129,
   "witness": {
     "congestion_feedback": true,
     "corridor_pressure": true,

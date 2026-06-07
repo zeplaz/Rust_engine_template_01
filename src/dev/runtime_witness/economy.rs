@@ -10,7 +10,10 @@ use crate::dev::logistics_throughput_todos::{
 };
 use crate::economy::activation::ConcreteChainE2eWitness;
 use crate::economy::logistics::types::{LogisticsDiagnostics, LogisticsThroughputRuntimeWitness};
+use crate::economy::resource_flow::ResourceFlowRegistry;
 use crate::engine::states::BaseState;
+use crate::strategic::PlannedSite;
+use crate::systems::transport::{TransportEdgeDirectory, TransportNavExport};
 
 use super::io::write_enveloped_witness;
 
@@ -124,12 +127,14 @@ pub fn commit_logistics_throughput_live_proof(
     witness: &LogisticsThroughputWitness,
     diagnostics: &LogisticsDiagnostics,
     runtime: Option<&LogisticsThroughputRuntimeWitness>,
+    infra_e5: Option<crate::economy::logistics::witness_collectors::InfraE502ProofExtension>,
 ) -> bool {
     let body = crate::economy::logistics::witness_collectors::build_logistics_throughput_proof_payload(
         board,
         witness,
         diagnostics,
         runtime,
+        infra_e5,
     );
     write_enveloped_witness(
         "LOGISTICS_THROUGHPUT",
@@ -139,6 +144,25 @@ pub fn commit_logistics_throughput_live_proof(
     )
 }
 
+#[must_use]
+fn infra_e5_002_proof_extension(
+    flow: Option<&ResourceFlowRegistry>,
+    nav: Option<&TransportNavExport>,
+    directory: Option<&TransportEdgeDirectory>,
+    portals: &Query<(Entity, &crate::economy::logistics::FacilityPortal, &PlannedSite)>,
+) -> crate::economy::logistics::witness_collectors::InfraE502ProofExtension {
+    use crate::economy::logistics::routes::{collect_portal_entity_tiles, flow_paths_match_nav_export};
+
+    let (Some(flow), Some(nav), Some(directory)) = (flow, nav, directory) else {
+        return crate::economy::logistics::witness_collectors::InfraE502ProofExtension::default();
+    };
+    let tiles = collect_portal_entity_tiles(portals);
+    crate::economy::logistics::witness_collectors::InfraE502ProofExtension {
+        graph_only_paths: flow_paths_match_nav_export(flow, nav, directory, &tiles),
+        no_harness_tile_paint: true,
+    }
+}
+
 pub fn write_logistics_throughput_live_proof_system(
     base: Option<Res<State<BaseState>>>,
     mut state: ResMut<LogisticsThroughputLiveProofState>,
@@ -146,6 +170,10 @@ pub fn write_logistics_throughput_live_proof_system(
     witness: Res<LogisticsThroughputWitness>,
     diagnostics: Res<LogisticsDiagnostics>,
     runtime: Option<Res<LogisticsThroughputRuntimeWitness>>,
+    flow: Option<Res<ResourceFlowRegistry>>,
+    nav: Option<Res<TransportNavExport>>,
+    directory: Option<Res<TransportEdgeDirectory>>,
+    portals: Query<(Entity, &crate::economy::logistics::FacilityPortal, &PlannedSite)>,
 ) {
     if !matches!(base.as_deref().map(|s| s.get()), Some(BaseState::Simulation)) {
         return;
@@ -157,10 +185,17 @@ pub fn write_logistics_throughput_live_proof_system(
     state.frames_since_write = 0;
     state.written = true;
 
+    let infra_e5 = infra_e5_002_proof_extension(
+        flow.as_deref(),
+        nav.as_deref(),
+        directory.as_deref(),
+        &portals,
+    );
     let _ = commit_logistics_throughput_live_proof(
         board.as_deref(),
         witness.as_ref(),
         diagnostics.as_ref(),
         runtime.as_deref(),
+        Some(infra_e5),
     );
 }

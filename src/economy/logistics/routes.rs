@@ -258,3 +258,69 @@ pub fn refresh_resource_flow_routes_system(
         }
     }
 }
+
+/// **INFRA-E5-002** — every `path_open` flag matches `TransportNavExport` reachability (no tile paint fallback).
+#[must_use]
+pub fn flow_paths_match_nav_export(
+    flow: &crate::economy::resource_flow::ResourceFlowRegistry,
+    nav: &TransportNavExport,
+    directory: &TransportEdgeDirectory,
+    entity_tiles: &std::collections::HashMap<Entity, BuildSiteTile>,
+) -> bool {
+    for edge in &flow.edges {
+        let (Some(&from_tile), Some(&to_tile)) =
+            (entity_tiles.get(&edge.from), entity_tiles.get(&edge.to))
+        else {
+            if edge.path_open {
+                return false;
+            }
+            continue;
+        };
+        let nav_open = path_edges_between_tiles(
+            nav,
+            directory,
+            from_tile,
+            to_tile,
+            edge.transport_mode,
+        )
+        .is_some();
+        if edge.path_open != nav_open {
+            return false;
+        }
+    }
+    true
+}
+
+#[must_use]
+pub fn collect_portal_entity_tiles(
+    portals: &Query<(Entity, &FacilityPortal, &PlannedSite)>,
+) -> std::collections::HashMap<Entity, BuildSiteTile> {
+    portals
+        .iter()
+        .map(|(entity, _, site)| (entity, site.origin))
+        .collect()
+}
+
+#[must_use]
+pub fn collect_portal_entity_tiles_from_world(
+    world: &mut World,
+) -> std::collections::HashMap<Entity, BuildSiteTile> {
+    let mut query = world.query::<(Entity, &FacilityPortal, &PlannedSite)>();
+    query
+        .iter(world)
+        .map(|(entity, _, site)| (entity, site.origin))
+        .collect()
+}
+
+#[must_use]
+pub fn infra_e5_002_graph_only_paths_green(
+    flow: &crate::economy::resource_flow::ResourceFlowRegistry,
+    nav: &TransportNavExport,
+    directory: &TransportEdgeDirectory,
+    entity_tiles: &std::collections::HashMap<Entity, BuildSiteTile>,
+    diagnostics: &super::types::LogisticsDiagnostics,
+) -> bool {
+    flow_paths_match_nav_export(flow, nav, directory, entity_tiles)
+        && diagnostics.routes_blocked == 0
+        && diagnostics.routes_open > 0
+}
