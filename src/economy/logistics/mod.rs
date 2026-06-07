@@ -11,11 +11,18 @@ pub mod routes;
 pub mod solver;
 pub mod types;
 
-pub use witness_collectors::LogisticsThroughputLiveProofState;
+pub use witness_collectors::{
+    build_logistics_throughput_proof_payload, InfraE502ProofExtension,
+    LogisticsThroughputLiveProofState, LOGISTICS_THROUGHPUT_JSON,
+};
 pub use portals::{
     register_facility_portals_system, rebuild_portal_attachment_map_system,
 };
-pub use routes::{refresh_resource_flow_routes_system, tile_node_key, topology_revision_u32};
+pub use routes::{
+    collect_portal_entity_tiles, collect_portal_entity_tiles_from_world,
+    flow_paths_match_nav_export, infra_e5_002_graph_only_paths_green,
+    refresh_resource_flow_routes_system, tile_node_key, topology_revision_u32,
+};
 pub use solver::{
     feedback_congestion_from_load_system, propagate_corridor_pressure_system,
     solve_throughput_greedy_system, sync_solver_capacity_from_graph_system,

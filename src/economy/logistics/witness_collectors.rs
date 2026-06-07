@@ -12,6 +12,13 @@ use crate::dev::logistics_throughput_todos::{
 
 use super::types::{LogisticsDiagnostics, LogisticsThroughputRuntimeWitness};
 
+/// **INFRA-E5-002** extension keys for `logistics_throughput_live.json`.
+#[derive(Clone, Copy, Debug, Default)]
+pub struct InfraE502ProofExtension {
+    pub graph_only_paths: bool,
+    pub no_harness_tile_paint: bool,
+}
+
 /// **S7P-LOG-001** — force next witness write (e.g. after play scenario seed completes).
 pub fn request_logistics_throughput_live_proof_refresh(
     state: &mut crate::dev::runtime_witness::economy::LogisticsThroughputLiveProofState,
@@ -34,6 +41,7 @@ pub fn build_logistics_throughput_proof_payload(
     witness: &LogisticsThroughputWitness,
     diagnostics: &LogisticsDiagnostics,
     runtime: Option<&LogisticsThroughputRuntimeWitness>,
+    infra_e5: Option<InfraE502ProofExtension>,
 ) -> serde_json::Value {
     let open = board.map(|b| b.open_count()).unwrap_or(LOGISTICS_THROUGHPUT_TODO_COUNT);
     let rt = runtime;
@@ -53,15 +61,20 @@ pub fn build_logistics_throughput_proof_payload(
         })
         .collect();
     let routes_open = rt.map(|r| r.routes_open).unwrap_or(0);
+    let routes_blocked = rt.map(|r| r.routes_blocked).unwrap_or(0);
+    let infra = infra_e5.unwrap_or_default();
     serde_json::json!({
         "profile": "LOGISTICS_THROUGHPUT",
         "throughput_green": open == 0,
         "s7p_log_001_green": open == 0 && routes_open > 0,
+        "infra_e5_002_green": infra.graph_only_paths && routes_blocked == 0 && routes_open > 0,
+        "graph_only_paths": infra.graph_only_paths,
+        "no_harness_tile_paint": infra.no_harness_tile_paint,
         "open_todos": open,
         "todo_total": LOGISTICS_THROUGHPUT_TODO_COUNT,
         "topology_revision": rt.map(|r| r.topology_revision),
-        "routes_open": rt.map(|r| r.routes_open),
-        "routes_blocked": rt.map(|r| r.routes_blocked),
+        "routes_open": routes_open,
+        "routes_blocked": routes_blocked,
         "edge_saturation_max": rt.map(|r| r.edge_saturation_max),
         "route_proofs_sample": diagnostics_sample,
         "witness": {
@@ -113,8 +126,9 @@ mod live_proof_sim_tests {
     use crate::economy::activation::BuildingDefinitionRef;
     use crate::engine::states::BaseState;
     use crate::strategic::{
-        rebuild_logistics_graph_from_transport, BuildSiteTile, ConstructionSite,
-        FootprintTiles, LayerType, PlannedSite, SiteArchetype, SiteConstructionPhase, SiteId,
+        rebuild_logistics_graph_from_transport, BuildSiteTile, CommitConstructionSiteEvent,
+        ConstructionSite, FootprintTiles, LayerType, PlannedSite, SiteArchetype,
+        SiteConstructionPhase, SiteId,
     };
     use crate::systems::sim_control::SimControlState;
     use crate::systems::transport::{
@@ -261,7 +275,11 @@ mod live_proof_sim_tests {
         app.add_plugins((MinimalPlugins, StatesPlugin));
         app.init_state::<BaseState>();
         app.insert_state(BaseState::Simulation);
+        app.insert_resource(crate::engine::ActiveTestScene(
+            crate::engine::launch_args::TestScene::Visual,
+        ));
         install_road_chain_transport(&mut app);
+        app.add_message::<CommitConstructionSiteEvent>();
         crate::dev::logistics_throughput_todos::register_logistics_throughput_todo_hooks(&mut app);
         register_industrial_activation_todo_hooks(&mut app);
         app.add_plugins((
@@ -670,5 +688,53 @@ mod live_proof_sim_tests {
             );
         }
         assert_eq!(board.open_count(), 0, "LOGISTICS_THROUGHPUT_GREEN");
+    }
+
+    /// **INFRA-E5-002** — graph-only paths; `routes_blocked == 0` on default industrial lib fixture.
+    #[test]
+    fn infra_e5_002_graph_only_paths_witness_green() {
+        use crate::economy::logistics::routes::{
+            collect_portal_entity_tiles_from_world, infra_e5_002_graph_only_paths_green,
+        };
+
+        let _lock = proof_lock();
+        let mut app = assemble_logistics_proof_sim_app();
+        spawn_operational(&mut app, "aluminum_bauxite_mine", 1, BuildSiteTile { x: 0, z: 0 });
+        spawn_operational(
+            &mut app,
+            "aluminum_alumina_refinery",
+            2,
+            BuildSiteTile { x: 1, z: 0 },
+        );
+        spawn_operational(&mut app, "aluminum_smelter1", 3, BuildSiteTile { x: 2, z: 0 });
+        for _ in 0..40 {
+            app.update();
+        }
+
+        let tiles = collect_portal_entity_tiles_from_world(app.world_mut());
+        let world = app.world();
+        let flow = world.resource::<crate::economy::resource_flow::ResourceFlowRegistry>();
+        let nav = world.resource::<TransportNavExport>();
+        let dir = world.resource::<TransportEdgeDirectory>();
+        let diagnostics = world.resource::<LogisticsDiagnostics>();
+        assert!(
+            infra_e5_002_graph_only_paths_green(flow, nav, dir, &tiles, diagnostics),
+            "routes_open={} routes_blocked={}",
+            diagnostics.routes_open,
+            diagnostics.routes_blocked
+        );
+
+        finalize_s7p_logistics_witness_in_test_app(&mut app);
+        for _ in 0..12 {
+            app.update();
+        }
+
+        let path = proof_output_path();
+        let json: serde_json::Value =
+            serde_json::from_str(&fs::read_to_string(&path).expect("read")).expect("parse");
+        assert_eq!(json["routes_blocked"].as_u64(), Some(0));
+        assert_eq!(json["graph_only_paths"].as_bool(), Some(true));
+        assert_eq!(json["infra_e5_002_green"].as_bool(), Some(true));
+        assert!(json["routes_open"].as_u64().unwrap_or(0) >= 2);
     }
 }
