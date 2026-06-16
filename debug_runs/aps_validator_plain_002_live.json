@@ -1,0 +1,31 @@
+{
+  "program_id": "APS-VALIDATOR-PLAIN-002",
+  "gate": "APS-VALIDATOR-PLAIN-002",
+  "green": true,
+  "code_count": 22,
+  "signatures": [
+    "assembly_graph_material_profile",
+    "assembly_production_glb_missing",
+    "assembly_production_glb_path",
+    "assembly_production_lod0_rejected",
+    "assembly_production_min_placements",
+    "assembly_production_missing_glb",
+    "assembly_production_snapshot_missing",
+    "assembly_production_tier",
+    "assembly_production_unique_modules",
+    "grammar_verify_footprint_min",
+    "grammar_verify_grammar_chain",
+    "grammar_verify_missing_roof",
+    "grammar_verify_missing_wall",
+    "grammar_verify_perimeter_count",
+    "grammar_verify_snapshot_missing",
+    "grammar_verify_style_pack_drift",
+    "grammar_verify_warehouse_footprint",
+    "material_profiles_missing_albedo",
+    "material_profiles_missing_normal_roughness",
+    "material_profiles_placement_missing",
+    "material_profiles_snapshot_missing",
+    "material_profiles_unknown_id"
+  ],
+  "assembly_panel_wired": true
+}

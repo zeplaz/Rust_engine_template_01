@@ -1,0 +1,102 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "grammar_iterate_result_v1.schema.json",
+  "title": "GrammarIterateResult",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "ok", "mode", "seed"],
+  "properties": {
+    "schema": { "const": "grammar_iterate_result_v1" },
+    "ok": { "type": "boolean" },
+    "mode": {
+      "type": "string",
+      "enum": [
+        "full",
+        "massing",
+        "roof",
+        "facade",
+        "detail",
+        "age",
+        "material_strategy",
+        "placement"
+      ]
+    },
+    "seed": { "type": "integer", "minimum": 0 },
+    "archetype_id": { "type": "string" },
+    "district_style": { "type": "string" },
+    "snapshot": {
+      "type": "object",
+      "description": "Full assembly_snapshot_v1 body after iteration"
+    },
+    "snapshot_path": {
+      "type": "string",
+      "description": "Repo-relative path if written to disk"
+    },
+    "diff": {
+      "$ref": "#/$defs/grammar_iterate_diff_v1"
+    },
+    "grammar_rule_chain": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "lineage": {
+      "$ref": "#/$defs/grammar_iterate_lineage_v1"
+    },
+    "errors": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/grammar_iterate_error_v1" }
+    },
+    "warnings": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  },
+  "$defs": {
+    "grammar_iterate_diff_v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "cells_added": { "type": "integer", "minimum": 0 },
+        "cells_removed": { "type": "integer", "minimum": 0 },
+        "cells_changed": { "type": "integer", "minimum": 0 },
+        "profiles_changed": { "type": "integer", "minimum": 0 },
+        "layers_touched": {
+          "type": "array",
+          "items": { "type": "string" },
+          "uniqueItems": true
+        },
+        "changed_node_ids": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "grammar_iterate_lineage_v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["parent_id", "iteration_mode", "seed", "iteration_seq"],
+      "properties": {
+        "parent_id": { "type": "string", "minLength": 1 },
+        "root_id": { "type": "string", "minLength": 1 },
+        "child_id": { "type": "string", "minLength": 1 },
+        "iteration_mode": { "type": "string" },
+        "iteration_seq": { "type": "integer", "minimum": 1 },
+        "seed": { "type": "integer", "minimum": 0 },
+        "pinned_layers": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "grammar_iterate_error_v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "message"],
+      "properties": {
+        "code": { "type": "string" },
+        "message": { "type": "string" },
+        "field": { "type": "string" }
+      }
+    }
+  }
+}

@@ -5,7 +5,7 @@
   "freeze_complete": true,
   "active_index_entries": 0,
   "archive_greybox_production_count": 5,
-  "policy": "src/dev/tile_greybox_production_frozen_v1.md",
+  "policy": "docs/archive/2026-06-src-dev/plans/tile_greybox_production_frozen_v1.md",
   "atlas_schema_v2": "tools/mcp/schemas/atlas_meta_v2.schema.json",
   "visual_config_schema": "tools/mcp/schemas/visual_config_v1.schema.json",
   "png_exists_gate": "rejected",

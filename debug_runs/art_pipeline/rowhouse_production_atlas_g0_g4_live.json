@@ -1,0 +1,28 @@
+{
+  "task_id": "MCP-PROD-ATLAS-G0-G4",
+  "agent": "designer-mcp",
+  "batch_id": "tile_rowhouse_victorian_production_v1",
+  "ok": true,
+  "green": true,
+  "generated_at": "2026-06-07T22:42:44.857469+00:00",
+  "gates": {
+    "G0": true,
+    "G1": true,
+    "G2": true,
+    "G3": true,
+    "G4": true
+  },
+  "proceed_ship": true,
+  "png_count_staging": 14,
+  "png_count_keyframe": 14,
+  "atlas_png": "assets/textures/buildings_iso/production/rowhouse_victorian_production_v1_atlas.png",
+  "atlas_meta": "assets/staging/tiles/tile_rowhouse_victorian_production_v1/atlas_meta.json",
+  "g4_witness": "debug_runs/art_pipeline/rowhouse_production_keyframe_g4_live.json",
+  "tile_witness": "debug_runs/art_pipeline/tile_tile_rowhouse_victorian_production_v1_live.json",
+  "signoff": "debug_runs/art_pipeline/rowhouse_victorian_production_signoff.yaml",
+  "ship_allowed_index": false,
+  "unblocks": [
+    "MCP-PROD-TILE-VAL",
+    "MCP-PROD-INDEX"
+  ]
+}

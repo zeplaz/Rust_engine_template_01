@@ -1,0 +1,90 @@
+{
+  "batch_id": "tile_landscape_lg5_pilot_v1",
+  "lane": "tile_batch",
+  "_agent_meta": {
+    "agent": "coder-mcp",
+    "updated_at": "2026-06-14T23:25:48.464177+00:00",
+    "program": "MCP-TILE-CLOSE-001",
+    "dry_run": false
+  },
+  "gates": {
+    "G0": "pass",
+    "G1": "pass",
+    "G2": "pass",
+    "G3": "pass",
+    "G4": "planned",
+    "G5": "planned"
+  },
+  "green": true,
+  "png_count": 3,
+  "png_dimensions": [
+    {
+      "file": "topology_corridor.png",
+      "bytes": 233,
+      "width": 64,
+      "height": 64
+    },
+    {
+      "file": "topology_patch.png",
+      "bytes": 531,
+      "width": 64,
+      "height": 64
+    },
+    {
+      "file": "topology_ring.png",
+      "bytes": 578,
+      "width": 64,
+      "height": 64
+    }
+  ],
+  "real_bake": true,
+  "atlas_path": "C:\\dev\\github\\Rust_engine_template_01\\assets\\textures\\landscape\\staging\\landscape_lg5_pilot_v1_atlas.png",
+  "meta_json": "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_landscape_lg5_pilot_v1\\atlas_meta.json",
+  "batch_status": {
+    "batch_id": "tile_landscape_lg5_pilot_v1",
+    "status": "done",
+    "bake_source": "keyframe_pack",
+    "variant_count": 3,
+    "png_paths": [
+      "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_landscape_lg5_pilot_v1\\topology_patch.png",
+      "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_landscape_lg5_pilot_v1\\topology_corridor.png",
+      "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_landscape_lg5_pilot_v1\\topology_ring.png"
+    ],
+    "atlas_path": "C:\\dev\\github\\Rust_engine_template_01\\assets\\textures\\landscape\\staging\\landscape_lg5_pilot_v1_atlas.png",
+    "meta_json": "assets/staging/tiles/tile_landscape_lg5_pilot_v1/atlas_meta.json",
+    "dry_run": false
+  },
+  "automation": "headless_only",
+  "smoke_fallback_used": false,
+  "gate_id": "TILE-REAL-001",
+  "atlas_schema_version": 1,
+  "atlas_v2_lookup_ok": true,
+  "frozen": false,
+  "png_exists_only_rejected": true,
+  "tile_id": "landscape_lg5",
+  "assembly_ref": null,
+  "variant_set_ref": null,
+  "source_tier": "lod0",
+  "development_tier": "pilot",
+  "ship": false,
+  "tile_atlas_index": {
+    "ok": true,
+    "entry": {
+      "atlas_id": "landscape_lg5_pilot_v1",
+      "batch_id": "tile_landscape_lg5_pilot_v1",
+      "assembly_id": "",
+      "tile_id": "landscape_lg5",
+      "atlas_png": "assets/textures/landscape/staging/landscape_lg5_pilot_v1_atlas.png",
+      "meta_json": "assets/staging/tiles/tile_landscape_lg5_pilot_v1/atlas_meta.json",
+      "development_tier": "pilot",
+      "style_pack_id": "landscape_lg5",
+      "ship_allowed": false
+    },
+    "written": "C:\\dev\\github\\Rust_engine_template_01\\assets\\configs\\landscape\\_landscape_atlas_index.ron",
+    "json_mirror": "C:\\dev\\github\\Rust_engine_template_01\\assets\\configs\\landscape\\_landscape_atlas_index.json",
+    "entry_count": 1,
+    "atlas_ids": [
+      "landscape_lg5_pilot_v1"
+    ]
+  }
+}

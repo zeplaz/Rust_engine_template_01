@@ -1,0 +1,28 @@
+{
+  "_agent_meta": {
+    "profile": "DESIGN_TILE_RAIL_WAREHOUSE_PILOT",
+    "schema": "debug_run_envelope_v1",
+    "source_system": "designer_mcp_build_read_visual_002",
+    "relative_path": "debug_runs/design_tile_rail_warehouse_pilot_live.json",
+    "design_doc": "src/dev/design_tile_rail_warehouse_pilot_v1.md",
+    "parent_program": "PLAN-BUILD-READABILITY-001"
+  },
+  "gate": "BUILD-READ-VISUAL-002",
+  "green": true,
+  "verdict": "PASS",
+  "staging_spec_on_disk": true,
+  "staging_spec_path": "assets/staging/specs/tile_rail_warehouse_pilot_v1.json",
+  "site_zone_grid_on_disk": true,
+  "site_zone_grid_path": "assets/configs/buildings/pilots/logistics_rail_warehouse_site_v0.json",
+  "variant_count_required": 4,
+  "bake_source": "keyframe_pack",
+  "ship": false,
+  "impl_wired": true,
+  "unblocks": [
+    "BUILD-READ-VISUAL-001",
+    "BUILD-READ-SITE-v0-002"
+  ],
+  "delta_wf": "@coder-mcp keyframe batch tile_rail_warehouse_pilot_v1",
+  "batch_witness": "debug_runs/tile_rail_warehouse_pilot_batch_live.json",
+  "tile_batch": "tools/mcp/schemas/examples/tile_batch_rail_warehouse_pilot_v1.json"
+}

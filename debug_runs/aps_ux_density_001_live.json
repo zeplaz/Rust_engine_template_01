@@ -1,0 +1,15 @@
+{
+  "gate_id": "APS-UX-DENSITY-001",
+  "ok": true,
+  "green": true,
+  "wiring": {
+    "assembly_panel.py:CollapsibleSection": true,
+    "assembly_panel.py:Semantic & variant tags": true,
+    "assembly_panel.py:Grammar inspector": true,
+    "assembly_panel.py:_refresh_collapsible_titles": true,
+    "aps_collapsible.py:set_title": true,
+    "assembly_panel.py:Iterate grammar (advanced)": true,
+    "variants_panel.py:Agent patch strip (advanced)": true
+  },
+  "assembly_pane_stretch": true
+}

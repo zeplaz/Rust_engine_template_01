@@ -1,0 +1,1776 @@
+{
+  "_meta": {
+    "version": "3.0.0",
+    "program_id": "VEGETATION-PROGRAM-001",
+    "date": "2026-06-13",
+    "supersedes_version": "2.0.0",
+    "full_chain_prompt": "src/dev/coder_vegetation_full_chain_prompt_v1.md",
+    "hardening_rules": "src/dev/coder_queue_hardening_rules_v1.md",
+    "parent_drain": "tools/orchestrator/queues/coder_master_drain_queue.json",
+    "status_doc": "src/dev/vegetation_system_honest_status_v1.md",
+    "rule": "Drain seq 1→82 without stopping · exit_predicate on witness JSON required · lib green ≠ done",
+    "regression": "cargo test -p proc_A_dine01 --lib landscape_grammar fire_ecology",
+    "operator_exit": "vegetation_program_close_live.json phases A-E green + play_scenario veg visible",
+    "reopen_audit": {
+      "reason": "v2 rows marked done while witnesses green:false / counters zero",
+      "false_done_v2_count": 41,
+      "witness_truth": {
+        "landscape_grammar_lg2_live.json": {
+          "fire_disturbances": 0,
+          "construction_disturbances": 0,
+          "green": false
+        },
+        "landscape_grammar_map_rollout_live.json": {
+          "chunks_with_program": 1,
+          "green": false
+        },
+        "stage5_full_app_live.json": {
+          "ecology_active_rows": 0
+        }
+      }
+    },
+    "last_sync": "2026-06-14",
+    "harness_witness": "debug_runs/landscape_grammar_sim_harness_live.json"
+  },
+  "phases": {
+    "A": {
+      "seq": "1-18",
+      "label": "LG-2 sim truth",
+      "exit": "lg2 green + fire>=1 + build>=1"
+    },
+    "B": {
+      "seq": "19-38",
+      "label": "Map authority",
+      "exit": "chunks_with_program>=16 green"
+    },
+    "C": {
+      "seq": "39-56",
+      "label": "Operator visible",
+      "exit": "operator_visible + play + stage5 eco rows"
+    },
+    "D": {
+      "seq": "57-63",
+      "label": "District coupling",
+      "exit": "lg3 green no hack"
+    },
+    "E": {
+      "seq": "64-71",
+      "label": "Population + instances",
+      "exit": "snapshot roundtrip"
+    },
+    "F": {
+      "seq": "72-78",
+      "label": "Art + close",
+      "exit": "program close rollup"
+    },
+    "G": {
+      "seq": "79-82",
+      "label": "Scale + steward",
+      "exit": "queue sync"
+    }
+  },
+  "done_lib_only": [
+    "LG-1-EVAL-001",
+    "LG-2-SUCCESSION-001",
+    "LG-2-FIRE-COUPLING-001",
+    "LG-2-BUILD-CLEAR-001",
+    "LG-3-DISTRICT-001",
+    "LG-4-POPULATION-001",
+    "LG-4-PREVIEW-001"
+  ],
+  "v2_false_done_reopened": [
+    "VEG-LG2-LIVE-FIRE-001",
+    "VEG-LG2-LIVE-BUILD-001",
+    "VEG-LG2-RECOVERY-001",
+    "VEG-LG2-FUEL-BRIDGE-001",
+    "VEG-LG2-HARVEST-001",
+    "VEG-WITNESS-LIVE-PROOF-001",
+    "VEG-Î»-INPUTS-001",
+    "VEG-PRESET-INDUSTRIAL-001",
+    "VEG-PRESET-MILITARY-001",
+    "VEG-PRESET-SETTLEMENT-001",
+    "VEG-PRESET-FOREST-001",
+    "VEG-PRESET-CATALOG-001",
+    "VEG-MAP-ROLLOUT-001",
+    "VEG-MAP-PARTITION-001",
+    "VEG-PREVIEW-TOPOLOGY-001",
+    "VEG-PREVIEW-GLYPH-001",
+    "VEG-PREVIEW-OVERLAY-001",
+    "VEG-POPULATION-FIELD-001",
+    "VEG-MINIMAP-OVERLAY-001",
+    "VEG-PLAY-WITNESS-001",
+    "VEG-FULL-APP-WITNESS-001",
+    "VEG-DISTRICT-SETTLEMENT-001",
+    "VEG-DISTRICT-TRANSPORT-001",
+    "VEG-DISTRICT-CONSTRUCTION-001",
+    "VEG-DISTRICT-HYDRO-001",
+    "VEG-LG3-WITNESS-001",
+    "VEG-SIM-EFFECT-HOOK-001",
+    "VEG-POPULATION-SUBCELL-001",
+    "VEG-INSTANCE-SPAWN-001",
+    "VEG-INSTANCE-EXTRACT-001",
+    "VEG-FIRE-CORRIDOR-001",
+    "VEG-SUCCESSION-GRAPH-001",
+    "VEG-SNAPSHOT-PERSIST-001",
+    "VEG-REGISTRY-STAMP-001",
+    "VEG-LG5-WITNESS-001",
+    "VEG-PROGRAM-CLOSE-001",
+    "VEG-PRESET-EXPAND-001",
+    "VEG-NESTED-DEPTH-001",
+    "VEG-OPERATOR-HISTORY-001",
+    "VEG-STEWARD-REGRESS-001",
+    "VEG-QUEUE-SYNC-001"
+  ],
+  "drain": [
+    {
+      "seq": 1,
+      "phase": "A",
+      "id": "VEG-A01-HARNESS-001",
+      "status": "done",
+      "priority": "P0",
+      "owner": "coder_a",
+      "goal": "Headless sim harness: N ticks + fire ignition on program chunk",
+      "territory": "src/dev/landscape_grammar_live_proof.rs",
+      "forbidden_exit": [
+        "lib_test_only",
+        "witness_counter_zero",
+        "witness_lib_green_without_green"
+      ],
+      "verify_commands": [
+        "cargo test -p proc_A_dine01 --lib landscape_grammar_live_proof"
+      ],
+      "live_sim_required": true,
+      "completed": "2026-06-13"
+    },
+    {
+      "seq": 2,
+      "phase": "A",
+      "id": "VEG-A02-SCHEDULE-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_a",
+      "goal": "LG2 systems in Simulation schedule after fire tick",
+      "territory": "src/systems/ecology/landscape_grammar_lg2.rs",
+      "depends_on": [
+        "VEG-A01-HARNESS-001"
+      ],
+      "forbidden_exit": [
+        "lib_test_only",
+        "witness_counter_zero",
+        "witness_lib_green_without_green"
+      ],
+      "completed": "2026-06-13"
+    },
+    {
+      "seq": 3,
+      "phase": "A",
+      "id": "VEG-A03-FIRE-IGNITE-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_a",
+      "goal": "Play/demo scenario ignites chunk with LandscapeProgramOnChunk",
+      "depends_on": [
+        "VEG-A02-SCHEDULE-001"
+      ],
+      "forbidden_exit": [
+        "lib_test_only",
+        "witness_counter_zero",
+        "witness_lib_green_without_green",
+        "single_chunk_pilot"
+      ],
+      "live_sim_required": true,
+      "completed": "2026-06-13"
+    },
+    {
+      "seq": 4,
+      "phase": "A",
+      "id": "VEG-A04-FIRE-EVENT-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_a",
+      "goal": "First DisturbanceKind::Fire in DisturbanceHistory",
+      "witness": "debug_runs/landscape_grammar_lg2_live.json",
+      "depends_on": [
+        "VEG-A03-FIRE-IGNITE-001"
+      ],
+      "exit_predicate": {
+        "witness": "debug_runs/landscape_grammar_lg2_live.json",
+        "must": [
+          {
+            "path": "fire_disturbances",
+            "gte": 1
+          }
+        ]
+      },
+      "forbidden_exit": [
+        "lib_test_only",
+        "witness_counter_zero",
+        "witness_lib_green_without_green"
+      ],
+      "live_sim_required": true,
+      "completed": "2026-06-13"
+    },
+    {
+      "seq": 5,
+      "phase": "A",
+      "id": "VEG-A05-FIRE-STAGE-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_a",
+      "goal": "OldGrowth to BurnScar SuccessionTopologyStage transition",
+      "depends_on": [
+        "VEG-A04-FIRE-EVENT-001"
+      ],
+      "forbidden_exit": [
+        "lib_test_only",
+        "witness_counter_zero",
+        "witness_lib_green_without_green"
+      ],
+      "completed": "2026-06-13"
+    },
+    {
+      "seq": 6,
+      "phase": "A",
+      "id": "VEG-A06-FIRE-WITNESS-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_a",
+      "goal": "Refresh lg2 witness: fire_disturbances>=1 AND green:true",
+      "witness": "debug_runs/landscape_grammar_lg2_live.json",
+      "depends_on": [
+        "VEG-A05-FIRE-STAGE-001"
+      ],
+      "exit_predicate": {
+        "witness": "debug_runs/landscape_grammar_lg2_live.json",
+        "must": [
+          {
+            "path": "fire_disturbances",
+            "gte": 1
+          },
+          {
+            "path": "green",
+            "eq": true
+          }
+        ]
+      },
+      "forbidden_exit": [
+        "lib_test_only",
+        "witness_counter_zero",
+        "witness_lib_green_without_green"
+      ],
+      "verify_commands": [
+        "cargo test -p proc_A_dine01 --lib landscape_grammar_lg2_live"
+      ],
+      "live_sim_required": true,
+      "completed": "2026-06-13"
+    },
+    {
+      "seq": 7,
+      "phase": "A",
+      "id": "VEG-A07-BUILD-FOOTPRINT-001",
+      "status": "done",
+      "priority": "P0",
+      "owner": "coder_a",
+      "goal": "Construction commit maps footprint tiles to chunk entities",
+      "territory": "src/construction/",
+      "forbidden_exit": [
+        "lib_test_only",
+        "witness_counter_zero",
+        "witness_lib_green_without_green"
+      ],
+      "completed": "2026-06-13"
+    },
+    {
+      "seq": 8,
+      "phase": "A",
+      "id": "VEG-A08-BUILD-DISTURB-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_a",
+      "goal": "construction_disturbances>=1 on correct chunk (not first-entity stub)",
+      "witness": "debug_runs/landscape_grammar_lg2_live.json",
+      "depends_on": [
+        "VEG-A07-BUILD-FOOTPRINT-001"
+      ],
+      "exit_predicate": {
+        "witness": "debug_runs/landscape_grammar_lg2_live.json",
+        "must": [
+          {
+            "path": "construction_disturbances",
+            "gte": 1
+          }
+        ]
+      },
+      "forbidden_exit": [
+        "lib_test_only",
+        "witness_counter_zero",
+        "witness_lib_green_without_green"
+      ],
+      "live_sim_required": true,
+      "completed": "2026-06-13"
+    },
+    {
+      "seq": 9,
+      "phase": "A",
+      "id": "VEG-A09-BUILD-WITNESS-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_a",
+      "goal": "lg2 witness green with fire AND build counters",
+      "witness": "debug_runs/landscape_grammar_lg2_live.json",
+      "depends_on": [
+        "VEG-A06-FIRE-WITNESS-001",
+        "VEG-A08-BUILD-DISTURB-001"
+      ],
+      "exit_predicate": {
+        "witness": "debug_runs/landscape_grammar_lg2_live.json",
+        "must": [
+          {
+            "path": "fire_disturbances",
+            "gte": 1
+          },
+          {
+            "path": "construction_disturbances",
+            "gte": 1
+          },
+          {
+            "path": "green",
+            "eq": true
+          }
+        ]
+      },
+      "forbidden_exit": [
+        "lib_test_only",
+        "witness_counter_zero",
+        "witness_lib_green_without_green"
+      ],
+      "live_sim_required": true,
+      "completed": "2026-06-13"
+    },
+    {
+      "seq": 10,
+      "phase": "A",
+      "id": "VEG-A10-RECOVERY-TICK-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_a",
+      "goal": "BurnScar recovery ticks when heat clears",
+      "depends_on": [
+        "VEG-A06-FIRE-WITNESS-001"
+      ],
+      "forbidden_exit": [
+        "lib_test_only"
+      ],
+      "completed": "2026-06-13"
+    },
+    {
+      "seq": 11,
+      "phase": "A",
+      "id": "VEG-A11-RECOVERY-STAGE-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_a",
+      "goal": "Recovery advances to Grass stage in witness",
+      "witness": "debug_runs/landscape_grammar_lg2_live.json",
+      "depends_on": [
+        "VEG-A10-RECOVERY-TICK-001"
+      ],
+      "exit_predicate": {
+        "witness": "debug_runs/landscape_grammar_lg2_live.json",
+        "must": [
+          {
+            "path": "recovery_ticks",
+            "gte": 1
+          }
+        ]
+      },
+      "forbidden_exit": [
+        "lib_test_only",
+        "witness_counter_zero",
+        "witness_lib_green_without_green"
+      ],
+      "completed": "2026-06-13"
+    },
+    {
+      "seq": 12,
+      "phase": "A",
+      "id": "VEG-A12-FUEL-MOD-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_a",
+      "goal": "SuccessionTopologyStage modulates ChunkFuelProfile",
+      "territory": "src/systems/fire/chunk_fuel_profile.rs",
+      "depends_on": [
+        "VEG-A05-FIRE-STAGE-001"
+      ],
+      "forbidden_exit": [
+        "lib_test_only",
+        "witness_counter_zero",
+        "witness_lib_green_without_green"
+      ],
+      "completed": "2026-06-13"
+    },
+    {
+      "seq": 13,
+      "phase": "A",
+      "id": "VEG-A13-FUEL-WITNESS-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_a",
+      "goal": "fire_ecology_live.json reflects fuel bridge delta",
+      "witness": "debug_runs/fire_ecology_live.json",
+      "depends_on": [
+        "VEG-A12-FUEL-MOD-001"
+      ],
+      "forbidden_exit": [
+        "lib_test_only",
+        "witness_counter_zero",
+        "witness_lib_green_without_green"
+      ],
+      "live_sim_required": true,
+      "completed": "2026-06-13"
+    },
+    {
+      "seq": 14,
+      "phase": "A",
+      "id": "VEG-A14-HARVEST-PATH-001",
+      "status": "done",
+      "priority": "P2",
+      "owner": "coder_a",
+      "goal": "DisturbanceKind::Harvest event path",
+      "forbidden_exit": [
+        "lib_test_only",
+        "witness_counter_zero",
+        "witness_lib_green_without_green"
+      ],
+      "completed": "2026-06-13"
+    },
+    {
+      "seq": 15,
+      "phase": "A",
+      "id": "VEG-A15-HARVEST-WITNESS-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_a",
+      "goal": "harvest_disturbances>=1 in lg2 witness",
+      "witness": "debug_runs/landscape_grammar_lg2_live.json",
+      "depends_on": [
+        "VEG-A14-HARVEST-PATH-001"
+      ],
+      "exit_predicate": {
+        "witness": "debug_runs/landscape_grammar_lg2_live.json",
+        "must": [
+          {
+            "path": "harvest_disturbances",
+            "gte": 1
+          }
+        ]
+      },
+      "forbidden_exit": [
+        "lib_test_only",
+        "witness_counter_zero",
+        "witness_lib_green_without_green"
+      ],
+      "completed": "2026-06-13"
+    },
+    {
+      "seq": 16,
+      "phase": "A",
+      "id": "VEG-A16-LIVE-PROOF-WIRE-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_a",
+      "goal": "landscape_grammar_live_proof in dev/mod.rs (not cfg(test) only)",
+      "territory": "src/dev/mod.rs",
+      "depends_on": [
+        "VEG-A09-BUILD-WITNESS-001"
+      ],
+      "forbidden_exit": [
+        "lib_test_only"
+      ],
+      "completed": "2026-06-13"
+    },
+    {
+      "seq": 17,
+      "phase": "A",
+      "id": "VEG-A17-FULLAPP-LG2-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_a",
+      "goal": "FULL_APP path refreshes lg2 counters from sim resources",
+      "witness": "debug_runs/landscape_grammar_live_proof.json",
+      "depends_on": [
+        "VEG-A16-LIVE-PROOF-WIRE-001"
+      ],
+      "forbidden_exit": [
+        "lib_test_only",
+        "witness_counter_zero",
+        "witness_lib_green_without_green"
+      ],
+      "live_sim_required": true,
+      "completed": "2026-06-13"
+    },
+    {
+      "seq": 18,
+      "phase": "A",
+      "id": "VEG-A18-PHASE-A-CLOSE-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_a",
+      "goal": "Phase A rollup: lg2 green + fire_ecology keys",
+      "witness": "debug_runs/vegetation_phase_a_close_live.json",
+      "depends_on": [
+        "VEG-A17-FULLAPP-LG2-001"
+      ],
+      "exit": "phase_a_all_green",
+      "forbidden_exit": [
+        "lib_test_only",
+        "witness_counter_zero",
+        "witness_lib_green_without_green"
+      ],
+      "completed": "2026-06-13"
+    },
+    {
+      "seq": 19,
+      "phase": "B",
+      "id": "VEG-BIND-LOAD-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_a",
+      "goal": "Load + validate preset industrial_barrier_v0.json",
+      "exit": "topology includes BARRIER",
+      "artifacts": [
+        "assets/configs/landscape/presets/industrial_barrier_v0.json"
+      ],
+      "forbidden_exit": [
+        "lib_test_only",
+        "witness_counter_zero",
+        "witness_lib_green_without_green"
+      ],
+      "completed": "2026-06-13"
+    },
+    {
+      "seq": 20,
+      "phase": "B",
+      "id": "VEG-BIND-EVAL-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_a",
+      "goal": "Evaluator produces graph for INDUSTRIAL preset",
+      "depends_on": [
+        "VEG-BIND-LOAD-001"
+      ],
+      "forbidden_exit": [
+        "lib_test_only",
+        "witness_counter_zero",
+        "witness_lib_green_without_green"
+      ],
+      "completed": "2026-06-13"
+    },
+    {
+      "seq": 21,
+      "phase": "B",
+      "id": "VEG-BMIL-LOAD-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_a",
+      "goal": "Load + validate preset military_defensive_v0.json",
+      "exit": "topology includes RING_FORTIFIED",
+      "artifacts": [
+        "assets/configs/landscape/presets/military_defensive_v0.json"
+      ],
+      "forbidden_exit": [
+        "lib_test_only",
+        "witness_counter_zero",
+        "witness_lib_green_without_green"
+      ],
+      "completed": "2026-06-13"
+    },
+    {
+      "seq": 22,
+      "phase": "B",
+      "id": "VEG-BMIL-EVAL-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_a",
+      "goal": "Evaluator produces graph for MILITARY preset",
+      "depends_on": [
+        "VEG-BMIL-LOAD-001"
+      ],
+      "forbidden_exit": [
+        "lib_test_only",
+        "witness_counter_zero",
+        "witness_lib_green_without_green"
+      ],
+      "completed": "2026-06-13"
+    },
+    {
+      "seq": 23,
+      "phase": "B",
+      "id": "VEG-BSET-LOAD-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_a",
+      "goal": "Load + validate preset settlement_park_v0.json",
+      "exit": "topology includes PATCH",
+      "artifacts": [
+        "assets/configs/landscape/presets/settlement_park_v0.json"
+      ],
+      "forbidden_exit": [
+        "lib_test_only",
+        "witness_counter_zero",
+        "witness_lib_green_without_green"
+      ],
+      "completed": "2026-06-13"
+    },
+    {
+      "seq": 24,
+      "phase": "B",
+      "id": "VEG-BSET-EVAL-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_a",
+      "goal": "Evaluator produces graph for SETTLEMENT preset",
+      "depends_on": [
+        "VEG-BSET-LOAD-001"
+      ],
+      "forbidden_exit": [
+        "lib_test_only",
+        "witness_counter_zero",
+        "witness_lib_green_without_green"
+      ],
+      "completed": "2026-06-13"
+    },
+    {
+      "seq": 25,
+      "phase": "B",
+      "id": "VEG-BFOR-LOAD-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_a",
+      "goal": "Load + validate preset old_growth_core_v0.json",
+      "exit": "topology includes PATCH",
+      "artifacts": [
+        "assets/configs/landscape/presets/old_growth_core_v0.json"
+      ],
+      "forbidden_exit": [
+        "lib_test_only",
+        "witness_counter_zero",
+        "witness_lib_green_without_green"
+      ],
+      "completed": "2026-06-13"
+    },
+    {
+      "seq": 26,
+      "phase": "B",
+      "id": "VEG-BFOR-EVAL-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_a",
+      "goal": "Evaluator produces graph for FOREST preset",
+      "depends_on": [
+        "VEG-BFOR-LOAD-001"
+      ],
+      "forbidden_exit": [
+        "lib_test_only",
+        "witness_counter_zero",
+        "witness_lib_green_without_green"
+      ],
+      "completed": "2026-06-13"
+    },
+    {
+      "seq": 27,
+      "phase": "B",
+      "id": "VEG-BAGR-LOAD-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_a",
+      "goal": "Load + validate preset agri_riparian_v0.json",
+      "exit": "topology includes CORRIDOR",
+      "artifacts": [
+        "assets/configs/landscape/presets/agri_riparian_v0.json"
+      ],
+      "forbidden_exit": [
+        "lib_test_only",
+        "witness_counter_zero",
+        "witness_lib_green_without_green"
+      ],
+      "completed": "2026-06-13"
+    },
+    {
+      "seq": 28,
+      "phase": "B",
+      "id": "VEG-BAGR-EVAL-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_a",
+      "goal": "Evaluator produces graph for AGRI preset",
+      "depends_on": [
+        "VEG-BAGR-LOAD-001"
+      ],
+      "forbidden_exit": [
+        "lib_test_only",
+        "witness_counter_zero",
+        "witness_lib_green_without_green"
+      ],
+      "completed": "2026-06-13"
+    },
+    {
+      "seq": 29,
+      "phase": "B",
+      "id": "VEG-B-CATALOG-INDEX-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_a",
+      "goal": "_preset_index.ron indexes all 5 presets",
+      "exit": "presets_on_disk >= 5",
+      "artifacts": [
+        "assets/configs/landscape/_preset_index.ron"
+      ],
+      "exit_predicate": {
+        "witness": "debug_runs/landscape_grammar_map_rollout_live.json",
+        "must": [
+          {
+            "path": "presets_used",
+            "gte": 5
+          }
+        ]
+      },
+      "forbidden_exit": [
+        "lib_test_only",
+        "witness_counter_zero",
+        "witness_lib_green_without_green"
+      ],
+      "completed": "2026-06-13"
+    },
+    {
+      "seq": 30,
+      "phase": "B",
+      "id": "VEG-B-ROLLOUT-Q1-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_a",
+      "goal": "Map rollout quarter 1: attach LandscapeProgramOnChunk (+4 chunks)",
+      "depends_on": [
+        "VEG-B-CATALOG-INDEX-001"
+      ],
+      "exit": "chunks_with_program += 4",
+      "forbidden_exit": [
+        "lib_test_only",
+        "witness_counter_zero",
+        "witness_lib_green_without_green",
+        "single_chunk_pilot"
+      ],
+      "completed": "2026-06-13"
+    },
+    {
+      "seq": 31,
+      "phase": "B",
+      "id": "VEG-B-ROLLOUT-Q2-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_a",
+      "goal": "Map rollout quarter 2: attach LandscapeProgramOnChunk (+4 chunks)",
+      "depends_on": [
+        "VEG-B-CATALOG-INDEX-001"
+      ],
+      "exit": "chunks_with_program += 4",
+      "forbidden_exit": [
+        "lib_test_only",
+        "witness_counter_zero",
+        "witness_lib_green_without_green",
+        "single_chunk_pilot"
+      ],
+      "completed": "2026-06-13"
+    },
+    {
+      "seq": 32,
+      "phase": "B",
+      "id": "VEG-B-ROLLOUT-Q3-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_a",
+      "goal": "Map rollout quarter 3: attach LandscapeProgramOnChunk (+4 chunks)",
+      "depends_on": [
+        "VEG-B-CATALOG-INDEX-001"
+      ],
+      "exit": "chunks_with_program += 4",
+      "forbidden_exit": [
+        "lib_test_only",
+        "witness_counter_zero",
+        "witness_lib_green_without_green",
+        "single_chunk_pilot"
+      ],
+      "completed": "2026-06-13"
+    },
+    {
+      "seq": 33,
+      "phase": "B",
+      "id": "VEG-B-ROLLOUT-Q4-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_a",
+      "goal": "Map rollout quarter 4: attach LandscapeProgramOnChunk (+4 chunks)",
+      "depends_on": [
+        "VEG-B-CATALOG-INDEX-001"
+      ],
+      "exit": "chunks_with_program += 4",
+      "forbidden_exit": [
+        "lib_test_only",
+        "witness_counter_zero",
+        "witness_lib_green_without_green",
+        "single_chunk_pilot"
+      ],
+      "completed": "2026-06-13"
+    },
+    {
+      "seq": 34,
+      "phase": "B",
+      "id": "VEG-B-ROLLOUT-WITNESS-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_a",
+      "goal": "Map rollout witness: chunks_with_program>=16 green:true",
+      "witness": "debug_runs/landscape_grammar_map_rollout_live.json",
+      "depends_on": [
+        "VEG-B-ROLLOUT-Q4-001"
+      ],
+      "exit_predicate": {
+        "witness": "debug_runs/landscape_grammar_map_rollout_live.json",
+        "must": [
+          {
+            "path": "chunks_with_program",
+            "gte": 16
+          },
+          {
+            "path": "green",
+            "eq": true
+          },
+          {
+            "path": "presets_used",
+            "gte": 3
+          }
+        ]
+      },
+      "forbidden_exit": [
+        "lib_test_only",
+        "witness_counter_zero",
+        "witness_lib_green_without_green"
+      ],
+      "live_sim_required": true,
+      "completed": "2026-06-13"
+    },
+    {
+      "seq": 35,
+      "phase": "B",
+      "id": "VEG-B-LAMBDA-HYDRO-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_a",
+      "goal": "LambdaExternalInputs reads hydrology (read-only)",
+      "territory": "src/systems/ecology/landscape_grammar.rs",
+      "forbidden_exit": [
+        "lib_test_only",
+        "witness_counter_zero",
+        "witness_lib_green_without_green"
+      ],
+      "completed": "2026-06-13"
+    },
+    {
+      "seq": 36,
+      "phase": "B",
+      "id": "VEG-B-LAMBDA-TRANSPORT-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_a",
+      "goal": "LambdaExternalInputs reads transport (read-only)",
+      "territory": "src/systems/ecology/landscape_grammar.rs",
+      "forbidden_exit": [
+        "lib_test_only",
+        "witness_counter_zero",
+        "witness_lib_green_without_green"
+      ],
+      "completed": "2026-06-13"
+    },
+    {
+      "seq": 37,
+      "phase": "B",
+      "id": "VEG-B-LAMBDA-CONSTRUCTION-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_a",
+      "goal": "LambdaExternalInputs reads construction (read-only)",
+      "territory": "src/systems/ecology/landscape_grammar.rs",
+      "forbidden_exit": [
+        "lib_test_only",
+        "witness_counter_zero",
+        "witness_lib_green_without_green"
+      ],
+      "completed": "2026-06-13"
+    },
+    {
+      "seq": 38,
+      "phase": "B",
+      "id": "VEG-B-PARTITION-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_a",
+      "goal": "3-8 topology nodes per chunk partition",
+      "depends_on": [
+        "VEG-B-ROLLOUT-WITNESS-001"
+      ],
+      "exit": "mean_topology_kind_count >= 3",
+      "forbidden_exit": [
+        "lib_test_only",
+        "witness_counter_zero",
+        "witness_lib_green_without_green"
+      ],
+      "completed": "2026-06-13"
+    },
+    {
+      "seq": 39,
+      "phase": "B",
+      "id": "VEG-B-NESTED-DEPTH-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_a",
+      "goal": "nested_depth_max >= 2 map-wide mean",
+      "depends_on": [
+        "VEG-B-PARTITION-001"
+      ],
+      "forbidden_exit": [
+        "lib_test_only",
+        "witness_counter_zero",
+        "witness_lib_green_without_green"
+      ],
+      "completed": "2026-06-13"
+    },
+    {
+      "seq": 40,
+      "phase": "B",
+      "id": "VEG-B-PHASE-CLOSE-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_a",
+      "goal": "Phase B rollup green",
+      "witness": "debug_runs/vegetation_phase_b_close_live.json",
+      "depends_on": [
+        "VEG-B-NESTED-DEPTH-001"
+      ],
+      "forbidden_exit": [
+        "lib_test_only",
+        "witness_counter_zero",
+        "witness_lib_green_without_green"
+      ],
+      "completed": "2026-06-13"
+    },
+    {
+      "seq": 41,
+      "phase": "C",
+      "id": "VEG-C01-PREVIEW-RASTER-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_a",
+      "goal": "Wire topology_kind to ecology preview raster tint",
+      "territory": "src/gui/editor/world_preview/ecology_preview.rs",
+      "forbidden_exit": [
+        "lib_test_only",
+        "witness_counter_zero",
+        "witness_lib_green_without_green",
+        "eval_math_without_render"
+      ],
+      "completed": "2026-06-13"
+    },
+    {
+      "seq": 42,
+      "phase": "C",
+      "id": "VEG-C02-PREVIEW-SHADER-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_a",
+      "goal": "Material path samples topology tint not biome scalar only",
+      "territory": "src/terrain/material/",
+      "forbidden_exit": [
+        "lib_test_only",
+        "witness_counter_zero",
+        "witness_lib_green_without_green",
+        "eval_math_without_render"
+      ],
+      "completed": "2026-06-13"
+    },
+    {
+      "seq": 43,
+      "phase": "C",
+      "id": "VEG-C03-PREVIEW-HEterogeneity-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_a",
+      "goal": "Pixel heterogeneity test: >=2 distinct tint buckets per chunk",
+      "forbidden_exit": [
+        "lib_test_only",
+        "witness_counter_zero",
+        "witness_lib_green_without_green",
+        "eval_math_without_render"
+      ],
+      "completed": "2026-06-13"
+    },
+    {
+      "seq": 44,
+      "phase": "C",
+      "id": "VEG-C04-PREVIEW-WITNESS-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_a",
+      "goal": "lg4 preview witness operator_visible:true green:true",
+      "witness": "debug_runs/landscape_grammar_lg4_preview_live.json",
+      "exit_predicate": {
+        "witness": "debug_runs/landscape_grammar_lg4_preview_live.json",
+        "must": [
+          {
+            "path": "green",
+            "eq": true
+          },
+          {
+            "path": "operator_visible",
+            "eq": true
+          },
+          {
+            "path": "topology_kinds_visible_min",
+            "gte": 3
+          }
+        ]
+      },
+      "forbidden_exit": [
+        "lib_test_only",
+        "witness_counter_zero",
+        "witness_lib_green_without_green",
+        "eval_math_without_render"
+      ],
+      "live_sim_required": true,
+      "operator_visible": true,
+      "completed": "2026-06-13"
+    },
+    {
+      "seq": 45,
+      "phase": "C",
+      "id": "VEG-C05-PREVIEW-GLYPH-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_a",
+      "goal": "Lexicon glyph map deterministic per topology kind",
+      "forbidden_exit": [
+        "lib_test_only",
+        "witness_counter_zero",
+        "witness_lib_green_without_green",
+        "eval_math_without_render"
+      ],
+      "completed": "2026-06-13"
+    },
+    {
+      "seq": 46,
+      "phase": "C",
+      "id": "VEG-C06-PREVIEW-OVERLAY-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_a",
+      "goal": "Diagnostics ecology overlay section wired",
+      "territory": "src/gui/diagnostics_ui.rs",
+      "forbidden_exit": [
+        "lib_test_only",
+        "witness_counter_zero",
+        "witness_lib_green_without_green",
+        "eval_math_without_render"
+      ],
+      "completed": "2026-06-13"
+    },
+    {
+      "seq": 47,
+      "phase": "C",
+      "id": "VEG-C07-POPULATION-AUTH-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_a",
+      "goal": "VegetationPopulation authority over vegetation_field_tick",
+      "territory": "src/systems/ecology/vegetation_field.rs",
+      "forbidden_exit": [
+        "lib_test_only",
+        "witness_counter_zero",
+        "witness_lib_green_without_green",
+        "eval_math_without_render"
+      ],
+      "completed": "2026-06-13"
+    },
+    {
+      "seq": 48,
+      "phase": "C",
+      "id": "VEG-C08-POPULATION-WITNESS-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_a",
+      "goal": "canopy_density tracks graph not biome alone",
+      "forbidden_exit": [
+        "lib_test_only",
+        "witness_counter_zero",
+        "witness_lib_green_without_green",
+        "eval_math_without_render"
+      ],
+      "completed": "2026-06-13"
+    },
+    {
+      "seq": 49,
+      "phase": "C",
+      "id": "VEG-C09-MINIMAP-LAYER-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_a",
+      "goal": "Minimap ecology layer topology boundaries",
+      "territory": "src/gui/minimap_shell.rs",
+      "forbidden_exit": [
+        "lib_test_only",
+        "witness_counter_zero",
+        "witness_lib_green_without_green",
+        "eval_math_without_render"
+      ],
+      "completed": "2026-06-13"
+    },
+    {
+      "seq": 50,
+      "phase": "C",
+      "id": "VEG-C10-PLAY-KEY-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_a",
+      "goal": "play_scenario_live.json veg_topology_visible_at_operational_zoom",
+      "witness": "debug_runs/play_scenario_live.json",
+      "exit_predicate": {
+        "witness": "debug_runs/play_scenario_live.json",
+        "must": [
+          {
+            "path": "veg_topology_visible_at_operational_zoom",
+            "eq": true
+          }
+        ]
+      },
+      "forbidden_exit": [
+        "lib_test_only",
+        "witness_counter_zero",
+        "witness_lib_green_without_green",
+        "eval_math_without_render"
+      ],
+      "live_sim_required": true,
+      "operator_visible": true,
+      "completed": "2026-06-13"
+    },
+    {
+      "seq": 51,
+      "phase": "C",
+      "id": "VEG-C11-FULLAPP-ECO-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_a",
+      "goal": "stage5 ecology_active_rows > 0",
+      "witness": "debug_runs/stage5_full_app_live.json",
+      "exit_predicate": {
+        "witness": "debug_runs/stage5_full_app_live.json",
+        "must": [
+          {
+            "path": "ecology_active_rows",
+            "gte": 1
+          }
+        ]
+      },
+      "forbidden_exit": [
+        "lib_test_only",
+        "witness_counter_zero",
+        "witness_lib_green_without_green",
+        "eval_math_without_render"
+      ],
+      "live_sim_required": true,
+      "operator_visible": true,
+      "completed": "2026-06-13"
+    },
+    {
+      "seq": 52,
+      "phase": "C",
+      "id": "VEG-C12-FULLAPP-TOPO-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_a",
+      "goal": "stage5 ecology_topology_wired key",
+      "witness": "debug_runs/stage5_full_app_live.json",
+      "forbidden_exit": [
+        "lib_test_only",
+        "witness_counter_zero",
+        "witness_lib_green_without_green",
+        "eval_math_without_render"
+      ],
+      "live_sim_required": true,
+      "operator_visible": true,
+      "completed": "2026-06-13"
+    },
+    {
+      "seq": 53,
+      "phase": "C",
+      "id": "VEG-C13-VISUAL-SMOKE-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_a",
+      "goal": "--test visual smoke: ecology raster non-uniform (qualified)",
+      "forbidden_exit": [
+        "lib_test_only",
+        "witness_counter_zero",
+        "witness_lib_green_without_green",
+        "eval_math_without_render"
+      ],
+      "live_sim_required": true,
+      "operator_visible": true,
+      "completed": "2026-06-13"
+    },
+    {
+      "seq": 54,
+      "phase": "C",
+      "id": "VEG-C14-OPERATOR-CHECKLIST-001",
+      "status": "blocked",
+      "priority": "P1",
+      "owner": "coder_a",
+      "goal": "Operator G-PLAY veg checklist row",
+      "snag": "operator_human_signoff",
+      "blocked_owner": "operator",
+      "forbidden_exit": [
+        "lib_test_only",
+        "witness_counter_zero",
+        "witness_lib_green_without_green",
+        "eval_math_without_render"
+      ],
+      "live_sim_required": true,
+      "operator_visible": true
+    },
+    {
+      "seq": 55,
+      "phase": "C",
+      "id": "VEG-C15-PHASE-CLOSE-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_a",
+      "goal": "Phase C rollup: preview+play+stage5 green",
+      "witness": "debug_runs/vegetation_phase_c_close_live.json",
+      "depends_on": [
+        "VEG-C10-PLAY-KEY-001",
+        "VEG-C11-FULLAPP-ECO-001"
+      ],
+      "forbidden_exit": [
+        "lib_test_only",
+        "witness_counter_zero",
+        "witness_lib_green_without_green"
+      ],
+      "operator_visible": true,
+      "completed": "2026-06-13"
+    },
+    {
+      "seq": 56,
+      "phase": "D",
+      "id": "VEG-D01-SETTLEMENT-LANDUSE-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_a",
+      "goal": "Settlement district to LandUseInfluence (remove x%16 hack)",
+      "territory": "src/strategic/settlement/",
+      "depends_on": [
+        "VEG-C15-PHASE-CLOSE-001"
+      ],
+      "forbidden_exit": [
+        "lib_test_only",
+        "witness_counter_zero",
+        "witness_lib_green_without_green"
+      ],
+      "completed": "2026-06-13"
+    },
+    {
+      "seq": 57,
+      "phase": "D",
+      "id": "VEG-D02-TRANSPORT-CORRIDOR-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_a",
+      "goal": "Transport edge proximity biases CORRIDOR preset",
+      "territory": "src/infrastructure/transport/",
+      "depends_on": [
+        "VEG-C15-PHASE-CLOSE-001"
+      ],
+      "forbidden_exit": [
+        "lib_test_only",
+        "witness_counter_zero",
+        "witness_lib_green_without_green"
+      ],
+      "completed": "2026-06-13"
+    },
+    {
+      "seq": 58,
+      "phase": "D",
+      "id": "VEG-D03-CONSTRUCTION-CLEAR-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_a",
+      "goal": "Construction site clear couples to lg2 disturbance",
+      "territory": "src/construction/",
+      "depends_on": [
+        "VEG-C15-PHASE-CLOSE-001"
+      ],
+      "forbidden_exit": [
+        "lib_test_only",
+        "witness_counter_zero",
+        "witness_lib_green_without_green"
+      ],
+      "completed": "2026-06-13"
+    },
+    {
+      "seq": 59,
+      "phase": "D",
+      "id": "VEG-D04-HYDRO-RIPARIAN-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_a",
+      "goal": "Hydrology band biases riparian preset pick",
+      "territory": "src/substrate/hydrology/",
+      "depends_on": [
+        "VEG-C15-PHASE-CLOSE-001"
+      ],
+      "forbidden_exit": [
+        "lib_test_only",
+        "witness_counter_zero",
+        "witness_lib_green_without_green"
+      ],
+      "completed": "2026-06-13"
+    },
+    {
+      "seq": 60,
+      "phase": "D",
+      "id": "VEG-D05-LG3-WITNESS-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_a",
+      "goal": "lg3 district witness green without hack",
+      "witness": "debug_runs/landscape_grammar_lg3_live.json",
+      "depends_on": [
+        "VEG-C15-PHASE-CLOSE-001"
+      ],
+      "exit_predicate": {
+        "witness": "debug_runs/landscape_grammar_lg3_live.json",
+        "must": [
+          {
+            "path": "green",
+            "eq": true
+          }
+        ]
+      },
+      "forbidden_exit": [
+        "lib_test_only",
+        "witness_counter_zero",
+        "witness_lib_green_without_green"
+      ],
+      "completed": "2026-06-13"
+    },
+    {
+      "seq": 61,
+      "phase": "D",
+      "id": "VEG-D06-SIM-EFFECT-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_a",
+      "goal": "SimEffect hook for landscape disturbance telemetry",
+      "territory": "src/sim/effects/",
+      "depends_on": [
+        "VEG-C15-PHASE-CLOSE-001"
+      ],
+      "forbidden_exit": [
+        "lib_test_only",
+        "witness_counter_zero",
+        "witness_lib_green_without_green"
+      ],
+      "completed": "2026-06-13"
+    },
+    {
+      "seq": 62,
+      "phase": "D",
+      "id": "VEG-D07-PHASE-CLOSE-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_a",
+      "goal": "Phase D rollup",
+      "witness": "debug_runs/vegetation_phase_d_close_live.json",
+      "depends_on": [
+        "VEG-C15-PHASE-CLOSE-001"
+      ],
+      "forbidden_exit": [
+        "lib_test_only",
+        "witness_counter_zero",
+        "witness_lib_green_without_green"
+      ],
+      "completed": "2026-06-13"
+    },
+    {
+      "seq": 63,
+      "phase": "E",
+      "id": "VEG-E01-SUBCELL-GRID-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_a",
+      "goal": "4x4 subcell population grid per chunk",
+      "depends_on": [
+        "VEG-D07-PHASE-CLOSE-001"
+      ],
+      "forbidden_exit": [
+        "lib_test_only",
+        "witness_counter_zero",
+        "witness_lib_green_without_green"
+      ],
+      "completed": "2026-06-13"
+    },
+    {
+      "seq": 64,
+      "phase": "E",
+      "id": "VEG-E02-INSTANCE-SPAWN-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_a",
+      "goal": "Deterministic instance spawn bounded by budget",
+      "depends_on": [
+        "VEG-D07-PHASE-CLOSE-001"
+      ],
+      "forbidden_exit": [
+        "lib_test_only",
+        "witness_counter_zero",
+        "witness_lib_green_without_green"
+      ],
+      "completed": "2026-06-13"
+    },
+    {
+      "seq": 65,
+      "phase": "E",
+      "id": "VEG-E03-INSTANCE-EXTRACT-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_a",
+      "goal": "Extract glyph per instance from lexicon",
+      "depends_on": [
+        "VEG-D07-PHASE-CLOSE-001"
+      ],
+      "forbidden_exit": [
+        "lib_test_only",
+        "witness_counter_zero",
+        "witness_lib_green_without_green"
+      ],
+      "completed": "2026-06-13"
+    },
+    {
+      "seq": 66,
+      "phase": "E",
+      "id": "VEG-E04-FIRE-CORRIDOR-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_a",
+      "goal": "Fire corridor reads population fuel corridor",
+      "depends_on": [
+        "VEG-D07-PHASE-CLOSE-001"
+      ],
+      "forbidden_exit": [
+        "lib_test_only",
+        "witness_counter_zero",
+        "witness_lib_green_without_green"
+      ],
+      "completed": "2026-06-13"
+    },
+    {
+      "seq": 67,
+      "phase": "E",
+      "id": "VEG-E05-SUCCESSION-GRAPH-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_a",
+      "goal": "Graph node stage on disturbance not scalar only",
+      "depends_on": [
+        "VEG-D07-PHASE-CLOSE-001"
+      ],
+      "forbidden_exit": [
+        "lib_test_only",
+        "witness_counter_zero",
+        "witness_lib_green_without_green"
+      ],
+      "completed": "2026-06-13"
+    },
+    {
+      "seq": 68,
+      "phase": "E",
+      "id": "VEG-E06-SNAPSHOT-PERSIST-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_a",
+      "goal": "Save/load SuccessionState + DisturbanceHistory",
+      "witness": "debug_runs/vegetation_snapshot_roundtrip_live.json",
+      "depends_on": [
+        "VEG-D07-PHASE-CLOSE-001"
+      ],
+      "forbidden_exit": [
+        "lib_test_only",
+        "witness_counter_zero",
+        "witness_lib_green_without_green"
+      ],
+      "completed": "2026-06-13"
+    },
+    {
+      "seq": 69,
+      "phase": "E",
+      "id": "VEG-E07-SNAPSHOT-ROUNDTRIP-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_a",
+      "goal": "Snapshot round-trip lib test + witness",
+      "witness": "debug_runs/vegetation_snapshot_roundtrip_live.json",
+      "depends_on": [
+        "VEG-D07-PHASE-CLOSE-001"
+      ],
+      "forbidden_exit": [
+        "lib_test_only",
+        "witness_counter_zero",
+        "witness_lib_green_without_green"
+      ],
+      "completed": "2026-06-13"
+    },
+    {
+      "seq": 70,
+      "phase": "E",
+      "id": "VEG-E08-PHASE-CLOSE-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_a",
+      "goal": "Phase E rollup",
+      "witness": "debug_runs/vegetation_phase_e_close_live.json",
+      "depends_on": [
+        "VEG-D07-PHASE-CLOSE-001"
+      ],
+      "forbidden_exit": [
+        "lib_test_only",
+        "witness_counter_zero",
+        "witness_lib_green_without_green"
+      ],
+      "completed": "2026-06-13"
+    },
+    {
+      "seq": 71,
+      "phase": "F",
+      "id": "VEG-F01-DESIGN-ATLAS-001",
+      "status": "blocked",
+      "priority": "P1",
+      "owner": "coder_a",
+      "goal": "LG-5 charter corridor/patch iso extracts",
+      "depends_on": [
+        "VEG-E08-PHASE-CLOSE-001"
+      ],
+      "snag": "designer-mcp_blocked",
+      "blocked_owner": "designer-mcp",
+      "forbidden_exit": [
+        "lib_test_only",
+        "witness_counter_zero",
+        "witness_lib_green_without_green"
+      ]
+    },
+    {
+      "seq": 72,
+      "phase": "F",
+      "id": "VEG-F02-MCP-ATLAS-001",
+      "status": "blocked",
+      "priority": "P1",
+      "owner": "coder_a",
+      "goal": "Tile batch + promote spec",
+      "depends_on": [
+        "VEG-E08-PHASE-CLOSE-001"
+      ],
+      "snag": "coder-mcp_blocked",
+      "blocked_owner": "coder-mcp",
+      "forbidden_exit": [
+        "lib_test_only",
+        "witness_counter_zero",
+        "witness_lib_green_without_green"
+      ]
+    },
+    {
+      "seq": 73,
+      "phase": "F",
+      "id": "VEG-F03-REGISTRY-STAMP-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_a",
+      "goal": "Bevy registry + chunk UV stamp from atlas meta",
+      "depends_on": [
+        "VEG-E08-PHASE-CLOSE-001"
+      ],
+      "forbidden_exit": [
+        "lib_test_only",
+        "witness_counter_zero",
+        "witness_lib_green_without_green"
+      ],
+      "completed": "2026-06-13"
+    },
+    {
+      "seq": 74,
+      "phase": "F",
+      "id": "VEG-F04-LG5-WITNESS-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_a",
+      "goal": "lg5 witness green or spec-only stub documented",
+      "witness": "debug_runs/landscape_grammar_lg5_live.json",
+      "depends_on": [
+        "VEG-E08-PHASE-CLOSE-001"
+      ],
+      "forbidden_exit": [
+        "lib_test_only",
+        "witness_counter_zero",
+        "witness_lib_green_without_green"
+      ],
+      "completed": "2026-06-13"
+    },
+    {
+      "seq": 75,
+      "phase": "F",
+      "id": "VEG-F05-PROGRAM-CLOSE-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_a",
+      "goal": "Rollup phases A-E witnesses",
+      "witness": "debug_runs/vegetation_program_close_live.json",
+      "depends_on": [
+        "VEG-E08-PHASE-CLOSE-001"
+      ],
+      "forbidden_exit": [
+        "lib_test_only",
+        "witness_counter_zero",
+        "witness_lib_green_without_green"
+      ],
+      "completed": "2026-06-13"
+    },
+    {
+      "seq": 76,
+      "phase": "F",
+      "id": "VEG-F06-PRESET-EXPAND-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_a",
+      "goal": "presets_on_disk >= 10",
+      "depends_on": [
+        "VEG-E08-PHASE-CLOSE-001"
+      ],
+      "forbidden_exit": [
+        "lib_test_only",
+        "witness_counter_zero",
+        "witness_lib_green_without_green"
+      ],
+      "completed": "2026-06-13"
+    },
+    {
+      "seq": 77,
+      "phase": "F",
+      "id": "VEG-F07-NESTED-DEPTH-003-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_a",
+      "goal": "nested_depth_max >= 3 on industrial+forest",
+      "depends_on": [
+        "VEG-E08-PHASE-CLOSE-001"
+      ],
+      "forbidden_exit": [
+        "lib_test_only",
+        "witness_counter_zero",
+        "witness_lib_green_without_green"
+      ],
+      "completed": "2026-06-13"
+    },
+    {
+      "seq": 78,
+      "phase": "F",
+      "id": "VEG-F08-QUEUE-SYNC-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_a",
+      "goal": "Sync HANDOFF + coder_active_queue",
+      "depends_on": [
+        "VEG-E08-PHASE-CLOSE-001"
+      ],
+      "forbidden_exit": [
+        "lib_test_only",
+        "witness_counter_zero",
+        "witness_lib_green_without_green"
+      ],
+      "completed": "2026-06-13"
+    },
+    {
+      "seq": 79,
+      "phase": "G",
+      "id": "VEG-G01-OPERATOR-HISTORY-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_a",
+      "goal": "DisturbanceHistory timeline in diagnostics UI",
+      "territory": "src/gui/diagnostics_ui.rs",
+      "depends_on": [
+        "VEG-F05-PROGRAM-CLOSE-001"
+      ],
+      "forbidden_exit": [
+        "lib_test_only",
+        "witness_counter_zero",
+        "witness_lib_green_without_green"
+      ],
+      "completed": "2026-06-13"
+    },
+    {
+      "seq": 80,
+      "phase": "G",
+      "id": "VEG-G02-STEWARD-REGRESS-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "sim-steward",
+      "goal": "sim-steward replay editor parity regress",
+      "witness": "debug_runs/replay_editor_parity_live.json",
+      "depends_on": [
+        "VEG-F05-PROGRAM-CLOSE-001"
+      ],
+      "forbidden_exit": [
+        "lib_test_only",
+        "witness_counter_zero",
+        "witness_lib_green_without_green"
+      ],
+      "completed": "2026-06-13"
+    },
+    {
+      "seq": 81,
+      "phase": "G",
+      "id": "VEG-G03-LG6-FLOWERS-001",
+      "status": "deferred",
+      "priority": "P1",
+      "owner": "designer-mcp",
+      "goal": "LG-6 flowers deferred charter slice",
+      "depends_on": [
+        "VEG-F04-LG5-WITNESS-001"
+      ],
+      "snag": "deferred_lg6"
+    },
+    {
+      "seq": 82,
+      "phase": "G",
+      "id": "VEG-G04-DRAIN-SYNC-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_a",
+      "goal": "Mark v3 drained; archive v2 false-done audit",
+      "depends_on": [
+        "VEG-F08-QUEUE-SYNC-001"
+      ],
+      "completed": "2026-06-13"
+    }
+  ],
+  "maintain_after_each_seq": [
+    "cargo test -p proc_A_dine01 --lib landscape_grammar fire_ecology",
+    "BLANG:CARGO --cached --compress 4"
+  ],
+  "operator_handoff": "Drain seq 1→82 without stopping. Read exit_predicate witness fields before marking done. Full prompt: src/dev/coder_vegetation_full_chain_prompt_v1.md"
+}

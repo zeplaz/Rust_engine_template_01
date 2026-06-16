@@ -337,6 +337,8 @@ pub fn clamp_map_camera_translation_xy(
 }
 const ROTATE_STEP: f32 = 1.35_f32.to_radians();
 const SMOOTH_LAMBDA: f32 = 12.0;
+/// MAP-ZOOM-001 / Option A — relative scale change above this snaps pan (ortho already instant).
+pub const MAP_ZOOM_AXIS_SNAP_EPS: f32 = 0.002;
 /// Cap smoothing dt so multi-second frame spikes do not overshoot pan/zoom lerp.
 const MAX_CAMERA_SMOOTH_DT_SECS: f32 = 0.05;
 
@@ -793,6 +795,7 @@ fn map_camera_smooth_toward_desired(
     windows: Query<&Window, With<PrimaryWindow>>,
     sim_viewport: Res<SimulationMapViewport>,
     mut q_cam: Query<&mut Transform, With<MainWorldCamera>>,
+    mut last_desired_scale: Local<f32>,
     mut last_trace: Local<u64>,
 ) {
     if !matches!(state.get(), BaseState::Simulation | BaseState::Editor) {
@@ -802,12 +805,20 @@ fn map_camera_smooth_toward_desired(
     if dt <= 0.0 {
         return;
     }
+    let zoom_axis_changed =
+        (*last_desired_scale - desired.scale.x).abs() > MAP_ZOOM_AXIS_SNAP_EPS;
+    *last_desired_scale = desired.scale.x;
     let k = 1.0 - (-dt * SMOOTH_LAMBDA).exp();
     let Ok(mut xf) = q_cam.single_mut() else {
         return;
     };
-    xf.translation = xf.translation.lerp(desired.translation, k);
-    xf.rotation = xf.rotation.slerp(desired.rotation, k);
+    if zoom_axis_changed {
+        xf.translation = desired.translation;
+        xf.rotation = desired.rotation;
+    } else {
+        xf.translation = xf.translation.lerp(desired.translation, k);
+        xf.rotation = xf.rotation.slerp(desired.rotation, k);
+    }
     xf.scale = Vec3::ONE;
     {
         let window_px = windows

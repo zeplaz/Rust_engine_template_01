@@ -61,10 +61,37 @@ pub mod s7b_m2_m3_coder_proof;
 #[cfg(test)]
 pub mod coder_b_s7p_construction_mv_proof;
 pub mod transport_network_live_proof;
+// Wired for lib tests — BUILD-READ-REWIRE-003 (map zoom witness).
+pub mod map_zoom_coherence_live_proof;
+pub mod design_minimap_widget_live_proof;
+pub mod design_build_toolbox_hud_live_proof;
+pub mod design_fire_play_visibility_live_proof;
+pub mod build_read_world_002_live_proof;
+pub mod build_read_visual_001_live_proof;
+pub mod build_read_debug_live_proof;
+pub mod construction_placement_live_proof;
+pub mod vfx_fire_test_highlight_live_proof;
+pub mod landscape_grammar_live_proof;
+pub mod landscape_grammar_sim_harness;
+pub mod fire_ecology_lib_harness;
+pub mod product_verify_live_proof;
+pub mod sim_effect_spine_live_proof;
+pub mod design_event_log_ui_live_proof;
+pub mod pilot_catalog_parity_live_proof;
+pub mod build_read_grammar_v003_live_proof;
+pub mod aps_bevy_qc_hud_live_proof;
 #[cfg(test)]
 pub mod coder_b_queue_bundle_proof;
 #[cfg(test)]
 pub mod coder_b_wave3_bundle_proof;
+pub mod sim_steward_combined_regression;
+pub mod vegetation_snapshot_roundtrip_live_proof;
+pub mod minimap_topology_legend_live_proof;
+pub mod infra_e0_profile_catalog_live_proof;
+pub mod infra_utility_overlay_live_proof;
+pub mod aps_dna_consumer_live_proof;
+#[cfg(test)]
+pub mod phase6_coder_queue_bundle_proof;
 
 pub use stage5_live_todos::{
     hook_post_readiness_evaluate, mark_stage5_todo, register_stage5_todo_runtime_hooks,

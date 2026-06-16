@@ -1,16 +1,18 @@
 {
   "_meta": {
-    "version": "3.7.0",
-    "date": "2026-06-02",
-    "mode": "on_call",
-    "on_call_playbook": "src/dev/designer_oncall_absorption_v1.md",
+    "version": "3.8.0",
+    "date": "2026-06-03",
+    "mode": "active_assignments",
+    "weather_brief": "prompts/designer_questions/weather_player_read_brief_v1.md",
+    "aps_brief": "prompts/designer_questions/aps_ux_audit_brief_v1.md",
+    "on_call_playbook": "docs/archive/2026-06-src-dev/plans/designer_oncall_absorption_v1.md",
     "wave6_drained": true,
-    "wave3_signoff": "src/dev/fleet_signoff_wave3_closure_20260527_v1.md",
-    "wave4_assignments": "src/dev/fleet_wave4_assignments_20260527_v1.md",
+    "wave3_signoff": "docs/archive/2026-06-fleet-drain/fleet_closed/fleet_signoff_wave3_closure_20260527_v1.md",
+    "wave4_assignments": "docs/archive/2026-06-fleet-drain/fleet_closed/fleet_wave4_assignments_20260527_v1.md",
     "wave3_core_closed": true,
     "owner": "@designer",
-    "parallel_workboard": "src/dev/designer_parallel_workboard_v1.md",
-    "parallel_checklist": "src/dev/designer_wave_parallel_todos_v1.md",
+    "parallel_workboard": "docs/archive/2026-06-src-dev/plans/designer_parallel_workboard_v1.md",
+    "parallel_checklist": "docs/archive/2026-06-src-dev/plans/designer_wave_parallel_todos_v1.md",
     "wave": "designer_wave6_todos_v1.md",
     "wave4_p1_open": 0,
     "wave4_p1_done": 6,
@@ -35,12 +37,12 @@
     "wave6_p2_open": 0,
     "wave6_p2_done": 0,
     "wave6_complete": true,
-    "coder_recap": "src/dev/coder_fleet_return_recap_wave3_v1.md",
+    "coder_recap": "docs/archive/2026-06-fleet-drain/fleet_closed/coder_fleet_return_recap_wave3_v1.md",
     "signoff_registry": "tools/orchestrator/queues/designer_signoff_registry.json",
-    "todo_board": "src/dev/stage_designer_todos_v1.md",
+    "todo_board": "docs/archive/2026-06-src-dev/plans/stage_designer_todos_v1.md",
     "machine_queue": "tools/orchestrator/queues/continuation_queue.json",
-    "workboard": "src/dev/stage_designer_workboard_v1.md",
-    "ledger": "src/dev/stage_tracks_signoff_ledger_v1.md"
+    "workboard": "docs/archive/2026-06-src-dev/plans/stage_designer_workboard_v1.md",
+    "ledger": "docs/archive/2026-06-src-dev/plans/stage_tracks_signoff_ledger_v1.md"
   },
   "done": [
     {
@@ -50,9 +52,9 @@
       "signed_date": "2026-05-26",
       "status": "done",
       "verdict": "PASS",
-      "witness": "src/dev/construction_parametric_placement_design_v1.md",
-      "plan_doc": "src/dev/plan_construction_parametric_placement_v1.md",
-      "spec_doc": "src/dev/construction_parametric_placement_spec_v1.md",
+      "witness": "docs/archive/2026-06-src-dev/plans/construction_parametric_placement_design_v1.md",
+      "plan_doc": "docs/archive/2026-06-src-dev/plans/plan_construction_parametric_placement_v1.md",
+      "spec_doc": "docs/archive/2026-06-src-dev/plans/construction_parametric_placement_spec_v1.md",
       "unblocks": [
         "CONSTRUCTION-PARAM-CODER-001",
         "CONSTRUCTION-PARAM-CODER-002",
@@ -69,7 +71,7 @@
       "signoff": "SIGNED",
       "signed_date": "2026-05-24",
       "status": "done",
-      "witness": "prompts/guides/ui/world_preview_d04_slide_sheet_spec_v1.md",
+      "witness": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/world_preview_d04_slide_sheet_spec_v1.md",
       "unblocks": ["UI-WP-LAYOUT-002"]
     },
     {
@@ -78,7 +80,7 @@
       "signoff": "SIGNED",
       "signed_date": "2026-05-24",
       "status": "done",
-      "witness": "src/dev/stage7_play_scenario_v1.md",
+      "witness": "docs/archive/2026-06-src-dev/plans/stage7_play_scenario_v1.md",
       "unblocks": ["S7P-STEWARD-001"]
     },
     {
@@ -90,8 +92,8 @@
       "signed_date": "2026-05-25",
       "status": "done",
       "verdict": "PASS",
-      "witness": "src/dev/ui_oh_d2_signoff_record_v1.md",
-      "brief": "prompts/guides/ui/ui_phase2_designer_signoff_v1.md"
+      "witness": "docs/archive/2026-06-src-dev/plans/ui_oh_d2_signoff_record_v1.md",
+      "brief": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/ui_phase2_designer_signoff_v1.md"
     },
     {
       "id": "UI-OH-P4-ART-001",
@@ -101,8 +103,8 @@
       "signed_date": "2026-05-25",
       "status": "done",
       "verdict": "PASS",
-      "witness": "src/dev/ui_oh_p4_art_signoff_record_v1.md",
-      "brief": "prompts/guides/ui/ui_phase4_icon_atlas_brief_v1.md"
+      "witness": "docs/archive/2026-06-src-dev/plans/ui_oh_p4_art_signoff_record_v1.md",
+      "brief": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/ui_phase4_icon_atlas_brief_v1.md"
     },
     {
       "id": "DESIGN-UI-P2-SIGNOFF-001",
@@ -111,7 +113,7 @@
       "signoff": "SIGNED",
       "signed_date": "2026-05-24",
       "status": "done",
-      "witness": "prompts/guides/ui/ui_phase2_designer_signoff_v1.md"
+      "witness": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/ui_phase2_designer_signoff_v1.md"
     },
     {
       "id": "DESIGN-D-VFX-POST-001",
@@ -122,8 +124,8 @@
       "signed_date": "2026-05-25",
       "status": "done",
       "verdict": "PASS",
-      "witness": "src/dev/vfx_design_review_record_v1.md",
-      "brief": "prompts/guides/ui/vfx_post_implementation_review_v1.md",
+      "witness": "docs/archive/2026-06-src-dev/plans/vfx_design_review_record_v1.md",
+      "brief": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/vfx_post_implementation_review_v1.md",
       "notes": "After @coder A P2-FIRE-SPARK-011"
     },
     {
@@ -143,7 +145,7 @@
       "signoff": "SIGNED",
       "signed_date": "2026-05-24",
       "status": "done",
-      "witness": "src/dev/water_ocean_fixture_request_v1.md",
+      "witness": "docs/archive/2026-06-src-dev/plans/water_ocean_fixture_request_v1.md",
       "unblocks": ["WATER-W1-OCEAN-001"]
     },
     {
@@ -154,7 +156,7 @@
       "signed_date": "2026-05-24",
       "status": "done",
       "verdict": "M2 COMPLETE",
-      "witness": "src/dev/minimap_d_m2_signoff_v1.md",
+      "witness": "docs/archive/2026-06-src-dev/plans/minimap_d_m2_signoff_v1.md",
       "deferred": ["UI-P3-M2-TRAY-OPT"]
     },
     {
@@ -164,7 +166,7 @@
       "signoff": "SIGNED",
       "signed_date": "2026-05-25",
       "status": "done",
-      "witness": "prompts/guides/ui/minimap_m3_operational_overlay_spec_v1.md",
+      "witness": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/minimap_m3_operational_overlay_spec_v1.md",
       "unblocks": ["UI-P3-M4-001"]
     },
     {
@@ -175,8 +177,8 @@
       "signed_date": "2026-05-25",
       "status": "done",
       "verdict": "PASS",
-      "witness": "src/dev/world_preview_d_wp_review_record_v1.md",
-      "brief": "prompts/guides/ui/world_preview_d_wp_post_impl_review_v1.md"
+      "witness": "docs/archive/2026-06-src-dev/plans/world_preview_d_wp_review_record_v1.md",
+      "brief": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/world_preview_d_wp_post_impl_review_v1.md"
     },
     {
       "id": "UX-E02-BQ128-001",
@@ -187,7 +189,7 @@
       "signoff": "SIGNED",
       "signed_date": "2026-05-25",
       "status": "done",
-      "witness": "src/dev/bq128_editor_path_design_note_v1.md",
+      "witness": "docs/archive/2026-06-src-dev/plans/bq128_editor_path_design_note_v1.md",
       "unblocks": ["BQ-128-APPLY-001"],
       "notes": "None (parallel)"
     },
@@ -197,7 +199,7 @@
       "signoff": "SIGNED",
       "signed_date": "2026-05-25",
       "status": "done",
-      "witness": "src/dev/stage7_behavioral_d_signoff_v1.md",
+      "witness": "docs/archive/2026-06-src-dev/plans/stage7_behavioral_d_signoff_v1.md",
       "unblocks": ["S7B-PLAN-001"]
     },
     {
@@ -206,7 +208,7 @@
       "signoff": "SIGNED",
       "signed_date": "2026-05-25",
       "status": "done",
-      "witness": "src/dev/fire_lod_player_read_v1.md",
+      "witness": "docs/archive/2026-06-src-dev/plans/fire_lod_player_read_v1.md",
       "unblocks": ["FIRE7-F7-C-001"]
     },
     {
@@ -215,7 +217,7 @@
       "signoff": "SIGNED",
       "signed_date": "2026-05-25",
       "status": "done",
-      "witness": "src/dev/s7p_grid_overload_ux_note_v1.md",
+      "witness": "docs/archive/2026-06-src-dev/plans/s7p_grid_overload_ux_note_v1.md",
       "unblocks": ["S7P-GRID-UX-UI-001"]
     },
     {
@@ -224,7 +226,7 @@
       "signoff": "SIGNED",
       "signed_date": "2026-05-26",
       "status": "done",
-      "witness": "src/dev/minimap_unit_marker_visual_spec_v1.md",
+      "witness": "docs/archive/2026-06-src-dev/plans/minimap_unit_marker_visual_spec_v1.md",
       "unblocks": ["UI-P3-M3-UNITS-001"]
     },
     {
@@ -233,7 +235,7 @@
       "signoff": "SIGNED",
       "signed_date": "2026-05-26",
       "status": "done",
-      "witness": "src/dev/minimap_replay_scrub_visual_spec_v1.md",
+      "witness": "docs/archive/2026-06-src-dev/plans/minimap_replay_scrub_visual_spec_v1.md",
       "unblocks": ["UI-P3-M3-REPLAY-001"]
     },
     {
@@ -242,7 +244,7 @@
       "signoff": "SIGNED",
       "signed_date": "2026-05-26",
       "status": "done",
-      "witness": "src/dev/construction_multiview_ghost_readability_v1.md",
+      "witness": "docs/archive/2026-06-src-dev/plans/construction_multiview_ghost_readability_v1.md",
       "unblocks": ["CONSTRUCTION-MV-SIM-001"],
       "notes": "Readability contract; sim witness already green"
     },
@@ -253,7 +255,7 @@
       "signed_date": "2026-05-26",
       "status": "done",
       "verdict": "PASS (qualified)",
-      "witness": "src/dev/vfx_visual_acceptance_record_v1.md",
+      "witness": "docs/archive/2026-06-src-dev/plans/vfx_visual_acceptance_record_v1.md",
       "unblocks": ["VFX-VISUAL-SIGNOFF-001"]
     },
     {
@@ -263,7 +265,7 @@
       "signed_date": "2026-05-26",
       "status": "done",
       "verdict": "PASS (qualified)",
-      "witness": "src/dev/world_preview_visual_acceptance_record_v1.md",
+      "witness": "docs/archive/2026-06-src-dev/plans/world_preview_visual_acceptance_record_v1.md",
       "unblocks": ["UI-WP-VISUAL-001"]
     },
     {
@@ -273,7 +275,7 @@
       "signed_date": "2026-05-26",
       "status": "done",
       "verdict": "PASS (qualified)",
-      "witness": "src/dev/s7p_grid_overload_ux_pass_record_v1.md",
+      "witness": "docs/archive/2026-06-src-dev/plans/s7p_grid_overload_ux_pass_record_v1.md",
       "unblocks": ["S7P-GRID-UX-UI-001"],
       "notes": "s7p_grid_ux_001 green on industrial_activation_live.json"
     },
@@ -283,7 +285,7 @@
       "signoff": "SIGNED",
       "signed_date": "2026-05-26",
       "status": "done",
-      "witness": "src/dev/fire_streaming_debug_overlay_names_v1.md",
+      "witness": "docs/archive/2026-06-src-dev/plans/fire_streaming_debug_overlay_names_v1.md",
       "notes": "FIRE7-DESIGN-002 F3 label contract; optional coder wire"
     },
     {
@@ -293,7 +295,7 @@
       "signed_date": "2026-05-26",
       "status": "done",
       "verdict": "PASS (qualified)",
-      "witness": "src/dev/bq128_apply_ghost_ux_review_v1.md",
+      "witness": "docs/archive/2026-06-src-dev/plans/bq128_apply_ghost_ux_review_v1.md",
       "unblocks": ["UX-E02-APPLY-POLISH-001"]
     },
     {
@@ -303,7 +305,7 @@
       "signed_date": "2026-05-26",
       "status": "done",
       "verdict": "PASS (qualified)",
-      "witness": "src/dev/ind_e03_ops_strip_polish_v1.md",
+      "witness": "docs/archive/2026-06-src-dev/plans/ind_e03_ops_strip_polish_v1.md",
       "unblocks": ["IND-E03-SIM-UX-001"]
     },
     {
@@ -324,7 +326,7 @@
       "signed_date": "2026-05-26",
       "status": "done",
       "verdict": "PASS",
-      "witness": "src/dev/construction_r4_corridor_map_ux_v1.md",
+      "witness": "docs/archive/2026-06-src-dev/plans/construction_r4_corridor_map_ux_v1.md",
       "witness_json": "debug_runs/construction_stage_live.json",
       "unblocks": ["R4-CORRIDOR-001"]
     },
@@ -335,7 +337,7 @@
       "signed_date": "2026-05-26",
       "status": "done",
       "verdict": "DEFER",
-      "witness": "src/dev/construction_r4_tray_legend_v1.md",
+      "witness": "docs/archive/2026-06-src-dev/plans/construction_r4_tray_legend_v1.md",
       "unblocks": ["R4-TRAY-001"]
     },
     {
@@ -345,7 +347,7 @@
       "signed_date": "2026-05-26",
       "status": "done",
       "verdict": "DEFER",
-      "witness": "src/dev/construction_r4_mv_pass_record_v1.md",
+      "witness": "docs/archive/2026-06-src-dev/plans/construction_r4_mv_pass_record_v1.md",
       "unblocks": ["R4-MV-GHOST-001"]
     },
     {
@@ -355,7 +357,7 @@
       "signed_date": "2026-05-26",
       "status": "done",
       "verdict": "DEFER",
-      "witness": "src/dev/minimap_m3_unit_aggregation_visual_v1.md",
+      "witness": "docs/archive/2026-06-src-dev/plans/minimap_m3_unit_aggregation_visual_v1.md",
       "unblocks": ["UI-P3-M3-DEPTH-001"]
     },
     {
@@ -365,7 +367,7 @@
       "signed_date": "2026-05-26",
       "status": "done",
       "verdict": "DEFER",
-      "witness": "src/dev/minimap_replay_live_ring_visual_v1.md",
+      "witness": "docs/archive/2026-06-src-dev/plans/minimap_replay_live_ring_visual_v1.md",
       "unblocks": ["REPLAY-LIVE-RING-001"]
     },
     {
@@ -375,7 +377,7 @@
       "signed_date": "2026-05-26",
       "status": "done",
       "verdict": "PASS (qualified)",
-      "witness": "src/dev/minimap_m2_tray_overlay_bridge_v1.md",
+      "witness": "docs/archive/2026-06-src-dev/plans/minimap_m2_tray_overlay_bridge_v1.md",
       "unblocks": ["UI-P3-M2-TRAY-OPT"]
     },
     {
@@ -385,7 +387,7 @@
       "signed_date": "2026-05-26",
       "status": "done",
       "verdict": "PASS",
-      "witness": "src/dev/fire_streaming_neighbor_wake_visual_v1.md",
+      "witness": "docs/archive/2026-06-src-dev/plans/fire_streaming_neighbor_wake_visual_v1.md",
       "witness_json": "debug_runs/fire_streaming_live.json",
       "unblocks": ["FIRE7-STREAM-NEIGHBOR-WAKE-001"]
     },
@@ -396,7 +398,7 @@
       "signed_date": "2026-05-26",
       "status": "done",
       "verdict": "DEFER",
-      "witness": "src/dev/fire7_f7_b_debug_pass_record_v1.md",
+      "witness": "docs/archive/2026-06-src-dev/plans/fire7_f7_b_debug_pass_record_v1.md",
       "unblocks": ["FIRE7-F7-B-DEBUG-UI-001"]
     },
     {
@@ -406,7 +408,7 @@
       "signed_date": "2026-05-26",
       "status": "done",
       "verdict": "PASS (qualified)",
-      "witness": "src/dev/fire_vt_spread_visual_acceptance_v1.md",
+      "witness": "docs/archive/2026-06-src-dev/plans/fire_vt_spread_visual_acceptance_v1.md",
       "unblocks": ["STAGE5-VT-DEEP-001"]
     },
     {
@@ -416,12 +418,12 @@
       "signed_date": "2026-05-26",
       "status": "done",
       "verdict": "PASS (qualified)",
-      "witness": "src/dev/wssr_design_signoff_v1.md",
-      "brief": "src/dev/wssr_design_gate_brief_v1.md",
-      "slab_preflight_g1_g2": "src/dev/wss_design_gate_parent_closure_v1.md",
+      "witness": "docs/archive/2026-06-src-dev/plans/wssr_design_signoff_v1.md",
+      "brief": "docs/archive/2026-06-src-dev/plans/wssr_design_gate_brief_v1.md",
+      "slab_preflight_g1_g2": "docs/archive/2026-06-src-dev/plans/wss_design_gate_parent_closure_v1.md",
       "deliverables": [
-        "src/dev/wss_substrate_diagnostics_copy_v1.md",
-        "src/dev/wss_substrate_debug_overlay_names_v1.md"
+        "docs/archive/2026-06-src-dev/plans/wss_substrate_diagnostics_copy_v1.md",
+        "docs/archive/2026-06-src-dev/plans/wss_substrate_debug_overlay_names_v1.md"
       ],
       "unblocks": ["WSS-CHUNK-SLAB-001", "WSS-ATMOS-CLIPMAP-001", "WSS-HYDRO-RUNTIME-001"]
     },
@@ -432,7 +434,7 @@
       "signed_date": "2026-05-26",
       "status": "done",
       "verdict": "PASS",
-      "witness": "src/dev/wss_hydrology_player_read_v1.md",
+      "witness": "docs/archive/2026-06-src-dev/plans/wss_hydrology_player_read_v1.md",
       "unblocks": ["WSS-HYDRO-RUNTIME-001", "B-H1"]
     },
     {
@@ -442,7 +444,7 @@
       "signed_date": "2026-05-26",
       "status": "done",
       "verdict": "PASS (qualified)",
-      "witness": "src/dev/ui_phase6_multiview_readability_v1.md",
+      "witness": "docs/archive/2026-06-src-dev/plans/ui_phase6_multiview_readability_v1.md",
       "unblocks": ["UI-W3-P6-001"]
     },
     {
@@ -462,7 +464,7 @@
       "signed_date": "2026-05-26",
       "status": "done",
       "verdict": "PASS",
-      "witness": "src/dev/construction_parametric_staging_ux_v2.md",
+      "witness": "docs/archive/2026-06-src-dev/plans/construction_parametric_staging_ux_v2.md",
       "unblocks": ["CONSTRUCTION-PARAM-CODER-004", "B-C4"]
     },
     {
@@ -472,7 +474,7 @@
       "signed_date": "2026-05-26",
       "status": "done",
       "verdict": "PASS",
-      "witness": "src/dev/construction_parametric_scale_hud_v1.md",
+      "witness": "docs/archive/2026-06-src-dev/plans/construction_parametric_scale_hud_v1.md",
       "unblocks": ["CONSTRUCTION-PARAM-CODER-006", "B-C5"]
     },
     {
@@ -482,7 +484,7 @@
       "signed_date": "2026-05-26",
       "status": "done",
       "verdict": "PASS",
-      "witness": "src/dev/wss_contamination_visual_language_v1.md",
+      "witness": "docs/archive/2026-06-src-dev/plans/wss_contamination_visual_language_v1.md",
       "unblocks": ["A-W2", "WSS-ATMOS-CLIPMAP-001"]
     },
     {
@@ -492,7 +494,7 @@
       "signed_date": "2026-05-26",
       "status": "done",
       "verdict": "PASS",
-      "witness": "src/dev/wss_smoke_layer_a_b_visual_v1.md",
+      "witness": "docs/archive/2026-06-src-dev/plans/wss_smoke_layer_a_b_visual_v1.md",
       "unblocks": ["A-V3", "WSS-SMOKE-BRIDGE-001"]
     },
     {
@@ -502,7 +504,7 @@
       "signed_date": "2026-05-26",
       "status": "done",
       "verdict": "PASS (qualified)",
-      "witness": "src/dev/ui_theme_collage_delta_v1.md",
+      "witness": "docs/archive/2026-06-src-dev/plans/ui_theme_collage_delta_v1.md",
       "unblocks": ["PLAN-UI-THEME-MERGE-001"]
     },
     {
@@ -512,7 +514,7 @@
       "signed_date": "2026-05-26",
       "status": "done",
       "verdict": "PASS (qualified)",
-      "witness": "src/dev/world_preview_visual_upgrade_checklist_v1.md",
+      "witness": "docs/archive/2026-06-src-dev/plans/world_preview_visual_upgrade_checklist_v1.md",
       "unblocks": ["UI-WP-VISUAL-001"]
     },
     {
@@ -522,7 +524,7 @@
       "signed_date": "2026-05-26",
       "status": "done",
       "verdict": "PASS (qualified)",
-      "witness": "src/dev/operator_visual_signoff_design_checklist_v1.md",
+      "witness": "docs/archive/2026-06-src-dev/plans/operator_visual_signoff_design_checklist_v1.md",
       "unblocks": ["PLAN-OPERATOR-VISUAL-BUNDLE-001"]
     },
     {
@@ -532,7 +534,7 @@
       "signed_date": "2026-05-27",
       "status": "done",
       "verdict": "PASS",
-      "witness": "src/dev/wss_contamination_visual_language_v1.md",
+      "witness": "docs/archive/2026-06-src-dev/plans/wss_contamination_visual_language_v1.md",
       "unblocks": ["A-W2", "WSS-ATMOS-CLIPMAP-001"],
       "notes": "Readability coverage accepted via contamination visual language pass."
     },
@@ -543,7 +545,7 @@
       "signed_date": "2026-05-27",
       "status": "done",
       "verdict": "PASS",
-      "witness": "src/dev/fire_f2_extract_readability_pass_001.md",
+      "witness": "docs/archive/2026-06-src-dev/plans/fire_f2_extract_readability_pass_001.md",
       "witness_json": "debug_runs/stage5_full_app_live.json",
       "unblocks": ["FIRE-F2-EXTRACT-001", "A-V2"],
       "notes": "fire_instance_buffer_rows > 0 and f2_extract_witness.green"
@@ -555,7 +557,7 @@
       "signed_date": "2026-05-27",
       "status": "done",
       "verdict": "PASS",
-      "witness": "src/dev/wss_diagnostics_pass_002.md",
+      "witness": "docs/archive/2026-06-src-dev/plans/wss_diagnostics_pass_002.md",
       "witness_json": "debug_runs/wss_substrate_live.json",
       "unblocks": ["WSS-CHUNK-SLAB-001", "A-W1", "A-W2"],
       "notes": "Overlay naming verified against live substrate witness fields"
@@ -567,7 +569,7 @@
       "signed_date": "2026-05-27",
       "status": "done",
       "verdict": "PASS (qualified)",
-      "witness": "src/dev/wss_dual_write_transition_ux_001.md",
+      "witness": "docs/archive/2026-06-src-dev/plans/wss_dual_write_transition_ux_001.md",
       "unblocks": ["PLAN-WSS-SLAB-PR-2", "WSS-SLAB-PR-2"],
       "notes": "PR-2 transition copy approved; waits on dual_write_shim keys"
     },
@@ -578,7 +580,7 @@
       "signed_date": "2026-05-27",
       "status": "done",
       "verdict": "PASS",
-      "witness": "src/dev/construction_r4_mv_post_param_001.md",
+      "witness": "docs/archive/2026-06-src-dev/plans/construction_r4_mv_post_param_001.md",
       "witness_json": "debug_runs/construction_stage_live.json",
       "unblocks": ["R4-MV-GHOST-001", "B-C3"],
       "notes": "Parametric rollup green and r4_mv_ghost green"
@@ -590,7 +592,7 @@
       "signed_date": "2026-05-27",
       "status": "done",
       "verdict": "PASS",
-      "witness": "src/dev/minimap_replay_pass_002_v1.md",
+      "witness": "docs/archive/2026-06-src-dev/plans/minimap_replay_pass_002_v1.md",
       "witness_json": "debug_runs/minimap_compositor_live.json",
       "pass_pointers": ["/replay_scrub_enabled", "/ui_p3_m3_replay_001_green"],
       "unblocks": ["REPLAY-RING-LIVE-001", "M3-UNITS-DEPTH-001"],
@@ -603,7 +605,7 @@
       "signed_date": "2026-05-27",
       "status": "done",
       "verdict": "PASS (qualified)",
-      "witness": "src/dev/hanabi_event_vfx_style_bounds_v1.md",
+      "witness": "docs/archive/2026-06-src-dev/plans/hanabi_event_vfx_style_bounds_v1.md",
       "unblocks": ["H-A", "W4-C-event-embellishment"],
       "notes": "Superseded by DESIGN-HANABI-SPIKE-REVIEW-001 H-A2 clearance"
     },
@@ -614,7 +616,7 @@
       "signed_date": "2026-05-27",
       "status": "done",
       "verdict": "PASS (qualified)",
-      "witness": "src/dev/hanabi_spike_review_h_a2_gate_v1.md",
+      "witness": "docs/archive/2026-06-src-dev/plans/hanabi_spike_review_h_a2_gate_v1.md",
       "spike_report": "experiments/hanabi_validation/report_v1.md",
       "h_a2_gate": "CLEARED (qualified)",
       "unblocks": ["H-A2", "hanabi_l3", "PLAN-HANABI-ADOPTION-001"],
@@ -640,7 +642,7 @@
       "signed_date": "2026-05-27",
       "status": "done",
       "verdict": "PASS",
-      "witness": "src/dev/project_identity_guard_rail_v1.md",
+      "witness": "docs/archive/2026-06-src-dev/plans/project_identity_guard_rail_v1.md",
       "unblocks": ["wssr_hybrid_assessment_review", "steward_identity_checkpoint"],
       "notes": "ACCEPT/TUNE/REJECT rubric for parallel VFX/WSS reviews"
     },
@@ -652,7 +654,7 @@
       "absorption_date": "2026-06-02",
       "status": "done",
       "verdict": "PASS",
-      "witness": "src/dev/wss_pr4_retire_cutover_ux_v1.md",
+      "witness": "docs/archive/2026-06-src-dev/plans/wss_pr4_retire_cutover_ux_v1.md",
       "witness_json": "debug_runs/wss_substrate_live.json",
       "pass_pointers": [
         "/substrate_persist_roundtrip_ok",
@@ -674,7 +676,7 @@
       "signed_date": "2026-05-28",
       "status": "done",
       "verdict": "PASS",
-      "witness": "src/dev/visual_perf_spike_degrade_ux_v1.md",
+      "witness": "docs/archive/2026-06-src-dev/plans/visual_perf_spike_degrade_ux_v1.md",
       "unblocks": ["PERF-P2-TILE-RASTER-BUDGET-001", "PERF-P2-FIRE-EXTRACT-CADENCE-001", "PLAN-VISUAL-PERF-EXEC-001"],
       "notes": "UxFrameSpikeGuard player vs dev suppression matrix"
     },
@@ -685,7 +687,7 @@
       "signed_date": "2026-05-28",
       "status": "done",
       "verdict": "PASS (qualified)",
-      "witness": "src/dev/play_scenario_acceptance_runbook_v1.md",
+      "witness": "docs/archive/2026-06-src-dev/plans/play_scenario_acceptance_runbook_v1.md",
       "planner_pair": "PLAN-G-PLAY-001",
       "unblocks": ["G-PLAY-001-BLOCKERS", "G-PLAY-01", "OPS-PLAY-001"],
       "notes": "Operator execution pending for full G-PLAY-01 close"
@@ -697,8 +699,8 @@
       "signed_date": "2026-05-28",
       "status": "done",
       "verdict": "PASS",
-      "witness": "src/dev/wss_hydro_read_feature_pass_001.md",
-      "baseline": "src/dev/wss_hydrology_player_read_v1.md",
+      "witness": "docs/archive/2026-06-src-dev/plans/wss_hydro_read_feature_pass_001.md",
+      "baseline": "docs/archive/2026-06-src-dev/plans/wss_hydrology_player_read_v1.md",
       "unblocks": ["FEAT-WSS-HYDRO-READ-001"]
     },
     {
@@ -708,7 +710,7 @@
       "signed_date": "2026-05-28",
       "status": "done",
       "verdict": "PASS (qualified)",
-      "witness": "src/dev/visual_perf_spike_degrade_validate_001_v1.md",
+      "witness": "docs/archive/2026-06-src-dev/plans/visual_perf_spike_degrade_validate_001_v1.md",
       "blocked_by": "OPS-PLAY-001",
       "unblocks": ["PERF-P2-TILE-RASTER-BUDGET-001", "PERF-P2-FIRE-EXTRACT-CADENCE-001"]
     },
@@ -719,7 +721,7 @@
       "signed_date": "2026-05-28",
       "status": "done",
       "verdict": "PASS",
-      "witness": "src/dev/construction_r4_product_slice_ux_v1.md",
+      "witness": "docs/archive/2026-06-src-dev/plans/construction_r4_product_slice_ux_v1.md",
       "unblocks": ["CONSTRUCTION-R4-PRODUCT-001"]
     },
     {
@@ -729,7 +731,7 @@
       "signed_date": "2026-06-02",
       "status": "done",
       "verdict": "PASS",
-      "witness": "src/dev/design_procedural_module_kit_v1.md",
+      "witness": "docs/archive/2026-06-src-dev/plans/design_procedural_module_kit_v1.md",
       "unblocks": ["PROC-PG-2-001"],
       "parallel_with": ["PROC-PG-1-001"],
       "notes": "50 modules, 7 style packs, W/D/C grammar; greybox OK for PG-1"
@@ -741,7 +743,7 @@
       "signed_date": "2026-06-02",
       "status": "done",
       "verdict": "PASS",
-      "witness": "src/dev/design_organic_growth_ux_v1.md",
+      "witness": "docs/archive/2026-06-src-dev/plans/design_organic_growth_ux_v1.md",
       "unblocks": ["PROC-OG-3-001"],
       "notes": "Proposals dashed; never instant zone→built"
     },
@@ -752,7 +754,7 @@
       "signed_date": "2026-06-02",
       "status": "done",
       "verdict": "PASS",
-      "witness": "src/dev/design_construction_site_stage_read_v1.md",
+      "witness": "docs/archive/2026-06-src-dev/plans/design_construction_site_stage_read_v1.md",
       "unblocks": ["CON-P2"],
       "notes": "Clearing→Operational HUD + minimap icons"
     },
@@ -763,7 +765,7 @@
       "signed_date": "2026-06-02",
       "status": "done",
       "verdict": "PASS",
-      "witness": "src/dev/design_construction_scaling_read_v1.md",
+      "witness": "docs/archive/2026-06-src-dev/plans/design_construction_scaling_read_v1.md",
       "unblocks": ["CON-P3-S1", "CON-P3-S2", "CON-P3-S3", "CON-P3-S4", "CON-P3-S5", "CON-P3-S6"],
       "notes": "S1–S6 designer half + overlap messaging"
     },
@@ -774,7 +776,7 @@
       "signed_date": "2026-06-02",
       "status": "done",
       "verdict": "PASS",
-      "witness": "src/dev/design_infra_network_overlay_v1.md",
+      "witness": "docs/archive/2026-06-src-dev/plans/design_infra_network_overlay_v1.md",
       "unblocks": ["INFRA-E6-003", "INFRA-E6-004"]
     },
     {
@@ -784,7 +786,7 @@
       "signed_date": "2026-06-02",
       "status": "done",
       "verdict": "PASS",
-      "witness": "src/dev/design_settlement_hierarchy_read_v1.md",
+      "witness": "docs/archive/2026-06-src-dev/plans/design_settlement_hierarchy_read_v1.md",
       "unblocks": ["PROC-OG-4-001", "PLAN-SETTLEMENT-HIERARCHY-005"],
       "notes": "Town/District/Block labels; district picker vs zone tool"
     }
@@ -800,32 +802,214 @@
       "notes": "ux_e03_transmission_shell_note_v1.md (2026-05-25)"
     }
   ],
-  "active": [],
+  "active": [
+    {
+      "id": "APS-BEVY-QC-HUD-001-DESIGN",
+      "status": "done",
+      "priority": 4,
+      "program": "aps_bevy",
+      "witness": "docs/archive/2026-06-src-dev/plans/design_aps_bevy_qc_hud_v1.md",
+      "verdict": "PASS WITH NOTES",
+      "handoff": "APS-BEVY-QC-HUD-001-V2"
+    },
+    {
+      "id": "SIM-HUD-PRODUCT-001",
+      "status": "done",
+      "priority": 5,
+      "program": "product_ui",
+      "verdict": "PASS (qualified)",
+      "witness": "docs/archive/2026-06-src-dev/plans/design_sim_hud_product_signoff_v1.md",
+      "witness_json": [
+        "debug_runs/sim_hud_play01_live.json",
+        "debug_runs/sim_hud_slice_dock_live.json",
+        "debug_runs/sim_hud_slice_ops_live.json"
+      ],
+      "notes": "Program closed; MINIMAP/BUILD witnesses optional"
+    },
+    {
+      "id": "SIM-HUD-SLICE-OPS",
+      "status": "done",
+      "priority": 5,
+      "program": "product_ui",
+      "witness": "docs/archive/2026-06-src-dev/plans/design_sim_hud_ops_v1.md",
+      "handoff": "SIM-HUD-SLICE-OPS-CODER"
+    },
+    {
+      "id": "SIM-HUD-SLICE-DOCK",
+      "status": "done",
+      "priority": 5,
+      "program": "product_ui",
+      "witness": "docs/archive/2026-06-src-dev/plans/design_sim_hud_dock_v1.md",
+      "handoff": "SIM-HUD-SLICE-DOCK-CODER"
+    },
+    {
+      "id": "SIM-HUD-SLICE-MINIMAP",
+      "status": "done",
+      "priority": 5,
+      "program": "product_ui",
+      "witness": "docs/archive/2026-06-src-dev/plans/design_sim_hud_minimap_v1.md",
+      "handoff": "SIM-HUD-SLICE-MINIMAP-CODER"
+    },
+    {
+      "id": "SIM-HUD-SLICE-BUILD",
+      "status": "done",
+      "priority": 5,
+      "program": "product_ui",
+      "witness": "docs/archive/2026-06-src-dev/plans/design_sim_hud_build_v1.md",
+      "handoff": "SIM-HUD-SLICE-BUILD-CODER"
+    }
+  ],
+  "done_aps_track_a_2026_06_03": [
+    {
+      "id": "APS-UX-AUDIT-001",
+      "status": "done",
+      "verdict": "PASS WITH NOTES",
+      "witness": "docs/archive/2026-06-src-dev/plans/design_aps_ux_audit_v1.md",
+      "witness_mcp": "docs/archive/2026-06-src-dev/plans/aps_ux_audit_001_designer_mcp_v1.md",
+      "unblocks": ["APS-PREVIEW-CATALOG-001", "APS-ATLAS-PREVIEW-002", "APS-UX-TOOLTIPS-002"],
+      "notes": "Phase 0 closed; full PASS deferred to APS-UX-POLISH-001-SIGNOFF"
+    },
+    {
+      "id": "APS-UX-TOOLTIPS-002",
+      "status": "done",
+      "verdict": "PASS",
+      "witness": "prompts/designer_questions/aps_tooltip_copy_v1.md",
+      "handoff": "APS-UX-TOOLTIPS-002-MERGE",
+      "notes": "78 keys; 42 new pending coder-mcp bind"
+    },
+    {
+      "id": "APS-ATLAS-LEGEND-001",
+      "status": "done",
+      "verdict": "PASS",
+      "witness": "docs/archive/2026-06-src-dev/plans/design_aps_atlas_preview_legend_v1.md",
+      "handoff": "APS-ATLAS-LEGEND-001-IMPL",
+      "notes": "Legend line + plain validate copy spec"
+    },
+    {
+      "id": "APS-MAT-IA-001",
+      "status": "done",
+      "verdict": "PASS",
+      "witness": "docs/archive/2026-06-src-dev/plans/design_aps_materials_tab_ia_v1.md",
+      "handoff": "APS-MAT-IA-001-IMPL",
+      "notes": "Tree IA + Use in Assembly; Apply on Assembly only"
+    },
+    {
+      "id": "APS-UX-TOOLTIPS-002-REVIEW",
+      "status": "done",
+      "verdict": "PASS",
+      "witness": "prompts/designer_questions/aps_tooltip_copy_v1.md",
+      "notes": "Copy doc supersedes on-call review; merge checklist for coder-mcp"
+    },
+    {
+      "id": "DESIGN-WEATHER-PLAYER-READ-001",
+      "status": "done",
+      "verdict": "PASS",
+      "witness": "docs/archive/2026-06-src-dev/plans/design_weather_player_read_v1.md",
+      "unblocks": ["WEATHER-GPU-PRECIP-001"]
+    },
+    {
+      "id": "EGUI-DEV-UX-001",
+      "status": "done",
+      "verdict": "PASS",
+      "program": "aps_bevy",
+      "witness": "docs/archive/2026-06-src-dev/plans/design_aps_bevy_qc_hud_v2.md",
+      "witness_json": "debug_runs/aps_bevy_qc_hud_001_v2_live.json",
+      "notes": "APS-BEVY-QC-HUD-001-V2 designer review closed"
+    },
+    {
+      "id": "DESIGN-WX-HUD-IMPL-001",
+      "status": "done",
+      "verdict": "PASS",
+      "program": "weather_hud",
+      "witness": "docs/archive/2026-06-src-dev/plans/design_weather_player_read_v1.md",
+      "handoff": "coder_c",
+      "notes": "§Implementation spec — witness JSON pending @coder C"
+    },
+    {
+      "id": "TRIAGE-FIRE-OVERLAY-DBG-001",
+      "status": "done",
+      "verdict": "PASS",
+      "witness": "src/dev/design_fire_overlay_debug_v1.md",
+      "witness_json": "debug_runs/fire_overlay_debug_spec_live.json"
+    },
+    {
+      "id": "APS-ARTIST-TOOL-E2E-REVIEW-001",
+      "status": "done",
+      "verdict": "PASS WITH NOTES",
+      "agent": "designer-mcp",
+      "witness": "src/dev/design_aps_artist_tool_e2e_review_v1.md",
+      "witness_json": "debug_runs/aps_artist_tool_e2e_live.json"
+    },
+    {
+      "id": "APS-UX-POLISH-001-SIGNOFF",
+      "status": "done",
+      "verdict": "PASS",
+      "witness": "docs/archive/2026-06-src-dev/plans/design_aps_ux_polish_signoff_v1.md",
+      "unblocks": ["APS-UX-AUDIT-001 lead PASS"]
+    },
+    {
+      "id": "APS-UX-AUDIT-001-LEAD",
+      "status": "done",
+      "verdict": "PASS",
+      "witness": "docs/archive/2026-06-src-dev/plans/design_aps_ux_audit_v1.md",
+      "notes": "Upgraded 2026-06-03 after validation colors + polish sign-off"
+    },
+    {
+      "id": "SIM-HUD-PRODUCT-SIGNOFF-001",
+      "status": "done",
+      "verdict": "PASS (full)",
+      "witness": "docs/archive/2026-06-src-dev/plans/design_sim_hud_product_signoff_v1.md",
+      "witness_json": "debug_runs/sim_hud_product_close_001_live.json",
+      "program": "SIM-HUD-PRODUCT-001"
+    },
+    {
+      "id": "SIM-HUD-PRODUCT-CLOSE-001",
+      "status": "done",
+      "verdict": "PASS (full)",
+      "witness": "docs/archive/2026-06-src-dev/plans/design_sim_hud_product_signoff_v1.md",
+      "witness_json": "debug_runs/sim_hud_product_close_001_live.json",
+      "program": "SIM-HUD-PRODUCT-001"
+    },
+    {
+      "id": "SIM-HUD-PRODUCT-001",
+      "status": "done",
+      "verdict": "PASS (full)",
+      "witness": "docs/archive/2026-06-src-dev/plans/design_sim_hud_product_signoff_v1.md",
+      "witness_json": [
+        "debug_runs/sim_hud_product_close_001_live.json",
+        "debug_runs/sim_hud_play01_live.json",
+        "debug_runs/sim_hud_slice_dock_live.json",
+        "debug_runs/sim_hud_slice_ops_live.json",
+        "debug_runs/sim_hud_slice_minimap_live.json",
+        "debug_runs/sim_hud_slice_build_live.json"
+      ]
+    }
+  ],
   "done_wave3_2026_05_27": [
     {
       "id": "DESIGN-DUAL-WRITE-FULL-PASS-001",
       "status": "done",
       "verdict": "PASS",
-      "witness": "src/dev/wss_dual_write_transition_ux_001.md"
+      "witness": "docs/archive/2026-06-src-dev/plans/wss_dual_write_transition_ux_001.md"
     },
     {
       "id": "DESIGN-ACTIVE-RUNTIME-READ-001",
       "status": "done",
       "verdict": "PASS",
-      "witness": "src/dev/plan_wss_active_chunk_001_v1.md",
+      "witness": "docs/archive/2026-06-src-dev/plans/plan_wss_active_chunk_001_v1.md",
       "notes": "Player read cap 64 — registry v1.8"
     },
     {
       "id": "DESIGN-BQ128-APPLY-UX-001",
       "status": "done",
       "verdict": "PASS (qualified)",
-      "witness": "src/dev/bq128_apply_ghost_ux_review_v1.md",
+      "witness": "docs/archive/2026-06-src-dev/plans/bq128_apply_ghost_ux_review_v1.md",
       "notes": "Also in done[] 2026-05-26"
     }
   ],
   "next_phase": {
     "phase_id": "DESIGNER-ONCALL-2026-06-02",
-    "playbook": "src/dev/designer_oncall_absorption_v1.md",
+    "playbook": "docs/archive/2026-06-src-dev/plans/designer_oncall_absorption_v1.md",
     "rule": "On-call — implementation review on @coder notify; no long-run re-queue",
     "pg3_live_w3_trigger": {
       "id": "MCP-DUX-PG2-003",

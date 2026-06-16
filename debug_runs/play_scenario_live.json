@@ -46,12 +46,20 @@
       "debug_runs/stage7_play_live.json",
       "debug_runs/wss_substrate_live.json",
       "debug_runs/f2_smoke_pipeline_live.json",
-      "debug_runs/play_scenario_live.json"
+      "debug_runs/play_scenario_live.json",
+      "debug_runs/transport_network_live.json"
     ],
     "relative_path": "debug_runs/play_scenario_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "play_scenario_001_tail_live_witness",
-    "written_at_epoch_secs": 1780418688
+    "written_at_epoch_secs": 1781533759
+  },
+  "demo_fire_sparks_visible_at_operational_zoom": true,
+  "g_play_fire_001": {
+    "demo_scenario": "assets/scenarios/play/default_industrial_demo_fire.scenario.ron",
+    "gate": "G-PLAY-FIRE-001",
+    "green": true,
+    "path_a_emit_sim_effect": true
   },
   "gate": "G-PLAY-01",
   "play_truth_001": {
@@ -63,7 +71,9 @@
     "logistics_seeded": true,
     "placed_via_construction": true,
     "scenario_id": "DefaultIndustrial",
-    "sites_committed": 3
+    "sites_committed": 3,
+    "transport_edge_count": 2,
+    "transport_graph_seeded": true
   },
   "play_truth_001_tail": {
     "active_env_seeds": [],
@@ -73,5 +83,6 @@
     "logistics_seed": "seed_default_industrial_logistics_once",
     "portland_seed": "seed_ind_e02_default_play_once",
     "stage7_env_seed_path": "opt_in_debug_only"
-  }
+  },
+  "veg_topology_visible_at_operational_zoom": true
 }

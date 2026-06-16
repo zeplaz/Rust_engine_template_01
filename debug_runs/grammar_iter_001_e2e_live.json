@@ -1,0 +1,10 @@
+{
+  "program_id": "GRAMMAR-ITER-001-E2E",
+  "gate": "GRAMMAR-ITER-001-E2E",
+  "green": true,
+  "massing_ok": true,
+  "roof_iterate_ok": true,
+  "aps1_ok": true,
+  "determinism": "pass",
+  "preview": "bevy_worker"
+}

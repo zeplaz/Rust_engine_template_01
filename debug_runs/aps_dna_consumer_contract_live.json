@@ -1,0 +1,91 @@
+{
+  "gate_id": "BUILD-READ-CONSUMER-MCP-001",
+  "task_id": "BUILD-READ-CONSUMER-MCP-001",
+  "depends_on": "BUILD-READ-GRAMMAR-v0-002",
+  "ok": true,
+  "green": true,
+  "consumer_contract": {
+    "schema": "aps_dna_consumer_contract_v1",
+    "task_id": "BUILD-READ-CONSUMER-MCP-001",
+    "producer": "BUILD-READ-GRAMMAR-v0-002",
+    "snapshot_fields": [
+      "arch_build_grammar_preset_id",
+      "arch_build_grammar_id",
+      "arch_dna",
+      "pressure_field"
+    ],
+    "beta_keys": [
+      "beta_sym",
+      "beta_irr",
+      "beta_yard",
+      "beta_svc",
+      "beta_mod",
+      "beta_exp",
+      "beta_vert",
+      "beta_roof"
+    ],
+    "dna_keys": [
+      "F",
+      "L",
+      "C",
+      "D",
+      "W",
+      "I",
+      "S",
+      "P",
+      "M",
+      "A"
+    ],
+    "rust_consumer": "src/construction/procedural/arch_build_grammar_v0.rs::load_arch_dna_preset",
+    "aps_ui": {
+      "panel": "tools/mcp/art_pipeline_suite/grammar_dna_panel.py",
+      "apply_hook": "assembly_panel._apply_grammar_dna_from_ui"
+    },
+    "mcp_tools": [
+      "arch_dna_snapshot_brief(path)",
+      "snapshot_digest(path) \u2014 includes arch_dna block",
+      "apply_to_snapshot(snapshot, preset_id=..., pressure_field=...)"
+    ],
+    "preset_ids": [
+      "logistics_rail_warehouse_v0",
+      "manufacturing_fabrication_hall_v0",
+      "power_substation_yard_v0",
+      "fuel_depot_tank_farm_v0"
+    ]
+  },
+  "sample_snapshot_brief": {
+    "schema": "arch_dna_snapshot_brief_v1",
+    "ok": true,
+    "path": "tools/mcp/schemas/examples/assembly_snapshot_rail_warehouse_pilot_v1.json",
+    "wired": true,
+    "preset_id": "logistics_rail_warehouse_v0",
+    "grammar_id": "industrial_warehouse_v1",
+    "f_axis": "logistics",
+    "arch_dna": {
+      "F": "logistics",
+      "L": "industrial_british",
+      "C": "temperate",
+      "D": "sparse",
+      "W": "industrial",
+      "I": "rail",
+      "S": "controlled",
+      "P": "utilitarian",
+      "M": "steel",
+      "A": "weathered"
+    },
+    "pressure_field": {
+      "beta_sym": 0.72,
+      "beta_irr": 0.24,
+      "beta_yard": 0.93,
+      "beta_svc": 0.88,
+      "beta_mod": 0.92,
+      "beta_exp": 0.84,
+      "beta_vert": 0.18,
+      "beta_roof": 0.63
+    },
+    "beta_summary": "sym=0.72, irr=0.24, yard=0.93, svc=0.88",
+    "hint": "Consumer ready"
+  },
+  "preset_load_errors": [],
+  "unblocks": "BUILD-READ-CONSUMER-MCP-001 @coder Rust consumer wiring"
+}

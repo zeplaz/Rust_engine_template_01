@@ -1,0 +1,190 @@
+{
+  "_meta": {
+    "teaches": [
+      "land_dna",
+      "lambda_pressure",
+      "topology_preset",
+      "nested_composition",
+      "symbolic_sketch",
+      "dual_glyph_layers",
+      "field_overlay",
+      "composition_macro"
+    ],
+    "not_a_ship_target": true,
+    "chart_id": "AGRI-LANDSCAPE-Δ9",
+    "chart_family": "Δ",
+    "lexicon_version": "1.4.0",
+    "symlang_section": "2.13",
+    "symbolic_sketch_planning": "╔ parcel ╗ · FIELDS=▒ · WOODLOTS=█ · TRANSPORT=═ · () RING shelterbelt",
+    "symbolic_sketch_extract": ", fields · # woodlots · = road · () windbreak ring",
+    "land_use_shorthand": {
+      "fields": "▒",
+      "woodlots": "█",
+      "transport": "═"
+    },
+    "composition_macros": ["MACRO-AG-PARCEL", "MACRO-RIPARIAN-AXIS", "MACRO-SHELTER-LEE"],
+    "lexicon": "prompts/guides/landscape_grammar_lexicon_v1.md",
+    "operator_source": "prompts/guides/olant_grammer.md",
+    "pictorial_ref": "prompts/guides/low_res_forest_veg.png"
+  },
+  "schema_version": "landscape_grammar_v0",
+  "lexicon_version": "1.4.0",
+  "preset_id": "agri_riparian_v0",
+  "chart_id": "AGRI-LANDSCAPE-Δ9",
+  "composition_macros": ["MACRO-AG-PARCEL", "MACRO-RIPARIAN-AXIS", "MACRO-SHELTER-LEE"],
+  "land_dna": {
+    "H": "riparian",
+    "S": "deep_alluvial",
+    "E": "sheltered",
+    "T": "temperate",
+    "D": "seasonal_flood",
+    "L": "agricultural",
+    "A": "mature",
+    "M": "maintained"
+  },
+  "pressure_field": {
+    "lambda_moisture": 0.88,
+    "lambda_slope": 0.22,
+    "lambda_exposure": 0.35,
+    "lambda_disturbance": 0.18,
+    "lambda_access": 0.72,
+    "lambda_security": 0.12,
+    "lambda_productivity": 0.91,
+    "lambda_legibility": 0.64
+  },
+  "landscape_program": {
+    "class": "agricultural",
+    "district_ref": "farm_parcel_07",
+    "required_topologies": [
+      "CORRIDOR_RIPARIAN",
+      "RING_SHELTERBELT",
+      "PATCH_IRREGULAR",
+      "FRINGE_EDGE"
+    ]
+  },
+  "topology_graph": [
+    {
+      "id": "net_01",
+      "topology_kind": "Network",
+      "preset_id": "NETWORK_CONNECTED",
+      "scale_band": "L",
+      "anchor_ref": "partition:chunk_12_ag",
+      "parent_topology_id": null,
+      "operator_stack": ["anchor_partition", "network_link"],
+      "cx_class": "Cx3",
+      "metadata": {
+        "nodes": [5, 12],
+        "connectivity": "high"
+      }
+    },
+    {
+      "id": "corr_riparian_01",
+      "topology_kind": "Corridor",
+      "topology_kind_id": "T01",
+      "preset_id": "CORRIDOR_RIPARIAN",
+      "scale_band": "M",
+      "anchor_ref": "hydro:river_edge_12",
+      "anchor_node_label": "G",
+      "corridor_subtype": "riparian",
+      "composition_macro": "MACRO-RIPARIAN-AXIS",
+      "parent_topology_id": "net_01",
+      "operator_stack": ["anchor_river", "drift", "corridor", "expand", "cluster"],
+      "cx_class": "Cx3",
+      "metadata": {
+        "width": [3, 6],
+        "density": [80, 100],
+        "core_density": 80,
+        "mid_density": 55,
+        "edge_density": 20,
+        "flow_direction": "downstream",
+        "continuity": "high",
+        "species_bias": "moist_mix",
+        "glyph_planning": "≈≈≈╬≈≈≈"
+      }
+    },
+    {
+      "id": "ring_shelter_01",
+      "topology_kind": "Ring",
+      "topology_kind_id": "T03",
+      "preset_id": "RING_SHELTERBELT",
+      "scale_band": "M",
+      "anchor_ref": "field:parcel_07_north",
+      "anchor_node_label": "D",
+      "composition_macro": "MACRO-SHELTER-LEE",
+      "parent_topology_id": "net_01",
+      "operator_stack": ["anchor_field_edge", "ring", "expand"],
+      "symbolic_field_stack": [
+        { "layer": "field", "glyph": "⚶", "intensity": 2, "reads_as": "wind_fetch" },
+        { "layer": "mass", "glyph": "█", "intensity": 1, "reads_as": "shelterbelt_canopy" }
+      ],
+      "cx_class": "Cx2",
+      "metadata": {
+        "width": [2, 4],
+        "density": [70, 90],
+        "ring_pressure": "windbreak",
+        "use": "protection"
+      }
+    },
+    {
+      "id": "patch_woodlot_01",
+      "topology_kind": "Patch",
+      "preset_id": "PATCH_IRREGULAR",
+      "scale_band": "M",
+      "anchor_ref": "site:farm_woodlot_a",
+      "parent_topology_id": "net_01",
+      "operator_stack": ["seed_patch", "cluster", "expand"],
+      "cx_class": "Cx3",
+      "metadata": {
+        "core_density": 80,
+        "edge_density": 20,
+        "radius": [6, 15],
+        "gaps": true,
+        "internals": ["core", "edge", "gap", "regrowth"]
+      },
+      "children": [
+        {
+          "id": "cluster_regrowth_01",
+          "topology_kind": "Cluster",
+          "preset_id": "CLUSTER_NATURAL",
+          "scale_band": "S",
+          "parent_topology_id": "patch_woodlot_01",
+          "metadata": {
+            "nuclei": [3, 6],
+            "connectivity": "low",
+            "expansion_bias": "organic"
+          }
+        }
+      ]
+    },
+    {
+      "id": "fringe_field_edge_01",
+      "topology_kind": "Fringe",
+      "preset_id": "FRINGE_EDGE",
+      "scale_band": "S",
+      "anchor_ref": "field:parcel_07_south",
+      "parent_topology_id": "net_01",
+      "operator_stack": ["anchor_field_edge", "fringe"],
+      "cx_class": "Cx1",
+      "metadata": {
+        "edge": "gradual",
+        "width": [1, 4]
+      }
+    }
+  ],
+  "transport_spine": {
+    "preset_id": "CORRIDOR_ROADSIDE",
+    "anchor_ref": "transport:county_road_3",
+    "glyph_planning": "══════════════════",
+    "glyph_extract": "========"
+  },
+  "field_overlay_stack": [
+    { "field": "hydrology", "glyph_hint": "≈", "strength": 0.88, "layer_tag": "field" },
+    { "field": "wind", "glyph_hint": "⚶", "strength": 0.35, "layer_tag": "field" },
+    { "field": "human_pressure", "glyph_hint": "⌂", "strength": 0.72, "layer_tag": "field" }
+  ],
+  "land_use_legend": {
+    "fields": "▒",
+    "woodlots": "█",
+    "transport": "═"
+  }
+}

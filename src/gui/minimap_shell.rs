@@ -5,6 +5,20 @@
 use bevy::prelude::*;
 use bevy_egui::egui;
 
+/// Title bar height for GPU minimap widget (MINIMAP-WIDGET-IMPL-001).
+pub const MINIMAP_TITLE_BAR_H_PX: f32 = 24.0;
+const MINIMAP_EDGE_RAIL_PX: f32 = 6.0;
+const MINIMAP_RESIZE_GRIP_PX: f32 = 14.0;
+
+/// Edge rail hit targets on the minimap widget body.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum MinimapEdge {
+    Top,
+    Bottom,
+    Left,
+    Right,
+}
+
 /// How the minimap panel is hosted (embedded HUD vs detached window vs fullscreen).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub enum MinimapPresentationMode {
@@ -101,6 +115,15 @@ pub struct MinimapShellState {
     pub native_window_requested: bool,
     pub last_window_rect: Option<egui::Rect>,
     pub last_image_rect: Option<egui::Rect>,
+    pub last_body_rect: Option<egui::Rect>,
+    pub title_bar_rect: Option<egui::Rect>,
+    pub top_rail_rect: Option<egui::Rect>,
+    pub bottom_rail_rect: Option<egui::Rect>,
+    pub left_rail_rect: Option<egui::Rect>,
+    pub right_rail_rect: Option<egui::Rect>,
+    pub resize_grip_rect: Option<egui::Rect>,
+    pub panel_screen_origin: Option<Vec2>,
+    pub last_fit_body_size: Vec2,
     /// Non-authoritative panel extent from the latest egui layout pass.
     pub panel_viewport_suggestion_active: bool,
     pub panel_viewport_suggestion_logical_size: Vec2,
@@ -129,6 +152,15 @@ impl Default for MinimapShellState {
             native_window_requested: false,
             last_window_rect: None,
             last_image_rect: None,
+            last_body_rect: None,
+            title_bar_rect: None,
+            top_rail_rect: None,
+            bottom_rail_rect: None,
+            left_rail_rect: None,
+            right_rail_rect: None,
+            resize_grip_rect: None,
+            panel_screen_origin: None,
+            last_fit_body_size: Vec2::ZERO,
             panel_viewport_suggestion_active: false,
             panel_viewport_suggestion_logical_size: Vec2::new(260.0, 220.0),
             pending_camera_focus_world: None,
@@ -180,6 +212,7 @@ impl MinimapShellState {
     pub fn sync_panel_viewport_suggestion_from_layout(&mut self) {
         let rect = self
             .last_image_rect
+            .or(self.last_body_rect)
             .or(self.last_window_rect)
             .unwrap_or_else(|| simulation_minimap_bootstrap_rect(1280.0, 720.0, self.viewport_size));
         if !self.visible || self.minimized {
@@ -189,6 +222,73 @@ impl MinimapShellState {
         self.panel_viewport_suggestion_active = true;
         self.panel_viewport_suggestion_logical_size =
             Vec2::new(rect.width().max(180.0), rect.height().max(160.0));
+    }
+
+    pub fn ensure_panel_screen_origin(&mut self, window_w: f32, window_h: f32) {
+        if self.panel_screen_origin.is_some() {
+            return;
+        }
+        let rect = self.last_window_rect.unwrap_or_else(|| {
+            simulation_minimap_bootstrap_rect(window_w, window_h, self.viewport_size)
+        });
+        self.panel_screen_origin = Some(Vec2::new(rect.min.x, rect.min.y));
+    }
+
+    pub fn sync_layout_rects_from_panel_origin(&mut self) {
+        let Some(origin) = self.panel_screen_origin else {
+            return;
+        };
+        let size = self.viewport_size;
+        let window = egui::Rect::from_min_size(
+            egui::pos2(origin.x, origin.y),
+            egui::vec2(size.x.max(120.0), size.y.max(120.0)),
+        );
+        self.last_window_rect = Some(window);
+        let title = egui::Rect::from_min_size(
+            window.min,
+            egui::vec2(window.width(), MINIMAP_TITLE_BAR_H_PX),
+        );
+        self.title_bar_rect = Some(title);
+        let body_min = egui::pos2(
+            window.min.x + MINIMAP_EDGE_RAIL_PX,
+            window.min.y + MINIMAP_TITLE_BAR_H_PX + MINIMAP_EDGE_RAIL_PX,
+        );
+        let body_max = egui::pos2(
+            window.max.x - MINIMAP_EDGE_RAIL_PX,
+            window.max.y - MINIMAP_EDGE_RAIL_PX - MINIMAP_RESIZE_GRIP_PX,
+        );
+        let body = egui::Rect::from_min_max(body_min, body_max);
+        self.last_body_rect = Some(body);
+        self.last_image_rect = Some(body);
+        self.top_rail_rect = Some(egui::Rect::from_min_max(
+            egui::pos2(window.min.x, title.max.y),
+            egui::pos2(window.max.x, body_min.y),
+        ));
+        self.bottom_rail_rect = Some(egui::Rect::from_min_max(
+            egui::pos2(window.min.x, body_max.y),
+            egui::pos2(window.max.x, window.max.y - MINIMAP_RESIZE_GRIP_PX),
+        ));
+        self.left_rail_rect = Some(egui::Rect::from_min_max(
+            egui::pos2(window.min.x, body_min.y),
+            egui::pos2(body_min.x, body_max.y),
+        ));
+        self.right_rail_rect = Some(egui::Rect::from_min_max(
+            egui::pos2(body_max.x, body_min.y),
+            egui::pos2(window.max.x, body_max.y),
+        ));
+        self.resize_grip_rect = Some(egui::Rect::from_min_size(
+            egui::pos2(
+                window.max.x - MINIMAP_RESIZE_GRIP_PX,
+                window.max.y - MINIMAP_RESIZE_GRIP_PX,
+            ),
+            egui::vec2(MINIMAP_RESIZE_GRIP_PX, MINIMAP_RESIZE_GRIP_PX),
+        ));
+    }
+
+    pub fn enforce_square_viewport(&mut self) {
+        let s = self.viewport_size.x.max(self.viewport_size.y);
+        self.viewport_size = Vec2::splat(s.clamp(120.0, 480.0));
+        self.clamp_viewport();
     }
 }
 

@@ -2,9 +2,10 @@
 
 use bevy::prelude::*;
 
+use crate::construction::iso_draw_scale::ConstructionIsoDrawScale;
 use crate::construction::procedural::{
-    procedural_module_local_translation, FootprintGrid, ProceduralAssemblyRequest,
-    ProceduralModuleRegistry, StylePackRegistry,
+    footprint_grid_for_assembly, procedural_module_local_translation, FootprintGrid,
+    ProceduralAssemblyRequest, ProceduralModuleRegistry, StylePackRegistry,
 };
 use crate::render::extraction::{
     assemble_procedural_build_instances, ProceduralBuildExtract, ProceduralBuildInstance,
@@ -46,7 +47,7 @@ fn instances_for_operational_site(
     let Some(pack) = style_packs.get(spec.0.style.as_str()) else {
         return Vec::new();
     };
-    let grid = FootprintGrid::from_request(&spec.0);
+    let grid = footprint_grid_for_assembly(&spec.0);
     assemble_procedural_build_instances(&spec.0, pack, &grid, registry, catalog).instances
 }
 
@@ -59,6 +60,7 @@ pub fn spawn_procedural_build_on_site_operational(
     registry: Res<ProceduralModuleRegistry>,
     catalog: Res<ProceduralModuleSceneCatalog>,
     visual: Res<ProceduralModuleVisualPolicy>,
+    iso_draw: Res<ConstructionIsoDrawScale>,
     q: Query<
         (Entity, &ConstructionSite, &ProceduralBuildingSpec),
         (With<PlannedSite>, Without<ProceduralBuildSpawned>),
@@ -83,14 +85,16 @@ pub fn spawn_procedural_build_on_site_operational(
         );
 
         let mut module_count = 0u32;
+        let scale = iso_draw.visual_scale_vec3();
         commands.entity(site_entity).with_children(|parent| {
             for inst in instances.iter().filter(|i| !i.hidden) {
                 module_count += 1;
-                let local = Transform::from_translation(procedural_module_local_translation(
+                let mut local = Transform::from_translation(procedural_module_local_translation(
                     inst.grid_x,
                     inst.grid_y,
                     inst.floor,
                 ));
+                local.scale = scale;
                 if let Some(scene) = inst.scene.as_ref() {
                     parent.spawn((
                         SceneRoot(scene.clone()),
@@ -143,6 +147,7 @@ fn procedural_pg2_spawn_self_check() -> Result<(), &'static str> {
         floors: 2,
         style: StylePackId("style_victorian".into()),
         seed: 1,
+        arch_dna_preset_id: None,
     };
     let grid = FootprintGrid::from_request(&request);
     let catalog = ProceduralModuleSceneCatalog::default();
@@ -197,6 +202,7 @@ fn spawn_operational_gate_self_check() -> Result<(), &'static str> {
         .init_resource::<ProceduralBuildExtract>()
         .init_resource::<ProceduralModuleSceneCatalog>()
         .init_resource::<ProceduralModuleVisualPolicy>()
+        .init_resource::<ConstructionIsoDrawScale>()
         .add_message::<CommitConstructionSiteEvent>()
         .add_plugins(SiteStageTickPlugin)
         .add_systems(Startup, (init_procedural_module_registry, init_style_pack_registry))

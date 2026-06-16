@@ -1,0 +1,7 @@
+{
+  "gate_id": "MCP-DOC-READ-002",
+  "ok": true,
+  "green": true,
+  "append_ok": true,
+  "ledger_path": "debug_runs/agent_ops/run_events.jsonl"
+}

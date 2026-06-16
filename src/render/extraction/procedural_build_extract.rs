@@ -3,8 +3,9 @@
 use bevy::prelude::*;
 
 use crate::construction::procedural::{
-    FootprintCell, FootprintGrid, FootprintToken, ProceduralBuildingRequest, ProceduralModuleRegistry,
-    StylePack, StylePackRegistry, StylePackSlotKey,
+    footprint_grid_for_assembly, FootprintCell, FootprintGrid, FootprintToken,
+    ProceduralBuildingRequest, ProceduralModuleRegistry, StylePack, StylePackRegistry,
+    StylePackSlotKey,
 };
 use crate::gui::RepresentationResult;
 use crate::render::extraction::{
@@ -144,7 +145,7 @@ pub fn extract_procedural_build_assembly(
         return;
     };
 
-    let grid = FootprintGrid::from_request(req);
+    let grid = footprint_grid_for_assembly(req);
     *extract = assemble_procedural_build_instances(req, pack, &grid, &registry, &catalog);
 }
 
@@ -163,6 +164,7 @@ mod tests {
             floors: 2,
             style: StylePackId("style_victorian".into()),
             seed: 1,
+            arch_dna_preset_id: None,
         }
     }
 

@@ -60,6 +60,11 @@ def _profile_label(profile_id: str) -> str:
 
 
 def infer_category(profile_id: str) -> str:
+    from .material_category_tree import infer_category_from_tree
+
+    resolved = infer_category_from_tree(profile_id)
+    if resolved:
+        return resolved
     pid = profile_id.lower()
     if "steel" in pid or "metal" in pid:
         return "industrial/steel"
@@ -70,7 +75,7 @@ def infer_category(profile_id: str) -> str:
     if "glass" in pid:
         return "glass"
     if "roof" in pid:
-        return "roof"
+        return "roof/tile"
     if "concrete" in pid:
         return "industrial/concrete"
     return "other"

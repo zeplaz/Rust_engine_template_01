@@ -1,0 +1,25 @@
+// BUILD-SET-MANIFEST-v1 — insured pilot sets (≥2 grammar pilots, ≥2 F-axis presets).
+(
+    sets: [
+        (
+            set_id: "industrial_west_v0",
+            label: "Industrial west pilot set",
+            min_grammar_pilots: 2,
+            pilot_ids: [
+                "logistics_rail_warehouse_v0",
+                "manufacturing_fabrication_hall_v0",
+            ],
+            required_f_functions: ["logistics", "manufacturing"],
+        ),
+        (
+            set_id: "infrastructure_v0",
+            label: "Power + fuel infrastructure set",
+            min_grammar_pilots: 2,
+            pilot_ids: [
+                "power_substation_yard_v0",
+                "fuel_depot_tank_farm_v0",
+            ],
+            required_f_functions: ["power", "fuel"],
+        ),
+    ],
+)

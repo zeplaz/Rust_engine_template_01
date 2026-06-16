@@ -1,0 +1,274 @@
+{
+  "_meta": {
+    "version": "1.0.0",
+    "program_id": "POST-DRAIN-DISPATCH-001",
+    "date": "2026-06-08",
+    "plan_doc": "src/dev/post_drain_dispatch_program_v1.md",
+    "rule": "One primary lane per agent per cycle. Warehouse Track B paused.",
+    "supersedes_idle": [
+      "grammar_continuation_queue ready=0",
+      "mcp_active_queue coder_mcp_drain=done",
+      "coder_active_queue coder_a_next=[]"
+    ]
+  },
+  "lanes": {
+    "K_RT": { "label": "DSM RT promotion", "owner_default": "coder-mcp" },
+    "L_FIRE": { "label": "Fire F2 depth", "owner_default": "coder" },
+    "M_WX": { "label": "Weather full green", "owner_default": "coder_c" },
+    "N_VM": { "label": "View VM deep", "owner_default": "coder_a" },
+    "O_PROD": { "label": "Product polish", "owner_default": "coder_b" },
+    "P_MCP": { "label": "MCP maintain P2", "owner_default": "coder-mcp" },
+    "Q_PLAN": { "label": "Planner hygiene", "owner_default": "planner" }
+  },
+  "tasks": [
+    {
+      "id": "ATL-SIGN-001",
+      "lane": "K_RT",
+      "priority": 1,
+      "agent": "coder-mcp",
+      "status": "done",
+      "goal": "Production atlas preview witness green on v2 path (not pilot v1)",
+      "witness": "debug_runs/aps_atlas_preview_002_live.json",
+      "witness_signoff": "debug_runs/atl_sign_001_live.json",
+      "updated_at": "2026-06-08T13:55:00+00:00",
+      "docs": ["src/dev/plan_dsm_wrk_atl_closure_v1.md", "docs/archive/2026-06-src-dev/plans/mcp_productivity_p1_plan_v1.md"],
+      "blocks": ["RT-REG-001"]
+    },
+    {
+      "id": "RT-REG-001",
+      "lane": "K_RT",
+      "priority": 2,
+      "agent": "coder-mcp",
+      "status": "done",
+      "depends_on": ["ATL-SIGN-001"],
+      "goal": "tile-atlas-register rowhouse production batch + lookup stamp witness",
+      "witness": "debug_runs/rt_registry_001_live.json",
+      "updated_at": "2026-06-08T14:30:00+00:00",
+      "docs": ["src/dev/plan_dsm_wrk_atl_closure_v1.md", "tools/mcp/MICRO_TOOLS_REGISTRY_v1.md"]
+    },
+    {
+      "id": "RT-BRIEF-001",
+      "lane": "K_RT",
+      "priority": 3,
+      "agent": "coder-mcp",
+      "status": "done",
+      "depends_on": ["RT-REG-001"],
+      "goal": "runtime_lookup_brief MCP — atlas meta + missing cells plain",
+      "witness": "debug_runs/rt_lookup_brief_001_live.json",
+      "updated_at": "2026-06-08T14:30:00+00:00",
+      "docs": ["docs/archive/2026-06-src-dev/plans/plan_mcp_productivity_chain_v1.md"]
+    },
+    {
+      "id": "RT-ENG-001",
+      "lane": "K_RT",
+      "priority": 4,
+      "agent": "coder",
+      "status": "done",
+      "depends_on": ["RT-REG-001", "PLAN-RT-EXEC-001"],
+      "goal": "Engine registry load + map stamp demo on production index row",
+      "witness": "debug_runs/procedural_tiles_runtime_live.json",
+      "updated_at": "2026-06-08T16:00:00+00:00",
+      "docs": ["src/dev/plan_rt_exec_001_v1.md", "docs/archive/2026-06-src-dev/plans/mcp_fleet_production_sprint_rowhouse_v1.md"]
+    },
+    {
+      "id": "FIRE-F2-EXTRACT-001",
+      "lane": "L_FIRE",
+      "priority": 1,
+      "agent": "coder",
+      "status": "done",
+      "goal": "Projection-graph fire instances hardening (VX-P2-01)",
+      "witness": "debug_runs/stage5_full_app_live.json",
+      "exit": "f2_extract_witness green; fire_instance_buffer_rows_gt_0; tactical_vfx all_green",
+      "continuation_ref": "SLICE-MD-F2-01",
+      "docs": ["docs/archive/2026-06-src-dev/plans/plan_fire_f2_extract_exec_001_v1.md"],
+      "updated_at": "2026-06-08T02:00:00+00:00"
+    },
+    {
+      "id": "TRIAGE-FIRE-STREAM-001",
+      "lane": "L_FIRE",
+      "priority": 2,
+      "agent": "sim-steward",
+      "status": "done",
+      "goal": "Active/sleep chunk streaming, neighbor wake, budgets",
+      "witness": "debug_runs/fire_streaming_live.json",
+      "exit": "streaming_wired green; live_visible split; neighbor_wake_observed; F7-B CLOSED",
+      "continuation_ref": "SLICE-TRIAGE-FIRE-STREAM",
+      "docs": ["src/dev/stage5_triage_backlog.md"],
+      "updated_at": "2026-06-08T17:00:00+00:00"
+    },
+    {
+      "id": "WSS-SMOKE-BRIDGE-001",
+      "lane": "L_FIRE",
+      "priority": 3,
+      "agent": "coder",
+      "status": "done",
+      "depends_on": ["FIRE-F2-EXTRACT-001"],
+      "goal": "Smoke Layer A to Layer B extract bridge",
+      "witness": "debug_runs/wss_substrate_live.json",
+      "updated_at": "2026-06-08T14:30:00+00:00",
+      "continuation_ref": "SLICE-MD-F2-02",
+      "docs": ["docs/archive/2026-06-src-dev/plans/plan_wss_smoke_bridge_exec_001_v1.md"]
+    },
+    {
+      "id": "FIRE-F2-FUEL-SPREAD-001",
+      "lane": "L_FIRE",
+      "priority": 4,
+      "agent": "coder",
+      "status": "done",
+      "depends_on": ["FIRE-F2-EXTRACT-001"],
+      "goal": "Fuel-linked spread — ember + neighbor fuel depletion",
+      "witness": "debug_runs/fire_ecology_live.json",
+      "updated_at": "2026-06-08T16:00:00+00:00",
+      "continuation_ref": "SLICE-MD-F2-03",
+      "docs": ["src/dev/fire_ecology_f1_todos.md"]
+    },
+    {
+      "id": "WX-GREEN-001",
+      "lane": "M_WX",
+      "priority": 1,
+      "agent": "coder_c",
+      "status": "done",
+      "goal": "climate_state_wired + cross_system hooks — weather_sim_live green",
+      "witness": "debug_runs/weather_sim_live.json",
+      "updated_at": "2026-06-08T14:30:00+00:00",
+      "docs": ["docs/archive/2026-06-src-dev/plans/plan_weather_witness_002_v1.md", "docs/archive/2026-06-src-dev/plans/plan_weather_parallel_lane_v1.md"]
+    },
+    {
+      "id": "DESIGN-WEATHER-PLAYER-READ-001",
+      "lane": "M_WX",
+      "priority": 2,
+      "agent": "designer",
+      "status": "done",
+      "goal": "Player-readable weather HUD brief",
+      "witness": "docs/archive/2026-06-src-dev/plans/design_weather_player_read_v1.md",
+      "docs": ["prompts/designer_questions/weather_player_read_brief_v1.md"],
+      "updated_at": "2026-06-03T12:00:00+00:00"
+    },
+    {
+      "id": "VM-10-LOCKSTEP-001",
+      "lane": "N_VM",
+      "priority": 1,
+      "agent": "coder_a",
+      "status": "done",
+      "goal": "Minimap + preview lockstep diagnostics green",
+      "witness": "debug_runs/infrastructure_view_isolation_live.json",
+      "updated_at": "2026-06-08T16:00:00+00:00",
+      "docs": ["src/dev/stage5_triage_backlog.md"]
+    },
+    {
+      "id": "TRIAGE-PROJ-2-SWEEP",
+      "lane": "N_VM",
+      "priority": 2,
+      "agent": "coder_a",
+      "status": "done",
+      "goal": "world_to_screen via ViewProjectionAuthority sweep",
+      "updated_at": "2026-06-08T16:00:00+00:00",
+      "docs": ["src/dev/stage5_triage_backlog.md"]
+    },
+    {
+      "id": "IND-E02-DEFAULT-001",
+      "lane": "O_PROD",
+      "priority": 1,
+      "agent": "coder_b",
+      "status": "done",
+      "goal": "Default industrial witness writer ind_e02_green when in-play",
+      "witness": "debug_runs/industrial_activation_live.json",
+      "updated_at": "2026-06-08T16:00:00+00:00",
+      "docs": ["docs/archive/2026-06-src-dev/plans/ind_board_reconcile_plan_v1.md", "src/dev/post_stage6_active_todos.md"]
+    },
+    {
+      "id": "BQ-128-APPLY-001",
+      "lane": "O_PROD",
+      "priority": 2,
+      "agent": "coder_b",
+      "status": "done",
+      "goal": "Apply BQ-128 editor path plan",
+      "updated_at": "2026-06-08T16:00:00+00:00",
+      "docs": ["docs/archive/2026-06-src-dev/plans/bq128_editor_path_plan_v1.md"]
+    },
+    {
+      "id": "EGUI-DEV-UX-001",
+      "lane": "O_PROD",
+      "priority": 3,
+      "agent": "designer",
+      "status": "done",
+      "goal": "Bevy QC HUD dev polish — V2 footprint + P0 strip sign-off",
+      "witness": "docs/archive/2026-06-src-dev/plans/design_aps_bevy_qc_hud_v2.md",
+      "witness_json": "debug_runs/aps_bevy_qc_hud_001_v2_live.json",
+      "docs": ["docs/archive/2026-06-src-dev/plans/design_aps_bevy_qc_hud_v2.md", "tools/orchestrator/queues/defer_registry.json"],
+      "updated_at": "2026-06-03T12:00:00+00:00"
+    },
+    {
+      "id": "MCP-OPS-REPORT-001",
+      "lane": "P_MCP",
+      "priority": 1,
+      "agent": "coder-mcp",
+      "status": "deferred",
+      "goal": "ops_intelligence_scan MCP wrapper",
+      "docs": ["src/dev/plan_agent_operations_intelligence_v1.md"]
+    },
+    {
+      "id": "MCP-TEST-PROMOTE-001",
+      "lane": "P_MCP",
+      "priority": 2,
+      "agent": "coder-mcp",
+      "status": "done",
+      "goal": "Isolate agent_doc_promote test from warm cache flake",
+      "updated_at": "2026-06-08T16:00:00+00:00",
+      "commands": ["pytest tools/mcp/python/tests/test_agent_doc_read.py"]
+    },
+    {
+      "id": "PLAN-TERRITORY-MATRIX-002",
+      "lane": "Q_PLAN",
+      "priority": 1,
+      "agent": "planner",
+      "status": "done",
+      "goal": "File prefix to owning program matrix",
+      "deliverable": "src/dev/plan_territory_matrix_002_v1.md",
+      "docs": ["docs/archive/2026-06-src-dev/plans/planner_improvement_analysis_20260603_v1.md"],
+      "completed": "2026-06-07"
+    },
+    {
+      "id": "PLAN-RT-EXEC-001",
+      "lane": "Q_PLAN",
+      "priority": 2,
+      "agent": "planner",
+      "status": "done",
+      "goal": "Thin exec for Lane K RT promotion — witness keys only",
+      "deliverable": "src/dev/plan_rt_exec_001_v1.md",
+      "docs": ["src/dev/post_drain_dispatch_program_v1.md"],
+      "unblocks": ["RT-ENG-001"],
+      "completed": "2026-06-08"
+    },
+    {
+      "id": "PLAN-AUDIT-020",
+      "lane": "Q_PLAN",
+      "priority": 3,
+      "agent": "planner",
+      "status": "deferred",
+      "depends_on": ["G-PLAY-01"],
+      "goal": "Fleet audit v20 after operator G-PLAY sign-off",
+      "defer_registry": "PLAN-AUDIT-020"
+    }
+  ],
+  "operator": [
+    {
+      "id": "G-PLAY-01",
+      "status": "ready",
+      "goal": "Operator play scenario acceptance checklist",
+      "docs": ["src/dev/plan_g_play_close_001_checklist_v1.md"]
+    },
+    {
+      "id": "OPS-F01",
+      "status": "ready",
+      "goal": "60s perf capture",
+      "docs": ["src/dev/post_stage6_active_todos.md"]
+    },
+    {
+      "id": "OPS-F03",
+      "status": "ready",
+      "goal": "Refresh stage6 virtualization JSON in sim",
+      "docs": ["src/dev/post_stage6_active_todos.md"]
+    }
+  ]
+}

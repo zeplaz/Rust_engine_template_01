@@ -5,7 +5,7 @@ owner: designer-mcp
 building_definition: tools/mcp/schemas/examples/building_definition_warehouse_industrial_west_production_v1.json
 visual_config: assets/configs/buildings/visual_config_warehouse_industrial_west_v2.json
 atlas_target: warehouse_industrial_west_v2
-bake_spine: src/dev/design_tile_bake_spine_convergence_v1.md
+bake_spine: docs/archive/2026-06-src-dev/plans/design_tile_bake_spine_convergence_v1.md
 variant_matrix: debug_runs/art_pipeline/variant_matrix_warehouse_v1.yaml
 
 archetype: warehouse

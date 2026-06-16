@@ -1,9 +1,9 @@
 # Rust Engine — Designer art MCP toolchain
 
-**Onboarding:** [`src/dev/designer_mcp_onboarding_v1.md`](../../src/dev/designer_mcp_onboarding_v1.md)  
+**Onboarding:** [`docs/archive/2026-06-src-dev/plans/designer_mcp_onboarding_v1.md`](../../docs/archive/2026-06-src-dev/plans/designer_mcp_onboarding_v1.md)  
 **Micro tools list:** [`MICRO_TOOLS_REGISTRY_v1.md`](MICRO_TOOLS_REGISTRY_v1.md)  
-**Exec plan:** [`src/dev/plan_designer_mcp_art_toolchain_exec_001_v1.md`](../../src/dev/plan_designer_mcp_art_toolchain_exec_001_v1.md)  
-**Inbound alignment:** [`src/dev/plan_art_design_inbound_alignment_v1.md`](../../src/dev/plan_art_design_inbound_alignment_v1.md) · [`prompts/art_desgin_inbound.md`](../../prompts/art_desgin_inbound.md)
+**Exec plan:** [`docs/archive/2026-06-src-dev/plans/plan_designer_mcp_art_toolchain_exec_001_v1.md`](../../docs/archive/2026-06-src-dev/plans/plan_designer_mcp_art_toolchain_exec_001_v1.md)  
+**Inbound alignment:** [`docs/archive/2026-06-src-dev/plans/plan_art_design_inbound_alignment_v1.md`](../../docs/archive/2026-06-src-dev/plans/plan_art_design_inbound_alignment_v1.md) · [`docs/reference/user/art_design_inbound.md`](../../docs/reference/user/art_design_inbound.md)
 
 ## Quick start (Windows)
 

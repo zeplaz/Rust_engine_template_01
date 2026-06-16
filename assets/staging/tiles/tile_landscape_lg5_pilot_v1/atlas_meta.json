@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "batch_id": "tile_landscape_lg5_pilot_v1",
+  "tile_id": "landscape_lg5",
+  "atlas_id": "landscape_lg5_pilot_v1",
+  "atlas_png": "C:\\dev\\github\\Rust_engine_template_01\\assets\\textures\\landscape\\staging\\landscape_lg5_pilot_v1_atlas.png",
+  "columns": 3,
+  "rows": 1,
+  "tile_px": 64,
+  "variant_count": 3,
+  "tiles": [
+    {
+      "variant_key": "topology_patch",
+      "png": "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_landscape_lg5_pilot_v1\\topology_patch.png",
+      "grid": [
+        0,
+        0
+      ],
+      "uv": [
+        0.0,
+        0.0,
+        0.3333333333333333,
+        1.0
+      ]
+    },
+    {
+      "variant_key": "topology_corridor",
+      "png": "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_landscape_lg5_pilot_v1\\topology_corridor.png",
+      "grid": [
+        1,
+        0
+      ],
+      "uv": [
+        0.3333333333333333,
+        0.0,
+        0.3333333333333333,
+        1.0
+      ]
+    },
+    {
+      "variant_key": "topology_ring",
+      "png": "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_landscape_lg5_pilot_v1\\topology_ring.png",
+      "grid": [
+        2,
+        0
+      ],
+      "uv": [
+        0.6666666666666666,
+        0.0,
+        0.3333333333333333,
+        1.0
+      ]
+    }
+  ]
+}

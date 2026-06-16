@@ -12,7 +12,7 @@ mod build_interaction;
 mod build_mode;
 mod build_overlays;
 mod building_catalog;
-mod building_definitions;
+pub mod building_definitions;
 pub mod procedural;
 mod supply_chain_role;
 mod utility_infrastructure_role;
@@ -35,7 +35,13 @@ mod build_state;
 mod build_strip;
 mod build_validation;
 mod build_confidence;
+pub mod building_set;
+pub mod site_zone_grid;
 mod ghost_visual;
+mod iso_draw_scale;
+pub mod pilot_catalog;
+mod placement_debug;
+mod site_stub_overlay;
 mod tile_visual;
 mod history;
 mod hydro_coupling;
@@ -45,12 +51,33 @@ mod sessions;
 mod tool_hints;
 mod witness_collectors;
 mod round4_corridor;
+pub use round4_corridor::{
+    construction_r4_corridor_legend_wired_witness_green, ConstructionRound4ProductGate,
+};
 mod parametric_commit;
 mod procedural_build_spawn;
 pub use parametric_commit::{
+    build_read_visual_001_witness_body, build_read_visual_001_witness_green,
     construction_procedural_build_001_witness_green, procedural_building_request_from_commit,
     style_pack_for_site_archetype, sync_procedural_assembly_request_from_sites,
 };
+pub use iso_draw_scale::{
+    build_read_world_002_witness_body, build_read_world_002_witness_green,
+    ConstructionIsoDrawScale, DEFAULT_ISO_DRAW_SCALE_MULTIPLIER,
+};
+pub use site_stub_overlay::{
+    build_read_site_v0_002_witness_green, sync_site_stub_overlay_requests, SiteStubOverlayState,
+};
+pub use pilot_catalog::{
+    build_read_shape_002_witness_green, pilot_catalog_parity_witness_green, PilotCatalog,
+    PilotKind,
+};
+pub use placement_debug::{
+    build_read_debug_001_witness_green, build_verify_debug_001_witness_json,
+    construction_placement_001_witness_green, construction_placement_001_witness_json,
+    map_pick_closure_lib_witness_green,
+};
+pub use build_confidence::{confidence_from_validation, BuildConfidence};
 pub use procedural_build_spawn::{
     spawn_procedural_build_on_site_operational, procedural_pg2_spawn_witness_green,
     ProceduralBuildModuleChild, ProceduralBuildSpawned,
@@ -121,7 +148,7 @@ pub use tile_visual::{
 };
 pub use footprint_tile_instances::FootprintTileWitness;
 pub use build_state::{
-    BuildCommandActor, BuildGhostRoot, BuildGhostState, BuildPlacementPreview,
+    BuildCommandActor, BuildGhostRoot, BuildGhostState, BuildPlacementMode, BuildPlacementPreview,
 };
 pub use build_mode::{BuildMode, BuildModeState};
 pub use build_strip::{BuildStripState, ToolContext};
@@ -246,6 +273,10 @@ impl Plugin for BuildPlanningPlugin {
             .init_resource::<staged_ghost_panel::StagedPlacementMode>()
             .init_resource::<staged_ghost_panel::StagedPlacementBook>()
             .init_resource::<BuildOverlayVisibility>()
+            .init_resource::<ConstructionIsoDrawScale>()
+            .init_resource::<SiteStubOverlayState>()
+            .init_resource::<placement_debug::ConstructionPlacementDebugOverlay>()
+            .init_resource::<placement_debug::ConstructionPlacementDebugProbe>()
             .init_resource::<tile_visual::ConstructionTileVisualSettings>()
             .init_resource::<PendingConstructionQueue>()
             .init_resource::<ConstructionBlueprintImportUi>()
@@ -312,6 +343,7 @@ impl Plugin for BuildPlanningPlugin {
                     visual_authority::sync_rail_visual_requests,
                     visual_authority::sync_zone_visual_requests,
                     visual_authority::sync_footprint_visual_requests,
+                    site_stub_overlay::sync_site_stub_overlay_requests,
                     round4_corridor::sync_corridor_phase_visual_requests
                         .after(visual_authority::sync_footprint_visual_requests),
                     footprint_tile_instances::push_footprint_tile_instances
@@ -361,12 +393,22 @@ impl Plugin for BuildPlanningPlugin {
                     .run_if(in_simulation_or_editor),
             )
             .add_systems(
+                PostUpdate,
+                (
+                    placement_debug::sync_construction_placement_debug_probe,
+                    sync_site_stub_overlay_requests.after(visual_authority::sync_footprint_visual_requests),
+                )
+                    .run_if(in_simulation_or_editor),
+            )
+            .add_systems(
                 EguiPrimaryContextPass,
                 (
                     draw_build_toolbox_egui.run_if(product_egui_shell_active),
                     staged_ghost_panel::draw_staged_placements_panel_egui_system
                         .run_if(in_simulation_or_editor),
                     draw_sim_build_rail_submenus_egui.run_if(in_simulation_or_editor),
+                    placement_debug::draw_construction_placement_debug_overlay
+                        .run_if(in_simulation_or_editor),
                     tool_hints::draw_tool_hints_egui,
                     draw_road_tool_popup_egui,
                     visual_authority::draw_construction_visual_requests_egui,

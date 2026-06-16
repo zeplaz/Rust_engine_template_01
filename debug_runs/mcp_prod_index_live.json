@@ -1,0 +1,14 @@
+{
+  "gate_id": "MCP-PROD-INDEX",
+  "ok": true,
+  "green": true,
+  "atlas_id": "rowhouse_victorian_production_v1",
+  "batch_id": "tile_rowhouse_victorian_production_v1",
+  "index_row_present": true,
+  "development_tier": "production",
+  "ship_allowed": true,
+  "atlas_png": "assets/textures/buildings_iso/production/rowhouse_victorian_production_v1_atlas.png",
+  "meta_json": "assets/staging/tiles/tile_rowhouse_victorian_production_v1/atlas_meta.json",
+  "atlas_png_on_disk": true,
+  "meta_json_on_disk": true
+}

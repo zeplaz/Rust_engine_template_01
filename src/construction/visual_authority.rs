@@ -47,6 +47,20 @@ pub struct FootprintTileRequest {
     pub weight: f32,
 }
 
+/// BUILD-READ-SITE-v0-002 — dashed site composition border.
+#[derive(Clone, Debug)]
+pub struct SiteStubBoxRequest {
+    pub origin: BuildSiteTile,
+    pub width: u32,
+    pub depth: u32,
+}
+
+#[derive(Clone, Debug)]
+pub struct SiteZoneLabelRequest {
+    pub world: Vec3,
+    pub text: String,
+}
+
 #[derive(Resource, Debug, Default)]
 pub struct ConstructionVisualRequests {
     pub paths: Vec<PathLineRequest>,
@@ -54,6 +68,8 @@ pub struct ConstructionVisualRequests {
     pub control_points: Vec<(Vec3, egui::Color32)>,
     pub footprint_tiles: Vec<FootprintTileRequest>,
     pub corridor_paths: Vec<super::round4_corridor::CorridorPhasePathRequest>,
+    pub site_stub_boxes: Vec<SiteStubBoxRequest>,
+    pub site_zone_labels: Vec<SiteZoneLabelRequest>,
 }
 
 impl ConstructionVisualRequests {
@@ -63,6 +79,8 @@ impl ConstructionVisualRequests {
         self.control_points.clear();
         self.footprint_tiles.clear();
         self.corridor_paths.clear();
+        self.site_stub_boxes.clear();
+        self.site_zone_labels.clear();
     }
 }
 
@@ -222,6 +240,8 @@ pub fn draw_construction_visual_requests_egui(
         && requests.control_points.is_empty()
         && requests.footprint_tiles.is_empty()
         && requests.corridor_paths.is_empty()
+        && requests.site_stub_boxes.is_empty()
+        && requests.site_zone_labels.is_empty()
     {
         return Ok(());
     }
@@ -260,6 +280,68 @@ pub fn draw_construction_visual_requests_egui(
                 0.0,
                 egui::Stroke::new(1.0, egui::Color32::from_gray(220)),
                 egui::epaint::StrokeKind::Inside,
+            );
+        }
+    }
+
+    let dash = egui::Stroke::new(1.5, egui::Color32::from_rgba_unmultiplied(180, 200, 255, 200));
+    for stub in &requests.site_stub_boxes {
+        for edge in 0..stub.width {
+            for &dz in &[0, stub.depth.saturating_sub(1)] {
+                let world = Vec3::new(
+                    stub.origin.x as f32 + edge as f32 + 0.5,
+                    0.05,
+                    stub.origin.z as f32 + dz as f32 + 0.5,
+                );
+                if let Some(screen) = world_to_sim_map_egui(
+                    world,
+                    authority.as_deref(),
+                    desired.as_ref(),
+                    map_vp.as_ref(),
+                    params.as_ref(),
+                ) {
+                    let side = tile_px * 0.92;
+                    let rect = egui::Rect::from_center_size(screen, egui::vec2(side, side));
+                    painter.rect_stroke(rect, 0.0, dash, egui::epaint::StrokeKind::Inside);
+                }
+            }
+        }
+        for edge in 0..stub.depth {
+            for &dx in &[0, stub.width.saturating_sub(1)] {
+                let world = Vec3::new(
+                    stub.origin.x as f32 + dx as f32 + 0.5,
+                    0.05,
+                    stub.origin.z as f32 + edge as f32 + 0.5,
+                );
+                if let Some(screen) = world_to_sim_map_egui(
+                    world,
+                    authority.as_deref(),
+                    desired.as_ref(),
+                    map_vp.as_ref(),
+                    params.as_ref(),
+                ) {
+                    let side = tile_px * 0.92;
+                    let rect = egui::Rect::from_center_size(screen, egui::vec2(side, side));
+                    painter.rect_stroke(rect, 0.0, dash, egui::epaint::StrokeKind::Inside);
+                }
+            }
+        }
+    }
+
+    for label in &requests.site_zone_labels {
+        if let Some(screen) = world_to_sim_map_egui(
+            label.world,
+            authority.as_deref(),
+            desired.as_ref(),
+            map_vp.as_ref(),
+            params.as_ref(),
+        ) {
+            painter.text(
+                screen,
+                egui::Align2::CENTER_CENTER,
+                &label.text,
+                egui::FontId::proportional(11.0),
+                egui::Color32::from_rgba_unmultiplied(220, 230, 255, 230),
             );
         }
     }

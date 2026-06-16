@@ -4,6 +4,8 @@ description: Authors Blender headless geometry jobs, procedural module specs, bu
 disable-model-invocation: true
 ---
 
+`⟦SYM⟧ lang⊳ $ref:prompts/SYMBOLIC_LANGUAGE.meta.md`
+
 # Blender Geometry Skill
 
 Procedural **modules** and geometry jobs via structured JSON → headless Blender — aligned with shipped `tools/mcp/`.
@@ -18,6 +20,16 @@ Procedural **modules** and geometry jobs via structured JSON → headless Blende
 ## Primary rule
 
 > Footprint + style + state in JSON → bpy op graph → GLB + validation → promote.
+
+## AGENT-LANG ritual (attach [agent-lang](../agent-lang/SKILL.md))
+
+**DSM node WRK** — geometry jobs only via JSON:
+
+```text
+$ref:tools/mcp/schemas/geometry_job_v1.schema.json → geometry_run_job → BLANG:validate_asset → 🟢|🔴
+```
+
+**Pivot rule:** `$ref:docs/archive/2026-06-src-dev/plans/design_procedural_module_kit_v1.md§grid` — bottom-center, 1u grid.
 
 ## Quick workflow
 
@@ -72,8 +84,27 @@ Small objects (crates, pipes, stacks) via `prop.generate` — spec in drafts, no
 
 ## Grid alignment
 
-- Modules align to **1u grid** from [`design_procedural_module_kit_v1.md`](src/dev/design_procedural_module_kit_v1.md)
+- Modules align to **1u grid** from [`design_procedural_module_kit_v1.md`](docs/archive/2026-06-src-dev/plans/design_procedural_module_kit_v1.md)
 - Bottom-center pivot on walls; no free rotation in iso presentation
+
+## BUILD-GRAMMAR◈ → MODULE-RUNS◈ (v0)
+
+Building grammar (`building_grammar_v1` + optional `arch_build_grammar_v0`) selects massing and slot keys; **this skill** produces the module GLBs.
+
+```text
+ARCH-DNA◈ → β◈ → SHAPE-GRAMMAR◈ → facade/roof/detail slots → geometry_job_v1 → GLB
+```
+
+| Grammar slot | bpy op |
+|:---|:---|
+| `wall_slot` | `module_wall` |
+| `door_slot` | `module_door` |
+| `window_slot` | `module_window` |
+| `roof_*` | `module_roof` |
+| `prop_slot` | `module_prop` |
+
+- `βmod` (modularity pressure) drives module-run **density** — not new ops in v0.
+- Refs: [`arch_build_grammar_v0_baseline_v1.md`](src/dev/arch_build_grammar_v0_baseline_v1.md) · [`industrial_warehouse_v1.ron`](assets/configs/buildings/grammars/industrial_warehouse_v1.ron)
 
 ## Route conflicts
 
@@ -85,6 +116,6 @@ Small objects (crates, pipes, stacks) via `prop.generate` — spec in drafts, no
 
 ## Additional resources
 
-- Onboarding: [`src/dev/designer_mcp_onboarding_v1.md`](src/dev/designer_mcp_onboarding_v1.md)
-- Source drafts: [`prompts/MCP/mcp_drafts.md`](prompts/MCP/mcp_drafts.md) §2.1, §3, §5
+- Onboarding: [`docs/archive/2026-06-src-dev/plans/designer_mcp_onboarding_v1.md`](docs/archive/2026-06-src-dev/plans/designer_mcp_onboarding_v1.md)
+- Source drafts: [`docs/archive/2026-06-fleet-drain/prompts_drafts/mcp_drafts.md`](docs/archive/2026-06-fleet-drain/prompts_drafts/mcp_drafts.md) §2.1, §3, §5
 - Layer specs + future building MCP: [reference.md](reference.md)

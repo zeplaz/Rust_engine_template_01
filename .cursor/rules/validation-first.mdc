@@ -50,4 +50,4 @@ Orchestrator cache: `tools/orchestrator/state/last_run.json` via `--cached` / `u
 
 Applies to `@coder`, `@designer`, `@orchestrator`, `@planner`, `@coder-mcp`, `@designer-mcp`, `@orchestrator-mcp`, `@sim-steward`.
 
-Plan: `src/dev/plan_validation_runtime_v1.md`
+Plan: `docs/archive/2026-06-src-dev/plans/plan_validation_runtime_v1.md`

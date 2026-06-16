@@ -103,6 +103,20 @@ pub fn validate_scenario(file: &ScenarioFileV1) -> ScenarioValidationReport {
                 }
             }
         }
+        if let ScenarioStep::EmitSimEffect { cells, cause_id, .. } = step {
+            if cells.is_empty() {
+                r.push(
+                    ScenarioValidationSeverity::Error,
+                    format!("EmitSimEffect at step {si} has empty cells"),
+                );
+            }
+            if cause_id.trim().is_empty() {
+                r.push(
+                    ScenarioValidationSeverity::Error,
+                    format!("EmitSimEffect at step {si} has empty cause_id"),
+                );
+            }
+        }
     }
 
     r

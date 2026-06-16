@@ -1,0 +1,8 @@
+{
+  "program_id": "GRAMMAR-ITER-001",
+  "gate": "GRAMMAR-ITER-001-APS1",
+  "green": true,
+  "inspector_lineage_wired": true,
+  "footprint_diff_wired": true,
+  "iterate_panel_wired": true
+}

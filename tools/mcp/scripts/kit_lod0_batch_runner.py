@@ -194,7 +194,7 @@ def author_g0_g1(batch_id: str) -> dict[str, Any]:
         "schema_version": 1,
         "batch_id": batch_id,
         "description": f"LOD0 wave — {batch_id} from plan_kit_lod0_roadmap_v1.md",
-        "plan_ref": "src/dev/plan_kit_lod0_roadmap_v1.md",
+        "plan_ref": "docs/archive/2026-06-src-dev/plans/plan_kit_lod0_roadmap_v1.md",
         "development_tier": TIER,
         "witness": f"debug_runs/art_pipeline/{batch_id}_live.json",
         "rules_applied": [

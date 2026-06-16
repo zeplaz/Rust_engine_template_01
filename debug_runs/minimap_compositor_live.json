@@ -48,12 +48,13 @@
       "debug_runs/stage7_play_live.json",
       "debug_runs/wss_substrate_live.json",
       "debug_runs/f2_smoke_pipeline_live.json",
-      "debug_runs/play_scenario_live.json"
+      "debug_runs/play_scenario_live.json",
+      "debug_runs/transport_network_live.json"
     ],
     "relative_path": "debug_runs/minimap_compositor_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "minimap_compositor_live_proof",
-    "written_at_epoch_secs": 1780455043
+    "written_at_epoch_secs": 1781367220
   },
   "composite_ok": true,
   "composite_path": "GpuCompute",

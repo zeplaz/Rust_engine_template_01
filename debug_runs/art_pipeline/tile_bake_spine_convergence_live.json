@@ -15,7 +15,7 @@
     "pytest": "tests/test_tile_pipeline.py::test_tile_batch_ship_rejects_smoke_ortho"
   },
   "docs_updated": [
-    "src/dev/design_tile_bake_spine_convergence_v1.md",
+    "docs/archive/2026-06-src-dev/plans/design_tile_bake_spine_convergence_v1.md",
     "utils/LEGACY_ART_PIPELINE_README.md",
     "AGENTS.md",
     ".cursor/agents/designer-mcp.md",

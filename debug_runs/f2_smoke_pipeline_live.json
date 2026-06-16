@@ -46,12 +46,13 @@
       "debug_runs/stage7_play_live.json",
       "debug_runs/wss_substrate_live.json",
       "debug_runs/f2_smoke_pipeline_live.json",
-      "debug_runs/play_scenario_live.json"
+      "debug_runs/play_scenario_live.json",
+      "debug_runs/transport_network_live.json"
     ],
     "relative_path": "debug_runs/f2_smoke_pipeline_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_f2_smoke_pipeline_live_witness",
-    "written_at_epoch_secs": 1780455042
+    "written_at_epoch_secs": 1781367219
   },
   "checks": {
     "f2_fixture_buffer_nonempty": true,

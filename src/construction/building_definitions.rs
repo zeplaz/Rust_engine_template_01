@@ -118,6 +118,12 @@ pub struct BuildingDefinition {
     pub procedural_glb_path: Option<String>,
     /// Bevy asset path (no `assets/` prefix) for `AssetServer::load`.
     pub procedural_glb_asset: Option<String>,
+    /// Grammar pilot — PG-2 archetype id (`IndustrialWarehouse`, …).
+    pub grammar_archetype_id: Option<String>,
+    pub arch_dna_preset: Option<String>,
+    pub site_json_path: Option<String>,
+    pub pilot_hover_hint: Option<String>,
+    pub district_style: Option<String>,
 }
 
 #[derive(Resource, Debug, Default)]
@@ -158,6 +164,7 @@ pub fn intent_from_definition(def: &BuildingDefinition) -> BuildingIntentPreview
         unit_kinds: Vec::new(),
         apartment_form: None,
         catalog_id: Some(def.id.clone()),
+        arch_dna_preset_id: def.arch_dna_preset.clone(),
     }
 }
 
@@ -198,6 +205,7 @@ pub fn intent_from_archetype(
         unit_kinds: Vec::new(),
         apartment_form: None,
         catalog_id: None,
+        arch_dna_preset_id: None,
     }
 }
 
@@ -339,6 +347,11 @@ fn file_to_definition(id: String, raw: BuildingDefinitionFile) -> BuildingDefini
         procedural_module_id: raw.procedural_module_id.clone(),
         procedural_glb_path: None,
         procedural_glb_asset: None,
+        grammar_archetype_id: None,
+        arch_dna_preset: None,
+        site_json_path: None,
+        pilot_hover_hint: None,
+        district_style: None,
     }
 }
 
@@ -392,8 +405,57 @@ fn register_mock_shapes_from_ron(registry: &mut BuildingDefinitionRegistry) {
             procedural_module_id: None,
             procedural_glb_path: None,
             procedural_glb_asset: None,
+            grammar_archetype_id: None,
+            arch_dna_preset: None,
+            site_json_path: None,
+            pilot_hover_hint: None,
+            district_style: None,
         };
         registry.by_id.insert(id, def);
+    }
+}
+
+fn register_pilot_catalog_from_ron(registry: &mut BuildingDefinitionRegistry) {
+    use super::pilot_catalog::{pilot_building_registration, PilotCatalog};
+
+    let catalog = PilotCatalog::load_from_disk();
+    for pilot in &catalog.pilots {
+        let (display_name, cost, time, power, workers, site_archetype, family, is_productive) =
+            pilot_building_registration(pilot);
+        let def = BuildingDefinition {
+            id: pilot.catalog_id.clone(),
+            display_name,
+            footprint: pilot.footprint.clone(),
+            construction_cost: cost,
+            construction_time_ticks: time,
+            power_consumption: power,
+            power_generation: 0.0,
+            workers_required: workers,
+            site_archetype,
+            family,
+            produces: Vec::new(),
+            consumes: if is_productive {
+                vec!["Electricity".into()]
+            } else {
+                Vec::new()
+            },
+            supply_chain: None,
+            supply_chain_role: None,
+            concrete_type: None,
+            utility_role: None,
+            plant_definition_id: None,
+            transfer_capacity_mva: 0.0,
+            is_productive,
+            procedural_module_id: None,
+            procedural_glb_path: None,
+            procedural_glb_asset: None,
+            grammar_archetype_id: pilot.grammar_archetype_id.clone(),
+            arch_dna_preset: pilot.arch_dna_preset.clone(),
+            site_json_path: pilot.site_json_path.clone(),
+            pilot_hover_hint: pilot.hover_hint.clone(),
+            district_style: pilot.district_style.clone(),
+        };
+        registry.by_id.insert(def.id.clone(), def);
     }
 }
 
@@ -430,6 +492,11 @@ fn register_builtin_apartments(registry: &mut BuildingDefinitionRegistry) {
             procedural_module_id: None,
             procedural_glb_path: None,
             procedural_glb_asset: None,
+            grammar_archetype_id: None,
+            arch_dna_preset: None,
+            site_json_path: None,
+            pilot_hover_hint: None,
+            district_style: None,
         };
         registry.by_id.insert(def.id.clone(), def);
     }
@@ -494,6 +561,7 @@ pub fn load_building_definitions_from_dir(dir: impl AsRef<Path>) -> BuildingDefi
         registry.by_id.insert(def.id.clone(), def);
     }
     register_mock_shapes_from_ron(&mut registry);
+    register_pilot_catalog_from_ron(&mut registry);
     registry
 }
 

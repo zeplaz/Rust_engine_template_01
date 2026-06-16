@@ -96,7 +96,7 @@ def main() -> None:
         "schema_version": 1,
         "batch_id": "kit_greybox_003",
         "description": "Kit gap slice — modules from design_procedural_module_kit_v1 not in _module_index",
-        "plan_ref": "src/dev/design_procedural_module_kit_v1.md",
+        "plan_ref": "docs/archive/2026-06-src-dev/plans/design_procedural_module_kit_v1.md",
         "rules_applied": [
             "no_ai_generated_images",
             "deterministic_output",

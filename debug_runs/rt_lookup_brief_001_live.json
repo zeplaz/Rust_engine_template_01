@@ -1,0 +1,60 @@
+{
+  "gate_id": "RT-BRIEF-001",
+  "green": true,
+  "ok": true,
+  "atlas_id": "rowhouse_victorian_production_v1",
+  "lookup_stamp": {
+    "schema_version": 1,
+    "lookup_count": 14,
+    "stamp": "64db3656419208eb",
+    "variant_keys_sample": [
+      "burning_00",
+      "burning_01",
+      "burning_02",
+      "burning_03",
+      "burning_04",
+      "burning_05",
+      "burning_06",
+      "burning_07"
+    ]
+  },
+  "missing_lookups": [],
+  "plain_language_count": 1,
+  "registry_witness_green": true,
+  "brief": {
+    "schema": "runtime_lookup_brief_v1",
+    "ok": true,
+    "atlas_id": "rowhouse_victorian_production_v1",
+    "batch_id": "tile_rowhouse_victorian_production_v1",
+    "tile_id": "rowhouse_victorian",
+    "meta_json": "assets/staging/tiles/tile_rowhouse_victorian_production_v1/atlas_meta.json",
+    "atlas_meta_schema": "v1",
+    "lookup_stamp": {
+      "schema_version": 1,
+      "lookup_count": 14,
+      "stamp": "64db3656419208eb",
+      "variant_keys_sample": [
+        "burning_00",
+        "burning_01",
+        "burning_02",
+        "burning_03",
+        "burning_04",
+        "burning_05",
+        "burning_06",
+        "burning_07"
+      ]
+    },
+    "missing_lookups": [],
+    "ship_allowed": true,
+    "atlas_png_present": true,
+    "artist_messages": [
+      {
+        "sentence": "Atlas meta is v1 with 14 variant tiles \u2014 acceptable for rowhouse production register.",
+        "fix": "Warehouse Track B uses v2; rowhouse production stays on v1 stamp",
+        "legend_code": "RT_META_V1_OK"
+      }
+    ],
+    "plain_language_count": 1,
+    "hint": "Runtime registry \u2014 not APS Atlas tab"
+  }
+}

@@ -4,6 +4,8 @@ description: Orchestrates deterministic MCP asset production for Rust_engine_tem
 disable-model-invocation: true
 ---
 
+`⟦SYM⟧ lang⊳ $ref:prompts/SYMBOLIC_LANGUAGE.meta.md`
+
 # MCP Asset Pipeline Orchestrator
 
 Deterministic **STATE → TOOL → BATCHED ART** production. The LLM writes **structured specs** and selects **MCP/CLI tools** — it does not generate final meshes or textures.
@@ -19,11 +21,27 @@ Deterministic **STATE → TOOL → BATCHED ART** production. The LLM writes **st
 
 > Agents are policy + skill routing + tool selection — not asset generators.
 
+## AGENT-LANG ritual (attach [agent-lang](../agent-lang/SKILL.md))
+
+**DSM art region:** `AUTH: … ⇢ WRK○ ⇢ ATL○ ⇢ RT○`
+
+```text
+BLANG:PRE → spec JSON → tool → BLANG:P0|validate_asset → promote → BLANG:WIT → BLANG:Q✓
+```
+
+| Node | BLANG |
+|:---|:---|
+| SNAP | `BLANG:DIGEST` on assembly snapshot |
+| WRK | `geometry_run_job` / `tile_batch_run` |
+| ATL | `validate_asset_report` + promote witness 🟢 |
+
+**Refs:** `$ref:tools/mcp/MICRO_TOOLS_REGISTRY_v1.md` · `$ref:tools/mcp/schemas/`
+
 ## Quick workflow
 
-1. Read [`prompts/llm_agent_brief.md`](prompts/llm_agent_brief.md) (token contract).
+1. `BLANG:REF` on [`prompts/llm_agent_brief.md`](prompts/llm_agent_brief.md) (token contract).
 2. Read shipped toolchain: [`tools/mcp/README.md`](tools/mcp/README.md), [`MICRO_TOOLS_REGISTRY_v1.md`](tools/mcp/MICRO_TOOLS_REGISTRY_v1.md).
-3. Read full pipeline: [reference.md](reference.md) + source drafts [`prompts/MCP/mcp_drafts.md`](prompts/MCP/mcp_drafts.md), [`prompts/MCP/rules_skills_draft.md`](prompts/MCP/rules_skills_draft.md).
+3. Read full pipeline: [reference.md](reference.md) + source drafts [`docs/archive/2026-06-fleet-drain/prompts_drafts/mcp_drafts.md`](docs/archive/2026-06-fleet-drain/prompts_drafts/mcp_drafts.md), [`docs/archive/2026-06-fleet-drain/prompts_drafts/rules_skills_draft.md`](docs/archive/2026-06-fleet-drain/prompts_drafts/rules_skills_draft.md).
 4. Attach **`mcp-production-rules`** — enforce before any tool call.
 5. Classify request: **geometry** · **tile** · **prop** · **material** · **reference-only**.
 6. Emit MCP request JSON (never bpy/chat mesh instructions).
@@ -78,10 +96,18 @@ promotion_target: assets/models/modules/
 
 ## Token discipline
 
-Compress to YAML + `path` + tool name. No log dumps, no full glb/base64 in chat.
+Compress to YAML + `$ref:` + tool name. No log dumps, no full glb/base64 in chat.
+
+**Rules verdict:**
+
+```yaml
+rules_check: { passed: 🟢|🔴, blocked_by: [rule_id], reroute: "..." }
+```
 
 ## Additional resources
 
-- Exec plan: [`src/dev/plan_designer_mcp_art_toolchain_exec_001_v1.md`](src/dev/plan_designer_mcp_art_toolchain_exec_001_v1.md)
-- Module kit: [`src/dev/design_procedural_module_kit_v1.md`](src/dev/design_procedural_module_kit_v1.md)
+- **agent-lang** — DSM nodes, grammar iterate loop
+
+- Exec plan: [`docs/archive/2026-06-src-dev/plans/plan_designer_mcp_art_toolchain_exec_001_v1.md`](docs/archive/2026-06-src-dev/plans/plan_designer_mcp_art_toolchain_exec_001_v1.md)
+- Module kit: [`docs/archive/2026-06-src-dev/plans/design_procedural_module_kit_v1.md`](docs/archive/2026-06-src-dev/plans/design_procedural_module_kit_v1.md)
 - Full architecture: [reference.md](reference.md)

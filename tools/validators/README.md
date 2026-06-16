@@ -24,4 +24,4 @@ python -m rust_engine_mcp.cli validate-report asset_glb ..\..\..\assets\models\m
 
 ## Plan
 
-`src/dev/plan_validation_runtime_v1.md`
+`docs/archive/2026-06-src-dev/plans/plan_validation_runtime_v1.md`

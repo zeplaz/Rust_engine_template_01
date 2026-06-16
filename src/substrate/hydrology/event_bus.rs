@@ -24,7 +24,7 @@ pub enum HydrologyDirtyReason {
 
 impl HydrologyDirtyReason {
     #[must_use]
-    fn dedupe_tag(&self) -> u8 {
+    pub fn dedupe_tag(&self) -> u8 {
         match self {
             Self::None => 0,
             Self::DamBreach { .. } => 1,

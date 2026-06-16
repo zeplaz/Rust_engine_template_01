@@ -344,6 +344,12 @@ fn raster_zoom_band(zoom_alpha: f32) -> u8 {
     (zoom_alpha.clamp(0.0, 1.0) * RASTER_ZOOM_BANDS as f32).floor() as u8
 }
 
+/// MAP-ZOOM-001 — zoom-band crossing always schedules tile dirty (Option B partial; lib witness).
+#[must_use]
+pub fn tile_raster_dirty_on_zoom_band_change_enabled() -> bool {
+    true
+}
+
 /// Runs **after** [`FireVisualFrameSet::BuildProfiles`](crate::render::FireVisualFrameSet) so minimap RGBA sees fresh [`SharedOverlayFieldBuffers`].
 #[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
 pub struct TileWorldFallbackAfterFireExtract;
@@ -869,13 +875,11 @@ fn tile_world_fallback_rasterize(
     let zoom_band = raster_zoom_band(zoom_alpha);
     let zoom_band_changed = raster_ctrl.last_raster_zoom_band != Some(zoom_band);
     let spike_active = raster_policy.defer_zoom_dirty;
-    if zoom_band_changed && !spike_active {
+    if zoom_band_changed {
         raster_ctrl.last_raster_zoom_band = Some(zoom_band);
         if !raster_ctrl.chunk_grid.has_dirty() {
             raster_ctrl.chunk_grid.mark_all_dirty();
         }
-    } else if zoom_band_changed {
-        raster_ctrl.last_raster_zoom_band = Some(zoom_band);
     }
 
     let work_pending =

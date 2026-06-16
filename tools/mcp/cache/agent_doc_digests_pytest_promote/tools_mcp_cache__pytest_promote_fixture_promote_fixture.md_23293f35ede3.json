@@ -1,0 +1,18 @@
+{
+  "schema": "agent_doc_digest_cache_v1",
+  "source_path": "tools/mcp/cache/_pytest_promote_fixture/promote_fixture.md",
+  "source_mtime": 1781325978.583596,
+  "read_count": 4,
+  "promoted_at": "2026-06-13T04:46:18+00:00",
+  "max_lines": 120,
+  "digest": {
+    "ok": true,
+    "path": "tools/mcp/cache/_pytest_promote_fixture/promote_fixture.md",
+    "total_lines": 2,
+    "head": [
+      "# promote fixture",
+      "line two"
+    ],
+    "truncated": false
+  }
+}

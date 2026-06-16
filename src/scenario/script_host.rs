@@ -1,7 +1,9 @@
 use bevy::prelude::*;
 use std::collections::VecDeque;
 
+use crate::sim::effects::{SimEffectEvent, SimEffectKind, SimEffectQueue};
 use crate::systems::sim_control::SimControlState;
+use crate::terrain::ChunkCellKey;
 
 use super::objectives::ScenarioObjectiveMarker;
 use super::scenario_steps::ScenarioStep;
@@ -112,6 +114,7 @@ pub fn drain_script_steps(
     mut commands: Commands,
     mut host: ResMut<EngineScriptHost>,
     mut sim_control: ResMut<SimControlState>,
+    mut sim_effect_queue: ResMut<SimEffectQueue>,
     objective_entities: Query<Entity, With<ScenarioObjectiveMarker>>,
 ) {
     if !host.running {
@@ -161,6 +164,39 @@ pub fn drain_script_steps(
             host.execution_log.push(format!(
                 "RegisterObjectives: spawned {n} ScenarioObjectiveMarker entities (clear_existing={clear_existing})"
             ));
+        }
+        ScenarioStep::EmitSimEffect {
+            source,
+            cause_id,
+            parent_effect_id,
+            cells,
+        } => {
+            if cells.is_empty() {
+                host.execution_log.push("EmitSimEffect: rejected — empty cells".into());
+            } else {
+                let mapped: Vec<(ChunkCellKey, f32)> = cells
+                    .iter()
+                    .map(|c| {
+                        (
+                            ChunkCellKey {
+                                chunk: IVec2::new(c.chunk_x, c.chunk_y),
+                                cell_index: c.cell,
+                            },
+                            c.spark,
+                        )
+                    })
+                    .collect();
+                let pushed = sim_effect_queue.push(SimEffectEvent {
+                    source,
+                    cause_id: cause_id.clone(),
+                    parent_effect_id,
+                    kind: SimEffectKind::IgniteCells { cells: mapped },
+                });
+                host.execution_log.push(format!(
+                    "EmitSimEffect: cause={cause_id} cells={} pushed={pushed}",
+                    cells.len()
+                ));
+            }
         }
     }
 }

@@ -2,6 +2,8 @@
 
 Single map of **planning → proof → implementation** for this repo. Use with orchestrator tooling so markdown boards, runtime todo boards, and witnesses stay aligned.
 
+**Live status (2026-06-14):** [`status_overview_20260613_v1.md`](status_overview_20260613_v1.md) · **Coder long-run Phase 6:** [`coder_longrun_plan_phase6_v1.md`](coder_longrun_plan_phase6_v1.md) · [`post_drain_phase6_coder_queue.json`](../tools/orchestrator/queues/post_drain_phase6_coder_queue.json) · **Landscape:** [`guide_landscape_grammar_v1.md`](guide_landscape_grammar_v1.md) · **Lexicon v1.4.0:** [`landscape_grammar_lexicon_v1.md`](../prompts/guides/landscape_grammar_lexicon_v1.md) · **Phase 5 (drained):** [`post_drain_phase5_queue.json`](../tools/orchestrator/queues/post_drain_phase5_queue.json)
+
 ---
 
 ## Designer art MCP + Blender (2026-06-02)
@@ -27,6 +29,7 @@ Single map of **planning → proof → implementation** for this repo. Use with 
 | **Settlement P5** | [`plan_settlement_hierarchy_exec_005_v1.md`](plan_settlement_hierarchy_exec_005_v1.md) — **SET-P5-001..003 done on disk** |
 | **Coder workload** | [`fleet_coder_workload_queue_20260602_v1.md`](fleet_coder_workload_queue_20260602_v1.md) — machine queue `v5.4.0` |
 | **Procedural + organic (after P2)** | [`construction_procedural_growth_index_v1.md`](construction_procedural_growth_index_v1.md) · **Growth actors:** [`plan_econ_growth_actors_exec_001_v1.md`](plan_econ_growth_actors_exec_001_v1.md) |
+| **Landscape / vegetation grammar** | [`guide_landscape_grammar_v1.md`](guide_landscape_grammar_v1.md) · [`plan_landscape_grammar_exec_001_v1.md`](plan_landscape_grammar_exec_001_v1.md) · **Lexicon v1.4.0:** [`landscape_grammar_lexicon_v1.md`](../prompts/guides/landscape_grammar_lexicon_v1.md) · **Schema:** [`landscape_grammar_v0.schema.json`](../tools/mcp/schemas/landscape_grammar_v0.schema.json) · **Example:** [`landscape_dna_agri_riparian_v0.json`](../tools/mcp/schemas/examples/landscape_dna_agri_riparian_v0.json) · **SYMLANG:** [`SYMBOLIC_LANGUAGE.meta.md`](../prompts/SYMBOLIC_LANGUAGE.meta.md) §2.13 |
 | **Infrastructure (parallel E0, gated)** | [`plan_infrastructure_world_layers_exec_001_v1.md`](plan_infrastructure_world_layers_exec_001_v1.md) |
 | **Proof / cfg (P1 done)** | [`plan_fleet_stability_integrity_exec_002_v1.md`](plan_fleet_stability_integrity_exec_002_v1.md) |
 

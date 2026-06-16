@@ -1,0 +1,20 @@
+{
+  "task_id": "MCP-GUARD-003",
+  "gate_id": "single_archetype_ratio_guard",
+  "ok": true,
+  "green": true,
+  "scanned_files": 246,
+  "total_refs": 13,
+  "archetype_counts": {
+    "IndustrialWarehouse": 13
+  },
+  "archetype_ratios": {
+    "IndustrialWarehouse": 1.0
+  },
+  "max_ratio": 0.4,
+  "building_set_insured": true,
+  "grammar_pilot_count": 4,
+  "violation_count": 0,
+  "violations": [],
+  "config": "tools/mcp/guard/build_set_guards_v1.json"
+}

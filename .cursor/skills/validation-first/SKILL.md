@@ -1,7 +1,8 @@
+`⟦SYM⟧ lang⊳ $ref:prompts/SYMBOLIC_LANGUAGE.meta.md`
+
 # Validation First Skill
 
 Agents consume **ValidationReport JSON**, not raw terminal output.
-
 ## When to use
 
 - After `cargo check`, `cargo test`, build, or clippy
@@ -28,9 +29,25 @@ Agents consume **ValidationReport JSON**, not raw terminal output.
 - `validate_asset_report`
 - `validate_report` (generic)
 
+## AGENT-LANG ritual (attach [agent-lang](../agent-lang/SKILL.md))
+
+```text
+BLANG:PRE → BLANG:Q+ → BLANG:CARGO|BEVY → BLANG:Q✓
+```
+
+| BLANG | This skill |
+|:---|:---|
+| `BLANG:CARGO` | `validate_cargo_report(compress=4, use_cached=true)` |
+| `BLANG:BEVY` | `validate_bevy_report(compress=4)` |
+| `BLANG:WIT` | After tests — witness path only 🟢/🔴 |
+
+**Status:** 🟢 pass · 🟡 qualified (notes in `summary`) · 🔴 `status=failed` — escalate raw log only if `confidence < 0.7`.
+
+**Refs:** `$ref:tools/validators/schemas/validation_report_v1.schema.json` · `$sym:validate_cargo_report@tools/mcp/python/rust_engine_mcp/`
+
 ## Token + queue (orchestration — use before reading big files)
 
-- `agent_queue_next` / `agent_queue_update` — drain lane queue; never wait-only idle ([`plan_agent_queue_mcp_v1.md`](../../src/dev/plan_agent_queue_mcp_v1.md))
+- `agent_queue_next` / `agent_queue_update` — drain lane queue; never wait-only idle ([`plan_agent_queue_mcp_v1.md`](../../docs/archive/2026-06-src-dev/plans/plan_agent_queue_mcp_v1.md))
 - `witness_brief` / `handoff_brief` / `file_digest` / `orchestrator_brief`
 - `token_savings_guide` — policy reminder
 - Prefer `compress=4` on validators when only pass/fail needed
@@ -45,9 +62,10 @@ Agents consume **ValidationReport JSON**, not raw terminal output.
 
 ## Related
 
+- **agent-lang** — BLANG tokens, `$ref`, stream delimiters
 - Orchestrator (full pipeline): `cargo orchestrate` → `tools/orchestrator/state/last_run.json`
-- Plan: `src/dev/plan_validation_runtime_v1.md`
-- Module production tier (not greybox smoke): `src/dev/plan_module_kit_production_tier_v1.md`
+- Plan: `docs/archive/2026-06-src-dev/plans/plan_validation_runtime_v1.md`
+- Module production tier (not greybox smoke): `docs/archive/2026-06-src-dev/plans/plan_module_kit_production_tier_v1.md`
 - Rule: `.cursor/rules/validation-first.mdc`
 
 ---
@@ -55,7 +73,7 @@ Agents consume **ValidationReport JSON**, not raw terminal output.
 ## Art pipeline — production vs smoke
 
 **Pipeline smoke** (cube bpy ops, `kit_greybox_*` batches) proves MCP gates only.  
-**Production modules** must satisfy [`design_procedural_module_kit_v1.md`](../../src/dev/design_procedural_module_kit_v1.md) validation contract (silhouette, pivot, PBR, canonical `module_id`).
+**Production modules** must satisfy [`design_procedural_module_kit_v1.md`](../../docs/archive/2026-06-src-dev/plans/design_procedural_module_kit_v1.md) validation contract (silhouette, pivot, PBR, canonical `module_id`).
 
 | Tier | Purpose | May enter `_module_index.ron`? | Promote after |
 |:---|:---|:---:|:---|

@@ -7,6 +7,14 @@ use crate::strategic::{BuildSiteTile, FootprintTiles, SiteArchetype, SitePlaceme
 use super::build_strip::ToolContext;
 
 /// Last world pick while a build tool is active (`None` when tool is `None` or not yet clicked).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum BuildPlacementMode {
+    #[default]
+    Place,
+    Adjust,
+}
+
+/// Last world pick while a build tool is active (`None` when tool is `None` or not yet clicked).
 #[derive(Resource, Debug, Clone)]
 pub struct BuildGhostState {
     pub origin: Option<BuildSiteTile>,
@@ -16,6 +24,9 @@ pub struct BuildGhostState {
     pub drag_active: bool,
     /// Parametric scale drag (Shift+vertical in product UX); clamped at raster time.
     pub scale_factor: f32,
+    pub placement_mode: BuildPlacementMode,
+    pub last_click_screen: Option<Vec2>,
+    pub last_action_tile: Option<BuildSiteTile>,
 }
 
 impl Default for BuildGhostState {
@@ -30,6 +41,9 @@ impl Default for BuildGhostState {
             mirror_x: false,
             drag_active: false,
             scale_factor: 1.0,
+            placement_mode: BuildPlacementMode::Place,
+            last_click_screen: None,
+            last_action_tile: None,
         }
     }
 }

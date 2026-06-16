@@ -122,6 +122,43 @@ def _bevy_preview_disabled() -> bool:
     )
 
 
+def wait_for_preview_png(path: Path, *, timeout_s: float = 8.0, poll_s: float = 0.1) -> bool:
+    """Poll until preview PNG exists with non-trivial size (Bevy worker flush)."""
+    deadline = time.perf_counter() + max(0.0, timeout_s)
+    while time.perf_counter() < deadline:
+        if png_preview_usable(path):
+            return True
+        time.sleep(max(0.02, poll_s))
+    return png_preview_usable(path)
+
+
+def png_preview_usable(path: Path, *, min_bytes: int = 256) -> bool:
+    """Reject missing, tiny, or nearly-all-black preview PNGs."""
+    if not path.is_file():
+        return False
+    try:
+        size = path.stat().st_size
+    except OSError:
+        return False
+    if size < min_bytes:
+        return False
+    try:
+        from PIL import Image
+    except ImportError:
+        return True
+    try:
+        with Image.open(path) as img:
+            gray = img.convert("L")
+            lo, hi = gray.getextrema()
+            if hi - lo < 24:
+                return False
+            if lo >= hi:
+                return lo > 0
+    except OSError:
+        return False
+    return True
+
+
 def _bevy_worker_command(job_path: Path, root: Path) -> list[str]:
     rel_job = str(job_path.relative_to(root) if job_path.is_relative_to(root) else job_path)
     for rel in (
@@ -150,6 +187,9 @@ def try_bevy_preview_worker(job_path: Path, *, timeout_s: float = 120.0) -> dict
     if _bevy_preview_disabled():
         return None
     root = repo_root()
+    env = os.environ.copy()
+    env.setdefault("BEVY_ASSET_ROOT", str(root))
+    env.setdefault("CARGO_MANIFEST_DIR", str(root))
     status_path = job_path.with_suffix(".status.json")
     cmd = _bevy_worker_command(job_path, root)
     try:
@@ -160,11 +200,24 @@ def try_bevy_preview_worker(job_path: Path, *, timeout_s: float = 120.0) -> dict
             text=True,
             timeout=timeout_s,
             check=False,
+            env=env,
         )
     except (FileNotFoundError, subprocess.TimeoutExpired) as exc:
         return {"status": "failed", "error": str(exc), "mode": "bevy_worker"}
     if status_path.is_file():
-        return json.loads(status_path.read_text(encoding="utf-8"))
+        status = json.loads(status_path.read_text(encoding="utf-8"))
+        png_rel = str(status.get("png") or "")
+        if png_rel:
+            png_path = root / png_rel.replace("\\", "/")
+            wait_for_preview_png(png_path, timeout_s=min(8.0, timeout_s * 0.25))
+            if not png_preview_usable(png_path):
+                status = {
+                    **status,
+                    "status": "failed",
+                    "error": "preview PNG missing, too small, or blank",
+                    "mode": "bevy_worker",
+                }
+        return status
     if proc.returncode != 0:
         tail = (proc.stderr or proc.stdout or "").strip()[-400:]
         return {"status": "failed", "error": tail or f"exit {proc.returncode}", "mode": "bevy_worker"}
@@ -356,6 +409,28 @@ def shutdown_preview_servers() -> int:
     return stopped
 
 
+def try_render_glb_thumbnail_bytes(glb_path: Path, *, resolution: tuple[int, int] = (256, 256)) -> bytes | None:
+    """Single-module orthographic PNG bytes via trimesh (optional)."""
+    try:
+        import trimesh
+    except ImportError:
+        return None
+    try:
+        loaded = trimesh.load(str(glb_path), force="scene")
+    except Exception:
+        return None
+    if isinstance(loaded, trimesh.Trimesh):
+        scene = trimesh.Scene(loaded)
+    else:
+        scene = loaded
+    if not scene.geometry:
+        return None
+    try:
+        return scene.save_image(resolution=resolution)
+    except Exception:
+        return None
+
+
 def try_render_thumbnail_png(placements: list[PreviewPlacement], out_png: Path) -> bool:
     """Best-effort orthographic PNG via trimesh (optional dependency)."""
     try:
@@ -429,16 +504,25 @@ def preview_assembly(
                 candidate = repo_root() / str(png_from_bevy).replace("\\", "/")
                 if candidate.is_file():
                     png_path = candidate
-            write_preview_worker_smoke_witness(
-                {
-                    "mode": mode,
-                    "png": _rel_repo(png_path) if png_path.is_file() else "",
-                    "modules_loaded": len(placements),
-                    "elapsed_ms": elapsed_ms,
-                    "missing_glb": missing[:32],
-                    "bevy_status": bevy_status,
+            if not png_preview_usable(png_path):
+                bevy_status = {
+                    **(bevy_status or {}),
+                    "status": "failed",
+                    "error": "Bevy worker PNG blank or unusable — falling back to browser",
+                    "mode": "bevy_worker",
                 }
-            )
+                mode = "browser_threejs"
+            else:
+                write_preview_worker_smoke_witness(
+                    {
+                        "mode": mode,
+                        "png": _rel_repo(png_path) if png_path.is_file() else "",
+                        "modules_loaded": len(placements),
+                        "elapsed_ms": elapsed_ms,
+                        "missing_glb": missing[:32],
+                        "bevy_status": bevy_status,
+                    }
+                )
 
     if mode != "bevy_worker":
         if placements:

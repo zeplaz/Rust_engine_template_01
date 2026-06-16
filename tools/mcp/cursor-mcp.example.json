@@ -1,9 +1,11 @@
 {
   "mcpServers": {
     "rust-engine-art": {
-      "command": "C:\\Users\\oz_\\AppData\\Local\\Programs\\Python\\Python313\\python.exe",
-      "args": ["-m", "rust_engine_mcp.server"],
-      "cwd": "C:\\dev\\github\\Rust_engine_template_01\\tools\\mcp\\python",
+      "command": "cmd",
+      "args": [
+        "/c",
+        "C:\\dev\\github\\Rust_engine_template_01\\tools\\mcp\\scripts\\run_rust_engine_mcp.cmd"
+      ],
       "env": {
         "RUST_ENGINE_REPO": "C:\\dev\\github\\Rust_engine_template_01",
         "BLENDER_EXE": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Blender\\blender.exe",

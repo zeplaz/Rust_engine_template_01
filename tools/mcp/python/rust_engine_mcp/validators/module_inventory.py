@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-# 50 canonical IDs (lod0/production must match one of these).
+# Canonical IDs (lod0/production must match one of these).
 CANONICAL_MODULE_IDS: frozenset[str] = frozenset(
     {
         # walls (10)
@@ -60,5 +60,8 @@ CANONICAL_MODULE_IDS: frozenset[str] = frozenset(
         "prop_transformer",
         "prop_ac",
         "prop_chimney",
+        # PG-MODULE-AUDIT-002 P3 grammar extensions (warehouse pilot)
+        "stack_chimney_1u",
+        "platform_dock_2u",
     }
 )

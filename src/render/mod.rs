@@ -3,7 +3,6 @@ mod debug_render_trace;
 mod visual_diagnostics;
 mod debug_viewport_overlay;
 mod full_render_diagnostic;
-mod base_cam;
 pub mod extraction;
 mod gpu_buffer_registry;
 mod gpu_bind_group_registry;
@@ -53,6 +52,10 @@ pub mod hanabi_witness;
 mod vt_app_integration;
 mod vt_ci_matrix;
 mod infrastructure_overlay;
+pub use infrastructure_overlay::{
+    collect_transport_overlay_edges_system, InfrastructureEdgeOverlay,
+    InfrastructureOverlayDrawRequests,
+};
 mod viewport_pipeline;
 pub mod view_runtime;
 mod spine_governance_matrix;
@@ -73,9 +76,10 @@ pub mod tilemap_adapter;
 
 pub use tile_world_fallback::{
     draw_simulation_minimap_egui, simulation_minimap_egui_texture, SimMinimapUiState,
-    TileFallbackRasterPolicy, TileWorldFallbackAfterFireExtract, TileWorldFallbackChunkGrid,
-    TileWorldFallbackPlugin, TileWorldFallbackRasterCtrl, TileWorldFallbackRasterDirty,
-    TileWorldFallbackSprite, TileWorldFallbackState, RASTER_CHUNK_TILES,
+    tile_raster_dirty_on_zoom_band_change_enabled, TileFallbackRasterPolicy,
+    TileWorldFallbackAfterFireExtract, TileWorldFallbackChunkGrid, TileWorldFallbackPlugin,
+    TileWorldFallbackRasterCtrl, TileWorldFallbackRasterDirty, TileWorldFallbackSprite,
+    TileWorldFallbackState, RASTER_CHUNK_TILES,
 };
 pub use tactical_vector_overlay::{
     sync_tactical_vector_overlay_from_projection, tactical_vector_overlay_witness_json,

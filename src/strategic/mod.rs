@@ -45,6 +45,7 @@ mod behavior_pressure;
 mod behavior_script;
 mod behavior_mission;
 mod behavior_pipeline;
+mod behavior_sim_effect_react;
 mod build_order;
 mod faction_plugin;
 mod fracture_plugin;
@@ -134,6 +135,7 @@ pub use behavior_pipeline::{
     compose_decision_score, decision_pipeline_composition_system, sample_decision_components,
     DecisionScoreComponents,
 };
+pub use behavior_sim_effect_react::apply_sim_effect_telemetry_faction_stress_system;
 pub use behavior_pressure::{PressureField, PressureProfile};
 pub use behavior_script::{Condition, IntentChannel, ScriptedIntentWeight, ScriptInfluence};
 pub use behavior_interface::{

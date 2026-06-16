@@ -1,0 +1,172 @@
+{
+  "gate": "MCP-P2-QUEUE-PHASE4-001",
+  "green": true,
+  "phase4_in_registry": true,
+  "review_order": {
+    "schema": "review_order_brief_v1",
+    "ok": true,
+    "g_play": {
+      "id": "G-PLAY-01",
+      "status": "blocked",
+      "blocker": "operator/designer-mcp blocked"
+    },
+    "p0_rows": [
+      {
+        "key": "P0-A",
+        "task_id": "TRIAGE-MAP-PICK-CLOSURE-001",
+        "label": "P0-BUILD-FOOTPRINT-001",
+        "status": "done",
+        "agent": "coder",
+        "blocker": null,
+        "delta_wf": null,
+        "witness": "debug_runs/construction_stage_live.json",
+        "vr_id": "VR-10"
+      },
+      {
+        "key": "P0-B",
+        "task_id": "P0-MINIMAP-WIDGET-001",
+        "label": "P0-MINIMAP-WIDGET-001",
+        "status": "done",
+        "agent": "designer",
+        "blocker": null,
+        "delta_wf": null,
+        "witness": "debug_runs/design_minimap_widget_live.json",
+        "vr_id": null
+      },
+      {
+        "key": "P0-C",
+        "task_id": "P0-FIRE-TILE-VFX-001",
+        "label": "P0-FIRE-TILE-VFX-001",
+        "status": "done",
+        "agent": "coder",
+        "blocker": null,
+        "delta_wf": null,
+        "witness": "debug_runs/stage5_full_app_live.json",
+        "vr_id": null
+      },
+      {
+        "key": "P0-D",
+        "task_id": "P0-VFX-ZOOM-LOCK-001",
+        "label": "P0-VFX-ZOOM-LOCK-001",
+        "status": "done",
+        "agent": "coder",
+        "blocker": null,
+        "delta_wf": null,
+        "witness": null,
+        "vr_id": null
+      }
+    ],
+    "vr_blockers": [
+      {
+        "id": "VR-01",
+        "symptom": "`tile_debug_instanced.wgsl`: `no definition in scope for identifier: inst` \u2192 render panic + Vulk",
+        "gate": "**Yes** \u2014 blocks `--test visual`"
+      },
+      {
+        "id": "VR-02",
+        "symptom": "`STATUS_STACK_BUFFER_OVERRUN` after render panic",
+        "gate": "Secondary"
+      },
+      {
+        "id": "VR-03",
+        "symptom": "rustc warnings (`TagSet`, `SiteFootprint`, `history.rs`, dead_code)",
+        "gate": "No (noise)"
+      },
+      {
+        "id": "VR-04",
+        "symptom": "`VT-5 spatial invariants failed` at inv\u2248108 (`fire_inst=2`)",
+        "gate": "**No** \u2014 not FULL_APP gate"
+      },
+      {
+        "id": "VR-05",
+        "symptom": "`fire_inst` flicker (e.g. 22 \u2192 0) while eval passes",
+        "gate": "No"
+      },
+      {
+        "id": "VR-06",
+        "symptom": "Visual test exits before inv 720 / no proof JSON",
+        "gate": "**Yes** if early crash"
+      },
+      {
+        "id": "VR-07",
+        "symptom": "`fire_particle_draw.wgsl`: `redefinition of alpha` (Naga)",
+        "gate": "**Yes** \u2014 fire raster pipeline fails"
+      },
+      {
+        "id": "VR-08",
+        "symptom": "`fire_particle_raster`: globals binding not visible in FRAGMENT",
+        "gate": "**Yes** \u2014 wgpu panic + `STATUS_STACK_BUFFER_OVER"
+      }
+    ],
+    "phase4_queue": "tools/orchestrator/queues/post_drain_phase4_queue.json"
+  },
+  "slice_sample": {
+    "ok": true,
+    "schema": "slice_exec_brief_v1",
+    "queue": "phase4",
+    "id": "TRIAGE-MAP-PICK-CLOSURE-001",
+    "title": "Close MAP-PICK / VR-10 \u2014 Pick \u0394 < 1 \u00b7 Ghost \u0394 < 4px",
+    "status": "done",
+    "agent": "coder",
+    "lane": "H_VIEW",
+    "exit": "map_pick_closure_001.green; footprint_projection_ok; pick_delta_world_max=1",
+    "witness": "debug_runs/construction_stage_live.json",
+    "files": [],
+    "exec_docs": [],
+    "do_not_pick": true,
+    "blocked_by": [],
+    "delta_wf": null,
+    "also_known_as": "P0-BUILD-FOOTPRINT-001"
+  },
+  "agent_queue_next_phase4": {
+    "queue": "phase4",
+    "queue_requested": "phase4",
+    "agent": "coder",
+    "action": "idle",
+    "drain_reason": "lane_idle",
+    "board_counts": {
+      "done": 18,
+      "blocked": 2,
+      "deferred": 1
+    },
+    "board_counts_agent": {
+      "done": 11
+    },
+    "board_lines": [
+      "TRIAGE-BUILD-CLICK-PLACE-001|done|coder",
+      "TRIAGE-CURSOR-UNIFY-001|done|coder",
+      "PLAN-MAP-ZOOM-SMOOTH-001|done|planner",
+      "P0-VFX-ZOOM-LOCK-001|done|coder",
+      "TRIAGE-FIRE-PRODUCT-001|done|coder",
+      "DESIGN-ZOOM-FIRE-READ-001|done|designer",
+      "P0-MINIMAP-WIDGET-001|done|designer",
+      "FIRE-IGNITION-P0-001|done|coder",
+      "TRIAGE-MAP-ZOOM-SMOOTH-001|done|coder",
+      "P0-TERRAIN-BLOB-001|done|coder",
+      "PLAN-AUDIT-020|blocked|planner",
+      "SIM-STEWARD-FIRE-REGRESS-001|deferred|sim-steward",
+      "G-PLAY-OP-REPORT-001|done|operator",
+      "DESIGN-BUILD-UX-REDESIGN-001|done|designer",
+      "TRIAGE-FIRE-PLAY-VIS-001|done|coder",
+      "PLAN-PRODUCT-POLISH-001|done|planner",
+      "TRIAGE-MAP-PICK-CLOSURE-001|done|coder",
+      "G-PLAY-01|blocked|operator",
+      "PLAN-SIM-EFFECT-SPINE-001|done|planner",
+      "SIM-EFFECT-QUEUE-001|done|coder",
+      "SIM-EFFECT-TEL-001|done|coder"
+    ],
+    "token_policy": [
+      "Use validate_*_report compress=4 \u2014 not raw cargo/blender logs",
+      "Use witness_brief / handoff_brief \u2014 not full JSON/markdown dumps",
+      "On exit: agent_queue_update(slice_id, done|blocked) + HANDOFF.md one paragraph"
+    ],
+    "queue_path": "tools/orchestrator/queues/post_drain_phase4_queue.json"
+  },
+  "_agent_meta": {
+    "schema": "mcp_phase4_queue_live_v1",
+    "written_at_epoch_secs": 1781481527,
+    "profile": "MCP_PHASE4_QUEUE",
+    "source_system": "ops_intelligence",
+    "relative_path": "debug_runs/agent_ops/mcp_phase4_queue_live.json"
+  }
+}

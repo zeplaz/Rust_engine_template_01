@@ -1,0 +1,38 @@
+{
+  "_meta": {
+    "teaches": ["grammar_eval", "arch_dna"],
+    "not_a_ship_target": true,
+    "building_set_id": "industrial_west_v0"
+  },
+  "schema_version": 1,
+  "assembly_id": "industrial_west_10x6_s43_iter1",
+  "style_pack_id": "style_industrial_west",
+  "source_tier": "production",
+  "procedural_rules_version": "building_grammar_v1",
+  "seed": 43,
+  "archetype_id": "IndustrialWarehouse",
+  "district_style": "industrial_west",
+  "grammar_rule_chain": {
+    "archetype": "IndustrialWarehouse",
+    "district_style": "industrial_west",
+    "massing": "double_hall",
+    "roof": "roof_flat",
+    "facade": "facade_v1",
+    "detail": "prop_clutter",
+    "age": "weathered",
+    "footprint_mode": "rect"
+  },
+  "grammar_lineage": {
+    "parent_assembly_id": "industrial_west_8x9_s43_f75a",
+    "root_assembly_id": "industrial_west_8x9_s43_f75a",
+    "iteration_mode": "massing",
+    "iteration_seq": 1,
+    "pinned_layers": ["district_style", "age"]
+  },
+  "grammar_overrides": {
+    "massing_strategy": "double_hall",
+    "footprint": { "width": 10, "depth": 6, "floors": 2 }
+  },
+  "footprint": { "width": 10, "depth": 6, "floors": 2 },
+  "module_placements": []
+}

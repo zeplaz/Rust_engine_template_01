@@ -1,0 +1,36 @@
+{
+  "_agent_meta": {
+    "profile": "DESIGN_SHAPE_RAIL_WAREHOUSE",
+    "schema": "debug_run_envelope_v1",
+    "source_system": "designer_mcp_build_read_shape_001",
+    "relative_path": "debug_runs/design_shape_rail_warehouse_pilot_live.json",
+    "design_doc": "src/dev/design_shape_rail_warehouse_pilot_v1.md",
+    "parent_program": "PLAN-BUILD-READABILITY-001",
+    "agent_commands": [
+      "node .claude/skills/agent-lang/driver.mjs witness-brief debug_runs/design_shape_rail_warehouse_pilot_live.json"
+    ],
+    "blang_ritual": "BLANG:WIT → BLANG:Q✓ DESIGN-BUILD-READ-SHAPE-001"
+  },
+  "gate": "BUILD-READ-SHAPE-001",
+  "green": true,
+  "verdict": "PASS",
+  "footprint_matrix_on_disk": true,
+  "footprint_matrix_ron": {
+    "mock_shapes": "assets/configs/buildings/_mock_shapes.ron",
+    "mock_shape_id": "logistics_rail_warehouse_l_6x5",
+    "pilot_catalog": "assets/configs/buildings/_pilot_catalog.ron",
+    "pilot_id": "logistics_rail_warehouse_v0"
+  },
+  "pilot_json": "assets/configs/buildings/pilots/logistics_rail_warehouse_pilot_v1.json",
+  "arch_dna_preset": "tools/mcp/schemas/examples/arch_dna_logistics_rail_warehouse_v0.json",
+  "footprint_width": 6,
+  "footprint_depth": 5,
+  "occupied_cells": 11,
+  "cells_len_equals_bbox": true,
+  "occupied_ne_bbox_area": true,
+  "ron_json_cells_parity": true,
+  "impl_wired": true,
+  "impl_slice": "BUILD-READ-SHAPE-002",
+  "unblocks": ["BUILD-READ-SHAPE-002", "BUILD-READ-VISUAL-002"],
+  "delta_wf": "@coder BUILD-READ-VISUAL-002 tile pilot bake"
+}

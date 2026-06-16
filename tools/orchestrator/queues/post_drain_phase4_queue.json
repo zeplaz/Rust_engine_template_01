@@ -1,0 +1,354 @@
+{
+  "_meta": {
+    "version": "1.2.0",
+    "program_id": "POST-DRAIN-PHASE-4-001",
+    "date": "2026-06-11",
+    "updated": "2026-06-12",
+    "plan_doc": "src/dev/plan_product_polish_exec_001_v1.md",
+    "coder_drain": "tools/orchestrator/queues/coder_drain_queue.json",
+    "prior_program": "POST-DRAIN-PHASE-3-001",
+    "rule": "Coder drains coder_drain_queue.json · sim spine wave 1 P0 · witness JSON wins",
+    "last_sync": "2026-06-14"
+  },
+  "lanes": {
+    "G_OPS": {
+      "label": "Operator play + perf",
+      "owner_default": "operator"
+    },
+    "H_VIEW": {
+      "label": "Viewport · zoom · MAP-PICK",
+      "owner_default": "coder"
+    },
+    "I_FIRE": {
+      "label": "Fire product finish",
+      "owner_default": "coder"
+    },
+    "J_DESIGN": {
+      "label": "Player read · UX sign-off",
+      "owner_default": "designer"
+    },
+    "K_PLAN": {
+      "label": "Thin exec + audit",
+      "owner_default": "planner"
+    },
+    "L_SIM": {
+      "label": "SimEffect spine · telemetry · triggers",
+      "owner_default": "coder"
+    }
+  },
+  "tasks": [
+    {
+      "id": "G-PLAY-OP-REPORT-001",
+      "lane": "G_OPS",
+      "priority": 0,
+      "agent": "operator",
+      "status": "done",
+      "goal": "Playtest report — cursor, build, fire",
+      "witness": "src/dev/operator_playtest_report_20260612_v1.md",
+      "completed": "2026-06-12"
+    },
+    {
+      "id": "DESIGN-BUILD-UX-REDESIGN-001",
+      "lane": "J_DESIGN",
+      "priority": 0,
+      "agent": "designer",
+      "status": "done",
+      "goal": "Build rail + two-click placement UX (operator spec in design doc)",
+      "deliverable": "src/dev/design_build_ux_redesign_v1.md",
+      "docs": [
+        "src/dev/operator_playtest_report_20260612_v1.md",
+        "src/dev/design_build_ux_redesign_v1.md"
+      ],
+      "witness": "debug_runs/design_build_ux_redesign_live.json",
+      "verdict": "PASS",
+      "completed": "2026-06-12",
+      "unblocks": [
+        "TRIAGE-BUILD-CLICK-PLACE-001",
+        "TRIAGE-CURSOR-UNIFY-001"
+      ]
+    },
+    {
+      "id": "TRIAGE-FIRE-PLAY-VIS-001",
+      "lane": "I_FIRE",
+      "priority": 0,
+      "agent": "coder",
+      "status": "done",
+      "goal": "Fire visible in normal play when sim has real heat — overlay + sparks; CLI test worlds for fire/weather/VFX",
+      "docs": [
+        "src/dev/operator_playtest_report_20260612_v1.md",
+        "src/dev/design_zoom_fire_read_v1.md"
+      ],
+      "completed": "2026-06-11",
+      "witness": "debug_runs/fire_ecology_live.json"
+    },
+    {
+      "id": "TRIAGE-BUILD-CLICK-PLACE-001",
+      "lane": "H_VIEW",
+      "priority": 1,
+      "agent": "coder",
+      "status": "done",
+      "depends_on": [
+        "DESIGN-BUILD-UX-REDESIGN-001"
+      ],
+      "goal": "Implement build UX — two-click place + Adjust modifiers",
+      "docs": [
+        "src/dev/design_build_ux_redesign_v1.md"
+      ],
+      "completed": "2026-06-11"
+    },
+    {
+      "id": "TRIAGE-CURSOR-UNIFY-001",
+      "lane": "H_VIEW",
+      "priority": 1,
+      "agent": "coder",
+      "status": "done",
+      "depends_on": [
+        "DESIGN-BUILD-UX-REDESIGN-001"
+      ],
+      "goal": "Unified game cursor — hide OS cursor; align pick + UI",
+      "docs": [
+        "src/dev/design_build_ux_redesign_v1.md"
+      ],
+      "completed": "2026-06-11"
+    },
+    {
+      "id": "PLAN-PRODUCT-POLISH-001",
+      "lane": "K_PLAN",
+      "priority": 0,
+      "agent": "planner",
+      "status": "done",
+      "goal": "Sign product polish exec — acceptance probes, defer MCP",
+      "deliverable": "src/dev/plan_product_polish_exec_001_v1.md",
+      "completed": "2026-06-11"
+    },
+    {
+      "id": "PLAN-MAP-ZOOM-SMOOTH-001",
+      "lane": "K_PLAN",
+      "priority": 1,
+      "agent": "planner",
+      "status": "done",
+      "goal": "Thin exec — Option A (snap ortho on zoom) vs B (bounded tile dirty) for zoom ghost",
+      "deliverable": "src/dev/plan_map_zoom_smooth_exec_001_v1.md",
+      "depends_on": [
+        "PLAN-PRODUCT-POLISH-001"
+      ],
+      "unblocks": [
+        "TRIAGE-MAP-ZOOM-SMOOTH-001"
+      ],
+      "completed": "2026-06-11"
+    },
+    {
+      "id": "TRIAGE-MAP-PICK-CLOSURE-001",
+      "lane": "H_VIEW",
+      "priority": 0,
+      "agent": "coder",
+      "status": "done",
+      "also_known_as": "P0-BUILD-FOOTPRINT-001",
+      "goal": "Close MAP-PICK / VR-10 — Pick Δ < 1 · Ghost Δ < 4px",
+      "witness": "debug_runs/construction_stage_live.json",
+      "exit": "map_pick_closure_001.green; footprint_projection_ok; pick_delta_world_max=1",
+      "completed": "2026-06-12"
+    },
+    {
+      "id": "TRIAGE-MAP-ZOOM-SMOOTH-001",
+      "lane": "H_VIEW",
+      "priority": 2,
+      "agent": "coder",
+      "status": "done",
+      "depends_on": [
+        "PLAN-MAP-ZOOM-SMOOTH-001",
+        "TRIAGE-MAP-PICK-CLOSURE-001"
+      ],
+      "goal": "Eliminate zoom ghost — ortho/tile sync vs pan smooth",
+      "note": "Tile/zoom code landed · witness module unwired 2026-06-13 — see BUILD-READ-REWIRE-003",
+      "docs": [
+        "src/dev/plan_product_polish_exec_001_v1.md",
+        "src/gui/map_camera.rs",
+        "src/render/visual_perf_budget.rs",
+        "src/render/tile_world_fallback.rs"
+      ],
+      "witness": "debug_runs/map_zoom_coherence_live.json",
+      "completed": "2026-06-11"
+    },
+    {
+      "id": "P0-VFX-ZOOM-LOCK-001",
+      "lane": "H_VIEW",
+      "priority": 1,
+      "agent": "coder",
+      "status": "done",
+      "goal": "Remove default tactical camera lock on --test vfx — scroll zoom must not snap back",
+      "note": "Parallel @coder B · phase3 review bundle",
+      "docs": [
+        "src/render/stage5_full_app_harness.rs"
+      ],
+      "completed": "2026-06-11"
+    },
+    {
+      "id": "P0-TERRAIN-BLOB-001",
+      "lane": "H_VIEW",
+      "priority": 2,
+      "agent": "coder",
+      "status": "done",
+      "goal": "Central terrain raster seam/blob — tile_world_fallback chunk grid",
+      "note": "After MAP-ZOOM or parallel if file territory clear",
+      "completed": "2026-06-11"
+    },
+    {
+      "id": "TRIAGE-FIRE-PRODUCT-001",
+      "lane": "I_FIRE",
+      "priority": 1,
+      "agent": "coder",
+      "status": "done",
+      "goal": "Fire product finish — sparks/smoke at play zoom · stable fire_inst",
+      "witness": "debug_runs/stage5_full_app_live.json",
+      "exit": "triage_fire_product_001.green; operational_spark_rows_gt_0",
+      "completed": "2026-06-08"
+    },
+    {
+      "id": "DESIGN-ZOOM-FIRE-READ-001",
+      "lane": "J_DESIGN",
+      "priority": 1,
+      "agent": "designer",
+      "status": "done",
+      "verdict": "PASS",
+      "witness": "debug_runs/design_zoom_fire_read_live.json",
+      "completed": "2026-06-11"
+    },
+    {
+      "id": "P0-MINIMAP-WIDGET-001",
+      "lane": "J_DESIGN",
+      "priority": 1,
+      "agent": "designer",
+      "status": "done",
+      "verdict": "PASS",
+      "goal": "Minimap widget moves; map texture centered+fit; no content pan",
+      "docs": [
+        "src/dev/design_minimap_widget_v1.md"
+      ],
+      "witness": "debug_runs/design_minimap_widget_live.json",
+      "completed": "2026-06-13",
+      "unblocks": [
+        "MINIMAP-WIDGET-IMPL-001"
+      ]
+    },
+    {
+      "id": "G-PLAY-01",
+      "lane": "G_OPS",
+      "priority": 0,
+      "agent": "operator",
+      "status": "blocked",
+      "depends_on": [
+        "TRIAGE-MAP-PICK-CLOSURE-001"
+      ],
+      "goal": "Play scenario acceptance — MAP-PICK lib green; validate zoom after coder slice",
+      "note": "💬 unblocked for placement · zoom ghost still open",
+      "docs": [
+        "src/dev/plan_g_play_close_001_checklist_v1.md"
+      ],
+      "snag": "operator/designer-mcp blocked"
+    },
+    {
+      "id": "PLAN-AUDIT-020",
+      "lane": "K_PLAN",
+      "priority": 2,
+      "agent": "planner",
+      "status": "blocked",
+      "depends_on": [
+        "G-PLAY-01"
+      ],
+      "goal": "Fleet audit v20",
+      "defer_registry": "PLAN-AUDIT-020",
+      "snag": "operator/designer-mcp blocked"
+    },
+    {
+      "id": "PLAN-SIM-EFFECT-SPINE-001",
+      "lane": "K_PLAN",
+      "priority": 0,
+      "agent": "planner",
+      "status": "done",
+      "goal": "Sign SimEffect spine guide + exec — telemetry before fire producers",
+      "deliverable": "src/dev/plan_sim_effect_spine_exec_001_v1.md",
+      "docs": [
+        "src/dev/guide_sim_effect_spine_v1.md"
+      ],
+      "completed": "2026-06-11",
+      "unblocks": [
+        "SIM-EFFECT-QUEUE-001"
+      ]
+    },
+    {
+      "id": "SIM-EFFECT-QUEUE-001",
+      "lane": "L_SIM",
+      "priority": 0,
+      "agent": "coder",
+      "status": "done",
+      "depends_on": [
+        "PLAN-SIM-EFFECT-SPINE-001"
+      ],
+      "goal": "SimEffectQueue + tick drain + fire/hydro dispatch adapters",
+      "docs": [
+        "src/dev/guide_sim_effect_spine_v1.md",
+        "src/dev/plan_sim_effect_spine_exec_001_v1.md",
+        "src/substrate/hydrology/event_bus.rs",
+        "src/systems/fire/ember_spot_ignition.rs"
+      ],
+      "witness": "debug_runs/sim_effect_spine_live.json",
+      "unblocks": [
+        "SIM-EFFECT-TEL-001",
+        "FIRE-IGNITION-P0-001"
+      ],
+      "completed": "2026-06-11"
+    },
+    {
+      "id": "SIM-EFFECT-TEL-001",
+      "lane": "L_SIM",
+      "priority": 0,
+      "agent": "coder",
+      "status": "done",
+      "depends_on": [
+        "SIM-EFFECT-QUEUE-001"
+      ],
+      "goal": "Telemetry IDs + causal graph + JSONL ledger",
+      "note": "Runtime JSONL only — Postgres is dev-workstation export, NOT in proc_A_dine01",
+      "docs": [
+        "src/dev/guide_sim_effect_spine_v1.md"
+      ],
+      "witness": "debug_runs/sim_effect_spine_live.json",
+      "completed": "2026-06-11"
+    },
+    {
+      "id": "FIRE-IGNITION-P0-001",
+      "lane": "L_SIM",
+      "priority": 1,
+      "agent": "coder",
+      "status": "done",
+      "depends_on": [
+        "SIM-EFFECT-TEL-001"
+      ],
+      "goal": "Lightning + transformer producers → EmberSpotIgnitionEvent in normal play",
+      "docs": [
+        "src/dev/plan_sim_effect_spine_exec_001_v1.md",
+        "src/systems/fire/play_fire_visibility.rs"
+      ],
+      "witness": "debug_runs/fire_ecology_live.json",
+      "completed": "2026-06-11"
+    },
+    {
+      "id": "SIM-STEWARD-FIRE-REGRESS-001",
+      "lane": "I_FIRE",
+      "priority": 3,
+      "agent": "sim-steward",
+      "status": "deferred",
+      "goal": "Fire/replay regression after Phase 4 slices",
+      "witness": "debug_runs/replay_editor_parity_live.json",
+      "note": "Moved to Phase 5 queue — see post_drain_phase5_queue.json"
+    }
+  ],
+  "paused": [
+    {
+      "id": "MCP-P2-KIT002-PLAN",
+      "track": "J_MCP",
+      "reason": "Secondary — view/fire polish P0 first"
+    }
+  ]
+}

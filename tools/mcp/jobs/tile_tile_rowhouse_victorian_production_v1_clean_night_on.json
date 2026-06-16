@@ -16,11 +16,13 @@
     "isometric": true,
     "seed": 42,
     "tile_size_px": 128,
-    "light_blend": "utils/Light_keysshotsetup.blend"
+    "light_blend": "utils/Tile_iso_rig_v1.blend"
   },
-  "light_blend": "C:\\dev\\github\\Rust_engine_template_01\\utils\\Light_keysshotsetup.blend",
+  "light_blend": "C:\\dev\\github\\Rust_engine_template_01\\utils\\Tile_iso_rig_v1.blend",
   "output": {
     "png": "assets/staging/tiles/tile_rowhouse_victorian_production_v1/clean_night_on.png"
   },
-  "assembly_blend": "assets/staging/assemblies/victorian_4x3_s42_a7cb.blend"
+  "assembly_blend": "assets/staging/assemblies/victorian_4x3_s42_a7cb.blend",
+  "assembly_snapshot": "tools/mcp/schemas/examples/assembly_snapshot_rowhouse_victorian_production_v1.json",
+  "material_authority": "snapshot material_profile"
 }

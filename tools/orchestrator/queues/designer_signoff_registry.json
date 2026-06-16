@@ -908,6 +908,18 @@
       "verdict": "PASS",
       "witness": "src/dev/design_settlement_hierarchy_read_v1.md",
       "unblocks": ["PROC-OG-4-001", "PLAN-SETTLEMENT-HIERARCHY-005"]
+    },
+    {
+      "id": "BUILD-READ-DESIGN-002",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-06-13",
+      "verdict": "PASS",
+      "witness": "src/dev/design_build_toolbox_hud_v1.md",
+      "live_witness": "debug_runs/design_build_toolbox_hud_live.json",
+      "unblocks": ["BUILD-READ-SHAPE-002", "BUILD-READ-SITE-v0-002"],
+      "notes": "Context strip Preview/Adjust copy wired; witness green 2026-06-13"
     }
   ]
 }

@@ -1,0 +1,10 @@
+{
+  "program_id": "APS-UX-TOOLTIPS-002",
+  "gate": "APS-UX-TOOLTIPS-002-MERGE",
+  "green": true,
+  "tooltip_key_count": 105,
+  "expected_keys": 78,
+  "bind_call_count": 84,
+  "per_step_pipeline_tooltips": true,
+  "missing_sample_keys": []
+}

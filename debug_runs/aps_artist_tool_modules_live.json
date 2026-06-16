@@ -1,0 +1,59 @@
+{
+  "program_id": "APS-WITNESS-REFRESH-001",
+  "green": true,
+  "suite_modules": [
+    "app.py",
+    "aps_collapsible.py",
+    "aps_inline_feedback.py",
+    "aps_paned.py",
+    "aps_scroll.py",
+    "aps_theme.py",
+    "aps_tooltips.py",
+    "assembly_panel.py",
+    "assembly_preview_panel.py",
+    "atlas_panel.py",
+    "atlas_preview_panel.py",
+    "catalog.py",
+    "footprint_canvas.py",
+    "grammar_dna_panel.py",
+    "grammar_inspector.py",
+    "grammar_iterate_panel.py",
+    "job_controller.py",
+    "job_strip.py",
+    "material_browser.py",
+    "material_library_widget.py",
+    "material_preview_modes.py",
+    "materials_panel.py",
+    "metadata_flow_panel.py",
+    "pipeline_status_bar.py",
+    "run.py",
+    "scrollable.py",
+    "slot_preview_panel.py",
+    "slot_preview_render.py",
+    "state.py",
+    "status_log_panel.py",
+    "variants_panel.py"
+  ],
+  "module_count": 31,
+  "pytest": {
+    "ok": true,
+    "summary": "15 passed in 0.84s",
+    "tests": [
+      "tests/test_aps_preview_001.py",
+      "tests/test_aps_atlas_preview.py",
+      "tests/test_aps_grammar_labels.py"
+    ]
+  },
+  "witnesses": {
+    "aps_preview_001": "debug_runs/aps_preview_001_slot_live.json",
+    "aps_preview_catalog": "debug_runs/aps_preview_catalog_live.json",
+    "aps_atlas_preview_002": "debug_runs/aps_atlas_preview_002_live.json",
+    "aps_material_studio": "debug_runs/aps_material_studio_live.json",
+    "aps_artist_tool_e2e": "debug_runs/aps_artist_tool_e2e_live.json",
+    "aps_mat_002": "debug_runs/aps_mat_002_live.json",
+    "aps_bevy_preview_002": "debug_runs/aps_bevy_preview_002_live.json"
+  },
+  "e2e_green": true,
+  "mat_002_ok": true,
+  "bevy_preview_002_green": true
+}

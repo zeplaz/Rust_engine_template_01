@@ -1,0 +1,12 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "atlas_meta_brief_request_v1",
+  "type": "object",
+  "required": ["schema", "atlas_folder"],
+  "properties": {
+    "schema": { "const": "atlas_meta_brief_request_v1" },
+    "atlas_folder": { "type": "string", "minLength": 1 },
+    "batch_id": { "type": "string" }
+  },
+  "additionalProperties": false
+}

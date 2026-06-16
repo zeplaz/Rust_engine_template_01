@@ -2,14 +2,14 @@
 program_id: MCP-FLEET-WAVE3-ENGINE-001
 task_id: MCP-DUX-PG2-002
 witness: debug_runs/procedural_assembly_live.json
-design_charter: src/dev/design_procedural_assembly_read_v1.md
+design_charter: docs/archive/2026-06-src-dev/plans/design_procedural_assembly_read_v1.md
 reviewer: designer
 reviewed_at: "2026-06-03"
 proceed_player_visible: yes
 
 w3_live_tactical_review:
   status: pass
-  trigger: "PROC-PG-3-001 green — runbook src/dev/pg3_w3_live_tactical_review_runbook_v1.md"
+  trigger: "PROC-PG-3-001 green — runbook docs/archive/2026-06-src-dev/plans/pg3_w3_live_tactical_review_runbook_v1.md"
   duration_min: 15
   footprint: "4x3 victorian rowhouse vs 4x2 industrial_west factory witness"
   pack_a: style_victorian

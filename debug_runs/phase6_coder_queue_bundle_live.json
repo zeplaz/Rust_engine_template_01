@@ -1,0 +1,80 @@
+{
+  "_agent_meta": {
+    "agent_commands": [
+      "cargo test -p proc_A_dine01 --lib"
+    ],
+    "docs": {
+      "compile_warnings": "src/dev/COMPILE_WARNINGS_TODOS.md",
+      "stage5_directive": "prompts/guides/stage5_convergence_directive_v1.md",
+      "viewport_recovery": "src/dev/recovery_viewport.md"
+    },
+    "logging_env": {
+      "ORCHESTRATOR_EXPORT_HEALTH": false,
+      "PERF": false,
+      "RUST_LOG": null,
+      "SIM_VIEW_SYNC_DEBUG": false,
+      "STAGE5_READINESS_VERBOSE": false,
+      "STAGE5_VERBOSE": false,
+      "VIEWPORT_AUTHORITY_DEBUG": false
+    },
+    "orchestrator": {
+      "build_report": "tools/orchestrator/reports/build_report.md",
+      "ci_entry": "tools/orchestrator/ci/run.ps1",
+      "continuation_queue": "tools/orchestrator/queues/continuation_queue.json",
+      "warning_registry": "tools/orchestrator/reports/warning_registry.md"
+    },
+    "profile": "PHASE6-TAIL-BUNDLE-001",
+    "related_proofs": [
+      "debug_runs/stage5_full_app_live.json",
+      "debug_runs/infrastructure_view_isolation_live.json",
+      "debug_runs/construction_stage_live.json",
+      "debug_runs/industrial_activation_live.json",
+      "debug_runs/fire_ecology_live.json",
+      "debug_runs/logistics_throughput_live.json",
+      "debug_runs/replay_editor_parity_live.json",
+      "debug_runs/orchestrator_thread_health.json",
+      "debug_runs/viewport_drift.json",
+      "debug_runs/viewport_authority_migration_witness.json",
+      "debug_runs/main_thread_orchestrator_live.json",
+      "debug_runs/stage6_virtualization_live.json",
+      "debug_runs/wave_s_hydrate_live.json",
+      "debug_runs/wave_p_live.json",
+      "debug_runs/wave_c_live.json",
+      "debug_runs/ui_shell_migration_live.json",
+      "debug_runs/minimap_compositor_live.json",
+      "debug_runs/stage7_behavioral_live.json",
+      "debug_runs/stage7_play_live.json",
+      "debug_runs/wss_substrate_live.json",
+      "debug_runs/f2_smoke_pipeline_live.json",
+      "debug_runs/play_scenario_live.json",
+      "debug_runs/transport_network_live.json"
+    ],
+    "relative_path": "debug_runs/phase6_coder_queue_bundle_live.json",
+    "schema": "debug_run_envelope_v1",
+    "source_system": "refresh_phase6_tail_witnesses",
+    "written_at_epoch_secs": 1781573867
+  },
+  "gate": "PHASE6-TAIL-BUNDLE-001",
+  "green": true,
+  "rows": {
+    "BUILD-GRAMMAR-PROGRAM-001": true,
+    "BUILD-GRAMMAR-SITE-ZONE-001": true,
+    "BUILD-GRAMMAR-WITNESS-002": true,
+    "BUILD-GRAMMAR-β-WORLD-001": true,
+    "BUILD-READ-CONSUMER-MCP-001": true,
+    "CON-R4-TAIL-001": true,
+    "INFRA-E0-003": true,
+    "INFRA-TRANSPORT-R8-001": true,
+    "INFRA-UTILITY-OVERLAY-001": true,
+    "INFRA-VM-DEEP-001": true,
+    "PROC-OG-4-001": true,
+    "PROC-OG-UX-WIRE-001": true,
+    "PROC-PG-2-TAIL-001": true,
+    "PT-5-002": true,
+    "REPLAY-RING-001": true,
+    "S7B-M1-001": true,
+    "VEG-FIRE-CORRIDOR-FULLAPP-001": true,
+    "VEG-MINIMAP-OVERLAY-002": true,
+    "VEG-SNAPSHOT-PLAY-001": true
+  }
+}

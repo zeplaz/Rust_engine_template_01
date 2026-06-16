@@ -1,0 +1,34 @@
+{
+  "schema_version": "landscape_grammar_v0",
+  "preset_id": "urban_canopy_v0",
+  "chart_id": "URB-CANOPY-D5",
+  "land_dna": { "H": "urban", "S": "compact", "E": "sheltered", "T": "temperate", "D": "dry", "L": "park", "A": "young", "M": "maintained" },
+  "pressure_field": {
+    "lambda_moisture": 0.52,
+    "lambda_slope": 0.14,
+    "lambda_exposure": 0.48,
+    "lambda_disturbance": 0.42,
+    "lambda_access": 0.91,
+    "lambda_security": 0.58,
+    "lambda_productivity": 0.66,
+    "lambda_legibility": 0.88
+  },
+  "landscape_program": {
+    "class": "urban",
+    "district_ref": "urban_canopy_04",
+    "required_topologies": ["PATCH_PARK", "CORRIDOR_STREET", "RING_PLAZA", "FRINGE_EDGE"]
+  },
+  "topology_graph": [
+    {
+      "id": "net_urb_01",
+      "topology_kind": "Network",
+      "preset_id": "NETWORK_CONNECTED",
+      "children": [
+        { "id": "patch_park_01", "topology_kind": "Patch", "preset_id": "PATCH_PARK" },
+        { "id": "corr_street_01", "topology_kind": "Corridor", "preset_id": "CORRIDOR_STREET" },
+        { "id": "ring_plaza_01", "topology_kind": "Ring", "preset_id": "RING_PLAZA" },
+        { "id": "fringe_edge_01", "topology_kind": "Fringe", "preset_id": "FRINGE_EDGE" }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "schema_version": "building_pilot_v1",
+  "pilot_id": "logistics_rail_warehouse_v0",
+  "catalog_id": "pilot:logistics_rail_warehouse_v0",
+  "label": "Rail Warehouse (pilot)",
+  "grammar_id": "industrial_warehouse_v1",
+  "arch_dna_preset": "tools/mcp/schemas/examples/arch_dna_logistics_rail_warehouse_v0.json",
+  "footprint_matrix": {
+    "width": 6,
+    "depth": 5,
+    "cells": [1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+  },
+  "mock_shape_id": "logistics_rail_warehouse_l_6x5",
+  "site_stub": {
+    "width": 10,
+    "depth": 8,
+    "primary_pct_target": 0.125,
+    "site_plan_json": "assets/configs/buildings/pilots/logistics_rail_warehouse_site_v0.json",
+    "zones": [
+      { "id": "primary", "role": "primary", "color_token": "footprint_valid" },
+      { "id": "loading", "role": "loading_wing", "color_token": "footprint_valid" },
+      { "id": "utility", "role": "utility_yard", "color_token": "yard_void" },
+      { "id": "rail", "role": "rail_spur", "color_token": "rail_void" },
+      { "id": "service", "role": "service", "color_token": "service_outline" },
+      { "id": "parking", "role": "parking", "color_token": "parking_void" }
+    ]
+  },
+  "massing_hint": "l_shape",
+  "program_stub": {
+    "storage": "high",
+    "loading": "high",
+    "office": "low",
+    "service": "medium",
+    "expansion": "high"
+  },
+  "design_docs": [
+    "src/dev/design_shape_rail_warehouse_pilot_v1.md",
+    "src/dev/design_build_readability_v1.md"
+  ]
+}

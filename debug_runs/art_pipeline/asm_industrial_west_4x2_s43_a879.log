@@ -1,98 +1,98 @@
-15:04:41 | INFO: Data are loaded, start creating Blender stuff
-15:04:41 | INFO: Blender create Mesh node Cube
-15:04:41 | INFO: glTF import finished in 0.01s
+22:31:54 | INFO: Data are loaded, start creating Blender stuff
+22:31:54 | INFO: Blender create Mesh node Cube
+22:31:54 | INFO: glTF import finished in 0.00s
 ASSEMBLY_MATERIAL_WARN corner_L_0_0 brick_red_01: No module named 'export_glb'
-15:04:41 | INFO: Data are loaded, start creating Blender stuff
-15:04:41 | INFO: Blender create Mesh node Cube
-15:04:41 | INFO: glTF import finished in 0.00s
+22:31:54 | INFO: Data are loaded, start creating Blender stuff
+22:31:54 | INFO: Blender create Mesh node Cube
+22:31:54 | INFO: glTF import finished in 0.00s
 ASSEMBLY_MATERIAL_WARN wall_steel_1u_1_0 steel_panel_01: No module named 'export_glb'
-15:04:41 | INFO: Data are loaded, start creating Blender stuff
-15:04:41 | INFO: Blender create Mesh node door_shop_lod0_run001
-15:04:41 | INFO: glTF import finished in 0.00s
+22:31:54 | INFO: Data are loaded, start creating Blender stuff
+22:31:54 | INFO: Blender create Mesh node door_shop_lod0_run001
+22:31:54 | INFO: glTF import finished in 0.00s
 ASSEMBLY_MATERIAL_WARN door_shop_2_0 wood_plank_01: No module named 'export_glb'
-15:04:41 | INFO: Data are loaded, start creating Blender stuff
-15:04:41 | INFO: Blender create Mesh node Cube
-15:04:41 | INFO: glTF import finished in 0.00s
+22:31:54 | INFO: Data are loaded, start creating Blender stuff
+22:31:54 | INFO: Blender create Mesh node Cube
+22:31:54 | INFO: glTF import finished in 0.00s
 ASSEMBLY_MATERIAL_WARN corner_L_3_0 brick_red_01: No module named 'export_glb'
-15:04:41 | INFO: Data are loaded, start creating Blender stuff
-15:04:41 | INFO: Blender create Mesh node Cube
-15:04:41 | INFO: glTF import finished in 0.00s
+22:31:54 | INFO: Data are loaded, start creating Blender stuff
+22:31:54 | INFO: Blender create Mesh node Cube
+22:31:54 | INFO: glTF import finished in 0.00s
 ASSEMBLY_MATERIAL_WARN corner_L_0_1 brick_red_01: No module named 'export_glb'
-15:04:41 | INFO: Data are loaded, start creating Blender stuff
-15:04:41 | INFO: Blender create Mesh node Cube
-15:04:41 | INFO: glTF import finished in 0.00s
+22:31:54 | INFO: Data are loaded, start creating Blender stuff
+22:31:54 | INFO: Blender create Mesh node Cube
+22:31:54 | INFO: glTF import finished in 0.00s
 ASSEMBLY_MATERIAL_WARN wall_steel_1u_1_1 steel_panel_01: No module named 'export_glb'
-15:04:41 | INFO: Data are loaded, start creating Blender stuff
-15:04:41 | INFO: Blender create Mesh node Cube
-15:04:41 | INFO: glTF import finished in 0.00s
+22:31:54 | INFO: Data are loaded, start creating Blender stuff
+22:31:54 | INFO: Blender create Mesh node Cube
+22:31:54 | INFO: glTF import finished in 0.00s
 ASSEMBLY_MATERIAL_WARN wall_steel_1u_2_1 steel_panel_01: No module named 'export_glb'
-15:04:41 | INFO: Data are loaded, start creating Blender stuff
-15:04:41 | INFO: Blender create Mesh node Cube
-15:04:41 | INFO: glTF import finished in 0.00s
+22:31:54 | INFO: Data are loaded, start creating Blender stuff
+22:31:54 | INFO: Blender create Mesh node Cube
+22:31:54 | INFO: glTF import finished in 0.00s
 ASSEMBLY_MATERIAL_WARN corner_L_3_1 brick_red_01: No module named 'export_glb'
-15:04:41 | INFO: Data are loaded, start creating Blender stuff
-15:04:41 | INFO: Blender create Mesh node Cube
-15:04:41 | INFO: glTF import finished in 0.00s
+22:31:54 | INFO: Data are loaded, start creating Blender stuff
+22:31:54 | INFO: Blender create Mesh node Cube
+22:31:54 | INFO: glTF import finished in 0.00s
 ASSEMBLY_MATERIAL_WARN corner_L_0_0.001 brick_red_01: No module named 'export_glb'
-15:04:41 | INFO: Data are loaded, start creating Blender stuff
-15:04:41 | INFO: Blender create Mesh node Cube
-15:04:41 | INFO: glTF import finished in 0.00s
+22:31:54 | INFO: Data are loaded, start creating Blender stuff
+22:31:54 | INFO: Blender create Mesh node Cube
+22:31:54 | INFO: glTF import finished in 0.00s
 ASSEMBLY_MATERIAL_WARN wall_steel_1u_1_0.001 steel_panel_01: No module named 'export_glb'
-15:04:41 | INFO: Data are loaded, start creating Blender stuff
-15:04:41 | INFO: Blender create Mesh node Cube
-15:04:41 | INFO: glTF import finished in 0.00s
+22:31:54 | INFO: Data are loaded, start creating Blender stuff
+22:31:54 | INFO: Blender create Mesh node Cube
+22:31:54 | INFO: glTF import finished in 0.00s
 ASSEMBLY_MATERIAL_WARN wall_steel_1u_2_0 steel_panel_01: No module named 'export_glb'
-15:04:41 | INFO: Data are loaded, start creating Blender stuff
-15:04:41 | INFO: Blender create Mesh node Cube
-15:04:41 | INFO: glTF import finished in 0.00s
+22:31:54 | INFO: Data are loaded, start creating Blender stuff
+22:31:54 | INFO: Blender create Mesh node Cube
+22:31:54 | INFO: glTF import finished in 0.00s
 ASSEMBLY_MATERIAL_WARN corner_L_3_0.001 brick_red_01: No module named 'export_glb'
-15:04:41 | INFO: Data are loaded, start creating Blender stuff
-15:04:41 | INFO: Blender create Mesh node Cube
-15:04:41 | INFO: glTF import finished in 0.00s
+22:31:54 | INFO: Data are loaded, start creating Blender stuff
+22:31:54 | INFO: Blender create Mesh node Cube
+22:31:54 | INFO: glTF import finished in 0.00s
 ASSEMBLY_MATERIAL_WARN corner_L_0_1.001 brick_red_01: No module named 'export_glb'
-15:04:41 | INFO: Data are loaded, start creating Blender stuff
-15:04:41 | INFO: Blender create Mesh node Cube
-15:04:41 | INFO: glTF import finished in 0.00s
+22:31:54 | INFO: Data are loaded, start creating Blender stuff
+22:31:54 | INFO: Blender create Mesh node Cube
+22:31:54 | INFO: glTF import finished in 0.00s
 ASSEMBLY_MATERIAL_WARN wall_steel_1u_1_1.001 steel_panel_01: No module named 'export_glb'
-15:04:41 | INFO: Data are loaded, start creating Blender stuff
-15:04:41 | INFO: Blender create Mesh node Cube
-15:04:41 | INFO: glTF import finished in 0.00s
+22:31:54 | INFO: Data are loaded, start creating Blender stuff
+22:31:54 | INFO: Blender create Mesh node Cube
+22:31:54 | INFO: glTF import finished in 0.00s
 ASSEMBLY_MATERIAL_WARN wall_steel_1u_2_1.001 steel_panel_01: No module named 'export_glb'
-15:04:41 | INFO: Data are loaded, start creating Blender stuff
-15:04:41 | INFO: Blender create Mesh node Cube
-15:04:41 | INFO: glTF import finished in 0.00s
+22:31:54 | INFO: Data are loaded, start creating Blender stuff
+22:31:54 | INFO: Blender create Mesh node Cube
+22:31:54 | INFO: glTF import finished in 0.00s
 ASSEMBLY_MATERIAL_WARN corner_L_3_1.001 brick_red_01: No module named 'export_glb'
-15:04:41 | INFO: Data are loaded, start creating Blender stuff
-15:04:41 | INFO: Blender create Mesh node Cube
-15:04:41 | INFO: glTF import finished in 0.00s
+22:31:54 | INFO: Data are loaded, start creating Blender stuff
+22:31:54 | INFO: Blender create Mesh node Cube
+22:31:54 | INFO: glTF import finished in 0.00s
 ASSEMBLY_MATERIAL_WARN roof_sawtooth_0_0 roof_metal_01: No module named 'export_glb'
-15:04:41 | INFO: Data are loaded, start creating Blender stuff
-15:04:41 | INFO: Blender create Mesh node Cube
-15:04:41 | INFO: glTF import finished in 0.00s
+22:31:54 | INFO: Data are loaded, start creating Blender stuff
+22:31:54 | INFO: Blender create Mesh node Cube
+22:31:54 | INFO: glTF import finished in 0.00s
 ASSEMBLY_MATERIAL_WARN roof_sawtooth_1_0 roof_metal_01: No module named 'export_glb'
-15:04:41 | INFO: Data are loaded, start creating Blender stuff
-15:04:41 | INFO: Blender create Mesh node Cube
-15:04:41 | INFO: glTF import finished in 0.00s
+22:31:54 | INFO: Data are loaded, start creating Blender stuff
+22:31:54 | INFO: Blender create Mesh node Cube
+22:31:54 | INFO: glTF import finished in 0.00s
 ASSEMBLY_MATERIAL_WARN roof_sawtooth_2_0 roof_metal_01: No module named 'export_glb'
-15:04:41 | INFO: Data are loaded, start creating Blender stuff
-15:04:41 | INFO: Blender create Mesh node Cube
-15:04:41 | INFO: glTF import finished in 0.00s
+22:31:54 | INFO: Data are loaded, start creating Blender stuff
+22:31:54 | INFO: Blender create Mesh node Cube
+22:31:54 | INFO: glTF import finished in 0.00s
 ASSEMBLY_MATERIAL_WARN roof_sawtooth_3_0 roof_metal_01: No module named 'export_glb'
-15:04:41 | INFO: Data are loaded, start creating Blender stuff
-15:04:41 | INFO: Blender create Mesh node Cube
-15:04:41 | INFO: glTF import finished in 0.00s
+22:31:54 | INFO: Data are loaded, start creating Blender stuff
+22:31:54 | INFO: Blender create Mesh node Cube
+22:31:54 | INFO: glTF import finished in 0.00s
 ASSEMBLY_MATERIAL_WARN roof_sawtooth_0_1 roof_metal_01: No module named 'export_glb'
-15:04:41 | INFO: Data are loaded, start creating Blender stuff
-15:04:41 | INFO: Blender create Mesh node Cube
-15:04:41 | INFO: glTF import finished in 0.00s
+22:31:54 | INFO: Data are loaded, start creating Blender stuff
+22:31:54 | INFO: Blender create Mesh node Cube
+22:31:54 | INFO: glTF import finished in 0.00s
 ASSEMBLY_MATERIAL_WARN roof_sawtooth_1_1 roof_metal_01: No module named 'export_glb'
-15:04:41 | INFO: Data are loaded, start creating Blender stuff
-15:04:41 | INFO: Blender create Mesh node Cube
-15:04:41 | INFO: glTF import finished in 0.00s
+22:31:54 | INFO: Data are loaded, start creating Blender stuff
+22:31:54 | INFO: Blender create Mesh node Cube
+22:31:54 | INFO: glTF import finished in 0.00s
 ASSEMBLY_MATERIAL_WARN roof_sawtooth_2_1 roof_metal_01: No module named 'export_glb'
-15:04:41 | INFO: Data are loaded, start creating Blender stuff
-15:04:41 | INFO: Blender create Mesh node Cube
-15:04:41 | INFO: glTF import finished in 0.00s
+22:31:54 | INFO: Data are loaded, start creating Blender stuff
+22:31:54 | INFO: Blender create Mesh node Cube
+22:31:54 | INFO: glTF import finished in 0.00s
 ASSEMBLY_MATERIAL_WARN roof_sawtooth_3_1 roof_metal_01: No module named 'export_glb'
 Info: Saved as "industrial_west_4x2_s43_a879.blend"
 ASSEMBLY_BLEND_OK C:\dev\github\Rust_engine_template_01\assets\staging\assemblies\industrial_west_4x2_s43_a879.blend

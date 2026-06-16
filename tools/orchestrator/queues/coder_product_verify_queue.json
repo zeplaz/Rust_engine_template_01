@@ -1,0 +1,275 @@
+{
+  "_meta": {
+    "version": "1.0.0",
+    "program_id": "CODER-PRODUCT-VERIFY-001",
+    "date": "2026-06-13",
+    "hardening_rules": "src/dev/coder_queue_hardening_rules_v1.md",
+    "parent": "tools/orchestrator/queues/coder_master_drain_queue.json",
+    "rule": "Parallel to VEG drain — runtime verify rows that v2 marked done prematurely",
+    "note": "Run after REWIRE compiles; each row needs exit_predicate green on disk",
+    "last_sync": "2026-06-14"
+  },
+  "tracks": {
+    "BUILD": "Build readability runtime verify",
+    "FIRE": "Fire play loop runtime verify",
+    "PRODUCT": "G-PLAY cross-lane verify"
+  },
+  "drain": [
+    {
+      "seq": 1,
+      "track": "BUILD",
+      "id": "BUILD-VERIFY-ZOOM-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_b",
+      "goal": "map_zoom_coherence witness green after sim scroll harness (not lib fixture only)",
+      "witness": "debug_runs/map_zoom_coherence_live.json",
+      "exit_predicate": {
+        "witness": "debug_runs/map_zoom_coherence_live.json",
+        "must": [
+          {
+            "path": "green",
+            "eq": true
+          }
+        ]
+      },
+      "forbidden_exit": [
+        "lib_test_only"
+      ],
+      "verify_commands": [
+        "cargo test -p proc_A_dine01 --lib map_zoom_coherence"
+      ],
+      "completed": "2026-06-13"
+    },
+    {
+      "seq": 2,
+      "track": "BUILD",
+      "id": "BUILD-VERIFY-POINTER-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_b",
+      "goal": "Pointer gate: pick under BuildToolbox does not commit",
+      "territory": "src/gui/hud/simulation_pointer_gate.rs",
+      "exit": "pick_blocked_under_toolbox true in witness or lib sim test",
+      "forbidden_exit": [
+        "lib_test_only",
+        "witness_counter_zero"
+      ],
+      "completed": "2026-06-13"
+    },
+    {
+      "seq": 3,
+      "track": "BUILD",
+      "id": "BUILD-VERIFY-DEBUG-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_b",
+      "depends_on": [
+        "BUILD-VERIFY-POINTER-001"
+      ],
+      "goal": "Placement debug overlay fields populated in Adjust mode at runtime",
+      "territory": "src/construction/placement_debug.rs",
+      "forbidden_exit": [
+        "lib_test_only"
+      ],
+      "completed": "2026-06-13"
+    },
+    {
+      "seq": 4,
+      "track": "BUILD",
+      "id": "BUILD-VERIFY-PILOT-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_b",
+      "goal": "Pilot catalog authoritative in commit path — grep no warehouse hardcode",
+      "witness": "debug_runs/pilot_catalog_parity_live.json",
+      "exit_predicate": {
+        "witness": "debug_runs/pilot_catalog_parity_live.json",
+        "must": [
+          {
+            "path": "green",
+            "eq": true
+          }
+        ]
+      },
+      "forbidden_exit": [
+        "lib_test_only"
+      ],
+      "completed": "2026-06-13"
+    },
+    {
+      "seq": 5,
+      "track": "BUILD",
+      "id": "BUILD-VERIFY-VISUAL-001",
+      "status": "done",
+      "priority": "P2",
+      "owner": "coder_b",
+      "goal": "Post-commit site extract visible in sim (not footprint-only fallback)",
+      "witness": "debug_runs/build_read_visual_001_live.json",
+      "exit_predicate": {
+        "witness": "debug_runs/build_read_visual_001_live.json",
+        "must": [
+          {
+            "path": "green",
+            "eq": true
+          },
+          {
+            "path": "runtime_sim_verified",
+            "eq": true
+          }
+        ]
+      },
+      "live_sim_required": true,
+      "forbidden_exit": [
+        "lib_test_only",
+        "eval_math_without_render"
+      ],
+      "note": "Reopens BUILD-READ-VISUAL-001 lib-only close",
+      "completed": "2026-06-14"
+    },
+    {
+      "seq": 6,
+      "track": "BUILD",
+      "id": "BUILD-VERIFY-MINIMAP-001",
+      "status": "done",
+      "priority": "P2",
+      "owner": "coder_b",
+      "goal": "Minimap widget drag + gold frame in running sim",
+      "witness": "debug_runs/design_minimap_widget_live.json",
+      "live_sim_required": true,
+      "operator_visible": true,
+      "forbidden_exit": [
+        "lib_test_only"
+      ],
+      "completed": "2026-06-13"
+    },
+    {
+      "seq": 7,
+      "track": "FIRE",
+      "id": "FIRE-VERIFY-PLAY-001",
+      "status": "done",
+      "priority": "P0",
+      "owner": "coder_a",
+      "goal": "Default play/demo fire sparks at operational zoom without test env",
+      "witness": "debug_runs/play_scenario_live.json",
+      "exit_predicate": {
+        "witness": "debug_runs/play_scenario_live.json",
+        "must": [
+          {
+            "path": "demo_fire_sparks_visible_at_operational_zoom",
+            "eq": true
+          }
+        ]
+      },
+      "live_sim_required": true,
+      "operator_visible": true,
+      "forbidden_exit": [
+        "lib_test_only",
+        "forbidden_env_bootstrap"
+      ],
+      "completed": "2026-06-13"
+    },
+    {
+      "seq": 8,
+      "track": "FIRE",
+      "id": "FIRE-VERIFY-ECOLOGY-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_a",
+      "depends_on": [
+        "FIRE-VERIFY-PLAY-001"
+      ],
+      "goal": "fire_ecology_live.json green with f2 fuel spread after sim refresh",
+      "witness": "debug_runs/fire_ecology_live.json",
+      "exit_predicate": {
+        "witness": "debug_runs/fire_ecology_live.json",
+        "must": [
+          {
+            "path": "green",
+            "eq": true
+          }
+        ]
+      },
+      "live_sim_required": true,
+      "forbidden_exit": [
+        "lib_test_only",
+        "witness_lib_green_without_green"
+      ],
+      "completed": "2026-06-13"
+    },
+    {
+      "seq": 9,
+      "track": "FIRE",
+      "id": "FIRE-VERIFY-STAGE5-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_a",
+      "goal": "stage5 f2_extract fire_instance_buffer_rows > 0 from FULL_APP refresh",
+      "witness": "debug_runs/stage5_full_app_live.json",
+      "exit_predicate": {
+        "witness": "debug_runs/stage5_full_app_live.json",
+        "must": [
+          {
+            "path": "f2_extract_witness.fire_instance_buffer_rows",
+            "gte": 1
+          }
+        ]
+      },
+      "live_sim_required": true,
+      "forbidden_exit": [
+        "lib_test_only"
+      ],
+      "completed": "2026-06-13"
+    },
+    {
+      "seq": 10,
+      "track": "PRODUCT",
+      "id": "PRODUCT-VERIFY-GPLAY-001",
+      "status": "done",
+      "priority": "P0",
+      "owner": "coder",
+      "goal": "G-PLAY rollup: play_truth + fire + build + veg keys all green",
+      "witness": "debug_runs/g_play_product_close_live.json",
+      "depends_on": [
+        "FIRE-VERIFY-PLAY-001",
+        "VEG-C15-PHASE-CLOSE-001"
+      ],
+      "forbidden_exit": [
+        "lib_test_only"
+      ],
+      "note": "Blocked on VEG phase C minimum",
+      "completed": "2026-06-13"
+    },
+    {
+      "seq": 11,
+      "track": "BUILD",
+      "id": "BUILD-VERIFY-LIVE-PROOF-001",
+      "status": "done",
+      "priority": "P2",
+      "owner": "coder_b",
+      "goal": "Promote build_read + minimap live proofs to dev/mod.rs non-test",
+      "territory": "src/dev/mod.rs",
+      "docs": [
+        "src/dev/build_read_unwired_spine_v1.md"
+      ],
+      "forbidden_exit": [
+        "lib_test_only"
+      ],
+      "completed": "2026-06-13"
+    },
+    {
+      "seq": 12,
+      "track": "PRODUCT",
+      "id": "PRODUCT-VERIFY-OPS-SCAN-001",
+      "status": "done",
+      "priority": "P2",
+      "owner": "coder",
+      "goal": "ops_intelligence_scan reflects reopened veg/build/fire rows not drained",
+      "witness": "debug_runs/agent_ops/ops_report_latest.json",
+      "forbidden_exit": [
+        "lib_test_only"
+      ],
+      "completed": "2026-06-13"
+    }
+  ]
+}

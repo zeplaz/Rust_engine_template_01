@@ -53,7 +53,7 @@
     "relative_path": "debug_runs/construction_stage_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "construction_live_proof",
-    "written_at_epoch_secs": 1780456677
+    "written_at_epoch_secs": 1781482874
   },
   "build_p_star": [
     {

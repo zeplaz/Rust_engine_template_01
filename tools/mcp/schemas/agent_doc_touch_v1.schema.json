@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "agent_doc_touch_v1.schema.json",
+  "title": "agent_doc_touch_v1",
+  "type": "object",
+  "required": ["schema", "path", "intent", "digest"],
+  "properties": {
+    "schema": { "const": "agent_doc_touch_v1" },
+    "path": { "type": "string", "minLength": 1 },
+    "intent": { "enum": ["ref", "orient", "implement"] },
+    "agent": { "type": "string" },
+    "digest": {
+      "type": "object",
+      "required": ["total_lines", "head", "truncated"],
+      "properties": {
+        "total_lines": { "type": "integer", "minimum": 0 },
+        "head": { "type": "array", "items": { "type": "string" } },
+        "truncated": { "type": "boolean" }
+      }
+    },
+    "ledger_appended": { "type": "boolean" },
+    "ledger_path": { "type": "string" },
+    "hint": { "type": "string" }
+  },
+  "additionalProperties": true
+}

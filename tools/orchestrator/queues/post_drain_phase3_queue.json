@@ -1,0 +1,60 @@
+{
+  "_meta": {
+    "version": "1.0.0",
+    "program_id": "POST-DRAIN-PHASE-3-001",
+    "date": "2026-06-08",
+    "rule": "Witness JSON wins · one primary lane per agent"
+  },
+  "lanes": {
+    "G_OPS": { "label": "Operator gates", "owner_default": "operator" },
+    "H_INFRA": { "label": "Infra depth", "owner_default": "coder" },
+    "I_PRODUCT": { "label": "Sim HUD product", "owner_default": "designer" },
+    "J_MCP": { "label": "MCP P2 + APS gates", "owner_default": "coder-mcp" },
+    "K_MAINTAIN": { "label": "Regression + queue hygiene", "owner_default": "planner" }
+  },
+  "tasks": [
+    {
+      "id": "G-PLAY-01",
+      "lane": "G_OPS",
+      "priority": 1,
+      "agent": "operator",
+      "status": "ready",
+      "goal": "Operator play scenario acceptance",
+      "witness_json": "debug_runs/play_scenario_live.json"
+    },
+    {
+      "id": "OPS-006",
+      "lane": "J_MCP",
+      "priority": 1,
+      "agent": "coder-mcp",
+      "status": "done",
+      "goal": "APS ARCH-DNA + beta sliders",
+      "witness_json": "debug_runs/aps_build_read_grammar_v0_002_live.json"
+    },
+    {
+      "id": "OPS-007",
+      "lane": "J_MCP",
+      "priority": 1,
+      "agent": "coder-mcp",
+      "status": "paused",
+      "goal": "Production warehouse tile bake + promote",
+      "witness_json": "debug_runs/ops_007_warehouse_production_pause_live.json"
+    },
+    {
+      "id": "OPS-CYCLE-2-001",
+      "lane": "J_MCP",
+      "priority": 2,
+      "agent": "coder-mcp",
+      "status": "done",
+      "goal": "ops_project_brief JSON + MCP wrapper",
+      "witness_json": "debug_runs/agent_ops/ops_mcp_function_layer_live.json"
+    }
+  ],
+  "paused": [
+    {
+      "id": "OPS-007",
+      "track": "WH-TRACK-B",
+      "reason": "Manual keyframe + G4"
+    }
+  ]
+}

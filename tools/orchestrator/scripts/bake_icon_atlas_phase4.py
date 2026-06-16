@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Bake Phase 4 icon atlas silhouettes (UI-OH-P4-ART-001).
 
-Spec: prompts/guides/ui/ui_phase4_icon_atlas_brief_v1.md §4–§7
+Spec: docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/ui_phase4_icon_atlas_brief_v1.md §4–§7
 Output: assets/textures/ui/icon_atlas_phase4_v1.png (256×128, 32×32 cells)
 """
 

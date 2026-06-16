@@ -1,0 +1,8 @@
+{
+  "program_id": "APS-PREVIEW-001",
+  "green": true,
+  "module_preview": true,
+  "material_preview": true,
+  "combined_preview": true,
+  "panel": "art_pipeline_suite.slot_preview_panel"
+}

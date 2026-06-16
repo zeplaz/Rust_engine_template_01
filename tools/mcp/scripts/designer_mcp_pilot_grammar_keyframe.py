@@ -4,8 +4,8 @@
 Headless `blender_keyframe_light_rig` produces grey slabs — same class as minimum_bake.
 Ship path requires **real** `utils/keyframe_render.py` in Blender UI + human G4 eyeball.
 
-Policy: src/dev/mcp_orchestrator_tile_fix_warehouse_slice_v2.md
-Checklist: src/dev/pilot_grammar_001_g4_checklist_v1.md
+Policy: docs/archive/2026-06-src-dev/plans/mcp_orchestrator_tile_fix_warehouse_slice_v2.md
+Checklist: docs/archive/2026-06-src-dev/plans/pilot_grammar_001_g4_checklist_v1.md
 """
 
 from __future__ import annotations
@@ -149,8 +149,8 @@ def _write_witness(body: dict) -> None:
         "_agent_meta": {
             "agent": "designer-mcp",
             "lane": "MCP-PILOT-GRAMMAR-001",
-            "policy": "src/dev/mcp_orchestrator_tile_fix_warehouse_slice_v2.md",
-            "checklist": "src/dev/pilot_grammar_001_g4_checklist_v1.md",
+            "policy": "docs/archive/2026-06-src-dev/plans/mcp_orchestrator_tile_fix_warehouse_slice_v2.md",
+            "checklist": "docs/archive/2026-06-src-dev/plans/pilot_grammar_001_g4_checklist_v1.md",
         },
     }
     out.write_text(json.dumps(wrapped, indent=2) + "\n", encoding="utf-8")

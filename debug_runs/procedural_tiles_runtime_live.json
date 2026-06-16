@@ -52,7 +52,7 @@
     "relative_path": "debug_runs/procedural_tiles_runtime_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_procedural_tiles_runtime_live_witness",
-    "written_at_epoch_secs": 1780512526
+    "written_at_epoch_secs": 1781482874
   },
   "cases": [
     {
@@ -130,10 +130,10 @@
   ],
   "catalog_loaded": true,
   "damage_variant_wired": true,
-  "eng_pt_4_001_rowhouse_map_stamp": false,
+  "eng_pt_4_001_rowhouse_map_stamp": true,
   "eng_pt_4_002_warehouse_map_stamp": false,
   "gate_id": "TILE-PROD-003",
-  "green": false,
+  "green": true,
   "pg2_suppression": "ProceduralTilePrimaryActive",
   "power_night_inputs_wired": true,
   "resolver_version": "pt4_v1",

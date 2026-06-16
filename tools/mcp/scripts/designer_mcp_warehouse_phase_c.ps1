@@ -1,13 +1,19 @@
 # TILE-FIX Phase C — @designer-mcp (CLI/MCP parity only; no ad-hoc Python audit)
 # Slice: src/dev/mcp_orchestrator_tile_fix_warehouse_slice_v1.md + v2 art_quality gate
+# Operator: run AFTER manual PNGs — see src/dev/pilot_grammar_operator_runbook_v1.md
+
+param(
+    [string]$StagingFolder = "assets/staging/tiles/tile_warehouse_industrial_v2_minimum_g4",
+    [string]$BuildingDef = "tools/mcp/schemas/examples/building_definition_warehouse_industrial_west_production_v1.json"
+)
 
 $ErrorActionPreference = "Stop"
 $RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..\..\..')).Path
 Set-Location $RepoRoot
 
-$BDEF = "tools/mcp/schemas/examples/building_definition_warehouse_industrial_west_production_v1.json"
+$BDEF = $BuildingDef
 $VC = "assets/configs/buildings/visual_config_warehouse_industrial_west_v2.json"
-$META = "assets/staging/tiles/tile_warehouse_industrial_v2_minimum_g4/atlas_meta.json"
+$META = ($StagingFolder.TrimEnd('/')).Replace('\', '/') + "/atlas_meta.json"
 
 Push-Location tools/mcp/python
 

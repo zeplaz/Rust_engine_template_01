@@ -327,6 +327,12 @@ pub fn r4_corridor_legend_wired_witness_green() -> bool {
     r4_corridor_legend_self_check().is_ok()
 }
 
+/// **CON-R4-TAIL-001** — public alias for phase6 witness bundle.
+#[must_use]
+pub fn construction_r4_corridor_legend_wired_witness_green() -> bool {
+    r4_corridor_legend_wired_witness_green()
+}
+
 fn r4_corridor_legend_self_check() -> Result<(), &'static str> {
     if !super::ghost_visual::corridor_phase_tokens_wired_green() {
         return Err("tokens");

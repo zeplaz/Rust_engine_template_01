@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "job_id": "asm_industrial_west_9x6_s35_1902",
+  "operation": "assembly_build",
+  "assembly_snapshot": "assets/staging/assemblies/industrial_west_9x6_s35_1902.json",
+  "output": {
+    "blend": "assets/staging/assemblies/industrial_west_9x6_s35_1902.blend"
+  }
+}

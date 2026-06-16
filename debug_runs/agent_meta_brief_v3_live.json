@@ -1,0 +1,35 @@
+{
+  "schema": "agent_meta_brief_v3_witness_v1",
+  "version": "v3.3.0",
+  "ts": "2026-06-07",
+  "status": "integrated",
+  "density": "HIGH",
+  "grammar": "agent_meta_grammar_v3_lattice.md",
+  "lattice_dimensions": ["Ct", "Cx", "Cm", "Dp", "Au", "Rk", "Q", "Delta", "U", "T", "E", "H", "S"],
+  "fold_policy": "multi_line_required_no_one_line_topology",
+  "cluster_grammar": true,
+  "graphics": [
+    "OMEGA_META_LATTICE",
+    "STATE_GRAMMAR",
+    "FLOW_GRAMMAR",
+    "COGNITIVE_WEIGHTS",
+    "REVIEW_TAGS",
+    "EXAMPLE_MARKER",
+    "CROSS_COMPLEXITY_MASTER_MESH",
+    "RESPONSE_CONTRACT_FOLD"
+  ],
+  "artifacts": {
+    "normative_brief": "docs/archive/2026-06-src-dev/plans/agent_meta_brief_v3.md",
+    "grammar_lattice": "docs/archive/2026-06-src-dev/plans/agent_meta_grammar_v3_lattice.md",
+    "field_registry": "docs/archive/2026-06-src-dev/plans/agent_meta_field_registry_v3.md",
+    "fold_atlas": "docs/archive/2026-06-src-dev/plans/agent_meta_diagrams_v3_fold.md",
+    "human_entry": "prompts/llm_agent_brief.md",
+    "lang_parent": "src/dev/agent_lang_v1.md",
+    "skill": ".cursor/skills/agent-lang/SKILL.md"
+  },
+  "example_cluster": "🟡⏳⊗☊",
+  "example_result": "🟢✅🧪🟩⊚",
+  "_agent_meta": {
+    "integration": "v3.3Ω ΩMETA-LATTICE grammar — symbols are semantic packets not decoration"
+  }
+}

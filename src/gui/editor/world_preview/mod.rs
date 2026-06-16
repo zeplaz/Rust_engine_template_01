@@ -47,7 +47,10 @@ pub use composite_preview_contract::{
     WAVE_P_OPEN_BACKLOG_ITEMS,
 };
 pub use ecology_preview::{
-    blend_fire_overlay, ecology_preview_rgba, ecology_sample_for_world_tile, vegetation_preview_rgba,
+    blend_fire_overlay, count_chunks_with_topology_tint_bias,
+    count_distinct_topology_visible_rgba, ecology_preview_rgba,
+    ecology_sample_for_world_tile, preview_samples_from_topology_kinds,
+    topology_kind_tint_modulator, topology_tint_bias_for_kinds, vegetation_preview_rgba,
     EcologyGpuPassKind, EcologyPreviewSample, EcologyRasterChunkRow,
 };
 pub use gpu_preview::{WorldPreviewGpuCamera, WorldPreviewGpuRuntime};

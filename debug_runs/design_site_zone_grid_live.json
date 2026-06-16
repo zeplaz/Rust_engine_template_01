@@ -1,0 +1,19 @@
+{
+  "_agent_meta": {
+    "profile": "DESIGN_SITE_ZONE_GRID",
+    "schema": "debug_run_envelope_v1",
+    "source_system": "designer_mcp_site_zone_grid_v0",
+    "relative_path": "debug_runs/design_site_zone_grid_live.json",
+    "design_doc": "assets/configs/buildings/pilots/logistics_rail_warehouse_site_v0.json",
+    "parent_program": "BUILD-READ-SITE-v0-001"
+  },
+  "gate": "BUILD-READ-SITE-ZONE-MAP-001",
+  "green": true,
+  "verdict": "PASS",
+  "cells_len": 80,
+  "width_depth": "10x8",
+  "primary_pct_site": 0.125,
+  "impl_wired": false,
+  "unblocks": ["BUILD-READ-SITE-v0-002"],
+  "delta_wf": "@coder BUILD-READ-SITE-v0-002 overlay from JSON"
+}

@@ -1,0 +1,17 @@
+{
+  "gate_id": "APS-UX-POLISH-001",
+  "ok": true,
+  "green": true,
+  "p0_a11y": {
+    "validation_fail_not_green": true,
+    "material_status_text_not_glyph_only": true,
+    "metadata_flow_default_visible": true
+  },
+  "phases_2_4_prerequisite": true,
+  "phase_1_async": true,
+  "panels_using_set_inline_status": {
+    "assembly_panel.py": true,
+    "catalog.py": true,
+    "variants_panel.py": true
+  }
+}

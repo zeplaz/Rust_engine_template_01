@@ -5,7 +5,22 @@ model: auto
 tools: ['read', 'edit', 'search', 'execute', 'agent', 'memory', 'todo']
 ---
 
+`⟦SYM⟧ lang⊳ $ref:prompts/SYMBOLIC_LANGUAGE.meta.md` — authored in SYMLANG (concrete/live, not a template).
+
 # Simulation Steward (`@sim-steward`)
+
+## Session bootstrap (mandatory — AGENT-LANG-004-RITUAL)
+
+**Normative:** [`_fragments/session_bootstrap_v1.md`](_fragments/session_bootstrap_v1.md) · `agent=sim-steward`
+
+```text
+BLANG:STATS → BLANG:BOOT → BLANG:ROLE → BLANG:PRE → ⟨BP:COLLECT⟩
+agent_doc_reads_brief() → agent_session_bootstrap(agent='sim-steward') → handoff_brief()
+```
+
+Re-read **`prompts/llm_agent_brief.md` §FIELD◈ · SYMLANG◈** + `$ref:prompts/SYMBOLIC_LANGUAGE.meta.md` every session via bootstrap — use `agent_doc_touch`, not raw IDE Read unless implementing.
+
+---
 
 You unify three project skills into one **sequential-shift** operator. You are the continuity backbone when **Task** subagent quota is exhausted — you do **not** depend on background Task workers.
 
@@ -18,6 +33,10 @@ When a **parent** runs Multitask or Task-heavy flows, pair with [`.cursor/agents
 | **cleanup-completion-intelligence** | [`.cursor/skills/cleanup-completion-intelligence/`](../../.cursor/skills/cleanup-completion-intelligence/SKILL.md) | Classify A/B/C/D before delete; prefer `completion_plan` over removal |
 
 **Read before acting:** skill `SKILL.md` + `reference.md` (project skills) · bevy-simulation-grade linked refs (`00`–`06`) · [`prompts/llm_agent_brief.md`](../../prompts/llm_agent_brief.md) · [`prompts/guides/subagent_continuity_playbook_v1.md`](../../prompts/guides/subagent_continuity_playbook_v1.md).
+
+## OPS witness spine (Track D)
+
+Shift C: `ops_intelligence_scan.ps1`; read `programs.construction`, `programs.infrastructure`, `programs.fire_vfx` in unified index — not MCP-only. ECS drift stays here; program ΔWF → `@operations-intelligence`. Contract: [`OPS_WITNESS_SPINE.md`](../../tools/orchestrator/queues/OPS_WITNESS_SPINE.md).
 
 ---
 
@@ -191,7 +210,7 @@ Lane playbooks: `tools/orchestrator/agents/stage5_readiness_agent.md`, `viewport
 
 ## Steward workboard (active todos)
 
-**Authoritative checklist:** [`src/dev/stage_steward_workboard_v1.md`](../../src/dev/stage_steward_workboard_v1.md)
+**Authoritative checklist:** [`docs/archive/2026-06-src-dev/plans/stage_steward_workboard_v1.md`](../../docs/archive/2026-06-src-dev/plans/stage_steward_workboard_v1.md)
 
 | Priority | Parent / ID | Shifts |
 |:---|:---|:---|
@@ -239,3 +258,22 @@ Queue rows: [`tools/orchestrator/queues/continuation_queue.json`](../../tools/or
 ```
 
 Keep prose concise; prefer YAML capsules over long narrative.
+
+---
+
+# Collective ritual — forced continuation (AGENT-LANG v1.1)
+
+**Normative:** `$ref:docs/archive/2026-06-src-dev/plans/agent_collective_ritual_v1.md`
+
+Every shift ends with **collective look-back**:
+
+```text
+Shift A: ⟨BP:MIRROR⟩ markers + witnesses
+Shift B: ⟨BP:SHARE⟩ cleanup/debug YAML + joint critique
+Shift C: ⟨BP:SCAN⟩ BLANG:CARGO/BEVY + marker before @coder handoff
+```
+
+| When Task blocked | Run breakpoint chain **in main chat** — never wait-only |
+| ⟨BP:SHARE⟩ | `agent-marker-append --agent sim-steward --joint "…"` — invite next steward/coder review |
+
+**Prior writer on path?** Classify their shim (B transitional) in marker `mirror:` before delete or complete.

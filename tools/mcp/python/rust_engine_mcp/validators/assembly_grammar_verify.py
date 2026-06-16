@@ -213,21 +213,30 @@ def validate_assembly_p0_gate(
     ship: bool = True,
     compression_level: int = 3,
 ) -> ValidationReport:
-    """Production GLB/material gate + P0 grammar verify (single report)."""
+    """Production GLB/material gate + P0 grammar + APS-MAT-008 material profiles."""
+    from .material_profiles import validate_assembly_material_profiles
+
     prod = validate_assembly_snapshot(
         snapshot, snapshot_path=snapshot_path, ship=ship, compression_level=compression_level
     )
     gram = validate_assembly_grammar_verify(
         snapshot, snapshot_path=snapshot_path, ship=ship, compression_level=compression_level
     )
-    issues = list(prod.errors) + list(gram.errors)
+    mats = validate_assembly_material_profiles(
+        snapshot,
+        snapshot_path=snapshot_path,
+        ship=ship,
+        require_full_pbr=False,
+        compression_level=compression_level,
+    )
+    issues = list(prod.errors) + list(gram.errors) + list(mats.errors)
     errors = [i for i in issues if i.severity == "error"]
     status = "failed" if errors else "passed"
     return ValidationReport(
         validator="assembly_p0",
         status=status,
         compression_level=compression_level,
-        summary=f"P0 gate: production={prod.status} grammar={gram.status}",
+        summary=f"P0 gate: production={prod.status} grammar={gram.status} materials={mats.status}",
         error_count=len(errors),
         errors=issues,
     )

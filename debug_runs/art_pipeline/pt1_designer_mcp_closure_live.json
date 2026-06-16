@@ -6,12 +6,12 @@
   "updated": "2026-06-03",
   "_agent_meta": {
     "agent": "designer-mcp",
-    "orders": "src/dev/mcp_fleet_procedural_tiles_production_orders_v1.md"
+    "orders": "docs/archive/2026-06-src-dev/plans/mcp_fleet_procedural_tiles_production_orders_v1.md"
   },
   "checklist": {
     "PT-1-001_production_bar": {
       "status": "pass",
-      "deliverable": "src/dev/design_procedural_tile_production_bar_v1.md"
+      "deliverable": "docs/archive/2026-06-src-dev/plans/design_procedural_tile_production_bar_v1.md"
     },
     "PT-1-002_variant_matrices": {
       "status": "pass",

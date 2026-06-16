@@ -1,0 +1,26 @@
+{
+  "task_id": "MCP-INTEGRATE-001",
+  "schema": "grammar_integration_validate_v1",
+  "ok": true,
+  "green": true,
+  "path": "tools/mcp/schemas/examples/assembly_snapshot_warehouse_industrial_west_production_v1.json",
+  "preset_id": "logistics_rail_warehouse_v0",
+  "preset_pair": {
+    "task_id": "MCP-GRAMMAR-SET-002",
+    "ok": true,
+    "green": true,
+    "preset_id": "logistics_rail_warehouse_v0",
+    "pilot_id": "logistics_rail_warehouse_v0",
+    "grammar_id": "industrial_warehouse_v1",
+    "errors": []
+  },
+  "site_json_path": "assets/configs/buildings/pilots/logistics_rail_warehouse_site_v0.json",
+  "site_ok": true,
+  "p0_summary": "P0 gate: production=passed grammar=passed materials=passed",
+  "error_count": 0,
+  "artist_messages": [],
+  "technical": {
+    "p0_status": "passed",
+    "compression_level": 3
+  }
+}

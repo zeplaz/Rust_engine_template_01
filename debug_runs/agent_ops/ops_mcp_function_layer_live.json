@@ -1,0 +1,16 @@
+{
+  "gate": "OPS-MCP-FUNCTION-LAYER-001",
+  "green": true,
+  "ops_get_project_brief": true,
+  "ops_project_brief_v1_path": true,
+  "ops_project_brief_rel": "debug_runs/agent_ops/ops_project_brief_v1.json",
+  "schema": "ops_project_brief_v1",
+  "quality_score": 7,
+  "_agent_meta": {
+    "schema": "ops_mcp_function_layer_live_v1",
+    "written_at_epoch_secs": 1781328296,
+    "profile": "OPS_MCP_FUNCTION_LAYER",
+    "source_system": "ops_intelligence",
+    "relative_path": "debug_runs/agent_ops/ops_mcp_function_layer_live.json"
+  }
+}

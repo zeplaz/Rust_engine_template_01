@@ -28,6 +28,7 @@ pub const FOOTPRINT_TILE_SCAFFOLD: ScaffoldContract = ScaffoldContract {
 #[derive(Resource, Clone, Debug, Default)]
 pub struct FootprintTileWitness {
     pub gpu_path_active: bool,
+    pub egui_path_active: bool,
     pub instance_count: u32,
 }
 
@@ -50,6 +51,7 @@ pub fn push_footprint_tile_instances(
     mut witness: ResMut<FootprintTileWitness>,
 ) {
     witness.gpu_path_active = false;
+    witness.egui_path_active = false;
     witness.instance_count = 0;
     if strip.active == ToolContext::None || ghost.origin.is_none() {
         return;
@@ -57,6 +59,7 @@ pub fn push_footprint_tile_instances(
     if requests.footprint_tiles.is_empty() {
         return;
     }
+    witness.egui_path_active = true;
     // Match ortho tile extent: fixed world half-size scaled by camera zoom (see LOD debug path).
     let cam_scale = _authority
         .as_ref()
@@ -83,6 +86,7 @@ pub fn push_footprint_tile_instances(
         });
     }
     witness.gpu_path_active = true;
+    witness.egui_path_active = false;
     witness.instance_count = requests.footprint_tiles.len() as u32;
     let _ = FOOTPRINT_TILE_SCAFFOLD.is_declared();
 }

@@ -4,6 +4,8 @@ description: Enforces non-negotiable MCP asset production constraints for Rust_e
 disable-model-invocation: true
 ---
 
+`⟦SYM⟧ lang⊳ $ref:prompts/SYMBOLIC_LANGUAGE.meta.md`
+
 # MCP Production Rules
 
 Hard constraints — **not** suggestions. Apply **pre_execution** before any toolchain call.
@@ -28,9 +30,19 @@ Hard constraints — **not** suggestions. Apply **pre_execution** before any too
 | `batch_processing` | pre_execution | Process asset **groups** / atlases — not ad-hoc singles |
 | `grid_alignment` | pre_execution | Fixed tile unit; no free rotation in isometric system |
 
+## AGENT-LANG ritual (attach [agent-lang](../agent-lang/SKILL.md))
+
+**Pre-execution verdict** — one line:
+
+```yaml
+rules_check: { passed: 🟢|🔴, blocked_by: [no_ai_generated_images, ...], seed: "<required>" }
+```
+
+Blocked → `ΔWF→@designer-mcp` with `$ref:` reroute spec — not chat mesh.
+
 ## Quick workflow
 
-1. Read [reference.md](reference.md) for full conditions + violation responses.
+1. `BLANG:REF` on [reference.md](reference.md) for full conditions.
 2. Inspect proposed `tool` + `input` JSON.
 3. Block and reroute if any **hard_rule** fails.
 4. Emit compressed verdict:
@@ -57,7 +69,7 @@ rules_check:
 
 ## ECS / engine alignment
 
-Rules apply to **toolchain outputs** entering Bevy — not simulation ECS authority. Promotion paths must match [`design_procedural_module_kit_v1.md`](src/dev/design_procedural_module_kit_v1.md) pivot and naming.
+Rules apply to **toolchain outputs** entering Bevy — not simulation ECS authority. Promotion paths must match [`design_procedural_module_kit_v1.md`](docs/archive/2026-06-src-dev/plans/design_procedural_module_kit_v1.md) pivot and naming.
 
 ## Route violations
 
@@ -69,6 +81,6 @@ Rules apply to **toolchain outputs** entering Bevy — not simulation ECS author
 
 ## Additional resources
 
-- Source: [`prompts/MCP/rules_skills_draft.md`](prompts/MCP/rules_skills_draft.md) §3
+- Source: [`docs/archive/2026-06-fleet-drain/prompts_drafts/rules_skills_draft.md`](docs/archive/2026-06-fleet-drain/prompts_drafts/rules_skills_draft.md) §3
 - Designer agent art pipeline: [`.cursor/agents/designer.md`](../../agents/designer.md)
 - Full rule definitions: [reference.md](reference.md)

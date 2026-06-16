@@ -29,5 +29,57 @@
             depth: 2,
             cells: [1, 0, 0, 1, 1, 1],
         ),
+        // BUILD-SET-PILOT-002 — manufacturing grammar pilot (rect hall · distinct F-axis)
+        (
+            id: "manufacturing_hall_5x4",
+            label: "Fabrication hall 5×4",
+            width: 5,
+            depth: 4,
+            cells: [
+                1, 1, 1, 1, 1,
+                1, 1, 1, 1, 1,
+                1, 1, 1, 1, 1,
+                1, 1, 1, 1, 1,
+            ],
+        ),
+        // BUILD-SET-PILOT-003 — power infrastructure (yard ring · F=power)
+        (
+            id: "power_substation_yard_4x3",
+            label: "Substation yard 4×3",
+            width: 4,
+            depth: 3,
+            cells: [
+                1, 1, 1, 1,
+                1, 0, 0, 1,
+                1, 1, 1, 1,
+            ],
+        ),
+        // BUILD-SET-PILOT-004 — fuel infrastructure (tank farm ring · F=fuel)
+        (
+            id: "fuel_depot_yard_5x4",
+            label: "Tank farm yard 5×4",
+            width: 5,
+            depth: 4,
+            cells: [
+                1, 1, 1, 1, 1,
+                1, 0, 0, 0, 1,
+                1, 0, 0, 0, 1,
+                1, 1, 1, 1, 1,
+            ],
+        ),
+        // BUILD-READ-SHAPE-001 — Industrial Rail Warehouse pilot (rotate/scale QA)
+        (
+            id: "logistics_rail_warehouse_l_6x5",
+            label: "Rail Warehouse L 6×5",
+            width: 6,
+            depth: 5,
+            cells: [
+                1, 1, 1, 1, 1, 1,
+                1, 1, 1, 0, 0, 0,
+                1, 1, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0,
+            ],
+        ),
     ],
 )

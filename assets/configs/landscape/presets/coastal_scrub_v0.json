@@ -1,0 +1,34 @@
+{
+  "schema_version": "landscape_grammar_v0",
+  "preset_id": "coastal_scrub_v0",
+  "chart_id": "COAST-SCRUB-D2",
+  "land_dna": { "H": "coastal", "S": "sandy", "E": "exposed", "T": "temperate", "D": "salt_spray", "L": "scrub", "A": "young", "M": "natural" },
+  "pressure_field": {
+    "lambda_moisture": 0.62,
+    "lambda_slope": 0.28,
+    "lambda_exposure": 0.81,
+    "lambda_disturbance": 0.22,
+    "lambda_access": 0.45,
+    "lambda_security": 0.08,
+    "lambda_productivity": 0.35,
+    "lambda_legibility": 0.52
+  },
+  "landscape_program": {
+    "class": "coastal",
+    "district_ref": "coastal_scrub_03",
+    "required_topologies": ["CORRIDOR_DUNE", "PATCH_SCRUB", "FRINGE_SALT", "CLUSTER_WIND"]
+  },
+  "topology_graph": [
+    {
+      "id": "net_coast_01",
+      "topology_kind": "Network",
+      "preset_id": "NETWORK_CONNECTED",
+      "children": [
+        { "id": "corr_dune_01", "topology_kind": "Corridor", "preset_id": "CORRIDOR_DUNE" },
+        { "id": "patch_scrub_01", "topology_kind": "Patch", "preset_id": "PATCH_SCRUB" },
+        { "id": "fringe_salt_01", "topology_kind": "Fringe", "preset_id": "FRINGE_SALT" },
+        { "id": "cluster_wind_01", "topology_kind": "Cluster", "preset_id": "CLUSTER_WIND" }
+      ]
+    }
+  ]
+}

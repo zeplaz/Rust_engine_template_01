@@ -1,0 +1,56 @@
+{
+  "gate": "MCP-P2-VALID-CONSTRUCTION-001",
+  "green": true,
+  "witness_brief_construction": {
+    "ok": true,
+    "brief": {
+      "profile": "construction",
+      "path": "debug_runs/construction_stage_live.json",
+      "green": true,
+      "operational_green": true,
+      "footprint_projection_ok": true,
+      "construction_parametric_placement_001": {
+        "green": true
+      },
+      "map_pick_closure_001": {
+        "green": true
+      }
+    }
+  },
+  "witness_brief_map_pick": {
+    "ok": true,
+    "brief": {
+      "profile": "map_pick",
+      "path": "debug_runs/map_zoom_coherence_live.json",
+      "footprint_projection_ok": true,
+      "cursor_delta_px": null,
+      "gpu_path_active": null,
+      "authority_drift": false,
+      "pick_tile": null,
+      "ghost_origin": null,
+      "pick_delta_world_max": 1.0,
+      "ghost_screen_delta_px_max": 4.0,
+      "map_pick_closure_math_ok": true
+    }
+  },
+  "validate_report_construction": {
+    "schema_version": 1,
+    "validator": "test",
+    "status": "passed",
+    "compression_level": 3,
+    "summary": "construction: 0 error(s), footprint_ok=True, pick_green=True",
+    "error_count": 0,
+    "warning_count": 0,
+    "errors": [],
+    "known_fixes": [],
+    "raw_log_path": "",
+    "confidence": 0.9
+  },
+  "_agent_meta": {
+    "schema": "mcp_valid_construction_live_v1",
+    "written_at_epoch_secs": 1781481527,
+    "profile": "MCP_VALID_CONSTRUCTION",
+    "source_system": "ops_intelligence",
+    "relative_path": "debug_runs/agent_ops/mcp_valid_construction_live.json"
+  }
+}

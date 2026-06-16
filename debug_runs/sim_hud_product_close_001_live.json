@@ -1,0 +1,75 @@
+{
+  "_agent_meta": {
+    "agent_commands": [
+      "cargo test -p proc_A_dine01 --lib sim_hud"
+    ],
+    "docs": {
+      "design_signoff": "docs/archive/2026-06-src-dev/plans/design_sim_hud_product_signoff_v1.md",
+      "stage5_directive": "prompts/guides/stage5_convergence_directive_v1.md",
+      "hud_orders": "docs/archive/2026-06-src-dev/plans/bevy_hud_lanes_agent_orders_v1.md"
+    },
+    "logging_env": {
+      "ORCHESTRATOR_EXPORT_HEALTH": false,
+      "PERF": false,
+      "RUST_LOG": null,
+      "SIM_VIEW_SYNC_DEBUG": false,
+      "STAGE5_READINESS_VERBOSE": false,
+      "STAGE5_VERBOSE": false,
+      "VIEWPORT_AUTHORITY_DEBUG": false
+    },
+    "orchestrator": {
+      "build_report": "tools/orchestrator/reports/build_report.md",
+      "ci_entry": "tools/orchestrator/ci/run.ps1",
+      "continuation_queue": "tools/orchestrator/queues/continuation_queue.json",
+      "ops_report_latest": "debug_runs/agent_ops/ops_report_latest.json",
+      "ops_scan": "tools/orchestrator/scripts/ops_intelligence_scan.ps1",
+      "unified_witness_index": "debug_runs/unified_witness_index.json",
+      "warning_registry": "tools/orchestrator/reports/warning_registry.md"
+    },
+    "profile": "SIM_HUD_PRODUCT_CLOSE_001",
+    "related_proofs": [
+      "debug_runs/sim_hud_play01_live.json",
+      "debug_runs/sim_hud_slice_dock_live.json",
+      "debug_runs/sim_hud_slice_ops_live.json",
+      "debug_runs/sim_hud_slice_minimap_live.json",
+      "debug_runs/sim_hud_slice_build_live.json",
+      "debug_runs/ui_shell_migration_live.json",
+      "debug_runs/aps_bevy_qc_hud_001_v2_live.json"
+    ],
+    "relative_path": "debug_runs/sim_hud_product_close_001_live.json",
+    "schema": "debug_run_envelope_v1",
+    "source_system": "designer_sim_hud_product_close_001_rollup",
+    "written_at_epoch_secs": 1780773503
+  },
+  "gate": "SIM-HUD-PRODUCT-CLOSE-001",
+  "program_id": "SIM-HUD-PRODUCT-001",
+  "green": true,
+  "slices_green_count": 5,
+  "play01_green": true,
+  "dock_green": true,
+  "ops_green": true,
+  "minimap_green": true,
+  "build_green": true,
+  "lane4_egui_qc_separate": true,
+  "designer_signoff_full_pass": true,
+  "design_signoff_doc": "docs/archive/2026-06-src-dev/plans/design_sim_hud_product_signoff_v1.md",
+  "slice_witnesses": {
+    "play01": "debug_runs/sim_hud_play01_live.json",
+    "dock": "debug_runs/sim_hud_slice_dock_live.json",
+    "ops": "debug_runs/sim_hud_slice_ops_live.json",
+    "minimap": "debug_runs/sim_hud_slice_minimap_live.json",
+    "build": "debug_runs/sim_hud_slice_build_live.json"
+  },
+  "sim_hud_product_close_001": {
+    "gate": "SIM-HUD-PRODUCT-CLOSE-001",
+    "green": true,
+    "slices_green_count": 5,
+    "play01_green": true,
+    "dock_green": true,
+    "ops_green": true,
+    "minimap_green": true,
+    "build_green": true,
+    "lane4_egui_qc_separate": true,
+    "designer_signoff_full_pass": true
+  }
+}

@@ -10,6 +10,9 @@ use std::path::{Path, PathBuf};
 use bevy::prelude::Resource;
 use serde::Deserialize;
 
+use super::arch_build_grammar_v0::{
+    floors_from_beta_vert, reweight_massing_strategies, ArchDnaConsumerFields,
+};
 use super::footprint_grid::FootprintGrid;
 use super::types::{ProceduralBuildingRequest, StylePackId};
 
@@ -161,6 +164,8 @@ pub struct GrammarGenerateResult {
     pub material_profiles: HashMap<String, String>,
     /// Weathering band derived from age rule (APS / worker apply).
     pub weathering: String,
+    /// BUILD-READ-CONSUMER-MCP-001 — ARCH-DNA preset when snapshot consumer wired.
+    pub arch_dna_preset_id: Option<String>,
 }
 
 #[derive(Resource, Debug, Default)]
@@ -248,21 +253,51 @@ impl BuildingGrammar {
 
     /// Evaluate full grammar chain for one archetype + district + seed.
     pub fn generate(&self, district_style: &str, seed: u64) -> Result<GrammarGenerateResult, String> {
+        self.generate_with_arch_dna(district_style, seed, None)
+    }
+
+    /// BUILD-READ-CONSUMER-MCP-001 — β re-rank massing when ARCH-DNA consumer present.
+    pub fn generate_with_arch_dna(
+        &self,
+        district_style: &str,
+        seed: u64,
+        arch_dna: Option<&ArchDnaConsumerFields>,
+    ) -> Result<GrammarGenerateResult, String> {
         let district = self
             .district_binding(district_style)
             .ok_or_else(|| format!("unknown district_style: {district_style}"))?;
 
-        let massing_weights: Vec<(u32, usize)> = self
-            .massing
-            .strategies
-            .iter()
-            .enumerate()
-            .map(|(i, s)| (s.weight, i))
-            .collect();
+        let massing_weights: Vec<(u32, usize)> = if let Some(c) = arch_dna {
+            reweight_massing_strategies(&self.massing.strategies, &c.pressure_field)
+                .into_iter()
+                .filter_map(|(id, w)| {
+                    self.massing
+                        .strategies
+                        .iter()
+                        .position(|s| s.id == id)
+                        .map(|i| (w, i))
+                })
+                .collect()
+        } else {
+            self.massing
+                .strategies
+                .iter()
+                .enumerate()
+                .map(|(i, s)| (s.weight, i))
+                .collect()
+        };
         let mi = pick_weighted_index(&massing_weights, mix_seed(seed, "massing"));
         let strategy = &self.massing.strategies[mi];
 
-        let (width, depth, floors) = self.resolve_footprint(strategy, seed);
+        let (width, depth, mut floors) = self.resolve_footprint(strategy, seed);
+        if let Some(c) = arch_dna {
+            let bounds = &self.archetype.footprint_bounds;
+            floors = floors_from_beta_vert(
+                c.pressure_field.beta_vert,
+                bounds.min_floors,
+                bounds.max_floors,
+            );
+        }
 
         let age_weights: Vec<(u32, usize)> = self
             .age
@@ -364,6 +399,7 @@ impl BuildingGrammar {
             rule_chain,
             material_profiles,
             weathering,
+            arch_dna_preset_id: arch_dna.map(|c| c.preset_id.clone()),
         })
     }
 }
@@ -420,6 +456,7 @@ impl GrammarGenerateResult {
             floors: self.floors,
             style: StylePackId(self.style_pack_id.clone()),
             seed: self.seed,
+            arch_dna_preset_id: self.arch_dna_preset_id.clone(),
         }
     }
 
@@ -483,12 +520,24 @@ pub fn load_building_grammar_registry() -> BuildingGrammarRegistry {
     load_building_grammar_registry_from_dir(&repo_asset_path(GRAMMARS_DIR))
 }
 
-/// Resolve grammar by archetype id (e.g. `IndustrialWarehouse`) and evaluate.
+/// Resolve grammar by archetype id and evaluate; optional ARCH-DNA preset re-ranks β massing.
 pub fn generate(
     archetype_id: &str,
     district_style: &str,
     seed: u64,
 ) -> Result<GrammarGenerateResult, String> {
+    generate_with_arch_dna_preset(archetype_id, district_style, seed, None)
+}
+
+/// BUILD-READ-CONSUMER-MCP-001 — preset id loads DNA+β consumer on commit / snapshot path.
+pub fn generate_with_arch_dna_preset(
+    archetype_id: &str,
+    district_style: &str,
+    seed: u64,
+    arch_dna_preset_id: Option<&str>,
+) -> Result<GrammarGenerateResult, String> {
+    let consumer = arch_dna_preset_id
+        .and_then(|id| super::arch_build_grammar_v0::arch_dna_consumer_from_preset_id(id).ok());
     let registry = load_building_grammar_registry();
     if !registry.load_errors.is_empty() {
         return Err(registry.load_errors.join("; "));
@@ -497,7 +546,7 @@ pub fn generate(
         .grammars
         .get(archetype_id)
         .ok_or_else(|| format!("no grammar for archetype: {archetype_id}"))?;
-    grammar.generate(district_style, seed)
+    grammar.generate_with_arch_dna(district_style, seed, consumer.as_ref())
 }
 
 /// Reference tags for assembly snapshot (parity with MCP `grammar_reference_tags`).
@@ -570,7 +619,7 @@ pub fn pg_quality_001_witness_green() -> bool {
     pg_quality_001_collect_metrics("IndustrialWarehouse", "industrial_west", PG_QUALITY_001_SEED_SWEEP)
         .ok()
         .is_some_and(|m| {
-            m.massing_strategy_count >= 2
+            m.massing_strategy_count >= 3
                 && m.roof_slot_count >= 2
                 && m.footprint_silhouette_count >= 2
         })
@@ -586,7 +635,7 @@ pub fn build_pg_quality_001_witness_body() -> serde_json::Value {
     let green = metrics
         .as_ref()
         .ok()
-        .is_some_and(|m| m.massing_strategy_count >= 2 && m.roof_slot_count >= 2 && m.footprint_silhouette_count >= 2);
+        .is_some_and(|m| m.massing_strategy_count >= 3 && m.roof_slot_count >= 2 && m.footprint_silhouette_count >= 2);
     let (metrics_ok, metrics_err) = match metrics {
         Ok(m) => (Some(m), None),
         Err(e) => (None, Some(e)),
@@ -599,7 +648,7 @@ pub fn build_pg_quality_001_witness_body() -> serde_json::Value {
         "district_style": "industrial_west",
         "seed_sweep": PG_QUALITY_001_SEED_SWEEP,
         "thresholds": {
-            "massing_strategy_count_min": 2,
+            "massing_strategy_count_min": 3,
             "roof_slot_count_min": 2,
             "footprint_silhouette_count_min": 2,
         },

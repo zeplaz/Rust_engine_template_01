@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+from copy import deepcopy
 from pathlib import Path
 from typing import Any
 
@@ -497,6 +498,112 @@ def remap_assembly_snapshot_to_production(
     out["module_placements"] = placements
     validate_assembly_snapshot(out)
     return out
+
+
+def _placement_for_cell(
+    cell: dict[str, Any],
+    *,
+    pack: dict[str, Any],
+    index: list[dict[str, Any]],
+    slot_overrides: dict[str, str],
+    grammar: dict[str, Any] | None,
+    source_tier: str,
+    default_placement_tags: list[str],
+    default_variant_tags: list[str],
+) -> dict[str, Any] | None:
+    from . import building_grammar
+
+    token = str(cell["token"])
+    if token == "Y":
+        return None
+    slot_key = SLOT_FOR_TOKEN.get(token)
+    if not slot_key:
+        return None
+    slot_key = slot_overrides.get(slot_key, slot_key)
+    module_id = pack["slots"].get(slot_key)
+    if not module_id:
+        return None
+    row = _resolve_module_row(
+        module_id,
+        index,
+        style_pack_id=str(pack["style_pack_id"]),
+        source_tier=source_tier,
+    )
+    if not row:
+        return None
+    glb = _module_glb_path(row)
+    if not glb.is_file():
+        return None
+    gx, gy, gf = int(cell["x"]), int(cell["y"]), int(cell["floor"])
+    base = {
+        "module_id": str(row["module_id"]),
+        "job_id": str(row["job_id"]),
+        "slot_key": slot_key,
+        "token": token,
+        "grid_x": gx,
+        "grid_y": gy,
+        "floor": gf,
+        "glb_path": str(glb.relative_to(repo_root())).replace("\\", "/"),
+        "position": _grid_to_position(gx, gy, gf),
+        "rotation_euler": [0.0, 0.0, 0.0],
+    }
+    if source_tier == "production" and str(row.get("development_tier") or "") != "production":
+        base["mesh_tier_fallback"] = "lod0"
+    enriched = enrich_placement(base, source_tier=source_tier, index_row=row)
+    if grammar is not None:
+        prof = building_grammar.material_profile_for_slot(grammar, slot_key)
+        if prof:
+            enriched["material_profile"] = prof
+        enriched["weathering"] = str(grammar.get("weathering") or "medium")
+    if default_placement_tags and not enriched.get("placement_tags"):
+        enriched["placement_tags"] = list(default_placement_tags)
+    if default_variant_tags:
+        enriched["variant_tags"] = list(default_variant_tags)
+    return enriched
+
+
+def refresh_placements_for_tokens(
+    snapshot: dict[str, Any],
+    grammar: dict[str, Any],
+    tokens: frozenset[str],
+) -> dict[str, Any]:
+    """GRAMMAR-002 — replace placements for footprint tokens only; preserve others."""
+    from . import building_grammar
+
+    out = enrich_snapshot(deepcopy(snapshot))
+    source_tier = str(out.get("source_tier") or "production")
+    style_pack_id = str(out.get("style_pack_id") or grammar.get("style_pack_id") or "")
+    pack = load_style_pack(style_pack_id)
+    index = load_index_json()
+    slot_overrides = dict(grammar.get("slot_overrides") or {})
+    default_placement_tags = list(grammar.get("placement_tags") or [])
+    default_variant_tags = list(grammar.get("variant_tags") or ["clean"])
+    cells = building_grammar.footprint_grid_from_grammar(grammar)
+
+    def key(p: dict[str, Any]) -> tuple[int, int, int]:
+        return (int(p.get("floor") or 0), int(p.get("grid_x") or 0), int(p.get("grid_y") or 0))
+
+    existing = {key(p): dict(p) for p in out.get("module_placements") or []}
+    for cell in cells:
+        token = str(cell.get("token") or "")
+        if token not in tokens:
+            continue
+        placement = _placement_for_cell(
+            cell,
+            pack=pack,
+            index=index,
+            slot_overrides=slot_overrides,
+            grammar=grammar,
+            source_tier=source_tier,
+            default_placement_tags=default_placement_tags,
+            default_variant_tags=default_variant_tags,
+        )
+        if placement:
+            existing[key(placement)] = placement
+
+    out["module_placements"] = list(existing.values())
+    out["grammar_rule_chain"] = building_grammar.grammar_rule_chain_snapshot(grammar)
+    return enrich_snapshot(out)
 
 
 def generate_assembly_snapshot(

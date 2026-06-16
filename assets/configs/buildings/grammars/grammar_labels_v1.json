@@ -1,0 +1,82 @@
+{
+  "schema": "grammar_labels_v1",
+  "version": "1.1.0",
+  "reviewed_by": "designer",
+  "reviewed_date": "2026-06-03",
+  "archetypes": {
+    "IndustrialWarehouse": {
+      "label": "Industrial Warehouse",
+      "usage": "warehouse"
+    }
+  },
+  "massing": {
+    "long_hall": "Long Hall",
+    "double_hall": "Double Hall",
+    "l_shape": "L-Shape Yard",
+    "yard_complex": "Yard Complex"
+  },
+  "footprint_mode": {
+    "rect": "Rectangle",
+    "l_shape": "L-Shape Fill",
+    "yard_interior": "Interior Yard"
+  },
+  "roof": {
+    "roof_default": "Default Roof",
+    "roof_industrial": "Industrial Roof",
+    "roof_flat": "Flat Roof"
+  },
+  "facade": {
+    "facade_v1": "Industrial Facade Pack",
+    "wall_1u": "Standard Wall Module",
+    "door_wide": "Wide Industrial Door",
+    "window_industrial": "Industrial Window"
+  },
+  "detail": {
+    "prop_clutter": "Roof & Yard Clutter"
+  },
+  "age": {
+    "new": "New",
+    "weathered": "Weathered",
+    "abandoned": "Abandoned"
+  },
+  "district_styles": {
+    "industrial_west": "Industrial West"
+  },
+  "iteration_modes": {
+    "massing": "Massing & footprint",
+    "roof": "Roof only",
+    "facade": "Facade ring",
+    "detail": "Props & detail",
+    "age": "Age & weathering",
+    "material_strategy": "Materials only",
+    "placement": "Single placement",
+    "full": "Full regenerate"
+  },
+  "ui": {
+    "panel_title": "Iterate grammar",
+    "apply_iteration": "Apply iteration",
+    "preview_assembly": "Preview assembly",
+    "save_branch": "Save branch…",
+    "revert_parent": "Revert to parent",
+    "auto_preview": "Auto-preview on iterate",
+    "pin_district_style": "Pin district style",
+    "pin_age_band": "Pin age band",
+    "pin_roof_slot": "Pin roof slot",
+    "pin_massing_footprint": "Pin massing footprint",
+    "footprint_mode_readonly": "Footprint mode (read-only)",
+    "last_change_template": "+{added} added · −{removed} removed · ~{changed} changed",
+    "layers_prefix": "layers",
+    "lineage_template": "parent {parent_id} · iter #{seq} · {mode}",
+    "status_ready": "Ready",
+    "status_no_parent": "No parent lineage — Save branch after first Apply",
+    "phase2_disabled": "Partial regen ships in Phase 2 — use Generate for a new snapshot today.",
+    "generate_vs_iterate_hint": "Generate starts fresh. Iterate keeps parent lineage and changes one layer.",
+    "open_materials_tab": "Open Materials tab",
+    "placement_defer_hint": "Edit the selected cell in the slot editor below — then Save snapshot.",
+    "cell_added": "Added",
+    "cell_removed": "Removed",
+    "cell_changed": "Changed",
+    "cell_unchanged": "Unchanged",
+    "inspector_pin_badge": "PIN"
+  }
+}

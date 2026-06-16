@@ -1,0 +1,35 @@
+{
+  "gate_id": "APS-UX-NONBLOCK-001",
+  "ok": true,
+  "green": true,
+  "messagebox_total": 3,
+  "messagebox_allowlisted": 3,
+  "messagebox_routine_remaining": 0,
+  "messagebox_per_file": {
+    "assembly_panel.py": 1,
+    "atlas_panel.py": 0,
+    "variants_panel.py": 1,
+    "catalog.py": 0,
+    "material_library_widget.py": 1,
+    "grammar_iterate_panel.py": 0,
+    "assembly_preview_panel.py": 0,
+    "app.py": 0
+  },
+  "messagebox_calls": [
+    "assembly_panel.py: messagebox.askyesno",
+    "variants_panel.py: messagebox.askyesno",
+    "material_library_widget.py: messagebox.showerror"
+  ],
+  "scroll_catalog_wheel": true,
+  "async_prerequisite_green": true,
+  "panels_migrated": [
+    "assembly_panel.py",
+    "atlas_panel.py",
+    "variants_panel.py",
+    "catalog.py",
+    "material_library_widget.py",
+    "grammar_iterate_panel.py",
+    "assembly_preview_panel.py",
+    "app.py"
+  ]
+}

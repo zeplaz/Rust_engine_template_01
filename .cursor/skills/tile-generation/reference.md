@@ -1,6 +1,6 @@
 # Tile Generation — Reference
 
-Merged from [`prompts/MCP/mcp_drafts.md`](../../prompts/MCP/mcp_drafts.md) §2.2–2.5, §7–8.
+Merged from [`docs/archive/2026-06-fleet-drain/prompts_drafts/mcp_drafts.md`](../../docs/archive/2026-06-fleet-drain/prompts_drafts/mcp_drafts.md) §2.2–2.5, §7–8.
 
 ## Core insight
 

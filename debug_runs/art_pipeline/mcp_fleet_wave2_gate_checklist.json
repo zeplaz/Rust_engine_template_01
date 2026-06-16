@@ -4,7 +4,7 @@
   "scope": "coder-mcp + designer-mcp lanes — ART 003-010, DATA style packs, TILE schema stub, batch runner",
   "green": false,
   "wave3_active": true,
-  "wave3_doc": "src/dev/mcp_fleet_wave3_engine_orders_v1.md",
+  "wave3_doc": "docs/archive/2026-06-src-dev/plans/mcp_fleet_wave3_engine_orders_v1.md",
   "snap": "tools/orchestrator/queues/mcp_orchestrator_snap_CURRENT.md",
   "overall_note": "Wave 2 ART+DATA+TILE schema CLOSED. Wave 3 ENGINE+UX active. Planner/designer-mcp/coder-mcp DRAINED.",
   "coverage": {
@@ -121,9 +121,9 @@
     "lod0_live_witnesses": "debug_runs/art_pipeline/kit_lod0_001_live.json … kit_lod0_010_live.json",
     "style_packs_manifest": "debug_runs/art_pipeline/style_packs_manifest_live.json",
     "module_index": "assets/configs/buildings/_module_index.ron",
-    "plan_style_pack_ron_v1": "src/dev/plan_style_pack_ron_v1.md",
-    "plan_procedural_build_exec": "src/dev/plan_procedural_build_gen_exec_001_v1.md",
-    "plan_tile_batch": "src/dev/plan_tile_batch_v1_planner_mcp_v1.md"
+    "plan_style_pack_ron_v1": "docs/archive/2026-06-src-dev/plans/plan_style_pack_ron_v1.md",
+    "plan_procedural_build_exec": "docs/archive/2026-06-src-dev/plans/plan_procedural_build_gen_exec_001_v1.md",
+    "plan_tile_batch": "docs/archive/2026-06-src-dev/plans/plan_tile_batch_v1_planner_mcp_v1.md"
   },
   "dispatch_complete": [
     "@designer-mcp MCP-D0-003 … D0-010 G0-G1",

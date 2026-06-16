@@ -1,0 +1,9 @@
+{
+  "gate_id": "APS-MAT-008",
+  "ok": true,
+  "status": "passed",
+  "snapshot": "C:\\dev\\github\\Rust_engine_template_01\\tools\\mcp\\schemas\\examples\\assembly_snapshot_warehouse_industrial_west_production_v1.json",
+  "summary": "material_profiles: 40 placements, 4 unique profiles, 0 issue(s)",
+  "error_count": 0,
+  "errors": []
+}

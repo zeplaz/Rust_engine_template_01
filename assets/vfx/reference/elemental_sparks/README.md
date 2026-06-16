@@ -9,7 +9,7 @@
 | [`legacy_compute_still_01.png`](legacy_compute_still_01.png) | Attractor advection mood from `compute_expanse_BASE_A.glsl` |
 | [`engine_blob_before.png`](engine_blob_before.png) | Current engine billboard blob — replace |
 
-**Authority:** [`src/dev/fire_particle_spark_design_plan_v1.md`](../../../../src/dev/fire_particle_spark_design_plan_v1.md)  
+**Authority:** [`docs/archive/2026-06-src-dev/plans/fire_particle_spark_design_plan_v1.md`](../../../../docs/archive/2026-06-src-dev/plans/fire_particle_spark_design_plan_v1.md)  
 **Worksheet:** [`prompts/guides/ui/fire_particle_spark_decision_worksheet_v1.md`](../../../../prompts/guides/ui/fire_particle_spark_decision_worksheet_v1.md)
 
 **Legacy GLSL:** `C:\dev\razerz-master\shaderzglsl\elemental\compute_partical\`

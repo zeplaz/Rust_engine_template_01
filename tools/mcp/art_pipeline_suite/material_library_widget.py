@@ -2,11 +2,15 @@
 
 from __future__ import annotations
 
+import threading
 import tkinter as tk
 from tkinter import messagebox, simpledialog, ttk
+from typing import Callable
 
 from PIL import Image, ImageTk
 
+from rust_engine_mcp.material_thumb_cache import LIST_THUMB, get_cached_thumb, warm_thumbnail_cache
+from rust_engine_mcp.material_category_tree import category_label, tree_roots
 from rust_engine_mcp.material_profiles import (
     CATEGORY_ORDER,
     MaterialProfileEntry,
@@ -20,6 +24,13 @@ from rust_engine_mcp.material_profiles import (
     register_material_profile,
 )
 from rust_engine_mcp.material_textures import PILOT_PROFILES, generate_profile
+
+from .aps_paned import add_pane, horizontal_paned
+from .aps_scroll import attach_wheel_area, bind_debounced_scrollregion, canvas_yscroll
+from .aps_tooltips import bind_aps_tooltip, bind_many
+from .job_controller import JobRecord, JobResult, JobState
+
+StartJobFn = Callable[..., str | None]
 
 
 class MaterialLibraryWidget(ttk.Frame):
@@ -37,47 +48,66 @@ class MaterialLibraryWidget(ttk.Frame):
         on_log=None,
         layout: str = "vertical",
         on_open_in_assembly=None,
+        on_profile_selected=None,
+        start_job: StartJobFn | None = None,
     ) -> None:
         super().__init__(master, padding=4)
         self._mode = mode
         self._on_apply = on_apply_material or (lambda _pid: None)
         self._on_log = on_log or (lambda _line: None)
         self._on_open_in_assembly = on_open_in_assembly
-        self._layout = layout if layout in ("vertical", "horizontal") else "vertical"
+        self._on_profile_selected = on_profile_selected
+        self._start_job = start_job
+        self._layout = layout if layout in ("vertical", "horizontal", "studio_tree") else "vertical"
+        self._tree_category: str | None = None
         self._entries: list[MaterialProfileEntry] = []
         self._filtered: list[MaterialProfileEntry] = []
         self._selected_id: str | None = None
         self._thumb_photos: dict[str, ImageTk.PhotoImage] = {}
+        self._row_photos: dict[str, ImageTk.PhotoImage] = {}
         self._preview_photo: ImageTk.PhotoImage | None = None
+        self._apply_btn = None
+        self._gen_selected_btn = None
+        self._search_entry = None
         self._build()
 
     def _build(self) -> None:
         toolbar = ttk.Frame(self)
         toolbar.pack(fill=tk.X, pady=(0, 4))
-        ttk.Button(toolbar, text="Add profile…", command=self._add_profile_dialog).pack(side=tk.LEFT, padx=2)
-        ttk.Button(toolbar, text="Generate selected", command=self._generate_selected).pack(side=tk.LEFT, padx=2)
-        ttk.Button(toolbar, text="Generate all missing", command=self._generate_all_missing).pack(side=tk.LEFT, padx=2)
-        ttk.Button(toolbar, text="Open texture folder", command=self._open_folder).pack(side=tk.LEFT, padx=2)
-        ttk.Button(toolbar, text="Open registry JSON", command=self._open_registry).pack(side=tk.LEFT, padx=2)
+        left_tools = ttk.Frame(toolbar)
+        left_tools.pack(side=tk.LEFT, fill=tk.X, expand=True)
+        self._add_btn = ttk.Button(left_tools, text="Add profile…", command=self._add_profile_dialog)
+        self._add_btn.pack(side=tk.LEFT, padx=2)
+        self._gen_selected_btn = ttk.Button(left_tools, text="Generate selected", command=self._generate_selected)
+        self._gen_selected_btn.pack(side=tk.LEFT, padx=2)
+        self._gen_all_btn = ttk.Button(left_tools, text="Generate all missing", command=self._generate_all_missing)
+        self._gen_all_btn.pack(side=tk.LEFT, padx=2)
+        self._open_folder_btn = ttk.Button(left_tools, text="Open texture folder", command=self._open_folder)
+        self._open_folder_btn.pack(side=tk.LEFT, padx=2)
+        self._open_registry_btn = ttk.Button(left_tools, text="Open registry JSON", command=self._open_registry)
+        self._open_registry_btn.pack(side=tk.LEFT, padx=2)
+        self._use_asm_btn = None
         if self._on_open_in_assembly:
-            ttk.Button(toolbar, text="Use in Assembly", command=self._open_in_assembly).pack(side=tk.LEFT, padx=6)
+            self._use_asm_btn = ttk.Button(toolbar, text="Use in Assembly", command=self._open_in_assembly)
+            self._use_asm_btn.pack(side=tk.RIGHT, padx=6)
 
         filter_row = ttk.Frame(self)
         filter_row.pack(fill=tk.X, pady=2)
         ttk.Label(filter_row, text="Search").pack(side=tk.LEFT)
         self._search_var = tk.StringVar(value="")
-        search = ttk.Entry(filter_row, textvariable=self._search_var, width=18)
-        search.pack(side=tk.LEFT, padx=4)
+        self._search_entry = ttk.Entry(filter_row, textvariable=self._search_var, width=18)
+        self._search_entry.pack(side=tk.LEFT, padx=4)
         self._search_var.trace_add("write", lambda *_: self._apply_filters())
         ttk.Label(filter_row, text="Category").pack(side=tk.LEFT, padx=(8, 0))
         self._category_var = tk.StringVar(value="all")
-        ttk.Combobox(
+        self._category_combo = ttk.Combobox(
             filter_row,
             textvariable=self._category_var,
             values=list(CATEGORY_ORDER),
             width=18,
             state="readonly",
-        ).pack(side=tk.LEFT, padx=4)
+        )
+        self._category_combo.pack(side=tk.LEFT, padx=4)
         self._category_var.trace_add("write", lambda *_: self._apply_filters())
 
         hint = (
@@ -90,7 +120,9 @@ class MaterialLibraryWidget(ttk.Frame):
             anchor=tk.W, pady=(0, 4)
         )
 
-        if self._layout == "horizontal":
+        if self._layout == "studio_tree":
+            self._build_studio_tree()
+        elif self._layout == "horizontal":
             self._build_horizontal()
         else:
             self._build_vertical()
@@ -100,6 +132,23 @@ class MaterialLibraryWidget(ttk.Frame):
             anchor=tk.W, pady=2
         )
         self.reload_catalog()
+
+    def bind_tooltips(self) -> None:
+        bind_many(
+            [
+                (self._add_btn, "mat_add_profile"),
+                (self._gen_selected_btn, "mat_generate"),
+                (self._gen_all_btn, "mat_generate_all"),
+                (self._open_folder_btn, "mat_open_folder"),
+                (self._open_registry_btn, "mat_open_registry"),
+                (self._use_asm_btn, "mat_use_in_assembly"),
+                (self._search_entry, "mat_search"),
+                (self._category_combo, "mat_category"),
+                (getattr(self, "_category_tree", None), "mat_category_tree"),
+                (self._apply_btn, "mat_apply"),
+                (getattr(self, "_reload_btn", None), "mat_reload_preview"),
+            ]
+        )
 
     def _build_preview_strip(self, parent: tk.Misc) -> None:
         preview = ttk.LabelFrame(parent, text="Preview & maps", padding=6)
@@ -121,15 +170,17 @@ class MaterialLibraryWidget(ttk.Frame):
         self._preview_meta = tk.StringVar(value="")
         ttk.Label(meta_col, textvariable=self._preview_meta, wraplength=240, justify=tk.LEFT).pack(anchor=tk.W)
         self._maps_var = tk.StringVar(value="")
-        ttk.Label(meta_col, textvariable=self._maps_var, wraplength=240, foreground="#333", font=("Consolas", 8)).pack(
+        ttk.Label(meta_col, textvariable=self._maps_var, wraplength=240, foreground="#333", font=("Consolas", 9)).pack(
             anchor=tk.W, pady=2
         )
 
         btn_row = ttk.Frame(meta_col)
         btn_row.pack(anchor=tk.W, pady=4)
         if self._mode == "assign":
-            ttk.Button(btn_row, text="Apply to selected slot", command=self._apply_selected).pack(side=tk.LEFT, padx=2)
-        ttk.Button(btn_row, text="Reload preview", command=self._reload_selected_preview).pack(side=tk.LEFT, padx=2)
+            self._apply_btn = ttk.Button(btn_row, text="Apply to selected slot", command=self._apply_selected)
+            self._apply_btn.pack(side=tk.LEFT, padx=2)
+        self._reload_btn = ttk.Button(btn_row, text="Reload preview", command=self._reload_selected_preview)
+        self._reload_btn.pack(side=tk.LEFT, padx=2)
         ttk.Button(btn_row, text="Regenerate all pilots", command=self._refresh_pilot_textures).pack(side=tk.LEFT, padx=2)
 
     def _build_grid(self, parent: tk.Misc) -> tk.Canvas:
@@ -140,17 +191,20 @@ class MaterialLibraryWidget(ttk.Frame):
         self._grid_inner = ttk.Frame(canvas)
         self._grid_win = canvas.create_window((0, 0), window=self._grid_inner, anchor=tk.NW)
 
-        def _on_inner_configure(_e=None) -> None:
-            canvas.configure(scrollregion=canvas.bbox("all"))
-
         def _on_canvas_configure(event) -> None:
             canvas.itemconfigure(self._grid_win, width=max(event.width, 140))
 
-        self._grid_inner.bind("<Configure>", _on_inner_configure)
         canvas.bind("<Configure>", _on_canvas_configure)
         canvas.configure(yscrollcommand=scroll_y.set)
         canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         scroll_y.pack(side=tk.RIGHT, fill=tk.Y)
+        bind_debounced_scrollregion(canvas, self._grid_inner)
+        attach_wheel_area(
+            canvas,
+            self._grid_inner,
+            on_scroll_y=canvas_yscroll(canvas),
+            area_id=f"aps-mat-grid-{id(self)}",
+        )
         return canvas
 
     def _build_vertical(self) -> None:
@@ -158,14 +212,188 @@ class MaterialLibraryWidget(ttk.Frame):
         self._build_grid(self)
 
     def _build_horizontal(self) -> None:
-        body = ttk.Panedwindow(self, orient=tk.HORIZONTAL)
+        body = horizontal_paned(self)
         body.pack(fill=tk.BOTH, expand=True)
         grid_wrap = ttk.Frame(body, padding=2)
-        body.add(grid_wrap, weight=3)
+        add_pane(body, grid_wrap, weight=3, minsize=280)
         self._build_grid(grid_wrap)
         preview_wrap = ttk.Frame(body, padding=2)
-        body.add(preview_wrap, weight=1)
+        add_pane(body, preview_wrap, weight=1, minsize=180)
         self._build_preview_strip(preview_wrap)
+
+    def _build_studio_tree(self) -> None:
+        """APS-MAT-002 at scale — category tree + profile list (not card grid)."""
+        body = horizontal_paned(self)
+        body.pack(fill=tk.BOTH, expand=True)
+        nav = ttk.Frame(body, padding=2)
+        add_pane(body, nav, weight=1, minsize=240)
+        preview_wrap = ttk.Frame(body, padding=2)
+        add_pane(body, preview_wrap, weight=2, minsize=320)
+        self._build_preview_strip(preview_wrap)
+
+        nav_row = horizontal_paned(nav)
+        nav_row.pack(fill=tk.BOTH, expand=True)
+        tree_wrap = ttk.LabelFrame(nav_row, text="Categories", padding=4)
+        add_pane(nav_row, tree_wrap, weight=1, minsize=140)
+        list_wrap = ttk.LabelFrame(nav_row, text="Profiles", padding=4)
+        add_pane(nav_row, list_wrap, weight=2, minsize=180)
+
+        self._category_tree = ttk.Treeview(tree_wrap, show="tree", height=14)
+        tree_scroll = ttk.Scrollbar(tree_wrap, orient=tk.VERTICAL, command=self._category_tree.yview)
+        self._category_tree.configure(yscrollcommand=tree_scroll.set)
+        self._category_tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        tree_scroll.pack(side=tk.RIGHT, fill=tk.Y)
+        self._category_tree.bind("<<TreeviewSelect>>", self._on_tree_category_select)
+        attach_wheel_area(
+            self._category_tree,
+            on_scroll_y=lambda delta: self._category_tree.yview_scroll(int(-delta * 3), "units"),
+            area_id=f"aps-mat-tree-{id(self)}",
+        )
+
+        list_scroll = ttk.Scrollbar(list_wrap, orient=tk.VERTICAL)
+        list_scroll.pack(side=tk.RIGHT, fill=tk.Y)
+        self._profile_canvas = tk.Canvas(
+            list_wrap,
+            highlightthickness=0,
+            yscrollcommand=list_scroll.set,
+            height=280,
+        )
+        self._profile_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        list_scroll.configure(command=self._profile_canvas.yview)
+        self._profile_rows_inner = ttk.Frame(self._profile_canvas)
+        self._profile_rows_win = self._profile_canvas.create_window(
+            (0, 0), window=self._profile_rows_inner, anchor=tk.NW
+        )
+
+        def _on_canvas_configure(event) -> None:
+            self._profile_canvas.itemconfigure(self._profile_rows_win, width=event.width)
+
+        self._profile_canvas.bind("<Configure>", _on_canvas_configure)
+        bind_debounced_scrollregion(self._profile_canvas, self._profile_rows_inner)
+        attach_wheel_area(
+            self._profile_canvas,
+            self._profile_rows_inner,
+            on_scroll_y=canvas_yscroll(self._profile_canvas),
+            area_id=f"aps-mat-profiles-{id(self)}",
+        )
+
+    def _on_tree_category_select(self, _event=None) -> None:
+        sel = self._category_tree.selection()
+        if not sel:
+            return
+        iid = sel[0]
+        if iid == "all":
+            self._tree_category = None
+            self._category_var.set("all")
+        else:
+            self._tree_category = iid.replace("cat_", "")
+            self._category_var.set(self._tree_category)
+        self._apply_filters()
+
+    def _category_matches_filter(self, entry_category: str) -> bool:
+        if self._layout == "studio_tree" and self._tree_category:
+            tc = self._tree_category
+            ec = entry_category.lower()
+            tc_l = tc.lower()
+            if ec == tc_l:
+                return True
+            if ec.startswith(tc_l + "/"):
+                return True
+            # parent-only selection (e.g. industrial)
+            if "/" not in tc_l and ec.split("/")[0].lower() == tc_l:
+                return True
+            return False
+        cat = self._category_var.get().strip().lower()
+        if cat == "all":
+            return True
+        return entry.category.lower() == cat
+
+    def _on_list_profile_select(self, profile_id: str) -> None:
+        self._select_profile(profile_id, apply=False)
+
+    def _render_tree_and_list(self) -> None:
+        if self._layout != "studio_tree":
+            return
+        for item in self._category_tree.get_children():
+            self._category_tree.delete(item)
+        self._category_tree.insert("", tk.END, iid="all", text=f"All ({len(self._entries)})", open=True)
+        by_path: dict[str, list[MaterialProfileEntry]] = {}
+        for entry in self._entries:
+            path = entry.category or infer_category(entry.profile_id)
+            by_path.setdefault(path, []).append(entry)
+        # APS-MAT-003 — tree from material_category_tree_v1.json
+        for root in tree_roots():
+            root_id = str(root.get("id") or "")
+            root_label = str(root.get("label") or root_id.replace("_", " ").title())
+            children = list(root.get("children") or [])
+            root_paths: list[str] = []
+            if children:
+                for child in sorted(children, key=lambda c: int(c.get("sort_order") or 0)):
+                    leaf_id = str(child.get("id") or "")
+                    root_paths.append(f"{root_id}/{leaf_id}")
+            else:
+                root_paths.append(root_id)
+            parent_count = sum(len(by_path.get(p, [])) for p in root_paths)
+            if parent_count == 0 and not children:
+                continue
+            parent_iid = f"cat_{root_id}"
+            self._category_tree.insert(
+                "",
+                tk.END,
+                iid=parent_iid,
+                text=f"{root_label} ({parent_count})",
+                open=True,
+            )
+            for path in root_paths:
+                count = len(by_path.get(path, []))
+                if count == 0 and "/" in path:
+                    continue
+                leaf_label = category_label(path)
+                if path == root_id:
+                    continue
+                self._category_tree.insert(
+                    parent_iid,
+                    tk.END,
+                    iid=f"cat_{path}",
+                    text=f"{leaf_label} ({count})",
+                )
+
+        for w in self._profile_rows_inner.winfo_children():
+            w.destroy()
+        self._row_photos.clear()
+        warm_thumbnail_cache(self._filtered, size=LIST_THUMB, limit=120)
+        for entry in self._filtered:
+            row = ttk.Frame(self._profile_rows_inner, padding=2)
+            row.pack(fill=tk.X, anchor=tk.W)
+            thumb_img = get_cached_thumb(entry, size=LIST_THUMB)
+            if thumb_img is not None:
+                thumb_img = thumb_img.copy()
+                thumb_img.thumbnail((LIST_THUMB, LIST_THUMB), Image.Resampling.LANCZOS)
+                photo = ImageTk.PhotoImage(thumb_img)
+                self._row_photos[entry.profile_id] = photo
+                lbl_img = tk.Label(row, image=photo, bg="#f0f0f0", cursor="hand2")
+                lbl_img.image = photo
+                lbl_img.pack(side=tk.LEFT, padx=(0, 6))
+                lbl_img.bind(
+                    "<Button-1>",
+                    lambda _e, pid=entry.profile_id: self._on_list_profile_select(pid),
+                )
+                lbl_img.bind(
+                    "<Double-Button-1>",
+                    lambda _e, pid=entry.profile_id: self._open_folder(pid),
+                )
+            stxt = self._status_text(entry.texture_status())
+            text = ttk.Label(
+                row,
+                text=f"{self._status_label(entry.texture_status(), entry.profile_id)}\n{entry.category}",
+                font=("Segoe UI", 9),
+                cursor="hand2",
+            )
+            text.pack(side=tk.LEFT, fill=tk.X, expand=True)
+            text.bind("<Button-1>", lambda _e, pid=entry.profile_id: self._on_list_profile_select(pid))
+            text.bind("<Double-Button-1>", lambda _e, pid=entry.profile_id: self._open_folder(pid))
+            if self._selected_id == entry.profile_id:
+                row.configure(relief=tk.RIDGE)
 
     def reload_catalog(self) -> None:
         self._entries = load_material_profile_catalog()
@@ -176,14 +404,17 @@ class MaterialLibraryWidget(ttk.Frame):
         cat = self._category_var.get().strip().lower()
         filtered: list[MaterialProfileEntry] = []
         for entry in self._entries:
-            if cat != "all" and entry.category.lower() != cat:
+            if not self._category_matches_filter(entry):
                 continue
             blob = f"{entry.profile_id} {entry.label} {entry.generator} {entry.category}".lower()
             if q and q not in blob:
                 continue
             filtered.append(entry)
         self._filtered = filtered
-        self._render_grid()
+        if self._layout == "studio_tree":
+            self._render_tree_and_list()
+        else:
+            self._render_grid()
 
     def _render_grid(self) -> None:
         for w in self._grid_inner.winfo_children():
@@ -199,9 +430,23 @@ class MaterialLibraryWidget(ttk.Frame):
             self._select_profile(self._filtered[0].profile_id, apply=False)
         elif self._filtered and not self._selected_id:
             self._select_profile(self._filtered[0].profile_id, apply=False)
+        self._status_var.set(
+            f"{len(self._filtered)} shown · cache {LIST_THUMB}px · {len(self._entries)} total"
+        )
 
     def _status_glyph(self, status: str) -> str:
         return {"ready": "●", "partial": "◐", "missing": "○"}.get(status, "?")
+
+    def _status_text(self, status: str) -> str:
+        return {"ready": "Ready", "partial": "Partial", "missing": "Missing"}.get(status, status.title())
+
+    def _status_label(self, status: str, profile_id: str | None = None) -> str:
+        """APS-UX-POLISH-001 — word-first status (glyph optional suffix)."""
+        word = self._status_text(status)
+        glyph = self._status_glyph(status)
+        if profile_id:
+            return f"{word} · {profile_id} · {glyph}"
+        return f"{word} · {glyph}"
 
     def _load_thumb(self, entry: MaterialProfileEntry, *, force_reload: bool = False) -> ImageTk.PhotoImage:
         if not force_reload and entry.profile_id in self._thumb_photos:
@@ -239,14 +484,17 @@ class MaterialLibraryWidget(ttk.Frame):
     def _make_card(self, entry: MaterialProfileEntry) -> ttk.Frame:
         frame = ttk.Frame(self._grid_inner, relief=tk.RIDGE, borderwidth=1, padding=3)
         status = entry.texture_status()
+        stxt = self._status_text(status)
         top = ttk.Frame(frame)
         top.pack(fill=tk.X)
-        ttk.Label(
+        status_lbl = ttk.Label(
             top,
-            text=f"{self._status_glyph(status)} {status}",
-            font=("Segoe UI", 7),
+            text=self._status_label(status),
+            font=("Segoe UI", 9),
             foreground={"ready": "#0a6b0a", "partial": "#a66b00", "missing": "#888"}.get(status, "#888"),
-        ).pack(side=tk.LEFT)
+        )
+        status_lbl.pack(side=tk.LEFT)
+        bind_aps_tooltip(status_lbl, "mat_status")
         photo = self._load_thumb(entry)
         selected = self._selected_id == entry.profile_id
         btn = tk.Button(
@@ -322,6 +570,8 @@ class MaterialLibraryWidget(ttk.Frame):
         self._maps_var.set(self._maps_line(entry))
         self._status_var.set(f"Selected {profile_id} · {entry.texture_status()}")
         self._refresh_card_highlights()
+        if self._on_profile_selected:
+            self._on_profile_selected(profile_id)
         if apply:
             self._apply_selected()
 
@@ -358,33 +608,89 @@ class MaterialLibraryWidget(ttk.Frame):
 
     def _apply_selected(self) -> None:
         if not self._selected_id:
-            messagebox.showinfo("Material", "Select a material profile first.")
+            self._preview_meta.set("Select a material profile first.")
             return
         self._on_apply(self._selected_id)
 
     def _generate_selected(self) -> None:
         if not self._selected_id:
-            messagebox.showinfo("Material", "Select a profile first.")
+            self._preview_meta.set("Select a profile first.")
             return
-        try:
-            ensure_profile_textures(self._selected_id, size=512, force=True)
-            self._on_log(f"generated textures for {self._selected_id}")
-        except Exception as exc:  # noqa: BLE001
-            messagebox.showerror("Generate", str(exc))
+        pid = self._selected_id
+        if not self._start_job:
+            try:
+                ensure_profile_textures(pid, size=512, force=True)
+            except Exception as exc:  # noqa: BLE001
+                self._preview_meta.set(f"Generate failed: {exc}")
+                return
+            self._on_log(f"generated textures for {pid}")
+            self._thumb_photos.pop(pid, None)
+            self.reload_catalog()
+            self._select_profile(pid, apply=False)
             return
-        self._thumb_photos.pop(self._selected_id, None)
-        self.reload_catalog()
-        self._select_profile(self._selected_id, apply=False)
+
+        def worker(cancel: threading.Event) -> JobResult:
+            if cancel.is_set():
+                return JobResult(False, "Cancelled")
+            try:
+                ensure_profile_textures(pid, size=512, force=True)
+            except Exception as exc:  # noqa: BLE001
+                return JobResult(False, f"Generate failed: {exc}", detail=str(exc))
+            return JobResult(True, f"Generated textures for {pid}")
+
+        def on_done(record: JobRecord) -> None:
+            if record.result and record.result.ok:
+                self._thumb_photos.pop(pid, None)
+                self.reload_catalog()
+                self._select_profile(pid, apply=False)
+            elif record.result:
+                self._preview_meta.set(record.result.summary)
+
+        self._start_job("Generate profile", worker, on_done=on_done)
 
     def _generate_all_missing(self) -> None:
+        if not self._start_job:
+            self._generate_all_sync()
+            return
+
+        def worker(cancel: threading.Event) -> JobResult:
+            if cancel.is_set():
+                return JobResult(False, "Cancelled")
+            try:
+                ids = generate_all_missing(size=512)
+            except Exception as exc:  # noqa: BLE001
+                return JobResult(False, f"Generate failed: {exc}", detail=str(exc))
+            if cancel.is_set():
+                return JobResult(False, "Cancelled")
+            return JobResult(True, f"Generated {len(ids)} profile(s)", data={"ids": ids})
+
+        def on_done(record: JobRecord) -> None:
+            if record.state == JobState.CANCELLED:
+                self._preview_meta.set("Generate cancelled.")
+                return
+            if record.result and record.result.ok:
+                self.reload_catalog()
+                self._preview_meta.set(record.result.summary)
+            elif record.result:
+                self._preview_meta.set(record.result.summary)
+
+        self._start_job(
+            "Generate materials",
+            worker,
+            on_done=on_done,
+            button=self._gen_all_btn,
+            button_label="Generate all missing",
+        )
+
+    def _generate_all_sync(self) -> None:
         try:
             ids = generate_all_missing(size=512)
         except Exception as exc:  # noqa: BLE001
-            messagebox.showerror("Generate", str(exc))
+            self._preview_meta.set(f"Generate failed: {exc}")
             return
         self._on_log(f"generated {len(ids)} profiles")
         self.reload_catalog()
-        messagebox.showinfo("Generate", f"Generated or refreshed {len(ids)} profile(s).")
+        self._preview_meta.set(f"Generated or refreshed {len(ids)} profile(s).")
 
     def _refresh_pilot_textures(self) -> None:
         for pid, defn in PILOT_PROFILES.items():
@@ -399,7 +705,7 @@ class MaterialLibraryWidget(ttk.Frame):
     def _open_folder(self, profile_id: str | None = None) -> None:
         pid = profile_id or self._selected_id
         if not pid:
-            messagebox.showinfo("Folder", "Select a profile first.")
+            self._preview_meta.set("Select a profile first.")
             return
         folder = open_profile_folder(pid)
         self._on_log(f"opened {folder}")
@@ -407,10 +713,7 @@ class MaterialLibraryWidget(ttk.Frame):
     def _open_registry(self) -> None:
         path = open_registry_in_editor()
         self._on_log(f"opened registry {path.name}")
-        messagebox.showinfo(
-            "Registry",
-            f"Opened {path}\n\nAdd profiles manually or use Add profile… in APS.\nReload preview after editing.",
-        )
+        self._preview_meta.set(f"Opened registry — {path.name}")
 
     def _add_profile_dialog(self) -> None:
         pid = simpledialog.askstring("Add material profile", "Profile id (e.g. steel_panel_02):", parent=self)
@@ -457,7 +760,7 @@ class MaterialLibraryWidget(ttk.Frame):
 
     def _open_in_assembly(self) -> None:
         if not self._selected_id:
-            messagebox.showinfo("Assembly", "Select a profile first.")
+            self._preview_meta.set("Select a profile first.")
             return
         if self._on_open_in_assembly:
             self._on_open_in_assembly(self._selected_id)

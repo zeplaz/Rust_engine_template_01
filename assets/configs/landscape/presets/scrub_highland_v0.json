@@ -1,0 +1,34 @@
+{
+  "schema_version": "landscape_grammar_v0",
+  "preset_id": "scrub_highland_v0",
+  "chart_id": "HIGH-SCRUB-D4",
+  "land_dna": { "H": "highland", "S": "rocky", "E": "exposed", "T": "alpine_edge", "D": "dry", "L": "scrub", "A": "old", "M": "natural" },
+  "pressure_field": {
+    "lambda_moisture": 0.41,
+    "lambda_slope": 0.68,
+    "lambda_exposure": 0.77,
+    "lambda_disturbance": 0.19,
+    "lambda_access": 0.22,
+    "lambda_security": 0.04,
+    "lambda_productivity": 0.28,
+    "lambda_legibility": 0.55
+  },
+  "landscape_program": {
+    "class": "highland",
+    "district_ref": "highland_scrub_02",
+    "required_topologies": ["PATCH_IRREGULAR", "CORRIDOR_RIDGE", "FRINGE_EDGE", "CLUSTER_NATURAL"]
+  },
+  "topology_graph": [
+    {
+      "id": "net_high_01",
+      "topology_kind": "Network",
+      "preset_id": "NETWORK_CONNECTED",
+      "children": [
+        { "id": "patch_irreg_01", "topology_kind": "Patch", "preset_id": "PATCH_IRREGULAR" },
+        { "id": "corr_ridge_01", "topology_kind": "Corridor", "preset_id": "CORRIDOR_RIDGE" },
+        { "id": "fringe_edge_01", "topology_kind": "Fringe", "preset_id": "FRINGE_EDGE" },
+        { "id": "cluster_nat_01", "topology_kind": "Cluster", "preset_id": "CLUSTER_NATURAL" }
+      ]
+    }
+  ]
+}

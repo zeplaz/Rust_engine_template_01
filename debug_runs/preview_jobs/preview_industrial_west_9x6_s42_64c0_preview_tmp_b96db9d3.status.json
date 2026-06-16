@@ -1,0 +1,7 @@
+{
+  "status": "done",
+  "png": "debug_runs/preview_jobs/industrial_west_9x6_s42_64c0_thumb.png",
+  "elapsed_ms": 770,
+  "modules_loaded": 78,
+  "mode": "bevy_worker"
+}

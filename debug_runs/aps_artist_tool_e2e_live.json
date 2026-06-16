@@ -1,0 +1,43 @@
+{
+  "program_id": "APS-ARTIST-TOOL-E2E-001",
+  "green": true,
+  "honest_gate": "schema_only",
+  "artist_path": "Catalog \u2192 Assembly \u2192 Materials \u2192 Variants \u2192 Atlas (no Blender)",
+  "steps": [
+    {
+      "step": "catalog_thumb",
+      "ok": true,
+      "module_id": "corner_brick_outer_run001"
+    },
+    {
+      "step": "assembly_snapshot",
+      "ok": true,
+      "path": "tools/mcp/schemas/examples/assembly_snapshot_warehouse_industrial_west_production_v1.json",
+      "grammar_chain": true,
+      "material_profiles": true
+    },
+    {
+      "step": "materials_studio",
+      "ok": true,
+      "catalog_count": 21
+    },
+    {
+      "step": "variants_example",
+      "ok": true,
+      "path": "tools/mcp/schemas/examples/variant_set_warehouse_industrial_west_production_v1.json"
+    },
+    {
+      "step": "atlas_pilot_fixture",
+      "ok": true,
+      "folder": "assets/staging/tiles/tile_warehouse_industrial_west_pilot_v1",
+      "meta_v2_validate": false,
+      "validation": "failed",
+      "plain_language": [
+        "Atlas meta must be schema version 2 (v1 greybox is frozen). (field: schema_version)",
+        "render_contract.facings must be 4 or 8 so tile lookup matches the rig."
+      ]
+    }
+  ],
+  "designer_mcp_signoff": "pending",
+  "track_b_deferred": "MCP-PILOT-GRAMMAR-001 manual keyframe"
+}

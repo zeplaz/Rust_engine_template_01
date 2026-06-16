@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "material_category_tree_v1.schema.json",
+  "title": "MaterialCategoryTree",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "tree_id", "version", "roots"],
+  "properties": {
+    "schema": { "const": "material_category_tree_v1" },
+    "tree_id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$",
+      "description": "e.g. aps_material_tree_v1"
+    },
+    "version": { "type": "integer", "minimum": 1 },
+    "label": { "type": "string" },
+    "description": { "type": "string" },
+    "max_depth": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 4,
+      "default": 3
+    },
+    "roots": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/category_node_v1" }
+    },
+    "profile_bindings": {
+      "type": "array",
+      "description": "Explicit profile_id → category path (overrides infer_category)",
+      "items": { "$ref": "#/$defs/profile_binding_v1" }
+    },
+    "infer_rules": {
+      "type": "array",
+      "description": "Ordered substring rules when no explicit binding",
+      "items": { "$ref": "#/$defs/infer_rule_v1" }
+    }
+  },
+  "$defs": {
+    "category_node_v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "label"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$",
+          "description": "Segment id (not full path)"
+        },
+        "label": { "type": "string", "minLength": 1 },
+        "icon": {
+          "type": "string",
+          "description": "Optional APS icon key"
+        },
+        "sort_order": { "type": "integer", "minimum": 0 },
+        "children": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/category_node_v1" }
+        }
+      }
+    },
+    "category_path": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*(/[a-z][a-z0-9_]*)*$",
+      "description": "Slash path e.g. industrial/steel/corrugated"
+    },
+    "profile_binding_v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["profile_id", "category_path"],
+      "properties": {
+        "profile_id": { "type": "string", "minLength": 1 },
+        "category_path": { "$ref": "#/$defs/category_path" }
+      }
+    },
+    "infer_rule_v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["match", "category_path"],
+      "properties": {
+        "match": {
+          "type": "string",
+          "description": "Substring match on profile_id (case-insensitive)"
+        },
+        "category_path": { "$ref": "#/$defs/category_path" },
+        "priority": {
+          "type": "integer",
+          "default": 0,
+          "description": "Higher wins when multiple rules match"
+        }
+      }
+    }
+  }
+}

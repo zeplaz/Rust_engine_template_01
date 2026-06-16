@@ -108,18 +108,18 @@ def main() -> None:
     items = json.loads(cq_path.read_text(encoding="utf-8"))
 
     plan_doc = {
-        "IND-E03-CODER-A": "src/dev/industrial_grid_overload_impl_plan_v1.md",
-        "INFRA-PROJ2-001": "src/dev/infra_proj2_sole_writer_plan_v1.md",
-        "INFRA-PROJ2-CODER-B": "src/dev/infra_proj2_sole_writer_plan_v1.md",
-        "UI-WP-LAYOUT-002": "src/dev/wave_p_witness_spec_v1.md",
-        "UI-WP-LAYOUT-D07": "src/dev/wave_p_witness_spec_v1.md",
-        "COD-B-WP-WITNESS-001": "src/dev/wave_p_witness_spec_v1.md",
-        "UI-P2B-CODER-B": "src/dev/ui_shell_witness_spec_v1.md",
-        "UI-SHELL-REFRESH-001": "src/dev/ui_shell_witness_spec_v1.md",
-        "S7P-IND-001": "src/dev/industrial_activation_board_reconcile_v1.md",
-        "BQ-128-APPLY-001": "src/dev/bq128_editor_path_plan_v1.md",
-        "WC-D04-CODER-B": "src/dev/infra_slice3_wc_d04_ops_f01_plan_v1.md",
-        "LOG-E01": "src/dev/logistics_projection_impl_plan_v1.md",
+        "IND-E03-CODER-A": "docs/archive/2026-06-src-dev/plans/industrial_grid_overload_impl_plan_v1.md",
+        "INFRA-PROJ2-001": "docs/archive/2026-06-src-dev/plans/infra_proj2_sole_writer_plan_v1.md",
+        "INFRA-PROJ2-CODER-B": "docs/archive/2026-06-src-dev/plans/infra_proj2_sole_writer_plan_v1.md",
+        "UI-WP-LAYOUT-002": "docs/archive/2026-06-src-dev/plans/wave_p_witness_spec_v1.md",
+        "UI-WP-LAYOUT-D07": "docs/archive/2026-06-src-dev/plans/wave_p_witness_spec_v1.md",
+        "COD-B-WP-WITNESS-001": "docs/archive/2026-06-src-dev/plans/wave_p_witness_spec_v1.md",
+        "UI-P2B-CODER-B": "docs/archive/2026-06-src-dev/plans/ui_shell_witness_spec_v1.md",
+        "UI-SHELL-REFRESH-001": "docs/archive/2026-06-src-dev/plans/ui_shell_witness_spec_v1.md",
+        "S7P-IND-001": "docs/archive/2026-06-src-dev/plans/industrial_activation_board_reconcile_v1.md",
+        "BQ-128-APPLY-001": "docs/archive/2026-06-src-dev/plans/bq128_editor_path_plan_v1.md",
+        "WC-D04-CODER-B": "docs/archive/2026-06-src-dev/plans/infra_slice3_wc_d04_ops_f01_plan_v1.md",
+        "LOG-E01": "docs/archive/2026-06-src-dev/plans/logistics_projection_impl_plan_v1.md",
     }
 
     done_ids = {
@@ -160,36 +160,36 @@ def main() -> None:
             x["notes"] = (prev + " | PLAN-LEDGER-REFRESH-003").strip(" |")
         if iid == "PLAN-LEDGER-REFRESH-003":
             x["status"] = "done"
-            x["plan_doc"] = "src/dev/plan_ledger_refresh_003_checklist_v1.md"
-            x["witness"] = "src/dev/planner_status_audit_v5.md"
+            x["plan_doc"] = "docs/archive/2026-06-src-dev/plans/plan_ledger_refresh_003_checklist_v1.md"
+            x["witness"] = "docs/archive/2026-06-fleet-drain/planner_audits/planner_status_audit_v5.md"
             x["docs"] = [
-                "src/dev/plan_ledger_refresh_003_checklist_v1.md",
-                "src/dev/planner_status_audit_v5.md",
-                "src/dev/industrial_activation_board_reconcile_v1.md",
+                "docs/archive/2026-06-src-dev/plans/plan_ledger_refresh_003_checklist_v1.md",
+                "docs/archive/2026-06-fleet-drain/planner_audits/planner_status_audit_v5.md",
+                "docs/archive/2026-06-src-dev/plans/industrial_activation_board_reconcile_v1.md",
             ]
             x["notes"] = "2026-05-25 machine-state sync; no spec re-run 2-11"
 
     cq_path.write_text(json.dumps(items, indent=2) + "\n", encoding="utf-8")
 
     planner_specs = [
-        ("PLAN-WAVE-P-WITNESS-SPEC-001", "src/dev/wave_p_witness_spec_v1.md"),
-        ("PLAN-UI-SHELL-WITNESS-SPEC-001", "src/dev/ui_shell_witness_spec_v1.md"),
-        ("PLAN-IND-E03-001", "src/dev/industrial_grid_overload_impl_plan_v1.md"),
-        ("PLAN-UI-P3-COMPOSITOR-001", "prompts/guides/ui/ui_phase3_minimap_compositor_full_plan_v1.md"),
-        ("PLAN-INFRA-PROJ2-001", "src/dev/infra_proj2_sole_writer_plan_v1.md"),
-        ("PLAN-FIRE-VFX-CLOSURE-001", "src/dev/fire_spark_track_closure_plan_v1.md"),
-        ("PLAN-UX-BQ128-001", "src/dev/bq128_editor_path_plan_v1.md"),
-        ("PLAN-UI-P4-ATLAS-001", "prompts/guides/ui/ui_phase4_icon_atlas_plan_v1.md"),
-        ("PLAN-LOGISTICS-PROJECTION-001", "src/dev/logistics_projection_impl_plan_v1.md"),
-        ("PLAN-IND-BOARD-RECONCILE-001", "src/dev/industrial_activation_board_reconcile_v1.md"),
-        ("PLAN-UI-P5-PAUSE-001", "prompts/guides/ui/ui_phase5_pause_menu_plan_v1.md"),
+        ("PLAN-WAVE-P-WITNESS-SPEC-001", "docs/archive/2026-06-src-dev/plans/wave_p_witness_spec_v1.md"),
+        ("PLAN-UI-SHELL-WITNESS-SPEC-001", "docs/archive/2026-06-src-dev/plans/ui_shell_witness_spec_v1.md"),
+        ("PLAN-IND-E03-001", "docs/archive/2026-06-src-dev/plans/industrial_grid_overload_impl_plan_v1.md"),
+        ("PLAN-UI-P3-COMPOSITOR-001", "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/ui_phase3_minimap_compositor_full_plan_v1.md"),
+        ("PLAN-INFRA-PROJ2-001", "docs/archive/2026-06-src-dev/plans/infra_proj2_sole_writer_plan_v1.md"),
+        ("PLAN-FIRE-VFX-CLOSURE-001", "docs/archive/2026-06-src-dev/plans/fire_spark_track_closure_plan_v1.md"),
+        ("PLAN-UX-BQ128-001", "docs/archive/2026-06-src-dev/plans/bq128_editor_path_plan_v1.md"),
+        ("PLAN-UI-P4-ATLAS-001", "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/ui_phase4_icon_atlas_plan_v1.md"),
+        ("PLAN-LOGISTICS-PROJECTION-001", "docs/archive/2026-06-src-dev/plans/logistics_projection_impl_plan_v1.md"),
+        ("PLAN-IND-BOARD-RECONCILE-001", "docs/archive/2026-06-src-dev/plans/industrial_activation_board_reconcile_v1.md"),
+        ("PLAN-UI-P5-PAUSE-001", "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/ui_phase5_pause_menu_plan_v1.md"),
     ]
     planner_done = [
         {
             "id": "PLAN-LEDGER-REFRESH-003",
             "status": "done",
-            "plan_doc": "src/dev/plan_ledger_refresh_003_checklist_v1.md",
-            "witness": "src/dev/planner_status_audit_v5.md",
+            "plan_doc": "docs/archive/2026-06-src-dev/plans/plan_ledger_refresh_003_checklist_v1.md",
+            "witness": "docs/archive/2026-06-fleet-drain/planner_audits/planner_status_audit_v5.md",
             "completed": "2026-05-25",
         }
     ]
@@ -210,15 +210,15 @@ def main() -> None:
             "version": "1.0.0",
             "date": "2026-05-25",
             "cycle": "PLAN-LEDGER-REFRESH-003",
-            "checklist": "src/dev/plan_ledger_refresh_003_checklist_v1.md",
-            "audit": "src/dev/planner_status_audit_v5.md",
+            "checklist": "docs/archive/2026-06-src-dev/plans/plan_ledger_refresh_003_checklist_v1.md",
+            "audit": "docs/archive/2026-06-fleet-drain/planner_audits/planner_status_audit_v5.md",
         },
         "done": planner_done,
         "active": [
             {
                 "id": "S7B-PLAN-001",
                 "status": "queued",
-                "plan_doc": "src/dev/stage7_behavioral_full_plan_v1.md",
+                "plan_doc": "docs/archive/2026-06-src-dev/plans/stage7_behavioral_full_plan_v1.md",
                 "agent": "planner",
             }
         ],
@@ -232,38 +232,38 @@ def main() -> None:
             "version": "1.0.0",
             "date": "2026-05-25",
             "cycle": "PLAN-LEDGER-REFRESH-003",
-            "triage": "src/dev/coder_triage_list_v1.md",
-            "markdown_mirror": "src/dev/active_coder_queue_v1.md",
+            "triage": "docs/archive/2026-06-src-dev/plans/coder_triage_list_v1.md",
+            "markdown_mirror": "docs/archive/2026-06-src-dev/plans/active_coder_queue_v1.md",
         },
         "done": [
             {
                 "id": "BQ-128-APPLY-001",
-                "plan_doc": "src/dev/bq128_editor_path_plan_v1.md",
+                "plan_doc": "docs/archive/2026-06-src-dev/plans/bq128_editor_path_plan_v1.md",
                 "witness": "debug_runs/wave_s_blueprint_roundtrip.json",
             },
             {
                 "id": "IND-E03-CODER-A",
-                "plan_doc": "src/dev/industrial_grid_overload_impl_plan_v1.md",
+                "plan_doc": "docs/archive/2026-06-src-dev/plans/industrial_grid_overload_impl_plan_v1.md",
                 "witness": "debug_runs/industrial_activation_live.json",
             },
             {
                 "id": "INFRA-PROJ2-001",
-                "plan_doc": "src/dev/infra_proj2_sole_writer_plan_v1.md",
+                "plan_doc": "docs/archive/2026-06-src-dev/plans/infra_proj2_sole_writer_plan_v1.md",
                 "witness": "debug_runs/infrastructure_view_isolation_live.json",
             },
             {
                 "id": "UI-P2B-CODER-B",
-                "plan_doc": "src/dev/ui_shell_witness_spec_v1.md",
+                "plan_doc": "docs/archive/2026-06-src-dev/plans/ui_shell_witness_spec_v1.md",
                 "witness": "debug_runs/ui_shell_migration_live.json",
             },
             {
                 "id": "COD-B-WP-WITNESS-001",
-                "plan_doc": "src/dev/wave_p_witness_spec_v1.md",
+                "plan_doc": "docs/archive/2026-06-src-dev/plans/wave_p_witness_spec_v1.md",
                 "witness": "debug_runs/wave_p_live.json",
             },
             {
                 "id": "WC-D04-CODER-B",
-                "plan_doc": "src/dev/infra_slice3_wc_d04_ops_f01_plan_v1.md",
+                "plan_doc": "docs/archive/2026-06-src-dev/plans/infra_slice3_wc_d04_ops_f01_plan_v1.md",
                 "witness": "debug_runs/stage6_virtualization_live.json",
             },
         ],
@@ -271,13 +271,13 @@ def main() -> None:
             {
                 "id": "UI-P5-PAUSE-001",
                 "priority": 2,
-                "plan_doc": "prompts/guides/ui/ui_phase5_pause_menu_plan_v1.md",
+                "plan_doc": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/ui_phase5_pause_menu_plan_v1.md",
                 "agent": "coder",
             },
             {
                 "id": "LOG-E01",
                 "priority": 3,
-                "plan_doc": "src/dev/logistics_projection_impl_plan_v1.md",
+                "plan_doc": "docs/archive/2026-06-src-dev/plans/logistics_projection_impl_plan_v1.md",
                 "witness": "debug_runs/stage5_full_app_live.json",
                 "verdict": "STALE",
             },
@@ -334,7 +334,7 @@ def main() -> None:
         "| **OPS-F03** | Optional sim stage6 refresh |",
         "",
     ]
-    (ROOT / "src/dev/coder_triage_list_v1.md").write_text("\n".join(triage_lines), encoding="utf-8")
+    (ROOT / "docs/archive/2026-06-src-dev/plans/coder_triage_list_v1.md").write_text("\n".join(triage_lines), encoding="utf-8")
 
     audit_lines = [
         "# Planner status audit v5 (PLAN-LEDGER-REFRESH-003)",
@@ -383,7 +383,7 @@ def main() -> None:
         "| `coder_triage_list_v1.md` | Triage snapshot |",
         "",
     ]
-    (ROOT / "src/dev/planner_status_audit_v5.md").write_text("\n".join(audit_lines), encoding="utf-8")
+    (ROOT / "docs/archive/2026-06-fleet-drain/planner_audits/planner_status_audit_v5.md").write_text("\n".join(audit_lines), encoding="utf-8")
     print(f"ok checks={len(checks)} cq={len(items)}")
 
 

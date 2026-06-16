@@ -1,0 +1,8 @@
+{
+  "gate_id": "MCP-DOC-READ-001",
+  "ok": true,
+  "green": true,
+  "touch_ok": true,
+  "ledger_path": "debug_runs/agent_ops/doc_reads.jsonl",
+  "intent": "ref"
+}

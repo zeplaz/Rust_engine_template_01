@@ -1,0 +1,71 @@
+// BUILD-READ-PILOT-001 — authoritative pilot set (expand by adding rows, not Rust branches).
+// Cells for mock_shape_id rows come from _mock_shapes.ron (single source).
+
+(
+    pilots: [
+        (
+            id: "shape_rectangle_2x2",
+            label: "Rectangle 2×2",
+            mock_shape_id: "shape_rectangle_2x2",
+            hover_hint: "Full rect · scale monotonic baseline",
+        ),
+        (
+            id: "shape_l_3x2",
+            label: "L 3×2",
+            mock_shape_id: "shape_l_3x2",
+            hover_hint: "L footprint · rotate QA",
+        ),
+        (
+            id: "shape_t_3x3",
+            label: "T 3×3",
+            mock_shape_id: "shape_t_3x3",
+            hover_hint: "T footprint · asymmetric massing",
+        ),
+        (
+            id: "shape_o_3x3",
+            label: "O-ring 3×3",
+            mock_shape_id: "shape_o_3x3",
+            hover_hint: "O footprint · hollow interior",
+        ),
+        (
+            id: "logistics_rail_warehouse_v0",
+            label: "Rail Warehouse (pilot)",
+            mock_shape_id: "logistics_rail_warehouse_l_6x5",
+            arch_dna_preset: "logistics_rail_warehouse_v0",
+            grammar_archetype_id: "IndustrialWarehouse",
+            district_style: "industrial_west",
+            site_json_path: "pilots/logistics_rail_warehouse_site_v0.json",
+            hover_hint: "Guide sample · L-yard · site stub 10×8 · ARCH-DNA",
+        ),
+        (
+            id: "manufacturing_fabrication_hall_v0",
+            label: "Fabrication Hall (pilot)",
+            mock_shape_id: "manufacturing_hall_5x4",
+            arch_dna_preset: "manufacturing_fabrication_hall_v0",
+            grammar_archetype_id: "IndustrialWarehouse",
+            district_style: "industrial_west",
+            site_json_path: "pilots/manufacturing_fabrication_hall_site_v0.json",
+            hover_hint: "Manufacturing F-axis · rect hall · site stub 8×6 · ARCH-DNA",
+        ),
+        (
+            id: "power_substation_yard_v0",
+            label: "Substation Yard (pilot)",
+            mock_shape_id: "power_substation_yard_4x3",
+            arch_dna_preset: "power_substation_yard_v0",
+            grammar_archetype_id: "IndustrialWarehouse",
+            district_style: "industrial_west",
+            site_json_path: "pilots/power_substation_yard_site_v0.json",
+            hover_hint: "Power F-axis · yard ring · site stub 6×5 · ARCH-DNA",
+        ),
+        (
+            id: "fuel_depot_tank_farm_v0",
+            label: "Tank Farm (pilot)",
+            mock_shape_id: "fuel_depot_yard_5x4",
+            arch_dna_preset: "fuel_depot_tank_farm_v0",
+            grammar_archetype_id: "IndustrialWarehouse",
+            district_style: "industrial_west",
+            site_json_path: "pilots/fuel_depot_tank_farm_site_v0.json",
+            hover_hint: "Fuel F-axis · tank ring · site stub 7×6 · ARCH-DNA",
+        ),
+    ],
+)

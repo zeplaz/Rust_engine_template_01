@@ -6,8 +6,8 @@ Isolated experiment crate — **does not** modify main `EnginePlugin` or link in
 
 | Doc | Role |
 |:---|:---|
-| [`src/dev/plan_hanabi_adoption_v1.md`](../../src/dev/plan_hanabi_adoption_v1.md) | Adoption phases H-A0…H-A3 |
-| [`src/dev/hanabi_event_vfx_style_bounds_v1.md`](../../src/dev/hanabi_event_vfx_style_bounds_v1.md) | Designer numeric bounds (PASS qualified) |
+| [`docs/archive/2026-06-src-dev/plans/plan_hanabi_adoption_v1.md`](../../docs/archive/2026-06-src-dev/plans/plan_hanabi_adoption_v1.md) | Adoption phases H-A0…H-A3 |
+| [`docs/archive/2026-06-src-dev/plans/hanabi_event_vfx_style_bounds_v1.md`](../../docs/archive/2026-06-src-dev/plans/hanabi_event_vfx_style_bounds_v1.md) | Designer numeric bounds (PASS qualified) |
 
 ## Bevy 0.18 gate
 

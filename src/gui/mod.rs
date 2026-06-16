@@ -9,8 +9,13 @@
 pub mod debug;
 pub mod hud;
 mod minimap_shell;
+mod minimap_egui_dev;
 mod minimap_viewport_frame;
 mod map_camera;
+mod map_zoom_coherence;
+mod sim_map_projection;
+mod vfx_fire_test_highlight;
+mod assembly_snapshot_qc_ui;
 mod map_view;
 mod map_presentation_controls;
 mod map_presentation_diagnostics;
@@ -69,15 +74,28 @@ pub mod editor;
 // Public exports
 pub use app_shell::{AppShellPlugin, LoadStubPath};
 pub use crate::construction::BuildPlanningPlugin;
+pub use assembly_snapshot_qc_ui::{
+    aps_bevy_qc_hud_001_witness_green, aps_bevy_qc_hud_001_witness_json,
+    aps_bevy_qc_hud_v2_witness_green, load_qc_snapshot, evaluate_p0_readonly,
+    placement_grid_coords, AssemblySnapshotQcUiPlugin, AssemblySnapshotQcUiState,
+    APS_BEVY_QC_HUD_DEFAULT_SNAPSHOT,
+};
+pub use vfx_fire_test_highlight::{
+    draw_vfx_fire_test_highlight_overlay, refresh_vfx_fire_test_highlight_from_burning,
+    vfx_fire_test_highlight_001_witness_green, vfx_fire_test_highlight_001_witness_json,
+    VfxFireTestHighlight, VfxFireTestHighlightPlugin,
+};
 pub use input_bindings::InputBindings;
 pub use minimap_shell::{
     minimap_uv_to_world_tile, native_minimap_window_supported, simulation_minimap_bootstrap_rect,
-    simulation_minimap_overlay_defaults, MinimapCameraBookmark, MinimapFollowMode,
+    simulation_minimap_overlay_defaults, MinimapCameraBookmark, MinimapEdge, MinimapFollowMode,
     MinimapOverlayMask, MinimapPresentationMode, MinimapPresentationSource, MinimapShellState,
+    MINIMAP_TITLE_BAR_H_PX,
 };
+pub use minimap_egui_dev::{minimap_egui_dev_enabled, MinimapEguiDevGate};
 pub use minimap_viewport_frame::{
-    paint_tactical_viewport_frame_on_minimap, tactical_visible_world_rect,
-    world_tile_to_minimap_screen,
+    clamp_tactical_viewport_frame_rect, paint_tactical_viewport_frame_on_minimap,
+    tactical_visible_world_rect, world_tile_to_minimap_screen,
 };
 pub use map_presentation_controls::map_overlay_controls_ui;
 pub use map_presentation_diagnostics::{
@@ -150,7 +168,19 @@ pub use map_camera::{
     sim_map_cursor_world_xy, sim_map_image_rect,
     sim_map_screen_to_world_xy, sim_map_visible_world_span, sim_map_world_vec3_to_egui,
     sim_map_world_xy_to_egui, TACTICAL_VFX_PROOF_ZOOM_ALPHA,
-    trace_map_camera_desired_write_if_full_app, MAP_ZOOM_CLAMP,
+    trace_map_camera_desired_write_if_full_app, MAP_ZOOM_CLAMP, MAP_ZOOM_AXIS_SNAP_EPS,
+};
+pub use map_zoom_coherence::{
+    map_pick_closure_math_witness_green, map_zoom_coherence_001_witness_green,
+    map_zoom_coherence_001_witness_json, map_zoom_axis_snap_applies,
+    MAP_ZOOM_DOUBLE_WORLD_FRAMES_MAX, MAP_ZOOM_GHOST_SCREEN_DELTA_PX_MAX,
+    MAP_ZOOM_PICK_DELTA_WORLD_MAX,
+};
+pub use sim_map_projection::{
+    camera_map_plane_vec3_to_logical_screen, map_camera_desired_from_presentation,
+    map_camera_pose_for_presentation, sim_map_projection_frame,
+    sim_map_screen_to_world_xy_in_frame,
+    sim_map_world_vec3_to_egui_rendered, MapCameraPresentationPose, SimMapProjectionFrame,
 };
 pub use camera_focus_debug::{
     fire_chunk_coords_above_visual_eps, CameraFocusDebug, CameraFocusDebugPlugin,

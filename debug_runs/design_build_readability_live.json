@@ -1,0 +1,30 @@
+{
+  "_agent_meta": {
+    "profile": "DESIGN_BUILD_READABILITY",
+    "schema": "debug_run_envelope_v1",
+    "source_system": "designer_build_read_design_001",
+    "relative_path": "debug_runs/design_build_readability_live.json",
+    "design_doc": "src/dev/design_build_readability_v1.md",
+    "parent_program": "PLAN-BUILD-READABILITY-001"
+  },
+  "gate": "BUILD-READ-DESIGN-001",
+  "slices": [
+    "BUILD-READ-DESIGN-001",
+    "BUILD-READ-SITE-v0-001",
+    "BUILD-READ-WORLD-001"
+  ],
+  "green": true,
+  "verdict": "PASS",
+  "charter_on_disk": true,
+  "primary_pct_site_min": 0.15,
+  "primary_pct_site_max": 0.4,
+  "site_stub_tiles": "10x8",
+  "world_002_lever_recommended": "iso_draw_scale_multiplier",
+  "world_002_lever_range": [1.35, 1.75],
+  "impl_wired": true,
+  "design_002_green": true,
+  "unblocks": [
+    "BUILD-READ-P0-003"
+  ],
+  "delta_wf": "@coder BUILD-READ-P0-002 runtime verify"
+}

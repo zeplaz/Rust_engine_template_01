@@ -19,7 +19,7 @@
     },
     "PT-0-003": {
       "pass": true,
-      "spec": "src/dev/procedural_tiles_production_witness_v1.md"
+      "spec": "docs/archive/2026-06-src-dev/plans/procedural_tiles_production_witness_v1.md"
     }
   },
   "canonical_variant_key_count": 18,

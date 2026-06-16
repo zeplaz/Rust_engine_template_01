@@ -1,0 +1,82 @@
+{
+  "schema_version": "build_set_guards_v1",
+  "valid_teaches_axes": [
+    "arch_dna",
+    "pressure_field",
+    "pilot_catalog",
+    "grammar_eval",
+    "site_composition",
+    "tile_state_machine",
+    "module_runs"
+  ],
+  "min_teaches_axes": 2,
+  "teachable": {
+    "examples_root": "tools/mcp/schemas/examples",
+    "subject_globs": [
+      "arch_dna_*.json",
+      "building_set_*.json",
+      "assembly_snapshot_grammar_lineage*.json",
+      "assembly_snapshot_rail_warehouse*.json",
+      "assembly_snapshot_warehouse_industrial_west_production_v1.json",
+      "tile_batch_rail_warehouse*.json",
+      "variant_set_rail_warehouse*.json",
+      "building_definition_rail_warehouse*.json",
+      "tile_batch_warehouse_industrial_west_production_v1.json",
+      "variant_set_warehouse_industrial_west_production_v1.json",
+      "building_definition_warehouse_industrial_west_production_v1.json"
+    ],
+    "exempt_globs": [
+      "**/*_run001.json",
+      "**/batch_kit_*.json",
+      "**/building_grammar_*.json",
+      "**/aps_tag_*.json",
+      "**/variant_catalog*.json",
+      "**/atlas_meta_*.json",
+      "**/specs/**",
+      "**/door_*.json",
+      "**/window_*.json"
+    ],
+    "canonical_fixture_globs": [
+      "**/assembly_snapshot_warehouse_industrial_west_production_v1.json"
+    ]
+  },
+  "archetype_ratio": {
+    "max_ratio": 0.4,
+    "scan_roots": [
+      "tools/mcp/schemas/examples",
+      "tools/mcp/python/tests"
+    ],
+    "scan_extensions": [".json", ".py"],
+    "archetype_patterns": [
+      "\"archetype_id\"\\s*:\\s*\"([^\"]+)\"",
+      "\"archetype\"\\s*:\\s*\"([^\"]+)\"",
+      "archetype:([A-Za-z0-9_]+)"
+    ],
+    "building_set_exception_min_pilots": 2
+  },
+  "warehouse_track": {
+    "scan_roots": [
+      "tools/mcp/schemas/examples",
+      "assets/staging"
+    ],
+    "path_needle": "warehouse",
+    "required_teaches_any": ["grammar_eval", "pilot_catalog"],
+    "exempt_globs": [
+      "**/*_run001.json",
+      "**/specs/**",
+      "**/door_*.json",
+      "**/window_*.json",
+      "**/atlas_meta.json",
+      "**/batch_status.json",
+      "**/building_grammar_*.json"
+    ],
+    "canonical_track_globs": [
+      "**/*rail_warehouse_pilot*",
+      "**/*warehouse_industrial_west*",
+      "**/arch_dna_logistics_rail_warehouse_v0.json"
+    ],
+    "allowlist_globs": [
+      "tools/mcp/schemas/examples/building_set_*.json"
+    ]
+  }
+}

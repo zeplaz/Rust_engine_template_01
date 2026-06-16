@@ -2,7 +2,7 @@
   "schema_version": 1,
   "batch_id": "kit_greybox_002",
   "description": "Wave 2 — windows, corners, props (bpy ops shipped; designer may re-run batch)",
-  "plan_ref": "src/dev/plan_mcp_pipeline_recovery_and_agent_fleet_v1.md",
+  "plan_ref": "docs/archive/2026-06-src-dev/plans/plan_mcp_pipeline_recovery_and_agent_fleet_v1.md",
   "predecessor": "kit_greybox_001",
   "witness": "debug_runs/art_pipeline/kit_greybox_002_live.json",
   "rules_applied": [

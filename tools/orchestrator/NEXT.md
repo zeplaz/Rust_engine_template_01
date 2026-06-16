@@ -1,6 +1,6 @@
 # Next work queue (post-orchestrator)
 
-**Orchestrator routing (2026-05-26):** read [`queues/HANDOFF.md`](queues/HANDOFF.md) and [`src/dev/orchestrator_signoff_snapshot_20260526_v1.md`](../src/dev/orchestrator_signoff_snapshot_20260526_v1.md) first — steward preflights and wave 3 coders are **CLOSED**.
+**Orchestrator routing (2026-05-26):** read [`queues/HANDOFF.md`](queues/HANDOFF.md) and [`docs/archive/2026-06-src-dev/plans/orchestrator_signoff_snapshot_20260526_v1.md`](../docs/archive/2026-06-src-dev/plans/orchestrator_signoff_snapshot_20260526_v1.md) first — steward preflights and wave 3 coders are **CLOSED**.
 
 **Gate:** `cargo orchestrate --skip-clippy --skip-test` → 0 issues (last: `20260522_021031`)
 
@@ -33,13 +33,13 @@
 
 ## Compile warnings (2026-05-20)
 
-- Registry: [`src/dev/compile_warnings_registry.md`](../src/dev/compile_warnings_registry.md)
+- Registry: [`docs/archive/2026-06-src-dev/plans/compile_warnings_registry.md`](../docs/archive/2026-06-src-dev/plans/compile_warnings_registry.md)
 - Todos: [`src/dev/COMPILE_WARNINGS_TODOS.md`](../src/dev/COMPILE_WARNINGS_TODOS.md)
 - **Build:** 0 rustc warnings after CW-01..CW-08
 
 ## Post-PLAY follow-up board
 
-**Closed:** [`post_play_followup_todos.md`](../src/dev/post_play_followup_todos.md). **Active:** [`next_action_todos.md`](../src/dev/next_action_todos.md)
+**Closed:** [`post_play_followup_todos.md`](../docs/archive/2026-06-src-dev/plans/post_play_followup_todos.md). **Active:** [`next_action_todos.md`](../src/dev/next_action_todos.md)
 
 ## Still manual (operator)
 

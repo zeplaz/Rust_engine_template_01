@@ -1,0 +1,9 @@
+{
+  "program_id": "APS-PREVIEW-CATALOG-001",
+  "green": true,
+  "sample_module_id": "corner_brick_outer_run001",
+  "list_thumb_px": 48,
+  "cache_dir": "debug_runs/catalog_thumb_cache",
+  "sidecar_truth_line": "Sidecar tags are hints only \u2014 assembly snapshot semantic_tags win at ship.",
+  "panel": "art_pipeline_suite.catalog.CatalogPanel"
+}

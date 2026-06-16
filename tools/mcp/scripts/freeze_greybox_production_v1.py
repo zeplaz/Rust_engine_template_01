@@ -83,7 +83,7 @@ def main() -> int:
     manifest = {
         "freeze_id": "TILE-FIX-001",
         "moved_at": datetime.now(timezone.utc).isoformat(),
-        "policy": "src/dev/tile_greybox_production_frozen_v1.md",
+        "policy": "docs/archive/2026-06-src-dev/plans/tile_greybox_production_frozen_v1.md",
         "moves": log,
     }
     ARCHIVE.mkdir(parents=True, exist_ok=True)

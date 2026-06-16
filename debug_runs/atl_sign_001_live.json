@@ -1,0 +1,24 @@
+{
+  "gate_id": "ATL-SIGN-001",
+  "ok": true,
+  "green": true,
+  "production_folder": "assets/staging/tiles/tile_warehouse_industrial_v2_minimum_g4",
+  "pilot_folder": "assets/staging/tiles/tile_warehouse_industrial_west_pilot_v1",
+  "aps_atlas_preview_002": {
+    "program_id": "APS-ATLAS-PREVIEW-002",
+    "gate_id": "ATL-SIGN-001",
+    "green": true,
+    "folder": "assets/staging/tiles/tile_warehouse_industrial_v2_minimum_g4",
+    "atlas_meta_schema": "v2",
+    "facings": 8,
+    "validation_status": "passed",
+    "plain_language": [
+      "Atlas meta looks complete \u2014 safe to proceed toward tile-atlas-register."
+    ],
+    "uv_grid_overlay": true,
+    "panel": "art_pipeline_suite.atlas_preview_panel.AtlasPreviewPanel"
+  },
+  "atlas_meta_brief_production_ok": true,
+  "mcp_atlas_brief_001_green": true,
+  "atl_star_criteria": "aps_atlas_preview_002 green + mcp_atlas_brief production v2 pass"
+}

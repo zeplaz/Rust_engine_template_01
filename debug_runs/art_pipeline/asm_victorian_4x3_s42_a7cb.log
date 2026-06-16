@@ -1,93 +1,153 @@
-12:04:39 | INFO: Data are loaded, start creating Blender stuff
-12:04:39 | INFO: Blender create Mesh node Cube
-12:04:39 | INFO: glTF import finished in 0.00s
-12:04:39 | INFO: Data are loaded, start creating Blender stuff
-12:04:39 | INFO: Blender create Mesh node Cube
-12:04:39 | INFO: glTF import finished in 0.00s
-12:04:39 | INFO: Data are loaded, start creating Blender stuff
-12:04:39 | INFO: Blender create Mesh node door_residential_production_run001
-12:04:39 | INFO: glTF import finished in 0.00s
-12:04:39 | INFO: Data are loaded, start creating Blender stuff
-12:04:39 | INFO: Blender create Mesh node Cube
-12:04:39 | INFO: glTF import finished in 0.00s
-12:04:39 | INFO: Data are loaded, start creating Blender stuff
-12:04:39 | INFO: Blender create Mesh node Cube
-12:04:39 | INFO: glTF import finished in 0.00s
-12:04:39 | INFO: Data are loaded, start creating Blender stuff
-12:04:39 | INFO: Blender create Mesh node Cube
-12:04:39 | INFO: glTF import finished in 0.00s
-12:04:39 | INFO: Data are loaded, start creating Blender stuff
-12:04:39 | INFO: Blender create Mesh node Cube
-12:04:39 | INFO: glTF import finished in 0.00s
-12:04:39 | INFO: Data are loaded, start creating Blender stuff
-12:04:39 | INFO: Blender create Mesh node Cube
-12:04:39 | INFO: glTF import finished in 0.00s
-12:04:39 | INFO: Data are loaded, start creating Blender stuff
-12:04:39 | INFO: Blender create Mesh node Cube
-12:04:39 | INFO: glTF import finished in 0.00s
-12:04:39 | INFO: Data are loaded, start creating Blender stuff
-12:04:39 | INFO: Blender create Mesh node Cube
-12:04:39 | INFO: glTF import finished in 0.00s
-12:04:39 | INFO: Data are loaded, start creating Blender stuff
-12:04:39 | INFO: Blender create Mesh node Cube
-12:04:39 | INFO: glTF import finished in 0.00s
-12:04:39 | INFO: Data are loaded, start creating Blender stuff
-12:04:39 | INFO: Blender create Mesh node Cube
-12:04:39 | INFO: glTF import finished in 0.00s
-12:04:39 | INFO: Data are loaded, start creating Blender stuff
-12:04:39 | INFO: Blender create Mesh node Cube
-12:04:39 | INFO: glTF import finished in 0.00s
-12:04:39 | INFO: Data are loaded, start creating Blender stuff
-12:04:39 | INFO: Blender create Mesh node Cube
-12:04:39 | INFO: glTF import finished in 0.00s
-12:04:39 | INFO: Data are loaded, start creating Blender stuff
-12:04:39 | INFO: Blender create Mesh node Cube
-12:04:39 | INFO: glTF import finished in 0.00s
-12:04:39 | INFO: Data are loaded, start creating Blender stuff
-12:04:39 | INFO: Blender create Mesh node Cube
-12:04:39 | INFO: glTF import finished in 0.00s
-12:04:39 | INFO: Data are loaded, start creating Blender stuff
-12:04:39 | INFO: Blender create Mesh node Cube
-12:04:39 | INFO: glTF import finished in 0.00s
-12:04:39 | INFO: Data are loaded, start creating Blender stuff
-12:04:39 | INFO: Blender create Mesh node Cube
-12:04:39 | INFO: glTF import finished in 0.00s
-12:04:39 | INFO: Data are loaded, start creating Blender stuff
-12:04:39 | INFO: Blender create Mesh node Cube
-12:04:39 | INFO: glTF import finished in 0.00s
-12:04:39 | INFO: Data are loaded, start creating Blender stuff
-12:04:39 | INFO: Blender create Mesh node Cube
-12:04:39 | INFO: glTF import finished in 0.00s
-12:04:39 | INFO: Data are loaded, start creating Blender stuff
-12:04:39 | INFO: Blender create Mesh node Cube
-12:04:39 | INFO: glTF import finished in 0.00s
-12:04:39 | INFO: Data are loaded, start creating Blender stuff
-12:04:39 | INFO: Blender create Mesh node Cube
-12:04:39 | INFO: glTF import finished in 0.00s
-12:04:39 | INFO: Data are loaded, start creating Blender stuff
-12:04:39 | INFO: Blender create Mesh node Cube
-12:04:39 | INFO: glTF import finished in 0.00s
-12:04:39 | INFO: Data are loaded, start creating Blender stuff
-12:04:39 | INFO: Blender create Mesh node Cube
-12:04:39 | INFO: glTF import finished in 0.00s
-12:04:39 | INFO: Data are loaded, start creating Blender stuff
-12:04:39 | INFO: Blender create Mesh node Cube
-12:04:39 | INFO: glTF import finished in 0.00s
-12:04:39 | INFO: Data are loaded, start creating Blender stuff
-12:04:39 | INFO: Blender create Mesh node Cube
-12:04:39 | INFO: glTF import finished in 0.00s
-12:04:39 | INFO: Data are loaded, start creating Blender stuff
-12:04:39 | INFO: Blender create Mesh node Cube
-12:04:39 | INFO: glTF import finished in 0.00s
-12:04:39 | INFO: Data are loaded, start creating Blender stuff
-12:04:39 | INFO: Blender create Mesh node Cube
-12:04:39 | INFO: glTF import finished in 0.00s
-12:04:39 | INFO: Data are loaded, start creating Blender stuff
-12:04:39 | INFO: Blender create Mesh node Cube
-12:04:39 | INFO: glTF import finished in 0.00s
-12:04:39 | INFO: Data are loaded, start creating Blender stuff
-12:04:39 | INFO: Blender create Mesh node Cube
-12:04:39 | INFO: glTF import finished in 0.00s
+18:41:13 | INFO: Data are loaded, start creating Blender stuff
+18:41:13 | INFO: Blender create Mesh node Cube
+18:41:13 | INFO: glTF import finished in 0.00s
+ASSEMBLY_MATERIAL corner_L_0_0 concrete_grey_01 mode=pbr_profile
+18:41:13 | INFO: Data are loaded, start creating Blender stuff
+18:41:13 | INFO: Blender create Mesh node Cube
+18:41:13 | INFO: glTF import finished in 0.00s
+ASSEMBLY_MATERIAL wall_brick_1u_1_0 brick_red_01 mode=pbr_profile
+18:41:13 | INFO: Data are loaded, start creating Blender stuff
+18:41:13 | INFO: Blender create Mesh node door_residential_production_run001
+18:41:13 | INFO: glTF import finished in 0.00s
+ASSEMBLY_MATERIAL door_residential_2_0 wood_plank_01 mode=pbr_profile
+18:41:13 | INFO: Data are loaded, start creating Blender stuff
+18:41:13 | INFO: Blender create Mesh node Cube
+18:41:13 | INFO: glTF import finished in 0.00s
+ASSEMBLY_MATERIAL corner_L_3_0 concrete_grey_01 mode=pbr_profile
+18:41:13 | INFO: Data are loaded, start creating Blender stuff
+18:41:13 | INFO: Blender create Mesh node Cube
+18:41:13 | INFO: glTF import finished in 0.00s
+ASSEMBLY_MATERIAL wall_brick_1u_0_1 brick_red_01 mode=pbr_profile
+18:41:13 | INFO: Data are loaded, start creating Blender stuff
+18:41:13 | INFO: Blender create Mesh node Cube
+18:41:13 | INFO: glTF import finished in 0.00s
+ASSEMBLY_MATERIAL wall_brick_1u_3_1 brick_red_01 mode=pbr_profile
+18:41:13 | INFO: Data are loaded, start creating Blender stuff
+18:41:13 | INFO: Blender create Mesh node Cube
+18:41:13 | INFO: glTF import finished in 0.00s
+ASSEMBLY_MATERIAL corner_L_0_2 concrete_grey_01 mode=pbr_profile
+18:41:13 | INFO: Data are loaded, start creating Blender stuff
+18:41:13 | INFO: Blender create Mesh node Cube
+18:41:13 | INFO: glTF import finished in 0.00s
+ASSEMBLY_MATERIAL wall_brick_1u_1_2 brick_red_01 mode=pbr_profile
+18:41:13 | INFO: Data are loaded, start creating Blender stuff
+18:41:13 | INFO: Blender create Mesh node Cube
+18:41:13 | INFO: glTF import finished in 0.00s
+ASSEMBLY_MATERIAL wall_brick_1u_2_2 brick_red_01 mode=pbr_profile
+18:41:13 | INFO: Data are loaded, start creating Blender stuff
+18:41:13 | INFO: Blender create Mesh node Cube
+18:41:13 | INFO: glTF import finished in 0.00s
+ASSEMBLY_MATERIAL corner_L_3_2 concrete_grey_01 mode=pbr_profile
+18:41:13 | INFO: Data are loaded, start creating Blender stuff
+18:41:13 | INFO: Blender create Mesh node Cube
+18:41:13 | INFO: glTF import finished in 0.00s
+ASSEMBLY_MATERIAL corner_L_0_0.001 concrete_grey_01 mode=pbr_profile
+18:41:13 | INFO: Data are loaded, start creating Blender stuff
+18:41:13 | INFO: Blender create Mesh node Cube
+18:41:13 | INFO: glTF import finished in 0.00s
+ASSEMBLY_MATERIAL wall_brick_1u_1_0.001 brick_red_01 mode=pbr_profile
+18:41:13 | INFO: Data are loaded, start creating Blender stuff
+18:41:13 | INFO: Blender create Mesh node Cube
+18:41:13 | INFO: glTF import finished in 0.00s
+ASSEMBLY_MATERIAL wall_brick_1u_2_0 brick_red_01 mode=pbr_profile
+18:41:13 | INFO: Data are loaded, start creating Blender stuff
+18:41:13 | INFO: Blender create Mesh node Cube
+18:41:13 | INFO: glTF import finished in 0.00s
+ASSEMBLY_MATERIAL corner_L_3_0.001 concrete_grey_01 mode=pbr_profile
+18:41:13 | INFO: Data are loaded, start creating Blender stuff
+18:41:13 | INFO: Blender create Mesh node Cube
+18:41:13 | INFO: glTF import finished in 0.00s
+ASSEMBLY_MATERIAL wall_brick_1u_0_1.001 brick_red_01 mode=pbr_profile
+18:41:13 | INFO: Data are loaded, start creating Blender stuff
+18:41:13 | INFO: Blender create Mesh node Cube
+18:41:13 | INFO: glTF import finished in 0.00s
+ASSEMBLY_MATERIAL wall_brick_1u_3_1.001 brick_red_01 mode=pbr_profile
+18:41:13 | INFO: Data are loaded, start creating Blender stuff
+18:41:13 | INFO: Blender create Mesh node Cube
+18:41:13 | INFO: glTF import finished in 0.00s
+ASSEMBLY_MATERIAL corner_L_0_2.001 concrete_grey_01 mode=pbr_profile
+18:41:13 | INFO: Data are loaded, start creating Blender stuff
+18:41:13 | INFO: Blender create Mesh node Cube
+18:41:13 | INFO: glTF import finished in 0.00s
+ASSEMBLY_MATERIAL wall_brick_1u_1_2.001 brick_red_01 mode=pbr_profile
+18:41:13 | INFO: Data are loaded, start creating Blender stuff
+18:41:13 | INFO: Blender create Mesh node Cube
+18:41:13 | INFO: glTF import finished in 0.00s
+ASSEMBLY_MATERIAL wall_brick_1u_2_2.001 brick_red_01 mode=pbr_profile
+18:41:13 | INFO: Data are loaded, start creating Blender stuff
+18:41:13 | INFO: Blender create Mesh node Cube
+18:41:13 | INFO: glTF import finished in 0.00s
+ASSEMBLY_MATERIAL corner_L_3_2.001 concrete_grey_01 mode=pbr_profile
+18:41:13 | INFO: Data are loaded, start creating Blender stuff
+18:41:13 | INFO: Blender create Mesh node Cube
+18:41:13 | INFO: glTF import finished in 0.00s
+ASSEMBLY_MATERIAL roof_pitched_gable_0_0 roof_tile_01 mode=pbr_profile
+18:41:13 | INFO: Data are loaded, start creating Blender stuff
+18:41:13 | INFO: Blender create Mesh node Cube
+18:41:13 | INFO: glTF import finished in 0.00s
+ASSEMBLY_MATERIAL roof_pitched_gable_1_0 roof_tile_01 mode=pbr_profile
+18:41:13 | INFO: Data are loaded, start creating Blender stuff
+18:41:13 | INFO: Blender create Mesh node Cube
+18:41:13 | INFO: glTF import finished in 0.00s
+ASSEMBLY_MATERIAL roof_pitched_gable_2_0 roof_tile_01 mode=pbr_profile
+18:41:13 | INFO: Data are loaded, start creating Blender stuff
+18:41:13 | INFO: Blender create Mesh node Cube
+18:41:13 | INFO: glTF import finished in 0.00s
+ASSEMBLY_MATERIAL roof_pitched_gable_3_0 roof_tile_01 mode=pbr_profile
+18:41:13 | INFO: Data are loaded, start creating Blender stuff
+18:41:13 | INFO: Blender create Mesh node Cube
+18:41:13 | INFO: glTF import finished in 0.00s
+ASSEMBLY_MATERIAL roof_pitched_gable_0_1 roof_tile_01 mode=pbr_profile
+18:41:13 | INFO: Data are loaded, start creating Blender stuff
+18:41:13 | INFO: Blender create Mesh node Cube
+18:41:13 | INFO: glTF import finished in 0.00s
+ASSEMBLY_MATERIAL roof_pitched_gable_3_1 roof_tile_01 mode=pbr_profile
+18:41:13 | INFO: Data are loaded, start creating Blender stuff
+18:41:13 | INFO: Blender create Mesh node Cube
+18:41:13 | INFO: glTF import finished in 0.00s
+ASSEMBLY_MATERIAL roof_pitched_gable_0_2 roof_tile_01 mode=pbr_profile
+18:41:13 | INFO: Data are loaded, start creating Blender stuff
+18:41:13 | INFO: Blender create Mesh node Cube
+18:41:13 | INFO: glTF import finished in 0.00s
+ASSEMBLY_MATERIAL roof_pitched_gable_1_2 roof_tile_01 mode=pbr_profile
+18:41:13 | INFO: Data are loaded, start creating Blender stuff
+18:41:13 | INFO: Blender create Mesh node Cube
+18:41:13 | INFO: glTF import finished in 0.00s
+ASSEMBLY_MATERIAL roof_pitched_gable_2_2 roof_tile_01 mode=pbr_profile
+18:41:13 | INFO: Data are loaded, start creating Blender stuff
+18:41:13 | INFO: Blender create Mesh node Cube
+18:41:13 | INFO: glTF import finished in 0.00s
+ASSEMBLY_MATERIAL roof_pitched_gable_3_2 roof_tile_01 mode=pbr_profile
+ARCH_MAT_APPLY corner_L_0_0 concrete_grey_01 mode=pbr_profile
+ARCH_MAT_APPLY wall_brick_1u_1_0 brick_red_01 mode=pbr_profile
+ARCH_MAT_APPLY door_residential_2_0 wood_plank_01 mode=pbr_profile
+ARCH_MAT_APPLY corner_L_3_0 concrete_grey_01 mode=pbr_profile
+ARCH_MAT_APPLY wall_brick_1u_0_1 brick_red_01 mode=pbr_profile
+ARCH_MAT_APPLY wall_brick_1u_3_1 brick_red_01 mode=pbr_profile
+ARCH_MAT_APPLY corner_L_0_2 concrete_grey_01 mode=pbr_profile
+ARCH_MAT_APPLY wall_brick_1u_1_2 brick_red_01 mode=pbr_profile
+ARCH_MAT_APPLY wall_brick_1u_2_2 brick_red_01 mode=pbr_profile
+ARCH_MAT_APPLY corner_L_3_2 concrete_grey_01 mode=pbr_profile
+ARCH_MAT_APPLY corner_L_0_0 concrete_grey_01 mode=pbr_profile
+ARCH_MAT_APPLY wall_brick_1u_1_0 brick_red_01 mode=pbr_profile
+ARCH_MAT_APPLY wall_brick_1u_2_0 brick_red_01 mode=pbr_profile
+ARCH_MAT_APPLY corner_L_3_0 concrete_grey_01 mode=pbr_profile
+ARCH_MAT_APPLY wall_brick_1u_0_1 brick_red_01 mode=pbr_profile
+ARCH_MAT_APPLY wall_brick_1u_3_1 brick_red_01 mode=pbr_profile
+ARCH_MAT_APPLY corner_L_0_2 concrete_grey_01 mode=pbr_profile
+ARCH_MAT_APPLY wall_brick_1u_1_2 brick_red_01 mode=pbr_profile
+ARCH_MAT_APPLY wall_brick_1u_2_2 brick_red_01 mode=pbr_profile
+ARCH_MAT_APPLY corner_L_3_2 concrete_grey_01 mode=pbr_profile
+ARCH_MAT_APPLY roof_pitched_gable_0_0 roof_tile_01 mode=pbr_profile
+ARCH_MAT_APPLY roof_pitched_gable_1_0 roof_tile_01 mode=pbr_profile
+ARCH_MAT_APPLY roof_pitched_gable_2_0 roof_tile_01 mode=pbr_profile
+ARCH_MAT_APPLY roof_pitched_gable_3_0 roof_tile_01 mode=pbr_profile
+ARCH_MAT_APPLY roof_pitched_gable_0_1 roof_tile_01 mode=pbr_profile
+ARCH_MAT_APPLY roof_pitched_gable_3_1 roof_tile_01 mode=pbr_profile
+ARCH_MAT_APPLY roof_pitched_gable_0_2 roof_tile_01 mode=pbr_profile
+ARCH_MAT_APPLY roof_pitched_gable_1_2 roof_tile_01 mode=pbr_profile
+ARCH_MAT_APPLY roof_pitched_gable_2_2 roof_tile_01 mode=pbr_profile
+ARCH_MAT_APPLY roof_pitched_gable_3_2 roof_tile_01 mode=pbr_profile
 Info: Saved as "victorian_4x3_s42_a7cb.blend"
 ASSEMBLY_BLEND_OK C:\dev\github\Rust_engine_template_01\assets\staging\assemblies\victorian_4x3_s42_a7cb.blend
 Blender 5.1.2 (hash ec6e62d40fa9 built 2026-05-19 01:37:34)

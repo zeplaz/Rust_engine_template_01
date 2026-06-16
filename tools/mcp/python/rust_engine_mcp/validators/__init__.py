@@ -128,4 +128,48 @@ def run_validator(
         if not target:
             raise ValueError("target path required for assembly_production (assembly snapshot JSON)")
         return validate_assembly_snapshot_path(_resolve(target), ship=True, compression_level=compression_level)
+    if name == "building_set_coverage":
+        from rust_engine_mcp.grammar_build_set import validate_building_set_coverage
+
+        return validate_building_set_coverage(compression_level=compression_level)
+    if name == "pilot_hardcode_lint":
+        from rust_engine_mcp.pilot_hardcode_lint import validate_pilot_hardcode_lint
+
+        return validate_pilot_hardcode_lint(compression_level=compression_level)
+    if name == "example_teachable_audit":
+        from rust_engine_mcp.build_set_guards import validate_example_teachable_audit
+
+        return validate_example_teachable_audit()
+    if name == "single_archetype_ratio_guard":
+        from rust_engine_mcp.build_set_guards import validate_single_archetype_ratio_guard
+
+        return validate_single_archetype_ratio_guard()
+    if name == "warehouse_track_guard":
+        from rust_engine_mcp.build_set_guards import validate_warehouse_track_guard
+
+        return validate_warehouse_track_guard()
+    if name == "grammar_integration":
+        if not target:
+            raise ValueError("target path required for grammar_integration (assembly snapshot JSON)")
+        from rust_engine_mcp.grammar_integration import validate_grammar_integration_path
+
+        return validate_grammar_integration_path(_resolve(target), ship=True, compression_level=compression_level)
+    if name == "landscape_grammar":
+        if not target:
+            raise ValueError("target path required for landscape_grammar (LAND-DNA preset JSON)")
+        from .landscape_grammar import validate_landscape_grammar_path
+
+        return validate_landscape_grammar_path(_resolve(target), compression_level=compression_level)
+    if name == "arch_build_grammar":
+        if not target:
+            raise ValueError("target path required for arch_build_grammar (ARCH-DNA preset JSON)")
+        from .arch_build_grammar import validate_arch_build_grammar_path
+
+        return validate_arch_build_grammar_path(_resolve(target), compression_level=compression_level)
+    if name == "construction":
+        if not target:
+            raise ValueError("target path required for construction (witness JSON)")
+        from rust_engine_mcp.validators.construction_witness import validate_construction_witness_path
+
+        return validate_construction_witness_path(_resolve(target), compression_level=compression_level)
     raise ValueError(f"unknown validator: {name}")

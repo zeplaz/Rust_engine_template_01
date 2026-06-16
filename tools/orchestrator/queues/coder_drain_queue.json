@@ -1,0 +1,457 @@
+{
+  "_meta": {
+    "version": "1.1.0",
+    "program_id": "POST-DRAIN-PHASE-4-001",
+    "date": "2026-06-11",
+    "updated": "2026-06-13",
+    "status": "DRAINED",
+    "superseded_by": "tools/orchestrator/queues/coder_master_drain_queue.json",
+    "plan_doc": "src/dev/plan_product_polish_exec_001_v1.md",
+    "handoff": "tools/orchestrator/queues/HANDOFF.md",
+    "phase4_queue": "tools/orchestrator/queues/post_drain_phase4_queue.json",
+    "runbook": "src/dev/coder_drain_order_phase4_v1.md",
+    "rule": "One coder drains top→bottom. parallel_group = same wave OK on different files. No dev Postgres in game.",
+    "regression": "cargo test -p proc_A_dine01 --lib sim_effects fire_ecology construction stage5",
+    "blang_cargo": "validate-report cargo --cached --compress 4",
+    "last_sync": "2026-06-14"
+  },
+  "sprint_decision": {
+    "primary_lane": "L_SIM — SimEffect spine P0–P2",
+    "parallel_lane": "H_VIEW + I_FIRE render + operator UX",
+    "note": "Wave 1 sim spine unblocks real play fire (FIRE-IGNITION). Build UX + cursor parallel on coder B territory."
+  },
+  "waves": [
+    {
+      "wave": 1,
+      "label": "SimEffect spine P0",
+      "owner_default": "coder_a",
+      "program": "sim_effects"
+    },
+    {
+      "wave": 2,
+      "label": "Operator build UX",
+      "owner_default": "coder_b",
+      "program": "g_play"
+    },
+    {
+      "wave": 3,
+      "label": "Fire sim + render",
+      "owner_default": "coder_a",
+      "program": "fire_vfx"
+    },
+    {
+      "wave": 4,
+      "label": "View polish",
+      "owner_default": "coder_a",
+      "program": "view_polish"
+    },
+    {
+      "wave": 5,
+      "label": "Sim spine P2+",
+      "owner_default": "coder_a",
+      "program": "sim_effects"
+    },
+    {
+      "wave": 6,
+      "label": "Deferred / designer-gated",
+      "owner_default": "coder",
+      "program": "backlog"
+    }
+  ],
+  "drain": [
+    {
+      "seq": 1,
+      "wave": 1,
+      "id": "SIM-EFFECT-QUEUE-001",
+      "status": "done",
+      "priority": "P0",
+      "owner": "coder_a",
+      "territory": "src/sim/effects/",
+      "goal": "SimEffectQueue + tick drain + fire/hydro adapters",
+      "exec": "src/dev/plan_sim_effect_spine_exec_001_v1.md",
+      "guide": "src/dev/guide_sim_effect_spine_v1.md",
+      "refs": [
+        "src/substrate/hydrology/event_bus.rs",
+        "src/systems/fire/ember_spot_ignition.rs"
+      ],
+      "exit": "queue_drain_ok true",
+      "witness": "debug_runs/sim_effect_spine_live.json",
+      "verify": "cargo test -p proc_A_dine01 --lib sim_effects",
+      "handoff_line": "Implement src/sim/effects/ per plan P0; hydro dedupe pattern; drain after AdvanceSimTick",
+      "completed": "2026-06-11"
+    },
+    {
+      "seq": 2,
+      "wave": 1,
+      "id": "SIM-EFFECT-TEL-001",
+      "status": "done",
+      "priority": "P0",
+      "owner": "coder_a",
+      "depends_on": [
+        "SIM-EFFECT-QUEUE-001"
+      ],
+      "territory": "src/sim/effects/telemetry.rs",
+      "goal": "sim_effect_id + ParentEffectID + JSONL ledger",
+      "exit": "causal_chain_depth_max >= 1",
+      "witness": "debug_runs/sim_effect_spine_live.json",
+      "artifacts": [
+        "debug_runs/sim_effects/effects.jsonl"
+      ],
+      "forbidden": [
+        "dev Postgres in proc_A_dine01"
+      ],
+      "handoff_line": "P1 telemetry JSONL; same witness rollup; no PG",
+      "completed": "2026-06-11"
+    },
+    {
+      "seq": 3,
+      "wave": 2,
+      "parallel_group": "ux",
+      "id": "TRIAGE-BUILD-CLICK-PLACE-001",
+      "status": "done",
+      "priority": "P0",
+      "owner": "coder_b",
+      "depends_on": [
+        "DESIGN-BUILD-UX-REDESIGN-001"
+      ],
+      "territory": "src/construction/build_interaction.rs",
+      "goal": "Two-click place: lock → Ctrl rotate / Shift size → click place",
+      "design": "src/dev/design_build_ux_redesign_v1.md",
+      "exit": "enter_commits_single_ghost optional; LMB two-click primary",
+      "witness": "debug_runs/construction_stage_live.json",
+      "verify": "cargo test -p proc_A_dine01 --lib construction::build_interaction",
+      "completed": "2026-06-11"
+    },
+    {
+      "seq": 4,
+      "wave": 2,
+      "parallel_group": "ux",
+      "id": "TRIAGE-CURSOR-UNIFY-001",
+      "status": "done",
+      "priority": "P0",
+      "owner": "coder_b",
+      "depends_on": [
+        "TRIAGE-BUILD-CLICK-PLACE-001"
+      ],
+      "territory": "src/gui/hud/simulation_pointer_gate.rs",
+      "goal": "Hide OS cursor in sim; unified game cursor for pick + UI",
+      "design": "src/dev/design_build_ux_redesign_v1.md",
+      "exit": "operator single cursor over game window",
+      "completed": "2026-06-11"
+    },
+    {
+      "seq": 5,
+      "wave": 3,
+      "id": "FIRE-IGNITION-P0-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_a",
+      "depends_on": [
+        "SIM-EFFECT-TEL-001"
+      ],
+      "territory": "src/systems/fire/",
+      "goal": "Lightning + transformer → SimEffect → ember in normal play",
+      "exec": "src/dev/plan_sim_effect_spine_exec_001_v1.md",
+      "refs": [
+        "src/systems/fire/play_fire_visibility.rs"
+      ],
+      "exit": "ember_events_emitted from non-ecology cause_id",
+      "witness": "debug_runs/fire_ecology_live.json",
+      "forbidden": [
+        "harness seed in normal Simulation"
+      ],
+      "completed": "2026-06-11"
+    },
+    {
+      "seq": 6,
+      "wave": 3,
+      "parallel_group": "fire_render",
+      "id": "TRIAGE-FIRE-PLAY-VIS-001",
+      "status": "done",
+      "priority": "P0",
+      "owner": "coder_a",
+      "territory": "src/gui/hud/simulation_session.rs",
+      "goal": "Fire/sparks visible in normal play when sim has heat",
+      "refs": [
+        "src/dev/operator_playtest_report_20260612_v1.md",
+        "src/dev/design_zoom_fire_read_v1.md"
+      ],
+      "exit": "operator sees heat or sparks without --test flags",
+      "note": "May start parallel to wave 1 if file territory clear — completes after FIRE-IGNITION for full loop",
+      "completed": "2026-06-11"
+    },
+    {
+      "seq": 7,
+      "wave": 4,
+      "id": "TRIAGE-MAP-ZOOM-SMOOTH-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_a",
+      "depends_on": [
+        "PLAN-MAP-ZOOM-SMOOTH-001",
+        "TRIAGE-MAP-PICK-CLOSURE-001"
+      ],
+      "territory": "src/gui/map_camera.rs",
+      "goal": "Eliminate zoom ghost — ortho/tile sync vs pan smooth",
+      "exec": "src/dev/plan_map_zoom_smooth_exec_001_v1.md",
+      "witness": "debug_runs/map_zoom_coherence_live.json",
+      "completed": "2026-06-11"
+    },
+    {
+      "seq": 8,
+      "wave": 4,
+      "id": "P0-VFX-ZOOM-LOCK-001",
+      "status": "done",
+      "priority": "P2",
+      "owner": "coder_b",
+      "territory": "src/render/stage5_full_app_harness.rs",
+      "goal": "--test vfx scroll zoom must not snap back",
+      "exit": "vfx sandbox zoom free",
+      "completed": "2026-06-11"
+    },
+    {
+      "seq": 9,
+      "wave": 4,
+      "id": "P0-TERRAIN-BLOB-001",
+      "status": "done",
+      "priority": "P2",
+      "owner": "coder_b",
+      "territory": "src/render/tile_world_fallback.rs",
+      "goal": "Central terrain raster seam/blob fix or instrument",
+      "completed": "2026-06-11"
+    },
+    {
+      "seq": 10,
+      "wave": 5,
+      "id": "SCENARIO-TRIGGER-001",
+      "status": "done",
+      "priority": "P2",
+      "owner": "coder_a",
+      "depends_on": [
+        "SIM-EFFECT-QUEUE-001"
+      ],
+      "territory": "src/scenario/",
+      "goal": "ScenarioStep::EmitSimEffect + RON TriggerSpec sketch",
+      "exec": "src/dev/plan_sim_effect_spine_exec_001_v1.md",
+      "completed": "2026-06-11"
+    },
+    {
+      "seq": 11,
+      "wave": 5,
+      "id": "BUILD-READ-SHAPE-002",
+      "status": "done",
+      "priority": "P2",
+      "owner": "coder_b",
+      "depends_on": [
+        "BUILD-READ-SHAPE-001"
+      ],
+      "goal": "Wire logistics_rail_warehouse pilot FootprintMatrix into tray + ghost",
+      "plan_doc": "src/dev/design_shape_rail_warehouse_pilot_v1.md",
+      "completed": "2026-06-11"
+    },
+    {
+      "seq": 17,
+      "wave": 5,
+      "id": "BUILD-READ-SHAPE-003",
+      "status": "done",
+      "priority": "P2",
+      "owner": "coder_b",
+      "depends_on": [
+        "BUILD-READ-GRAMMAR-v0-003",
+        "BUILD-READ-SHAPE-002"
+      ],
+      "goal": "β massing pick → footprint_mode + FootprintMatrix export on commit path",
+      "plan_doc": "src/dev/plan_operator_build_readability_exec_001_v1.md",
+      "completed": "2026-06-11"
+    },
+    {
+      "seq": 12,
+      "wave": 5,
+      "id": "BUILD-READ-WORLD-002",
+      "status": "done",
+      "priority": "P2",
+      "owner": "coder_a",
+      "depends_on": [
+        "BUILD-READ-WORLD-001"
+      ],
+      "goal": "Iso draw scale multiplier Option A — designer scale table",
+      "plan_doc": "src/dev/design_build_readability_v1.md",
+      "completed": "2026-06-11"
+    },
+    {
+      "seq": 13,
+      "wave": 5,
+      "id": "BUILD-READ-SITE-v0-002",
+      "status": "done",
+      "priority": "P2",
+      "owner": "coder_b",
+      "depends_on": [
+        "BUILD-READ-SITE-v0-001"
+      ],
+      "goal": "View-only site stub overlay (yard/rail voids)",
+      "plan_doc": "src/dev/design_build_readability_v1.md",
+      "completed": "2026-06-11"
+    },
+    {
+      "seq": 14,
+      "wave": 5,
+      "id": "EVENT-LOG-UI-001",
+      "status": "done",
+      "priority": "P3",
+      "owner": "coder_b",
+      "depends_on": [
+        "SIM-EFFECT-TEL-001",
+        "DESIGN-EVENT-LOG-001"
+      ],
+      "goal": "RTS event log panel from telemetry ledger — RAM ring first",
+      "plan_doc": "src/dev/design_event_log_ui_v1.md",
+      "witness": "debug_runs/design_event_log_ui_live.json",
+      "note": "DESIGN-EVENT-LOG-001 PASS 2026-06-12 — Events context tray + ops strip",
+      "completed": "2026-06-11"
+    },
+    {
+      "seq": 15,
+      "wave": 5,
+      "id": "FACTION-REACT-001",
+      "status": "done",
+      "priority": "P3",
+      "owner": "coder_a",
+      "depends_on": [
+        "SIM-EFFECT-TEL-001"
+      ],
+      "goal": "Faction stress hooks read telemetry rows",
+      "exec": "src/dev/plan_sim_effect_spine_exec_001_v1.md",
+      "completed": "2026-06-14"
+    },
+    {
+      "seq": 16,
+      "wave": 6,
+      "id": "SIM-EFFECT-EMBED-DB-001",
+      "status": "deferred",
+      "priority": "P4",
+      "goal": "Embedded DB only if GAME-STORE-GATE passes — not P0–P2",
+      "forbidden": [
+        "dev Postgres in game"
+      ]
+    },
+    {
+      "seq": 17,
+      "wave": 6,
+      "id": "NARRATIVE-GEN-001",
+      "status": "deferred",
+      "priority": "P4",
+      "owner": "designer",
+      "goal": "Lazy NL from telemetry → NarrativeObservationBus"
+    }
+  ],
+  "done": [
+    {
+      "id": "PLAN-SIM-EFFECT-SPINE-001",
+      "completed": "2026-06-11"
+    },
+    {
+      "id": "PLAN-PRODUCT-POLISH-001",
+      "completed": "2026-06-11"
+    },
+    {
+      "id": "DESIGN-BUILD-UX-REDESIGN-001",
+      "completed": "2026-06-12",
+      "verdict": "PASS"
+    },
+    {
+      "id": "TRIAGE-BUILD-CLICK-PLACE-001",
+      "completed": "2026-06-11",
+      "verdict": "witness_green"
+    },
+    {
+      "id": "TRIAGE-CURSOR-UNIFY-001",
+      "completed": "2026-06-11",
+      "verdict": "witness_green"
+    },
+    {
+      "id": "SIM-EFFECT-QUEUE-001",
+      "completed": "2026-06-11",
+      "verdict": "witness_green"
+    },
+    {
+      "id": "SIM-EFFECT-TEL-001",
+      "completed": "2026-06-11",
+      "verdict": "witness_green"
+    },
+    {
+      "id": "FIRE-IGNITION-P0-001",
+      "completed": "2026-06-11",
+      "verdict": "witness_green"
+    },
+    {
+      "id": "TRIAGE-FIRE-PLAY-VIS-001",
+      "completed": "2026-06-11",
+      "verdict": "witness_green"
+    },
+    {
+      "id": "TRIAGE-MAP-ZOOM-SMOOTH-001",
+      "completed": "2026-06-11",
+      "verdict": "witness_green"
+    },
+    {
+      "id": "P0-VFX-ZOOM-LOCK-001",
+      "completed": "2026-06-11",
+      "verdict": "witness_green"
+    },
+    {
+      "id": "P0-TERRAIN-BLOB-001",
+      "completed": "2026-06-11",
+      "verdict": "witness_green"
+    },
+    {
+      "id": "SCENARIO-TRIGGER-001",
+      "completed": "2026-06-11",
+      "verdict": "witness_green"
+    },
+    {
+      "id": "EVENT-LOG-UI-001",
+      "completed": "2026-06-11",
+      "verdict": "witness_green"
+    },
+    {
+      "id": "BUILD-READ-SHAPE-003",
+      "completed": "2026-06-11",
+      "verdict": "witness_green"
+    },
+    {
+      "id": "BUILD-READ-SHAPE-001",
+      "completed": "2026-06-13",
+      "verdict": "PASS",
+      "witness": "debug_runs/design_shape_rail_warehouse_pilot_live.json"
+    },
+    {
+      "id": "BUILD-READ-SHAPE-002",
+      "completed": "2026-06-11"
+    },
+    {
+      "id": "BUILD-READ-WORLD-002",
+      "completed": "2026-06-11"
+    },
+    {
+      "id": "BUILD-READ-SITE-v0-002",
+      "completed": "2026-06-11"
+    },
+    {
+      "id": "BUILD-READ-DEBUG-001",
+      "completed": "2026-06-11"
+    },
+    {
+      "id": "TRIAGE-MAP-PICK-CLOSURE-001",
+      "completed": "2026-06-12"
+    },
+    {
+      "id": "TRIAGE-FIRE-PRODUCT-001",
+      "completed": "2026-06-08"
+    }
+  ],
+  "maintain_after_each_wave": [
+    "cargo test -p proc_A_dine01 --lib sim_effects fire_ecology construction stage5",
+    "BLANG:CARGO --cached --compress 4"
+  ],
+  "operator_handoff": "Implement src/sim/effects/ per plan_sim_effect_spine_exec_001_v1.md P0–P1; hydro pattern + ember waist; JSONL telemetry; no dev Postgres; witness debug_runs/sim_effect_spine_live.json"
+}

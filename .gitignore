@@ -1,4 +1,6 @@
 /target
+/target_fleet*/
+/target_*/
 /.vscode
 
 # Orchestrator volatile history (reports/runbooks are committed when refreshed)

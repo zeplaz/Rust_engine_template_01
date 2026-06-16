@@ -1,15 +1,76 @@
 {
   "slice_id": "MCP-PILOT-GRAMMAR-001",
+  "track": "B",
   "green": false,
   "proceed_ship": false,
   "art_quality": "rejected_headless_procedural",
-  "supersedes": "2026-06-03T20:13:33 false-green run",
-  "human_verdict": "unacceptable",
+  "updated": "2026-06-04T02:32:05.201146+00:00",
+  "pilot_assembly": "assets/staging/assemblies/industrial_west_7x5_s39_9fa1.json",
+  "pilot_blend": "assets/staging/assemblies/industrial_west_7x5_s39_9fa1.blend",
+  "manual_stills_folder": "assets/staging/tiles/keyframe_stills/warehouse_industrial_manual_v1",
   "rejection_witness": "debug_runs/art_pipeline/mcp_pilot_grammar_001_rejected_live.json",
-  "findings_summary": "Grey slabs, truck in burning still, no variant differentiation — headless bake mislabeled keyframe_manual",
-  "updated": "2026-06-03T21:00:00+00:00",
+  "gates": {
+    "assembly_p0": {
+      "status": "passed",
+      "summary": "P0 gate: production=passed grammar=passed"
+    },
+    "assembly_grammar": {
+      "status": "passed",
+      "summary": "GRAMMAR-GEN-VERIFY-001: 0 error(s) footprint=7x5x1 placements=40"
+    },
+    "cleanup_assembly_blends": {
+      "exit_code": 0
+    },
+    "assembly_build_run": {
+      "ok": true,
+      "result": {
+        "ok": true,
+        "job_id": "asm_industrial_west_7x5_s39_9fa1",
+        "status": "done",
+        "blend_path": "assets/staging/assemblies/industrial_west_7x5_s39_9fa1.blend",
+        "outputs": [
+          "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\assemblies\\industrial_west_7x5_s39_9fa1.blend"
+        ],
+        "error": null
+      }
+    }
+  },
+  "prerequisites": {
+    "track_a_grammar_e2e": true,
+    "aps_preview_002": true,
+    "build_worker_001": true,
+    "assembly_p0": true,
+    "prep_ready": true
+  },
+  "blocked_by": [
+    "real_keyframe_render_required",
+    "operator_g4_eyeball"
+  ],
+  "operator_phase_4_6": [
+    "Open assets/staging/assemblies/industrial_west_7x5_s39_9fa1.blend \u2014 ASSEMBLY only (no truck/rig saved in file)",
+    "Append utils/Tile_iso_rig_v1.blend \u2192 TILE_ISO_RIG at bake time",
+    "Run utils/keyframe_render.py \u2014 3 states \u00d7 8 facings = 24 PNGs @ 128px",
+    "Export to assets/staging/tiles/keyframe_stills/warehouse_industrial_manual_v1/",
+    "Write assets/staging/tiles/keyframe_stills/warehouse_industrial_manual_v1/keyframe_manual.export (export_mode: keyframe_manual)",
+    "tile-atlas-pack from manual folder \u2014 NOT tile_warehouse_industrial_v2_minimum_g4 headless grid",
+    "powershell -File tools/mcp/scripts/designer_mcp_warehouse_phase_c.ps1"
+  ],
+  "forbidden": [
+    "tile_compile_minimum_bake.py",
+    "designer_mcp_pilot_grammar_keyframe.py --force-bake for ship",
+    "fake keyframe_manual.export on headless PNGs"
+  ],
+  "findings_from_rejection": [
+    "Grey untextured slab geometry \u2014 not a warehouse silhouette",
+    "Vehicle/truck geometry visible in burning stills",
+    "No readable difference between clean_day, clean_night, burning, abandoned variants",
+    "Fake keyframe_manual.export marker masked headless blender_keyframe_light_rig output",
+    "Facing rotation missing: clean_day f0..f7 are pixel-identical (0% diff); clean_night_on all 8 identical"
+  ],
   "_agent_meta": {
-    "agent": "operator",
-    "lane": "human_g4_rejection"
+    "agent": "designer-mcp",
+    "lane": "MCP-PILOT-GRAMMAR-001",
+    "policy": "docs/archive/2026-06-src-dev/plans/mcp_orchestrator_tile_fix_warehouse_slice_v2.md",
+    "orders": "docs/archive/2026-06-src-dev/plans/pilot_grammar_agent_orders_v1.md"
   }
 }

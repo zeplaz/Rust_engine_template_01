@@ -1,0 +1,81 @@
+{
+  "schema": "material_category_tree_v1",
+  "tree_id": "aps_material_tree_v1",
+  "version": 1,
+  "label": "APS Material Library",
+  "description": "Category tree for 300+ profiles — APS-MAT-002/003 Materials tab",
+  "max_depth": 3,
+  "roots": [
+    {
+      "id": "industrial",
+      "label": "Industrial",
+      "sort_order": 10,
+      "children": [
+        { "id": "steel", "label": "Steel", "sort_order": 1 },
+        { "id": "corrugated", "label": "Corrugated", "sort_order": 2 },
+        { "id": "concrete", "label": "Concrete", "sort_order": 3 },
+        { "id": "metal_roof", "label": "Metal Roof", "sort_order": 4 }
+      ]
+    },
+    {
+      "id": "residential",
+      "label": "Residential",
+      "sort_order": 20,
+      "children": [
+        { "id": "brick", "label": "Brick", "sort_order": 1 },
+        { "id": "plaster", "label": "Plaster", "sort_order": 2 },
+        { "id": "wood", "label": "Wood", "sort_order": 3 },
+        { "id": "shingle", "label": "Shingle", "sort_order": 4 }
+      ]
+    },
+    {
+      "id": "civic",
+      "label": "Civic & Commercial",
+      "sort_order": 30,
+      "children": [
+        { "id": "stone", "label": "Stone", "sort_order": 1 },
+        { "id": "glass", "label": "Glass Curtain", "sort_order": 2 },
+        { "id": "stucco", "label": "Stucco", "sort_order": 3 }
+      ]
+    },
+    {
+      "id": "roof",
+      "label": "Roofing",
+      "sort_order": 40,
+      "children": [
+        { "id": "tile", "label": "Tile", "sort_order": 1 },
+        { "id": "membrane", "label": "Membrane", "sort_order": 2 },
+        { "id": "tar", "label": "Tar / Built-up", "sort_order": 3 }
+      ]
+    },
+    {
+      "id": "glass",
+      "label": "Glass & Glazing",
+      "sort_order": 50
+    },
+    {
+      "id": "other",
+      "label": "Other / Unsorted",
+      "sort_order": 99
+    }
+  ],
+  "infer_rules": [
+    { "match": "steel", "category_path": "industrial/steel", "priority": 10 },
+    { "match": "corrugated", "category_path": "industrial/corrugated", "priority": 12 },
+    { "match": "metal", "category_path": "industrial/steel", "priority": 8 },
+    { "match": "concrete", "category_path": "industrial/concrete", "priority": 10 },
+    { "match": "brick", "category_path": "residential/brick", "priority": 10 },
+    { "match": "plaster", "category_path": "residential/plaster", "priority": 10 },
+    { "match": "wood", "category_path": "residential/wood", "priority": 10 },
+    { "match": "shingle", "category_path": "residential/shingle", "priority": 10 },
+    { "match": "roof", "category_path": "roof/tile", "priority": 5 },
+    { "match": "glass", "category_path": "glass", "priority": 10 },
+    { "match": "stone", "category_path": "civic/stone", "priority": 10 }
+  ],
+  "profile_bindings": [
+    { "profile_id": "steel_panel_01", "category_path": "industrial/steel" },
+    { "profile_id": "brick_red_01", "category_path": "residential/brick" },
+    { "profile_id": "roof_metal_01", "category_path": "industrial/metal_roof" },
+    { "profile_id": "glass_panel_01", "category_path": "glass" }
+  ]
+}

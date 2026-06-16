@@ -1,6 +1,6 @@
 # Blender Geometry — Reference
 
-Merged from [`prompts/MCP/mcp_drafts.md`](../../prompts/MCP/mcp_drafts.md) §2.1, §3, §5–6 and shipped [`tools/mcp/`](../../tools/mcp/).
+Merged from [`docs/archive/2026-06-fleet-drain/prompts_drafts/mcp_drafts.md`](../../docs/archive/2026-06-fleet-drain/prompts_drafts/mcp_drafts.md) §2.1, §3, §5–6 and shipped [`tools/mcp/`](../../tools/mcp/).
 
 ## Geometry MCP (Blender)
 
@@ -167,4 +167,4 @@ LOD/collision: **planned** (Tier 3 gltfpack / art_validator).
 
 - Orchestration: [mcp-asset-pipeline](../mcp-asset-pipeline/SKILL.md)
 - Rules: [mcp-production-rules](../mcp-production-rules/SKILL.md)
-- Module kit: [`design_procedural_module_kit_v1.md`](../../src/dev/design_procedural_module_kit_v1.md)
+- Module kit: [`design_procedural_module_kit_v1.md`](../../docs/archive/2026-06-src-dev/plans/design_procedural_module_kit_v1.md)

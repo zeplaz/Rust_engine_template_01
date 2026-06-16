@@ -115,24 +115,24 @@ def main() -> None:
     )
 
     plan_docs = [
-        "src/dev/fire7_f7_a_exit_acceptance_v1.md",
-        "src/dev/fire7_f7_b_streaming_impl_plan_v1.md",
-        "src/dev/fire7_f7_c_lod_impl_plan_v1.md",
-        "src/dev/construction_multiview_sim_spec_v1.md",
-        "src/dev/ind_e02_default_play_spec_v1.md",
-        "src/dev/log_e01_visual_acceptance_v1.md",
-        "src/dev/visual_run_acceptance_matrix_v1.md",
-        "src/dev/minimap_m3_units_replay_impl_plan_v1.md",
-        "src/dev/replay_editor_parity_impl_plan_v1.md",
-        "src/dev/s7b_m4_sim_playtest_spec_v1.md",
-        "src/dev/overlay_parity_stress_plan_v1.md",
-        "src/dev/plan_ledger_refresh_005_checklist_v1.md",
+        "docs/archive/2026-06-src-dev/plans/fire7_f7_a_exit_acceptance_v1.md",
+        "docs/archive/2026-06-src-dev/plans/fire7_f7_b_streaming_impl_plan_v1.md",
+        "docs/archive/2026-06-src-dev/plans/fire7_f7_c_lod_impl_plan_v1.md",
+        "docs/archive/2026-06-src-dev/plans/construction_multiview_sim_spec_v1.md",
+        "docs/archive/2026-06-src-dev/plans/ind_e02_default_play_spec_v1.md",
+        "docs/archive/2026-06-src-dev/plans/log_e01_visual_acceptance_v1.md",
+        "docs/archive/2026-06-src-dev/plans/visual_run_acceptance_matrix_v1.md",
+        "docs/archive/2026-06-src-dev/plans/minimap_m3_units_replay_impl_plan_v1.md",
+        "docs/archive/2026-06-src-dev/plans/replay_editor_parity_impl_plan_v1.md",
+        "docs/archive/2026-06-src-dev/plans/s7b_m4_sim_playtest_spec_v1.md",
+        "docs/archive/2026-06-src-dev/plans/overlay_parity_stress_plan_v1.md",
+        "docs/archive/2026-06-src-dev/plans/plan_ledger_refresh_005_checklist_v1.md",
     ]
     missing = [p for p in plan_docs if not (ROOT / p).is_file()]
     if missing:
         raise SystemExit(f"missing plan docs: {missing}")
 
-    audit_path = ROOT / "src/dev/planner_status_audit_v7.md"
+    audit_path = ROOT / "docs/archive/2026-06-fleet-drain/planner_audits/planner_status_audit_v7.md"
     print(f"audit: {audit_path.relative_to(ROOT)}")
     print(f"wave4 plans on disk: {len(plan_docs)}/{len(plan_docs)}")
     print(f"witness checks: {len(checks)}")

@@ -206,6 +206,8 @@ pub struct ProceduralBuildingRequest {
     pub floors: u32,
     pub style: StylePackId,
     pub seed: u64,
+    /// ARCH-DNA preset for grammar grid at PG-2 extract (BUILD-READ-VISUAL-001).
+    pub arch_dna_preset_id: Option<String>,
 }
 
 /// Active assembly request resource (demo / PG-2 until commit hook lands).
@@ -221,6 +223,7 @@ impl Default for ProceduralAssemblyRequest {
             floors: 2,
             style: StylePackId("style_victorian".into()),
             seed: 1,
+            arch_dna_preset_id: None,
         })
     }
 }

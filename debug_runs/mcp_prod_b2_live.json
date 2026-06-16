@@ -1,0 +1,15 @@
+{
+  "gate_id": "MCP-PROD-B2",
+  "ok": true,
+  "green": true,
+  "phase": "B2",
+  "acceptance": "24-vert cube fails pitched/sawtooth/arched at production",
+  "silhouette_cases": {
+    "module_roof:pitched": true,
+    "module_roof:sawtooth": true,
+    "module_window:arched": true
+  },
+  "tier_rules": [
+    "TIER-002"
+  ]
+}

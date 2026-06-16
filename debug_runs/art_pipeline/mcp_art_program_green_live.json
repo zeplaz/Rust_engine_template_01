@@ -3,8 +3,8 @@
   "updated": "2026-06-03",
   "green": true,
   "authoritative_docs": [
-    "src/dev/mcp_art_program_green_gates_v1.md",
-    "src/dev/mcp_fleet_production_pilot_rowhouse_v1.md"
+    "docs/archive/2026-06-src-dev/plans/mcp_art_program_green_gates_v1.md",
+    "docs/archive/2026-06-src-dev/plans/mcp_fleet_production_pilot_rowhouse_v1.md"
   ],
   "snap": "tools/orchestrator/queues/mcp_orchestrator_snap_CURRENT.md",
   "strong": {

@@ -4,7 +4,7 @@
 |:---|:---|
 | **Date** | 2026-05-25 (updated) |
 | **Queue** | **VFX-CAPTURE-001** (operator, optional) |
-| **Review** | [`src/dev/vfx_design_review_record_v1.md`](../../../src/dev/vfx_design_review_record_v1.md) |
+| **Review** | [`docs/archive/2026-06-src-dev/plans/vfx_design_review_record_v1.md`](../../../docs/archive/2026-06-src-dev/plans/vfx_design_review_record_v1.md) |
 
 ---
 

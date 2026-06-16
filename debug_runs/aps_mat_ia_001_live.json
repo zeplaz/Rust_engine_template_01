@@ -1,0 +1,9 @@
+{
+  "program_id": "APS-MAT-IA-001",
+  "gate": "APS-MAT-IA-001-IMPL",
+  "green": true,
+  "use_in_assembly_primary_cta": true,
+  "category_tree": true,
+  "profile_row_status_text": true,
+  "studio_mode_no_apply": true
+}

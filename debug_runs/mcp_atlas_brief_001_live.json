@@ -1,0 +1,14 @@
+{
+  "gate_id": "MCP-ATLAS-BRIEF-001",
+  "ok": true,
+  "green": true,
+  "pilot_v1_folder": "assets/staging/tiles/tile_rowhouse_victorian_pilot_v1",
+  "pilot_ok": false,
+  "pilot_schema": "v1",
+  "production_v2_folder": "assets/staging/tiles/tile_warehouse_industrial_v2_minimum_g4",
+  "production_ok": true,
+  "production_schema": "v2",
+  "pilot_plain_count": 1,
+  "production_facings": 8,
+  "production_cells": 24
+}

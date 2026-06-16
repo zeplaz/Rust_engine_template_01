@@ -12,6 +12,7 @@ pub mod gate;
 pub mod io;
 pub mod minimap;
 pub mod parity;
+pub mod sim_effects;
 pub mod stage6;
 pub mod stage7_behavioral;
 pub mod stage7_play;
@@ -53,6 +54,11 @@ pub use wave_s::{
     WaveSLiveProofState, WAVE_S_HYDRATE_JSON,
 };
 pub use parity::{refresh_migrated_witness_parity_bundle, strip_envelope_for_parity, witness_has_required_keys};
+pub use sim_effects::{
+    commit_sim_effect_spine_live_proof, commit_sim_effect_spine_live_proof_unchecked,
+    refresh_sim_effect_spine_live_witness, write_sim_effect_spine_live_proof_system,
+    SIM_EFFECT_SPINE_JSON,
+};
 pub use minimap::{
     commit_minimap_compositor_live_proof, refresh_perf_vis_p1b_gpu_default_live_witness,
     refresh_ui_oh_m2_001_live_witness, refresh_ui_w3_m2_001_live_witness,

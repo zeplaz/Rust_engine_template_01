@@ -3,7 +3,7 @@
   "lane": "tile_batch",
   "_agent_meta": {
     "agent": "coder-mcp",
-    "updated_at": "2026-06-03T03:03:21.416090+00:00",
+    "updated_at": "2026-06-07T22:42:33.998903+00:00",
     "program": "MCP-TILE-CLOSE-001",
     "dry_run": false
   },
@@ -20,85 +20,85 @@
   "png_dimensions": [
     {
       "file": "burning_00.png",
-      "bytes": 13858,
+      "bytes": 12361,
       "width": 128,
       "height": 128
     },
     {
       "file": "burning_01.png",
-      "bytes": 13777,
+      "bytes": 12251,
       "width": 128,
       "height": 128
     },
     {
       "file": "burning_02.png",
-      "bytes": 13838,
+      "bytes": 12191,
       "width": 128,
       "height": 128
     },
     {
       "file": "burning_03.png",
-      "bytes": 13847,
+      "bytes": 12042,
       "width": 128,
       "height": 128
     },
     {
       "file": "burning_04.png",
-      "bytes": 13762,
+      "bytes": 11517,
       "width": 128,
       "height": 128
     },
     {
       "file": "burning_05.png",
-      "bytes": 13822,
+      "bytes": 10867,
       "width": 128,
       "height": 128
     },
     {
       "file": "burning_06.png",
-      "bytes": 13793,
+      "bytes": 10578,
       "width": 128,
       "height": 128
     },
     {
       "file": "burning_07.png",
-      "bytes": 13740,
+      "bytes": 10806,
       "width": 128,
       "height": 128
     },
     {
       "file": "clean_day.png",
-      "bytes": 10716,
+      "bytes": 12661,
       "width": 128,
       "height": 128
     },
     {
       "file": "clean_night_off.png",
-      "bytes": 13616,
+      "bytes": 12661,
       "width": 128,
       "height": 128
     },
     {
       "file": "clean_night_on.png",
-      "bytes": 13616,
+      "bytes": 12355,
       "width": 128,
       "height": 128
     },
     {
       "file": "damaged_day.png",
-      "bytes": 13818,
+      "bytes": 12661,
       "width": 128,
       "height": 128
     },
     {
       "file": "damaged_night_on.png",
-      "bytes": 13818,
+      "bytes": 12383,
       "width": 128,
       "height": 128
     },
     {
       "file": "under_construction_01.png",
-      "bytes": 13616,
+      "bytes": 12661,
       "width": 128,
       "height": 128
     }
@@ -134,6 +134,10 @@
   "automation": "headless_only",
   "smoke_fallback_used": false,
   "gate_id": "TILE-REAL-001",
+  "atlas_schema_version": 1,
+  "atlas_v2_lookup_ok": true,
+  "frozen": false,
+  "png_exists_only_rejected": true,
   "tile_id": "rowhouse_victorian",
   "assembly_ref": {
     "style_pack_id": "style_victorian",
@@ -147,7 +151,7 @@
   "variant_set_ref": "tools/mcp/schemas/examples/variant_set_rowhouse_victorian_production_v1.json",
   "source_tier": "production",
   "development_tier": "production",
-  "ship": true,
+  "ship": false,
   "tile_atlas_index": {
     "ok": true,
     "entry": {
@@ -159,17 +163,15 @@
       "meta_json": "assets/staging/tiles/tile_rowhouse_victorian_production_v1/atlas_meta.json",
       "development_tier": "production",
       "style_pack_id": "style_victorian",
-      "ship_allowed": true
+      "ship_allowed": false
     },
     "written": "C:\\dev\\github\\Rust_engine_template_01\\assets\\configs\\buildings\\_tile_atlas_index.ron",
     "json_mirror": "C:\\dev\\github\\Rust_engine_template_01\\assets\\configs\\buildings\\_tile_atlas_index.json",
-    "entry_count": 5,
+    "entry_count": 3,
     "atlas_ids": [
-      "bunker_military_production_v1",
       "rowhouse_victorian_pilot_v1",
       "rowhouse_victorian_production_v1",
-      "shopfront_colonial_production_v1",
-      "warehouse_industrial_west_production_v1"
+      "warehouse_industrial_west_v2"
     ]
   }
 }

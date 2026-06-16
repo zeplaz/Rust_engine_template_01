@@ -4,7 +4,7 @@ task_id: MCP-PT-1-002
 archetype: warehouse
 usage_bias: [industrial, warehouse, logistics]
 primary_style_pack: style_industrial_west
-production_bar: src/dev/design_procedural_tile_production_bar_v1.md
+production_bar: docs/archive/2026-06-src-dev/plans/design_procedural_tile_production_bar_v1.md
 catalog: assets/configs/buildings/_variant_catalog.ron
 
 pilot:
@@ -73,7 +73,7 @@ tile_fix_09:
   v1_frozen: true
 
 bake_spine:
-  design_ref: src/dev/design_tile_bake_spine_convergence_v1.md
+  design_ref: docs/archive/2026-06-src-dev/plans/design_tile_bake_spine_convergence_v1.md
   ship_bake_source: keyframe_pack
   ci_bake_source: smoke_ortho_headless
   lod0_pilot_atlas_ship_allowed: false

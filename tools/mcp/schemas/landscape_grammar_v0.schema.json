@@ -1,0 +1,652 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "landscape_grammar_v0.schema.json",
+  "title": "LandscapeGrammarV0",
+  "description": "LG-0-001 — LAND-DNA + λ pressure + vegetation topology graph. Lexicon v1.4.0 (§1.0–§1.19 planning · §2 extract · §3 mapping · §1.11 semantic · §1.17 composite). Operator art: $ref:prompts/guides/olant_grammer.md. Topology ≠ Shape. Planning vs extract glyphs never mix in one layer.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "preset_id",
+    "land_dna",
+    "pressure_field",
+    "landscape_program",
+    "topology_graph"
+  ],
+  "properties": {
+    "schema_version": { "const": "landscape_grammar_v0" },
+    "preset_id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$",
+      "description": "Landscape preset bundle id (e.g. agri_riparian_v0)"
+    },
+    "chart_id": { "$ref": "#/$defs/chart_id" },
+    "lexicon_version": {
+      "type": "string",
+      "description": "Aligned lexicon semver (e.g. 1.4.0)",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "land_dna": { "$ref": "#/$defs/land_dna" },
+    "pressure_field": { "$ref": "#/$defs/pressure_field_v0" },
+    "landscape_program": { "$ref": "#/$defs/landscape_program" },
+    "topology_graph": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/topology_node" }
+    },
+    "transport_spine": { "$ref": "#/$defs/transport_spine" },
+    "field_overlay_stack": {
+      "type": "array",
+      "description": "Overlapping field layers (lexicon §1.8) — 8–20 simultaneous overlays per partition",
+      "items": { "$ref": "#/$defs/field_overlay_entry" }
+    },
+    "composition_macros": {
+      "type": "array",
+      "description": "Reusable composite macros cited on preset (lexicon §1.17.4)",
+      "items": { "$ref": "#/$defs/composition_macro_id" }
+    },
+    "land_use_legend": { "$ref": "#/$defs/land_use_legend" },
+    "_meta": { "$ref": "#/$defs/preset_meta" }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "land_dna": {
+      "type": "object",
+      "required": ["H", "S", "E", "T", "D", "L", "A", "M"],
+      "properties": {
+        "H": { "$ref": "#/$defs/dna_hydrology" },
+        "S": { "$ref": "#/$defs/dna_soil" },
+        "E": { "$ref": "#/$defs/dna_exposure" },
+        "T": { "$ref": "#/$defs/dna_temperature" },
+        "D": { "$ref": "#/$defs/dna_disturbance" },
+        "L": { "$ref": "#/$defs/dna_land_use" },
+        "A": { "$ref": "#/$defs/dna_age" },
+        "M": { "$ref": "#/$defs/dna_management" }
+      },
+      "additionalProperties": false
+    },
+    "pressure_field_v0": {
+      "type": "object",
+      "required": [
+        "lambda_moisture",
+        "lambda_slope",
+        "lambda_exposure",
+        "lambda_disturbance",
+        "lambda_access",
+        "lambda_security",
+        "lambda_productivity",
+        "lambda_legibility"
+      ],
+      "properties": {
+        "lambda_moisture": { "type": "number", "minimum": 0, "maximum": 1 },
+        "lambda_slope": { "type": "number", "minimum": 0, "maximum": 1 },
+        "lambda_exposure": { "type": "number", "minimum": 0, "maximum": 1 },
+        "lambda_disturbance": { "type": "number", "minimum": 0, "maximum": 1 },
+        "lambda_access": { "type": "number", "minimum": 0, "maximum": 1 },
+        "lambda_security": { "type": "number", "minimum": 0, "maximum": 1 },
+        "lambda_productivity": { "type": "number", "minimum": 0, "maximum": 1 },
+        "lambda_legibility": { "type": "number", "minimum": 0, "maximum": 1 }
+      },
+      "additionalProperties": false
+    },
+    "landscape_program": {
+      "type": "object",
+      "required": ["class"],
+      "properties": {
+        "class": { "$ref": "#/$defs/landscape_program_class" },
+        "district_ref": { "type": "string" },
+        "required_topologies": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/topology_preset_id" },
+          "minItems": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "transport_spine": {
+      "type": "object",
+      "required": ["preset_id", "anchor_ref"],
+      "properties": {
+        "preset_id": { "$ref": "#/$defs/topology_preset_id" },
+        "anchor_ref": { "type": "string" },
+        "glyph_planning": {
+          "type": "string",
+          "description": "§1 planning glyph sketch (e.g. ══ transport)"
+        },
+        "glyph_extract": {
+          "type": "string",
+          "description": "§2 extract glyph sketch (e.g. == road)"
+        }
+      },
+      "additionalProperties": false
+    },
+    "topology_node": {
+      "type": "object",
+      "required": ["id", "topology_kind", "preset_id", "scale_band"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+        "topology_kind": { "$ref": "#/$defs/topology_kind" },
+        "topology_kind_id": {
+          "type": "string",
+          "description": "T01–T20 machine id (optional mirror of topology_kind)",
+          "enum": [
+            "T01", "T02", "T03", "T04", "T05", "T06", "T07", "T08", "T09", "T10",
+            "T11", "T12", "T13", "T14", "T15", "T16", "T17", "T18", "T19", "T20"
+          ]
+        },
+        "preset_id": { "$ref": "#/$defs/topology_preset_id" },
+        "scale_band": { "$ref": "#/$defs/scale_band" },
+        "anchor_ref": { "type": "string" },
+        "anchor_node_label": {
+          "$ref": "#/$defs/anchor_node_label",
+          "description": "◊A…◊I weighted node semantics (lexicon §1.6)"
+        },
+        "corridor_subtype": {
+          "type": "string",
+          "enum": ["riparian", "rail", "roadside"],
+          "description": "Corridor bone variant (lexicon §1.2)"
+        },
+        "composition_macro": { "$ref": "#/$defs/composition_macro_id" },
+        "parent_topology_id": {
+          "type": ["string", "null"],
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "operator_stack": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/operator_id" },
+          "description": "Machine operator ids; symbolic glyphs ⊕⊖≈◊ in lexicon §9"
+        },
+        "symbolic_operator_stack": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/symbolic_operator_glyph" },
+          "description": "Optional olant_grammer.md glyph stack for charts"
+        },
+        "symbolic_field_stack": {
+          "type": "array",
+          "description": "Tagged field/op/mass/bone layers (lexicon §9 field: vs op:)",
+          "items": { "$ref": "#/$defs/tagged_glyph_entry" }
+        },
+        "field_layers": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/field_overlay_entry" }
+        },
+        "cx_class": {
+          "type": "string",
+          "enum": ["Cx1", "Cx2", "Cx3", "Cx4"]
+        },
+        "metadata": { "$ref": "#/$defs/topology_metadata" },
+        "children": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/topology_node" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "topology_metadata": {
+      "type": "object",
+      "properties": {
+        "width": {
+          "oneOf": [
+            { "type": "number", "minimum": 0 },
+            {
+              "type": "array",
+              "items": { "type": "number" },
+              "minItems": 2,
+              "maxItems": 2
+            }
+          ]
+        },
+        "density": {
+          "oneOf": [
+            { "type": "number", "minimum": 0, "maximum": 100 },
+            {
+              "type": "array",
+              "items": { "type": "number", "minimum": 0, "maximum": 100 },
+              "minItems": 2,
+              "maxItems": 2
+            }
+          ]
+        },
+        "curvature": { "type": "string" },
+        "branching": { "type": "string" },
+        "age": { "type": "string" },
+        "flow_direction": { "type": "string" },
+        "continuity": { "type": "string", "enum": ["low", "medium", "high"] },
+        "species_bias": { "type": "string" },
+        "core_density": { "type": "number", "minimum": 0, "maximum": 100 },
+        "mid_density": { "type": "number", "minimum": 0, "maximum": 100 },
+        "edge_density": { "type": "number", "minimum": 0, "maximum": 100 },
+        "radius": {
+          "type": "array",
+          "items": { "type": "number", "minimum": 0 },
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "gaps": { "type": "boolean" },
+        "internals": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["core", "edge", "gap", "regrowth", "deadfall"]
+          }
+        },
+        "nodes": {
+          "oneOf": [
+            { "type": "integer", "minimum": 1 },
+            {
+              "type": "array",
+              "items": { "type": "integer", "minimum": 1 },
+              "minItems": 2,
+              "maxItems": 2
+            }
+          ]
+        },
+        "connectivity": { "type": "string", "enum": ["low", "medium", "high"] },
+        "ring_pressure": {
+          "type": "string",
+          "enum": [
+            "containment",
+            "protection",
+            "boundary",
+            "visibility",
+            "concealment",
+            "windbreak"
+          ]
+        },
+        "use": { "type": "string" },
+        "nuclei": {
+          "oneOf": [
+            { "type": "integer", "minimum": 1 },
+            {
+              "type": "array",
+              "items": { "type": "integer", "minimum": 1 },
+              "minItems": 2,
+              "maxItems": 2
+            }
+          ]
+        },
+        "expansion_bias": { "type": "string" },
+        "edge": { "type": "string", "enum": ["sharp", "gradual"] },
+        "disturbance": { "type": "string" },
+        "spread": { "type": "string" },
+        "angle": { "type": "string" },
+        "origin": { "type": "string" },
+        "gradient": { "type": "string" },
+        "follow": { "type": "string" },
+        "exposure": { "type": "string" },
+        "moisture": { "type": "string" },
+        "matrix": { "type": "string" },
+        "mix": { "type": "string" },
+        "transition": { "type": "string" },
+        "branch": { "type": "string" },
+        "order": { "type": "string" },
+        "flow": { "type": "string" },
+        "inside": { "type": "string" },
+        "size": { "type": "string" },
+        "visibility": { "type": "string" },
+        "channels": { "type": "string" },
+        "sediment": { "type": "string" },
+        "inflow": { "type": "string" },
+        "outflow": { "type": "string" },
+        "bowl": { "type": "boolean" },
+        "vegetation": { "type": "string" },
+        "growth": { "type": "string" },
+        "steps": { "type": "string" },
+        "levels": { "type": "integer", "minimum": 1 },
+        "complexity": { "type": "string" },
+        "glyph_planning": { "type": "string" },
+        "glyph_extract": { "type": "string" },
+        "chart_id": { "$ref": "#/$defs/chart_id" },
+        "corridor_subtype": { "type": "string", "enum": ["riparian", "rail", "roadside"] },
+        "wind_exposure": { "type": "number", "minimum": 0, "maximum": 1 },
+        "fetch_direction_deg": { "type": "number", "minimum": 0, "maximum": 360 },
+        "shelter_demand": { "type": "string", "enum": ["low", "med", "high"] },
+        "mosaic_percent": {
+          "type": "object",
+          "description": "Mosaic breakdown (lexicon §1.9) — sums to ~100",
+          "properties": {
+            "mature": { "type": "number", "minimum": 0, "maximum": 100 },
+            "young": { "type": "number", "minimum": 0, "maximum": 100 },
+            "shrub": { "type": "number", "minimum": 0, "maximum": 100 },
+            "wetland": { "type": "number", "minimum": 0, "maximum": 100 },
+            "open": { "type": "number", "minimum": 0, "maximum": 100 }
+          },
+          "additionalProperties": false
+        },
+        "succession_stage": {
+          "type": "string",
+          "enum": ["gap", "regeneration", "shrub", "sapling", "canopy"],
+          "description": "NESTED-SUCCESSION-Ψ18 ladder stage"
+        }
+      },
+      "additionalProperties": true
+    },
+    "preset_meta": {
+      "type": "object",
+      "properties": {
+        "teaches": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 1
+        },
+        "not_a_ship_target": { "type": "boolean" },
+        "chart_id": { "$ref": "#/$defs/chart_id" },
+        "chart_family": { "$ref": "#/$defs/chart_family_suffix" },
+        "lexicon_version": { "type": "string" },
+        "symlang_section": { "type": "string", "const": "2.13" },
+        "symbolic_sketch_planning": { "type": "string" },
+        "symbolic_sketch_extract": { "type": "string" },
+        "land_use_shorthand": { "$ref": "#/$defs/land_use_legend" },
+        "composition_macros": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/composition_macro_id" }
+        },
+        "lexicon": { "type": "string" },
+        "operator_source": { "type": "string" },
+        "pictorial_ref": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "chart_id": {
+      "type": "string",
+      "description": "Named chart ID (lexicon §1.5 — 15 catalog)",
+      "enum": [
+        "VEG-NETWORK-Ω7",
+        "OLD-GROWTH-COMPLEX-Σ4",
+        "AGRI-LANDSCAPE-Δ9",
+        "VEGETATION-HIERARCHY-Ξ12",
+        "DELTA-FOREST-Λ5",
+        "DEFENSIVE-VEGETATION-Ω13",
+        "RIPARIAN-REGENERATION-Ψ8",
+        "ECOLOGICAL-PRESSURE-Ω27",
+        "NESTED-SUCCESSION-Ψ18",
+        "MOUNTAIN-FOREST-DRAINAGE-Δ44",
+        "FIRE-CORRIDOR-Ω51",
+        "URBAN-FOREST-FRACTURE-Σ63",
+        "ECOLOGICAL-NETWORK-Ω91",
+        "FOREST-WARFARE-Ω113",
+        "MEGA-BIOSPHERE-Ω200"
+      ]
+    },
+    "chart_family_suffix": {
+      "type": "string",
+      "description": "Chart ID suffix family (lexicon §1.5)",
+      "enum": ["Ω", "Σ", "Δ", "Λ", "Ψ", "Ξ"]
+    },
+    "anchor_node_label": {
+      "type": "string",
+      "description": "◊ node semantic weight (ECOLOGICAL-NETWORK-Ω91)",
+      "enum": ["A", "B", "C", "D", "E", "F", "G", "H", "I"]
+    },
+    "composition_macro_id": {
+      "type": "string",
+      "description": "Reusable composite macro (lexicon §1.17.4)",
+      "enum": [
+        "MACRO-RIPARIAN-AXIS",
+        "MACRO-WIND-ALLEY",
+        "MACRO-FIRE-SADDLE",
+        "MACRO-REGROWTH-CHAIN",
+        "MACRO-AG-PARCEL",
+        "MACRO-DEFENSE-IN-DEPTH",
+        "MACRO-SHELTER-LEE",
+        "MACRO-DELTA-FORK",
+        "MACRO-URBAN-CELL",
+        "MACRO-SPECIES-FRONTLINE"
+      ]
+    },
+    "land_use_legend": {
+      "type": "object",
+      "description": "AGRI-LANDSCAPE-Δ9 style shorthand",
+      "properties": {
+        "fields": { "type": "string", "default": "▒" },
+        "woodlots": { "type": "string", "default": "█" },
+        "transport": { "type": "string", "default": "═" }
+      },
+      "additionalProperties": false
+    },
+    "field_overlay_entry": {
+      "type": "object",
+      "required": ["field"],
+      "properties": {
+        "field": {
+          "type": "string",
+          "enum": [
+            "canopy",
+            "age",
+            "hydrology",
+            "wind",
+            "disturbance",
+            "species",
+            "visibility",
+            "fire",
+            "human_pressure",
+            "habitat"
+          ]
+        },
+        "glyph_hint": { "type": "string" },
+        "strength": { "type": "number", "minimum": 0, "maximum": 1 },
+        "layer_tag": {
+          "type": "string",
+          "enum": ["field", "op", "mass", "bone"],
+          "description": "Lexicon §9 layer disambiguation"
+        }
+      },
+      "additionalProperties": false
+    },
+    "tagged_glyph_entry": {
+      "type": "object",
+      "required": ["layer", "glyph"],
+      "properties": {
+        "layer": { "type": "string", "enum": ["field", "op", "mass", "bone"] },
+        "glyph": { "type": "string" },
+        "intensity": { "type": "integer", "minimum": 1, "maximum": 8 },
+        "reads_as": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "topology_kind": {
+      "type": "string",
+      "description": "T01–T20 base kinds (lexicon §4)",
+      "enum": [
+        "Corridor",
+        "Patch",
+        "Ring",
+        "Fan",
+        "Spine",
+        "Cluster",
+        "Network",
+        "Mosaic",
+        "Fringe",
+        "Pocket",
+        "Barrier",
+        "Archipelago",
+        "Delta",
+        "Convergence",
+        "Divergence",
+        "Veins",
+        "Basin",
+        "Crown",
+        "Ladder",
+        "Nested"
+      ]
+    },
+    "topology_preset_id": {
+      "type": "string",
+      "description": "30 named presets (lexicon §5 / pictorial v2.3)",
+      "enum": [
+        "CORRIDOR_RIPARIAN",
+        "CORRIDOR_ROADSIDE",
+        "CORRIDOR_RAILSIDE",
+        "PATCH_ROUNDED",
+        "PATCH_IRREGULAR",
+        "PATCH_SPLIT",
+        "RING_SHELTERBELT",
+        "RING_FORTIFIED",
+        "FAN_FLOODPLAIN",
+        "FAN_ALLUVIAL",
+        "SPINE_RIDGELINE",
+        "SPINE_RIVER",
+        "CLUSTER_NATURAL",
+        "CLUSTER_DENSE",
+        "ARCHIPELAGO_FOREST",
+        "MOSAIC_MIXED",
+        "NETWORK_CONNECTED",
+        "NETWORK_DENDRITIC",
+        "POCKET_INTERNAL",
+        "FRINGE_EDGE",
+        "BARRIER_THICK",
+        "BARRIER_THIN",
+        "DELTA_DISTRIBUTARY",
+        "CONVERGENCE_BASIN",
+        "DIVERGENCE_FLOW",
+        "VEINS_CAPILLARY",
+        "BASIN_WETLAND",
+        "CROWN_HILLTOP",
+        "LADDER_TERRACE",
+        "NESTED_HIERARCHY"
+      ]
+    },
+    "scale_band": {
+      "type": "string",
+      "enum": ["S", "M", "L", "XL"]
+    },
+    "landscape_program_class": {
+      "type": "string",
+      "enum": ["natural", "agricultural", "industrial", "military", "settlement"]
+    },
+    "operator_id": {
+      "type": "string",
+      "description": "Machine operator id (maps to lexicon §9 glyphs)",
+      "enum": [
+        "anchor_partition",
+        "anchor_river",
+        "anchor_road",
+        "anchor_field_edge",
+        "anchor_site_edge",
+        "network_link",
+        "drift",
+        "corridor",
+        "expand",
+        "cluster",
+        "ring",
+        "fringe",
+        "seed_patch",
+        "clear_suppress",
+        "contract_maintain",
+        "branch_anchor",
+        "fan_spread",
+        "spine_follow",
+        "barrier_block",
+        "mosaic_mix"
+      ]
+    },
+    "symbolic_operator_glyph": {
+      "type": "string",
+      "description": "Semantic operators (lexicon §1.11) and graph ops (§9)",
+      "enum": [
+        "anchor",
+        "corridor_extrude",
+        "seed_patch",
+        "clear_suppress",
+        "expand_edge",
+        "contract_maintain",
+        "drift_meander",
+        "cluster_fill",
+        "ring_band",
+        "branch_anchor",
+        "wind_domain",
+        "ecological_barrier",
+        "habitat_attractor",
+        "expansion_pressure",
+        "suppression_pressure",
+        "disturbance_event",
+        "human_management",
+        "regeneration_nucleus",
+        "species_advance",
+        "species_retreat",
+        "hydrology_axis",
+        "convergence_junction",
+        "elevation_source",
+        "flow_sink",
+        "thin_boundary",
+        "transport_spine"
+      ]
+    },
+    "dna_hydrology": {
+      "type": "string",
+      "enum": [
+        "riparian",
+        "upland",
+        "seasonal_flood",
+        "drainage_ditch",
+        "pond_margin"
+      ]
+    },
+    "dna_soil": {
+      "type": "string",
+      "enum": [
+        "deep_alluvial",
+        "thin_ridge",
+        "organic_muck",
+        "rocky",
+        "compacted_fill"
+      ]
+    },
+    "dna_exposure": {
+      "type": "string",
+      "enum": [
+        "sheltered",
+        "wind_exposed",
+        "coastal_spray",
+        "frost_pocket"
+      ]
+    },
+    "dna_temperature": {
+      "type": "string",
+      "enum": [
+        "arctic",
+        "temperate",
+        "mediterranean",
+        "tropical",
+        "desert",
+        "montane"
+      ]
+    },
+    "dna_disturbance": {
+      "type": "string",
+      "enum": [
+        "fire_return",
+        "grazing",
+        "industrial_spill",
+        "seasonal_flood",
+        "low",
+        "moderate",
+        "high"
+      ]
+    },
+    "dna_land_use": {
+      "type": "string",
+      "enum": [
+        "wild",
+        "agricultural",
+        "industrial",
+        "military",
+        "residential",
+        "utility"
+      ]
+    },
+    "dna_age": {
+      "type": "string",
+      "enum": ["pioneer", "young", "mature", "legacy"]
+    },
+    "dna_management": {
+      "type": "string",
+      "enum": [
+        "wild",
+        "maintained",
+        "cleared",
+        "abandoned",
+        "intensively_managed"
+      ]
+    }
+  }
+}

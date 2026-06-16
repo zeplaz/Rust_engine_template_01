@@ -1,6 +1,7 @@
 //! Procedural building data — module kit index (PG-1) + StylePack registry (PG-1/2).
 
 mod assembly_snapshot;
+mod arch_build_grammar_v0;
 mod building_grammar;
 mod footprint_grid;
 mod load;
@@ -14,9 +15,17 @@ mod types;
 #[cfg(test)]
 mod tests;
 
+pub use arch_build_grammar_v0::{
+    arch_dna_consumer_from_preset_id, arch_dna_consumer_from_snapshot_fields,
+    arch_dna_consumer_wired, beta_with_world_transport_bias, build_read_grammar_v0_003_witness_body,
+    build_read_grammar_v0_003_witness_green, build_read_consumer_mcp_001_witness_green,
+    load_preset_for_id,
+    load_logistics_rail_warehouse_v0_preset, program_graph_stub_for_preset,
+    ArchDnaConsumerFields, ArchGrammarV0Preset, PressureFieldV0, ARCH_DNA_EXAMPLES_DIR,
+};
 pub use building_grammar::{
     build_pg_quality_001_witness_body, generate as generate_building_grammar,
-    grammar_reference_tags, load_building_grammar_registry, pg_quality_001_witness_green,
+    generate_with_arch_dna_preset, grammar_reference_tags, load_building_grammar_registry, pg_quality_001_witness_green,
     pg_quality_002_pg2_hook_body, pg_quality_002_pg2_hook_green,
     refresh_pg_quality_001_grammar_diversity_witness, BuildingGrammar, BuildingGrammarRegistry,
     GrammarGenerateResult, GrammarRuleStep, PgQuality001Metrics, GRAMMAR_DIVERSITY_WITNESS_JSON,
@@ -24,7 +33,7 @@ pub use building_grammar::{
 };
 pub use assembly_snapshot::{
     assembly_id_for, build_assembly_snapshot, build_assembly_snapshot_from_grammar,
-    grammar_rule_chain_snapshot, snapshot_passes_auto_001_contract, staging_relative_path,
+    build_assembly_snapshot_from_grammar_with_preset, grammar_rule_chain_snapshot, snapshot_passes_auto_001_contract, staging_relative_path,
     write_assembly_snapshot, procedural_module_local_translation, AssemblyGrammarRuleChain,
     AssemblyModulePlacement, AssemblySnapshot, ASSEMBLY_SNAPSHOT_SCHEMA, ASSEMBLY_SNAPSHOT_STAGING,
     PROCEDURAL_RULES_VERSION,
@@ -84,6 +93,7 @@ pub fn procedural_pg2_tail_001_witness_green() -> bool {
         floors: 2,
         style: StylePackId("style_victorian".into()),
         seed: 1,
+        arch_dna_preset_id: None,
     };
     let grid = FootprintGrid::from_request(&request);
     let snap = build_assembly_snapshot(&request, pack, &grid, &modules);
@@ -113,6 +123,7 @@ pub fn procedural_pg2_assembly_wired_witness_green() -> bool {
         floors: 2,
         style: StylePackId("style_victorian".into()),
         seed: 1,
+        arch_dna_preset_id: None,
     };
     let grid = FootprintGrid::from_request(&request);
     let extract = assemble_procedural_build_instances(
@@ -123,4 +134,36 @@ pub fn procedural_pg2_assembly_wired_witness_green() -> bool {
         &ProceduralModuleSceneCatalog::default(),
     );
     extract.pg2_wired && !extract.smoke_fallback_used && extract.footprint_cells > 0
+}
+
+/// District tag for grammar regen from a committed style pack id.
+#[must_use]
+pub fn district_style_for_pack(style_pack_id: &str) -> &'static str {
+    match style_pack_id {
+        "style_industrial_west" => "industrial_west",
+        "style_industrial_soviet" => "industrial_soviet",
+        "style_victorian" => "victorian",
+        "style_colonial" => "colonial",
+        "style_modern" => "modern",
+        "style_military" => "military",
+        _ => "industrial_west",
+    }
+}
+
+/// PG-2 footprint authority: grammar L-matrix for pilot commits, rect perimeter otherwise.
+#[must_use]
+pub fn footprint_grid_for_assembly(request: &ProceduralBuildingRequest) -> FootprintGrid {
+    if request.archetype_id == "rect_perimeter" {
+        return FootprintGrid::from_request(request);
+    }
+    let district = district_style_for_pack(request.style.as_str());
+    if let Ok(grammar) = generate_with_arch_dna_preset(
+        &request.archetype_id,
+        district,
+        request.seed,
+        request.arch_dna_preset_id.as_deref(),
+    ) {
+        return FootprintGrid::from_grammar(&grammar);
+    }
+    FootprintGrid::from_request(request)
 }

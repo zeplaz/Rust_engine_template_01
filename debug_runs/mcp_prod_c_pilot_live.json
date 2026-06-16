@@ -1,0 +1,23 @@
+{
+  "gate_id": "MCP-PROD-C-PILOT",
+  "ok": true,
+  "green": true,
+  "batch_id": "kit_production_001",
+  "profile_cases": {
+    "wall_brick_1u:brick": true,
+    "door_residential:residential": true,
+    "roof_pitched_gable:pitched": true,
+    "win_industrial_3u:strip": true
+  },
+  "promoted_glbs": {
+    "wall_brick_1u": true,
+    "door_residential": true,
+    "roof_pitched_gable": true
+  },
+  "bpy_ops": [
+    "module_wall",
+    "module_door",
+    "module_roof",
+    "module_window"
+  ]
+}

@@ -7,7 +7,7 @@
   "updated": "2026-06-03",
   "_agent_meta": {
     "agent": "designer-mcp",
-    "bake_spine": "src/dev/design_tile_bake_spine_convergence_v1.md",
+    "bake_spine": "docs/archive/2026-06-src-dev/plans/design_tile_bake_spine_convergence_v1.md",
     "export_rollup": "debug_runs/art_pipeline/pilot_keyframe_export_rollup_live.json",
     "pg3_witness": "debug_runs/pg3_w3_tactical_review_live.json"
   },

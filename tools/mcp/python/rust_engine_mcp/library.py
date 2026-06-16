@@ -101,6 +101,8 @@ KIT_INDUSTRIAL_WEST_PRODUCTION_001_JOB_IDS = frozenset(
         "wall_concrete_2u_production_run001",
         "prop_vent_production_run001",
         "roof_shed_production_run001",
+        "stack_chimney_1u_production_run001",
+        "platform_dock_2u_production_run001",
     }
 )
 

@@ -1,0 +1,14 @@
+{
+  "batch_id": "tile_landscape_lg5_pilot_v1",
+  "status": "done",
+  "bake_source": "keyframe_pack",
+  "variant_count": 3,
+  "png_paths": [
+    "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_landscape_lg5_pilot_v1\\topology_patch.png",
+    "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_landscape_lg5_pilot_v1\\topology_corridor.png",
+    "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_landscape_lg5_pilot_v1\\topology_ring.png"
+  ],
+  "atlas_path": "C:\\dev\\github\\Rust_engine_template_01\\assets\\textures\\landscape\\staging\\landscape_lg5_pilot_v1_atlas.png",
+  "meta_json": "assets/staging/tiles/tile_landscape_lg5_pilot_v1/atlas_meta.json",
+  "dry_run": false
+}

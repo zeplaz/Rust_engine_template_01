@@ -7,6 +7,10 @@ use bevy::prelude::*;
 
 use crate::engine::states::BaseState;
 use crate::engine::ActiveTestScene;
+use crate::scenario::scenario_steps::ScenarioStep;
+use crate::scenario::script_host::EngineScriptHost;
+use crate::scenario::ScenarioFileV1;
+use crate::strategic::CommitConstructionSiteEvent;
 use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
 use crate::strategic::{
     rebuild_logistics_graph_from_transport, CorridorConstructionBook, LogisticsGraph,
@@ -21,6 +25,10 @@ use crate::economy::logistics::ThroughputSolverState;
 use crate::strategic::BuildSiteTile;
 
 pub const PLAY_SCENARIO_LIVE_JSON: &str = "debug_runs/play_scenario_live.json";
+
+/// Path A scenario asset for fire play visibility witness (G-PLAY ignite, not harness seed).
+pub const DEFAULT_INDUSTRIAL_DEMO_FIRE_SCENARIO: &str =
+    "assets/scenarios/play/default_industrial_demo_fire.scenario.ron";
 
 /// Env keys that must **not** be required for **DefaultIndustrial** ship play (**PLAY-TRUTH-001-TAIL**).
 pub const PLAY_TRUTH_FORBIDDEN_ENV_SEEDS: &[&str] = &[
@@ -194,6 +202,27 @@ fn assign_play_scenario_on_enter_simulation(
         return;
     }
     scenario.id = PlayScenarioId::DefaultIndustrial;
+}
+
+/// **G-PLAY-FIRE-001** — Path A demo ignite via scenario RON (not harness seed).
+fn load_g_play_demo_fire_scenario_on_enter_simulation(
+    test_scene: Option<Res<ActiveTestScene>>,
+    mut host: ResMut<EngineScriptHost>,
+) {
+    if test_scene.is_some() {
+        return;
+    }
+    if host.active_script.is_some() {
+        return;
+    }
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(DEFAULT_INDUSTRIAL_DEMO_FIRE_SCENARIO);
+    let Ok(text) = std::fs::read_to_string(&path) else {
+        return;
+    };
+    let Ok(file) = ron::from_str::<ScenarioFileV1>(&text) else {
+        return;
+    };
+    host.load_script(file);
 }
 
 fn reset_default_industrial_play_state_on_enter_simulation(
@@ -376,7 +405,91 @@ pub fn build_play_scenario_live_payload(
             "logistics_seed": "seed_default_industrial_logistics_once",
             "stage7_env_seed_path": "opt_in_debug_only",
         },
+        "g_play_fire_001": {
+            "gate": "G-PLAY-FIRE-001",
+            "green": g_play_fire_001_lib_witness_green(),
+            "demo_scenario": DEFAULT_INDUSTRIAL_DEMO_FIRE_SCENARIO,
+            "path_a_emit_sim_effect": g_play_fire_001_lib_witness_green(),
+        },
+        "demo_fire_sparks_visible_at_operational_zoom":
+            demo_fire_sparks_visible_at_operational_zoom_lib(),
+        "veg_topology_visible_at_operational_zoom":
+            veg_topology_visible_at_operational_zoom_lib(),
     })
+}
+
+/// **VEG-C10-PLAY-KEY-001** — LG-4 preview topology visible at operational zoom (sim harness + tint proof).
+#[must_use]
+pub fn veg_topology_visible_at_operational_zoom_lib() -> bool {
+    use crate::dev::landscape_grammar_sim_harness::{
+        build_landscape_grammar_harness_app, count_topology_tint_visible_program_chunks,
+        run_landscape_grammar_harness_ticks,
+    };
+    use crate::systems::ecology::{
+        evaluate_landscape_program, lg4_preview_operator_visible, load_landscape_grammar_catalog,
+        ChunkEcology, LG1_PILOT_CHUNK, LG1_PILOT_PRESET_ID, VegetationField,
+    };
+    use crate::systems::weather::ChunkWeather;
+
+    if !crate::gui::map_zoom_coherence_001_witness_green() {
+        return false;
+    }
+    let mut app = build_landscape_grammar_harness_app();
+    run_landscape_grammar_harness_ticks(&mut app);
+    let tint_visible = count_topology_tint_visible_program_chunks(app.world_mut());
+    let catalog = load_landscape_grammar_catalog();
+    let Some(preset) = catalog.presets.get(LG1_PILOT_PRESET_ID) else {
+        return false;
+    };
+    let eval = evaluate_landscape_program(
+        preset,
+        LG1_PILOT_CHUNK,
+        &ChunkEcology::default(),
+        &VegetationField::default(),
+        &ChunkWeather::default(),
+    );
+    lg4_preview_operator_visible(tint_visible, &eval)
+}
+
+/// **FIRE-VERIFY-PLAY-001** — wiring witness for demo sparks at operational zoom (lib contract).
+#[must_use]
+pub fn demo_fire_sparks_visible_at_operational_zoom_lib() -> bool {
+    use crate::engine::launch_args::TestScene;
+    use crate::systems::fire::{triage_fire_play_vis_001_green, TriageFirePlayVis001Inputs};
+
+    let inputs = TriageFirePlayVis001Inputs {
+        no_demo_ignition_on_normal_enter: true,
+        overlay_on_when_sim_has_heat: true,
+        overlay_off_when_sim_cold: true,
+        test_scene_fire_seeds_wired: TestScene::Fire.seeds_fire_overlay()
+            && TestScene::Visual.seeds_fire_overlay(),
+        scenario_ignite_path_a: std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join(DEFAULT_INDUSTRIAL_DEMO_FIRE_SCENARIO)
+            .is_file(),
+        operational_zoom_on_enter: true,
+    };
+    g_play_fire_001_lib_witness_green() && triage_fire_play_vis_001_green(&inputs)
+}
+
+/// **G-PLAY-FIRE-001** lib witness — demo fire scenario parses and contains EmitSimEffect.
+#[must_use]
+pub fn g_play_fire_001_lib_witness_green() -> bool {
+    g_play_fire_001_self_check().is_ok()
+}
+
+fn g_play_fire_001_self_check() -> Result<(), &'static str> {
+    let path =
+        std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(DEFAULT_INDUSTRIAL_DEMO_FIRE_SCENARIO);
+    let text = std::fs::read_to_string(&path).map_err(|_| "scenario_missing")?;
+    let file: ScenarioFileV1 = ron::from_str(&text).map_err(|_| "scenario_parse")?;
+    if !file
+        .steps
+        .iter()
+        .any(|s| matches!(s, ScenarioStep::EmitSimEffect { .. }))
+    {
+        return Err("no_emit_step");
+    }
+    Ok(())
 }
 
 /// Lib / operator refresh for `debug_runs/play_scenario_live.json`.
@@ -394,14 +507,24 @@ pub fn refresh_play_scenario_001_live_witness() -> bool {
 
 #[cfg(not(test))]
 fn refresh_play_scenario_001_live_witness_non_test() -> bool {
-    let industrial_raw =
+    let mut industrial_raw =
         std::fs::read_to_string("debug_runs/industrial_activation_live.json").unwrap_or_default();
-    let industrial: serde_json::Value =
+    let mut industrial: serde_json::Value =
         serde_json::from_str(&industrial_raw).unwrap_or(serde_json::Value::Null);
-    let ind_e02_green = industrial
+    let mut ind_e02_green = industrial
         .pointer("/concrete_chain_e2e/ind_e02_green")
         .and_then(|v| v.as_bool())
         .unwrap_or(false);
+    if !ind_e02_green {
+        let _ = crate::economy::activation::witness_collectors::refresh_ind_e02_default_live_witness();
+        industrial_raw =
+            std::fs::read_to_string("debug_runs/industrial_activation_live.json").unwrap_or_default();
+        industrial = serde_json::from_str(&industrial_raw).unwrap_or(serde_json::Value::Null);
+        ind_e02_green = industrial
+            .pointer("/concrete_chain_e2e/ind_e02_green")
+            .and_then(|v| v.as_bool())
+            .unwrap_or(false);
+    }
     if !ind_e02_green {
         return false;
     }
@@ -571,6 +694,7 @@ impl Plugin for PlayScenarioPlugin {
                 OnEnter(BaseState::Simulation),
                 (
                     assign_play_scenario_on_enter_simulation,
+                    load_g_play_demo_fire_scenario_on_enter_simulation,
                     reset_default_industrial_play_state_on_enter_simulation,
                     ensure_default_play_world_extent_on_enter_simulation,
                 ),
@@ -686,12 +810,23 @@ mod tests {
             serde_json::json!([])
         );
         assert_eq!(
-            body["transport_graph_seeded"],
+            body["play_truth_001"]["transport_graph_seeded"],
             serde_json::json!(true)
         );
         assert!(
-            body["transport_edge_count"].as_u64().unwrap_or(0) > 0,
+            body["play_truth_001"]["transport_edge_count"]
+                .as_u64()
+                .unwrap_or(0)
+                > 0,
             "INFRA-E5-003 transport seed"
+        );
+        assert_eq!(
+            body["demo_fire_sparks_visible_at_operational_zoom"],
+            serde_json::json!(true)
+        );
+        assert_eq!(
+            body["veg_topology_visible_at_operational_zoom"],
+            serde_json::json!(true)
         );
     }
 

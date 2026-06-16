@@ -1,0 +1,15 @@
+{
+  "schema_version": "site_zone_grid_v1",
+  "site_id": "fuel_depot_tank_farm_site_v0",
+  "pilot_id": "fuel_depot_tank_farm_v0",
+  "width": 7,
+  "depth": 6,
+  "cells": [
+    "parking","parking","parking","parking","parking","parking","parking",
+    "utility","primary","primary","primary","primary","primary","utility",
+    "utility","primary","loading","loading","loading","primary","utility",
+    "utility","primary","primary","primary","primary","primary","utility",
+    "service","service","buffer","buffer","buffer","buffer","buffer",
+    "buffer","buffer","buffer","buffer","buffer","buffer","buffer"
+  ]
+}

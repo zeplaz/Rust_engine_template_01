@@ -11,8 +11,8 @@
     "agent": "designer",
     "source_system": "MCP-APS-PILOT-001",
     "updated_at": "2026-06-02",
-    "design_charter": "src/dev/design_art_pipeline_suite_v1.md",
-    "orders": "src/dev/mcp_fleet_aps_pilot_orders_v1.md"
+    "design_charter": "docs/archive/2026-06-src-dev/plans/design_art_pipeline_suite_v1.md",
+    "orders": "docs/archive/2026-06-src-dev/plans/mcp_fleet_aps_pilot_orders_v1.md"
   },
   "assembly_id": "victorian_4x3_s42_a7cb",
   "variant_set_id": "rowhouse_victorian_night_damage",

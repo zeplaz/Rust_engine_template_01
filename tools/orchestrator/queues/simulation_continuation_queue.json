@@ -1,0 +1,80 @@
+[
+  {
+    "id": "SIM-QUEUE-001",
+    "priority": 0,
+    "title": "Simulation continuation queue — weather train + future sim lanes",
+    "lane": "sim-meta",
+    "agent": "orchestrator",
+    "status": "done",
+    "deliverable": "tools/orchestrator/queues/simulation_continuation_queue.json",
+    "docs": ["docs/archive/2026-06-src-dev/plans/plan_weather_parallel_lane_v1.md"]
+  },
+  {
+    "id": "WEATHER-WITNESS-001",
+    "priority": 1,
+    "title": "weather_sim_live.json writer — all schema keys",
+    "lane": "weather-sim",
+    "agent": "coder_c",
+    "depends_on": [],
+    "status": "done",
+    "witness": "debug_runs/weather_sim_live.json",
+    "regression": "cargo test -p proc_A_dine01 --lib weather::witness",
+    "updated_at": "2026-06-03T20:00:00+00:00"
+  },
+  {
+    "id": "WEATHER-CLIMATE-001",
+    "priority": 2,
+    "title": "ClimateState + climate_slow_tick (L3)",
+    "lane": "weather-sim",
+    "agent": "coder_c",
+    "depends_on": ["WEATHER-WITNESS-001"],
+    "status": "done",
+    "witness": "debug_runs/weather_sim_live.json",
+    "exit": "ClimateState + climate_slow_tick; climate_seed_present + climate_state_wired via witness inputs",
+    "regression": "cargo test -p proc_A_dine01 --lib weather::",
+    "updated_at": "2026-06-03T21:00:00+00:00",
+    "docs": [
+      "docs/archive/2026-06-src-dev/plans/plan_weather_parallel_lane_v1.md",
+      "docs/archive/2026-06-src-dev/plans/weather_simulation_runbook_v2_plan_v1.md"
+    ]
+  },
+  {
+    "id": "WEATHER-REGIONAL-001",
+    "priority": 3,
+    "title": "Regional clipmap sample → regional_weather_tick",
+    "lane": "weather-sim",
+    "agent": "coder_c",
+    "depends_on": ["WEATHER-CLIMATE-001"],
+    "status": "done",
+    "witness": "debug_runs/weather_sim_live.json",
+    "exit": "regional_weather_wired true",
+    "regression": "cargo test -p proc_A_dine01 --lib weather_regional",
+    "updated_at": "2026-06-02T22:00:00+00:00"
+  },
+  {
+    "id": "WEATHER-EFFECTS-001",
+    "priority": 4,
+    "title": "Traction + visibility effect stubs",
+    "lane": "weather-sim",
+    "agent": "coder_c",
+    "depends_on": ["WEATHER-REGIONAL-001"],
+    "status": "done",
+    "witness": "debug_runs/weather_sim_live.json",
+    "exit": "weather_effects_traction_stub true",
+    "regression": "cargo test -p proc_A_dine01 --lib weather_effects",
+    "updated_at": "2026-06-02T23:00:00+00:00"
+  },
+  {
+    "id": "WEATHER-GPU-PRECIP-001",
+    "priority": 5,
+    "title": "GPU precip authority; mesh demoted",
+    "lane": "weather-sim",
+    "agent": "coder_c",
+    "depends_on": ["WEATHER-EFFECTS-001"],
+    "status": "done",
+    "witness": "debug_runs/weather_sim_live.json",
+    "exit": "weather_precip_gpu_authority true",
+    "regression": "cargo test -p proc_A_dine01 --lib weather_sim_live",
+    "updated_at": "2026-06-03T00:00:00+00:00"
+  }
+]

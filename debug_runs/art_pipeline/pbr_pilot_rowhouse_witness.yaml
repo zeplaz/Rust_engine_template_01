@@ -1,0 +1,37 @@
+# pbr_pilot_rowhouse_witness.yaml — MCP-PROD-PBR-PILOT acceptance
+task_id: MCP-PROD-PBR-PILOT
+agent: designer-mcp
+batch_id: kit_production_001
+green: true
+pbr_waiver: procedural_mcp_generator_v1
+doc_ref: docs/archive/2026-06-src-dev/plans/pbr_pilot_rowhouse_material_maker_v1.md
+
+pilot_texture_profiles:
+  - profile_id: brick_red_01
+    ok: true
+  - profile_id: wood_plank_01
+    ok: true
+  - profile_id: roof_tile_01
+    ok: true
+
+production_specs:
+  - asset_id: wall_brick_1u
+    tier_ok: true
+    material_profile: brick_red_01
+  - asset_id: corner_L
+    tier_ok: true
+    material_profile: brick_red_01
+  - asset_id: door_residential
+    tier_ok: true
+    material_profile: wood_plank_01
+  - asset_id: roof_pitched_gable
+    tier_ok: true
+    material_profile: roof_tile_01
+  - asset_id: prop_chimney
+    tier_ok: true
+    material_profile: brick_red_01
+
+unblocks:
+  - MCP-PROD-MOD-G0-G5
+blocked_by_remaining:
+  - MCP-PROD-C-PILOT

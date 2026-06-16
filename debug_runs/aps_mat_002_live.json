@@ -1,0 +1,27 @@
+{
+  "gate_id": "APS-MAT-002",
+  "ok": true,
+  "green": true,
+  "catalog_count": 21,
+  "scale_target_profiles": 300,
+  "scale_ready": false,
+  "layout": "studio_tree",
+  "ui": {
+    "panel": "tools/mcp/art_pipeline_suite/materials_panel.py",
+    "widget": "material_library_widget.py",
+    "nested_roots": [
+      "glass",
+      "industrial",
+      "other",
+      "residential",
+      "roof"
+    ],
+    "list_rows": "scrollable_thumb_rows",
+    "list_thumb_px": 48,
+    "thumb_cache": {
+      "warmed": 21,
+      "total": 21
+    }
+  },
+  "ship_policy": "Assign material_profile on Assembly tab \u2014 Materials is browse/preview only"
+}

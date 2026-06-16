@@ -1,0 +1,623 @@
+{
+  "_meta": {
+    "version": "1.2.0",
+    "program_id": "CODER-MASTER-DRAIN-001",
+    "date": "2026-06-13",
+    "vegetation_drain": "tools/orchestrator/queues/coder_vegetation_drain_queue.json",
+    "vegetation_drain_version": "3.0.0",
+    "product_verify_queue": "tools/orchestrator/queues/coder_product_verify_queue.json",
+    "hardening_rules": "src/dev/coder_queue_hardening_rules_v1.md",
+    "vegetation_status": "src/dev/vegetation_system_honest_status_v1.md",
+    "supersedes": "tools/orchestrator/queues/coder_drain_queue.json",
+    "phase5_queue": "tools/orchestrator/queues/post_drain_phase5_queue.json",
+    "runbook": "src/dev/coder_drain_order_master_v1.md",
+    "unwired_spine": "src/dev/build_read_unwired_spine_v1.md",
+    "rule": "Pick seq 1→N top-down · skip blocked/deferred · exit_predicate on witness JSON · lib green ≠ done",
+    "regression": "cargo test -p proc_A_dine01 --lib fire_ecology landscape_grammar construction stage5 sim_effects",
+    "blang_cargo": "validate-report cargo --cached --compress 4",
+    "last_sync": "2026-06-14"
+  },
+  "tracks": {
+    "REWIRE": {
+      "label": "BUILD-READ / HUD mod.rs spine",
+      "owner_default": "coder_b"
+    },
+    "FIRE": {
+      "label": "Fire play loop + ecology witnesses",
+      "owner_default": "coder_a"
+    },
+    "BUILD": {
+      "label": "Build readability + pilot catalog",
+      "owner_default": "coder_b"
+    },
+    "VEG": {
+      "label": "Vegetation program — drain coder_vegetation_drain_queue.json",
+      "owner_default": "coder_a",
+      "note": "Lib LG-1/2 green ≠ product · operator_visible required"
+    },
+    "PRODUCT": {
+      "label": "G-PLAY product closure",
+      "owner_default": "coder"
+    },
+    "DEFER": {
+      "label": "Designer/MCP-gated backlog",
+      "owner_default": "mixed"
+    }
+  },
+  "sprint_decision": {
+    "wave_1": "REWIRE — unblock BUILD verify (mod.rs)",
+    "wave_2": "FIRE — G-PLAY-FIRE + ecology refresh (parallel REWIRE)",
+    "wave_3": "BUILD — pilot catalog + P0 verify + visual",
+    "wave_4": "VEG — coder_vegetation_drain_queue.json v3 seq 1→82 (v2 false-done reopened)",
+    "wave_5": "PRODUCT-VERIFY — coder_product_verify_queue.json runtime gates",
+    "parallel_ok": "REWIRE (B) + FIRE (A) · BUILD (B) + VEG (A) after wave 1"
+  },
+  "drain": [
+    {
+      "seq": 1,
+      "track": "REWIRE",
+      "wave": 1,
+      "id": "BUILD-READ-REWIRE-003",
+      "status": "done",
+      "priority": "P0",
+      "owner": "coder_b",
+      "territory": "src/gui/map_zoom_coherence.rs",
+      "goal": "Wire map_zoom_coherence witness module + live proof refresh",
+      "docs": [
+        "src/dev/build_read_unwired_spine_v1.md",
+        "src/dev/plan_map_zoom_smooth_exec_001_v1.md"
+      ],
+      "witness": "debug_runs/map_zoom_coherence_live.json",
+      "verify": "cargo check -p proc_A_dine01 --lib",
+      "unblocks": [
+        "BUILD-READ-P0-002"
+      ],
+      "completed": "2026-06-11"
+    },
+    {
+      "seq": 2,
+      "track": "REWIRE",
+      "wave": 1,
+      "parallel_group": "rewire_ab",
+      "id": "BUILD-READ-REWIRE-001",
+      "status": "done",
+      "priority": "P0",
+      "owner": "coder_b",
+      "territory": "src/construction/placement_debug.rs",
+      "goal": "Re-wire placement_debug into construction/mod.rs + projection exports",
+      "docs": [
+        "src/dev/build_read_unwired_spine_v1.md"
+      ],
+      "exit": "construction/mod.rs mod placement_debug; cargo check --lib",
+      "unblocks": [
+        "BUILD-READ-DEBUG-001",
+        "BUILD-READ-P0-003"
+      ],
+      "completed": "2026-06-11"
+    },
+    {
+      "seq": 3,
+      "track": "REWIRE",
+      "wave": 1,
+      "parallel_group": "rewire_ab",
+      "id": "BUILD-READ-REWIRE-002",
+      "status": "done",
+      "priority": "P0",
+      "owner": "coder_b",
+      "territory": "src/gui/hud/simulation_pointer_gate.rs",
+      "goal": "Re-wire pointer gate + sim_build_rail_submenu_block_rect in ops shell",
+      "docs": [
+        "src/dev/build_read_unwired_spine_v1.md",
+        "src/dev/design_pointer_hud_regions_v1.md"
+      ],
+      "exit": "hud/mod.rs mod simulation_pointer_gate",
+      "unblocks": [
+        "BUILD-READ-P0-003"
+      ],
+      "completed": "2026-06-11"
+    },
+    {
+      "seq": 4,
+      "track": "REWIRE",
+      "wave": 1,
+      "id": "MINIMAP-REWIRE-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_b",
+      "goal": "MinimapEdge + title bar API; wire minimap_bevy_interaction",
+      "witness": "debug_runs/design_minimap_widget_live.json",
+      "completed": "2026-06-11",
+      "unblocks": [
+        "MINIMAP-WIDGET-IMPL-001"
+      ]
+    },
+    {
+      "seq": 5,
+      "track": "FIRE",
+      "wave": 2,
+      "id": "G-PLAY-FIRE-001",
+      "status": "done",
+      "priority": "P0",
+      "owner": "coder_a",
+      "territory": "assets/scenarios/play/ · src/scenario/",
+      "goal": "Path A demo fire — EmitSimEffect → sim heat → sparks at operational zoom in normal play",
+      "docs": [
+        "src/dev/design_fire_play_visibility_v1.md",
+        "assets/scenarios/play/default_industrial_demo_fire.scenario.ron"
+      ],
+      "witness": "debug_runs/play_scenario_live.json",
+      "exit": "demo_fire_sparks_visible_at_operational_zoom",
+      "unblocks": [
+        "FIRE-ECOLOGY-REFRESH-001"
+      ],
+      "completed": "2026-06-11"
+    },
+    {
+      "seq": 6,
+      "track": "FIRE",
+      "wave": 2,
+      "parallel_group": "fire_tools",
+      "id": "VFX-FIRE-HIGHLIGHT-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_a",
+      "territory": "src/gui/vfx_fire_test_highlight.rs",
+      "goal": "Red world-space box on --test vfx|visual|fire — find seeded burn when zoomed out",
+      "witness": "debug_runs/vfx_fire_test_highlight_live.json",
+      "verify": "cargo run -p proc_A_dine01 --release -- --test vfx",
+      "completed": "2026-06-11"
+    },
+    {
+      "seq": 7,
+      "track": "FIRE",
+      "wave": 2,
+      "id": "FIRE-ECOLOGY-REFRESH-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_a",
+      "depends_on": [
+        "G-PLAY-FIRE-001"
+      ],
+      "territory": "src/systems/fire/ · src/dev/",
+      "goal": "Refresh fire_ecology_live.json — merge SimEffect spine; F2 proof train on disk",
+      "docs": [
+        "src/dev/fire_ecology_f1_todos.md"
+      ],
+      "witness": "debug_runs/fire_ecology_live.json",
+      "exit": "fire_ignition_p0_001.green && f2_fuel_spread_001.green",
+      "verify": "cargo test -p proc_A_dine01 --lib fire_ecology",
+      "completed": "2026-06-11"
+    },
+    {
+      "seq": 8,
+      "track": "BUILD",
+      "wave": 3,
+      "id": "BUILD-READ-P0-002",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_b",
+      "depends_on": [
+        "BUILD-READ-REWIRE-003"
+      ],
+      "goal": "Refresh map_zoom_coherence_live.json after --test vfx scroll torture",
+      "witness": "debug_runs/map_zoom_coherence_live.json",
+      "plan_doc": "src/dev/plan_operator_build_readability_exec_001_v1.md",
+      "completed": "2026-06-11"
+    },
+    {
+      "seq": 9,
+      "track": "BUILD",
+      "wave": 3,
+      "parallel_group": "build_p0",
+      "id": "BUILD-READ-P0-003",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_b",
+      "depends_on": [
+        "BUILD-READ-REWIRE-001",
+        "BUILD-READ-REWIRE-002"
+      ],
+      "goal": "Verify pointer gate: toolbox blocks pick; os_cursor_hidden; egui_blocks",
+      "plan_doc": "src/dev/plan_operator_build_readability_exec_001_v1.md",
+      "exit": "pick under BuildToolbox = no commit",
+      "completed": "2026-06-11"
+    },
+    {
+      "seq": 10,
+      "track": "BUILD",
+      "wave": 3,
+      "parallel_group": "build_p0",
+      "id": "BUILD-READ-DEBUG-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_b",
+      "depends_on": [
+        "BUILD-READ-REWIRE-001"
+      ],
+      "goal": "Placement debug overlay: cursor_visible, click_screen, pick_world, scale_factor, weight_tile_count",
+      "territory": "src/construction/placement_debug.rs",
+      "exit": "overlay fields populated in Adjust mode",
+      "completed": "2026-06-11"
+    },
+    {
+      "seq": 11,
+      "track": "REWIRE",
+      "wave": 3,
+      "id": "BUILD-READ-REWIRE-004",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_b",
+      "goal": "Pilot catalog authority in parametric_commit / visual_authority",
+      "witness": "debug_runs/pilot_hardcode_lint_live.json",
+      "completed": "2026-06-11",
+      "unblocks": [
+        "BUILD-READ-PILOT-001"
+      ]
+    },
+    {
+      "seq": 12,
+      "track": "BUILD",
+      "wave": 3,
+      "id": "BUILD-READ-PILOT-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_b",
+      "also_known_as": "CODER-PILOT-REFACTOR-001",
+      "depends_on": [
+        "BUILD-READ-REWIRE-004"
+      ],
+      "territory": "src/construction/pilot_catalog.rs · building_grammar.rs",
+      "goal": "Load matrix + site from _pilot_catalog.ron; delete warehouse-named Rust branches",
+      "witness": "debug_runs/pilot_catalog_parity_live.json",
+      "exit": "pilots.len() >= 4; no preset-id match arms in commit path",
+      "plan_doc": "src/dev/plan_operator_build_readability_exec_001_v1.md",
+      "completed": "2026-06-11"
+    },
+    {
+      "seq": 13,
+      "track": "BUILD",
+      "wave": 3,
+      "id": "BUILD-READ-GRAMMAR-v0-003",
+      "status": "done",
+      "priority": "P2",
+      "owner": "coder_b",
+      "depends_on": [
+        "BUILD-READ-GRAMMAR-v0-001"
+      ],
+      "territory": "src/construction/procedural/building_grammar.rs",
+      "goal": "Evaluator DNA+β → score massing → pick + effective_scale from βexp",
+      "witness": "debug_runs/grammar_diversity_witness.json",
+      "plan_doc": "src/dev/plan_operator_build_readability_exec_001_v1.md",
+      "note": "BUILD-READ-GRAMMAR-v0-002 APS done (coder-mcp)",
+      "completed": "2026-06-11"
+    },
+    {
+      "seq": 14,
+      "track": "BUILD",
+      "wave": 3,
+      "id": "BUILD-READ-VISUAL-001",
+      "status": "done",
+      "priority": "P2",
+      "owner": "coder_b",
+      "depends_on": [
+        "BUILD-READ-SHAPE-003"
+      ],
+      "territory": "src/construction/visual_authority.rs",
+      "goal": "Post-commit site extract — lod0+ module mesh or iso tile in sim (no footprint-only fallback)",
+      "witness": "debug_runs/build_read_visual_001_live.json",
+      "plan_doc": "src/dev/plan_operator_build_readability_exec_001_v1.md",
+      "note": "lib green 2026-06-11; runtime sim verify still open",
+      "completed": "2026-06-11"
+    },
+    {
+      "seq": 15,
+      "track": "PRODUCT",
+      "wave": 3,
+      "id": "MINIMAP-WIDGET-IMPL-001",
+      "status": "done",
+      "priority": "P2",
+      "owner": "coder_b",
+      "depends_on": [
+        "MINIMAP-REWIRE-001",
+        "P0-MINIMAP-WIDGET-001"
+      ],
+      "territory": "src/gui/hud/minimap_bevy_interaction.rs",
+      "goal": "Minimap widget — drag title bar, fit texture, gold viewport frame",
+      "design": "src/dev/design_minimap_widget_v1.md",
+      "witness": "debug_runs/design_minimap_widget_live.json",
+      "completed": "2026-06-11"
+    },
+    {
+      "seq": 16,
+      "track": "REWIRE",
+      "wave": 3,
+      "parallel_group": "dev_tools",
+      "id": "BUILD-READ-REWIRE-005",
+      "status": "done",
+      "priority": "P2",
+      "owner": "coder_b",
+      "depends_on": [
+        "BUILD-READ-REWIRE-001",
+        "BUILD-READ-REWIRE-003"
+      ],
+      "territory": "src/dev/mod.rs",
+      "goal": "Promote live proof modules from #[cfg(test)] to dev/mod.rs",
+      "docs": [
+        "src/dev/build_read_unwired_spine_v1.md"
+      ],
+      "completed": "2026-06-11"
+    },
+    {
+      "seq": 17,
+      "track": "REWIRE",
+      "wave": 3,
+      "parallel_group": "dev_tools",
+      "id": "APS-QC-REWIRE-001",
+      "status": "done",
+      "priority": "P2",
+      "owner": "coder_b",
+      "territory": "src/gui/assembly_snapshot_qc_ui.rs",
+      "goal": "Wire assembly_snapshot_qc_ui into gui/mod.rs + plugin",
+      "witness": "debug_runs/aps_bevy_qc_hud_001_live.json",
+      "completed": "2026-06-11"
+    },
+    {
+      "seq": 18,
+      "track": "VEG",
+      "wave": 4,
+      "id": "LG-2-SUCCESSION-001",
+      "status": "lib_done",
+      "reopened_as": "VEG-LG2-LIVE-FIRE-001",
+      "priority": "P2",
+      "owner": "coder_a",
+      "depends_on": [
+        "PLAN-LANDSCAPE-GRAMMAR-001"
+      ],
+      "territory": "src/systems/ecology/landscape_grammar.rs",
+      "goal": "LG-2 succession + DisturbanceHistory on landscape program graph",
+      "docs": [
+        "src/dev/plan_landscape_grammar_exec_001_v1.md §4",
+        "src/dev/guide_landscape_grammar_v1.md"
+      ],
+      "witness": "debug_runs/landscape_grammar_lg2_live.json",
+      "exit": "succession_age_ticks && disturbance_history_linked",
+      "verify": "cargo test -p proc_A_dine01 --lib landscape_grammar",
+      "completed": "2026-06-11",
+      "note": "lib witness only — fire_disturbances=0 · see vegetation_system_honest_status_v1.md"
+    },
+    {
+      "seq": 19,
+      "track": "VEG",
+      "wave": 4,
+      "id": "VEG-A01-HARNESS-001",
+      "status": "done",
+      "priority": "P0",
+      "owner": "coder_a",
+      "vegetation_seq": 1,
+      "goal": "v3 drain start — headless sim harness for ecology disturbances",
+      "docs": [
+        "tools/orchestrator/queues/coder_vegetation_drain_queue.json",
+        "src/dev/coder_queue_hardening_rules_v1.md"
+      ],
+      "note": "Supersedes VEG-LG2-LIVE-FIRE-001 (v2 false-done: fire_disturbances=0)",
+      "completed": "2026-06-13"
+    },
+    {
+      "seq": 20,
+      "track": "VEG",
+      "wave": 4,
+      "id": "VEG-A06-FIRE-WITNESS-001",
+      "status": "done",
+      "priority": "P0",
+      "owner": "coder_a",
+      "vegetation_seq": 6,
+      "goal": "lg2 witness fire_disturbances>=1 AND green:true",
+      "witness": "debug_runs/landscape_grammar_lg2_live.json",
+      "exit_predicate": {
+        "witness": "debug_runs/landscape_grammar_lg2_live.json",
+        "must": [
+          {
+            "path": "fire_disturbances",
+            "gte": 1
+          },
+          {
+            "path": "green",
+            "eq": true
+          }
+        ]
+      },
+      "completed": "2026-06-13"
+    },
+    {
+      "seq": 21,
+      "track": "VEG",
+      "wave": 4,
+      "id": "VEG-B-ROLLOUT-WITNESS-001",
+      "status": "done",
+      "priority": "P0",
+      "owner": "coder_a",
+      "vegetation_seq": 33,
+      "goal": "Map rollout chunks_with_program>=16 green:true",
+      "witness": "debug_runs/landscape_grammar_map_rollout_live.json",
+      "note": "v2 false-done: chunks_with_program=1",
+      "completed": "2026-06-13"
+    },
+    {
+      "seq": 22,
+      "track": "VEG",
+      "wave": 4,
+      "id": "VEG-C04-PREVIEW-WITNESS-001",
+      "status": "done",
+      "priority": "P0",
+      "owner": "coder_a",
+      "vegetation_seq": 42,
+      "depends_on": [
+        "VEG-B-ROLLOUT-WITNESS-001"
+      ],
+      "goal": "Preview operator_visible:true — topology tints not eval-only",
+      "operator_visible": true,
+      "completed": "2026-06-13"
+    },
+    {
+      "seq": 23,
+      "track": "VEG",
+      "wave": 4,
+      "id": "VEG-DRAIN-CONTINUE",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_a",
+      "goal": "Drain coder_vegetation_drain_queue.json v3 seq 1→82 without stopping",
+      "docs": [
+        "src/dev/coder_vegetation_full_chain_prompt_v1.md",
+        "src/dev/vegetation_system_honest_status_v1.md",
+        "src/dev/coder_queue_hardening_rules_v1.md"
+      ],
+      "completed": "2026-06-13"
+    },
+    {
+      "seq": 24,
+      "track": "FIRE",
+      "wave": 4,
+      "id": "SIM-STEWARD-FIRE-REGRESS-001",
+      "status": "deferred",
+      "priority": "P3",
+      "owner": "sim-steward",
+      "depends_on": [
+        "VEG-PREVIEW-TOPOLOGY-001",
+        "G-PLAY-FIRE-001"
+      ],
+      "goal": "Fire/replay regression after veg visible in play",
+      "witness": "debug_runs/replay_editor_parity_live.json",
+      "verify": "cargo test -p proc_A_dine01 --lib stage5 fire_ecology"
+    },
+    {
+      "seq": 25,
+      "track": "DEFER",
+      "wave": 5,
+      "id": "BUILD-READ-PILOT-002",
+      "status": "blocked",
+      "priority": "P2",
+      "owner": "designer-mcp",
+      "depends_on": [
+        "BUILD-READ-PILOT-001"
+      ],
+      "goal": "Add pilot rows (rect + T/O/L + warehouse) in catalog only",
+      "plan_doc": "src/dev/plan_operator_build_readability_exec_001_v1.md"
+    },
+    {
+      "seq": 26,
+      "track": "DEFER",
+      "wave": 5,
+      "id": "BUILD-READ-VISUAL-002",
+      "status": "blocked",
+      "priority": "P2",
+      "owner": "coder-mcp",
+      "depends_on": [
+        "BUILD-READ-SHAPE-001"
+      ],
+      "goal": "Production tile bake for pilot warehouse; promote to Bevy registry",
+      "plan_doc": "src/dev/plan_operator_build_readability_exec_001_v1.md",
+      "note": "MCP lane — not @coder pick unless orchestrator escalates",
+      "snag": "operator/designer-mcp blocked"
+    },
+    {
+      "seq": 27,
+      "track": "DEFER",
+      "wave": 5,
+      "id": "BUILD-READ-DESIGN-001",
+      "status": "blocked",
+      "priority": "P1",
+      "owner": "designer",
+      "goal": "Readability brief — site 15–40% rule, footprint partial-alpha, mesh vs tile authority",
+      "plan_doc": "src/dev/plan_operator_build_readability_exec_001_v1.md",
+      "blocks": [
+        "BUILD-READ-DESIGN-002"
+      ],
+      "snag": "designer/mcp lane — not coder pick"
+    },
+    {
+      "seq": 28,
+      "track": "DEFER",
+      "wave": 5,
+      "id": "LG-5-ATLAS-001",
+      "status": "deferred",
+      "priority": "P4",
+      "owner": "designer-mcp",
+      "depends_on": [
+        "LG-4-PREVIEW-001"
+      ],
+      "goal": "Minimal iso veg atlas extract — terminal art only after LG-4 green",
+      "docs": [
+        "src/dev/plan_landscape_grammar_exec_001_v1.md §7"
+      ]
+    },
+    {
+      "seq": 29,
+      "track": "DEFER",
+      "wave": 5,
+      "id": "FACTION-REACT-001",
+      "status": "done",
+      "priority": "P3",
+      "owner": "coder_a",
+      "depends_on": [
+        "G-PLAY-01"
+      ],
+      "goal": "Faction stress hooks read SimEffect telemetry rows",
+      "exec": "src/dev/plan_sim_effect_spine_exec_001_v1.md",
+      "completed": "2026-06-14"
+    },
+    {
+      "seq": 30,
+      "track": "DEFER",
+      "wave": 6,
+      "id": "SIM-EFFECT-EMBED-DB-001",
+      "status": "deferred",
+      "priority": "P4",
+      "goal": "Embedded DB only if GAME-STORE-GATE passes",
+      "forbidden": [
+        "dev Postgres in proc_A_dine01"
+      ]
+    }
+  ],
+  "done_phase4": [
+    "SIM-EFFECT-QUEUE-001",
+    "SIM-EFFECT-TEL-001",
+    "FIRE-IGNITION-P0-001",
+    "TRIAGE-FIRE-PLAY-VIS-001",
+    "TRIAGE-BUILD-CLICK-PLACE-001",
+    "TRIAGE-CURSOR-UNIFY-001",
+    "TRIAGE-MAP-PICK-CLOSURE-001",
+    "TRIAGE-MAP-ZOOM-SMOOTH-001",
+    "SCENARIO-TRIGGER-001",
+    "BUILD-READ-SHAPE-001",
+    "BUILD-READ-SHAPE-002",
+    "BUILD-READ-SHAPE-003",
+    "BUILD-READ-SITE-v0-002",
+    "BUILD-READ-WORLD-002",
+    "EVENT-LOG-UI-001",
+    "P0-VFX-ZOOM-LOCK-001",
+    "P0-TERRAIN-BLOB-001",
+    "PLAN-LANDSCAPE-GRAMMAR-001",
+    "LG-1 pilot (landscape_grammar_lg1_live.json green)"
+  ],
+  "done_fire_depth": [
+    "FIRE-F2-EXTRACT-001",
+    "WSS-SMOKE-BRIDGE-001",
+    "FIRE-F2-FUEL-SPREAD-001",
+    "TRIAGE-FIRE-PRODUCT-001",
+    "TRIAGE-FIRE-STREAM-001"
+  ],
+  "lib_only_veg_reopened": [
+    "LG-2-SUCCESSION-001",
+    "LG-2-FIRE-COUPLING-001",
+    "LG-2-BUILD-CLEAR-001",
+    "LG-3-DISTRICT-001",
+    "LG-4-POPULATION-001",
+    "LG-4-PREVIEW-001"
+  ],
+  "operator_handoff": "VEG not done — drain coder_vegetation_drain_queue.json seq 1→28. Master VEG picks: seq 19-23. Lib green ≠ operator-visible vegetation.",
+  "maintain_after_each_wave": [
+    "cargo test -p proc_A_dine01 --lib fire_ecology landscape_grammar construction stage5 sim_effects",
+    "BLANG:CARGO --cached --compress 4"
+  ]
+}

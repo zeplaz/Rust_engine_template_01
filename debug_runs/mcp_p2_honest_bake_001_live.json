@@ -1,0 +1,45 @@
+{
+  "gate_id": "MCP-P2-HONEST-BAKE-001",
+  "ok": true,
+  "green": true,
+  "checks": {
+    "production_keyframe_pack": {
+      "ok": false,
+      "artist_message": "Keyframe folder has 13 PNGs; need 24 for ship bake.",
+      "warnings": [],
+      "errors": [
+        "Keyframe folder has 13 PNGs; need 24 for ship bake.",
+        "atlas_meta schema v2 required for ship."
+      ],
+      "batch_path": "C:\\dev\\github\\Rust_engine_template_01\\tools\\mcp\\schemas\\examples\\tile_batch_rowhouse_victorian_production_v1.json",
+      "staging": "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_rowhouse_victorian_production_v1"
+    },
+    "smoke_ortho_rejected": {
+      "ok": false,
+      "artist_message": "bake_source must be keyframe_pack for ship (got 'smoke_ortho_headless').",
+      "warnings": [
+        "atlas_meta.json missing \u2014 defer full atlas validate until pack step."
+      ],
+      "errors": [
+        "bake_source must be keyframe_pack for ship (got 'smoke_ortho_headless').",
+        "render.method blender_orthographic_iso is smoke/CI only \u2014 ship requires manual keyframe_render + G4."
+      ],
+      "batch_path": "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\_honest_witness_smoke.json",
+      "staging": "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\test_smoke_ortho"
+    },
+    "dry_run_rejected": {
+      "ok": false,
+      "artist_message": "RUST_ENGINE_TILE_DRY_RUN is set \u2014 cannot ship ortho smoke bake.",
+      "warnings": [],
+      "errors": [
+        "RUST_ENGINE_TILE_DRY_RUN is set \u2014 cannot ship ortho smoke bake.",
+        "Keyframe folder has 13 PNGs; need 24 for ship bake.",
+        "atlas_meta schema v2 required for ship."
+      ],
+      "batch_path": "C:\\dev\\github\\Rust_engine_template_01\\tools\\mcp\\schemas\\examples\\tile_batch_rowhouse_victorian_production_v1.json",
+      "staging": "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_rowhouse_victorian_production_v1"
+    }
+  },
+  "cli": "validate-report tile_promotion_honest <tile_batch.json>",
+  "spine_hook": "tile_spine_run honest_bake step"
+}

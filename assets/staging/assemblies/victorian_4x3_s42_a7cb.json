@@ -41,7 +41,13 @@
       "variant_tags": [
         "clean"
       ],
-      "lod_policy": "lod0"
+      "lod_policy": "lod0",
+      "semantic_tags": {
+        "location": [
+          "street_facing",
+          "corner"
+        ]
+      }
     },
     {
       "module_id": "wall_brick_1u",
@@ -66,12 +72,20 @@
       "material_profile": "brick_red_01",
       "placement_tags": [
         "exterior",
-        "wall"
+        "industrial"
       ],
       "variant_tags": [
         "clean"
       ],
-      "lod_policy": "lod0"
+      "lod_policy": "lod0",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "architectural": [
+          "industrial"
+        ]
+      }
     },
     {
       "module_id": "door_residential",
@@ -101,7 +115,15 @@
       "variant_tags": [
         "clean"
       ],
-      "lod_policy": "lod0"
+      "lod_policy": "lod0",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "detail": [
+          "door_rollup"
+        ]
+      }
     },
     {
       "module_id": "corner_L",
@@ -131,7 +153,13 @@
       "variant_tags": [
         "clean"
       ],
-      "lod_policy": "lod0"
+      "lod_policy": "lod0",
+      "semantic_tags": {
+        "location": [
+          "street_facing",
+          "corner"
+        ]
+      }
     },
     {
       "module_id": "wall_brick_1u",
@@ -156,12 +184,20 @@
       "material_profile": "brick_red_01",
       "placement_tags": [
         "exterior",
-        "wall"
+        "industrial"
       ],
       "variant_tags": [
         "clean"
       ],
-      "lod_policy": "lod0"
+      "lod_policy": "lod0",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "architectural": [
+          "industrial"
+        ]
+      }
     },
     {
       "module_id": "wall_brick_1u",
@@ -186,12 +222,20 @@
       "material_profile": "brick_red_01",
       "placement_tags": [
         "exterior",
-        "wall"
+        "industrial"
       ],
       "variant_tags": [
         "clean"
       ],
-      "lod_policy": "lod0"
+      "lod_policy": "lod0",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "architectural": [
+          "industrial"
+        ]
+      }
     },
     {
       "module_id": "corner_L",
@@ -221,7 +265,13 @@
       "variant_tags": [
         "clean"
       ],
-      "lod_policy": "lod0"
+      "lod_policy": "lod0",
+      "semantic_tags": {
+        "location": [
+          "street_facing",
+          "corner"
+        ]
+      }
     },
     {
       "module_id": "wall_brick_1u",
@@ -246,12 +296,20 @@
       "material_profile": "brick_red_01",
       "placement_tags": [
         "exterior",
-        "wall"
+        "industrial"
       ],
       "variant_tags": [
         "clean"
       ],
-      "lod_policy": "lod0"
+      "lod_policy": "lod0",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "architectural": [
+          "industrial"
+        ]
+      }
     },
     {
       "module_id": "wall_brick_1u",
@@ -276,12 +334,20 @@
       "material_profile": "brick_red_01",
       "placement_tags": [
         "exterior",
-        "wall"
+        "industrial"
       ],
       "variant_tags": [
         "clean"
       ],
-      "lod_policy": "lod0"
+      "lod_policy": "lod0",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "architectural": [
+          "industrial"
+        ]
+      }
     },
     {
       "module_id": "corner_L",
@@ -311,7 +377,13 @@
       "variant_tags": [
         "clean"
       ],
-      "lod_policy": "lod0"
+      "lod_policy": "lod0",
+      "semantic_tags": {
+        "location": [
+          "street_facing",
+          "corner"
+        ]
+      }
     },
     {
       "module_id": "corner_L",
@@ -341,7 +413,13 @@
       "variant_tags": [
         "clean"
       ],
-      "lod_policy": "lod0"
+      "lod_policy": "lod0",
+      "semantic_tags": {
+        "location": [
+          "street_facing",
+          "corner"
+        ]
+      }
     },
     {
       "module_id": "wall_brick_1u",
@@ -366,12 +444,20 @@
       "material_profile": "brick_red_01",
       "placement_tags": [
         "exterior",
-        "wall"
+        "industrial"
       ],
       "variant_tags": [
         "clean"
       ],
-      "lod_policy": "lod0"
+      "lod_policy": "lod0",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "architectural": [
+          "industrial"
+        ]
+      }
     },
     {
       "module_id": "wall_brick_1u",
@@ -396,12 +482,20 @@
       "material_profile": "brick_red_01",
       "placement_tags": [
         "exterior",
-        "wall"
+        "industrial"
       ],
       "variant_tags": [
         "clean"
       ],
-      "lod_policy": "lod0"
+      "lod_policy": "lod0",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "architectural": [
+          "industrial"
+        ]
+      }
     },
     {
       "module_id": "corner_L",
@@ -431,7 +525,13 @@
       "variant_tags": [
         "clean"
       ],
-      "lod_policy": "lod0"
+      "lod_policy": "lod0",
+      "semantic_tags": {
+        "location": [
+          "street_facing",
+          "corner"
+        ]
+      }
     },
     {
       "module_id": "wall_brick_1u",
@@ -456,12 +556,20 @@
       "material_profile": "brick_red_01",
       "placement_tags": [
         "exterior",
-        "wall"
+        "industrial"
       ],
       "variant_tags": [
         "clean"
       ],
-      "lod_policy": "lod0"
+      "lod_policy": "lod0",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "architectural": [
+          "industrial"
+        ]
+      }
     },
     {
       "module_id": "wall_brick_1u",
@@ -486,12 +594,20 @@
       "material_profile": "brick_red_01",
       "placement_tags": [
         "exterior",
-        "wall"
+        "industrial"
       ],
       "variant_tags": [
         "clean"
       ],
-      "lod_policy": "lod0"
+      "lod_policy": "lod0",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "architectural": [
+          "industrial"
+        ]
+      }
     },
     {
       "module_id": "corner_L",
@@ -521,7 +637,13 @@
       "variant_tags": [
         "clean"
       ],
-      "lod_policy": "lod0"
+      "lod_policy": "lod0",
+      "semantic_tags": {
+        "location": [
+          "street_facing",
+          "corner"
+        ]
+      }
     },
     {
       "module_id": "wall_brick_1u",
@@ -546,12 +668,20 @@
       "material_profile": "brick_red_01",
       "placement_tags": [
         "exterior",
-        "wall"
+        "industrial"
       ],
       "variant_tags": [
         "clean"
       ],
-      "lod_policy": "lod0"
+      "lod_policy": "lod0",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "architectural": [
+          "industrial"
+        ]
+      }
     },
     {
       "module_id": "wall_brick_1u",
@@ -576,12 +706,20 @@
       "material_profile": "brick_red_01",
       "placement_tags": [
         "exterior",
-        "wall"
+        "industrial"
       ],
       "variant_tags": [
         "clean"
       ],
-      "lod_policy": "lod0"
+      "lod_policy": "lod0",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "architectural": [
+          "industrial"
+        ]
+      }
     },
     {
       "module_id": "corner_L",
@@ -611,7 +749,13 @@
       "variant_tags": [
         "clean"
       ],
-      "lod_policy": "lod0"
+      "lod_policy": "lod0",
+      "semantic_tags": {
+        "location": [
+          "street_facing",
+          "corner"
+        ]
+      }
     },
     {
       "module_id": "roof_pitched_gable",
@@ -636,12 +780,20 @@
       "material_profile": "roof_tile_01",
       "placement_tags": [
         "exterior",
-        "roof"
+        "industrial"
       ],
       "variant_tags": [
         "clean"
       ],
-      "lod_policy": "lod0"
+      "lod_policy": "lod0",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "architectural": [
+          "industrial"
+        ]
+      }
     },
     {
       "module_id": "roof_pitched_gable",
@@ -666,12 +818,20 @@
       "material_profile": "roof_tile_01",
       "placement_tags": [
         "exterior",
-        "roof"
+        "industrial"
       ],
       "variant_tags": [
         "clean"
       ],
-      "lod_policy": "lod0"
+      "lod_policy": "lod0",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "architectural": [
+          "industrial"
+        ]
+      }
     },
     {
       "module_id": "roof_pitched_gable",
@@ -696,12 +856,20 @@
       "material_profile": "roof_tile_01",
       "placement_tags": [
         "exterior",
-        "roof"
+        "industrial"
       ],
       "variant_tags": [
         "clean"
       ],
-      "lod_policy": "lod0"
+      "lod_policy": "lod0",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "architectural": [
+          "industrial"
+        ]
+      }
     },
     {
       "module_id": "roof_pitched_gable",
@@ -726,12 +894,20 @@
       "material_profile": "roof_tile_01",
       "placement_tags": [
         "exterior",
-        "roof"
+        "industrial"
       ],
       "variant_tags": [
         "clean"
       ],
-      "lod_policy": "lod0"
+      "lod_policy": "lod0",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "architectural": [
+          "industrial"
+        ]
+      }
     },
     {
       "module_id": "roof_pitched_gable",
@@ -756,12 +932,20 @@
       "material_profile": "roof_tile_01",
       "placement_tags": [
         "exterior",
-        "roof"
+        "industrial"
       ],
       "variant_tags": [
         "clean"
       ],
-      "lod_policy": "lod0"
+      "lod_policy": "lod0",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "architectural": [
+          "industrial"
+        ]
+      }
     },
     {
       "module_id": "roof_pitched_gable",
@@ -786,12 +970,20 @@
       "material_profile": "roof_tile_01",
       "placement_tags": [
         "exterior",
-        "roof"
+        "industrial"
       ],
       "variant_tags": [
         "clean"
       ],
-      "lod_policy": "lod0"
+      "lod_policy": "lod0",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "architectural": [
+          "industrial"
+        ]
+      }
     },
     {
       "module_id": "roof_pitched_gable",
@@ -816,12 +1008,20 @@
       "material_profile": "roof_tile_01",
       "placement_tags": [
         "exterior",
-        "roof"
+        "industrial"
       ],
       "variant_tags": [
         "clean"
       ],
-      "lod_policy": "lod0"
+      "lod_policy": "lod0",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "architectural": [
+          "industrial"
+        ]
+      }
     },
     {
       "module_id": "roof_pitched_gable",
@@ -846,12 +1046,20 @@
       "material_profile": "roof_tile_01",
       "placement_tags": [
         "exterior",
-        "roof"
+        "industrial"
       ],
       "variant_tags": [
         "clean"
       ],
-      "lod_policy": "lod0"
+      "lod_policy": "lod0",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "architectural": [
+          "industrial"
+        ]
+      }
     },
     {
       "module_id": "roof_pitched_gable",
@@ -876,12 +1084,20 @@
       "material_profile": "roof_tile_01",
       "placement_tags": [
         "exterior",
-        "roof"
+        "industrial"
       ],
       "variant_tags": [
         "clean"
       ],
-      "lod_policy": "lod0"
+      "lod_policy": "lod0",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "architectural": [
+          "industrial"
+        ]
+      }
     },
     {
       "module_id": "roof_pitched_gable",
@@ -906,12 +1122,20 @@
       "material_profile": "roof_tile_01",
       "placement_tags": [
         "exterior",
-        "roof"
+        "industrial"
       ],
       "variant_tags": [
         "clean"
       ],
-      "lod_policy": "lod0"
+      "lod_policy": "lod0",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "architectural": [
+          "industrial"
+        ]
+      }
     }
   ]
 }

@@ -44,6 +44,8 @@ pub mod validation_feedback;
 pub mod viewport_rect_sanity;
 pub mod sim_view_sync_debug;
 pub mod simulation_session;
+pub mod simulation_pointer_gate;
+pub mod minimap_bevy_interaction;
 pub mod layout_debug;
 pub mod viewport_authority_debug;
 pub mod icon_atlas;

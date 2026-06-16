@@ -5,7 +5,7 @@ use super::layers::PreviewLayers;
 use super::texture_cache::WorldPreviewTexture;
 use crate::gui::map_view::MapViewInstances;
 use crate::gui::preview_partial_min_interval_from_hz;
-use crate::systems::ecology::{ChunkEcology, VegetationField};
+use crate::systems::ecology::{ChunkEcology, LandscapeProgramOnChunk, VegetationField};
 use crate::render::SharedOverlayFieldBuffers;
 use crate::systems::fire::{ChunkSmokeField, FireFuelField};
 use crate::systems::weather::ChunkWeather;
@@ -62,6 +62,7 @@ pub(crate) struct WorldPreviewTileChunkQueries<'w, 's> {
             Option<&'static ChunkWeather>,
             Option<&'static FireFuelField>,
             Option<&'static ChunkSmokeField>,
+            Option<&'static LandscapeProgramOnChunk>,
         ),
     >,
     pub(crate) terrain_overlay: Res<'w, DynamicTerrainOverlay>,
@@ -267,7 +268,10 @@ pub fn update_world_preview_texture(
     let ecology_slices: Vec<EcologyRasterChunkRow> = queries
         .chunk_ecology_bundle
         .iter()
-        .map(|(c, m, eco, veg, wx, fuel, smoke)| {
+        .map(|(c, m, eco, veg, wx, fuel, smoke, program)| {
+            let topo_count = program
+                .map(|p| p.evaluation.topology_kind_count.min(255) as u8)
+                .unwrap_or(0);
             (
                 c.coord,
                 m.size,
@@ -277,6 +281,7 @@ pub fn update_world_preview_texture(
                 fuel.copied(),
                 queries.shared_overlay_fields.fire_surface_heat_at(c.coord),
                 smoke.copied(),
+                topo_count,
             )
         })
         .collect();

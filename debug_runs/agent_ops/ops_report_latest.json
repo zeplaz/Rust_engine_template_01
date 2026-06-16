@@ -1,0 +1,239 @@
+{
+  "_agent_meta": {
+    "schema": "ops_report_v2",
+    "written_at_epoch_secs": 1781328296,
+    "profile": "OPS_REPORT",
+    "source_system": "ops_witness_index+ops_project_brief",
+    "relative_path": "debug_runs/agent_ops/ops_report_latest.json",
+    "agent": "operations-intelligence"
+  },
+  "profile": "OPS_REPORT",
+  "plan_id": "PLAN-THREE-TRACK-001",
+  "track_d_id": "OPS-WITNESS-SPINE-002",
+  "registry_path": "tools/orchestrator/queues/OPS_LANE_REGISTRY.json",
+  "dsm_snapshot": [
+    "AUTH: MAT\u2605\u21e2APS\u2605\u21e2SNAP\u2605\u21e2WRK\u2605\u21e2ATL\u2605\u21e2RT\u2605 | SIM\u2605\u21e2CON\u2605\u21e2INFRA\u2605\u21e2FIRE\u2605\u21e2ECO\u2605",
+    "LOOP: RUN\u21e2TEL\u2605\u21e2KPI\u2605\u21e2OPS\u2605\u21e2\u0394WF\u21ba",
+    "STAGE5: 1 green / 1 proofs",
+    "FIRE/VFX: 0 green / 0 proofs",
+    "CONSTRUCTION: operational + 15 sub-witnesses \u00b7 0 red",
+    "INFRASTRUCTURE: 0 green / 0 proofs",
+    "ECONOMY/LOG: 0 green / 0 proofs",
+    "WAVE/STAGE6: 0 green / 0 proofs",
+    "STAGE7/PLAY: 0 green / 1 proofs",
+    "ART-A/B/C: 2/68/0 proofs \u00b7 B ship\u26d4=True",
+    "UI: 0 proofs \u00b7 UNCLASSIFIED: 106",
+    "FAIL-PROP[art_B]: Track B manual keyframe \u2014 warehouse paused (does not block ATL\u2605/RT\u2605)"
+  ],
+  "qce": {
+    "Q_coherence": {
+      "score": 7,
+      "evidence": "stage5 spine + construction operational; art_B dishonest=4"
+    },
+    "Q_stability": {
+      "score": 7,
+      "evidence": "FULL_APP + infra isolation + construction operational_green"
+    },
+    "C_compute": {
+      "score": 5,
+      "evidence": "fire_streaming + wave virtualization indexed; weather_sim_live when green"
+    },
+    "C_tokens": {
+      "score": null,
+      "evidence": "append agent_run_event_v1 on HANDOFF close"
+    },
+    "E_clarity": {
+      "score": 6,
+      "evidence": "construction sub-witness rollup in index; APS previews green"
+    },
+    "E_confusion_risk": {
+      "score": 8,
+      "evidence": "art dishonest=4; construction red=0"
+    }
+  },
+  "delta_wf": [
+    {
+      "finding": "Track B ship blocked \u2014 manual keyframe + G4",
+      "owner": "@designer-mcp + operator",
+      "program_id": "art_B",
+      "next_artifact": "debug_runs/art_pipeline/mcp_pilot_grammar_001_live.json"
+    },
+    {
+      "finding": "Product gate \u2014 play scenario acceptance",
+      "owner": "Operator",
+      "program_id": "stage7_play",
+      "next_artifact": "debug_runs/play_scenario_live.json"
+    },
+    {
+      "finding": "Warehouse production bake paused \u2014 Track B",
+      "owner": "@coder-mcp + operator",
+      "program_id": "art_B",
+      "next_artifact": "debug_runs/ops_007_warehouse_production_pause_live.json"
+    }
+  ],
+  "program_summary": {
+    "agent_ops": {
+      "count": 1,
+      "green_count": 1,
+      "label": "Agent continuity"
+    },
+    "art_A": {
+      "count": 2,
+      "green_count": 2,
+      "label": "APS product / material studio"
+    },
+    "art_B": {
+      "count": 68,
+      "green_count": 35,
+      "label": "MCP pipeline spine / warehouse integration"
+    },
+    "construction": {
+      "count": 1,
+      "green_count": 1,
+      "label": "Construction phases"
+    },
+    "stage5_spine": {
+      "count": 1,
+      "green_count": 1,
+      "label": "Stage 5 FULL_APP readiness"
+    },
+    "stage7_play": {
+      "count": 1,
+      "green_count": 0,
+      "label": "Stage 7 play scenarios"
+    },
+    "unclassified": {
+      "count": 106,
+      "green_count": 85,
+      "label": null
+    }
+  },
+  "construction_sub_witnesses": [
+    {
+      "witness_key": "construction_bq128_apply_ghost_001",
+      "green": true,
+      "partial_alpha": null,
+      "note": null
+    },
+    {
+      "witness_key": "construction_bq128_apply_merge_replace_002",
+      "green": true,
+      "partial_alpha": null,
+      "note": null
+    },
+    {
+      "witness_key": "construction_growth_inspector_001",
+      "green": true,
+      "partial_alpha": null,
+      "note": null
+    },
+    {
+      "witness_key": "construction_mv_001",
+      "green": true,
+      "partial_alpha": null,
+      "note": null
+    },
+    {
+      "witness_key": "construction_organic_growth_001",
+      "green": true,
+      "partial_alpha": null,
+      "note": null
+    },
+    {
+      "witness_key": "construction_parametric_placement_001",
+      "green": true,
+      "partial_alpha": true,
+      "note": null
+    },
+    {
+      "witness_key": "construction_procedural_build_001",
+      "green": true,
+      "partial_alpha": null,
+      "note": null
+    },
+    {
+      "witness_key": "construction_r4_corridor_001",
+      "green": true,
+      "partial_alpha": null,
+      "note": null
+    },
+    {
+      "witness_key": "construction_r4_mv_ghost_001",
+      "green": true,
+      "partial_alpha": null,
+      "note": null
+    },
+    {
+      "witness_key": "construction_r4_prep_001",
+      "green": true,
+      "partial_alpha": null,
+      "note": null
+    },
+    {
+      "witness_key": "construction_scaling_audit_001",
+      "green": true,
+      "partial_alpha": null,
+      "note": null
+    },
+    {
+      "witness_key": "construction_settlement_hierarchy_001",
+      "green": true,
+      "partial_alpha": null,
+      "note": null
+    },
+    {
+      "witness_key": "construction_site_stage_pipeline_001",
+      "green": true,
+      "partial_alpha": null,
+      "note": null
+    },
+    {
+      "witness_key": "construction_site_stage_tick_002",
+      "green": true,
+      "partial_alpha": null,
+      "note": null
+    },
+    {
+      "witness_key": "operational_green",
+      "green": true
+    }
+  ],
+  "unified_index_path": "debug_runs/unified_witness_index.json",
+  "handoff_path": "tools/orchestrator/queues/HANDOFF.md",
+  "doc_reads": {
+    "witness_path": "debug_runs/agent_ops/doc_reads_brief_latest.json",
+    "total_reads_in_window": 174,
+    "hot_path_count": 12,
+    "promotion_candidates": 12,
+    "top_hot_paths": [
+      {
+        "path": "src/dev/plan_mcp_agent_lang_program_v1.md",
+        "count": 49
+      },
+      {
+        "path": "src/dev/agent_lang_v1.md",
+        "count": 27
+      },
+      {
+        "path": "prompts/llm_agent_brief.md",
+        "count": 21
+      },
+      {
+        "path": ".cursor/skills/agent-lang/SKILL.md",
+        "count": 18
+      },
+      {
+        "path": "docs/archive/2026-06-src-dev/plans/plan_mcp_agent_lang_program_v1.md",
+        "count": 13
+      }
+    ]
+  },
+  "utility_score": 2.4,
+  "metrics_tier1": {
+    "q_per_token": null,
+    "ftr": null,
+    "rtr": null,
+    "status": "not_measured",
+    "note": "Tier-1 KPIs require agent_run_event telemetry"
+  }
+}

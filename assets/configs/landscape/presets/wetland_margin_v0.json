@@ -1,0 +1,34 @@
+{
+  "schema_version": "landscape_grammar_v0",
+  "preset_id": "wetland_margin_v0",
+  "chart_id": "WET-MARGIN-D3",
+  "land_dna": { "H": "wetland", "S": "peat", "E": "sheltered", "T": "temperate", "D": "seasonal_wet", "L": "marsh", "A": "mature", "M": "natural" },
+  "pressure_field": {
+    "lambda_moisture": 0.94,
+    "lambda_slope": 0.12,
+    "lambda_exposure": 0.25,
+    "lambda_disturbance": 0.15,
+    "lambda_access": 0.38,
+    "lambda_security": 0.05,
+    "lambda_productivity": 0.48,
+    "lambda_legibility": 0.41
+  },
+  "landscape_program": {
+    "class": "wetland",
+    "district_ref": "wetland_margin_05",
+    "required_topologies": ["CORRIDOR_RIPARIAN", "PATCH_MARSH", "FRINGE_MUD", "RING_BASIN"]
+  },
+  "topology_graph": [
+    {
+      "id": "net_wet_01",
+      "topology_kind": "Network",
+      "preset_id": "NETWORK_CONNECTED",
+      "children": [
+        { "id": "corr_riparian_01", "topology_kind": "Corridor", "preset_id": "CORRIDOR_RIPARIAN" },
+        { "id": "patch_marsh_01", "topology_kind": "Patch", "preset_id": "PATCH_MARSH" },
+        { "id": "fringe_mud_01", "topology_kind": "Fringe", "preset_id": "FRINGE_MUD" },
+        { "id": "ring_basin_01", "topology_kind": "Ring", "preset_id": "RING_BASIN" }
+      ]
+    }
+  ]
+}

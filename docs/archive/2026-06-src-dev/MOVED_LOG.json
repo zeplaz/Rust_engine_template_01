@@ -1,0 +1,2196 @@
+{
+  "schema": "archive_moved_log_v1",
+  "phase": "src-dev-phase3",
+  "archive_root": "docs/archive/2026-06-src-dev",
+  "moved_at": "2026-06-10T15:50:31.467011+00:00",
+  "dry_run": false,
+  "moved_count": 437,
+  "kept_md_count": 51,
+  "moved": [
+    {
+      "from": "docs/archive/2026-06-src-dev/trees/stages/fire_sim_phase7_plan_v1.md",
+      "to": "docs/archive/2026-06-src-dev/trees/stages/fire_sim_phase7_plan_v1.md",
+      "bucket": "trees"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/trees/stages/infra_55_execution_plan_v1.md",
+      "to": "docs/archive/2026-06-src-dev/trees/stages/infra_55_execution_plan_v1.md",
+      "bucket": "trees"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/trees/stages/stage7_behavioral_plan_v1.md",
+      "to": "docs/archive/2026-06-src-dev/trees/stages/stage7_behavioral_plan_v1.md",
+      "bucket": "trees"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/trees/stages/stage7_behavioral_planner_handoff_v1.md",
+      "to": "docs/archive/2026-06-src-dev/trees/stages/stage7_behavioral_planner_handoff_v1.md",
+      "bucket": "trees"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/trees/stages/stage7_play_plan_v1.md",
+      "to": "docs/archive/2026-06-src-dev/trees/stages/stage7_play_plan_v1.md",
+      "bucket": "trees"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/trees/stages/ui_phase4_execution_plan_v1.md",
+      "to": "docs/archive/2026-06-src-dev/trees/stages/ui_phase4_execution_plan_v1.md",
+      "bucket": "trees"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/trees/stages/vfx_phase2_closure_plan_v1.md",
+      "to": "docs/archive/2026-06-src-dev/trees/stages/vfx_phase2_closure_plan_v1.md",
+      "bucket": "trees"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/trees/stages/water_vfx_closure_plan_v1.md",
+      "to": "docs/archive/2026-06-src-dev/trees/stages/water_vfx_closure_plan_v1.md",
+      "bucket": "trees"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/trees/stages/wave_c_depth_plan_v1.md",
+      "to": "docs/archive/2026-06-src-dev/trees/stages/wave_c_depth_plan_v1.md",
+      "bucket": "trees"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/trees/wss_hybrid_assessments/wss_chunk_slab_001_v1.yaml",
+      "to": "docs/archive/2026-06-src-dev/trees/wss_hybrid_assessments/wss_chunk_slab_001_v1.yaml",
+      "bucket": "trees"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/active_coder_queue_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/active_coder_queue_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/agent_collective_ritual_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/agent_collective_ritual_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/agent_lang_002_005_closure_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/agent_lang_002_005_closure_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/agent_mcp_consumer_guide_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/agent_mcp_consumer_guide_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/agent_meta_brief_v3.md",
+      "to": "docs/archive/2026-06-src-dev/plans/agent_meta_brief_v3.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/agent_meta_diagrams_v3_fold.md",
+      "to": "docs/archive/2026-06-src-dev/plans/agent_meta_diagrams_v3_fold.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/agent_meta_field_registry_v3.md",
+      "to": "docs/archive/2026-06-src-dev/plans/agent_meta_field_registry_v3.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/agent_meta_grammar_v3_lattice.md",
+      "to": "docs/archive/2026-06-src-dev/plans/agent_meta_grammar_v3_lattice.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/aps_authoring_tool_roadmap_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/aps_authoring_tool_roadmap_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/aps_mat_category_schema_001_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/aps_mat_category_schema_001_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/aps_preview_001_spec_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/aps_preview_001_spec_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/aps_preview_004_bevy_worker_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/aps_preview_004_bevy_worker_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/aps_tags_001_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/aps_tags_001_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/aps_ux_audit_001_designer_mcp_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/aps_ux_audit_001_designer_mcp_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/aps_ux_grammar_why_glossary_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/aps_ux_grammar_why_glossary_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/aps_ux_professional_polish_rules_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/aps_ux_professional_polish_rules_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/aps_validator_plain_language_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/aps_validator_plain_language_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/aps_validator_plain_signoff_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/aps_validator_plain_signoff_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/arch_assembly_graph_002_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/arch_assembly_graph_002_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/arch_blender_worker_contract_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/arch_blender_worker_contract_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/arch_build_grammar_001_schema_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/arch_build_grammar_001_schema_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/arch_mat_001_material_authority_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/arch_mat_001_material_authority_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/arch_material_authority_001_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/arch_material_authority_001_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/arch_pbg_massing_placement_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/arch_pbg_massing_placement_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/assets_organization_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/assets_organization_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/bevy_hud_lanes_agent_orders_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/bevy_hud_lanes_agent_orders_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/bq128_apply_ghost_ux_review_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/bq128_apply_ghost_ux_review_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/bq128_editor_path_design_note_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/bq128_editor_path_design_note_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/bq128_editor_path_plan_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/bq128_editor_path_plan_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/clippy_policy.md",
+      "to": "docs/archive/2026-06-src-dev/plans/clippy_policy.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/coder_a_backlog_wave6_20260527_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/coder_a_backlog_wave6_20260527_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/coder_a_infra_stress_active_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/coder_a_infra_stress_active_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/coder_b_backlog_wave6_20260527_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/coder_b_backlog_wave6_20260527_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/coder_dual_queue_multistage_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/coder_dual_queue_multistage_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/coder_dual_queue_todos_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/coder_dual_queue_todos_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/coder_dual_queue_todos_v2.md",
+      "to": "docs/archive/2026-06-src-dev/plans/coder_dual_queue_todos_v2.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/coder_dual_queue_v2.md",
+      "to": "docs/archive/2026-06-src-dev/plans/coder_dual_queue_v2.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/coder_dual_queue_v3.md",
+      "to": "docs/archive/2026-06-src-dev/plans/coder_dual_queue_v3.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/coder_execution_plan_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/coder_execution_plan_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/coder_triage_list_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/coder_triage_list_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/coder_unblock_dispatch_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/coder_unblock_dispatch_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/coder_unified_backlog_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/coder_unified_backlog_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/compile_warnings_registry.md",
+      "to": "docs/archive/2026-06-src-dev/plans/compile_warnings_registry.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/construction_active_progress.md",
+      "to": "docs/archive/2026-06-src-dev/plans/construction_active_progress.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/construction_coder_drain_order_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/construction_coder_drain_order_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/construction_economy_growth_vision_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/construction_economy_growth_vision_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/construction_multiview_ghost_readability_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/construction_multiview_ghost_readability_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/construction_multiview_sim_spec_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/construction_multiview_sim_spec_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/construction_operational_gate.md",
+      "to": "docs/archive/2026-06-src-dev/plans/construction_operational_gate.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/construction_ownership.md",
+      "to": "docs/archive/2026-06-src-dev/plans/construction_ownership.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/construction_parametric_design_signoff_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/construction_parametric_design_signoff_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/construction_parametric_ghost_visual_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/construction_parametric_ghost_visual_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/construction_parametric_placement_design_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/construction_parametric_placement_design_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/construction_parametric_placement_spec_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/construction_parametric_placement_spec_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/construction_parametric_scale_hud_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/construction_parametric_scale_hud_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/construction_parametric_staged_panel_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/construction_parametric_staged_panel_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/construction_parametric_staging_ux_v2.md",
+      "to": "docs/archive/2026-06-src-dev/plans/construction_parametric_staging_ux_v2.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/construction_parametric_tray_mock_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/construction_parametric_tray_mock_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/construction_procedural_buildings_plan_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/construction_procedural_buildings_plan_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/construction_product_roadmap_phases_2_10_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/construction_product_roadmap_phases_2_10_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/construction_r4_corridor_map_ux_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/construction_r4_corridor_map_ux_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/construction_r4_mv_pass_record_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/construction_r4_mv_pass_record_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/construction_r4_mv_post_param_001.md",
+      "to": "docs/archive/2026-06-src-dev/plans/construction_r4_mv_post_param_001.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/construction_r4_product_slice_ux_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/construction_r4_product_slice_ux_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/construction_r4_tray_legend_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/construction_r4_tray_legend_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/construction_recovery_todos.md",
+      "to": "docs/archive/2026-06-src-dev/plans/construction_recovery_todos.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/construction_round2_plan.md",
+      "to": "docs/archive/2026-06-src-dev/plans/construction_round2_plan.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/construction_round3_plan.md",
+      "to": "docs/archive/2026-06-src-dev/plans/construction_round3_plan.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/construction_round4_corridor_phase_spec_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/construction_round4_corridor_phase_spec_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/construction_round4_multiview_ghost_presets_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/construction_round4_multiview_ghost_presets_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/construction_round4_prep_index_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/construction_round4_prep_index_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/construction_round4_product_gate_plan_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/construction_round4_product_gate_plan_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/design_aps_atlas_preview_legend_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/design_aps_atlas_preview_legend_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/design_aps_bevy_qc_hud_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/design_aps_bevy_qc_hud_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/design_aps_bevy_qc_hud_v2.md",
+      "to": "docs/archive/2026-06-src-dev/plans/design_aps_bevy_qc_hud_v2.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/design_aps_materials_tab_ia_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/design_aps_materials_tab_ia_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/design_aps_ux_audit_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/design_aps_ux_audit_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/design_aps_ux_density_001_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/design_aps_ux_density_001_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/design_aps_ux_polish_signoff_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/design_aps_ux_polish_signoff_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/design_art_pipeline_suite_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/design_art_pipeline_suite_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/design_assembly_to_tile_coupling_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/design_assembly_to_tile_coupling_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/design_construction_scaling_read_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/design_construction_scaling_read_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/design_construction_site_stage_read_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/design_construction_site_stage_read_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/design_grammar_iter_ui_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/design_grammar_iter_ui_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/design_infra_network_overlay_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/design_infra_network_overlay_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/design_organic_growth_ux_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/design_organic_growth_ux_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/design_procedural_art_acceptance_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/design_procedural_art_acceptance_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/design_procedural_assembly_read_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/design_procedural_assembly_read_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/design_procedural_module_kit_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/design_procedural_module_kit_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/design_procedural_tile_production_bar_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/design_procedural_tile_production_bar_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/design_settlement_hierarchy_read_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/design_settlement_hierarchy_read_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/design_sim_hud_build_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/design_sim_hud_build_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/design_sim_hud_dock_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/design_sim_hud_dock_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/design_sim_hud_minimap_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/design_sim_hud_minimap_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/design_sim_hud_ops_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/design_sim_hud_ops_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/design_sim_hud_product_signoff_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/design_sim_hud_product_signoff_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/design_tile_bake_spine_convergence_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/design_tile_bake_spine_convergence_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/design_tools_ux_polish_charter_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/design_tools_ux_polish_charter_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/design_weather_player_read_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/design_weather_player_read_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/designer_mcp_onboarding_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/designer_mcp_onboarding_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/designer_oncall_absorption_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/designer_oncall_absorption_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/designer_parallel_workboard_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/designer_parallel_workboard_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/designer_planner_parallel_wave_20260603_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/designer_planner_parallel_wave_20260603_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/designer_wave4_todos_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/designer_wave4_todos_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/designer_wave5_todos_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/designer_wave5_todos_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/designer_wave6_todos_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/designer_wave6_todos_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/designer_wave_parallel_todos_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/designer_wave_parallel_todos_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/dev_artifact_containment_policy_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/dev_artifact_containment_policy_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/doc_drift_review_2026_05_27.md",
+      "to": "docs/archive/2026-06-src-dev/plans/doc_drift_review_2026_05_27.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/fire7_f7_a_exit_acceptance_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/fire7_f7_a_exit_acceptance_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/fire7_f7_b_debug_pass_record_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/fire7_f7_b_debug_pass_record_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/fire7_f7_b_streaming_impl_plan_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/fire7_f7_b_streaming_impl_plan_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/fire7_f7_c_lod_impl_plan_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/fire7_f7_c_lod_impl_plan_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/fire7_streaming_depth_plan_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/fire7_streaming_depth_plan_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/fire_f2_extract_readability_pass_001.md",
+      "to": "docs/archive/2026-06-src-dev/plans/fire_f2_extract_readability_pass_001.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/fire_lod_player_read_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/fire_lod_player_read_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/fire_particle_spark_design_plan_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/fire_particle_spark_design_plan_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/fire_sim_phase7_architecture_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/fire_sim_phase7_architecture_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/fire_spark_track_closure_plan_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/fire_spark_track_closure_plan_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/fire_streaming_debug_overlay_names_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/fire_streaming_debug_overlay_names_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/fire_streaming_neighbor_wake_visual_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/fire_streaming_neighbor_wake_visual_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/fire_vt_spread_visual_acceptance_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/fire_vt_spread_visual_acceptance_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/fleet_coder_orders_econ_growth_20260602_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/fleet_coder_orders_econ_growth_20260602_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/fleet_wave4_coder_dispatch_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/fleet_wave4_coder_dispatch_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/g_play_001_blockers_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/g_play_001_blockers_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/grammar_002_slice_001_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/grammar_002_slice_001_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/grammar_iter_001_spec_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/grammar_iter_001_spec_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/grammar_iter_agent_orders_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/grammar_iter_agent_orders_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/grammar_lane_agent_prompts_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/grammar_lane_agent_prompts_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/hanabi_event_vfx_style_bounds_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/hanabi_event_vfx_style_bounds_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/hanabi_spike_review_h_a2_gate_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/hanabi_spike_review_h_a2_gate_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/hud_aesthetics_todos.md",
+      "to": "docs/archive/2026-06-src-dev/plans/hud_aesthetics_todos.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/ind_board_reconcile_plan_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/ind_board_reconcile_plan_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/ind_e02_default_play_spec_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/ind_e02_default_play_spec_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/ind_e03_ops_strip_polish_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/ind_e03_ops_strip_polish_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/industrial_activation_board_reconcile_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/industrial_activation_board_reconcile_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/industrial_activation_phase_todos.md",
+      "to": "docs/archive/2026-06-src-dev/plans/industrial_activation_phase_todos.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/industrial_grid_overload_impl_plan_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/industrial_grid_overload_impl_plan_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/infra_agent_orders_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/infra_agent_orders_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/infra_proj2_sole_writer_plan_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/infra_proj2_sole_writer_plan_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/infra_slice3_wc_d04_ops_f01_plan_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/infra_slice3_wc_d04_ops_f01_plan_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/log_e01_full_app_witness_spec_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/log_e01_full_app_witness_spec_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/log_e01_visual_acceptance_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/log_e01_visual_acceptance_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/Logistics throughput architecture.md",
+      "to": "docs/archive/2026-06-src-dev/plans/Logistics throughput architecture.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/logistics_projection_impl_plan_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/logistics_projection_impl_plan_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/logistics_throughput_phase_todos.md",
+      "to": "docs/archive/2026-06-src-dev/plans/logistics_throughput_phase_todos.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/logistics_visual_lane_spec_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/logistics_visual_lane_spec_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/logistics_visual_todos.md",
+      "to": "docs/archive/2026-06-src-dev/plans/logistics_visual_todos.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/m3_minimap_product_depth_plan_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/m3_minimap_product_depth_plan_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/map_blink_001_repro_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/map_blink_001_repro_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/mcp_art_program_green_gates_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/mcp_art_program_green_gates_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/mcp_fleet_active_orders_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/mcp_fleet_active_orders_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/mcp_fleet_aps_pilot_orders_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/mcp_fleet_aps_pilot_orders_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/mcp_fleet_procedural_tiles_production_orders_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/mcp_fleet_procedural_tiles_production_orders_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/mcp_fleet_production_pilot_rowhouse_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/mcp_fleet_production_pilot_rowhouse_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/mcp_fleet_production_sprint_rowhouse_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/mcp_fleet_production_sprint_rowhouse_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/mcp_fleet_tile_automation_orders_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/mcp_fleet_tile_automation_orders_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/mcp_fleet_tile_real_engine_orders_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/mcp_fleet_tile_real_engine_orders_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/mcp_fleet_wave3_engine_orders_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/mcp_fleet_wave3_engine_orders_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/mcp_orchestrator_tile_fix_warehouse_slice_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/mcp_orchestrator_tile_fix_warehouse_slice_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/mcp_orchestrator_tile_fix_warehouse_slice_v2.md",
+      "to": "docs/archive/2026-06-src-dev/plans/mcp_orchestrator_tile_fix_warehouse_slice_v2.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/mcp_productivity_p1_plan_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/mcp_productivity_p1_plan_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/minimap_d_m1_signoff_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/minimap_d_m1_signoff_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/minimap_d_m2_signoff_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/minimap_d_m2_signoff_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/minimap_d_m3_signoff_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/minimap_d_m3_signoff_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/minimap_m1_gate_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/minimap_m1_gate_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/minimap_m2_tray_overlay_bridge_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/minimap_m2_tray_overlay_bridge_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/minimap_m3_readability_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/minimap_m3_readability_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/minimap_m3_unit_aggregation_visual_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/minimap_m3_unit_aggregation_visual_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/minimap_m3_units_replay_impl_plan_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/minimap_m3_units_replay_impl_plan_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/minimap_replay_live_ring_visual_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/minimap_replay_live_ring_visual_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/minimap_replay_pass_002_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/minimap_replay_pass_002_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/minimap_replay_scrub_visual_spec_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/minimap_replay_scrub_visual_spec_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/minimap_unit_marker_visual_spec_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/minimap_unit_marker_visual_spec_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/minimap_ux_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/minimap_ux_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/operator_ops_witness_refresh_plan_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/operator_ops_witness_refresh_plan_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/operator_visual_signoff_bundle_plan_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/operator_visual_signoff_bundle_plan_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/operator_visual_signoff_design_checklist_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/operator_visual_signoff_design_checklist_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/orchestrator_order_mcp_productivity_p1_plan_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/orchestrator_order_mcp_productivity_p1_plan_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/orchestrator_signoff_snapshot_20260526_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/orchestrator_signoff_snapshot_20260526_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/overlay_parity_stress_plan_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/overlay_parity_stress_plan_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/pbr_pilot_rowhouse_material_maker_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/pbr_pilot_rowhouse_material_maker_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/perf_visual_full_fix_todo_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/perf_visual_full_fix_todo_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/pg3_w3_live_tactical_review_runbook_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/pg3_w3_live_tactical_review_runbook_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/pg_module_audit_warehouse_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/pg_module_audit_warehouse_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/pilot_grammar_001_execution_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/pilot_grammar_001_execution_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/pilot_grammar_001_g4_checklist_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/pilot_grammar_001_g4_checklist_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/pilot_grammar_agent_orders_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/pilot_grammar_agent_orders_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/pilot_grammar_operator_runbook_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/pilot_grammar_operator_runbook_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/plan_agent_queue_mcp_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/plan_agent_queue_mcp_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/plan_aps_ux_async_001_exec_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/plan_aps_ux_async_001_exec_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/plan_aps_ux_polish_program_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/plan_aps_ux_polish_program_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/plan_art_design_inbound_alignment_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/plan_art_design_inbound_alignment_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/plan_art_pipeline_suite_exec_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/plan_art_pipeline_suite_exec_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/plan_art_preview_hub_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/plan_art_preview_hub_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/plan_bevy_hud_grammar_parallel_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/plan_bevy_hud_grammar_parallel_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/plan_bq128_apply_exec_001_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/plan_bq128_apply_exec_001_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/plan_building_grammar_evolution_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/plan_building_grammar_evolution_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/plan_building_tile_spine_001_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/plan_building_tile_spine_001_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/plan_construction_hydro_coupling_001_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/plan_construction_hydro_coupling_001_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/plan_construction_p7_logistics_exec_001_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/plan_construction_p7_logistics_exec_001_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/plan_construction_param_exec_phases_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/plan_construction_param_exec_phases_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/plan_construction_parametric_placement_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/plan_construction_parametric_placement_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/plan_construction_r4_exec_001_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/plan_construction_r4_exec_001_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/plan_construction_r4_mv_exec_001_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/plan_construction_r4_mv_exec_001_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/plan_construction_r4_product_open_001_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/plan_construction_r4_product_open_001_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/plan_construction_scaling_audit_exec_003_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/plan_construction_scaling_audit_exec_003_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/plan_construction_stage_pipeline_exec_002_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/plan_construction_stage_pipeline_exec_002_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/plan_defer_registry_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/plan_defer_registry_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/plan_designer_mcp_art_toolchain_exec_001_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/plan_designer_mcp_art_toolchain_exec_001_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/plan_dev_artifact_containment_exec_001_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/plan_dev_artifact_containment_exec_001_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/plan_econ_growth_actors_exec_001_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/plan_econ_growth_actors_exec_001_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/plan_elemental_wave2_index_001_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/plan_elemental_wave2_index_001_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/plan_f7_stream_exec_001_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/plan_f7_stream_exec_001_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/plan_fire_f2_extract_exec_001_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/plan_fire_f2_extract_exec_001_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/plan_fleet_phase_next_001_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/plan_fleet_phase_next_001_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/plan_fleet_phase_next_exec_001_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/plan_fleet_phase_next_exec_001_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/plan_fleet_stability_integrity_001_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/plan_fleet_stability_integrity_001_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/plan_fleet_stability_integrity_exec_001_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/plan_fleet_stability_integrity_exec_001_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/plan_fleet_stability_integrity_exec_002_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/plan_fleet_stability_integrity_exec_002_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/plan_hanabi_adoption_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/plan_hanabi_adoption_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/plan_hanabi_h_a2_exec_001_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/plan_hanabi_h_a2_exec_001_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/plan_ind_e02_play_exec_001_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/plan_ind_e02_play_exec_001_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/plan_infra_tail_exec_001_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/plan_infra_tail_exec_001_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/plan_infrastructure_world_layers_exec_001_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/plan_infrastructure_world_layers_exec_001_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/plan_kit_lod0_roadmap_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/plan_kit_lod0_roadmap_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/plan_ledger_refresh_003_checklist_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/plan_ledger_refresh_003_checklist_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/plan_ledger_refresh_004_checklist_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/plan_ledger_refresh_004_checklist_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/plan_ledger_refresh_005_checklist_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/plan_ledger_refresh_005_checklist_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/plan_ledger_refresh_006_checklist_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/plan_ledger_refresh_006_checklist_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/plan_ledger_refresh_007_checklist_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/plan_ledger_refresh_007_checklist_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/plan_ledger_refresh_008_checklist_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/plan_ledger_refresh_008_checklist_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/plan_ledger_refresh_009_checklist_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/plan_ledger_refresh_009_checklist_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/plan_ledger_refresh_016_checklist_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/plan_ledger_refresh_016_checklist_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/plan_ledger_refresh_017_checklist_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/plan_ledger_refresh_017_checklist_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/plan_ledger_refresh_018_checklist_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/plan_ledger_refresh_018_checklist_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/plan_ledger_refresh_019_checklist_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/plan_ledger_refresh_019_checklist_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/plan_m3_depth_exec_001_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/plan_m3_depth_exec_001_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/plan_material_studio_phase_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/plan_material_studio_phase_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/plan_mcp_agent_lang_program_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/plan_mcp_agent_lang_program_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/plan_mcp_pipeline_recovery_and_agent_fleet_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/plan_mcp_pipeline_recovery_and_agent_fleet_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/plan_mcp_productivity_chain_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/plan_mcp_productivity_chain_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/plan_module_kit_production_tier_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/plan_module_kit_production_tier_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/plan_ops_witness_cadence_001_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/plan_ops_witness_cadence_001_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/plan_organic_growth_exec_001_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/plan_organic_growth_exec_001_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/plan_p1_atl_closure_review_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/plan_p1_atl_closure_review_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/plan_procedural_build_gen_exec_001_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/plan_procedural_build_gen_exec_001_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/plan_procedural_building_tiles_production_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/plan_procedural_building_tiles_production_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/plan_pt0_signoff_procedural_tiles_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/plan_pt0_signoff_procedural_tiles_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/plan_replay_ring_exec_001_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/plan_replay_ring_exec_001_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/plan_settlement_hierarchy_exec_005_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/plan_settlement_hierarchy_exec_005_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/plan_stage7_m3_steward_001_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/plan_stage7_m3_steward_001_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/plan_stage7_m4_play_001_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/plan_stage7_m4_play_001_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/plan_style_pack_ron_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/plan_style_pack_ron_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/plan_tile_batch_v1_planner_mcp_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/plan_tile_batch_v1_planner_mcp_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/plan_tile_pipeline_automation_exec_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/plan_tile_pipeline_automation_exec_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/plan_tile_pipeline_fix_auto_build_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/plan_tile_pipeline_fix_auto_build_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/plan_ui_p3_m3_operational_stage7_plan_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/plan_ui_p3_m3_operational_stage7_plan_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/plan_ui_p5_pause_menu_index_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/plan_ui_p5_pause_menu_index_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/plan_validation_runtime_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/plan_validation_runtime_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/plan_visual_perf_production_exec_001_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/plan_visual_perf_production_exec_001_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/plan_visual_perf_production_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/plan_visual_perf_production_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/plan_weather_deferred_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/plan_weather_deferred_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/plan_weather_parallel_lane_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/plan_weather_parallel_lane_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/plan_weather_witness_002_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/plan_weather_witness_002_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/plan_wss_active_chunk_001_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/plan_wss_active_chunk_001_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/plan_wss_atmos_clipmap_exec_001_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/plan_wss_atmos_clipmap_exec_001_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/plan_wss_chunk_slab_exec_001_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/plan_wss_chunk_slab_exec_001_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/plan_wss_hybrid_retire_pr4_001_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/plan_wss_hybrid_retire_pr4_001_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/plan_wss_hydro_runtime_exec_001_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/plan_wss_hydro_runtime_exec_001_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/plan_wss_pr4_exec_001_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/plan_wss_pr4_exec_001_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/plan_wss_pr5_smoke_prod_001_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/plan_wss_pr5_smoke_prod_001_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/plan_wss_slab_pr2_dual_write_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/plan_wss_slab_pr2_dual_write_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/plan_wss_slab_pr3_exec_001_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/plan_wss_slab_pr3_exec_001_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/plan_wss_smoke_bridge_exec_001_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/plan_wss_smoke_bridge_exec_001_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/planner_delivery_signoff_matrix_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/planner_delivery_signoff_matrix_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/planner_elemental_vfx_domain_charter_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/planner_elemental_vfx_domain_charter_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/planner_improvement_analysis_20260603_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/planner_improvement_analysis_20260603_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/planner_mcp_deliverables_20260603_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/planner_mcp_deliverables_20260603_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/planner_mcp_maintenance_idle_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/planner_mcp_maintenance_idle_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/planner_parallel_workboard_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/planner_parallel_workboard_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/planner_queue_cycle_20260525_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/planner_queue_cycle_20260525_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/planner_queue_todos_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/planner_queue_todos_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/planner_queue_ui_batch_v2.md",
+      "to": "docs/archive/2026-06-src-dev/plans/planner_queue_ui_batch_v2.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/planner_unified_path_20260603_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/planner_unified_path_20260603_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/planner_wave4_todos_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/planner_wave4_todos_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/planner_wave5_todos_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/planner_wave5_todos_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/planner_wave6_parametric_todos_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/planner_wave6_parametric_todos_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/planner_wave6_todos_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/planner_wave6_todos_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/planner_wave7_parallel_todos_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/planner_wave7_parallel_todos_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/play_scenario_acceptance_runbook_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/play_scenario_acceptance_runbook_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/post_play_followup_todos.md",
+      "to": "docs/archive/2026-06-src-dev/plans/post_play_followup_todos.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/post_stage6_design_decisions.md",
+      "to": "docs/archive/2026-06-src-dev/plans/post_stage6_design_decisions.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/post_stage6_infra_slice2_plan_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/post_stage6_infra_slice2_plan_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/post_stage6_infra_wave_c_plan_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/post_stage6_infra_wave_c_plan_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/post_stage6_vm09_audit.md",
+      "to": "docs/archive/2026-06-src-dev/plans/post_stage6_vm09_audit.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/post_stage6_wave_p_audit.md",
+      "to": "docs/archive/2026-06-src-dev/plans/post_stage6_wave_p_audit.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/procedural_tiles_production_witness_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/procedural_tiles_production_witness_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/production_jank_sweep_20260602_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/production_jank_sweep_20260602_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/project_identity_guard_rail_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/project_identity_guard_rail_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/recovery_viewport.md",
+      "to": "docs/archive/2026-06-src-dev/plans/recovery_viewport.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/replay_editor_parity_impl_plan_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/replay_editor_parity_impl_plan_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/replay_live_ring_impl_plan_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/replay_live_ring_impl_plan_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/runtime_env_policy_registry_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/runtime_env_policy_registry_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/s7b_closure_plan_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/s7b_closure_plan_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/s7b_m4_live_sim_playtest_plan_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/s7b_m4_live_sim_playtest_plan_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/s7b_m4_sim_playtest_spec_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/s7b_m4_sim_playtest_spec_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/s7p_grid_overload_ux_note_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/s7p_grid_overload_ux_note_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/s7p_grid_overload_ux_pass_record_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/s7p_grid_overload_ux_pass_record_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/session_playback_issues_todos.md",
+      "to": "docs/archive/2026-06-src-dev/plans/session_playback_issues_todos.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/stage5_5_active_todos.md",
+      "to": "docs/archive/2026-06-src-dev/plans/stage5_5_active_todos.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/stage5_5_open.md",
+      "to": "docs/archive/2026-06-src-dev/plans/stage5_5_open.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/stage5_close_checklist.md",
+      "to": "docs/archive/2026-06-src-dev/plans/stage5_close_checklist.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/stage5_operational_signoff.md",
+      "to": "docs/archive/2026-06-src-dev/plans/stage5_operational_signoff.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/stage6_active_todos.md",
+      "to": "docs/archive/2026-06-src-dev/plans/stage6_active_todos.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/stage6_agent_handoff.md",
+      "to": "docs/archive/2026-06-src-dev/plans/stage6_agent_handoff.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/stage6_design_decisions.md",
+      "to": "docs/archive/2026-06-src-dev/plans/stage6_design_decisions.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/stage6_operational_signoff.md",
+      "to": "docs/archive/2026-06-src-dev/plans/stage6_operational_signoff.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/stage6_plan_open.md",
+      "to": "docs/archive/2026-06-src-dev/plans/stage6_plan_open.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/stage7_behavioral_d_signoff_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/stage7_behavioral_d_signoff_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/stage7_behavioral_full_plan_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/stage7_behavioral_full_plan_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/stage7_behavioral_implementation_plan_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/stage7_behavioral_implementation_plan_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/stage7_behavioral_live_witness_spec_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/stage7_behavioral_live_witness_spec_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/stage7_behavioral_track_plan_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/stage7_behavioral_track_plan_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/stage7_play_scenario_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/stage7_play_scenario_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/stage_coder_workboard_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/stage_coder_workboard_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/stage_designer_todos_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/stage_designer_todos_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/stage_designer_workboard_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/stage_designer_workboard_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/stage_open_todos_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/stage_open_todos_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/stage_planner_workboard_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/stage_planner_workboard_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/stage_steward_todos_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/stage_steward_todos_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/stage_steward_workboard_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/stage_steward_workboard_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/stage_tracks_audit_signoff_20260525.md",
+      "to": "docs/archive/2026-06-src-dev/plans/stage_tracks_audit_signoff_20260525.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/stage_tracks_fleet_snapshot_signoff_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/stage_tracks_fleet_snapshot_signoff_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/stage_tracks_ledger_refresh_003_plan_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/stage_tracks_ledger_refresh_003_plan_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/stage_tracks_ledger_refresh_runbook_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/stage_tracks_ledger_refresh_runbook_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/stage_tracks_signoff_ledger_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/stage_tracks_signoff_ledger_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/status snapshot.md",
+      "to": "docs/archive/2026-06-src-dev/plans/status snapshot.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/stauts_26_05.md",
+      "to": "docs/archive/2026-06-src-dev/plans/stauts_26_05.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/steward_fire7_preflight_gate_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/steward_fire7_preflight_gate_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/steward_operator_queue_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/steward_operator_queue_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/steward_s7b_preflight_gate_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/steward_s7b_preflight_gate_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/steward_s7p_gate_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/steward_s7p_gate_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/steward_spark_vfx_gate_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/steward_spark_vfx_gate_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/steward_u3_onward_shift_abc_gate_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/steward_u3_onward_shift_abc_gate_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/steward_u3_onward_shift_abc_todos_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/steward_u3_onward_shift_abc_todos_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/steward_ui_oh_gate_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/steward_ui_oh_gate_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/steward_vm09_gate_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/steward_vm09_gate_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/steward_w3_gate_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/steward_w3_gate_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/steward_water_witness_gate_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/steward_water_witness_gate_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/steward_witness_sync_gate_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/steward_witness_sync_gate_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/tile_fix_10_promotion_gates_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/tile_fix_10_promotion_gates_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/tile_greybox_production_frozen_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/tile_greybox_production_frozen_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/triage_vm09_v2_invert_bridge_plan_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/triage_vm09_v2_invert_bridge_plan_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/ui_construction_playtest_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/ui_construction_playtest_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/ui_icon_atlas_sheet_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/ui_icon_atlas_sheet_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/ui_left_rail_mock_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/ui_left_rail_mock_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/ui_oh_d2_signoff_record_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/ui_oh_d2_signoff_record_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/ui_oh_m3_001_plan_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/ui_oh_m3_001_plan_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/ui_oh_p4_001_plan_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/ui_oh_p4_001_plan_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/ui_oh_p4_art_signoff_record_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/ui_oh_p4_art_signoff_record_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/ui_oh_p5_001_plan_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/ui_oh_p5_001_plan_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/ui_overhaul_phase23_closure_plan_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/ui_overhaul_phase23_closure_plan_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/ui_overhaul_plan.md",
+      "to": "docs/archive/2026-06-src-dev/plans/ui_overhaul_plan.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/ui_p2b_coder_b_numbered_tasks_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/ui_p2b_coder_b_numbered_tasks_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/ui_p3_m4_minimap_coder_queue_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/ui_p3_m4_minimap_coder_queue_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/ui_p5_design_signoff_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/ui_p5_design_signoff_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/ui_pause_menu_mock_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/ui_pause_menu_mock_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/ui_phase2_sprint_queue.md",
+      "to": "docs/archive/2026-06-src-dev/plans/ui_phase2_sprint_queue.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/ui_phase2c_left_command_rail_plan_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/ui_phase2c_left_command_rail_plan_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/ui_phase3_minimap_compositor_plan.md",
+      "to": "docs/archive/2026-06-src-dev/plans/ui_phase3_minimap_compositor_plan.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/ui_phase6_multiview_readability_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/ui_phase6_multiview_readability_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/ui_phase6_shell_perf_multiview_plan_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/ui_phase6_shell_perf_multiview_plan_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/ui_shell_witness_spec_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/ui_shell_witness_spec_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/ui_theme_collage_delta_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/ui_theme_collage_delta_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/ui_theme_merge_impl_spec_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/ui_theme_merge_impl_spec_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/user_feedback_orchestration_layer_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/user_feedback_orchestration_layer_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/ux_e03_transmission_shell_note_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/ux_e03_transmission_shell_note_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/ux_gpu_minimap_design_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/ux_gpu_minimap_design_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/ux_gpu_minimap_m1_architecture_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/ux_gpu_minimap_m1_architecture_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/vfx_coder_phase2_queue_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/vfx_coder_phase2_queue_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/vfx_design_review_record_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/vfx_design_review_record_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/vfx_triage_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/vfx_triage_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/vfx_visual_acceptance_record_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/vfx_visual_acceptance_record_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/view_runtime_architecture_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/view_runtime_architecture_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/visual_aidv2.md",
+      "to": "docs/archive/2026-06-src-dev/plans/visual_aidv2.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/visual_perf_spike_degrade_ux_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/visual_perf_spike_degrade_ux_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/visual_perf_spike_degrade_validate_001_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/visual_perf_spike_degrade_validate_001_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/visual_run_acceptance_matrix_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/visual_run_acceptance_matrix_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/visual_test_runbook_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/visual_test_runbook_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/vm09_gate_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/vm09_gate_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/vm09_slice2_closure_signoff_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/vm09_slice2_closure_signoff_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/warehouse_tile_ship_workflow_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/warehouse_tile_ship_workflow_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/water_ocean_fixture_request_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/water_ocean_fixture_request_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/water_surface_vfx_design_plan_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/water_surface_vfx_design_plan_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/water_vfx_review_record_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/water_vfx_review_record_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/water_vfx_track_closure_plan_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/water_vfx_track_closure_plan_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/wave_p_witness_spec_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/wave_p_witness_spec_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/weather_simulation_runbook_v2_plan_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/weather_simulation_runbook_v2_plan_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/witness_exec_shape_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/witness_exec_shape_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/witness_status_live_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/witness_status_live_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/world_layer_infrastructure_model_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/world_layer_infrastructure_model_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/world_preview_d_wp_review_record_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/world_preview_d_wp_review_record_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/world_preview_visual_acceptance_record_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/world_preview_visual_acceptance_record_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/world_preview_visual_upgrade_checklist_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/world_preview_visual_upgrade_checklist_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/wss_contamination_visual_language_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/wss_contamination_visual_language_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/wss_design_gate_001_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/wss_design_gate_001_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/wss_design_gate_parent_closure_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/wss_design_gate_parent_closure_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/wss_diagnostics_pass_002.md",
+      "to": "docs/archive/2026-06-src-dev/plans/wss_diagnostics_pass_002.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/wss_dual_write_transition_ux_001.md",
+      "to": "docs/archive/2026-06-src-dev/plans/wss_dual_write_transition_ux_001.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/wss_hydro_read_feature_pass_001.md",
+      "to": "docs/archive/2026-06-src-dev/plans/wss_hydro_read_feature_pass_001.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/wss_hydrology_player_read_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/wss_hydrology_player_read_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/wss_pr4_retire_cutover_ux_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/wss_pr4_retire_cutover_ux_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/wss_smoke_layer_a_b_visual_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/wss_smoke_layer_a_b_visual_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/wss_substrate_debug_overlay_names_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/wss_substrate_debug_overlay_names_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/wss_substrate_diagnostics_copy_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/wss_substrate_diagnostics_copy_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/wssr_coder_hybrid_orders_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/wssr_coder_hybrid_orders_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/wssr_dependency_routing_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/wssr_dependency_routing_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/wssr_design_gate_brief_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/wssr_design_gate_brief_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/wssr_design_signoff_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/wssr_design_signoff_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/wssr_identity_alignment_record_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/wssr_identity_alignment_record_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/wssr_index_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/wssr_index_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/wssr_migration_visual_contract_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/wssr_migration_visual_contract_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/wssr_plan_002_chunk_authority_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/wssr_plan_002_chunk_authority_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/wssr_plan_003_hydrology_runtime_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/wssr_plan_003_hydrology_runtime_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/wssr_plan_004_atmosphere_unification_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/wssr_plan_004_atmosphere_unification_v1.md",
+      "bucket": "plans"
+    },
+    {
+      "from": "docs/archive/2026-06-src-dev/plans/wssr_readability_impact_v1.md",
+      "to": "docs/archive/2026-06-src-dev/plans/wssr_readability_impact_v1.md",
+      "bucket": "plans"
+    }
+  ]
+}

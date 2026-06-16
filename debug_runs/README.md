@@ -10,7 +10,19 @@ Each `*_live.json` file is rewritten during simulation or `--test visual`. Newer
 | `related_proofs` | Cross-links to sibling witness files |
 | `orchestrator` | Paths to `tools/orchestrator/reports/*` |
 
-**Index:** [`agent_debug_index.json`](agent_debug_index.json) — scanned summary of all known proofs (updated whenever any proof writes).
+**Indexes:**
+
+| File | Scope |
+|------|--------|
+| [`agent_debug_index.json`](agent_debug_index.json) | Sim spine + art anchor proofs (Rust refresh on proof write) |
+| [`unified_witness_index.json`](unified_witness_index.json) | Full sim + art rollup (OPS Track D) |
+| [`agent_ops/ops_report_latest.json`](agent_ops/ops_report_latest.json) | DSM + Q/C/E + ΔWF + `program_summary` |
+
+**Programs:** stage5 · fire_vfx · construction · infrastructure · economy · wave · stage7 · ui · art A/B/C — see [`../tools/orchestrator/queues/OPS_LANE_REGISTRY.json`](../tools/orchestrator/queues/OPS_LANE_REGISTRY.json)
+
+**Contract:** $ref:docs/archive/2026-06-src-dev/plans/witness_exec_shape_v1.md — tensor AUTH from scan, not hardcoded ○ nodes.
+
+Refresh: `powershell -File tools/orchestrator/scripts/ops_intelligence_scan.ps1` · Contract: [`../tools/orchestrator/queues/OPS_WITNESS_SPINE.md`](../tools/orchestrator/queues/OPS_WITNESS_SPINE.md)
 
 ## Primary files
 
@@ -25,7 +37,7 @@ Each `*_live.json` file is rewritten during simulation or `--test visual`. Newer
 
 ## Stage 5 closure
 
-- **Checklist (gate):** [`src/dev/stage5_close_checklist.md`](../src/dev/stage5_close_checklist.md)
+- **Checklist (gate):** [`docs/archive/2026-06-src-dev/plans/stage5_close_checklist.md`](../docs/archive/2026-06-src-dev/plans/stage5_close_checklist.md)
 - **Deferred / sticky:** [`src/dev/stage5_triage_backlog.md`](../src/dev/stage5_triage_backlog.md)
 - Live JSON includes `stage5_closure` when written by visual harness
 

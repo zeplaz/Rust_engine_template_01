@@ -30,7 +30,7 @@ manifest = {
     "pilot_scope": "MCP-PROD-PILOT-ROWHOUSE-001",
     "pilot_archetype": "rowhouse",
     "pilot_style_pack_id": STYLE,
-    "plan_ref": "src/dev/mcp_fleet_production_pilot_rowhouse_v1.md",
+    "plan_ref": "docs/archive/2026-06-src-dev/plans/mcp_fleet_production_pilot_rowhouse_v1.md",
     "wave": "001",
     "module_count": len(MODULES),
     "modules": [

@@ -1,0 +1,29 @@
+{
+  "program_id": "PLAN-MCP-PRODUCTIVITY-CHAIN-001",
+  "gate": "MCP-P0",
+  "green": true,
+  "pipeline_preflight_ok": true,
+  "snapshot_digest_ok": true,
+  "validate_p0_gate_plain_ok": true,
+  "example_snapshot": "tools/mcp/schemas/examples/assembly_snapshot_warehouse_industrial_west_production_v1.json",
+  "preflight": {
+    "ok": true,
+    "blender_ok": true,
+    "bevy_preview_worker": true,
+    "schemas": {
+      "assembly_snapshot_v1": true,
+      "grammar_iterate_request_v1": true,
+      "grammar_iterate_result_v1": true,
+      "material_category_tree_v1": true
+    },
+    "paths": {
+      "grammars_dir": true,
+      "material_profiles": true,
+      "material_category_tree": true,
+      "debug_runs": true
+    }
+  },
+  "digest_hint": "Ready for P0 gate",
+  "p0_status": "passed",
+  "p0_message_count": 0
+}

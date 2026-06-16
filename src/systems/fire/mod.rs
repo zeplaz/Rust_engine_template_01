@@ -13,6 +13,7 @@ mod chunk_smoke_field;
 mod chunk_surface_fire;
 mod ember_spot_ignition;
 mod fire_light_emission;
+mod play_fire_visibility;
 pub mod combustion;
 mod fire_fuel;
 pub mod witness_collectors;
@@ -20,6 +21,10 @@ pub mod types;
 
 pub(crate) use fire_fuel::{fire_fuel_field_tick, spawn_fire_fuel_field_on_new_chunk};
 
+pub use play_fire_visibility::{
+    sync_sim_map_fire_overlay_when_sim_has_heat, triage_fire_play_vis_001_green,
+    triage_fire_play_vis_001_witness_json, TriageFirePlayVis001Inputs,
+};
 pub use chunk_fuel_profile::{chunk_fuel_profile_from_vegetation, ChunkFuelProfile};
 pub use crate::terrain::fire::FuelLayer;
 pub use chunk_fire_overlay::chunk_fire_overlay_tick;

@@ -1,0 +1,64 @@
+{
+  "task_id": "MCP-GRAMMAR-SET-001",
+  "ok": true,
+  "green": true,
+  "lines": [
+    "grammar pilots: 4 \u00b7 shape QA: 4 \u00b7 presets: 4",
+    "F-axis covered: fuel, logistics, manufacturing, power",
+    "gaps: none"
+  ],
+  "text": "grammar pilots: 4 \u00b7 shape QA: 4 \u00b7 presets: 4\nF-axis covered: fuel, logistics, manufacturing, power\ngaps: none",
+  "counts": {
+    "grammar_pilots": 4,
+    "shape_qa_pilots": 4,
+    "arch_dna_presets": 4,
+    "building_sets": 2
+  },
+  "grammar_pilot_ids": [
+    "logistics_rail_warehouse_v0",
+    "manufacturing_fabrication_hall_v0",
+    "power_substation_yard_v0",
+    "fuel_depot_tank_farm_v0"
+  ],
+  "preset_ids": [
+    "fuel_depot_tank_farm_v0",
+    "logistics_rail_warehouse_v0",
+    "manufacturing_fabrication_hall_v0",
+    "power_substation_yard_v0"
+  ],
+  "f_axis_values": [
+    "fuel",
+    "logistics",
+    "manufacturing",
+    "power"
+  ],
+  "gaps": [],
+  "sets": [
+    {
+      "set_id": "industrial_west_v0",
+      "label": "Industrial west pilot set",
+      "min_grammar_pilots": 2,
+      "pilot_ids": [
+        "logistics_rail_warehouse_v0",
+        "manufacturing_fabrication_hall_v0"
+      ],
+      "required_f_functions": [
+        "logistics",
+        "manufacturing"
+      ]
+    },
+    {
+      "set_id": "infrastructure_v0",
+      "label": "Power + fuel infrastructure set",
+      "min_grammar_pilots": 2,
+      "pilot_ids": [
+        "power_substation_yard_v0",
+        "fuel_depot_tank_farm_v0"
+      ],
+      "required_f_functions": [
+        "power",
+        "fuel"
+      ]
+    }
+  ]
+}

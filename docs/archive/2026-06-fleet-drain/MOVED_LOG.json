@@ -1,0 +1,245 @@
+{
+  "schema": "archive_moved_log_v1",
+  "archive_root": "docs/archive/2026-06-fleet-drain",
+  "moved_at": "2026-06-10T15:35:39.359901+00:00",
+  "dry_run": false,
+  "moved_count": 47,
+  "skipped_missing": [],
+  "moved": [
+    {
+      "from": "docs/archive/2026-06-fleet-drain/planner_audits/planner_status_audit_v5.md",
+      "to": "docs/archive/2026-06-fleet-drain/planner_audits/planner_status_audit_v5.md",
+      "bucket": "planner_audits"
+    },
+    {
+      "from": "docs/archive/2026-06-fleet-drain/planner_audits/planner_status_audit_v6.md",
+      "to": "docs/archive/2026-06-fleet-drain/planner_audits/planner_status_audit_v6.md",
+      "bucket": "planner_audits"
+    },
+    {
+      "from": "docs/archive/2026-06-fleet-drain/planner_audits/planner_status_audit_v7.md",
+      "to": "docs/archive/2026-06-fleet-drain/planner_audits/planner_status_audit_v7.md",
+      "bucket": "planner_audits"
+    },
+    {
+      "from": "docs/archive/2026-06-fleet-drain/planner_audits/planner_status_audit_v8.md",
+      "to": "docs/archive/2026-06-fleet-drain/planner_audits/planner_status_audit_v8.md",
+      "bucket": "planner_audits"
+    },
+    {
+      "from": "docs/archive/2026-06-fleet-drain/planner_audits/planner_status_audit_v9.md",
+      "to": "docs/archive/2026-06-fleet-drain/planner_audits/planner_status_audit_v9.md",
+      "bucket": "planner_audits"
+    },
+    {
+      "from": "docs/archive/2026-06-fleet-drain/planner_audits/planner_status_audit_v10.md",
+      "to": "docs/archive/2026-06-fleet-drain/planner_audits/planner_status_audit_v10.md",
+      "bucket": "planner_audits"
+    },
+    {
+      "from": "docs/archive/2026-06-fleet-drain/planner_audits/planner_status_audit_v11.md",
+      "to": "docs/archive/2026-06-fleet-drain/planner_audits/planner_status_audit_v11.md",
+      "bucket": "planner_audits"
+    },
+    {
+      "from": "docs/archive/2026-06-fleet-drain/planner_audits/planner_status_audit_v12.md",
+      "to": "docs/archive/2026-06-fleet-drain/planner_audits/planner_status_audit_v12.md",
+      "bucket": "planner_audits"
+    },
+    {
+      "from": "docs/archive/2026-06-fleet-drain/planner_audits/planner_status_audit_v13.md",
+      "to": "docs/archive/2026-06-fleet-drain/planner_audits/planner_status_audit_v13.md",
+      "bucket": "planner_audits"
+    },
+    {
+      "from": "docs/archive/2026-06-fleet-drain/planner_audits/planner_status_audit_v14.md",
+      "to": "docs/archive/2026-06-fleet-drain/planner_audits/planner_status_audit_v14.md",
+      "bucket": "planner_audits"
+    },
+    {
+      "from": "docs/archive/2026-06-fleet-drain/planner_audits/planner_status_audit_v15.md",
+      "to": "docs/archive/2026-06-fleet-drain/planner_audits/planner_status_audit_v15.md",
+      "bucket": "planner_audits"
+    },
+    {
+      "from": "docs/archive/2026-06-fleet-drain/planner_audits/plan_ledger_refresh_010_checklist_v1.md",
+      "to": "docs/archive/2026-06-fleet-drain/planner_audits/plan_ledger_refresh_010_checklist_v1.md",
+      "bucket": "planner_audits"
+    },
+    {
+      "from": "docs/archive/2026-06-fleet-drain/planner_audits/plan_ledger_refresh_015_checklist_v1.md",
+      "to": "docs/archive/2026-06-fleet-drain/planner_audits/plan_ledger_refresh_015_checklist_v1.md",
+      "bucket": "planner_audits"
+    },
+    {
+      "from": "docs/archive/2026-06-fleet-drain/fleet_closed/fleet_snapshot_20260527_v1.md",
+      "to": "docs/archive/2026-06-fleet-drain/fleet_closed/fleet_snapshot_20260527_v1.md",
+      "bucket": "fleet_closed"
+    },
+    {
+      "from": "docs/archive/2026-06-fleet-drain/fleet_closed/fleet_snapshot_20260528_v1.md",
+      "to": "docs/archive/2026-06-fleet-drain/fleet_closed/fleet_snapshot_20260528_v1.md",
+      "bucket": "fleet_closed"
+    },
+    {
+      "from": "docs/archive/2026-06-fleet-drain/fleet_closed/fleet_snapshot_20260528_v2.md",
+      "to": "docs/archive/2026-06-fleet-drain/fleet_closed/fleet_snapshot_20260528_v2.md",
+      "bucket": "fleet_closed"
+    },
+    {
+      "from": "docs/archive/2026-06-fleet-drain/fleet_closed/fleet_signoff_wave_closure_20260527_v1.md",
+      "to": "docs/archive/2026-06-fleet-drain/fleet_closed/fleet_signoff_wave_closure_20260527_v1.md",
+      "bucket": "fleet_closed"
+    },
+    {
+      "from": "docs/archive/2026-06-fleet-drain/fleet_closed/fleet_signoff_wave3_closure_20260527_v1.md",
+      "to": "docs/archive/2026-06-fleet-drain/fleet_closed/fleet_signoff_wave3_closure_20260527_v1.md",
+      "bucket": "fleet_closed"
+    },
+    {
+      "from": "docs/archive/2026-06-fleet-drain/fleet_closed/fleet_signoff_wave4_coder_partial_20260527_v1.md",
+      "to": "docs/archive/2026-06-fleet-drain/fleet_closed/fleet_signoff_wave4_coder_partial_20260527_v1.md",
+      "bucket": "fleet_closed"
+    },
+    {
+      "from": "docs/archive/2026-06-fleet-drain/fleet_closed/fleet_wave3_assignments_20260527_v1.md",
+      "to": "docs/archive/2026-06-fleet-drain/fleet_closed/fleet_wave3_assignments_20260527_v1.md",
+      "bucket": "fleet_closed"
+    },
+    {
+      "from": "docs/archive/2026-06-fleet-drain/fleet_closed/fleet_wave4_assignments_20260527_v1.md",
+      "to": "docs/archive/2026-06-fleet-drain/fleet_closed/fleet_wave4_assignments_20260527_v1.md",
+      "bucket": "fleet_closed"
+    },
+    {
+      "from": "docs/archive/2026-06-fleet-drain/fleet_closed/fleet_wave5_coder_dispatch_v1.md",
+      "to": "docs/archive/2026-06-fleet-drain/fleet_closed/fleet_wave5_coder_dispatch_v1.md",
+      "bucket": "fleet_closed"
+    },
+    {
+      "from": "docs/archive/2026-06-fleet-drain/fleet_closed/fleet_wave6_coder_dispatch_v1.md",
+      "to": "docs/archive/2026-06-fleet-drain/fleet_closed/fleet_wave6_coder_dispatch_v1.md",
+      "bucket": "fleet_closed"
+    },
+    {
+      "from": "docs/archive/2026-06-fleet-drain/fleet_closed/fleet_wave7_coder_dispatch_v1.md",
+      "to": "docs/archive/2026-06-fleet-drain/fleet_closed/fleet_wave7_coder_dispatch_v1.md",
+      "bucket": "fleet_closed"
+    },
+    {
+      "from": "docs/archive/2026-06-fleet-drain/fleet_closed/fleet_coder_workboard_20260528_v3.md",
+      "to": "docs/archive/2026-06-fleet-drain/fleet_closed/fleet_coder_workboard_20260528_v3.md",
+      "bucket": "fleet_closed"
+    },
+    {
+      "from": "docs/archive/2026-06-fleet-drain/fleet_closed/fleet_coder_workload_queue_20260602_v1.md",
+      "to": "docs/archive/2026-06-fleet-drain/fleet_closed/fleet_coder_workload_queue_20260602_v1.md",
+      "bucket": "fleet_closed"
+    },
+    {
+      "from": "docs/archive/2026-06-fleet-drain/fleet_closed/fleet_planner_designer_prompts_20260602_v2.md",
+      "to": "docs/archive/2026-06-fleet-drain/fleet_closed/fleet_planner_designer_prompts_20260602_v2.md",
+      "bucket": "fleet_closed"
+    },
+    {
+      "from": "docs/archive/2026-06-fleet-drain/fleet_closed/fleet_maturity_signoff_routing_20260527_v1.md",
+      "to": "docs/archive/2026-06-fleet-drain/fleet_closed/fleet_maturity_signoff_routing_20260527_v1.md",
+      "bucket": "fleet_closed"
+    },
+    {
+      "from": "docs/archive/2026-06-fleet-drain/fleet_closed/fleet_stability_coder_dispatch_v1.md",
+      "to": "docs/archive/2026-06-fleet-drain/fleet_closed/fleet_stability_coder_dispatch_v1.md",
+      "bucket": "fleet_closed"
+    },
+    {
+      "from": "docs/archive/2026-06-fleet-drain/fleet_closed/fleet_stability_phase2_dispatch_v1.md",
+      "to": "docs/archive/2026-06-fleet-drain/fleet_closed/fleet_stability_phase2_dispatch_v1.md",
+      "bucket": "fleet_closed"
+    },
+    {
+      "from": "docs/archive/2026-06-fleet-drain/fleet_closed/mcp_fleet_wave2_orders_v1.md",
+      "to": "docs/archive/2026-06-fleet-drain/fleet_closed/mcp_fleet_wave2_orders_v1.md",
+      "bucket": "fleet_closed"
+    },
+    {
+      "from": "docs/archive/2026-06-fleet-drain/fleet_closed/coder_fleet_return_recap_wave3_v1.md",
+      "to": "docs/archive/2026-06-fleet-drain/fleet_closed/coder_fleet_return_recap_wave3_v1.md",
+      "bucket": "fleet_closed"
+    },
+    {
+      "from": "docs/archive/2026-06-fleet-drain/fleet_closed/coder_fleet_active_assignments_v1.md",
+      "to": "docs/archive/2026-06-fleet-drain/fleet_closed/coder_fleet_active_assignments_v1.md",
+      "bucket": "fleet_closed"
+    },
+    {
+      "from": "docs/archive/2026-06-fleet-drain/fleet_closed/coder_fleet_multistage_matrix_v1.md",
+      "to": "docs/archive/2026-06-fleet-drain/fleet_closed/coder_fleet_multistage_matrix_v1.md",
+      "bucket": "fleet_closed"
+    },
+    {
+      "from": "docs/archive/2026-06-fleet-drain/fleet_closed/coder_wave3_full_todos_v1.md",
+      "to": "docs/archive/2026-06-fleet-drain/fleet_closed/coder_wave3_full_todos_v1.md",
+      "bucket": "fleet_closed"
+    },
+    {
+      "from": "docs/archive/2026-06-fleet-drain/dev_dispatch/orchestrator_collective_dispatch_20260607_v1.md",
+      "to": "docs/archive/2026-06-fleet-drain/dev_dispatch/orchestrator_collective_dispatch_20260607_v1.md",
+      "bucket": "dev_dispatch"
+    },
+    {
+      "from": "docs/archive/2026-06-fleet-drain/dev_dispatch/orchestrator_coder_dispatch_20260603_v1.md",
+      "to": "docs/archive/2026-06-fleet-drain/dev_dispatch/orchestrator_coder_dispatch_20260603_v1.md",
+      "bucket": "dev_dispatch"
+    },
+    {
+      "from": "docs/archive/2026-06-fleet-drain/dev_dispatch/snapshot_drain_review_20260607_v1.md",
+      "to": "docs/archive/2026-06-fleet-drain/dev_dispatch/snapshot_drain_review_20260607_v1.md",
+      "bucket": "dev_dispatch"
+    },
+    {
+      "from": "docs/archive/2026-06-fleet-drain/dev_dispatch/agent_prompt_pack_20260607_v1.md",
+      "to": "docs/archive/2026-06-fleet-drain/dev_dispatch/agent_prompt_pack_20260607_v1.md",
+      "bucket": "dev_dispatch"
+    },
+    {
+      "from": "docs/archive/2026-06-fleet-drain/prompts_drafts/mcp_drafts.md",
+      "to": "docs/archive/2026-06-fleet-drain/prompts_drafts/mcp_drafts.md",
+      "bucket": "prompts_drafts"
+    },
+    {
+      "from": "docs/archive/2026-06-fleet-drain/prompts_drafts/rules_skills_draft.md",
+      "to": "docs/archive/2026-06-fleet-drain/prompts_drafts/rules_skills_draft.md",
+      "bucket": "prompts_drafts"
+    },
+    {
+      "from": "docs/archive/2026-06-fleet-drain/prompts_drafts/planner_fix_auto_build.md",
+      "to": "docs/archive/2026-06-fleet-drain/prompts_drafts/planner_fix_auto_build.md",
+      "bucket": "prompts_drafts"
+    },
+    {
+      "from": "docs/archive/2026-06-fleet-drain/prompts_drafts/base_visual_dev01_plan_status.md",
+      "to": "docs/archive/2026-06-fleet-drain/prompts_drafts/base_visual_dev01_plan_status.md",
+      "bucket": "prompts_drafts"
+    },
+    {
+      "from": "docs/archive/2026-06-fleet-drain/prompts_rough_agents/cleanup_a1.skill.md",
+      "to": "docs/archive/2026-06-fleet-drain/prompts_rough_agents/cleanup_a1.skill.md",
+      "bucket": "prompts_rough_agents"
+    },
+    {
+      "from": "docs/archive/2026-06-fleet-drain/prompts_rough_agents/debug_intel_a1.skill.md",
+      "to": "docs/archive/2026-06-fleet-drain/prompts_rough_agents/debug_intel_a1.skill.md",
+      "bucket": "prompts_rough_agents"
+    },
+    {
+      "from": "docs/archive/2026-06-fleet-drain/prompts_rough_agents/draft_agent_cleanup_intel_info.md",
+      "to": "docs/archive/2026-06-fleet-drain/prompts_rough_agents/draft_agent_cleanup_intel_info.md",
+      "bucket": "prompts_rough_agents"
+    },
+    {
+      "from": "docs/archive/2026-06-fleet-drain/prompts_rough_agents/draft_agent_debug_intelother_info.md",
+      "to": "docs/archive/2026-06-fleet-drain/prompts_rough_agents/draft_agent_debug_intelother_info.md",
+      "bucket": "prompts_rough_agents"
+    }
+  ]
+}

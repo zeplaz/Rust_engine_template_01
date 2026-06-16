@@ -1,0 +1,1501 @@
+{
+  "schema": "archive_moved_log_v1",
+  "phase": "prompts-guides-phase2",
+  "archive_root": "docs/archive/2026-06-prompts-guides",
+  "reference_root": "docs/reference",
+  "moved_at": "2026-06-10T15:44:26.289413+00:00",
+  "dry_run": false,
+  "moved_count": 293,
+  "kept_count": 22,
+  "kept": [
+    "prompts/INDEX.md",
+    "prompts/README.md",
+    "prompts/designer_questions/README.md",
+    "prompts/designer_questions/aps_atlas_legend_brief_v1.md",
+    "prompts/designer_questions/aps_bevy_qc_hud_brief_v1.md",
+    "prompts/designer_questions/aps_materials_tab_ia_brief_v1.md",
+    "prompts/designer_questions/aps_tooltip_copy_brief_v1.md",
+    "prompts/designer_questions/aps_tooltip_copy_v1.md",
+    "prompts/designer_questions/aps_ux_audit_brief_v1.md",
+    "prompts/designer_questions/grammar_iter_wireframe_brief_v1.md",
+    "prompts/designer_questions/grammar_iter_wireframe_v1.md",
+    "prompts/designer_questions/sim_hud_product_brief_v1.md",
+    "prompts/designer_questions/weather_player_read_brief_v1.md",
+    "prompts/guides/README.md",
+    "prompts/guides/base_finsh_5.md",
+    "prompts/guides/base_fire_sim.md",
+    "prompts/guides/operational_readiness_vs_infrastructure_perf_v1.md",
+    "prompts/guides/stage5_convergence_directive_v1.md",
+    "prompts/guides/subagent_continuity_playbook_v1.md",
+    "prompts/guides/ui_boundary_guide_v1.md",
+    "prompts/guides/weather_simulation_runbook_v1.md",
+    "prompts/llm_agent_brief.md"
+  ],
+  "moved": [
+    {
+      "from": "docs/reference/outside/effwecny_mpc_draft.md",
+      "to": "docs/reference/outside/effwecny_mpc_draft.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/user/art_design_inbound.md",
+      "to": "docs/reference/user/art_design_inbound.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/user/econ_followup.md",
+      "to": "docs/reference/user/econ_followup.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/outside/implementation_plan_v1.md",
+      "to": "docs/reference/outside/implementation_plan_v1.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/user/designer/art_design.md",
+      "to": "docs/reference/user/designer/art_design.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/user/designer/art_extend.md",
+      "to": "docs/reference/user/designer/art_extend.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "prompts/guides/DSM\u27c1OPS\u27e6SUBAGENT-SYSTEM \u2192 TOOLING PROJEC.ini",
+      "to": "docs/reference/outside/dsm_ops_subagent_tooling.ini",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/legacy/bevy_notes_old.md",
+      "to": "docs/reference/legacy/bevy_notes_old.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/legacy/_legacy_sidrn_file_inventory.txt",
+      "to": "docs/reference/legacy/_legacy_sidrn_file_inventory.txt",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/legacy/_legacy_railhubz_file_inventory.txt",
+      "to": "docs/reference/legacy/_legacy_railhubz_file_inventory.txt",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/legacy/_legacy_razerz_file_inventory.txt",
+      "to": "docs/reference/legacy/_legacy_razerz_file_inventory.txt",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/legacy/legacy_cpp_repos_agent_communication_maps_v1.md",
+      "to": "docs/reference/legacy/legacy_cpp_repos_agent_communication_maps_v1.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/user/developer_reflective_brief_v1.md",
+      "to": "docs/reference/user/developer_reflective_brief_v1.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/user/developer_reflective_brief_v1.plan.md",
+      "to": "docs/reference/user/developer_reflective_brief_v1.plan.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/user/new_proposal_guide_may202608.md",
+      "to": "docs/reference/user/new_proposal_guide_may202608.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/designer_questions/terrain_world/chunks_streaming_v1.md",
+      "to": "docs/reference/designer_questions/terrain_world/chunks_streaming_v1.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/designer_questions/terrain_world/composite_style_worldgen_v1.md",
+      "to": "docs/reference/designer_questions/terrain_world/composite_style_worldgen_v1.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/designer_questions/terrain_world/hydrology_v1.md",
+      "to": "docs/reference/designer_questions/terrain_world/hydrology_v1.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/designer_questions/terrain_world/implementation_questions_v1.md",
+      "to": "docs/reference/designer_questions/terrain_world/implementation_questions_v1.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/designer_questions/terrain_world/llm_world_evolution_reference_outline_v1.md",
+      "to": "docs/reference/designer_questions/terrain_world/llm_world_evolution_reference_outline_v1.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/designer_questions/terrain_world/material_tag_rule_system_v1.md",
+      "to": "docs/reference/designer_questions/terrain_world/material_tag_rule_system_v1.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/designer_questions/terrain_world/ontology/derived_metric_pipeline_v1.md",
+      "to": "docs/reference/designer_questions/terrain_world/ontology/derived_metric_pipeline_v1.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/designer_questions/terrain_world/ontology/fact_vocabulary_rulebook_v1.md",
+      "to": "docs/reference/designer_questions/terrain_world/ontology/fact_vocabulary_rulebook_v1.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/designer_questions/terrain_world/ontology/mobility_profile_matrix_v1.md",
+      "to": "docs/reference/designer_questions/terrain_world/ontology/mobility_profile_matrix_v1.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/designer_questions/terrain_world/ontology/project_status_and_questions_v1.md",
+      "to": "docs/reference/designer_questions/terrain_world/ontology/project_status_and_questions_v1.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/designer_questions/terrain_world/ontology/README.md",
+      "to": "docs/reference/designer_questions/terrain_world/ontology/README.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/designer_questions/terrain_world/ontology/refactor_execution_plan_v1.md",
+      "to": "docs/reference/designer_questions/terrain_world/ontology/refactor_execution_plan_v1.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/designer_questions/terrain_world/procedural_world_pipeline_reference_outline_v1.md",
+      "to": "docs/reference/designer_questions/terrain_world/procedural_world_pipeline_reference_outline_v1.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/designer_questions/terrain_world/README.md",
+      "to": "docs/reference/designer_questions/terrain_world/README.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/designer_questions/terrain_world/simulation_lod_v1.md",
+      "to": "docs/reference/designer_questions/terrain_world/simulation_lod_v1.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/designer_questions/terrain_world/spec/00_world_terrain_political_scope.md",
+      "to": "docs/reference/designer_questions/terrain_world/spec/00_world_terrain_political_scope.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/designer_questions/terrain_world/spec/01_world_generation_pipeline.md",
+      "to": "docs/reference/designer_questions/terrain_world/spec/01_world_generation_pipeline.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/designer_questions/terrain_world/spec/02_terrain_hydrology_worldgen.md",
+      "to": "docs/reference/designer_questions/terrain_world/spec/02_terrain_hydrology_worldgen.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/designer_questions/terrain_world/spec/03_political_territory.md",
+      "to": "docs/reference/designer_questions/terrain_world/spec/03_political_territory.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/designer_questions/terrain_world/spec/04_cities_ai_settlements.md",
+      "to": "docs/reference/designer_questions/terrain_world/spec/04_cities_ai_settlements.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/designer_questions/terrain_world/spec/05_logistics_settlement_coupling.md",
+      "to": "docs/reference/designer_questions/terrain_world/spec/05_logistics_settlement_coupling.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/designer_questions/terrain_world/spec/README.md",
+      "to": "docs/reference/designer_questions/terrain_world/spec/README.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/designer_questions/terrain_world/terrain_family_extensibility_and_overlay_sim_prospectus_v1.md",
+      "to": "docs/reference/designer_questions/terrain_world/terrain_family_extensibility_and_overlay_sim_prospectus_v1.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/designer_questions/terrain_world/terrain_tools_brushes_v1.md",
+      "to": "docs/reference/designer_questions/terrain_world/terrain_tools_brushes_v1.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/designer_questions/terrain_world/tile_sprites_v1.md",
+      "to": "docs/reference/designer_questions/terrain_world/tile_sprites_v1.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/designer_questions/transport/lane_graph_model_idea.md",
+      "to": "docs/reference/designer_questions/transport/lane_graph_model_idea.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/designer_questions/transport/README.md",
+      "to": "docs/reference/designer_questions/transport/README.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/designer_questions/transport/rulebook_drafts.md",
+      "to": "docs/reference/designer_questions/transport/rulebook_drafts.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/designer_questions/transport/system_decisions_v1.md",
+      "to": "docs/reference/designer_questions/transport/system_decisions_v1.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/designer_questions/transport/transport_code_implementation_plan_v1.md",
+      "to": "docs/reference/designer_questions/transport/transport_code_implementation_plan_v1.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/designer_questions/transport/transport_editor_ux_risk_v1.md",
+      "to": "docs/reference/designer_questions/transport/transport_editor_ux_risk_v1.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/designer_questions/transport/transport_sim_runplan_v1.md",
+      "to": "docs/reference/designer_questions/transport/transport_sim_runplan_v1.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/designer_questions/factions/diplomacy_bargaining_reference_outline_v1.md",
+      "to": "docs/reference/designer_questions/factions/diplomacy_bargaining_reference_outline_v1.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/designer_questions/factions/faction_editor/00_scope.md",
+      "to": "docs/reference/designer_questions/factions/faction_editor/00_scope.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/designer_questions/factions/faction_editor/01_data_model.md",
+      "to": "docs/reference/designer_questions/factions/faction_editor/01_data_model.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/designer_questions/factions/faction_editor/02_ui_egui_panels.md",
+      "to": "docs/reference/designer_questions/factions/faction_editor/02_ui_egui_panels.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/designer_questions/factions/faction_editor/03_persistence.md",
+      "to": "docs/reference/designer_questions/factions/faction_editor/03_persistence.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/designer_questions/factions/faction_editor/04_validation.md",
+      "to": "docs/reference/designer_questions/factions/faction_editor/04_validation.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/designer_questions/factions/faction_editor/05_integration_tests.md",
+      "to": "docs/reference/designer_questions/factions/faction_editor/05_integration_tests.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/designer_questions/factions/faction_editor/README.md",
+      "to": "docs/reference/designer_questions/factions/faction_editor/README.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/designer_questions/factions/faction_editor_tooling_matrix_v1.md",
+      "to": "docs/reference/designer_questions/factions/faction_editor_tooling_matrix_v1.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/designer_questions/factions/implementation_questions_v1.md",
+      "to": "docs/reference/designer_questions/factions/implementation_questions_v1.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/designer_questions/factions/README.md",
+      "to": "docs/reference/designer_questions/factions/README.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/designer_questions/navigation/implementation_questions_v1.md",
+      "to": "docs/reference/designer_questions/navigation/implementation_questions_v1.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/designer_questions/navigation/pathfinding_hierarchical_v1.md",
+      "to": "docs/reference/designer_questions/navigation/pathfinding_hierarchical_v1.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/designer_questions/navigation/README.md",
+      "to": "docs/reference/designer_questions/navigation/README.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/designer_questions/navigation/spec/00_scope.md",
+      "to": "docs/reference/designer_questions/navigation/spec/00_scope.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/designer_questions/navigation/spec/01_graph_representations.md",
+      "to": "docs/reference/designer_questions/navigation/spec/01_graph_representations.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/designer_questions/navigation/spec/02_pathfinding_lod_handoff.md",
+      "to": "docs/reference/designer_questions/navigation/spec/02_pathfinding_lod_handoff.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/designer_questions/navigation/spec/03_client_server_pathing.md",
+      "to": "docs/reference/designer_questions/navigation/spec/03_client_server_pathing.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/designer_questions/navigation/spec/04_validation_perf.md",
+      "to": "docs/reference/designer_questions/navigation/spec/04_validation_perf.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/designer_questions/navigation/spec/05_integration_tests.md",
+      "to": "docs/reference/designer_questions/navigation/spec/05_integration_tests.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/designer_questions/navigation/spec/README.md",
+      "to": "docs/reference/designer_questions/navigation/spec/README.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/designer_questions/production_economy/implementation_questions_v1.md",
+      "to": "docs/reference/designer_questions/production_economy/implementation_questions_v1.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/designer_questions/production_economy/power_damage_ui_persistence_v1.md",
+      "to": "docs/reference/designer_questions/production_economy/power_damage_ui_persistence_v1.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/designer_questions/production_economy/README.md",
+      "to": "docs/reference/designer_questions/production_economy/README.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/designer_questions/production_economy/spec/00_scope.md",
+      "to": "docs/reference/designer_questions/production_economy/spec/00_scope.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/designer_questions/production_economy/spec/01_data_model_manifest.md",
+      "to": "docs/reference/designer_questions/production_economy/spec/01_data_model_manifest.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/designer_questions/production_economy/spec/02_tools_ui_production.md",
+      "to": "docs/reference/designer_questions/production_economy/spec/02_tools_ui_production.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/designer_questions/production_economy/spec/03_persistence_snapshots.md",
+      "to": "docs/reference/designer_questions/production_economy/spec/03_persistence_snapshots.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/designer_questions/production_economy/spec/04_power_damage_repair.md",
+      "to": "docs/reference/designer_questions/production_economy/spec/04_power_damage_repair.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/designer_questions/production_economy/spec/05_integration_tests.md",
+      "to": "docs/reference/designer_questions/production_economy/spec/05_integration_tests.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/designer_questions/production_economy/spec/06_power_plants_data_scripting_v1.md",
+      "to": "docs/reference/designer_questions/production_economy/spec/06_power_plants_data_scripting_v1.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/designer_questions/production_economy/spec/README.md",
+      "to": "docs/reference/designer_questions/production_economy/spec/README.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/designer_questions/strategic_platforms/implementation_questions_v1.md",
+      "to": "docs/reference/designer_questions/strategic_platforms/implementation_questions_v1.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/designer_questions/strategic_platforms/phased_engine_delivery_v1.md",
+      "to": "docs/reference/designer_questions/strategic_platforms/phased_engine_delivery_v1.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/designer_questions/strategic_platforms/platforms_ew_munitions_v1.md",
+      "to": "docs/reference/designer_questions/strategic_platforms/platforms_ew_munitions_v1.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/designer_questions/strategic_platforms/README.md",
+      "to": "docs/reference/designer_questions/strategic_platforms/README.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/designer_questions/strategic_platforms/spec/00_scope.md",
+      "to": "docs/reference/designer_questions/strategic_platforms/spec/00_scope.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/designer_questions/strategic_platforms/spec/01_platform_taxonomy.md",
+      "to": "docs/reference/designer_questions/strategic_platforms/spec/01_platform_taxonomy.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/designer_questions/strategic_platforms/spec/02_sensors_ew_c2.md",
+      "to": "docs/reference/designer_questions/strategic_platforms/spec/02_sensors_ew_c2.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/designer_questions/strategic_platforms/spec/03_munitions_weapons.md",
+      "to": "docs/reference/designer_questions/strategic_platforms/spec/03_munitions_weapons.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/designer_questions/strategic_platforms/spec/04_supply_cargo_magazines.md",
+      "to": "docs/reference/designer_questions/strategic_platforms/spec/04_supply_cargo_magazines.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/designer_questions/strategic_platforms/spec/05_integration_phases.md",
+      "to": "docs/reference/designer_questions/strategic_platforms/spec/05_integration_phases.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/designer_questions/strategic_platforms/spec/README.md",
+      "to": "docs/reference/designer_questions/strategic_platforms/spec/README.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/designer_questions/tools_ui/debug_perf_ui_split_v1.md",
+      "to": "docs/reference/designer_questions/tools_ui/debug_perf_ui_split_v1.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/designer_questions/tools_ui/implementation_questions_v1.md",
+      "to": "docs/reference/designer_questions/tools_ui/implementation_questions_v1.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/designer_questions/tools_ui/README.md",
+      "to": "docs/reference/designer_questions/tools_ui/README.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/designer_questions/tools_ui/spec/00_scope.md",
+      "to": "docs/reference/designer_questions/tools_ui/spec/00_scope.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/designer_questions/tools_ui/spec/01_plugin_schedule_patterns.md",
+      "to": "docs/reference/designer_questions/tools_ui/spec/01_plugin_schedule_patterns.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/designer_questions/tools_ui/spec/02_egui_bevy_split.md",
+      "to": "docs/reference/designer_questions/tools_ui/spec/02_egui_bevy_split.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/designer_questions/tools_ui/spec/03_cross_domain_panels.md",
+      "to": "docs/reference/designer_questions/tools_ui/spec/03_cross_domain_panels.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/designer_questions/tools_ui/spec/04_metrics_diagnostics.md",
+      "to": "docs/reference/designer_questions/tools_ui/spec/04_metrics_diagnostics.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/designer_questions/tools_ui/spec/05_integration_tests.md",
+      "to": "docs/reference/designer_questions/tools_ui/spec/05_integration_tests.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/designer_questions/tools_ui/spec/06_asset_content_studio_workflow_v1.md",
+      "to": "docs/reference/designer_questions/tools_ui/spec/06_asset_content_studio_workflow_v1.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/designer_questions/tools_ui/spec/07_asset_editor_dual_chain_audit_v1.md",
+      "to": "docs/reference/designer_questions/tools_ui/spec/07_asset_editor_dual_chain_audit_v1.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/designer_questions/tools_ui/spec/08_world_gen_desktop_tool_v1.md",
+      "to": "docs/reference/designer_questions/tools_ui/spec/08_world_gen_desktop_tool_v1.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/designer_questions/tools_ui/spec/README.md",
+      "to": "docs/reference/designer_questions/tools_ui/spec/README.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/designer_questions/tools_ui/tooling_cross_domain_v1.md",
+      "to": "docs/reference/designer_questions/tools_ui/tooling_cross_domain_v1.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/reference/designer_questions/map_editor/m1_execution_questions_v1.md",
+      "to": "docs/reference/designer_questions/map_editor/m1_execution_questions_v1.md",
+      "bucket": "reference"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/designer_domains/designer_questions/_legacy/_legacy_designer_questions_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/designer_domains/designer_questions/_legacy/_legacy_designer_questions_v1.md",
+      "bucket": "designer_domains"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/designer_domains/designer_questions/_legacy/README.md",
+      "to": "docs/archive/2026-06-prompts-guides/designer_domains/designer_questions/_legacy/README.md",
+      "bucket": "designer_domains"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/runbooks/guides/ai_city_planning_runbook_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/runbooks/guides/ai_city_planning_runbook_v1.md",
+      "bucket": "runbooks"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/runbooks/guides/ai_operational_warfare_runbook_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/runbooks/guides/ai_operational_warfare_runbook_v1.md",
+      "bucket": "runbooks"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/runbooks/guides/asset_system_audit_runbook_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/runbooks/guides/asset_system_audit_runbook_v1.md",
+      "bucket": "runbooks"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/runbooks/guides/backlog_serialization_preview_streaming_runbook_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/runbooks/guides/backlog_serialization_preview_streaming_runbook_v1.md",
+      "bucket": "runbooks"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/runbooks/guides/base_ai_runbook_draft.md",
+      "to": "docs/archive/2026-06-prompts-guides/runbooks/guides/base_ai_runbook_draft.md",
+      "bucket": "runbooks"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/runbooks/guides/base_behav_a.md",
+      "to": "docs/archive/2026-06-prompts-guides/runbooks/guides/base_behav_a.md",
+      "bucket": "runbooks"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/runbooks/guides/base_doctrine_thoery.md",
+      "to": "docs/archive/2026-06-prompts-guides/runbooks/guides/base_doctrine_thoery.md",
+      "bucket": "runbooks"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/runbooks/guides/base_fire2_smoke.md",
+      "to": "docs/archive/2026-06-prompts-guides/runbooks/guides/base_fire2_smoke.md",
+      "bucket": "runbooks"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/runbooks/guides/base_gui_next.md",
+      "to": "docs/archive/2026-06-prompts-guides/runbooks/guides/base_gui_next.md",
+      "bucket": "runbooks"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/runbooks/guides/base_reserch_draft.md",
+      "to": "docs/archive/2026-06-prompts-guides/runbooks/guides/base_reserch_draft.md",
+      "bucket": "runbooks"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/runbooks/guides/base_ui_direction_principls.md",
+      "to": "docs/archive/2026-06-prompts-guides/runbooks/guides/base_ui_direction_principls.md",
+      "bucket": "runbooks"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/runbooks/guides/base_visual_dev01.md",
+      "to": "docs/archive/2026-06-prompts-guides/runbooks/guides/base_visual_dev01.md",
+      "bucket": "runbooks"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/runbooks/guides/base_visual_dev01_roadmap_next.md",
+      "to": "docs/archive/2026-06-prompts-guides/runbooks/guides/base_visual_dev01_roadmap_next.md",
+      "bucket": "runbooks"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/runbooks/guides/base_visual_pip_.md",
+      "to": "docs/archive/2026-06-prompts-guides/runbooks/guides/base_visual_pip_.md",
+      "bucket": "runbooks"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/runbooks/guides/base_visual_world_representation_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/runbooks/guides/base_visual_world_representation_v1.md",
+      "bucket": "runbooks"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/runbooks/guides/basic_nav_outline.md",
+      "to": "docs/archive/2026-06-prompts-guides/runbooks/guides/basic_nav_outline.md",
+      "bucket": "runbooks"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/runbooks/guides/bevy_asset_terrain_runbook_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/runbooks/guides/bevy_asset_terrain_runbook_v1.md",
+      "bucket": "runbooks"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/runbooks/guides/build_warnings_inventory_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/runbooks/guides/build_warnings_inventory_v1.md",
+      "bucket": "runbooks"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/runbooks/guides/camera_map_navigation_runbook_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/runbooks/guides/camera_map_navigation_runbook_v1.md",
+      "bucket": "runbooks"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/runbooks/guides/chunk_scheduler_runbook_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/runbooks/guides/chunk_scheduler_runbook_v1.md",
+      "bucket": "runbooks"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/runbooks/guides/concrete_industry_sim_runbook_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/runbooks/guides/concrete_industry_sim_runbook_v1.md",
+      "bucket": "runbooks"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/runbooks/guides/developmental_ux_runbook_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/runbooks/guides/developmental_ux_runbook_v1.md",
+      "bucket": "runbooks"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/runbooks/guides/doctrine_simulation_alignment_runbook_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/runbooks/guides/doctrine_simulation_alignment_runbook_v1.md",
+      "bucket": "runbooks"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/runbooks/guides/ecs_systems_schedule_runbook_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/runbooks/guides/ecs_systems_schedule_runbook_v1.md",
+      "bucket": "runbooks"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/runbooks/guides/engine_architecture_human_map_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/runbooks/guides/engine_architecture_human_map_v1.md",
+      "bucket": "runbooks"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/runbooks/guides/experience_layer_orchestrator_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/runbooks/guides/experience_layer_orchestrator_v1.md",
+      "bucket": "runbooks"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/runbooks/guides/experience_layer_ux_hud_designer_brief_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/runbooks/guides/experience_layer_ux_hud_designer_brief_v1.md",
+      "bucket": "runbooks"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/runbooks/guides/fire_ecology_simulation_runbook_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/runbooks/guides/fire_ecology_simulation_runbook_v1.md",
+      "bucket": "runbooks"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/runbooks/guides/flora_ecology_runbook_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/runbooks/guides/flora_ecology_runbook_v1.md",
+      "bucket": "runbooks"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/runbooks/guides/gap_remediation_runbook_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/runbooks/guides/gap_remediation_runbook_v1.md",
+      "bucket": "runbooks"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/runbooks/guides/gui_runbook_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/runbooks/guides/gui_runbook_v1.md",
+      "bucket": "runbooks"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/runbooks/guides/hybred_road_stats.md",
+      "to": "docs/archive/2026-06-prompts-guides/runbooks/guides/hybred_road_stats.md",
+      "bucket": "runbooks"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/runbooks/guides/implementation_gap_hunt_runbook_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/runbooks/guides/implementation_gap_hunt_runbook_v1.md",
+      "bucket": "runbooks"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/runbooks/guides/infrastructure_and_research_orchestrator_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/runbooks/guides/infrastructure_and_research_orchestrator_v1.md",
+      "bucket": "runbooks"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/runbooks/guides/infrastructure_construction_runbook_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/runbooks/guides/infrastructure_construction_runbook_v1.md",
+      "bucket": "runbooks"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/runbooks/guides/infrastructure_corridor_runbook_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/runbooks/guides/infrastructure_corridor_runbook_v1.md",
+      "bucket": "runbooks"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/runbooks/guides/infrastructure_environment_integration_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/runbooks/guides/infrastructure_environment_integration_v1.md",
+      "bucket": "runbooks"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/runbooks/guides/infrastructure_resilience_and_failure_runbook_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/runbooks/guides/infrastructure_resilience_and_failure_runbook_v1.md",
+      "bucket": "runbooks"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/runbooks/guides/intersection_road.md",
+      "to": "docs/archive/2026-06-prompts-guides/runbooks/guides/intersection_road.md",
+      "bucket": "runbooks"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/runbooks/guides/INVENTORY.md",
+      "to": "docs/archive/2026-06-prompts-guides/runbooks/guides/INVENTORY.md",
+      "bucket": "runbooks"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/runbooks/guides/lan level traffic.idea.md",
+      "to": "docs/archive/2026-06-prompts-guides/runbooks/guides/lan level traffic.idea.md",
+      "bucket": "runbooks"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/runbooks/guides/logistics_ai_runbook_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/runbooks/guides/logistics_ai_runbook_v1.md",
+      "bucket": "runbooks"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/runbooks/guides/map_editor_runbook_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/runbooks/guides/map_editor_runbook_v1.md",
+      "bucket": "runbooks"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/runbooks/guides/mission_authoring_framework_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/runbooks/guides/mission_authoring_framework_v1.md",
+      "bucket": "runbooks"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/runbooks/guides/operational_feedback_language_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/runbooks/guides/operational_feedback_language_v1.md",
+      "bucket": "runbooks"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/runbooks/guides/p2_territorial_site_execution_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/runbooks/guides/p2_territorial_site_execution_v1.md",
+      "bucket": "runbooks"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/runbooks/guides/petroleum_industry_simulation_runbook_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/runbooks/guides/petroleum_industry_simulation_runbook_v1.md",
+      "bucket": "runbooks"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/runbooks/guides/python_asset_tools_alignment_runbook_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/runbooks/guides/python_asset_tools_alignment_runbook_v1.md",
+      "bucket": "runbooks"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/runbooks/guides/ref_buildout_roads.md",
+      "to": "docs/archive/2026-06-prompts-guides/runbooks/guides/ref_buildout_roads.md",
+      "bucket": "runbooks"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/runbooks/guides/research_capability_ecosystem_runbook_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/runbooks/guides/research_capability_ecosystem_runbook_v1.md",
+      "bucket": "runbooks"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/runbooks/guides/rulebook_backlog_designer_brief_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/runbooks/guides/rulebook_backlog_designer_brief_v1.md",
+      "bucket": "runbooks"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/runbooks/guides/scenario_campaign_scripted_tools_runbook_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/runbooks/guides/scenario_campaign_scripted_tools_runbook_v1.md",
+      "bucket": "runbooks"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/runbooks/guides/settlement_growth_runbook_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/runbooks/guides/settlement_growth_runbook_v1.md",
+      "bucket": "runbooks"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/runbooks/guides/simulation_expansion_orchestrator_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/runbooks/guides/simulation_expansion_orchestrator_v1.md",
+      "bucket": "runbooks"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/runbooks/guides/simulation_explainability_runbook_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/runbooks/guides/simulation_explainability_runbook_v1.md",
+      "bucket": "runbooks"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/runbooks/guides/stage7_behavioral_decision_worksheet_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/runbooks/guides/stage7_behavioral_decision_worksheet_v1.md",
+      "bucket": "runbooks"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/runbooks/guides/stage7_behavioral_world_designer_brief_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/runbooks/guides/stage7_behavioral_world_designer_brief_v1.md",
+      "bucket": "runbooks"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/runbooks/guides/strategic_fields_and_ai_orchestrator_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/runbooks/guides/strategic_fields_and_ai_orchestrator_v1.md",
+      "bucket": "runbooks"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/runbooks/guides/strategic_overlay_runbook_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/runbooks/guides/strategic_overlay_runbook_v1.md",
+      "bucket": "runbooks"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/runbooks/guides/strategic_program_execution_plan_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/runbooks/guides/strategic_program_execution_plan_v1.md",
+      "bucket": "runbooks"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/runbooks/guides/system_refactor.opai_.rtf",
+      "to": "docs/archive/2026-06-prompts-guides/runbooks/guides/system_refactor.opai_.rtf",
+      "bucket": "runbooks"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/runbooks/guides/system_refactor_NOTE.md",
+      "to": "docs/archive/2026-06-prompts-guides/runbooks/guides/system_refactor_NOTE.md",
+      "bucket": "runbooks"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/runbooks/guides/system_runbook_authoring_meta_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/runbooks/guides/system_runbook_authoring_meta_v1.md",
+      "bucket": "runbooks"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/runbooks/guides/terrain_paired_runbooks_queue_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/runbooks/guides/terrain_paired_runbooks_queue_v1.md",
+      "bucket": "runbooks"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/runbooks/guides/terrain_unification_runbook_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/runbooks/guides/terrain_unification_runbook_v1.md",
+      "bucket": "runbooks"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/runbooks/guides/territorial_infrastructure_orchestration_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/runbooks/guides/territorial_infrastructure_orchestration_v1.md",
+      "bucket": "runbooks"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/design_theme.md",
+      "to": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/design_theme.md",
+      "bucket": "ui_phases"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/fire_particle_legacy_elemental_reference_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/fire_particle_legacy_elemental_reference_v1.md",
+      "bucket": "ui_phases"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/fire_particle_spark_coder_queue_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/fire_particle_spark_coder_queue_v1.md",
+      "bucket": "ui_phases"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/fire_particle_spark_decision_worksheet_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/fire_particle_spark_decision_worksheet_v1.md",
+      "bucket": "ui_phases"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/fire_particle_spark_designer_brief_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/fire_particle_spark_designer_brief_v1.md",
+      "bucket": "ui_phases"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/legacy_asset_reference_manifest_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/legacy_asset_reference_manifest_v1.md",
+      "bucket": "ui_phases"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/minimap_m3_operational_overlay_spec_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/minimap_m3_operational_overlay_spec_v1.md",
+      "bucket": "ui_phases"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/palette_v2_tokens.md",
+      "to": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/palette_v2_tokens.md",
+      "bucket": "ui_phases"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/petroleum_industry_ui_snippet_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/petroleum_industry_ui_snippet_v1.md",
+      "bucket": "ui_phases"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/README.md",
+      "to": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/README.md",
+      "bucket": "ui_phases"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/ui_icone_design_spec.md",
+      "to": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/ui_icone_design_spec.md",
+      "bucket": "ui_phases"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/ui_phase0_panel_mocks_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/ui_phase0_panel_mocks_v1.md",
+      "bucket": "ui_phases"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/ui_phase2_coder_queue_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/ui_phase2_coder_queue_v1.md",
+      "bucket": "ui_phases"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/ui_phase2_designer_signoff_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/ui_phase2_designer_signoff_v1.md",
+      "bucket": "ui_phases"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/ui_phase2b_egui_gate_plan_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/ui_phase2b_egui_gate_plan_v1.md",
+      "bucket": "ui_phases"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/ui_phase2b_gate_plan_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/ui_phase2b_gate_plan_v1.md",
+      "bucket": "ui_phases"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/ui_phase3_coder_queue_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/ui_phase3_coder_queue_v1.md",
+      "bucket": "ui_phases"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/ui_phase3_gpu_minimap_m1_planner_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/ui_phase3_gpu_minimap_m1_planner_v1.md",
+      "bucket": "ui_phases"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/ui_phase3_m2_minimap_overlay_plan_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/ui_phase3_m2_minimap_overlay_plan_v1.md",
+      "bucket": "ui_phases"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/ui_phase3_minimap_compositor_full_plan_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/ui_phase3_minimap_compositor_full_plan_v1.md",
+      "bucket": "ui_phases"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/ui_phase3_minimap_compositor_plan_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/ui_phase3_minimap_compositor_plan_v1.md",
+      "bucket": "ui_phases"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/ui_phase3_minimap_m2_impl_full_plan_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/ui_phase3_minimap_m2_impl_full_plan_v1.md",
+      "bucket": "ui_phases"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/ui_phase3_minimap_m2_impl_plan_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/ui_phase3_minimap_m2_impl_plan_v1.md",
+      "bucket": "ui_phases"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/ui_phase3_minimap_track_naming_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/ui_phase3_minimap_track_naming_v1.md",
+      "bucket": "ui_phases"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/ui_phase4_handoff_plan_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/ui_phase4_handoff_plan_v1.md",
+      "bucket": "ui_phases"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/ui_phase4_icon_atlas_brief_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/ui_phase4_icon_atlas_brief_v1.md",
+      "bucket": "ui_phases"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/ui_phase4_icon_atlas_plan_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/ui_phase4_icon_atlas_plan_v1.md",
+      "bucket": "ui_phases"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/ui_phase5_pause_menu_plan_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/ui_phase5_pause_menu_plan_v1.md",
+      "bucket": "ui_phases"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/ui_world_preview_coder_queue_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/ui_world_preview_coder_queue_v1.md",
+      "bucket": "ui_phases"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/vfx_coder_phase2_starters_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/vfx_coder_phase2_starters_v1.md",
+      "bucket": "ui_phases"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/vfx_post_implementation_review_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/vfx_post_implementation_review_v1.md",
+      "bucket": "ui_phases"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/water_surface_vfx_coder_queue_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/water_surface_vfx_coder_queue_v1.md",
+      "bucket": "ui_phases"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/water_surface_vfx_decision_worksheet_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/water_surface_vfx_decision_worksheet_v1.md",
+      "bucket": "ui_phases"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/world_map_preview_layout_decision_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/world_map_preview_layout_decision_v1.md",
+      "bucket": "ui_phases"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/world_preview_d01_shell_signoff_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/world_preview_d01_shell_signoff_v1.md",
+      "bucket": "ui_phases"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/world_preview_d02_map_dominance_signoff_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/world_preview_d02_map_dominance_signoff_v1.md",
+      "bucket": "ui_phases"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/world_preview_d04_slide_sheet_spec_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/world_preview_d04_slide_sheet_spec_v1.md",
+      "bucket": "ui_phases"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/world_preview_d_wp_post_impl_review_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/world_preview_d_wp_post_impl_review_v1.md",
+      "bucket": "ui_phases"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/world_preview_d_wp_track_signoff_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/world_preview_d_wp_track_signoff_v1.md",
+      "bucket": "ui_phases"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/world_preview_layout_decision_worksheet_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/world_preview_layout_decision_worksheet_v1.md",
+      "bucket": "ui_phases"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/world_preview_layout_designer_next_steps_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/world_preview_layout_designer_next_steps_v1.md",
+      "bucket": "ui_phases"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/world_preview_product_decision_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/world_preview_product_decision_v1.md",
+      "bucket": "ui_phases"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/world_preview_product_full_plan_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/world_preview_product_full_plan_v1.md",
+      "bucket": "ui_phases"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/world_preview_visual_references_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/world_preview_visual_references_v1.md",
+      "bucket": "ui_phases"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/runbooks/guides/ui_design_language_plan_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/runbooks/guides/ui_design_language_plan_v1.md",
+      "bucket": "runbooks"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/runbooks/guides/ui_operational_direction_runbook_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/runbooks/guides/ui_operational_direction_runbook_v1.md",
+      "bucket": "runbooks"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/runbooks/guides/vfx_architecture_bevy_wgpu_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/runbooks/guides/vfx_architecture_bevy_wgpu_v1.md",
+      "bucket": "runbooks"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/runbooks/guides/visual_aidv2_runbook_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/runbooks/guides/visual_aidv2_runbook_v1.md",
+      "bucket": "runbooks"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/runbooks/guides/voronoi_polygon_worlds_notes.md.md",
+      "to": "docs/archive/2026-06-prompts-guides/runbooks/guides/voronoi_polygon_worlds_notes.md.md",
+      "bucket": "runbooks"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/runbooks/guides/world_assets_tools_rulebook_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/runbooks/guides/world_assets_tools_rulebook_v1.md",
+      "bucket": "runbooks"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/runbooks/guides/world_preview_runbook_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/runbooks/guides/world_preview_runbook_v1.md",
+      "bucket": "runbooks"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/misc/imahes/gen_image_water.png",
+      "to": "docs/archive/2026-06-prompts-guides/misc/imahes/gen_image_water.png",
+      "bucket": "misc"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/misc/legacy_runbooks/gap_remediation/g1_hydrology_steps_v1_FULL.md",
+      "to": "docs/archive/2026-06-prompts-guides/misc/legacy_runbooks/gap_remediation/g1_hydrology_steps_v1_FULL.md",
+      "bucket": "misc"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/misc/legacy_runbooks/README.md",
+      "to": "docs/archive/2026-06-prompts-guides/misc/legacy_runbooks/README.md",
+      "bucket": "misc"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/misc/legacy_runbooks/terrain/terrain_u_applied_maintenance_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/misc/legacy_runbooks/terrain/terrain_u_applied_maintenance_v1.md",
+      "bucket": "misc"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/matrix/matrix/assets/bevy_asset_config_migration_matrix_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/matrix/matrix/assets/bevy_asset_config_migration_matrix_v1.md",
+      "bucket": "matrix"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/matrix/matrix/assets/runbook/a1_steps_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/matrix/matrix/assets/runbook/a1_steps_v1.md",
+      "bucket": "matrix"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/matrix/matrix/assets/runbook/a2_steps_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/matrix/matrix/assets/runbook/a2_steps_v1.md",
+      "bucket": "matrix"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/matrix/matrix/assets/runbook/a3_steps_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/matrix/matrix/assets/runbook/a3_steps_v1.md",
+      "bucket": "matrix"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/matrix/matrix/assets/runbook/README.md",
+      "to": "docs/archive/2026-06-prompts-guides/matrix/matrix/assets/runbook/README.md",
+      "bucket": "matrix"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/matrix/matrix/engine_bevy/bevy_0_18_migration_plan.md",
+      "to": "docs/archive/2026-06-prompts-guides/matrix/matrix/engine_bevy/bevy_0_18_migration_plan.md",
+      "bucket": "matrix"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/matrix/matrix/engine_bevy/runbook/README.md",
+      "to": "docs/archive/2026-06-prompts-guides/matrix/matrix/engine_bevy/runbook/README.md",
+      "bucket": "matrix"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/matrix/matrix/engine_bevy/runbook/s0_inventory_steps_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/matrix/matrix/engine_bevy/runbook/s0_inventory_steps_v1.md",
+      "bucket": "matrix"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/matrix/matrix/engine_bevy/runbook/s1_schedule_cross_plugin_steps_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/matrix/matrix/engine_bevy/runbook/s1_schedule_cross_plugin_steps_v1.md",
+      "bucket": "matrix"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/matrix/matrix/engine_bevy/runbook/s2_schedule_navigation_steps_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/matrix/matrix/engine_bevy/runbook/s2_schedule_navigation_steps_v1.md",
+      "bucket": "matrix"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/matrix/matrix/experience/runbook/README.md",
+      "to": "docs/archive/2026-06-prompts-guides/matrix/matrix/experience/runbook/README.md",
+      "bucket": "matrix"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/matrix/matrix/experience/runbook/v1_hud_steps_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/matrix/matrix/experience/runbook/v1_hud_steps_v1.md",
+      "bucket": "matrix"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/matrix/matrix/experience/runbook/v2_footprint_steps_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/matrix/matrix/experience/runbook/v2_footprint_steps_v1.md",
+      "bucket": "matrix"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/matrix/matrix/experience/runbook/v3_readability_steps_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/matrix/matrix/experience/runbook/v3_readability_steps_v1.md",
+      "bucket": "matrix"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/matrix/matrix/experience/runbook/v4_lod_scale_steps_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/matrix/matrix/experience/runbook/v4_lod_scale_steps_v1.md",
+      "bucket": "matrix"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/matrix/matrix/experience/runbook/v5_camera_steps_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/matrix/matrix/experience/runbook/v5_camera_steps_v1.md",
+      "bucket": "matrix"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/matrix/matrix/experience/runbook/v6_icons_steps_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/matrix/matrix/experience/runbook/v6_icons_steps_v1.md",
+      "bucket": "matrix"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/matrix/matrix/gap_remediation/runbook/g1_hydrology_steps_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/matrix/matrix/gap_remediation/runbook/g1_hydrology_steps_v1.md",
+      "bucket": "matrix"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/matrix/matrix/gap_remediation/runbook/g2_power_placeholders_steps_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/matrix/matrix/gap_remediation/runbook/g2_power_placeholders_steps_v1.md",
+      "bucket": "matrix"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/matrix/matrix/gap_remediation/runbook/g3_cycle_results_TEMPLATE.md",
+      "to": "docs/archive/2026-06-prompts-guides/matrix/matrix/gap_remediation/runbook/g3_cycle_results_TEMPLATE.md",
+      "bucket": "matrix"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/matrix/matrix/gap_remediation/runbook/g3_execution_cycle_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/matrix/matrix/gap_remediation/runbook/g3_execution_cycle_v1.md",
+      "bucket": "matrix"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/matrix/matrix/gap_remediation/runbook/g3_gui_todos_steps_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/matrix/matrix/gap_remediation/runbook/g3_gui_todos_steps_v1.md",
+      "bucket": "matrix"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/matrix/matrix/gap_remediation/runbook/g3a_faction_editor_steps_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/matrix/matrix/gap_remediation/runbook/g3a_faction_editor_steps_v1.md",
+      "bucket": "matrix"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/matrix/matrix/gap_remediation/runbook/g3b_production_hud_steps_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/matrix/matrix/gap_remediation/runbook/g3b_production_hud_steps_v1.md",
+      "bucket": "matrix"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/matrix/matrix/gap_remediation/runbook/g3c_diagnostics_steps_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/matrix/matrix/gap_remediation/runbook/g3c_diagnostics_steps_v1.md",
+      "bucket": "matrix"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/matrix/matrix/gap_remediation/runbook/g3d_runtime_ui_steps_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/matrix/matrix/gap_remediation/runbook/g3d_runtime_ui_steps_v1.md",
+      "bucket": "matrix"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/matrix/matrix/gap_remediation/runbook/g4_serialization_stubs_steps_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/matrix/matrix/gap_remediation/runbook/g4_serialization_stubs_steps_v1.md",
+      "bucket": "matrix"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/matrix/matrix/gap_remediation/runbook/g4_transport_r8_network_slice_steps_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/matrix/matrix/gap_remediation/runbook/g4_transport_r8_network_slice_steps_v1.md",
+      "bucket": "matrix"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/matrix/matrix/gap_remediation/runbook/g5_nav_damage_steps_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/matrix/matrix/gap_remediation/runbook/g5_nav_damage_steps_v1.md",
+      "bucket": "matrix"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/matrix/matrix/gap_remediation/runbook/README.md",
+      "to": "docs/archive/2026-06-prompts-guides/matrix/matrix/gap_remediation/runbook/README.md",
+      "bucket": "matrix"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/matrix/matrix/gap_remediation/runbook/results/.gitkeep",
+      "to": "docs/archive/2026-06-prompts-guides/matrix/matrix/gap_remediation/runbook/results/.gitkeep",
+      "bucket": "matrix"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/matrix/matrix/map_editor/map_editor_matrix_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/matrix/matrix/map_editor/map_editor_matrix_v1.md",
+      "bucket": "matrix"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/matrix/matrix/map_editor/runbook/m1_steps_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/matrix/matrix/map_editor/runbook/m1_steps_v1.md",
+      "bucket": "matrix"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/matrix/matrix/map_editor/runbook/m2_steps_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/matrix/matrix/map_editor/runbook/m2_steps_v1.md",
+      "bucket": "matrix"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/matrix/matrix/map_editor/runbook/m3_steps_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/matrix/matrix/map_editor/runbook/m3_steps_v1.md",
+      "bucket": "matrix"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/matrix/matrix/map_editor/runbook/m4_steps_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/matrix/matrix/map_editor/runbook/m4_steps_v1.md",
+      "bucket": "matrix"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/matrix/matrix/map_editor/runbook/m5_steps_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/matrix/matrix/map_editor/runbook/m5_steps_v1.md",
+      "bucket": "matrix"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/matrix/matrix/map_editor/runbook/README.md",
+      "to": "docs/archive/2026-06-prompts-guides/matrix/matrix/map_editor/runbook/README.md",
+      "bucket": "matrix"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/matrix/matrix/production/power_legacy_functional_parity_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/matrix/matrix/production/power_legacy_functional_parity_v1.md",
+      "bucket": "matrix"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/matrix/matrix/production/production_migration_matrix_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/matrix/matrix/production/production_migration_matrix_v1.md",
+      "bucket": "matrix"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/matrix/matrix/README.md",
+      "to": "docs/archive/2026-06-prompts-guides/matrix/matrix/README.md",
+      "bucket": "matrix"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/matrix/matrix/repo/repo_boundary_matrix_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/matrix/matrix/repo/repo_boundary_matrix_v1.md",
+      "bucket": "matrix"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/matrix/matrix/serialization/serialization_hybrid_migration_matrix_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/matrix/matrix/serialization/serialization_hybrid_migration_matrix_v1.md",
+      "bucket": "matrix"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/matrix/matrix/simulation_expansion/asset_sim_ownership_matrix_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/matrix/matrix/simulation_expansion/asset_sim_ownership_matrix_v1.md",
+      "bucket": "matrix"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/matrix/matrix/simulation_expansion/chunk_scheduler_gap_table_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/matrix/matrix/simulation_expansion/chunk_scheduler_gap_table_v1.md",
+      "bucket": "matrix"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/matrix/matrix/simulation_expansion/python_asset_tools_a0_inventory_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/matrix/matrix/simulation_expansion/python_asset_tools_a0_inventory_v1.md",
+      "bucket": "matrix"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/matrix/matrix/simulation_expansion/runbook/README.md",
+      "to": "docs/archive/2026-06-prompts-guides/matrix/matrix/simulation_expansion/runbook/README.md",
+      "bucket": "matrix"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/matrix/matrix/simulation_expansion/runbook/s0_steps_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/matrix/matrix/simulation_expansion/runbook/s0_steps_v1.md",
+      "bucket": "matrix"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/matrix/matrix/simulation_expansion/runbook/s1_steps_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/matrix/matrix/simulation_expansion/runbook/s1_steps_v1.md",
+      "bucket": "matrix"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/matrix/matrix/simulation_expansion/runbook/s2_steps_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/matrix/matrix/simulation_expansion/runbook/s2_steps_v1.md",
+      "bucket": "matrix"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/matrix/matrix/strategic_platforms/strategic_platforms_matrix_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/matrix/matrix/strategic_platforms/strategic_platforms_matrix_v1.md",
+      "bucket": "matrix"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/matrix/matrix/terrain_biome/composite_style_preview_integration_matrix_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/matrix/matrix/terrain_biome/composite_style_preview_integration_matrix_v1.md",
+      "bucket": "matrix"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/matrix/matrix/terrain_biome/material_unification_matrix_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/matrix/matrix/terrain_biome/material_unification_matrix_v1.md",
+      "bucket": "matrix"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/matrix/matrix/terrain_biome/runbook/README.md",
+      "to": "docs/archive/2026-06-prompts-guides/matrix/matrix/terrain_biome/runbook/README.md",
+      "bucket": "matrix"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/matrix/matrix/terrain_biome/runbook/u3_steps_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/matrix/matrix/terrain_biome/runbook/u3_steps_v1.md",
+      "bucket": "matrix"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/matrix/matrix/terrain_biome/runbook/u4_steps_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/matrix/matrix/terrain_biome/runbook/u4_steps_v1.md",
+      "bucket": "matrix"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/matrix/matrix/terrain_biome/runbook/u5_steps_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/matrix/matrix/terrain_biome/runbook/u5_steps_v1.md",
+      "bucket": "matrix"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/matrix/matrix/terrain_biome/runbook/u6_steps_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/matrix/matrix/terrain_biome/runbook/u6_steps_v1.md",
+      "bucket": "matrix"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/matrix/matrix/terrain_biome/runbook/u7_steps_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/matrix/matrix/terrain_biome/runbook/u7_steps_v1.md",
+      "bucket": "matrix"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/matrix/matrix/terrain_biome/terrain_biome_migration_matrix_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/matrix/matrix/terrain_biome/terrain_biome_migration_matrix_v1.md",
+      "bucket": "matrix"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/matrix/matrix/transport/reference_post_foundation_track_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/matrix/matrix/transport/reference_post_foundation_track_v1.md",
+      "bucket": "matrix"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/matrix/matrix/transport/road_rail_migration_matrix_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/matrix/matrix/transport/road_rail_migration_matrix_v1.md",
+      "bucket": "matrix"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/matrix/matrix/transport/runbook/r9_authoring_bake_order_steps_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/matrix/matrix/transport/runbook/r9_authoring_bake_order_steps_v1.md",
+      "bucket": "matrix"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/matrix/matrix/transport/runbook/README.md",
+      "to": "docs/archive/2026-06-prompts-guides/matrix/matrix/transport/runbook/README.md",
+      "bucket": "matrix"
+    },
+    {
+      "from": "docs/archive/2026-06-prompts-guides/matrix/matrix/transport/runbook/ron_and_persistence_next_steps_v1.md",
+      "to": "docs/archive/2026-06-prompts-guides/matrix/matrix/transport/runbook/ron_and_persistence_next_steps_v1.md",
+      "bucket": "matrix"
+    }
+  ]
+}

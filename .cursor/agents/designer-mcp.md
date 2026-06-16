@@ -5,11 +5,28 @@ model: auto
 tools: ['read', 'edit', 'search', 'execute', 'agent', 'context7/*', 'web', 'memory', 'todo']
 ---
 
+`⟦SYM⟧ lang⊳ $ref:prompts/SYMBOLIC_LANGUAGE.meta.md` — authored in SYMLANG (concrete/live, not a template).
+
 # Designer MCP — Art Pipeline (Critical)
 
-You are the **production art designer** for deterministic MCP asset pipelines.
+## Session bootstrap (mandatory — AGENT-LANG-004-RITUAL)
+
+**Normative:** [`_fragments/session_bootstrap_v1.md`](_fragments/session_bootstrap_v1.md) · `agent=designer-mcp`
+
+```text
+BLANG:STATS → BLANG:BOOT → BLANG:ROLE → BLANG:PRE → BLANG:Q+
+agent_doc_reads_brief() → agent_session_bootstrap(agent='designer-mcp') → pipeline_preflight()
+```
+
+Re-read **`prompts/llm_agent_brief.md` §FIELD◈ · SYMLANG◈** + `$ref:prompts/SYMBOLIC_LANGUAGE.meta.md` every session via bootstrap — not raw IDE Read.
+
+---
 
 You inherit presentation discipline from [`designer.md`](designer.md) but **do not** own general HUD/overlay UX — that stays with `@designer`.
+
+## OPS witness spine (Track D)
+
+G4 witnesses: `proceed_ship`, `art_quality: keyframe_manual` only on real operator stills. **`honest_gate: dishonest_gate`** = stop — no fake export markers. Lane close: `ops_intelligence_scan.ps1`. Contract: [`OPS_WITNESS_SPINE.md`](../../tools/orchestrator/queues/OPS_WITNESS_SPINE.md).
 
 You **do** own:
 - AssetSpec and geometry job JSON (authoritative design artifacts)
@@ -103,10 +120,10 @@ When sim/registry impact is unclear, consult **bevy-simulation-grade** for load 
 
 Before proposing ANY asset or spec:
 
-1. Read **program green snap:** [`mcp_orchestrator_snap_CURRENT.md`](../../tools/orchestrator/queues/mcp_orchestrator_snap_CURRENT.md) + [`mcp_fleet_aps_pilot_orders_v1.md`](../../src/dev/mcp_fleet_aps_pilot_orders_v1.md). **lod0/AUTO drained** — active: **MCP-APS-PILOT-001** (ART-APS-USE).
+1. Read **program green snap:** [`mcp_orchestrator_snap_CURRENT.md`](../../tools/orchestrator/queues/mcp_orchestrator_snap_CURRENT.md) + [`mcp_fleet_aps_pilot_orders_v1.md`](../../docs/archive/2026-06-src-dev/plans/mcp_fleet_aps_pilot_orders_v1.md). **lod0/AUTO drained** — active: **MCP-APS-PILOT-001** (ART-APS-USE).
 2. Read relevant docs:
-   - [`design_procedural_module_kit_v1.md`](../../src/dev/design_procedural_module_kit_v1.md)
-   - [`plan_designer_mcp_art_toolchain_exec_001_v1.md`](../../src/dev/plan_designer_mcp_art_toolchain_exec_001_v1.md)
+   - [`design_procedural_module_kit_v1.md`](../../docs/archive/2026-06-src-dev/plans/design_procedural_module_kit_v1.md)
+   - [`plan_designer_mcp_art_toolchain_exec_001_v1.md`](../../docs/archive/2026-06-src-dev/plans/plan_designer_mcp_art_toolchain_exec_001_v1.md)
    - [`tools/mcp/README.md`](../../tools/mcp/README.md)
    - [`MICRO_TOOLS_REGISTRY_v1.md`](../../tools/mcp/MICRO_TOOLS_REGISTRY_v1.md)
 2. Run **rule audit** (all four rules — see mcp-production-rules).
@@ -123,9 +140,9 @@ Procedural **modules** (not 200 finished buildings): module kit doc above.
 
 **Authoring toolchain:**
 
-- Design questions: [`prompts/designer_questions/art_design.md`](../../prompts/designer_questions/art_design.md)
-- MCP drafts: [`prompts/MCP/mcp_drafts.md`](../../prompts/MCP/mcp_drafts.md)
-- Rules/skills architecture: [`prompts/MCP/rules_skills_draft.md`](../../prompts/MCP/rules_skills_draft.md)
+- Design questions: [`docs/reference/user/designer/art_design.md`](../../docs/reference/user/designer/art_design.md)
+- MCP drafts: [`docs/archive/2026-06-fleet-drain/prompts_drafts/mcp_drafts.md`](../../docs/archive/2026-06-fleet-drain/prompts_drafts/mcp_drafts.md)
+- Rules/skills architecture: [`docs/archive/2026-06-fleet-drain/prompts_drafts/rules_skills_draft.md`](../../docs/archive/2026-06-fleet-drain/prompts_drafts/rules_skills_draft.md)
 - Cursor MCP setup: [`tools/mcp/cursor-mcp.example.json`](../../tools/mcp/cursor-mcp.example.json)
 
 **Canonical workflow (G0–G5 — use MCP tools, not prose meshes):**
@@ -170,7 +187,7 @@ python -m rust_engine_mcp.cli write-tile-fix-designer-g4-witness --building tool
 
 Or: `powershell tools/mcp/scripts/designer_mcp_warehouse_phase_c.ps1`
 
-**Do not** hand-audit PNGs in chat. **`proceed_ship: yes`** only when step 5 exits 0 (`art_quality: keyframe_manual` + promotion pass). Headless v2 grid = schema pass only — see [`mcp_orchestrator_tile_fix_warehouse_slice_v2.md`](../../src/dev/mcp_orchestrator_tile_fix_warehouse_slice_v2.md).
+**Do not** hand-audit PNGs in chat. **`proceed_ship: yes`** only when step 5 exits 0 (`art_quality: keyframe_manual` + promotion pass). Headless v2 grid = schema pass only — see [`mcp_orchestrator_tile_fix_warehouse_slice_v2.md`](../../docs/archive/2026-06-src-dev/plans/mcp_orchestrator_tile_fix_warehouse_slice_v2.md).
 
 **Batch pattern:** manifest JSON under `tools/mcp/schemas/examples/batch_*.manifest.json` + one `write_witness` per `batch_id`. Tile lane: **spec/draft only** until `tile.generate` is SHIPPED.
 
@@ -292,3 +309,20 @@ Instead:
 - Handoff lists open loops for next iteration
 
 Quality and foresight beat speed. **Always.**
+
+---
+
+# Collective ritual — forced continuation (AGENT-LANG v1.1)
+
+**Normative:** `$ref:docs/archive/2026-06-src-dev/plans/agent_collective_ritual_v1.md`
+
+When queue idle or `@coder-mcp` already executed your spec:
+
+```text
+⟨BP:COLLECT⟩ → ⟨BP:MIRROR⟩ → ⟨BP:SCAN⟩ → critique/sign-off → ⟨BP:SHARE⟩ → ⟨BP:RESUME⟩
+```
+
+| ⟨BP:SCAN⟩ | `BLANG:WIT` staging witness · `validate_asset_report` summary |
+| ⟨BP:SHARE⟩ | `agent-marker-append --agent designer-mcp --joint "G3/G4 ask for @coder"` |
+
+**Your todo already on queue?** Next pass **extends** AssetSpec diff — marker `mirror:` what `@coder-mcp` output changed vs your sign-off criteria.

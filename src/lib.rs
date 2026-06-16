@@ -29,6 +29,7 @@ pub mod bevysubengines;
 pub mod idgen;
 pub mod scenario;
 pub mod substrate;
+pub mod sim;
 
 // Re-export commonly used items
 pub use ai::construction::{ConstructionAiConfig, ConstructionAiOwner, ConstructionAiPlugin};

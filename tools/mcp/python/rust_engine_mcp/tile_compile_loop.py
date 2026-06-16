@@ -132,6 +132,8 @@ def write_compile_plan_json(
 
 def keyframe_job_for_cell(defn: BuildingDefinition, cell: BakeCell, *, light_blend: str = "") -> dict[str, Any]:
     """Single headless ``tile_variant_bake`` job (keyframe light rig when configured)."""
+    from .material_authority import annotate_tile_bake_job
+
     png_rel = (
         f"assets/staging/tiles/{_staging_batch_id(defn)}/"
         f"{cell_png_basename(cell)}"
@@ -155,6 +157,9 @@ def keyframe_job_for_cell(defn: BuildingDefinition, cell: BakeCell, *, light_ble
     }
     if light_blend:
         job["light_blend"] = light_blend
+    snap = defn.assembly_snapshot
+    if snap:
+        job = annotate_tile_bake_job(job, snapshot_path=snap, ensure_textures=True)
     return job
 
 

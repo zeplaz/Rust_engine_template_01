@@ -5,7 +5,7 @@
   "pilot_scope": "MCP-PROD-PILOT-ROWHOUSE-001",
   "pilot_archetype": "rowhouse",
   "pilot_style_pack_id": "style_victorian",
-  "plan_ref": "src/dev/mcp_fleet_production_pilot_rowhouse_v1.md",
+  "plan_ref": "docs/archive/2026-06-src-dev/plans/mcp_fleet_production_pilot_rowhouse_v1.md",
   "wave": "001",
   "module_count": 5,
   "modules": [
@@ -36,7 +36,7 @@
     {
       "module_id": "door_residential",
       "style_pack_id": "style_victorian",
-      "material_id": "brick_red_01",
+      "material_id": "wood_plank_01",
       "profile": "residential",
       "pbr_status": "shipped",
       "development_tier": "production",
@@ -48,7 +48,7 @@
     {
       "module_id": "roof_pitched_gable",
       "style_pack_id": "style_victorian",
-      "material_id": "brick_red_01",
+      "material_id": "roof_tile_01",
       "profile": "pitched",
       "pbr_status": "shipped",
       "development_tier": "production",

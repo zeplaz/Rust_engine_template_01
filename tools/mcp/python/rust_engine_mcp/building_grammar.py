@@ -334,3 +334,156 @@ def grammar_rule_chain_snapshot(result: dict[str, Any]) -> dict[str, str]:
         elif layer == "age" and "age" not in chain:
             chain["age"] = rule_id
     return chain
+
+
+def generate_with_overrides(
+    archetype_id: str,
+    district_style: str,
+    seed: int,
+    *,
+    massing_strategy: str | None = None,
+    footprint: dict[str, Any] | None = None,
+    footprint_mode: str | None = None,
+    age_band_id: str | None = None,
+    roof_slot: str | None = None,
+    roof_rule_id: str | None = None,
+    wall_slot: str | None = None,
+    door_slot: str | None = None,
+    window_slot: str | None = None,
+    facade_rule_id: str | None = None,
+) -> dict[str, Any]:
+    """Deterministic grammar eval with explicit pins (GRAMMAR-ITER-001 massing path)."""
+    grammar = load_building_grammar_by_archetype(archetype_id)
+    district = None
+    for row in grammar.get("district_styles") or []:
+        if str(row.get("id")) == district_style:
+            district = row
+            break
+    if district is None:
+        raise KeyError(f"unknown district_style: {district_style}")
+
+    strategies = grammar["massing"]["strategies"]
+    if massing_strategy:
+        strategy = next((s for s in strategies if str(s.get("id")) == massing_strategy), None)
+        if strategy is None:
+            raise KeyError(f"unknown massing_strategy: {massing_strategy}")
+    else:
+        massing_weights = [(int(s["weight"]), i) for i, s in enumerate(strategies)]
+        mi = _pick_weighted(massing_weights, _mix_seed(seed, "massing"))
+        strategy = strategies[mi]
+
+    bounds = grammar["archetype"]["footprint_bounds"]
+    if footprint:
+        width = max(2, int(footprint["width"]))
+        depth = max(2, int(footprint["depth"]))
+        floors = max(1, int(footprint.get("floors") or bounds["min_floors"]))
+    else:
+        width, depth, floors = _resolve_footprint(bounds, strategy, seed)
+
+    resolved_footprint_mode = str(footprint_mode or strategy.get("footprint_mode") or "rect")
+
+    age_bands = grammar["age"]["bands"]
+    if age_band_id:
+        age_band = next((b for b in age_bands if str(b.get("id")) == age_band_id), None)
+        if age_band is None:
+            raise KeyError(f"unknown age_band_id: {age_band_id}")
+    else:
+        age_weights = [(int(b["weight"]), i) for i, b in enumerate(age_bands)]
+        ai = _pick_weighted(age_weights, _mix_seed(seed, "age"))
+        age_band = age_bands[ai]
+
+    slot_overrides: dict[str, str] = {}
+    roof_default = grammar["roof"]["default_slot"]
+    for row in grammar["roof"].get("by_massing") or []:
+        if str(row.get("massing_id")) == strategy["id"]:
+            roof_default = str(row["slot"])
+            break
+    if roof_slot:
+        roof_default = roof_slot
+    elif roof_rule_id:
+        roof_default = roof_rule_id
+    slot_overrides["roof_default"] = roof_default
+
+    facade = grammar.get("facade") or {}
+    if facade.get("wall_slot"):
+        slot_overrides["wall_1u"] = str(facade["wall_slot"])
+    if facade.get("door_slot"):
+        slot_overrides["door_default"] = str(facade["door_slot"])
+    if facade.get("window_slot"):
+        slot_overrides["window_1u"] = str(facade["window_slot"])
+    if wall_slot:
+        slot_overrides["wall_1u"] = wall_slot
+    if door_slot:
+        slot_overrides["door_default"] = door_slot
+    if window_slot:
+        slot_overrides["window_1u"] = window_slot
+
+    facade_rule = facade_rule_id or "facade_v1"
+
+    rule_chain = [
+        {
+            "layer": "archetype",
+            "rule_id": grammar["archetype"]["id"],
+            "detail": f"usage={grammar['archetype']['usage']}",
+        },
+        {
+            "layer": "district_style",
+            "rule_id": district_style,
+            "detail": f"style_pack={district['style_pack_id']}",
+        },
+        {
+            "layer": "massing",
+            "rule_id": strategy["id"],
+            "detail": f"{width}x{depth}x{floors} mode={resolved_footprint_mode}",
+        },
+        {
+            "layer": "roof",
+            "rule_id": roof_default,
+            "detail": "slot override for R token",
+        },
+        {
+            "layer": "facade",
+            "rule_id": facade_rule,
+            "detail": f"tags={','.join(facade.get('placement_tags') or [])}",
+        },
+        {
+            "layer": "detail",
+            "rule_id": str((grammar.get("detail") or {}).get("prop_slot") or "none"),
+            "detail": f"density={(grammar.get('detail') or {}).get('density', 0)}",
+        },
+        {
+            "layer": "age",
+            "rule_id": age_band["id"],
+            "detail": f"variant_tags={','.join(age_band.get('variant_tags') or [])}",
+        },
+    ]
+
+    if resolved_footprint_mode == "l_shape":
+        rule_chain.append(
+            {
+                "layer": "massing",
+                "rule_id": "l_shape_v1",
+                "detail": "asymmetric rect footprint (full L cutout in v2)",
+            }
+        )
+
+    return {
+        "grammar_id": grammar["grammar_id"],
+        "archetype_id": archetype_id,
+        "district_style": district_style,
+        "seed": seed,
+        "massing_strategy": strategy["id"],
+        "footprint_mode": resolved_footprint_mode,
+        "width": width,
+        "depth": depth,
+        "floors": floors,
+        "style_pack_id": str(district["style_pack_id"]),
+        "slot_overrides": slot_overrides,
+        "placement_tags": list(facade.get("placement_tags") or []),
+        "variant_tags": list(age_band.get("variant_tags") or ["clean"]),
+        "detail_density": float((grammar.get("detail") or {}).get("density") or 0.0),
+        "age_band": str(age_band["id"]),
+        "rule_chain": rule_chain,
+        "material_profiles": dict(district.get("material_profiles") or {}),
+        "weathering": weathering_for_age_band(str(age_band["id"])),
+    }

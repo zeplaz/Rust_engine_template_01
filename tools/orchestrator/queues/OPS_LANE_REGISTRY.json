@@ -1,0 +1,60 @@
+{
+  "schema": "ops_lane_registry_v1",
+  "description": "Engine + art program lanes for OPS Witness Spine (Track D).",
+  "programs": [
+    {
+      "program_id": "stage5_spine",
+      "label": "Stage 5 FULL_APP readiness",
+      "owner": "@coder",
+      "anchor_witnesses": ["debug_runs/stage5_full_app_live.json"]
+    },
+    {
+      "program_id": "construction",
+      "label": "Construction phases",
+      "owner": "@coder",
+      "anchor_witnesses": ["debug_runs/construction_stage_live.json"]
+    },
+    {
+      "program_id": "art_A",
+      "label": "APS product / material studio",
+      "owner": "@coder-mcp",
+      "track": "A",
+      "anchor_witnesses": ["debug_runs/aps_material_studio_live.json"]
+    },
+    {
+      "program_id": "art_B",
+      "label": "MCP pipeline spine / warehouse integration",
+      "owner": "@orchestrator-mcp",
+      "track": "B",
+      "anchor_witnesses": ["debug_runs/art_pipeline/mcp_pilot_grammar_001_live.json"]
+    },
+    {
+      "program_id": "stage7_play",
+      "label": "Stage 7 play scenarios",
+      "owner": "@coder",
+      "anchor_witnesses": ["debug_runs/play_scenario_live.json"]
+    },
+    {
+      "program_id": "agent_ops",
+      "label": "Agent continuity",
+      "owner": "@main-thread-orchestrator",
+      "anchor_witnesses": ["debug_runs/main_thread_orchestrator_live.json"]
+    }
+  ],
+  "handoff_priorities": [
+    {
+      "task_id": "G-PLAY-01",
+      "program_id": "stage7_play",
+      "owner": "Operator",
+      "note": "Product gate — play scenario acceptance",
+      "witness_key": "debug_runs/play_scenario_live.json"
+    },
+    {
+      "task_id": "OPS-007",
+      "program_id": "art_B",
+      "owner": "@coder-mcp + operator",
+      "note": "Warehouse production bake paused — Track B",
+      "witness_key": "debug_runs/ops_007_warehouse_production_pause_live.json"
+    }
+  ]
+}

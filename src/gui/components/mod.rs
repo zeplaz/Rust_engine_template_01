@@ -1,4 +1,1 @@
-// GUI components
-mod world_gen_ui;
-
-// Public exports
+//! GUI component re-exports (world gen UI lives in `gui::editor::world_gen_ui`).

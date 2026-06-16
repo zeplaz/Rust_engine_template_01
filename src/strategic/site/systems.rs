@@ -67,6 +67,7 @@ pub fn commit_construction_site_system(
     mut hydro_coupling: Option<ResMut<crate::substrate::hydrology::HydrologyConstructionCouplingWitness>>,
     district_book: Option<Res<super::super::settlement::DistrictBook>>,
     mut block_book: Option<ResMut<super::super::settlement::BlockBook>>,
+    buildings: Option<Res<crate::construction::building_definitions::BuildingDefinitionRegistry>>,
 ) {
     for ev in reader.read() {
         if let Some(placement) = ev.placement.as_ref() {
@@ -157,6 +158,8 @@ pub fn commit_construction_site_system(
             ev.archetype,
             ev.footprint,
             ev.placement.as_ref(),
+            ev.catalog_id.as_deref(),
+            buildings.as_deref(),
         ) {
             entity.insert(super::components::ProceduralBuildingSpec(request));
         }

@@ -1,0 +1,12 @@
+{
+  "task_id": "MCP-GUARD-004",
+  "gate_id": "warehouse_track_guard",
+  "ok": true,
+  "green": true,
+  "scanned_files": 30,
+  "manifest_path_count": 8,
+  "violation_count": 0,
+  "violations": [],
+  "violations_truncated": false,
+  "config": "tools/mcp/guard/build_set_guards_v1.json"
+}
