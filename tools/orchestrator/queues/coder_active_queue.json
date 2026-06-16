@@ -1,30 +1,38 @@
 {
-    "_meta": {
-    "version": "5.4.0",
-    "date": "2026-06-02",
+  "_meta": {
+    "version": "8.0.0",
+    "date": "2026-06-13",
+    "drain_queue": "tools/orchestrator/queues/coder_master_drain_queue.json",
+    "vegetation_drain": "tools/orchestrator/queues/coder_vegetation_drain_queue.json",
+    "vegetation_drain_version": "3.0.0",
+    "product_verify_queue": "tools/orchestrator/queues/coder_product_verify_queue.json",
+    "hardening_rules": "src/dev/coder_queue_hardening_rules_v1.md",
+    "vegetation_full_chain": "src/dev/coder_vegetation_full_chain_prompt_v1.md",
+    "next_pick": "none — coder drain clear",
+    "rule": "AUDIT-v19 SIGNED — construction P1-P6 + organic B drain CLOSED; coder A pulls infra A-tail (E4-E6); coder C weather primary; do not re-pick CON-P2 or infra B coder_b_next rows",
     "reconcile_snapshot": "src/dev/fleet_snapshot_20260602_v3.md",
-    "workload_plan": "src/dev/fleet_coder_workload_queue_20260602_v1.md",
-    "dispatch": "src/dev/fleet_stability_phase2_dispatch_v1.md",
-    "dispatch_p1": "src/dev/fleet_stability_coder_dispatch_v1.md",
-    "phase_plan": "src/dev/plan_fleet_stability_integrity_001_v1.md",
-    "exec_doc": "src/dev/plan_fleet_stability_integrity_exec_002_v1.md",
-    "exec_doc_historical": "src/dev/plan_fleet_stability_integrity_exec_001_v1.md",
-    "jank_sweep": "src/dev/production_jank_sweep_20260602_v1.md",
-    "env_registry": "src/dev/runtime_env_policy_registry_v1.md",
-    "workboard_legacy": "src/dev/fleet_coder_workboard_20260528_v3.md",
-    "dispatch_wave6": "src/dev/fleet_wave6_coder_dispatch_v1.md",
-    "maturity_routing": "src/dev/fleet_maturity_signoff_routing_20260527_v1.md",
-    "signoff_wave4_partial": "src/dev/fleet_signoff_wave4_coder_partial_20260527_v1.md",
-    "dispatch_legacy": "src/dev/coder_unblock_dispatch_v1.md",
-    "signoff_wave2": "src/dev/fleet_signoff_wave_closure_20260527_v1.md",
-    "signoff_wave3": "src/dev/fleet_signoff_wave3_closure_20260527_v1.md",
-    "wave3_assignments": "src/dev/fleet_wave3_assignments_20260527_v1.md",
-    "wave4_assignments": "src/dev/fleet_wave4_assignments_20260527_v1.md",
-    "wave5_assignments": "src/dev/fleet_wave5_coder_dispatch_v1.md",
+    "workload_plan": "docs/archive/2026-06-fleet-drain/fleet_closed/fleet_coder_workload_queue_20260602_v1.md",
+    "dispatch": "docs/archive/2026-06-fleet-drain/fleet_closed/fleet_stability_phase2_dispatch_v1.md",
+    "dispatch_p1": "docs/archive/2026-06-fleet-drain/fleet_closed/fleet_stability_coder_dispatch_v1.md",
+    "phase_plan": "docs/archive/2026-06-src-dev/plans/plan_fleet_stability_integrity_001_v1.md",
+    "exec_doc": "docs/archive/2026-06-src-dev/plans/plan_fleet_stability_integrity_exec_002_v1.md",
+    "exec_doc_historical": "docs/archive/2026-06-src-dev/plans/plan_fleet_stability_integrity_exec_001_v1.md",
+    "jank_sweep": "docs/archive/2026-06-src-dev/plans/production_jank_sweep_20260602_v1.md",
+    "env_registry": "docs/archive/2026-06-src-dev/plans/runtime_env_policy_registry_v1.md",
+    "workboard_legacy": "docs/archive/2026-06-fleet-drain/fleet_closed/fleet_coder_workboard_20260528_v3.md",
+    "dispatch_wave6": "docs/archive/2026-06-fleet-drain/fleet_closed/fleet_wave6_coder_dispatch_v1.md",
+    "maturity_routing": "docs/archive/2026-06-fleet-drain/fleet_closed/fleet_maturity_signoff_routing_20260527_v1.md",
+    "signoff_wave4_partial": "docs/archive/2026-06-fleet-drain/fleet_closed/fleet_signoff_wave4_coder_partial_20260527_v1.md",
+    "dispatch_legacy": "docs/archive/2026-06-src-dev/plans/coder_unblock_dispatch_v1.md",
+    "signoff_wave2": "docs/archive/2026-06-fleet-drain/fleet_closed/fleet_signoff_wave_closure_20260527_v1.md",
+    "signoff_wave3": "docs/archive/2026-06-fleet-drain/fleet_closed/fleet_signoff_wave3_closure_20260527_v1.md",
+    "wave3_assignments": "docs/archive/2026-06-fleet-drain/fleet_closed/fleet_wave3_assignments_20260527_v1.md",
+    "wave4_assignments": "docs/archive/2026-06-fleet-drain/fleet_closed/fleet_wave4_assignments_20260527_v1.md",
+    "wave5_assignments": "docs/archive/2026-06-fleet-drain/fleet_closed/fleet_wave5_coder_dispatch_v1.md",
     "handoff": "tools/orchestrator/queues/HANDOFF.md",
-    "todos": "src/dev/coder_wave3_full_todos_v1.md",
-    "todos_compact": "src/dev/coder_dual_queue_todos_v2.md",
-    "prior_closure": "src/dev/coder_dual_queue_todos_v1.md",
+    "todos": "docs/archive/2026-06-fleet-drain/fleet_closed/coder_wave3_full_todos_v1.md",
+    "todos_compact": "docs/archive/2026-06-src-dev/plans/coder_dual_queue_todos_v2.md",
+    "prior_closure": "docs/archive/2026-06-src-dev/plans/coder_dual_queue_todos_v1.md",
     "regression": "cargo test -p proc_A_dine01 --lib wss_substrate construction stage5",
     "closure_bundles": [
       "src/dev/coder_a_dual_queue_closure_v1.rs",
@@ -36,71 +44,126 @@
       "src/dev/coder_b_wave3_bundle_proof.rs"
     ],
     "verify": "cargo test -p proc_A_dine01 --lib coder_a_wave3 coder_b_wave3",
-    "rule": "PHASE-STABLE P2 SIGNED — dual track CON-P2+INFRA-E0 + P2 tails; PERF-VIS + CONTAIN-002-006 closed unless regression",
     "p2_dispatch_signed": true,
-    "audit": "src/dev/planner_status_audit_v18.md",
+    "audit": "src/dev/planner_status_audit_v19.md",
+    "unified_path": "docs/archive/2026-06-src-dev/plans/planner_unified_path_20260603_v1.md",
     "wave5_coder_closed": true,
     "fleet_snapshot": "src/dev/fleet_snapshot_20260602_v3.md",
-    "phase_stable_p2_open_slices": 8,
+    "phase_stable_p2_open_slices": 0,
+    "audit_v19_open_picks": 9,
     "p0_harness_gate": "done",
     "p1_boundary_sweep": "done",
-    "coder_a_backlog": "src/dev/coder_a_backlog_wave6_20260527_v1.md",
-    "coder_b_backlog": "src/dev/coder_b_backlog_wave6_20260527_v1.md"
+    "coder_a_backlog": "docs/archive/2026-06-src-dev/plans/coder_a_backlog_wave6_20260527_v1.md",
+    "coder_b_backlog": "docs/archive/2026-06-src-dev/plans/coder_b_backlog_wave6_20260527_v1.md",
+    "weather_lane": "docs/archive/2026-06-src-dev/plans/plan_weather_parallel_lane_v1.md",
+    "weather_witness": "docs/archive/2026-06-src-dev/plans/plan_weather_witness_002_v1.md",
+    "last_sync": "2026-06-14"
   },
   "coder_a": {
     "p1_pick_one": false,
-    "wave7_dispatch": "src/dev/fleet_wave7_coder_dispatch_v1.md",
-    "phase_dispatch": "src/dev/fleet_stability_coder_dispatch_v1.md",
-    "workboard": "src/dev/plan_fleet_stability_integrity_exec_002_v1.md",
-    "infra_stress_plan": "src/dev/coder_a_infra_stress_active_v1.md",
-    "backlog_ref": "src/dev/coder_unified_backlog_v1.md",
+    "wave7_dispatch": "docs/archive/2026-06-fleet-drain/fleet_closed/fleet_wave7_coder_dispatch_v1.md",
+    "phase_dispatch": "docs/archive/2026-06-fleet-drain/fleet_closed/fleet_stability_coder_dispatch_v1.md",
+    "workboard": "docs/archive/2026-06-src-dev/plans/plan_fleet_stability_integrity_exec_002_v1.md",
+    "infra_stress_plan": "docs/archive/2026-06-src-dev/plans/coder_a_infra_stress_active_v1.md",
+    "backlog_ref": "docs/archive/2026-06-src-dev/plans/coder_unified_backlog_v1.md",
+    "construction_drain": "docs/archive/2026-06-src-dev/plans/construction_coder_drain_order_v1.md",
     "active": [
       {
-        "id": "INFRA-E4-002",
-        "status": "ready",
+        "seq": 1,
+        "id": "VEG-A01-HARNESS-001",
+        "status": "done",
+        "track": "VEG",
+        "priority": "P0",
         "owner": "coder_a",
-        "priority": 11,
+        "full_chain": "src/dev/coder_vegetation_full_chain_prompt_v1.md",
+        "hardening": "src/dev/coder_queue_hardening_rules_v1.md",
+        "drain": "tools/orchestrator/queues/coder_vegetation_drain_queue.json",
+        "rule": "Drain v3 seq 1→82 · read exit_predicate before done",
+        "completed": "2026-06-13"
+      }
+    ],
+    "veg_drain_remaining": "seq 2→82 in coder_vegetation_drain_queue.json v3",
+    "product_verify_parallel": "tools/orchestrator/queues/coder_product_verify_queue.json seq 1→12 (coder_b BUILD while A on VEG)",
+    "parallel_infrastructure_lane": [
+      {
+        "id": "INFRA-E4-002",
+        "status": "done",
+        "owner": "coder_a",
         "program": "infrastructure",
-        "blocked_by": "INFRA-E4-001",
-        "exit": "utility flow hook"
+        "witness": "debug_runs/utility_network_live.json",
+        "exit": "power_edges_from_graph true",
+        "updated_at": "2026-06-02T23:00:00+00:00"
       },
       {
         "id": "INFRA-E5-002",
-        "status": "ready",
+        "status": "done",
         "owner": "coder_a",
-        "priority": 12,
         "program": "infrastructure",
-        "blocked_by": "INFRA-E1-004",
-        "exit": "logistics graph-only paths"
+        "witness": "debug_runs/logistics_throughput_live.json",
+        "exit": "graph_only_paths true; infra_e5_002_green",
+        "updated_at": "2026-06-02T22:00:00+00:00"
       },
       {
         "id": "INFRA-E6-001",
-        "status": "ready",
+        "status": "done",
         "owner": "coder_a",
-        "priority": 13,
         "program": "infrastructure",
-        "exit": "material tags from corridor profiles"
+        "witness": "debug_runs/transport_network_live.json",
+        "exit": "profile_material_histogram non-empty",
+        "updated_at": "2026-06-03T00:00:00+00:00"
       },
       {
         "id": "INFRA-E6-002",
-        "status": "ready",
+        "status": "done",
         "owner": "coder_a",
-        "priority": 14,
         "program": "infrastructure",
-        "blocked_by": "INFRA-E1-001",
-        "exit": "nav agents on TransportTopology"
+        "witness": "debug_runs/nav_agent_routing_live.json",
+        "exit": "road_agent_reaches_goal true; train_on_road_only false",
+        "updated_at": "2026-06-03T00:00:00+00:00"
       },
       {
         "id": "INFRA-E6-004",
-        "status": "ready",
+        "status": "done",
         "owner": "coder_a",
-        "priority": 15,
         "program": "infrastructure",
-        "blocked_by": "INFRA-E6-003",
-        "exit": "debug overlays depth"
-      },
+        "witness": "debug_runs/infra_overlay_live.json",
+        "exit": "overlay_default_off true",
+        "updated_at": "2026-06-03T00:00:00+00:00"
+      }
     ],
     "done_2026_06_02": [
+      {
+        "id": "TRIAGE-MAP-PICK-CLOSURE-001",
+        "status": "done",
+        "owner": "coder_a",
+        "program": "view_polish",
+        "witness": "debug_runs/construction_stage_live.json",
+        "exit": "map_pick_closure_001.green; footprint_projection_ok"
+      },
+      {
+        "id": "PROC-OG-4-ROLLUP-001",
+        "status": "done",
+        "owner": "coder_a",
+        "program": "construction",
+        "witness": "debug_runs/construction_stage_live.json",
+        "exit": "town_rollup from district site counts + construction_town_rollup_001"
+      },
+      {
+        "id": "CON-P2-CLEARING-WIT-001",
+        "status": "done",
+        "owner": "coder_a",
+        "program": "construction",
+        "witness": "debug_runs/construction_stage_live.json",
+        "exit": "clearing_substeps_seen Trees/Stumps in pipeline witness"
+      },
+      {
+        "id": "PROC-PG-4-001",
+        "status": "done",
+        "owner": "coder_a",
+        "program": "construction",
+        "witness": "debug_runs/construction_stage_live.json",
+        "exit": "building_grammar stable layout + construction_shape_grammar_001"
+      },
       {
         "id": "INFRA-E1-001",
         "status": "done",
@@ -179,7 +242,7 @@
         "id": "G-PLAY-001-BLOCKERS",
         "status": "done",
         "gate": "G-PLAY-01",
-        "plan_doc": "src/dev/g_play_001_blockers_v1.md",
+        "plan_doc": "docs/archive/2026-06-src-dev/plans/g_play_001_blockers_v1.md",
         "notes": "Logistics colocated with Portland; IND-E02 MessageWriter; runtime play witness; world extent clamp; lib play_scenario 4/4"
       },
       {
@@ -191,20 +254,20 @@
       {
         "id": "STAB-CI-001",
         "status": "done",
-        "plan_doc": "src/dev/production_jank_sweep_20260602_v1.md",
+        "plan_doc": "docs/archive/2026-06-src-dev/plans/production_jank_sweep_20260602_v1.md",
         "notes": "cargo rustc --lib -D warnings green; ci.yml + run.ps1 gate; cfg(test) lib refresh helpers"
       },
       {
         "id": "DEHACK-ENV-002",
         "status": "done",
-        "plan_doc": "src/dev/runtime_env_policy_registry_v1.md",
+        "plan_doc": "docs/archive/2026-06-src-dev/plans/runtime_env_policy_registry_v1.md",
         "notes": "RUST_ENGINE_S7P_STEWARD sunset from concrete_chain_e2e; dehack_env_002_s7p_steward_sunset test"
       },
       {
         "id": "CON-P3-S1",
         "status": "done",
         "program": "construction",
-        "plan_doc": "src/dev/plan_construction_scaling_audit_exec_003_v1.md",
+        "plan_doc": "docs/archive/2026-06-src-dev/plans/plan_construction_scaling_audit_exec_003_v1.md",
         "exit": "scaling_audit_s1_preset_matrix_match_green"
       },
       {
@@ -254,7 +317,7 @@
         "id": "CON-P2-001",
         "status": "done",
         "program": "construction",
-        "plan_doc": "src/dev/plan_construction_stage_pipeline_exec_002_v1.md",
+        "plan_doc": "docs/archive/2026-06-src-dev/plans/plan_construction_stage_pipeline_exec_002_v1.md",
         "files": "strategic/site/components.rs, systems.rs, economy/activation/concrete_chain_e2e.rs",
         "exit": "commit attaches SiteStageProgress Planned; fast_forward gated by RUST_ENGINE_CONSTRUCTION_INSTANT"
       },
@@ -262,7 +325,7 @@
         "id": "CON-P2-003",
         "status": "done",
         "program": "construction",
-        "plan_doc": "src/dev/plan_construction_stage_pipeline_exec_002_v1.md",
+        "plan_doc": "docs/archive/2026-06-src-dev/plans/plan_construction_stage_pipeline_exec_002_v1.md",
         "witness": "debug_runs/construction_stage_live.json",
         "exit": "construction_site_stage_pipeline_001.green; instant_operational_on_commit false"
       },
@@ -270,30 +333,33 @@
         "id": "INFRA-E0-001",
         "status": "done",
         "program": "infrastructure",
-        "plan_doc": "src/dev/plan_infrastructure_world_layers_exec_001_v1.md",
+        "plan_doc": "docs/archive/2026-06-src-dev/plans/plan_infrastructure_world_layers_exec_001_v1.md",
         "witness": "assets/config/infrastructure/corridor_profiles.example.ron",
         "exit": "ProfileRegistry + InfrastructureProfilesPlugin; infrastructure::profiles 3/3 tests"
       },
       {
         "id": "PLAY-TRUTH-003",
         "status": "done",
-        "plan_doc": "src/dev/plan_fleet_stability_integrity_exec_001_v1.md",
+        "plan_doc": "docs/archive/2026-06-src-dev/plans/plan_fleet_stability_integrity_exec_001_v1.md",
         "witness": "debug_runs/stage5_full_app_live.json",
         "gate": "G-PROOF-01",
-        "exit_keys": ["log_e01_fixture_green", "full_visual_confirm"],
+        "exit_keys": [
+          "log_e01_fixture_green",
+          "full_visual_confirm"
+        ],
         "notes": "LibFixture green via log_e01_fixture_green; VisualCapture green via full_visual_confirm only; play_truth_003 test"
       },
       {
         "id": "DEHACK-VIEW-001",
         "status": "done",
-        "plan_doc": "src/dev/plan_fleet_stability_integrity_001_v1.md",
+        "plan_doc": "docs/archive/2026-06-src-dev/plans/plan_fleet_stability_integrity_001_v1.md",
         "gate": "G-PLAY-01",
         "notes": "dehack_view_001_sim_default_uses_authority_commit — pose round-trip via ViewProjectionAuthority"
       },
       {
         "id": "DEHACK-FIRE-001",
         "status": "done",
-        "plan_doc": "src/dev/plan_fleet_stability_integrity_001_v1.md",
+        "plan_doc": "docs/archive/2026-06-src-dev/plans/plan_fleet_stability_integrity_001_v1.md",
         "gate": "G-PLAY-01",
         "notes": "fire_degraded_overlay_bootstrap requires RUST_ENGINE_FIRE_DEGRADED_OVERLAY=1; dehack_fire_001 test"
       },
@@ -306,7 +372,7 @@
       {
         "id": "PLAY-TRUTH-002",
         "status": "done",
-        "plan_doc": "src/dev/plan_fleet_stability_integrity_exec_001_v1.md",
+        "plan_doc": "docs/archive/2026-06-src-dev/plans/plan_fleet_stability_integrity_exec_001_v1.md",
         "gate": "G-PROOF-01",
         "witness": "src/dev/proof_grade.rs + grep gate test",
         "notes": "ProofGrade LibFixture/HeadlessSim/VisualCapture; visual path uses align_logistics_* not patch/shortcut; qualified_close lib-only"
@@ -327,7 +393,7 @@
         "status": "done",
         "bundle": "phase_d_parity_stress.rs + coder_b_wave3",
         "witness": "debug_runs/infrastructure_view_isolation_live.json",
-        "notes": "S1\u2013S3 lib-green; triage_phase_d_parity_001.stress in witness"
+        "notes": "S1–S3 lib-green; triage_phase_d_parity_001.stress in witness"
       },
       {
         "id": "INFRA-VM-DEEP-001",
@@ -350,7 +416,7 @@
       {
         "id": "H-A2-001",
         "status": "done",
-        "plan_doc": "src/dev/plan_hanabi_h_a2_exec_001_v1.md",
+        "plan_doc": "docs/archive/2026-06-src-dev/plans/plan_hanabi_h_a2_exec_001_v1.md",
         "witness": "debug_runs/wss_substrate_live.json",
         "notes": "hanabi_l3 feature + bevy_hanabi optional dep; HanabiEmbellishmentPlugin; default hanabi_l3_plugin_wired false"
       },
@@ -363,70 +429,70 @@
       {
         "id": "WSS-PR5-SMOKE-PROD-001",
         "status": "done",
-        "plan_doc": "src/dev/plan_wss_pr5_smoke_prod_001_v1.md",
+        "plan_doc": "docs/archive/2026-06-src-dev/plans/plan_wss_pr5_smoke_prod_001_v1.md",
         "witness": "debug_runs/wss_substrate_live.json",
         "notes": "hybrid_ecs_smoke_authoritative false; ecs_retire_smoke_prod_green true in live JSON"
       },
       {
         "id": "WSS-SLAB-PR-5",
         "status": "done_qualified",
-        "plan_doc": "src/dev/plan_wss_hybrid_retire_pr4_001_v1.md",
+        "plan_doc": "docs/archive/2026-06-src-dev/plans/plan_wss_hybrid_retire_pr4_001_v1.md",
         "witness": "debug_runs/wss_substrate_live.json",
         "notes": "ecs_retire_fixture_green; weather/fire authority false; smoke authority tail → WSS-PR5-SMOKE-PROD-001"
       },
       {
         "id": "WSS-SLAB-PR-4",
         "status": "done",
-        "plan_doc": "src/dev/plan_wss_hybrid_retire_pr4_001_v1.md",
+        "plan_doc": "docs/archive/2026-06-src-dev/plans/plan_wss_hybrid_retire_pr4_001_v1.md",
         "witness": "debug_runs/wss_substrate_live.json",
         "notes": "substrate_persist_roundtrip_ok + dynamic_overlay_migrated; SubstratePersistBook flush + overlay→slab"
       },
       {
         "id": "H-A-SPIKE-001",
         "status": "done",
-        "plan_doc": "src/dev/plan_hanabi_adoption_v1.md",
+        "plan_doc": "docs/archive/2026-06-src-dev/plans/plan_hanabi_adoption_v1.md",
         "witness": "experiments/hanabi_validation/report_v1.md",
         "notes": "bevy 0.18 + bevy_hanabi 0.18; PASS presets peak 24/α0.35; main EnginePlugin unchanged"
       },
       {
         "id": "WSS-SLAB-PR-2",
         "status": "done",
-        "plan_doc": "src/dev/plan_wss_slab_pr2_dual_write_v1.md",
+        "plan_doc": "docs/archive/2026-06-src-dev/plans/plan_wss_slab_pr2_dual_write_v1.md",
         "witness": "debug_runs/wss_substrate_live.json",
         "notes": "dual_write_shim_enabled=true; dual_write_drift_max=0.0 (< ε); ECS→slab weather+fire mirror"
       },
       {
         "id": "WSS-SLAB-PR-3",
         "status": "done",
-        "plan_doc": "src/dev/plan_wss_slab_pr3_exec_001_v1.md",
+        "plan_doc": "docs/archive/2026-06-src-dev/plans/plan_wss_slab_pr3_exec_001_v1.md",
         "witness": "debug_runs/wss_substrate_live.json",
         "notes": "active_runtime_wired + activate_test_ok + policy_wired + cap_respected (cap 64); slab green preserved"
       },
       {
         "id": "WSS-ATMOS-CLIPMAP-001",
         "status": "done",
-        "plan_doc": "src/dev/plan_wss_atmos_clipmap_exec_001_v1.md",
+        "plan_doc": "docs/archive/2026-06-src-dev/plans/plan_wss_atmos_clipmap_exec_001_v1.md",
         "witness": "debug_runs/wss_substrate_live.json",
         "notes": "wss_atmos_clipmap_001.green=true; clipmap L0-L3 + legacy bridge witness"
       },
       {
         "id": "WSS-HYDRO-RUNTIME-001",
         "status": "done",
-        "plan_doc": "src/dev/plan_wss_hydro_runtime_exec_001_v1.md",
+        "plan_doc": "docs/archive/2026-06-src-dev/plans/plan_wss_hydro_runtime_exec_001_v1.md",
         "witness": "debug_runs/wss_substrate_live.json",
         "notes": "wss_hydro_runtime_001.green=true; hydrate + background/boundary/deep-solve witness"
       },
       {
         "id": "S7B-M4-LIVE-001",
         "status": "done",
-        "plan_doc": "src/dev/s7b_m4_live_sim_playtest_plan_v1.md",
+        "plan_doc": "docs/archive/2026-06-src-dev/plans/s7b_m4_live_sim_playtest_plan_v1.md",
         "witness": "debug_runs/stage7_behavioral_live.json",
         "notes": "M4 live witness wired"
       },
       {
         "id": "S7B-M4-PLAY-001",
         "status": "done",
-        "plan_doc": "src/dev/s7b_m4_live_sim_playtest_plan_v1.md",
+        "plan_doc": "docs/archive/2026-06-src-dev/plans/s7b_m4_live_sim_playtest_plan_v1.md",
         "witness": "debug_runs/stage7_behavioral_live.json",
         "notes": "s7b_m4_play_green=true; play_enqueue_wired=true"
       }
@@ -435,35 +501,35 @@
       {
         "id": "WSS-CHUNK-SLAB-001",
         "status": "done",
-        "plan_doc": "src/dev/plan_wss_chunk_slab_exec_001_v1.md",
+        "plan_doc": "docs/archive/2026-06-src-dev/plans/plan_wss_chunk_slab_exec_001_v1.md",
         "witness": "debug_runs/wss_substrate_live.json",
         "notes": "CS-003 hydrate + lib witness green; dual-write deferred WSS-SLAB-PR-2"
       },
       {
         "id": "FIRE-F2-EXTRACT-001",
         "status": "done",
-        "plan_doc": "src/dev/plan_fire_f2_extract_exec_001_v1.md",
+        "plan_doc": "docs/archive/2026-06-src-dev/plans/plan_fire_f2_extract_exec_001_v1.md",
         "witness": "debug_runs/stage5_full_app_live.json",
         "notes": "F2-PR-1..3: f2_tactical fixture, visual residency fix, f2_extract_witness fire_instance_buffer_rows>0"
       },
       {
         "id": "WSS-SMOKE-BRIDGE-001",
         "status": "done",
-        "plan_doc": "src/dev/plan_wss_smoke_bridge_exec_001_v1.md",
+        "plan_doc": "docs/archive/2026-06-src-dev/plans/plan_wss_smoke_bridge_exec_001_v1.md",
         "witness": "debug_runs/f2_smoke_pipeline_live.json",
         "notes": "SM-PR-1/3 validated in F2 smoke pipeline witness (`mini_smoke_extract_wired=true`); keep WSS substrate witness follow-up for top-level smoke flags"
       },
       {
         "id": "F7-DEBUG-WIRE-001",
         "status": "done",
-        "plan_doc": "src/dev/fire_streaming_debug_overlay_names_v1.md",
+        "plan_doc": "docs/archive/2026-06-src-dev/plans/fire_streaming_debug_overlay_names_v1.md",
         "witness": "debug_runs/fire_streaming_live.json",
         "notes": "A-V1: F3 Fire Phase 7 chunk streaming section + map gizmo legend in diagnostics_ui.rs"
       },
       {
         "id": "F7-STREAM-DEEP-001",
         "status": "done",
-        "plan_doc": "src/dev/plan_f7_stream_exec_001_v1.md",
+        "plan_doc": "docs/archive/2026-06-src-dev/plans/plan_f7_stream_exec_001_v1.md",
         "witness": "debug_runs/fire_streaming_live.json",
         "notes": "B-DEEP-1..3: deterministic neighbor wake; sleep radius derived from Stage6 residency; neighbor_wake_observed=true; green unchanged; regression guard: fire7_f7_a_exit_001.green=true"
       },
@@ -471,7 +537,7 @@
         "id": "FIRE7-F7-A-EXIT-001",
         "status": "done",
         "bundle": "coder_a_wave3_closure_v1",
-        "notes": "F7-A product gate A1\u2013A5 \u2014 fire7_f7_a_exit_001 green in infrastructure_view_isolation_live.json"
+        "notes": "F7-A product gate A1–A5 — fire7_f7_a_exit_001 green in infrastructure_view_isolation_live.json"
       },
       {
         "id": "VFX-VISUAL-SIGNOFF-001",
@@ -492,25 +558,25 @@
         "status": "done",
         "bundle": "coder_b_wave3_bundle_proof",
         "witness": "debug_runs/infrastructure_view_isolation_live.json",
-        "notes": "VM-08 baseline + S1\u2013S3 overlay parity stress (phase_d_parity_stress.rs)"
+        "notes": "VM-08 baseline + S1–S3 overlay parity stress (phase_d_parity_stress.rs)"
       },
       {
         "id": "FIRE7-F7-B-001",
         "status": "done",
         "bundle": "coder_a_wave3_closure_v1",
         "witness": "debug_runs/fire_streaming_live.json",
-        "notes": "Same wave-3 pass as F7-A-EXIT \u2014 fire_streaming.rs runtime writer"
+        "notes": "Same wave-3 pass as F7-A-EXIT — fire_streaming.rs runtime writer"
       },
       {
         "id": "FIRE7-F7-C-001",
         "status": "done",
         "bundle": "coder_a_wave3_closure_v1",
-        "notes": "Same wave-3 pass \u2014 fire7_f7_c_001_green + designer LOD caps in extract"
+        "notes": "Same wave-3 pass — fire7_f7_c_001_green + designer LOD caps in extract"
       },
       {
         "id": "FIRE7-F7-A-001",
         "status": "done_witness_only",
-        "notes": "Dual-queue witness bundle \u2014 product exit is FIRE7-F7-A-EXIT-001 (wave 3)"
+        "notes": "Dual-queue witness bundle — product exit is FIRE7-F7-A-EXIT-001 (wave 3)"
       },
       {
         "id": "P2-FIRE-SPARK-010",
@@ -608,8 +674,8 @@
     "parametric_placement": {
       "rule": "CONSTRUCTION-PARAM-DESIGN-001 PASS (qualified); DESIGN-PARAM-STAGING-POLISH-002 + DESIGN-PARAM-SCALE-HUD-001 PASS — lanes 004/005/006 NOT blocked_design",
       "design_unblock_2026_05_26": "staging v2 + scale HUD PASS; ghost visual PASS (005)",
-      "plan_doc": "src/dev/plan_construction_parametric_placement_v1.md",
-      "exec_phases": "src/dev/plan_construction_param_exec_phases_v1.md",
+      "plan_doc": "docs/archive/2026-06-src-dev/plans/plan_construction_parametric_placement_v1.md",
+      "exec_phases": "docs/archive/2026-06-src-dev/plans/plan_construction_param_exec_phases_v1.md",
       "witness": "debug_runs/construction_stage_live.json",
       "lanes": [
         {
@@ -633,38 +699,184 @@
           "id": "CONSTRUCTION-PARAM-CODER-004",
           "phase": 3,
           "status": "done",
-          "design_doc": "src/dev/construction_parametric_staging_ux_v2.md",
+          "design_doc": "docs/archive/2026-06-src-dev/plans/construction_parametric_staging_ux_v2.md",
           "design_verdict": "PASS"
         },
         {
           "id": "CONSTRUCTION-PARAM-CODER-005",
           "phase": 2,
           "status": "done",
-          "design_doc": "src/dev/construction_parametric_ghost_visual_v1.md",
+          "design_doc": "docs/archive/2026-06-src-dev/plans/construction_parametric_ghost_visual_v1.md",
           "design_verdict": "PASS (qualified)"
         },
         {
           "id": "CONSTRUCTION-PARAM-CODER-006",
           "phase": 4,
           "status": "done",
-          "design_doc": "src/dev/construction_parametric_scale_hud_v1.md",
+          "design_doc": "docs/archive/2026-06-src-dev/plans/construction_parametric_scale_hud_v1.md",
           "design_verdict": "PASS"
         }
       ]
     },
-    "backlog_ref": "src/dev/coder_unified_backlog_v1.md",
-    "workload_ref": "src/dev/fleet_coder_workload_queue_20260602_v1.md",
+    "backlog_ref": "docs/archive/2026-06-src-dev/plans/coder_unified_backlog_v1.md",
+    "workload_ref": "docs/archive/2026-06-src-dev/plans/construction_coder_drain_order_v1.md",
+    "construction_drain": "docs/archive/2026-06-src-dev/plans/construction_coder_drain_order_v1.md",
     "active": [
       {
-        "id": "ECON-OG-SAVE-001",
-        "status": "ready",
+        "seq": 0,
+        "id": "BUILD-VERIFY-ZOOM-001",
+        "status": "done",
+        "track": "PRODUCT-VERIFY",
+        "priority": "P1",
         "owner": "coder_b",
-        "priority": 1,
-        "program": "construction",
-        "exit": "settlement books save round-trip beyond witness stub"
+        "queue": "tools/orchestrator/queues/coder_product_verify_queue.json",
+        "rule": "Runtime verify — exit_predicate green required",
+        "completed": "2026-06-13"
+      },
+      {
+        "seq": 2,
+        "id": "BUILD-READ-REWIRE-001",
+        "status": "done",
+        "track": "REWIRE",
+        "priority": "P0",
+        "owner": "coder_b",
+        "completed": "2026-06-13"
+      },
+      {
+        "seq": 3,
+        "id": "BUILD-READ-REWIRE-002",
+        "status": "done",
+        "track": "REWIRE",
+        "priority": "P0",
+        "owner": "coder_b",
+        "completed": "2026-06-13"
+      },
+      {
+        "seq": 8,
+        "id": "BUILD-READ-P0-002",
+        "status": "done",
+        "track": "BUILD",
+        "priority": "P1",
+        "owner": "coder_b",
+        "depends_on": [
+          "BUILD-READ-REWIRE-003"
+        ],
+        "completed": "2026-06-13"
+      },
+      {
+        "seq": 9,
+        "id": "BUILD-READ-P0-003",
+        "status": "done",
+        "track": "BUILD",
+        "priority": "P1",
+        "owner": "coder_b",
+        "depends_on": [
+          "BUILD-READ-REWIRE-001",
+          "BUILD-READ-REWIRE-002"
+        ],
+        "completed": "2026-06-13"
+      },
+      {
+        "seq": 10,
+        "id": "BUILD-READ-DEBUG-001",
+        "status": "done",
+        "track": "BUILD",
+        "priority": "P1",
+        "owner": "coder_b",
+        "depends_on": [
+          "BUILD-READ-REWIRE-001"
+        ],
+        "completed": "2026-06-13"
+      },
+      {
+        "seq": 12,
+        "id": "BUILD-READ-PILOT-001",
+        "status": "done",
+        "track": "BUILD",
+        "priority": "P1",
+        "owner": "coder_b",
+        "also_known_as": "CODER-PILOT-REFACTOR-001",
+        "witness": "debug_runs/pilot_catalog_parity_live.json",
+        "completed": "2026-06-13"
+      },
+      {
+        "seq": 13,
+        "id": "BUILD-READ-GRAMMAR-v0-003",
+        "status": "done",
+        "track": "BUILD",
+        "priority": "P2",
+        "owner": "coder_b",
+        "completed": "2026-06-13"
+      },
+      {
+        "seq": 14,
+        "id": "BUILD-READ-VISUAL-001",
+        "status": "done",
+        "track": "BUILD",
+        "priority": "P2",
+        "owner": "coder_b",
+        "witness": "debug_runs/build_read_visual_001_live.json",
+        "completed": "2026-06-13"
+      },
+      {
+        "seq": 15,
+        "id": "MINIMAP-WIDGET-IMPL-001",
+        "status": "done",
+        "track": "PRODUCT",
+        "priority": "P2",
+        "owner": "coder_b",
+        "completed": "2026-06-13"
+      },
+      {
+        "seq": 16,
+        "id": "BUILD-READ-REWIRE-005",
+        "status": "done",
+        "track": "REWIRE",
+        "priority": "P2",
+        "owner": "coder_b",
+        "completed": "2026-06-13"
+      },
+      {
+        "seq": 17,
+        "id": "APS-QC-REWIRE-001",
+        "status": "done",
+        "track": "REWIRE",
+        "priority": "P2",
+        "owner": "coder_b",
+        "completed": "2026-06-13"
+      }
+    ],
+    "done_2026_06_12": [
+      {
+        "id": "TRIAGE-FIRE-PRODUCT-001",
+        "status": "done",
+        "owner": "coder_b",
+        "witness": "debug_runs/stage5_full_app_live.json",
+        "exit": "triage_fire_product_001.green"
       }
     ],
     "done_2026_06_03": [
+      {
+        "id": "ECON-OG-SAVE-001",
+        "status": "done",
+        "owner": "coder_b",
+        "program": "construction",
+        "exit": "settlement_books RON round-trip; save_roundtrip_ok from lib witness"
+      },
+      {
+        "id": "PROC-OG-APPROVE-001",
+        "status": "done",
+        "owner": "coder_b",
+        "program": "construction",
+        "exit": "approve → PendingConstructionQueue GrowthProposal; build_interaction drain"
+      },
+      {
+        "id": "PROC-OG-POLICY-001",
+        "status": "done",
+        "owner": "coder_b",
+        "program": "construction",
+        "exit": "auto_build_policy_tick_system AutoCommercial/AutoAll → pending queue"
+      },
       {
         "id": "CON-PARAM-PARTIAL-ALPHA-001",
         "status": "done",
@@ -837,7 +1049,7 @@
         "status": "done",
         "owner": "coder_b",
         "program": "infrastructure",
-        "plan_doc": "src/dev/plan_infrastructure_world_layers_exec_001_v1.md",
+        "plan_doc": "docs/archive/2026-06-src-dev/plans/plan_infrastructure_world_layers_exec_001_v1.md",
         "files": "bevy_terrain.rs, map_snapshot.rs, map_editor/mod.rs, proof_grade.rs",
         "exit": "TerrainFeatures road/track deprecated; v2 snapshot save; migrate strips road; infra_e0_002 grep gate"
       },
@@ -869,7 +1081,7 @@
         "id": "DEHACK-WSS-002",
         "status": "done",
         "owner": "coder_b",
-        "plan_doc": "src/dev/fleet_stability_phase2_dispatch_v1.md",
+        "plan_doc": "docs/archive/2026-06-fleet-drain/fleet_closed/fleet_stability_phase2_dispatch_v1.md",
         "witness": "debug_runs/wss_substrate_live.json",
         "exit": "slab_authoritative_default + dehack_wss_002_green witness keys; compare-only default"
       },
@@ -878,7 +1090,7 @@
         "status": "done",
         "owner": "coder_b",
         "design_verdict": "PASS",
-        "design_doc": "src/dev/wss_hydro_read_feature_pass_001.md",
+        "design_doc": "docs/archive/2026-06-src-dev/plans/wss_hydro_read_feature_pass_001.md",
         "files": "src/substrate/hydrology/player_read.rs, witness_collectors.rs",
         "exit": "player_read bands + wss_hydro_runtime_001 feat_wss_hydro_read_001_green"
       },
@@ -893,7 +1105,7 @@
         "status": "done",
         "owner": "coder_b",
         "program": "construction",
-        "plan_doc": "src/dev/plan_construction_stage_pipeline_exec_002_v1.md",
+        "plan_doc": "docs/archive/2026-06-src-dev/plans/plan_construction_stage_pipeline_exec_002_v1.md",
         "files": "site_stage.rs, site_stage_transitions.rs, site_stage_tick.rs, mod.rs, strategic/site/systems.rs",
         "exit": "advance_site_construction_tick_system; forest_pipeline_reaches_operational_in_n_ticks; post-A-001 witness construction_site_stage_tick_002",
         "notes": "CON-P2-001 attaches SiteStageProgress on commit; init is legacy backfill only; Without<SiteStageProgress> on site_advance_planned_to_under_construction"
@@ -902,7 +1114,7 @@
         "id": "PLAY-TRUTH-001-TAIL",
         "status": "done",
         "owner": "coder_b",
-        "plan_doc": "src/dev/fleet_stability_phase2_dispatch_v1.md",
+        "plan_doc": "docs/archive/2026-06-fleet-drain/fleet_closed/fleet_stability_phase2_dispatch_v1.md",
         "gate": "G-PLAY-01",
         "witness": "debug_runs/play_scenario_live.json",
         "exit": "DefaultIndustrial without RUST_ENGINE_* play seeds",
@@ -912,7 +1124,7 @@
         "id": "DEHACK-LOG-001",
         "status": "done",
         "owner": "coder_b",
-        "plan_doc": "src/dev/plan_fleet_stability_integrity_exec_002_v1.md",
+        "plan_doc": "docs/archive/2026-06-src-dev/plans/plan_fleet_stability_integrity_exec_002_v1.md",
         "gate": "compile-boundary",
         "files": "src/economy/logistics/witness_fixture.rs, mod.rs, witness.rs, witness_collectors.rs, src/dev/proof_grade.rs",
         "notes": "apply_s7p_* / patch_s7p_* moved to #[cfg(test)] witness_fixture; mod.rs exports align only; grep gate covers mod.rs+witness.rs; test_harness uses align_logistics only"
@@ -920,14 +1132,14 @@
       {
         "id": "DEHACK-LOG-001-behavior",
         "status": "done",
-        "plan_doc": "src/dev/plan_fleet_stability_integrity_exec_001_v1.md",
+        "plan_doc": "docs/archive/2026-06-src-dev/plans/plan_fleet_stability_integrity_exec_001_v1.md",
         "gate": "G-PROOF-01",
         "notes": "VisualCapture skips apply_s7p_* shortcut; dehack_log_001 tests — superseded by exec-002 export gate"
       },
       {
         "id": "CONTAIN-D-001",
         "status": "done",
-        "plan_doc": "src/dev/plan_fleet_stability_integrity_001_v1.md",
+        "plan_doc": "docs/archive/2026-06-src-dev/plans/plan_fleet_stability_integrity_001_v1.md",
         "witness": "src/dev/runtime_witness/exceptions_manifest.json",
         "gate": "G-CONTAIN-01",
         "notes": "Retired wave_c/s, stage6, view_runtime shims; plugins import runtime_witness; contain_d_001 test + HardFail green"
@@ -935,64 +1147,67 @@
       {
         "id": "DEHACK-WSS-001",
         "status": "done",
-        "plan_doc": "src/dev/plan_fleet_stability_integrity_001_v1.md",
+        "plan_doc": "docs/archive/2026-06-src-dev/plans/plan_fleet_stability_integrity_001_v1.md",
         "notes": "substrate_dual_write_mirror_enabled env opt-in; dual_write_compare_only on witness; ecs_retire green without mirror"
       },
       {
         "id": "PLAY-TRUTH-001",
         "status": "done",
-        "plan_doc": "src/dev/plan_fleet_stability_integrity_001_v1.md",
+        "plan_doc": "docs/archive/2026-06-src-dev/plans/plan_fleet_stability_integrity_001_v1.md",
         "witness": "debug_runs/play_scenario_live.json",
         "gate": "G-PLAY-01",
-        "exit_keys": ["play_truth_001.green", "play_truth_001.harness_bootstrap"],
+        "exit_keys": [
+          "play_truth_001.green",
+          "play_truth_001.harness_bootstrap"
+        ],
         "notes": "PlayScenarioId::DefaultIndustrial; PlayScenarioPlugin; seed_default_industrial_logistics_once; IND-E02 via construction at DEFAULT_INDUSTRIAL_PORTLAND_ORIGIN; lib play_scenario tests green"
       },
       {
         "id": "DEV-CONTAIN-002-CONSTRUCTION",
         "status": "done",
-        "plan_doc": "src/dev/plan_dev_artifact_containment_exec_001_v1.md",
+        "plan_doc": "docs/archive/2026-06-src-dev/plans/plan_dev_artifact_containment_exec_001_v1.md",
         "witness": "debug_runs/construction_stage_live.json",
         "notes": "runtime_witness/construction.rs; shim construction/live_proof.rs"
       },
       {
         "id": "DEV-CONTAIN-003-ECONOMY",
         "status": "done",
-        "plan_doc": "src/dev/plan_dev_artifact_containment_exec_001_v1.md",
+        "plan_doc": "docs/archive/2026-06-src-dev/plans/plan_dev_artifact_containment_exec_001_v1.md",
         "witness": "debug_runs/industrial_activation_live.json",
         "notes": "runtime_witness/economy.rs; industrial + logistics; 5 industrial lib tests pass"
       },
       {
         "id": "DEV-CONTAIN-004-FIRE-WAVEP",
         "status": "done",
-        "plan_doc": "src/dev/plan_dev_artifact_containment_exec_001_v1.md",
+        "plan_doc": "docs/archive/2026-06-src-dev/plans/plan_dev_artifact_containment_exec_001_v1.md",
         "witness": "debug_runs/fire_ecology_live.json + debug_runs/wave_p_live.json",
         "notes": "runtime_witness/fire.rs + wave_p.rs; simulation_writes_fire + cod_b_wp_witness_001_simulation lib-green"
       },
       {
         "id": "DEV-CONTAIN-005-STAGE7",
         "status": "done",
-        "plan_doc": "src/dev/plan_dev_artifact_containment_exec_001_v1.md",
+        "plan_doc": "docs/archive/2026-06-src-dev/plans/plan_dev_artifact_containment_exec_001_v1.md",
         "witness": "debug_runs/stage7_behavioral_live.json + debug_runs/stage7_play_live.json",
         "notes": "runtime_witness/stage7_behavioral.rs + stage7_play.rs; s7b_m3/steward/m4/play_enqueue preserved; M4 last in coder_a_dual_queue bundle"
       },
       {
         "id": "DEV-CONTAIN-007-SHIM-RETIRE",
         "status": "done",
-        "plan_doc": "src/dev/plan_dev_artifact_containment_exec_001_v1.md",
+        "plan_doc": "docs/archive/2026-06-src-dev/plans/plan_dev_artifact_containment_exec_001_v1.md",
         "witness": "src/dev/runtime_witness/exceptions_manifest.json",
         "notes": "002-006 shims renamed to witness_collectors/wave_p_witness/stage7_*_witness; manifest trimmed to 5 Slice-D shims; check_live_proof_containment.ps1 -HardFail green"
       },
       {
         "id": "DEV-CONTAIN-HARDFAIL-CI-001",
         "status": "done",
-        "plan_doc": "src/dev/plan_dev_artifact_containment_exec_001_v1.md",
+        "plan_doc": "docs/archive/2026-06-src-dev/plans/plan_dev_artifact_containment_exec_001_v1.md",
         "witness": ".github/workflows/ci.yml + tools/orchestrator/ci/run.ps1",
         "notes": "check_live_proof_containment.ps1 -HardFail in ubuntu CI + orchestrator run.ps1; lib dev_contain_hardfail_ci_001; 5 manifest shims remain (wave_c/s, stage6, minimap, view_runtime)"
       },
       {
         "id": "WSS-DEFORMATION-SLAB-L2-001",
         "status": "done",
-        "plan_doc": "src/dev/wssr_index_v1.md",
+        "plan_doc": "docs/archive/2026-06-src-dev/plans/wssr_index_v1.md",
         "witness": "debug_runs/wss_substrate_live.json",
         "notes": "deformation_apply_tick_system + DeformationTickState; wss_deformation_slab_001 l2_tick_wired; runs before hydrology"
       },
@@ -1005,21 +1220,25 @@
       {
         "id": "UI-OH-2B-001",
         "status": "done",
-        "plan_doc": "src/dev/steward_ui_oh_gate_v1.md",
+        "plan_doc": "docs/archive/2026-06-src-dev/plans/steward_ui_oh_gate_v1.md",
         "witness": "debug_runs/ui_shell_migration_live.json",
-        "exit_keys": ["ui_oh_2b_001.green", "phase2b_closed", "floating_egui_shells_gated"],
+        "exit_keys": [
+          "ui_oh_2b_001.green",
+          "phase2b_closed",
+          "floating_egui_shells_gated"
+        ],
         "notes": "product_egui_shell_in_simulation: false is correct gate (not true)"
       },
       {
         "id": "UI-SHELL-MIG-001-SIM-CHROME",
         "status": "done",
-        "plan_doc": "src/dev/ui_shell_witness_spec_v1.md",
+        "plan_doc": "docs/archive/2026-06-src-dev/plans/ui_shell_witness_spec_v1.md",
         "notes": "Merged into UI-OH-2B-001; PLAY-01 sim chrome collapsed"
       },
       {
         "id": "UI-SHELL-MIG-002-FLOAT-GATE",
         "status": "done",
-        "plan_doc": "src/dev/ui_shell_witness_spec_v1.md",
+        "plan_doc": "docs/archive/2026-06-src-dev/plans/ui_shell_witness_spec_v1.md",
         "notes": "floating_egui_shells_gated: true on disk"
       }
     ],
@@ -1027,88 +1246,97 @@
       {
         "id": "S7B-M3-STEWARD-REMEDY-001",
         "status": "done",
-        "plan_doc": "src/dev/plan_stage7_m3_steward_001_v1.md",
-        "witness_spec": "src/dev/stage7_behavioral_live_witness_spec_v1.md",
+        "plan_doc": "docs/archive/2026-06-src-dev/plans/plan_stage7_m3_steward_001_v1.md",
+        "witness_spec": "docs/archive/2026-06-src-dev/plans/stage7_behavioral_live_witness_spec_v1.md",
         "witness": "debug_runs/stage7_behavioral_live.json",
-        "exit_keys": ["s7b_m3_green", "s7b_steward_green"],
+        "exit_keys": [
+          "s7b_m3_green",
+          "s7b_steward_green"
+        ],
         "notes": "s7b_m3_green + s7b_steward_green on disk; overlay samples >= 1; refresh_s7b_m3_steward_remedy_001_live_witness"
       },
       {
         "id": "S7B-M4-PLAY-REMEDY-001",
         "status": "done",
-        "plan_doc": "src/dev/plan_stage7_m4_play_001_v1.md",
+        "plan_doc": "docs/archive/2026-06-src-dev/plans/plan_stage7_m4_play_001_v1.md",
         "witness": "debug_runs/stage7_behavioral_live.json",
-        "exit_keys": ["s7b_m4_play_green", "play_enqueue_wired"],
+        "exit_keys": [
+          "s7b_m4_play_green",
+          "play_enqueue_wired"
+        ],
         "notes": "play_enqueue_wired + pending_dispatch_count>=1; tick sync + witness schedule; lib test s7b_m4_play_remedy_001_live_witness_refresh"
       },
       {
         "id": "LOG-E01-FULLAPP-UPGRADE-001",
         "status": "done",
-        "plan_doc": "src/dev/logistics_visual_lane_spec_v1.md",
+        "plan_doc": "docs/archive/2026-06-src-dev/plans/logistics_visual_lane_spec_v1.md",
         "witness": "debug_runs/stage5_full_app_live.json",
-        "exit_keys": ["log_e01_fullapp_upgrade_001.green", "log_e01_fullapp_upgrade_001.full_visual_confirm"],
+        "exit_keys": [
+          "log_e01_fullapp_upgrade_001.green",
+          "log_e01_fullapp_upgrade_001.full_visual_confirm"
+        ],
         "notes": "LibVisualSim via refresh_log_e01_fullapp_upgrade_001; last writer in dual-queue bundle after tactical refresh; optional operator --test visual upgrades capture_lane to visual_run"
       },
       {
         "id": "BQ-128-APPLY-002",
         "status": "done",
-        "plan_doc": "src/dev/bq128_editor_path_plan_v1.md",
+        "plan_doc": "docs/archive/2026-06-src-dev/plans/bq128_editor_path_plan_v1.md",
         "witness": "debug_runs/construction_stage_live.json + debug_runs/wave_s_hydrate_live.json",
         "notes": "Append/Replace import + replace_confirm; construction_bq128_apply_merge_replace_002.green"
       },
       {
         "id": "INFRA-SLICE3-001",
         "status": "done",
-        "plan_doc": "src/dev/infra_slice3_wc_d04_ops_f01_plan_v1.md",
+        "plan_doc": "docs/archive/2026-06-src-dev/plans/infra_slice3_wc_d04_ops_f01_plan_v1.md",
         "witness": "debug_runs/perf_attribution_60s.md + debug_runs/stage6_virtualization_live.json",
         "notes": "OPS-F01 2026-05-27 section + wc_d04.green; lib test infra_slice3_001_witness_refresh_green"
       },
       {
         "id": "IND-E02-DEFAULT-PLAY-002",
         "status": "done",
-        "plan_doc": "src/dev/plan_ind_e02_play_exec_001_v1.md",
+        "plan_doc": "docs/archive/2026-06-src-dev/plans/plan_ind_e02_play_exec_001_v1.md",
         "witness": "debug_runs/industrial_activation_live.json",
         "notes": "ind_e02_default_play_002.green; play seed writer; lib test simulation_ind_e02_default_play_002_writer_sets_ind_e02_green"
       },
       {
         "id": "BQ-128-APPLY-001",
         "status": "done",
-        "plan_doc": "src/dev/bq128_editor_path_plan_v1.md",
+        "plan_doc": "docs/archive/2026-06-src-dev/plans/bq128_editor_path_plan_v1.md",
         "witness": "debug_runs/construction_stage_live.json",
         "notes": "ApplyImportedPreset → ghost only; construction_bq128_apply_ghost_001.green + wave_s_hydrate bq128_apply_ghost_001"
       },
       {
         "id": "WSS-HYDRO-BOUNDARY-001",
         "status": "done",
-        "plan_doc": "src/dev/plan_construction_hydro_coupling_001_v1.md",
+        "plan_doc": "docs/archive/2026-06-src-dev/plans/plan_construction_hydro_coupling_001_v1.md",
         "witness": "debug_runs/wss_substrate_live.json",
         "notes": "B-H2 — HydrologyDirtyReason bus; construction_hydro_coupling_wired=true; construction_events_drained>0; execute-only emit"
       },
       {
         "id": "M3-UNITS-DEPTH-001",
         "status": "done",
-        "plan_doc": "src/dev/plan_m3_depth_exec_001_v1.md",
+        "plan_doc": "docs/archive/2026-06-src-dev/plans/plan_m3_depth_exec_001_v1.md",
         "witness": "debug_runs/minimap_compositor_live.json",
         "notes": "ui_p3_m3_units_001_green + unit_marker_rows; post-drain catch-up 2026-05-27"
       },
       {
         "id": "REPLAY-RING-LIVE-001",
         "status": "done",
-        "plan_doc": "src/dev/plan_replay_ring_exec_001_v1.md",
+        "plan_doc": "docs/archive/2026-06-src-dev/plans/plan_replay_ring_exec_001_v1.md",
         "witness": "debug_runs/replay_editor_parity_live.json",
         "notes": "replay_parity_001_green + replay_ring_len>=2; CommittedSimReplayRing default capacity"
       },
       {
         "id": "UI-P3-M2-TRAY-OPT",
         "status": "done",
-        "plan_doc": "src/dev/minimap_m2_tray_overlay_bridge_v1.md",
+        "plan_doc": "docs/archive/2026-06-src-dev/plans/minimap_m2_tray_overlay_bridge_v1.md",
         "witness": "debug_runs/minimap_compositor_live.json",
         "notes": "ui_p3_m2_tray_opt_green + overlay_tray_minimap_mask"
       },
       {
         "id": "R4-MV-GHOST-001",
         "status": "done",
-        "plan_doc": "src/dev/plan_construction_r4_mv_exec_001_v1.md",
+        "plan_doc": "docs/archive/2026-06-src-dev/plans/plan_construction_r4_mv_exec_001_v1.md",
         "witness": "debug_runs/construction_stage_live.json",
         "notes": "construction_r4_mv_ghost_001.green + corridor overlay tokens"
       },
@@ -1173,7 +1401,7 @@
         "status": "done",
         "bundle": "coder_b_wave3_bundle_proof",
         "witness": "debug_runs/infrastructure_view_isolation_live.json",
-        "notes": "S1\u2013S3 stress in phase_d_parity_stress.rs; triage_phase_d_parity_001.stress + green"
+        "notes": "S1–S3 stress in phase_d_parity_stress.rs; triage_phase_d_parity_001.stress + green"
       },
       {
         "id": "LOG-E01-WITNESS",
@@ -1182,7 +1410,7 @@
       {
         "id": "IND-E02-DEFAULT",
         "status": "done",
-        "notes": "lib refresh path \u2014 play default is IND-E02-DEFAULT-PLAY-001"
+        "notes": "lib refresh path — play default is IND-E02-DEFAULT-PLAY-001"
       },
       {
         "id": "P2-VFX-WITNESS-001",
@@ -1333,36 +1561,38 @@
       {
         "id": "DEV-CONTAIN-006-WSS",
         "status": "done",
-        "plan_doc": "src/dev/plan_dev_artifact_containment_exec_001_v1.md",
+        "plan_doc": "docs/archive/2026-06-src-dev/plans/plan_dev_artifact_containment_exec_001_v1.md",
         "witness": "debug_runs/wss_substrate_live.json",
         "notes": "runtime_witness/wss_substrate.rs writer; substrate/live_proof.rs collectors; shim in exceptions_manifest"
       },
       {
         "id": "PERF-VIS-001-P1BC",
         "status": "done",
-        "plan_doc": "src/dev/plan_visual_perf_production_exec_001_v1.md",
+        "plan_doc": "docs/archive/2026-06-src-dev/plans/plan_visual_perf_production_exec_001_v1.md",
         "witness": "debug_runs/minimap_compositor_live.json",
         "notes": "run_visual_test_clean.ps1 clears RASTER_*; CI check_visual_runbook_no_raster_env; Simulation defaults GPU minimap when compositor green"
       },
       {
         "id": "PERF-VIS-004",
         "status": "done",
-        "plan_doc": "src/dev/plan_visual_perf_production_exec_001_v1.md",
+        "plan_doc": "docs/archive/2026-06-src-dev/plans/plan_visual_perf_production_exec_001_v1.md",
         "witness": "debug_runs/stage5_full_app_live.json",
-        "exit_keys": ["readiness.visual_witness.perf_attribution_60s"],
+        "exit_keys": [
+          "readiness.visual_witness.perf_attribution_60s"
+        ],
         "notes": "Rolling 60s p95 frame/raster_b/view_fire in visual readiness witness"
       },
       {
         "id": "PERF-VIS-003",
         "status": "done",
-        "plan_doc": "src/dev/plan_visual_perf_production_exec_001_v1.md",
+        "plan_doc": "docs/archive/2026-06-src-dev/plans/plan_visual_perf_production_exec_001_v1.md",
         "witness": "debug_runs/stage5_full_app_live.json",
         "notes": "Ortho view_px aligned with hole latch; bootstrap RENDER_HOLE_FLIP suppressed; steady_flip_count witness"
       },
       {
         "id": "DEV-CONTAIN-SLICE-1",
         "status": "done",
-        "plan_doc": "src/dev/plan_dev_artifact_containment_exec_001_v1.md",
+        "plan_doc": "docs/archive/2026-06-src-dev/plans/plan_dev_artifact_containment_exec_001_v1.md",
         "witness": "debug_runs/minimap_compositor_live.json",
         "notes": "Writer I/O in src/dev/runtime_witness/minimap.rs; live_proof.rs shim"
       },
@@ -1399,7 +1629,7 @@
       {
         "id": "DEV-CONTAIN-PHASE0-001",
         "status": "done",
-        "plan_doc": "src/dev/plan_dev_artifact_containment_exec_001_v1.md",
+        "plan_doc": "docs/archive/2026-06-src-dev/plans/plan_dev_artifact_containment_exec_001_v1.md",
         "notes": "runtime_witness/containment.rs + CI HardFail"
       },
       {
@@ -1411,42 +1641,44 @@
       {
         "id": "PERF-VIS-002-P2B",
         "status": "done",
-        "plan_doc": "src/dev/plan_visual_perf_production_exec_001_v1.md",
+        "plan_doc": "docs/archive/2026-06-src-dev/plans/plan_visual_perf_production_exec_001_v1.md",
         "witness": "debug_runs/stage5_full_app_live.json",
         "notes": "TileRasterSpikeFeedback defers zoom-band mark_all_dirty during raster spike"
       },
       {
         "id": "PERF-VIS-002-P2D",
         "status": "done",
-        "plan_doc": "src/dev/plan_visual_perf_production_exec_001_v1.md",
+        "plan_doc": "docs/archive/2026-06-src-dev/plans/plan_visual_perf_production_exec_001_v1.md",
         "witness": "debug_runs/stage5_full_app_live.json",
         "notes": "FireExtractCadence residency_scoped default; extract skips non-resident chunks. p95 view_fire < 8ms acceptance = OPS-F01 live perf attribution — not lib gate alone"
       },
       {
         "id": "FIRE-F2-EXTRACT-TAIL-001",
         "status": "done",
-        "plan_doc": "src/dev/plan_fire_f2_extract_exec_001_v1.md",
+        "plan_doc": "docs/archive/2026-06-src-dev/plans/plan_fire_f2_extract_exec_001_v1.md",
         "witness": "debug_runs/stage5_full_app_live.json",
-        "exit_keys": ["f2_extract_witness.fire_instance_buffer_rows"],
+        "exit_keys": [
+          "f2_extract_witness.fire_instance_buffer_rows"
+        ],
         "notes": "log_e01_f2_combined_projection_fixture; f2_extract_witness.fire_instance_buffer_rows > 0 on disk"
       },
       {
         "id": "WSS-WITNESS-PARITY-001",
         "status": "done",
-        "plan_doc": "src/dev/plan_dev_artifact_containment_exec_001_v1.md",
+        "plan_doc": "docs/archive/2026-06-src-dev/plans/plan_dev_artifact_containment_exec_001_v1.md",
         "notes": "runtime_witness/parity.rs refresh_migrated_witness_parity_bundle lib-green"
       },
       {
         "id": "WSS-DEFORMATION-SLAB-001",
         "status": "done",
-        "plan_doc": "src/dev/wssr_index_v1.md",
+        "plan_doc": "docs/archive/2026-06-src-dev/plans/wssr_index_v1.md",
         "witness": "debug_runs/wss_substrate_live.json",
         "notes": "wss_deformation_slab_001 L1 scaffold witness block"
       },
       {
         "id": "VFX-VECTOR-SHAPES-001",
         "status": "done_qualified",
-        "plan_doc": "src/dev/wssr_index_v1.md",
+        "plan_doc": "docs/archive/2026-06-src-dev/plans/wssr_index_v1.md",
         "witness": "debug_runs/stage5_full_app_live.json",
         "notes": "bevy_vector_shapes 0.12 + draw_tactical_vector_wire_overlay; witness backend bevy_vector_shapes, drawn_shapes > 0"
       },
@@ -1459,7 +1691,7 @@
       {
         "id": "UI-PHASE4-WP-TAIL-001",
         "status": "done",
-        "plan_doc": "src/dev/stages/ui_phase4_execution_plan_v1.md",
+        "plan_doc": "docs/archive/2026-06-src-dev/trees/stages/ui_phase4_execution_plan_v1.md",
         "witness": "debug_runs/wave_p_live.json",
         "notes": "ui_phase4_wp_tail_001 optional rollup in wave_p_live.json"
       },
@@ -1467,9 +1699,12 @@
         "id": "PERF-WITNESS-DISK-REFRESH-001",
         "status": "done",
         "parent": "P0-2",
-        "plan_doc": "src/dev/plan_fleet_phase_next_exec_001_v1.md",
+        "plan_doc": "docs/archive/2026-06-src-dev/plans/plan_fleet_phase_next_exec_001_v1.md",
         "witness": "debug_runs/stage5_full_app_live.json",
-        "exit_keys": ["readiness.visual_witness", "readiness.perf_attribution_60s"],
+        "exit_keys": [
+          "readiness.visual_witness",
+          "readiness.perf_attribution_60s"
+        ],
         "notes": "merge_visual_perf_witness_stage5 + perf_witness_disk_refresh_001 lib test; fixture p95 on disk"
       },
       {
@@ -1482,49 +1717,65 @@
         "id": "PERF-VIS-P1B-GPU-DEFAULT-001",
         "status": "done",
         "parent": "P1-1",
-        "plan_doc": "src/dev/plan_visual_perf_production_exec_001_v1.md",
+        "plan_doc": "docs/archive/2026-06-src-dev/plans/plan_visual_perf_production_exec_001_v1.md",
         "witness": "debug_runs/minimap_compositor_live.json",
-        "exit_keys": ["presentation_source", "perf_vis_p1b_gpu_default_001.green"],
+        "exit_keys": [
+          "presentation_source",
+          "perf_vis_p1b_gpu_default_001.green"
+        ],
         "notes": "GPU default on unset MINIMAP_GPU_COMPOSITOR; sync_minimap_presentation_source; no RASTER_* required"
       },
       {
         "id": "UI-P3-SHELL-ROLLUP-001",
         "status": "done",
-        "plan_doc": "src/dev/ui_overhaul_phase23_closure_plan_v1.md",
+        "plan_doc": "docs/archive/2026-06-src-dev/plans/ui_overhaul_phase23_closure_plan_v1.md",
         "witness": "debug_runs/ui_shell_migration_live.json",
-        "exit_keys": ["ui_p3_001.closed", "ui_p3_001.compositor_authoritative"],
+        "exit_keys": [
+          "ui_p3_001.closed",
+          "ui_p3_001.compositor_authoritative"
+        ],
         "notes": "compositor ui_p3_001_green authority + ui_p3_001_shell_closed; refresh_coder_b_ui_shell_tail_closure_witness"
       },
       {
         "id": "UI-OH-P4-001",
         "status": "done",
-        "plan_doc": "src/dev/ui_oh_p4_001_plan_v1.md",
+        "plan_doc": "docs/archive/2026-06-src-dev/plans/ui_oh_p4_001_plan_v1.md",
         "witness": "debug_runs/ui_shell_migration_live.json",
-        "exit_keys": ["ui_oh_p4_001.green", "phase4.icon_atlas_loaded"],
+        "exit_keys": [
+          "ui_oh_p4_001.green",
+          "phase4.icon_atlas_loaded"
+        ],
         "notes": "ui_oh_p4_001 block in build_proof_payload; five-lane refresh preserves phase4"
       },
       {
         "id": "UI-OH-P5-001",
         "status": "done",
-        "plan_doc": "src/dev/plan_ui_p5_pause_menu_index_v1.md",
+        "plan_doc": "docs/archive/2026-06-src-dev/plans/plan_ui_p5_pause_menu_index_v1.md",
         "witness": "debug_runs/ui_shell_migration_live.json",
-        "exit_keys": ["ui_oh_p5_001.green", "phase5.pause_menu_bevy"],
+        "exit_keys": [
+          "ui_oh_p5_001.green",
+          "phase5.pause_menu_bevy"
+        ],
         "notes": "Bevy pause OH rollup; refresh_ui_oh_p5_001_live_witness via five-lane bundle"
       },
       {
         "id": "INFRA-VM09-V2-001",
         "status": "done",
-        "plan_doc": "src/dev/triage_vm09_v2_invert_bridge_plan_v1.md",
+        "plan_doc": "docs/archive/2026-06-src-dev/plans/triage_vm09_v2_invert_bridge_plan_v1.md",
         "witness": "debug_runs/infrastructure_view_isolation_live.json",
-        "exit_keys": ["vm_09.triage_vm09_v2_green"],
+        "exit_keys": [
+          "vm_09.triage_vm09_v2_green"
+        ],
         "notes": "V2-A/B/C landed 2026-05-25; triage_vm09_v2_green true on disk — queue optional close"
       },
       {
         "id": "CONSTRUCTION-R4-PRODUCT-001",
         "status": "done_qualified",
-        "plan_doc": "src/dev/plan_construction_r4_product_open_001_v1.md",
+        "plan_doc": "docs/archive/2026-06-src-dev/plans/plan_construction_r4_product_open_001_v1.md",
         "witness": "debug_runs/construction_stage_live.json",
-        "exit_keys": ["construction_r4_corridor_001.product_board_open"],
+        "exit_keys": [
+          "construction_r4_corridor_001.product_board_open"
+        ],
         "notes": "Policy doc signed; product_board_open true on disk — scope next R4 feature before impl"
       }
     ]
@@ -1554,26 +1805,54 @@
     }
   ],
   "planner": {
-    "active": [],
+    "active": [
+      {
+        "id": "PLAN-MAP-ZOOM-SMOOTH-001",
+        "status": "done",
+        "owner": "planner",
+        "program": "view_polish",
+        "deliverable": "src/dev/plan_map_zoom_smooth_exec_001_v1.md",
+        "exit": "Option A or B signed — unblocks TRIAGE-MAP-ZOOM-SMOOTH-001",
+        "completed": "2026-06-14"
+      },
+      {
+        "id": "PLAN-AUDIT-020",
+        "status": "blocked",
+        "owner": "planner",
+        "depends_on": [
+          "G-PLAY-01"
+        ],
+        "exit": "planner_status_audit_v20.md",
+        "snag": "operator/designer-mcp blocked"
+      }
+    ],
+    "done_2026_06_12": [
+      {
+        "id": "PLAN-PRODUCT-POLISH-001",
+        "status": "done",
+        "deliverable": "src/dev/plan_product_polish_exec_001_v1.md",
+        "completed": "2026-06-11"
+      }
+    ],
     "done_p2_2026_06_02": [
       {
         "id": "PLAN-AUDIT-018",
         "status": "done",
         "deliverable": "src/dev/planner_status_audit_v18.md",
-        "witness": "src/dev/plan_ledger_refresh_018_checklist_v1.md",
+        "witness": "docs/archive/2026-06-src-dev/plans/plan_ledger_refresh_018_checklist_v1.md",
         "completed": "2026-06-02"
       },
       {
         "id": "PLAN-G-PLAY-001",
         "status": "done",
-        "deliverable": "src/dev/play_scenario_acceptance_runbook_v1.md",
+        "deliverable": "docs/archive/2026-06-src-dev/plans/play_scenario_acceptance_runbook_v1.md",
         "notes": "Co-delivered with DESIGN-G-PLAY-001; operator execution pending",
         "completed": "2026-06-02"
       },
       {
         "id": "PLAN-STABLE-P2-SIGN",
         "status": "done",
-        "deliverable": "src/dev/fleet_stability_phase2_dispatch_v1.md",
+        "deliverable": "docs/archive/2026-06-fleet-drain/fleet_closed/fleet_stability_phase2_dispatch_v1.md",
         "witness": "src/dev/planner_status_audit_v18.md",
         "completed": "2026-06-02"
       }
@@ -1581,27 +1860,172 @@
   },
   "designer": {
     "active": [],
+    "done_2026_06_13": [
+      {
+        "id": "P0-MINIMAP-WIDGET-001",
+        "status": "done",
+        "owner": "designer",
+        "verdict": "PASS",
+        "witness": "debug_runs/design_minimap_widget_live.json",
+        "deliverable": "src/dev/design_minimap_widget_v1.md",
+        "unblocks": [
+          "MINIMAP-WIDGET-IMPL-001"
+        ]
+      },
+      {
+        "id": "BUILD-READ-DESIGN-002",
+        "status": "done",
+        "owner": "designer",
+        "verdict": "PASS",
+        "witness": "debug_runs/design_build_toolbox_hud_live.json",
+        "deliverable": "src/dev/design_build_toolbox_hud_v1.md",
+        "unblocks": [
+          "BUILD-READ-SHAPE-002",
+          "BUILD-READ-SITE-v0-002"
+        ]
+      },
+      {
+        "id": "BUILD-READ-POINTER-HUD-001",
+        "status": "done",
+        "owner": "designer",
+        "verdict": "PASS",
+        "witness": "debug_runs/design_pointer_hud_regions_live.json",
+        "deliverable": "src/dev/design_pointer_hud_regions_v1.md",
+        "unblocks": [
+          "BUILD-READ-P0-003"
+        ]
+      },
+      {
+        "id": "DESIGN-MAP-ZOOM-READ-001",
+        "status": "done",
+        "owner": "designer",
+        "verdict": "PASS",
+        "witness": "debug_runs/design_map_zoom_read_live.json",
+        "deliverable": "src/dev/design_map_zoom_read_v1.md",
+        "unblocks": [
+          "PLAN-MAP-ZOOM-SMOOTH-001"
+        ]
+      },
+      {
+        "id": "DESIGN-FIRE-PLAY-VIS-001",
+        "status": "done",
+        "owner": "designer",
+        "verdict": "PASS",
+        "witness": "debug_runs/design_fire_play_visibility_live.json",
+        "deliverable": "src/dev/design_fire_play_visibility_v1.md",
+        "unblocks": [
+          "TRIAGE-FIRE-PLAY-VIS-001"
+        ]
+      },
+      {
+        "id": "BUILD-READ-SITE-ZONE-MAP-001",
+        "status": "done",
+        "owner": "designer-mcp",
+        "verdict": "PASS",
+        "witness": "debug_runs/design_site_zone_grid_live.json",
+        "deliverable": "assets/configs/buildings/pilots/logistics_rail_warehouse_site_v0.json",
+        "unblocks": [
+          "BUILD-READ-SITE-v0-002"
+        ]
+      },
+      {
+        "id": "BUILD-READ-VISUAL-002",
+        "status": "done",
+        "owner": "designer-mcp",
+        "verdict": "PASS",
+        "witness": "debug_runs/design_tile_rail_warehouse_pilot_live.json",
+        "deliverable": "src/dev/design_tile_rail_warehouse_pilot_v1.md",
+        "unblocks": [
+          "BUILD-READ-VISUAL-001"
+        ]
+      }
+    ],
+    "done_2026_06_12": [
+      {
+        "id": "DESIGN-EVENT-LOG-001",
+        "status": "done",
+        "owner": "designer",
+        "verdict": "PASS",
+        "witness": "debug_runs/design_event_log_ui_live.json",
+        "deliverable": "src/dev/design_event_log_ui_v1.md",
+        "unblocks": [
+          "EVENT-LOG-UI-001"
+        ]
+      },
+      {
+        "id": "DESIGN-BUILD-UX-REDESIGN-001",
+        "status": "done",
+        "owner": "designer",
+        "verdict": "PASS",
+        "witness": "debug_runs/design_build_ux_redesign_live.json",
+        "deliverable": "src/dev/design_build_ux_redesign_v1.md",
+        "unblocks": [
+          "TRIAGE-BUILD-CLICK-PLACE-001",
+          "TRIAGE-CURSOR-UNIFY-001"
+        ]
+      }
+    ],
+    "done_2026_06_11": [
+      {
+        "id": "DESIGN-ZOOM-FIRE-READ-001",
+        "status": "done",
+        "owner": "designer",
+        "verdict": "PASS",
+        "witness": "debug_runs/design_zoom_fire_read_live.json",
+        "deliverable": "src/dev/design_zoom_fire_read_v1.md",
+        "unblocks": [
+          "TRIAGE-FIRE-PRODUCT-001"
+        ]
+      }
+    ],
+    "done_2026_06_03": [
+      {
+        "id": "APS-UX-AUDIT-001",
+        "status": "done",
+        "owner": "designer",
+        "verdict": "PASS",
+        "witness": "docs/archive/2026-06-src-dev/plans/design_aps_ux_audit_v1.md"
+      },
+      {
+        "id": "DESIGN-WEATHER-PLAYER-READ-001",
+        "status": "done",
+        "owner": "designer",
+        "witness": "docs/archive/2026-06-src-dev/plans/design_weather_player_read_v1.md"
+      },
+      {
+        "id": "SIM-HUD-PRODUCT-001",
+        "status": "done",
+        "owner": "designer",
+        "verdict": "PASS (qualified)",
+        "witness": "docs/archive/2026-06-src-dev/plans/design_sim_hud_product_signoff_v1.md"
+      }
+    ],
+    "on_call_only": true,
+    "on_call_triggers": [
+      "APS-UX-TOOLTIPS-002-REVIEW",
+      "SIGNOFF-REGISTRY-NEW-ROW"
+    ],
     "done_stability_2026_05_28": [
       {
         "id": "DESIGN-G-PLAY-001",
         "verdict": "PASS (qualified)",
-        "witness": "src/dev/play_scenario_acceptance_runbook_v1.md"
+        "witness": "docs/archive/2026-06-src-dev/plans/play_scenario_acceptance_runbook_v1.md"
       },
       {
         "id": "DESIGN-WSS-HYDRO-READ-001",
         "verdict": "PASS",
-        "witness": "src/dev/wss_hydro_read_feature_pass_001.md",
+        "witness": "docs/archive/2026-06-src-dev/plans/wss_hydro_read_feature_pass_001.md",
         "unblocks": "FEAT-WSS-HYDRO-READ-001"
       },
       {
         "id": "DESIGN-PERF-DEGRADE-VALIDATE-001",
         "verdict": "PASS (qualified)",
-        "witness": "src/dev/visual_perf_spike_degrade_validate_001_v1.md"
+        "witness": "docs/archive/2026-06-src-dev/plans/visual_perf_spike_degrade_validate_001_v1.md"
       },
       {
         "id": "DESIGN-R4-UX-001",
         "verdict": "PASS",
-        "witness": "src/dev/construction_r4_product_slice_ux_v1.md",
+        "witness": "docs/archive/2026-06-src-dev/plans/construction_r4_product_slice_ux_v1.md",
         "unblocks": "CONSTRUCTION-R4-PRODUCT-001"
       }
     ],
@@ -1609,34 +2033,34 @@
       {
         "id": "DESIGN-PROC-MODULE-KIT-001",
         "verdict": "PASS",
-        "witness": "src/dev/design_procedural_module_kit_v1.md",
+        "witness": "docs/archive/2026-06-src-dev/plans/design_procedural_module_kit_v1.md",
         "unblocks": "PROC-PG-2-001"
       },
       {
         "id": "DESIGN-ORGANIC-GROWTH-UX-001",
         "verdict": "PASS",
-        "witness": "src/dev/design_organic_growth_ux_v1.md",
+        "witness": "docs/archive/2026-06-src-dev/plans/design_organic_growth_ux_v1.md",
         "unblocks": "PROC-OG-3-001"
       },
       {
         "id": "DESIGN-CONSTRUCTION-STAGE-READ-001",
         "verdict": "PASS",
-        "witness": "src/dev/design_construction_site_stage_read_v1.md"
+        "witness": "docs/archive/2026-06-src-dev/plans/design_construction_site_stage_read_v1.md"
       },
       {
         "id": "DESIGN-CONSTRUCTION-SCALING-READ-001",
         "verdict": "PASS",
-        "witness": "src/dev/design_construction_scaling_read_v1.md"
+        "witness": "docs/archive/2026-06-src-dev/plans/design_construction_scaling_read_v1.md"
       },
       {
         "id": "DESIGN-INFRA-NETWORK-OVERLAY-001",
         "verdict": "PASS",
-        "witness": "src/dev/design_infra_network_overlay_v1.md"
+        "witness": "docs/archive/2026-06-src-dev/plans/design_infra_network_overlay_v1.md"
       },
       {
         "id": "DESIGN-SETTLEMENT-HIERARCHY-READ-001",
         "verdict": "PASS",
-        "witness": "src/dev/design_settlement_hierarchy_read_v1.md"
+        "witness": "docs/archive/2026-06-src-dev/plans/design_settlement_hierarchy_read_v1.md"
       }
     ]
   },
@@ -1645,7 +2069,7 @@
       "id": "FIRE7-DESIGN-001",
       "owner": "@designer",
       "status": "done",
-      "deliverable": "src/dev/fire_lod_player_read_v1.md"
+      "deliverable": "docs/archive/2026-06-src-dev/plans/fire_lod_player_read_v1.md"
     },
     {
       "id": "S7P-DESIGN-002",
@@ -1657,35 +2081,77 @@
   "active": [],
   "done": [],
   "primary_program": "DUAL",
-  "unified_backlog": "src/dev/coder_unified_backlog_v1.md",
+  "unified_backlog": "docs/archive/2026-06-src-dev/plans/coder_unified_backlog_v1.md",
   "alignment_hub": "src/dev/planner_program_alignment_v1.md",
   "primary_program_note": "Both construction + infrastructure advance; 2 coders split by file territory in unified backlog - no toe stepping",
   "construction_program": {
     "phase_id": "CONSTRUCTION-ROADMAP-2-10",
-    "roadmap": "src/dev/construction_product_roadmap_phases_2_10_v1.md",
+    "roadmap": "docs/archive/2026-06-src-dev/plans/construction_product_roadmap_phases_2_10_v1.md",
     "alignment": "src/dev/planner_program_alignment_v1.md",
-    "active_phase": "4",
-    "exec_doc": "src/dev/plan_construction_scaling_audit_exec_003_v1.md",
-    "workload_plan": "src/dev/fleet_coder_workload_queue_20260602_v1.md",
+    "active_phase": "6+",
+    "exec_doc": "docs/archive/2026-06-src-dev/plans/plan_organic_growth_exec_001_v1.md",
+    "drain_order": "docs/archive/2026-06-src-dev/plans/construction_coder_drain_order_v1.md",
+    "workload_plan": "docs/archive/2026-06-src-dev/plans/construction_coder_drain_order_v1.md",
     "snapshot": "src/dev/fleet_snapshot_20260602_v3.md",
-    "stage_pipeline_exec": "src/dev/plan_construction_stage_pipeline_exec_002_v1.md",
-    "settlement_exec": "src/dev/plan_settlement_hierarchy_exec_005_v1.md",
-    "scaling_exec": "src/dev/plan_construction_scaling_audit_exec_003_v1.md",
+    "stage_pipeline_exec": "docs/archive/2026-06-src-dev/plans/plan_construction_stage_pipeline_exec_002_v1.md",
+    "settlement_exec": "docs/archive/2026-06-src-dev/plans/plan_settlement_hierarchy_exec_005_v1.md",
+    "scaling_exec": "docs/archive/2026-06-src-dev/plans/plan_construction_scaling_audit_exec_003_v1.md",
     "rule": "SiteConstructionPhase only; preview never commits; execute funnel only",
-    "econ_growth_exec": "src/dev/plan_econ_growth_actors_exec_001_v1.md",
-    "coder_a_next": ["INFRA-E4-002", "INFRA-E5-002", "INFRA-E6-001", "INFRA-E6-002", "INFRA-E6-004"],
-    "coder_b_next": ["ECON-OG-SAVE-001"],
-    "after_p3": ["PROC-PG-2-TAIL-001", "PT-5-002", "PT-4-005"],
-    "coder_b_unblocks_a": "none — SET-P5 + ECON-OG closed 2026-06-02",
-    "closed_2026_06_02": ["SET-P5-001", "SET-P5-002", "SET-P5-003", "ECON-OG-1-A", "ECON-OG-1-B", "ECON-OG-1-C", "PROC-OG-2-001", "PROC-OG-3-001", "PROC-PG-1-001"],
-    "blocked_by_infra": {
-      "phase_7_logistics": "INFRA-E1-004 hydrate round-trip"
-    },
+    "econ_growth_exec": "docs/archive/2026-06-src-dev/plans/plan_econ_growth_actors_exec_001_v1.md",
+    "coder_a_next": [],
+    "coder_a_horizon": [],
+    "coder_b_next": [],
+    "infra_pull": "infrastructure_program.coder_a_next when construction active[] empty",
+    "after_p6": [],
+    "coder_b_unblocks_a": "none — P1-P6 + organic save/approve/policy closed on disk",
+    "closed_through_phase_6": [
+      "CON-P2",
+      "CON-P3",
+      "SET-P5",
+      "PROC-PG-1",
+      "PROC-PG-2-TAIL",
+      "PROC-PG-3",
+      "PROC-PG-4",
+      "ECON-OG-1",
+      "ECON-OG-SAVE",
+      "PROC-OG-APPROVE",
+      "PROC-OG-POLICY",
+      "PROC-OG-2",
+      "PROC-OG-3",
+      "PROC-OG-UX",
+      "PROC-OG-4-ROLLUP",
+      "CON-P2-CLEARING-WIT",
+      "CON-PARAM-PARTIAL-ALPHA"
+    ],
+    "closed_2026_06_02": [
+      "SET-P5-001",
+      "SET-P5-002",
+      "SET-P5-003",
+      "ECON-OG-1-A",
+      "ECON-OG-1-B",
+      "ECON-OG-1-C",
+      "PROC-OG-2-001",
+      "PROC-OG-3-001",
+      "PROC-PG-1-001"
+    ],
+    "closed_2026_06_03_coder_a": [
+      "PROC-OG-4-ROLLUP-001",
+      "CON-P2-CLEARING-WIT-001",
+      "PROC-PG-4-001",
+      "INFRA-E4-002",
+      "INFRA-E5-002",
+      "INFRA-E6-001",
+      "INFRA-E6-002",
+      "INFRA-E6-004",
+      "CON-P7-LOGISTICS-001"
+    ],
+    "blocked_by_infra": {},
+    "p7_exec": "docs/archive/2026-06-src-dev/plans/plan_construction_p7_logistics_exec_001_v1.md",
     "procedural_growth": {
       "index": "src/dev/construction_procedural_growth_index_v1.md",
-      "architecture": "src/dev/construction_procedural_buildings_plan_v1.md",
-      "proc_exec": "src/dev/plan_procedural_build_gen_exec_001_v1.md",
-      "organic_exec": "src/dev/plan_organic_growth_exec_001_v1.md",
+      "architecture": "docs/archive/2026-06-src-dev/plans/construction_procedural_buildings_plan_v1.md",
+      "proc_exec": "docs/archive/2026-06-src-dev/plans/plan_procedural_build_gen_exec_001_v1.md",
+      "organic_exec": "docs/archive/2026-06-src-dev/plans/plan_organic_growth_exec_001_v1.md",
       "designer_module_kit": "DESIGN-PROC-MODULE-KIT-001",
       "designer_module_kit_verdict": "PASS",
       "designer_growth_ux": "DESIGN-ORGANIC-GROWTH-UX-001",
@@ -1698,26 +2164,55 @@
       "designer_settlement_read": "DESIGN-SETTLEMENT-HIERARCHY-READ-001",
       "designer_settlement_read_verdict": "PASS",
       "designer_longrun_drained": "2026-06-02",
-      "horizon_after_p2": ["PROC-PG-1-001", "PROC-PG-2-001", "PROC-OG-1-001", "PROC-OG-2-001"],
+      "horizon_after_p2": [
+        "PROC-PG-1-001",
+        "PROC-PG-2-001",
+        "PROC-OG-1-001",
+        "PROC-OG-2-001"
+      ],
       "invariant": "no Operational on commit; growth uses ConstructionPlanQueue only"
     }
   },
   "infrastructure_program": {
     "phase_id": "PLAN-INFRA-WORLD-LAYERS-001",
-    "design_doc": "src/dev/world_layer_infrastructure_model_v1.md",
-    "exec_doc": "src/dev/plan_infrastructure_world_layers_exec_001_v1.md",
-    "matrix": "prompts/matrix/transport/road_rail_migration_matrix_v1.md",
+    "design_doc": "docs/archive/2026-06-src-dev/plans/world_layer_infrastructure_model_v1.md",
+    "exec_doc": "docs/archive/2026-06-src-dev/plans/plan_infrastructure_world_layers_exec_001_v1.md",
+    "matrix": "docs/archive/2026-06-prompts-guides/matrix/matrix/transport/road_rail_migration_matrix_v1.md",
     "horizon_weeks": "12-14",
-    "active_epic": "E0",
+    "active_epic": "E4-E6-A-TAIL-CLOSED",
     "parallel_with": "construction_program",
-    "rule": "Full program — pull from unified_backlog coder column; respect gates only, not serial primary",
+    "rule": "E0-E6 A-tail CLOSED on disk — coder_a_next empty",
     "gates": {
-      "E2-003": "construction P1 + CON-P2-001",
-      "E5-001": "construction Phase 5 town schema",
-      "E5-002_C7": "INFRA-E1-004"
+      "E2-003": "CLOSED — CON-P2-001 done",
+      "E5-001": "CLOSED — SET-P5 done",
+      "E5-002_C7": "CLOSED — INFRA-E5-002 COMMIT:WIT logistics_throughput_live.json",
+      "CON-P7": "CLOSED — construction_p7_logistics_hook_001 in construction_stage_live.json"
     },
-    "coder_a_next": ["INFRA-E4-002", "INFRA-E5-002", "INFRA-E6-001", "INFRA-E6-002", "INFRA-E6-004"],
-    "coder_b_next": ["INFRA-E0-002", "INFRA-E1-003", "INFRA-E1-004", "INFRA-E2-003", "INFRA-E2-004", "INFRA-E3-001", "INFRA-E3-002", "INFRA-E4-001", "INFRA-E4-003", "INFRA-E4-004", "INFRA-E5-001", "INFRA-E5-003", "INFRA-E6-003"],
+    "coder_a_next": [],
+    "coder_a_closed_2026_06_07": [
+      "INFRA-E4-002",
+      "INFRA-E5-002",
+      "INFRA-E6-001",
+      "INFRA-E6-002",
+      "INFRA-E6-004",
+      "CON-P7-LOGISTICS-001"
+    ],
+    "coder_b_next": [],
+    "coder_b_closed_2026_06_03": [
+      "INFRA-E0-002",
+      "INFRA-E1-003",
+      "INFRA-E1-004",
+      "INFRA-E2-003",
+      "INFRA-E2-004",
+      "INFRA-E3-001",
+      "INFRA-E3-002",
+      "INFRA-E4-001",
+      "INFRA-E4-003",
+      "INFRA-E4-004",
+      "INFRA-E5-001",
+      "INFRA-E5-003",
+      "INFRA-E6-003"
+    ],
     "epic_milestones": {
       "E0": "profiles load + tile road/track deprecated + CI grep gate",
       "E1": "TransportGraph drives topology + spline + junction tests",
@@ -1728,33 +2223,184 @@
       "E6": "overlay render + nav agents on allowed_agents"
     }
   },
+  "weather_program": {
+    "phase_id": "PLAN-WEATHER-PARALLEL-001",
+    "plan_doc": "docs/archive/2026-06-src-dev/plans/plan_weather_parallel_lane_v1.md",
+    "witness_doc": "docs/archive/2026-06-src-dev/plans/plan_weather_witness_002_v1.md",
+    "runbook": "docs/archive/2026-06-src-dev/plans/weather_simulation_runbook_v2_plan_v1.md",
+    "owner_default": "coder_c",
+    "designer_brief": "prompts/designer_questions/weather_player_read_brief_v1.md",
+    "designer_active": null,
+    "pull_policy": "downtime_only",
+    "does_not_preempt": [
+      "construction_program",
+      "infrastructure_program",
+      "art_A",
+      "art_B"
+    ],
+    "territory": "src/systems/weather/",
+    "cross_system_max_consumer_files_per_pr": 1,
+    "coder_c_next": [],
+    "designer_next": [],
+    "downtime_queue": [
+      {
+        "id": "WEATHER-WITNESS-001",
+        "status": "done",
+        "owner": "coder_c",
+        "priority": 1,
+        "program": "weather",
+        "exit": "debug_runs/weather_sim_live.json writer; all keys present; green false",
+        "witness": "debug_runs/weather_sim_live.json",
+        "updated_at": "2026-06-03T20:00:00+00:00"
+      },
+      {
+        "id": "WEATHER-CLIMATE-001",
+        "status": "done",
+        "owner": "coder_c",
+        "priority": 2,
+        "program": "weather",
+        "exit": "ClimateState + climate_slow_tick",
+        "updated_at": "2026-06-03T21:00:00+00:00"
+      },
+      {
+        "id": "WEATHER-REGIONAL-001",
+        "status": "done",
+        "owner": "coder_c",
+        "priority": 3,
+        "program": "weather",
+        "exit": "regional_weather_tick + chunk lerp; regional_weather_wired witness",
+        "witness": "debug_runs/weather_sim_live.json",
+        "updated_at": "2026-06-02T22:00:00+00:00"
+      },
+      {
+        "id": "WEATHER-EFFECTS-001",
+        "status": "done",
+        "owner": "coder_c",
+        "priority": 4,
+        "program": "weather",
+        "exit": "weather_effects_traction_stub witness",
+        "witness": "debug_runs/weather_sim_live.json",
+        "updated_at": "2026-06-02T23:00:00+00:00"
+      },
+      {
+        "id": "WEATHER-GPU-PRECIP-001",
+        "status": "done",
+        "owner": "coder_c",
+        "priority": 5,
+        "program": "weather",
+        "witness": "debug_runs/weather_sim_live.json",
+        "exit": "mesh precip demoted; gpu authority flag",
+        "updated_at": "2026-06-03T00:00:00+00:00"
+      }
+    ]
+  },
+  "coder_c": {
+    "role": "weather_downtime",
+    "backlog_ref": "docs/archive/2026-06-src-dev/plans/coder_unified_backlog_v1.md#coder-c--weather-downtime-queue",
+    "pull_policy": "primary when assigned; else A/B pull when active[] empty",
+    "active": [],
+    "done": [
+      {
+        "id": "WEATHER-GPU-PRECIP-001",
+        "status": "done",
+        "owner": "coder_c",
+        "priority": 5,
+        "program": "weather",
+        "witness": "debug_runs/weather_sim_live.json",
+        "exit": "weather_precip_gpu_authority true",
+        "updated_at": "2026-06-03T00:00:00+00:00"
+      },
+      {
+        "id": "WEATHER-EFFECTS-001",
+        "status": "done",
+        "owner": "coder_c",
+        "priority": 4,
+        "program": "weather",
+        "witness": "debug_runs/weather_sim_live.json",
+        "exit": "weather_effects_traction_stub true",
+        "updated_at": "2026-06-02T23:00:00+00:00"
+      },
+      {
+        "id": "WEATHER-REGIONAL-001",
+        "status": "done",
+        "owner": "coder_c",
+        "priority": 3,
+        "program": "weather",
+        "witness": "debug_runs/weather_sim_live.json",
+        "exit": "regional_weather_tick + chunk lerp; regional_weather_wired witness",
+        "updated_at": "2026-06-02T22:00:00+00:00"
+      },
+      {
+        "id": "WEATHER-WITNESS-001",
+        "status": "done",
+        "owner": "coder_c",
+        "program": "weather",
+        "witness": "debug_runs/weather_sim_live.json",
+        "exit": "src/systems/weather/witness.rs + refresh_weather_sim_live_witness; lib test green"
+      },
+      {
+        "id": "WEATHER-CLIMATE-001",
+        "status": "done",
+        "owner": "coder_c",
+        "program": "weather",
+        "witness": "debug_runs/weather_sim_live.json",
+        "exit": "src/systems/weather/climate.rs ClimateState + climate_slow_tick; 14/14 weather tests"
+      }
+    ]
+  },
   "p2_optional": [
     {
       "id": "DEHACK-ENV-001",
       "status": "doc_done",
       "owner": "planner",
-      "plan_doc": "src/dev/runtime_env_policy_registry_v1.md",
+      "plan_doc": "docs/archive/2026-06-src-dev/plans/runtime_env_policy_registry_v1.md",
       "notes": "P2 env classification; not in coder active[] unless promoted"
     }
   ],
   "next_phase": {
-    "phase_id": "PHASE-STABLE-2026-06",
-    "plan_doc": "src/dev/plan_fleet_stability_integrity_001_v1.md",
-    "exec_doc": "src/dev/plan_fleet_stability_integrity_exec_002_v1.md",
-    "assignments_doc": "src/dev/fleet_stability_coder_dispatch_v1.md",
-    "audit": "src/dev/planner_status_audit_v18.md",
-    "jank_sweep": "src/dev/production_jank_sweep_20260602_v1.md",
-    "primary_theme": "PLAYABILITY-AND-STABILITY-P2",
-    "secondary_theme": "CON-P2 + INFRA-E0 (dual track)",
-    "gates": ["G-PLAY-01", "G-PROOF-01", "G-STAB-01", "G-CONTAIN-01"],
-    "p0_done": ["harness_plugin_test_mode_gate"],
-    "p1_done": ["DEHACK-ENG-001", "DEHACK-RENDER-001", "DEHACK-LOG-001"],
-    "open_slices": ["PLAY-TRUTH-001-TAIL", "DEHACK-WSS-002"],
-    "closed_unless_regression": ["PERF-VIS-*", "DEV-CONTAIN-002", "DEV-CONTAIN-003", "DEV-CONTAIN-004", "DEV-CONTAIN-005", "DEV-CONTAIN-006"],
+    "phase_id": "UNIFIED-PATH-2026-06",
+    "plan_doc": "docs/archive/2026-06-src-dev/plans/planner_unified_path_20260603_v1.md",
+    "exec_doc": "docs/archive/2026-06-src-dev/plans/plan_infrastructure_world_layers_exec_001_v1.md",
+    "assignments_doc": "docs/archive/2026-06-fleet-drain/dev_dispatch/orchestrator_coder_dispatch_20260603_v1.md",
+    "audit": "src/dev/planner_status_audit_v19.md",
+    "jank_sweep": "docs/archive/2026-06-src-dev/plans/production_jank_sweep_20260602_v1.md",
+    "primary_theme": "INFRA-A-TAIL + MCP-P0 + WEATHER-WITNESS",
+    "secondary_theme": "CON-P7 after PLAN-CON-P7-LOGISTICS-001",
+    "gates": [
+      "G-PLAY-01",
+      "G-PROOF-01"
+    ],
+    "gates_closed": [
+      "G-STAB-01",
+      "G-CONTAIN-01"
+    ],
+    "p0_done": [
+      "harness_plugin_test_mode_gate"
+    ],
+    "p1_done": [
+      "DEHACK-ENG-001",
+      "DEHACK-RENDER-001",
+      "DEHACK-LOG-001",
+      "CONTAIN-MINIMAP-001",
+      "STAB-CI-001",
+      "PLAY-TRUTH-001-TAIL",
+      "DEHACK-WSS-002"
+    ],
+    "open_slices": [
+      "MCP-P0-BRIEFS"
+    ],
+    "closed_unless_regression": [
+      "PERF-VIS-*",
+      "DEV-CONTAIN-002",
+      "DEV-CONTAIN-003",
+      "DEV-CONTAIN-004",
+      "DEV-CONTAIN-005",
+      "DEV-CONTAIN-006"
+    ],
     "rule": "Slice done = cfg compile boundary; not runtime guard alone. Do not reopen wave7 perf/contain rows.",
     "prior_phase": {
       "phase_id": "PHASE-NEXT-2026-05-28",
-      "plan_doc": "src/dev/plan_fleet_phase_next_001_v1.md",
+      "plan_doc": "docs/archive/2026-06-src-dev/plans/plan_fleet_phase_next_001_v1.md",
       "audit": "src/dev/planner_status_audit_v16.md",
       "status": "CLOSED"
     }

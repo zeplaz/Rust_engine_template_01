@@ -27,15 +27,12 @@
     "error": null
   },
   "authority": "snapshot material_profile \u2192 assembly_import apply_material_profile_to_meshes",
-  "render": {
-    "ok": true,
-    "status": "done",
-    "method": "keyframe_minimum_cell",
-    "variant_key": "clean_day",
-    "facing": 0,
-    "preview_png": "assets/staging/tiles/tile_warehouse_industrial_v2_minimum_g4/clean_day_f0.png",
-    "job_id": "tile_warehouse_industrial_clean_day_f0",
-    "error": null
-  },
-  "preview_png": "assets/staging/tiles/tile_warehouse_industrial_v2_minimum_g4/clean_day_f0.png"
+  "ship_policy": "ARCH-MAT-001: snapshot material_profile on assembly_build + every tile_variant_bake (bpy ops.material_authority.apply_from_job); ship stills = manual keyframe_render.py only (NOT keyframe_minimum_cell / tile_compile_minimum_bake)",
+  "bake_paths": [
+    "assembly_build",
+    "tile_variant_bake (ortho + keyframe)",
+    "variant_set.variant_bake",
+    "tile_batch_run / keyframe_pack",
+    "tile_compile_loop.run_minimum_cell_bakes"
+  ]
 }

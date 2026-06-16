@@ -1,0 +1,164 @@
+{
+  "_agent_meta": {
+    "agent_commands": [
+      "cargo test -p proc_A_dine01 --lib"
+    ],
+    "docs": {
+      "compile_warnings": "src/dev/COMPILE_WARNINGS_TODOS.md",
+      "stage5_directive": "prompts/guides/stage5_convergence_directive_v1.md",
+      "viewport_recovery": "src/dev/recovery_viewport.md"
+    },
+    "logging_env": {
+      "ORCHESTRATOR_EXPORT_HEALTH": false,
+      "PERF": false,
+      "RUST_LOG": null,
+      "SIM_VIEW_SYNC_DEBUG": false,
+      "STAGE5_READINESS_VERBOSE": false,
+      "STAGE5_VERBOSE": false,
+      "VIEWPORT_AUTHORITY_DEBUG": false
+    },
+    "orchestrator": {
+      "build_report": "tools/orchestrator/reports/build_report.md",
+      "ci_entry": "tools/orchestrator/ci/run.ps1",
+      "continuation_queue": "tools/orchestrator/queues/continuation_queue.json",
+      "warning_registry": "tools/orchestrator/reports/warning_registry.md"
+    },
+    "profile": "landscape_grammar_lg1",
+    "related_proofs": [
+      "debug_runs/stage5_full_app_live.json",
+      "debug_runs/infrastructure_view_isolation_live.json",
+      "debug_runs/construction_stage_live.json",
+      "debug_runs/industrial_activation_live.json",
+      "debug_runs/fire_ecology_live.json",
+      "debug_runs/logistics_throughput_live.json",
+      "debug_runs/replay_editor_parity_live.json",
+      "debug_runs/orchestrator_thread_health.json",
+      "debug_runs/viewport_drift.json",
+      "debug_runs/viewport_authority_migration_witness.json",
+      "debug_runs/main_thread_orchestrator_live.json",
+      "debug_runs/stage6_virtualization_live.json",
+      "debug_runs/wave_s_hydrate_live.json",
+      "debug_runs/wave_p_live.json",
+      "debug_runs/wave_c_live.json",
+      "debug_runs/ui_shell_migration_live.json",
+      "debug_runs/minimap_compositor_live.json",
+      "debug_runs/stage7_behavioral_live.json",
+      "debug_runs/stage7_play_live.json",
+      "debug_runs/wss_substrate_live.json",
+      "debug_runs/f2_smoke_pipeline_live.json",
+      "debug_runs/play_scenario_live.json",
+      "debug_runs/transport_network_live.json"
+    ],
+    "relative_path": "debug_runs/landscape_grammar_lg1_live.json",
+    "schema": "debug_run_envelope_v1",
+    "source_system": "refresh_lg1_witness",
+    "written_at_epoch_secs": 1781486860
+  },
+  "chart_id": "AGRI-LANDSCAPE-Δ9",
+  "effective_lambda": {
+    "lambda_access": 0.7200000286102295,
+    "lambda_disturbance": 0.18000000715255737,
+    "lambda_exposure": 0.4025000035762787,
+    "lambda_legibility": 0.6599999666213989,
+    "lambda_moisture": 0.9165000319480896,
+    "lambda_productivity": 0.9450000524520874,
+    "lambda_security": 0.11999999731779099,
+    "lambda_slope": 0.24799999594688416
+  },
+  "flat_node_count": 9,
+  "green": true,
+  "lambda_blended": true,
+  "lane": "LG-1",
+  "missing_required_topologies": [],
+  "nested_depth_max": 2,
+  "pilot_chunk": [
+    12,
+    0
+  ],
+  "pilot_preset_id": "agri_riparian_v0",
+  "planning_glyph_overlays": [
+    {
+      "depth": 0,
+      "glyph": "◊═◊",
+      "node_id": "net_01",
+      "preset_id": "NETWORK_CONNECTED",
+      "topology_kind": "Network"
+    },
+    {
+      "depth": 1,
+      "glyph": "≈≈≈╬≈≈≈",
+      "node_id": "corr_riparian_01",
+      "preset_id": "CORRIDOR_RIPARIAN",
+      "topology_kind": "Corridor"
+    },
+    {
+      "depth": 1,
+      "glyph": "(█)",
+      "node_id": "ring_shelter_01",
+      "preset_id": "RING_SHELTERBELT",
+      "topology_kind": "Ring"
+    },
+    {
+      "depth": 1,
+      "glyph": "█▓▒",
+      "node_id": "patch_woodlot_01",
+      "preset_id": "PATCH_IRREGULAR",
+      "topology_kind": "Patch"
+    },
+    {
+      "depth": 2,
+      "glyph": "◊◊",
+      "node_id": "cluster_regrowth_01",
+      "preset_id": "CLUSTER_NATURAL",
+      "topology_kind": "Cluster"
+    },
+    {
+      "depth": 1,
+      "glyph": "▒│",
+      "node_id": "fringe_field_edge_01",
+      "preset_id": "FRINGE_EDGE",
+      "topology_kind": "Fringe"
+    },
+    {
+      "depth": 0,
+      "glyph": "█▓▒",
+      "node_id": "macro_ag_parcel",
+      "preset_id": "PATCH_IRREGULAR",
+      "topology_kind": "Patch"
+    },
+    {
+      "depth": 0,
+      "glyph": "≈≈≈╬≈≈≈",
+      "node_id": "macro_riparian_axis",
+      "preset_id": "CORRIDOR_RIPARIAN",
+      "topology_kind": "Corridor"
+    },
+    {
+      "depth": 0,
+      "glyph": "(█)",
+      "node_id": "macro_shelter_lee",
+      "preset_id": "RING_SHELTERBELT",
+      "topology_kind": "Ring"
+    }
+  ],
+  "preset_lambda": {
+    "lambda_access": 0.7200000286102295,
+    "lambda_disturbance": 0.18000000715255737,
+    "lambda_exposure": 0.3499999940395355,
+    "lambda_legibility": 0.6399999856948853,
+    "lambda_moisture": 0.8799999952316284,
+    "lambda_productivity": 0.9100000262260437,
+    "lambda_security": 0.11999999731779099,
+    "lambda_slope": 0.2199999988079071
+  },
+  "required_topologies_met": true,
+  "topology_kind_count": 6,
+  "topology_kinds": [
+    "Cluster",
+    "Corridor",
+    "Fringe",
+    "Network",
+    "Patch",
+    "Ring"
+  ]
+}

@@ -14,11 +14,13 @@
     "playbook": "tools/orchestrator/agents/viewport_cleanup_agent.md",
     "docs": [
       "src/dev/stage5_triage_backlog.md",
-      "src/dev/stage5_5_open.md",
+      "docs/archive/2026-06-src-dev/plans/stage5_5_open.md",
       "`base_finsh_5.md` §1 — **Done** (witness `vm_06`)"
     ],
     "source": "TRIAGE-VM-06",
-    "status": "ready"
+    "status": "done",
+    "exit": "vm_06 sole writer sync_view_manager_bridge; infrastructure_view_isolation_live green",
+    "updated_at": "2026-06-08T01:50:00+00:00"
   },
   {
     "id": "SLICE-TRIAGE-FIRE-STREAM",
@@ -27,19 +29,21 @@
     "lane": "Fire",
     "agent": "sim-steward",
     "track": "5.5-E",
-    "witness": "debug_runs/infrastructure_view_isolation_live.json",
+    "witness": "debug_runs/fire_streaming_live.json",
     "commands": [
-      "cargo test -p proc_A_dine01 --lib",
-      "cargo orchestrate --plan-slice"
+      "cargo test -p proc_A_dine01 --lib fire_streaming",
+      "cargo test -p proc_A_dine01 --lib coder_a_wave3_14_closure"
     ],
     "playbook": "tools/orchestrator/agents/render_pipeline_agent.md",
     "docs": [
       "src/dev/stage5_triage_backlog.md",
-      "src/dev/stage5_5_open.md",
-      "`base_finsh_5.md` §5"
+      "docs/archive/2026-06-src-dev/plans/stage5_5_open.md",
+      "`base_finsh_5.md` §5 — **Done** (F7-B witness split)"
     ],
     "source": "TRIAGE-FIRE-STREAM",
-    "status": "ready"
+    "status": "done",
+    "exit": "fire_streaming_live.json green+streaming_wired; neighbor_wake_observed; cold-sim witness drift fixed",
+    "updated_at": "2026-06-08T17:00:00+00:00"
   },
   {
     "id": "SLICE-MD-F2-01",
@@ -55,12 +59,14 @@
     ],
     "playbook": "tools/orchestrator/agents/render_pipeline_agent.md",
     "docs": [
-      "src/dev/plan_fire_f2_extract_exec_001_v1.md",
+      "docs/archive/2026-06-src-dev/plans/plan_fire_f2_extract_exec_001_v1.md",
       "src/dev/fire_ecology_f1_todos.md"
     ],
     "source": "PLAN-FIRE-F2-EXEC-001",
     "coder_slice": "FIRE-F2-EXTRACT-001",
-    "status": "ready"
+    "status": "done",
+    "exit": "f2_extract_witness green; tactical_vfx fire_instance_buffer_rows_gt_0",
+    "updated_at": "2026-06-08T02:00:00+00:00"
   },
   {
     "id": "SLICE-MD-F2-02",
@@ -76,12 +82,14 @@
     ],
     "playbook": "tools/orchestrator/agents/render_pipeline_agent.md",
     "docs": [
-      "src/dev/plan_wss_smoke_bridge_exec_001_v1.md",
-      "src/dev/wssr_plan_004_atmosphere_unification_v1.md"
+      "docs/archive/2026-06-src-dev/plans/plan_wss_smoke_bridge_exec_001_v1.md",
+      "docs/archive/2026-06-src-dev/plans/wssr_plan_004_atmosphere_unification_v1.md"
     ],
     "source": "PLAN-WSS-SMOKE-BRIDGE-001",
     "coder_slice": "WSS-SMOKE-BRIDGE-001",
-    "status": "ready"
+    "status": "done",
+    "exit": "wss_smoke_bridge_001.green; smoke_extract_wired; smoke_stub_removed",
+    "updated_at": "2026-06-08T15:00:00+00:00"
   },
   {
     "id": "SLICE-MD-F2-03",
@@ -100,6 +108,10 @@
       "src/dev/fire_ecology_f1_todos.md"
     ],
     "source": "markdown:src/dev/fire_ecology_f1_todos.md",
-    "status": "ready"
+    "status": "done",
+    "exit": "fuel_spread_counters_wired true; fuel_depleted_cells 348; neighbor_spread_cells 558",
+    "tail_slice": "FIRE-FUEL-COUNTERS-001",
+    "updated_at": "2026-06-08T19:00:00+00:00",
+    "notes": "Harness fix: elevation 0.5 above water line; schedule finalize after ember apply"
   }
 ]

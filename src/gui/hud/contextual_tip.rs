@@ -2,7 +2,9 @@
 
 use bevy::prelude::*;
 
-use crate::construction::{BuildGhostState, BuildPlacementPreview, BuildStripState, ToolContext};
+use crate::construction::{
+    BuildGhostState, BuildPlacementMode, BuildPlacementPreview, BuildStripState, ToolContext,
+};
 use crate::gui::hud::strategic_preview::format_projected_commit_effects;
 use crate::gui::hud::tool_help;
 use crate::gui::hud::validation_feedback::{self, ValidationSeverity};
@@ -28,15 +30,20 @@ pub fn format_developmental_context_line(
     bindings: &InputBindings,
     policy_routing: bool,
     policy_ew: bool,
+    site_stub_overlay_on: bool,
 ) -> String {
     let cycle = tool_help::format_build_cycle_key(bindings);
-    let commit = tool_help::format_build_commit_key(bindings);
     let rot = tool_help::format_map_rotate_keys(bindings);
     let overlay = format!(
         "overlays congestion {} / EW {}",
         if policy_routing { "on" } else { "off" },
         if policy_ew { "on" } else { "off" },
     );
+    let site_suffix = if site_stub_overlay_on {
+        " · site overlay on"
+    } else {
+        ""
+    };
 
     if strip.active == ToolContext::None {
         return format!(
@@ -45,6 +52,37 @@ pub fn format_developmental_context_line(
     }
 
     let heading = tool_heading(strip.active);
+    let is_building_tool = matches!(
+        strip.active,
+        ToolContext::Industry | ToolContext::Civil | ToolContext::Military
+    );
+
+    if is_building_tool {
+        let archetype = validation_feedback::site_archetype_operational_name(strip.active.site_archetype());
+        let in_adjust = ghost.placement_mode == BuildPlacementMode::Adjust && ghost.origin.is_some();
+        if in_adjust {
+            let (x, z) = ghost
+                .origin
+                .map(|t| (t.x, t.z))
+                .unwrap_or((0, 0));
+            if preview.report.allows_commit {
+                return format!(
+                    "CONTEXT — BUILD · {archetype} · locked {x},{z} · Ctrl rotate · Shift scale · click to place · Esc cancel{site_suffix}",
+                );
+            }
+            let reason = validation_feedback::primary_validation_message(&preview.report)
+                .unwrap_or_else(|| "Placement blocked.".into());
+            return format!(
+                "CONTEXT — BUILD · {archetype} · locked {x},{z} · blocked: {reason} · Esc cancel{site_suffix}",
+            );
+        }
+        return format!(
+            "CONTEXT — BUILD · {} · {} · click map to lock · [{cycle}] category{site_suffix}",
+            strip.active.label(),
+            archetype,
+        );
+    }
+
     let site = ghost
         .origin
         .map(|t| format!("selection {},{}", t.x, t.z))
@@ -65,15 +103,16 @@ pub fn format_developmental_context_line(
         .map(|d| format!(" · warning: {}", d.message))
         .unwrap_or_default();
 
+    let commit = tool_help::format_build_commit_key(bindings);
     if preview.report.allows_commit {
         format!(
-            "CONTEXT — {heading} · {site} · ok to commit [{commit}] · shift+click queues blueprint · right-click clears ghost · cycle [{cycle}] · rotate map [{rot}] · {overlay}{warn_note}{projection_note}",
+            "CONTEXT — {heading} · {site} · ok to commit [{commit}] · right-click clears ghost · cycle [{cycle}] · rotate map [{rot}] · {overlay}{warn_note}{projection_note}",
         )
     } else {
         let reason = validation_feedback::primary_validation_message(&preview.report)
             .unwrap_or_else(|| "Placement blocked.".into());
         format!(
-            "CONTEXT — {heading} · {site} · blocked: {reason} · [{cycle}] change mode · shift+click queue when valid · [{commit}] approve pending · right-click cancel · {overlay}",
+            "CONTEXT — {heading} · {site} · blocked: {reason} · [{cycle}] change mode · right-click cancel · {overlay}",
         )
     }
 }
@@ -84,8 +123,13 @@ pub fn update_developmental_context_strip_system(
     preview: Res<BuildPlacementPreview>,
     bindings: Res<InputBindings>,
     policy: Res<StrategicOverlayDisplayPolicy>,
+    site_stub: Option<Res<crate::construction::SiteStubOverlayState>>,
     mut q: Query<&mut Text, With<DevelopmentalContextStripLine>>,
 ) {
+    let site_stub_overlay_on = site_stub
+        .as_deref()
+        .map(|s| s.preset_id.is_some())
+        .unwrap_or(false);
     let line = format_developmental_context_line(
         &strip,
         &ghost,
@@ -93,8 +137,91 @@ pub fn update_developmental_context_strip_system(
         &bindings,
         policy.apply_routing_congestion,
         policy.apply_ew_denial,
+        site_stub_overlay_on,
     );
     for mut t in &mut q {
         *t = Text::new(line.clone());
+    }
+}
+
+/// BUILD-READ-DESIGN-002 — context strip wiring witness (copy charter in `design_build_toolbox_hud_v1.md`).
+#[must_use]
+pub fn build_read_design_002_witness_green() -> bool {
+    build_read_design_002_self_check().is_ok()
+}
+
+fn build_read_design_002_self_check() -> Result<(), &'static str> {
+    use crate::construction::{
+        BuildGhostState, BuildPlacementMode, BuildPlacementPreview, BuildStripState, ToolContext,
+    };
+    use crate::gui::input_bindings::InputBindings;
+    use crate::strategic::{BuildSiteTile, StrategicOverlayDisplayPolicy};
+
+    let bindings = InputBindings::default();
+    let policy = StrategicOverlayDisplayPolicy::default();
+    let mut strip = BuildStripState::default();
+    strip.active = ToolContext::Industry;
+    let ghost_preview = BuildGhostState::default();
+    let preview = BuildPlacementPreview::default();
+    let preview_line = format_developmental_context_line(
+        &strip,
+        &ghost_preview,
+        &preview,
+        &bindings,
+        policy.apply_routing_congestion,
+        policy.apply_ew_denial,
+        false,
+    );
+    if !preview_line.contains("click map to lock") {
+        return Err("preview_copy");
+    }
+    if preview_line.contains("shift+click") || preview_line.contains("ok to commit") {
+        return Err("legacy_build_copy");
+    }
+
+    let ghost_adjust = BuildGhostState {
+        origin: Some(BuildSiteTile { x: 4, z: 7 }),
+        placement_mode: BuildPlacementMode::Adjust,
+        ..Default::default()
+    };
+    let mut adjust_preview = BuildPlacementPreview::default();
+    adjust_preview.report.allows_commit = true;
+    let adjust_line = format_developmental_context_line(
+        &strip,
+        &ghost_adjust,
+        &adjust_preview,
+        &bindings,
+        policy.apply_routing_congestion,
+        policy.apply_ew_denial,
+        true,
+    );
+    if !adjust_line.contains("Ctrl rotate") || !adjust_line.contains("Shift scale") {
+        return Err("adjust_copy");
+    }
+    if !adjust_line.contains("site overlay on") {
+        return Err("site_overlay_suffix");
+    }
+    Ok(())
+}
+
+#[must_use]
+pub fn build_read_design_002_witness_json() -> serde_json::Value {
+    serde_json::json!({
+        "gate": "BUILD-READ-DESIGN-002",
+        "green": build_read_design_002_witness_green(),
+        "context_strip_formatter": true,
+        "design_copy_wired": build_read_design_002_witness_green(),
+        "preview_copy": "click map to lock",
+        "adjust_copy": "Ctrl rotate · Shift scale · click to place",
+    })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn build_read_design_002_witness_self_check_green() {
+        assert!(build_read_design_002_witness_green());
     }
 }

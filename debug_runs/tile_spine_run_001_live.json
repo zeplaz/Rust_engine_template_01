@@ -1,0 +1,33 @@
+{
+  "schema": "tile_spine_run_result_v1",
+  "ok": true,
+  "stopped_at": null,
+  "snapshot_path": "tools/mcp/schemas/examples/assembly_snapshot_rowhouse_victorian_production_v1.json",
+  "batch_id": "tile_rowhouse_victorian_production_v1",
+  "tile_batch_path": "tools/mcp/schemas/examples/tile_batch_rowhouse_victorian_production_v1.json",
+  "ship": false,
+  "honest_bake": true,
+  "steps": [
+    {
+      "step": "p0_gate",
+      "ok": true,
+      "duration_ms": 7,
+      "witness_path": null,
+      "detail": {
+        "status": "passed"
+      }
+    },
+    {
+      "step": "snapshot_digest",
+      "ok": true,
+      "duration_ms": 1,
+      "witness_path": null,
+      "detail": {
+        "footprint": "4x3x2",
+        "placements": 30
+      }
+    }
+  ],
+  "gate_id": "MCP-SPINE-CHAIN-001",
+  "green": true
+}

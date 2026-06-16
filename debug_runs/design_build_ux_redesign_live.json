@@ -1,0 +1,25 @@
+{
+  "_agent_meta": {
+    "profile": "DESIGN_BUILD_UX_REDESIGN",
+    "schema": "debug_run_envelope_v1",
+    "source_system": "designer_design_build_ux_redesign_001",
+    "relative_path": "debug_runs/design_build_ux_redesign_live.json",
+    "design_doc": "src/dev/design_build_ux_redesign_v1.md",
+    "parent_program": "G-PLAY-01"
+  },
+  "gate": "DESIGN-BUILD-UX-REDESIGN-001",
+  "green": true,
+  "verdict": "PASS",
+  "charter_on_disk": true,
+  "two_click_fsm_spec": true,
+  "shift_lmb_building_queue_removed": true,
+  "alt_drag_blueprint_paint": true,
+  "enter_optional_power_user": true,
+  "hud_copy_locked": true,
+  "impl_wired": false,
+  "unblocks": [
+    "TRIAGE-BUILD-CLICK-PLACE-001",
+    "TRIAGE-CURSOR-UNIFY-001"
+  ],
+  "delta_wf": "@coder TRIAGE-BUILD-CLICK-PLACE-001"
+}

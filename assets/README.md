@@ -1,6 +1,6 @@
 # Assets layout (authoritative map)
 
-**Policy:** [`src/dev/assets_organization_v1.md`](../src/dev/assets_organization_v1.md) · tile bake spine: [`src/dev/design_tile_bake_spine_convergence_v1.md`](../src/dev/design_tile_bake_spine_convergence_v1.md)
+**Policy:** [`docs/archive/2026-06-src-dev/plans/assets_organization_v1.md`](../docs/archive/2026-06-src-dev/plans/assets_organization_v1.md) · tile bake spine: [`docs/archive/2026-06-src-dev/plans/design_tile_bake_spine_convergence_v1.md`](../docs/archive/2026-06-src-dev/plans/design_tile_bake_spine_convergence_v1.md)
 
 Nothing under `assets/` is deleted by automation — only **moved to `archive/`** with a manifest log.
 

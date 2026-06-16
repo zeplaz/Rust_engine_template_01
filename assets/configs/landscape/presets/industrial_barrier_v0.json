@@ -1,0 +1,59 @@
+{
+  "schema_version": "landscape_grammar_v0",
+  "preset_id": "industrial_barrier_v0",
+  "chart_id": "IND-BARRIER-D1",
+  "land_dna": { "H": "industrial", "S": "compact", "E": "exposed", "T": "temperate", "D": "dry", "L": "industrial", "A": "young", "M": "maintained" },
+  "pressure_field": {
+    "lambda_moisture": 0.35,
+    "lambda_slope": 0.18,
+    "lambda_exposure": 0.72,
+    "lambda_disturbance": 0.55,
+    "lambda_access": 0.88,
+    "lambda_security": 0.65,
+    "lambda_productivity": 0.82,
+    "lambda_legibility": 0.78
+  },
+  "landscape_program": {
+    "class": "industrial",
+    "district_ref": "industrial_yard_07",
+    "required_topologies": ["CORRIDOR_ROADSIDE", "RING_BARRIER", "PATCH_HARDSTAND", "FRINGE_EDGE"]
+  },
+  "topology_graph": [
+    {
+      "id": "net_ind_01",
+      "topology_kind": "Network",
+      "preset_id": "NETWORK_CONNECTED",
+      "children": [
+        {
+          "id": "corr_road_01",
+          "topology_kind": "Corridor",
+          "preset_id": "CORRIDOR_ROADSIDE",
+          "metadata": { "glyph_planning": "════════" }
+        },
+        {
+          "id": "ring_barrier_01",
+          "topology_kind": "Ring",
+          "preset_id": "RING_BARRIER",
+          "metadata": { "glyph_planning": "◯◯◯" }
+        },
+        {
+          "id": "patch_yard_01",
+          "topology_kind": "Patch",
+          "preset_id": "PATCH_HARDSTAND",
+          "children": [
+            {
+              "id": "cluster_stack_01",
+              "topology_kind": "Cluster",
+              "preset_id": "CLUSTER_INDUSTRIAL"
+            }
+          ]
+        },
+        {
+          "id": "fringe_edge_01",
+          "topology_kind": "Fringe",
+          "preset_id": "FRINGE_EDGE"
+        }
+      ]
+    }
+  ]
+}

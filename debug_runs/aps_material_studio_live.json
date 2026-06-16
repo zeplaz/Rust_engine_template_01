@@ -1,0 +1,53 @@
+{
+  "gate_id": "APS-MAT-STUDIO-PHASE-A",
+  "ok": true,
+  "profile_id": "concrete_grey_01",
+  "catalog_count": 21,
+  "categories": [
+    "glass",
+    "industrial/concrete",
+    "industrial/steel",
+    "other",
+    "residential/brick",
+    "residential/wood",
+    "roof"
+  ],
+  "preview_modes": {
+    "sphere": {
+      "ok": true,
+      "path": "debug_runs/material_studio_previews/concrete_grey_01/sphere.png"
+    },
+    "wall_strip": {
+      "ok": true,
+      "path": "debug_runs/material_studio_previews/concrete_grey_01/wall_strip.png"
+    },
+    "building_section": {
+      "ok": true,
+      "path": "debug_runs/material_studio_previews/concrete_grey_01/building_section.png",
+      "mode": "building_section",
+      "degraded": false,
+      "placement_count": 40,
+      "missing_glbs": [],
+      "source": "tools/mcp/schemas/examples/assembly_snapshot_warehouse_industrial_west_production_v1.json"
+    },
+    "profile_id": "concrete_grey_01",
+    "category": "industrial/concrete",
+    "texture_status": "ready",
+    "ok": true
+  },
+  "ui": {
+    "materials_tab": "tools/mcp/art_pipeline_suite/app.py",
+    "shared_widget": "material_library_widget.py",
+    "layout": "studio_tree",
+    "list_rows": "scrollable_thumb_rows",
+    "thumb_cache_dir": "debug_runs/material_thumb_cache",
+    "list_thumb_px": 48,
+    "assembly_assign": "assembly_panel.py MaterialBrowserPanel",
+    "context_thumb": "assembly_preview_panel \u2192 slot_preview_panel"
+  },
+  "aps_mat_003": {
+    "warmed": 21,
+    "total": 21
+  },
+  "ship_policy": "material authority on snapshot only \u2014 not Blender viewport"
+}

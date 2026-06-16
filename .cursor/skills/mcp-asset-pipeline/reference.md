@@ -1,6 +1,6 @@
 # MCP Asset Pipeline — Reference
 
-Merged from [`prompts/MCP/mcp_drafts.md`](../../prompts/MCP/mcp_drafts.md) and [`prompts/MCP/rules_skills_draft.md`](../../prompts/MCP/rules_skills_draft.md), aligned with shipped [`tools/mcp/`](../../tools/mcp/).
+Merged from [`docs/archive/2026-06-fleet-drain/prompts_drafts/mcp_drafts.md`](../../docs/archive/2026-06-fleet-drain/prompts_drafts/mcp_drafts.md) and [`docs/archive/2026-06-fleet-drain/prompts_drafts/rules_skills_draft.md`](../../docs/archive/2026-06-fleet-drain/prompts_drafts/rules_skills_draft.md), aligned with shipped [`tools/mcp/`](../../tools/mcp/).
 
 ## Core flow
 

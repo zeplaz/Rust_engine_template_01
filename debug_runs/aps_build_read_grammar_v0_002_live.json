@@ -1,0 +1,69 @@
+{
+  "gate_id": "BUILD-READ-GRAMMAR-v0-002",
+  "ops_id": "OPS-006",
+  "task_id": "BUILD-READ-GRAMMAR-v0-002",
+  "program_id": "art_A",
+  "owner": "@coder-mcp",
+  "ok": true,
+  "green": true,
+  "preset_id": "logistics_rail_warehouse_v0",
+  "preset_count": 4,
+  "consumer_witness": "debug_runs/aps_dna_consumer_contract_live.json",
+  "consumer_unblocked": true,
+  "beta_keys": [
+    "beta_sym",
+    "beta_irr",
+    "beta_yard",
+    "beta_svc",
+    "beta_mod",
+    "beta_exp",
+    "beta_vert",
+    "beta_roof"
+  ],
+  "arch_dna_keys": [
+    "F",
+    "L",
+    "C",
+    "D",
+    "W",
+    "I",
+    "S",
+    "P",
+    "M",
+    "A"
+  ],
+  "ui": {
+    "panel": "tools/mcp/art_pipeline_suite/grammar_dna_panel.py",
+    "assembly_hook": "tools/mcp/art_pipeline_suite/assembly_panel.py",
+    "snapshot_fields": [
+      "arch_build_grammar_preset_id",
+      "arch_dna",
+      "pressure_field",
+      "arch_build_grammar_id"
+    ]
+  },
+  "preset_sample": {
+    "arch_dna": {
+      "F": "logistics",
+      "L": "industrial_british",
+      "C": "temperate",
+      "D": "sparse",
+      "W": "industrial",
+      "I": "rail",
+      "S": "controlled",
+      "P": "utilitarian",
+      "M": "steel",
+      "A": "weathered"
+    },
+    "pressure_field": {
+      "beta_sym": 0.72,
+      "beta_irr": 0.24,
+      "beta_yard": 0.93,
+      "beta_svc": 0.88,
+      "beta_mod": 0.92,
+      "beta_exp": 0.84,
+      "beta_vert": 0.18,
+      "beta_roof": 0.63
+    }
+  }
+}

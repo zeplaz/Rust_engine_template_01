@@ -21,7 +21,8 @@ pub use portals::{
 pub use routes::{
     collect_portal_entity_tiles, collect_portal_entity_tiles_from_world,
     flow_paths_match_nav_export, infra_e5_002_graph_only_paths_green,
-    refresh_resource_flow_routes_system, tile_node_key, topology_revision_u32,
+    nav_agent_routing_witness_payload, refresh_resource_flow_routes_system, tile_node_key,
+    topology_revision_u32,
 };
 pub use solver::{
     feedback_congestion_from_load_system, propagate_corridor_pressure_system,

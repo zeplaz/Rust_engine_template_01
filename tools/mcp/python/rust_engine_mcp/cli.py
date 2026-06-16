@@ -372,8 +372,39 @@ def _cmd_agent_queue_board(args: argparse.Namespace) -> int:
 
 
 def _cmd_witness_brief(args: argparse.Namespace) -> int:
-    print(json.dumps(agent_queue.witness_brief(args.path), indent=2))
+    profile = getattr(args, "profile", None) or None
+    print(json.dumps(agent_queue.witness_brief(args.path, profile=profile), indent=2))
     return 0
+
+
+def _cmd_review_order_brief(_: argparse.Namespace) -> int:
+    from rust_engine_mcp import ops_intelligence
+
+    print(json.dumps(ops_intelligence.review_order_brief(), indent=2))
+    return 0
+
+
+def _cmd_slice_exec_brief(args: argparse.Namespace) -> int:
+    queue = args.queue or None
+    body = agent_queue.slice_exec_brief(args.slice_id, queue=queue)
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("ok") else 1
+
+
+def _cmd_mcp_phase4_queue_witness(_: argparse.Namespace) -> int:
+    from rust_engine_mcp import ops_intelligence
+
+    body = ops_intelligence.write_mcp_phase4_queue_live_witness()
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
+def _cmd_mcp_valid_construction_witness(_: argparse.Namespace) -> int:
+    from rust_engine_mcp import ops_intelligence
+
+    body = ops_intelligence.write_mcp_valid_construction_live_witness()
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
 
 
 def _cmd_handoff_brief(_args: argparse.Namespace) -> int:
@@ -394,6 +425,190 @@ def _cmd_orchestrator_brief(args: argparse.Namespace) -> int:
 def _cmd_token_savings_guide(_args: argparse.Namespace) -> int:
     print(json.dumps(agent_queue.token_savings_guide(), indent=2))
     return 0
+
+
+def _cmd_pipeline_preflight(args: argparse.Namespace) -> int:
+    from rust_engine_mcp import mcp_productivity_p0
+
+    body = mcp_productivity_p0.pipeline_preflight(
+        queue=args.queue,
+        check_build_set=bool(getattr(args, "check_build_set", False)),
+    )
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("ok") else 1
+
+
+def _cmd_ops_get_project_brief(_: argparse.Namespace) -> int:
+    from rust_engine_mcp import ops_intelligence
+
+    print(json.dumps(ops_intelligence.ops_get_project_brief(), indent=2))
+    return 0
+
+
+def _cmd_ops_get_retry_guidance(args: argparse.Namespace) -> int:
+    from rust_engine_mcp import ops_intelligence
+
+    body = ops_intelligence.ops_get_retry_guidance(args.task_id)
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("ok") else 1
+
+
+def _cmd_build_read_grammar_v0_002_witness(_: argparse.Namespace) -> int:
+    from rust_engine_mcp import arch_build_grammar
+
+    body = arch_build_grammar.write_build_read_grammar_v0_002_witness()
+    arch_build_grammar.write_aps_dna_consumer_witness()
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
+def _cmd_aps_dna_consumer_witness(_: argparse.Namespace) -> int:
+    from rust_engine_mcp import arch_build_grammar
+
+    body = arch_build_grammar.write_aps_dna_consumer_witness()
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
+def _cmd_arch_dna_consumer_contract(_: argparse.Namespace) -> int:
+    from rust_engine_mcp import arch_build_grammar
+
+    print(json.dumps(arch_build_grammar.consumer_contract(), indent=2))
+    return 0
+
+
+def _cmd_arch_dna_snapshot_brief(args: argparse.Namespace) -> int:
+    from rust_engine_mcp import arch_build_grammar
+
+    body = arch_build_grammar.arch_dna_snapshot_brief(args.path)
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("ok") else 1
+
+
+def _cmd_grammar_set_brief(args: argparse.Namespace) -> int:
+    from rust_engine_mcp import grammar_build_set
+
+    if getattr(args, "write_witness", False):
+        body = grammar_build_set.write_grammar_set_brief_witness()
+    else:
+        body = grammar_build_set.grammar_set_brief(set_id=args.set_id or None)
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("ok") else 1
+
+
+def _cmd_grammar_preset_pair_validate(args: argparse.Namespace) -> int:
+    from rust_engine_mcp import grammar_build_set
+
+    body = grammar_build_set.grammar_preset_pair_validate(
+        preset_id=args.preset_id or None,
+        path=args.path or None,
+    )
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
+def _cmd_grammar_eval_sweep(args: argparse.Namespace) -> int:
+    from rust_engine_mcp import grammar_build_set
+
+    seeds = [int(x) for x in args.seeds.split(",")] if args.seeds else None
+    body = grammar_build_set.grammar_eval_sweep(
+        archetype_id=args.archetype,
+        district_style=args.district,
+        seeds=seeds,
+    )
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("ok") else 1
+
+
+def _cmd_grammar_pilot_parity(_: argparse.Namespace) -> int:
+    from rust_engine_mcp import grammar_build_set
+
+    body = grammar_build_set.grammar_pilot_parity()
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
+def _cmd_building_set_coverage(_: argparse.Namespace) -> int:
+    from rust_engine_mcp import grammar_build_set
+
+    body = grammar_build_set.building_set_coverage_report()
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
+def _cmd_building_set_coverage_witness(_: argparse.Namespace) -> int:
+    from rust_engine_mcp import grammar_build_set
+
+    body = grammar_build_set.write_building_set_coverage_witness()
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
+def _cmd_pilot_hardcode_lint(_: argparse.Namespace) -> int:
+    from rust_engine_mcp.pilot_hardcode_lint import pilot_hardcode_lint
+
+    body = pilot_hardcode_lint()
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
+def _cmd_pilot_hardcode_lint_witness(_: argparse.Namespace) -> int:
+    from rust_engine_mcp.pilot_hardcode_lint import write_pilot_hardcode_lint_witness
+
+    body = write_pilot_hardcode_lint_witness()
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
+def _cmd_example_teachable_audit(_: argparse.Namespace) -> int:
+    from rust_engine_mcp.build_set_guards import example_teachable_audit
+
+    body = example_teachable_audit()
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
+def _cmd_example_teachable_audit_witness(_: argparse.Namespace) -> int:
+    from rust_engine_mcp.build_set_guards import write_example_teachable_audit_witness
+
+    body = write_example_teachable_audit_witness()
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
+def _cmd_single_archetype_ratio_guard(_: argparse.Namespace) -> int:
+    from rust_engine_mcp.build_set_guards import single_archetype_ratio_guard
+
+    body = single_archetype_ratio_guard()
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
+def _cmd_warehouse_track_guard(_: argparse.Namespace) -> int:
+    from rust_engine_mcp.build_set_guards import warehouse_track_guard
+
+    body = warehouse_track_guard()
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
+def _cmd_build_set_guards_witness(_: argparse.Namespace) -> int:
+    from rust_engine_mcp.build_set_guards import write_build_set_guards_witnesses
+
+    body = write_build_set_guards_witnesses()
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
+def _cmd_grammar_integration_validate(args: argparse.Namespace) -> int:
+    from rust_engine_mcp.grammar_integration import grammar_integration_validate, write_grammar_integration_witness
+
+    if getattr(args, "write_witness", False):
+        body = write_grammar_integration_witness(args.path or None)
+    else:
+        body = grammar_integration_validate(args.path)
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
 
 
 def _cmd_validate_report(args: argparse.Namespace) -> int:
@@ -618,6 +833,10 @@ def main(argv: list[str] | None = None) -> int:
             "assembly_grammar",
             "assembly_p0",
             "assembly_production",
+            "building_set_coverage",
+            "pilot_hardcode_lint",
+            "landscape_grammar",
+            "arch_build_grammar",
         ],
         help="Validator id",
     )
@@ -648,7 +867,7 @@ def main(argv: list[str] | None = None) -> int:
 
     p = sub.add_parser("agent-queue-next")
     p.add_argument("agent", help="planner | coder | designer | coder-mcp | designer-mcp")
-    p.add_argument("--queue", default="grammar", choices=sorted(agent_queue.QUEUE_REGISTRY))
+    p.add_argument("--queue", default="auto", choices=["auto", *sorted(agent_queue.QUEUE_REGISTRY)])
     p.add_argument("--mark-in-progress", action="store_true")
     p.set_defaults(func=_cmd_agent_queue_next)
 
@@ -666,7 +885,16 @@ def main(argv: list[str] | None = None) -> int:
 
     p = sub.add_parser("witness-brief")
     p.add_argument("path")
+    p.add_argument("--profile", default="", help="construction | map_pick | fire_product")
     p.set_defaults(func=_cmd_witness_brief)
+
+    sub.add_parser("review-order-brief").set_defaults(func=_cmd_review_order_brief)
+    p = sub.add_parser("slice-exec-brief")
+    p.add_argument("slice_id")
+    p.add_argument("--queue", default="", help="phase4 | grammar | … (default: search all)")
+    p.set_defaults(func=_cmd_slice_exec_brief)
+    sub.add_parser("mcp-phase4-queue-witness").set_defaults(func=_cmd_mcp_phase4_queue_witness)
+    sub.add_parser("mcp-valid-construction-witness").set_defaults(func=_cmd_mcp_valid_construction_witness)
 
     p = sub.add_parser("handoff-brief")
     p.set_defaults(func=_cmd_handoff_brief)
@@ -681,6 +909,57 @@ def main(argv: list[str] | None = None) -> int:
     p.set_defaults(func=_cmd_orchestrator_brief)
 
     sub.add_parser("token-savings-guide").set_defaults(func=_cmd_token_savings_guide)
+
+    p = sub.add_parser("pipeline-preflight", help="MCP-PREFLIGHT-001 environment check")
+    p.add_argument("--queue", default="grammar")
+    p.add_argument("--check-build-set", action="store_true", help="MCP-PREFLIGHT-BUILD-SET-001")
+    p.set_defaults(func=_cmd_pipeline_preflight)
+
+    sub.add_parser("ops-get-project-brief").set_defaults(func=_cmd_ops_get_project_brief)
+    sub.add_parser("build-read-grammar-v0-002-witness").set_defaults(func=_cmd_build_read_grammar_v0_002_witness)
+    sub.add_parser("aps-dna-consumer-witness").set_defaults(func=_cmd_aps_dna_consumer_witness)
+    sub.add_parser("arch-dna-consumer-contract").set_defaults(func=_cmd_arch_dna_consumer_contract)
+    p = sub.add_parser("arch-dna-snapshot-brief")
+    p.add_argument("path")
+    p.set_defaults(func=_cmd_arch_dna_snapshot_brief)
+    p = sub.add_parser("ops-get-retry-guidance")
+    p.add_argument("task_id")
+    p.set_defaults(func=_cmd_ops_get_retry_guidance)
+
+    p = sub.add_parser("grammar-set-brief")
+    p.add_argument("--set-id", default="")
+    p.add_argument("--write-witness", action="store_true")
+    p.set_defaults(func=_cmd_grammar_set_brief)
+
+    p = sub.add_parser("grammar-preset-pair-validate")
+    p.add_argument("--preset-id", default="")
+    p.add_argument("--path", default="")
+    p.set_defaults(func=_cmd_grammar_preset_pair_validate)
+
+    p = sub.add_parser("grammar-eval-sweep")
+    p.add_argument("--archetype", default="IndustrialWarehouse")
+    p.add_argument("--district", default="industrial_west")
+    p.add_argument("--seeds", default="", help="Comma-separated seed list")
+    p.set_defaults(func=_cmd_grammar_eval_sweep)
+
+    sub.add_parser("grammar-pilot-parity").set_defaults(func=_cmd_grammar_pilot_parity)
+    sub.add_parser("building-set-coverage").set_defaults(func=_cmd_building_set_coverage)
+    sub.add_parser("building-set-coverage-witness").set_defaults(func=_cmd_building_set_coverage_witness)
+    sub.add_parser("pilot-hardcode-lint").set_defaults(func=_cmd_pilot_hardcode_lint)
+    sub.add_parser("pilot-hardcode-lint-witness").set_defaults(func=_cmd_pilot_hardcode_lint_witness)
+    sub.add_parser("example-teachable-audit").set_defaults(func=_cmd_example_teachable_audit)
+    sub.add_parser("example-teachable-audit-witness").set_defaults(func=_cmd_example_teachable_audit_witness)
+    sub.add_parser("single-archetype-ratio-guard").set_defaults(func=_cmd_single_archetype_ratio_guard)
+    sub.add_parser("warehouse-track-guard").set_defaults(func=_cmd_warehouse_track_guard)
+    sub.add_parser("build-set-guards-witness").set_defaults(func=_cmd_build_set_guards_witness)
+    p = sub.add_parser("grammar-integration-validate")
+    p.add_argument(
+        "path",
+        nargs="?",
+        default="tools/mcp/schemas/examples/assembly_snapshot_warehouse_industrial_west_production_v1.json",
+    )
+    p.add_argument("--write-witness", action="store_true")
+    p.set_defaults(func=_cmd_grammar_integration_validate)
 
     args = parser.parse_args(argv)
     try:

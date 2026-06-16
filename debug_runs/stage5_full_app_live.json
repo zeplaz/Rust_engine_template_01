@@ -49,12 +49,13 @@
       "debug_runs/stage7_play_live.json",
       "debug_runs/wss_substrate_live.json",
       "debug_runs/f2_smoke_pipeline_live.json",
-      "debug_runs/play_scenario_live.json"
+      "debug_runs/play_scenario_live.json",
+      "debug_runs/transport_network_live.json"
     ],
     "relative_path": "debug_runs/stage5_full_app_live.json",
     "schema": "debug_run_envelope_v1",
-    "source_system": "log_e01_fullapp_upgrade_001_witness_refresh",
-    "written_at_epoch_secs": 1780455044
+    "source_system": "log_e01_and_tactical_vfx_stage5_witness_refresh",
+    "written_at_epoch_secs": 1781533759
   },
   "agent_cleanup_hints": null,
   "authority_revisions": {
@@ -68,10 +69,28 @@
     "fire_tick": 121
   },
   "diagnostic_captured": true,
+  "ecology_active_rows": 17,
+  "ecology_rows_source": "live_landscape_program_on_chunk",
   "f2_extract_witness": {
     "fire_instance_buffer_rows": 1,
     "gate": "FIRE-F2-EXTRACT-001",
     "green": true
+  },
+  "fire_corridor_witness": {
+    "gate": "VEG-FIRE-CORRIDOR-FULLAPP-001",
+    "green": true,
+    "population_fuel_wired": true
+  },
+  "fire_f2_004_001": {
+    "chunks_with_heat": 64,
+    "fire_inst_readiness_aligned": true,
+    "fire_inst_readiness_metric": true,
+    "fire_instance_buffer_rows": 1,
+    "gate": "FIRE-F2-004-001",
+    "green": true,
+    "heat_mostly_stable": true,
+    "max_heat": 0.18568697571754456,
+    "sim_heat_present": true
   },
   "fire_playback": {
     "active_fire_chunks": 28,
@@ -291,11 +310,11 @@
   },
   "profile": "FULL_APP",
   "projection_graph": {
-    "build_signature": "order=fire+logistics+ecology fire_inst=1 fire_heat=1 log_rows=1 eco_rows=0",
-    "ecology_active_rows": 0,
+    "build_signature": "order=fire+logistics+ecology fire_inst=1 fire_heat=1 log_rows=1 eco_rows=17",
+    "ecology_active_rows": 17,
     "fire_instance_buffer_rows": 1,
     "logistics_active_rows": 1,
-    "runtime_order": "order=fire+logistics+ecology fire_inst=1 fire_heat=1 log_rows=1 eco_rows=0 fire_snap=9 log_snap=1 eco_snap=1"
+    "runtime_order": "order=fire+logistics+ecology fire_inst=1 fire_heat=1 log_rows=1 eco_rows=17 fire_snap=9 log_snap=1 eco_snap=1"
   },
   "projection_state": {
     "fire_instance_buffer_rows": 1,
@@ -493,7 +512,7 @@
     "tick": 121
   },
   "stage5_closure": {
-    "checklist": "src/dev/stage5_close_checklist.md",
+    "checklist": "docs/archive/2026-06-src-dev/plans/stage5_close_checklist.md",
     "finish_todos_all_done": true,
     "not_gate": "VM-06..11, full fire streaming, gpu-tile gizmo removal, construction stage",
     "operational_gate": "FULL_APP",
@@ -533,6 +552,62 @@
   "texture_stale_reasons": {
     "minimap_cached_behind_raster": 14,
     "preview_stale_binding": false
+  },
+  "triage_fire_extract_final_001": {
+    "f7_a_per_view_extract_bounded": true,
+    "full_world_scan_absent": true,
+    "gate": "TRIAGE-FIRE-EXTRACT-FINAL-001",
+    "green": true,
+    "minimap_cap_respected": true,
+    "no_camera_global_shortcut": true,
+    "per_view_visible_derived_from_projection": true,
+    "preview_cap_respected": true,
+    "projection_fire_source": "WorldMain",
+    "visible_fire_chunk_set_authoritative": true
+  },
+  "triage_fire_lod_tiers_001": {
+    "cinematic_band_policy": "FireChunkLodState per-chunk; tactical cap 512 is WorldLodBand::LocalTactical only",
+    "design_ref": "docs/archive/2026-06-src-dev/plans/fire_lod_player_read_v1.md",
+    "designer_table_wired": true,
+    "fire7_f7_c_001_green": true,
+    "fire_lod_cap_operational": 128,
+    "fire_lod_cap_strategic": 32,
+    "fire_lod_cap_tactical": 512,
+    "gate": "TRIAGE-FIRE-LOD-TIERS-001",
+    "green": true,
+    "per_band_caps_enforced_in_extract": true
+  },
+  "triage_fire_product_001": {
+    "design_ref": "docs/archive/2026-06-src-dev/plans/fire_lod_player_read_v1.md",
+    "fire7_bands_wired": true,
+    "fire_inst_readiness_aligned": true,
+    "gate": "TRIAGE-FIRE-PRODUCT-001",
+    "green": true,
+    "map_blink_overlay_hold_wired": true,
+    "operational_play_zoom_alpha": 0.41999998688697815,
+    "operational_spark_play_green": true,
+    "operational_spark_rows_gt_0": true,
+    "strategic_sparks_culled": true
+  },
+  "triage_gpu_tile_001": {
+    "gate": "TRIAGE-GPU-TILE-001",
+    "gizmo_fallback_policy": "GPU instanced quads authoritative in BaseState::Simulation (OnEnter sets use_batched_mesh_overlay). Legacy gizmo rects run only when tile_debug_use_gizmos_instead is true: instanced off or non-Simulation.",
+    "gizmo_fallback_when": "use_batched_mesh_overlay == false OR BaseState != Simulation",
+    "green": true,
+    "instanced_authoritative_in_simulation": true,
+    "simulation_enables_instanced_on_enter": true,
+    "wgsl_storage_instanced": true
+  },
+  "triage_phase_f_cull_001": {
+    "fire_spark_min_zoom_alpha": 0.2800000011920929,
+    "gate": "TRIAGE-PHASE-F-CULL-001",
+    "green": true,
+    "low_zoom_culled": true,
+    "minimap_sparks_culled": true,
+    "preview_sparks_culled": true,
+    "tactical_views_only_sparks": true,
+    "tactical_zoom_rows_positive": true,
+    "view_aware_particle_cull_wired": true
   },
   "viewport_contracts": {
     "egui_world_preview_viewport": {

@@ -1,0 +1,60 @@
+{
+  "program_id": "APS-UX-AUDIT-001",
+  "track": "A",
+  "phase": 0,
+  "green": true,
+  "honest_gate": "schema_only",
+  "audit_complete": true,
+  "artist_would_ship_today": false,
+  "production_lens_ship_score": 5,
+  "production_lens_target_after_phase_5": 7,
+  "verdict_designer_mcp": "PASS WITH NOTES",
+  "verdict_designer_lead": "PENDING",
+  "updated": "2026-06-03",
+  "_agent_meta": {
+    "agent": "designer-mcp",
+    "brief": "prompts/designer_questions/aps_ux_audit_brief_v1.md",
+    "exec_plan": "src/dev/plan_aps_artist_tool_exec_v1.md",
+    "audit_doc": "docs/archive/2026-06-src-dev/plans/aps_ux_audit_001_designer_mcp_v1.md",
+    "grammar_glossary": "docs/archive/2026-06-src-dev/plans/aps_ux_grammar_why_glossary_v1.md"
+  },
+  "scores": {
+    "clarity": 6,
+    "discoverability": 5,
+    "error_recovery": 5,
+    "accessibility": 4,
+    "workflow_efficiency": 6
+  },
+  "top_coder_mcp_fixes": [
+    "APS-UX-GRAMMAR-WHY human labels in grammar inspector",
+    "APS-UX-POLISH-001 status text beside glyphs (materials + pipeline bar)",
+    "APS-PREVIEW-CATALOG-001 list thumb + sidecar authority line",
+    "APS-ATLAS-PREVIEW-002 validate atlas meta plain language + UV grid",
+    "APS-UX-TOOLTIPS-002 Assembly next-step callout after generate"
+  ],
+  "verification": {
+    "pytest_aps_preview": { "passed": 8, "failed": 0, "tests": ["test_aps_preview_001", "test_aps_atlas_preview"] },
+    "validate_report_asset_glb": "skipped_no_indexed_glb_on_disk",
+    "code_review": "tools/mcp/art_pipeline_suite"
+  },
+  "accessibility_checklist": {
+    "status_not_glyph_alone": false,
+    "min_font_sizes": "partial",
+    "critical_actions_not_tooltip_only": "partial",
+    "scroll_affordances": true,
+    "paned_960x600": "partial",
+    "metadata_flow_without_doc": "partial",
+    "pipeline_mental_model": true
+  },
+  "unblocks": [
+    "APS-PREVIEW-CATALOG-001",
+    "APS-ATLAS-PREVIEW-002",
+    "APS-UX-TOOLTIPS-002",
+    "APS-UX-POLISH-001",
+    "APS-UX-GRAMMAR-WHY"
+  ],
+  "deferred": {
+    "track_b": "MCP-PILOT-GRAMMAR-001 manual keyframe_render",
+    "phase_9": "APS-ARTIST-TOOL-E2E-001"
+  }
+}

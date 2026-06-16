@@ -1,0 +1,16 @@
+// VEG-PRESET-CATALOG-001 — landscape grammar preset index (≥5 presets).
+(
+    schema_version: 1,
+    presets: [
+        "agri_riparian_v0",
+        "industrial_barrier_v0",
+        "military_defensive_v0",
+        "settlement_park_v0",
+        "old_growth_core_v0",
+        "coastal_scrub_v0",
+        "wetland_margin_v0",
+        "scrub_highland_v0",
+        "urban_canopy_v0",
+        "fire_recovery_v0",
+    ],
+)

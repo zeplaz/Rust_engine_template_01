@@ -106,3 +106,18 @@ fn scenario_script_host_resume_after_stop() {
     assert!(host.running);
     assert_eq!(host.pending_steps.len(), 2);
 }
+
+#[test]
+fn g_play_demo_fire_scenario_deserializes_emit_sim_effect() {
+    use crate::engine::play_scenario::DEFAULT_INDUSTRIAL_DEMO_FIRE_SCENARIO;
+    use crate::scenario::scenario_steps::ScenarioStep;
+
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(DEFAULT_INDUSTRIAL_DEMO_FIRE_SCENARIO);
+    let text = std::fs::read_to_string(&path).expect("demo fire scenario");
+    let file: ScenarioFileV1 = ron::from_str(&text).expect("parse demo fire");
+    assert!(
+        file.steps
+            .iter()
+            .any(|s| matches!(s, ScenarioStep::EmitSimEffect { .. }))
+    );
+}

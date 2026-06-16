@@ -80,6 +80,7 @@ pub fn build_fire_ecology_proof_payload(witness: &FireEcologyWitness) -> serde_j
     };
     serde_json::json!({
         "profile": "FIRE_ECOLOGY_F1",
+        "green": witness.f1_fuel_gate_active() && witness.heat_mostly_stable(),
         "f1_green": witness.f1_fuel_gate_active() && witness.heat_mostly_stable(),
         "witness": {
             "fuel_gate_active": witness.f1_fuel_gate_active(),

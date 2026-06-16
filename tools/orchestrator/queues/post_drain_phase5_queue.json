@@ -1,0 +1,489 @@
+{
+  "_meta": {
+    "version": "1.0.0",
+    "program_id": "POST-DRAIN-PHASE-5-001",
+    "date": "2026-06-13",
+    "prior_program": "POST-DRAIN-PHASE-4-001",
+    "status_doc": "src/dev/status_overview_20260613_v1.md",
+    "coder_drain": "tools/orchestrator/queues/coder_master_drain_queue.json",
+    "coder_drain_runbook": "src/dev/coder_drain_order_master_v1.md",
+    "rule": "Coder picks from coder_master_drain_queue.json · phase5 tasks mirrored · witness JSON wins",
+    "last_sync": "2026-06-14"
+  },
+  "lanes": {
+    "G_OPS": {
+      "label": "G-PLAY closure",
+      "owner_default": "operator"
+    },
+    "H_PRODUCT": {
+      "label": "Normal play product",
+      "owner_default": "coder"
+    },
+    "I_FIRE": {
+      "label": "Fire play loop + VFX",
+      "owner_default": "coder"
+    },
+    "J_BUILD": {
+      "label": "Build readability tail",
+      "owner_default": "coder"
+    },
+    "J_REWIRE": {
+      "label": "BUILD-READ / HUD re-wire (mod.rs)",
+      "owner_default": "coder"
+    },
+    "K_DESIGN": {
+      "label": "Designer sign-off",
+      "owner_default": "designer"
+    },
+    "L_MCP": {
+      "label": "MCP doc gates",
+      "owner_default": "planner-mcp"
+    },
+    "M_PLAN": {
+      "label": "Planner hygiene",
+      "owner_default": "planner"
+    },
+    "N_LANDSCAPE": {
+      "label": "Landscape grammar LG-1+",
+      "owner_default": "coder"
+    }
+  },
+  "tasks": [
+    {
+      "id": "PLAN-LANDSCAPE-GRAMMAR-001",
+      "lane": "N_LANDSCAPE",
+      "priority": 2,
+      "agent": "coder",
+      "status": "done",
+      "goal": "LG-1 pilot — landscape grammar evaluator on agri_riparian_v0 (no stubs)",
+      "docs": [
+        "src/dev/plan_landscape_grammar_exec_001_v1.md",
+        "src/dev/guide_landscape_grammar_v1.md",
+        "src/systems/ecology/landscape_grammar.rs"
+      ],
+      "witness": "debug_runs/landscape_grammar_lg1_live.json",
+      "exit": "green && topology_kind_count>=4 && nested_depth_max>=2 && lambda_blended && required_topologies_met",
+      "verify": "cargo test -p proc_A_dine01 --lib landscape_grammar"
+    },
+    {
+      "id": "LG-2-SUCCESSION-001",
+      "lane": "N_LANDSCAPE",
+      "priority": 3,
+      "agent": "coder",
+      "status": "lib_done",
+      "note": "Reopened — VEG-LG2-LIVE-* in coder_vegetation_drain_queue.json",
+      "depends_on": [
+        "PLAN-LANDSCAPE-GRAMMAR-001"
+      ],
+      "goal": "LG-2 succession + disturbance history on landscape program graph",
+      "docs": [
+        "src/dev/plan_landscape_grammar_exec_001_v1.md §4"
+      ],
+      "witness": "debug_runs/landscape_grammar_lg2_live.json",
+      "exit": "succession_age_ticks && disturbance_history_linked"
+    },
+    {
+      "id": "G-PLAY-01",
+      "lane": "G_OPS",
+      "priority": 0,
+      "agent": "operator",
+      "status": "blocked",
+      "goal": "Play scenario acceptance — placement, zoom, build UX after Phase 4 coder slices",
+      "docs": [
+        "src/dev/plan_g_play_close_001_checklist_v1.md"
+      ],
+      "witness": "debug_runs/play_scenario_live.json",
+      "exit": "play_truth_001.green",
+      "note": "MAP-PICK + zoom done — operator EXECUTE checklist",
+      "snag": "operator/designer-mcp blocked"
+    },
+    {
+      "id": "G-PLAY-FIRE-001",
+      "lane": "H_PRODUCT",
+      "priority": 0,
+      "agent": "coder",
+      "status": "done",
+      "depends_on": [],
+      "goal": "Path A demo fire — scenario EmitSimEffect → sim heat → sparks at operational zoom in normal play",
+      "docs": [
+        "src/dev/design_fire_play_visibility_v1.md",
+        "src/dev/plan_sim_effect_spine_exec_001_v1.md",
+        "assets/scenarios/play/default_industrial_demo_fire.scenario.ron"
+      ],
+      "witness": "debug_runs/play_scenario_live.json",
+      "exit": "demo_fire_sparks_visible_at_operational_zoom",
+      "unblocks": [
+        "FIRE-ECOLOGY-REFRESH-001"
+      ],
+      "completed": "2026-06-13"
+    },
+    {
+      "id": "VFX-FIRE-HIGHLIGHT-001",
+      "lane": "I_FIRE",
+      "priority": 1,
+      "agent": "coder",
+      "status": "done",
+      "goal": "Red world-space box on --test vfx|visual|fire — find seeded burn when zoomed out",
+      "docs": [
+        "src/gui/vfx_fire_test_highlight.rs"
+      ],
+      "witness": "debug_runs/vfx_fire_test_highlight_live.json",
+      "exit": "highlight_visible_at_strategic_zoom",
+      "verify": "cargo run -p proc_A_dine01 --release -- --test vfx",
+      "completed": "2026-06-13"
+    },
+    {
+      "id": "FIRE-ECOLOGY-REFRESH-001",
+      "lane": "I_FIRE",
+      "priority": 1,
+      "agent": "coder",
+      "status": "done",
+      "depends_on": [
+        "G-PLAY-FIRE-001"
+      ],
+      "goal": "Refresh fire_ecology_live.json — merge SimEffect spine witness; F2 proof train on disk",
+      "witness": "debug_runs/fire_ecology_live.json",
+      "exit": "fire_ignition_p0_001.green && f2_fuel_spread_001.green",
+      "verify": "cargo test -p proc_A_dine01 --lib fire_ecology",
+      "completed": "2026-06-13"
+    },
+    {
+      "id": "MINIMAP-WIDGET-IMPL-001",
+      "lane": "H_PRODUCT",
+      "priority": 2,
+      "agent": "coder",
+      "status": "done",
+      "depends_on": [
+        "P0-MINIMAP-WIDGET-001",
+        "MINIMAP-REWIRE-001"
+      ],
+      "goal": "Implement designer minimap widget spec — drag title bar, fit texture, gold viewport frame",
+      "docs": [
+        "src/dev/design_minimap_widget_v1.md",
+        "src/dev/build_read_unwired_spine_v1.md"
+      ],
+      "witness": "debug_runs/design_minimap_widget_live.json",
+      "note": "minimap_bevy_interaction.rs on disk — not in hud/mod.rs until MINIMAP-REWIRE-001",
+      "completed": "2026-06-13"
+    },
+    {
+      "id": "BUILD-READ-REWIRE-003",
+      "lane": "J_REWIRE",
+      "priority": 0,
+      "agent": "coder",
+      "status": "done",
+      "goal": "Add map_zoom_coherence_001 witness module; wire map_zoom_coherence_live_proof",
+      "docs": [
+        "src/dev/build_read_unwired_spine_v1.md",
+        "src/dev/plan_map_zoom_smooth_exec_001_v1.md",
+        "src/dev/map_zoom_coherence_live_proof.rs"
+      ],
+      "witness": "debug_runs/map_zoom_coherence_live.json",
+      "exit": "cargo check --lib && refresh witness green",
+      "unblocks": [
+        "BUILD-READ-P0-002"
+      ],
+      "completed": "2026-06-11"
+    },
+    {
+      "id": "BUILD-READ-REWIRE-001",
+      "lane": "J_REWIRE",
+      "priority": 0,
+      "agent": "coder",
+      "status": "done",
+      "depends_on": [],
+      "goal": "Re-wire placement_debug.rs — mod.rs + sim-map projection exports + witness helpers",
+      "docs": [
+        "src/dev/build_read_unwired_spine_v1.md",
+        "src/construction/placement_debug.rs",
+        "src/dev/plan_operator_build_readability_exec_001_v1.md"
+      ],
+      "exit": "construction/mod.rs mod placement_debug; cargo check --lib",
+      "unblocks": [
+        "BUILD-READ-DEBUG-001",
+        "BUILD-READ-P0-003"
+      ],
+      "completed": "2026-06-11"
+    },
+    {
+      "id": "BUILD-READ-REWIRE-002",
+      "lane": "J_REWIRE",
+      "priority": 0,
+      "agent": "coder",
+      "status": "done",
+      "depends_on": [],
+      "goal": "Re-wire simulation_pointer_gate.rs + sim_build_rail_submenu_block_rect in ops shell",
+      "docs": [
+        "src/dev/build_read_unwired_spine_v1.md",
+        "src/dev/design_pointer_hud_regions_v1.md",
+        "src/gui/hud/simulation_pointer_gate.rs"
+      ],
+      "exit": "hud/mod.rs mod simulation_pointer_gate; cargo check --lib",
+      "unblocks": [
+        "BUILD-READ-P0-003"
+      ],
+      "completed": "2026-06-11"
+    },
+    {
+      "id": "MINIMAP-REWIRE-001",
+      "lane": "J_REWIRE",
+      "priority": 1,
+      "agent": "coder",
+      "status": "done",
+      "goal": "MinimapEdge + title bar API; wire minimap_bevy_interaction + minimap_egui_dev",
+      "docs": [
+        "src/dev/build_read_unwired_spine_v1.md",
+        "src/dev/design_minimap_widget_v1.md",
+        "src/gui/hud/minimap_bevy_interaction.rs"
+      ],
+      "exit": "gui/mod.rs + hud/mod.rs wired; cargo check --lib",
+      "unblocks": [
+        "MINIMAP-WIDGET-IMPL-001"
+      ],
+      "completed": "2026-06-11"
+    },
+    {
+      "id": "BUILD-READ-REWIRE-004",
+      "lane": "J_REWIRE",
+      "priority": 1,
+      "agent": "coder",
+      "status": "done",
+      "goal": "Pilot catalog authority in parametric_commit / visual_authority — not warehouse branches",
+      "docs": [
+        "src/dev/build_read_unwired_spine_v1.md",
+        "src/construction/pilot_catalog.rs",
+        "src/dev/plan_mcp_grammar_build_set_guards_v1.md"
+      ],
+      "witness": "debug_runs/pilot_hardcode_lint_live.json",
+      "unblocks": [
+        "BUILD-READ-PILOT-001"
+      ],
+      "completed": "2026-06-11"
+    },
+    {
+      "id": "APS-QC-REWIRE-001",
+      "lane": "J_REWIRE",
+      "priority": 2,
+      "agent": "coder",
+      "status": "done",
+      "goal": "Wire assembly_snapshot_qc_ui.rs into gui/mod.rs + plugin",
+      "docs": [
+        "src/dev/build_read_unwired_spine_v1.md",
+        "docs/archive/2026-06-src-dev/plans/design_aps_bevy_qc_hud_v1.md"
+      ],
+      "witness": "debug_runs/aps_bevy_qc_hud_001_live.json",
+      "completed": "2026-06-13"
+    },
+    {
+      "id": "BUILD-READ-P0-002",
+      "lane": "J_BUILD",
+      "priority": 1,
+      "agent": "coder",
+      "status": "done",
+      "depends_on": [
+        "BUILD-READ-REWIRE-003"
+      ],
+      "goal": "Refresh map_zoom_coherence_live.json after --test vfx scroll torture",
+      "witness": "debug_runs/map_zoom_coherence_live.json",
+      "plan_doc": "src/dev/plan_operator_build_readability_exec_001_v1.md",
+      "note": "Verify after BUILD-READ-REWIRE-003 — witness module unwired 2026-06-13",
+      "completed": "2026-06-13"
+    },
+    {
+      "id": "BUILD-READ-VISUAL-001",
+      "lane": "J_BUILD",
+      "priority": 1,
+      "agent": "coder",
+      "status": "lib_done",
+      "depends_on": [
+        "BUILD-READ-SHAPE-003"
+      ],
+      "goal": "Post-commit site extract — lod0+ module mesh or iso tile in sim (no footprint-only fallback)",
+      "witness": "debug_runs/build_read_visual_001_live.json",
+      "plan_doc": "src/dev/plan_operator_build_readability_exec_001_v1.md",
+      "note": "lib green + witness refresh 2026-06-11; runtime sim verify still open (operator)"
+    },
+    {
+      "id": "BUILD-READ-VISUAL-002",
+      "lane": "J_BUILD",
+      "priority": 2,
+      "agent": "coder-mcp",
+      "status": "blocked",
+      "depends_on": [
+        "BUILD-READ-SHAPE-001"
+      ],
+      "goal": "Production tile bake for pilot warehouse variant; promote to Bevy registry",
+      "plan_doc": "src/dev/plan_operator_build_readability_exec_001_v1.md",
+      "snag": "operator/designer-mcp blocked"
+    },
+    {
+      "id": "BUILD-READ-PILOT-001",
+      "lane": "J_BUILD",
+      "priority": 2,
+      "agent": "coder",
+      "status": "done",
+      "depends_on": [
+        "BUILD-READ-REWIRE-004"
+      ],
+      "goal": "Pilot catalog authority — _pilot_catalog.ron; remove warehouse-named Rust branches",
+      "witness": "debug_runs/pilot_catalog_parity_live.json",
+      "plan_doc": "src/dev/plan_operator_build_readability_exec_001_v1.md",
+      "completed": "2026-06-13"
+    },
+    {
+      "id": "BUILD-READ-PILOT-002",
+      "lane": "J_BUILD",
+      "priority": 2,
+      "agent": "designer-mcp",
+      "status": "blocked",
+      "depends_on": [
+        "BUILD-READ-PILOT-001"
+      ],
+      "goal": "Add pilot rows (rect + T/O/L + warehouse) in catalog only",
+      "plan_doc": "src/dev/plan_operator_build_readability_exec_001_v1.md",
+      "snag": "operator/designer-mcp blocked"
+    },
+    {
+      "id": "BUILD-READ-GRAMMAR-v0-002",
+      "lane": "J_BUILD",
+      "priority": 2,
+      "agent": "coder-mcp",
+      "status": "blocked",
+      "depends_on": [
+        "BUILD-READ-GRAMMAR-v0-001"
+      ],
+      "goal": "APS DNA preset dropdown + β sliders (v0 subset); snapshot stores arch_dna + pressure_field",
+      "plan_doc": "src/dev/arch_build_grammar_v0_baseline_v1.md",
+      "snag": "operator/designer-mcp blocked"
+    },
+    {
+      "id": "BUILD-READ-GRAMMAR-v0-003",
+      "lane": "J_BUILD",
+      "priority": 2,
+      "agent": "coder",
+      "status": "done",
+      "depends_on": [
+        "BUILD-READ-GRAMMAR-v0-001"
+      ],
+      "goal": "Evaluator DNA+β → score massing → pick + effective_scale from βexp",
+      "witness": "debug_runs/grammar_diversity_witness.json",
+      "plan_doc": "src/dev/plan_operator_build_readability_exec_001_v1.md",
+      "completed": "2026-06-13"
+    },
+    {
+      "id": "BUILD-READ-DESIGN-001",
+      "lane": "K_DESIGN",
+      "priority": 1,
+      "agent": "designer",
+      "status": "blocked",
+      "goal": "Readability brief — site 15–40% rule, footprint partial-alpha, mesh vs tile authority",
+      "plan_doc": "src/dev/plan_operator_build_readability_exec_001_v1.md",
+      "exit": "designer_signoff_registry row",
+      "snag": "designer/mcp lane — not coder pick"
+    },
+    {
+      "id": "BUILD-READ-DESIGN-002",
+      "lane": "K_DESIGN",
+      "priority": 2,
+      "agent": "designer",
+      "status": "blocked",
+      "depends_on": [
+        "BUILD-READ-DESIGN-001"
+      ],
+      "goal": "HUD copy for Adjust mode — Ctrl rotate, Shift scale",
+      "witness": "debug_runs/design_build_toolbox_hud_live.json",
+      "deliverable": "src/dev/design_build_toolbox_hud_v1.md",
+      "updated_at": "2026-06-13T12:00:00+00:00",
+      "snag": "operator/designer-mcp blocked"
+    },
+    {
+      "id": "MCP-P2-SIM-VALIDATORS-PLAN-001",
+      "lane": "L_MCP",
+      "priority": 0,
+      "agent": "planner-mcp",
+      "status": "blocked",
+      "goal": "Sign sim product validators plan — unblocks 3 coder-mcp P2 tasks",
+      "plan_deliverable": "docs/archive/2026-06-src-dev/plans/plan_mcp_sim_product_validators_v1.md",
+      "signed": "2026-06-13",
+      "blocks": [
+        "MCP-P2-QUEUE-PHASE4-001",
+        "MCP-P2-VALID-CONSTRUCTION-001",
+        "MCP-P2-OPS-BRIEF-002"
+      ],
+      "mcp_queue_ref": "tools/orchestrator/queues/mcp_active_queue.json#MCP-P2-SIM-VALIDATORS-PLAN-001",
+      "snag": "operator/designer-mcp blocked"
+    },
+    {
+      "id": "MCP-P2-KIT002-PLAN",
+      "lane": "L_MCP",
+      "priority": 1,
+      "agent": "planner-mcp",
+      "status": "blocked",
+      "goal": "Write mcp_kit_production_002_unfreeze_v1.md — kit002+ frozen lane",
+      "plan_deliverable": "docs/archive/2026-06-src-dev/plans/mcp_kit_production_002_unfreeze_v1.md",
+      "mcp_queue_ref": "tools/orchestrator/queues/mcp_active_queue.json#MCP-P2-KIT002-PLAN",
+      "snag": "operator/designer-mcp blocked"
+    },
+    {
+      "id": "ARCH-002",
+      "lane": "L_MCP",
+      "priority": 2,
+      "agent": "planner-mcp",
+      "status": "blocked",
+      "goal": "Formal Variant Graph JSON schema variant_graph_v1.schema.json",
+      "plan_doc": "docs/archive/2026-06-src-dev/plans/plan_building_tile_spine_001_v1.md",
+      "plan_deliverable": "tools/mcp/schemas/variant_graph_v1.schema.json",
+      "mcp_queue_ref": "tools/orchestrator/queues/mcp_active_queue.json#ARCH-002",
+      "snag": "operator/designer-mcp blocked"
+    },
+    {
+      "id": "PLAN-AUDIT-020",
+      "lane": "M_PLAN",
+      "priority": 2,
+      "agent": "planner",
+      "status": "blocked",
+      "depends_on": [
+        "G-PLAY-01"
+      ],
+      "goal": "Fleet audit v20",
+      "defer_registry": "PLAN-AUDIT-020",
+      "snag": "operator/designer-mcp blocked"
+    },
+    {
+      "id": "PLAN-QUEUE-SYNC-001",
+      "lane": "M_PLAN",
+      "priority": 3,
+      "agent": "planner",
+      "status": "blocked",
+      "goal": "Sync planner_active_queue + HANDOFF + status doc after Phase 5 seed",
+      "docs": [
+        "src/dev/planner_backlog_sweep_001_v1.md"
+      ],
+      "snag": "operator/designer-mcp blocked"
+    },
+    {
+      "id": "SIM-STEWARD-FIRE-REGRESS-001",
+      "lane": "I_FIRE",
+      "priority": 3,
+      "agent": "sim-steward",
+      "status": "deferred",
+      "goal": "Fire/replay regression after Phase 5 product slices",
+      "witness": "debug_runs/replay_editor_parity_live.json",
+      "verify": "cargo test -p proc_A_dine01 --lib stage5 fire_ecology"
+    }
+  ],
+  "deferred": [
+    {
+      "id": "FACTION-REACT-001",
+      "reason": "SimEffect P5 — after G-PLAY green"
+    },
+    {
+      "id": "SIM-EFFECT-EMBED-DB-001",
+      "reason": "GAME-STORE-GATE — not hot path"
+    },
+    {
+      "id": "NARRATIVE-GEN-001",
+      "reason": "P4 designer-gated"
+    }
+  ]
+}

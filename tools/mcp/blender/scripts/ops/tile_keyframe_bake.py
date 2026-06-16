@@ -127,6 +127,11 @@ def bake(job: dict, *, repo_root: Path) -> Path:
         raise FileNotFoundError(f"Missing assembly blend: {blend_path}")
 
     bpy.ops.wm.open_mainfile(filepath=str(blend_path))
+    from ops.material_authority import apply_from_job
+
+    applied = apply_from_job(job, repo_root=repo_root)
+    if applied:
+        print(f"ARCH_MAT_KEYFRAME applied={len(applied)}")
     _apply_variant_to_assembly(variant)
     _apply_night_emission(variant)
     facing_yaw = render.get("facing_yaw_deg")

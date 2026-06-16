@@ -10,7 +10,7 @@
 
 **Procedure:** [`prompts/guides/ui/vfx_post_implementation_review_v1.md`](../../../prompts/guides/ui/vfx_post_implementation_review_v1.md)
 
-**Post-impl review:** **DESIGN-D-VFX-POST-001** — [`vfx_design_review_record_v1.md`](../../../src/dev/vfx_design_review_record_v1.md) **SIGNED PASS** · [`water_vfx_review_record_v1.md`](../../../src/dev/water_vfx_review_record_v1.md) **PASS**
+**Post-impl review:** **DESIGN-D-VFX-POST-001** — [`vfx_design_review_record_v1.md`](../../../docs/archive/2026-06-src-dev/plans/vfx_design_review_record_v1.md) **SIGNED PASS** · [`water_vfx_review_record_v1.md`](../../../docs/archive/2026-06-src-dev/plans/water_vfx_review_record_v1.md) **PASS**
 
 **Capture status:** [`vfx_capture_status_20260525.md`](vfx_capture_status_20260525.md) — **DESIGN-VFX-CAPTURE-001** **DONE** · [`vfx_capture_status_wave4.md`](vfx_capture_status_wave4.md) — **DESIGN-VFX-CAPTURE-ROUND-002** **DONE** · [`vfx_capture_status_wave5.md`](vfx_capture_status_wave5.md) — **DESIGN-VFX-CAPTURE-WAVE5-001** **DEFER**
 

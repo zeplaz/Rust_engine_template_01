@@ -6,7 +6,24 @@ tools: ['read', 'search', 'agent', 'memory']
 readonly: true
 ---
 
+`⟦SYM⟧ lang⊳ $ref:prompts/SYMBOLIC_LANGUAGE.meta.md` — authored in SYMLANG (concrete/live, not a template).
+
 # Orchestrator Agent
+
+## Session bootstrap (mandatory — AGENT-LANG-004-RITUAL)
+
+**Skills:** attach [`.cursor/skills/agent-lang/SKILL.md`](../skills/agent-lang/SKILL.md) **every session** — domain skills stack on top.
+
+**Normative:** [`_fragments/session_bootstrap_v1.md`](_fragments/session_bootstrap_v1.md) · `agent=orchestrator`
+
+```text
+BLANG:STATS → BLANG:BOOT → BLANG:ROLE → BLANG:PRE → BLANG:Q+
+agent_doc_reads_brief() → agent_session_bootstrap(agent='orchestrator') → role BLANG:DOC → pipeline_preflight() → handoff_brief()
+```
+
+Re-read **`prompts/llm_agent_brief.md` §FIELD◈ · SYMLANG◈** + `$ref:prompts/SYMBOLIC_LANGUAGE.meta.md` every session via bootstrap — not raw IDE Read.
+
+---
 
 **MCP art-pipeline sequencing:** use **`@orchestrator-mcp`** — [`.cursor/agents/orchestrator-mcp.md`](orchestrator-mcp.md). This agent owns general engine phases only.
 

@@ -1,0 +1,96 @@
+{
+  "_meta": {
+    "teaches": ["pilot_catalog", "tile_state_machine"],
+    "not_a_ship_target": true,
+    "building_set_id": "industrial_west_v0"
+  },
+  "schema_version": 1,
+  "batch_id": "tile_rail_warehouse_pilot_v1",
+  "tile_id": "tile_rail_warehouse_pilot_v1",
+  "base": "metal_plate",
+  "status": "pilot",
+  "ship": false,
+  "frozen": false,
+  "bake_source": "keyframe_pack",
+  "source_tier": "lod0",
+  "development_tier": "pilot",
+  "keyframe_rename_pk": true,
+  "staging_spec_ref": "assets/staging/specs/tile_rail_warehouse_pilot_v1.json",
+  "pilot_ref": "assets/configs/buildings/pilots/logistics_rail_warehouse_pilot_v1.json",
+  "footprint_matrix_ref": "assets/configs/buildings/pilots/logistics_rail_warehouse_pilot_v1.json",
+  "site_plan_ref": "assets/configs/buildings/pilots/logistics_rail_warehouse_site_v0.json",
+  "rules_applied": [
+    "no_ai_generated_images",
+    "deterministic_output",
+    "batch_processing",
+    "grid_alignment"
+  ],
+  "render": {
+    "method": "blender_keyframe_light_rig",
+    "isometric": true,
+    "seed": 440013,
+    "tile_size_px": 128,
+    "light_blend": "utils/Light_keysshotsetup.blend"
+  },
+  "assembly_ref": {
+    "style_pack_id": "style_industrial_west",
+    "assembly_snapshot": "tools/mcp/schemas/examples/assembly_snapshot_rail_warehouse_pilot_v1.json",
+    "footprint": {
+      "width": 6,
+      "depth": 5,
+      "floors": 1
+    },
+    "pilot_note": "L-matrix 6x5 authoritative in pilot_ref; lod0 grammar scaffold until PG-2"
+  },
+  "variant_set_ref": "tools/mcp/schemas/examples/variant_set_rail_warehouse_pilot_v1.json",
+  "variants": [
+    {
+      "variant_key": "clean_day",
+      "state": "clean",
+      "damage": 0.0,
+      "power": "off",
+      "fill": "empty",
+      "lighting": "day"
+    },
+    {
+      "variant_key": "clean_night_off",
+      "state": "clean",
+      "damage": 0.0,
+      "power": "off",
+      "fill": "empty",
+      "lighting": "night_off"
+    },
+    {
+      "variant_key": "clean_night_on",
+      "state": "clean",
+      "damage": 0.0,
+      "power": "on",
+      "fill": "empty",
+      "lighting": "night_on"
+    },
+    {
+      "variant_key": "under_construction_01",
+      "state": "dirty",
+      "damage": 0.0,
+      "power": "off",
+      "fill": "empty",
+      "lighting": "day"
+    }
+  ],
+  "atlas": {
+    "atlas_id": "rail_warehouse_pilot_v1",
+    "columns": 2,
+    "rows": 2,
+    "tile_px": 128,
+    "padding_px": 2,
+    "output_png": "assets/textures/buildings_iso/staging/tile_rail_warehouse_pilot_v1_atlas.png",
+    "meta_json": "assets/staging/tiles/tile_rail_warehouse_pilot_v1/atlas_meta.json"
+  },
+  "expected_outputs": [
+    "{variant_key}.png",
+    "atlas_meta.json",
+    "tile_rail_warehouse_pilot_v1_atlas.png"
+  ],
+  "pre_baked_folder": "assets/staging/tiles/keyframe_stills/tile_rail_warehouse_pilot_v1",
+  "note": "BUILD-READ-VISUAL-002 pilot \u2014 export stills via utils/keyframe_render.py \u2192 assets/staging/tiles/tile_rail_warehouse_pilot_v1/ then tile-batch-run / tile-atlas-pack -pk. ship=false until G4."
+}

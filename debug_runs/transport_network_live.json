@@ -52,7 +52,7 @@
     "relative_path": "debug_runs/transport_network_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_transport_network_live_witness",
-    "written_at_epoch_secs": 1780456405
+    "written_at_epoch_secs": 1781367219
   },
   "edge_count": 2,
   "gate": "INFRA-E3-WIT-001",

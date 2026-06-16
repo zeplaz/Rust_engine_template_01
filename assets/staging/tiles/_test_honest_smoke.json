@@ -1,0 +1,1 @@
+{"batch_id": "test_smoke", "bake_source": "smoke_ortho_headless", "render": {"method": "blender_orthographic_iso", "seed": 1}}

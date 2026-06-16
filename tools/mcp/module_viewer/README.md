@@ -2,7 +2,7 @@
 
 **Evolving from “Module Kit Viewer”** into a four-stage desktop suite: **Catalog → Assembly → Variants → Atlas**.
 
-Design: [`src/dev/design_art_pipeline_suite_v1.md`](../../src/dev/design_art_pipeline_suite_v1.md) · Exec: [`src/dev/plan_art_pipeline_suite_exec_v1.md`](../../src/dev/plan_art_pipeline_suite_exec_v1.md)
+Design: [`docs/archive/2026-06-src-dev/plans/design_art_pipeline_suite_v1.md`](../../docs/archive/2026-06-src-dev/plans/design_art_pipeline_suite_v1.md) · Exec: [`docs/archive/2026-06-src-dev/plans/plan_art_pipeline_suite_exec_v1.md`](../../docs/archive/2026-06-src-dev/plans/plan_art_pipeline_suite_exec_v1.md)
 
 **Today:** **Art Pipeline Suite** — tabs **Catalog | Assembly | Variants | Atlas** + flow buttons (Send to Assembly, Bake variants, Pack atlas). All actions call `rust_engine_mcp` CLI/MCP.
 
@@ -100,7 +100,7 @@ Then re-promote modules if staging changed.
 | **Keyframe render addon** | `utils/keyframe_render.py` — render selected animation frames to PNG |
 
 Legacy inventory: [`utils/LEGACY_ART_PIPELINE_README.md`](../../utils/LEGACY_ART_PIPELINE_README.md).  
-Architecture: [`src/dev/plan_art_preview_hub_v1.md`](../../src/dev/plan_art_preview_hub_v1.md).
+Architecture: [`docs/archive/2026-06-src-dev/plans/plan_art_preview_hub_v1.md`](../../docs/archive/2026-06-src-dev/plans/plan_art_preview_hub_v1.md).
 
 **Agents / CI — same operations as MCP:**
 
@@ -124,4 +124,4 @@ MCP tools: `tile_atlas_pack_tool`, `lod0_batch_run_tool`, `tile_batch_validate`,
 
 - MCP pipeline: `tools/mcp/README.md`
 - Full asset editor (vehicles/buildings JSON): `src/utils/asset_tools/run.py`
-- Module kit spec: `src/dev/design_procedural_module_kit_v1.md`
+- Module kit spec: `docs/archive/2026-06-src-dev/plans/design_procedural_module_kit_v1.md`

@@ -1,0 +1,22 @@
+{
+  "gate_id": "APS-BEVY-PREVIEW-002",
+  "green": true,
+  "mode": "browser_threejs",
+  "assembly_id": "industrial_west_7x5_s39_9fa1",
+  "png": "debug_runs/preview_jobs/industrial_west_7x5_s39_9fa1_thumb.png",
+  "context_thumb_pipe": {
+    "assembly_preview_panel": "assembly_preview_panel.py _load_thumbnail",
+    "callback": "assembly_panel._on_assembly_preview_thumb",
+    "slot_panel": "slot_preview_panel.set_assembly_context_image",
+    "wired": true
+  },
+  "modules_loaded": 40,
+  "missing_glb": [],
+  "bevy_worker": {
+    "attempted": true,
+    "green": true,
+    "witness": "debug_runs/preview_worker_smoke_live.json"
+  },
+  "preview_002_witness": "debug_runs/aps_preview_002_live.json",
+  "elapsed_ms": 11062
+}

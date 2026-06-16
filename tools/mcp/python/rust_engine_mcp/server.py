@@ -30,6 +30,14 @@ from rust_engine_mcp import variant_set
 from rust_engine_mcp.tile_index import register_tile_atlas_from_batch
 from rust_engine_mcp.validators import run_validator
 from rust_engine_mcp import agent_queue
+from rust_engine_mcp import mcp_productivity_p0
+from rust_engine_mcp import ops_intelligence
+from rust_engine_mcp.pilot_hardcode_lint import (
+    pilot_hardcode_lint,
+    validate_pilot_hardcode_lint,
+    write_pilot_hardcode_lint_witness,
+)
+from rust_engine_mcp import grammar_build_set
 
 mcp = FastMCP("rust-engine-art")
 
@@ -199,6 +207,78 @@ def validate_report(
         use_cached=use_cached,
     )
     return json.dumps(report.to_dict())
+
+
+@mcp.tool()
+def validate_pilot_hardcode_lint_report(compress: int = 3) -> str:
+    """MCP-GUARD-001 — scan for warehouse-shaped hardcode outside allowlists."""
+    report = validate_pilot_hardcode_lint()
+    report.compression_level = max(1, min(4, compress))
+    return json.dumps(report.to_dict())
+
+
+@mcp.tool()
+def write_pilot_hardcode_lint_witness_tool() -> str:
+    """Write debug_runs/pilot_hardcode_lint_live.json."""
+    return json.dumps(write_pilot_hardcode_lint_witness())
+
+
+@mcp.tool()
+def grammar_set_brief(set_id: str = "") -> str:
+    """MCP-GRAMMAR-SET-001 — pilot/grammar/preset inventory + F-axis gaps (≤50 lines)."""
+    body = grammar_build_set.grammar_set_brief(set_id=set_id or None)
+    return json.dumps(body)
+
+
+@mcp.tool()
+def grammar_preset_pair_validate_tool(preset_id: str = "", path: str = "") -> str:
+    """MCP-GRAMMAR-SET-002 — ARCH-DNA preset ↔ pilot row ↔ grammar_id parity."""
+    body = grammar_build_set.grammar_preset_pair_validate(
+        preset_id=preset_id or None,
+        path=path or None,
+    )
+    return json.dumps(body)
+
+
+@mcp.tool()
+def grammar_eval_sweep_tool(
+    archetype_id: str = "IndustrialWarehouse",
+    district_style: str = "industrial_west",
+    seeds_json: str = "",
+) -> str:
+    """MCP-GRAMMAR-SET-003 — seed sweep massing/roof histogram."""
+    seeds = json.loads(seeds_json) if seeds_json.strip() else None
+    body = grammar_build_set.grammar_eval_sweep(
+        archetype_id=archetype_id,
+        district_style=district_style,
+        seeds=seeds,
+    )
+    return json.dumps(body)
+
+
+@mcp.tool()
+def grammar_pilot_parity_tool() -> str:
+    """MCP-GRAMMAR-SET-004 — catalog parity (≥4 grammar pilots, ≥8 total)."""
+    return json.dumps(grammar_build_set.grammar_pilot_parity())
+
+
+@mcp.tool()
+def building_set_coverage_report_tool(set_id: str = "") -> str:
+    """MCP-BUILD-SET-002 — F-axis coverage + hardcode lint rollup."""
+    body = grammar_build_set.building_set_coverage_report(set_id=set_id or None)
+    return json.dumps(body)
+
+
+@mcp.tool()
+def building_set_health_brief_tool() -> str:
+    """MCP-BUILD-SET-003 — OPS/APS rollup: brief + coverage + parity + hardcode."""
+    return json.dumps(grammar_build_set.building_set_health_brief())
+
+
+@mcp.tool()
+def write_grammar_set_brief_witness_tool() -> str:
+    """Write debug_runs/grammar_set_brief_live.json."""
+    return json.dumps(grammar_build_set.write_grammar_set_brief_witness())
 
 
 @mcp.tool()
@@ -400,15 +480,84 @@ def agent_queue_board(agent: str = "", queue: str = "grammar") -> str:
 
 
 @mcp.tool()
-def witness_brief(path: str) -> str:
-    """Witness JSON summary (green, blockers, errors cap) — not full file."""
-    return json.dumps(agent_queue.witness_brief(path))
+def witness_brief(path: str, profile: str = "") -> str:
+    """Witness JSON summary (green, blockers, errors cap) — optional profile=construction|map_pick|fire_product."""
+    prof = profile.strip() or None
+    return json.dumps(agent_queue.witness_brief(path, profile=prof))
+
+
+@mcp.tool()
+def review_order_brief() -> str:
+    """BLANG:REVIEW — REVIEW-ORDER P0 rows + phase4 status + VR compressed."""
+    return json.dumps(ops_intelligence.review_order_brief())
+
+
+@mcp.tool()
+def slice_exec_brief(slice_id: str, queue: str = "") -> str:
+    """BLANG:SLICE — one queue row: exit, witness, exec docs."""
+    q = queue.strip() or None
+    return json.dumps(agent_queue.slice_exec_brief(slice_id, queue=q))
+
+
+@mcp.tool()
+def validate_construction_report(path: str, compress: int = 3) -> str:
+    """BLANG:PLACE — ValidationReport for construction/placement witness JSON."""
+    from rust_engine_mcp.validators.construction_witness import validate_construction_witness_path
+
+    report = validate_construction_witness_path(path, compression_level=max(1, min(4, compress)))
+    return json.dumps(report.to_dict())
 
 
 @mcp.tool()
 def handoff_brief() -> str:
     """HANDOFF.md Goal/Blockers/Next only — not full handoff file."""
     return json.dumps(agent_queue.handoff_brief())
+
+
+@mcp.tool()
+def arch_dna_consumer_contract() -> str:
+    """BUILD-READ-CONSUMER-MCP-001 — @coder snapshot field contract for DNA+β."""
+    from rust_engine_mcp import arch_build_grammar
+
+    return json.dumps(arch_build_grammar.consumer_contract())
+
+
+@mcp.tool()
+def arch_dna_snapshot_brief(path: str) -> str:
+    """Compressed ARCH-DNA + β from assembly snapshot JSON."""
+    from rust_engine_mcp import arch_build_grammar
+
+    return json.dumps(arch_build_grammar.arch_dna_snapshot_brief(path))
+
+
+@mcp.tool()
+def ops_get_project_brief() -> str:
+    """BLANG:OPS — ~20-token project orientation (ops_project_brief_v1); not HANDOFF + 80 witnesses."""
+    return json.dumps(ops_intelligence.ops_get_project_brief())
+
+
+@mcp.tool()
+def ops_get_retry_guidance(task_id: str) -> str:
+    """OPS retry stub — phase3 queue row status, depends_on, witness path."""
+    return json.dumps(ops_intelligence.ops_get_retry_guidance(task_id))
+
+
+@mcp.tool()
+def coder_drain_brief(coder: str = "c") -> str:
+    """MCP-CODER-DRAIN-001 — @coder A/B/C open vs stale slices before dispatch paste."""
+    return json.dumps(agent_queue.coder_drain_brief(coder))
+
+
+@mcp.tool()
+def simulation_queue_brief() -> str:
+    """MCP-SIM-QUEUE-001 — weather simulation train open/done rows."""
+    return json.dumps(agent_queue.simulation_queue_brief())
+
+
+@mcp.tool()
+def coder_mcp_drain_brief() -> str:
+    """MCP-CODER-MCP-DRAIN-001 — all open @coder-mcp slices + recommended drain order."""
+    return json.dumps(agent_queue.coder_mcp_drain_brief())
 
 
 @mcp.tool()
@@ -427,6 +576,185 @@ def orchestrator_brief(use_cached: bool = True) -> str:
 def token_savings_guide() -> str:
     """Which MCP tools to use instead of raw logs / full-file reads (token policy)."""
     return json.dumps(agent_queue.token_savings_guide())
+
+
+@mcp.tool()
+def pipeline_preflight(queue: str = "grammar") -> str:
+    """MCP-PREFLIGHT-001 — Blender, schemas, repo paths, queue stale rows (one call)."""
+    return json.dumps(mcp_productivity_p0.pipeline_preflight(queue=queue))
+
+
+@mcp.tool()
+def snapshot_digest(path: str) -> str:
+    """MCP-SNAPSHOT-DIGEST-001 — placements, materials, grammar one-liner (no full JSON)."""
+    return json.dumps(mcp_productivity_p0.snapshot_digest(path))
+
+
+@mcp.tool()
+def material_profile_brief(profile_id: str) -> str:
+    """MCP-MAT-BRIEF-001 — texture status + category path for one material profile."""
+    from . import material_brief
+
+    return json.dumps(material_brief.material_profile_brief(profile_id))
+
+
+@mcp.tool()
+def material_catalog_brief(max_rows: int = 12) -> str:
+    """MAT node roll-up — profile counts by texture_status (no full catalog Read)."""
+    from . import material_brief
+
+    return json.dumps(material_brief.material_catalog_brief(max_rows=max_rows))
+
+
+@mcp.tool()
+def validate_p0_gate_plain(path: str, ship: bool = True, compression_level: int = 4) -> str:
+    """MCP-P0-PLAIN-001 — P0 gate with artist sentences + fix hints."""
+    return json.dumps(
+        mcp_productivity_p0.validate_p0_gate_plain(
+            path, ship=ship, compression_level=compression_level
+        )
+    )
+
+
+@mcp.tool()
+def agent_doc_touch(
+    path: str,
+    agent: str = "coder-mcp",
+    intent: str = "ref",
+    max_lines: int = 40,
+    session_hint: str = "",
+) -> str:
+    """MCP-DOC-READ-001 — ledger doc read + file digest (BLANG ref/orient/implement)."""
+    from . import agent_doc_read
+
+    return json.dumps(
+        agent_doc_read.agent_doc_touch(
+            path,
+            agent=agent,
+            intent=intent,
+            max_lines=max_lines,
+            session_hint=session_hint,
+        )
+    )
+
+
+@mcp.tool()
+def agent_doc_reads_brief(min_reads: int = 2, tail_rows: int = 500) -> str:
+    """MCP-DOC-READ-003 — aggregate doc_reads.jsonl: hot paths + repeat-in-session."""
+    from . import agent_doc_read
+
+    return json.dumps(
+        agent_doc_read.agent_doc_reads_brief(min_reads=min_reads, tail_rows=tail_rows)
+    )
+
+
+@mcp.tool()
+def agent_doc_promote_hot_reads(min_reads: int = 3, max_promote: int = 8) -> str:
+    """MCP-DOC-READ-004 — promote hot ledger paths to tools/mcp/cache/agent_doc_digests/."""
+    from . import agent_doc_read
+
+    return json.dumps(
+        agent_doc_read.agent_doc_promote_hot_reads(min_reads=min_reads, max_promote=max_promote)
+    )
+
+
+@mcp.tool()
+def agent_doc_digest_cached(path: str, max_lines: int = 120) -> str:
+    """Return MCP digest cache for path when source mtime unchanged."""
+    from . import agent_doc_read
+
+    return json.dumps(agent_doc_read.agent_doc_digest_cached(path, max_lines=max_lines))
+
+
+@mcp.tool()
+def agent_session_bootstrap(
+    agent: str,
+    session_hint: str = "SESSION-START",
+    max_lines: int = 60,
+    touch_role_reads: bool = False,
+) -> str:
+    """MCP-DOC-READ-005 — session start: brief stack + ledger + hot-read stats."""
+    from . import agent_doc_read
+
+    return json.dumps(
+        agent_doc_read.agent_session_bootstrap(
+            agent,
+            session_hint=session_hint,
+            max_lines=max_lines,
+            touch_role_reads=touch_role_reads,
+        )
+    )
+
+
+@mcp.tool()
+def agent_run_append(event_json: str, agent: str = "") -> str:
+    """MCP-DOC-READ-002 — append session telemetry to debug_runs/agent_ops/run_events.jsonl."""
+    from . import agent_doc_read
+
+    event = json.loads(event_json)
+    return json.dumps(agent_doc_read.agent_run_append(event, agent=agent or None))
+
+
+@mcp.tool()
+def snapshot_diff_brief(before_path: str, after_path: str) -> str:
+    """MCP-SNAPSHOT-DIFF-001 — compact diff between two assembly snapshots."""
+    from . import agent_doc_read
+
+    return json.dumps(agent_doc_read.snapshot_diff_brief(before_path, after_path))
+
+
+@mcp.tool()
+def grammar_iterate(
+    request_path: str,
+    write_snapshot: bool = False,
+    write_witness: str = "",
+) -> str:
+    """MCP-GRAMMAR-ITER-TOOL — grammar iterate (CLI parity with grammar-iterate)."""
+    from . import agent_doc_read
+
+    return json.dumps(
+        agent_doc_read.grammar_iterate_mcp(
+            request_path,
+            write_snapshot=write_snapshot,
+            write_witness=write_witness or None,
+        )
+    )
+
+
+@mcp.tool()
+def tile_spine_run_tool(request_path: str) -> str:
+    """MCP-SPINE-CHAIN-001 — WRK→ATL chain with per-step witness (CLI parity)."""
+    from . import tile_spine_run
+
+    return json.dumps(tile_spine_run.tile_spine_run(request_path))
+
+
+@mcp.tool()
+def atlas_meta_brief_tool(atlas_folder: str, batch_id: str = "") -> str:
+    """MCP-ATLAS-BRIEF-001 — ≤40-line atlas folder artist summary."""
+    from . import atlas_meta_brief
+
+    return json.dumps(
+        atlas_meta_brief.atlas_meta_brief(atlas_folder, batch_id=batch_id or None)
+    )
+
+
+@mcp.tool()
+def rt_registry_tool(batch_id: str = "") -> str:
+    """RT-REG-001 — register rowhouse production batch + lookup stamp."""
+    from . import rt_registry
+
+    return json.dumps(
+        rt_registry.rt_registry_register_rowhouse_production(batch_id=batch_id or None)
+    )
+
+
+@mcp.tool()
+def runtime_lookup_brief_tool(atlas_id: str = "rowhouse_victorian_production_v1") -> str:
+    """RT-BRIEF-001 — runtime lookup brief from index row + atlas meta."""
+    from . import runtime_lookup_brief
+
+    return json.dumps(runtime_lookup_brief.runtime_lookup_brief(atlas_id))
 
 
 @mcp.tool()
@@ -469,18 +797,60 @@ def micro_tool_help() -> str:
                 "agent-queue-board [--agent planner]",
                 "witness-brief <debug_runs/...json>",
                 "handoff-brief",
+                "coder-drain-brief [--coder a|b|c]",
+                "simulation-queue-brief",
                 "file-digest <path>",
                 "orchestrator-brief",
+                "token-savings-guide",
+                "pipeline-preflight [--queue grammar]",
+                "snapshot-digest <assembly.json>",
+                "material-profile-brief <profile_id>",
+                "material-catalog-brief [--max-rows 12]",
+                "validate-p0-gate-plain <assembly.json>",
+                "agent-doc-touch <path> [--intent ref|orient|implement]",
+                "agent-doc-reads-brief [--min-reads 2]",
+                "agent-doc-promote-hot-reads [--min-reads 3]",
+                "agent-doc-digest-cached <path>",
+                "agent-session-bootstrap <agent> [--session-hint SESSION-START]",
+                "agent-run-append '<event json>'",
+                "snapshot-diff-brief <before.json> <after.json>",
+                "grammar-iterate <request.json> [--write-snapshot]",
+                "tile-spine-run <request.json>",
+                "tile-spine-run-witness",
+                "atlas-meta-brief <folder> [--batch-id X]",
+                "atlas-meta-brief-witness",
             ],
             "mcp_agent_tools": [
                 "agent_queue_next",
                 "agent_queue_update",
                 "agent_queue_board",
                 "witness_brief",
+                "review_order_brief",
+                "slice_exec_brief",
+                "validate_construction_report",
                 "handoff_brief",
+                "coder_drain_brief",
+                "simulation_queue_brief",
                 "file_digest",
                 "orchestrator_brief",
                 "token_savings_guide",
+                "pipeline_preflight",
+                "snapshot_digest",
+                "material_profile_brief",
+                "material_catalog_brief",
+                "validate_p0_gate_plain",
+                "agent_doc_touch",
+                "agent_doc_reads_brief",
+                "agent_doc_promote_hot_reads",
+                "agent_doc_digest_cached",
+                "agent_session_bootstrap",
+                "agent_run_append",
+                "snapshot_diff_brief",
+                "grammar_iterate",
+                "tile_spine_run_tool",
+                "atlas_meta_brief_tool",
+                "rt_registry_tool",
+                "runtime_lookup_brief_tool",
             ],
             "mcp_tile_tools": [
                 "tile_atlas_pack_tool",

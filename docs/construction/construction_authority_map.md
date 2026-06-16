@@ -1,6 +1,6 @@
 # Construction system inventory and authority map
 
-Scan date: 2026-05-14. Scope: repository-wide grep for construction, build, site, corridor, ghost placement, transport persistence, and related presentation hooks. Runbook cross-reference: [`prompts/guides/infrastructure_construction_runbook_v1.md`](../../prompts/guides/infrastructure_construction_runbook_v1.md).
+Scan date: 2026-05-14. Scope: repository-wide grep for construction, build, site, corridor, ghost placement, transport persistence, and related presentation hooks. Runbook cross-reference: [`docs/archive/2026-06-prompts-guides/runbooks/guides/infrastructure_construction_runbook_v1.md`](../../docs/archive/2026-06-prompts-guides/runbooks/guides/infrastructure_construction_runbook_v1.md).
 
 This document inventories what exists today, classifies each piece into the authority buckets below, and records who mutates world state versus who should. It does not change UI or rendering code.
 
@@ -231,4 +231,4 @@ Do **not** refactor UI or rendering until plan/execution boundaries are agreed:
 | AI construction | `src/ai/construction/mod.rs` |
 | Build orders | `src/strategic/build_order.rs` |
 | Visual snapshot | `src/render/visual_domain_snapshots.rs` |
-| Runbook | `prompts/guides/infrastructure_construction_runbook_v1.md` |
+| Runbook | `docs/archive/2026-06-prompts-guides/runbooks/guides/infrastructure_construction_runbook_v1.md` |

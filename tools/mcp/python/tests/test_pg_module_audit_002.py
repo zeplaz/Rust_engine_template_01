@@ -14,6 +14,20 @@ from rust_engine_mcp.pg_module_audit_002 import (
 )
 
 
+def test_gap_jobs_include_p3_stack_and_dock():
+    p3 = [g for g in GAP_JOBS if g.priority == "P3"]
+    ids = {g.module_id for g in p3}
+    assert ids == {"stack_chimney_1u", "platform_dock_2u"}
+
+
+def test_write_gap_artifacts_p3_specs():
+    written = write_gap_artifacts(priorities=("P3",))
+    assert len(written) == 2
+    for row in written:
+        assert Path(repo_root() / row["spec"]).is_file()
+        assert Path(repo_root() / row["job"]).is_file()
+
+
 def test_gap_jobs_include_p0_corner_fork():
     p0 = [g for g in GAP_JOBS if g.priority == "P0"]
     ids = {g.module_id for g in p0}

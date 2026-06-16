@@ -146,6 +146,20 @@ pub fn paint_tactical_viewport_frame_on_minimap(
     painter.rect_stroke(frame, 0.0, stroke, egui::StrokeKind::Outside);
 }
 
+/// Clamp tactical viewport frame to minimap image bounds (MINIMAP-REWIRE-001).
+#[must_use]
+pub fn clamp_tactical_viewport_frame_rect(
+    frame: egui::Rect,
+    image_rect: egui::Rect,
+) -> Option<egui::Rect> {
+    let clamped = frame.intersect(image_rect);
+    if clamped.width() >= 2.0 && clamped.height() >= 2.0 {
+        Some(clamped)
+    } else {
+        None
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

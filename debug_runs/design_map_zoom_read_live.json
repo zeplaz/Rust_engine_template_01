@@ -1,0 +1,19 @@
+{
+  "_agent_meta": {
+    "profile": "DESIGN_MAP_ZOOM_READ",
+    "schema": "debug_run_envelope_v1",
+    "source_system": "designer_map_zoom_read_001",
+    "relative_path": "debug_runs/design_map_zoom_read_live.json",
+    "design_doc": "src/dev/design_map_zoom_read_v1.md",
+    "parent_program": "PLAN-PRODUCT-POLISH-001"
+  },
+  "gate": "DESIGN-MAP-ZOOM-READ-001",
+  "green": true,
+  "verdict": "PASS",
+  "charter_on_disk": true,
+  "recommended_lever": "option_a_snap_ortho_on_band_change",
+  "double_world_frames_max_target": 1,
+  "impl_wired": false,
+  "unblocks": ["PLAN-MAP-ZOOM-SMOOTH-001", "TRIAGE-MAP-ZOOM-SMOOTH-001"],
+  "delta_wf": "@planner PLAN-MAP-ZOOM-SMOOTH-001"
+}

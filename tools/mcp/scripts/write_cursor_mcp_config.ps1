@@ -16,10 +16,11 @@ if (-not (Test-Path $CursorDir)) {
     New-Item -ItemType Directory -Path $CursorDir | Out-Null
 }
 
+$Launcher = Join-Path $Repo "tools\mcp\scripts\run_rust_engine_mcp.cmd"
+
 $server = @{
-    command = $Python
-    args    = @("-m", "rust_engine_mcp.server")
-    cwd     = Join-Path $Repo "tools\mcp\python"
+    command = "cmd"
+    args    = @("/c", $Launcher)
     env     = @{
         RUST_ENGINE_REPO   = $Repo
         BLENDER_EXE        = $Blender
@@ -40,7 +41,7 @@ if ($Merge -and (Test-Path $McpJsonPath)) {
     $out = @{ mcpServers = @{ "rust-engine-art" = $server } }
 }
 
-($out | ConvertTo-Json -Depth 6) | Set-Content -Path $McpJsonPath -Encoding utf8
+[System.IO.File]::WriteAllText($McpJsonPath, ($out | ConvertTo-Json -Depth 6), [System.Text.UTF8Encoding]::new($false))
 
 $envLines = @(
     "# Rust Engine Art MCP machine reference (dotenv-style)"

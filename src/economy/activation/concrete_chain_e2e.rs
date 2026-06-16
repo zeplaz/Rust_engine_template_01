@@ -196,6 +196,7 @@ pub fn spawn_rowhouse_victorian_production_demo(
         floors: 2,
         style: StylePackId("style_victorian".into()),
         seed: ROWHOUSE_VICTORIAN_DEMO_SITE_ID,
+        arch_dna_preset_id: None,
     };
     commands
         .spawn((

@@ -1,0 +1,19 @@
+(
+    schema_version: 2,
+    metadata: (
+        id: "default_industrial_demo_fire",
+        display_name: "G-PLAY demo fire",
+        author: Some("proc_A_dine01"),
+        description: Some("Path A — scenario ignite within first camera span (DESIGN-FIRE-PLAY-VIS-001)"),
+    ),
+    steps: [
+        EmitSimEffect(
+            source: ScenarioScript,
+            cause_id: "CAUSE-gplay-demo-ignite",
+            parent_effect_id: None,
+            cells: [
+                (chunk_x: 0, chunk_y: 0, cell: 0, spark: 0.55),
+            ],
+        ),
+    ],
+)

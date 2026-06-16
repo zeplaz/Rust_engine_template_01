@@ -28,6 +28,20 @@ impl FootprintMatrix {
             cells: vec![u8::from(filled); n],
         }
     }
+
+    #[must_use]
+    pub fn occupied_count(&self) -> u32 {
+        self.cells.iter().filter(|&&c| c != 0).count() as u32
+    }
+
+    #[must_use]
+    pub fn is_non_rectangular(&self) -> bool {
+        if self.cells.is_empty() {
+            return false;
+        }
+        let filled = self.occupied_count();
+        filled != self.width * self.depth
+    }
 }
 
 /// Unit layout inside an apartment building (legacy `APARTMENT_UNIT_TYPES`).
@@ -111,6 +125,8 @@ pub struct BuildingIntentPreview {
     pub apartment_form: Option<ApartmentForm>,
     /// Round 3 catalog id (`assets/configs/buildings` stem or `builtin:*`).
     pub catalog_id: Option<String>,
+    /// ARCH-DNA preset for grammar pilots (site stub + PG-2 commit).
+    pub arch_dna_preset_id: Option<String>,
 }
 
 #[must_use]
@@ -141,5 +157,6 @@ pub fn default_preview_for_apartment(form: ApartmentForm) -> BuildingIntentPrevi
         unit_kinds: units,
         apartment_form: Some(form),
         catalog_id: None,
+        arch_dna_preset_id: None,
     }
 }

@@ -1,12 +1,14 @@
 {
-  "schema_version": 5,
-  "program_id": "MCP-PROD-SPRINT-ROWHOUSE-001",
-  "updated": "2026-06-03",
+  "schema_version": 6,
+  "program_id": "MCP-PRODUCTIVITY-P2-001",
+  "prior_program_id": "MCP-PROD-SPRINT-ROWHOUSE-001",
+  "updated": "2026-06-13",
   "program_green": true,
   "production_pilot_active": true,
+  "lane_order": "tools/orchestrator/queues/mcp_lane_order_v1.md",
   "authoritative_docs": [
-    "src/dev/mcp_fleet_production_sprint_rowhouse_v1.md",
-    "src/dev/mcp_fleet_production_pilot_rowhouse_v1.md"
+    "docs/archive/2026-06-src-dev/plans/mcp_fleet_production_sprint_rowhouse_v1.md",
+    "docs/archive/2026-06-src-dev/plans/mcp_fleet_production_pilot_rowhouse_v1.md"
   ],
   "witness": "debug_runs/art_pipeline/procedural_tiles_production_bake_live.json",
   "snap": "tools/orchestrator/queues/mcp_orchestrator_snap_CURRENT.md",
@@ -25,34 +27,181 @@
     "variant_matrix_bunker_v1"
   ],
   "week1_coder_mcp_first": true,
+  "coder_mcp_drain": {
+    "status": "done",
+    "done_coder_mcp": [
+      "MCP-PROD-B2",
+      "MCP-PROD-C-PILOT",
+      "MCP-PROD-TILE-VAL",
+      "MCP-PROD-INDEX",
+      "MCP-P2-RUN-EVENT-001",
+      "MCP-P2-HONEST-BAKE-001",
+      "BUILD-READ-GRAMMAR-v0-002"
+    ],
+    "done_designer_mcp": ["MCP-PROD-PBR-PILOT", "MCP-PROD-MOD-G0-G5", "MCP-PROD-ATLAS-G0-G4"],
+    "next_coder_mcp": [],
+    "next_designer_mcp": [],
+    "done_planner_mcp": ["MCP-P2-SIM-VALIDATORS-PLAN-001"],
+    "next_planner_mcp": ["MCP-P2-KIT002-PLAN", "ARCH-002"],
+    "orchestrator_mcp_pick": "MCP-P2-OPS-BRIEF-002",
+    "planner_drain_order": [
+      "MCP-P2-KIT002-PLAN",
+      "ARCH-002"
+    ],
+    "coder_mcp_blocked_chain": [],
+    "coder_mcp_blocked_until": "MCP-P2-OPS-BRIEF-002 ready",
+    "next_coder_mcp": [
+      "MCP-P2-OPS-BRIEF-002"
+    ],
+    "note": "Phase 1+2 SHIPPED — Phase 3 OPS-BRIEF serial after QUEUE done"
+  },
+  "p2_tasks": [
+    {
+      "id": "MCP-P2-SIM-VALIDATORS-PLAN-001",
+      "week": 1,
+      "agent": "planner-mcp",
+      "priority": "P0",
+      "status": "done",
+      "goal": "SIGN sim product validators plan — Tier 1e Phases 1–3 authorized",
+      "plan_deliverable": "docs/archive/2026-06-src-dev/plans/plan_mcp_sim_product_validators_v1.md",
+      "depends_on": [],
+      "blocks": ["MCP-P2-QUEUE-PHASE4-001", "MCP-P2-VALID-CONSTRUCTION-001", "MCP-P2-OPS-BRIEF-002"],
+      "signed": "2026-06-13",
+      "note": "SIGNED @planner-mcp — unblocked coder-mcp Phase 1+2",
+      "updated_at": "2026-06-13T00:00:00+00:00"
+    },
+    {
+      "id": "MCP-P2-QUEUE-PHASE4-001",
+      "week": 1,
+      "agent": "coder-mcp",
+      "priority": "P1",
+      "status": "done",
+      "depends_on": ["MCP-P2-SIM-VALIDATORS-PLAN-001"],
+      "goal": "phase4 queue registry + slice_exec_brief + review_order_brief",
+      "docs": ["docs/archive/2026-06-src-dev/plans/plan_mcp_sim_product_validators_v1.md"],
+      "witness": "debug_runs/agent_ops/mcp_phase4_queue_live.json",
+      "commands": [
+        "python -m rust_engine_mcp.cli review-order-brief",
+        "python -m rust_engine_mcp.cli mcp-phase4-queue-witness"
+      ],
+      "updated_at": "2026-06-02T12:00:00+00:00"
+    },
+    {
+      "id": "MCP-P2-VALID-CONSTRUCTION-001",
+      "week": 1,
+      "agent": "coder-mcp",
+      "priority": "P1",
+      "status": "done",
+      "depends_on": ["MCP-P2-SIM-VALIDATORS-PLAN-001"],
+      "goal": "witness_brief profiles + validate_report construction",
+      "docs": ["docs/archive/2026-06-src-dev/plans/plan_mcp_sim_product_validators_v1.md"],
+      "witness": "debug_runs/agent_ops/mcp_valid_construction_live.json",
+      "commands": [
+        "python -m rust_engine_mcp.cli mcp-valid-construction-witness",
+        "python -m rust_engine_mcp.cli validate-report construction debug_runs/construction_placement_live.json"
+      ],
+      "updated_at": "2026-06-02T12:00:00+00:00"
+    },
+    {
+      "id": "MCP-P2-OPS-BRIEF-002",
+      "week": 2,
+      "agent": "coder-mcp",
+      "priority": "P2",
+      "status": "ready",
+      "depends_on": ["MCP-P2-QUEUE-PHASE4-001"],
+      "goal": "ops_get_retry_guidance v2 + ops_get_active_blockers for G-PLAY",
+      "docs": ["src/dev/ops_mcp_function_layer_v1.md"],
+      "witness": "debug_runs/agent_ops/ops_mcp_function_layer_live.json",
+      "updated_at": "2026-06-02T00:00:00+00:00"
+    },
+    {
+      "id": "MCP-P2-KIT002-PLAN",
+      "week": 1,
+      "agent": "planner-mcp",
+      "priority": "P0",
+      "status": "ready",
+      "goal": "Unfreeze criteria + batch_kit_production_002 manifest sketch",
+      "plan_deliverable": "docs/archive/2026-06-src-dev/plans/mcp_kit_production_002_unfreeze_v1.md",
+      "depends_on": [],
+      "blocks": ["kit_production_002+"],
+      "updated_at": "2026-06-07T00:00:00+00:00"
+    },
+    {
+      "id": "MCP-P2-RUN-EVENT-001",
+      "week": 1,
+      "agent": "coder-mcp",
+      "priority": "P1",
+      "status": "done",
+      "goal": "agent_run_append MCP wrapper — OPS Phase 1 telemetry",
+      "docs": ["src/dev/plan_agent_operations_intelligence_v1.md", "docs/archive/2026-06-src-dev/plans/plan_mcp_productivity_chain_v1.md"],
+      "witness": "debug_runs/mcp_p2_run_event_001_live.json",
+      "depends_on": [],
+      "updated_at": "2026-06-13T00:00:00+00:00"
+    },
+    {
+      "id": "MCP-P2-HONEST-BAKE-001",
+      "week": 1,
+      "agent": "coder-mcp",
+      "priority": "P2",
+      "status": "done",
+      "goal": "tile_promotion_honest_check — reject headless-as-ship before G4",
+      "depends_on": ["MCP-P2-RUN-EVENT-001"],
+      "docs": ["docs/archive/2026-06-src-dev/plans/plan_mcp_productivity_chain_v1.md"],
+      "witness": "debug_runs/mcp_p2_honest_bake_001_live.json",
+      "updated_at": "2026-06-13T00:00:00+00:00"
+    },
+    {
+      "id": "ARCH-002",
+      "week": 2,
+      "agent": "planner-mcp",
+      "priority": "P1",
+      "status": "ready",
+      "goal": "Formal Variant Graph JSON schema variant_graph_v1.schema.json",
+      "plan_deliverable": "tools/mcp/schemas/variant_graph_v1.schema.json",
+      "plan_doc": "docs/archive/2026-06-src-dev/plans/plan_building_tile_spine_001_v1.md",
+      "depends_on": [],
+      "blocks": ["RENDER-001", "PILOT-001"],
+      "note": "VariantNode: material/visibility/emission/decal overrides — variant-aware bakes",
+      "updated_at": "2026-06-13T00:00:00+00:00"
+    }
+  ],
   "tasks": [
     {
       "id": "MCP-PROD-B2",
       "week": 1,
       "agent": "coder-mcp",
       "priority": "P0",
-      "status": "ready",
+      "status": "done",
       "goal": "validate_asset_report tier rules (Phase B2)",
-      "plan_ref": "plan_module_kit_production_tier_v1.md#phase-b"
+      "plan_ref": "plan_module_kit_production_tier_v1.md#phase-b",
+      "witness": "debug_runs/mcp_prod_b2_live.json",
+      "updated_at": "2026-06-02T22:00:00+00:00"
     },
     {
       "id": "MCP-PROD-C-PILOT",
       "week": 1,
       "agent": "coder-mcp",
       "priority": "P0",
-      "status": "ready",
+      "status": "done",
       "blocked_by": [],
       "goal": "bpy profiles wall/door/window/roof rowhouse",
-      "manifest": "tools/mcp/schemas/examples/batch_kit_production_001.manifest.json"
+      "manifest": "tools/mcp/schemas/examples/batch_kit_production_001.manifest.json",
+      "witness": "debug_runs/mcp_prod_c_pilot_live.json",
+      "updated_at": "2026-06-02T23:00:00+00:00"
     },
     {
       "id": "MCP-PROD-PBR-PILOT",
       "week": 1,
       "agent": "designer-mcp",
       "priority": "P0",
-      "status": "ready",
+      "status": "done",
       "goal": "Material Maker doc or PBR waiver + tileable set ids",
-      "acceptance": ["pbr_pilot_rowhouse_witness.yaml"]
+      "acceptance": ["pbr_pilot_rowhouse_witness.yaml"],
+      "witness": "debug_runs/art_pipeline/pbr_pilot_rowhouse_live.json",
+      "witness_yaml": "debug_runs/art_pipeline/pbr_pilot_rowhouse_witness.yaml",
+      "doc_ref": "docs/archive/2026-06-src-dev/plans/pbr_pilot_rowhouse_material_maker_v1.md",
+      "pbr_waiver": "procedural_mcp_generator_v1",
+      "updated_at": "2026-06-06T00:00:00+00:00"
     },
     {
       "id": "MCP-PROD-MOD-G0-G5",
@@ -60,10 +209,14 @@
       "track": "modules",
       "agent": "designer-mcp",
       "priority": "P0",
-      "status": "blocked",
-      "blocked_by": ["MCP-PROD-C-PILOT", "MCP-PROD-PBR-PILOT", "MCP-PROD-B2"],
+      "status": "done",
+      "blocked_by": [],
+      "depends_on": ["MCP-PROD-C-PILOT", "MCP-PROD-PBR-PILOT"],
       "goal": "kit_production_001 G0-G5 promote production modules",
-      "witness": "debug_runs/art_pipeline/rowhouse_production_module_g0_rules.yaml"
+      "witness": "debug_runs/art_pipeline/rowhouse_production_module_g0_rules.yaml",
+      "witness_json": "debug_runs/art_pipeline/rowhouse_production_mod_g0_g5_live.json",
+      "kit_witness": "debug_runs/art_pipeline/kit_production_001_live.json",
+      "updated_at": "2026-06-06T00:00:00+00:00"
     },
     {
       "id": "MCP-PROD-ATLAS-G0-G4",
@@ -71,28 +224,38 @@
       "track": "atlas",
       "agent": "designer-mcp",
       "priority": "P1",
-      "status": "blocked",
-      "blocked_by": ["MCP-PROD-MOD-G0-G5"],
+      "status": "done",
+      "blocked_by": [],
       "goal": "keyframe pack + rowhouse_victorian_production_signoff proceed_ship yes",
-      "batch": "tools/mcp/schemas/examples/tile_batch_rowhouse_victorian_production_v1.json"
+      "batch": "tools/mcp/schemas/examples/tile_batch_rowhouse_victorian_production_v1.json",
+      "witness": "debug_runs/art_pipeline/rowhouse_production_atlas_g0_g4_witness.yaml",
+      "witness_json": "debug_runs/art_pipeline/rowhouse_production_atlas_g0_g4_live.json",
+      "g4_signoff": "debug_runs/art_pipeline/rowhouse_victorian_production_signoff.yaml",
+      "updated_at": "2026-06-07T00:00:00+00:00"
     },
     {
       "id": "MCP-PROD-TILE-VAL",
       "week": 2,
       "agent": "coder-mcp",
       "priority": "P1",
-      "status": "blocked",
-      "blocked_by": ["MCP-PROD-ATLAS-G0-G4"],
-      "goal": "tile_batch_validate keyframe_pack + variant_matrix_expand"
+      "status": "done",
+      "blocked_by": [],
+      "goal": "tile_batch_validate keyframe_pack + variant_matrix_expand",
+      "witness": "debug_runs/mcp_prod_tile_val_live.json",
+      "batch": "tools/mcp/schemas/examples/tile_batch_rowhouse_victorian_production_v1.json",
+      "updated_at": "2026-06-07T00:00:00+00:00"
     },
     {
       "id": "MCP-PROD-INDEX",
       "week": 2,
       "agent": "coder-mcp",
       "priority": "P2",
-      "status": "blocked",
-      "blocked_by": ["MCP-PROD-ATLAS-G0-G4"],
-      "goal": "_tile_atlas_index.ron production row ship_allowed true"
+      "status": "done",
+      "blocked_by": [],
+      "goal": "_tile_atlas_index.ron production row ship_allowed true",
+      "witness": "debug_runs/mcp_prod_index_live.json",
+      "index": "assets/configs/buildings/_tile_atlas_index.ron",
+      "updated_at": "2026-06-07T00:00:00+00:00"
     },
     {
       "id": "ENG-PT-4-001",
@@ -108,9 +271,12 @@
       "week": 3,
       "agent": "coder",
       "priority": "P2",
-      "status": "blocked",
-      "blocked_by": ["ENG-PT-4-001"],
-      "goal": "fire frame tick + dirty stamp"
+      "status": "done",
+      "blocked_by": [],
+      "goal": "fire frame tick + dirty stamp",
+      "witness": "debug_runs/procedural_tiles_runtime_live.json",
+      "exit": "eng_pt_5_001 true",
+      "updated_at": "2026-06-07T00:00:00+00:00"
     }
   ],
   "archive_done": {

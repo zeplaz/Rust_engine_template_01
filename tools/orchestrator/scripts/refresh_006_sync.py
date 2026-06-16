@@ -8,11 +8,11 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[3]
 
 REQUIRED_PLANS = [
-    "src/dev/planner_status_audit_v8.md",
-    "src/dev/planner_delivery_signoff_matrix_v1.md",
-    "src/dev/operator_visual_signoff_bundle_plan_v1.md",
-    "src/dev/construction_round4_corridor_phase_spec_v1.md",
-    "src/dev/construction_round4_multiview_ghost_presets_v1.md",
+    "docs/archive/2026-06-fleet-drain/planner_audits/planner_status_audit_v8.md",
+    "docs/archive/2026-06-src-dev/plans/planner_delivery_signoff_matrix_v1.md",
+    "docs/archive/2026-06-src-dev/plans/operator_visual_signoff_bundle_plan_v1.md",
+    "docs/archive/2026-06-src-dev/plans/construction_round4_corridor_phase_spec_v1.md",
+    "docs/archive/2026-06-src-dev/plans/construction_round4_multiview_ghost_presets_v1.md",
 ]
 
 
@@ -46,7 +46,7 @@ def main() -> None:
     if failed:
         raise SystemExit(f"failed: {failed}")
 
-    audit = ROOT / "src/dev/planner_status_audit_v8.md"
+    audit = ROOT / "docs/archive/2026-06-fleet-drain/planner_audits/planner_status_audit_v8.md"
     text = audit.read_text(encoding="utf-8")
     if "**SIGNED**" not in text or "QUEUED" in text.split("Status")[1][:80]:
         raise SystemExit("planner_status_audit_v8.md must be SIGNED (not QUEUED)")

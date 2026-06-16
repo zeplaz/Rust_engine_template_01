@@ -23,7 +23,7 @@ use crate::render::{
 use crate::gui::WorldRepresentationFrame;
 use crate::io::streaming::ghost_band_neighbor_coords_for_preview;
 use crate::render::SharedOverlayFieldBuffers;
-use crate::systems::ecology::{ChunkEcology, VegetationField};
+use crate::systems::ecology::{ChunkEcology, LandscapeProgramOnChunk, VegetationField};
 use crate::systems::fire::{ChunkSmokeField, FireFuelField};
 use crate::systems::terrain::TerrainRegistriesHandles;
 use crate::systems::weather::ChunkWeather;
@@ -276,6 +276,7 @@ pub(crate) struct WorldPreviewGpuChunkSync<'w, 's> {
             Option<&'static ChunkWeather>,
             Option<&'static FireFuelField>,
             Option<&'static ChunkSmokeField>,
+            Option<&'static LandscapeProgramOnChunk>,
         ),
     >,
     q_chunks: Query<'w, 's, (Entity, &'static WorldPreviewGpuChunkQuad)>,
@@ -352,12 +353,13 @@ pub(crate) fn sync_world_preview_gpu_chunk_quads(
     sync.gpu_rt.last_overlay_revision = overlay_revision;
 
     let mut ecology_by_chunk: HashMap<IVec2, EcologyPreviewSample> = HashMap::new();
-    for (chunk, eco, veg, wx, fuel, smoke) in sync.chunk_ecology.iter() {
+    for (chunk, eco, veg, wx, fuel, smoke, program) in sync.chunk_ecology.iter() {
         let heat = sync.shared_overlay.fire_surface_heat_at(chunk.coord);
-        ecology_by_chunk.insert(
-            chunk.coord,
-            EcologyPreviewSample::from_chunk_components(eco, veg, wx, fuel, heat, smoke),
-        );
+        let mut sample = EcologyPreviewSample::from_chunk_components(eco, veg, wx, fuel, heat, smoke);
+        if let Some(prog) = program {
+            sample = sample.with_topology_kinds(&prog.evaluation.topology_kinds);
+        }
+        ecology_by_chunk.insert(chunk.coord, sample);
     }
 
     for (chunk, mat_chunk) in sync.chunk_mats.iter() {

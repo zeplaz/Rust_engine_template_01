@@ -1,0 +1,139 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "arch_build_grammar_v0.schema.json",
+  "title": "ArchBuildGrammarV0",
+  "description": "BUILD-READ-GRAMMAR-v0-001 — ARCH-DNA + PressureField v0 extension. Composes with building_grammar_v1; does not replace massing geometry.",
+  "type": "object",
+  "required": ["schema_version", "preset_id", "arch_dna", "pressure_field"],
+  "properties": {
+    "schema_version": { "const": "arch_build_grammar_v0" },
+    "preset_id": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+    "grammar_id": {
+      "type": "string",
+      "description": "Optional link to building_grammar_v1 grammar_id",
+      "pattern": "^[a-z][a-z0-9_]*$"
+    },
+    "arch_dna": { "$ref": "#/$defs/arch_dna" },
+    "pressure_field": { "$ref": "#/$defs/pressure_field_v0" },
+    "program_stub": { "$ref": "#/$defs/program_stub" },
+    "site_zones": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/site_zone" }
+    },
+    "massing_weight_override": {
+      "type": "array",
+      "description": "Optional precomputed v0 weights; evaluator may recompute from pressure_field",
+      "items": {
+        "type": "object",
+        "required": ["id", "weight"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "enum": ["long_hall", "double_hall", "l_shape", "yard_complex"]
+          },
+          "weight": { "type": "integer", "minimum": 1, "maximum": 100 }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "arch_dna": {
+      "type": "object",
+      "required": ["F", "L", "C", "D", "W", "I", "S", "P", "M", "A"],
+      "properties": {
+        "F": { "$ref": "#/$defs/dna_function" },
+        "L": { "$ref": "#/$defs/dna_lineage" },
+        "C": { "$ref": "#/$defs/dna_climate" },
+        "D": { "$ref": "#/$defs/dna_density" },
+        "W": { "$ref": "#/$defs/dna_wealth" },
+        "I": { "$ref": "#/$defs/dna_infrastructure" },
+        "S": { "$ref": "#/$defs/dna_security" },
+        "P": { "$ref": "#/$defs/dna_philosophy" },
+        "M": { "$ref": "#/$defs/dna_material" },
+        "A": { "$ref": "#/$defs/dna_age" }
+      },
+      "additionalProperties": false
+    },
+    "pressure_field_v0": {
+      "type": "object",
+      "required": ["beta_sym", "beta_irr", "beta_yard", "beta_svc", "beta_mod", "beta_exp", "beta_vert", "beta_roof"],
+      "properties": {
+        "beta_sym": { "type": "number", "minimum": 0, "maximum": 1 },
+        "beta_irr": { "type": "number", "minimum": 0, "maximum": 1 },
+        "beta_yard": { "type": "number", "minimum": 0, "maximum": 1 },
+        "beta_svc": { "type": "number", "minimum": 0, "maximum": 1 },
+        "beta_mod": { "type": "number", "minimum": 0, "maximum": 1 },
+        "beta_exp": { "type": "number", "minimum": 0, "maximum": 1 },
+        "beta_vert": { "type": "number", "minimum": 0, "maximum": 1 },
+        "beta_roof": { "type": "number", "minimum": 0, "maximum": 1 }
+      },
+      "additionalProperties": false
+    },
+    "program_stub": {
+      "type": "object",
+      "properties": {
+        "storage": { "type": "string", "enum": ["low", "medium", "high"] },
+        "loading": { "type": "string", "enum": ["low", "medium", "high"] },
+        "office": { "type": "string", "enum": ["low", "medium", "high"] },
+        "service": { "type": "string", "enum": ["low", "medium", "high"] },
+        "expansion": { "type": "string", "enum": ["low", "medium", "high"] }
+      },
+      "additionalProperties": false
+    },
+    "site_zone": {
+      "type": "object",
+      "required": ["id", "role"],
+      "properties": {
+        "id": { "type": "string" },
+        "role": {
+          "type": "string",
+          "enum": ["primary", "loading_wing", "utility_yard", "rail_spur", "parking", "service"]
+        },
+        "footprint_hint": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "dna_function": {
+      "type": "string",
+      "enum": ["logistics", "manufacturing", "housing", "military", "utility", "port", "commercial", "government"]
+    },
+    "dna_lineage": {
+      "type": "string",
+      "enum": ["roman", "industrial_british", "soviet", "nato", "germanic", "japanese", "colonial", "corporate", "arcology", "frontier"]
+    },
+    "dna_climate": {
+      "type": "string",
+      "enum": ["arctic", "temperate", "mediterranean", "tropical", "desert", "mountain", "wetland", "monsoon"]
+    },
+    "dna_density": {
+      "type": "string",
+      "enum": ["sparse", "rural", "town", "urban", "dense_urban", "megacity"]
+    },
+    "dna_wealth": {
+      "type": "string",
+      "enum": ["poor", "working", "middle", "industrial", "elite", "state"]
+    },
+    "dna_infrastructure": {
+      "type": "string",
+      "enum": ["road", "rail", "port", "airport", "canal", "pipeline", "power_hub"]
+    },
+    "dna_security": {
+      "type": "string",
+      "enum": ["open", "controlled", "protected", "fortified", "military"]
+    },
+    "dna_philosophy": {
+      "type": "string",
+      "enum": ["utilitarian", "monumental", "humanist", "corporate", "efficiency", "defensive", "prestige"]
+    },
+    "dna_material": {
+      "type": "string",
+      "enum": ["steel", "concrete", "brick", "stone", "glass", "composite", "hybrid"]
+    },
+    "dna_age": {
+      "type": "string",
+      "enum": ["new", "maintained", "weathered", "declining", "ruined"]
+    }
+  }
+}

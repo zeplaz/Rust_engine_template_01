@@ -4,7 +4,7 @@
 |:---|:---|
 | `water_surface_target_v1.png` | Lake / river / ocean motion + particle target (**SIGNED** 2026-05-24) |
 
-**Authority:** [`src/dev/water_surface_vfx_design_plan_v1.md`](../../../src/dev/water_surface_vfx_design_plan_v1.md)  
+**Authority:** [`docs/archive/2026-06-src-dev/plans/water_surface_vfx_design_plan_v1.md`](../../../docs/archive/2026-06-src-dev/plans/water_surface_vfx_design_plan_v1.md)  
 **Worksheet:** [`prompts/guides/ui/water_surface_vfx_decision_worksheet_v1.md`](../../../prompts/guides/ui/water_surface_vfx_decision_worksheet_v1.md)  
 **Coder queue:** [`prompts/guides/ui/water_surface_vfx_coder_queue_v1.md`](../../../prompts/guides/ui/water_surface_vfx_coder_queue_v1.md)
 

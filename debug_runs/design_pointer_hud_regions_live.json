@@ -1,0 +1,19 @@
+{
+  "_agent_meta": {
+    "profile": "DESIGN_POINTER_HUD_REGIONS",
+    "schema": "debug_run_envelope_v1",
+    "source_system": "designer_build_read_pointer_hud_001",
+    "relative_path": "debug_runs/design_pointer_hud_regions_live.json",
+    "design_doc": "src/dev/design_pointer_hud_regions_v1.md",
+    "parent_program": "PLAN-BUILD-READABILITY-001"
+  },
+  "gate": "BUILD-READ-POINTER-HUD-001",
+  "green": true,
+  "verdict": "PASS",
+  "charter_on_disk": true,
+  "chrome_region_map": true,
+  "debug_overlay_fields_spec": true,
+  "impl_wired": false,
+  "unblocks": ["BUILD-READ-P0-003", "BUILD-READ-DEBUG-001"],
+  "delta_wf": "@coder BUILD-READ-P0-003 verify"
+}

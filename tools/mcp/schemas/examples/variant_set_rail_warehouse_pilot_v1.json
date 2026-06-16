@@ -1,0 +1,108 @@
+{
+  "_meta": {
+    "teaches": ["tile_state_machine", "pilot_catalog"],
+    "not_a_ship_target": true,
+    "building_set_id": "industrial_west_v0"
+  },
+  "schema_version": 1,
+  "variant_set_id": "rail_warehouse_pilot_v1",
+  "assembly_id": "industrial_west_4x7_s440013_f0c0",
+  "style_pack_id": "style_industrial_west",
+  "seed": 440013,
+  "variants": [
+    {
+      "variant_key": "clean_day",
+      "sim_tags": [
+        "sim_clean_day"
+      ],
+      "tags": [
+        "sim_clean_day"
+      ],
+      "layers": {
+        "lighting": {
+          "lighting": "day",
+          "power": "off",
+          "night_lights": false
+        },
+        "damage": {
+          "state": "clean",
+          "damage": 0.0
+        },
+        "fill": {
+          "fill": "empty"
+        }
+      }
+    },
+    {
+      "variant_key": "clean_night_off",
+      "sim_tags": [
+        "sim_clean_night_off"
+      ],
+      "tags": [
+        "sim_clean_night_off"
+      ],
+      "layers": {
+        "lighting": {
+          "lighting": "night_off",
+          "power": "off",
+          "night_lights": false
+        },
+        "damage": {
+          "state": "clean",
+          "damage": 0.0
+        },
+        "fill": {
+          "fill": "empty"
+        }
+      }
+    },
+    {
+      "variant_key": "clean_night_on",
+      "sim_tags": [
+        "sim_clean_night_on"
+      ],
+      "tags": [
+        "sim_clean_night_on"
+      ],
+      "layers": {
+        "lighting": {
+          "lighting": "night_on",
+          "power": "on",
+          "night_lights": true
+        },
+        "damage": {
+          "state": "clean",
+          "damage": 0.0
+        },
+        "fill": {
+          "fill": "empty"
+        }
+      }
+    },
+    {
+      "variant_key": "under_construction_01",
+      "sim_tags": [
+        "sim_construction",
+        "sim_stage_01"
+      ],
+      "tags": [
+        "sim_construction",
+        "sim_stage_01"
+      ],
+      "layers": {
+        "lighting": {
+          "lighting": "day",
+          "power": "off",
+          "night_lights": false
+        },
+        "damage": {
+          "state": "dirty",
+          "damage": 0.0
+        },
+        "fill": {
+          "fill": "empty"
+        }
+      }
+    }
+  ]
+}

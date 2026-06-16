@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import json
 import tkinter as tk
-from tkinter import messagebox, ttk
+from tkinter import ttk
+
+from PIL import ImageTk
 
 from module_viewer.model_store import (
     ModuleRecord,
@@ -17,8 +19,20 @@ from module_viewer.model_store import (
     validate_record,
 )
 from module_viewer.preview_browser import preview_in_browser
+from rust_engine_mcp.aps_catalog_preview import render_module_list_thumb
+from rust_engine_mcp.paths import repo_root
 
+from .aps_tooltips import bind_aps_tooltip
+from .aps_inline_feedback import set_inline_status
+from .aps_paned import add_pane, horizontal_paned
+from .aps_scroll import attach_wheel_area, bind_debounced_scrollregion, canvas_yscroll, text_yscroll
+from .aps_theme import track_wraplength
+from .metadata_flow_panel import MetadataFlowPanel
 from .state import SuiteState
+
+SIDECAR_TRUTH = (
+    "Sidecar tags ≠ ship truth — assembly snapshot semantic_tags and material_profile win at runtime."
+)
 
 
 class CatalogPanel(ttk.Frame):
@@ -28,10 +42,13 @@ class CatalogPanel(ttk.Frame):
         self._on_select = on_select
         self._records: list[ModuleRecord] = []
         self._current: ModuleRecord | None = None
+        self._row_photos: dict[str, ImageTk.PhotoImage] = {}
         self._build()
         self.refresh_list()
 
     def _build(self) -> None:
+        self.metadata_flow = MetadataFlowPanel(self, context="catalog")
+        self.metadata_flow.pack(fill=tk.X, pady=(0, 6))
         bar = ttk.Frame(self)
         bar.pack(fill=tk.X, pady=(0, 4))
         ttk.Label(bar, text="Batch").pack(side=tk.LEFT)
@@ -41,6 +58,7 @@ class CatalogPanel(ttk.Frame):
         )
         self.batch_combo.pack(side=tk.LEFT, padx=(4, 12))
         self.batch_combo.bind("<<ComboboxSelected>>", lambda _e: self.refresh_list())
+        bind_aps_tooltip(self.batch_combo, "cat_batch_filter")
 
         ttk.Label(bar, text="Category").pack(side=tk.LEFT)
         self.category_var = tk.StringVar(value="(all)")
@@ -49,28 +67,70 @@ class CatalogPanel(ttk.Frame):
         )
         self.category_combo.pack(side=tk.LEFT, padx=(4, 12))
         self.category_combo.bind("<<ComboboxSelected>>", lambda _e: self.refresh_list())
-        ttk.Button(bar, text="Refresh", command=self.refresh_list).pack(side=tk.RIGHT)
+        bind_aps_tooltip(self.category_combo, "cat_category_filter")
+        refresh_btn = ttk.Button(bar, text="Refresh", command=self.refresh_list)
+        refresh_btn.pack(side=tk.RIGHT)
+        bind_aps_tooltip(refresh_btn, "cat_refresh")
 
-        paned = ttk.Panedwindow(self, orient=tk.HORIZONTAL)
+        paned = horizontal_paned(self)
         paned.pack(fill=tk.BOTH, expand=True)
 
         left = ttk.Frame(paned, padding=4)
-        paned.add(left, weight=1)
+        add_pane(paned, left, weight=1, minsize=220)
         ttk.Label(left, text="Modules").pack(anchor=tk.W)
-        self.listbox = tk.Listbox(left, exportselection=False, activestyle="none")
-        self.listbox.pack(fill=tk.BOTH, expand=True, pady=4)
-        self.listbox.bind("<<ListboxSelect>>", self.on_select)
+        list_wrap = ttk.Frame(left)
+        list_wrap.pack(fill=tk.BOTH, expand=True, pady=4)
+        list_scroll = ttk.Scrollbar(list_wrap, orient=tk.VERTICAL)
+        list_scroll.pack(side=tk.RIGHT, fill=tk.Y)
+        self._list_canvas = tk.Canvas(
+            list_wrap,
+            highlightthickness=0,
+            yscrollcommand=list_scroll.set,
+        )
+        self._list_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        list_scroll.configure(command=self._list_canvas.yview)
+        self._list_inner = ttk.Frame(self._list_canvas)
+        self._list_win = self._list_canvas.create_window((0, 0), window=self._list_inner, anchor=tk.NW)
+
+        def _on_canvas_configure(event) -> None:
+            self._list_canvas.itemconfigure(self._list_win, width=event.width)
+
+        self._list_canvas.bind("<Configure>", _on_canvas_configure)
+        bind_debounced_scrollregion(self._list_canvas, self._list_inner)
+        attach_wheel_area(
+            self._list_canvas,
+            self._list_inner,
+            on_scroll_y=canvas_yscroll(self._list_canvas),
+            area_id=f"aps-catalog-list-{id(self)}",
+        )
 
         right = ttk.Frame(paned, padding=4)
-        paned.add(right, weight=3)
+        add_pane(paned, right, weight=3, minsize=360)
         self.summary = tk.StringVar(value="Select a module")
-        ttk.Label(right, textvariable=self.summary, wraplength=680, justify=tk.LEFT).pack(
-            anchor=tk.W, fill=tk.X
+        summary_lbl = ttk.Label(right, textvariable=self.summary, wraplength=680, justify=tk.LEFT)
+        summary_lbl.pack(anchor=tk.W, fill=tk.X)
+        self.sidecar_truth_var = tk.StringVar(value=SIDECAR_TRUTH)
+        sidecar_lbl = ttk.Label(
+            right,
+            textvariable=self.sidecar_truth_var,
+            wraplength=680,
+            justify=tk.LEFT,
+            foreground="#555",
+            font=("Segoe UI", 9),
         )
+        sidecar_lbl.pack(anchor=tk.W, fill=tk.X, pady=(2, 0))
+        bind_aps_tooltip(sidecar_lbl, "cat_sidecar_truth")
         self.validation = tk.StringVar(value="")
-        ttk.Label(
-            right, textvariable=self.validation, foreground="#006400", wraplength=680, justify=tk.LEFT
-        ).pack(anchor=tk.W, fill=tk.X, pady=(4, 0))
+        self._validation_lbl = tk.Label(
+            right,
+            textvariable=self.validation,
+            foreground="#444444",
+            wraplength=680,
+            justify=tk.LEFT,
+            font=("Segoe UI", 9),
+        )
+        self._validation_lbl.pack(anchor=tk.W, fill=tk.X, pady=(4, 0))
+        track_wraplength(right, summary_lbl, sidecar_lbl, self._validation_lbl, minimum=320)
 
         notebook = ttk.Notebook(right)
         notebook.pack(fill=tk.BOTH, expand=True, pady=8)
@@ -82,6 +142,11 @@ class CatalogPanel(ttk.Frame):
         self.meta_text.configure(yscrollcommand=meta_scroll.set)
         self.meta_text.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         meta_scroll.pack(side=tk.RIGHT, fill=tk.Y)
+        attach_wheel_area(
+            self.meta_text,
+            on_scroll_y=text_yscroll(self.meta_text),
+            area_id=f"aps-catalog-meta-{id(self)}",
+        )
 
         index_frame = ttk.Frame(notebook, padding=4)
         notebook.add(index_frame, text="Index entry")
@@ -90,16 +155,30 @@ class CatalogPanel(ttk.Frame):
         self.index_text.configure(yscrollcommand=idx_scroll.set)
         self.index_text.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         idx_scroll.pack(side=tk.RIGHT, fill=tk.Y)
+        attach_wheel_area(
+            self.index_text,
+            on_scroll_y=text_yscroll(self.index_text),
+            area_id=f"aps-catalog-index-{id(self)}",
+        )
 
         actions = ttk.Frame(right)
         actions.pack(fill=tk.X, pady=4)
-        ttk.Button(actions, text="Validate GLB", command=self.on_validate).pack(side=tk.LEFT, padx=2)
-        ttk.Button(actions, text="Save metadata", command=self.on_save).pack(side=tk.LEFT, padx=2)
-        ttk.Button(actions, text="Reindex library", command=self.on_reindex).pack(side=tk.LEFT, padx=2)
-        ttk.Button(actions, text="Preview in browser", command=self.on_browser_preview).pack(
-            side=tk.LEFT, padx=2
-        )
-        ttk.Button(actions, text="3D preview (trimesh)", command=self.on_trimesh).pack(side=tk.LEFT, padx=2)
+        val_btn = ttk.Button(actions, text="Validate GLB", command=self.on_validate)
+        val_btn.pack(side=tk.LEFT, padx=2)
+        bind_aps_tooltip(val_btn, "cat_validate")
+        bind_aps_tooltip(notebook, "cat_metadata")
+        save_btn = ttk.Button(actions, text="Save metadata", command=self.on_save)
+        save_btn.pack(side=tk.LEFT, padx=2)
+        bind_aps_tooltip(save_btn, "cat_save_metadata")
+        reindex_btn = ttk.Button(actions, text="Reindex library", command=self.on_reindex)
+        reindex_btn.pack(side=tk.LEFT, padx=2)
+        bind_aps_tooltip(reindex_btn, "cat_reindex")
+        browser_btn = ttk.Button(actions, text="Preview in browser", command=self.on_browser_preview)
+        browser_btn.pack(side=tk.LEFT, padx=2)
+        bind_aps_tooltip(browser_btn, "cat_browser_preview")
+        trimesh_btn = ttk.Button(actions, text="3D preview (trimesh)", command=self.on_trimesh)
+        trimesh_btn.pack(side=tk.LEFT, padx=2)
+        bind_aps_tooltip(trimesh_btn, "cat_trimesh")
 
     def refresh_list(self) -> None:
         batch = self.batch_var.get()
@@ -107,10 +186,11 @@ class CatalogPanel(ttk.Frame):
         batch_filter = None if batch == "(all)" else batch
         category_filter = None if category == "(all)" else category
         self._records = list_modules(batch_id=batch_filter, category=category_filter)
-        self.listbox.delete(0, tk.END)
+        for w in self._list_inner.winfo_children():
+            w.destroy()
+        self._row_photos.clear()
         for rec in self._records:
-            label = f"{rec.module_id}  ({rec.index_row.get('category', '?')})"
-            self.listbox.insert(tk.END, label)
+            self._add_list_row(rec)
         batches = sorted({str(r.index_row.get("batch_id") or "") for r in self._records if r.index_row.get("batch_id")})
         categories = sorted(
             {str(r.index_row.get("category") or "") for r in self._records if r.index_row.get("category")}
@@ -118,15 +198,50 @@ class CatalogPanel(ttk.Frame):
         self.batch_combo["values"] = ["(all)", *batches]
         self.category_combo["values"] = ["(all)", *categories]
         if self._records:
-            self.listbox.selection_set(0)
-            self.on_select()
+            self._select_record(self._records[0])
+
+    def _add_list_row(self, rec: ModuleRecord) -> None:
+        row = ttk.Frame(self._list_inner, padding=2)
+        row.pack(fill=tk.X, anchor=tk.W)
+        glb = rec.glb_path
+        if not glb.is_absolute():
+            glb = repo_root() / glb
+        thumb = render_module_list_thumb(glb, module_id=rec.module_id)
+        img_lbl: tk.Label | None = None
+        if thumb is not None:
+            photo = ImageTk.PhotoImage(thumb)
+            self._row_photos[rec.module_id] = photo
+            img_lbl = tk.Label(row, image=photo, bg="#f0f0f0", cursor="hand2")
+            img_lbl.image = photo
+            img_lbl.pack(side=tk.LEFT, padx=(0, 6))
+            img_lbl.bind("<Button-1>", lambda _e, r=rec: self._select_record(r))
+            bind_aps_tooltip(img_lbl, "cat_list_thumb")
+        cat = rec.index_row.get("category", "?")
+        text = ttk.Label(
+            row,
+            text=f"{rec.module_id}\n{cat}",
+            font=("Segoe UI", 8),
+            cursor="hand2",
+        )
+        text.pack(side=tk.LEFT, fill=tk.X, expand=True)
+        text.bind("<Button-1>", lambda _e, r=rec: self._select_record(r))
+        bind_aps_tooltip(text, "cat_list_thumb")
+
+    def _set_validation_result(self, text: str, *, ok: bool | None = None) -> None:
+        if ok is True and text:
+            text = f"Validation: PASS — {text}" if not text.startswith("Validation:") else text
+        elif ok is False and text:
+            text = f"Validation: FAIL — {text}" if not text.startswith("Validation:") else text
+        set_inline_status(self._validation_lbl, self.validation, text, ok=ok)
+
+    def _select_record(self, rec: ModuleRecord) -> None:
+        self._current = rec
+        self.on_select()
 
     def on_select(self, _event=None) -> None:
-        sel = self.listbox.curselection()
-        if not sel:
-            return
-        self._current = self._records[sel[0]]
         rec = self._current
+        if rec is None:
+            return
         self.state.selected_module_id = rec.module_id
         self.state.selected_module_ids = [rec.module_id]
         dims = (rec.sidecar or {}).get("dimensions_m") or {}
@@ -138,6 +253,7 @@ class CatalogPanel(ttk.Frame):
             f"Grid {grid} · dims {dim_txt} · batch {rec.index_row.get('batch_id', '—')}"
         )
         self.validation.set("")
+        self._validation_lbl.configure(foreground="#444444")
         sidecar_json = json.dumps(rec.sidecar or {}, indent=2)
         self.meta_text.configure(state=tk.NORMAL)
         self.meta_text.delete("1.0", tk.END)
@@ -156,7 +272,7 @@ class CatalogPanel(ttk.Frame):
 
     def _require_current(self) -> ModuleRecord | None:
         if self._current is None:
-            messagebox.showinfo("Catalog", "Select a module first.")
+            self._set_validation_result("Select a module first.", ok=False)
             return None
         return self._current
 
@@ -168,7 +284,8 @@ class CatalogPanel(ttk.Frame):
         status = "PASS" if report.get("valid") else "FAIL"
         verts = report.get("vertex_count", "?")
         issues = "; ".join(report.get("issues") or []) or "none"
-        self.validation.set(f"Validation {status} · {verts} verts · {issues}")
+        ok = bool(report.get("valid"))
+        self._set_validation_result(f"Validation {status} · {verts} verts · {issues}", ok=ok)
 
     def on_save(self) -> None:
         rec = self._require_current()
@@ -177,19 +294,20 @@ class CatalogPanel(ttk.Frame):
         try:
             data = json.loads(self.meta_text.get("1.0", tk.END))
         except json.JSONDecodeError as exc:
-            messagebox.showerror("Save metadata", f"Invalid JSON:\n{exc}")
+            self._set_validation_result(f"Invalid JSON: {exc}", ok=False)
             return
         path = save_sidecar(rec, data)
-        messagebox.showinfo("Save metadata", f"Saved:\n{path}")
+        self._set_validation_result(f"Saved metadata — {path.name}", ok=True)
         self.on_select()
 
     def on_reindex(self) -> None:
         try:
             result = reindex_library()
         except Exception as exc:  # noqa: BLE001
-            messagebox.showerror("Reindex", str(exc))
+            self._set_validation_result(f"Reindex failed: {exc}", ok=False)
             return
-        messagebox.showinfo("Reindex", f"Updated {result.get('entry_count', 0)} entries")
+        count = result.get("entry_count", 0)
+        self._set_validation_result(f"Reindex OK — {count} entries", ok=True)
         self.refresh_list()
 
     def on_browser_preview(self) -> None:
@@ -199,10 +317,10 @@ class CatalogPanel(ttk.Frame):
         try:
             url = preview_in_browser(rec.glb_path, title=rec.module_id)
         except Exception as exc:  # noqa: BLE001
-            messagebox.showerror("Browser preview", str(exc))
+            self._set_validation_result(f"Browser preview failed: {exc}", ok=False)
             return
         if url.startswith("http"):
-            self.validation.set(f"Browser preview: {url}")
+            self._set_validation_result(f"Browser preview: {url}", ok=True)
 
     def on_trimesh(self) -> None:
         rec = self._require_current()
@@ -210,4 +328,6 @@ class CatalogPanel(ttk.Frame):
             return
         err = preview_trimesh(rec.glb_path)
         if err:
-            messagebox.showwarning("3D preview", err)
+            self._set_validation_result(f"3D preview: {err}", ok=False)
+            return
+        self._set_validation_result("3D preview opened.", ok=True)

@@ -1,0 +1,3 @@
+{"cause_id":"CAUSE-lightning-live-22","dispatch_ok":true,"effect_id":1,"kind_tag":2,"parent_effect_id":null,"run_id":"LIB-SIM-EFFECT-LIVE-001","sim_tick":0,"source":"lightning"}
+{"cause_id":"CAUSE-ignite-live-71","dispatch_ok":true,"effect_id":2,"kind_tag":1,"parent_effect_id":0,"run_id":"LIB-SIM-EFFECT-LIVE-001","sim_tick":0,"source":"sim_effect_test"}
+{"cause_id":"CAUSE-grid-live-99","dispatch_ok":true,"effect_id":3,"kind_tag":4,"parent_effect_id":null,"run_id":"LIB-SIM-EFFECT-LIVE-001","sim_tick":0,"source":"grid_overload"}

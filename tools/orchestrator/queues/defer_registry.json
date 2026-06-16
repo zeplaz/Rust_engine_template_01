@@ -1,0 +1,62 @@
+{
+  "_meta": {
+    "version": "1.0.0",
+    "date": "2026-06-03",
+    "plan_doc": "docs/archive/2026-06-src-dev/plans/plan_defer_registry_v1.md",
+    "audit": "src/dev/planner_status_audit_v19.md",
+    "rule": "Do not promote defer[] rows to active[] without planner sign-off"
+  },
+  "defer": [
+    {
+      "id": "MCP-PILOT-GRAMMAR-001",
+      "track": "B",
+      "reason": "Manual keyframe ship; headless minimum bake is not ship proof",
+      "unblock_when": "tile_promotion_honest_check green + operator G4 checklist",
+      "witness": "debug_runs/mcp_pilot_grammar_001_rejected_live.json"
+    },
+    {
+      "id": "TRACK-B-G4-SHIP",
+      "track": "B",
+      "reason": "Warehouse integration test paused — not blocking Track A/C",
+      "unblock_when": "MCP-PILOT-GRAMMAR-001 unpause"
+    },
+    {
+      "id": "APS-ARTIST-TOOL-E2E-001",
+      "track": "A",
+      "reason": "CLI E2E green; product operator sign-off deferred",
+      "unblock_when": "ATL★ signed — review APS-ARTIST-TOOL-E2E-REVIEW-001 in Phase 3 queue",
+      "witness": "debug_runs/aps_artist_tool_e2e_live.json",
+      "status": "closed",
+      "closed_at": "2026-06-03",
+      "review": "src/dev/design_aps_artist_tool_e2e_review_v1.md",
+      "verdict": "PASS WITH NOTES"
+    },
+    {
+      "id": "APS-PHASE-9-PRODUCT-GATE",
+      "track": "A",
+      "reason": "Phase 9 witness exists — product gate not spine blocker",
+      "unblock_when": "ATL★ signed 2026-06-08 — operator/designer-mcp review"
+    },
+    {
+      "id": "TILE-SPINE-RUN-WAREHOUSE",
+      "track": "B",
+      "reason": "tile_spine_run MCP is warehouse integration test only",
+      "unblock_when": "Track B unpause or orchestrator explicit"
+    },
+    {
+      "id": "EGUI-DEV-UX-001",
+      "track": "A-prime",
+      "reason": "Lane 4 egui QC v2 shipped — not sim HUD; do not re-impl",
+      "unblock_when": "APS-UX-ASYNC-001 green",
+      "status": "closed",
+      "closed_at": "2026-06-03",
+      "witness": "docs/archive/2026-06-src-dev/plans/design_aps_bevy_qc_hud_v2.md"
+    },
+    {
+      "id": "PLAN-AUDIT-020",
+      "track": "planner",
+      "reason": "Next fleet audit",
+      "unblock_when": "G-PLAY-01 operator EXECUTED + INFRA-E5-002 green"
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "gate_id": "RT-REG-001",
+  "green": true,
+  "ok": true,
+  "batch_id": "tile_rowhouse_victorian_production_v1",
+  "atlas_id": "rowhouse_victorian_production_v1",
+  "lookup_stamp": {
+    "schema_version": 1,
+    "lookup_count": 14,
+    "stamp": "64db3656419208eb",
+    "variant_keys_sample": [
+      "burning_00",
+      "burning_01",
+      "burning_02",
+      "burning_03",
+      "burning_04",
+      "burning_05",
+      "burning_06",
+      "burning_07"
+    ]
+  },
+  "ship_allowed": true,
+  "atlas_png_present": true,
+  "index_entry_count": 3
+}

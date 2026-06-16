@@ -1,0 +1,37 @@
+{
+  "gate_id": "BUILD-READ-VISUAL-002-BATCH",
+  "program": "tile_rail_warehouse_pilot_v1",
+  "ok": true,
+  "green": true,
+  "staging_spec": "assets/staging/specs/tile_rail_warehouse_pilot_v1.json",
+  "artifacts": {
+    "assembly_snapshot": "tools/mcp/schemas/examples/assembly_snapshot_rail_warehouse_pilot_v1.json",
+    "variant_set": "tools/mcp/schemas/examples/variant_set_rail_warehouse_pilot_v1.json",
+    "tile_batch": "tools/mcp/schemas/examples/tile_batch_rail_warehouse_pilot_v1.json",
+    "building_definition": "tools/mcp/schemas/examples/building_definition_rail_warehouse_pilot_v1.json",
+    "assembly_id": "industrial_west_4x7_s440013_f0c0",
+    "variant_count": 4,
+    "staging_dir": "assets/staging/tiles/tile_rail_warehouse_pilot_v1"
+  },
+  "validation": {
+    "tile_batch": "passed",
+    "tile_promotion_honest": "passed"
+  },
+  "variant_keys": [
+    "clean_day",
+    "clean_night_off",
+    "clean_night_on",
+    "under_construction_01"
+  ],
+  "png_in_staging": 0,
+  "png_required_for_pack": 4,
+  "bake_source": "keyframe_pack",
+  "ship": false,
+  "seed": 440013,
+  "next_ops": [
+    "utils/keyframe_render.py \u2192 assets/staging/tiles/tile_rail_warehouse_pilot_v1/*.png",
+    "node .claude/skills/agent-lang/driver.mjs tile-batch-run ../schemas/examples/tile_batch_rail_warehouse_pilot_v1.json",
+    "node .claude/skills/agent-lang/driver.mjs tile-atlas-pack assets/staging/tiles/tile_rail_warehouse_pilot_v1 -pk"
+  ],
+  "impl_wired": true
+}

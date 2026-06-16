@@ -83,18 +83,18 @@ def main() -> None:
     )
 
     plan_doc = {
-        "PLAN-UI-OH-CLOSURE-004": "src/dev/ui_overhaul_phase23_closure_plan_v1.md",
-        "PLAN-UI-P5-PAUSE-001": "prompts/guides/ui/ui_phase5_pause_menu_plan_v1.md",
-        "UI-OH-P5-001": "src/dev/ui_oh_p5_001_plan_v1.md",
-        "PLAN-UI-P4-ATLAS-001": "prompts/guides/ui/ui_phase4_icon_atlas_plan_v1.md",
-        "UI-OH-P4-001": "src/dev/ui_oh_p4_001_plan_v1.md",
-        "PLAN-UI-P3-M3-001": "src/dev/plan_ui_p3_m3_operational_stage7_plan_v1.md",
-        "UI-OH-M3-001": "src/dev/ui_oh_m3_001_plan_v1.md",
-        "PLAN-UI-PHASE6-001": "src/dev/ui_phase6_shell_perf_multiview_plan_v1.md",
-        "PLAN-UI-2C-001": "src/dev/ui_phase2c_left_command_rail_plan_v1.md",
-        "PLAN-UI-THEME-MERGE-001": "src/dev/ui_theme_merge_impl_spec_v1.md",
-        "PLAN-LEDGER-REFRESH-004": "src/dev/plan_ledger_refresh_004_checklist_v1.md",
-        "UI-P5-PAUSE-001": "prompts/guides/ui/ui_phase5_pause_menu_plan_v1.md",
+        "PLAN-UI-OH-CLOSURE-004": "docs/archive/2026-06-src-dev/plans/ui_overhaul_phase23_closure_plan_v1.md",
+        "PLAN-UI-P5-PAUSE-001": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/ui_phase5_pause_menu_plan_v1.md",
+        "UI-OH-P5-001": "docs/archive/2026-06-src-dev/plans/ui_oh_p5_001_plan_v1.md",
+        "PLAN-UI-P4-ATLAS-001": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/ui_phase4_icon_atlas_plan_v1.md",
+        "UI-OH-P4-001": "docs/archive/2026-06-src-dev/plans/ui_oh_p4_001_plan_v1.md",
+        "PLAN-UI-P3-M3-001": "docs/archive/2026-06-src-dev/plans/plan_ui_p3_m3_operational_stage7_plan_v1.md",
+        "UI-OH-M3-001": "docs/archive/2026-06-src-dev/plans/ui_oh_m3_001_plan_v1.md",
+        "PLAN-UI-PHASE6-001": "docs/archive/2026-06-src-dev/plans/ui_phase6_shell_perf_multiview_plan_v1.md",
+        "PLAN-UI-2C-001": "docs/archive/2026-06-src-dev/plans/ui_phase2c_left_command_rail_plan_v1.md",
+        "PLAN-UI-THEME-MERGE-001": "docs/archive/2026-06-src-dev/plans/ui_theme_merge_impl_spec_v1.md",
+        "PLAN-LEDGER-REFRESH-004": "docs/archive/2026-06-src-dev/plans/plan_ledger_refresh_004_checklist_v1.md",
+        "UI-P5-PAUSE-001": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/ui_phase5_pause_menu_plan_v1.md",
     }
 
     batch_ids = set(plan_doc.keys())
@@ -135,7 +135,7 @@ def main() -> None:
             "plan_doc": plan_doc["PLAN-UI-2C-001"],
             "docs": [
                 plan_doc["PLAN-UI-2C-001"],
-                "prompts/guides/ui/ui_phase0_panel_mocks_v1.md",
+                "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/ui_phase0_panel_mocks_v1.md",
             ],
             "source": "planner_queue_ui_batch_v2",
             "status": "done",
@@ -148,11 +148,11 @@ def main() -> None:
             "lane": "UI / Planning",
             "agent": "planner",
             "track": "UI-THEME",
-            "witness": "src/dev/ui_theme_merge_impl_spec_v1.md",
+            "witness": "docs/archive/2026-06-src-dev/plans/ui_theme_merge_impl_spec_v1.md",
             "plan_doc": plan_doc["PLAN-UI-THEME-MERGE-001"],
             "docs": [
                 plan_doc["PLAN-UI-THEME-MERGE-001"],
-                "prompts/guides/ui/design_theme.md",
+                "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/design_theme.md",
             ],
             "source": "planner_queue_ui_batch_v2",
             "status": "done",
@@ -164,12 +164,12 @@ def main() -> None:
             "lane": "Planning",
             "agent": "orchestrator",
             "track": "LEDGER",
-            "witness": "src/dev/planner_status_audit_v6.md",
+            "witness": "docs/archive/2026-06-fleet-drain/planner_audits/planner_status_audit_v6.md",
             "commands": ["python tools/orchestrator/scripts/refresh_004_sync.py"],
             "plan_doc": plan_doc["PLAN-LEDGER-REFRESH-004"],
             "docs": [
                 plan_doc["PLAN-LEDGER-REFRESH-004"],
-                "src/dev/planner_queue_ui_batch_v2.md",
+                "docs/archive/2026-06-src-dev/plans/planner_queue_ui_batch_v2.md",
             ],
             "source": "planner_queue_ui_batch_v2",
             "status": "done",
@@ -211,7 +211,7 @@ def main() -> None:
             "id": "PLAN-LEDGER-REFRESH-004",
             "status": "done",
             "plan_doc": plan_doc["PLAN-LEDGER-REFRESH-004"],
-            "witness": "src/dev/planner_status_audit_v6.md",
+            "witness": "docs/archive/2026-06-fleet-drain/planner_audits/planner_status_audit_v6.md",
             "completed": "2026-05-25",
         }
     ]
@@ -233,15 +233,15 @@ def main() -> None:
             "date": "2026-05-25",
             "cycle": "PLAN-LEDGER-REFRESH-004",
             "checklist": plan_doc["PLAN-LEDGER-REFRESH-004"],
-            "batch": "src/dev/planner_queue_ui_batch_v2.md",
-            "audit": "src/dev/planner_status_audit_v6.md",
+            "batch": "docs/archive/2026-06-src-dev/plans/planner_queue_ui_batch_v2.md",
+            "audit": "docs/archive/2026-06-fleet-drain/planner_audits/planner_status_audit_v6.md",
         },
         "done": planner_done,
         "active": [
             {
                 "id": "S7B-PREFLIGHT-001",
                 "status": "queued",
-                "plan_doc": "src/dev/stage7_behavioral_implementation_plan_v1.md",
+                "plan_doc": "docs/archive/2026-06-src-dev/plans/stage7_behavioral_implementation_plan_v1.md",
                 "agent": "sim-steward",
             }
         ],
@@ -255,7 +255,7 @@ def main() -> None:
             "version": "1.0.0",
             "date": "2026-05-25",
             "cycle": "PLAN-LEDGER-REFRESH-004",
-            "triage": "src/dev/coder_triage_list_v1.md",
+            "triage": "docs/archive/2026-06-src-dev/plans/coder_triage_list_v1.md",
         },
         "done": [
             {
@@ -274,13 +274,13 @@ def main() -> None:
             {
                 "id": "S7B-M1-001",
                 "priority": 1,
-                "plan_doc": "src/dev/stage7_behavioral_implementation_plan_v1.md",
+                "plan_doc": "docs/archive/2026-06-src-dev/plans/stage7_behavioral_implementation_plan_v1.md",
                 "agent": "coder",
             },
             {
                 "id": "LOG-E01",
                 "priority": 3,
-                "plan_doc": "src/dev/logistics_projection_impl_plan_v1.md",
+                "plan_doc": "docs/archive/2026-06-src-dev/plans/logistics_projection_impl_plan_v1.md",
                 "witness": "debug_runs/stage5_full_app_live.json",
                 "verdict": "STALE",
             },
@@ -323,7 +323,7 @@ def main() -> None:
         "| **phase4.icon_atlas_loaded** | shell JSON | run `icon_atlas` lib test + steward bundle |",
         "",
     ]
-    (ROOT / "src/dev/coder_triage_list_v1.md").write_text("\n".join(triage_lines), encoding="utf-8")
+    (ROOT / "docs/archive/2026-06-src-dev/plans/coder_triage_list_v1.md").write_text("\n".join(triage_lines), encoding="utf-8")
 
     audit_lines = [
         "# Planner status audit v6 (PLAN-LEDGER-REFRESH-004)",
@@ -357,7 +357,7 @@ def main() -> None:
         "| `continuation_queue.json` | plan_doc + new PLAN-* rows |",
         "",
     ]
-    (ROOT / "src/dev/planner_status_audit_v6.md").write_text("\n".join(audit_lines), encoding="utf-8")
+    (ROOT / "docs/archive/2026-06-fleet-drain/planner_audits/planner_status_audit_v6.md").write_text("\n".join(audit_lines), encoding="utf-8")
     print(f"ok checks={len(checks)} cq={len(items)}")
 
 

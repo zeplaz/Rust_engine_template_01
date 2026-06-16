@@ -188,9 +188,9 @@ def main() -> None:
         "batch_id": BATCH_ID,
         "order_id": "MCP-D0-003",
         "description": "LOD0 wave 3 — concrete 2u wall, sawtooth roof, warehouse door, industrial 3u window, vent prop",
-        "plan_ref": "src/dev/plan_kit_lod0_roadmap_v1.md",
-        "fleet_ref": "src/dev/mcp_fleet_wave2_orders_v1.md",
-        "kit_ref": "src/dev/design_procedural_module_kit_v1.md",
+        "plan_ref": "docs/archive/2026-06-src-dev/plans/plan_kit_lod0_roadmap_v1.md",
+        "fleet_ref": "docs/archive/2026-06-fleet-drain/fleet_closed/mcp_fleet_wave2_orders_v1.md",
+        "kit_ref": "docs/archive/2026-06-src-dev/plans/design_procedural_module_kit_v1.md",
         "development_tier": TIER,
         "rules_applied": [
             "no_ai_generated_images",

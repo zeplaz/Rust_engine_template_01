@@ -22,6 +22,19 @@ TOKEN_LABELS = {
     "Y": "Yard / empty",
 }
 
+# GRAMMAR-ITER-001 footprint diff legend (designer wireframe)
+DIFF_COLORS = {
+    "added": "#6bbf59",
+    "removed": "#c45c5c",
+    "changed": "#e6b422",
+}
+
+DIFF_LABELS = {
+    "added": "Added",
+    "removed": "Removed",
+    "changed": "Changed",
+}
+
 
 class FootprintCanvas(ttk.Frame):
     def __init__(
@@ -38,6 +51,8 @@ class FootprintCanvas(ttk.Frame):
         self._placements: list[dict[str, Any]] = []
         self._floor = 0
         self._selected: tuple[int, int, int] | None = None
+        self._cell_diff: dict[tuple[int, int, int], str] = {}
+        self._removed_ghosts: list[tuple[int, int, int]] = []
 
         header = ttk.Frame(self)
         header.pack(fill=tk.X)
@@ -91,6 +106,22 @@ class FootprintCanvas(ttk.Frame):
                 font=("Segoe UI", 9),
             ).pack(side=tk.LEFT)
 
+        diff_legend = ttk.LabelFrame(workspace, text="Iteration diff", padding=6)
+        diff_legend.pack(side=tk.LEFT, fill=tk.Y, padx=(10, 0))
+        for state in ("added", "removed", "changed"):
+            row = ttk.Frame(diff_legend)
+            row.pack(anchor=tk.W, pady=2)
+            swatch = tk.Label(
+                row,
+                text="  ",
+                bg=DIFF_COLORS[state],
+                width=2,
+                relief=tk.RIDGE,
+                borderwidth=1,
+            )
+            swatch.pack(side=tk.LEFT, padx=(0, 6))
+            ttk.Label(row, text=DIFF_LABELS[state], font=("Segoe UI", 9)).pack(side=tk.LEFT)
+
         ttk.Label(
             self,
             text="Colored squares match placement list tokens. Selected cell has a thick black outline.",
@@ -114,6 +145,22 @@ class FootprintCanvas(ttk.Frame):
         if self._cells:
             max_floor = max(int(c.get("floor") or 0) for c in self._cells)
             self.floor_spin.configure(to=max_floor)
+        self.redraw()
+
+    def set_cell_diff(
+        self,
+        diff_map: dict[tuple[int, int, int], str] | None,
+        *,
+        removed_ghosts: list[tuple[int, int, int]] | None = None,
+    ) -> None:
+        """Highlight added/removed/changed cells after grammar iteration."""
+        self._cell_diff = dict(diff_map or {})
+        self._removed_ghosts = list(removed_ghosts or [])
+        self.redraw()
+
+    def clear_cell_diff(self) -> None:
+        self._cell_diff = {}
+        self._removed_ghosts = []
         self.redraw()
 
     def set_selection(self, grid_x: int, grid_y: int, floor: int) -> None:
@@ -167,6 +214,10 @@ class FootprintCanvas(ttk.Frame):
             color = TOKEN_COLORS.get(token, "#cccccc")
             if (x, y) in heat:
                 color = TOKEN_COLORS.get(heat[(x, y)], color)
+            key = (self._floor, x, y)
+            diff_state = self._cell_diff.get(key)
+            if diff_state:
+                color = DIFF_COLORS.get(diff_state, color)
             x0, y0 = x * px + 6, y * px + 6
             x1, y1 = x0 + px - 3, y0 + px - 3
             selected = self._selected == (x, y, self._floor)
@@ -181,6 +232,22 @@ class FootprintCanvas(ttk.Frame):
                     fill="white" if token != "Y" else "#222222",
                     font=("Consolas", 8, "bold"),
                 )
+        for key in self._removed_ghosts:
+            if key[0] != self._floor:
+                continue
+            _, x, y = key
+            x0, y0 = x * px + 6, y * px + 6
+            x1, y1 = x0 + px - 3, y0 + px - 3
+            self.canvas.create_rectangle(
+                x0,
+                y0,
+                x1,
+                y1,
+                fill="",
+                outline=DIFF_COLORS["removed"],
+                width=2,
+                dash=(3, 2),
+            )
         pad = 12
         self.canvas.configure(width=width * px + pad, height=depth * px + pad)
 

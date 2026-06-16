@@ -4,7 +4,7 @@
 |:---|:---|
 | **Slice** | H-A-SPIKE-001 / PLAN-HANABI-ADOPTION-001 |
 | **Designer bounds** | DESIGN-HANABI-BOUNDS-001 PASS (qualified) |
-| **Designer review** | DESIGN-HANABI-SPIKE-REVIEW-001 → [`hanabi_spike_review_h_a2_gate_v1.md`](../../src/dev/hanabi_spike_review_h_a2_gate_v1.md) — H-A2 **CLEARED (qualified)** |
+| **Designer review** | DESIGN-HANABI-SPIKE-REVIEW-001 → [`hanabi_spike_review_h_a2_gate_v1.md`](../../docs/archive/2026-06-src-dev/plans/hanabi_spike_review_h_a2_gate_v1.md) — H-A2 **CLEARED (qualified)** |
 | **Date** | 2026-05-27 |
 | **Scope** | `experiments/hanabi_validation/` only — main `EnginePlugin` unchanged |
 | **Bevy gate** | PASS — `cargo check -p hanabi_validation` |

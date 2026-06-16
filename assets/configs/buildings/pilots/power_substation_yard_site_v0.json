@@ -1,0 +1,14 @@
+{
+  "schema_version": "site_zone_grid_v1",
+  "site_id": "power_substation_yard_site_v0",
+  "pilot_id": "power_substation_yard_v0",
+  "width": 6,
+  "depth": 5,
+  "cells": [
+    "utility","utility","utility","utility","utility","utility",
+    "utility","primary","primary","primary","primary","utility",
+    "utility","primary","primary","primary","primary","utility",
+    "utility","service","service","buffer","buffer","utility",
+    "utility","utility","utility","utility","utility","utility"
+  ]
+}

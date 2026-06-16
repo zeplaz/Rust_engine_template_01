@@ -3,7 +3,7 @@
 use bevy::prelude::*;
 
 use crate::render::{ChunkSmokeGpu, ClimateVisualAggregate, SimChunkSmokeVisualExtract};
-use crate::systems::ecology::ChunkEcology;
+use crate::systems::ecology::{ChunkEcology, LandscapeProgramOnChunk};
 use crate::systems::fire::ChunkSmokeField;
 use crate::systems::weather::{ChunkWeather, WeatherPrecipVisualSample};
 use crate::terrain::generation::Chunk;
@@ -16,6 +16,7 @@ const SMOKE_EXTRACT_EPS: f32 = 1e-4;
 pub(crate) fn publish_climate_visual_aggregate(
     wx: Query<&ChunkWeather>,
     eco: Query<&ChunkEcology>,
+    programs: Query<&LandscapeProgramOnChunk>,
     mut out: ResMut<ClimateVisualAggregate>,
 ) {
     let mut nw = 0u32;
@@ -42,6 +43,7 @@ pub(crate) fn publish_climate_visual_aggregate(
         frisk += e.fire_risk;
     }
 
+    let np = programs.iter().count() as u32;
     let nf_w = nw.max(1) as f32;
     let nf_e = ne.max(1) as f32;
     *out = ClimateVisualAggregate {
@@ -53,7 +55,7 @@ pub(crate) fn publish_climate_visual_aggregate(
         mean_biomass: bio / nf_e,
         mean_fire_risk: frisk / nf_e,
         weather_chunk_count: nw,
-        ecology_chunk_count: ne,
+        ecology_chunk_count: if np > 0 { np } else { ne },
     };
 }
 

@@ -1,0 +1,22 @@
+{
+  "_meta": {
+    "teaches": ["pilot_catalog", "grammar_eval", "site_composition"],
+    "not_a_ship_target": true,
+    "building_set_id": "infrastructure_v0"
+  },
+  "schema_version": "building_set_manifest_v1",
+  "set_id": "infrastructure_v0",
+  "label": "Power + fuel infrastructure set",
+  "min_grammar_pilots": 2,
+  "pilot_ids": [
+    "power_substation_yard_v0",
+    "fuel_depot_tank_farm_v0"
+  ],
+  "grammar_ids": ["industrial_warehouse_v1"],
+  "arch_dna_presets": [
+    "power_substation_yard_v0",
+    "fuel_depot_tank_farm_v0"
+  ],
+  "required_f_functions": ["power", "fuel"],
+  "tile_batches_optional": []
+}

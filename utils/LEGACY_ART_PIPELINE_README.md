@@ -1,6 +1,6 @@
 # Proven iso tile bake spine (utils — keep files in place)
 
-**Policy:** [`src/dev/design_tile_bake_spine_convergence_v1.md`](../src/dev/design_tile_bake_spine_convergence_v1.md)
+**Policy:** [`docs/archive/2026-06-src-dev/plans/design_tile_bake_spine_convergence_v1.md`](../docs/archive/2026-06-src-dev/plans/design_tile_bake_spine_convergence_v1.md)
 
 **Do not delete or move** these paths. MCP **wraps** them for pack/register; **does not replace** keyframe still export for production ship art.
 
@@ -87,7 +87,7 @@ python tools/mcp/art_pipeline_suite/run.py
 # Atlas tab: Pack atlas (tilemapgen) | Keyframe addon | tile_batch_run = CI/smoke unless keyframe_pack batch
 ```
 
-See [`src/dev/plan_art_preview_hub_v1.md`](../src/dev/plan_art_preview_hub_v1.md).
+See [`docs/archive/2026-06-src-dev/plans/plan_art_preview_hub_v1.md`](../docs/archive/2026-06-src-dev/plans/plan_art_preview_hub_v1.md).
 
 ---
 

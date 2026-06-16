@@ -72,5 +72,13 @@ def validate_visual_config(data: dict[str, Any]) -> None:
     jsonschema.validate(instance=data, schema=_load_schema("visual_config_v1.schema.json"))
 
 
+def validate_arch_build_grammar(data: dict[str, Any]) -> None:
+    jsonschema.validate(instance=data, schema=_load_schema("arch_build_grammar_v0.schema.json"))
+
+
+def validate_landscape_grammar(data: dict[str, Any]) -> None:
+    jsonschema.validate(instance=data, schema=_load_schema("landscape_grammar_v0.schema.json"))
+
+
 def load_json_file(path: Path) -> dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))

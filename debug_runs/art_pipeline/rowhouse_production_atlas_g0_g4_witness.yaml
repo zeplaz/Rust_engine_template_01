@@ -1,0 +1,25 @@
+# rowhouse_production_atlas_g0_g4_witness.yaml — MCP-PROD-ATLAS-G0-G4
+task_id: MCP-PROD-ATLAS-G0-G4
+agent: designer-mcp
+batch_id: tile_rowhouse_victorian_production_v1
+atlas_id: rowhouse_victorian_production_v1
+green: true
+proceed_ship: yes
+
+gates:
+  G0: pass
+  G1: pass
+  G2: pass
+  G3: pass
+  G4: pass
+
+artifacts:
+  tile_batch: tools/mcp/schemas/examples/tile_batch_rowhouse_victorian_production_v1.json
+  g4_signoff: debug_runs/art_pipeline/rowhouse_victorian_production_signoff.yaml
+  atlas_png: assets/textures/buildings_iso/production/rowhouse_victorian_production_v1_atlas.png
+  atlas_meta: assets/staging/tiles/tile_rowhouse_victorian_production_v1/atlas_meta.json
+  keyframe_stills: assets/staging/tiles/keyframe_stills/rowhouse_victorian/
+
+unblocks:
+  - MCP-PROD-TILE-VAL
+  - MCP-PROD-INDEX

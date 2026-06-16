@@ -8,10 +8,10 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[3]
 
 REQUIRED_PLANS = [
-    "src/dev/planner_status_audit_v9.md",
-    "src/dev/plan_construction_hydro_coupling_001_v1.md",
-    "src/dev/plan_wss_slab_pr3_exec_001_v1.md",
-    "src/dev/plan_ledger_refresh_007_checklist_v1.md",
+    "docs/archive/2026-06-fleet-drain/planner_audits/planner_status_audit_v9.md",
+    "docs/archive/2026-06-src-dev/plans/plan_construction_hydro_coupling_001_v1.md",
+    "docs/archive/2026-06-src-dev/plans/plan_wss_slab_pr3_exec_001_v1.md",
+    "docs/archive/2026-06-src-dev/plans/plan_ledger_refresh_007_checklist_v1.md",
 ]
 
 
@@ -48,7 +48,7 @@ def main() -> None:
     if failed:
         raise SystemExit(f"failed: {failed}")
 
-    audit = ROOT / "src/dev/planner_status_audit_v9.md"
+    audit = ROOT / "docs/archive/2026-06-fleet-drain/planner_audits/planner_status_audit_v9.md"
     text = audit.read_text(encoding="utf-8")
     if "**SIGNED**" not in text:
         raise SystemExit("planner_status_audit_v9.md must be SIGNED")

@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "building_set_manifest_v1.schema.json",
+  "title": "BuildingSetManifestV1",
+  "description": "PLAN-BUILD-SET-MANIFEST-001 — insured multi-pilot grammar set",
+  "type": "object",
+  "required": ["schema_version", "set_id", "label", "min_grammar_pilots", "pilot_ids", "required_f_functions"],
+  "properties": {
+    "schema_version": { "const": "building_set_manifest_v1" },
+    "set_id": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+    "label": { "type": "string", "minLength": 1 },
+    "min_grammar_pilots": { "type": "integer", "minimum": 2 },
+    "pilot_ids": {
+      "type": "array",
+      "minItems": 2,
+      "items": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" }
+    },
+    "grammar_ids": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "arch_dna_presets": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "required_f_functions": {
+      "type": "array",
+      "minItems": 2,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "tile_batches_optional": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "_meta": {
+      "type": "object",
+      "properties": {
+        "teaches": { "type": "array", "items": { "type": "string" }, "minItems": 2 },
+        "not_a_ship_target": { "type": "boolean" },
+        "building_set_id": { "type": "string" }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": false
+}

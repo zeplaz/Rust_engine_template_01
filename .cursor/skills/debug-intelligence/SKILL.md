@@ -1,67 +1,110 @@
 ---
 name: debug-intelligence
-description: Reads diagnostics, compresses engine debug state into ECS-aware intelligence, traces authority drift, and routes findings to specialist agents for Rust_engine_template_01. Use when interpreting witness JSON, viewport/render drift, multi-writer resources, migration VM debt, or noisy logs — does not fix systems directly.
+description: >-
+  Triage diagnostics into compressed, routed reports instead of fixing in place or
+  dumping logs. Use when interpreting witness JSON, viewport/authority drift, render
+  contract mismatches, construction placement projection deltas, multi-writer ECS
+  resources, schedule hazards, or stale scaffolds. Produces a YAML routing packet for
+  @planner / @coder / @designer. Triggers: witness, drift, dual writer, render contract,
+  viewport, placement debug, Pick Δ, ghost misalign, diagnostics, panic, regression triage.
 disable-model-invocation: true
 ---
 
-# Debug Intelligence Orchestrator
+`⟦SYM⟧ lang⊳ $ref:prompts/SYMBOLIC_LANGUAGE.meta.md`
 
-Converts noisy engine state into **compressed, ECS-aware operational intelligence**. Does **not** fix systems directly — extracts meaning, preserves context, routes work.
+# debug-intelligence — compress evidence, route the fix
 
-## When to use
+## The pattern
 
-- Witness JSON / debug overlays / trace interpretation
-- Authority drift, dual writers, viewport or render contract mismatch
-- Migration tracking (VM-*), shim permanence, orphaned diagnostics
-- Before `@coder` or `@planner` works on viewport/render/ECS bugs
+A triage agent does **not** fix and does **not** paste raw logs.
 
-## Quick workflow
-
-1. Read [`prompts/llm_agent_brief.md`](prompts/llm_agent_brief.md) and [reference.md](reference.md).
-2. **Never dump full logs** — summarize, compress, semantic deltas only.
-3. Run evidence pipeline: `raw logs → extraction → authority analysis → compression → ECS classification → routing package`.
-4. Emit one of: authority drift · render contract mismatch · ECS authority graph · delegation block.
-5. Route to `@planner` (architecture), `@coder` (fix), `@designer` (overlay UX), `@orchestrator` (multi-domain), or **`@sim-steward`** (all three skills + sequential shifts when Task blocked — [`.cursor/agents/sim-steward.md`](../../agents/sim-steward.md)).
-6. Update `persistent_engine_knowledge` mental model (Tier 1–3, see reference).
-
-## Primary debug targets (repo)
-
-| Area | Paths | Watch for |
-|------|-------|-----------|
-| View authority | `src/gui/view_authority.rs`, `src/gui/view_projection_authority.rs` | dual writes, lockstep, stale mirrors, hidden globals |
-| Viewport pipeline | `src/render/viewport_pipeline.rs`, `src/gui/authoritative_viewport.rs` | semantic/render mismatch, drift, rescue-floor, stale propagation |
-| Map view | `src/gui/map_view/` | presentation leaks, texture mismatch, preview/minimap bleed |
-| Projection graph | `src/render/extraction/render_projection_graph.rs`, `src/render/fire_view_extract.rs` | tactical-only assumptions, ViewId bypasses, shared overlay hazards |
-
-## Output template
-
-```yaml
-issue:
-  id: VM-XX-DRIFT-001
-  severity: HIGH | MED | LOW
-root_cause: [...]
-affected: [...]
-evidence: [compressed bullets]
-recommendation: [...]
-owner: planner | coder | designer | orchestrator
-confidence: 0.0-1.0
-delegation:
-  target_agent: coder
-  reason: [...]
-  files: [...]
+```text
+◎evidence ◂⊳ smallest sufficient source (witness DIGEST · code REGION · debug probe fields)
+  ▷⊳ ▢compress ─⬡[severity · root_cause · affected · migration · conf]▶
+  ▷⊳ ◆route ▶ ⦿owner + single next step
+  ⛔ log-walls — surface the DECISION not the dump
 ```
 
-## Token tiers
+Output = routing packet, not a patch:
 
-- **Tier 1** — permanent architectural truths (long-term)
-- **Tier 2** — transitional migration state (VM-*)
-- **Tier 3** — volatile frame diagnostics (discard after routed)
+```yaml
+issue: <one line>
+root_cause: <mechanism, not symptom>
+affected: [<system/resource>, ...]
+migration_status: <tag or n/a>
+recommendation: <single next action>
+owner: "@planner | @coder | @designer | @orchestrator"
+confidence: 0.0–1.0
+```
 
-## Task quota fallback
+## In this repo (scope)
 
-If Cursor **Task** subagents hit quota, route via **@coder** / **@planner** in main chat per `prompts/guides/subagent_continuity_playbook_v1.md` — do not retry Task.
+```text
+⊚own  ECS / viewport / render / placement-projection DRIFT
+¬own  pipeline DSM / Q-C-E / three-track → operations-intelligence skill
+```
 
-## Additional resources
+**Watch surfaces:**
 
-- Full routing, parallel analysis model, ECS rules: [reference.md](reference.md)
-- Source drafts: `prompts/rough_agents/debug_intel_a1.skill.md`, `draft_agent_debug_intelother_info.md`
+```text
+src/gui/view_authority.rs · view_projection_authority.rs · map_camera.rs
+src/render/viewport_pipeline.rs · fire_visual_extract.rs · map_view/
+src/construction/placement_debug.rs · map_egui_projection.rs
+```
+
+**Detects:** multi-writer resources · hidden authority mutation · camera bleed · scissor/heal mismatch · schedule hazards · stale scaffolds · projection span confusion (`fixed_w` vs `visible_w`)
+
+Authority map: [bevy-simulation-grade/07-repo-authority-map.md](../bevy-simulation-grade/07-repo-authority-map.md)  
+Placement projection: [bevy-simulation-grade/09-sim-map-projection-placement.md](../bevy-simulation-grade/09-sim-map-projection-placement.md)
+
+## Construction placement debug (live overlay)
+
+When user reports cursor/ghost misalignment, read **probe fields** first (not perf logs):
+
+| Field | Drift signal |
+|-------|----------------|
+| `pick_delta_world` | cam vs manual egui inverse — want **< 1** |
+| `ghost_delta_camera_vs_egui_px` | draw path — want **< 4** |
+| `cursor_reproject_delta_px` | camera self-consistency |
+| `latch_using_hole` vs `camera_viewport_phys` | hole latch true but viewport full window → ortho/view_px bug |
+| `ortho_fixed_wh` vs `projection_visible_wh` | fixed = view/zoom; visible = manual span |
+| `camera_authoritative` | which pick path is live |
+
+**Routing examples:**
+
+```yaml
+# span bug
+issue: Pick Δ world large while camera roundtrip ok
+root_cause: sim_map_*_in_frame used fixed_w/h instead of visible_w/h
+owner: "@coder"
+confidence: 0.9
+
+# scissor heal bug
+issue: Ghost detached, latch_hole=true, viewport full window
+root_cause: view_px sized from sim hole while GPU draws window_px
+owner: "@coder"
+confidence: 0.85
+```
+
+Enable: `--test vfx` / `--test visual` or `CONSTRUCTION_PLACEMENT_DEBUG=1`.
+
+## Evidence commands
+
+Prefer validation-first and witness briefs over raw cargo:
+
+```bash
+cargo validate-report cargo --cached
+# witness: debug_runs/unified_witness_index.json · construction_stage_live.json
+```
+
+Escalate to `raw_log_path` only when `confidence < 0.7` or validator status failed with empty errors.
+
+## Gotchas
+
+- Lone ✅ is not a verdict — close with 🧪 measured, 📜 witnessed, or ⊚ authority-valid
+- Do not read full witness JSON when a digest or probe struct suffices
+- Stale binary after `map_camera.rs` edit — confirm file non-empty and rebuild before deep triage
+
+## Source
+
+Full detection rules: [reference.md](reference.md)

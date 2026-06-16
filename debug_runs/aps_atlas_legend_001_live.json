@@ -1,0 +1,9 @@
+{
+  "program_id": "APS-ATLAS-LEGEND-001",
+  "gate": "APS-ATLAS-LEGEND-001-IMPL",
+  "green": true,
+  "legend_line": true,
+  "plain_validate": true,
+  "uv_grid_overlay": true,
+  "pilot_validation": "passed"
+}

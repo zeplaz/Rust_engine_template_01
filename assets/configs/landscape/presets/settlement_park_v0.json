@@ -1,0 +1,38 @@
+{
+  "schema_version": "landscape_grammar_v0",
+  "preset_id": "settlement_park_v0",
+  "chart_id": "SETT-PARK-D1",
+  "land_dna": { "H": "urban_park", "S": "loam", "E": "sheltered", "T": "temperate", "D": "managed", "L": "settlement", "A": "mature", "M": "maintained" },
+  "pressure_field": {
+    "lambda_moisture": 0.62,
+    "lambda_slope": 0.25,
+    "lambda_exposure": 0.38,
+    "lambda_disturbance": 0.22,
+    "lambda_access": 0.85,
+    "lambda_security": 0.45,
+    "lambda_productivity": 0.55,
+    "lambda_legibility": 0.82
+  },
+  "landscape_program": {
+    "class": "settlement",
+    "required_topologies": ["CORRIDOR_ROADSIDE", "RING_SHELTERBELT", "PATCH_IRREGULAR", "FRINGE_EDGE"]
+  },
+  "topology_graph": [
+    {
+      "id": "net_sett_01",
+      "topology_kind": "Network",
+      "preset_id": "NETWORK_CONNECTED",
+      "children": [
+        { "id": "corr_path_01", "topology_kind": "Corridor", "preset_id": "CORRIDOR_ROADSIDE", "metadata": { "glyph_planning": "≈≈≈" } },
+        { "id": "ring_park_01", "topology_kind": "Ring", "preset_id": "RING_SHELTERBELT", "metadata": { "glyph_planning": "()" } },
+        {
+          "id": "patch_grove_01",
+          "topology_kind": "Patch",
+          "preset_id": "PATCH_IRREGULAR",
+          "children": [{ "id": "cluster_trees_01", "topology_kind": "Cluster", "preset_id": "CLUSTER_NATURAL" }]
+        },
+        { "id": "fringe_lawn_01", "topology_kind": "Fringe", "preset_id": "FRINGE_EDGE" }
+      ]
+    }
+  ]
+}

@@ -231,26 +231,35 @@ def lod0_batch_run(batch_id: str, phase: str = "full") -> dict:
 
 def assembly_build_run(snapshot_path: str | Path) -> dict[str, Any]:
     """Run assembly_build from an assembly snapshot JSON path."""
+    from .material_authority import annotate_tile_bake_job, write_bake_job
+
     snap_path = Path(snapshot_path).resolve()
     snapshot = assembly.load_assembly_snapshot(snap_path)
     assembly_id = str(snapshot["assembly_id"])
     blend_rel = f"assets/staging/assemblies/{assembly_id}.blend"
 
-    try:
-        snap_rel = str(snap_path.relative_to(repo_root())).replace("\\", "/")
-    except ValueError:
-        snap_rel = str(snap_path)
-
     job_id = f"asm_{assembly_id}"
-    job = {
-        "schema_version": 1,
-        "job_id": job_id,
-        "operation": "assembly_build",
-        "assembly_snapshot": snap_rel,
-        "output": {"blend": blend_rel},
-    }
+    job = annotate_tile_bake_job(
+        {
+            "schema_version": 1,
+            "job_id": job_id,
+            "operation": "assembly_build",
+            "output": {"blend": blend_rel},
+        },
+        snapshot_path=snap_path,
+        ensure_textures=True,
+    )
+    if job.get("_material_prep_failed"):
+        prep = job["_material_prep_failed"]
+        return {
+            "ok": False,
+            "job_id": job_id,
+            "status": "missing_material_profiles",
+            "materials": prep.get("materials"),
+            "error": "material texture prep failed",
+        }
     job_path = jobs_root() / f"{job_id}.json"
-    job_path.write_text(json.dumps(job, indent=2) + "\n", encoding="utf-8")
+    write_bake_job(job_path, job)
     result = _run_tile_job_path(job_path)
     return {
         "ok": result.status == "done",
@@ -382,6 +391,10 @@ def _tile_batch_keyframe_headless_export(
             continue
         png_rel = str(staging.relative_to(repo_root()) / f"{vkey}.png").replace("\\", "/")
         job_id = f"tile_{batch_id}_{vkey}"[:120]
+        snap_rel = None
+        assembly_ref = batch.get("assembly_ref") or {}
+        if assembly_ref.get("assembly_snapshot"):
+            snap_rel = str(assembly_ref["assembly_snapshot"])
         job = {
             "schema_version": 1,
             "job_id": job_id,
@@ -393,8 +406,18 @@ def _tile_batch_keyframe_headless_export(
             "output": {"png": png_rel},
             "assembly_blend": assembly_blend,
         }
+        from .material_authority import annotate_tile_bake_job, write_bake_job
+
+        if snap_rel:
+            job = annotate_tile_bake_job(job, snapshot_path=snap_rel, ensure_textures=True)
+            if job.get("_material_prep_failed"):
+                return {
+                    "ok": False,
+                    "status": "missing_material_profiles",
+                    "materials": job["_material_prep_failed"].get("materials"),
+                }
         job_path = jobs_root() / f"{job_id}.json"
-        job_path.write_text(json.dumps(job, indent=2) + "\n", encoding="utf-8")
+        write_bake_job(job_path, job)
         result = _run_tile_job_path(job_path)
         bake_results.append(
             {
@@ -519,7 +542,7 @@ def _tile_batch_run_keyframe_pack(
                 "utils/Tile_iso_rig_v1.blend + utils/keyframe_render.py (manual), or "
                 "RUST_ENGINE_TILE_KEYFRAME_HEADLESS=1 for optional headless export, then "
                 "tile-batch-run / tile-atlas-pack. "
-                "See src/dev/design_tile_bake_spine_convergence_v1.md"
+                "See docs/archive/2026-06-src-dev/plans/design_tile_bake_spine_convergence_v1.md"
             ),
         }
 
@@ -559,7 +582,12 @@ def _tile_batch_run_keyframe_pack(
     tile_index_result: dict[str, Any] | None = None
     if not tile_dry_run_enabled():
         try:
-            tile_index_result = register_tile_atlas_from_meta(meta_path, batch=batch)
+            if batch.get("atlas_domain") == "landscape":
+                from .landscape_atlas_index import register_landscape_atlas_from_meta
+
+                tile_index_result = register_landscape_atlas_from_meta(meta_path, batch=batch)
+            else:
+                tile_index_result = register_tile_atlas_from_meta(meta_path, batch=batch)
         except Exception as exc:  # noqa: BLE001
             tile_index_result = {"ok": False, "error": str(exc)}
 
@@ -692,6 +720,9 @@ def tile_batch_run(tile_batch_path: str | Path) -> dict[str, Any]:
         variant_keys.append(vkey)
         png_rel = str(staging.relative_to(repo_root()) / f"{vkey}.png").replace("\\", "/")
         job_id = f"tile_{batch_id}_{vkey}"[:120]
+        snap_rel_batch = None
+        if assembly_ref and assembly_ref.get("assembly_snapshot"):
+            snap_rel_batch = str(assembly_ref["assembly_snapshot"])
         job = {
             "schema_version": 1,
             "job_id": job_id,
@@ -707,8 +738,18 @@ def tile_batch_run(tile_batch_path: str | Path) -> dict[str, Any]:
         else:
             job["terrain_base"] = str(batch.get("base") or "concrete")
 
+        from .material_authority import annotate_tile_bake_job, write_bake_job
+
+        if snap_rel_batch and assembly_blend:
+            job = annotate_tile_bake_job(job, snapshot_path=snap_rel_batch, ensure_textures=True)
+            if job.get("_material_prep_failed"):
+                return {
+                    "ok": False,
+                    "status": "missing_material_profiles",
+                    "materials": job["_material_prep_failed"].get("materials"),
+                }
         job_path = jobs_root() / f"{job_id}.json"
-        job_path.write_text(json.dumps(job, indent=2) + "\n", encoding="utf-8")
+        write_bake_job(job_path, job)
         result = _run_tile_job_path(job_path)
         bake_results.append(
             {

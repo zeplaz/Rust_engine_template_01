@@ -1,0 +1,25 @@
+{
+  "gate_id": "APS-UX-ASYNC-001",
+  "ok": true,
+  "green": true,
+  "mainloop_block_during_job": false,
+  "job_strip_cancel_ok": true,
+  "jobs_threaded": [
+    "tile_batch",
+    "pack_atlas",
+    "variant_bake",
+    "material_generate",
+    "assembly_preview"
+  ],
+  "wiring": {
+    "tile_batch": true,
+    "pack_atlas": true,
+    "variant_bake": true,
+    "material_generate": true,
+    "assembly_preview": true,
+    "job_strip": true,
+    "status_log_panel": true
+  },
+  "status_log_untruncated": true,
+  "job_controller_completes": true
+}

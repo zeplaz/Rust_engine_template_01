@@ -1,0 +1,22 @@
+{
+  "_meta": {
+    "teaches": ["pilot_catalog", "grammar_eval"],
+    "not_a_ship_target": true,
+    "building_set_id": "industrial_west_v0"
+  },
+  "schema_version": "building_set_manifest_v1",
+  "set_id": "industrial_west_v0",
+  "label": "Industrial west pilot set",
+  "min_grammar_pilots": 2,
+  "pilot_ids": [
+    "logistics_rail_warehouse_v0",
+    "manufacturing_fabrication_hall_v0"
+  ],
+  "grammar_ids": ["industrial_warehouse_v1"],
+  "arch_dna_presets": [
+    "logistics_rail_warehouse_v0",
+    "manufacturing_fabrication_hall_v0"
+  ],
+  "required_f_functions": ["logistics", "manufacturing"],
+  "tile_batches_optional": []
+}

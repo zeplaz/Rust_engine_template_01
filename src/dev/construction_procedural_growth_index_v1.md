@@ -31,6 +31,7 @@
 | **PLAN-CONSTRUCTION-STAGE-PIPELINE-002** | [`plan_construction_stage_pipeline_exec_002_v1.md`](plan_construction_stage_pipeline_exec_002_v1.md) | @planner → @coder | **SIGNED** |
 | **PLAN-PROC-TILE-PROD-001** | [`plan_procedural_building_tiles_production_v1.md`](plan_procedural_building_tiles_production_v1.md) | @planner → designer-mcp / coder-mcp / coder | **ACTIVE** (PT-0 **SIGNED**) |
 | **PLAN-BUILDING-GRAMMAR-001** | [`plan_building_grammar_evolution_v1.md`](plan_building_grammar_evolution_v1.md) | @planner-mcp → @coder / @coder-mcp / @designer-mcp | **ACTIVE** (hierarchical grammar + APS authoring) |
+| **PLAN-LANDSCAPE-GRAMMAR-001** | [`plan_landscape_grammar_exec_001_v1.md`](plan_landscape_grammar_exec_001_v1.md) | @planner → @planner-mcp → @coder | **LG-0 SIGNED** (schema + example · LG-1 next) |
 | **DESIGN-PROC-MODULE-KIT-001** | [`design_procedural_module_kit_v1.md`](design_procedural_module_kit_v1.md) | @designer | **PASS** (2026-06-02) |
 | **DESIGN-ORGANIC-GROWTH-UX-001** | [`design_organic_growth_ux_v1.md`](design_organic_growth_ux_v1.md) | @designer | **PASS** (2026-06-02) |
 | **DESIGN-CONSTRUCTION-STAGE-READ-001** | [`design_construction_site_stage_read_v1.md`](design_construction_site_stage_read_v1.md) | @designer | **PASS** |
@@ -188,3 +189,4 @@ cargo test -p proc_A_dine01 --lib procedural_build organic_growth
 | v1.3.0 | 2026-06-02 | PLAN-CONSTRUCTION-SCALING-AUDIT-003 signed; Phase 3 active |
 | v1.4.0 | 2026-06-02 | PG-2 mesh authority — smoke GLBs not authoritative; lod0/production only |
 | v1.5.0 | 2026-06-02 | MCP-PLN-001 — Registry tier filter API for MCP-E0-001 |
+| v1.6.0 | 2026-06-13 | PLAN-LANDSCAPE-GRAMMAR-001 — vegetation topology grammar lane (parallel to building grammar) |

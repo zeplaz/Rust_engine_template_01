@@ -1,0 +1,22 @@
+{
+  "task_id": "MCP-BUILD-SET-002",
+  "ok": true,
+  "green": true,
+  "rows": [
+    {
+      "set_id": "industrial_west_v0",
+      "grammar_pilots": 2,
+      "f_axis": [
+        "logistics",
+        "manufacturing"
+      ],
+      "i_axis": [
+        "rail",
+        "road"
+      ]
+    }
+  ],
+  "errors": [],
+  "preset_count": 2,
+  "pilot_hardcode_green": true
+}

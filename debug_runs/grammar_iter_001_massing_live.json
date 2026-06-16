@@ -1,0 +1,22 @@
+{
+  "program_id": "GRAMMAR-ITER-001",
+  "gate": "GRAMMAR-ITER-001-API",
+  "green": true,
+  "mode": "massing",
+  "parent": "industrial_west_8x9_s43_f75a",
+  "child": "industrial_10x6_s43_iter1",
+  "diff": {
+    "cells_added": 62,
+    "cells_removed": 18,
+    "cells_changed": 15,
+    "profiles_changed": 0,
+    "layers_touched": [
+      "massing",
+      "roof",
+      "facade"
+    ]
+  },
+  "determinism": "pass",
+  "snapshot_hash": "33da978c534adef5",
+  "preview": "bevy_worker"
+}

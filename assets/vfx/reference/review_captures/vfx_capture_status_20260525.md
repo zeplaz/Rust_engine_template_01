@@ -5,7 +5,7 @@
 | **Date** | 2026-05-25 |
 | **Queue** | **VFX-CAPTURE-001** |
 | **Status** | **DONE** — witness **PASS** + interim PNGs on disk |
-| **Reviews** | [`vfx_design_review_record_v1.md`](../../../src/dev/vfx_design_review_record_v1.md) v1.1 · [`water_vfx_review_record_v1.md`](../../../src/dev/water_vfx_review_record_v1.md) v1.1 |
+| **Reviews** | [`vfx_design_review_record_v1.md`](../../../docs/archive/2026-06-src-dev/plans/vfx_design_review_record_v1.md) v1.1 · [`water_vfx_review_record_v1.md`](../../../docs/archive/2026-06-src-dev/plans/water_vfx_review_record_v1.md) v1.1 |
 
 ---
 

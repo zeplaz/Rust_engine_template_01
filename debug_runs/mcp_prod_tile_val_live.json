@@ -1,0 +1,16 @@
+{
+  "gate_id": "MCP-PROD-TILE-VAL",
+  "ok": true,
+  "green": true,
+  "batch_id": "tile_rowhouse_victorian_production_v1",
+  "tile_batch_validate_passed": true,
+  "bake_source_keyframe_pack": true,
+  "variant_matrix_expand_ok": true,
+  "matrix_keys_cover_batch": true,
+  "batch_variant_count": 14,
+  "matrix_variant_count": 16,
+  "g4_witness_green": true,
+  "proceed_ship": true,
+  "atlas_png_on_disk": true,
+  "atlas_meta_on_disk": true
+}

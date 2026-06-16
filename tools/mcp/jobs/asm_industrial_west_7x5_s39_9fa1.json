@@ -2,8 +2,9 @@
   "schema_version": 1,
   "job_id": "asm_industrial_west_7x5_s39_9fa1",
   "operation": "assembly_build",
-  "assembly_snapshot": "tools/mcp/schemas/examples/assembly_snapshot_warehouse_industrial_west_production_v1.json",
   "output": {
     "blend": "assets/staging/assemblies/industrial_west_7x5_s39_9fa1.blend"
-  }
+  },
+  "assembly_snapshot": "tools/mcp/schemas/examples/assembly_snapshot_warehouse_industrial_west_production_v1.json",
+  "material_authority": "snapshot material_profile"
 }

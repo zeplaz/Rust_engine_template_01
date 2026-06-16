@@ -3,22 +3,22 @@
   "batch_id": "kit_industrial_west_production_001",
   "style_pack_id": "style_industrial_west",
   "priorities": [
-    "P2"
+    "P3"
   ],
   "artifacts": [
     {
-      "priority": "P2",
-      "module_id": "prop_vent",
-      "job_id": "prop_vent_production_run001",
-      "spec": "assets/staging/specs/prop_vent_production.json",
-      "job": "tools/mcp/schemas/examples/prop_vent_production_run001.json"
+      "priority": "P3",
+      "module_id": "stack_chimney_1u",
+      "job_id": "stack_chimney_1u_production_run001",
+      "spec": "assets/staging/specs/stack_chimney_1u_production.json",
+      "job": "tools/mcp/schemas/examples/stack_chimney_1u_production_run001.json"
     },
     {
-      "priority": "P2",
-      "module_id": "roof_shed",
-      "job_id": "roof_shed_production_run001",
-      "spec": "assets/staging/specs/roof_shed_production.json",
-      "job": "tools/mcp/schemas/examples/roof_shed_production_run001.json"
+      "priority": "P3",
+      "module_id": "platform_dock_2u",
+      "job_id": "platform_dock_2u_production_run001",
+      "spec": "assets/staging/specs/platform_dock_2u_production.json",
+      "job": "tools/mcp/schemas/examples/platform_dock_2u_production_run001.json"
     }
   ],
   "materials": {
@@ -28,36 +28,36 @@
   },
   "geometry": [
     {
-      "job_id": "prop_vent_production_run001",
-      "module_id": "prop_vent",
-      "priority": "P2",
+      "job_id": "stack_chimney_1u_production_run001",
+      "module_id": "stack_chimney_1u",
+      "priority": "P3",
       "status": "lod0_bootstrap",
       "glb_ready": true
     },
     {
-      "job_id": "roof_shed_production_run001",
-      "module_id": "roof_shed",
-      "priority": "P2",
+      "job_id": "platform_dock_2u_production_run001",
+      "module_id": "platform_dock_2u",
+      "priority": "P3",
       "status": "lod0_bootstrap",
       "glb_ready": true
     }
   ],
   "promoted": [
     {
-      "job_id": "prop_vent_production_run001",
-      "module_id": "prop_vent",
+      "job_id": "stack_chimney_1u_production_run001",
+      "module_id": "stack_chimney_1u",
       "promote": {
-        "job_id": "prop_vent_production_run001",
-        "glb": "assets/models/modules/prop_vent_production_run001/model.glb",
+        "job_id": "stack_chimney_1u_production_run001",
+        "glb": "assets/models/modules/stack_chimney_1u_production_run001/model.glb",
         "valid": true,
-        "vertex_count": 48,
+        "vertex_count": 24,
         "batch_id": "kit_industrial_west_production_001",
         "validation": {
           "schema_version": 1,
           "validator": "asset_glb",
           "status": "passed",
           "compression_level": 1,
-          "summary": "model.glb: verts=48 tier=production arch=module_prop profile=box",
+          "summary": "model.glb: verts=24 tier=production arch=module_prop profile=box",
           "error_count": 0,
           "warning_count": 0,
           "errors": [],
@@ -66,26 +66,26 @@
           "confidence": 1.0
         },
         "library": {
-          "registered": "prop_vent",
-          "entry_count": 93
+          "registered": "stack_chimney_1u",
+          "entry_count": 95
         }
       }
     },
     {
-      "job_id": "roof_shed_production_run001",
-      "module_id": "roof_shed",
+      "job_id": "platform_dock_2u_production_run001",
+      "module_id": "platform_dock_2u",
       "promote": {
-        "job_id": "roof_shed_production_run001",
-        "glb": "assets/models/modules/roof_shed_production_run001/model.glb",
+        "job_id": "platform_dock_2u_production_run001",
+        "glb": "assets/models/modules/platform_dock_2u_production_run001/model.glb",
         "valid": true,
-        "vertex_count": 48,
+        "vertex_count": 24,
         "batch_id": "kit_industrial_west_production_001",
         "validation": {
           "schema_version": 1,
           "validator": "asset_glb",
           "status": "passed",
           "compression_level": 1,
-          "summary": "model.glb: verts=48 tier=production arch=module_roof profile=shed",
+          "summary": "model.glb: verts=24 tier=production arch=module_prop profile=box",
           "error_count": 0,
           "warning_count": 0,
           "errors": [],
@@ -94,13 +94,13 @@
           "confidence": 1.0
         },
         "library": {
-          "registered": "roof_shed",
-          "entry_count": 94
+          "registered": "platform_dock_2u",
+          "entry_count": 96
         }
       }
     }
   ],
-  "index_entries": 94,
+  "index_entries": 96,
   "ok": true,
   "status": "gap_modules_promoted"
 }

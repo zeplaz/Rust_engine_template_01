@@ -20,7 +20,7 @@ const KNOWN_WITNESSES: &[(&str, &str)] = &[
 ];
 
 const TRIAGE_DOC: &str = "src/dev/stage5_triage_backlog.md";
-const STAGE55_DOC: &str = "src/dev/stage5_5_open.md";
+const STAGE55_DOC: &str = "docs/archive/2026-06-src-dev/plans/stage5_5_open.md";
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ContinuationTask {
     pub id: String,

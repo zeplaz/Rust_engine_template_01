@@ -2,17 +2,54 @@
   "witness_id": "pbr_pilot_rowhouse_live",
   "sprint": "MCP-PROD-PBR-PILOT",
   "batch_id": "kit_production_001",
-  "generated_at": "2026-06-03T02:04:44.656835+00:00",
-  "doc_ref": "src/dev/pbr_pilot_rowhouse_material_maker_v1.md",
+  "generated_at": "2026-06-07T22:34:27.624430+00:00",
+  "doc_ref": "docs/archive/2026-06-src-dev/plans/pbr_pilot_rowhouse_material_maker_v1.md",
+  "ok": true,
+  "green": true,
+  "pbr_waiver": "procedural_mcp_generator_v1",
   "tileable_allowlist": [
     "brick_red_01",
     "concrete_grey_01",
     "glass_panel_01",
     "roof_metal_01",
     "roof_tile_01",
+    "steel_corner_01",
+    "steel_door_warehouse_01",
     "steel_panel_01",
     "stucco_cream_01",
     "wood_plank_01"
+  ],
+  "pilot_texture_profiles": [
+    {
+      "profile_id": "brick_red_01",
+      "folder": "assets/materials/textures/brick_red_01",
+      "maps_present": {
+        "albedo.png": true,
+        "normal.png": true,
+        "roughness.png": true
+      },
+      "ok": true
+    },
+    {
+      "profile_id": "wood_plank_01",
+      "folder": "assets/materials/textures/wood_plank_01",
+      "maps_present": {
+        "albedo.png": true,
+        "normal.png": true,
+        "roughness.png": true
+      },
+      "ok": true
+    },
+    {
+      "profile_id": "roof_tile_01",
+      "folder": "assets/materials/textures/roof_tile_01",
+      "maps_present": {
+        "albedo.png": true,
+        "normal.png": true,
+        "roughness.png": true
+      },
+      "ok": true
+    }
   ],
   "production_specs": [
     {

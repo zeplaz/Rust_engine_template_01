@@ -1,0 +1,175 @@
+{
+  "_meta": {
+    "version": "1.1.0",
+    "date": "2026-06-08",
+    "board_doc": "src/dev/master_chain_board_4d_v1.md",
+    "lang": "src/dev/agent_lang_v1.md",
+    "signoff_witness": "debug_runs/dsm_signoff_001_live.json",
+    "axes": {
+      "c": "chain A-J",
+      "d": "dsm MAT|APS|SNAP|WRK|ATL|RT",
+      "a": "agent role",
+      "phi": "phase -1 defer 0 open 1 qualified 2 green"
+    },
+    "formula": "T_synergy = T[c,d,a,phi] * R_ux when d in APS,ATL"
+  },
+  "auth_spine": {
+    "MAT": { "phi": 2, "glyph": "★" },
+    "APS": { "phi": 2, "glyph": "★" },
+    "SNAP": { "phi": 2, "glyph": "★" },
+    "WRK": { "phi": 2, "glyph": "★" },
+    "ATL": {
+      "phi": 2,
+      "glyph": "★",
+      "signed": "2026-06-08",
+      "witness": "debug_runs/atl_sign_001_live.json"
+    },
+    "RT": {
+      "phi": 2,
+      "glyph": "★",
+      "signed": "2026-06-08",
+      "witness": "debug_runs/rt_registry_001_live.json"
+    }
+  },
+  "dsm_signoff": {
+    "gate_id": "DSM-SIGNOFF-001",
+    "green": true,
+    "date": "2026-06-08",
+    "witness": "debug_runs/dsm_signoff_001_live.json",
+    "criteria_doc": "src/dev/plan_dsm_wrk_atl_closure_v1.md"
+  },
+  "chains": {
+    "A": {
+      "label": "AUTH spine",
+      "primary_d": ["WRK", "ATL", "RT"],
+      "phi": 2,
+      "done": [
+        "MCP-SPINE-CHAIN-001",
+        "APS-ATLAS-LEGEND-001-IMPL",
+        "ATL-SIGN-001",
+        "RT-REG-001",
+        "RT-BRIEF-001",
+        "RT-ENG-001"
+      ],
+      "next": [],
+      "maintain_only": true,
+      "owner": "coder-mcp"
+    },
+    "B": {
+      "label": "MCP productivity",
+      "phi": 2,
+      "p0_green": ["pipeline_preflight", "snapshot_digest", "validate_p0_gate_plain", "material_profile_brief"],
+      "p1_plan": "docs/archive/2026-06-src-dev/plans/mcp_productivity_p1_plan_v1.md",
+      "grammar_shipped": ["grammar_iterate", "snapshot_diff_brief", "tile_spine_run", "atlas_meta_brief", "runtime_lookup_brief"],
+      "done": ["MCP-SPINE-CHAIN-001", "MCP-ATLAS-BRIEF-001", "MCP-PRODUCTIVITY-P1-PLAN"],
+      "next": [],
+      "maintain_only": true,
+      "owner": "coder-mcp"
+    },
+    "C": {
+      "label": "AGENT-LANG",
+      "phi": 2,
+      "done": [
+        "AGENT-LANG-001-SPEC",
+        "AGENT-LANG-002-REF",
+        "AGENT-LANG-003-BLANG",
+        "AGENT-LANG-004-RITUAL",
+        "AGENT-LANG-005-HANDOFF",
+        "AGENT-LANG-006-INFRA-REF",
+        "MCP-DOC-READ-001-IMPL"
+      ],
+      "next": [],
+      "maintain_only": true,
+      "owner": "planner-mcp"
+    },
+    "D": {
+      "label": "Rowhouse prod",
+      "phi": 2,
+      "done": ["MCP-PROD-B2", "MCP-PROD-C-PILOT", "MCP-PROD-TILE-VAL", "MCP-PROD-INDEX", "ENG-PT-4-001", "ENG-PT-5-001"],
+      "next": [],
+      "maintain_only": true,
+      "owner": "coder-mcp"
+    },
+    "E": {
+      "label": "Grammar iter",
+      "phi": 2,
+      "maintain_only": true
+    },
+    "F": {
+      "label": "APS UX",
+      "phi": 2,
+      "done": ["APS-UX-ASYNC-001", "APS-UX-NONBLOCK-001", "APS-UX-TOOLTIPS-002", "APS-ATLAS-LEGEND-001-IMPL"],
+      "next": [],
+      "maintain_only": true,
+      "owner": "coder-mcp",
+      "rules": "docs/archive/2026-06-src-dev/plans/aps_ux_professional_polish_rules_v1.md"
+    },
+    "G": {
+      "label": "Bevy HUD",
+      "phi": 2,
+      "done": ["SIM-HUD-PLAY01", "SIM-HUD-DOCK", "SIM-HUD-OPS", "SIM-HUD-MINIMAP", "SIM-HUD-BUILD", "APS-BEVY-QC-HUD-001-V2"],
+      "next": [],
+      "maintain_only": true,
+      "owner": "coder"
+    },
+    "H": {
+      "label": "Con/Infra",
+      "phi": 2,
+      "done": ["INFRA-E4-002", "INFRA-E5-002", "INFRA-E6-001", "INFRA-E6-002", "INFRA-E6-004", "CON-P7-LOGISTICS-001"],
+      "next": [],
+      "maintain_only": true,
+      "owner": "coder_a",
+      "exec": "docs/archive/2026-06-src-dev/plans/plan_infra_tail_exec_001_v1.md"
+    },
+    "I": {
+      "label": "Weather",
+      "phi": 2,
+      "done": ["WEATHER-WITNESS-001", "WEATHER-CLIMATE-001", "WEATHER-REGIONAL-001", "WX-GREEN-001"],
+      "next": [],
+      "maintain_only": true,
+      "owner": "coder_c",
+      "witness": "debug_runs/weather_sim_live.json"
+    },
+    "J": {
+      "label": "Defer",
+      "phi": -1,
+      "registry": "tools/orchestrator/queues/defer_registry.json",
+      "note": "RT no longer deferred — warehouse Track B still paused"
+    }
+  },
+  "gates": {
+    "G-CONTAIN-01": { "phi": 2, "closed": true },
+    "G-STAB-01": { "phi": 2, "closed": true },
+    "G-PLAY-01": {
+      "phi": 0,
+      "operator": "src/dev/plan_g_play_close_001_checklist_v1.md",
+      "blocker": "TRIAGE-MAP-PICK-CLOSURE-001",
+      "blocker_alias": "P0-BUILD-FOOTPRINT-001",
+      "blocker_exec": "src/dev/plan_build_footprint_vm09_exec_v1.md",
+      "note": "💬 operator blocked until footprint projection φ→🟢"
+    }
+  },
+  "a2c_template": {
+    "spec": "COMMIT:SPEC ⟨ID⟩ $ref:<exec.md>",
+    "wit": "COMMIT:WIT debug_runs/<witness>.json",
+    "ops": "COMMIT:OPS operator row"
+  },
+  "blang_session": ["BLANG:PRE", "BLANG:Q+", "work", "BLANG:WIT", "BLANG:Q✓"],
+  "drain_order": [],
+  "active_program": "POST-DRAIN-PHASE-4-001",
+  "active_queue": "tools/orchestrator/queues/post_drain_phase4_queue.json",
+  "prior_program": "POST-DRAIN-PHASE-3-001",
+  "collective_dispatch": "docs/archive/2026-06-fleet-drain/dev_dispatch/orchestrator_collective_dispatch_20260607_v1.md",
+  "breakpoint_chain": [
+    "BLANG:PRE",
+    "BLANG:Q+",
+    "⟨BP:COLLECT⟩",
+    "⟨BP:MIRROR⟩",
+    "⟨BP:SCAN⟩",
+    "work",
+    "⟨BP:SHARE⟩",
+    "⟨BP:RESUME⟩",
+    "BLANG:WIT",
+    "BLANG:Q✓"
+  ]
+}

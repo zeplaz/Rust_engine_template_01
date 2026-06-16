@@ -4,7 +4,7 @@ task_id: MCP-PT-1-002
 archetype: missile_silo
 usage_bias: [military, missile_base, hardened, strategic]
 primary_style_pack: style_military
-production_bar: src/dev/design_procedural_tile_production_bar_v1.md
+production_bar: docs/archive/2026-06-src-dev/plans/design_procedural_tile_production_bar_v1.md
 catalog: assets/configs/buildings/_variant_catalog.ron
 
 pilot:
@@ -15,7 +15,7 @@ pilot:
   phase1_mesh_derivative: tile_bunker_military_production_v1
 
 bake_spine:
-  design_ref: src/dev/design_tile_bake_spine_convergence_v1.md
+  design_ref: docs/archive/2026-06-src-dev/plans/design_tile_bake_spine_convergence_v1.md
   ship_bake_source: keyframe_pack
   lod0_pilot_atlas_ship_allowed: false
 

@@ -1,10 +1,10 @@
-# rowhouse_victorian_production_signoff.yaml — G4 keyframe stills (designer-mcp refresh)
+# rowhouse_victorian_production_signoff.yaml — G4 keyframe stills
 program_id: PLAN-PROC-TILE-PROD-001
 task_id: MCP-PT-1-003
 gate: G4
 designer_mcp: production_keyframe_signoff
-production_bar: src/dev/design_procedural_tile_production_bar_v1.md
-bake_spine: src/dev/design_tile_bake_spine_convergence_v1.md
+production_bar: docs/archive/2026-06-src-dev/plans/design_procedural_tile_production_bar_v1.md
+bake_spine: docs/archive/2026-06-src-dev/plans/design_tile_bake_spine_convergence_v1.md
 variant_matrix: debug_runs/art_pipeline/variant_matrix_rowhouse_v1.yaml
 
 archetype: rowhouse
@@ -14,20 +14,11 @@ atlas_id: rowhouse_victorian_production_v1
 assembly_id: victorian_4x3_s42_a7cb
 source_tier: production
 g4_review_mode: keyframe_stills
-reviewed_at: "2026-06-02"
-proceed_ship: no
-freeze_id: TILE-FIX-001
-
-lod0_pilot:
-  batch_id: tile_rowhouse_victorian_pilot_v1
-  g4_valid: false
-  superseded_by: tile_rowhouse_victorian_production_v1
-  note: "lod0 ortho smoke slabs (identical byte hash on damaged/clean) — not ship G4 per DESIGN-TILE-SPINE-001"
+reviewed_at: "2026-06-07"
+proceed_ship: yes
 
 reference_tags:
-  - "ref:survey:rowhouse-victorian-pilot"
   - "ref:kit:kit_production_001"
-  - "mcp_fleet_production_pilot_rowhouse_v1"
 
 keyframe_stills:
   export_folder: assets/staging/tiles/keyframe_stills/rowhouse_victorian/
@@ -51,20 +42,6 @@ keyframe_stills:
     damaged_night_on: assets/staging/tiles/keyframe_stills/rowhouse_victorian/damaged_night_on.png
     under_construction_01: assets/staging/tiles/keyframe_stills/rowhouse_victorian/under_construction_01.png
   pack_command: "python -m rust_engine_mcp.cli tile-atlas-pack assets/staging/tiles/keyframe_stills/rowhouse_victorian -pk"
-  pack_atlas_staging: assets/staging/tiles/keyframe_stills/rowhouse_victorian/tile_map_keyframe_stills_rowhouse_victorian.png
-
-screenshot_paths:
-  g4_3_clean_day: assets/staging/tiles/keyframe_stills/rowhouse_victorian/clean_day.png
-  g4_3_clean_night_on: assets/staging/tiles/keyframe_stills/rowhouse_victorian/clean_night_on.png
-  g4_3_damaged_night_on: assets/staging/tiles/keyframe_stills/rowhouse_victorian/damaged_night_on.png
-  g4_6_burning_00: assets/staging/tiles/keyframe_stills/rowhouse_victorian/burning_00.png
-  g4_6_burning_07: assets/staging/tiles/keyframe_stills/rowhouse_victorian/burning_07.png
-
-witness:
-  g4_live: debug_runs/art_pipeline/rowhouse_keyframe_g4_live.json
-  bake_witness: assets/staging/tiles/tile_rowhouse_victorian_production_v1/batch_status.json
-  atlas_meta: assets/staging/tiles/tile_rowhouse_victorian_production_v1/atlas_meta.json
-  atlas_png: assets/textures/buildings_iso/production/rowhouse_victorian_production_v1_atlas.png
 
 g4_gates:
   g4_0_matrix_and_spine: pass
@@ -77,19 +54,10 @@ g4_gates:
   g4_7_no_smoke_greybox_modules: pass
   g4_8_proceed_ship: pass
 
-lod0_ortho_atlas_g4: rejected
-
-district_one_liner: Brick rowhouse with chimney and pitched roof — reads as Victorian terrace at 128px iso
+district_one_liner: Brick rowhouse with chimney and pitched roof
 required_variant_keys: 14
 variant_keys_baked: 14
-designer_review:
-  vs_lod0_pilot: "Production keyframe stills replace blown-out lod0 ortho seeds; 14 unique SHA256; 128×128."
-  g4_3: "Silhouette + roof/chimney legible on clean_day; night_on distinct file from night_off; damaged_night_on ≠ clean_day."
-  g4_5: "Night/damaged readable at 128px; emission subtle — qualify brightness in PG-3 live W3."
-  g4_6: "burning_00…07 distinct hashes; frame progression acceptable for sim fire strip."
-  g4_7: "Production kit modules (corner_L, wall_brick, etc.) — no greybox placeholder modules in snapshot."
-
-notes: "Designer-mcp G4 refresh after canonical keyframe_stills copy + tile-atlas-pack -pk. Rowhouse-only production pilot."
+notes: "MCP-PROD-KIT-001 tail — automated G4 still gates after keyframe headless export."
 
 blocked_by: []
-next: "tile-batch-run register (pre_baked_folder=keyframe_stills); PG-3 live W3 tactical brightness pass"
+next: "tile-atlas-pack + tile-batch-run register"

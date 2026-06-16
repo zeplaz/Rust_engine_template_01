@@ -6,6 +6,6 @@
 
 **Spec:** [`prompts/guides/ui/minimap_m3_operational_overlay_spec_v1.md`](../../prompts/guides/ui/minimap_m3_operational_overlay_spec_v1.md) — **SIGNED** 2026-05-25
 
-**Sign-off:** [`src/dev/minimap_d_m3_signoff_v1.md`](../../src/dev/minimap_d_m3_signoff_v1.md)
+**Sign-off:** [`docs/archive/2026-06-src-dev/plans/minimap_d_m3_signoff_v1.md`](../../docs/archive/2026-06-src-dev/plans/minimap_d_m3_signoff_v1.md)
 
 **Not blocking** **UI-P3-M4-001** — coder may implement from spec tokens alone.

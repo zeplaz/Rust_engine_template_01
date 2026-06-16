@@ -5,7 +5,7 @@
   "base": "stone",
   "status": "production",
   "ship": false,
-  "frozen": true,
+  "frozen": false,
   "freeze_id": "TILE-FIX-001",
   "atlas_schema_version": 1,
   "freeze_reason": "greybox_v1 state-only ortho; superseded by atlas schema v2",

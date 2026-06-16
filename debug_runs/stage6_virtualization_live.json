@@ -54,7 +54,7 @@
     "relative_path": "debug_runs/stage6_virtualization_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "stage6_live_proof",
-    "written_at_epoch_secs": 1780456285
+    "written_at_epoch_secs": 1781367219
   },
   "frame": {
     "active_atlas_slots": 2,

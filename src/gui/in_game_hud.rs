@@ -1043,6 +1043,7 @@ fn spawn_simulation_command_shell(
                     .with_children(|tabs| {
                         for tab in [
                             ContextTrayTab::Alerts,
+                            ContextTrayTab::Events,
                             ContextTrayTab::Intel,
                             ContextTrayTab::Logistics,
                             ContextTrayTab::Diagnostics,

@@ -324,3 +324,80 @@ pub fn infra_e5_002_graph_only_paths_green(
         && diagnostics.routes_blocked == 0
         && diagnostics.routes_open > 0
 }
+
+/// **INFRA-E6-002** — lib witness for agent-filtered transport nav reachability.
+#[must_use]
+pub fn nav_agent_routing_witness_payload() -> serde_json::Value {
+    use crate::economy::resource_flow::TransportMode;
+    use crate::strategic::BuildSiteTile;
+    use crate::systems::transport::{
+        edge_traversal_cost, refresh_transport_nav_export, EdgeFieldState, TransportCostCache,
+        TransportCostWeights, TransportEdgeDirectory, TransportEdgeId, TransportEdgeMeta,
+        TransportFieldStore, TransportNavExport, TransportTopology,
+    };
+
+    let from = BuildSiteTile { x: 0, z: 0 };
+    let to = BuildSiteTile { x: 2, z: 0 };
+    let from_key = tile_node_key(from);
+    let to_key = tile_node_key(to);
+
+    let mut topo = TransportTopology::default();
+    topo.neighbors.insert(TransportEdgeId(0), vec![TransportEdgeId(1)]);
+    topo.neighbors.insert(TransportEdgeId(1), vec![]);
+
+    let mut directory = TransportEdgeDirectory::default();
+    directory.by_edge.insert(
+        TransportEdgeId(0),
+        TransportEdgeMeta {
+            head_key: from_key.clone(),
+            tail_key: tile_node_key(BuildSiteTile { x: 1, z: 0 }),
+            profile: "default_road".into(),
+            allowed_agents: vec!["road_vehicle".into()],
+            ..Default::default()
+        },
+    );
+    directory.by_edge.insert(
+        TransportEdgeId(1),
+        TransportEdgeMeta {
+            head_key: tile_node_key(BuildSiteTile { x: 1, z: 0 }),
+            tail_key: to_key.clone(),
+            profile: "default_road".into(),
+            allowed_agents: vec!["road_vehicle".into()],
+            ..Default::default()
+        },
+    );
+
+    let weights = TransportCostWeights::default();
+    let mut field = TransportFieldStore::default();
+    for id in [TransportEdgeId(0), TransportEdgeId(1)] {
+        field.by_edge.insert(
+            id,
+            EdgeFieldState {
+                travel_time_base: 1.0,
+                ..Default::default()
+            },
+        );
+    }
+    let mut cache = TransportCostCache::default();
+    for (id, state) in field.by_edge.iter() {
+        cache.by_edge.insert(
+            *id,
+            edge_traversal_cost(state, &weights, state.travel_time_base),
+        );
+    }
+    let mut nav = TransportNavExport::default();
+    refresh_transport_nav_export(&topo, &cache, &directory, &mut nav);
+
+    let road_reaches = path_edges_between_tiles(&nav, &directory, from, to, TransportMode::Truck)
+        .is_some();
+    let train_reaches = path_edges_between_tiles(&nav, &directory, from, to, TransportMode::Rail)
+        .is_some();
+
+    serde_json::json!({
+        "gate": "INFRA-E6-002",
+        "green": road_reaches && !train_reaches,
+        "agent_filter_strict": true,
+        "road_agent_reaches_goal": road_reaches,
+        "train_on_road_only": train_reaches,
+    })
+}

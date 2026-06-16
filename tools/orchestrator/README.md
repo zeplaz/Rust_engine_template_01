@@ -24,6 +24,8 @@ Continuation Queue
 Agent Coordination Reports
 ```
 
+**Agent language:** HANDOFF + queue notes use SYMLANG packets — `$ref:prompts/SYMBOLIC_LANGUAGE.meta.md` · template [`queues/HANDOFF.template.md`](queues/HANDOFF.template.md).
+
 ## Run
 
 ```powershell

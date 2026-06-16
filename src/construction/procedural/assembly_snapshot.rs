@@ -9,8 +9,13 @@ use bevy::prelude::Vec3;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
+use super::arch_build_grammar_v0::{
+    arch_dna_consumer_from_preset_id, arch_dna_consumer_from_snapshot_fields,
+    arch_dna_consumer_wired, ArchDnaConsumerFields, PressureFieldV0,
+};
+use super::building_grammar::generate_with_arch_dna_preset;
 use super::{
-    generate_building_grammar, grammar_reference_tags, DevelopmentTier, FootprintGrid, FootprintToken,
+    grammar_reference_tags, DevelopmentTier, FootprintGrid, FootprintToken,
     GrammarGenerateResult, ProceduralBuildingRequest, ProceduralModuleRegistry,
     StylePack, StylePackRegistry, StylePackSlotKey, GRAMMAR_RULES_VERSION,
 };
@@ -83,6 +88,35 @@ pub struct AssemblySnapshot {
     pub district_style: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub grammar_rule_chain: Option<AssemblyGrammarRuleChain>,
+    /// BUILD-READ-CONSUMER-MCP-001 — APS snapshot DNA preset id.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub arch_build_grammar_preset_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub arch_build_grammar_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub arch_dna: Option<serde_json::Value>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pressure_field: Option<PressureFieldV0>,
+}
+
+impl AssemblySnapshot {
+    /// Resolve MCP consumer fields from embedded snapshot DNA+β (commit replay path).
+    #[must_use]
+    pub fn arch_dna_consumer(&self) -> Option<ArchDnaConsumerFields> {
+        let preset_id = self.arch_build_grammar_preset_id.as_deref()?;
+        arch_dna_consumer_from_snapshot_fields(
+            preset_id,
+            self.arch_build_grammar_id.clone(),
+            self.arch_dna.clone().unwrap_or(serde_json::Value::Null),
+            self.pressure_field,
+        )
+    }
+
+    #[must_use]
+    pub fn arch_dna_consumer_wired(&self) -> bool {
+        self.arch_dna_consumer()
+            .is_some_and(|c| arch_dna_consumer_wired(&c))
+    }
 }
 
 #[must_use]
@@ -156,7 +190,31 @@ pub fn build_assembly_snapshot_from_grammar(
     registry: &ProceduralModuleRegistry,
     packs: &StylePackRegistry,
 ) -> Result<AssemblySnapshot, String> {
-    let grammar = generate_building_grammar(archetype_id, district_style, seed)?;
+    build_assembly_snapshot_from_grammar_with_preset(
+        archetype_id,
+        district_style,
+        seed,
+        None,
+        registry,
+        packs,
+    )
+}
+
+/// Grammar-first snapshot with optional ARCH-DNA preset consumer on commit path.
+pub fn build_assembly_snapshot_from_grammar_with_preset(
+    archetype_id: &str,
+    district_style: &str,
+    seed: u64,
+    arch_dna_preset_id: Option<&str>,
+    registry: &ProceduralModuleRegistry,
+    packs: &StylePackRegistry,
+) -> Result<AssemblySnapshot, String> {
+    let grammar = generate_with_arch_dna_preset(
+        archetype_id,
+        district_style,
+        seed,
+        arch_dna_preset_id,
+    )?;
     let request = grammar.procedural_request();
     let pack = packs
         .get(request.style.0.as_str())
@@ -248,6 +306,37 @@ fn build_assembly_snapshot_with_grammar(
             )
         };
 
+    let (arch_build_grammar_preset_id, arch_build_grammar_id, arch_dna, pressure_field) =
+        if let Some(g) = grammar {
+            if let Some(preset_id) = g.arch_dna_preset_id.as_deref() {
+                if let Ok(consumer) = arch_dna_consumer_from_preset_id(preset_id) {
+                    (
+                        Some(consumer.preset_id),
+                        consumer.grammar_id,
+                        Some(consumer.arch_dna),
+                        Some(consumer.pressure_field),
+                    )
+                } else {
+                    (None, None, None, None)
+                }
+            } else {
+                (None, None, None, None)
+            }
+        } else if let Some(preset_id) = request.arch_dna_preset_id.as_deref() {
+            if let Ok(consumer) = arch_dna_consumer_from_preset_id(preset_id) {
+                (
+                    Some(consumer.preset_id),
+                    consumer.grammar_id,
+                    Some(consumer.arch_dna),
+                    Some(consumer.pressure_field),
+                )
+            } else {
+                (None, None, None, None)
+            }
+        } else {
+            (None, None, None, None)
+        };
+
     AssemblySnapshot {
         schema_version: ASSEMBLY_SNAPSHOT_SCHEMA,
         assembly_id: assembly_id_for(
@@ -272,6 +361,10 @@ fn build_assembly_snapshot_with_grammar(
         archetype_id,
         district_style,
         grammar_rule_chain,
+        arch_build_grammar_preset_id,
+        arch_build_grammar_id,
+        arch_dna,
+        pressure_field,
     }
 }
 
@@ -338,6 +431,7 @@ mod tests {
             floors: 2,
             style: StylePackId("style_victorian".into()),
             seed,
+            arch_dna_preset_id: None,
         }
     }
 

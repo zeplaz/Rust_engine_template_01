@@ -1,0 +1,568 @@
+{
+  "_meta": {
+    "version": "1.0.0",
+    "program_id": "POST-DRAIN-PHASE-6-001",
+    "date": "2026-06-14",
+    "prior_program": "POST-DRAIN-PHASE-5-001",
+    "plan_doc": "src/dev/coder_longrun_plan_phase6_v1.md",
+    "hardening_rules": "src/dev/coder_queue_hardening_rules_v1.md",
+    "vegetation_status": "src/dev/vegetation_system_honest_status_v1.md",
+    "rule": "Pick seq 1â†’32 top-down Â· skip blocked Â· witness exit_predicate required",
+    "regression": "cargo test -p proc_A_dine01 --lib landscape_grammar fire_ecology construction stage5 sim_effects",
+    "last_sync": "2026-06-11",
+    "bundle_witness": "debug_runs/phase6_coder_queue_bundle_live.json"
+  },
+  "lanes": {
+    "HARDEN": "Lib â†’ FULL_APP / play truth",
+    "VEG": "Landscape grammar depth",
+    "BUILD": "Building grammar v1",
+    "INFRA": "World layers column",
+    "GROWTH": "Procedural + organic product",
+    "SIM": "Stage 7 + replay + effects plugin"
+  },
+  "tracks": {
+    "coder_a": "ecology Â· fire Â· scenario Â· hydrology Â· infra A-half",
+    "coder_b": "construction Â· gui Â· infrastructure Â· strategic Â· growth HUD"
+  },
+  "drain": [
+    {
+      "seq": 1,
+      "lane": "HARDEN",
+      "wave": 1,
+      "id": "VEG-HARD-FULLAPP-001",
+      "status": "done",
+      "priority": "P0",
+      "owner": "coder_a",
+      "goal": "FULL_APP ecology extract from live LandscapeProgramOnChunk (not harness-only patch)",
+      "docs": [
+        "src/dev/vegetation_system_honest_status_v1.md",
+        "src/systems/ecology/landscape_grammar.rs"
+      ],
+      "witness": "debug_runs/stage5_full_app_live.json",
+      "exit_predicate": {
+        "witness": "debug_runs/stage5_full_app_live.json",
+        "must": [
+          {
+            "path": "ecology_rows_source",
+            "eq": "live_landscape_program_on_chunk"
+          }
+        ]
+      },
+      "live_sim_required": true,
+      "forbidden_exit": [
+        "lib_test_only",
+        "witness_counter_zero"
+      ]
+    },
+    {
+      "seq": 2,
+      "lane": "HARDEN",
+      "wave": 1,
+      "id": "VEG-HARD-PREVIEW-PIXEL-001",
+      "status": "done",
+      "priority": "P0",
+      "owner": "coder_a",
+      "depends_on": [
+        "VEG-HARD-FULLAPP-001"
+      ],
+      "goal": "Ecology preview shows â‰¥3 topology kinds with pixel-level heterogeneity in visual harness",
+      "witness": "debug_runs/landscape_grammar_lg4_preview_live.json",
+      "exit_predicate": {
+        "witness": "debug_runs/landscape_grammar_lg4_preview_live.json",
+        "must": [
+          {
+            "path": "topology_kind_count_visible",
+            "gte": 3
+          },
+          {
+            "path": "operator_visible",
+            "eq": true
+          }
+        ]
+      },
+      "live_sim_required": true,
+      "operator_visible": true,
+      "forbidden_exit": [
+        "eval_math_without_render"
+      ]
+    },
+    {
+      "seq": 3,
+      "lane": "HARDEN",
+      "wave": 1,
+      "id": "BUILD-HARD-VISUAL-RUN-001",
+      "status": "done",
+      "priority": "P0",
+      "owner": "coder_b",
+      "goal": "Post-commit site extract visible in --test visual (mesh or iso tile, not footprint fallback)",
+      "territory": "src/construction/visual_authority.rs",
+      "witness": "debug_runs/build_read_visual_001_live.json",
+      "exit_predicate": {
+        "witness": "debug_runs/build_read_visual_001_live.json",
+        "must": [
+          {
+            "path": "runtime_sim_verified",
+            "eq": true
+          },
+          {
+            "path": "green",
+            "eq": true
+          }
+        ]
+      },
+      "live_sim_required": true,
+      "forbidden_exit": [
+        "lib_test_only"
+      ]
+    },
+    {
+      "seq": 4,
+      "lane": "HARDEN",
+      "wave": 1,
+      "id": "IND-E02-DEFAULT-JSON-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_b",
+      "goal": "Default industrial play witness writer sets ind_e02_green when activation seed fires",
+      "docs": [
+        "src/dev/ind_board_reconcile_plan_v1.md",
+        "src/dev/post_stage6_active_todos.md"
+      ],
+      "witness": "debug_runs/play_scenario_live.json",
+      "forbidden_exit": [
+        "lib_test_only"
+      ]
+    },
+    {
+      "seq": 5,
+      "lane": "HARDEN",
+      "wave": 1,
+      "id": "BQ128-APPLY-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_b",
+      "goal": "Apply BQ-128 editor path slice from signed plan",
+      "docs": [
+        "src/dev/bq128_editor_path_plan_v1.md"
+      ],
+      "forbidden_exit": [
+        "lib_test_only"
+      ]
+    },
+    {
+      "seq": 6,
+      "lane": "HARDEN",
+      "wave": 1,
+      "id": "SIM-STEWARD-COMBINED-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "sim-steward",
+      "goal": "Combined regression stage5 + fire_ecology + landscape_grammar after Wave 1",
+      "verify": "cargo test -p proc_A_dine01 --lib stage5 fire_ecology landscape_grammar"
+    },
+    {
+      "seq": 7,
+      "lane": "VEG",
+      "wave": 2,
+      "id": "VEG-COMPOSITE-EVAL-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_a",
+      "depends_on": [
+        "VEG-HARD-FULLAPP-001"
+      ],
+      "goal": "Composite macro registry â€” MACRO-* recipes expand to topology subgraph per lexicon Â§1.17",
+      "docs": [
+        "prompts/guides/landscape_grammar_lexicon_v1.md",
+        "src/systems/ecology/landscape_grammar.rs"
+      ],
+      "witness": "debug_runs/landscape_grammar_composite_live.json",
+      "forbidden_exit": [
+        "lib_test_only"
+      ]
+    },
+    {
+      "seq": 8,
+      "lane": "VEG",
+      "wave": 2,
+      "id": "VEG-PRESET-INDUSTRIAL-002",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_a",
+      "goal": "Industrial + military presets anchored to settlement/transport (not coord heuristic)",
+      "docs": [
+        "assets/configs/landscape/presets/",
+        "src/dev/plan_landscape_grammar_exec_001_v1.md Â§5"
+      ],
+      "witness": "debug_runs/landscape_grammar_lg3_live.json",
+      "forbidden_exit": [
+        "single_chunk_pilot"
+      ]
+    },
+    {
+      "seq": 9,
+      "lane": "VEG",
+      "wave": 2,
+      "id": "VEG-Î»-LIVE-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_a",
+      "goal": "Î» pressure field from live hydrology + ChunkWeather (remove remaining hacks)",
+      "territory": "src/systems/ecology/landscape_grammar.rs",
+      "forbidden_exit": [
+        "lib_test_only"
+      ]
+    },
+    {
+      "seq": 10,
+      "lane": "VEG",
+      "wave": 2,
+      "id": "VEG-MINIMAP-OVERLAY-002",
+      "status": "done",
+      "priority": "P2",
+      "owner": "coder_b",
+      "goal": "Minimap debug overlay â€” topology program tint legend",
+      "territory": "src/gui/hud/minimap_bevy_interaction.rs",
+      "depends_on": [
+        "VEG-HARD-PREVIEW-PIXEL-001"
+      ],
+      "forbidden_exit": [
+        "lib_test_only"
+      ]
+    },
+    {
+      "seq": 11,
+      "lane": "VEG",
+      "wave": 2,
+      "id": "VEG-FIRE-CORRIDOR-FULLAPP-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_a",
+      "goal": "Fire corridor fuel reads population field in FULL_APP extract path",
+      "territory": "src/systems/fire/",
+      "witness": "debug_runs/stage5_full_app_live.json",
+      "live_sim_required": true,
+      "forbidden_exit": [
+        "lib_test_only"
+      ]
+    },
+    {
+      "seq": 12,
+      "lane": "VEG",
+      "wave": 2,
+      "id": "VEG-SNAPSHOT-PLAY-001",
+      "status": "done",
+      "priority": "P2",
+      "owner": "coder_a",
+      "goal": "Vegetation snapshot roundtrip in play scenario save/load",
+      "witness": "debug_runs/vegetation_snapshot_roundtrip_live.json",
+      "forbidden_exit": [
+        "lib_test_only"
+      ]
+    },
+    {
+      "seq": 13,
+      "lane": "VEG",
+      "wave": 2,
+      "id": "VEG-DIAG-COMPOSITE-001",
+      "status": "done",
+      "priority": "P2",
+      "owner": "coder_a",
+      "goal": "Diagnostics UI: nested topology tree + disturbance timeline + composite macro IDs",
+      "territory": "src/gui/diagnostics_ui.rs",
+      "forbidden_exit": [
+        "lib_test_only"
+      ]
+    },
+    {
+      "seq": 14,
+      "lane": "BUILD",
+      "wave": 3,
+      "id": "BUILD-GRAMMAR-PROGRAM-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_b",
+      "goal": "ProgramGraph v1 stub â€” site zones from ARCH-DNA + Î² pressure",
+      "docs": [
+        "src/dev/arch_build_grammar_v0_baseline_v1.md",
+        "src/construction/procedural/building_grammar.rs"
+      ],
+      "forbidden_exit": [
+        "lib_test_only"
+      ]
+    },
+    {
+      "seq": 15,
+      "lane": "BUILD",
+      "wave": 3,
+      "id": "BUILD-GRAMMAR-PILOT-EXPAND-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_b",
+      "goal": "Expand _pilot_catalog.ron to â‰¥8 pilots (rect/T/O/L variants)",
+      "witness": "debug_runs/pilot_catalog_parity_live.json",
+      "forbidden_exit": [
+        "lib_test_only"
+      ]
+    },
+    {
+      "seq": 16,
+      "lane": "BUILD",
+      "wave": 3,
+      "id": "BUILD-GRAMMAR-SITE-ZONE-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_b",
+      "depends_on": [
+        "BUILD-GRAMMAR-PROGRAM-001"
+      ],
+      "goal": "Site occupancy 15â€“40% enforced in footprint matrix",
+      "docs": [
+        "src/dev/arch_build_grammar_v0_baseline_v1.md"
+      ],
+      "forbidden_exit": [
+        "lib_test_only"
+      ]
+    },
+    {
+      "seq": 17,
+      "lane": "BUILD",
+      "wave": 3,
+      "id": "BUILD-GRAMMAR-Î²-WORLD-001",
+      "status": "done",
+      "priority": "P2",
+      "owner": "coder_b",
+      "goal": "Î² pressure reads transport edges + land-use influence",
+      "forbidden_exit": [
+        "lib_test_only"
+      ]
+    },
+    {
+      "seq": 18,
+      "lane": "BUILD",
+      "wave": 3,
+      "id": "BUILD-GRAMMAR-WITNESS-002",
+      "status": "done",
+      "priority": "P2",
+      "owner": "coder_b",
+      "goal": "grammar_diversity_witness â€” â‰¥3 distinct massing picks per DNA family",
+      "witness": "debug_runs/grammar_diversity_witness.json",
+      "forbidden_exit": [
+        "lib_test_only"
+      ]
+    },
+    {
+      "seq": 19,
+      "lane": "BUILD",
+      "wave": 3,
+      "id": "BUILD-READ-CONSUMER-MCP-001",
+      "status": "ready",
+      "priority": "P2",
+      "owner": "coder_b",
+      "goal": "Wire APS snapshot DNA+β consumer in Rust (arch_build_grammar_v0)",
+      "witness": "debug_runs/aps_dna_consumer_contract_live.json",
+      "docs": [
+        "tools/mcp/python/rust_engine_mcp/arch_build_grammar.py",
+        "src/construction/procedural/arch_build_grammar_v0.rs"
+      ],
+      "note": "Unblocked @coder-mcp consumer contract witness green"
+    },
+    {
+      "seq": 20,
+      "lane": "INFRA",
+      "wave": 4,
+      "id": "INFRA-E0-003",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_a",
+      "goal": "Infrastructure E0 column start â€” profile RON catalog",
+      "docs": [
+        "src/dev/plan_infrastructure_world_layers_exec_001_v1.md",
+        "src/dev/world_layer_infrastructure_model_v1.md"
+      ]
+    },
+    {
+      "seq": 21,
+      "lane": "INFRA",
+      "wave": 4,
+      "id": "INFRA-TRANSPORT-R8-001",
+      "status": "done",
+      "priority": "P2",
+      "owner": "coder_b",
+      "goal": "Construction corridor slice in TransportNetworkSnapshot",
+      "docs": [
+        "src/strategic/construction_book.rs",
+        "AGENTS.md Transport R8"
+      ]
+    },
+    {
+      "seq": 22,
+      "lane": "INFRA",
+      "wave": 4,
+      "id": "INFRA-UTILITY-OVERLAY-001",
+      "status": "done",
+      "priority": "P2",
+      "owner": "coder_b",
+      "goal": "Utility network overlay in sim HUD",
+      "docs": [
+        "src/dev/design_infra_network_overlay_v1.md"
+      ]
+    },
+    {
+      "seq": 23,
+      "lane": "INFRA",
+      "wave": 4,
+      "id": "INFRA-VM-DEEP-001",
+      "status": "done",
+      "priority": "P3",
+      "owner": "coder_a",
+      "goal": "VM-09/10/11 triage fixes from stage5_triage_backlog",
+      "docs": [
+        "src/dev/stage5_triage_backlog.md"
+      ]
+    },
+    {
+      "seq": 24,
+      "lane": "GROWTH",
+      "wave": 5,
+      "id": "PROC-PG-2-TAIL-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_a",
+      "goal": "PG-2 tail â€” lod0/production mesh authority, tier filter",
+      "docs": [
+        "src/dev/construction_procedural_growth_index_v1.md"
+      ]
+    },
+    {
+      "seq": 25,
+      "lane": "GROWTH",
+      "wave": 5,
+      "id": "PROC-OG-4-001",
+      "status": "done",
+      "priority": "P2",
+      "owner": "coder_a",
+      "goal": "Town rollup books â€” organic growth Phase 4",
+      "docs": [
+        "src/dev/plan_organic_growth_exec_001_v1.md"
+      ]
+    },
+    {
+      "seq": 26,
+      "lane": "GROWTH",
+      "wave": 5,
+      "id": "PROC-OG-UX-WIRE-001",
+      "status": "done",
+      "priority": "P2",
+      "owner": "coder_b",
+      "goal": "Growth approve HUD wired per design_organic_growth_ux_v1",
+      "docs": [
+        "src/dev/design_organic_growth_ux_v1.md"
+      ]
+    },
+    {
+      "seq": 27,
+      "lane": "GROWTH",
+      "wave": 5,
+      "id": "CON-R4-TAIL-001",
+      "status": "done",
+      "priority": "P2",
+      "owner": "coder_b",
+      "goal": "Construction Round 4 product board runtime slices",
+      "docs": [
+        "src/dev/plan_construction_r4_exec_001_v1.md"
+      ]
+    },
+    {
+      "seq": 28,
+      "lane": "GROWTH",
+      "wave": 5,
+      "id": "PT-5-002",
+      "status": "done",
+      "priority": "P2",
+      "owner": "coder_a",
+      "goal": "Fire frame tick in procedural tile resolver",
+      "docs": [
+        "src/dev/plan_procedural_building_tiles_production_v1.md"
+      ]
+    },
+    {
+      "seq": 29,
+      "lane": "SIM",
+      "wave": 6,
+      "id": "S7B-M1-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_a",
+      "goal": "Stage 7 behavioral M1 implementation slice",
+      "docs": [
+        "src/dev/stage7_behavioral_implementation_plan_v1.md"
+      ]
+    },
+    {
+      "seq": 30,
+      "lane": "SIM",
+      "wave": 6,
+      "id": "REPLAY-RING-001",
+      "status": "done",
+      "priority": "P2",
+      "owner": "coder_b",
+      "goal": "Replay ring exec tail",
+      "docs": [
+        "docs/archive/2026-06-src-dev/plans/plan_replay_ring_exec_001_v1.md"
+      ]
+    },
+    {
+      "seq": 31,
+      "lane": "SIM",
+      "wave": 6,
+      "id": "FACTION-REACT-002",
+      "status": "done",
+      "priority": "P3",
+      "owner": "coder_a",
+      "goal": "Extend faction stress hooks from SimEffect telemetry",
+      "docs": [
+        "src/dev/plan_sim_effect_spine_exec_001_v1.md"
+      ]
+    },
+    {
+      "seq": 32,
+      "lane": "SIM",
+      "wave": 6,
+      "id": "SIM-EFFECT-PLUGIN-001",
+      "status": "done",
+      "priority": "P2",
+      "owner": "coder_b",
+      "goal": "Register sim effects plugin in FULL_APP â€” telemetry.rs on disk today",
+      "territory": "src/sim/effects/",
+      "docs": [
+        "src/dev/build_read_unwired_spine_v1.md"
+      ],
+      "forbidden_exit": [
+        "lib_test_only"
+      ]
+    }
+  ],
+  "blocked_external": [
+    {
+      "id": "VEG-F01-DESIGN-ATLAS-001",
+      "blocked_owner": "designer-mcp"
+    },
+    {
+      "id": "VEG-F02-MCP-ATLAS-001",
+      "blocked_owner": "coder-mcp"
+    },
+    {
+      "id": "VEG-C14-OPERATOR-CHECKLIST-001",
+      "blocked_owner": "operator"
+    },
+    {
+      "id": "BUILD-READ-VISUAL-002",
+      "blocked_owner": "coder-mcp"
+    },
+    {
+      "id": "BUILD-READ-DESIGN-001",
+      "blocked_owner": "designer"
+    }
+  ]
+}

@@ -117,6 +117,13 @@ fn sample_fps(
     state.entity_count = entity_count_cache.1;
 }
 
+/// Bundles optional ecology program diagnostics (VEG-DIAG-COMPOSITE-001).
+#[derive(SystemParam)]
+pub struct EcologyDiagnosticsPanels<'w, 's> {
+    programs: Query<'w, 's, &'static crate::systems::ecology::LandscapeProgramOnChunk>,
+    disturbances: Query<'w, 's, &'static crate::systems::ecology::DisturbanceHistory>,
+}
+
 /// Bundles optional spine diagnostics to stay within Bevy system-param limits.
 #[derive(SystemParam)]
 pub struct DiagnosticsSpinePanels<'w> {
@@ -152,6 +159,7 @@ pub fn diagnostics_ui_system(
     mut construction_book: ResMut<CorridorConstructionBook>,
     palette: Res<UiPalette>,
     spine: DiagnosticsSpinePanels,
+    ecology: EcologyDiagnosticsPanels,
 ) -> Result {
     if !state.visible {
         return Ok(());
@@ -324,6 +332,77 @@ pub fn diagnostics_ui_system(
                                 ),
                             );
                         }
+                    });
+            }
+
+            if ecology.programs.iter().next().is_some() || ecology.disturbances.iter().next().is_some() {
+                ui.separator();
+                egui::CollapsingHeader::new("Landscape grammar (composite)")
+                    .default_open(state.sections_default_open)
+                    .show(ui, |ui| {
+                        section_heading(ui, &palette, CmdHeadingStyle::Gt, "Topology programs");
+                        let mut preset_counts: std::collections::BTreeMap<String, u32> =
+                            std::collections::BTreeMap::new();
+                        let mut kind_union: std::collections::BTreeSet<String> =
+                            std::collections::BTreeSet::new();
+                        let mut depth_max = 0usize;
+                        for program in ecology.programs.iter() {
+                            *preset_counts
+                                .entry(program.preset_id.clone())
+                                .or_insert(0) += 1;
+                            depth_max = depth_max.max(program.evaluation.nested_depth_max);
+                            for kind in &program.evaluation.topology_kinds {
+                                kind_union.insert(kind.clone());
+                            }
+                        }
+                        muted_label(
+                            ui,
+                            &palette,
+                            format!(
+                                "chunks={} presets={} kinds={} nested_depth_max={}",
+                                ecology.programs.iter().len(),
+                                preset_counts.len(),
+                                kind_union.len(),
+                                depth_max,
+                            ),
+                        );
+                        for (preset, count) in preset_counts.iter().take(8) {
+                            muted_label(ui, &palette, format!("• {preset} ×{count}"));
+                        }
+                        let mut kinds: Vec<_> = kind_union.into_iter().collect();
+                        kinds.sort();
+                        if !kinds.is_empty() {
+                            section_heading(ui, &palette, CmdHeadingStyle::Gt, "Topology kinds");
+                            muted_label(ui, &palette, kinds.join(" · "));
+                        }
+                        let fire_events: u32 = ecology
+                            .disturbances
+                            .iter()
+                            .flat_map(|h| h.events.iter())
+                            .filter(|e| {
+                                matches!(
+                                    e.kind,
+                                    crate::systems::ecology::DisturbanceKind::Fire
+                                )
+                            })
+                            .count() as u32;
+                        let build_events: u32 = ecology
+                            .disturbances
+                            .iter()
+                            .flat_map(|h| h.events.iter())
+                            .filter(|e| {
+                                matches!(
+                                    e.kind,
+                                    crate::systems::ecology::DisturbanceKind::ConstructionClear
+                                )
+                            })
+                            .count() as u32;
+                        section_heading(ui, &palette, CmdHeadingStyle::Gt, "Disturbance timeline");
+                        muted_label(
+                            ui,
+                            &palette,
+                            format!("fire={fire_events} construction_clear={build_events}"),
+                        );
                     });
             }
 

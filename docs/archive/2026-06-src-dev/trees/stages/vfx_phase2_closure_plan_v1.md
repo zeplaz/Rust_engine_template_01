@@ -1,0 +1,118 @@
+# VFX Phase 2 closure — tactical proof + tuning `v1`
+
+| Field | Value |
+|:---|:---|
+| **Track ID** | `VFX-P2` |
+| **Version** | `1.1.0` |
+| **Status** | **CLOSED** (2026-05-25) — fire + water tracks signed |
+| **Exit milestone** | **VFX Phase 2 CLOSED** — tactical proof + **D-VFX PASS** |
+| **Fire closure** | [`../fire_spark_track_closure_plan_v1.md`](../fire_spark_track_closure_plan_v1.md) (**PLAN-FIRE-VFX-CLOSURE-001**) |
+| **Sign-off** | [`../stage_tracks_signoff_ledger_v1.md`](../stage_tracks_signoff_ledger_v1.md) · [`../vfx_design_review_record_v1.md`](../vfx_design_review_record_v1.md) **SIGNED PASS** |
+| **Triage board** | [`../vfx_triage_v1.md`](../vfx_triage_v1.md) — archive + operator P0 only |
+| **Water (separate track)** | [`water_vfx_track_closure_plan_v1.md`](../water_vfx_track_closure_plan_v1.md) v2 — **CLOSED** · do not re-queue foam |
+| **Queue (detail)** | [`../vfx_coder_phase2_queue_v1.md`](../vfx_coder_phase2_queue_v1.md) |
+| **Starters** | [`../../docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/vfx_coder_phase2_starters_v1.md`](../../docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/vfx_coder_phase2_starters_v1.md) |
+
+**Context:** Fire shaders/compute **landed**. `fire_spark_rows: 0` at **strategic** zoom is **correct** (D-F09). Closure = **tactical fire proof** + compositing + tuning.
+
+**Water is not part of this exit.** FX-WATER **CLOSED** per [`water_vfx_track_closure_plan_v1.md`](../water_vfx_track_closure_plan_v1.md) — maintain regression only.
+
+---
+
+## Witness exit
+
+| File | Fields |
+|:---|:---|
+| `debug_runs/stage5_full_app_live.json` | `fire_spark_rows > 0`, `water_particle_rows > 0` at `zoom_alpha ≥ 0.65`; `fire_sparks_above_smoke: true` |
+| Unit tests | Tactical zoom in `gpu_particles` / `gpu_water_particles` / `stage5` harness |
+
+---
+
+## @designer instructions
+
+### VFX2-DESIGN-001 — Post-implementation review (after P2-VFX-VISUAL-001)
+
+**Read:** [`../../docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/vfx_post_implementation_review_v1.md`](../../docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/vfx_post_implementation_review_v1.md)
+
+| Task | Deliverable |
+|:---|:---|
+| Capture tactical stills | `assets/vfx/reference/review_captures/` |
+| Compare fire | vs `fire_spark_target_v1.png` |
+| Compare water | vs `water_surface_target_v1.png` |
+| Record | [`../vfx_design_review_record_v1.md`](../vfx_design_review_record_v1.md) — **D-VFX** |
+
+**Status (2026-05-25):** ☑ **SIGNED — PASS** — after **P2-FIRE-SPARK-011**; see [`../fire_spark_track_closure_plan_v1.md`](../fire_spark_track_closure_plan_v1.md).
+
+**Optional:** interim PNGs on disk; formal **ACCEPTED** captures not track blockers.
+
+### VFX2-DESIGN-002 — Spark read at tactical zoom (optional)
+
+One mock annotation: acceptable spark density over burning cells (not blob). Attach to fire worksheet if TUNE needed.
+
+---
+
+## @coder instructions — dual lane
+
+### Coder A (render / visual)
+
+| ID | Title | Status | Evidence |
+|:---|:---|:---|:---|
+| **P2-VFX-VISUAL-001** | Tactical visual harness | **DONE** | `fire_spark_rows: 308`, tactical gates green |
+| **P2-FIRE-SPARK-010** | Sparks above smoke | **DONE** | `fire_sparks_above_smoke: true` |
+| **P2-FIRE-SPARK-011** | Spark motion tuning @ **0.85** | **DONE** | `fire_spark_011_green` in FULL_APP witness; captures PASS |
+
+### Coder B (witness / CI)
+
+| ID | Title | Status | Evidence |
+|:---|:---|:---|:---|
+| **P2-VFX-WITNESS-001** | Tactical unit tests | **PARTIAL→DONE** | lib tests green; close administratively |
+
+Water slices → [`water_vfx_closure_plan_v1.md`](water_vfx_closure_plan_v1.md) only.
+
+**Rule:** Do **not** remove strategic cull rules to make witness green.
+
+### Copy-paste — Coder A (P2-VFX-VISUAL-001)
+
+```
+Track: VFX-P2 — P2-VFX-VISUAL-001
+Read: docs/archive/2026-06-src-dev/trees/stages/vfx_phase2_closure_plan_v1.md
+      docs/archive/2026-06-src-dev/plans/vfx_coder_phase2_queue_v1.md § P2-VFX-VISUAL-001
+First: set MapCameraDesired / zoom_alpha >= 0.65 before witness stamp in harness
+Do NOT: disable D-F09/D-W09 strategic cull globally
+Verify: cargo run -p proc_A_dine01 --release -- --test visual
+Witness: stage5_full_app_live.json fire_spark_rows > 0, water_particle_rows > 0
+```
+
+### Copy-paste — Coder B (P2-VFX-WITNESS-001)
+
+```
+Track: VFX-P2 — P2-VFX-WITNESS-001
+Read: docs/archive/2026-06-src-dev/trees/stages/vfx_phase2_closure_plan_v1.md
+First: add #[test] with tactical zoom_alpha fixture; assert rows > 0
+Do NOT: touch WGSL unless test proves shader bug
+Verify: cargo test -p proc_A_dine01 --lib gpu_particles stage5
+```
+
+### Done — do not re-implement
+
+FX-FIRE-SPARK-001…006, FX-WATER-SHADER/PARTICLE-001/002 — see queue § Done.
+
+### Acceptance — VFX Phase 2 CLOSED
+
+| # | Criterion |
+|:---:|:---|
+| V1 | P2-VFX-VISUAL-001 + P2-VFX-WITNESS-001 complete |
+| V2 | `fire_sparks_above_smoke: true` stable |
+| V3 | `cargo test -p proc_A_dine01 --lib stage5 gpu_particles` green |
+| V4 | Designer VFX2-DESIGN-001 recorded (PASS or TUNE list) | ☑ **D-VFX** TUNE 2026-05-24 |
+| V5 | P2-FIRE-SPARK-010/011 done or deferred to VFX-P3 |
+| V6 | **Water VFX CLOSED** per [`water_vfx_closure_plan_v1.md`](water_vfx_closure_plan_v1.md) (separate track) |
+
+---
+
+## Changelog
+
+| Version | Date | Notes |
+|:---|:---|:---|
+| v1.1.0 | 2026-05-25 | Link PLAN-FIRE-VFX-CLOSURE-001; D-VFX PASS |
+| v1.0.0 | 2026-05-24 | Closure plan aligned to landed code |

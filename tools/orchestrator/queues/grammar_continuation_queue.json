@@ -9,9 +9,9 @@
     "depends_on": [],
     "status": "done",
     "note": "2026-06-02 aps_tag_taxonomy_v1.schema.json + aps_tags_001_v1.md",
-    "deliverable": "tools/mcp/schemas/aps_tag_taxonomy_v1.schema.json + src/dev/aps_tags_001_v1.md",
+    "deliverable": "tools/mcp/schemas/aps_tag_taxonomy_v1.schema.json + docs/archive/2026-06-src-dev/plans/aps_tags_001_v1.md",
     "docs": [
-      "src/dev/plan_building_grammar_evolution_v1.md"
+      "docs/archive/2026-06-src-dev/plans/plan_building_grammar_evolution_v1.md"
     ]
   },
   {
@@ -40,7 +40,7 @@
     ],
     "status": "done",
     "note": "2026-06-02 aps_preview_004_bevy_worker_v1.md",
-    "deliverable": "src/dev/aps_preview_004_bevy_worker_v1.md",
+    "deliverable": "docs/archive/2026-06-src-dev/plans/aps_preview_004_bevy_worker_v1.md",
     "docs": []
   },
   {
@@ -77,8 +77,8 @@
     "status": "done",
     "deliverable": "src/construction/procedural/assembly_snapshot.rs",
     "docs": [
-      "src/dev/arch_build_grammar_001_schema_v1.md",
-      "src/dev/arch_assembly_graph_002_v1.md"
+      "docs/archive/2026-06-src-dev/plans/arch_build_grammar_001_schema_v1.md",
+      "docs/archive/2026-06-src-dev/plans/arch_assembly_graph_002_v1.md"
     ]
   },
   {
@@ -108,7 +108,7 @@
     "depends_on": [],
     "status": "done",
     "note": "2026-06-02 pg_module_audit_warehouse_v1.md \u2014 2 production modules in pack; PG-MODULE-AUDIT-002 job list drafted",
-    "deliverable": "src/dev/pg_module_audit_warehouse_v1.md",
+    "deliverable": "docs/archive/2026-06-src-dev/plans/pg_module_audit_warehouse_v1.md",
     "docs": [
       "assets/configs/buildings/_module_index.ron"
     ]
@@ -129,9 +129,9 @@
       "manual-keyframe-not-run"
     ],
     "fallback_when_blocked": "DESIGN-PG-MODULE-AUDIT-001",
-    "deliverable": "src/dev/pilot_grammar_001_g4_checklist_v1.md",
+    "deliverable": "docs/archive/2026-06-src-dev/plans/pilot_grammar_001_g4_checklist_v1.md",
     "docs": [
-      "src/dev/mcp_orchestrator_tile_fix_warehouse_slice_v2.md",
+      "docs/archive/2026-06-src-dev/plans/mcp_orchestrator_tile_fix_warehouse_slice_v2.md",
       "utils/TILE_ISO_RIG_README.md"
     ]
   },
@@ -147,7 +147,7 @@
     "status": "done",
     "deliverable": "art_pipeline_suite/assembly_panel.py semantic_tags UI",
     "docs": [
-      "src/dev/aps_tags_001_v1.md"
+      "docs/archive/2026-06-src-dev/plans/aps_tags_001_v1.md"
     ],
     "started_at": "2026-06-03T18:55:51.357950+00:00",
     "note": "aps_tags.py + semantic_tags UI in assembly_panel",
@@ -166,7 +166,7 @@
     "status": "done",
     "note": "grammar_inspector.py rule_chain panel",
     "docs": [
-      "src/dev/arch_assembly_graph_002_v1.md"
+      "docs/archive/2026-06-src-dev/plans/arch_assembly_graph_002_v1.md"
     ],
     "updated_at": "2026-06-03T19:00:26.385089+00:00"
   },
@@ -181,7 +181,7 @@
     ],
     "status": "done",
     "docs": [
-      "src/dev/plan_building_grammar_evolution_v1.md"
+      "docs/archive/2026-06-src-dev/plans/plan_building_grammar_evolution_v1.md"
     ],
     "note": "footprint_canvas + archetype/district grammar generate",
     "updated_at": "2026-06-03T19:00:26.620615+00:00"
@@ -195,10 +195,10 @@
     "stop_point": true,
     "depends_on": [],
     "status": "done",
-    "deliverable": "src/dev/arch_pbg_massing_placement_v1.md",
-    "note": "2026-06-03 thin slice — no generator change until ARCH-PBG-MASSING-002 gate",
+    "deliverable": "docs/archive/2026-06-src-dev/plans/arch_pbg_massing_placement_v1.md",
+    "note": "2026-06-03 thin slice \u2014 no generator change until ARCH-PBG-MASSING-002 gate",
     "docs": [
-      "prompts/planner_fix_auto_build.md"
+      "docs/archive/2026-06-fleet-drain/prompts_drafts/planner_fix_auto_build.md"
     ]
   },
   {
@@ -211,9 +211,9 @@
     "depends_on": [],
     "status": "done",
     "note": "2026-06-03 arch_material_authority_001_v1.md \u2014 blocks pilot until APS material browser + preview + PG-MATERIAL-GENERATION",
-    "deliverable": "src/dev/arch_material_authority_001_v1.md",
+    "deliverable": "docs/archive/2026-06-src-dev/plans/arch_material_authority_001_v1.md",
     "docs": [
-      "prompts/planner_fix_auto_build.md"
+      "docs/archive/2026-06-fleet-drain/prompts_drafts/planner_fix_auto_build.md"
     ]
   },
   {
@@ -230,7 +230,7 @@
     "witness": "debug_runs/aps_material_browser_live.json",
     "note": "2026-06-03 thumbnail grid + click-apply \u2192 update_placement on snapshot",
     "docs": [
-      "src/dev/arch_material_authority_001_v1.md",
+      "docs/archive/2026-06-src-dev/plans/arch_material_authority_001_v1.md",
       "assets/materials/profiles/material_profiles_v1.json"
     ],
     "updated_at": "2026-06-03T20:00:00+00:00"
@@ -272,8 +272,8 @@
       "python -m rust_engine_mcp.cli preview-assembly tools/mcp/schemas/examples/assembly_snapshot_warehouse_industrial_west_production_v1.json --no-browser --write-witness"
     ],
     "docs": [
-      "src/dev/aps_preview_004_bevy_worker_v1.md",
-      "src/dev/arch_material_authority_001_v1.md"
+      "docs/archive/2026-06-src-dev/plans/aps_preview_004_bevy_worker_v1.md",
+      "docs/archive/2026-06-src-dev/plans/arch_material_authority_001_v1.md"
     ],
     "note": "three.js multi-GLB + APS panel + preview-assembly CLI; witness green",
     "updated_at": "2026-06-03T20:02:58.077725+00:00"
@@ -281,7 +281,7 @@
   {
     "id": "PILOT-GRAMMAR-E2E-001",
     "priority": 3,
-    "title": "Grammar E2E witness — IndustrialWarehouse not placement-only",
+    "title": "Grammar E2E witness \u2014 IndustrialWarehouse not placement-only",
     "lane": "grammar-coder",
     "agent": "coder-mcp",
     "depends_on": [
@@ -290,11 +290,131 @@
     ],
     "status": "done",
     "witness": "debug_runs/pilot_grammar_001_grammar_e2e_live.json",
-    "deliverable": "src/dev/pilot_grammar_001_execution_v1.md",
+    "deliverable": "docs/archive/2026-06-src-dev/plans/pilot_grammar_001_execution_v1.md",
     "note": "2026-06-03 generate+grammar_verify+material_profile on all placements green",
     "docs": [
-      "src/dev/pilot_grammar_001_execution_v1.md"
+      "docs/archive/2026-06-src-dev/plans/pilot_grammar_001_execution_v1.md",
+      "docs/archive/2026-06-src-dev/plans/pilot_grammar_agent_orders_v1.md"
     ]
+  },
+  {
+    "id": "APS-MAT-STUDIO-PHASE-A",
+    "priority": 3,
+    "title": "Material Studio Phase A \u2014 Materials tab + previews + library categories",
+    "lane": "grammar-coder",
+    "agent": "coder-mcp",
+    "depends_on": [
+      "PILOT-GRAMMAR-E2E-001",
+      "MCP-APS-MATERIAL-BROWSER-001"
+    ],
+    "status": "done",
+    "witness": "debug_runs/aps_material_studio_live.json",
+    "deliverable": "docs/archive/2026-06-src-dev/plans/plan_material_studio_phase_v1.md",
+    "commands": [
+      "python -m rust_engine_mcp.cli material-studio-witness"
+    ],
+    "docs": [
+      "docs/archive/2026-06-src-dev/plans/plan_material_studio_phase_v1.md",
+      "docs/archive/2026-06-src-dev/plans/pilot_grammar_agent_orders_v1.md"
+    ],
+    "note": "2026-06-03 Materials tab + sphere/wall/building previews + shared library widget; witness green",
+    "updated_at": "2026-06-03T21:30:00+00:00"
+  },
+  {
+    "id": "BUILD-WORKER-001",
+    "priority": 3,
+    "title": "Snapshot material apply at assembly build + manual keyframe path",
+    "lane": "grammar-coder",
+    "agent": "coder-mcp",
+    "depends_on": [
+      "APS-MAT-STUDIO-PHASE-A"
+    ],
+    "status": "done",
+    "witness": "debug_runs/build_worker_001_live.json",
+    "commands": [
+      "python -m rust_engine_mcp.cli assembly-build-run tools/mcp/schemas/examples/assembly_snapshot_warehouse_industrial_west_production_v1.json --ensure-materials --write-witness"
+    ],
+    "docs": [
+      "docs/archive/2026-06-src-dev/plans/arch_blender_worker_contract_v1.md",
+      "docs/archive/2026-06-src-dev/plans/pilot_grammar_agent_orders_v1.md"
+    ],
+    "note": "2026-06-03 snapshot\u2192assembly_import apply verified; ship_policy=manual keyframe_render only",
+    "updated_at": "2026-06-03T21:30:00+00:00"
+  },
+  {
+    "id": "PG-MODULE-AUDIT-002",
+    "priority": 3,
+    "title": "Industrial-west production corner + door (P0 StylePackDrift)",
+    "lane": "grammar-coder",
+    "agent": "coder-mcp",
+    "depends_on": [
+      "DESIGN-PG-MODULE-AUDIT-001"
+    ],
+    "status": "done",
+    "witness": "debug_runs/art_pipeline/pg_module_audit_002_live.json",
+    "commands": [
+      "python -m rust_engine_mcp.cli pg-module-audit-002-run --priorities P0,P1,P2 --no-blender",
+      "python -m rust_engine_mcp.cli validate-report assembly_p0 tools/mcp/schemas/examples/assembly_snapshot_warehouse_industrial_west_production_v1.json --compress 3"
+    ],
+    "docs": [
+      "docs/archive/2026-06-src-dev/plans/pg_module_audit_warehouse_v1.md",
+      "docs/archive/2026-06-src-dev/plans/pilot_grammar_agent_orders_v1.md"
+    ],
+    "note": "2026-06-03 kit_industrial_west_production_001 P0\u2013P3 promoted (incl. stack_chimney_1u, platform_dock_2u); assembly_p0 passed",
+    "updated_at": "2026-06-02T12:00:00+00:00"
+  },
+  {
+    "id": "APS-MAT-003",
+    "priority": 3,
+    "title": "Materials tab thumb cache + scrollable profile rows",
+    "lane": "grammar-mcp",
+    "agent": "coder-mcp",
+    "depends_on": [
+      "APS-MAT-STUDIO-PHASE-A"
+    ],
+    "status": "done",
+    "witness": "debug_runs/aps_material_studio_live.json",
+    "deliverable": "rust_engine_mcp/material_thumb_cache.py + material_library_widget studio_tree rows",
+    "commands": [
+      "python -m rust_engine_mcp.cli material-studio-witness"
+    ],
+    "note": "2026-06-02 disk cache debug_runs/material_thumb_cache + 48px scrollable rows",
+    "updated_at": "2026-06-02T12:00:00+00:00"
+  },
+  {
+    "id": "APS-MAT-002",
+    "priority": 2,
+    "title": "Materials tab studio_tree at scale (nested categories + thumb rows)",
+    "lane": "grammar-mcp",
+    "agent": "coder-mcp",
+    "depends_on": [
+      "APS-MAT-STUDIO-PHASE-A"
+    ],
+    "status": "done",
+    "witness": "debug_runs/aps_mat_002_live.json",
+    "commands": [
+      "python -m rust_engine_mcp.cli aps-mat-002-witness"
+    ],
+    "note": "2026-06-02 studio_tree nested Industrial/Residential roots; scale_ready at 50+ profiles",
+    "updated_at": "2026-06-02T12:00:00+00:00"
+  },
+  {
+    "id": "APS-MAT-008",
+    "priority": 3,
+    "title": "Assembly material_profile + PBR map validation gate",
+    "lane": "grammar-mcp",
+    "agent": "coder-mcp",
+    "depends_on": [
+      "BUILD-WORKER-001"
+    ],
+    "status": "done",
+    "witness": "debug_runs/material_validation_live.json",
+    "deliverable": "validators/material_profiles.py + validate-material-profiles CLI",
+    "commands": [
+      "python -m rust_engine_mcp.cli validate-material-profiles tools/mcp/schemas/examples/assembly_snapshot_warehouse_industrial_west_production_v1.json --write-witness"
+    ],
+    "note": "2026-06-02 folded into assembly_p0 gate; 40 placements passed",
+    "updated_at": "2026-06-02T12:00:00+00:00"
   },
   {
     "id": "MCP-PILOT-GRAMMAR-001",
@@ -304,24 +424,1318 @@
     "agent": "designer-mcp",
     "depends_on": [
       "DESIGN-PILOT-GRAMMAR-001-PREP",
+      "PILOT-GRAMMAR-E2E-001",
+      "APS-MAT-STUDIO-PHASE-A",
+      "BUILD-WORKER-001",
+      "PG-MODULE-AUDIT-002",
       "MCP-APS-UI-003b",
       "MCP-APS-MATERIAL-BROWSER-001",
       "CODER-PG-MATERIAL-GENERATION-001",
       "APS-PREVIEW-002"
     ],
-    "status": "blocked",
+    "status": "paused",
     "blocked_by": [
+      "WH-TRACK-B-PAUSE",
       "human_g4_rejected",
       "headless_bake_not_ship_art",
       "real_keyframe_render_required"
     ],
-    "note": "Operator rejected stills 2026-06-03 — grey slabs, truck in frame, no variant read. Witness: mcp_pilot_grammar_001_rejected_live.json. Index de-indexed.",
+    "note": "PAUSED 2026-06-03 \u2014 does not block APS/Bevy/grammar/HUD lanes. Resume: plan_bevy_hud_grammar_parallel_v1.md",
     "witness": "debug_runs/art_pipeline/mcp_pilot_grammar_001_rejected_live.json",
     "docs": [
-      "src/dev/pilot_grammar_001_g4_checklist_v1.md",
-      "src/dev/mcp_orchestrator_tile_fix_warehouse_slice_v2.md"
+      "docs/archive/2026-06-src-dev/plans/pilot_grammar_001_g4_checklist_v1.md",
+      "docs/archive/2026-06-src-dev/plans/mcp_orchestrator_tile_fix_warehouse_slice_v2.md",
+      "docs/archive/2026-06-src-dev/plans/plan_bevy_hud_grammar_parallel_v1.md"
     ],
-    "started_at": "2026-06-03T20:09:57.937481+00:00",
-    "updated_at": "2026-06-03T20:13:33.370206+00:00"
+    "started_at": "2026-06-04T02:31:07.600590+00:00",
+    "updated_at": "2026-06-04T02:32:12.149457+00:00"
+  },
+  {
+    "id": "WH-TRACK-B-PAUSE",
+    "priority": 99,
+    "title": "Warehouse Track B keyframe/G4 \u2014 orchestrator pause (non-blocking)",
+    "lane": "grammar-orchestrator",
+    "agent": "orchestrator",
+    "status": "active",
+    "note": "Does not block Lane A/A'/C/product HUD. Operator runbook kept for resume.",
+    "docs": [
+      "docs/archive/2026-06-src-dev/plans/plan_bevy_hud_grammar_parallel_v1.md"
+    ]
+  },
+  {
+    "id": "APS-BEVY-PREVIEW-002",
+    "priority": 2,
+    "title": "Bevy preview worker polish + context thumb from assembly PNG",
+    "lane": "aps-bevy",
+    "agent": "coder-mcp",
+    "depends_on": [
+      "APS-PREVIEW-001"
+    ],
+    "status": "done",
+    "witness": "debug_runs/aps_bevy_preview_002_live.json",
+    "commands": [
+      "python -m rust_engine_mcp.cli aps-bevy-preview-002"
+    ],
+    "docs": [
+      "docs/archive/2026-06-src-dev/plans/aps_preview_004_bevy_worker_v1.md",
+      "docs/archive/2026-06-src-dev/plans/plan_bevy_hud_grammar_parallel_v1.md"
+    ],
+    "note": "2026-06-02 context thumb piped assembly_preview_panel \u2192 slot_preview_panel; PNG witness green",
+    "updated_at": "2026-06-02T12:00:00+00:00"
+  },
+  {
+    "id": "APS-BEVY-QC-HUD-001",
+    "priority": 2,
+    "title": "egui in-sim artist QC \u2014 snapshot path, placements, material_profile read-only",
+    "lane": "aps-bevy",
+    "agent": "coder",
+    "depends_on": [],
+    "status": "done",
+    "witness": "debug_runs/aps_bevy_qc_hud_001_live.json",
+    "brief": "prompts/designer_questions/aps_bevy_qc_hud_brief_v1.md",
+    "docs": [
+      "docs/archive/2026-06-src-dev/plans/plan_bevy_hud_grammar_parallel_v1.md",
+      "docs/archive/2026-06-src-dev/plans/bevy_hud_lanes_agent_orders_v1.md",
+      "src/gui/assembly_snapshot_qc_ui.rs"
+    ],
+    "note": "v1 shipped \u2014 Ctrl+Shift+Q, F3 entry, spawn preview hint",
+    "updated_at": "2026-06-03T00:00:00+00:00"
+  },
+  {
+    "id": "APS-BEVY-QC-HUD-001-DESIGN",
+    "priority": 2,
+    "title": "QC panel UX sign-off \u2014 wireframe, copy, registry",
+    "lane": "aps-bevy",
+    "agent": "designer",
+    "depends_on": [
+      "APS-BEVY-QC-HUD-001"
+    ],
+    "status": "done",
+    "completed_at": "2026-06-03",
+    "verdict": "PASS WITH NOTES",
+    "witness": "docs/archive/2026-06-src-dev/plans/design_aps_bevy_qc_hud_v1.md",
+    "brief": "prompts/designer_questions/aps_bevy_qc_hud_brief_v1.md",
+    "unblocks": [
+      "APS-BEVY-QC-HUD-001-V2"
+    ],
+    "docs": [
+      "docs/archive/2026-06-src-dev/plans/bevy_hud_lanes_agent_orders_v1.md"
+    ]
+  },
+  {
+    "id": "APS-BEVY-QC-HUD-001-V2",
+    "priority": 2,
+    "title": "QC v2 \u2014 footprint highlight on row select + optional P0 read-only strip",
+    "lane": "aps-bevy",
+    "agent": "coder+designer",
+    "depends_on": [
+      "APS-BEVY-QC-HUD-001-DESIGN"
+    ],
+    "status": "done",
+    "completed_at": "2026-06-03",
+    "verdict": "PASS",
+    "witness": "debug_runs/aps_bevy_qc_hud_001_v2_live.json",
+    "design_signoff": "docs/archive/2026-06-src-dev/plans/design_aps_bevy_qc_hud_v2.md",
+    "docs": [
+      "src/gui/assembly_snapshot_qc_ui.rs",
+      "docs/archive/2026-06-src-dev/plans/bevy_hud_lanes_agent_orders_v1.md",
+      "docs/archive/2026-06-src-dev/plans/design_aps_bevy_qc_hud_v2.md"
+    ]
+  },
+  {
+    "id": "SIM-HUD-PRODUCT-001",
+    "priority": 3,
+    "title": "Simulation product HUD \u2014 PLAY-01 dock / in_game_hud (not APS Tk)",
+    "lane": "product-ui",
+    "agent": "designer+coder",
+    "status": "done",
+    "completed_at": "2026-06-03",
+    "verdict": "PASS (full)",
+    "witness": "debug_runs/sim_hud_product_close_001_live.json",
+    "note": "Phase 3 close \u2014 5/5 slice witnesses green",
+    "brief": "prompts/designer_questions/sim_hud_product_brief_v1.md",
+    "docs": [
+      "src/dev/post_stage6_active_todos.md",
+      "docs/archive/2026-06-src-dev/plans/plan_bevy_hud_grammar_parallel_v1.md",
+      "docs/archive/2026-06-src-dev/plans/bevy_hud_lanes_agent_orders_v1.md"
+    ]
+  },
+  {
+    "id": "SIM-HUD-SLICE-PLAY01",
+    "priority": 3,
+    "title": "PLAY-01 session entry/exit \u2014 editor chrome hide/restore",
+    "lane": "product-ui",
+    "agent": "coder",
+    "depends_on": [],
+    "status": "done",
+    "witness": "debug_runs/sim_hud_play01_live.json",
+    "docs": [
+      "src/gui/hud/simulation_session.rs",
+      "docs/archive/2026-06-src-dev/plans/bevy_hud_lanes_agent_orders_v1.md"
+    ]
+  },
+  {
+    "id": "SIM-HUD-SLICE-OPS",
+    "priority": 3,
+    "title": "Ops strip readability \u2014 designer spec",
+    "lane": "product-ui",
+    "agent": "designer",
+    "depends_on": [
+      "SIM-HUD-SLICE-PLAY01"
+    ],
+    "status": "done",
+    "witness": "docs/archive/2026-06-src-dev/plans/design_sim_hud_ops_v1.md",
+    "completed_at": "2026-06-03",
+    "docs": [
+      "docs/archive/2026-06-src-dev/plans/bevy_hud_lanes_agent_orders_v1.md"
+    ]
+  },
+  {
+    "id": "SIM-HUD-SLICE-OPS-CODER",
+    "priority": 3,
+    "title": "Ops strip readability \u2014 implement",
+    "lane": "product-ui",
+    "agent": "coder",
+    "depends_on": [
+      "SIM-HUD-SLICE-OPS"
+    ],
+    "status": "done",
+    "witness": "debug_runs/sim_hud_slice_ops_live.json",
+    "spec": "docs/archive/2026-06-src-dev/plans/design_sim_hud_ops_v1.md",
+    "docs": [
+      "src/gui/in_game_hud.rs"
+    ]
+  },
+  {
+    "id": "SIM-HUD-SLICE-DOCK",
+    "priority": 3,
+    "title": "Collapsed command tray default \u2014 designer spec",
+    "lane": "product-ui",
+    "agent": "designer",
+    "depends_on": [
+      "SIM-HUD-SLICE-PLAY01"
+    ],
+    "status": "done",
+    "witness": "docs/archive/2026-06-src-dev/plans/design_sim_hud_dock_v1.md",
+    "completed_at": "2026-06-03",
+    "docs": [
+      "docs/archive/2026-06-src-dev/plans/bevy_hud_lanes_agent_orders_v1.md"
+    ]
+  },
+  {
+    "id": "SIM-HUD-SLICE-DOCK-CODER",
+    "priority": 3,
+    "title": "Collapsed command tray \u2014 implement + PLAY-01 witness",
+    "lane": "product-ui",
+    "agent": "coder",
+    "depends_on": [
+      "SIM-HUD-SLICE-DOCK"
+    ],
+    "status": "done",
+    "witness": "debug_runs/sim_hud_slice_dock_live.json",
+    "spec": "docs/archive/2026-06-src-dev/plans/design_sim_hud_dock_v1.md",
+    "docs": [
+      "src/gui/hud/simulation_session.rs",
+      "src/gui/hud/dock_shell.rs"
+    ]
+  },
+  {
+    "id": "SIM-HUD-SLICE-MINIMAP",
+    "priority": 3,
+    "title": "Minimap sim overlays M1\u2013M3 \u2014 designer spec",
+    "lane": "product-ui",
+    "agent": "designer",
+    "depends_on": [
+      "SIM-HUD-SLICE-PLAY01"
+    ],
+    "status": "done",
+    "witness": "docs/archive/2026-06-src-dev/plans/design_sim_hud_minimap_v1.md",
+    "completed_at": "2026-06-03",
+    "docs": [
+      "docs/archive/2026-06-src-dev/plans/bevy_hud_lanes_agent_orders_v1.md"
+    ]
+  },
+  {
+    "id": "SIM-HUD-SLICE-MINIMAP-CODER",
+    "priority": 3,
+    "title": "Minimap sim overlay defaults \u2014 implement",
+    "lane": "product-ui",
+    "agent": "coder",
+    "depends_on": [
+      "SIM-HUD-SLICE-MINIMAP"
+    ],
+    "status": "done",
+    "witness": "debug_runs/sim_hud_slice_minimap_live.json",
+    "spec": "docs/archive/2026-06-src-dev/plans/design_sim_hud_minimap_v1.md",
+    "docs": [
+      "src/gui/minimap_shell.rs",
+      "src/gui/hud/simulation_session.rs"
+    ]
+  },
+  {
+    "id": "SIM-HUD-SLICE-BUILD",
+    "priority": 3,
+    "title": "Build rail / context tray \u2014 designer spec",
+    "lane": "product-ui",
+    "agent": "designer",
+    "depends_on": [
+      "SIM-HUD-SLICE-PLAY01"
+    ],
+    "status": "done",
+    "witness": "docs/archive/2026-06-src-dev/plans/design_sim_hud_build_v1.md",
+    "completed_at": "2026-06-03",
+    "docs": [
+      "docs/archive/2026-06-src-dev/plans/bevy_hud_lanes_agent_orders_v1.md"
+    ]
+  },
+  {
+    "id": "SIM-HUD-SLICE-BUILD-CODER",
+    "priority": 3,
+    "title": "Build rail / context tray \u2014 implement",
+    "lane": "product-ui",
+    "agent": "coder",
+    "depends_on": [
+      "SIM-HUD-SLICE-BUILD"
+    ],
+    "status": "done",
+    "witness": "debug_runs/sim_hud_slice_build_live.json",
+    "spec": "docs/archive/2026-06-src-dev/plans/design_sim_hud_build_v1.md",
+    "docs": [
+      "src/gui/in_game_hud.rs",
+      "src/gui/hud/simulation_shell_phase2.rs"
+    ]
+  },
+  {
+    "id": "GRAMMAR-ITER-001-SPEC",
+    "priority": 4,
+    "title": "Iterative grammar spec + request schema",
+    "lane": "grammar-planner",
+    "agent": "planner-mcp",
+    "depends_on": [
+      "APS-PREVIEW-001"
+    ],
+    "status": "done",
+    "deliverable": "docs/archive/2026-06-src-dev/plans/grammar_iter_001_spec_v1.md",
+    "docs": [
+      "tools/mcp/schemas/grammar_iterate_request_v1.schema.json",
+      "assets/configs/buildings/grammars/grammar_labels_v1.json"
+    ],
+    "updated_at": "2026-06-03T00:00:00+00:00"
+  },
+  {
+    "id": "GRAMMAR-ITER-001-UI",
+    "priority": 4,
+    "title": "Iterate grammar panel wireframe + label glossary review",
+    "lane": "grammar-designer",
+    "agent": "designer",
+    "depends_on": [
+      "GRAMMAR-ITER-001-SPEC"
+    ],
+    "status": "done",
+    "completed_at": "2026-06-03",
+    "witness": "docs/archive/2026-06-src-dev/plans/design_grammar_iter_ui_v1.md",
+    "wireframe": "prompts/designer_questions/grammar_iter_wireframe_v1.md",
+    "brief": "prompts/designer_questions/grammar_iter_wireframe_brief_v1.md",
+    "docs": [
+      "docs/archive/2026-06-src-dev/plans/grammar_iter_001_spec_v1.md",
+      "docs/archive/2026-06-src-dev/plans/grammar_iter_agent_orders_v1.md"
+    ]
+  },
+  {
+    "id": "GRAMMAR-ITER-001-APS1",
+    "priority": 4,
+    "title": "APS Phase 1 \u2014 inspector lineage + footprint diff UI",
+    "lane": "grammar-coder",
+    "agent": "coder-mcp",
+    "depends_on": [
+      "GRAMMAR-ITER-001-SPEC",
+      "GRAMMAR-ITER-001-UI"
+    ],
+    "status": "done",
+    "witness": "debug_runs/grammar_iter_001_aps1_live.json",
+    "docs": [
+      "docs/archive/2026-06-src-dev/plans/grammar_iter_001_spec_v1.md",
+      "docs/archive/2026-06-src-dev/plans/grammar_iter_agent_orders_v1.md"
+    ]
+  },
+  {
+    "id": "GRAMMAR-ITER-001-API",
+    "priority": 4,
+    "title": "iterate_grammar API \u2014 massing / material_strategy / placement",
+    "lane": "grammar-coder",
+    "agent": "coder-mcp",
+    "depends_on": [
+      "GRAMMAR-ITER-001-SPEC",
+      "GRAMMAR-ITER-SNAPSHOT-001",
+      "GRAMMAR-ITER-RESULT-001"
+    ],
+    "status": "done",
+    "witness": "debug_runs/grammar_iter_001_massing_live.json",
+    "docs": [
+      "tools/mcp/schemas/grammar_iterate_request_v1.schema.json",
+      "tools/mcp/schemas/grammar_iterate_result_v1.schema.json",
+      "docs/archive/2026-06-fleet-drain/dev_dispatch/orchestrator_coder_dispatch_20260603_v1.md"
+    ],
+    "note": "Pair with GRAMMAR-ITER-001-RUST for massing parity"
+  },
+  {
+    "id": "GRAMMAR-ITER-001-RUST",
+    "priority": 4,
+    "title": "Rust iterate_grammar massing parity",
+    "lane": "grammar-coder",
+    "agent": "coder",
+    "depends_on": [
+      "GRAMMAR-ITER-001-SPEC"
+    ],
+    "status": "done",
+    "docs": [
+      "src/construction/procedural/building_grammar.rs",
+      "docs/archive/2026-06-src-dev/plans/grammar_iter_001_spec_v1.md"
+    ]
+  },
+  {
+    "id": "APS-UX-TOOLTIPS-002",
+    "priority": 1,
+    "title": "Tooltip copy for all APS tabs \u2014 aps_tooltip_copy_v1.md",
+    "lane": "aps-designer",
+    "agent": "designer",
+    "depends_on": [
+      "APS-UX-AUDIT-001"
+    ],
+    "status": "done",
+    "output": "prompts/designer_questions/aps_tooltip_copy_v1.md",
+    "brief": "prompts/designer_questions/aps_tooltip_copy_brief_v1.md",
+    "docs": [
+      "docs/archive/2026-06-src-dev/plans/designer_planner_parallel_wave_20260603_v1.md",
+      "docs/archive/2026-06-src-dev/plans/design_aps_ux_audit_v1.md"
+    ],
+    "handoff": "APS-UX-TOOLTIPS-002-MERGE",
+    "handoff_agent": "coder-mcp"
+  },
+  {
+    "id": "APS-ATLAS-LEGEND-001",
+    "priority": 1,
+    "title": "Atlas UV grid overlay legend + plain-language validate copy",
+    "lane": "aps-designer",
+    "agent": "designer",
+    "depends_on": [
+      "APS-UX-AUDIT-001"
+    ],
+    "status": "done",
+    "output": "docs/archive/2026-06-src-dev/plans/design_aps_atlas_preview_legend_v1.md",
+    "brief": "prompts/designer_questions/aps_atlas_legend_brief_v1.md",
+    "docs": [
+      "src/dev/plan_aps_artist_tool_exec_v1.md"
+    ],
+    "handoff": "APS-ATLAS-LEGEND-001-IMPL",
+    "handoff_agent": "coder-mcp"
+  },
+  {
+    "id": "APS-MAT-IA-001",
+    "priority": 1,
+    "title": "Materials tab category tree IA + assignment flow",
+    "lane": "aps-designer",
+    "agent": "designer",
+    "depends_on": [
+      "APS-UX-AUDIT-001"
+    ],
+    "status": "done",
+    "output": "docs/archive/2026-06-src-dev/plans/design_aps_materials_tab_ia_v1.md",
+    "brief": "prompts/designer_questions/aps_materials_tab_ia_brief_v1.md",
+    "docs": [
+      "docs/archive/2026-06-src-dev/plans/aps_authoring_tool_roadmap_v1.md"
+    ],
+    "handoff": "APS-MAT-IA-001-IMPL",
+    "handoff_agent": "coder-mcp"
+  },
+  {
+    "id": "APS-UX-TOOLTIPS-002-MERGE",
+    "priority": 1,
+    "title": "Merge + bind 42 tooltip keys (aps_tooltip_copy_v1)",
+    "lane": "aps-coder",
+    "agent": "coder-mcp",
+    "depends_on": [
+      "APS-UX-TOOLTIPS-002"
+    ],
+    "status": "done",
+    "witness": "debug_runs/aps_ux_tooltips_002_live.json",
+    "docs": [
+      "prompts/designer_questions/aps_tooltip_copy_v1.md",
+      "tools/mcp/art_pipeline_suite/aps_tooltips.py"
+    ]
+  },
+  {
+    "id": "APS-ATLAS-LEGEND-001-IMPL",
+    "priority": 1,
+    "title": "Atlas UV legend + plain validate copy in panels",
+    "lane": "aps-coder",
+    "agent": "coder-mcp",
+    "depends_on": [
+      "APS-ATLAS-LEGEND-001"
+    ],
+    "status": "done",
+    "witness": "debug_runs/aps_atlas_legend_001_live.json",
+    "docs": [
+      "docs/archive/2026-06-src-dev/plans/design_aps_atlas_preview_legend_v1.md",
+      "tools/mcp/art_pipeline_suite/atlas_preview_panel.py"
+    ]
+  },
+  {
+    "id": "APS-MAT-IA-001-IMPL",
+    "priority": 1,
+    "title": "Materials tab tree + Use in Assembly CTA polish",
+    "lane": "aps-coder",
+    "agent": "coder-mcp",
+    "depends_on": [
+      "APS-MAT-IA-001"
+    ],
+    "status": "done",
+    "witness": "debug_runs/aps_mat_ia_001_live.json",
+    "docs": [
+      "docs/archive/2026-06-src-dev/plans/design_aps_materials_tab_ia_v1.md",
+      "tools/mcp/art_pipeline_suite/material_library_widget.py"
+    ]
+  },
+  {
+    "id": "GRAMMAR-ITER-SNAPSHOT-001",
+    "priority": 4,
+    "title": "assembly_snapshot optional grammar_lineage + grammar_overrides schema",
+    "lane": "grammar-planner",
+    "agent": "planner-mcp",
+    "depends_on": [
+      "GRAMMAR-ITER-001-SPEC"
+    ],
+    "status": "done",
+    "deliverable": "tools/mcp/schemas/assembly_snapshot_v1.schema.json",
+    "updated_at": "2026-06-03T12:00:00+00:00"
+  },
+  {
+    "id": "GRAMMAR-ITER-RESULT-001",
+    "priority": 4,
+    "title": "grammar_iterate_result_v1.schema.json",
+    "lane": "grammar-planner",
+    "agent": "planner-mcp",
+    "depends_on": [
+      "GRAMMAR-ITER-001-SPEC"
+    ],
+    "status": "done",
+    "deliverable": "tools/mcp/schemas/grammar_iterate_result_v1.schema.json",
+    "updated_at": "2026-06-03T12:00:00+00:00"
+  },
+  {
+    "id": "APS-VALIDATOR-PLAIN-001",
+    "priority": 1,
+    "title": "Validator codes \u2192 artist plain-language map (P0 / assembly / material)",
+    "lane": "aps-planner",
+    "agent": "planner-mcp",
+    "depends_on": [],
+    "status": "done",
+    "deliverable": "docs/archive/2026-06-src-dev/plans/aps_validator_plain_language_v1.md",
+    "updated_at": "2026-06-03T12:00:00+00:00"
+  },
+  {
+    "id": "APS-VALIDATOR-PLAIN-002",
+    "priority": 1,
+    "title": "Wire plain-language map into APS P0 gate UI",
+    "lane": "aps-coder",
+    "agent": "coder-mcp",
+    "depends_on": [
+      "APS-VALIDATOR-PLAIN-001"
+    ],
+    "status": "done",
+    "witness": "debug_runs/aps_validator_plain_002_live.json",
+    "docs": [
+      "docs/archive/2026-06-fleet-drain/dev_dispatch/orchestrator_coder_dispatch_20260603_v1.md"
+    ]
+  },
+  {
+    "id": "APS-MAT-CATEGORY-SCHEMA-001",
+    "priority": 2,
+    "title": "Material library category tree schema for APS-MAT-002 scale",
+    "lane": "aps-planner",
+    "agent": "planner-mcp",
+    "depends_on": [],
+    "status": "done",
+    "deliverable": "assets/materials/profiles/material_category_tree_v1.json",
+    "updated_at": "2026-06-03T12:00:00+00:00"
+  },
+  {
+    "id": "APS-MAT-003",
+    "priority": 2,
+    "title": "Materials tab \u2014 load material_category_tree_v1.json nested browse",
+    "lane": "aps-coder",
+    "agent": "coder-mcp",
+    "depends_on": [
+      "APS-MAT-CATEGORY-SCHEMA-001"
+    ],
+    "status": "done",
+    "witness": "debug_runs/aps_mat_003_category_tree_live.json",
+    "docs": [
+      "docs/archive/2026-06-fleet-drain/dev_dispatch/orchestrator_coder_dispatch_20260603_v1.md"
+    ]
+  },
+  {
+    "id": "GRAMMAR-002-SLICE-001",
+    "priority": 5,
+    "title": "Facade + roof partial regen slice plan (T2/T3)",
+    "lane": "grammar-planner",
+    "agent": "planner-mcp",
+    "depends_on": [
+      "GRAMMAR-001"
+    ],
+    "status": "done",
+    "deliverable": "docs/archive/2026-06-src-dev/plans/grammar_002_slice_001_v1.md",
+    "updated_at": "2026-06-03T12:00:00+00:00"
+  },
+  {
+    "id": "GRAMMAR-002-G2S-2",
+    "priority": 5,
+    "title": "Rust apply_roof_layer + apply_facade_layer",
+    "lane": "grammar-coder",
+    "agent": "coder",
+    "depends_on": [
+      "GRAMMAR-ITER-001-API",
+      "GRAMMAR-002-SLICE-001"
+    ],
+    "status": "done",
+    "witness": "debug_runs/grammar_002_roof_facade_live.json",
+    "docs": [
+      "docs/archive/2026-06-src-dev/plans/grammar_002_slice_001_v1.md",
+      "docs/archive/2026-06-fleet-drain/dev_dispatch/orchestrator_coder_dispatch_20260603_v1.md"
+    ]
+  },
+  {
+    "id": "GRAMMAR-002-G2S-3",
+    "priority": 5,
+    "title": "Python roof/facade iterate_grammar parity + CLI",
+    "lane": "grammar-coder",
+    "agent": "coder-mcp",
+    "depends_on": [
+      "GRAMMAR-002-G2S-2"
+    ],
+    "status": "done",
+    "witness": "debug_runs/grammar_002_roof_facade_live.json",
+    "docs": [
+      "docs/archive/2026-06-src-dev/plans/grammar_002_slice_001_v1.md"
+    ]
+  },
+  {
+    "id": "GRAMMAR-ITER-001-E2E",
+    "priority": 4,
+    "title": "E2E witness \u2014 massing iteration + preview loop",
+    "lane": "grammar-coder",
+    "agent": "coder-mcp",
+    "depends_on": [
+      "GRAMMAR-ITER-001-API",
+      "GRAMMAR-ITER-001-APS1"
+    ],
+    "status": "done",
+    "witness": "debug_runs/grammar_iter_001_e2e_live.json",
+    "docs": [
+      "docs/archive/2026-06-src-dev/plans/grammar_iter_agent_orders_v1.md"
+    ]
+  },
+  {
+    "id": "MCP-P0-PLAIN-001",
+    "priority": 1,
+    "title": "validate_p0_gate_plain MCP tool + productivity P0 trio",
+    "lane": "aps-coder",
+    "agent": "coder-mcp",
+    "depends_on": [
+      "APS-VALIDATOR-PLAIN-002"
+    ],
+    "status": "done",
+    "witness": "debug_runs/mcp_productivity_p0_live.json",
+    "docs": [
+      "docs/archive/2026-06-src-dev/plans/plan_mcp_productivity_chain_v1.md",
+      "tools/mcp/python/rust_engine_mcp/mcp_productivity_p0.py"
+    ]
+  },
+  {
+    "id": "APS-UX-ASYNC-001",
+    "priority": 1,
+    "title": "Job strip + threaded tile-batch/pack/bake/generate/preview",
+    "lane": "aps-coder",
+    "agent": "coder-mcp",
+    "depends_on": [],
+    "status": "done",
+    "witness": "debug_runs/aps_ux_async_001_live.json",
+    "commands": [
+      "pytest tools/mcp/python/tests/test_aps_ux_async_001.py"
+    ],
+    "docs": [
+      "docs/archive/2026-06-src-dev/plans/plan_aps_ux_async_001_exec_v1.md"
+    ]
+  },
+  {
+    "id": "APS-UX-NONBLOCK-001",
+    "priority": 1,
+    "title": "Replace routine modals with inline + status log",
+    "lane": "aps-coder",
+    "agent": "coder-mcp",
+    "depends_on": [
+      "APS-UX-ASYNC-001"
+    ],
+    "status": "done",
+    "witness": "debug_runs/aps_ux_nonblock_001_live.json",
+    "commands": [
+      "pytest tools/mcp/python/tests/test_aps_ux_nonblock_001.py"
+    ],
+    "docs": [
+      "docs/archive/2026-06-src-dev/plans/plan_aps_ux_polish_program_v1.md",
+      "docs/archive/2026-06-src-dev/plans/aps_ux_professional_polish_rules_v1.md"
+    ]
+  },
+  {
+    "id": "APS-UX-SCROLL-001",
+    "priority": 2,
+    "title": "Catalog module list captures mousewheel (scroll owner fix)",
+    "lane": "aps-coder",
+    "agent": "coder-mcp",
+    "depends_on": [
+      "APS-UX-NONBLOCK-001"
+    ],
+    "status": "done",
+    "witness": "debug_runs/aps_ux_nonblock_001_live.json",
+    "docs": [
+      "docs/archive/2026-06-src-dev/plans/plan_aps_ux_polish_program_v1.md"
+    ]
+  },
+  {
+    "id": "APS-UX-DENSITY-001",
+    "priority": 3,
+    "title": "Collapse Assembly tags + grammar by default (960x600)",
+    "lane": "aps-coder",
+    "agent": "coder-mcp",
+    "depends_on": [
+      "APS-UX-NONBLOCK-001"
+    ],
+    "status": "done",
+    "witness": "debug_runs/aps_ux_density_001_live.json",
+    "commands": [
+      "pytest tools/mcp/python/tests/test_aps_ux_polish_density_tokens.py"
+    ],
+    "docs": [
+      "docs/archive/2026-06-src-dev/plans/plan_aps_ux_polish_program_v1.md",
+      "docs/archive/2026-06-src-dev/plans/design_aps_ux_density_001_v1.md"
+    ],
+    "designer_signoff": "docs/archive/2026-06-src-dev/plans/design_aps_ux_density_001_v1.md"
+  },
+  {
+    "id": "APS-UX-TOKENS-001",
+    "priority": 4,
+    "title": "Shared theme: fonts >=9pt, spacing, dynamic wrap",
+    "lane": "aps-coder",
+    "agent": "coder-mcp",
+    "depends_on": [
+      "APS-UX-ASYNC-001",
+      "APS-UX-NONBLOCK-001"
+    ],
+    "status": "done",
+    "witness": "debug_runs/aps_ux_tokens_001_live.json",
+    "commands": [
+      "pytest tools/mcp/python/tests/test_aps_ux_polish_density_tokens.py"
+    ],
+    "docs": [
+      "docs/archive/2026-06-src-dev/plans/plan_aps_ux_polish_program_v1.md"
+    ]
+  },
+  {
+    "id": "APS-UX-POLISH-001",
+    "priority": 5,
+    "title": "P0 a11y \u2014 validation color, material status text, metadata visibility",
+    "lane": "aps-coder",
+    "agent": "coder-mcp",
+    "depends_on": [
+      "APS-UX-DENSITY-001",
+      "APS-UX-TOKENS-001"
+    ],
+    "status": "done",
+    "witness": "debug_runs/aps_ux_polish_001_live.json",
+    "commands": [
+      "pytest tools/mcp/python/tests/test_aps_ux_polish_001.py"
+    ],
+    "docs": [
+      "docs/archive/2026-06-src-dev/plans/design_aps_ux_polish_signoff_v1.md",
+      "docs/archive/2026-06-src-dev/plans/design_aps_ux_audit_v1.md"
+    ]
+  },
+  {
+    "id": "AGENT-LANG-001-SPEC",
+    "priority": 0,
+    "title": "AGENT-LANG normative grammar \u2014 BLANG + $ref + emoji status",
+    "lane": "mcp-planner",
+    "agent": "planner-mcp",
+    "depends_on": [],
+    "status": "done",
+    "deliverable": "src/dev/agent_lang_v1.md",
+    "docs": [
+      "docs/archive/2026-06-src-dev/plans/plan_mcp_agent_lang_program_v1.md"
+    ],
+    "updated_at": "2026-06-03T12:00:00+00:00"
+  },
+  {
+    "id": "AGENT-LANG-002-REF",
+    "priority": 0,
+    "title": "$ref syntax pass on agent order docs",
+    "lane": "mcp-planner",
+    "agent": "planner-mcp",
+    "depends_on": [
+      "AGENT-LANG-001-SPEC"
+    ],
+    "status": "done",
+    "deliverable": "docs/archive/2026-06-fleet-drain/dev_dispatch/orchestrator_coder_dispatch_20260603_v1.md v1.1 + grammar_iter + bevy_hud orders v1.1",
+    "docs": [
+      "docs/archive/2026-06-fleet-drain/dev_dispatch/orchestrator_coder_dispatch_20260603_v1.md",
+      "docs/archive/2026-06-src-dev/plans/grammar_iter_agent_orders_v1.md",
+      "docs/archive/2026-06-src-dev/plans/bevy_hud_lanes_agent_orders_v1.md"
+    ],
+    "updated_at": "2026-06-03T20:00:00+00:00",
+    "note": "Delta $ref only \u2014 coder-mcp queue rows untouched"
+  },
+  {
+    "id": "MCP-DOC-READ-SPEC-001",
+    "priority": 0,
+    "title": "agent_doc_touch schema + ledger format",
+    "lane": "mcp-planner",
+    "agent": "planner-mcp",
+    "depends_on": [
+      "AGENT-LANG-001-SPEC"
+    ],
+    "status": "done",
+    "deliverable": "tools/mcp/schemas/agent_doc_touch_v1.schema.json",
+    "updated_at": "2026-06-03T18:00:00+00:00"
+  },
+  {
+    "id": "MCP-DOC-READ-001-IMPL",
+    "priority": 0,
+    "title": "agent_doc_touch MCP + CLI + read ledger",
+    "lane": "mcp-coder",
+    "agent": "coder-mcp",
+    "depends_on": [
+      "MCP-DOC-READ-SPEC-001"
+    ],
+    "status": "done",
+    "witness": "debug_runs/agent_doc_read_001_live.json",
+    "docs": [
+      "docs/archive/2026-06-src-dev/plans/plan_mcp_agent_lang_program_v1.md"
+    ],
+    "updated_at": "2026-06-03T18:00:00+00:00"
+  },
+  {
+    "id": "MCP-DOC-READ-002-IMPL",
+    "priority": 1,
+    "title": "agent_run_append \u2192 run_events.jsonl",
+    "lane": "mcp-coder",
+    "agent": "coder-mcp",
+    "depends_on": [
+      "MCP-DOC-READ-001-IMPL"
+    ],
+    "status": "done",
+    "witness": "debug_runs/agent_run_append_001_live.json",
+    "docs": [
+      "docs/archive/2026-06-src-dev/plans/plan_mcp_productivity_chain_v1.md"
+    ],
+    "updated_at": "2026-06-03T18:00:00+00:00"
+  },
+  {
+    "id": "MCP-GRAMMAR-ITER-TOOL",
+    "priority": 1,
+    "title": "grammar_iterate MCP server tool (CLI parity)",
+    "lane": "mcp-coder",
+    "agent": "coder-mcp",
+    "depends_on": [
+      "GRAMMAR-ITER-001-API"
+    ],
+    "status": "done",
+    "witness": "debug_runs/grammar_iter_001_massing_live.json",
+    "docs": [
+      "docs/archive/2026-06-src-dev/plans/plan_mcp_agent_lang_program_v1.md"
+    ],
+    "updated_at": "2026-06-03T18:00:00+00:00"
+  },
+  {
+    "id": "MCP-SNAPSHOT-DIFF-001-IMPL",
+    "priority": 1,
+    "title": "snapshot_diff_brief MCP + CLI",
+    "lane": "mcp-coder",
+    "agent": "coder-mcp",
+    "depends_on": [
+      "GRAMMAR-ITER-001-API"
+    ],
+    "status": "done",
+    "witness": "debug_runs/grammar_iter_001_aps1_live.json",
+    "docs": [
+      "docs/archive/2026-06-src-dev/plans/plan_mcp_productivity_chain_v1.md"
+    ],
+    "updated_at": "2026-06-03T18:00:00+00:00"
+  },
+  {
+    "id": "AGENT-LANG-003-BLANG",
+    "priority": 0,
+    "title": "BLANG card in token_savings_guide + MICRO_TOOLS_REGISTRY",
+    "lane": "mcp-planner",
+    "agent": "planner-mcp",
+    "depends_on": [
+      "AGENT-LANG-001-SPEC",
+      "MCP-DOC-READ-001-IMPL"
+    ],
+    "status": "done",
+    "docs": [
+      "src/dev/agent_lang_v1.md",
+      "tools/mcp/MICRO_TOOLS_REGISTRY_v1.md"
+    ],
+    "note": "token_savings_guide.blang + Tier 1a-BLANG registry table",
+    "updated_at": "2026-06-03T20:00:00+00:00"
+  },
+  {
+    "id": "AGENT-LANG-004-RITUAL",
+    "priority": 0,
+    "title": "BLANG loop in .cursor/agents orchestrator + coder-mcp + coder + planner-mcp",
+    "lane": "mcp-planner",
+    "agent": "planner-mcp",
+    "depends_on": [
+      "AGENT-LANG-001-SPEC"
+    ],
+    "status": "done",
+    "docs": [
+      ".cursor/agents/coder-mcp.md",
+      ".cursor/agents/orchestrator.md",
+      ".cursor/agents/coder.md",
+      ".cursor/agents/planner-mcp.md"
+    ],
+    "updated_at": "2026-06-03T19:00:00+00:00"
+  },
+  {
+    "id": "AGENT-LANG-005-HANDOFF",
+    "priority": 0,
+    "title": "HANDOFF Active programs \u2014 \u27e8ID\u27e9 + \ud83d\udfe2/\ud83d\udd34 + $ref only",
+    "lane": "mcp-planner",
+    "agent": "planner-mcp",
+    "depends_on": [
+      "AGENT-LANG-002-REF"
+    ],
+    "status": "done",
+    "deliverable": "tools/orchestrator/queues/HANDOFF.md",
+    "note": "HANDOFF v2.0.0 \u2014 compact \u27e8\u27e9 + \u03c6 + $ref overlay",
+    "updated_at": "2026-06-03T20:00:00+00:00"
+  },
+  {
+    "id": "AGENT-LANG-006-INFRA-REF",
+    "priority": 0,
+    "title": "$ref + $sym pass on INFRA tail exec + agent orders",
+    "lane": "mcp-planner",
+    "agent": "planner-mcp",
+    "depends_on": [
+      "AGENT-LANG-002-REF",
+      "AGENT-LANG-005-HANDOFF",
+      "PLAN-INFRA-TAIL-001"
+    ],
+    "status": "done",
+    "deliverable": "docs/archive/2026-06-src-dev/plans/infra_agent_orders_v1.md + docs/archive/2026-06-src-dev/plans/agent_lang_002_005_closure_v1.md",
+    "docs": [
+      "docs/archive/2026-06-src-dev/plans/plan_infra_tail_exec_001_v1.md",
+      "docs/archive/2026-06-src-dev/plans/plan_construction_p7_logistics_exec_001_v1.md"
+    ],
+    "note": "Delta $ref/$sym only \u2014 coder-mcp queue rows untouched",
+    "updated_at": "2026-06-03T21:00:00+00:00"
+  },
+  {
+    "id": "MCP-SPINE-CHAIN-001",
+    "priority": 1,
+    "title": "tile_spine_run \u2014 WRK\u2192ATL one-call with per-step witness",
+    "lane": "mcp-coder",
+    "agent": "coder-mcp",
+    "depends_on": [
+      "MCP-DOC-READ-001-IMPL",
+      "AGENT-LANG-004-RITUAL",
+      "MCP-PRODUCTIVITY-P1-PLAN"
+    ],
+    "status": "done",
+    "blocked_by": [
+      "Orchestrator \u0394WF\u2192@coder-mcp after plan review"
+    ],
+    "witness": "debug_runs/tile_spine_run_001_live.json",
+    "docs": [
+      "docs/archive/2026-06-src-dev/plans/plan_mcp_productivity_chain_v1.md"
+    ],
+    "steps": [
+      "p0_gate",
+      "preview",
+      "assembly_build",
+      "tile_batch",
+      "atlas_pack",
+      "atlas_validate"
+    ],
+    "note": "tile_spine_run shipped; witness tile_spine_run_001_live.json",
+    "updated_at": "2026-06-08T13:48:34.530530+00:00"
+  },
+  {
+    "id": "MCP-ATLAS-BRIEF-001",
+    "priority": 2,
+    "title": "atlas_meta_brief \u2014 UV grid + missing lookups plain errors",
+    "lane": "mcp-coder",
+    "agent": "coder-mcp",
+    "depends_on": [
+      "MCP-PRODUCTIVITY-P1-PLAN"
+    ],
+    "status": "done",
+    "docs": [
+      "docs/archive/2026-06-src-dev/plans/plan_mcp_productivity_chain_v1.md"
+    ],
+    "note": "atlas_meta_brief shipped; witness mcp_atlas_brief_001_live.json",
+    "updated_at": "2026-06-08T13:48:34.807246+00:00"
+  },
+  {
+    "id": "MCP-MAT-BRIEF-001",
+    "priority": 2,
+    "title": "material_profile_brief \u2014 maps status + category path",
+    "lane": "mcp-coder",
+    "agent": "coder-mcp",
+    "depends_on": [],
+    "status": "done",
+    "witness": "debug_runs/mcp_mat_brief_001_live.json",
+    "docs": [
+      "assets/materials/profiles/material_category_tree_v1.json"
+    ],
+    "updated_at": "2026-06-03T22:00:00+00:00"
+  },
+  {
+    "id": "BUILD-READ-VISUAL-002-BATCH",
+    "priority": 1,
+    "title": "Keyframe batch tile_rail_warehouse_pilot_v1 — tile_batch + variant_set + bdef",
+    "lane": "mcp-coder",
+    "agent": "coder-mcp",
+    "depends_on": ["BUILD-READ-GRAMMAR-v0-002"],
+    "status": "done",
+    "witness": "debug_runs/tile_rail_warehouse_pilot_batch_live.json",
+    "docs": [
+      "src/dev/design_tile_rail_warehouse_pilot_v1.md",
+      "assets/staging/specs/tile_rail_warehouse_pilot_v1.json"
+    ],
+    "updated_at": "2026-06-13T00:00:00+00:00"
+  },
+  {
+    "id": "BUILD-READ-GRAMMAR-v0-002",
+    "priority": 2,
+    "title": "APS ARCH-DNA preset + \u03b2 v0 sliders \u2192 snapshot arch_dna + pressure_field",
+    "lane": "mcp-coder",
+    "agent": "coder-mcp",
+    "depends_on": [],
+    "status": "done",
+    "witness": "debug_runs/aps_build_read_grammar_v0_002_live.json",
+    "docs": [
+      "src/dev/plan_operator_build_readability_exec_001_v1.md",
+      "tools/mcp/schemas/arch_build_grammar_v0.schema.json"
+    ],
+    "updated_at": "2026-06-13T04:44:23.206607+00:00",
+    "note": "debug_runs/aps_build_read_grammar_v0_002_live.json"
+  },
+    {
+      "id": "BUILD-READ-CONSUMER-MCP-001",
+      "priority": 2,
+      "title": "APS DNA+β consumer contract — snapshot fields for @coder",
+      "lane": "mcp-coder",
+      "agent": "coder-mcp",
+      "depends_on": ["BUILD-READ-GRAMMAR-v0-002"],
+      "status": "done",
+      "witness": "debug_runs/aps_dna_consumer_contract_live.json",
+      "commands": [
+        "python -m rust_engine_mcp.cli arch-dna-consumer-contract",
+        "python -m rust_engine_mcp.cli aps-dna-consumer-witness"
+      ],
+      "updated_at": "2026-06-02T12:00:00+00:00"
+    },
+    {
+      "id": "MCP-OPS-REPORT-001",
+    "priority": 3,
+    "title": "ops_intelligence_scan MCP wrapper",
+    "lane": "mcp-coder",
+    "agent": "coder-mcp",
+    "depends_on": [
+      "MCP-DOC-READ-002-IMPL"
+    ],
+    "status": "deferred",
+    "docs": [
+      "src/dev/plan_agent_operations_intelligence_v1.md"
+    ]
+  },
+  {
+    "id": "MCP-PRODUCTIVITY-P1-PLAN",
+    "priority": 1,
+    "title": "Thin P1 plan \u2014 grammar loop + tile_spine_run + atlas_meta_brief specs",
+    "lane": "mcp-planner",
+    "agent": "planner-mcp",
+    "depends_on": [
+      "AGENT-LANG-005-HANDOFF",
+      "MCP-MAT-BRIEF-001"
+    ],
+    "status": "done",
+    "orchestrator_gated": true,
+    "deliverable": "docs/archive/2026-06-src-dev/plans/mcp_productivity_p1_plan_v1.md",
+    "docs": [
+      "docs/archive/2026-06-src-dev/plans/orchestrator_order_mcp_productivity_p1_plan_v1.md",
+      "docs/archive/2026-06-src-dev/plans/plan_mcp_productivity_chain_v1.md"
+    ],
+    "note": "\u00a71 grammar SHIPPED ritual \u00b7 \u00a72-3 spine/atlas PLANNED for @coder-mcp",
+    "unblocks": [
+      "MCP-SPINE-CHAIN-001",
+      "MCP-ATLAS-BRIEF-001"
+    ],
+    "updated_at": "2026-06-07T12:00:00+00:00"
+  },
+  {
+    "id": "PLAN-MCP-GRAMMAR-BUILD-SET-GUARDS-001",
+    "priority": 0,
+    "title": "MCP grammar + building-set guards plan (post-warehouse lesson)",
+    "lane": "mcp-planner",
+    "agent": "planner-mcp",
+    "depends_on": ["BUILD-READ-GRAMMAR-v0-002"],
+    "status": "done",
+    "deliverable": "src/dev/plan_mcp_grammar_build_set_guards_v1.md + src/dev/mcp_grammar_build_set_todos_v1.md",
+    "docs": [
+      "src/dev/arch_build_grammar_v0_baseline_v1.md",
+      "src/dev/plan_operator_build_readability_exec_001_v1.md"
+    ],
+    "updated_at": "2026-06-13T12:00:00+00:00"
+  },
+  {
+    "id": "MCP-GUARD-001",
+    "priority": 0,
+    "title": "pilot_hardcode_lint — block literal warehouse/pilot ids outside catalog allowlist",
+    "lane": "mcp-coder",
+    "agent": "coder-mcp",
+    "depends_on": ["PLAN-MCP-GRAMMAR-BUILD-SET-GUARDS-001"],
+    "status": "done",
+    "witness": "debug_runs/pilot_hardcode_lint_live.json",
+    "docs": ["src/dev/mcp_grammar_build_set_todos_v1.md", "tools/mcp/guard/pilot_hardcode_allowlist_v1.json"],
+    "commands": [
+      "python -m rust_engine_mcp.cli pilot-hardcode-lint-witness",
+      "python -m rust_engine_mcp.cli validate-report pilot_hardcode_lint"
+    ],
+    "updated_at": "2026-06-13T18:00:00+00:00"
+  },
+  {
+    "id": "MCP-GUARD-002",
+    "priority": 0,
+    "title": "example_teachable_audit — _meta.teaches[] on schema examples",
+    "lane": "mcp-coder",
+    "agent": "coder-mcp",
+    "depends_on": ["PLAN-MCP-GRAMMAR-BUILD-SET-GUARDS-001"],
+    "status": "done",
+    "witness": "debug_runs/example_teachable_audit_live.json",
+    "docs": ["src/dev/plan_mcp_grammar_build_set_guards_v1.md"],
+    "commands": [
+      "python -m rust_engine_mcp.cli example-teachable-audit-witness",
+      "python -m rust_engine_mcp.cli validate-report example_teachable_audit"
+    ],
+    "updated_at": "2026-06-02T12:00:00+00:00"
+  },
+  {
+    "id": "MCP-GUARD-003",
+    "priority": 0,
+    "title": "single_archetype_ratio_guard — cap dominant archetype refs",
+    "lane": "mcp-coder",
+    "agent": "coder-mcp",
+    "depends_on": ["MCP-BUILD-SET-002"],
+    "status": "done",
+    "witness": "debug_runs/single_archetype_ratio_guard_live.json",
+    "commands": [
+      "python -m rust_engine_mcp.cli single-archetype-ratio-guard",
+      "python -m rust_engine_mcp.cli validate-report single_archetype_ratio_guard"
+    ],
+    "updated_at": "2026-06-02T12:00:00+00:00"
+  },
+  {
+    "id": "MCP-GUARD-004",
+    "priority": 0,
+    "title": "warehouse_track_guard — manifest or teaches on warehouse paths",
+    "lane": "mcp-coder",
+    "agent": "coder-mcp",
+    "depends_on": ["MCP-BUILD-SET-002", "MCP-GUARD-002"],
+    "status": "done",
+    "witness": "debug_runs/warehouse_track_guard_live.json",
+    "commands": [
+      "python -m rust_engine_mcp.cli warehouse-track-guard",
+      "python -m rust_engine_mcp.cli validate-report warehouse_track_guard"
+    ],
+    "updated_at": "2026-06-02T12:00:00+00:00"
+  },
+  {
+    "id": "MCP-GRAMMAR-SET-001",
+    "priority": 1,
+    "title": "grammar_set_brief — pilot/grammar/preset inventory + gaps",
+    "lane": "mcp-coder",
+    "agent": "coder-mcp",
+    "depends_on": ["PLAN-MCP-GRAMMAR-BUILD-SET-GUARDS-001"],
+    "status": "done",
+    "witness": "debug_runs/grammar_set_brief_live.json",
+    "commands": ["python -m rust_engine_mcp.cli grammar-set-brief"],
+    "docs": ["src/dev/plan_mcp_grammar_build_set_guards_v1.md"],
+    "updated_at": "2026-06-13T20:00:00+00:00"
+  },
+  {
+    "id": "MCP-GRAMMAR-SET-002",
+    "priority": 1,
+    "title": "grammar_preset_pair_validate — preset ↔ grammar_id ↔ pilot",
+    "lane": "mcp-coder",
+    "agent": "coder-mcp",
+    "depends_on": ["MCP-GRAMMAR-SET-001"],
+    "status": "done",
+    "commands": ["python -m rust_engine_mcp.cli grammar-preset-pair-validate --preset-id logistics_rail_warehouse_v0"],
+    "docs": ["tools/mcp/schemas/arch_build_grammar_v0.schema.json"],
+    "updated_at": "2026-06-13T20:00:00+00:00"
+  },
+  {
+    "id": "MCP-GRAMMAR-SET-003",
+    "priority": 1,
+    "title": "grammar_eval_sweep — massing/roof histogram brief",
+    "lane": "mcp-coder",
+    "agent": "coder-mcp",
+    "depends_on": ["MCP-GRAMMAR-SET-001"],
+    "status": "done",
+    "commands": ["python -m rust_engine_mcp.cli grammar-eval-sweep"],
+    "docs": ["debug_runs/grammar_diversity_witness.json"],
+    "updated_at": "2026-06-13T20:00:00+00:00"
+  },
+  {
+    "id": "MCP-GRAMMAR-SET-004",
+    "priority": 1,
+    "title": "grammar_pilot_parity — MCP wrap of catalog parity self-check",
+    "lane": "mcp-coder",
+    "agent": "coder-mcp",
+    "depends_on": ["MCP-GRAMMAR-SET-001"],
+    "status": "done",
+    "commands": ["python -m rust_engine_mcp.cli grammar-pilot-parity"],
+    "updated_at": "2026-06-13T20:00:00+00:00"
+  },
+  {
+    "id": "PLAN-BUILD-SET-MANIFEST-001",
+    "priority": 1,
+    "title": "building_set_manifest_v1 schema + _building_sets.ron spec",
+    "lane": "mcp-planner",
+    "agent": "planner-mcp",
+    "depends_on": ["PLAN-MCP-GRAMMAR-BUILD-SET-GUARDS-001"],
+    "status": "done",
+    "deliverable": "tools/mcp/schemas/building_set_manifest_v1.schema.json",
+    "witness": "assets/configs/buildings/_building_sets.ron",
+    "updated_at": "2026-06-13T20:00:00+00:00"
+  },
+  {
+    "id": "MCP-BUILD-SET-001",
+    "priority": 2,
+    "title": "building_set_manifest_validate",
+    "lane": "mcp-coder",
+    "agent": "coder-mcp",
+    "depends_on": ["PLAN-BUILD-SET-MANIFEST-001"],
+    "status": "done",
+    "updated_at": "2026-06-13T20:00:00+00:00"
+  },
+  {
+    "id": "MCP-BUILD-SET-002",
+    "priority": 2,
+    "title": "building_set_coverage_report",
+    "lane": "mcp-coder",
+    "agent": "coder-mcp",
+    "depends_on": ["PLAN-BUILD-SET-MANIFEST-001"],
+    "status": "done",
+    "witness": "debug_runs/building_set_coverage_live.json",
+    "commands": ["python -m rust_engine_mcp.cli building-set-coverage-witness"],
+    "updated_at": "2026-06-13T20:00:00+00:00"
+  },
+  {
+    "id": "MCP-BUILD-SET-003",
+    "priority": 2,
+    "title": "building_set_health_brief for OPS rollup",
+    "lane": "mcp-coder",
+    "agent": "coder-mcp",
+    "depends_on": ["MCP-BUILD-SET-002"],
+    "status": "done",
+    "updated_at": "2026-06-13T20:00:00+00:00"
+  },
+  {
+    "id": "BUILD-SET-PILOT-002",
+    "priority": 2,
+    "title": "Second grammar pilot — manufacturing_fabrication_hall_v0",
+    "lane": "grammar-designer",
+    "agent": "designer-mcp",
+    "depends_on": ["PLAN-BUILD-SET-MANIFEST-001"],
+    "status": "done",
+    "witness": "debug_runs/building_set_coverage_live.json",
+    "docs": ["assets/configs/buildings/_pilot_catalog.ron", "tools/mcp/schemas/examples/arch_dna_manufacturing_fabrication_hall_v0.json"],
+    "updated_at": "2026-06-13T20:00:00+00:00"
+  },
+  {
+    "id": "APS-GRAMMAR-SET-UI-001",
+    "priority": 3,
+    "title": "APS Grammar set brief strip on Assembly tab",
+    "lane": "mcp-coder",
+    "agent": "coder-mcp",
+    "depends_on": ["MCP-GRAMMAR-SET-001"],
+    "status": "done",
+    "deliverable": "tools/mcp/art_pipeline_suite/grammar_build_set_panel.py",
+    "updated_at": "2026-06-13T20:00:00+00:00"
+  },
+  {
+    "id": "APS-GRAMMAR-SWEEP-UI-001",
+    "priority": 3,
+    "title": "APS Eval sweep button inline histogram",
+    "lane": "mcp-coder",
+    "agent": "coder-mcp",
+    "depends_on": ["MCP-GRAMMAR-SET-003"],
+    "status": "done",
+    "deliverable": "tools/mcp/art_pipeline_suite/grammar_build_set_panel.py",
+    "updated_at": "2026-06-13T20:00:00+00:00"
+  },
+  {
+    "id": "MCP-PREFLIGHT-BUILD-SET-001",
+    "priority": 4,
+    "title": "pipeline_preflight --check-build-set",
+    "lane": "mcp-coder",
+    "agent": "coder-mcp",
+    "depends_on": ["MCP-BUILD-SET-002", "MCP-GUARD-001"],
+    "status": "done",
+    "commands": ["python -m rust_engine_mcp.cli pipeline-preflight --check-build-set"],
+    "updated_at": "2026-06-13T20:00:00+00:00"
+  },
+  {
+    "id": "CODER-PILOT-REFACTOR-001",
+    "priority": 1,
+    "title": "Remove warehouse-only Rust branches — catalog loader only",
+    "lane": "grammar-coder",
+    "agent": "coder",
+    "depends_on": ["MCP-GUARD-001"],
+    "status": "pending",
+    "docs": [
+      "src/construction/pilot_catalog.rs",
+      "src/dev/plan_operator_build_readability_exec_001_v1.md"
+    ]
+  },
+  {
+    "id": "MCP-INTEGRATE-001",
+    "priority": 2,
+    "title": "grammar_integration_validate — complex snapshot gate",
+    "lane": "mcp-coder",
+    "agent": "coder-mcp",
+    "depends_on": ["MCP-GRAMMAR-SET-002", "MCP-GRAMMAR-SET-003"],
+    "status": "done",
+    "witness": "debug_runs/grammar_integration_validate_live.json",
+    "docs": ["docs/archive/2026-06-src-dev/plans/aps_validator_plain_language_v1.md"],
+    "commands": [
+      "python -m rust_engine_mcp.cli grammar-integration-validate --write-witness",
+      "python -m rust_engine_mcp.cli validate-report grammar_integration tools/mcp/schemas/examples/assembly_snapshot_warehouse_industrial_west_production_v1.json"
+    ],
+    "updated_at": "2026-06-02T12:00:00+00:00"
+  },
+  {
+    "id": "OPS-BUILD-SET-001",
+    "priority": 3,
+    "title": "ops_get_build_set_health in ops_project_brief_v1",
+    "lane": "mcp-coder",
+    "agent": "coder-mcp",
+    "depends_on": ["MCP-BUILD-SET-003"],
+    "status": "done",
+    "docs": ["src/dev/ops_mcp_function_layer_v1.md", "tools/mcp/python/rust_engine_mcp/ops_intelligence.py"],
+    "updated_at": "2026-06-13T20:00:00+00:00"
   }
 ]

@@ -1,0 +1,29 @@
+{
+  "schema": "pilot_hardcode_allowlist_v1",
+  "version": "1.1.0",
+  "task_id": "MCP-GUARD-001",
+  "needles": [
+    "logistics_rail_warehouse_v0",
+    "IndustrialWarehouse",
+    "pilot:logistics_rail_warehouse_v0"
+  ],
+  "scan_roots": ["src", "tests", "tools/mcp/schemas/examples"],
+  "scan_extensions": [".rs", ".json", ".ron", ".py"],
+  "permanent_allowlist_globs": [
+    "src/construction/procedural/building_grammar.rs",
+    "src/construction/procedural/arch_build_grammar_v0.rs",
+    "src/construction/building_catalog.rs",
+    "tools/mcp/schemas/examples/*warehouse*",
+    "tools/mcp/schemas/examples/*rail_warehouse*",
+    "tools/mcp/schemas/examples/arch_dna_logistics_rail_warehouse_v0.json",
+    "tools/mcp/schemas/examples/building_grammar_industrial_warehouse_v1.json",
+    "tools/mcp/schemas/examples/assembly_snapshot_grammar_lineage_example.json",
+    "tools/mcp/schemas/examples/building_set_*.json"
+  ],
+  "transitional_allowlist": [
+    "src/construction/procedural/assembly_snapshot.rs",
+    "src/gui/assembly_snapshot_qc_ui.rs"
+  ],
+  "transitional_until": "BUILD-SET-GUARD-002",
+  "note": "Warehouse needles allowed only in canonical example paths + grammar test harness. Production paths must use PilotCatalog / building_set manifest."
+}

@@ -1,0 +1,11 @@
+(
+    schema_version: 1,
+    id: "demo_ignite_v0",
+    when_tick_min: Some(0),
+    source: "scenario_script",
+    cause_id: "CAUSE-trigger-demo-ignite",
+    parent_effect_id: None,
+    cells: [
+        (chunk_x: 4, chunk_y: 2, cell: 0, spark: 0.35),
+    ],
+)

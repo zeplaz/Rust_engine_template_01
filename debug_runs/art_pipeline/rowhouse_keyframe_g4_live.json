@@ -10,7 +10,7 @@
       "copy production stills → assets/staging/tiles/keyframe_stills/rowhouse_victorian/",
       "python -m rust_engine_mcp.cli tile-atlas-pack assets/staging/tiles/keyframe_stills/rowhouse_victorian -pk"
     ],
-    "bake_spine": "src/dev/design_tile_bake_spine_convergence_v1.md",
+    "bake_spine": "docs/archive/2026-06-src-dev/plans/design_tile_bake_spine_convergence_v1.md",
     "signoff_yaml": "debug_runs/art_pipeline/rowhouse_victorian_production_signoff.yaml"
   },
   "batch_id": "tile_rowhouse_victorian_production_v1",

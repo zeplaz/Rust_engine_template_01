@@ -1,0 +1,39 @@
+{
+  "schema_version": "tile_variant_spec_v1",
+  "tile_id": "tile_rail_warehouse_pilot_v1",
+  "label": "Rail Warehouse (pilot L)",
+  "style_pack": "style_industrial_west",
+  "archetype": "industrial_warehouse_l",
+  "development_tier": "pilot",
+  "ship": false,
+  "bake_source": "keyframe_pack",
+  "seed": 440013,
+  "footprint_matrix_ref": "assets/configs/buildings/pilots/logistics_rail_warehouse_pilot_v1.json",
+  "site_plan_ref": "assets/configs/buildings/pilots/logistics_rail_warehouse_site_v0.json",
+  "variants": [
+    { "state_id": "clean_day", "required": true, "lighting": "day" },
+    { "state_id": "clean_night_off", "required": true, "lighting": "night", "emissive": false },
+    { "state_id": "clean_night_on", "required": true, "lighting": "night", "emissive": true },
+    { "state_id": "under_construction_01", "required": true, "lighting": "day", "stage": "construction" }
+  ],
+  "deferred_variants": [
+    "damaged_day",
+    "damaged_night_on",
+    "burning_00",
+    "burning_01",
+    "burning_02",
+    "burning_03"
+  ],
+  "atlas_output": {
+    "staging_dir": "assets/staging/tiles/tile_rail_warehouse_pilot_v1",
+    "production_path": "assets/textures/buildings_iso/staging/tile_rail_warehouse_pilot_v1_atlas.png"
+  },
+  "design_docs": [
+    "src/dev/design_tile_rail_warehouse_pilot_v1.md",
+    "src/dev/design_shape_rail_warehouse_pilot_v1.md"
+  ],
+  "references": [
+    "ref:pilot:logistics_rail_warehouse_v0",
+    "ref:BUILD-READ-VISUAL-002"
+  ]
+}

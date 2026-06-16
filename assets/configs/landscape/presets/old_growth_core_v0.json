@@ -1,0 +1,47 @@
+{
+  "schema_version": "landscape_grammar_v0",
+  "preset_id": "old_growth_core_v0",
+  "chart_id": "OG-CORE-D1",
+  "land_dna": { "H": "old_growth", "S": "deep_humus", "E": "sheltered", "T": "temperate", "D": "stable", "L": "forest", "A": "ancient", "M": "wild" },
+  "pressure_field": {
+    "lambda_moisture": 0.78,
+    "lambda_slope": 0.42,
+    "lambda_exposure": 0.28,
+    "lambda_disturbance": 0.12,
+    "lambda_access": 0.25,
+    "lambda_security": 0.08,
+    "lambda_productivity": 0.38,
+    "lambda_legibility": 0.35
+  },
+  "landscape_program": {
+    "class": "forest",
+    "required_topologies": ["CORRIDOR_RIPARIAN", "RING_SHELTERBELT", "PATCH_IRREGULAR", "FRINGE_EDGE"]
+  },
+  "topology_graph": [
+    {
+      "id": "net_og_01",
+      "topology_kind": "Network",
+      "preset_id": "NETWORK_CONNECTED",
+      "children": [
+        { "id": "corr_creek_01", "topology_kind": "Corridor", "preset_id": "CORRIDOR_RIPARIAN", "metadata": { "glyph_planning": "≈≈≈╬≈≈≈" } },
+        { "id": "ring_canopy_01", "topology_kind": "Ring", "preset_id": "RING_SHELTERBELT", "metadata": { "glyph_planning": "◯◯◯" } },
+        {
+          "id": "patch_core_01",
+          "topology_kind": "Patch",
+          "preset_id": "PATCH_IRREGULAR",
+          "children": [
+            {
+              "id": "cluster_og_01",
+              "topology_kind": "Cluster",
+              "preset_id": "CLUSTER_NATURAL",
+              "children": [
+                { "id": "cluster_snag_01", "topology_kind": "Cluster", "preset_id": "CLUSTER_SNAG" }
+              ]
+            }
+          ]
+        },
+        { "id": "fringe_edge_01", "topology_kind": "Fringe", "preset_id": "FRINGE_EDGE" }
+      ]
+    }
+  ]
+}

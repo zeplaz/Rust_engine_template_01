@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import bmesh
 import bpy
 
 # sRGB-ish greybox tints by module category (R, G, B, A)
@@ -198,10 +199,46 @@ def apply_greybox_materials() -> None:
     apply_materials()
 
 
+def _assign_box_uv_to_mesh(mesh: bpy.types.Mesh) -> None:
+    """Procedural modules (bmesh) ship without UV — Bevy mikktspace needs TEXCOORD_0."""
+    if len(mesh.polygons) == 0:
+        return
+    bm = bmesh.new()
+    bm.from_mesh(mesh)
+    uv_layer = bm.loops.layers.uv.verify()
+    for face in bm.faces:
+        n = face.normal
+        ax, ay, az = abs(n.x), abs(n.y), abs(n.z)
+        for loop in face.loops:
+            v = loop.vert.co
+            if ay >= ax and ay >= az:
+                u, vcoord = v.x, v.z
+            elif ax >= az:
+                u, vcoord = v.z, v.y
+            else:
+                u, vcoord = v.x, v.y
+            loop[uv_layer].uv = (u, vcoord)
+    bm.to_mesh(mesh)
+    bm.free()
+    mesh.update()
+
+
+def ensure_mesh_uv_layers(objects: list[bpy.types.Object]) -> None:
+    for obj in objects:
+        if getattr(obj, "type", None) != "MESH":
+            continue
+        mesh = obj.data
+        if not mesh.uv_layers:
+            mesh.uv_layers.new(name="UVMap")
+        _assign_box_uv_to_mesh(mesh)
+
+
 def export_glb(filepath: str, *, material_profile: str | None = None, repo_root: Path | None = None) -> None:
     glb_path = Path(filepath)
     repo = repo_root or _repo_from_glb_path(glb_path)
     mode = apply_materials(material_profile=material_profile, repo_root=repo)
+    meshes = [o for o in bpy.context.scene.objects if o.type == "MESH"]
+    ensure_mesh_uv_layers(meshes)
     bpy.ops.object.select_all(action="DESELECT")
     for obj in bpy.context.scene.objects:
         if obj.type == "MESH":

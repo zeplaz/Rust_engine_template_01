@@ -1,0 +1,13 @@
+{
+  "gate_id": "MCP-MAT-BRIEF-001",
+  "ok": true,
+  "green": true,
+  "sample_profile": "steel_panel_01",
+  "sample_category_path": "industrial/steel",
+  "catalog_total": 21,
+  "catalog_counts": {
+    "ready": 21,
+    "partial": 0,
+    "missing": 0
+  }
+}

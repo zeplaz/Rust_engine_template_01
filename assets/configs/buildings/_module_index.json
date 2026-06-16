@@ -635,6 +635,30 @@
       "replaced_by": "door_warehouse"
     },
     {
+      "module_id": "platform_dock_2u",
+      "job_id": "platform_dock_2u_production_run001",
+      "category": "corner_prop",
+      "glb": "assets/models/modules/platform_dock_2u_production_run001/model.glb",
+      "glb_path": "assets/models/modules/platform_dock_2u_production_run001/model.glb",
+      "archetype": "module_prop",
+      "style_pack": "style_industrial_west",
+      "grid_units": [
+        2,
+        1
+      ],
+      "snap": "floor_edge",
+      "material_profile": "concrete_grey_01",
+      "style_tags": [
+        "concrete",
+        "grey",
+        "industrial_west"
+      ],
+      "batch_id": "kit_industrial_west_production_001",
+      "development_tier": "production",
+      "pbr_status": "shipped",
+      "stylepack_visible": true
+    },
+    {
       "module_id": "prop_ac",
       "job_id": "prop_ac_lod0_run001",
       "category": "prop",
@@ -1332,6 +1356,30 @@
       "batch_id": "kit_lod0_007",
       "development_tier": "lod0",
       "pbr_status": "deferred",
+      "stylepack_visible": true
+    },
+    {
+      "module_id": "stack_chimney_1u",
+      "job_id": "stack_chimney_1u_production_run001",
+      "category": "corner_prop",
+      "glb": "assets/models/modules/stack_chimney_1u_production_run001/model.glb",
+      "glb_path": "assets/models/modules/stack_chimney_1u_production_run001/model.glb",
+      "archetype": "module_prop",
+      "style_pack": "style_industrial_west",
+      "grid_units": [
+        1,
+        1
+      ],
+      "snap": "roof_ridge",
+      "material_profile": "steel_panel_01",
+      "style_tags": [
+        "steel",
+        "panel",
+        "industrial_west"
+      ],
+      "batch_id": "kit_industrial_west_production_001",
+      "development_tier": "production",
+      "pbr_status": "shipped",
       "stylepack_visible": true
     },
     {

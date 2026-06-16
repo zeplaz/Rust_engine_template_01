@@ -1,0 +1,51 @@
+{
+  "_meta": {
+    "teaches": ["arch_dna", "pressure_field", "pilot_catalog", "site_composition", "grammar_eval"],
+    "not_a_ship_target": true,
+    "building_set_id": "industrial_west_v0"
+  },
+  "schema_version": "arch_build_grammar_v0",
+  "preset_id": "logistics_rail_warehouse_v0",
+  "grammar_id": "industrial_warehouse_v1",
+  "arch_dna": {
+    "F": "logistics",
+    "L": "industrial_british",
+    "C": "temperate",
+    "D": "sparse",
+    "W": "industrial",
+    "I": "rail",
+    "S": "controlled",
+    "P": "utilitarian",
+    "M": "steel",
+    "A": "weathered"
+  },
+  "pressure_field": {
+    "beta_sym": 0.72,
+    "beta_irr": 0.24,
+    "beta_yard": 0.93,
+    "beta_svc": 0.88,
+    "beta_mod": 0.92,
+    "beta_exp": 0.84,
+    "beta_vert": 0.18,
+    "beta_roof": 0.63
+  },
+  "program_stub": {
+    "storage": "high",
+    "loading": "high",
+    "office": "low",
+    "service": "medium",
+    "expansion": "high"
+  },
+  "site_zones": [
+    { "id": "primary", "role": "primary", "footprint_hint": "warehouse_hall" },
+    { "id": "loading", "role": "loading_wing", "footprint_hint": "rail_edge" },
+    { "id": "utility", "role": "utility_yard", "footprint_hint": "peripheral" },
+    { "id": "rail", "role": "rail_spur", "footprint_hint": "infrastructure_edge" }
+  ],
+  "massing_weight_override": [
+    { "id": "long_hall", "weight": 22 },
+    { "id": "double_hall", "weight": 24 },
+    { "id": "l_shape", "weight": 28 },
+    { "id": "yard_complex", "weight": 26 }
+  ]
+}

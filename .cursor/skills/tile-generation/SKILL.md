@@ -4,6 +4,8 @@ description: Defines isometric tile state machines, variant specs, keyframe bake
 disable-model-invocation: true
 ---
 
+`⟦SYM⟧ lang⊳ $ref:prompts/SYMBOLIC_LANGUAGE.meta.md`
+
 # Tile Generation Skill
 
 Tiles are **state machines** — not standalone textures. Deterministic stills from structured specs + **proven utils spine**.
@@ -19,7 +21,23 @@ Tiles are **state machines** — not standalone textures. Deterministic stills f
 
 > STATE → KEYFRAME STILLS → TILEMAPGEN → ATLAS → ENGINE. LLM sets parameters; Blender + tilemapgen render.
 
-**Ship art forbids** using headless `tile_ortho_bake` alone. See [`design_tile_bake_spine_convergence_v1.md`](../../src/dev/design_tile_bake_spine_convergence_v1.md).
+**Ship art forbids** using headless `tile_ortho_bake` alone. See [`design_tile_bake_spine_convergence_v1.md`](../../docs/archive/2026-06-src-dev/plans/design_tile_bake_spine_convergence_v1.md).
+
+## AGENT-LANG ritual (attach [agent-lang](../agent-lang/SKILL.md))
+
+**DSM node WRK→ATL** · production = `bake_source: keyframe_pack` when `ship: true`
+
+```text
+BLANG:PRE → keyframe PNG folder → tile-atlas-pack → BLANG:WIT → register $ref:_tile_atlas_index.ron
+```
+
+| Status | Sym |
+|:---|:---|
+| Production spine | 🟢 `keyframe_pack` |
+| CI smoke only | 🧊 `smoke_ortho_headless` |
+| Ship blocked | 🔴 ortho-only without keyframes |
+
+**Refs:** `$ref:docs/archive/2026-06-src-dev/plans/design_tile_bake_spine_convergence_v1.md`
 
 ## Quick workflow (production)
 
@@ -52,6 +70,22 @@ Tiles are **state machines** — not standalone textures. Deterministic stills f
 | Vehicles (`civ_truck_01`) | **8 facings** in one sheet | empty/full, day/night |
 | Buildings (production) | **One iso** + state rows | day/night, damage, fire frames |
 
+## BUILD-GRAMMAR◈ → WEATHERING◈ (v0)
+
+Building grammar `age` bands and `ARCH-DNA.A` map to tile state-machine rows:
+
+| Grammar | Tile `variant_key` / axis |
+|:---|:---|
+| `age.bands[].variant_tags` | `clean` · `weathered` · `abandoned` · `damaged` |
+| `arch_dna.A = weathered` | damage row + `clean_night_on` siblings |
+| `district_styles.style_tags` | base material axis (steel · brick · …) |
+
+```text
+SNAP★ → grammar age pick → variant_set_v1 → keyframe bake → atlas
+```
+
+Refs: [`arch_build_grammar_v0_baseline_v1.md`](src/dev/arch_build_grammar_v0_baseline_v1.md) · [`industrial_warehouse_v1.ron`](assets/configs/buildings/grammars/industrial_warehouse_v1.ron) `age` section.
+
 ## MCP tools (shipped)
 
 | Tool | Role |
@@ -70,7 +104,7 @@ Tiles are **state machines** — not standalone textures. Deterministic stills f
 
 ## Additional resources
 
-- Convergence: [`src/dev/design_tile_bake_spine_convergence_v1.md`](../../src/dev/design_tile_bake_spine_convergence_v1.md)
-- Production program: [`src/dev/plan_procedural_building_tiles_production_v1.md`](../../src/dev/plan_procedural_building_tiles_production_v1.md)
+- Convergence: [`docs/archive/2026-06-src-dev/plans/design_tile_bake_spine_convergence_v1.md`](../../docs/archive/2026-06-src-dev/plans/design_tile_bake_spine_convergence_v1.md)
+- Production program: [`docs/archive/2026-06-src-dev/plans/plan_procedural_building_tiles_production_v1.md`](../../docs/archive/2026-06-src-dev/plans/plan_procedural_building_tiles_production_v1.md)
 - Pipeline: [mcp-asset-pipeline](mcp-asset-pipeline/SKILL.md)
 - Full enums: [reference.md](reference.md)

@@ -1,0 +1,181 @@
+{
+  "_meta": {
+    "version": "1.1.0",
+    "program_id": "POST-DRAIN-PHASE-2-001",
+    "date": "2026-06-08",
+    "program_green": true,
+    "closed": "2026-06-08",
+    "successor": "POST-DRAIN-PHASE-3-001",
+    "successor_queue": "tools/orchestrator/queues/post_drain_phase3_queue.json",
+    "plan_doc": "src/dev/planner_dispatch_prompts_20260608_v1.md",
+    "supersedes": "POST-DRAIN-DISPATCH-001 phase-1 rows (mostly done on disk)",
+    "rule": "Witness JSON wins. Sync queues before new implementation."
+  },
+  "lanes": {
+    "R_SYNC": { "label": "Queue + HANDOFF sync", "owner_default": "planner" },
+    "S_INFRA": { "label": "5.5-B/C infra hardening", "owner_default": "coder" },
+    "T_FIRE": { "label": "Fire F2 tail + queue close", "owner_default": "coder" },
+    "U_PROD": { "label": "Product HUD implement", "owner_default": "designer" },
+    "V_OPS": { "label": "Operator + audit", "owner_default": "operator" },
+    "W_MCP": { "label": "MCP P2 maintain", "owner_default": "coder-mcp" },
+    "X_DSM": { "label": "DSM ATL/RT signoff", "owner_default": "orchestrator" }
+  },
+  "tasks": [
+    {
+      "id": "PLAN-QUEUE-SYNC-003",
+      "lane": "R_SYNC",
+      "priority": 0,
+      "agent": "planner",
+      "status": "done",
+      "goal": "Reconcile post_drain, continuation, HANDOFF, tensor with witnesses",
+      "deliverable": "HANDOFF v2.2 + continuation_queue status fixes",
+      "docs": ["src/dev/planner_dispatch_prompts_20260608_v1.md"],
+      "completed": "2026-06-08"
+    },
+    {
+      "id": "PLAN-PHASE2-EXEC-001",
+      "lane": "R_SYNC",
+      "priority": 1,
+      "agent": "planner",
+      "status": "done",
+      "depends_on": ["PLAN-QUEUE-SYNC-003"],
+      "goal": "Thin exec for Phase 2 lanes S–W — witness keys only",
+      "deliverable": "src/dev/plan_phase2_exec_001_v1.md",
+      "completed": "2026-06-08"
+    },
+    {
+      "id": "FIRE-STREAM-CLOSE-001",
+      "lane": "T_FIRE",
+      "priority": 1,
+      "agent": "sim-steward",
+      "status": "done",
+      "goal": "Close TRIAGE-FIRE-STREAM — witness already green; sync continuation queue",
+      "witness": "debug_runs/fire_streaming_live.json",
+      "exit": "fire_streaming_live.json green + continuation row done",
+      "docs": ["src/dev/stage5_triage_backlog.md"],
+      "updated_at": "2026-06-08T17:00:00+00:00"
+    },
+    {
+      "id": "FIRE-FUEL-COUNTERS-001",
+      "lane": "T_FIRE",
+      "priority": 2,
+      "agent": "coder",
+      "status": "done",
+      "goal": "fire_f2_fuel_spread_001 fuel_spread_counters_wired true",
+      "witness": "debug_runs/fire_ecology_live.json",
+      "updated_at": "2026-06-08T18:30:00+00:00",
+      "continuation_ref": "SLICE-MD-F2-03",
+      "docs": ["src/dev/fire_ecology_f1_todos.md", "src/dev/plan_phase2_exec_001_v1.md"]
+    },
+    {
+      "id": "FIRE-F2-004-001",
+      "lane": "T_FIRE",
+      "priority": 3,
+      "agent": "coder",
+      "status": "done",
+      "depends_on": ["FIRE-FUEL-COUNTERS-001"],
+      "goal": "Align fire_inst readiness metric with sim heat stability in proof JSON",
+      "witness": "debug_runs/fire_ecology_live.json",
+      "updated_at": "2026-06-08T19:00:00+00:00",
+      "docs": ["src/dev/fire_ecology_f1_todos.md"]
+    },
+    {
+      "id": "TRIAGE-GPU-TILE-001",
+      "lane": "S_INFRA",
+      "priority": 1,
+      "agent": "coder",
+      "status": "done",
+      "goal": "Instanced tile debug authoritative; document gizmo fallback policy",
+      "witness": "debug_runs/stage5_full_app_live.json",
+      "updated_at": "2026-06-08T19:00:00+00:00",
+      "docs": ["src/dev/stage5_triage_backlog.md", "prompts/guides/base_finsh_5.md"]
+    },
+    {
+      "id": "TRIAGE-REPLAY-001",
+      "lane": "S_INFRA",
+      "priority": 2,
+      "agent": "sim-steward",
+      "status": "done",
+      "goal": "Deterministic replay ring + editor parity — verify only",
+      "witness": "debug_runs/replay_editor_parity_live.json",
+      "exit": "parity_green true · replay_ring_len 64",
+      "updated_at": "2026-06-08T20:00:00+00:00",
+      "docs": ["src/dev/stage5_triage_backlog.md"]
+    },
+    {
+      "id": "PERF-SHELL-001",
+      "lane": "S_INFRA",
+      "priority": 3,
+      "agent": "operator",
+      "status": "ready",
+      "goal": "60s perf capture — OPS-F01",
+      "deliverable": "src/dev/perf_attribution_60s.md",
+      "docs": ["src/dev/post_stage6_active_todos.md"]
+    },
+    {
+      "id": "DESIGN-WX-HUD-IMPL-001",
+      "lane": "U_PROD",
+      "priority": 1,
+      "agent": "designer",
+      "status": "done",
+      "goal": "§Implementation spec + @coder C wire — PASS",
+      "design": "docs/archive/2026-06-src-dev/plans/design_weather_player_read_v1.md",
+      "witness": "docs/archive/2026-06-src-dev/plans/design_weather_player_read_v1.md",
+      "witness_json": "debug_runs/weather_hud_player_read_live.json",
+      "witness_json_green": true,
+      "paired_coder": "coder_c",
+      "docs": ["src/dev/plan_phase2_exec_001_v1.md"],
+      "updated_at": "2026-06-08T19:00:00+00:00"
+    },
+    {
+      "id": "EGUI-QC-IMPL-001",
+      "lane": "U_PROD",
+      "priority": 2,
+      "agent": "coder",
+      "status": "done",
+      "goal": "Bevy QC HUD v2 — shipped; witness green (lane 4 dev tooling — NOT sim HUD)",
+      "design": "docs/archive/2026-06-src-dev/plans/design_aps_bevy_qc_hud_v2.md",
+      "witness": "debug_runs/aps_bevy_qc_hud_001_v2_live.json",
+      "paired_designer": "designer"
+    },
+    {
+      "id": "MCP-OPS-REPORT-001",
+      "lane": "W_MCP",
+      "priority": 1,
+      "agent": "coder-mcp",
+      "status": "deferred",
+      "goal": "ops_intelligence_scan MCP wrapper",
+      "docs": ["src/dev/plan_agent_operations_intelligence_v1.md"]
+    },
+    {
+      "id": "DSM-SIGNOFF-001",
+      "lane": "X_DSM",
+      "priority": 1,
+      "agent": "orchestrator",
+      "status": "done",
+      "goal": "ATL★ + RT★ tensor rows when rt_registry + rt_eng witnesses green",
+      "witness": "debug_runs/dsm_signoff_001_live.json",
+      "updated_at": "2026-06-08T17:00:00+00:00",
+      "docs": ["src/dev/plan_dsm_wrk_atl_closure_v1.md", "src/dev/plan_rt_exec_001_v1.md"]
+    },
+    {
+      "id": "G-PLAY-01",
+      "lane": "V_OPS",
+      "priority": 1,
+      "agent": "operator",
+      "status": "ready",
+      "goal": "Operator play scenario acceptance",
+      "docs": ["src/dev/plan_g_play_close_001_checklist_v1.md"]
+    },
+    {
+      "id": "PLAN-AUDIT-020",
+      "lane": "V_OPS",
+      "priority": 2,
+      "agent": "planner",
+      "status": "deferred",
+      "depends_on": ["G-PLAY-01"],
+      "goal": "Fleet audit v20",
+      "defer_registry": "PLAN-AUDIT-020"
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "program_id": "GRAMMAR-002-SLICE-001",
+  "modes": [
+    "roof",
+    "facade"
+  ],
+  "archetype": "IndustrialWarehouse",
+  "green": true,
+  "roof_layers": [
+    "roof"
+  ],
+  "facade_layers": [
+    "facade"
+  ]
+}

@@ -39,6 +39,7 @@
       "description": "APS-GRAMMAR-INSPECTOR — evaluated rule ids",
       "properties": {
         "archetype": { "type": "string" },
+        "district_style": { "type": "string" },
         "massing": { "type": "string" },
         "roof": { "type": "string" },
         "facade": { "type": "string" },
@@ -47,6 +48,30 @@
         "footprint_mode": { "type": "string" }
       },
       "additionalProperties": true
+    },
+    "grammar_lineage": {
+      "$ref": "#/$defs/grammar_lineage_v1",
+      "description": "GRAMMAR-ITER-SNAPSHOT-001 — iteration branch history (optional)"
+    },
+    "grammar_overrides": {
+      "$ref": "#/$defs/grammar_overrides_v1",
+      "description": "GRAMMAR-ITER-SNAPSHOT-001 — artist-pinned grammar fields (optional)"
+    },
+    "arch_build_grammar_preset_id": {
+      "type": "string",
+      "description": "BUILD-READ-GRAMMAR-v0-002 — ARCH-DNA preset id"
+    },
+    "arch_build_grammar_id": {
+      "type": "string",
+      "description": "Optional link to building_grammar_v1 grammar_id"
+    },
+    "arch_dna": {
+      "type": "object",
+      "description": "BUILD-READ-GRAMMAR-v0 ARCH-DNA axes (F,L,C,D,W,I,S,P,M,A)"
+    },
+    "pressure_field": {
+      "type": "object",
+      "description": "BUILD-READ-GRAMMAR-v0 β pressure field (8 keys, 0–1)"
     },
     "footprint": {
       "type": "object",
@@ -63,6 +88,107 @@
       "minItems": 1,
       "items": {
         "$ref": "https://rust-engine.local/schemas/assembly_graph_node_v1.schema.json"
+      }
+    }
+  },
+  "$defs": {
+    "grammar_iteration_mode": {
+      "type": "string",
+      "enum": [
+        "full",
+        "massing",
+        "roof",
+        "facade",
+        "detail",
+        "age",
+        "material_strategy",
+        "placement"
+      ]
+    },
+    "grammar_pinned_layer": {
+      "type": "string",
+      "enum": [
+        "archetype",
+        "district_style",
+        "massing",
+        "roof",
+        "facade",
+        "detail",
+        "age",
+        "material_strategy"
+      ]
+    },
+    "grammar_lineage_v1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["iteration_mode", "iteration_seq"],
+      "properties": {
+        "parent_assembly_id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Immediate parent snapshot assembly_id"
+        },
+        "root_assembly_id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "First snapshot in branch (defaults to parent if omitted)"
+        },
+        "iteration_mode": { "$ref": "#/$defs/grammar_iteration_mode" },
+        "iteration_seq": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "1-based count from root along this branch"
+        },
+        "pinned_layers": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/grammar_pinned_layer" },
+          "uniqueItems": true
+        },
+        "applied_at": {
+          "type": "string",
+          "description": "ISO-8601 timestamp when iteration was applied (APS)"
+        }
+      }
+    },
+    "grammar_overrides_v1": {
+      "type": "object",
+      "description": "Pinned grammar fields — inspector shows bold; generator skips weighted pick for these keys",
+      "additionalProperties": false,
+      "properties": {
+        "massing_strategy": { "type": "string" },
+        "footprint_mode": {
+          "type": "string",
+          "enum": ["rect", "l_shape", "yard_interior"]
+        },
+        "footprint": {
+          "type": "object",
+          "properties": {
+            "width": { "type": "integer", "minimum": 2 },
+            "depth": { "type": "integer", "minimum": 2 },
+            "floors": { "type": "integer", "minimum": 1 }
+          },
+          "additionalProperties": false
+        },
+        "roof_slot": { "type": "string" },
+        "roof_rule_id": { "type": "string" },
+        "wall_slot": { "type": "string" },
+        "door_slot": { "type": "string" },
+        "window_slot": { "type": "string" },
+        "placement_tags": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "prop_slot": { "type": "string" },
+        "density": { "type": "number", "minimum": 0, "maximum": 1 },
+        "detail_tags": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "age_band_id": { "type": "string" },
+        "district_material_profiles": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        }
       }
     }
   }

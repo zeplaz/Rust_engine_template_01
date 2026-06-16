@@ -1,0 +1,25 @@
+{
+  "schema_version": "site_zone_grid_v1",
+  "site_id": "manufacturing_fabrication_hall_site_v0",
+  "pilot_id": "manufacturing_fabrication_hall_v0",
+  "width": 8,
+  "depth": 6,
+  "row_major": true,
+  "origin": "north_west",
+  "zone_legend": {
+    ".": "buffer",
+    "P": "parking",
+    "W": "primary",
+    "L": "loading",
+    "Y": "utility",
+    "S": "service"
+  },
+  "cells": [
+    "parking","parking","parking","parking","parking","parking","parking","parking",
+    "primary","primary","primary","primary","primary","primary","utility","utility",
+    "primary","primary","primary","primary","primary","primary","utility","utility",
+    "primary","primary","loading","loading","service","service","buffer","buffer",
+    "buffer","buffer","buffer","buffer","buffer","buffer","buffer","buffer",
+    "buffer","buffer","buffer","buffer","buffer","buffer","buffer","buffer"
+  ]
+}

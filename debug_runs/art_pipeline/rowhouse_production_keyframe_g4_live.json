@@ -1,8 +1,9 @@
 {
-  "program_id": "MCP-EXPORT-PILOT-KEYFRAMES-G4",
-  "pilot": "rowhouse_victorian",
+  "program_id": "MCP-PROD-KIT-001-KEYFRAME-G4",
   "batch_id": "tile_rowhouse_victorian_production_v1",
-  "generated_at": "2026-06-03T03:14:12.236113+00:00",
+  "assembly_id": "victorian_4x3_s42_a7cb",
+  "generated_at": "2026-06-07T22:41:51.202600+00:00",
+  "production_snapshot": "tools/mcp/schemas/examples/assembly_snapshot_rowhouse_victorian_production_v1.json",
   "keyframe_stills_folder": "assets/staging/tiles/keyframe_stills/rowhouse_victorian",
   "gates": {
     "g4_0_matrix_and_spine": "pass",
@@ -20,7 +21,7 @@
     "clean_day": {
       "path": "assets/staging/tiles/keyframe_stills/rowhouse_victorian/clean_day.png",
       "exists": true,
-      "bytes": 13256,
+      "bytes": 12661,
       "width": 128,
       "height": 128,
       "ok": true
@@ -28,7 +29,7 @@
     "clean_night_on": {
       "path": "assets/staging/tiles/keyframe_stills/rowhouse_victorian/clean_night_on.png",
       "exists": true,
-      "bytes": 12758,
+      "bytes": 12355,
       "width": 128,
       "height": 128,
       "ok": true
@@ -36,7 +37,7 @@
     "damaged_night_on": {
       "path": "assets/staging/tiles/keyframe_stills/rowhouse_victorian/damaged_night_on.png",
       "exists": true,
-      "bytes": 12826,
+      "bytes": 12383,
       "width": 128,
       "height": 128,
       "ok": true
@@ -44,6 +45,5 @@
   },
   "variant_count": 14,
   "stills_ok_count": 14,
-  "lod0_ortho_atlas_g4": "rejected",
-  "bake_source": "keyframe_pack"
+  "signoff": "debug_runs/art_pipeline/rowhouse_victorian_production_signoff.yaml"
 }

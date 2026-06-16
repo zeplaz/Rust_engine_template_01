@@ -1,0 +1,41 @@
+{
+  "_meta": {
+    "teaches": ["pilot_catalog", "module_runs"],
+    "not_a_ship_target": true,
+    "building_set_id": "industrial_west_v0"
+  },
+  "schema_version": 1,
+  "building_id": "rail_warehouse_pilot",
+  "style_pack_id": "style_industrial_west",
+  "assembly_snapshot": "tools/mcp/schemas/examples/assembly_snapshot_rail_warehouse_pilot_v1.json",
+  "pilot_ref": "assets/configs/buildings/pilots/logistics_rail_warehouse_pilot_v1.json",
+  "catalog_id": "pilot:logistics_rail_warehouse_v0",
+  "variants": [
+    "clean_day",
+    "clean_night_off",
+    "clean_night_on",
+    "under_construction_01"
+  ],
+  "render_contract": {
+    "facings": 8,
+    "tile_px": 128,
+    "quarter_turn_fallback": true
+  },
+  "material_profiles": [
+    "roof_metal_01",
+    "steel_corner_01",
+    "steel_door_warehouse_01",
+    "steel_panel_01"
+  ],
+  "tile_fix_09": {
+    "assembly_id": "industrial_west_4x7_s440013_f0c0",
+    "footprint": {
+      "width": 4,
+      "depth": 7,
+      "floors": 2,
+      "wdc_cell_count": 36
+    },
+    "pilot_tile_id": "tile_rail_warehouse_pilot_v1",
+    "occupied_cells_target": 11
+  }
+}

@@ -53,6 +53,12 @@ pub(crate) fn tactical_vfx_proof_enabled() -> bool {
     )
 }
 
+/// Minimap double-tap / operator scroll extends tactical VFX camera override window.
+#[derive(Resource, Debug, Default)]
+pub struct TacticalVfxCameraUserOverride {
+    pub release_after_secs: f64,
+}
+
 /// P2-VFX-VISUAL-001: `--test visual` / VfxSandbox always require tactical particle witness before proof commit.
 #[inline]
 pub(crate) fn visual_tactical_vfx_witness_required(launch: &crate::engine::EngineLaunchArgs) -> bool {
@@ -601,8 +607,13 @@ pub fn log_e01_projection_graph_fixture() -> RenderProjectionGraph {
     };
     let mut policy = RepresentationResult::default();
     policy.overlay_matrix.logistics = true;
+    policy.overlay_policy.fire_heat = true;
     let fire_frame = crate::render::sim_visual_extract::FireVisualFrame::default();
-    let ecology = EcologyVisualSnapshot::default();
+    let ecology_rows =
+        crate::dev::landscape_grammar_sim_harness::live_landscape_program_chunk_count_after_harness();
+    let mut ecology = EcologyVisualSnapshot::default();
+    ecology.stamp = stamp;
+    ecology.ecology_chunk_count = ecology_rows;
     let lod_map = WorldLodMap::default();
     let ctx = RenderProjectionContext {
         policy: &policy,
@@ -698,15 +709,23 @@ pub fn refresh_stage5_visual_perf_witness_on_disk() -> bool {
 pub fn merge_log_e01_stage5_witness(root: &mut serde_json::Value, graph: &RenderProjectionGraph) {
     let signature = crate::render::extraction::projection_graph_build_signature(graph);
     let fire_rows = graph.fire.instance_buffer.len();
+    let ecology_rows = graph.ecology.active_rows;
+    let ecology_source = if ecology_rows > 0 {
+        "live_landscape_program_on_chunk"
+    } else {
+        "projection_graph_ecology"
+    };
     let patch = serde_json::json!({
         "build_signature": signature,
         "runtime_order": crate::render::extraction::projection_graph_runtime_order_snapshot(graph),
         "logistics_active_rows": graph.logistics.active_rows,
-        "ecology_active_rows": graph.ecology.active_rows,
+        "ecology_active_rows": ecology_rows,
         "fire_instance_buffer_rows": fire_rows,
     });
     if let Some(obj) = root.as_object_mut() {
         obj.insert("projection_graph".into(), patch);
+        obj.insert("ecology_active_rows".into(), ecology_rows.into());
+        obj.insert("ecology_rows_source".into(), ecology_source.into());
         obj.insert(
             "projection_state".into(),
             serde_json::json!({
@@ -728,6 +747,16 @@ pub fn merge_log_e01_stage5_witness(root: &mut serde_json::Value, graph: &Render
                 "gate": "FIRE-F2-EXTRACT-001",
                 "fire_instance_buffer_rows": fire_rows,
                 "green": fire_rows > 0,
+            }),
+        );
+        let fire_corridor_population_fuel_wired =
+            crate::systems::ecology::fire_corridor_population_fuel_witness_green();
+        obj.insert(
+            "fire_corridor_witness".into(),
+            serde_json::json!({
+                "gate": "VEG-FIRE-CORRIDOR-FULLAPP-001",
+                "population_fuel_wired": fire_corridor_population_fuel_wired,
+                "green": fire_corridor_population_fuel_wired,
             }),
         );
     }

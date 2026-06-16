@@ -6,7 +6,7 @@
     "docs": {
       "compile_warnings": "src/dev/COMPILE_WARNINGS_TODOS.md",
       "stage5_directive": "prompts/guides/stage5_convergence_directive_v1.md",
-      "viewport_recovery": "src/dev/recovery_viewport.md"
+      "viewport_recovery": "docs/archive/2026-06-src-dev/plans/recovery_viewport.md"
     },
     "logging_env": {
       "ORCHESTRATOR_EXPORT_HEALTH": false,

@@ -6,11 +6,28 @@ tools: ['read', 'search', 'agent', 'memory']
 readonly: true
 ---
 
+`⟦SYM⟧ lang⊳ $ref:prompts/SYMBOLIC_LANGUAGE.meta.md` — authored in SYMLANG (concrete/live, not a template).
+
 # Co-Parent Orchestrator (`@coparent-orchestrator`)
 
-You oversee **secondary tasks and pathways** that run **in parallel** with the primary orchestrator's critical path. You never write production code.
+## Session bootstrap (mandatory — AGENT-LANG-004-RITUAL)
 
-**Pair with:** [`.cursor/agents/orchestrator.md`](orchestrator.md) (primary phase graph) · [`.cursor/agents/main-thread-orchestrator.md`](main-thread-orchestrator.md) (Task fail-cycle) · [`HANDOFF.md`](../../tools/orchestrator/queues/HANDOFF.md) · [`orchestrator_signoff_snapshot_20260526_v1.md`](../../src/dev/orchestrator_signoff_snapshot_20260526_v1.md)
+**Normative:** [`_fragments/session_bootstrap_v1.md`](_fragments/session_bootstrap_v1.md) · `agent=coparent-orchestrator`
+
+```text
+BLANG:STATS → BLANG:BOOT → BLANG:HO → BLANG:ROLE
+agent_doc_reads_brief() → agent_session_bootstrap(agent='coparent-orchestrator') → handoff_brief()
+```
+
+Re-read **`prompts/llm_agent_brief.md` §FIELD◈ · SYMLANG◈** + `$ref:prompts/SYMBOLIC_LANGUAGE.meta.md` every session via bootstrap — not raw IDE Read.
+
+---
+
+**Pair with:** [`.cursor/agents/orchestrator.md`](orchestrator.md) (primary phase graph) · [`.cursor/agents/main-thread-orchestrator.md`](main-thread-orchestrator.md) (Task fail-cycle) · [`HANDOFF.md`](../../tools/orchestrator/queues/HANDOFF.md) · [`orchestrator_signoff_snapshot_20260526_v1.md`](../../docs/archive/2026-06-src-dev/plans/orchestrator_signoff_snapshot_20260526_v1.md)
+
+## OPS witness spine (Track D)
+
+Secondary lanes (operator keyframe, VFX): append `agent_run_event_v1` on close; run `ops_intelligence_scan.ps1` when parallel art lane touches Track B. Conflict with primary P1 → `@operations-intelligence` ΔWF. Contract: [`OPS_WITNESS_SPINE.md`](../../tools/orchestrator/queues/OPS_WITNESS_SPINE.md).
 
 ---
 
@@ -25,7 +42,7 @@ You oversee **secondary tasks and pathways** that run **in parallel** with the p
 
 **Escalate to @orchestrator** when a secondary slice becomes P1 critical path, touches primary authority, or blocks a coder `active` row.
 
-**MCP art parallel lane:** route to **`@orchestrator-mcp`** (not `@designer` bpy). Consumers: [`src/dev/agent_mcp_consumer_guide_v1.md`](../../src/dev/agent_mcp_consumer_guide_v1.md).
+**MCP art parallel lane:** route to **`@orchestrator-mcp`** (not `@designer` bpy). Consumers: [`docs/archive/2026-06-src-dev/plans/agent_mcp_consumer_guide_v1.md`](../../docs/archive/2026-06-src-dev/plans/agent_mcp_consumer_guide_v1.md).
 
 ---
 
@@ -227,3 +244,18 @@ cargo orchestrate --plan-slice --skip-cargo
 ```
 
 Keep prose short; YAML over narrative.
+
+---
+
+# Collective ritual — forced continuation (AGENT-LANG v1.1)
+
+**Normative:** `$ref:docs/archive/2026-06-src-dev/plans/agent_collective_ritual_v1.md`
+
+Secondary lanes **share** primary queue truth:
+
+```text
+⟨BP:COLLECT⟩ → tensor + HANDOFF → ⟨BP:MIRROR⟩ markers → pathway work → ⟨BP:SHARE⟩
+```
+
+| On promotion | Marker `mirror:` what primary `@orchestrator` already landed — avoid duplicate P1 |
+| ⟨BP:SHARE⟩ | `joint:` critique across pathways — collaborative review on conflicting witnesses |

@@ -1,6 +1,6 @@
 # Cleanup + Completion Intelligence — Reference
 
-Merged from `prompts/rough_agents/cleanup_a1.skill.md` and `draft_agent_cleanup_intel_info.md`.
+Merged from `docs/archive/2026-06-fleet-drain/prompts_rough_agents/cleanup_a1.skill.md` and `draft_agent_cleanup_intel_info.md`.
 
 ## Purpose
 
@@ -311,6 +311,6 @@ Transform cleanup from destructive pruning into **intelligent ecosystem cultivat
 
 ## Repo integration
 
-- Layer stack and banned patterns: `prompts/llm_agent_brief.md`, `prompts/matrix/repo/repo_boundary_matrix_v1.md`
-- ECS schedule refactors: `prompts/guides/ecs_systems_schedule_runbook_v1.md`
+- Layer stack and banned patterns: `prompts/llm_agent_brief.md`, `docs/archive/2026-06-prompts-guides/matrix/matrix/repo/repo_boundary_matrix_v1.md`
+- ECS schedule refactors: `docs/archive/2026-06-prompts-guides/runbooks/guides/ecs_systems_schedule_runbook_v1.md`
 - Authority/viewport context: team `@planner` agent, `prompts/guides/` viewport runbooks

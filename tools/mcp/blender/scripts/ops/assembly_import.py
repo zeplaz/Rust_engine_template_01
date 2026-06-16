@@ -31,6 +31,16 @@ def _ensure_collection(name: str) -> bpy.types.Collection:
     return coll
 
 
+def _meshes_in_hierarchy(root: bpy.types.Object) -> list:
+    meshes: list = []
+    if root.type == "MESH":
+        meshes.append(root)
+    for child in root.children_recursive:
+        if child.type == "MESH":
+            meshes.append(child)
+    return meshes
+
+
 def _import_glb(glb_path: Path, collection: bpy.types.Collection) -> bpy.types.Object:
     bpy.ops.import_scene.gltf(filepath=str(glb_path))
     objs = list(bpy.context.selected_objects)
@@ -64,13 +74,8 @@ def build(job: dict, *, repo_root: Path) -> Path:
             glb_path = (repo_root / glb_rel).resolve()
         if not glb_path.is_file():
             raise FileNotFoundError(f"Missing GLB: {glb_path}")
-        before = {o.name for o in bpy.data.objects}
         root = _import_glb(glb_path, assembly_coll)
-        new_meshes = [
-            o
-            for o in bpy.data.objects
-            if o.name not in before and o.type == "MESH"
-        ]
+        new_meshes = _meshes_in_hierarchy(root)
         pos = placement.get("position") or [0.0, 0.0, 0.0]
         rot = placement.get("rotation_euler") or [0.0, 0.0, 0.0]
         root.location = (float(pos[0]), float(pos[2]), float(pos[1]))
@@ -79,7 +84,7 @@ def build(job: dict, *, repo_root: Path) -> Path:
         profile = placement.get("material_profile")
         if profile and new_meshes:
             try:
-                from export_glb import apply_material_profile_to_meshes
+                from ops.export_glb import apply_material_profile_to_meshes
 
                 mode = apply_material_profile_to_meshes(
                     new_meshes,
@@ -89,6 +94,10 @@ def build(job: dict, *, repo_root: Path) -> Path:
                 print(f"ASSEMBLY_MATERIAL {root.name} {profile} mode={mode}")
             except Exception as exc:  # noqa: BLE001
                 print(f"ASSEMBLY_MATERIAL_WARN {root.name} {profile}: {exc}")
+
+    from ops.material_authority import apply_snapshot_material_profiles
+
+    apply_snapshot_material_profiles(snapshot, repo_root=repo_root)
 
     # Assembly blends are ASSEMBLY-only. Iso rig (utils/Tile_iso_rig_v1.blend) is appended at bake/render time.
 

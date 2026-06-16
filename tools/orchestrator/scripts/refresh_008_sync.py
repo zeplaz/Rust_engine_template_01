@@ -8,11 +8,11 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[3]
 
 REQUIRED = [
-    "src/dev/planner_status_audit_v10.md",
-    "src/dev/plan_ledger_refresh_008_checklist_v1.md",
-    "src/dev/plan_elemental_wave2_index_001_v1.md",
-    "src/dev/plan_wss_hybrid_retire_pr4_001_v1.md",
-    "src/dev/plan_bq128_apply_exec_001_v1.md",
+    "docs/archive/2026-06-fleet-drain/planner_audits/planner_status_audit_v10.md",
+    "docs/archive/2026-06-src-dev/plans/plan_ledger_refresh_008_checklist_v1.md",
+    "docs/archive/2026-06-src-dev/plans/plan_elemental_wave2_index_001_v1.md",
+    "docs/archive/2026-06-src-dev/plans/plan_wss_hybrid_retire_pr4_001_v1.md",
+    "docs/archive/2026-06-src-dev/plans/plan_bq128_apply_exec_001_v1.md",
 ]
 
 
@@ -58,7 +58,7 @@ def main() -> None:
     if failed:
         raise SystemExit(f"witness reconcile failed: {failed}")
 
-    audit = (ROOT / "src/dev/planner_status_audit_v10.md").read_text(encoding="utf-8")
+    audit = (ROOT / "docs/archive/2026-06-fleet-drain/planner_audits/planner_status_audit_v10.md").read_text(encoding="utf-8")
     if "**SIGNED**" not in audit:
         raise SystemExit("audit v10 must be SIGNED")
 

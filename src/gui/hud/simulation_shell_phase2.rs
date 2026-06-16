@@ -58,6 +58,14 @@ pub fn command_left_stack_footprint_px(collapsed: bool) -> f32 {
     }
 }
 
+/// Screen rect for build-rail submenu popup (pointer gate hit test).
+#[must_use]
+pub fn sim_build_rail_submenu_block_rect() -> egui::Rect {
+    let anchor_x = CONTEXT_RAIL_W_PX + COMMAND_LEFT_STACK_COLUMN_GAP_PX + BUILD_RAIL_W_PX + 8.0;
+    let anchor_y = 96.0;
+    egui::Rect::from_min_size(egui::pos2(anchor_x, anchor_y), egui::vec2(280.0, 420.0))
+}
+
 /// P3 — map viewport inset frame.
 pub const MAP_FRAME_INSET_PX: f32 = 4.0;
 
@@ -122,6 +130,7 @@ impl ContextTrayState {
 pub enum ContextTrayTab {
     #[default]
     Alerts,
+    Events,
     Intel,
     Logistics,
     Diagnostics,
@@ -132,11 +141,19 @@ impl ContextTrayTab {
     pub const fn label(self) -> &'static str {
         match self {
             Self::Alerts => "Alerts",
+            Self::Events => "Events",
             Self::Intel => "Intel",
             Self::Logistics => "Logistics",
             Self::Diagnostics => "Diag",
         }
     }
+}
+
+/// **EVENT-LOG-UI-001** — Events tab + tray/ops format hooks wired in sim chrome.
+#[must_use]
+pub fn event_log_ui_chrome_wired() -> bool {
+    ContextTrayTab::Events.label() == "Events"
+        && crate::sim::effects::PLAYER_EVENT_TRAY_BODY_MAX_ROWS >= 4
 }
 
 /// P1 ops strip zones: time | alerts | intel | weather | power | tray affordance.
@@ -757,6 +774,9 @@ impl Plugin for SimulationShellPhase2Plugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(super::icon_atlas::IconAtlasPlugin);
         app.init_resource::<ContextTrayState>()
+            .init_resource::<super::simulation_pointer_gate::SimulationMapPointerGate>()
+            .init_resource::<crate::gui::MinimapEguiDevGate>()
+            .init_resource::<super::minimap_bevy_interaction::MinimapBevyPointerState>()
             .init_resource::<OpsStripIntelFocusRequest>()
             .init_resource::<UiShellMigrationWitness>()
             .init_resource::<UiShellMigrationWitnessReplay>()
@@ -767,6 +787,12 @@ impl Plugin for SimulationShellPhase2Plugin {
             .add_systems(
                 Update,
                 (
+                    super::simulation_pointer_gate::sync_simulation_map_pointer_gate_system,
+                    super::simulation_pointer_gate::apply_simulation_unified_cursor_system
+                        .after(super::simulation_pointer_gate::sync_simulation_map_pointer_gate_system),
+                    super::minimap_bevy_interaction::minimap_bevy_active_input_system,
+                    super::minimap_bevy_interaction::minimap_bevy_scroll_zoom_system,
+                    super::minimap_bevy_interaction::pin_minimap_centered_fit_system,
                     prime_phase2a_ops_zones_witness_when_strip_live,
                     ops_strip_zone_click_system,
                     context_tray_tab_click_system,
@@ -797,20 +823,26 @@ impl Plugin for SimulationShellPhase2Plugin {
             )
             .add_systems(
                 bevy_egui::EguiPrimaryContextPass,
-                sync_minimap_chrome_root_system
+                (
+                    super::simulation_pointer_gate::finalize_simulation_map_pointer_gate_egui_system,
+                    sync_minimap_chrome_root_system,
+                )
+                    .chain()
                     .after(super::hud_root_tick::hud_product_shell_egui_root)
                     .run_if(in_simulation_or_editor),
             )
-            .add_systems(OnEnter(BaseState::Simulation), reset_ui_shell_witness_replay)
             .add_systems(
                 PostUpdate,
                 (
+                    super::minimap_bevy_interaction::minimap_bevy_pointer_system,
+                    super::minimap_bevy_interaction::sync_minimap_viewport_frame_overlay_system,
                     replay_ui_shell_witness_interactions_system,
                     write_ui_shell_migration_live_proof_system,
                 )
                     .chain()
                     .run_if(in_state(BaseState::Simulation)),
-            );
+            )
+            .add_systems(OnEnter(BaseState::Simulation), reset_ui_shell_witness_replay);
     }
 }
 
@@ -824,7 +856,7 @@ pub fn format_sim_tick_line(tick: u64, paused: bool, speed: f32) -> String {
 struct OpsStripZoneCache {
     time_fp: Option<(u64, bool, i32)>,
     time_line: String,
-    alerts_fp: Option<(usize, u32)>,
+    alerts_fp: Option<(usize, u32, u32, u64)>,
     alerts_line: String,
     intel_fp: Option<(bool, i32, i32)>,
     intel_line: String,
@@ -842,6 +874,7 @@ fn update_ops_strip_zone_lines_system(
     logistics: Option<Res<crate::strategic::LogisticsAiRuntime>>,
     missions: Option<Res<ActiveMissions>>,
     narrative: Option<Res<NarrativeObservationBus>>,
+    player_log: Option<Res<crate::sim::effects::PlayerEventLog>>,
     weather: Option<Res<WeatherPrecipVisualSample>>,
     world_fields: Option<Res<WorldFields>>,
     tray: Res<ContextTrayState>,
@@ -875,10 +908,18 @@ fn update_ops_strip_zone_lines_system(
         .and_then(|b| b.recent.back())
         .map(|o| o.generated_text.len() as u32)
         .unwrap_or(0);
-    let alerts_fp = (n_m, narrative_fp);
+    let crit_unread = player_log.as_deref().map(|l| l.unread_crit).unwrap_or(0);
+    let last_event_id = player_log
+        .as_deref()
+        .and_then(|l| l.rows.back().map(|r| r.effect_id))
+        .unwrap_or(0);
+    let alerts_fp = (n_m, narrative_fp, crit_unread, last_event_id);
     if cache.alerts_fp != Some(alerts_fp) {
         cache.alerts_fp = Some(alerts_fp);
-        cache.alerts_line = format!("ALERTS  {n_m}");
+        cache.alerts_line = crate::sim::effects::format_ops_strip_alerts_line(
+            n_m,
+            player_log.as_deref().unwrap_or(&crate::sim::effects::PlayerEventLog::default()),
+        );
         for mut t in qs.p1().iter_mut() {
             *t = Text::new(cache.alerts_line.clone());
         }
@@ -1000,11 +1041,17 @@ fn apply_ops_strip_intel_focus_system(
 fn context_tray_tab_click_system(
     q: Query<(&Interaction, &ContextTrayTabButton), Changed<Interaction>>,
     mut tray: ResMut<ContextTrayState>,
+    mut player_log: Option<ResMut<crate::sim::effects::PlayerEventLog>>,
     mut witness: ResMut<UiShellMigrationWitness>,
 ) {
     for (interaction, tab) in &q {
         if *interaction == Interaction::Pressed {
             tray.on_tab_pressed(tab.0);
+            if tab.0 == ContextTrayTab::Events {
+                if let Some(log) = player_log.as_mut() {
+                    crate::sim::effects::clear_player_event_crit_unread(log.as_mut());
+                }
+            }
             witness.ops_zones_wired = true;
             witness.phase2_zones_live = true;
             witness.flat_v2_tab_chrome = true;
@@ -1088,6 +1135,7 @@ fn sync_ops_strip_alert_badge_system(
 fn sync_context_tray_visibility_system(
     tray: Res<ContextTrayState>,
     live: Option<Res<HudInfoLiveData>>,
+    player_log: Option<Res<crate::sim::effects::PlayerEventLog>>,
     mut q: ParamSet<(
         Query<(&mut Node, &mut Visibility), With<ContextTrayRoot>>,
         Query<&mut Visibility, With<ContextTrayBodyRoot>>,
@@ -1135,6 +1183,9 @@ fn sync_context_tray_visibility_system(
                 "ALERTS · msn {} · T0 {:.2} · {}",
                 d.mission_count, d.mean_threat_slot0, d.mission_hint
             ),
+            ContextTrayTab::Events => crate::sim::effects::format_player_event_tray_body(
+                player_log.as_deref().unwrap_or(&crate::sim::effects::PlayerEventLog::default()),
+            ),
             ContextTrayTab::Intel => format!(
                 "INTEL · routes {} · fract μ {:.2} · factions {}",
                 if d.routes_layer_on { "on" } else { "off" },
@@ -1153,6 +1204,13 @@ fn sync_context_tray_visibility_system(
                 d.pending_total
             ),
         };
+        for mut text in &mut body_q {
+            *text = Text::new(body.clone());
+        }
+    } else if tray.active_tab == ContextTrayTab::Events {
+        let body = crate::sim::effects::format_player_event_tray_body(
+            player_log.as_deref().unwrap_or(&crate::sim::effects::PlayerEventLog::default()),
+        );
         for mut text in &mut body_q {
             *text = Text::new(body.clone());
         }

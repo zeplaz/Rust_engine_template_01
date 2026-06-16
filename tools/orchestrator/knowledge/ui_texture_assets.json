@@ -28,7 +28,7 @@
   },
   "palette_refs": [
     "src/gui/style/palette.rs",
-    "prompts/guides/ui/design_theme.md"
+    "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/design_theme.md"
   ],
   "phase4_icon_atlas": {
     "atlas_png": "assets/textures/ui/icon_atlas_phase4_v1.png",

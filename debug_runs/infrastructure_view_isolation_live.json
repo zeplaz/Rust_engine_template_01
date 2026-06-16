@@ -51,40 +51,40 @@
     ],
     "relative_path": "debug_runs/infrastructure_view_isolation_live.json",
     "schema": "debug_run_envelope_v1",
-    "source_system": "refresh_infrastructure_view_isolation_live_witness",
-    "written_at_epoch_secs": 1780456285
+    "source_system": "witness_parity_refresh",
+    "written_at_epoch_secs": 1781367219
   },
   "fire7_f7_a_001": {
-    "f7_a_per_view_extract_bounded": true,
+    "f7_a_per_view_extract_bounded": false,
     "gate": "FIRE7-F7-A-001",
-    "green": true
+    "green": false
   },
   "fire7_f7_a_exit_001": {
-    "fire7_f7_a_001_green": true,
+    "fire7_f7_a_001_green": false,
     "gate": "FIRE7-F7-A-EXIT-001",
-    "green": true,
+    "green": false,
     "minimap_fire_overlay_only": true,
     "sole_fire_visual_producer": true
   },
   "infra_vm_deep_001": {
     "gate": "INFRA-VM-DEEP-001",
-    "green": true,
+    "green": false,
     "sim_trace": {
-      "vm_08_overlay_masks_aligned": true,
+      "vm_08_overlay_masks_aligned": false,
       "vm_10_minimap_lockstep": false,
       "vm_10_preview_lockstep": false,
       "vm_11_minimap_cap_respected": true,
       "vm_11_preview_cap_respected": true
     }
   },
-  "infrastructure_view_isolation_green": true,
+  "infrastructure_view_isolation_green": false,
   "isolation": {
     "minimap_main_lockstep_suspect": false,
     "minimap_overlay_fire_heat": false,
     "preview_main_lockstep_suspect": false,
     "preview_overlay_fire_heat": false,
     "simulation_map_shares_main_camera": false,
-    "vm08_overlay_masks_aligned": true,
+    "vm08_overlay_masks_aligned": false,
     "world_main_overlay_fire_heat": false
   },
   "profile": "INFRASTRUCTURE_VIEW_ISOLATION",
@@ -95,7 +95,7 @@
   },
   "triage_phase_d_parity_001": {
     "gate": "TRIAGE-PHASE-D-PARITY-001",
-    "green": true
+    "green": false
   },
   "vm_06": {
     "resolved_viewports_cache_mirror": "view_runtime::sync_resolved_viewports_from_authority",
@@ -110,7 +110,7 @@
     "deferred_input_hub": "MapViewInteractionByView"
   },
   "vm_08": {
-    "overlay_masks_aligned": true
+    "overlay_masks_aligned": false
   },
   "vm_09": {
     "infra_proj2_001_green": true,
@@ -126,7 +126,7 @@
     "preview_lockstep_suspect": false
   },
   "vm_11": {
-    "f7_a_per_view_extract_bounded": true,
+    "f7_a_per_view_extract_bounded": false,
     "minimap_cap_respected": true,
     "per_view_chunk_heat": {},
     "per_view_fire_instances": {},

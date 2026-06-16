@@ -127,6 +127,35 @@ pub fn warehouse_v2_atlas_index_registered() -> bool {
     })
 }
 
+/// BUILD-READ-VISUAL-001 — pilot catalog id resolves to warehouse production atlas (lib).
+#[must_use]
+pub fn build_read_visual_pilot_tile_stamp_lib_green() -> bool {
+    use crate::construction::PilotCatalog;
+    use crate::strategic::{BuildSiteTile, LayerType, SiteId};
+
+    let registry = crate::construction::procedural::load_tile_atlas_registry();
+    if !registry.load_errors.is_empty() {
+        return false;
+    }
+    let pilots = PilotCatalog::load_from_disk();
+    let Some(pilot) = pilots.first_grammar_pilot() else {
+        return false;
+    };
+    let planned = PlannedSite {
+        site_id: SiteId(1),
+        origin: BuildSiteTile { x: 0, z: 0 },
+        footprint: FootprintTiles {
+            width: pilot.footprint.width,
+            depth: pilot.footprint.depth,
+        },
+        archetype: SiteArchetype::Factory,
+        layer: LayerType::Surface,
+        catalog_id: Some(pilot.catalog_id.clone()),
+        placement: None,
+    };
+    resolve_atlas_entry_for_planned_site(&registry, &planned, None).is_some()
+}
+
 #[must_use]
 pub fn resolve_atlas_entry_for_planned_site<'a>(
     registry: &'a TileAtlasRegistry,
@@ -142,7 +171,12 @@ pub fn resolve_atlas_entry_for_planned_site<'a>(
                 return Some(entry);
             }
         }
-        if catalog.contains("warehouse") || catalog.contains("industrial") {
+        if catalog.contains("warehouse") || catalog.contains("industrial") || catalog.contains("logistics_rail") {
+            if let Some(entry) = registry.atlas_for_tile_id(WAREHOUSE_INDUSTRIAL_TILE_ID) {
+                return Some(entry);
+            }
+        }
+        if catalog.starts_with("pilot:") && catalog.contains("logistics_rail") {
             if let Some(entry) = registry.atlas_for_tile_id(WAREHOUSE_INDUSTRIAL_TILE_ID) {
                 return Some(entry);
             }
@@ -289,6 +323,7 @@ pub fn eng_pt_4_001_rowhouse_map_stamp_witness_green() -> bool {
         floors: 2,
         style: StylePackId("style_victorian".into()),
         seed: 42,
+        arch_dna_preset_id: None,
     });
     let assembly_id = assembly_id_for("style_victorian", 4, 3, 2, 42);
     if assembly_id != "victorian_4x3_s42_a7cb" {
@@ -384,6 +419,7 @@ pub fn eng_pt_4_warehouse_map_stamp_witness_green() -> bool {
         floors: 2,
         style: StylePackId("style_industrial_west".into()),
         seed: 43,
+        arch_dna_preset_id: None,
     });
     let assembly_id = assembly_id_for("style_industrial_west", 4, 2, 2, 43);
     if assembly_id != "industrial_west_4x2_s43_a879" {

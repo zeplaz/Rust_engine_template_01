@@ -1,0 +1,63 @@
+{
+  "schema": "ops_project_brief_v1",
+  "project": "Rust_engine_template_01",
+  "quality_score": 7,
+  "utility_score": 2.4,
+  "auth_spine": "MAT\u2605\u21e2APS\u2605\u21e2SNAP\u2605\u21e2WRK\u2605\u21e2ATL\u2605\u21e2RT\u2605",
+  "known_failures": [
+    "track_b_ship_blocked__manual_keyframe_+_g4",
+    "product_gate__play_scenario_acceptance",
+    "warehouse_production_bake_paused__track_b"
+  ],
+  "top_failures_ranked": [
+    {
+      "id": "track_b_ship_blocked__manual_keyframe_+_g4",
+      "severity": "P0"
+    },
+    {
+      "id": "product_gate__play_scenario_acceptance",
+      "severity": "P1"
+    },
+    {
+      "id": "warehouse_production_bake_paused__track_b",
+      "severity": "P1"
+    }
+  ],
+  "recent_improvements": [
+    "OPS-006",
+    "OPS-CYCLE-2-001"
+  ],
+  "suggested_focus": "Track B ship blocked \u2014 manual keyframe + G4",
+  "active_picks": {
+    "Operator": "G-PLAY-01"
+  },
+  "last_20_runs_summary": "ops_report_latest.json, ops_project_brief_v1.json",
+  "metrics_tier1": {
+    "q_per_token": null,
+    "ftr": null,
+    "rtr": null,
+    "status": "not_measured",
+    "note": "Tier-1 KPIs require agent_run_event telemetry"
+  },
+  "build_set_health": {
+    "green": true,
+    "grammar_set_brief": "grammar pilots: 2 \u00b7 shape QA: 4 \u00b7 presets: 2\nF-axis covered: logistics, manufacturing\ngaps: none",
+    "coverage_green": true,
+    "parity_green": true,
+    "hardcode_green": true,
+    "grammar_pilot_count": 2,
+    "preset_count": 2,
+    "gaps": [],
+    "coverage_errors": []
+  },
+  "handoff_ok": true,
+  "ops_report_path": "debug_runs/agent_ops/ops_report_latest.json",
+  "phase3_queue_path": "tools/orchestrator/queues/post_drain_phase3_queue.json",
+  "_agent_meta": {
+    "schema": "ops_project_brief_v1",
+    "written_at_epoch_secs": 1781328296,
+    "profile": "OPS_PROJECT_BRIEF",
+    "source_system": "ops_intelligence",
+    "relative_path": "debug_runs/agent_ops/ops_project_brief_v1.json"
+  }
+}

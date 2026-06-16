@@ -6,7 +6,7 @@
 | **Queue** | **DESIGN-VFX-CAPTURE-ROUND-002** · **VX-P0-04** |
 | **Status** | **DONE** — witness **PASS** + round-001 PNGs retained |
 | **Prior round** | [`vfx_capture_status_20260525.md`](vfx_capture_status_20260525.md) (**DESIGN-VFX-CAPTURE-001**) |
-| **Designer ACCEPT** | [`vfx_visual_acceptance_record_v1.md`](../../../src/dev/vfx_visual_acceptance_record_v1.md) |
+| **Designer ACCEPT** | [`vfx_visual_acceptance_record_v1.md`](../../../docs/archive/2026-06-src-dev/plans/vfx_visual_acceptance_record_v1.md) |
 
 ---
 

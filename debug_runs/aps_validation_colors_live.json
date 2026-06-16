@@ -1,0 +1,8 @@
+{
+  "program_id": "APS-UX-POLISH-001",
+  "gate": "validation_fail_not_green",
+  "green": true,
+  "assembly_panel": true,
+  "catalog_panel": true,
+  "variants_panel": true
+}

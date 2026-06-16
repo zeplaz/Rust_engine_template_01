@@ -1,0 +1,25 @@
+{
+  "_agent_meta": {
+    "profile": "DESIGN_ZOOM_FIRE_READ",
+    "schema": "debug_run_envelope_v1",
+    "source_system": "designer_design_zoom_fire_read_001",
+    "relative_path": "debug_runs/design_zoom_fire_read_live.json",
+    "design_doc": "src/dev/design_zoom_fire_read_v1.md",
+    "parent_program": "PLAN-PRODUCT-POLISH-001"
+  },
+  "gate": "DESIGN-ZOOM-FIRE-READ-001",
+  "green": true,
+  "verdict": "PASS",
+  "charter_on_disk": true,
+  "fire7_prereq_signed": true,
+  "operational_play_zoom_alpha": 0.42,
+  "fire_spark_min_zoom_alpha": 0.28,
+  "fire_spark_full_scatter_zoom_alpha": 0.58,
+  "fire_spark_tactical_proof_zoom_alpha": 0.85,
+  "probe_green_pick_delta_world_max": 1.0,
+  "probe_green_ghost_screen_delta_px_max": 4.0,
+  "probe_yellow_pick_delta_world_max": 3.0,
+  "probe_yellow_ghost_screen_delta_px_max": 12.0,
+  "unblocks": ["TRIAGE-FIRE-PRODUCT-001"],
+  "delta_wf": "@coder TRIAGE-MAP-PICK-CLOSURE-001"
+}

@@ -1,6 +1,6 @@
 # STAGE 5 EXIT COMPLETION DIRECTIVE — NO NEW PARALLEL SYSTEMS
 
-> **Gate split (2026-05-22):** Operational closure = [`src/dev/stage5_close_checklist.md`](../../src/dev/stage5_close_checklist.md) only. Items in this doc that are VM / fire-streaming / GPU-tile / deep parity are **deferred** to [`src/dev/stage5_triage_backlog.md`](../../src/dev/stage5_triage_backlog.md) unless they regress FULL_APP.
+> **Gate split (2026-05-22):** Operational closure = [`docs/archive/2026-06-src-dev/plans/stage5_close_checklist.md`](../../docs/archive/2026-06-src-dev/plans/stage5_close_checklist.md) only. Items in this doc that are VM / fire-streaming / GPU-tile / deep parity are **deferred** to [`src/dev/stage5_triage_backlog.md`](../../src/dev/stage5_triage_backlog.md) unless they regress FULL_APP.
 
 You are working inside the proc_A_dine01 Stage 5 convergence architecture.
 
@@ -501,7 +501,7 @@ Do **not** remove until FULL_APP green and a replacement spine owns the behavior
 ### 5) Per-phase acceptance (short)
 
 - **View / vm:** No `ViewManager` consumers observe stale main pose after RTS input in the same frame (`SyncViewManager` after `MapCameraSystemSet::ApplyInput`); minimap shell intent runs after ApplyInput and before sync; isolation diagnostics quiet in expected modes.
-- **GPU tile debug:** With default settings, one instanced pass; storage upload registered in `gpu_buffer_registry` / `TILE_DEBUG_INSTANCES_BUFFER`. **Retire CPU fallback** when: (1) `TILE_DEBUG_INSTANCES_BUFFER` upload stable under FULL_APP, (2) construction phase flags consumed via `RepresentationResult` overlay channel (see [`view_runtime_architecture_v1.md`](../../src/dev/view_runtime_architecture_v1.md) §16), (3) no duplicate extract in `footprint_tile_instances` / `phase_visual` egui path.
+- **GPU tile debug:** With default settings, one instanced pass; storage upload registered in `gpu_buffer_registry` / `TILE_DEBUG_INSTANCES_BUFFER`. **Retire CPU fallback** when: (1) `TILE_DEBUG_INSTANCES_BUFFER` upload stable under FULL_APP, (2) construction phase flags consumed via `RepresentationResult` overlay channel (see [`view_runtime_architecture_v1.md`](../../docs/archive/2026-06-src-dev/plans/view_runtime_architecture_v1.md) §16), (3) no duplicate extract in `footprint_tile_instances` / `phase_visual` egui path.
 - **Fire view:** `VisibleFireChunkSet` keyed by `ViewId`; extraction consumes `ViewInstance::visible_world_rect` — no invisible fallback to “all chunks”.
 - **Phase D:** GPU preview path reported authoritative when requested by mode.
 - **Phase F:** Indirect dispatch count aligns with policy caps when instancing on.

@@ -116,6 +116,7 @@ impl Plugin for EnginePlugin {
             // Sim loop control (pause / step / speed / monotonic tick).
             .add_plugins(SimControlPlugin)
             // Scenario script host (Wave 1): drains one step per frame before sim tick.
+            .add_plugins(crate::sim::SimEffectsPlugin)
             .add_plugins(ScenarioScriptingPlugin);
         configure_chunk_environment_sets(app);
         app.add_plugins(crate::substrate::SubstratePlugin)
@@ -222,6 +223,8 @@ impl Plugin for EnginePlugin {
             .add_plugins(crate::gui::hud::OverlayShellPlugin)
             .add_plugins(crate::gui::hud::Stage7UiShellPlugin)
             .add_plugins(BuildPlanningPlugin)
+            .add_plugins(crate::gui::AssemblySnapshotQcUiPlugin)
+            .add_plugins(crate::gui::VfxFireTestHighlightPlugin)
             .add_plugins(LogisticsTargetsPanelPlugin)
             // World generation editor + runtime.
             .add_plugins(WorldGenToolsPlugin)

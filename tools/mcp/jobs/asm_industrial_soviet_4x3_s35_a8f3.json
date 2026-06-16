@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "job_id": "asm_industrial_soviet_4x3_s35_a8f3",
+  "operation": "assembly_build",
+  "assembly_snapshot": "assets/staging/assemblies/industrial_soviet_4x3_s35_a8f3.json",
+  "output": {
+    "blend": "assets/staging/assemblies/industrial_soviet_4x3_s35_a8f3.blend"
+  }
+}

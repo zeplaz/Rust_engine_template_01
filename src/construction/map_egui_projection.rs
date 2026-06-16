@@ -71,6 +71,32 @@ impl<'a> ConstructionMapProjection<'a> {
             self.world_h,
         )
     }
+
+    #[must_use]
+    pub fn cursor_world_xy_rendered(
+        &self,
+        cursor_logical: Vec2,
+        camera: &Camera,
+        xf: &GlobalTransform,
+        window: &Window,
+        ortho: Option<&crate::gui::MainWorldCameraOrthoTrace>,
+    ) -> Option<Vec2> {
+        if let Some(frame) =
+            crate::gui::sim_map_projection_frame(camera, self.map_vp, window, ortho)
+        {
+            let pose = crate::gui::MapCameraPresentationPose {
+                translation: self.map_camera_compat().translation,
+                zoom: self.camera.zoom,
+                rotation: self.map_camera_compat().rotation,
+            };
+            return Some(crate::gui::sim_map_screen_to_world_xy_in_frame(
+                cursor_logical,
+                &pose,
+                &frame,
+            ));
+        }
+        self.cursor_world_xy(cursor_logical)
+    }
 }
 
 #[inline]
@@ -138,6 +164,45 @@ pub fn tile_screen_extent(
         (Some(p0), Some(p1)) => (p1 - p0).length().max(4.0 * zoom),
         _ => 24.0 * zoom,
     }
+}
+
+/// VM-09 hotfix A — egui footprint projection path when GPU instancing is off.
+#[must_use]
+pub fn egui_footprint_hotfix_a_witness_green() -> bool {
+    use crate::gui::{MapCameraDesired, SimulationMapViewport};
+    use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
+
+    let map_vp = SimulationMapViewport {
+        valid: true,
+        min: Vec2::new(80.0, 60.0),
+        max: Vec2::new(880.0, 540.0),
+    };
+    let params = WorldGenParams::default();
+    let desired = MapCameraDesired {
+        translation: Vec3::new(64.0, 64.0, 999.0),
+        scale: Vec3::splat(2.0),
+        ..Default::default()
+    };
+    let ext = tile_screen_extent(None, &desired, &map_vp, &params);
+    ext > 4.0
+        && world_to_sim_map_egui(Vec3::new(64.5, 0.0, 64.5), None, &desired, &map_vp, &params)
+            .is_some()
+}
+
+/// Map camera desired ↔ view camera roundtrip (MAP-PICK closure helper).
+#[must_use]
+pub fn map_camera_desired_view_camera_roundtrip_witness_green() -> bool {
+    use crate::gui::{view_camera_state_from_map_camera_desired, MapCameraDesired};
+
+    let desired = MapCameraDesired {
+        translation: Vec3::new(100.0, 200.0, 999.0),
+        scale: Vec3::splat(2.5),
+        ..Default::default()
+    };
+    let cam = view_camera_state_from_map_camera_desired(&desired);
+    let back = map_camera_desired_from_view_camera(cam);
+    (back.translation.truncate() - desired.translation.truncate()).length() < 1e-3
+        && (back.scale.x - desired.scale.x).abs() < 1e-3
 }
 
 #[cfg(test)]

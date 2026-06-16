@@ -23,7 +23,7 @@
       "continuation_queue": "tools/orchestrator/queues/continuation_queue.json",
       "warning_registry": "tools/orchestrator/reports/warning_registry.md"
     },
-    "profile": "FIRE_ECOLOGY_F1",
+    "profile": "FIRE-ECOLOGY-REFRESH-001",
     "related_proofs": [
       "debug_runs/stage5_full_app_live.json",
       "debug_runs/infrastructure_view_isolation_live.json",
@@ -46,30 +46,49 @@
       "debug_runs/stage7_play_live.json",
       "debug_runs/wss_substrate_live.json",
       "debug_runs/f2_smoke_pipeline_live.json",
-      "debug_runs/play_scenario_live.json"
+      "debug_runs/play_scenario_live.json",
+      "debug_runs/transport_network_live.json"
     ],
     "relative_path": "debug_runs/fire_ecology_live.json",
     "schema": "debug_run_envelope_v1",
-    "source_system": "fire_ecology_live_proof",
-    "written_at_epoch_secs": 1780455044
+    "source_system": "refresh_fire_ecology_lib_harness_witness",
+    "written_at_epoch_secs": 1781533761
   },
-  "f1_green": false,
+  "f1_green": true,
+  "gate": "FIRE-ECOLOGY-REFRESH-001",
+  "green": true,
+  "lib_harness": true,
   "profile": "FIRE_ECOLOGY_F1",
+  "sim_effect_spine": {
+    "faction_react_hook_rows": 1,
+    "faction_react_wired": true,
+    "sim_effect_spine": {
+      "causal_chain_depth_max": 2,
+      "dedupe_ok": false,
+      "dedupe_rejected": 0,
+      "drain_us": 50,
+      "effect_rows": 3,
+      "ember_dispatched": 3,
+      "hydro_dispatched": 0,
+      "non_ecology_producer_dispatched": 3,
+      "queue_drain_ok": true
+    }
+  },
   "witness": {
-    "chunks_fuel_gated": 0,
-    "chunks_sampled": 19,
+    "chunks_fuel_gated": 63,
+    "chunks_sampled": 63,
     "chunks_with_heat": 0,
-    "frames_sampled": 20,
-    "fuel_gate_active": false,
+    "frames_sampled": 64,
+    "fuel_gate_active": true,
     "fuel_gated_ignitions": 0,
     "fuel_gated_spark_ratio": 0.0,
-    "heat_mostly_stable": false,
+    "heat_mostly_stable": true,
     "heat_spike_frames": 0,
-    "heat_stable_low_frames": 0,
+    "heat_stable_low_frames": 63,
     "max_heat": 0.0,
     "mean_fuel": 0.05999999865889549,
     "mean_heat": 0.0,
-    "mean_old_growth": 0.039949122816324234,
+    "mean_old_growth": 0.019999999552965164,
     "proof_json": true,
     "ungated_spark_cells": 0
   }

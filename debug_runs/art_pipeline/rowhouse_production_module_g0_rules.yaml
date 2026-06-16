@@ -1,0 +1,45 @@
+# rowhouse_production_module_g0_rules.yaml — MCP-PROD-MOD-G0-G5
+task_id: MCP-PROD-MOD-G0-G5
+agent: designer-mcp
+batch_id: kit_production_001
+scope: rowhouse_victorian_only
+green: true
+g0_rules_ref: debug_runs/art_pipeline/rowhouse_production_g0_rules.yaml
+kit_witness: debug_runs/art_pipeline/kit_production_001_live.json
+
+gates:
+  G0: pass
+  G1: pass
+  G2: pass
+  G3: pass
+  G4: pass
+  G5: pass
+
+modules:
+  - module_id: wall_brick_1u
+    job_id: wall_brick_1u_production_run001
+    registered: true
+    vertex_count: 192
+  - module_id: corner_L
+    job_id: corner_L_production_run001
+    registered: true
+    vertex_count: 48
+  - module_id: door_residential
+    job_id: door_residential_production_run001
+    registered: true
+    vertex_count: 44
+  - module_id: roof_pitched_gable
+    job_id: roof_pitched_gable_production_run001
+    registered: true
+    vertex_count: 48
+  - module_id: prop_chimney
+    job_id: prop_chimney_production_run001
+    registered: true
+    vertex_count: 72
+
+g4_silhouette_read:
+  verdict: pass_pilot_silhouette
+  note: bpy C-pilot profiles — not 24-vert cubes; tactical-readable at lod0 zoom
+
+unblocks:
+  - MCP-PROD-ATLAS-G0-G4

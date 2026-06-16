@@ -384,7 +384,7 @@ def tier_issues_for_asset(
                     "TIER-005",
                     "UnknownModuleId",
                     sev,
-                    f"module_id {ctx.module_id!r} not in canonical kit inventory (50 IDs)",
+                    f"module_id {ctx.module_id!r} not in canonical kit inventory ({len(CANONICAL_MODULE_IDS)} IDs)",
                     "tier_unknown_module_id",
                 )
             )
@@ -513,3 +513,50 @@ def tier_issues_for_spec(spec: dict[str, Any], spec_path: Path) -> list[TierIssu
         )
 
     return issues
+
+
+MCP_PROD_B2_WITNESS = "debug_runs/mcp_prod_b2_live.json"
+
+
+def _b2_silhouette_case(archetype: str, profile: str, module_id: str) -> bool:
+    ctx = AssetValidationContext(
+        glb_path=repo_root() / "x.glb",
+        vertex_count=24,
+        archetype=archetype,
+        profile=profile,
+        development_tier="production",
+        batch_id="kit_production_001",
+        module_id=module_id,
+        pbr_status="shipped",
+        material_profile="brick_red_01",
+    )
+    issues = tier_issues_for_asset(ctx, vertex_count=24)
+    return any(i.rule_id == "TIER-002" and i.severity == "error" for i in issues)
+
+
+def refresh_mcp_prod_b2_witness() -> bool:
+    """MCP-PROD-B2 — 24-vert cube fails pitched/sawtooth/arched at production tier."""
+    import json
+
+    cases = [
+        ("module_roof", "pitched", "roof_pitched_gable"),
+        ("module_roof", "sawtooth", "roof_sawtooth"),
+        ("module_window", "arched", "win_arched_1u"),
+    ]
+    silhouette_hits = {
+        f"{a}:{p}": _b2_silhouette_case(a, p, mid) for a, p, mid in cases
+    }
+    green = all(silhouette_hits.values())
+    payload = {
+        "gate_id": "MCP-PROD-B2",
+        "ok": green,
+        "green": green,
+        "phase": "B2",
+        "acceptance": "24-vert cube fails pitched/sawtooth/arched at production",
+        "silhouette_cases": silhouette_hits,
+        "tier_rules": ["TIER-002"],
+    }
+    out = repo_root() / MCP_PROD_B2_WITNESS
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+    return green

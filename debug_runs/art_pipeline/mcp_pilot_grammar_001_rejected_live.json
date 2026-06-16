@@ -30,6 +30,6 @@
   "_agent_meta": {
     "agent": "operator",
     "lane": "human_g4_rejection",
-    "policy": "src/dev/mcp_orchestrator_tile_fix_warehouse_slice_v2.md"
+    "policy": "docs/archive/2026-06-src-dev/plans/mcp_orchestrator_tile_fix_warehouse_slice_v2.md"
   }
 }

@@ -1,0 +1,10 @@
+{
+  "gate_id": "MCP-P2-RUN-EVENT-001",
+  "ok": true,
+  "green": true,
+  "append_ok": true,
+  "ledger_path": "debug_runs/agent_ops/run_events.jsonl",
+  "mcp_tool": "agent_run_append",
+  "cli": "agent-run-append",
+  "prior_witness": "debug_runs/agent_run_append_001_live.json"
+}

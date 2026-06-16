@@ -6,7 +6,7 @@
   "updated": "2026-06-03",
   "_agent_meta": {
     "agent": "designer-mcp",
-    "orders": "src/dev/mcp_fleet_production_pilot_rowhouse_v1.md",
+    "orders": "docs/archive/2026-06-src-dev/plans/mcp_fleet_production_pilot_rowhouse_v1.md",
     "scope": "rowhouse_victorian_only"
   },
   "batch_id": "tile_rowhouse_victorian_production_v1",
@@ -19,11 +19,7 @@
     "variant_set_validate": "pass",
     "tile_batch_validate_report": "pass"
   },
-  "blocked_by": [
-    "MCP-PROD-MOD-G0-G5",
-    "assembly_snapshot_production_tier",
-    "reference_tags_on_production_snapshot"
-  ],
+  "blocked_by": [],
   "scope_guard": {
     "other_archetypes_edited": false
   },

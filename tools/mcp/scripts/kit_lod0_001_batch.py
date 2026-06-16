@@ -161,8 +161,8 @@ def main() -> None:
         "schema_version": 1,
         "batch_id": BATCH_ID,
         "description": "LOD0 canonical slice — 5 kit inventory modules, real profiles, no greybox cheats",
-        "plan_ref": "src/dev/plan_module_kit_production_tier_v1.md",
-        "kit_ref": "src/dev/design_procedural_module_kit_v1.md",
+        "plan_ref": "docs/archive/2026-06-src-dev/plans/plan_module_kit_production_tier_v1.md",
+        "kit_ref": "docs/archive/2026-06-src-dev/plans/design_procedural_module_kit_v1.md",
         "development_tier": TIER,
         "rules_applied": [
             "no_ai_generated_images",

@@ -3,6 +3,7 @@
 ## Project Cursor agents (`.cursor/agents/`)
 
 - `@orchestrator` — `.cursor/agents/orchestrator.md` (primary critical path)
+- `@orchestrator-mcp` — `.cursor/agents/orchestrator-mcp.md` (MCP art lane — `mcp_lane_order_v1.md`)
 - `@coparent-orchestrator` — `.cursor/agents/coparent-orchestrator.md` (secondary parallel pathways)
 - `@planner` — `.cursor/agents/planner.md`
 - `@coder` — `.cursor/agents/coder.md`
@@ -22,5 +23,10 @@
 
 ## ACTIVE MIGRATIONS
 
-_None — infrastructure viewport migration complete; use @coder for new work._
+```text
+⚡P0 MASTER DRAIN — $ref:tools/orchestrator/queues/coder_master_drain_queue.json
+Tracks: REWIRE → FIRE → BUILD → VEG (seq 1–24)
+$ref:src/dev/coder_drain_order_master_v1.md
+```
 
+**Lang:** `$ref:.cursor/skills/agent-lang/SKILL.md` · `$ref:src/dev/agent_lang_v1.md`

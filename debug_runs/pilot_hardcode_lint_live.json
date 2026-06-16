@@ -1,0 +1,19 @@
+{
+  "task_id": "MCP-GUARD-001",
+  "gate_id": "pilot_hardcode_lint",
+  "ok": true,
+  "green": true,
+  "scanned_files": 1637,
+  "needle_count": 3,
+  "hit_count": 0,
+  "violation_count": 0,
+  "transitional_hit_count": 1,
+  "permanent_allowlist_hit_count": 9,
+  "transitional_until": "BUILD-SET-GUARD-002",
+  "allowlist": "tools/mcp/guard/pilot_hardcode_allowlist_v1.json",
+  "violations": [],
+  "transitional_files": [
+    "src/construction/procedural/assembly_snapshot.rs"
+  ],
+  "violations_truncated": false
+}

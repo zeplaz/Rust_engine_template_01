@@ -46,12 +46,13 @@
       "debug_runs/stage7_play_live.json",
       "debug_runs/wss_substrate_live.json",
       "debug_runs/f2_smoke_pipeline_live.json",
-      "debug_runs/play_scenario_live.json"
+      "debug_runs/play_scenario_live.json",
+      "debug_runs/transport_network_live.json"
     ],
     "relative_path": "debug_runs/stage7_play_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "stage7_play_witness",
-    "written_at_epoch_secs": 1780455043
+    "written_at_epoch_secs": 1781573867
   },
   "activation_green": true,
   "concrete_chain_e2e": {

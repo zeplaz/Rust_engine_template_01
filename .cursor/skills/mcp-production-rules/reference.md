@@ -1,6 +1,6 @@
 # MCP Production Rules — Reference
 
-Merged from [`prompts/MCP/rules_skills_draft.md`](../../prompts/MCP/rules_skills_draft.md) §3, [`tools/mcp/MICRO_TOOLS_REGISTRY_v1.md`](../../tools/mcp/MICRO_TOOLS_REGISTRY_v1.md) anti-patterns, and [`.cursor/agents/designer.md`](../../agents/designer.md) art pipeline section.
+Merged from [`docs/archive/2026-06-fleet-drain/prompts_drafts/rules_skills_draft.md`](../../docs/archive/2026-06-fleet-drain/prompts_drafts/rules_skills_draft.md) §3, [`tools/mcp/MICRO_TOOLS_REGISTRY_v1.md`](../../tools/mcp/MICRO_TOOLS_REGISTRY_v1.md) anti-patterns, and [`.cursor/agents/designer.md`](../../agents/designer.md) art pipeline section.
 
 ## Purpose
 
@@ -64,7 +64,7 @@ conditions:
   - tile_size_must_be_fixed_unit
 ```
 
-**Aligns with:** [`design_procedural_module_kit_v1.md`](../../src/dev/design_procedural_module_kit_v1.md) — 1u module grid, bottom-center pivots.
+**Aligns with:** [`design_procedural_module_kit_v1.md`](../../docs/archive/2026-06-src-dev/plans/design_procedural_module_kit_v1.md) — 1u module grid, bottom-center pivots.
 
 ## Enforcement pipeline (draft Rust pseudocode)
 

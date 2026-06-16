@@ -1,0 +1,34 @@
+{
+  "schema_version": "landscape_grammar_v0",
+  "preset_id": "fire_recovery_v0",
+  "chart_id": "FIRE-RECOV-D6",
+  "land_dna": { "H": "burn_scar", "S": "ash", "E": "exposed", "T": "temperate", "D": "dry", "L": "successional", "A": "young", "M": "natural" },
+  "pressure_field": {
+    "lambda_moisture": 0.44,
+    "lambda_slope": 0.36,
+    "lambda_exposure": 0.69,
+    "lambda_disturbance": 0.88,
+    "lambda_access": 0.31,
+    "lambda_security": 0.06,
+    "lambda_productivity": 0.22,
+    "lambda_legibility": 0.47
+  },
+  "landscape_program": {
+    "class": "successional",
+    "district_ref": "fire_recovery_08",
+    "required_topologies": ["PATCH_BURN", "CORRIDOR_SPOIL", "CLUSTER_REGROWTH", "FRINGE_EDGE"]
+  },
+  "topology_graph": [
+    {
+      "id": "net_fire_01",
+      "topology_kind": "Network",
+      "preset_id": "NETWORK_CONNECTED",
+      "children": [
+        { "id": "patch_burn_01", "topology_kind": "Patch", "preset_id": "PATCH_BURN" },
+        { "id": "corr_spoil_01", "topology_kind": "Corridor", "preset_id": "CORRIDOR_SPOIL" },
+        { "id": "cluster_regrow_01", "topology_kind": "Cluster", "preset_id": "CLUSTER_REGROWTH" },
+        { "id": "fringe_edge_01", "topology_kind": "Fringe", "preset_id": "FRINGE_EDGE" }
+      ]
+    }
+  ]
+}

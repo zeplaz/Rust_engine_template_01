@@ -211,6 +211,11 @@ def bake(job: dict, *, repo_root: Path) -> Path:
         if not blend_path.is_file():
             raise FileNotFoundError(f"Missing assembly blend: {blend_path}")
         bpy.ops.wm.open_mainfile(filepath=str(blend_path))
+        from ops.material_authority import apply_from_job
+
+        applied = apply_from_job(job, repo_root=repo_root)
+        if applied:
+            print(f"ARCH_MAT_ORTHO applied={len(applied)}")
         _apply_variant_to_assembly(variant)
         _frame_assembly_camera(elev)
     else:

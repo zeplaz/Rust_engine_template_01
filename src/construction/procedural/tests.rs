@@ -26,6 +26,7 @@ pub fn build_procedural_assembly_witness_body() -> serde_json::Value {
         floors: 2,
         style: StylePackId(style_pack_id.into()),
         seed: 1,
+        arch_dna_preset_id: None,
     };
     let pack = packs.get(style_pack_id);
     let grid = FootprintGrid::from_request(&request);
@@ -283,6 +284,11 @@ fn attach_paths_from_procedural_module_id_field() {
             procedural_module_id: Some("door_residential".into()),
             procedural_glb_path: None,
             procedural_glb_asset: None,
+            grammar_archetype_id: None,
+            arch_dna_preset: None,
+            site_json_path: None,
+            pilot_hover_hint: None,
+            district_style: None,
         },
     );
     attach_procedural_glb_paths(&mut buildings, &modules);

@@ -1,0 +1,51 @@
+{
+  "_meta": {
+    "teaches": ["arch_dna", "pressure_field", "pilot_catalog", "site_composition"],
+    "not_a_ship_target": true,
+    "building_set_id": "infrastructure_v0"
+  },
+  "schema_version": "arch_build_grammar_v0",
+  "preset_id": "power_substation_yard_v0",
+  "grammar_id": "industrial_warehouse_v1",
+  "arch_dna": {
+    "F": "utility",
+    "L": "corporate",
+    "C": "temperate",
+    "D": "sparse",
+    "W": "industrial",
+    "I": "power_hub",
+    "S": "controlled",
+    "P": "utilitarian",
+    "M": "steel",
+    "A": "weathered"
+  },
+  "pressure_field": {
+    "beta_sym": 0.88,
+    "beta_irr": 0.08,
+    "beta_yard": 0.72,
+    "beta_svc": 0.65,
+    "beta_mod": 0.55,
+    "beta_exp": 0.42,
+    "beta_vert": 0.12,
+    "beta_roof": 0.48
+  },
+  "program_stub": {
+    "storage": "high",
+    "loading": "high",
+    "office": "low",
+    "service": "medium",
+    "expansion": "low"
+  },
+  "site_zones": [
+    { "id": "primary", "role": "primary", "footprint_hint": "switchyard" },
+    { "id": "utility", "role": "utility_yard", "footprint_hint": "perimeter" },
+    { "id": "service", "role": "parking", "footprint_hint": "frontage" },
+    { "id": "buffer", "role": "parking", "footprint_hint": "setback" }
+  ],
+  "massing_weight_override": [
+    { "id": "long_hall", "weight": 32 },
+    { "id": "double_hall", "weight": 28 },
+    { "id": "l_shape", "weight": 12 },
+    { "id": "yard_complex", "weight": 28 }
+  ]
+}

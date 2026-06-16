@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "tile_spine_run_request_v1",
+  "type": "object",
+  "required": ["schema", "snapshot_path", "batch_id"],
+  "properties": {
+    "schema": { "const": "tile_spine_run_request_v1" },
+    "snapshot_path": { "type": "string", "minLength": 1 },
+    "batch_id": { "type": "string", "minLength": 1 },
+    "tile_batch_path": { "type": "string" },
+    "steps": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "p0_gate",
+          "snapshot_digest",
+          "preview",
+          "assembly_build",
+          "tile_batch",
+          "atlas_pack",
+          "atlas_validate"
+        ]
+      }
+    },
+    "ship": { "type": "boolean", "default": false },
+    "write_witness": { "type": "boolean", "default": true },
+    "honest_bake": { "type": "boolean", "default": true },
+    "parent_lineage_id": { "type": "string" }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,89 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "grammar_iterate_request_v1.schema.json",
+  "title": "GrammarIterateRequest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "mode", "seed", "archetype_id", "district_style"],
+  "properties": {
+    "schema": { "const": "grammar_iterate_request_v1" },
+    "base_snapshot_path": { "type": "string", "minLength": 1 },
+    "base_snapshot": { "type": "object" },
+    "mode": {
+      "type": "string",
+      "enum": [
+        "full",
+        "massing",
+        "roof",
+        "facade",
+        "detail",
+        "age",
+        "material_strategy",
+        "placement"
+      ]
+    },
+    "seed": { "type": "integer", "minimum": 0 },
+    "archetype_id": { "type": "string", "minLength": 1 },
+    "district_style": { "type": "string", "minLength": 1 },
+    "overrides": {
+      "type": "object",
+      "properties": {
+        "massing_strategy": { "type": "string" },
+        "footprint_mode": { "type": "string" },
+        "footprint": {
+          "type": "object",
+          "properties": {
+            "width": { "type": "integer", "minimum": 1 },
+            "depth": { "type": "integer", "minimum": 1 },
+            "floors": { "type": "integer", "minimum": 1 }
+          },
+          "additionalProperties": false
+        },
+        "roof_slot": { "type": "string" },
+        "roof_rule_id": { "type": "string" },
+        "wall_slot": { "type": "string" },
+        "door_slot": { "type": "string" },
+        "window_slot": { "type": "string" },
+        "placement_tags": { "type": "array", "items": { "type": "string" } },
+        "prop_slot": { "type": "string" },
+        "density": { "type": "number", "minimum": 0, "maximum": 1 },
+        "detail_tags": { "type": "array", "items": { "type": "string" } },
+        "age_band_id": { "type": "string" },
+        "district_material_profiles": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        },
+        "slot_material_overrides": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        },
+        "node_id": { "type": "string" },
+        "module_id": { "type": "string" },
+        "material_profile": { "type": "string" },
+        "semantic_tags": { "type": "object" }
+      },
+      "additionalProperties": false
+    },
+    "preserve_layers": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "archetype",
+          "district_style",
+          "massing",
+          "roof",
+          "facade",
+          "detail",
+          "age",
+          "material_strategy"
+        ]
+      }
+    },
+    "parent_lineage_id": { "type": "string" }
+  },
+  "oneOf": [
+    { "required": ["base_snapshot_path"] },
+    { "required": ["base_snapshot"] }
+  ]
+}

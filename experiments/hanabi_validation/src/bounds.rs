@@ -1,4 +1,4 @@
-//! Designer bounds from [`hanabi_event_vfx_style_bounds_v1.md`](../../../src/dev/hanabi_event_vfx_style_bounds_v1.md).
+//! Designer bounds from [`hanabi_event_vfx_style_bounds_v1.md`](../../../docs/archive/2026-06-src-dev/plans/hanabi_event_vfx_style_bounds_v1.md).
 
 /// Max instances per local burst (DESIGN-HANABI-BOUNDS-001).
 pub const MAX_INSTANCES_PER_EVENT: u32 = 32;

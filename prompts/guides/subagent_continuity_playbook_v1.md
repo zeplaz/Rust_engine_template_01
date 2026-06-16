@@ -2,7 +2,7 @@
 
 > **Problem:** Cursor **Task** background workers sometimes fail with *“Increase limits for faster responses / Switch to Auto”*. That is a **billing/quota gate on the Task API**, not a hard stop on the project. Work must continue via **alternate channels** documented here.
 
-**Related:** [`AGENTS.md`](../../AGENTS.md) agent routing · [`llm_agent_brief.md`](../llm_agent_brief.md) · lane playbooks `tools/orchestrator/agents/`
+**Related:** [`AGENTS.md`](../../AGENTS.md) agent routing · [`llm_agent_brief.md`](../llm_agent_brief.md) · [`SYMBOLIC_LANGUAGE.meta.md`](../SYMBOLIC_LANGUAGE.meta.md) · lane playbooks `tools/orchestrator/agents/`
 
 ---
 
@@ -40,7 +40,7 @@ So *“Switch to Auto”* literally means: **stop using the subagent Task API; u
 Task error (usage limit)  ← Task pool exhausted (all models)
     ├─► 1. Parent (Auto) or @coder in THIS chat implements now   ← correct fix
     ├─► 2. New chat: @coder + playbook + file list (NOT Task)
-    ├─► 3. HANDOFF.md for next session
+    ├─► 3. HANDOFF.md for next session (SYMLANG packet §3.1 — `$ref:prompts/SYMBOLIC_LANGUAGE.meta.md`)
     └─► 4. SDK / admin quota increase (only ways to “turn Task back on”)
 
     ✗ Do NOT: Task(composer-2.5-fast) again — same pool, same error
@@ -152,7 +152,7 @@ When coordinating mission-critical work:
 1. Prefer **one coherent slice** per turn in main chat over fan-out Task workers.
 2. On Task `status: error` + usage message → **implement in foreground** same turn; do not summarize failure and stop.
 3. Attach **playbook path + 3 file paths + test command** to every delegation.
-4. Update `HANDOFF.md` or `construction_active_progress.md` when switching lanes (LOG → VM-C).
+4. Update `HANDOFF.md` (chart-first packet + `ΔWF→@role`) or `construction_active_progress.md` when switching lanes (LOG → VM-C).
 5. After `src/` edits: `cargo test` (filtered) → witness JSON → `cargo orchestrate`.
 
 ### Fail-cycle escalation (main-thread orchestrator)
