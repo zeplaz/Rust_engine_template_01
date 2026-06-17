@@ -1,0 +1,28 @@
+{
+  "gate": "DMCP-OVR-ARTIST-ACCEPT-001",
+  "program_id": "PLAN-APS-UIUX-OVERHAUL-001",
+  "green": true,
+  "verdict": "PASS_WITH_NOTES",
+  "ship_score": "8 / 10",
+  "prior_score": "7 / 10 (DMCP-E0-ARTIST-REVERDICT-001)",
+  "delta": "+1 UI/UX overhaul (text, IA, spine, layout, onboarding)",
+  "deliverable": "src/dev/design_aps_artist_ship_review_uiux_v1.md",
+  "supersedes": "src/dev/design_aps_artist_ship_review_20260616_v1.md",
+  "checks": {
+    "deliverable_on_disk": true,
+    "designer_signoff_on_disk": true,
+    "close_machine_ok": true
+  },
+  "blocks": [],
+  "unblocks": [
+    "PLAN-APS-UIUX-OVERHAUL-001 program close"
+  ],
+  "_agent_meta": {
+    "schema": "dmcp_ovr_artist_accept_live_v1",
+    "written_at_epoch_secs": 1781721277,
+    "profile": "DMCP_OVR_ARTIST_ACCEPT",
+    "relative_path": "debug_runs/art_pipeline/dmcp_ovr_artist_accept_live.json",
+    "ritual": "BLANG:WIT-HON\u2192Q\u2713 DMCP-OVR-ARTIST-ACCEPT-001",
+    "agent": "designer-mcp"
+  }
+}

@@ -1,0 +1,70 @@
+{
+  "gate_id": "OPS-OVR-PROGRAM-SNAPSHOT-001",
+  "program_id": "PLAN-APS-UIUX-OVERHAUL-001",
+  "program_status": "CLOSE_PENDING",
+  "snapshot_at": "2026-06-17",
+  "progress": {
+    "main_queue": {
+      "done": 23,
+      "total": 24,
+      "percent": 96,
+      "by_status": {
+        "done": 23,
+        "ready": 1
+      },
+      "ready": [
+        "OVR-P6-OPERATOR-EYEBALL-001"
+      ],
+      "blocked": []
+    },
+    "parallel_queue": {
+      "done": 11,
+      "total": 11,
+      "percent": 100,
+      "by_status": {
+        "done": 11
+      },
+      "ready": [],
+      "blocked": []
+    },
+    "phases_complete": [
+      "OVR-P1-TOKENS-001",
+      "OVR-P2-TEXT-001",
+      "OVR-P3-LAYOUT-001",
+      "OVR-P4-IA-001",
+      "OVR-P45-SPINE-001",
+      "OVR-P5-STYLE-001",
+      "OVR-P55-PREVIEW-001",
+      "OVR-P56-ONBOARD-001"
+    ],
+    "pytest_aps_ok": true,
+    "ban_list_clean": true
+  },
+  "blockers": {
+    "human_gates_pending": [
+      "OVR-P6-OPERATOR-EYEBALL-001"
+    ],
+    "ready_now": [
+      "OVR-P6-OPERATOR-EYEBALL-001"
+    ]
+  },
+  "routing": {
+    "next_coder_mcp": "idle \u2014 P1\u2013P6 machine phases done",
+    "next_operator": "OVR-P6-OPERATOR-EYEBALL-001",
+    "next_designer": null,
+    "next_designer_mcp": null
+  },
+  "sources": {
+    "queue": "tools/orchestrator/queues/aps_uiux_overhaul_queue.json",
+    "parallel_queue": "tools/orchestrator/queues/aps_uiux_overhaul_parallel_drain_v1.json",
+    "dispatch": "debug_runs/agent_ops/aps_uiux_overhaul_dispatch_live.json",
+    "close_witness": "debug_runs/aps_uiux_overhaul_close_live.json"
+  },
+  "_agent_meta": {
+    "schema": "aps_uiux_overhaul_ops_snapshot_live_v1",
+    "written_at_epoch_secs": 1781721238,
+    "profile": "OPS_OVR_PROGRAM_SNAPSHOT",
+    "relative_path": "debug_runs/agent_ops/aps_uiux_overhaul_ops_snapshot_live.json",
+    "agent": "operations-intelligence"
+  }
+}

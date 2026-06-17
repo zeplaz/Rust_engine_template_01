@@ -5,7 +5,7 @@
     "dispatch_witness": "debug_runs/agent_ops/aps_uiux_overhaul_dispatch_live.json",
     "p0_gate": "OVR-P0-DESIGN-LOCK signed 2026-06-17 — enforced",
     "program_id": "PLAN-APS-UIUX-OVERHAUL-001",
-    "program_status": "ACTIVE",
+    "program_status": "CLOSE_PENDING",
     "date": "2026-06-17",
     "plan_doc": "src/dev/plan_aps_uiux_overhaul_20260616_v1.md",
     "board": "src/dev/aps_uiux_overhaul_agent_todos_v1.md",
@@ -40,14 +40,14 @@
     }
   },
   "dispatch_now": {
-    "orchestrator-mcp": "ORCH-OVR-001 done — wave-1 issued",
-    "designer": "idle — P45 spine spec + P56 onboard outline done",
+    "orchestrator-mcp": "reconcile CLOSED after operator eyeball",
+    "designer": "OVR-P6-DESIGN-SIGN-001 done — PASS WITH NOTES",
     "planner-mcp": "idle",
-    "coder-mcp": "idle — P3–P6 done; human gates ready",
-    "designer-mcp": "idle — G0 + P2 audit + P3 rubric done",
+    "coder-mcp": "idle — P1–P6 machine done",
+    "designer-mcp": "DMCP-OVR-ARTIST-ACCEPT-001 done — 8/10",
     "coder_a": "idle — no APS Tk scope",
     "coder_b": "idle — no APS Tk scope",
-    "operator": "OVR-P6-OPERATOR-EYEBALL-001 — ready (NEEDS-DISPLAY)"
+    "operator": "OVR-P6-OPERATOR-EYEBALL-001 ★ PICK (NEEDS-DISPLAY)"
   },
   "phase_legend": {
     "P0": "Design-system lock (GATE)",
@@ -436,7 +436,9 @@
       "owner": "operator",
       "depends_on": ["OVR-P6-CLOSE-001"],
       "goal": "Human eyeball: both lanes at 1280×800 + MIN 960×600 — text/layout/tabs/style vs P0 spec",
+      "witness": "debug_runs/aps_uiux_operator_eyeball_live.json",
       "needs_display": true,
+      "structural_pre_pass": true,
       "forbidden_exit": ["headless_only", "lib_test_only"]
     },
     {
@@ -444,26 +446,30 @@
       "phase": "P6",
       "wave": 9,
       "id": "OVR-P6-DESIGN-SIGN-001",
-      "status": "blocked",
+      "status": "done",
+      "completed_date": "2026-06-02",
       "priority": "P0",
       "owner": "designer",
       "depends_on": ["OVR-P6-CLOSE-001", "OVR-P6-OPERATOR-EYEBALL-001"],
       "goal": "Final designer sign-off on overhaul vs north star + P0 design system",
       "deliverable": "src/dev/design_aps_uiux_overhaul_signoff_v1.md",
-      "witness": "debug_runs/aps_uiux_overhaul_close_live.json"
+      "witness": "debug_runs/aps_uiux_overhaul_close_live.json",
+      "verdict": "PASS_WITH_NOTES"
     },
     {
       "seq": 23,
       "phase": "P6",
       "wave": 9,
       "id": "DMCP-OVR-ARTIST-ACCEPT-001",
-      "status": "blocked",
+      "status": "done",
+      "completed_date": "2026-06-02",
       "priority": "P1",
       "owner": "designer-mcp",
       "depends_on": ["OVR-P6-DESIGN-SIGN-001"],
       "goal": "Artist acceptance re-verdict post-overhaul (supersedes 7/10 building-only score)",
       "deliverable": "src/dev/design_aps_artist_ship_review_uiux_v1.md",
-      "witness": "debug_runs/art_pipeline/dmcp_ovr_artist_accept_live.json"
+      "witness": "debug_runs/art_pipeline/dmcp_ovr_artist_accept_live.json",
+      "verdict": "PASS_WITH_NOTES"
     },
     {
       "seq": 24,

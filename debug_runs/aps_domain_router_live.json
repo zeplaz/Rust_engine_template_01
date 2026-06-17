@@ -86,7 +86,7 @@
     "profile": "APS_E1_DOMAIN_ROUTER",
     "relative_path": "debug_runs/aps_domain_router_live.json",
     "source_system": "aps_domain_router",
-    "written_at_epoch_secs": 1781720484,
+    "written_at_epoch_secs": 1781721208,
     "ritual": "BLANG:WIT-HON APS-EVO-E1-DOMAIN-ROUTER-001"
   },
   "witness_honesty": {
