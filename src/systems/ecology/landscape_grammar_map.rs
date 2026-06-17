@@ -116,11 +116,47 @@ pub fn pick_preset_id_for_chunk_with_inputs(
             return id;
         }
     }
-    let h = coord
-        .x
-        .wrapping_mul(73856093)
-        .wrapping_add(coord.y.wrapping_mul(19349663)) as usize;
-    index.preset_ids[h % index.preset_ids.len()].clone()
+    if inputs.hydrology_bias >= 0.75 {
+        if let Some(id) = pick_if_present("wetland_margin_v0") {
+            return id;
+        }
+    }
+    if inputs.construction_pressure >= 0.25 {
+        if let Some(id) = pick_if_present("fire_recovery_v0") {
+            return id;
+        }
+    }
+    pick_preset_from_lambda_influence(inputs, index)
+}
+
+/// CDR-A-PRESET-PICK-LAMBDA-001 — λ-driven fallback (no coord hash).
+#[must_use]
+fn pick_preset_from_lambda_influence(
+    inputs: &LambdaExternalInputs,
+    index: &LandscapePresetIndex,
+) -> String {
+    if index.preset_ids.is_empty() {
+        return LG1_PILOT_PRESET_ID.to_string();
+    }
+    let scored: [(&str, f32); 5] = [
+        (
+            "military_defensive_v0",
+            (inputs.transport_access * 0.55 + inputs.construction_pressure * 0.45).clamp(0.0, 1.0),
+        ),
+        ("industrial_barrier_v0", inputs.transport_access),
+        ("wetland_margin_v0", inputs.hydrology_bias),
+        ("settlement_park_v0", inputs.hydrology_bias * 0.9),
+        ("fire_recovery_v0", inputs.construction_pressure),
+    ];
+    let mut best_score = -1.0f32;
+    let mut best_id = index.preset_ids[0].as_str();
+    for (candidate, score) in scored {
+        if index.preset_ids.iter().any(|p| p == candidate) && score > best_score {
+            best_score = score;
+            best_id = candidate;
+        }
+    }
+    best_id.to_string()
 }
 
 /// Read-only λ inputs from live ecology + weather (+ transport raster when present) — VEG-λ-LIVE-001.
@@ -223,6 +259,11 @@ pub fn refresh_map_rollout_witness_system(
             .map(|p| p.evaluation.topology_kind_count as u32)
             .sum();
         witness.mean_topology_kind_count = sum as f32 / n as f32;
+        let presets_seen: std::collections::HashSet<String> = program_q
+            .iter()
+            .map(|p| p.preset_id.clone())
+            .collect();
+        witness.presets_used = presets_seen.len() as u32;
     }
     let green = map_rollout_witness_green(&witness);
     let body = json!({
@@ -367,14 +408,37 @@ pub struct VegetationProgramCloseBody {
 }
 
 #[must_use]
+pub fn vegetation_program_close_honest(body: &VegetationProgramCloseBody) -> bool {
+    body.all_green
+        && crate::dev::veg_runtime_proof_live::veg_runtime_child_sub_rules_ok()
+        && crate::dev::veg_runtime_proof_live::lg4_preview_child_sub_rules_ok()
+}
+
+#[must_use]
 pub fn refresh_vegetation_program_close(body: &VegetationProgramCloseBody) -> bool {
+    let child_veg_runtime = crate::dev::veg_runtime_proof_live::veg_runtime_child_sub_rules_ok();
+    let child_lg4 = crate::dev::veg_runtime_proof_live::lg4_preview_child_sub_rules_ok();
+    let honest_all_green = vegetation_program_close_honest(body);
     let wrapped = wrap_debug_run(
         "VEG-PROGRAM-CLOSE-001",
         "refresh_vegetation_program_close",
         VEGETATION_PROGRAM_CLOSE_LIVE_JSON,
-        json!(body),
+        json!({
+            "phase_a_green": body.phase_a_green,
+            "phase_b_green": body.phase_b_green,
+            "phase_c_green": body.phase_c_green,
+            "phase_d_green": body.phase_d_green,
+            "phase_e_green": body.phase_e_green,
+            "phase_f_green": body.phase_f_green,
+            "all_green": honest_all_green,
+            "child_rollup": {
+                "veg_runtime_proof_sub_rules": child_veg_runtime,
+                "lg4_preview_sub_rules": child_lg4,
+            },
+            "sub_rules_evaluated": true,
+        }),
     );
-    write_debug_run_json(VEGETATION_PROGRAM_CLOSE_LIVE_JSON, wrapped)
+    write_debug_run_json(VEGETATION_PROGRAM_CLOSE_LIVE_JSON, wrapped) && honest_all_green
 }
 
 pub fn landscape_grammar_map_plugin(app: &mut App) {
@@ -415,6 +479,28 @@ mod tests {
         for id in &index.preset_ids {
             assert!(catalog.presets.contains_key(id), "missing {id}");
         }
+    }
+
+    #[test]
+    fn pick_preset_lambda_influence_not_coord_hash() {
+        let index = LandscapePresetIndex::load();
+        let industrial = LambdaExternalInputs {
+            transport_access: 0.9,
+            hydrology_bias: 0.1,
+            construction_pressure: 0.1,
+        };
+        let wetland = LambdaExternalInputs {
+            transport_access: 0.1,
+            hydrology_bias: 0.95,
+            construction_pressure: 0.1,
+        };
+        let a = pick_preset_id_for_chunk_with_inputs(IVec2::new(99, 99), &index, &industrial);
+        let b = pick_preset_id_for_chunk_with_inputs(IVec2::new(99, 99), &index, &wetland);
+        assert_ne!(a, b, "lambda inputs should drive preset, got both {a}");
+        assert_eq!(
+            pick_preset_id_for_chunk_with_inputs(IVec2::new(99, 99), &index, &industrial),
+            a
+        );
     }
 
     #[test]

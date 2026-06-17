@@ -31,12 +31,15 @@ pub use landscape_grammar_lg2::{
     attach_lg2_components_on_pilot, refresh_lg2_witness, refresh_lg4_preview_witness,
     refresh_lg4_preview_witness_with_tint,
     refresh_lg4_preview_witness_with_tint_and_pixel_count,
+    refresh_disturbance_log_witness, merge_harness_eval_summary,
+    drain_landscape_disturbance_queue, push_post_fire_harvest_sim_effect, tick_succession_age_on_ecology,
     fire_corridor_population_fuel_witness_green,
     DisturbanceHistory, DisturbanceKind, lg2_witness_green, lg4_preview_operator_visible,
     lg4_preview_witness_green, LandUseDistrictKind,
     LandUseInfluence, LandscapeDisturbanceQueue, LandscapeGrammarLg2Witness,
     SubcellPopulationGrid, SuccessionState, SuccessionTopologyStage, VegetationPopulation,
     LANDSCAPE_GRAMMAR_LG2_LIVE_JSON, LANDSCAPE_GRAMMAR_LG4_PREVIEW_LIVE_JSON,
+    LANDSCAPE_GRAMMAR_DISTURBANCE_LOG_LIVE_JSON,
 };
 pub use landscape_grammar::attach_landscape_program_pilot;
 pub use landscape_atlas_registry::{
@@ -49,6 +52,7 @@ pub use landscape_grammar_map::{
     refresh_lg5_witness, refresh_map_rollout_witness_system,
     lambda_inputs_from_live_fields, pick_preset_id_for_chunk_with_inputs,
     refresh_vegetation_program_close, rollout_landscape_program_on_chunks,
+    vegetation_program_close_honest,
     landscape_lg5_registry_stamped,
     LandscapeMapRolloutWitness, LandscapePresetIndex, VegetationProgramCloseBody,
     LANDSCAPE_GRAMMAR_LG3_LIVE_JSON, LANDSCAPE_GRAMMAR_LG5_LIVE_JSON,

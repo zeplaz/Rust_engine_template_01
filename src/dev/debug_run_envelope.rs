@@ -139,6 +139,10 @@ pub fn agent_commands_for_profile(profile: &str) -> Vec<&'static str> {
             "cargo test -p proc_A_dine01 --lib wss_substrate",
             "cargo test -p proc_A_dine01 --lib stage5 fire_streaming gpu_particles",
         ],
+        "LG-4-PREVIEW-001" | "PLAN-VEG-RUNTIME-PROOF-001" | "VEG-PROGRAM-CLOSE-001" => vec![
+            "cargo test -p proc_A_dine01 --lib sim_harness_refreshes_witness_json_green",
+            "cargo test -p proc_A_dine01 --lib landscape_grammar",
+        ],
         _ => vec!["cargo test -p proc_A_dine01 --lib"],
     }
 }

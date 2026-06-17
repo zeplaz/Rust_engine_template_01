@@ -380,8 +380,24 @@ pub fn build_play_scenario_live_payload(
     let core_green = play_scenario_001_green(scenario, state, chain);
     let tail_green = core_green && !default_play_blocked_by_env_seeds();
     let active_env = active_play_truth_env_seeds();
+    let fire_coder_green = g_play_fire_001_lib_witness_green()
+        && demo_fire_sparks_visible_at_operational_zoom_lib();
+    let veg_coder_green = veg_topology_visible_at_operational_zoom_lib();
+    let lib_contract_green = core_green && fire_coder_green && veg_coder_green;
+    let operator_session_green = tail_green && lib_contract_green;
     serde_json::json!({
         "gate": "G-PLAY-01",
+        "slice_id": "CDR-A-PLAY-OPS-SPLIT-001",
+        "proof_grade": crate::dev::proof_grade::ProofGrade::HeadlessSim.as_str(),
+        "lib_contract_green": lib_contract_green,
+        "operator_session_green": operator_session_green,
+        "g_play_coder_sub_gates": {
+            "G-PLAY-CODER-FIRE": fire_coder_green,
+            "G-PLAY-CODER-VEG": veg_coder_green,
+            "G-PLAY-CODER-BUILD": true,
+        },
+        "g_play_coder_rollup_green": lib_contract_green,
+        "g_play_operator_pending": !operator_session_green,
         "play_truth_001": {
             "gate": "PLAY-TRUTH-001",
             "scenario_id": "DefaultIndustrial",

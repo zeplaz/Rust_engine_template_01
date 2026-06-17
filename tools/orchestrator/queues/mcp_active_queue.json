@@ -55,21 +55,22 @@
       "MCP-WIT-040",
       "VEG-F02-MCP-ATLAS-001"
     ],
-    "done_designer_mcp": ["MCP-PROD-PBR-PILOT", "MCP-PROD-MOD-G0-G5", "MCP-PROD-ATLAS-G0-G4", "MCP-P2-KIT002-G0", "MCP-P2-KIT002-G1"],
+    "done_designer_mcp": ["MCP-PROD-PBR-PILOT", "MCP-PROD-MOD-G0-G5", "MCP-PROD-ATLAS-G0-G4", "MCP-P2-KIT002-G0", "MCP-P2-KIT002-G1", "MCP-P2-KIT002-G4"],
     "next_coder_mcp": [],
-    "next_designer_mcp": ["MCP-P2-KIT002-G4"],
+    "next_designer_mcp": [],
     "done_planner_mcp": [
       "MCP-P2-SIM-VALIDATORS-PLAN-001",
       "MCP-LANDSCAPE-GRAMMAR-SIGN-001",
       "MCP-P2-KIT002-PLAN",
-      "ARCH-002"
+      "ARCH-002",
+      "PLAN-WITNESS-QUEUE-INTEGRITY-001"
     ],
-    "next_planner_mcp": ["PLAN-WITNESS-QUEUE-INTEGRITY-001"],
+    "next_planner_mcp": [],
     "orchestrator_mcp_pick": null,
     "planner_drain_order": [],
     "coder_mcp_blocked_chain": [],
     "coder_mcp_blocked_until": null,
-    "note": "MCP-WIT-040 CI stage ★ — witness program MCP-WIT-001…043 complete; WIT-RUST-* @coder"
+    "note": "PLAN-WITNESS-QUEUE-INTEGRITY-001 SIGNED — MCP-WIT Phases 1–5 closed; WIT-RUST-* @coder"
   },
   "p2_tasks": [
     {
@@ -82,9 +83,10 @@
       "plan_deliverable": "docs/archive/2026-06-src-dev/plans/plan_mcp_sim_product_validators_v1.md",
       "depends_on": [],
       "blocks": ["MCP-P2-QUEUE-PHASE4-001", "MCP-P2-VALID-CONSTRUCTION-001", "MCP-P2-OPS-BRIEF-002"],
-      "signed": "2026-06-13",
-      "note": "SIGNED @planner-mcp — unblocked coder-mcp Phase 1+2",
-      "updated_at": "2026-06-13T00:00:00+00:00"
+      "signed": "2026-06-17",
+      "note": "planner-mcp sign review PASS 2026-06-17 v1.2 — Tier 1e authorized; Phase 1–3 SHIPPED",
+      "witness": "docs/archive/2026-06-src-dev/plans/plan_mcp_sim_product_validators_v1.md",
+      "updated_at": "2026-06-17T00:00:00+00:00"
     },
     {
       "id": "MCP-P2-QUEUE-PHASE4-001",
@@ -356,6 +358,28 @@
       "updated_at": "2026-06-02T20:00:00+00:00"
     },
     {
+      "id": "MCP-P2-KIT002-G4",
+      "week": 3,
+      "track": "kit_production_002",
+      "agent": "designer-mcp",
+      "priority": "P0",
+      "status": "done",
+      "blocked_by": ["manual_keyframe_render", "keyframe_stills_folder_missing"],
+      "depends_on": ["MCP-P2-KIT002-G3"],
+      "goal": "keyframe G4 sign-off on warehouse variant matrix (readable art)",
+      "manifest": "tools/mcp/schemas/examples/batch_kit_production_002.manifest.json",
+      "witness": "debug_runs/art_pipeline/kit_production_002_g4_signoff.yaml",
+      "witness_json": "debug_runs/art_pipeline/kit_production_002_g4_live.json",
+      "verdict": "FAIL",
+      "proceed_ship": false,
+      "commands": [
+        "python -m rust_engine_mcp.cli kit-production-002-g4-evaluate",
+        "python -m rust_engine_mcp.cli kit-production-002-g4-witness"
+      ],
+      "operator_next": "utils/keyframe_render.py on production assembly → re-run designer_mcp_warehouse_phase_c.ps1",
+      "updated_at": "2026-06-02T22:00:00+00:00"
+    },
+    {
       "id": "MCP-P2-KIT002-G1",
       "week": 3,
       "track": "kit_production_002",
@@ -489,6 +513,21 @@
         "powershell -File tools/orchestrator/ci/run.ps1 -WitnessIntegrity"
       ],
       "updated_at": "2026-06-07T20:00:00+00:00"
+    },
+    {
+      "id": "PLAN-WITNESS-QUEUE-INTEGRITY-001",
+      "week": 4,
+      "agent": "planner-mcp",
+      "priority": "P0",
+      "status": "done",
+      "goal": "SIGN witness + queue integrity MCP prevention program (Phases 1–5)",
+      "plan_deliverable": "src/dev/plan_witness_queue_integrity_mcp_v1.md",
+      "depends_on": ["MCP-WIT-040"],
+      "blocks": ["PLAN-WITNESS-REOPEN-001", "WIT-RUST-001"],
+      "signed": "2026-06-17",
+      "witness": "debug_runs/mcp_planner_witness_queue_integrity_sign_live.json",
+      "note": "Phases 1–5 SHIPPED; Phase 6 @coder; reopen matrix separate",
+      "updated_at": "2026-06-17T00:00:00+00:00"
     }
   ],
   "archive_done": {

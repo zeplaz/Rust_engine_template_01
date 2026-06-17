@@ -52,7 +52,7 @@
     "relative_path": "debug_runs/agent_debug_index.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "debug_run_envelope",
-    "written_at_epoch_secs": 1781658954
+    "written_at_epoch_secs": 1781709768
   },
   "profile": "AGENT_DEBUG_INDEX",
   "proof_count": 23,
@@ -60,7 +60,7 @@
     {
       "bytes": 23438,
       "exists": true,
-      "modified_epoch_secs": 1781658954,
+      "modified_epoch_secs": 1781709088,
       "path": "debug_runs/stage5_full_app_live.json",
       "summary": {
         "activation_green": null,
@@ -114,7 +114,7 @@
     {
       "bytes": 6640,
       "exists": true,
-      "modified_epoch_secs": 1781658952,
+      "modified_epoch_secs": 1781708986,
       "path": "debug_runs/industrial_activation_live.json",
       "summary": {
         "activation_green": false,
@@ -132,7 +132,7 @@
     {
       "bytes": 3288,
       "exists": true,
-      "modified_epoch_secs": 1781658825,
+      "modified_epoch_secs": 1781708226,
       "path": "debug_runs/fire_ecology_live.json",
       "summary": {
         "activation_green": null,
@@ -166,9 +166,9 @@
       }
     },
     {
-      "bytes": 2444,
+      "bytes": 2506,
       "exists": true,
-      "modified_epoch_secs": 1781645762,
+      "modified_epoch_secs": 1781666601,
       "path": "debug_runs/replay_editor_parity_live.json",
       "summary": {
         "activation_green": null,
@@ -320,9 +320,9 @@
       }
     },
     {
-      "bytes": 8761,
+      "bytes": 8754,
       "exists": true,
-      "modified_epoch_secs": 1781645760,
+      "modified_epoch_secs": 1781670326,
       "path": "debug_runs/ui_shell_migration_live.json",
       "summary": {
         "activation_green": null,
@@ -338,9 +338,9 @@
       }
     },
     {
-      "bytes": 5156,
+      "bytes": 5317,
       "exists": true,
-      "modified_epoch_secs": 1781645761,
+      "modified_epoch_secs": 1781666601,
       "path": "debug_runs/minimap_compositor_live.json",
       "summary": {
         "activation_green": null,
@@ -428,9 +428,9 @@
       }
     },
     {
-      "bytes": 3319,
+      "bytes": 3658,
       "exists": true,
-      "modified_epoch_secs": 1781658953,
+      "modified_epoch_secs": 1781709052,
       "path": "debug_runs/play_scenario_live.json",
       "summary": {
         "activation_green": null,

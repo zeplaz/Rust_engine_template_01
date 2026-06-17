@@ -6,7 +6,7 @@
 | **Track** | **art_A / art_C** (APS product + landscape art lane) — MCP three-track |
 | **Author** | `@planner-mcp` (architecture / phases / schema-ownership) |
 | **Date** | 2026-06-16 |
-| **Status** | **DRAFT — for `@orchestrator-mcp` sequencing + `@designer-mcp` content sign-off** |
+| **Status** | **SIGNED** (@planner-mcp 2026-06-16) — architecture + wave-0 schemas; E0–E5 impl open |
 | **Stance** | READ-ONLY planning deliverable. No production code. Schema sketches + job-JSON examples + phase tables ONLY. |
 | **Parent** | `$ref:src/dev/plan_aps_artist_tool_exec_v1.md` · `$ref:src/dev/plan_landscape_grammar_exec_001_v1.md`[§7] · `$ref:src/dev/plan_veg_burn_extract_001_v1.md` |
 | **Reconciliation truth** | `$ref:src/dev/veg_queue_reconciliation_20260616_v1.md` |

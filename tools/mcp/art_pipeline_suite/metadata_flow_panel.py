@@ -116,6 +116,21 @@ Independent of per-placement material_profile — building tile vs module materi
   Derived from assembly_id + snapshot variant_tags
 
 Bake variants prepares tile_batch — does not replace snapshot authority.""",
+            "landscape_presets": """landscape_grammar preset (ship truth)
+  land_dna + pressure_field → topology_graph nodes (Network/Corridor/Ring/Patch/Cluster/Fringe)
+  validate-report landscape_grammar before bake
+
+Presets tab browse — not building module catalog.""",
+            "landscape_grammar": """topology_graph workspace
+  operator stacks + glyph planning → generate/iterate grammar object
+  ship truth: landscape_grammar preset — not assembly_snapshot
+
+Graph-not-grid — do not use Assembly footprint canvas.""",
+            "landscape_states": """succession + disturbance STATE rows
+  burn_00..07 · scar · regrowth → veg variant catalog axis
+  binds to _vegetation_variant_catalog.ron (designer-mcp key set)
+
+LG-5 atlas bake uses keyframe_pack — G0–G5 scope explicit on Atlas tab.""",
         }
         body = blocks.get(self._context, blocks["assembly"])
         self._text.configure(state=tk.NORMAL)

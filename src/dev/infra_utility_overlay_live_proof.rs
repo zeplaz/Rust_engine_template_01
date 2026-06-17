@@ -1,4 +1,4 @@
-//! **INFRA-UTILITY-OVERLAY-001** — utility/transport overlay collection witness.
+//! **INFRA-UTILITY-OVERLAY-001** / **CDR-B-INFRA-OVERLAY-POLISH-001** — overlay collection witness.
 
 pub const INFRA_UTILITY_OVERLAY_LIVE_JSON: &str = "debug_runs/infra_utility_overlay_live.json";
 
@@ -6,17 +6,26 @@ pub const INFRA_UTILITY_OVERLAY_LIVE_JSON: &str = "debug_runs/infra_utility_over
 pub fn refresh_infra_utility_overlay_live_witness() -> bool {
     use bevy::app::App;
     use bevy::prelude::*;
-    use crate::render::InfrastructureOverlayDrawRequests;
+    use crate::infrastructure::utility::{
+        fixture_utility_network_snapshot, hydrate_utility_graph_from_snapshot, UtilityGraph,
+    };
+    use crate::render::{
+        collect_infrastructure_overlay_edges_system, infra_overlay_polish_green,
+        infrastructure_overlay_polish_witness_fields, InfrastructureOverlayDrawRequests,
+        InfrastructureOverlaySettings,
+    };
     use crate::systems::transport::{TransportEdgeDirectory, TransportEdgeMeta};
 
     let mut app = App::new();
     app.init_resource::<TransportEdgeDirectory>()
+        .init_resource::<UtilityGraph>()
         .init_resource::<InfrastructureOverlayDrawRequests>()
-        .add_systems(
-            Update,
-            crate::render::collect_transport_overlay_edges_system,
-        );
+        .init_resource::<InfrastructureOverlaySettings>()
+        .add_systems(Update, collect_infrastructure_overlay_edges_system);
     {
+        let snap = fixture_utility_network_snapshot();
+        let graph = hydrate_utility_graph_from_snapshot(&snap);
+        *app.world_mut().resource_mut::<UtilityGraph>() = graph;
         let mut dir = app.world_mut().resource_mut::<TransportEdgeDirectory>();
         dir.by_edge.insert(
             crate::systems::transport::TransportEdgeId(1),
@@ -29,6 +38,10 @@ pub fn refresh_infra_utility_overlay_live_witness() -> bool {
                 tail_key: "t10_0".into(),
             },
         );
+        let mut settings = app.world_mut().resource_mut::<InfrastructureOverlaySettings>();
+        settings.enabled = true;
+        settings.road = true;
+        settings.power = true;
     }
     app.update();
     let edges = app
@@ -36,12 +49,20 @@ pub fn refresh_infra_utility_overlay_live_witness() -> bool {
         .resource::<InfrastructureOverlayDrawRequests>()
         .edges
         .len();
-    let green = edges >= 1;
+    let polish = infrastructure_overlay_polish_witness_fields(
+        app.world().resource::<InfrastructureOverlaySettings>(),
+    );
+    let polish_ok = infra_overlay_polish_green();
+    let green = edges >= 2 && polish_ok;
     let body = serde_json::json!({
         "gate": "INFRA-UTILITY-OVERLAY-001",
         "green": green,
         "overlay_edge_rows": edges,
-        "sim_hud_overlay_wired": green,
+        "sim_hud_overlay_wired": edges >= 1,
+        "slice_id": "CDR-B-INFRA-OVERLAY-POLISH-001",
+        "overlay_readability_polish": polish.get("overlay_readability_polish"),
+        "legend_row_count": polish.get("legend_row_count"),
+        "power_stroke_rgb": polish.get("power_stroke_rgb"),
     });
     let wrapped = crate::dev::debug_run_envelope::wrap_debug_run(
         "INFRA-UTILITY-OVERLAY-001",

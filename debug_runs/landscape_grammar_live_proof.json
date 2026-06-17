@@ -52,12 +52,13 @@
     "relative_path": "debug_runs/landscape_grammar_live_proof.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "commit_landscape_grammar_live_proof",
-    "written_at_epoch_secs": 1781658947
+    "written_at_epoch_secs": 1781708915
   },
   "construction_disturbances": 1,
   "fire_disturbances": 1,
   "gate": "VEG-WITNESS-LIVE-PROOF-001",
   "green": true,
+  "harvest_disturbances": 1,
   "lg2_path": "debug_runs/landscape_grammar_lg2_live.json",
   "lg4_path": "debug_runs/landscape_grammar_lg4_preview_live.json"
 }

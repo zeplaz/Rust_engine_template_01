@@ -1,8 +1,8 @@
 {
   "task_id": "MCP-GUARD-002",
   "gate_id": "example_teachable_audit",
-  "ok": true,
-  "green": true,
+  "ok": false,
+  "green": false,
   "checked_files": 14,
   "checked": [
     "tools/mcp/schemas/examples/arch_dna_fuel_depot_tank_farm_v0.json",
@@ -21,8 +21,29 @@
     "tools/mcp/schemas/examples/variant_set_warehouse_industrial_west_production_v1.json"
   ],
   "min_teaches_axes": 2,
-  "violation_count": 0,
-  "violations": [],
+  "violation_count": 4,
+  "violations": [
+    {
+      "file": "tools/mcp/schemas/examples/assembly_snapshot_rail_warehouse_pilot_v1.json",
+      "teaches_count": 0,
+      "hint": "missing _meta.teaches with >=2 axes"
+    },
+    {
+      "file": "tools/mcp/schemas/examples/building_definition_rail_warehouse_pilot_v1.json",
+      "teaches_count": 0,
+      "hint": "missing _meta.teaches with >=2 axes"
+    },
+    {
+      "file": "tools/mcp/schemas/examples/tile_batch_rail_warehouse_pilot_v1.json",
+      "teaches_count": 0,
+      "hint": "missing _meta.teaches with >=2 axes"
+    },
+    {
+      "file": "tools/mcp/schemas/examples/variant_set_rail_warehouse_pilot_v1.json",
+      "teaches_count": 0,
+      "hint": "missing _meta.teaches with >=2 axes"
+    }
+  ],
   "violations_truncated": false,
   "config": "tools/mcp/guard/build_set_guards_v1.json",
   "examples_root": "tools/mcp/schemas/examples"

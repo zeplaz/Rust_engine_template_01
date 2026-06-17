@@ -17,13 +17,27 @@ TOOLTIPS: dict[str, str] = {
     "tab_materials": "Browse material profiles and preview textures — assign on Assembly only.",
     "tab_variants": "variant_set_v1 layers and tags — declarative tile-state expansion.",
     "tab_atlas": "tile_batch run, PNG folder pack, and atlas QC preview.",
-    # Pipeline steps
-    "pipeline_catalog": "Done = module selected. Pending = pick a module in Catalog.",
-    "pipeline_assembly": "Done = snapshot loaded or generated. Pending = Assembly tab.",
-    "pipeline_materials": "Done = placements have material_profile. Pending = assign on Assembly.",
-    "pipeline_variants": "Done = variant_set loaded. Pending = Variants tab.",
-    "pipeline_atlas": "Done = atlas folder or tile_batch set. Pending = Atlas tab.",
-    "pipeline_step": "Valid = step passed its check. Saved = data exists, not yet validated. Pending = not started.",
+    "tab_presets": "Browse landscape grammar presets — land_dna + topology_graph authority.",
+    "tab_grammar": "Topology graph workspace — not building footprint.",
+    "tab_states": "Succession + burn + regrowth axes — vegetation_variant_catalog entries.",
+    # Landscape States (DES-APS-STATE-AXIS-LABELS-001)
+    "state_succession_axis": "Succession stages in catalog.axes — long-term cover ladder (Grass→OldGrowth).",
+    "state_regrowth_axis": "Regrowth macro phases — transient post-disturbance window (Scar→Mature).",
+    "state_burn_frames": "Burn frame loop veg_burn_00–07 — matches engine VEG_BURN_FRAME_COUNT (default 8).",
+    "veg_extract_authority": "Read-only: VegetationExtractFrame variant_key → LG-5 stamp. APS does not write extract.",
+    "state_bake": "Expand catalog entries to tile_batch variants — preset JSON remains authority.",
+    "state_catalog_validate": "Validate against vegetation_variant_catalog_v1 before bake.",
+    # Pipeline pills (DES-APS-PIPELINE-PILLS-001)
+    "pipeline_catalog": "Catalog — module selected and GLB validate PASS.",
+    "pipeline_assembly": "Assembly — valid only after QC/P0 gate; saved (QC not run) = snapshot on disk only.",
+    "pipeline_materials": "Materials — every placement has material_profile.",
+    "pipeline_variants": "Variants — variant_set valid and ready for tile batch.",
+    "pipeline_atlas": "Atlas — PNG folder packed; valid = QC PASS.",
+    "pipeline_presets": "Presets — landscape preset selected; schema validate PASS.",
+    "pipeline_grammar": "Grammar — topology_graph saved on preset JSON.",
+    "pipeline_states": "States — succession and disturbance variant rows ready.",
+    "pipeline_stamp": "Stamp — atlas registered for map stamp; engine resolves UV lookup.",
+    "pipeline_step": "Valid = gate passed. Saved (QC not run) = data on disk only. Pending = not started.",
     # Catalog
     "cat_batch_filter": "Filter module list by production batch id.",
     "cat_category_filter": "Filter modules by kit category.",
@@ -112,20 +126,66 @@ def _wrap_tooltip_text(text: str, width: int = 72) -> str:
     ) or text
 
 
+# Show tooltip only after a short hover, and never leave one floating: a single
+# tooltip window is reused/destroyed across every widget so a stale tip can't
+# survive a tab change or a fast mouse move (APS-UX-TOOLTIPS / B3).
+_HOVER_DELAY_MS = 450
+
+
 def bind_aps_tooltip(widget: tk.Misc, key: str) -> None:
     text = _wrap_tooltip_text(_tooltip_text(key))
+    state: dict[str, Any] = {"after_id": None}
+
+    def _cancel_pending() -> None:
+        after_id = state.get("after_id")
+        if after_id is not None:
+            try:
+                widget.after_cancel(after_id)
+            except (tk.TclError, ValueError):
+                pass
+            state["after_id"] = None
+
+    def _show() -> None:
+        state["after_id"] = None
+        # Only show if the pointer is still over this widget — guards against a
+        # scheduled show firing after a fast move / tab change.
+        try:
+            under = widget.winfo_containing(
+                widget.winfo_pointerx(), widget.winfo_pointery()
+            )
+        except tk.TclError:
+            return
+        if under is not widget and not _is_descendant(widget, under):
+            return
+        _Tooltip.show_for(widget, text)
 
     def _enter(_event: tk.Event) -> None:
-        widget.tooltip = _Tooltip(widget, text)
+        _cancel_pending()
+        try:
+            state["after_id"] = widget.after(_HOVER_DELAY_MS, _show)
+        except tk.TclError:
+            state["after_id"] = None
 
-    def _leave(_event: tk.Event) -> None:
-        tip = getattr(widget, "tooltip", None)
-        if tip is not None:
-            tip.destroy()
-            widget.tooltip = None
+    def _hide(_event: tk.Event | None = None) -> None:
+        _cancel_pending()
+        _Tooltip.hide()
 
     widget.bind("<Enter>", _enter, add="+")
-    widget.bind("<Leave>", _leave, add="+")
+    widget.bind("<Leave>", _hide, add="+")
+    # Any click, mousewheel, or the widget leaving the screen must drop the tip.
+    widget.bind("<ButtonPress>", _hide, add="+")
+    widget.bind("<MouseWheel>", _hide, add="+")
+    widget.bind("<Unmap>", _hide, add="+")
+    widget.bind("<Destroy>", _hide, add="+")
+
+
+def _is_descendant(ancestor: tk.Misc, widget: tk.Misc | None) -> bool:
+    node = widget
+    while node is not None:
+        if node is ancestor:
+            return True
+        node = getattr(node, "master", None)
+    return False
 
 
 def bind_many(pairs: list[tuple[Any, str]]) -> None:
@@ -134,17 +194,50 @@ def bind_many(pairs: list[tuple[Any, str]]) -> None:
             bind_aps_tooltip(widget, key)
 
 
+def hide_all_tooltips(_event: tk.Event | None = None) -> None:
+    """Public hook — call on tab change / focus loss to drop any floating tip."""
+    _Tooltip.hide()
+
+
 class _Tooltip:
+    """Single shared tooltip window — at most one is visible at any time."""
+
+    _current: _Tooltip | None = None
+
     def __init__(self, widget: tk.Misc, text: str) -> None:
         self._top = tk.Toplevel(widget)
         self._top.wm_overrideredirect(True)
-        self._top.wm_attributes("-topmost", True)
+        try:
+            self._top.wm_attributes("-topmost", True)
+        except tk.TclError:
+            pass
         lbl = ttk.Label(self._top, text=text, relief=tk.SOLID, padding=4, font=("Segoe UI", 9))
         lbl.pack()
         self._top.update_idletasks()
-        x = widget.winfo_rootx() + 8
-        y = widget.winfo_rooty() + widget.winfo_height() + 4
+        try:
+            x = widget.winfo_rootx() + 8
+            y = widget.winfo_rooty() + widget.winfo_height() + 4
+        except tk.TclError:
+            x, y = 0, 0
         self._top.wm_geometry(f"+{x}+{y}")
 
+    @classmethod
+    def show_for(cls, widget: tk.Misc, text: str) -> None:
+        cls.hide()
+        try:
+            cls._current = cls(widget, text)
+        except tk.TclError:
+            cls._current = None
+
+    @classmethod
+    def hide(cls) -> None:
+        tip = cls._current
+        cls._current = None
+        if tip is not None:
+            tip.destroy()
+
     def destroy(self) -> None:
-        self._top.destroy()
+        try:
+            self._top.destroy()
+        except tk.TclError:
+            pass

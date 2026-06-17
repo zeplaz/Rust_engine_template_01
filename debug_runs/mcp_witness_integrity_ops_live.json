@@ -5,18 +5,18 @@
   "enforce_mode": false,
   "exit_code": 0,
   "integrity_cache": {
-    "fail_count": 146,
-    "inflated_green_count": 8,
-    "rollup_inflated_count": 2,
+    "fail_count": 154,
+    "inflated_green_count": 10,
+    "rollup_inflated_count": 4,
     "queue_contradiction_count": 3,
-    "queue_stale_count": 126,
+    "queue_stale_count": 127,
     "queue_error_count": 133
   },
   "witness_honesty": {
     "status": "failed",
-    "summary": "witness_honesty scan debug_runs: scanned=251 failed_files=135 issues=138",
-    "error_count": 13,
-    "warning_count": 125
+    "summary": "witness_honesty scan debug_runs: scanned=274 failed_files=140 issues=145",
+    "error_count": 21,
+    "warning_count": 124
   },
   "queue_integrity": {
     "status": "failed",
@@ -36,7 +36,7 @@
   ],
   "_agent_meta": {
     "schema": "mcp_witness_integrity_ops_live_v1",
-    "written_at_epoch_secs": 1781659475,
+    "written_at_epoch_secs": 1781670227,
     "profile": "MCP_WITNESS_INTEGRITY_OPS",
     "source_system": "witness_honesty_lib",
     "relative_path": "debug_runs/mcp_witness_integrity_ops_live.json",

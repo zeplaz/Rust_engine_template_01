@@ -4,7 +4,7 @@
 ⟦SYMLANG⟧⟐v1  ◈EXEC
 ⟨ID⟩ PLAN-VEG-RUNTIME-PROOF-001
 Date: 2026-06-14
-Status: **SIGNED** (@planner)
+Status: **SIGNED** (@planner 2026-06-14 · @planner-mcp 2026-06-16 · reconcile @planner 2026-06-17)
 Owner: @planner → @coder (A)
 Parent: POST-DRAIN-PHASE-6-001
 Queue: $ref:tools/orchestrator/queues/post_drain_phase6_coder_queue.json (seq 1–2, 7–13)
@@ -115,6 +115,8 @@ python -m rust_engine_mcp.cli validate-report cargo --compress 3
 | **VEG-C14 operator checklist** | L3+L4 green |
 | **LG-5 production atlas** | MCP sign + designer-mcp |
 
+**Planner reconcile (2026-06-17):** Plan doc **closed**. Queue `reopened` = witness `veg_runtime_proof_live.json` WIT-HON only → **CDR-A-WIT-HON-ROLLUP-001** (@coder A). Ladder L0–L4 coder slices **done**; L5 = **G-PLAY-OPERATOR-01**.
+
 ```text
-⟦/PLAN-VEG-RUNTIME-PROOF-001⟧  ΔWF→@coder A seq 1→2 · @planner-mcp MCP-LANDSCAPE-GRAMMAR-SIGN-001
+⟦/PLAN-VEG-RUNTIME-PROOF-001⟧  ΔWF→ CDR-A-WIT-HON-ROLLUP-001 · G-PLAY-OPERATOR-01
 ```

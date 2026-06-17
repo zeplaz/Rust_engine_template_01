@@ -1,0 +1,75 @@
+{
+  "gate": "APS-EVO-E3-VEG-STATE-AXIS-001",
+  "program_id": "APS-E3",
+  "green": true,
+  "slice_id": "APS-EVO-E3-VEG-STATE-AXIS-001",
+  "catalog_validator_green": true,
+  "catalog_validator": {
+    "green": true,
+    "catalog_path": "assets/configs/landscape/_vegetation_variant_catalog.ron",
+    "status": "passed",
+    "entry_count": 35,
+    "veg_burn_count": 8,
+    "topology_count": 22,
+    "unique_keys": 35,
+    "ship_review": {
+      "atlas_bake_v1_aligned": true,
+      "atlas_sparse_v1_complete": true,
+      "engine_veg_byte_parity": true,
+      "topology_stamp_present": true,
+      "missing_bake_keys": [],
+      "missing_sparse_keys": [],
+      "missing_veg_keys": [],
+      "extra_veg_keys": [],
+      "entry_count": 35,
+      "topology_count": 22
+    },
+    "ship_catalog_version": 2
+  },
+  "burn_variants_authored": 15,
+  "burn_frame_count": 8,
+  "succession_stages": [
+    "Grass",
+    "Shrub",
+    "Sapling",
+    "Canopy",
+    "OldGrowth",
+    "BurnScar"
+  ],
+  "state_axis_row_count": 35,
+  "topology_state_rows": 15,
+  "states_panel_catalog_wired": true,
+  "catalog_path": "assets/configs/landscape/_vegetation_variant_catalog.ron",
+  "design_ref": "src/dev/design_landscape_lg5_expansion_matrix_v1.md",
+  "witness_honesty": {
+    "status": "warning",
+    "error_count": 0,
+    "warning_count": 1,
+    "summary": "witness_honesty debug_runs/aps_veg_state_axis_live.json: 0 error(s), 1 issue(s)"
+  },
+  "exit_predicate": {
+    "witness": "debug_runs/aps_veg_state_axis_live.json",
+    "must": [
+      {
+        "path": "catalog_validator_green",
+        "eq": true
+      },
+      {
+        "path": "burn_variants_authored",
+        "gte": 8
+      },
+      {
+        "path": "states_panel_catalog_wired",
+        "eq": true
+      }
+    ]
+  },
+  "_agent_meta": {
+    "schema": "aps_veg_state_axis_live_v1",
+    "profile": "APS_E3_VEG_STATE_AXIS",
+    "relative_path": "debug_runs/aps_veg_state_axis_live.json",
+    "source_system": "aps_veg_state_axis",
+    "written_at_epoch_secs": 1781712989,
+    "ritual": "BLANG:WIT-HON APS-EVO-E3-VEG-STATE-AXIS-001"
+  }
+}

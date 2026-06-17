@@ -1,0 +1,1188 @@
+{
+  "_meta": {
+    "version": "1.0.1",
+    "bulk_reopen": "PLAN-WITNESS-REOPEN-001 operator approved 2026-06-02",
+    "program_id": "PARALLEL-WAVE-APS-VEG-DISPATCH-001",
+    "date": "2026-06-16",
+    "rule": "Wave 0 = start ALL agents NOW in parallel \u00b7 WIT-HON before every Q\u2713 \u00b7 pick by owner filter",
+    "aps_program": "tools/orchestrator/queues/mcp_aps_evolution_queue.json",
+    "plan": "src/dev/plan_aps_evolution_veg_capability_20260616_v1.md",
+    "design_ia": "src/dev/design_aps_uiux_style_quality_20260616_v1.md",
+    "hardening": "src/dev/coder_queue_hardening_rules_v1.md",
+    "wit_hon": "python -m rust_engine_mcp.cli validate-report witness_honesty <witness> --compress 3",
+    "regression_coder": "cargo test -p proc_A_dine01 --lib landscape_grammar fire_ecology construction stage5",
+    "regression_mcp": "pytest tools/mcp/python/tests -k aps",
+    "wave_legend": {
+      "0": "Immediate parallel \u2014 no cross-lane deps",
+      "1": "After E0 relaunch green OR schema draft landed",
+      "2": "After E1 domain router green",
+      "3": "After E3 veg catalog schema + content signed",
+      "4": "After LG4 pixel proof + designer matrix sign"
+    },
+    "agent_pick_counts": {
+      "coder-mcp": 20,
+      "planner-mcp": 15,
+      "designer-mcp": 14,
+      "designer": 12,
+      "coder_a": 16,
+      "coder_b": 11,
+      "total": 88
+    },
+    "wave_0_issued_at": "2026-06-17T04:00:19Z",
+    "wave_0_orders": "tools/orchestrator/queues/parallel_wave_aps_veg_wave0_orders_v1.md"
+  },
+  "dispatch_now": {
+    "orchestrator-mcp": "Issue wave-0 orders to ALL six owner lanes \u00b7 track WIT-HON rollup",
+    "coder-mcp": "Filter owner=coder-mcp status=ready wave<=1 \u00b7 start APS-EVO-E0-RELAUNCH-001",
+    "planner-mcp": "Wave 0 CLOSED 2026-06-16 — witness mcp_planner_wave0_aps_veg_live.json · DMCP-E3 ready",
+    "designer-mcp": "Wave 0 designer-mcp CLOSED — DMCP-E0/E3/E4 done · witness designer_mcp_parallel_wave0_live.json",
+    "designer": "Filter owner=designer wave=0 \u00b7 start DES-APS-E1-IA-OPTION-D-001",
+    "coder_a": "Filter owner=coder_a wave=0 \u00b7 wave-0 veg harden CLOSED \u00b7 pick CDR-A-PLAY-OPS / ECOLOGY-HARNESS-CLEAN / VISUAL-SMOKE",
+    "coder_b": "Filter owner=coder_b \u00b7 wave-0 + P3 infra polish CLOSED 2026-06-17",
+  },
+  "drain": [
+    {
+      "wave": 0,
+      "id": "APS-EVO-E0-RELAUNCH-001",
+      "status": "done",
+      "priority": "P0",
+      "owner": "coder-mcp",
+      "co_owner": "designer-mcp",
+      "program": "APS-E0",
+      "goal": "Relaunch APS + honest E2E re-witness",
+      "witness": "debug_runs/aps_artist_tool_e2e_live.json",
+      "verify": [
+        "pytest tools/mcp/python/tests -k aps",
+        "validate-report witness_honesty debug_runs/aps_artist_tool_e2e_live.json"
+      ],
+      "blocks": [
+        "APS-EVO-E1-DOMAIN-ROUTER-001"
+      ],
+      "wave_0_issued": true
+    },
+    {
+      "wave": 0,
+      "id": "MCP-APS-IMPORT-GUARD-001",
+      "status": "done",
+      "priority": "P0",
+      "owner": "coder-mcp",
+      "program": "APS-E0",
+      "goal": "Harden test_aps_imports.py \u2014 all panels + backend modules non-zero + symbol import",
+      "verify": [
+        "pytest tools/mcp/python/tests/test_aps_imports.py"
+      ]
+    },
+    {
+      "wave": 0,
+      "id": "MCP-APS-WIT-WRITER-001",
+      "status": "done",
+      "priority": "P0",
+      "owner": "coder-mcp",
+      "program": "APS-E0",
+      "goal": "Regenerate aps_artist_tool_e2e_live.json + aps_artist_tool_modules_live.json with envelope v1",
+      "witness": "debug_runs/aps_artist_tool_e2e_live.json"
+    },
+    {
+      "wave": 0,
+      "id": "MCP-APS-PYTEST-SUITE-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder-mcp",
+      "program": "APS-E0",
+      "goal": "Full pytest tools/mcp/python/tests -k aps green (font floor, pipeline validity, nonblock UX)",
+      "verify": [
+        "pytest tools/mcp/python/tests -k aps -v"
+      ]
+    },
+    {
+      "wave": 0,
+      "id": "MCP-APS-STATE-SCAFFOLD-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder-mcp",
+      "program": "APS-E1",
+      "goal": "Add SuiteState.art_domain enum + default buildings in state.py (no UI yet)",
+      "territory": "tools/mcp/art_pipeline_suite/state.py",
+      "parallel_ok": [
+        "APS-EVO-E0-RELAUNCH-001"
+      ]
+    },
+    {
+      "wave": 0,
+      "id": "MCP-LANDSCAPE-BROWSE-STUB-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder-mcp",
+      "program": "APS-E2",
+      "goal": "Stub landscape_preset_browse.py wrapping validate-report landscape_grammar",
+      "territory": "tools/mcp/python/rust_engine_mcp/landscape_preset_browse.py",
+      "parallel_ok": [
+        "APS-EVO-E0-RELAUNCH-001"
+      ]
+    },
+    {
+      "wave": 0,
+      "id": "MCP-APS-ATLAS-QC-DOMAIN-001",
+      "status": "done",
+      "priority": "P2",
+      "owner": "coder-mcp",
+      "program": "APS-E4",
+      "goal": "Add atlas_domain param to aps_atlas_qc.py + format_atlas_qc_display branch",
+      "territory": "tools/mcp/art_pipeline_suite/aps_atlas_qc.py",
+      "parallel_ok": [
+        "APS-EVO-E0-RELAUNCH-001"
+      ]
+    },
+    {
+      "wave": 0,
+      "id": "MCP-APS-INLINE-FEEDBACK-002",
+      "status": "done",
+      "priority": "P2",
+      "owner": "coder-mcp",
+      "program": "APS-UX",
+      "goal": "Flow-bar prerequisite hints when domain/catalog missing (designer open item)",
+      "territory": "tools/mcp/art_pipeline_suite/aps_inline_feedback.py"
+    },
+    {
+      "wave": 0,
+      "id": "MCP-APS-GRAMMAR-INSPECT-LAND-001",
+      "status": "done",
+      "priority": "P2",
+      "owner": "coder-mcp",
+      "program": "APS-E2",
+      "goal": "grammar_inspector.py landscape preset summary branch (read-only)",
+      "parallel_ok": [
+        "MCP-LANDSCAPE-BROWSE-STUB-001"
+      ]
+    },
+    {
+      "wave": 0,
+      "id": "MCP-APS-WIT-HON-HOOK-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder-mcp",
+      "program": "WIT",
+      "goal": "APS witness writers call validate-report witness_honesty before green:true",
+      "docs": [
+        "src/dev/plan_witness_queue_integrity_mcp_v1.md"
+      ]
+    },
+    {
+      "wave": 1,
+      "id": "APS-EVO-E1-DOMAIN-ROUTER-001",
+      "status": "done",
+      "priority": "P0",
+      "owner": "coder-mcp",
+      "co_owner": "designer",
+      "depends_on": [
+        "APS-EVO-E0-RELAUNCH-001",
+        "DES-APS-E1-IA-OPTION-D-001"
+      ],
+      "program": "APS-E1",
+      "goal": "Domain router UI + per-tab set_domain hooks",
+      "witness": "debug_runs/aps_domain_router_live.json",
+      "verify": [
+        "pytest tools/mcp/python/tests/test_aps_domain_router.py"
+      ],
+      "blocks": [
+        "APS-EVO-E2-PRESET-BROWSE-001",
+        "APS-EVO-E3-VEG-STATE-AXIS-001"
+      ]
+    },
+    {
+      "wave": 1,
+      "id": "MCP-APS-CATALOG-LANDSCAPE-001",
+      "status": "done",
+      "priority": "P2",
+      "owner": "coder-mcp",
+      "depends_on": [
+        "APS-EVO-E1-DOMAIN-ROUTER-001"
+      ],
+      "program": "APS-E2",
+      "goal": "catalog.py landscape branch lists _preset_index.json",
+      "witness": "debug_runs/aps_landscape_preset_browse_live.json",
+      "note": "Superseded by APS-EVO-E2-PRESET-BROWSE-001 — same witness"
+    },
+    {
+      "wave": 1,
+      "id": "APS-EVO-E2-PRESET-BROWSE-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder-mcp",
+      "co_owner": "designer-mcp",
+      "depends_on": [
+        "APS-EVO-E1-DOMAIN-ROUTER-001"
+      ],
+      "program": "APS-E2",
+      "goal": "Preset browse + inline validate-report landscape_grammar",
+      "witness": "debug_runs/aps_landscape_preset_browse_live.json"
+    },
+    {
+      "wave": 1,
+      "id": "MCP-APS-VARIANTS-LAND-BRANCH-001",
+      "status": "superseded",
+      "priority": "P2",
+      "owner": "coder-mcp",
+      "depends_on": [
+        "APS-EVO-E1-DOMAIN-ROUTER-001",
+        "APS-EVO-E3-VEGCATALOG-SCHEMA-001"
+      ],
+      "program": "APS-E3",
+      "goal": "variants_panel.py landscape state axis branch scaffold",
+      "territory": "tools/mcp/art_pipeline_suite/variants_panel.py",
+      "note": "Option D — landscape_states_panel.py replaces variants branch"
+    },
+    {
+      "wave": 1,
+      "id": "MCP-APS-ASSEMBLY-LAND-GRAMMAR-001",
+      "status": "superseded",
+      "priority": "P2",
+      "owner": "coder-mcp",
+      "depends_on": [
+        "APS-EVO-E1-DOMAIN-ROUTER-001"
+      ],
+      "program": "APS-E2",
+      "goal": "assembly_panel.py landscape_grammar_v0 read-only preset attach path",
+      "note": "Superseded by landscape_grammar_panel.py (APS-E2-GRAMMAR-PANEL-001)"
+    },
+    {
+      "wave": 2,
+      "id": "APS-EVO-E3-VEG-STATE-AXIS-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder-mcp",
+      "co_owner": "designer-mcp",
+      "depends_on": [
+        "APS-EVO-E1-DOMAIN-ROUTER-001",
+        "APS-EVO-E3-VEGCATALOG-SCHEMA-001",
+        "DMCP-E3-VARIANT-KEY-SET-001"
+      ],
+      "program": "APS-E3",
+      "goal": "Variants landscape axis + _vegetation_variant_catalog.ron validator",
+      "witness": "debug_runs/aps_veg_state_axis_live.json"
+    },
+    {
+      "wave": 2,
+      "id": "MCP-APS-EXTRACT-PARITY-STUB-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder-mcp",
+      "depends_on": [
+        "APS-EVO-E3-VEG-STATE-AXIS-001"
+      ],
+      "program": "APS-E5",
+      "goal": "Stub aps_veg_extract_parity.py read-only ENGINE_READ_PATH panel",
+      "witness": "debug_runs/aps_veg_extract_parity_live.json"
+    },
+    {
+      "wave": 3,
+      "id": "APS-EVO-E4-ATLAS-EXPAND-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder-mcp",
+      "co_owner": "designer-mcp",
+      "depends_on": [
+        "APS-EVO-E3-VEG-STATE-AXIS-001",
+        "CDR-A-LG4-PIXEL-REOPEN-001",
+        "DMCP-E4-MATRIX-CHARTER-001"
+      ],
+      "program": "APS-E4",
+      "goal": "LG-5 atlas expansion beyond 3 tiles + landscape register + domain QC",
+      "witness": "debug_runs/art_pipeline/tile_landscape_expanded_live.json"
+    },
+    {
+      "wave": 2,
+      "id": "MCP-APS-ATLAS-LAND-REGISTER-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder-mcp",
+      "depends_on": [
+        "APS-EVO-E1-DOMAIN-ROUTER-001",
+        "APS-EVO-E4-ATLAS-EXPAND-001"
+      ],
+      "program": "APS-E4",
+      "goal": "atlas_panel.py atlas_domain:landscape → landscape_atlas_index.register",
+      "territory": "tools/mcp/python/rust_engine_mcp/landscape_atlas_index.py",
+      "witness": "debug_runs/aps_atlas_land_register_live.json"
+    },
+    {
+      "wave": 2,
+      "id": "APS-EVO-E5-EXTRACT-PARITY-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder-mcp",
+      "co_owner": "coder_b",
+      "depends_on": [
+        "APS-EVO-E3-VEG-STATE-AXIS-001",
+        "CDR-B-VEG-RESOLVER-PARITY-001"
+      ],
+      "program": "APS-E5",
+      "goal": "In-tool parity: authored variant_key \u2286 resolver-known keys",
+      "witness": "debug_runs/aps_veg_extract_parity_live.json"
+    },
+    {
+      "wave": 0,
+      "id": "APS-EVO-E3-VEGCATALOG-SCHEMA-001",
+      "status": "done",
+      "priority": "P0",
+      "owner": "planner-mcp",
+      "program": "APS-E3",
+      "goal": "Author vegetation_variant_catalog_v1.schema.json",
+      "deliverable": "tools/mcp/schemas/vegetation_variant_catalog_v1.schema.json",
+      "blocks": [
+        "APS-EVO-E3-VEG-STATE-AXIS-001",
+        "DMCP-E3-VARIANT-KEY-SET-001"
+      ],
+      "wave_0_issued": true,
+      "signed": "2026-06-16",
+      "witness": "debug_runs/mcp_planner_wave0_aps_veg_live.json"
+    },
+    {
+      "wave": 0,
+      "id": "PLAN-VEG-RESOLVER-KEY-NAMING-001",
+      "status": "done",
+      "priority": "P0",
+      "owner": "planner-mcp",
+      "program": "APS-E3",
+      "goal": "Open Q1 doc: variant_key naming vs VegetationExtractFrame resolver (@coder sign-off)",
+      "deliverable": "src/dev/plan_veg_variant_key_naming_v1.md",
+      "signed": "2026-06-16",
+      "witness": "debug_runs/mcp_planner_wave0_aps_veg_live.json"
+    },
+    {
+      "wave": 0,
+      "id": "PLAN-ATLAS-BUDGET-SIZING-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "planner-mcp",
+      "program": "APS-E4",
+      "goal": "Atlas budget framework: topology\u00d7state matrix sizing before bake",
+      "deliverable": "src/dev/plan_landscape_atlas_budget_v1.md",
+      "signed": "2026-06-16",
+      "witness": "debug_runs/mcp_planner_wave0_aps_veg_live.json"
+    },
+    {
+      "wave": 0,
+      "id": "PLAN-APS-E5-ENGINE-AUTHORITY-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "planner-mcp",
+      "program": "APS-E5",
+      "goal": "Engine authority review: RepresentationResult / map-stamp contract for veg parity",
+      "deliverable": "src/dev/plan_aps_veg_parity_engine_authority_v1.md",
+      "signed": "2026-06-16",
+      "witness": "debug_runs/mcp_planner_wave0_aps_veg_live.json"
+    },
+    {
+      "wave": 0,
+      "id": "PLAN-INTEGRATION-CROSSREF-001",
+      "status": "done",
+      "priority": "P2",
+      "owner": "planner-mcp",
+      "goal": "Cross-ref APS evolution into 6 neighbor plans (stale flags explicit)",
+      "docs": [
+        "src/dev/plan_aps_evolution_veg_capability_20260616_v1.md"
+      ],
+      "signed": "2026-06-16",
+      "witness": "debug_runs/mcp_planner_wave0_aps_veg_live.json"
+    },
+    {
+      "wave": 0,
+      "id": "PLAN-LG-EXEC-ANNOT-001",
+      "status": "done",
+      "priority": "P2",
+      "owner": "planner-mcp",
+      "goal": "Annotate plan_landscape_grammar_exec \u00a77 teach exception for 3-tile pilot",
+      "docs": [
+        "src/dev/plan_landscape_grammar_exec_001_v1.md"
+      ],
+      "signed": "2026-06-16",
+      "witness": "debug_runs/mcp_planner_wave0_aps_veg_live.json"
+    },
+    {
+      "wave": 0,
+      "id": "PLAN-VEG-BURN-RECONCILE-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "planner-mcp",
+      "goal": "Reconcile plan_veg_burn_extract \u00a76 with new catalog schema draft",
+      "docs": [
+        "src/dev/plan_veg_burn_extract_001_v1.md"
+      ],
+      "signed": "2026-06-16",
+      "witness": "debug_runs/mcp_planner_wave0_aps_veg_live.json"
+    },
+    {
+      "wave": 0,
+      "id": "PLAN-QUEUE-REGISTRY-APS-001",
+      "status": "done",
+      "priority": "P2",
+      "owner": "planner-mcp",
+      "goal": "Register parallel_wave + mcp_aps_evolution queues in queue_integrity registry",
+      "verify": [
+        "validate-report queue_integrity --compress 3"
+      ],
+      "signed": "2026-06-16",
+      "witness": "debug_runs/mcp_planner_wave0_aps_veg_live.json"
+    },
+    {
+      "wave": 0,
+      "id": "PLAN-G-PLAY-SPLIT-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "planner",
+      "goal": "Finalize G-PLAY lib vs operator split plan (unblocks honest play witnesses)",
+      "deliverable": "src/dev/plan_g_play_split_v1.md",
+      "signed": "2026-06-16",
+      "witness": "debug_runs/mcp_planner_wave0_aps_veg_live.json"
+    },
+    {
+      "wave": 0,
+      "id": "PLAN-VEG-RUNTIME-PROOF-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "planner",
+      "goal": "Runtime proof plan: lib harness vs live sim vs operator-visible tiers",
+      "deliverable": "src/dev/plan_veg_runtime_proof_001_v1.md",
+      "signed": "2026-06-17",
+      "note": "Plan closed — witness WIT-HON → CDR-A-WIT-HON-ROLLUP-001",
+      "witness_reopen": "debug_runs/veg_runtime_proof_live.json",
+    },
+    {
+      "wave": 0,
+      "id": "PLAN-WITNESS-REOPEN-001",
+      "status": "done",
+      "priority": "P0",
+      "owner": "planner-mcp",
+      "goal": "Witness reopen matrix: which phase6/VEG done rows fail WIT-HON scan",
+      "deliverable": "src/dev/plan_witness_reopen_matrix_v1.md",
+      "signed": "2026-06-16",
+      "operator_approved": "2026-06-02",
+      "witness": "debug_runs/agent_ops/witness_bulk_reopen_live.json"
+    },
+    {
+      "wave": 0,
+      "id": "PLAN-MCP-SIM-VALIDATORS-SIGN-001",
+      "status": "done",
+      "priority": "P2",
+      "owner": "planner-mcp",
+      "goal": "Sign MCP-P2-SIM-VALIDATORS plan (unblocks 3 coder-mcp phase4 rows)",
+      "docs": [
+        "tools/orchestrator/queues/mcp_active_queue.json"
+      ],
+      "signed": "2026-06-16",
+      "witness": "debug_runs/mcp_planner_wave0_aps_veg_live.json"
+    },
+    {
+      "wave": 0,
+      "id": "PLAN-TILE-BATCH-LAND-EXAMPLE-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "planner-mcp",
+      "program": "APS-E4",
+      "goal": "Job JSON example: expanded tile_batch_landscape with burn rows",
+      "deliverable": "assets/staging/specs/tile_batch_landscape_expanded_v1.example.json",
+      "signed": "2026-06-16",
+      "witness": "debug_runs/mcp_planner_wave0_aps_veg_live.json"
+    },
+    {
+      "wave": 0,
+      "id": "PLAN-ARCH-002-VEG-PATCH-001",
+      "status": "done",
+      "priority": "P2",
+      "owner": "planner-mcp",
+      "goal": "Decide variant_graph_v1 reuse vs flat catalog for veg state patches",
+      "deliverable": "src/dev/plan_veg_variant_graph_decision_v1.md",
+      "signed": "2026-06-16",
+      "witness": "debug_runs/mcp_planner_wave0_aps_veg_live.json"
+    },
+    {
+      "wave": 0,
+      "id": "PLAN-THREE-GREENS-VOCAB-001",
+      "status": "done",
+      "priority": "P2",
+      "owner": "planner-mcp",
+      "goal": "Document schema/bake/runtime-stamp/art-ship green scopes for all APS witnesses",
+      "deliverable": "src/dev/plan_aps_witness_green_vocabulary_v1.md",
+      "signed": "2026-06-16",
+      "witness": "debug_runs/mcp_planner_wave0_aps_veg_live.json"
+    },
+    {
+      "wave": 0,
+      "id": "DMCP-E0-ARTIST-REVERDICT-001",
+      "status": "done",
+      "priority": "P0",
+      "owner": "designer-mcp",
+      "program": "APS-E0",
+      "goal": "Artist acceptance re-verdict after E0 E2E (supersede stale 2/10 FAIL review)",
+      "depends_on_parallel": [
+        "APS-EVO-E0-RELAUNCH-001"
+      ],
+      "deliverable": "src/dev/design_aps_artist_ship_review_20260616_v1.md",
+      "verdict": "PASS_WITH_NOTES",
+      "witness": "debug_runs/art_pipeline/dmcp_e0_artist_reverdict_live.json",
+      "witness_json": "debug_runs/art_pipeline/dmcp_e0_artist_reverdict_live.json",
+      "e0_witness": "debug_runs/aps_artist_tool_e2e_live.json",
+      "completed": "2026-06-02",
+      "wave_0_issued": true
+    },
+    {
+      "wave": 0,
+      "id": "DMCP-E2-PRESET-QC-CRITERIA-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "designer-mcp",
+      "program": "APS-E2",
+      "goal": "QC criteria: what artist must read on preset browse (topology summary plain language)",
+      "deliverable": "src/dev/design_aps_preset_qc_criteria_v1.md"
+    },
+    {
+      "wave": 0,
+      "id": "DMCP-E3-VARIANT-KEY-SET-001",
+      "status": "done",
+      "priority": "P0",
+      "owner": "designer-mcp",
+      "depends_on": [
+        "APS-EVO-E3-VEGCATALOG-SCHEMA-001"
+      ],
+      "program": "APS-E3",
+      "goal": "Draft veg variant_key set: clean/damaged/burn_00..07/regrowth rows",
+      "deliverable": "assets/configs/landscape/_vegetation_variant_catalog.ron",
+      "witness": "debug_runs/art_pipeline/dmcp_e3_vegetation_catalog_live.json",
+      "verdict": "PASS"
+    },
+    {
+      "wave": 0,
+      "id": "DMCP-E4-MATRIX-CHARTER-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "designer-mcp",
+      "program": "APS-E4",
+      "goal": "Charter first expansion matrix: which topology kinds \u00d7 which states in atlas v1",
+      "deliverable": "src/dev/design_landscape_lg5_expansion_matrix_v1.md",
+      "blocks": [
+        "APS-EVO-E4-ATLAS-EXPAND-001"
+      ]
+    },
+    {
+      "wave": 0,
+      "id": "DMCP-VEG-F01-ART-SHIP-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "designer-mcp",
+      "program": "VEG-F",
+      "goal": "VEG-F01 art-ship gate criteria for LG-5 expanded atlas (G4/G5)",
+      "docs": [
+        "src/dev/design_landscape_lg5_atlas_v1.md"
+      ]
+    },
+    {
+      "wave": 0,
+      "id": "DMCP-LG5-KEYFRAME-REQS-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "designer-mcp",
+      "program": "APS-E4",
+      "goal": "Keyframe still requirements per burn/scar/recovery variant (keyframe_pack spine)",
+      "deliverable": "src/dev/design_landscape_keyframe_burn_reqs_v1.md"
+    },
+    {
+      "wave": 0,
+      "id": "DMCP-TILE-BATCH-EXPAND-SPEC-001",
+      "status": "ready",
+      "priority": "P1",
+      "owner": "designer-mcp",
+      "program": "APS-E4",
+      "goal": "Signed tile_batch spec for expanded landscape atlas (content authority)",
+      "deliverable": "assets/staging/specs/tile_batch_landscape_expanded_v1.json"
+    },
+    {
+      "wave": 0,
+      "id": "DMCP-G4-STAGING-SIGN-001",
+      "status": "ready",
+      "priority": "P2",
+      "owner": "designer-mcp",
+      "goal": "list-staging sign workflow for landscape domain atlases",
+      "verify": [
+        "list-staging"
+      ]
+    },
+    {
+      "wave": 0,
+      "id": "DMCP-PRESET-DISPLAY-STRINGS-001",
+      "status": "ready",
+      "priority": "P2",
+      "owner": "designer-mcp",
+      "goal": "Plain-language display strings for 10 ship presets in APS browse",
+      "deliverable": "assets/configs/landscape/presets/_display_strings_v1.json"
+    },
+    {
+      "wave": 0,
+      "id": "DMCP-BURN-VISUAL-LANG-001",
+      "status": "ready",
+      "priority": "P2",
+      "owner": "designer-mcp",
+      "goal": "Visual language doc: burn/scar/recovery readable at iso zoom",
+      "deliverable": "src/dev/design_veg_burn_visual_language_v1.md"
+    },
+    {
+      "wave": 0,
+      "id": "DMCP-PILOT-TEACH-ANNOT-001",
+      "status": "ready",
+      "priority": "P2",
+      "owner": "designer-mcp",
+      "goal": "Annotate 3-tile pilot as teach exception not_a_ship_target:true",
+      "docs": [
+        "assets/staging/tiles/tile_landscape_lg5_pilot_v1/"
+      ]
+    },
+    {
+      "wave": 0,
+      "id": "DMCP-ATLAS-QC-PLAIN-001",
+      "status": "ready",
+      "priority": "P2",
+      "owner": "designer-mcp",
+      "goal": "Plain-language atlas QC messages for landscape domain (artist-readable)",
+      "deliverable": "src/dev/design_aps_atlas_qc_copy_v1.md"
+    },
+    {
+      "wave": 0,
+      "id": "DMCP-CONTENT-G0-RULES-001",
+      "status": "ready",
+      "priority": "P1",
+      "owner": "designer-mcp",
+      "goal": "G0 order-critique for expanded veg atlas batch (mcp-production-rules audit)",
+      "skills": [
+        "mcp-production-rules",
+        "tile-generation"
+      ]
+    },
+    {
+      "wave": 0,
+      "id": "DMCP-SUCCESSION-STATE-CONTENT-001",
+      "status": "ready",
+      "priority": "P1",
+      "owner": "designer-mcp",
+      "program": "APS-E3",
+      "goal": "Succession stage content: gap/regen/shrub/sapling/canopy variant rows",
+      "parallel_ok": [
+        "APS-EVO-E3-VEGCATALOG-SCHEMA-001"
+      ]
+    },
+    {
+      "wave": 0,
+      "id": "DES-APS-E1-IA-OPTION-D-001",
+      "status": "done",
+      "priority": "P0",
+      "owner": "designer",
+      "program": "APS-E1",
+      "goal": "Sign Option D: domain toggle on existing 5 tabs (not 6th tab)",
+      "deliverable": "src/dev/design_aps_domain_ia_sign_v1.md",
+      "blocks": [
+        "APS-EVO-E1-DOMAIN-ROUTER-001"
+      ],
+      "wave_0_issued": true
+    },
+    {
+      "wave": 0,
+      "id": "DES-APS-STYLE-TOKENS-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "designer",
+      "goal": "FONT_TITLE + FONT_CAPTION token spec handoff to coder-mcp",
+      "docs": [
+        "src/dev/design_aps_uiux_style_quality_20260616_v1.md"
+      ]
+    },
+    {
+      "wave": 0,
+      "id": "DES-APS-DOMAIN-A11Y-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "designer",
+      "goal": "Keyboard path + focus order for domain switch control",
+      "deliverable": "src/dev/design_aps_domain_a11y_v1.md"
+    },
+    {
+      "wave": 0,
+      "id": "DES-APS-PARITY-PANEL-UX-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "designer",
+      "program": "APS-E5",
+      "goal": "ENGINE_READ_PATH parity panel mock (mirror aps_mat_auth_ui pattern)",
+      "deliverable": "src/dev/design_aps_veg_parity_panel_v1.md"
+    },
+    {
+      "wave": 0,
+      "id": "DES-APS-PRESET-BROWSE-UX-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "designer",
+      "program": "APS-E2",
+      "goal": "Preset list + topology summary layout wireframe",
+      "deliverable": "src/dev/design_aps_preset_browse_layout_v1.md"
+    },
+    {
+      "wave": 0,
+      "id": "DES-APS-STATE-AXIS-LABELS-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "designer",
+      "program": "APS-E3",
+      "goal": "Plain labels for succession + burn axis in Variants tab",
+      "deliverable": "src/dev/design_aps_veg_state_labels_v1.md"
+    },
+    {
+      "wave": 0,
+      "id": "DES-ECOLOGY-READ-HUD-001",
+      "status": "done",
+      "priority": "P2",
+      "owner": "designer",
+      "goal": "World preview ecology readability: topology tint legend",
+      "deliverable": "src/dev/design_ecology_preview_legend_v1.md"
+    },
+    {
+      "wave": 0,
+      "id": "DES-G-PLAY-OPERATOR-FLOW-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "designer",
+      "goal": "Operator G-PLAY veg checklist flow (supports VEG-C14)",
+      "deliverable": "src/dev/design_g_play_veg_operator_v1.md"
+    },
+    {
+      "wave": 0,
+      "id": "DES-APS-ASSEMBLY-DENSITY-001",
+      "status": "done",
+      "priority": "P2",
+      "owner": "designer",
+      "goal": "Assembly panel density at MIN window \u2014 layout fix spec",
+      "docs": [
+        "src/dev/design_aps_uiux_style_quality_20260616_v1.md"
+      ]
+    },
+    {
+      "wave": 0,
+      "id": "DES-APS-COLOR-A11Y-001",
+      "status": "done",
+      "priority": "P2",
+      "owner": "designer",
+      "goal": "Color-not-alone audit: footprint heatmap, material swatch, atlas inline",
+      "deliverable": "src/dev/design_aps_color_a11y_audit_v1.md"
+    },
+    {
+      "wave": 0,
+      "id": "DES-MINIMAP-VEG-LEGEND-001",
+      "status": "ready",
+      "priority": "P3",
+      "owner": "designer",
+      "goal": "Minimap ecology/topology legend tokens",
+      "docs": [
+        "assets/ui/minimap/README.md"
+      ]
+    },
+    {
+      "wave": 0,
+      "id": "DES-BUILD-READ-HUD-001",
+      "status": "ready",
+      "priority": "P2",
+      "owner": "designer",
+      "goal": "Building grammar read HUD affordances for arch_build_grammar consumer",
+      "parallel_ok": [
+        "CDR-B-BUILD-CONSUMER-MCP-001"
+      ]
+    },
+    {
+      "wave": 0,
+      "id": "CDR-A-LG4-PIXEL-REOPEN-001",
+      "status": "done",
+      "priority": "P0",
+      "owner": "coder_a",
+      "program": "VEG-HARDEN",
+      "goal": "Reopen LG-4: pixel_heterogeneity_wired + topology_tint_visible_chunks>=1 + operator_visible",
+      "witness": "debug_runs/landscape_grammar_lg4_preview_live.json",
+      "completed": "2026-06-02",
+      "reconcile": "ORCH-APS-RECONCILE-001",
+      "exit_predicate": {
+        "must": [
+          {
+            "path": "green",
+            "eq": true
+          },
+          {
+            "path": "pixel_heterogeneity_wired",
+            "eq": true
+          },
+          {
+            "path": "topology_tint_visible_chunks",
+            "gte": 1
+          }
+        ]
+      },
+      "blocks": [
+        "APS-EVO-E4-ATLAS-EXPAND-001"
+      ],
+      "forbidden_exit": [
+        "eval_math_without_render",
+        "witness_lib_green_without_green"
+      ],
+      "wave_0_issued": true
+    },
+    {
+      "wave": 0,
+      "id": "CDR-A-VEG-HARVEST-001",
+      "status": "done",
+      "priority": "P0",
+      "owner": "coder_a",
+      "program": "VEG-SIM",
+      "goal": "VEG-LG2-HARVEST genuine open: harvest_disturbances>=1",
+      "witness": "debug_runs/landscape_grammar_lg2_live.json",
+      "completed": "2026-06-17",
+      "exit_predicate": {
+        "must": [
+          {
+            "path": "harvest_disturbances",
+            "gte": 1
+          }
+        ]
+      }
+    },
+    {
+      "wave": 0,
+      "id": "CDR-A-VEG-RECOVERY-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_a",
+      "program": "VEG-SIM",
+      "goal": "recovery_ticks>=1 on lg2 witness (reopen ambiguous row)",
+      "witness": "debug_runs/landscape_grammar_lg2_live.json",
+      "completed": "2026-06-17",
+      "exit_predicate": {
+        "must": [
+          {
+            "path": "recovery_ticks",
+            "gte": 1
+          }
+        ]
+      }
+    },
+    {
+      "wave": 0,
+      "id": "CDR-A-NESTED-DEPTH-003",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_a",
+      "program": "VEG-SIM",
+      "goal": "nested_depth_max>=3 (reopen F07 ambiguous)",
+      "witness": "debug_runs/landscape_grammar_lg2_live.json",
+      "completed": "2026-06-17",
+      "exit_predicate": {
+        "must": [
+          {
+            "path": "nested_depth_max",
+            "gte": 3
+          }
+        ]
+      }
+    },
+    {
+      "wave": 0,
+      "id": "CDR-A-ROLLOUT-PRESETS-003",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_a",
+      "program": "VEG-SIM",
+      "goal": "Map rollout presets_used>=3 (reopen ambiguous row)",
+      "witness": "debug_runs/landscape_grammar_map_rollout_live.json",
+      "completed": "2026-06-17",
+      "exit_predicate": {
+        "must": [
+          {
+            "path": "presets_used",
+            "gte": 3
+          }
+        ]
+      }
+    },
+    {
+      "wave": 0,
+      "id": "CDR-A-WIT-HON-ROLLUP-001",
+      "status": "done",
+      "priority": "P0",
+      "owner": "coder_a",
+      "program": "WIT",
+      "goal": "Fix veg_runtime_proof rollup child \u2014 vegetation_program_close WIT-HON FAIL",
+      "witness": "debug_runs/vegetation_program_close_live.json",
+      "completed": "2026-06-17",
+      "verify": [
+        "validate-report witness_honesty debug_runs/vegetation_program_close_live.json"
+      ]
+    },
+    {
+      "wave": 0,
+      "id": "CDR-A-EXTRACT-SPRITE-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_a",
+      "program": "VEG-EXTRACT",
+      "goal": "Real-sprite variant_key resolution in landscape extract (not tint-only)",
+      "witness": "debug_runs/landscape_grammar_extract_live.json",
+      "completed": "2026-06-17",
+      "parallel_ok": [
+        "CDR-B-VEG-RESOLVER-PARITY-001"
+      ]
+    },
+    {
+      "wave": 0,
+      "id": "CDR-A-STAGE5-LIVE-ECO-001",
+      "status": "done",
+      "priority": "P0",
+      "owner": "coder_a",
+      "program": "VEG-HARDEN",
+      "goal": "Verify stage5 ecology_rows_source=live_landscape_program_on_chunk (not harness patch)",
+      "witness": "debug_runs/stage5_full_app_live.json",
+      "completed": "2026-06-17",
+      "forbidden_exit": [
+        "witness_lib_green_without_green"
+      ]
+    },
+    {
+      "wave": 0,
+      "id": "CDR-A-FIRE-HARVEST-WIRE-001",
+      "status": "ready",
+      "priority": "P1",
+      "owner": "coder_a",
+      "program": "VEG-SIM",
+      "goal": "Fire disturbance \u2192 harvest event path wired in ecology sim",
+      "territory": "src/systems/ecology/"
+    },
+    {
+      "wave": 0,
+      "id": "CDR-A-PLAY-OPS-SPLIT-001",
+      "status": "ready",
+      "priority": "P1",
+      "owner": "coder_a",
+      "program": "G-PLAY",
+      "goal": "Split play_scenario witness: lib contract vs operator_visible fields",
+      "witness": "debug_runs/play_scenario_live.json",
+      "docs": [
+        "src/dev/plan_g_play_split_v1.md"
+      ]
+    },
+    {
+      "wave": 0,
+      "id": "CDR-A-LG5-REAL-STAMP-001",
+      "status": "ready",
+      "priority": "P1",
+      "owner": "coder_a",
+      "program": "VEG-ART",
+      "goal": "LG-5 registry stamp uses real atlas UV (when expanded atlas lands)",
+      "witness": "debug_runs/landscape_grammar_lg5_live.json",
+      "depends_on_parallel": [
+        "APS-EVO-E4-ATLAS-EXPAND-001"
+      ]
+    },
+    {
+      "wave": 0,
+      "id": "CDR-A-PRESET-PICK-LAMBDA-001",
+      "status": "ready",
+      "priority": "P2",
+      "owner": "coder_a",
+      "program": "VEG-SIM",
+      "goal": "Replace coord-heuristic preset pick with LandUseInfluence-driven selection",
+      "territory": "src/systems/ecology/landscape_grammar_map.rs"
+    },
+    {
+      "wave": 0,
+      "id": "CDR-A-DISTURBANCE-LOG-001",
+      "status": "done",
+      "priority": "P2",
+      "owner": "coder_a",
+      "program": "VEG-SIM",
+      "goal": "Disturbance event log witness for fire/construction/harvest audit",
+      "witness": "debug_runs/landscape_grammar_disturbance_log_live.json",
+      "completed": "2026-06-17"
+    },
+    {
+      "wave": 0,
+      "id": "CDR-A-ECOLOGY-HARNESS-CLEAN-001",
+      "status": "ready",
+      "priority": "P1",
+      "owner": "coder_a",
+      "program": "VEG-HARDEN",
+      "goal": "Remove harness-only ecology row injection from stage5 when live path green",
+      "territory": "src/render/stage5_full_app_harness.rs"
+    },
+    {
+      "wave": 0,
+      "id": "CDR-A-VEG-DOC-REFRESH-001",
+      "status": "ready",
+      "priority": "P2",
+      "owner": "coder_a",
+      "goal": "Refresh vegetation_system_honest_status_v1.md to match live witnesses",
+      "docs": [
+        "src/dev/vegetation_system_honest_status_v1.md"
+      ]
+    },
+    {
+      "wave": 0,
+      "id": "CDR-A-VISUAL-SMOKE-ECO-001",
+      "status": "ready",
+      "priority": "P2",
+      "owner": "coder_a",
+      "program": "VEG-HARDEN",
+      "goal": "--test visual ecology raster non-uniform re-verify after LG4 fix",
+      "witness": "debug_runs/landscape_grammar_visual_smoke_live.json",
+      "depends_on_parallel": [
+        "CDR-A-LG4-PIXEL-REOPEN-001"
+      ]
+    },
+    {
+      "wave": 0,
+      "id": "CDR-B-BUILD-CONSUMER-MCP-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_b",
+      "program": "BUILD",
+      "goal": "Wire APS snapshot DNA+\u03b2 consumer in Rust (arch_build_grammar_v0)",
+      "witness": "debug_runs/aps_dna_consumer_rust_live.json",
+      "completed": "2026-06-17",
+      "territory": "src/construction/procedural/arch_build_grammar_v0.rs",
+      "docs": [
+        "tools/mcp/python/rust_engine_mcp/arch_build_grammar.py"
+      ],
+      "wave_0_issued": true
+    },
+    {
+      "wave": 0,
+      "id": "CDR-B-VEG-RESOLVER-PARITY-001",
+      "status": "done",
+      "priority": "P0",
+      "owner": "coder_b",
+      "program": "APS-E5",
+      "goal": "Document VegetationExtractFrame known variant_keys for APS parity (authority)",
+      "deliverable": "src/dev/veg_resolver_known_keys_v1.md",
+      "witness": "debug_runs/art_pipeline/veg_resolver_parity_live.json",
+      "completed": "2026-06-17",
+      "blocks": [
+        "APS-EVO-E5-EXTRACT-PARITY-001"
+      ]
+    },
+    {
+      "wave": 0,
+      "id": "CDR-B-REPRESENTATION-PARITY-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_b",
+      "program": "APS-E5",
+      "goal": "Review RepresentationResult map-stamp path for veg tiles with @planner",
+      "deliverable": "src/dev/representation_parity_signoff_v1.md",
+      "completed": "2026-06-17",
+      "parallel_ok": [
+        "PLAN-APS-E5-ENGINE-AUTHORITY-001"
+      ]
+    },
+    {
+      "wave": 0,
+      "id": "CDR-B-TILE-RESOLVER-VEG-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_b",
+      "program": "APS-E5",
+      "goal": "TileVariantResolver landscape domain branch for veg variant_keys",
+      "witness": "debug_runs/coder_b_parallel_wave_live.json",
+      "completed": "2026-06-17",
+      "territory": "src/render/tiles/"
+    },
+    {
+      "wave": 0,
+      "id": "CDR-B-BUILD-VISUAL-RUN-002",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_b",
+      "program": "BUILD",
+      "goal": "Re-verify BUILD-READ-VISUAL operator path (--test visual mesh/tile visible)",
+      "witness": "debug_runs/build_read_visual_001_live.json",
+      "completed": "2026-06-17",
+      "blocked_external": "BUILD-READ-VISUAL-002 operator"
+    },
+    {
+      "wave": 0,
+      "id": "CDR-B-GROWTH-HUD-VEG-001",
+      "status": "done",
+      "priority": "P2",
+      "owner": "coder_b",
+      "program": "GROWTH",
+      "goal": "Growth HUD ecology hint rows when landscape program active on chunk",
+      "witness": "debug_runs/coder_b_parallel_wave_live.json",
+      "completed": "2026-06-17",
+      "territory": "src/gui/"
+    },
+    {
+      "wave": 0,
+      "id": "CDR-B-CONSTRUCTION-GRAMMAR-DEPTH-001",
+      "status": "done",
+      "priority": "P2",
+      "owner": "coder_b",
+      "program": "BUILD",
+      "goal": "Grammar diversity witness refresh \u2014 >=3 massing picks per DNA family",
+      "witness": "debug_runs/grammar_diversity_witness.json",
+      "completed": "2026-06-17",
+    },
+    {
+      "wave": 0,
+      "id": "CDR-B-INFRA-OVERLAY-POLISH-001",
+      "status": "done",
+      "priority": "P3",
+      "owner": "coder_b",
+      "program": "INFRA",
+      "goal": "Utility overlay readability polish per design_infra_network_overlay_v1",
+      "witness": "debug_runs/utility_network_live.json",
+      "completed": "2026-06-17",
+      "deliverable": "src/render/infrastructure_overlay.rs"
+    },
+    {
+      "wave": 0,
+      "id": "CDR-B-IND-PLAY-WITNESS-001",
+      "status": "done",
+      "priority": "P2",
+      "owner": "coder_b",
+      "program": "IND",
+      "goal": "Industrial activation play witness ind_e02_green stable on default scenario",
+      "witness": "debug_runs/ind_play_witness_live.json",
+      "completed": "2026-06-17",
+    },
+    {
+      "wave": 0,
+      "id": "CDR-B-MAP-STAMP-CONTRACT-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_b",
+      "program": "APS-E5",
+      "goal": "Map stamp contract test: landscape atlas UV \u2192 chunk render",
+      "witness": "debug_runs/landscape_map_stamp_contract_live.json",
+      "completed": "2026-06-17",
+      "parallel_ok": [
+        "CDR-A-LG5-REAL-STAMP-001"
+      ]
+    },
+    {
+      "wave": 0,
+      "id": "CDR-B-WIT-HON-PHASE6-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_b",
+      "program": "WIT",
+      "goal": "Reconcile phase6 done rows vs WIT-HON \u2014 downgrade or reopen honestly",
+      "witness": "debug_runs/wit_hon_phase6_reconcile_live.json",
+      "completed": "2026-06-17",
+      "docs": [
+        "tools/orchestrator/queues/post_drain_phase6_coder_queue.json"
+      ],
+      "parallel_ok": [
+        "PLAN-WITNESS-REOPEN-001"
+      ]
+    }
+  ]
+}

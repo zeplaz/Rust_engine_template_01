@@ -2,11 +2,17 @@
 
 mod authoring;
 mod connection;
+pub mod graph;
 
 pub use authoring::{UtilityAuthoringMode, UtilityAuthoringTool};
 pub use connection::{UtilityConnection, UtilityNetworkKind};
 pub use connection::infra_e4_003_utility_connection_witness_green;
 pub use authoring::infra_e4_004_authoring_witness_green;
+pub use graph::{
+    fixture_utility_network_snapshot, hydrate_utility_graph_from_snapshot,
+    refresh_utility_network_live_witness_payload, UtilityGraph, UtilityGraphEdge,
+    UtilityGraphNode, UtilityGraphPlugin,
+};
 
 use serde::{Deserialize, Serialize};
 

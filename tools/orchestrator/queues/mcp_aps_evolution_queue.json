@@ -1,0 +1,328 @@
+{
+  "_meta": {
+    "version": "1.0.1",
+    "reconciled": "2026-06-02",
+    "option_d_sync": "tools/orchestrator/queues/aps_option_d_agent_queue.json",
+    "program_id": "PLAN-APS-EVOLUTION-VEG-CAPABILITY-001",
+    "date": "2026-06-16",
+    "plan_doc": "src/dev/plan_aps_evolution_veg_capability_20260616_v1.md",
+    "design_ia": "src/dev/design_aps_uiux_style_quality_20260616_v1.md",
+    "reconciliation": "src/dev/veg_queue_reconciliation_20260616_v1.md",
+    "witness_integrity": "src/dev/plan_witness_queue_integrity_mcp_v1.md",
+    "hardening": "src/dev/coder_queue_hardening_rules_v1.md",
+    "snap": "tools/orchestrator/queues/mcp_orchestrator_snap_CURRENT.md",
+    "rule": "Drain E0\u2192E5 top-down \u00b7 BLANG:WIT-HON before every Q\u2713 \u00b7 lib green \u2260 art-ship green",
+    "skills": [
+      "tile-generation",
+      "mcp-asset-pipeline",
+      "mcp-production-rules",
+      "agent-lang"
+    ],
+    "wit_hon_gate": "python -m rust_engine_mcp.cli validate-report witness_honesty <witness> --compress 3",
+    "regression": "pytest tools/mcp/python/tests -k aps"
+  },
+  "green_vocabulary": {
+    "schema_sign": "validate-report landscape_grammar / mcp_spec",
+    "bake_g3": "tile_*_live.json png_count + atlas_meta",
+    "runtime_stamp": "landscape_grammar_lg5_live.json registry_stamp",
+    "art_ship_g4g5": "proceed_ship + designer-mcp sign + ship_allowed",
+    "operator_visible": "pixel_heterogeneity_wired + topology_tint_visible_chunks>0"
+  },
+  "parallel_lanes": {
+    "sim_veg": "@coder \u2014 VEG-LG2-HARVEST, nested_depth, recovery_ticks (NOT APS scope)",
+    "phase6_coder": "@coder \u2014 BUILD-READ-CONSUMER-MCP-001 bridges E5 consumer contract",
+    "lg4_pixel": "CDR-A-LG4-PIXEL-REOPEN-001 done — lg4 witness green:true",
+    "wit_hon_bulk_reopen": "PLAN-WITNESS-REOPEN-001 operator approved 2026-06-02",
+    "e4_e5": "APS-EVO-E4/E5 reconciled 2026-06-02 — spine unblocked for coder-mcp follow-on"
+  },
+  "drain": [
+    {
+      "seq": 0,
+      "phase": "E0",
+      "id": "APS-EVO-E0-RELAUNCH-001",
+      "status": "done",
+      "priority": "P0",
+      "label": "SHIPPED-VERIFY",
+      "owner": "coder-mcp",
+      "co_owner": "designer-mcp",
+      "goal": "Relaunch APS + honest E2E re-witness \u2014 close false-green loop on aps_artist_tool_e2e",
+      "witness": "debug_runs/aps_artist_tool_e2e_live.json",
+      "exit_predicate": {
+        "witness": "debug_runs/aps_artist_tool_e2e_live.json",
+        "must": [
+          {
+            "path": "green",
+            "eq": true
+          },
+          {
+            "path": "import_guard_pass",
+            "eq": true
+          }
+        ]
+      },
+      "verify_commands": [
+        "pytest tools/mcp/python/tests -k aps",
+        "python -m rust_engine_mcp.cli validate-report witness_honesty debug_runs/aps_artist_tool_e2e_live.json"
+      ],
+      "forbidden_exit": [
+        "lib_test_only",
+        "witness_lib_green_without_green"
+      ],
+      "blocks": [
+        "APS-EVO-E1-DOMAIN-ROUTER-001"
+      ],
+      "note": "Supersedes stale design_aps_artist_ship_review FAIL; import smoke precondition"
+    },
+    {
+      "seq": 1,
+      "phase": "E1",
+      "id": "APS-EVO-E1-DOMAIN-ROUTER-001",
+      "status": "done",
+      "priority": "P0",
+      "label": "PLANNED",
+      "owner": "coder-mcp",
+      "co_owner": "designer",
+      "depends_on": [
+        "APS-EVO-E0-RELAUNCH-001"
+      ],
+      "goal": "SuiteState.art_domain {buildings|landscape} \u2014 keystone router on existing 5 tabs",
+      "territory": "tools/mcp/art_pipeline_suite/state.py",
+      "witness": "debug_runs/aps_domain_router_live.json",
+      "exit_predicate": {
+        "witness": "debug_runs/aps_domain_router_live.json",
+        "must": [
+          {
+            "path": "green",
+            "eq": true
+          },
+          {
+            "path": "catalog_source_switches",
+            "eq": true
+          }
+        ]
+      },
+      "verify_commands": [
+        "pytest tools/mcp/python/tests/test_aps_domain_router.py"
+      ],
+      "blocks": [
+        "APS-EVO-E2-PRESET-BROWSE-001",
+        "APS-EVO-E3-VEG-STATE-AXIS-001",
+        "APS-EVO-E4-ATLAS-EXPAND-001"
+      ],
+      "design_ref": "src/dev/design_aps_uiux_style_quality_20260616_v1.md"
+    },
+    {
+      "seq": 2,
+      "phase": "E2",
+      "id": "APS-EVO-E2-PRESET-BROWSE-001",
+      "status": "done",
+      "priority": "P1",
+      "label": "PLANNED",
+      "owner": "coder-mcp",
+      "co_owner": "designer-mcp",
+      "depends_on": [
+        "APS-EVO-E1-DOMAIN-ROUTER-001"
+      ],
+      "goal": "Landscape Catalog: _preset_index browse + inline validate-report landscape_grammar",
+      "witness": "debug_runs/aps_landscape_preset_browse_live.json",
+      "exit_predicate": {
+        "witness": "debug_runs/aps_landscape_preset_browse_live.json",
+        "must": [
+          {
+            "path": "presets_listed",
+            "gte": 10
+          },
+          {
+            "path": "validate_inline_green",
+            "eq": true
+          }
+        ]
+      },
+      "forbidden_exit": [
+        "eval_math_without_render"
+      ]
+    },
+    {
+      "seq": 3,
+      "phase": "E3",
+      "id": "APS-EVO-E3-VEGCATALOG-SCHEMA-001",
+      "status": "done",
+      "priority": "P0",
+      "label": "SIGNED",
+      "owner": "planner-mcp",
+      "goal": "Author vegetation_variant_catalog_v1.schema.json + sign with @coder resolver",
+      "plan_deliverable": "tools/mcp/schemas/vegetation_variant_catalog_v1.schema.json",
+      "depends_on": [],
+      "parallel_ok": [
+        "APS-EVO-E0-RELAUNCH-001",
+        "APS-EVO-E1-DOMAIN-ROUTER-001"
+      ],
+      "blocks": [
+        "APS-EVO-E3-VEG-STATE-AXIS-001",
+        "APS-EVO-E4-ATLAS-EXPAND-001"
+      ],
+      "note": "Schema signed — _vegetation_variant_catalog.ron on disk (29 keys)",
+      "signed": "2026-06-17",
+      "witness": "debug_runs/mcp_aps_e3_veg_catalog_schema_sign_live.json"
+    },
+    {
+      "seq": 4,
+      "phase": "E3",
+      "id": "APS-EVO-E3-VEG-STATE-AXIS-001",
+      "status": "done",
+      "priority": "P1",
+      "label": "SHIPPED",
+      "owner": "coder-mcp",
+      "co_owner": "designer-mcp",
+      "depends_on": [
+        "APS-EVO-E1-DOMAIN-ROUTER-001",
+        "APS-EVO-E3-VEGCATALOG-SCHEMA-001"
+      ],
+      "goal": "Variants landscape axis: succession + veg_burn_00..07 STATE rows per tile-generation",
+      "artifacts": [
+        "assets/configs/landscape/_vegetation_variant_catalog.ron"
+      ],
+      "witness": "debug_runs/aps_veg_state_axis_live.json",
+      "exit_predicate": {
+        "witness": "debug_runs/aps_veg_state_axis_live.json",
+        "must": [
+          {
+            "path": "catalog_validator_green",
+            "eq": true
+          },
+          {
+            "path": "burn_variants_ok",
+            "eq": true
+          },
+          {
+            "path": "catalog_rows_ok",
+            "eq": true
+          },
+          {
+            "path": "states_panel_catalog_wired",
+            "eq": true
+          },
+          {
+            "path": "v2_labels_wired",
+            "eq": true
+          }
+        ]
+      },
+      "skills_gate": [
+        "tile-generation",
+        "mcp-production-rules"
+      ]
+    },
+    {
+      "seq": 5,
+      "phase": "E4",
+      "id": "APS-EVO-E4-ATLAS-EXPAND-001",
+      "status": "done",
+      "priority": "P1",
+      "label": "SHIPPED",
+      "owner": "coder-mcp",
+      "co_owner": "designer-mcp",
+      "depends_on": [
+        "APS-EVO-E3-VEG-STATE-AXIS-001",
+        "LG4-PIXEL-PROOF-GATE"
+      ],
+      "goal": "LG-5 atlas expansion beyond 3 tiles \u2014 atlas_domain:landscape \u2192 _landscape_atlas_index",
+      "witness": "debug_runs/art_pipeline/tile_landscape_expanded_live.json",
+      "exit_predicate": {
+        "witness": "debug_runs/art_pipeline/tile_landscape_expanded_live.json",
+        "must": [
+          {
+            "path": "png_count",
+            "gt": 3
+          },
+          {
+            "path": "atlas_domain",
+            "eq": "landscape"
+          },
+          {
+            "path": "bake_source",
+            "eq": "keyframe_pack"
+          }
+        ]
+      },
+      "forbidden_exit": [
+        "witness_lib_green_without_green"
+      ],
+      "skills_gate": [
+        "mcp-asset-pipeline",
+        "tile-generation",
+        "mcp-production-rules"
+      ],
+      "note": "Expanded v1 shipped — 16-tile keyframe_pack · charter signed",
+      "completed": "2026-06-02",
+      "reconcile": "ORCH-APS-RECONCILE-001"
+    },
+    {
+      "seq": 6,
+      "phase": "E5",
+      "id": "APS-EVO-E5-EXTRACT-PARITY-001",
+      "status": "done",
+      "priority": "P1",
+      "label": "SHIPPED",
+      "owner": "coder-mcp",
+      "co_owner": "coder",
+      "depends_on": [
+        "APS-EVO-E3-VEG-STATE-AXIS-001"
+      ],
+      "parallel_ok": [
+        "APS-EVO-E4-ATLAS-EXPAND-001"
+      ],
+      "goal": "In-tool parity: authored variant_key \u2286 resolver-known keys (plants in game)",
+      "witness": "debug_runs/aps_veg_extract_parity_live.json",
+      "exit_predicate": {
+        "witness": "debug_runs/aps_veg_extract_parity_live.json",
+        "must": [
+          {
+            "path": "parity_green",
+            "eq": true
+          }
+        ]
+      },
+      "note": "Read-only in APS; @coder owns VegetationExtractFrame authority"
+    }
+  ],
+  "external_gates": [
+    {
+      "id": "LG4-PIXEL-PROOF-GATE",
+      "owner": "coder_a",
+      "witness": "debug_runs/landscape_grammar_lg4_preview_live.json",
+      "exit_predicate": {
+        "must": [
+          {
+            "path": "green",
+            "eq": true
+          },
+          {
+            "path": "pixel_heterogeneity_wired",
+            "eq": true
+          },
+          {
+            "path": "topology_tint_visible_chunks",
+            "gte": 1
+          }
+        ]
+      },
+      "current_truth": "green:true pixel_heterogeneity_wired:true topology_tint_visible_chunks:17",
+      "status": "satisfied",
+      "blocks": [],
+      "note": "E4 G4 expansion \u2014 not 3-tile pilot teach exception"
+    },
+    {
+      "id": "VEG-F01-DESIGN-ATLAS-001",
+      "owner": "designer-mcp",
+      "deliverable": "src/dev/design_landscape_lg5_expansion_matrix_v1.md",
+      "status": "satisfied",
+      "blocks": [],
+      "note": "DMCP-E4-MATRIX-CHARTER-001 PASS — charter on disk"
+    }
+  ],
+  "maintain_after_each_seq": [
+    "python -m rust_engine_mcp.cli validate-report witness_honesty <witness> --compress 3",
+    "pytest tools/mcp/python/tests -k aps"
+  ]
+}

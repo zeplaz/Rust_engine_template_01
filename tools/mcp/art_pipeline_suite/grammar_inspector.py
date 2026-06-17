@@ -44,6 +44,9 @@ class GrammarInspectorPanel(ttk.LabelFrame):
             self.district_var.set("—")
             self.massing_var.set("—")
             return
+        if _is_landscape_preset(snapshot):
+            self._load_landscape_preset_summary(snapshot)
+            return
         self.archetype_var.set(str(snapshot.get("archetype_id") or "—"))
         self.district_var.set(str(snapshot.get("district_style") or "—"))
         chain_obj = snapshot.get("grammar_rule_chain") or {}
@@ -61,6 +64,45 @@ class GrammarInspectorPanel(ttk.LabelFrame):
                     step.get("tags", ""),
                 ),
             )
+
+    def _load_landscape_preset_summary(self, snapshot: dict[str, Any]) -> None:
+        """MCP-APS-GRAMMAR-INSPECT-LAND-001 — read-only landscape preset branch."""
+        preset_id = str(
+            snapshot.get("landscape_preset_id")
+            or snapshot.get("preset_id")
+            or snapshot.get("id")
+            or "landscape_preset"
+        )
+        self.archetype_var.set("landscape")
+        self.district_var.set(preset_id)
+        land_dna = snapshot.get("land_dna") if isinstance(snapshot.get("land_dna"), dict) else {}
+        self.massing_var.set(str(land_dna.get("pressure_profile") or land_dna.get("biome") or "—"))
+        kinds = _landscape_topology_kinds(snapshot)
+        summary = ", ".join(kinds[:6]) if kinds else "no topology nodes"
+        self.tree.insert("", tk.END, values=("topology", preset_id, summary, "read-only"))
+
+
+def _is_landscape_preset(snapshot: dict[str, Any]) -> bool:
+    schema = str(snapshot.get("schema") or "")
+    return bool(
+        snapshot.get("land_dna")
+        or snapshot.get("topology_graph")
+        or snapshot.get("landscape_preset_id")
+        or schema.startswith("landscape_grammar")
+    )
+
+
+def _landscape_topology_kinds(snapshot: dict[str, Any]) -> list[str]:
+    graph = snapshot.get("topology_graph") if isinstance(snapshot.get("topology_graph"), dict) else {}
+    nodes = graph.get("nodes") or []
+    kinds: list[str] = []
+    for node in nodes:
+        if not isinstance(node, dict):
+            continue
+        kind = str(node.get("kind") or node.get("type") or "").strip()
+        if kind and kind not in kinds:
+            kinds.append(kind)
+    return kinds
 
 
 def _rule_chain_steps(snapshot: dict[str, Any], ref: list[Any]) -> list[dict[str, str]]:

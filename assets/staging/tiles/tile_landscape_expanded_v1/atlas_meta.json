@@ -1,0 +1,237 @@
+{
+  "schema_version": 1,
+  "batch_id": "tile_landscape_expanded_v1",
+  "tile_id": "landscape_lg5",
+  "atlas_id": "landscape_lg5_expanded_v1",
+  "atlas_png": "C:\\dev\\github\\Rust_engine_template_01\\assets\\textures\\landscape\\staging\\landscape_lg5_expanded_v1_atlas.png",
+  "columns": 4,
+  "rows": 4,
+  "tile_px": 64,
+  "variant_count": 16,
+  "tiles": [
+    {
+      "variant_key": "topology_patch",
+      "png": "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_landscape_expanded_v1\\topology_patch.png",
+      "grid": [
+        0,
+        0
+      ],
+      "uv": [
+        0.0,
+        0.0,
+        0.25,
+        0.25
+      ]
+    },
+    {
+      "variant_key": "topology_patch_scar",
+      "png": "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_landscape_expanded_v1\\topology_patch_scar.png",
+      "grid": [
+        1,
+        0
+      ],
+      "uv": [
+        0.25,
+        0.0,
+        0.25,
+        0.25
+      ]
+    },
+    {
+      "variant_key": "topology_patch_burn_00",
+      "png": "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_landscape_expanded_v1\\topology_patch_burn_00.png",
+      "grid": [
+        2,
+        0
+      ],
+      "uv": [
+        0.5,
+        0.0,
+        0.25,
+        0.25
+      ]
+    },
+    {
+      "variant_key": "topology_patch_burn_04",
+      "png": "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_landscape_expanded_v1\\topology_patch_burn_04.png",
+      "grid": [
+        3,
+        0
+      ],
+      "uv": [
+        0.75,
+        0.0,
+        0.25,
+        0.25
+      ]
+    },
+    {
+      "variant_key": "topology_patch_regrowth_grass",
+      "png": "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_landscape_expanded_v1\\topology_patch_regrowth_grass.png",
+      "grid": [
+        0,
+        1
+      ],
+      "uv": [
+        0.0,
+        0.25,
+        0.25,
+        0.25
+      ]
+    },
+    {
+      "variant_key": "topology_patch_regrowth_shrub",
+      "png": "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_landscape_expanded_v1\\topology_patch_regrowth_shrub.png",
+      "grid": [
+        1,
+        1
+      ],
+      "uv": [
+        0.25,
+        0.25,
+        0.25,
+        0.25
+      ]
+    },
+    {
+      "variant_key": "topology_corridor",
+      "png": "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_landscape_expanded_v1\\topology_corridor.png",
+      "grid": [
+        2,
+        1
+      ],
+      "uv": [
+        0.5,
+        0.25,
+        0.25,
+        0.25
+      ]
+    },
+    {
+      "variant_key": "topology_corridor_scar",
+      "png": "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_landscape_expanded_v1\\topology_corridor_scar.png",
+      "grid": [
+        3,
+        1
+      ],
+      "uv": [
+        0.75,
+        0.25,
+        0.25,
+        0.25
+      ]
+    },
+    {
+      "variant_key": "topology_corridor_burn_00",
+      "png": "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_landscape_expanded_v1\\topology_corridor_burn_00.png",
+      "grid": [
+        0,
+        2
+      ],
+      "uv": [
+        0.0,
+        0.5,
+        0.25,
+        0.25
+      ]
+    },
+    {
+      "variant_key": "topology_corridor_burn_04",
+      "png": "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_landscape_expanded_v1\\topology_corridor_burn_04.png",
+      "grid": [
+        1,
+        2
+      ],
+      "uv": [
+        0.25,
+        0.5,
+        0.25,
+        0.25
+      ]
+    },
+    {
+      "variant_key": "topology_ring",
+      "png": "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_landscape_expanded_v1\\topology_ring.png",
+      "grid": [
+        2,
+        2
+      ],
+      "uv": [
+        0.5,
+        0.5,
+        0.25,
+        0.25
+      ]
+    },
+    {
+      "variant_key": "topology_ring_burn_00",
+      "png": "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_landscape_expanded_v1\\topology_ring_burn_00.png",
+      "grid": [
+        3,
+        2
+      ],
+      "uv": [
+        0.75,
+        0.5,
+        0.25,
+        0.25
+      ]
+    },
+    {
+      "variant_key": "topology_cluster",
+      "png": "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_landscape_expanded_v1\\topology_cluster.png",
+      "grid": [
+        0,
+        3
+      ],
+      "uv": [
+        0.0,
+        0.75,
+        0.25,
+        0.25
+      ]
+    },
+    {
+      "variant_key": "topology_cluster_regrowth_grass",
+      "png": "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_landscape_expanded_v1\\topology_cluster_regrowth_grass.png",
+      "grid": [
+        1,
+        3
+      ],
+      "uv": [
+        0.25,
+        0.75,
+        0.25,
+        0.25
+      ]
+    },
+    {
+      "variant_key": "topology_fringe",
+      "png": "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_landscape_expanded_v1\\topology_fringe.png",
+      "grid": [
+        2,
+        3
+      ],
+      "uv": [
+        0.5,
+        0.75,
+        0.25,
+        0.25
+      ]
+    },
+    {
+      "variant_key": "topology_fringe_regrowth_grass",
+      "png": "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_landscape_expanded_v1\\topology_fringe_regrowth_grass.png",
+      "grid": [
+        3,
+        3
+      ],
+      "uv": [
+        0.75,
+        0.75,
+        0.25,
+        0.25
+      ]
+    }
+  ]
+}

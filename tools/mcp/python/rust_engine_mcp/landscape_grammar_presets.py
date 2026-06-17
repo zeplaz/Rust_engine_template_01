@@ -18,6 +18,19 @@ SCHEMA_REL = "tools/mcp/schemas/landscape_grammar_v0.schema.json"
 SIGN_WITNESS_REL = "debug_runs/mcp_landscape_grammar_sign_live.json"
 BATCH_WITNESS_REL = "debug_runs/mcp_landscape_grammar_preset_batch_live.json"
 
+# UI chrome / lexicon sidecars — not landscape_grammar_v0 ship presets.
+AUXILIARY_PRESET_STEM_PREFIX = "_"
+
+
+def is_ship_preset_json(path: Path) -> bool:
+    return path.suffix.lower() == ".json" and not path.stem.startswith(AUXILIARY_PRESET_STEM_PREFIX)
+
+
+def iter_ship_preset_jsons(presets_dir: Path) -> list[Path]:
+    if not presets_dir.is_dir():
+        return []
+    return sorted(p for p in presets_dir.glob("*.json") if is_ship_preset_json(p))
+
 
 def _load_index(root: Path) -> dict[str, Any]:
     path = root / INDEX_REL
@@ -38,7 +51,7 @@ def landscape_grammar_presets_batch(*, repo: Path | None = None) -> dict[str, An
     ship_ids = [str(x) for x in (index.get("ship_presets") or []) if x]
     topology_count = len(index.get("topology_presets") or [])
     preset_results: list[dict[str, Any]] = []
-    for path in sorted(presets_dir.glob("*.json")):
+    for path in iter_ship_preset_jsons(presets_dir):
         report = validate_landscape_grammar_path(path, compression_level=3)
         preset_results.append(
             {
@@ -49,7 +62,7 @@ def landscape_grammar_presets_batch(*, repo: Path | None = None) -> dict[str, An
             }
         )
 
-    on_disk = {p.stem for p in presets_dir.glob("*.json")}
+    on_disk = {p.stem for p in iter_ship_preset_jsons(presets_dir)}
     missing_ship = [pid for pid in ship_ids if pid not in on_disk]
     orphan_files = sorted(on_disk - set(ship_ids))
     failed = [r for r in preset_results if r["status"] != "passed"]

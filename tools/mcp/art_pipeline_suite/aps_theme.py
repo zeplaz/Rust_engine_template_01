@@ -16,11 +16,17 @@ FONT_HINT = ("Segoe UI", 9)
 FONT_SMALL = ("Segoe UI", 9)
 FONT_MONO_SMALL = ("Consolas", 9)
 
+PAD_SM = 4
+PAD_MD = 8
+PAD_LG = 12
+
 COLOR_PASS = "#0a6b0a"
 COLOR_FAIL = "#a00000"
 COLOR_WARN = "#a66b00"
 COLOR_MUTED = "#555555"
 COLOR_ACCENT = "#0a4a7a"
+COLOR_LANE_BUILDING = COLOR_ACCENT
+COLOR_LANE_LANDSCAPE = "#1f6b54"
 COLOR_PANE_BG = "#eceff3"
 COLOR_PANEL_BG = "#f6f7f9"
 COLOR_INPUT_BG = "#ffffff"
@@ -71,6 +77,11 @@ def init_aps_ttk(root: tk.Misc) -> ttk.Style:
     style.configure("Treeview.Heading", font=FONT_UI_BOLD)
 
     style.configure("Aps.Toolbar.TButton", padding=(6, 2), font=FONT_UI)
+    style.configure("Aps.Lane.TRadiobutton", padding=(12, 4), font=FONT_UI)
+    style.map(
+        "Aps.Lane.TRadiobutton",
+        background=[("selected", COLOR_INPUT_BG), ("!selected", COLOR_PANEL_BG)],
+    )
 
     for pane_style in ("Aps.Horizontal.TPanedwindow", "Aps.Vertical.TPanedwindow"):
         style.configure(pane_style, background=COLOR_PANE_BG)

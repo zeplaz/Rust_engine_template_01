@@ -48,8 +48,10 @@ def format_atlas_qc_display(
     lines: list[str],
     *,
     meta: dict[str, Any] | None = None,
+    atlas_domain: str = "buildings",
 ) -> tuple[str, str]:
     """Return panel text + foreground color (PASS/FAIL prefix, not color-only)."""
+    domain_label = "Landscape" if str(atlas_domain).lower() == "landscape" else "Buildings"
     if report is not None and report.status == "passed":
         detail = lines[0] if lines else "Atlas meta looks complete — safe to proceed toward tile-atlas-register."
         extra = ""
@@ -59,9 +61,14 @@ def format_atlas_qc_display(
             n = len(meta.get("tiles") or [])
             if cols > 0 and rows > 0:
                 extra = f" Grid {cols}×{rows} · {n} cells indexed · facings OK"
-        return f"PASS: {detail}{extra}", "#006400"
+        register = (
+            "_landscape_atlas_index"
+            if str(atlas_domain).lower() == "landscape"
+            else "_tile_atlas_index"
+        )
+        return f"PASS [{domain_label} → {register}]: {detail}{extra}", "#006400"
     body = " · ".join(lines[:4]) if lines else "Validation failed — see atlas_meta.json."
-    return f"FAIL: {body}", "#8b0000"
+    return f"FAIL [{domain_label}]: {body}", "#8b0000"
 
 
 def validate_atlas_folder(folder: Path) -> tuple[ValidationReport | None, list[str]]:

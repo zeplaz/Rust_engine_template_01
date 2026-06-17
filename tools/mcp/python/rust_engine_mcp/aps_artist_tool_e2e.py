@@ -14,6 +14,7 @@ from .aps_mat_auth_ui import count_missing_material_profiles
 from .aps_slot_preview import render_material_preview
 from .material_profiles import load_material_profile_catalog
 from .paths import repo_root
+from .aps_witness_honesty import write_aps_live_witness
 
 APS_ARTIST_TOOL_E2E_WITNESS = "debug_runs/aps_artist_tool_e2e_live.json"
 
@@ -72,6 +73,54 @@ def check_build_health() -> dict[str, Any]:
         "collect_ok": collect_ok,
         "collect_summary": collect_summary,
         "reason": reason,
+    }
+
+
+def run_pytest_aps_gate() -> dict[str, Any]:
+    """APS-EVO-E0-RELAUNCH-001 — full ``pytest -k aps`` (not collect-only)."""
+    py_root = repo_root() / "tools/mcp/python"
+    cmd = [
+        sys.executable,
+        "-m",
+        "pytest",
+        "tests/",
+        "-k",
+        "aps and not e0_e2_relaunch",
+        "-q",
+        "--tb=no",
+    ]
+    proc = subprocess.run(cmd, cwd=str(py_root), capture_output=True, text=True)
+    out = (proc.stdout or "") + (proc.stderr or "")
+    tail = out.strip().splitlines()
+    summary = tail[-1] if tail else ""
+    return {
+        "ok": proc.returncode == 0,
+        "summary": summary,
+        "returncode": proc.returncode,
+    }
+
+
+def refresh_aps_e0_relaunch(*, include_e2: bool = True) -> dict[str, Any]:
+    """E0 maintain bundle: pytest -k aps + E2E witness (+ optional E2 preset browse)."""
+    pytest_gate = run_pytest_aps_gate()
+    e2e = run_artist_tool_e2e()
+    e2_body: dict[str, Any] | None = None
+    if include_e2:
+        from rust_engine_mcp.aps_landscape_preset_browse import refresh_aps_landscape_preset_browse_witness
+
+        e2_body = refresh_aps_landscape_preset_browse_witness()
+    green = bool(
+        pytest_gate.get("ok")
+        and e2e.get("green")
+        and (not include_e2 or (e2_body or {}).get("green"))
+    )
+    return {
+        "program_id": "APS-EVO-E0-RELAUNCH-001",
+        "green": green,
+        "pytest_aps": pytest_gate,
+        "e0_witness_green": e2e.get("green"),
+        "e2_witness_green": (e2_body or {}).get("green") if include_e2 else None,
+        "e2_witness": e2_body,
     }
 WAREHOUSE_SNAP = (
     "tools/mcp/schemas/examples/assembly_snapshot_warehouse_industrial_west_production_v1.json"
@@ -162,12 +211,15 @@ def run_artist_tool_e2e(*, skip_build_health: bool = False) -> dict[str, Any]:
     )
 
     steps_ok = all(s.get("ok") for s in steps)
+    import_guard_pass = bool(health.get("ok"))
     # Build health is a hard precondition: never green over a broken tree.
-    green = bool(health.get("ok")) and steps_ok
+    green = import_guard_pass and steps_ok
     body: dict[str, Any] = {
         "program_id": "APS-ARTIST-TOOL-E2E-001",
+        "gate": "APS-EVO-E0-RELAUNCH-001",
         "green": green,
-        "honest_gate": "build_health+schema",
+        "import_guard_pass": import_guard_pass,
+        "honest_gate": "build_health+schema+wit_hon",
         "build_health": health,
         "steps_ok": steps_ok,
         "artist_path": "Catalog → Assembly → Materials → Variants → Atlas (no Blender)",
@@ -175,9 +227,19 @@ def run_artist_tool_e2e(*, skip_build_health: bool = False) -> dict[str, Any]:
         "designer_mcp_signoff": "pending",
         "track_b_deferred": "MCP-PILOT-GRAMMAR-001 manual keyframe",
     }
-    if not health.get("ok"):
+    if not import_guard_pass:
         body["not_green_reason"] = health.get("reason") or "build health gate failed"
-    out = root / APS_ARTIST_TOOL_E2E_WITNESS
-    out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(json.dumps(body, indent=2) + "\n", encoding="utf-8")
-    return body
+    elif not steps_ok:
+        body["not_green_reason"] = "one or more E2E steps failed"
+    return write_aps_live_witness(
+        body,
+        APS_ARTIST_TOOL_E2E_WITNESS,
+        schema="aps_artist_tool_e2e_live_v1",
+        profile="APS_E0_RELAUNCH",
+        source_system="aps_artist_tool_e2e",
+        ritual="BLANG:WIT-HON APS-EVO-E0-RELAUNCH-001" if green else None,
+        exit_predicate_must=[
+            {"path": "green", "eq": True},
+            {"path": "import_guard_pass", "eq": True},
+        ],
+    )

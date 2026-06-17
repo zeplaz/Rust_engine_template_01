@@ -11,7 +11,9 @@ mod smoke_visual_extract;
 mod vegetation_visual_extract;
 
 pub use vegetation_visual_extract::{
-    build_vegetation_extract_frame, extract_glyph_deterministic, refresh_vegetation_extract_witness,
+    build_vegetation_extract_frame, build_harness_topo_extract_frame,
+    extract_glyph_deterministic, harness_topo_extract_witness_green,
+    refresh_landscape_extract_sprite_witness, refresh_vegetation_extract_witness,
     vegetation_extract_witness_green, VegetationExtractFrame, VegetationExtractFrameSet,
     VegetationVisualExtractPlugin, VegExtractRow, LANDSCAPE_GRAMMAR_EXTRACT_LIVE_JSON,
 };

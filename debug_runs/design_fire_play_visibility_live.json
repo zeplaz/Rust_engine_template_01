@@ -52,7 +52,7 @@
     "relative_path": "debug_runs/design_fire_play_visibility_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_design_fire_play_visibility_live_witness",
-    "written_at_epoch_secs": 1781658825
+    "written_at_epoch_secs": 1781708226
   },
   "cli_test_scenes_with_fire": [
     "fire",

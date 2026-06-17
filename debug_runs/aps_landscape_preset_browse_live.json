@@ -1,0 +1,82 @@
+{
+  "gate": "APS-EVO-E2-PRESET-BROWSE-001",
+  "program_id": "APS-E2",
+  "green": true,
+  "presets_listed": 10,
+  "validate_inline_green": true,
+  "sample_preset_id": "agri_riparian_v0",
+  "sample_validate_status": "passed",
+  "dedicated_landscape_panels": true,
+  "des_aps_e1_ia_option_d_001": {
+    "id": "DES-APS-E1-IA-OPTION-D-001",
+    "verdict": "pass",
+    "design_ref": "src/dev/design_aps_domain_ia_sign_v1.md",
+    "reasons": [],
+    "option_d_ia_contract_ok": true,
+    "tab_set_swap": true,
+    "buildings_tab_count": 5,
+    "landscape_tab_count": 4,
+    "flow_lane_scoped": true,
+    "pipeline_lane_scoped": true,
+    "buildings_flow_keys": [
+      "send_to_assembly",
+      "bake_variants",
+      "pack_atlas"
+    ],
+    "landscape_flow_keys": [
+      "generate_grammar",
+      "bake_states",
+      "pack_lg5_atlas"
+    ],
+    "buildings_pipeline_keys": [
+      "catalog",
+      "assembly",
+      "materials",
+      "variants",
+      "atlas"
+    ],
+    "landscape_pipeline_keys": [
+      "presets",
+      "grammar",
+      "states",
+      "atlas",
+      "stamp"
+    ],
+    "option_d_shell_ok": true,
+    "dual_notebook_flag": true,
+    "reuses_building_panels_in_landscape_lane": false
+  },
+  "index_path": "assets/configs/landscape/_preset_index.json",
+  "design_ref": "src/dev/design_aps_preset_qc_criteria_v1.md",
+  "witness_honesty": {
+    "status": "warning",
+    "error_count": 0,
+    "warning_count": 1,
+    "summary": "witness_honesty debug_runs/aps_landscape_preset_browse_live.json: 0 error(s), 1 issue(s)"
+  },
+  "exit_predicate": {
+    "witness": "debug_runs/aps_landscape_preset_browse_live.json",
+    "must": [
+      {
+        "path": "presets_listed",
+        "gte": 10
+      },
+      {
+        "path": "validate_inline_green",
+        "eq": true
+      },
+      {
+        "path": "des_aps_e1_ia_option_d_001.verdict",
+        "eq": "pass"
+      }
+    ]
+  },
+  "_agent_meta": {
+    "schema": "aps_landscape_preset_browse_live_v1",
+    "profile": "APS_E2_PRESET_BROWSE",
+    "relative_path": "debug_runs/aps_landscape_preset_browse_live.json",
+    "source_system": "aps_landscape_preset_browse",
+    "written_at_epoch_secs": 1781712978,
+    "ritual": "BLANG:WIT-HON APS-EVO-E2-PRESET-BROWSE-001"
+  }
+}

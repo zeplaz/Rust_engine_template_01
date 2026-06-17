@@ -639,6 +639,46 @@ def _cmd_kit_production_002_g3_validate(_: argparse.Namespace) -> int:
     return 0 if body.get("green") else 1
 
 
+def _cmd_kit_production_002_g4_witness(_: argparse.Namespace) -> int:
+    from rust_engine_mcp import kit_production_002
+
+    body = kit_production_002.refresh_kit_production_002_g4_witness()
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
+def _cmd_kit_production_002_g4_evaluate(_: argparse.Namespace) -> int:
+    from rust_engine_mcp import kit_production_002
+
+    body = kit_production_002.evaluate_kit_production_002_g4()
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
+def _cmd_dmcp_e3_vegetation_catalog_witness(_: argparse.Namespace) -> int:
+    from rust_engine_mcp.vegetation_variant_catalog import refresh_dmcp_e3_witness
+
+    body = refresh_dmcp_e3_witness()
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
+def _cmd_dmcp_e4_matrix_witness(_: argparse.Namespace) -> int:
+    from rust_engine_mcp.dmcp_designer_signoff import refresh_dmcp_e4_matrix_witness
+
+    body = refresh_dmcp_e4_matrix_witness()
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
+def _cmd_dmcp_e0_artist_reverdict_witness(_: argparse.Namespace) -> int:
+    from rust_engine_mcp.dmcp_designer_signoff import refresh_dmcp_e0_artist_reverdict_witness
+
+    body = refresh_dmcp_e0_artist_reverdict_witness()
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
 def _cmd_pilot_hardcode_lint(_: argparse.Namespace) -> int:
     from rust_engine_mcp.pilot_hardcode_lint import pilot_hardcode_lint
 
@@ -1094,6 +1134,11 @@ def main(argv: list[str] | None = None) -> int:
 
     sub.add_parser("kit-production-002-g3-validate").set_defaults(func=_cmd_kit_production_002_g3_validate)
     sub.add_parser("kit-production-002-g3-witness").set_defaults(func=_cmd_kit_production_002_g3_witness)
+    sub.add_parser("kit-production-002-g4-evaluate").set_defaults(func=_cmd_kit_production_002_g4_evaluate)
+    sub.add_parser("kit-production-002-g4-witness").set_defaults(func=_cmd_kit_production_002_g4_witness)
+    sub.add_parser("dmcp-e3-vegetation-catalog-witness").set_defaults(func=_cmd_dmcp_e3_vegetation_catalog_witness)
+    sub.add_parser("dmcp-e4-matrix-charter-witness").set_defaults(func=_cmd_dmcp_e4_matrix_witness)
+    sub.add_parser("dmcp-e0-artist-reverdict-witness").set_defaults(func=_cmd_dmcp_e0_artist_reverdict_witness)
     sub.add_parser("mcp-witness-honesty-validator-witness").set_defaults(
         func=_cmd_mcp_witness_honesty_validator_witness
     )

@@ -80,6 +80,23 @@ def _agent_commands_all_lib(meta: dict[str, Any]) -> bool:
     return all("--lib" in str(cmd) for cmd in cmds)
 
 
+# CDR-A-WIT-HON-ROLLUP-001 — ECS sim harness may claim operator_visible with headless_sim grade.
+_OPERATOR_VISIBLE_PROOF_GRADES_OK = frozenset(
+    {"headless_sim", "visual_capture", "live_sim", "lib_harness"}
+)
+
+
+def _operator_visible_lib_fixture_dishonest(data: dict[str, Any], meta: dict[str, Any]) -> bool:
+    if data.get("operator_visible") is not True:
+        return False
+    proof_grade = str(data.get("proof_grade") or "")
+    if proof_grade in _OPERATOR_VISIBLE_PROOF_GRADES_OK:
+        return False
+    if proof_grade == "lib_fixture":
+        return True
+    return _agent_commands_all_lib(meta)
+
+
 def _exit_predicate_fails(data: dict[str, Any]) -> str | None:
     block = data.get("exit_predicate")
     if not isinstance(block, dict):
@@ -202,13 +219,12 @@ def evaluate_witness_honesty_rules(
             )
 
     # WIT-OPERATOR-LIB-FIXTURE
-    if data.get("operator_visible") is True:
+    if _operator_visible_lib_fixture_dishonest(data, meta):
         proof_grade = data.get("proof_grade")
-        if proof_grade == "lib_fixture" or _agent_commands_all_lib(meta):
-            add(
-                "WIT-OPERATOR-LIB-FIXTURE",
-                f"operator_visible=true with proof_grade={proof_grade!r} or --lib-only harness",
-            )
+        add(
+            "WIT-OPERATOR-LIB-FIXTURE",
+            f"operator_visible=true with proof_grade={proof_grade!r} or --lib-only harness",
+        )
 
     # WIT-ART-DISHONEST
     art_quality = str(data.get("art_quality") or "")

@@ -1,25 +1,22 @@
-# warehouse_industrial_west_production_signoff.yaml — G4 via CLI witness (Phase C)
+# warehouse_industrial_west_production_signoff.yaml — G4 via kit_production_002
 program_id: PLAN-PROC-TILE-PROD-001
-task_id: MCP-PT-1-003
+task_id: MCP-PT-1-002
+kit_gate: MCP-P2-KIT002-G4
 gate: G4
 designer_mcp: production_keyframe_signoff
-reviewed_at: "2026-06-03"
+reviewed_at: "2026-06-17"
 proceed_ship: no
 
-freeze_v1:
-  batch_id: tile_warehouse_industrial_west_production_v1
-  proceed_ship: no
-  freeze_id: TILE-FIX-001
+kit_production_002_signoff: debug_runs/art_pipeline/kit_production_002_g4_signoff.yaml
+variant_matrix: debug_runs/art_pipeline/variant_matrix_warehouse_v1.yaml
 
 tile_fix_09_phase_c:
   cli: tools/mcp/scripts/designer_mcp_warehouse_phase_c.ps1
   witness: debug_runs/art_pipeline/tile_fix_09_phase_c_warehouse_g4_live.json
-  validate_tile_promotion: passed
-  minimum_g4_ship: true
   art_quality: rejected_headless_procedural
   proceed_ship: no
 
-notes: "Designer-mcp runs validate-report + write-tile-fix-designer-g4-witness only — not hand audit. proceed_ship: yes when CLI step 5 exits 0."
+notes: "Designer-mcp G4 witness — proceed_ship: yes only when keyframe_stills on disk + keyframe_manual."
 
-blocked_by: [manual_keyframe_render]
-next: "Export 24 manual keyframes (3×8) → re-run Phase C CLI"
+blocked_by: ["keyframe_stills_folder_missing", "minimum_review_stills_missing", "manual_keyframe_render"]
+next: "operator keyframe_render on production assembly"

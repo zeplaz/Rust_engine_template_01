@@ -3,6 +3,17 @@
     schema_version: 1,
     entries: [
         (
+            atlas_id: "landscape_lg5_expanded_v1",
+            batch_id: "tile_landscape_expanded_v1",
+            assembly_id: "",
+            tile_id: "landscape_lg5",
+            atlas_png: "assets/textures/landscape/staging/landscape_lg5_expanded_v1_atlas.png",
+            meta_json: "assets/staging/tiles/tile_landscape_expanded_v1/atlas_meta.json",
+            development_tier: "pilot",
+            style_pack_id: "landscape_lg5",
+            ship_allowed: false,
+        ),
+        (
             atlas_id: "landscape_lg5_pilot_v1",
             batch_id: "tile_landscape_lg5_pilot_v1",
             assembly_id: "",

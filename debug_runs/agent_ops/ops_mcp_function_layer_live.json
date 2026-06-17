@@ -22,7 +22,7 @@
       "next_artifact": "debug_runs/g_play_product_close_live.json"
     },
     {
-      "finding": "VEG-HARD witnesses green \u2014 rollup blocked on operator only",
+      "finding": "VEG rollup dishonest \u2014 operator rollup still blocked on G-PLAY-OPERATOR-01",
       "owner": "@coder A",
       "program_id": "stage7_play",
       "next_artifact": "debug_runs/g_play_product_close_live.json"
@@ -66,8 +66,15 @@
         "closed": null,
         "plan": "src/dev/plan_g_play_close_001_checklist_v1.md",
         "operator": "src/dev/plan_g_play_close_001_checklist_v1.md",
-        "note": "\ud83d\udcac rollup OPEN \u2014 all coder sub-gates green \u00b7 G-PLAY-OPERATOR-01 only",
+        "note": "Rollup OPEN \u2014 G-PLAY-CODER-VEG reopened (WIT-HON bulk gate 2026-06-02) \u00b7 operator only on G-PLAY-OPERATOR-01",
         "open_sub_gates": [
+          {
+            "id": "G-PLAY-CODER-VEG",
+            "phi": 0,
+            "closed": false,
+            "plan": "src/dev/plan_veg_runtime_proof_001_v1.md",
+            "reopen_reason": "WIT-HON bulk reopen \u2014 rollup child fail; Review row pending scan"
+          },
           {
             "id": "G-PLAY-OPERATOR-01",
             "phi": 0,
@@ -85,7 +92,7 @@
   },
   "_agent_meta": {
     "schema": "ops_mcp_function_layer_live_v1",
-    "written_at_epoch_secs": 1781574915,
+    "written_at_epoch_secs": 1781670224,
     "profile": "OPS_MCP_FUNCTION_LAYER",
     "source_system": "ops_intelligence",
     "relative_path": "debug_runs/agent_ops/ops_mcp_function_layer_live.json"

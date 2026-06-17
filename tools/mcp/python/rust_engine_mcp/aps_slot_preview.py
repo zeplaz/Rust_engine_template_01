@@ -29,7 +29,7 @@ def render_module_isolated(glb_rel: str, *, size: int = PREVIEW_SIZE) -> Image.I
         img = Image.open(io.BytesIO(png)).convert("RGB")
         img.thumbnail((size, size), Image.Resampling.LANCZOS)
         return img
-    return _placeholder(path.parent.name, size=size)
+    return _placeholder(path.parent.name, size=size, color=(120, 128, 140))
 
 
 def render_material_preview(profile_id: str, *, size: int = PREVIEW_SIZE) -> Image.Image | None:

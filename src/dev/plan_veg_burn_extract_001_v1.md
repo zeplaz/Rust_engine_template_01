@@ -227,6 +227,23 @@ Minimal ship set (designer-mcp expands):
 
 **Atlas:** iso tile batch under `assets/staging/tiles/tile_veg_*` — keyframe bake spine when designer signs; until then extract uses **tint + glyph overlay** (LG-4).
 
+### §6.1 Catalog schema reconciliation (PLAN-VEG-BURN-RECONCILE-001)
+
+**Signed:** 2026-06-16 (@planner-mcp) · Schema: `vegetation_variant_catalog_v1.schema.json`
+
+| §6 sketch row | Catalog `resolver.kind` | Notes |
+|:---|:---|:---|
+| `veg_clean_day` | `default` | Fallback |
+| `veg_damaged` | `regrowth_macro: Scar` or `succession_stage: BurnScar` | Engine uses both paths |
+| `veg_burn_00..07` | `active_burn_frame` + `frame_index` | All 8 required at ship |
+| `veg_regrowth_nuclei/front` | `regrowth_macro` | Matches `RegrowthMacroPhase` |
+| `veg_old_growth` | `succession_stage: OldGrowth` | Cx5 lane |
+| `topology_*` | `topology_kind` | LG-5 stamp — orthogonal to burn keys |
+
+**RON ship path:** `assets/configs/landscape/_vegetation_variant_catalog.ron` (designer-mcp DMCP-E3). Until on disk, extract emits keys per `landscape_grammar_burn.rs` without UV resolve.
+
+**Supersedes:** informal §6 table only — schema + example are authoritative for APS authoring.
+
 ---
 
 ## 7. Witness acceptance
@@ -274,6 +291,7 @@ cargo test -p proc_A_dine01 --lib landscape_grammar fire_ecology
 | Ver | Date | Note |
 |:---|:---|:---|
 | v1.0.0 | 2026-06-14 | Initial plan — P-001..P-005 · authority map · ActiveBurn overlay · LG-5 defer |
+| v1.1.0 | 2026-06-16 | §6.1 catalog schema reconciliation (PLAN-VEG-BURN-RECONCILE-001) |
 
 ```text
 ⟦/PLAN-VEG-BURN-EXTRACT-001⟧  ΔWF→@coder A VEG-BURN-OVERLAY-001 · @planner-mcp veg catalog schema

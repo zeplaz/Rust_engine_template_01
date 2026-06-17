@@ -13,6 +13,7 @@ from .aps_catalog_preview import render_module_list_thumb, write_aps_preview_cat
 from .aps_slot_preview import write_aps_preview_001_witness
 from .material_studio_preview import write_material_studio_witness
 from .paths import repo_root
+from .aps_witness_honesty import write_aps_live_witness
 
 APS_ARTIST_TOOL_MODULES_WITNESS = "debug_runs/aps_artist_tool_modules_live.json"
 
@@ -113,6 +114,15 @@ def refresh_aps_witnesses() -> dict[str, Any]:
         "bevy_preview_002_green": bevy002.get("green"),
     }
     out = repo_root() / APS_ARTIST_TOOL_MODULES_WITNESS
-    out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(json.dumps(modules_body, indent=2) + "\n", encoding="utf-8")
+    modules_body = write_aps_live_witness(
+        modules_body,
+        APS_ARTIST_TOOL_MODULES_WITNESS,
+        schema="aps_artist_tool_modules_live_v1",
+        profile="APS_WITNESS_REFRESH",
+        source_system="aps_witness_refresh",
+        ritual="BLANG:WIT-HON APS-WITNESS-REFRESH-001" if gate_ok else None,
+        exit_predicate_must=[
+            {"path": "green", "eq": True},
+        ],
+    )
     return modules_body

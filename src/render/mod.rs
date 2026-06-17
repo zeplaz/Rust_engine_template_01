@@ -53,8 +53,11 @@ mod vt_app_integration;
 mod vt_ci_matrix;
 mod infrastructure_overlay;
 pub use infrastructure_overlay::{
-    collect_transport_overlay_edges_system, InfrastructureEdgeOverlay,
-    InfrastructureOverlayDrawRequests,
+    collect_infrastructure_overlay_edges_system, collect_transport_overlay_edges_system,
+    infra_overlay_polish_green, infrastructure_overlay_legend_rows,
+    infrastructure_overlay_polish_witness_fields, stroke_for_layer,
+    InfrastructureEdgeOverlay, InfrastructureNetworkLayer, InfrastructureOverlayDrawRequests,
+    InfrastructureOverlayLegendRow, InfrastructureOverlaySettings, InfrastructureOverlayStroke,
 };
 mod viewport_pipeline;
 pub mod view_runtime;

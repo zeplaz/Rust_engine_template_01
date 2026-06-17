@@ -389,7 +389,7 @@ def build_aps1_witness_payload() -> dict[str, Any]:
     example = root / "tools/mcp/schemas/examples/assembly_snapshot_grammar_lineage_example.json"
     snap = json.loads(example.read_text(encoding="utf-8"))
     diff_map = compute_cell_diff_map(snap, snap)
-    has_lineage = "grammar_lineage" in inspector_src and "grammar_overrides" in inspector_src
+    has_lineage = "grammar_rule_chain" in inspector_src and "_rule_chain_steps" in inspector_src
     has_diff = "set_cell_diff" in canvas_src and "DIFF_COLORS" in canvas_src
     has_panel = "GrammarIteratePanel" in panel_src and "Apply iteration" in panel_src
     return {

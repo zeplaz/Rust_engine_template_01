@@ -1,0 +1,57 @@
+# kit_production_002_g4_signoff.yaml — MCP-P2-KIT002-G4 warehouse keyframe matrix
+program_id: MCP-PRODUCTIVITY-P2-001
+task_id: MCP-P2-KIT002-G4
+gate: G4
+designer_mcp: production_keyframe_signoff
+production_bar: docs/archive/2026-06-src-dev/plans/design_procedural_tile_production_bar_v1.md
+variant_matrix: debug_runs/art_pipeline/variant_matrix_warehouse_v1.yaml
+manifest: tools/mcp/schemas/examples/batch_kit_production_002.manifest.json
+paired_tile_batch: tools/mcp/schemas/examples/tile_batch_warehouse_industrial_west_production_v1.json
+
+archetype: warehouse
+primary_style_pack: style_industrial_west
+batch_id: tile_warehouse_industrial_west_production_v1
+kit_batch_id: kit_production_002
+source_tier: production
+g4_review_mode: keyframe_stills
+reviewed_at: "2026-06-17"
+proceed_ship: no
+
+reference_tags:
+  - "ref:gate:MCP-P2-KIT002-G4"
+  - "ref:survey:warehouse-industrial-west-pilot"
+
+keyframe_stills:
+  export_folder: assets/staging/tiles/keyframe_stills/warehouse_industrial/
+  legacy_folder: assets/staging/tiles/keyframe_stills/warehouse_industrial_west/
+  minimum_review_keys:
+    - clean_day
+    - clean_night_on
+    - damaged_night_on
+  still_paths:
+    clean_day: assets/staging/tiles/keyframe_stills/warehouse_industrial/clean_day.png
+    clean_night_on: assets/staging/tiles/keyframe_stills/warehouse_industrial/clean_night_on.png
+    damaged_night_on: assets/staging/tiles/keyframe_stills/warehouse_industrial/damaged_night_on.png
+  pack_command: "python -m rust_engine_mcp.cli tile-atlas-pack assets/staging/tiles/keyframe_stills/warehouse_industrial -pk"
+
+phase_c:
+  cli: tools/mcp/scripts/designer_mcp_warehouse_phase_c.ps1
+  witness: debug_runs/art_pipeline/tile_fix_09_phase_c_warehouse_g4_live.json
+  art_quality: rejected_headless_procedural
+
+g4_gates:
+  g4_0_matrix_and_spine: pass
+  g4_1_source_tier_production: pass
+  g4_2_reference_tags_present: pass
+  g4_3_keyframe_minimum_stills_review: fail
+  g4_4_full_matrix_keys_packed: fail
+  g4_5_night_damaged_iso_readable_128px: fail
+  g4_6_fire_frames_distinct: fail
+  g4_7_no_smoke_greybox_modules: pass
+  g4_8_proceed_ship: fail
+
+required_variant_keys: 16
+variant_keys_baked: 0
+blocked_by: [keyframe_stills_folder_missing, minimum_review_stills_missing, manual_keyframe_render]
+next: "operator manual keyframe_render → re-run designer_mcp_warehouse_phase_c.ps1"
+notes: "Designer-mcp G4 — proceed_ship only when keyframe_stills exist and art_quality=keyframe_manual."

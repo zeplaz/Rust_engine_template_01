@@ -1,6 +1,7 @@
 {
   "_meta": {
-    "version": "3.3.0",
+    "version": "3.3.1",
+    "bulk_reopen": "PLAN-WITNESS-REOPEN-001 operator approved 2026-06-02",
     "date": "2026-06-03",
     "cycle": "PLAN-IMPROVE-WAVE-001",
     "analysis": "docs/archive/2026-06-src-dev/plans/planner_improvement_analysis_20260603_v1.md",
@@ -888,6 +889,8 @@
       "status": "done",
       "signoff": "SIGNED",
       "deliverable": "src/dev/plan_veg_runtime_proof_001_v1.md",
+      "note": "Plan closed 2026-06-17 — witness WIT-HON fix is CDR-A-WIT-HON-ROLLUP-001 not plan reopen",
+      "witness_reopen": "debug_runs/veg_runtime_proof_live.json",
       "unblocks": [
         "VEG-HARD-FULLAPP-001",
         "VEG-HARD-PREVIEW-PIXEL-001",
@@ -900,6 +903,7 @@
       "status": "done",
       "signoff": "SIGNED",
       "deliverable": "src/dev/plan_g_play_split_v1.md",
+      "note": "Rollup model closed — G-PLAY-OPERATOR-01 sole open gate",
       "completed": "2026-06-14"
     },
     {

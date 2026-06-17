@@ -28,20 +28,24 @@ fn bool_at(doc: &serde_json::Value, key: &str) -> bool {
     doc.get(key).and_then(|v| v.as_bool()).unwrap_or(false)
 }
 
-/// WIT-RUST-002 — L1 sim harness sub-rules (not top-level `green` alone).
+/// WIT-RUST-002 / CDR-A-WIT-HON-ROLLUP-001 — L1 sim harness sub-rules (not top-level `green` alone).
 #[must_use]
-fn l1_sim_harness_sub_rules_ok(doc: &serde_json::Value) -> bool {
+pub fn l1_sim_harness_sub_rules_ok(doc: &serde_json::Value) -> bool {
     bool_at(doc, "green")
         && u64_at(doc, "chunks_with_program") >= 16
         && u64_at(doc, "topology_tint_visible_chunks") >= 2
 }
 
-/// WIT-RUST-002 — L3 LG-4 preview sub-rules aligned with WIT-GREEN-TINT-ZERO.
+/// WIT-RUST-002 / CDR-A-LG4 — L3 LG-4 preview sub-rules aligned with WIT-GREEN-TINT-ZERO.
 #[must_use]
-fn l3_lg4_preview_sub_rules_ok(doc: &serde_json::Value) -> bool {
+pub fn l3_lg4_preview_sub_rules_ok(doc: &serde_json::Value) -> bool {
     let tint = u64_at(doc, "topology_tint_visible_chunks");
     let kinds = u64_at(doc, "topology_kind_count_visible");
-    bool_at(doc, "operator_visible") && tint >= 2 && kinds >= 3 && tint > 0
+    let pixel_wired = bool_at(doc, "pixel_heterogeneity_wired");
+    bool_at(doc, "operator_visible")
+        && tint >= 1
+        && kinds >= 3
+        && pixel_wired
 }
 
 /// WIT-RUST-002 — LG-5 atlas consumer sub-rules.
@@ -50,6 +54,39 @@ fn lg5_sub_rules_ok(doc: &serde_json::Value) -> bool {
     bool_at(doc, "bevy_chunk_uv_stamp")
         && bool_at(doc, "registry_stamp")
         && bool_at(doc, "atlas_batch_green")
+}
+
+#[must_use]
+pub fn lg4_preview_child_sub_rules_ok() -> bool {
+    read_witness("debug_runs/landscape_grammar_lg4_preview_live.json")
+        .map(|doc| l3_lg4_preview_sub_rules_ok(&doc))
+        .unwrap_or(false)
+}
+
+#[must_use]
+pub fn veg_runtime_child_sub_rules_ok() -> bool {
+    let l1 = read_witness("debug_runs/landscape_grammar_sim_harness_live.json")
+        .map(|doc| l1_sim_harness_sub_rules_ok(&doc))
+        .unwrap_or(false);
+    let l2 = read_json_path(
+        "debug_runs/stage5_full_app_live.json",
+        "/ecology_rows_source",
+    )
+    .and_then(|v| v.as_str().map(|s| s == "live_landscape_program_on_chunk"))
+    .unwrap_or(false);
+    let l3 = lg4_preview_child_sub_rules_ok();
+    let l4 = read_json_path(
+        "debug_runs/play_scenario_live.json",
+        "/veg_topology_visible_at_operational_zoom",
+    )
+    .and_then(|v| v.as_bool())
+    .unwrap_or(false);
+    let f03 =
+        crate::gui::landscape_chunk_atlas_stamp::landscape_lg5_chunk_uv_stamp_witness_green();
+    let lg5 = read_witness("debug_runs/landscape_grammar_lg5_live.json")
+        .map(|doc| lg5_sub_rules_ok(&doc))
+        .unwrap_or(false);
+    l1 && l2 && l3 && l4 && f03 && lg5
 }
 
 #[must_use]
@@ -68,9 +105,7 @@ pub fn refresh_veg_runtime_proof_live_witness() -> bool {
     )
     .and_then(|v| v.as_str().map(|s| s == "live_landscape_program_on_chunk"))
     .unwrap_or(false);
-    let l3_preview = read_witness("debug_runs/landscape_grammar_lg4_preview_live.json")
-        .map(|doc| l3_lg4_preview_sub_rules_ok(&doc))
-        .unwrap_or(false);
+    let l3_preview = lg4_preview_child_sub_rules_ok();
     let l4_play = read_json_path(
         "debug_runs/play_scenario_live.json",
         "/veg_topology_visible_at_operational_zoom",
@@ -83,10 +118,12 @@ pub fn refresh_veg_runtime_proof_live_witness() -> bool {
         .map(|doc| lg5_sub_rules_ok(&doc))
         .unwrap_or(false);
 
-    let green = l1_harness && l2_fullapp && l3_preview && l4_play && f03_stamp && lg5;
+    let green = veg_runtime_child_sub_rules_ok();
     let body = serde_json::json!({
         "gate": "PLAN-VEG-RUNTIME-PROOF-001",
+        "slice_id": "CDR-A-WIT-HON-ROLLUP-001",
         "green": green,
+        "proof_grade": crate::dev::proof_grade::ProofGrade::HeadlessSim.as_str(),
         "plan": "src/dev/plan_veg_runtime_proof_001_v1.md",
         "ladder": {
             "L0_lib_tests": "cargo test -p proc_A_dine01 --lib landscape_grammar fire_ecology",
@@ -150,7 +187,20 @@ mod tests {
             "green": true,
             "operator_visible": true,
             "topology_tint_visible_chunks": 0,
-            "topology_kind_count_visible": 6
+            "topology_kind_count_visible": 6,
+            "pixel_heterogeneity_wired": true
+        });
+        assert!(!l3_lg4_preview_sub_rules_ok(&doc));
+    }
+
+    #[test]
+    fn l3_sub_rules_require_pixel_heterogeneity_wired() {
+        let doc = serde_json::json!({
+            "green": true,
+            "operator_visible": true,
+            "topology_tint_visible_chunks": 2,
+            "topology_kind_count_visible": 6,
+            "pixel_heterogeneity_wired": false
         });
         assert!(!l3_lg4_preview_sub_rules_ok(&doc));
     }

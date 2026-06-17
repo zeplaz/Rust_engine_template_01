@@ -1,0 +1,69 @@
+{
+  "gate": "PLAN-WITNESS-REOPEN-001",
+  "operator_approved": "2026-06-02",
+  "matrix": "src/dev/plan_witness_reopen_matrix_v1.md",
+  "reopen_yes_applied": [
+    {
+      "id": "VEG-HARD-PREVIEW-PIXEL-001",
+      "queue": "tools/orchestrator/queues/post_drain_phase6_coder_queue.json",
+      "witness": "debug_runs/landscape_grammar_lg4_preview_live.json",
+      "wit_hon_class": "WIT-OPERATOR-LIB-FIXTURE",
+      "fix_lane": "CDR-A-LG4-PIXEL-REOPEN-001"
+    },
+    {
+      "id": "VEG-A01-HARNESS-001",
+      "queue": "tools/orchestrator/queues/coder_vegetation_drain_queue.json",
+      "witness": "debug_runs/landscape_grammar_sim_harness_live.json",
+      "wit_hon_class": "WIT-OPERATOR-LIB-FIXTURE",
+      "fix_lane": "CDR-A-WIT-HON-ROLLUP-001"
+    },
+    {
+      "id": "VEG-F05-PROGRAM-CLOSE-001",
+      "queue": "tools/orchestrator/queues/coder_vegetation_drain_queue.json",
+      "witness": "debug_runs/vegetation_program_close_live.json",
+      "wit_hon_class": "WIT-OPERATOR-LIB-FIXTURE",
+      "fix_lane": "CDR-A-WIT-HON-ROLLUP-001"
+    },
+    {
+      "id": "PLAN-VEG-RUNTIME-PROOF-001",
+      "queue": "tools/orchestrator/queues/planner_active_queue.json",
+      "witness": "debug_runs/veg_runtime_proof_live.json",
+      "wit_hon_class": "WIT-OPERATOR-LIB-FIXTURE",
+      "note": "plan deliverable remains signed; rollup reopened"
+    }
+  ],
+  "review_not_reopened": [
+    {
+      "id": "G-PLAY-CODER-VEG",
+      "witness": "debug_runs/g_play_product_close_live.json",
+      "matrix_action": "Review",
+      "ops_status": "reopened",
+      "note": "OPS/tensor honesty downgrade only — queue row absent"
+    },
+    {
+      "id": "VEG-C10-PLAY-KEY-001",
+      "witness": "debug_runs/play_scenario_live.json",
+      "matrix_action": "Review",
+      "fix_lane": "CDR-A-PLAY-OPS-SPLIT-001"
+    }
+  ],
+  "no_reopen": [
+    {
+      "witness": "debug_runs/stage5_full_app_live.json",
+      "row": "VEG-HARD-FULLAPP-001"
+    },
+    {
+      "witness": "debug_runs/mcp_landscape_grammar_sign_live.json",
+      "row": "MCP-LANDSCAPE-GRAMMAR-SIGN"
+    }
+  ],
+  "proceed_bulk_reopen": true,
+  "_agent_meta": {
+    "schema": "witness_reopen_candidates_v1",
+    "written_at_epoch_secs": 1748870400,
+    "profile": "PLAN_WITNESS_REOPEN",
+    "source_system": "orchestrator-mcp",
+    "relative_path": "debug_runs/witness_reopen_candidates_v1.json",
+    "ritual": "BLANG:WIT-HON PLAN-WITNESS-REOPEN-001"
+  }
+}

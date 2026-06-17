@@ -3,7 +3,7 @@
   "ok": true,
   "ledger_path": "debug_runs/agent_ops/doc_reads.jsonl",
   "tail_rows_scanned": 500,
-  "total_reads_in_window": 174,
+  "total_reads_in_window": 192,
   "unique_paths_in_window": 13,
   "min_reads_threshold": 2,
   "hot_paths": [
@@ -26,83 +26,99 @@
     },
     {
       "path": "src/dev/agent_lang_v1.md",
-      "count": 27,
+      "count": 30,
       "agents": {
-        "planner-mcp": 9,
-        "pytest": 9,
+        "pytest": 11,
+        "planner-mcp": 10,
         "coder": 5,
         "coder-mcp": 3,
         "debug-intelligence": 1
       },
       "intents": {
-        "ref": 27
+        "ref": 30
       },
-      "last_ts": "2026-06-13T04:43:07+00:00",
+      "last_ts": "2026-06-17T04:22:43+00:00",
       "cached": true,
       "cache_path": "tools/mcp/cache/agent_doc_digests/src_dev_agent_lang_v1.md_0f6faed9d974.json"
     },
     {
       "path": "prompts/llm_agent_brief.md",
-      "count": 21,
+      "count": 23,
       "agents": {
-        "pytest": 9,
+        "pytest": 11,
         "coder": 6,
         "coder-mcp": 4,
         "claude": 1,
         "debug-intelligence": 1
       },
       "intents": {
-        "orient": 19,
+        "orient": 21,
         "ref": 2
       },
-      "last_ts": "2026-06-13T04:43:07+00:00",
+      "last_ts": "2026-06-17T04:22:43+00:00",
       "cached": true,
       "cache_path": "tools/mcp/cache/agent_doc_digests/prompts_llm_agent_brief.md_71556df95daa.json"
     },
     {
-      "path": ".cursor/skills/agent-lang/SKILL.md",
-      "count": 18,
+      "path": "docs/archive/2026-06-src-dev/plans/plan_mcp_agent_lang_program_v1.md",
+      "count": 21,
       "agents": {
-        "pytest": 9,
+        "pytest-stats": 10,
+        "pytest": 5,
+        "witness": 5,
+        "coder-mcp": 1
+      },
+      "intents": {
+        "ref": 21
+      },
+      "last_ts": "2026-06-17T04:23:20+00:00",
+      "cached": false,
+      "cache_path": "tools/mcp/cache/agent_doc_digests/docs_archive_2026-06-src-dev_plans_plan_mcp_agent_lang_program_v1.md_92271883daea.json"
+    },
+    {
+      "path": ".cursor/skills/agent-lang/SKILL.md",
+      "count": 20,
+      "agents": {
+        "pytest": 11,
         "coder": 5,
         "coder-mcp": 3,
         "debug-intelligence": 1
       },
       "intents": {
-        "ref": 18
+        "ref": 20
       },
-      "last_ts": "2026-06-13T04:43:07+00:00",
+      "last_ts": "2026-06-17T04:22:43+00:00",
       "cached": true,
       "cache_path": "tools/mcp/cache/agent_doc_digests/.cursor_skills_agent-lang_SKILL.md_d4aa4da4c802.json"
     },
     {
-      "path": "docs/archive/2026-06-src-dev/plans/plan_mcp_agent_lang_program_v1.md",
+      "path": "tools/mcp/MICRO_TOOLS_REGISTRY_v1.md",
       "count": 13,
       "agents": {
-        "pytest-stats": 6,
-        "pytest": 3,
-        "witness": 3,
-        "coder-mcp": 1
+        "coder-mcp": 13
       },
       "intents": {
         "ref": 13
       },
       "last_ts": "2026-06-13T04:46:18+00:00",
-      "cached": false,
-      "cache_path": "tools/mcp/cache/agent_doc_digests/docs_archive_2026-06-src-dev_plans_plan_mcp_agent_lang_program_v1.md_92271883daea.json"
-    },
-    {
-      "path": "tools/mcp/MICRO_TOOLS_REGISTRY_v1.md",
-      "count": 12,
-      "agents": {
-        "coder-mcp": 12
-      },
-      "intents": {
-        "ref": 12
-      },
-      "last_ts": "2026-06-13T04:43:07+00:00",
       "cached": true,
       "cache_path": "tools/mcp/cache/agent_doc_digests/tools_mcp_MICRO_TOOLS_REGISTRY_v1.md_30024e171682.json"
+    },
+    {
+      "path": "docs/archive/2026-06-src-dev/plans/agent_meta_grammar_v3_lattice.md",
+      "count": 11,
+      "agents": {
+        "coder": 5,
+        "pytest": 4,
+        "debug-intelligence": 1,
+        "coder-mcp": 1
+      },
+      "intents": {
+        "ref": 11
+      },
+      "last_ts": "2026-06-17T04:22:43+00:00",
+      "cached": false,
+      "cache_path": "tools/mcp/cache/agent_doc_digests/docs_archive_2026-06-src-dev_plans_agent_meta_grammar_v3_lattice.md_cc681d263645.json"
     },
     {
       "path": "src/dev/agent_meta_grammar_v3_lattice.md",
@@ -117,22 +133,6 @@
       "last_ts": "2026-06-10T15:25:54+00:00",
       "cached": true,
       "cache_path": "tools/mcp/cache/agent_doc_digests/src_dev_agent_meta_grammar_v3_lattice.md_70334b16e319.json"
-    },
-    {
-      "path": "docs/archive/2026-06-src-dev/plans/agent_meta_grammar_v3_lattice.md",
-      "count": 9,
-      "agents": {
-        "coder": 5,
-        "pytest": 2,
-        "debug-intelligence": 1,
-        "coder-mcp": 1
-      },
-      "intents": {
-        "ref": 9
-      },
-      "last_ts": "2026-06-13T04:43:07+00:00",
-      "cached": false,
-      "cache_path": "tools/mcp/cache/agent_doc_digests/docs_archive_2026-06-src-dev_plans_agent_meta_grammar_v3_lattice.md_cc681d263645.json"
     },
     {
       "path": ".cursor/skills/bevy-simulation-grade/SKILL.md",
@@ -207,83 +207,99 @@
     },
     {
       "path": "src/dev/agent_lang_v1.md",
-      "count": 27,
+      "count": 30,
       "agents": {
-        "planner-mcp": 9,
-        "pytest": 9,
+        "pytest": 11,
+        "planner-mcp": 10,
         "coder": 5,
         "coder-mcp": 3,
         "debug-intelligence": 1
       },
       "intents": {
-        "ref": 27
+        "ref": 30
       },
-      "last_ts": "2026-06-13T04:43:07+00:00",
+      "last_ts": "2026-06-17T04:22:43+00:00",
       "cached": true,
       "cache_path": "tools/mcp/cache/agent_doc_digests/src_dev_agent_lang_v1.md_0f6faed9d974.json"
     },
     {
       "path": "prompts/llm_agent_brief.md",
-      "count": 21,
+      "count": 23,
       "agents": {
-        "pytest": 9,
+        "pytest": 11,
         "coder": 6,
         "coder-mcp": 4,
         "claude": 1,
         "debug-intelligence": 1
       },
       "intents": {
-        "orient": 19,
+        "orient": 21,
         "ref": 2
       },
-      "last_ts": "2026-06-13T04:43:07+00:00",
+      "last_ts": "2026-06-17T04:22:43+00:00",
       "cached": true,
       "cache_path": "tools/mcp/cache/agent_doc_digests/prompts_llm_agent_brief.md_71556df95daa.json"
     },
     {
-      "path": ".cursor/skills/agent-lang/SKILL.md",
-      "count": 18,
+      "path": "docs/archive/2026-06-src-dev/plans/plan_mcp_agent_lang_program_v1.md",
+      "count": 21,
       "agents": {
-        "pytest": 9,
+        "pytest-stats": 10,
+        "pytest": 5,
+        "witness": 5,
+        "coder-mcp": 1
+      },
+      "intents": {
+        "ref": 21
+      },
+      "last_ts": "2026-06-17T04:23:20+00:00",
+      "cached": false,
+      "cache_path": "tools/mcp/cache/agent_doc_digests/docs_archive_2026-06-src-dev_plans_plan_mcp_agent_lang_program_v1.md_92271883daea.json"
+    },
+    {
+      "path": ".cursor/skills/agent-lang/SKILL.md",
+      "count": 20,
+      "agents": {
+        "pytest": 11,
         "coder": 5,
         "coder-mcp": 3,
         "debug-intelligence": 1
       },
       "intents": {
-        "ref": 18
+        "ref": 20
       },
-      "last_ts": "2026-06-13T04:43:07+00:00",
+      "last_ts": "2026-06-17T04:22:43+00:00",
       "cached": true,
       "cache_path": "tools/mcp/cache/agent_doc_digests/.cursor_skills_agent-lang_SKILL.md_d4aa4da4c802.json"
     },
     {
-      "path": "docs/archive/2026-06-src-dev/plans/plan_mcp_agent_lang_program_v1.md",
+      "path": "tools/mcp/MICRO_TOOLS_REGISTRY_v1.md",
       "count": 13,
       "agents": {
-        "pytest-stats": 6,
-        "pytest": 3,
-        "witness": 3,
-        "coder-mcp": 1
+        "coder-mcp": 13
       },
       "intents": {
         "ref": 13
       },
       "last_ts": "2026-06-13T04:46:18+00:00",
-      "cached": false,
-      "cache_path": "tools/mcp/cache/agent_doc_digests/docs_archive_2026-06-src-dev_plans_plan_mcp_agent_lang_program_v1.md_92271883daea.json"
-    },
-    {
-      "path": "tools/mcp/MICRO_TOOLS_REGISTRY_v1.md",
-      "count": 12,
-      "agents": {
-        "coder-mcp": 12
-      },
-      "intents": {
-        "ref": 12
-      },
-      "last_ts": "2026-06-13T04:43:07+00:00",
       "cached": true,
       "cache_path": "tools/mcp/cache/agent_doc_digests/tools_mcp_MICRO_TOOLS_REGISTRY_v1.md_30024e171682.json"
+    },
+    {
+      "path": "docs/archive/2026-06-src-dev/plans/agent_meta_grammar_v3_lattice.md",
+      "count": 11,
+      "agents": {
+        "coder": 5,
+        "pytest": 4,
+        "debug-intelligence": 1,
+        "coder-mcp": 1
+      },
+      "intents": {
+        "ref": 11
+      },
+      "last_ts": "2026-06-17T04:22:43+00:00",
+      "cached": false,
+      "cache_path": "tools/mcp/cache/agent_doc_digests/docs_archive_2026-06-src-dev_plans_agent_meta_grammar_v3_lattice.md_cc681d263645.json"
     },
     {
       "path": "src/dev/agent_meta_grammar_v3_lattice.md",
@@ -298,22 +314,6 @@
       "last_ts": "2026-06-10T15:25:54+00:00",
       "cached": true,
       "cache_path": "tools/mcp/cache/agent_doc_digests/src_dev_agent_meta_grammar_v3_lattice.md_70334b16e319.json"
-    },
-    {
-      "path": "docs/archive/2026-06-src-dev/plans/agent_meta_grammar_v3_lattice.md",
-      "count": 9,
-      "agents": {
-        "coder": 5,
-        "pytest": 2,
-        "debug-intelligence": 1,
-        "coder-mcp": 1
-      },
-      "intents": {
-        "ref": 9
-      },
-      "last_ts": "2026-06-13T04:43:07+00:00",
-      "cached": false,
-      "cache_path": "tools/mcp/cache/agent_doc_digests/docs_archive_2026-06-src-dev_plans_agent_meta_grammar_v3_lattice.md_cc681d263645.json"
     },
     {
       "path": ".cursor/skills/bevy-simulation-grade/SKILL.md",
@@ -370,24 +370,24 @@
   ],
   "repeat_in_session": [
     {
-      "path": "src/dev/agent_lang_v1.md",
-      "session_hint": "AGENT-LANG-DEMO-001",
-      "count": 9
-    },
-    {
       "path": "prompts/llm_agent_brief.md",
       "session_hint": "PYTEST-BOOT",
-      "count": 9
+      "count": 11
     },
     {
       "path": ".cursor/skills/agent-lang/SKILL.md",
       "session_hint": "PYTEST-BOOT",
-      "count": 9
+      "count": 11
     },
     {
       "path": "src/dev/agent_lang_v1.md",
       "session_hint": "PYTEST-BOOT",
-      "count": 9
+      "count": 11
+    },
+    {
+      "path": "src/dev/agent_lang_v1.md",
+      "session_hint": "AGENT-LANG-DEMO-001",
+      "count": 10
     },
     {
       "path": "src/dev/agent_meta_grammar_v3_lattice.md",
@@ -417,7 +417,7 @@
     {
       "path": "tools/mcp/MICRO_TOOLS_REGISTRY_v1.md",
       "session_hint": "AGENT-LANG-DEMO-001",
-      "count": 6
+      "count": 7
     },
     {
       "path": ".cursor/skills/bevy-simulation-grade/SKILL.md",

@@ -1,0 +1,161 @@
+{
+  "batch_id": "tile_landscape_expanded_v1",
+  "lane": "tile_batch",
+  "_agent_meta": {
+    "agent": "coder-mcp",
+    "updated_at": "2026-06-17T16:16:29.251295+00:00",
+    "program": "MCP-TILE-CLOSE-001",
+    "dry_run": true
+  },
+  "gates": {
+    "G0": "pass",
+    "G1": "pass",
+    "G2": "pass",
+    "G3": "pass",
+    "G4": "planned",
+    "G5": "planned"
+  },
+  "green": true,
+  "png_count": 16,
+  "png_dimensions": [
+    {
+      "file": "topology_cluster.png",
+      "bytes": 315,
+      "width": 64,
+      "height": 64
+    },
+    {
+      "file": "topology_cluster_regrowth_grass.png",
+      "bytes": 342,
+      "width": 64,
+      "height": 64
+    },
+    {
+      "file": "topology_corridor.png",
+      "bytes": 233,
+      "width": 64,
+      "height": 64
+    },
+    {
+      "file": "topology_corridor_burn_00.png",
+      "bytes": 507,
+      "width": 64,
+      "height": 64
+    },
+    {
+      "file": "topology_corridor_burn_04.png",
+      "bytes": 507,
+      "width": 64,
+      "height": 64
+    },
+    {
+      "file": "topology_corridor_scar.png",
+      "bytes": 232,
+      "width": 64,
+      "height": 64
+    },
+    {
+      "file": "topology_fringe.png",
+      "bytes": 578,
+      "width": 64,
+      "height": 64
+    },
+    {
+      "file": "topology_fringe_regrowth_grass.png",
+      "bytes": 716,
+      "width": 64,
+      "height": 64
+    },
+    {
+      "file": "topology_patch.png",
+      "bytes": 531,
+      "width": 64,
+      "height": 64
+    },
+    {
+      "file": "topology_patch_burn_00.png",
+      "bytes": 835,
+      "width": 64,
+      "height": 64
+    },
+    {
+      "file": "topology_patch_burn_04.png",
+      "bytes": 835,
+      "width": 64,
+      "height": 64
+    },
+    {
+      "file": "topology_patch_regrowth_grass.png",
+      "bytes": 605,
+      "width": 64,
+      "height": 64
+    },
+    {
+      "file": "topology_patch_regrowth_shrub.png",
+      "bytes": 626,
+      "width": 64,
+      "height": 64
+    },
+    {
+      "file": "topology_patch_scar.png",
+      "bytes": 589,
+      "width": 64,
+      "height": 64
+    },
+    {
+      "file": "topology_ring.png",
+      "bytes": 578,
+      "width": 64,
+      "height": 64
+    },
+    {
+      "file": "topology_ring_burn_00.png",
+      "bytes": 780,
+      "width": 64,
+      "height": 64
+    }
+  ],
+  "real_bake": false,
+  "atlas_path": "C:\\dev\\github\\Rust_engine_template_01\\assets\\textures\\landscape\\staging\\landscape_lg5_expanded_v1_atlas.png",
+  "meta_json": "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_landscape_expanded_v1\\atlas_meta.json",
+  "batch_status": {
+    "batch_id": "tile_landscape_expanded_v1",
+    "status": "done",
+    "bake_source": "keyframe_pack",
+    "variant_count": 16,
+    "png_paths": [
+      "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_landscape_expanded_v1\\topology_patch.png",
+      "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_landscape_expanded_v1\\topology_patch_scar.png",
+      "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_landscape_expanded_v1\\topology_patch_burn_00.png",
+      "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_landscape_expanded_v1\\topology_patch_burn_04.png",
+      "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_landscape_expanded_v1\\topology_patch_regrowth_grass.png",
+      "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_landscape_expanded_v1\\topology_patch_regrowth_shrub.png",
+      "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_landscape_expanded_v1\\topology_corridor.png",
+      "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_landscape_expanded_v1\\topology_corridor_scar.png",
+      "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_landscape_expanded_v1\\topology_corridor_burn_00.png",
+      "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_landscape_expanded_v1\\topology_corridor_burn_04.png",
+      "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_landscape_expanded_v1\\topology_ring.png",
+      "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_landscape_expanded_v1\\topology_ring_burn_00.png",
+      "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_landscape_expanded_v1\\topology_cluster.png",
+      "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_landscape_expanded_v1\\topology_cluster_regrowth_grass.png",
+      "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_landscape_expanded_v1\\topology_fringe.png",
+      "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_landscape_expanded_v1\\topology_fringe_regrowth_grass.png"
+    ],
+    "atlas_path": "C:\\dev\\github\\Rust_engine_template_01\\assets\\textures\\landscape\\staging\\landscape_lg5_expanded_v1_atlas.png",
+    "meta_json": "assets/staging/tiles/tile_landscape_expanded_v1/atlas_meta.json",
+    "dry_run": true
+  },
+  "automation": "headless_only",
+  "smoke_fallback_used": false,
+  "gate_id": "TILE-REAL-001",
+  "atlas_schema_version": 1,
+  "atlas_v2_lookup_ok": true,
+  "frozen": false,
+  "png_exists_only_rejected": true,
+  "tile_id": "landscape_lg5",
+  "assembly_ref": null,
+  "variant_set_ref": null,
+  "source_tier": "pilot",
+  "development_tier": "pilot",
+  "ship": false
+}

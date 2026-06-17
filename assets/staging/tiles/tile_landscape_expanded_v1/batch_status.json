@@ -1,0 +1,27 @@
+{
+  "batch_id": "tile_landscape_expanded_v1",
+  "status": "done",
+  "bake_source": "keyframe_pack",
+  "variant_count": 16,
+  "png_paths": [
+    "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_landscape_expanded_v1\\topology_patch.png",
+    "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_landscape_expanded_v1\\topology_patch_scar.png",
+    "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_landscape_expanded_v1\\topology_patch_burn_00.png",
+    "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_landscape_expanded_v1\\topology_patch_burn_04.png",
+    "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_landscape_expanded_v1\\topology_patch_regrowth_grass.png",
+    "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_landscape_expanded_v1\\topology_patch_regrowth_shrub.png",
+    "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_landscape_expanded_v1\\topology_corridor.png",
+    "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_landscape_expanded_v1\\topology_corridor_scar.png",
+    "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_landscape_expanded_v1\\topology_corridor_burn_00.png",
+    "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_landscape_expanded_v1\\topology_corridor_burn_04.png",
+    "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_landscape_expanded_v1\\topology_ring.png",
+    "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_landscape_expanded_v1\\topology_ring_burn_00.png",
+    "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_landscape_expanded_v1\\topology_cluster.png",
+    "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_landscape_expanded_v1\\topology_cluster_regrowth_grass.png",
+    "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_landscape_expanded_v1\\topology_fringe.png",
+    "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_landscape_expanded_v1\\topology_fringe_regrowth_grass.png"
+  ],
+  "atlas_path": "C:\\dev\\github\\Rust_engine_template_01\\assets\\textures\\landscape\\staging\\landscape_lg5_expanded_v1_atlas.png",
+  "meta_json": "assets/staging/tiles/tile_landscape_expanded_v1/atlas_meta.json",
+  "dry_run": true
+}

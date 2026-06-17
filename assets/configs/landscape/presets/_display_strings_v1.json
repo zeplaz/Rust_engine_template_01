@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "locale": "en",
+  "presets": {
+    "agri_riparian_v0": {
+      "title": "Agricultural riparian parcel",
+      "district_one_liner": "Farmed bottomland with shelterbelts and field blocks",
+      "topology_summary": "Riparian corridor, field patches, shelter ring, road fringe"
+    },
+    "coastal_scrub_v0": {
+      "title": "Coastal scrub edge",
+      "district_one_liner": "Wind-exposed coastal margin with scrub clusters",
+      "topology_summary": "Road corridor, scrub patches, natural clusters, open fringe"
+    },
+    "fire_recovery_v0": {
+      "title": "Fire recovery slope",
+      "district_one_liner": "Post-fire regrowth with rail corridor",
+      "topology_summary": "Irregular patch, rail corridor, natural cluster, edge fringe"
+    },
+    "industrial_barrier_v0": {
+      "title": "Industrial barrier belt",
+      "district_one_liner": "Thick buffer between industry and settlement",
+      "topology_summary": "Road corridor, barrier pocket, dense cluster, hardened fringe"
+    },
+    "military_defensive_v0": {
+      "title": "Military defensive screen",
+      "district_one_liner": "Fortified vegetation screen with internal pockets",
+      "topology_summary": "Road corridor, fortified ring, internal pocket, edge fringe"
+    },
+    "old_growth_core_v0": {
+      "title": "Old-growth core",
+      "district_one_liner": "Mature forest interior with nested dense clusters",
+      "topology_summary": "Riparian corridor, irregular patch, nested clusters, shelter ring"
+    },
+    "scrub_highland_v0": {
+      "title": "Highland scrub ridge",
+      "district_one_liner": "Ridge spine with patchy scrub and natural clusters",
+      "topology_summary": "Ridge spine, irregular patches, natural clusters, open fringe"
+    },
+    "settlement_park_v0": {
+      "title": "Settlement park belt",
+      "district_one_liner": "Managed park vegetation around settlement edge",
+      "topology_summary": "Road corridor, park patches, shelter ring, lawn fringe"
+    },
+    "urban_canopy_v0": {
+      "title": "Urban canopy strip",
+      "district_one_liner": "Street-tree canopy with rounded patches",
+      "topology_summary": "Rounded patches, roadside corridor, shelter ring, paved fringe"
+    },
+    "wetland_margin_v0": {
+      "title": "Wetland margin",
+      "district_one_liner": "Riparian wetland with basin and scrub patches",
+      "topology_summary": "Riparian corridor, wetland basin, irregular patches, soggy fringe"
+    }
+  }
+}

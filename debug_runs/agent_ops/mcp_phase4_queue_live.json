@@ -115,10 +115,10 @@
     "witness_honesty": {
       "last_scan": {
         "source": "debug_runs/mcp_witness_integrity_ops_live.json",
-        "fail_count": 148,
-        "inflated_green_count": 7,
+        "fail_count": 154,
+        "inflated_green_count": 10,
         "queue_contradiction_count": 3,
-        "queue_stale_count": 126,
+        "queue_stale_count": 127,
         "enforce_mode": false
       },
       "witness": {
@@ -185,7 +185,7 @@
   },
   "_agent_meta": {
     "schema": "mcp_phase4_queue_live_v1",
-    "written_at_epoch_secs": 1781658232,
+    "written_at_epoch_secs": 1781670225,
     "profile": "MCP_PHASE4_QUEUE",
     "source_system": "ops_intelligence",
     "relative_path": "debug_runs/agent_ops/mcp_phase4_queue_live.json"

@@ -157,7 +157,7 @@ class AssemblyPreviewPanel(ttk.LabelFrame):
         self._on_log(f"preview done {result.get('assembly_id')} · {mode} · url={url or '—'}")
         self._load_thumbnail(result.get("png") or "")
         if self._on_preview_thumb and result.get("png"):
-            self._on_preview_thumb(result.get("png"))
+            self._on_preview_thumb(result.get("png"), result)
 
     def on_open_url(self) -> None:
         url = self._url_var.get().strip()
@@ -190,7 +190,22 @@ class AssemblyPreviewPanel(ttk.LabelFrame):
         if not path.is_file():
             self._on_log(f"preview thumb missing {path.name}")
             return
-        img = Image.open(path).convert("RGB")
+        try:
+            img = Image.open(path).convert("RGB")
+        except Exception as exc:  # noqa: BLE001
+            self._on_log(f"preview thumb unreadable {path.name}: {exc}")
+            return
+        # B2 — never show a black tile. If the rendered PNG is (near-)uniformly
+        # black (degraded GL / camera), label it instead of pasting a black box.
+        lo, hi = img.convert("L").getextrema()
+        if hi - lo < 16 and hi < 24:
+            self._thumb_photo = None
+            self._thumb_label.configure(
+                image="",
+                text="(render blank - use Open URL\nfor the browser preview)",
+            )
+            self._on_log(f"preview thumb blank/black {path.name} — kept browser URL")
+            return
         img.thumbnail((200, 200), Image.Resampling.LANCZOS)
         self._thumb_photo = ImageTk.PhotoImage(img)
         self._thumb_label.configure(image=self._thumb_photo, text="")

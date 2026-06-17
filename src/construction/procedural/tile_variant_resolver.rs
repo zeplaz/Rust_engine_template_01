@@ -496,6 +496,84 @@ pub fn refresh_procedural_tiles_runtime_live_witness() -> bool {
         && procedural_tiles_runtime_witness_green()
 }
 
+/// APS-E5 — atlas domain for landscape LG-5 stamps (distinct from building [`VariantCatalog`]).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum TileAtlasDomain {
+    Building,
+    Landscape,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ResolvedLandscapeTileVariant {
+    pub variant_key: String,
+    pub uv: [f32; 4],
+    pub atlas_id: String,
+}
+
+/// Resolve LG-5 landscape atlas UV for an authored variant_key.
+#[must_use]
+pub fn resolve_landscape_tile_variant(
+    registry: &crate::systems::ecology::LandscapeAtlasRegistry,
+    variant_key: &str,
+) -> Option<ResolvedLandscapeTileVariant> {
+    let entry = registry.lg5_entry()?;
+    let uv = entry.resolve_variant_uv(variant_key)?;
+    Some(ResolvedLandscapeTileVariant {
+        variant_key: variant_key.to_owned(),
+        uv,
+        atlas_id: entry.atlas_id.clone(),
+    })
+}
+
+/// Map topology kind label → LG-5 variant_key → UV (CDR-B-TILE-RESOLVER-VEG-001).
+#[must_use]
+pub fn resolve_landscape_tile_from_topology(
+    registry: &crate::systems::ecology::LandscapeAtlasRegistry,
+    topology_kind: &str,
+) -> Option<ResolvedLandscapeTileVariant> {
+    let key = crate::systems::ecology::topology_kind_to_variant_key(topology_kind)?;
+    resolve_landscape_tile_variant(registry, key)
+}
+
+/// Resolve extract-frame `veg_topo_*` or catalog `topology_*` keys on landscape domain.
+#[must_use]
+pub fn resolve_landscape_tile_from_extract_key(
+    registry: &crate::systems::ecology::LandscapeAtlasRegistry,
+    extract_variant_key: &str,
+) -> Option<ResolvedLandscapeTileVariant> {
+    if extract_variant_key.starts_with("veg_topo_") {
+        let topo = extract_variant_key.trim_start_matches("veg_topo_");
+        let kind = match topo {
+            "patch" => "Patch",
+            "corridor" => "Corridor",
+            "ring" => "Ring",
+            "network" => "Network",
+            other => {
+                let mut s = other.to_owned();
+                if let Some(r) = s.get_mut(0..1) {
+                    r.make_ascii_uppercase();
+                }
+                return resolve_landscape_tile_from_topology(registry, &s);
+            }
+        };
+        return resolve_landscape_tile_from_topology(registry, kind);
+    }
+    resolve_landscape_tile_variant(registry, extract_variant_key)
+}
+
+#[must_use]
+pub fn landscape_tile_resolver_witness_green() -> bool {
+    use crate::systems::ecology::load_landscape_atlas_registry;
+    let registry = load_landscape_atlas_registry();
+    if !registry.load_errors.is_empty() {
+        return false;
+    }
+    ["Patch", "Corridor", "Ring"]
+        .iter()
+        .all(|kind| resolve_landscape_tile_from_topology(&registry, kind).is_some())
+        && resolve_landscape_tile_from_extract_key(&registry, "veg_topo_patch").is_some()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -590,6 +668,19 @@ mod tests {
         assert!(a.variant_key.starts_with("burning_"));
         assert_eq!(a.animation_frame, Some(0));
         assert_eq!(b.animation_frame, Some(1));
+    }
+
+    #[test]
+    fn landscape_tile_resolver_maps_topology_and_extract_keys() {
+        use crate::systems::ecology::load_landscape_atlas_registry;
+        let registry = load_landscape_atlas_registry();
+        if !registry.lg5_entry().is_some_and(|e| e.chunk_stamp_allowed()) {
+            return;
+        }
+        assert!(super::landscape_tile_resolver_witness_green());
+        let patch = super::resolve_landscape_tile_from_extract_key(&registry, "veg_topo_patch")
+            .expect("veg_topo_patch");
+        assert!(patch.variant_key.starts_with("topology_"));
     }
 
     #[test]

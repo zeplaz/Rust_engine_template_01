@@ -1,7 +1,7 @@
 {
   "gate": "MCP-LANDSCAPE-GRAMMAR-SIGN-001",
   "signed": true,
-  "signed_at": "2026-06-17T00:08:59.385320+00:00",
+  "signed_at": "2026-06-17T04:51:16.895147+00:00",
   "schema": "tools/mcp/schemas/landscape_grammar_v0.schema.json",
   "validator": "validate-report landscape_grammar",
   "preset_validation": {

@@ -9,7 +9,8 @@ use crate::construction::{
     ConstructionQueuePanelView, PendingConstructionQueue,
 };
 use crate::gui::construction_growth_inspector::{
-    draw_organic_growth_inspector_egui, GrowthInspectorUiState,
+    draw_organic_growth_inspector_egui, sync_ecology_growth_hint, EcologyGrowthHint,
+    GrowthInspectorUiState,
 };
 use crate::strategic::settlement::{AutoBuildPolicyBook, GrowthProposalQueue};
 use crate::gui::MapFitValidationLog;
@@ -68,8 +69,10 @@ pub struct HudRootTickPlugin;
 
 impl Plugin for HudRootTickPlugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<GrowthInspectorUiState>();
-        app.add_systems(
+        app.init_resource::<GrowthInspectorUiState>()
+            .init_resource::<EcologyGrowthHint>()
+            .add_systems(Update, sync_ecology_growth_hint)
+            .add_systems(
             EguiPrimaryContextPass,
             hud_product_shell_egui_root
                 .after(crate::gui::sync_shell_layout_drag_gate)
@@ -143,6 +146,7 @@ pub struct HudProductShellEguiParams<'w> {
     growth_ui: ResMut<'w, GrowthInspectorUiState>,
     growth_queue: ResMut<'w, GrowthProposalQueue>,
     growth_policy: Option<Res<'w, AutoBuildPolicyBook>>,
+    ecology_growth_hint: Option<Res<'w, crate::gui::construction_growth_inspector::EcologyGrowthHint>>,
 }
 
 /// One egui context pass for docked HUD widgets; individual drawers early-out when suspended.
@@ -399,6 +403,7 @@ pub fn hud_product_shell_egui_root(
         panels.growth_ui,
         panels.growth_queue,
         panels.growth_policy,
+        panels.ecology_growth_hint,
     );
     draw_hud_dev_overlay_egui(
         ctx,

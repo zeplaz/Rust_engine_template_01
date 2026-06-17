@@ -623,6 +623,7 @@ pub fn pg_quality_001_witness_green() -> bool {
                 && m.roof_slot_count >= 2
                 && m.footprint_silhouette_count >= 2
         })
+        && crate::construction::procedural::arch_dna_massing_diversity_witness_green()
 }
 
 #[must_use]
@@ -632,10 +633,15 @@ pub fn build_pg_quality_001_witness_body() -> serde_json::Value {
         "industrial_west",
         PG_QUALITY_001_SEED_SWEEP,
     );
+    let dna_families = crate::construction::procedural::build_arch_dna_massing_diversity_rows();
+    let dna_depth_green = dna_families
+        .iter()
+        .all(|row| row.get("green").and_then(|v| v.as_bool()).unwrap_or(false));
     let green = metrics
         .as_ref()
         .ok()
-        .is_some_and(|m| m.massing_strategy_count >= 3 && m.roof_slot_count >= 2 && m.footprint_silhouette_count >= 2);
+        .is_some_and(|m| m.massing_strategy_count >= 3 && m.roof_slot_count >= 2 && m.footprint_silhouette_count >= 2)
+        && dna_depth_green;
     let (metrics_ok, metrics_err) = match metrics {
         Ok(m) => (Some(m), None),
         Err(e) => (None, Some(e)),
@@ -643,6 +649,7 @@ pub fn build_pg_quality_001_witness_body() -> serde_json::Value {
     serde_json::json!({
         "gate_id": "PG-QUALITY-001",
         "program_id": "PLAN-BUILDING-GRAMMAR-001",
+        "slice_id": "CDR-B-CONSTRUCTION-GRAMMAR-DEPTH-001",
         "green": green,
         "archetype_id": "IndustrialWarehouse",
         "district_style": "industrial_west",
@@ -651,7 +658,10 @@ pub fn build_pg_quality_001_witness_body() -> serde_json::Value {
             "massing_strategy_count_min": 3,
             "roof_slot_count_min": 2,
             "footprint_silhouette_count_min": 2,
+            "dna_family_massing_pick_min": 3,
         },
+        "dna_families": dna_families,
+        "dna_family_depth_green": dna_depth_green,
         "metrics": metrics_ok,
         "error": metrics_err,
     })

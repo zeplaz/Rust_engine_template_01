@@ -1,0 +1,30 @@
+{
+  "green": true,
+  "gate": "PLAN-WITNESS-REOPEN-001",
+  "operator_approved": "2026-06-02",
+  "matrix": "src/dev/plan_witness_reopen_matrix_v1.md",
+  "candidates": "debug_runs/witness_reopen_candidates_v1.json",
+  "rows_reopened": 4,
+  "queues_touched": [
+    "tools/orchestrator/queues/post_drain_phase6_coder_queue.json",
+    "tools/orchestrator/queues/coder_vegetation_drain_queue.json",
+    "tools/orchestrator/queues/planner_active_queue.json",
+    "tools/orchestrator/queues/parallel_wave_aps_veg_dispatch_v1.json",
+    "tools/orchestrator/queues/master_chain_tensor_v1.json",
+    "tools/orchestrator/queues/OPS_LANE_REGISTRY.json"
+  ],
+  "fix_lanes_unblocked": [
+    "CDR-A-LG4-PIXEL-REOPEN-001",
+    "CDR-A-WIT-HON-ROLLUP-001"
+  ],
+  "wit_hon_baseline": "debug_runs/agent_ops/parallel_wave_w0_wit_hon_baseline.json",
+  "next": "BLANG:WIT-HON before Q✓ on fix lanes · WIT-RUST-* after MCP-WIT green",
+  "_agent_meta": {
+    "schema": "witness_bulk_reopen_live_v1",
+    "written_at_epoch_secs": 1748870400,
+    "profile": "ORCHESTRATOR_MCP",
+    "source_system": "orchestrator-mcp",
+    "relative_path": "debug_runs/agent_ops/witness_bulk_reopen_live.json",
+    "ritual": "BLANG:WIT-HON PLAN-WITNESS-REOPEN-001"
+  }
+}

@@ -3,9 +3,9 @@
   "task_id": "TILE-FIX-10",
   "gate": "TILE-FIX-10-promotion",
   "green": false,
-  "schema_validation_passed": true,
+  "schema_validation_passed": false,
   "art_quality": "rejected_headless_procedural",
-  "updated": "2026-06-03T20:44:31.573644+00:00",
+  "updated": "2026-06-17T04:23:39.601172+00:00",
   "building_id": "warehouse_industrial",
   "minimum_g4_cells": 24,
   "shell_production_ready": true,
@@ -13,12 +13,27 @@
   "promotion_validation": {
     "schema_version": 1,
     "validator": "tile",
-    "status": "passed",
+    "status": "failed",
     "compression_level": 3,
-    "summary": "tile_promotion: 0 error(s), shell_ok=True",
-    "error_count": 0,
+    "summary": "tile_promotion: 2 error(s), shell_ok=True",
+    "error_count": 2,
     "warning_count": 0,
-    "errors": [],
+    "errors": [
+      {
+        "kind": "MinimumG4ShipFlag",
+        "severity": "error",
+        "file": "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_warehouse_industrial_v2_minimum_g4\\atlas_meta.json",
+        "hint": "atlas_meta.minimum_g4_ship must be true for minimum G4 promotion",
+        "signature": "tile_promotion_minimum_g4_ship_flag"
+      },
+      {
+        "kind": "FacingRotationMissing",
+        "severity": "error",
+        "file": "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_warehouse_industrial_v2_minimum_g4\\clean_night_on_f0.png",
+        "hint": "clean_night_on: f0..f7 are pixel-identical \u2014 facing yaw was not applied at bake (not shippable)",
+        "signature": "tile_promotion_facing_rotation_missing"
+      }
+    ],
     "known_fixes": [],
     "raw_log_path": "",
     "confidence": 1.0

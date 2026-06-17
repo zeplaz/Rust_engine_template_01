@@ -1,0 +1,78 @@
+{
+  "green": true,
+  "program_id": "APS-OPTION-D-001",
+  "gate": "APS-E1-TAB-SWAP-001",
+  "gate_status": "done",
+  "e2_plus_blocked": false,
+  "dispatch_issued": "2026-06-02",
+  "gate_closed": "2026-06-02",
+  "board": "src/dev/aps_option_d_agent_todos_v1.md",
+  "queue": "tools/orchestrator/queues/aps_option_d_agent_queue.json",
+  "orders": "tools/orchestrator/queues/aps_option_d_dispatch_orders_v1.md",
+  "rules": {
+    "no_e2_plus_q_check_until": "APS-E1-TAB-SWAP-001",
+    "wit_hon_before_q_check": true,
+    "tab_swap_gate_closed": true
+  },
+  "tab_swap_exit": {
+    "verify": "pytest tools/mcp/python/tests/test_aps_lane_tab_swap.py",
+    "file_exists": true,
+    "pytest_green": true,
+    "shell_landed": true,
+    "domain_router_baseline_green": true,
+    "witness": "debug_runs/aps_option_d_e1_live.json",
+    "e1_tab_swap_green": true
+  },
+  "e1_critical_path": {
+    "witness": "debug_runs/aps_option_d_e1_live.json",
+    "green": true,
+    "slices_done": [
+      "APS-E1-TAB-SWAP-001",
+      "APS-E1-FLOW-LANE-001",
+      "APS-E1-PIPELINE-LANE-001",
+      "APS-E1-CHROME-001",
+      "DMCP-E0-ARTIST-REVERDICT-001"
+    ]
+  },
+  "designer_mcp_closed": {
+    "DMCP-E0-ARTIST-REVERDICT-001": {
+      "verdict": "PASS_WITH_NOTES",
+      "deliverable": "src/dev/design_aps_artist_ship_review_20260616_v1.md",
+      "witness": "debug_runs/art_pipeline/dmcp_e0_artist_reverdict_live.json",
+      "completed": "2026-06-02"
+    }
+  },
+  "primary_picks": {
+    "coder-mcp": "MCP-APS-ATLAS-LAND-REGISTER-001",
+    "planner-mcp": "idle",
+    "designer-mcp": "idle",
+    "coder_a": "CDR-A-WIT-HON-ROLLUP-001",
+    "coder_b": "CDR-B-BUILD-CONSUMER-MCP-001"
+  },
+  "e4_e5_reconciled": "2026-06-02",
+  "reconcile_witness": "debug_runs/agent_ops/aps_option_d_queue_reconcile_live.json",
+  "e2_plus_unblocked": [
+    "APS-EVO-E2-PRESET-BROWSE-001",
+    "APS-E2-GRAMMAR-PANEL-001",
+    "APS-EVO-E3-VEG-STATE-AXIS-001",
+    "APS-EVO-E4-ATLAS-EXPAND-001",
+    "APS-EVO-E5-EXTRACT-PARITY-001"
+  ],
+  "wit_hon_aps_baseline": {
+    "aps_option_d_e1_live.json": "pass",
+    "aps_domain_router_live.json": "pass",
+    "aps_artist_tool_e2e_live.json": "pass",
+    "aps_landscape_preset_browse_live.json": "pass",
+    "aps_veg_state_axis_live.json": "pass",
+    "tile_landscape_expanded_live.json": "pass",
+    "aps_veg_extract_parity_live.json": "pass"
+  },
+  "_agent_meta": {
+    "schema": "aps_option_d_dispatch_live_v1",
+    "written_at_epoch_secs": 1781672000,
+    "profile": "ORCHESTRATOR_MCP",
+    "source_system": "orchestrator-mcp",
+    "relative_path": "debug_runs/agent_ops/aps_option_d_dispatch_live.json",
+    "ritual": "BLANG:WIT-HON ORCH-APS-001"
+  }
+}

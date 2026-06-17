@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "operation": "preview_assembly",
+  "job_id": "preview_assembly_snapshot_warehouse_industrial_west_production_v1_476ec0dc",
+  "assembly_snapshot": "tools/mcp/schemas/examples/assembly_snapshot_warehouse_industrial_west_production_v1.json",
+  "camera": {
+    "preset": "iso_ne",
+    "distance_m": 24.0
+  },
+  "output": {
+    "png": "debug_runs/preview_jobs/industrial_west_7x5_s39_9fa1_thumb.png",
+    "width": 512,
+    "height": 512
+  }
+}

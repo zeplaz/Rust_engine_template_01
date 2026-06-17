@@ -16,7 +16,7 @@ atlas_id: rail_warehouse_pilot_v1
 footprint_matrix_id: logistics_rail_warehouse_l_6x5
 source_tier: pilot
 g4_review_mode: keyframe_stills
-reviewed_at: "2026-06-16"
+reviewed_at: "2026-06-17"
 proceed_ship: yes
 
 readability_gates:

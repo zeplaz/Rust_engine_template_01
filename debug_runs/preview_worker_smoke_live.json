@@ -4,12 +4,12 @@
   "mode": "bevy_worker",
   "png": "debug_runs/preview_jobs/industrial_west_7x5_s39_9fa1_thumb.png",
   "modules_loaded": 40,
-  "elapsed_ms": 1119,
+  "elapsed_ms": 2548,
   "missing_glb": [],
   "bevy_status": {
     "status": "done",
     "png": "debug_runs/preview_jobs/industrial_west_7x5_s39_9fa1_thumb.png",
-    "elapsed_ms": 1020,
+    "elapsed_ms": 1737,
     "modules_loaded": 40,
     "mode": "bevy_worker"
   }

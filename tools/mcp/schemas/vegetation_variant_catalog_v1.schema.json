@@ -1,0 +1,182 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://rust-engine.local/schemas/vegetation_variant_catalog_v1.schema.json",
+  "title": "vegetation_variant_catalog_v1",
+  "description": "APS-EVO-E3 — authoritative variant_key registry for VegetationExtractFrame resolver + LG-5 atlas UV slots. Flat catalog (not variant_graph_v1 — see plan_veg_variant_graph_decision_v1.md).",
+  "type": "object",
+  "required": ["schema_version", "catalog_id", "entries"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "const": 1 },
+    "catalog_id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$"
+    },
+    "preset_scope": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Optional landscape preset_ids this catalog row set applies to; empty = global"
+    },
+    "seed": { "type": "integer", "minimum": 0 },
+    "_meta": { "type": "object", "additionalProperties": true },
+    "axes": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "burn_frame_count": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 16,
+          "default": 8,
+          "description": "ActiveBurn frame loop upper bound (engine: VEG_BURN_FRAME_COUNT)"
+        },
+        "succession_stages": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "Grass",
+              "Shrub",
+              "Sapling",
+              "Canopy",
+              "OldGrowth",
+              "BurnScar"
+            ]
+          }
+        },
+        "regrowth_macro_phases": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["None", "Scar", "Nuclei", "Front", "Closing", "Mature"]
+          }
+        }
+      }
+    },
+    "entries": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/catalog_entry" }
+    }
+  },
+  "$defs": {
+    "catalog_entry": {
+      "type": "object",
+      "required": ["variant_key", "resolver"],
+      "additionalProperties": false,
+      "properties": {
+        "variant_key": {
+          "type": "string",
+          "pattern": "^(topology_|veg_)[a-z0-9_]+$"
+        },
+        "resolver": { "$ref": "#/$defs/resolver_match" },
+        "sim_tags": {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^sim_" }
+        },
+        "atlas": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "atlas_domain": { "const": "landscape" },
+            "atlas_id": { "type": "string", "minLength": 1 },
+            "uv_slot": { "type": "string", "minLength": 1 },
+            "topology_kind": {
+              "type": "string",
+              "enum": ["Patch", "Corridor", "Ring", "Any"]
+            },
+            "scale_band": {
+              "type": "string",
+              "enum": ["S", "M", "L"]
+            }
+          }
+        },
+        "glyphs": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "planning": { "type": "string", "minLength": 1, "maxLength": 1 },
+            "extract": { "type": "string", "minLength": 1, "maxLength": 1 }
+          }
+        },
+        "notes": { "type": "string" }
+      }
+    },
+    "resolver_match": {
+      "type": "object",
+      "required": ["kind"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "topology_kind",
+            "active_burn_frame",
+            "regrowth_macro",
+            "succession_stage",
+            "default"
+          ]
+        },
+        "topology_kind": {
+          "type": "string",
+          "enum": ["Patch", "Corridor", "Ring"]
+        },
+        "frame_index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 15
+        },
+        "frame_index_range": {
+          "type": "array",
+          "items": { "type": "integer", "minimum": 0, "maximum": 15 },
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "regrowth_macro_phase": {
+          "type": "string",
+          "enum": ["None", "Scar", "Nuclei", "Front", "Closing", "Mature"]
+        },
+        "succession_stage": {
+          "type": "string",
+          "enum": [
+            "Grass",
+            "Shrub",
+            "Sapling",
+            "Canopy",
+            "OldGrowth",
+            "BurnScar"
+          ]
+        },
+        "active_burn_heat_gt": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Match when ActiveBurn.heat exceeds epsilon"
+        }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "kind": { "const": "topology_kind" } } },
+          "then": { "required": ["topology_kind"] }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "active_burn_frame" } } },
+          "then": {
+            "oneOf": [
+              { "required": ["frame_index"] },
+              { "required": ["frame_index_range"] }
+            ]
+          }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "regrowth_macro" } } },
+          "then": { "required": ["regrowth_macro_phase"] }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "succession_stage" } } },
+          "then": { "required": ["succession_stage"] }
+        }
+      ]
+    }
+  }
+}

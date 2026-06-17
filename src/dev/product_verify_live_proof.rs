@@ -34,6 +34,7 @@ fn witness_file_green(path: &str) -> bool {
     };
     doc.get("green")
         .and_then(|v| v.as_bool())
+        .or_else(|| doc.get("lib_contract_green").and_then(|v| v.as_bool()))
         .or_else(|| doc.get("f1_green").and_then(|v| v.as_bool()))
         .or_else(|| {
             doc.pointer("/play_truth_001/green")
@@ -106,7 +107,17 @@ pub fn refresh_product_verify_live_witnesses() -> ProductVerifyRefreshResult {
     let _ = crate::dev::construction_placement_live_proof::refresh_construction_placement_live_witness();
     let _ = crate::engine::play_scenario::refresh_play_scenario_001_live_witness();
 
-    let play_truth = witness_file_green("debug_runs/play_scenario_live.json");
+    let play_lib = witness_file_green("debug_runs/play_scenario_live.json");
+    let play_operator = std::fs::read_to_string(
+        std::env::var_os("CARGO_MANIFEST_DIR")
+            .map(std::path::PathBuf::from)
+            .map(|r| r.join("debug_runs/play_scenario_live.json"))
+            .unwrap_or_else(|| std::path::PathBuf::from("debug_runs/play_scenario_live.json")),
+    )
+    .ok()
+    .and_then(|raw| serde_json::from_str::<serde_json::Value>(&raw).ok())
+    .and_then(|doc| doc.get("operator_session_green").and_then(|v| v.as_bool()))
+    .unwrap_or(false);
     let stage5_fire = {
         let full = std::env::var_os("CARGO_MANIFEST_DIR")
             .map(std::path::PathBuf::from)
@@ -124,8 +135,7 @@ pub fn refresh_product_verify_live_witnesses() -> ProductVerifyRefreshResult {
     };
 
     let proof_grade_honest = g_play_proof_grade_honest();
-    r.rollup_green = proof_grade_honest
-        && r.map_zoom
+    let coder_rollup_green = r.map_zoom
         && r.pilot_catalog
         && r.build_visual
         && r.minimap
@@ -134,8 +144,9 @@ pub fn refresh_product_verify_live_witnesses() -> ProductVerifyRefreshResult {
         && r.fire_play_vis
         && r.landscape_grammar
         && r.pointer_gate
-        && play_truth
+        && play_lib
         && stage5_fire;
+    r.rollup_green = proof_grade_honest && coder_rollup_green && play_operator;
 
     let proof_grade = read_json_proof_grade();
     let body = serde_json::json!({
@@ -143,7 +154,11 @@ pub fn refresh_product_verify_live_witnesses() -> ProductVerifyRefreshResult {
         "green": r.rollup_green,
         "proof_grade": proof_grade,
         "proof_grade_honest": proof_grade_honest,
-        "play_truth": play_truth,
+        "g_play_coder_rollup_green": coder_rollup_green,
+        "g_play_operator_pending": !play_operator,
+        "play_lib_contract": play_lib,
+        "play_operator_session": play_operator,
+        "play_truth": play_lib,
         "stage5_fire_instances": stage5_fire,
         "lanes": {
             "map_zoom": r.map_zoom,
@@ -204,7 +219,13 @@ mod tests {
         assert!(r.landscape_grammar, "landscape_grammar");
         assert!(r.pointer_gate, "pointer_gate");
         if g_play_proof_grade_honest() {
-            assert!(r.rollup_green, "rollup");
+            assert!(r.rollup_green || {
+                let raw = std::fs::read_to_string(G_PLAY_PRODUCT_CLOSE_LIVE_JSON).expect("g_play");
+                let doc: serde_json::Value = serde_json::from_str(&raw).expect("parse");
+                doc.get("g_play_coder_rollup_green")
+                    .and_then(|v| v.as_bool())
+                    .unwrap_or(false)
+            }, "rollup or honest coder rollup");
         } else {
             assert!(
                 !r.rollup_green,

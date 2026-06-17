@@ -1,13 +1,15 @@
 {
   "program_id": "APS-ARTIST-TOOL-E2E-001",
+  "gate": "APS-EVO-E0-RELAUNCH-001",
   "green": true,
-  "honest_gate": "build_health+schema",
+  "import_guard_pass": true,
+  "honest_gate": "build_health+schema+wit_hon",
   "build_health": {
     "ok": true,
     "import_ok": true,
     "import_error": null,
     "collect_ok": true,
-    "collect_summary": "68/344 tests collected (276 deselected) in 0.24s",
+    "collect_summary": "149/442 tests collected (293 deselected) in 0.27s",
     "reason": ""
   },
   "steps_ok": true,
@@ -48,5 +50,32 @@
     }
   ],
   "designer_mcp_signoff": "pending",
-  "track_b_deferred": "MCP-PILOT-GRAMMAR-001 manual keyframe"
+  "track_b_deferred": "MCP-PILOT-GRAMMAR-001 manual keyframe",
+  "witness_honesty": {
+    "status": "warning",
+    "error_count": 0,
+    "warning_count": 1,
+    "summary": "witness_honesty debug_runs/aps_artist_tool_e2e_live.json: 0 error(s), 1 issue(s)"
+  },
+  "exit_predicate": {
+    "witness": "debug_runs/aps_artist_tool_e2e_live.json",
+    "must": [
+      {
+        "path": "green",
+        "eq": true
+      },
+      {
+        "path": "import_guard_pass",
+        "eq": true
+      }
+    ]
+  },
+  "_agent_meta": {
+    "schema": "aps_artist_tool_e2e_live_v1",
+    "profile": "APS_E0_RELAUNCH",
+    "relative_path": "debug_runs/aps_artist_tool_e2e_live.json",
+    "source_system": "aps_artist_tool_e2e",
+    "written_at_epoch_secs": 1781712992,
+    "ritual": "BLANG:WIT-HON APS-EVO-E0-RELAUNCH-001"
+  }
 }
