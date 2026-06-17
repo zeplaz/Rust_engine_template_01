@@ -3,9 +3,9 @@
 use crate::dev::debug_run_envelope::{wrap_debug_run, write_debug_run_json};
 use crate::systems::ecology::{
     evaluate_landscape_program, load_landscape_grammar_catalog, refresh_lg2_witness,
-    refresh_lg4_preview_witness, LandscapeGrammarLg2Witness, LG1_PILOT_CHUNK,
+    LandscapeGrammarLg2Witness, LG1_PILOT_CHUNK,
     LG1_PILOT_PRESET_ID, LANDSCAPE_GRAMMAR_LG2_LIVE_JSON,
-    LANDSCAPE_GRAMMAR_LG4_PREVIEW_LIVE_JSON,
+    LANDSCAPE_GRAMMAR_LG4_PREVIEW_LIVE_JSON, LandscapeProgramEvaluation,
 };
 use crate::systems::ecology::{ChunkEcology, VegetationField};
 use crate::systems::weather::ChunkWeather;
@@ -15,27 +15,24 @@ pub const LANDSCAPE_GRAMMAR_LIVE_PROOF_JSON: &str =
 
 #[must_use]
 pub fn landscape_grammar_live_proof_green(witness: &LandscapeGrammarLg2Witness) -> bool {
-    witness.fire_disturbances >= 1 && witness.construction_disturbances >= 1
+    witness.fire_disturbances >= 1
+        && witness.construction_disturbances >= 1
+        && witness.harvest_disturbances >= 1
 }
 
 #[must_use]
-pub fn commit_landscape_grammar_live_proof(witness: &LandscapeGrammarLg2Witness) -> bool {
-    let catalog = load_landscape_grammar_catalog();
-    let Some(preset) = catalog.presets.get(LG1_PILOT_PRESET_ID) else {
-        return false;
-    };
-    let ecology = ChunkEcology::default();
-    let veg = VegetationField::default();
-    let weather = ChunkWeather::default();
-    let eval = evaluate_landscape_program(preset, LG1_PILOT_CHUNK, &ecology, &veg, &weather);
-    let _ = refresh_lg2_witness(&eval, witness);
-    let _ = refresh_lg4_preview_witness(&eval);
+pub fn commit_landscape_grammar_live_proof(
+    witness: &LandscapeGrammarLg2Witness,
+    eval: &crate::systems::ecology::LandscapeProgramEvaluation,
+) -> bool {
+    let _ = refresh_lg2_witness(eval, witness);
     let green = landscape_grammar_live_proof_green(witness);
     let body = serde_json::json!({
         "gate": "VEG-WITNESS-LIVE-PROOF-001",
         "green": green,
         "fire_disturbances": witness.fire_disturbances,
         "construction_disturbances": witness.construction_disturbances,
+        "harvest_disturbances": witness.harvest_disturbances,
         "lg2_path": LANDSCAPE_GRAMMAR_LG2_LIVE_JSON,
         "lg4_path": LANDSCAPE_GRAMMAR_LG4_PREVIEW_LIVE_JSON,
     });
@@ -65,9 +62,22 @@ mod tests {
         let witness = LandscapeGrammarLg2Witness {
             fire_disturbances: 1,
             construction_disturbances: 1,
+            harvest_disturbances: 1,
             ..Default::default()
         };
-        assert!(commit_landscape_grammar_live_proof(&witness));
+        let catalog = load_landscape_grammar_catalog();
+        let preset = catalog
+            .presets
+            .get(LG1_PILOT_PRESET_ID)
+            .expect("pilot preset");
+        let eval = evaluate_landscape_program(
+            preset,
+            LG1_PILOT_CHUNK,
+            &ChunkEcology::default(),
+            &VegetationField::default(),
+            &ChunkWeather::default(),
+        );
+        assert!(commit_landscape_grammar_live_proof(&witness, &eval));
         let raw =
             std::fs::read_to_string(repo_asset_path(LANDSCAPE_GRAMMAR_LIVE_PROOF_JSON)).unwrap();
         let doc: serde_json::Value = serde_json::from_str(&raw).unwrap();

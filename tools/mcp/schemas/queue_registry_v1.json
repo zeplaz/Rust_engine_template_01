@@ -10,6 +10,22 @@
   },
   "queues": [
     {
+      "queue_id": "parallel_wave_aps_veg",
+      "path": "tools/orchestrator/queues/parallel_wave_aps_veg_dispatch_v1.json",
+      "id_field": "id",
+      "rows_path": "drain",
+      "status_field": "status",
+      "witness_fields": ["witness", "witness_json"]
+    },
+    {
+      "queue_id": "mcp_aps_evolution",
+      "path": "tools/orchestrator/queues/mcp_aps_evolution_queue.json",
+      "id_field": "id",
+      "rows_path": "drain",
+      "status_field": "status",
+      "witness_fields": ["witness", "witness_json"]
+    },
+    {
       "queue_id": "coder_vegetation_drain",
       "path": "tools/orchestrator/queues/coder_vegetation_drain_queue.json",
       "id_field": "id",
@@ -49,6 +65,22 @@
     {
       "queue_id": "post_drain_phase6_coder",
       "path": "tools/orchestrator/queues/post_drain_phase6_coder_queue.json",
+      "id_field": "id",
+      "rows_path": "drain",
+      "status_field": "status",
+      "witness_fields": ["witness", "witness_json"]
+    },
+    {
+      "queue_id": "aps_option_d",
+      "path": "tools/orchestrator/queues/aps_option_d_agent_queue.json",
+      "id_field": "id",
+      "rows_path": "drain",
+      "status_field": "status",
+      "witness_fields": ["witness", "witness_json"]
+    },
+    {
+      "queue_id": "aps_uiux_overhaul",
+      "path": "tools/orchestrator/queues/aps_uiux_overhaul_queue.json",
       "id_field": "id",
       "rows_path": "drain",
       "status_field": "status",

@@ -126,6 +126,26 @@ From `$ref:tools/orchestrator/queues/coder_vegetation_drain_queue.json` v3 — *
 
 ## P2 dispatch order (`@orchestrator-mcp` session)
 
+### APS evolution E0–E5 (primary — 2026-06-16)
+
+**Parallel wave (88 rows):** [`parallel_wave_aps_veg_dispatch_v1.json`](parallel_wave_aps_veg_dispatch_v1.json) · **APS spine:** [`mcp_aps_evolution_queue.json`](mcp_aps_evolution_queue.json)
+
+```text
+WAVE 0 — START ALL NOW (no cross-lane deps):
+  @coder-mcp     20 rows · APS-EVO-E0-RELAUNCH-001 + scaffolds
+  @planner-mcp   15 rows · APS-EVO-E3-VEGCATALOG-SCHEMA-001 + plans
+  @designer-mcp  14 rows · matrix charter + preset QC + burn content
+  @designer      12 rows · IA Option D + UX specs
+  @coder_a       16 rows · LG4 pixel reopen + sim residuals + WIT-HON
+  @coder_b       11 rows · BUILD consumer + veg resolver parity
+```
+
+**WIT-HON gate:** `validate-report witness_honesty` before every APS Q✓ — rollup parents still FAIL (false-green loop open).
+
+**External gates:** `LG4-PIXEL-PROOF-GATE` (`landscape_grammar_lg4_preview_live.json` green:false) · `VEG-F01-DESIGN-ATLAS-001`
+
+### Legacy P2 (parallel)
+
 ```text
 PICK @coder-mcp  ⟨MCP-P2-KIT002-G2⟩  roof_industrial_shed_2u bpy + kit_production_002 promote
 ```

@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import json
 import os
+import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -129,17 +131,42 @@ def test_tile_batch_run_dry_factory_floor(tile_dry_run: None) -> None:
 
 
 def test_assembly_snapshot_generate_cli_shape() -> None:
-    snap = assembly.generate_assembly_snapshot(
-        style_pack_id="style_victorian",
-        width=4,
-        depth=3,
-        seed=42,
-        write=True,
+    """CLI must emit assembly_snapshot_v1 JSON with written_path (AUTO-011 contract)."""
+    proc = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "rust_engine_mcp.cli",
+            "assembly-snapshot-generate",
+            "--style-pack",
+            "style_victorian",
+            "--footprint",
+            "4x3",
+            "--floors",
+            "2",
+            "--seed",
+            "4242",
+        ],
+        cwd=str(repo_root() / "tools/mcp/python"),
+        capture_output=True,
+        text=True,
+        check=False,
     )
+    assert proc.returncode == 0, (proc.stderr or proc.stdout or "cli failed")
+    snap = json.loads(proc.stdout)
+    assert snap.get("schema_version") == 1
+    assert isinstance(snap.get("assembly_id"), str) and snap["assembly_id"]
+    assert isinstance(snap.get("module_placements"), list) and snap["module_placements"]
+    assert snap.get("style_pack_id") == "style_victorian"
+    assert snap.get("footprint", {}).get("width") == 4
+    assert snap.get("footprint", {}).get("depth") == 3
     assert "written_path" in snap
     written = repo_root() / str(snap["written_path"])
-    assert written.is_file()
-    validate_assembly_snapshot(load_json_file(written))
+    try:
+        assert written.is_file()
+        validate_assembly_snapshot(load_json_file(written))
+    finally:
+        written.unlink(missing_ok=True)
 
 
 def test_write_tile_batch_witness_g3() -> None:

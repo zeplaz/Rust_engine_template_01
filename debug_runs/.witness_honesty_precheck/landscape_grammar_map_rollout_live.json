@@ -52,11 +52,11 @@
     "relative_path": "debug_runs/landscape_grammar_map_rollout_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_map_rollout_witness",
-    "written_at_epoch_secs": 1781658954
+    "written_at_epoch_secs": 1781709087
   },
   "chunks_with_program": 17,
   "gate": "VEG-MAP-ROLLOUT-001",
   "green": true,
   "mean_topology_kind_count": 6.0,
-  "presets_used": 2
+  "presets_used": 3
 }

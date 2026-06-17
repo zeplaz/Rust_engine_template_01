@@ -3,11 +3,26 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from enum import Enum
 from typing import Any
+
+
+class ArtDomain(str, Enum):
+    """MCP-APS-STATE-SCAFFOLD-001 — domain router scaffold (E1 wires UI)."""
+
+    BUILDINGS = "buildings"
+    LANDSCAPE = "landscape"
 
 
 @dataclass
 class SuiteState:
+    art_domain: str = ArtDomain.BUILDINGS.value
+    selected_landscape_preset_id: str | None = None
+    landscape_preset_validate_ok: bool | None = None
+    landscape_grammar_saved: bool = False
+    landscape_states_ready: bool = False
+    landscape_catalog_validate_ok: bool | None = None
+    landscape_stamp_registered: bool = False
     selected_module_id: str | None = None
     selected_module_ids: list[str] = field(default_factory=list)
     style_pack_id: str = "style_victorian"

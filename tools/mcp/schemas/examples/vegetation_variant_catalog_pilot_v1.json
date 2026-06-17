@@ -1,0 +1,189 @@
+{
+  "_meta": {
+    "teaches": [
+      "vegetation_variant_catalog",
+      "veg_burn_frame",
+      "topology_sprite"
+    ],
+    "not_a_ship_target": true,
+    "pairs_with": "src/systems/ecology/landscape_grammar_burn.rs::variant_key_for_burn_row",
+    "charter": "src/dev/plan_veg_variant_key_naming_v1.md"
+  },
+  "schema_version": 1,
+  "catalog_id": "vegetation_variant_catalog_pilot_v1",
+  "seed": 550005,
+  "axes": {
+    "burn_frame_count": 8,
+    "succession_stages": [
+      "OldGrowth",
+      "BurnScar"
+    ],
+    "regrowth_macro_phases": [
+      "None",
+      "Scar",
+      "Nuclei",
+      "Front",
+      "Closing",
+      "Mature"
+    ]
+  },
+  "entries": [
+    {
+      "variant_key": "topology_patch",
+      "resolver": {
+        "kind": "topology_kind",
+        "topology_kind": "Patch"
+      },
+      "sim_tags": [
+        "sim_day",
+        "sim_topology_patch"
+      ],
+      "atlas": {
+        "atlas_domain": "landscape",
+        "atlas_id": "landscape_lg5_pilot_v1",
+        "uv_slot": "topology_patch",
+        "topology_kind": "Patch",
+        "scale_band": "M"
+      },
+      "glyphs": {
+        "planning": "#",
+        "extract": "#"
+      }
+    },
+    {
+      "variant_key": "topology_corridor",
+      "resolver": {
+        "kind": "topology_kind",
+        "topology_kind": "Corridor"
+      },
+      "sim_tags": [
+        "sim_day",
+        "sim_topology_corridor"
+      ],
+      "atlas": {
+        "atlas_domain": "landscape",
+        "atlas_id": "landscape_lg5_pilot_v1",
+        "uv_slot": "topology_corridor",
+        "topology_kind": "Corridor",
+        "scale_band": "M"
+      },
+      "glyphs": {
+        "planning": "=",
+        "extract": "="
+      }
+    },
+    {
+      "variant_key": "topology_ring",
+      "resolver": {
+        "kind": "topology_kind",
+        "topology_kind": "Ring"
+      },
+      "sim_tags": [
+        "sim_day",
+        "sim_topology_ring"
+      ],
+      "atlas": {
+        "atlas_domain": "landscape",
+        "atlas_id": "landscape_lg5_pilot_v1",
+        "uv_slot": "topology_ring",
+        "topology_kind": "Ring",
+        "scale_band": "M"
+      },
+      "glyphs": {
+        "planning": "\u25cb",
+        "extract": "O"
+      }
+    },
+    {
+      "variant_key": "veg_clean_day",
+      "resolver": {
+        "kind": "default"
+      },
+      "sim_tags": [
+        "sim_day",
+        "sim_operational"
+      ],
+      "notes": "Fallback when no burn overlay and non-OldGrowth succession"
+    },
+    {
+      "variant_key": "veg_old_growth",
+      "resolver": {
+        "kind": "succession_stage",
+        "succession_stage": "OldGrowth"
+      },
+      "sim_tags": [
+        "sim_old_growth",
+        "sim_day"
+      ]
+    },
+    {
+      "variant_key": "veg_damaged",
+      "resolver": {
+        "kind": "regrowth_macro",
+        "regrowth_macro_phase": "Scar"
+      },
+      "sim_tags": [
+        "sim_damaged",
+        "sim_day"
+      ]
+    },
+    {
+      "variant_key": "veg_regrowth_nuclei",
+      "resolver": {
+        "kind": "regrowth_macro",
+        "regrowth_macro_phase": "Nuclei"
+      },
+      "sim_tags": [
+        "sim_regrowth",
+        "sim_day"
+      ]
+    },
+    {
+      "variant_key": "veg_regrowth_front",
+      "resolver": {
+        "kind": "regrowth_macro",
+        "regrowth_macro_phase": "Front"
+      },
+      "sim_tags": [
+        "sim_regrowth",
+        "sim_day"
+      ]
+    },
+    {
+      "variant_key": "veg_burn_00",
+      "resolver": {
+        "kind": "active_burn_frame",
+        "frame_index": 0,
+        "active_burn_heat_gt": 0.01
+      },
+      "sim_tags": [
+        "sim_fire",
+        "sim_burn_frame"
+      ]
+    },
+    {
+      "variant_key": "veg_burn_01",
+      "resolver": {
+        "kind": "active_burn_frame",
+        "frame_index": 1,
+        "active_burn_heat_gt": 0.01
+      },
+      "sim_tags": [
+        "sim_fire",
+        "sim_burn_frame"
+      ]
+    },
+    {
+      "variant_key": "veg_burn_07",
+      "resolver": {
+        "kind": "active_burn_frame",
+        "frame_index": 7,
+        "active_burn_heat_gt": 0.01
+      },
+      "sim_tags": [
+        "sim_fire",
+        "sim_burn_frame"
+      ]
+    }
+  ]
+}

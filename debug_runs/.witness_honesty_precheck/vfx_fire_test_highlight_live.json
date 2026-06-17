@@ -52,7 +52,7 @@
     "relative_path": "debug_runs/vfx_fire_test_highlight_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_vfx_fire_test_highlight_live_witness",
-    "written_at_epoch_secs": 1781658825
+    "written_at_epoch_secs": 1781708226
   },
   "gate": "VFX-FIRE-HIGHLIGHT-001",
   "green": true,

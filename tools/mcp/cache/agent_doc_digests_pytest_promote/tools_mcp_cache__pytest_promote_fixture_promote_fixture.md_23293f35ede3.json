@@ -1,9 +1,9 @@
 {
   "schema": "agent_doc_digest_cache_v1",
   "source_path": "tools/mcp/cache/_pytest_promote_fixture/promote_fixture.md",
-  "source_mtime": 1781325978.583596,
+  "source_mtime": 1781670200.160359,
   "read_count": 4,
-  "promoted_at": "2026-06-13T04:46:18+00:00",
+  "promoted_at": "2026-06-17T04:23:20+00:00",
   "max_lines": 120,
   "digest": {
     "ok": true,

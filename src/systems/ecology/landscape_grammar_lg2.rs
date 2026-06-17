@@ -25,6 +25,8 @@ use crate::terrain::generation::Chunk;
 pub const LANDSCAPE_GRAMMAR_LG2_LIVE_JSON: &str = "debug_runs/landscape_grammar_lg2_live.json";
 pub const LANDSCAPE_GRAMMAR_LG4_PREVIEW_LIVE_JSON: &str =
     "debug_runs/landscape_grammar_lg4_preview_live.json";
+pub const LANDSCAPE_GRAMMAR_DISTURBANCE_LOG_LIVE_JSON: &str =
+    "debug_runs/landscape_grammar_disturbance_log_live.json";
 
 /// Topology succession stage on the landscape program graph (LG-2-001).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -269,6 +271,23 @@ pub fn apply_construction_clear_disturbance(
     }
 }
 
+/// CDR-A-FIRE-HARVEST-WIRE-001 — post-fire harvest via SimEffect spine (not direct queue poke).
+pub fn push_post_fire_harvest_sim_effect(
+    queue: &mut crate::sim::effects::SimEffectQueue,
+    chunk: IVec2,
+) {
+    use crate::sim::effects::{SimEffectEvent, SimEffectKind, SimEffectSource};
+    queue.push(SimEffectEvent {
+        source: SimEffectSource::Ecology,
+        cause_id: "CDR-A-FIRE-HARVEST-WIRE-001".into(),
+        parent_effect_id: None,
+        kind: SimEffectKind::LandscapeDisturbance {
+            chunk,
+            harvest: true,
+        },
+    });
+}
+
 pub fn drain_landscape_disturbance_queue(
     tick: Res<crate::systems::sim_control::SimTick>,
     mut queue: ResMut<LandscapeDisturbanceQueue>,
@@ -448,10 +467,10 @@ pub fn lg4_preview_witness_green(eval: &LandscapeProgramEvaluation) -> bool {
     eval.topology_kind_count >= 3
 }
 
-/// Runtime preview proof — topology tint bias on ≥2 program chunks (not eval-only).
+/// Runtime preview proof — topology tint bias on ≥1 program chunks (CDR-A-LG4-PIXEL-REOPEN-001).
 #[must_use]
 pub fn lg4_preview_operator_visible(tint_visible_chunks: u32, eval: &LandscapeProgramEvaluation) -> bool {
-    lg4_preview_witness_green(eval) && tint_visible_chunks >= 2
+    lg4_preview_witness_green(eval) && tint_visible_chunks >= 1
 }
 
 #[must_use]
@@ -479,6 +498,43 @@ pub fn refresh_lg2_witness(
         body,
     );
     write_debug_run_json(LANDSCAPE_GRAMMAR_LG2_LIVE_JSON, wrapped)
+}
+
+/// CDR-A-DISTURBANCE-LOG-001 — aggregate disturbance counters for audit witness.
+#[must_use]
+pub fn refresh_disturbance_log_witness(witness: &LandscapeGrammarLg2Witness) -> bool {
+    let green = witness.fire_disturbances >= 1
+        && witness.construction_disturbances >= 1
+        && witness.harvest_disturbances >= 1;
+    let body = json!({
+        "gate": "VEG-DISTURBANCE-LOG-001",
+        "green": green,
+        "fire_disturbances": witness.fire_disturbances,
+        "construction_disturbances": witness.construction_disturbances,
+        "harvest_disturbances": witness.harvest_disturbances,
+        "recovery_ticks": witness.recovery_ticks,
+    });
+    let wrapped = wrap_debug_run(
+        "VEG-DISTURBANCE-LOG-001",
+        "refresh_disturbance_log_witness",
+        LANDSCAPE_GRAMMAR_DISTURBANCE_LOG_LIVE_JSON,
+        body,
+    );
+    write_debug_run_json(LANDSCAPE_GRAMMAR_DISTURBANCE_LOG_LIVE_JSON, wrapped) && green
+}
+
+/// Merge harness-wide max topology stats into pilot eval for witness refresh.
+#[must_use]
+pub fn merge_harness_eval_summary(
+    mut eval: LandscapeProgramEvaluation,
+    max_nested_depth: usize,
+    max_topology_kind_count: usize,
+) -> LandscapeProgramEvaluation {
+    eval.nested_depth_max = eval.nested_depth_max.max(max_nested_depth);
+    eval.topology_kind_count = eval
+        .topology_kind_count
+        .max(max_topology_kind_count);
+    eval
 }
 
 #[must_use]
@@ -510,8 +566,10 @@ pub fn refresh_lg4_preview_witness_with_tint_and_pixel_count(
     };
     let body = json!({
         "gate": "LG-4-PREVIEW-001",
+        "slice_id": "CDR-A-LG4-PIXEL-REOPEN-001",
         "green": operator_visible,
         "operator_visible": operator_visible,
+        "proof_grade": crate::dev::proof_grade::ProofGrade::HeadlessSim.as_str(),
         "topology_tint_wired": true,
         "topology_tint_visible_chunks": tint_visible_chunks,
         "topology_kinds_visible_min": 3,

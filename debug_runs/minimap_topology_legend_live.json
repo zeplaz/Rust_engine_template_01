@@ -52,7 +52,7 @@
     "relative_path": "debug_runs/minimap_topology_legend_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_minimap_topology_legend_live_witness",
-    "written_at_epoch_secs": 1781658953
+    "written_at_epoch_secs": 1781709052
   },
   "gate": "VEG-MINIMAP-OVERLAY-002",
   "green": true,

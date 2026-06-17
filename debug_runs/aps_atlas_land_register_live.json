@@ -1,0 +1,67 @@
+{
+  "gate": "MCP-APS-ATLAS-LAND-REGISTER-001",
+  "program_id": "APS-E4",
+  "green": true,
+  "slice_id": "MCP-APS-ATLAS-LAND-REGISTER-001",
+  "register_target": "_landscape_atlas_index",
+  "index_path": "assets/configs/landscape/_landscape_atlas_index.json",
+  "atlas_ids": [
+    "landscape_lg5_expanded_v1",
+    "landscape_lg5_pilot_v1"
+  ],
+  "pilot_atlas_id": "landscape_lg5_pilot_v1",
+  "expanded_atlas_id": "landscape_lg5_expanded_v1",
+  "pilot_registered": true,
+  "expanded_registered": true,
+  "atlas_domain_landscape_ok": true,
+  "batch_witness_green": true,
+  "batch_witness": "debug_runs/art_pipeline/tile_tile_landscape_expanded_v1_live.json",
+  "panel_wired": true,
+  "ensure_expanded": {
+    "ok": true,
+    "already_registered": true,
+    "atlas_id": "landscape_lg5_expanded_v1"
+  },
+  "register_green": true,
+  "expanded_batch_path": "assets/staging/specs/tile_batch_landscape_expanded_v1.json",
+  "design_ref": "src/dev/design_landscape_lg5_expansion_matrix_v1.md",
+  "exit_predicate": {
+    "witness": "debug_runs/aps_atlas_land_register_live.json",
+    "must": [
+      {
+        "path": "register_green",
+        "eq": true
+      },
+      {
+        "path": "pilot_registered",
+        "eq": true
+      },
+      {
+        "path": "expanded_registered",
+        "eq": true
+      },
+      {
+        "path": "panel_wired",
+        "eq": true
+      },
+      {
+        "path": "atlas_domain_landscape_ok",
+        "eq": true
+      }
+    ]
+  },
+  "_agent_meta": {
+    "schema": "aps_atlas_land_register_live_v1",
+    "profile": "APS_ATLAS_LAND_REGISTER",
+    "relative_path": "debug_runs/aps_atlas_land_register_live.json",
+    "source_system": "aps_atlas_land_register",
+    "written_at_epoch_secs": 1781712945,
+    "ritual": "BLANG:WIT-HON MCP-APS-ATLAS-LAND-REGISTER-001"
+  },
+  "witness_honesty": {
+    "status": "passed",
+    "error_count": 0,
+    "warning_count": 0,
+    "summary": "witness_honesty debug_runs/aps_atlas_land_register_live.json: 0 error(s), 0 issue(s)"
+  }
+}

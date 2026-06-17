@@ -17,6 +17,7 @@ pub fn refresh_aps_dna_consumer_rust_live_witness() -> bool {
     let body = serde_json::json!({
         "gate_id": "BUILD-READ-CONSUMER-MCP-001",
         "task_id": "BUILD-READ-CONSUMER-MCP-001",
+        "slice_id": "CDR-B-BUILD-CONSUMER-MCP-001",
         "green": green,
         "mcp_contract": "debug_runs/aps_dna_consumer_contract_live.json",
         "rust_consumer": "src/construction/procedural/arch_build_grammar_v0.rs::load_arch_dna_preset",

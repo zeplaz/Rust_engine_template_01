@@ -1,0 +1,206 @@
+{
+  "_meta": {
+    "teaches": [
+      "landscape_lg5_expanded",
+      "burn_scar_regrowth"
+    ],
+    "not_a_ship_target": true,
+    "charter": "src/dev/design_landscape_lg5_expansion_matrix_v1.md",
+    "designer_mcp": "DMCP-TILE-BATCH-EXPAND-SPEC-001",
+    "pilot_reuse": "tools/mcp/schemas/examples/tile_batch_landscape_lg5_pilot_v1.json"
+  },
+  "schema_version": 1,
+  "batch_id": "tile_landscape_expanded_v1",
+  "tile_id": "landscape_lg5",
+  "base": "dirt",
+  "status": "expanded_pilot",
+  "ship": false,
+  "frozen": false,
+  "bake_source": "keyframe_pack",
+  "source_tier": "pilot",
+  "development_tier": "pilot",
+  "atlas_domain": "landscape",
+  "landscape_program_ref": "assets/configs/landscape/presets/fire_recovery_v0.json",
+  "matrix_ref": "src/dev/design_landscape_lg5_expansion_matrix_v1.md",
+  "keyframe_rename_pk": true,
+  "rules_applied": [
+    "no_ai_generated_images",
+    "deterministic_output",
+    "batch_processing",
+    "grid_alignment"
+  ],
+  "render": {
+    "method": "blender_keyframe_light_rig",
+    "isometric": true,
+    "seed": 550005,
+    "tile_size_px": 64,
+    "light_blend": "utils/Tile_iso_rig_v1.blend"
+  },
+  "variants": [
+    {
+      "variant_key": "topology_patch",
+      "state": "clean",
+      "damage": 0.0,
+      "power": "off",
+      "fill": "full",
+      "lighting": "day",
+      "topology_kind": "Patch"
+    },
+    {
+      "variant_key": "topology_patch_scar",
+      "state": "damaged",
+      "damage": 0.35,
+      "power": "off",
+      "fill": "empty",
+      "lighting": "day",
+      "topology_kind": "Patch"
+    },
+    {
+      "variant_key": "topology_patch_burn_00",
+      "state": "damaged",
+      "damage": 0.55,
+      "power": "on",
+      "fill": "half",
+      "lighting": "night_on",
+      "topology_kind": "Patch",
+      "fire_frame": 0
+    },
+    {
+      "variant_key": "topology_patch_burn_04",
+      "state": "damaged",
+      "damage": 0.63,
+      "power": "on",
+      "fill": "half",
+      "lighting": "night_on",
+      "topology_kind": "Patch",
+      "fire_frame": 4
+    },
+    {
+      "variant_key": "topology_patch_regrowth_grass",
+      "state": "clean",
+      "damage": 0.05,
+      "power": "off",
+      "fill": "quarter",
+      "lighting": "day",
+      "topology_kind": "Patch"
+    },
+    {
+      "variant_key": "topology_patch_regrowth_shrub",
+      "state": "clean",
+      "damage": 0.1,
+      "power": "off",
+      "fill": "half",
+      "lighting": "day",
+      "topology_kind": "Patch"
+    },
+    {
+      "variant_key": "topology_corridor",
+      "state": "clean",
+      "damage": 0.0,
+      "power": "off",
+      "fill": "half",
+      "lighting": "day",
+      "topology_kind": "Corridor"
+    },
+    {
+      "variant_key": "topology_corridor_scar",
+      "state": "damaged",
+      "damage": 0.35,
+      "power": "off",
+      "fill": "empty",
+      "lighting": "day",
+      "topology_kind": "Corridor"
+    },
+    {
+      "variant_key": "topology_corridor_burn_00",
+      "state": "damaged",
+      "damage": 0.55,
+      "power": "on",
+      "fill": "half",
+      "lighting": "night_on",
+      "topology_kind": "Corridor",
+      "fire_frame": 0
+    },
+    {
+      "variant_key": "topology_corridor_burn_04",
+      "state": "damaged",
+      "damage": 0.63,
+      "power": "on",
+      "fill": "half",
+      "lighting": "night_on",
+      "topology_kind": "Corridor",
+      "fire_frame": 4
+    },
+    {
+      "variant_key": "topology_ring",
+      "state": "clean",
+      "damage": 0.0,
+      "power": "off",
+      "fill": "quarter",
+      "lighting": "day",
+      "topology_kind": "Ring"
+    },
+    {
+      "variant_key": "topology_ring_burn_00",
+      "state": "damaged",
+      "damage": 0.55,
+      "power": "on",
+      "fill": "half",
+      "lighting": "night_on",
+      "topology_kind": "Ring",
+      "fire_frame": 0
+    },
+    {
+      "variant_key": "topology_cluster",
+      "state": "clean",
+      "damage": 0.0,
+      "power": "off",
+      "fill": "half",
+      "lighting": "day",
+      "topology_kind": "Cluster"
+    },
+    {
+      "variant_key": "topology_cluster_regrowth_grass",
+      "state": "clean",
+      "damage": 0.08,
+      "power": "off",
+      "fill": "quarter",
+      "lighting": "day",
+      "topology_kind": "Cluster"
+    },
+    {
+      "variant_key": "topology_fringe",
+      "state": "clean",
+      "damage": 0.0,
+      "power": "off",
+      "fill": "empty",
+      "lighting": "day",
+      "topology_kind": "Fringe"
+    },
+    {
+      "variant_key": "topology_fringe_regrowth_grass",
+      "state": "clean",
+      "damage": 0.05,
+      "power": "off",
+      "fill": "quarter",
+      "lighting": "day",
+      "topology_kind": "Fringe"
+    }
+  ],
+  "atlas": {
+    "atlas_id": "landscape_lg5_expanded_v1",
+    "columns": 4,
+    "rows": 4,
+    "tile_px": 64,
+    "padding_px": 2,
+    "output_png": "assets/textures/landscape/staging/landscape_lg5_expanded_v1_atlas.png",
+    "meta_json": "assets/staging/tiles/tile_landscape_expanded_v1/atlas_meta.json"
+  },
+  "expected_outputs": [
+    "{variant_key}.png",
+    "atlas_meta.json",
+    "landscape_lg5_expanded_v1_atlas.png"
+  ],
+  "pre_baked_folder": "assets/staging/tiles/keyframe_stills/tile_landscape_expanded_v1",
+  "note": "Expanded LG-5 \u2014 16 topology\u00d7state cells per designer-mcp matrix charter. ship:false until G4 manual keyframes."
+}

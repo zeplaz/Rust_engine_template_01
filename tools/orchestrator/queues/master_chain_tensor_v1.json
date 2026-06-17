@@ -147,10 +147,10 @@
       "sub_gates": {
         "G-PLAY-CODER-FIRE": { "phi": 2, "closed": true },
         "G-PLAY-CODER-BUILD": { "phi": 2, "closed": true },
-        "G-PLAY-CODER-VEG": { "phi": 2, "closed": true, "plan": "src/dev/plan_veg_runtime_proof_001_v1.md" },
+        "G-PLAY-CODER-VEG": { "phi": 0, "closed": false, "plan": "src/dev/plan_veg_runtime_proof_001_v1.md", "reopen_reason": "WIT-HON bulk reopen — rollup child fail; Review row pending scan" },
         "G-PLAY-OPERATOR-01": { "phi": 0, "closed": false }
       },
-      "note": "💬 rollup OPEN — all coder sub-gates green · G-PLAY-OPERATOR-01 only"
+      "note": "Rollup OPEN — G-PLAY-CODER-VEG reopened (WIT-HON bulk gate 2026-06-02) · operator only on G-PLAY-OPERATOR-01"
     }
   },
   "a2c_template": {

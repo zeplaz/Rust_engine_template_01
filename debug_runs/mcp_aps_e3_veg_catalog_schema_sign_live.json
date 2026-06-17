@@ -1,0 +1,29 @@
+{
+  "_agent_meta": {
+    "schema": "debug_run_envelope_v1",
+    "gate": "APS-EVO-E3-VEGCATALOG-SCHEMA-001",
+    "agent": "planner-mcp",
+    "green_scope": "G-SCHEMA"
+  },
+  "gate": "APS-EVO-E3-VEGCATALOG-SCHEMA-001",
+  "paired_plan": "PLAN-VEG-RESOLVER-KEY-NAMING-001",
+  "signed": true,
+  "signed_at": "2026-06-17",
+  "schema": "tools/mcp/schemas/vegetation_variant_catalog_v1.schema.json",
+  "example": "tools/mcp/schemas/examples/vegetation_variant_catalog_pilot_v1.json",
+  "ship_catalog": "assets/configs/landscape/_vegetation_variant_catalog.ron",
+  "validation": {
+    "pilot_example_jsonschema": true,
+    "dmcp_e3_pytest": "tests/test_dmcp_e3_vegetation_catalog.py",
+    "entry_count": 29,
+    "veg_burn_count": 8,
+    "topology_count": 16
+  },
+  "naming_plan": "src/dev/plan_veg_variant_key_naming_v1.md",
+  "unblocks": [
+    "DMCP-E3-VARIANT-KEY-SET-001",
+    "CDR-B-VEG-RESOLVER-PARITY-001",
+    "APS-EVO-E3-VEG-STATE-AXIS-001"
+  ],
+  "green": true
+}

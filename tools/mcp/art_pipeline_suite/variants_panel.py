@@ -13,7 +13,7 @@ from rust_engine_mcp.schemas import validate_variant_set
 
 from .aps_inline_feedback import set_inline_status
 from .job_controller import JobRecord, JobResult, JobState
-from .state import SuiteState
+from .state import ArtDomain, SuiteState
 
 
 class VariantsPanel(ttk.Frame):
@@ -25,6 +25,12 @@ class VariantsPanel(ttk.Frame):
         self._data: dict | None = None
         self._build()
 
+    def set_domain(self, lane: str) -> None:
+        if lane == ArtDomain.LANDSCAPE.value:
+            self._lane_banner.configure(text="Landscape lane — state axis scaffold (E3); building axes remain default.")
+        else:
+            self._lane_banner.configure(text="Buildings lane — damage / power / fill / lighting axes.")
+
     def _build(self) -> None:
         ttk.Label(
             self,
@@ -33,6 +39,8 @@ class VariantsPanel(ttk.Frame):
             wraplength=720,
             justify=tk.LEFT,
         ).pack(anchor=tk.W, pady=(0, 8))
+        self._lane_banner = ttk.Label(self, text="", font=("Segoe UI", 9), foreground="#555")
+        self._lane_banner.pack(anchor=tk.W, pady=(0, 4))
 
         top = ttk.Frame(self)
         top.pack(fill=tk.X, pady=4)

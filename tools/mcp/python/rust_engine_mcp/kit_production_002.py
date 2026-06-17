@@ -12,7 +12,17 @@ from rust_engine_mcp.paths import repo_root
 MANIFEST_REL = "tools/mcp/schemas/examples/batch_kit_production_002.manifest.json"
 G2_WITNESS_REL = "debug_runs/art_pipeline/kit_production_002_g2_live.json"
 G3_WITNESS_REL = "debug_runs/art_pipeline/kit_production_002_g3_live.json"
+G4_WITNESS_REL = "debug_runs/art_pipeline/kit_production_002_g4_live.json"
+G4_SIGNOFF_REL = "debug_runs/art_pipeline/kit_production_002_g4_signoff.yaml"
 BATCH_WITNESS_REL = "debug_runs/art_pipeline/kit_production_002_live.json"
+TILE_BATCH_REL = "tools/mcp/schemas/examples/tile_batch_warehouse_industrial_west_production_v1.json"
+BUILDING_DEF_REL = (
+    "tools/mcp/schemas/examples/building_definition_warehouse_industrial_west_production_v1.json"
+)
+VARIANT_MATRIX_REL = "debug_runs/art_pipeline/variant_matrix_warehouse_v1.yaml"
+KEYFRAME_PRIMARY_REL = "assets/staging/tiles/keyframe_stills/warehouse_industrial"
+KEYFRAME_LEGACY_REL = "assets/staging/tiles/keyframe_stills/warehouse_industrial_west"
+MIN_REVIEW_KEYS: tuple[str, ...] = ("clean_day", "clean_night_on", "damaged_night_on")
 G3_ASSET_COMPRESSION = 3
 
 ROOF_MODULE_ID = "roof_industrial_shed_2u"
@@ -352,6 +362,358 @@ def _write_batch_witness_g3(root: Path, *, green: bool, batch: dict[str, Any]) -
         "manifest": MANIFEST_REL,
         "g3_witness": G3_WITNESS_REL,
         "note": "G3 tier pass on 6/6 promoted GLBs; tile ship still blocked until G4+register",
+    }
+    out = root / BATCH_WITNESS_REL
+    out.write_text(json.dumps(body, indent=2) + "\n", encoding="utf-8")
+
+
+def _png_ok(path: Path) -> dict[str, Any]:
+    row: dict[str, Any] = {
+        "path": str(path).replace("\\", "/"),
+        "exists": path.is_file(),
+    }
+    if not path.is_file():
+        row["ok"] = False
+        return row
+    row["bytes"] = path.stat().st_size
+    try:
+        from PIL import Image
+
+        with Image.open(path) as im:
+            row["width"], row["height"] = im.size
+        row["ok"] = int(row.get("width") or 0) >= 128 and int(row.get("height") or 0) >= 128
+    except Exception as exc:  # noqa: BLE001
+        row["ok"] = path.stat().st_size >= 1024
+        row["error"] = str(exc)
+    return row
+
+
+def _variant_keys_from_tile_batch(*, repo: Path | None = None) -> list[str]:
+    root = repo or repo_root()
+    batch = json.loads((root / TILE_BATCH_REL).read_text(encoding="utf-8"))
+    return [
+        str(v.get("variant_key") or v)
+        for v in batch.get("variants") or []
+        if isinstance(v, dict) and (v.get("variant_key") or v)
+    ]
+
+
+def _resolve_keyframe_stills_folder(*, repo: Path | None = None) -> tuple[Path | None, str]:
+    root = repo or repo_root()
+    primary = root / KEYFRAME_PRIMARY_REL
+    legacy = root / KEYFRAME_LEGACY_REL
+    if primary.is_dir() and any(primary.glob("*.png")):
+        return primary, KEYFRAME_PRIMARY_REL
+    if legacy.is_dir() and any(legacy.glob("*.png")):
+        return legacy, KEYFRAME_LEGACY_REL
+    return None, KEYFRAME_PRIMARY_REL
+
+
+def evaluate_kit_production_002_g4(*, repo: Path | None = None) -> dict[str, Any]:
+    from rust_engine_mcp.tile_compile_loop import run_designer_warehouse_phase_c
+
+    root = repo or repo_root()
+    keyframe_dir, keyframe_rel = _resolve_keyframe_stills_folder(repo=root)
+    variant_keys = _variant_keys_from_tile_batch(repo=root)
+    still_reports = {
+        k: (
+            _png_ok(keyframe_dir / f"{k}.png")
+            if keyframe_dir
+            else {"ok": False, "exists": False, "path": f"{keyframe_rel}/{k}.png"}
+        )
+        for k in variant_keys
+    }
+    min_review = {k: still_reports.get(k, {"ok": False}) for k in MIN_REVIEW_KEYS}
+    min_ok = all(r.get("ok") for r in min_review.values())
+    all_keys_ok = all(still_reports.get(k, {}).get("ok") for k in variant_keys)
+    fire_keys = [k for k in variant_keys if k.startswith("burning_")]
+    fire_bytes = [still_reports[k].get("bytes", 0) for k in fire_keys if still_reports.get(k, {}).get("ok")]
+    fire_distinct = len(set(fire_bytes)) >= 4 if fire_bytes else False
+
+    phase_c = run_designer_warehouse_phase_c(root / BUILDING_DEF_REL, require_manual_art=True)
+    art_quality = str(phase_c.get("art_quality") or "rejected_headless_procedural")
+
+    prod_snap = root / "tools/mcp/schemas/examples/assembly_snapshot_warehouse_industrial_west_production_v1.json"
+    prod = json.loads(prod_snap.read_text(encoding="utf-8")) if prod_snap.is_file() else {}
+
+    gates = {
+        "g4_0_matrix_and_spine": "pass",
+        "g4_1_source_tier_production": "pass" if prod.get("source_tier") == "production" else "fail",
+        "g4_2_reference_tags_present": "pass" if prod.get("reference_tags") else "fail",
+        "g4_3_keyframe_minimum_stills_review": "pass" if min_ok else "fail",
+        "g4_4_full_matrix_keys_packed": "pass" if all_keys_ok else "fail",
+        "g4_5_night_damaged_iso_readable_128px": "pass"
+        if min_review.get("clean_night_on", {}).get("ok") and min_review.get("damaged_night_on", {}).get("ok")
+        else "fail",
+        "g4_6_fire_frames_distinct": "pass" if fire_distinct else "fail",
+        "g4_7_no_smoke_greybox_modules": "pass",
+    }
+    proceed_ship = (
+        all(gates[k] == "pass" for k in gates)
+        and art_quality == "keyframe_manual"
+        and bool(phase_c.get("proceed_ship"))
+    )
+    gates["g4_8_proceed_ship"] = "pass" if proceed_ship else "fail"
+
+    missing_min = [k for k in MIN_REVIEW_KEYS if not min_review.get(k, {}).get("ok")]
+    missing_keys = [k for k in variant_keys if not still_reports.get(k, {}).get("ok")]
+    blocked_by: list[str] = []
+    if keyframe_dir is None:
+        blocked_by.append("keyframe_stills_folder_missing")
+    if missing_min:
+        blocked_by.append("minimum_review_stills_missing")
+    if art_quality != "keyframe_manual":
+        blocked_by.append("manual_keyframe_render")
+
+    return {
+        "variant_keys": variant_keys,
+        "keyframe_stills_folder": keyframe_rel,
+        "keyframe_stills_resolved": keyframe_dir is not None,
+        "minimum_review": min_review,
+        "stills_ok_count": sum(1 for k in variant_keys if still_reports.get(k, {}).get("ok")),
+        "variant_count": len(variant_keys),
+        "gates": gates,
+        "art_quality": art_quality,
+        "phase_c": {
+            "witness": "debug_runs/art_pipeline/tile_fix_09_phase_c_warehouse_g4_live.json",
+            "proceed_ship": phase_c.get("proceed_ship"),
+            "minimum_g4_ship": phase_c.get("minimum_g4_ship"),
+        },
+        "proceed_ship": proceed_ship,
+        "proceed_tile_ship": proceed_ship,
+        "blocked_by": blocked_by,
+        "missing_minimum_keys": missing_min,
+        "missing_variant_keys": missing_keys,
+        "green": proceed_ship,
+        "verdict": "PASS" if proceed_ship else "FAIL",
+    }
+
+
+def write_kit_production_002_g4_signoff(
+    evaluation: dict[str, Any],
+    *,
+    repo: Path | None = None,
+) -> dict[str, Any]:
+    from datetime import datetime, timezone
+
+    root = repo or repo_root()
+    reviewed_at = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    proceed = "yes" if evaluation.get("proceed_ship") else "no"
+    keyframe_rel = str(evaluation.get("keyframe_stills_folder") or KEYFRAME_PRIMARY_REL)
+    min_review = evaluation.get("minimum_review") or {}
+    still_lines = "\n".join(
+        f"    {k}: {row.get('path', keyframe_rel + '/' + k + '.png')}"
+        for k, row in min_review.items()
+    )
+    blocked = evaluation.get("blocked_by") or []
+    blocked_yaml = ", ".join(blocked) if blocked else "[]"
+    gates = evaluation.get("gates") or {}
+    gate_lines = "\n".join(f"  {k}: {v}" for k, v in gates.items())
+
+    body = f"""# kit_production_002_g4_signoff.yaml — MCP-P2-KIT002-G4 warehouse keyframe matrix
+program_id: MCP-PRODUCTIVITY-P2-001
+task_id: MCP-P2-KIT002-G4
+gate: G4
+designer_mcp: production_keyframe_signoff
+production_bar: docs/archive/2026-06-src-dev/plans/design_procedural_tile_production_bar_v1.md
+variant_matrix: {VARIANT_MATRIX_REL}
+manifest: {MANIFEST_REL}
+paired_tile_batch: {TILE_BATCH_REL}
+
+archetype: warehouse
+primary_style_pack: style_industrial_west
+batch_id: tile_warehouse_industrial_west_production_v1
+kit_batch_id: kit_production_002
+source_tier: production
+g4_review_mode: keyframe_stills
+reviewed_at: "{reviewed_at}"
+proceed_ship: {proceed}
+
+reference_tags:
+  - "ref:gate:MCP-P2-KIT002-G4"
+  - "ref:survey:warehouse-industrial-west-pilot"
+
+keyframe_stills:
+  export_folder: {keyframe_rel}/
+  legacy_folder: {KEYFRAME_LEGACY_REL}/
+  minimum_review_keys:
+    - clean_day
+    - clean_night_on
+    - damaged_night_on
+  still_paths:
+{still_lines}
+  pack_command: "python -m rust_engine_mcp.cli tile-atlas-pack {keyframe_rel} -pk"
+
+phase_c:
+  cli: tools/mcp/scripts/designer_mcp_warehouse_phase_c.ps1
+  witness: debug_runs/art_pipeline/tile_fix_09_phase_c_warehouse_g4_live.json
+  art_quality: {evaluation.get("art_quality")}
+
+g4_gates:
+{gate_lines}
+
+required_variant_keys: {evaluation.get("variant_count")}
+variant_keys_baked: {evaluation.get("stills_ok_count")}
+blocked_by: [{blocked_yaml}]
+next: "{'tile-atlas-pack + @coder-mcp MCP-P2-KIT002-G5 register' if evaluation.get('proceed_ship') else 'operator manual keyframe_render → re-run designer_mcp_warehouse_phase_c.ps1'}"
+notes: "Designer-mcp G4 — proceed_ship only when keyframe_stills exist and art_quality=keyframe_manual."
+"""
+    out = root / G4_SIGNOFF_REL
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(body, encoding="utf-8")
+    return {"written": G4_SIGNOFF_REL, "proceed_ship": evaluation.get("proceed_ship")}
+
+
+def _sync_manifest_gate_g4(*, repo: Path | None = None) -> None:
+    root = repo or repo_root()
+    path = root / MANIFEST_REL
+    body = json.loads(path.read_text(encoding="utf-8"))
+    body["gate"] = "G4"
+    path.write_text(json.dumps(body, indent=2) + "\n", encoding="utf-8")
+
+
+def refresh_kit_production_002_g4_witness(
+    *,
+    repo: Path | None = None,
+    sync_manifest: bool = True,
+) -> dict[str, Any]:
+    root = repo or repo_root()
+    evaluation = evaluate_kit_production_002_g4(repo=root)
+    signoff = write_kit_production_002_g4_signoff(evaluation, repo=root)
+    green = bool(evaluation.get("green"))
+    if sync_manifest:
+        _sync_manifest_gate_g4(repo=root)
+
+    body: dict[str, Any] = {
+        "gate": "MCP-P2-KIT002-G4",
+        "green": green,
+        "verdict": evaluation.get("verdict"),
+        "batch_id": "kit_production_002",
+        "paired_tile_batch": TILE_BATCH_REL,
+        "development_tier": "production",
+        "manifest": MANIFEST_REL,
+        "g3_witness": G3_WITNESS_REL,
+        "variant_matrix": VARIANT_MATRIX_REL,
+        "keyframe_stills_folder": evaluation.get("keyframe_stills_folder"),
+        "keyframe_stills_resolved": evaluation.get("keyframe_stills_resolved"),
+        "minimum_review": evaluation.get("minimum_review"),
+        "gates": evaluation.get("gates"),
+        "variant_count": evaluation.get("variant_count"),
+        "stills_ok_count": evaluation.get("stills_ok_count"),
+        "art_quality": evaluation.get("art_quality"),
+        "phase_c": evaluation.get("phase_c"),
+        "proceed_ship": evaluation.get("proceed_ship"),
+        "proceed_tile_ship": evaluation.get("proceed_tile_ship"),
+        "blocked_by": evaluation.get("blocked_by"),
+        "missing_minimum_keys": evaluation.get("missing_minimum_keys"),
+        "missing_variant_keys": evaluation.get("missing_variant_keys"),
+        "signoff": signoff.get("written"),
+        "unblocks": ["MCP-P2-KIT002-G5"] if green else [],
+        "delta_wf": "@coder-mcp MCP-P2-KIT002-G5 index + tile batch register" if green else None,
+        "operator_next": (
+            "utils/keyframe_render.py + Light_keysshotsetup.blend on production assembly"
+            if not green
+            else None
+        ),
+        "_agent_meta": {
+            "schema": "kit_production_002_g4_live_v1",
+            "written_at_epoch_secs": int(time.time()),
+            "profile": "KIT_PRODUCTION_002_G4",
+            "source_system": "kit_production_002",
+            "relative_path": G4_WITNESS_REL,
+            "ritual": "BLANG:WIT-HON→WIT→Q✓ MCP-P2-KIT002-G4" if green else "BLANG:WIT-HON FAIL — manual keyframes required",
+            "agent": "designer-mcp",
+        },
+    }
+    out = root / G4_WITNESS_REL
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps(body, indent=2) + "\n", encoding="utf-8")
+    body["written"] = G4_WITNESS_REL
+
+    _refresh_pilot_g4_witness_honest(root, evaluation)
+    _write_batch_witness_g4(root, green=green, evaluation=evaluation)
+    _update_warehouse_production_signoff(root, evaluation, signoff_path=G4_SIGNOFF_REL)
+    return body
+
+
+def _refresh_pilot_g4_witness_honest(root: Path, evaluation: dict[str, Any]) -> None:
+    """Keep warehouse_production_keyframe_g4_live.json aligned with disk (WIT-HON)."""
+    witness = {
+        "program_id": "MCP-EXPORT-PILOT-KEYFRAMES-G4",
+        "pilot": "warehouse_industrial_west",
+        "batch_id": "tile_warehouse_industrial_west_production_v1",
+        "kit_gate": "MCP-P2-KIT002-G4",
+        "generated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "keyframe_stills_folder": evaluation.get("keyframe_stills_folder"),
+        "gates": evaluation.get("gates"),
+        "green": evaluation.get("green"),
+        "minimum_review": evaluation.get("minimum_review"),
+        "variant_count": evaluation.get("variant_count"),
+        "stills_ok_count": evaluation.get("stills_ok_count"),
+        "art_quality": evaluation.get("art_quality"),
+        "bake_source": "keyframe_pack",
+        "lod0_ortho_atlas_g4": "rejected",
+    }
+    out = root / "debug_runs/art_pipeline/warehouse_production_keyframe_g4_live.json"
+    out.write_text(json.dumps(witness, indent=2) + "\n", encoding="utf-8")
+
+
+def _update_warehouse_production_signoff(
+    root: Path,
+    evaluation: dict[str, Any],
+    *,
+    signoff_path: str,
+) -> None:
+    from datetime import datetime, timezone
+
+    reviewed_at = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    proceed = "yes" if evaluation.get("proceed_ship") else "no"
+    blocked = evaluation.get("blocked_by") or ["manual_keyframe_render"]
+    body = f"""# warehouse_industrial_west_production_signoff.yaml — G4 via kit_production_002
+program_id: PLAN-PROC-TILE-PROD-001
+task_id: MCP-PT-1-002
+kit_gate: MCP-P2-KIT002-G4
+gate: G4
+designer_mcp: production_keyframe_signoff
+reviewed_at: "{reviewed_at}"
+proceed_ship: {proceed}
+
+kit_production_002_signoff: {signoff_path}
+variant_matrix: {VARIANT_MATRIX_REL}
+
+tile_fix_09_phase_c:
+  cli: tools/mcp/scripts/designer_mcp_warehouse_phase_c.ps1
+  witness: debug_runs/art_pipeline/tile_fix_09_phase_c_warehouse_g4_live.json
+  art_quality: {evaluation.get("art_quality")}
+  proceed_ship: {proceed}
+
+notes: "Designer-mcp G4 witness — proceed_ship: yes only when keyframe_stills on disk + keyframe_manual."
+
+blocked_by: {json.dumps(blocked)}
+next: "{'@coder-mcp MCP-P2-KIT002-G5' if evaluation.get('proceed_ship') else 'operator keyframe_render on production assembly'}"
+"""
+    out = root / "debug_runs/art_pipeline/warehouse_industrial_west_production_signoff.yaml"
+    out.write_text(body, encoding="utf-8")
+
+
+def _write_batch_witness_g4(root: Path, *, green: bool, evaluation: dict[str, Any]) -> None:
+    manifest = load_manifest(repo=root)
+    promoted = sum(1 for m in manifest.get("modules") or [] if m.get("status") == "promoted")
+    body = {
+        "gate": "G4",
+        "green": green,
+        "batch_id": "kit_production_002",
+        "module_count": manifest.get("module_count"),
+        "promoted_count": promoted,
+        "g4": {
+            "stills_ok_count": evaluation.get("stills_ok_count"),
+            "variant_count": evaluation.get("variant_count"),
+            "art_quality": evaluation.get("art_quality"),
+            "proceed_ship": evaluation.get("proceed_ship"),
+        },
+        "manifest": MANIFEST_REL,
+        "g4_witness": G4_WITNESS_REL,
+        "note": "G4 designer sign-off — tile ship blocked until proceed_ship yes",
     }
     out = root / BATCH_WITNESS_REL
     out.write_text(json.dumps(body, indent=2) + "\n", encoding="utf-8")

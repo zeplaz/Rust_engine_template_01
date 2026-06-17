@@ -2,7 +2,7 @@
   "schema_version": 1,
   "assembly_id": "industrial_west_9x6_s42_64c0",
   "style_pack_id": "style_industrial_west",
-  "source_tier": "lod0",
+  "source_tier": "production",
   "procedural_rules_version": "building_grammar_v1",
   "reference_tags": [
     "grammar:industrial_warehouse_v1",
@@ -29,13 +29,13 @@
   "module_placements": [
     {
       "module_id": "corner_L",
-      "job_id": "corner_L_lod0_run001",
+      "job_id": "corner_L_industrial_west_production_run001",
       "slot_key": "corner_outer",
       "token": "C",
       "grid_x": 0,
       "grid_y": 0,
       "floor": 0,
-      "glb_path": "assets/models/modules/corner_L_lod0_run001/model.glb",
+      "glb_path": "assets/models/modules/corner_L_industrial_west_production_run001/model.glb",
       "position": [
         0.0,
         0.0,
@@ -56,7 +56,7 @@
         "clean",
         "weathered"
       ],
-      "lod_policy": "lod0",
+      "lod_policy": "production",
       "semantic_tags": {
         "location": [
           "street_facing",
@@ -67,13 +67,13 @@
     },
     {
       "module_id": "wall_steel_1u",
-      "job_id": "wall_steel_1u_lod0_run001",
+      "job_id": "wall_steel_1u_production_run001",
       "slot_key": "wall_1u",
       "token": "W",
       "grid_x": 1,
       "grid_y": 0,
       "floor": 0,
-      "glb_path": "assets/models/modules/wall_steel_1u_lod0_run001/model.glb",
+      "glb_path": "assets/models/modules/wall_steel_1u_production_run001/model.glb",
       "position": [
         1.0,
         0.0,
@@ -94,7 +94,7 @@
         "clean",
         "weathered"
       ],
-      "lod_policy": "lod0",
+      "lod_policy": "production",
       "semantic_tags": {
         "location": [
           "street_facing"
@@ -107,13 +107,13 @@
     },
     {
       "module_id": "wall_steel_1u",
-      "job_id": "wall_steel_1u_lod0_run001",
+      "job_id": "wall_steel_1u_production_run001",
       "slot_key": "wall_1u",
       "token": "W",
       "grid_x": 2,
       "grid_y": 0,
       "floor": 0,
-      "glb_path": "assets/models/modules/wall_steel_1u_lod0_run001/model.glb",
+      "glb_path": "assets/models/modules/wall_steel_1u_production_run001/model.glb",
       "position": [
         2.0,
         0.0,
@@ -134,7 +134,7 @@
         "clean",
         "weathered"
       ],
-      "lod_policy": "lod0",
+      "lod_policy": "production",
       "semantic_tags": {
         "location": [
           "street_facing"
@@ -147,13 +147,13 @@
     },
     {
       "module_id": "wall_steel_1u",
-      "job_id": "wall_steel_1u_lod0_run001",
+      "job_id": "wall_steel_1u_production_run001",
       "slot_key": "wall_1u",
       "token": "W",
       "grid_x": 3,
       "grid_y": 0,
       "floor": 0,
-      "glb_path": "assets/models/modules/wall_steel_1u_lod0_run001/model.glb",
+      "glb_path": "assets/models/modules/wall_steel_1u_production_run001/model.glb",
       "position": [
         3.0,
         0.0,
@@ -174,7 +174,7 @@
         "clean",
         "weathered"
       ],
-      "lod_policy": "lod0",
+      "lod_policy": "production",
       "semantic_tags": {
         "location": [
           "street_facing"
@@ -187,13 +187,13 @@
     },
     {
       "module_id": "door_warehouse",
-      "job_id": "door_warehouse_lod0_run001",
+      "job_id": "door_warehouse_production_run001",
       "slot_key": "door_wide",
       "token": "D",
       "grid_x": 4,
       "grid_y": 0,
       "floor": 0,
-      "glb_path": "assets/models/modules/door_warehouse_lod0_run001/model.glb",
+      "glb_path": "assets/models/modules/door_warehouse_production_run001/model.glb",
       "position": [
         4.0,
         0.0,
@@ -214,7 +214,7 @@
         "clean",
         "weathered"
       ],
-      "lod_policy": "lod0",
+      "lod_policy": "production",
       "semantic_tags": {
         "location": [
           "street_facing"
@@ -227,13 +227,13 @@
     },
     {
       "module_id": "wall_steel_1u",
-      "job_id": "wall_steel_1u_lod0_run001",
+      "job_id": "wall_steel_1u_production_run001",
       "slot_key": "wall_1u",
       "token": "W",
       "grid_x": 5,
       "grid_y": 0,
       "floor": 0,
-      "glb_path": "assets/models/modules/wall_steel_1u_lod0_run001/model.glb",
+      "glb_path": "assets/models/modules/wall_steel_1u_production_run001/model.glb",
       "position": [
         5.0,
         0.0,
@@ -254,7 +254,7 @@
         "clean",
         "weathered"
       ],
-      "lod_policy": "lod0",
+      "lod_policy": "production",
       "semantic_tags": {
         "location": [
           "street_facing"
@@ -267,13 +267,13 @@
     },
     {
       "module_id": "wall_steel_1u",
-      "job_id": "wall_steel_1u_lod0_run001",
+      "job_id": "wall_steel_1u_production_run001",
       "slot_key": "wall_1u",
       "token": "W",
       "grid_x": 6,
       "grid_y": 0,
       "floor": 0,
-      "glb_path": "assets/models/modules/wall_steel_1u_lod0_run001/model.glb",
+      "glb_path": "assets/models/modules/wall_steel_1u_production_run001/model.glb",
       "position": [
         6.0,
         0.0,
@@ -294,7 +294,7 @@
         "clean",
         "weathered"
       ],
-      "lod_policy": "lod0",
+      "lod_policy": "production",
       "semantic_tags": {
         "location": [
           "street_facing"
@@ -307,13 +307,13 @@
     },
     {
       "module_id": "wall_steel_1u",
-      "job_id": "wall_steel_1u_lod0_run001",
+      "job_id": "wall_steel_1u_production_run001",
       "slot_key": "wall_1u",
       "token": "W",
       "grid_x": 7,
       "grid_y": 0,
       "floor": 0,
-      "glb_path": "assets/models/modules/wall_steel_1u_lod0_run001/model.glb",
+      "glb_path": "assets/models/modules/wall_steel_1u_production_run001/model.glb",
       "position": [
         7.0,
         0.0,
@@ -334,7 +334,7 @@
         "clean",
         "weathered"
       ],
-      "lod_policy": "lod0",
+      "lod_policy": "production",
       "semantic_tags": {
         "location": [
           "street_facing"
@@ -347,13 +347,13 @@
     },
     {
       "module_id": "corner_L",
-      "job_id": "corner_L_lod0_run001",
+      "job_id": "corner_L_industrial_west_production_run001",
       "slot_key": "corner_outer",
       "token": "C",
       "grid_x": 8,
       "grid_y": 0,
       "floor": 0,
-      "glb_path": "assets/models/modules/corner_L_lod0_run001/model.glb",
+      "glb_path": "assets/models/modules/corner_L_industrial_west_production_run001/model.glb",
       "position": [
         8.0,
         0.0,
@@ -374,7 +374,7 @@
         "clean",
         "weathered"
       ],
-      "lod_policy": "lod0",
+      "lod_policy": "production",
       "semantic_tags": {
         "location": [
           "street_facing",
@@ -385,13 +385,13 @@
     },
     {
       "module_id": "wall_steel_1u",
-      "job_id": "wall_steel_1u_lod0_run001",
+      "job_id": "wall_steel_1u_production_run001",
       "slot_key": "wall_1u",
       "token": "W",
       "grid_x": 0,
       "grid_y": 1,
       "floor": 0,
-      "glb_path": "assets/models/modules/wall_steel_1u_lod0_run001/model.glb",
+      "glb_path": "assets/models/modules/wall_steel_1u_production_run001/model.glb",
       "position": [
         0.0,
         0.0,
@@ -412,7 +412,7 @@
         "clean",
         "weathered"
       ],
-      "lod_policy": "lod0",
+      "lod_policy": "production",
       "semantic_tags": {
         "location": [
           "street_facing"
@@ -425,13 +425,13 @@
     },
     {
       "module_id": "wall_steel_1u",
-      "job_id": "wall_steel_1u_lod0_run001",
+      "job_id": "wall_steel_1u_production_run001",
       "slot_key": "wall_1u",
       "token": "W",
       "grid_x": 8,
       "grid_y": 1,
       "floor": 0,
-      "glb_path": "assets/models/modules/wall_steel_1u_lod0_run001/model.glb",
+      "glb_path": "assets/models/modules/wall_steel_1u_production_run001/model.glb",
       "position": [
         8.0,
         0.0,
@@ -452,7 +452,7 @@
         "clean",
         "weathered"
       ],
-      "lod_policy": "lod0",
+      "lod_policy": "production",
       "semantic_tags": {
         "location": [
           "street_facing"
@@ -465,13 +465,13 @@
     },
     {
       "module_id": "wall_steel_1u",
-      "job_id": "wall_steel_1u_lod0_run001",
+      "job_id": "wall_steel_1u_production_run001",
       "slot_key": "wall_1u",
       "token": "W",
       "grid_x": 0,
       "grid_y": 2,
       "floor": 0,
-      "glb_path": "assets/models/modules/wall_steel_1u_lod0_run001/model.glb",
+      "glb_path": "assets/models/modules/wall_steel_1u_production_run001/model.glb",
       "position": [
         0.0,
         0.0,
@@ -492,7 +492,7 @@
         "clean",
         "weathered"
       ],
-      "lod_policy": "lod0",
+      "lod_policy": "production",
       "semantic_tags": {
         "location": [
           "street_facing"
@@ -505,13 +505,13 @@
     },
     {
       "module_id": "wall_steel_1u",
-      "job_id": "wall_steel_1u_lod0_run001",
+      "job_id": "wall_steel_1u_production_run001",
       "slot_key": "wall_1u",
       "token": "W",
       "grid_x": 8,
       "grid_y": 2,
       "floor": 0,
-      "glb_path": "assets/models/modules/wall_steel_1u_lod0_run001/model.glb",
+      "glb_path": "assets/models/modules/wall_steel_1u_production_run001/model.glb",
       "position": [
         8.0,
         0.0,
@@ -532,7 +532,7 @@
         "clean",
         "weathered"
       ],
-      "lod_policy": "lod0",
+      "lod_policy": "production",
       "semantic_tags": {
         "location": [
           "street_facing"
@@ -545,13 +545,13 @@
     },
     {
       "module_id": "wall_steel_1u",
-      "job_id": "wall_steel_1u_lod0_run001",
+      "job_id": "wall_steel_1u_production_run001",
       "slot_key": "wall_1u",
       "token": "W",
       "grid_x": 0,
       "grid_y": 3,
       "floor": 0,
-      "glb_path": "assets/models/modules/wall_steel_1u_lod0_run001/model.glb",
+      "glb_path": "assets/models/modules/wall_steel_1u_production_run001/model.glb",
       "position": [
         0.0,
         0.0,
@@ -572,7 +572,7 @@
         "clean",
         "weathered"
       ],
-      "lod_policy": "lod0",
+      "lod_policy": "production",
       "semantic_tags": {
         "location": [
           "street_facing"
@@ -585,13 +585,13 @@
     },
     {
       "module_id": "wall_steel_1u",
-      "job_id": "wall_steel_1u_lod0_run001",
+      "job_id": "wall_steel_1u_production_run001",
       "slot_key": "wall_1u",
       "token": "W",
       "grid_x": 8,
       "grid_y": 3,
       "floor": 0,
-      "glb_path": "assets/models/modules/wall_steel_1u_lod0_run001/model.glb",
+      "glb_path": "assets/models/modules/wall_steel_1u_production_run001/model.glb",
       "position": [
         8.0,
         0.0,
@@ -612,7 +612,7 @@
         "clean",
         "weathered"
       ],
-      "lod_policy": "lod0",
+      "lod_policy": "production",
       "semantic_tags": {
         "location": [
           "street_facing"
@@ -625,13 +625,13 @@
     },
     {
       "module_id": "wall_steel_1u",
-      "job_id": "wall_steel_1u_lod0_run001",
+      "job_id": "wall_steel_1u_production_run001",
       "slot_key": "wall_1u",
       "token": "W",
       "grid_x": 0,
       "grid_y": 4,
       "floor": 0,
-      "glb_path": "assets/models/modules/wall_steel_1u_lod0_run001/model.glb",
+      "glb_path": "assets/models/modules/wall_steel_1u_production_run001/model.glb",
       "position": [
         0.0,
         0.0,
@@ -652,7 +652,7 @@
         "clean",
         "weathered"
       ],
-      "lod_policy": "lod0",
+      "lod_policy": "production",
       "semantic_tags": {
         "location": [
           "street_facing"
@@ -665,13 +665,13 @@
     },
     {
       "module_id": "wall_steel_1u",
-      "job_id": "wall_steel_1u_lod0_run001",
+      "job_id": "wall_steel_1u_production_run001",
       "slot_key": "wall_1u",
       "token": "W",
       "grid_x": 8,
       "grid_y": 4,
       "floor": 0,
-      "glb_path": "assets/models/modules/wall_steel_1u_lod0_run001/model.glb",
+      "glb_path": "assets/models/modules/wall_steel_1u_production_run001/model.glb",
       "position": [
         8.0,
         0.0,
@@ -692,7 +692,7 @@
         "clean",
         "weathered"
       ],
-      "lod_policy": "lod0",
+      "lod_policy": "production",
       "semantic_tags": {
         "location": [
           "street_facing"
@@ -705,13 +705,13 @@
     },
     {
       "module_id": "corner_L",
-      "job_id": "corner_L_lod0_run001",
+      "job_id": "corner_L_industrial_west_production_run001",
       "slot_key": "corner_outer",
       "token": "C",
       "grid_x": 0,
       "grid_y": 5,
       "floor": 0,
-      "glb_path": "assets/models/modules/corner_L_lod0_run001/model.glb",
+      "glb_path": "assets/models/modules/corner_L_industrial_west_production_run001/model.glb",
       "position": [
         0.0,
         0.0,
@@ -732,7 +732,7 @@
         "clean",
         "weathered"
       ],
-      "lod_policy": "lod0",
+      "lod_policy": "production",
       "semantic_tags": {
         "location": [
           "street_facing",
@@ -743,13 +743,13 @@
     },
     {
       "module_id": "wall_steel_1u",
-      "job_id": "wall_steel_1u_lod0_run001",
+      "job_id": "wall_steel_1u_production_run001",
       "slot_key": "wall_1u",
       "token": "W",
       "grid_x": 1,
       "grid_y": 5,
       "floor": 0,
-      "glb_path": "assets/models/modules/wall_steel_1u_lod0_run001/model.glb",
+      "glb_path": "assets/models/modules/wall_steel_1u_production_run001/model.glb",
       "position": [
         1.0,
         0.0,
@@ -770,7 +770,7 @@
         "clean",
         "weathered"
       ],
-      "lod_policy": "lod0",
+      "lod_policy": "production",
       "semantic_tags": {
         "location": [
           "street_facing"
@@ -783,13 +783,13 @@
     },
     {
       "module_id": "wall_steel_1u",
-      "job_id": "wall_steel_1u_lod0_run001",
+      "job_id": "wall_steel_1u_production_run001",
       "slot_key": "wall_1u",
       "token": "W",
       "grid_x": 2,
       "grid_y": 5,
       "floor": 0,
-      "glb_path": "assets/models/modules/wall_steel_1u_lod0_run001/model.glb",
+      "glb_path": "assets/models/modules/wall_steel_1u_production_run001/model.glb",
       "position": [
         2.0,
         0.0,
@@ -810,7 +810,7 @@
         "clean",
         "weathered"
       ],
-      "lod_policy": "lod0",
+      "lod_policy": "production",
       "semantic_tags": {
         "location": [
           "street_facing"
@@ -823,13 +823,13 @@
     },
     {
       "module_id": "wall_steel_1u",
-      "job_id": "wall_steel_1u_lod0_run001",
+      "job_id": "wall_steel_1u_production_run001",
       "slot_key": "wall_1u",
       "token": "W",
       "grid_x": 3,
       "grid_y": 5,
       "floor": 0,
-      "glb_path": "assets/models/modules/wall_steel_1u_lod0_run001/model.glb",
+      "glb_path": "assets/models/modules/wall_steel_1u_production_run001/model.glb",
       "position": [
         3.0,
         0.0,
@@ -850,7 +850,7 @@
         "clean",
         "weathered"
       ],
-      "lod_policy": "lod0",
+      "lod_policy": "production",
       "semantic_tags": {
         "location": [
           "street_facing"
@@ -863,13 +863,13 @@
     },
     {
       "module_id": "wall_steel_1u",
-      "job_id": "wall_steel_1u_lod0_run001",
+      "job_id": "wall_steel_1u_production_run001",
       "slot_key": "wall_1u",
       "token": "W",
       "grid_x": 4,
       "grid_y": 5,
       "floor": 0,
-      "glb_path": "assets/models/modules/wall_steel_1u_lod0_run001/model.glb",
+      "glb_path": "assets/models/modules/wall_steel_1u_production_run001/model.glb",
       "position": [
         4.0,
         0.0,
@@ -890,7 +890,7 @@
         "clean",
         "weathered"
       ],
-      "lod_policy": "lod0",
+      "lod_policy": "production",
       "semantic_tags": {
         "location": [
           "street_facing"
@@ -903,13 +903,13 @@
     },
     {
       "module_id": "wall_steel_1u",
-      "job_id": "wall_steel_1u_lod0_run001",
+      "job_id": "wall_steel_1u_production_run001",
       "slot_key": "wall_1u",
       "token": "W",
       "grid_x": 5,
       "grid_y": 5,
       "floor": 0,
-      "glb_path": "assets/models/modules/wall_steel_1u_lod0_run001/model.glb",
+      "glb_path": "assets/models/modules/wall_steel_1u_production_run001/model.glb",
       "position": [
         5.0,
         0.0,
@@ -930,7 +930,7 @@
         "clean",
         "weathered"
       ],
-      "lod_policy": "lod0",
+      "lod_policy": "production",
       "semantic_tags": {
         "location": [
           "street_facing"
@@ -943,13 +943,13 @@
     },
     {
       "module_id": "wall_steel_1u",
-      "job_id": "wall_steel_1u_lod0_run001",
+      "job_id": "wall_steel_1u_production_run001",
       "slot_key": "wall_1u",
       "token": "W",
       "grid_x": 6,
       "grid_y": 5,
       "floor": 0,
-      "glb_path": "assets/models/modules/wall_steel_1u_lod0_run001/model.glb",
+      "glb_path": "assets/models/modules/wall_steel_1u_production_run001/model.glb",
       "position": [
         6.0,
         0.0,
@@ -970,7 +970,7 @@
         "clean",
         "weathered"
       ],
-      "lod_policy": "lod0",
+      "lod_policy": "production",
       "semantic_tags": {
         "location": [
           "street_facing"
@@ -983,13 +983,13 @@
     },
     {
       "module_id": "wall_steel_1u",
-      "job_id": "wall_steel_1u_lod0_run001",
+      "job_id": "wall_steel_1u_production_run001",
       "slot_key": "wall_1u",
       "token": "W",
       "grid_x": 7,
       "grid_y": 5,
       "floor": 0,
-      "glb_path": "assets/models/modules/wall_steel_1u_lod0_run001/model.glb",
+      "glb_path": "assets/models/modules/wall_steel_1u_production_run001/model.glb",
       "position": [
         7.0,
         0.0,
@@ -1010,7 +1010,7 @@
         "clean",
         "weathered"
       ],
-      "lod_policy": "lod0",
+      "lod_policy": "production",
       "semantic_tags": {
         "location": [
           "street_facing"
@@ -1023,13 +1023,13 @@
     },
     {
       "module_id": "corner_L",
-      "job_id": "corner_L_lod0_run001",
+      "job_id": "corner_L_industrial_west_production_run001",
       "slot_key": "corner_outer",
       "token": "C",
       "grid_x": 8,
       "grid_y": 5,
       "floor": 0,
-      "glb_path": "assets/models/modules/corner_L_lod0_run001/model.glb",
+      "glb_path": "assets/models/modules/corner_L_industrial_west_production_run001/model.glb",
       "position": [
         8.0,
         0.0,
@@ -1050,7 +1050,7 @@
         "clean",
         "weathered"
       ],
-      "lod_policy": "lod0",
+      "lod_policy": "production",
       "semantic_tags": {
         "location": [
           "street_facing",
@@ -1061,13 +1061,13 @@
     },
     {
       "module_id": "corner_L",
-      "job_id": "corner_L_lod0_run001",
+      "job_id": "corner_L_industrial_west_production_run001",
       "slot_key": "corner_outer",
       "token": "C",
       "grid_x": 0,
       "grid_y": 0,
       "floor": 1,
-      "glb_path": "assets/models/modules/corner_L_lod0_run001/model.glb",
+      "glb_path": "assets/models/modules/corner_L_industrial_west_production_run001/model.glb",
       "position": [
         0.0,
         3.0,
@@ -1088,7 +1088,7 @@
         "clean",
         "weathered"
       ],
-      "lod_policy": "lod0",
+      "lod_policy": "production",
       "semantic_tags": {
         "location": [
           "street_facing",
@@ -1099,13 +1099,13 @@
     },
     {
       "module_id": "wall_steel_1u",
-      "job_id": "wall_steel_1u_lod0_run001",
+      "job_id": "wall_steel_1u_production_run001",
       "slot_key": "wall_1u",
       "token": "W",
       "grid_x": 1,
       "grid_y": 0,
       "floor": 1,
-      "glb_path": "assets/models/modules/wall_steel_1u_lod0_run001/model.glb",
+      "glb_path": "assets/models/modules/wall_steel_1u_production_run001/model.glb",
       "position": [
         1.0,
         3.0,
@@ -1126,7 +1126,7 @@
         "clean",
         "weathered"
       ],
-      "lod_policy": "lod0",
+      "lod_policy": "production",
       "semantic_tags": {
         "location": [
           "street_facing"
@@ -1139,13 +1139,13 @@
     },
     {
       "module_id": "wall_steel_1u",
-      "job_id": "wall_steel_1u_lod0_run001",
+      "job_id": "wall_steel_1u_production_run001",
       "slot_key": "wall_1u",
       "token": "W",
       "grid_x": 2,
       "grid_y": 0,
       "floor": 1,
-      "glb_path": "assets/models/modules/wall_steel_1u_lod0_run001/model.glb",
+      "glb_path": "assets/models/modules/wall_steel_1u_production_run001/model.glb",
       "position": [
         2.0,
         3.0,
@@ -1166,7 +1166,7 @@
         "clean",
         "weathered"
       ],
-      "lod_policy": "lod0",
+      "lod_policy": "production",
       "semantic_tags": {
         "location": [
           "street_facing"
@@ -1179,13 +1179,13 @@
     },
     {
       "module_id": "wall_steel_1u",
-      "job_id": "wall_steel_1u_lod0_run001",
+      "job_id": "wall_steel_1u_production_run001",
       "slot_key": "wall_1u",
       "token": "W",
       "grid_x": 3,
       "grid_y": 0,
       "floor": 1,
-      "glb_path": "assets/models/modules/wall_steel_1u_lod0_run001/model.glb",
+      "glb_path": "assets/models/modules/wall_steel_1u_production_run001/model.glb",
       "position": [
         3.0,
         3.0,
@@ -1206,7 +1206,7 @@
         "clean",
         "weathered"
       ],
-      "lod_policy": "lod0",
+      "lod_policy": "production",
       "semantic_tags": {
         "location": [
           "street_facing"
@@ -1219,13 +1219,13 @@
     },
     {
       "module_id": "wall_steel_1u",
-      "job_id": "wall_steel_1u_lod0_run001",
+      "job_id": "wall_steel_1u_production_run001",
       "slot_key": "wall_1u",
       "token": "W",
       "grid_x": 4,
       "grid_y": 0,
       "floor": 1,
-      "glb_path": "assets/models/modules/wall_steel_1u_lod0_run001/model.glb",
+      "glb_path": "assets/models/modules/wall_steel_1u_production_run001/model.glb",
       "position": [
         4.0,
         3.0,
@@ -1246,7 +1246,7 @@
         "clean",
         "weathered"
       ],
-      "lod_policy": "lod0",
+      "lod_policy": "production",
       "semantic_tags": {
         "location": [
           "street_facing"
@@ -1259,13 +1259,13 @@
     },
     {
       "module_id": "wall_steel_1u",
-      "job_id": "wall_steel_1u_lod0_run001",
+      "job_id": "wall_steel_1u_production_run001",
       "slot_key": "wall_1u",
       "token": "W",
       "grid_x": 5,
       "grid_y": 0,
       "floor": 1,
-      "glb_path": "assets/models/modules/wall_steel_1u_lod0_run001/model.glb",
+      "glb_path": "assets/models/modules/wall_steel_1u_production_run001/model.glb",
       "position": [
         5.0,
         3.0,
@@ -1286,7 +1286,7 @@
         "clean",
         "weathered"
       ],
-      "lod_policy": "lod0",
+      "lod_policy": "production",
       "semantic_tags": {
         "location": [
           "street_facing"
@@ -1299,13 +1299,13 @@
     },
     {
       "module_id": "wall_steel_1u",
-      "job_id": "wall_steel_1u_lod0_run001",
+      "job_id": "wall_steel_1u_production_run001",
       "slot_key": "wall_1u",
       "token": "W",
       "grid_x": 6,
       "grid_y": 0,
       "floor": 1,
-      "glb_path": "assets/models/modules/wall_steel_1u_lod0_run001/model.glb",
+      "glb_path": "assets/models/modules/wall_steel_1u_production_run001/model.glb",
       "position": [
         6.0,
         3.0,
@@ -1326,7 +1326,7 @@
         "clean",
         "weathered"
       ],
-      "lod_policy": "lod0",
+      "lod_policy": "production",
       "semantic_tags": {
         "location": [
           "street_facing"
@@ -1339,13 +1339,13 @@
     },
     {
       "module_id": "wall_steel_1u",
-      "job_id": "wall_steel_1u_lod0_run001",
+      "job_id": "wall_steel_1u_production_run001",
       "slot_key": "wall_1u",
       "token": "W",
       "grid_x": 7,
       "grid_y": 0,
       "floor": 1,
-      "glb_path": "assets/models/modules/wall_steel_1u_lod0_run001/model.glb",
+      "glb_path": "assets/models/modules/wall_steel_1u_production_run001/model.glb",
       "position": [
         7.0,
         3.0,
@@ -1366,7 +1366,7 @@
         "clean",
         "weathered"
       ],
-      "lod_policy": "lod0",
+      "lod_policy": "production",
       "semantic_tags": {
         "location": [
           "street_facing"
@@ -1379,13 +1379,13 @@
     },
     {
       "module_id": "corner_L",
-      "job_id": "corner_L_lod0_run001",
+      "job_id": "corner_L_industrial_west_production_run001",
       "slot_key": "corner_outer",
       "token": "C",
       "grid_x": 8,
       "grid_y": 0,
       "floor": 1,
-      "glb_path": "assets/models/modules/corner_L_lod0_run001/model.glb",
+      "glb_path": "assets/models/modules/corner_L_industrial_west_production_run001/model.glb",
       "position": [
         8.0,
         3.0,
@@ -1406,7 +1406,7 @@
         "clean",
         "weathered"
       ],
-      "lod_policy": "lod0",
+      "lod_policy": "production",
       "semantic_tags": {
         "location": [
           "street_facing",
@@ -1417,13 +1417,13 @@
     },
     {
       "module_id": "wall_steel_1u",
-      "job_id": "wall_steel_1u_lod0_run001",
+      "job_id": "wall_steel_1u_production_run001",
       "slot_key": "wall_1u",
       "token": "W",
       "grid_x": 0,
       "grid_y": 1,
       "floor": 1,
-      "glb_path": "assets/models/modules/wall_steel_1u_lod0_run001/model.glb",
+      "glb_path": "assets/models/modules/wall_steel_1u_production_run001/model.glb",
       "position": [
         0.0,
         3.0,
@@ -1444,7 +1444,7 @@
         "clean",
         "weathered"
       ],
-      "lod_policy": "lod0",
+      "lod_policy": "production",
       "semantic_tags": {
         "location": [
           "street_facing"
@@ -1457,13 +1457,13 @@
     },
     {
       "module_id": "wall_steel_1u",
-      "job_id": "wall_steel_1u_lod0_run001",
+      "job_id": "wall_steel_1u_production_run001",
       "slot_key": "wall_1u",
       "token": "W",
       "grid_x": 8,
       "grid_y": 1,
       "floor": 1,
-      "glb_path": "assets/models/modules/wall_steel_1u_lod0_run001/model.glb",
+      "glb_path": "assets/models/modules/wall_steel_1u_production_run001/model.glb",
       "position": [
         8.0,
         3.0,
@@ -1484,7 +1484,7 @@
         "clean",
         "weathered"
       ],
-      "lod_policy": "lod0",
+      "lod_policy": "production",
       "semantic_tags": {
         "location": [
           "street_facing"
@@ -1497,13 +1497,13 @@
     },
     {
       "module_id": "wall_steel_1u",
-      "job_id": "wall_steel_1u_lod0_run001",
+      "job_id": "wall_steel_1u_production_run001",
       "slot_key": "wall_1u",
       "token": "W",
       "grid_x": 0,
       "grid_y": 2,
       "floor": 1,
-      "glb_path": "assets/models/modules/wall_steel_1u_lod0_run001/model.glb",
+      "glb_path": "assets/models/modules/wall_steel_1u_production_run001/model.glb",
       "position": [
         0.0,
         3.0,
@@ -1524,7 +1524,7 @@
         "clean",
         "weathered"
       ],
-      "lod_policy": "lod0",
+      "lod_policy": "production",
       "semantic_tags": {
         "location": [
           "street_facing"
@@ -1537,13 +1537,13 @@
     },
     {
       "module_id": "wall_steel_1u",
-      "job_id": "wall_steel_1u_lod0_run001",
+      "job_id": "wall_steel_1u_production_run001",
       "slot_key": "wall_1u",
       "token": "W",
       "grid_x": 8,
       "grid_y": 2,
       "floor": 1,
-      "glb_path": "assets/models/modules/wall_steel_1u_lod0_run001/model.glb",
+      "glb_path": "assets/models/modules/wall_steel_1u_production_run001/model.glb",
       "position": [
         8.0,
         3.0,
@@ -1564,7 +1564,7 @@
         "clean",
         "weathered"
       ],
-      "lod_policy": "lod0",
+      "lod_policy": "production",
       "semantic_tags": {
         "location": [
           "street_facing"
@@ -1577,13 +1577,13 @@
     },
     {
       "module_id": "wall_steel_1u",
-      "job_id": "wall_steel_1u_lod0_run001",
+      "job_id": "wall_steel_1u_production_run001",
       "slot_key": "wall_1u",
       "token": "W",
       "grid_x": 0,
       "grid_y": 3,
       "floor": 1,
-      "glb_path": "assets/models/modules/wall_steel_1u_lod0_run001/model.glb",
+      "glb_path": "assets/models/modules/wall_steel_1u_production_run001/model.glb",
       "position": [
         0.0,
         3.0,
@@ -1604,7 +1604,7 @@
         "clean",
         "weathered"
       ],
-      "lod_policy": "lod0",
+      "lod_policy": "production",
       "semantic_tags": {
         "location": [
           "street_facing"
@@ -1617,13 +1617,13 @@
     },
     {
       "module_id": "wall_steel_1u",
-      "job_id": "wall_steel_1u_lod0_run001",
+      "job_id": "wall_steel_1u_production_run001",
       "slot_key": "wall_1u",
       "token": "W",
       "grid_x": 8,
       "grid_y": 3,
       "floor": 1,
-      "glb_path": "assets/models/modules/wall_steel_1u_lod0_run001/model.glb",
+      "glb_path": "assets/models/modules/wall_steel_1u_production_run001/model.glb",
       "position": [
         8.0,
         3.0,
@@ -1644,7 +1644,7 @@
         "clean",
         "weathered"
       ],
-      "lod_policy": "lod0",
+      "lod_policy": "production",
       "semantic_tags": {
         "location": [
           "street_facing"
@@ -1657,13 +1657,13 @@
     },
     {
       "module_id": "wall_steel_1u",
-      "job_id": "wall_steel_1u_lod0_run001",
+      "job_id": "wall_steel_1u_production_run001",
       "slot_key": "wall_1u",
       "token": "W",
       "grid_x": 0,
       "grid_y": 4,
       "floor": 1,
-      "glb_path": "assets/models/modules/wall_steel_1u_lod0_run001/model.glb",
+      "glb_path": "assets/models/modules/wall_steel_1u_production_run001/model.glb",
       "position": [
         0.0,
         3.0,
@@ -1684,7 +1684,7 @@
         "clean",
         "weathered"
       ],
-      "lod_policy": "lod0",
+      "lod_policy": "production",
       "semantic_tags": {
         "location": [
           "street_facing"
@@ -1697,13 +1697,13 @@
     },
     {
       "module_id": "wall_steel_1u",
-      "job_id": "wall_steel_1u_lod0_run001",
+      "job_id": "wall_steel_1u_production_run001",
       "slot_key": "wall_1u",
       "token": "W",
       "grid_x": 8,
       "grid_y": 4,
       "floor": 1,
-      "glb_path": "assets/models/modules/wall_steel_1u_lod0_run001/model.glb",
+      "glb_path": "assets/models/modules/wall_steel_1u_production_run001/model.glb",
       "position": [
         8.0,
         3.0,
@@ -1724,7 +1724,7 @@
         "clean",
         "weathered"
       ],
-      "lod_policy": "lod0",
+      "lod_policy": "production",
       "semantic_tags": {
         "location": [
           "street_facing"
@@ -1737,13 +1737,13 @@
     },
     {
       "module_id": "corner_L",
-      "job_id": "corner_L_lod0_run001",
+      "job_id": "corner_L_industrial_west_production_run001",
       "slot_key": "corner_outer",
       "token": "C",
       "grid_x": 0,
       "grid_y": 5,
       "floor": 1,
-      "glb_path": "assets/models/modules/corner_L_lod0_run001/model.glb",
+      "glb_path": "assets/models/modules/corner_L_industrial_west_production_run001/model.glb",
       "position": [
         0.0,
         3.0,
@@ -1764,7 +1764,7 @@
         "clean",
         "weathered"
       ],
-      "lod_policy": "lod0",
+      "lod_policy": "production",
       "semantic_tags": {
         "location": [
           "street_facing",
@@ -1775,13 +1775,13 @@
     },
     {
       "module_id": "wall_steel_1u",
-      "job_id": "wall_steel_1u_lod0_run001",
+      "job_id": "wall_steel_1u_production_run001",
       "slot_key": "wall_1u",
       "token": "W",
       "grid_x": 1,
       "grid_y": 5,
       "floor": 1,
-      "glb_path": "assets/models/modules/wall_steel_1u_lod0_run001/model.glb",
+      "glb_path": "assets/models/modules/wall_steel_1u_production_run001/model.glb",
       "position": [
         1.0,
         3.0,
@@ -1802,7 +1802,7 @@
         "clean",
         "weathered"
       ],
-      "lod_policy": "lod0",
+      "lod_policy": "production",
       "semantic_tags": {
         "location": [
           "street_facing"
@@ -1815,13 +1815,13 @@
     },
     {
       "module_id": "wall_steel_1u",
-      "job_id": "wall_steel_1u_lod0_run001",
+      "job_id": "wall_steel_1u_production_run001",
       "slot_key": "wall_1u",
       "token": "W",
       "grid_x": 2,
       "grid_y": 5,
       "floor": 1,
-      "glb_path": "assets/models/modules/wall_steel_1u_lod0_run001/model.glb",
+      "glb_path": "assets/models/modules/wall_steel_1u_production_run001/model.glb",
       "position": [
         2.0,
         3.0,
@@ -1842,7 +1842,7 @@
         "clean",
         "weathered"
       ],
-      "lod_policy": "lod0",
+      "lod_policy": "production",
       "semantic_tags": {
         "location": [
           "street_facing"
@@ -1855,13 +1855,13 @@
     },
     {
       "module_id": "wall_steel_1u",
-      "job_id": "wall_steel_1u_lod0_run001",
+      "job_id": "wall_steel_1u_production_run001",
       "slot_key": "wall_1u",
       "token": "W",
       "grid_x": 3,
       "grid_y": 5,
       "floor": 1,
-      "glb_path": "assets/models/modules/wall_steel_1u_lod0_run001/model.glb",
+      "glb_path": "assets/models/modules/wall_steel_1u_production_run001/model.glb",
       "position": [
         3.0,
         3.0,
@@ -1882,7 +1882,7 @@
         "clean",
         "weathered"
       ],
-      "lod_policy": "lod0",
+      "lod_policy": "production",
       "semantic_tags": {
         "location": [
           "street_facing"
@@ -1895,13 +1895,13 @@
     },
     {
       "module_id": "wall_steel_1u",
-      "job_id": "wall_steel_1u_lod0_run001",
+      "job_id": "wall_steel_1u_production_run001",
       "slot_key": "wall_1u",
       "token": "W",
       "grid_x": 4,
       "grid_y": 5,
       "floor": 1,
-      "glb_path": "assets/models/modules/wall_steel_1u_lod0_run001/model.glb",
+      "glb_path": "assets/models/modules/wall_steel_1u_production_run001/model.glb",
       "position": [
         4.0,
         3.0,
@@ -1922,7 +1922,7 @@
         "clean",
         "weathered"
       ],
-      "lod_policy": "lod0",
+      "lod_policy": "production",
       "semantic_tags": {
         "location": [
           "street_facing"
@@ -1935,13 +1935,13 @@
     },
     {
       "module_id": "wall_steel_1u",
-      "job_id": "wall_steel_1u_lod0_run001",
+      "job_id": "wall_steel_1u_production_run001",
       "slot_key": "wall_1u",
       "token": "W",
       "grid_x": 5,
       "grid_y": 5,
       "floor": 1,
-      "glb_path": "assets/models/modules/wall_steel_1u_lod0_run001/model.glb",
+      "glb_path": "assets/models/modules/wall_steel_1u_production_run001/model.glb",
       "position": [
         5.0,
         3.0,
@@ -1962,7 +1962,7 @@
         "clean",
         "weathered"
       ],
-      "lod_policy": "lod0",
+      "lod_policy": "production",
       "semantic_tags": {
         "location": [
           "street_facing"
@@ -1975,13 +1975,13 @@
     },
     {
       "module_id": "wall_steel_1u",
-      "job_id": "wall_steel_1u_lod0_run001",
+      "job_id": "wall_steel_1u_production_run001",
       "slot_key": "wall_1u",
       "token": "W",
       "grid_x": 6,
       "grid_y": 5,
       "floor": 1,
-      "glb_path": "assets/models/modules/wall_steel_1u_lod0_run001/model.glb",
+      "glb_path": "assets/models/modules/wall_steel_1u_production_run001/model.glb",
       "position": [
         6.0,
         3.0,
@@ -2002,7 +2002,7 @@
         "clean",
         "weathered"
       ],
-      "lod_policy": "lod0",
+      "lod_policy": "production",
       "semantic_tags": {
         "location": [
           "street_facing"
@@ -2015,13 +2015,13 @@
     },
     {
       "module_id": "wall_steel_1u",
-      "job_id": "wall_steel_1u_lod0_run001",
+      "job_id": "wall_steel_1u_production_run001",
       "slot_key": "wall_1u",
       "token": "W",
       "grid_x": 7,
       "grid_y": 5,
       "floor": 1,
-      "glb_path": "assets/models/modules/wall_steel_1u_lod0_run001/model.glb",
+      "glb_path": "assets/models/modules/wall_steel_1u_production_run001/model.glb",
       "position": [
         7.0,
         3.0,
@@ -2042,7 +2042,7 @@
         "clean",
         "weathered"
       ],
-      "lod_policy": "lod0",
+      "lod_policy": "production",
       "semantic_tags": {
         "location": [
           "street_facing"
@@ -2055,13 +2055,13 @@
     },
     {
       "module_id": "corner_L",
-      "job_id": "corner_L_lod0_run001",
+      "job_id": "corner_L_industrial_west_production_run001",
       "slot_key": "corner_outer",
       "token": "C",
       "grid_x": 8,
       "grid_y": 5,
       "floor": 1,
-      "glb_path": "assets/models/modules/corner_L_lod0_run001/model.glb",
+      "glb_path": "assets/models/modules/corner_L_industrial_west_production_run001/model.glb",
       "position": [
         8.0,
         3.0,
@@ -2082,7 +2082,7 @@
         "clean",
         "weathered"
       ],
-      "lod_policy": "lod0",
+      "lod_policy": "production",
       "semantic_tags": {
         "location": [
           "street_facing",
@@ -2110,6 +2110,7 @@
         0.0,
         0.0
       ],
+      "mesh_tier_fallback": "lod0",
       "node_id": "roof_metal_low_0_0_f2",
       "material_profile": "roof_metal_01",
       "placement_tags": [
@@ -2150,6 +2151,7 @@
         0.0,
         0.0
       ],
+      "mesh_tier_fallback": "lod0",
       "node_id": "roof_metal_low_1_0_f2",
       "material_profile": "roof_metal_01",
       "placement_tags": [
@@ -2190,6 +2192,7 @@
         0.0,
         0.0
       ],
+      "mesh_tier_fallback": "lod0",
       "node_id": "roof_metal_low_2_0_f2",
       "material_profile": "roof_metal_01",
       "placement_tags": [
@@ -2230,6 +2233,7 @@
         0.0,
         0.0
       ],
+      "mesh_tier_fallback": "lod0",
       "node_id": "roof_metal_low_3_0_f2",
       "material_profile": "roof_metal_01",
       "placement_tags": [
@@ -2270,6 +2274,7 @@
         0.0,
         0.0
       ],
+      "mesh_tier_fallback": "lod0",
       "node_id": "roof_metal_low_4_0_f2",
       "material_profile": "roof_metal_01",
       "placement_tags": [
@@ -2310,6 +2315,7 @@
         0.0,
         0.0
       ],
+      "mesh_tier_fallback": "lod0",
       "node_id": "roof_metal_low_5_0_f2",
       "material_profile": "roof_metal_01",
       "placement_tags": [
@@ -2350,6 +2356,7 @@
         0.0,
         0.0
       ],
+      "mesh_tier_fallback": "lod0",
       "node_id": "roof_metal_low_6_0_f2",
       "material_profile": "roof_metal_01",
       "placement_tags": [
@@ -2390,6 +2397,7 @@
         0.0,
         0.0
       ],
+      "mesh_tier_fallback": "lod0",
       "node_id": "roof_metal_low_7_0_f2",
       "material_profile": "roof_metal_01",
       "placement_tags": [
@@ -2430,6 +2438,7 @@
         0.0,
         0.0
       ],
+      "mesh_tier_fallback": "lod0",
       "node_id": "roof_metal_low_8_0_f2",
       "material_profile": "roof_metal_01",
       "placement_tags": [
@@ -2470,6 +2479,7 @@
         0.0,
         0.0
       ],
+      "mesh_tier_fallback": "lod0",
       "node_id": "roof_metal_low_0_1_f2",
       "material_profile": "roof_metal_01",
       "placement_tags": [
@@ -2510,6 +2520,7 @@
         0.0,
         0.0
       ],
+      "mesh_tier_fallback": "lod0",
       "node_id": "roof_metal_low_8_1_f2",
       "material_profile": "roof_metal_01",
       "placement_tags": [
@@ -2550,6 +2561,7 @@
         0.0,
         0.0
       ],
+      "mesh_tier_fallback": "lod0",
       "node_id": "roof_metal_low_0_2_f2",
       "material_profile": "roof_metal_01",
       "placement_tags": [
@@ -2590,6 +2602,7 @@
         0.0,
         0.0
       ],
+      "mesh_tier_fallback": "lod0",
       "node_id": "roof_metal_low_8_2_f2",
       "material_profile": "roof_metal_01",
       "placement_tags": [
@@ -2630,6 +2643,7 @@
         0.0,
         0.0
       ],
+      "mesh_tier_fallback": "lod0",
       "node_id": "roof_metal_low_0_3_f2",
       "material_profile": "roof_metal_01",
       "placement_tags": [
@@ -2670,6 +2684,7 @@
         0.0,
         0.0
       ],
+      "mesh_tier_fallback": "lod0",
       "node_id": "roof_metal_low_8_3_f2",
       "material_profile": "roof_metal_01",
       "placement_tags": [
@@ -2710,6 +2725,7 @@
         0.0,
         0.0
       ],
+      "mesh_tier_fallback": "lod0",
       "node_id": "roof_metal_low_0_4_f2",
       "material_profile": "roof_metal_01",
       "placement_tags": [
@@ -2750,6 +2766,7 @@
         0.0,
         0.0
       ],
+      "mesh_tier_fallback": "lod0",
       "node_id": "roof_metal_low_8_4_f2",
       "material_profile": "roof_metal_01",
       "placement_tags": [
@@ -2790,6 +2807,7 @@
         0.0,
         0.0
       ],
+      "mesh_tier_fallback": "lod0",
       "node_id": "roof_metal_low_0_5_f2",
       "material_profile": "roof_metal_01",
       "placement_tags": [
@@ -2830,6 +2848,7 @@
         0.0,
         0.0
       ],
+      "mesh_tier_fallback": "lod0",
       "node_id": "roof_metal_low_1_5_f2",
       "material_profile": "roof_metal_01",
       "placement_tags": [
@@ -2870,6 +2889,7 @@
         0.0,
         0.0
       ],
+      "mesh_tier_fallback": "lod0",
       "node_id": "roof_metal_low_2_5_f2",
       "material_profile": "roof_metal_01",
       "placement_tags": [
@@ -2910,6 +2930,7 @@
         0.0,
         0.0
       ],
+      "mesh_tier_fallback": "lod0",
       "node_id": "roof_metal_low_3_5_f2",
       "material_profile": "roof_metal_01",
       "placement_tags": [
@@ -2950,6 +2971,7 @@
         0.0,
         0.0
       ],
+      "mesh_tier_fallback": "lod0",
       "node_id": "roof_metal_low_4_5_f2",
       "material_profile": "roof_metal_01",
       "placement_tags": [
@@ -2990,6 +3012,7 @@
         0.0,
         0.0
       ],
+      "mesh_tier_fallback": "lod0",
       "node_id": "roof_metal_low_5_5_f2",
       "material_profile": "roof_metal_01",
       "placement_tags": [
@@ -3030,6 +3053,7 @@
         0.0,
         0.0
       ],
+      "mesh_tier_fallback": "lod0",
       "node_id": "roof_metal_low_6_5_f2",
       "material_profile": "roof_metal_01",
       "placement_tags": [
@@ -3070,6 +3094,7 @@
         0.0,
         0.0
       ],
+      "mesh_tier_fallback": "lod0",
       "node_id": "roof_metal_low_7_5_f2",
       "material_profile": "roof_metal_01",
       "placement_tags": [
@@ -3110,6 +3135,7 @@
         0.0,
         0.0
       ],
+      "mesh_tier_fallback": "lod0",
       "node_id": "roof_metal_low_8_5_f2",
       "material_profile": "roof_metal_01",
       "placement_tags": [
@@ -3132,6 +3158,7 @@
       "weathering": "medium"
     }
   ],
+  "mesh_tier_fallback_count": 26,
   "archetype_id": "IndustrialWarehouse",
   "district_style": "industrial_west",
   "grammar_rule_chain": {

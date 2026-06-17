@@ -32,6 +32,11 @@ def root():
 
 # ---- P1-4: pipeline bar reflects validity, not just presence ----------------
 
+def _pill_text(bar, key: str) -> str:
+    _pill, lbl = bar._pills[key]
+    return lbl.cget("text")
+
+
 def test_assembly_step_three_states(root):
     from art_pipeline_suite.pipeline_status_bar import PipelineStatusBar
     from art_pipeline_suite.state import SuiteState
@@ -41,27 +46,27 @@ def test_assembly_step_three_states(root):
 
     # No snapshot → pending.
     bar.refresh()
-    assert bar._vars["assembly"].get() == "○ Assembly pending"
+    assert _pill_text(bar, "assembly") == "○ Assembly pending"
 
     # Snapshot present but P0 not run → saved, NOT a checkmark.
     state.assembly_snapshot_path = "assets/staging/assemblies/x.json"
     state.assembly_p0_passed = None
     bar.refresh()
-    txt = bar._vars["assembly"].get()
+    txt = _pill_text(bar, "assembly")
     assert "✓" not in txt, f"unvalidated snapshot must not show ✓: {txt!r}"
-    assert "saved" in txt and "P0 not run" in txt
+    assert "saved" in txt and "QC not run" in txt
 
     # P0 failed → explicit fail, never a checkmark.
     state.assembly_p0_passed = False
     bar.refresh()
-    txt = bar._vars["assembly"].get()
+    txt = _pill_text(bar, "assembly")
     assert "✓" not in txt, f"P0-failing snapshot must not show ✓: {txt!r}"
-    assert "fail" in txt.lower()
+    assert "FAIL" in txt
 
     # P0 passed → valid checkmark.
     state.assembly_p0_passed = True
     bar.refresh()
-    assert bar._vars["assembly"].get() == "✓ Assembly valid"
+    assert _pill_text(bar, "assembly") == "✓ Assembly valid"
 
 
 def test_suite_state_has_p0_field():

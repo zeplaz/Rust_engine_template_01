@@ -52,10 +52,33 @@
     "relative_path": "debug_runs/grammar_diversity_witness.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_pg_quality_001_grammar_diversity_witness",
-    "written_at_epoch_secs": 1781573867
+    "written_at_epoch_secs": 1781709767
   },
   "archetype_id": "IndustrialWarehouse",
   "district_style": "industrial_west",
+  "dna_families": [
+    {
+      "green": true,
+      "massing_pick_count": 4,
+      "preset_id": "fuel_depot_tank_farm_v0"
+    },
+    {
+      "green": true,
+      "massing_pick_count": 4,
+      "preset_id": "logistics_rail_warehouse_v0"
+    },
+    {
+      "green": true,
+      "massing_pick_count": 4,
+      "preset_id": "manufacturing_fabrication_hall_v0"
+    },
+    {
+      "green": true,
+      "massing_pick_count": 4,
+      "preset_id": "power_substation_yard_v0"
+    }
+  ],
+  "dna_family_depth_green": true,
   "error": null,
   "gate_id": "PG-QUALITY-001",
   "green": true,
@@ -80,7 +103,9 @@
   },
   "program_id": "PLAN-BUILDING-GRAMMAR-001",
   "seed_sweep": 64,
+  "slice_id": "CDR-B-CONSTRUCTION-GRAMMAR-DEPTH-001",
   "thresholds": {
+    "dna_family_massing_pick_min": 3,
     "footprint_silhouette_count_min": 2,
     "massing_strategy_count_min": 3,
     "roof_slot_count_min": 2

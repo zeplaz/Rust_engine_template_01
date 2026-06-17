@@ -40,7 +40,7 @@ from .grammar_build_set_panel import GrammarBuildSetPanel
 from .material_browser import MaterialBrowserPanel
 from .assembly_preview_panel import AssemblyPreviewPanel
 from .slot_preview_panel import SlotPreviewPanel
-from .state import SuiteState
+from .state import ArtDomain, SuiteState
 
 
 def _is_dark_color(hex_color: str) -> bool:
@@ -77,6 +77,15 @@ class AssemblyPanel(ttk.Frame):
         self._tag_category_frames: dict[str, ttk.LabelFrame] = {}
         self._material_profiles: list[str] = []
         self._build()
+
+    def set_domain(self, lane: str) -> None:
+        if not hasattr(self, "_lane_banner"):
+            self._lane_banner = ttk.Label(self, text="", font=("Segoe UI", 9), foreground="#555")
+            self._lane_banner.pack(anchor=tk.W, before=self.metadata_flow, pady=(0, 4))
+        if lane == ArtDomain.LANDSCAPE.value:
+            self._lane_banner.configure(text="Landscape lane — grammar preset authority (E2 browse/author).")
+        else:
+            self._lane_banner.configure(text="Buildings lane — assembly_snapshot authority.")
 
     def _build(self) -> None:
         intro = ttk.Label(

@@ -6,7 +6,7 @@
 | **Program** | ⟨MCP-PRODUCTIVITY-P2-001⟩ · **secondary** to G-PLAY 🧩 (not art spine) |
 | **Owner** | `@planner-mcp` → `@coder-mcp` |
 | **Parent intel** | ⟨REVIEW-ORDER-MAP-VFX-UI-DEBUG⟩ · VR-10 · AGENT-LANG queue sync 2026-06-02 |
-| **Status** | **SIGNED** (@planner-mcp 2026-06-13) |
+| **Status** | **SIGNED** (@planner-mcp 2026-06-13 · re-verified 2026-06-17) |
 | **Unblocks** | MCP-P2-OPS-BRIEF-002 · MCP-P2-VALID-CONSTRUCTION-001 · MCP-P2-QUEUE-PHASE4-001 |
 
 ---
@@ -174,11 +174,24 @@ Register in `$ref:tools/mcp/MICRO_TOOLS_REGISTRY_v1.md` after ship.
 
 ## Sign-off
 
+### Sign review (@planner-mcp 2026-06-17)
+
+| Criterion | Verdict | Evidence |
+|:---|:---:|:---|
+| Tier 1e separate from art bpy | **PASS** | §Lattice Review◈ · §SHIPPED vs PLANNED — Tier 1e AUTHORIZED; building bpy **DEFER** (L133–134) |
+| CLI/MCP parity rule | **PASS** | Phase 1 #5 · Phase 2 #4 — same `rust_engine_mcp.cli` + MCP server registration |
+| @coder witness export parallel | **PASS** | Phase 2 — `@coder` placement JSON **parallel, not blocking Phase 1** (L106–108) |
+| No Postgres until OPS S3 | **PASS** | L132 — `Postgres-backed ops fn_*` **DEFER**; JSON compose only |
+
+**Verdict:** **PASS** — `BLANG:Q✓` idempotent (plan + `mcp_active_queue` already `done`). Unblocks **`MCP-P2-QUEUE-PHASE4-001`** → **SHIPPED** (`debug_runs/agent_ops/mcp_phase4_queue_live.json`).
+
 | Role | Date | Verdict |
 |:---|:---|:---|
 | **@planner-mcp** | 2026-06-13 | **SIGNED** — Tier 1e scope, phase boundaries, and acceptance P1–P5 are explicit. Unblocks `MCP-P2-QUEUE-PHASE4-001`, `MCP-P2-VALID-CONSTRUCTION-001`, `MCP-P2-OPS-BRIEF-002`. |
+| **@planner-mcp** | 2026-06-17 | **RE-VERIFIED PASS** — four gate criteria above; ΔWF→@coder-mcp Phase 1 **closed** (witness on disk). |
 
 | Version | Date | Notes |
 |:---|:---|:---|
 | v1.0.0 | 2026-06-02 | Draft — READY for planner review |
 | v1.1.0 | 2026-06-13 | **SIGNED** — @coder-mcp may implement Phases 1–3 |
+| v1.2.0 | 2026-06-17 | Sign-review PASS table · queue reconcile · ⟨COMMIT:SPEC⟩ |

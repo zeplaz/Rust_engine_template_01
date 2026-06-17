@@ -1,22 +1,22 @@
 {
   "gate": "MCP-LANDSCAPE-SIGN-ATLAS-001",
-  "green": true,
+  "green": false,
   "plan_ref": "src/dev/plan_landscape_grammar_mcp_sign_delegate_v1.md",
   "charter_ref": "src/dev/design_landscape_lg5_atlas_v1.md",
   "lanes": {
     "sign": {
       "gate": "MCP-LANDSCAPE-GRAMMAR-SIGN-001",
-      "green": true,
+      "green": false,
       "witness": "debug_runs/mcp_landscape_grammar_sign_live.json",
       "topology_preset_count": 30,
       "ship_preset_count": 10
     },
     "preset_batch": {
       "gate": "MCP-LG-VALID-PRESET-001",
-      "green": true,
+      "green": false,
       "witness": "debug_runs/mcp_landscape_grammar_preset_batch_live.json",
       "passed": 10,
-      "total": 10
+      "total": 11
     },
     "atlas": {
       "gate": "VEG-F02-MCP-ATLAS-001",
@@ -35,7 +35,7 @@
   ],
   "_agent_meta": {
     "schema": "mcp_landscape_sign_atlas_live_v1",
-    "written_at_epoch_secs": 1781654938,
+    "written_at_epoch_secs": 1781670221,
     "profile": "MCP_LANDSCAPE_SIGN_ATLAS",
     "source_system": "landscape_sign_atlas",
     "relative_path": "debug_runs/mcp_landscape_sign_atlas_live.json"

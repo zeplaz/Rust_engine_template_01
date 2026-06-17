@@ -409,8 +409,41 @@ def shutdown_preview_servers() -> int:
     return stopped
 
 
+def _png_bytes_are_black(png: bytes, *, span_threshold: int = 16) -> bool:
+    """True if a PNG byte blob is missing or visually (near-)uniformly black.
+
+    The trimesh/pyglet offscreen path frequently returns an all-black image when
+    the camera is not framing the geometry or the GL context degraded. Callers
+    use this to fall back to a labeled placeholder instead of showing black.
+    """
+    if not png or len(png) < 64:
+        return True
+    try:
+        from PIL import Image
+    except ImportError:
+        return False
+    import io as _io
+
+    try:
+        with Image.open(_io.BytesIO(png)) as img:
+            gray = img.convert("L")
+            lo, hi = gray.getextrema()
+    except Exception:
+        return True
+    # Uniform dark frame (e.g. (0, 0)) or a frame with no usable contrast.
+    if hi - lo < span_threshold and hi < 24:
+        return True
+    return False
+
+
 def try_render_glb_thumbnail_bytes(glb_path: Path, *, resolution: tuple[int, int] = (256, 256)) -> bytes | None:
-    """Single-module orthographic PNG bytes via trimesh (optional)."""
+    """Single-module thumbnail PNG bytes via trimesh (optional dependency).
+
+    Returns ``None`` when trimesh is unavailable, the GLB cannot be loaded, the
+    scene has no geometry, OR the render came back blank/near-black — in every
+    one of those cases the caller is expected to degrade to a labeled placeholder
+    rather than display a black tile (APS-PREVIEW-001 / B2).
+    """
     try:
         import trimesh
     except ImportError:
@@ -423,12 +456,39 @@ def try_render_glb_thumbnail_bytes(glb_path: Path, *, resolution: tuple[int, int
         scene = trimesh.Scene(loaded)
     else:
         scene = loaded
-    if not scene.geometry:
+    if not getattr(scene, "geometry", None):
         return None
+
+    # Frame the geometry explicitly. trimesh's default camera often points away
+    # from a freshly loaded GLB (Y-up vs Z-up, off-center origin), which is the
+    # most common cause of a fully black thumbnail. Setting a look-at transform
+    # from the scene bounds makes the single-module preview reliable.
     try:
-        return scene.save_image(resolution=resolution)
+        bounds = scene.bounds
+        if bounds is not None:
+            center = bounds.mean(axis=0)
+            extents = bounds[1] - bounds[0]
+            span = float(max(extents)) or 1.0
+            distance = span * 2.2
+            scene.camera_transform = scene.camera.look_at(
+                points=bounds,
+                center=center,
+                distance=distance,
+            )
     except Exception:
+        # Framing is best-effort; fall through to the default camera.
+        pass
+
+    png: bytes | None = None
+    try:
+        png = scene.save_image(resolution=resolution)
+    except Exception:
+        png = None
+    if png is None:
         return None
+    if _png_bytes_are_black(png):
+        return None
+    return png
 
 
 def try_render_thumbnail_png(placements: list[PreviewPlacement], out_png: Path) -> bool:

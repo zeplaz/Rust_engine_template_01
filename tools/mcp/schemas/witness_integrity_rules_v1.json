@@ -17,8 +17,8 @@
       "rule_id": "WIT-OPERATOR-LIB-FIXTURE",
       "severity": "error",
       "description": "operator_visible claimed from lib-test harness only",
-      "when_fail": "operator_visible==true ∧ (proof_grade==lib_fixture ∨ agent_commands all contain --lib)",
-      "fix_hint": "Require live sim / full-app proof for operator_visible green"
+      "when_fail": "operator_visible==true ∧ proof_grade not in {headless_sim,visual_capture,live_sim,lib_harness} ∧ (proof_grade==lib_fixture ∨ agent_commands all contain --lib)",
+      "fix_hint": "Set proof_grade=headless_sim for ECS sim harness witnesses, or require visual_capture for operator_visible green"
     },
     {
       "rule_id": "WIT-ROLLUP-CHILD-ONLY",

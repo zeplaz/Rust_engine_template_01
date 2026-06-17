@@ -9,7 +9,8 @@
     "vegetation_status": "src/dev/vegetation_system_honest_status_v1.md",
     "rule": "Pick seq 1â†’32 top-down Â· skip blocked Â· witness exit_predicate required",
     "regression": "cargo test -p proc_A_dine01 --lib landscape_grammar fire_ecology construction stage5 sim_effects",
-    "last_sync": "2026-06-11",
+    "last_sync": "2026-06-02",
+    "bulk_reopen": "PLAN-WITNESS-REOPEN-001 operator approved 2026-06-02",
     "bundle_witness": "debug_runs/phase6_coder_queue_bundle_live.json"
   },
   "lanes": {
@@ -60,6 +61,11 @@
       "wave": 1,
       "id": "VEG-HARD-PREVIEW-PIXEL-001",
       "status": "done",
+      "reopen_reason": "WIT-HON FAIL landscape_grammar_lg4_preview_live.json — WIT-OPERATOR-LIB-FIXTURE / tint-zero",
+      "reopen_date": "2026-06-02",
+      "completed": "2026-06-17",
+      "close_note": "Superseded by CDR-A-LG4-PIXEL-REOPEN-001 — lg4 witness green, tint=17, pixel_heterogeneity_wired",
+      "superseded_by": "CDR-A-LG4-PIXEL-REOPEN-001",
       "priority": "P0",
       "owner": "coder_a",
       "depends_on": [

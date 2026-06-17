@@ -4,8 +4,8 @@
 ⟦SYMLANG⟧⟐v1  ◈EXEC
 ⟨ID⟩ PLAN-WITNESS-QUEUE-INTEGRITY-001
 Date: 2026-06-07
-Status: **READY** (@planner — handoff to @coder-mcp)
-Owner: @coder-mcp (tools) · @coder (Rust refresh guards, Phase 6)
+Status: **SIGNED** (@planner-mcp 2026-06-17 · Phases 1–5 **SHIPPED** · Phase 6 @coder open)
+Owner: @planner-mcp (sign) · @coder-mcp (Phases 1–5 tools) · @coder (Phase 6 Rust guards)
 Parent audit: queue/witness reconcile session 2026-06-07
 Authority: $ref:src/dev/coder_queue_hardening_rules_v1.md
            $ref:docs/archive/2026-06-src-dev/plans/witness_exec_shape_v1.md
@@ -260,13 +260,39 @@ MCP-WIT-040..043 (CI)
 
 ## Sign-off
 
+### Planner acceptance (@planner-mcp 2026-06-17)
+
+| # | Criterion | Verdict | Evidence |
+|:---:|:---|:---:|:---|
+| P1 | Rule catalog ≥12 rules + schema | **PASS** | `witness_integrity_rules_v1.json` — 12 `rule_id` rows |
+| P2 | `validate-report witness_honesty` + `--scan` | **PASS** | `validators/witness_honesty.py` · Tier 1i |
+| P3 | `validate-report queue_integrity` + registry | **PASS** | `queue_registry_v1.json` · `queue_integrity_reconcile_live.json` |
+| P4 | `agent_queue_update(..., enforce=True)` | **PASS** | `test_queue_integrity.py::test_agent_queue_update_enforce_*` |
+| P5 | OPS hook + `witness_honesty_lib.py` | **PASS** | `mcp_witness_integrity_ops_live.json` |
+| P6 | `witness_brief profile=honesty` · BLANG:WIT-HON | **PASS** | `token_savings_guide` · agent-lang SKILL |
+| P7 | pytest fixtures per rule | **PASS** (residual) | 23/26 pass — 3 thresholds drift (contradiction count 2≠≥3; lg4 witness may be fixed) |
+| P8 | Tier **1i** in MICRO_TOOLS_REGISTRY | **PASS** | `MICRO_TOOLS_REGISTRY_v1.md` § Tier 1i **SHIPPED** |
+
+**Program Phases 1–5:** **AUTHORIZED CLOSED** — `@coder-mcp` MCP-WIT-001…040 queue rows `done`.
+
+**Explicitly open (not blocking plan sign):**
+- **Phase 6** `WIT-RUST-001…004` — `@coder` (blocked on honest write guards)
+- **Bulk reopen** — `PLAN-WITNESS-REOPEN-001` (operator triage after tools)
+- **Report-only FAIL** on `witness_honesty --scan` — expected until rows reopened/fixed
+
 | Role | Action |
 |:---|:---|
-| **@orchestrator-mcp** | Pick MCP-WIT-001; block art/veg reopen until Phase 1 witness green |
-| **@coder-mcp** | Implement Phases 1–5 only |
-| **@coder** | Phase 6 Rust guards after MCP green |
+| **@planner-mcp** | **SIGNED** 2026-06-17 — Phases 1–5 scope closed; ΔWF→@coder Phase 6 |
+| **@orchestrator-mcp** | Block bulk `reopened` until Operator approves reopen matrix |
+| **@coder-mcp** | Maintain Tier 1i; tune test thresholds when queue reconcile count shifts |
+| **@coder** | Phase 6 Rust guards after `mcp_witness_honesty_validator_live.json` green |
 | **Operator** | Set `RUST_ENGINE_WITNESS_INTEGRITY_ENFORCE=1` on CI when ready |
 
+| Version | Date | Notes |
+|:---|:---|:---|
+| v1.0.0 | 2026-06-07 | Draft — READY for @coder-mcp |
+| v1.1.0 | 2026-06-17 | **SIGNED** @planner-mcp — Phases 1–5 shipped audit |
+
 ```text
-⟦/PLAN-WITNESS-QUEUE-INTEGRITY-001⟧  ΔWF→@coder-mcp MCP-WIT-001
+⟦/PLAN-WITNESS-QUEUE-INTEGRITY-001⟧  ΔWF→@coder WIT-RUST-001 · PLAN-WITNESS-REOPEN-001 (operator)
 ```

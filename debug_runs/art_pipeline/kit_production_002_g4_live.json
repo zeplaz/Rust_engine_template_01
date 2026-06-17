@@ -1,0 +1,92 @@
+{
+  "gate": "MCP-P2-KIT002-G4",
+  "green": false,
+  "verdict": "FAIL",
+  "batch_id": "kit_production_002",
+  "paired_tile_batch": "tools/mcp/schemas/examples/tile_batch_warehouse_industrial_west_production_v1.json",
+  "development_tier": "production",
+  "manifest": "tools/mcp/schemas/examples/batch_kit_production_002.manifest.json",
+  "g3_witness": "debug_runs/art_pipeline/kit_production_002_g3_live.json",
+  "variant_matrix": "debug_runs/art_pipeline/variant_matrix_warehouse_v1.yaml",
+  "keyframe_stills_folder": "assets/staging/tiles/keyframe_stills/warehouse_industrial",
+  "keyframe_stills_resolved": false,
+  "minimum_review": {
+    "clean_day": {
+      "ok": false,
+      "exists": false,
+      "path": "assets/staging/tiles/keyframe_stills/warehouse_industrial/clean_day.png"
+    },
+    "clean_night_on": {
+      "ok": false,
+      "exists": false,
+      "path": "assets/staging/tiles/keyframe_stills/warehouse_industrial/clean_night_on.png"
+    },
+    "damaged_night_on": {
+      "ok": false,
+      "exists": false,
+      "path": "assets/staging/tiles/keyframe_stills/warehouse_industrial/damaged_night_on.png"
+    }
+  },
+  "gates": {
+    "g4_0_matrix_and_spine": "pass",
+    "g4_1_source_tier_production": "pass",
+    "g4_2_reference_tags_present": "pass",
+    "g4_3_keyframe_minimum_stills_review": "fail",
+    "g4_4_full_matrix_keys_packed": "fail",
+    "g4_5_night_damaged_iso_readable_128px": "fail",
+    "g4_6_fire_frames_distinct": "fail",
+    "g4_7_no_smoke_greybox_modules": "pass",
+    "g4_8_proceed_ship": "fail"
+  },
+  "variant_count": 16,
+  "stills_ok_count": 0,
+  "art_quality": "rejected_headless_procedural",
+  "phase_c": {
+    "witness": "debug_runs/art_pipeline/tile_fix_09_phase_c_warehouse_g4_live.json",
+    "proceed_ship": false,
+    "minimum_g4_ship": false
+  },
+  "proceed_ship": false,
+  "proceed_tile_ship": false,
+  "blocked_by": [
+    "keyframe_stills_folder_missing",
+    "minimum_review_stills_missing",
+    "manual_keyframe_render"
+  ],
+  "missing_minimum_keys": [
+    "clean_day",
+    "clean_night_on",
+    "damaged_night_on"
+  ],
+  "missing_variant_keys": [
+    "clean_day",
+    "clean_night_off",
+    "clean_night_on",
+    "damaged_day",
+    "damaged_night_on",
+    "under_construction_01",
+    "under_construction_02",
+    "abandoned",
+    "burning_00",
+    "burning_01",
+    "burning_02",
+    "burning_03",
+    "burning_04",
+    "burning_05",
+    "burning_06",
+    "burning_07"
+  ],
+  "signoff": "debug_runs/art_pipeline/kit_production_002_g4_signoff.yaml",
+  "unblocks": [],
+  "delta_wf": null,
+  "operator_next": "utils/keyframe_render.py + Light_keysshotsetup.blend on production assembly",
+  "_agent_meta": {
+    "schema": "kit_production_002_g4_live_v1",
+    "written_at_epoch_secs": 1781670219,
+    "profile": "KIT_PRODUCTION_002_G4",
+    "source_system": "kit_production_002",
+    "relative_path": "debug_runs/art_pipeline/kit_production_002_g4_live.json",
+    "ritual": "BLANG:WIT-HON FAIL \u2014 manual keyframes required",
+    "agent": "designer-mcp"
+  }
+}

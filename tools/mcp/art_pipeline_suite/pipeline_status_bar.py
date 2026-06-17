@@ -1,4 +1,4 @@
-"""APS-UX-PIPELINE-001 — artist workflow step indicators."""
+"""APS-E1-PIPELINE-LANE-001 — validity-aware pipeline pills (lane-scoped)."""
 
 from __future__ import annotations
 
@@ -7,72 +7,133 @@ from tkinter import ttk
 
 from .aps_theme import FONT_HINT
 from .aps_tooltips import bind_aps_tooltip
-from .state import SuiteState
+from .domain_router import pipeline_steps_for
+from .pipeline_pills import apply_pill
+from .state import ArtDomain, SuiteState
 
 
 class PipelineStatusBar(ttk.Frame):
-    STEPS = (
-        ("catalog", "Catalog"),
-        ("assembly", "Assembly"),
-        ("materials", "Materials"),
-        ("variants", "Variants"),
-        ("atlas", "Atlas"),
-    )
-
     def __init__(self, master: tk.Misc, state: SuiteState) -> None:
         super().__init__(master, padding=(0, 4))
         self.state = state
-        self._vars: dict[str, tk.StringVar] = {}
-        self._labels: dict[str, ttk.Label] = {}
+        self._lane = state.art_domain
+        self._steps: list[tuple[str, str]] = list(pipeline_steps_for(state.art_domain))
+        self._pills: dict[str, tuple[tk.Frame, tk.Label]] = {}
         ttk.Label(self, text="Pipeline:", font=("Segoe UI", 9, "bold")).pack(side=tk.LEFT, padx=(0, 6))
-        for key, label in self.STEPS:
-            var = tk.StringVar(value=f"○ {label} pending")
-            self._vars[key] = var
-            lbl = ttk.Label(self, textvariable=var, font=("Segoe UI", 9))
-            lbl.pack(side=tk.LEFT, padx=6)
-            self._labels[key] = lbl
+        self._step_frame = ttk.Frame(self)
+        self._step_frame.pack(side=tk.LEFT)
+        self._hint = ttk.Label(self, text="", font=FONT_HINT, foreground="#555")
+        self._hint.pack(side=tk.LEFT, padx=(12, 0))
+        self._rebuild_step_widgets()
+        self._set_lane_hint()
+
+    def _set_lane_hint(self) -> None:
+        if self.state.art_domain == ArtDomain.LANDSCAPE.value:
+            self._hint.configure(text="LG-5 atlas art-ship (G4/G5) is separate from schema/bake green.")
+        else:
+            self._hint.configure(
+                text="Keyframe bake is behind Atlas — Assembly/Materials/Preview work without ship proof."
+            )
+
+    def _rebuild_step_widgets(self) -> None:
+        for child in self._step_frame.winfo_children():
+            child.destroy()
+        self._pills.clear()
+        self._steps = list(pipeline_steps_for(self._lane))
+        for key, label in self._steps:
+            pill = tk.Frame(self._step_frame, relief=tk.RIDGE, borderwidth=1, padx=6, pady=2)
+            pill.pack(side=tk.LEFT, padx=4)
+            lbl = tk.Label(pill, text=f"○ {label} pending", font=("Segoe UI", 9))
+            lbl.pack()
+            self._pills[key] = (pill, lbl)
             bind_aps_tooltip(lbl, f"pipeline_{key}")
-        ttk.Label(
-            self,
-            text="Keyframe bake is behind Atlas — Assembly/Materials/Preview work without ship proof.",
-            font=FONT_HINT,
-            foreground="#555",
-        ).pack(side=tk.LEFT, padx=(12, 0))
+
+    def set_domain(self, lane: str) -> None:
+        self._lane = lane
+        self._rebuild_step_widgets()
+        self._set_lane_hint()
+        self.refresh()
+
+    def _step_label(self, key: str, default: str) -> str:
+        for step_key, label in self._steps:
+            if step_key == key:
+                return label
+        return default
+
+    def _apply(self, key: str, state_key: str) -> None:
+        if key not in self._pills:
+            return
+        pill, lbl = self._pills[key]
+        apply_pill(pill, lbl, self._step_label(key, key.title()), state_key)
 
     def refresh(self) -> None:
+        if self.state.art_domain == ArtDomain.LANDSCAPE.value:
+            self._refresh_landscape()
+            return
+        self._refresh_buildings()
+
+    def _refresh_buildings(self) -> None:
         s = self.state
-        self._set(
-            "catalog",
-            bool(s.selected_module_id or s.selected_module_ids),
-        )
-        # APS-UX-PIPELINE-VALIDITY-001 — Assembly is "valid" only after the P0 gate
-        # passes; a saved-but-unvalidated (or failing) snapshot reads "saved", never ✓.
-        has_snapshot = bool(s.assembly_snapshot_path or s.assembly_snapshot_data)
-        self._set_assembly(has_snapshot, s.assembly_p0_passed)
-        self._set(
-            "materials",
-            bool(s.assembly_snapshot_data and _has_material_profiles(s.assembly_snapshot_data)),
-        )
-        self._set("variants", bool(s.variant_set_data or s.variant_set_path))
-        self._set("atlas", bool(s.atlas_folder or s.tile_batch_path))
-
-    def _set(self, key: str, ok: bool) -> None:
-        label = next(l for k, l in self.STEPS if k == key)
-        state = "complete" if ok else "pending"
-        mark = "✓" if ok else "○"
-        self._vars[key].set(f"{mark} {label} {state}")
-
-    def _set_assembly(self, has_snapshot: bool, p0_passed: bool | None) -> None:
-        label = "Assembly"
-        if not has_snapshot:
-            mark, state = "○", "pending"
-        elif p0_passed is True:
-            mark, state = "✓", "valid"
-        elif p0_passed is False:
-            mark, state = "✗", "P0 failed"
+        if s.selected_module_id or s.selected_module_ids:
+            self._apply("catalog", "valid")
         else:
-            mark, state = "◐", "saved (P0 not run)"
-        self._vars["assembly"].set(f"{mark} {label} {state}")
+            self._apply("catalog", "pending")
+        has_snapshot = bool(s.assembly_snapshot_path or s.assembly_snapshot_data)
+        if not has_snapshot:
+            self._apply("assembly", "pending")
+        elif s.assembly_p0_passed is True:
+            self._apply("assembly", "valid")
+        elif s.assembly_p0_passed is False:
+            self._apply("assembly", "fail")
+        else:
+            self._apply("assembly", "saved_qc_not_run")
+        if s.assembly_snapshot_data and _has_material_profiles(s.assembly_snapshot_data):
+            self._apply("materials", "valid")
+        elif s.assembly_snapshot_data:
+            self._apply("materials", "saved_qc_not_run")
+        else:
+            self._apply("materials", "pending")
+        if s.variant_set_data or s.variant_set_path:
+            self._apply("variants", "valid")
+        else:
+            self._apply("variants", "pending")
+        if s.atlas_folder or s.tile_batch_path:
+            self._apply("atlas", "atlas_packed")
+        else:
+            self._apply("atlas", "pending")
+
+    def _refresh_landscape(self) -> None:
+        s = self.state
+        if s.landscape_preset_validate_ok is True:
+            self._apply("presets", "valid")
+        elif s.landscape_preset_validate_ok is False:
+            self._apply("presets", "fail")
+        elif s.selected_landscape_preset_id:
+            self._apply("presets", "presets_loaded")
+        else:
+            self._apply("presets", "pending")
+        if s.landscape_preset_validate_ok is True and s.landscape_grammar_saved:
+            self._apply("grammar", "valid")
+        elif s.landscape_grammar_saved:
+            self._apply("grammar", "grammar_saved")
+        elif s.selected_landscape_preset_id:
+            self._apply("grammar", "pending")
+        else:
+            self._apply("grammar", "pending")
+        if s.landscape_states_ready:
+            self._apply("states", "valid")
+        elif s.landscape_grammar_saved:
+            self._apply("states", "saved_qc_not_run")
+        else:
+            self._apply("states", "pending")
+        if s.atlas_folder or s.tile_batch_path:
+            self._apply("atlas", "atlas_packed")
+        else:
+            self._apply("atlas", "pending")
+        if s.landscape_stamp_registered:
+            self._apply("stamp", "stamp_done")
+        else:
+            self._apply("stamp", "stamp_pending")
 
 
 def _has_material_profiles(snapshot: dict) -> bool:

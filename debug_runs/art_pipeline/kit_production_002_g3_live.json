@@ -112,7 +112,7 @@
   "delta_wf": "@designer-mcp MCP-P2-KIT002-G4 keyframe stills",
   "_agent_meta": {
     "schema": "kit_production_002_g3_live_v1",
-    "written_at_epoch_secs": 1781656358,
+    "written_at_epoch_secs": 1781670219,
     "profile": "KIT_PRODUCTION_002_G3",
     "source_system": "kit_production_002",
     "relative_path": "debug_runs/art_pipeline/kit_production_002_g3_live.json",

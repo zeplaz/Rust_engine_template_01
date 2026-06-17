@@ -4,7 +4,7 @@ use serde_json::{json, Value};
 
 use crate::dev::debug_run_envelope;
 use crate::render::{
-    collect_transport_overlay_edges_system, InfrastructureOverlayDrawRequests,
+    collect_infrastructure_overlay_edges_system, InfrastructureOverlayDrawRequests,
     InfrastructureOverlaySettings,
 };
 use crate::systems::transport::{TransportEdgeDirectory, TransportEdgeId, TransportEdgeMeta};
@@ -17,7 +17,10 @@ pub fn infra_e6_004_overlay_default_off_witness_green() -> bool {
     app.init_resource::<TransportEdgeDirectory>()
         .init_resource::<InfrastructureOverlayDrawRequests>()
         .init_resource::<InfrastructureOverlaySettings>()
-        .add_systems(bevy::prelude::Update, collect_transport_overlay_edges_system);
+        .add_systems(
+            bevy::prelude::Update,
+            collect_infrastructure_overlay_edges_system,
+        );
     {
         let mut dir = app.world_mut().resource_mut::<TransportEdgeDirectory>();
         dir.by_edge.insert(

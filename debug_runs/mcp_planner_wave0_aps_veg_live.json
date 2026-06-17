@@ -1,0 +1,34 @@
+{
+  "_agent_meta": {
+    "schema": "debug_run_envelope_v1",
+    "gate": "MCP-PLANNER-WAVE0-APS-VEG-15",
+    "agent": "planner-mcp",
+    "command": "parallel wave-0 sign-off"
+  },
+  "gate": "MCP-PLANNER-WAVE0-APS-VEG-15",
+  "signed": true,
+  "signed_at": "2026-06-16",
+  "agent": "planner-mcp",
+  "wave": 0,
+  "row_count": 15,
+  "rows_done": [
+    "APS-EVO-E3-VEGCATALOG-SCHEMA-001",
+    "PLAN-VEG-RESOLVER-KEY-NAMING-001",
+    "PLAN-WITNESS-REOPEN-001",
+    "PLAN-VEG-RUNTIME-PROOF-001",
+    "PLAN-ATLAS-BUDGET-SIZING-001",
+    "PLAN-APS-E5-ENGINE-AUTHORITY-001",
+    "PLAN-VEG-BURN-RECONCILE-001",
+    "PLAN-TILE-BATCH-LAND-EXAMPLE-001",
+    "PLAN-INTEGRATION-CROSSREF-001",
+    "PLAN-LG-EXEC-ANNOT-001",
+    "PLAN-QUEUE-REGISTRY-APS-001",
+    "PLAN-G-PLAY-SPLIT-001",
+    "PLAN-MCP-SIM-VALIDATORS-SIGN-001",
+    "PLAN-ARCH-002-VEG-PATCH-001",
+    "PLAN-THREE-GREENS-VOCAB-001"
+  ],
+  "schema": "tools/mcp/schemas/vegetation_variant_catalog_v1.schema.json",
+  "example": "tools/mcp/schemas/examples/vegetation_variant_catalog_pilot_v1.json",
+  "green": true
+}

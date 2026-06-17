@@ -1,0 +1,43 @@
+{
+  "_agent_meta": {
+    "schema": "debug_run_envelope_v1",
+    "program_id": "PARALLEL-WAVE-APS-VEG-DISPATCH-001",
+    "writer": "orchestrator-mcp",
+    "command": "validate-report witness_honesty baseline at wave-0 issue",
+    "issued_at": "2026-06-16T00:00:00Z"
+  },
+  "green": true,
+  "wave": 0,
+  "lanes_issued": 6,
+  "primary_ids": [
+    "APS-EVO-E0-RELAUNCH-001",
+    "APS-EVO-E3-VEGCATALOG-SCHEMA-001",
+    "DMCP-E0-ARTIST-REVERDICT-001",
+    "DES-APS-E1-IA-OPTION-D-001",
+    "CDR-A-LG4-PIXEL-REOPEN-001",
+    "CDR-B-BUILD-CONSUMER-MCP-001"
+  ],
+  "wit_hon_baseline": {
+    "debug_runs/aps_artist_tool_e2e_live.json": {
+      "status": "warning",
+      "signature": "WIT-MISSING-ENVELOPE",
+      "owner": "MCP-APS-WIT-WRITER-001"
+    },
+    "debug_runs/landscape_grammar_lg4_preview_live.json": {
+      "status": "passed",
+      "owner": "CDR-A-LG4-PIXEL-REOPEN-001"
+    },
+    "debug_runs/vegetation_program_close_live.json": {
+      "status": "failed",
+      "signatures": ["WIT-PHASE-CLOSE-WITHOUT-SUB", "WIT-ROLLUP-CHILD-ONLY"],
+      "owner": "CDR-A-WIT-HON-ROLLUP-001"
+    }
+  },
+  "queue_integrity_scan": {
+    "status": "failed",
+    "contradictions": 3,
+    "note": "PLAN-QUEUE-REGISTRY-APS-001 tracks reconcile — non-blocking for wave-0 parallel"
+  },
+  "orders_doc": "tools/orchestrator/queues/parallel_wave_aps_veg_wave0_orders_v1.md",
+  "spine": "tools/orchestrator/queues/mcp_aps_evolution_queue.json"
+}

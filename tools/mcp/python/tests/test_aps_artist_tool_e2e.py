@@ -40,3 +40,6 @@ def test_e2e_witness_written() -> None:
     assert body.get("program_id") == "APS-ARTIST-TOOL-E2E-001"
     assert (repo_root() / APS_ARTIST_TOOL_E2E_WITNESS).is_file()
     assert len(body.get("steps") or []) >= 5
+    assert body.get("import_guard_pass") is True
+    assert body.get("_agent_meta", {}).get("schema") == "aps_artist_tool_e2e_live_v1"
+    assert body.get("exit_predicate", {}).get("must")

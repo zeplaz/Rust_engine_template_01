@@ -109,3 +109,11 @@ def register_landscape_atlas_from_meta(
 
 def landscape_lg5_registry_stamped() -> bool:
     return any(e.get("atlas_id") == "landscape_lg5_pilot_v1" for e in load_landscape_atlas_index())
+
+
+def landscape_atlas_registered(atlas_id: str) -> bool:
+    return any(str(e.get("atlas_id") or "") == atlas_id for e in load_landscape_atlas_index())
+
+
+def landscape_expanded_atlas_registered() -> bool:
+    return landscape_atlas_registered("landscape_lg5_expanded_v1")

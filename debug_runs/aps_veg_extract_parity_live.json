@@ -1,0 +1,96 @@
+{
+  "gate": "APS-EVO-E5-EXTRACT-PARITY-001",
+  "program_id": "APS-E5",
+  "green": true,
+  "slice_id": "APS-EVO-E5-EXTRACT-PARITY-001",
+  "engine_authority": "vegetation_extract_frame",
+  "engine_read_path": "Runtime: SuccessionState + ActiveBurn \u2192 VegetationExtractFrame::BuildProfiles (rows[].variant_key) \u2192 landscape_chunk_atlas_stamp / LG-5 atlas index. Authored keys live in _vegetation_variant_catalog.ron \u2014 not RepresentationResult or Blender viewport.",
+  "authored_keys": [
+    "veg_burn_00",
+    "veg_burn_01",
+    "veg_burn_02",
+    "veg_burn_03",
+    "veg_burn_04",
+    "veg_burn_05",
+    "veg_burn_06",
+    "veg_burn_07",
+    "veg_clean_day",
+    "veg_damaged",
+    "veg_old_growth",
+    "veg_regrowth_front",
+    "veg_regrowth_nuclei"
+  ],
+  "resolver_keys": [
+    "veg_clean_day",
+    "veg_old_growth",
+    "veg_damaged",
+    "veg_regrowth_nuclei",
+    "veg_regrowth_front",
+    "veg_burn_00",
+    "veg_burn_01",
+    "veg_burn_02",
+    "veg_burn_03",
+    "veg_burn_04",
+    "veg_burn_05",
+    "veg_burn_06",
+    "veg_burn_07"
+  ],
+  "authored_count": 13,
+  "resolver_count": 13,
+  "missing_from_resolver": [],
+  "extra_authored_vs_resolver": [],
+  "subset_ok": true,
+  "resolver_parity_ok": true,
+  "extract_witness": "debug_runs/landscape_grammar_extract_live.json",
+  "extract_witness_present": true,
+  "extract_witness_green": true,
+  "extract_sample_keys": [
+    "veg_topo_barrier",
+    "veg_topo_cluster"
+  ],
+  "extract_row_count": 17,
+  "panel_wired": true,
+  "parity_green": true,
+  "catalog_path": "assets/configs/landscape/_vegetation_variant_catalog.ron",
+  "design_ref": "src/dev/plan_aps_veg_parity_engine_authority_v1.md",
+  "cdr_b_witness": "debug_runs/art_pipeline/veg_resolver_parity_live.json",
+  "exit_predicate": {
+    "witness": "debug_runs/aps_veg_extract_parity_live.json",
+    "must": [
+      {
+        "path": "parity_green",
+        "eq": true
+      },
+      {
+        "path": "subset_ok",
+        "eq": true
+      },
+      {
+        "path": "resolver_parity_ok",
+        "eq": true
+      },
+      {
+        "path": "extract_witness_green",
+        "eq": true
+      },
+      {
+        "path": "panel_wired",
+        "eq": true
+      }
+    ]
+  },
+  "_agent_meta": {
+    "schema": "aps_veg_extract_parity_live_v1",
+    "profile": "APS_E5_VEG_EXTRACT_PARITY",
+    "relative_path": "debug_runs/aps_veg_extract_parity_live.json",
+    "source_system": "aps_veg_extract_parity",
+    "written_at_epoch_secs": 1781712973,
+    "ritual": "BLANG:WIT-HON APS-EVO-E5-EXTRACT-PARITY-001"
+  },
+  "witness_honesty": {
+    "status": "passed",
+    "error_count": 0,
+    "warning_count": 0,
+    "summary": "witness_honesty debug_runs/aps_veg_extract_parity_live.json: 0 error(s), 0 issue(s)"
+  }
+}

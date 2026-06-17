@@ -1,0 +1,28 @@
+{
+  "_agent_meta": {
+    "schema": "debug_run_envelope_v1",
+    "gate": "PLAN-WITNESS-QUEUE-INTEGRITY-001",
+    "agent": "planner-mcp",
+    "green_scope": "G-SCHEMA"
+  },
+  "gate": "PLAN-WITNESS-QUEUE-INTEGRITY-001",
+  "signed": true,
+  "signed_at": "2026-06-17",
+  "plan": "src/dev/plan_witness_queue_integrity_mcp_v1.md",
+  "phases_1_5": "SHIPPED",
+  "phase_6": "open",
+  "mcp_wit_rows": ["MCP-WIT-001", "MCP-WIT-010", "MCP-WIT-020", "MCP-WIT-030", "MCP-WIT-040"],
+  "witnesses": {
+    "MCP-WIT-006": "debug_runs/mcp_witness_honesty_validator_live.json",
+    "MCP-WIT-014": "debug_runs/queue_integrity_reconcile_live.json",
+    "MCP-WIT-024": "debug_runs/mcp_witness_integrity_ops_live.json"
+  },
+  "rule_count": 12,
+  "tier": "1i",
+  "residual": [
+    "pytest 3/26 threshold drift (contradiction_count, lg4 real witness)",
+    "WIT-RUST-001..004 @coder",
+    "PLAN-WITNESS-REOPEN-001 operator gate"
+  ],
+  "green": true
+}

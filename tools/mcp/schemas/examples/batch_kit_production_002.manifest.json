@@ -111,5 +111,5 @@
     "no_greybox_ortho_ship"
   ],
   "witness": "debug_runs/art_pipeline/kit_production_002_live.json",
-  "gate": "G3"
+  "gate": "G4"
 }

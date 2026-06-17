@@ -19,6 +19,7 @@ pub use arch_build_grammar_v0::{
     arch_dna_consumer_from_preset_id, arch_dna_consumer_from_snapshot_fields,
     arch_dna_consumer_wired, beta_with_world_transport_bias, build_read_grammar_v0_003_witness_body,
     build_read_grammar_v0_003_witness_green, build_read_consumer_mcp_001_witness_green,
+    arch_dna_massing_diversity_witness_green, build_arch_dna_massing_diversity_rows,
     load_arch_dna_preset, list_arch_dna_preset_ids, load_preset_from_path, load_preset_for_id,
     load_logistics_rail_warehouse_v0_preset, program_graph_stub_for_preset,
     site_zones_for_preset,
@@ -64,10 +65,12 @@ pub use variant_recipe::{
 };
 pub use tile_variant_resolver::{
     build_procedural_tiles_runtime_witness_body, init_variant_catalog, load_variant_catalog,
-    production_atlas_covers_assembly, procedural_tiles_runtime_witness_green,
-    refresh_procedural_tiles_runtime_live_witness, resolve_tile_variant, ProceduralTilePrimaryActive,
-    ResolvedTileVariant, TileVariantContext, VariantCatalog, VARIANT_CATALOG_RON,
-    PROCEDURAL_TILES_RUNTIME_LIVE_JSON,
+    landscape_tile_resolver_witness_green, production_atlas_covers_assembly,
+    procedural_tiles_runtime_witness_green, refresh_procedural_tiles_runtime_live_witness,
+    resolve_landscape_tile_from_extract_key, resolve_landscape_tile_from_topology,
+    resolve_landscape_tile_variant, resolve_tile_variant, ProceduralTilePrimaryActive,
+    ResolvedLandscapeTileVariant, ResolvedTileVariant, TileAtlasDomain, TileVariantContext,
+    VariantCatalog, VARIANT_CATALOG_RON, PROCEDURAL_TILES_RUNTIME_LIVE_JSON,
 };
 pub use types::{
     BuildingArchetype, BuildingUsage, FallbackPolicy, ProceduralAssemblyRequest,

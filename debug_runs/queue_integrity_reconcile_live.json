@@ -8,17 +8,17 @@
   "warning_count": 0,
   "contradictions": [
     {
+      "id": "VEG-A01-HARNESS-001",
+      "by_queue": {
+        "tools/orchestrator/queues/coder_vegetation_drain_queue.json": "open",
+        "tools/orchestrator/queues/coder_master_drain_queue.json": "closed"
+      }
+    },
+    {
       "id": "VEG-F02-MCP-ATLAS-001",
       "by_queue": {
         "tools/orchestrator/queues/coder_vegetation_drain_queue.json": "open",
         "tools/orchestrator/queues/mcp_active_queue.json": "closed"
-      }
-    },
-    {
-      "id": "MCP-P2-SIM-VALIDATORS-PLAN-001",
-      "by_queue": {
-        "tools/orchestrator/queues/mcp_active_queue.json": "closed",
-        "tools/orchestrator/queues/post_drain_phase5_queue.json": "open"
       }
     },
     {
@@ -32,18 +32,13 @@
   "snag_done": [],
   "exit_predicate_failures": [
     {
-      "id": "VEG-F05-PROGRAM-CLOSE-001",
+      "id": "VEG-C04-PREVIEW-WITNESS-001",
       "queue": "tools/orchestrator/queues/coder_vegetation_drain_queue.json",
-      "witness": "debug_runs/vegetation_program_close_live.json",
-      "detail": "witness_honesty debug_runs/vegetation_program_close_live.json: 2 error(s), 2 issue(s)"
+      "witness": "debug_runs/landscape_grammar_lg4_preview_live.json",
+      "detail": "witness_honesty debug_runs/landscape_grammar_lg4_preview_live.json: 1 error(s), 1 issue(s)"
     }
   ],
   "stale_ids": [
-    {
-      "id": "VEG-A01-HARNESS-001",
-      "queue": "tools/orchestrator/queues/coder_vegetation_drain_queue.json",
-      "reason": "missing_exit_predicate"
-    },
     {
       "id": "VEG-A02-SCHEDULE-001",
       "queue": "tools/orchestrator/queues/coder_vegetation_drain_queue.json",
@@ -205,6 +200,11 @@
       "reason": "missing_exit_predicate"
     },
     {
+      "id": "VEG-C04-PREVIEW-WITNESS-001",
+      "queue": "tools/orchestrator/queues/coder_vegetation_drain_queue.json",
+      "reason": "witness_honesty"
+    },
+    {
       "id": "VEG-C05-PREVIEW-GLYPH-001",
       "queue": "tools/orchestrator/queues/coder_vegetation_drain_queue.json",
       "reason": "missing_exit_predicate"
@@ -288,7 +288,7 @@
   ],
   "_agent_meta": {
     "schema": "queue_integrity_reconcile_live_v1",
-    "written_at_epoch_secs": 1781659475,
+    "written_at_epoch_secs": 1781670225,
     "profile": "MCP_WIT_QUEUE_INTEGRITY",
     "source_system": "queue_integrity",
     "relative_path": "debug_runs/queue_integrity_reconcile_live.json",

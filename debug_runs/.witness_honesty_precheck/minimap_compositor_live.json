@@ -1,0 +1,162 @@
+{
+  "_agent_meta": {
+    "agent_commands": [
+      "cargo test -p proc_A_dine01 --lib stage5",
+      "cargo test -p proc_A_dine01 --lib minimap_compositor",
+      "MINIMAP_GPU_COMPOSITOR=1 cargo run -p proc_A_dine01 --release -- --test visual"
+    ],
+    "docs": {
+      "compile_warnings": "src/dev/COMPILE_WARNINGS_TODOS.md",
+      "stage5_directive": "prompts/guides/stage5_convergence_directive_v1.md",
+      "viewport_recovery": "src/dev/recovery_viewport.md"
+    },
+    "logging_env": {
+      "ORCHESTRATOR_EXPORT_HEALTH": false,
+      "PERF": false,
+      "RUST_LOG": null,
+      "SIM_VIEW_SYNC_DEBUG": false,
+      "STAGE5_READINESS_VERBOSE": false,
+      "STAGE5_VERBOSE": false,
+      "VIEWPORT_AUTHORITY_DEBUG": false
+    },
+    "orchestrator": {
+      "build_report": "tools/orchestrator/reports/build_report.md",
+      "ci_entry": "tools/orchestrator/ci/run.ps1",
+      "continuation_queue": "tools/orchestrator/queues/continuation_queue.json",
+      "warning_registry": "tools/orchestrator/reports/warning_registry.md"
+    },
+    "profile": "MINIMAP_COMPOSITOR_M1",
+    "related_proofs": [
+      "debug_runs/stage5_full_app_live.json",
+      "debug_runs/infrastructure_view_isolation_live.json",
+      "debug_runs/construction_stage_live.json",
+      "debug_runs/industrial_activation_live.json",
+      "debug_runs/fire_ecology_live.json",
+      "debug_runs/logistics_throughput_live.json",
+      "debug_runs/replay_editor_parity_live.json",
+      "debug_runs/orchestrator_thread_health.json",
+      "debug_runs/viewport_drift.json",
+      "debug_runs/viewport_authority_migration_witness.json",
+      "debug_runs/main_thread_orchestrator_live.json",
+      "debug_runs/stage6_virtualization_live.json",
+      "debug_runs/wave_s_hydrate_live.json",
+      "debug_runs/wave_p_live.json",
+      "debug_runs/wave_c_live.json",
+      "debug_runs/ui_shell_migration_live.json",
+      "debug_runs/minimap_compositor_live.json",
+      "debug_runs/stage7_behavioral_live.json",
+      "debug_runs/stage7_play_live.json",
+      "debug_runs/wss_substrate_live.json",
+      "debug_runs/f2_smoke_pipeline_live.json",
+      "debug_runs/play_scenario_live.json",
+      "debug_runs/transport_network_live.json"
+    ],
+    "relative_path": "debug_runs/minimap_compositor_live.json",
+    "schema": "debug_run_envelope_v1",
+    "source_system": "minimap_compositor_live_proof",
+    "written_at_epoch_secs": 1781663493
+  },
+  "composite_ok": true,
+  "composite_path": "GpuCompute",
+  "compositor_revision": 1,
+  "construction_heat_enabled": true,
+  "construction_rows": 0,
+  "dual_minimap_present": false,
+  "ecology_heat_enabled": true,
+  "ecology_rows": 100,
+  "ew_overlay_enabled": true,
+  "ew_rows": 23,
+  "extent": {
+    "x": 256,
+    "y": 256
+  },
+  "extent_match_px": 78.0,
+  "fire_heat_enabled": false,
+  "fow_enabled": true,
+  "fow_rows": 30,
+  "gpu_budget": {
+    "commits_queued": 33,
+    "debug_logging": false,
+    "gpu_dedup_skips": 0,
+    "gpu_executes": 32,
+    "justified": true,
+    "last_commit_stamp": 33,
+    "last_dispatch": "overlay_changed",
+    "last_fingerprint": 16520889120742658287,
+    "last_skip": "none",
+    "overflow_ratio": 1.0,
+    "skips_hidden": 0,
+    "skips_no_change": 11,
+    "skips_no_rt": 0,
+    "skips_no_terrain": 2,
+    "skips_rate_capped": 0,
+    "skips_upload_failed": 0,
+    "target_hz": 10.0
+  },
+  "gpu_compositor_env": true,
+  "logistics_heat_enabled": true,
+  "logistics_rows": 18,
+  "overlay_revision": 2,
+  "overlay_tray_minimap_mask": {
+    "construction_heat": true,
+    "ecology_heat": true,
+    "fire_heat": false,
+    "logistics_heat": true
+  },
+  "perf_vis_p1b_gpu_default_001": {
+    "gate": "PERF-VIS-P1B-GPU-DEFAULT-001",
+    "gpu_compositor_default_on": true,
+    "gpu_compositor_env": true,
+    "green": true,
+    "presentation_source": "SharedRenderTargetImage",
+    "raster_env_required": false
+  },
+  "presentation_source": "SharedRenderTargetImage",
+  "replay_scrub_enabled": true,
+  "rt_bound": true,
+  "stamp": 33,
+  "ui_oh_m2_001": {
+    "construction_heat_enabled": true,
+    "construction_rows": 0,
+    "gate": "UI-OH-M2-001",
+    "green": false,
+    "logistics_heat_enabled": true,
+    "logistics_rows": 18
+  },
+  "ui_oh_m3_001": {
+    "construction_heat_enabled": true,
+    "construction_rows": 0,
+    "ecology_heat_enabled": true,
+    "ecology_rows": 100,
+    "gate": "UI-OH-M3-001",
+    "green": true
+  },
+  "ui_p3_001_green": false,
+  "ui_p3_m2_green": false,
+  "ui_p3_m2_tray_opt_green": true,
+  "ui_p3_m3_green": true,
+  "ui_p3_m3_replay_001_green": true,
+  "ui_p3_m3_units_001_green": false,
+  "ui_p3_m4_green": true,
+  "ui_stress_wrote_sim": false,
+  "ui_w3_m2_001": {
+    "construction_heat_enabled": true,
+    "construction_rows": 0,
+    "gate": "UI-W3-M2-001",
+    "green": false,
+    "logistics_heat_enabled": true,
+    "logistics_rows": 18
+  },
+  "ui_w3_m3_001": {
+    "construction_heat_enabled": true,
+    "construction_rows": 0,
+    "ecology_heat_enabled": true,
+    "ecology_rows": 100,
+    "gate": "UI-W3-M3-001",
+    "green": true,
+    "operational_green": false,
+    "stage7_operational_green": false
+  },
+  "unit_marker_rows": 0,
+  "units_heat_enabled": true
+}

@@ -417,6 +417,13 @@ pub fn load_landscape_grammar_catalog_from_dir(dir: &Path) -> LandscapeGrammarCa
         if path.extension().and_then(|s| s.to_str()) != Some("json") {
             continue;
         }
+        if path
+            .file_stem()
+            .and_then(|s| s.to_str())
+            .is_some_and(|stem| stem.starts_with('_'))
+        {
+            continue;
+        }
         match load_landscape_preset_from_path(&path) {
             Ok(preset) => {
                 catalog.presets.insert(preset.preset_id.clone(), preset);

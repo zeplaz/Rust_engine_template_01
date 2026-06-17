@@ -1,0 +1,43 @@
+{
+  "slice_id": "CDR-B-VEG-RESOLVER-PARITY-001",
+  "green": true,
+  "engine_veg_keys": [
+    "veg_clean_day",
+    "veg_old_growth",
+    "veg_damaged",
+    "veg_regrowth_nuclei",
+    "veg_regrowth_front",
+    "veg_burn_00",
+    "veg_burn_01",
+    "veg_burn_02",
+    "veg_burn_03",
+    "veg_burn_04",
+    "veg_burn_05",
+    "veg_burn_06",
+    "veg_burn_07"
+  ],
+  "engine_topology_stamp_keys": [
+    "topology_patch",
+    "topology_corridor",
+    "topology_ring"
+  ],
+  "catalog_veg_count": 13,
+  "catalog_topology_count": 22,
+  "missing_in_catalog": [],
+  "extra_in_catalog": [],
+  "stamp_keys_missing_in_catalog": [],
+  "byte_parity": true,
+  "charter": "src/dev/plan_veg_variant_key_naming_v1.md",
+  "catalog_path": "assets/configs/landscape/_vegetation_variant_catalog.ron",
+  "deliverable": "src/dev/veg_resolver_known_keys_v1.md",
+  "deliverable_written": "src/dev/veg_resolver_known_keys_v1.md",
+  "_agent_meta": {
+    "schema": "veg_resolver_parity_live_v1",
+    "written_at_epoch_secs": 1781712989,
+    "profile": "CDR_B_VEG_RESOLVER_PARITY",
+    "source_system": "veg_resolver_parity",
+    "relative_path": "debug_runs/art_pipeline/veg_resolver_parity_live.json",
+    "ritual": "BLANG:Q\u2713 CDR-B-VEG-RESOLVER-PARITY-001",
+    "agent": "coder-mcp"
+  }
+}

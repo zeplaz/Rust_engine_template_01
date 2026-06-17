@@ -1,0 +1,113 @@
+{
+  "_meta": {
+    "teaches": ["tile_batch_landscape", "veg_burn_state", "atlas_budget"],
+    "not_a_ship_target": true,
+    "plan_ref": "src/dev/plan_landscape_atlas_budget_v1.md",
+    "charter": "src/dev/design_landscape_lg5_atlas_v1.md"
+  },
+  "schema_version": 1,
+  "batch_id": "tile_landscape_expanded_v1",
+  "tile_id": "landscape_lg5",
+  "base": "dirt",
+  "status": "spec",
+  "ship": false,
+  "frozen": true,
+  "bake_source": "keyframe_pack",
+  "source_tier": "lod0",
+  "development_tier": "expansion",
+  "atlas_domain": "landscape",
+  "landscape_program_ref": "assets/configs/landscape/presets/agri_riparian_v0.json",
+  "keyframe_rename_pk": true,
+  "rules_applied": [
+    "no_ai_generated_images",
+    "deterministic_output",
+    "batch_processing",
+    "grid_alignment"
+  ],
+  "render": {
+    "method": "blender_keyframe_light_rig",
+    "isometric": true,
+    "seed": 550006,
+    "tile_size_px": 64
+  },
+  "atlas_budget": {
+    "topology_kinds": ["Patch", "Corridor", "Ring"],
+    "state_axes": ["clean", "damaged", "burn", "regrowth"],
+    "burn_frame_count": 8,
+    "matrix_rows": 3,
+    "matrix_cols": 14,
+    "note": "3 topology × (1 clean + 1 damaged + 8 burn + 2 regrowth) = 36 slots; padded to 3×14 grid"
+  },
+  "variants": [
+    {
+      "variant_key": "topology_patch",
+      "state": "clean",
+      "topology_kind": "Patch",
+      "lighting": "day"
+    },
+    {
+      "variant_key": "topology_corridor",
+      "state": "clean",
+      "topology_kind": "Corridor",
+      "lighting": "day"
+    },
+    {
+      "variant_key": "topology_ring",
+      "state": "clean",
+      "topology_kind": "Ring",
+      "lighting": "day"
+    },
+    {
+      "variant_key": "veg_damaged",
+      "state": "damaged",
+      "topology_kind": "Patch",
+      "damage": 0.65,
+      "lighting": "day"
+    },
+    {
+      "variant_key": "veg_burn_00",
+      "state": "burn",
+      "topology_kind": "Patch",
+      "burn_frame": 0,
+      "lighting": "day"
+    },
+    {
+      "variant_key": "veg_burn_01",
+      "state": "burn",
+      "topology_kind": "Patch",
+      "burn_frame": 1,
+      "lighting": "day"
+    },
+    {
+      "variant_key": "veg_burn_07",
+      "state": "burn",
+      "topology_kind": "Patch",
+      "burn_frame": 7,
+      "lighting": "day"
+    },
+    {
+      "variant_key": "veg_regrowth_nuclei",
+      "state": "regrowth",
+      "topology_kind": "Patch",
+      "regrowth_macro_phase": "Nuclei",
+      "lighting": "day"
+    },
+    {
+      "variant_key": "veg_regrowth_front",
+      "state": "regrowth",
+      "topology_kind": "Patch",
+      "regrowth_macro_phase": "Front",
+      "lighting": "day"
+    }
+  ],
+  "atlas": {
+    "atlas_id": "landscape_expanded_v1",
+    "columns": 14,
+    "rows": 3,
+    "tile_px": 64,
+    "padding_px": 2,
+    "output_png": "assets/textures/landscape/staging/landscape_expanded_v1_atlas.png",
+    "meta_json": "assets/staging/tiles/tile_landscape_expanded_v1/atlas_meta.json"
+  },
+  "note": "PLAN-TILE-BATCH-LAND-EXAMPLE-001 — job JSON sketch only; bake blocked until DMCP-E4 matrix + G0 sign-off"
+}

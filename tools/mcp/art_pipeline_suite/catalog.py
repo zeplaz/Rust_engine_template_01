@@ -20,6 +20,7 @@ from module_viewer.model_store import (
 )
 from module_viewer.preview_browser import preview_in_browser
 from rust_engine_mcp.aps_catalog_preview import render_module_list_thumb
+from rust_engine_mcp.landscape_preset_browse import list_landscape_presets, preset_summary
 from rust_engine_mcp.paths import repo_root
 
 from .aps_tooltips import bind_aps_tooltip
@@ -27,8 +28,9 @@ from .aps_inline_feedback import set_inline_status
 from .aps_paned import add_pane, horizontal_paned
 from .aps_scroll import attach_wheel_area, bind_debounced_scrollregion, canvas_yscroll, text_yscroll
 from .aps_theme import FONT_SMALL, track_wraplength
+from .domain_router import catalog_source_for
 from .metadata_flow_panel import MetadataFlowPanel
-from .state import SuiteState
+from .state import ArtDomain, SuiteState
 
 SIDECAR_TRUTH = (
     "Sidecar tags ≠ ship truth — assembly snapshot semantic_tags and material_profile win at runtime."
@@ -41,6 +43,7 @@ class CatalogPanel(ttk.Frame):
         self.state = state
         self._on_select = on_select
         self._records: list[ModuleRecord] = []
+        self._landscape_preset_ids: list[str] = []
         self._current: ModuleRecord | None = None
         self._row_photos: dict[str, ImageTk.PhotoImage] = {}
         self._build()
@@ -179,8 +182,25 @@ class CatalogPanel(ttk.Frame):
         trimesh_btn = ttk.Button(actions, text="3D preview (trimesh)", command=self.on_trimesh)
         trimesh_btn.pack(side=tk.LEFT, padx=2)
         bind_aps_tooltip(trimesh_btn, "cat_trimesh")
+        self._module_actions = actions
+
+    def set_domain(self, lane: str) -> None:
+        """E1 — re-source list when lane changes."""
+        is_landscape = lane == ArtDomain.LANDSCAPE.value
+        state = "disabled" if is_landscape else "readonly"
+        self.batch_combo.configure(state=state)
+        self.category_combo.configure(state=state)
+        for child in self._module_actions.winfo_children():
+            try:
+                child.configure(state=tk.DISABLED if is_landscape else tk.NORMAL)
+            except tk.TclError:
+                pass
+        self.refresh_list()
 
     def refresh_list(self) -> None:
+        if self.state.art_domain == ArtDomain.LANDSCAPE.value:
+            self._refresh_landscape_presets()
+            return
         batch = self.batch_var.get()
         category = self.category_var.get()
         batch_filter = None if batch == "(all)" else batch
@@ -199,6 +219,49 @@ class CatalogPanel(ttk.Frame):
         self.category_combo["values"] = ["(all)", *categories]
         if self._records:
             self._select_record(self._records[0])
+
+    def _refresh_landscape_presets(self) -> None:
+        listed = list_landscape_presets()
+        self._landscape_preset_ids = list(listed.get("ship_presets") or [])
+        self._records = []
+        self._current = None
+        for w in self._list_inner.winfo_children():
+            w.destroy()
+        self._row_photos.clear()
+        for preset_id in self._landscape_preset_ids:
+            row = ttk.Frame(self._list_inner, padding=2)
+            row.pack(fill=tk.X, anchor=tk.W)
+            text = ttk.Label(
+                row,
+                text=f"{preset_id}\nlandscape preset",
+                font=FONT_SMALL,
+                cursor="hand2",
+            )
+            text.pack(side=tk.LEFT, fill=tk.X, expand=True)
+            text.bind("<Button-1>", lambda _e, pid=preset_id: self._select_landscape_preset(pid))
+        if self._landscape_preset_ids:
+            self._select_landscape_preset(self._landscape_preset_ids[0])
+        self.batch_combo["values"] = ["(all)"]
+        self.category_combo["values"] = ["(all)"]
+
+    def _select_landscape_preset(self, preset_id: str) -> None:
+        self.state.selected_landscape_preset_id = preset_id
+        self.state.selected_module_id = None
+        self.state.selected_module_ids = []
+        summary = preset_summary(preset_id)
+        kinds = ", ".join(summary.get("topology_kinds") or []) or "—"
+        self.summary.set(
+            f"{preset_id} · landscape preset\n"
+            f"topology kinds: {kinds}\n"
+            f"validate: {summary.get('validate_status')} — {summary.get('validate_summary', '')}"
+        )
+        self.validation.set("")
+        self._validation_lbl.configure(foreground="#444444")
+        self.meta_text.configure(state=tk.NORMAL)
+        self.meta_text.delete("1.0", tk.END)
+        self.meta_text.insert("1.0", json.dumps(summary, indent=2))
+        self._set_readonly(self.index_text, json.dumps({"catalog_source": catalog_source_for(self.state.art_domain)}, indent=2))
+        self._on_select(None)
 
     def _add_list_row(self, rec: ModuleRecord) -> None:
         row = ttk.Frame(self._list_inner, padding=2)

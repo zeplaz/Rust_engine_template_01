@@ -54,8 +54,10 @@
       "task_id": "G-PLAY-CODER-VEG",
       "program_id": "stage7_play",
       "owner": "@coder A",
-      "status": "done",
-      "note": "VEG-HARD witnesses green — rollup blocked on operator only",
+      "status": "reopened",
+      "reopen_reason": "WIT-HON bulk gate — veg_runtime_proof / vegetation_program_close rollup fail (Review row; fix CDR-A-WIT-HON-ROLLUP-001)",
+      "reopen_date": "2026-06-02",
+      "note": "VEG rollup dishonest — operator rollup still blocked on G-PLAY-OPERATOR-01",
       "witness_key": "debug_runs/g_play_product_close_live.json",
       "plan_doc": "src/dev/plan_veg_runtime_proof_001_v1.md"
     },

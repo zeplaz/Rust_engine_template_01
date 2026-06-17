@@ -52,7 +52,7 @@
     "relative_path": "debug_runs/industrial_activation_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "ind_e02_default_play_002_witness",
-    "written_at_epoch_secs": 1781658952
+    "written_at_epoch_secs": 1781708986
   },
   "activation_green": false,
   "board": [

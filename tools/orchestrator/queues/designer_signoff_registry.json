@@ -1,8 +1,10 @@
 {
     "_meta": {
-    "version": "2.4.0",
-    "date": "2026-06-02",
-    "mode": "on_call",
+    "version": "2.7.0",
+    "date": "2026-06-16",
+    "chrome_mockup": "DES-APS-CHROME-MOCKUP-001",
+    "mode": "parallel_wave_aps_veg_w0",
+    "wave0_rollup": "src/dev/design_aps_veg_wave0_signoff_rollup_v1.md",
     "on_call_playbook": "src/dev/designer_oncall_absorption_v1.md",
     "longrun_closed": "DESIGN-PROC-MODULE-KIT-001, DESIGN-ORGANIC-GROWTH-UX-001, DESIGN-CONSTRUCTION-STAGE-READ-001, DESIGN-CONSTRUCTION-SCALING-READ-001, DESIGN-INFRA-NETWORK-OVERLAY-001, DESIGN-SETTLEMENT-HIERARCHY-READ-001",
     "wave4_designer_closed": "DESIGN-HANABI-SPIKE-REVIEW-001, DESIGN-VFX-CAPTURE-ROUND-003, DESIGN-PR4-RETIRE-UX-001",
@@ -932,6 +934,140 @@
       "witness_json": "debug_runs/design_build_read_d001_d004_live.json",
       "unblocks": ["BUILD-READ-VISUAL-002-BATCH", "TILE-PROD-004"],
       "notes": "D-001 scale · D-002 footprint · D-003 site · D-004 variant matrix + 128px G4"
+    },
+    {
+      "id": "DES-APS-E1-IA-OPTION-D-001",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-06-16",
+      "verdict": "PASS",
+      "witness": "src/dev/design_aps_domain_ia_sign_v1.md",
+      "unblocks": ["APS-EVO-E1-DOMAIN-ROUTER-001"],
+      "notes": "Option D lane switch signed — not 6th tab"
+    },
+    {
+      "id": "DES-APS-PRESET-BROWSE-UX-001",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-06-16",
+      "verdict": "PASS",
+      "witness": "src/dev/design_aps_preset_browse_layout_v1.md",
+      "unblocks": ["APS-EVO-E2-PRESET-BROWSE-001"]
+    },
+    {
+      "id": "DES-APS-STATE-AXIS-LABELS-001",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-06-17",
+      "verdict": "PASS",
+      "witness": "src/dev/design_aps_veg_state_labels_v1.md",
+      "witness_version": "v2",
+      "schema_ref": "tools/mcp/schemas/vegetation_variant_catalog_v1.schema.json",
+      "unblocks": ["APS-EVO-E3-VEG-STATE-AXIS-001"],
+      "notes": "Schema-aligned succession/regrowth/burn labels + States tab wireframe"
+    },
+    {
+      "id": "DES-APS-PARITY-PANEL-UX-001",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-06-16",
+      "verdict": "PASS",
+      "witness": "src/dev/design_aps_veg_parity_panel_v1.md",
+      "unblocks": ["APS-EVO-E5-PARITY-PANEL-001"]
+    },
+    {
+      "id": "DES-APS-DOMAIN-A11Y-001",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-06-16",
+      "verdict": "PASS",
+      "witness": "src/dev/design_aps_domain_a11y_v1.md",
+      "unblocks": ["APS-EVO-E1-LANE-A11Y-001"]
+    },
+    {
+      "id": "DES-G-PLAY-OPERATOR-FLOW-001",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-06-16",
+      "verdict": "PASS (qualified)",
+      "witness": "src/dev/design_g_play_veg_operator_v1.md",
+      "unblocks": ["VEG-C14", "G-PLAY-01-veg-addendum"]
+    },
+    {
+      "id": "DES-APS-STYLE-TOKENS-001",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-06-16",
+      "verdict": "PASS",
+      "witness": "src/dev/design_aps_style_tokens_handoff_v1.md",
+      "unblocks": ["APS-EVO-E1-THEME-TOKENS-001"]
+    },
+    {
+      "id": "DES-ECOLOGY-READ-HUD-001",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-06-16",
+      "verdict": "PASS",
+      "witness": "src/dev/design_ecology_preview_legend_v1.md",
+      "unblocks": ["CDR-A-STAGE5-LIVE-ECO-001"]
+    },
+    {
+      "id": "DES-APS-ASSEMBLY-DENSITY-001",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-06-16",
+      "verdict": "PASS",
+      "witness": "src/dev/design_aps_assembly_density_v1.md",
+      "unblocks": ["APS-UX-ASSEMBLY-RESPONSIVE-001"]
+    },
+    {
+      "id": "DES-APS-COLOR-A11Y-001",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-06-16",
+      "verdict": "PASS",
+      "witness": "src/dev/design_aps_color_a11y_audit_v1.md",
+      "unblocks": ["APS-UX-NONCOLOR-COMPLETE-001"]
+    },
+    {
+      "id": "DES-APS-CHROME-MOCKUP-001",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-06-16",
+      "verdict": "PASS",
+      "witness": "src/dev/design_aps_chrome_mockup_spec_v1.md",
+      "unblocks": ["APS-E1-CHROME-001"]
+    },
+    {
+      "id": "DES-APS-GRAMMAR-PANEL-UX-001",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-06-16",
+      "verdict": "PASS",
+      "witness": "src/dev/design_aps_grammar_panel_v1.md",
+      "unblocks": ["APS-E2-GRAMMAR-PANEL-001"]
+    },
+    {
+      "id": "DES-APS-PIPELINE-PILLS-001",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-06-16",
+      "verdict": "PASS",
+      "witness": "src/dev/design_aps_pipeline_pills_v1.md",
+      "unblocks": ["APS-E1-PIPELINE-LANE-001"]
     }
   ]
 }

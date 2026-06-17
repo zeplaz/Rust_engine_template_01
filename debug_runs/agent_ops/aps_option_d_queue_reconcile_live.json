@@ -1,0 +1,62 @@
+{
+  "green": true,
+  "gate": "ORCH-APS-RECONCILE-001",
+  "program_id": "APS-OPTION-D-001",
+  "reconciled": "2026-06-02",
+  "summary": "E4/E5 spine synced across option_d · mcp_aps_evolution · parallel_wave",
+  "e4_e5_unblocked": true,
+  "rows_synced": [
+    {
+      "id": "APS-EVO-E4-ATLAS-EXPAND-001",
+      "status": "done",
+      "witness": "debug_runs/art_pipeline/tile_landscape_expanded_live.json",
+      "wit_hon": "green:true png_count:16 atlas_domain:landscape"
+    },
+    {
+      "id": "APS-EVO-E5-EXTRACT-PARITY-001",
+      "status": "done",
+      "witness": "debug_runs/aps_veg_extract_parity_live.json",
+      "wit_hon": "passed error_count:0"
+    },
+    {
+      "id": "CDR-A-LG4-PIXEL-REOPEN-001",
+      "status": "done",
+      "witness": "debug_runs/landscape_grammar_lg4_preview_live.json",
+      "note": "LG4-PIXEL-PROOF-GATE satisfied"
+    },
+    {
+      "id": "DMCP-E4-MATRIX-CHARTER-001",
+      "status": "done",
+      "deliverable": "src/dev/design_landscape_lg5_expansion_matrix_v1.md"
+    }
+  ],
+  "external_gates_cleared": [
+    "LG4-PIXEL-PROOF-GATE",
+    "VEG-F01-DESIGN-ATLAS-001"
+  ],
+  "coder_mcp_next": {
+    "id": "MCP-APS-ATLAS-LAND-REGISTER-001",
+    "status": "in_progress",
+    "goal": "landscape atlas register after E4 expand"
+  },
+  "queues_touched": [
+    "tools/orchestrator/queues/aps_option_d_agent_queue.json",
+    "tools/orchestrator/queues/mcp_aps_evolution_queue.json",
+    "tools/orchestrator/queues/parallel_wave_aps_veg_dispatch_v1.json",
+    "tools/mcp/schemas/queue_registry_v1.json"
+  ],
+  "queue_integrity": {
+    "validator": "validate-report queue_integrity",
+    "aps_e4_e5_contradiction": false,
+    "residual_contradictions": 3,
+    "note": "Global contradictions remain (VEG harness · BUILD-READ) — out of APS-E4/E5 scope"
+  },
+  "_agent_meta": {
+    "schema": "aps_option_d_queue_reconcile_live_v1",
+    "written_at_epoch_secs": 1748871000,
+    "profile": "ORCHESTRATOR_MCP",
+    "source_system": "orchestrator-mcp",
+    "relative_path": "debug_runs/agent_ops/aps_option_d_queue_reconcile_live.json",
+    "ritual": "BLANG:WIT-HON ORCH-APS-RECONCILE-001"
+  }
+}

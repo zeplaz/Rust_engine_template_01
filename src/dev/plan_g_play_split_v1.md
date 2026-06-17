@@ -4,7 +4,7 @@
 ⟦SYMLANG⟧⟐v1  ◈PLAN
 ⟨ID⟩ PLAN-G-PLAY-SPLIT-001
 Date: 2026-06-14
-Status: **SIGNED** (@planner)
+Status: **SIGNED** (@planner 2026-06-14 · @planner-mcp 2026-06-16 · reconcile @planner 2026-06-17)
 Parent: PLAN-G-PLAY-CLOSE-001 · G-PLAY-01
 Runbook: $ref:src/dev/play_scenario_acceptance_runbook_v1.md
 Checklist: $ref:src/dev/plan_g_play_close_001_checklist_v1.md
@@ -104,8 +104,9 @@ G-PLAY-01 CLOSED ⇔
 
 ```text
 G-PLAY-01 is a ROLLUP — not a coder pick.
-Coder lanes: G-PLAY-CODER-FIRE (done) · G-PLAY-CODER-BUILD (done) · G-PLAY-CODER-VEG (open).
-Operator lane: G-PLAY-OPERATOR-01 only.
+Coder lanes: G-PLAY-CODER-FIRE 🟢 · G-PLAY-CODER-BUILD 🟢 · G-PLAY-CODER-VEG 🟢 (2026-06-14).
+Operator lane: G-PLAY-OPERATOR-01 🔴 — sole rollup blocker.
+Witness honesty: rollup refresh via CDR-A-WIT-HON-ROLLUP-001 if WIT-HON FAIL.
 ```
 
 ```text

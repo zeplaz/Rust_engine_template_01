@@ -1,9 +1,9 @@
 {
   "task_id": "MCP-GUARD-003",
   "gate_id": "single_archetype_ratio_guard",
-  "ok": true,
-  "green": true,
-  "scanned_files": 246,
+  "ok": false,
+  "green": false,
+  "scanned_files": 289,
   "total_refs": 13,
   "archetype_counts": {
     "IndustrialWarehouse": 13
@@ -12,9 +12,17 @@
     "IndustrialWarehouse": 1.0
   },
   "max_ratio": 0.4,
-  "building_set_insured": true,
-  "grammar_pilot_count": 4,
-  "violation_count": 0,
-  "violations": [],
+  "building_set_insured": false,
+  "grammar_pilot_count": 0,
+  "violation_count": 1,
+  "violations": [
+    {
+      "archetype": "IndustrialWarehouse",
+      "count": 13,
+      "ratio": 1.0,
+      "max_ratio": 0.4,
+      "hint": "diversify grammar pilots/examples or insure building_set manifest"
+    }
+  ],
   "config": "tools/mcp/guard/build_set_guards_v1.json"
 }

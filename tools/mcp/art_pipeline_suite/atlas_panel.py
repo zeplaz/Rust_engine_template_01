@@ -8,7 +8,7 @@ import threading
 import tkinter as tk
 from pathlib import Path
 from tkinter import filedialog, ttk
-from typing import Callable
+from typing import Any, Callable
 
 from rust_engine_mcp import variant_set
 from rust_engine_mcp.paths import repo_root
@@ -28,7 +28,7 @@ from .aps_tooltips import bind_aps_tooltip
 from .atlas_preview_panel import AtlasPreviewPanel
 from .job_controller import JobRecord, JobResult, JobState
 from .metadata_flow_panel import MetadataFlowPanel
-from .state import SuiteState
+from .state import ArtDomain, SuiteState
 
 StartJobFn = Callable[..., str | None]
 
@@ -47,6 +47,36 @@ class AtlasPanel(ttk.Frame):
         self._on_log = on_log
         self._start_job = start_job
         self._build()
+
+    def set_domain(self, lane: str) -> None:
+        reg = "_landscape_atlas_index" if lane == ArtDomain.LANDSCAPE.value else "_tile_atlas_index"
+        lane_word = "landscape" if lane == ArtDomain.LANDSCAPE.value else "buildings"
+        self._domain_banner.configure(text=f"Register target: {reg} ({lane_word})")
+        if lane == ArtDomain.LANDSCAPE.value:
+            self.refresh_landscape_register()
+        else:
+            self._register_status_var.set("")
+
+    def refresh_landscape_register(self) -> dict[str, Any]:
+        from rust_engine_mcp.aps_atlas_land_register import check_atlas_land_register
+
+        body = check_atlas_land_register()
+        ids = body.get("atlas_ids") or []
+        if body.get("register_green"):
+            msg = f"Register PASS — {len(ids)} atlas row(s): {', '.join(ids)}"
+            color = "#0a4a7a"
+        else:
+            missing: list[str] = []
+            if not body.get("pilot_registered"):
+                missing.append("pilot")
+            if not body.get("expanded_registered"):
+                missing.append("expanded")
+            msg = f"Register FAIL — missing: {', '.join(missing) or 'check witness'}"
+            color = "#8b1a1a"
+        self._register_status_var.set(msg)
+        self._register_status_lbl.configure(foreground=color)
+        return body
+
     def _build(self) -> None:
         ttk.Label(
             self,
@@ -55,6 +85,21 @@ class AtlasPanel(ttk.Frame):
             wraplength=720,
             justify=tk.LEFT,
         ).pack(anchor=tk.W, pady=(0, 4))
+        self._domain_banner = ttk.Label(
+            self,
+            text="Register target: _tile_atlas_index (buildings)",
+            font=("Segoe UI", 9),
+            foreground="#1f6b54",
+        )
+        self._domain_banner.pack(anchor=tk.W, pady=(0, 4))
+        reg_row = ttk.Frame(self)
+        reg_row.pack(fill=tk.X, pady=(0, 4))
+        ttk.Button(reg_row, text="Check landscape register", command=self.refresh_landscape_register).pack(
+            side=tk.LEFT
+        )
+        self._register_status_var = tk.StringVar(value="")
+        self._register_status_lbl = ttk.Label(reg_row, textvariable=self._register_status_var, font=("Segoe UI", 9))
+        self._register_status_lbl.pack(side=tk.LEFT, padx=(8, 0))
         self.metadata_flow = MetadataFlowPanel(self, context="atlas")
         self.metadata_flow.pack(fill=tk.X, pady=(0, 6))
 

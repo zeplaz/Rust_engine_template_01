@@ -3,7 +3,8 @@
   "VEG-LG5-WITNESS-001": true,
   "_agent_meta": {
     "agent_commands": [
-      "cargo test -p proc_A_dine01 --lib"
+      "cargo test -p proc_A_dine01 --lib sim_harness_refreshes_witness_json_green",
+      "cargo test -p proc_A_dine01 --lib landscape_grammar"
     ],
     "docs": {
       "compile_warnings": "src/dev/COMPILE_WARNINGS_TODOS.md",
@@ -54,7 +55,7 @@
     "relative_path": "debug_runs/veg_runtime_proof_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_veg_runtime_proof_live_witness",
-    "written_at_epoch_secs": 1781658946
+    "written_at_epoch_secs": 1781708914
   },
   "exit_predicate": {
     "must": [
@@ -83,5 +84,7 @@
   "live_sim_required": true,
   "operator_visible": true,
   "plan": "src/dev/plan_veg_runtime_proof_001_v1.md",
+  "proof_grade": "headless_sim",
+  "slice_id": "CDR-A-WIT-HON-ROLLUP-001",
   "sub_rules_evaluated": true
 }

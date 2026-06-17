@@ -1,0 +1,61 @@
+{
+  "gate": "DMCP-E3-VARIANT-KEY-SET-001",
+  "green": true,
+  "verdict": "PASS",
+  "ship_catalog_version": 2,
+  "catalog": "assets/configs/landscape/_vegetation_variant_catalog.ron",
+  "schema": "tools/mcp/schemas/vegetation_variant_catalog_v1.schema.json",
+  "validation": {
+    "status": "passed",
+    "entry_count": 35,
+    "veg_burn_count": 8,
+    "topology_count": 22,
+    "unique_keys": 35,
+    "ship_review": {
+      "atlas_bake_v1_aligned": true,
+      "atlas_sparse_v1_complete": true,
+      "engine_veg_byte_parity": true,
+      "topology_stamp_present": true,
+      "missing_bake_keys": [],
+      "missing_sparse_keys": [],
+      "missing_veg_keys": [],
+      "extra_veg_keys": [],
+      "entry_count": 35,
+      "topology_count": 22
+    },
+    "ship_catalog_version": 2
+  },
+  "ship_review": {
+    "atlas_bake_v1_aligned": true,
+    "atlas_sparse_v1_complete": true,
+    "engine_veg_byte_parity": true,
+    "topology_stamp_present": true,
+    "missing_bake_keys": [],
+    "missing_sparse_keys": [],
+    "missing_veg_keys": [],
+    "extra_veg_keys": [],
+    "entry_count": 35,
+    "topology_count": 22
+  },
+  "sparse_keys_added": [
+    "topology_patch_burn_07",
+    "topology_patch_regrowth_canopy",
+    "topology_corridor_burn_07",
+    "topology_corridor_regrowth_grass",
+    "topology_cluster_scar",
+    "topology_cluster_regrowth_shrub"
+  ],
+  "unblocks": [
+    "APS-EVO-E3-VEG-STATE-AXIS-001",
+    "CDR-B-VEG-RESOLVER-PARITY-001"
+  ],
+  "_agent_meta": {
+    "schema": "dmcp_e3_vegetation_catalog_live_v1",
+    "written_at_epoch_secs": 1781670218,
+    "profile": "DMCP_E3_VARIANT_KEY_SET",
+    "source_system": "vegetation_variant_catalog",
+    "relative_path": "debug_runs/art_pipeline/dmcp_e3_vegetation_catalog_live.json",
+    "ritual": "BLANG:Q\u2713 DMCP-E3-VARIANT-KEY-SET-001",
+    "agent": "designer-mcp"
+  }
+}

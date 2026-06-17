@@ -1,7 +1,8 @@
 {
   "_agent_meta": {
     "agent_commands": [
-      "cargo test -p proc_A_dine01 --lib"
+      "cargo test -p proc_A_dine01 --lib sim_harness_refreshes_witness_json_green",
+      "cargo test -p proc_A_dine01 --lib landscape_grammar"
     ],
     "docs": {
       "compile_warnings": "src/dev/COMPILE_WARNINGS_TODOS.md",
@@ -52,13 +53,18 @@
     "relative_path": "debug_runs/vegetation_program_close_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_vegetation_program_close",
-    "written_at_epoch_secs": 1781658946
+    "written_at_epoch_secs": 1781708914
   },
   "all_green": true,
+  "child_rollup": {
+    "lg4_preview_sub_rules": true,
+    "veg_runtime_proof_sub_rules": true
+  },
   "phase_a_green": true,
   "phase_b_green": true,
   "phase_c_green": true,
   "phase_d_green": true,
   "phase_e_green": true,
-  "phase_f_green": true
+  "phase_f_green": true,
+  "sub_rules_evaluated": true
 }

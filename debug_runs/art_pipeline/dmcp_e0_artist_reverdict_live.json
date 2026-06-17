@@ -1,0 +1,32 @@
+{
+  "gate": "DMCP-E0-ARTIST-REVERDICT-001",
+  "green": true,
+  "verdict": "PASS_WITH_NOTES",
+  "depends_on": "APS-EVO-E0-RELAUNCH-001",
+  "e0_witness": "debug_runs/aps_artist_tool_e2e_live.json",
+  "review_doc": "src/dev/design_aps_artist_ship_review_20260616_v1.md",
+  "ship_score": "7/10",
+  "checks": {
+    "e0_witness_green": true,
+    "import_guard_pass": true,
+    "steps_ok": true,
+    "honest_gate_not_dishonest": true,
+    "review_doc_on_disk": true
+  },
+  "artist_path": "Catalog \u2192 Assembly \u2192 Materials \u2192 Variants \u2192 Atlas (no Blender)",
+  "track_b_deferred": "MCP-PILOT-GRAMMAR-001 manual keyframe",
+  "e0_stamp": {
+    "stamped": "debug_runs/aps_artist_tool_e2e_live.json",
+    "designer_mcp_signoff": "signed"
+  },
+  "reviewed_at": "2026-06-17",
+  "_agent_meta": {
+    "schema": "dmcp_e0_artist_reverdict_live_v1",
+    "written_at_epoch_secs": 1781710794,
+    "profile": "DMCP_E0_ARTIST_REVERDICT",
+    "source_system": "dmcp_designer_signoff",
+    "relative_path": "debug_runs/art_pipeline/dmcp_e0_artist_reverdict_live.json",
+    "ritual": "BLANG:WIT-HON\u2192Q\u2713 DMCP-E0-ARTIST-REVERDICT-001",
+    "agent": "designer-mcp"
+  }
+}

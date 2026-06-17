@@ -1,4 +1,4 @@
-# Vegetation system — honest status `v1` (2026-06-14)
+# Vegetation system — honest status `v1` (2026-06-17 refresh)
 
 **Charter:** [`guide_landscape_grammar_v1.md`](guide_landscape_grammar_v1.md)  
 **Exec:** [`plan_landscape_grammar_exec_001_v1.md`](plan_landscape_grammar_exec_001_v1.md)  
@@ -11,53 +11,40 @@
 | Layer | Lib witness | Normal play / map | Plain English |
 |:---|:---:|:---:|:---|
 | **LG-0** schema + lexicon | 🟢 | — | Docs/schemas done |
-| **LG-1** evaluator | 🟢 | 🟡 | Map rollout ≥16 chunks in sim harness; pilot preset still primary QA anchor |
-| **LG-2** succession + disturbance | 🟢 JSON | 🟡 | Harness proves fire + construction disturbances > 0 |
-| **LG-3** district programs | 🟡 stub | 🔴 | `x % 16 == 7` hack, not settlement coupling |
-| **LG-4** population + preview | 🟡 tint proof | 🟡 | Topology tint bias on ≥2 program chunks in sim harness — **not** FULL_APP pixel proof |
-| **LG-5/6** sprites / flowers | — | 🔴 | MCP-blocked (correctly deferred) |
+| **LG-1** evaluator | 🟢 | 🟡 | Map rollout ≥16 chunks in sim harness |
+| **LG-2** succession + disturbance | 🟢 JSON | 🟡 | Harness: fire=1, construction=1, harvest=1 (SimEffect wire) |
+| **LG-3** district programs | 🟢 | 🟡 | `presets_used>=3`; λ-driven preset pick (no coord hash) |
+| **LG-4** population + preview | 🟢 | 🟡 | `pixel_heterogeneity_wired` + tint≥1; `proof_grade=headless_sim` |
+| **LG-5/6** sprites / flowers | 🟡 pilot | 🔴 | Pilot stamp green; expanded atlas = @coder-mcp E4 |
 
-**Honest gap:** lib witnesses now require **live `LandscapeProgramOnChunk` query** + **topology tint bias** on multiple chunks — but **FULL_APP / `--test visual` pixel confirmation** is still a separate operator gate (VEG-C14).
+**Honest gap:** lib harness + headless_sim witnesses are green; **`--test visual` ecology raster** remains `CDR-A-VISUAL-SMOKE-ECO-001` lib smoke + operator visual capture.
 
 ---
 
-## Runtime proof upgrades (2026-06-14)
+## Runtime proof upgrades (2026-06-17)
 
 | Before | After |
 |:---|:---|
-| `stage5` ecology rows from harness struct injection | `live_landscape_program_chunk_count_after_harness()` + `ecology_rows_source: live_landscape_program_on_chunk` |
-| `ClimateVisualAggregate.ecology_chunk_count` = `ChunkEcology` only | Prefers `LandscapeProgramOnChunk` count when programs exist (atmosphere visual extract) |
-| Play veg key = pilot eval + `topology_kind_count >= 3` | Requires `topology_tint_bias > 0` on **≥2** program chunks in sim harness |
-| LG-4 `operator_visible` = eval math | `lg4_preview_operator_visible(tint_chunks, eval)` when tint count supplied |
+| `patch_stage5_ecology_*` shortcut in harness refresh | **Removed** — `stage5_live_ecology_already_verified()` only (`CDR-A-ECOLOGY-HARNESS-CLEAN-001`) |
+| Harvest via direct queue poke | **SimEffect** `LandscapeDisturbance.harvest` wire (`CDR-A-FIRE-HARVEST-WIRE-001`) |
+| `vegetation_program_close` rollup dishonest | Child sub-rules + WIT-HON `proof_grade=headless_sim` |
+| Coord-hash preset fallback | **λ-influence** scoring (`CDR-A-PRESET-PICK-LAMBDA-001`) |
+| G-PLAY single `green` | **Split** `lib_contract_green` vs `operator_session_green` (`CDR-A-PLAY-OPS-SPLIT-001`) |
 
 ---
 
-## Witness vs truth (on disk)
+## Key witnesses (disk truth)
 
-| JSON | Key fields | Read as |
-|:---|:---|:---|
-| `landscape_grammar_sim_harness_live.json` | `chunks_with_program >= 16`, `topology_tint_visible_chunks >= 2` | Sim harness green |
-| `landscape_grammar_lg4_preview_live.json` | `topology_tint_visible_chunks` | Tint proof, not pixel heterogeneity |
-| `play_scenario_live.json` | `veg_topology_visible_at_operational_zoom` | Sim harness tint + zoom coherence |
-| `stage5_full_app_live.json` | `ecology_active_rows`, `ecology_rows_source` | Live program count (harness-fed until FULL_APP extract wired end-to-end) |
-| `vegetation_program_close_live.json` | `phase_f_green` | Presets on disk ≥10 + phases A–E |
-
----
-
-## Still blocked (not coder fault)
-
-| ID | Blocker |
+| Witness | Exit |
 |:---|:---|
-| VEG-F01 / F02 | designer-mcp → coder-mcp atlas |
-| VEG-C14 | operator `--test visual` sign-off |
-| MCP P2 | planner SIGN + coder-mcp chain |
+| `landscape_grammar_lg4_preview_live.json` | green, pixel_heterogeneity_wired, tint≥1 |
+| `vegetation_program_close_live.json` | all_green + child_rollup true |
+| `landscape_grammar_lg2_live.json` | harvest≥1, recovery≥1, nested_depth≥3 |
+| `landscape_grammar_fire_harvest_wire_live.json` | fire + harvest via SimEffect |
+| `landscape_grammar_visual_smoke_live.json` | lib_smoke_green (visual capture pending) |
+| `play_scenario_live.json` | lib_contract_green + operator_session fields |
+| `g_play_product_close_live.json` | `g_play_coder_rollup_green` (operator rollup separate) |
 
----
-
-## Remaining hardening (next coder slices)
-
-1. **FULL_APP extract** — `EcologyVisualSnapshot` populated from running sim `publish_climate_visual_aggregate` (not harness patch-only refresh).
-2. **λ / districts** — replace coord heuristics with hydrology/transport/construction reads.
-3. **SIM-STEWARD-FIRE-REGRESS-001** — fire after veg visible in combined lib regression.
-
-**Queue:** v3 drain **78 done · 3 blocked · 1 deferred · 0 ready** (coder-implementable clear).
+```text
+[/vegetation_system_honest_status_v1]  ΔWF→ CDR-A-VISUAL-SMOKE visual capture · G-PLAY-OPERATOR-01
+```

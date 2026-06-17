@@ -14,6 +14,7 @@
     "atlas_panel.py",
     "atlas_preview_panel.py",
     "catalog.py",
+    "domain_router.py",
     "footprint_canvas.py",
     "grammar_build_set_panel.py",
     "grammar_dna_panel.py",
@@ -21,11 +22,17 @@
     "grammar_iterate_panel.py",
     "job_controller.py",
     "job_strip.py",
+    "landscape_extract_parity_panel.py",
+    "landscape_grammar_panel.py",
+    "landscape_presets_panel.py",
+    "landscape_state_labels.py",
+    "landscape_states_panel.py",
     "material_browser.py",
     "material_library_widget.py",
     "material_preview_modes.py",
     "materials_panel.py",
     "metadata_flow_panel.py",
+    "pipeline_pills.py",
     "pipeline_status_bar.py",
     "run.py",
     "scrollable.py",
@@ -35,7 +42,7 @@
     "status_log_panel.py",
     "variants_panel.py"
   ],
-  "module_count": 32,
+  "module_count": 39,
   "pytest": {
     "ok": true,
     "summary": "1 passed",
@@ -59,5 +66,25 @@
   },
   "e2e_green": true,
   "mat_002_ok": true,
-  "bevy_preview_002_green": true
+  "bevy_preview_002_green": true,
+  "witness_honesty": {
+    "status": "skipped",
+    "reason": "green not requested"
+  },
+  "exit_predicate": {
+    "witness": "debug_runs/aps_artist_tool_modules_live.json",
+    "must": [
+      {
+        "path": "green",
+        "eq": true
+      }
+    ]
+  },
+  "_agent_meta": {
+    "schema": "aps_artist_tool_modules_live_v1",
+    "profile": "APS_WITNESS_REFRESH",
+    "relative_path": "debug_runs/aps_artist_tool_modules_live.json",
+    "source_system": "aps_witness_refresh",
+    "written_at_epoch_secs": 1781712992
+  }
 }

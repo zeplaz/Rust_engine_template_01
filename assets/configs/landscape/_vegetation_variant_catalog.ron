@@ -1,0 +1,688 @@
+// DMCP-E3-VARIANT-KEY-SET-001 — authoritative veg + topology variant_key registry.
+(
+    schema_version: 1,
+    catalog_id: "vegetation_variant_catalog_v1",
+    seed: 550005,
+    preset_scope: [
+        "fire_recovery_v0",
+        "old_growth_core_v0",
+    ],
+    _meta: (
+        gate: "DMCP-E3-VARIANT-KEY-SET-001",
+        ship_catalog_version: 2,
+        charter: "src/dev/plan_veg_variant_key_naming_v1.md",
+        matrix: "src/dev/design_landscape_lg5_expansion_matrix_v1.md",
+        keyframe_reqs: "src/dev/design_landscape_keyframe_burn_reqs_v1.md",
+        tile_batch: "assets/staging/specs/tile_batch_landscape_expanded_v1.json",
+        pairs_with: "tools/mcp/schemas/examples/vegetation_variant_catalog_pilot_v1.json",
+        ship_tiers: (
+            engine_resolver_veg: 13,
+            atlas_bake_v1: 16,
+            atlas_sparse_v1: 6,
+        ),
+        review: "DMCP-E3 ship catalog v1.1 — sparse atlas rows from keyframe reqs; veg byte parity unchanged",
+    ),
+    axes: (
+        burn_frame_count: 8,
+        succession_stages: [
+            "Grass",
+            "Shrub",
+            "Sapling",
+            "Canopy",
+            "OldGrowth",
+            "BurnScar",
+        ],
+        regrowth_macro_phases: [
+            "None",
+            "Scar",
+            "Nuclei",
+            "Front",
+            "Closing",
+            "Mature",
+        ],
+    ),
+    entries: [
+        (
+            variant_key: "veg_clean_day",
+            resolver: (
+                kind: "default",
+            ),
+            sim_tags: [
+                "sim_day",
+                "sim_operational",
+            ],
+            notes: "Fallback when no burn overlay and non-OldGrowth succession",
+        ),
+        (
+            variant_key: "veg_old_growth",
+            resolver: (
+                kind: "succession_stage",
+                succession_stage: "OldGrowth",
+            ),
+            sim_tags: [
+                "sim_old_growth",
+                "sim_day",
+            ],
+        ),
+        (
+            variant_key: "veg_damaged",
+            resolver: (
+                kind: "regrowth_macro",
+                regrowth_macro_phase: "Scar",
+            ),
+            sim_tags: [
+                "sim_damaged",
+                "sim_day",
+            ],
+            notes: "Also covers RegrowthMacroPhase::Closing and succession BurnScar tint path",
+        ),
+        (
+            variant_key: "veg_regrowth_nuclei",
+            resolver: (
+                kind: "regrowth_macro",
+                regrowth_macro_phase: "Nuclei",
+            ),
+            sim_tags: [
+                "sim_regrowth",
+                "sim_day",
+            ],
+        ),
+        (
+            variant_key: "veg_regrowth_front",
+            resolver: (
+                kind: "regrowth_macro",
+                regrowth_macro_phase: "Front",
+            ),
+            sim_tags: [
+                "sim_regrowth",
+                "sim_day",
+            ],
+        ),
+        (
+            variant_key: "veg_burn_00",
+            resolver: (
+                kind: "active_burn_frame",
+                frame_index: 0,
+                active_burn_heat_gt: 0.01,
+            ),
+            sim_tags: [
+                "sim_fire",
+                "sim_burn_frame",
+            ],
+        ),
+        (
+            variant_key: "veg_burn_01",
+            resolver: (
+                kind: "active_burn_frame",
+                frame_index: 1,
+                active_burn_heat_gt: 0.01,
+            ),
+            sim_tags: [
+                "sim_fire",
+                "sim_burn_frame",
+            ],
+        ),
+        (
+            variant_key: "veg_burn_02",
+            resolver: (
+                kind: "active_burn_frame",
+                frame_index: 2,
+                active_burn_heat_gt: 0.01,
+            ),
+            sim_tags: [
+                "sim_fire",
+                "sim_burn_frame",
+            ],
+        ),
+        (
+            variant_key: "veg_burn_03",
+            resolver: (
+                kind: "active_burn_frame",
+                frame_index: 3,
+                active_burn_heat_gt: 0.01,
+            ),
+            sim_tags: [
+                "sim_fire",
+                "sim_burn_frame",
+            ],
+        ),
+        (
+            variant_key: "veg_burn_04",
+            resolver: (
+                kind: "active_burn_frame",
+                frame_index: 4,
+                active_burn_heat_gt: 0.01,
+            ),
+            sim_tags: [
+                "sim_fire",
+                "sim_burn_frame",
+            ],
+        ),
+        (
+            variant_key: "veg_burn_05",
+            resolver: (
+                kind: "active_burn_frame",
+                frame_index: 5,
+                active_burn_heat_gt: 0.01,
+            ),
+            sim_tags: [
+                "sim_fire",
+                "sim_burn_frame",
+            ],
+        ),
+        (
+            variant_key: "veg_burn_06",
+            resolver: (
+                kind: "active_burn_frame",
+                frame_index: 6,
+                active_burn_heat_gt: 0.01,
+            ),
+            sim_tags: [
+                "sim_fire",
+                "sim_burn_frame",
+            ],
+        ),
+        (
+            variant_key: "veg_burn_07",
+            resolver: (
+                kind: "active_burn_frame",
+                frame_index: 7,
+                active_burn_heat_gt: 0.01,
+            ),
+            sim_tags: [
+                "sim_fire",
+                "sim_burn_frame",
+            ],
+        ),
+        (
+            variant_key: "topology_patch",
+            resolver: (
+                kind: "topology_kind",
+                topology_kind: "Patch",
+            ),
+            sim_tags: [
+                "sim_day",
+                "sim_topology_patch",
+            ],
+            atlas: (
+                atlas_domain: "landscape",
+                atlas_id: "landscape_lg5_expanded_v1",
+                uv_slot: "topology_patch",
+                scale_band: "M",
+                topology_kind: "Patch",
+            ),
+            glyphs: (
+                planning: "#",
+                extract: "#",
+            ),
+        ),
+        (
+            variant_key: "topology_patch_scar",
+            resolver: (
+                kind: "succession_stage",
+                succession_stage: "BurnScar",
+            ),
+            sim_tags: [
+                "sim_damaged",
+                "sim_topology_patch",
+            ],
+            atlas: (
+                atlas_domain: "landscape",
+                atlas_id: "landscape_lg5_expanded_v1",
+                uv_slot: "topology_patch_scar",
+                scale_band: "M",
+                topology_kind: "Patch",
+            ),
+            glyphs: (
+                planning: "x",
+                extract: "x",
+            ),
+        ),
+        (
+            variant_key: "topology_patch_burn_00",
+            resolver: (
+                kind: "active_burn_frame",
+                frame_index: 0,
+                active_burn_heat_gt: 0.01,
+            ),
+            sim_tags: [
+                "sim_fire",
+                "sim_topology_patch",
+            ],
+            atlas: (
+                atlas_domain: "landscape",
+                atlas_id: "landscape_lg5_expanded_v1",
+                uv_slot: "topology_patch_burn_00",
+                scale_band: "M",
+                topology_kind: "Patch",
+            ),
+            glyphs: (
+                planning: "⊗",
+                extract: "F",
+            ),
+        ),
+        (
+            variant_key: "topology_patch_burn_04",
+            resolver: (
+                kind: "active_burn_frame",
+                frame_index: 4,
+                active_burn_heat_gt: 0.01,
+            ),
+            sim_tags: [
+                "sim_fire",
+                "sim_topology_patch",
+            ],
+            atlas: (
+                atlas_domain: "landscape",
+                atlas_id: "landscape_lg5_expanded_v1",
+                uv_slot: "topology_patch_burn_04",
+                scale_band: "M",
+                topology_kind: "Patch",
+            ),
+            glyphs: (
+                planning: "⊗",
+                extract: "F",
+            ),
+        ),
+        (
+            variant_key: "topology_patch_regrowth_grass",
+            resolver: (
+                kind: "succession_stage",
+                succession_stage: "Grass",
+            ),
+            sim_tags: [
+                "sim_regrowth",
+                "sim_topology_patch",
+            ],
+            atlas: (
+                atlas_domain: "landscape",
+                atlas_id: "landscape_lg5_expanded_v1",
+                uv_slot: "topology_patch_regrowth_grass",
+                scale_band: "M",
+                topology_kind: "Patch",
+            ),
+            glyphs: (
+                planning: ",",
+                extract: ",",
+            ),
+        ),
+        (
+            variant_key: "topology_patch_regrowth_shrub",
+            resolver: (
+                kind: "succession_stage",
+                succession_stage: "Shrub",
+            ),
+            sim_tags: [
+                "sim_regrowth",
+                "sim_topology_patch",
+            ],
+            atlas: (
+                atlas_domain: "landscape",
+                atlas_id: "landscape_lg5_expanded_v1",
+                uv_slot: "topology_patch_regrowth_shrub",
+                scale_band: "M",
+                topology_kind: "Patch",
+            ),
+            glyphs: (
+                planning: ".",
+                extract: ".",
+            ),
+        ),
+        (
+            variant_key: "topology_corridor",
+            resolver: (
+                kind: "topology_kind",
+                topology_kind: "Corridor",
+            ),
+            sim_tags: [
+                "sim_day",
+                "sim_topology_corridor",
+            ],
+            atlas: (
+                atlas_domain: "landscape",
+                atlas_id: "landscape_lg5_expanded_v1",
+                uv_slot: "topology_corridor",
+                scale_band: "M",
+                topology_kind: "Corridor",
+            ),
+            glyphs: (
+                planning: "=",
+                extract: "=",
+            ),
+        ),
+        (
+            variant_key: "topology_corridor_scar",
+            resolver: (
+                kind: "succession_stage",
+                succession_stage: "BurnScar",
+            ),
+            sim_tags: [
+                "sim_damaged",
+                "sim_topology_corridor",
+            ],
+            atlas: (
+                atlas_domain: "landscape",
+                atlas_id: "landscape_lg5_expanded_v1",
+                uv_slot: "topology_corridor_scar",
+                scale_band: "M",
+                topology_kind: "Corridor",
+            ),
+            glyphs: (
+                planning: "x",
+                extract: "x",
+            ),
+        ),
+        (
+            variant_key: "topology_corridor_burn_00",
+            resolver: (
+                kind: "active_burn_frame",
+                frame_index: 0,
+                active_burn_heat_gt: 0.01,
+            ),
+            sim_tags: [
+                "sim_fire",
+                "sim_topology_corridor",
+            ],
+            atlas: (
+                atlas_domain: "landscape",
+                atlas_id: "landscape_lg5_expanded_v1",
+                uv_slot: "topology_corridor_burn_00",
+                scale_band: "M",
+                topology_kind: "Corridor",
+            ),
+            glyphs: (
+                planning: "⊗",
+                extract: "F",
+            ),
+        ),
+        (
+            variant_key: "topology_corridor_burn_04",
+            resolver: (
+                kind: "active_burn_frame",
+                frame_index: 4,
+                active_burn_heat_gt: 0.01,
+            ),
+            sim_tags: [
+                "sim_fire",
+                "sim_topology_corridor",
+            ],
+            atlas: (
+                atlas_domain: "landscape",
+                atlas_id: "landscape_lg5_expanded_v1",
+                uv_slot: "topology_corridor_burn_04",
+                scale_band: "M",
+                topology_kind: "Corridor",
+            ),
+            glyphs: (
+                planning: "⊗",
+                extract: "F",
+            ),
+        ),
+        (
+            variant_key: "topology_ring",
+            resolver: (
+                kind: "topology_kind",
+                topology_kind: "Ring",
+            ),
+            sim_tags: [
+                "sim_day",
+                "sim_topology_ring",
+            ],
+            atlas: (
+                atlas_domain: "landscape",
+                atlas_id: "landscape_lg5_expanded_v1",
+                uv_slot: "topology_ring",
+                scale_band: "M",
+                topology_kind: "Ring",
+            ),
+            glyphs: (
+                planning: "○",
+                extract: "O",
+            ),
+        ),
+        (
+            variant_key: "topology_ring_burn_00",
+            resolver: (
+                kind: "active_burn_frame",
+                frame_index: 0,
+                active_burn_heat_gt: 0.01,
+            ),
+            sim_tags: [
+                "sim_fire",
+                "sim_topology_ring",
+            ],
+            atlas: (
+                atlas_domain: "landscape",
+                atlas_id: "landscape_lg5_expanded_v1",
+                uv_slot: "topology_ring_burn_00",
+                scale_band: "M",
+                topology_kind: "Ring",
+            ),
+            glyphs: (
+                planning: "⊗",
+                extract: "F",
+            ),
+        ),
+        (
+            variant_key: "topology_cluster",
+            resolver: (
+                kind: "default",
+            ),
+            sim_tags: [
+                "sim_day",
+                "sim_topology_cluster",
+            ],
+            atlas: (
+                atlas_domain: "landscape",
+                atlas_id: "landscape_lg5_expanded_v1",
+                uv_slot: "topology_cluster",
+                scale_band: "M",
+            ),
+            glyphs: (
+                planning: "*",
+                extract: "*",
+            ),
+        ),
+        (
+            variant_key: "topology_cluster_regrowth_grass",
+            resolver: (
+                kind: "succession_stage",
+                succession_stage: "Grass",
+            ),
+            sim_tags: [
+                "sim_regrowth",
+                "sim_topology_cluster",
+            ],
+            atlas: (
+                atlas_domain: "landscape",
+                atlas_id: "landscape_lg5_expanded_v1",
+                uv_slot: "topology_cluster_regrowth_grass",
+                scale_band: "M",
+            ),
+            glyphs: (
+                planning: ",",
+                extract: ",",
+            ),
+        ),
+        (
+            variant_key: "topology_fringe",
+            resolver: (
+                kind: "default",
+            ),
+            sim_tags: [
+                "sim_day",
+                "sim_topology_fringe",
+            ],
+            atlas: (
+                atlas_domain: "landscape",
+                atlas_id: "landscape_lg5_expanded_v1",
+                uv_slot: "topology_fringe",
+                scale_band: "M",
+            ),
+            glyphs: (
+                planning: ".",
+                extract: ".",
+            ),
+        ),
+        (
+            variant_key: "topology_fringe_regrowth_grass",
+            resolver: (
+                kind: "succession_stage",
+                succession_stage: "Grass",
+            ),
+            sim_tags: [
+                "sim_regrowth",
+                "sim_topology_fringe",
+            ],
+            atlas: (
+                atlas_domain: "landscape",
+                atlas_id: "landscape_lg5_expanded_v1",
+                uv_slot: "topology_fringe_regrowth_grass",
+                scale_band: "M",
+            ),
+            glyphs: (
+                planning: ",",
+                extract: ",",
+            ),
+        ),
+        (
+            variant_key: "topology_patch_burn_07",
+            resolver: (
+                kind: "active_burn_frame",
+                frame_index: 7,
+                active_burn_heat_gt: 0.01,
+            ),
+            sim_tags: [
+                "sim_fire",
+                "sim_topology_patch",
+            ],
+            atlas: (
+                atlas_domain: "landscape",
+                atlas_id: "landscape_lg5_expanded_v1",
+                uv_slot: "topology_patch_burn_07",
+                scale_band: "M",
+                topology_kind: "Patch",
+            ),
+            glyphs: (
+                planning: "⊗",
+                extract: "F",
+            ),
+            notes: "sparse_v1 — catalog ship row; bake when APS-E4 expands sheet or sparse keyframe lane",
+        ),
+        (
+            variant_key: "topology_patch_regrowth_canopy",
+            resolver: (
+                kind: "succession_stage",
+                succession_stage: "Canopy",
+            ),
+            sim_tags: [
+                "sim_regrowth",
+                "sim_topology_patch",
+                "sim_canopy",
+            ],
+            atlas: (
+                atlas_domain: "landscape",
+                atlas_id: "landscape_lg5_expanded_v1",
+                uv_slot: "topology_patch_regrowth_canopy",
+                scale_band: "M",
+                topology_kind: "Patch",
+            ),
+            glyphs: (
+                planning: "*",
+                extract: "#",
+            ),
+            notes: "sparse_v1 — catalog ship row; bake when APS-E4 expands sheet or sparse keyframe lane",
+        ),
+        (
+            variant_key: "topology_corridor_burn_07",
+            resolver: (
+                kind: "active_burn_frame",
+                frame_index: 7,
+                active_burn_heat_gt: 0.01,
+            ),
+            sim_tags: [
+                "sim_fire",
+                "sim_topology_corridor",
+            ],
+            atlas: (
+                atlas_domain: "landscape",
+                atlas_id: "landscape_lg5_expanded_v1",
+                uv_slot: "topology_corridor_burn_07",
+                scale_band: "M",
+                topology_kind: "Corridor",
+            ),
+            glyphs: (
+                planning: "⊗",
+                extract: "F",
+            ),
+            notes: "sparse_v1 — catalog ship row; bake when APS-E4 expands sheet or sparse keyframe lane",
+        ),
+        (
+            variant_key: "topology_corridor_regrowth_grass",
+            resolver: (
+                kind: "succession_stage",
+                succession_stage: "Grass",
+            ),
+            sim_tags: [
+                "sim_regrowth",
+                "sim_topology_corridor",
+            ],
+            atlas: (
+                atlas_domain: "landscape",
+                atlas_id: "landscape_lg5_expanded_v1",
+                uv_slot: "topology_corridor_regrowth_grass",
+                scale_band: "M",
+                topology_kind: "Corridor",
+            ),
+            glyphs: (
+                planning: ",",
+                extract: ",",
+            ),
+            notes: "sparse_v1 — catalog ship row; bake when APS-E4 expands sheet or sparse keyframe lane",
+        ),
+        (
+            variant_key: "topology_cluster_scar",
+            resolver: (
+                kind: "succession_stage",
+                succession_stage: "BurnScar",
+            ),
+            sim_tags: [
+                "sim_damaged",
+                "sim_topology_cluster",
+            ],
+            atlas: (
+                atlas_domain: "landscape",
+                atlas_id: "landscape_lg5_expanded_v1",
+                uv_slot: "topology_cluster_scar",
+                scale_band: "M",
+            ),
+            glyphs: (
+                planning: "x",
+                extract: "x",
+            ),
+            notes: "sparse_v1 — catalog ship row; bake when APS-E4 expands sheet or sparse keyframe lane",
+        ),
+        (
+            variant_key: "topology_cluster_regrowth_shrub",
+            resolver: (
+                kind: "succession_stage",
+                succession_stage: "Shrub",
+            ),
+            sim_tags: [
+                "sim_regrowth",
+                "sim_topology_cluster",
+            ],
+            atlas: (
+                atlas_domain: "landscape",
+                atlas_id: "landscape_lg5_expanded_v1",
+                uv_slot: "topology_cluster_regrowth_shrub",
+                scale_band: "M",
+            ),
+            glyphs: (
+                planning: ".",
+                extract: ".",
+            ),
+            notes: "sparse_v1 — catalog ship row; bake when APS-E4 expands sheet or sparse keyframe lane",
+        ),
+    ],
+)

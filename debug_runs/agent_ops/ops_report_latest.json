@@ -1,7 +1,7 @@
 {
   "_agent_meta": {
     "schema": "ops_report_v2",
-    "written_at_epoch_secs": 1781574914,
+    "written_at_epoch_secs": 1781670224,
     "profile": "OPS_REPORT",
     "source_system": "ops_witness_index+ops_project_brief",
     "relative_path": "debug_runs/agent_ops/ops_report_latest.json",
@@ -21,14 +21,14 @@
     "ECONOMY/LOG: 0 green / 0 proofs",
     "WAVE/STAGE6: 0 green / 0 proofs",
     "STAGE7/PLAY: 0 green / 1 proofs",
-    "ART-A/B/C: 2/69/0 proofs \u00b7 B ship\u26d4=True",
-    "UI: 0 proofs \u00b7 UNCLASSIFIED: 140",
+    "ART-A/B/C: 2/83/0 proofs \u00b7 B ship\u26d4=True",
+    "UI: 0 proofs \u00b7 UNCLASSIFIED: 197",
     "FAIL-PROP[art_B]: Track B manual keyframe \u2014 warehouse paused (does not block ATL\u2605/RT\u2605)"
   ],
   "qce": {
     "Q_coherence": {
       "score": 7,
-      "evidence": "stage5 spine + construction operational; art_B dishonest=4"
+      "evidence": "stage5 spine + construction operational; art_B dishonest=5"
     },
     "Q_stability": {
       "score": 7,
@@ -47,8 +47,8 @@
       "evidence": "construction sub-witness rollup in index; APS previews green"
     },
     "E_confusion_risk": {
-      "score": 8,
-      "evidence": "art dishonest=4; construction red=0"
+      "score": 9,
+      "evidence": "art dishonest=5; construction red=0; inflated_green=9; rollup_inflated=1; queue_contradiction=3"
     }
   },
   "delta_wf": [
@@ -65,7 +65,7 @@
       "next_artifact": "debug_runs/g_play_product_close_live.json"
     },
     {
-      "finding": "VEG-HARD witnesses green \u2014 rollup blocked on operator only",
+      "finding": "VEG rollup dishonest \u2014 operator rollup still blocked on G-PLAY-OPERATOR-01",
       "owner": "@coder A",
       "program_id": "stage7_play",
       "next_artifact": "debug_runs/g_play_product_close_live.json"
@@ -95,8 +95,8 @@
       "label": "APS product / material studio"
     },
     "art_B": {
-      "count": 69,
-      "green_count": 36,
+      "count": 83,
+      "green_count": 47,
       "label": "MCP pipeline spine / warehouse integration"
     },
     "construction": {
@@ -115,8 +115,8 @@
       "label": "Stage 7 play scenarios"
     },
     "unclassified": {
-      "count": 140,
-      "green_count": 120,
+      "count": 197,
+      "green_count": 156,
       "label": null
     }
   },
@@ -214,7 +214,7 @@
   "handoff_path": "tools/orchestrator/queues/HANDOFF.md",
   "doc_reads": {
     "witness_path": "debug_runs/agent_ops/doc_reads_brief_latest.json",
-    "total_reads_in_window": 174,
+    "total_reads_in_window": 192,
     "hot_path_count": 12,
     "promotion_candidates": 12,
     "top_hot_paths": [
@@ -224,19 +224,19 @@
       },
       {
         "path": "src/dev/agent_lang_v1.md",
-        "count": 27
+        "count": 30
       },
       {
         "path": "prompts/llm_agent_brief.md",
+        "count": 23
+      },
+      {
+        "path": "docs/archive/2026-06-src-dev/plans/plan_mcp_agent_lang_program_v1.md",
         "count": 21
       },
       {
         "path": ".cursor/skills/agent-lang/SKILL.md",
-        "count": 18
-      },
-      {
-        "path": "docs/archive/2026-06-src-dev/plans/plan_mcp_agent_lang_program_v1.md",
-        "count": 13
+        "count": 20
       }
     ]
   },

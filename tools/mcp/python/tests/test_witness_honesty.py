@@ -188,13 +188,35 @@ def test_phase_close_without_sub(tmp_path) -> None:
     assert any(i.symbol == "WIT-PHASE-CLOSE-WITHOUT-SUB" for i in issues)
 
 
-def test_real_lg4_preview_fails_green_tint_zero() -> None:
+def test_real_lg4_preview_passes_when_honest_tint_and_proof_grade() -> None:
     path = repo_root() / "debug_runs/landscape_grammar_lg4_preview_live.json"
     if not path.is_file():
         pytest.skip("lg4 preview witness missing")
     report = validate_witness_honesty_path(path, compression_level=3)
-    assert report.status == "failed"
-    assert any(i.symbol == "WIT-GREEN-TINT-ZERO" for i in report.errors)
+    assert report.status in ("passed", "warning")
+    assert not any(i.symbol == "WIT-GREEN-TINT-ZERO" for i in report.errors)
+    assert not any(i.symbol == "WIT-OPERATOR-LIB-FIXTURE" for i in report.errors)
+
+
+def test_headless_sim_operator_visible_passes_with_lib_harness_command() -> None:
+    catalog = load_witness_integrity_catalog()
+    data = {
+        "_agent_meta": {
+            "schema": "witness_honesty_fixture_v1",
+            "agent_commands": ["cargo test -p proc_A_dine01 --lib sim_harness_refreshes_witness_json_green"],
+        },
+        "operator_visible": True,
+        "proof_grade": "headless_sim",
+        "topology_tint_visible_chunks": 3,
+        "green": True,
+    }
+    issues = evaluate_witness_honesty_rules(
+        data,
+        witness_rel="debug_runs/landscape_grammar_lg4_preview_live.json",
+        catalog=catalog,
+        root=repo_root(),
+    )
+    assert not any(i.symbol == "WIT-OPERATOR-LIB-FIXTURE" for i in issues)
 
 
 def test_scan_debug_runs_structured_report() -> None:

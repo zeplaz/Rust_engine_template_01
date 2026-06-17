@@ -1,0 +1,51 @@
+{
+  "gate": "PARALLEL-WAVE-APS-VEG-DISPATCH-001",
+  "agent": "designer-mcp",
+  "wave": 0,
+  "green": true,
+  "updated": "2026-06-17",
+  "_agent_meta": {
+    "schema": "debug_run_envelope_v1",
+    "ritual": "BLANG:WIT-HON→WIT→Q✓ designer-mcp wave-0 close",
+    "skills": ["mcp-production-rules", "tile-generation"]
+  },
+  "completed": [
+    "DMCP-E4-MATRIX-CHARTER-001",
+    "DMCP-E2-PRESET-QC-CRITERIA-001",
+    "DMCP-LG5-KEYFRAME-REQS-001",
+    "DMCP-VEG-F01-ART-SHIP-001",
+    "DMCP-E3-VARIANT-KEY-SET-001",
+    "DMCP-E0-ARTIST-REVERDICT-001",
+    "DMCP-CONTENT-G0-RULES-001",
+    "DMCP-TILE-BATCH-EXPAND-SPEC-001",
+    "DMCP-BURN-VISUAL-LANG-001",
+    "DMCP-PRESET-DISPLAY-STRINGS-001",
+    "DMCP-SUCCESSION-STATE-CONTENT-001",
+    "DMCP-G4-STAGING-SIGN-001",
+    "DMCP-PILOT-TEACH-ANNOT-001",
+    "DMCP-ATLAS-QC-PLAIN-001"
+  ],
+  "deferred": [],
+  "blocked": [],
+  "witnesses": {
+    "e0_reverdict": "src/dev/design_aps_artist_ship_review_20260616_v1.md",
+    "e0_witness": "debug_runs/art_pipeline/dmcp_e0_artist_reverdict_live.json",
+    "e4_matrix": "src/dev/design_landscape_lg5_expansion_matrix_v1.md",
+    "e4_witness": "debug_runs/art_pipeline/dmcp_e4_matrix_charter_live.json",
+    "e3_catalog": "assets/configs/landscape/_vegetation_variant_catalog.ron",
+    "e3_witness": "debug_runs/art_pipeline/dmcp_e3_vegetation_catalog_live.json",
+    "g0_rules": "debug_runs/art_pipeline/landscape_expanded_g0_rules.yaml",
+    "tile_batch": "assets/staging/specs/tile_batch_landscape_expanded_v1.json",
+    "tile_batch_validate": "passed",
+    "matrix": "src/dev/design_landscape_lg5_expansion_matrix_v1.md",
+    "preset_qc": "src/dev/design_aps_preset_qc_criteria_v1.md",
+    "lg5_keyframes": "src/dev/design_landscape_keyframe_burn_reqs_v1.md",
+    "veg_f01": "src/dev/design_veg_f01_art_ship_v1.md"
+  },
+  "unblocks": [
+    "APS-EVO-E4-ATLAS-EXPAND-001",
+    "APS-EVO-E3-VEG-STATE-AXIS-001",
+    "CDR-B-VEG-RESOLVER-PARITY-001"
+  ],
+  "next": "@coder-mcp APS-EVO-E3-VEG-STATE-AXIS-001 + APS-EVO-E4-ATLAS-EXPAND-001 after keyframes"
+}

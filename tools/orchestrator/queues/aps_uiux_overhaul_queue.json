@@ -1,0 +1,423 @@
+{
+  "_meta": {
+    "version": "1.0.0",
+    "program_id": "PLAN-APS-UIUX-OVERHAUL-001",
+    "program_status": "ACTIVE",
+    "date": "2026-06-17",
+    "plan_doc": "src/dev/plan_aps_uiux_overhaul_20260616_v1.md",
+    "board": "src/dev/aps_uiux_overhaul_agent_todos_v1.md",
+    "dispatch": "tools/orchestrator/queues/aps_uiux_overhaul_dispatch_orders_v1.md",
+    "prior_program": "APS-OPTION-D-001",
+    "prior_closed": "debug_runs/agent_ops/aps_option_d_queue_reconcile_live.json",
+    "rule": "OVR-P0-DESIGN-LOCK gates ALL coder-mcp phases · P1→P6 sequential (app.py file lock) · pytest -k aps every phase · NEEDS-DISPLAY = operator eyeball, not Q✓",
+    "sequence": "P0 → P1 → P2 → P3 → P4 → P4.5 → P5 → P5.5 → P5.6 → P6",
+    "regression": "cd tools/mcp/python && python -m pytest -k aps -q",
+    "runtime_guards": [
+      "tests/test_aps_imports.py",
+      "tests/test_aps_runtime_callbacks.py"
+    ],
+    "sweeps": [
+      "src/dev/aps_sweep_text_20260616_v1.md",
+      "src/dev/aps_sweep_layout_20260616_v1.md",
+      "src/dev/aps_sweep_tabdesign_20260616_v1.md",
+      "src/dev/aps_sweep_style_20260616_v1.md",
+      "src/dev/aps_sweep_workflow_tooltips_vibe_20260616_v1.md"
+    ],
+    "wit_hon": "validate-report witness_honesty <witness> --compress 3"
+  },
+  "dispatch_now": {
+    "orchestrator-mcp": "ORCH-OVR-001 — issue wave-0; enforce P0 gate",
+    "designer": "OVR-P0-DESIGN-LOCK — START NOW (blocks everyone)",
+    "planner-mcp": "PLAN-OVR-QUEUE-REGISTRY-001 — parallel",
+    "coder-mcp": "BLOCKED until P0 sign-off on aps_design_system_v1.md",
+    "designer-mcp": "DMCP-OVR-G0-AUDIT-001 — parallel after P0 draft",
+    "coder_a": "idle — no APS Tk scope",
+    "coder_b": "idle — no APS Tk scope",
+    "operator": "OVR-P6-OPERATOR-EYEBALL-001 — after P6 witness lands"
+  },
+  "phase_legend": {
+    "P0": "Design-system lock (GATE)",
+    "P1": "Token enforcement foundation",
+    "P2": "Text overhaul",
+    "P3": "Layout & density",
+    "P4": "Tab design & IA refinement",
+    "P4.5": "Pipeline spine (clickable stepper)",
+    "P5": "Visual-style unification",
+    "P5.5": "Preview & presentation",
+    "P5.6": "Onboarding & first-run",
+    "P6": "Integration close + operator eyeball"
+  },
+  "drain": [
+    {
+      "seq": 1,
+      "phase": "P0",
+      "wave": 0,
+      "id": "ORCH-OVR-001",
+      "status": "ready",
+      "priority": "P0",
+      "owner": "orchestrator-mcp",
+      "goal": "Sequence PLAN-APS-UIUX-OVERHAUL-001; enforce P0 gate + per-phase file lock",
+      "queue": "tools/orchestrator/queues/aps_uiux_overhaul_queue.json",
+      "blocks": ["OVR-P1-TOKENS-001"]
+    },
+    {
+      "seq": 2,
+      "phase": "P0",
+      "wave": 0,
+      "id": "OVR-P0-DESIGN-LOCK",
+      "status": "ready",
+      "priority": "P0",
+      "owner": "designer",
+      "goal": "Author aps_design_system_v1.md — terminology, tokens, IA contract, status atom",
+      "deliverable": "src/dev/aps_design_system_v1.md",
+      "inputs": [
+        "src/dev/aps_sweep_text_20260616_v1.md",
+        "src/dev/aps_sweep_layout_20260616_v1.md",
+        "src/dev/aps_sweep_tabdesign_20260616_v1.md",
+        "src/dev/aps_sweep_style_20260616_v1.md",
+        "src/dev/aps_sweep_workflow_tooltips_vibe_20260616_v1.md"
+      ],
+      "acceptance": "Designer sign-off; cited by P1–P6",
+      "blocks": [
+        "OVR-P1-TOKENS-001",
+        "OVR-DES-P2-COPY-PACK-001",
+        "OVR-DES-P3-LAYOUT-DELTA-001",
+        "OVR-DES-P45-SPINE-SPEC-001",
+        "OVR-DES-P55-PREVIEW-SPEC-001",
+        "OVR-DES-P56-ONBOARD-SPEC-001"
+      ]
+    },
+    {
+      "seq": 3,
+      "phase": "P0",
+      "wave": 0,
+      "id": "PLAN-OVR-QUEUE-REGISTRY-001",
+      "status": "done",
+      "priority": "P2",
+      "owner": "planner-mcp",
+      "goal": "Register aps_uiux_overhaul_queue in queue_integrity registry",
+      "verify": ["validate-report queue_integrity --compress 3"],
+      "parallel_ok": ["OVR-P0-DESIGN-LOCK"]
+    },
+    {
+      "seq": 4,
+      "phase": "P0",
+      "wave": 0,
+      "id": "PLAN-OVR-WITNESS-PROFILE-001",
+      "status": "done",
+      "priority": "P2",
+      "owner": "planner-mcp",
+      "goal": "Define P6 witness envelope aps_uiux_overhaul_close_live.json fields",
+      "deliverable": "src/dev/plan_aps_uiux_overhaul_witness_v1.md",
+      "parallel_ok": ["OVR-P0-DESIGN-LOCK"]
+    },
+    {
+      "seq": 5,
+      "phase": "P0",
+      "wave": 1,
+      "id": "DMCP-OVR-G0-AUDIT-001",
+      "status": "blocked",
+      "priority": "P1",
+      "owner": "designer-mcp",
+      "depends_on": ["OVR-P0-DESIGN-LOCK"],
+      "goal": "G0 order-critique: terminology ban-list + voice rules audit (no jargon in artist strings)",
+      "deliverable": "src/dev/design_aps_uiux_g0_audit_v1.md",
+      "parallel_ok": ["OVR-P1-TOKENS-001"]
+    },
+    {
+      "seq": 6,
+      "phase": "P1",
+      "wave": 1,
+      "id": "OVR-P1-TOKENS-001",
+      "status": "blocked",
+      "priority": "P0",
+      "owner": "coder-mcp",
+      "depends_on": ["OVR-P0-DESIGN-LOCK", "ORCH-OVR-001"],
+      "goal": "Token ramp + spacing scale + color roles; fix 7px font; style/density guards",
+      "territory": "tools/mcp/art_pipeline_suite/aps_theme.py",
+      "verify": [
+        "pytest tools/mcp/python/tests/test_aps_font_floor.py",
+        "pytest tools/mcp/python/tests/test_aps_style_tokens.py",
+        "pytest tools/mcp/python/tests/test_aps_ux_polish_density_tokens.py",
+        "pytest tools/mcp/python/tests -k aps -q"
+      ],
+      "blocks": ["OVR-P2-TEXT-001"]
+    },
+    {
+      "seq": 7,
+      "phase": "P2",
+      "wave": 2,
+      "id": "OVR-DES-P2-COPY-PACK-001",
+      "status": "blocked",
+      "priority": "P1",
+      "owner": "designer",
+      "depends_on": ["OVR-P0-DESIGN-LOCK"],
+      "goal": "Signed copy pack: worst-offender rewrites + tooltip rewrites from text sweep",
+      "deliverable": "src/dev/design_aps_uiux_copy_pack_v1.md",
+      "blocks": ["OVR-P2-TEXT-001"]
+    },
+    {
+      "seq": 8,
+      "phase": "P2",
+      "wave": 2,
+      "id": "OVR-P2-TEXT-001",
+      "status": "blocked",
+      "priority": "P0",
+      "owner": "coder-mcp",
+      "co_owner": "designer",
+      "depends_on": ["OVR-P1-TOKENS-001", "OVR-DES-P2-COPY-PACK-001"],
+      "goal": "Implement terminology + ban-list + voice rules across panels and aps_tooltips.py",
+      "territory": "tools/mcp/art_pipeline_suite/",
+      "verify": [
+        "pytest tools/mcp/python/tests/test_aps_no_jargon.py",
+        "pytest tools/mcp/python/tests -k aps -q"
+      ],
+      "blocks": ["OVR-P3-LAYOUT-001"]
+    },
+    {
+      "seq": 9,
+      "phase": "P3",
+      "wave": 3,
+      "id": "OVR-DES-P3-LAYOUT-DELTA-001",
+      "status": "blocked",
+      "priority": "P1",
+      "owner": "designer",
+      "depends_on": ["OVR-P0-DESIGN-LOCK"],
+      "goal": "Layout delta spec: chrome collapse, grid above fold, pane mins at 960×600",
+      "deliverable": "src/dev/design_aps_uiux_layout_delta_v1.md",
+      "blocks": ["OVR-P3-LAYOUT-001"]
+    },
+    {
+      "seq": 10,
+      "phase": "P3",
+      "wave": 3,
+      "id": "OVR-P3-LAYOUT-001",
+      "status": "blocked",
+      "priority": "P0",
+      "owner": "coder-mcp",
+      "co_owner": "designer",
+      "depends_on": ["OVR-P2-TEXT-001", "OVR-DES-P3-LAYOUT-DELTA-001"],
+      "goal": "Reclaim work area; fix footprint overflow; migrate padding literals; no h-scroll at MIN",
+      "territory": "tools/mcp/art_pipeline_suite/app.py",
+      "verify": [
+        "pytest tools/mcp/python/tests/test_aps_min_window_layout.py",
+        "pytest tools/mcp/python/tests -k aps -q"
+      ],
+      "blocks": ["OVR-P4-IA-001"]
+    },
+    {
+      "seq": 11,
+      "phase": "P4",
+      "wave": 4,
+      "id": "OVR-DES-P4-IA-SIGN-001",
+      "status": "blocked",
+      "priority": "P1",
+      "owner": "designer",
+      "depends_on": ["OVR-P0-DESIGN-LOCK"],
+      "goal": "Sign IA contract: Buildings tab reorder, Stamp fold, material authority map",
+      "deliverable": "src/dev/design_aps_uiux_ia_sign_v1.md",
+      "blocks": ["OVR-P4-IA-001"]
+    },
+    {
+      "seq": 12,
+      "phase": "P4",
+      "wave": 4,
+      "id": "OVR-P4-IA-001",
+      "status": "blocked",
+      "priority": "P0",
+      "owner": "coder-mcp",
+      "co_owner": "designer",
+      "depends_on": ["OVR-P3-LAYOUT-001", "OVR-DES-P4-IA-SIGN-001"],
+      "goal": "R1 Stamp→Atlas; R2 dead catalog path; Buildings reorder; material vocab unify",
+      "territory": "tools/mcp/art_pipeline_suite/domain_router.py",
+      "verify": [
+        "pytest tools/mcp/python/tests/test_aps_lane_tab_swap.py",
+        "pytest tools/mcp/python/tests/test_aps_runtime_callbacks.py",
+        "pytest tools/mcp/python/tests -k aps -q"
+      ],
+      "blocks": ["OVR-P45-SPINE-001"]
+    },
+    {
+      "seq": 13,
+      "phase": "P4.5",
+      "wave": 5,
+      "id": "OVR-DES-P45-SPINE-SPEC-001",
+      "status": "blocked",
+      "priority": "P1",
+      "owner": "designer",
+      "depends_on": ["OVR-P0-DESIGN-LOCK", "OVR-DES-P4-IA-SIGN-001"],
+      "goal": "Pipeline spine interaction spec: clickable pills, ▣ here, advance verbs, no auto-tab-switch",
+      "deliverable": "src/dev/design_aps_uiux_spine_spec_v1.md",
+      "blocks": ["OVR-P45-SPINE-001"]
+    },
+    {
+      "seq": 14,
+      "phase": "P4.5",
+      "wave": 5,
+      "id": "OVR-P45-SPINE-001",
+      "status": "blocked",
+      "priority": "P0",
+      "owner": "coder-mcp",
+      "co_owner": "designer",
+      "depends_on": ["OVR-P4-IA-001", "OVR-DES-P45-SPINE-SPEC-001"],
+      "goal": "Clickable pipeline spine; readiness gates flow verbs; narrate on_bake_variants",
+      "territory": "tools/mcp/art_pipeline_suite/pipeline_status_bar.py",
+      "verify": [
+        "pytest tools/mcp/python/tests/test_aps_runtime_callbacks.py",
+        "pytest tools/mcp/python/tests -k aps -q"
+      ],
+      "blocks": ["OVR-P5-STYLE-001"]
+    },
+    {
+      "seq": 15,
+      "phase": "P5",
+      "wave": 6,
+      "id": "OVR-P5-STYLE-001",
+      "status": "blocked",
+      "priority": "P0",
+      "owner": "coder-mcp",
+      "co_owner": "designer",
+      "depends_on": ["OVR-P45-SPINE-001"],
+      "goal": "status_atom() everywhere; tk→ttk migration; fix PASS-in-blue; section component",
+      "territory": "tools/mcp/art_pipeline_suite/aps_inline_feedback.py",
+      "verify": [
+        "pytest tools/mcp/python/tests/test_aps_style_tokens.py",
+        "pytest tools/mcp/python/tests -k aps -q"
+      ],
+      "blocks": ["OVR-P55-PREVIEW-001"]
+    },
+    {
+      "seq": 16,
+      "phase": "P5.5",
+      "wave": 7,
+      "id": "OVR-DES-P55-PREVIEW-SPEC-001",
+      "status": "blocked",
+      "priority": "P1",
+      "owner": "designer",
+      "depends_on": ["OVR-P0-DESIGN-LOCK"],
+      "goal": "Preview surface contract: 4 states, fidelity labels, browser vs in-Tk story",
+      "deliverable": "src/dev/design_aps_uiux_preview_spec_v1.md",
+      "blocks": ["OVR-P55-PREVIEW-001"]
+    },
+    {
+      "seq": 17,
+      "phase": "P5.5",
+      "wave": 7,
+      "id": "OVR-P55-PREVIEW-001",
+      "status": "blocked",
+      "priority": "P0",
+      "owner": "coder-mcp",
+      "co_owner": "designer",
+      "depends_on": ["OVR-P5-STYLE-001", "OVR-DES-P55-PREVIEW-SPEC-001"],
+      "goal": "Unified preview states; no black/blank; async update-on-select; trimesh degradation",
+      "territory": "tools/mcp/art_pipeline_suite/slot_preview_panel.py",
+      "verify": [
+        "pytest tools/mcp/python/tests/test_aps_runtime_callbacks.py",
+        "pytest tools/mcp/python/tests -k aps -q"
+      ],
+      "needs_display": true,
+      "blocks": ["OVR-P56-ONBOARD-001"]
+    },
+    {
+      "seq": 18,
+      "phase": "P5.6",
+      "wave": 8,
+      "id": "OVR-DES-P56-ONBOARD-SPEC-001",
+      "status": "blocked",
+      "priority": "P1",
+      "owner": "designer",
+      "depends_on": ["OVR-P0-DESIGN-LOCK", "OVR-DES-P45-SPINE-SPEC-001"],
+      "goal": "Onboarding copy: How this works, empty states per tab, dismiss persistence",
+      "deliverable": "src/dev/design_aps_uiux_onboard_spec_v1.md",
+      "blocks": ["OVR-P56-ONBOARD-001"]
+    },
+    {
+      "seq": 19,
+      "phase": "P5.6",
+      "wave": 8,
+      "id": "OVR-P56-ONBOARD-001",
+      "status": "blocked",
+      "priority": "P0",
+      "owner": "coder-mcp",
+      "co_owner": "designer",
+      "depends_on": ["OVR-P55-PREVIEW-001", "OVR-DES-P56-ONBOARD-SPEC-001"],
+      "goal": "First-run greeting; friendly empty states; metadata_flow default collapsed; dismiss remembered",
+      "territory": "tools/mcp/art_pipeline_suite/metadata_flow_panel.py",
+      "verify": [
+        "pytest tools/mcp/python/tests/test_aps_onboarding.py",
+        "pytest tools/mcp/python/tests -k aps -q"
+      ],
+      "needs_display": true,
+      "blocks": ["OVR-P6-CLOSE-001"]
+    },
+    {
+      "seq": 20,
+      "phase": "P6",
+      "wave": 9,
+      "id": "OVR-P6-CLOSE-001",
+      "status": "blocked",
+      "priority": "P0",
+      "owner": "coder-mcp",
+      "co_owner": "designer",
+      "depends_on": ["OVR-P56-ONBOARD-001"],
+      "goal": "Full guard suite green; refresh aps_uiux_overhaul_close_live.json; WIT-HON",
+      "witness": "debug_runs/aps_uiux_overhaul_close_live.json",
+      "verify": [
+        "pytest tools/mcp/python/tests -k aps -q",
+        "validate-report witness_honesty debug_runs/aps_uiux_overhaul_close_live.json"
+      ],
+      "blocks": ["OVR-P6-OPERATOR-EYEBALL-001", "OVR-P6-DESIGN-SIGN-001"]
+    },
+    {
+      "seq": 21,
+      "phase": "P6",
+      "wave": 9,
+      "id": "OVR-P6-OPERATOR-EYEBALL-001",
+      "status": "blocked",
+      "priority": "P0",
+      "owner": "operator",
+      "depends_on": ["OVR-P6-CLOSE-001"],
+      "goal": "Human eyeball: both lanes at 1280×800 + MIN 960×600 — text/layout/tabs/style vs P0 spec",
+      "needs_display": true,
+      "forbidden_exit": ["headless_only", "lib_test_only"]
+    },
+    {
+      "seq": 22,
+      "phase": "P6",
+      "wave": 9,
+      "id": "OVR-P6-DESIGN-SIGN-001",
+      "status": "blocked",
+      "priority": "P0",
+      "owner": "designer",
+      "depends_on": ["OVR-P6-CLOSE-001", "OVR-P6-OPERATOR-EYEBALL-001"],
+      "goal": "Final designer sign-off on overhaul vs north star + P0 design system",
+      "deliverable": "src/dev/design_aps_uiux_overhaul_signoff_v1.md",
+      "witness": "debug_runs/aps_uiux_overhaul_close_live.json"
+    },
+    {
+      "seq": 23,
+      "phase": "P6",
+      "wave": 9,
+      "id": "DMCP-OVR-ARTIST-ACCEPT-001",
+      "status": "blocked",
+      "priority": "P1",
+      "owner": "designer-mcp",
+      "depends_on": ["OVR-P6-DESIGN-SIGN-001"],
+      "goal": "Artist acceptance re-verdict post-overhaul (supersedes 7/10 building-only score)",
+      "deliverable": "src/dev/design_aps_artist_ship_review_uiux_v1.md",
+      "witness": "debug_runs/art_pipeline/dmcp_ovr_artist_accept_live.json"
+    },
+    {
+      "seq": 24,
+      "phase": "P0",
+      "wave": 0,
+      "id": "ORCH-OVR-FILELOCK-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "orchestrator-mcp",
+      "goal": "Publish per-phase file-lock table in dispatch orders; one coder-mcp phase active",
+      "deliverable": "tools/orchestrator/queues/aps_uiux_overhaul_dispatch_orders_v1.md",
+      "parallel_ok": ["OVR-P0-DESIGN-LOCK"]
+    }
+  ]
+}

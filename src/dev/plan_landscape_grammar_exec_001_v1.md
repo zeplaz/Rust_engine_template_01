@@ -185,6 +185,19 @@ Burn and regrowth ship **before** LG-5 atlas pixels — sim + extract first, spr
 
 **Do not:** LG-5 atlas before extract frame green · per-tree global ECS · density-only burn.
 
+#### §7.1.1 Teach exception — 3-tile pilot atlas (PLAN-LG-EXEC-ANNOT-001)
+
+The LG-5 **pilot** (`tile_landscape_lg5_pilot_v1`, 3 variants) is an intentional **teach** batch:
+
+| Field | Pilot value | Full expansion |
+|:---|:---|:---|
+| `ship` | `false` | `true` only after G-ART-SHIP |
+| `development_tier` | `pilot` | `production` |
+| Variant count | 3 (`topology_*` clean only) | full matrix per `plan_landscape_atlas_budget_v1.md` |
+| Burn rows | **absent** — extract uses tint | `veg_burn_00..07` in catalog + batch |
+
+**Rule:** Do not cite pilot bake green as burn/scar coverage. `_meta.teaches: landscape_lg5` examples are **not** ship targets. Expansion job: `assets/staging/specs/tile_batch_landscape_expanded_v1.example.json`.
+
 ---
 
 ## 8. Witness probes (v0 acceptance)
@@ -274,6 +287,7 @@ ring_shelter: anchor_node_label D · symbolic_field_stack ⚶{wind} + █{mass}
 | v1.1.0 | 2026-06-13 | LG-0-001 schema shipped · @planner **SIGNED** · §11 symbol retention audit |
 | v1.2.0 | 2026-06-13 | Schema aligned to lexicon v1.4.0 — chart enum · field overlays · macros · ◊A…I · dual-layer tags |
 | v1.3.0 | 2026-06-14 | §7.1 burn/extract extension — PLAN-VEG-BURN-EXTRACT-001 SIGNED |
+| v1.4.0 | 2026-06-16 | §7.1.1 pilot teach exception — PLAN-LG-EXEC-ANNOT-001 |
 
 ```text
 ⟦/PLAN-LANDSCAPE-GRAMMAR-001⟧  LG-0 ✅ · ΔWF→@coder LG-1-001 evaluator stub

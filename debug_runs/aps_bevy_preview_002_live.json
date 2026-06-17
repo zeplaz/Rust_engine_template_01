@@ -1,7 +1,7 @@
 {
   "gate_id": "APS-BEVY-PREVIEW-002",
   "green": true,
-  "mode": "bevy_worker",
+  "mode": "browser_threejs",
   "assembly_id": "industrial_west_7x5_s39_9fa1",
   "png": "debug_runs/preview_jobs/industrial_west_7x5_s39_9fa1_thumb.png",
   "context_thumb_pipe": {
@@ -18,5 +18,5 @@
     "witness": "debug_runs/preview_worker_smoke_live.json"
   },
   "preview_002_witness": "debug_runs/aps_preview_002_live.json",
-  "elapsed_ms": 1119
+  "elapsed_ms": 0
 }

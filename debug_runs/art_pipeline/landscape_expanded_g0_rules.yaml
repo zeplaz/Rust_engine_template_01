@@ -1,0 +1,71 @@
+# landscape_expanded_g0_rules.yaml — DMCP-CONTENT-G0-RULES-001
+program_id: PARALLEL-WAVE-APS-VEG-DISPATCH-001
+task_id: DMCP-CONTENT-G0-RULES-001
+gate: G0
+designer_mcp: rules_audit
+skills_applied: [mcp-production-rules, tile-generation]
+scope: landscape_lg5_expanded_atlas
+
+rules_check:
+  passed: true
+  verdict: PASS_WITH_NOTES
+  blocked_by: []
+  batch_id: tile_landscape_expanded_v1
+  atlas_id: landscape_lg5_expanded_v1
+  tile_id: landscape_lg5
+  atlas_domain: landscape
+  development_tier: pilot
+  bake_source: keyframe_pack
+  ship: false
+  frozen: false
+  render_seed: 550005
+  proceed_production_bake: yes
+  proceed_tile_ship: no
+
+production_rules:
+  no_ai_generated_images: pass
+  deterministic_output: pass
+  batch_processing: pass
+  grid_alignment: pass
+
+artifacts:
+  tile_batch: assets/staging/specs/tile_batch_landscape_expanded_v1.json
+  matrix_charter: src/dev/design_landscape_lg5_expansion_matrix_v1.md
+  keyframe_reqs: src/dev/design_landscape_keyframe_burn_reqs_v1.md
+  burn_visual_lang: src/dev/design_veg_burn_visual_language_v1.md
+  pilot_batch: tools/mcp/schemas/examples/tile_batch_landscape_lg5_pilot_v1.json
+  landscape_index: assets/configs/landscape/_landscape_atlas_index.ron
+
+validations:
+  tile_batch_validate_report:
+    status: pass
+    variant_count: 16
+    error_count: 0
+
+alignment:
+  variant_count: 16
+  atlas_grid: "4x4"
+  pilot_keys_reused:
+    - topology_patch
+    - topology_corridor
+    - topology_ring
+  matrix_charter_signed: true
+
+order_critique:
+  - "Scope DMCP-CONTENT-G0-RULES-001 — expanded landscape atlas only; building batches untouched."
+  - "16 cells sized upfront per design_landscape_lg5_expansion_matrix_v1 — burn rows in-sheet (no ad-hoc singles)."
+  - "bake_source:keyframe_pack + ship:false — teach batch until G4 manual keyframes (tile-generation skill)."
+  - "render.seed 550005 matches pilot family — deterministic_output enforced."
+  - "atlas_domain:landscape — registers _landscape_atlas_index.ron not buildings index."
+  - "First 3 variant_keys reuse pilot PNGs; remaining 13 require keyframe export per burn/scar/regrowth reqs."
+  - "proceed_production_bake:yes unlocks coder-mcp pack lane; proceed_tile_ship:no until G4 signoff."
+  - "DMCP-E3 variant catalog still blocked — succession rows authoritative in design_veg_succession_state_content_v1.md until schema lands."
+
+scope_guard:
+  building_batches_untouched: true
+  warehouse_production_untouched: true
+
+next:
+  - "Export keyframes to assets/staging/tiles/keyframe_stills/tile_landscape_expanded_v1/"
+  - "APS-EVO-E4-ATLAS-EXPAND-001 tile-batch-run after keyframes"
+  - "DMCP-E0-ARTIST-REVERDICT-001 after APS-EVO-E0-RELAUNCH-001"

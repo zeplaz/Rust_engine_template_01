@@ -3,7 +3,7 @@
   "gate_id": "warehouse_track_guard",
   "ok": true,
   "green": true,
-  "scanned_files": 30,
+  "scanned_files": 33,
   "manifest_path_count": 8,
   "violation_count": 0,
   "violations": [],

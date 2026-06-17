@@ -1,0 +1,49 @@
+{
+  "gate": "DMCP-E4-MATRIX-CHARTER-001",
+  "green": true,
+  "verdict": "PASS",
+  "charter": "src/dev/design_landscape_lg5_expansion_matrix_v1.md",
+  "tile_batch": "assets/staging/specs/tile_batch_landscape_expanded_v1.json",
+  "variant_keys": [
+    "topology_patch",
+    "topology_patch_scar",
+    "topology_patch_burn_00",
+    "topology_patch_burn_04",
+    "topology_patch_regrowth_grass",
+    "topology_patch_regrowth_shrub",
+    "topology_corridor",
+    "topology_corridor_scar",
+    "topology_corridor_burn_00",
+    "topology_corridor_burn_04",
+    "topology_ring",
+    "topology_ring_burn_00",
+    "topology_cluster",
+    "topology_cluster_regrowth_grass",
+    "topology_fringe",
+    "topology_fringe_regrowth_grass"
+  ],
+  "checks": {
+    "charter_on_disk": true,
+    "variant_count_16": true,
+    "atlas_grid_4x4": true,
+    "matrix_ref_points_charter": true,
+    "g0_proceed_production_bake": true,
+    "catalog_topology_keys": true,
+    "bake_source_keyframe_pack": true,
+    "render_seed_550005": true
+  },
+  "blocks": [
+    "APS-EVO-E4-ATLAS-EXPAND-001"
+  ],
+  "missing_in_catalog": [],
+  "reviewed_at": "2026-06-17",
+  "_agent_meta": {
+    "schema": "dmcp_e4_matrix_charter_live_v1",
+    "written_at_epoch_secs": 1781670218,
+    "profile": "DMCP_E4_MATRIX_CHARTER",
+    "source_system": "dmcp_designer_signoff",
+    "relative_path": "debug_runs/art_pipeline/dmcp_e4_matrix_charter_live.json",
+    "ritual": "BLANG:WIT-HON\u2192Q\u2713 DMCP-E4-MATRIX-CHARTER-001",
+    "agent": "designer-mcp"
+  }
+}

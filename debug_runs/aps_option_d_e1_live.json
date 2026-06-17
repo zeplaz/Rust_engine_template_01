@@ -1,0 +1,123 @@
+{
+  "program_id": "APS-OPTION-D-001",
+  "gate": "APS-E1-CRITICAL-PATH",
+  "green": true,
+  "slices": {
+    "APS-E1-TAB-SWAP-001": {
+      "slice_id": "APS-E1-TAB-SWAP-001",
+      "green": true,
+      "buildings_tab_labels": [
+        "Catalog",
+        "Assembly",
+        "Materials",
+        "Variants",
+        "Atlas"
+      ],
+      "landscape_tab_labels": [
+        "Presets",
+        "Grammar",
+        "States",
+        "Atlas"
+      ],
+      "landscape_tab_count": 4,
+      "materials_in_landscape_tabs": false,
+      "option_d_shell_ok": true,
+      "dual_notebook_flag": true,
+      "reuses_building_panels_in_landscape_lane": false
+    },
+    "APS-E1-FLOW-LANE-001": {
+      "slice_id": "APS-E1-FLOW-LANE-001",
+      "green": true,
+      "landscape_flow_labels": [
+        "Generate grammar",
+        "Bake states",
+        "Pack LG-5 atlas"
+      ],
+      "buildings_flow_labels": [
+        "Send to Assembly",
+        "Bake variants",
+        "Pack atlas"
+      ]
+    },
+    "APS-E1-PIPELINE-LANE-001": {
+      "slice_id": "APS-E1-PIPELINE-LANE-001",
+      "green": true,
+      "landscape_pipeline_keys": [
+        "presets",
+        "grammar",
+        "states",
+        "atlas",
+        "stamp"
+      ],
+      "has_stamp_step": true
+    },
+    "APS-E1-CHROME-001": {
+      "slice_id": "APS-E1-CHROME-001",
+      "green": true,
+      "dual_notebook": true,
+      "design_ref": "src/dev/design_aps_chrome_mockup_spec_v1.md"
+    }
+  },
+  "des_aps_e1_ia_option_d_001": {
+    "id": "DES-APS-E1-IA-OPTION-D-001",
+    "verdict": "pass",
+    "design_ref": "src/dev/design_aps_domain_ia_sign_v1.md",
+    "reasons": [],
+    "option_d_ia_contract_ok": true,
+    "tab_set_swap": true,
+    "buildings_tab_count": 5,
+    "landscape_tab_count": 4,
+    "flow_lane_scoped": true,
+    "pipeline_lane_scoped": true,
+    "buildings_flow_keys": [
+      "send_to_assembly",
+      "bake_variants",
+      "pack_atlas"
+    ],
+    "landscape_flow_keys": [
+      "generate_grammar",
+      "bake_states",
+      "pack_lg5_atlas"
+    ],
+    "buildings_pipeline_keys": [
+      "catalog",
+      "assembly",
+      "materials",
+      "variants",
+      "atlas"
+    ],
+    "landscape_pipeline_keys": [
+      "presets",
+      "grammar",
+      "states",
+      "atlas",
+      "stamp"
+    ],
+    "option_d_shell_ok": true,
+    "dual_notebook_flag": true,
+    "reuses_building_panels_in_landscape_lane": false
+  },
+  "exit_predicate": {
+    "witness": "debug_runs/aps_option_d_e1_live.json",
+    "must": [
+      {
+        "path": "green",
+        "eq": true
+      }
+    ]
+  },
+  "_agent_meta": {
+    "schema": "aps_option_d_e1_live_v1",
+    "profile": "APS_OPTION_D_E1",
+    "relative_path": "debug_runs/aps_option_d_e1_live.json",
+    "source_system": "aps_option_d_e1",
+    "written_at_epoch_secs": 1781704532,
+    "ritual": "BLANG:WIT-HON APS-OPTION-D-E1"
+  },
+  "witness_honesty": {
+    "status": "passed",
+    "error_count": 0,
+    "warning_count": 0,
+    "summary": "witness_honesty debug_runs/aps_option_d_e1_live.json: 0 error(s), 0 issue(s)"
+  }
+}

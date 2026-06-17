@@ -368,6 +368,43 @@ pub fn program_graph_stub_for_preset(preset_id: &str) -> Option<ProgramGraphStub
     })
 }
 
+/// Count distinct massing strategies with non-zero β weight for an arch DNA preset.
+#[must_use]
+pub fn arch_dna_massing_pick_count(preset_id: &str) -> Result<u32, String> {
+    let preset = load_arch_dna_preset(preset_id)?;
+    let registry = super::load_building_grammar_registry();
+    let grammar = registry
+        .grammars
+        .values()
+        .find(|g| g.grammar_id == preset.grammar_id)
+        .ok_or_else(|| format!("grammar_id={}", preset.grammar_id))?;
+    let weights = reweight_massing_strategies(&grammar.massing.strategies, &preset.pressure_field);
+    Ok(weights.iter().filter(|(_, w)| *w > 0).count() as u32)
+}
+
+/// BUILD-GRAMMAR-WITNESS-002 / CDR-B-CONSTRUCTION-GRAMMAR-DEPTH-001 — DNA family rows.
+#[must_use]
+pub fn build_arch_dna_massing_diversity_rows() -> Vec<serde_json::Value> {
+    list_arch_dna_preset_ids()
+        .into_iter()
+        .map(|preset_id| {
+            let count = arch_dna_massing_pick_count(&preset_id).unwrap_or(0);
+            serde_json::json!({
+                "preset_id": preset_id,
+                "massing_pick_count": count,
+                "green": count >= 3,
+            })
+        })
+        .collect()
+}
+
+#[must_use]
+pub fn arch_dna_massing_diversity_witness_green() -> bool {
+    build_arch_dna_massing_diversity_rows()
+        .iter()
+        .all(|row| row.get("green").and_then(|v| v.as_bool()).unwrap_or(false))
+}
+
 /// BUILD-GRAMMAR-β-WORLD-001 — blend preset β with live transport edge density (read-only).
 #[must_use]
 pub fn beta_with_world_transport_bias(
