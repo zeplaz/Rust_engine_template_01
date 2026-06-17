@@ -3,7 +3,7 @@
 use bevy::prelude::*;
 
 use crate::strategic::TownId;
-use crate::systems::transport::{TransportEdgeDirectory, TransportEdgeId};
+use crate::systems::transport::TransportEdgeDirectory;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct SettlementId(pub u64);

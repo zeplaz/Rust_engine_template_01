@@ -11,11 +11,12 @@
     "supersedes": "tools/orchestrator/queues/coder_drain_queue.json",
     "phase5_queue": "tools/orchestrator/queues/post_drain_phase5_queue.json",
     "runbook": "src/dev/coder_drain_order_master_v1.md",
-    "unwired_spine": "src/dev/build_read_unwired_spine_v1.md",
+    "wired_spine": "src/dev/build_read_unwired_spine_v1.md",
+    "wired_spine_note": "Filename historical — content is WIRED post J_REWIRE drain",
     "rule": "Pick seq 1→N top-down · skip blocked/deferred · exit_predicate on witness JSON · lib green ≠ done",
     "regression": "cargo test -p proc_A_dine01 --lib fire_ecology landscape_grammar construction stage5 sim_effects",
     "blang_cargo": "validate-report cargo --cached --compress 4",
-    "last_sync": "2026-06-14"
+    "last_sync": "2026-06-15"
   },
   "tracks": {
     "REWIRE": {
@@ -45,12 +46,13 @@
     }
   },
   "sprint_decision": {
-    "wave_1": "REWIRE — unblock BUILD verify (mod.rs)",
-    "wave_2": "FIRE — G-PLAY-FIRE + ecology refresh (parallel REWIRE)",
-    "wave_3": "BUILD — pilot catalog + P0 verify + visual",
-    "wave_4": "VEG — coder_vegetation_drain_queue.json v3 seq 1→82 (v2 false-done reopened)",
+    "wave_1": "REWIRE — ★ DRAINED (mod.rs wired)",
+    "wave_2": "FIRE — ★ DRAINED",
+    "wave_3": "BUILD — ★ DRAINED (P0 verify + pilot + visual lib)",
+    "wave_4": "VEG — coder_vegetation_drain_queue.json v3 seq 1→82",
     "wave_5": "PRODUCT-VERIFY — coder_product_verify_queue.json runtime gates",
-    "parallel_ok": "REWIRE (B) + FIRE (A) · BUILD (B) + VEG (A) after wave 1"
+    "wave_6": "PHASE-6 — post_drain_phase6_coder_queue.json",
+    "parallel_ok": "Phase 6 dual-coder A/B per coder_longrun_plan_phase6_v1.md"
   },
   "drain": [
     {

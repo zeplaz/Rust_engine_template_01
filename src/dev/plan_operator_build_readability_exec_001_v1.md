@@ -176,8 +176,8 @@ Footprint **geometry authority** for overlap: **weighted tiles**, not axis-align
 | ID | Owner | Task | Depends | Witness / exit |
 |:---|:---|:---|:---|:---|
 | **BUILD-READ-P0-001** | @coder | Confirm `parametric_placement_snapshot` uses weighted raster; Adjust mode Shift+scroll grows overlay tiles | — | Manual: lock ghost → scale → tile count ↑; `scaling_audit_s1` green |
-| **BUILD-READ-P0-002** | @coder | Refresh zoom coherence: `map_zoom_coherence_live.json` after `--test vfx` scroll torture | PLAN-PRODUCT-POLISH P1 · **REWIRE-003** | No double-world trail ≥5 zoom cycles · **blocked** — witness module unwired |
-| **BUILD-READ-P0-003** | @coder | Pointer gate: Construction toolbox + submenus block pick; debug overlay shows `egui_blocks`, `os_cursor_hidden` | TRIAGE-CURSOR-UNIFY · **REWIRE-001/002** | Pick under BuildToolbox = no commit · **on disk, not compiled** |
+| **BUILD-READ-P0-002** | @coder | Refresh zoom coherence: `map_zoom_coherence_live.json` after `--test vfx` scroll torture | PLAN-PRODUCT-POLISH P1 · REWIRE-003 | **🟢 done** — `map_zoom_coherence_live.json` green |
+| **BUILD-READ-P0-003** | @coder | Pointer gate: Construction toolbox + submenus block pick; debug overlay shows `egui_blocks`, `os_cursor_hidden` | TRIAGE-CURSOR-UNIFY · REWIRE-001/002 | **🟢 done** — wired in hud/mod.rs |
 | **BUILD-READ-DESIGN-001** | @designer | **Readability brief** (≤2 pages): min/max building screen height vs chunk; footprint valid/risky/invalid at partial alpha; when to show mesh vs tiles | BUILD-READ-P0-001 | Sign-off row in `designer_signoff_registry.json` |
 | **BUILD-READ-DESIGN-002** | @designer | Annotate **Build Toolbox** + Adjust mode affordances (Ctrl=rotate, Shift=scale) — not hover-only | BUILD-READ-DESIGN-001 | HUD copy in `contextual_tip` / `build_toolbox` · witness `build_read_ux_live.json` |
 | **BUILD-READ-SHAPE-001** | @designer-mcp | **Industrial Rail Warehouse** pilot: `FootprintMatrix` + ARCH-DNA preset row in RON (guide §EXAMPLE) | PG-MODULE-AUDIT · [`build_grammer2_exman.md`](../prompts/guides/build_grammer2_exman.md) | Matrix + DNA preset on disk |
@@ -319,21 +319,21 @@ Exit: BUILD-READ-SHAPE-001 RON; BUILD-READ-GRAMMAR-v0-002 pytest green
 
 ## Already landed (steward lane — do not re-assign)
 
-**Unwired recovery (2026-06-13):** Several rows below exist **on disk** but were **removed from `mod.rs`** to keep `cargo check` green. Re-wire per [`build_read_unwired_spine_v1.md`](build_read_unwired_spine_v1.md) before closing BUILD-READ-P0.
+**J_REWIRE closed (2026-06-13):** Recovery split-brain resolved — all rows below **compiled in binary**. Authority: [`build_read_unwired_spine_v1.md`](build_read_unwired_spine_v1.md).
 
 | Fix | File / note | Wire status |
 |:---|:---|:---:|
 | Weighted raster on commit snapshot | `parametric_commit.rs` → `rasterize_with_effective_scale` | 🟢 compiled |
 | Ghost footprint bbox from weights | `build_refresh_placement_validation_system` | 🟢 compiled |
 | Zoom dirty-all + raised chunk budget | `tile_world_fallback.rs` | 🟢 compiled |
-| Post-egui pointer gate + widget hit test | `simulation_pointer_gate.rs` | ⚠ **unwired** — REWIRE-002 |
-| Placement debug overlay + pick probe | `placement_debug.rs` | ⚠ **unwired** — REWIRE-001 |
-| Footprint draw single projection | `visual_authority.rs` | 🟢 compiled (witness helpers may be missing) |
-| Map zoom coherence witness | `map_zoom_coherence_live_proof.rs` | ⚠ **unwired** — REWIRE-003 |
-| Minimap Bevy GPU interaction | `minimap_bevy_interaction.rs` | ⚠ **unwired** — MINIMAP-REWIRE-001 |
-| Pilot catalog loader | `pilot_catalog.rs` | 🟡 partial — REWIRE-004 |
+| Post-egui pointer gate + widget hit test | `simulation_pointer_gate.rs` | 🟢 wired — REWIRE-002 |
+| Placement debug overlay + pick probe | `placement_debug.rs` | 🟢 wired — REWIRE-001 |
+| Footprint draw single projection | `visual_authority.rs` | 🟢 compiled |
+| Map zoom coherence witness | `map_zoom_coherence.rs` + live proof | 🟢 wired — REWIRE-003 |
+| Minimap Bevy GPU interaction | `minimap_bevy_interaction.rs` | 🟢 wired — MINIMAP-REWIRE-001 |
+| Pilot catalog loader | `pilot_catalog.rs` | 🟢 wired — REWIRE-004 |
 
-Verify in runtime before closing **BUILD-READ-P0**.
+Runtime operator verify still open for **BUILD-READ-P0** acceptance checklist (Phase 6).
 
 ---
 
@@ -353,6 +353,6 @@ Add to [`construction_procedural_growth_index_v1.md`](construction_procedural_gr
 |:---|:---|:---|
 | @planner (thin exec) | **SIGNED** — operator report + **build_grammer2_exman v0 baseline** plot | 2026-06-13 |
 | @planner-mcp (v0 schema) | **SIGNED** — `arch_build_grammar_v0_baseline_v1.md` | 2026-06-13 |
-| @designer | **PASS** BUILD-READ-DESIGN-001/002 + SITE-v0-001 + WORLD-001 + POINTER-HUD + MAP-ZOOM + FIRE-PLAY-VIS + P0-MINIMAP | 2026-06-13 |
+| @designer | **PASS** D-001…D-004 variant matrix + readability | 2026-06-14 |
 | @designer-mcp | **PASS** BUILD-READ-SHAPE-001 + SITE-ZONE-MAP + VISUAL-002 spec | 2026-06-13 |
-| @coder | **unwired** BUILD-READ-P0 — code on disk; **mod.rs wiring pending** — see [`build_read_unwired_spine_v1.md`](build_read_unwired_spine_v1.md) | 2026-06-13 |
+| @coder | **wired** BUILD-READ-P0 spine — J_REWIRE drained; runtime operator verify Phase 6 | 2026-06-14 |

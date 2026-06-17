@@ -8,7 +8,8 @@
     "coder_drain": "tools/orchestrator/queues/coder_master_drain_queue.json",
     "coder_drain_runbook": "src/dev/coder_drain_order_master_v1.md",
     "rule": "Coder picks from coder_master_drain_queue.json · phase5 tasks mirrored · witness JSON wins",
-    "last_sync": "2026-06-14"
+    "last_sync": "2026-06-14",
+    "rewire_status": "drained"
   },
   "lanes": {
     "G_OPS": {
@@ -28,8 +29,9 @@
       "owner_default": "coder"
     },
     "J_REWIRE": {
-      "label": "BUILD-READ / HUD re-wire (mod.rs)",
-      "owner_default": "coder"
+      "label": "BUILD-READ / HUD re-wire (mod.rs) — DRAINED 2026-06-13",
+      "owner_default": "coder",
+      "note": "All REWIRE rows done — see build_read_unwired_spine_v1.md (wired). Phase 6: post_drain_phase6_coder_queue.json"
     },
     "K_DESIGN": {
       "label": "Designer sign-off",
@@ -163,7 +165,7 @@
         "src/dev/build_read_unwired_spine_v1.md"
       ],
       "witness": "debug_runs/design_minimap_widget_live.json",
-      "note": "minimap_bevy_interaction.rs on disk — not in hud/mod.rs until MINIMAP-REWIRE-001",
+      "note": "Wired via MINIMAP-REWIRE-001 — hud/mod.rs + gui/mod.rs",
       "completed": "2026-06-13"
     },
     {
@@ -286,7 +288,7 @@
       "goal": "Refresh map_zoom_coherence_live.json after --test vfx scroll torture",
       "witness": "debug_runs/map_zoom_coherence_live.json",
       "plan_doc": "src/dev/plan_operator_build_readability_exec_001_v1.md",
-      "note": "Verify after BUILD-READ-REWIRE-003 — witness module unwired 2026-06-13",
+      "note": "Witness refreshed after REWIRE-003 — map_zoom_coherence_live.json green",
       "completed": "2026-06-13"
     },
     {
@@ -418,23 +420,25 @@
       "lane": "L_MCP",
       "priority": 1,
       "agent": "planner-mcp",
-      "status": "blocked",
+      "status": "done",
       "goal": "Write mcp_kit_production_002_unfreeze_v1.md — kit002+ frozen lane",
       "plan_deliverable": "docs/archive/2026-06-src-dev/plans/mcp_kit_production_002_unfreeze_v1.md",
       "mcp_queue_ref": "tools/orchestrator/queues/mcp_active_queue.json#MCP-P2-KIT002-PLAN",
-      "snag": "operator/designer-mcp blocked"
+      "witness": "debug_runs/mcp_kit002_arch002_sign_live.json",
+      "signed": "2026-06-14"
     },
     {
       "id": "ARCH-002",
       "lane": "L_MCP",
       "priority": 2,
       "agent": "planner-mcp",
-      "status": "blocked",
+      "status": "done",
       "goal": "Formal Variant Graph JSON schema variant_graph_v1.schema.json",
-      "plan_doc": "docs/archive/2026-06-src-dev/plans/plan_building_tile_spine_001_v1.md",
+      "plan_doc": "src/dev/arch_variant_graph_002_v1.md",
       "plan_deliverable": "tools/mcp/schemas/variant_graph_v1.schema.json",
       "mcp_queue_ref": "tools/orchestrator/queues/mcp_active_queue.json#ARCH-002",
-      "snag": "operator/designer-mcp blocked"
+      "witness": "debug_runs/mcp_kit002_arch002_sign_live.json",
+      "signed": "2026-06-14"
     },
     {
       "id": "PLAN-AUDIT-020",
@@ -454,12 +458,13 @@
       "lane": "M_PLAN",
       "priority": 3,
       "agent": "planner",
-      "status": "blocked",
-      "goal": "Sync planner_active_queue + HANDOFF + status doc after Phase 5 seed",
+      "status": "done",
+      "goal": "Sync planner_active_queue + HANDOFF + status doc after Phase 5/6 seed",
       "docs": [
+        "src/dev/plan_queue_sync_001_close_v1.md",
         "src/dev/planner_backlog_sweep_001_v1.md"
       ],
-      "snag": "operator/designer-mcp blocked"
+      "completed": "2026-06-14"
     },
     {
       "id": "SIM-STEWARD-FIRE-REGRESS-001",

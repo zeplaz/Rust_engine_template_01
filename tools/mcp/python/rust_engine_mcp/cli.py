@@ -301,6 +301,16 @@ def _cmd_tile_atlas_register(args: argparse.Namespace) -> int:
     return 0 if result.get("ok") else 1
 
 
+def _cmd_rail_warehouse_pilot_batch_run(args: argparse.Namespace) -> int:
+    from rust_engine_mcp import rail_warehouse_pilot_batch
+
+    result = rail_warehouse_pilot_batch.run_rail_warehouse_pilot_keyframe_batch(
+        headless=not bool(args.no_headless),
+    )
+    print(json.dumps(result, indent=2))
+    return 0 if result.get("ok") else 1
+
+
 def _cmd_tile_keyframe_export(args: argparse.Namespace) -> int:
     result = tile_keyframe_export(args.path or "")
     print(json.dumps(result, indent=2))
@@ -361,9 +371,26 @@ def _cmd_agent_queue_update(args: argparse.Namespace) -> int:
         args.status,
         note=args.note or "",
         queue=args.queue,
+        enforce=bool(getattr(args, "enforce", False)),
     )
     print(json.dumps(out, indent=2))
-    return 0
+    return 0 if out.get("ok") else 1
+
+
+def _cmd_queue_integrity_reconcile_witness(_: argparse.Namespace) -> int:
+    from rust_engine_mcp.validators.queue_integrity import refresh_queue_integrity_reconcile_witness
+
+    body = refresh_queue_integrity_reconcile_witness()
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
+def _cmd_mcp_witness_integrity_ops_witness(_: argparse.Namespace) -> int:
+    from rust_engine_mcp.witness_honesty_lib import refresh_mcp_witness_integrity_ops_witness
+
+    body = refresh_mcp_witness_integrity_ops_witness()
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("written") else 1
 
 
 def _cmd_agent_queue_board(args: argparse.Namespace) -> int:
@@ -451,6 +478,22 @@ def _cmd_ops_get_retry_guidance(args: argparse.Namespace) -> int:
     body = ops_intelligence.ops_get_retry_guidance(args.task_id)
     print(json.dumps(body, indent=2))
     return 0 if body.get("ok") else 1
+
+
+def _cmd_ops_get_active_blockers(_: argparse.Namespace) -> int:
+    from rust_engine_mcp import ops_intelligence
+
+    body = ops_intelligence.ops_get_active_blockers()
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("ok") else 1
+
+
+def _cmd_ops_mcp_function_layer_witness(_: argparse.Namespace) -> int:
+    from rust_engine_mcp import ops_intelligence
+
+    body = ops_intelligence.refresh_ops_mcp_function_layer_witness()
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
 
 
 def _cmd_build_read_grammar_v0_002_witness(_: argparse.Namespace) -> int:
@@ -544,6 +587,58 @@ def _cmd_building_set_coverage_witness(_: argparse.Namespace) -> int:
     return 0 if body.get("green") else 1
 
 
+def _cmd_landscape_grammar_presets_witness(_: argparse.Namespace) -> int:
+    from rust_engine_mcp import landscape_grammar_presets
+
+    batch = landscape_grammar_presets.write_landscape_grammar_presets_witness()
+    sign = landscape_grammar_presets.refresh_mcp_landscape_grammar_sign_witness()
+    green = bool(batch.get("green")) and bool(sign.get("green"))
+    print(json.dumps({"green": green, "batch": batch.get("written"), "sign": sign.get("written")}, indent=2))
+    return 0 if green else 1
+
+
+def _cmd_landscape_sign_atlas_witness(args: argparse.Namespace) -> int:
+    from rust_engine_mcp import landscape_sign_atlas
+
+    body = landscape_sign_atlas.run_landscape_sign_atlas_refresh(
+        refresh_atlas=bool(getattr(args, "refresh_atlas", False)),
+    )
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
+def _cmd_kit_production_002_g2_witness(_: argparse.Namespace) -> int:
+    from rust_engine_mcp import kit_production_002
+
+    body = kit_production_002.refresh_kit_production_002_g2_witness()
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
+def _cmd_kit_production_002_g2_run(args: argparse.Namespace) -> int:
+    from rust_engine_mcp import kit_production_002
+
+    body = kit_production_002.run_kit_production_002_g2_full(promote=not args.no_promote)
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("ok") else 1
+
+
+def _cmd_kit_production_002_g3_witness(_: argparse.Namespace) -> int:
+    from rust_engine_mcp import kit_production_002
+
+    body = kit_production_002.refresh_kit_production_002_g3_witness()
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
+def _cmd_kit_production_002_g3_validate(_: argparse.Namespace) -> int:
+    from rust_engine_mcp import kit_production_002
+
+    body = kit_production_002.validate_kit_production_002_g3_batch()
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
 def _cmd_pilot_hardcode_lint(_: argparse.Namespace) -> int:
     from rust_engine_mcp.pilot_hardcode_lint import pilot_hardcode_lint
 
@@ -611,14 +706,30 @@ def _cmd_grammar_integration_validate(args: argparse.Namespace) -> int:
     return 0 if body.get("green") else 1
 
 
+def _cmd_mcp_witness_honesty_validator_witness(_: argparse.Namespace) -> int:
+    from rust_engine_mcp.validators.witness_honesty import refresh_mcp_witness_honesty_validator_witness
+
+    body = refresh_mcp_witness_honesty_validator_witness()
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
 def _cmd_validate_report(args: argparse.Namespace) -> int:
-    report = run_validator(
-        args.validator,
-        target=args.target or None,
-        package=args.package or None,
-        compression_level=int(args.compress),
-        use_cached=bool(args.cached),
-    )
+    if args.validator == "witness_honesty" and bool(getattr(args, "scan", False)):
+        from rust_engine_mcp.validators.witness_honesty import validate_witness_honesty_scan
+
+        report = validate_witness_honesty_scan(
+            args.target or "debug_runs",
+            compression_level=int(args.compress),
+        )
+    else:
+        report = run_validator(
+            args.validator,
+            target=args.target or None,
+            package=args.package or None,
+            compression_level=int(args.compress),
+            use_cached=bool(args.cached),
+        )
     print(json.dumps(report.to_dict()))
     return 0 if report.status == "passed" else 1
 
@@ -802,6 +913,14 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--batch-json", default="", help="Optional tile_batch_v1.json path")
     p.set_defaults(func=_cmd_tile_atlas_register)
 
+    p = sub.add_parser("rail-warehouse-pilot-batch-run")
+    p.add_argument(
+        "--no-headless",
+        action="store_true",
+        help="Skip headless keyframe export (expects PNGs in staging)",
+    )
+    p.set_defaults(func=_cmd_rail_warehouse_pilot_batch_run)
+
     p = sub.add_parser("tile-keyframe-export")
     p.add_argument("path", help="tile_batch_v1.json (keyframe_pack / ship production)")
     p.set_defaults(func=_cmd_tile_keyframe_export)
@@ -836,11 +955,16 @@ def main(argv: list[str] | None = None) -> int:
             "building_set_coverage",
             "pilot_hardcode_lint",
             "landscape_grammar",
+            "landscape_grammar_presets",
             "arch_build_grammar",
+            "construction",
+            "witness_honesty",
+            "queue_integrity",
         ],
         help="Validator id",
     )
     p.add_argument("target", nargs="?", default="", help="Path for file validators")
+    p.add_argument("--scan", action="store_true", help="Scan *_live.json under target dir (witness_honesty)")
     p.add_argument("-p", "--package", default="")
     p.add_argument("--compress", default="3", help="Compression level 1-4")
     p.add_argument("--cached", action="store_true", help="Use orchestrator last_run.json for cargo")
@@ -876,6 +1000,11 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("status")
     p.add_argument("--note", default="")
     p.add_argument("--queue", default="grammar", choices=sorted(agent_queue.QUEUE_REGISTRY))
+    p.add_argument(
+        "--enforce",
+        action="store_true",
+        help="Block done if exit_predicate missing or witness fails WIT-EXIT-PREDICATE",
+    )
     p.set_defaults(func=_cmd_agent_queue_update)
 
     p = sub.add_parser("agent-queue-board")
@@ -885,7 +1014,7 @@ def main(argv: list[str] | None = None) -> int:
 
     p = sub.add_parser("witness-brief")
     p.add_argument("path")
-    p.add_argument("--profile", default="", help="construction | map_pick | fire_product")
+    p.add_argument("--profile", default="", help="construction | map_pick | fire_product | honesty")
     p.set_defaults(func=_cmd_witness_brief)
 
     sub.add_parser("review-order-brief").set_defaults(func=_cmd_review_order_brief)
@@ -926,6 +1055,12 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("task_id")
     p.set_defaults(func=_cmd_ops_get_retry_guidance)
 
+    p = sub.add_parser("ops-get-active-blockers")
+    p.set_defaults(func=_cmd_ops_get_active_blockers)
+
+    p = sub.add_parser("ops-mcp-function-layer-witness")
+    p.set_defaults(func=_cmd_ops_mcp_function_layer_witness)
+
     p = sub.add_parser("grammar-set-brief")
     p.add_argument("--set-id", default="")
     p.add_argument("--write-witness", action="store_true")
@@ -945,6 +1080,25 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("grammar-pilot-parity").set_defaults(func=_cmd_grammar_pilot_parity)
     sub.add_parser("building-set-coverage").set_defaults(func=_cmd_building_set_coverage)
     sub.add_parser("building-set-coverage-witness").set_defaults(func=_cmd_building_set_coverage_witness)
+    sub.add_parser("landscape-grammar-presets-witness").set_defaults(func=_cmd_landscape_grammar_presets_witness)
+
+    p = sub.add_parser("landscape-sign-atlas-witness")
+    p.add_argument("--refresh-atlas", action="store_true")
+    p.set_defaults(func=_cmd_landscape_sign_atlas_witness)
+
+    p = sub.add_parser("kit-production-002-g2-run")
+    p.add_argument("--no-promote", action="store_true")
+    p.set_defaults(func=_cmd_kit_production_002_g2_run)
+
+    sub.add_parser("kit-production-002-g2-witness").set_defaults(func=_cmd_kit_production_002_g2_witness)
+
+    sub.add_parser("kit-production-002-g3-validate").set_defaults(func=_cmd_kit_production_002_g3_validate)
+    sub.add_parser("kit-production-002-g3-witness").set_defaults(func=_cmd_kit_production_002_g3_witness)
+    sub.add_parser("mcp-witness-honesty-validator-witness").set_defaults(
+        func=_cmd_mcp_witness_honesty_validator_witness
+    )
+    sub.add_parser("queue-integrity-reconcile-witness").set_defaults(func=_cmd_queue_integrity_reconcile_witness)
+    sub.add_parser("mcp-witness-integrity-ops-witness").set_defaults(func=_cmd_mcp_witness_integrity_ops_witness)
     sub.add_parser("pilot-hardcode-lint").set_defaults(func=_cmd_pilot_hardcode_lint)
     sub.add_parser("pilot-hardcode-lint-witness").set_defaults(func=_cmd_pilot_hardcode_lint_witness)
     sub.add_parser("example-teachable-audit").set_defaults(func=_cmd_example_teachable_audit)

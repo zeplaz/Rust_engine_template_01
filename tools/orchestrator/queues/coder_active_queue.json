@@ -57,7 +57,7 @@
     "coder_b_backlog": "docs/archive/2026-06-src-dev/plans/coder_b_backlog_wave6_20260527_v1.md",
     "weather_lane": "docs/archive/2026-06-src-dev/plans/plan_weather_parallel_lane_v1.md",
     "weather_witness": "docs/archive/2026-06-src-dev/plans/plan_weather_witness_002_v1.md",
-    "last_sync": "2026-06-14"
+    "last_sync": "2026-06-15"
   },
   "coder_a": {
     "p1_pick_one": false,
@@ -1860,6 +1860,17 @@
   },
   "designer": {
     "active": [],
+    "done_2026_06_14": [
+      {
+        "id": "BUILD-READ-D-001_D004",
+        "status": "done",
+        "owner": "designer",
+        "verdict": "PASS",
+        "witness": "debug_runs/design_build_read_d001_d004_live.json",
+        "deliverable": "src/dev/design_build_read_d001_d004_v1.md",
+        "unblocks": ["BUILD-READ-VISUAL-002-BATCH", "TILE-PROD-004"]
+      }
+    ],
     "done_2026_06_13": [
       {
         "id": "P0-MINIMAP-WIDGET-001",

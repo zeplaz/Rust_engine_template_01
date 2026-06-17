@@ -11,6 +11,10 @@ FONT_UI_BOLD = ("Segoe UI", 9, "bold")
 FONT_SECTION = ("Segoe UI", 9, "bold")
 FONT_MONO = ("Consolas", 10)
 FONT_HINT = ("Segoe UI", 9)
+# APS-UX-FONT-FLOOR — smallest font allowed on primary content labels.
+# Never use a literal ("Segoe UI", 8) / ("Consolas", 8) on a content label; use this token.
+FONT_SMALL = ("Segoe UI", 9)
+FONT_MONO_SMALL = ("Consolas", 9)
 
 COLOR_PASS = "#0a6b0a"
 COLOR_FAIL = "#a00000"

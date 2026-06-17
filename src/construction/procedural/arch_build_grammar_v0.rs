@@ -292,6 +292,16 @@ fn build_read_consumer_mcp_001_self_check() -> Result<(), &'static str> {
     use super::load_procedural_module_registry;
     use super::load_style_pack_registry;
 
+    let example_path = repo_path(ARCH_GRAMMAR_V0_PRESET_JSON);
+    load_preset_from_path(&example_path).map_err(|_| "example_preset_path")?;
+    let preset_ids = list_arch_dna_preset_ids();
+    if !preset_ids.iter().any(|id| id == "logistics_rail_warehouse_v0") {
+        return Err("preset_ids");
+    }
+    if site_zones_for_preset("logistics_rail_warehouse_v0").is_empty() {
+        return Err("site_zones");
+    }
+
     let consumer = arch_dna_consumer_from_preset_id("logistics_rail_warehouse_v0")
         .map_err(|_| "consumer_load")?;
     if !arch_dna_consumer_wired(&consumer) {

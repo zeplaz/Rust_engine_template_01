@@ -71,9 +71,11 @@ pub const fn simulation_minimap_overlay_defaults() -> MinimapOverlayMask {
 /// Consumer path for minimap pixels — **no** alternate ECS extraction.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub enum MinimapPresentationSource {
+    /// **Effects / dev / explicit opt-in** — layered CPU raster (`fallback.minimap_image`).
+    /// Not used on the default simulation HUD path when GPU compositor is on.
     #[default]
     SharedCpuRaster,
-    /// Optional `RenderTarget::Image` consumer; samples existing shared overlays only (**BQ-124**).
+    /// **Main simulation product path** — GPU compositor RT (Bevy chrome + compositor pass).
     SharedRenderTargetImage,
 }
 
@@ -234,15 +236,18 @@ impl MinimapShellState {
         self.panel_screen_origin = Some(Vec2::new(rect.min.x, rect.min.y));
     }
 
-    pub fn sync_layout_rects_from_panel_origin(&mut self) {
-        let Some(origin) = self.panel_screen_origin else {
-            return;
-        };
-        let size = self.viewport_size;
+    /// Sync pointer hit-test rects from the outer Bevy chrome box (logical px).
+    ///
+    /// Does **not** overwrite [`panel_screen_origin`] — drag uses origin + [`sync_layout_rects_from_panel_origin`].
+    pub fn apply_chrome_outer_rect(&mut self, min_x: f32, min_y: f32, outer_w: f32, outer_h: f32) {
         let window = egui::Rect::from_min_size(
-            egui::pos2(origin.x, origin.y),
-            egui::vec2(size.x.max(120.0), size.y.max(120.0)),
+            egui::pos2(min_x, min_y),
+            egui::vec2(outer_w.max(1.0), outer_h.max(1.0)),
         );
+        self.apply_window_rect_layout(window);
+    }
+
+    fn apply_window_rect_layout(&mut self, window: egui::Rect) {
         self.last_window_rect = Some(window);
         let title = egui::Rect::from_min_size(
             window.min,
@@ -283,6 +288,18 @@ impl MinimapShellState {
             ),
             egui::vec2(MINIMAP_RESIZE_GRIP_PX, MINIMAP_RESIZE_GRIP_PX),
         ));
+    }
+
+    pub fn sync_layout_rects_from_panel_origin(&mut self) {
+        let Some(origin) = self.panel_screen_origin else {
+            return;
+        };
+        let size = self.viewport_size;
+        let window = egui::Rect::from_min_size(
+            egui::pos2(origin.x, origin.y),
+            egui::vec2(size.x.max(120.0), size.y.max(120.0)),
+        );
+        self.apply_window_rect_layout(window);
     }
 
     pub fn enforce_square_viewport(&mut self) {

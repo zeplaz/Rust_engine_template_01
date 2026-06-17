@@ -21,7 +21,16 @@ from .aps_collapsible import CollapsibleSection
 from .aps_inline_feedback import set_inline_status
 from .aps_paned import add_pane, horizontal_paned, set_initial_pane_widths
 from .aps_scroll import attach_wheel_area
-from .aps_theme import FONT_UI, FONT_UI_BOLD, FONT_MONO, track_wraplength, wrap_for_widget
+from .aps_theme import (
+    FONT_UI,
+    FONT_UI_BOLD,
+    FONT_MONO,
+    FONT_MONO_SMALL,
+    FONT_SMALL,
+    MIN_WINDOW_SIZE,
+    track_wraplength,
+    wrap_for_widget,
+)
 from .footprint_canvas import FootprintCanvas
 from .metadata_flow_panel import MetadataFlowPanel
 from .grammar_inspector import GrammarInspectorPanel
@@ -32,6 +41,18 @@ from .material_browser import MaterialBrowserPanel
 from .assembly_preview_panel import AssemblyPreviewPanel
 from .slot_preview_panel import SlotPreviewPanel
 from .state import SuiteState
+
+
+def _is_dark_color(hex_color: str) -> bool:
+    """True if a #rrggbb color is dark enough to need light text on top."""
+    try:
+        h = hex_color.lstrip("#")
+        if len(h) != 6:
+            return False
+        r, g, b = int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16)
+        return (0.299 * r + 0.587 * g + 0.114 * b) < 140
+    except (ValueError, TypeError):
+        return False
 
 
 class AssemblyPanel(ttk.Frame):
@@ -178,9 +199,10 @@ class AssemblyPanel(ttk.Frame):
         self.iterate_panel.pack(fill=tk.X)
 
         self.grammar_dna_section = CollapsibleSection(
-            gen, "ARCH-DNA + β v0", expanded=True, padding=2
+            gen, "Massing pressure (advanced)", expanded=False, padding=2
         )
         self.grammar_dna_section.pack(fill=tk.X, pady=4)
+        bind_aps_tooltip(self.grammar_dna_section._head_btn, "asm_grammar_dna")
         self.grammar_dna_panel = GrammarDnaPanel(
             self.grammar_dna_section.body,
             on_change=self._on_grammar_dna_change,
@@ -213,9 +235,14 @@ class AssemblyPanel(ttk.Frame):
         footprint_pane = ttk.Frame(workspace, padding=4)
         materials_pane = ttk.Frame(workspace, padding=4)
         inspector_pane = ttk.Frame(workspace, padding=4)
-        add_pane(workspace, footprint_pane, weight=2, minsize=240)
-        add_pane(workspace, materials_pane, weight=2, minsize=220)
-        add_pane(workspace, inspector_pane, weight=3, minsize=260)
+        # APS-UX-MIN-FIT — pane minsizes must fit MIN_WINDOW_SIZE width with no
+        # horizontal scroll. 3 panes + 2 sashes must stay under usable width at
+        # MIN_WINDOW_SIZE[0] (scrollbar + tab padding eat ~40px). 215+195+215 = 625.
+        _min_w = MIN_WINDOW_SIZE[0]
+        _fp_min, _mat_min, _insp_min = (215, 195, 215) if _min_w <= 1024 else (240, 220, 260)
+        add_pane(workspace, footprint_pane, weight=2, minsize=_fp_min)
+        add_pane(workspace, materials_pane, weight=2, minsize=_mat_min)
+        add_pane(workspace, inspector_pane, weight=3, minsize=_insp_min)
         set_initial_pane_widths(
             workspace,
             [(footprint_pane, 0.30), (materials_pane, 0.28)],
@@ -282,13 +309,15 @@ class AssemblyPanel(ttk.Frame):
         self.material_category_var = tk.StringVar(value="")
         mat_row = ttk.Frame(slot)
         mat_row.grid(row=2, column=1, sticky=tk.W, padx=4)
-        self._material_swatch = tk.Label(mat_row, text="  ", width=2, bg="#dddddd", relief=tk.RIDGE)
+        self._material_swatch = tk.Label(
+            mat_row, text="—", width=3, bg="#dddddd", relief=tk.RIDGE, font=FONT_SMALL
+        )
         self._material_swatch.pack(side=tk.LEFT, padx=(0, 6))
         mat_col = ttk.Frame(mat_row)
         mat_col.pack(side=tk.LEFT)
-        ttk.Label(mat_col, textvariable=self.material_var, font=("Consolas", 9)).pack(anchor=tk.W)
+        ttk.Label(mat_col, textvariable=self.material_var, font=FONT_MONO_SMALL).pack(anchor=tk.W)
         ttk.Label(
-            mat_col, textvariable=self.material_category_var, font=("Segoe UI", 8), foreground="#555"
+            mat_col, textvariable=self.material_category_var, font=FONT_SMALL, foreground="#555"
         ).pack(anchor=tk.W)
         mat_btn_row = ttk.Frame(slot)
         mat_btn_row.grid(row=2, column=2, sticky=tk.W, padx=4)
@@ -557,6 +586,10 @@ class AssemblyPanel(ttk.Frame):
 
     def _load_snapshot_into_ui(self, snap: dict, *, path_hint: str = "") -> None:
         self._snapshot = assembly.enrich_snapshot(snap)
+        # APS-UX-PIPELINE-VALIDITY-001 — a freshly generated/loaded snapshot is
+        # unvalidated; clear any stale P0 verdict so the pipeline bar shows "saved
+        # (P0 not run)" until the gate is actually run.
+        self.state.assembly_p0_passed = None
         self._sync_state_from_snapshot(self._snapshot)
         self.iterate_panel.set_base_snapshot(self._snapshot)
         self.grammar_dna_panel.set_from_snapshot(self._snapshot)
@@ -643,11 +676,15 @@ class AssemblyPanel(ttk.Frame):
             tmp = Path(tempfile.gettempdir()) / "_aps_assembly_p0_validate.json"
             tmp.write_text(json.dumps(self._snapshot, indent=2), encoding="utf-8")
             snap_path = str(tmp)
-        return validate_assembly_p0_gate(
+        rep = validate_assembly_p0_gate(
             self._snapshot,
             snapshot_path=snap_path.replace("\\", "/"),
             ship=True,
         )
+        # APS-UX-PIPELINE-VALIDITY-001 — record the live P0 verdict so the pipeline
+        # bar can show ✓ only when the gate actually passed for this snapshot.
+        self.state.assembly_p0_passed = rep.status == "passed"
+        return rep
 
     @staticmethod
     def _format_validation_hints(rep) -> str:
@@ -865,7 +902,14 @@ class AssemblyPanel(ttk.Frame):
                     color = "#9e4a38"
                 elif "wood" in profile_id:
                     color = "#7a5a3a"
-        self._material_swatch.configure(bg=color)
+        # APS-UX-NONCOLOR — carry identity as text on the swatch so material is
+        # distinguishable in grayscale / colorblind, not by color block alone.
+        swatch_text = "—"
+        if profile_id:
+            head = profile_id.split("_")[0]
+            swatch_text = head[:3].upper() if head else profile_id[:3].upper()
+        fg = "#ffffff" if _is_dark_color(color) else "#111111"
+        self._material_swatch.configure(bg=color, text=swatch_text, fg=fg)
 
     def _apply_material_profile(self, profile_id: str) -> None:
         if not self._snapshot or not self._selected_node_id:

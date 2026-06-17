@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "batch_id": "kit_production_002",
+  "gate": "MCP-P2-KIT002-G1",
+  "development_tier": "production",
+  "manifest": "tools/mcp/schemas/examples/batch_kit_production_002.manifest.json",
+  "g0_rules": "debug_runs/art_pipeline/warehouse_production_g0_rules.yaml",
+  "module_count": 6,
+  "assetspecs": [
+    {
+      "module_id": "wall_steel_1u",
+      "spec_path": "assets/staging/specs/wall_steel_1u_production.json",
+      "job_id": "wall_steel_1u_production_run001",
+      "assembly_slot": "wall_1u",
+      "priority": "P0",
+      "reuse": false
+    },
+    {
+      "module_id": "door_warehouse",
+      "spec_path": "assets/staging/specs/door_warehouse_production.json",
+      "job_id": "door_warehouse_production_run001",
+      "assembly_slot": "door_default",
+      "priority": "P0",
+      "reuse": true
+    },
+    {
+      "module_id": "win_industrial_3u",
+      "spec_path": "assets/staging/specs/win_industrial_3u_production.json",
+      "job_id": "win_industrial_3u_production_run001",
+      "assembly_slot": "window_band",
+      "priority": "P0",
+      "reuse": true
+    },
+    {
+      "module_id": "corner_L",
+      "spec_path": "assets/staging/specs/corner_L_industrial_west_production.json",
+      "job_id": "corner_L_industrial_west_production_run001",
+      "assembly_slot": "corner_outer",
+      "priority": "P1",
+      "reuse": true
+    },
+    {
+      "module_id": "roof_industrial_shed_2u",
+      "spec_path": "assets/staging/specs/roof_industrial_shed_2u_production.json",
+      "job_id": "roof_industrial_shed_2u_production_run001",
+      "assembly_slot": "roof_default",
+      "priority": "P1",
+      "reuse": false
+    },
+    {
+      "module_id": "stack_chimney_1u",
+      "spec_path": "assets/staging/specs/stack_chimney_1u_production.json",
+      "job_id": "stack_chimney_1u_production_run001",
+      "assembly_slot": "stack",
+      "priority": "P2",
+      "reuse": true
+    }
+  ]
+}

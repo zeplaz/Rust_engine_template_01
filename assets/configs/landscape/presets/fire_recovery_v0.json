@@ -1,8 +1,17 @@
 {
   "schema_version": "landscape_grammar_v0",
   "preset_id": "fire_recovery_v0",
-  "chart_id": "FIRE-RECOV-D6",
-  "land_dna": { "H": "burn_scar", "S": "ash", "E": "exposed", "T": "temperate", "D": "dry", "L": "successional", "A": "young", "M": "natural" },
+  "chart_id": "NESTED-SUCCESSION-Ψ18",
+  "land_dna": {
+    "H": "upland",
+    "S": "thin_ridge",
+    "E": "wind_exposed",
+    "T": "temperate",
+    "D": "fire_return",
+    "L": "wild",
+    "A": "pioneer",
+    "M": "wild"
+  },
   "pressure_field": {
     "lambda_moisture": 0.44,
     "lambda_slope": 0.36,
@@ -14,21 +23,56 @@
     "lambda_legibility": 0.47
   },
   "landscape_program": {
-    "class": "successional",
+    "class": "natural",
     "district_ref": "fire_recovery_08",
-    "required_topologies": ["PATCH_BURN", "CORRIDOR_SPOIL", "CLUSTER_REGROWTH", "FRINGE_EDGE"]
+    "required_topologies": ["PATCH_IRREGULAR", "CORRIDOR_RAILSIDE", "CLUSTER_NATURAL", "FRINGE_EDGE"]
   },
   "topology_graph": [
     {
       "id": "net_fire_01",
       "topology_kind": "Network",
       "preset_id": "NETWORK_CONNECTED",
-      "children": [
-        { "id": "patch_burn_01", "topology_kind": "Patch", "preset_id": "PATCH_BURN" },
-        { "id": "corr_spoil_01", "topology_kind": "Corridor", "preset_id": "CORRIDOR_SPOIL" },
-        { "id": "cluster_regrow_01", "topology_kind": "Cluster", "preset_id": "CLUSTER_REGROWTH" },
-        { "id": "fringe_edge_01", "topology_kind": "Fringe", "preset_id": "FRINGE_EDGE" }
-      ]
+      "scale_band": "L",
+      "anchor_ref": "partition:chunk_08_burn",
+      "parent_topology_id": null,
+      "operator_stack": ["anchor_partition", "network_link"]
+    },
+    {
+      "id": "patch_burn_01",
+      "topology_kind": "Patch",
+      "preset_id": "PATCH_IRREGULAR",
+      "scale_band": "M",
+      "anchor_ref": "site:burn_scar_a",
+      "parent_topology_id": "net_fire_01",
+      "operator_stack": ["seed_patch", "clear_suppress"],
+      "metadata": { "glyph_planning": "○▒▒" }
+    },
+    {
+      "id": "corr_spoil_01",
+      "topology_kind": "Corridor",
+      "preset_id": "CORRIDOR_RAILSIDE",
+      "scale_band": "M",
+      "anchor_ref": "transport:spoil_line_08",
+      "parent_topology_id": "net_fire_01",
+      "operator_stack": ["anchor_road", "corridor"]
+    },
+    {
+      "id": "cluster_regrow_01",
+      "topology_kind": "Cluster",
+      "preset_id": "CLUSTER_NATURAL",
+      "scale_band": "S",
+      "parent_topology_id": "patch_burn_01",
+      "operator_stack": ["cluster", "expand"],
+      "metadata": { "glyph_planning": "◊◊" }
+    },
+    {
+      "id": "fringe_edge_01",
+      "topology_kind": "Fringe",
+      "preset_id": "FRINGE_EDGE",
+      "scale_band": "S",
+      "anchor_ref": "field:burn_margin",
+      "parent_topology_id": "net_fire_01",
+      "operator_stack": ["fringe"]
     }
   ]
 }

@@ -26,7 +26,7 @@ from .aps_tooltips import bind_aps_tooltip
 from .aps_inline_feedback import set_inline_status
 from .aps_paned import add_pane, horizontal_paned
 from .aps_scroll import attach_wheel_area, bind_debounced_scrollregion, canvas_yscroll, text_yscroll
-from .aps_theme import track_wraplength
+from .aps_theme import FONT_SMALL, track_wraplength
 from .metadata_flow_panel import MetadataFlowPanel
 from .state import SuiteState
 
@@ -220,7 +220,7 @@ class CatalogPanel(ttk.Frame):
         text = ttk.Label(
             row,
             text=f"{rec.module_id}\n{cat}",
-            font=("Segoe UI", 8),
+            font=FONT_SMALL,
             cursor="hand2",
         )
         text.pack(side=tk.LEFT, fill=tk.X, expand=True)

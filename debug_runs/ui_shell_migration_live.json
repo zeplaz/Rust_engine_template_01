@@ -55,7 +55,7 @@
     "relative_path": "debug_runs/ui_shell_migration_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "simulation_shell_phase2_live_proof",
-    "written_at_epoch_secs": 1781482896
+    "written_at_epoch_secs": 1781645760
   },
   "backends": {
     "P1_ops_strip": "bevy_ui",
@@ -130,7 +130,7 @@
       "F-11"
     ],
     "minimap_chrome_pad_px": 1.0,
-    "minimap_gpu_path": false,
+    "minimap_gpu_path": true,
     "ops_strip_top_offset_px": 2.0,
     "zones_live": true
   },
@@ -146,12 +146,12 @@
     "left_chrome_width_px_expanded": 458.0,
     "map_hole_inset": false,
     "overlay_absolute": true,
-    "phase2c_closed": true,
+    "phase2c_closed": false,
     "stack_body_width_px": 400.0
   },
   "phase4": {
     "atlas_texture": "textures/ui/icon_atlas_phase4_v1.png",
-    "icon_atlas_loaded": false,
+    "icon_atlas_loaded": true,
     "manifest_ron": "configs/ui/icon_atlas_phase4.icon_atlas.ron",
     "p4_veh_chips_wired": false,
     "p5_br_tab_wired": false,
@@ -169,7 +169,7 @@
   "profile": "UI_SHELL_MIGRATION_2B",
   "ui_oh_2a_001": {
     "gate": "UI-OH-2A-001",
-    "green": true,
+    "green": false,
     "phase2_zones_live": true
   },
   "ui_oh_2b_001": {
@@ -181,8 +181,8 @@
   "ui_oh_p4_001": {
     "gate": "UI-OH-P4-001",
     "green": false,
-    "icon_atlas_loaded": false,
-    "p4_1_green": true,
+    "icon_atlas_loaded": true,
+    "p4_1_green": false,
     "p5_br_green": false
   },
   "ui_oh_p5_001": {
@@ -196,10 +196,10 @@
     "phase2_zones_live": true
   },
   "ui_p2a_tail": {
-    "build_rail_authoritative": true,
+    "build_rail_authoritative": false,
     "f03_green": true,
     "ops_zone_hover_token": true,
-    "p4_auth_green": true
+    "p4_auth_green": false
   },
   "ui_p2b_coder_b": {
     "build_toolbox_egui_gated": true,
@@ -215,13 +215,13 @@
     "compositor_ui_p3_001_green": true,
     "gate": "UI-P3-SHELL-ROLLUP-001",
     "minimap_chrome_aligned": true,
-    "minimap_gpu_path": false
+    "minimap_gpu_path": true
   },
   "ui_p5_pause_001_green": false,
   "ui_w3_2a_001": {
-    "context_tray_wired": true,
+    "context_tray_wired": false,
     "gate": "UI-W3-2A-001",
-    "green": true,
+    "green": false,
     "ops_zones_wired": true,
     "phase2_zones_live": true
   },
@@ -232,19 +232,19 @@
     "product_egui_shell_in_simulation": false
   },
   "ui_w3_2c_001": {
-    "build_rail_authoritative": true,
+    "build_rail_authoritative": false,
     "build_rail_width_px": 52.0,
     "context_rail_width_px": 48.0,
     "gate": "UI-W3-2C-001",
-    "green": true,
+    "green": false,
     "layout_option": "2C-B",
     "left_chrome_width_px_collapsed": 106.0
   },
   "ui_w3_p4_001": {
     "gate": "UI-W3-P4-001",
     "green": false,
-    "icon_atlas_loaded": false,
-    "p4_auth_green": true,
+    "icon_atlas_loaded": true,
+    "p4_auth_green": false,
     "p5_br_tab_wired": false,
     "petroleum_panel_tab_wired": false
   },
@@ -275,22 +275,22 @@
   },
   "ux_e03_coder_a": {
     "gate": "UX-E03-CODER-A",
-    "green": false,
-    "media_registry_wired": false,
+    "green": true,
+    "media_registry_wired": true,
     "strategic_enqueue_from_transmission_ui": false
   },
   "witness": {
-    "alert_click_expanded_tray": true,
-    "build_rail_authoritative": true,
+    "alert_click_expanded_tray": false,
+    "build_rail_authoritative": false,
     "build_rail_synced": true,
     "build_toolbox_egui_gated": true,
-    "escape_collapsed_tray": true,
+    "escape_collapsed_tray": false,
     "flat_v2_tab_chrome": true,
     "floating_egui_shells_gated": true,
     "intel_map_camera_request": true,
-    "interaction_block_green": true,
+    "interaction_block_green": false,
     "last_minimap_rect_delta_px": 1.0,
-    "last_mission_count": 4,
+    "last_mission_count": 0,
     "minimap_chrome_aligned": true,
     "ops_zone_hover_token": true,
     "ops_zones_wired": true,

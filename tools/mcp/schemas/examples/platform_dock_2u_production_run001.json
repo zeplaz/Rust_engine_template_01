@@ -4,10 +4,10 @@
   "batch_id": "kit_industrial_west_production_001",
   "development_tier": "production",
   "spec_ref": "assets/staging/specs/platform_dock_2u_production.json",
-  "operation": "module_prop",
+  "operation": "module_platform",
   "params": {
     "width_m": 2,
-    "height_m": 2,
+    "height_m": 0.5,
     "depth_m": 2,
     "material_profile": "concrete_grey_01",
     "seed": 42,

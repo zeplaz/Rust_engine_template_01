@@ -56,9 +56,10 @@ impl Plugin for IndustrialActivationPlugin {
                     .before(crate::strategic::commit_construction_site_system),
                 super::concrete_chain_e2e::seed_rowhouse_victorian_production_demo_once
                     .after(crate::strategic::commit_construction_site_system)
-                    .after(super::concrete_chain_e2e::fast_forward_portland_chain_sites_to_operational),
+                    .after(super::concrete_chain_e2e::ConcreteChainE2eSet::FastForwardPortland),
                 super::concrete_chain_e2e::seed_stage7_play_concrete_chain_once,
                 super::concrete_chain_e2e::fast_forward_portland_chain_sites_to_operational
+                    .in_set(super::concrete_chain_e2e::ConcreteChainE2eSet::FastForwardPortland)
                     .after(crate::strategic::commit_construction_site_system),
                 crate::economy::site_placement::ensure_site_world_transform_system,
                 activate_industrial_facilities_system

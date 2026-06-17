@@ -5,22 +5,18 @@
   "style_pack": "style_industrial_west",
   "development_tier": "production",
   "pbr_status": "shipped",
-  "batch_id": "kit_industrial_west_production_001",
+  "batch_id": "kit_production_002",
   "module": {
-    "grid_units": [
-      1,
-      1
-    ],
+    "grid_units": [1, 1],
     "snap": "floor_edge",
     "pivot": "bottom_center"
   },
-  "dimensions_m": {
-    "w": 2,
-    "h": 3,
-    "d": 2
-  },
+  "dimensions_m": { "w": 2, "h": 3, "d": 2 },
   "material_profile": "steel_corner_01",
   "references": [
+    "ref:kit:kit_production_002",
+    "ref:gate:MCP-P2-KIT002-G1",
+    "ref:manifest:batch_kit_production_002",
     "ref:audit:PG-MODULE-AUDIT-002",
     "ref:kit:kit_industrial_west_production_001"
   ]

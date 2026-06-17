@@ -117,7 +117,7 @@ pub fn apply_simulation_map_presentation_defaults(
 ) {
     minimap.visible = true;
     minimap.minimized = false;
-    // P1-B: GPU minimap when compositor env on; [`sync_minimap_presentation_source`] falls back until RT committed.
+    // P1-B: main sim HUD → GPU RT. CPU layered raster remains for explicit `SharedCpuRaster` effects.
     minimap.presentation_source = if minimap_gpu_compositor_env_enabled() {
         MinimapPresentationSource::SharedRenderTargetImage
     } else {

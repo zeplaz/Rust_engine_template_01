@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "batch_id": "tile_rail_warehouse_pilot_v1",
+  "tile_id": "tile_rail_warehouse_pilot_v1",
+  "atlas_id": "rail_warehouse_pilot_v1",
+  "atlas_png": "C:\\dev\\github\\Rust_engine_template_01\\assets\\textures\\buildings_iso\\staging\\tile_rail_warehouse_pilot_v1_atlas.png",
+  "columns": 2,
+  "rows": 2,
+  "tile_px": 128,
+  "variant_count": 4,
+  "tiles": [
+    {
+      "variant_key": "clean_day",
+      "png": "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_rail_warehouse_pilot_v1\\clean_day.png",
+      "grid": [
+        0,
+        0
+      ],
+      "uv": [
+        0.0,
+        0.0,
+        0.5,
+        0.5
+      ]
+    },
+    {
+      "variant_key": "clean_night_off",
+      "png": "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_rail_warehouse_pilot_v1\\clean_night_off.png",
+      "grid": [
+        1,
+        0
+      ],
+      "uv": [
+        0.5,
+        0.0,
+        0.5,
+        0.5
+      ]
+    },
+    {
+      "variant_key": "clean_night_on",
+      "png": "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_rail_warehouse_pilot_v1\\clean_night_on.png",
+      "grid": [
+        0,
+        1
+      ],
+      "uv": [
+        0.0,
+        0.5,
+        0.5,
+        0.5
+      ]
+    },
+    {
+      "variant_key": "under_construction_01",
+      "png": "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_rail_warehouse_pilot_v1\\under_construction_01.png",
+      "grid": [
+        1,
+        1
+      ],
+      "uv": [
+        0.5,
+        0.5,
+        0.5,
+        0.5
+      ]
+    }
+  ]
+}

@@ -265,23 +265,33 @@ pub fn build_read_visual_001_runtime_sim_verified() -> bool {
 #[must_use]
 pub fn build_read_visual_001_witness_body() -> serde_json::Value {
     use crate::gui::map_tile_atlas_stamp::{
-        build_read_visual_pilot_tile_stamp_lib_green, warehouse_v2_atlas_index_registered,
+        build_read_visual_pilot_tile_stamp_lib_green,
+        rail_warehouse_pilot_atlas_index_registered,
     };
 
     let lib_green = build_read_visual_001_witness_green();
     let runtime_sim_verified = build_read_visual_001_runtime_sim_verified();
     let pilot_tile = build_read_visual_pilot_tile_stamp_lib_green();
-    let mesh_tier = if lib_green { "lod0" } else { "fallback_primitive" };
+    let pilot_atlas = rail_warehouse_pilot_atlas_index_registered();
+    let mesh_tier = if pilot_atlas {
+        "iso_tile"
+    } else if lib_green {
+        "lod0"
+    } else {
+        "fallback_primitive"
+    };
     serde_json::json!({
         "gate": "BUILD-READ-VISUAL-001",
-        "green": lib_green && runtime_sim_verified,
+        "green": lib_green && runtime_sim_verified && pilot_atlas,
         "lib_green": lib_green,
         "runtime_sim_verified": runtime_sim_verified,
         "pg2_operational_spawn_wired": runtime_sim_verified,
+        "pg2_mesh_suppressed_when_atlas": pilot_atlas,
         "mesh_tier_used": mesh_tier,
         "pg2_lod0_extract": lib_green,
         "pilot_tile_stamp_lib": pilot_tile,
-        "warehouse_atlas_registered": warehouse_v2_atlas_index_registered(),
+        "pilot_atlas_registered": pilot_atlas,
+        "warehouse_atlas_registered": pilot_atlas,
         "footprint_grid_uses_grammar": true,
         "runtime_verify": {
             "open": !runtime_sim_verified,

@@ -1,0 +1,24 @@
+---
+description: Session bootstrap + operating rules for the BLANG/agent-lang multi-agent system — run the boot ritual, reason on witnesses (not raw logs or stale queue rows), and use the MCP CLI driver.
+alwaysApply: true
+---
+
+# Agent-lang boot + operating rules
+
+Full skill: `.cursor/skills/agent-lang/SKILL.md`.
+
+## Every session
+Run the boot ritual: `node .claude/skills/agent-lang/driver.mjs boot <agent>` (PRE → BOOT → HO). It runs preflight, loads `prompts/llm_agent_brief.md` + `prompts/SYMBOLIC_LANGUAGE.meta.md`, and returns per-agent queue picks.
+
+## Source of truth
+- Trust live witness JSON in `debug_runs/` + files on disk **over** queue-row status, the orchestrator snap, or status docs — these drift both ways (false-`done` AND stale-`blocked`). Reconcile against the witness.
+- "Green" is **scoped**: schema-green ≠ bake-green (G0–G3) ≠ runtime-stamp-green ≠ art-ship-green (G4/G5). Always state which scope.
+- `lib green ≠ done` — require the live exit-predicate witness (counters non-zero), not just a passing lib test.
+
+## Use the tools, not the wall
+- Structured reports over raw logs: `validate-report` / the `validate_*` MCP tools.
+- Witness digest over full JSON: `witness-brief <path>`.
+- Queue: `agent-queue-next <agent>` / `agent-queue-update <id> done --note <witness>`.
+
+## Interpreter gotcha (this machine)
+The MCP server/CLI needs `mcp` + `jsonschema` + `Pillow`. `python` (3.14) has all three; `py -3.13` lacks Pillow. Use the 3.14 interpreter for art/preview tools (or `pip install Pillow` into 3.13). The driver auto-sets `PYTHONUTF8=1` and runs from `tools/mcp/python`.

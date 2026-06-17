@@ -1,0 +1,27 @@
+---
+description: Non-negotiable procedural-asset production gates for tools/mcp/ — no AI-generated final art, deterministic seeded output, batch/atlas processing, grid alignment. Emit a pass/block verdict before any art/geometry tool call.
+globs: tools/mcp/**
+alwaysApply: false
+---
+
+# MCP production rules (tools/mcp/)
+
+Full skill: `.cursor/skills/mcp-production-rules/SKILL.md`. Fire these four gates BEFORE any MCP/CLI art or geometry call. Any failure = hard stop; propose the compliant alternative instead.
+
+| Gate | Constraint | Blocks |
+|---|---|---|
+| `no_ai_generated_images` | No diffusion/LLM-freeform for FINAL assets | base64 textures, "generate an image", diffusion output |
+| `deterministic_output` | Same input + same seed ⇒ same output | unseeded variation, random-per-run |
+| `batch_processing` | Process groups/atlases, not ad-hoc singles | one-off tile, single-prop production bakes |
+| `grid_alignment` | Fixed grid unit, no free rotation | free-rotated props, off-grid placement |
+
+Emit before executing — never silently proceed:
+
+```yaml
+rules_check: { passed: true|false, blocked_by: [<rule_id>...], seed: "<seed>" }
+```
+
+Blocked → propose the compliant path ("describe mesh in chat" → a `geometry_job_v1` JSON; "quick texture" → keyframe render pack).
+
+## Witness honesty
+Never emit `green` over a failing or un-run tree. `honest_gate: dishonest_gate` blocks promotion. A witness must reflect the tree on disk, not an earlier state.

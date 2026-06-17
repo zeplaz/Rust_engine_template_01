@@ -30,8 +30,24 @@ Re-run every session. Orient via `… doc <path>` (file-digest ⊚digest) ¬raw-
 ## BLANG session loop ⟶ command
 
 ```text
-PRE ⊳ BOOT ⊳ Q+ ⊳ work ⊳ WIT ⊳ Q✓
+SKILL-SYNC ⊳ PRE ⊳ BOOT ⊳ Q+ ⊳ work ⊳ WIT-HON ⊳ WIT ⊳ Q✓
 ```
+
+## Skill parity (mandatory — every session)
+
+**If this file or any domain `SKILL.md` was empty/stale, agents lose BLANG protocol.**
+
+```powershell
+# From repo root — repair .cursor/skills from .claude/skills
+powershell -NoProfile -File .cursor/skills/sync-claude-skills/scripts/sync.ps1
+```
+
+1. Run sync when `.cursor/skills/agent-lang/SKILL.md` is missing or <500 bytes  
+2. **Read** the synced skill in-session (do not rely on old digest cache alone)  
+3. After `tools/mcp/python` tool changes → **reload Cursor MCP** (`rust-engine-art`)  
+4. Skill sync doc: `$ref:.cursor/skills/sync-claude-skills/SKILL.md`
+
+**Rule:** `BLANG:Q✓` forbidden when `BLANG:WIT-HON` FAIL on row witness + rollup parents (see `plan_witness_queue_integrity_mcp_v1.md`).
 
 | BLANG | `node .claude/skills/agent-lang/driver.mjs …` |
 |:--|:--|
@@ -41,6 +57,7 @@ PRE ⊳ BOOT ⊳ Q+ ⊳ work ⊳ WIT ⊳ Q✓
 | `Q✓` | `agent-queue-update <id> done --note <witness>` |
 | `HO` | `handoff-brief` |
 | `WIT` | `witness-brief <path>` |
+| `WIT-HON` | `validate-report witness_honesty <path>` · `--scan debug_runs` · `validate-report queue_integrity` |
 | `CARGO` | `validate-report cargo --cached --compress 4` (structured report ¬raw stderr) |
 | `REF` | `doc <path>` → `file-digest` (⊚digest, compressed) |
 | `GUIDE` | `guide` (token-savings-guide: BLANG token → CLI map) |
@@ -95,5 +112,5 @@ The CLI was refactored; the doc-ledger / session / demo command family was **rem
 token-savings-guide · file-digest`.
 
 ```text
-⟦/agent-lang⟧ NEXT ⚑ boot <agent> → BOOT-read → Q+ → work → ⬡validate → WIT → Q✓
+⟦/agent-lang⟧ NEXT ⚑ SKILL-SYNC → boot <agent> → Q+ → work → WIT-HON → WIT → Q✓
 ```

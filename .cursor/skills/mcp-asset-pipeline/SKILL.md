@@ -1,113 +1,78 @@
 ---
 name: mcp-asset-pipeline
-description: Orchestrates deterministic MCP asset production for Rust_engine_template_01 — Agent spec JSON, rule enforcement, tool selection, staging validation, and Bevy promotion. Use when wiring MCP tools, authoring AssetSpec/geometry jobs, batch asset pipelines, or routing art work to @designer / @coder — not for freeform mesh or texture generation.
-disable-model-invocation: true
+description: >-
+  Orchestrate deterministic asset production end-to-end — spec is authority, MCP/CLI
+  executes, validators gate, promotion copies into the engine registry. Use when
+  driving an art job from request to shipped asset, routing tile vs geometry lanes, or
+  sequencing the spec→tool→validate→promote phases. Triggers: asset pipeline, AssetSpec,
+  staging, promote, geometry job, atlas, module kit, art lane, G0-G5 gates.
 ---
 
 `⟦SYM⟧ lang⊳ $ref:prompts/SYMBOLIC_LANGUAGE.meta.md`
 
-# MCP Asset Pipeline Orchestrator
+# mcp-asset-pipeline — spec → tool → validate → promote
 
-Deterministic **STATE → TOOL → BATCHED ART** production. The LLM writes **structured specs** and selects **MCP/CLI tools** — it does not generate final meshes or textures.
+`◉Q🎯 deterministic · 🏛 spec=authority` — single execution path, gated at every hop.
 
-## When to use
-
-- Authoring or reviewing MCP requests / `AssetSpec` / geometry job JSON
-- Chaining spec → Blender → validate → promote → Bevy registry
-- Deciding which MCP server or micro-CLI to invoke
-- Planning tile, prop, or animation pipeline extensions (see drafts)
-
-## Primary rule
-
-> Agents are policy + skill routing + tool selection — not asset generators.
-
-## AGENT-LANG ritual (attach [agent-lang](../agent-lang/SKILL.md))
-
-**DSM art region:** `AUTH: … ⇢ WRK○ ⇢ ATL○ ⇢ RT○`
+## Pattern (form A — gated pipeline)
 
 ```text
-BLANG:PRE → spec JSON → tool → BLANG:P0|validate_asset → promote → BLANG:WIT → BLANG:Q✓
+◎AssetSpec🏛 ▷⊳ ▢MCP/CLI-tool ─⬡[one-path]▶ ◎staging/ ─⬡[validate★]▶ ⇧promote ▷⊳ ◎registry★
+   │                                                  │
+   └─⊰ structured JSON ¬freeform                       └─🔴[validate✗]⊸ ¬promote
 ```
-
-| Node | BLANG |
-|:---|:---|
-| SNAP | `BLANG:DIGEST` on assembly snapshot |
-| WRK | `geometry_run_job` / `tile_batch_run` |
-| ATL | `validate_asset_report` + promote witness 🟢 |
-
-**Refs:** `$ref:tools/mcp/MICRO_TOOLS_REGISTRY_v1.md` · `$ref:tools/mcp/schemas/`
-
-## Quick workflow
-
-1. `BLANG:REF` on [`prompts/llm_agent_brief.md`](prompts/llm_agent_brief.md) (token contract).
-2. Read shipped toolchain: [`tools/mcp/README.md`](tools/mcp/README.md), [`MICRO_TOOLS_REGISTRY_v1.md`](tools/mcp/MICRO_TOOLS_REGISTRY_v1.md).
-3. Read full pipeline: [reference.md](reference.md) + source drafts [`docs/archive/2026-06-fleet-drain/prompts_drafts/mcp_drafts.md`](docs/archive/2026-06-fleet-drain/prompts_drafts/mcp_drafts.md), [`docs/archive/2026-06-fleet-drain/prompts_drafts/rules_skills_draft.md`](docs/archive/2026-06-fleet-drain/prompts_drafts/rules_skills_draft.md).
-4. Attach **`mcp-production-rules`** — enforce before any tool call.
-5. Classify request: **geometry** · **tile** · **prop** · **material** · **reference-only**.
-6. Emit MCP request JSON (never bpy/chat mesh instructions).
-7. Execute via MCP tool or `python -m rust_engine_mcp.cli` (same code path).
-8. Validate → promote → register in asset library.
-
-## Execution model
 
 ```text
-Agent (@designer / @coder)
-  ↓ Load skills + apply rules
-  ↓ Select tool (MCP or micro-CLI)
-  ↓ MCP Request JSON
-  ↓ Python toolchain (tools/mcp/python/)
-  ↓ External binary (Blender / future tile batch)
-  ↓ assets/staging/<job_id>/
-  ↓ validate_glb_asset → promote_staging_module
-  ↓ Bevy (BuildingDefinition / StylePack / RepresentationResult)
+🏛 spec=authority    agent authors JSON · tool executes · ¬freeform mesh/texture (⤴ mcp-production-rules)
+   one-path          MCP tools ∧ micro-CLI call same functions ⇒ CLI-proven ≡ MCP-behavior
+⛓ staging-boundary   tools write only staging/<job_id>/ · promote = separate validated copy
+⬡ gate-every-phase   validate✗ ⊸ promote · ¬designer-signoff ⊸ tool-exec
+```
+Transfers: define spec schema · force one execution path · gate the staging→ship hop.
+
+## In this repo — G0–G5 (form A · graph algebra)
+
+```text
+⟨G:art⟩ ≝ G0 ⨟ G1 ⨟ G2 ⨟ G3 ⨟ G4 ⨟ G5      (each Gn begins when Gn−1 closes ★)
+
+G0 order-critique + rules-audit   ⤳ @designer-mcp
+G1 spec valid       ─⬡▶ validate-report mcp_spec
+G2 tool runs        ─⬡▶ run-geometry / tile-spine-run
+G3 validate green   ─⬡▶ validate-report asset_glb
+G4 staging sign-off ─⬡▶ @designer-mcp (list-staging)
+G5 promote+register+witness ▷⊳ promote / library-register / write-witness ▷⊳ ◎registry★
+   owners: @designer-mcp authors · @coder-mcp builds · @orchestrator-mcp sequences
+   ¬promote ∵ ¬(G3★ ∧ G4★)
 ```
 
-## Shipped vs planned (repo truth)
+Drive via the agent-lang driver (verified commands):
 
-| Lane | Status | Skill |
-|------|--------|-------|
-| Geometry (Blender modules) | **Shipped** — `tools/mcp/` | [blender-geometry](blender-geometry/SKILL.md) |
-| AssetSpec + validate + promote | **Shipped** | this skill |
-| Tile keyframe pack + atlas | **Shipped** (pack/register); ortho bake CI-only | [tile-generation](tile-generation/SKILL.md) |
-| Prop / smoke / light MCP | **Planned** (draft spec) | [blender-geometry](blender-geometry/SKILL.md) |
-| Skill runtime engine (Rust) | **Future** (draft only) | reference.md |
-
-## MCP request template
-
-```yaml
-tool: geometry_run_job | tile.generate | prop.generate  # use shipped names when available
-input:
-  spec_path: tools/mcp/schemas/examples/wall_job.example.json
-  # or inline AssetSpec / geometry_job_v1 fields
-rules_applied: [no_ai_generated_images, deterministic_output, batch_processing, grid_alignment]
-expected_outputs: [model.glb, metadata, status.json]
-promotion_target: assets/models/modules/
+```bash
+node .claude/skills/agent-lang/driver.mjs list-staging                                   # what's staged (G4)
+node .claude/skills/agent-lang/driver.mjs job-status wall_brick_1u_lod0_run001           # a job's state
+node .claude/skills/agent-lang/driver.mjs validate-report asset_glb assets/staging/wall_brick_1u_example/model.glb --compress 4   # G3
 ```
 
-## Route conflicts
+Lane router (form K):
 
-| Situation | Delegate |
-|-----------|----------|
-| UX / visual state readability | `@designer-mcp` |
-| MCP server / CLI / bpy ops | `@coder-mcp` |
-| Multi-lane pipeline architecture | `@planner-mcp` |
-| ECS registry / Bevy load contract | `@coder` + bevy-simulation-grade |
-| Rule violation or cleanup of draft shims | `@sim-steward` |
+```text
+◎request ═[kind=geom]▶ ▢geometry-lane (Blender modules) ⤴ [blender-geometry](../blender-geometry/SKILL.md)
+         ═[kind=tile]▶ ▢tile-lane (iso state machines)   ⤴ [tile-generation](../tile-generation/SKILL.md)
+```
+Tool registry: [`tools/mcp/MICRO_TOOLS_REGISTRY_v1.md`](../../../tools/mcp/MICRO_TOOLS_REGISTRY_v1.md). SHIPPED ≠ PLANNED — ¬plan on `tile.generate` execution (PLANNED) as if shipped.
 
-## Token discipline
+## Gotchas
 
-Compress to YAML + `$ref:` + tool name. No log dumps, no full glb/base64 in chat.
-
-**Rules verdict:**
-
-```yaml
-rules_check: { passed: 🟢|🔴, blocked_by: [rule_id], reroute: "..." }
+```text
+🏛 consumer≠builder   @coder/@designer/@planner USE these tools · only -mcp agents build tools/mcp/ · ¬paste bpy as consumer
+   list-staging quirk  glb_count: 0 for container dirs (assemblies, tiles) = ¬failure · those hold sub-jobs
+⬡ promote≠idempotent  promote copies validated staging → registry + auto library_register · validate★ first
 ```
 
-## Additional resources
+## Source
 
-- **agent-lang** — DSM nodes, grammar iterate loop
+Cursor original: [.cursor/skills/mcp-asset-pipeline/](../../../.cursor/skills/mcp-asset-pipeline/) · toolchain README [`tools/mcp/README.md`](../../../tools/mcp/README.md).
 
-- Exec plan: [`docs/archive/2026-06-src-dev/plans/plan_designer_mcp_art_toolchain_exec_001_v1.md`](docs/archive/2026-06-src-dev/plans/plan_designer_mcp_art_toolchain_exec_001_v1.md)
-- Module kit: [`docs/archive/2026-06-src-dev/plans/design_procedural_module_kit_v1.md`](docs/archive/2026-06-src-dev/plans/design_procedural_module_kit_v1.md)
-- Full architecture: [reference.md](reference.md)
+```text
+⟦/mcp-asset-pipeline⟧ NEXT ⚑ G0 critique → G1–G3 validate → G4 sign → G5 ⇧promote ▷⊳ ◎registry★
+```

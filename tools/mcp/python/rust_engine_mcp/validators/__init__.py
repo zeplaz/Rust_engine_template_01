@@ -19,6 +19,10 @@ from .assembly_grammar_verify import (
 )
 from .material_textures import validate_material_textures, validate_material_textures_path
 from .tile_promotion import validate_tile_promotion
+from .witness_honesty import (
+    validate_witness_honesty_path,
+    validate_witness_honesty_scan,
+)
 from .report import ValidationReport
 
 __all__ = [
@@ -38,6 +42,9 @@ __all__ = [
     "validate_material_textures",
     "validate_material_textures_path",
     "validate_tile_promotion",
+    "validate_witness_honesty_path",
+    "validate_witness_honesty_scan",
+    "validate_queue_integrity",
     "run_validator",
 ]
 
@@ -160,6 +167,10 @@ def run_validator(
         from .landscape_grammar import validate_landscape_grammar_path
 
         return validate_landscape_grammar_path(_resolve(target), compression_level=compression_level)
+    if name == "landscape_grammar_presets":
+        from rust_engine_mcp.landscape_grammar_presets import validate_landscape_grammar_presets
+
+        return validate_landscape_grammar_presets(compression_level=compression_level)
     if name == "arch_build_grammar":
         if not target:
             raise ValueError("target path required for arch_build_grammar (ARCH-DNA preset JSON)")
@@ -172,4 +183,15 @@ def run_validator(
         from rust_engine_mcp.validators.construction_witness import validate_construction_witness_path
 
         return validate_construction_witness_path(_resolve(target), compression_level=compression_level)
+    if name == "witness_honesty":
+        if not target:
+            raise ValueError("target path required for witness_honesty (witness JSON)")
+        return validate_witness_honesty_path(_resolve(target), compression_level=compression_level)
+    if name == "queue_integrity":
+        from .queue_integrity import validate_queue_integrity
+
+        return validate_queue_integrity(
+            queue_filter=target or None,
+            compression_level=compression_level,
+        )
     raise ValueError(f"unknown validator: {name}")

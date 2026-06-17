@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "asset_id": "platform_dock_2u",
-  "archetype": "module_prop",
+  "archetype": "module_platform",
   "style_pack": "style_industrial_west",
   "development_tier": "production",
   "pbr_status": "shipped",
@@ -15,7 +15,7 @@
     "pivot": "bottom_center"
   },
   "dimensions_m": {
-    "w": 4,
+    "w": 2,
     "h": 0.5,
     "d": 2
   },

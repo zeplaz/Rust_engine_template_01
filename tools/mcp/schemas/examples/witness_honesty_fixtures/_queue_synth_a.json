@@ -1,0 +1,6 @@
+{
+  "_fixture": { "expect": "pass", "rule_id": "WIT-QUEUE-CONTRADICTION", "teaches": "synthetic queue A — closed" },
+  "rows": [
+    { "id": "WIT-SYNTH-CONTRA", "status": "done" }
+  ]
+}

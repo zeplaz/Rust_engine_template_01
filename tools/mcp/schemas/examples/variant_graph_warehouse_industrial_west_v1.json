@@ -1,0 +1,76 @@
+{
+  "_meta": {
+    "teaches": ["variant_graph", "node_patch", "material_override", "decal_override"],
+    "not_a_ship_target": true,
+    "pairs_with": "tools/mcp/schemas/examples/variant_set_warehouse_industrial_west_production_v1.json"
+  },
+  "schema_version": 1,
+  "variant_graph_id": "variant_graph_warehouse_industrial_west_v1",
+  "assembly_id": "industrial_west_4x2_s43_a879",
+  "style_pack_id": "style_industrial_west",
+  "variant_set_id": "warehouse_industrial_west_production_v1",
+  "seed": 43,
+  "variants": [
+    {
+      "variant_key": "clean_day",
+      "inherits": null,
+      "sim_tags": ["sim_operational", "sim_day", "sim_power_any"],
+      "nodes": []
+    },
+    {
+      "variant_key": "damaged_heavy",
+      "inherits": "clean_day",
+      "sim_tags": ["sim_damaged", "sim_day"],
+      "nodes": [
+        {
+          "target": "role",
+          "role": "primary_wall",
+          "material_overrides": {
+            "material_profile": "steel_rust_heavy_01",
+            "weathering": "heavy",
+            "roughness_multiplier": 1.35
+          },
+          "decal_overrides": [
+            { "decal_id": "panel_dent_a", "layer": "damage", "strength": 0.55 }
+          ]
+        },
+        {
+          "target": "node",
+          "node_id": "door_warehouse_2_0_f0",
+          "material_overrides": {
+            "material_profile": "steel_door_damaged_01",
+            "weathering": "heavy"
+          },
+          "visibility_overrides": { "visible": true }
+        }
+      ]
+    },
+    {
+      "variant_key": "fire",
+      "inherits": "clean_day",
+      "sim_tags": ["sim_fire", "sim_night"],
+      "nodes": [
+        {
+          "target": "role",
+          "role": "stack",
+          "emission_overrides": {
+            "emissive_strength": 2.4,
+            "emissive_color": [1.0, 0.42, 0.08],
+            "night_lights": true
+          },
+          "decal_overrides": [
+            { "decal_id": "soot_stack_a", "layer": "soot", "strength": 0.8 }
+          ]
+        },
+        {
+          "target": "semantic_tag",
+          "semantic_tag": "street_facing",
+          "emission_overrides": {
+            "emissive_strength": 0.6,
+            "emissive_color": [1.0, 0.25, 0.05]
+          }
+        }
+      ]
+    }
+  ]
+}

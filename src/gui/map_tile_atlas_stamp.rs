@@ -78,6 +78,11 @@ pub const ROWHOUSE_VICTORIAN_TILE_ID: &str = "rowhouse_victorian";
 /// Warehouse industrial west v2 tile/atlas ids (TILE-FIX-10 minimum G4).
 pub const WAREHOUSE_INDUSTRIAL_TILE_ID: &str = "warehouse_industrial";
 pub const WAREHOUSE_INDUSTRIAL_ATLAS_ID: &str = "warehouse_industrial_west_v2";
+
+/// BUILD-READ-VISUAL-001 — rail warehouse pilot iso tile (logistics_rail_warehouse_v0).
+pub const RAIL_WAREHOUSE_PILOT_TILE_ID: &str = "tile_rail_warehouse_pilot_v1";
+pub const RAIL_WAREHOUSE_PILOT_ATLAS_ID: &str = "rail_warehouse_pilot_v1";
+pub const RAIL_WAREHOUSE_PILOT_CATALOG_ID: &str = "pilot:logistics_rail_warehouse_v0";
 pub const TILE_FIX_10_WAREHOUSE_WITNESS_JSON: &str =
     "debug_runs/art_pipeline/tile_fix_10_warehouse_industrial_live.json";
 pub const ENG_PT4_WAREHOUSE_MAP_STAMP_LIVE_JSON: &str =
@@ -130,17 +135,46 @@ pub fn warehouse_v2_atlas_index_registered() -> bool {
 /// BUILD-READ-VISUAL-001 — pilot catalog id resolves to warehouse production atlas (lib).
 #[must_use]
 pub fn build_read_visual_pilot_tile_stamp_lib_green() -> bool {
-    use crate::construction::PilotCatalog;
-    use crate::strategic::{BuildSiteTile, LayerType, SiteId};
+    rail_warehouse_pilot_atlas_index_registered()
+        && build_read_visual_pilot_stamp_request_green()
+}
 
+/// Pilot iso stamp resolves when production atlas row + PNG are on disk.
+#[must_use]
+pub fn rail_warehouse_pilot_atlas_index_registered() -> bool {
     let registry = crate::construction::procedural::load_tile_atlas_registry();
     if !registry.load_errors.is_empty() {
         return false;
     }
+    let Some(entry) = registry.atlas_for_tile_id(RAIL_WAREHOUSE_PILOT_TILE_ID) else {
+        return false;
+    };
+    entry.atlas_id == RAIL_WAREHOUSE_PILOT_ATLAS_ID
+        && entry.runtime_stamp_allowed()
+        && !entry.lookups.is_empty()
+        && std::path::Path::new(&entry.atlas_png).is_file()
+}
+
+#[must_use]
+pub fn build_read_visual_pilot_stamp_request_green() -> bool {
+    use crate::construction::procedural::{
+        load_tile_atlas_registry, load_variant_catalog, ProceduralBuildingRequest, StylePackId,
+    };
+    use crate::construction::PilotCatalog;
+    use crate::strategic::{BuildSiteTile, LayerType, SiteId};
+
+    let registry = load_tile_atlas_registry();
+    let catalog = match load_variant_catalog() {
+        Some(c) => c,
+        None => return false,
+    };
     let pilots = PilotCatalog::load_from_disk();
     let Some(pilot) = pilots.first_grammar_pilot() else {
         return false;
     };
+    if pilot.catalog_id != RAIL_WAREHOUSE_PILOT_CATALOG_ID {
+        return false;
+    }
     let planned = PlannedSite {
         site_id: SiteId(1),
         origin: BuildSiteTile { x: 0, z: 0 },
@@ -153,7 +187,50 @@ pub fn build_read_visual_pilot_tile_stamp_lib_green() -> bool {
         catalog_id: Some(pilot.catalog_id.clone()),
         placement: None,
     };
-    resolve_atlas_entry_for_planned_site(&registry, &planned, None).is_some()
+    let site = ConstructionSite {
+        site_id: 1,
+        owner: Entity::PLACEHOLDER,
+        archetype: SiteArchetype::Factory,
+        phase: SiteConstructionPhase::Operational,
+        operational_readiness: 1.0,
+    };
+    let mut footprint_tiles = Vec::new();
+    for dz in 0..planned.footprint.depth {
+        for dx in 0..planned.footprint.width {
+            footprint_tiles.push(IVec2::new(
+                planned.origin.x as i32 + dx as i32,
+                planned.origin.z as i32 + dz as i32,
+            ));
+        }
+    }
+    let site_fp = SiteFootprint {
+        tiles: footprint_tiles,
+        layer: planned.layer,
+    };
+    let spec = ProceduralBuildingSpec(ProceduralBuildingRequest {
+        archetype_id: "industrial_warehouse_l".into(),
+        width: planned.footprint.width,
+        depth: planned.footprint.depth,
+        floors: 1,
+        style: StylePackId("style_industrial_west".into()),
+        seed: 440013,
+        arch_dna_preset_id: Some("logistics_rail_warehouse_v0".into()),
+    });
+    let Some(req) = stamp_request_for_site(
+        &registry,
+        Some(&catalog),
+        0,
+        0.0,
+        &planned,
+        &site,
+        &site_fp,
+        Some(&spec),
+    ) else {
+        return false;
+    };
+    req.atlas_id == RAIL_WAREHOUSE_PILOT_ATLAS_ID
+        && req.variant_key == "clean_day"
+        && req.footprint_w >= planned.footprint.width
 }
 
 #[must_use]
@@ -163,6 +240,13 @@ pub fn resolve_atlas_entry_for_planned_site<'a>(
     spec: Option<&ProceduralBuildingSpec>,
 ) -> Option<&'a crate::construction::procedural::TileAtlasEntry> {
     if let Some(catalog) = planned.catalog_id.as_deref() {
+        if catalog == RAIL_WAREHOUSE_PILOT_CATALOG_ID
+            || (catalog.starts_with("pilot:") && catalog.contains("logistics_rail"))
+        {
+            if let Some(entry) = registry.atlas_for_tile_id(RAIL_WAREHOUSE_PILOT_TILE_ID) {
+                return Some(entry);
+            }
+        }
         if let Some(entry) = registry.atlas_for_tile_id(catalog) {
             return Some(entry);
         }
@@ -171,12 +255,7 @@ pub fn resolve_atlas_entry_for_planned_site<'a>(
                 return Some(entry);
             }
         }
-        if catalog.contains("warehouse") || catalog.contains("industrial") || catalog.contains("logistics_rail") {
-            if let Some(entry) = registry.atlas_for_tile_id(WAREHOUSE_INDUSTRIAL_TILE_ID) {
-                return Some(entry);
-            }
-        }
-        if catalog.starts_with("pilot:") && catalog.contains("logistics_rail") {
+        if catalog.contains("warehouse") || catalog.contains("industrial") {
             if let Some(entry) = registry.atlas_for_tile_id(WAREHOUSE_INDUSTRIAL_TILE_ID) {
                 return Some(entry);
             }
@@ -633,6 +712,16 @@ pub fn apply_atlas_stamps_to_rgba_subregion(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn build_read_pilot_atlas_stamp_when_registered() {
+        if !super::rail_warehouse_pilot_atlas_index_registered() {
+            eprintln!("skip: rail warehouse pilot atlas not registered for runtime stamp");
+            return;
+        }
+        assert!(super::build_read_visual_pilot_stamp_request_green());
+        assert!(super::build_read_visual_pilot_tile_stamp_lib_green());
+    }
 
     #[test]
     fn variant_key_switches_on_abandoned() {

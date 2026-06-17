@@ -2,6 +2,17 @@
   "schema_version": 1,
   "entries": [
     {
+      "atlas_id": "rail_warehouse_pilot_v1",
+      "batch_id": "tile_rail_warehouse_pilot_v1",
+      "assembly_id": "industrial_west_4x7_s440013_f0c0",
+      "tile_id": "tile_rail_warehouse_pilot_v1",
+      "atlas_png": "assets/textures/buildings_iso/staging/tile_rail_warehouse_pilot_v1_atlas.png",
+      "meta_json": "assets/staging/tiles/tile_rail_warehouse_pilot_v1/atlas_meta.json",
+      "development_tier": "production",
+      "style_pack_id": "style_industrial_west",
+      "ship_allowed": true
+    },
+    {
       "atlas_id": "rowhouse_victorian_pilot_v1",
       "batch_id": "tile_rowhouse_victorian_pilot_v1",
       "assembly_id": "victorian_4x3_s42_a7cb",

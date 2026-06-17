@@ -2,7 +2,7 @@
   "gate_id": "APS-MAT-STUDIO-PHASE-A",
   "ok": true,
   "profile_id": "concrete_grey_01",
-  "catalog_count": 21,
+  "catalog_count": 22,
   "categories": [
     "glass",
     "industrial/concrete",
@@ -13,6 +13,10 @@
     "roof"
   ],
   "preview_modes": {
+    "profile_id": "concrete_grey_01",
+    "category": "industrial/concrete",
+    "texture_status": "ready",
+    "ok": true,
     "sphere": {
       "ok": true,
       "path": "debug_runs/material_studio_previews/concrete_grey_01/sphere.png"
@@ -28,12 +32,9 @@
       "degraded": false,
       "placement_count": 40,
       "missing_glbs": [],
-      "source": "tools/mcp/schemas/examples/assembly_snapshot_warehouse_industrial_west_production_v1.json"
-    },
-    "profile_id": "concrete_grey_01",
-    "category": "industrial/concrete",
-    "texture_status": "ready",
-    "ok": true
+      "source": "tools/mcp/schemas/examples/assembly_snapshot_warehouse_industrial_west_production_v1.json",
+      "fallback": "wall_strip"
+    }
   },
   "ui": {
     "materials_tab": "tools/mcp/art_pipeline_suite/app.py",
@@ -46,8 +47,8 @@
     "context_thumb": "assembly_preview_panel \u2192 slot_preview_panel"
   },
   "aps_mat_003": {
-    "warmed": 21,
-    "total": 21
+    "warmed": 22,
+    "total": 22
   },
   "ship_policy": "material authority on snapshot only \u2014 not Blender viewport"
 }

@@ -1,7 +1,5 @@
 //! Growth proposals + queue (PROC-OG-2-001).
 
-use std::collections::HashMap;
-
 use bevy::prelude::*;
 
 use super::actors::{BuildingUsage, GrowthActorLayer, GrowthReasonCode};
@@ -97,6 +95,7 @@ pub fn growth_proposal_tick_system(
                     .unwrap_or(0.0),
             };
             if proposal_rejected_by_saturation(district, &saturation, &proposal) {
+                let _ = super::market::saturation_reason_codes(true);
                 continue;
             }
             if queue
@@ -128,10 +127,13 @@ mod tests {
 
     #[test]
     fn saturated_district_skips_fourth_shop_proposal() {
+        use std::collections::HashMap;
+
         let town = portland_fixture_town();
         let districts = portland_fixture_district(&town);
         let record = districts.districts.values().next().unwrap().clone();
-        let sat = compute_market_saturation_for_district(&record, 3);
+        let blocks = crate::strategic::settlement::market::fixture_blocks_with_site_count(&record.id, 3);
+        let sat = compute_market_saturation_for_district(&record, Some(&blocks));
         let mut saturation_book = MarketSaturationBook::default();
         saturation_book
             .by_district

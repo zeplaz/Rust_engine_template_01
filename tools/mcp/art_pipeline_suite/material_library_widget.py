@@ -27,6 +27,7 @@ from rust_engine_mcp.material_textures import PILOT_PROFILES, generate_profile
 
 from .aps_paned import add_pane, horizontal_paned
 from .aps_scroll import attach_wheel_area, bind_debounced_scrollregion, canvas_yscroll
+from .aps_theme import FONT_SMALL
 from .aps_tooltips import bind_aps_tooltip, bind_many
 from .job_controller import JobRecord, JobResult, JobState
 
@@ -116,7 +117,7 @@ class MaterialLibraryWidget(ttk.Frame):
         )
         if self._mode == "assign":
             hint = "Select a footprint cell first, then pick a profile. " + hint
-        ttk.Label(self, text=hint, wraplength=520, justify=tk.LEFT, font=("Segoe UI", 8), foreground="#555").pack(
+        ttk.Label(self, text=hint, wraplength=520, justify=tk.LEFT, font=FONT_SMALL, foreground="#555").pack(
             anchor=tk.W, pady=(0, 4)
         )
 
@@ -128,7 +129,7 @@ class MaterialLibraryWidget(ttk.Frame):
             self._build_vertical()
 
         self._status_var = tk.StringVar(value="")
-        ttk.Label(self, textvariable=self._status_var, foreground="#444", font=("Segoe UI", 8)).pack(
+        ttk.Label(self, textvariable=self._status_var, foreground="#444", font=FONT_SMALL).pack(
             anchor=tk.W, pady=2
         )
         self.reload_catalog()
@@ -306,7 +307,7 @@ class MaterialLibraryWidget(ttk.Frame):
         cat = self._category_var.get().strip().lower()
         if cat == "all":
             return True
-        return entry.category.lower() == cat
+        return entry_category.lower() == cat
 
     def _on_list_profile_select(self, profile_id: str) -> None:
         self._select_profile(profile_id, apply=False)

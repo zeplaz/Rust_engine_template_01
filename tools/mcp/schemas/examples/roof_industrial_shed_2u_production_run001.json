@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "job_id": "roof_industrial_shed_2u_production_run001",
+  "batch_id": "kit_production_002",
+  "development_tier": "production",
+  "spec_ref": "assets/staging/specs/roof_industrial_shed_2u_production.json",
+  "operation": "module_roof",
+  "params": {
+    "width_m": 8,
+    "thickness_m": 0.3,
+    "depth_m": 10,
+    "material_profile": "metal_roof_01",
+    "seed": 42,
+    "profile": "shed",
+    "pitch_height_m": 1.2
+  },
+  "output": {
+    "glb": "assets/staging/roof_industrial_shed_2u_production_run001/model.glb",
+    "thumbnail": "assets/staging/roof_industrial_shed_2u_production_run001/preview.png"
+  }
+}

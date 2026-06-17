@@ -1,0 +1,77 @@
+{
+  "gate": "MCP-LANDSCAPE-GRAMMAR-SIGN-001",
+  "signed": true,
+  "signed_at": "2026-06-17T00:08:59.385320+00:00",
+  "schema": "tools/mcp/schemas/landscape_grammar_v0.schema.json",
+  "validator": "validate-report landscape_grammar",
+  "preset_validation": {
+    "total": 10,
+    "passed": 10,
+    "failed": 0,
+    "results": [
+      {
+        "file": "agri_riparian_v0.json",
+        "preset_id": "agri_riparian_v0",
+        "status": "passed",
+        "error_count": 0
+      },
+      {
+        "file": "coastal_scrub_v0.json",
+        "preset_id": "coastal_scrub_v0",
+        "status": "passed",
+        "error_count": 0
+      },
+      {
+        "file": "fire_recovery_v0.json",
+        "preset_id": "fire_recovery_v0",
+        "status": "passed",
+        "error_count": 0
+      },
+      {
+        "file": "industrial_barrier_v0.json",
+        "preset_id": "industrial_barrier_v0",
+        "status": "passed",
+        "error_count": 0
+      },
+      {
+        "file": "military_defensive_v0.json",
+        "preset_id": "military_defensive_v0",
+        "status": "passed",
+        "error_count": 0
+      },
+      {
+        "file": "old_growth_core_v0.json",
+        "preset_id": "old_growth_core_v0",
+        "status": "passed",
+        "error_count": 0
+      },
+      {
+        "file": "scrub_highland_v0.json",
+        "preset_id": "scrub_highland_v0",
+        "status": "passed",
+        "error_count": 0
+      },
+      {
+        "file": "settlement_park_v0.json",
+        "preset_id": "settlement_park_v0",
+        "status": "passed",
+        "error_count": 0
+      },
+      {
+        "file": "urban_canopy_v0.json",
+        "preset_id": "urban_canopy_v0",
+        "status": "passed",
+        "error_count": 0
+      },
+      {
+        "file": "wetland_margin_v0.json",
+        "preset_id": "wetland_margin_v0",
+        "status": "passed",
+        "error_count": 0
+      }
+    ]
+  },
+  "topology_preset_count": 30,
+  "ship_preset_count": 10,
+  "green": true
+}

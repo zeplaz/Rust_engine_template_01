@@ -1,0 +1,22 @@
+{
+  "gate": "G3",
+  "green": true,
+  "batch_id": "kit_production_002",
+  "module_count": 6,
+  "promoted_count": 6,
+  "g3": {
+    "validate_asset_report": true,
+    "passed_count": 6,
+    "tile_promotion_honest": {
+      "status": "passed",
+      "ship": false,
+      "ok": true,
+      "bake_source": "keyframe_pack",
+      "render_method": "blender_keyframe_light_rig",
+      "batch_path": "tools/mcp/schemas/examples/tile_batch_warehouse_industrial_west_production_v1.json"
+    }
+  },
+  "manifest": "tools/mcp/schemas/examples/batch_kit_production_002.manifest.json",
+  "g3_witness": "debug_runs/art_pipeline/kit_production_002_g3_live.json",
+  "note": "G3 tier pass on 6/6 promoted GLBs; tile ship still blocked until G4+register"
+}

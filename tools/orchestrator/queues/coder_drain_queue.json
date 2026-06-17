@@ -13,7 +13,7 @@
     "rule": "One coder drains top→bottom. parallel_group = same wave OK on different files. No dev Postgres in game.",
     "regression": "cargo test -p proc_A_dine01 --lib sim_effects fire_ecology construction stage5",
     "blang_cargo": "validate-report cargo --cached --compress 4",
-    "last_sync": "2026-06-14"
+    "last_sync": "2026-06-15"
   },
   "sprint_decision": {
     "primary_lane": "L_SIM — SimEffect spine P0–P2",

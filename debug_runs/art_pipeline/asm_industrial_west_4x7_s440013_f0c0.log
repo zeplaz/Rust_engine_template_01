@@ -1,0 +1,275 @@
+19:48:45 | INFO: Data are loaded, start creating Blender stuff
+19:48:45 | INFO: Blender create Mesh node Cube
+19:48:45 | INFO: glTF import finished in 0.01s
+ASSEMBLY_MATERIAL corner_L_0_0 steel_corner_01 mode=pbr_profile
+19:48:45 | INFO: Data are loaded, start creating Blender stuff
+19:48:45 | INFO: Blender create Mesh node Cube
+19:48:45 | INFO: glTF import finished in 0.00s
+ASSEMBLY_MATERIAL wall_steel_1u_1_0 steel_panel_01 mode=pbr_profile
+19:48:45 | INFO: Data are loaded, start creating Blender stuff
+19:48:45 | INFO: Blender create Mesh node door_warehouse_lod0_run001
+19:48:45 | INFO: glTF import finished in 0.00s
+ASSEMBLY_MATERIAL door_warehouse_2_0 steel_door_warehouse_01 mode=pbr_profile
+19:48:45 | INFO: Data are loaded, start creating Blender stuff
+19:48:45 | INFO: Blender create Mesh node Cube
+19:48:45 | INFO: glTF import finished in 0.00s
+ASSEMBLY_MATERIAL corner_L_3_0 steel_corner_01 mode=pbr_profile
+19:48:45 | INFO: Data are loaded, start creating Blender stuff
+19:48:45 | INFO: Blender create Mesh node Cube
+19:48:45 | INFO: glTF import finished in 0.00s
+ASSEMBLY_MATERIAL wall_steel_1u_0_1 steel_panel_01 mode=pbr_profile
+19:48:45 | INFO: Data are loaded, start creating Blender stuff
+19:48:45 | INFO: Blender create Mesh node Cube
+19:48:45 | INFO: glTF import finished in 0.00s
+ASSEMBLY_MATERIAL wall_steel_1u_3_1 steel_panel_01 mode=pbr_profile
+19:48:45 | INFO: Data are loaded, start creating Blender stuff
+19:48:45 | INFO: Blender create Mesh node Cube
+19:48:45 | INFO: glTF import finished in 0.00s
+ASSEMBLY_MATERIAL wall_steel_1u_0_2 steel_panel_01 mode=pbr_profile
+19:48:45 | INFO: Data are loaded, start creating Blender stuff
+19:48:45 | INFO: Blender create Mesh node Cube
+19:48:45 | INFO: glTF import finished in 0.00s
+ASSEMBLY_MATERIAL wall_steel_1u_3_2 steel_panel_01 mode=pbr_profile
+19:48:45 | INFO: Data are loaded, start creating Blender stuff
+19:48:45 | INFO: Blender create Mesh node Cube
+19:48:45 | INFO: glTF import finished in 0.00s
+ASSEMBLY_MATERIAL wall_steel_1u_0_3 steel_panel_01 mode=pbr_profile
+19:48:45 | INFO: Data are loaded, start creating Blender stuff
+19:48:45 | INFO: Blender create Mesh node Cube
+19:48:45 | INFO: glTF import finished in 0.00s
+ASSEMBLY_MATERIAL wall_steel_1u_3_3 steel_panel_01 mode=pbr_profile
+19:48:45 | INFO: Data are loaded, start creating Blender stuff
+19:48:45 | INFO: Blender create Mesh node Cube
+19:48:45 | INFO: glTF import finished in 0.00s
+ASSEMBLY_MATERIAL wall_steel_1u_0_4 steel_panel_01 mode=pbr_profile
+19:48:45 | INFO: Data are loaded, start creating Blender stuff
+19:48:45 | INFO: Blender create Mesh node Cube
+19:48:45 | INFO: glTF import finished in 0.00s
+ASSEMBLY_MATERIAL wall_steel_1u_3_4 steel_panel_01 mode=pbr_profile
+19:48:45 | INFO: Data are loaded, start creating Blender stuff
+19:48:45 | INFO: Blender create Mesh node Cube
+19:48:45 | INFO: glTF import finished in 0.00s
+ASSEMBLY_MATERIAL wall_steel_1u_0_5 steel_panel_01 mode=pbr_profile
+19:48:45 | INFO: Data are loaded, start creating Blender stuff
+19:48:45 | INFO: Blender create Mesh node Cube
+19:48:45 | INFO: glTF import finished in 0.00s
+ASSEMBLY_MATERIAL wall_steel_1u_3_5 steel_panel_01 mode=pbr_profile
+19:48:45 | INFO: Data are loaded, start creating Blender stuff
+19:48:45 | INFO: Blender create Mesh node Cube
+19:48:45 | INFO: glTF import finished in 0.00s
+ASSEMBLY_MATERIAL corner_L_0_6 steel_corner_01 mode=pbr_profile
+19:48:45 | INFO: Data are loaded, start creating Blender stuff
+19:48:45 | INFO: Blender create Mesh node Cube
+19:48:45 | INFO: glTF import finished in 0.00s
+ASSEMBLY_MATERIAL wall_steel_1u_1_6 steel_panel_01 mode=pbr_profile
+19:48:45 | INFO: Data are loaded, start creating Blender stuff
+19:48:45 | INFO: Blender create Mesh node Cube
+19:48:45 | INFO: glTF import finished in 0.00s
+ASSEMBLY_MATERIAL wall_steel_1u_2_6 steel_panel_01 mode=pbr_profile
+19:48:45 | INFO: Data are loaded, start creating Blender stuff
+19:48:45 | INFO: Blender create Mesh node Cube
+19:48:45 | INFO: glTF import finished in 0.00s
+ASSEMBLY_MATERIAL corner_L_3_6 steel_corner_01 mode=pbr_profile
+19:48:45 | INFO: Data are loaded, start creating Blender stuff
+19:48:45 | INFO: Blender create Mesh node Cube
+19:48:45 | INFO: glTF import finished in 0.00s
+ASSEMBLY_MATERIAL corner_L_0_0.001 steel_corner_01 mode=pbr_profile
+19:48:45 | INFO: Data are loaded, start creating Blender stuff
+19:48:45 | INFO: Blender create Mesh node Cube
+19:48:45 | INFO: glTF import finished in 0.00s
+ASSEMBLY_MATERIAL wall_steel_1u_1_0.001 steel_panel_01 mode=pbr_profile
+19:48:45 | INFO: Data are loaded, start creating Blender stuff
+19:48:45 | INFO: Blender create Mesh node Cube
+19:48:45 | INFO: glTF import finished in 0.00s
+ASSEMBLY_MATERIAL wall_steel_1u_2_0 steel_panel_01 mode=pbr_profile
+19:48:45 | INFO: Data are loaded, start creating Blender stuff
+19:48:45 | INFO: Blender create Mesh node Cube
+19:48:45 | INFO: glTF import finished in 0.00s
+ASSEMBLY_MATERIAL corner_L_3_0.001 steel_corner_01 mode=pbr_profile
+19:48:45 | INFO: Data are loaded, start creating Blender stuff
+19:48:45 | INFO: Blender create Mesh node Cube
+19:48:45 | INFO: glTF import finished in 0.00s
+ASSEMBLY_MATERIAL wall_steel_1u_0_1.001 steel_panel_01 mode=pbr_profile
+19:48:45 | INFO: Data are loaded, start creating Blender stuff
+19:48:45 | INFO: Blender create Mesh node Cube
+19:48:45 | INFO: glTF import finished in 0.00s
+ASSEMBLY_MATERIAL wall_steel_1u_3_1.001 steel_panel_01 mode=pbr_profile
+19:48:45 | INFO: Data are loaded, start creating Blender stuff
+19:48:45 | INFO: Blender create Mesh node Cube
+19:48:45 | INFO: glTF import finished in 0.00s
+ASSEMBLY_MATERIAL wall_steel_1u_0_2.001 steel_panel_01 mode=pbr_profile
+19:48:45 | INFO: Data are loaded, start creating Blender stuff
+19:48:45 | INFO: Blender create Mesh node Cube
+19:48:45 | INFO: glTF import finished in 0.00s
+ASSEMBLY_MATERIAL wall_steel_1u_3_2.001 steel_panel_01 mode=pbr_profile
+19:48:45 | INFO: Data are loaded, start creating Blender stuff
+19:48:45 | INFO: Blender create Mesh node Cube
+19:48:45 | INFO: glTF import finished in 0.00s
+ASSEMBLY_MATERIAL wall_steel_1u_0_3.001 steel_panel_01 mode=pbr_profile
+19:48:45 | INFO: Data are loaded, start creating Blender stuff
+19:48:45 | INFO: Blender create Mesh node Cube
+19:48:45 | INFO: glTF import finished in 0.00s
+ASSEMBLY_MATERIAL wall_steel_1u_3_3.001 steel_panel_01 mode=pbr_profile
+19:48:45 | INFO: Data are loaded, start creating Blender stuff
+19:48:45 | INFO: Blender create Mesh node Cube
+19:48:45 | INFO: glTF import finished in 0.00s
+ASSEMBLY_MATERIAL wall_steel_1u_0_4.001 steel_panel_01 mode=pbr_profile
+19:48:45 | INFO: Data are loaded, start creating Blender stuff
+19:48:45 | INFO: Blender create Mesh node Cube
+19:48:45 | INFO: glTF import finished in 0.00s
+ASSEMBLY_MATERIAL wall_steel_1u_3_4.001 steel_panel_01 mode=pbr_profile
+19:48:45 | INFO: Data are loaded, start creating Blender stuff
+19:48:45 | INFO: Blender create Mesh node Cube
+19:48:45 | INFO: glTF import finished in 0.00s
+ASSEMBLY_MATERIAL wall_steel_1u_0_5.001 steel_panel_01 mode=pbr_profile
+19:48:45 | INFO: Data are loaded, start creating Blender stuff
+19:48:45 | INFO: Blender create Mesh node Cube
+19:48:45 | INFO: glTF import finished in 0.00s
+ASSEMBLY_MATERIAL wall_steel_1u_3_5.001 steel_panel_01 mode=pbr_profile
+19:48:45 | INFO: Data are loaded, start creating Blender stuff
+19:48:45 | INFO: Blender create Mesh node Cube
+19:48:45 | INFO: glTF import finished in 0.00s
+ASSEMBLY_MATERIAL corner_L_0_6.001 steel_corner_01 mode=pbr_profile
+19:48:45 | INFO: Data are loaded, start creating Blender stuff
+19:48:45 | INFO: Blender create Mesh node Cube
+19:48:45 | INFO: glTF import finished in 0.00s
+ASSEMBLY_MATERIAL wall_steel_1u_1_6.001 steel_panel_01 mode=pbr_profile
+19:48:45 | INFO: Data are loaded, start creating Blender stuff
+19:48:45 | INFO: Blender create Mesh node Cube
+19:48:45 | INFO: glTF import finished in 0.00s
+ASSEMBLY_MATERIAL wall_steel_1u_2_6.001 steel_panel_01 mode=pbr_profile
+19:48:45 | INFO: Data are loaded, start creating Blender stuff
+19:48:45 | INFO: Blender create Mesh node Cube
+19:48:45 | INFO: glTF import finished in 0.00s
+ASSEMBLY_MATERIAL corner_L_3_6.001 steel_corner_01 mode=pbr_profile
+19:48:45 | INFO: Data are loaded, start creating Blender stuff
+19:48:45 | INFO: Blender create Mesh node Cube
+19:48:45 | INFO: glTF import finished in 0.00s
+ASSEMBLY_MATERIAL roof_metal_low_0_0 roof_metal_01 mode=pbr_profile
+19:48:45 | INFO: Data are loaded, start creating Blender stuff
+19:48:45 | INFO: Blender create Mesh node Cube
+19:48:45 | INFO: glTF import finished in 0.00s
+ASSEMBLY_MATERIAL roof_metal_low_1_0 roof_metal_01 mode=pbr_profile
+19:48:45 | INFO: Data are loaded, start creating Blender stuff
+19:48:45 | INFO: Blender create Mesh node Cube
+19:48:45 | INFO: glTF import finished in 0.00s
+ASSEMBLY_MATERIAL roof_metal_low_2_0 roof_metal_01 mode=pbr_profile
+19:48:45 | INFO: Data are loaded, start creating Blender stuff
+19:48:45 | INFO: Blender create Mesh node Cube
+19:48:45 | INFO: glTF import finished in 0.00s
+ASSEMBLY_MATERIAL roof_metal_low_3_0 roof_metal_01 mode=pbr_profile
+19:48:45 | INFO: Data are loaded, start creating Blender stuff
+19:48:45 | INFO: Blender create Mesh node Cube
+19:48:45 | INFO: glTF import finished in 0.00s
+ASSEMBLY_MATERIAL roof_metal_low_0_1 roof_metal_01 mode=pbr_profile
+19:48:45 | INFO: Data are loaded, start creating Blender stuff
+19:48:45 | INFO: Blender create Mesh node Cube
+19:48:45 | INFO: glTF import finished in 0.00s
+ASSEMBLY_MATERIAL roof_metal_low_3_1 roof_metal_01 mode=pbr_profile
+19:48:45 | INFO: Data are loaded, start creating Blender stuff
+19:48:45 | INFO: Blender create Mesh node Cube
+19:48:45 | INFO: glTF import finished in 0.00s
+ASSEMBLY_MATERIAL roof_metal_low_0_2 roof_metal_01 mode=pbr_profile
+19:48:45 | INFO: Data are loaded, start creating Blender stuff
+19:48:45 | INFO: Blender create Mesh node Cube
+19:48:45 | INFO: glTF import finished in 0.00s
+ASSEMBLY_MATERIAL roof_metal_low_3_2 roof_metal_01 mode=pbr_profile
+19:48:45 | INFO: Data are loaded, start creating Blender stuff
+19:48:45 | INFO: Blender create Mesh node Cube
+19:48:45 | INFO: glTF import finished in 0.00s
+ASSEMBLY_MATERIAL roof_metal_low_0_3 roof_metal_01 mode=pbr_profile
+19:48:45 | INFO: Data are loaded, start creating Blender stuff
+19:48:45 | INFO: Blender create Mesh node Cube
+19:48:45 | INFO: glTF import finished in 0.00s
+ASSEMBLY_MATERIAL roof_metal_low_3_3 roof_metal_01 mode=pbr_profile
+19:48:45 | INFO: Data are loaded, start creating Blender stuff
+19:48:45 | INFO: Blender create Mesh node Cube
+19:48:45 | INFO: glTF import finished in 0.00s
+ASSEMBLY_MATERIAL roof_metal_low_0_4 roof_metal_01 mode=pbr_profile
+19:48:45 | INFO: Data are loaded, start creating Blender stuff
+19:48:45 | INFO: Blender create Mesh node Cube
+19:48:45 | INFO: glTF import finished in 0.00s
+ASSEMBLY_MATERIAL roof_metal_low_3_4 roof_metal_01 mode=pbr_profile
+19:48:45 | INFO: Data are loaded, start creating Blender stuff
+19:48:45 | INFO: Blender create Mesh node Cube
+19:48:45 | INFO: glTF import finished in 0.00s
+ASSEMBLY_MATERIAL roof_metal_low_0_5 roof_metal_01 mode=pbr_profile
+19:48:45 | INFO: Data are loaded, start creating Blender stuff
+19:48:45 | INFO: Blender create Mesh node Cube
+19:48:45 | INFO: glTF import finished in 0.00s
+ASSEMBLY_MATERIAL roof_metal_low_3_5 roof_metal_01 mode=pbr_profile
+19:48:45 | INFO: Data are loaded, start creating Blender stuff
+19:48:45 | INFO: Blender create Mesh node Cube
+19:48:45 | INFO: glTF import finished in 0.00s
+ASSEMBLY_MATERIAL roof_metal_low_0_6 roof_metal_01 mode=pbr_profile
+19:48:45 | INFO: Data are loaded, start creating Blender stuff
+19:48:45 | INFO: Blender create Mesh node Cube
+19:48:45 | INFO: glTF import finished in 0.00s
+ASSEMBLY_MATERIAL roof_metal_low_1_6 roof_metal_01 mode=pbr_profile
+19:48:45 | INFO: Data are loaded, start creating Blender stuff
+19:48:45 | INFO: Blender create Mesh node Cube
+19:48:45 | INFO: glTF import finished in 0.00s
+ASSEMBLY_MATERIAL roof_metal_low_2_6 roof_metal_01 mode=pbr_profile
+19:48:45 | INFO: Data are loaded, start creating Blender stuff
+19:48:45 | INFO: Blender create Mesh node Cube
+19:48:45 | INFO: glTF import finished in 0.00s
+ASSEMBLY_MATERIAL roof_metal_low_3_6 roof_metal_01 mode=pbr_profile
+ARCH_MAT_APPLY corner_L_0_0 steel_corner_01 mode=pbr_profile
+ARCH_MAT_APPLY wall_steel_1u_1_0 steel_panel_01 mode=pbr_profile
+ARCH_MAT_APPLY door_warehouse_2_0 steel_door_warehouse_01 mode=pbr_profile
+ARCH_MAT_APPLY corner_L_3_0 steel_corner_01 mode=pbr_profile
+ARCH_MAT_APPLY wall_steel_1u_0_1 steel_panel_01 mode=pbr_profile
+ARCH_MAT_APPLY wall_steel_1u_3_1 steel_panel_01 mode=pbr_profile
+ARCH_MAT_APPLY wall_steel_1u_0_2 steel_panel_01 mode=pbr_profile
+ARCH_MAT_APPLY wall_steel_1u_3_2 steel_panel_01 mode=pbr_profile
+ARCH_MAT_APPLY wall_steel_1u_0_3 steel_panel_01 mode=pbr_profile
+ARCH_MAT_APPLY wall_steel_1u_3_3 steel_panel_01 mode=pbr_profile
+ARCH_MAT_APPLY wall_steel_1u_0_4 steel_panel_01 mode=pbr_profile
+ARCH_MAT_APPLY wall_steel_1u_3_4 steel_panel_01 mode=pbr_profile
+ARCH_MAT_APPLY wall_steel_1u_0_5 steel_panel_01 mode=pbr_profile
+ARCH_MAT_APPLY wall_steel_1u_3_5 steel_panel_01 mode=pbr_profile
+ARCH_MAT_APPLY corner_L_0_6 steel_corner_01 mode=pbr_profile
+ARCH_MAT_APPLY wall_steel_1u_1_6 steel_panel_01 mode=pbr_profile
+ARCH_MAT_APPLY wall_steel_1u_2_6 steel_panel_01 mode=pbr_profile
+ARCH_MAT_APPLY corner_L_3_6 steel_corner_01 mode=pbr_profile
+ARCH_MAT_APPLY corner_L_0_0 steel_corner_01 mode=pbr_profile
+ARCH_MAT_APPLY wall_steel_1u_1_0 steel_panel_01 mode=pbr_profile
+ARCH_MAT_APPLY wall_steel_1u_2_0 steel_panel_01 mode=pbr_profile
+ARCH_MAT_APPLY corner_L_3_0 steel_corner_01 mode=pbr_profile
+ARCH_MAT_APPLY wall_steel_1u_0_1 steel_panel_01 mode=pbr_profile
+ARCH_MAT_APPLY wall_steel_1u_3_1 steel_panel_01 mode=pbr_profile
+ARCH_MAT_APPLY wall_steel_1u_0_2 steel_panel_01 mode=pbr_profile
+ARCH_MAT_APPLY wall_steel_1u_3_2 steel_panel_01 mode=pbr_profile
+ARCH_MAT_APPLY wall_steel_1u_0_3 steel_panel_01 mode=pbr_profile
+ARCH_MAT_APPLY wall_steel_1u_3_3 steel_panel_01 mode=pbr_profile
+ARCH_MAT_APPLY wall_steel_1u_0_4 steel_panel_01 mode=pbr_profile
+ARCH_MAT_APPLY wall_steel_1u_3_4 steel_panel_01 mode=pbr_profile
+ARCH_MAT_APPLY wall_steel_1u_0_5 steel_panel_01 mode=pbr_profile
+ARCH_MAT_APPLY wall_steel_1u_3_5 steel_panel_01 mode=pbr_profile
+ARCH_MAT_APPLY corner_L_0_6 steel_corner_01 mode=pbr_profile
+ARCH_MAT_APPLY wall_steel_1u_1_6 steel_panel_01 mode=pbr_profile
+ARCH_MAT_APPLY wall_steel_1u_2_6 steel_panel_01 mode=pbr_profile
+ARCH_MAT_APPLY corner_L_3_6 steel_corner_01 mode=pbr_profile
+ARCH_MAT_APPLY roof_metal_low_0_0 roof_metal_01 mode=pbr_profile
+ARCH_MAT_APPLY roof_metal_low_1_0 roof_metal_01 mode=pbr_profile
+ARCH_MAT_APPLY roof_metal_low_2_0 roof_metal_01 mode=pbr_profile
+ARCH_MAT_APPLY roof_metal_low_3_0 roof_metal_01 mode=pbr_profile
+ARCH_MAT_APPLY roof_metal_low_0_1 roof_metal_01 mode=pbr_profile
+ARCH_MAT_APPLY roof_metal_low_3_1 roof_metal_01 mode=pbr_profile
+ARCH_MAT_APPLY roof_metal_low_0_2 roof_metal_01 mode=pbr_profile
+ARCH_MAT_APPLY roof_metal_low_3_2 roof_metal_01 mode=pbr_profile
+ARCH_MAT_APPLY roof_metal_low_0_3 roof_metal_01 mode=pbr_profile
+ARCH_MAT_APPLY roof_metal_low_3_3 roof_metal_01 mode=pbr_profile
+ARCH_MAT_APPLY roof_metal_low_0_4 roof_metal_01 mode=pbr_profile
+ARCH_MAT_APPLY roof_metal_low_3_4 roof_metal_01 mode=pbr_profile
+ARCH_MAT_APPLY roof_metal_low_0_5 roof_metal_01 mode=pbr_profile
+ARCH_MAT_APPLY roof_metal_low_3_5 roof_metal_01 mode=pbr_profile
+ARCH_MAT_APPLY roof_metal_low_0_6 roof_metal_01 mode=pbr_profile
+ARCH_MAT_APPLY roof_metal_low_1_6 roof_metal_01 mode=pbr_profile
+ARCH_MAT_APPLY roof_metal_low_2_6 roof_metal_01 mode=pbr_profile
+ARCH_MAT_APPLY roof_metal_low_3_6 roof_metal_01 mode=pbr_profile
+Info: Saved as "industrial_west_4x7_s440013_f0c0.blend"
+ASSEMBLY_BLEND_OK C:\dev\github\Rust_engine_template_01\assets\staging\assemblies\industrial_west_4x7_s440013_f0c0.blend
+Blender 5.1.2 (hash ec6e62d40fa9 built 2026-05-19 01:37:34)
+
+Blender quit

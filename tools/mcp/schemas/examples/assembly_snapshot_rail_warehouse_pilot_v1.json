@@ -1,9 +1,4 @@
 {
-  "_meta": {
-    "teaches": ["grammar_eval", "pilot_catalog", "site_composition"],
-    "not_a_ship_target": true,
-    "building_set_id": "industrial_west_v0"
-  },
   "schema_version": 1,
   "assembly_id": "industrial_west_4x7_s440013_f0c0",
   "style_pack_id": "style_industrial_west",

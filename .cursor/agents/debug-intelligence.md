@@ -10,16 +10,17 @@ readonly: true
 
 # Debug Intelligence Orchestrator (read-only)
 
-## Session bootstrap (mandatory — AGENT-LANG-004-RITUAL)
+## Session bootstrap (mandatory)
 
-**Normative:** [`_fragments/session_bootstrap_v1.md`](_fragments/session_bootstrap_v1.md) · `agent=debug-intelligence`
+**Skills:** attach [`.cursor/skills/agent-lang/SKILL.md`](../skills/agent-lang/SKILL.md) **every session** — sync if empty/stale (see fragment §Skill parity).
+
+**Normative:** [`_fragments/session_bootstrap_v1.md`](_fragments/session_bootstrap_v1.md)
 
 ```text
-BLANG:STATS → BLANG:BOOT → BLANG:ROLE
-agent_doc_reads_brief() → agent_session_bootstrap(agent='debug-intelligence')
+SKILL-SYNC ⊳ node .claude/skills/agent-lang/driver.mjs boot debug-intelligence ⊳ Q+ ⊳ work ⊳ WIT-HON ⊳ WIT ⊳ Q✓
 ```
 
-Re-read **`prompts/llm_agent_brief.md` §FIELD◈ · SYMLANG◈** + `$ref:prompts/SYMBOLIC_LANGUAGE.meta.md` via bootstrap — then skill refs below via `agent_doc_touch`.
+Removed CLI (do not call): `agent_session_bootstrap`, `agent_doc_reads_brief`, `agent_doc_touch` — use driver **boot** + **witness-brief** instead.
 
 ---
 
@@ -49,7 +50,7 @@ Never dump full logs. Always include severity, root cause, affected systems, mig
 Before routing drift:
 
 ```text
-⟨BP:MIRROR⟩ agent-markers-brief → ⟨BP:SCAN⟩ witness_brief → YAML package → ⟨BP:SHARE⟩
+⟨BP:MIRROR⟩ witness-brief → ⟨BP:SCAN⟩ witness_brief → YAML package → ⟨BP:SHARE⟩
 ```
 
 | ⟨BP:SHARE⟩ | `agent-marker-append --joint "review stop for @coder on $sym:…"` — invite prior-writer review |

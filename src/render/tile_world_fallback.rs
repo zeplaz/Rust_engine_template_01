@@ -189,8 +189,8 @@ impl TileWorldFallbackChunkGrid {
     }
 }
 
-/// CPU repaint of `minimap_image` only when presentation resolves to shared CPU raster.
-/// When GPU compositor RT is committed, egui binds the GPU path — duplicate CPU pass is waste.
+/// CPU repaint of `minimap_image` for the **effects lane** (`SharedCpuRaster` opt-in) or when GPU compositor is off.
+/// Skipped on the default simulation HUD path (GPU compositor + `SharedRenderTargetImage`).
 /// See [`plan_visual_perf_production_v1.md`](../../dev/plan_visual_perf_production_v1.md) P1-A.
 #[inline]
 fn tile_fallback_cpu_minimap_raster_needed(
@@ -608,7 +608,7 @@ fn sync_tile_fallback_raster_policy(
     fallback: Res<TileWorldFallbackState>,
     spike_guard: Option<Res<crate::engine::UxFrameSpikeGuard>>,
     raster_spike_feedback: Option<Res<crate::render::TileRasterSpikeFeedback>>,
-    raster_budget: Res<crate::render::TileRasterBudget>,
+    mut raster_budget: ResMut<crate::render::TileRasterBudget>,
     tile_registry: Option<Res<crate::construction::procedural::TileAtlasRegistry>>,
     asset_server: Res<AssetServer>,
     sites: Query<(
@@ -621,7 +621,6 @@ fn sync_tile_fallback_raster_policy(
     sim_tick: Option<Res<crate::systems::sim_control::SimTick>>,
     overlay: Option<Res<crate::render::SharedOverlayFieldBuffers>>,
     mut policy: ResMut<TileFallbackRasterPolicy>,
-    mut raster_budget_mut: ResMut<crate::render::TileRasterBudget>,
     mut raster_ctrl: ResMut<TileWorldFallbackRasterCtrl>,
     mut atlas_cache: ResMut<crate::gui::map_tile_atlas_stamp::TileAtlasGpuCache>,
 ) {
@@ -640,7 +639,7 @@ fn sync_tile_fallback_raster_policy(
     policy.fire_overlay_mark_interval_frames = raster_budget.fire_overlay_mark_interval_frames;
     policy.defer_zoom_dirty = spike_active;
     policy.minimap_cadence_hz = 10.0;
-    raster_budget_mut.minimap_cpu_allowed = policy.cpu_minimap_pass;
+    raster_budget.minimap_cpu_allowed = policy.cpu_minimap_pass;
 
     crate::gui::map_tile_atlas_stamp::preload_tile_atlas_gpu_cache(
         tile_registry.as_deref(),
@@ -1431,18 +1430,19 @@ pub fn draw_simulation_minimap_egui(
 mod chunk_grid_tests {
     use super::*;
     #[test]
-    fn cpu_minimap_raster_skipped_when_gpu_rt_committed() {
+    fn cpu_minimap_raster_skipped_on_main_sim_gpu_path() {
         let shell = MinimapShellState {
             presentation_source: MinimapPresentationSource::SharedRenderTargetImage,
             ..Default::default()
         };
         let mut registry = MinimapRenderTargetRegistry::default();
         let fallback = TileWorldFallbackState::default();
-        assert!(tile_fallback_cpu_minimap_raster_needed(
-            Some(&shell),
-            Some(&registry),
-            &fallback,
-        ));
+        if crate::render::minimap_gpu_compositor_env_enabled() {
+            assert!(
+                !tile_fallback_cpu_minimap_raster_needed(Some(&shell), Some(&registry), &fallback),
+                "main sim GPU path must not run duplicate CPU minimap pass"
+            );
+        }
 
         let mut images = Assets::<Image>::default();
         registry.committed_image = images.add(super::make_rgba_image(8, 8, "test_minimap_rt"));
@@ -1454,7 +1454,27 @@ mod chunk_grid_tests {
     }
 
     #[test]
-    fn cpu_minimap_raster_runs_for_shared_cpu_presentation() {
+    fn cpu_minimap_raster_runs_for_effects_opt_in() {
+        if !crate::render::minimap_gpu_compositor_env_enabled() {
+            return;
+        }
+        let shell = MinimapShellState {
+            presentation_source: MinimapPresentationSource::SharedCpuRaster,
+            ..Default::default()
+        };
+        let registry = MinimapRenderTargetRegistry::default();
+        let fallback = TileWorldFallbackState::default();
+        assert!(
+            tile_fallback_cpu_minimap_raster_needed(Some(&shell), Some(&registry), &fallback),
+            "effects SharedCpuRaster must keep CPU minimap raster alive"
+        );
+    }
+
+    #[test]
+    fn cpu_minimap_raster_runs_when_gpu_compositor_disabled() {
+        if crate::render::minimap_gpu_compositor_env_enabled() {
+            return;
+        }
         let shell = MinimapShellState {
             presentation_source: MinimapPresentationSource::SharedCpuRaster,
             ..Default::default()

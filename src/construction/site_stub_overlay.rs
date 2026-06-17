@@ -148,8 +148,13 @@ fn build_read_site_v0_002_self_check() -> Result<(), &'static str> {
     for pilot in grammar_with_site {
         let preset = pilot.arch_dna_preset.as_deref().ok_or("preset")?;
         let grid = site_zone_grid_for_arch_dna_preset(preset).ok_or("site_load")?;
-        if grid.width < 4 || grid.depth < 4 {
+        if grid.width < SITE_STUB_WIDTH / 2 || grid.depth < SITE_STUB_DEPTH / 2 {
             return Err("site_dims");
+        }
+        let primary = primary_loading_cell_count(&grid);
+        let pct = primary_pct_of_site_stub(primary, grid.width * grid.depth);
+        if !(0.10..=0.55).contains(&pct) {
+            return Err("primary_pct");
         }
         if primary_loading_cell_count(&grid) == 0 {
             return Err("primary_zone");

@@ -1,0 +1,57 @@
+{
+  "total": 10,
+  "passed": 1,
+  "failed": 9,
+  "results": [
+    {
+      "file": "agri_riparian_v0.json",
+      "status": "passed",
+      "error_count": 0
+    },
+    {
+      "file": "coastal_scrub_v0.json",
+      "status": "failed",
+      "error_count": 1
+    },
+    {
+      "file": "fire_recovery_v0.json",
+      "status": "failed",
+      "error_count": 1
+    },
+    {
+      "file": "industrial_barrier_v0.json",
+      "status": "failed",
+      "error_count": 1
+    },
+    {
+      "file": "military_defensive_v0.json",
+      "status": "failed",
+      "error_count": 1
+    },
+    {
+      "file": "old_growth_core_v0.json",
+      "status": "failed",
+      "error_count": 1
+    },
+    {
+      "file": "scrub_highland_v0.json",
+      "status": "failed",
+      "error_count": 1
+    },
+    {
+      "file": "settlement_park_v0.json",
+      "status": "failed",
+      "error_count": 1
+    },
+    {
+      "file": "urban_canopy_v0.json",
+      "status": "failed",
+      "error_count": 1
+    },
+    {
+      "file": "wetland_margin_v0.json",
+      "status": "failed",
+      "error_count": 1
+    }
+  ]
+}

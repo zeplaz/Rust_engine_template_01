@@ -1,14 +1,91 @@
 {
-  "gate": "OPS-MCP-FUNCTION-LAYER-001",
+  "gate": "MCP-P2-OPS-BRIEF-002",
   "green": true,
   "ops_get_project_brief": true,
+  "ops_get_retry_guidance_v2": true,
+  "ops_get_active_blockers": true,
   "ops_project_brief_v1_path": true,
   "ops_project_brief_rel": "debug_runs/agent_ops/ops_project_brief_v1.json",
   "schema": "ops_project_brief_v1",
   "quality_score": 7,
+  "delta_wf_composed": [
+    {
+      "finding": "Track B ship blocked \u2014 manual keyframe + G4",
+      "owner": "@designer-mcp + operator",
+      "program_id": "art_B",
+      "next_artifact": "debug_runs/art_pipeline/mcp_pilot_grammar_001_live.json"
+    },
+    {
+      "finding": "Rollup OPEN \u2014 see sub-gates G-PLAY-CODER-* + G-PLAY-OPERATOR-01",
+      "owner": "Operator",
+      "program_id": "stage7_play",
+      "next_artifact": "debug_runs/g_play_product_close_live.json"
+    },
+    {
+      "finding": "VEG-HARD witnesses green \u2014 rollup blocked on operator only",
+      "owner": "@coder A",
+      "program_id": "stage7_play",
+      "next_artifact": "debug_runs/g_play_product_close_live.json"
+    },
+    {
+      "finding": "Human 10 min checklist \u2014 sole operator blocker for rollup",
+      "owner": "Operator",
+      "program_id": "stage7_play",
+      "next_artifact": "src/dev/plan_g_play_close_001_checklist_v1.md"
+    },
+    {
+      "finding": "Warehouse production bake paused \u2014 Track B",
+      "owner": "@coder-mcp + operator",
+      "program_id": "art_B",
+      "next_artifact": "debug_runs/ops_007_warehouse_production_pause_live.json"
+    },
+    {
+      "finding": "Gate open \u2014 G-PLAY-01",
+      "owner": "operator",
+      "program_id": "stage7_play",
+      "next_artifact": "src/dev/plan_g_play_close_001_checklist_v1.md",
+      "gate_id": "G-PLAY-01",
+      "phi": 0
+    }
+  ],
+  "retry_guidance_sample": {
+    "task_id": "TRIAGE-MAP-PICK-CLOSURE-001",
+    "exec_doc": "src/dev/plan_build_footprint_vm09_exec_v1.md",
+    "hotfix_step_count": 3,
+    "phase4_row": true
+  },
+  "active_blockers": {
+    "schema": "ops_active_blockers_v1",
+    "ok": true,
+    "tensor_path": "tools/orchestrator/queues/master_chain_tensor_v1.json",
+    "open_gate_count": 1,
+    "open_gates": [
+      {
+        "id": "G-PLAY-01",
+        "phi": 0,
+        "closed": null,
+        "plan": "src/dev/plan_g_play_close_001_checklist_v1.md",
+        "operator": "src/dev/plan_g_play_close_001_checklist_v1.md",
+        "note": "\ud83d\udcac rollup OPEN \u2014 all coder sub-gates green \u00b7 G-PLAY-OPERATOR-01 only",
+        "open_sub_gates": [
+          {
+            "id": "G-PLAY-OPERATOR-01",
+            "phi": 0,
+            "closed": false
+          }
+        ],
+        "owner": "operator"
+      }
+    ],
+    "g_play_rollup": {
+      "id": "G-PLAY-01",
+      "status": "blocked",
+      "blocker": "operator/designer-mcp blocked"
+    }
+  },
   "_agent_meta": {
     "schema": "ops_mcp_function_layer_live_v1",
-    "written_at_epoch_secs": 1781328296,
+    "written_at_epoch_secs": 1781574915,
     "profile": "OPS_MCP_FUNCTION_LAYER",
     "source_system": "ops_intelligence",
     "relative_path": "debug_runs/agent_ops/ops_mcp_function_layer_live.json"

@@ -1,7 +1,7 @@
 {
   "gate_id": "APS-PREVIEW-002",
   "green": true,
-  "mode": "browser_threejs",
+  "mode": "bevy_worker",
   "assembly_id": "industrial_west_7x5_s39_9fa1",
   "snapshot": "tools/mcp/schemas/examples/assembly_snapshot_warehouse_industrial_west_production_v1.json",
   "modules_loaded": 40,
@@ -13,10 +13,17 @@
     "steel_door_warehouse_01",
     "steel_panel_01"
   ],
-  "preview_url": "http://127.0.0.1:60762/",
-  "preview_url_hint": "Open in browser while this process runs. CLI without --serve-seconds exits and kills the server.",
+  "preview_url": "",
+  "preview_url_hint": "",
   "server_note": "",
-  "preview_job": "debug_runs/preview_jobs/preview_assembly_snapshot_warehouse_industrial_west_production_v1_d4a331ab.json",
+  "preview_job": "debug_runs/preview_jobs/preview_assembly_snapshot_warehouse_industrial_west_production_v1_e5bf1af9.json",
   "png": "debug_runs/preview_jobs/industrial_west_7x5_s39_9fa1_thumb.png",
-  "elapsed_ms": 0
+  "bevy_status": {
+    "status": "done",
+    "png": "debug_runs/preview_jobs/industrial_west_7x5_s39_9fa1_thumb.png",
+    "elapsed_ms": 1020,
+    "modules_loaded": 40,
+    "mode": "bevy_worker"
+  },
+  "elapsed_ms": 1119
 }

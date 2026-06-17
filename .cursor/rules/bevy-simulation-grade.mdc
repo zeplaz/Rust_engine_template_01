@@ -1,0 +1,26 @@
+---
+description: Simulation-grade Bevy ECS guardrails for src/ — single authority, explicit SystemSets, immutable frame state, hard Sim→View→Render→UI layer boundaries (never inverted).
+globs: src/**/*.rs
+alwaysApply: false
+---
+
+# Bevy simulation-grade guardrails (src/)
+
+Full skill: `.cursor/skills/bevy-simulation-grade/SKILL.md`. Hold these before any schedule, system-ordering, viewport/camera/render-extraction, ECS-resource, or view-authority edit.
+
+## Layer boundaries — never inverted
+`Sim → View → Render → UI`
+- **Sim** owns sim state; never reads UI.
+- **View** projects sim→views; exactly ONE ViewManager writer, not N rebuilds/frame.
+- **Render** reads snapshots; never writes sim during extraction.
+- **UI** visualizes; never commits sim/camera authority.
+
+## Invariants
+1. **Single authority** — exactly one system writes a given resource/surface. A second writer is the #1 source of drift.
+2. **Explicit SystemSets** — order via named sets, not ad-hoc `.after("string")`.
+3. **Immutable frame state** — build snapshots/derived data per frame from authority; downstream reads, never mutates upstream truth.
+4. **Layer boundaries** (above) — never inverted.
+5. **Parallel safety** — `par_iter_mut` over disjoint data only; no shared-resource writes in parallel bodies.
+
+## Before you edit
+Name the single writer · place the system in the correct set · confirm the cross-layer read/write boundary. If the change would introduce a second writer or invert a layer, stop and route to @planner.

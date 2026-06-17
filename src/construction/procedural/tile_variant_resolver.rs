@@ -103,11 +103,13 @@ pub fn load_variant_catalog() -> Option<VariantCatalog> {
     let text = std::fs::read_to_string(&path).ok()?;
     match ron::from_str(&text) {
         Ok(catalog) => Some(catalog),
+        #[cfg(test)]
         Err(err) => {
-            #[cfg(test)]
             eprintln!("VariantCatalog RON parse failed ({path:?}): {err}");
             None
         }
+        #[cfg(not(test))]
+        Err(_) => None,
     }
 }
 

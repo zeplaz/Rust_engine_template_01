@@ -1,0 +1,46 @@
+{
+  "program_id": "MCP-PRODUCTIVITY-P2-001",
+  "task_id": "MCP-P2-KIT002-G0",
+  "gate": "G0",
+  "green": true,
+  "verdict": "PASS_WITH_NOTES",
+  "updated": "2026-06-14",
+  "_agent_meta": {
+    "agent": "designer-mcp",
+    "ritual": "BLANG:Q✓ MCP-P2-KIT002-G0",
+    "orders": "docs/archive/2026-06-src-dev/plans/mcp_kit_production_002_unfreeze_v1.md",
+    "scope": "warehouse_industrial_west_only"
+  },
+  "batch_id": "tile_warehouse_industrial_west_production_v1",
+  "kit_batch_id": "kit_production_002",
+  "variant_set_id": "warehouse_industrial_west_production_v1",
+  "assembly_id_lod0": "industrial_west_4x2_s43_a879",
+  "assembly_id_production_snapshot": "industrial_west_7x5_s39_9fa1",
+  "style_pack_id": "style_industrial_west",
+  "grammar_id": "industrial_warehouse_v1",
+  "proceed_kit_bpy": true,
+  "proceed_tile_ship": false,
+  "proceed_production_bake": true,
+  "g0_rules": "debug_runs/art_pipeline/warehouse_production_g0_rules.yaml",
+  "validations": {
+    "variant_set_schema": "pass",
+    "variant_keys_aligned": true,
+    "tile_batch_validate_report": "fail_frozen_expected"
+  },
+  "blocked_by": [],
+  "tile_ship_blocked_by": [
+    "TILE-FIX-001_v1_frozen",
+    "G4_manual_keyframe_pending"
+  ],
+  "scope_guard": {
+    "other_archetypes_edited": false,
+    "rowhouse_production_untouched": true
+  },
+  "unblocks": [
+    "MCP-P2-KIT002-G1"
+  ],
+  "closed_slices": [
+    "MCP-P2-KIT002-G2"
+  ],
+  "next": "ΔWF→@designer-mcp MCP-P2-KIT002-G1 AssetSpec · tile ship blocked TILE-FIX-001 + G4 keyframes (expected)"
+}

@@ -487,18 +487,24 @@ def _tile_batch_run_keyframe_pack(
             src = repo_root() / src
         if not src.is_dir():
             return {"ok": False, "status": "pre_baked_missing", "error": str(src)}
+        missing_pre: list[str] = []
         for vkey in variant_keys:
             candidates = list(src.glob(f"*{vkey}*.png")) + list(src.glob(f"{vkey}.png"))
             if not candidates:
-                return {
-                    "ok": False,
-                    "status": "pre_baked_variant_missing",
-                    "variant_key": vkey,
-                    "folder": str(src),
-                    "hint": "Export stills via utils/keyframe_render.py first",
-                }
-            dest = staging / f"{vkey}.png"
-            dest.write_bytes(candidates[0].read_bytes())
+                missing_pre.append(vkey)
+        if not missing_pre:
+            for vkey in variant_keys:
+                candidates = list(src.glob(f"*{vkey}*.png")) + list(src.glob(f"{vkey}.png"))
+                dest = staging / f"{vkey}.png"
+                dest.write_bytes(candidates[0].read_bytes())
+        elif not any(_png_has_real_pixels(staging / f"{v}") for v in variant_keys):
+            return {
+                "ok": False,
+                "status": "pre_baked_variant_missing",
+                "variant_key": missing_pre[0],
+                "folder": str(src),
+                "hint": "Export stills via utils/keyframe_render.py first",
+            }
 
     missing: list[str] = []
     png_paths: list[str] = []

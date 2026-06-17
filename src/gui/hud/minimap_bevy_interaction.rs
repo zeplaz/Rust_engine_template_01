@@ -1,6 +1,6 @@
 //! Bevy minimap pointer UX for Simulation GPU chrome (Phase 2B gap fill).
 //!
-//! **MINIMAP-WIDGET-IMPL-001:** title-bar drag moves widget; map image tap jumps camera — no panel drag on map.
+//! Map image: **drag** moves the widget; **tap** (movement &lt; 9px) jumps main camera. Title bar also drags.
 
 use bevy::input::mouse::MouseWheel;
 use bevy::prelude::*;
@@ -99,16 +99,15 @@ fn cursor_in_minimap_chrome(cursor: Vec2, shell: &MinimapShellState) -> bool {
     point_in_rect(cursor, minimap_widget_rect(shell))
 }
 
-/// **MINIMAP-WIDGET-IMPL-001** lib witness — map image must not start panel drag.
+/// **MINIMAP-WIDGET-IMPL-001** lib witness — map image drag + title bar drag + tap-to-jump.
 #[must_use]
 pub fn minimap_widget_impl_001_witness_green() -> bool {
-    minimap_map_image_drag_moves_widget() == false
-        && minimap_title_bar_drag_moves_widget()
+    minimap_map_image_drag_moves_widget() && minimap_title_bar_drag_moves_widget()
 }
 
 #[must_use]
 pub fn minimap_map_image_drag_moves_widget() -> bool {
-    false
+    true
 }
 
 #[must_use]
@@ -231,7 +230,7 @@ fn apply_edge_rail_action(
     }
 }
 
-/// Title-bar drag moves widget; map tap jumps camera; edge rails = features; corner grip resizes.
+/// Map/title drag moves widget; map tap (no drag) jumps camera; edge rails = features; corner grip resizes.
 pub fn minimap_bevy_pointer_system(
     base: Res<State<BaseState>>,
     time: Res<Time>,
@@ -282,7 +281,7 @@ pub fn minimap_bevy_pointer_system(
             pointer.resize_drag = false;
             map_views.minimap.follow_mode = MinimapFollowMode::FollowCamera;
         } else if on_map {
-            pointer.panel_drag = false;
+            pointer.panel_drag = true;
             pointer.click_pending = true;
             pointer.resize_drag = false;
             map_views.minimap.follow_mode = MinimapFollowMode::FollowCamera;
@@ -424,7 +423,7 @@ pub fn sync_minimap_viewport_frame_overlay_system(
     };
     let tex_w = params.width.max(1) as f32;
     let tex_h = params.height.max(1) as f32;
-    let pan_vis = map_views.minimap.camera_center;
+    let _pan_vis = map_views.minimap.camera_center;
     let _zoom_vis = map_views.minimap.zoom.max(1e-6);
 
     let Some(world_rect) =
@@ -468,8 +467,8 @@ mod tests {
     }
 
     #[test]
-    fn map_image_drag_does_not_move_panel() {
-        assert!(!minimap_map_image_drag_moves_widget());
+    fn map_image_drag_moves_panel() {
+        assert!(minimap_map_image_drag_moves_widget());
         assert!(minimap_title_bar_drag_moves_widget());
     }
 }

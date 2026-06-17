@@ -28,7 +28,8 @@ pub use crate::dev::runtime_witness::minimap::{
     MinimapCompositorLiveProofState,
 };
 pub use pass::{
-    apply_minimap_gpu_resize_request, commit_minimap_render_target_bind_system,
+    apply_minimap_gpu_resize_request, bootstrap_minimap_gpu_render_target,
+    commit_minimap_render_target_bind_system,
     minimap_gpu_compositor_default_on_unset, minimap_gpu_compositor_env_enabled,
     perf_vis_p1b_gpu_default_001_green, queue_minimap_render_target_resize,
     run_minimap_compositor_pass, sync_minimap_presentation_source, MinimapCompositePath,
@@ -64,8 +65,13 @@ impl Plugin for MinimapCompositorPlugin {
             .init_resource::<crate::render::MinimapOperationalSnapshot>();
         register_minimap_composite_gpu(app);
         app.add_systems(
+            OnEnter(BaseState::Simulation),
+            bootstrap_minimap_gpu_render_target,
+        )
+        .add_systems(
             Update,
             (
+                bootstrap_minimap_gpu_render_target,
                 queue_minimap_render_target_resize,
                 apply_minimap_gpu_resize_request,
                 commit_minimap_render_target_bind_system,

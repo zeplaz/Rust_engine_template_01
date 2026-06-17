@@ -6,14 +6,14 @@
     "brief": {
       "profile": "construction",
       "path": "debug_runs/construction_stage_live.json",
-      "green": true,
+      "green": null,
       "operational_green": true,
-      "footprint_projection_ok": true,
+      "footprint_projection_ok": null,
       "construction_parametric_placement_001": {
         "green": true
       },
       "map_pick_closure_001": {
-        "green": true
+        "green": null
       }
     }
   },
@@ -48,7 +48,7 @@
   },
   "_agent_meta": {
     "schema": "mcp_valid_construction_live_v1",
-    "written_at_epoch_secs": 1781481527,
+    "written_at_epoch_secs": 1781658232,
     "profile": "MCP_VALID_CONSTRUCTION",
     "source_system": "ops_intelligence",
     "relative_path": "debug_runs/agent_ops/mcp_valid_construction_live.json"

@@ -382,14 +382,21 @@ impl Plugin for BuildPlanningPlugin {
                     build_rotate_mirror_ghost_system,
                     build_clear_pending_queue_system,
                     build_confirm_site_system,
-                    staged_ghost_panel::commit_approved_staged_placements_system
-                        .after(build_confirm_site_system),
+                )
+                    .chain()
+                    .run_if(in_simulation_or_editor),
+            )
+            .add_systems(
+                Update,
+                (
+                    staged_ghost_panel::commit_approved_staged_placements_system,
                     build_cancel_ghost_system,
                     build_sync_ghost_cursor_entity_system,
                     validate_construction_plans_system,
                     execute_construction_plans_system,
                 )
                     .chain()
+                    .after(build_confirm_site_system)
                     .run_if(in_simulation_or_editor),
             )
             .add_systems(

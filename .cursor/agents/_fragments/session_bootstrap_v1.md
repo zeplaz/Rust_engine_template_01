@@ -1,104 +1,123 @@
 # Session bootstrap fragment (AGENT-LANG-004-RITUAL)
 
-**Program:** `$ref:docs/archive/2026-06-src-dev/plans/plan_mcp_agent_lang_program_v1.md` · **Brief:** `$ref:prompts/llm_agent_brief.md`  
+**Program:** `$ref:src/dev/plan_witness_queue_integrity_mcp_v1.md` · **Brief:** `$ref:prompts/llm_agent_brief.md`  
 **SYMLANG:** `$ref:prompts/SYMBOLIC_LANGUAGE.meta.md` — chart-first laws L1–L8 · FIELD◈ ⊂ SYMLANG  
-**Telemetry:** `$ref:debug_runs/agent_ops/doc_reads.jsonl` · **Rollup:** `agent_doc_reads_brief()`
+**Driver:** `.claude/skills/agent-lang/driver.mjs` · **Skill:** `.cursor/skills/agent-lang/SKILL.md`
 
 Replace `<AGENT>` with this agent file's `name:` frontmatter (e.g. `coder`, `planner-mcp`).
 
 ---
 
-## Mandatory skill attach (ALL agents — every session)
+## Skill parity (FIRST — every session, all agents)
+
+**Empty or stale `.cursor/skills/*/SKILL.md` breaks BLANG** — agents lose queue/witness/validator protocol.
 
 ```text
-Attach: .cursor/skills/agent-lang/SKILL.md   (or @agent-lang in chat)
-Stack domain skills ON TOP — never skip agent-lang for BLANG / $ref / validate-report
+1. Check .cursor/skills/agent-lang/SKILL.md is non-empty (>500 bytes)
+2. If missing/empty/stale → run sync-claude-skills (see below)
+3. Read the synced SKILL.md in this session (IDE Read or @agent-lang) — do NOT trust old MCP digest cache alone
+4. After MCP tool changes in tools/mcp/python → reload Cursor MCP server (rust-engine-art)
+```
+
+| Action | Command |
+|:---|:---|
+| **Sync skills** | `powershell -NoProfile -File .cursor/skills/sync-claude-skills/scripts/sync.ps1` |
+| **Dry run** | `… sync.ps1 -WhatIf` |
+| **Force overlay** | `… sync.ps1 -Force` |
+| **Skill doc** | `$ref:.cursor/skills/sync-claude-skills/SKILL.md` |
+
+**Authority:** `.claude/skills/` = authoring tree · `.cursor/skills/` = Cursor discovery base. Keep aligned.
+
+**Domain skills** (read after agent-lang each session when in role matrix): validation-first, bevy-simulation-grade, debug-intelligence, mcp-production-rules, operations-intelligence, …
+
+---
+
+## Mandatory skill attach (ALL agents)
+
+```text
+Base:  .cursor/skills/agent-lang/SKILL.md   (@agent-lang in chat)
+Stack: domain skills ON TOP — never skip agent-lang for BLANG / $ref / validate-report
 ```
 
 | Layer | Skill | When |
 |:---|:---|:---|
-| **Base** | [agent-lang/SKILL.md](../../skills/agent-lang/SKILL.md) | Session start · handoffs · queue · witnesses |
-| Domain | bevy-simulation-grade · validation-first · debug-intelligence · … | Per role matrix below |
-
-**Orchestrator rule:** dispatch orders must cite `$ref:` paths + `⟨ID⟩` — not prose-only task walls.
+| **Base** | [agent-lang/SKILL.md](../../skills/agent-lang/SKILL.md) | Every session · handoffs · queue · witnesses |
+| Domain | per role matrix below | Before editing that lane |
 
 ---
 
-## Mandatory session chain (every turn / new chat)
+## Mandatory session chain (current CLI — 2026-06)
 
 ```text
-BLANG:STATS → BLANG:BOOT → BLANG:ROLE → BLANG:PRE → BLANG:Q+
+SKILL-SYNC ⊳ DRIVER-BOOT ⊳ PRE ⊳ Q+ ⊳ work ⊳ WIT-HON ⊳ WIT ⊳ Q✓
 ```
 
-| Step | MCP / CLI | Purpose |
+| Step | Command | Purpose |
 |:---|:---|:---|
-| **BLANG:STATS** | `agent_doc_reads_brief()` | Hot re-read paths · repeat-in-session · promotion hints |
-| **BLANG:BOOT** | `agent_session_bootstrap(agent='<AGENT>')` | Ledger + digest for canonical brief stack (not full Read) |
-| **BLANG:ROLE** | `agent_doc_touch(path, agent='<AGENT>', intent='ref')` | Role matrix paths below — one call per path |
-| **BLANG:PRE** | `pipeline_preflight()` | Environment + queue stale check |
-| **BLANG:Q+** | `agent_queue_next('<AGENT>')` or `handoff_brief()` | Pick slice / orient HANDOFF |
+| **SKILL-SYNC** | `sync.ps1` if agent-lang empty/stale | Repair broken skill attach |
+| **DRIVER-BOOT** | `node .claude/skills/agent-lang/driver.mjs boot <AGENT>` | PRE + read brief/SYMLANG + HO |
+| **BLANG:PRE** | `pipeline-preflight` (via driver or CLI) | Env + queue staleness |
+| **BLANG:Q+** | `agent-queue-next '<AGENT>'` | Pick slice |
+| **BLANG:HO** | `handoff-brief` | HANDOFF spine only |
+| **work** | slice implementation | validate-report not raw logs |
+| **BLANG:WIT-HON** | `validate-report witness_honesty <witness>` or `--scan debug_runs` | **Required before Q✓** on product rows |
+| **BLANG:WIT** | `witness-brief <path>` | Compressed witness read |
+| **BLANG:Q✓** | `agent-queue-update <id> done --note <witness>` | Only if WIT-HON pass (or report-only mode) |
 
-**End slice:** `BLANG:RUN` → `agent_run_append({slice_id, tools_called, witness})`
+**Passthrough:** `node .claude/skills/agent-lang/driver.mjs <any-cli-args>` → `python -m rust_engine_mcp.cli`
+
+**End slice:** `⟨COMMIT:WIT⟩` path only — no prose-only done.
 
 ---
 
-## Canonical brief stack (BLANG:BOOT touches these)
+## Canonical orient stack (BOOT reads — direct Read OK)
 
-| Path | Section | Intent |
+| Path | Section | Purpose |
 |:---|:---|:---|
-| `prompts/llm_agent_brief.md` | **FIELD◈ · SYMLANG◈** | `orient` — fast legend + merged SYMLANG section |
-| `prompts/SYMBOLIC_LANGUAGE.meta.md` | **SYMLANG** | `ref` — laws, chart forms A–P, bindings, EBNF (canonical in-repo) |
-| `docs/archive/2026-06-src-dev/plans/agent_meta_grammar_v3_lattice.md` | ΩMETA-LATTICE | `ref` — STATE · FLOW · REVIEW clusters |
-| `.cursor/skills/agent-lang/SKILL.md` | Session loop | `ref` — BLANG token map |
-| `src/dev/agent_lang_v1.md` | BLANG spec | `ref` — $ref / stream delimiters |
+| `prompts/llm_agent_brief.md` | **FIELD◈ · SYMLANG◈** | Fast legend |
+| `prompts/SYMBOLIC_LANGUAGE.meta.md` | **SYMLANG** | Laws · chart forms · bindings |
+| `.cursor/skills/agent-lang/SKILL.md` | BLANG loop | Token → CLI map |
+| `tools/orchestrator/queues/HANDOFF.md` | Active programs | Human intent overlay |
 
-**Rule:** Use returned **digest** from `agent_doc_touch` / bootstrap — **not** IDE `Read` unless `intent=implement`.
+**Compress large docs:** `node … driver.mjs doc <path>` → file-digest (⊚digest)
 
 ---
 
-## Role reads (BLANG:ROLE — after bootstrap)
+## Role reads (after BOOT — domain skills)
 
-Touch via `agent_doc_touch(path, agent='<AGENT>', intent='ref|orient')`. Full matrix: `AGENTS.md` § Agent routing.
-
-| Agent | Also touch (ref/orient) |
+| Agent | Also read / attach |
 |:---|:---|
 | `orchestrator` | `tools/orchestrator/NEXT.md`, `tools/orchestrator/queues/agent_queue.md` |
-| `orchestrator-mcp` | `tools/mcp/README.md`, `tools/mcp/MICRO_TOOLS_REGISTRY_v1.md`, `tools/orchestrator/queues/mcp_lane_order_v1.md`, `tools/orchestrator/queues/mcp_active_queue.json` |
-| `planner` | `prompts/llm_agent_brief.md`, migration matrices in `tools/orchestrator/` |
-| `planner-mcp` | `docs/archive/2026-06-src-dev/plans/plan_mcp_agent_lang_program_v1.md`, MCP exec drafts |
-| `coder` | `.cursor/skills/bevy-simulation-grade/SKILL.md` → `07-repo-authority-map.md`, `.cursor/skills/validation-first/SKILL.md` |
-| `coder-mcp` | `tools/mcp/MICRO_TOOLS_REGISTRY_v1.md`, `docs/archive/2026-06-src-dev/plans/plan_mcp_agent_lang_program_v1.md` |
-| `designer` | `prompts/guides/ui_boundary_guide_v1.md` |
-| `designer-mcp` | MCP art exec plan, four MCP skills |
-| `sim-steward` | bevy-simulation-grade + debug-intelligence + cleanup-completion-intelligence skills |
-| `main-thread-orchestrator` | Same as sim-steward + `tools/orchestrator/queues/HANDOFF.md` |
-| `debug-intelligence` | `.cursor/skills/debug-intelligence/SKILL.md` |
-| `cleanup-intelligence` | `.cursor/skills/cleanup-completion-intelligence/SKILL.md` |
-| `operations-intelligence` | `src/dev/plan_agent_operations_intelligence_v1.md`, `debug_runs/agent_ops/ops_report_latest.json` |
-| `coparent-orchestrator` | `tools/orchestrator/queues/HANDOFF.md`, bevy-simulation-grade conflict matrix |
+| `orchestrator-mcp` | `tools/mcp/README.md`, `MICRO_TOOLS_REGISTRY_v1.md`, `mcp_active_queue.json` |
+| `planner` | migration matrices · debug-intelligence when drift |
+| `planner-mcp` | MCP exec plans · schema dirs |
+| `coder` | bevy-simulation-grade (`07-repo-authority-map` first), validation-first |
+| `coder-mcp` | `MICRO_TOOLS_REGISTRY_v1.md`, witness_integrity plan |
+| `designer-mcp` | mcp-asset-pipeline, mcp-production-rules, tile-generation |
+| `sim-steward` | bevy-simulation-grade + debug-intelligence + cleanup-completion-intelligence |
+| `main-thread-orchestrator` | same as sim-steward + HANDOFF |
+| `debug-intelligence` | debug-intelligence skill |
+| `operations-intelligence` | operations-intelligence skill, OPS_WITNESS_SPINE |
+| `coparent-orchestrator` | HANDOFF + conflict matrix |
 
 ---
 
-## Read telemetry + hot-path promotion (MCP project)
+## Removed CLI (do NOT call — refactored out)
 
-| Tool | When |
-|:---|:---|
-| `agent_doc_reads_brief(min_reads=2)` | Session start · ops review · before blaming "agents didn't read X" |
-| `agent_doc_promote_hot_reads(min_reads=3)` | Paths read ≥3× without cache — writes MCP digest cache |
-| `agent_doc_digest_cached(path)` | Prefer cached digest over re-touch when source mtime unchanged |
+```text
+agent_session_bootstrap · agent_doc_touch · agent_doc_reads_brief · agent_doc_promote_hot_reads
+agent-lang-demo · agent-run-append · agent-markers-brief · snapshot-digest
+```
 
-**Ledger:** `debug_runs/agent_ops/doc_reads.jsonl` — one row per `agent_doc_touch`.  
-**Rollup witness:** `debug_runs/agent_ops/doc_reads_brief_latest.json`  
-**MCP cache:** `tools/mcp/cache/agent_doc_digests/<path_slug>.json`
-
-When `hot_paths` or `repeat_in_session` is non-empty → run `agent_doc_promote_hot_reads()` so repeated full orient reads shrink to cache hits.
+Use **driver boot** + **file-digest** + **handoff-brief** + **witness-brief** instead.
 
 ---
 
 ## Anti-patterns (forbidden)
 
-- Raw IDE `Read` on brief/plan/AGENTS without `agent_doc_touch` ledger row
-- Re-read same path every turn without checking `agent_doc_reads_brief()` / cache
-- Paste full file contents in chat when digest exists
-- Skip `prompts/llm_agent_brief.md` FIELD◈ / SYMLANG◈ at session start
-- NL status walls in HANDOFF or replies when a SYMLANG packet suffices (L1/L8)
+- Skip skill sync when `agent-lang/SKILL.md` was empty last session
+- Trust stale MCP digest cache instead of reading current SKILL.md
+- `BLANG:Q✓` without `BLANG:WIT-HON` on rows with `exit_predicate` / product witnesses
+- Raw IDE Read on full witness JSON → use `witness-brief`
+- Raw cargo stderr → use `validate-report cargo`
+- Mark queue `done` from `cargo test --lib` alone

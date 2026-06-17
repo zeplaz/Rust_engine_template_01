@@ -258,7 +258,7 @@ pub fn flatten_topology_graph(nodes: &[TopologyNodeV0], out: &mut Vec<FlatTopolo
 }
 
 /// Read-only external λ inputs (hydrology / transport / construction) — VEG-λ-INPUTS-001.
-#[derive(Clone, Copy, Debug, Default)]
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct LambdaExternalInputs {
     pub hydrology_bias: f32,
     pub transport_access: f32,
@@ -358,7 +358,11 @@ pub fn evaluate_landscape_program_with_inputs(
         .collect();
 
     let preset_lambda = preset.pressure_field;
-    let effective_lambda = blend_lambda_with_inputs(preset_lambda, ecology, veg, weather, inputs);
+    let effective_lambda = if *inputs == LambdaExternalInputs::default() {
+        blend_lambda_readonly(preset_lambda, ecology, veg, weather)
+    } else {
+        blend_lambda_with_inputs(preset_lambda, ecology, veg, weather, inputs)
+    };
     let lambda_blended = lambda_differs(preset_lambda, effective_lambda, 1e-4);
 
     let planning_glyph_overlays: Vec<PlanningGlyphOverlay> = flat

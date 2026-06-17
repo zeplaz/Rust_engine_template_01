@@ -468,9 +468,24 @@ def agent_queue_update(
     status: str,
     note: str = "",
     queue: str = "grammar",
+    enforce: bool = False,
 ) -> str:
     """Checkpoint a queue slice (ready|blocked|in_progress|done|deferred)."""
-    return json.dumps(agent_queue.agent_queue_update(slice_id, status, note=note, queue=queue))
+    return json.dumps(
+        agent_queue.agent_queue_update(slice_id, status, note=note, queue=queue, enforce=enforce)
+    )
+
+
+@mcp.tool()
+def validate_queue_integrity_report(queue_filter: str = "", compress: int = 3) -> str:
+    """BLANG:WIT-HON — cross-queue contradiction + exit_predicate report."""
+    from rust_engine_mcp.validators.queue_integrity import validate_queue_integrity
+
+    report = validate_queue_integrity(
+        queue_filter=queue_filter or None,
+        compression_level=max(1, min(4, compress)),
+    )
+    return json.dumps(report.to_dict())
 
 
 @mcp.tool()
@@ -481,7 +496,7 @@ def agent_queue_board(agent: str = "", queue: str = "grammar") -> str:
 
 @mcp.tool()
 def witness_brief(path: str, profile: str = "") -> str:
-    """Witness JSON summary (green, blockers, errors cap) — optional profile=construction|map_pick|fire_product."""
+    """Witness JSON summary — profile=construction|map_pick|fire_product|honesty (failed rule ids only)."""
     prof = profile.strip() or None
     return json.dumps(agent_queue.witness_brief(path, profile=prof))
 
@@ -505,6 +520,19 @@ def validate_construction_report(path: str, compress: int = 3) -> str:
     from rust_engine_mcp.validators.construction_witness import validate_construction_witness_path
 
     report = validate_construction_witness_path(path, compression_level=max(1, min(4, compress)))
+    return json.dumps(report.to_dict())
+
+
+@mcp.tool()
+def validate_witness_honesty_report(path: str, compress: int = 3, scan: bool = False) -> str:
+    """BLANG:WIT-HON — ValidationReport for witness honesty (single path or scan dir when scan=True)."""
+    from rust_engine_mcp.validators.witness_honesty import validate_witness_honesty_path, validate_witness_honesty_scan
+
+    level = max(1, min(4, compress))
+    if scan:
+        report = validate_witness_honesty_scan(path or "debug_runs", compression_level=level)
+    else:
+        report = validate_witness_honesty_path(path, compression_level=level)
     return json.dumps(report.to_dict())
 
 
@@ -538,8 +566,30 @@ def ops_get_project_brief() -> str:
 
 @mcp.tool()
 def ops_get_retry_guidance(task_id: str) -> str:
-    """OPS retry stub — phase3 queue row status, depends_on, witness path."""
+    """BLANG:OPS retry — phase3/phase4 row + exec_doc + hotfix_steps."""
     return json.dumps(ops_intelligence.ops_get_retry_guidance(task_id))
+
+
+@mcp.tool()
+def ops_get_active_blockers() -> str:
+    """BLANG:OPS blockers — open gates from master_chain_tensor_v1.json."""
+    return json.dumps(ops_intelligence.ops_get_active_blockers())
+
+
+@mcp.tool()
+def landscape_grammar_presets_witness() -> str:
+    """MCP-LG-VALID-PRESET-001 — batch validate ship presets + refresh witnesses."""
+    from rust_engine_mcp import landscape_grammar_presets
+
+    batch = landscape_grammar_presets.write_landscape_grammar_presets_witness()
+    sign = landscape_grammar_presets.refresh_mcp_landscape_grammar_sign_witness()
+    return json.dumps(
+        {
+            "green": bool(batch.get("green")) and bool(sign.get("green")),
+            "batch_witness": batch.get("written"),
+            "sign_witness": sign.get("written"),
+        }
+    )
 
 
 @mcp.tool()

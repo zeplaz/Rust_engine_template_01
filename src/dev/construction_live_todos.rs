@@ -5,6 +5,7 @@
 
 use bevy::log::info;
 use bevy::prelude::{App, Resource, World};
+use std::collections::HashSet;
 
 use crate::construction::{ConstructionStageWitness, CONSTRUCTION_TODO_COUNT};
 
@@ -206,10 +207,25 @@ impl ConstructionLiveTodoBoard {
     }
 }
 
+/// Log each construction board "green" line once per session (witness sync runs every frame).
+#[derive(Resource, Default)]
+pub struct ConstructionBoardGreenLogGate {
+    keys: HashSet<&'static str>,
+}
+
+impl ConstructionBoardGreenLogGate {
+    pub fn log_once(&mut self, key: &'static str, message: &str) {
+        if self.keys.insert(key) {
+            info!("{message}");
+        }
+    }
+}
+
 /// Register construction board (parallel lane — **not** Stage 5).
 pub fn register_construction_todo_runtime_hooks(app: &mut App) {
     app.init_resource::<ConstructionLiveTodoBoard>()
-        .init_resource::<ConstructionStageWitness>();
+        .init_resource::<ConstructionStageWitness>()
+        .init_resource::<ConstructionBoardGreenLogGate>();
     super::construction_p9_todos::register_construction_p9_todo_hooks(app);
 }
 
@@ -225,10 +241,14 @@ pub fn sync_construction_live_todo_board(world: &mut World) {
     board.sync_from_witness(&witness);
     let done = board.status.iter().filter(|s| **s == TodoStatus::Done).count();
     if done == CONSTRUCTION_TODOS.len() {
-        info!(
-            target: "construction_live_todos",
-            "CONSTRUCTION_STAGE_COMPLETE done={done}/{}",
-            CONSTRUCTION_TODOS.len()
-        );
+        if let Some(mut gate) = world.get_resource_mut::<ConstructionBoardGreenLogGate>() {
+            gate.log_once(
+                "construction_stage",
+                &format!(
+                    "CONSTRUCTION_STAGE_COMPLETE done={done}/{}",
+                    CONSTRUCTION_TODOS.len()
+                ),
+            );
+        }
     }
 }

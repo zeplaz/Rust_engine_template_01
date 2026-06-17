@@ -15,7 +15,7 @@ from rust_engine_mcp.paths import repo_root
 
 from .aps_paned import add_pane, horizontal_paned
 from .aps_scroll import attach_wheel_area, bind_debounced_scrollregion, canvas_xscroll, canvas_yscroll, text_yscroll
-from .aps_theme import track_wraplength
+from .aps_theme import FONT_SMALL, track_wraplength
 
 
 def _resolve_path(raw: str) -> Path:
@@ -114,7 +114,7 @@ class AtlasPreviewPanel(ttk.LabelFrame):
             anchor=tk.W
         )
         self._grid_legend_var = tk.StringVar(value="")
-        ttk.Label(atlas_col, textvariable=self._grid_legend_var, font=("Segoe UI", 8), foreground="#555").pack(
+        ttk.Label(atlas_col, textvariable=self._grid_legend_var, font=FONT_SMALL, foreground="#555").pack(
             anchor=tk.W
         )
 
@@ -254,7 +254,7 @@ class AtlasPreviewPanel(ttk.LabelFrame):
             lbl.pack()
             self._show_image(lbl, f"cell_{i}", png, max_size=self.THUMB)
             name = png.stem
-            ttk.Label(cell, text=name[:14], font=("Segoe UI", 8)).pack()
+            ttk.Label(cell, text=name[:14], font=FONT_SMALL).pack()
             row = tiles_by_png.get(png.name) or {}
             grid = row.get("grid")
             hint = f"grid {grid}" if grid else "no meta row"

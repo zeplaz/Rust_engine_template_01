@@ -1,0 +1,36 @@
+{
+  "gate": "MCP-P2-KIT002-G2",
+  "green": true,
+  "batch_id": "kit_production_002",
+  "module_id": "roof_industrial_shed_2u",
+  "job_id": "roof_industrial_shed_2u_production_run001",
+  "bpy_operation": "module_roof",
+  "bpy_profile": "shed",
+  "status": {
+    "module_id": "roof_industrial_shed_2u",
+    "job_id": "roof_industrial_shed_2u_production_run001",
+    "profile": "shed",
+    "profile_ok": true,
+    "staging_glb": true,
+    "promoted_glb": true,
+    "batch_id": "kit_production_002",
+    "development_tier": "production"
+  },
+  "manifest": "tools/mcp/schemas/examples/batch_kit_production_002.manifest.json",
+  "g0_witness": "debug_runs/art_pipeline/warehouse_production_g0_live.json",
+  "tile_ship_blocked_by": [
+    "TILE-FIX-001_v1_frozen",
+    "G4_manual_keyframe_pending"
+  ],
+  "proceed_tile_ship": false,
+  "closed": true,
+  "unblocks": ["MCP-P2-KIT002-G1", "MCP-P2-KIT002-G3"],
+  "_agent_meta": {
+    "schema": "kit_production_002_g2_live_v1",
+    "written_at_epoch_secs": 1781652319,
+    "profile": "KIT_PRODUCTION_002_G2",
+    "source_system": "kit_production_002",
+    "relative_path": "debug_runs/art_pipeline/kit_production_002_g2_live.json",
+    "ritual": "BLANG:Q✓ MCP-P2-KIT002-G2"
+  }
+}

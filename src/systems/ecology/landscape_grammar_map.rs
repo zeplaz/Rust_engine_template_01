@@ -146,30 +146,6 @@ pub fn lambda_inputs_from_live_fields(
     }
 }
 
-/// Read-only λ inputs from chunk coord stubs (hydrology / transport / construction).
-#[deprecated(note = "use lambda_inputs_from_live_fields — VEG-λ-LIVE-001")]
-#[must_use]
-pub fn lambda_inputs_for_chunk(coord: IVec2, raster: Option<&StrategicRasterConfig>) -> LambdaExternalInputs {
-    let transport = raster
-        .map(|r| (r.cells_per_chunk.x as f32 * 0.01).clamp(0.0, 1.0))
-        .unwrap_or(0.5);
-    let hydrology = if coord.y.rem_euclid(4) == 0 {
-        0.75
-    } else {
-        0.35
-    };
-    let construction = if coord.x.rem_euclid(8) == 3 {
-        0.55
-    } else {
-        0.08
-    };
-    LambdaExternalInputs {
-        hydrology_bias: hydrology,
-        transport_access: transport,
-        construction_pressure: construction,
-    }
-}
-
 #[must_use]
 pub fn district_kind_from_preset_class(class: &str) -> LandUseDistrictKind {
     match class {
@@ -346,9 +322,12 @@ pub fn landscape_lg5_registry_stamped() -> bool {
 pub fn refresh_lg5_witness() -> bool {
     let atlas_ok = landscape_lg5_atlas_batch_green();
     let stamp_ok = landscape_lg5_registry_stamped();
-    let green = atlas_ok && stamp_ok;
+    let bevy_uv = crate::gui::landscape_chunk_atlas_stamp::landscape_lg5_chunk_uv_stamp_witness_green();
+    let green = atlas_ok && stamp_ok && bevy_uv;
     let atlas_lane = if green {
         "mcp_atlas_pack"
+    } else if atlas_ok && stamp_ok {
+        "bevy_chunk_uv_pending"
     } else if atlas_ok {
         "registry_stamp_pending"
     } else {
@@ -360,6 +339,8 @@ pub fn refresh_lg5_witness() -> bool {
         "atlas_lane": atlas_lane,
         "atlas_batch_green": atlas_ok,
         "registry_stamp": stamp_ok,
+        "bevy_chunk_uv_stamp": bevy_uv,
+        "VEG-F03-REGISTRY-STAMP-001": bevy_uv,
         "atlas_id": LG5_ATLAS_ID,
         "atlas_batch_witness": LG5_ATLAS_BATCH_WITNESS_JSON,
         "landscape_index": LANDSCAPE_ATLAS_INDEX_RON,

@@ -1,0 +1,12 @@
+{
+  "job_id": "tile_tile_rail_warehouse_pilot_v1_clean_day",
+  "status": "done",
+  "log_path": "C:\\dev\\github\\Rust_engine_template_01\\debug_runs\\art_pipeline\\tile_tile_rail_warehouse_pilot_v1_clean_day.log",
+  "outputs": [
+    "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_rail_warehouse_pilot_v1\\clean_day.png"
+  ],
+  "error": null,
+  "operation": "tile_variant_bake",
+  "job_path": "C:\\dev\\github\\Rust_engine_template_01\\tools\\mcp\\jobs\\tile_tile_rail_warehouse_pilot_v1_clean_day.json",
+  "updated_at": 1781653729.171493
+}

@@ -3,12 +3,10 @@
 //! Charter: `src/dev/plan_landscape_grammar_exec_001_v1.md` §4.
 
 use std::collections::VecDeque;
-use std::fs;
-use std::path::PathBuf;
 
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
-use serde_json::{json, Value};
+use serde_json::json;
 
 use super::landscape_grammar::{
     evaluate_landscape_program, LandscapeGrammarCatalog, LandscapeProgramEvaluation,
@@ -17,8 +15,7 @@ use super::landscape_grammar::{
 use super::{ChunkEcology, VegetationField};
 use crate::dev::debug_run_envelope::{wrap_debug_run, write_debug_run_json};
 use crate::strategic::{
-    footprint_affected_chunk_coords, CommitConstructionSiteEvent, FootprintTiles,
-    StrategicRasterConfig,
+    footprint_affected_chunk_coords, CommitConstructionSiteEvent, StrategicRasterConfig,
 };
 use crate::systems::chunk_environment_set::ChunkEnvironmentSet;
 use crate::systems::fire::{ChunkFuelProfile, ChunkSurfaceFire};
@@ -139,14 +136,6 @@ pub struct LandscapeGrammarLg2Witness {
     pub recovery_ticks: u32,
 }
 
-#[must_use]
-pub fn repo_asset_path(rel: &str) -> PathBuf {
-    std::env::var_os("CARGO_MANIFEST_DIR")
-        .map(PathBuf::from)
-        .map(|root| root.join(rel))
-        .unwrap_or_else(|| PathBuf::from(rel))
-}
-
 fn succession_stage_from_age(age_ticks: u32, burned: bool) -> SuccessionTopologyStage {
     if burned {
         return SuccessionTopologyStage::BurnScar;
@@ -247,7 +236,7 @@ pub fn apply_fire_disturbance_on_heat(
 
 pub fn apply_construction_clear_disturbance(
     tick: Res<crate::systems::sim_control::SimTick>,
-    mut events: Option<MessageReader<CommitConstructionSiteEvent>>,
+    events: Option<MessageReader<CommitConstructionSiteEvent>>,
     raster: Option<Res<StrategicRasterConfig>>,
     chunk_q: Query<(Entity, &Chunk), With<DisturbanceHistory>>,
     mut history_q: Query<&mut DisturbanceHistory>,
@@ -513,10 +502,11 @@ pub fn refresh_lg4_preview_witness_with_tint_and_pixel_count(
 ) -> bool {
     let pixel_visible = topology_kind_count_visible
         .unwrap_or_else(|| eval.topology_kind_count as u32);
-    let operator_visible = if tint_visible_chunks > 0 {
-        lg4_preview_operator_visible(tint_visible_chunks, eval) && pixel_visible >= 3
+    // WIT-RUST-001 / WIT-GREEN-TINT-ZERO — never green when tint count is zero.
+    let operator_visible = if tint_visible_chunks == 0 {
+        false
     } else {
-        lg4_preview_witness_green(eval) && pixel_visible >= 3
+        lg4_preview_operator_visible(tint_visible_chunks, eval) && pixel_visible >= 3
     };
     let body = json!({
         "gate": "LG-4-PREVIEW-001",
@@ -535,7 +525,7 @@ pub fn refresh_lg4_preview_witness_with_tint_and_pixel_count(
         LANDSCAPE_GRAMMAR_LG4_PREVIEW_LIVE_JSON,
         body,
     );
-    write_debug_run_json(LANDSCAPE_GRAMMAR_LG4_PREVIEW_LIVE_JSON, wrapped)
+    write_debug_run_json(LANDSCAPE_GRAMMAR_LG4_PREVIEW_LIVE_JSON, wrapped) && operator_visible
 }
 
 pub fn landscape_grammar_lg2_plugin(app: &mut App) {
@@ -560,9 +550,11 @@ pub fn landscape_grammar_lg2_plugin(app: &mut App) {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::fs;
     use super::super::landscape_grammar::{
         load_landscape_preset_from_path, LANDSCAPE_PRESETS_DIR,
     };
+    use super::super::landscape_grammar_map::repo_asset_path;
     use crate::strategic::{
         BuildSiteTile, CommitConstructionSiteEvent, FootprintTiles, LayerType, SiteArchetype,
         SiteId, StrategicRasterConfig,
@@ -592,7 +584,13 @@ mod tests {
     fn lg4_preview_witness_writes_green_json() {
         let eval = pilot_eval();
         assert!(lg4_preview_witness_green(&eval));
-        assert!(refresh_lg4_preview_witness(&eval));
+        assert!(
+            !refresh_lg4_preview_witness(&eval),
+            "WIT-GREEN-TINT-ZERO: tint=0 must not green"
+        );
+        assert!(refresh_lg4_preview_witness_with_tint(&eval, 2));
+        let raw = fs::read_to_string(repo_asset_path(LANDSCAPE_GRAMMAR_LG4_PREVIEW_LIVE_JSON)).unwrap();
+        assert!(raw.contains("topology_tint_visible_chunks"));
     }
 
     #[test]

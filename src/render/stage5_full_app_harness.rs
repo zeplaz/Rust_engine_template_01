@@ -759,6 +759,10 @@ pub fn merge_log_e01_stage5_witness(root: &mut serde_json::Value, graph: &Render
                 "green": fire_corridor_population_fuel_wired,
             }),
         );
+        obj.insert(
+            "veg_burn_witness".into(),
+            crate::dev::landscape_grammar_burn_live_proof::veg_burn_stage5_witness_json(),
+        );
     }
 }
 
@@ -2418,6 +2422,17 @@ mod tests {
         assert_eq!(
             v["tactical_vfx_witness"]["fire_instance_buffer_rows_gt_0"],
             serde_json::json!(true)
+        );
+        assert_eq!(
+            v["veg_burn_witness"]["gate"],
+            serde_json::json!("VEG-BURN-FULLAPP-006")
+        );
+        assert_eq!(v["veg_burn_witness"]["green"], serde_json::json!(true));
+        assert!(
+            v["veg_burn_witness"]["burn_active_rows"]
+                .as_u64()
+                .unwrap_or(0)
+                > 0
         );
     }
 

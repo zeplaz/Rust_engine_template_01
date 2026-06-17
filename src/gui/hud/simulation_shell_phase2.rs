@@ -1487,8 +1487,10 @@ fn sync_minimap_gpu_image_node_system(
     };
     let gpu_active = minimap_gpu_compositor_env_enabled()
         && shell.presentation_source == crate::gui::MinimapPresentationSource::SharedRenderTargetImage
+        && shell.visible
+        && !shell.minimized
         && registry.committed_image != Handle::default();
-    if !gpu_active || !shell.visible || shell.minimized {
+    if !gpu_active {
         *vis = Visibility::Hidden;
         compositor.dual_minimap_present = false;
         witness.minimap_gpu_path = false;
@@ -1541,9 +1543,16 @@ fn sync_minimap_chrome_root_system(
         return;
     };
     let window = win.single().ok();
+    // Operator drag owns `panel_screen_origin` → full outer window via sync_layout_rects_from_panel_origin.
+    if minimap.visible
+        && !minimap.minimized
+        && minimap.panel_screen_origin.is_some()
+    {
+        minimap.sync_layout_rects_from_panel_origin();
+    }
     let content = minimap
-        .last_image_rect
-        .or(minimap.last_window_rect)
+        .last_window_rect
+        .or(minimap.last_image_rect)
         .or_else(|| {
             if !minimap.visible || minimap.minimized {
                 return None;
@@ -1579,6 +1588,7 @@ fn sync_minimap_chrome_root_system(
     node.top = Val::Px(min_y / scale);
     node.width = Val::Px(w_px / scale);
     node.height = Val::Px(h_px / scale);
+    minimap.apply_chrome_outer_rect(min_x, min_y, w_px, h_px);
     minimap.sync_panel_viewport_suggestion_from_layout();
     if minimap.last_image_rect.is_some() {
         witness.last_minimap_rect_delta_px = pad;

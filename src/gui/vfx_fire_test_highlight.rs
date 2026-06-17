@@ -29,9 +29,10 @@ impl Default for VfxFireTestHighlight {
     }
 }
 
-/// Minimum screen extent so the marker stays visible when fully zoomed out.
-const MIN_SCREEN_PX: f32 = 96.0;
-const STROKE_PX: f32 = 3.0;
+/// Minimum screen extent only when zoomed out (keeps marker findable without freezing size when zoomed in).
+const MIN_SCREEN_WHEN_ZOOMED_OUT_PX: f32 = 48.0;
+const ZOOMED_OUT_ALPHA: f32 = 0.35;
+const STROKE_PX_BASE: f32 = 2.0;
 
 #[must_use]
 pub fn highlight_region_from_world_center(params: &WorldGenParams) -> (Vec2, Vec2) {
@@ -181,7 +182,10 @@ pub fn draw_vfx_fire_test_highlight_overlay(
     ) else {
         return Ok(());
     };
-    rect = expand_rect_min_screen_size(rect, MIN_SCREEN_PX);
+    let zoom_alpha = desired.scale.x.abs().max(1e-6);
+    if zoom_alpha < ZOOMED_OUT_ALPHA {
+        rect = expand_rect_min_screen_size(rect, MIN_SCREEN_WHEN_ZOOMED_OUT_PX);
+    }
     if !map_vp.valid {
         return Ok(());
     }
@@ -199,7 +203,8 @@ pub fn draw_vfx_fire_test_highlight_overlay(
         egui::Id::new("vfx_fire_test_highlight"),
     );
     let painter = ctx.layer_painter(layer);
-    let stroke = egui::Stroke::new(STROKE_PX, egui::Color32::from_rgb(255, 40, 32));
+    let stroke_w = (STROKE_PX_BASE * zoom_alpha.clamp(0.25, 1.25)).clamp(1.0, 4.0);
+    let stroke = egui::Stroke::new(stroke_w, egui::Color32::from_rgb(255, 40, 32));
     painter.rect_stroke(rect, 0.0, stroke, egui::StrokeKind::Outside);
     painter.rect_filled(
         rect.expand(1.0),
@@ -291,10 +296,10 @@ mod tests {
     }
 
     #[test]
-    fn expand_rect_enforces_min_screen_size() {
+    fn expand_rect_enforces_min_screen_size_when_zoomed_out() {
         let tiny = egui::Rect::from_min_size(egui::pos2(100.0, 100.0), egui::vec2(12.0, 8.0));
-        let big = expand_rect_min_screen_size(tiny, 96.0);
-        assert!(big.width() >= 96.0);
-        assert!(big.height() >= 96.0);
+        let big = expand_rect_min_screen_size(tiny, MIN_SCREEN_WHEN_ZOOMED_OUT_PX);
+        assert!(big.width() >= MIN_SCREEN_WHEN_ZOOMED_OUT_PX);
+        assert!(big.height() >= MIN_SCREEN_WHEN_ZOOMED_OUT_PX);
     }
 }

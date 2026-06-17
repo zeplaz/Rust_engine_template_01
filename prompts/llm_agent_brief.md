@@ -534,18 +534,19 @@ Full fold atlas: `docs/archive/2026-06-src-dev/plans/agent_meta_diagrams_v3_fold
 
 ---
 
-## Read telemetry (MCP — all agents)
+## Read telemetry (driver — all agents)
 
-Every orient/ref read must go through **`agent_doc_touch`** (BLANG:DOC) — not silent IDE `Read`.
+Large orient docs: **`node .claude/skills/agent-lang/driver.mjs doc <path>`** (file-digest) — not silent full-file Read when digest suffices.
 
-| Step | MCP tool | Output |
+| Step | Command | Output |
 |:---|:---|:---|
-| Session start | `agent_session_bootstrap(agent)` | FIELD◈ digest + ledger rows |
-| Hot-path audit | `agent_doc_reads_brief(min_reads=2)` | `doc_reads_brief_latest.json` |
-| Repeat promotion | `agent_doc_promote_hot_reads()` | `tools/mcp/cache/agent_doc_digests/` |
-| Cache hit | `agent_doc_digest_cached(path)` | Skip re-touch when mtime unchanged |
+| Session start | `driver.mjs boot <agent>` | PRE + brief/SYMLANG read + HO |
+| Compressed doc | `driver.mjs doc <path>` | ⊚digest via `file-digest` |
+| Witness | `witness-brief <path>` | Compressed witness fields |
 
-**Ledger:** `debug_runs/agent_ops/doc_reads.jsonl` · **Fragment:** `.cursor/agents/_fragments/session_bootstrap_v1.md`
+**Fragment:** `.cursor/agents/_fragments/session_bootstrap_v1.md` · **Skill:** `.cursor/skills/agent-lang/SKILL.md`
+
+**Removed (2026-06 CLI refactor):** `agent_session_bootstrap`, `agent_doc_touch`, `agent_doc_reads_brief`, `agent_doc_promote_hot_reads` — use driver **boot** + **doc** instead.
 
 ---
 

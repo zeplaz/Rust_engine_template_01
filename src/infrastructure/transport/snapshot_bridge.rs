@@ -6,9 +6,8 @@ use super::graph::{TransportEdge, TransportGraph, TransportNode, TransportNodeId
 use super::junction::{ensure_edge_endpoints, rebuild_junction_metadata};
 use crate::systems::transport::{
     bake_snapshot_from_ordered_markers_with_world_positions,
-    corridor_class_from_profile, hydrate_transport_from_snapshot, TransportEdgeDirectory,
-    TransportEdgeId, TransportEdgeRecord, TransportFieldStore, TransportNetworkSnapshot,
-    TransportNodeRecord, TransportTopology, TRANSPORT_NETWORK_SCHEMA_V1,
+    corridor_class_from_profile, TransportEdgeId, TransportEdgeRecord, TransportNetworkSnapshot,
+    TransportNodeRecord, TRANSPORT_NETWORK_SCHEMA_V1,
 };
 
 /// **INFRA-E2-002** — ordered markers → authoritative graph (v2 bake path).

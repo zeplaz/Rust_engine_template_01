@@ -34,6 +34,7 @@ mod view_authority;
 mod view_projection_authority;
 pub mod map_tile_raster;
 pub mod map_tile_atlas_stamp;
+pub mod landscape_chunk_atlas_stamp;
 pub mod construction_growth_inspector;
 pub mod egui_window;
 mod app_shell;

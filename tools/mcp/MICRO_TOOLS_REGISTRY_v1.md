@@ -30,7 +30,7 @@
 | `agent-queue-next <agent>` | `agent_queue_next` | Next drainable slice; drain fallback when stop-point blocked |
 | `agent-queue-update <id> <status>` | `agent_queue_update` | Checkpoint slice (`done` / `blocked` / `in_progress`) |
 | `agent-queue-board` | `agent_queue_board` | Tab-separated board (no full JSON dump) |
-| `witness-brief <path>` | `witness_brief` | Witness JSON: green + capped errors only |
+| `witness-brief <path> [--profile honesty]` | `witness_brief` | Witness JSON: green + capped errors; `profile=honesty` → failed rule ids only |
 | `handoff-brief` | `handoff_brief` | HANDOFF Goal/Blockers/Next sections only |
 | `file-digest <path>` | `file_digest` | Head N lines + total line count |
 | `orchestrator-brief` | `orchestrator_brief` | `last_run.json` summary |
@@ -52,6 +52,7 @@ Doc: [`docs/archive/2026-06-src-dev/plans/plan_agent_queue_mcp_v1.md`](../../doc
 | `BLANG:HO` | `handoff_brief()` | Orient — not full HANDOFF Read |
 | `BLANG:OPS` | `ops_get_project_brief()` | Compressed ops_project_brief_v1 — not HANDOFF + 80 witnesses |
 | `BLANG:WIT` | `witness_brief(path)` | After work — not full witness Read |
+| `BLANG:WIT-HON` | `witness_brief(path, profile='honesty')` · `validate_witness_honesty_report` · `validate_queue_integrity_report` | Before Q✓ — honesty gate on witness + queue rollup |
 | `BLANG:DIGEST` | `snapshot_digest(path)` | Touch snapshot |
 | `BLANG:DIFF` | `snapshot_diff_brief(before, after)` | Grammar iterate |
 | `BLANG:P0` | `validate_p0_gate_plain(path)` | P0 gate artist text |
@@ -68,7 +69,7 @@ Doc: [`docs/archive/2026-06-src-dev/plans/plan_agent_queue_mcp_v1.md`](../../doc
 | `BLANG:PY` | `pytest tools/mcp/python/tests/` | @coder-mcp |
 | `BLANG:S5` | `cargo test -p proc_A_dine01 --lib stage5` | Stage5 spine |
 
-**Session:** `BLANG:PRE → BLANG:OPS → BLANG:HO → L4 work → L5 tools → L6 WIT → BLANG:Q✓`  
+**Session:** `BLANG:PRE → BLANG:OPS → BLANG:HO → L4 work → L5 tools → BLANG:WIT-HON → L6 WIT → BLANG:Q✓`  
 **Policy card:** `token_savings_guide()` → key `blang` (full token map + `by_agent`)
 
 ## Tier 1e — Sim product validators (**SHIPPED**)
@@ -127,7 +128,7 @@ Doc: [`docs/archive/2026-06-src-dev/plans/plan_mcp_productivity_chain_v1.md`](..
 | `mcp-p2-run-event-001-witness` | — | Refresh `debug_runs/mcp_p2_run_event_001_live.json` | **SHIPPED** |
 | `mcp-p2-honest-bake-001-witness` | — | Refresh `debug_runs/mcp_p2_honest_bake_001_live.json` | **SHIPPED** |
 | `validate-report arch_build_grammar <preset.json>` | `validate_report` | ARCH-DNA preset schema | **SHIPPED** |
-| `validate-report landscape_grammar <preset.json>` | `validate_report` | LAND-DNA + topology graph v0 | **SHIPPED** (LG-0-001) |
+| `validate-report landscape_grammar <preset.json>` | `validate_report` | LAND-DNA + topology graph v0 | **SHIPPED** · **SIGNED** LG-0 (MCP-LANDSCAPE-GRAMMAR-SIGN-001) |
 | `validate-report tile_promotion_honest <batch.json>` | `validate_report` | Reject ortho/dry-run ship bakes | **SHIPPED** |
 | `rail-warehouse-pilot-batch-write` | — | Materialize tile_batch + variant_set + bdef from staging spec | **SHIPPED** |
 | `rail-warehouse-pilot-batch-witness` | — | Refresh `debug_runs/tile_rail_warehouse_pilot_batch_live.json` | **SHIPPED** |
@@ -135,6 +136,52 @@ Doc: [`docs/archive/2026-06-src-dev/plans/plan_mcp_productivity_chain_v1.md`](..
 Doc: [`docs/archive/2026-06-src-dev/plans/mcp_productivity_p1_plan_v1.md`](../../docs/archive/2026-06-src-dev/plans/mcp_productivity_p1_plan_v1.md)
 
 **Grammar → spine handoff:** `grammar_iterate` + `snapshot_diff_brief` → `tile_spine_run_request_v1.snapshot_path`
+
+## Tier 1f — Landscape grammar validators (**SIGNED** 2026-06-14)
+
+**Plan:** `$ref:src/dev/plan_landscape_grammar_mcp_sign_delegate_v1.md` · ⟨MCP-LANDSCAPE-GRAMMAR-SIGN-001⟩
+
+| CLI / MCP | Does | Status |
+|:---|:---|:---|
+| `validate-report landscape_grammar <preset.json>` | LAND-DNA + topology graph v0 | **SHIPPED** |
+| `validate-report landscape_grammar_presets` | Batch all ship presets + index alignment | **SHIPPED** (MCP-LG-VALID-PRESET-001) |
+| `landscape-grammar-presets-witness` | Refresh batch + sign witnesses | **SHIPPED** |
+| `refresh_mcp_landscape_grammar_sign_witness.py` | Thin wrapper → batch module | **SHIPPED** |
+
+**Index:** `assets/configs/landscape/_preset_index.json` (30 topology + 10 ship presets)  
+**Witness:** `debug_runs/mcp_landscape_grammar_sign_live.json` · batch: `debug_runs/mcp_landscape_grammar_preset_batch_live.json`  
+**Hook:** `tools/orchestrator/hooks/post_build.ps1` (disable: `$env:RUST_ENGINE_LG_PRESET_HOOK='0'`)
+
+## Tier 1h — Variant graph (ARCH-002) (**SIGNED** 2026-06-14)
+
+**Charter:** `$ref:src/dev/arch_variant_graph_002_v1.md` · ⟨ARCH-002⟩
+
+| CLI / MCP | Does | Status |
+|:---|:---|:---|
+| `validate_variant_graph` (pytest + jsonschema) | Per-node material/visibility/emission/decal patches on assembly graph | **SIGNED** |
+| Example | `tools/mcp/schemas/examples/variant_graph_warehouse_industrial_west_v1.json` | pairs with warehouse `variant_set_v1` |
+
+**Witness:** `debug_runs/mcp_kit002_arch002_sign_live.json`
+
+## Tier 1i — witness + queue integrity (**SHIPPED** 2026-06-07)
+
+**Plan:** [`src/dev/plan_witness_queue_integrity_mcp_v1.md`](../../src/dev/plan_witness_queue_integrity_mcp_v1.md) · rules: `tools/mcp/schemas/witness_integrity_rules_v1.json`
+
+| CLI | MCP tool | Does | Status |
+|:---|:---|:---|:---:|
+| `validate-report witness_honesty <path>` | `validate_witness_honesty_report` | Per-witness honesty rules (compress 1–4) | **SHIPPED** |
+| `validate-report witness_honesty --scan debug_runs` | `validate_witness_honesty_report(scan=True)` | Batch scan `*_live.json` under dir | **SHIPPED** |
+| `validate-report queue_integrity` | `validate_queue_integrity_report` | Queue row vs witness contradictions | **SHIPPED** |
+| `witness-brief <path> --profile honesty` | `witness_brief` | Failed rule ids only (compress 4) — **BLANG:WIT-HON** | **SHIPPED** |
+| `slice-exec-brief <id>` | `slice_exec_brief` | Adds `exit_predicate` + `witness_honesty` + last scan rollup | **SHIPPED** |
+| `queue-integrity-reconcile-witness` | — | Refresh `debug_runs/queue_integrity_reconcile_live.json` | **SHIPPED** |
+| `mcp-witness-integrity-ops-witness` | — | Refresh `debug_runs/mcp_witness_integrity_ops_live.json` | **SHIPPED** |
+
+**BLANG:** `BLANG:WIT-HON` — `BLANG:Q✓` forbidden when witness honesty FAIL on row witness + rollup parents.  
+**Hooks:** `tools/orchestrator/hooks/post_build.ps1` → `witness_honesty_lib.py run-hook` (enforce: `RUST_ENGINE_WITNESS_INTEGRITY_ENFORCE=1`) · `tools/orchestrator/scripts/ops_intelligence_scan.ps1`  
+**CI:** `tools/orchestrator/ci/run.ps1 -WitnessIntegrity` or `RUST_ENGINE_CI_WITNESS_INTEGRITY=1` (MCP-WIT-043)  
+**Token guide:** `token_savings_guide()` → key `witness_integrity`  
+**Fixtures:** `tools/mcp/schemas/examples/witness_honesty_fixtures/`
 
 ## Tier 1g — grammar / building-set guards (**SHIPPED**)
 

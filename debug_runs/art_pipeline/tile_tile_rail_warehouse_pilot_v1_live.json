@@ -1,0 +1,109 @@
+{
+  "batch_id": "tile_rail_warehouse_pilot_v1",
+  "lane": "tile_batch",
+  "_agent_meta": {
+    "agent": "coder-mcp",
+    "updated_at": "2026-06-16T23:49:19.720851+00:00",
+    "program": "MCP-TILE-CLOSE-001",
+    "dry_run": false
+  },
+  "gates": {
+    "G0": "pass",
+    "G1": "pass",
+    "G2": "pass",
+    "G3": "pass",
+    "G4": "planned",
+    "G5": "planned"
+  },
+  "green": true,
+  "png_count": 4,
+  "png_dimensions": [
+    {
+      "file": "clean_day.png",
+      "bytes": 15558,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "file": "clean_night_off.png",
+      "bytes": 15558,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "file": "clean_night_on.png",
+      "bytes": 15469,
+      "width": 128,
+      "height": 128
+    },
+    {
+      "file": "under_construction_01.png",
+      "bytes": 15558,
+      "width": 128,
+      "height": 128
+    }
+  ],
+  "real_bake": true,
+  "atlas_path": "C:\\dev\\github\\Rust_engine_template_01\\assets\\textures\\buildings_iso\\staging\\tile_rail_warehouse_pilot_v1_atlas.png",
+  "meta_json": "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_rail_warehouse_pilot_v1\\atlas_meta.json",
+  "batch_status": {
+    "batch_id": "tile_rail_warehouse_pilot_v1",
+    "status": "done",
+    "bake_source": "keyframe_pack",
+    "variant_count": 4,
+    "png_paths": [
+      "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_rail_warehouse_pilot_v1\\clean_day.png",
+      "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_rail_warehouse_pilot_v1\\clean_night_off.png",
+      "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_rail_warehouse_pilot_v1\\clean_night_on.png",
+      "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_rail_warehouse_pilot_v1\\under_construction_01.png"
+    ],
+    "atlas_path": "C:\\dev\\github\\Rust_engine_template_01\\assets\\textures\\buildings_iso\\staging\\tile_rail_warehouse_pilot_v1_atlas.png",
+    "meta_json": "assets/staging/tiles/tile_rail_warehouse_pilot_v1/atlas_meta.json",
+    "dry_run": false
+  },
+  "automation": "headless_only",
+  "smoke_fallback_used": false,
+  "gate_id": "TILE-REAL-001",
+  "atlas_schema_version": 1,
+  "atlas_v2_lookup_ok": true,
+  "frozen": false,
+  "png_exists_only_rejected": true,
+  "tile_id": "tile_rail_warehouse_pilot_v1",
+  "assembly_ref": {
+    "style_pack_id": "style_industrial_west",
+    "assembly_snapshot": "tools/mcp/schemas/examples/assembly_snapshot_rail_warehouse_pilot_v1.json",
+    "footprint": {
+      "width": 6,
+      "depth": 5,
+      "floors": 1
+    },
+    "pilot_note": "L-matrix 6x5 authoritative in pilot_ref; lod0 grammar scaffold until PG-2"
+  },
+  "variant_set_ref": "tools/mcp/schemas/examples/variant_set_rail_warehouse_pilot_v1.json",
+  "source_tier": "lod0",
+  "development_tier": "pilot",
+  "ship": false,
+  "tile_atlas_index": {
+    "ok": true,
+    "entry": {
+      "atlas_id": "rail_warehouse_pilot_v1",
+      "batch_id": "tile_rail_warehouse_pilot_v1",
+      "assembly_id": "industrial_west_4x7_s440013_f0c0",
+      "tile_id": "tile_rail_warehouse_pilot_v1",
+      "atlas_png": "assets/textures/buildings_iso/staging/tile_rail_warehouse_pilot_v1_atlas.png",
+      "meta_json": "assets/staging/tiles/tile_rail_warehouse_pilot_v1/atlas_meta.json",
+      "development_tier": "pilot",
+      "style_pack_id": "style_industrial_west",
+      "ship_allowed": false
+    },
+    "written": "C:\\dev\\github\\Rust_engine_template_01\\assets\\configs\\buildings\\_tile_atlas_index.ron",
+    "json_mirror": "C:\\dev\\github\\Rust_engine_template_01\\assets\\configs\\buildings\\_tile_atlas_index.json",
+    "entry_count": 4,
+    "atlas_ids": [
+      "rail_warehouse_pilot_v1",
+      "rowhouse_victorian_pilot_v1",
+      "rowhouse_victorian_production_v1",
+      "warehouse_industrial_west_v2"
+    ]
+  }
+}

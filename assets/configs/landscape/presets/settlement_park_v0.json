@@ -1,8 +1,17 @@
 {
   "schema_version": "landscape_grammar_v0",
   "preset_id": "settlement_park_v0",
-  "chart_id": "SETT-PARK-D1",
-  "land_dna": { "H": "urban_park", "S": "loam", "E": "sheltered", "T": "temperate", "D": "managed", "L": "settlement", "A": "mature", "M": "maintained" },
+  "chart_id": "URBAN-FOREST-FRACTURE-Σ63",
+  "land_dna": {
+    "H": "drainage_ditch",
+    "S": "deep_alluvial",
+    "E": "sheltered",
+    "T": "temperate",
+    "D": "moderate",
+    "L": "residential",
+    "A": "mature",
+    "M": "maintained"
+  },
   "pressure_field": {
     "lambda_moisture": 0.62,
     "lambda_slope": 0.25,
@@ -15,6 +24,7 @@
   },
   "landscape_program": {
     "class": "settlement",
+    "district_ref": "settlement_park_05",
     "required_topologies": ["CORRIDOR_ROADSIDE", "RING_SHELTERBELT", "PATCH_IRREGULAR", "FRINGE_EDGE"]
   },
   "topology_graph": [
@@ -22,17 +32,57 @@
       "id": "net_sett_01",
       "topology_kind": "Network",
       "preset_id": "NETWORK_CONNECTED",
+      "scale_band": "L",
+      "anchor_ref": "partition:chunk_05_park",
+      "parent_topology_id": null,
+      "operator_stack": ["anchor_partition", "network_link"]
+    },
+    {
+      "id": "corr_path_01",
+      "topology_kind": "Corridor",
+      "preset_id": "CORRIDOR_ROADSIDE",
+      "scale_band": "M",
+      "anchor_ref": "transport:park_path_05",
+      "parent_topology_id": "net_sett_01",
+      "operator_stack": ["anchor_road", "corridor"],
+      "metadata": { "glyph_planning": "≈≈≈" }
+    },
+    {
+      "id": "ring_park_01",
+      "topology_kind": "Ring",
+      "preset_id": "RING_SHELTERBELT",
+      "scale_band": "M",
+      "anchor_ref": "site:park_ring",
+      "parent_topology_id": "net_sett_01",
+      "operator_stack": ["ring", "expand"],
+      "metadata": { "glyph_planning": "(█)" }
+    },
+    {
+      "id": "patch_grove_01",
+      "topology_kind": "Patch",
+      "preset_id": "PATCH_IRREGULAR",
+      "scale_band": "M",
+      "anchor_ref": "site:grove_center",
+      "parent_topology_id": "net_sett_01",
+      "operator_stack": ["seed_patch", "cluster"],
       "children": [
-        { "id": "corr_path_01", "topology_kind": "Corridor", "preset_id": "CORRIDOR_ROADSIDE", "metadata": { "glyph_planning": "≈≈≈" } },
-        { "id": "ring_park_01", "topology_kind": "Ring", "preset_id": "RING_SHELTERBELT", "metadata": { "glyph_planning": "()" } },
         {
-          "id": "patch_grove_01",
-          "topology_kind": "Patch",
-          "preset_id": "PATCH_IRREGULAR",
-          "children": [{ "id": "cluster_trees_01", "topology_kind": "Cluster", "preset_id": "CLUSTER_NATURAL" }]
-        },
-        { "id": "fringe_lawn_01", "topology_kind": "Fringe", "preset_id": "FRINGE_EDGE" }
+          "id": "cluster_trees_01",
+          "topology_kind": "Cluster",
+          "preset_id": "CLUSTER_NATURAL",
+          "scale_band": "S",
+          "parent_topology_id": "patch_grove_01"
+        }
       ]
+    },
+    {
+      "id": "fringe_lawn_01",
+      "topology_kind": "Fringe",
+      "preset_id": "FRINGE_EDGE",
+      "scale_band": "S",
+      "anchor_ref": "field:lawn_edge",
+      "parent_topology_id": "net_sett_01",
+      "operator_stack": ["fringe"]
     }
   ]
 }

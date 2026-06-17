@@ -1,6 +1,6 @@
 {
   "program_id": "APS-WITNESS-REFRESH-001",
-  "green": true,
+  "green": false,
   "suite_modules": [
     "app.py",
     "aps_collapsible.py",
@@ -15,6 +15,7 @@
     "atlas_preview_panel.py",
     "catalog.py",
     "footprint_canvas.py",
+    "grammar_build_set_panel.py",
     "grammar_dna_panel.py",
     "grammar_inspector.py",
     "grammar_iterate_panel.py",
@@ -34,18 +35,21 @@
     "status_log_panel.py",
     "variants_panel.py"
   ],
-  "module_count": 31,
+  "module_count": 32,
   "pytest": {
     "ok": true,
-    "summary": "15 passed in 0.84s",
+    "summary": "1 passed",
+    "tests": []
+  },
+  "aps_imports": {
+    "ok": false,
+    "summary": "1 failed",
     "tests": [
-      "tests/test_aps_preview_001.py",
-      "tests/test_aps_atlas_preview.py",
-      "tests/test_aps_grammar_labels.py"
+      "tests/test_aps_imports.py"
     ]
   },
   "witnesses": {
-    "aps_preview_001": "debug_runs/aps_preview_001_slot_live.json",
+    "aps_preview_001": "debug_runs/aps_preview_001_live.json",
     "aps_preview_catalog": "debug_runs/aps_preview_catalog_live.json",
     "aps_atlas_preview_002": "debug_runs/aps_atlas_preview_002_live.json",
     "aps_material_studio": "debug_runs/aps_material_studio_live.json",

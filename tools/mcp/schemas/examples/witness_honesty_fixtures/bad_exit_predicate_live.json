@@ -1,0 +1,13 @@
+{
+  "_fixture": { "expect": "fail", "rule_id": "WIT-EXIT-PREDICATE" },
+  "_agent_meta": {
+    "schema": "witness_honesty_fixture_v1",
+    "profile": "BAD_EXIT_PREDICATE"
+  },
+  "gate": "FIXTURE-EXIT",
+  "green": false,
+  "exit_predicate": {
+    "must": [{ "path": "green", "eq": true }],
+    "witness": "tools/mcp/schemas/examples/witness_honesty_fixtures/bad_exit_predicate_live.json"
+  }
+}

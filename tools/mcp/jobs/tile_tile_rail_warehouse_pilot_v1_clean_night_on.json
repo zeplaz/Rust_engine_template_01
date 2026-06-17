@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "job_id": "tile_tile_rail_warehouse_pilot_v1_clean_night_on",
+  "operation": "tile_variant_bake",
+  "mode": "assembly",
+  "variant": {
+    "variant_key": "clean_night_on",
+    "state": "clean",
+    "damage": 0.0,
+    "power": "on",
+    "fill": "empty",
+    "lighting": "night_on"
+  },
+  "render": {
+    "method": "blender_keyframe_light_rig",
+    "isometric": true,
+    "seed": 440013,
+    "tile_size_px": 128,
+    "light_blend": "utils/Light_keysshotsetup.blend"
+  },
+  "light_blend": "C:\\dev\\github\\Rust_engine_template_01\\utils\\Tile_iso_rig_v1.blend",
+  "output": {
+    "png": "assets/staging/tiles/tile_rail_warehouse_pilot_v1/clean_night_on.png"
+  },
+  "assembly_blend": "assets/staging/assemblies/industrial_west_4x7_s440013_f0c0.blend",
+  "assembly_snapshot": "tools/mcp/schemas/examples/assembly_snapshot_rail_warehouse_pilot_v1.json",
+  "material_authority": "snapshot material_profile"
+}

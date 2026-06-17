@@ -1,8 +1,17 @@
 {
   "schema_version": "landscape_grammar_v0",
   "preset_id": "military_defensive_v0",
-  "chart_id": "MIL-DEFENSE-D1",
-  "land_dna": { "H": "military", "S": "rocky", "E": "exposed", "T": "temperate", "D": "dry", "L": "defensive", "A": "managed", "M": "maintained" },
+  "chart_id": "DEFENSIVE-VEGETATION-Ω13",
+  "land_dna": {
+    "H": "upland",
+    "S": "rocky",
+    "E": "wind_exposed",
+    "T": "temperate",
+    "D": "high",
+    "L": "military",
+    "A": "young",
+    "M": "maintained"
+  },
   "pressure_field": {
     "lambda_moisture": 0.42,
     "lambda_slope": 0.55,
@@ -15,24 +24,65 @@
   },
   "landscape_program": {
     "class": "military",
-    "required_topologies": ["CORRIDOR_ROADSIDE", "RING_BARRIER", "PATCH_HARDSTAND", "FRINGE_EDGE"]
+    "district_ref": "defensive_sector_04",
+    "required_topologies": ["CORRIDOR_ROADSIDE", "RING_FORTIFIED", "POCKET_INTERNAL", "FRINGE_EDGE"]
   },
   "topology_graph": [
     {
       "id": "net_mil_01",
       "topology_kind": "Network",
       "preset_id": "NETWORK_CONNECTED",
+      "scale_band": "L",
+      "anchor_ref": "partition:chunk_04_mil",
+      "parent_topology_id": null,
+      "operator_stack": ["anchor_partition", "network_link"]
+    },
+    {
+      "id": "corr_patrol_01",
+      "topology_kind": "Corridor",
+      "preset_id": "CORRIDOR_ROADSIDE",
+      "scale_band": "M",
+      "anchor_ref": "transport:patrol_road_04",
+      "parent_topology_id": "net_mil_01",
+      "operator_stack": ["anchor_road", "corridor"],
+      "metadata": { "glyph_planning": "═══" }
+    },
+    {
+      "id": "ring_bunker_01",
+      "topology_kind": "Ring",
+      "preset_id": "RING_FORTIFIED",
+      "scale_band": "M",
+      "anchor_ref": "site:perimeter_ring",
+      "parent_topology_id": "net_mil_01",
+      "operator_stack": ["ring", "barrier_block"],
+      "metadata": { "glyph_planning": "(█)" }
+    },
+    {
+      "id": "patch_bivouac_01",
+      "topology_kind": "Pocket",
+      "preset_id": "POCKET_INTERNAL",
+      "scale_band": "M",
+      "anchor_ref": "site:bivouac_clearing",
+      "parent_topology_id": "net_mil_01",
+      "operator_stack": ["clear_suppress", "contract_maintain"],
       "children": [
-        { "id": "corr_patrol_01", "topology_kind": "Corridor", "preset_id": "CORRIDOR_ROADSIDE", "metadata": { "glyph_planning": "═══" } },
-        { "id": "ring_bunker_01", "topology_kind": "Ring", "preset_id": "RING_BARRIER", "metadata": { "glyph_planning": "◯◯" } },
         {
-          "id": "patch_bivouac_01",
-          "topology_kind": "Patch",
-          "preset_id": "PATCH_HARDSTAND",
-          "children": [{ "id": "cluster_cam_01", "topology_kind": "Cluster", "preset_id": "CLUSTER_DEFENSE" }]
-        },
-        { "id": "fringe_wire_01", "topology_kind": "Fringe", "preset_id": "FRINGE_EDGE" }
+          "id": "cluster_cam_01",
+          "topology_kind": "Cluster",
+          "preset_id": "CLUSTER_DENSE",
+          "scale_band": "S",
+          "parent_topology_id": "patch_bivouac_01"
+        }
       ]
+    },
+    {
+      "id": "fringe_wire_01",
+      "topology_kind": "Fringe",
+      "preset_id": "FRINGE_EDGE",
+      "scale_band": "S",
+      "anchor_ref": "field:wire_margin",
+      "parent_topology_id": "net_mil_01",
+      "operator_stack": ["fringe"]
     }
   ]
 }

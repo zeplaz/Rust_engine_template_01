@@ -126,6 +126,7 @@ impl TileAtlasEntry {
 
 #[derive(Resource, Debug, Default)]
 pub struct TileAtlasRegistry {
+    pub schema_version: u32,
     pub entries: Vec<TileAtlasEntry>,
     pub by_atlas_id: HashMap<String, TileAtlasEntry>,
     pub by_batch_id: HashMap<String, String>,
@@ -234,6 +235,9 @@ fn uv_from_meta_tile(tile: &AtlasMetaTile) -> Option<[f32; 4]> {
 struct MetaLoadResult {
     variants: HashMap<String, [f32; 4]>,
     schema_version: u32,
+    batch_id: String,
+    tile_id: String,
+    atlas_id: String,
     render_facings: u8,
     quarter_turn_fallback: bool,
     lookups: HashMap<(String, u8, u8), [f32; 4]>,
@@ -272,6 +276,9 @@ fn load_meta(meta_path: &Path) -> Result<MetaLoadResult, String> {
             return Ok(MetaLoadResult {
                 variants,
                 schema_version,
+                batch_id: meta.batch_id,
+                tile_id: meta.tile_id,
+                atlas_id: meta.atlas_id,
                 render_facings: 1,
                 quarter_turn_fallback: true,
                 lookups,
@@ -282,6 +289,9 @@ fn load_meta(meta_path: &Path) -> Result<MetaLoadResult, String> {
     Ok(MetaLoadResult {
         variants,
         schema_version,
+        batch_id: meta.batch_id,
+        tile_id: meta.tile_id,
+        atlas_id: meta.atlas_id,
         render_facings: facings,
         quarter_turn_fallback,
         lookups,
@@ -293,6 +303,24 @@ fn normalize_entry(raw: TileAtlasIndexEntryRaw) -> Result<TileAtlasEntry, String
     let meta_json = raw.meta_json.replace('\\', "/");
     let meta_path = repo_asset_path(&meta_json);
     let meta = load_meta(&meta_path)?;
+    if !meta.batch_id.is_empty() && !raw.batch_id.is_empty() && meta.batch_id != raw.batch_id {
+        return Err(format!(
+            "tile atlas batch_id mismatch index={} meta={}",
+            raw.batch_id, meta.batch_id
+        ));
+    }
+    if !meta.tile_id.is_empty() && !raw.tile_id.is_empty() && meta.tile_id != raw.tile_id {
+        return Err(format!(
+            "tile atlas tile_id mismatch index={} meta={}",
+            raw.tile_id, meta.tile_id
+        ));
+    }
+    if !meta.atlas_id.is_empty() && !raw.atlas_id.is_empty() && meta.atlas_id != raw.atlas_id {
+        return Err(format!(
+            "tile atlas atlas_id mismatch index={} meta={}",
+            raw.atlas_id, meta.atlas_id
+        ));
+    }
     let tier = DevelopmentTier::parse(&raw.development_tier, &raw.batch_id);
     let ship_allowed = raw.ship_allowed && tier.atlas_runtime_stamp_allowed();
     Ok(TileAtlasEntry {
@@ -364,6 +392,7 @@ pub fn load_tile_atlas_registry_from_path(path: &Path) -> TileAtlasRegistry {
 
     match parse_result {
         Ok(file) => {
+            registry.schema_version = file.schema_version;
             for raw in file.entries {
                 match normalize_entry(raw) {
                     Ok(entry) => ingest_entry(&mut registry, entry, true),
@@ -386,6 +415,10 @@ pub fn load_tile_atlas_registry() -> TileAtlasRegistry {
     if json_path.is_file() {
         return load_tile_atlas_registry_from_path(&json_path);
     }
+    let archive = load_tile_atlas_archive_registry();
+    if !archive.entries.is_empty() || !archive.load_errors.is_empty() {
+        return archive;
+    }
     let mut registry = TileAtlasRegistry::default();
     registry
         .load_errors
@@ -402,8 +435,9 @@ pub fn init_tile_atlas_registry(mut commands: Commands) {
     } else if !registry.is_empty() {
         info!(
             target: "tile_atlas",
-            "TileAtlasRegistry: {} atlas(es)",
-            registry.len()
+            "TileAtlasRegistry: {} atlas(es) schema_v{}",
+            registry.len(),
+            registry.schema_version
         );
     }
     commands.insert_resource(registry);
@@ -430,6 +464,7 @@ pub fn load_tile_atlas_archive_registry_from_path(path: &Path) -> TileAtlasRegis
     };
     match parse_result {
         Ok(file) => {
+            registry.schema_version = file.schema_version;
             for raw in file.entries {
                 match normalize_entry(raw) {
                     Ok(entry) => ingest_entry(&mut registry, entry, false),

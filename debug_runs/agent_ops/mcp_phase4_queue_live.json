@@ -111,6 +111,27 @@
     "lane": "H_VIEW",
     "exit": "map_pick_closure_001.green; footprint_projection_ok; pick_delta_world_max=1",
     "witness": "debug_runs/construction_stage_live.json",
+    "exit_predicate": null,
+    "witness_honesty": {
+      "last_scan": {
+        "source": "debug_runs/mcp_witness_integrity_ops_live.json",
+        "fail_count": 148,
+        "inflated_green_count": 7,
+        "queue_contradiction_count": 3,
+        "queue_stale_count": 126,
+        "enforce_mode": false
+      },
+      "witness": {
+        "profile": "honesty",
+        "path": "debug_runs/construction_stage_live.json",
+        "status": "passed",
+        "failed_rule_ids": [],
+        "warning_rule_ids": [],
+        "q_forbidden": false,
+        "blang": "BLANG:WIT-HON"
+      },
+      "q_forbidden": false
+    },
     "files": [],
     "exec_docs": [],
     "do_not_pick": true,
@@ -164,7 +185,7 @@
   },
   "_agent_meta": {
     "schema": "mcp_phase4_queue_live_v1",
-    "written_at_epoch_secs": 1781481527,
+    "written_at_epoch_secs": 1781658232,
     "profile": "MCP_PHASE4_QUEUE",
     "source_system": "ops_intelligence",
     "relative_path": "debug_runs/agent_ops/mcp_phase4_queue_live.json"

@@ -107,17 +107,19 @@ pub fn refresh_construction_finish_witness_system(
 pub fn sync_construction_finish_board_system(
     witness: Res<crate::dev::construction_finish_todos::ConstructionFinishWitness>,
     mut board: ResMut<crate::dev::construction_finish_todos::ConstructionFinishTodoBoard>,
+    mut gate: ResMut<crate::dev::construction_live_todos::ConstructionBoardGreenLogGate>,
 ) {
-    use bevy::log::info;
     use crate::dev::construction_live_todos::TodoStatus;
 
     board.sync_from_witness(witness.as_ref());
     let done = board.status.iter().filter(|s| **s == TodoStatus::Done).count();
     if done == crate::dev::construction_finish_todos::CONSTRUCTION_FINISH_TODO_COUNT {
-        info!(
-            target: "construction_finish_todos",
-            "CONSTRUCTION_FINISH_COMPLETE done={done}/{}",
-            crate::dev::construction_finish_todos::CONSTRUCTION_FINISH_TODOS.len()
+        gate.log_once(
+            "construction_finish",
+            &format!(
+                "CONSTRUCTION_FINISH_COMPLETE done={done}/{}",
+                crate::dev::construction_finish_todos::CONSTRUCTION_FINISH_TODOS.len()
+            ),
         );
     }
 }
@@ -162,21 +164,47 @@ pub fn refresh_construction_phase2_witness_system(
 pub fn sync_construction_phase2_board_system(
     witness: Res<crate::dev::construction_phase2_todos::ConstructionPhase2Witness>,
     mut board: ResMut<crate::dev::construction_phase2_todos::ConstructionPhase2TodoBoard>,
+    mut gate: ResMut<crate::dev::construction_live_todos::ConstructionBoardGreenLogGate>,
 ) {
     crate::dev::construction_phase2_todos::sync_construction_phase2_board_from_witness(
         witness.as_ref(),
         board.as_mut(),
     );
+    let done = board
+        .status
+        .iter()
+        .filter(|s| **s == crate::dev::construction_live_todos::TodoStatus::Done)
+        .count();
+    if done == crate::dev::construction_phase2_todos::CONSTRUCTION_PHASE2_TODOS.len() {
+        gate.log_once(
+            "construction_phase2",
+            &format!(
+                "CONSTRUCTION_PHASE2_COMPLETE done={done}/{}",
+                crate::dev::construction_phase2_todos::CONSTRUCTION_PHASE2_TODOS.len()
+            ),
+        );
+    }
 }
 
 pub fn sync_construction_p9_board_system(
     witness: Res<crate::dev::construction_p9_todos::ConstructionP9Witness>,
     mut board: ResMut<crate::dev::construction_p9_todos::ConstructionP9TodoBoard>,
+    mut gate: ResMut<crate::dev::construction_live_todos::ConstructionBoardGreenLogGate>,
 ) {
     crate::dev::construction_p9_todos::sync_construction_p9_board_from_witness(
         witness.as_ref(),
         board.as_mut(),
     );
+    if board.is_green() {
+        gate.log_once(
+            "construction_p9",
+            &format!(
+                "CONSTRUCTION_P9_COMPLETE done={}/{}",
+                crate::dev::construction_p9_todos::CONSTRUCTION_P9_TODO_COUNT,
+                crate::dev::construction_p9_todos::CONSTRUCTION_P9_TODO_COUNT
+            ),
+        );
+    }
 }
 
 pub fn refresh_construction_round2_witness_system(
@@ -203,11 +231,26 @@ pub fn refresh_construction_round2_witness_system(
 pub fn sync_construction_round2_board_system(
     witness: Res<crate::dev::construction_round2_todos::ConstructionRound2Witness>,
     mut board: ResMut<crate::dev::construction_round2_todos::ConstructionRound2TodoBoard>,
+    mut gate: ResMut<crate::dev::construction_live_todos::ConstructionBoardGreenLogGate>,
 ) {
     crate::dev::construction_round2_todos::sync_construction_round2_board_from_witness(
         witness.as_ref(),
         board.as_mut(),
     );
+    let done = board
+        .status
+        .iter()
+        .filter(|s| **s == crate::dev::construction_live_todos::TodoStatus::Done)
+        .count();
+    if done == crate::dev::construction_round2_todos::CONSTRUCTION_ROUND2_TODOS.len() {
+        gate.log_once(
+            "construction_round2",
+            &format!(
+                "CONSTRUCTION_ROUND2_COMPLETE done={done}/{}",
+                crate::dev::construction_round2_todos::CONSTRUCTION_ROUND2_TODOS.len()
+            ),
+        );
+    }
 }
 
 pub fn refresh_construction_round3_witness_system(
@@ -257,11 +300,26 @@ fn shim_gone() -> bool {
 pub fn sync_construction_round3_board_system(
     witness: Res<crate::dev::construction_round3_todos::ConstructionRound3Witness>,
     mut board: ResMut<crate::dev::construction_round3_todos::ConstructionRound3TodoBoard>,
+    mut gate: ResMut<crate::dev::construction_live_todos::ConstructionBoardGreenLogGate>,
 ) {
     crate::dev::construction_round3_todos::sync_construction_round3_board_from_witness(
         witness.as_ref(),
         board.as_mut(),
     );
+    let done = board
+        .status
+        .iter()
+        .filter(|s| **s == crate::dev::construction_live_todos::TodoStatus::Done)
+        .count();
+    if done == crate::dev::construction_round3_todos::CONSTRUCTION_ROUND3_TODOS.len() {
+        gate.log_once(
+            "construction_round3",
+            &format!(
+                "CONSTRUCTION_ROUND3_COMPLETE done={done}/{}",
+                crate::dev::construction_round3_todos::CONSTRUCTION_ROUND3_TODOS.len()
+            ),
+        );
+    }
 }
 
 pub fn refresh_construction_operational_witness_system(
@@ -285,9 +343,13 @@ pub fn refresh_construction_operational_witness_system(
 pub fn sync_construction_operational_board_system(
     witness: Res<crate::dev::construction_operational_todos::ConstructionOperationalWitness>,
     mut board: ResMut<crate::dev::construction_operational_todos::ConstructionOperationalTodoBoard>,
+    mut gate: ResMut<crate::dev::construction_live_todos::ConstructionBoardGreenLogGate>,
 ) {
     crate::dev::construction_operational_todos::sync_construction_operational_board_from_witness(
         witness.as_ref(),
         board.as_mut(),
     );
+    if board.is_green() {
+        gate.log_once("construction_operational", "CONSTRUCTION_OPERATIONAL_GREEN");
+    }
 }

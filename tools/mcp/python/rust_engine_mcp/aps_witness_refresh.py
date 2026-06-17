@@ -35,6 +35,15 @@ def _pytest_aps_smoke() -> dict[str, Any]:
     return {"ok": proc.returncode == 0, "summary": summary, "tests": tests}
 
 
+def _pytest_aps_imports() -> dict[str, Any]:
+    """MCP-WIT-042 — APS witness refresh refuses green when imports fail."""
+    cmd = [sys.executable, "-m", "pytest", "tests/test_aps_imports.py", "-q", "--tb=no"]
+    proc = subprocess.run(cmd, cwd=repo_root() / "tools/mcp/python", capture_output=True, text=True)
+    tail = (proc.stdout or proc.stderr or "").strip().splitlines()
+    summary = tail[-1] if tail else ""
+    return {"ok": proc.returncode == 0, "summary": summary, "tests": ["tests/test_aps_imports.py"]}
+
+
 def _sample_catalog_thumb() -> tuple[str, bool]:
     modules_dir = repo_root() / "assets/models/modules"
     if not modules_dir.is_dir():
@@ -81,12 +90,15 @@ def refresh_aps_witnesses() -> dict[str, Any]:
 
     modules = _suite_modules()
     pytest_result = _pytest_aps_smoke()
+    imports_result = _pytest_aps_imports()
+    gate_ok = pytest_result.get("ok", False) and imports_result.get("ok", False)
     modules_body = {
         "program_id": "APS-WITNESS-REFRESH-001",
-        "green": pytest_result.get("ok", False),
+        "green": gate_ok,
         "suite_modules": modules,
         "module_count": len(modules),
         "pytest": pytest_result,
+        "aps_imports": imports_result,
         "witnesses": {
             "aps_preview_001": preview_001.relative_to(repo_root()).as_posix(),
             "aps_preview_catalog": preview_catalog.relative_to(repo_root()).as_posix(),

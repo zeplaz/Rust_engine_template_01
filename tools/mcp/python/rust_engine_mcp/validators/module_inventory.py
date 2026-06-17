@@ -44,6 +44,7 @@ CANONICAL_MODULE_IDS: frozenset[str] = frozenset(
         "roof_pitched_hip",
         "roof_shed",
         "roof_sawtooth",
+        "roof_industrial_shed_2u",
         "roof_parapet",
         "roof_metal_low",
         "roof_tile",

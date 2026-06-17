@@ -1,0 +1,102 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "witness_integrity_rules_v1.schema.json",
+  "title": "WitnessIntegrityRulesV1",
+  "description": "MCP-WIT-001 — machine rule catalog for validate-report witness_honesty",
+  "type": "object",
+  "required": ["schema_version", "rules", "rollup_registry"],
+  "properties": {
+    "schema_version": { "const": "witness_integrity_rules_v1" },
+    "rules": {
+      "type": "array",
+      "minItems": 12,
+      "items": { "$ref": "#/$defs/rule" }
+    },
+    "rollup_registry": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/rollup_entry" }
+    },
+    "gate_drift_pairs": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/gate_drift_pair" }
+    },
+    "queue_registry_preview": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/queue_entry" }
+    },
+    "live_sim_required_paths": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "_meta": {
+      "type": "object",
+      "properties": {
+        "teaches": { "type": "array", "items": { "type": "string" } },
+        "plan_ref": { "type": "string" }
+      }
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "rule": {
+      "type": "object",
+      "required": ["rule_id", "severity", "description", "when_fail"],
+      "properties": {
+        "rule_id": {
+          "type": "string",
+          "pattern": "^WIT-[A-Z0-9-]+$"
+        },
+        "severity": { "enum": ["error", "warning"] },
+        "description": { "type": "string" },
+        "when_fail": { "type": "string" },
+        "path_glob": { "type": "string" },
+        "scan_only": { "type": "boolean" },
+        "fix_hint": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "rollup_entry": {
+      "type": "object",
+      "required": ["path"],
+      "properties": {
+        "path": { "type": "string" },
+        "green_fields": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": ["green", "all_green"]
+        },
+        "mandatory_children": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "child_extract_paths": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Dot paths to child witness rel paths inside parent JSON"
+        }
+      },
+      "additionalProperties": false
+    },
+    "gate_drift_pair": {
+      "type": "object",
+      "required": ["tile_witness_glob", "keyframe_witness_glob"],
+      "properties": {
+        "tile_witness_glob": { "type": "string" },
+        "keyframe_witness_glob": { "type": "string" },
+        "batch_id_field": { "type": "string", "default": "batch_id" }
+      },
+      "additionalProperties": false
+    },
+    "queue_entry": {
+      "type": "object",
+      "required": ["path", "id_field"],
+      "properties": {
+        "path": { "type": "string" },
+        "id_field": { "type": "string" },
+        "rows_path": { "type": "string" },
+        "status_field": { "type": "string", "default": "status" }
+      },
+      "additionalProperties": false
+    }
+  }
+}

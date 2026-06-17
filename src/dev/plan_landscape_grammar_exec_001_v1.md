@@ -164,6 +164,27 @@ Coupling: `LandUseInfluence` ← settlement hierarchy + construction sites + tra
 | LG-5 minimal iso atlas | @designer-mcp → @coder-mcp | LG-4 witness |
 | LG-6 flowers aesthetic | @designer-mcp | LG-5 |
 
+### §7.1 Burn · succession · extract extension (**PLAN-VEG-BURN-EXTRACT-001**)
+
+**Signed:** 2026-06-14 · Exec: [`plan_veg_burn_extract_001_v1.md`](plan_veg_burn_extract_001_v1.md)
+
+Burn and regrowth ship **before** LG-5 atlas pixels — sim + extract first, sprites last.
+
+| Layer | Mechanism | Owner |
+|:---|:---|:---|
+| **Sim** | `SuccessionState` + `LandscapeDisturbanceQueue` + **ActiveBurn** overlay | @coder A |
+| **Planning** | ⊗ / ○ / **MACRO-REGROWTH-CHAIN** (lexicon §1.17) | schema + evaluator |
+| **Extract** | `VegetationExtractFrame` — glyphs + modifiers → `variant_key` | @coder A |
+| **Art** | LG-5 catalog `veg_burn_00..07` — construction PT-4 pattern | @designer-mcp → @coder-mcp |
+
+**Principles:** P-001 plants from grammar · P-002 burn via disturbance · P-003 sprites terminal · P-004 ActiveBurn transient · P-005 variant_key lookup.
+
+**Authority:** `.cursor/skills/bevy-simulation-grade/07-repo-authority-map.md` — extract after `FireVisualFrameSet::BuildProfiles`; no render write to succession.
+
+**Coder pick order:** VEG-BURN-OVERLAY-001 → SM-002 → SUCCESSION-003 → EXTRACT-004 → GLYPH-005 → FULLAPP-006.
+
+**Do not:** LG-5 atlas before extract frame green · per-tree global ECS · density-only burn.
+
 ---
 
 ## 8. Witness probes (v0 acceptance)
@@ -252,6 +273,7 @@ ring_shelter: anchor_node_label D · symbolic_field_stack ⚶{wind} + █{mass}
 | v1.0.0 | 2026-06-13 | Exec plan — integrates olant_grammer + pictorial v2.3 into LG phases |
 | v1.1.0 | 2026-06-13 | LG-0-001 schema shipped · @planner **SIGNED** · §11 symbol retention audit |
 | v1.2.0 | 2026-06-13 | Schema aligned to lexicon v1.4.0 — chart enum · field overlays · macros · ◊A…I · dual-layer tags |
+| v1.3.0 | 2026-06-14 | §7.1 burn/extract extension — PLAN-VEG-BURN-EXTRACT-001 SIGNED |
 
 ```text
 ⟦/PLAN-LANDSCAPE-GRAMMAR-001⟧  LG-0 ✅ · ΔWF→@coder LG-1-001 evaluator stub

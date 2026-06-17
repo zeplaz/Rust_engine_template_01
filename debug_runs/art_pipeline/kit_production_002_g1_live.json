@@ -1,0 +1,42 @@
+{
+  "gate": "MCP-P2-KIT002-G1",
+  "green": true,
+  "verdict": "PASS",
+  "batch_id": "kit_production_002",
+  "module_count": 6,
+  "assetspec_count": 6,
+  "mcp_spec_all_passed": true,
+  "development_tier": "production",
+  "pbr_status": "shipped",
+  "manifest": "tools/mcp/schemas/examples/batch_kit_production_002.manifest.json",
+  "assetspec_index": "assets/staging/specs/kit_production_002_assetspec_index.json",
+  "design_doc": "src/dev/design_kit_production_002_g1_v1.md",
+  "g0_witness": "debug_runs/art_pipeline/warehouse_production_g0_live.json",
+  "g2_witness": "debug_runs/art_pipeline/kit_production_002_g2_live.json",
+  "modules": [
+    { "module_id": "wall_steel_1u", "spec": "assets/staging/specs/wall_steel_1u_production.json", "mcp_spec": "passed" },
+    { "module_id": "door_warehouse", "spec": "assets/staging/specs/door_warehouse_production.json", "mcp_spec": "passed" },
+    { "module_id": "win_industrial_3u", "spec": "assets/staging/specs/win_industrial_3u_production.json", "mcp_spec": "passed", "material_fix": "steel_window_01" },
+    { "module_id": "corner_L", "spec": "assets/staging/specs/corner_L_industrial_west_production.json", "mcp_spec": "passed" },
+    { "module_id": "roof_industrial_shed_2u", "spec": "assets/staging/specs/roof_industrial_shed_2u_production.json", "mcp_spec": "passed" },
+    { "module_id": "stack_chimney_1u", "spec": "assets/staging/specs/stack_chimney_1u_production.json", "mcp_spec": "passed", "material_fix": "metal_stack_01" }
+  ],
+  "rules_check": {
+    "passed": true,
+    "blocked_by": []
+  },
+  "tile_ship_blocked_by": [
+    "TILE-FIX-001_v1_frozen",
+    "G4_manual_keyframe_pending"
+  ],
+  "proceed_tile_ship": false,
+  "unblocks": ["MCP-P2-KIT002-G3"],
+  "delta_wf": "@coder-mcp MCP-P2-KIT002-G3 validate_asset_report",
+  "_agent_meta": {
+    "schema": "kit_production_002_g1_live_v1",
+    "profile": "KIT_PRODUCTION_002_G1",
+    "source_system": "designer_mcp_kit002_g1",
+    "relative_path": "debug_runs/art_pipeline/kit_production_002_g1_live.json",
+    "ritual": "BLANG:Q✓ MCP-P2-KIT002-G1"
+  }
+}

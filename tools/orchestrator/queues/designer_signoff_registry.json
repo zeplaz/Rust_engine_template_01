@@ -920,6 +920,18 @@
       "live_witness": "debug_runs/design_build_toolbox_hud_live.json",
       "unblocks": ["BUILD-READ-SHAPE-002", "BUILD-READ-SITE-v0-002"],
       "notes": "Context strip Preview/Adjust copy wired; witness green 2026-06-13"
+    },
+    {
+      "id": "BUILD-READ-D-001_D004",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-06-14",
+      "verdict": "PASS",
+      "witness": "src/dev/design_build_read_d001_d004_v1.md",
+      "witness_json": "debug_runs/design_build_read_d001_d004_live.json",
+      "unblocks": ["BUILD-READ-VISUAL-002-BATCH", "TILE-PROD-004"],
+      "notes": "D-001 scale · D-002 footprint · D-003 site · D-004 variant matrix + 128px G4"
     }
   ]
 }

@@ -100,6 +100,7 @@ pub struct LocalLightPlugin;
 impl Plugin for LocalLightPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(FireVisualFramePlugin)
+            .add_plugins(crate::render::extraction::VegetationVisualExtractPlugin)
             .init_resource::<ActiveLights>()
             .init_resource::<LocalLightSlotsSpawned>()
             .add_message::<RequestLocalLight>()

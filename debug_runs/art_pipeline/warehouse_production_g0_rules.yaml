@@ -1,0 +1,124 @@
+# warehouse_production_g0_rules.yaml — MCP-P2-KIT002-G0 (warehouse industrial west only)
+program_id: MCP-PRODUCTIVITY-P2-001
+task_id: MCP-P2-KIT002-G0
+gate: G0
+designer_mcp: rules_audit
+scope: warehouse_industrial_west_only
+frozen_archetypes: [shopfront, bunker]
+plan_ref: docs/archive/2026-06-src-dev/plans/mcp_kit_production_002_unfreeze_v1.md
+
+rules_check:
+  passed: true
+  verdict: PASS_WITH_NOTES
+  blocked_by: []
+  tile_ship_blocked_by:
+    - TILE-FIX-001_v1_frozen
+    - G4_manual_keyframe_pending
+  batch_id: tile_warehouse_industrial_west_production_v1
+  kit_batch_id: kit_production_002
+  variant_set_id: warehouse_industrial_west_production_v1
+  assembly_id_lod0: industrial_west_4x2_s43_a879
+  assembly_id_production_snapshot: industrial_west_7x5_s39_9fa1
+  style_pack_id: style_industrial_west
+  grammar_id: industrial_warehouse_v1
+  footprint_tile_batch: { width: 4, depth: 2, floors: 2 }
+  footprint_production_snapshot: { width: 7, depth: 5, floors: 1 }
+  development_tier: production
+  bake_source: keyframe_pack
+  ship: false
+  frozen: true
+  proceed_kit_bpy: yes
+  proceed_tile_ship: no
+  proceed_production_bake: yes
+
+artifacts:
+  tile_batch: tools/mcp/schemas/examples/tile_batch_warehouse_industrial_west_production_v1.json
+  variant_set: tools/mcp/schemas/examples/variant_set_warehouse_industrial_west_production_v1.json
+  assembly_snapshot: tools/mcp/schemas/examples/assembly_snapshot_warehouse_industrial_west_production_v1.json
+  variant_matrix: debug_runs/art_pipeline/variant_matrix_warehouse_v1.yaml
+  variant_graph: tools/mcp/schemas/examples/variant_graph_warehouse_industrial_west_v1.json
+  kit_manifest: tools/mcp/schemas/examples/batch_kit_production_002.manifest.json
+  g4_signoff: debug_runs/art_pipeline/warehouse_industrial_west_production_signoff.yaml
+
+validations:
+  tile_batch_validate_report:
+    status: fail
+    reason: FrozenBatch TILE-FIX-001 — expected until v2 unfreeze + honest bake
+    error_count: 1
+    signature: tile_batch_frozen
+  variant_set_schema:
+    status: pass
+    variant_count: 16
+  variant_graph_schema:
+    status: pass
+    schema: tools/mcp/schemas/variant_graph_v1.schema.json
+
+alignment:
+  assembly_id_lod0_match: true
+  style_pack_match: true
+  variant_keys_tile_batch: 16
+  variant_keys_variant_set: 16
+  variant_keys_aligned: true
+  matrix_required_keys_met: true
+  kit_manifest_modules: 6
+  kit_promoted_modules: 5
+  kit_spec_ready_modules: 1
+
+module_audit:
+  - module_id: wall_steel_1u
+    material_profile: steel_panel_01
+    pbr_status: shipped
+    status: promoted
+    priority: P0
+  - module_id: door_warehouse
+    material_profile: steel_door_warehouse_01
+    pbr_status: shipped
+    status: promoted
+    priority: P0
+  - module_id: win_industrial_3u
+    material_profile: steel_window_01
+    pbr_status: shipped
+    status: promoted
+    priority: P0
+  - module_id: corner_L
+    material_profile: steel_corner_01
+    pbr_status: shipped
+    status: promoted
+    priority: P1
+    note: reused kit_industrial_west_production_001
+  - module_id: roof_industrial_shed_2u
+    material_profile: metal_roof_01
+    pbr_status: shipped
+    status: spec_ready
+    priority: P1
+    bpy_allowed_after_g0: true
+  - module_id: stack_chimney_1u
+    material_profile: metal_stack_01
+    pbr_status: shipped
+    status: promoted
+    priority: P2
+    note: reused kit_industrial_west_production_001
+
+order_critique:
+  - "Scope MCP-P2-KIT002-G0 — warehouse industrial west only; shopfront/bunker matrices untouched."
+  - "kit_production_002 manifest: 6 modules, canonical PBR ids, ¬greybox ortho ship — matches tier contract."
+  - "Only net-new bpy after G0: roof_industrial_shed_2u (spec_ready); five modules reuse promoted GLBs."
+  - "tile_batch ship:false + frozen:true — TILE-FIX-001; proceed_tile_ship:no until v2 honest bake + G4 manual keyframes."
+  - "16 variant keys aligned tile_batch ↔ variant_set (damaged_night_on + abandoned added this slice)."
+  - "assembly_ref 4x2 (tile batch) vs production snapshot 7x5 — intentional grammar expansion; document in G1 AssetSpec."
+  - "render.method blender_keyframe_light_rig + Tile_iso_rig_v1.blend — not smoke ortho for ship path."
+  - "reference_tags on production snapshot — grammar:industrial_warehouse_v1 + chain:* present."
+  - "G4 signoff proceed_ship:no — manual keyframe export still required before tile register (G5)."
+
+scope_guard:
+  other_archetypes_edited: false
+  rowhouse_production_untouched: true
+  frozen_batches_untouched:
+    - tile_batch_shopfront_colonial_production_v1
+    - tile_batch_bunker_military_production_v1
+
+next:
+  - "BLANG:Q✓ MCP-P2-KIT002-G1 — 6/6 AssetSpec ★"
+  - "ΔWF→@coder-mcp MCP-P2-KIT002-G3 — validate_asset_report tier pass"
+  - "ΔWF→@designer-mcp MCP-P2-KIT002-G4 — keyframe G4 warehouse matrix"
+  - "Tile ship: blocked TILE-FIX-001_v1_frozen + G4 manual keyframes (expected — proceed_tile_ship:no)"

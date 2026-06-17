@@ -12,6 +12,8 @@ from rust_engine_mcp.material_studio_preview import (
     render_sphere_preview,
     render_wall_strip_preview,
 )
+
+from .aps_theme import FONT_SMALL
 from rust_engine_mcp.material_profiles import MaterialProfileEntry, ensure_profile_textures
 
 
@@ -43,7 +45,7 @@ class MaterialPreviewModesPanel(ttk.LabelFrame):
         self._canvas = tk.Label(self, text="(select a profile)", bg="#e8e8e8", width=32, height=16)
         self._canvas.pack(fill=tk.BOTH, expand=True)
         self._hint_var = tk.StringVar(value="")
-        ttk.Label(self, textvariable=self._hint_var, font=("Segoe UI", 8), foreground="#555").pack(anchor=tk.W)
+        ttk.Label(self, textvariable=self._hint_var, font=FONT_SMALL, foreground="#555").pack(anchor=tk.W)
 
     def set_profile(self, profile_id: str | None) -> None:
         if not profile_id:
