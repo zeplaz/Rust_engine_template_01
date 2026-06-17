@@ -1,8 +1,15 @@
 {
   "gate_id": "OVR-P6-CLOSE-001",
   "program_id": "PLAN-APS-UIUX-OVERHAUL-001",
-  "green": true,
+  "status": "pending_human",
+  "green": false,
   "pytest_aps_ok": true,
+  "pytest_aps": {
+    "passed": 163,
+    "failed": 0,
+    "skipped": 4,
+    "command": "C:\\Users\\oz_\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe -m pytest tests -k aps and not e0_e2_relaunch -q"
+  },
   "ban_list": {
     "gate": "DMCP-OVR-G0-AUDIT-001",
     "charter_section": "plan_aps_uiux_overhaul \u00a72b",
@@ -31,21 +38,77 @@
     "OVR-P56-ONBOARD-001"
   ],
   "human_gates_pending": [
-    "OVR-P6-OPERATOR-EYEBALL-001",
-    "OVR-P6-DESIGN-SIGN-001",
-    "DMCP-OVR-ARTIST-ACCEPT-001"
+    "OVR-P6-OPERATOR-EYEBALL-001"
   ],
+  "needs_display": [
+    {
+      "id": "OVR-P55-PREVIEW-001",
+      "verdict": "pending",
+      "operator": null,
+      "at": null,
+      "notes": "See P3 rubric \u00a79 + preview/onboard specs"
+    },
+    {
+      "id": "OVR-P56-ONBOARD-001",
+      "verdict": "pending",
+      "operator": null,
+      "at": null,
+      "notes": "See P3 rubric \u00a79 + preview/onboard specs"
+    },
+    {
+      "id": "OVR-P6-OPERATOR-EYEBALL-001",
+      "verdict": "pending",
+      "operator": null,
+      "at": null,
+      "notes": "Machine structural guards green; pixel walk pending @ 1280\u00d7800 + MIN 960\u00d7600"
+    }
+  ],
+  "guards": {
+    "P1": [
+      "test_aps_font_floor.py",
+      "test_aps_style_tokens.py",
+      "test_aps_ux_polish_density_tokens.py"
+    ],
+    "P2": [
+      "test_aps_no_jargon.py"
+    ],
+    "P3": [
+      "test_aps_min_window_layout.py"
+    ],
+    "P4": [
+      "test_aps_lane_tab_swap.py",
+      "test_aps_runtime_callbacks.py"
+    ],
+    "P4.5": [
+      "test_aps_runtime_callbacks.py"
+    ],
+    "P5": [
+      "test_aps_style_tokens.py"
+    ],
+    "P5.5": [
+      "test_aps_runtime_callbacks.py"
+    ],
+    "P5.6": [
+      "test_aps_onboarding.py"
+    ],
+    "P6": [
+      "pytest -k aps"
+    ]
+  },
   "exit_predicate": {
     "pytest_aps_ok": {
       "eq": true
     },
     "ban_list_clean": {
       "eq": true
+    },
+    "human_gates_clear": {
+      "eq": false
     }
   },
   "_agent_meta": {
     "schema": "aps_uiux_overhaul_close_live_v1",
-    "written_at_epoch_secs": 1781720472,
+    "written_at_epoch_secs": 1781721225,
     "profile": "OVR_P6_CLOSE",
     "relative_path": "debug_runs/aps_uiux_overhaul_close_live.json"
   }

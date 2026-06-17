@@ -17,11 +17,11 @@
     "designer": "idle — spine spec + onboard outline signed",
     "designer-mcp": "idle — P2 impl audit + P3 accept rubric done",
     "planner-mcp": "idle — wave-3 planner rows CLOSED 2026-06-17",
-    "operations-intelligence": "OPS-OVR-PROGRAM-SNAPSHOT-001",
-    "sim-steward": "STEWARD-OVR-APS-REGRESS-001 — pytest -k aps between phases",
+    "operations-intelligence": "OPS-OVR-PROGRAM-SNAPSHOT-001 done",
+    "sim-steward": "STEWARD-OVR-APS-REGRESS-001 done — 163 passed",
     "coder_a": "CODER-A-VT5-TRIAGE-001 done 2026-06-17 — VR-04 bootstrap defer witness green",
     "coder_b": "CODER-B-HUD-L5-POLISH-001 done 2026-06-17 — sim HUD L5 polish witness green",
-    "operator": "idle until OVR-P6-OPERATOR-EYEBALL-001"
+    "operator": "OVR-P6-OPERATOR-EYEBALL-001 ★ PICK — structural pre-pass green"
   },
   "parallel": [
     {
@@ -116,7 +116,8 @@
       "seq": 7,
       "wave": 3,
       "id": "OPS-OVR-PROGRAM-SNAPSHOT-001",
-      "status": "ready",
+      "status": "done",
+      "completed_date": "2026-06-02",
       "priority": "P2",
       "owner": "operations-intelligence",
       "goal": "Compress APS overhaul queue into ops_report — progress, blockers, Q/C/E, ΔWF routing",
@@ -131,7 +132,8 @@
       "seq": 8,
       "wave": 3,
       "id": "STEWARD-OVR-APS-REGRESS-001",
-      "status": "ready",
+      "status": "done",
+      "completed_date": "2026-06-02",
       "priority": "P1",
       "owner": "sim-steward",
       "goal": "Between-phase regression watch — pytest -k aps + imports + runtime_callbacks after each coder-mcp Q✓",

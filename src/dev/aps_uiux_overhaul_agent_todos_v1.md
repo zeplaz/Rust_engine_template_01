@@ -37,8 +37,8 @@
 | **@planner-mcp** | PLAN-OVR-P3-GUARD-SPEC-001 | **✓ SIGNED** 2026-06-17 |
 | **@planner-mcp** | PLAN-OVR-HANDOFF-SYNC-001 | **✓ SIGNED** 2026-06-17 |
 | **@planner-mcp** | PLAN-OVR-P45-WITNESS-STUB-001 | **✓ SIGNED** 2026-06-17 |
-| **@operations-intelligence** | OPS-OVR-PROGRAM-SNAPSHOT-001 | Ops progress snapshot |
-| **@sim-steward** | STEWARD-OVR-APS-REGRESS-001 | Between-phase pytest watch |
+| **@operations-intelligence** | OPS-OVR-PROGRAM-SNAPSHOT-001 | **✓ DONE** |
+| **@sim-steward** | STEWARD-OVR-APS-REGRESS-001 | **✓ DONE** — 163 passed |
 | **@coder A** | CODER-A-VT5-TRIAGE-001 | VR-04 Bevy triage |
 | **@coder B** | CODER-B-HUD-L5-POLISH-001 | Sim HUD lane 5 |
 | **@operator** | — | P6 only |
@@ -111,7 +111,7 @@
 | Phase | ID | When | Task |
 |:---|:---|:---|
 | P0+ | DMCP-OVR-G0-AUDIT-001 | After P0 draft | G0 audit: ban-list + voice rules **✓** |
-| P6 | DMCP-OVR-ARTIST-ACCEPT-001 | After design sign | Artist re-verdict post-overhaul |
+| P6 | DMCP-OVR-ARTIST-ACCEPT-001 | After design sign | **✓ DONE** 8/10 |
 
 ---
 
@@ -137,7 +137,7 @@
 
 | ID | When | Task |
 |:---|:---|:---|
-| OVR-P6-OPERATOR-EYEBALL-001 | After P6 witness | Walk both lanes 1280×800 + MIN 960×600 |
+| OVR-P6-OPERATOR-EYEBALL-001 | After P6 witness | **★ PICK** — structural pre-pass green; pixel walk pending |
 
 ---
 
