@@ -1,0 +1,25 @@
+{
+  "_agent_meta": {
+    "schema": "debug_run_envelope_v1",
+    "gate": "PLAN-OVR-SIGN-ROLLUP",
+    "agent": "planner-mcp",
+    "green_scope": "G-SCHEMA"
+  },
+  "gate": "PLAN-OVR-SIGN-ROLLUP",
+  "signed": true,
+  "signed_at": "2026-06-17",
+  "program": "PLAN-APS-UIUX-OVERHAUL-001",
+  "rows": {
+    "PLAN-OVR-QUEUE-REGISTRY-001": {
+      "status": "done",
+      "deliverable": "tools/mcp/schemas/queue_registry_v1.json#aps_uiux_overhaul",
+      "plan": "src/dev/plan_ovr_queue_registry_sign_v1.md"
+    },
+    "PLAN-OVR-WITNESS-PROFILE-001": {
+      "status": "done",
+      "deliverable": "src/dev/plan_aps_uiux_overhaul_witness_v1.md",
+      "close_witness_path": "debug_runs/aps_uiux_overhaul_close_live.json"
+    }
+  },
+  "green": true
+}

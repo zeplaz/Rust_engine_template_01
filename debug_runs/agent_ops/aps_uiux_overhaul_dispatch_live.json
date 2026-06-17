@@ -1,0 +1,60 @@
+{
+  "green": true,
+  "program_id": "PLAN-APS-UIUX-OVERHAUL-001",
+  "wave_3_issued": "2026-06-17",
+  "progress": {
+    "main_queue_done": 11,
+    "main_queue_total": 24,
+    "percent": 46,
+    "pytest_aps_passed": 161
+  },
+  "p0_gate": {
+    "id": "OVR-P0-DESIGN-LOCK",
+    "status": "done",
+    "deliverable": "src/dev/aps_design_system_v1.md"
+  },
+  "file_lock": {
+    "enforced": true,
+    "active_phase": "P3",
+    "active_row": "OVR-P3-LAYOUT-001",
+    "rule": "ONE active @coder-mcp phase · P1→P6 sequential · commit between phases",
+    "app_py_exclusive_phases": ["P3", "P4", "P4.5"],
+    "forbidden": [
+      "parallel coder-mcp phases",
+      "app.py edits outside P3/P4/P4.5 active phase"
+    ],
+    "chain_status": {
+      "P1": "done",
+      "P2": "done",
+      "P3": "ready",
+      "P4": "blocked",
+      "P4.5": "blocked",
+      "P5": "blocked",
+      "P5.5": "blocked",
+      "P5.6": "blocked",
+      "P6": "blocked"
+    }
+  },
+  "wave_3_picks": {
+    "orchestrator-mcp": "ORCH-OVR-WAVE3-001",
+    "coder-mcp": "OVR-P3-LAYOUT-001 ★ PICK",
+    "designer": "P45 spine spec + P56 onboard outline done — idle until P56 full spec",
+    "designer-mcp": "idle — P2 audit + P3 rubric done",
+    "planner-mcp": "idle — wave-3 planner rows CLOSED 2026-06-17 ($ref:debug_runs/mcp_planner_ovr_wave3_sign_live.json)",
+    "operations-intelligence": "OPS-OVR-PROGRAM-SNAPSHOT-001",
+    "sim-steward": "STEWARD-OVR-APS-REGRESS-001",
+    "coder_a": "CODER-A-VT5-TRIAGE-001",
+    "coder_b": "CODER-B-HUD-L5-POLISH-001",
+    "operator": "idle until P6"
+  },
+  "queue": "tools/orchestrator/queues/aps_uiux_overhaul_queue.json",
+  "parallel_queue": "tools/orchestrator/queues/aps_uiux_overhaul_parallel_drain_v1.json",
+  "orders": "tools/orchestrator/queues/aps_uiux_overhaul_dispatch_orders_v1.md",
+  "_agent_meta": {
+    "schema": "aps_uiux_overhaul_dispatch_live_v1",
+    "profile": "ORCHESTRATOR_MCP",
+    "source_system": "orchestrator-mcp",
+    "relative_path": "debug_runs/agent_ops/aps_uiux_overhaul_dispatch_live.json",
+    "ritual": "BLANG:WIT-HON ORCH-OVR-WAVE3-001"
+  }
+}

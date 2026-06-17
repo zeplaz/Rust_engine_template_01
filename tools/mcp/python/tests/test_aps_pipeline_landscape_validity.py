@@ -1,4 +1,4 @@
-"""APS-E1-PIPELINE-LANE-001 — landscape pipeline pills + Stamp step."""
+"""APS-E1-PIPELINE-LANE-001 — landscape pipeline pills (Stamp folded into Atlas per P4 IA)."""
 
 from __future__ import annotations
 
@@ -10,15 +10,16 @@ if str(APS_ROOT) not in sys.path:
     sys.path.insert(0, str(APS_ROOT))
 
 
-def test_landscape_pipeline_includes_stamp() -> None:
+def test_landscape_pipeline_four_steps_no_stamp_pill() -> None:
     from art_pipeline_suite.domain_router import pipeline_steps_for
     from art_pipeline_suite.state import ArtDomain
 
     keys = [k for k, _ in pipeline_steps_for(ArtDomain.LANDSCAPE.value)]
-    assert keys == ["presets", "grammar", "states", "atlas", "stamp"]
+    assert keys == ["presets", "grammar", "states", "atlas"]
+    assert "stamp" not in keys
 
 
-def test_pipeline_pills_landscape_stamp_pending() -> None:
+def test_pipeline_pills_landscape_atlas_registered() -> None:
     import tkinter as tk
 
     from art_pipeline_suite.pipeline_status_bar import PipelineStatusBar
@@ -26,12 +27,16 @@ def test_pipeline_pills_landscape_stamp_pending() -> None:
 
     root = tk.Tk()
     root.withdraw()
-    state = SuiteState(art_domain=ArtDomain.LANDSCAPE.value)
+    state = SuiteState(
+        art_domain=ArtDomain.LANDSCAPE.value,
+        atlas_folder="assets/staging/atlas",
+        landscape_stamp_registered=True,
+    )
     bar = PipelineStatusBar(root, state)
     bar.refresh()
-    stamp_var = bar._pills["stamp"][1].cget("text")
-    assert "Stamp" in stamp_var
-    assert "pending" in stamp_var.lower() or "○" in stamp_var
+    atlas_var = bar._pills["atlas"][1].cget("text")
+    assert "Atlas" in atlas_var
+    assert "valid" in atlas_var.lower() or "✓" in atlas_var
     bar.destroy()
     root.destroy()
 
@@ -62,4 +67,4 @@ def test_verify_e1_pipeline_lane_headless() -> None:
 
     body = verify_e1_pipeline_lane()
     assert body["green"] is True
-    assert body["has_stamp_step"] is True
+    assert body.get("stamp_folded_into_atlas") is True

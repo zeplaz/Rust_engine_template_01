@@ -679,6 +679,30 @@ def _cmd_dmcp_e0_artist_reverdict_witness(_: argparse.Namespace) -> int:
     return 0 if body.get("green") else 1
 
 
+def _cmd_dmcp_ovr_g0_audit_witness(_: argparse.Namespace) -> int:
+    from rust_engine_mcp.aps_uiux_g0_audit import refresh_dmcp_ovr_g0_audit_witness
+
+    body = refresh_dmcp_ovr_g0_audit_witness()
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("audit_complete") else 1
+
+
+def _cmd_dmcp_ovr_p2_impl_audit_witness(_: argparse.Namespace) -> int:
+    from rust_engine_mcp.aps_uiux_p2_impl_audit import refresh_dmcp_ovr_p2_impl_audit_witness
+
+    body = refresh_dmcp_ovr_p2_impl_audit_witness()
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
+def _cmd_dmcp_ovr_p3_accept_rubric_witness(_: argparse.Namespace) -> int:
+    from rust_engine_mcp.aps_uiux_p3_accept_rubric import refresh_dmcp_ovr_p3_accept_rubric_witness
+
+    body = refresh_dmcp_ovr_p3_accept_rubric_witness()
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
 def _cmd_pilot_hardcode_lint(_: argparse.Namespace) -> int:
     from rust_engine_mcp.pilot_hardcode_lint import pilot_hardcode_lint
 
@@ -1139,6 +1163,9 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("dmcp-e3-vegetation-catalog-witness").set_defaults(func=_cmd_dmcp_e3_vegetation_catalog_witness)
     sub.add_parser("dmcp-e4-matrix-charter-witness").set_defaults(func=_cmd_dmcp_e4_matrix_witness)
     sub.add_parser("dmcp-e0-artist-reverdict-witness").set_defaults(func=_cmd_dmcp_e0_artist_reverdict_witness)
+    sub.add_parser("dmcp-ovr-g0-audit-witness").set_defaults(func=_cmd_dmcp_ovr_g0_audit_witness)
+    sub.add_parser("dmcp-ovr-p2-impl-audit-witness").set_defaults(func=_cmd_dmcp_ovr_p2_impl_audit_witness)
+    sub.add_parser("dmcp-ovr-p3-accept-rubric-witness").set_defaults(func=_cmd_dmcp_ovr_p3_accept_rubric_witness)
     sub.add_parser("mcp-witness-honesty-validator-witness").set_defaults(
         func=_cmd_mcp_witness_honesty_validator_witness
     )

@@ -52,7 +52,7 @@
     "relative_path": "debug_runs/landscape_grammar_visual_smoke_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_landscape_visual_smoke_live_witness",
-    "written_at_epoch_secs": 1781708981
+    "written_at_epoch_secs": 1781716592
   },
   "gate": "CDR-A-VISUAL-SMOKE-ECO-001",
   "green": true,

@@ -10,7 +10,7 @@ from typing import Any
 
 from rust_engine_mcp import aps_tags, assembly, arch_build_grammar, building_grammar
 from rust_engine_mcp.aps_grammar_labels import human_label
-from rust_engine_mcp.aps_mat_auth_ui import ENGINE_READ_PATH, save_hint
+from rust_engine_mcp.aps_mat_auth_ui import save_hint
 from rust_engine_mcp.aps_validator_plain import format_p0_display
 from rust_engine_mcp.paths import repo_root
 from rust_engine_mcp.validators.assembly_production import validate_assembly_snapshot_path
@@ -41,6 +41,12 @@ from .material_browser import MaterialBrowserPanel
 from .assembly_preview_panel import AssemblyPreviewPanel
 from .slot_preview_panel import SlotPreviewPanel
 from .state import ArtDomain, SuiteState
+
+_MATERIAL_AUTHORITY_COPY = (
+    "The material you assign here is saved on each piece. The game and the preview both read it "
+    "from this Assembly — not from Catalog tags or the Blender viewport. So: assign here, save, "
+    "and it shows up everywhere."
+)
 
 
 def _is_dark_color(hex_color: str) -> bool:
@@ -83,15 +89,15 @@ class AssemblyPanel(ttk.Frame):
             self._lane_banner = ttk.Label(self, text="", font=("Segoe UI", 9), foreground="#555")
             self._lane_banner.pack(anchor=tk.W, before=self.metadata_flow, pady=(0, 4))
         if lane == ArtDomain.LANDSCAPE.value:
-            self._lane_banner.configure(text="Landscape lane — grammar preset authority (E2 browse/author).")
+            self._lane_banner.configure(text="Landscape lane — grammar preset authority.")
         else:
-            self._lane_banner.configure(text="Buildings lane — assembly_snapshot authority.")
+            self._lane_banner.configure(text="Buildings lane — Assembly authority.")
 
     def _build(self) -> None:
         intro = ttk.Label(
             self,
-            text="Assembly — snapshot is authority for materials & tags (not Blender). "
-            "Preview slots + full assembly here; keyframe tile bake is on Atlas tab.",
+            text="Assembly — what you set here (materials + tags) is what ships. "
+            "Tile baking is on the Atlas step.",
             wraplength=900,
             justify=tk.LEFT,
         )
@@ -103,9 +109,9 @@ class AssemblyPanel(ttk.Frame):
         self.grammar_set_panel = GrammarBuildSetPanel(self, on_log=self._on_log)
         self.grammar_set_panel.pack(fill=tk.X, pady=(0, 6))
 
-        auth = ttk.LabelFrame(self, text="Material authority (APS-MAT-AUTH-UI-001)", padding=6)
+        auth = ttk.LabelFrame(self, text="Where materials come from", padding=6)
         auth.pack(fill=tk.X, pady=(0, 6))
-        self.engine_path_var = tk.StringVar(value=ENGINE_READ_PATH)
+        self.engine_path_var = tk.StringVar(value=_MATERIAL_AUTHORITY_COPY)
         self._engine_path_lbl = ttk.Label(
             auth, textvariable=self.engine_path_var, wraplength=900, justify=tk.LEFT, font=("Segoe UI", 9)
         )
@@ -123,7 +129,7 @@ class AssemblyPanel(ttk.Frame):
         gram_row.pack(fill=tk.X, pady=2)
         self.use_grammar_var = tk.BooleanVar(value=False)
         gram_cb = ttk.Checkbutton(
-            gram_row, text="Use building grammar", variable=self.use_grammar_var, command=self._on_grammar_toggle
+            gram_row, text="Generate from a building style (auto-place modules)", variable=self.use_grammar_var, command=self._on_grammar_toggle
         )
         gram_cb.pack(side=tk.LEFT)
         bind_aps_tooltip(gram_cb, "asm_grammar")
@@ -178,7 +184,7 @@ class AssemblyPanel(ttk.Frame):
         ttk.Label(row2, text="Seed").pack(side=tk.LEFT, padx=(8, 0))
         self.seed_var = tk.IntVar(value=self.state.seed)
         ttk.Spinbox(row2, from_=0, to=999999, textvariable=self.seed_var, width=8).pack(side=tk.LEFT, padx=4)
-        gen_btn = ttk.Button(row2, text="Generate snapshot", command=self.on_generate)
+        gen_btn = ttk.Button(row2, text="Generate Assembly", command=self.on_generate)
         gen_btn.pack(side=tk.LEFT, padx=8)
         bind_aps_tooltip(gen_btn, "asm_generate")
 
@@ -197,7 +203,7 @@ class AssemblyPanel(ttk.Frame):
         bind_aps_tooltip(self._next_step_lbl, "asm_material_lib")
 
         self.iterate_section = CollapsibleSection(
-            gen, "Iterate grammar (advanced)", expanded=False, padding=2
+            gen, "Tweak one style layer (advanced)", expanded=False, padding=2
         )
         self.iterate_section.pack(fill=tk.X, pady=4)
         self.iterate_panel = GrammarIteratePanel(
@@ -208,7 +214,7 @@ class AssemblyPanel(ttk.Frame):
         self.iterate_panel.pack(fill=tk.X)
 
         self.grammar_dna_section = CollapsibleSection(
-            gen, "Massing pressure (advanced)", expanded=False, padding=2
+            gen, "Building shape bias (advanced)", expanded=False, padding=2
         )
         self.grammar_dna_section.pack(fill=tk.X, pady=4)
         bind_aps_tooltip(self.grammar_dna_section._head_btn, "asm_grammar_dna")
@@ -226,10 +232,10 @@ class AssemblyPanel(ttk.Frame):
         save_btn = ttk.Button(file_row, text="Save", command=self.on_save)
         save_btn.pack(side=tk.LEFT, padx=2)
         bind_aps_tooltip(save_btn, "asm_save")
-        val_btn = ttk.Button(file_row, text="Validate", command=self.on_validate)
+        val_btn = ttk.Button(file_row, text="Check schema", command=self.on_validate)
         val_btn.pack(side=tk.LEFT, padx=2)
         bind_aps_tooltip(val_btn, "asm_validate")
-        p0_btn = ttk.Button(file_row, text="P0 gate", command=self.on_validate_p0)
+        p0_btn = ttk.Button(file_row, text="Run ship check", command=self.on_validate_p0)
         p0_btn.pack(side=tk.LEFT, padx=2)
         bind_aps_tooltip(p0_btn, "asm_p0")
         self.path_var = tk.StringVar(value="(no snapshot)")
@@ -298,7 +304,7 @@ class AssemblyPanel(ttk.Frame):
         )
         self.assembly_preview.pack(fill=tk.X, pady=(0, 8))
 
-        slot = ttk.LabelFrame(inspector_pane, text="Selected slot — edit", padding=8)
+        slot = ttk.LabelFrame(inspector_pane, text="Selected piece — edit", padding=8)
         slot.pack(fill=tk.BOTH, expand=True)
 
         ttk.Label(slot, text="Node id").grid(row=0, column=0, sticky=tk.W)
@@ -335,17 +341,17 @@ class AssemblyPanel(ttk.Frame):
                 anchor=tk.W
             )
 
-        ttk.Label(slot, text="LOD policy").grid(row=3, column=0, sticky=tk.W, pady=4)
+        ttk.Label(slot, text="Detail level").grid(row=3, column=0, sticky=tk.W, pady=4)
         self.lod_var = tk.StringVar(value="production")
         ttk.Combobox(
             slot,
             textvariable=self.lod_var,
             width=14,
-            values=["lod0", "production", "hero"],
+            values=["rough", "production", "hero"],
             state="readonly",
         ).grid(row=3, column=1, sticky=tk.W, padx=4)
 
-        tag_section = CollapsibleSection(slot, "Semantic & variant tags", expanded=False, padding=4)
+        tag_section = CollapsibleSection(slot, "Tags (look & state)", expanded=False, padding=4)
         tag_section.grid(row=5, column=0, columnspan=3, sticky=tk.EW, pady=(8, 0))
         self._tag_section = tag_section
         tag_body = tag_section.body
@@ -378,7 +384,7 @@ class AssemblyPanel(ttk.Frame):
 
         btn_row = ttk.Frame(tag_body)
         btn_row.pack(fill=tk.X, pady=(4, 0))
-        ttk.Button(btn_row, text="Apply tags to slot", command=self.on_apply_slot).pack(side=tk.LEFT, padx=2)
+        ttk.Button(btn_row, text="Save tags to this piece", command=self.on_apply_slot).pack(side=tk.LEFT, padx=2)
 
         grammar_section = CollapsibleSection(
             inspector_pane, "Grammar inspector", expanded=False, padding=2
@@ -463,7 +469,7 @@ class AssemblyPanel(ttk.Frame):
         return base
 
     def _refresh_collapsible_titles(self) -> None:
-        tag_title = "Semantic & variant tags"
+        tag_title = "Tags (look & state)"
         n = self._count_active_tags()
         if n:
             tag_title = f"{tag_title} ({n} selected)"

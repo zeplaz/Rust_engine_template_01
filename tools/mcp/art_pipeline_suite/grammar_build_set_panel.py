@@ -16,7 +16,7 @@ class GrammarBuildSetPanel(ttk.LabelFrame):
         *,
         on_log: Callable[[str], None] | None = None,
     ) -> None:
-        super().__init__(master, text="Grammar set (BUILD-SET)", padding=6)
+        super().__init__(master, text="Building style set", padding=6)
         self._on_log = on_log or (lambda _m: None)
         self.brief_var = tk.StringVar(value="Loading…")
         ttk.Label(self, textvariable=self.brief_var, wraplength=720, justify=tk.LEFT).pack(

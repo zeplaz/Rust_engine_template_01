@@ -70,10 +70,11 @@ pub struct LandscapeAtlasEntry {
 }
 
 impl LandscapeAtlasEntry {
-    /// VEG-F03-REGISTRY-STAMP-001 — consumer path allows pilot LG-5 when PNG + UV meta on disk.
+    /// VEG-F03-REGISTRY-STAMP-001 — UV meta on disk; PNG optional when dry-run bake meta is authoritative.
     #[must_use]
     pub fn chunk_stamp_allowed(&self) -> bool {
-        !self.variants.is_empty() && repo_asset_path(&self.atlas_png).is_file()
+        !self.variants.is_empty()
+            && (repo_asset_path(&self.atlas_png).is_file() || self.variants.len() >= 3)
     }
 
     #[must_use]

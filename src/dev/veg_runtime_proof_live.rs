@@ -54,6 +54,11 @@ fn lg5_sub_rules_ok(doc: &serde_json::Value) -> bool {
     bool_at(doc, "bevy_chunk_uv_stamp")
         && bool_at(doc, "registry_stamp")
         && bool_at(doc, "atlas_batch_green")
+        && bool_at(doc, "atlas_expand_rollup_green")
+        && doc
+            .get("atlas_id")
+            .and_then(|v| v.as_str())
+            .is_some_and(|id| id == "landscape_lg5_expanded_v1")
 }
 
 #[must_use]

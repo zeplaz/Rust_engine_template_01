@@ -33,7 +33,7 @@ from .metadata_flow_panel import MetadataFlowPanel
 from .state import ArtDomain, SuiteState
 
 SIDECAR_TRUTH = (
-    "Sidecar tags ≠ ship truth — assembly snapshot semantic_tags and material_profile win at runtime."
+    "Tags here are hints only. The tags and materials you set in the Assembly are what actually ship."
 )
 
 
@@ -139,7 +139,7 @@ class CatalogPanel(ttk.Frame):
         notebook.pack(fill=tk.BOTH, expand=True, pady=8)
 
         meta_frame = ttk.Frame(notebook, padding=4)
-        notebook.add(meta_frame, text="AssetSpec sidecar")
+        notebook.add(meta_frame, text="Module info (editable)")
         self.meta_text = tk.Text(meta_frame, wrap=tk.NONE, undo=True, font=("Consolas", 10))
         meta_scroll = ttk.Scrollbar(meta_frame, orient=tk.VERTICAL, command=self.meta_text.yview)
         self.meta_text.configure(yscrollcommand=meta_scroll.set)
@@ -152,7 +152,7 @@ class CatalogPanel(ttk.Frame):
         )
 
         index_frame = ttk.Frame(notebook, padding=4)
-        notebook.add(index_frame, text="Index entry")
+        notebook.add(index_frame, text="Library record (read-only)")
         self.index_text = tk.Text(index_frame, wrap=tk.NONE, state=tk.DISABLED, font=("Consolas", 10))
         idx_scroll = ttk.Scrollbar(index_frame, orient=tk.VERTICAL, command=self.index_text.yview)
         self.index_text.configure(yscrollcommand=idx_scroll.set)
@@ -179,7 +179,7 @@ class CatalogPanel(ttk.Frame):
         browser_btn = ttk.Button(actions, text="Preview in browser", command=self.on_browser_preview)
         browser_btn.pack(side=tk.LEFT, padx=2)
         bind_aps_tooltip(browser_btn, "cat_browser_preview")
-        trimesh_btn = ttk.Button(actions, text="3D preview (trimesh)", command=self.on_trimesh)
+        trimesh_btn = ttk.Button(actions, text="Quick 3D preview", command=self.on_trimesh)
         trimesh_btn.pack(side=tk.LEFT, padx=2)
         bind_aps_tooltip(trimesh_btn, "cat_trimesh")
         self._module_actions = actions

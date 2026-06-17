@@ -29,9 +29,9 @@ class MaterialsPanel(ttk.Frame):
         self._on_log = on_log
         intro = ttk.Label(
             self,
-            text="Material Studio — browse, generate, and edit profiles. "
-            "Drop authored PNGs into each profile folder, then Reload preview. "
-            "Assign on the Assembly tab.",
+            text="Material Studio — browse, generate, and edit materials. "
+            "Drop authored PNGs into each material folder, then Reload preview. "
+            "Assign them on the Assembly step.",
             wraplength=900,
             justify=tk.LEFT,
         )
@@ -68,7 +68,7 @@ class MaterialsPanel(ttk.Frame):
                 text="Landscape lane — material profiles remain buildings-only until E3 cross-lane profiles."
             )
         else:
-            self._lane_banner.configure(text="Buildings lane — material_profile authority for assembly.")
+            self._lane_banner.configure(text="Buildings lane — materials you assign on Assembly are what ship.")
 
     def _on_profile_selected(self, profile_id: str) -> None:
         self.preview_modes.set_profile(profile_id)

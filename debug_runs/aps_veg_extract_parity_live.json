@@ -84,7 +84,7 @@
     "profile": "APS_E5_VEG_EXTRACT_PARITY",
     "relative_path": "debug_runs/aps_veg_extract_parity_live.json",
     "source_system": "aps_veg_extract_parity",
-    "written_at_epoch_secs": 1781712973,
+    "written_at_epoch_secs": 1781720498,
     "ritual": "BLANG:WIT-HON APS-EVO-E5-EXTRACT-PARITY-001"
   },
   "witness_honesty": {

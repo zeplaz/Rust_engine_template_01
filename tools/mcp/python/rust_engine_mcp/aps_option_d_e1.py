@@ -47,7 +47,7 @@ def verify_e1_flow_lane(*, repo: Path | None = None) -> dict[str, Any]:
 
     landscape = [label for _, label in flow_verbs_for(ArtDomain.LANDSCAPE.value)]
     buildings = [label for _, label in flow_verbs_for(ArtDomain.BUILDINGS.value)]
-    ok = landscape == ["Generate grammar", "Bake states", "Pack LG-5 atlas"]
+    ok = landscape == ["Generate grammar", "Bake states", "Pack landscape atlas"]
     return {
         "slice_id": "APS-E1-FLOW-LANE-001",
         "green": ok,
@@ -63,12 +63,21 @@ def verify_e1_pipeline_lane(*, repo: Path | None = None) -> dict[str, Any]:
     from art_pipeline_suite.state import ArtDomain
 
     keys = [k for k, _ in pipeline_steps_for(ArtDomain.LANDSCAPE.value)]
-    ok = keys == ["presets", "grammar", "states", "atlas", "stamp"]
+    bkeys = [k for k, _ in pipeline_steps_for(ArtDomain.BUILDINGS.value)]
+    ok = keys == ["presets", "grammar", "states", "atlas"] and bkeys == [
+        "catalog",
+        "materials",
+        "assembly",
+        "variants",
+        "atlas",
+    ]
     return {
         "slice_id": "APS-E1-PIPELINE-LANE-001",
         "green": ok,
         "landscape_pipeline_keys": keys,
-        "has_stamp_step": "stamp" in keys,
+        "buildings_pipeline_keys": bkeys,
+        "stamp_folded_into_atlas": "stamp" not in keys,
+        "has_stamp_step": False,
     }
 
 

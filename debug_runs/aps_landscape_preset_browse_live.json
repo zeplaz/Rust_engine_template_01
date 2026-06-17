@@ -3,6 +3,7 @@
   "program_id": "APS-E2",
   "green": true,
   "presets_listed": 10,
+  "presets_listed_ok": true,
   "validate_inline_green": true,
   "sample_preset_id": "agri_riparian_v0",
   "sample_validate_status": "passed",
@@ -30,8 +31,8 @@
     ],
     "buildings_pipeline_keys": [
       "catalog",
-      "assembly",
       "materials",
+      "assembly",
       "variants",
       "atlas"
     ],
@@ -39,8 +40,7 @@
       "presets",
       "grammar",
       "states",
-      "atlas",
-      "stamp"
+      "atlas"
     ],
     "option_d_shell_ok": true,
     "dual_notebook_flag": true,
@@ -48,21 +48,19 @@
   },
   "index_path": "assets/configs/landscape/_preset_index.json",
   "design_ref": "src/dev/design_aps_preset_qc_criteria_v1.md",
-  "witness_honesty": {
-    "status": "warning",
-    "error_count": 0,
-    "warning_count": 1,
-    "summary": "witness_honesty debug_runs/aps_landscape_preset_browse_live.json: 0 error(s), 1 issue(s)"
-  },
   "exit_predicate": {
     "witness": "debug_runs/aps_landscape_preset_browse_live.json",
     "must": [
       {
-        "path": "presets_listed",
-        "gte": 10
+        "path": "presets_listed_ok",
+        "eq": true
       },
       {
         "path": "validate_inline_green",
+        "eq": true
+      },
+      {
+        "path": "dedicated_landscape_panels",
         "eq": true
       },
       {
@@ -76,7 +74,13 @@
     "profile": "APS_E2_PRESET_BROWSE",
     "relative_path": "debug_runs/aps_landscape_preset_browse_live.json",
     "source_system": "aps_landscape_preset_browse",
-    "written_at_epoch_secs": 1781712978,
+    "written_at_epoch_secs": 1781720484,
     "ritual": "BLANG:WIT-HON APS-EVO-E2-PRESET-BROWSE-001"
+  },
+  "witness_honesty": {
+    "status": "passed",
+    "error_count": 0,
+    "warning_count": 0,
+    "summary": "witness_honesty debug_runs/aps_landscape_preset_browse_live.json: 0 error(s), 0 issue(s)"
   }
 }

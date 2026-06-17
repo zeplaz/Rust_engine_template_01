@@ -1,4 +1,4 @@
-"""APS-UX-META-001 — where artist metadata flows into the engine."""
+"""Where artist metadata flows into the engine."""
 
 from __future__ import annotations
 
@@ -9,6 +9,18 @@ from tkinter import ttk
 from rust_engine_mcp.paths import repo_root
 
 _PREFS_PATH = repo_root() / "debug_runs/aps_ui_prefs.json"
+
+_ASSEMBLY_FLOW = """What you save in this Assembly is the source of truth.
+• Materials → used when the building is baked or previewed.
+• Tags → drive how the engine filters and places pieces.
+• Variant tags → expand into tile states later.
+Run the Ship check before baking. Save after every material or tag change."""
+
+_LANDSCAPE_STATES_FLOW = (
+    "The game looks at each vegetation patch's growth stage and fire state to pick the "
+    "matching tile from the landscape atlas. Those states are authored in the catalog file "
+    "here — not in Blender."
+)
 
 
 def _load_prefs() -> dict:
@@ -27,21 +39,15 @@ def _save_prefs(prefs: dict) -> None:
 
 
 def _initial_expanded(context: str) -> bool:
-    prefs = _load_prefs()
-    seen_key = f"metadata_flow_seen_{context}"
-    if not prefs.get(seen_key):
-        prefs[seen_key] = True
-        prefs[f"metadata_flow_expanded_{context}"] = True
-        _save_prefs(prefs)
-        return True
-    return bool(prefs.get(f"metadata_flow_expanded_{context}", False))
+    _ = context
+    return False
 
 
 class MetadataFlowPanel(ttk.LabelFrame):
-    """Collapsible guide: snapshot authority → worker → atlas → runtime."""
+    """Collapsible guide: Assembly authority → worker → atlas → runtime."""
 
     def __init__(self, master: tk.Misc, *, context: str = "assembly") -> None:
-        super().__init__(master, text="Metadata → engine (ARCH-MAT-001)", padding=6)
+        super().__init__(master, text="Where this data goes", padding=6)
         self._context = context
         self._expanded = tk.BooleanVar(value=_initial_expanded(context))
         head = ttk.Frame(self)
@@ -58,7 +64,7 @@ class MetadataFlowPanel(ttk.LabelFrame):
         bind_aps_tooltip(chk, "meta_flow")
         self._collapsed_hint = ttk.Label(
             head,
-            text="Snapshot is ship authority — expand for metadata flow diagram.",
+            text="The Assembly is the source of truth — expand for how data flows.",
             font=("Segoe UI", 9),
             foreground="#0a4a7a",
             wraplength=680,
@@ -86,51 +92,21 @@ class MetadataFlowPanel(ttk.LabelFrame):
 
     def _fill_content(self) -> None:
         blocks = {
-            "assembly": """assembly_snapshot (AUTHORITY)
-  material_profile  → Blender/Bevy worker applies at bake/preview (not assigned in DCC)
-  semantic_tags     → procedural rules, facade/location filters in engine
-  variant_tags      → variant_set expansion → tile states
-  module_placements → GLB resolve + grid position → construction/render extract
-  grammar_rule_chain → APS inspector only today; drives generator seed path
-
-Validate (P0) before bake. Save snapshot after every material/tag edit.""",
-            "materials": """material_profiles registry (assets/materials/profiles/)
-  profile_id        → written on placement.material_profile in snapshot
-  albedo/normal/...   → worker material bind + runtime lookup
-  category            → APS browse only; engine uses profile_id string
-
-Assign on Assembly tab — Materials tab does not ship alone.""",
-            "catalog": """module index + AssetSpec sidecar
-  module_id, category, batch_id → assembly module resolver
-  tags in sidecar     → optional hints; assembly semantic_tags are ship truth
-  GLB path            → placement.glb_path after generate/build
-
-Validate GLB before adding modules to style packs / assemblies.""",
-            "atlas": """atlas_meta.json + tile_map PNG
-  variant_key, grid, uv → runtime tile atlas lookup (map stamp)
-  tile_id / atlas_id    → registry registration (--register)
-
-Independent of per-placement material_profile — building tile vs module materials.""",
-            "variants": """variant_set JSON
-  state keys (clean_day, damaged_…) → tile_batch variants → atlas cells
-  Derived from assembly_id + snapshot variant_tags
-
-Bake variants prepares tile_batch — does not replace snapshot authority.""",
-            "landscape_presets": """landscape_grammar preset (ship truth)
-  land_dna + pressure_field → topology_graph nodes (Network/Corridor/Ring/Patch/Cluster/Fringe)
-  validate-report landscape_grammar before bake
-
-Presets tab browse — not building module catalog.""",
-            "landscape_grammar": """topology_graph workspace
-  operator stacks + glyph planning → generate/iterate grammar object
-  ship truth: landscape_grammar preset — not assembly_snapshot
-
-Graph-not-grid — do not use Assembly footprint canvas.""",
-            "landscape_states": """succession + disturbance STATE rows
-  burn_00..07 · scar · regrowth → veg variant catalog axis
-  binds to _vegetation_variant_catalog.ron (designer-mcp key set)
-
-LG-5 atlas bake uses keyframe_pack — G0–G5 scope explicit on Atlas tab.""",
+            "assembly": _ASSEMBLY_FLOW,
+            "materials": """Material library on disk.
+Pick a material id and assign it on the Assembly step.
+Materials you set here do not ship until saved on the Assembly.""",
+            "catalog": """Module kit index and editable sidecar.
+Tags here are hints only. The tags and materials you set in the Assembly are what actually ship.""",
+            "atlas": """Packed tile sheet and atlas metadata.
+Registers tile lookup for the map after you pass ship checks.""",
+            "variants": """Variant layers expand into tile states for baking.
+The Assembly remains the source of truth for materials and tags.""",
+            "landscape_presets": """Browse and validate landscape presets.
+The preset you select is what ships for layout and disturbance.""",
+            "landscape_grammar": """Edit the landscape layout graph.
+This is separate from the building footprint grid.""",
+            "landscape_states": _LANDSCAPE_STATES_FLOW,
         }
         body = blocks.get(self._context, blocks["assembly"])
         self._text.configure(state=tk.NORMAL)

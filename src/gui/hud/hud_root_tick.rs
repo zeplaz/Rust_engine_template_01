@@ -143,6 +143,7 @@ pub struct HudProductShellEguiParams<'w> {
     per_view_lod: Res<'w, crate::gui::PerViewLodHints>,
     view_isolation: Res<'w, crate::gui::ViewIsolationDiagnostics>,
     update_attrib: Option<ResMut<'w, crate::render::FrameUpdateAttrib>>,
+    infra_overlay: ResMut<'w, crate::render::InfrastructureOverlaySettings>,
     growth_ui: ResMut<'w, GrowthInspectorUiState>,
     growth_queue: ResMut<'w, GrowthProposalQueue>,
     growth_policy: Option<Res<'w, AutoBuildPolicyBook>>,
@@ -362,6 +363,7 @@ pub fn hud_product_shell_egui_root(
         Some(panels.world.as_ref()),
         panels.readiness.as_deref(),
         Some(panels.info_live.as_ref()),
+        panels.infra_overlay.as_mut(),
     );
     panels
         .frame_budget

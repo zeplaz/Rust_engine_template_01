@@ -67,7 +67,7 @@ def _ship_badge(preset_id: str, validate_ok: bool | None) -> str:
     doc = json.loads(path.read_text(encoding="utf-8"))
     meta = doc.get("_meta") if isinstance(doc.get("_meta"), dict) else {}
     if meta.get("not_a_ship_target"):
-        return "Teach"
+        return "Example (not for ship)"
     if validate_ok is True:
         return "Ship"
     return "Draft"
@@ -115,12 +115,12 @@ class LandscapePresetsPanel(ttk.Frame):
             area_id=f"aps-landscape-presets-{id(self)}",
         )
 
-        detail = ttk.LabelFrame(self, text="Must-read (DMCP-E2 preset QC)", padding=6)
+        detail = ttk.LabelFrame(self, text="Preset summary", padding=6)
         detail.pack(fill=tk.X, pady=(8, 0))
         self._q1 = tk.StringVar(value="Preset name: —")
-        self._q2 = tk.StringVar(value="District read: —")
-        self._q3 = tk.StringVar(value="Topology summary: —")
-        self._q4 = tk.StringVar(value="Pressure headline: —")
+        self._q2 = tk.StringVar(value="District: —")
+        self._q3 = tk.StringVar(value="Layout shapes: —")
+        self._q4 = tk.StringVar(value="Disturbance level: —")
         self._q5 = tk.StringVar(value="Ship status: —")
         for var in (self._q1, self._q2, self._q3, self._q4, self._q5):
             ttk.Label(detail, textvariable=var, wraplength=720, justify=tk.LEFT, font=FONT_SMALL).pack(
@@ -168,9 +168,9 @@ class LandscapePresetsPanel(ttk.Frame):
             lambdas = [f"{k}={v}" for k, v in list(land_dna.items())[:2]]
             pressure = " · ".join(lambdas) if lambdas else "Moderate disturbance"
         self._q1.set(f"Preset name: {title} ({preset_id})")
-        self._q2.set(f"District read: {district}")
-        self._q3.set(f"Topology summary: {_topology_plain_summary(preset_id).replace(chr(10), ' ')}")
-        self._q4.set(f"Pressure headline: {pressure}")
+        self._q2.set(f"District: {district}")
+        self._q3.set(f"Layout shapes: {_topology_plain_summary(preset_id).replace(chr(10), ' ')}")
+        self._q4.set(f"Disturbance level: {pressure}")
         badge = _ship_badge(preset_id, None)
         self._q5.set(f"Ship status: {badge}")
         self._validate_var.set(

@@ -51,13 +51,14 @@
     ],
     "relative_path": "debug_runs/replay_editor_parity_live.json",
     "schema": "debug_run_envelope_v1",
-    "source_system": "replay_editor_parity",
-    "written_at_epoch_secs": 1781663496
+    "source_system": "refresh_replay_editor_parity_live_witness",
+    "written_at_epoch_secs": 1781716814
   },
   "editor_scenario_panel": true,
   "infrastructure_isolation_json": true,
   "parity_green": true,
   "profile": "REPLAY_EDITOR_PARITY",
-  "replay_ring_len": 52,
+  "replay_parity_001_green": true,
+  "replay_ring_len": 4,
   "scenario_plugin_wired": true
 }

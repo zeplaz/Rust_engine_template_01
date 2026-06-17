@@ -294,9 +294,30 @@ pub fn infrastructure_overlay_polish_witness_fields(
         "utility_layers_default_off": !(settings.power || settings.water || settings.sewer),
         "road_rail_default_on_when_enabled": settings.road && settings.rail,
         "legend_row_count": infrastructure_overlay_legend_rows().len(),
+        "hud_legend_wired": infrastructure_overlay_hud_legend_wired(),
         "power_stroke_rgb": power_stroke.color_rgb,
         "power_stroke_weight_px": power_stroke.weight_px,
     })
+}
+
+/// Bevy plugin: overlay settings + edge collection each frame.
+pub struct InfrastructureOverlayPlugin;
+
+impl Plugin for InfrastructureOverlayPlugin {
+    fn build(&self, app: &mut App) {
+        app.init_resource::<InfrastructureOverlaySettings>()
+            .init_resource::<InfrastructureOverlayDrawRequests>()
+            .add_systems(
+                Update,
+                collect_infrastructure_overlay_edges_system
+                    .after(crate::systems::transport::TransportSchedule::Topology),
+            );
+    }
+}
+
+#[must_use]
+pub fn infrastructure_overlay_hud_legend_wired() -> bool {
+    infrastructure_overlay_legend_rows().len() >= 4
 }
 
 #[must_use]

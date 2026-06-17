@@ -108,16 +108,26 @@ pub fn refresh_product_verify_live_witnesses() -> ProductVerifyRefreshResult {
     let _ = crate::engine::play_scenario::refresh_play_scenario_001_live_witness();
 
     let play_lib = witness_file_green("debug_runs/play_scenario_live.json");
-    let play_operator = std::fs::read_to_string(
+    let play_doc = std::fs::read_to_string(
         std::env::var_os("CARGO_MANIFEST_DIR")
             .map(std::path::PathBuf::from)
             .map(|r| r.join("debug_runs/play_scenario_live.json"))
             .unwrap_or_else(|| std::path::PathBuf::from("debug_runs/play_scenario_live.json")),
     )
     .ok()
-    .and_then(|raw| serde_json::from_str::<serde_json::Value>(&raw).ok())
-    .and_then(|doc| doc.get("operator_session_green").and_then(|v| v.as_bool()))
-    .unwrap_or(false);
+    .and_then(|raw| serde_json::from_str::<serde_json::Value>(&raw).ok());
+    let play_operator = play_doc
+        .as_ref()
+        .and_then(|doc| doc.get("operator_session_green").and_then(|v| v.as_bool()))
+        .unwrap_or(false);
+    let g_play_coder_sub_gates = play_doc
+        .as_ref()
+        .and_then(|doc| doc.get("g_play_coder_sub_gates").cloned())
+        .unwrap_or_else(|| serde_json::json!({}));
+    let g_play_coder_veg_green = g_play_coder_sub_gates
+        .get("G-PLAY-CODER-VEG")
+        .and_then(|v| v.as_bool())
+        .unwrap_or(false);
     let stage5_fire = {
         let full = std::env::var_os("CARGO_MANIFEST_DIR")
             .map(std::path::PathBuf::from)
@@ -156,6 +166,8 @@ pub fn refresh_product_verify_live_witnesses() -> ProductVerifyRefreshResult {
         "proof_grade_honest": proof_grade_honest,
         "g_play_coder_rollup_green": coder_rollup_green,
         "g_play_operator_pending": !play_operator,
+        "g_play_coder_sub_gates": g_play_coder_sub_gates,
+        "g_play_coder_veg_sub_gate_green": g_play_coder_veg_green,
         "play_lib_contract": play_lib,
         "play_operator_session": play_operator,
         "play_truth": play_lib,

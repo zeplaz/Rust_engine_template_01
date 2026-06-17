@@ -1,6 +1,6 @@
 //! INFRA-E6-002 — `debug_runs/nav_agent_routing_live.json` lib refresh.
 
-use serde_json::{json, Value};
+use serde_json::Value;
 
 use crate::economy::logistics::routes::nav_agent_routing_witness_payload;
 

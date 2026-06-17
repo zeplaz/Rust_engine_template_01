@@ -1,0 +1,34 @@
+{
+  "gate": "DMCP-OVR-G0-AUDIT-001",
+  "charter_section": "plan_aps_uiux_overhaul \u00a72b",
+  "violation_count": 0,
+  "p0_violation_count": 0,
+  "by_rule": {},
+  "by_file": {},
+  "violations": [],
+  "truncated": false,
+  "audit_complete": true,
+  "ui_clean": true,
+  "verdict": "PASS",
+  "blocks": [
+    "OVR-P2-TEXT-001"
+  ],
+  "unblocks_p2_when_clean": true,
+  "green": true,
+  "deliverable": "src/dev/design_aps_uiux_g0_audit_v1.md",
+  "charter": "src/dev/plan_aps_uiux_overhaul_20260616_v1.md",
+  "design_system": "src/dev/aps_design_system_v1.md",
+  "sweep_ref": "src/dev/aps_sweep_text_20260616_v1.md",
+  "guard_test": "tools/mcp/python/tests/test_aps_no_jargon.py",
+  "handoff": "OVR-P2-TEXT-001 + OVR-DES-P2-COPY-PACK-001",
+  "parallel_with": "OVR-P1-TOKENS-001",
+  "_agent_meta": {
+    "schema": "dmcp_ovr_g0_audit_live_v1",
+    "written_at_epoch_secs": 1781720498,
+    "profile": "DMCP_OVR_G0_AUDIT",
+    "source_system": "aps_uiux_g0_audit",
+    "relative_path": "debug_runs/art_pipeline/dmcp_ovr_g0_audit_live.json",
+    "ritual": "BLANG:WIT-HON\u2192Q\u2713 DMCP-OVR-G0-AUDIT-001",
+    "agent": "designer-mcp"
+  }
+}

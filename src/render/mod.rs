@@ -54,10 +54,11 @@ mod vt_ci_matrix;
 mod infrastructure_overlay;
 pub use infrastructure_overlay::{
     collect_infrastructure_overlay_edges_system, collect_transport_overlay_edges_system,
-    infra_overlay_polish_green, infrastructure_overlay_legend_rows,
-    infrastructure_overlay_polish_witness_fields, stroke_for_layer,
-    InfrastructureEdgeOverlay, InfrastructureNetworkLayer, InfrastructureOverlayDrawRequests,
-    InfrastructureOverlayLegendRow, InfrastructureOverlaySettings, InfrastructureOverlayStroke,
+    infra_overlay_polish_green, infrastructure_overlay_hud_legend_wired,
+    infrastructure_overlay_legend_rows, infrastructure_overlay_polish_witness_fields,
+    stroke_for_layer, InfrastructureEdgeOverlay, InfrastructureNetworkLayer,
+    InfrastructureOverlayDrawRequests, InfrastructureOverlayLegendRow,
+    InfrastructureOverlayPlugin, InfrastructureOverlaySettings, InfrastructureOverlayStroke,
 };
 mod viewport_pipeline;
 pub mod view_runtime;
@@ -175,7 +176,8 @@ pub use fire_smoke_shader_handles::{
 pub use fx_burst_request::{collect_burst_hints_from_fire_visual, FxParticleBurstRequest};
 pub use visual_snapshot_commit::{commit_fire_visual_snapshot, CommittedVisualSnapshotFence};
 pub use vt_spatial_invariants::{
-    passes_vt5_spatial_invariants, sample_fire_row, VT5_MIN_MEAN_DISTANCE, VT5_MIN_OCCUPIED_CHUNKS,
+    passes_vt5_spatial_invariants, sample_fire_row, vt5_spatial_eval_deferred,
+    VT5_MIN_EVAL_FIRE_INSTANCES, VT5_MIN_MEAN_DISTANCE, VT5_MIN_OCCUPIED_CHUNKS,
     VT5_MIN_VARIANCE,
 };
 pub use logistics_visual_snapshot::LogisticsVisualSnapshot;

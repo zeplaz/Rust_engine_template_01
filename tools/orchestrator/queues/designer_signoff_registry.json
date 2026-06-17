@@ -1,8 +1,10 @@
 {
     "_meta": {
-    "version": "2.7.0",
-    "date": "2026-06-16",
+    "version": "2.9.0",
+    "date": "2026-06-17",
+    "aps_uiux_overhaul_parallel_specs": "OVR-DES-P2/P3/P4/P55 done 2026-06-17",
     "chrome_mockup": "DES-APS-CHROME-MOCKUP-001",
+    "aps_uiux_overhaul_gate": "OVR-P0-DESIGN-LOCK",
     "mode": "parallel_wave_aps_veg_w0",
     "wave0_rollup": "src/dev/design_aps_veg_wave0_signoff_rollup_v1.md",
     "on_call_playbook": "src/dev/designer_oncall_absorption_v1.md",
@@ -1068,6 +1070,128 @@
       "verdict": "PASS",
       "witness": "src/dev/design_aps_pipeline_pills_v1.md",
       "unblocks": ["APS-E1-PIPELINE-LANE-001"]
+    },
+    {
+      "id": "OVR-P0-DESIGN-LOCK",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-06-17",
+      "verdict": "PASS",
+      "witness": "src/dev/aps_design_system_v1.md",
+      "program": "PLAN-APS-UIUX-OVERHAUL-001",
+      "unblocks": [
+        "OVR-P1-TOKENS-001",
+        "OVR-DES-P2-COPY-PACK-001",
+        "OVR-DES-P3-LAYOUT-DELTA-001",
+        "OVR-DES-P45-SPINE-SPEC-001",
+        "OVR-DES-P55-PREVIEW-SPEC-001",
+        "OVR-DES-P56-ONBOARD-SPEC-001",
+        "DMCP-OVR-G0-AUDIT-001"
+      ]
+    },
+    {
+      "id": "OVR-DES-P2-COPY-PACK-001",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-06-17",
+      "verdict": "PASS",
+      "witness": "src/dev/design_aps_uiux_copy_pack_v1.md",
+      "program": "PLAN-APS-UIUX-OVERHAUL-001",
+      "unblocks": ["OVR-P2-TEXT-001"]
+    },
+    {
+      "id": "OVR-DES-P3-LAYOUT-DELTA-001",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-06-17",
+      "verdict": "PASS",
+      "witness": "src/dev/design_aps_uiux_layout_delta_v1.md",
+      "program": "PLAN-APS-UIUX-OVERHAUL-001",
+      "unblocks": ["OVR-P3-LAYOUT-001"]
+    },
+    {
+      "id": "OVR-DES-P4-IA-SIGN-001",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-06-17",
+      "verdict": "PASS",
+      "witness": "src/dev/design_aps_uiux_ia_sign_v1.md",
+      "program": "PLAN-APS-UIUX-OVERHAUL-001",
+      "unblocks": ["OVR-P4-IA-001", "OVR-DES-P45-SPINE-SPEC-001"]
+    },
+    {
+      "id": "OVR-DES-P55-PREVIEW-SPEC-001",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-06-17",
+      "verdict": "PASS",
+      "witness": "src/dev/design_aps_uiux_preview_spec_v1.md",
+      "program": "PLAN-APS-UIUX-OVERHAUL-001",
+      "unblocks": ["OVR-P55-PREVIEW-001"]
+    },
+    {
+      "id": "DMCP-OVR-G0-AUDIT-001",
+      "agent": "designer-mcp",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-06-02",
+      "verdict": "PASS_WITH_NOTES",
+      "witness": "debug_runs/art_pipeline/dmcp_ovr_g0_audit_live.json",
+      "deliverable": "src/dev/design_aps_uiux_g0_audit_v1.md",
+      "program": "PLAN-APS-UIUX-OVERHAUL-001",
+      "notes": "54 §2b hits pre-P2; guard test_aps_no_jargon.py wired",
+      "unblocks": ["OVR-P2-TEXT-001"]
+    },
+    {
+      "id": "OVR-DES-P45-SPINE-SPEC-001",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-06-02",
+      "verdict": "PASS",
+      "witness": "src/dev/design_aps_uiux_spine_spec_v1.md",
+      "program": "PLAN-APS-UIUX-OVERHAUL-001",
+      "unblocks": ["OVR-P45-SPINE-001", "OVR-DES-P56-ONBOARD-SPEC-001"]
+    },
+    {
+      "id": "DES-OVR-P56-ONBOARD-OUTLINE-001",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-06-02",
+      "verdict": "PASS",
+      "witness": "src/dev/design_aps_uiux_onboard_outline_v1.md",
+      "program": "PLAN-APS-UIUX-OVERHAUL-001",
+      "notes": "Outline only — full spec after P4.5 lands"
+    },
+    {
+      "id": "DMCP-OVR-P2-IMPL-AUDIT-001",
+      "agent": "designer-mcp",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-06-02",
+      "verdict": "PASS_WITH_NOTES",
+      "witness": "debug_runs/art_pipeline/dmcp_ovr_p2_impl_audit_live.json",
+      "deliverable": "src/dev/design_aps_uiux_p2_impl_audit_v1.md",
+      "program": "PLAN-APS-UIUX-OVERHAUL-001",
+      "notes": "ban-list 0 · copy 25/32 · 7 tails P3/P5"
+    },
+    {
+      "id": "DMCP-OVR-P3-ACCEPT-RUBRIC-001",
+      "agent": "designer-mcp",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-06-02",
+      "verdict": "PASS",
+      "witness": "debug_runs/art_pipeline/dmcp_ovr_p3_accept_rubric_live.json",
+      "deliverable": "src/dev/design_aps_uiux_p3_accept_rubric_v1.md",
+      "program": "PLAN-APS-UIUX-OVERHAUL-001",
+      "needs_display": true
     }
   ]
 }

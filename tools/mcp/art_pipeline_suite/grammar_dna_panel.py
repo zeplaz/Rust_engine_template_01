@@ -33,7 +33,7 @@ class GrammarDnaPanel(ttk.LabelFrame):
         self.enabled_var = tk.BooleanVar(value=True)
         enable_cb = ttk.Checkbutton(
             top,
-            text="Store ARCH-DNA + β in snapshot",
+            text="Save shape settings with this building",
             variable=self.enabled_var,
             command=self._notify_change,
         )
@@ -42,7 +42,7 @@ class GrammarDnaPanel(ttk.LabelFrame):
 
         preset_row = ttk.Frame(self)
         preset_row.pack(fill=tk.X, pady=4)
-        ttk.Label(preset_row, text="DNA preset").pack(side=tk.LEFT)
+        ttk.Label(preset_row, text="Shape preset").pack(side=tk.LEFT)
         presets = arch_build_grammar.list_preset_ids()
         default = arch_build_grammar.default_preset_id()
         self.preset_var = tk.StringVar(value=default)
@@ -57,7 +57,7 @@ class GrammarDnaPanel(ttk.LabelFrame):
         self.preset_combo.bind("<<ComboboxSelected>>", self._on_preset_selected)
         bind_aps_tooltip(self.preset_combo, "asm_grammar_dna_preset")
 
-        dna_frame = ttk.LabelFrame(self, text="ARCH-DNA (read-only from preset)", padding=4)
+        dna_frame = ttk.LabelFrame(self, text="Shape profile (from preset, read-only)", padding=4)
         dna_frame.pack(fill=tk.X, pady=4)
         for i, key in enumerate(arch_build_grammar.DNA_KEYS):
             row = i // 5
@@ -71,7 +71,7 @@ class GrammarDnaPanel(ttk.LabelFrame):
             lbl.pack(side=tk.LEFT)
             bind_aps_tooltip(lbl, f"asm_grammar_dna_{key.lower()}")
 
-        beta_frame = ttk.LabelFrame(self, text="Pressure field β (0–1)", padding=4)
+        beta_frame = ttk.LabelFrame(self, text="Shape sliders (0–1)", padding=4)
         beta_frame.pack(fill=tk.X, pady=4)
         for i, key in enumerate(arch_build_grammar.BETA_KEYS):
             row = ttk.Frame(beta_frame)

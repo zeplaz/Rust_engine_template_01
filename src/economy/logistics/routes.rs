@@ -129,7 +129,7 @@ pub fn path_edges_between_tiles(
             .filter(|e| {
                 e.allowed_agents.is_empty()
                     || e.allowed_agents.iter().any(|a| a == agent)
-                    || e.profile.contains("road")
+                    || (mode != TransportMode::Rail && e.profile.contains("road"))
             })
             .cloned()
             .collect(),

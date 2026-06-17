@@ -5,7 +5,8 @@
 | **Program ID** | **PLAN-APS-UIUX-OVERHAUL-001** |
 | **Owner (sequencing)** | `@orchestrator-mcp` · implementation `@coder-mcp` · design authority `@designer` |
 | **Date** | 2026-06-16 |
-| **Status** | **READY FOR CURSOR PICKUP** |
+| **Status** | **DRAIN — P3 next** |
+| **Drain playbook** | [`plan_aps_uiux_overhaul_drain_finish_v1.md`](plan_aps_uiux_overhaul_drain_finish_v1.md) ★ |
 | **Machine queue** | [`tools/orchestrator/queues/aps_uiux_overhaul_queue.json`](../tools/orchestrator/queues/aps_uiux_overhaul_queue.json) (24 rows) |
 | **Agent board** | [`aps_uiux_overhaul_agent_todos_v1.md`](aps_uiux_overhaul_agent_todos_v1.md) |
 | **Dispatch** | [`aps_uiux_overhaul_dispatch_orders_v1.md`](../tools/orchestrator/queues/aps_uiux_overhaul_dispatch_orders_v1.md) |

@@ -33,7 +33,7 @@ def refresh_aps_ux_polish_001_witness() -> bool:
     metadata_visible = (
         "_initial_expanded" in meta
         and "_collapsed_hint" in meta
-        and "Snapshot is ship authority" in meta
+        and "source of truth" in meta
     )
     phases_2_4 = all(
         (repo_root() / f"debug_runs/{w}").is_file()

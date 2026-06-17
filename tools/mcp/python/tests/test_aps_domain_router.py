@@ -36,8 +36,7 @@ def test_catalog_source_ids_switch_per_lane() -> None:
 def test_option_d_tab_labels() -> None:
     from art_pipeline_suite.domain_router import tab_labels_for
 
-    assert tab_labels_for("buildings")[0] == "Catalog"
-    assert tab_labels_for("landscape") == ("Presets", "Grammar", "States", "Atlas")
+    assert tab_labels_for("buildings") == ("Catalog", "Materials", "Assembly", "Variants", "Atlas")
 
 
 def test_option_d_pipeline_and_flow_lane_scoped() -> None:
@@ -45,8 +44,8 @@ def test_option_d_pipeline_and_flow_lane_scoped() -> None:
 
     b_pipe = [k for k, _ in pipeline_steps_for("buildings")]
     l_pipe = [k for k, _ in pipeline_steps_for("landscape")]
-    assert b_pipe == ["catalog", "assembly", "materials", "variants", "atlas"]
-    assert l_pipe == ["presets", "grammar", "states", "atlas", "stamp"]
+    assert b_pipe == ["catalog", "materials", "assembly", "variants", "atlas"]
+    assert l_pipe == ["presets", "grammar", "states", "atlas"]
     assert [k for k, _ in flow_verbs_for("landscape")] == [
         "generate_grammar",
         "bake_states",

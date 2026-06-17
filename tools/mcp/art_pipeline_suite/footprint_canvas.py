@@ -6,6 +6,7 @@ import tkinter as tk
 from tkinter import ttk
 from typing import Any, Callable
 
+from .aps_collapsible import CollapsibleSection
 from .aps_theme import FONT_SMALL
 
 TOKEN_COLORS = {
@@ -71,27 +72,26 @@ class FootprintCanvas(ttk.Frame):
             side=tk.RIGHT, padx=4
         )
 
-        workspace = ttk.Frame(self)
-        workspace.pack(fill=tk.BOTH, expand=True, pady=4)
-
-        canvas_wrap = ttk.Frame(workspace)
-        canvas_wrap.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        canvas_wrap = ttk.Frame(self)
+        canvas_wrap.pack(fill=tk.BOTH, expand=True, pady=4)
         self.canvas = tk.Canvas(
             canvas_wrap,
-            width=280,
-            height=200,
+            height=160,
             bg="#f8f8f8",
             highlightthickness=1,
             highlightbackground="#c8c8c8",
         )
-        self.canvas.pack(anchor=tk.NW)
+        self.canvas.pack(fill=tk.BOTH, expand=True)
         self.canvas.bind("<Button-1>", self._on_click)
+        self.canvas.bind("<Configure>", self.redraw)
 
-        legend = ttk.LabelFrame(workspace, text="Cell tokens", padding=6)
-        legend.pack(side=tk.LEFT, fill=tk.Y, padx=(10, 0))
+        legend = ttk.LabelFrame(self, text="Cell tokens", padding=6)
+        legend.pack(fill=tk.X)
+        legend_row = ttk.Frame(legend)
+        legend_row.pack(fill=tk.X)
         for token in ("W", "D", "C", "R", "Y"):
-            row = ttk.Frame(legend)
-            row.pack(anchor=tk.W, pady=2)
+            row = ttk.Frame(legend_row)
+            row.pack(side=tk.LEFT, padx=(0, 8))
             color = TOKEN_COLORS[token]
             swatch = tk.Label(
                 row,
@@ -101,18 +101,15 @@ class FootprintCanvas(ttk.Frame):
                 relief=tk.RIDGE,
                 borderwidth=1,
             )
-            swatch.pack(side=tk.LEFT, padx=(0, 6))
-            ttk.Label(
-                row,
-                text=f"{token} — {TOKEN_LABELS[token]}",
-                font=("Segoe UI", 9),
-            ).pack(side=tk.LEFT)
+            swatch.pack(side=tk.LEFT, padx=(0, 4))
+            ttk.Label(row, text=f"{token} — {TOKEN_LABELS[token]}", font=FONT_SMALL).pack(side=tk.LEFT)
 
-        diff_legend = ttk.LabelFrame(workspace, text="Iteration diff", padding=6)
-        diff_legend.pack(side=tk.LEFT, fill=tk.Y, padx=(10, 0))
+        self._diff_section = CollapsibleSection(self, "Iteration diff", expanded=False, padding=4)
+        self._diff_section.pack(fill=tk.X)
+        diff_body = self._diff_section.body
         for state in ("added", "removed", "changed"):
-            row = ttk.Frame(diff_legend)
-            row.pack(anchor=tk.W, pady=2)
+            row = ttk.Frame(diff_body)
+            row.pack(side=tk.LEFT, padx=(0, 12))
             swatch = tk.Label(
                 row,
                 text="  ",
@@ -121,8 +118,8 @@ class FootprintCanvas(ttk.Frame):
                 relief=tk.RIDGE,
                 borderwidth=1,
             )
-            swatch.pack(side=tk.LEFT, padx=(0, 6))
-            ttk.Label(row, text=DIFF_LABELS[state], font=("Segoe UI", 9)).pack(side=tk.LEFT)
+            swatch.pack(side=tk.LEFT, padx=(0, 4))
+            ttk.Label(row, text=DIFF_LABELS[state], font=FONT_SMALL).pack(side=tk.LEFT)
 
         ttk.Label(
             self,
@@ -158,6 +155,10 @@ class FootprintCanvas(ttk.Frame):
         """Highlight added/removed/changed cells after grammar iteration."""
         self._cell_diff = dict(diff_map or {})
         self._removed_ghosts = list(removed_ghosts or [])
+        if (self._cell_diff or self._removed_ghosts) and not self._diff_section.is_expanded:
+            self._diff_section._expanded = True
+            self._diff_section._head_btn.configure(text=self._diff_section._header_text())
+            self._diff_section._sync_body()
         self.redraw()
 
     def clear_cell_diff(self) -> None:
@@ -195,13 +196,17 @@ class FootprintCanvas(ttk.Frame):
         self._floor = int(self.floor_var.get())
         self.canvas.delete("all")
         if not self._cells:
-            self.canvas.create_text(12, 12, anchor=tk.NW, text="Generate snapshot to show grid")
-            self.canvas.configure(width=280, height=120)
+            self.canvas.create_text(12, 12, anchor=tk.NW, text="Generate Assembly to show grid")
             return
         width, depth = self._footprint_dims()
         if not width or not depth:
             return
         px = self._cell_px
+        avail_w = max(self.canvas.winfo_width(), 80)
+        avail_h = max(self.canvas.winfo_height(), 80)
+        max_px_w = max(12, (avail_w - 12) // max(width, 1) - 2)
+        max_px_h = max(12, (avail_h - 12) // max(depth, 1) - 2)
+        px = min(px, max_px_w, max_px_h)
         heat: dict[tuple[int, int], str] = {}
         for p in self._placements:
             if int(p.get("floor") or 0) != self._floor:
@@ -252,8 +257,6 @@ class FootprintCanvas(ttk.Frame):
                 width=2,
                 dash=(3, 2),
             )
-        pad = 12
-        self.canvas.configure(width=width * px + pad, height=depth * px + pad)
 
     def _footprint_dims(self) -> tuple[int, int]:
         if not self._cells:

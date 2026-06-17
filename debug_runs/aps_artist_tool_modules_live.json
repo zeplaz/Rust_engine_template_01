@@ -67,10 +67,6 @@
   "e2e_green": true,
   "mat_002_ok": true,
   "bevy_preview_002_green": true,
-  "witness_honesty": {
-    "status": "skipped",
-    "reason": "green not requested"
-  },
   "exit_predicate": {
     "witness": "debug_runs/aps_artist_tool_modules_live.json",
     "must": [
@@ -85,6 +81,10 @@
     "profile": "APS_WITNESS_REFRESH",
     "relative_path": "debug_runs/aps_artist_tool_modules_live.json",
     "source_system": "aps_witness_refresh",
-    "written_at_epoch_secs": 1781712992
+    "written_at_epoch_secs": 1781720502
+  },
+  "witness_honesty": {
+    "status": "skipped",
+    "reason": "green not requested"
   }
 }

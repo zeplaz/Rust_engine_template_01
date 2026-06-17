@@ -50,6 +50,7 @@ pub mod layout_debug;
 pub mod viewport_authority_debug;
 pub mod icon_atlas;
 pub mod simulation_shell_phase2;
+pub mod sim_hud_l5_polish;
 pub mod ui_stress_state;
 pub mod ui_shell_migration;
 
@@ -66,6 +67,11 @@ pub use hud_side_status_panel::{
 pub use panel_state::{HudPanel, HudPanelState, HudPanelStatePlugin, HudPanelStateWitness};
 pub use icon_atlas::{
     tool_context_uses_icon_atlas, IconAtlasManifest, IconAtlasPlugin, IconAtlasUi, IconId,
+};
+pub use sim_hud_l5_polish::{
+    sim_hud_info_panel_tokens_ok, sim_hud_l5_polish_rollup_green, sim_hud_slice_build_green,
+    sim_hud_slice_dock_green, sim_hud_slice_minimap_green, sim_hud_slice_ops_polish_green,
+    INFO_PANEL_BODY_FONT_MIN_PX, OPS_STRIP_BODY_FONT_PT, OPS_STRIP_FONT_MIN_PX,
 };
 pub use simulation_shell_phase2::{
     collapse_context_tray_on_escape, format_sim_tick_line, BuildRailRoot, BuildRailToolIcon,

@@ -37,7 +37,7 @@
     "planner-mcp": "Wave 0 CLOSED 2026-06-16 — witness mcp_planner_wave0_aps_veg_live.json · DMCP-E3 ready",
     "designer-mcp": "Wave 0 designer-mcp CLOSED — DMCP-E0/E3/E4 done · witness designer_mcp_parallel_wave0_live.json",
     "designer": "Filter owner=designer wave=0 \u00b7 start DES-APS-E1-IA-OPTION-D-001",
-    "coder_a": "Filter owner=coder_a wave=0 \u00b7 wave-0 veg harden CLOSED \u00b7 pick CDR-A-PLAY-OPS / ECOLOGY-HARNESS-CLEAN / VISUAL-SMOKE",
+    "coder_a": "Filter owner=coder_a wave=0 \u00b7 wave-0 veg harden CLOSED 2026-06-17 \u00b7 coder_a_parallel_wave_live.json",
     "coder_b": "Filter owner=coder_b \u00b7 wave-0 + P3 infra polish CLOSED 2026-06-17",
   },
   "drain": [
@@ -950,22 +950,25 @@
     {
       "wave": 0,
       "id": "CDR-A-FIRE-HARVEST-WIRE-001",
-      "status": "ready",
+      "status": "done",
       "priority": "P1",
       "owner": "coder_a",
       "program": "VEG-SIM",
       "goal": "Fire disturbance \u2192 harvest event path wired in ecology sim",
-      "territory": "src/systems/ecology/"
+      "territory": "src/systems/ecology/",
+      "witness": "debug_runs/landscape_grammar_fire_harvest_wire_live.json",
+      "completed": "2026-06-17"
     },
     {
       "wave": 0,
       "id": "CDR-A-PLAY-OPS-SPLIT-001",
-      "status": "ready",
+      "status": "done",
       "priority": "P1",
       "owner": "coder_a",
       "program": "G-PLAY",
       "goal": "Split play_scenario witness: lib contract vs operator_visible fields",
       "witness": "debug_runs/play_scenario_live.json",
+      "completed": "2026-06-17",
       "docs": [
         "src/dev/plan_g_play_split_v1.md"
       ]
@@ -973,25 +976,28 @@
     {
       "wave": 0,
       "id": "CDR-A-LG5-REAL-STAMP-001",
-      "status": "ready",
+      "status": "done",
       "priority": "P1",
       "owner": "coder_a",
       "program": "VEG-ART",
       "goal": "LG-5 registry stamp uses real atlas UV (when expanded atlas lands)",
       "witness": "debug_runs/landscape_grammar_lg5_live.json",
+      "completed": "2026-06-17",
       "depends_on_parallel": [
         "APS-EVO-E4-ATLAS-EXPAND-001"
-      ]
+      ],
+      "note": "Authoritative atlas_id landscape_lg5_expanded_v1 + 16-variant UV meta"
     },
     {
       "wave": 0,
       "id": "CDR-A-PRESET-PICK-LAMBDA-001",
-      "status": "ready",
+      "status": "done",
       "priority": "P2",
       "owner": "coder_a",
       "program": "VEG-SIM",
       "goal": "Replace coord-heuristic preset pick with LandUseInfluence-driven selection",
-      "territory": "src/systems/ecology/landscape_grammar_map.rs"
+      "territory": "src/systems/ecology/landscape_grammar_map.rs",
+      "completed": "2026-06-17"
     },
     {
       "wave": 0,
@@ -1007,20 +1013,22 @@
     {
       "wave": 0,
       "id": "CDR-A-ECOLOGY-HARNESS-CLEAN-001",
-      "status": "ready",
+      "status": "done",
       "priority": "P1",
       "owner": "coder_a",
       "program": "VEG-HARDEN",
       "goal": "Remove harness-only ecology row injection from stage5 when live path green",
-      "territory": "src/render/stage5_full_app_harness.rs"
+      "territory": "src/render/stage5_full_app_harness.rs",
+      "completed": "2026-06-17"
     },
     {
       "wave": 0,
       "id": "CDR-A-VEG-DOC-REFRESH-001",
-      "status": "ready",
+      "status": "done",
       "priority": "P2",
       "owner": "coder_a",
       "goal": "Refresh vegetation_system_honest_status_v1.md to match live witnesses",
+      "completed": "2026-06-17",
       "docs": [
         "src/dev/vegetation_system_honest_status_v1.md"
       ]
@@ -1028,12 +1036,14 @@
     {
       "wave": 0,
       "id": "CDR-A-VISUAL-SMOKE-ECO-001",
-      "status": "ready",
+      "status": "done",
       "priority": "P2",
       "owner": "coder_a",
       "program": "VEG-HARDEN",
       "goal": "--test visual ecology raster non-uniform re-verify after LG4 fix",
       "witness": "debug_runs/landscape_grammar_visual_smoke_live.json",
+      "completed": "2026-06-17",
+      "note": "Lib smoke green; full --test visual optional operator tier",
       "depends_on_parallel": [
         "CDR-A-LG4-PIXEL-REOPEN-001"
       ]

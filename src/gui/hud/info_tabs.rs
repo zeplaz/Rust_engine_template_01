@@ -5,10 +5,12 @@ use bevy::prelude::*;
 use bevy_egui::egui;
 
 use crate::construction::PendingConstructionQueue;
+use crate::gui::construction_growth_inspector::EcologyGrowthHint;
 use crate::gui::logistics_focus::HudLogisticsFocus;
 use crate::gui::ui_gates::in_simulation_or_editor;
 use crate::gui::world_representation::WorldRepresentationFrame;
-use crate::render::{AppStage5ReadinessReport, FireAtmosphereAggregate, GpuRepresentationMetrics};
+use crate::render::{AppStage5ReadinessReport, FireAtmosphereAggregate, GpuRepresentationMetrics,
+    infrastructure_overlay_legend_rows, InfrastructureOverlaySettings};
 use crate::strategic::{
     ActiveMissions, CityPlanningHints, FractureProbabilityOverlay, LogisticsAiRuntime,
     OperationalTheaterSummary, StrategicOverlayDisplayPolicy, WorldFields, WorldReadSnapshot,
@@ -68,6 +70,9 @@ pub struct HudInfoLiveData {
     pub fire_heat_energy: f32,
     pub fire_particle_rows: u32,
     pub focus_has_site: bool,
+    pub ecology_program_chunks: u32,
+    pub ecology_unique_presets: u32,
+    pub ecology_topology_kinds: u32,
 }
 
 pub fn sync_hud_info_live_data(
@@ -85,6 +90,7 @@ pub fn sync_hud_info_live_data(
     metrics: Option<Res<GpuRepresentationMetrics>>,
     pending: Option<Res<PendingConstructionQueue>>,
     focus: Option<Res<HudLogisticsFocus>>,
+    ecology: Option<Res<EcologyGrowthHint>>,
     mut live: ResMut<HudInfoLiveData>,
 ) {
     live.sim_tick = tick.0;
@@ -146,6 +152,11 @@ pub fn sync_hud_info_live_data(
     }
     live.fire_particle_rows = metrics.as_deref().map(|m| m.particle_rows).unwrap_or(0);
     live.focus_has_site = focus.as_deref().and_then(|f| f.tracked_entity).is_some();
+    if let Some(h) = ecology.as_deref() {
+        live.ecology_program_chunks = h.program_chunks;
+        live.ecology_unique_presets = h.unique_presets;
+        live.ecology_topology_kinds = h.topology_kind_count;
+    }
 }
 
 pub fn draw_info_tab_bar(ui: &mut egui::Ui, palette: &UiPalette, state: &mut HudInfoTabState) {
@@ -166,6 +177,54 @@ pub fn draw_info_tab_bar(ui: &mut egui::Ui, palette: &UiPalette, state: &mut Hud
     ui.separator();
 }
 
+fn sync_infra_overlay_from_utility_group(
+    shell: &OverlayShellState,
+    settings: &mut InfrastructureOverlaySettings,
+) {
+    let utility_on = shell.groups[3];
+    if utility_on && !settings.enabled {
+        settings.enabled = true;
+        settings.road = true;
+        settings.rail = true;
+    } else if !utility_on {
+        settings.enabled = false;
+    }
+}
+
+fn draw_infrastructure_overlay_legend(
+    ui: &mut egui::Ui,
+    settings: &mut InfrastructureOverlaySettings,
+) {
+    ui.separator();
+    ui.label(egui::RichText::new("Infrastructure network").strong());
+    ui.checkbox(&mut settings.enabled, "Show network overlay");
+    if !settings.enabled {
+        return;
+    }
+    ui.checkbox(&mut settings.road, "Roads");
+    ui.checkbox(&mut settings.rail, "Rail");
+    ui.checkbox(&mut settings.power, "Power");
+    ui.checkbox(&mut settings.water, "Water");
+    ui.checkbox(&mut settings.sewer, "Sewer");
+    ui.separator();
+    ui.label(egui::RichText::new("Stroke legend").small());
+    for row in infrastructure_overlay_legend_rows() {
+        ui.horizontal(|ui| {
+            let [r, g, b] = row.stroke.color_rgb;
+            let color = egui::Color32::from_rgb(r, g, b);
+            let height = row.stroke.weight_px.max(2.0);
+            let (rect, _) =
+                ui.allocate_exact_size(egui::vec2(28.0, height + 4.0), egui::Sense::hover());
+            let y = rect.center().y;
+            ui.painter().line_segment(
+                [egui::pos2(rect.left(), y), egui::pos2(rect.right(), y)],
+                egui::Stroke::new(row.stroke.weight_px, color),
+            );
+            ui.label(row.label);
+        });
+    }
+}
+
 pub fn draw_info_tab_body(
     ui: &mut egui::Ui,
     palette: &UiPalette,
@@ -177,17 +236,26 @@ pub fn draw_info_tab_body(
     readiness: Option<&AppStage5ReadinessReport>,
     live: Option<&HudInfoLiveData>,
     minimap_legend: Option<&str>,
+    infra_settings: &mut InfrastructureOverlaySettings,
 ) {
     match tab {
         HudInfoTab::Layers => {
             ui.label(egui::RichText::new("Map overlays").strong());
+            ui.label(egui::RichText::new("Tactical layers").small().weak());
             ui.checkbox(shell.group_mut(OverlayToggleGroup::Threat), "Threat");
             ui.checkbox(shell.group_mut(OverlayToggleGroup::Logistics), "Logistics routes");
             ui.checkbox(shell.group_mut(OverlayToggleGroup::Recon), "Recon");
+            ui.separator();
+            ui.label(egui::RichText::new("Utilities & networks").small().weak());
             ui.checkbox(shell.group_mut(OverlayToggleGroup::Utility), "Utilities");
+            sync_infra_overlay_from_utility_group(shell, infra_settings);
+            if shell.groups[3] {
+                draw_infrastructure_overlay_legend(ui, infra_settings);
+            }
             ui.separator();
             ui.checkbox(&mut shell.legend_open, "Channel legend");
             if shell.legend_open {
+                ui.label(egui::RichText::new("Minimap / map channels").small().weak());
                 if let Some(legend) = minimap_legend {
                     ui.label(egui::RichText::new(legend).small());
                 }
@@ -280,6 +348,15 @@ pub fn draw_info_tab_body(
         }
         HudInfoTab::Diagnostics => {
             ui.label(egui::RichText::new("Runtime diagnostics").strong());
+            if let Some(d) = live {
+                if d.ecology_program_chunks > 0 {
+                    ui.label(format!(
+                        "Ecology programs: {} chunks · {} presets · {} topology kinds",
+                        d.ecology_program_chunks, d.ecology_unique_presets, d.ecology_topology_kinds
+                    ));
+                    ui.separator();
+                }
+            }
             if let Some(r) = readiness {
                 ui.label(format!(
                     "Stage5 passes={} vt4={} vt5={} phase_f={}",

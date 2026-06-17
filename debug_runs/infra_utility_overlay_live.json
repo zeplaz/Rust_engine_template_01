@@ -52,10 +52,18 @@
     "relative_path": "debug_runs/infra_utility_overlay_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_infra_utility_overlay_live_witness",
-    "written_at_epoch_secs": 1781573867
+    "written_at_epoch_secs": 1781716813
   },
   "gate": "INFRA-UTILITY-OVERLAY-001",
   "green": true,
-  "overlay_edge_rows": 1,
-  "sim_hud_overlay_wired": true
+  "legend_row_count": 5,
+  "overlay_edge_rows": 3,
+  "overlay_readability_polish": true,
+  "power_stroke_rgb": [
+    232,
+    192,
+    64
+  ],
+  "sim_hud_overlay_wired": true,
+  "slice_id": "CDR-B-INFRA-OVERLAY-POLISH-001"
 }
