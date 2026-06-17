@@ -9,6 +9,7 @@ from typing import Any, Callable
 
 from PIL import Image, ImageTk
 
+from .aps_theme import FONT_SMALL, FONT_MONO_SMALL
 from .slot_preview_render import (
     PREVIEW_SIZE,
     render_combined_preview,
@@ -40,7 +41,7 @@ class SlotPreviewPanel(ttk.LabelFrame):
             text="Previews unlock understanding — module isolated, material on wall+sphere, combined, "
             "placement highlighted on footprint grid.",
             wraplength=520,
-            font=("Segoe UI", 8),
+            font=FONT_SMALL,
             foreground="#555",
         ).pack(anchor=tk.W, pady=(0, 6))
 
@@ -60,18 +61,18 @@ class SlotPreviewPanel(ttk.LabelFrame):
         meta = ttk.Frame(self)
         meta.pack(fill=tk.X, pady=(6, 0))
         self._mesh_var = tk.StringVar(value="")
-        ttk.Label(meta, textvariable=self._mesh_var, font=("Consolas", 8), foreground="#444", wraplength=500).pack(
+        ttk.Label(meta, textvariable=self._mesh_var, font=FONT_MONO_SMALL, foreground="#444", wraplength=500).pack(
             anchor=tk.W
         )
         self._slot_why_var = tk.StringVar(value="")
-        ttk.Label(meta, textvariable=self._slot_why_var, font=("Segoe UI", 8), foreground="#333", wraplength=500).pack(
+        ttk.Label(meta, textvariable=self._slot_why_var, font=FONT_SMALL, foreground="#333", wraplength=500).pack(
             anchor=tk.W, pady=2
         )
 
     def _thumb_cell(self, parent: ttk.Frame, col: int, title_var: tk.StringVar) -> tk.Label:
         cell = ttk.Frame(parent, padding=4)
         cell.grid(row=0, column=col, sticky=tk.N)
-        ttk.Label(cell, textvariable=title_var, font=("Segoe UI", 8, "bold")).pack(anchor=tk.CENTER)
+        ttk.Label(cell, textvariable=title_var, font=(FONT_SMALL[0], FONT_SMALL[1], "bold")).pack(anchor=tk.CENTER)
         lbl = tk.Label(
             cell,
             text="(select slot)",

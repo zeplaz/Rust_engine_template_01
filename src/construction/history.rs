@@ -273,7 +273,18 @@ pub fn record_road_execution(
     history: &mut ConstructionHistory,
     tiles_added: Vec<BuildSiteTile>,
     marker_entities: Vec<Entity>,
+    edge_id: Option<crate::systems::transport::TransportEdgeId>,
+    construction_record: Option<crate::systems::transport::TransportConstructionRecord>,
 ) {
+    if let (Some(eid), Some(rec)) = (edge_id, construction_record.as_ref()) {
+        bevy::log::debug!(
+            target: "construction::history",
+            edge = eid.0,
+            phase = %rec.phase,
+            progress = rec.progress,
+            "recorded corridor execute"
+        );
+    }
     if tiles_added.is_empty() && marker_entities.is_empty() {
         return;
     }
@@ -321,7 +332,7 @@ mod tests {
             BuildSiteTile { x: 1, z: 2 },
             BuildSiteTile { x: 2, z: 2 },
         ];
-        record_road_execution(&mut history, tiles.clone(), vec![]);
+        record_road_execution(&mut history, tiles.clone(), vec![], None, None);
         assert!(history.can_undo());
         let action = history.undo_stack.pop().unwrap();
         history.redo_stack.push(action.clone());

@@ -1,0 +1,45 @@
+{
+  "gate": "MCP-WIT-024",
+  "green": false,
+  "verdict": "FAIL",
+  "enforce_mode": false,
+  "exit_code": 0,
+  "integrity_cache": {
+    "fail_count": 146,
+    "inflated_green_count": 8,
+    "rollup_inflated_count": 2,
+    "queue_contradiction_count": 3,
+    "queue_stale_count": 126,
+    "queue_error_count": 133
+  },
+  "witness_honesty": {
+    "status": "failed",
+    "summary": "witness_honesty scan debug_runs: scanned=251 failed_files=135 issues=138",
+    "error_count": 13,
+    "warning_count": 125
+  },
+  "queue_integrity": {
+    "status": "failed",
+    "summary": "queue_integrity: contradictions=3 errors=133",
+    "error_count": 133
+  },
+  "hooks": {
+    "post_build": "tools/orchestrator/hooks/post_build.ps1",
+    "ops_scan": "tools/orchestrator/scripts/ops_intelligence_scan.ps1",
+    "env_enforce": "RUST_ENGINE_WITNESS_INTEGRITY_ENFORCE=1",
+    "env_disable_hook": "RUST_ENGINE_WITNESS_HONESTY_HOOK=0"
+  },
+  "commands": [
+    "python tools/orchestrator/scripts/witness_honesty_lib.py run-hook",
+    "python -m rust_engine_mcp.cli validate-report witness_honesty --scan debug_runs --compress 3",
+    "python -m rust_engine_mcp.cli validate-report queue_integrity --compress 3"
+  ],
+  "_agent_meta": {
+    "schema": "mcp_witness_integrity_ops_live_v1",
+    "written_at_epoch_secs": 1781659475,
+    "profile": "MCP_WITNESS_INTEGRITY_OPS",
+    "source_system": "witness_honesty_lib",
+    "relative_path": "debug_runs/mcp_witness_integrity_ops_live.json",
+    "ritual": null
+  }
+}

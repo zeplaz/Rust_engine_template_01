@@ -11,11 +11,12 @@ use crate::strategic::{
     SiteId, StrategicRasterConfig,
 };
 use crate::systems::ecology::{
-    apply_construction_clear_disturbance, apply_fire_disturbance_on_heat,
+    apply_active_burn_from_surface_fire, apply_construction_clear_disturbance,
+    apply_fire_disturbance_on_heat, advance_regrowth_macro_chain,
     attach_landscape_program_pilot, attach_lg2_components_on_pilot, evaluate_landscape_program,
     lg2_witness_green,
     load_landscape_grammar_catalog, map_rollout_witness_green, refresh_lg2_witness,
-    refresh_lg3_witness_from_districts, refresh_lg3_witness_from_districts_with_anchors,
+    refresh_lg3_witness_from_districts_with_anchors,
     refresh_lg4_preview_witness_with_tint_and_pixel_count, refresh_lg5_witness,
     lg4_preview_operator_visible,
     refresh_map_rollout_witness_system, refresh_vegetation_program_close,
@@ -66,6 +67,7 @@ pub fn build_landscape_grammar_harness_app() -> App {
         })
         .init_resource::<LandscapeGrammarLg2Witness>()
         .init_resource::<LandscapeMapRolloutWitness>()
+        .init_resource::<crate::systems::ecology::LandscapeBurnWitness>()
         .insert_resource(load_landscape_grammar_catalog())
         .insert_resource(LandscapePresetIndex::load())
         .add_message::<CommitConstructionSiteEvent>()
@@ -76,6 +78,8 @@ pub fn build_landscape_grammar_harness_app() -> App {
                 attach_lg2_components_on_pilot,
                 rollout_landscape_program_on_chunks,
                 apply_fire_disturbance_on_heat,
+                apply_active_burn_from_surface_fire,
+                advance_regrowth_macro_chain,
                 apply_construction_clear_disturbance,
                 refresh_map_rollout_witness_system,
             )
@@ -165,6 +169,8 @@ pub fn count_topology_tint_visible_program_chunks(world: &mut World) -> u32 {
 fn collect_result(world: &mut World) -> LandscapeGrammarSimHarnessResult {
     let program_count = count_live_landscape_program_chunks(world);
     let lg2 = world.resource::<LandscapeGrammarLg2Witness>().clone();
+    let burn = world.resource::<crate::systems::ecology::LandscapeBurnWitness>().clone();
+    let _ = crate::systems::ecology::refresh_burn_overlay_witness(&lg2, &burn);
     let map_w = world.resource::<LandscapeMapRolloutWitness>().clone();
     let eval = pilot_eval();
     let lg2_green = lg2_witness_green(&eval, &lg2);
@@ -314,6 +320,7 @@ pub fn refresh_landscape_grammar_harness_witnesses() -> bool {
         Some(pixel_visible),
     );
     let _ = refresh_lg5_witness();
+    let _ = crate::dev::veg_runtime_proof_live::refresh_veg_runtime_proof_live_witness();
 
     let preset_count = LandscapePresetIndex::load().preset_ids.len() as u32;
     let phases_a_e = result.lg2_green

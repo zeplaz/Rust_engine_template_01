@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "asset_id": "platform_dock_2u",
+  "archetype": "module_platform",
+  "style_pack": "style_industrial_west",
+  "development_tier": "lod0",
+  "pbr_status": "deferred",
+  "batch_id": "kit_lod0_007",
+  "module": {
+    "grid_units": [2, 1],
+    "snap": "floor_edge",
+    "pivot": "bottom_center"
+  },
+  "dimensions_m": {"w": 2, "h": 0.5, "d": 2},
+  "material_profile": "concrete_grey_01",
+  "references": []
+}

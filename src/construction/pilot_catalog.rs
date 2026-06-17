@@ -4,7 +4,7 @@
 
 use std::collections::HashMap;
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::sync::{Mutex, OnceLock};
 
 use bevy::prelude::*;
@@ -143,6 +143,7 @@ fn footprint_from_entry(
 ) -> Result<FootprintMatrix, &'static str> {
     if let Some(shape_id) = entry.mock_shape_id.as_deref() {
         let shape = mock_index.get(shape_id).ok_or("mock_shape_missing")?;
+        let _ = &shape.label;
         let expected = (shape.width as usize) * (shape.depth as usize);
         if shape.cells.len() != expected {
             return Err("mock_shape_cells");
@@ -202,10 +203,19 @@ impl PilotCatalog {
             } else {
                 PilotKind::ShapeQa
             });
+            let pilot_id = entry.id.clone();
             catalog.pilots.push(ResolvedPilotEntry {
-                catalog_id: format!("pilot:{}", entry.id),
-                id: entry.id,
-                label: entry.label,
+                catalog_id: format!("pilot:{}", pilot_id),
+                id: pilot_id.clone(),
+                label: if entry.label.is_empty() {
+                    entry
+                        .mock_shape_id
+                        .as_deref()
+                        .and_then(|id| mock_index.get(id).map(|s| s.label.clone()))
+                        .unwrap_or(pilot_id)
+                } else {
+                    entry.label
+                },
                 footprint,
                 arch_dna_preset: entry.arch_dna_preset,
                 grammar_archetype_id: entry.grammar_archetype_id,

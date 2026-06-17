@@ -16,8 +16,8 @@ use crate::systems::transport::{
 };
 
 use super::corridor_transport::{
-    apply_rail_profile_to_edge, find_edge_id_for_segment, planned_construction_record,
-    SimCorridorEdgeBinding,
+    apply_selected_rail_profile_to_edge, find_edge_id_for_segment, planned_construction_record,
+    transport_edge_from_binding, RailProfileSelection, SimCorridorEdgeBinding,
 };
 use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
 
@@ -257,6 +257,8 @@ pub fn execute_construction_plans_system(
                 history.as_mut(),
                 apply.tiles_added.clone(),
                 apply.marker_entities,
+                apply.edge_id,
+                apply.construction_record,
             );
             if let (Some(hydro), Some(coupling)) = (hydro_queue.as_mut(), hydro_coupling.as_mut()) {
                 super::hydro_coupling::emit_road_execute_hydro_dirty(
@@ -336,8 +338,10 @@ fn apply_road_segment_to_world<M: Component + Copy>(
     if let Some(edge_id) = segment_edge {
         corridor_book.plan_edge(edge_id);
         if is_rail {
-            let profile_id = rail_profile_id.unwrap_or("default_rail");
-            apply_rail_profile_to_edge(directory, edge_id, profile_id, &["train".into()]);
+            let selection = RailProfileSelection {
+                profile_id: rail_profile_id.unwrap_or("default_rail").to_owned(),
+            };
+            apply_selected_rail_profile_to_edge(directory, edge_id, &selection, None);
         }
     } else if let Some(edge_id) = directory
         .by_edge
@@ -348,8 +352,10 @@ fn apply_road_segment_to_world<M: Component + Copy>(
     {
         corridor_book.plan_edge(edge_id);
         if is_rail {
-            let profile_id = rail_profile_id.unwrap_or("default_rail");
-            apply_rail_profile_to_edge(directory, edge_id, profile_id, &["train".into()]);
+            let selection = RailProfileSelection {
+                profile_id: rail_profile_id.unwrap_or("default_rail").to_owned(),
+            };
+            apply_selected_rail_profile_to_edge(directory, edge_id, &selection, None);
         }
     }
     let bound_edge = segment_edge.or_else(|| {
@@ -476,7 +482,9 @@ fn spawn_path_marker<M: Component + Copy>(
         ))
         .id();
     if let Some(eid) = edge_id {
-        commands.entity(entity).insert(SimCorridorEdgeBinding { edge_id: eid });
+        let binding = SimCorridorEdgeBinding { edge_id: eid };
+        debug_assert_eq!(transport_edge_from_binding(&binding), eid);
+        commands.entity(entity).insert(binding);
     }
     entity
 }

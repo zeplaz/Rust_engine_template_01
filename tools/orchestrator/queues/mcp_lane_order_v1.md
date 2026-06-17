@@ -6,9 +6,10 @@
 ⟨MCP-LANE-ORDER⟩ 🟢⏳  ◕
  Lattice  Au:🏛🟩🟩🟩  Ct:🟨🟨  Q:🎯🟩🟩
  Flow     ⊚orchestrator-mcp ═▶ ⊚HANDOFF ⊐ ⊚mcp_active_queue ⊐ ⊚G0…G5 graph
- Program  ⟨MCP-PRODUCTIVITY-P2-001⟩  ·  rowhouse ★  ·  ⟨MCP-P2-SIM-VALIDATORS⟩ secondary
- NEXT     ΔWF→@coder-mcp ⟨MCP-P2-QUEUE-PHASE4-001⟩ + ⟨MCP-P2-VALID-CONSTRUCTION-001⟩ (parallel — plan SIGNED)
-          ΔWF→@planner-mcp ⟨MCP-P2-KIT002-PLAN⟩ · ⟨ARCH-002⟩ (orthogonal planner drain)
+ Program  ⟨MCP-PRODUCTIVITY-P2-001⟩  ·  rowhouse ★  ·  ⟨MCP-P2-SIM-VALIDATORS⟩ Phase 3
+ NEXT     ΔWF→@planner-mcp ⟨MCP-P2-KIT002-PLAN⟩ · ⟨ARCH-002⟩ (planner drain — unfreeze criteria)
+          @coder-mcp ⏸ idle — P2 sim-validators Phases 1–3 ★ SHIPPED
+ SHIPPED  ⟨MCP-P2-QUEUE-PHASE4-001⟩ ★ · ⟨MCP-P2-VALID-CONSTRUCTION-001⟩ ★ · ⟨MCP-P2-OPS-BRIEF-002⟩ ★ · ⟨BUILD-READ-CONSUMER-MCP-001⟩ ★
 ```
 
 ---
@@ -73,7 +74,8 @@ BLANG:STATS → BLANG:BOOT(agent=orchestrator-mcp) → BLANG:HO → orchestrator
   └─═[quality]▶     ⦿coder-mcp   ▷⊳ ⟨MCP-P2-HONEST-BAKE-001⟩ ⬡G3 ★
 ⧗ paused: ⟨MCP-PILOT-GRAMMAR-001⟩ Track B — operator manual keyframe only
 ⛔ frozen: kit_production_002+ until ⟨MCP-P2-KIT002-PLAN⟩ ★ ∧ designer G0
-⛔ coder-mcp blocked: ⟨MCP-P2-OPS-BRIEF-002⟩ until ⟨MCP-P2-QUEUE-PHASE4-001⟩ done
+✅ shipped: ⟨MCP-P2-QUEUE-PHASE4-001⟩ · ⟨MCP-P2-VALID-CONSTRUCTION-001⟩ · ⟨BUILD-READ-CONSUMER-MCP-001⟩ · ⟨MCP-P2-OPS-BRIEF-002⟩
+⏸ coder-mcp idle — await ⟨MCP-P2-KIT002-PLAN⟩ ★ or new queue row
 ```
 
 ### Task order (strict)

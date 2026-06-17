@@ -46,8 +46,8 @@ use crate::gui::style::{
 };
 use crate::systems::terrain::TerrainRegistriesHandles;
 use crate::terrain::editor::map_snapshot::{
-    load_map_snapshot_from_ron, map_snapshot_v1_to_v2, MapSnapshotCellV1, MapSnapshotV1,
-    MAP_SNAPSHOT_SCHEMA_VERSION,
+    load_map_snapshot_bundle_from_ron, MapSnapshotCellV2, MapSnapshotV2,
+    MAP_SNAPSHOT_SCHEMA_VERSION_V2,
 };
 use crate::terrain::family::{TerrainFamilyId, TerrainFamilyRegistry, DEFAULT_TERRAIN_FAMILY_ID};
 use crate::terrain::generation::polygon_world_semantics::MacroStrategicKind;
@@ -1193,20 +1193,23 @@ fn map_editor_map_snapshot_io(
                             .def(tid)
                             .map(|d| d.name.clone())
                             .unwrap_or_else(|| "Grassland".to_string());
-                        cells.push(MapSnapshotCellV1 {
+                        cells.push(MapSnapshotCellV2 {
                             height,
                             terrain_family,
-                            road: road_tiles.contains(&(x, z)),
                         });
                     }
                 }
-                let snap = MapSnapshotV1 {
-                    schema_version: MAP_SNAPSHOT_SCHEMA_VERSION,
+                let road_marker_tiles: Vec<[u32; 2]> = road_tiles
+                    .iter()
+                    .map(|(x, z)| [*x, *z])
+                    .collect();
+                let snap_v2 = MapSnapshotV2 {
+                    schema_version: MAP_SNAPSHOT_SCHEMA_VERSION_V2,
                     width: w,
                     height: h,
                     cells,
+                    road_marker_tiles,
                 };
-                let snap_v2 = map_snapshot_v1_to_v2(&snap);
                 let path = dev_map_snapshot_path();
                 if let Some(parent) = path.parent() {
                     let _ = std::fs::create_dir_all(parent);
@@ -1235,13 +1238,14 @@ fn map_editor_map_snapshot_io(
                         continue;
                     }
                 };
-                let snap = match load_map_snapshot_from_ron(text) {
+                let bundle = match load_map_snapshot_bundle_from_ron(text) {
                     Ok(s) => s,
                     Err(e) => {
                         warn!("Load map snapshot: RON: {e}");
                         continue;
                     }
                 };
+                let snap = bundle.terrain;
                 if let Err(e) = snap.validate() {
                     warn!("Load map snapshot: {e}");
                     continue;
@@ -1302,29 +1306,23 @@ fn map_editor_map_snapshot_io(
                     }
                 }
 
-                idx = 0;
-                for z in 0..h {
-                    for x in 0..w {
-                        let cell = &snap.cells[idx];
-                        idx += 1;
-                        if !cell.road {
-                            continue;
-                        }
-                        let seq = road_placement.next;
-                        road_placement.next = road_placement.next.saturating_add(1);
-                        let y = cell.height * HEIGHT_WORLD_SCALE + 0.25;
-                        commands.entity(world_root).with_children(|parent| {
-                            parent.spawn((
-                                MapEditorRoadMarkerV1 {
-                                    tile_x: x,
-                                    tile_z: z,
-                                    placement_seq: seq,
-                                },
-                                Transform::from_translation(Vec3::new(x as f32, y, z as f32)),
-                                Name::new(format!("Road marker v1 ({x},{z}) seq={seq}")),
-                            ));
-                        });
-                    }
+                for (x, z) in bundle.road_marker_tiles {
+                    let i = (z * h + x) as usize;
+                    let height = snap.cells.get(i).map(|c| c.height).unwrap_or(0.0);
+                    let seq = road_placement.next;
+                    road_placement.next = road_placement.next.saturating_add(1);
+                    let y = height * HEIGHT_WORLD_SCALE + 0.25;
+                    commands.entity(world_root).with_children(|parent| {
+                        parent.spawn((
+                            MapEditorRoadMarkerV1 {
+                                tile_x: x,
+                                tile_z: z,
+                                placement_seq: seq,
+                            },
+                            Transform::from_translation(Vec3::new(x as f32, y, z as f32)),
+                            Name::new(format!("Road marker v1 ({x},{z}) seq={seq}")),
+                        ));
+                    });
                 }
 
                 info!("Loaded map snapshot {}×{} from {}", w, h, path.display());

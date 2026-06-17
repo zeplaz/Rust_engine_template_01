@@ -28,6 +28,11 @@ pub struct SimCorridorEdgeBinding {
 }
 
 #[must_use]
+pub fn transport_edge_from_binding(binding: &SimCorridorEdgeBinding) -> TransportEdgeId {
+    binding.edge_id
+}
+
+#[must_use]
 pub fn transport_tile_node_key(tile: BuildSiteTile) -> String {
     format!("t{}_{}", tile.x, tile.z)
 }

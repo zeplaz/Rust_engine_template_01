@@ -187,6 +187,10 @@ class AtlasPanel(ttk.Frame):
         self.atlas_preview.load_folder(folder or None)
 
     def _inline_hint(self, text: str, *, ok: bool | None = None) -> None:
+        # APS-UX-NONCOLOR — carry pass/fail as a text prefix, not color alone, so
+        # the signal survives grayscale / colorblind.
+        if ok is not None and not text.upper().startswith(("PASS:", "FAIL:")):
+            text = f"{'PASS' if ok else 'FAIL'}: {text}"
         self._inline_status_var.set(text)
         fg = "#0a4a7a" if ok is None else ("#1a6b1a" if ok else "#8b1a1a")
         self._inline_status_lbl.configure(foreground=fg)

@@ -56,6 +56,7 @@ PILOT_PROFILES: dict[str, ProfileDef] = {
     "glass_panel_01": ProfileDef("glass_panel_01", "steel", 45, 0.1, 0.15),
     "steel_panel_01": ProfileDef("steel_panel_01", "steel", 42010, 0.85, 0.42),
     "roof_metal_01": ProfileDef("roof_metal_01", "steel", 42011, 0.9, 0.38),
+    "metal_roof_01": ProfileDef("metal_roof_01", "steel", 42011, 0.9, 0.38),
 }
 
 

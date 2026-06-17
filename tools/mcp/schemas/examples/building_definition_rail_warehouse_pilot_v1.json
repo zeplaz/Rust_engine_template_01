@@ -1,9 +1,4 @@
 {
-  "_meta": {
-    "teaches": ["pilot_catalog", "module_runs"],
-    "not_a_ship_target": true,
-    "building_set_id": "industrial_west_v0"
-  },
   "schema_version": 1,
   "building_id": "rail_warehouse_pilot",
   "style_pack_id": "style_industrial_west",

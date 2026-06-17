@@ -73,6 +73,7 @@ pub mod construction_placement_live_proof;
 pub mod vfx_fire_test_highlight_live_proof;
 pub mod landscape_grammar_live_proof;
 pub mod landscape_grammar_sim_harness;
+pub mod veg_runtime_proof_live;
 pub mod fire_ecology_lib_harness;
 pub mod product_verify_live_proof;
 pub mod sim_effect_spine_live_proof;
@@ -89,6 +90,7 @@ pub mod vegetation_snapshot_roundtrip_live_proof;
 pub mod minimap_topology_legend_live_proof;
 pub mod infra_e0_profile_catalog_live_proof;
 pub mod infra_utility_overlay_live_proof;
+pub mod landscape_grammar_burn_live_proof;
 pub mod aps_dna_consumer_live_proof;
 #[cfg(test)]
 pub mod phase6_coder_queue_bundle_proof;
@@ -102,8 +104,9 @@ pub use orchestrator_health::{
     orchestrator_health_path, OrchestratorHealthPlugin, OrchestratorThreadHealthExport,
 };
 pub use debug_run_envelope::{
-    debug_runs_dir, refresh_agent_debug_index, wrap_debug_run, write_debug_run_json,
-    AGENT_DEBUG_INDEX_PATH, ENVELOPE_SCHEMA,
+    assert_witness_honesty_before_write, debug_runs_dir, refresh_agent_debug_index,
+    wrap_debug_run, write_debug_run_json, AGENT_DEBUG_INDEX_PATH, ENVELOPE_SCHEMA,
+    WITNESS_HONESTY_ENFORCE_ENV, WITNESS_HONESTY_SKIP_ENV,
 };
 pub use runtime_witness::{
     witness_gate_snapshot, witness_writes_enabled, write_enveloped_witness,

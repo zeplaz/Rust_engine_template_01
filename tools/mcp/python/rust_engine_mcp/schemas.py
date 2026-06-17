@@ -60,6 +60,10 @@ def validate_variant_set(data: dict[str, Any]) -> None:
     jsonschema.validate(instance=data, schema=_load_schema("variant_set_v1.schema.json"))
 
 
+def validate_variant_graph(data: dict[str, Any]) -> None:
+    jsonschema.validate(instance=data, schema=_load_schema("variant_graph_v1.schema.json"))
+
+
 def validate_variant_catalog(data: dict[str, Any]) -> None:
     jsonschema.validate(instance=data, schema=_load_schema("variant_catalog_v1.schema.json"))
 
@@ -78,6 +82,14 @@ def validate_arch_build_grammar(data: dict[str, Any]) -> None:
 
 def validate_landscape_grammar(data: dict[str, Any]) -> None:
     jsonschema.validate(instance=data, schema=_load_schema("landscape_grammar_v0.schema.json"))
+
+
+def validate_witness_integrity_catalog(data: dict[str, Any]) -> None:
+    jsonschema.validate(instance=data, schema=_load_schema("witness_integrity_rules_v1.schema.json"))
+
+
+def validate_queue_registry_doc(data: dict[str, Any]) -> None:
+    jsonschema.validate(instance=data, schema=_load_schema("queue_registry_v1.schema.json"))
 
 
 def load_json_file(path: Path) -> dict[str, Any]:

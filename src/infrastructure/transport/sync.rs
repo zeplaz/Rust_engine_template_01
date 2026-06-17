@@ -77,7 +77,7 @@ pub fn sync_transport_runtime_from_graph(
 
 #[must_use]
 pub fn infra_e1_001_transport_graph_sync_witness_green() -> bool {
-    use super::graph::{TransportEdge, TransportGraph, TransportNode, TransportNodeId};
+    use super::graph::{TransportEdge, TransportGraph};
     use super::junction::{ensure_edge_endpoints, rebuild_junction_metadata};
     use crate::systems::transport::CorridorClass;
 

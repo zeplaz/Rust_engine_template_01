@@ -1,0 +1,15 @@
+{
+  "_fixture": { "expect": "fail", "rule_id": "WIT-TINY-PNG-PILOT" },
+  "_agent_meta": {
+    "schema": "witness_honesty_fixture_v1",
+    "profile": "BAD_TINY_PNG"
+  },
+  "gate": "FIXTURE-TINY-PNG",
+  "green": true,
+  "ship": true,
+  "png_count": 2,
+  "png_dimensions": [
+    { "file": "clean_day.png", "bytes": 128, "width": 128, "height": 128 },
+    { "file": "clean_night.png", "bytes": 2048, "width": 128, "height": 128 }
+  ]
+}

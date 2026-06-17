@@ -46,6 +46,26 @@ fn witness_file_green(path: &str) -> bool {
         .unwrap_or(false)
 }
 
+/// WIT-RUST-003 — G-PLAY rollup requires non-lib_fixture proof grade.
+#[must_use]
+fn g_play_proof_grade_honest() -> bool {
+    let stage5 = std::env::var_os("CARGO_MANIFEST_DIR")
+        .map(std::path::PathBuf::from)
+        .map(|root| root.join("debug_runs/stage5_full_app_live.json"))
+        .unwrap_or_else(|| std::path::PathBuf::from("debug_runs/stage5_full_app_live.json"));
+    let Ok(raw) = std::fs::read_to_string(stage5) else {
+        return false;
+    };
+    let Ok(doc) = serde_json::from_str::<serde_json::Value>(&raw) else {
+        return false;
+    };
+    let grade = doc
+        .pointer("/log_e01_visual_confirm_001/proof_grade")
+        .or_else(|| doc.get("proof_grade"))
+        .and_then(|v| v.as_str());
+    matches!(grade, Some(g) if g != "lib_fixture")
+}
+
 #[must_use]
 pub fn refresh_build_verify_pointer_live_witness() -> bool {
     let green = crate::gui::hud::simulation_pointer_gate::build_verify_pointer_001_witness_green();
@@ -103,7 +123,9 @@ pub fn refresh_product_verify_live_witnesses() -> ProductVerifyRefreshResult {
             .unwrap_or(false)
     };
 
-    r.rollup_green = r.map_zoom
+    let proof_grade_honest = g_play_proof_grade_honest();
+    r.rollup_green = proof_grade_honest
+        && r.map_zoom
         && r.pilot_catalog
         && r.build_visual
         && r.minimap
@@ -115,9 +137,12 @@ pub fn refresh_product_verify_live_witnesses() -> ProductVerifyRefreshResult {
         && play_truth
         && stage5_fire;
 
+    let proof_grade = read_json_proof_grade();
     let body = serde_json::json!({
         "gate": "PRODUCT-VERIFY-GPLAY-001",
         "green": r.rollup_green,
+        "proof_grade": proof_grade,
+        "proof_grade_honest": proof_grade_honest,
         "play_truth": play_truth,
         "stage5_fire_instances": stage5_fire,
         "lanes": {
@@ -144,6 +169,19 @@ pub fn refresh_product_verify_live_witnesses() -> ProductVerifyRefreshResult {
     r
 }
 
+fn read_json_proof_grade() -> Option<String> {
+    let stage5 = std::env::var_os("CARGO_MANIFEST_DIR")
+        .map(std::path::PathBuf::from)
+        .map(|root| root.join("debug_runs/stage5_full_app_live.json"))
+        .unwrap_or_else(|| std::path::PathBuf::from("debug_runs/stage5_full_app_live.json"));
+    let raw = std::fs::read_to_string(stage5).ok()?;
+    let doc = serde_json::from_str::<serde_json::Value>(&raw).ok()?;
+    doc.pointer("/log_e01_visual_confirm_001/proof_grade")
+        .or_else(|| doc.get("proof_grade"))
+        .and_then(|v| v.as_str())
+        .map(str::to_owned)
+}
+
 #[must_use]
 pub fn product_verify_rollup_green() -> bool {
     refresh_product_verify_live_witnesses().rollup_green
@@ -154,7 +192,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn product_verify_bundle_refreshes_green_rollup() {
+    fn product_verify_bundle_refreshes_lane_witnesses() {
         let r = refresh_product_verify_live_witnesses();
         assert!(r.map_zoom, "map_zoom");
         assert!(r.pilot_catalog, "pilot_catalog");
@@ -165,6 +203,13 @@ mod tests {
         assert!(r.fire_play_vis, "fire_play_vis");
         assert!(r.landscape_grammar, "landscape_grammar");
         assert!(r.pointer_gate, "pointer_gate");
-        assert!(r.rollup_green, "rollup");
+        if g_play_proof_grade_honest() {
+            assert!(r.rollup_green, "rollup");
+        } else {
+            assert!(
+                !r.rollup_green,
+                "WIT-RUST-003: lib_fixture must not close G-PLAY rollup"
+            );
+        }
     }
 }

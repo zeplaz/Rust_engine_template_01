@@ -1,0 +1,121 @@
+{
+  "gate": "MCP-P2-KIT002-G3",
+  "green": true,
+  "verdict": "PASS",
+  "batch_id": "kit_production_002",
+  "development_tier": "production",
+  "manifest": "tools/mcp/schemas/examples/batch_kit_production_002.manifest.json",
+  "g1_witness": "debug_runs/art_pipeline/kit_production_002_g1_live.json",
+  "g2_witness": "debug_runs/art_pipeline/kit_production_002_g2_live.json",
+  "validate_asset_report": {
+    "compression_level": 3,
+    "all_passed": true,
+    "passed_count": 6,
+    "module_count": 6
+  },
+  "modules": [
+    {
+      "module_id": "wall_steel_1u",
+      "job_id": "wall_steel_1u_production_run001",
+      "glb": "assets/models/modules/wall_steel_1u_production_run001/model.glb",
+      "passed": true,
+      "validate_asset_report": {
+        "status": "passed",
+        "summary": "model.glb: verts=48 tier=production arch=module_wall profile=flat",
+        "error_count": 0,
+        "warning_count": 0,
+        "compression_level": 3
+      }
+    },
+    {
+      "module_id": "door_warehouse",
+      "job_id": "door_warehouse_production_run001",
+      "glb": "assets/models/modules/door_warehouse_production_run001/model.glb",
+      "passed": true,
+      "validate_asset_report": {
+        "status": "passed",
+        "summary": "model.glb: verts=44 tier=production arch=module_door profile=frame",
+        "error_count": 0,
+        "warning_count": 0,
+        "compression_level": 3
+      }
+    },
+    {
+      "module_id": "win_industrial_3u",
+      "job_id": "win_industrial_3u_production_run001",
+      "glb": "assets/models/modules/win_industrial_3u_production_run001/model.glb",
+      "passed": true,
+      "validate_asset_report": {
+        "status": "passed",
+        "summary": "model.glb: verts=96 tier=production arch=module_window profile=strip",
+        "error_count": 0,
+        "warning_count": 0,
+        "compression_level": 3
+      }
+    },
+    {
+      "module_id": "corner_L",
+      "job_id": "corner_L_industrial_west_production_run001",
+      "glb": "assets/models/modules/corner_L_industrial_west_production_run001/model.glb",
+      "passed": true,
+      "validate_asset_report": {
+        "status": "passed",
+        "summary": "model.glb: verts=48 tier=production arch=module_prop profile=box",
+        "error_count": 0,
+        "warning_count": 0,
+        "compression_level": 3
+      }
+    },
+    {
+      "module_id": "roof_industrial_shed_2u",
+      "job_id": "roof_industrial_shed_2u_production_run001",
+      "glb": "assets/models/modules/roof_industrial_shed_2u_production_run001/model.glb",
+      "passed": true,
+      "validate_asset_report": {
+        "status": "passed",
+        "summary": "model.glb: verts=48 tier=production arch=module_roof profile=shed",
+        "error_count": 0,
+        "warning_count": 0,
+        "compression_level": 3
+      }
+    },
+    {
+      "module_id": "stack_chimney_1u",
+      "job_id": "stack_chimney_1u_production_run001",
+      "glb": "assets/models/modules/stack_chimney_1u_production_run001/model.glb",
+      "passed": true,
+      "validate_asset_report": {
+        "status": "passed",
+        "summary": "model.glb: verts=24 tier=production arch=module_prop profile=box",
+        "error_count": 0,
+        "warning_count": 0,
+        "compression_level": 3
+      }
+    }
+  ],
+  "tile_promotion_honest": {
+    "status": "passed",
+    "ship": false,
+    "ok": true,
+    "bake_source": "keyframe_pack",
+    "render_method": "blender_keyframe_light_rig",
+    "batch_path": "tools/mcp/schemas/examples/tile_batch_warehouse_industrial_west_production_v1.json"
+  },
+  "tile_ship_blocked_by": [
+    "TILE-FIX-001_v1_frozen",
+    "G4_manual_keyframe_pending"
+  ],
+  "proceed_tile_ship": false,
+  "unblocks": [
+    "MCP-P2-KIT002-G4"
+  ],
+  "delta_wf": "@designer-mcp MCP-P2-KIT002-G4 keyframe stills",
+  "_agent_meta": {
+    "schema": "kit_production_002_g3_live_v1",
+    "written_at_epoch_secs": 1781656358,
+    "profile": "KIT_PRODUCTION_002_G3",
+    "source_system": "kit_production_002",
+    "relative_path": "debug_runs/art_pipeline/kit_production_002_g3_live.json",
+    "ritual": "BLANG:Q\u2713 MCP-P2-KIT002-G3"
+  }
+}

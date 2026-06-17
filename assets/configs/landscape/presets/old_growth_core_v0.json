@@ -1,8 +1,17 @@
 {
   "schema_version": "landscape_grammar_v0",
   "preset_id": "old_growth_core_v0",
-  "chart_id": "OG-CORE-D1",
-  "land_dna": { "H": "old_growth", "S": "deep_humus", "E": "sheltered", "T": "temperate", "D": "stable", "L": "forest", "A": "ancient", "M": "wild" },
+  "chart_id": "OLD-GROWTH-COMPLEX-Σ4",
+  "land_dna": {
+    "H": "riparian",
+    "S": "deep_alluvial",
+    "E": "sheltered",
+    "T": "temperate",
+    "D": "low",
+    "L": "wild",
+    "A": "legacy",
+    "M": "wild"
+  },
   "pressure_field": {
     "lambda_moisture": 0.78,
     "lambda_slope": 0.42,
@@ -14,7 +23,8 @@
     "lambda_legibility": 0.35
   },
   "landscape_program": {
-    "class": "forest",
+    "class": "natural",
+    "district_ref": "old_growth_reserve_02",
     "required_topologies": ["CORRIDOR_RIPARIAN", "RING_SHELTERBELT", "PATCH_IRREGULAR", "FRINGE_EDGE"]
   },
   "topology_graph": [
@@ -22,26 +32,66 @@
       "id": "net_og_01",
       "topology_kind": "Network",
       "preset_id": "NETWORK_CONNECTED",
+      "scale_band": "L",
+      "anchor_ref": "partition:chunk_02_og",
+      "parent_topology_id": null,
+      "operator_stack": ["anchor_partition", "network_link"]
+    },
+    {
+      "id": "corr_creek_01",
+      "topology_kind": "Corridor",
+      "preset_id": "CORRIDOR_RIPARIAN",
+      "scale_band": "M",
+      "anchor_ref": "hydro:creek_axis_02",
+      "parent_topology_id": "net_og_01",
+      "operator_stack": ["anchor_river", "corridor", "drift"],
+      "metadata": { "glyph_planning": "≈≈≈╬≈≈≈" }
+    },
+    {
+      "id": "ring_canopy_01",
+      "topology_kind": "Ring",
+      "preset_id": "RING_SHELTERBELT",
+      "scale_band": "M",
+      "anchor_ref": "site:reserve_edge",
+      "parent_topology_id": "net_og_01",
+      "operator_stack": ["ring", "expand"],
+      "metadata": { "glyph_planning": "(█)" }
+    },
+    {
+      "id": "patch_core_01",
+      "topology_kind": "Patch",
+      "preset_id": "PATCH_IRREGULAR",
+      "scale_band": "M",
+      "anchor_ref": "site:core_stand",
+      "parent_topology_id": "net_og_01",
+      "operator_stack": ["seed_patch", "cluster", "expand"],
       "children": [
-        { "id": "corr_creek_01", "topology_kind": "Corridor", "preset_id": "CORRIDOR_RIPARIAN", "metadata": { "glyph_planning": "≈≈≈╬≈≈≈" } },
-        { "id": "ring_canopy_01", "topology_kind": "Ring", "preset_id": "RING_SHELTERBELT", "metadata": { "glyph_planning": "◯◯◯" } },
         {
-          "id": "patch_core_01",
-          "topology_kind": "Patch",
-          "preset_id": "PATCH_IRREGULAR",
+          "id": "cluster_og_01",
+          "topology_kind": "Cluster",
+          "preset_id": "CLUSTER_NATURAL",
+          "scale_band": "S",
+          "parent_topology_id": "patch_core_01",
           "children": [
             {
-              "id": "cluster_og_01",
+              "id": "cluster_snag_01",
               "topology_kind": "Cluster",
-              "preset_id": "CLUSTER_NATURAL",
-              "children": [
-                { "id": "cluster_snag_01", "topology_kind": "Cluster", "preset_id": "CLUSTER_SNAG" }
-              ]
+              "preset_id": "CLUSTER_DENSE",
+              "scale_band": "S",
+              "parent_topology_id": "cluster_og_01"
             }
           ]
-        },
-        { "id": "fringe_edge_01", "topology_kind": "Fringe", "preset_id": "FRINGE_EDGE" }
+        }
       ]
+    },
+    {
+      "id": "fringe_edge_01",
+      "topology_kind": "Fringe",
+      "preset_id": "FRINGE_EDGE",
+      "scale_band": "S",
+      "anchor_ref": "field:reserve_margin",
+      "parent_topology_id": "net_og_01",
+      "operator_stack": ["fringe"]
     }
   ]
 }

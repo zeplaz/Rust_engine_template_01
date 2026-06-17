@@ -60,13 +60,13 @@ FULL_APP green means the **spine is authoritative and measurable** in the runnin
 
 ### 1. Cursor custom agents (authoritative roles) — [`.cursor/agents/`](.cursor/agents/)
 
-**Session bootstrap (all agents — AGENT-LANG-004-RITUAL):** Every agent file mandates [`_fragments/session_bootstrap_v1.md`](.cursor/agents/_fragments/session_bootstrap_v1.md). Session start chain:
+**Session bootstrap (all agents):** Every agent file mandates [`_fragments/session_bootstrap_v1.md`](.cursor/agents/_fragments/session_bootstrap_v1.md). **Skill sync first** if `.cursor/skills/agent-lang/SKILL.md` is empty — then:
 
 ```text
-agent_doc_reads_brief() → agent_session_bootstrap('<agent>') → role BLANG:DOC → pipeline_preflight()
+SKILL-SYNC ⊳ node .claude/skills/agent-lang/driver.mjs boot <agent> ⊳ Q+ ⊳ work ⊳ WIT-HON ⊳ WIT ⊳ Q✓
 ```
 
-Re-read [`prompts/llm_agent_brief.md`](prompts/llm_agent_brief.md) **§FIELD◈ · SYMLANG◈** + [`prompts/SYMBOLIC_LANGUAGE.meta.md`](prompts/SYMBOLIC_LANGUAGE.meta.md) via MCP digest — ledger in `debug_runs/agent_ops/doc_reads.jsonl`. Hot repeats → `agent_doc_promote_hot_reads()` → `tools/mcp/cache/agent_doc_digests/`. Rollup: `debug_runs/agent_ops/doc_reads_brief_latest.json`. Portal upstream `../claude-portal-skills/SYMBOLIC_LANGUAGE.meta.md` is **read-only** — edit only the in-repo copy.
+Attach [`.cursor/skills/agent-lang/SKILL.md`](.cursor/skills/agent-lang/SKILL.md) every session. BOOT reads [`prompts/llm_agent_brief.md`](prompts/llm_agent_brief.md) **§FIELD◈ · SYMLANG◈** + [`prompts/SYMBOLIC_LANGUAGE.meta.md`](prompts/SYMBOLIC_LANGUAGE.meta.md) directly (or via `driver.mjs doc <path>`). **Removed CLI:** `agent_session_bootstrap`, `agent_doc_touch`, `agent_doc_reads_brief`.
 
 Copied from user profile into the repo so the team shares one definition. Each file uses **`model: auto`** in frontmatter (agent picker or `@orchestrator` / `@planner` / `@coder` / `@designer` / **`@orchestrator-mcp` / `@planner-mcp` / `@coder-mcp` / `@designer-mcp`** / `@sim-steward`).
 
@@ -138,7 +138,15 @@ Per-subsystem **DO NOT TOUCH**, safe edits, and exit criteria (e.g. `viewport_cl
 
 ### 3. Skills + governance
 
-- **agent-lang** ([`.cursor/skills/agent-lang/`](.cursor/skills/agent-lang/SKILL.md)) — **attach every session** (all agents); BLANG loop, `$ref`, validators; stacks on domain skills
+**Skill parity (mandatory — all agents, every session):** If `.cursor/skills/agent-lang/SKILL.md` (or any domain skill) is **missing or empty**, agents lose BLANG/queue/witness protocol — run sync before work:
+
+```powershell
+powershell -NoProfile -File .cursor/skills/sync-claude-skills/scripts/sync.ps1
+```
+
+Authoring tree: `.claude/skills/` · Cursor base: `.cursor/skills/` · Ritual: [`.cursor/agents/_fragments/session_bootstrap_v1.md`](.cursor/agents/_fragments/session_bootstrap_v1.md). After MCP tool changes in `tools/mcp/python`, **reload Cursor MCP** (`rust-engine-art`).
+
+- **agent-lang** ([`.cursor/skills/agent-lang/`](.cursor/skills/agent-lang/SKILL.md)) — **attach every session** (all agents); BLANG loop, `$ref`, validators, **WIT-HON** before Q✓; stacks on domain skills
 - **validation-first** (project skill, [`.cursor/skills/validation-first/`](.cursor/skills/validation-first/SKILL.md)) — structured `validate-report` after builds; **@coder** / **@sim-steward** consumers; not raw cargo walls
 - **bevy-simulation-grade** ([`.cursor/skills/bevy-simulation-grade/`](.cursor/skills/bevy-simulation-grade/SKILL.md) in repo; also `~/.cursor/skills/`) — **start at `07-repo-authority-map.md`** for `src/` scheduling; Bevy **0.18**
 - **debug-intelligence** (project skill, [`.cursor/skills/debug-intelligence/`](.cursor/skills/debug-intelligence/SKILL.md)) — witness JSON, viewport/render drift, VM-* migration debt; compresses evidence and routes to `@planner` / `@coder` / `@designer` (does not implement fixes).

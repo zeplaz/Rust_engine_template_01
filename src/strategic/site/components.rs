@@ -6,7 +6,7 @@ use super::resources::{FootprintTiles, SiteConstructionPhase, SiteId};
 use crate::strategic::build_order::BuildSiteTile;
 use crate::strategic::spatial_network::LayerType;
 
-pub use crate::construction::{ClearingSubstep, SiteStageProgress};
+pub use crate::construction::SiteStageProgress;
 
 // -----------------------------------------------------------------------------
 // Site identity & lifecycle

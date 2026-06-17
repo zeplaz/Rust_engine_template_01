@@ -143,10 +143,14 @@
     "G-PLAY-01": {
       "phi": 0,
       "operator": "src/dev/plan_g_play_close_001_checklist_v1.md",
-      "blocker": "TRIAGE-MAP-PICK-CLOSURE-001",
-      "blocker_alias": "P0-BUILD-FOOTPRINT-001",
-      "blocker_exec": "src/dev/plan_build_footprint_vm09_exec_v1.md",
-      "note": "💬 operator blocked until footprint projection φ→🟢"
+      "split": "src/dev/plan_g_play_split_v1.md",
+      "sub_gates": {
+        "G-PLAY-CODER-FIRE": { "phi": 2, "closed": true },
+        "G-PLAY-CODER-BUILD": { "phi": 2, "closed": true },
+        "G-PLAY-CODER-VEG": { "phi": 2, "closed": true, "plan": "src/dev/plan_veg_runtime_proof_001_v1.md" },
+        "G-PLAY-OPERATOR-01": { "phi": 0, "closed": false }
+      },
+      "note": "💬 rollup OPEN — all coder sub-gates green · G-PLAY-OPERATOR-01 only"
     }
   },
   "a2c_template": {
@@ -156,9 +160,9 @@
   },
   "blang_session": ["BLANG:PRE", "BLANG:Q+", "work", "BLANG:WIT", "BLANG:Q✓"],
   "drain_order": [],
-  "active_program": "POST-DRAIN-PHASE-4-001",
-  "active_queue": "tools/orchestrator/queues/post_drain_phase4_queue.json",
-  "prior_program": "POST-DRAIN-PHASE-3-001",
+  "active_program": "POST-DRAIN-PHASE-6-001",
+  "active_queue": "tools/orchestrator/queues/post_drain_phase6_coder_queue.json",
+  "prior_program": "POST-DRAIN-PHASE-5-001",
   "collective_dispatch": "docs/archive/2026-06-fleet-drain/dev_dispatch/orchestrator_collective_dispatch_20260607_v1.md",
   "breakpoint_chain": [
     "BLANG:PRE",

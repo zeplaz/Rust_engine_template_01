@@ -18,9 +18,9 @@ pub use concrete_chain_e2e::{
     reset_stage7_play_chain_seed_on_enter_simulation, seed_ind_e02_default_play_once,
     seed_ind_e03_grid_overload_witness_once, seed_stage7_play_concrete_chain_once,
     spawn_concrete_portland_chain_operational,
-    spawn_ind_e03_grid_overload_cluster, ConcreteChainE2eWitness, IndE02DefaultPlaySeedState,
-    IndE03GridOverloadSeedState, Stage7PlayChainSeedState, CONCRETE_PORTLAND_CHAIN,
-    CONCRETE_PORTLAND_STEPS,
+    spawn_ind_e03_grid_overload_cluster, ConcreteChainE2eSet, ConcreteChainE2eWitness,
+    IndE02DefaultPlaySeedState, IndE03GridOverloadSeedState, Stage7PlayChainSeedState,
+    CONCRETE_PORTLAND_CHAIN, CONCRETE_PORTLAND_STEPS,
 };
 
 pub use bridge::{

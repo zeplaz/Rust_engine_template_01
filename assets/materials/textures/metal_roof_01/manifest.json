@@ -1,0 +1,11 @@
+{
+  "profile_id": "metal_roof_01",
+  "seed": 42011,
+  "generator": "steel",
+  "size": 512,
+  "paths": {
+    "albedo": "assets/materials/textures/metal_roof_01/albedo.png",
+    "normal": "assets/materials/textures/metal_roof_01/normal.png",
+    "roughness": "assets/materials/textures/metal_roof_01/roughness.png"
+  }
+}

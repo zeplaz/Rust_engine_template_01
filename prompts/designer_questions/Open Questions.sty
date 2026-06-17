@@ -1,0 +1,61 @@
+Open Questions
+Hanabi adoption timeline? Architecture assumes event VFX layer — needs Bevy 0.18 compatibility audit before planner signs adoption plan.
+is their any other libreaitres which will fit our needs better, list out expected needed features, and tools, and compare them to the ones we are using now. and were hanabi or another 3rd party, rust library wwill is their a better fit for our future, 
+
+
+Weather sim priority vs construction R4 / M3 depth? 
+
+Wave 6 queues construction + F7 stream first; 
+weather sim expansion is unqueued until runbook v2 signed.
+
+i mot sure we need to really set a priroty here, we can bring more coders to fleet or alterantive in planning downtiems for other paths
+best to keep both active and folding, 
+
+
+Ocean fixture authority: Does water_ocean_tiles require new world-gen scenario or catalog-only stub for witness?
+think the whole water tile and water respoantion system shuold be. 
+
+ocean water is a simulation, so it should be part of the terrain world gen system, not a separate system, 
+if we need to add a new system for the ocean, we should add it to the terrain world gen system, not a separate system, 
+we should be able to generate the ocean tiles and water respoantion system as part of the terrain world gen system, 
+and we should be able to save and load the ocean tiles and water respoantion system as part of the terrain world gen system, 
+and we should be able to edit the ocean tiles and water respoantion system as part of the terrain world gen system, 
+and we should be able to add new ocean tiles and water respoantion system as part of the terrain world gen system, 
+and we should be able to remove old ocean tiles and water respoantion system as part of the terrain world gen system, 
+the terrisysem in genreal should be handle expanded systems and subsystems that will be increabtle to the furre
+a full reflection and critical review of the terrain world gen system should be done before we add new systems to it, 
+it should be refactored, and the terrine system reworked at tis core to handle expanded systems and subsystems that will be increabtle to the furre
+around forests, rivers, lakes, oceans, and other natural features, 
+and minreals, ores, and other resources should be part of the terrain world gen system, not a separate system, 
+as well as the live deformation sytesms that will be used to deform the terrain in real time, 
+and the live deformation sytesms should be part of the terrain world gen system, not a separate system, 
+the live deformation sytesms should be able to be used to deform the terrain in real time, 
+and the live deformation sytesms should be able to be saved and loaded as part of the terrain world gen system, 
+and the live deformation sytesms should be able to be edited as part of the terrain world gen system, 
+and the live deformation sytesms should be able to be added new live deformation sytesms as part of the terrain world gen system, 
+and the live deformation sytesms should be able to be removed old live deformation sytesms as part of the terrain world gen system, 
+
+
+
+
+Smoke stub vs GPU field: Complete smoke as particle instances, field density only, or hybrid? Designer spec needed before coder slice.
+no stubs we need our full smoke system to be part of the terrain world gen system, not a separate system, 
+we need our full smoke system to be able to be used to generate the smoke particles and the smoke field, 
+and we need our full smoke system to be able to be saved and loaded in a basic lod form, as emiters for  terrian system 
+and we need our full smoke system to be able to be edited 
+and we need our full smoke system to be able to be removed old smoke system as part of the terrain world gen system, 
+
+GPU feild, unlike oceans should not be part of the terrain world gen system, as this will be a separate system, 
+and will be part of the VFX layer, not the terrain world gen system.
+since it is not a terrain feature, it should not be part of the terrain world gen system, 
+the GPU feild should be able to be used to generate the GPU feild and t 
+
+dust scope: In scope for this planner domain or defer to logistics/vehicle lane?
+we need to be able to generate the dust particles and the dust field, 
+and we need to be able to save and load the dust particles and the dust field, 
+and we need to be able to edit the dust particles and the dust field, 
+and we need to be able to add new dust particles and the dust field, 
+and we need to be able to remove old dust particles and the dust field, 
+
+
+F2 per-tile hot-cell extract: Required for strategic fire read upgrade — depends on projection graph stability (Phase 3).

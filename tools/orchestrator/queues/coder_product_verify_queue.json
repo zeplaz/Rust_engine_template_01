@@ -7,7 +7,7 @@
     "parent": "tools/orchestrator/queues/coder_master_drain_queue.json",
     "rule": "Parallel to VEG drain — runtime verify rows that v2 marked done prematurely",
     "note": "Run after REWIRE compiles; each row needs exit_predicate green on disk",
-    "last_sync": "2026-06-14"
+    "last_sync": "2026-06-15"
   },
   "tracks": {
     "BUILD": "Build readability runtime verify",

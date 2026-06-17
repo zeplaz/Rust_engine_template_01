@@ -1,8 +1,17 @@
 {
   "schema_version": "landscape_grammar_v0",
   "preset_id": "coastal_scrub_v0",
-  "chart_id": "COAST-SCRUB-D2",
-  "land_dna": { "H": "coastal", "S": "sandy", "E": "exposed", "T": "temperate", "D": "salt_spray", "L": "scrub", "A": "young", "M": "natural" },
+  "chart_id": "VEG-NETWORK-Ω7",
+  "land_dna": {
+    "H": "pond_margin",
+    "S": "rocky",
+    "E": "coastal_spray",
+    "T": "temperate",
+    "D": "moderate",
+    "L": "wild",
+    "A": "young",
+    "M": "wild"
+  },
   "pressure_field": {
     "lambda_moisture": 0.62,
     "lambda_slope": 0.28,
@@ -14,21 +23,55 @@
     "lambda_legibility": 0.52
   },
   "landscape_program": {
-    "class": "coastal",
+    "class": "natural",
     "district_ref": "coastal_scrub_03",
-    "required_topologies": ["CORRIDOR_DUNE", "PATCH_SCRUB", "FRINGE_SALT", "CLUSTER_WIND"]
+    "required_topologies": ["CORRIDOR_ROADSIDE", "PATCH_IRREGULAR", "FRINGE_EDGE", "CLUSTER_NATURAL"]
   },
   "topology_graph": [
     {
       "id": "net_coast_01",
       "topology_kind": "Network",
       "preset_id": "NETWORK_CONNECTED",
-      "children": [
-        { "id": "corr_dune_01", "topology_kind": "Corridor", "preset_id": "CORRIDOR_DUNE" },
-        { "id": "patch_scrub_01", "topology_kind": "Patch", "preset_id": "PATCH_SCRUB" },
-        { "id": "fringe_salt_01", "topology_kind": "Fringe", "preset_id": "FRINGE_SALT" },
-        { "id": "cluster_wind_01", "topology_kind": "Cluster", "preset_id": "CLUSTER_WIND" }
-      ]
+      "scale_band": "L",
+      "anchor_ref": "partition:chunk_08_coast",
+      "parent_topology_id": null,
+      "operator_stack": ["anchor_partition", "network_link"]
+    },
+    {
+      "id": "corr_dune_01",
+      "topology_kind": "Corridor",
+      "preset_id": "CORRIDOR_ROADSIDE",
+      "scale_band": "M",
+      "anchor_ref": "coast:dune_edge_08",
+      "parent_topology_id": "net_coast_01",
+      "operator_stack": ["anchor_road", "corridor", "expand"],
+      "metadata": { "glyph_planning": "═══" }
+    },
+    {
+      "id": "patch_scrub_01",
+      "topology_kind": "Patch",
+      "preset_id": "PATCH_IRREGULAR",
+      "scale_band": "M",
+      "anchor_ref": "site:scrub_patch_a",
+      "parent_topology_id": "net_coast_01",
+      "operator_stack": ["seed_patch", "cluster", "expand"]
+    },
+    {
+      "id": "fringe_salt_01",
+      "topology_kind": "Fringe",
+      "preset_id": "FRINGE_EDGE",
+      "scale_band": "S",
+      "anchor_ref": "coast:salt_margin",
+      "parent_topology_id": "net_coast_01",
+      "operator_stack": ["anchor_site_edge", "fringe"]
+    },
+    {
+      "id": "cluster_wind_01",
+      "topology_kind": "Cluster",
+      "preset_id": "CLUSTER_NATURAL",
+      "scale_band": "S",
+      "parent_topology_id": "patch_scrub_01",
+      "operator_stack": ["cluster"]
     }
   ]
 }

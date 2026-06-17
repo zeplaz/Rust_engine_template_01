@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "job_id": "asm_industrial_west_4x7_s440013_f0c0",
+  "operation": "assembly_build",
+  "output": {
+    "blend": "assets/staging/assemblies/industrial_west_4x7_s440013_f0c0.blend"
+  },
+  "assembly_snapshot": "tools/mcp/schemas/examples/assembly_snapshot_rail_warehouse_pilot_v1.json",
+  "material_authority": "snapshot material_profile"
+}

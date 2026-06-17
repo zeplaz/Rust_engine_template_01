@@ -22,7 +22,7 @@ Checklist: $ref:src/dev/plan_g_play_close_001_checklist_v1.md
 G-PLAY-01 (rollup)                    💬 OPEN
 ├── G-PLAY-CODER-FIRE                 🟢 CLOSED
 ├── G-PLAY-CODER-BUILD                🟢 CLOSED (runtime verify done)
-├── G-PLAY-CODER-VEG                  🟡 PARTIAL (lib · play keys pending L2/L3)
+├── G-PLAY-CODER-VEG                  🟢 CLOSED (witnesses green 2026-06-14)
 └── G-PLAY-OPERATOR-01                🔴 OPEN (human 10 min checklist)
 ```
 
@@ -50,16 +50,16 @@ G-PLAY-01 (rollup)                    💬 OPEN
 | **Queue** | BUILD-VERIFY-* · REWIRE (done) |
 | **Blocks rollup?** | No — green |
 
-### G-PLAY-CODER-VEG 🟡
+### G-PLAY-CODER-VEG 🟢
 
 | Field | Value |
 |:---|:---|
 | **Owner** | @coder A |
 | **Plan** | $ref:src/dev/plan_veg_runtime_proof_001_v1.md |
-| **Witnesses** | `landscape_grammar_sim_harness_live.json` · `play_scenario_live.json` · `stage5_full_app_live.json` |
-| **Keys** | `veg_topology_visible_at_operational_zoom` · `ecology_rows_source: live` · preview `operator_visible` |
-| **Open** | VEG-HARD-FULLAPP-001 · VEG-HARD-PREVIEW-PIXEL-001 |
-| **Blocks rollup?** | **Yes** until L2+L4 |
+| **Witnesses** | `stage5_full_app_live.json` · `landscape_grammar_lg4_preview_live.json` · `play_scenario_live.json` · `g_play_product_close_live.json` |
+| **Keys** | `ecology_rows_source: live_landscape_program_on_chunk` · `topology_kind_count_visible >= 3` · `veg_topology_visible_at_operational_zoom` |
+| **Queue** | VEG-HARD-FULLAPP-001 · VEG-HARD-PREVIEW-PIXEL-001 (done) |
+| **Blocks rollup?** | No — green |
 
 ### G-PLAY-OPERATOR-01 🔴
 

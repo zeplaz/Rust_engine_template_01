@@ -1,8 +1,17 @@
 {
   "schema_version": "landscape_grammar_v0",
   "preset_id": "urban_canopy_v0",
-  "chart_id": "URB-CANOPY-D5",
-  "land_dna": { "H": "urban", "S": "compact", "E": "sheltered", "T": "temperate", "D": "dry", "L": "park", "A": "young", "M": "maintained" },
+  "chart_id": "URBAN-FOREST-FRACTURE-Σ63",
+  "land_dna": {
+    "H": "drainage_ditch",
+    "S": "compacted_fill",
+    "E": "sheltered",
+    "T": "temperate",
+    "D": "moderate",
+    "L": "residential",
+    "A": "young",
+    "M": "maintained"
+  },
   "pressure_field": {
     "lambda_moisture": 0.52,
     "lambda_slope": 0.14,
@@ -14,21 +23,56 @@
     "lambda_legibility": 0.88
   },
   "landscape_program": {
-    "class": "urban",
+    "class": "settlement",
     "district_ref": "urban_canopy_04",
-    "required_topologies": ["PATCH_PARK", "CORRIDOR_STREET", "RING_PLAZA", "FRINGE_EDGE"]
+    "required_topologies": ["PATCH_ROUNDED", "CORRIDOR_ROADSIDE", "RING_SHELTERBELT", "FRINGE_EDGE"]
   },
   "topology_graph": [
     {
       "id": "net_urb_01",
       "topology_kind": "Network",
       "preset_id": "NETWORK_CONNECTED",
-      "children": [
-        { "id": "patch_park_01", "topology_kind": "Patch", "preset_id": "PATCH_PARK" },
-        { "id": "corr_street_01", "topology_kind": "Corridor", "preset_id": "CORRIDOR_STREET" },
-        { "id": "ring_plaza_01", "topology_kind": "Ring", "preset_id": "RING_PLAZA" },
-        { "id": "fringe_edge_01", "topology_kind": "Fringe", "preset_id": "FRINGE_EDGE" }
-      ]
+      "scale_band": "L",
+      "anchor_ref": "partition:chunk_04_urb",
+      "parent_topology_id": null,
+      "operator_stack": ["anchor_partition", "network_link"]
+    },
+    {
+      "id": "patch_park_01",
+      "topology_kind": "Patch",
+      "preset_id": "PATCH_ROUNDED",
+      "scale_band": "M",
+      "anchor_ref": "site:urban_park_04",
+      "parent_topology_id": "net_urb_01",
+      "operator_stack": ["seed_patch", "expand"]
+    },
+    {
+      "id": "corr_street_01",
+      "topology_kind": "Corridor",
+      "preset_id": "CORRIDOR_ROADSIDE",
+      "scale_band": "M",
+      "anchor_ref": "transport:street_grid_04",
+      "parent_topology_id": "net_urb_01",
+      "operator_stack": ["anchor_road", "corridor"],
+      "metadata": { "glyph_planning": "════════" }
+    },
+    {
+      "id": "ring_plaza_01",
+      "topology_kind": "Ring",
+      "preset_id": "RING_SHELTERBELT",
+      "scale_band": "M",
+      "anchor_ref": "site:plaza_ring",
+      "parent_topology_id": "net_urb_01",
+      "operator_stack": ["ring", "contract_maintain"]
+    },
+    {
+      "id": "fringe_edge_01",
+      "topology_kind": "Fringe",
+      "preset_id": "FRINGE_EDGE",
+      "scale_band": "S",
+      "anchor_ref": "field:sidewalk_edge",
+      "parent_topology_id": "net_urb_01",
+      "operator_stack": ["fringe"]
     }
   ]
 }

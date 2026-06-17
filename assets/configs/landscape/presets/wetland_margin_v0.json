@@ -1,8 +1,17 @@
 {
   "schema_version": "landscape_grammar_v0",
   "preset_id": "wetland_margin_v0",
-  "chart_id": "WET-MARGIN-D3",
-  "land_dna": { "H": "wetland", "S": "peat", "E": "sheltered", "T": "temperate", "D": "seasonal_wet", "L": "marsh", "A": "mature", "M": "natural" },
+  "chart_id": "RIPARIAN-REGENERATION-Ψ8",
+  "land_dna": {
+    "H": "riparian",
+    "S": "organic_muck",
+    "E": "sheltered",
+    "T": "temperate",
+    "D": "seasonal_flood",
+    "L": "wild",
+    "A": "mature",
+    "M": "wild"
+  },
   "pressure_field": {
     "lambda_moisture": 0.94,
     "lambda_slope": 0.12,
@@ -14,21 +23,56 @@
     "lambda_legibility": 0.41
   },
   "landscape_program": {
-    "class": "wetland",
+    "class": "natural",
     "district_ref": "wetland_margin_05",
-    "required_topologies": ["CORRIDOR_RIPARIAN", "PATCH_MARSH", "FRINGE_MUD", "RING_BASIN"]
+    "required_topologies": ["CORRIDOR_RIPARIAN", "PATCH_IRREGULAR", "FRINGE_EDGE", "BASIN_WETLAND"]
   },
   "topology_graph": [
     {
       "id": "net_wet_01",
       "topology_kind": "Network",
       "preset_id": "NETWORK_CONNECTED",
-      "children": [
-        { "id": "corr_riparian_01", "topology_kind": "Corridor", "preset_id": "CORRIDOR_RIPARIAN" },
-        { "id": "patch_marsh_01", "topology_kind": "Patch", "preset_id": "PATCH_MARSH" },
-        { "id": "fringe_mud_01", "topology_kind": "Fringe", "preset_id": "FRINGE_MUD" },
-        { "id": "ring_basin_01", "topology_kind": "Ring", "preset_id": "RING_BASIN" }
-      ]
+      "scale_band": "L",
+      "anchor_ref": "partition:chunk_05_wet",
+      "parent_topology_id": null,
+      "operator_stack": ["anchor_partition", "network_link"]
+    },
+    {
+      "id": "corr_riparian_01",
+      "topology_kind": "Corridor",
+      "preset_id": "CORRIDOR_RIPARIAN",
+      "scale_band": "M",
+      "anchor_ref": "hydro:marsh_channel_05",
+      "parent_topology_id": "net_wet_01",
+      "operator_stack": ["anchor_river", "corridor", "drift"],
+      "metadata": { "glyph_planning": "≈≈≈" }
+    },
+    {
+      "id": "patch_marsh_01",
+      "topology_kind": "Patch",
+      "preset_id": "PATCH_IRREGULAR",
+      "scale_band": "M",
+      "anchor_ref": "site:marsh_patch",
+      "parent_topology_id": "net_wet_01",
+      "operator_stack": ["seed_patch", "expand"]
+    },
+    {
+      "id": "basin_wet_01",
+      "topology_kind": "Basin",
+      "preset_id": "BASIN_WETLAND",
+      "scale_band": "M",
+      "anchor_ref": "hydro:basin_pool_05",
+      "parent_topology_id": "net_wet_01",
+      "operator_stack": ["anchor_river", "expand"]
+    },
+    {
+      "id": "fringe_mud_01",
+      "topology_kind": "Fringe",
+      "preset_id": "FRINGE_EDGE",
+      "scale_band": "S",
+      "anchor_ref": "field:mud_margin",
+      "parent_topology_id": "net_wet_01",
+      "operator_stack": ["fringe"]
     }
   ]
 }

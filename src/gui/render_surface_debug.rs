@@ -113,7 +113,7 @@ pub fn draw_render_surface_debug_overlay(
             );
             ui.label(
                 egui::RichText::new(
-                    "Red box = FIRE/SPARKS TEST region — zoom in here for GPU sparks (operational zoom α≥0.42).",
+                    "Red box = FIRE/SPARKS TEST region — sparks from zoom α≥0.10; readable at operational α≥0.42.",
                 )
                 .small()
                 .color(egui::Color32::from_rgb(255, 100, 90)),

@@ -1,0 +1,27 @@
+{
+  "gate": "VEG-QUEUE-RECONCILIATION-20260616",
+  "green": true,
+  "analyst": "operations-intelligence",
+  "read_only": true,
+  "method": "classify v2_false_done_reopened rows against CURRENT on-disk exit-predicate witness; lib green != done",
+  "reconciliation_doc": "src/dev/veg_queue_reconciliation_20260616_v1.md",
+  "reopened_rows_total": 41,
+  "verdict_counts": {
+    "done_confirmed": 35,
+    "stale_blocked": 2,
+    "ambiguous": 2,
+    "genuinely_open": 1,
+    "unverified": 1
+  },
+  "key_finding": "reopen_audit witness_truth snapshot (2026-06-13) is now STALE; live witnesses refreshed 2026-06-17 show lg2 fire=1/build=1 green, map_rollout chunks=17 green, stage5 eco=17. Reopen list now under-claims.",
+  "g4_g5_finding": "green has 3 scopes: schema-sign (presets pass), bake G0-G3 (PNGs baked, G4/G5 planned, ship:false), runtime-stamp. Art-ship G4/G5 NOT achieved.",
+  "must_stay_open": ["VEG-LG2-HARVEST-001", "VEG-C14-OPERATOR-CHECKLIST-001", "VEG-F01-DESIGN-ATLAS-001", "VEG-G03-LG6-FLOWERS-001"],
+  "stale_blocked_flip": ["VEG-F02-MCP-ATLAS-001", "VEG-POPULATION-SUBCELL-001", "VEG-OPERATOR-HISTORY-001"],
+  "owner_delta_wf": "@coder (queue status flips) + @orchestrator (snap/status-doc sync)",
+  "_agent_meta": {
+    "schema": "ops_intelligence_witness_v1",
+    "source_system": "operations_intelligence_veg_reconciliation",
+    "written_at_date": "2026-06-16",
+    "relative_path": "debug_runs/agent_ops/veg_queue_reconciliation_witness_20260616.json"
+  }
+}

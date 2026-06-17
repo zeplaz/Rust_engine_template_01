@@ -8,8 +8,7 @@ use crate::gui::hud::HudDockRegistry;
 use crate::gui::map_view::presentation::{MapViewInstanceId, MapViewReadyStates};
 use crate::gui::map_view::projection::ResolvedMapViewFrames;
 use crate::gui::map_view::texture_cache::MapViewTextureCache;
-use crate::gui::{MinimapPresentationSource, MinimapShellState};
-use crate::render::minimap_gpu_compositor_env_enabled;
+use crate::gui::{MinimapShellState};
 use crate::render::{SimMinimapUiState, TileWorldFallbackState};
 
 pub fn resolve_minimap_egui_texture(
@@ -24,9 +23,8 @@ pub fn resolve_minimap_egui_texture(
     interaction_frozen: bool,
 ) -> Option<egui::TextureId> {
     legacy.open = shell.visible;
-    if shell.presentation_source == MinimapPresentationSource::SharedRenderTargetImage
-        && minimap_gpu_compositor_env_enabled()
-    {
+    // Main sim HUD uses Bevy GPU chrome — egui CPU minimap only for explicit effects opt-in.
+    if crate::gui::map_view::minimap_main_display_uses_gpu_compositor(shell) {
         cache.binding_mut(MapViewInstanceId::Minimap).clear();
         return None;
     }

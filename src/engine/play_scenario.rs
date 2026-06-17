@@ -10,7 +10,6 @@ use crate::engine::ActiveTestScene;
 use crate::scenario::scenario_steps::ScenarioStep;
 use crate::scenario::script_host::EngineScriptHost;
 use crate::scenario::ScenarioFileV1;
-use crate::strategic::CommitConstructionSiteEvent;
 use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
 use crate::strategic::{
     rebuild_logistics_graph_from_transport, CorridorConstructionBook, LogisticsGraph,
@@ -415,6 +414,8 @@ pub fn build_play_scenario_live_payload(
             demo_fire_sparks_visible_at_operational_zoom_lib(),
         "veg_topology_visible_at_operational_zoom":
             veg_topology_visible_at_operational_zoom_lib(),
+        "veg_burn_visible_at_operational_zoom":
+            crate::dev::landscape_grammar_burn_live_proof::veg_burn_visible_at_operational_zoom_lib(),
     })
 }
 
@@ -516,7 +517,7 @@ fn refresh_play_scenario_001_live_witness_non_test() -> bool {
         .and_then(|v| v.as_bool())
         .unwrap_or(false);
     if !ind_e02_green {
-        let _ = crate::economy::activation::witness_collectors::refresh_ind_e02_default_live_witness();
+        let _ = crate::economy::activation::refresh_ind_e02_default_live_witness();
         industrial_raw =
             std::fs::read_to_string("debug_runs/industrial_activation_live.json").unwrap_or_default();
         industrial = serde_json::from_str(&industrial_raw).unwrap_or(serde_json::Value::Null);

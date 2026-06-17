@@ -1,0 +1,66 @@
+{
+  "schema_version": "queue_registry_v1",
+  "_meta": {
+    "plan_ref": "src/dev/plan_witness_queue_integrity_mcp_v1.md"
+  },
+  "status_normalization": {
+    "closed": ["done", "lib_done", "signed", "closed"],
+    "open": ["blocked", "paused", "deferred", "open", "reopened"],
+    "ready": ["ready", "active", "in_progress"]
+  },
+  "queues": [
+    {
+      "queue_id": "coder_vegetation_drain",
+      "path": "tools/orchestrator/queues/coder_vegetation_drain_queue.json",
+      "id_field": "id",
+      "rows_path": "drain",
+      "status_field": "status",
+      "witness_fields": ["witness", "witness_json", "harness_witness"]
+    },
+    {
+      "queue_id": "mcp_active",
+      "path": "tools/orchestrator/queues/mcp_active_queue.json",
+      "id_field": "id",
+      "rows_path": "p2_tasks",
+      "status_field": "status",
+      "witness_fields": ["witness", "witness_json"],
+      "synthetic_done_buckets": [
+        { "dot_path": "coder_mcp_drain.done_coder_mcp", "status": "done" },
+        { "dot_path": "coder_mcp_drain.done_designer_mcp", "status": "done" },
+        { "dot_path": "coder_mcp_drain.done_planner_mcp", "status": "done" }
+      ]
+    },
+    {
+      "queue_id": "post_drain_phase5",
+      "path": "tools/orchestrator/queues/post_drain_phase5_queue.json",
+      "id_field": "id",
+      "rows_path": "tasks",
+      "status_field": "status",
+      "witness_fields": ["witness", "witness_json"]
+    },
+    {
+      "queue_id": "post_drain_phase4",
+      "path": "tools/orchestrator/queues/post_drain_phase4_queue.json",
+      "id_field": "id",
+      "rows_path": "tasks",
+      "status_field": "status",
+      "witness_fields": ["witness", "witness_json"]
+    },
+    {
+      "queue_id": "post_drain_phase6_coder",
+      "path": "tools/orchestrator/queues/post_drain_phase6_coder_queue.json",
+      "id_field": "id",
+      "rows_path": "drain",
+      "status_field": "status",
+      "witness_fields": ["witness", "witness_json"]
+    },
+    {
+      "queue_id": "coder_master_drain",
+      "path": "tools/orchestrator/queues/coder_master_drain_queue.json",
+      "id_field": "id",
+      "rows_path": "drain",
+      "status_field": "status",
+      "witness_fields": ["witness", "witness_json"]
+    }
+  ]
+}

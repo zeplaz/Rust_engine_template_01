@@ -132,6 +132,19 @@
         "normal": "assets/materials/textures/roof_metal_01/normal.png",
         "roughness": "assets/materials/textures/roof_metal_01/roughness.png"
       }
+    },
+    "metal_roof_01": {
+      "generator": "steel",
+      "seed": 42011,
+      "metallic": 0.9,
+      "roughness_base": 0.38,
+      "category": "industrial/steel",
+      "label": "Metal Roof 01",
+      "textures": {
+        "albedo": "assets/materials/textures/metal_roof_01/albedo.png",
+        "normal": "assets/materials/textures/metal_roof_01/normal.png",
+        "roughness": "assets/materials/textures/metal_roof_01/roughness.png"
+      }
     }
   }
 }

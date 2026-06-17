@@ -58,7 +58,7 @@ impl EcologyPreviewSample {
         }
     }
 
-    pub fn with_topology_kind_count(mut self, count: u8) -> Self {
+    pub fn with_topology_kind_count(self, count: u8) -> Self {
         if count == 0 {
             return self;
         }

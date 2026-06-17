@@ -1,7 +1,6 @@
 //! BUILD-SET-MANIFEST-v1 — insured pilot sets (`_building_sets.ron` + ARCH-DNA F-axis coverage).
 
 use std::fs;
-use std::path::PathBuf;
 
 use bevy::prelude::*;
 use serde::Deserialize;

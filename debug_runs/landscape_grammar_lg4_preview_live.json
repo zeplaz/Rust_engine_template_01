@@ -52,11 +52,11 @@
     "relative_path": "debug_runs/landscape_grammar_lg4_preview_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_lg4_preview_witness",
-    "written_at_epoch_secs": 1781533758
+    "written_at_epoch_secs": 1781658947
   },
   "gate": "LG-4-PREVIEW-001",
-  "green": true,
-  "operator_visible": true,
+  "green": false,
+  "operator_visible": false,
   "pixel_heterogeneity_wired": false,
   "topology_kind_count": 6,
   "topology_kind_count_visible": 6,

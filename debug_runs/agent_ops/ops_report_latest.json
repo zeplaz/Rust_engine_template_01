@@ -1,7 +1,7 @@
 {
   "_agent_meta": {
     "schema": "ops_report_v2",
-    "written_at_epoch_secs": 1781328296,
+    "written_at_epoch_secs": 1781574914,
     "profile": "OPS_REPORT",
     "source_system": "ops_witness_index+ops_project_brief",
     "relative_path": "debug_runs/agent_ops/ops_report_latest.json",
@@ -21,8 +21,8 @@
     "ECONOMY/LOG: 0 green / 0 proofs",
     "WAVE/STAGE6: 0 green / 0 proofs",
     "STAGE7/PLAY: 0 green / 1 proofs",
-    "ART-A/B/C: 2/68/0 proofs \u00b7 B ship\u26d4=True",
-    "UI: 0 proofs \u00b7 UNCLASSIFIED: 106",
+    "ART-A/B/C: 2/69/0 proofs \u00b7 B ship\u26d4=True",
+    "UI: 0 proofs \u00b7 UNCLASSIFIED: 140",
     "FAIL-PROP[art_B]: Track B manual keyframe \u2014 warehouse paused (does not block ATL\u2605/RT\u2605)"
   ],
   "qce": {
@@ -59,10 +59,22 @@
       "next_artifact": "debug_runs/art_pipeline/mcp_pilot_grammar_001_live.json"
     },
     {
-      "finding": "Product gate \u2014 play scenario acceptance",
+      "finding": "Rollup OPEN \u2014 see sub-gates G-PLAY-CODER-* + G-PLAY-OPERATOR-01",
       "owner": "Operator",
       "program_id": "stage7_play",
-      "next_artifact": "debug_runs/play_scenario_live.json"
+      "next_artifact": "debug_runs/g_play_product_close_live.json"
+    },
+    {
+      "finding": "VEG-HARD witnesses green \u2014 rollup blocked on operator only",
+      "owner": "@coder A",
+      "program_id": "stage7_play",
+      "next_artifact": "debug_runs/g_play_product_close_live.json"
+    },
+    {
+      "finding": "Human 10 min checklist \u2014 sole operator blocker for rollup",
+      "owner": "Operator",
+      "program_id": "stage7_play",
+      "next_artifact": "src/dev/plan_g_play_close_001_checklist_v1.md"
     },
     {
       "finding": "Warehouse production bake paused \u2014 Track B",
@@ -83,8 +95,8 @@
       "label": "APS product / material studio"
     },
     "art_B": {
-      "count": 68,
-      "green_count": 35,
+      "count": 69,
+      "green_count": 36,
       "label": "MCP pipeline spine / warehouse integration"
     },
     "construction": {
@@ -103,8 +115,8 @@
       "label": "Stage 7 play scenarios"
     },
     "unclassified": {
-      "count": 106,
-      "green_count": 85,
+      "count": 140,
+      "green_count": 120,
       "label": null
     }
   },
@@ -228,7 +240,7 @@
       }
     ]
   },
-  "utility_score": 2.4,
+  "utility_score": 0.0,
   "metrics_tier1": {
     "q_per_token": null,
     "ftr": null,

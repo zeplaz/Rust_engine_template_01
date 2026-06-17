@@ -141,7 +141,7 @@ pub use gpu_particles::{
     seed_world_fire_particles_from_overlay_heat, sync_fire_particle_camera_scale,
     update_world_fire_particles_from_projection,
     FireParticleCameraScale, FireSparkWitness, GpuParticleInstance, GpuParticleQuadVertex,
-    ParticleClass, WorldFireParticleFrame, WorldFireParticleGpuStorage, FIRE_SPARK_SCATTER_MAX,
+    ParticleClass, WorldFireParticleFrame, WorldFireParticleGpuStorage,     FIRE_SPARK_OPERATIONAL_PLAY_ZOOM_ALPHA, FIRE_SPARK_SCATTER_MAX,
     FIRE_SPARK_STRATEGIC_ZOOM_ALPHA, FIRE_SPARK_TACTICAL_PROOF_ZOOM_ALPHA,
 };
 pub use stage5_full_app_harness::{

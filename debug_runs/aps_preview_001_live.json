@@ -1,0 +1,10 @@
+{
+  "gate_id": "APS-PREVIEW-001",
+  "ok": true,
+  "green": true,
+  "module_thumb_ok": true,
+  "material_thumb_ok": true,
+  "combined_thumb_ok": true,
+  "preview_size_px": 128,
+  "panel": "art_pipeline_suite.slot_preview_panel.SlotPreviewPanel"
+}

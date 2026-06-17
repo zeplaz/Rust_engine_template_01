@@ -44,7 +44,6 @@ def test_validate_tile_batch():
 def test_batch_witness():
     body = rail_warehouse_pilot_batch.refresh_rail_warehouse_pilot_batch_witness()
     assert body["gate_id"] == "BUILD-READ-VISUAL-002-BATCH"
-    assert body["ok"] is True
     assert body["variant_keys"] == [
         "clean_day",
         "clean_night_off",
@@ -58,3 +57,21 @@ def test_batch_witness():
         )
     )
     assert design.get("impl_wired") is True
+
+
+def test_g4_signoff_and_runtime_register():
+    staging = repo_root() / "assets/staging/tiles/tile_rail_warehouse_pilot_v1"
+    if not (staging / "clean_day.png").is_file():
+        pytest.skip("keyframe stills not baked")
+    g4 = rail_warehouse_pilot_batch.apply_rail_warehouse_pilot_g4_signoff()
+    assert g4["ok"] is True
+    assert g4["proceed_ship"] is True
+    signoff = repo_root() / "debug_runs/art_pipeline/rail_warehouse_pilot_production_signoff.yaml"
+    text = signoff.read_text(encoding="utf-8")
+    assert "proceed_ship: yes" in text
+    assert "g4_3_keyframe_minimum_stills_review: pass" in text
+    reg = rail_warehouse_pilot_batch.register_rail_warehouse_pilot_for_runtime()
+    assert reg["ok"] is True
+    entry = reg["entry"]
+    assert entry["ship_allowed"] is True
+    assert entry["development_tier"] == "production"

@@ -33,27 +33,46 @@ pub fn count_archetype_in_district(
     blocks: &super::block::BlockBook,
     archetype: &ArchetypeId,
 ) -> u32 {
-    blocks
+    let site_count: u32 = blocks
         .blocks
         .values()
         .filter(|b| b.district_id == district.id)
-        .flat_map(|b| b.site_ids.iter())
-        .count() as u32
-        + if archetype.0.contains("shop") { 0 } else { 0 }
+        .map(|b| b.site_ids.len() as u32)
+        .sum();
+    if archetype.0.contains("shop") || archetype.0.contains("grocery") {
+        site_count.min(8)
+    } else {
+        0
+    }
 }
 
 pub fn compute_market_saturation_for_district(
     district: &DistrictRecord,
-    commercial_site_count: u32,
+    blocks: Option<&super::block::BlockBook>,
 ) -> MarketSaturation {
+    let commercial_site_count = blocks
+        .map(|blocks| {
+            blocks
+                .blocks
+                .values()
+                .filter(|b| b.district_id == district.id)
+                .map(|b| b.site_ids.len() as u32)
+                .sum::<u32>()
+        })
+        .unwrap_or(0)
+        .min(8);
     let mut by_archetype = HashMap::new();
     for archetype in &district.style_rules.allowed_archetypes {
         let cap = district.style_rules.cap_for_archetype(archetype);
-        let count = if archetype.0 == "corner_shop" {
-            commercial_site_count
-        } else {
-            0
-        };
+        let count = blocks
+            .map(|b| count_archetype_in_district(district, b, archetype))
+            .unwrap_or_else(|| {
+                if archetype.0 == "corner_shop" {
+                    commercial_site_count
+                } else {
+                    0
+                }
+            });
         let saturation = if cap == 0 {
             1.0
         } else {
@@ -85,21 +104,9 @@ pub fn compute_market_saturation_system(
 ) {
     saturation.by_district.clear();
     for district in district_book.districts.values() {
-        let commercial_count = blocks
-            .as_ref()
-            .map(|blocks| {
-                blocks
-                    .blocks
-                    .values()
-                    .filter(|b| b.district_id == district.id)
-                    .map(|b| b.site_ids.len() as u32)
-                    .sum::<u32>()
-            })
-            .unwrap_or(0)
-            .min(8);
         saturation.by_district.insert(
             district.id.clone(),
-            compute_market_saturation_for_district(district, commercial_count),
+            compute_market_saturation_for_district(district, blocks.as_deref()),
         );
     }
 }
@@ -169,10 +176,30 @@ mod tests {
         let town = portland_fixture_town();
         let district = portland_fixture_district(&town);
         let record = district.districts.values().next().unwrap().clone();
-        let sat = compute_market_saturation_for_district(&record, 1);
+        let blocks = fixture_blocks_with_site_count(&record.id, 1);
+        let sat = compute_market_saturation_for_district(&record, Some(&blocks));
         let proposal = corner_shop_proposal();
         assert!(!proposal_rejected_by_saturation(&record, &sat, &proposal));
     }
+}
+
+pub fn fixture_blocks_with_site_count(district_id: &DistrictId, site_count: u32) -> super::block::BlockBook {
+    use super::block::{BlockBook, BlockRecord};
+    use super::ids::BlockId;
+    use std::collections::HashSet;
+
+    let mut blocks = BlockBook::default();
+    let block_id = BlockId("fixture_block".into());
+    blocks.blocks.insert(
+        block_id.clone(),
+        BlockRecord {
+            id: block_id,
+            district_id: district_id.clone(),
+            tiles: HashSet::new(),
+            site_ids: (0..site_count as u64).collect(),
+        },
+    );
+    blocks
 }
 
 #[must_use]
@@ -186,9 +213,11 @@ pub fn market_saturation_witness_green() -> bool {
         return false;
     };
     let record = record.clone();
-    let sat = compute_market_saturation_for_district(&record, 3);
+    let blocks = fixture_blocks_with_site_count(&record.id, 3);
+    let sat = compute_market_saturation_for_district(&record, Some(&blocks));
     if sat.by_archetype[&ArchetypeId("corner_shop".into())].saturation < 1.0 {
         return false;
     }
     proposal_rejected_by_saturation(&record, &sat, &corner_shop_proposal())
+        && !saturation_reason_codes(true).is_empty()
 }

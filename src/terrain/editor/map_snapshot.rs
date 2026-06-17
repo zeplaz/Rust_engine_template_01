@@ -47,6 +47,9 @@ pub struct MapSnapshotV2 {
     pub width: u32,
     pub height: u32,
     pub cells: Vec<MapSnapshotCellV2>,
+    /// INFRA-E0-002 — editor road marker tiles (transport graph authoritative in sim).
+    #[serde(default)]
+    pub road_marker_tiles: Vec<[u32; 2]>,
 }
 
 impl MapSnapshotV1 {
@@ -106,30 +109,73 @@ impl MapSnapshotV2 {
     }
 }
 
+/// Bundle returned when loading editor terrain snapshots.
+#[derive(Clone, Debug)]
+pub struct MapSnapshotLoadBundle {
+    pub terrain: MapSnapshotV1,
+    pub road_marker_tiles: Vec<(u32, u32)>,
+}
+
 /// Load v1 or v2 RON; v1 is migrated (road flags stripped, logged once).
-pub fn load_map_snapshot_from_ron(s: &str) -> Result<MapSnapshotV1, String> {
+pub fn load_map_snapshot_bundle_from_ron(s: &str) -> Result<MapSnapshotLoadBundle, String> {
     if let Ok(v2) = ron::de::from_str::<MapSnapshotV2>(s) {
         if v2.schema_version == MAP_SNAPSHOT_SCHEMA_VERSION_V2 {
             v2.validate()?;
-            return Ok(v2_to_v1_working(v2));
+            let terrain = v2_to_v1_working(&v2);
+            let road_marker_tiles = v2
+                .road_marker_tiles
+                .into_iter()
+                .map(|[x, z]| (x, z))
+                .collect();
+            return Ok(MapSnapshotLoadBundle {
+                terrain,
+                road_marker_tiles,
+            });
         }
     }
     let v1 = MapSnapshotV1::from_ron_str(s)?;
-    Ok(migrate_map_snapshot_v1_to_v2(v1))
+    let mut road_marker_tiles = Vec::new();
+    for z in 0..v1.height {
+        for x in 0..v1.width {
+            let i = (z * v1.width + x) as usize;
+            if v1.cells.get(i).is_some_and(|c| {
+                #[allow(deprecated)]
+                {
+                    c.road
+                }
+            }) {
+                road_marker_tiles.push((x, z));
+            }
+        }
+    }
+    Ok(MapSnapshotLoadBundle {
+        terrain: migrate_map_snapshot_v1_to_v2(v1),
+        road_marker_tiles,
+    })
 }
 
-fn v2_to_v1_working(v2: MapSnapshotV2) -> MapSnapshotV1 {
+/// Load v1 or v2 RON; v1 is migrated (road flags stripped, logged once).
+pub fn load_map_snapshot_from_ron(s: &str) -> Result<MapSnapshotV1, String> {
+    load_map_snapshot_bundle_from_ron(s).map(|b| b.terrain)
+}
+
+fn v2_to_v1_working(v2: &MapSnapshotV2) -> MapSnapshotV1 {
     MapSnapshotV1 {
         schema_version: MAP_SNAPSHOT_SCHEMA_VERSION,
         width: v2.width,
         height: v2.height,
         cells: v2
             .cells
-            .into_iter()
-            .map(|c| MapSnapshotCellV1 {
-                height: c.height,
-                terrain_family: c.terrain_family,
-                road: false,
+            .iter()
+            .map(|c| {
+                #[allow(deprecated)]
+                {
+                    MapSnapshotCellV1 {
+                        height: c.height,
+                        terrain_family: c.terrain_family.clone(),
+                        road: false,
+                    }
+                }
             })
             .collect(),
     }
@@ -137,6 +183,7 @@ fn v2_to_v1_working(v2: MapSnapshotV2) -> MapSnapshotV1 {
 
 /// **INFRA-E0-002** — strip legacy `road` bools; transport graph owns corridors.
 #[must_use]
+#[allow(deprecated)]
 pub fn migrate_map_snapshot_v1_to_v2(mut snap: MapSnapshotV1) -> MapSnapshotV1 {
     let road_cells = snap.cells.iter().filter(|c| c.road).count();
     if road_cells > 0 && !MAP_SNAPSHOT_ROAD_STRIP_LOGGED.swap(true, Ordering::Relaxed) {
@@ -152,6 +199,20 @@ pub fn migrate_map_snapshot_v1_to_v2(mut snap: MapSnapshotV1) -> MapSnapshotV1 {
 
 #[must_use]
 pub fn map_snapshot_v1_to_v2(snap: &MapSnapshotV1) -> MapSnapshotV2 {
+    let mut road_marker_tiles = Vec::new();
+    for z in 0..snap.height {
+        for x in 0..snap.width {
+            let i = (z * snap.width + x) as usize;
+            if snap.cells.get(i).is_some_and(|c| {
+                #[allow(deprecated)]
+                {
+                    c.road
+                }
+            }) {
+                road_marker_tiles.push([x, z]);
+            }
+        }
+    }
     MapSnapshotV2 {
         schema_version: MAP_SNAPSHOT_SCHEMA_VERSION_V2,
         width: snap.width,
@@ -164,6 +225,7 @@ pub fn map_snapshot_v1_to_v2(snap: &MapSnapshotV1) -> MapSnapshotV2 {
                 terrain_family: c.terrain_family.clone(),
             })
             .collect(),
+        road_marker_tiles,
     }
 }
 

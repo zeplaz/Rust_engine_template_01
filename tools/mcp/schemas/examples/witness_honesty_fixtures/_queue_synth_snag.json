@@ -1,0 +1,6 @@
+{
+  "_fixture": { "expect": "fail", "rule_id": "WIT-SNAG-DONE", "teaches": "done row with non-empty snag" },
+  "rows": [
+    { "id": "WIT-SYNTH-SNAG", "status": "done", "snag": "art blocked on review" }
+  ]
+}

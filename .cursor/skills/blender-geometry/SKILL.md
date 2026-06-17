@@ -1,121 +1,88 @@
 ---
 name: blender-geometry
-description: Authors Blender headless geometry jobs, procedural module specs, building visual layers, and prop MCP requests for Rust_engine_template_01. Use when creating AssetSpec/geometry_job JSON, extending bpy ops in tools/mcp/blender, or planning GLB/LOD/collision exports — never chat-only mesh generation.
-disable-model-invocation: true
+description: >-
+  Author headless Blender geometry jobs — footprint + style + state as JSON → bpy op
+  graph → validated GLB → promote. Use for procedural module kits (walls, roofs, doors,
+  windows, props), geometry job specs, or building visual layers. Triggers: blender,
+  bpy, geometry job, GLB, module kit, wall/roof/door/window/prop, mesh export, headless
+  bake, LOD, collision.
 ---
 
 `⟦SYM⟧ lang⊳ $ref:prompts/SYMBOLIC_LANGUAGE.meta.md`
 
-# Blender Geometry Skill
+# blender-geometry — geometry jobs → GLB
 
-Procedural **modules** and geometry jobs via structured JSON → headless Blender — aligned with shipped `tools/mcp/`.
+`◉Q🎯 reproducible · 🏛 job=artifact` — declarative JSON, executed headless · ¬paste bpy in chat.
 
-## When to use
-
-- Writing `AssetSpec` or `geometry_job_v1` JSON
-- Running `geometry_run_job` / `python -m rust_engine_mcp.cli run-geometry`
-- Adding bpy ops under `tools/mcp/blender/scripts/ops/`
-- Planning building/prop/smoke/light layered visual states
-
-## Primary rule
-
-> Footprint + style + state in JSON → bpy op graph → GLB + validation → promote.
-
-## AGENT-LANG ritual (attach [agent-lang](../agent-lang/SKILL.md))
-
-**DSM node WRK** — geometry jobs only via JSON:
+## Pattern (form A — pipeline)
 
 ```text
-$ref:tools/mcp/schemas/geometry_job_v1.schema.json → geometry_run_job → BLANG:validate_asset → 🟢|🔴
+◎geometry_job_v1 JSON ▷⊳ ▢bpy-op-graph ▷⊳ ▮headless-Blender ▷⊳ ◎GLB ─⬡[validate]▶ ⇧promote
+   (footprint + style + state)
+   job = hashable · reproducible · reviewable · ops registered/named/grid-anchored (fixed unit, consistent pivot ⇒ snap together)
 ```
+Adapt op catalog + grid unit to your kit; the JSON ▷⊳ headless ▷⊳ validate ▷⊳ promote spine is constant.
 
-**Pivot rule:** `$ref:docs/archive/2026-06-src-dev/plans/design_procedural_module_kit_v1.md§grid` — bottom-center, 1u grid.
-
-## Quick workflow
-
-1. Attach **`mcp-production-rules`** + [mcp-asset-pipeline](mcp-asset-pipeline/SKILL.md).
-2. Read shipped ops: [`MICRO_TOOLS_REGISTRY_v1.md`](tools/mcp/MICRO_TOOLS_REGISTRY_v1.md) Tier 2.
-3. Author job JSON against [`geometry_job_v1.schema.json`](tools/mcp/schemas/geometry_job_v1.schema.json).
-4. Execute: `geometry_run_job` or CLI `run-geometry`.
-5. `validate_glb_asset` → `promote_staging_module`.
-6. For multi-module buildings: compose from module kit — not monolithic mesh in chat.
-
-## Shipped bpy operations
-
-| Op | Params | Output |
-|----|--------|--------|
-| `module_wall` | width_m, height_m, depth_m | box mesh, bottom-center pivot |
-| `module_roof` | width_m, depth_m, thickness_m | flat slab |
-| `module_door` | width_m, height_m, depth_m | frame box |
-
-Add ops: `tools/mcp/blender/scripts/ops/` + register in `run_job.py`.
-
-## Geometry job template
-
-```json
-{
-  "job_id": "wall_brick_1u_example",
-  "operation": "module_wall",
-  "params": {
-    "width_m": 1.0,
-    "height_m": 3.0,
-    "depth_m": 0.2
-  }
-}
-```
-
-## Building visual layers (planned / Republic-style)
-
-Layer stack for state-driven districts — see [reference.md](reference.md):
-
-Base structure → damage → lights → smoke → cargo → power emission
-
-## Prop MCP (planned)
-
-Small objects (crates, pipes, stacks) via `prop.generate` — spec in drafts, not shipped.
-
-## Outputs
-
-| Artifact | Path pattern |
-|----------|----------------|
-| GLB | `assets/staging/<job_id>/model.glb` |
-| Status | `tools/mcp/jobs/<job_id>.status.json` |
-| Promoted | `assets/models/modules/` + RON sidecar |
-
-## Grid alignment
-
-- Modules align to **1u grid** from [`design_procedural_module_kit_v1.md`](docs/archive/2026-06-src-dev/plans/design_procedural_module_kit_v1.md)
-- Bottom-center pivot on walls; no free rotation in iso presentation
-
-## BUILD-GRAMMAR◈ → MODULE-RUNS◈ (v0)
-
-Building grammar (`building_grammar_v1` + optional `arch_build_grammar_v0`) selects massing and slot keys; **this skill** produces the module GLBs.
+## In this repo — shipped ops + paths
 
 ```text
-ARCH-DNA◈ → β◈ → SHAPE-GRAMMAR◈ → facade/roof/detail slots → geometry_job_v1 → GLB
+ops⊳ module_wall · module_roof · module_door · module_window · module_prop    (1u grid · bottom-center pivot)
+schema⊳ tools/mcp/schemas/geometry_job_v1.schema.json · examples⊳ tools/mcp/schemas/examples/
+out⊳ assets/staging/<job_id>/model.glb · status⊳ tools/mcp/jobs/<job_id>.status.json
+promote⊳ ⇧ assets/models/modules/ + RON sidecar
 ```
 
-| Grammar slot | bpy op |
+Verified end-to-end this session (bake ▷⊳ status ▷⊳ validate):
+
+```bash
+# run a job — NOTE: the path is relative to tools/mcp/python (the CLI cwd), so use ../schemas/...
+node .claude/skills/agent-lang/driver.mjs run-geometry ../schemas/examples/wall_brick_1u_lod0_run001.json
+node .claude/skills/agent-lang/driver.mjs job-status wall_brick_1u_lod0_run001
+node .claude/skills/agent-lang/driver.mjs validate-report asset_glb assets/staging/wall_brick_1u_lod0_run001/model.glb --compress 4
+```
+
+```text
+🟢✅🔬 run-geometry ▷⊳ {"status":"done","outputs":[".../model.glb"]}
+🟢✅🔬 validate-report asset_glb ▷⊳ {"status":"passed","summary":"... verts=24 tier=smoke arch=module_wall profile=brick"}
+🟢✅🔬 pipeline-preflight ▷⊳ blender_ok:true   (Steam Blender path from tools/mcp/config.defaults.json)
+```
+
+## Gotchas — TWO path conventions ⚠
+
+```text
+◆ which path? ⊗ easy to trip
+   ═[run-geometry job-file]▶ resolved vs tools/mcp/python (CLI cwd) ⟶ pass ../schemas/... ∨ absolute
+   ═[validate-report asset_glb]▶ repo-relative (resolved internally)
+   ☍ NOT the same — a repo-relative path to run-geometry ⟶ tools/mcp/python/<that> ⟶ 🔴 No such file or directory
+```
+
+```text
+⛓ needs-Blender-on-disk   set via BLENDER_EXE ∨ tools/mcp/config.local.json · pipeline-preflight ▷⊳ blender_ok / blender_error
+⬡ promote-after-validate  promote only after validate-report asset_glb passes (the [mcp-production-rules](../mcp-production-rules/SKILL.md) gate)
+```
+
+## BUILD-GRAMMAR◈ → MODULE-RUNS◈ (v0 hook)
+
+Grammar picks **massing** + **module slots**; this skill authors the **module GLBs** those slots resolve to.
+
+```text
+SHAPE-GRAMMAR◈(massing id) ▷⊳ facade/roof/detail slots ▷⊳ MODULE-RUNS◈ ▷⊳ geometry_job_v1
+   βmod ↑ ⇒ denser module-run coverage (PG-2) · ¬new bpy ops in v0
+```
+
+| Grammar field | Geometry job input |
 |:---|:---|
-| `wall_slot` | `module_wall` |
-| `door_slot` | `module_door` |
-| `window_slot` | `module_window` |
-| `roof_*` | `module_roof` |
-| `prop_slot` | `module_prop` |
+| `facade.wall_slot` / `door_slot` / `window_slot` | `module_wall` · `module_door` · `module_window` |
+| `roof.default_slot` / `by_massing` | `module_roof` |
+| `detail.prop_slot` | `module_prop` |
+| `district_styles[].material_profiles` | style params on job JSON (profile id) |
 
-- `βmod` (modularity pressure) drives module-run **density** — not new ops in v0.
-- Refs: [`arch_build_grammar_v0_baseline_v1.md`](src/dev/arch_build_grammar_v0_baseline_v1.md) · [`industrial_warehouse_v1.ron`](assets/configs/buildings/grammars/industrial_warehouse_v1.ron)
+**Refs:** $ref:src/dev/arch_build_grammar_v0_baseline_v1.md§6 · $ref:assets/configs/buildings/grammars/industrial_warehouse_v1.ron
 
-## Route conflicts
+## Source
 
-| Situation | Delegate |
-|-----------|----------|
-| New bpy op implementation | `@coder` |
-| Module kit / style pack UX | `@designer` |
-| Bevy load / representation | `@coder` + bevy-simulation-grade |
+Cursor original: [.cursor/skills/blender-geometry/](../../../.cursor/skills/blender-geometry/) · shipped ops in [`tools/mcp/MICRO_TOOLS_REGISTRY_v1.md`](../../../tools/mcp/MICRO_TOOLS_REGISTRY_v1.md) Tier 2.
 
-## Additional resources
-
-- Onboarding: [`docs/archive/2026-06-src-dev/plans/designer_mcp_onboarding_v1.md`](docs/archive/2026-06-src-dev/plans/designer_mcp_onboarding_v1.md)
-- Source drafts: [`docs/archive/2026-06-fleet-drain/prompts_drafts/mcp_drafts.md`](docs/archive/2026-06-fleet-drain/prompts_drafts/mcp_drafts.md) §2.1, §3, §5
-- Layer specs + future building MCP: [reference.md](reference.md)
+```text
+⟦/blender-geometry⟧ NEXT ⚑ author geometry_job_v1 → run-geometry → job-status → validate-report asset_glb → ⇧promote
+```

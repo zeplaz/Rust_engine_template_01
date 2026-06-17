@@ -1,0 +1,172 @@
+{
+  "schema_version": "witness_integrity_rules_v1",
+  "_meta": {
+    "teaches": ["witness_honesty", "queue_integrity", "BLANG:WIT-HON"],
+    "plan_ref": "src/dev/plan_witness_queue_integrity_mcp_v1.md"
+  },
+  "rules": [
+    {
+      "rule_id": "WIT-GREEN-TINT-ZERO",
+      "severity": "error",
+      "description": "LG-4 preview green while zero topology tint chunks visible",
+      "when_fail": "green==true ∧ topology_tint_visible_chunks==0 ∧ path matches landscape_grammar_lg4*",
+      "path_glob": "**/landscape_grammar_lg4*_live.json",
+      "fix_hint": "refresh_lg4_preview_witness must not green when tint_visible_chunks==0"
+    },
+    {
+      "rule_id": "WIT-OPERATOR-LIB-FIXTURE",
+      "severity": "error",
+      "description": "operator_visible claimed from lib-test harness only",
+      "when_fail": "operator_visible==true ∧ (proof_grade==lib_fixture ∨ agent_commands all contain --lib)",
+      "fix_hint": "Require live sim / full-app proof for operator_visible green"
+    },
+    {
+      "rule_id": "WIT-ROLLUP-CHILD-ONLY",
+      "severity": "error",
+      "description": "Rollup parent green while mandatory child witness fails honesty",
+      "when_fail": "rollup registry path green ∧ any mandatory child fails error-severity rules",
+      "fix_hint": "Evaluate child witnesses before parent rollup green"
+    },
+    {
+      "rule_id": "WIT-PHASE-CLOSE-WITHOUT-SUB",
+      "severity": "error",
+      "description": "All phase_*_green true while child witnesses fail honesty",
+      "when_fail": "all phase_*_green ∧ any listed child witness fails honesty",
+      "fix_hint": "Phase close requires child sub-field honesty pass"
+    },
+    {
+      "rule_id": "WIT-GATE-DRIFT-G4",
+      "severity": "error",
+      "description": "Tile batch G4 planned while sibling keyframe proceed_ship passes",
+      "when_fail": "gates.G4==planned ∧ keyframe g4_8_proceed_ship==pass for same batch",
+      "path_glob": "**/tile_tile_*_live.json",
+      "fix_hint": "Align tile witness G4 gate with keyframe proceed_ship truth"
+    },
+    {
+      "rule_id": "WIT-TINY-PNG-PILOT",
+      "severity": "error",
+      "description": "Ship-target tile batch with stub PNG bytes",
+      "when_fail": "png_count>=1 ∧ any png_dimensions.bytes < 512 ∧ ship!=false",
+      "fix_hint": "Re-bake keyframes or set ship:false until art ready"
+    },
+    {
+      "rule_id": "WIT-ART-DISHONEST",
+      "severity": "error",
+      "description": "Green rollup while art_quality rejected",
+      "when_fail": "green==true ∧ art_quality starts with rejected_",
+      "fix_hint": "Set green:false when art_quality is rejected"
+    },
+    {
+      "rule_id": "WIT-ENV-BOOTSTRAP-ONLY",
+      "severity": "warning",
+      "description": "Live-sim-required witness green from lib/bootstrap harness only",
+      "when_fail": "green==true ∧ live_sim_required ∧ agent_commands all --lib",
+      "fix_hint": "Run full-app / operator sim before green on live_sim_required witnesses"
+    },
+    {
+      "rule_id": "WIT-MISSING-ENVELOPE",
+      "severity": "warning",
+      "description": "*_live.json without _agent_meta.schema envelope",
+      "when_fail": "*_live.json missing _agent_meta.schema",
+      "fix_hint": "Wrap witness with debug_run_envelope_v1 _agent_meta"
+    },
+    {
+      "rule_id": "WIT-EXIT-PREDICATE",
+      "severity": "error",
+      "description": "Witness body contradicts exit_predicate.must clauses",
+      "when_fail": "exit_predicate.must present ∧ body fails must paths",
+      "fix_hint": "Fix witness sub-fields or exit_predicate before queue done"
+    },
+    {
+      "rule_id": "WIT-QUEUE-CONTRADICTION",
+      "severity": "error",
+      "description": "Same task id closed in one queue, open in another",
+      "when_fail": "same id normalized closed vs open across queue registry",
+      "scan_only": true,
+      "fix_hint": "Reconcile queue boards before BLANG:Q✓"
+    },
+    {
+      "rule_id": "WIT-SNAG-DONE",
+      "severity": "error",
+      "description": "Queue row marked done with non-empty snag",
+      "when_fail": "status==done ∧ snag non-empty",
+      "scan_only": true,
+      "fix_hint": "Clear snag or set status blocked/reopened"
+    }
+  ],
+  "rollup_registry": [
+    {
+      "path": "debug_runs/veg_runtime_proof_live.json",
+      "green_fields": ["green"],
+      "mandatory_children": []
+    },
+    {
+      "path": "debug_runs/vegetation_program_close_live.json",
+      "green_fields": ["all_green", "green"],
+      "mandatory_children": [
+        "debug_runs/veg_runtime_proof_live.json",
+        "debug_runs/landscape_grammar_lg4_preview_live.json"
+      ]
+    },
+    {
+      "path": "debug_runs/g_play_product_close_live.json",
+      "green_fields": ["green", "all_green"],
+      "mandatory_children": []
+    },
+    {
+      "path": "debug_runs/mcp_landscape_sign_atlas_live.json",
+      "green_fields": ["green"],
+      "mandatory_children": [],
+      "child_extract_paths": [
+        "lanes.sign.witness",
+        "lanes.preset_batch.witness",
+        "lanes.atlas.lg5_witness",
+        "lanes.atlas.tile_witness"
+      ]
+    }
+  ],
+  "gate_drift_pairs": [
+    {
+      "tile_witness_glob": "debug_runs/art_pipeline/tile_tile_*_live.json",
+      "keyframe_witness_glob": "debug_runs/art_pipeline/*_production_keyframe_g4_live.json",
+      "batch_id_field": "batch_id"
+    }
+  ],
+  "queue_registry_preview": [
+    {
+      "path": "tools/orchestrator/queues/coder_vegetation_drain_queue.json",
+      "id_field": "id",
+      "rows_path": "rows"
+    },
+    {
+      "path": "tools/orchestrator/queues/mcp_active_queue.json",
+      "id_field": "id",
+      "rows_path": "p2_tasks"
+    },
+    {
+      "path": "tools/orchestrator/queues/post_drain_phase5_queue.json",
+      "id_field": "id",
+      "rows_path": "rows"
+    },
+    {
+      "path": "tools/orchestrator/queues/post_drain_phase4_queue.json",
+      "id_field": "id",
+      "rows_path": "rows"
+    },
+    {
+      "path": "tools/orchestrator/queues/post_drain_phase6_coder_queue.json",
+      "id_field": "id",
+      "rows_path": "rows"
+    },
+    {
+      "path": "tools/orchestrator/queues/coder_master_drain_queue.json",
+      "id_field": "id",
+      "rows_path": "rows"
+    }
+  ],
+  "live_sim_required_paths": [
+    "debug_runs/veg_runtime_proof_live.json",
+    "debug_runs/g_play_product_close_live.json",
+    "debug_runs/landscape_grammar_sim_harness_live.json"
+  ]
+}

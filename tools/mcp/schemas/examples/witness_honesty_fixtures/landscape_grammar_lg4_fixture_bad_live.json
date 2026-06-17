@@ -1,0 +1,12 @@
+{
+  "_fixture": { "expect": "fail", "rule_id": "WIT-GREEN-TINT-ZERO" },
+  "_agent_meta": {
+    "schema": "witness_honesty_fixture_v1",
+    "profile": "BAD_GREEN_TINT_ZERO"
+  },
+  "gate": "LG-4-PREVIEW-FIXTURE",
+  "green": true,
+  "operator_visible": false,
+  "topology_tint_visible_chunks": 0,
+  "topology_tint_wired": true
+}

@@ -1,0 +1,176 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://rust-engine.local/schemas/variant_graph_v1.schema.json",
+  "title": "variant_graph_v1",
+  "description": "ARCH-002 — per-node variant overrides on assembly graph (material / visibility / emission / decal). Complements variant_set_v1 (variant-level layers).",
+  "type": "object",
+  "required": ["schema_version", "variant_graph_id", "assembly_id", "variants"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "const": 1 },
+    "variant_graph_id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$"
+    },
+    "assembly_id": { "type": "string", "minLength": 1 },
+    "style_pack_id": { "type": "string" },
+    "variant_set_id": {
+      "type": "string",
+      "description": "Optional paired variant_set_v1 id — graph patches refine set-level layers per node"
+    },
+    "seed": { "type": "integer", "minimum": 0 },
+    "_meta": { "type": "object", "additionalProperties": true },
+    "variants": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/variant_graph_entry" }
+    }
+  },
+  "$defs": {
+    "variant_graph_entry": {
+      "type": "object",
+      "required": ["variant_key", "nodes"],
+      "additionalProperties": false,
+      "properties": {
+        "variant_key": { "type": "string", "minLength": 1 },
+        "inherits": {
+          "type": ["string", "null"],
+          "description": "Base variant_key — patches apply on top"
+        },
+        "sim_tags": {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^sim_" }
+        },
+        "tags": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "nodes": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/variant_node_patch" }
+        }
+      }
+    },
+    "variant_node_patch": {
+      "type": "object",
+      "required": ["target"],
+      "additionalProperties": false,
+      "properties": {
+        "target": {
+          "type": "string",
+          "enum": ["node", "role", "semantic_tag"],
+          "description": "How to resolve assembly placements"
+        },
+        "node_id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Required when target=node — matches assembly_graph_node_v1.node_id"
+        },
+        "role": {
+          "type": "string",
+          "enum": [
+            "primary_wall",
+            "secondary_wall",
+            "corner",
+            "door",
+            "window",
+            "roof",
+            "parapet",
+            "stack",
+            "vent",
+            "platform",
+            "sign",
+            "detail_prop"
+          ],
+          "description": "Required when target=role"
+        },
+        "semantic_tag": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Required when target=semantic_tag — matches flattened placement_tags"
+        },
+        "material_overrides": { "$ref": "#/$defs/material_overrides" },
+        "visibility_overrides": { "$ref": "#/$defs/visibility_overrides" },
+        "emission_overrides": { "$ref": "#/$defs/emission_overrides" },
+        "decal_overrides": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/decal_override" }
+        }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "target": { "const": "node" } }, "required": ["target"] },
+          "then": { "required": ["node_id"] }
+        },
+        {
+          "if": { "properties": { "target": { "const": "role" } }, "required": ["target"] },
+          "then": { "required": ["role"] }
+        },
+        {
+          "if": { "properties": { "target": { "const": "semantic_tag" } }, "required": ["target"] },
+          "then": { "required": ["semantic_tag"] }
+        }
+      ]
+    },
+    "material_overrides": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "material_profile": { "type": "string", "minLength": 1 },
+        "weathering": {
+          "type": "string",
+          "enum": ["clean", "light", "medium", "heavy"]
+        },
+        "roughness_multiplier": { "type": "number", "minimum": 0, "maximum": 4 },
+        "metallic_multiplier": { "type": "number", "minimum": 0, "maximum": 4 },
+        "color_tint": {
+          "type": "array",
+          "items": { "type": "number", "minimum": 0, "maximum": 1 },
+          "minItems": 3,
+          "maxItems": 3
+        }
+      },
+      "minProperties": 1
+    },
+    "visibility_overrides": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "visible": { "type": "boolean" },
+        "hide_children": { "type": "boolean" },
+        "opacity": { "type": "number", "minimum": 0, "maximum": 1 }
+      },
+      "minProperties": 1
+    },
+    "emission_overrides": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "emissive_strength": { "type": "number", "minimum": 0, "maximum": 10 },
+        "emissive_color": {
+          "type": "array",
+          "items": { "type": "number", "minimum": 0, "maximum": 1 },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "night_lights": { "type": "boolean" },
+        "color_temperature_k": { "type": "number", "minimum": 1000, "maximum": 12000 }
+      },
+      "minProperties": 1
+    },
+    "decal_override": {
+      "type": "object",
+      "required": ["decal_id", "layer"],
+      "additionalProperties": false,
+      "properties": {
+        "decal_id": { "type": "string", "minLength": 1 },
+        "layer": {
+          "type": "string",
+          "enum": ["damage", "dirt", "graffiti", "warning", "soot", "rust"]
+        },
+        "strength": { "type": "number", "minimum": 0, "maximum": 1 },
+        "uv_scale": { "type": "number", "minimum": 0.01, "maximum": 16 }
+      }
+    }
+  }
+}

@@ -8,6 +8,13 @@ mod procedural_build_extract;
 mod procedural_module_extract;
 mod smoke_visual_extract;
 
+mod vegetation_visual_extract;
+
+pub use vegetation_visual_extract::{
+    build_vegetation_extract_frame, extract_glyph_deterministic, refresh_vegetation_extract_witness,
+    vegetation_extract_witness_green, VegetationExtractFrame, VegetationExtractFrameSet,
+    VegetationVisualExtractPlugin, VegExtractRow, LANDSCAPE_GRAMMAR_EXTRACT_LIVE_JSON,
+};
 pub use frame_snapshot::ExtractFrameSnapshot;
 pub use fire_emission_profile::{
     infer_combustion_class, infer_fire_emission_profile, material_id_at_chunk_center,

@@ -1,0 +1,98 @@
+# variant_matrix_rail_warehouse_pilot_v1.yaml — BUILD-READ-D-004
+program_id: PLAN-BUILD-READABILITY-001
+task_id: BUILD-READ-D-004
+archetype: industrial_warehouse_l
+pilot_id: logistics_rail_warehouse_v0
+catalog_id: pilot:logistics_rail_warehouse_v0
+usage_bias: [industrial, warehouse, logistics, rail]
+primary_style_pack: style_industrial_west
+production_bar: docs/archive/2026-06-src-dev/plans/design_procedural_tile_production_bar_v1.md
+readability_charter: src/dev/design_build_read_d001_d004_v1.md
+catalog: assets/configs/buildings/_variant_catalog.ron
+
+pilot:
+  footprint_matrix_id: logistics_rail_warehouse_l_6x5
+  footprint: { width: 6, depth: 5, occupied_cells: 11 }
+  site_stub: { width: 10, depth: 8, primary_pct: 0.125 }
+  tile_id: tile_rail_warehouse_pilot_v1
+  staging_spec: assets/staging/specs/tile_rail_warehouse_pilot_v1.json
+  site_plan: assets/configs/buildings/pilots/logistics_rail_warehouse_site_v0.json
+  arch_dna_preset: tools/mcp/schemas/examples/arch_dna_logistics_rail_warehouse_v0.json
+
+readability:
+  zoom_alpha_operational: 0.42
+  iso_draw_scale_multiplier_range: [1.35, 1.75]
+  primary_screen_px_target: [40, 90]
+  site_stub_screen_px_target: [120, 200]
+  g4_review_px: 128
+
+variant_keys:
+  clean_day:
+    required: true
+    group: operational
+    sim_tags: [operational, day, power_on]
+    player_read: "L-hall + rail-edge roof; yard void beside hall"
+    g4_minimum_review: true
+  clean_night_off:
+    required: true
+    group: operational
+    sim_tags: [operational, night, power_off]
+    player_read: "Dark mass; no window glow"
+    g4_minimum_review: false
+  clean_night_on:
+    required: true
+    group: operational
+    sim_tags: [operational, night, power_on]
+    player_read: "T4 emissive — loading bay / office dots"
+    g4_minimum_review: true
+  under_construction_01:
+    required: true
+    group: construction
+    sim_tags: [under_construction]
+    player_read: "Scaffold / open bay"
+    g4_minimum_review: true
+  damaged_day:
+    required: false
+    group: damage
+    defer: v1.1
+    player_read: "T5 wear distinct from clean"
+  damaged_night_on:
+    required: false
+    group: damage
+    defer: v1.1
+  burning_00:
+    required: false
+    group: fire
+    frame_index: 0
+    defer: fire_lane
+  burning_01: { required: false, group: fire, frame_index: 1, defer: fire_lane }
+  burning_02: { required: false, group: fire, frame_index: 2, defer: fire_lane }
+  burning_03: { required: false, group: fire, frame_index: 3, defer: fire_lane }
+
+required_key_count: 4
+minimum_bake_v1: 4
+g4_signoff: debug_runs/art_pipeline/rail_warehouse_pilot_production_signoff.yaml
+
+bake_spine:
+  design_ref: src/dev/design_tile_bake_spine_convergence_v1.md
+  ship_bake_source: keyframe_pack
+  seed: 440013
+  light_blend: utils/Light_keysshotsetup.blend
+  keyframe_tool: utils/keyframe_render.py
+  pack_cli: "python -m rust_engine_mcp.cli tile-atlas-pack <folder> -pk"
+
+keyframe_stills:
+  export_folder: assets/staging/tiles/tile_rail_warehouse_pilot_v1/
+  g4_minimum_review_keys:
+    - clean_day
+    - clean_night_on
+    - under_construction_01
+  full_matrix_keys_v1: 4
+
+style_packs:
+  style_industrial_west:
+    applicable: true
+    role: primary
+    reference_tag_hints:
+      - ref:pilot:logistics_rail_warehouse_v0
+      - ref:BUILD-READ-D-004

@@ -23,11 +23,14 @@
     "clean_night_on",
     "under_construction_01"
   ],
-  "png_in_staging": 0,
+  "png_in_staging": 4,
   "png_required_for_pack": 4,
+  "atlas_png_on_disk": true,
+  "atlas_meta_on_disk": true,
   "bake_source": "keyframe_pack",
-  "ship": false,
+  "ship": true,
   "seed": 440013,
+  "g4_signoff": "debug_runs/art_pipeline/rail_warehouse_pilot_production_signoff.yaml",
   "next_ops": [
     "utils/keyframe_render.py \u2192 assets/staging/tiles/tile_rail_warehouse_pilot_v1/*.png",
     "node .claude/skills/agent-lang/driver.mjs tile-batch-run ../schemas/examples/tile_batch_rail_warehouse_pilot_v1.json",

@@ -5,7 +5,6 @@
 //!
 //! **CON-E01-P9:** runtime board syncs from [`ConstructionPhase2Witness`] tail flags + proof write.
 
-use bevy::log::info;
 use bevy::prelude::{App, Resource};
 
 use super::construction_live_todos::TodoStatus;
@@ -163,14 +162,6 @@ pub fn sync_construction_p9_board_from_witness(
     board: &mut ConstructionP9TodoBoard,
 ) {
     board.sync_from_witness(witness);
-    if board.is_green() {
-        info!(
-            target: "construction_p9_todos",
-            "CONSTRUCTION_P9_COMPLETE done={}/{}",
-            CONSTRUCTION_P9_TODO_COUNT,
-            CONSTRUCTION_P9_TODO_COUNT
-        );
-    }
 }
 
 #[cfg(test)]

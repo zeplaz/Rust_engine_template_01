@@ -72,6 +72,33 @@ pub struct MinimapCompositorState {
     pub replay_scrub_enabled: bool,
 }
 
+/// Allocate committed minimap RT immediately on sim enter so Bevy chrome never binds CPU terrain.
+pub fn bootstrap_minimap_gpu_render_target(
+    mut images: ResMut<Assets<Image>>,
+    mut registry: ResMut<MinimapRenderTargetRegistry>,
+    shell: Res<MinimapShellState>,
+) {
+    if !minimap_gpu_compositor_env_enabled() {
+        return;
+    }
+    if registry.committed_image != Handle::default() {
+        return;
+    }
+    let (w, h) = if shell.panel_viewport_suggestion_active {
+        let s = shell.panel_viewport_suggestion_logical_size;
+        (
+            s.x.round().max(128.0) as u32,
+            s.y.round().max(128.0) as u32,
+        )
+    } else {
+        (256, 256)
+    };
+    let handle = images.add(super::render_target::minimap_rgba_image(w, h));
+    registry.committed_image = handle;
+    registry.committed_size = UVec2::new(w, h);
+    registry.revision = registry.revision.max(1);
+}
+
 #[must_use]
 pub fn minimap_gpu_compositor_env_enabled() -> bool {
     match std::env::var("MINIMAP_GPU_COMPOSITOR").ok().as_deref() {
@@ -187,24 +214,15 @@ pub(crate) fn perf_vis_p1b_witness_json(
     })
 }
 
-/// P1-B: Simulation minimap binds GPU RT when compositor has committed; CPU fallback until then.
+/// P1-B: Simulation main HUD → GPU RT when compositor env on. CPU raster is not auto-fallback.
 pub fn sync_minimap_presentation_source(
     base: Res<State<crate::engine::states::BaseState>>,
     mut shell: ResMut<MinimapShellState>,
-    registry: Res<MinimapRenderTargetRegistry>,
-    compositor: Res<MinimapCompositorState>,
 ) {
     if !matches!(base.get(), crate::engine::states::BaseState::Simulation) {
         return;
     }
-    if !minimap_gpu_compositor_env_enabled() {
-        shell.presentation_source = MinimapPresentationSource::SharedCpuRaster;
-        return;
-    }
-    let composite_ok = registry.committed_image != Handle::default()
-        && registry.revision > 0
-        && compositor.stamp > 0;
-    shell.presentation_source = if composite_ok {
+    shell.presentation_source = if minimap_gpu_compositor_env_enabled() {
         MinimapPresentationSource::SharedRenderTargetImage
     } else {
         MinimapPresentationSource::SharedCpuRaster

@@ -99,3 +99,39 @@ def test_token_savings_guide_blang_review_slice_place() -> None:
     assert "BLANG:REVIEW" in tokens
     assert "BLANG:SLICE" in tokens
     assert "BLANG:PLACE" in tokens
+    assert "BLANG:WIT-HON" in tokens
+    wit = g["witness_integrity"]
+    assert wit["blang"] == "BLANG:WIT-HON"
+    assert "validate-report witness_honesty" in wit["validate_witness"]
+
+
+def test_witness_brief_honesty_profile_failed_rule_ids() -> None:
+    bad = agent_queue.witness_brief(
+        "tools/mcp/schemas/examples/witness_honesty_fixtures/bad_exit_predicate_live.json",
+        profile="honesty",
+    )
+    assert bad["ok"] is True
+    brief = bad["brief"]
+    assert brief["profile"] == "honesty"
+    assert brief["status"] != "passed"
+    assert "WIT-EXIT-PREDICATE" in brief["failed_rule_ids"]
+    assert brief["q_forbidden"] is True
+    assert brief["blang"] == "BLANG:WIT-HON"
+
+    good = agent_queue.witness_brief(
+        "tools/mcp/schemas/examples/witness_honesty_fixtures/good_minimal_live.json",
+        profile="honesty",
+    )
+    assert good["ok"] is True
+    assert good["brief"]["status"] == "passed"
+    assert good["brief"]["failed_rule_ids"] == []
+    assert good["brief"]["q_forbidden"] is False
+
+
+def test_slice_exec_brief_includes_witness_honesty_and_exit_predicate() -> None:
+    body = agent_queue.slice_exec_brief("TRIAGE-MAP-PICK-CLOSURE-001", queue="phase4")
+    assert body["ok"] is True
+    wh = body["witness_honesty"]
+    assert "last_scan" in wh
+    assert "fail_count" in wh["last_scan"] or wh["last_scan"].get("source")
+    assert "witness" in wh or wh.get("q_forbidden") is not None

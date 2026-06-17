@@ -1,86 +1,71 @@
 ---
 name: mcp-production-rules
-description: Enforces non-negotiable MCP asset production constraints for Rust_engine_template_01 — no AI final art, deterministic seeded output, batch/atlas processing, and grid alignment. Use before any MCP tool call, asset generation request, or when evaluating whether a workflow violates production rules.
-disable-model-invocation: true
+description: >-
+  The non-negotiable constraints for procedural-asset production — no AI-generated
+  final art, deterministic seeded output, batch/atlas processing, and grid alignment.
+  Attach BEFORE any MCP/CLI art or geometry call to emit a pass/block verdict. Use
+  whenever someone proposes "quick texture", a diffusion image, a one-off tile, a
+  free-rotated prop, or pasting bpy in chat. Triggers: production rules, deterministic,
+  seed, no AI art, batch, atlas, grid alignment, asset gate, art constraints.
 ---
 
 `⟦SYM⟧ lang⊳ $ref:prompts/SYMBOLIC_LANGUAGE.meta.md`
 
-# MCP Production Rules
+# mcp-production-rules — the four hard gates
 
-Hard constraints — **not** suggestions. Apply **pre_execution** before any toolchain call.
+`◉Q🎯 reproducible-at-batch-scale` — enforced as code ¬vibes. 4 ⬡ gates fire BEFORE the tool; any 🔴 = hard stop.
 
-## When to use
+## Pattern (form B — 4 gates before execution)
 
-- Before invoking MCP tools or micro-CLI (`rust_engine_mcp.cli`)
-- When a request mentions diffusion, AI textures, chat-only bpy, or single one-off assets
-- When validating agent/tool configs from draft JSON schemas
-- Pair with [mcp-asset-pipeline](mcp-asset-pipeline/SKILL.md) on every art lane
-
-## Primary rule
-
-> Same input + same seed → same output. No LLM freeform generation leakage into final artifacts.
-
-## Rule checklist (enforce all that apply)
-
-| Rule ID | Enforcement | Pass when |
-|---------|-------------|-----------|
-| `no_ai_generated_images` | pre_execution | No diffusion/image-gen for final albedo/mesh; references/metadata only |
-| `deterministic_output` | pre_execution | All variation is seed-based; no unseeded random |
-| `batch_processing` | pre_execution | Process asset **groups** / atlases — not ad-hoc singles |
-| `grid_alignment` | pre_execution | Fixed tile unit; no free rotation in isometric system |
-
-## AGENT-LANG ritual (attach [agent-lang](../agent-lang/SKILL.md))
-
-**Pre-execution verdict** — one line:
-
-```yaml
-rules_check: { passed: 🟢|🔴, blocked_by: [no_ai_generated_images, ...], seed: "<required>" }
+```text
+◎proposal ─⬡[no_ai_generated_images]▶ ─⬡[deterministic_output]▶ ─⬡[batch_processing]▶ ─⬡[grid_alignment]▶ ▢tool-call ▷⊳ ◎asset
+              │                            │                        │                      │
+              └─🔴⊸ base64/diffusion        └─🔴⊸ unseeded/random      └─🔴⊸ one-off single     └─🔴⊸ free-rotated/off-grid
+   ∀⬡★ ⇒ 🟢 proceed   ·   ∃⬡🔴 ⇒ 🔴 stop ⤴ propose compliant alternative
 ```
 
-Blocked → `ΔWF→@designer-mcp` with `$ref:` reroute spec — not chat mesh.
+| Rule ⬡ | Constraint | Blocks |
+|:--|:--|:--|
+| `no_ai_generated_images` | ¬diffusion/LLM-freeform for **final** assets | base64 textures, "generate an image", diffusion output |
+| `deterministic_output` | same input + same seed ⇒ same output | unseeded variation, random-per-run |
+| `batch_processing` | process groups/atlases ¬ad-hoc singles | one-off tile, single-prop bakes as production |
+| `grid_alignment` | fixed grid unit, ¬free rotation | free-rotated props, off-grid placement |
 
-## Quick workflow
-
-1. `BLANG:REF` on [reference.md](reference.md) for full conditions.
-2. Inspect proposed `tool` + `input` JSON.
-3. Block and reroute if any **hard_rule** fails.
-4. Emit compressed verdict:
+Emit a compressed verdict **before** executing — never silently proceed:
 
 ```yaml
-rules_check:
-  passed: true | false
-  blocked_by: []  # rule ids
-  reroute: "spec JSON + geometry_run_job" | "tile_batch spec" | "reference-only"
-  seed: "<required if variation>"
+rules_check: { passed: 🟢|🔴, blocked_by: [<rule_id>...], seed: "<seed>" }
+```
+🔴 ⟶ propose the compliant alternative ("describe mesh in chat" ⟶ a `geometry_job_v1` JSON; "quick texture" ⟶ keyframe render pack). Rules are env-independent; the *blocked patterns* adapt to your toolchain.
+
+## In this repo — policy gate over the art lane
+
+Wraps [mcp-asset-pipeline](../mcp-asset-pipeline/SKILL.md) · [blender-geometry](../blender-geometry/SKILL.md) · [tile-generation](../tile-generation/SKILL.md). Enforcement points:
+
+```text
+◆ job declares variation-set ∧ ¬seed         ─▶ 🔴 block (deterministic_output⊸)
+◆ promote attempted ∧ ¬(validate-report★)    ─▶ 🔴 block (see below)
+◆ ortho headless bake offered as production    ─▶ 🔴 block — production ⊨ bake_source: keyframe_pack ; ortho = smoke/CI only
 ```
 
-## Blocked patterns
+Schema validation is where rules become real:
 
-| Don't | Do instead |
-|-------|------------|
-| GenerateImage / diffusion for final assets | Blender orthographic bake, Material Maker CLI |
-| Describe mesh in chat | `geometry_run_job` + `geometry_job_v1` JSON |
-| Paste base64 textures | Staging path + manifest |
-| Single tile without batch context | `tile_batch` spec or atlas pack plan |
-| Free-rotated props in iso grid | Snap to grid; fixed unit from module kit |
-| `tile_batch_run` ortho for production buildings | `keyframe_render` PNGs → `tile-atlas-pack`; `bake_source: keyframe_pack` |
-| Promote lod0 ortho pilot atlases | Production keyframe stills + G4 sign-off |
+```bash
+node .claude/skills/agent-lang/driver.mjs validate-report mcp_job <path/to/job.json>
+node .claude/skills/agent-lang/driver.mjs variant-set-validate <path/to/variant_set.json>
+```
 
-## ECS / engine alignment
+## Gotchas
 
-Rules apply to **toolchain outputs** entering Bevy — not simulation ECS authority. Promotion paths must match [`design_procedural_module_kit_v1.md`](docs/archive/2026-06-src-dev/plans/design_procedural_module_kit_v1.md) pivot and naming.
+```text
+⬡ gate-before-tool   🔴 = hard stop · ¬"just this once" a one-off — point is reproducibility at batch scale
+⚖ deterministic⊨seed  seed IS the variation source · vary w/o recorded seed ⟶ non-reproducible even if it looks fine once
+```
 
-## Route violations
+## Source
 
-| Violation type | Owner |
-|----------------|-------|
-| Architectural (new tool bypass) | `@planner-mcp` |
-| Implement fix / MCP wiring | `@coder-mcp` |
-| UX spec without AssetSpec | `@designer-mcp` |
+Cursor original: [.cursor/skills/mcp-production-rules/](../../../.cursor/skills/mcp-production-rules/) (reference.md lists every blocked pattern). Consumer/builder split in [.cursor/skills/README.md](../../../.cursor/skills/README.md).
 
-## Additional resources
-
-- Source: [`docs/archive/2026-06-fleet-drain/prompts_drafts/rules_skills_draft.md`](docs/archive/2026-06-fleet-drain/prompts_drafts/rules_skills_draft.md) §3
-- Designer agent art pipeline: [`.cursor/agents/designer.md`](../../agents/designer.md)
-- Full rule definitions: [reference.md](reference.md)
+```text
+⟦/mcp-production-rules⟧ NEXT ⚑ ∀⬡ check → rules_check verdict → 🟢 tool ∨ 🔴 ⤴ compliant alt
+```

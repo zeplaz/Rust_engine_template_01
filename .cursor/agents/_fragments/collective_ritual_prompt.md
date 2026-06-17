@@ -17,9 +17,9 @@ When `BLANG:Q+` returns **idle**, **drain**, or **blocked**:
 | BP | Action |
 |:---|:---|
 | **⟨BP:COLLECT⟩** | `BLANG:HO` · `$ref:tools/orchestrator/queues/master_chain_tensor_v1.json` · queue rows for same ⟨ID⟩ / deps (all agents) |
-| **⟨BP:MIRROR⟩** | `agent-markers-brief` · `BLANG:WIT` on slice witness · read prior writer's queue `note` |
+| **⟨BP:MIRROR⟩** | `BLANG:WIT` on slice witness · `witness-brief <path>` · read prior writer's queue `note` |
 | **⟨BP:SCAN⟩** | Role dimensional scan (see agent file) + `$sym:Authority@path` one line |
-| **⟨BP:SHARE⟩** | `BLANG:MARK` / `agent-marker-append` — **required** honest artifact |
+| **⟨BP:SHARE⟩** | Queue `note` + witness path — **required** honest artifact (`agent-markers-brief` removed; use `agent-queue-update --note`) |
 | **⟨BP:RESUME⟩** | `BLANG:Q+` again · **extend** prior work · or `ΔWF→@agent` — **same turn** |
 
 ## Honest marker (leave for agents who follow)

@@ -1,0 +1,35 @@
+{
+  "gate": "MCP-PLANNER-DRAIN-KIT002-ARCH002",
+  "signed": true,
+  "signed_at": "2026-06-14",
+  "deliverables": {
+    "MCP-P2-KIT002-PLAN": {
+      "status": "done",
+      "plan": "docs/archive/2026-06-src-dev/plans/mcp_kit_production_002_unfreeze_v1.md",
+      "manifest": "tools/mcp/schemas/examples/batch_kit_production_002.manifest.json",
+      "module_count": 6,
+      "pilot_archetype": "warehouse_industrial"
+    },
+    "ARCH-002": {
+      "status": "done",
+      "schema": "tools/mcp/schemas/variant_graph_v1.schema.json",
+      "charter": "src/dev/arch_variant_graph_002_v1.md",
+      "example": "tools/mcp/schemas/examples/variant_graph_warehouse_industrial_west_v1.json",
+      "schema_test": "tools/mcp/python/tests/test_variant_graph.py"
+    }
+  },
+  "unfrozen": [
+    "kit_production_002",
+    "tile_batch_warehouse_industrial_west_production_v1",
+    "variant_matrix_warehouse_v1"
+  ],
+  "next_agent": "coder-mcp",
+  "next_slice": "MCP-P2-KIT002-G2",
+  "g0_complete": {
+    "task_id": "MCP-P2-KIT002-G0",
+    "witness": "debug_runs/art_pipeline/warehouse_production_g0_live.json",
+    "rules": "debug_runs/art_pipeline/warehouse_production_g0_rules.yaml",
+    "signed": "2026-06-14"
+  },
+  "green": true
+}

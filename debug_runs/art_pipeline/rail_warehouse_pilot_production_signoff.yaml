@@ -1,0 +1,59 @@
+# rail_warehouse_pilot_production_signoff.yaml — BUILD-READ-D-004 / TILE-PROD-004 pilot
+program_id: PLAN-BUILD-READABILITY-001
+task_id: BUILD-READ-D-004
+gate: G4
+designer: build_read_variant_matrix_signoff
+designer_mcp: production_keyframe_signoff
+production_bar: docs/archive/2026-06-src-dev/plans/design_procedural_tile_production_bar_v1.md
+readability_charter: src/dev/design_build_read_d001_d004_v1.md
+variant_matrix: debug_runs/art_pipeline/variant_matrix_rail_warehouse_pilot_v1.yaml
+
+archetype: industrial_warehouse_l
+pilot_id: logistics_rail_warehouse_v0
+primary_style_pack: style_industrial_west
+batch_id: tile_rail_warehouse_pilot_v1
+atlas_id: rail_warehouse_pilot_v1
+footprint_matrix_id: logistics_rail_warehouse_l_6x5
+source_tier: pilot
+g4_review_mode: keyframe_stills
+reviewed_at: "2026-06-16"
+proceed_ship: yes
+
+readability_gates:
+  d001_primary_inside_site_box: pass
+  d003_yard_rail_labels_in_overlay: pass
+  d004_l_footprint_leg_visible: pass
+
+keyframe_stills:
+  export_folder: assets/staging/tiles/tile_rail_warehouse_pilot_v1/
+  minimum_review_keys:
+    - clean_day
+    - clean_night_on
+    - under_construction_01
+  still_paths:
+    clean_day: assets/staging/tiles/tile_rail_warehouse_pilot_v1/clean_day.png
+    clean_night_off: assets/staging/tiles/tile_rail_warehouse_pilot_v1/clean_night_off.png
+    clean_night_on: assets/staging/tiles/tile_rail_warehouse_pilot_v1/clean_night_on.png
+    under_construction_01: assets/staging/tiles/tile_rail_warehouse_pilot_v1/under_construction_01.png
+  pack_command: "python -m rust_engine_mcp.cli tile-atlas-pack assets/staging/tiles/tile_rail_warehouse_pilot_v1 -pk"
+
+witness:
+  design_witness: debug_runs/design_build_read_d001_d004_live.json
+  bake_witness: debug_runs/design_tile_rail_warehouse_pilot_live.json
+  atlas_meta: assets/staging/tiles/tile_rail_warehouse_pilot_v1/atlas_meta.json
+  atlas_png: assets/textures/buildings_iso/staging/tile_rail_warehouse_pilot_v1_atlas.png
+
+g4_gates:
+  g4_0_matrix_and_spine: pass
+  g4_1_source_tier_pilot: pass
+  g4_2_reference_tags_present: pass
+  g4_3_keyframe_minimum_stills_review: pass
+  g4_4_full_matrix_keys_packed: pass
+  g4_5_night_damaged_iso_readable_128px: pass
+  g4_6_fire_frames_distinct: waived_v1
+  g4_7_no_smoke_greybox_modules: pass
+  g4_8_proceed_ship: pass
+
+lod0_ortho_atlas_g4: rejected
+blocked_by: []
+next: "BUILD-READ-VISUAL-001 iso stamp + suppress PG-2 mesh when atlas registered"

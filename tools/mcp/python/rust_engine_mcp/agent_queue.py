@@ -17,7 +17,7 @@ QUEUE_REGISTRY: dict[str, str] = {
     "phase4": "tools/orchestrator/queues/post_drain_phase4_queue.json",
 }
 
-WITNESS_PROFILES = frozenset({"map_pick", "construction", "fire_product"})
+WITNESS_PROFILES = frozenset({"map_pick", "construction", "fire_product", "honesty"})
 
 VALID_STATUS = frozenset({"ready", "blocked", "in_progress", "done", "deferred", "cancelled"})
 
@@ -125,6 +125,7 @@ def slice_exec_brief(slice_id: str, *, queue: str | None = None) -> dict[str, An
     files = [d for d in docs if "/" in d or d.endswith((".md", ".rs", ".json"))]
     status = str(row.get("status") or "ready")
     agent = str(row.get("agent") or "")
+    witness_rel = str(row.get("witness") or row.get("witness_json") or "")
     return {
         "ok": True,
         "schema": "slice_exec_brief_v1",
@@ -135,7 +136,9 @@ def slice_exec_brief(slice_id: str, *, queue: str | None = None) -> dict[str, An
         "agent": agent,
         "lane": row.get("lane"),
         "exit": str(row.get("exit") or ""),
-        "witness": str(row.get("witness") or row.get("witness_json") or ""),
+        "witness": witness_rel,
+        "exit_predicate": row.get("exit_predicate") if isinstance(row.get("exit_predicate"), dict) else None,
+        "witness_honesty": _slice_witness_honesty_brief(row, witness_rel),
         "files": files,
         "exec_docs": docs,
         "do_not_pick": status in ("done", "cancelled"),
@@ -299,6 +302,7 @@ def agent_queue_update(
     *,
     note: str = "",
     queue: str = "grammar",
+    enforce: bool = False,
 ) -> dict[str, Any]:
     st = status.strip().lower()
     if st not in VALID_STATUS:
@@ -306,10 +310,25 @@ def agent_queue_update(
 
     items = load_queue(queue)
     found = False
+    target_row: dict[str, Any] | None = None
     for row in items:
         if str(row.get("id")) != slice_id:
             continue
         found = True
+        target_row = row
+        if st == "done" and enforce:
+            from rust_engine_mcp.validators.queue_integrity import check_row_done_allowed
+
+            ok, reason = check_row_done_allowed(row)
+            if not ok:
+                return {
+                    "ok": False,
+                    "enforce": True,
+                    "slice_id": slice_id,
+                    "status": st,
+                    "queue": queue,
+                    "error": reason,
+                }
         row["status"] = st
         if note:
             row["note"] = note
@@ -319,7 +338,14 @@ def agent_queue_update(
         raise KeyError(f"slice_id not in queue: {slice_id}")
 
     save_queue(queue, items)
-    return {"ok": True, "slice_id": slice_id, "status": st, "queue": queue}
+    return {
+        "ok": True,
+        "slice_id": slice_id,
+        "status": st,
+        "queue": queue,
+        "enforce": bool(enforce),
+        "had_exit_predicate": isinstance((target_row or {}).get("exit_predicate"), dict),
+    }
 
 
 def agent_queue_board(
@@ -414,6 +440,89 @@ def _witness_brief_fire_product(data: dict[str, Any], rel: str) -> dict[str, Any
     }
 
 
+def _witness_brief_honesty(data: dict[str, Any], rel: str) -> dict[str, Any]:
+    """MCP-WIT-030 — failed rule ids only (compress 4)."""
+    from rust_engine_mcp.validators.witness_honesty import load_witness_integrity_catalog, validate_witness_honesty
+
+    catalog = load_witness_integrity_catalog()
+    report = validate_witness_honesty(
+        data,
+        witness_rel=rel,
+        catalog=catalog,
+        compression_level=3,
+    )
+    failed_rule_ids = sorted(
+        {
+            str(issue.symbol or issue.kind)
+            for issue in report.errors
+            if issue.severity == "error" and (issue.symbol or issue.kind)
+        }
+    )
+    warning_rule_ids = sorted(
+        {
+            str(issue.symbol or issue.kind)
+            for issue in report.errors
+            if issue.severity == "warning" and (issue.symbol or issue.kind)
+        }
+    )
+    return {
+        "profile": "honesty",
+        "path": rel,
+        "status": report.status,
+        "failed_rule_ids": failed_rule_ids,
+        "warning_rule_ids": warning_rule_ids,
+        "q_forbidden": report.status != "passed",
+        "blang": "BLANG:WIT-HON",
+    }
+
+
+def _last_witness_integrity_scan_summary() -> dict[str, Any]:
+    """Last ops/post_build scan rollup for slice_exec_brief."""
+    ops_path = repo_root() / "debug_runs/mcp_witness_integrity_ops_live.json"
+    if ops_path.is_file():
+        try:
+            body = json.loads(ops_path.read_text(encoding="utf-8"))
+            cache = body.get("integrity_cache") or {}
+            return {
+                "source": str(ops_path.relative_to(repo_root())).replace("\\", "/"),
+                "fail_count": cache.get("fail_count"),
+                "inflated_green_count": cache.get("inflated_green_count"),
+                "queue_contradiction_count": cache.get("queue_contradiction_count"),
+                "queue_stale_count": cache.get("queue_stale_count"),
+                "enforce_mode": body.get("enforce_mode"),
+            }
+        except (OSError, json.JSONDecodeError):
+            pass
+    try:
+        from rust_engine_mcp.witness_honesty_lib import build_integrity_cache
+
+        cache = build_integrity_cache(compression_level=3)
+        return {
+            "source": "live_scan",
+            "fail_count": cache.get("fail_count"),
+            "inflated_green_count": cache.get("inflated_green_count"),
+            "queue_contradiction_count": cache.get("queue_contradiction_count"),
+            "queue_stale_count": cache.get("queue_stale_count"),
+        }
+    except Exception as exc:  # noqa: BLE001
+        return {"source": "unavailable", "error": str(exc)}
+
+
+def _slice_witness_honesty_brief(row: dict[str, Any], witness_rel: str) -> dict[str, Any]:
+    """MCP-WIT-031 — honesty block for slice_exec_brief before BLANG:Q✓."""
+    out: dict[str, Any] = {"last_scan": _last_witness_integrity_scan_summary()}
+    if witness_rel.endswith(".json"):
+        brief = witness_brief(witness_rel, profile="honesty")
+        out["witness"] = brief.get("brief") if brief.get("ok") else {"error": brief.get("error")}
+        out["q_forbidden"] = bool((brief.get("brief") or {}).get("q_forbidden"))
+    elif isinstance(row.get("exit_predicate"), dict):
+        out["q_forbidden"] = True
+        out["note"] = "exit_predicate on row; validate witness JSON for WIT-HON"
+    else:
+        out["q_forbidden"] = None
+    return out
+
+
 def witness_brief(path: str, *, profile: str | None = None, max_list_items: int = 8) -> dict[str, Any]:
     """Compressed witness JSON — green flag + key fields; optional profile dispatch."""
     p = Path(path)
@@ -433,6 +542,8 @@ def witness_brief(path: str, *, profile: str | None = None, max_list_items: int 
             brief = _witness_brief_construction(data, rel)
         elif prof == "map_pick":
             brief = _witness_brief_map_pick(data, rel)
+        elif prof == "honesty":
+            brief = _witness_brief_honesty(data, rel)
         else:
             brief = _witness_brief_fire_product(data, rel)
         return {"ok": True, "brief": brief}
@@ -914,10 +1025,14 @@ def token_savings_guide() -> dict[str, Any]:
             "mcp_job": "validate_report('mcp_job', path, compress=4)",
         },
         "briefs": {
-            "witness": "witness_brief('debug_runs/...json', profile='construction'|'map_pick'|'fire_product')",
+            "witness": "witness_brief('debug_runs/...json', profile='construction'|'map_pick'|'fire_product'|'honesty')",
             "handoff": "handoff_brief()",
             "review_order": "review_order_brief()",
             "slice_exec": "slice_exec_brief('TRIAGE-MAP-PICK-CLOSURE-001')",
+            "ops_project": "ops_get_project_brief()",
+            "ops_retry": "ops_get_retry_guidance('<task_id>')",
+            "ops_blockers": "ops_get_active_blockers()",
+            "landscape_presets": "landscape_grammar_presets_witness()",
             "orchestrator": "orchestrator_brief()",
             "file_peek": "file_digest('src/.../file.rs', max_lines=40)",
             "snapshot": "snapshot_digest('assets/staging/assemblies/<id>.json')",
@@ -926,6 +1041,17 @@ def token_savings_guide() -> dict[str, Any]:
             "simulation": "simulation_queue_brief() — weather train open rows",
             "coder_mcp_drain": "coder_mcp_drain_brief() — full @coder-mcp drain board",
             "orchestrator_mcp_lane": "orchestrator-mcp-lane-brief — @orchestrator-mcp P2 pick + explicit order",
+        },
+        "witness_integrity": {
+            "blang": "BLANG:WIT-HON",
+            "witness_brief": "witness_brief(path, profile='honesty') — failed rule ids only",
+            "validate_witness": "validate-report witness_honesty <path> --compress 3",
+            "validate_scan": "validate-report witness_honesty --scan debug_runs --compress 3",
+            "validate_queue": "validate-report queue_integrity --compress 3",
+            "ops_witness": "debug_runs/mcp_witness_integrity_ops_live.json",
+            "enforce_env": "RUST_ENGINE_WITNESS_INTEGRITY_ENFORCE=1",
+            "hook_disable": "RUST_ENGINE_WITNESS_HONESTY_HOOK=0",
+            "agent_rule": "BLANG:Q✓ forbidden when witness_honesty FAIL on row witness + rollup parents",
         },
         "session_start": [
             "agent_doc_reads_brief(min_reads=2)",
@@ -944,7 +1070,11 @@ def token_savings_guide() -> dict[str, Any]:
                 "BLANG:Q✓": "agent_queue_update(id, 'done', note=witness_path)",
                 "BLANG:HO": "handoff_brief()",
                 "BLANG:WIT": "witness_brief('debug_runs/...json', profile='construction'|'map_pick'|'fire_product')",
+                "BLANG:WIT-HON": "witness_brief(path, profile='honesty') | validate-report witness_honesty <path>|--scan debug_runs | validate-report queue_integrity",
                 "BLANG:REVIEW": "review_order_brief()",
+                "BLANG:OPS": "ops_get_project_brief() — delta_wf + active_blockers composed",
+                "BLANG:OPS-RETRY": "ops_get_retry_guidance('<task_id>')",
+                "BLANG:OPS-BLOCK": "ops_get_active_blockers()",
                 "BLANG:SLICE": "slice_exec_brief('<slice_id>')",
                 "BLANG:PLACE": "validate_report('construction', path, compress=3)",
                 "BLANG:DIGEST": "snapshot_digest(path) — includes arch_dna block",
@@ -967,8 +1097,8 @@ def token_savings_guide() -> dict[str, Any]:
             "by_agent": {
                 "orchestrator": ["BLANG:PRE", "BLANG:HO", "BLANG:Q+", "BLANG:WIT", "BLANG:Q✓", "BLANG:RUN"],
                 "planner-mcp": ["BLANG:HO", "BLANG:Q+", "BLANG:DOC", "BLANG:Q✓"],
-                "coder-mcp": ["BLANG:PRE", "BLANG:Q+", "BLANG:REVIEW", "BLANG:SLICE", "BLANG:PLACE", "BLANG:DIGEST", "BLANG:P0", "BLANG:PY", "BLANG:WIT", "BLANG:Q✓", "BLANG:RUN"],
-                "coder": ["BLANG:Q+", "BLANG:REVIEW", "BLANG:SLICE", "BLANG:PLACE", "BLANG:CARGO", "BLANG:BEVY", "BLANG:S5", "BLANG:WIT", "BLANG:Q✓"],
+                "coder-mcp": ["BLANG:PRE", "BLANG:Q+", "BLANG:REVIEW", "BLANG:OPS", "BLANG:OPS-RETRY", "BLANG:SLICE", "BLANG:PLACE", "BLANG:DIGEST", "BLANG:P0", "BLANG:PY", "BLANG:WIT", "BLANG:WIT-HON", "BLANG:Q✓", "BLANG:RUN"],
+                "coder": ["BLANG:Q+", "BLANG:REVIEW", "BLANG:SLICE", "BLANG:PLACE", "BLANG:CARGO", "BLANG:BEVY", "BLANG:S5", "BLANG:WIT", "BLANG:WIT-HON", "BLANG:Q✓"],
             },
             "commits": {
                 "SPEC": "planner — $ref:exec.md",
@@ -977,7 +1107,7 @@ def token_savings_guide() -> dict[str, Any]:
             },
         },
         "blang_session_loop": [
-            "BLANG:PRE → BLANG:Q+ → work → BLANG:WIT → BLANG:Q✓",
+            "BLANG:PRE → BLANG:Q+ → work → BLANG:WIT-HON → BLANG:WIT → BLANG:Q✓",
             "Orient/ref: BLANG:DOC — not raw Read",
             "End: BLANG:RUN — agent_run_append telemetry",
         ],

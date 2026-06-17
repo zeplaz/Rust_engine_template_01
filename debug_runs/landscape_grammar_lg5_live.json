@@ -1,4 +1,5 @@
 {
+  "VEG-F03-REGISTRY-STAMP-001": true,
   "_agent_meta": {
     "agent_commands": [
       "cargo test -p proc_A_dine01 --lib"
@@ -52,12 +53,13 @@
     "relative_path": "debug_runs/landscape_grammar_lg5_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_lg5_witness",
-    "written_at_epoch_secs": 1781533758
+    "written_at_epoch_secs": 1781658946
   },
   "atlas_batch_green": true,
   "atlas_batch_witness": "debug_runs/art_pipeline/tile_tile_landscape_lg5_pilot_v1_live.json",
   "atlas_id": "landscape_lg5_pilot_v1",
   "atlas_lane": "mcp_atlas_pack",
+  "bevy_chunk_uv_stamp": true,
   "charter": "src/dev/design_landscape_lg5_atlas_v1.md",
   "gate": "VEG-LG5-WITNESS-001",
   "green": true,

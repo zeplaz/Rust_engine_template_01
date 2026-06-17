@@ -55,7 +55,7 @@
     "relative_path": "debug_runs/stage5_full_app_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "log_e01_and_tactical_vfx_stage5_witness_refresh",
-    "written_at_epoch_secs": 1781533759
+    "written_at_epoch_secs": 1781658954
   },
   "agent_cleanup_hints": null,
   "authority_revisions": {
@@ -608,6 +608,25 @@
     "tactical_views_only_sparks": true,
     "tactical_zoom_rows_positive": true,
     "view_aware_particle_cull_wired": true
+  },
+  "veg_burn_witness": {
+    "burn_active_rows": 1,
+    "burn_rows": [
+      {
+        "coord": {
+          "x": 12,
+          "y": 0
+        },
+        "extract_glyph": "@",
+        "frame_index": 1,
+        "variant_key": "veg_burn_01"
+      }
+    ],
+    "gate": "VEG-BURN-FULLAPP-006",
+    "green": true,
+    "sample_variant_keys": [
+      "veg_burn_01"
+    ]
   },
   "viewport_contracts": {
     "egui_world_preview_viewport": {

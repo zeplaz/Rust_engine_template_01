@@ -12,6 +12,8 @@ from rust_engine_mcp.aps_grammar_labels import human_label
 from rust_engine_mcp.grammar_iterate import compute_cell_diff_map, iterate_grammar
 from rust_engine_mcp.paths import repo_root
 
+from .aps_theme import FONT_SMALL
+
 
 def _ui_labels() -> dict[str, str]:
     path = repo_root() / "assets/configs/buildings/grammars/grammar_labels_v1.json"
@@ -99,7 +101,7 @@ class GrammarIteratePanel(ttk.LabelFrame):
             self,
             text=ui.get("generate_vs_iterate_hint", ""),
             foreground="#666",
-            font=("Segoe UI", 8),
+            font=FONT_SMALL,
             wraplength=520,
         ).pack(anchor=tk.W)
 

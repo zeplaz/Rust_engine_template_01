@@ -2,19 +2,17 @@
 
 **Authority:** [`tools/orchestrator/queues/coder_master_drain_queue.json`](../tools/orchestrator/queues/coder_master_drain_queue.json)  
 **Phase 4 drain:** closed — see `done_phase4` in JSON  
-**Unwired spine:** [`build_read_unwired_spine_v1.md`](build_read_unwired_spine_v1.md)  
-**Rule:** Pick **seq 1 → 24** · skip `blocked` / `deferred` · **REWIRE before BUILD verify**
+**HUD spine (wired):** [`build_read_unwired_spine_v1.md`](build_read_unwired_spine_v1.md) — J_REWIRE ★ drained  
+**Phase 6 active:** [`post_drain_phase6_coder_queue.json`](../tools/orchestrator/queues/post_drain_phase6_coder_queue.json)  
+**Rule:** Master drain seq 1–24 **drained** · pick Phase 6 queue top→bottom
 
 ---
 
 ## Single handoff (@coder)
 
 ```text
-Drain coder_master_drain_queue.json top→bottom.
-Wave 1 REWIRE: mod.rs spine (placement_debug, pointer_gate, map_zoom witness)
-Wave 2 FIRE: G-PLAY-FIRE-001 → ecology refresh + vfx highlight
-Wave 3 BUILD: P0 verify, pilot catalog refactor, grammar v0-003, visual-001, minimap
-Wave 4 VEG: LG-2 succession → fire/build coupling → LG-3 districts → LG-4 population/preview
+Master drain seq 1–24 DRAINED (REWIRE + FIRE + BUILD P0).
+Pick post_drain_phase6_coder_queue.json — BUILD-READ-CONSUMER-MCP-001 or VEG-HARD-* / INFRA-*.
 Regression: cargo test -p proc_A_dine01 --lib fire_ecology landscape_grammar construction stage5 sim_effects
 ```
 
@@ -112,7 +110,7 @@ Fire **depth** (F2 extract, smoke bridge, fuel spread) — lib green; product ga
 |:---|:---|
 | `coder_drain_queue.json` | Phase 4 → `done_phase4` |
 | `post_drain_phase5_queue.json` | REWIRE, FIRE, BUILD tail, LG-2 |
-| `build_read_unwired_spine_v1.md` | Wave 1 pick order |
+| `build_read_unwired_spine_v1.md` | J_REWIRE ★ drained (wired inventory) |
 | `plan_landscape_grammar_exec_001_v1.md` | LG-2→LG-4 rows |
 | `plan_operator_build_readability_exec_001_v1.md` | BUILD-READ todo board |
 | `grammar_continuation_queue.json` | CODER-PILOT-REFACTOR → seq 12 |

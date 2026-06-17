@@ -2,11 +2,15 @@
 
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::process::Command;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use serde_json::{Map, Value};
 
 pub const ENVELOPE_SCHEMA: &str = "debug_run_envelope_v1";
+pub const WITNESS_HONESTY_ENFORCE_ENV: &str = "RUST_ENGINE_WITNESS_INTEGRITY_ENFORCE";
+pub const WITNESS_HONESTY_SKIP_ENV: &str = "RUST_ENGINE_WITNESS_INTEGRITY_SKIP";
+const WITNESS_HONESTY_PRECHECK_DIR: &str = "debug_runs/.witness_honesty_precheck";
 
 /// Primary live proofs agents should read (relative to repo root).
 pub const KNOWN_LIVE_PROOF_PATHS: &[&str] = &[
@@ -195,10 +199,7 @@ pub fn wrap_debug_run(
 }
 
 fn write_json_file(relative_path: &str, payload: &Value) -> bool {
-    let path = std::env::var_os("CARGO_MANIFEST_DIR")
-        .map(PathBuf::from)
-        .unwrap_or_else(|| PathBuf::from("."))
-        .join(relative_path);
+    let path = repo_root_path().join(relative_path);
     if let Some(parent) = path.parent() {
         let _ = fs::create_dir_all(parent);
     }
@@ -208,8 +209,87 @@ fn write_json_file(relative_path: &str, payload: &Value) -> bool {
     fs::write(&path, text).is_ok()
 }
 
+#[must_use]
+fn repo_root_path() -> PathBuf {
+    std::env::var_os("CARGO_MANIFEST_DIR")
+        .map(PathBuf::from)
+        .unwrap_or_else(|| PathBuf::from("."))
+}
+
+/// WIT-RUST-004 — run MCP witness_honesty validator (subprocess) before writing `*_live.json`.
+///
+/// When [`WITNESS_HONESTY_ENFORCE_ENV`] is set, a failed check blocks the write.
+/// Set [`WITNESS_HONESTY_SKIP_ENV`] to bypass (tests / offline).
+#[must_use]
+pub fn assert_witness_honesty_before_write(relative_path: &str, body: &Value) -> bool {
+    if !relative_path.ends_with("_live.json") || env_flag(WITNESS_HONESTY_SKIP_ENV) {
+        return true;
+    }
+
+    let root = repo_root_path();
+    let basename = Path::new(relative_path)
+        .file_name()
+        .and_then(|s| s.to_str())
+        .unwrap_or("witness_live.json");
+    let precheck_dir = root.join(WITNESS_HONESTY_PRECHECK_DIR);
+    if fs::create_dir_all(&precheck_dir).is_err() {
+        return !env_flag(WITNESS_HONESTY_ENFORCE_ENV);
+    }
+    let precheck_path = precheck_dir.join(basename);
+    if !write_json_file(
+        &format!("{WITNESS_HONESTY_PRECHECK_DIR}/{basename}"),
+        body,
+    ) {
+        return !env_flag(WITNESS_HONESTY_ENFORCE_ENV);
+    }
+
+    let mcp_python = root.join("tools/mcp/python");
+    let script = format!(
+        "import json, sys\n\
+         from pathlib import Path\n\
+         from rust_engine_mcp.paths import repo_root\n\
+         from rust_engine_mcp.validators.witness_honesty import (\n\
+             load_witness_integrity_catalog, validate_witness_honesty,\n\
+         )\n\
+         root = repo_root()\n\
+         data = json.loads(Path(sys.argv[1]).read_text(encoding='utf-8'))\n\
+         witness_rel = sys.argv[2]\n\
+         report = validate_witness_honesty(\n\
+             data,\n\
+             witness_rel=witness_rel,\n\
+             catalog=load_witness_integrity_catalog(repo=root),\n\
+             root=root,\n\
+             compression_level=3,\n\
+         )\n\
+         print(json.dumps(report.to_dict()))\n\
+         sys.exit(0 if report.status == 'passed' else 1)\n"
+    );
+
+    let output = Command::new("python")
+        .current_dir(&mcp_python)
+        .arg("-c")
+        .arg(&script)
+        .arg(&precheck_path)
+        .arg(relative_path)
+        .output();
+
+    let passed = match output {
+        Ok(out) => out.status.success(),
+        Err(_) => true,
+    };
+
+    if passed {
+        true
+    } else {
+        !env_flag(WITNESS_HONESTY_ENFORCE_ENV)
+    }
+}
+
 /// Write pretty JSON and refresh [`AGENT_DEBUG_INDEX_PATH`] (unless writing the index itself).
 pub fn write_debug_run_json(relative_path: &str, payload: Value) -> bool {
+    if !assert_witness_honesty_before_write(relative_path, &payload) {
+        return false;
+    }
     if !write_json_file(relative_path, &payload) {
         return false;
     }
@@ -317,5 +397,37 @@ mod tests {
         );
         assert!(wrapped.get("_agent_meta").is_some());
         assert_eq!(wrapped.get("ok").and_then(|v| v.as_bool()), Some(true));
+    }
+
+    #[test]
+    fn assert_witness_honesty_blocks_wit_green_tint_zero_when_enforced() {
+        let body = serde_json::json!({
+            "_agent_meta": { "schema": ENVELOPE_SCHEMA },
+            "gate": "LG-4-PREVIEW-FIXTURE",
+            "green": true,
+            "topology_tint_visible_chunks": 0,
+        });
+        std::env::set_var(WITNESS_HONESTY_SKIP_ENV, "1");
+        assert!(assert_witness_honesty_before_write(
+            "debug_runs/landscape_grammar_lg4_preview_live.json",
+            &body
+        ));
+        std::env::remove_var(WITNESS_HONESTY_SKIP_ENV);
+        std::env::set_var(WITNESS_HONESTY_ENFORCE_ENV, "1");
+        let blocked = assert_witness_honesty_before_write(
+            "debug_runs/landscape_grammar_lg4_preview_live.json",
+            &body,
+        );
+        std::env::remove_var(WITNESS_HONESTY_ENFORCE_ENV);
+        if std::process::Command::new("python")
+            .arg("-c")
+            .arg("import rust_engine_mcp")
+            .current_dir(repo_root_path().join("tools/mcp/python"))
+            .status()
+            .map(|s| s.success())
+            .unwrap_or(false)
+        {
+            assert!(!blocked, "WIT-GREEN-TINT-ZERO must block when enforced");
+        }
     }
 }

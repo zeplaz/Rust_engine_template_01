@@ -6,7 +6,6 @@
 //!
 //! **Prerequisite:** Phase 2 P6–P8 green. **Not** Stage 5.
 
-use bevy::log::info;
 use bevy::prelude::{App, Resource};
 
 use super::construction_live_todos::TodoStatus;
@@ -360,12 +359,4 @@ pub fn sync_construction_round3_board_from_witness(
     board: &mut ConstructionRound3TodoBoard,
 ) {
     board.sync_from_witness(witness);
-    let done = board.status.iter().filter(|s| **s == TodoStatus::Done).count();
-    if done == CONSTRUCTION_ROUND3_TODOS.len() {
-        info!(
-            target: "construction_round3_todos",
-            "CONSTRUCTION_ROUND3_COMPLETE done={done}/{}",
-            CONSTRUCTION_ROUND3_TODOS.len()
-        );
-    }
 }

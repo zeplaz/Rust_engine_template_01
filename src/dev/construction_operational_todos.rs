@@ -3,7 +3,6 @@
 //! Spec: [`super::construction_operational_gate.md`](super::construction_operational_gate.md)
 //! **Not** Stage 5. Run before scaling Round 3 catalog/topology.
 
-use bevy::log::info;
 use bevy::prelude::{App, Resource};
 
 use super::construction_live_todos::TodoStatus;
@@ -145,10 +144,4 @@ pub fn sync_construction_operational_board_from_witness(
     board: &mut ConstructionOperationalTodoBoard,
 ) {
     board.sync_from_witness(witness);
-    if board.is_green() {
-        info!(
-            target: "construction_operational_todos",
-            "CONSTRUCTION_OPERATIONAL_GREEN"
-        );
-    }
 }

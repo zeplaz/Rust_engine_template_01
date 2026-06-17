@@ -8,7 +8,7 @@
     "coder_drain": "tools/orchestrator/queues/coder_drain_queue.json",
     "prior_program": "POST-DRAIN-PHASE-3-001",
     "rule": "Coder drains coder_drain_queue.json · sim spine wave 1 P0 · witness JSON wins",
-    "last_sync": "2026-06-14"
+    "last_sync": "2026-06-15"
   },
   "lanes": {
     "G_OPS": {
@@ -160,7 +160,7 @@
         "TRIAGE-MAP-PICK-CLOSURE-001"
       ],
       "goal": "Eliminate zoom ghost — ortho/tile sync vs pan smooth",
-      "note": "Tile/zoom code landed · witness module unwired 2026-06-13 — see BUILD-READ-REWIRE-003",
+      "note": "Tile/zoom + witness module wired — BUILD-READ-REWIRE-003 done · map_zoom_coherence_live.json green",
       "docs": [
         "src/dev/plan_product_polish_exec_001_v1.md",
         "src/gui/map_camera.rs",

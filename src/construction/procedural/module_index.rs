@@ -152,6 +152,7 @@ impl ProceduralModuleEntry {
 
 #[derive(Resource, Debug, Default)]
 pub struct ProceduralModuleRegistry {
+    pub schema_version: u32,
     pub entries: Vec<ProceduralModuleEntry>,
     /// Best-tier row per `module_id` (lod0/production wins over smoke).
     pub by_module_id: HashMap<String, ProceduralModuleEntry>,
@@ -408,18 +409,24 @@ pub fn load_procedural_module_registry_from_path(path: &Path) -> ProceduralModul
 
     if path.extension().and_then(|e| e.to_str()) == Some("json") {
         match serde_json::from_str::<ModuleIndexFileJson>(&text) {
-            Ok(file) => ingest_entries(
-                &mut registry,
-                file.entries.into_iter().map(entry_from_json),
-            ),
+            Ok(file) => {
+                registry.schema_version = file.schema_version;
+                ingest_entries(
+                    &mut registry,
+                    file.entries.into_iter().map(entry_from_json),
+                );
+            }
             Err(e) => registry.load_errors.push(format!("JSON parse: {e}")),
         }
     } else {
         match ron::from_str::<ModuleIndexFileRon>(&text) {
-            Ok(file) => ingest_entries(
-                &mut registry,
-                file.entries.into_iter().map(entry_from_ron),
-            ),
+            Ok(file) => {
+                registry.schema_version = file.schema_version;
+                ingest_entries(
+                    &mut registry,
+                    file.entries.into_iter().map(entry_from_ron),
+                );
+            }
             Err(e) => registry.load_errors.push(format!("RON parse: {e}")),
         }
     }
@@ -452,9 +459,10 @@ pub fn init_procedural_module_registry(mut commands: Commands) {
     } else {
         info!(
             target: "procedural_module",
-            "ProceduralModuleRegistry: {} entries ({} stylepack-visible)",
+            "ProceduralModuleRegistry: {} entries ({} stylepack-visible) schema_v{}",
             registry.len(),
-            registry.modules_for_stylepack().count()
+            registry.modules_for_stylepack().count(),
+            registry.schema_version
         );
     }
     commands.insert_resource(registry);

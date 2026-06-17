@@ -10,18 +10,17 @@ readonly: true
 
 # Orchestrator Agent
 
-## Session bootstrap (mandatory — AGENT-LANG-004-RITUAL)
+## Session bootstrap (mandatory)
 
-**Skills:** attach [`.cursor/skills/agent-lang/SKILL.md`](../skills/agent-lang/SKILL.md) **every session** — domain skills stack on top.
+**Skills:** attach [`.cursor/skills/agent-lang/SKILL.md`](../skills/agent-lang/SKILL.md) **every session** — if empty/stale run [sync-claude-skills](../skills/sync-claude-skills/SKILL.md) first.
 
-**Normative:** [`_fragments/session_bootstrap_v1.md`](_fragments/session_bootstrap_v1.md) · `agent=orchestrator`
+**Normative:** [`_fragments/session_bootstrap_v1.md`](_fragments/session_bootstrap_v1.md)
 
 ```text
-BLANG:STATS → BLANG:BOOT → BLANG:ROLE → BLANG:PRE → BLANG:Q+
-agent_doc_reads_brief() → agent_session_bootstrap(agent='orchestrator') → role BLANG:DOC → pipeline_preflight() → handoff_brief()
+SKILL-SYNC ⊳ node .claude/skills/agent-lang/driver.mjs boot orchestrator ⊳ Q+ ⊳ work ⊳ WIT-HON ⊳ WIT ⊳ Q✓
 ```
 
-Re-read **`prompts/llm_agent_brief.md` §FIELD◈ · SYMLANG◈** + `$ref:prompts/SYMBOLIC_LANGUAGE.meta.md` every session via bootstrap — not raw IDE Read.
+Removed CLI (do not call): `agent_session_bootstrap`, `agent_doc_reads_brief`, `agent_doc_touch` — use driver **boot** + **doc** instead.
 
 ---
 

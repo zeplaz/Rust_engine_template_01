@@ -60,6 +60,7 @@ PRODUCTION_TILEABLE_SET_IDS: frozenset[str] = frozenset(
         "glass_panel_01",
         "roof_tile_01",
         "roof_metal_01",
+        "metal_roof_01",
     }
 )
 

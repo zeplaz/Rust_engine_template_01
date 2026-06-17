@@ -117,6 +117,33 @@
       }
     },
     {
+      "variant_key": "damaged_night_on",
+      "sim_tags": [
+        "sim_damage_mid",
+        "sim_night",
+        "sim_power_on"
+      ],
+      "tags": [
+        "sim_damage_mid",
+        "sim_night",
+        "sim_power_on"
+      ],
+      "layers": {
+        "lighting": {
+          "lighting": "night_on",
+          "power": "on",
+          "night_lights": true
+        },
+        "damage": {
+          "state": "damaged",
+          "damage": 0.45
+        },
+        "fill": {
+          "fill": "half"
+        }
+      }
+    },
+    {
       "variant_key": "under_construction_01",
       "sim_tags": [
         "sim_construction_early"
@@ -159,6 +186,31 @@
         },
         "fill": {
           "fill": "quarter"
+        }
+      }
+    },
+    {
+      "variant_key": "abandoned",
+      "sim_tags": [
+        "sim_abandoned",
+        "sim_day"
+      ],
+      "tags": [
+        "sim_abandoned",
+        "sim_day"
+      ],
+      "layers": {
+        "lighting": {
+          "lighting": "day",
+          "power": "off",
+          "night_lights": false
+        },
+        "damage": {
+          "state": "ruined",
+          "damage": 0.8
+        },
+        "fill": {
+          "fill": "empty"
         }
       }
     },

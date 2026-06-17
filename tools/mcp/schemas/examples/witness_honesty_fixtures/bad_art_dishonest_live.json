@@ -1,0 +1,10 @@
+{
+  "_fixture": { "expect": "fail", "rule_id": "WIT-ART-DISHONEST" },
+  "_agent_meta": {
+    "schema": "witness_honesty_fixture_v1",
+    "profile": "BAD_ART_DISHONEST"
+  },
+  "gate": "FIXTURE-ART",
+  "green": true,
+  "art_quality": "rejected_greybox_ortho"
+}

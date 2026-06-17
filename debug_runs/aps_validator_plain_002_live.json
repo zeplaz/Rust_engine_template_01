@@ -2,7 +2,7 @@
   "program_id": "APS-VALIDATOR-PLAIN-002",
   "gate": "APS-VALIDATOR-PLAIN-002",
   "green": true,
-  "code_count": 22,
+  "code_count": 25,
   "signatures": [
     "assembly_graph_material_profile",
     "assembly_production_glb_missing",
@@ -13,6 +13,9 @@
     "assembly_production_snapshot_missing",
     "assembly_production_tier",
     "assembly_production_unique_modules",
+    "grammar_integration_preset_missing",
+    "grammar_integration_preset_pair",
+    "grammar_integration_site_missing",
     "grammar_verify_footprint_min",
     "grammar_verify_grammar_chain",
     "grammar_verify_missing_roof",

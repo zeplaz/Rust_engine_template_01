@@ -1,8 +1,17 @@
 {
   "schema_version": "landscape_grammar_v0",
   "preset_id": "scrub_highland_v0",
-  "chart_id": "HIGH-SCRUB-D4",
-  "land_dna": { "H": "highland", "S": "rocky", "E": "exposed", "T": "alpine_edge", "D": "dry", "L": "scrub", "A": "old", "M": "natural" },
+  "chart_id": "MOUNTAIN-FOREST-DRAINAGE-Δ44",
+  "land_dna": {
+    "H": "upland",
+    "S": "thin_ridge",
+    "E": "wind_exposed",
+    "T": "montane",
+    "D": "low",
+    "L": "wild",
+    "A": "legacy",
+    "M": "wild"
+  },
   "pressure_field": {
     "lambda_moisture": 0.41,
     "lambda_slope": 0.68,
@@ -14,21 +23,55 @@
     "lambda_legibility": 0.55
   },
   "landscape_program": {
-    "class": "highland",
+    "class": "natural",
     "district_ref": "highland_scrub_02",
-    "required_topologies": ["PATCH_IRREGULAR", "CORRIDOR_RIDGE", "FRINGE_EDGE", "CLUSTER_NATURAL"]
+    "required_topologies": ["PATCH_IRREGULAR", "SPINE_RIDGELINE", "FRINGE_EDGE", "CLUSTER_NATURAL"]
   },
   "topology_graph": [
     {
       "id": "net_high_01",
       "topology_kind": "Network",
       "preset_id": "NETWORK_CONNECTED",
-      "children": [
-        { "id": "patch_irreg_01", "topology_kind": "Patch", "preset_id": "PATCH_IRREGULAR" },
-        { "id": "corr_ridge_01", "topology_kind": "Corridor", "preset_id": "CORRIDOR_RIDGE" },
-        { "id": "fringe_edge_01", "topology_kind": "Fringe", "preset_id": "FRINGE_EDGE" },
-        { "id": "cluster_nat_01", "topology_kind": "Cluster", "preset_id": "CLUSTER_NATURAL" }
-      ]
+      "scale_band": "L",
+      "anchor_ref": "partition:chunk_02_high",
+      "parent_topology_id": null,
+      "operator_stack": ["anchor_partition", "network_link"]
+    },
+    {
+      "id": "patch_irreg_01",
+      "topology_kind": "Patch",
+      "preset_id": "PATCH_IRREGULAR",
+      "scale_band": "M",
+      "anchor_ref": "site:scrub_patch_high",
+      "parent_topology_id": "net_high_01",
+      "operator_stack": ["seed_patch", "cluster"]
+    },
+    {
+      "id": "corr_ridge_01",
+      "topology_kind": "Spine",
+      "preset_id": "SPINE_RIDGELINE",
+      "scale_band": "M",
+      "anchor_ref": "terrain:ridge_spine_02",
+      "parent_topology_id": "net_high_01",
+      "operator_stack": ["spine_follow", "expand"],
+      "metadata": { "glyph_planning": "▲▲▲" }
+    },
+    {
+      "id": "fringe_edge_01",
+      "topology_kind": "Fringe",
+      "preset_id": "FRINGE_EDGE",
+      "scale_band": "S",
+      "anchor_ref": "field:treeline_edge",
+      "parent_topology_id": "net_high_01",
+      "operator_stack": ["fringe"]
+    },
+    {
+      "id": "cluster_nat_01",
+      "topology_kind": "Cluster",
+      "preset_id": "CLUSTER_NATURAL",
+      "scale_band": "S",
+      "parent_topology_id": "patch_irreg_01",
+      "operator_stack": ["cluster"]
     }
   ]
 }

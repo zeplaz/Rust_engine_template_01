@@ -45,10 +45,10 @@ class PipelineStatusBar(ttk.Frame):
             "catalog",
             bool(s.selected_module_id or s.selected_module_ids),
         )
-        self._set(
-            "assembly",
-            bool(s.assembly_snapshot_path or s.assembly_snapshot_data),
-        )
+        # APS-UX-PIPELINE-VALIDITY-001 — Assembly is "valid" only after the P0 gate
+        # passes; a saved-but-unvalidated (or failing) snapshot reads "saved", never ✓.
+        has_snapshot = bool(s.assembly_snapshot_path or s.assembly_snapshot_data)
+        self._set_assembly(has_snapshot, s.assembly_p0_passed)
         self._set(
             "materials",
             bool(s.assembly_snapshot_data and _has_material_profiles(s.assembly_snapshot_data)),
@@ -61,6 +61,18 @@ class PipelineStatusBar(ttk.Frame):
         state = "complete" if ok else "pending"
         mark = "✓" if ok else "○"
         self._vars[key].set(f"{mark} {label} {state}")
+
+    def _set_assembly(self, has_snapshot: bool, p0_passed: bool | None) -> None:
+        label = "Assembly"
+        if not has_snapshot:
+            mark, state = "○", "pending"
+        elif p0_passed is True:
+            mark, state = "✓", "valid"
+        elif p0_passed is False:
+            mark, state = "✗", "P0 failed"
+        else:
+            mark, state = "◐", "saved (P0 not run)"
+        self._vars["assembly"].set(f"{mark} {label} {state}")
 
 
 def _has_material_profiles(snapshot: dict) -> bool:

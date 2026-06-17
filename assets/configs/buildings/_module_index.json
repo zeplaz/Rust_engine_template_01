@@ -1045,6 +1045,31 @@
     },
     {
       "module_id": "roof_industrial_shed_2u",
+      "job_id": "roof_industrial_shed_2u_production_run001",
+      "category": "roof",
+      "glb": "assets/models/modules/roof_industrial_shed_2u_production_run001/model.glb",
+      "glb_path": "assets/models/modules/roof_industrial_shed_2u_production_run001/model.glb",
+      "archetype": "module_roof",
+      "style_pack": "style_industrial_west",
+      "grid_units": [
+        2,
+        3
+      ],
+      "snap": "roof_ridge",
+      "material_profile": "metal_roof_01",
+      "style_tags": [
+        "metal",
+        "roof",
+        "industrial",
+        "industrial_west"
+      ],
+      "batch_id": "kit_production_002",
+      "development_tier": "production",
+      "pbr_status": "shipped",
+      "stylepack_visible": true
+    },
+    {
+      "module_id": "roof_industrial_shed_2u",
       "job_id": "roof_industrial_shed_2u_run001",
       "category": "roof",
       "glb": "assets/models/modules/roof_industrial_shed_2u_run001/model.glb",
@@ -1067,7 +1092,8 @@
       "batch_id": "kit_greybox_001",
       "development_tier": "smoke",
       "pbr_status": "none",
-      "stylepack_visible": false
+      "stylepack_visible": false,
+      "replaced_by": "roof_industrial_shed_2u"
     },
     {
       "module_id": "roof_metal_low",

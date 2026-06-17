@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "queue_registry_v1.schema.json",
+  "title": "QueueRegistryV1",
+  "description": "MCP-WIT-010 — authoritative queue file registry for queue_integrity",
+  "type": "object",
+  "required": ["schema_version", "queues"],
+  "properties": {
+    "schema_version": { "const": "queue_registry_v1" },
+    "queues": {
+      "type": "array",
+      "minItems": 6,
+      "items": { "$ref": "#/$defs/queue_entry" }
+    },
+    "status_normalization": { "$ref": "#/$defs/status_normalization" },
+    "_meta": {
+      "type": "object",
+      "properties": {
+        "plan_ref": { "type": "string" }
+      }
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "queue_entry": {
+      "type": "object",
+      "required": ["queue_id", "path", "id_field", "rows_path"],
+      "properties": {
+        "queue_id": { "type": "string" },
+        "path": { "type": "string" },
+        "id_field": { "type": "string", "default": "id" },
+        "rows_path": { "type": "string" },
+        "status_field": { "type": "string", "default": "status" },
+        "witness_fields": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "synthetic_done_buckets": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/synthetic_bucket" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "synthetic_bucket": {
+      "type": "object",
+      "required": ["dot_path", "status"],
+      "properties": {
+        "dot_path": { "type": "string" },
+        "status": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "status_normalization": {
+      "type": "object",
+      "properties": {
+        "closed": { "type": "array", "items": { "type": "string" } },
+        "open": { "type": "array", "items": { "type": "string" } },
+        "ready": { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  }
+}

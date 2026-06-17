@@ -5,7 +5,6 @@
 //!
 //! **Not** Stage 5. Close rows via witness predicates + running-app checks (not template defaults alone).
 
-use bevy::log::info;
 use bevy::prelude::{App, Resource};
 
 use super::construction_live_todos::TodoStatus;
@@ -292,16 +291,4 @@ pub fn sync_construction_phase2_board_from_witness(
     board: &mut ConstructionPhase2TodoBoard,
 ) {
     board.sync_from_witness(witness);
-    let done = board
-        .status
-        .iter()
-        .filter(|s| **s == TodoStatus::Done)
-        .count();
-    if done == CONSTRUCTION_PHASE2_TODOS.len() {
-        info!(
-            target: "construction_phase2_todos",
-            "CONSTRUCTION_PHASE2_COMPLETE done={done}/{}",
-            CONSTRUCTION_PHASE2_TODOS.len()
-        );
-    }
 }

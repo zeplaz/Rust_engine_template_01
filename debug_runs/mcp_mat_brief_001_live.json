@@ -4,9 +4,9 @@
   "green": true,
   "sample_profile": "steel_panel_01",
   "sample_category_path": "industrial/steel",
-  "catalog_total": 21,
+  "catalog_total": 22,
   "catalog_counts": {
-    "ready": 21,
+    "ready": 5,
     "partial": 0,
     "missing": 0
   }

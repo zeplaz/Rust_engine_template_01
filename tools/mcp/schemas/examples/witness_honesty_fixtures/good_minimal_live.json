@@ -1,0 +1,10 @@
+{
+  "_fixture": { "expect": "pass", "rule_id": "baseline" },
+  "_agent_meta": {
+    "schema": "witness_honesty_fixture_v1",
+    "profile": "GOOD_MINIMAL"
+  },
+  "gate": "FIXTURE-GOOD",
+  "green": true,
+  "operator_visible": false
+}

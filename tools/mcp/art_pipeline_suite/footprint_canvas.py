@@ -6,6 +6,8 @@ import tkinter as tk
 from tkinter import ttk
 from typing import Any, Callable
 
+from .aps_theme import FONT_SMALL
+
 TOKEN_COLORS = {
     "W": "#4a90d9",
     "D": "#6bbf59",
@@ -124,9 +126,9 @@ class FootprintCanvas(ttk.Frame):
 
         ttk.Label(
             self,
-            text="Colored squares match placement list tokens. Selected cell has a thick black outline.",
+            text="Letter + color show each cell's role (W/D/C/R/Y). Selected cell has a thick black outline.",
             foreground="#666",
-            font=("Segoe UI", 8),
+            font=FONT_SMALL,
             wraplength=420,
         ).pack(anchor=tk.W, pady=(2, 0))
 
@@ -224,14 +226,16 @@ class FootprintCanvas(ttk.Frame):
             outline = "#1a1a1a" if selected else "#555555"
             width_line = 3 if selected else 1
             self.canvas.create_rectangle(x0, y0, x1, y1, fill=color, outline=outline, width=width_line)
-            if px >= 24:
-                self.canvas.create_text(
-                    (x0 + x1) // 2,
-                    (y0 + y1) // 2,
-                    text=token,
-                    fill="white" if token != "Y" else "#222222",
-                    font=("Consolas", 8, "bold"),
-                )
+            # APS-UX-NONCOLOR — always draw the role glyph (W/D/C/R/Y) so cell role
+            # survives grayscale / colorblind at every cell size, not color-only.
+            glyph_size = 9 if px >= 22 else max(7, px // 3)
+            self.canvas.create_text(
+                (x0 + x1) // 2,
+                (y0 + y1) // 2,
+                text=token,
+                fill="white" if token != "Y" else "#222222",
+                font=("Consolas", glyph_size, "bold"),
+            )
         for key in self._removed_ghosts:
             if key[0] != self._floor:
                 continue

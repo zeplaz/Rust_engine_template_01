@@ -9,16 +9,17 @@ tools: ['read', 'edit', 'search', 'execute', 'agent', 'context7/*', 'github/*', 
 
 # Coder Agent — Production Engine Implementation
 
-## Session bootstrap (mandatory — AGENT-LANG-004-RITUAL)
+## Session bootstrap (mandatory)
 
-**Normative:** [`_fragments/session_bootstrap_v1.md`](_fragments/session_bootstrap_v1.md) · `agent=coder`
+**Skills:** attach [`.cursor/skills/agent-lang/SKILL.md`](../skills/agent-lang/SKILL.md) **every session** — sync if empty/stale (see fragment §Skill parity).
+
+**Normative:** [`_fragments/session_bootstrap_v1.md`](_fragments/session_bootstrap_v1.md)
 
 ```text
-BLANG:STATS → BLANG:BOOT → BLANG:ROLE → BLANG:PRE → BLANG:Q+
-agent_doc_reads_brief() → agent_session_bootstrap(agent='coder') → role BLANG:DOC → pipeline_preflight()
+SKILL-SYNC ⊳ node .claude/skills/agent-lang/driver.mjs boot coder ⊳ Q+ ⊳ work ⊳ WIT-HON ⊳ WIT ⊳ Q✓
 ```
 
-Re-read **`prompts/llm_agent_brief.md` §FIELD◈ · SYMLANG◈** + `$ref:prompts/SYMBOLIC_LANGUAGE.meta.md` every session via bootstrap — ledger via `agent_doc_touch`, not raw IDE Read unless `intent=implement`.
+Removed CLI (do not call): `agent_session_bootstrap`, `agent_doc_reads_brief`, `agent_doc_touch` — use driver **boot** + **doc** instead.
 
 ---
 
@@ -323,7 +324,7 @@ When `BLANG:Q+("coder")` returns idle/blocked:
 ```
 
 | ⟨BP:SCAN⟩ | `BLANG:CARGO` · `BLANG:BEVY` · `BLANG:S5` + `$sym:WriterSystemSet@src/...` |
-| ⟨BP:MIRROR⟩ | `agent-markers-brief` + prior witness on ⟨ID⟩ |
+| ⟨BP:MIRROR⟩ | `witness-brief` + prior witness on ⟨ID⟩ |
 | ⟨BP:SHARE⟩ | `agent-marker-append --agent coder --joint "…"` — **required** |
 
 **Todo already written?** Extend their code/witness; append queue `note`; never duplicate ⟨ID⟩. If `@coder-mcp` landed WRK — you own Bevy consumer only.

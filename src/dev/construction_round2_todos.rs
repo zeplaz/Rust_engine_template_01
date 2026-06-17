@@ -8,8 +8,6 @@
 
 
 
-use bevy::log::info;
-
 use bevy::prelude::{App, Resource};
 
 
@@ -427,38 +425,10 @@ pub fn register_construction_round2_todo_hooks(app: &mut App) {
 
 
 pub fn sync_construction_round2_board_from_witness(
-
     witness: &ConstructionRound2Witness,
-
     board: &mut ConstructionRound2TodoBoard,
-
 ) {
-
     board.sync_from_witness(witness);
-
-    let done = board
-
-        .status
-
-        .iter()
-
-        .filter(|s| **s == TodoStatus::Done)
-
-        .count();
-
-    if done == CONSTRUCTION_ROUND2_TODOS.len() {
-
-        info!(
-
-            target: "construction_round2_todos",
-
-            "CONSTRUCTION_ROUND2_COMPLETE done={done}/{}",
-            CONSTRUCTION_ROUND2_TODOS.len()
-
-        );
-
-    }
-
 }
 
 

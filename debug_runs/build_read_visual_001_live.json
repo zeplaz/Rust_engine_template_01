@@ -52,15 +52,17 @@
     "relative_path": "debug_runs/build_read_visual_001_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_build_read_visual_001_live_witness",
-    "written_at_epoch_secs": 1781487131
+    "written_at_epoch_secs": 1781658808
   },
   "footprint_grid_uses_grammar": true,
   "gate": "BUILD-READ-VISUAL-001",
   "green": true,
   "lib_green": true,
-  "mesh_tier_used": "lod0",
+  "mesh_tier_used": "iso_tile",
   "pg2_lod0_extract": true,
+  "pg2_mesh_suppressed_when_atlas": true,
   "pg2_operational_spawn_wired": true,
+  "pilot_atlas_registered": true,
   "pilot_tile_stamp_lib": true,
   "runtime_sim_verified": true,
   "runtime_verify": {
@@ -68,5 +70,5 @@
     "open": false,
     "requires_sim_session": false
   },
-  "warehouse_atlas_registered": false
+  "warehouse_atlas_registered": true
 }

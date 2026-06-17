@@ -1,9 +1,4 @@
 {
-  "_meta": {
-    "teaches": ["tile_state_machine", "pilot_catalog"],
-    "not_a_ship_target": true,
-    "building_set_id": "industrial_west_v0"
-  },
   "schema_version": 1,
   "variant_set_id": "rail_warehouse_pilot_v1",
   "assembly_id": "industrial_west_4x7_s440013_f0c0",

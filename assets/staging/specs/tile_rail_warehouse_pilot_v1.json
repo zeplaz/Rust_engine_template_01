@@ -30,8 +30,10 @@
   },
   "design_docs": [
     "src/dev/design_tile_rail_warehouse_pilot_v1.md",
-    "src/dev/design_shape_rail_warehouse_pilot_v1.md"
+    "src/dev/design_shape_rail_warehouse_pilot_v1.md",
+    "src/dev/design_build_read_d001_d004_v1.md"
   ],
+  "variant_matrix_ref": "debug_runs/art_pipeline/variant_matrix_rail_warehouse_pilot_v1.yaml",
   "references": [
     "ref:pilot:logistics_rail_warehouse_v0",
     "ref:BUILD-READ-VISUAL-002"

@@ -1,0 +1,15 @@
+{
+  "batch_id": "tile_rail_warehouse_pilot_v1",
+  "status": "done",
+  "bake_source": "keyframe_pack",
+  "variant_count": 4,
+  "png_paths": [
+    "assets/staging/tiles/tile_rail_warehouse_pilot_v1/clean_day.png",
+    "assets/staging/tiles/tile_rail_warehouse_pilot_v1/clean_night_off.png",
+    "assets/staging/tiles/tile_rail_warehouse_pilot_v1/clean_night_on.png",
+    "assets/staging/tiles/tile_rail_warehouse_pilot_v1/under_construction_01.png"
+  ],
+  "atlas_path": "assets/textures/buildings_iso/staging/tile_rail_warehouse_pilot_v1_atlas.png",
+  "meta_json": "assets/staging/tiles/tile_rail_warehouse_pilot_v1/atlas_meta.json",
+  "dry_run": false
+}

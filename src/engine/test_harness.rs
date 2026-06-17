@@ -214,11 +214,7 @@ impl Plugin for TestHarnessPlugin {
             )
             .add_systems(
                 Update,
-                (
-                    seed_visual_concrete_chain_e2e,
-                    crate::economy::activation::fast_forward_portland_chain_sites_to_operational,
-                )
-                    .chain()
+                seed_visual_concrete_chain_e2e
                     .after(StrategicFieldPipeline::GraphSync)
                     .run_if(in_state(BaseState::Simulation))
                     .run_if(post_enter_sim_frame_at_least(4)),

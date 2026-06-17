@@ -86,7 +86,15 @@ def _match_program(rel: str, body: dict[str, Any], registry: dict[str, Any]) -> 
     return "unclassified"
 
 
-def _honest_gate(body: dict[str, Any], summary: dict[str, Any]) -> str:
+def _honest_gate(body: dict[str, Any], summary: dict[str, Any], integrity_cache: dict[str, Any] | None = None) -> str:
+    try:
+        from witness_honesty_lib import classify_honest_gate_v2
+
+        rel = str(summary.get("_witness_rel") or "")
+        if rel:
+            return classify_honest_gate_v2(rel, body, summary, integrity_cache)
+    except ImportError:
+        pass
     green = summary.get("green")
     art_quality = summary.get("art_quality")
     if green is False and art_quality:
@@ -104,7 +112,12 @@ def _honest_gate(body: dict[str, Any], summary: dict[str, Any]) -> str:
     return "unknown"
 
 
-def _extract_summary(rel: str, body: dict[str, Any], registry: dict[str, Any]) -> dict[str, Any]:
+def _extract_summary(
+    rel: str,
+    body: dict[str, Any],
+    registry: dict[str, Any],
+    integrity_cache: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     meta = body.get("_agent_meta") or {}
     program_id = _match_program(rel, body, registry)
     prog = registry["programs"].get(program_id, {})
@@ -149,11 +162,12 @@ def _extract_summary(rel: str, body: dict[str, Any], registry: dict[str, Any]) -
     ):
         if key in body:
             summary[key] = body[key]
-    summary["honest_gate"] = _honest_gate(body, summary)
+    summary["_witness_rel"] = rel
+    summary["honest_gate"] = _honest_gate(body, summary, integrity_cache)
     return summary
 
 
-def _scan_file(rel: str, registry: dict[str, Any]) -> dict[str, Any]:
+def _scan_file(rel: str, registry: dict[str, Any], integrity_cache: dict[str, Any] | None = None) -> dict[str, Any]:
     path = REPO_ROOT / rel
     if not path.is_file():
         return {
@@ -179,7 +193,7 @@ def _scan_file(rel: str, registry: dict[str, Any]) -> dict[str, Any]:
         "exists": True,
         "bytes": len(text),
         "modified_epoch_secs": int(path.stat().st_mtime),
-        "summary": _extract_summary(rel, body, registry),
+        "summary": _extract_summary(rel, body, registry, integrity_cache),
     }
 
 
@@ -226,8 +240,15 @@ def _construction_sub_witnesses() -> list[dict[str, Any]]:
 
 def build_index() -> dict[str, Any]:
     registry = _load_registry()
+    integrity_cache: dict[str, Any] = {}
+    try:
+        from witness_honesty_lib import build_integrity_cache
+
+        integrity_cache = build_integrity_cache(repo=REPO_ROOT, compression_level=3)
+    except Exception as exc:  # noqa: BLE001
+        integrity_cache = {"error": str(exc)}
     all_rels = _discover_witness_paths(registry)
-    proofs = [_scan_file(rel, registry) for rel in all_rels]
+    proofs = [_scan_file(rel, registry, integrity_cache) for rel in all_rels]
     by_program: dict[str, list[dict[str, Any]]] = {}
     for proof in proofs:
         pid = (proof.get("summary") or {}).get("program_id") or "unclassified"
@@ -247,6 +268,13 @@ def build_index() -> dict[str, Any]:
         "program_count": len(by_program),
         "programs": by_program,
         "proofs": proofs,
+        "integrity_cache": {
+            "fail_count": integrity_cache.get("fail_count"),
+            "inflated_green_count": integrity_cache.get("inflated_green_count"),
+            "rollup_inflated_count": integrity_cache.get("rollup_inflated_count"),
+            "queue_contradiction_count": integrity_cache.get("queue_contradiction_count"),
+            "queue_stale_count": integrity_cache.get("queue_stale_count"),
+        },
         "construction_sub_witnesses": _construction_sub_witnesses(),
         "registry_path": _rel(REGISTRY_PATH),
     }
@@ -304,12 +332,23 @@ def _dsm_snapshot(programs: dict[str, list[dict[str, Any]]], index: dict[str, An
     return lines
 
 
-def _qce_fields(programs: dict[str, list[dict[str, Any]]], index: dict[str, Any]) -> dict[str, Any]:
+def _qce_fields(
+    programs: dict[str, list[dict[str, Any]]],
+    index: dict[str, Any],
+) -> dict[str, Any]:
     b_dishonest = sum(
         1
         for p in programs.get("art_B", [])
         if (p.get("summary") or {}).get("honest_gate") == "dishonest_gate"
     )
+    inflated_green = sum(
+        1 for p in index.get("proofs", []) if (p.get("summary") or {}).get("honest_gate") == "inflated_green"
+    )
+    rollup_inflated = sum(
+        1 for p in index.get("proofs", []) if (p.get("summary") or {}).get("honest_gate") == "rollup_inflated"
+    )
+    integrity = index.get("integrity_cache") or {}
+    queue_contradiction_count = int(integrity.get("queue_contradiction_count") or 0)
     constr_red = [w for w in index.get("construction_sub_witnesses", []) if w.get("green") is False]
     stage5_ok = _count_green(programs.get("stage5_spine", [])) > 0
     return {
@@ -331,8 +370,15 @@ def _qce_fields(programs: dict[str, list[dict[str, Any]]], index: dict[str, Any]
             "evidence": "construction sub-witness rollup in index; APS previews green",
         },
         "E_confusion_risk": {
-            "score": min(9, 4 + b_dishonest + len(constr_red)),
-            "evidence": f"art dishonest={b_dishonest}; construction red={len(constr_red)}",
+            "score": min(
+                9,
+                4 + b_dishonest + len(constr_red) + inflated_green + queue_contradiction_count,
+            ),
+            "evidence": (
+                f"art dishonest={b_dishonest}; construction red={len(constr_red)}; "
+                f"inflated_green={inflated_green}; rollup_inflated={rollup_inflated}; "
+                f"queue_contradiction={queue_contradiction_count}"
+            ),
         },
     }
 
@@ -553,6 +599,21 @@ def main() -> int:
         repo=REPO_ROOT,
         brief_path=OUT_OPS_BRIEF,
     )
+    try:
+        from rust_engine_mcp import landscape_grammar_presets
+
+        landscape_grammar_presets.write_landscape_grammar_presets_witness(repo=REPO_ROOT)
+    except Exception as exc:  # noqa: BLE001
+        print(f"landscape_grammar_presets witness skipped: {exc}", file=sys.stderr)
+    try:
+        from witness_honesty_lib import build_integrity_cache, refresh_mcp_witness_integrity_ops_witness
+
+        refresh_mcp_witness_integrity_ops_witness(
+            repo=REPO_ROOT,
+            cache=build_integrity_cache(repo=REPO_ROOT, compression_level=3),
+        )
+    except Exception as exc:  # noqa: BLE001
+        print(f"witness_integrity_ops witness skipped: {exc}", file=sys.stderr)
     print(f"Wrote {_rel(OUT_INDEX)} ({index['proof_count']} proofs, {index['program_count']} programs)")
     print(f"Wrote {_rel(OUT_OPS)}")
     print(f"Wrote {_rel(OUT_OPS_BRIEF)}")

@@ -1,0 +1,5 @@
+{
+  "_fixture": { "expect": "fail", "rule_id": "WIT-MISSING-ENVELOPE" },
+  "gate": "FIXTURE-NO-ENVELOPE",
+  "green": true
+}

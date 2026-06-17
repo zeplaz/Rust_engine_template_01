@@ -129,7 +129,7 @@ TILE-FIX-01…10 laid schema, resolver, validators, and froze greybox ship. **Sp
 | ID | Owner | Deliverable | Status |
 |:---|:---|:---|:---|
 | **ARCH-001** | @planner-mcp | Formal **Assembly Graph** schema (`assembly_graph_node_v1.schema.json`) | **done** |
-| **ARCH-002** | @planner-mcp | Formal **Variant Graph** schema (`VariantNode`: material/visibility/emission/decal overrides) | **pending** |
+| **ARCH-002** | @planner-mcp | Formal **Variant Graph** schema (`VariantNode`: material/visibility/emission/decal overrides) | **done** — SIGNED 2026-06-14 |
 | **ARCH-003** | @coder-mcp | `material_profile` (+ tags) on each `module_placement`; enrich on generate/load; ship validator | **done** |
 | **APS-UI-003b** | @coder-mcp | **Assembly Editor** in Art Pipeline Suite — placements list, material/tags/LOD, save/validate | **done** |
 | **BUILD-001** | @coder-mcp | Explicit build dependency graph + per-node witness | **pending** |

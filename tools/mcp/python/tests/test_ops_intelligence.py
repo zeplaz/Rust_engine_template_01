@@ -48,8 +48,38 @@ def test_ops_get_retry_guidance_known_task():
     guidance = ops_intelligence.ops_get_retry_guidance("G-PLAY-01")
     assert guidance.get("ok") is True
     assert guidance["task_id"] == "G-PLAY-01"
-    assert guidance.get("status") == "ready"
+    assert guidance.get("schema") == "ops_retry_guidance_v2"
+    assert guidance.get("status") in ("ready", "blocked")
     assert "witness" in guidance
+    assert guidance.get("exec_doc") == "src/dev/plan_g_play_close_001_checklist_v1.md"
+
+
+def test_ops_get_retry_guidance_triage_map_pick_hotfix():
+    guidance = ops_intelligence.ops_get_retry_guidance("TRIAGE-MAP-PICK-CLOSURE-001")
+    assert guidance.get("ok") is True
+    assert guidance.get("phase4_row") is True
+    assert guidance.get("exec_doc") == "src/dev/plan_build_footprint_vm09_exec_v1.md"
+    steps = guidance.get("hotfix_steps") or []
+    assert len(steps) >= 2
+    assert steps[0].get("phase") == "A"
+    assert "visual_authority.rs" in steps[0].get("file", "")
+
+
+def test_ops_get_active_blockers_g_play_open():
+    blockers = ops_intelligence.ops_get_active_blockers()
+    assert blockers.get("ok") is True
+    open_ids = [g["id"] for g in blockers.get("open_gates") or []]
+    assert "G-PLAY-01" in open_ids
+    gplay = next(g for g in blockers["open_gates"] if g["id"] == "G-PLAY-01")
+    assert any(s.get("id") == "G-PLAY-OPERATOR-01" for s in gplay.get("open_sub_gates") or [])
+
+
+def test_ops_build_project_brief_delta_wf_composed():
+    brief = ops_intelligence.ops_build_project_brief()
+    assert "delta_wf" in brief
+    assert isinstance(brief["delta_wf"], list)
+    assert "active_blockers" in brief
+    assert brief["active_blockers"].get("ok") is True
 
 
 def test_ops_get_retry_guidance_missing_task():

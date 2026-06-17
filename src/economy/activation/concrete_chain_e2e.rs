@@ -29,6 +29,12 @@ pub const ROWHOUSE_VICTORIAN_DEMO_SITE_ID: u64 = 42;
 
 pub const CONCRETE_PORTLAND_CHAIN: &str = "concrete_portland";
 
+/// Schedule anchor — single registration of [`fast_forward_portland_chain_sites_to_operational`].
+#[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone, Copy)]
+pub enum ConcreteChainE2eSet {
+    FastForwardPortland,
+}
+
 pub const CONCRETE_PORTLAND_STEPS: &[&str] = &[
     "concrete_aggregate_mine",
     "concrete_cement_kiln",

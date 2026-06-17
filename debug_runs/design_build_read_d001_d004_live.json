@@ -1,0 +1,36 @@
+{
+  "_agent_meta": {
+    "profile": "DESIGN_BUILD_READ_D001_D004",
+    "schema": "debug_run_envelope_v1",
+    "source_system": "designer_build_read_d_variant_matrix",
+    "relative_path": "debug_runs/design_build_read_d001_d004_live.json",
+    "design_doc": "src/dev/design_build_read_d001_d004_v1.md",
+    "parent_program": "PLAN-BUILD-READABILITY-001"
+  },
+  "gate": "BUILD-READ-D-001_D004",
+  "slices": [
+    "BUILD-READ-D-001",
+    "BUILD-READ-D-002",
+    "BUILD-READ-D-003",
+    "BUILD-READ-D-004"
+  ],
+  "green": true,
+  "verdict": "PASS",
+  "charter_on_disk": true,
+  "variant_matrix_on_disk": true,
+  "variant_matrix_path": "debug_runs/art_pipeline/variant_matrix_rail_warehouse_pilot_v1.yaml",
+  "g4_signoff_template": "debug_runs/art_pipeline/rail_warehouse_pilot_production_signoff.yaml",
+  "pilot_id": "logistics_rail_warehouse_v0",
+  "required_variant_keys_v1": 4,
+  "primary_pct_site": 0.125,
+  "iso_draw_scale_multiplier_range": [1.35, 1.75],
+  "g4_review_px": 128,
+  "impl_wired": false,
+  "bake_pending": true,
+  "unblocks": [
+    "BUILD-READ-VISUAL-002-BATCH",
+    "TILE-PROD-004",
+    "BUILD-READ-VISUAL-001"
+  ],
+  "delta_wf": "@coder-mcp keyframe batch tile_rail_warehouse_pilot_v1"
+}

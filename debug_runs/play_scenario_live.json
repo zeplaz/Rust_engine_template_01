@@ -52,7 +52,7 @@
     "relative_path": "debug_runs/play_scenario_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "play_scenario_001_tail_live_witness",
-    "written_at_epoch_secs": 1781533759
+    "written_at_epoch_secs": 1781658952
   },
   "demo_fire_sparks_visible_at_operational_zoom": true,
   "g_play_fire_001": {
@@ -84,5 +84,6 @@
     "portland_seed": "seed_ind_e02_default_play_once",
     "stage7_env_seed_path": "opt_in_debug_only"
   },
+  "veg_burn_visible_at_operational_zoom": true,
   "veg_topology_visible_at_operational_zoom": true
 }

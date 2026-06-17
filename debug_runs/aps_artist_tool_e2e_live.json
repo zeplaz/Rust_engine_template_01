@@ -1,7 +1,16 @@
 {
   "program_id": "APS-ARTIST-TOOL-E2E-001",
   "green": true,
-  "honest_gate": "schema_only",
+  "honest_gate": "build_health+schema",
+  "build_health": {
+    "ok": true,
+    "import_ok": true,
+    "import_error": null,
+    "collect_ok": true,
+    "collect_summary": "68/344 tests collected (276 deselected) in 0.24s",
+    "reason": ""
+  },
+  "steps_ok": true,
   "artist_path": "Catalog \u2192 Assembly \u2192 Materials \u2192 Variants \u2192 Atlas (no Blender)",
   "steps": [
     {
@@ -19,7 +28,7 @@
     {
       "step": "materials_studio",
       "ok": true,
-      "catalog_count": 21
+      "catalog_count": 22
     },
     {
       "step": "variants_example",

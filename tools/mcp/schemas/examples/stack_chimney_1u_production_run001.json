@@ -7,11 +7,12 @@
   "operation": "module_prop",
   "params": {
     "width_m": 1,
-    "height_m": 2.5,
+    "height_m": 3,
     "depth_m": 1,
     "material_profile": "steel_panel_01",
     "seed": 42,
-    "profile": "box"
+    "profile": "box",
+    "prop_kind": "chimney_stack"
   },
   "output": {
     "glb": "assets/staging/stack_chimney_1u_production_run001/model.glb",

@@ -11,6 +11,7 @@ from . import agent_queue
 from .paths import repo_root
 
 PHASE3_QUEUE = "tools/orchestrator/queues/post_drain_phase3_queue.json"
+MASTER_CHAIN_TENSOR_REL = "tools/orchestrator/queues/master_chain_tensor_v1.json"
 OPS_REPORT_REL = "debug_runs/agent_ops/ops_report_latest.json"
 OPS_BRIEF_REL = "debug_runs/agent_ops/ops_project_brief_v1.json"
 OPS_MCP_LAYER_WITNESS_REL = "debug_runs/agent_ops/ops_mcp_function_layer_live.json"
@@ -59,6 +60,39 @@ _AGENT_PICK_LABEL: dict[str, str] = {
     "sim-steward": "@sim-steward",
     "operator": "Operator",
     "orchestrator": "@orchestrator",
+}
+
+_RETRY_EXEC_DOC_HINTS: dict[str, str] = {
+    "TRIAGE-MAP-PICK-CLOSURE-001": "src/dev/plan_build_footprint_vm09_exec_v1.md",
+    "P0-BUILD-FOOTPRINT-001": "src/dev/plan_build_footprint_vm09_exec_v1.md",
+    "G-PLAY-01": "src/dev/plan_g_play_close_001_checklist_v1.md",
+}
+
+_RETRY_HOTFIX_STEPS: dict[str, list[dict[str, str]]] = {
+    "TRIAGE-MAP-PICK-CLOSURE-001": [
+        {
+            "phase": "A",
+            "priority": "P0",
+            "file": "src/construction/visual_authority.rs",
+            "action": "Stop skipping egui footprint_tiles when gpu_path_active",
+            "exit": "Green crosshair overlaps white; footprint tiles under cursor",
+        },
+        {
+            "phase": "A",
+            "priority": "P0",
+            "file": "src/construction/visual_authority.rs",
+            "action": "Optional: omit footprint rows from TileDebugInstanceMap until phase B",
+            "exit": "Pick Δ < 1 · Ghost Δ < 4px",
+        },
+        {
+            "phase": "B",
+            "priority": "follow",
+            "file": "src/gui/gpu_tile_debug.rs",
+            "action": "Hole-aware view_proj (match map_camera.rs sim hole)",
+            "exit": "footprint_gpu_hole_correct witness green",
+        },
+    ],
+    "P0-BUILD-FOOTPRINT-001": [],  # alias — filled from TRIAGE row at runtime
 }
 
 _REQUIRED_BRIEF_KEYS = frozenset(
@@ -124,6 +158,34 @@ def _utility_score(quality: int, failures: list[str]) -> float:
     return round(max(0.0, quality - debt * 10 - _LAMBDA_TOKENS * 5 - _MU_COMPUTE * 3), 1)
 
 
+def _compose_delta_wf(
+    report_delta: list[Any],
+    *,
+    repo: Path | None = None,
+) -> list[dict[str, Any]]:
+    """Merge ops_report delta_wf with open master_chain_tensor gates."""
+    rows: list[dict[str, Any]] = []
+    for raw in report_delta:
+        if isinstance(raw, dict) and raw.get("finding"):
+            rows.append(dict(raw))
+    blockers = ops_get_active_blockers(repo=repo)
+    for gate in blockers.get("open_gates") or []:
+        finding = f"Gate open — {gate.get('id')}"
+        if any(str(r.get("finding", "")).startswith("Gate open") and gate.get("id") in str(r.get("finding")) for r in rows):
+            continue
+        rows.append(
+            {
+                "finding": finding,
+                "owner": gate.get("owner") or gate.get("operator") or "operator",
+                "program_id": gate.get("program_id") or "stage7_play",
+                "next_artifact": gate.get("witness") or gate.get("plan") or gate.get("operator"),
+                "gate_id": gate.get("id"),
+                "phi": gate.get("phi"),
+            }
+        )
+    return rows[:8]
+
+
 def ops_build_project_brief(
     *,
     ops_report: dict[str, Any] | None = None,
@@ -133,7 +195,8 @@ def ops_build_project_brief(
     report = ops_report or _load_json(root / OPS_REPORT_REL) or {}
     qce = report.get("qce") if isinstance(report.get("qce"), dict) else {}
     q_score = int((qce.get("Q_coherence") or {}).get("score") or 70)
-    delta_wf = report.get("delta_wf") if isinstance(report.get("delta_wf"), list) else []
+    report_delta = report.get("delta_wf") if isinstance(report.get("delta_wf"), list) else []
+    delta_wf = _compose_delta_wf(report_delta, repo=root)
     known_failures = [
         str(row.get("finding", "")).lower().replace(" ", "_").replace("—", "")[:64]
         for row in delta_wf[:5]
@@ -177,6 +240,8 @@ def ops_build_project_brief(
         "handoff_ok": True,
         "ops_report_path": OPS_REPORT_REL,
         "phase3_queue_path": PHASE3_QUEUE,
+        "delta_wf": delta_wf,
+        "active_blockers": ops_get_active_blockers(repo=root),
     }
     return brief
 
@@ -191,23 +256,116 @@ def ops_get_project_brief() -> dict[str, Any]:
     return brief
 
 
+def _resolve_retry_hotfix_steps(task_id: str, row: dict[str, Any] | None) -> list[dict[str, str]]:
+    needle = task_id.strip()
+    alias = str((row or {}).get("also_known_as") or "")
+    steps = list(_RETRY_HOTFIX_STEPS.get(needle) or [])
+    if not steps and alias:
+        steps = list(_RETRY_HOTFIX_STEPS.get(alias) or [])
+    if not steps and needle == "P0-BUILD-FOOTPRINT-001":
+        steps = list(_RETRY_HOTFIX_STEPS.get("TRIAGE-MAP-PICK-CLOSURE-001") or [])
+    return steps
+
+
+def _resolve_exec_doc(task_id: str, slice_exec: dict[str, Any] | None) -> str | None:
+    needle = task_id.strip()
+    hint = _RETRY_EXEC_DOC_HINTS.get(needle)
+    if hint:
+        return hint
+    if slice_exec:
+        docs = slice_exec.get("exec_docs") or slice_exec.get("files") or []
+        for doc in docs:
+            if str(doc).endswith(".md"):
+                return str(doc)
+    return None
+
+
 def ops_get_retry_guidance(task_id: str) -> dict[str, Any]:
+    """BLANG:OPS retry — phase3/phase4 queue row + slice_exec + hotfix steps."""
     needle = task_id.strip()
     root = repo_root()
-    for row in _load_phase3_tasks(root):
-        if str(row.get("id") or "") != needle:
-            continue
+    queue_name: str | None = None
+    row: dict[str, Any] | None = None
+    slice_exec: dict[str, Any] | None = None
+    try:
+        queue_name, row = agent_queue.find_queue_task(needle)
+        slice_exec = agent_queue.slice_exec_brief(needle, queue=queue_name)
+    except KeyError:
+        for row_candidate in _load_phase3_tasks(root):
+            if str(row_candidate.get("id") or "") == needle:
+                row = row_candidate
+                queue_name = "phase3"
+                slice_exec = agent_queue.slice_exec_brief(needle, queue="phase3")
+                break
+    if row is None:
         return {
-            "ok": True,
+            "ok": False,
+            "schema": "ops_retry_guidance_v2",
             "task_id": needle,
-            "status": row.get("status"),
-            "agent": row.get("agent"),
-            "witness": row.get("witness") or row.get("witness_json"),
-            "depends_on": row.get("depends_on") or [],
-            "blocked_by": row.get("blocked_by") or [],
-            "goal": row.get("goal") or row.get("title"),
+            "error": "task not found in phase3/phase4 queues",
         }
-    return {"ok": False, "task_id": needle, "error": "task not found in phase3 queue"}
+    exec_doc = _resolve_exec_doc(needle, slice_exec)
+    hotfix_steps = _resolve_retry_hotfix_steps(needle, row)
+    return {
+        "ok": True,
+        "schema": "ops_retry_guidance_v2",
+        "task_id": needle,
+        "queue": queue_name,
+        "status": row.get("status"),
+        "agent": row.get("agent"),
+        "witness": row.get("witness") or row.get("witness_json"),
+        "depends_on": row.get("depends_on") or [],
+        "blocked_by": row.get("blocked_by") or row.get("depends_on") or [],
+        "goal": row.get("goal") or row.get("title"),
+        "also_known_as": row.get("also_known_as"),
+        "slice_exec": slice_exec,
+        "exec_doc": exec_doc,
+        "hotfix_steps": hotfix_steps,
+        "phase4_row": queue_name == "phase4",
+    }
+
+
+def ops_get_active_blockers(*, repo: Path | None = None) -> dict[str, Any]:
+    """Open gates from master_chain_tensor_v1.json + G-PLAY rollup."""
+    root = repo or repo_root()
+    tensor = _load_json(root / MASTER_CHAIN_TENSOR_REL) or {}
+    gates = tensor.get("gates") if isinstance(tensor.get("gates"), dict) else {}
+    open_gates: list[dict[str, Any]] = []
+    for gate_id, spec in gates.items():
+        if not isinstance(spec, dict):
+            continue
+        closed = spec.get("closed")
+        if closed is True:
+            continue
+        entry: dict[str, Any] = {
+            "id": gate_id,
+            "phi": spec.get("phi"),
+            "closed": closed,
+            "plan": spec.get("operator") or spec.get("split"),
+            "operator": spec.get("operator"),
+            "note": spec.get("note"),
+        }
+        sub_gates = spec.get("sub_gates")
+        if isinstance(sub_gates, dict):
+            open_sub = [
+                {"id": sid, **(s if isinstance(s, dict) else {})}
+                for sid, s in sub_gates.items()
+                if not (isinstance(s, dict) and s.get("closed") is True)
+            ]
+            entry["open_sub_gates"] = open_sub
+            if open_sub:
+                entry["owner"] = open_sub[0].get("agent") or "operator"
+        open_gates.append(entry)
+    review = review_order_brief()
+    gplay = review.get("g_play") if isinstance(review.get("g_play"), dict) else {}
+    return {
+        "schema": "ops_active_blockers_v1",
+        "ok": True,
+        "tensor_path": MASTER_CHAIN_TENSOR_REL,
+        "open_gate_count": len(open_gates),
+        "open_gates": open_gates,
+        "g_play_rollup": gplay,
+    }
 
 
 def _phase4_tasks_by_id() -> dict[str, dict[str, Any]]:
@@ -374,15 +532,33 @@ def refresh_ops_mcp_function_layer_witness(
 ) -> dict[str, Any]:
     root = repo or repo_root()
     brief_file = brief_path or (root / OPS_BRIEF_REL)
-    brief_ok = brief_file.is_file()
+    brief = _load_json(brief_file) if brief_file.is_file() else ops_build_project_brief(repo=root)
+    brief_ok = bool(brief) and brief_schema_keys_present(brief)
+    retry_sample = ops_get_retry_guidance("TRIAGE-MAP-PICK-CLOSURE-001")
+    blockers = ops_get_active_blockers(repo=root)
+    delta_wf = brief.get("delta_wf") if isinstance(brief.get("delta_wf"), list) else []
     body = {
-        "gate": "OPS-MCP-FUNCTION-LAYER-001",
-        "green": brief_ok,
+        "gate": "MCP-P2-OPS-BRIEF-002",
+        "green": brief_ok
+        and retry_sample.get("ok")
+        and bool(retry_sample.get("exec_doc"))
+        and bool(retry_sample.get("hotfix_steps"))
+        and blockers.get("ok"),
         "ops_get_project_brief": True,
-        "ops_project_brief_v1_path": brief_ok,
+        "ops_get_retry_guidance_v2": retry_sample.get("schema") == "ops_retry_guidance_v2",
+        "ops_get_active_blockers": blockers.get("ok"),
+        "ops_project_brief_v1_path": brief_file.is_file(),
         "ops_project_brief_rel": OPS_BRIEF_REL,
         "schema": "ops_project_brief_v1",
-        "quality_score": None,
+        "quality_score": brief.get("quality_score"),
+        "delta_wf_composed": delta_wf,
+        "retry_guidance_sample": {
+            "task_id": retry_sample.get("task_id"),
+            "exec_doc": retry_sample.get("exec_doc"),
+            "hotfix_step_count": len(retry_sample.get("hotfix_steps") or []),
+            "phase4_row": retry_sample.get("phase4_row"),
+        },
+        "active_blockers": blockers,
         "_agent_meta": {
             "schema": "ops_mcp_function_layer_live_v1",
             "written_at_epoch_secs": int(time.time()),
@@ -391,10 +567,8 @@ def refresh_ops_mcp_function_layer_witness(
             "relative_path": OPS_MCP_LAYER_WITNESS_REL,
         },
     }
-    if brief_ok:
-        brief = _load_json(brief_file) or {}
-        body["quality_score"] = brief.get("quality_score")
     out = root / OPS_MCP_LAYER_WITNESS_REL
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(body, indent=2) + "\n", encoding="utf-8")
+    body["written"] = OPS_MCP_LAYER_WITNESS_REL
     return body

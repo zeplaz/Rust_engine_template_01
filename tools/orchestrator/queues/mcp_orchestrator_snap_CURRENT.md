@@ -1,6 +1,6 @@
 # MCP orchestrator snap — CURRENT (authoritative)
 
-**Date:** 2026-06-13 · **Program:** `MCP-PRODUCTIVITY-P2-001`
+**Date:** 2026-06-14 · **Program:** `MCP-PRODUCTIVITY-P2-001`
 
 | Doc | Role |
 |:---|:---|
@@ -18,21 +18,24 @@
 | MCP-ART-PROGRAM-GREEN-001 | **CLOSED** |
 | MCP-PROD-SPRINT-ROWHOUSE-001 | **CLOSED** |
 | MCP-PRODUCTIVITY-P1 (spine/atlas) | **CLOSED** |
-| **MCP-PRODUCTIVITY-P2-001** | **ACTIVE** — sim validators plan **SIGNED** · coder-mcp Phase 1+2 **ready** |
+| **MCP-PRODUCTIVITY-P2-001** | **ACTIVE** — G0 **CLOSED** · ΔWF→@coder-mcp `MCP-P2-KIT002-G2` |
 
 **Coder lane (Rust):** `$ref:tools/orchestrator/queues/coder_vegetation_drain_queue.json` v3 — **not** MCP scope unless `VEG-F02-MCP-ATLAS-001` unblocks.
 
 ---
 
-## Planner drain order (strict — `@planner-mcp`)
+## Planner drain order — **CLOSED** 2026-06-14
 
-Drain top-down. **Sign-off** = plan on disk + acceptance table in plan doc + `BLANG:Q✓` → update `mcp_active_queue.json` status → unblocks dependents.
+All four planner rows signed. **G0 closed** 2026-06-14. Next pick: **@coder-mcp** `MCP-P2-KIT002-G2` (roof bpy + kit promote after G0).
 
 | # | ⟨ID⟩ | Pri | Status | Deliverable | Unblocks |
 |:--|:---|:---:|:---|:---|:---|
-| 1 | **MCP-P2-SIM-VALIDATORS-PLAN-001** | P0 | **SIGNED** 2026-06-13 | [`plan_mcp_sim_product_validators_v1.md`](../../docs/archive/2026-06-src-dev/plans/plan_mcp_sim_product_validators_v1.md) | **unblocked** Phase 1+2 coder-mcp |
-| 2 | **MCP-P2-KIT002-PLAN** | P0 | **ready** | `docs/archive/2026-06-src-dev/plans/mcp_kit_production_002_unfreeze_v1.md` + manifest sketch | `kit_production_002+` unfreeze · `@designer-mcp` G0 |
-| 3 | **ARCH-002** | P1 | **ready** | `tools/mcp/schemas/variant_graph_v1.schema.json` | `RENDER-001` · `PILOT-001` · variant-aware bakes |
+| 1 | **MCP-P2-SIM-VALIDATORS-PLAN-001** | P0 | **SIGNED** 2026-06-13 | [`plan_mcp_sim_product_validators_v1.md`](../../docs/archive/2026-06-src-dev/plans/plan_mcp_sim_product_validators_v1.md) | coder-mcp Phase 1+2 |
+| 2 | **MCP-LANDSCAPE-GRAMMAR-SIGN-001** | P0 | **SIGNED** 2026-06-14 | [`plan_landscape_grammar_mcp_sign_delegate_v1.md`](../../src/dev/plan_landscape_grammar_mcp_sign_delegate_v1.md) | VEG-F02 partial · preset CI |
+| 3 | **MCP-P2-KIT002-PLAN** | P0 | **SIGNED** 2026-06-14 | [`mcp_kit_production_002_unfreeze_v1.md`](../../docs/archive/2026-06-src-dev/plans/mcp_kit_production_002_unfreeze_v1.md) | `kit_production_002` · warehouse tile batch |
+| 4 | **ARCH-002** | P1 | **SIGNED** 2026-06-14 | [`variant_graph_v1.schema.json`](../../tools/mcp/schemas/variant_graph_v1.schema.json) · [`arch_variant_graph_002_v1.md`](../../src/dev/arch_variant_graph_002_v1.md) | variant-aware bakes · BUILD-001 |
+
+**Witness:** `debug_runs/mcp_kit002_arch002_sign_live.json`
 
 ### Planner rules
 
@@ -124,12 +127,10 @@ From `$ref:tools/orchestrator/queues/coder_vegetation_drain_queue.json` v3 — *
 ## P2 dispatch order (`@orchestrator-mcp` session)
 
 ```text
-1 @orchestrator-mcp  boot → orchestrator-mcp-lane-brief → issue explicit order
-2 @coder-mcp         ⟨MCP-P2-QUEUE-PHASE4-001⟩ + ⟨MCP-P2-VALID-CONSTRUCTION-001⟩  ★ parallel PICK
-3 @planner-mcp       ⟨MCP-P2-KIT002-PLAN⟩               ★ parallel if bandwidth
-4 @planner-mcp       ⟨ARCH-002⟩                         variant graph schema
-5 @coder-mcp         ⟨MCP-P2-OPS-BRIEF-002⟩            after QUEUE-PHASE4 done
+PICK @coder-mcp  ⟨MCP-P2-KIT002-G2⟩  roof_industrial_shed_2u bpy + kit_production_002 promote
 ```
+
+Planner drain **CLOSED** (rows 1–4 signed 2026-06-13…14). Coder-mcp P2 chain **done**.
 
 **Copy explicit order from:** [`mcp_lane_order_v1.md`](mcp_lane_order_v1.md) § Delegate paste
 
@@ -171,6 +172,6 @@ python -m rust_engine_mcp.cli coder-mcp-drain-brief
 
 | Ver | Date | Note |
 |:---|:---|:---|
-| v3.2 | 2026-06-13 | SIM-VALIDATORS plan SIGNED — coder-mcp Phase 1+2 ready |
+| v3.3 | 2026-06-14 | MCP-LANDSCAPE-GRAMMAR-SIGN-001 SIGNED — 10 presets + topology index |
 | v3.0 | 2026-06-13 | P2 RUN-EVENT + HONEST-BAKE done |
 | v2.x | 2026-06-02 | Rowhouse sprint closed |

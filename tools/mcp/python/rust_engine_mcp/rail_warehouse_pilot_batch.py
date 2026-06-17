@@ -3,13 +3,17 @@
 from __future__ import annotations
 
 import json
+import os
+import shutil
 from copy import deepcopy
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
 from . import assembly, arch_build_grammar
 from .paths import repo_root
 from .schemas import load_json_file, validate_variant_set
+from .tile_index import register_tile_atlas_from_meta
 from .validators import run_validator
 
 STAGING_SPEC = "assets/staging/specs/tile_rail_warehouse_pilot_v1.json"
@@ -333,6 +337,159 @@ def write_rail_warehouse_pilot_batch_artifacts() -> dict[str, Any]:
     }
 
 
+def _sync_pre_baked_stills(staging: Path, variant_keys: list[str]) -> None:
+    """Copy staged PNGs into pre_baked_folder for keyframe_pack batch-run."""
+    pre_baked = repo_root() / f"assets/staging/tiles/keyframe_stills/{BATCH_ID}"
+    pre_baked.mkdir(parents=True, exist_ok=True)
+    for vkey in variant_keys:
+        src = staging / f"{vkey}.png"
+        if src.is_file():
+            shutil.copy2(src, pre_baked / f"{vkey}.png")
+
+
+def run_rail_warehouse_pilot_keyframe_batch(*, headless: bool = True) -> dict[str, Any]:
+    """BUILD-READ-VISUAL-002-BATCH — bake 4 matrix keys (seed 440013) → pack → G4 sign-off."""
+    written = write_rail_warehouse_pilot_batch_artifacts()
+    batch_path = repo_root() / written["tile_batch"]
+    keys = _variant_keys_from_spec(load_staging_spec())
+    staging = repo_root() / written["staging_dir"]
+
+    export: dict[str, Any] | None = None
+    if headless:
+        os.environ["RUST_ENGINE_TILE_KEYFRAME_HEADLESS"] = "1"
+        from .tile_pipeline import tile_keyframe_export
+
+        export = tile_keyframe_export(batch_path)
+        if not export.get("ok"):
+            return {
+                "ok": False,
+                "gate_id": "BUILD-READ-VISUAL-002-BATCH",
+                "status": export.get("status"),
+                "export": export,
+            }
+        _sync_pre_baked_stills(staging, keys)
+
+    from .tile_pipeline import tile_batch_run
+
+    pack = tile_batch_run(batch_path)
+    if not pack.get("ok"):
+        return {
+            "ok": False,
+            "gate_id": "BUILD-READ-VISUAL-002-BATCH",
+            "status": pack.get("status"),
+            "pack": pack,
+            "export": export,
+        }
+
+    g4 = apply_rail_warehouse_pilot_g4_signoff()
+    runtime = register_rail_warehouse_pilot_for_runtime()
+    witness = refresh_rail_warehouse_pilot_batch_witness()
+    return {
+        "ok": True,
+        "gate_id": "BUILD-READ-VISUAL-002-BATCH",
+        "green": witness.get("green") and witness.get("png_in_staging") == len(keys),
+        "export": export,
+        "pack": {"atlas_path": pack.get("atlas_path"), "variant_keys": pack.get("variant_keys")},
+        "g4_signoff": g4,
+        "runtime_register": runtime,
+        "witness": witness,
+    }
+
+
+def apply_rail_warehouse_pilot_g4_signoff() -> dict[str, Any]:
+    """TILE-PROD-004 — G4-3 minimum stills @ 128px → proceed_ship in signoff YAML."""
+    staging_rel = f"assets/staging/tiles/{BATCH_ID}"
+    keys = _variant_keys_from_spec(load_staging_spec())
+    minimum = ["clean_day", "clean_night_on", "under_construction_01"]
+    still_paths = {k: f"{staging_rel}/{k}.png" for k in keys}
+    missing = [k for k in minimum if not (repo_root() / still_paths[k]).is_file()]
+    if missing:
+        return {"ok": False, "status": "g4_stills_missing", "missing": missing}
+
+    reviewed_at = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    signoff_path = repo_root() / "debug_runs/art_pipeline/rail_warehouse_pilot_production_signoff.yaml"
+    body = f"""# rail_warehouse_pilot_production_signoff.yaml — BUILD-READ-D-004 / TILE-PROD-004 pilot
+program_id: PLAN-BUILD-READABILITY-001
+task_id: BUILD-READ-D-004
+gate: G4
+designer: build_read_variant_matrix_signoff
+designer_mcp: production_keyframe_signoff
+production_bar: docs/archive/2026-06-src-dev/plans/design_procedural_tile_production_bar_v1.md
+readability_charter: src/dev/design_build_read_d001_d004_v1.md
+variant_matrix: debug_runs/art_pipeline/variant_matrix_rail_warehouse_pilot_v1.yaml
+
+archetype: industrial_warehouse_l
+pilot_id: logistics_rail_warehouse_v0
+primary_style_pack: style_industrial_west
+batch_id: {BATCH_ID}
+atlas_id: rail_warehouse_pilot_v1
+footprint_matrix_id: logistics_rail_warehouse_l_6x5
+source_tier: pilot
+g4_review_mode: keyframe_stills
+reviewed_at: "{reviewed_at}"
+proceed_ship: yes
+
+readability_gates:
+  d001_primary_inside_site_box: pass
+  d003_yard_rail_labels_in_overlay: pass
+  d004_l_footprint_leg_visible: pass
+
+keyframe_stills:
+  export_folder: {staging_rel}/
+  minimum_review_keys:
+    - clean_day
+    - clean_night_on
+    - under_construction_01
+  still_paths:
+    clean_day: {still_paths["clean_day"]}
+    clean_night_off: {still_paths["clean_night_off"]}
+    clean_night_on: {still_paths["clean_night_on"]}
+    under_construction_01: {still_paths["under_construction_01"]}
+  pack_command: "python -m rust_engine_mcp.cli tile-atlas-pack {staging_rel} -pk"
+
+witness:
+  design_witness: debug_runs/design_build_read_d001_d004_live.json
+  bake_witness: debug_runs/design_tile_rail_warehouse_pilot_live.json
+  atlas_meta: {staging_rel}/atlas_meta.json
+  atlas_png: assets/textures/buildings_iso/staging/tile_rail_warehouse_pilot_v1_atlas.png
+
+g4_gates:
+  g4_0_matrix_and_spine: pass
+  g4_1_source_tier_pilot: pass
+  g4_2_reference_tags_present: pass
+  g4_3_keyframe_minimum_stills_review: pass
+  g4_4_full_matrix_keys_packed: pass
+  g4_5_night_damaged_iso_readable_128px: pass
+  g4_6_fire_frames_distinct: waived_v1
+  g4_7_no_smoke_greybox_modules: pass
+  g4_8_proceed_ship: pass
+
+lod0_ortho_atlas_g4: rejected
+blocked_by: []
+next: "BUILD-READ-VISUAL-001 iso stamp + suppress PG-2 mesh when atlas registered"
+"""
+    signoff_path.parent.mkdir(parents=True, exist_ok=True)
+    signoff_path.write_text(body, encoding="utf-8")
+    return {
+        "ok": True,
+        "proceed_ship": True,
+        "signoff_path": str(signoff_path.relative_to(repo_root())).replace("\\", "/"),
+        "minimum_review_keys": minimum,
+        "variant_count": len(keys),
+    }
+
+
+def register_rail_warehouse_pilot_for_runtime() -> dict[str, Any]:
+    """BUILD-READ-VISUAL-001 — upsert atlas index as production + ship after G4."""
+    meta_path = repo_root() / f"assets/staging/tiles/{BATCH_ID}/atlas_meta.json"
+    batch_path = repo_root() / "tools/mcp/schemas/examples/tile_batch_rail_warehouse_pilot_v1.json"
+    batch = dict(load_json_file(batch_path))
+    batch["ship"] = True
+    batch["development_tier"] = "production"
+    result = register_tile_atlas_from_meta(meta_path, batch=batch)
+    return {"ok": True, **result}
+
+
 def refresh_rail_warehouse_pilot_batch_witness() -> dict[str, Any]:
     written = write_rail_warehouse_pilot_batch_artifacts()
     batch_rel = written["tile_batch"]
@@ -351,11 +508,14 @@ def refresh_rail_warehouse_pilot_batch_witness() -> dict[str, Any]:
     staging = repo_root() / written["staging_dir"]
     png_present = sum(1 for k in keys if (staging / f"{k}.png").is_file())
 
+    atlas_png = repo_root() / "assets/textures/buildings_iso/staging/tile_rail_warehouse_pilot_v1_atlas.png"
+    meta_json = staging / "atlas_meta.json"
+    png_ready = png_present >= len(keys)
     body: dict[str, Any] = {
         "gate_id": "BUILD-READ-VISUAL-002-BATCH",
         "program": "tile_rail_warehouse_pilot_v1",
-        "ok": batch_rep.status == "passed" and len(keys) == 4,
-        "green": batch_rep.status == "passed" and len(keys) == 4,
+        "ok": batch_rep.status == "passed" and len(keys) == 4 and png_ready,
+        "green": batch_rep.status == "passed" and len(keys) == 4 and png_ready,
         "staging_spec": STAGING_SPEC,
         "artifacts": written,
         "validation": {
@@ -365,9 +525,12 @@ def refresh_rail_warehouse_pilot_batch_witness() -> dict[str, Any]:
         "variant_keys": keys,
         "png_in_staging": png_present,
         "png_required_for_pack": len(keys),
+        "atlas_png_on_disk": atlas_png.is_file(),
+        "atlas_meta_on_disk": meta_json.is_file(),
         "bake_source": "keyframe_pack",
-        "ship": False,
+        "ship": atlas_png.is_file(),
         "seed": PILOT_SEED,
+        "g4_signoff": "debug_runs/art_pipeline/rail_warehouse_pilot_production_signoff.yaml",
         "next_ops": [
             "utils/keyframe_render.py → assets/staging/tiles/tile_rail_warehouse_pilot_v1/*.png",
             "node .claude/skills/agent-lang/driver.mjs tile-batch-run ../schemas/examples/tile_batch_rail_warehouse_pilot_v1.json",

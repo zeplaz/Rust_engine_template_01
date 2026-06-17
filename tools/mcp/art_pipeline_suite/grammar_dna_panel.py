@@ -9,6 +9,7 @@ from typing import Any, Callable
 from rust_engine_mcp import arch_build_grammar
 from rust_engine_mcp.aps_grammar_labels import human_label
 
+from .aps_theme import FONT_SMALL
 from .aps_tooltips import bind_aps_tooltip
 
 
@@ -19,7 +20,7 @@ class GrammarDnaPanel(ttk.LabelFrame):
         *,
         on_change: Callable[[], None] | None = None,
     ) -> None:
-        super().__init__(master, text="ARCH-DNA + β v0 (BUILD-READ-GRAMMAR)", padding=6)
+        super().__init__(master, text="Massing pressure (advanced)", padding=6)
         self._on_change = on_change
         self._beta_vars: dict[str, tk.DoubleVar] = {}
         self._dna_value_vars: dict[str, tk.StringVar] = {}
@@ -63,10 +64,10 @@ class GrammarDnaPanel(ttk.LabelFrame):
             col = i % 5
             cell = ttk.Frame(dna_frame)
             cell.grid(row=row, column=col, sticky=tk.W, padx=4, pady=2)
-            ttk.Label(cell, text=f"{key}:", width=2, font=("Segoe UI", 8, "bold")).pack(side=tk.LEFT)
+            ttk.Label(cell, text=f"{key}:", width=2, font=(FONT_SMALL[0], FONT_SMALL[1], "bold")).pack(side=tk.LEFT)
             var = tk.StringVar(value="—")
             self._dna_value_vars[key] = var
-            lbl = ttk.Label(cell, textvariable=var, width=14, font=("Segoe UI", 8))
+            lbl = ttk.Label(cell, textvariable=var, width=14, font=FONT_SMALL)
             lbl.pack(side=tk.LEFT)
             bind_aps_tooltip(lbl, f"asm_grammar_dna_{key.lower()}")
 

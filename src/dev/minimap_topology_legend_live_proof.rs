@@ -11,7 +11,7 @@ pub fn minimap_topology_legend_witness_green() -> bool {
         .iter()
         .map(|k| {
             let [r, g, b] = topology_kind_tint_modulator(&[(*k).to_string()]);
-            ((r.to_bits(), g.to_bits(), b.to_bits()))
+            (r.to_bits(), g.to_bits(), b.to_bits())
         })
         .collect();
     distinct.len() >= 3

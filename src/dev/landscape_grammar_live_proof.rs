@@ -1,13 +1,11 @@
 //! Landscape grammar live proof — FULL_APP witness refresh (VEG-WITNESS-LIVE-PROOF-001).
 
-use bevy::prelude::*;
-
 use crate::dev::debug_run_envelope::{wrap_debug_run, write_debug_run_json};
 use crate::systems::ecology::{
-    evaluate_landscape_program, load_landscape_grammar_catalog, load_landscape_preset_from_path,
-    refresh_lg2_witness, refresh_lg4_preview_witness, LandscapeGrammarLg2Witness,
-    LG1_PILOT_CHUNK, LG1_PILOT_PRESET_ID, LANDSCAPE_GRAMMAR_LG2_LIVE_JSON,
-    LANDSCAPE_GRAMMAR_LG4_PREVIEW_LIVE_JSON, LANDSCAPE_PRESETS_DIR,
+    evaluate_landscape_program, load_landscape_grammar_catalog, refresh_lg2_witness,
+    refresh_lg4_preview_witness, LandscapeGrammarLg2Witness, LG1_PILOT_CHUNK,
+    LG1_PILOT_PRESET_ID, LANDSCAPE_GRAMMAR_LG2_LIVE_JSON,
+    LANDSCAPE_GRAMMAR_LG4_PREVIEW_LIVE_JSON,
 };
 use crate::systems::ecology::{ChunkEcology, VegetationField};
 use crate::systems::weather::ChunkWeather;
@@ -78,6 +76,9 @@ mod tests {
 
     #[test]
     fn pilot_preset_loads_from_disk() {
+        use crate::systems::ecology::{
+            load_landscape_preset_from_path, LANDSCAPE_PRESETS_DIR, LG1_PILOT_PRESET_ID,
+        };
         let path = repo_asset_path(&format!("{LANDSCAPE_PRESETS_DIR}/{LG1_PILOT_PRESET_ID}.json"));
         assert!(load_landscape_preset_from_path(&path).is_ok());
     }

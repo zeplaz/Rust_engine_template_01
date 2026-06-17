@@ -92,7 +92,7 @@ Minimap wheel must **not** scroll the tactical map when hovered (existing — ve
 
 ```json
 {
-  "map_image_drag_moves_widget": false,
+  "map_image_drag_moves_widget": true,
   "title_bar_drag_moves_widget": true,
   "tap_map_jumps_camera": true,
   "texture_centered_on_resize": true,
@@ -100,7 +100,7 @@ Minimap wheel must **not** scroll the tactical map when hovered (existing — ve
 }
 ```
 
-Lib fixture suggestion: `minimap_bevy_interaction::tests::map_image_drag_does_not_move_panel`
+Lib fixture: `minimap_bevy_interaction::tests::map_image_drag_moves_panel`
 
 ---
 

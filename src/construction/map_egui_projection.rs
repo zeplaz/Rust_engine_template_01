@@ -81,6 +81,7 @@ impl<'a> ConstructionMapProjection<'a> {
         window: &Window,
         ortho: Option<&crate::gui::MainWorldCameraOrthoTrace>,
     ) -> Option<Vec2> {
+        let _xf = xf;
         if let Some(frame) =
             crate::gui::sim_map_projection_frame(camera, self.map_vp, window, ortho)
         {

@@ -2,7 +2,7 @@
 
 Single map of **planning → proof → implementation** for this repo. Use with orchestrator tooling so markdown boards, runtime todo boards, and witnesses stay aligned.
 
-**Live status (2026-06-14):** [`status_overview_20260613_v1.md`](status_overview_20260613_v1.md) · **Coder long-run Phase 6:** [`coder_longrun_plan_phase6_v1.md`](coder_longrun_plan_phase6_v1.md) · [`post_drain_phase6_coder_queue.json`](../tools/orchestrator/queues/post_drain_phase6_coder_queue.json) · **Landscape:** [`guide_landscape_grammar_v1.md`](guide_landscape_grammar_v1.md) · **Lexicon v1.4.0:** [`landscape_grammar_lexicon_v1.md`](../prompts/guides/landscape_grammar_lexicon_v1.md) · **Phase 5 (drained):** [`post_drain_phase5_queue.json`](../tools/orchestrator/queues/post_drain_phase5_queue.json)
+**Live status (2026-06-14):** [`status_overview_20260613_v1.md`](status_overview_20260613_v1.md) · **HUD spine (wired):** [`build_read_unwired_spine_v1.md`](build_read_unwired_spine_v1.md) · **Coder long-run Phase 6:** [`coder_longrun_plan_phase6_v1.md`](coder_longrun_plan_phase6_v1.md) · [`post_drain_phase6_coder_queue.json`](../tools/orchestrator/queues/post_drain_phase6_coder_queue.json) · **Veg runtime proof:** [`plan_veg_runtime_proof_001_v1.md`](plan_veg_runtime_proof_001_v1.md) · **Veg burn/extract:** [`plan_veg_burn_extract_001_v1.md`](plan_veg_burn_extract_001_v1.md) · **G-PLAY split:** [`plan_g_play_split_v1.md`](plan_g_play_split_v1.md) · **Queue sync:** [`plan_queue_sync_001_close_v1.md`](plan_queue_sync_001_close_v1.md) · **Landscape:** [`guide_landscape_grammar_v1.md`](guide_landscape_grammar_v1.md) · **Lexicon v1.4.0:** [`landscape_grammar_lexicon_v1.md`](../prompts/guides/landscape_grammar_lexicon_v1.md) · **Phase 5 (drained):** [`post_drain_phase5_queue.json`](../tools/orchestrator/queues/post_drain_phase5_queue.json)
 
 ---
 
@@ -58,7 +58,7 @@ Single map of **planning → proof → implementation** for this repo. Use with 
 
 **Phase index (authoritative):** [`plan_fleet_stability_integrity_001_v1.md`](plan_fleet_stability_integrity_001_v1.md) · **PHASE-STABLE-2026-06** — **P2 signed**  
 **Exec P1 (closed):** [`plan_fleet_stability_integrity_exec_002_v1.md`](plan_fleet_stability_integrity_exec_002_v1.md) · **Dispatch P2 (signed):** [`fleet_stability_phase2_dispatch_v1.md`](fleet_stability_phase2_dispatch_v1.md) · P1: [`fleet_stability_coder_dispatch_v1.md`](fleet_stability_coder_dispatch_v1.md)  
-**G-PLAY runbook:** [`play_scenario_acceptance_runbook_v1.md`](play_scenario_acceptance_runbook_v1.md)  
+**G-PLAY runbook:** [`play_scenario_acceptance_runbook_v1.md`](play_scenario_acceptance_runbook_v1.md) · **Split model:** [`plan_g_play_split_v1.md`](plan_g_play_split_v1.md)  
 **Sweep:** [`production_jank_sweep_20260602_v1.md`](production_jank_sweep_20260602_v1.md) · **Env:** [`runtime_env_policy_registry_v1.md`](runtime_env_policy_registry_v1.md)  
 **Audit:** [`planner_status_audit_v18.md`](planner_status_audit_v18.md) · checklist [`plan_ledger_refresh_018_checklist_v1.md`](plan_ledger_refresh_018_checklist_v1.md)  
 **Prior audit:** [`planner_status_audit_v17.md`](planner_status_audit_v17.md) · [`plan_ledger_refresh_017_checklist_v1.md`](plan_ledger_refresh_017_checklist_v1.md)

@@ -20,7 +20,7 @@
     "fleet_closed": false,
     "construction_drain": "docs/archive/2026-06-src-dev/plans/construction_coder_drain_order_v1.md",
     "three_track_hub": "src/dev/plan_three_track_execution_v1.md",
-    "last_sync": "2026-06-14"
+    "last_sync": "2026-06-15"
   },
   "done": [
     {
@@ -871,6 +871,48 @@
       "signoff": "SIGNED",
       "deliverable": "src/dev/plan_product_polish_exec_001_v1.md",
       "completed": "2026-06-11"
+    },
+    {
+      "id": "PLAN-QUEUE-SYNC-001",
+      "status": "done",
+      "signoff": "SIGNED",
+      "deliverable": "src/dev/plan_queue_sync_001_close_v1.md",
+      "unblocks": [
+        "PLAN-VEG-RUNTIME-PROOF-001",
+        "PLAN-G-PLAY-SPLIT-001"
+      ],
+      "completed": "2026-06-14"
+    },
+    {
+      "id": "PLAN-VEG-RUNTIME-PROOF-001",
+      "status": "done",
+      "signoff": "SIGNED",
+      "deliverable": "src/dev/plan_veg_runtime_proof_001_v1.md",
+      "unblocks": [
+        "VEG-HARD-FULLAPP-001",
+        "VEG-HARD-PREVIEW-PIXEL-001",
+        "G-PLAY-CODER-VEG"
+      ],
+      "completed": "2026-06-14"
+    },
+    {
+      "id": "PLAN-G-PLAY-SPLIT-001",
+      "status": "done",
+      "signoff": "SIGNED",
+      "deliverable": "src/dev/plan_g_play_split_v1.md",
+      "completed": "2026-06-14"
+    },
+    {
+      "id": "PLAN-VEG-BURN-EXTRACT-001",
+      "status": "done",
+      "signoff": "SIGNED",
+      "deliverable": "src/dev/plan_veg_burn_extract_001_v1.md",
+      "unblocks": [
+        "VEG-BURN-OVERLAY-001",
+        "VEG-BURN-EXTRACT-004",
+        "VEG-LG5-CATALOG-008"
+      ],
+      "completed": "2026-06-14"
     }
   ],
   "active": [
@@ -891,8 +933,11 @@
       "priority": 3,
       "lane": "A2",
       "defer_registry": "PLAN-AUDIT-020",
-      "unblock_when": "G-PLAY-01 operator sign-off",
-      "snag": "operator/designer-mcp blocked"
+      "unblock_when": "G-PLAY-OPERATOR-01 executed",
+      "snag": "operator human checklist only — coder sub-gates mostly green",
+      "docs": [
+        "src/dev/plan_g_play_split_v1.md"
+      ]
     }
   ],
   "coder_mcp_parallel": {
@@ -957,7 +1002,7 @@
     "phase_id": "UNIFIED-PATH-2026-06",
     "unified_path": "docs/archive/2026-06-src-dev/plans/planner_unified_path_20260603_v1.md",
     "alignment_hub": "src/dev/planner_program_alignment_v1.md",
-    "primary_theme": "PLAN-INFRA-TAIL-001 signed — operator G-PLAY + coder A INFRA-E5-002 → E4/E6",
+    "primary_theme": "Phase 6 veg runtime proof — G-PLAY rollup open on G-PLAY-OPERATOR-01 + G-PLAY-CODER-VEG",
     "secondary_theme": "MCP P0 briefs + APS Tk 2-4 (coder-mcp parallel)",
     "rule": "Planner Lane A does not block on MCP P0; coder-mcp P0 does not block Rust coders"
   },
