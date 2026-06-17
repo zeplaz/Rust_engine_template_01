@@ -6,18 +6,23 @@ import tkinter as tk
 from tkinter import ttk
 from typing import Any
 
-from rust_engine_mcp.aps_veg_extract_parity import ENGINE_READ_PATH, check_veg_extract_parity
+from rust_engine_mcp.aps_veg_extract_parity import check_veg_extract_parity
 
 from .aps_inline_feedback import set_inline_status
 from .aps_theme import FONT_SMALL, FONT_UI
 from .aps_tooltips import bind_aps_tooltip
+
+_VEG_ENGINE_READ_COPY = (
+    "The game reads vegetation state (growth + fire) to pick the right tile from the landscape atlas. "
+    "Authored states live in the catalog file, not in Blender."
+)
 
 
 class LandscapeExtractParityPanel(ttk.LabelFrame):
     """Read-only parity QC — APS must not write extract or ActiveBurn."""
 
     def __init__(self, master: tk.Misc, *, on_log) -> None:
-        super().__init__(master, text="Engine reads (veg extract parity)", padding=6)
+        super().__init__(master, text="Engine read check (vegetation)", padding=6)
         self._on_log = on_log
         self._summary_var = tk.StringVar(value="")
         self._detail_var = tk.StringVar(value="")
@@ -28,7 +33,7 @@ class LandscapeExtractParityPanel(ttk.LabelFrame):
     def _build(self) -> None:
         path_lbl = ttk.Label(
             self,
-            text=ENGINE_READ_PATH,
+            text=_VEG_ENGINE_READ_COPY,
             wraplength=720,
             justify=tk.LEFT,
             font=FONT_SMALL,
@@ -73,7 +78,7 @@ class LandscapeExtractParityPanel(ttk.LabelFrame):
             self._validation,
             "Parity green — burn tiles will resolve in game extract path"
             if green
-            else "Parity FAIL — block atlas promote; route to @coder resolver",
+            else "Some states won't load in-game yet — flag this to engineering before publishing.",
             ok=green,
         )
         self._on_log(f"veg extract parity · {'PASS' if green else 'FAIL'}")

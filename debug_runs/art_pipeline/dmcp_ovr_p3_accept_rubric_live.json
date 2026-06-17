@@ -1,0 +1,35 @@
+{
+  "gate": "DMCP-OVR-P3-ACCEPT-RUBRIC-001",
+  "green": true,
+  "verdict": "PASS",
+  "deliverable": "src/dev/design_aps_uiux_p3_accept_rubric_v1.md",
+  "layout_delta": "src/dev/design_aps_uiux_layout_delta_v1.md",
+  "guard_spec": "src/dev/plan_aps_uiux_p3_layout_guard_v1.md",
+  "checks": {
+    "rubric_on_disk": true,
+    "layout_delta_on_disk": true,
+    "guard_spec_on_disk": true,
+    "rubric_row_count": 25,
+    "p0_row_count": 15,
+    "needs_display": true
+  },
+  "operator_walk": "\u00a79 in rubric \u2014 run after OVR-P3-LAYOUT-001 lands",
+  "machine_guards": [
+    "tests/test_aps_min_window_layout.py",
+    "tests/test_aps_imports.py",
+    "tests/test_aps_runtime_callbacks.py"
+  ],
+  "blocks": [],
+  "unblocks": [
+    "OVR-P3-LAYOUT-001 operator sign-off"
+  ],
+  "_agent_meta": {
+    "schema": "dmcp_ovr_p3_accept_rubric_live_v1",
+    "written_at_epoch_secs": 1781720498,
+    "profile": "DMCP_OVR_P3_ACCEPT_RUBRIC",
+    "source_system": "aps_uiux_p3_accept_rubric",
+    "relative_path": "debug_runs/art_pipeline/dmcp_ovr_p3_accept_rubric_live.json",
+    "ritual": "BLANG:WIT-HON\u2192Q\u2713 DMCP-OVR-P3-ACCEPT-RUBRIC-001",
+    "agent": "designer-mcp"
+  }
+}

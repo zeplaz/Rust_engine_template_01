@@ -40,7 +40,7 @@ class LandscapeGrammarPanel(ttk.Frame):
         self.metadata_flow.pack(fill=tk.X, pady=(0, 6))
         ttk.Label(
             self,
-            text="Grammar — topology graph ship truth (land_dna + topology_graph)",
+            text="Grammar — the landscape layout graph (this is what ships).",
             font=("Segoe UI", 9, "bold"),
         ).pack(anchor=tk.W)
 
@@ -78,7 +78,7 @@ class LandscapeGrammarPanel(ttk.Frame):
         self._validate_var = tk.StringVar(value="")
         self._validate_lbl = ttk.Label(actions, textvariable=self._validate_var, font=FONT_HINT)
         self._validate_lbl.pack(side=tk.LEFT, padx=6)
-        self._status_var = tk.StringVar(value="○ Grammar pending — no preset")
+        self._status_var = tk.StringVar(value="Pick a preset first")
         ttk.Label(self, textvariable=self._status_var, font=FONT_HINT, foreground="#555").pack(anchor=tk.W, pady=(4, 0))
 
     def _on_tree_select(self, _event=None) -> None:

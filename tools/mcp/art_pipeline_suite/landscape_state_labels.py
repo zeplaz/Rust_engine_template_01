@@ -170,4 +170,4 @@ def inline_hint(
         return "○ States pending — select a landscape preset on Presets tab"
     if not grammar_ok:
         return "◐ States blocked — generate grammar on Grammar tab"
-    return "Bake states prepares LG-5 tile batch — then Pack LG-5 atlas on Flow bar"
+    return "Bake states prepares a landscape tile job — then Pack landscape atlas on the flow bar"

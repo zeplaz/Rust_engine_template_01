@@ -1,0 +1,23 @@
+{
+  "_meta": {
+    "schema": "debug_run_envelope_v1",
+    "gate": "PLAN-OVR-WAVE3-PLANNER",
+    "agent": "planner-mcp",
+    "green_scope": "G-SCHEMA"
+  },
+  "gate": "PLAN-OVR-WAVE3-PLANNER",
+  "signed": true,
+  "signed_at": "2026-06-17",
+  "rows": {
+    "PLAN-OVR-P3-GUARD-SPEC-001": {
+      "deliverable": "src/dev/plan_aps_uiux_p3_layout_guard_v1.md"
+    },
+    "PLAN-OVR-HANDOFF-SYNC-001": {
+      "deliverable": "tools/orchestrator/queues/HANDOFF.md"
+    },
+    "PLAN-OVR-P45-WITNESS-STUB-001": {
+      "deliverable": "src/dev/plan_aps_uiux_p45_spine_witness_v1.md"
+    }
+  },
+  "green": true
+}

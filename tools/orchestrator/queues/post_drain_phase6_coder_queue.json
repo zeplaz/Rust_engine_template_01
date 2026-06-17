@@ -362,16 +362,17 @@
       "lane": "BUILD",
       "wave": 3,
       "id": "BUILD-READ-CONSUMER-MCP-001",
-      "status": "ready",
+      "status": "done",
       "priority": "P2",
       "owner": "coder_b",
       "goal": "Wire APS snapshot DNA+β consumer in Rust (arch_build_grammar_v0)",
-      "witness": "debug_runs/aps_dna_consumer_contract_live.json",
+      "witness": "debug_runs/aps_dna_consumer_rust_live.json",
+      "completed": "2026-06-17",
       "docs": [
         "tools/mcp/python/rust_engine_mcp/arch_build_grammar.py",
         "src/construction/procedural/arch_build_grammar_v0.rs"
       ],
-      "note": "Unblocked @coder-mcp consumer contract witness green"
+      "note": "Superseded by CDR-B-BUILD-CONSUMER-MCP-001 — aps_dna_consumer_rust_live.json green"
     },
     {
       "seq": 20,

@@ -28,8 +28,11 @@ pub const LANDSCAPE_GRAMMAR_LG3_LIVE_JSON: &str = "debug_runs/landscape_grammar_
 pub const LANDSCAPE_GRAMMAR_LG5_LIVE_JSON: &str = "debug_runs/landscape_grammar_lg5_live.json";
 pub const LANDSCAPE_ATLAS_INDEX_RON: &str = "assets/configs/landscape/_landscape_atlas_index.ron";
 pub const LG5_ATLAS_BATCH_WITNESS_JSON: &str =
-    "debug_runs/art_pipeline/tile_tile_landscape_lg5_pilot_v1_live.json";
-pub const LG5_ATLAS_ID: &str = "landscape_lg5_pilot_v1";
+    "debug_runs/art_pipeline/tile_tile_landscape_expanded_v1_live.json";
+pub const LG5_ATLAS_EXPAND_ROLLUP_JSON: &str =
+    "debug_runs/art_pipeline/tile_landscape_expanded_live.json";
+pub const LG5_ATLAS_ID: &str = "landscape_lg5_expanded_v1";
+pub const LG5_PILOT_ATLAS_ID: &str = "landscape_lg5_pilot_v1";
 pub const VEGETATION_PROGRAM_CLOSE_LIVE_JSON: &str =
     "debug_runs/vegetation_program_close_live.json";
 
@@ -351,6 +354,22 @@ pub fn landscape_lg5_atlas_batch_green() -> bool {
 }
 
 #[must_use]
+pub fn landscape_lg5_expand_rollup_green() -> bool {
+    let path = repo_asset_path(LG5_ATLAS_EXPAND_ROLLUP_JSON);
+    let Ok(raw) = fs::read_to_string(path) else {
+        return false;
+    };
+    let Ok(body) = serde_json::from_str::<serde_json::Value>(&raw) else {
+        return false;
+    };
+    body.get("green").and_then(|v| v.as_bool()).unwrap_or(false)
+        && body
+            .get("atlas_id")
+            .and_then(|v| v.as_str())
+            .is_some_and(|id| id == LG5_ATLAS_ID)
+}
+
+#[must_use]
 pub fn landscape_lg5_registry_stamped() -> bool {
     let path = repo_asset_path(LANDSCAPE_ATLAS_INDEX_RON);
     let Ok(text) = fs::read_to_string(path) else {
@@ -362,11 +381,12 @@ pub fn landscape_lg5_registry_stamped() -> bool {
 #[must_use]
 pub fn refresh_lg5_witness() -> bool {
     let atlas_ok = landscape_lg5_atlas_batch_green();
+    let expand_ok = landscape_lg5_expand_rollup_green();
     let stamp_ok = landscape_lg5_registry_stamped();
     let bevy_uv = crate::gui::landscape_chunk_atlas_stamp::landscape_lg5_chunk_uv_stamp_witness_green();
-    let green = atlas_ok && stamp_ok && bevy_uv;
+    let green = atlas_ok && expand_ok && stamp_ok && bevy_uv;
     let atlas_lane = if green {
-        "mcp_atlas_pack"
+        "mcp_atlas_pack_expanded"
     } else if atlas_ok && stamp_ok {
         "bevy_chunk_uv_pending"
     } else if atlas_ok {
@@ -376,16 +396,21 @@ pub fn refresh_lg5_witness() -> bool {
     };
     let body = json!({
         "gate": "VEG-LG5-WITNESS-001",
+        "slice_id": "CDR-A-LG5-REAL-STAMP-001",
         "green": green,
+        "real_atlas_uv": green,
         "atlas_lane": atlas_lane,
         "atlas_batch_green": atlas_ok,
+        "atlas_expand_rollup_green": expand_ok,
         "registry_stamp": stamp_ok,
         "bevy_chunk_uv_stamp": bevy_uv,
         "VEG-F03-REGISTRY-STAMP-001": bevy_uv,
         "atlas_id": LG5_ATLAS_ID,
+        "pilot_atlas_id": LG5_PILOT_ATLAS_ID,
         "atlas_batch_witness": LG5_ATLAS_BATCH_WITNESS_JSON,
+        "atlas_expand_witness": LG5_ATLAS_EXPAND_ROLLUP_JSON,
         "landscape_index": LANDSCAPE_ATLAS_INDEX_RON,
-        "charter": "src/dev/design_landscape_lg5_atlas_v1.md",
+        "charter": "src/dev/design_landscape_lg5_expansion_matrix_v1.md",
     });
     let wrapped = wrap_debug_run(
         "VEG-LG5-WITNESS-001",

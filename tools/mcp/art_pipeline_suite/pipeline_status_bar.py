@@ -5,6 +5,8 @@ from __future__ import annotations
 import tkinter as tk
 from tkinter import ttk
 
+from typing import Callable
+
 from .aps_theme import FONT_HINT
 from .aps_tooltips import bind_aps_tooltip
 from .domain_router import pipeline_steps_for
@@ -13,9 +15,17 @@ from .state import ArtDomain, SuiteState
 
 
 class PipelineStatusBar(ttk.Frame):
-    def __init__(self, master: tk.Misc, state: SuiteState) -> None:
+    def __init__(
+        self,
+        master: tk.Misc,
+        state: SuiteState,
+        *,
+        on_step_click: Callable[[str], None] | None = None,
+    ) -> None:
         super().__init__(master, padding=(0, 4))
         self.state = state
+        self._on_step_click = on_step_click
+        self._current_key: str | None = None
         self._lane = state.art_domain
         self._steps: list[tuple[str, str]] = list(pipeline_steps_for(state.art_domain))
         self._pills: dict[str, tuple[tk.Frame, tk.Label]] = {}
@@ -29,10 +39,12 @@ class PipelineStatusBar(ttk.Frame):
 
     def _set_lane_hint(self) -> None:
         if self.state.art_domain == ArtDomain.LANDSCAPE.value:
-            self._hint.configure(text="LG-5 atlas art-ship (G4/G5) is separate from schema/bake green.")
+            self._hint.configure(
+                text="Final landscape tile art is signed off separately from passing the schema and bake checks."
+            )
         else:
             self._hint.configure(
-                text="Keyframe bake is behind Atlas — Assembly/Materials/Preview work without ship proof."
+                text="You can build, assign materials, and preview without baking tiles. Tile bake happens on the Atlas step."
             )
 
     def _rebuild_step_widgets(self) -> None:
@@ -47,6 +59,11 @@ class PipelineStatusBar(ttk.Frame):
             lbl.pack()
             self._pills[key] = (pill, lbl)
             bind_aps_tooltip(lbl, f"pipeline_{key}")
+            if self._on_step_click is not None:
+                pill.configure(cursor="hand2")
+                lbl.configure(cursor="hand2")
+                pill.bind("<Button-1>", lambda _e, k=key: self._on_step_click(k))
+                lbl.bind("<Button-1>", lambda _e, k=key: self._on_step_click(k))
 
     def set_domain(self, lane: str) -> None:
         self._lane = lane
@@ -60,11 +77,25 @@ class PipelineStatusBar(ttk.Frame):
                 return label
         return default
 
+    def set_current(self, key: str | None) -> None:
+        self._current_key = key
+        self._sync_current_markers()
+
+    def _sync_current_markers(self) -> None:
+        for step_key, (pill, lbl) in self._pills.items():
+            text = lbl.cget("text")
+            if step_key == self._current_key and not text.startswith("▣"):
+                lbl.configure(text=f"▣ {text}")
+            elif step_key != self._current_key and text.startswith("▣ "):
+                lbl.configure(text=text[2:])
+
     def _apply(self, key: str, state_key: str) -> None:
         if key not in self._pills:
             return
         pill, lbl = self._pills[key]
         apply_pill(pill, lbl, self._step_label(key, key.title()), state_key)
+        if key == self._current_key:
+            lbl.configure(text=f"▣ {lbl.cget('text').lstrip('▣ ')}")
 
     def refresh(self) -> None:
         if self.state.art_domain == ArtDomain.LANDSCAPE.value:
@@ -127,13 +158,10 @@ class PipelineStatusBar(ttk.Frame):
         else:
             self._apply("states", "pending")
         if s.atlas_folder or s.tile_batch_path:
-            self._apply("atlas", "atlas_packed")
+            state_key = "valid" if s.landscape_stamp_registered else "atlas_packed"
+            self._apply("atlas", state_key)
         else:
             self._apply("atlas", "pending")
-        if s.landscape_stamp_registered:
-            self._apply("stamp", "stamp_done")
-        else:
-            self._apply("stamp", "stamp_pending")
 
 
 def _has_material_profiles(snapshot: dict) -> bool:

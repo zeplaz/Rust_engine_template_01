@@ -25,6 +25,8 @@ SUITE = repo_root() / "tools/mcp/art_pipeline_suite"
 ALLOWLIST = {
     # Dynamic per-cell glyph size for tiny grids; never below 7, default 9 — see APS-UX-NONCOLOR.
     ("footprint_canvas.py", "glyph_size"),
+    # Token definitions — FONT_CAPTION 8 is decorative-only per aps_design_system_v1.md §3.1.
+    ("aps_theme.py", "FONT_CAPTION"),
 }
 
 EIGHT_PX = re.compile(r'\(\s*"(?:Segoe UI|Consolas)"\s*,\s*8\b')
@@ -35,8 +37,10 @@ def test_no_8px_font_on_primary_labels():
     for path in sorted(SUITE.glob("*.py")):
         for i, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
             if path.name == "aps_theme.py" and "Never use a literal" in line:
-                continue  # the documentation comment in the token module
+                continue  # legacy documentation comment
             if EIGHT_PX.search(line):
+                if any(path.name == fname and token in line for fname, token in ALLOWLIST):
+                    continue
                 offenders.append(f"{path.name}:{i}: {line.strip()}")
     assert not offenders, "sub-9px font literals on content labels:\n" + "\n".join(offenders)
 

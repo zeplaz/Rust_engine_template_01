@@ -1,0 +1,428 @@
+{
+  "gate": "DMCP-OVR-P2-IMPL-AUDIT-001",
+  "ban_list": {
+    "violation_count": 0,
+    "verdict": "PASS",
+    "clean": true
+  },
+  "copy_pack": {
+    "total": 32,
+    "pass": 26,
+    "partial": 2,
+    "fail": 3,
+    "deferred": 1,
+    "by_status": {
+      "pass": 26,
+      "partial": 2,
+      "deferred": 1,
+      "fail": 3
+    }
+  },
+  "findings": [
+    {
+      "id": "CP-01",
+      "section": "\u00a71 global",
+      "path": "tools/mcp/art_pipeline_suite/domain_router.py",
+      "status": "pass",
+      "kind": "ui_must",
+      "old": "Ship truth:",
+      "new": "What ships:",
+      "note": ""
+    },
+    {
+      "id": "CP-02",
+      "section": "\u00a71 global",
+      "path": "tools/mcp/art_pipeline_suite/pipeline_status_bar.py",
+      "status": "pass",
+      "kind": "ui_must",
+      "old": "Keyframe bake is behind Atlas",
+      "new": "You can build, assign materials, and preview without baking tiles",
+      "note": ""
+    },
+    {
+      "id": "CP-03",
+      "section": "\u00a71 global",
+      "path": "tools/mcp/art_pipeline_suite/pipeline_pills.py",
+      "status": "partial",
+      "kind": "ui_must",
+      "old": "saved (QC not run)",
+      "new": "saved (not checked)",
+      "note": ""
+    },
+    {
+      "id": "CP-04",
+      "section": "\u00a71 global",
+      "path": "tools/mcp/art_pipeline_suite/app.py",
+      "status": "deferred",
+      "kind": "deferred_p3",
+      "old": "All actions call rust_engine_mcp CLI/MCP",
+      "new": "Every button here runs the same tools the build pipeline uses",
+      "note": "app.py chrome deferred OVR-P3-LAYOUT-001"
+    },
+    {
+      "id": "CP-05",
+      "section": "\u00a72 assembly",
+      "path": "tools/mcp/art_pipeline_suite/assembly_panel.py",
+      "status": "pass",
+      "kind": "ui_must",
+      "old": "Material authority (APS-MAT-AUTH-UI-001)",
+      "new": "Where materials come from",
+      "note": ""
+    },
+    {
+      "id": "CP-06",
+      "section": "\u00a72 assembly",
+      "path": "tools/mcp/art_pipeline_suite/assembly_panel.py",
+      "status": "pass",
+      "kind": "ui_must",
+      "old": "Generate snapshot",
+      "new": "Generate Assembly",
+      "note": ""
+    },
+    {
+      "id": "CP-07",
+      "section": "\u00a72 assembly",
+      "path": "tools/mcp/art_pipeline_suite/assembly_panel.py",
+      "status": "pass",
+      "kind": "ui_must",
+      "old": "text=\"P0 gate\"",
+      "new": "Run ship check",
+      "note": ""
+    },
+    {
+      "id": "CP-08",
+      "section": "\u00a72 assembly",
+      "path": "tools/mcp/art_pipeline_suite/assembly_panel.py",
+      "status": "pass",
+      "kind": "ui_must",
+      "old": "text=\"Validate\"",
+      "new": "Check schema",
+      "note": ""
+    },
+    {
+      "id": "CP-09",
+      "section": "\u00a72 assembly",
+      "path": "tools/mcp/art_pipeline_suite/assembly_panel.py",
+      "status": "partial",
+      "kind": "log_ok_old",
+      "old": "P0 gate failed",
+      "new": "Ship check failed",
+      "note": "status/log/dialog \u2014 artist-visible"
+    },
+    {
+      "id": "CP-10",
+      "section": "\u00a72 assembly",
+      "path": "tools/mcp/art_pipeline_suite/grammar_build_set_panel.py",
+      "status": "pass",
+      "kind": "ui_must",
+      "old": "Grammar set (BUILD-SET)",
+      "new": "Building style set",
+      "note": ""
+    },
+    {
+      "id": "CP-11",
+      "section": "\u00a72 assembly",
+      "path": "tools/mcp/art_pipeline_suite/grammar_dna_panel.py",
+      "status": "pass",
+      "kind": "ui_must",
+      "old": "Store ARCH-DNA",
+      "new": "Save shape settings with this building",
+      "note": ""
+    },
+    {
+      "id": "CP-12",
+      "section": "\u00a72 assembly",
+      "path": "tools/mcp/art_pipeline_suite/grammar_dna_panel.py",
+      "status": "pass",
+      "kind": "ui_must",
+      "old": "ARCH-DNA (read-only from preset)",
+      "new": "Shape profile (from preset, read-only)",
+      "note": ""
+    },
+    {
+      "id": "CP-13",
+      "section": "\u00a73 metadata",
+      "path": "tools/mcp/art_pipeline_suite/metadata_flow_panel.py",
+      "status": "pass",
+      "kind": "ui_must",
+      "old": "Metadata \u2192 engine (ARCH-MAT-001)",
+      "new": "Where this data goes",
+      "note": ""
+    },
+    {
+      "id": "CP-14",
+      "section": "\u00a73 metadata",
+      "path": "tools/mcp/art_pipeline_suite/metadata_flow_panel.py",
+      "status": "pass",
+      "kind": "ui_must",
+      "old": "assembly_snapshot (AUTHORITY)",
+      "new": "What you save in this Assembly is the source of truth",
+      "note": ""
+    },
+    {
+      "id": "CP-15",
+      "section": "\u00a74 catalog",
+      "path": "tools/mcp/art_pipeline_suite/catalog.py",
+      "status": "pass",
+      "kind": "ui_must",
+      "old": "Sidecar tags \u2260 ship truth",
+      "new": "Tags here are hints only",
+      "note": ""
+    },
+    {
+      "id": "CP-16",
+      "section": "\u00a74 catalog",
+      "path": "tools/mcp/art_pipeline_suite/catalog.py",
+      "status": "pass",
+      "kind": "ui_must",
+      "old": "AssetSpec sidecar",
+      "new": "Module info (editable)",
+      "note": ""
+    },
+    {
+      "id": "CP-17",
+      "section": "\u00a74 catalog",
+      "path": "tools/mcp/art_pipeline_suite/catalog.py",
+      "status": "pass",
+      "kind": "ui_must",
+      "old": "3D preview (trimesh)",
+      "new": "Quick 3D preview",
+      "note": ""
+    },
+    {
+      "id": "CP-18",
+      "section": "\u00a75 materials",
+      "path": "tools/mcp/art_pipeline_suite/material_preview_modes.py",
+      "status": "pass",
+      "kind": "ui_must",
+      "old": "Preview modes (APS-MAT-002)",
+      "new": "text=\"Preview\"",
+      "note": ""
+    },
+    {
+      "id": "CP-19",
+      "section": "\u00a75 materials",
+      "path": "tools/mcp/art_pipeline_suite/material_library_widget.py",
+      "status": "fail",
+      "kind": "ui_should",
+      "old": "Regenerate all pilots",
+      "new": "Regenerate sample materials",
+      "note": ""
+    },
+    {
+      "id": "CP-20",
+      "section": "\u00a76 variants",
+      "path": "tools/mcp/art_pipeline_suite/variants_panel.py",
+      "status": "pass",
+      "kind": "ui_must",
+      "old": "variant_set_v1 \u2014 declarative layers",
+      "new": "Variant set \u2014 states of the same building",
+      "note": ""
+    },
+    {
+      "id": "CP-21",
+      "section": "\u00a76 variants",
+      "path": "tools/mcp/art_pipeline_suite/variants_panel.py",
+      "status": "pass",
+      "kind": "ui_must",
+      "old": "Agent patch strip",
+      "new": "Ask AI for a variant (advanced)",
+      "note": ""
+    },
+    {
+      "id": "CP-22",
+      "section": "\u00a77 atlas",
+      "path": "tools/mcp/art_pipeline_suite/atlas_panel.py",
+      "status": "pass",
+      "kind": "ui_must",
+      "old": "tile_batch_v1",
+      "new": "Tile job file",
+      "note": ""
+    },
+    {
+      "id": "CP-23",
+      "section": "\u00a77 atlas",
+      "path": "tools/mcp/art_pipeline_suite/atlas_panel.py",
+      "status": "pass",
+      "kind": "ui_must",
+      "old": "Pack atlas (tilemapgen)",
+      "new": "text=\"Pack atlas\"",
+      "note": ""
+    },
+    {
+      "id": "CP-24",
+      "section": "\u00a77 atlas",
+      "path": "tools/mcp/art_pipeline_suite/atlas_panel.py",
+      "status": "pass",
+      "kind": "ui_should",
+      "old": "RUST_ENGINE_ART_DEBUG_GUI",
+      "new": "Blender debug buttons are hidden",
+      "note": ""
+    },
+    {
+      "id": "CP-25",
+      "section": "\u00a78 landscape",
+      "path": "tools/mcp/art_pipeline_suite/landscape_presets_panel.py",
+      "status": "pass",
+      "kind": "ui_must",
+      "old": "Must-read (DMCP-E2 preset QC)",
+      "new": "Preset summary",
+      "note": ""
+    },
+    {
+      "id": "CP-26",
+      "section": "\u00a78 landscape",
+      "path": "tools/mcp/art_pipeline_suite/landscape_grammar_panel.py",
+      "status": "pass",
+      "kind": "ui_must",
+      "old": "land_dna + topology_graph",
+      "new": "landscape layout graph (this is what ships)",
+      "note": ""
+    },
+    {
+      "id": "CP-27",
+      "section": "\u00a78 landscape",
+      "path": "tools/mcp/art_pipeline_suite/landscape_states_panel.py",
+      "status": "pass",
+      "kind": "ui_must",
+      "old": "succession + disturbance matrix",
+      "new": "growth stages & fire",
+      "note": ""
+    },
+    {
+      "id": "CP-28",
+      "section": "\u00a78 landscape",
+      "path": "tools/mcp/art_pipeline_suite/landscape_extract_parity_panel.py",
+      "status": "pass",
+      "kind": "ui_must",
+      "old": "route to @coder",
+      "new": "flag this to engineering",
+      "note": ""
+    },
+    {
+      "id": "CP-29",
+      "section": "\u00a79 preview",
+      "path": "tools/mcp/art_pipeline_suite/slot_preview_panel.py",
+      "status": "pass",
+      "kind": "ui_must",
+      "old": "Selected slot previews (APS-PREVIEW-001)",
+      "new": "Selected piece previews",
+      "note": ""
+    },
+    {
+      "id": "CP-30",
+      "section": "\u00a72 assembly",
+      "path": "tools/mcp/art_pipeline_suite/footprint_canvas.py",
+      "status": "pass",
+      "kind": "ui_should",
+      "old": "Generate snapshot to show grid",
+      "new": "Generate Assembly to show grid",
+      "note": ""
+    },
+    {
+      "id": "CP-31",
+      "section": "\u00a72 assembly",
+      "path": "tools/mcp/art_pipeline_suite/grammar_dna_panel.py",
+      "status": "fail",
+      "kind": "ui_should",
+      "old": "Massing pressure (advanced)",
+      "new": "Building shape bias (advanced)",
+      "note": "outer LabelFrame title; collapsible wrapper uses new copy"
+    },
+    {
+      "id": "CP-32",
+      "section": "\u00a77 atlas",
+      "path": "tools/mcp/art_pipeline_suite/atlas_preview_panel.py",
+      "status": "fail",
+      "kind": "ui_should",
+      "old": "(no tile_map_*.png \u2014 run Pack atlas)",
+      "new": "No packed tile sheet yet",
+      "note": ""
+    }
+  ],
+  "top_misses": [
+    {
+      "id": "CP-03",
+      "section": "\u00a71 global",
+      "path": "tools/mcp/art_pipeline_suite/pipeline_pills.py",
+      "status": "partial",
+      "kind": "ui_must",
+      "old": "saved (QC not run)",
+      "new": "saved (not checked)",
+      "note": ""
+    },
+    {
+      "id": "CP-09",
+      "section": "\u00a72 assembly",
+      "path": "tools/mcp/art_pipeline_suite/assembly_panel.py",
+      "status": "partial",
+      "kind": "log_ok_old",
+      "old": "P0 gate failed",
+      "new": "Ship check failed",
+      "note": "status/log/dialog \u2014 artist-visible"
+    },
+    {
+      "id": "CP-19",
+      "section": "\u00a75 materials",
+      "path": "tools/mcp/art_pipeline_suite/material_library_widget.py",
+      "status": "fail",
+      "kind": "ui_should",
+      "old": "Regenerate all pilots",
+      "new": "Regenerate sample materials",
+      "note": ""
+    },
+    {
+      "id": "CP-31",
+      "section": "\u00a72 assembly",
+      "path": "tools/mcp/art_pipeline_suite/grammar_dna_panel.py",
+      "status": "fail",
+      "kind": "ui_should",
+      "old": "Massing pressure (advanced)",
+      "new": "Building shape bias (advanced)",
+      "note": "outer LabelFrame title; collapsible wrapper uses new copy"
+    },
+    {
+      "id": "CP-32",
+      "section": "\u00a77 atlas",
+      "path": "tools/mcp/art_pipeline_suite/atlas_preview_panel.py",
+      "status": "fail",
+      "kind": "ui_should",
+      "old": "(no tile_map_*.png \u2014 run Pack atlas)",
+      "new": "No packed tile sheet yet",
+      "note": ""
+    }
+  ],
+  "deferred_p3": [
+    {
+      "id": "CP-04",
+      "section": "\u00a71 global",
+      "path": "tools/mcp/art_pipeline_suite/app.py",
+      "status": "deferred",
+      "kind": "deferred_p3",
+      "old": "All actions call rust_engine_mcp CLI/MCP",
+      "new": "Every button here runs the same tools the build pipeline uses",
+      "note": "app.py chrome deferred OVR-P3-LAYOUT-001"
+    }
+  ],
+  "audit_complete": true,
+  "verdict": "PASS_WITH_NOTES",
+  "handoff": {
+    "p3": "OVR-P3-LAYOUT-001 \u2014 app.py flow caveat (CP-04)",
+    "p5": "OVR-P5-STYLE-001 \u2014 footprint empty copy, atlas preview empty, material regenerate label",
+    "logs": "assembly_panel P0 gate strings in status/log (CP-09)"
+  },
+  "green": true,
+  "deliverable": "src/dev/design_aps_uiux_p2_impl_audit_v1.md",
+  "copy_pack_ref": "src/dev/design_aps_uiux_copy_pack_v1.md",
+  "g0_audit_ref": "src/dev/design_aps_uiux_g0_audit_v1.md",
+  "guard_test": "tools/mcp/python/tests/test_aps_no_jargon.py",
+  "_agent_meta": {
+    "schema": "dmcp_ovr_p2_impl_audit_live_v1",
+    "written_at_epoch_secs": 1781720497,
+    "profile": "DMCP_OVR_P2_IMPL_AUDIT",
+    "source_system": "aps_uiux_p2_impl_audit",
+    "relative_path": "debug_runs/art_pipeline/dmcp_ovr_p2_impl_audit_live.json",
+    "ritual": "BLANG:WIT-HON\u2192Q\u2713 DMCP-OVR-P2-IMPL-AUDIT-001",
+    "agent": "designer-mcp"
+  }
+}

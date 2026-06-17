@@ -53,16 +53,21 @@
     "relative_path": "debug_runs/landscape_grammar_lg5_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_lg5_witness",
-    "written_at_epoch_secs": 1781708914
+    "written_at_epoch_secs": 1781716519
   },
   "atlas_batch_green": true,
-  "atlas_batch_witness": "debug_runs/art_pipeline/tile_tile_landscape_lg5_pilot_v1_live.json",
-  "atlas_id": "landscape_lg5_pilot_v1",
-  "atlas_lane": "mcp_atlas_pack",
+  "atlas_batch_witness": "debug_runs/art_pipeline/tile_tile_landscape_expanded_v1_live.json",
+  "atlas_expand_rollup_green": true,
+  "atlas_expand_witness": "debug_runs/art_pipeline/tile_landscape_expanded_live.json",
+  "atlas_id": "landscape_lg5_expanded_v1",
+  "atlas_lane": "mcp_atlas_pack_expanded",
   "bevy_chunk_uv_stamp": true,
-  "charter": "src/dev/design_landscape_lg5_atlas_v1.md",
+  "charter": "src/dev/design_landscape_lg5_expansion_matrix_v1.md",
   "gate": "VEG-LG5-WITNESS-001",
   "green": true,
   "landscape_index": "assets/configs/landscape/_landscape_atlas_index.ron",
-  "registry_stamp": true
+  "pilot_atlas_id": "landscape_lg5_pilot_v1",
+  "real_atlas_uv": true,
+  "registry_stamp": true,
+  "slice_id": "CDR-A-LG5-REAL-STAMP-001"
 }

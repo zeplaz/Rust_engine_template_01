@@ -92,6 +92,7 @@ pub mod infra_e0_profile_catalog_live_proof;
 pub mod infra_utility_overlay_live_proof;
 pub mod utility_network_live_proof;
 pub mod infra_overlay_live_proof;
+pub mod nav_agent_routing_live_proof;
 pub mod landscape_grammar_burn_live_proof;
 pub mod landscape_grammar_fire_harvest_wire_live_proof;
 pub mod landscape_grammar_visual_smoke_live_proof;
@@ -100,6 +101,9 @@ pub mod landscape_map_stamp_contract_live_proof;
 pub mod wit_hon_phase6_reconcile_live_proof;
 pub mod ind_play_witness_live_proof;
 pub mod coder_b_parallel_wave_live_proof;
+pub mod coder_a_parallel_wave_live_proof;
+pub mod vt5_flicker_triage_live_proof;
+pub mod sim_hud_l5_polish_live_proof;
 pub mod veg_resolver_parity_live_proof;
 pub mod coder_b_e5_resolver_gate_live_proof;
 #[cfg(test)]

@@ -52,7 +52,7 @@
     "relative_path": "debug_runs/landscape_grammar_lg3_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_lg3_witness_from_districts",
-    "written_at_epoch_secs": 1781708913
+    "written_at_epoch_secs": 1781716518
   },
   "anchor_source": "live_transport_settlement",
   "district_kind_count": 2,

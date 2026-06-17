@@ -1,50 +1,72 @@
-"""APS-UX-TOKENS-001 — shared fonts, colors, wraplength helpers."""
+"""Design tokens (aps_design_system_v1.md §3)."""
 
 from __future__ import annotations
 
 import tkinter as tk
 from tkinter import ttk
 
+# --- §3.1 Typography ramp ---
+FONT_CAPTION = ("Segoe UI", 8)  # decorative only — allowlisted in font-floor guard
 FONT_UI = ("Segoe UI", 9)
 FONT_UI_SM = ("Segoe UI", 9)
-FONT_UI_BOLD = ("Segoe UI", 9, "bold")
-FONT_SECTION = ("Segoe UI", 9, "bold")
-FONT_MONO = ("Consolas", 10)
 FONT_HINT = ("Segoe UI", 9)
-# APS-UX-FONT-FLOOR — smallest font allowed on primary content labels.
-# Never use a literal ("Segoe UI", 8) / ("Consolas", 8) on a content label; use this token.
 FONT_SMALL = ("Segoe UI", 9)
+FONT_UI_BOLD = ("Segoe UI", 9, "bold")
+FONT_SECTION = ("Segoe UI", 10, "bold")
 FONT_MONO_SMALL = ("Consolas", 9)
+FONT_MONO = ("Consolas", 10)
+FONT_TITLE = ("Segoe UI", 13, "bold")
 
-PAD_SM = 4
-PAD_MD = 8
-PAD_LG = 12
-
+# --- §3.2 Color roles ---
 COLOR_PASS = "#0a6b0a"
 COLOR_FAIL = "#a00000"
 COLOR_WARN = "#a66b00"
 COLOR_MUTED = "#555555"
 COLOR_ACCENT = "#0a4a7a"
+COLOR_PASS_BG = "#f0faf0"
+COLOR_WARN_BG = "#fff8ee"
+COLOR_FAIL_BG = "#fff0f0"
+COLOR_PANEL_BG = "#f6f7f9"
+COLOR_INPUT_BG = "#ffffff"
+COLOR_SELECT_BG = "#e8eef5"
+COLOR_SELECT_ACTIVE = "#cce0ff"
+COLOR_OUTLINE = "#c8ccd4"
 COLOR_LANE_BUILDING = COLOR_ACCENT
 COLOR_LANE_LANDSCAPE = "#1f6b54"
 COLOR_PANE_BG = "#eceff3"
-COLOR_PANEL_BG = "#f6f7f9"
-COLOR_INPUT_BG = "#ffffff"
 COLOR_SASH = "#6b8299"
 COLOR_SASH_LIGHT = "#94a3b4"
 COLOR_SASH_DARK = "#4a5568"
+
+# --- §3.3 Spacing scale (4px grid) ---
+GAP_XS = 2
+GAP_SM = 4
+GAP_MD = 8
+GAP_LG = 12
+GAP_XL = 16
+INSET_PANE = 8
+INSET_PANEL = 8
+PANE_MIN_LIST = 220
+PANE_MIN_DETAIL = 280
+PANE_MIN_CANVAS = 320
+ROW_HEIGHT = 24
 SASH_WIDTH = 7
 
+# Back-compat aliases (prefer GAP_* in new code)
+PAD_SM = GAP_SM
+PAD_MD = GAP_MD
+PAD_LG = GAP_LG
+
 AUTHORITY_STRIP = (
-    "Ship truth: assembly_snapshot (materials + tags). Sidecar and atlas are inputs only."
+    "What ships: the Assembly you save here (its materials + tags). "
+    "Catalog data and atlas tiles only feed into it."
 )
 
-# Viewport policy — 1080p-class production; default one step below full comfortable width.
 DISPLAY_CLASS_1080P = (1920, 1080)
-DESIGN_TARGET_WINDOW = (1280, 800)  # primary sign-off + default launch (720p-class height)
+DESIGN_TARGET_WINDOW = (1280, 800)
 DEFAULT_WINDOW_SIZE = DESIGN_TARGET_WINDOW
-COMFORTABLE_MAX_WINDOW = (1440, 900)  # also supported on same display when undocked / maximized-ish
-MIN_WINDOW_SIZE = (960, 600)  # regression floor only — must not break
+COMFORTABLE_MAX_WINDOW = (1440, 900)
+MIN_WINDOW_SIZE = (960, 600)
 
 
 def wrap_for_widget(widget: tk.Misc, *, fraction: float = 0.92, minimum: int = 280) -> int:
@@ -64,20 +86,37 @@ def init_aps_ttk(root: tk.Misc) -> ttk.Style:
 
     style.configure(".", background=COLOR_PANEL_BG, font=FONT_UI)
     style.configure("TFrame", background=COLOR_PANEL_BG)
-    style.configure("TNotebook", padding=(4, 2), background=COLOR_PANEL_BG)
-    style.configure("TNotebook.Tab", padding=(12, 6), font=FONT_UI)
+    style.configure("TNotebook", padding=(GAP_SM, GAP_XS), background=COLOR_PANEL_BG)
+    style.configure("TNotebook.Tab", padding=(GAP_LG, 6), font=FONT_UI)
     style.map("TNotebook.Tab", background=[("selected", COLOR_INPUT_BG)])
 
-    style.configure("TLabelframe", background=COLOR_PANEL_BG, borderwidth=1, relief=tk.GROOVE)
+    style.configure(
+        "TLabelframe",
+        background=COLOR_PANEL_BG,
+        borderwidth=1,
+        relief=tk.GROOVE,
+        bordercolor=COLOR_OUTLINE,
+    )
     style.configure("TLabelframe.Label", background=COLOR_PANEL_BG, font=FONT_SECTION, foreground=COLOR_ACCENT)
 
-    style.configure("TButton", padding=(10, 5))
-    style.configure("TCombobox", padding=2)
-    style.configure("Treeview", rowheight=24, font=FONT_UI, background=COLOR_INPUT_BG, fieldbackground=COLOR_INPUT_BG)
+    style.configure("TButton", padding=(10, GAP_SM))
+    style.configure("TCombobox", padding=GAP_XS)
+    style.configure(
+        "Treeview",
+        rowheight=ROW_HEIGHT,
+        font=FONT_UI,
+        background=COLOR_INPUT_BG,
+        fieldbackground=COLOR_INPUT_BG,
+    )
     style.configure("Treeview.Heading", font=FONT_UI_BOLD)
+    style.map(
+        "Treeview",
+        background=[("selected", COLOR_SELECT_BG)],
+        foreground=[("selected", "#000000")],
+    )
 
-    style.configure("Aps.Toolbar.TButton", padding=(6, 2), font=FONT_UI)
-    style.configure("Aps.Lane.TRadiobutton", padding=(12, 4), font=FONT_UI)
+    style.configure("Aps.Toolbar.TButton", padding=(6, GAP_XS), font=FONT_UI)
+    style.configure("Aps.Lane.TRadiobutton", padding=(GAP_LG, GAP_SM), font=FONT_UI)
     style.map(
         "Aps.Lane.TRadiobutton",
         background=[("selected", COLOR_INPUT_BG), ("!selected", COLOR_PANEL_BG)],

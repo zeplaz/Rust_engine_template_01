@@ -27,6 +27,7 @@
     "ship_catalog_version": 2
   },
   "burn_variants_authored": 15,
+  "burn_variants_ok": true,
   "burn_frame_count": 8,
   "succession_stages": [
     "Grass",
@@ -36,17 +37,22 @@
     "OldGrowth",
     "BurnScar"
   ],
+  "regrowth_macro_phases": [
+    "None",
+    "Scar",
+    "Nuclei",
+    "Front",
+    "Closing",
+    "Mature"
+  ],
   "state_axis_row_count": 35,
+  "catalog_rows_ok": true,
   "topology_state_rows": 15,
   "states_panel_catalog_wired": true,
+  "v2_labels_wired": true,
   "catalog_path": "assets/configs/landscape/_vegetation_variant_catalog.ron",
-  "design_ref": "src/dev/design_landscape_lg5_expansion_matrix_v1.md",
-  "witness_honesty": {
-    "status": "warning",
-    "error_count": 0,
-    "warning_count": 1,
-    "summary": "witness_honesty debug_runs/aps_veg_state_axis_live.json: 0 error(s), 1 issue(s)"
-  },
+  "design_labels_ref": "src/dev/design_aps_veg_state_labels_v1.md",
+  "design_matrix_ref": "src/dev/design_landscape_lg5_expansion_matrix_v1.md",
   "exit_predicate": {
     "witness": "debug_runs/aps_veg_state_axis_live.json",
     "must": [
@@ -55,11 +61,19 @@
         "eq": true
       },
       {
-        "path": "burn_variants_authored",
-        "gte": 8
+        "path": "burn_variants_ok",
+        "eq": true
+      },
+      {
+        "path": "catalog_rows_ok",
+        "eq": true
       },
       {
         "path": "states_panel_catalog_wired",
+        "eq": true
+      },
+      {
+        "path": "v2_labels_wired",
         "eq": true
       }
     ]
@@ -69,7 +83,13 @@
     "profile": "APS_E3_VEG_STATE_AXIS",
     "relative_path": "debug_runs/aps_veg_state_axis_live.json",
     "source_system": "aps_veg_state_axis",
-    "written_at_epoch_secs": 1781712989,
+    "written_at_epoch_secs": 1781720498,
     "ritual": "BLANG:WIT-HON APS-EVO-E3-VEG-STATE-AXIS-001"
+  },
+  "witness_honesty": {
+    "status": "passed",
+    "error_count": 0,
+    "warning_count": 0,
+    "summary": "witness_honesty debug_runs/aps_veg_state_axis_live.json: 0 error(s), 0 issue(s)"
   }
 }

@@ -89,7 +89,7 @@ class LandscapeStatesPanel(ttk.Frame):
         head.pack(fill=tk.X)
         ttk.Label(
             head,
-            text="States — succession + disturbance matrix",
+            text="States — growth stages & fire",
             font=("Segoe UI", 9, "bold"),
         ).pack(side=tk.LEFT)
         ttk.Button(head, text="Validate catalog", command=self._validate_catalog).pack(

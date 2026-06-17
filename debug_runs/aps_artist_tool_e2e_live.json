@@ -9,7 +9,7 @@
     "import_ok": true,
     "import_error": null,
     "collect_ok": true,
-    "collect_summary": "149/442 tests collected (293 deselected) in 0.27s",
+    "collect_summary": "171/464 tests collected (293 deselected) in 0.33s",
     "reason": ""
   },
   "steps_ok": true,
@@ -51,12 +51,6 @@
   ],
   "designer_mcp_signoff": "pending",
   "track_b_deferred": "MCP-PILOT-GRAMMAR-001 manual keyframe",
-  "witness_honesty": {
-    "status": "warning",
-    "error_count": 0,
-    "warning_count": 1,
-    "summary": "witness_honesty debug_runs/aps_artist_tool_e2e_live.json: 0 error(s), 1 issue(s)"
-  },
   "exit_predicate": {
     "witness": "debug_runs/aps_artist_tool_e2e_live.json",
     "must": [
@@ -75,7 +69,13 @@
     "profile": "APS_E0_RELAUNCH",
     "relative_path": "debug_runs/aps_artist_tool_e2e_live.json",
     "source_system": "aps_artist_tool_e2e",
-    "written_at_epoch_secs": 1781712992,
+    "written_at_epoch_secs": 1781720502,
     "ritual": "BLANG:WIT-HON APS-EVO-E0-RELAUNCH-001"
+  },
+  "witness_honesty": {
+    "status": "passed",
+    "error_count": 0,
+    "warning_count": 0,
+    "summary": "witness_honesty debug_runs/aps_artist_tool_e2e_live.json: 0 error(s), 0 issue(s)"
   }
 }

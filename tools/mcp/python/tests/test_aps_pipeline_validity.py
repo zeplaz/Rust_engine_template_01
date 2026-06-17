@@ -54,7 +54,7 @@ def test_assembly_step_three_states(root):
     bar.refresh()
     txt = _pill_text(bar, "assembly")
     assert "✓" not in txt, f"unvalidated snapshot must not show ✓: {txt!r}"
-    assert "saved" in txt and "QC not run" in txt
+    assert "saved" in txt and "not checked" in txt
 
     # P0 failed → explicit fail, never a checkmark.
     state.assembly_p0_passed = False

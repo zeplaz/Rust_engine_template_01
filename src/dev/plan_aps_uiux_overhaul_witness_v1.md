@@ -5,6 +5,7 @@
 | **Program** | PLAN-APS-UIUX-OVERHAUL-001 |
 | **Witness path** | `debug_runs/aps_uiux_overhaul_close_live.json` |
 | **Owner** | `@planner-mcp` (PLAN-OVR-WITNESS-PROFILE-001) |
+| **Status** | **SIGNED** (@planner-mcp 2026-06-17) |
 | **Honesty gate** | `validate-report witness_honesty debug_runs/aps_uiux_overhaul_close_live.json --compress 3` |
 
 ---
@@ -84,3 +85,16 @@ OVR-P6-CLOSE-001 (coder-mcp witness)
 - Plan: `src/dev/plan_aps_uiux_overhaul_20260616_v1.md`
 - P0 authority: `src/dev/aps_design_system_v1.md` (when signed)
 - Queue: `tools/orchestrator/queues/aps_uiux_overhaul_queue.json`
+
+---
+
+## Sign-off (@planner-mcp 2026-06-17)
+
+| ⟨ID⟩ | Deliverable | Verdict |
+|:---|:---|:---:|
+| **PLAN-OVR-QUEUE-REGISTRY-001** | `queue_registry_v1.json` → `aps_uiux_overhaul` | **PASS** |
+| **PLAN-OVR-WITNESS-PROFILE-001** | This doc — P6 `aps_uiux_overhaul_close_live.json` field contract | **PASS** |
+
+**Witness rollup:** `debug_runs/mcp_planner_ovr_sign_live.json`
+
+**ΔWF:** `@coder-mcp` **OVR-P1-TOKENS-001** (P0 design lock signed) · P6 witness refresh uses this profile at **OVR-P6-CLOSE-001**.

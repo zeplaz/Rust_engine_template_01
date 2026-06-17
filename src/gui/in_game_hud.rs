@@ -28,6 +28,7 @@ use crate::gui::hud::{
     MinimapChromeRoot, MinimapGpuImageNode, OpsStripAlertBadge, OpsStripAlertBadgeText,
     OpsStripAlerts, OpsStripIntel, OpsStripPower, OpsStripTime, OpsStripTrayAffordance,
     OpsStripWeather, OpsStripZone, SimulationShellPhase2Plugin, BUILD_RAIL_W_PX,
+    OPS_STRIP_FONT_MIN_PX,
     COMMAND_LEFT_STACK_COLUMN_GAP_PX, CONTEXT_RAIL_W_PX, LEFT_CONTEXT_STACK_BODY_W_PX,
     CONTEXT_TRAY_BODY_H_PX, CONTEXT_TRAY_TAB_H_PX, OPS_STRIP_TOP_OFFSET_PX, MAP_FRAME_INSET_PX,
 };
@@ -552,7 +553,7 @@ fn spawn_simulation_command_shell(
                             .with_children(|b| {
                                 b.spawn((
                                     Text::new("◆0"),
-                                    TextFont::from_font_size(9.0).with_font(font.clone()),
+                                    TextFont::from_font_size(OPS_STRIP_FONT_MIN_PX).with_font(font.clone()),
                                     TextColor(palette.bevy_fg_data()),
                                     OpsStripAlertBadgeText,
                                 ));
@@ -560,7 +561,7 @@ fn spawn_simulation_command_shell(
                             c.spawn((
                                 Text::new("ALERTS  0"),
                                 TextFont::from_font_size(fs).with_font(font.clone()),
-                                TextColor(palette.bevy_text_muted()),
+                                TextColor(palette.bevy_fg_data()),
                                 OpsStripAlerts,
                             ));
                         });
@@ -579,7 +580,7 @@ fn spawn_simulation_command_shell(
                             z.spawn((
                                 Text::new("INTEL  —"),
                                 TextFont::from_font_size(fs).with_font(font.clone()),
-                                TextColor(palette.bevy_secondary_text()),
+                                TextColor(palette.bevy_fg_data()),
                                 OpsStripIntel,
                             ));
                         });
@@ -598,7 +599,7 @@ fn spawn_simulation_command_shell(
                             z.spawn((
                                 Text::new("WX  —"),
                                 TextFont::from_font_size(fs).with_font(font.clone()),
-                                TextColor(palette.bevy_secondary_text()),
+                                TextColor(palette.bevy_fg_data()),
                                 OpsStripWeather,
                             ));
                         });

@@ -47,10 +47,7 @@ def test_landscape_notebook_four_tabs_no_materials(aps_app) -> None:
 def test_buildings_notebook_five_tabs_unchanged(aps_app) -> None:
     aps_app._apply_lane("buildings", log=False)
     tabs = _tab_texts(aps_app._notebook_buildings)
-    assert len(tabs) == 5
-    assert tabs[0] == "Catalog"
-    assert "Materials" in tabs
-    assert "Assembly" in tabs
+    assert tabs == ["Catalog", "Materials", "Assembly", "Variants", "Atlas"]
 
 
 def test_no_zip_label_remap_on_single_notebook(aps_app) -> None:

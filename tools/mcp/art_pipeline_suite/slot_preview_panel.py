@@ -29,7 +29,7 @@ class SlotPreviewPanel(ttk.LabelFrame):
         *,
         on_log: Callable[[str], None] | None = None,
     ) -> None:
-        super().__init__(master, text="Selected slot previews (APS-PREVIEW-001)", padding=6)
+        super().__init__(master, text="Selected piece previews", padding=6)
         self._on_log = on_log or (lambda _line: None)
         self._photos: dict[str, ImageTk.PhotoImage] = {}
         self._assembly_context_img: Image.Image | None = None
@@ -38,25 +38,24 @@ class SlotPreviewPanel(ttk.LabelFrame):
     def _build(self) -> None:
         ttk.Label(
             self,
-            text="Previews unlock understanding — module isolated, material on wall+sphere, combined, "
-            "placement highlighted on footprint grid.",
+            text="Previews of the selected piece: module alone, its material, the two combined, and where it sits.",
             wraplength=520,
             font=FONT_SMALL,
             foreground="#555",
         ).pack(anchor=tk.W, pady=(0, 6))
 
-        row = ttk.Frame(self)
-        row.pack(fill=tk.X)
+        grid = ttk.Frame(self)
+        grid.pack(fill=tk.X)
 
         self._module_title = tk.StringVar(value="Module preview")
         self._material_title = tk.StringVar(value="Material preview")
         self._combined_title = tk.StringVar(value="Combined")
         self._context_title = tk.StringVar(value="Placement context")
 
-        self._module_label = self._thumb_cell(row, 0, self._module_title)
-        self._material_label = self._thumb_cell(row, 1, self._material_title)
-        self._combined_label = self._thumb_cell(row, 2, self._combined_title)
-        self._context_label = self._thumb_cell(row, 3, self._context_title)
+        self._module_label = self._thumb_cell(grid, 0, 0, self._module_title)
+        self._material_label = self._thumb_cell(grid, 0, 1, self._material_title)
+        self._combined_label = self._thumb_cell(grid, 1, 0, self._combined_title)
+        self._context_label = self._thumb_cell(grid, 1, 1, self._context_title)
 
         meta = ttk.Frame(self)
         meta.pack(fill=tk.X, pady=(6, 0))
@@ -69,13 +68,13 @@ class SlotPreviewPanel(ttk.LabelFrame):
             anchor=tk.W, pady=2
         )
 
-    def _thumb_cell(self, parent: ttk.Frame, col: int, title_var: tk.StringVar) -> tk.Label:
+    def _thumb_cell(self, parent: ttk.Frame, row: int, col: int, title_var: tk.StringVar) -> tk.Label:
         cell = ttk.Frame(parent, padding=4)
-        cell.grid(row=0, column=col, sticky=tk.N)
+        cell.grid(row=row, column=col, sticky=tk.N)
         ttk.Label(cell, textvariable=title_var, font=(FONT_SMALL[0], FONT_SMALL[1], "bold")).pack(anchor=tk.CENTER)
         lbl = tk.Label(
             cell,
-            text="(select slot)",
+            text="(select piece)",
             width=self.THUMB // 8,
             height=self.THUMB // 16,
             bg="#ececec",

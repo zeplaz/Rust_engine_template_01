@@ -132,6 +132,8 @@ impl Plugin for EnginePlugin {
             .add_plugins(GpuWeatherFireFieldPlugin)
             .add_plugins(crate::infrastructure::InfrastructureProfilesPlugin)
             .add_plugins(crate::infrastructure::InfrastructureTransportPlugin)
+            .add_plugins(crate::infrastructure::utility::UtilityGraphPlugin)
+            .add_plugins(crate::render::InfrastructureOverlayPlugin)
             .add_plugins(TransportSimulationPlugin)
             .add_plugins(crate::engine::PlayScenarioPlugin)
             // Nav: damage/speed adjustments after transport cost cache; motion stage after damage (S2).

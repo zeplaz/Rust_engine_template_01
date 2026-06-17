@@ -1,0 +1,52 @@
+{
+  "gate_id": "OVR-P6-CLOSE-001",
+  "program_id": "PLAN-APS-UIUX-OVERHAUL-001",
+  "green": true,
+  "pytest_aps_ok": true,
+  "ban_list": {
+    "gate": "DMCP-OVR-G0-AUDIT-001",
+    "charter_section": "plan_aps_uiux_overhaul \u00a72b",
+    "violation_count": 0,
+    "p0_violation_count": 0,
+    "by_rule": {},
+    "by_file": {},
+    "violations": [],
+    "truncated": false,
+    "audit_complete": true,
+    "ui_clean": true,
+    "verdict": "PASS",
+    "blocks": [
+      "OVR-P2-TEXT-001"
+    ],
+    "unblocks_p2_when_clean": true
+  },
+  "phases_complete": [
+    "OVR-P1-TOKENS-001",
+    "OVR-P2-TEXT-001",
+    "OVR-P3-LAYOUT-001",
+    "OVR-P4-IA-001",
+    "OVR-P45-SPINE-001",
+    "OVR-P5-STYLE-001",
+    "OVR-P55-PREVIEW-001",
+    "OVR-P56-ONBOARD-001"
+  ],
+  "human_gates_pending": [
+    "OVR-P6-OPERATOR-EYEBALL-001",
+    "OVR-P6-DESIGN-SIGN-001",
+    "DMCP-OVR-ARTIST-ACCEPT-001"
+  ],
+  "exit_predicate": {
+    "pytest_aps_ok": {
+      "eq": true
+    },
+    "ban_list_clean": {
+      "eq": true
+    }
+  },
+  "_agent_meta": {
+    "schema": "aps_uiux_overhaul_close_live_v1",
+    "written_at_epoch_secs": 1781720472,
+    "profile": "OVR_P6_CLOSE",
+    "relative_path": "debug_runs/aps_uiux_overhaul_close_live.json"
+  }
+}

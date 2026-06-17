@@ -27,6 +27,8 @@ pub fn refresh_phase6_tail_witnesses() -> bool {
         crate::construction::construction_r4_corridor_legend_wired_witness_green();
     let aps_dna_consumer =
         crate::dev::aps_dna_consumer_live_proof::refresh_aps_dna_consumer_rust_live_witness();
+    let nav_agent =
+        crate::dev::nav_agent_routing_live_proof::refresh_nav_agent_routing_live_witness();
     let s7b_m1 = s7b_m1_witness_green();
 
     let green = veg_snapshot
@@ -47,6 +49,7 @@ pub fn refresh_phase6_tail_witnesses() -> bool {
         && build_beta
         && con_r4
         && aps_dna_consumer
+        && nav_agent
         && s7b_m1;
 
     let body = serde_json::json!({
@@ -65,6 +68,7 @@ pub fn refresh_phase6_tail_witnesses() -> bool {
             "BUILD-GRAMMAR-SITE-ZONE-001": build_site_zone,
             "BUILD-GRAMMAR-β-WORLD-001": build_beta,
             "BUILD-READ-CONSUMER-MCP-001": aps_dna_consumer,
+            "INFRA-E6-002-NAV-AGENT": nav_agent,
             "PROC-PG-2-TAIL-001": pg2_tail,
             "PROC-OG-4-001": og_4,
             "PROC-OG-UX-WIRE-001": og_ux,

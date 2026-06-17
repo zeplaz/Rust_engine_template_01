@@ -37,6 +37,7 @@ APS_PANEL_IMPORTS: list[tuple[str, str]] = [
     ("rust_engine_mcp.aps_veg_extract_parity", "check_veg_extract_parity"),
     ("rust_engine_mcp.aps_atlas_land_register", "check_atlas_land_register"),
     ("rust_engine_mcp.landscape_lg5_expanded_batch", "write_landscape_expanded_keyframes"),
+    ("art_pipeline_suite.aps_inline_feedback", "status_atom"),
     ("art_pipeline_suite.aps_inline_feedback", "flow_prerequisite_message"),
 ]
 

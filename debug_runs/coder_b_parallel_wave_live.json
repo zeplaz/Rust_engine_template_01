@@ -52,7 +52,7 @@
     "relative_path": "debug_runs/coder_b_parallel_wave_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_coder_b_parallel_wave_witnesses",
-    "written_at_epoch_secs": 1781709768
+    "written_at_epoch_secs": 1781715769
   },
   "gate": "CDR-B-PARALLEL-WAVE-001",
   "green": true,

@@ -52,7 +52,7 @@
     "relative_path": "debug_runs/grammar_diversity_witness.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_pg_quality_001_grammar_diversity_witness",
-    "written_at_epoch_secs": 1781709767
+    "written_at_epoch_secs": 1781716814
   },
   "archetype_id": "IndustrialWarehouse",
   "district_style": "industrial_west",

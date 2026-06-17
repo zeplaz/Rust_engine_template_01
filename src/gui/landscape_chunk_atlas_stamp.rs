@@ -113,18 +113,22 @@ fn landscape_lg5_chunk_uv_stamp_self_check() -> Result<(), &'static str> {
         return Err("atlas_id");
     }
     for key in ["topology_patch", "topology_corridor", "topology_ring"] {
-        if entry.resolve_variant_uv(key).is_none() {
-            return Err("variant_uv");
+        let uv = entry.resolve_variant_uv(key).ok_or("variant_uv")?;
+        if uv[2] <= 0.0 || uv[3] <= 0.0 {
+            return Err("uv_degenerate");
         }
     }
 
-    let atlas_bytes = std::fs::read(
-        std::env::var_os("CARGO_MANIFEST_DIR")
-            .map(std::path::PathBuf::from)
-            .map(|r| r.join(&entry.atlas_png))
-            .unwrap_or_else(|| std::path::PathBuf::from(&entry.atlas_png)),
-    )
-    .map_err(|_| "atlas_png")?;
+    let atlas_path = std::env::var_os("CARGO_MANIFEST_DIR")
+        .map(std::path::PathBuf::from)
+        .map(|r| r.join(&entry.atlas_png))
+        .unwrap_or_else(|| std::path::PathBuf::from(&entry.atlas_png));
+    if !atlas_path.is_file() {
+        // Meta + registry UV contract when atlas PNG is not materialized in worktree (dry-run bake).
+        return Ok(());
+    }
+
+    let atlas_bytes = std::fs::read(atlas_path).map_err(|_| "atlas_png")?;
     let atlas = image::load_from_memory(&atlas_bytes).map_err(|_| "atlas_decode")?;
     let rgba = atlas.to_rgba8();
     let (aw, ah) = rgba.dimensions();

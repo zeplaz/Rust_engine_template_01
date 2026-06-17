@@ -1,4 +1,4 @@
-"""APS-EVO-E1-DOMAIN-ROUTER-001 — lane config (Option D IA sign)."""
+"""Lane config — buildings vs landscape tab sets (Option D IA)."""
 
 from __future__ import annotations
 
@@ -12,24 +12,27 @@ from .state import ArtDomain, SuiteState
 
 PREFS_REL = "debug_runs/aps_ui_prefs.json"
 
-BUILDINGS_TAB_LABELS = ("Catalog", "Assembly", "Materials", "Variants", "Atlas")
+FLOW_CAVEAT = "Every button here runs the same tools the build pipeline uses."
+
+BUILDINGS_TAB_LABELS = ("Catalog", "Materials", "Assembly", "Variants", "Atlas")
 LANDSCAPE_TAB_LABELS = ("Presets", "Grammar", "States", "Atlas")
 
 AUTHORITY_BY_LANE: dict[str, str] = {
     ArtDomain.BUILDINGS.value: (
-        "Ship truth: assembly_snapshot (materials + tags). Sidecar and atlas are inputs only."
+        "What ships: the Assembly you save here (its materials + tags). "
+        "Catalog data and atlas tiles only feed into it."
     ),
     ArtDomain.LANDSCAPE.value: (
-        "Ship truth: landscape_grammar preset (land_dna + topology_graph). "
-        "Bake via keyframe_pack only."
+        "What ships: the Landscape preset you select here. "
+        "Tiles are baked through the keyframe step only."
     ),
 }
 
 PIPELINE_STEPS_BY_LANE: dict[str, tuple[tuple[str, str], ...]] = {
     ArtDomain.BUILDINGS.value: (
         ("catalog", "Catalog"),
-        ("assembly", "Assembly"),
         ("materials", "Materials"),
+        ("assembly", "Assembly"),
         ("variants", "Variants"),
         ("atlas", "Atlas"),
     ),
@@ -38,7 +41,6 @@ PIPELINE_STEPS_BY_LANE: dict[str, tuple[tuple[str, str], ...]] = {
         ("grammar", "Grammar"),
         ("states", "States"),
         ("atlas", "Atlas"),
-        ("stamp", "Stamp"),
     ),
 }
 
@@ -51,7 +53,7 @@ FLOW_VERBS_BY_LANE: dict[str, tuple[tuple[str, str], ...]] = {
     ArtDomain.LANDSCAPE.value: (
         ("generate_grammar", "Generate grammar"),
         ("bake_states", "Bake states"),
-        ("pack_lg5_atlas", "Pack LG-5 atlas"),
+        ("pack_lg5_atlas", "Pack landscape atlas"),
     ),
 }
 
@@ -110,11 +112,11 @@ def verify_option_d_ia_contract() -> dict[str, Any]:
     ] and landscape_flow == ["generate_grammar", "bake_states", "pack_lg5_atlas"]
     pipeline_lane_scoped = buildings_pipe == [
         "catalog",
-        "assembly",
         "materials",
+        "assembly",
         "variants",
         "atlas",
-    ] and landscape_pipe == ["presets", "grammar", "states", "atlas", "stamp"]
+    ] and landscape_pipe == ["presets", "grammar", "states", "atlas"]
     ok = tab_set_swap and flow_lane_scoped and pipeline_lane_scoped
     return {
         "option_d_ia_contract_ok": ok,
@@ -145,7 +147,7 @@ def verify_option_d_shell_implementation() -> dict[str, Any]:
 
 
 def des_aps_e1_ia_verdict(*, repo: Path | None = None) -> dict[str, Any]:
-    """DES-APS-E1-IA-OPTION-D-001 — FAIL until tab-set swap + lane-scoped flow/pipeline match sign-off."""
+    """Static contract from design_aps_domain_ia_sign_v1.md — tab sets + lane-scoped chrome."""
     _ = repo
     contract = verify_option_d_ia_contract()
     shell = verify_option_d_shell_implementation()
@@ -170,7 +172,7 @@ def des_aps_e1_ia_verdict(*, repo: Path | None = None) -> dict[str, Any]:
 
 
 def clear_cross_lane_selection(state: SuiteState, lane: str) -> None:
-    """DES-APS-E1 — lane switch does not carry selection across lanes."""
+    """Lane switch does not carry selection across lanes."""
     if normalize_lane(lane) == ArtDomain.LANDSCAPE.value:
         state.selected_module_id = None
         state.selected_module_ids = []

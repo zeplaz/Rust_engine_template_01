@@ -48,7 +48,7 @@ from .aps_theme import (
     COLOR_PANEL_BG,
     FONT_HINT,
     FONT_UI_BOLD,
-    PAD_MD,
+    GAP_MD,
     DEFAULT_WINDOW_SIZE,
     MIN_WINDOW_SIZE,
     init_aps_ttk,
@@ -63,7 +63,11 @@ from .domain_router import (
 
     flow_verbs_for,
 
+    FLOW_CAVEAT,
+
     load_active_lane,
+
+    pipeline_steps_for,
 
     save_active_lane,
 
@@ -121,11 +125,17 @@ class ArtPipelineSuiteApp(tk.Tk):
 
         self._build_flow_bars()
 
-        self._build_authority_strip()
+        self._chrome_row2 = ttk.Frame(self, padding=(GAP_MD, 0, GAP_MD, 2))
 
-        self.pipeline_status = PipelineStatusBar(self, self.state)
+        self._build_authority_strip(self._chrome_row2)
 
-        self.pipeline_status.pack(fill=tk.X, padx=8)
+        self.pipeline_status = PipelineStatusBar(
+            self._chrome_row2, self.state, on_step_click=self._on_pipeline_step
+        )
+
+        self.pipeline_status.pack(side=tk.RIGHT, fill=tk.X, expand=True)
+
+        self._chrome_row2.pack(fill=tk.X)
 
         self.job_strip = JobStrip(self, self.jobs)
 
@@ -152,9 +162,20 @@ class ArtPipelineSuiteApp(tk.Tk):
         self._notebook_landscape.bind("<<NotebookTabChanged>>", self._on_tab_changed)
         self.bind("<Control-Key-1>", lambda _e: self._apply_lane(ArtDomain.BUILDINGS.value))
         self.bind("<Control-Key-2>", lambda _e: self._apply_lane(ArtDomain.LANDSCAPE.value))
+        self._maybe_onboarding()
+
+    def _maybe_onboarding(self) -> None:
+        from rust_engine_mcp.aps_uiux_onboard import load_onboarding_seen, mark_onboarding_seen
+
+        if load_onboarding_seen():
+            return
+        mark_onboarding_seen()
+        self._log(
+            "Welcome — use the pipeline pills to move Catalog → Materials → Assembly → Variants → Atlas."
+        )
 
     def _build_lane_bar(self) -> None:
-        wrap = ttk.Frame(self, padding=(PAD_MD, 6, PAD_MD, 0))
+        wrap = ttk.Frame(self, padding=(GAP_MD, 6, GAP_MD, 0))
         wrap.pack(fill=tk.X)
         bar = ttk.Frame(wrap)
         bar.pack(fill=tk.X)
@@ -177,12 +198,10 @@ class ArtPipelineSuiteApp(tk.Tk):
             command=self._on_lane_selected,
         )
         self._lane_landscape_btn.pack(side=tk.LEFT, padx=4)
-        self._lane_underline = tk.Frame(wrap, height=3, bg=COLOR_LANE_BUILDING)
+        self._lane_underline = tk.Frame(wrap, height=2, bg=COLOR_LANE_BUILDING)
         self._lane_underline.pack(fill=tk.X, pady=(2, 0))
-        chip_frame = tk.Frame(bar, relief=tk.RIDGE, borderwidth=1, padx=8, pady=2)
-        chip_frame.pack(side=tk.LEFT, padx=(12, 0))
-        self._lane_chip = ttk.Label(chip_frame, text="", font=FONT_HINT)
-        self._lane_chip.pack()
+        self._lane_flow_host = ttk.Frame(bar)
+        self._lane_flow_host.pack(side=tk.RIGHT, fill=tk.X, expand=True)
 
 
 
@@ -212,7 +231,9 @@ class ArtPipelineSuiteApp(tk.Tk):
 
             self._flow_buildings.pack_forget()
 
-            self._flow_landscape.pack(fill=tk.X)
+            self._flow_buildings.pack(side=tk.RIGHT, fill=tk.X, expand=True)
+
+            self._flow_landscape.pack_forget()
 
         else:
 
@@ -224,12 +245,12 @@ class ArtPipelineSuiteApp(tk.Tk):
 
             self._flow_landscape.pack_forget()
 
-            self._flow_buildings.pack(fill=tk.X)
+            self._flow_buildings.pack_forget()
+
+            self._flow_landscape.pack(side=tk.RIGHT, fill=tk.X, expand=True)
 
         self._authority_var.set(authority_for(lane))
-        chip = "Buildings lane" if lane == ArtDomain.BUILDINGS.value else "Landscape lane"
         fg = COLOR_LANE_BUILDING if lane == ArtDomain.BUILDINGS.value else COLOR_LANE_LANDSCAPE
-        self._lane_chip.configure(text=chip, foreground=fg)
         self._lane_underline.configure(bg=fg)
         if lane == ArtDomain.BUILDINGS.value:
             self._lane_buildings_btn.configure(text="▣ Buildings")
@@ -271,7 +292,7 @@ class ArtPipelineSuiteApp(tk.Tk):
 
         tab_root = ttk.Frame(notebook)
 
-        scroll = ScrollableFrame(tab_root, enable_horizontal=True)
+        scroll = ScrollableFrame(tab_root, enable_horizontal=False)
 
         scroll.pack(fill=tk.BOTH, expand=True)
 
@@ -289,11 +310,9 @@ class ArtPipelineSuiteApp(tk.Tk):
 
     def _build_flow_bars(self) -> None:
 
-        self._flow_buildings = ttk.Frame(self, padding=8)
+        self._flow_buildings = self._lane_flow_host
 
-        self._flow_landscape = ttk.Frame(self, padding=8)
-
-        self._flow_buildings.pack(fill=tk.X)
+        self._flow_landscape = ttk.Frame(self._lane_flow_host)
 
         for frame, lane, handlers in (
 
@@ -303,7 +322,7 @@ class ArtPipelineSuiteApp(tk.Tk):
 
         ):
 
-            ttk.Label(frame, text="Flow:").pack(side=tk.LEFT)
+            ttk.Label(frame, text="Flow:").pack(side=tk.LEFT, padx=(12, 0))
 
             for key, label in flow_verbs_for(lane):
 
@@ -314,18 +333,6 @@ class ArtPipelineSuiteApp(tk.Tk):
                 btn.pack(side=tk.LEFT, padx=4)
 
                 self._flow_buttons[key] = btn
-
-            ttk.Separator(frame, orient=tk.VERTICAL).pack(side=tk.LEFT, fill=tk.Y, padx=8)
-
-            ttk.Label(
-
-                frame,
-
-                text="All actions call rust_engine_mcp CLI/MCP — agents use the same APIs.",
-
-                foreground=COLOR_MUTED,
-
-            ).pack(side=tk.LEFT)
 
         self._flow_hint_var = tk.StringVar(value="")
 
@@ -395,11 +402,9 @@ class ArtPipelineSuiteApp(tk.Tk):
 
 
 
-    def _build_authority_strip(self) -> None:
-        outer = ttk.Frame(self, padding=(PAD_MD, 0, PAD_MD, 2))
-        outer.pack(fill=tk.X)
-        row = ttk.Frame(outer)
-        row.pack(fill=tk.X)
+    def _build_authority_strip(self, parent: tk.Misc) -> None:
+        row = ttk.Frame(parent)
+        row.pack(side=tk.LEFT, fill=tk.X, expand=True)
         self._authority_border = tk.Frame(row, width=4, bg=COLOR_LANE_BUILDING)
         self._authority_border.pack(side=tk.LEFT, fill=tk.Y)
         self._authority_var = tk.StringVar(value=authority_for(self.state.art_domain))
@@ -408,14 +413,14 @@ class ArtPipelineSuiteApp(tk.Tk):
             textvariable=self._authority_var,
             font=FONT_HINT,
             foreground=COLOR_LANE_BUILDING,
-            wraplength=900,
+            wraplength=420,
         )
         self._authority_lbl.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(6, 0))
 
         def _wrap(_event=None) -> None:
-            self._authority_lbl.configure(wraplength=wrap_for_widget(outer, minimum=480))
+            self._authority_lbl.configure(wraplength=wrap_for_widget(parent, minimum=240))
 
-        outer.bind("<Configure>", _wrap)
+        parent.bind("<Configure>", _wrap)
 
 
 
@@ -432,26 +437,6 @@ class ArtPipelineSuiteApp(tk.Tk):
         )
 
         bind_aps_tooltip(self.catalog, "tab_catalog")
-
-        self.assembly = self._add_scrollable_tab(
-
-            nb,
-
-            AssemblyPanel,
-
-            "Assembly",
-
-            state=self.state,
-
-            on_log=self._log,
-
-            on_open_in_materials=self._open_material_in_materials_tab,
-
-            **job_kw,
-
-        )
-
-        bind_aps_tooltip(self.assembly, "tab_assembly")
 
         self.materials = self._add_scrollable_tab(
 
@@ -472,6 +457,26 @@ class ArtPipelineSuiteApp(tk.Tk):
         )
 
         bind_aps_tooltip(self.materials, "tab_materials")
+
+        self.assembly = self._add_scrollable_tab(
+
+            nb,
+
+            AssemblyPanel,
+
+            "Assembly",
+
+            state=self.state,
+
+            on_log=self._log,
+
+            on_open_in_materials=self._open_material_in_materials_tab,
+
+            **job_kw,
+
+        )
+
+        bind_aps_tooltip(self.assembly, "tab_assembly")
 
         self.variants = self._add_scrollable_tab(
 
@@ -701,7 +706,31 @@ class ArtPipelineSuiteApp(tk.Tk):
 
         hide_all_tooltips()
 
+        idx = self.notebook.index(self.notebook.select())
+
+        steps = pipeline_steps_for(self.state.art_domain)
+
+        if 0 <= idx < len(steps):
+
+            self.pipeline_status.set_current(steps[idx][0])
+
         self.pipeline_status.refresh()
+
+
+
+    def _on_pipeline_step(self, key: str) -> None:
+
+        steps = pipeline_steps_for(self.state.art_domain)
+
+        for i, (step_key, _label) in enumerate(steps):
+
+            if step_key == key:
+
+                self.notebook.select(i)
+
+                self.pipeline_status.set_current(key)
+
+                return
 
 
 

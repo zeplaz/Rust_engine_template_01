@@ -52,7 +52,7 @@
     "relative_path": "debug_runs/landscape_grammar_burn_overlay_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_burn_overlay_witness",
-    "written_at_epoch_secs": 1781708948
+    "written_at_epoch_secs": 1781716556
   },
   "active_burn_chunks": 1,
   "fire_disturbances": 1,

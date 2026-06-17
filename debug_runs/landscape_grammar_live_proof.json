@@ -52,7 +52,7 @@
     "relative_path": "debug_runs/landscape_grammar_live_proof.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "commit_landscape_grammar_live_proof",
-    "written_at_epoch_secs": 1781708915
+    "written_at_epoch_secs": 1781716520
   },
   "construction_disturbances": 1,
   "fire_disturbances": 1,

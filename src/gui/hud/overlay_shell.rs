@@ -6,6 +6,7 @@ use bevy_egui::egui;
 use crate::gui::style::UiPalette;
 use crate::gui::world_representation::WorldRepresentationFrame;
 use crate::render::AppStage5ReadinessReport;
+use crate::render::InfrastructureOverlaySettings;
 
 use super::info_tabs::{
     draw_info_tab_bar, draw_info_tab_body, HudInfoLiveData, HudInfoTabState,
@@ -91,6 +92,7 @@ pub fn draw_overlay_shell_egui(
     world: Option<&WorldRepresentationFrame>,
     readiness: Option<&AppStage5ReadinessReport>,
     live: Option<&HudInfoLiveData>,
+    infra_settings: &mut InfrastructureOverlaySettings,
 ) {
     let mut open = dock.slot(HudWidgetId::OverlaysPanel).visible;
     if !shell_widget_runs_egui_with_budget(
@@ -128,6 +130,7 @@ pub fn draw_overlay_shell_egui(
                 readiness,
                 live,
                 minimap_legend,
+                infra_settings,
             );
         },
         widget_timing,

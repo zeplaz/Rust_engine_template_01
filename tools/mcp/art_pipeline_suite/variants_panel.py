@@ -34,8 +34,8 @@ class VariantsPanel(ttk.Frame):
     def _build(self) -> None:
         ttk.Label(
             self,
-            text="variant_set_v1 — declarative layers (lighting, damage, material, fill). "
-            "Bake via MCP variant_bake / tile_batch_run — no manual Blender.",
+            text="Variant set — states of the same building (lighting, damage, fill). "
+            "Bake them into tiles from here; no manual Blender.",
             wraplength=720,
             justify=tk.LEFT,
         ).pack(anchor=tk.W, pady=(0, 8))
@@ -47,8 +47,8 @@ class VariantsPanel(ttk.Frame):
         ttk.Button(top, text="Load…", command=self.on_load).pack(side=tk.LEFT, padx=2)
         ttk.Button(top, text="Load example", command=self.on_load_example).pack(side=tk.LEFT, padx=2)
         ttk.Button(top, text="New from assembly", command=self.on_new_from_assembly).pack(side=tk.LEFT, padx=2)
-        ttk.Button(top, text="Save JSON", command=lambda: self.on_save(ext=".json")).pack(side=tk.LEFT, padx=2)
-        ttk.Button(top, text="Save RON", command=lambda: self.on_save(ext=".ron")).pack(side=tk.LEFT, padx=2)
+        ttk.Button(top, text="Save (JSON)", command=lambda: self.on_save(ext=".json")).pack(side=tk.LEFT, padx=2)
+        ttk.Button(top, text="Save (engine format)", command=lambda: self.on_save(ext=".ron")).pack(side=tk.LEFT, padx=2)
         ttk.Button(top, text="Validate", command=self.on_validate).pack(side=tk.LEFT, padx=2)
 
         self.path_var = tk.StringVar(value="(none)")
@@ -128,7 +128,7 @@ class VariantsPanel(ttk.Frame):
             row=6, column=0, columnspan=4, pady=6, sticky=tk.W
         )
 
-        agent_row = ttk.LabelFrame(right, text="Agent patch strip", padding=6)
+        agent_row = ttk.LabelFrame(right, text="Ask AI for a variant (advanced)", padding=6)
         agent_row.pack(fill=tk.X, pady=8)
         ttk.Label(agent_row, text="Intent").pack(anchor=tk.W)
         self.intent_var = tk.StringVar(value="add_warm_window_lights")

@@ -25,7 +25,7 @@ def format_pill(label: str, state_key: str) -> tuple[str, str, str]:
     """Return (display_text, bg, fg) for a pipeline pill."""
     templates = {
         "pending": f"○ {label} pending",
-        "saved_qc_not_run": f"◐ {label} saved (QC not run)",
+        "saved_qc_not_run": f"◐ {label} saved (not checked)",
         "valid": f"✓ {label} valid",
         "fail": f"✗ {label} FAIL",
         "stamp_pending": f"○ {label} pending",

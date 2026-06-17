@@ -6,8 +6,8 @@
   "tab_labels": {
     "buildings": [
       "Catalog",
-      "Assembly",
       "Materials",
+      "Assembly",
       "Variants",
       "Atlas"
     ],
@@ -41,8 +41,8 @@
     ],
     "buildings_pipeline_keys": [
       "catalog",
-      "assembly",
       "materials",
+      "assembly",
       "variants",
       "atlas"
     ],
@@ -50,8 +50,7 @@
       "presets",
       "grammar",
       "states",
-      "atlas",
-      "stamp"
+      "atlas"
     ],
     "option_d_shell_ok": true,
     "dual_notebook_flag": true,
@@ -87,7 +86,7 @@
     "profile": "APS_E1_DOMAIN_ROUTER",
     "relative_path": "debug_runs/aps_domain_router_live.json",
     "source_system": "aps_domain_router",
-    "written_at_epoch_secs": 1781712945,
+    "written_at_epoch_secs": 1781720484,
     "ritual": "BLANG:WIT-HON APS-EVO-E1-DOMAIN-ROUTER-001"
   },
   "witness_honesty": {

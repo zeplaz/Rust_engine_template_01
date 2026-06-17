@@ -1,6 +1,5 @@
 {
   "active_lane": "landscape",
   "art_domain": "landscape",
-  "metadata_flow_seen_assembly": true,
-  "metadata_flow_expanded_assembly": true
+  "onboarding_seen_v1": true
 }

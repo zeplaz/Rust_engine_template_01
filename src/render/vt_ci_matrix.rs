@@ -28,7 +28,9 @@ use crate::render::visual_agreement::{
 };
 use crate::render::visual_snapshot_commit::CommittedVisualSnapshotFence;
 use crate::render::{EcologyVisualSnapshot, LogisticsVisualSnapshot};
-use crate::render::vt_spatial_invariants::{passes_vt5_spatial_invariants, VT5_MIN_OCCUPIED_CHUNKS};
+use crate::render::vt_spatial_invariants::{
+    passes_vt5_spatial_invariants, vt5_spatial_eval_deferred,
+};
 use crate::systems::sim_control::SimStepStamp;
 
 /// VT-4 consumer surface id (bit index for [`Vt4CiReport::failing_surface_mask`]).
@@ -297,14 +299,8 @@ pub fn apply_vt4_ci_report_to_overlay_debug(
 /// VT-5 spatial invariants on extract, projection, and particle rows.
 #[must_use]
 pub fn run_vt5_ci_spatial_matrix(scenario: &Vt4CiScenario) -> bool {
-    use crate::render::extraction::spatial_distribution_stats;
-
     let rows = &scenario.fire.instances;
-    if rows.len() < VT5_MIN_OCCUPIED_CHUNKS {
-        return true;
-    }
-    let (occupied, _, _) = spatial_distribution_stats(rows);
-    if occupied < VT5_MIN_OCCUPIED_CHUNKS {
+    if vt5_spatial_eval_deferred(rows) {
         return true;
     }
     passes_vt5_spatial_invariants(rows)
@@ -432,7 +428,7 @@ impl Plugin for VtCiMatrixPlugin {
 
 fn particle_rows_pass_vt5(particles: &WorldFireParticleFrame) -> bool {
     if particles.instances.len() < 2 {
-        return false;
+        return true;
     }
     let mut rows = Vec::with_capacity(particles.instances.len());
     for inst in &particles.instances {
@@ -500,6 +496,17 @@ mod tests {
     fn vt5_ci_matrix_spatial_passes_on_extract_projection_particles() {
         let scenario = build_deterministic_ci_scenario();
         assert!(run_vt5_ci_spatial_matrix(&scenario));
+    }
+
+    #[test]
+    fn vt5_ci_matrix_vr04_bootstrap_burst_deferred() {
+        let mut scenario = build_deterministic_ci_scenario();
+        scenario.fire.instances = vec![
+            sample_fire_instance(IVec2::new(0, 0), 0.9, 0.4),
+            sample_fire_instance(IVec2::new(1, 0), 0.8, 0.3),
+        ];
+        assert!(run_vt5_ci_spatial_matrix(&scenario));
+        assert!(!passes_vt5_spatial_invariants(&scenario.fire.instances));
     }
 
     #[test]

@@ -52,15 +52,15 @@
     "relative_path": "debug_runs/agent_debug_index.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "debug_run_envelope",
-    "written_at_epoch_secs": 1781709768
+    "written_at_epoch_secs": 1781718054
   },
   "profile": "AGENT_DEBUG_INDEX",
   "proof_count": 23,
   "proofs": [
     {
-      "bytes": 23438,
+      "bytes": 23434,
       "exists": true,
-      "modified_epoch_secs": 1781709088,
+      "modified_epoch_secs": 1781717503,
       "path": "debug_runs/stage5_full_app_live.json",
       "summary": {
         "activation_green": null,
@@ -114,7 +114,7 @@
     {
       "bytes": 6640,
       "exists": true,
-      "modified_epoch_secs": 1781708986,
+      "modified_epoch_secs": 1781716714,
       "path": "debug_runs/industrial_activation_live.json",
       "summary": {
         "activation_green": false,
@@ -132,7 +132,7 @@
     {
       "bytes": 3288,
       "exists": true,
-      "modified_epoch_secs": 1781708226,
+      "modified_epoch_secs": 1781716487,
       "path": "debug_runs/fire_ecology_live.json",
       "summary": {
         "activation_green": null,
@@ -166,9 +166,9 @@
       }
     },
     {
-      "bytes": 2506,
+      "bytes": 2499,
       "exists": true,
-      "modified_epoch_secs": 1781666601,
+      "modified_epoch_secs": 1781716814,
       "path": "debug_runs/replay_editor_parity_live.json",
       "summary": {
         "activation_green": null,
@@ -322,7 +322,7 @@
     {
       "bytes": 8754,
       "exists": true,
-      "modified_epoch_secs": 1781670326,
+      "modified_epoch_secs": 1781717385,
       "path": "debug_runs/ui_shell_migration_live.json",
       "summary": {
         "activation_green": null,
@@ -358,7 +358,7 @@
     {
       "bytes": 3941,
       "exists": true,
-      "modified_epoch_secs": 1781573867,
+      "modified_epoch_secs": 1781716815,
       "path": "debug_runs/stage7_behavioral_live.json",
       "summary": {
         "activation_green": null,
@@ -376,7 +376,7 @@
     {
       "bytes": 2844,
       "exists": true,
-      "modified_epoch_secs": 1781573867,
+      "modified_epoch_secs": 1781716814,
       "path": "debug_runs/stage7_play_live.json",
       "summary": {
         "activation_green": true,
@@ -430,7 +430,7 @@
     {
       "bytes": 3658,
       "exists": true,
-      "modified_epoch_secs": 1781709052,
+      "modified_epoch_secs": 1781716789,
       "path": "debug_runs/play_scenario_live.json",
       "summary": {
         "activation_green": null,

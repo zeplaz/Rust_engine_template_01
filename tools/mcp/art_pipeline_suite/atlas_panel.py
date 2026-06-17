@@ -30,7 +30,12 @@ from .job_controller import JobRecord, JobResult, JobState
 from .metadata_flow_panel import MetadataFlowPanel
 from .state import ArtDomain, SuiteState
 
-StartJobFn = Callable[..., str | None]
+_LANE_LOD_PHASE_TO_STEP = {
+    "schema only": "g0g1",
+    "geometry": "geometry",
+    "promote": "promote",
+    "full": "full",
+}
 
 
 class AtlasPanel(ttk.Frame):
@@ -51,7 +56,7 @@ class AtlasPanel(ttk.Frame):
     def set_domain(self, lane: str) -> None:
         reg = "_landscape_atlas_index" if lane == ArtDomain.LANDSCAPE.value else "_tile_atlas_index"
         lane_word = "landscape" if lane == ArtDomain.LANDSCAPE.value else "buildings"
-        self._domain_banner.configure(text=f"Register target: {reg} ({lane_word})")
+        self._domain_banner.configure(text=f"Registers to: {lane_word.title()} tile index")
         if lane == ArtDomain.LANDSCAPE.value:
             self.refresh_landscape_register()
         else:
@@ -71,7 +76,7 @@ class AtlasPanel(ttk.Frame):
                 missing.append("pilot")
             if not body.get("expanded_registered"):
                 missing.append("expanded")
-            msg = f"Register FAIL — missing: {', '.join(missing) or 'check witness'}"
+            msg = f"Not registered yet — missing: {', '.join(missing) or 'check witness'}"
             color = "#8b1a1a"
         self._register_status_var.set(msg)
         self._register_status_lbl.configure(foreground=color)
@@ -80,14 +85,13 @@ class AtlasPanel(ttk.Frame):
     def _build(self) -> None:
         ttk.Label(
             self,
-            text="Atlas — preview cells & packed tile_map here. Keyframe bake in Blender is a separate ship step; "
-            "artist QC of PNGs/atlas does not require it.",
+            text="Atlas — preview your tiles and the packed tile sheet. The keyframe bake in Blender is a separate step.",
             wraplength=720,
             justify=tk.LEFT,
         ).pack(anchor=tk.W, pady=(0, 4))
         self._domain_banner = ttk.Label(
             self,
-            text="Register target: _tile_atlas_index (buildings)",
+            text="Registers to: Buildings tile index",
             font=("Segoe UI", 9),
             foreground="#1f6b54",
         )
@@ -105,7 +109,7 @@ class AtlasPanel(ttk.Frame):
 
         batch_row = ttk.Frame(self)
         batch_row.pack(fill=tk.X, pady=4)
-        batch_lbl = ttk.Label(batch_row, text="tile_batch_v1")
+        batch_lbl = ttk.Label(batch_row, text="Tile job file")
         batch_lbl.pack(side=tk.LEFT)
         bind_aps_tooltip(batch_lbl, "atl_batch_json")
         self.batch_json_var = tk.StringVar()
@@ -140,10 +144,10 @@ class AtlasPanel(ttk.Frame):
         bind_aps_tooltip(self.folder_entry, "atl_folder")
         ttk.Button(tile_row, text="Browse…", command=self.on_browse_folder).pack(side=tk.LEFT)
         self.keyframe_rename_var = tk.BooleanVar(value=False)
-        self.keyframe_rename_cb = ttk.Checkbutton(tile_row, text="-pk rename", variable=self.keyframe_rename_var)
+        self.keyframe_rename_cb = ttk.Checkbutton(tile_row, text="Rename keyframe PNGs for packing", variable=self.keyframe_rename_var)
         self.keyframe_rename_cb.pack(side=tk.LEFT)
         bind_aps_tooltip(self.keyframe_rename_cb, "atl_keyframe_rename")
-        pack_btn = ttk.Button(self, text="Pack atlas (tilemapgen)", command=self.on_pack)
+        pack_btn = ttk.Button(self, text="Pack atlas", command=self.on_pack)
         pack_btn.pack(anchor=tk.W, pady=4)
         bind_aps_tooltip(pack_btn, "atl_pack")
         self.pack_btn = pack_btn
@@ -177,7 +181,7 @@ class AtlasPanel(ttk.Frame):
 
         lod_row = ttk.Frame(self)
         lod_row.pack(fill=tk.X, pady=8)
-        lod_lbl = ttk.Label(lod_row, text="lod0 batch")
+        lod_lbl = ttk.Label(lod_row, text="Smoke-test batch")
         lod_lbl.pack(side=tk.LEFT)
         bind_aps_tooltip(lod_lbl, "atl_lod0")
         self.lod_batch_var = tk.StringVar(value="kit_lod0_003")
@@ -189,13 +193,13 @@ class AtlasPanel(ttk.Frame):
         )
         self.lod_batch_combo.pack(side=tk.LEFT, padx=4)
         bind_aps_tooltip(self.lod_batch_combo, "atl_batch")
-        self.lod_phase_var = tk.StringVar(value="g0g1")
+        self.lod_phase_var = tk.StringVar(value="schema only")
         ttk.Combobox(
             lod_row,
             textvariable=self.lod_phase_var,
-            width=10,
+            width=12,
             state="readonly",
-            values=["g0g1", "geometry", "promote", "full"],
+            values=["schema only", "geometry", "promote", "full"],
         ).pack(side=tk.LEFT, padx=4)
         ttk.Button(lod_row, text="Run lod0 batch", command=self.on_lod0).pack(side=tk.LEFT, padx=4)
 
@@ -209,7 +213,7 @@ class AtlasPanel(ttk.Frame):
         else:
             ttk.Label(
                 self,
-                text="Blender GUI hidden — RUST_ENGINE_ART_DEBUG_GUI=1 for legacy debug buttons.",
+                text="Blender debug buttons are hidden (developer mode only).",
                 foreground="#666",
             ).pack(anchor=tk.W)
 
@@ -311,7 +315,7 @@ class AtlasPanel(ttk.Frame):
     def on_run_batch(self) -> None:
         path = self.batch_json_var.get().strip()
         if not path:
-            self._inline_hint("Choose tile_batch_v1 JSON.")
+            self._inline_hint("Choose a tile job JSON file.")
             return
         if not self._start_job:
             self._run_batch_sync(path)
@@ -403,7 +407,7 @@ class AtlasPanel(ttk.Frame):
             worker,
             on_done=on_done,
             button=self.pack_btn,
-            button_label="Pack atlas (tilemapgen)",
+            button_label="Pack atlas",
         )
 
     def _pack_sync(self, folder: str) -> None:
@@ -416,7 +420,10 @@ class AtlasPanel(ttk.Frame):
         self._refresh_preview()
         self._inline_hint(f"Atlas OK — {atlas.name if atlas else 'see log'}", ok=True)
     def on_lod0(self) -> None:
-        code, log = run_lod0_batch(self.lod_batch_var.get(), step=self.lod_phase_var.get())
+        code, log = run_lod0_batch(
+            self.lod_batch_var.get(),
+            step=_LANE_LOD_PHASE_TO_STEP.get(self.lod_phase_var.get(), self.lod_phase_var.get()),
+        )
         self._log(log)
         if code != 0:
             self._inline_hint("lod0 batch failed — see status log.", ok=False)

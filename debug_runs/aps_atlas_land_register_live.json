@@ -55,7 +55,7 @@
     "profile": "APS_ATLAS_LAND_REGISTER",
     "relative_path": "debug_runs/aps_atlas_land_register_live.json",
     "source_system": "aps_atlas_land_register",
-    "written_at_epoch_secs": 1781712945,
+    "written_at_epoch_secs": 1781720483,
     "ritual": "BLANG:WIT-HON MCP-APS-ATLAS-LAND-REGISTER-001"
   },
   "witness_honesty": {

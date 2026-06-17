@@ -19,7 +19,7 @@ from rust_engine_mcp.material_profiles import MaterialProfileEntry, ensure_profi
 
 class MaterialPreviewModesPanel(ttk.LabelFrame):
     def __init__(self, master: tk.Misc, *, on_log=None) -> None:
-        super().__init__(master, text="Preview modes (APS-MAT-002)", padding=6)
+        super().__init__(master, text="Preview", padding=6)
         self._on_log = on_log or (lambda _s: None)
         self._photos: dict[str, ImageTk.PhotoImage] = {}
         self._entry: MaterialProfileEntry | None = None

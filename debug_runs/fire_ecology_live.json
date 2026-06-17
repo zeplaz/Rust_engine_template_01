@@ -52,7 +52,7 @@
     "relative_path": "debug_runs/fire_ecology_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_fire_ecology_lib_harness_witness",
-    "written_at_epoch_secs": 1781708226
+    "written_at_epoch_secs": 1781716487
   },
   "f1_green": true,
   "gate": "FIRE-ECOLOGY-REFRESH-001",
@@ -66,7 +66,7 @@
       "causal_chain_depth_max": 2,
       "dedupe_ok": false,
       "dedupe_rejected": 0,
-      "drain_us": 72,
+      "drain_us": 23,
       "effect_rows": 3,
       "ember_dispatched": 3,
       "hydro_dispatched": 0,
