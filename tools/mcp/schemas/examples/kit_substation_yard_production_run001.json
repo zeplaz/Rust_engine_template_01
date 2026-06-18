@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "job_id": "kit_substation_yard_production_run001",
+  "batch_id": "kit_utility_power_production_001",
+  "development_tier": "production",
+  "spec_ref": "assets/staging/specs/kit_substation_yard_production_001.json",
+  "operation": "module_prop",
+  "params": {
+    "width_m": 8.0,
+    "height_m": 3.0,
+    "depth_m": 6.0,
+    "material_profile": "galvanized_steel_01",
+    "seed": 43010,
+    "profile": "box",
+    "prop_kind": "yard_kit",
+    "name": "kit_substation_yard_production_001"
+  },
+  "output": {
+    "glb": "assets/staging/kit_substation_yard_production_run001/model.glb",
+    "thumbnail": "assets/staging/kit_substation_yard_production_run001/preview.png"
+  }
+}

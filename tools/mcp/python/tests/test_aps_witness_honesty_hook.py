@@ -26,4 +26,5 @@ def test_format_atlas_qc_display_landscape_domain() -> None:
     text, color = format_atlas_qc_display(report, ["ok"], atlas_domain="landscape")
     assert "Landscape" in text
     assert "_landscape_atlas_index" in text
-    assert color == "#006400"
+    assert color == "#0a6b0a"
+    assert text.startswith("✓")

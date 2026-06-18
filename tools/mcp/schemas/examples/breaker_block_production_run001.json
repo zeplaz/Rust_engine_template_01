@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "job_id": "breaker_block_production_run001",
+  "batch_id": "kit_utility_power_production_001",
+  "development_tier": "production",
+  "spec_ref": "assets/staging/specs/breaker_block_production_run001.json",
+  "operation": "module_prop",
+  "params": {
+    "width_m": 2.0,
+    "height_m": 2.0,
+    "depth_m": 2.0,
+    "material_profile": "galvanized_steel_01",
+    "seed": 43001,
+    "profile": "box",
+    "prop_kind": "breaker"
+  },
+  "output": {
+    "glb": "assets/staging/breaker_block_production_run001/model.glb",
+    "thumbnail": "assets/staging/breaker_block_production_run001/preview.png"
+  }
+}

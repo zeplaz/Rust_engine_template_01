@@ -1,0 +1,87 @@
+{
+  "gate": "DMCP-VEG-WAVE-TAIL-RECONCILE-001",
+  "slice_count": 8,
+  "done_count": 8,
+  "rows": [
+    {
+      "id": "DMCP-TILE-BATCH-EXPAND-SPEC-001",
+      "deliverable": "assets/staging/specs/tile_batch_landscape_expanded_v1.json",
+      "deliverable_exists": true,
+      "status": "done",
+      "witness": "debug_runs/art_pipeline/landscape_expanded_g0_rules.yaml",
+      "witness_exists": true
+    },
+    {
+      "id": "DMCP-CONTENT-G0-RULES-001",
+      "deliverable": "debug_runs/art_pipeline/landscape_expanded_g0_rules.yaml",
+      "deliverable_exists": true,
+      "status": "done",
+      "witness": "debug_runs/art_pipeline/landscape_expanded_g0_rules.yaml",
+      "witness_exists": true
+    },
+    {
+      "id": "DMCP-SUCCESSION-STATE-CONTENT-001",
+      "deliverable": "src/dev/design_veg_succession_state_content_v1.md",
+      "deliverable_exists": true,
+      "status": "done"
+    },
+    {
+      "id": "DMCP-BURN-VISUAL-LANG-001",
+      "deliverable": "src/dev/design_veg_burn_visual_language_v1.md",
+      "deliverable_exists": true,
+      "status": "done"
+    },
+    {
+      "id": "DMCP-PRESET-DISPLAY-STRINGS-001",
+      "deliverable": "assets/configs/landscape/presets/_display_strings_v1.json",
+      "deliverable_exists": true,
+      "status": "done"
+    },
+    {
+      "id": "DMCP-ATLAS-QC-PLAIN-001",
+      "deliverable": "src/dev/design_aps_atlas_qc_copy_v1.md",
+      "deliverable_exists": true,
+      "status": "done"
+    },
+    {
+      "id": "DMCP-G4-STAGING-SIGN-001",
+      "deliverable": "src/dev/design_landscape_g4_staging_sign_v1.md",
+      "deliverable_exists": true,
+      "status": "done"
+    },
+    {
+      "id": "DMCP-PILOT-TEACH-ANNOT-001",
+      "deliverable": "assets/staging/tiles/tile_landscape_lg5_pilot_v1/batch_status.json",
+      "deliverable_exists": true,
+      "status": "done",
+      "pilot_spec": "tools/mcp/schemas/examples/tile_batch_landscape_lg5_pilot_v1.json",
+      "pilot_spec_exists": true,
+      "pilot_teach": {
+        "green": true,
+        "checks": {
+          "batch_status_on_disk": true,
+          "pilot_spec_on_disk": true,
+          "atlas_meta_on_disk": true,
+          "batch_status_not_a_ship_target": true,
+          "batch_status_teach_gate": true,
+          "spec_not_a_ship_target": true,
+          "atlas_meta_not_a_ship_target": true
+        }
+      }
+    }
+  ],
+  "audit_complete": true,
+  "green": true,
+  "verdict": "PASS",
+  "queue": "tools/orchestrator/queues/parallel_wave_aps_veg_dispatch_v1.json",
+  "wave0_witness": "debug_runs/art_pipeline/designer_mcp_parallel_wave0_live.json",
+  "_agent_meta": {
+    "schema": "dmcp_veg_wave_tail_reconcile_live_v1",
+    "written_at_epoch_secs": 1781755159,
+    "profile": "DMCP_VEG_WAVE_TAIL",
+    "source_system": "dmcp_veg_wave_tail_reconcile",
+    "relative_path": "debug_runs/art_pipeline/dmcp_veg_wave_tail_reconcile_live.json",
+    "ritual": "BLANG:WIT-HON\u2192Q\u2713 DMCP-VEG-WAVE-TAIL-RECONCILE",
+    "agent": "designer-mcp"
+  }
+}

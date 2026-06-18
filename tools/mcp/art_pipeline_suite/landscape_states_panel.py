@@ -12,9 +12,11 @@ from rust_engine_mcp.veg_catalog_loader import (
     load_vegetation_variant_catalog,
 )
 
+from .aps_collapsible import CollapsibleSection
 from .aps_inline_feedback import set_inline_status
-from .aps_theme import FONT_HINT, FONT_SMALL, FONT_UI
+from .aps_theme import COLOR_MUTED, FONT_HINT, FONT_SMALL, FONT_UI
 from .aps_tooltips import bind_aps_tooltip
+from .aps_workflow_layout import workflow_intro, workflow_primary_row
 from .landscape_extract_parity_panel import LandscapeExtractParityPanel
 from .landscape_state_labels import (
     REGROWTH_MACRO_ROWS,
@@ -29,7 +31,6 @@ from .landscape_state_labels import (
     status_foreground,
     ui_label_for_enum,
 )
-from .metadata_flow_panel import MetadataFlowPanel
 from .state import SuiteState
 
 
@@ -83,23 +84,18 @@ class LandscapeStatesPanel(ttk.Frame):
         self.refresh_from_catalog()
 
     def _build(self) -> None:
-        self.metadata_flow = MetadataFlowPanel(self, context="landscape_states")
-        self.metadata_flow.pack(fill=tk.X, pady=(0, 6))
-        head = ttk.Frame(self)
-        head.pack(fill=tk.X)
-        ttk.Label(
-            head,
-            text="States — growth stages & fire",
-            font=("Segoe UI", 9, "bold"),
-        ).pack(side=tk.LEFT)
-        ttk.Button(head, text="Validate catalog", command=self._validate_catalog).pack(
-            side=tk.RIGHT, padx=4
+        workflow_intro(
+            self,
+            "Browse state rows from the vegetation catalog — validate, then bake atlas slots on the Atlas tab.",
         )
+        head = workflow_primary_row(self)
+        ttk.Label(head, text="State matrix", font=("Segoe UI", 9, "bold")).pack(side=tk.LEFT)
+        ttk.Button(head, text="Validate catalog", command=self._validate_catalog).pack(side=tk.RIGHT, padx=4)
         ttk.Label(
             self,
             textvariable=self._axis_var,
             font=FONT_HINT,
-            foreground="#555",
+            foreground=COLOR_MUTED,
             wraplength=720,
         ).pack(anchor=tk.W, pady=(0, 4))
 
@@ -143,8 +139,10 @@ class LandscapeStatesPanel(ttk.Frame):
         self._validator_lbl = ttk.Label(self, textvariable=self._validation, font=FONT_SMALL)
         self._validator_lbl.pack(anchor=tk.W, pady=(4, 0))
 
-        self.extract_parity = LandscapeExtractParityPanel(self, on_log=self._on_log)
-        self.extract_parity.pack(fill=tk.X, pady=(8, 0))
+        parity_section = CollapsibleSection(self, "Engine extract parity (advanced)", expanded=False, padding=4)
+        parity_section.pack(fill=tk.X, pady=(8, 0))
+        self.extract_parity = LandscapeExtractParityPanel(parity_section.body, on_log=self._on_log)
+        self.extract_parity.pack(fill=tk.X)
 
     def _sync_axis_comboboxes(self, axis: dict[str, Any]) -> None:
         burn_count = int(axis.get("burn_frame_count") or 8)
@@ -186,12 +184,9 @@ class LandscapeStatesPanel(ttk.Frame):
         ok = bool(report.get("green"))
         self.state.landscape_catalog_validate_ok = ok
         if ok:
-            msg = (
-                f"Catalog PASS — {report.get('entry_count')} entries · "
-                f"{report.get('veg_burn_count')} burn frames"
-            )
+            msg = f"{report.get('entry_count')} entries · {report.get('veg_burn_count')} burn frames"
         else:
-            msg = f"Catalog FAIL — {report.get('error') or report.get('status')}"
+            msg = str(report.get("error") or report.get("status") or "catalog blocked")
         set_inline_status(self._validator_lbl, self._validation, msg, ok=ok if ok else False)
         self._on_log(f"vegetation catalog validate · {report.get('status')}")
         self.refresh_from_catalog()
@@ -261,7 +256,7 @@ class LandscapeStatesPanel(ttk.Frame):
             set_inline_status(
                 self._validator_lbl,
                 self._validation,
-                "Catalog FAIL — validate before bake",
+                "Validate the catalog before baking",
                 ok=False,
             )
             self._on_log("landscape states · bake blocked (catalog not valid)")

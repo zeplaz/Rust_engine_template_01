@@ -1,0 +1,23 @@
+(
+  schema_version: 1,
+  texture: "textures/ui/power_hud_atlas.png",
+  cell_size: (20, 20),
+  chip_size: (16, 16),
+  atlas_size: (80, 80),
+  icons: {
+    "PWR_LINE": (col: 0, row: 0),
+    "VOLT_L": (col: 1, row: 0),
+    "VOLT_M": (col: 2, row: 0),
+    "VOLT_H": (col: 3, row: 0),
+    "ROUTE_CURVE": (col: 0, row: 1),
+    "ROUTE_90": (col: 1, row: 1),
+    "SNAP_TX": (col: 2, row: 1),
+    "SNAP_JX": (col: 3, row: 1),
+    "PLACE_SUB": (col: 0, row: 2),
+    "PLACE_TX": (col: 1, row: 2),
+    "DIESEL": (col: 2, row: 2),
+    "SCRAM": (col: 3, row: 2),
+    "ISLAND": (col: 0, row: 3),
+    "REPAIR": (col: 1, row: 3),
+  },
+)

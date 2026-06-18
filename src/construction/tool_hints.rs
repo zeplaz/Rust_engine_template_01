@@ -8,13 +8,20 @@ use crate::gui::InputBindings;
 use super::build_tool_authority::{ActiveBuildTool, BuildTool};
 use super::path_feedback::ConstructionPathFeedback;
 
+/// Sim session routes hints through tray Build peek — no LEFT_BOTTOM floater.
+pub const TOOL_HINTS_DRAW_IN_SIM: bool = false;
+
 pub fn draw_tool_hints_egui(
     mut contexts: bevy_egui::EguiContexts,
+    base: Res<State<crate::engine::states::BaseState>>,
     tool: Res<ActiveBuildTool>,
     bindings: Res<InputBindings>,
     path_feedback: Res<ConstructionPathFeedback>,
 ) -> Result {
     if matches!(tool.tool, BuildTool::None) {
+        return Ok(());
+    }
+    if matches!(base.get(), crate::engine::states::BaseState::Simulation) {
         return Ok(());
     }
 
@@ -46,6 +53,13 @@ pub fn draw_tool_hints_egui(
             "Shift+LMB: commit track",
             "Esc: clear path (keep tool)",
             "Rail: grade + curve limits apply",
+        ],
+        BuildTool::PowerLine(_) => vec![
+            "LMB: add point",
+            "RMB: undo point",
+            "Shift+LMB: commit line",
+            "O / [ / ]: routing mode",
+            "Esc: clear path (keep tool)",
         ],
         BuildTool::Demolish => vec![
             "LMB: pick target",

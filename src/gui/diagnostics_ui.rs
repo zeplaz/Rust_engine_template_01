@@ -124,6 +124,12 @@ pub struct EcologyDiagnosticsPanels<'w, 's> {
     disturbances: Query<'w, 's, &'static crate::systems::ecology::DisturbanceHistory>,
 }
 
+/// **VEG-DIAG-EXTRACT-PANEL-001** — read-only vegetation extract sample rows.
+#[derive(SystemParam)]
+pub struct VegExtractDiagnosticsPanel<'w> {
+    frame: Option<Res<'w, crate::render::extraction::VegetationExtractFrame>>,
+}
+
 /// Bundles optional spine diagnostics to stay within Bevy system-param limits.
 #[derive(SystemParam)]
 pub struct DiagnosticsSpinePanels<'w> {
@@ -160,6 +166,7 @@ pub fn diagnostics_ui_system(
     palette: Res<UiPalette>,
     spine: DiagnosticsSpinePanels,
     ecology: EcologyDiagnosticsPanels,
+    veg_extract: VegExtractDiagnosticsPanel,
 ) -> Result {
     if !state.visible {
         return Ok(());
@@ -403,6 +410,46 @@ pub fn diagnostics_ui_system(
                             &palette,
                             format!("fire={fire_events} construction_clear={build_events}"),
                         );
+                    });
+            }
+
+            if let Some(frame) = veg_extract.frame.as_ref() {
+                ui.separator();
+                egui::CollapsingHeader::new("Vegetation extract (VEG-DIAG-EXTRACT-001)")
+                    .default_open(false)
+                    .show(ui, |ui| {
+                        muted_label(
+                            ui,
+                            &palette,
+                            format!(
+                                "revision={} rows={} tick={}",
+                                frame.revision,
+                                frame.rows.len(),
+                                frame.stamp.tick
+                            ),
+                        );
+                        for row in frame.rows.iter().take(8) {
+                            muted_label(
+                                ui,
+                                &palette,
+                                format!(
+                                    "({},{}) vk={} g={} burn={} f={:02}",
+                                    row.coord.x,
+                                    row.coord.y,
+                                    row.variant_key,
+                                    row.extract_glyph,
+                                    row.burn_active,
+                                    row.frame_index,
+                                ),
+                            );
+                        }
+                        if frame.rows.len() > 8 {
+                            muted_label(
+                                ui,
+                                &palette,
+                                format!("… {} more rows", frame.rows.len() - 8),
+                            );
+                        }
                     });
             }
 

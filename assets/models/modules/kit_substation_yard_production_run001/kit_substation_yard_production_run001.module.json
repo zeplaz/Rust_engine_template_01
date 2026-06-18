@@ -1,0 +1,85 @@
+{
+  "schema_version": 1,
+  "asset_id": "kit_substation_yard_production_001",
+  "archetype": "module_kit",
+  "style_pack": "style_industrial_west",
+  "development_tier": "production",
+  "pbr_status": "shipped",
+  "batch_id": "kit_utility_power_production_001",
+  "module": {
+    "grid_units": [
+      4,
+      3
+    ],
+    "snap": "floor_edge",
+    "pivot": "bottom_center"
+  },
+  "dimensions_m": {
+    "w": 8,
+    "h": 3,
+    "d": 6
+  },
+  "material_profile": "galvanized_steel_01",
+  "composition": [
+    {
+      "module_id": "bus_bay_simplified",
+      "grid": [
+        2,
+        1
+      ],
+      "count": 2,
+      "zone": "primary"
+    },
+    {
+      "module_id": "breaker_block",
+      "grid": [
+        1,
+        1
+      ],
+      "count": 2,
+      "zone": "primary"
+    },
+    {
+      "module_id": "control_shack_1u",
+      "grid": [
+        1,
+        1
+      ],
+      "count": 1,
+      "zone": "service"
+    },
+    {
+      "module_id": "fence_chainlink_1u",
+      "grid": [
+        1,
+        1
+      ],
+      "count": 8,
+      "zone": "utility"
+    },
+    {
+      "module_id": "gravel_pad_1u",
+      "grid": [
+        1,
+        1
+      ],
+      "count": 4,
+      "zone": "utility"
+    },
+    {
+      "module_id": "warning_sign_1u",
+      "grid": [
+        1,
+        1
+      ],
+      "count": 2,
+      "zone": "utility"
+    }
+  ],
+  "references": [
+    "ref:design:DES-ART-UTILITY-STYLE-001",
+    "ref:dmcp:DMCP-SPEC-SUBSTATION-YARD-001",
+    "ref:catalog:grid_substation.json",
+    "ref:site:power_substation_yard_site_v0.json"
+  ]
+}

@@ -4,17 +4,22 @@
   "suite_modules": [
     "app.py",
     "aps_collapsible.py",
+    "aps_headless.py",
     "aps_inline_feedback.py",
     "aps_paned.py",
+    "aps_preview_state.py",
     "aps_scroll.py",
     "aps_theme.py",
+    "aps_tk.py",
     "aps_tooltips.py",
+    "aps_workflow_layout.py",
     "assembly_panel.py",
     "assembly_preview_panel.py",
     "atlas_panel.py",
     "atlas_preview_panel.py",
     "catalog.py",
     "domain_router.py",
+    "facility_needs_strip.py",
     "footprint_canvas.py",
     "grammar_build_set_panel.py",
     "grammar_dna_panel.py",
@@ -42,7 +47,7 @@
     "status_log_panel.py",
     "variants_panel.py"
   ],
-  "module_count": 39,
+  "module_count": 44,
   "pytest": {
     "ok": true,
     "summary": "1 passed",
@@ -81,7 +86,7 @@
     "profile": "APS_WITNESS_REFRESH",
     "relative_path": "debug_runs/aps_artist_tool_modules_live.json",
     "source_system": "aps_witness_refresh",
-    "written_at_epoch_secs": 1781721224
+    "written_at_epoch_secs": 1781793822
   },
   "witness_honesty": {
     "status": "skipped",

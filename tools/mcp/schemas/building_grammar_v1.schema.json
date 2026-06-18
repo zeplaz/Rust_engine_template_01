@@ -28,10 +28,46 @@
       "type": "array",
       "minItems": 1,
       "items": { "$ref": "#/$defs/district_style_binding" }
-    }
+    },
+    "facility_binding": { "$ref": "#/$defs/facility_binding" }
   },
   "additionalProperties": false,
   "$defs": {
+    "facility_binding": {
+      "type": "object",
+      "required": [
+        "catalog_id",
+        "chain_id",
+        "supply_chain_role",
+        "power_tier"
+      ],
+      "properties": {
+        "catalog_id": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+        "chain_id": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+        "supply_chain_role": { "type": "string", "minLength": 1 },
+        "power_tier": {
+          "type": "string",
+          "enum": ["light", "medium", "heavy", "grid"]
+        },
+        "site_template_id": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+        "program_axes": {
+          "type": "object",
+          "properties": {
+            "storage": { "$ref": "#/$defs/program_axis_level" },
+            "loading": { "$ref": "#/$defs/program_axis_level" },
+            "office": { "$ref": "#/$defs/program_axis_level" },
+            "service": { "$ref": "#/$defs/program_axis_level" },
+            "expansion": { "$ref": "#/$defs/program_axis_level" }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "program_axis_level": {
+      "type": "string",
+      "enum": ["low", "medium", "high"]
+    },
     "footprint_bounds": {
       "type": "object",
       "required": ["min_width", "max_width", "min_depth", "max_depth", "min_floors", "max_floors"],

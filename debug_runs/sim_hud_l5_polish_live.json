@@ -52,7 +52,7 @@
     "relative_path": "debug_runs/sim_hud_l5_polish_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_sim_hud_l5_polish_live_witness",
-    "written_at_epoch_secs": 1781718054
+    "written_at_epoch_secs": 1781756521
   },
   "code": [
     "src/gui/hud/sim_hud_l5_polish.rs",

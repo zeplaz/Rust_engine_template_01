@@ -1,0 +1,216 @@
+{
+  "gate": "DMCP-FACILITY-BINDING-LANE-001",
+  "lanes": [
+    "facility_binding schema",
+    "FactoryCluster + binding",
+    "concrete 3-step site pilot",
+    "all G1 grammars bound"
+  ],
+  "slice_count": 3,
+  "done_count": 3,
+  "rows": [
+    {
+      "id": "DES-FACILITY-BINDING-001",
+      "status": "done",
+      "deliverable": "src/dev/design_facility_binding_schema_v1.md",
+      "schema_audit": {
+        "green": true,
+        "checks": {
+          "artifacts_on_disk": true,
+          "standalone_schema": true,
+          "grammar_schema_has_binding": true
+        }
+      },
+      "deliverable_exists": true,
+      "verdict": "PASS"
+    },
+    {
+      "id": "DMCP-GRAM-FACTORY-CLUSTER-001",
+      "status": "done",
+      "grammar_audit": {
+        "green": true,
+        "binding_count": 3,
+        "green_binding_count": 3,
+        "grammars": [
+          {
+            "green": true,
+            "checks": {
+              "files_on_disk": true,
+              "schema_valid": true,
+              "catalog_id": true,
+              "chain_id": true,
+              "role_match": true,
+              "chain_step_match": true,
+              "power_tier_derived": true,
+              "site_template_id": true,
+              "ron_has_binding": true
+            },
+            "grammar_id": "factory_cluster_v1",
+            "catalog_power_units": 28,
+            "expected_power_tier": "light"
+          },
+          {
+            "green": true,
+            "checks": {
+              "files_on_disk": true,
+              "schema_valid": true,
+              "catalog_id": true,
+              "chain_id": true,
+              "role_match": true,
+              "chain_step_match": true,
+              "power_tier_derived": true,
+              "site_template_id": true,
+              "ron_has_binding": true
+            },
+            "grammar_id": "rail_edge_v1",
+            "catalog_power_units": 15,
+            "expected_power_tier": "light"
+          },
+          {
+            "green": true,
+            "checks": {
+              "files_on_disk": true,
+              "schema_valid": true,
+              "catalog_id": true,
+              "chain_id": true,
+              "role_match": true,
+              "chain_step_match": true,
+              "power_tier_derived": true,
+              "site_template_id": true,
+              "ron_has_binding": true
+            },
+            "grammar_id": "industrial_warehouse_v1",
+            "catalog_power_units": 12,
+            "expected_power_tier": "light"
+          }
+        ]
+      },
+      "verdict": "PASS"
+    },
+    {
+      "id": "DMCP-PILOT-CONCRETE-SITE-001",
+      "status": "done",
+      "pilot_audit": {
+        "green": true,
+        "checks": {
+          "pilot_on_disk": true,
+          "schema_version": true,
+          "step_count_3": true,
+          "chain_id": true,
+          "grammar_hint": true
+        },
+        "steps": [
+          {
+            "role": "aggregate_mine",
+            "green": true,
+            "checks": {
+              "catalog_on_disk": true,
+              "catalog_id_chain_match": true,
+              "power_ref_match": true,
+              "power_tier_match": true,
+              "site_grid": true
+            }
+          },
+          {
+            "role": "cement_kiln",
+            "green": true,
+            "checks": {
+              "catalog_on_disk": true,
+              "catalog_id_chain_match": true,
+              "power_ref_match": true,
+              "power_tier_match": true,
+              "site_grid": true
+            }
+          },
+          {
+            "role": "concrete_mixer",
+            "green": true,
+            "checks": {
+              "catalog_on_disk": true,
+              "catalog_id_chain_match": true,
+              "power_ref_match": true,
+              "power_tier_match": true,
+              "site_grid": true
+            }
+          }
+        ]
+      },
+      "verdict": "PASS"
+    }
+  ],
+  "grammar_bindings": {
+    "green": true,
+    "binding_count": 3,
+    "green_binding_count": 3,
+    "grammars": [
+      {
+        "green": true,
+        "checks": {
+          "files_on_disk": true,
+          "schema_valid": true,
+          "catalog_id": true,
+          "chain_id": true,
+          "role_match": true,
+          "chain_step_match": true,
+          "power_tier_derived": true,
+          "site_template_id": true,
+          "ron_has_binding": true
+        },
+        "grammar_id": "factory_cluster_v1",
+        "catalog_power_units": 28,
+        "expected_power_tier": "light"
+      },
+      {
+        "green": true,
+        "checks": {
+          "files_on_disk": true,
+          "schema_valid": true,
+          "catalog_id": true,
+          "chain_id": true,
+          "role_match": true,
+          "chain_step_match": true,
+          "power_tier_derived": true,
+          "site_template_id": true,
+          "ron_has_binding": true
+        },
+        "grammar_id": "rail_edge_v1",
+        "catalog_power_units": 15,
+        "expected_power_tier": "light"
+      },
+      {
+        "green": true,
+        "checks": {
+          "files_on_disk": true,
+          "schema_valid": true,
+          "catalog_id": true,
+          "chain_id": true,
+          "role_match": true,
+          "chain_step_match": true,
+          "power_tier_derived": true,
+          "site_template_id": true,
+          "ron_has_binding": true
+        },
+        "grammar_id": "industrial_warehouse_v1",
+        "catalog_power_units": 12,
+        "expected_power_tier": "light"
+      }
+    ]
+  },
+  "audit_complete": true,
+  "green": true,
+  "verdict": "PASS",
+  "handoff": {
+    "designer": "DES-APS-FACILITY-NEEDS-001 sign-off on schema",
+    "coder_mcp": "CMCP-GRAMMAR-FACILITY-BRIEF-001",
+    "coder": "COD-FACILITY-BINDING-READ-001"
+  },
+  "_agent_meta": {
+    "schema": "dmcp_facility_binding_lane_live_v1",
+    "written_at_epoch_secs": 1781756433,
+    "profile": "DMCP_FACILITY_BINDING",
+    "source_system": "dmcp_facility_binding_lane",
+    "relative_path": "debug_runs/art_pipeline/dmcp_facility_binding_lane_live.json",
+    "ritual": "BLANG:WIT-HON\u2192Q\u2713 DMCP-FACILITY-BINDING",
+    "agent": "designer-mcp"
+  }
+}

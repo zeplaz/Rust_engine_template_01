@@ -18,4 +18,5 @@ pub use input::{
 #[cfg(test)]
 pub use pathing::regenerate_road_segments;
 pub use placement::{ActiveRoadPlacement, RoadSegmentPreview};
+pub use commit::commit_road_path_to_queue;
 pub use popup::{draw_road_tool_popup_egui, RoadToolPopupState};

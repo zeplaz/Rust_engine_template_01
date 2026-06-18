@@ -4,20 +4,26 @@ from __future__ import annotations
 
 import tkinter as tk
 from tkinter import ttk
-from typing import Any
+from typing import Any, Callable
 
 from rust_engine_mcp import aps_tags
 
 
 class GrammarInspectorPanel(ttk.LabelFrame):
-    def __init__(self, master: tk.Misc) -> None:
+    def __init__(
+        self,
+        master: tk.Misc,
+        *,
+        on_rule_select: Callable[[str, str], None] | None = None,
+    ) -> None:
         super().__init__(master, text="Grammar inspector", padding=6)
+        self._on_rule_select = on_rule_select
         meta = ttk.Frame(self)
         meta.pack(fill=tk.X, pady=(0, 4))
         self.archetype_var = tk.StringVar(value="—")
         self.district_var = tk.StringVar(value="—")
         self.massing_var = tk.StringVar(value="—")
-        ttk.Label(meta, text="Archetype:").grid(row=0, column=0, sticky=tk.W)
+        ttk.Label(meta, text="Building type:").grid(row=0, column=0, sticky=tk.W)
         ttk.Label(meta, textvariable=self.archetype_var, font=("Consolas", 9)).grid(
             row=0, column=1, sticky=tk.W, padx=4
         )
@@ -35,6 +41,22 @@ class GrammarInspectorPanel(ttk.LabelFrame):
             self.tree.heading(col, text=col.replace("_", " ").title())
             self.tree.column(col, width=w, stretch=col == "detail")
         self.tree.pack(fill=tk.BOTH, expand=True)
+        if self._on_rule_select is not None:
+            self.tree.bind("<<TreeviewSelect>>", self._on_tree_select)
+
+    def _on_tree_select(self, _event: object | None = None) -> None:
+        if self._on_rule_select is None:
+            return
+        selected = self.tree.selection()
+        if not selected:
+            return
+        values = self.tree.item(selected[0], "values")
+        if len(values) < 2:
+            return
+        layer = str(values[0] or "")
+        rule_id = str(values[1] or "")
+        if rule_id:
+            self._on_rule_select(layer, rule_id)
 
     def load_snapshot(self, snapshot: dict[str, Any] | None) -> None:
         for row in self.tree.get_children():

@@ -1,0 +1,539 @@
+{
+  "_meta": {
+    "version": "1.0.0",
+    "program_id": "PLAN-APS-GRAMMAR-EVOLUTION-001",
+    "program_status": "CLOSED_PENDING_OPERATOR",
+    "date": "2026-06-17",
+    "plan_doc": "src/dev/plan_aps_grammar_evolution_v1.md",
+    "witness_profile": "src/dev/plan_aps_grammar_evolution_witness_v1.md",
+    "board": "src/dev/aps_grammar_evolution_agent_todos_v1.md",
+    "dispatch": "tools/orchestrator/queues/aps_grammar_evolution_dispatch_orders_v1.md",
+    "parent_plan": "src/dev/plan_building_grammar_evolution_v1.md",
+    "guards_plan": "src/dev/plan_mcp_grammar_build_set_guards_v1.md",
+    "cross_program": {
+      "uiux_overhaul": "tools/orchestrator/queues/aps_uiux_overhaul_queue.json",
+      "rule": "APS-GRAM-TIER-004 may compose with OVR-P45-SPINE-001 \u2014 tier copy is authoritative; no Q\u2713 without grammar_set_tier in witness"
+    },
+    "rule": "No row done without exit_predicate pass OR signed deliverable path \u00b7 content tier must match UI claims \u00b7 pytest -k aps every coder-mcp row",
+    "sequence": "TIER-001\u2192002 \u2192 CONTENT-001\u2192002\u2192003\u2192004 \u2192 P3-001 \u2192 TIER-004",
+    "regression": "cd tools/mcp/python && python -m pytest -k aps -q",
+    "content_baseline": {
+      "archetype_count": 3,
+      "grammar_files": [
+        "industrial_warehouse_v1.ron",
+        "factory_cluster_v1.ron",
+        "rail_edge_v1.ron"
+      ],
+      "tier_expected": "G1"
+    },
+    "wit_hon": "validate-report witness_honesty <witness> --compress 3"
+  },
+  "dispatch_now": {
+    "orchestrator-mcp": "idle \u2014 APS-GRAM-CLOSE-001 machine green; operator NEEDS-DISPLAY pending",
+    "coder-mcp": "idle \u2014 grammar evolution coder drain complete 2026-06-18",
+    "designer-mcp": "idle",
+    "designer": "idle \u2014 operator eyeball TIER-002/REFRESH/TIER-004",
+    "planner-mcp": "idle",
+    "sim-steward": "idle \u2014 close witness WIT-HON passed"
+  },
+  "drain": [
+    {
+      "seq": 1,
+      "wave": 0,
+      "phase": "P0",
+      "id": "ORCH-GRAM-001",
+      "status": "done",
+      "priority": "P0",
+      "owner": "orchestrator-mcp",
+      "goal": "Issue PLAN-APS-GRAMMAR-EVOLUTION-001; enforce no fake green on tier/content rows",
+      "deliverable": "debug_runs/agent_ops/aps_grammar_evolution_dispatch_live.json"
+    },
+    {
+      "seq": 2,
+      "wave": 0,
+      "phase": "P0",
+      "id": "PLAN-GRAM-WITNESS-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "planner-mcp",
+      "goal": "Witness envelope per row \u2014 exit_predicate.must fields",
+      "deliverable": "src/dev/plan_aps_grammar_evolution_witness_v1.md",
+      "parallel_ok": [
+        "APS-GRAM-TIER-001"
+      ]
+    },
+    {
+      "seq": 3,
+      "wave": 1,
+      "phase": "T1",
+      "id": "APS-GRAM-TIER-001",
+      "status": "done",
+      "priority": "P0",
+      "owner": "coder-mcp",
+      "depends_on": [
+        "ORCH-GRAM-001"
+      ],
+      "goal": "grammar_set_tier() in rust_engine_mcp/grammar_build_set.py \u2014 returns G0\u2013G4 + reasons[] + counts from registry",
+      "territory": "tools/mcp/python/rust_engine_mcp/grammar_build_set.py",
+      "acceptance": [
+        "grammar_set_tier()['tier'] in G0..G4",
+        "reasons[] non-empty when tier below G4",
+        "archetype_count from list_archetype_ids() not hardcoded",
+        "Today with 1 grammar file: tier == G0"
+      ],
+      "verify": [
+        "pytest tools/mcp/python/tests/test_aps_grammar_tier.py -q",
+        "pytest tools/mcp/python/tests/test_grammar_build_set.py -q",
+        "pytest tools/mcp/python/tests -k aps -q"
+      ],
+      "witness": "debug_runs/grammar_set_tier_live.json",
+      "exit_predicate": {
+        "witness": "debug_runs/grammar_set_tier_live.json",
+        "must": [
+          {
+            "path": "tier",
+            "eq": "G0"
+          },
+          {
+            "path": "archetype_count",
+            "eq": 1
+          },
+          {
+            "path": "reasons",
+            "min_len": 1
+          }
+        ]
+      },
+      "forbidden_exit": [
+        "hardcoded_tier",
+        "no_witness",
+        "lib_test_only"
+      ]
+    },
+    {
+      "seq": 4,
+      "wave": 1,
+      "phase": "T1",
+      "id": "APS-GRAM-TIER-002",
+      "status": "done",
+      "priority": "P0",
+      "owner": "coder-mcp",
+      "depends_on": [
+        "APS-GRAM-TIER-001"
+      ],
+      "goal": "AssemblyPanel.apply_grammar_tier(tier) \u2014 show/hide DNA, iterate, build-set per exposure table in plan",
+      "territory": "tools/mcp/art_pipeline_suite/assembly_panel.py",
+      "acceptance": [
+        "At G0: GrammarDnaPanel + GrammarIteratePanel hidden or collapsed advanced-only",
+        "At G0: kit hint visible when archetype_count <= 1",
+        "Tier strip label shows G0 \u2014 pilot kit",
+        "apply_grammar_tier called on panel build and after grammar_set_brief refresh"
+      ],
+      "verify": [
+        "pytest tools/mcp/python/tests/test_aps_grammar_tier_gates.py -q",
+        "pytest tools/mcp/python/tests/test_aps_runtime_callbacks.py -q",
+        "pytest tools/mcp/python/tests -k aps -q"
+      ],
+      "witness": "debug_runs/aps_grammar_tier_gates_live.json",
+      "exit_predicate": {
+        "witness": "debug_runs/aps_grammar_tier_gates_live.json",
+        "must": [
+          {
+            "path": "tier",
+            "eq": "G0"
+          },
+          {
+            "path": "dna_panel_visible",
+            "eq": false
+          },
+          {
+            "path": "iterate_panel_visible",
+            "eq": false
+          },
+          {
+            "path": "kit_hint_visible",
+            "eq": true
+          }
+        ]
+      },
+      "needs_display": true,
+      "forbidden_exit": [
+        "all_panels_visible_at_g0",
+        "witness_missing"
+      ]
+    },
+    {
+      "seq": 5,
+      "wave": 2,
+      "phase": "C1",
+      "id": "GRAM-CONTENT-001",
+      "status": "done",
+      "signed_date": "2026-06-17",
+      "witness": "src/dev/design_grammar_archetype_family_g1_v1.md",
+      "priority": "P0",
+      "owner": "designer-mcp",
+      "goal": "Second + third archetype AssetSpec \u2014 massing strategies, districts, module kit gaps",
+      "deliverable": "src/dev/design_grammar_archetype_family_g1_v1.md",
+      "acceptance": [
+        "Two new archetype ids named (e.g. FactoryCluster, RailEdge or signed alternates)",
+        "Each: \u22652 massing strategies, \u22651 district_style, seed-driven",
+        "No bpy in chat \u2014 spec only"
+      ],
+      "parallel_ok": [
+        "APS-GRAM-TIER-001",
+        "APS-GRAM-TIER-002"
+      ],
+      "blocks": [
+        "GRAM-CONTENT-002"
+      ]
+    },
+    {
+      "seq": 6,
+      "wave": 2,
+      "phase": "C1",
+      "id": "GRAM-CONTENT-002",
+      "status": "done",
+      "priority": "P0",
+      "owner": "coder-mcp",
+      "depends_on": [
+        "GRAM-CONTENT-001"
+      ],
+      "goal": "Add *.ron + JSON mirror under grammars/ + schemas/examples/ for both new archetypes",
+      "territory": "assets/configs/buildings/grammars/",
+      "acceptance": [
+        "list_archetype_ids() returns \u22653 ids",
+        "validate-report arch_build_grammar passes for each new file",
+        "JSON examples mirror RON for MCP agents"
+      ],
+      "verify": [
+        "pytest tools/mcp/python/tests/test_grammar_archetype_registry.py -q",
+        "python -m rust_engine_mcp.cli validate-report arch_build_grammar --compress 3",
+        "pytest tools/mcp/python/tests -k aps -q"
+      ],
+      "witness": "debug_runs/grammar_archetype_g1_live.json",
+      "exit_predicate": {
+        "witness": "debug_runs/grammar_archetype_g1_live.json",
+        "must": [
+          {
+            "path": "archetype_count",
+            "gte": 3
+          },
+          {
+            "path": "ron_files_added",
+            "gte": 2
+          },
+          {
+            "path": "json_mirrors_added",
+            "gte": 2
+          }
+        ]
+      },
+      "forbidden_exit": [
+        "fallback_IndustrialWarehouse_only",
+        "ron_without_json_mirror"
+      ]
+    },
+    {
+      "seq": 7,
+      "wave": 2,
+      "phase": "C1",
+      "id": "GRAM-CONTENT-003",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder-mcp",
+      "depends_on": [
+        "GRAM-CONTENT-002"
+      ],
+      "goal": "grammar_labels_v1.json + aps_grammar_labels human entries for new archetype/district ids",
+      "territory": "assets/configs/buildings/grammars/grammar_labels_v1.json",
+      "verify": [
+        "pytest tools/mcp/python/tests/test_aps_grammar_labels.py -q",
+        "pytest tools/mcp/python/tests/test_aps_no_jargon.py -q"
+      ],
+      "witness": "debug_runs/grammar_labels_g1_live.json",
+      "exit_predicate": {
+        "witness": "debug_runs/grammar_labels_g1_live.json",
+        "must": [
+          {
+            "path": "human_labels_for_new_archetypes",
+            "eq": true
+          }
+        ]
+      }
+    },
+    {
+      "seq": 8,
+      "wave": 2,
+      "phase": "C1",
+      "id": "GRAM-CONTENT-004",
+      "status": "done",
+      "priority": "P0",
+      "owner": "coder-mcp",
+      "depends_on": [
+        "GRAM-CONTENT-002",
+        "GRAM-CONTENT-003",
+        "APS-GRAM-TIER-001"
+      ],
+      "goal": "building_set_coverage_report + grammar_set_tier() reports G1; refresh tier witness",
+      "verify": [
+        "pytest tools/mcp/python/tests/test_grammar_build_set.py::test_building_set_coverage_green -q",
+        "pytest tools/mcp/python/tests/test_aps_grammar_tier.py -q"
+      ],
+      "witness": "debug_runs/grammar_set_tier_g1.json",
+      "exit_predicate": {
+        "witness": "debug_runs/grammar_set_tier_g1.json",
+        "must": [
+          {
+            "path": "tier",
+            "eq": "G1"
+          },
+          {
+            "path": "archetype_count",
+            "gte": 3
+          },
+          {
+            "path": "kit_hint_downgraded",
+            "eq": true
+          }
+        ]
+      },
+      "forbidden_exit": [
+        "tier_g1_with_one_archetype",
+        "dropdown_still_sparse"
+      ]
+    },
+    {
+      "seq": 9,
+      "wave": 2,
+      "phase": "T1",
+      "id": "APS-GRAM-TIER-002-REFRESH",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder-mcp",
+      "depends_on": [
+        "GRAM-CONTENT-004",
+        "APS-GRAM-TIER-002"
+      ],
+      "goal": "Re-apply apply_grammar_tier(G1) \u2014 kit hint off, multi-value dropdowns, DNA still collapsed",
+      "witness": "debug_runs/aps_grammar_tier_g1_gates_live.json",
+      "exit_predicate": {
+        "witness": "debug_runs/aps_grammar_tier_g1_gates_live.json",
+        "must": [
+          {
+            "path": "tier",
+            "eq": "G1"
+          },
+          {
+            "path": "archetype_combo_count",
+            "gte": 3
+          },
+          {
+            "path": "kit_hint_visible",
+            "eq": false
+          }
+        ]
+      },
+      "needs_display": true
+    },
+    {
+      "seq": 10,
+      "wave": 3,
+      "phase": "P3",
+      "id": "APS-GRAM-P3-001",
+      "status": "done",
+      "priority": "P0",
+      "owner": "coder-mcp",
+      "depends_on": [
+        "APS-GRAM-TIER-002",
+        "GRAM-CONTENT-002"
+      ],
+      "goal": "Inspector row click \u2192 FootprintCanvas highlight placements linked to rule_id / massing",
+      "territory": [
+        "tools/mcp/art_pipeline_suite/grammar_inspector.py",
+        "tools/mcp/art_pipeline_suite/footprint_canvas.py",
+        "tools/mcp/art_pipeline_suite/assembly_panel.py"
+      ],
+      "acceptance": [
+        "TreeviewSelect on inspector row calls footprint highlight",
+        "Click massing rule long_hall highlights affected cells (via placement_rule_id or massing match)",
+        "FootprintCanvas.highlight_rule(rule_id) or highlight_cells() API added",
+        "Works after Generate with grammar snapshot"
+      ],
+      "verify": [
+        "pytest tools/mcp/python/tests/test_aps_grammar_inspector_link.py -q",
+        "pytest tools/mcp/python/tests/test_aps_runtime_callbacks.py -q",
+        "pytest tools/mcp/python/tests -k aps -q"
+      ],
+      "witness": "debug_runs/aps_grammar_p3_live.json",
+      "exit_predicate": {
+        "witness": "debug_runs/aps_grammar_p3_live.json",
+        "must": [
+          {
+            "path": "inspector_click_highlights_grid",
+            "eq": true
+          },
+          {
+            "path": "rule_id_tested",
+            "eq": "long_hall"
+          },
+          {
+            "path": "cells_highlighted_count",
+            "gte": 1
+          }
+        ]
+      },
+      "forbidden_exit": [
+        "headless_only",
+        "no_generate_fixture",
+        "inspector_orphan"
+      ]
+    },
+    {
+      "seq": 11,
+      "wave": 3,
+      "phase": "T1",
+      "id": "APS-GRAM-TIER-004",
+      "status": "done",
+      "priority": "P0",
+      "owner": "coder-mcp",
+      "depends_on": [
+        "APS-GRAM-TIER-001",
+        "APS-GRAM-P3-001"
+      ],
+      "goal": "PipelineStatusBar reads grammar_set_tier; step copy + next-step hint tier-aware per plan table",
+      "territory": [
+        "tools/mcp/art_pipeline_suite/pipeline_status_bar.py",
+        "tools/mcp/art_pipeline_suite/domain_router.py",
+        "tools/mcp/art_pipeline_suite/state.py"
+      ],
+      "acceptance": [
+        "SuiteState or bar caches grammar_set_tier from grammar_set_tier()",
+        "Assembly step copy differs G0 vs G1+ (see plan exposure table)",
+        "Atlas step grays/warns when tier < G4 and ship check failed \u2014 not silent",
+        "grammar_sweep_stale field wired when eval sweep exists"
+      ],
+      "verify": [
+        "pytest tools/mcp/python/tests/test_aps_grammar_spine_tier.py -q",
+        "pytest tools/mcp/python/tests/test_aps_runtime_callbacks.py -q",
+        "pytest tools/mcp/python/tests -k aps -q"
+      ],
+      "witness": "debug_runs/aps_grammar_spine_tier_live.json",
+      "exit_predicate": {
+        "witness": "debug_runs/aps_grammar_spine_tier_live.json",
+        "must": [
+          {
+            "path": "grammar_set_tier_present",
+            "eq": true
+          },
+          {
+            "path": "assembly_copy_tier_aware",
+            "eq": true
+          },
+          {
+            "path": "atlas_warn_when_below_g4",
+            "eq": true
+          }
+        ]
+      },
+      "needs_display": true,
+      "forbidden_exit": [
+        "static_copy_ignores_tier",
+        "fake_green_spine"
+      ]
+    },
+    {
+      "seq": 12,
+      "wave": 4,
+      "phase": "P6",
+      "id": "APS-GRAM-CLOSE-001",
+      "status": "done",
+      "priority": "P0",
+      "owner": "coder-mcp",
+      "co_owner": "sim-steward",
+      "depends_on": [
+        "APS-GRAM-TIER-004",
+        "GRAM-CONTENT-004"
+      ],
+      "goal": "Program close witness \u2014 all tier/content/P3/spine rows green + WIT-HON",
+      "witness": "debug_runs/aps_grammar_evolution_close_live.json",
+      "verify": [
+        "pytest tools/mcp/python/tests -k aps -q",
+        "validate-report witness_honesty debug_runs/aps_grammar_evolution_close_live.json --compress 3"
+      ],
+      "exit_predicate": {
+        "witness": "debug_runs/aps_grammar_evolution_close_live.json",
+        "must": [
+          {
+            "path": "status",
+            "eq": "pass"
+          },
+          {
+            "path": "tier",
+            "eq": "G1"
+          },
+          {
+            "path": "rows_closed",
+            "gte": 10
+          }
+        ]
+      },
+      "forbidden_exit": [
+        "tier_ui_mismatch",
+        "witness_honesty_fail"
+      ]
+    },
+    {
+      "seq": 13,
+      "wave": 0,
+      "phase": "P0",
+      "id": "STEWARD-GRAM-WIT-HON-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "sim-steward",
+      "goal": "Reject Q\u2713 when tier witness archetype_count disagrees with list_archetype_ids() or UI exposure table",
+      "parallel_ok": [
+        "*"
+      ],
+      "verify": [
+        "validate-report witness_honesty debug_runs/grammar_set_tier_live.json --compress 3"
+      ]
+    },
+    {
+      "seq": 14,
+      "wave": 2,
+      "phase": "T1",
+      "id": "APS-GRAM-TIER-003",
+      "status": "done",
+      "signed_date": "2026-06-17",
+      "witness": "src/dev/design_aps_grammar_tier_wireframes_v1.md",
+      "exposure_authority": "src/dev/design_aps_grammar_tier_exposure_v1.md",
+      "priority": "P2",
+      "owner": "designer",
+      "depends_on": [
+        "APS-GRAM-TIER-002"
+      ],
+      "goal": "Sign-off wireframes G0 minimal vs G2 expanded \u2014 amend design_aps_assembly_density_v1.md",
+      "deliverable": "src/dev/design_aps_grammar_tier_wireframes_v1.md",
+      "needs_display": true,
+      "parallel_ok": [
+        "GRAM-CONTENT-001"
+      ]
+    },
+    {
+      "seq": 15,
+      "wave": 3,
+      "phase": "P3",
+      "id": "APS-GRAM-P3-003",
+      "status": "done",
+      "signed_date": "2026-06-17",
+      "witness": "src/dev/design_aps_grammar_why_copy_v1.md",
+      "priority": "P2",
+      "owner": "designer",
+      "depends_on": [
+        "APS-GRAM-P3-001"
+      ],
+      "goal": "Copy for why-this-module tooltips \u2014 aps_grammar_labels + grammar_why_detail",
+      "deliverable": "src/dev/design_aps_grammar_why_copy_v1.md"
+    }
+  ]
+}

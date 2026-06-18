@@ -1,0 +1,16 @@
+{
+  "gate": "MCP-PWR-PROMOTE-TRANSFORMER-001",
+  "promoted": true,
+  "registry_row": "grid_distribution_transformer",
+  "supersedes_lod0_stub": true,
+  "procedural_module_id": "prop_transformer_production_run001",
+  "model_glb": "assets/models/modules/prop_transformer_production_run001/model.glb",
+  "green": true,
+  "_agent_meta": {
+    "schema": "mcp_pwr_transformer_promote_live_v1",
+    "written_at_epoch_secs": 1781792304,
+    "profile": "MCP_PWR_TRANSFORMER_PROMOTE",
+    "source_system": "mcp_pwr_utility",
+    "relative_path": "debug_runs/art_pipeline/mcp_pwr_transformer_promote_live.json"
+  }
+}

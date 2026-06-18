@@ -88,11 +88,13 @@ pub fn veg_resolver_parity_body() -> serde_json::Value {
         .difference(&catalog_topology)
         .cloned()
         .collect();
+    let clamp_green = crate::systems::ecology::catalog_clamp_witness_green();
     let green = missing_in_catalog.is_empty() && extra_in_catalog.is_empty() && stamp_missing.is_empty();
     let _ = write_veg_resolver_known_keys_doc(catalog_topology.len(), catalog_veg.len(), green);
     serde_json::json!({
         "slice_id": "CDR-B-VEG-RESOLVER-PARITY-001",
         "green": green,
+        "catalog_clamp_green": clamp_green,
         "engine_veg_keys": ENGINE_VEG_RESOLVER_KEYS,
         "engine_topology_stamp_keys": ENGINE_TOPOLOGY_STAMP_KEYS,
         "catalog_veg_count": catalog_veg.len(),

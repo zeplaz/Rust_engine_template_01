@@ -120,9 +120,15 @@ pub fn drain_hud_async_task_queue(mut queue: ResMut<HudAsyncTaskQueue>) {
                 queue.cache.log_line = Some(line);
             }
             HudAsyncTask::MinimapLegend { zoom, revision } => {
+                use crate::gui::hud::minimap_topology_legend::{
+                    minimap_topology_legend_collapsed_label, minimap_topology_legend_expanded_lines,
+                };
+                let lines = minimap_topology_legend_expanded_lines();
                 queue.cache.minimap_legend = Some(format!(
-                    "zoom {:.2}x · raster rev {revision} · legend deferred",
+                    "{} · zoom {:.2}x · rev {revision} · {}",
+                    minimap_topology_legend_collapsed_label(),
                     zoom,
+                    lines.join("  "),
                 ));
             }
             HudAsyncTask::ExplainabilityTransform { beliefs } => {

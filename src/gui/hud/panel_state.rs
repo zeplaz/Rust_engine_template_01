@@ -96,6 +96,8 @@ pub struct HudPanelStateWitness {
 /// Global HUD panel collapse on Escape (unpinned panels only).
 pub fn hud_panel_escape_collapse_system(
     keys: Res<ButtonInput<KeyCode>>,
+    mut picker: ResMut<crate::gui::hud::SimBuildPickerState>,
+    mut road_sheet: ResMut<crate::gui::hud::sim_road_tool_sheet::SimRoadToolSheetState>,
     mut tray: ResMut<crate::gui::hud::HudOverlayTrayState>,
     mut layout: ResMut<crate::gui::hud::HudCommandShellLayout>,
     mut transmission: ResMut<crate::gui::hud::TransmissionShellState>,
@@ -104,6 +106,18 @@ pub fn hud_panel_escape_collapse_system(
     mut witness: ResMut<HudPanelStateWitness>,
 ) {
     if !keys.just_pressed(KeyCode::Escape) {
+        return;
+    }
+    if picker.open {
+        picker.close();
+        witness.last_esc_collapsed = true;
+        witness.cycle_ok = true;
+        return;
+    }
+    if road_sheet.open {
+        road_sheet.close();
+        witness.last_esc_collapsed = true;
+        witness.cycle_ok = true;
         return;
     }
     super::simulation_shell_phase2::collapse_context_tray_on_escape(

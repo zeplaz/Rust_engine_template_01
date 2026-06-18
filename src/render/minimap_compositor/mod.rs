@@ -44,7 +44,7 @@ use bevy::prelude::*;
 
 use crate::engine::states::BaseState;
 use crate::gui::{on_visual_cadence_minimap, ViewRepresentationSystemSet};
-use crate::render::extraction::FireVisualFrameSet;
+use crate::render::extraction::{FireVisualFrameSet, VegetationExtractFrameSet};
 use crate::render::ViewportPipelineSet;
 
 use composite::{MinimapCompositeDispatch, MinimapCompositeHeatTextures};
@@ -89,6 +89,7 @@ impl Plugin for MinimapCompositorPlugin {
                 .chain()
                 .after(ViewRepresentationSystemSet::SyncOverlayField)
                 .after(FireVisualFrameSet::BuildProfiles)
+                .after(VegetationExtractFrameSet::BuildProfiles)
                 .in_set(ViewRepresentationSystemSet::WorldRender)
                 .run_if(on_visual_cadence_minimap),
         )
@@ -236,6 +237,9 @@ mod tests {
             units_heat_enabled: true,
             unit_marker_rows: 6,
             replay_scrub_enabled: true,
+            veg_burn_rows: 1,
+            burn_overrides_topology: true,
+            veg_extract_revision: 1,
             composite_path: super::pass::MinimapCompositePath::GpuCompute,
             ..Default::default()
         };
@@ -281,6 +285,9 @@ mod tests {
         assert_eq!(v["ui_p3_m4_green"], serde_json::json!(true));
         assert_eq!(v["fow_enabled"], serde_json::json!(true));
         assert_eq!(v["ew_overlay_enabled"], serde_json::json!(true));
+        assert_eq!(v["veg_burn_rows"], serde_json::json!(1));
+        assert_eq!(v["burn_overrides_topology"], serde_json::json!(true));
+        assert_eq!(v["veg_minimap_burn_merge_green"], serde_json::json!(true));
         assert_eq!(v["fow_rows"], serde_json::json!(16));
         assert_eq!(v["ew_rows"], serde_json::json!(12));
         assert_eq!(v["construction_rows"], serde_json::json!(18));
@@ -389,7 +396,7 @@ mod tests {
         let mut replay = CommittedSimReplayRing::with_capacity(8);
         replay.record_commit(crate::systems::sim_control::SimStepStamp::new(1, 0));
         replay.record_commit(crate::systems::sim_control::SimStepStamp::new(2, 0));
-        let (ok, _, _, _, fow_rows, ew_rows, unit_rows, replay_on) = upload_minimap_heat_textures(
+        let (ok, _, _, _, fow_rows, ew_rows, unit_rows, replay_on, _) = upload_minimap_heat_textures(
             &mut images,
             &mut heat,
             None,
@@ -399,6 +406,7 @@ mod tests {
             Some(&operational),
             None,
             Some(&replay),
+            None,
             &map_views,
             &fallback,
             UVec2::new(32, 32),

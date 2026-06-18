@@ -137,7 +137,7 @@
 
 | ID | When | Task |
 |:---|:---|:---|
-| OVR-P6-OPERATOR-EYEBALL-001 | After P6 witness | **★ PICK** — structural pre-pass green; pixel walk pending |
+| OVR-P6-OPERATOR-EYEBALL-001 | After P6 witness | **✓ DONE** — oz approved 2026-06-02 |
 
 ---
 

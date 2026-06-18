@@ -25,9 +25,24 @@ from rust_engine_mcp.material_profiles import (
 )
 from rust_engine_mcp.material_textures import PILOT_PROFILES, generate_profile
 
+from .aps_inline_feedback import format_material_texture_status, material_texture_status
+from .aps_preview_state import apply_preview_photo, configure_preview_label
 from .aps_paned import add_pane, horizontal_paned
 from .aps_scroll import attach_wheel_area, bind_debounced_scrollregion, canvas_yscroll
-from .aps_theme import FONT_SMALL
+from .aps_theme import (
+    COLOR_CARD_BG,
+    COLOR_SELECT_ACTIVE,
+    COLOR_SELECT_BG,
+    COLOR_TEXT_BODY,
+    COLOR_TEXT_HINT,
+    COLOR_TEXT_SUBTLE,
+    FONT_CAPTION,
+    FONT_MONO_SMALL,
+    FONT_SMALL,
+    GAP_SM,
+    COLOR_PREVIEW_PLACEHOLDER,
+    PREVIEW_THUMB_MD,
+)
 from .aps_tooltips import bind_aps_tooltip, bind_many
 from .job_controller import JobRecord, JobResult, JobState
 
@@ -117,7 +132,7 @@ class MaterialLibraryWidget(ttk.Frame):
         )
         if self._mode == "assign":
             hint = "Select a footprint cell first, then pick a profile. " + hint
-        ttk.Label(self, text=hint, wraplength=520, justify=tk.LEFT, font=FONT_SMALL, foreground="#555").pack(
+        ttk.Label(self, text=hint, wraplength=520, justify=tk.LEFT, font=FONT_SMALL, foreground=COLOR_TEXT_HINT).pack(
             anchor=tk.W, pady=(0, 4)
         )
 
@@ -129,7 +144,7 @@ class MaterialLibraryWidget(ttk.Frame):
             self._build_vertical()
 
         self._status_var = tk.StringVar(value="")
-        ttk.Label(self, textvariable=self._status_var, foreground="#444", font=FONT_SMALL).pack(
+        ttk.Label(self, textvariable=self._status_var, foreground=COLOR_TEXT_SUBTLE, font=FONT_SMALL).pack(
             anchor=tk.W, pady=2
         )
         self.reload_catalog()
@@ -159,19 +174,24 @@ class MaterialLibraryWidget(ttk.Frame):
         row.pack(fill=tk.X)
         self._preview_image = tk.Label(
             row,
-            text="(select profile)",
             width=self.PREVIEW_SIZE // 8,
             height=self.PREVIEW_SIZE // 16,
-            bg="#e8e8e8",
             relief=tk.SUNKEN,
         )
         self._preview_image.pack(side=tk.LEFT, padx=(0, 8))
+        configure_preview_label(
+            self._preview_image,
+            "empty",
+            detail="Select a material",
+            width=PREVIEW_THUMB_MD,
+            height=PREVIEW_THUMB_MD,
+        )
         meta_col = ttk.Frame(row)
         meta_col.pack(side=tk.LEFT, fill=tk.X, expand=True)
         self._preview_meta = tk.StringVar(value="")
         ttk.Label(meta_col, textvariable=self._preview_meta, wraplength=240, justify=tk.LEFT).pack(anchor=tk.W)
         self._maps_var = tk.StringVar(value="")
-        ttk.Label(meta_col, textvariable=self._maps_var, wraplength=240, foreground="#333", font=("Consolas", 9)).pack(
+        ttk.Label(meta_col, textvariable=self._maps_var, wraplength=240, foreground=COLOR_TEXT_BODY, font=FONT_MONO_SMALL).pack(
             anchor=tk.W, pady=2
         )
 
@@ -372,7 +392,7 @@ class MaterialLibraryWidget(ttk.Frame):
                 thumb_img.thumbnail((LIST_THUMB, LIST_THUMB), Image.Resampling.LANCZOS)
                 photo = ImageTk.PhotoImage(thumb_img)
                 self._row_photos[entry.profile_id] = photo
-                lbl_img = tk.Label(row, image=photo, bg="#f0f0f0", cursor="hand2")
+                lbl_img = tk.Label(row, image=photo, bg=COLOR_PREVIEW_PLACEHOLDER, cursor="hand2")
                 lbl_img.image = photo
                 lbl_img.pack(side=tk.LEFT, padx=(0, 6))
                 lbl_img.bind(
@@ -383,11 +403,10 @@ class MaterialLibraryWidget(ttk.Frame):
                     "<Double-Button-1>",
                     lambda _e, pid=entry.profile_id: self._open_folder(pid),
                 )
-            stxt = self._status_text(entry.texture_status())
             text = ttk.Label(
                 row,
                 text=f"{self._status_label(entry.texture_status(), entry.profile_id)}\n{entry.category}",
-                font=("Segoe UI", 9),
+                font=FONT_SMALL,
                 cursor="hand2",
             )
             text.pack(side=tk.LEFT, fill=tk.X, expand=True)
@@ -424,7 +443,7 @@ class MaterialLibraryWidget(ttk.Frame):
         cols = 3 if self._layout == "vertical" else 4
         for i, entry in enumerate(self._filtered):
             card = self._make_card(entry)
-            card.grid(row=i // cols, column=i % cols, padx=3, pady=3, sticky=tk.NW)
+            card.grid(row=i // cols, column=i % cols, padx=GAP_SM, pady=GAP_SM, sticky=tk.NW)
         ready = sum(1 for e in self._filtered if e.texture_status() == "ready")
         self._status_var.set(f"{len(self._filtered)} shown · {ready} ready · {len(self._entries)} total")
         if self._filtered and self._selected_id not in {e.profile_id for e in self._filtered}:
@@ -435,19 +454,16 @@ class MaterialLibraryWidget(ttk.Frame):
             f"{len(self._filtered)} shown · cache {LIST_THUMB}px · {len(self._entries)} total"
         )
 
-    def _status_glyph(self, status: str) -> str:
-        return {"ready": "●", "partial": "◐", "missing": "○"}.get(status, "?")
-
     def _status_text(self, status: str) -> str:
-        return {"ready": "Ready", "partial": "Partial", "missing": "Missing"}.get(status, status.title())
+        _glyph, label, _fg = material_texture_status(status)
+        return label
 
     def _status_label(self, status: str, profile_id: str | None = None) -> str:
-        """APS-UX-POLISH-001 — word-first status (glyph optional suffix)."""
-        word = self._status_text(status)
-        glyph = self._status_glyph(status)
-        if profile_id:
-            return f"{word} · {profile_id} · {glyph}"
-        return f"{word} · {glyph}"
+        return format_material_texture_status(status, profile_id=profile_id)
+
+    def _status_foreground(self, status: str) -> str:
+        _glyph, _label, fg = material_texture_status(status)
+        return fg
 
     def _load_thumb(self, entry: MaterialProfileEntry, *, force_reload: bool = False) -> ImageTk.PhotoImage:
         if not force_reload and entry.profile_id in self._thumb_photos:
@@ -485,14 +501,13 @@ class MaterialLibraryWidget(ttk.Frame):
     def _make_card(self, entry: MaterialProfileEntry) -> ttk.Frame:
         frame = ttk.Frame(self._grid_inner, relief=tk.RIDGE, borderwidth=1, padding=3)
         status = entry.texture_status()
-        stxt = self._status_text(status)
         top = ttk.Frame(frame)
         top.pack(fill=tk.X)
         status_lbl = ttk.Label(
             top,
             text=self._status_label(status),
-            font=("Segoe UI", 9),
-            foreground={"ready": "#0a6b0a", "partial": "#a66b00", "missing": "#888"}.get(status, "#888"),
+            font=FONT_SMALL,
+            foreground=self._status_foreground(status),
         )
         status_lbl.pack(side=tk.LEFT)
         bind_aps_tooltip(status_lbl, "mat_status")
@@ -505,11 +520,11 @@ class MaterialLibraryWidget(ttk.Frame):
             compound=tk.TOP,
             command=lambda pid=entry.profile_id: self._on_card_click(pid),
             width=self.THUMB_SIZE + 8,
-            bg="#e8eef5" if selected else "#f4f4f4",
-            activebackground="#cce0ff",
+            bg=COLOR_SELECT_BG if selected else COLOR_CARD_BG,
+            activebackground=COLOR_SELECT_ACTIVE,
             relief=tk.SOLID if selected else tk.FLAT,
             borderwidth=2 if selected else 1,
-            font=("Segoe UI", 7),
+            font=FONT_CAPTION,
             wraplength=self.THUMB_SIZE + 4,
         )
         btn.image = photo
@@ -527,7 +542,7 @@ class MaterialLibraryWidget(ttk.Frame):
                 continue
             selected = pid == self._selected_id
             btn.configure(
-                bg="#e8eef5" if selected else "#f4f4f4",
+                bg=COLOR_SELECT_BG if selected else COLOR_CARD_BG,
                 relief=tk.SOLID if selected else tk.FLAT,
                 borderwidth=2 if selected else 1,
             )
@@ -583,15 +598,19 @@ class MaterialLibraryWidget(ttk.Frame):
                 img = Image.open(path).convert("RGB")
                 img.thumbnail((self.PREVIEW_SIZE, self.PREVIEW_SIZE), Image.Resampling.LANCZOS)
                 self._preview_photo = ImageTk.PhotoImage(img)
-                self._preview_image.configure(image=self._preview_photo, text="", bg="#f0f0f0")
+                apply_preview_photo(self._preview_image, self._preview_photo)
                 return
             except Exception as exc:  # noqa: BLE001
                 err = err or str(exc)
         self._preview_photo = None
-        msg = "No albedo — click Generate selected"
-        if err:
-            msg = f"{msg}\n{err[:120]}"
-        self._preview_image.configure(image="", text=msg, bg="#f5e6e6" if err else "#eee8d5")
+        configure_preview_label(
+            self._preview_image,
+            "error" if err else "empty",
+            detail="No color map yet" if not err else "Preview failed",
+            hint=err[:80] if err else "click Generate selected",
+            width=PREVIEW_THUMB_MD,
+            height=PREVIEW_THUMB_MD,
+        )
 
     def _reload_selected_preview(self) -> None:
         if not self._selected_id:

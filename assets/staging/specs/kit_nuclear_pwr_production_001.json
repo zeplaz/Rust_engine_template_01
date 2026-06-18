@@ -1,0 +1,117 @@
+{
+  "schema_version": 1,
+  "asset_id": "kit_nuclear_pwr_production_001",
+  "archetype": "module_kit",
+  "style_pack": "style_industrial_west",
+  "development_tier": "production",
+  "pbr_status": "pending",
+  "batch_id": "kit_nuclear_pwr_production_001",
+  "utility_role": "nuclear",
+  "power_tier": "grid",
+  "plant_definition_id": "pwr_4loop_1100mw_v1",
+  "catalog_id_planned": "nuclear_plant_pwr",
+  "module": {
+    "grid_units": [6, 6],
+    "snap": "floor_edge",
+    "pivot": "bottom_center"
+  },
+  "dimensions_m": {
+    "w": 12,
+    "h": 9,
+    "d": 12
+  },
+  "site_zones": {
+    "primary_pct": 0.4,
+    "utility_pct": 0.25,
+    "service_pct": 0.15,
+    "buffer_pct": 0.2
+  },
+  "material_profile": "concrete_grey_01",
+  "hero_module": {
+    "module_id": "containment_dome_pwr",
+    "grid": [3, 3]
+  },
+  "composition": [
+    {
+      "module_id": "containment_dome_pwr",
+      "grid": [3, 3],
+      "count": 1,
+      "zone": "primary",
+      "placement": "north_center",
+      "note": "PWR containment dome — primary landmark @ 64px iso"
+    },
+    {
+      "module_id": "turbine_hall_1u",
+      "grid": [2, 1],
+      "count": 2,
+      "zone": "primary",
+      "placement": "south_of_dome",
+      "note": "Low turbine hall — repeat along E-W axis"
+    },
+    {
+      "module_id": "cooling_tower_1u",
+      "grid": [1, 1],
+      "count": 2,
+      "zone": "utility",
+      "placement": "south_east",
+      "note": "Alt variant cooling_bank_2u deferred to G4"
+    },
+    {
+      "module_id": "diesel_gen_pad_2x2",
+      "grid": [2, 2],
+      "count": 1,
+      "zone": "service",
+      "placement": "south_west",
+      "note": "Backup diesel — links icon_diesel HUD read"
+    },
+    {
+      "module_id": "switchyard_edge_1u",
+      "grid": [1, 1],
+      "count": 4,
+      "zone": "utility",
+      "placement": "east_edge",
+      "note": "Bus + fence segment — shares utility steel palette"
+    },
+    {
+      "module_id": "fence_chainlink_1u",
+      "grid": [1, 1],
+      "count": 10,
+      "zone": "buffer",
+      "placement": "perimeter",
+      "note": "Reuse from kit_utility_power_production_001"
+    },
+    {
+      "module_id": "warning_sign_nuclear_1u",
+      "grid": [1, 1],
+      "count": 2,
+      "zone": "utility",
+      "placement": "gate_entries",
+      "note": "Yellow + simplified trefoil — no photoreal hazard art"
+    }
+  ],
+  "module_whitelist": [
+    "containment_dome_pwr",
+    "turbine_hall_1u",
+    "cooling_tower_1u",
+    "diesel_gen_pad_2x2",
+    "switchyard_edge_1u",
+    "fence_chainlink_1u",
+    "warning_sign_nuclear_1u"
+  ],
+  "state_read": [
+    { "state": "normal", "visual": "dome + steady stack" },
+    { "state": "scram", "visual": "amber dome wash + icon_scram HUD" },
+    { "state": "meltdown", "visual": "column effect + danger adjunct" },
+    { "state": "diesel_run", "visual": "aux pad exhaust animation" }
+  ],
+  "spec_only": true,
+  "bpy_blocked": true,
+  "references": [
+    "ref:design:DES-ART-NUCLEAR-PLANT-001",
+    "ref:design:DES-ART-UTILITY-STYLE-001",
+    "ref:dmcp:DMCP-SPEC-NUCLEAR-PWR-001",
+    "ref:plant:pwr_4loop_1100mw_v1",
+    "ref:catalog_planned:nuclear_plant_pwr.json",
+    "ref:glyhs:assets/ui/infrastructure/power_glyphs_spec_v1.md"
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "task_id": "CMCP-GRAM-SWEEP-PROCESS-001",
+  "green": true,
+  "process_histogram": {
+    "power_tier": {
+      "light": 1
+    },
+    "supply_chain_role": {
+      "concrete_mixer": 1
+    }
+  },
+  "sweep": {
+    "archetype_id": "IndustrialWarehouse",
+    "seed_count": 24,
+    "massing_histogram": {
+      "long_hall": 6,
+      "yard_complex": 6,
+      "double_hall": 10,
+      "l_shape": 2
+    }
+  },
+  "_agent_meta": {
+    "schema": "grammar_sweep_process_live_v1",
+    "profile": "CMCP_GRAM_SWEEP_PROCESS",
+    "relative_path": "debug_runs/grammar_sweep_process_live.json",
+    "source_system": "grammar_build_set",
+    "written_at_epoch_secs": 1781756231,
+    "ritual": "BLANG:WIT-HON CMCP-GRAM-SWEEP-PROCESS-001"
+  },
+  "witness_honesty": {
+    "status": "passed",
+    "error_count": 0,
+    "warning_count": 0,
+    "summary": "witness_honesty debug_runs/grammar_sweep_process_live.json: 0 error(s), 0 issue(s)"
+  }
+}

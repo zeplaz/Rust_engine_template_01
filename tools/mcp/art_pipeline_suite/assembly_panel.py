@@ -8,7 +8,7 @@ from pathlib import Path
 from tkinter import filedialog, messagebox, ttk
 from typing import Any
 
-from rust_engine_mcp import aps_tags, assembly, arch_build_grammar, building_grammar
+from rust_engine_mcp import aps_tags, assembly, arch_build_grammar, building_grammar, grammar_build_set
 from rust_engine_mcp.aps_grammar_labels import human_label
 from rust_engine_mcp.aps_mat_auth_ui import save_hint
 from rust_engine_mcp.aps_validator_plain import format_p0_display
@@ -22,6 +22,11 @@ from .aps_inline_feedback import set_inline_status
 from .aps_paned import add_pane, horizontal_paned, set_initial_pane_widths
 from .aps_scroll import attach_wheel_area
 from .aps_theme import (
+    COLOR_ACCENT,
+    COLOR_MUTED,
+    COLOR_PREVIEW_PLACEHOLDER,
+    COLOR_TEXT_HINT,
+    COLOR_TEXT_SUBTLE,
     FONT_UI,
     FONT_UI_BOLD,
     FONT_MONO,
@@ -31,6 +36,8 @@ from .aps_theme import (
     track_wraplength,
     wrap_for_widget,
 )
+from .aps_tk import themed_listbox
+from .facility_needs_strip import FacilityNeedsStrip
 from .footprint_canvas import FootprintCanvas
 from .metadata_flow_panel import MetadataFlowPanel
 from .grammar_inspector import GrammarInspectorPanel
@@ -82,11 +89,12 @@ class AssemblyPanel(ttk.Frame):
         self._variant_tag_vars: dict[str, tk.BooleanVar] = {}
         self._tag_category_frames: dict[str, ttk.LabelFrame] = {}
         self._material_profiles: list[str] = []
+        self._grammar_set_tier = "G0"
         self._build()
 
     def set_domain(self, lane: str) -> None:
         if not hasattr(self, "_lane_banner"):
-            self._lane_banner = ttk.Label(self, text="", font=("Segoe UI", 9), foreground="#555")
+            self._lane_banner = ttk.Label(self, text="", font=FONT_UI, foreground=COLOR_MUTED)
             self._lane_banner.pack(anchor=tk.W, before=self.metadata_flow, pady=(0, 4))
         if lane == ArtDomain.LANDSCAPE.value:
             self._lane_banner.configure(text="Landscape lane — grammar preset authority.")
@@ -96,97 +104,87 @@ class AssemblyPanel(ttk.Frame):
     def _build(self) -> None:
         intro = ttk.Label(
             self,
-            text="Assembly — what you set here (materials + tags) is what ships. "
-            "Tile baking is on the Atlas step.",
+            text="Pick type and district, generate, assign materials, then ship check.",
             wraplength=900,
             justify=tk.LEFT,
+            foreground=COLOR_TEXT_SUBTLE,
+            font=FONT_SMALL,
         )
         intro.pack(anchor=tk.W, pady=(0, 4))
         track_wraplength(self, intro, minimum=480)
         self.metadata_flow = MetadataFlowPanel(self, context="assembly")
         self.metadata_flow.pack(fill=tk.X, pady=(0, 6))
 
-        self.grammar_set_panel = GrammarBuildSetPanel(self, on_log=self._on_log)
-        self.grammar_set_panel.pack(fill=tk.X, pady=(0, 6))
+        # --- Step 1: Generate (primary workflow — always visible) ---
+        gen = ttk.Frame(self)
+        gen.pack(fill=tk.X, pady=(0, 4))
 
-        auth = ttk.LabelFrame(self, text="Where materials come from", padding=6)
-        auth.pack(fill=tk.X, pady=(0, 6))
-        self.engine_path_var = tk.StringVar(value=_MATERIAL_AUTHORITY_COPY)
-        self._engine_path_lbl = ttk.Label(
-            auth, textvariable=self.engine_path_var, wraplength=900, justify=tk.LEFT, font=("Segoe UI", 9)
+        self._grammar_set_tier_var = tk.StringVar(value="G0 — pilot kit")
+        self._grammar_tier_strip = ttk.Label(
+            gen,
+            textvariable=self._grammar_set_tier_var,
+            font=FONT_UI_BOLD,
+            foreground=COLOR_ACCENT,
         )
-        self._engine_path_lbl.pack(anchor=tk.W)
-        bind_aps_tooltip(self._engine_path_lbl, "asm_engine_path")
-        self.save_hint_var = tk.StringVar(value="")
-        ttk.Label(auth, textvariable=self.save_hint_var, wraplength=900, justify=tk.LEFT, foreground="#0a4a7a").pack(
-            anchor=tk.W, pady=(4, 0)
-        )
+        self._grammar_tier_strip.pack(anchor=tk.W, pady=(0, 4))
 
-        gen = ttk.LabelFrame(self, text="Generate", padding=6)
-        gen.pack(fill=tk.X, pady=4)
-
-        gram_row = ttk.Frame(gen)
-        gram_row.pack(fill=tk.X, pady=2)
-        self.use_grammar_var = tk.BooleanVar(value=False)
-        gram_cb = ttk.Checkbutton(
-            gram_row, text="Generate from a building style (auto-place modules)", variable=self.use_grammar_var, command=self._on_grammar_toggle
-        )
-        gram_cb.pack(side=tk.LEFT)
-        bind_aps_tooltip(gram_cb, "asm_grammar")
-        ttk.Label(gram_row, text="Archetype").pack(side=tk.LEFT, padx=(12, 0))
         archetypes = building_grammar.list_archetype_ids() or ["IndustrialWarehouse"]
-        self.archetype_var = tk.StringVar(value=archetypes[0])
+        arch_labels, self._archetype_label_to_id = self._grammar_combo_maps(archetypes)
+        districts = building_grammar.list_district_styles(archetypes[0]) or ["industrial_west"]
+        dist_labels, self._district_label_to_id = self._grammar_combo_maps(districts)
+
+        primary = ttk.Frame(gen)
+        primary.pack(fill=tk.X, pady=2)
+        ttk.Label(primary, text="Building type").pack(side=tk.LEFT)
+        self.archetype_var = tk.StringVar(value=arch_labels[0] if arch_labels else "")
         self.archetype_combo = ttk.Combobox(
-            gram_row, textvariable=self.archetype_var, width=20, values=archetypes, state="readonly"
+            primary, textvariable=self.archetype_var, width=26, values=arch_labels, state="readonly"
         )
         self.archetype_combo.pack(side=tk.LEFT, padx=4)
         self.archetype_combo.bind("<<ComboboxSelected>>", self._on_archetype_change)
         bind_aps_tooltip(self.archetype_combo, "asm_archetype")
-        ttk.Label(gram_row, text="District").pack(side=tk.LEFT, padx=(8, 0))
-        districts = building_grammar.list_district_styles(archetypes[0]) or ["industrial_west"]
-        self.district_var = tk.StringVar(value=districts[0] if districts else "")
+        ttk.Label(primary, text="District").pack(side=tk.LEFT, padx=(8, 0))
+        self.district_var = tk.StringVar(value=dist_labels[0] if dist_labels else "")
         self.district_combo = ttk.Combobox(
-            gram_row, textvariable=self.district_var, width=16, values=districts, state="readonly"
+            primary, textvariable=self.district_var, width=22, values=dist_labels, state="readonly"
         )
         self.district_combo.pack(side=tk.LEFT, padx=4)
         bind_aps_tooltip(self.district_combo, "asm_district")
-
-        row = ttk.Frame(gen)
-        row.pack(fill=tk.X, pady=2)
-        ttk.Label(row, text="StylePack").pack(side=tk.LEFT)
-        packs = assembly.list_style_packs()
-        self.style_var = tk.StringVar(value=self.state.style_pack_id)
-        self.style_combo = ttk.Combobox(
-            row, textvariable=self.style_var, width=22, values=packs or ["style_victorian"]
-        )
-        self.style_combo.pack(side=tk.LEFT, padx=4)
-        bind_aps_tooltip(self.style_combo, "asm_style_pack")
-        ttk.Label(row, text="Tier").pack(side=tk.LEFT, padx=(8, 0))
-        self.tier_var = tk.StringVar(value="production")
-        self.tier_combo = ttk.Combobox(
-            row, textvariable=self.tier_var, width=12, values=["production", "lod0"], state="readonly"
-        )
-        self.tier_combo.pack(side=tk.LEFT, padx=4)
-        bind_aps_tooltip(self.tier_combo, "asm_tier")
-
-        row2 = ttk.Frame(gen)
-        row2.pack(fill=tk.X, pady=2)
-        ttk.Label(row2, text="Footprint W×D").pack(side=tk.LEFT)
-        self.footprint_var = tk.StringVar(value=self.state.footprint)
-        self.footprint_entry = ttk.Entry(row2, textvariable=self.footprint_var, width=8)
-        self.footprint_entry.pack(side=tk.LEFT, padx=4)
-        ttk.Label(row2, text="Floors").pack(side=tk.LEFT, padx=(8, 0))
-        self.floors_var = tk.IntVar(value=self.state.floors)
-        self.floors_spin = ttk.Spinbox(row2, from_=1, to=8, textvariable=self.floors_var, width=4)
-        self.floors_spin.pack(side=tk.LEFT, padx=4)
-        bind_aps_tooltip(self.footprint_entry, "asm_footprint_dims")
-        bind_aps_tooltip(self.floors_spin, "asm_footprint_dims")
-        ttk.Label(row2, text="Seed").pack(side=tk.LEFT, padx=(8, 0))
+        ttk.Label(primary, text="Seed").pack(side=tk.LEFT, padx=(8, 0))
         self.seed_var = tk.IntVar(value=self.state.seed)
-        ttk.Spinbox(row2, from_=0, to=999999, textvariable=self.seed_var, width=8).pack(side=tk.LEFT, padx=4)
-        gen_btn = ttk.Button(row2, text="Generate Assembly", command=self.on_generate)
-        gen_btn.pack(side=tk.LEFT, padx=8)
+        ttk.Spinbox(primary, from_=0, to=999999, textvariable=self.seed_var, width=8).pack(side=tk.LEFT, padx=4)
+        gen_btn = ttk.Button(primary, text="Generate Assembly", command=self.on_generate)
+        gen_btn.pack(side=tk.LEFT, padx=(12, 0))
         bind_aps_tooltip(gen_btn, "asm_generate")
+
+        self._grammar_kit_var = tk.StringVar(value="")
+        kit_hint = ttk.Label(
+            gen,
+            textvariable=self._grammar_kit_var,
+            wraplength=880,
+            justify=tk.LEFT,
+            foreground=COLOR_TEXT_HINT,
+            font=FONT_UI,
+        )
+        kit_hint.pack(anchor=tk.W, pady=(2, 0))
+        track_wraplength(gen, kit_hint, minimum=480)
+        self._kit_hint_label = kit_hint
+
+        self._set_health_var = tk.StringVar(value="")
+        self._set_health_strip = ttk.Frame(gen)
+        ttk.Label(
+            self._set_health_strip,
+            textvariable=self._set_health_var,
+            wraplength=720,
+            justify=tk.LEFT,
+            font=FONT_SMALL,
+            foreground=COLOR_TEXT_SUBTLE,
+        ).pack(side=tk.LEFT, fill=tk.X, expand=True)
+        ttk.Button(
+            self._set_health_strip,
+            text="Run sweep",
+            command=self._on_set_health_sweep,
+        ).pack(side=tk.RIGHT, padx=(8, 0))
 
         self.next_step_var = tk.StringVar(value="")
         self._next_step_frame = ttk.Frame(gen)
@@ -196,63 +194,31 @@ class AssemblyPanel(ttk.Frame):
             textvariable=self.next_step_var,
             wraplength=880,
             justify=tk.LEFT,
-            foreground="#0a4a7a",
-            font=("Segoe UI", 9),
+            foreground=COLOR_ACCENT,
+            font=FONT_UI,
         )
         self._next_step_lbl.pack(anchor=tk.W)
         bind_aps_tooltip(self._next_step_lbl, "asm_material_lib")
 
-        self.iterate_section = CollapsibleSection(
-            gen, "Tweak one style layer (advanced)", expanded=False, padding=2
-        )
-        self.iterate_section.pack(fill=tk.X, pady=4)
-        self.iterate_panel = GrammarIteratePanel(
-            self.iterate_section.body,
-            on_applied=self._on_iterate_applied,
-            on_log=self._on_log,
-        )
-        self.iterate_panel.pack(fill=tk.X)
+        self.save_hint_var = tk.StringVar(value="")
+        ttk.Label(
+            gen,
+            textvariable=self.save_hint_var,
+            wraplength=880,
+            justify=tk.LEFT,
+            foreground=COLOR_ACCENT,
+            font=FONT_SMALL,
+        ).pack(anchor=tk.W, pady=(2, 0))
 
-        self.grammar_dna_section = CollapsibleSection(
-            gen, "Building shape bias (advanced)", expanded=False, padding=2
-        )
-        self.grammar_dna_section.pack(fill=tk.X, pady=4)
-        bind_aps_tooltip(self.grammar_dna_section._head_btn, "asm_grammar_dna")
-        self.grammar_dna_panel = GrammarDnaPanel(
-            self.grammar_dna_section.body,
-            on_change=self._on_grammar_dna_change,
-        )
-        self.grammar_dna_panel.pack(fill=tk.X)
+        self.use_grammar_var = tk.BooleanVar(value=bool(archetypes))
 
-        file_row = ttk.Frame(self)
-        file_row.pack(fill=tk.X, pady=4)
-        load_btn = ttk.Button(file_row, text="Load…", command=self.on_load)
-        load_btn.pack(side=tk.LEFT, padx=2)
-        bind_aps_tooltip(load_btn, "asm_load")
-        save_btn = ttk.Button(file_row, text="Save", command=self.on_save)
-        save_btn.pack(side=tk.LEFT, padx=2)
-        bind_aps_tooltip(save_btn, "asm_save")
-        val_btn = ttk.Button(file_row, text="Check schema", command=self.on_validate)
-        val_btn.pack(side=tk.LEFT, padx=2)
-        bind_aps_tooltip(val_btn, "asm_validate")
-        p0_btn = ttk.Button(file_row, text="Run ship check", command=self.on_validate_p0)
-        p0_btn.pack(side=tk.LEFT, padx=2)
-        bind_aps_tooltip(p0_btn, "asm_p0")
-        self.path_var = tk.StringVar(value="(no snapshot)")
-        ttk.Label(file_row, textvariable=self.path_var, foreground="#444").pack(side=tk.LEFT, padx=8)
-        prev_btn = ttk.Button(file_row, text="Preview assembly", command=self.on_preview_assembly)
-        prev_btn.pack(side=tk.LEFT, padx=2)
-        bind_aps_tooltip(prev_btn, "asm_preview")
-
+        # --- Step 2–4: Footprint · Materials · Inspector (main work area) ---
         workspace = horizontal_paned(self)
-        workspace.pack(fill=tk.BOTH, expand=True, pady=8)
+        workspace.pack(fill=tk.BOTH, expand=True, pady=4)
 
         footprint_pane = ttk.Frame(workspace, padding=4)
         materials_pane = ttk.Frame(workspace, padding=4)
         inspector_pane = ttk.Frame(workspace, padding=4)
-        # APS-UX-MIN-FIT — pane minsizes must fit MIN_WINDOW_SIZE width with no
-        # horizontal scroll. 3 panes + 2 sashes must stay under usable width at
-        # MIN_WINDOW_SIZE[0] (scrollbar + tab padding eat ~40px). 215+195+215 = 625.
         _min_w = MIN_WINDOW_SIZE[0]
         _fp_min, _mat_min, _insp_min = (215, 195, 215) if _min_w <= 1024 else (240, 220, 260)
         add_pane(workspace, footprint_pane, weight=2, minsize=_fp_min)
@@ -263,10 +229,10 @@ class AssemblyPanel(ttk.Frame):
             [(footprint_pane, 0.30), (materials_pane, 0.28)],
         )
 
-        ttk.Label(footprint_pane, text="Footprint & placements", font=("Segoe UI", 9, "bold")).pack(
+        ttk.Label(footprint_pane, text="Footprint & placements", font=FONT_UI_BOLD).pack(
             anchor=tk.W
         )
-        self.placement_list = tk.Listbox(
+        self.placement_list = themed_listbox(
             footprint_pane, exportselection=False, font=("Consolas", 9), height=5
         )
         self.placement_list.pack(fill=tk.X, pady=(4, 6))
@@ -281,8 +247,23 @@ class AssemblyPanel(ttk.Frame):
         bind_aps_tooltip(self.footprint_canvas, "asm_footprint")
         bind_aps_tooltip(self.placement_list, "asm_footprint_heatmap")
 
-        mat_frame = ttk.LabelFrame(materials_pane, text="Material library", padding=4)
+        mat_frame = ttk.LabelFrame(
+            materials_pane,
+            text="Material library — assign here to ship",
+            padding=4,
+        )
         mat_frame.pack(fill=tk.BOTH, expand=True)
+        self.engine_path_var = tk.StringVar(value=_MATERIAL_AUTHORITY_COPY)
+        auth_lbl = ttk.Label(
+            mat_frame,
+            textvariable=self.engine_path_var,
+            wraplength=420,
+            justify=tk.LEFT,
+            font=FONT_SMALL,
+            foreground=COLOR_MUTED,
+        )
+        auth_lbl.pack(anchor=tk.W, pady=(0, 4))
+        bind_aps_tooltip(auth_lbl, "asm_engine_path")
         self.material_browser = MaterialBrowserPanel(
             mat_frame,
             on_apply_material=self._apply_material_profile,
@@ -292,22 +273,26 @@ class AssemblyPanel(ttk.Frame):
         self.material_browser.pack(fill=tk.BOTH, expand=True)
         bind_aps_tooltip(mat_frame, "asm_material_lib")
 
-        self.slot_preview = SlotPreviewPanel(inspector_pane, on_log=self._on_log)
+        preview_section = CollapsibleSection(inspector_pane, "Previews", expanded=True, padding=4)
+        preview_section.pack(fill=tk.X, pady=(0, 6))
+        preview_body = preview_section.body
+
+        self.slot_preview = SlotPreviewPanel(preview_body, on_log=self._on_log, start_job=self._start_job)
         bind_aps_tooltip(self.slot_preview, "asm_slot_preview")
         self.slot_preview.pack(fill=tk.X, pady=(0, 6))
 
         self.assembly_preview = AssemblyPreviewPanel(
-            inspector_pane,
+            preview_body,
             on_log=self._on_log,
             on_preview_thumb=self._on_assembly_preview_thumb,
             start_job=self._start_job,
         )
-        self.assembly_preview.pack(fill=tk.X, pady=(0, 8))
+        self.assembly_preview.pack(fill=tk.X, pady=(0, 4))
 
         slot = ttk.LabelFrame(inspector_pane, text="Selected piece — edit", padding=8)
         slot.pack(fill=tk.BOTH, expand=True)
 
-        ttk.Label(slot, text="Node id").grid(row=0, column=0, sticky=tk.W)
+        ttk.Label(slot, text="Piece id").grid(row=0, column=0, sticky=tk.W)
         self.node_id_var = tk.StringVar(value="—")
         ttk.Label(slot, textvariable=self.node_id_var, font=("Consolas", 9)).grid(
             row=0, column=1, sticky=tk.W, padx=4
@@ -319,20 +304,20 @@ class AssemblyPanel(ttk.Frame):
             row=1, column=1, sticky=tk.W, padx=4
         )
 
-        ttk.Label(slot, text="Material profile").grid(row=2, column=0, sticky=tk.W, pady=4)
+        ttk.Label(slot, text="Material").grid(row=2, column=0, sticky=tk.W, pady=4)
         self.material_var = tk.StringVar(value="—")
         self.material_category_var = tk.StringVar(value="")
         mat_row = ttk.Frame(slot)
         mat_row.grid(row=2, column=1, sticky=tk.W, padx=4)
         self._material_swatch = tk.Label(
-            mat_row, text="—", width=3, bg="#dddddd", relief=tk.RIDGE, font=FONT_SMALL
+            mat_row, text="—", width=3, bg=COLOR_PREVIEW_PLACEHOLDER, relief=tk.RIDGE, font=FONT_SMALL
         )
         self._material_swatch.pack(side=tk.LEFT, padx=(0, 6))
         mat_col = ttk.Frame(mat_row)
         mat_col.pack(side=tk.LEFT)
         ttk.Label(mat_col, textvariable=self.material_var, font=FONT_MONO_SMALL).pack(anchor=tk.W)
         ttk.Label(
-            mat_col, textvariable=self.material_category_var, font=FONT_SMALL, foreground="#555"
+            mat_col, textvariable=self.material_category_var, font=FONT_SMALL, foreground=COLOR_MUTED
         ).pack(anchor=tk.W)
         mat_btn_row = ttk.Frame(slot)
         mat_btn_row.grid(row=2, column=2, sticky=tk.W, padx=4)
@@ -391,15 +376,17 @@ class AssemblyPanel(ttk.Frame):
         )
         grammar_section.pack(fill=tk.X, pady=4)
         self._grammar_section = grammar_section
-        self.grammar_inspector = GrammarInspectorPanel(grammar_section.body)
+        self.grammar_inspector = GrammarInspectorPanel(
+            grammar_section.body,
+            on_rule_select=self._on_grammar_inspector_rule_select,
+        )
         self.grammar_inspector.pack(fill=tk.X)
 
         self.validation_var = tk.StringVar(value="")
-        self._validation_lbl = tk.Label(
+        self._validation_lbl = ttk.Label(
             inspector_pane,
             textvariable=self.validation_var,
             wraplength=420,
-            foreground="#444444",
             font=FONT_UI,
         )
         self._validation_lbl.pack(anchor=tk.W, pady=4)
@@ -410,7 +397,246 @@ class AssemblyPanel(ttk.Frame):
         inspector_pane.bind("<Configure>", _validation_wrap)
 
         slot.columnconfigure(1, weight=1)
+
+        # --- File / ship actions ---
+        file_row = ttk.Frame(self)
+        file_row.pack(fill=tk.X, pady=4)
+        load_btn = ttk.Button(file_row, text="Load…", command=self.on_load)
+        load_btn.pack(side=tk.LEFT, padx=2)
+        bind_aps_tooltip(load_btn, "asm_load")
+        save_btn = ttk.Button(file_row, text="Save", command=self.on_save)
+        save_btn.pack(side=tk.LEFT, padx=2)
+        bind_aps_tooltip(save_btn, "asm_save")
+        val_btn = ttk.Button(file_row, text="Check schema", command=self.on_validate)
+        val_btn.pack(side=tk.LEFT, padx=2)
+        bind_aps_tooltip(val_btn, "asm_validate")
+        p0_btn = ttk.Button(file_row, text="Run ship check", command=self.on_validate_p0)
+        p0_btn.pack(side=tk.LEFT, padx=2)
+        bind_aps_tooltip(p0_btn, "asm_p0")
+        self.path_var = tk.StringVar(value="(no snapshot)")
+        ttk.Label(file_row, textvariable=self.path_var, foreground=COLOR_TEXT_SUBTLE).pack(side=tk.LEFT, padx=8)
+        prev_btn = ttk.Button(file_row, text="Preview assembly", command=self.on_preview_assembly)
+        prev_btn.pack(side=tk.LEFT, padx=2)
+        bind_aps_tooltip(prev_btn, "asm_preview")
+
+        # --- Setup & manual fallback (collapsed by default) ---
+        self._setup_section = CollapsibleSection(
+            self, "Setup & manual fallback", expanded=False, padding=4
+        )
+        self._setup_section.pack(fill=tk.X, pady=(0, 4))
+        setup_body = self._setup_section.body
+
+        gram_row = ttk.Frame(setup_body)
+        gram_row.pack(fill=tk.X, pady=2)
+        gram_cb = ttk.Checkbutton(
+            gram_row,
+            text="Use building style rules (recommended)",
+            variable=self.use_grammar_var,
+            command=self._on_grammar_toggle,
+        )
+        gram_cb.pack(side=tk.LEFT)
+        bind_aps_tooltip(gram_cb, "asm_grammar")
+
+        self.facility_needs = FacilityNeedsStrip(setup_body)
+        self.facility_needs.pack(fill=tk.X, pady=(4, 4))
+
+        manual = ttk.LabelFrame(setup_body, text="Manual override (when grammar off)", padding=4)
+        manual.pack(fill=tk.X, pady=2)
+        row = ttk.Frame(manual)
+        row.pack(fill=tk.X, pady=2)
+        ttk.Label(row, text="Style pack").pack(side=tk.LEFT)
+        packs = assembly.list_style_packs()
+        self.style_var = tk.StringVar(value=self.state.style_pack_id)
+        self.style_combo = ttk.Combobox(
+            row, textvariable=self.style_var, width=22, values=packs or ["style_victorian"]
+        )
+        self.style_combo.pack(side=tk.LEFT, padx=4)
+        bind_aps_tooltip(self.style_combo, "asm_style_pack")
+        ttk.Label(row, text="Source tier").pack(side=tk.LEFT, padx=(8, 0))
+        self.tier_var = tk.StringVar(value="production")
+        self.tier_combo = ttk.Combobox(
+            row, textvariable=self.tier_var, width=12, values=["production", "lod0"], state="readonly"
+        )
+        self.tier_combo.pack(side=tk.LEFT, padx=4)
+        bind_aps_tooltip(self.tier_combo, "asm_tier")
+        row2 = ttk.Frame(manual)
+        row2.pack(fill=tk.X, pady=2)
+        ttk.Label(row2, text="Footprint W×D").pack(side=tk.LEFT)
+        self.footprint_var = tk.StringVar(value=self.state.footprint)
+        self.footprint_entry = ttk.Entry(row2, textvariable=self.footprint_var, width=8)
+        self.footprint_entry.pack(side=tk.LEFT, padx=4)
+        ttk.Label(row2, text="Floors").pack(side=tk.LEFT, padx=(8, 0))
+        self.floors_var = tk.IntVar(value=self.state.floors)
+        self.floors_spin = ttk.Spinbox(row2, from_=1, to=8, textvariable=self.floors_var, width=4)
+        self.floors_spin.pack(side=tk.LEFT, padx=4)
+        bind_aps_tooltip(self.footprint_entry, "asm_footprint_dims")
+        bind_aps_tooltip(self.floors_spin, "asm_footprint_dims")
+
+        self.iterate_section = CollapsibleSection(
+            setup_body, "Tweak one style layer (advanced)", expanded=False, padding=2
+        )
+        self.iterate_section.pack(fill=tk.X, pady=4)
+        self.iterate_panel = GrammarIteratePanel(
+            self.iterate_section.body,
+            on_applied=self._on_iterate_applied,
+            on_log=self._on_log,
+        )
+        self.iterate_panel.pack(fill=tk.X)
+
+        self.grammar_dna_section = CollapsibleSection(
+            setup_body, "Building shape bias (advanced)", expanded=False, padding=2
+        )
+        self.grammar_dna_section.pack(fill=tk.X, pady=4)
+        bind_aps_tooltip(self.grammar_dna_section._head_btn, "asm_grammar_dna")
+        self.grammar_dna_panel = GrammarDnaPanel(
+            self.grammar_dna_section.body,
+            on_change=self._on_grammar_dna_change,
+        )
+        self.grammar_dna_panel.pack(fill=tk.X)
+
+        # --- Kit grammar reference (bottom, advanced) ---
+        self._grammar_set_section = CollapsibleSection(
+            self, "Kit grammar reference (advanced)", expanded=False, padding=4
+        )
+        self._grammar_set_section.pack(fill=tk.X, pady=(0, 4))
+        self.grammar_set_panel = GrammarBuildSetPanel(self._grammar_set_section.body, on_log=self._on_log)
+        self.grammar_set_panel.pack(fill=tk.X)
+
         self._on_grammar_toggle()
+        self.refresh_grammar_tier_from_registry()
+        self._refresh_facility_needs()
+
+    _TIER_STRIP_LABELS = {
+        "G0": "G0 — pilot kit",
+        "G1": "G1 — family seed",
+        "G2": "G2 — axis coverage",
+        "G3": "G3 — layer depth",
+        "G4": "G4 — production set",
+    }
+
+    def _refresh_set_health_strip(self) -> None:
+        """G2+ promoted strip — brief gaps + sweep entry point."""
+        try:
+            brief = grammar_build_set.grammar_set_brief()
+            gaps = brief.get("gaps") or []
+            if gaps:
+                self._set_health_var.set(f"Set health: {gaps[0]}")
+            elif brief.get("green"):
+                self._set_health_var.set("Set health: OK — run sweep to verify massing spread")
+            else:
+                self._set_health_var.set(str(brief.get("text") or "Set health: refresh brief"))
+        except Exception as exc:  # noqa: BLE001
+            self._set_health_var.set(f"Set health: unavailable ({exc})")
+
+    def _on_set_health_sweep(self) -> None:
+        self.grammar_set_panel._run_sweep()
+        self._refresh_set_health_strip()
+        sweep = self.grammar_set_panel.sweep_var.get()
+        if sweep:
+            self._set_health_var.set(f"Set health: {sweep[:160]}")
+
+    def refresh_grammar_tier_from_registry(self) -> None:
+        body = grammar_build_set.grammar_set_tier()
+        tier = str(body.get("tier") or "G0").upper()
+        self.apply_grammar_tier(tier)
+
+    def apply_grammar_tier(self, tier: str) -> None:
+        """APS-GRAM-TIER-002 — show/hide grammar surfaces per exposure table."""
+        tier = str(tier or "G0").upper()
+        if tier not in grammar_build_set.TIER_ORDER:
+            tier = "G0"
+        self._grammar_set_tier = tier
+        self._grammar_set_tier_var.set(self._TIER_STRIP_LABELS.get(tier, tier))
+        self.facility_needs.set_grammar_tier(tier)
+        self._refresh_facility_needs()
+
+        if tier == "G0":
+            self._grammar_kit_var.set(
+                "Only one building type in the kit — add grammar files to unlock the full family."
+            )
+            self._kit_hint_label.pack(anchor=tk.W, pady=(2, 0))
+        else:
+            self._grammar_kit_var.set("")
+            self._kit_hint_label.pack_forget()
+
+        if tier in ("G2", "G3", "G4"):
+            self._refresh_set_health_strip()
+            if not self._set_health_strip.winfo_ismapped():
+                self._set_health_strip.pack(fill=tk.X, pady=(4, 0), before=self._next_step_frame)
+        else:
+            self._set_health_strip.pack_forget()
+
+        archetypes = building_grammar.list_archetype_ids() or ["IndustrialWarehouse"]
+        arch_labels, self._archetype_label_to_id = self._grammar_combo_maps(archetypes)
+        self.archetype_combo.configure(values=arch_labels or [""])
+        if arch_labels and self.archetype_var.get() not in arch_labels:
+            self.archetype_var.set(arch_labels[0])
+            self._on_archetype_change()
+
+        dna_mode = "hidden"
+        iterate_mode = "hidden"
+        build_set_expanded = False
+        if tier in ("G2", "G3", "G4"):
+            dna_mode = "collapsed"
+            iterate_mode = "collapsed"
+        if tier in ("G3", "G4"):
+            dna_mode = "visible"
+            iterate_mode = "visible"
+        if tier in ("G2", "G3", "G4"):
+            build_set_expanded = tier in ("G2", "G3", "G4")
+
+        self._apply_tier_section(self.iterate_section, iterate_mode)
+        self._apply_tier_section(self.grammar_dna_section, dna_mode)
+        if build_set_expanded and not self._grammar_set_section.is_expanded:
+            self._grammar_set_section._expanded = True
+            self._grammar_set_section._head_btn.configure(text=self._grammar_set_section._header_text())
+            self._grammar_set_section._sync_body()
+        elif tier in ("G0", "G1") and self._grammar_set_section.is_expanded:
+            self._grammar_set_section._expanded = False
+            self._grammar_set_section._head_btn.configure(text=self._grammar_set_section._header_text())
+            self._grammar_set_section._sync_body()
+
+    @staticmethod
+    def _apply_tier_section(
+        section: CollapsibleSection,
+        mode: str,
+        *,
+        before: tk.Misc | None = None,
+    ) -> None:
+        if mode == "hidden":
+            section.pack_forget()
+            return
+        if not section.winfo_ismapped():
+            if before is not None:
+                section.pack(fill=tk.X, pady=4, before=before)
+            else:
+                section.pack(fill=tk.X, pady=4)
+        want_expanded = mode == "visible"
+        if section.is_expanded != want_expanded:
+            section._expanded = want_expanded
+            section._head_btn.configure(text=section._header_text())
+            section._sync_body()
+
+    @staticmethod
+    def _widget_packed(widget: tk.Misc) -> bool:
+        try:
+            return bool(widget.winfo_manager())
+        except tk.TclError:
+            return False
+
+    def grammar_tier_gate_snapshot(self) -> dict[str, Any]:
+        """Scanner payload for tier gate witnesses."""
+        values = self.archetype_combo.cget("values")
+        combo_count = len(values) if isinstance(values, (list, tuple)) else 0
+        kit_text = self._grammar_kit_var.get().strip()
+        return {
+            "tier": self._grammar_set_tier,
+            "dna_panel_visible": self._widget_packed(self.grammar_dna_section),
+            "iterate_panel_visible": self._widget_packed(self.iterate_section),
+            "build_set_expanded_default": self._grammar_set_section.is_expanded,
+            "kit_hint_visible": self._widget_packed(self._kit_hint_label) and bool(kit_text),
+            "archetype_combo_count": combo_count,
+        }
 
     def _build_semantic_tag_pickers(self, parent: ttk.Frame) -> None:
         labels = aps_tags.category_labels()
@@ -431,19 +657,15 @@ class AssemblyPanel(ttk.Frame):
                 )
 
     def _set_validation_result(self, text: str, *, ok: bool | None = None) -> None:
-        if ok is False and text and not text.lower().startswith("validation"):
-            text = f"Validation: FAIL — {text}"
-        elif ok is True and text and "passed" not in text.lower():
-            text = f"Validation: PASS — {text}"
         set_inline_status(self._validation_lbl, self.validation_var, text, ok=ok)
 
     def show_material_assign_callout(self, profile_id: str) -> None:
         if self._snapshot:
             self.next_step_var.set(
-                f"Profile {profile_id} highlighted — select a footprint cell, then Apply to selected slot."
+                f"Material {profile_id} highlighted — select a footprint cell, then Apply to selected piece."
             )
         else:
-            self.next_step_var.set("Generate or load an assembly snapshot first, then select a footprint cell.")
+            self.next_step_var.set("Generate or load an Assembly first, then select a footprint cell.")
         bind_aps_tooltip(self._next_step_lbl, "asm_material_lib")
 
     def _apply_tag_category_filter(self) -> None:
@@ -458,6 +680,20 @@ class AssemblyPanel(ttk.Frame):
         n = sum(1 for tag_map in self._semantic_tag_vars.values() for var in tag_map.values() if var.get())
         n += sum(1 for var in self._variant_tag_vars.values() if var.get())
         return n
+
+    @staticmethod
+    def _grammar_combo_maps(ids: list[str]) -> tuple[list[str], dict[str, str]]:
+        labels = [human_label(i) for i in ids if i]
+        label_to_id = {human_label(i): i for i in ids if i}
+        return labels, label_to_id
+
+    def _resolve_archetype_id(self) -> str:
+        raw = self.archetype_var.get().strip()
+        return self._archetype_label_to_id.get(raw, raw)
+
+    def _resolve_district_id(self) -> str:
+        raw = self.district_var.get().strip()
+        return self._district_label_to_id.get(raw, raw)
 
     def _grammar_section_title(self) -> str:
         base = "Grammar inspector"
@@ -495,17 +731,25 @@ class AssemblyPanel(ttk.Frame):
             self.style_combo.configure(state="disabled")
         else:
             self.style_combo.configure(state="normal")
+        self._refresh_facility_needs()
+
+    def _refresh_facility_needs(self) -> None:
+        archetype_id = None
+        if self.use_grammar_var.get():
+            label = self.archetype_var.get()
+            archetype_id = self._archetype_label_to_id.get(label, label)
+        self.facility_needs.refresh(archetype_id=archetype_id, lane=self.state.art_domain)
 
     def _on_archetype_change(self, _event=None) -> None:
-        archetype = self.archetype_var.get().strip()
+        archetype = self._resolve_archetype_id()
         if not archetype:
             return
         districts = building_grammar.list_district_styles(archetype)
-        self.district_combo.configure(values=districts or [""])
-        if districts:
-            self.district_var.set(districts[0])
-
-    def sync_from_state(self) -> None:
+        labels, self._district_label_to_id = self._grammar_combo_maps(districts or [])
+        self.district_combo.configure(values=labels or [""])
+        if labels:
+            self.district_var.set(labels[0])
+        self._refresh_facility_needs()
         self.style_var.set(self.state.style_pack_id)
         self.footprint_var.set(self.state.footprint)
         self.floors_var.set(self.state.floors)
@@ -530,10 +774,10 @@ class AssemblyPanel(ttk.Frame):
             self.seed_var.set(int(snap["seed"]))
         if snap.get("archetype_id"):
             self.use_grammar_var.set(True)
-            self.archetype_var.set(str(snap["archetype_id"]))
+            self.archetype_var.set(human_label(str(snap["archetype_id"])))
             self._on_archetype_change()
             if snap.get("district_style"):
-                self.district_var.set(str(snap["district_style"]))
+                self.district_var.set(human_label(str(snap["district_style"])))
             self._on_grammar_toggle()
         self.state.module_ids_in_assembly = sorted(
             {str(p.get("module_id")) for p in snap.get("module_placements") or []}
@@ -559,11 +803,16 @@ class AssemblyPanel(ttk.Frame):
         for p in self._sorted_placements():
             self.placement_list.insert(tk.END, self._placement_label(p))
 
+    def _on_grammar_inspector_rule_select(self, layer: str, rule_id: str) -> None:
+        count = self.footprint_canvas.highlight_for_rule(rule_id)
+        self._on_log(f"grammar-inspector {layer}/{rule_id} → {count} cells highlighted")
+
     def _refresh_footprint_grid(self) -> None:
         if not self._snapshot:
             self.footprint_canvas.set_cells([], [])
             return
         cells = assembly.footprint_cells_for_snapshot(self._snapshot)
+        self.footprint_canvas.clear_rule_highlight()
         self.footprint_canvas.set_cells(cells, self._sorted_placements())
 
     def _on_iterate_applied(
@@ -624,8 +873,8 @@ class AssemblyPanel(ttk.Frame):
         tier = self.tier_var.get().strip() or "lod0"
         try:
             if self.use_grammar_var.get():
-                archetype = self.archetype_var.get().strip()
-                district = self.district_var.get().strip()
+                archetype = self._resolve_archetype_id()
+                district = self._resolve_district_id()
                 self._on_log(f"assembly-snapshot-generate grammar {archetype}/{district} seed={seed}")
                 snap = assembly.generate_assembly_snapshot(
                     archetype_id=archetype,
@@ -654,21 +903,22 @@ class AssemblyPanel(ttk.Frame):
         snap = self._apply_grammar_dna_from_ui(snap)
         self._load_snapshot_into_ui(snap, path_hint=str(snap.get("written_path") or ""))
         self._on_log(f"wrote {self.state.assembly_snapshot_path}")
+        # P7 Slice B — the pipeline spine owns the "what's next" walkthrough; this
+        # stays a short in-context hint about the work area, not a second pipeline nav.
         self.next_step_var.set(
-            "Next: Select a footprint cell → Materials tab → Apply profile → Save snapshot "
-            "(sidecar tags in Catalog are hints only)."
+            "Select a footprint cell to assign a material (Catalog tags are hints only)."
         )
         bind_aps_tooltip(self._next_step_lbl, "asm_save_reminder")
         rep = self._p0_report()
         if rep.status == "passed":
             self._set_validation_result(
-                f"Snapshot OK · {self.state.assembly_id} · P0 gate passed",
+                f"Assembly saved · {self.state.assembly_id} · ship check passed",
                 ok=True,
             )
         else:
             hints = self._format_validation_hints(rep)
-            self._set_validation_result(f"P0 failed: {hints[:200]}", ok=False)
-            self._on_log(f"generate P0 failed: {hints[:400]}")
+            self._set_validation_result(f"Ship check failed: {hints[:200]}", ok=False)
+            self._on_log(f"generate ship check failed: {hints[:400]}")
 
     def _p0_report(self):
         import tempfile
@@ -708,13 +958,13 @@ class AssemblyPanel(ttk.Frame):
     def _run_p0_or_block(self, action: str) -> bool:
         rep = self._p0_report()
         if rep.status == "passed":
-            self._set_validation_result(f"P0 gate: passed — {action} OK", ok=True)
+            self._set_validation_result(f"Ship check passed — {action} OK", ok=True)
             return True
         hints = self._format_validation_hints(rep)
-        self._set_validation_result(f"P0 failed: {hints[:200]}", ok=False)
+        self._set_validation_result(f"Ship check failed: {hints[:200]}", ok=False)
         return messagebox.askyesno(
-            f"P0 gate failed — {action} anyway?",
-            f"{hints}\n\nProceed anyway? (Not recommended for ship/bake.)",
+            f"Ship check failed — {action} anyway?",
+            f"{hints}\n\nProceed anyway? (Not recommended before you ship.)",
         )
 
     def on_load(self) -> None:
@@ -741,7 +991,7 @@ class AssemblyPanel(ttk.Frame):
             self._set_validation_result("Generate or load a snapshot first.", ok=False)
             return
         if not self._run_p0_or_block("Save"):
-            self._on_log("save cancelled — P0 gate failed")
+            self._on_log("save cancelled — ship check failed")
             return
         try:
             self._snapshot = self._apply_grammar_dna_from_ui(self._snapshot)
@@ -779,7 +1029,7 @@ class AssemblyPanel(ttk.Frame):
 
     def on_preview_assembly(self) -> None:
         if not self._run_p0_or_block("Preview"):
-            self._on_log("preview cancelled — P0 gate failed")
+            self._on_log("preview cancelled — ship check failed")
             return
         self.assembly_preview.on_preview()
 
@@ -796,14 +1046,14 @@ class AssemblyPanel(ttk.Frame):
             tmp = Path(tempfile.gettempdir()) / "_aps_assembly_validate.json"
             tmp.write_text(json.dumps(self._snapshot, indent=2), encoding="utf-8")
             rep = validate_assembly_snapshot_path(tmp, ship=True)
-        self._show_validation_report(rep, title="Validate (production)")
+        self._show_validation_report(rep, title="Check schema")
 
     def on_validate_p0(self) -> None:
         if not self._snapshot:
             self._set_validation_result("No snapshot loaded.", ok=False)
             return
         rep = self._p0_report()
-        self._show_validation_report(rep, title="P0 gate (production + grammar)")
+        self._show_validation_report(rep, title="Ship check")
 
     def _show_validation_report(self, rep, *, title: str) -> None:
         if rep.status == "passed":

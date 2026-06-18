@@ -173,7 +173,7 @@ pub fn draw_build_toolbox_egui(
         }
         if tool.utilities_menu_open {
             ui.separator();
-            draw_utilities_submenu(ui, &mut tool, &registry);
+            draw_utilities_submenu(ui, &mut tool, &registry, None);
         }
         if tool.mock_shapes_menu_open {
             ui.separator();
@@ -203,67 +203,5 @@ pub fn draw_build_toolbox_egui(
     let slot = dock.slot_mut(HudWidgetId::BuildToolbox);
     slot.minimized = minimized;
     slot.detached = detached;
-    Ok(())
-}
-
-/// Simulation-only build rail submenu panel (does not touch product-shell egui pass counter).
-pub fn draw_sim_build_rail_submenus_egui(
-    mut contexts: bevy_egui::EguiContexts,
-    mut tool: ResMut<ActiveBuildTool>,
-    strip: Res<BuildStripState>,
-    registry: Res<BuildingDefinitionRegistry>,
-    base: Res<State<BaseState>>,
-) -> Result {
-    if !matches!(*base.get(), BaseState::Simulation) {
-        return Ok(());
-    }
-    if strip.active == ToolContext::None {
-        return Ok(());
-    }
-    if !tool.residential_menu_open
-        && !tool.commercial_menu_open
-        && !tool.industrial_menu_open
-        && !tool.utilities_menu_open
-        && !tool.mock_shapes_menu_open
-    {
-        return Ok(());
-    }
-
-    use crate::gui::hud::simulation_shell_phase2::{
-        BUILD_RAIL_W_PX, COMMAND_LEFT_STACK_COLUMN_GAP_PX, CONTEXT_RAIL_W_PX,
-    };
-
-    let ctx = contexts.ctx_mut()?;
-    let anchor_x = CONTEXT_RAIL_W_PX + COMMAND_LEFT_STACK_COLUMN_GAP_PX + BUILD_RAIL_W_PX + 8.0;
-    let anchor_y = 96.0;
-
-    egui::Area::new(egui::Id::new("sim_build_rail_submenus"))
-        .fixed_pos(egui::pos2(anchor_x, anchor_y))
-        .show(ctx, |ui| {
-            egui::Frame::popup(ui.style()).show(ui, |ui| {
-                ui.set_min_width(220.0);
-                ui.label(egui::RichText::new(strip.active.label()).strong());
-                ui.separator();
-                if tool.residential_menu_open {
-                    draw_residential_submenu(ui, &mut tool, &registry);
-                }
-                if tool.commercial_menu_open {
-                    draw_commercial_submenu(ui, &mut tool, &registry);
-                }
-                if tool.industrial_menu_open {
-                    draw_industrial_submenu(ui, &mut tool, &registry);
-                }
-                if tool.utilities_menu_open {
-                    draw_utilities_submenu(ui, &mut tool, &registry);
-                }
-                if tool.mock_shapes_menu_open {
-                    draw_mock_shapes_submenu(ui, &mut tool, &registry);
-                }
-                if let Some(intent) = tool.building_intent.as_ref() {
-                    ui.separator();
-                    draw_intent_preview(ui, intent);
-                }
-            });
-        });
     Ok(())
 }

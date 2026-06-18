@@ -24,7 +24,7 @@ def test_p0_material_status_label():
         encoding="utf-8"
     )
     assert "def _status_label" in mat
-    assert "Ready" in mat
+    assert "ready" in mat
 
 
 def test_p0_metadata_collapsed_hint():

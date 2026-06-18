@@ -1,0 +1,8 @@
+{
+  "inspector_click_highlights_grid": true,
+  "rule_id_tested": "long_hall",
+  "cells_highlighted_count": 134,
+  "seed": 42,
+  "archetype_id": "IndustrialWarehouse",
+  "district_style": "industrial_west"
+}

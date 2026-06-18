@@ -8,10 +8,12 @@ from tkinter import ttk
 
 from rust_engine_mcp.landscape_preset_browse import preset_path, validate_landscape_preset
 
+from . import aps_theme
 from .aps_inline_feedback import set_inline_status
 from .aps_paned import add_pane, horizontal_paned
 from .aps_theme import FONT_HINT, FONT_SMALL
-from .metadata_flow_panel import MetadataFlowPanel
+from .aps_tk import themed_text
+from .aps_workflow_layout import workflow_intro, workflow_primary_row
 from .state import SuiteState
 
 _NODE_KIND_LABELS = {
@@ -36,13 +38,17 @@ class LandscapeGrammarPanel(ttk.Frame):
         self.refresh_from_state()
 
     def _build(self) -> None:
-        self.metadata_flow = MetadataFlowPanel(self, context="landscape_grammar")
-        self.metadata_flow.pack(fill=tk.X, pady=(0, 6))
-        ttk.Label(
+        workflow_intro(
             self,
-            text="Grammar — the landscape layout graph (this is what ships).",
-            font=("Segoe UI", 9, "bold"),
-        ).pack(anchor=tk.W)
+            "Inspect the topology graph for the selected preset — validate before States and Atlas.",
+        )
+
+        actions = workflow_primary_row(self)
+        ttk.Label(actions, text="Grammar graph", font=("Segoe UI", 9, "bold")).pack(side=tk.LEFT, padx=(0, 8))
+        ttk.Button(actions, text="Validate schema", command=self._validate_schema).pack(side=tk.LEFT, padx=(0, 6))
+        self._validate_var = tk.StringVar(value="")
+        self._validate_lbl = ttk.Label(actions, textvariable=self._validate_var, font=FONT_HINT)
+        self._validate_lbl.pack(side=tk.LEFT, padx=6)
 
         paned = horizontal_paned(self)
         paned.pack(fill=tk.BOTH, expand=True, pady=4)
@@ -62,24 +68,22 @@ class LandscapeGrammarPanel(ttk.Frame):
         mid = ttk.Frame(paned, padding=4)
         add_pane(paned, mid, weight=2, minsize=240)
         ttk.Label(mid, text="Graph preview (schematic)", font=FONT_SMALL).pack(anchor=tk.W)
-        self._canvas = tk.Canvas(mid, height=180, background="#f4f4f4", highlightthickness=1)
+        self._canvas = tk.Canvas(mid, height=180, background=aps_theme.COLOR_CARD_BG, highlightthickness=1)
         self._canvas.pack(fill=tk.BOTH, expand=True, pady=4)
         self._canvas.bind("<Button-1>", self._on_canvas_click)
 
         right = ttk.Frame(paned, padding=4)
         add_pane(paned, right, weight=1, minsize=220)
         ttk.Label(right, text="Selected node", font=FONT_SMALL).pack(anchor=tk.W)
-        self._inspector = tk.Text(right, height=10, wrap=tk.WORD, font=FONT_SMALL, relief=tk.FLAT, background="#f8f8f8")
+        self._inspector = themed_text(
+            right, height=10, wrap=tk.WORD, font=FONT_SMALL
+        )
         self._inspector.pack(fill=tk.BOTH, expand=True)
 
-        actions = ttk.Frame(self)
-        actions.pack(fill=tk.X, pady=(4, 0))
-        ttk.Button(actions, text="Validate schema", command=self._validate_schema).pack(side=tk.LEFT, padx=(0, 6))
-        self._validate_var = tk.StringVar(value="")
-        self._validate_lbl = ttk.Label(actions, textvariable=self._validate_var, font=FONT_HINT)
-        self._validate_lbl.pack(side=tk.LEFT, padx=6)
-        self._status_var = tk.StringVar(value="Pick a preset first")
-        ttk.Label(self, textvariable=self._status_var, font=FONT_HINT, foreground="#555").pack(anchor=tk.W, pady=(4, 0))
+        self._status_var = tk.StringVar(value="Pick a preset on the Presets tab first")
+        ttk.Label(self, textvariable=self._status_var, font=FONT_HINT, foreground=aps_theme.COLOR_MUTED).pack(
+            anchor=tk.W, pady=(4, 0)
+        )
 
     def _on_tree_select(self, _event=None) -> None:
         sel = self._tree.selection()
@@ -184,17 +188,16 @@ class LandscapeGrammarPanel(ttk.Frame):
             return
         report = validate_landscape_preset(pid, compression_level=3)
         ok = report.status == "passed"
-        prefix = "PASS:" if ok else "FAIL:"
         set_inline_status(
             self._validate_lbl,
             self._validate_var,
-            f"{prefix} landscape_grammar — {report.summary}",
+            report.summary,
             ok=ok,
         )
         if ok:
             self._status_var.set("✓ Grammar valid")
         else:
-            self._status_var.set("✗ Grammar schema FAIL")
+            self._status_var.set("✗ Grammar blocked")
         self._on_log(f"grammar validate · {pid} · {report.status}")
 
     def mark_saved(self) -> None:

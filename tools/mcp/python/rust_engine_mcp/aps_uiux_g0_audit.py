@@ -238,6 +238,32 @@ def _scan_module_string_constants(root: Path) -> list[Violation]:
     return out
 
 
+def _scan_runtime_surface(root: Path) -> list[Violation]:
+    """P7 META-GUARD bridge — fold the runtime-surface scan into the audit.
+
+    The static ``_scan_python_ui_strings`` only sees literal ``text="..."``;
+    f-strings, ``StringVar.set``, ``.configure(text=)``, ``messagebox.*``,
+    dynamic ``LabelFrame`` titles, and ``_log(...)`` status lines are scanned by
+    ``aps_uiux_surface_scan`` (ban-list jargon + off-glossary terminology). This
+    bridge lets the single ``test_aps_no_jargon`` guard cover the real surface.
+    """
+    from rust_engine_mcp.aps_uiux_surface_scan import scan_surface
+
+    out: list[Violation] = []
+    report = scan_surface(repo=root)
+    for hit in report.get("violations", []):
+        out.append(
+            Violation(
+                rule=str(hit.get("rule")),
+                path=str(hit.get("path")),
+                line=int(hit.get("line") or 0),
+                excerpt=f"[{hit.get('context')}] {hit.get('excerpt')}"[:140],
+                source="runtime_surface",
+            )
+        )
+    return out
+
+
 def run_ban_list_audit(*, repo: Path | None = None) -> dict[str, Any]:
     root = repo or repo_root()
     suite = root / SUITE_REL
@@ -247,6 +273,7 @@ def run_ban_list_audit(*, repo: Path | None = None) -> dict[str, Any]:
     if suite.is_dir():
         for py in sorted(suite.glob("*.py")):
             violations.extend(_scan_python_ui_strings(py, root))
+    violations.extend(_scan_runtime_surface(root))
 
     by_rule: dict[str, int] = {}
     by_file: dict[str, int] = {}

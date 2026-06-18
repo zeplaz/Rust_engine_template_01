@@ -9,6 +9,7 @@ use std::path::{Path, PathBuf};
 
 use bevy::prelude::Resource;
 use serde::Deserialize;
+use serde::Deserializer;
 
 use super::arch_build_grammar_v0::{
     floors_from_beta_vert, reweight_massing_strategies, ArchDnaConsumerFields,
@@ -121,6 +122,84 @@ pub struct DistrictStyleBinding {
     pub material_profiles: HashMap<String, String>,
 }
 
+/// **COD-FACILITY-BINDING-READ-001** — optional join to catalog + chain (Layer 3 authority).
+/// Grammar holds references only — no `power_consumption` / I/O lists.
+pub const FACILITY_BINDING_SCHEMA: &str = "facility_binding_v1";
+
+/// RON grammars use bare tuples/strings for optional fields (not `Some(...)`).
+fn deserialize_ron_optional_field<'de, T, D>(deserializer: D) -> Result<Option<T>, D::Error>
+where
+    T: Deserialize<'de>,
+    D: Deserializer<'de>,
+{
+    #[derive(Deserialize)]
+    #[serde(untagged)]
+    enum Repr<T> {
+        Value(T),
+        Option(Option<T>),
+    }
+    match Repr::<T>::deserialize(deserializer) {
+        Ok(Repr::Value(v)) => Ok(Some(v)),
+        Ok(Repr::Option(v)) => Ok(v),
+        Err(e) => Err(e),
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum FacilityPowerTier {
+    Light,
+    Medium,
+    Heavy,
+    Grid,
+}
+
+impl FacilityPowerTier {
+    #[must_use]
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::Light => "light",
+            Self::Medium => "medium",
+            Self::Heavy => "heavy",
+            Self::Grid => "grid",
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum ProgramAxisLevel {
+    Low,
+    Medium,
+    High,
+}
+
+#[derive(Debug, Clone, Default, Deserialize)]
+pub struct FacilityProgramAxes {
+    #[serde(default, deserialize_with = "deserialize_ron_optional_field")]
+    pub storage: Option<ProgramAxisLevel>,
+    #[serde(default, deserialize_with = "deserialize_ron_optional_field")]
+    pub loading: Option<ProgramAxisLevel>,
+    #[serde(default, deserialize_with = "deserialize_ron_optional_field")]
+    pub office: Option<ProgramAxisLevel>,
+    #[serde(default, deserialize_with = "deserialize_ron_optional_field")]
+    pub service: Option<ProgramAxisLevel>,
+    #[serde(default, deserialize_with = "deserialize_ron_optional_field")]
+    pub expansion: Option<ProgramAxisLevel>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct FacilityBindingV1 {
+    pub catalog_id: String,
+    pub chain_id: String,
+    pub supply_chain_role: String,
+    pub power_tier: FacilityPowerTier,
+    #[serde(default, deserialize_with = "deserialize_ron_optional_field")]
+    pub site_template_id: Option<String>,
+    #[serde(default, deserialize_with = "deserialize_ron_optional_field")]
+    pub program_axes: Option<FacilityProgramAxes>,
+}
+
 #[derive(Debug, Clone, Deserialize)]
 pub struct BuildingGrammar {
     pub schema_version: u32,
@@ -132,6 +211,8 @@ pub struct BuildingGrammar {
     pub detail: DetailRule,
     pub age: AgeRule,
     pub district_styles: Vec<DistrictStyleBinding>,
+    #[serde(default, deserialize_with = "deserialize_ron_optional_field")]
+    pub facility_binding: Option<FacilityBindingV1>,
 }
 
 #[derive(Debug, Clone)]
@@ -174,6 +255,89 @@ pub struct BuildingGrammarRegistry {
     pub load_errors: Vec<String>,
 }
 
+impl BuildingGrammarRegistry {
+    /// Lookup by `grammar_id` field (registry map keys are archetype ids).
+    #[must_use]
+    pub fn by_grammar_id(&self, grammar_id: &str) -> Option<&BuildingGrammar> {
+        self.grammars
+            .values()
+            .find(|g| g.grammar_id == grammar_id)
+    }
+
+    /// Read-only facility bindings loaded from grammar RON files.
+    #[must_use]
+    pub fn facility_bindings(&self) -> Vec<(&BuildingGrammar, &FacilityBindingV1)> {
+        self.grammars
+            .values()
+            .filter_map(|g| g.facility_binding().map(|b| (g, b)))
+            .collect()
+    }
+
+    /// Facility binding for an archetype id (`BuildingGrammar.archetype.id`).
+    #[must_use]
+    pub fn facility_binding_for_archetype(&self, archetype_id: &str) -> Option<&FacilityBindingV1> {
+        self.grammars
+            .get(archetype_id)
+            .and_then(|g| g.facility_binding())
+    }
+}
+
+pub const FACILITY_BINDING_G1_MIN: usize = 2;
+
+/// **COD-FACILITY-BINDING-READ-001** — G1 grammars deserialize optional `facility_binding`.
+#[must_use]
+pub fn facility_binding_read_witness_green() -> bool {
+    facility_binding_read_witness_body().get("green").and_then(|v| v.as_bool()) == Some(true)
+}
+
+#[must_use]
+pub fn facility_binding_read_witness_body() -> serde_json::Value {
+    let registry = load_building_grammar_registry();
+    let load_ok = registry.load_errors.is_empty();
+    let bindings = registry.facility_bindings();
+    let bound_count = bindings.len();
+    let g1_min_ok = bound_count >= FACILITY_BINDING_G1_MIN;
+
+    let factory = registry.by_grammar_id("factory_cluster_v1");
+    let rail = registry.by_grammar_id("rail_edge_v1");
+    let warehouse = registry.by_grammar_id("industrial_warehouse_v1");
+
+    let factory_binding_ok = factory
+        .and_then(|g| g.facility_binding())
+        .is_some_and(|b| {
+            b.catalog_id == "concrete_mixer_plant"
+                && b.chain_id == "concrete_portland"
+                && b.supply_chain_role == "concrete_mixer"
+                && b.power_tier == FacilityPowerTier::Light
+        });
+    let rail_binding_ok = rail
+        .and_then(|g| g.facility_binding())
+        .is_some_and(|b| {
+            b.catalog_id == "logistics_rail_warehouse" && b.chain_id == "logistics_storage"
+        });
+    let warehouse_binding_ok = warehouse
+        .and_then(|g| g.facility_binding())
+        .is_some_and(|b| b.catalog_id == "logistics_storage_warehouse");
+
+    let green = load_ok && g1_min_ok && factory_binding_ok && rail_binding_ok && warehouse_binding_ok;
+
+    serde_json::json!({
+        "gate": "COD-FACILITY-BINDING-READ-001",
+        "green": green,
+        "binding_schema": FACILITY_BINDING_SCHEMA,
+        "load_errors_empty": load_ok,
+        "bound_grammar_count": bound_count,
+        "g1_min_ok": g1_min_ok,
+        "factory_cluster_v1": factory_binding_ok,
+        "rail_edge_v1": rail_binding_ok,
+        "industrial_warehouse_v1": warehouse_binding_ok,
+        "bound_grammar_ids": bindings
+            .iter()
+            .map(|(g, _)| g.grammar_id.as_str())
+            .collect::<Vec<_>>(),
+    })
+}
+
 #[must_use]
 fn repo_asset_path(rel: &str) -> PathBuf {
     std::env::var_os("CARGO_MANIFEST_DIR")
@@ -206,6 +370,12 @@ fn pick_weighted_index<'a>(items: &'a [(u32, usize)], seed: u64) -> usize {
 }
 
 impl BuildingGrammar {
+    /// Read-only facility join block when present on disk grammar.
+    #[must_use]
+    pub fn facility_binding(&self) -> Option<&FacilityBindingV1> {
+        self.facility_binding.as_ref()
+    }
+
     pub fn district_binding(&self, district_style: &str) -> Option<&DistrictStyleBinding> {
         self.district_styles
             .iter()
@@ -725,6 +895,26 @@ pub fn refresh_pg_quality_001_grammar_diversity_witness() -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn facility_binding_read_witness_green() {
+        assert!(super::facility_binding_read_witness_green());
+        let body = super::facility_binding_read_witness_body();
+        assert!(body["g1_min_ok"].as_bool().unwrap_or(false));
+        assert!(body["factory_cluster_v1"].as_bool().unwrap_or(false));
+    }
+
+    #[test]
+    fn facility_binding_deserializes_program_axes() {
+        let registry = load_building_grammar_registry();
+        let grammar = registry
+            .by_grammar_id("factory_cluster_v1")
+            .expect("factory_cluster_v1");
+        let binding = grammar.facility_binding().expect("binding");
+        let axes = binding.program_axes.as_ref().expect("program_axes");
+        assert_eq!(axes.loading, Some(ProgramAxisLevel::High));
+        assert_eq!(axes.storage, Some(ProgramAxisLevel::Medium));
+    }
 
     #[test]
     fn industrial_warehouse_grammar_deterministic() {

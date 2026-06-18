@@ -12,7 +12,8 @@ from rust_engine_mcp.aps_grammar_labels import human_label
 from rust_engine_mcp.grammar_iterate import compute_cell_diff_map, iterate_grammar
 from rust_engine_mcp.paths import repo_root
 
-from .aps_theme import FONT_SMALL
+from .aps_inline_feedback import set_inline_status
+from .aps_theme import COLOR_ACCENT, COLOR_MUTED, COLOR_TEXT_HINT, COLOR_TEXT_SUBTLE, FONT_SMALL
 
 
 def _ui_labels() -> dict[str, str]:
@@ -95,12 +96,12 @@ class GrammarIteratePanel(ttk.LabelFrame):
         ).pack(side=tk.LEFT, padx=4)
 
         self.diff_var = tk.StringVar(value="")
-        self._diff_lbl = ttk.Label(self, textvariable=self.diff_var, foreground="#444", wraplength=520)
+        self._diff_lbl = ttk.Label(self, textvariable=self.diff_var, foreground=COLOR_TEXT_SUBTLE, wraplength=520)
         self._diff_lbl.pack(anchor=tk.W, pady=4)
         ttk.Label(
             self,
             text=ui.get("generate_vs_iterate_hint", ""),
-            foreground="#666",
+            foreground=COLOR_TEXT_HINT,
             font=FONT_SMALL,
             wraplength=520,
         ).pack(anchor=tk.W)
@@ -108,12 +109,12 @@ class GrammarIteratePanel(ttk.LabelFrame):
         self.material_hint = ttk.Label(
             self,
             text=ui.get("open_materials_tab", "Open Materials tab"),
-            foreground="#0a4a7a",
+            foreground=COLOR_ACCENT,
         )
         self.placement_hint = ttk.Label(
             self,
             text=ui.get("placement_defer_hint", ""),
-            foreground="#666",
+            foreground=COLOR_TEXT_HINT,
             wraplength=520,
         )
         self._on_mode_change()
@@ -185,14 +186,7 @@ class GrammarIteratePanel(ttk.LabelFrame):
         return req
 
     def _set_status(self, text: str, *, ok: bool | None = None) -> None:
-        self.diff_var.set(text)
-        if ok is True:
-            fg = "#006400"
-        elif ok is False:
-            fg = "#8b0000"
-        else:
-            fg = "#444444"
-        self._diff_lbl.configure(foreground=fg)
+        set_inline_status(self._diff_lbl, self.diff_var, text, ok=ok)
 
     def _on_apply(self) -> None:
         if not self._before_snapshot:

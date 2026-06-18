@@ -93,6 +93,15 @@ impl Default for HudOverlayTrayState {
     }
 }
 
+/// **MINIMAP-ECO-FIRE-TRAY-001** — tray defaults match simulation minimap overlay policy.
+#[must_use]
+pub fn minimap_eco_fire_tray_defaults_green() -> bool {
+    let tray = HudOverlayTrayState::default();
+    let mask = tray.minimap_overlay_mask();
+    let defaults = simulation_minimap_overlay_defaults();
+    !mask.fire_heat && mask.ecology_heat == defaults.ecology_heat
+}
+
 /// Command shell layout flags (overlay tray → command tray → intel timeline → command table).
 #[derive(Resource, Clone, Debug)]
 pub struct HudCommandShellLayout {
@@ -360,7 +369,7 @@ pub fn draw_hud_overlay_tray_egui(
             ui.checkbox(&mut tray.fire_heat, "Fire heat");
             ui.checkbox(&mut tray.logistics_heat, "Logistics heat");
             ui.checkbox(&mut tray.construction_heat, "Construction heat");
-            ui.checkbox(&mut tray.ecology_heat, "Ecology heat");
+            ui.checkbox(&mut tray.ecology_heat, "Ecology / burn scar");
         },
         widget_timing,
     ) {
@@ -693,5 +702,10 @@ mod tests {
         assert!(mask.construction_heat);
         tray.set_minimap_overlay_mask(simulation_minimap_overlay_defaults());
         assert!(tray.ecology_heat);
+    }
+
+    #[test]
+    fn minimap_eco_fire_tray_defaults_match_sim_policy() {
+        assert!(super::minimap_eco_fire_tray_defaults_green());
     }
 }

@@ -226,6 +226,11 @@ pub fn build_minimap_compositor_proof_payload(
         "units_heat_enabled": compositor.units_heat_enabled,
         "unit_marker_rows": compositor.unit_marker_rows,
         "replay_scrub_enabled": compositor.replay_scrub_enabled,
+        "veg_burn_rows": compositor.veg_burn_rows,
+        "burn_overrides_topology": compositor.burn_overrides_topology,
+        "veg_extract_revision": compositor.veg_extract_revision,
+        "veg_minimap_burn_merge_green": compositor.veg_burn_rows >= 1
+            && compositor.burn_overrides_topology,
         "ui_p3_m3_units_001_green": ui_p3_m3_units_001_green(compositor),
         "ui_p3_m3_replay_001_green": ui_p3_m3_replay_001_green(compositor),
         "gpu_budget": diagnostics_json_snapshot(diagnostics),
@@ -266,6 +271,13 @@ pub fn build_minimap_compositor_proof_payload(
         registry,
         compositor,
     );
+    let defaults = crate::gui::simulation_minimap_overlay_defaults();
+    body["minimap_eco_fire_tray_001"] = serde_json::json!({
+        "gate": "MINIMAP-ECO-FIRE-TRAY-001",
+        "green": crate::gui::hud::dock_shell::minimap_eco_fire_tray_defaults_green(),
+        "fire_heat_default_off": !defaults.fire_heat,
+        "ecology_burn_scar_default_on": defaults.ecology_heat,
+    });
     body
 }
 

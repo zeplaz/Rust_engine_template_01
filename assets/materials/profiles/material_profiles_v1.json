@@ -145,6 +145,84 @@
         "normal": "assets/materials/textures/metal_roof_01/normal.png",
         "roughness": "assets/materials/textures/metal_roof_01/roughness.png"
       }
+    },
+    "galvanized_steel_01": {
+      "generator": "steel",
+      "seed": 43001,
+      "metallic": 0.82,
+      "roughness_base": 0.42,
+      "category": "industrial/steel",
+      "label": "Galvanized Steel 01",
+      "textures": {
+        "albedo": "assets/materials/textures/galvanized_steel_01/albedo.png",
+        "normal": "assets/materials/textures/galvanized_steel_01/normal.png",
+        "roughness": "assets/materials/textures/galvanized_steel_01/roughness.png"
+      }
+    },
+    "gravel_yard_01": {
+      "generator": "concrete",
+      "seed": 43002,
+      "metallic": 0.0,
+      "roughness_base": 0.92,
+      "category": "other",
+      "label": "Gravel Yard 01",
+      "textures": {
+        "albedo": "assets/materials/textures/gravel_yard_01/albedo.png",
+        "normal": "assets/materials/textures/gravel_yard_01/normal.png",
+        "roughness": "assets/materials/textures/gravel_yard_01/roughness.png"
+      }
+    },
+    "warning_paint_yellow_01": {
+      "generator": "concrete",
+      "seed": 43003,
+      "metallic": 0.0,
+      "roughness_base": 0.55,
+      "category": "other",
+      "label": "Warning Paint Yellow 01",
+      "textures": {
+        "albedo": "assets/materials/textures/warning_paint_yellow_01/albedo.png",
+        "normal": "assets/materials/textures/warning_paint_yellow_01/normal.png",
+        "roughness": "assets/materials/textures/warning_paint_yellow_01/roughness.png"
+      }
+    },
+    "concrete_pad_01": {
+      "generator": "concrete",
+      "seed": 43004,
+      "metallic": 0.0,
+      "roughness_base": 0.86,
+      "category": "industrial/concrete",
+      "label": "Concrete Pad 01",
+      "textures": {
+        "albedo": "assets/materials/textures/concrete_pad_01/albedo.png",
+        "normal": "assets/materials/textures/concrete_pad_01/normal.png",
+        "roughness": "assets/materials/textures/concrete_pad_01/roughness.png"
+      }
+    },
+    "ceramic_insulator_01": {
+      "generator": "concrete",
+      "seed": 43005,
+      "metallic": 0.0,
+      "roughness_base": 0.35,
+      "category": "other",
+      "label": "Ceramic Insulator 01",
+      "textures": {
+        "albedo": "assets/materials/textures/ceramic_insulator_01/albedo.png",
+        "normal": "assets/materials/textures/ceramic_insulator_01/normal.png",
+        "roughness": "assets/materials/textures/ceramic_insulator_01/roughness.png"
+      }
+    },
+    "ac_unit_01": {
+      "generator": "concrete",
+      "seed": 931,
+      "metallic": 0.0,
+      "roughness_base": 0.75,
+      "category": "other",
+      "label": "Ac Unit 01",
+      "textures": {
+        "albedo": "assets/materials/textures/ac_unit_01/albedo.png",
+        "normal": "assets/materials/textures/ac_unit_01/normal.png",
+        "roughness": "assets/materials/textures/ac_unit_01/roughness.png"
+      }
     }
   }
 }

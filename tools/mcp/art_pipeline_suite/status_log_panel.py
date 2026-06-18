@@ -6,23 +6,23 @@ import time
 import tkinter as tk
 from tkinter import ttk
 
+from . import aps_theme
 from .aps_scroll import attach_wheel_area, text_yscroll
-from .aps_theme import COLOR_INPUT_BG, FONT_MONO
+from .aps_theme import FONT_MONO
+from .aps_tk import themed_text
 
 
 class StatusLogPanel(ttk.Frame):
     def __init__(self, master: tk.Misc, *, height: int = 6) -> None:
         super().__init__(master)
-        self._text = tk.Text(
+        self._text = themed_text(
             self,
             height=height,
             wrap=tk.WORD,
             font=FONT_MONO,
-            bg=COLOR_INPUT_BG,
-            relief=tk.FLAT,
-            borderwidth=1,
+            bg=aps_theme.COLOR_INPUT_BG,
             highlightthickness=1,
-            highlightbackground="#c8ccd4",
+            highlightbackground=aps_theme.COLOR_OUTLINE,
         )
         scroll = ttk.Scrollbar(self, orient=tk.VERTICAL, command=self._text.yview)
         self._text.configure(yscrollcommand=scroll.set, state=tk.NORMAL)

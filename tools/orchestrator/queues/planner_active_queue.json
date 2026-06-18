@@ -917,6 +917,18 @@
         "VEG-LG5-CATALOG-008"
       ],
       "completed": "2026-06-14"
+    },
+    {
+      "id": "PLAN-CODER-B-VEG-FIRE-MINIMAP-TAIL-001",
+      "status": "done",
+      "signoff": "SIGNED",
+      "deliverable": "src/dev/plan_coder_b_veg_fire_minimap_tail_001_v1.md",
+      "unblocks": [
+        "VEG-CATALOG-LOADER-001",
+        "VEG-MINIMAP-BURN-MERGE-001",
+        "FIRE-MINIMAP-COHERENCE-001"
+      ],
+      "completed": "2026-06-17"
     }
   ],
   "active": [

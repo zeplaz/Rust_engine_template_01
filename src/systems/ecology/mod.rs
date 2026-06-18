@@ -7,6 +7,7 @@ mod landscape_grammar_lg2;
 mod landscape_grammar_map;
 mod landscape_atlas_registry;
 mod vegetation_field;
+mod vegetation_variant_catalog;
 
 pub use chunk_ecology::{chunk_ecology_tick, ChunkEcology};
 pub use landscape_grammar::{
@@ -66,6 +67,12 @@ pub use vegetation_field::{
     derive_vegetation_structure, integrate_vegetation_field_step, succession_stage_from_vegetation,
     EcologicalSuccessionStage, VegetationField, VegetationStructure,
 };
+pub use vegetation_variant_catalog::{
+    catalog_clamp_witness_green, catalog_variant_key_set, clamp_vegetation_variant_to_catalog,
+    init_vegetation_variant_catalog, load_vegetation_variant_catalog, resolve_vegetation_variant,
+    ENGINE_VEG_RESOLVER_KEYS, VegetationVariantCatalog, VegetationVariantCatalogEntry,
+    VEGETATION_VARIANT_CATALOG_RON,
+};
 
 use bevy::prelude::*;
 
@@ -105,6 +112,7 @@ impl Plugin for EcologyPlugin {
         landscape_grammar_lg2::landscape_grammar_lg2_plugin(app);
         landscape_grammar_burn::landscape_grammar_burn_plugin(app);
         landscape_grammar_map::landscape_grammar_map_plugin(app);
+        app.add_systems(Startup, init_vegetation_variant_catalog);
         app.add_systems(
             Update,
             (

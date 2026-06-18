@@ -1,0 +1,16 @@
+{
+  "tier": "G1",
+  "archetype_count": 3,
+  "district_count": 3,
+  "grammar_files": [
+    "factory_cluster_v1.ron",
+    "industrial_warehouse_v1.ron",
+    "rail_edge_v1.ron"
+  ],
+  "reasons": [
+    "preset_count=4 or F-axis=3<4 for G2"
+  ],
+  "source": "grammar_set_tier()",
+  "preset_count": 4,
+  "f_axis_count": 3
+}

@@ -65,4 +65,16 @@
             },
         ),
     ],
+    facility_binding: (
+        catalog_id: "logistics_storage_warehouse",
+        chain_id: "logistics_storage",
+        supply_chain_role: "storage_warehouse",
+        power_tier: "light",
+        site_template_id: "logistics_storage_warehouse_site_v0",
+        program_axes: (
+            storage: "high",
+            loading: "medium",
+            office: "low",
+        ),
+    ),
 )

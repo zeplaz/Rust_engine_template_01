@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
-import sys
 import tkinter as tk
 from tkinter import ttk
+
+from .aps_scroll import attach_wheel_area, canvas_xscroll, canvas_yscroll
 
 
 class ScrollableFrame(ttk.Frame):
@@ -13,7 +14,6 @@ class ScrollableFrame(ttk.Frame):
     def __init__(self, master: tk.Misc, *, enable_horizontal: bool = False) -> None:
         super().__init__(master)
         self._enable_horizontal = enable_horizontal
-        self._wheel_bound: set[str] = set()
         # B4 — coalesce scrollregion recomputes to one idle pass per burst of
         # <Configure> events so a tall tab does not retear on every child resize.
         self._scrollregion_job: str | None = None
@@ -37,19 +37,14 @@ class ScrollableFrame(ttk.Frame):
 
         self.interior.bind("<Configure>", self._on_interior_configure)
         self._canvas.bind("<Configure>", self._on_canvas_configure)
-        self._bind_wheel_recursive(self)
-
-    def _bind_wheel_recursive(self, widget: tk.Misc) -> None:
-        wid = str(widget)
-        if wid in self._wheel_bound:
-            return
-        self._wheel_bound.add(wid)
-        widget.bind("<MouseWheel>", self._on_mousewheel, add="+")
-        widget.bind("<Shift-MouseWheel>", self._on_shift_mousewheel, add="+")
-        widget.bind("<Button-4>", self._on_mousewheel_linux, add="+")
-        widget.bind("<Button-5>", self._on_mousewheel_linux, add="+")
-        for child in widget.winfo_children():
-            self._bind_wheel_recursive(child)
+        # P7 Wave-2 S — one wheel owner via aps_scroll (no per-widget recursive rebind).
+        attach_wheel_area(
+            self._canvas,
+            self.interior,
+            on_scroll_y=canvas_yscroll(self._canvas),
+            on_scroll_x=canvas_xscroll(self._canvas) if enable_horizontal else None,
+            area_id=f"aps-scrollable-{id(self)}",
+        )
 
     def _on_interior_configure(self, _event=None) -> None:
         # Debounce: schedule one scrollregion update + wheel rebind at idle rather
@@ -72,7 +67,6 @@ class ScrollableFrame(ttk.Frame):
         if bbox != self._last_scrollregion:
             self._last_scrollregion = bbox
             self._canvas.configure(scrollregion=bbox)
-        self._bind_wheel_recursive(self.interior)
 
     def _on_canvas_configure(self, event) -> None:
         if not self._enable_horizontal:
@@ -80,26 +74,3 @@ class ScrollableFrame(ttk.Frame):
             if self._canvas.itemcget(self._interior_id, "width") != str(event.width):
                 self._canvas.itemconfigure(self._interior_id, width=event.width)
 
-    def _on_mousewheel(self, event) -> None:
-        if sys.platform == "darwin":
-            delta = event.delta
-        else:
-            delta = event.delta // 120 if event.delta else 0
-        if delta:
-            self._canvas.yview_scroll(int(-delta), "units")
-
-    def _on_shift_mousewheel(self, event) -> None:
-        if not self._enable_horizontal:
-            return
-        if sys.platform == "darwin":
-            delta = event.delta
-        else:
-            delta = event.delta // 120 if event.delta else 0
-        if delta:
-            self._canvas.xview_scroll(int(-delta), "units")
-
-    def _on_mousewheel_linux(self, event) -> None:
-        if event.num == 4:
-            self._canvas.yview_scroll(-1, "units")
-        elif event.num == 5:
-            self._canvas.yview_scroll(1, "units")

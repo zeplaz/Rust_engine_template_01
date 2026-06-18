@@ -17,6 +17,7 @@ import sys
 from pathlib import Path
 
 import pytest
+import tkinter as tk
 
 # rust_engine_mcp is importable from tools/mcp/python (pytest rootdir); the
 # art_pipeline_suite package lives one level up under tools/mcp.
@@ -24,64 +25,36 @@ APS_PARENT = Path(__file__).resolve().parents[2]
 if str(APS_PARENT) not in sys.path:
     sys.path.insert(0, str(APS_PARENT))
 
-tk = pytest.importorskip("tkinter")
 pytest.importorskip("PIL")
 
 # Keep the Bevy worker out of the loop — these are pure UI-callback smoke tests,
 # not a render-farm round trip. The browser/three.js path is exercised instead.
 os.environ.setdefault("RUST_ENGINE_BEVY_PREVIEW", "0")
 
-
-@pytest.fixture()
-def tk_root():
-    """Hidden Tk root; skip if no display is available (headless CI)."""
-    try:
-        root = tk.Tk()
-    except tk.TclError as exc:  # pragma: no cover - environment dependent
-        pytest.skip(f"no Tk display available: {exc}")
-    root.withdraw()
-    try:
-        from art_pipeline_suite.aps_theme import init_aps_ttk
-        from art_pipeline_suite.aps_scroll import init_aps_scroll
-
-        init_aps_ttk(root)
-        init_aps_scroll(root)
-    except tk.TclError as exc:  # pragma: no cover
-        root.destroy()
-        pytest.skip(f"Tk theme/scroll init failed (no display): {exc}")
-    root.update_idletasks()
-    try:
-        yield root
-    finally:
-        try:
-            root.destroy()
-        except tk.TclError:
-            pass
+pytestmark = pytest.mark.aps_gui
 
 
-def _make_assembly_panel(tk_root):
+def _make_assembly_panel(gui_panel_host):
     from art_pipeline_suite.assembly_panel import AssemblyPanel
     from art_pipeline_suite.state import SuiteState
 
     logs: list[str] = []
     state = SuiteState()
-    # start_job=None -> generate/preview run synchronously, exactly the path the
-    # user exercised when clicking with no background job in flight.
-    panel = AssemblyPanel(tk_root, state, on_log=logs.append, start_job=None)
-    panel.pack()
-    tk_root.update_idletasks()
+    panel = AssemblyPanel(gui_panel_host, state, on_log=logs.append, start_job=None)
+    panel.pack(fill="both", expand=True)
+    gui_panel_host.winfo_toplevel().update_idletasks()
     return panel, logs
 
 
-def test_on_generate_with_building_grammar(tk_root) -> None:
+def test_on_generate_with_building_grammar(gui_panel_host) -> None:
     """B1 guard — grammar ON generate produces a snapshot, no traceback."""
-    panel, _logs = _make_assembly_panel(tk_root)
+    panel, _logs = _make_assembly_panel(gui_panel_host)
     panel.use_grammar_var.set(True)
     panel._on_grammar_toggle()
-    tk_root.update_idletasks()
+    gui_panel_host.winfo_toplevel().update_idletasks()
 
-    panel.on_generate()  # must not raise
-    tk_root.update_idletasks()
+    panel.on_generate()
+    gui_panel_host.winfo_toplevel().update_idletasks()
 
     snap = panel._snapshot
     assert snap is not None, "grammar generate produced no snapshot"
@@ -89,20 +62,20 @@ def test_on_generate_with_building_grammar(tk_root) -> None:
     assert snap.get("grammar_rule_chain"), "grammar snapshot missing rule chain"
 
 
-def test_on_generate_without_building_grammar(tk_root) -> None:
+def test_on_generate_without_building_grammar(gui_panel_host) -> None:
     """B1 guard — grammar OFF generate produces a valid snapshot, no traceback.
 
     The grammar-OFF path also auto-selects placement 0, which runs
     SlotPreviewPanel.show_placement -> render_module_isolated (the call that
     used to TypeError on the missing placeholder ``color=`` kwarg).
     """
-    panel, _logs = _make_assembly_panel(tk_root)
+    panel, _logs = _make_assembly_panel(gui_panel_host)
     panel.use_grammar_var.set(False)
     panel._on_grammar_toggle()
-    tk_root.update_idletasks()
+    gui_panel_host.winfo_toplevel().update_idletasks()
 
-    panel.on_generate()  # must not raise
-    tk_root.update_idletasks()
+    panel.on_generate()
+    gui_panel_host.winfo_toplevel().update_idletasks()
 
     snap = panel._snapshot
     assert snap is not None, "grammar-OFF generate produced no snapshot"
@@ -111,45 +84,45 @@ def test_on_generate_without_building_grammar(tk_root) -> None:
     assert "grammar_rule_chain" not in snap
 
 
-def test_grammar_toggle_then_off_generate(tk_root) -> None:
+def test_grammar_toggle_then_off_generate(gui_panel_host) -> None:
     """B1 guard — the exact user sequence: grammar ON, generate, uncheck, generate."""
-    panel, _logs = _make_assembly_panel(tk_root)
+    panel, _logs = _make_assembly_panel(gui_panel_host)
+    top = gui_panel_host.winfo_toplevel()
 
     panel.use_grammar_var.set(True)
     panel._on_grammar_toggle()
     panel.on_generate()
-    tk_root.update_idletasks()
+    top.update_idletasks()
 
-    # _sync_state_from_snapshot flips the checkbox ON for grammar snapshots;
-    # the user then unchecks it and regenerates.
     panel.use_grammar_var.set(False)
     panel._on_grammar_toggle()
-    tk_root.update_idletasks()
-    panel.on_generate()  # must not raise
-    tk_root.update_idletasks()
+    top.update_idletasks()
+    panel.on_generate()
+    top.update_idletasks()
 
     assert panel._snapshot is not None
     assert panel._snapshot.get("module_placements")
 
 
-def test_on_placement_select_runs_slot_preview(tk_root) -> None:
+def test_on_placement_select_runs_slot_preview(gui_panel_host) -> None:
     """Crash-1 / B2 guard — placement select -> slot preview render, no TypeError.
 
     render_module_isolated falls back to a labeled placeholder when trimesh is
     absent or returns a blank/black render; either way it must not raise and the
     combined/module thumbs must not be a black tile.
     """
-    panel, _logs = _make_assembly_panel(tk_root)
+    panel, _logs = _make_assembly_panel(gui_panel_host)
+    top = gui_panel_host.winfo_toplevel()
     panel.use_grammar_var.set(False)
     panel._on_grammar_toggle()
     panel.on_generate()
-    tk_root.update_idletasks()
+    top.update_idletasks()
 
     assert panel.placement_list.size() > 0, "no placements to select"
     panel.placement_list.selection_clear(0, tk.END)
     panel.placement_list.selection_set(0)
-    panel.on_placement_select()  # must not raise (was the line-32 TypeError)
-    tk_root.update_idletasks()
+    panel.on_placement_select()
+    top.update_idletasks()
 
     assert panel._selected_node_id, "placement select did not resolve a node id"
 
@@ -181,7 +154,7 @@ def test_slot_preview_render_not_black(tk_root) -> None:
     assert hi >= 24, f"module thumbnail is (near-)black: extrema={(lo, hi)}"
 
 
-def test_assembly_preview_apply_result_with_png(tk_root, tmp_path) -> None:
+def test_assembly_preview_apply_result_with_png(gui_panel_host, tmp_path) -> None:
     """Crash-2 guard — _apply_preview_result with a png drives _on_preview_thumb(image, result)."""
     from art_pipeline_suite.assembly_preview_panel import AssemblyPreviewPanel
     from rust_engine_mcp.paths import repo_root
@@ -200,9 +173,10 @@ def test_assembly_preview_apply_result_with_png(tk_root, tmp_path) -> None:
         # crash-2 was calling this with a single argument.
         received.append((image, result))
 
-    panel = AssemblyPreviewPanel(tk_root, on_log=lambda _l: None, on_preview_thumb=on_thumb)
+    panel = AssemblyPreviewPanel(gui_panel_host, on_log=lambda _l: None, on_preview_thumb=on_thumb)
     panel.pack()
-    tk_root.update_idletasks()
+    top = gui_panel_host.winfo_toplevel()
+    top.update_idletasks()
 
     result = {
         "assembly_id": "smoke",
@@ -213,8 +187,8 @@ def test_assembly_preview_apply_result_with_png(tk_root, tmp_path) -> None:
         "missing_glb": [],
         "png": png_rel,
     }
-    panel._apply_preview_result(result)  # must not raise (2-arg thumb callback)
-    tk_root.update_idletasks()
+    panel._apply_preview_result(result)
+    top.update_idletasks()
 
     assert received, "_on_preview_thumb was not invoked"
     assert received[0][1] is result, "_on_preview_thumb did not receive the result dict (2nd arg)"
@@ -225,7 +199,7 @@ def test_assembly_preview_apply_result_with_png(tk_root, tmp_path) -> None:
         pass
 
 
-def test_assembly_preview_apply_result_black_png_labels(tk_root) -> None:
+def test_assembly_preview_apply_result_black_png_labels(gui_panel_host) -> None:
     """B2 guard — a black preview PNG is labeled, not pasted as a black tile."""
     from art_pipeline_suite.assembly_preview_panel import AssemblyPreviewPanel
     from rust_engine_mcp.paths import repo_root
@@ -236,15 +210,16 @@ def test_assembly_preview_apply_result_black_png_labels(tk_root) -> None:
     Image.new("RGB", (48, 48), (0, 0, 0)).save(png_abs)
     png_rel = png_abs.relative_to(repo_root()).as_posix()
 
-    panel = AssemblyPreviewPanel(tk_root, on_log=lambda _l: None)
+    panel = AssemblyPreviewPanel(gui_panel_host, on_log=lambda _l: None)
     panel.pack()
-    tk_root.update_idletasks()
+    top = gui_panel_host.winfo_toplevel()
+    top.update_idletasks()
 
-    panel._load_thumbnail(png_rel)  # must not raise
-    tk_root.update_idletasks()
+    panel._load_thumbnail(png_rel)
+    top.update_idletasks()
 
     assert panel._thumb_photo is None, "black PNG should not become a displayed photo"
-    assert "blank" in panel._thumb_label.cget("text").lower()
+    assert "unavailable" in panel._thumb_label.cget("text").lower()
 
     try:
         png_abs.unlink()

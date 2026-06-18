@@ -27,9 +27,11 @@ from .aps_tooltips import bind_aps_tooltip
 from .aps_inline_feedback import set_inline_status
 from .aps_paned import add_pane, horizontal_paned
 from .aps_scroll import attach_wheel_area, bind_debounced_scrollregion, canvas_yscroll, text_yscroll
-from .aps_theme import FONT_SMALL, track_wraplength
+from .aps_preview_state import configure_preview_label
+from .aps_theme import COLOR_INPUT_BG, COLOR_MUTED, COLOR_TEXT_HINT, FONT_SMALL, PREVIEW_THUMB_LG, track_wraplength
+from .aps_tk import themed_text
+from .aps_workflow_layout import workflow_intro, workflow_primary_row
 from .domain_router import catalog_source_for
-from .metadata_flow_panel import MetadataFlowPanel
 from .state import ArtDomain, SuiteState
 
 SIDECAR_TRUTH = (
@@ -50,10 +52,11 @@ class CatalogPanel(ttk.Frame):
         self.refresh_list()
 
     def _build(self) -> None:
-        self.metadata_flow = MetadataFlowPanel(self, context="catalog")
-        self.metadata_flow.pack(fill=tk.X, pady=(0, 6))
-        bar = ttk.Frame(self)
-        bar.pack(fill=tk.X, pady=(0, 4))
+        workflow_intro(
+            self,
+            "Browse modules, validate GLB, edit sidecar metadata — Assembly tags and materials are what ship.",
+        )
+        bar = workflow_primary_row(self)
         ttk.Label(bar, text="Batch").pack(side=tk.LEFT)
         self.batch_var = tk.StringVar(value="(all)")
         self.batch_combo = ttk.Combobox(
@@ -118,16 +121,15 @@ class CatalogPanel(ttk.Frame):
             textvariable=self.sidecar_truth_var,
             wraplength=680,
             justify=tk.LEFT,
-            foreground="#555",
+            foreground=COLOR_MUTED,
             font=("Segoe UI", 9),
         )
         sidecar_lbl.pack(anchor=tk.W, fill=tk.X, pady=(2, 0))
         bind_aps_tooltip(sidecar_lbl, "cat_sidecar_truth")
         self.validation = tk.StringVar(value="")
-        self._validation_lbl = tk.Label(
+        self._validation_lbl = ttk.Label(
             right,
             textvariable=self.validation,
-            foreground="#444444",
             wraplength=680,
             justify=tk.LEFT,
             font=("Segoe UI", 9),
@@ -140,7 +142,7 @@ class CatalogPanel(ttk.Frame):
 
         meta_frame = ttk.Frame(notebook, padding=4)
         notebook.add(meta_frame, text="Module info (editable)")
-        self.meta_text = tk.Text(meta_frame, wrap=tk.NONE, undo=True, font=("Consolas", 10))
+        self.meta_text = themed_text(meta_frame, wrap=tk.NONE, undo=True, font=("Consolas", 10))
         meta_scroll = ttk.Scrollbar(meta_frame, orient=tk.VERTICAL, command=self.meta_text.yview)
         self.meta_text.configure(yscrollcommand=meta_scroll.set)
         self.meta_text.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
@@ -153,7 +155,7 @@ class CatalogPanel(ttk.Frame):
 
         index_frame = ttk.Frame(notebook, padding=4)
         notebook.add(index_frame, text="Library record (read-only)")
-        self.index_text = tk.Text(index_frame, wrap=tk.NONE, state=tk.DISABLED, font=("Consolas", 10))
+        self.index_text = themed_text(index_frame, wrap=tk.NONE, state=tk.DISABLED, font=("Consolas", 10))
         idx_scroll = ttk.Scrollbar(index_frame, orient=tk.VERTICAL, command=self.index_text.yview)
         self.index_text.configure(yscrollcommand=idx_scroll.set)
         self.index_text.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
@@ -256,7 +258,7 @@ class CatalogPanel(ttk.Frame):
             f"validate: {summary.get('validate_status')} — {summary.get('validate_summary', '')}"
         )
         self.validation.set("")
-        self._validation_lbl.configure(foreground="#444444")
+        set_inline_status(self._validation_lbl, self.validation, "", ok=None)
         self.meta_text.configure(state=tk.NORMAL)
         self.meta_text.delete("1.0", tk.END)
         self.meta_text.insert("1.0", json.dumps(summary, indent=2))
@@ -274,11 +276,23 @@ class CatalogPanel(ttk.Frame):
         if thumb is not None:
             photo = ImageTk.PhotoImage(thumb)
             self._row_photos[rec.module_id] = photo
-            img_lbl = tk.Label(row, image=photo, bg="#f0f0f0", cursor="hand2")
+            img_lbl = tk.Label(row, image=photo, bg=COLOR_INPUT_BG, cursor="hand2")
             img_lbl.image = photo
             img_lbl.pack(side=tk.LEFT, padx=(0, 6))
             img_lbl.bind("<Button-1>", lambda _e, r=rec: self._select_record(r))
             bind_aps_tooltip(img_lbl, "cat_list_thumb")
+        else:
+            ph = tk.Label(row, width=12, height=6, relief=tk.SUNKEN, cursor="hand2")
+            configure_preview_label(
+                ph,
+                "error",
+                detail="No 3D file",
+                hint="pick another module",
+                width=PREVIEW_THUMB_LG // 2,
+                height=PREVIEW_THUMB_LG // 2,
+            )
+            ph.pack(side=tk.LEFT, padx=(0, 6))
+            ph.bind("<Button-1>", lambda _e, r=rec: self._select_record(r))
         cat = rec.index_row.get("category", "?")
         text = ttk.Label(
             row,
@@ -291,10 +305,6 @@ class CatalogPanel(ttk.Frame):
         bind_aps_tooltip(text, "cat_list_thumb")
 
     def _set_validation_result(self, text: str, *, ok: bool | None = None) -> None:
-        if ok is True and text:
-            text = f"Validation: PASS — {text}" if not text.startswith("Validation:") else text
-        elif ok is False and text:
-            text = f"Validation: FAIL — {text}" if not text.startswith("Validation:") else text
         set_inline_status(self._validation_lbl, self.validation, text, ok=ok)
 
     def _select_record(self, rec: ModuleRecord) -> None:
@@ -316,7 +326,6 @@ class CatalogPanel(ttk.Frame):
             f"Grid {grid} · dims {dim_txt} · batch {rec.index_row.get('batch_id', '—')}"
         )
         self.validation.set("")
-        self._validation_lbl.configure(foreground="#444444")
         sidecar_json = json.dumps(rec.sidecar or {}, indent=2)
         self.meta_text.configure(state=tk.NORMAL)
         self.meta_text.delete("1.0", tk.END)
@@ -344,11 +353,10 @@ class CatalogPanel(ttk.Frame):
         if rec is None:
             return
         report = validate_record(rec)
-        status = "PASS" if report.get("valid") else "FAIL"
+        ok = bool(report.get("valid"))
         verts = report.get("vertex_count", "?")
         issues = "; ".join(report.get("issues") or []) or "none"
-        ok = bool(report.get("valid"))
-        self._set_validation_result(f"Validation {status} · {verts} verts · {issues}", ok=ok)
+        self._set_validation_result(f"{verts} verts · {issues}", ok=ok)
 
     def on_save(self) -> None:
         rec = self._require_current()

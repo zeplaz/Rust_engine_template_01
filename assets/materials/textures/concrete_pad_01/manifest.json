@@ -1,0 +1,11 @@
+{
+  "profile_id": "concrete_pad_01",
+  "seed": 43004,
+  "generator": "concrete",
+  "size": 256,
+  "paths": {
+    "albedo": "assets/materials/textures/concrete_pad_01/albedo.png",
+    "normal": "assets/materials/textures/concrete_pad_01/normal.png",
+    "roughness": "assets/materials/textures/concrete_pad_01/roughness.png"
+  }
+}

@@ -37,6 +37,8 @@ pub mod widget_presentation;
 pub mod world_interaction_diagnostics;
 pub mod cause_chain;
 pub mod contextual_tip;
+pub mod grammar_read_hud;
+pub mod minimap_topology_legend;
 pub mod strategic_preview;
 pub mod tool_help;
 pub mod transmission;
@@ -49,8 +51,16 @@ pub mod minimap_bevy_interaction;
 pub mod layout_debug;
 pub mod viewport_authority_debug;
 pub mod icon_atlas;
+pub mod power_hud_icon_atlas;
+pub mod plant_focus_card;
 pub mod simulation_shell_phase2;
 pub mod sim_hud_l5_polish;
+pub mod sim_hud_copy;
+pub mod sim_hud_egui_theme;
+pub mod sim_build_picker_sheet;
+pub mod sim_road_tool_sheet;
+pub mod sim_power_tool_sheet;
+pub mod context_tray_build_egui;
 pub mod ui_stress_state;
 pub mod ui_shell_migration;
 
@@ -68,6 +78,21 @@ pub use panel_state::{HudPanel, HudPanelState, HudPanelStatePlugin, HudPanelStat
 pub use icon_atlas::{
     tool_context_uses_icon_atlas, IconAtlasManifest, IconAtlasPlugin, IconAtlasUi, IconId,
 };
+pub use power_hud_icon_atlas::{
+    power_hud_atlas_assets_on_disk, power_hud_icon_atlas_registration_witness_green,
+    PowerHudEguiTextureCache, PowerHudIconAtlasManifest, PowerHudIconAtlasPlugin,
+    PowerHudIconAtlasUi, PowerHudIconId,
+};
+pub use plant_focus_card::{
+    draw_plant_focus_card_egui, plant_focus_card_gauges_wired, sync_plant_focus_card_visibility,
+    PlantFocusCardSnapshot,
+};
+pub use sim_build_picker_sheet::{
+    BuildPickerCategory, SimBuildPickerState, AD_HOC_SUBMENU_WINDOWS, BUILD_PICKER_RAIL_GAP_PX,
+    BUILD_PICKER_SHEET_W_PX,
+};
+pub use sim_road_tool_sheet::SimRoadToolSheetState;
+pub use sim_power_tool_sheet::{sim_power_tool_sheet_icons_wired, SimPowerToolSheetState};
 pub use sim_hud_l5_polish::{
     sim_hud_info_panel_tokens_ok, sim_hud_l5_polish_rollup_green, sim_hud_slice_build_green,
     sim_hud_slice_dock_green, sim_hud_slice_minimap_green, sim_hud_slice_ops_polish_green,

@@ -1,0 +1,15 @@
+============================= test session starts =============================
+platform win32 -- Python 3.14.3, pytest-9.0.3, pluggy-1.6.0
+rootdir: C:\dev\github\Rust_engine_template_01\tools\mcp\python
+configfile: pytest.ini
+plugins: anyio-4.13.0
+collected 4 items
+
+tests\test_aps_chrome_layout.py ssss
+
+=========================== short test summary info ===========================
+SKIPPED [1] tests\test_aps_chrome_layout.py:26: no APS Tk display: name 'CollapsibleSection' is not defined
+SKIPPED [1] tests\test_aps_chrome_layout.py:47: no APS Tk display: name 'CollapsibleSection' is not defined
+SKIPPED [1] tests\test_aps_chrome_layout.py:55: no APS Tk display: name 'CollapsibleSection' is not defined
+SKIPPED [1] tests\test_aps_chrome_layout.py:78: no APS Tk display: name 'CollapsibleSection' is not defined
+============================= 4 skipped in 0.25s ==============================

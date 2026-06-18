@@ -2,7 +2,7 @@
   "gate_id": "APS-MAT-STUDIO-PHASE-A",
   "ok": true,
   "profile_id": "concrete_grey_01",
-  "catalog_count": 22,
+  "catalog_count": 27,
   "categories": [
     "glass",
     "industrial/concrete",
@@ -47,8 +47,8 @@
     "context_thumb": "assembly_preview_panel \u2192 slot_preview_panel"
   },
   "aps_mat_003": {
-    "warmed": 22,
-    "total": 22
+    "warmed": 27,
+    "total": 27
   },
   "ship_policy": "material authority on snapshot only \u2014 not Blender viewport"
 }

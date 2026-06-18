@@ -571,6 +571,59 @@ def _cmd_grammar_pilot_parity(_: argparse.Namespace) -> int:
     return 0 if body.get("green") else 1
 
 
+def _cmd_grammar_set_tier(args: argparse.Namespace) -> int:
+    from rust_engine_mcp import grammar_build_set
+
+    if getattr(args, "write_witness", False):
+        rel = getattr(args, "witness_path", "") or None
+        body = grammar_build_set.write_grammar_set_tier_witness(rel_path=rel or None)
+    else:
+        body = grammar_build_set.grammar_set_tier()
+    print(json.dumps(body, indent=2))
+    return 0
+
+
+def _cmd_grammar_facility_brief(args: argparse.Namespace) -> int:
+    from rust_engine_mcp import grammar_facility_brief
+
+    gid = getattr(args, "grammar_id", "") or None
+    if getattr(args, "write_witness", False):
+        body = grammar_facility_brief.write_grammar_facility_brief_witness(grammar_id=gid)
+    else:
+        body = grammar_facility_brief.grammar_facility_brief(grammar_id=gid)
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("ok") else 1
+
+
+def _cmd_site_zone_validate_witness(_: argparse.Namespace) -> int:
+    from rust_engine_mcp.validators.site_zone_grid import write_site_zone_validate_witness
+
+    body = write_site_zone_validate_witness()
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
+def _cmd_grammar_sweep_process_witness(_: argparse.Namespace) -> int:
+    from rust_engine_mcp import grammar_build_set
+
+    body = grammar_build_set.write_grammar_sweep_process_witness()
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
+def _cmd_designer_grammar_quality_loop(args: argparse.Namespace) -> int:
+    from rust_engine_mcp.designer_grammar_quality_loop import run_designer_grammar_quality_loop
+
+    mode = "full" if getattr(args, "full", False) else "fast"
+    body = run_designer_grammar_quality_loop(
+        mode=mode,
+        sweep_seeds=int(getattr(args, "sweep_seeds", 24) or 24),
+        write_witness=bool(getattr(args, "write_witness", False)),
+    )
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
 def _cmd_building_set_coverage(_: argparse.Namespace) -> int:
     from rust_engine_mcp import grammar_build_set
 
@@ -699,6 +752,122 @@ def _cmd_dmcp_ovr_p3_accept_rubric_witness(_: argparse.Namespace) -> int:
     from rust_engine_mcp.aps_uiux_p3_accept_rubric import refresh_dmcp_ovr_p3_accept_rubric_witness
 
     body = refresh_dmcp_ovr_p3_accept_rubric_witness()
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
+def _cmd_dmcp_veg_wave_tail_reconcile_witness(_: argparse.Namespace) -> int:
+    from rust_engine_mcp.dmcp_veg_wave_tail_reconcile import refresh_dmcp_veg_wave_tail_reconcile_witness
+
+    body = refresh_dmcp_veg_wave_tail_reconcile_witness()
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
+def _cmd_dmcp_parallel_lane_bkkf_witness(_: argparse.Namespace) -> int:
+    from rust_engine_mcp.dmcp_parallel_lane_bkkf import refresh_dmcp_parallel_lane_bkkf_witness
+
+    body = refresh_dmcp_parallel_lane_bkkf_witness()
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
+def _cmd_dmcp_facility_binding_lane_witness(_: argparse.Namespace) -> int:
+    from rust_engine_mcp.dmcp_facility_binding_lane import refresh_dmcp_facility_binding_lane_witness
+
+    body = refresh_dmcp_facility_binding_lane_witness()
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
+def _cmd_dmcp_nuclear_pwr_spec_witness(_: argparse.Namespace) -> int:
+    from rust_engine_mcp.dmcp_nuclear_pwr_spec import refresh_dmcp_nuclear_pwr_spec_witness
+
+    body = refresh_dmcp_nuclear_pwr_spec_witness()
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
+def _cmd_dmcp_art_spine_hub_wave_witness(_: argparse.Namespace) -> int:
+    from rust_engine_mcp.dmcp_art_spine_hub_wave import refresh_dmcp_art_spine_hub_wave_witness
+
+    body = refresh_dmcp_art_spine_hub_wave_witness()
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
+def _cmd_pwr_utility_manifest_witness(_: argparse.Namespace) -> int:
+    from rust_engine_mcp.mcp_pwr_utility import refresh_pwr_utility_manifest_witness
+
+    body = refresh_pwr_utility_manifest_witness()
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
+def _cmd_pwr_substation_batch_run(_: argparse.Namespace) -> int:
+    from rust_engine_mcp.mcp_pwr_utility import refresh_substation_batch_witness, run_substation_batch
+
+    result = run_substation_batch()
+    witness = refresh_substation_batch_witness()
+    print(json.dumps({"batch": result, "witness": witness}, indent=2))
+    return 0 if witness.get("green") else 1
+
+
+def _cmd_pwr_transformer_batch_run(_: argparse.Namespace) -> int:
+    from rust_engine_mcp.mcp_pwr_utility import refresh_transformer_batch_witness, run_transformer_batch
+
+    result = run_transformer_batch()
+    witness = refresh_transformer_batch_witness()
+    print(json.dumps({"batch": result, "witness": witness}, indent=2))
+    return 0 if witness.get("green") else 1
+
+
+def _cmd_pwr_substation_promote(_: argparse.Namespace) -> int:
+    from rust_engine_mcp.mcp_pwr_utility import promote_substation, refresh_substation_promote_witness
+
+    result = promote_substation()
+    witness = refresh_substation_promote_witness()
+    print(json.dumps({"promote": result, "witness": witness}, indent=2))
+    return 0 if witness.get("green") else 1
+
+
+def _cmd_pwr_transformer_promote(_: argparse.Namespace) -> int:
+    from rust_engine_mcp.mcp_pwr_utility import promote_transformer, refresh_transformer_promote_witness
+
+    result = promote_transformer()
+    witness = refresh_transformer_promote_witness()
+    print(json.dumps({"promote": result, "witness": witness}, indent=2))
+    return 0 if witness.get("green") else 1
+
+
+def _cmd_pwr_substation_batch_witness(_: argparse.Namespace) -> int:
+    from rust_engine_mcp.mcp_pwr_utility import refresh_substation_batch_witness
+
+    body = refresh_substation_batch_witness()
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
+def _cmd_pwr_transformer_batch_witness(_: argparse.Namespace) -> int:
+    from rust_engine_mcp.mcp_pwr_utility import refresh_transformer_batch_witness
+
+    body = refresh_transformer_batch_witness()
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
+def _cmd_pwr_substation_promote_witness(_: argparse.Namespace) -> int:
+    from rust_engine_mcp.mcp_pwr_utility import refresh_substation_promote_witness
+
+    body = refresh_substation_promote_witness()
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
+def _cmd_pwr_transformer_promote_witness(_: argparse.Namespace) -> int:
+    from rust_engine_mcp.mcp_pwr_utility import refresh_transformer_promote_witness
+
+    body = refresh_transformer_promote_witness()
     print(json.dumps(body, indent=2))
     return 0 if body.get("green") else 1
 
@@ -1021,6 +1190,7 @@ def main(argv: list[str] | None = None) -> int:
             "landscape_grammar",
             "landscape_grammar_presets",
             "arch_build_grammar",
+            "site_zone_grid",
             "construction",
             "witness_honesty",
             "queue_integrity",
@@ -1142,6 +1312,26 @@ def main(argv: list[str] | None = None) -> int:
     p.set_defaults(func=_cmd_grammar_eval_sweep)
 
     sub.add_parser("grammar-pilot-parity").set_defaults(func=_cmd_grammar_pilot_parity)
+
+    p = sub.add_parser("grammar-set-tier")
+    p.add_argument("--write-witness", action="store_true")
+    p.add_argument("--witness-path", default="", help="Relative path under repo root")
+    p.set_defaults(func=_cmd_grammar_set_tier)
+
+    p = sub.add_parser("grammar-facility-brief")
+    p.add_argument("--grammar-id", default="", help="Single grammar_id (default: all grammars)")
+    p.add_argument("--write-witness", action="store_true")
+    p.set_defaults(func=_cmd_grammar_facility_brief)
+
+    sub.add_parser("site-zone-validate-witness").set_defaults(func=_cmd_site_zone_validate_witness)
+    sub.add_parser("grammar-sweep-process-witness").set_defaults(func=_cmd_grammar_sweep_process_witness)
+
+    p = sub.add_parser("designer-grammar-quality-loop")
+    p.add_argument("--full", action="store_true", help="Run grammar_eval_sweep per archetype")
+    p.add_argument("--sweep-seeds", type=int, default=24)
+    p.add_argument("--write-witness", action="store_true")
+    p.set_defaults(func=_cmd_designer_grammar_quality_loop)
+
     sub.add_parser("building-set-coverage").set_defaults(func=_cmd_building_set_coverage)
     sub.add_parser("building-set-coverage-witness").set_defaults(func=_cmd_building_set_coverage_witness)
     sub.add_parser("landscape-grammar-presets-witness").set_defaults(func=_cmd_landscape_grammar_presets_witness)
@@ -1166,6 +1356,20 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("dmcp-ovr-g0-audit-witness").set_defaults(func=_cmd_dmcp_ovr_g0_audit_witness)
     sub.add_parser("dmcp-ovr-p2-impl-audit-witness").set_defaults(func=_cmd_dmcp_ovr_p2_impl_audit_witness)
     sub.add_parser("dmcp-ovr-p3-accept-rubric-witness").set_defaults(func=_cmd_dmcp_ovr_p3_accept_rubric_witness)
+    sub.add_parser("dmcp-veg-wave-tail-reconcile-witness").set_defaults(func=_cmd_dmcp_veg_wave_tail_reconcile_witness)
+    sub.add_parser("dmcp-parallel-lane-bkkf-witness").set_defaults(func=_cmd_dmcp_parallel_lane_bkkf_witness)
+    sub.add_parser("dmcp-facility-binding-lane-witness").set_defaults(func=_cmd_dmcp_facility_binding_lane_witness)
+    sub.add_parser("dmcp-nuclear-pwr-spec-witness").set_defaults(func=_cmd_dmcp_nuclear_pwr_spec_witness)
+    sub.add_parser("dmcp-art-spine-hub-wave-witness").set_defaults(func=_cmd_dmcp_art_spine_hub_wave_witness)
+    sub.add_parser("pwr-utility-manifest-witness").set_defaults(func=_cmd_pwr_utility_manifest_witness)
+    sub.add_parser("pwr-substation-batch-run").set_defaults(func=_cmd_pwr_substation_batch_run)
+    sub.add_parser("pwr-transformer-batch-run").set_defaults(func=_cmd_pwr_transformer_batch_run)
+    sub.add_parser("pwr-substation-promote").set_defaults(func=_cmd_pwr_substation_promote)
+    sub.add_parser("pwr-transformer-promote").set_defaults(func=_cmd_pwr_transformer_promote)
+    sub.add_parser("pwr-substation-batch-witness").set_defaults(func=_cmd_pwr_substation_batch_witness)
+    sub.add_parser("pwr-transformer-batch-witness").set_defaults(func=_cmd_pwr_transformer_batch_witness)
+    sub.add_parser("pwr-substation-promote-witness").set_defaults(func=_cmd_pwr_substation_promote_witness)
+    sub.add_parser("pwr-transformer-promote-witness").set_defaults(func=_cmd_pwr_transformer_promote_witness)
     sub.add_parser("mcp-witness-honesty-validator-witness").set_defaults(
         func=_cmd_mcp_witness_honesty_validator_witness
     )

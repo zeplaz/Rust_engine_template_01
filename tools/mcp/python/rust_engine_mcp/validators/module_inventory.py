@@ -64,5 +64,14 @@ CANONICAL_MODULE_IDS: frozenset[str] = frozenset(
         # PG-MODULE-AUDIT-002 P3 grammar extensions (warehouse pilot)
         "stack_chimney_1u",
         "platform_dock_2u",
+        # utility power grid (kit_utility_power_production_001)
+        "bus_bay_simplified",
+        "breaker_block",
+        "control_shack_1u",
+        "fence_chainlink_1u",
+        "gravel_pad_1u",
+        "warning_sign_1u",
+        "kit_substation_yard_production_001",
+        "prop_transformer_production_run001",
     }
 )

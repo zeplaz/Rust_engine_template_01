@@ -1,0 +1,75 @@
+{
+  "schema_version": "facility_chain_pilot_v1",
+  "pilot_id": "concrete_portland_chain_v1",
+  "chain_id": "concrete_portland",
+  "display_name": "Concrete (Portland) — 3-step site pilot",
+  "grammar_archetype_hint": "FactoryCluster",
+  "grammar_id": "factory_cluster_v1",
+  "district_style": "manufacturing_row",
+  "steps": [
+    {
+      "step_index": 0,
+      "role": "aggregate_mine",
+      "catalog_id": "concrete_aggregate_mine",
+      "power_consumption_ref": 18,
+      "power_tier": "light",
+      "massing_hint": "yard_complex",
+      "site_plan_json": "assets/configs/buildings/pilots/concrete_aggregate_mine_site_v0.json",
+      "program_axes": {
+        "storage": "low",
+        "loading": "medium",
+        "office": "low"
+      }
+    },
+    {
+      "step_index": 1,
+      "role": "cement_kiln",
+      "catalog_id": "concrete_cement_kiln",
+      "power_consumption_ref": 72,
+      "power_tier": "medium",
+      "massing_hint": "long_hall",
+      "site_plan_json": "assets/configs/buildings/pilots/concrete_cement_kiln_site_v0.json",
+      "program_axes": {
+        "storage": "medium",
+        "loading": "medium",
+        "office": "low",
+        "service": "medium"
+      }
+    },
+    {
+      "step_index": 2,
+      "role": "concrete_mixer",
+      "catalog_id": "concrete_mixer_plant",
+      "power_consumption_ref": 28,
+      "power_tier": "light",
+      "massing_hint": "double_hall",
+      "site_plan_json": "assets/configs/buildings/pilots/concrete_mixer_plant_site_v0.json",
+      "facility_binding": {
+        "catalog_id": "concrete_mixer_plant",
+        "chain_id": "concrete_portland",
+        "supply_chain_role": "concrete_mixer",
+        "power_tier": "light",
+        "site_template_id": "concrete_mixer_plant_site_v0",
+        "program_axes": {
+          "storage": "medium",
+          "loading": "high",
+          "office": "low"
+        }
+      },
+      "program_axes": {
+        "storage": "medium",
+        "loading": "high",
+        "office": "low"
+      }
+    }
+  ],
+  "adjacency_hints": [
+    { "from_role": "aggregate_mine", "to_role": "cement_kiln", "must_buffer": true },
+    { "from_role": "cement_kiln", "to_role": "concrete_mixer", "must_buffer": true }
+  ],
+  "design_docs": [
+    "src/dev/design_facility_binding_schema_v1.md",
+    "src/dev/design_factory_cluster_concept_v1.md",
+    "src/dev/plan_industrial_facility_grammar_suite_v1.md"
+  ]
+}

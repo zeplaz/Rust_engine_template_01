@@ -5,7 +5,7 @@ from __future__ import annotations
 import tkinter as tk
 from tkinter import ttk
 
-from .job_controller import JobController, JobRecord, JobState
+from .aps_theme import COLOR_TEXT_SUBTLE
 
 
 class JobStrip(ttk.Frame):
@@ -19,7 +19,7 @@ class JobStrip(ttk.Frame):
         ttk.Label(self, textvariable=self._label_var, font=("Segoe UI", 9, "bold")).pack(
             side=tk.LEFT, padx=(0, 8)
         )
-        ttk.Label(self, textvariable=self._step_var, foreground="#444").pack(side=tk.LEFT, padx=(0, 8))
+        ttk.Label(self, textvariable=self._step_var, foreground=COLOR_TEXT_SUBTLE).pack(side=tk.LEFT, padx=(0, 8))
         self._cancel_btn = ttk.Button(self, text="Cancel", command=self._on_cancel)
         self._cancel_btn.pack(side=tk.RIGHT)
 

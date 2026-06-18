@@ -1,0 +1,50 @@
+{
+  "task_id": "DESIGNER-GRAMMAR-QUALITY-LOOP-001",
+  "ok": true,
+  "green": true,
+  "mode": "fast",
+  "tier": "G0",
+  "tier_detail": {
+    "archetype_count": 0,
+    "reasons": [
+      "archetype_count<3 for G1",
+      "lineage_district_count<3 for G1"
+    ],
+    "grammar_files": [
+      "factory_cluster_v1.ron",
+      "industrial_warehouse_v1.ron",
+      "rail_edge_v1.ron"
+    ]
+  },
+  "brief_green": false,
+  "brief_gaps": [
+    "grammar_pilots=0 need \u22654",
+    "industrial_west_v0: missing F-axis logistics",
+    "industrial_west_v0: missing F-axis manufacturing",
+    "infrastructure_v0: missing F-axis power",
+    "infrastructure_v0: missing F-axis fuel"
+  ],
+  "coverage_green": false,
+  "coverage_errors": [
+    "industrial_west_v0: bad preset logistics_rail_warehouse_v0",
+    "industrial_west_v0: bad preset manufacturing_fabrication_hall_v0",
+    "industrial_west_v0: grammar pilots 0 < min",
+    "industrial_west_v0: F-axis logistics not covered",
+    "industrial_west_v0: F-axis manufacturing not covered",
+    "infrastructure_v0: bad preset power_substation_yard_v0"
+  ],
+  "parity_green": false,
+  "parity_errors": [
+    "grammar_pilots=0 need \u22654",
+    "preset pair failed"
+  ],
+  "grammar_checks": [],
+  "sweeps": [],
+  "next_actions": [
+    "GRAM-CONTENT-002: add \u22652 grammar *.ron + JSON mirrors (see src/dev/design_grammar_archetype_family_g1_v1.md)",
+    "validate each new grammar: validate-report arch_build_grammar on preset JSON twin",
+    "refresh tier: python -m rust_engine_mcp.cli grammar-set-tier --write-witness"
+  ],
+  "cli_fast": "powershell tools/mcp/scripts/designer_grammar_iterate.ps1",
+  "cli_full": "powershell tools/mcp/scripts/designer_grammar_iterate.ps1 -Mode full"
+}

@@ -25,11 +25,11 @@ def refresh_aps_ux_polish_001_witness() -> bool:
 
     validation_color = (
         "COLOR_FAIL" in inline
+        and "status_atom" in inline
         and "set_inline_status" in asm
-        and "Validation: FAIL" in asm
         and "set_inline_status" in cat
     )
-    material_status_text = "_status_label" in mat and "Ready" in mat and "_status_text" in mat
+    material_status_text = "_status_label" in mat and "ready" in mat and "_status_text" in mat
     metadata_visible = (
         "_initial_expanded" in meta
         and "_collapsed_hint" in meta

@@ -19,6 +19,7 @@ from .assembly_grammar_verify import (
 )
 from .material_textures import validate_material_textures, validate_material_textures_path
 from .tile_promotion import validate_tile_promotion
+from .site_zone_grid import validate_site_zone_grid_path, write_site_zone_validate_witness
 from .witness_honesty import (
     validate_witness_honesty_path,
     validate_witness_honesty_scan,
@@ -177,6 +178,10 @@ def run_validator(
         from .arch_build_grammar import validate_arch_build_grammar_path
 
         return validate_arch_build_grammar_path(_resolve(target), compression_level=compression_level)
+    if name == "site_zone_grid":
+        if not target:
+            raise ValueError("target path required for site_zone_grid (site_zone_grid_v1 JSON)")
+        return validate_site_zone_grid_path(_resolve(target), compression_level=compression_level)
     if name == "construction":
         if not target:
             raise ValueError("target path required for construction (witness JSON)")

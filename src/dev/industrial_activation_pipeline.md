@@ -64,6 +64,10 @@ Today: commit stops at `ConstructionSite` + phases; production plugins tick **on
 
 **Supply-chain authority:** `assets/configs/industrial_supply_chains.json` + per-step JSON under `assets/configs/buildings/`. Roles in `src/construction/supply_chain_role.rs`; activation in `src/economy/supply_chain.rs`.
 
+**Visual grammar binding (2026-06):** [`plan_industrial_facility_grammar_suite_v1.md`](plan_industrial_facility_grammar_suite_v1.md) — join building grammars + site zones + catalog power/IO in APS iterate loop.
+
+**Power line construction UX (2026-06):** [`plan_power_grid_construction_ux_v1.md`](plan_power_grid_construction_ux_v1.md) — curved/90° draw · voltage types · islanding/repair read · [`design_power_line_construction_ux_v1.md`](design_power_line_construction_ux_v1.md).
+
 **Role → ECS (one building per step — do not collapse chains):**
 
 | `supply_chain_role` | Example `catalog_id` | Runtime components | Typical power |

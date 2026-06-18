@@ -1,0 +1,105 @@
+{
+  "_meta": {
+    "version": "1.0.0",
+    "program_id": "PLAN-CODER-B-VEG-FIRE-MINIMAP-TAIL-001",
+    "date": "2026-06-18",
+    "plan_doc": "src/dev/plan_coder_b_veg_fire_minimap_tail_001_v1.md",
+    "parent_program": "POST-DRAIN-PHASE-6-001",
+    "rule": "Pick seq 1→9 top-down · witness exit_predicate required · @coder B only",
+    "regression": "cargo test -p proc_A_dine01 --lib landscape_grammar minimap_compositor vegetation_visual_extract topology_legend des_build_read"
+  },
+  "drain": [
+    {
+      "seq": 1,
+      "id": "VEG-CATALOG-LOADER-001",
+      "status": "done",
+      "priority": "P0",
+      "owner": "coder_b",
+      "witness": "debug_runs/vegetation_variant_catalog_load_live.json",
+      "exit_predicate": { "path": "green", "eq": true }
+    },
+    {
+      "seq": 2,
+      "id": "VEG-MINIMAP-BURN-MERGE-001",
+      "status": "done",
+      "priority": "P0",
+      "owner": "coder_b",
+      "witness": "debug_runs/minimap_compositor_live.json",
+      "exit_predicate": { "path": "burn_overrides_topology", "eq": true }
+    },
+    {
+      "seq": 3,
+      "id": "FIRE-MINIMAP-COHERENCE-001",
+      "status": "done",
+      "priority": "P0",
+      "owner": "coder_b",
+      "witness": "debug_runs/minimap_fire_veg_coherence_live.json",
+      "exit_predicate": { "path": "revision_aligned", "eq": true }
+    },
+    {
+      "seq": 4,
+      "id": "VEG-MINIMAP-LEGEND-UI-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_b",
+      "witness": "debug_runs/minimap_topology_legend_live.json",
+      "exit_predicate": { "path": "legend_ui_wired", "eq": true }
+    },
+    {
+      "seq": 5,
+      "id": "VEG-LG5-STAMP-RUNTIME-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_b",
+      "witness": "debug_runs/landscape_map_stamp_runtime_live.json",
+      "exit_predicate": { "path": "stamped_chunks", "gte": 1 }
+    },
+    {
+      "seq": 6,
+      "id": "VEG-CATALOG-RESOLVE-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_b",
+      "witness": "debug_runs/art_pipeline/veg_resolver_parity_live.json",
+      "exit_predicate": { "path": "catalog_clamp_green", "eq": true }
+    },
+    {
+      "seq": 7,
+      "id": "S7B-M3-MINIMAP-001",
+      "status": "done",
+      "priority": "P2",
+      "owner": "coder_b",
+      "witness": "debug_runs/stage7_behavioral_live.json",
+      "exit_predicate": { "path": "m3_minimap_readers_wired", "eq": true },
+      "note": "alias of s7b_m3_green — closed prior; field added for tail plan parity"
+    },
+    {
+      "seq": 8,
+      "id": "MINIMAP-ECO-FIRE-TRAY-001",
+      "status": "done",
+      "priority": "P2",
+      "owner": "coder_b",
+      "witness": "debug_runs/minimap_compositor_live.json",
+      "exit_predicate": { "path": "minimap_eco_fire_tray_001/green", "eq": true }
+    },
+    {
+      "seq": 9,
+      "id": "VEG-DIAG-EXTRACT-PANEL-001",
+      "status": "done",
+      "priority": "P2",
+      "owner": "coder_b",
+      "witness": "debug_runs/veg_diag_extract_panel_live.json",
+      "exit_predicate": { "path": "diag_panel_wired", "eq": true }
+    }
+  ],
+  "parallel": [
+    {
+      "id": "DES-BUILD-READ-HUD-001",
+      "status": "done",
+      "owner": "coder_b",
+      "witness": "debug_runs/des_build_read_hud_001_live.json",
+      "note": "lib green; runtime_sim_verified operator pending"
+    }
+  ],
+  "program_status": "CLOSED_PENDING_OPERATOR"
+}

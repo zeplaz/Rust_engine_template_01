@@ -88,7 +88,11 @@ pub fn build_pick_ghost_tile_system(
     }
     if matches!(
         tool.tool,
-        BuildTool::Zone(_) | BuildTool::Demolish | BuildTool::Road(_) | BuildTool::Rail(_)
+        BuildTool::Zone(_)
+            | BuildTool::Demolish
+            | BuildTool::Road(_)
+            | BuildTool::Rail(_)
+            | BuildTool::PowerLine(_)
     ) {
         ghost.origin = None;
         ghost.drag_active = false;
@@ -132,7 +136,10 @@ pub fn build_pick_ghost_tile_system(
     let _conform_y = conform_world_y(world_xy.x, world_xy.y, &params);
 
     if buttons.just_pressed(MouseButton::Left) {
-        if matches!(tool.tool, BuildTool::Road(_) | BuildTool::Rail(_)) {
+        if matches!(
+            tool.tool,
+            BuildTool::Road(_) | BuildTool::Rail(_) | BuildTool::PowerLine(_)
+        ) {
             return;
         }
         ghost.origin = Some(tile);
@@ -170,7 +177,10 @@ pub fn build_refresh_placement_validation_system(
     } else if strip.is_changed() {
         ghost.footprint = strip.active.footprint_for_tool();
     }
-    if strip.active == ToolContext::Roads || strip.active == ToolContext::Rail {
+    if strip.active == ToolContext::Roads
+        || strip.active == ToolContext::Rail
+        || matches!(tool.tool, BuildTool::PowerLine(_))
+    {
         return;
     }
 
@@ -372,7 +382,10 @@ pub fn build_confirm_site_system(
         return;
     }
 
-    if matches!(tool.tool, BuildTool::Road(_) | BuildTool::Rail(_)) {
+    if matches!(
+        tool.tool,
+        BuildTool::Road(_) | BuildTool::Rail(_) | BuildTool::PowerLine(_)
+    ) {
         return;
     }
 

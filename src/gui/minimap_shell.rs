@@ -135,6 +135,9 @@ pub struct MinimapShellState {
     pub diagnostic_camera_drove_ui: bool,
     /// Draw gold frame for [`crate::gui::ViewId::WorldMain`] visible bounds on the minimap image.
     pub show_tactical_viewport_frame: bool,
+    /// DES-MINIMAP-VEG-LEGEND-001 — ecology topology legend strip.
+    pub topology_legend_expanded: bool,
+    pub topology_legend_user_toggled: bool,
 }
 
 impl Default for MinimapShellState {
@@ -170,6 +173,8 @@ impl Default for MinimapShellState {
             diagnostic_ui_wrote_camera: false,
             diagnostic_camera_drove_ui: false,
             show_tactical_viewport_frame: true,
+            topology_legend_expanded: false,
+            topology_legend_user_toggled: false,
         }
     }
 }

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import tkinter as tk
-from pathlib import Path
 from tkinter import ttk
 
 try:
@@ -15,9 +14,10 @@ except ImportError:  # pragma: no cover
 from rust_engine_mcp import assembly_preview
 from rust_engine_mcp.paths import repo_root
 
-from .aps_inline_feedback import set_inline_status
-from .aps_theme import FONT_SMALL
-from .job_controller import JobRecord, JobResult, JobState
+from .aps_inline_feedback import apply_status_atom, set_inline_status
+from .aps_preview_state import apply_preview_photo, configure_preview_label, image_is_near_black, make_fidelity_chip
+from .aps_theme import COLOR_MUTED, FONT_SMALL, PREVIEW_THUMB_MD
+from .job_controller import JobRecord, JobResult
 
 
 class AssemblyPreviewPanel(ttk.LabelFrame):
@@ -29,24 +29,24 @@ class AssemblyPreviewPanel(ttk.LabelFrame):
         on_preview_thumb=None,
         start_job=None,
     ) -> None:
-        super().__init__(master, text="3D preview", padding=6)
+        super().__init__(master, text="Assembly preview", padding=6)
         self._on_log = on_log or (lambda _line: None)
         self._on_preview_thumb = on_preview_thumb
         self._start_job = start_job
         self._snapshot: dict | None = None
         self._thumb_photo: ImageTk.PhotoImage | None = None
         self._last_result: dict | None = None
+        self._preview_btn: ttk.Button | None = None
         self._build()
 
     def _build(self) -> None:
         ttk.Label(
             self,
-            text="Quick 3D check of the whole assembly. Uses the built-in viewer when available, "
-            "otherwise an in-browser preview.",
+            text="Whole assembly in 3D (browser or built-in viewer). Generate or load a snapshot first.",
             wraplength=360,
             justify=tk.LEFT,
             font=FONT_SMALL,
-            foreground="#555",
+            foreground=COLOR_MUTED,
         ).pack(anchor=tk.W, pady=(0, 4))
 
         body = ttk.Panedwindow(self, orient=tk.HORIZONTAL)
@@ -54,27 +54,29 @@ class AssemblyPreviewPanel(ttk.LabelFrame):
 
         thumb_pane = ttk.Frame(body, width=200)
         body.add(thumb_pane, weight=0)
-        self._thumb_label = ttk.Label(
-            thumb_pane,
-            text="(Preview assembly)",
-            anchor=tk.CENTER,
-            width=22,
-        )
+        make_fidelity_chip(thumb_pane, "interactive").pack(anchor=tk.W, padx=4, pady=(4, 0))
+        self._thumb_label = tk.Label(thumb_pane, relief=tk.SUNKEN)
         self._thumb_label.pack(fill=tk.BOTH, expand=True, padx=4, pady=4)
+        configure_preview_label(
+            self._thumb_label,
+            "empty",
+            detail="No Assembly loaded — generate or load one first",
+            width=PREVIEW_THUMB_MD,
+            height=PREVIEW_THUMB_MD,
+        )
 
         controls = ttk.Frame(body, padding=(4, 0))
         body.add(controls, weight=1)
 
         btn_row = ttk.Frame(controls)
         btn_row.pack(anchor=tk.W, pady=2)
-        ttk.Button(btn_row, text="Preview assembly", command=self.on_preview).pack(side=tk.LEFT, padx=2)
+        self._preview_btn = ttk.Button(btn_row, text="Preview assembly", command=self.on_preview)
+        self._preview_btn.pack(side=tk.LEFT, padx=2)
         ttk.Button(btn_row, text="Open URL", command=self.on_open_url).pack(side=tk.LEFT, padx=2)
         ttk.Button(btn_row, text="Copy URL", command=self.on_copy_url).pack(side=tk.LEFT, padx=2)
 
         self._status_var = tk.StringVar(value="")
-        self._status_lbl = tk.Label(
-            controls, textvariable=self._status_var, wraplength=320, justify=tk.LEFT
-        )
+        self._status_lbl = ttk.Label(controls, textvariable=self._status_var, wraplength=320, justify=tk.LEFT)
         self._status_lbl.pack(anchor=tk.W, pady=4)
         self._url_var = tk.StringVar(value="")
         url_row = ttk.Frame(controls)
@@ -96,15 +98,27 @@ class AssemblyPreviewPanel(ttk.LabelFrame):
 
     def set_snapshot(self, snapshot: dict | None) -> None:
         self._snapshot = snapshot
-        aid = (snapshot or {}).get("assembly_id")
-        if aid:
-            self._set_status(f"Snapshot {aid} — click Preview assembly", ok=None)
+        if snapshot:
+            aid = snapshot.get("assembly_id")
+            self._set_status(f"Assembly {aid} — click Preview assembly", ok=None)
+        else:
+            configure_preview_label(
+                self._thumb_label,
+                "empty",
+                detail="No Assembly loaded — generate or load one first",
+                width=PREVIEW_THUMB_MD,
+                height=PREVIEW_THUMB_MD,
+            )
+            self._thumb_photo = None
 
     def on_preview(self) -> None:
         if not self._snapshot:
             self._set_status("Generate or load an assembly snapshot first.", ok=None)
             self._on_log("preview skipped — no snapshot loaded")
             return
+        if self._preview_btn is not None:
+            self._preview_btn.configure(text="⟳ Opening preview…")
+        apply_status_atom(self._status_lbl, self._status_var, "working", detail="Opening interactive 3D…")
         if self._start_job:
             snapshot = self._snapshot
 
@@ -116,14 +130,21 @@ class AssemblyPreviewPanel(ttk.LabelFrame):
                 return JobResult(True, "Preview OK", data={"result": result})
 
             def on_done(record: JobRecord) -> None:
+                if self._preview_btn is not None:
+                    self._preview_btn.configure(text="Preview assembly")
                 if record.result and record.result.ok and record.result.data:
                     self._apply_preview_result(record.result.data["result"])
+                else:
+                    msg = record.result.message if record.result else "Preview failed"
+                    self._set_status(msg, ok=False)
 
             self._start_job("Assembly preview", worker, on_done=on_done)
             return
         self._run_preview_sync()
 
     def _run_preview_sync(self) -> None:
+        if self._preview_btn is not None:
+            self._preview_btn.configure(text="Preview assembly")
         if not self._snapshot:
             return
         aid = self._snapshot.get("assembly_id", "?")
@@ -146,14 +167,16 @@ class AssemblyPreviewPanel(ttk.LabelFrame):
         loaded = result.get("modules_loaded", 0)
         missing = result.get("missing_glb") or []
         profiles = ", ".join(result.get("material_profiles_sample") or []) or "—"
-        status = f"{mode} · {loaded} modules · profiles: {profiles}"
-        if missing:
-            status += f" · missing GLB: {len(missing)}"
         if url:
-            status += " · browser opened (if not, use Open URL / Copy URL)"
+            self._set_status(
+                f"Interactive 3D opened in browser · {mode} · {loaded} modules · profiles: {profiles}",
+                ok=True,
+            )
         else:
-            status += " · no URL (Bevy mode or zero placements)"
-        self._set_status(status, ok=None if missing else True)
+            self._set_status(
+                f"{mode} · {loaded} modules · profiles: {profiles} · no URL (use Open URL if needed)",
+                ok=None if missing else True,
+            )
         self._on_log(f"preview done {result.get('assembly_id')} · {mode} · url={url or '—'}")
         self._load_thumbnail(result.get("png") or "")
         if self._on_preview_thumb and result.get("png"):
@@ -189,23 +212,40 @@ class AssemblyPreviewPanel(ttk.LabelFrame):
         path = repo_root() / str(png_rel).replace("\\", "/")
         if not path.is_file():
             self._on_log(f"preview thumb missing {path.name}")
+            configure_preview_label(
+                self._thumb_label,
+                "error",
+                detail="Thumbnail unavailable",
+                hint="use Open in browser",
+                width=PREVIEW_THUMB_MD,
+                height=PREVIEW_THUMB_MD,
+            )
             return
         try:
             img = Image.open(path).convert("RGB")
         except Exception as exc:  # noqa: BLE001
             self._on_log(f"preview thumb unreadable {path.name}: {exc}")
+            configure_preview_label(
+                self._thumb_label,
+                "error",
+                detail="Thumbnail unreadable",
+                hint="use Open in browser",
+                width=PREVIEW_THUMB_MD,
+                height=PREVIEW_THUMB_MD,
+            )
             return
-        # B2 — never show a black tile. If the rendered PNG is (near-)uniformly
-        # black (degraded GL / camera), label it instead of pasting a black box.
-        lo, hi = img.convert("L").getextrema()
-        if hi - lo < 16 and hi < 24:
+        if image_is_near_black(img):
             self._thumb_photo = None
-            self._thumb_label.configure(
-                image="",
-                text="(render blank - use Open URL\nfor the browser preview)",
+            configure_preview_label(
+                self._thumb_label,
+                "error",
+                detail="Thumbnail unavailable",
+                hint="use Open in browser",
+                width=PREVIEW_THUMB_MD,
+                height=PREVIEW_THUMB_MD,
             )
             self._on_log(f"preview thumb blank/black {path.name} — kept browser URL")
             return
         img.thumbnail((200, 200), Image.Resampling.LANCZOS)
         self._thumb_photo = ImageTk.PhotoImage(img)
-        self._thumb_label.configure(image=self._thumb_photo, text="")
+        apply_preview_photo(self._thumb_label, self._thumb_photo)

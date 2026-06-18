@@ -17,6 +17,9 @@ ATL_SIGN_001_WITNESS = "debug_runs/atl_sign_001_live.json"
 PRODUCTION_V2_ATLAS_FOLDER = "assets/staging/tiles/tile_warehouse_industrial_v2_minimum_g4"
 PILOT_V1_ATLAS_FOLDER = "assets/staging/tiles/tile_warehouse_industrial_west_pilot_v1"
 
+APS_STATUS_PASS = "#0a6b0a"
+APS_STATUS_FAIL = "#a00000"
+
 _PLAIN: dict[str, str] = {
     "atlas_meta_v2_parse": "Could not read atlas_meta.json — check the file exists and is valid JSON.",
     "atlas_meta_v2_version": "Atlas meta must be schema version 2 (v1 greybox is frozen).",
@@ -66,9 +69,12 @@ def format_atlas_qc_display(
             if str(atlas_domain).lower() == "landscape"
             else "_tile_atlas_index"
         )
-        return f"PASS [{domain_label} → {register}]: {detail}{extra}", "#006400"
+        return (
+            f"✓ valid — [{domain_label} → {register}] {detail}{extra}",
+            APS_STATUS_PASS,
+        )
     body = " · ".join(lines[:4]) if lines else "Validation failed — see atlas_meta.json."
-    return f"FAIL [{domain_label}]: {body}", "#8b0000"
+    return f"✗ blocked — [{domain_label}] {body}", APS_STATUS_FAIL
 
 
 def validate_atlas_folder(folder: Path) -> tuple[ValidationReport | None, list[str]]:

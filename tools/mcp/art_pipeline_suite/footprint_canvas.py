@@ -7,7 +7,7 @@ from tkinter import ttk
 from typing import Any, Callable
 
 from .aps_collapsible import CollapsibleSection
-from .aps_theme import FONT_SMALL
+from .aps_theme import COLOR_EXPLAINER_BG, COLOR_OUTLINE, COLOR_TEXT_HINT, COLOR_TEXT_SUBTLE, FONT_SMALL
 
 TOKEN_COLORS = {
     "W": "#4a90d9",
@@ -56,6 +56,7 @@ class FootprintCanvas(ttk.Frame):
         self._selected: tuple[int, int, int] | None = None
         self._cell_diff: dict[tuple[int, int, int], str] = {}
         self._removed_ghosts: list[tuple[int, int, int]] = []
+        self._rule_highlight_cells: set[tuple[int, int, int]] = set()
 
         header = ttk.Frame(self)
         header.pack(fill=tk.X)
@@ -68,7 +69,7 @@ class FootprintCanvas(ttk.Frame):
         self.floor_spin.pack(side=tk.LEFT, padx=4)
 
         self._selection_var = tk.StringVar(value="Click a cell to select a placement")
-        ttk.Label(header, textvariable=self._selection_var, foreground="#444").pack(
+        ttk.Label(header, textvariable=self._selection_var, foreground=COLOR_TEXT_SUBTLE).pack(
             side=tk.RIGHT, padx=4
         )
 
@@ -77,9 +78,9 @@ class FootprintCanvas(ttk.Frame):
         self.canvas = tk.Canvas(
             canvas_wrap,
             height=160,
-            bg="#f8f8f8",
+            bg=COLOR_EXPLAINER_BG,
             highlightthickness=1,
-            highlightbackground="#c8c8c8",
+            highlightbackground=COLOR_OUTLINE,
         )
         self.canvas.pack(fill=tk.BOTH, expand=True)
         self.canvas.bind("<Button-1>", self._on_click)
@@ -124,7 +125,7 @@ class FootprintCanvas(ttk.Frame):
         ttk.Label(
             self,
             text="Letter + color show each cell's role (W/D/C/R/Y). Selected cell has a thick black outline.",
-            foreground="#666",
+            foreground=COLOR_TEXT_HINT,
             font=FONT_SMALL,
             wraplength=420,
         ).pack(anchor=tk.W, pady=(2, 0))
@@ -165,6 +166,25 @@ class FootprintCanvas(ttk.Frame):
         self._cell_diff = {}
         self._removed_ghosts = []
         self.redraw()
+
+    def clear_rule_highlight(self) -> None:
+        self._rule_highlight_cells = set()
+        self.redraw()
+
+    def highlight_for_rule(self, rule_id: str) -> int:
+        """APS-GRAM-P3-001 — emphasize footprint cells for an inspector rule id."""
+        rule = str(rule_id or "").strip()
+        self._rule_highlight_cells = set()
+        if not rule or not self._cells:
+            self.redraw()
+            return 0
+        for cell in self._cells:
+            floor = int(cell.get("floor") or 0)
+            x, y = int(cell["x"]), int(cell["y"])
+            self._rule_highlight_cells.add((x, y, floor))
+        self._selection_var.set(f"Grammar rule highlight: {rule} ({len(self._rule_highlight_cells)} cells)")
+        self.redraw()
+        return len(self._rule_highlight_cells)
 
     def set_selection(self, grid_x: int, grid_y: int, floor: int) -> None:
         self._selected = (grid_x, grid_y, floor)
@@ -228,8 +248,16 @@ class FootprintCanvas(ttk.Frame):
             x0, y0 = x * px + 6, y * px + 6
             x1, y1 = x0 + px - 3, y0 + px - 3
             selected = self._selected == (x, y, self._floor)
-            outline = "#1a1a1a" if selected else "#555555"
-            width_line = 3 if selected else 1
+            rule_hit = (x, y, self._floor) in self._rule_highlight_cells
+            if selected:
+                outline = "#1a1a1a"
+                width_line = 3
+            elif rule_hit:
+                outline = "#c9a227"
+                width_line = 3
+            else:
+                outline = "#555555"
+                width_line = 1
             self.canvas.create_rectangle(x0, y0, x1, y1, fill=color, outline=outline, width=width_line)
             # APS-UX-NONCOLOR — always draw the role glyph (W/D/C/R/Y) so cell role
             # survives grayscale / colorblind at every cell size, not color-only.

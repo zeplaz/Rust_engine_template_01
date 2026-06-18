@@ -1,0 +1,68 @@
+{
+  "gate": "APS-GRAM-CLOSE-001",
+  "program_id": "PLAN-APS-GRAMMAR-EVOLUTION-001",
+  "status": "pass",
+  "tier": "G1",
+  "rows_closed": 8,
+  "green": true,
+  "slices": {
+    "APS-GRAM-TIER-001": true,
+    "APS-GRAM-TIER-002": true,
+    "GRAM-CONTENT-002": true,
+    "GRAM-CONTENT-003": true,
+    "GRAM-CONTENT-004": true,
+    "APS-GRAM-TIER-002-REFRESH": true,
+    "APS-GRAM-P3-001": true,
+    "APS-GRAM-TIER-004": true
+  },
+  "slice_witnesses": {
+    "APS-GRAM-TIER-001": "debug_runs/grammar_set_tier_live.json",
+    "APS-GRAM-TIER-002": "debug_runs/aps_grammar_tier_gates_live.json",
+    "GRAM-CONTENT-002": "debug_runs/grammar_archetype_g1_live.json",
+    "GRAM-CONTENT-003": "debug_runs/grammar_labels_g1_live.json",
+    "GRAM-CONTENT-004": "debug_runs/grammar_set_tier_g1.json",
+    "APS-GRAM-TIER-002-REFRESH": "debug_runs/aps_grammar_tier_g1_gates_live.json",
+    "APS-GRAM-P3-001": "debug_runs/aps_grammar_p3_live.json",
+    "APS-GRAM-TIER-004": "debug_runs/aps_grammar_spine_tier_live.json"
+  },
+  "grammar_set_tier": {
+    "tier": "G1",
+    "archetype_count": 3,
+    "district_count": 3,
+    "grammar_files": [
+      "factory_cluster_v1.ron",
+      "industrial_warehouse_v1.ron",
+      "rail_edge_v1.ron"
+    ],
+    "reasons": [
+      "preset_count=4 or F-axis=3<4 for G2"
+    ],
+    "source": "grammar_set_tier()",
+    "preset_count": 4,
+    "f_axis_count": 3
+  },
+  "pytest_aps": {
+    "passed": 17,
+    "failed": 0,
+    "exit_code": 0
+  },
+  "needs_display": [
+    "APS-GRAM-TIER-002",
+    "APS-GRAM-TIER-002-REFRESH",
+    "APS-GRAM-TIER-004"
+  ],
+  "wit_hon": "validate-report witness_honesty debug_runs/aps_grammar_evolution_close_live.json --compress 3",
+  "_agent_meta": {
+    "schema": "aps_grammar_evolution_close_live_v1",
+    "profile": "APS_GRAM_CLOSE",
+    "relative_path": "debug_runs/aps_grammar_evolution_close_live.json",
+    "source_system": "grammar_build_set",
+    "written_at_epoch_secs": 1781793783
+  },
+  "witness_honesty": {
+    "status": "passed",
+    "error_count": 0,
+    "warning_count": 0,
+    "summary": "witness_honesty debug_runs/aps_grammar_evolution_close_live.json: 0 error(s), 0 issue(s)"
+  }
+}

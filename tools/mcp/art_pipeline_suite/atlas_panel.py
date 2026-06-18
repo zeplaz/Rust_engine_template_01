@@ -23,11 +23,16 @@ from module_viewer.pipeline_runner import (
     run_tile_batch,
 )
 
+from .aps_collapsible import CollapsibleSection
+from .aps_inline_feedback import apply_status_atom, set_inline_status
 from .aps_scroll import attach_wheel_area, text_yscroll
+from . import aps_theme
+from .aps_theme import FONT_UI
+from .aps_tk import themed_text
 from .aps_tooltips import bind_aps_tooltip
+from .aps_workflow_layout import workflow_intro, workflow_primary_row, workflow_status_label
 from .atlas_preview_panel import AtlasPreviewPanel
 from .job_controller import JobRecord, JobResult, JobState
-from .metadata_flow_panel import MetadataFlowPanel
 from .state import ArtDomain, SuiteState
 
 _LANE_LOD_PHASE_TO_STEP = {
@@ -68,35 +73,69 @@ class AtlasPanel(ttk.Frame):
         body = check_atlas_land_register()
         ids = body.get("atlas_ids") or []
         if body.get("register_green"):
-            msg = f"Register PASS — {len(ids)} atlas row(s): {', '.join(ids)}"
-            color = "#0a4a7a"
+            detail = f"{len(ids)} atlas row(s): {', '.join(ids)}" if ids else "registered"
+            apply_status_atom(self._register_status_lbl, self._register_status_var, "pass", detail=detail)
         else:
             missing: list[str] = []
             if not body.get("pilot_registered"):
                 missing.append("pilot")
             if not body.get("expanded_registered"):
                 missing.append("expanded")
-            msg = f"Not registered yet — missing: {', '.join(missing) or 'check witness'}"
-            color = "#8b1a1a"
-        self._register_status_var.set(msg)
-        self._register_status_lbl.configure(foreground=color)
+            detail = f"missing: {', '.join(missing) or 'check witness'}"
+            apply_status_atom(self._register_status_lbl, self._register_status_var, "fail", detail=detail)
         return body
 
     def _build(self) -> None:
-        ttk.Label(
+        workflow_intro(
             self,
-            text="Atlas — preview your tiles and the packed tile sheet. The keyframe bake in Blender is a separate step.",
-            wraplength=720,
-            justify=tk.LEFT,
-        ).pack(anchor=tk.W, pady=(0, 4))
+            "Run tile batch, pack PNGs into an atlas sheet, validate, then register — preview is the main work area.",
+        )
         self._domain_banner = ttk.Label(
             self,
             text="Registers to: Buildings tile index",
-            font=("Segoe UI", 9),
-            foreground="#1f6b54",
+            font=FONT_UI,
+            foreground=aps_theme.COLOR_MUTED,
         )
         self._domain_banner.pack(anchor=tk.W, pady=(0, 4))
-        reg_row = ttk.Frame(self)
+
+        primary = workflow_primary_row(self)
+        self.run_batch_btn = ttk.Button(primary, text="Run tile batch", command=self.on_run_batch)
+        self.run_batch_btn.pack(side=tk.LEFT, padx=(0, 6))
+        bind_aps_tooltip(self.run_batch_btn, "atl_batch_run")
+        self.pack_btn = ttk.Button(primary, text="Pack atlas", command=self.on_pack)
+        self.pack_btn.pack(side=tk.LEFT, padx=2)
+        bind_aps_tooltip(self.pack_btn, "atl_pack")
+        refresh_btn = ttk.Button(primary, text="Refresh preview", command=self._refresh_preview)
+        refresh_btn.pack(side=tk.LEFT, padx=2)
+        bind_aps_tooltip(refresh_btn, "atl_preview")
+        val_btn = ttk.Button(primary, text="Validate atlas meta", command=self.on_validate_atlas_meta)
+        val_btn.pack(side=tk.LEFT, padx=(12, 4))
+        bind_aps_tooltip(val_btn, "atl_validate")
+        open_folder_btn = ttk.Button(primary, text="Open PNG folder", command=self.on_open_png_folder)
+        open_folder_btn.pack(side=tk.LEFT, padx=2)
+        bind_aps_tooltip(open_folder_btn, "atl_open_folder")
+
+        self._inline_status_lbl, self._inline_status_var = workflow_status_label(self)
+        self._atlas_qc_var = tk.StringVar(value="Run Validate atlas meta for plain-language QC before register.")
+        self._atlas_qc_lbl = ttk.Label(
+            self,
+            textvariable=self._atlas_qc_var,
+            wraplength=720,
+            justify=tk.LEFT,
+            font=FONT_UI,
+        )
+        self._atlas_qc_lbl.pack(anchor=tk.W, pady=(0, 4))
+
+        self.atlas_preview = AtlasPreviewPanel(self, on_log=self._on_log)
+        self.atlas_preview.pack(fill=tk.BOTH, expand=True, pady=(4, 4))
+        bind_aps_tooltip(self.atlas_preview._atlas_label, "atl_uv_grid")
+        bind_aps_tooltip(self.atlas_preview._cells_inner, "atl_cell_strip")
+
+        setup = CollapsibleSection(self, "Setup paths", expanded=False, padding=4)
+        setup.pack(fill=tk.X, pady=4)
+        setup_body = setup.body
+
+        reg_row = ttk.Frame(setup_body)
         reg_row.pack(fill=tk.X, pady=(0, 4))
         ttk.Button(reg_row, text="Check landscape register", command=self.refresh_landscape_register).pack(
             side=tk.LEFT
@@ -104,10 +143,8 @@ class AtlasPanel(ttk.Frame):
         self._register_status_var = tk.StringVar(value="")
         self._register_status_lbl = ttk.Label(reg_row, textvariable=self._register_status_var, font=("Segoe UI", 9))
         self._register_status_lbl.pack(side=tk.LEFT, padx=(8, 0))
-        self.metadata_flow = MetadataFlowPanel(self, context="atlas")
-        self.metadata_flow.pack(fill=tk.X, pady=(0, 6))
 
-        batch_row = ttk.Frame(self)
+        batch_row = ttk.Frame(setup_body)
         batch_row.pack(fill=tk.X, pady=4)
         batch_lbl = ttk.Label(batch_row, text="Tile job file")
         batch_lbl.pack(side=tk.LEFT)
@@ -120,20 +157,8 @@ class AtlasPanel(ttk.Frame):
         ttk.Button(batch_row, text="From variant set", command=self.on_batch_from_variant_set).pack(
             side=tk.LEFT, padx=4
         )
-        self.run_batch_btn = ttk.Button(self, text="Run tile batch", command=self.on_run_batch)
-        self.run_batch_btn.pack(anchor=tk.W, pady=4)
-        bind_aps_tooltip(self.run_batch_btn, "atl_batch_run")
-        self._inline_status_var = tk.StringVar(value="")
-        self._inline_status_lbl = tk.Label(
-            self,
-            textvariable=self._inline_status_var,
-            wraplength=720,
-            justify=tk.LEFT,
-            font=("Segoe UI", 9),
-            foreground="#0a4a7a",
-        )
-        self._inline_status_lbl.pack(anchor=tk.W)
-        tile_row = ttk.Frame(self)
+
+        tile_row = ttk.Frame(setup_body)
         tile_row.pack(fill=tk.X, pady=4)
         folder_lbl = ttk.Label(tile_row, text="PNG folder")
         folder_lbl.pack(side=tk.LEFT)
@@ -144,43 +169,18 @@ class AtlasPanel(ttk.Frame):
         bind_aps_tooltip(self.folder_entry, "atl_folder")
         ttk.Button(tile_row, text="Browse…", command=self.on_browse_folder).pack(side=tk.LEFT)
         self.keyframe_rename_var = tk.BooleanVar(value=False)
-        self.keyframe_rename_cb = ttk.Checkbutton(tile_row, text="Rename keyframe PNGs for packing", variable=self.keyframe_rename_var)
-        self.keyframe_rename_cb.pack(side=tk.LEFT)
-        bind_aps_tooltip(self.keyframe_rename_cb, "atl_keyframe_rename")
-        pack_btn = ttk.Button(self, text="Pack atlas", command=self.on_pack)
-        pack_btn.pack(anchor=tk.W, pady=4)
-        bind_aps_tooltip(pack_btn, "atl_pack")
-        self.pack_btn = pack_btn
-        refresh_btn = ttk.Button(self, text="Refresh preview", command=self._refresh_preview)
-        refresh_btn.pack(anchor=tk.W, pady=2)
-        bind_aps_tooltip(refresh_btn, "atl_preview")
-
-        qc_row = ttk.Frame(self)
-        qc_row.pack(fill=tk.X, pady=2)
-        val_btn = ttk.Button(qc_row, text="Validate atlas meta", command=self.on_validate_atlas_meta)
-        val_btn.pack(side=tk.LEFT, padx=(0, 4))
-        bind_aps_tooltip(val_btn, "atl_validate")
-        open_folder_btn = ttk.Button(qc_row, text="Open PNG folder", command=self.on_open_png_folder)
-        open_folder_btn.pack(side=tk.LEFT, padx=4)
-        bind_aps_tooltip(open_folder_btn, "atl_open_folder")
-        self._atlas_qc_var = tk.StringVar(value="Run Validate atlas meta for plain-language QC before register.")
-        self._atlas_qc_lbl = tk.Label(
-            self,
-            textvariable=self._atlas_qc_var,
-            wraplength=720,
-            justify=tk.LEFT,
-            font=("Segoe UI", 9),
-            foreground="#333333",
+        self.keyframe_rename_cb = ttk.Checkbutton(
+            tile_row, text="Rename keyframe PNGs for packing", variable=self.keyframe_rename_var
         )
-        self._atlas_qc_lbl.pack(anchor=tk.W, pady=(0, 4))
+        self.keyframe_rename_cb.pack(side=tk.LEFT, padx=(8, 0))
+        bind_aps_tooltip(self.keyframe_rename_cb, "atl_keyframe_rename")
 
-        self.atlas_preview = AtlasPreviewPanel(self, on_log=self._on_log)
-        self.atlas_preview.pack(fill=tk.BOTH, expand=True, pady=(4, 8))
-        bind_aps_tooltip(self.atlas_preview._atlas_label, "atl_uv_grid")
-        bind_aps_tooltip(self.atlas_preview._cells_inner, "atl_cell_strip")
+        advanced = CollapsibleSection(self, "Advanced (smoke & debug)", expanded=False, padding=4)
+        advanced.pack(fill=tk.X, pady=(0, 4))
+        adv_body = advanced.body
 
-        lod_row = ttk.Frame(self)
-        lod_row.pack(fill=tk.X, pady=8)
+        lod_row = ttk.Frame(adv_body)
+        lod_row.pack(fill=tk.X, pady=4)
         lod_lbl = ttk.Label(lod_row, text="Smoke-test batch")
         lod_lbl.pack(side=tk.LEFT)
         bind_aps_tooltip(lod_lbl, "atl_lod0")
@@ -204,7 +204,7 @@ class AtlasPanel(ttk.Frame):
         ttk.Button(lod_row, text="Run lod0 batch", command=self.on_lod0).pack(side=tk.LEFT, padx=4)
 
         if art_debug_gui_enabled():
-            dbg = ttk.Frame(self)
+            dbg = ttk.Frame(adv_body)
             dbg.pack(fill=tk.X, pady=4)
             ttk.Button(dbg, text="Open light setup (.blend)", command=self.on_light_blend).pack(
                 side=tk.LEFT, padx=2
@@ -212,14 +212,16 @@ class AtlasPanel(ttk.Frame):
             ttk.Button(dbg, text="Keyframe addon", command=self.on_keyframe_addon).pack(side=tk.LEFT, padx=2)
         else:
             ttk.Label(
-                self,
+                adv_body,
                 text="Blender debug buttons are hidden (developer mode only).",
-                foreground="#666",
+                foreground=aps_theme.COLOR_MUTED,
             ).pack(anchor=tk.W)
 
-        ttk.Label(self, text="Log").pack(anchor=tk.W, pady=(8, 0))
-        self.log_text = tk.Text(self, height=6, wrap=tk.WORD, font=("Consolas", 9))
-        scroll = ttk.Scrollbar(self, orient=tk.VERTICAL, command=self.log_text.yview)
+        ttk.Label(adv_body, text="Log").pack(anchor=tk.W, pady=(8, 0))
+        log_wrap = ttk.Frame(adv_body)
+        log_wrap.pack(fill=tk.BOTH, expand=True)
+        self.log_text = themed_text(log_wrap, height=6, wrap=tk.WORD, font=("Consolas", 9))
+        scroll = ttk.Scrollbar(log_wrap, orient=tk.VERTICAL, command=self.log_text.yview)
         self.log_text.configure(yscrollcommand=scroll.set)
         self.log_text.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         scroll.pack(side=tk.RIGHT, fill=tk.Y)
@@ -236,13 +238,7 @@ class AtlasPanel(ttk.Frame):
         self.atlas_preview.load_folder(folder or None)
 
     def _inline_hint(self, text: str, *, ok: bool | None = None) -> None:
-        # APS-UX-NONCOLOR — carry pass/fail as a text prefix, not color alone, so
-        # the signal survives grayscale / colorblind.
-        if ok is not None and not text.upper().startswith(("PASS:", "FAIL:")):
-            text = f"{'PASS' if ok else 'FAIL'}: {text}"
-        self._inline_status_var.set(text)
-        fg = "#0a4a7a" if ok is None else ("#1a6b1a" if ok else "#8b1a1a")
-        self._inline_status_lbl.configure(foreground=fg)
+        set_inline_status(self._inline_status_lbl, self._inline_status_var, text, ok=ok)
 
     def on_validate_atlas_meta(self) -> None:
         from rust_engine_mcp.aps_atlas_qc import format_atlas_qc_display, validate_atlas_folder
@@ -261,12 +257,14 @@ class AtlasPanel(ttk.Frame):
             except (OSError, json.JSONDecodeError):
                 meta = None
         text, fg = format_atlas_qc_display(report, lines, meta=meta if isinstance(meta, dict) else None)
-        self._atlas_qc_var.set(text)
-        self._atlas_qc_lbl.configure(foreground=fg)
+        passed = bool(report and report.status == "passed")
+        set_inline_status(self._atlas_qc_lbl, self._atlas_qc_var, text, ok=passed if report else None)
         status = report.status if report else "failed"
         self._log(f"atlas meta validate · {status}")
         if status != "passed":
-            self._inline_hint(text, ok=False)
+            set_inline_status(self._inline_status_lbl, self._inline_status_var, text, ok=False)
+        else:
+            set_inline_status(self._inline_status_lbl, self._inline_status_var, text, ok=True)
 
     def on_open_png_folder(self) -> None:
         folder = self.folder_var.get().strip()
@@ -309,8 +307,8 @@ class AtlasPanel(ttk.Frame):
         tmp.write_text(json.dumps(batch, indent=2) + "\n", encoding="utf-8")
         self.batch_json_var.set(str(tmp))
         self.state.tile_batch_path = str(tmp)
-        self._log(f"expanded variant_set → {tmp}")
-        self._inline_hint(f"Wrote temp tile_batch: {tmp.name}", ok=True)
+        self._log(f"Variant set expanded into a tile job → {tmp}")
+        self._inline_hint(f"Prepared a tile job: {tmp.name}", ok=True)
 
     def on_run_batch(self) -> None:
         path = self.batch_json_var.get().strip()

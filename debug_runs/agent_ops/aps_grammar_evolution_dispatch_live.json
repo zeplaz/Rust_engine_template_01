@@ -1,0 +1,30 @@
+{
+  "green": false,
+  "program_id": "PLAN-APS-GRAMMAR-EVOLUTION-001",
+  "wave_1_issued": "2026-06-17",
+  "progress": {
+    "queue_done": 1,
+    "queue_total": 15,
+    "content_baseline": { "tier": "G0", "archetype_count": 1 }
+  },
+  "dispatch_now": {
+    "coder-mcp": "APS-GRAM-TIER-001 ready",
+    "designer-mcp": "GRAM-CONTENT-001 ready parallel",
+    "orchestrator-mcp": "ORCH-GRAM-001 ready"
+  },
+  "anti_fake_green": [
+    "exit_predicate on every coder-mcp row",
+    "guard pytest must exist before Q✓",
+    "tier G1 forbidden until archetype_count >= 3",
+    "WIT-HON on close witness"
+  ],
+  "queue": "tools/orchestrator/queues/aps_grammar_evolution_queue.json",
+  "witness_profile": "src/dev/plan_aps_grammar_evolution_witness_v1.md",
+  "orders": "tools/orchestrator/queues/aps_grammar_evolution_dispatch_orders_v1.md",
+  "_agent_meta": {
+    "schema": "aps_grammar_evolution_dispatch_live_v1",
+    "profile": "ORCHESTRATOR_MCP",
+    "relative_path": "debug_runs/agent_ops/aps_grammar_evolution_dispatch_live.json",
+    "ritual": "BLANG:WIT-HON ORCH-GRAM-001"
+  }
+}

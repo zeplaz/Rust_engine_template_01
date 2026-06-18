@@ -1198,6 +1198,10 @@ pub fn draw_simulation_minimap_egui(
     pending_layout: &mut PendingHudLayoutCommit,
     interaction: &mut MinimapInteractionBuffer,
     active_input: &mut ActiveMapViewInput,
+    base: BaseState,
+    overlays: &crate::gui::MinimapOverlayMask,
+    ecology_rows: u32,
+    veg_burn_rows: u32,
 ) {
     let rev = raster_dirty.revision();
     let w = fallback.last_w as f32;
@@ -1389,6 +1393,16 @@ pub fn draw_simulation_minimap_egui(
                     interaction.queue_focus(world, response.double_clicked());
                 }
             }
+        }
+        if !defer_heavy_chrome {
+            crate::gui::hud::minimap_topology_legend::draw_minimap_topology_legend_ui(
+                ui,
+                shell,
+                overlays,
+                ecology_rows,
+                veg_burn_rows,
+                base,
+            );
         }
     };
 

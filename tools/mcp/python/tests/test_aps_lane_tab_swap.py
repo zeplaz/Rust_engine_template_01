@@ -11,24 +11,7 @@ APS_ROOT = Path(__file__).resolve().parents[2]
 if str(APS_ROOT) not in sys.path:
     sys.path.insert(0, str(APS_ROOT))
 
-
-@pytest.fixture
-def aps_app():
-    import tkinter as tk
-
-    from art_pipeline_suite.app import ArtPipelineSuiteApp
-
-    try:
-        app = ArtPipelineSuiteApp()
-    except tk.TclError as exc:
-        pytest.skip(f"no Tk display: {exc}")
-    app.withdraw()
-    app.update_idletasks()
-    yield app
-    try:
-        app.destroy()
-    except tk.TclError:
-        pass
+pytestmark = pytest.mark.aps_gui
 
 
 def _tab_texts(notebook) -> list[str]:

@@ -11,8 +11,8 @@ use bevy::render::render_resource::{
 use crate::construction::site_phase_tile_instances::ConstructionPhaseGpuChannel;
 use crate::gui::MapViewInstances;
 use crate::render::{
-    EcologyVisualSnapshot, LogisticsVisualSnapshot, SharedOverlayFieldBuffers,
-    TileWorldFallbackState,
+    extraction::VegetationExtractFrame, EcologyVisualSnapshot, LogisticsVisualSnapshot,
+    SharedOverlayFieldBuffers, TileWorldFallbackState,
 };
 use crate::render::visual_domain_snapshots::MinimapOperationalSnapshot;
 use crate::strategic::{ConstructionPhase, CorridorConstructionBook};
@@ -179,6 +179,54 @@ fn fill_ecology_heat_from_snapshot(
         }
     }
     eco.ecology_chunk_count.max(eco.chunk_rows.len() as u32)
+}
+
+/// **VEG-MINIMAP-BURN-MERGE-001** — burn `veg_burn_*` rows override ecology topology tint (Q4a).
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
+pub struct VegEcologyBurnMerge {
+    pub veg_burn_rows: u32,
+    pub burn_overrides_topology: bool,
+}
+
+#[must_use]
+pub fn merge_veg_extract_burn_into_ecology_heat(
+    out: &mut [u8],
+    w: u32,
+    h: u32,
+    veg: Option<&VegetationExtractFrame>,
+    enabled: bool,
+    chunk_dims: (u32, u32),
+) -> VegEcologyBurnMerge {
+    let mut stats = VegEcologyBurnMerge::default();
+    if !enabled {
+        return stats;
+    }
+    let Some(veg) = veg else {
+        return stats;
+    };
+    let cw = chunk_dims.0.max(1);
+    let ch = chunk_dims.1.max(1);
+    for row in &veg.rows {
+        if !row.burn_active || !row.variant_key.starts_with("veg_burn_") {
+            continue;
+        }
+        stats.veg_burn_rows = stats.veg_burn_rows.saturating_add(1);
+        let px = (row.coord.x.rem_euclid(cw as i32) as u32).min(w.saturating_sub(1));
+        let py = (row.coord.y.rem_euclid(ch as i32) as u32).min(h.saturating_sub(1));
+        let base = ((py * w + px) * 4) as usize;
+        if base + 2 >= out.len() {
+            continue;
+        }
+        let had_topology = out[base + 1] > 0 || out[base + 2] > 0;
+        if had_topology {
+            stats.burn_overrides_topology = true;
+        }
+        let burn_strength = ((u16::from(row.frame_index) + 1) * 255 / 8) as u8;
+        out[base] = burn_strength.max(out[base]);
+        out[base + 1] = 0;
+        out[base + 2] = burn_strength;
+    }
+    stats
 }
 
 fn fill_operational_heat_layers(
@@ -359,10 +407,21 @@ pub fn upload_minimap_heat_textures(
     operational: Option<&MinimapOperationalSnapshot>,
     construction_channel: Option<&ConstructionPhaseGpuChannel>,
     replay: Option<&CommittedSimReplayRing>,
+    veg_extract: Option<&VegetationExtractFrame>,
     map_views: &MapViewInstances,
     fallback: &TileWorldFallbackState,
     extent: UVec2,
-) -> (bool, u32, u32, u32, u32, u32, u32, bool) {
+) -> (
+    bool,
+    u32,
+    u32,
+    u32,
+    u32,
+    u32,
+    u32,
+    bool,
+    VegEcologyBurnMerge,
+) {
     ensure_heat_textures(images, heat, extent);
     let w = extent.x;
     let h = extent.y;
@@ -408,6 +467,14 @@ pub fn upload_minimap_heat_textures(
         h,
         ecology,
         map_views.minimap.overlays.ecology_heat,
+    );
+    let veg_merge = merge_veg_extract_burn_into_ecology_heat(
+        &mut ecology_buf,
+        w,
+        h,
+        veg_extract,
+        map_views.minimap.overlays.ecology_heat,
+        chunk_count,
     );
 
     if let Some(img) = images.get_mut(&heat.fire) {
@@ -463,6 +530,7 @@ pub fn upload_minimap_heat_textures(
         ew_rows,
         unit_marker_rows,
         replay_scrub_enabled,
+        veg_merge,
     )
 }
 
@@ -548,11 +616,12 @@ mod tests {
             edge_rows: vec![(3, 0.8), (7, 0.5)],
             ..Default::default()
         };
-        let (ok, _, _, _, _, _, _, _) = upload_minimap_heat_textures(
+        let (ok, _, _, _, _, _, _, _, _) = upload_minimap_heat_textures(
             &mut images,
             &mut heat,
             None,
             Some(&logistics),
+            None,
             None,
             None,
             None,
@@ -645,7 +714,7 @@ mod tests {
             [].into_iter(),
             &mut operational.unit_markers,
         );
-        let (ok, _, construction_rows, ecology_rows, _, _, unit_rows, replay_on) =
+        let (ok, _, construction_rows, ecology_rows, _, _, unit_rows, replay_on, veg_merge) =
             upload_minimap_heat_textures(
                 &mut images,
                 &mut heat,
@@ -656,10 +725,12 @@ mod tests {
                 Some(&operational),
                 None,
                 None,
+                None,
                 &map_views,
                 &fallback,
                 UVec2::new(32, 32),
             );
+        let _ = veg_merge;
         assert!(unit_rows > 0);
         let _ = replay_on;
         assert!(ok);
@@ -669,5 +740,50 @@ mod tests {
         assert!(construction.data.as_ref().is_some_and(|d| d.iter().any(|&b| b > 0)));
         let eco = images.get(&heat.ecology).expect("ecology tex");
         assert!(eco.data.as_ref().is_some_and(|d| d.iter().any(|&b| b > 0)));
+    }
+
+    #[test]
+    fn veg_burn_merge_overrides_ecology_topology_tint() {
+        use crate::dev::landscape_grammar_burn_live_proof::veg_burn_pilot_extract_frame;
+        use crate::systems::ecology::LG1_PILOT_CHUNK;
+
+        let mut images = Assets::<Image>::default();
+        let mut heat = MinimapCompositeHeatTextures::default();
+        let mut map_views = MapViewInstances::default();
+        map_views.minimap.overlays.ecology_heat = true;
+        let fallback = TileWorldFallbackState {
+            last_w: 64,
+            last_h: 64,
+            ..Default::default()
+        };
+        let ecology = EcologyVisualSnapshot {
+            ecology_chunk_count: 1,
+            chunk_rows: vec![bevy::math::Vec4::new(
+                LG1_PILOT_CHUNK.x as f32,
+                0.8,
+                0.3,
+                0.0,
+            )],
+            ..Default::default()
+        };
+        let veg = veg_burn_pilot_extract_frame();
+        let (ok, _, _, _, _, _, _, _, merge) = upload_minimap_heat_textures(
+            &mut images,
+            &mut heat,
+            None,
+            None,
+            None,
+            Some(&ecology),
+            None,
+            None,
+            None,
+            Some(&veg),
+            &map_views,
+            &fallback,
+            UVec2::new(32, 32),
+        );
+        assert!(ok);
+        assert!(merge.veg_burn_rows >= 1, "expected veg_burn rows");
+        assert!(merge.burn_overrides_topology, "burn must override topology tint");
     }
 }

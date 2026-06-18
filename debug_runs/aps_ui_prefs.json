@@ -1,5 +1,4 @@
 {
-  "active_lane": "landscape",
-  "art_domain": "landscape",
-  "onboarding_seen_v1": true
+  "active_lane": "buildings",
+  "art_domain": "buildings"
 }

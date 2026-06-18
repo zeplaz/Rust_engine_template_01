@@ -282,6 +282,25 @@ def write_grammar_set_brief_witness_tool() -> str:
 
 
 @mcp.tool()
+def grammar_set_tier_tool(write_witness: bool = False) -> str:
+    """APS-GRAM-TIER-001 — G0–G4 maturity from registry + coverage guards."""
+    if write_witness:
+        return json.dumps(grammar_build_set.write_grammar_set_tier_witness())
+    return json.dumps(grammar_build_set.grammar_set_tier())
+
+
+@mcp.tool()
+def designer_grammar_quality_loop_tool(mode: str = "fast", write_witness: bool = False) -> str:
+    """Designer iteration loop — tier + brief + coverage + optional sweeps (compressed JSON)."""
+    from rust_engine_mcp.designer_grammar_quality_loop import run_designer_grammar_quality_loop
+
+    m = "full" if str(mode).strip().lower() == "full" else "fast"
+    return json.dumps(
+        run_designer_grammar_quality_loop(mode=m, write_witness=write_witness)
+    )
+
+
+@mcp.tool()
 def validate_cargo_report(package: str = "", compress: int = 3, use_cached: bool = False) -> str:
     """cargo check → classified ValidationReport (JSON diagnostics only)."""
     report = run_validator(

@@ -11,7 +11,12 @@ from rust_engine_mcp import variant_set
 from rust_engine_mcp.paths import repo_root
 from rust_engine_mcp.schemas import validate_variant_set
 
+from . import aps_theme
 from .aps_inline_feedback import set_inline_status
+from .aps_collapsible import CollapsibleSection
+from .aps_tk import themed_listbox, themed_text
+from .aps_workflow_layout import workflow_file_row, workflow_intro, workflow_lane_banner, workflow_status_label
+from .aps_theme import FONT_SMALL, FONT_UI
 from .job_controller import JobRecord, JobResult, JobState
 from .state import ArtDomain, SuiteState
 
@@ -32,39 +37,26 @@ class VariantsPanel(ttk.Frame):
             self._lane_banner.configure(text="Buildings lane — damage / power / fill / lighting axes.")
 
     def _build(self) -> None:
-        ttk.Label(
+        workflow_intro(
             self,
-            text="Variant set — states of the same building (lighting, damage, fill). "
-            "Bake them into tiles from here; no manual Blender.",
-            wraplength=720,
-            justify=tk.LEFT,
-        ).pack(anchor=tk.W, pady=(0, 8))
-        self._lane_banner = ttk.Label(self, text="", font=("Segoe UI", 9), foreground="#555")
-        self._lane_banner.pack(anchor=tk.W, pady=(0, 4))
+            "Define visual states (lighting, damage, fill) for the same building — bake tiles from Atlas.",
+        )
+        self._lane_banner = workflow_lane_banner(self)
 
-        top = ttk.Frame(self)
-        top.pack(fill=tk.X, pady=4)
-        ttk.Button(top, text="Load…", command=self.on_load).pack(side=tk.LEFT, padx=2)
-        ttk.Button(top, text="Load example", command=self.on_load_example).pack(side=tk.LEFT, padx=2)
-        ttk.Button(top, text="New from assembly", command=self.on_new_from_assembly).pack(side=tk.LEFT, padx=2)
-        ttk.Button(top, text="Save (JSON)", command=lambda: self.on_save(ext=".json")).pack(side=tk.LEFT, padx=2)
-        ttk.Button(top, text="Save (engine format)", command=lambda: self.on_save(ext=".ron")).pack(side=tk.LEFT, padx=2)
-        ttk.Button(top, text="Validate", command=self.on_validate).pack(side=tk.LEFT, padx=2)
+        primary = ttk.Frame(self)
+        primary.pack(fill=tk.X, pady=4)
+        ttk.Button(primary, text="New from assembly", command=self.on_new_from_assembly).pack(side=tk.LEFT, padx=2)
+        ttk.Button(primary, text="Load example", command=self.on_load_example).pack(side=tk.LEFT, padx=2)
 
-        self.path_var = tk.StringVar(value="(none)")
-        ttk.Label(top, textvariable=self.path_var, foreground="#444").pack(side=tk.LEFT, padx=8)
-
-        self.status_var = tk.StringVar(value="")
-        self._status_lbl = tk.Label(self, textvariable=self.status_var, wraplength=720, justify=tk.LEFT)
-        self._status_lbl.pack(anchor=tk.W, pady=(0, 4))
+        self._status_lbl, self.status_var = workflow_status_label(self, wraplength=720)
 
         paned = ttk.Panedwindow(self, orient=tk.HORIZONTAL)
-        paned.pack(fill=tk.BOTH, expand=True, pady=8)
+        paned.pack(fill=tk.BOTH, expand=True, pady=4)
 
         left = ttk.Frame(paned, padding=4)
         paned.add(left, weight=1)
         ttk.Label(left, text="Variants").pack(anchor=tk.W)
-        self.variant_list = tk.Listbox(left, exportselection=False)
+        self.variant_list = themed_listbox(left, exportselection=False)
         self.variant_list.pack(fill=tk.BOTH, expand=True)
         self.variant_list.bind("<<ListboxSelect>>", self.on_variant_select)
 
@@ -128,8 +120,26 @@ class VariantsPanel(ttk.Frame):
             row=6, column=0, columnspan=4, pady=6, sticky=tk.W
         )
 
-        agent_row = ttk.LabelFrame(right, text="Ask AI for a variant (advanced)", padding=6)
-        agent_row.pack(fill=tk.X, pady=8)
+        self.bake_status = tk.StringVar(value="")
+        self._bake_status_lbl = ttk.Label(right, textvariable=self.bake_status, font=FONT_SMALL)
+        self._bake_status_lbl.pack(anchor=tk.W)
+
+        file_row = workflow_file_row(self)
+        ttk.Button(file_row, text="Load…", command=self.on_load).pack(side=tk.LEFT, padx=2)
+        ttk.Button(file_row, text="Save (JSON)", command=lambda: self.on_save(ext=".json")).pack(side=tk.LEFT, padx=2)
+        ttk.Button(file_row, text="Save (engine format)", command=lambda: self.on_save(ext=".ron")).pack(
+            side=tk.LEFT, padx=2
+        )
+        ttk.Button(file_row, text="Check schema", command=self.on_validate).pack(side=tk.LEFT, padx=2)
+        self.path_var = tk.StringVar(value="(none)")
+        ttk.Label(file_row, textvariable=self.path_var, foreground=aps_theme.COLOR_TEXT_SUBTLE).pack(
+            side=tk.LEFT, padx=8
+        )
+
+        agent_section = CollapsibleSection(self, "Agent patch (advanced)", expanded=False, padding=4)
+        agent_section.pack(fill=tk.X, pady=4)
+        agent_row = ttk.Frame(agent_section.body, padding=2)
+        agent_row.pack(fill=tk.BOTH, expand=True)
         ttk.Label(agent_row, text="Intent").pack(anchor=tk.W)
         self.intent_var = tk.StringVar(value="add_warm_window_lights")
         ttk.Entry(agent_row, textvariable=self.intent_var, width=48).pack(fill=tk.X, pady=2)
@@ -138,12 +148,8 @@ class VariantsPanel(ttk.Frame):
         ttk.Button(btn_row, text="Request agent", command=self.on_request_agent).pack(side=tk.LEFT, padx=2)
         ttk.Button(btn_row, text="Apply patch", command=self.on_apply_patch).pack(side=tk.LEFT, padx=2)
         ttk.Button(btn_row, text="Bake selected", command=self.on_bake_selected).pack(side=tk.LEFT, padx=2)
-
-        self.patch_text = tk.Text(agent_row, height=8, wrap=tk.WORD, font=("Consolas", 9))
+        self.patch_text = themed_text(agent_row, height=8, wrap=tk.WORD, font=("Consolas", 9))
         self.patch_text.pack(fill=tk.BOTH, expand=True, pady=4)
-
-        self.bake_status = tk.StringVar(value="")
-        ttk.Label(right, textvariable=self.bake_status, foreground="#006400").pack(anchor=tk.W)
 
     def _set_status(self, text: str, *, ok: bool | None = None) -> None:
         set_inline_status(self._status_lbl, self.status_var, text, ok=ok)
@@ -177,7 +183,7 @@ class VariantsPanel(ttk.Frame):
 
     def on_load(self) -> None:
         path = filedialog.askopenfilename(
-            title="variant_set_v1",
+            title="Open variant set",
             filetypes=[("Variant set", "*.json *.ron"), ("All", "*.*")],
         )
         if not path:
@@ -231,7 +237,7 @@ class VariantsPanel(ttk.Frame):
         }
         out = variant_set.save_variant_set(data)
         self._load_data(data, str(out))
-        self._on_log(f"new variant_set {out}")
+        self._on_log(f"New variant set {out}")
 
     def on_save(self, *, ext: str) -> None:
         if not self._data:
@@ -253,9 +259,9 @@ class VariantsPanel(ttk.Frame):
         try:
             validate_variant_set(self._data)
         except Exception as exc:  # noqa: BLE001
-            self._set_status(f"Validation: FAIL — {exc}", ok=False)
+            self._set_status(f"Schema check failed — {exc}", ok=False)
             return
-        self._set_status("Validation: PASS — variant_set_v1 OK", ok=True)
+        self._set_status("Schema check passed — variant set is valid.", ok=True)
 
     def on_variant_select(self, _event=None) -> None:
         idx = self._selected_index()
@@ -279,9 +285,14 @@ class VariantsPanel(ttk.Frame):
         tags = entry.get("tags") or []
         self.tags_var.set(", ".join(tags))
         bake = entry.get("bake") or {}
-        self.bake_status.set(
-            f"bake: {bake.get('status', 'pending')} · {bake.get('png') or '—'}"
-        )
+        bake_line = f"bake: {bake.get('status', 'pending')} · {bake.get('png') or '—'}"
+        status = str(bake.get("status") or "").lower()
+        if status in ("done", "ok", "pass", "passed"):
+            set_inline_status(self._bake_status_lbl, self.bake_status, bake_line, ok=True)
+        elif status:
+            set_inline_status(self._bake_status_lbl, self.bake_status, bake_line, ok=False)
+        else:
+            set_inline_status(self._bake_status_lbl, self.bake_status, bake_line, ok=None)
 
     def on_apply_layers(self) -> None:
         idx = self._selected_index()
@@ -375,7 +386,7 @@ class VariantsPanel(ttk.Frame):
                 f"Current Assembly tab snapshot:\n  {cur_aid}\n\n"
                 "Bake anyway? (PNG will land under the variant set assembly_id folder.)",
             ):
-                self._on_log(f"bake cancelled — variant_set assembly_id={vs_aid} != current {cur_aid}")
+                self._on_log(f"Bake cancelled — variant set targets {vs_aid}, not the current {cur_aid}.")
                 return
         if self._start_job:
             path = self.state.variant_set_path
@@ -410,7 +421,7 @@ class VariantsPanel(ttk.Frame):
                 f"Current Assembly tab snapshot:\n  {cur_aid}\n\n"
                 "Bake anyway? (PNG will land under the variant set assembly_id folder.)",
             ):
-                self._on_log(f"bake cancelled — variant_set assembly_id={vs_aid} != current {cur_aid}")
+                self._on_log(f"Bake cancelled — variant set targets {vs_aid}, not the current {cur_aid}.")
                 return
         self._on_log(f"variant-bake {self.state.selected_variant_key} → assembly {vs_aid}")
         try:

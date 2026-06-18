@@ -1,0 +1,82 @@
+(
+    schema_version: 1,
+    grammar_id: "rail_edge_v1",
+    archetype: (
+        id: "RailEdge",
+        usage: "warehouse",
+        footprint_bounds: (
+            min_width: 5,
+            max_width: 12,
+            min_depth: 4,
+            max_depth: 9,
+            min_floors: 1,
+            max_floors: 2,
+        ),
+    ),
+    massing: (
+        strategies: [
+            (id: "l_shape", weight: 45, footprint_mode: "l_shape"),
+            (id: "yard_complex", weight: 30, footprint_mode: "yard_interior"),
+            (id: "long_hall", weight: 20, width_depth_ratio: 2.1, footprint_mode: "rect"),
+            (id: "double_hall", weight: 5, width_depth_ratio: 1.4, footprint_mode: "rect"),
+        ],
+    ),
+    roof: (
+        default_slot: "roof_industrial",
+        by_massing: [
+            (massing_id: "l_shape", slot: "roof_industrial"),
+            (massing_id: "yard_complex", slot: "roof_flat"),
+        ],
+    ),
+    facade: (
+        window_slot: "window_industrial",
+        door_slot: "door_wide",
+        wall_slot: "wall_1u",
+        placement_tags: ["exterior", "industrial", "rail", "loading_dock"],
+    ),
+    detail: (
+        prop_slot: "prop_clutter",
+        density: 0.30,
+        tags: ["vent", "pipe", "platform", "rail_buffer"],
+    ),
+    age: (
+        bands: [
+            (id: "new", weight: 35, variant_tags: ["clean"]),
+            (id: "weathered", weight: 45, variant_tags: ["clean", "weathered"]),
+            (id: "abandoned", weight: 20, variant_tags: ["abandoned", "damaged"]),
+        ],
+    ),
+    district_styles: [
+        (
+            id: "rail_yard_corridor",
+            style_pack_id: "style_industrial_west",
+            style_tags: ["steel", "rail", "logistics", "loading_dock"],
+            zoning: "industrial",
+            material_profiles: {
+                "wall_1u": "steel_panel_01",
+                "wall_2u": "steel_panel_01",
+                "door_default": "steel_door_warehouse_01",
+                "door_wide": "steel_door_warehouse_01",
+                "corner_outer": "steel_corner_01",
+                "roof_default": "roof_metal_01",
+                "roof_industrial": "roof_metal_01",
+                "roof_flat": "roof_metal_01",
+                "window_industrial": "glass_panel_01",
+            },
+        ),
+    ],
+    facility_binding: (
+        catalog_id: "logistics_rail_warehouse",
+        chain_id: "logistics_storage",
+        supply_chain_role: "rail_warehouse",
+        power_tier: "light",
+        site_template_id: "logistics_rail_warehouse_site_v0",
+        program_axes: (
+            storage: "high",
+            loading: "high",
+            office: "low",
+            service: "medium",
+            expansion: "high",
+        ),
+    ),
+)

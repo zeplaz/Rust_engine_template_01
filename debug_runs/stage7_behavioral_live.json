@@ -53,7 +53,7 @@
     "relative_path": "debug_runs/stage7_behavioral_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "stage7_behavioral_witness",
-    "written_at_epoch_secs": 1781716814
+    "written_at_epoch_secs": 1781756524
   },
   "behavioral_contract_ok": true,
   "communication_plane_v1": "StrategicCommand",
@@ -74,6 +74,7 @@
   "intel_stale_surface": "tray_and_map_tint",
   "logistics_stress_overlay_enabled": true,
   "logistics_stress_sample_count": 18,
+  "m3_minimap_readers_wired": true,
   "mission_kinds_supported": [
     "MoveCorridor",
     "SecureCorridor"

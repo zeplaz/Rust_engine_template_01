@@ -1,8 +1,11 @@
 {
   "_meta": {
-    "version": "3.8.0",
-    "date": "2026-06-03",
+    "version": "3.9.0",
+    "date": "2026-06-17",
     "mode": "active_assignments",
+    "designer_backlog_plan": "src/dev/plan_designer_work_202606_v1.md",
+    "designer_work_prompt": "src/dev/designer_work_prompt_202606_v1.md",
+    "industrial_facility_grammar_plan": "src/dev/plan_industrial_facility_grammar_suite_v1.md",
     "weather_brief": "prompts/designer_questions/weather_player_read_brief_v1.md",
     "aps_brief": "prompts/designer_questions/aps_ux_audit_brief_v1.md",
     "on_call_playbook": "docs/archive/2026-06-src-dev/plans/designer_oncall_absorption_v1.md",
@@ -32,7 +35,11 @@
     "parallel_p1_done": 4,
     "parallel_p2_open": 0,
     "parallel_p2_done": 4,
-    "designer_queue_drained": true,
+    "designer_queue_drained": false,
+    "designer_backlog_open": 15,
+    "power_grid_construction_plan": "src/dev/plan_power_grid_construction_ux_v1.md",
+    "power_grid_art_plan": "src/dev/plan_power_grid_art_assets_v1.md",
+    "sim_hud_phase2_plan": "src/dev/plan_sim_hud_professional_polish_v1.md",
     "parametric_design_done": 1,
     "wave6_p2_open": 0,
     "wave6_p2_done": 0,
@@ -857,6 +864,374 @@
       "program": "product_ui",
       "witness": "docs/archive/2026-06-src-dev/plans/design_sim_hud_build_v1.md",
       "handoff": "SIM-HUD-SLICE-BUILD-CODER"
+    },
+    {
+      "id": "DES-APS-DS-V11-001",
+      "status": "done",
+      "priority": 0,
+      "program": "aps_uiux_phase2",
+      "agent": "designer",
+      "plan": "src/dev/plan_designer_work_202606_v1.md",
+      "witness": "src/dev/design_aps_design_system_v11_delta_v1.md",
+      "unblocks": ["OVR-P5-TAIL-001", "DES-APS-SMOOTHNESS-001"]
+    },
+    {
+      "id": "DES-APS-SMOOTHNESS-001",
+      "status": "done",
+      "priority": 0,
+      "program": "aps_uiux_phase2",
+      "agent": "designer",
+      "plan": "src/dev/plan_designer_work_202606_v1.md",
+      "witness": "src/dev/design_aps_smoothness_charter_v1.md",
+      "depends_on": ["DES-APS-DS-V11-001"]
+    },
+    {
+      "id": "DES-APS-GRAM-TIER-004",
+      "status": "done",
+      "priority": 0,
+      "program": "aps_grammar_evolution",
+      "agent": "designer",
+      "plan": "src/dev/plan_designer_work_202606_v1.md",
+      "witness": "src/dev/design_aps_grammar_tier_exposure_v1.md#10",
+      "unblocks": ["APS-GRAM-TIER-004"]
+    },
+    {
+      "id": "DES-APS-PREVIEW-V2-001",
+      "status": "done",
+      "priority": 1,
+      "program": "aps_uiux_phase2",
+      "agent": "designer",
+      "plan": "src/dev/plan_designer_work_202606_v1.md",
+      "witness": "src/dev/design_aps_preview_v2_spec_v1.md",
+      "unblocks": ["OVR-P55-PREVIEW-002"]
+    },
+    {
+      "id": "DES-STYLE-INDUSTRIAL-WEST-001",
+      "status": "done",
+      "priority": 1,
+      "program": "style_concepts",
+      "agent": "designer",
+      "plan": "src/dev/plan_designer_work_202606_v1.md",
+      "witness": "src/dev/design_style_industrial_west_v1.md",
+      "unblocks": ["DMCP-MODULE-KIT002-001", "DES-GRAM-ARCHETYPE-FACTORY-001"]
+    },
+    {
+      "id": "DES-APS-MAT-BROWSE-001",
+      "status": "done",
+      "priority": 1,
+      "program": "aps_materials",
+      "agent": "designer",
+      "plan": "src/dev/plan_designer_work_202606_v1.md",
+      "witness": "src/dev/design_aps_mat_browse_v1.md",
+      "unblocks": ["APS-MAT-002"]
+    },
+    {
+      "id": "DES-MINIMAP-VEG-LEGEND-002",
+      "status": "done",
+      "priority": 2,
+      "program": "product_ui",
+      "agent": "designer",
+      "plan": "src/dev/plan_designer_work_202606_v1.md",
+      "witness": "src/dev/design_minimap_veg_legend_wire_v1.md",
+      "handoff": "CDR-B-VEG-MINIMAP-LEGEND-UI-001"
+    },
+    {
+      "id": "DES-INDUSTRIAL-RESEARCH-001",
+      "status": "done",
+      "priority": 0,
+      "program": "industrial_facility_grammar",
+      "agent": "designer",
+      "plan": "src/dev/plan_industrial_facility_grammar_suite_v1.md",
+      "witness": "src/dev/design_industrial_process_research_v1.md",
+      "unblocks": ["DES-FACILITY-BINDING-001", "DMCP-PILOT-CONCRETE-SITE-001"]
+    },
+    {
+      "id": "DES-FACILITY-SITE-ZONE-001",
+      "status": "done",
+      "priority": 0,
+      "program": "industrial_facility_grammar",
+      "agent": "designer",
+      "plan": "src/dev/plan_industrial_facility_grammar_suite_v1.md",
+      "witness": "src/dev/design_facility_site_zone_taxonomy_v1.md",
+      "unblocks": ["CMCP-SITE-ZONE-VALIDATE-001", "DES-APS-SITE-PREVIEW-001"]
+    },
+    {
+      "id": "DES-POWER-TIER-001",
+      "status": "done",
+      "priority": 0,
+      "program": "industrial_facility_grammar",
+      "agent": "designer",
+      "plan": "src/dev/plan_industrial_facility_grammar_suite_v1.md",
+      "witness": "src/dev/design_power_tier_bands_v1.md",
+      "unblocks": ["DES-APS-FACILITY-NEEDS-001", "CMCP-GRAM-SWEEP-PROCESS-001"]
+    },
+    {
+      "id": "DES-APS-FACILITY-NEEDS-001",
+      "status": "done",
+      "priority": 1,
+      "program": "industrial_facility_grammar",
+      "agent": "designer",
+      "plan": "src/dev/plan_industrial_facility_grammar_suite_v1.md",
+      "witness": "src/dev/design_aps_facility_needs_v1.md",
+      "depends_on": ["DES-INDUSTRIAL-RESEARCH-001", "DES-POWER-TIER-001"],
+      "handoff": "CMCP-FACILITY-NEEDS-PANEL-001"
+    },
+    {
+      "id": "DES-APS-SITE-PREVIEW-001",
+      "status": "done",
+      "priority": 1,
+      "program": "industrial_facility_grammar",
+      "agent": "designer",
+      "plan": "src/dev/plan_industrial_facility_grammar_suite_v1.md",
+      "witness": "src/dev/design_aps_site_preview_v1.md",
+      "depends_on": ["DES-FACILITY-SITE-ZONE-001"],
+      "handoff": "CMCP-SITE-PREVIEW-PANEL-001"
+    },
+    {
+      "id": "DES-SIM-HUD-COHESION-001",
+      "status": "done",
+      "priority": 0,
+      "program": "sim_hud_phase2",
+      "agent": "designer",
+      "plan": "src/dev/plan_sim_hud_professional_polish_v1.md",
+      "witness": "src/dev/design_sim_hud_cohesion_charter_v1.md",
+      "unblocks": ["DES-SIM-HUD-BUILD-PICKER-001", "COD-SIM-HUD-EGUI-THEME-001"]
+    },
+    {
+      "id": "DES-SIM-HUD-BUILD-PICKER-001",
+      "status": "done",
+      "priority": 0,
+      "program": "sim_hud_phase2",
+      "agent": "designer",
+      "plan": "src/dev/plan_sim_hud_professional_polish_v1.md",
+      "witness": "src/dev/design_sim_hud_build_picker_v1.md",
+      "depends_on": ["DES-SIM-HUD-COHESION-001"],
+      "handoff": "COD-SIM-HUD-BUILD-PICKER-001"
+    },
+    {
+      "id": "DES-SIM-HUD-TRAY-BUILD-001",
+      "status": "done",
+      "priority": 0,
+      "program": "sim_hud_phase2",
+      "agent": "designer",
+      "plan": "src/dev/plan_sim_hud_professional_polish_v1.md",
+      "witness": "src/dev/design_sim_hud_tray_build_v1.md",
+      "handoff": "COD-SIM-HUD-TRAY-BUILD-001"
+    },
+    {
+      "id": "DES-SIM-HUD-COPY-REGISTRY-001",
+      "status": "done",
+      "priority": 0,
+      "program": "sim_hud_phase2",
+      "agent": "designer",
+      "plan": "src/dev/plan_sim_hud_professional_polish_v1.md",
+      "witness": "src/dev/sim_hud_copy_registry_v1.md"
+    },
+    {
+      "id": "DES-SIM-HUD-POPUP-TIERS-001",
+      "status": "done",
+      "priority": 0,
+      "program": "sim_hud_phase2",
+      "agent": "designer",
+      "plan": "src/dev/plan_sim_hud_professional_polish_v1.md",
+      "witness": "src/dev/design_sim_hud_popup_tiers_v1.md",
+      "depends_on": ["DES-SIM-HUD-TRAY-BUILD-001", "DES-SIM-HUD-BUILD-PICKER-001"],
+      "handoff": "COD-SIM-HUD-POPUP-MIGRATE-001"
+    },
+    {
+      "id": "DES-POWER-LINE-TOOL-SHEET-001",
+      "status": "done",
+      "priority": 0,
+      "program": "power_grid_construction",
+      "agent": "designer",
+      "plan": "src/dev/plan_power_grid_construction_ux_v1.md",
+      "witness": "src/dev/design_power_line_tool_sheet_v1.md",
+      "unblocks": ["COD-POWER-LINE-DRAW-001"]
+    },
+    {
+      "id": "DES-POWER-ROUTING-MODE-001",
+      "status": "done",
+      "priority": 0,
+      "program": "power_grid_construction",
+      "agent": "designer",
+      "plan": "src/dev/plan_power_grid_construction_ux_v1.md",
+      "witness": "src/dev/design_power_routing_mode_v1.md",
+      "depends_on": ["DES-POWER-LINE-TOOL-SHEET-001"],
+      "unblocks": ["COD-POWER-ORTHOGONAL-ROUTER-001", "COD-POWER-SPLINE-ROUTER-001"]
+    },
+    {
+      "id": "DES-POWER-VOLTAGE-PICKER-001",
+      "status": "done",
+      "priority": 0,
+      "program": "power_grid_construction",
+      "agent": "designer",
+      "plan": "src/dev/plan_power_grid_construction_ux_v1.md",
+      "witness": "src/dev/design_power_voltage_picker_v1.md",
+      "unblocks": ["COD-POWER-LINE-DRAW-001"]
+    },
+    {
+      "id": "DES-POWER-MAP-OVERLAY-002",
+      "status": "done",
+      "priority": 1,
+      "program": "power_grid_construction",
+      "agent": "designer",
+      "plan": "src/dev/plan_power_grid_construction_ux_v1.md",
+      "witness": "src/dev/design_power_map_overlay_v1.md",
+      "unblocks": ["COD-POWER-OVERLAY-RENDER-001", "COD-POWER-ISLAND-HIGHLIGHT-001"]
+    },
+    {
+      "id": "DES-POWER-TARGETING-001",
+      "status": "done",
+      "priority": 2,
+      "program": "power_grid_construction",
+      "agent": "designer",
+      "plan": "src/dev/plan_power_grid_construction_ux_v1.md",
+      "witness": "src/dev/design_power_targeting_v1.md",
+      "unblocks": ["COD-POWER-DAMAGE-SEGMENT-001"]
+    },
+    {
+      "id": "DES-POWER-REPAIR-PANEL-001",
+      "status": "done",
+      "priority": 2,
+      "program": "power_grid_construction",
+      "agent": "designer",
+      "plan": "src/dev/plan_power_grid_construction_ux_v1.md",
+      "witness": "src/dev/design_power_repair_panel_v1.md",
+      "unblocks": ["COD-POWER-REPAIR-QUEUE-001"]
+    },
+    {
+      "id": "DES-ART-UTILITY-STYLE-001",
+      "status": "done",
+      "priority": 0,
+      "program": "power_grid_art",
+      "agent": "designer",
+      "plan": "src/dev/plan_power_grid_art_assets_v1.md",
+      "witness": "src/dev/design_utility_industrial_style_v1.md",
+      "unblocks": ["DMCP-SPEC-SUBSTATION-YARD-001", "DMCP-SPEC-TRANSFORMER-PAD-001", "DES-ART-NUCLEAR-PLANT-001"]
+    },
+    {
+      "id": "DES-ART-POWER-GLYPHS-001",
+      "status": "done",
+      "priority": 0,
+      "program": "power_grid_art",
+      "agent": "designer",
+      "plan": "src/dev/plan_power_grid_art_assets_v1.md",
+      "witness": "assets/ui/infrastructure/power_glyphs_spec_v1.md"
+    },
+    {
+      "id": "DES-ART-HUD-POWER-ICONS-001",
+      "status": "done",
+      "priority": 0,
+      "program": "power_grid_art",
+      "agent": "designer",
+      "plan": "src/dev/plan_power_grid_art_assets_v1.md",
+      "witness": "src/dev/design_hud_power_icons_v1.md",
+      "handoff": "COD-ART-HUD-ICON-ATLAS-001"
+    },
+    {
+      "id": "DES-ART-NUCLEAR-PLANT-001",
+      "status": "done",
+      "priority": 1,
+      "program": "power_grid_art",
+      "agent": "designer",
+      "plan": "src/dev/plan_power_grid_art_assets_v1.md",
+      "witness": "src/dev/design_nuclear_plant_massing_v1.md",
+      "depends_on": ["DES-ART-UTILITY-STYLE-001"],
+      "handoff": "DMCP-SPEC-NUCLEAR-PWR-001"
+    },
+    {
+      "id": "DMCP-SPEC-SUBSTATION-YARD-001",
+      "status": "done",
+      "priority": 0,
+      "program": "power_grid_art",
+      "agent": "designer-mcp",
+      "plan": "src/dev/plan_power_grid_art_assets_v1.md",
+      "witness": "src/dev/dmcp_spec_substation_yard_v1.md",
+      "deliverable": "assets/staging/specs/kit_substation_yard_production_001.json",
+      "depends_on": ["DES-ART-UTILITY-STYLE-001"],
+      "catalog": "assets/configs/buildings/grid_substation.json"
+    },
+    {
+      "id": "DMCP-SPEC-TRANSFORMER-PAD-001",
+      "status": "done",
+      "priority": 0,
+      "program": "power_grid_art",
+      "agent": "designer-mcp",
+      "plan": "src/dev/plan_power_grid_art_assets_v1.md",
+      "witness": "src/dev/dmcp_spec_transformer_pad_v1.md",
+      "deliverable": "assets/staging/specs/prop_transformer_production_run001.json",
+      "depends_on": ["DES-ART-UTILITY-STYLE-001"],
+      "catalog": "assets/configs/buildings/grid_distribution_transformer.json"
+    },
+    {
+      "id": "DMCP-SPEC-NUCLEAR-PWR-001",
+      "status": "done",
+      "priority": 1,
+      "program": "power_grid_art",
+      "agent": "designer-mcp",
+      "plan": "src/dev/plan_power_grid_art_assets_v1.md",
+      "witness": "debug_runs/art_pipeline/dmcp_nuclear_pwr_spec_live.json",
+      "deliverable": "assets/staging/specs/kit_nuclear_pwr_production_001.json",
+      "dmcp_doc": "src/dev/dmcp_spec_nuclear_pwr_v1.md",
+      "depends_on": ["DES-ART-NUCLEAR-PLANT-001"],
+      "handoff": "MCP-PWR-NUCLEAR-BATCH-001"
+    },
+    {
+      "id": "DES-ART-PLANT-CARD-001",
+      "status": "done",
+      "priority": 1,
+      "program": "power_grid_art",
+      "agent": "designer",
+      "plan": "src/dev/plan_power_grid_art_assets_v1.md",
+      "witness": "src/dev/design_plant_card_gauges_v1.md",
+      "depends_on": ["DES-ART-HUD-POWER-ICONS-001"],
+      "handoff": "COD-NUCLEAR-UX-WIRE-001"
+    }
+  ],
+  "done_art_spine_hub_wave_2026_06_02": [
+    {
+      "id": "DMCP-LG5-KEYFRAME-QC-001",
+      "status": "done",
+      "priority": 0,
+      "program": "plan_designer_work_202606",
+      "agent": "designer-mcp",
+      "witness": "debug_runs/art_pipeline/dmcp_art_spine_hub_wave_live.json",
+      "deliverable": "src/dev/design_landscape_lg5_keyframe_qc_v1.md",
+      "verdict": "PASS_WITH_NOTES",
+      "handoff": "DMCP-VEG-ATLAS-SHIP-001"
+    },
+    {
+      "id": "DMCP-TILE-ROWHOUSE-V2-001",
+      "status": "done",
+      "priority": 0,
+      "program": "plan_designer_work_202606",
+      "agent": "designer-mcp",
+      "witness": "debug_runs/art_pipeline/dmcp_art_spine_hub_wave_live.json",
+      "deliverable": "src/dev/design_rowhouse_v2_operator_qc_v1.md",
+      "verdict": "PASS",
+      "handoff": "MCP-PROD-ROWHOUSE-SIGNOFF"
+    },
+    {
+      "id": "DES-GRAM-ARCHETYPE-CIVIC-001",
+      "status": "done",
+      "priority": 0,
+      "program": "plan_designer_work_202606",
+      "agent": "designer-mcp",
+      "witness": "debug_runs/art_pipeline/dmcp_art_spine_hub_wave_live.json",
+      "deliverable": "src/dev/design_civic_block_concept_v1.md",
+      "verdict": "PASS",
+      "handoff": "GRAM-CONTENT-005"
+    },
+    {
+      "id": "DMCP-MAT-PROFILE-PILOT-002",
+      "status": "done",
+      "priority": 0,
+      "program": "plan_designer_work_202606",
+      "agent": "designer-mcp",
+      "witness": "debug_runs/art_pipeline/dmcp_art_spine_hub_wave_live.json",
+      "deliverable": "assets/staging/specs/mat_profile_pilot_002_pack.json",
+      "verdict": "PASS",
+      "handoff": "CMCP-MAT-PROFILE-VALIDATE-002"
     }
   ],
   "done_aps_track_a_2026_06_03": [

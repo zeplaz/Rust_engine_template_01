@@ -79,6 +79,22 @@
       "witness_fields": ["witness", "witness_json"]
     },
     {
+      "queue_id": "power_grid_art_downstream",
+      "path": "tools/orchestrator/queues/power_grid_art_downstream_queue.json",
+      "id_field": "id",
+      "rows_path": "drain",
+      "status_field": "status",
+      "witness_fields": ["witness", "witness_json", "exit_predicate"]
+    },
+    {
+      "queue_id": "aps_grammar_evolution",
+      "path": "tools/orchestrator/queues/aps_grammar_evolution_queue.json",
+      "id_field": "id",
+      "rows_path": "drain",
+      "status_field": "status",
+      "witness_fields": ["witness", "witness_json", "exit_predicate"]
+    },
+    {
       "queue_id": "aps_uiux_overhaul",
       "path": "tools/orchestrator/queues/aps_uiux_overhaul_queue.json",
       "id_field": "id",
@@ -93,6 +109,13 @@
       "rows_path": "drain",
       "status_field": "status",
       "witness_fields": ["witness", "witness_json"]
+    },
+    {
+      "queue_id": "agent_hub",
+      "path": "tools/orchestrator/queues/agent_hub_queue_v1.json",
+      "human_doc": "src/dev/agent_hub_queue_v1.md",
+      "generated_by": "tools/orchestrator/scripts/scan_queues_hub.py",
+      "note": "rollup — pick_now + blocked_fallback; not a work queue"
     }
   ]
 }

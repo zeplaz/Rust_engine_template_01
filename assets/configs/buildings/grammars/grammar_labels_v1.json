@@ -7,6 +7,14 @@
     "IndustrialWarehouse": {
       "label": "Industrial Warehouse",
       "usage": "warehouse"
+    },
+    "FactoryCluster": {
+      "label": "Factory Cluster",
+      "usage": "factory"
+    },
+    "RailEdge": {
+      "label": "Rail Edge Warehouse",
+      "usage": "warehouse"
     }
   },
   "massing": {
@@ -40,7 +48,9 @@
     "abandoned": "Abandoned"
   },
   "district_styles": {
-    "industrial_west": "Industrial West"
+    "industrial_west": "Industrial West",
+    "manufacturing_row": "Manufacturing Row",
+    "rail_yard_corridor": "Rail Yard Corridor"
   },
   "iteration_modes": {
     "massing": "Massing & footprint",

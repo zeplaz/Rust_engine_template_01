@@ -1,0 +1,61 @@
+{
+  "green": true,
+  "program_id": "PLAN-POWER-GRID-ART-ASSETS-001",
+  "gate": "ORCH-PWR-DOWNSTREAM-001",
+  "scope": "on_call_absorption_only",
+  "issued": "2026-06-02",
+  "wave_picks_issued": false,
+  "absorption_doc": "src/dev/designer_oncall_absorption_v1.md",
+  "rule": "Sequence + spec≠ship gate only — no parallel bpy/HUD wave dispatch",
+  "anti_fake_green": "spec PASS != ship; promote + validate_asset required when slice activates",
+  "upstream_specs_done": [
+    "DMCP-SPEC-SUBSTATION-YARD-001",
+    "DMCP-SPEC-TRANSFORMER-PAD-001",
+    "DMCP-SPEC-NUCLEAR-PWR-001",
+    "DES-ART-NUCLEAR-PLANT-001",
+    "DES-ART-HUD-POWER-ICONS-001"
+  ],
+  "on_call_triggers": [
+    {
+      "when": "@coder-mcp promotes substation GLB",
+      "absorb": "DMCP-QC-SUBSTATION-001",
+      "owner": "designer-mcp"
+    },
+    {
+      "when": "@coder-mcp promotes transformer GLB",
+      "absorb": "DMCP-QC-TRANSFORMER-001",
+      "owner": "designer-mcp"
+    },
+    {
+      "when": "Art assets land in assets/models/modules/",
+      "absorb": "DESIGN-PROC-ART-ACCEPTANCE-001",
+      "owner": "designer",
+      "ref": "designer_oncall_absorption_v1.md"
+    },
+    {
+      "when": "Orchestrator activates downstream slice",
+      "absorb": "MCP-PWR-UTILITY-MANIFEST-001 → bpy → promote chain",
+      "owner": "coder-mcp"
+    },
+    {
+      "when": "Product requests HUD power rail",
+      "absorb": "COD-ART-HUD-ICON-ATLAS-001",
+      "owner": "coder_b"
+    }
+  ],
+  "not_dispatched": [
+    "MCP-PWR-UTILITY-MANIFEST-001",
+    "MCP-PWR-SUBSTATION-BATCH-001",
+    "MCP-PWR-TRANSFORMER-BATCH-001",
+    "COD-ART-HUD-ICON-ATLAS-001"
+  ],
+  "queue": "tools/orchestrator/queues/power_grid_art_downstream_queue.json",
+  "batch_manifest": "tools/mcp/schemas/examples/batch_kit_utility_power_production_001.manifest.json",
+  "_agent_meta": {
+    "schema": "power_grid_art_downstream_dispatch_live_v1",
+    "profile": "ORCHESTRATOR_MCP",
+    "source_system": "orchestrator-mcp",
+    "relative_path": "debug_runs/agent_ops/power_grid_art_downstream_dispatch_live.json",
+    "ritual": "ORCH-PWR-DOWNSTREAM-001 on-call absorption only"
+  }
+}

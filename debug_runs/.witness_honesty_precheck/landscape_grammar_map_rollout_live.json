@@ -52,7 +52,7 @@
     "relative_path": "debug_runs/landscape_grammar_map_rollout_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_map_rollout_witness",
-    "written_at_epoch_secs": 1781717502
+    "written_at_epoch_secs": 1781756611
   },
   "chunks_with_program": 17,
   "gate": "VEG-MAP-ROLLOUT-001",

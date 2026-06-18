@@ -1,0 +1,9 @@
+{
+  "tier": "G0",
+  "dna_panel_visible": false,
+  "iterate_panel_visible": false,
+  "build_set_expanded_default": false,
+  "kit_hint_visible": true,
+  "scanner": "test_aps_grammar_tier_gates.py",
+  "archetype_combo_count": 3
+}

@@ -45,10 +45,9 @@
   "extract_witness_present": true,
   "extract_witness_green": true,
   "extract_sample_keys": [
-    "veg_topo_barrier",
-    "veg_topo_cluster"
+    "veg_burn_02"
   ],
-  "extract_row_count": 17,
+  "extract_row_count": 1,
   "panel_wired": true,
   "parity_green": true,
   "catalog_path": "assets/configs/landscape/_vegetation_variant_catalog.ron",
@@ -84,7 +83,7 @@
     "profile": "APS_E5_VEG_EXTRACT_PARITY",
     "relative_path": "debug_runs/aps_veg_extract_parity_live.json",
     "source_system": "aps_veg_extract_parity",
-    "written_at_epoch_secs": 1781721220,
+    "written_at_epoch_secs": 1781793818,
     "ritual": "BLANG:WIT-HON APS-EVO-E5-EXTRACT-PARITY-001"
   },
   "witness_honesty": {
