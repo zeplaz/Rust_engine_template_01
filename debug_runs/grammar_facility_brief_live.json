@@ -1,0 +1,213 @@
+{
+  "task_id": "CMCP-GRAMMAR-FACILITY-BRIEF-001",
+  "ok": true,
+  "green": true,
+  "grammar_id": "factory_cluster_v1",
+  "grammar_count": 1,
+  "binding_count": 1,
+  "green_binding_count": 1,
+  "briefs": [
+    {
+      "grammar_id": "factory_cluster_v1",
+      "archetype_id": "FactoryCluster",
+      "ok": true,
+      "green": true,
+      "facility_binding": {
+        "catalog_id": "concrete_mixer_plant",
+        "chain_id": "concrete_portland",
+        "supply_chain_role": "concrete_mixer",
+        "power_tier": "light",
+        "site_template_id": "concrete_mixer_plant_site_v0",
+        "program_axes": {
+          "storage": "medium",
+          "loading": "high",
+          "office": "low"
+        }
+      },
+      "catalog": {
+        "catalog_id": "concrete_mixer_plant",
+        "asset_name": "Concrete batching plant",
+        "supply_chain_role": "concrete_mixer",
+        "utility_role": null,
+        "power_consumption": 28.0,
+        "power_generation": 0.0,
+        "footprint": {
+          "w": 3,
+          "d": 2
+        },
+        "produces": [
+          "Concrete"
+        ],
+        "consumes": [
+          "Cement",
+          "Water",
+          "Gravel",
+          "Chemicals",
+          "Labour",
+          "Electricity"
+        ],
+        "produces_top3": [
+          "Concrete"
+        ],
+        "consumes_top3": [
+          "Cement",
+          "Water",
+          "Gravel"
+        ],
+        "power_tier": "light"
+      },
+      "chain": {
+        "chain_id": "concrete_portland",
+        "display_name": "Concrete (Portland)",
+        "step_index": 2,
+        "role": "concrete_mixer",
+        "catalog_id": "concrete_mixer_plant",
+        "power_consumption": 28,
+        "produces": [
+          "Concrete"
+        ],
+        "consumes": [
+          "Cement",
+          "Water",
+          "Gravel",
+          "Chemicals",
+          "Labour",
+          "Electricity"
+        ]
+      },
+      "derived": {
+        "power_tier_from_catalog": "light",
+        "power_tier_binding_match": true,
+        "site_template_id": "concrete_mixer_plant_site_v0",
+        "program_axes": {
+          "storage": "medium",
+          "loading": "high",
+          "office": "low"
+        }
+      },
+      "io_summary": {
+        "produces_top3": [
+          "Concrete"
+        ],
+        "consumes_top3": [
+          "Cement",
+          "Water",
+          "Gravel"
+        ]
+      },
+      "errors": [],
+      "gaps": []
+    }
+  ],
+  "brief": {
+    "grammar_id": "factory_cluster_v1",
+    "archetype_id": "FactoryCluster",
+    "ok": true,
+    "green": true,
+    "facility_binding": {
+      "catalog_id": "concrete_mixer_plant",
+      "chain_id": "concrete_portland",
+      "supply_chain_role": "concrete_mixer",
+      "power_tier": "light",
+      "site_template_id": "concrete_mixer_plant_site_v0",
+      "program_axes": {
+        "storage": "medium",
+        "loading": "high",
+        "office": "low"
+      }
+    },
+    "catalog": {
+      "catalog_id": "concrete_mixer_plant",
+      "asset_name": "Concrete batching plant",
+      "supply_chain_role": "concrete_mixer",
+      "utility_role": null,
+      "power_consumption": 28.0,
+      "power_generation": 0.0,
+      "footprint": {
+        "w": 3,
+        "d": 2
+      },
+      "produces": [
+        "Concrete"
+      ],
+      "consumes": [
+        "Cement",
+        "Water",
+        "Gravel",
+        "Chemicals",
+        "Labour",
+        "Electricity"
+      ],
+      "produces_top3": [
+        "Concrete"
+      ],
+      "consumes_top3": [
+        "Cement",
+        "Water",
+        "Gravel"
+      ],
+      "power_tier": "light"
+    },
+    "chain": {
+      "chain_id": "concrete_portland",
+      "display_name": "Concrete (Portland)",
+      "step_index": 2,
+      "role": "concrete_mixer",
+      "catalog_id": "concrete_mixer_plant",
+      "power_consumption": 28,
+      "produces": [
+        "Concrete"
+      ],
+      "consumes": [
+        "Cement",
+        "Water",
+        "Gravel",
+        "Chemicals",
+        "Labour",
+        "Electricity"
+      ]
+    },
+    "derived": {
+      "power_tier_from_catalog": "light",
+      "power_tier_binding_match": true,
+      "site_template_id": "concrete_mixer_plant_site_v0",
+      "program_axes": {
+        "storage": "medium",
+        "loading": "high",
+        "office": "low"
+      }
+    },
+    "io_summary": {
+      "produces_top3": [
+        "Concrete"
+      ],
+      "consumes_top3": [
+        "Cement",
+        "Water",
+        "Gravel"
+      ]
+    },
+    "errors": [],
+    "gaps": []
+  },
+  "authority": {
+    "chains": "assets/configs/industrial_supply_chains.json",
+    "catalog_dir": "assets/configs/buildings",
+    "binding_schema": "src/dev/design_facility_binding_schema_v1.md",
+    "power_tier_spec": "src/dev/design_power_tier_bands_v1.md"
+  },
+  "_agent_meta": {
+    "schema": "grammar_facility_brief_live_v1",
+    "profile": "CMCP_GRAMMAR_FACILITY_BRIEF",
+    "relative_path": "debug_runs/grammar_facility_brief_live.json",
+    "source_system": "grammar_facility_brief",
+    "written_at_epoch_secs": 1781756431,
+    "ritual": "BLANG:WIT-HON CMCP-GRAMMAR-FACILITY-BRIEF-001"
+  },
+  "witness_honesty": {
+    "status": "passed",
+    "error_count": 0,
+    "warning_count": 0,
+    "summary": "witness_honesty debug_runs/grammar_facility_brief_live.json: 0 error(s), 0 issue(s)"
+  }
+}

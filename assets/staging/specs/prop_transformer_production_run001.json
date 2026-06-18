@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "asset_id": "prop_transformer_production_run001",
+  "archetype": "module_prop",
+  "style_pack": "style_industrial_west",
+  "development_tier": "production",
+  "pbr_status": "shipped",
+  "batch_id": "kit_utility_power_production_001",
+  "module": {
+    "grid_units": [
+      2,
+      2
+    ],
+    "snap": "floor_center",
+    "pivot": "bottom_center"
+  },
+  "dimensions_m": {
+    "w": 3.6,
+    "h": 1.5,
+    "d": 3.6
+  },
+  "material_profile": "galvanized_steel_01",
+  "geometry_notes": {
+    "tank": "horizontal_cylinder",
+    "bushings": 3,
+    "berm": "optional_lip"
+  },
+  "references": [
+    "ref:design:DES-ART-UTILITY-STYLE-001",
+    "ref:dmcp:DMCP-SPEC-TRANSFORMER-PAD-001",
+    "ref:catalog:grid_distribution_transformer.json",
+    "ref:supersedes:prop_transformer.json"
+  ]
+}

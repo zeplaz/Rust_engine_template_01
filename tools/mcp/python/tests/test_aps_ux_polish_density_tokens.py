@@ -21,6 +21,7 @@ LEGAL_PADDING = {0, 2, 3, 4, 6, 8, 10, 12, 16, 24}
 TOKEN_ADOPTER_FILES = (
     "app.py",
     "aps_theme.py",
+    "material_library_widget.py",
 )
 
 
@@ -40,6 +41,12 @@ def test_aps_theme_declares_full_gap_scale() -> None:
     theme = (SUITE / "aps_theme.py").read_text(encoding="utf-8")
     for name in ("GAP_XS", "GAP_SM", "GAP_MD", "GAP_LG", "GAP_XL", "PANE_MIN_LIST", "ROW_HEIGHT"):
         assert f"{name} =" in theme
+
+
+def test_material_library_no_off_scale_card_padding() -> None:
+    text = (SUITE / "material_library_widget.py").read_text(encoding="utf-8")
+    offenders = [m.group(0) for m in re.finditer(r"padx=3|pady=3", text)]
+    assert not offenders, "migrate card grid padding to GAP_SM/GAP_MD"
 
 
 def test_no_out_of_scale_padding_literals_in_theme() -> None:

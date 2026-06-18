@@ -9,7 +9,7 @@
     "asset_id": { "type": "string", "pattern": "^[a-z][a-zA-Z0-9_]*$" },
     "archetype": {
       "type": "string",
-      "enum": ["module_wall", "module_roof", "module_door", "module_window", "module_prop"]
+      "enum": ["module_wall", "module_roof", "module_door", "module_window", "module_prop", "module_kit"]
     },
     "style_pack": { "type": "string" },
     "module": {
@@ -35,10 +35,30 @@
     },
     "material_profile": { "type": "string" },
     "development_tier": { "type": "string", "enum": ["smoke", "lod0", "production"] },
-    "pbr_status": { "type": "string", "enum": ["none", "deferred", "shipped"] },
+    "pbr_status": { "type": "string", "enum": ["none", "deferred", "pending", "shipped"] },
     "batch_id": { "type": "string" },
     "module_id_alias_of": { "type": ["string", "null"] },
-    "references": { "type": "array", "items": { "type": "string" } }
+    "references": { "type": "array", "items": { "type": "string" } },
+    "composition": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "module_id": { "type": "string" },
+          "grid": {
+            "type": "array",
+            "items": { "type": "integer", "minimum": 1 },
+            "minItems": 2,
+            "maxItems": 2
+          },
+          "count": { "type": "integer", "minimum": 1 },
+          "zone": { "type": "string" }
+        },
+        "required": ["module_id", "grid"]
+      }
+    },
+    "geometry_notes": { "type": "object" },
+    "feeds": { "type": "string" }
   },
   "additionalProperties": false
 }

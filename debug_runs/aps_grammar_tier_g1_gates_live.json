@@ -1,0 +1,8 @@
+{
+  "tier": "G1",
+  "archetype_combo_count": 3,
+  "kit_hint_visible": false,
+  "dna_panel_visible": false,
+  "iterate_panel_visible": false,
+  "scanner": "test_aps_grammar_tier_gates.py"
+}

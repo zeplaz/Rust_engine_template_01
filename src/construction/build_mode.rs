@@ -5,6 +5,7 @@ use bevy::prelude::*;
 use super::build_tool_authority::{ActiveBuildTool, BuildTool};
 use super::build_state::BuildGhostState;
 use super::build_strip::ToolContext;
+use super::power_lines::ActivePowerLinePlacement;
 use super::rail::ActiveRailPlacement;
 use super::roads::ActiveRoadPlacement;
 use super::sessions::ActiveToolSession;
@@ -33,6 +34,7 @@ pub fn sync_build_mode_state(
     strip: Res<super::BuildStripState>,
     ghost: Res<BuildGhostState>,
     path: Res<ActiveRoadPlacement>,
+    power: Res<ActivePowerLinePlacement>,
     zone: Res<ActiveZonePaint>,
     mut mode: ResMut<BuildModeState>,
 ) {
@@ -49,8 +51,10 @@ pub fn sync_build_mode_state(
             BuildTool::Road(_) | BuildTool::Rail(_) if !path.control_points.is_empty() => {
                 BuildMode::GhostPreview
             }
+            BuildTool::PowerLine(_) if !power.control_points.is_empty() => BuildMode::GhostPreview,
             BuildTool::Road(_) => BuildMode::RoadPlacement,
             BuildTool::Rail(_) => BuildMode::RailPlacement,
+            BuildTool::PowerLine(_) => BuildMode::RoadPlacement,
             BuildTool::Building(_) => {
                 if ghost.origin.is_some() {
                     BuildMode::GhostPreview
@@ -72,6 +76,7 @@ pub fn build_escape_cancel_system(
     mut strip: ResMut<super::BuildStripState>,
     mut ghost: ResMut<BuildGhostState>,
     mut path: ResMut<ActiveRoadPlacement>,
+    mut power: ResMut<ActivePowerLinePlacement>,
     mut rail: ResMut<ActiveRailPlacement>,
     mut zone: ResMut<ActiveZonePaint>,
 ) {
@@ -82,6 +87,7 @@ pub fn build_escape_cancel_system(
     ghost.drag_active = false;
     path.control_points.clear();
     path.generated_segments.clear();
+    power.clear_path();
     rail.control_points.clear();
     rail.generated_segments.clear();
     zone.clear();

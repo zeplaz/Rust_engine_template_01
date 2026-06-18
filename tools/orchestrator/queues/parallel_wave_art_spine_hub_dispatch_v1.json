@@ -1,0 +1,52 @@
+{
+  "_meta": {
+    "version": "1.0.0",
+    "program_id": "PARALLEL-WAVE-ART-SPINE-HUB-001",
+    "date": "2026-06-02",
+    "rule": "Parallel @designer-mcp lane — LG5 keyframe QC · rowhouse v2 · civic archetype · mat pilot 002",
+    "plan": "src/dev/plan_designer_work_202606_v1.md",
+    "witness": "debug_runs/art_pipeline/dmcp_art_spine_hub_wave_live.json",
+    "witness_cli": "python -m rust_engine_mcp.cli dmcp-art-spine-hub-wave-witness"
+  },
+  "dispatch_now": {
+    "designer-mcp": "ALL ROWS CLOSED — witness dmcp_art_spine_hub_wave_live.json (4/4)"
+  },
+  "rows": [
+    {
+      "id": "DMCP-LG5-KEYFRAME-QC-001",
+      "owner": "designer-mcp",
+      "wave": 0,
+      "status": "done",
+      "deliverable": "src/dev/design_landscape_lg5_keyframe_qc_v1.md",
+      "verdict": "PASS_WITH_NOTES",
+      "handoff": "DMCP-VEG-ATLAS-SHIP-001 · G4 manual corridor regrowth"
+    },
+    {
+      "id": "DMCP-TILE-ROWHOUSE-V2-001",
+      "owner": "designer-mcp",
+      "wave": 0,
+      "status": "done",
+      "deliverable": "src/dev/design_rowhouse_v2_operator_qc_v1.md",
+      "verdict": "PASS",
+      "handoff": "MCP-PROD-ROWHOUSE-SIGNOFF · APS preview strip"
+    },
+    {
+      "id": "DES-GRAM-ARCHETYPE-CIVIC-001",
+      "owner": "designer-mcp",
+      "wave": 0,
+      "status": "done",
+      "deliverable": "src/dev/design_civic_block_concept_v1.md",
+      "verdict": "PASS",
+      "handoff": "GRAM-CONTENT-005 civic_block_v1.ron @coder-mcp"
+    },
+    {
+      "id": "DMCP-MAT-PROFILE-PILOT-002",
+      "owner": "designer-mcp",
+      "wave": 0,
+      "status": "done",
+      "deliverable": "src/dev/design_mat_profile_pilot_002_v1.md",
+      "verdict": "PASS",
+      "handoff": "@coder-mcp validate + merge material_profiles pilot"
+    }
+  ]
+}

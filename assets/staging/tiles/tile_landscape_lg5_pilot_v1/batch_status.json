@@ -1,6 +1,9 @@
 {
   "batch_id": "tile_landscape_lg5_pilot_v1",
   "status": "done",
+  "gate": "DMCP-PILOT-TEACH-ANNOT-001",
+  "not_a_ship_target": true,
+  "teach_exception": "3-tile pilot — topology extract teach only; not production ship",
   "bake_source": "keyframe_pack",
   "variant_count": 3,
   "png_paths": [

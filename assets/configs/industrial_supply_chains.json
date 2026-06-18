@@ -94,6 +94,26 @@
           "consumes": ["Aluminum", "Electricity", "Labour"]
         }
       ]
+    },
+    "logistics_storage": {
+      "display_name": "Logistics storage",
+      "steps": [
+        {
+          "role": "rail_warehouse",
+          "catalog_id": "logistics_rail_warehouse",
+          "power_consumption": 15,
+          "produces": [],
+          "consumes": ["Labour", "Electricity"],
+          "note": "Rail-edge loading warehouse — storage and transfer, not a process chain"
+        },
+        {
+          "role": "storage_warehouse",
+          "catalog_id": "logistics_storage_warehouse",
+          "power_consumption": 12,
+          "produces": [],
+          "consumes": ["Labour", "Electricity"]
+        }
+      ]
     }
   }
 }

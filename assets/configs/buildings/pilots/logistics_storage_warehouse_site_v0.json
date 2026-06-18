@@ -1,0 +1,49 @@
+{
+  "schema_version": "site_zone_grid_v1",
+  "site_id": "logistics_storage_warehouse_site_v0",
+  "pilot_id": "logistics_storage_warehouse_v0",
+  "width": 8,
+  "depth": 6,
+  "row_major": true,
+  "origin": "north_west",
+  "zone_legend": {
+    ".": "buffer",
+    "P": "parking",
+    "W": "primary",
+    "L": "loading",
+    "S": "service"
+  },
+  "ascii_plan": [
+    "PPPPPPPP",
+    "WWWWWWWW",
+    "WWLLLLWW",
+    "..SS....",
+    "........",
+    "........"
+  ],
+  "cells": [
+    "parking","parking","parking","parking","parking","parking","parking","parking",
+    "primary","primary","primary","primary","primary","primary","primary","primary",
+    "primary","primary","loading","loading","loading","loading","primary","primary",
+    "buffer","buffer","service","service","buffer","buffer","buffer","buffer",
+    "buffer","buffer","buffer","buffer","buffer","buffer","buffer","buffer",
+    "buffer","buffer","buffer","buffer","buffer","buffer","buffer","buffer"
+  ],
+  "zone_styles": {
+    "primary": { "color_token": "footprint_valid", "alpha": 0.35, "label": "Hall" },
+    "loading": { "color_token": "footprint_valid", "alpha": 0.35, "label": "Load" },
+    "service": { "color_token": "service_outline", "alpha": 0.3, "label": "Svc", "outline_only": true },
+    "parking": { "color_token": "parking_void", "alpha": 0.12, "label": "Park" },
+    "buffer": { "color_token": "none", "alpha": 0.0, "label": null }
+  },
+  "metrics": {
+    "primary_cells": 16,
+    "loading_cells": 4,
+    "building_cells": 20,
+    "site_cells": 48,
+    "primary_pct_site": 0.333
+  },
+  "design_docs": [
+    "src/dev/design_facility_binding_schema_v1.md"
+  ]
+}

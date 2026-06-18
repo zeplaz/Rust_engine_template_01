@@ -8,6 +8,10 @@ from tkinter import ttk
 
 from rust_engine_mcp.paths import repo_root
 
+from . import aps_theme
+from .aps_theme import FONT_UI, FONT_UI_BOLD
+from .aps_tk import themed_text
+
 _PREFS_PATH = repo_root() / "debug_runs/aps_ui_prefs.json"
 
 _ASSEMBLY_FLOW = """What you save in this Assembly is the source of truth.
@@ -65,18 +69,16 @@ class MetadataFlowPanel(ttk.LabelFrame):
         self._collapsed_hint = ttk.Label(
             head,
             text="The Assembly is the source of truth — expand for how data flows.",
-            font=("Segoe UI", 9),
-            foreground="#0a4a7a",
+            font=FONT_UI,
+            foreground=aps_theme.COLOR_ACCENT,
             wraplength=680,
         )
         self._body = ttk.Frame(self)
-        self._text = tk.Text(
+        self._text = themed_text(
             self._body,
             height=10,
             wrap=tk.WORD,
-            font=("Segoe UI", 9),
-            background="#f8f8f8",
-            relief=tk.FLAT,
+            font=FONT_UI,
         )
         self._text.pack(fill=tk.BOTH, expand=True)
         self._fill_content()

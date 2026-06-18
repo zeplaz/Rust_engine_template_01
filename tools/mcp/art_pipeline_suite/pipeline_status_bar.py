@@ -7,9 +7,9 @@ from tkinter import ttk
 
 from typing import Callable
 
-from .aps_theme import FONT_HINT
+from .aps_theme import COLOR_ACCENT, COLOR_FAIL, COLOR_MUTED, FONT_HINT, FONT_UI, FONT_UI_BOLD
 from .aps_tooltips import bind_aps_tooltip
-from .domain_router import pipeline_steps_for
+from .domain_router import flow_verb_label, next_action_for, pipeline_steps_for, refresh_grammar_set_tier_on_state
 from .pipeline_pills import apply_pill
 from .state import ArtDomain, SuiteState
 
@@ -21,19 +21,46 @@ class PipelineStatusBar(ttk.Frame):
         state: SuiteState,
         *,
         on_step_click: Callable[[str], None] | None = None,
+        on_advance: Callable[[str], None] | None = None,
+        flow_ready: Callable[[str], bool] | None = None,
+        flow_blocked_reason: Callable[[str], str | None] | None = None,
     ) -> None:
         super().__init__(master, padding=(0, 4))
         self.state = state
         self._on_step_click = on_step_click
+        # P7 Slice B — the spine owns "advance": it runs the lane/step flow verb.
+        self._on_advance = on_advance
+        self._flow_ready = flow_ready
+        self._flow_blocked_reason = flow_blocked_reason
+        self._advance_verb: str | None = None
         self._current_key: str | None = None
         self._lane = state.art_domain
         self._steps: list[tuple[str, str]] = list(pipeline_steps_for(state.art_domain))
         self._pills: dict[str, tuple[tk.Frame, tk.Label]] = {}
-        ttk.Label(self, text="Pipeline:", font=("Segoe UI", 9, "bold")).pack(side=tk.LEFT, padx=(0, 6))
-        self._step_frame = ttk.Frame(self)
+
+        steps_row = ttk.Frame(self)
+        steps_row.pack(side=tk.TOP, fill=tk.X)
+        ttk.Label(steps_row, text="Pipeline:", font=FONT_UI_BOLD).pack(side=tk.LEFT, padx=(0, 6))
+        self._step_frame = ttk.Frame(steps_row)
         self._step_frame.pack(side=tk.LEFT)
-        self._hint = ttk.Label(self, text="", font=FONT_HINT, foreground="#555")
+        self._hint = ttk.Label(steps_row, text="", font=FONT_HINT, foreground=COLOR_MUTED)
         self._hint.pack(side=tk.LEFT, padx=(12, 0))
+
+        # P7 Slice B — the single "Next step:" line + advance button (the spine is
+        # the one teacher). Replaces the always-on lane flow-verb row.
+        next_row = ttk.Frame(self)
+        next_row.pack(side=tk.TOP, fill=tk.X, pady=(2, 0))
+        ttk.Label(next_row, text="Next step:", font=FONT_UI_BOLD).pack(side=tk.LEFT, padx=(0, 6))
+        self._next_var = tk.StringVar(value="")
+        ttk.Label(next_row, textvariable=self._next_var, font=FONT_HINT, foreground=COLOR_ACCENT).pack(
+            side=tk.LEFT
+        )
+        self._advance_btn = ttk.Button(next_row, text="", command=self._advance, width=20)
+        self._advance_blocked_var = tk.StringVar(value="")
+        self._advance_blocked_lbl = ttk.Label(
+            next_row, textvariable=self._advance_blocked_var, font=FONT_HINT, foreground=COLOR_FAIL
+        )
+
         self._rebuild_step_widgets()
         self._set_lane_hint()
 
@@ -55,7 +82,7 @@ class PipelineStatusBar(ttk.Frame):
         for key, label in self._steps:
             pill = tk.Frame(self._step_frame, relief=tk.RIDGE, borderwidth=1, padx=6, pady=2)
             pill.pack(side=tk.LEFT, padx=4)
-            lbl = tk.Label(pill, text=f"○ {label} pending", font=("Segoe UI", 9))
+            lbl = tk.Label(pill, text=f"○ {label} pending", font=FONT_UI)
             lbl.pack()
             self._pills[key] = (pill, lbl)
             bind_aps_tooltip(lbl, f"pipeline_{key}")
@@ -70,6 +97,7 @@ class PipelineStatusBar(ttk.Frame):
         self._rebuild_step_widgets()
         self._set_lane_hint()
         self.refresh()
+        self._sync_next_step()
 
     def _step_label(self, key: str, default: str) -> str:
         for step_key, label in self._steps:
@@ -80,6 +108,42 @@ class PipelineStatusBar(ttk.Frame):
     def set_current(self, key: str | None) -> None:
         self._current_key = key
         self._sync_current_markers()
+        self._sync_next_step()
+
+    def _advance(self) -> None:
+        """Run the current step's flow verb — the spine's single advance action."""
+        if self._advance_verb and self._on_advance is not None:
+            self._on_advance(self._advance_verb)
+
+    def _sync_next_step(self) -> None:
+        """Drive the one 'Next step:' line + advance button from the current step.
+
+        Disabled verbs show their reason inline (Phase 4.5 S2) instead of failing
+        only into a red string at the far end. Never auto-switches tabs.
+        """
+        guidance, verb = next_action_for(
+            self._lane,
+            self._current_key,
+            grammar_tier=self.state.grammar_set_tier,
+        )
+        self._advance_verb = verb
+        self._next_var.set(guidance)
+        if not verb:
+            # terminal / no further verb — hide the button, just show guidance
+            self._advance_btn.pack_forget()
+            self._advance_blocked_lbl.pack_forget()
+            return
+        self._advance_btn.configure(text=f"{flow_verb_label(verb)} ▸")
+        self._advance_btn.pack(side=tk.LEFT, padx=(10, 0))
+        reason = self._flow_blocked_reason(verb) if self._flow_blocked_reason else None
+        ready = self._flow_ready(verb) if self._flow_ready else True
+        if ready and not reason:
+            self._advance_btn.configure(state=tk.NORMAL)
+            self._advance_blocked_lbl.pack_forget()
+        else:
+            self._advance_btn.configure(state=tk.DISABLED)
+            self._advance_blocked_var.set(reason or "Not ready yet.")
+            self._advance_blocked_lbl.pack(side=tk.LEFT, padx=(8, 0))
 
     def _sync_current_markers(self) -> None:
         for step_key, (pill, lbl) in self._pills.items():
@@ -98,10 +162,12 @@ class PipelineStatusBar(ttk.Frame):
             lbl.configure(text=f"▣ {lbl.cget('text').lstrip('▣ ')}")
 
     def refresh(self) -> None:
+        refresh_grammar_set_tier_on_state(self.state)
         if self.state.art_domain == ArtDomain.LANDSCAPE.value:
             self._refresh_landscape()
-            return
-        self._refresh_buildings()
+        else:
+            self._refresh_buildings()
+        self._sync_next_step()
 
     def _refresh_buildings(self) -> None:
         s = self.state
@@ -128,8 +194,11 @@ class PipelineStatusBar(ttk.Frame):
             self._apply("variants", "valid")
         else:
             self._apply("variants", "pending")
+        tier_num = _tier_index(s.grammar_set_tier)
         if s.atlas_folder or s.tile_batch_path:
             self._apply("atlas", "atlas_packed")
+        elif tier_num < 4 and s.assembly_p0_passed is not True:
+            self._apply("atlas", "fail")
         else:
             self._apply("atlas", "pending")
 
@@ -169,3 +238,10 @@ def _has_material_profiles(snapshot: dict) -> bool:
         if isinstance(row, dict) and row.get("material_profile"):
             return True
     return False
+
+
+def _tier_index(tier: str | None) -> int:
+    raw = str(tier or "G0").upper()
+    if raw.startswith("G") and raw[1:].isdigit():
+        return int(raw[1:])
+    return 0

@@ -1,0 +1,11 @@
+{
+  "profile_id": "warning_paint_yellow_01",
+  "seed": 43003,
+  "generator": "concrete",
+  "size": 256,
+  "paths": {
+    "albedo": "assets/materials/textures/warning_paint_yellow_01/albedo.png",
+    "normal": "assets/materials/textures/warning_paint_yellow_01/normal.png",
+    "roughness": "assets/materials/textures/warning_paint_yellow_01/roughness.png"
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "facility_binding_v1.schema.json",
+  "title": "FacilityBindingV1",
+  "description": "PLAN-INDUSTRIAL-FACILITY-GRAMMAR-001 — optional join from BuildingGrammar to catalog + chain (Layer 3 authority).",
+  "type": "object",
+  "required": [
+    "catalog_id",
+    "chain_id",
+    "supply_chain_role",
+    "power_tier"
+  ],
+  "properties": {
+    "catalog_id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$",
+      "description": "assets/configs/buildings/<catalog_id>.json"
+    },
+    "chain_id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$",
+      "description": "industrial_supply_chains.json chains key"
+    },
+    "supply_chain_role": {
+      "type": "string",
+      "minLength": 1
+    },
+    "power_tier": {
+      "type": "string",
+      "enum": ["light", "medium", "heavy", "grid"]
+    },
+    "site_template_id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$"
+    },
+    "program_axes": {
+      "type": "object",
+      "properties": {
+        "storage": { "$ref": "#/$defs/program_axis_level" },
+        "loading": { "$ref": "#/$defs/program_axis_level" },
+        "office": { "$ref": "#/$defs/program_axis_level" },
+        "service": { "$ref": "#/$defs/program_axis_level" },
+        "expansion": { "$ref": "#/$defs/program_axis_level" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "program_axis_level": {
+      "type": "string",
+      "enum": ["low", "medium", "high"]
+    }
+  }
+}

@@ -53,7 +53,7 @@
     "relative_path": "debug_runs/construction_stage_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "construction_live_proof",
-    "written_at_epoch_secs": 1781482874
+    "written_at_epoch_secs": 1781756518
   },
   "build_p_star": [
     {
@@ -256,10 +256,10 @@
     "site_stage_progress_attached": true
   },
   "construction_site_stage_tick_002": {
-    "advance_site_construction_tick_wired": true,
+    "advance_site_construction_tick_wired": false,
     "gate": "CONSTRUCTION-SITE-STAGE-TICK-002",
-    "green": true,
-    "post_a001_commit_attached": true
+    "green": false,
+    "post_a001_commit_attached": false
   },
   "history": {
     "last_action": null,

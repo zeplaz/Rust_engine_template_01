@@ -679,6 +679,16 @@ pub fn draw_construction_placement_debug_overlay(
                 tile_gpu.use_batched_mesh_overlay
             ));
             ui.label(format!("Build strip: {:?}", strip.active));
+            if let Some(ctx) = crate::gui::hud::grammar_read_hud::resolve_grammar_read_context(
+                &tool,
+                &registry,
+                &ghost,
+            ) {
+                ui.label(egui::RichText::new(
+                    crate::gui::hud::grammar_read_hud::format_grammar_summary_chip(&ctx),
+                )
+                .small());
+            }
         });
 
     if overlay.show_crosshairs {

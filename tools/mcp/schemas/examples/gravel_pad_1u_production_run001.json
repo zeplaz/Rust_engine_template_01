@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "job_id": "gravel_pad_1u_production_run001",
+  "batch_id": "kit_utility_power_production_001",
+  "development_tier": "production",
+  "spec_ref": "assets/staging/specs/gravel_pad_1u_production_run001.json",
+  "operation": "module_prop",
+  "params": {
+    "width_m": 2.0,
+    "height_m": 0.15,
+    "depth_m": 2.0,
+    "material_profile": "gravel_yard_01",
+    "seed": 43001,
+    "profile": "box",
+    "prop_kind": "gravel_pad"
+  },
+  "output": {
+    "glb": "assets/staging/gravel_pad_1u_production_run001/model.glb",
+    "thumbnail": "assets/staging/gravel_pad_1u_production_run001/preview.png"
+  }
+}

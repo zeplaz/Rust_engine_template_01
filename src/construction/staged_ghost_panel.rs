@@ -1,6 +1,11 @@
 //! Staged parametric placements — queue rows before commit (**CONSTRUCTION-PARAM-CODER-004** / P3-A).
 
+/// Tray Build tab owns staging in sim — no RIGHT_BOTTOM floater.
+pub const STAGED_PANEL_FLOATING_SIM: bool = false;
+
 use bevy::prelude::*;
+
+use crate::engine::states::BaseState;
 use bevy_egui::egui;
 
 use crate::gui::InputBindings;
@@ -253,6 +258,7 @@ pub fn build_all_valid_staged_rows(
 /// Staging panel + tray readout (P3-A / P3-B).
 pub fn draw_staged_placements_panel_egui_system(
     mut contexts: bevy_egui::EguiContexts,
+    base: Res<State<crate::engine::states::BaseState>>,
     strip: Res<BuildStripState>,
     tool: Res<ActiveBuildTool>,
     ghost: Res<BuildGhostState>,
@@ -269,6 +275,9 @@ pub fn draw_staged_placements_panel_egui_system(
         return Ok(());
     }
     if !matches!(tool.tool, BuildTool::Building(_)) {
+        return Ok(());
+    }
+    if matches!(base.get(), BaseState::Simulation) {
         return Ok(());
     }
     let ctx = contexts.ctx_mut()?;
@@ -298,7 +307,7 @@ pub fn draw_staged_placements_panel_egui_system(
     Ok(())
 }
 
-fn draw_staged_placements_panel_body(
+pub fn draw_staged_placements_panel_body(
     ui: &mut egui::Ui,
     book: &mut StagedPlacementBook,
     actor: Entity,

@@ -41,6 +41,8 @@ class SuiteState:
     selected_variant_key: str | None = None
     tile_batch_path: str | None = None
     atlas_folder: str | None = None
+    grammar_set_tier: str = "G0"
+    grammar_sweep_stale: bool = False
     log_lines: list[str] = field(default_factory=list)
 
     def append_log(self, line: str) -> None:

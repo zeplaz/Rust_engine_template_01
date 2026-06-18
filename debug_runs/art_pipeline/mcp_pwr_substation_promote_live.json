@@ -1,0 +1,16 @@
+{
+  "gate": "MCP-PWR-PROMOTE-SUBSTATION-001",
+  "promoted": true,
+  "registry_row": "grid_substation",
+  "ship_path_set": true,
+  "model_glb": "assets/models/modules/kit_substation_yard_production_run001/model.glb",
+  "procedural_module_id": "kit_substation_yard_production_001",
+  "green": true,
+  "_agent_meta": {
+    "schema": "mcp_pwr_substation_promote_live_v1",
+    "written_at_epoch_secs": 1781792303,
+    "profile": "MCP_PWR_SUBSTATION_PROMOTE",
+    "source_system": "mcp_pwr_utility",
+    "relative_path": "debug_runs/art_pipeline/mcp_pwr_substation_promote_live.json"
+  }
+}

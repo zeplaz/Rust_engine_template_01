@@ -29,7 +29,7 @@ NON_BOX_PROFILES: dict[str, frozenset[str]] = {
     "module_roof": frozenset({"pitched", "pitched_gable", "gable", "shed", "sawtooth"}),
     "module_window": frozenset({"mullion", "frame_mullion", "single", "arched", "curtain", "strip"}),
     "module_door": frozenset({"residential", "frame", "shop", "lod0"}),
-    "module_prop": frozenset({"l_corner", "corner", "corner_l", "chimney", "prop_chimney", "vent", "ac"}),
+    "module_prop": frozenset({"l_corner", "corner", "corner_l", "chimney", "prop_chimney", "vent", "ac", "transformer", "prop_transformer", "bus_bay", "breaker", "shack", "control_shack", "fence", "fence_chainlink", "gravel_pad", "warning_sign", "yard_kit"}),
 }
 
 ASSET_ID_PROFILE_HINTS: list[tuple[re.Pattern[str], str, str]] = [
@@ -61,6 +61,11 @@ PRODUCTION_TILEABLE_SET_IDS: frozenset[str] = frozenset(
         "roof_tile_01",
         "roof_metal_01",
         "metal_roof_01",
+        "galvanized_steel_01",
+        "gravel_yard_01",
+        "warning_paint_yellow_01",
+        "concrete_pad_01",
+        "ceramic_insulator_01",
     }
 )
 

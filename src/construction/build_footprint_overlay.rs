@@ -28,6 +28,7 @@ pub fn build_footprint_validity_overlay_egui(
     map_vp: Res<SimulationMapViewport>,
     footprint_gpu: Option<Res<super::footprint_tile_instances::FootprintTileWitness>>,
     params: Res<crate::terrain::generation::world_generator_enhanced::WorldGenParams>,
+    palette: Res<crate::gui::UiPalette>,
 ) -> Result {
     if !matches!(base.get(), BaseState::Simulation) {
         return Ok(());
@@ -87,20 +88,18 @@ pub fn build_footprint_validity_overlay_egui(
                 .order(egui::Order::Tooltip)
                 .fixed_pos(anchor + egui::vec2(tile_px * 0.45, -tile_px * 0.55))
                 .show(contexts.ctx_mut()?, |ui| {
-                    egui::Frame::new()
-                        .fill(egui::Color32::from_rgba_unmultiplied(14, 16, 22, 230))
-                        .stroke(egui::Stroke::new(1.0, color))
-                        .inner_margin(egui::Margin::symmetric(8, 4))
-                        .show(ui, |ui| {
-                            ui.label(egui::RichText::new(label).color(egui::Color32::WHITE));
-                            if !preview.report.errors.is_empty() {
-                                ui.label(
-                                    egui::RichText::new(preview.report.errors.join(", "))
-                                        .small()
-                                        .color(footprint_invalid_color()),
-                                );
-                            }
-                        });
+                    use crate::gui::hud::sim_hud_egui_theme::{
+                        body_text, caption_text, map_attached_chip_frame,
+                    };
+                    map_attached_chip_frame(&palette, color).show(ui, |ui| {
+                        ui.label(body_text(&palette, &label));
+                        if !preview.report.errors.is_empty() {
+                            ui.label(caption_text(
+                                &palette,
+                                &preview.report.errors.join(", "),
+                            ));
+                        }
+                    });
                 });
         }
     }

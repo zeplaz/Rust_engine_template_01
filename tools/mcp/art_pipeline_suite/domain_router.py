@@ -57,6 +57,94 @@ FLOW_VERBS_BY_LANE: dict[str, tuple[tuple[str, str], ...]] = {
     ),
 }
 
+# P7 Slice B — the spine is the ONE place that says "what's next". Each pipeline
+# step maps to a single advance action: (next-step guidance, flow-verb key). The
+# flow verb is the spine's "advance" button; the old always-on lane flow-verb row
+# is dropped. Terminal steps (atlas) have no further advance verb.
+NEXT_ACTION_BY_LANE: dict[str, dict[str, tuple[str, str | None]]] = {
+    ArtDomain.BUILDINGS.value: {
+        "catalog": ("Send your selected module to the Assembly step.", "send_to_assembly"),
+        "assembly": ("Assign materials, then run the ship check before you bake.", None),
+        "materials": ("Bake your variants into tiles on the Atlas step.", "bake_variants"),
+        "variants": ("Bake your variants into tiles on the Atlas step.", "bake_variants"),
+        "atlas": ("Pack the tiles into the ship atlas.", "pack_atlas"),
+    },
+    ArtDomain.LANDSCAPE.value: {
+        "presets": ("Generate the layout from your selected preset.", "generate_grammar"),
+        "grammar": ("Bake the vegetation states into tiles.", "bake_states"),
+        "states": ("Bake the vegetation states into tiles.", "bake_states"),
+        "atlas": ("Pack the tiles into the landscape atlas.", "pack_lg5_atlas"),
+    },
+}
+
+# Artist label for each flow verb (sentence-case imperative; the spine button).
+FLOW_VERB_LABELS: dict[str, str] = {
+    "send_to_assembly": "Send to Assembly",
+    "bake_variants": "Bake variants",
+    "pack_atlas": "Pack atlas",
+    "generate_grammar": "Generate layout",
+    "bake_states": "Bake states",
+    "pack_lg5_atlas": "Pack landscape atlas",
+}
+
+
+def refresh_grammar_set_tier_on_state(state: SuiteState) -> str:
+    """Cache grammar_set_tier() on suite state for spine copy."""
+    from rust_engine_mcp import grammar_build_set
+
+    body = grammar_build_set.grammar_set_tier()
+    tier = str(body.get("tier") or "G0").upper()
+    state.grammar_set_tier = tier
+    return tier
+
+
+def assembly_spine_copy_for_tier(tier: str) -> str:
+    norm = str(tier or "G0").upper()
+    if norm in ("G0", "G1"):
+        return "Generate from building type"
+    return "Tune shape bias; inspect rule chain"
+
+
+def pipeline_step_label(lane: str, step_key: str, *, grammar_tier: str | None = None) -> str:
+    if normalize_lane(lane) == ArtDomain.BUILDINGS.value and step_key == "assembly":
+        return f"Assembly · {assembly_spine_copy_for_tier(grammar_tier or 'G0').lower()}"
+    for key, label in pipeline_steps_for(lane):
+        if key == step_key:
+            return label
+    return step_key.replace("_", " ").title()
+
+
+def next_action_for(
+    lane: str,
+    step_key: str | None,
+    *,
+    grammar_tier: str | None = None,
+) -> tuple[str, str | None]:
+    """Return (guidance, flow_verb_key|None) for the current pipeline step.
+
+    The spine uses this to drive its single "Next step:" line + advance button.
+    """
+    lane_norm = normalize_lane(lane)
+    tier = str(grammar_tier or "G0").upper()
+    if lane_norm == ArtDomain.BUILDINGS.value and step_key == "assembly":
+        if tier in ("G0", "G1"):
+            return ("Generate from your building type and district.", None)
+        return ("Tune shape bias; inspect the rule chain after Generate.", None)
+
+    lane_map = NEXT_ACTION_BY_LANE[lane_norm]
+    if step_key and step_key in lane_map:
+        return lane_map[step_key]
+    # default: first step's action
+    steps = pipeline_steps_for(lane)
+    if steps:
+        return lane_map.get(steps[0][0], ("", None))
+    return ("", None)
+
+
+def flow_verb_label(key: str | None) -> str:
+    return FLOW_VERB_LABELS.get(key or "", "")
+
+
 DES_APS_E1_IA_SIGN_ID = "DES-APS-E1-IA-OPTION-D-001"
 
 CATALOG_SOURCE_BY_LANE: dict[str, str] = {

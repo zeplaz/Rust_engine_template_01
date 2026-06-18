@@ -2,7 +2,7 @@
   "program_id": "APS-EVO-E1-DOMAIN-ROUTER-001",
   "gate": "APS-E1-DOMAIN-ROUTER",
   "green": true,
-  "active_lane_default": "landscape",
+  "active_lane_default": "buildings",
   "tab_labels": {
     "buildings": [
       "Catalog",
@@ -59,7 +59,7 @@
   "catalog_source_switches": true,
   "buildings_catalog_source": "building_modules",
   "landscape_catalog_source": "landscape_presets",
-  "building_modules_count": 97,
+  "building_modules_count": 99,
   "landscape_preset_ship_count": 10,
   "modules_ok": true,
   "presets_ok": true,
@@ -86,7 +86,7 @@
     "profile": "APS_E1_DOMAIN_ROUTER",
     "relative_path": "debug_runs/aps_domain_router_live.json",
     "source_system": "aps_domain_router",
-    "written_at_epoch_secs": 1781721208,
+    "written_at_epoch_secs": 1781793743,
     "ritual": "BLANG:WIT-HON APS-EVO-E1-DOMAIN-ROUTER-001"
   },
   "witness_honesty": {

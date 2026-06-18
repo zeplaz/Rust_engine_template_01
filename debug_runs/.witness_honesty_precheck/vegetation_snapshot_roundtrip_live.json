@@ -52,7 +52,7 @@
     "relative_path": "debug_runs/vegetation_snapshot_roundtrip_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_vegetation_snapshot_roundtrip_live_witness",
-    "written_at_epoch_secs": 1781716813
+    "written_at_epoch_secs": 1781756523
   },
   "chunks_roundtrip": 1,
   "gate": "VEG-SNAPSHOT-PLAY-001",

@@ -196,6 +196,50 @@ Or: `powershell tools/mcp/scripts/designer_mcp_warehouse_phase_c.ps1`
 
 ---
 
+# BUILDING GRAMMAR LANE (G0–G4 — tools only, no prose grammars)
+
+**Program:** [`plan_aps_grammar_evolution_v1.md`](../../src/dev/plan_aps_grammar_evolution_v1.md) · content spec: [`design_grammar_archetype_family_g1_v1.md`](../../src/dev/design_grammar_archetype_family_g1_v1.md) · loop guide: [`design_grammar_iterate_tooling_v1.md`](../../src/dev/design_grammar_iterate_tooling_v1.md)
+
+**You author RON + JSON mirrors + pilot catalog rows.** Never draft grammar logic in chat — iterate with MCP/CLI until `next_actions` is empty or tier rises.
+
+```text
+Receive grammar brief / tier target
+  → designer_grammar_quality_loop (fast) — read tier + gaps + next_actions only
+  → Edit *.ron + preset JSON + _pilot_catalog.ron (content lane)
+  → validate-report arch_build_grammar <preset.json>
+  → grammar_preset_pair_validate (preset ↔ pilot ↔ grammar_id)
+  → grammar_eval_sweep (per archetype — massing ≥2 strategies)
+  → designer_grammar_quality_loop --full --write-witness
+  → grammar_set_tier --write-witness
+  → Sign-off when tier matches target + sweeps green
+```
+
+| Tool / CLI | Designer use |
+|:---|:---|
+| `designer_grammar_quality_loop` / `designer_grammar_quality_loop_tool` | **Start every session** — compressed tier, gaps, `next_actions` |
+| `grammar_set_tier` / `grammar_set_tier_tool` | Authoritative G0–G4 bar |
+| `grammar_set_brief` | Pilot/preset inventory + F-axis gaps |
+| `grammar_eval_sweep` | Seed histogram — catch single-strategy grammars |
+| `grammar_preset_pair_validate` | After each new ARCH-DNA preset |
+| `building_set_coverage` | G4 gate — axis + pilot parity |
+| `validate-report arch_build_grammar` | Schema gate on preset JSON (validation-first) |
+
+**Scripts (agents — prefer over raw pytest):**
+
+```powershell
+# Fast loop (~2s) — tier + guards only
+powershell tools/mcp/scripts/designer_grammar_iterate.ps1
+
+# After RON edits — sweeps + witness
+powershell tools/mcp/scripts/designer_grammar_iterate.ps1 -Mode full -WriteWitness
+```
+
+**Critique loop:** if `grammar_eval_sweep.green` is false or massing histogram is single-mode, **revise weights/strategies in RON** and re-run sweep — do not hand-wave “looks fine”. Tier **G1** requires `archetype_count >= 3` on disk (see GRAM-CONTENT-002).
+
+**APS coupling:** @designer owns exposure IA; @coder-mcp implements `apply_grammar_tier` in APS — your witness must match disk (`list_archetype_ids()`), not aspirational copy.
+
+---
+
 # RULE REFLECTION (always explicit)
 
 On every request, emit a compressed rules block — even when passing:

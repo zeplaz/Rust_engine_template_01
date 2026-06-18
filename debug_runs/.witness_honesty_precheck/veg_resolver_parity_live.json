@@ -52,9 +52,10 @@
     "relative_path": "debug_runs/art_pipeline/veg_resolver_parity_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_veg_resolver_parity_live_witness",
-    "written_at_epoch_secs": 1781715768
+    "written_at_epoch_secs": 1781756523
   },
   "byte_parity": true,
+  "catalog_clamp_green": true,
   "catalog_path": "assets/configs/landscape/_vegetation_variant_catalog.ron",
   "catalog_topology_count": 22,
   "catalog_veg_count": 13,

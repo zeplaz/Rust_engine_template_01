@@ -148,6 +148,8 @@ pub struct HudProductShellEguiParams<'w> {
     growth_queue: ResMut<'w, GrowthProposalQueue>,
     growth_policy: Option<Res<'w, AutoBuildPolicyBook>>,
     ecology_growth_hint: Option<Res<'w, crate::gui::construction_growth_inspector::EcologyGrowthHint>>,
+    base: Res<'w, State<crate::engine::BaseState>>,
+    compositor: Option<Res<'w, crate::render::MinimapCompositorState>>,
 }
 
 /// One egui context pass for docked HUD widgets; individual drawers early-out when suspended.
@@ -233,6 +235,10 @@ pub fn hud_product_shell_egui_root(
         .update_budget
         .set_bypass_throttle(panels.pending_layout.drag_active || panels.minimap.diagnostic_ui_wrote_camera);
     if let Some(tex_id) = minimap_tex {
+        let minimap_overlays = panels.map_views.minimap.overlays;
+        let ecology_rows = panels.compositor.as_ref().map(|c| c.ecology_rows).unwrap_or(0);
+        let veg_burn_rows = panels.compositor.as_ref().map(|c| c.veg_burn_rows).unwrap_or(0);
+        let base_state = *panels.base.get();
         let minimap_presentation = &mut panels.map_views.minimap;
         draw_simulation_minimap_egui(
             ctx,
@@ -257,6 +263,10 @@ pub fn hud_product_shell_egui_root(
             &mut panels.pending_layout,
             &mut panels.map_view_interaction.minimap,
             &mut panels.active_map_input,
+            base_state,
+            &minimap_overlays,
+            ecology_rows,
+            veg_burn_rows,
         );
         if panels.minimap.cached_texture_revision != *minimap_legend_revision {
             *minimap_legend_revision = panels.minimap.cached_texture_revision;

@@ -5,7 +5,7 @@
     "dispatch_witness": "debug_runs/agent_ops/aps_uiux_overhaul_dispatch_live.json",
     "p0_gate": "OVR-P0-DESIGN-LOCK signed 2026-06-17 — enforced",
     "program_id": "PLAN-APS-UIUX-OVERHAUL-001",
-    "program_status": "CLOSE_PENDING",
+    "program_status": "CLOSED",
     "date": "2026-06-17",
     "plan_doc": "src/dev/plan_aps_uiux_overhaul_20260616_v1.md",
     "board": "src/dev/aps_uiux_overhaul_agent_todos_v1.md",
@@ -47,7 +47,7 @@
     "designer-mcp": "DMCP-OVR-ARTIST-ACCEPT-001 done — 8/10",
     "coder_a": "idle — no APS Tk scope",
     "coder_b": "idle — no APS Tk scope",
-    "operator": "OVR-P6-OPERATOR-EYEBALL-001 ★ PICK (NEEDS-DISPLAY)"
+    "operator": "idle — OVR-P6-OPERATOR-EYEBALL-001 done (oz approved)"
   },
   "phase_legend": {
     "P0": "Design-system lock (GATE)",
@@ -376,12 +376,8 @@
       "wave": 8,
       "id": "OVR-DES-P56-ONBOARD-SPEC-001",
       "status": "done",
-      "signed_date": "2026-06-02",
-      "priority": "P1",
-      "owner": "designer",
-      "depends_on": ["OVR-P0-DESIGN-LOCK", "OVR-DES-P45-SPINE-SPEC-001"],
-      "goal": "Onboarding copy: How this works, empty states per tab, dismiss persistence",
-      "deliverable": "src/dev/design_aps_uiux_onboard_spec_v1.md",
+      "signed_date": "2026-06-17",
+      "witness": "src/dev/design_aps_uiux_onboard_spec_v1.md",
       "blocks": ["OVR-P56-ONBOARD-001"]
     },
     {
@@ -431,7 +427,10 @@
       "phase": "P6",
       "wave": 9,
       "id": "OVR-P6-OPERATOR-EYEBALL-001",
-      "status": "ready",
+      "status": "done",
+      "completed_date": "2026-06-02",
+      "operator": "oz",
+      "verdict": "PASS",
       "priority": "P0",
       "owner": "operator",
       "depends_on": ["OVR-P6-CLOSE-001"],

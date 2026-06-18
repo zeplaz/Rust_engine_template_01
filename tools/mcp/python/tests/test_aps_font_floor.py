@@ -29,10 +29,10 @@ ALLOWLIST = {
     ("aps_theme.py", "FONT_CAPTION"),
 }
 
-EIGHT_PX = re.compile(r'\(\s*"(?:Segoe UI|Consolas)"\s*,\s*8\b')
+EIGHT_PX = re.compile(r'\(\s*"(?:Segoe UI|Consolas)"\s*,\s*([0-8])\b')
 
 
-def test_no_8px_font_on_primary_labels():
+def test_no_sub_nine_px_font_on_primary_labels():
     offenders: list[str] = []
     for path in sorted(SUITE.glob("*.py")):
         for i, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):

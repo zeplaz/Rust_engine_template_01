@@ -39,6 +39,7 @@ pub struct MinimapCompositorHeatSources<'w> {
     pub operational: Option<Res<'w, MinimapOperationalSnapshot>>,
     pub construction_channel: Option<Res<'w, ConstructionPhaseGpuChannel>>,
     pub replay: Option<Res<'w, crate::systems::sim_frame_delta::CommittedSimReplayRing>>,
+    pub veg_extract: Option<Res<'w, crate::render::extraction::VegetationExtractFrame>>,
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -70,6 +71,10 @@ pub struct MinimapCompositorState {
     pub units_heat_enabled: bool,
     pub unit_marker_rows: u32,
     pub replay_scrub_enabled: bool,
+    /// **VEG-MINIMAP-BURN-MERGE-001** — rows merged from `VegetationExtractFrame`.
+    pub veg_burn_rows: u32,
+    pub burn_overrides_topology: bool,
+    pub veg_extract_revision: u64,
 }
 
 /// Allocate committed minimap RT immediately on sim enter so Bevy chrome never binds CPU terrain.
@@ -316,7 +321,19 @@ pub fn run_minimap_compositor_pass(
         .ecology
         .as_ref()
         .map(|e| e.ecology_chunk_count.max(e.chunk_rows.len() as u32))
-        .unwrap_or(0);
+        .unwrap_or(0)
+        .max(
+            heat_sources
+                .veg_extract
+                .as_ref()
+                .map(|v| {
+                    v.rows
+                        .iter()
+                        .filter(|r| r.burn_active && r.variant_key.starts_with("veg_burn_"))
+                        .count() as u32
+                })
+                .unwrap_or(0),
+        );
     let fallback_revision = raster_dirty.as_ref().map(|r| r.revision()).unwrap_or(0);
     let overlays = map_views.minimap.overlays;
     let fingerprint = composite_fingerprint(
@@ -390,6 +407,7 @@ pub fn run_minimap_compositor_pass(
         ew_rows,
         unit_marker_rows,
         replay_scrub_enabled,
+        veg_merge,
     ) = upload_minimap_heat_textures(
         &mut images,
         &mut heat,
@@ -400,6 +418,7 @@ pub fn run_minimap_compositor_pass(
         heat_sources.operational.as_deref(),
         heat_sources.construction_channel.as_deref(),
         heat_sources.replay.as_deref(),
+        heat_sources.veg_extract.as_deref(),
         &map_views,
         &fallback,
         extent,
@@ -453,6 +472,13 @@ pub fn run_minimap_compositor_pass(
     compositor.units_heat_enabled = overlays.units;
     compositor.unit_marker_rows = unit_marker_rows;
     compositor.replay_scrub_enabled = replay_scrub_enabled;
+    compositor.veg_burn_rows = veg_merge.veg_burn_rows;
+    compositor.burn_overrides_topology = veg_merge.burn_overrides_topology;
+    compositor.veg_extract_revision = heat_sources
+        .veg_extract
+        .as_ref()
+        .map(|v| v.revision)
+        .unwrap_or(0);
     compositor.composite_path = MinimapCompositePath::GpuCompute;
     shell.compositor_revision = compositor.compositor_revision;
     shell.cached_texture_revision = compositor.stamp;

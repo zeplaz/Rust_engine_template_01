@@ -1047,6 +1047,7 @@ fn spawn_simulation_command_shell(
                             ContextTrayTab::Events,
                             ContextTrayTab::Intel,
                             ContextTrayTab::Logistics,
+                            ContextTrayTab::Build,
                             ContextTrayTab::Diagnostics,
                         ] {
                             tabs.spawn((

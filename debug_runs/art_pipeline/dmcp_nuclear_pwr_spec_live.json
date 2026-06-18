@@ -1,0 +1,61 @@
+{
+  "gate": "DMCP-SPEC-NUCLEAR-PWR-001",
+  "asset_id": "kit_nuclear_pwr_production_001",
+  "spec_file_exists": true,
+  "grid_units": [
+    6,
+    6
+  ],
+  "utility_role": "nuclear",
+  "plant_definition_id": "pwr_4loop_1100mw_v1",
+  "hero_module": {
+    "module_id": "containment_dome_pwr",
+    "grid": [
+      3,
+      3
+    ]
+  },
+  "module_whitelist": [
+    "containment_dome_pwr",
+    "cooling_tower_1u",
+    "diesel_gen_pad_2x2",
+    "fence_chainlink_1u",
+    "switchyard_edge_1u",
+    "turbine_hall_1u",
+    "warning_sign_nuclear_1u"
+  ],
+  "checks": {
+    "spec_file_exists": true,
+    "dmcp_doc_exists": true,
+    "asset_id": true,
+    "grid_units_6x6": true,
+    "utility_role_nuclear": true,
+    "plant_definition_id": true,
+    "hero_module": true,
+    "whitelist_complete": true,
+    "composition_covers_whitelist": true,
+    "spec_only_flag": true,
+    "bpy_blocked": true,
+    "development_tier_production": true
+  },
+  "errors": [],
+  "spec_only": true,
+  "bpy_blocked": true,
+  "audit_complete": true,
+  "green": true,
+  "verdict": "PASS",
+  "handoff": {
+    "coder_mcp": "MCP-PWR-NUCLEAR-BATCH-001",
+    "deliverable": "assets/staging/specs/kit_nuclear_pwr_production_001.json",
+    "dmcp_doc": "src/dev/dmcp_spec_nuclear_pwr_v1.md"
+  },
+  "_agent_meta": {
+    "schema": "dmcp_nuclear_pwr_spec_live_v1",
+    "written_at_epoch_secs": 1781792318,
+    "profile": "DMCP_NUCLEAR_PWR_SPEC",
+    "source_system": "dmcp_nuclear_pwr_spec",
+    "relative_path": "debug_runs/art_pipeline/dmcp_nuclear_pwr_spec_live.json",
+    "ritual": "BLANG:WIT-HON\u2192Q\u2713 DMCP-SPEC-NUCLEAR-PWR-001",
+    "agent": "designer-mcp"
+  }
+}

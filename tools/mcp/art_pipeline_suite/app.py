@@ -46,6 +46,7 @@ from .aps_theme import (
     COLOR_LANE_LANDSCAPE,
     COLOR_MUTED,
     COLOR_PANEL_BG,
+    COLOR_TEXT_BODY,
     FONT_HINT,
     FONT_UI_BOLD,
     GAP_MD,
@@ -61,10 +62,6 @@ from .domain_router import (
 
     clear_cross_lane_selection,
 
-    flow_verbs_for,
-
-    FLOW_CAVEAT,
-
     load_active_lane,
 
     pipeline_steps_for,
@@ -74,6 +71,7 @@ from .domain_router import (
 )
 
 from .aps_collapsible import CollapsibleSection
+from .aps_headless import apply_headless_root, headless_tests_enabled
 
 from .aps_scroll import init_aps_scroll
 
@@ -97,15 +95,20 @@ class ArtPipelineSuiteApp(tk.Tk):
 
         super().__init__()
 
+        if headless_tests_enabled():
+            apply_headless_root(self)
+
         init_aps_ttk(self)
 
         init_aps_scroll(self)
 
         self.title("Rust Engine — Art Pipeline Suite")
 
-        w, h = DEFAULT_WINDOW_SIZE
-
-        self.geometry(f"{w}x{h}")
+        if headless_tests_enabled():
+            self.geometry("1x1+-20000+-20000")
+        else:
+            w, h = DEFAULT_WINDOW_SIZE
+            self.geometry(f"{w}x{h}")
 
         self.minsize(*MIN_WINDOW_SIZE)
 
@@ -119,18 +122,27 @@ class ArtPipelineSuiteApp(tk.Tk):
 
         self._lane_var = tk.StringVar(value=self.state.art_domain)
 
-        self._flow_buttons: dict[str, ttk.Button] = {}
-
         self._build_lane_bar()
 
-        self._build_flow_bars()
+        # P7 Slice B — flow-verb handlers are kept (the spine's advance action runs
+        # them) but the always-on lane flow-verb ROW is dropped: the pipeline spine
+        # is now the single nav surface.
+        self._flow_handlers = {
+            **self._buildings_flow_handlers(),
+            **self._landscape_flow_handlers(),
+        }
 
         self._chrome_row2 = ttk.Frame(self, padding=(GAP_MD, 0, GAP_MD, 2))
 
         self._build_authority_strip(self._chrome_row2)
 
         self.pipeline_status = PipelineStatusBar(
-            self._chrome_row2, self.state, on_step_click=self._on_pipeline_step
+            self._chrome_row2,
+            self.state,
+            on_step_click=self._on_pipeline_step,
+            on_advance=self._on_spine_advance,
+            flow_ready=self._flow_verb_ready,
+            flow_blocked_reason=self._flow_verb_blocked_reason,
         )
 
         self.pipeline_status.pack(side=tk.RIGHT, fill=tk.X, expand=True)
@@ -139,13 +151,16 @@ class ArtPipelineSuiteApp(tk.Tk):
 
         self.job_strip = JobStrip(self, self.jobs)
 
+        # P7 Slice C — ≤2 always-on chrome rows ABOVE the work area (lane bar +
+        # the pipeline-spine row). The collapsible status log moves BELOW the
+        # notebook so it no longer eats height above the work surface.
         self._status_log_frame = ttk.Frame(self, padding=(8, 0, 8, 8))
-
-        self._pack_status_log()
 
         self._notebook_container = ttk.Frame(self)
 
-        self._notebook_container.pack(fill=tk.BOTH, expand=True, padx=8, pady=4)
+        self._notebook_container.pack(side=tk.TOP, fill=tk.BOTH, expand=True, padx=8, pady=4)
+
+        self._pack_status_log()
 
         self._notebook_buildings = ttk.Notebook(self._notebook_container)
 
@@ -171,7 +186,8 @@ class ArtPipelineSuiteApp(tk.Tk):
             return
         mark_onboarding_seen()
         self._log(
-            "Welcome — use the pipeline pills to move Catalog → Materials → Assembly → Variants → Atlas."
+            "Welcome — follow the pipeline at the top: Catalog → Materials → Assembly → Variants → Atlas. "
+            "The Next step line tells you what to do."
         )
 
     def _build_lane_bar(self) -> None:
@@ -200,8 +216,8 @@ class ArtPipelineSuiteApp(tk.Tk):
         self._lane_landscape_btn.pack(side=tk.LEFT, padx=4)
         self._lane_underline = tk.Frame(wrap, height=2, bg=COLOR_LANE_BUILDING)
         self._lane_underline.pack(fill=tk.X, pady=(2, 0))
-        self._lane_flow_host = ttk.Frame(bar)
-        self._lane_flow_host.pack(side=tk.RIGHT, fill=tk.X, expand=True)
+        # P7 Slice B — the lane bar no longer carries flow-verb buttons; the
+        # pipeline spine (row 2) is the single advance surface.
 
 
 
@@ -229,12 +245,6 @@ class ArtPipelineSuiteApp(tk.Tk):
 
             self.notebook = self._notebook_landscape
 
-            self._flow_buildings.pack_forget()
-
-            self._flow_buildings.pack(side=tk.RIGHT, fill=tk.X, expand=True)
-
-            self._flow_landscape.pack_forget()
-
         else:
 
             self._notebook_landscape.pack_forget()
@@ -242,12 +252,6 @@ class ArtPipelineSuiteApp(tk.Tk):
             self._notebook_buildings.pack(fill=tk.BOTH, expand=True)
 
             self.notebook = self._notebook_buildings
-
-            self._flow_landscape.pack_forget()
-
-            self._flow_buildings.pack_forget()
-
-            self._flow_landscape.pack(side=tk.RIGHT, fill=tk.X, expand=True)
 
         self._authority_var.set(authority_for(lane))
         fg = COLOR_LANE_BUILDING if lane == ArtDomain.BUILDINGS.value else COLOR_LANE_LANDSCAPE
@@ -308,53 +312,22 @@ class ArtPipelineSuiteApp(tk.Tk):
 
 
 
-    def _build_flow_bars(self) -> None:
+    def _on_spine_advance(self, verb: str) -> None:
+        """The spine's single advance action — runs the lane/step flow verb."""
+        handler = self._flow_handlers.get(verb)
+        if handler is not None:
+            handler()
 
-        self._flow_buildings = self._lane_flow_host
+    def _flow_verb_blocked_reason(self, verb: str) -> str | None:
+        """Readiness reason for the spine advance button (Phase 4.5 S2).
 
-        self._flow_landscape = ttk.Frame(self._lane_flow_host)
+        Returned inline by the spine when the verb is not yet runnable — no modal,
+        no whisper at the far end of the bar.
+        """
+        return flow_prerequisite_message(verb, self.state)
 
-        for frame, lane, handlers in (
-
-            (self._flow_buildings, ArtDomain.BUILDINGS.value, self._buildings_flow_handlers()),
-
-            (self._flow_landscape, ArtDomain.LANDSCAPE.value, self._landscape_flow_handlers()),
-
-        ):
-
-            ttk.Label(frame, text="Flow:").pack(side=tk.LEFT, padx=(12, 0))
-
-            for key, label in flow_verbs_for(lane):
-
-                handler = handlers[key]
-
-                btn = ttk.Button(frame, text=label, command=handler)
-
-                btn.pack(side=tk.LEFT, padx=4)
-
-                self._flow_buttons[key] = btn
-
-        self._flow_hint_var = tk.StringVar(value="")
-
-        self._flow_hint_lbl = ttk.Label(
-
-            self._flow_buildings, textvariable=self._flow_hint_var, foreground="#8b0000", font=FONT_HINT
-
-        )
-
-        self._flow_hint_lbl.pack(side=tk.LEFT, padx=(12, 0))
-
-        self._flow_hint_lbl_land = ttk.Label(
-
-            self._flow_landscape, textvariable=self._flow_hint_var, foreground="#8b0000", font=FONT_HINT
-
-        )
-
-        self._flow_hint_lbl_land.pack(side=tk.LEFT, padx=(12, 0))
-
-        self._flow_landscape.pack_forget()
-
-
+    def _flow_verb_ready(self, verb: str) -> bool:
+        return self._flow_verb_blocked_reason(verb) is None
 
     def _buildings_flow_handlers(self) -> dict[str, object]:
 
@@ -386,17 +359,17 @@ class ArtPipelineSuiteApp(tk.Tk):
 
     def _show_flow_prerequisite(self, action: str) -> bool:
 
+        # P7 Slice B — the spine disables a not-ready advance button and shows the
+        # reason inline; this guard remains as a safety net (e.g. keyboard / future
+        # callers) and logs the reason rather than surfacing a far-end red string.
+
         msg = flow_prerequisite_message(action, self.state)
 
         if msg:
 
-            self._flow_hint_var.set(msg)
-
             self._log(msg)
 
             return False
-
-        self._flow_hint_var.set("")
 
         return True
 
@@ -556,7 +529,8 @@ class ArtPipelineSuiteApp(tk.Tk):
 
     def _pack_status_log(self) -> None:
 
-        self._status_log_frame.pack(fill=tk.BOTH, expand=False)
+        # Bottom band, below the work area (Slice C — not an above-the-fold chrome row).
+        self._status_log_frame.pack(side=tk.BOTTOM, fill=tk.X, expand=False)
 
         self._status_log_section = CollapsibleSection(
 
@@ -578,7 +552,7 @@ class ArtPipelineSuiteApp(tk.Tk):
 
             textvariable=self.status_summary_var,
 
-            foreground="#333",
+            foreground=COLOR_TEXT_BODY,
 
         ).pack(anchor=tk.W)
 
@@ -794,17 +768,27 @@ class ArtPipelineSuiteApp(tk.Tk):
 
             return
 
+        # P7 Slice B / S4 — narrate the multi-step work instead of running it silent.
+
         self.notebook.select(self.variants._aps_tab_root)
 
         if not self.state.variant_set_data:
 
+            self._log("Bake variants — step 1: created a variant set from this assembly.")
+
             self.variants.on_new_from_assembly()
+
+        else:
+
+            self._log("Bake variants — step 1: using your existing variant set.")
+
+        self._log("Bake variants — step 2: expanding the variant set into a tile job.")
 
         self.atlas.on_batch_from_variant_set()
 
         self.notebook.select(self.atlas._aps_tab_root)
 
-        self._log("bake variants → tile_batch prepared on Atlas tab")
+        self._log("Bake variants — step 3: tile job prepared on the Atlas step. Pack it next.")
 
 
 
@@ -871,7 +855,7 @@ class ArtPipelineSuiteApp(tk.Tk):
 
         self.pipeline_status.refresh()
 
-        self._log("bake states → tile_batch scaffold on Landscape Atlas tab")
+        self._log("Bake states — tile job prepared on the Landscape Atlas step.")
 
 
 
@@ -891,11 +875,11 @@ class ArtPipelineSuiteApp(tk.Tk):
             self.landscape_atlas.on_pack()
             self.state.landscape_stamp_registered = True
             self.pipeline_status.refresh()
-            self._log("Pack LG-5 atlas — stamp registered (scaffold)")
+            self._log("Pack landscape atlas — tiles registered for the map.")
 
         else:
 
-            self._log("Pack LG-5 atlas — run bake states or set PNG folder on Landscape Atlas tab")
+            self._log("Pack landscape atlas — bake states or set a PNG folder on the Landscape Atlas step first.")
 
 
 

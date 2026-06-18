@@ -1,0 +1,11 @@
+{
+  "profile_id": "gravel_yard_01",
+  "seed": 43002,
+  "generator": "concrete",
+  "size": 256,
+  "paths": {
+    "albedo": "assets/materials/textures/gravel_yard_01/albedo.png",
+    "normal": "assets/materials/textures/gravel_yard_01/normal.png",
+    "roughness": "assets/materials/textures/gravel_yard_01/roughness.png"
+  }
+}

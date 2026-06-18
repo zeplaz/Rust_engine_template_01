@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "job_id": "prop_transformer_production_run001",
+  "batch_id": "kit_utility_power_production_001",
+  "development_tier": "production",
+  "spec_ref": "assets/staging/specs/prop_transformer_production_run001.json",
+  "operation": "module_prop",
+  "params": {
+    "width_m": 3.6,
+    "height_m": 1.5,
+    "depth_m": 3.6,
+    "material_profile": "galvanized_steel_01",
+    "seed": 43020,
+    "profile": "box",
+    "prop_kind": "transformer",
+    "name": "prop_transformer_production_run001"
+  },
+  "output": {
+    "glb": "assets/staging/prop_transformer_production_run001/model.glb",
+    "thumbnail": "assets/staging/prop_transformer_production_run001/preview.png"
+  }
+}

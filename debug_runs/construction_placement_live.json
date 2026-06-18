@@ -52,7 +52,7 @@
     "relative_path": "debug_runs/construction_placement_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_construction_placement_live_witness",
-    "written_at_epoch_secs": 1781716709
+    "written_at_epoch_secs": 1781756518
   },
   "authority_drift": false,
   "cursor_delta_px": 0.0,

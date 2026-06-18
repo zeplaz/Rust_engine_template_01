@@ -17,7 +17,7 @@ from rust_engine_mcp.paths import repo_root
 from .aps_inline_feedback import set_inline_status
 from .aps_scroll import attach_wheel_area, bind_debounced_scrollregion, canvas_yscroll
 from .aps_theme import FONT_HINT, FONT_SMALL
-from .metadata_flow_panel import MetadataFlowPanel
+from .aps_workflow_layout import workflow_intro, workflow_primary_row
 from .state import SuiteState
 
 _DISPLAY_STRINGS_REL = "assets/configs/landscape/presets/_display_strings_v1.json"
@@ -87,11 +87,12 @@ class LandscapePresetsPanel(ttk.Frame):
         self.refresh_list()
 
     def _build(self) -> None:
-        self.metadata_flow = MetadataFlowPanel(self, context="landscape_presets")
-        self.metadata_flow.pack(fill=tk.X, pady=(0, 6))
-        bar = ttk.Frame(self)
-        bar.pack(fill=tk.X, pady=(0, 4))
-        ttk.Label(bar, text="Landscape presets", font=("Segoe UI", 9, "bold")).pack(side=tk.LEFT)
+        workflow_intro(
+            self,
+            "Pick a landscape preset, validate it, then use Grammar and States tabs to author the ship path.",
+        )
+        bar = workflow_primary_row(self)
+        ttk.Label(bar, text="Presets", font=("Segoe UI", 9, "bold")).pack(side=tk.LEFT)
         refresh_btn = ttk.Button(bar, text="Refresh", command=self.refresh_list)
         refresh_btn.pack(side=tk.RIGHT)
         validate_btn = ttk.Button(bar, text="Validate preset", command=self._validate_selected)
@@ -188,11 +189,10 @@ class LandscapePresetsPanel(ttk.Frame):
         self.state.landscape_preset_validate_ok = ok
         badge = _ship_badge(pid, ok)
         self._q5.set(f"Ship status: {badge}")
-        prefix = "PASS:" if ok else "FAIL:"
         set_inline_status(
             self._validate_lbl,
             self._validate_var,
-            f"{prefix} landscape_grammar — {report.summary}",
+            report.summary,
             ok=ok,
         )
         self._on_log(f"validate landscape_grammar · {pid} · {report.status}")

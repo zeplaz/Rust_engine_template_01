@@ -1,0 +1,275 @@
+{
+  "gate": "DMCP-ART-SPINE-HUB-WAVE-001",
+  "lanes": [
+    "DMCP-LG5-KEYFRAME-QC-001",
+    "DMCP-TILE-ROWHOUSE-V2-001",
+    "DES-GRAM-ARCHETYPE-CIVIC-001",
+    "DMCP-MAT-PROFILE-PILOT-002"
+  ],
+  "slice_count": 4,
+  "done_count": 4,
+  "rows": [
+    {
+      "id": "DMCP-LG5-KEYFRAME-QC-001",
+      "deliverable": "src/dev/design_landscape_lg5_keyframe_qc_v1.md",
+      "deliverable_exists": true,
+      "status": "done",
+      "verdict": "PASS_WITH_NOTES",
+      "audit": {
+        "green": true,
+        "verdict": "PASS_WITH_NOTES",
+        "checks": {
+          "reqs_doc": true,
+          "batch_variant_count_16": true,
+          "all_keyframes_on_disk": true,
+          "all_64px": true,
+          "seed_in_batch": true,
+          "ship_false": true
+        },
+        "g4_minimum_in_batch": {
+          "topology_patch_burn_04": true,
+          "topology_patch_scar": true,
+          "topology_corridor_regrowth_grass": false
+        },
+        "png_rows": [
+          {
+            "variant_key": "topology_patch",
+            "exists": true,
+            "size": [
+              64,
+              64
+            ],
+            "size_64": true
+          },
+          {
+            "variant_key": "topology_patch_scar",
+            "exists": true,
+            "size": [
+              64,
+              64
+            ],
+            "size_64": true
+          },
+          {
+            "variant_key": "topology_patch_burn_00",
+            "exists": true,
+            "size": [
+              64,
+              64
+            ],
+            "size_64": true
+          },
+          {
+            "variant_key": "topology_patch_burn_04",
+            "exists": true,
+            "size": [
+              64,
+              64
+            ],
+            "size_64": true
+          },
+          {
+            "variant_key": "topology_patch_regrowth_grass",
+            "exists": true,
+            "size": [
+              64,
+              64
+            ],
+            "size_64": true
+          },
+          {
+            "variant_key": "topology_patch_regrowth_shrub",
+            "exists": true,
+            "size": [
+              64,
+              64
+            ],
+            "size_64": true
+          },
+          {
+            "variant_key": "topology_corridor",
+            "exists": true,
+            "size": [
+              64,
+              64
+            ],
+            "size_64": true
+          },
+          {
+            "variant_key": "topology_corridor_scar",
+            "exists": true,
+            "size": [
+              64,
+              64
+            ],
+            "size_64": true
+          },
+          {
+            "variant_key": "topology_corridor_burn_00",
+            "exists": true,
+            "size": [
+              64,
+              64
+            ],
+            "size_64": true
+          },
+          {
+            "variant_key": "topology_corridor_burn_04",
+            "exists": true,
+            "size": [
+              64,
+              64
+            ],
+            "size_64": true
+          },
+          {
+            "variant_key": "topology_ring",
+            "exists": true,
+            "size": [
+              64,
+              64
+            ],
+            "size_64": true
+          },
+          {
+            "variant_key": "topology_ring_burn_00",
+            "exists": true,
+            "size": [
+              64,
+              64
+            ],
+            "size_64": true
+          },
+          {
+            "variant_key": "topology_cluster",
+            "exists": true,
+            "size": [
+              64,
+              64
+            ],
+            "size_64": true
+          },
+          {
+            "variant_key": "topology_cluster_regrowth_grass",
+            "exists": true,
+            "size": [
+              64,
+              64
+            ],
+            "size_64": true
+          },
+          {
+            "variant_key": "topology_fringe",
+            "exists": true,
+            "size": [
+              64,
+              64
+            ],
+            "size_64": true
+          },
+          {
+            "variant_key": "topology_fringe_regrowth_grass",
+            "exists": true,
+            "size": [
+              64,
+              64
+            ],
+            "size_64": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "DMCP-TILE-ROWHOUSE-V2-001",
+      "deliverable": "src/dev/design_rowhouse_v2_operator_qc_v1.md",
+      "deliverable_exists": true,
+      "status": "done",
+      "verdict": "PASS",
+      "audit": {
+        "green": true,
+        "verdict": "PASS",
+        "checks": {
+          "variant_set_on_disk": true,
+          "atlas_meta_on_disk": true,
+          "variant_count_14": true,
+          "damage_frames": true,
+          "burn_frames_8": true,
+          "atlas_matches_variant_set": true,
+          "fire_tags": true
+        },
+        "variant_keys": [
+          "burning_00",
+          "burning_01",
+          "burning_02",
+          "burning_03",
+          "burning_04",
+          "burning_05",
+          "burning_06",
+          "burning_07",
+          "clean_day",
+          "clean_night_off",
+          "clean_night_on",
+          "damaged_day",
+          "damaged_night_on",
+          "under_construction_01"
+        ]
+      }
+    },
+    {
+      "id": "DES-GRAM-ARCHETYPE-CIVIC-001",
+      "deliverable": "src/dev/design_civic_block_concept_v1.md",
+      "deliverable_exists": true,
+      "status": "done",
+      "verdict": "PASS",
+      "audit": {
+        "green": true,
+        "verdict": "PASS",
+        "checks": {
+          "doc_on_disk": true,
+          "civic_block_id": true,
+          "archetype_civic_block": true,
+          "massing_stepped_block": true,
+          "g2_seed_note": true,
+          "no_ron_on_disk": true
+        }
+      }
+    },
+    {
+      "id": "DMCP-MAT-PROFILE-PILOT-002",
+      "deliverable": "src/dev/design_mat_profile_pilot_002_v1.md",
+      "deliverable_exists": true,
+      "status": "done",
+      "verdict": "PASS",
+      "audit": {
+        "green": true,
+        "verdict": "PASS",
+        "checks": {
+          "pack_on_disk": true,
+          "profile_count_24": true,
+          "unique_ids": true,
+          "spec_only": true,
+          "categories_match_leaves": true,
+          "deterministic_seeds": true
+        },
+        "profile_count": 24
+      }
+    }
+  ],
+  "audit_complete": true,
+  "green": true,
+  "verdict": "PASS_WITH_NOTES",
+  "handoff": {
+    "lg5_g4": "operator manual keyframes for corridor regrowth",
+    "civic_ron": "GRAM-CONTENT-005 @coder-mcp",
+    "mat_merge": "@coder-mcp validate material_profiles"
+  },
+  "_agent_meta": {
+    "schema": "dmcp_art_spine_hub_wave_live_v1",
+    "written_at_epoch_secs": 1781792396,
+    "profile": "DMCP_ART_SPINE_HUB",
+    "source_system": "dmcp_art_spine_hub_wave",
+    "relative_path": "debug_runs/art_pipeline/dmcp_art_spine_hub_wave_live.json",
+    "ritual": "BLANG:WIT-HON\u2192Q\u2713 DMCP-ART-SPINE-HUB",
+    "agent": "designer-mcp"
+  }
+}

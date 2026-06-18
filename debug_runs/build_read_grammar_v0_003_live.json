@@ -52,7 +52,7 @@
     "relative_path": "debug_runs/build_read_grammar_v0_003_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_build_read_grammar_v0_003_live_witness",
-    "written_at_epoch_secs": 1781373356
+    "written_at_epoch_secs": 1781756518
   },
   "beta_exp_multiplier": 1.0199999809265137,
   "gate_id": "BUILD-READ-GRAMMAR-v0-003",

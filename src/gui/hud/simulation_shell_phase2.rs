@@ -58,12 +58,16 @@ pub fn command_left_stack_footprint_px(collapsed: bool) -> f32 {
     }
 }
 
-/// Screen rect for build-rail submenu popup (pointer gate hit test).
+/// Screen rect for build picker sheet (pointer gate hit test).
 #[must_use]
 pub fn sim_build_rail_submenu_block_rect() -> egui::Rect {
-    let anchor_x = CONTEXT_RAIL_W_PX + COMMAND_LEFT_STACK_COLUMN_GAP_PX + BUILD_RAIL_W_PX + 8.0;
-    let anchor_y = 96.0;
-    egui::Rect::from_min_size(egui::pos2(anchor_x, anchor_y), egui::vec2(280.0, 420.0))
+    crate::gui::hud::sim_build_picker_sheet::sim_build_picker_sheet_rect(
+        &crate::gui::hud::sim_build_picker_sheet::SimBuildPickerState {
+            open: true,
+            category: crate::gui::hud::sim_build_picker_sheet::BuildPickerCategory::Industry,
+            anchor_slot: crate::construction::ToolContext::Industry,
+        },
+    )
 }
 
 /// P3 — map viewport inset frame.
@@ -133,6 +137,7 @@ pub enum ContextTrayTab {
     Events,
     Intel,
     Logistics,
+    Build,
     Diagnostics,
 }
 
@@ -144,6 +149,7 @@ impl ContextTrayTab {
             Self::Events => "Events",
             Self::Intel => "Intel",
             Self::Logistics => "Logistics",
+            Self::Build => crate::gui::hud::sim_hud_copy::TRAY_BUILD_TAB,
             Self::Diagnostics => "Diag",
         }
     }
@@ -773,12 +779,17 @@ pub struct OpsStripZoneLinesSet;
 impl Plugin for SimulationShellPhase2Plugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(super::icon_atlas::IconAtlasPlugin);
+        app.add_plugins(super::power_hud_icon_atlas::PowerHudIconAtlasPlugin);
         app.init_resource::<ContextTrayState>()
             .init_resource::<super::simulation_pointer_gate::SimulationMapPointerGate>()
             .init_resource::<crate::gui::MinimapEguiDevGate>()
             .init_resource::<super::minimap_bevy_interaction::MinimapBevyPointerState>()
             .init_resource::<OpsStripIntelFocusRequest>()
             .init_resource::<UiShellMigrationWitness>()
+            .init_resource::<crate::gui::hud::sim_build_picker_sheet::SimBuildPickerState>()
+            .init_resource::<crate::gui::hud::sim_road_tool_sheet::SimRoadToolSheetState>()
+            .init_resource::<crate::gui::hud::sim_power_tool_sheet::SimPowerToolSheetState>()
+            .init_resource::<crate::gui::hud::plant_focus_card::PlantFocusCardSnapshot>()
             .init_resource::<UiShellMigrationWitnessReplay>()
             .init_resource::<UiShellMigrationLiveProofState>()
             .init_resource::<UiStressState>()
@@ -808,6 +819,13 @@ impl Plugin for SimulationShellPhase2Plugin {
                     sync_petroleum_panel_tab_system,
                     sync_logistics_vehicle_chips_system,
                     sync_ui_stress_from_sim_system,
+                )
+                    .run_if(in_simulation_or_editor),
+            )
+            .add_systems(
+                Update,
+                (
+                    super::plant_focus_card::sync_plant_focus_card_visibility,
                 )
                     .run_if(in_simulation_or_editor),
             )
@@ -1063,6 +1081,8 @@ fn build_rail_tool_click_system(
     q: Query<(&Interaction, &BuildRailToolSlot), (Changed<Interaction>, With<Button>)>,
     mut strip: ResMut<BuildStripState>,
     mut tool: ResMut<crate::construction::ActiveBuildTool>,
+    mut picker: ResMut<crate::gui::hud::sim_build_picker_sheet::SimBuildPickerState>,
+    mut road_sheet: ResMut<crate::gui::hud::sim_road_tool_sheet::SimRoadToolSheetState>,
     mut witness: ResMut<UiShellMigrationWitness>,
 ) {
     for (interaction, slot) in &q {
@@ -1073,6 +1093,8 @@ fn build_rail_tool_click_system(
         if deselect {
             strip.active = ToolContext::None;
             crate::construction::apply_build_rail_tool_selection(&mut tool, ToolContext::None, true);
+            picker.close();
+            road_sheet.close();
             witness.build_rail_synced = true;
             witness.build_rail_authoritative = true;
         } else {
@@ -1082,6 +1104,12 @@ fn build_rail_tool_click_system(
                 witness.as_mut(),
                 slot.0,
             );
+            picker.open_for_slot(slot.0);
+            if matches!(slot.0, ToolContext::Roads | ToolContext::Rail) {
+                road_sheet.open = true;
+            } else {
+                road_sheet.close();
+            }
         }
     }
 }
@@ -1196,6 +1224,7 @@ fn sync_context_tray_visibility_system(
                 "LOGISTICS · congest {:.2} · stock {:.2} · edges {}",
                 d.logistics_congestion, d.logistics_stockpile, d.transport_edges
             ),
+            ContextTrayTab::Build => String::new(),
             ContextTrayTab::Diagnostics => format!(
                 "DIAG · sim n={} · fire parts {} · pending {}/{}",
                 d.sim_tick,

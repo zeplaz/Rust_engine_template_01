@@ -8,6 +8,8 @@ from typing import Callable
 
 from rust_engine_mcp import grammar_build_set
 
+from .aps_theme import COLOR_TEXT_SUBTLE
+
 
 class GrammarBuildSetPanel(ttk.LabelFrame):
     def __init__(
@@ -27,7 +29,7 @@ class GrammarBuildSetPanel(ttk.LabelFrame):
         ttk.Button(row, text="Refresh brief", command=self.refresh_brief).pack(side=tk.LEFT, padx=(0, 6))
         ttk.Button(row, text="Eval sweep", command=self._run_sweep).pack(side=tk.LEFT)
         self.sweep_var = tk.StringVar(value="")
-        ttk.Label(self, textvariable=self.sweep_var, foreground="#444", wraplength=720).pack(
+        ttk.Label(self, textvariable=self.sweep_var, foreground=COLOR_TEXT_SUBTLE, wraplength=720).pack(
             anchor=tk.W, fill=tk.X
         )
         self.refresh_brief()

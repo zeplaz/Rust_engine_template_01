@@ -2,7 +2,7 @@
     "asset_name": "Distribution transformer",
     "asset_type": "Building",
     "segment": "Utilities",
-    "description": "Step-down transformer — grid capacity bottleneck for industrial districts",
+    "description": "Step-down transformer \u2014 grid capacity bottleneck for industrial districts",
     "utility_role": "transformer",
     "is_building": true,
     "is_power": true,
@@ -13,5 +13,7 @@
     "power_consumption": 4,
     "power_generation": 0,
     "transfer_capacity_mva": 40,
-    "version": "1.0.0"
+    "version": "1.0.0",
+    "procedural_module_id": "prop_transformer_production_run001",
+    "model_glb": "assets/models/modules/prop_transformer_production_run001/model.glb"
 }

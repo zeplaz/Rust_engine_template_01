@@ -63,6 +63,97 @@ def build(params: dict) -> bpy.types.Object:
         bpy.context.view_layer.objects.active = base
         bpy.ops.object.join()
         obj = bpy.context.active_object
+    elif kind in ("transformer", "prop_transformer"):
+        radius = min(d, h) * 0.35
+        length = w * 0.55
+        bpy.ops.mesh.primitive_cylinder_add(
+            radius=radius,
+            depth=length,
+            location=(0.0, radius + 0.05, 0.0),
+        )
+        tank = bpy.context.active_object
+        tank.name = "transformer_tank"
+        tank.rotation_euler[1] = 1.5707963
+        bpy.ops.object.transform_apply(rotation=True)
+        bushing_r = max(radius * 0.22, 0.08)
+        bushing_h = max(h * 0.28, 0.12)
+        offsets = (-length * 0.28, 0.0, length * 0.28)
+        parts: list[bpy.types.Object] = [tank]
+        for idx, ox in enumerate(offsets):
+            bpy.ops.mesh.primitive_cylinder_add(
+                radius=bushing_r,
+                depth=bushing_h,
+                location=(ox, radius * 2.0 + bushing_h * 0.5, 0.0),
+            )
+            bushing = bpy.context.active_object
+            bushing.name = f"transformer_bushing_{idx}"
+            parts.append(bushing)
+        pad = _add_box("transformer_pad", w, max(h * 0.08, 0.08), d, (0.0, max(h * 0.04, 0.04), 0.0))
+        parts.append(pad)
+        bpy.ops.object.select_all(action="DESELECT")
+        for part in parts:
+            part.select_set(True)
+        bpy.context.view_layer.objects.active = tank
+        bpy.ops.object.join()
+        obj = bpy.context.active_object
+    elif kind in ("bus_bay",):
+        base = _add_box("bus_base", w, h * 0.72, d, (0.0, h * 0.36, 0.0))
+        beam = _add_box("bus_beam", w * 0.9, max(h * 0.12, 0.15), d * 0.25, (0.0, h * 0.86, 0.0))
+        bpy.ops.object.select_all(action="DESELECT")
+        base.select_set(True)
+        beam.select_set(True)
+        bpy.context.view_layer.objects.active = base
+        bpy.ops.object.join()
+        obj = bpy.context.active_object
+    elif kind in ("breaker",):
+        housing = _add_box("breaker_housing", w * 0.9, h * 0.78, d * 0.9, (0.0, h * 0.39, 0.0))
+        stack = _add_box("breaker_stack", w * 0.45, h * 0.35, d * 0.45, (0.0, h * 0.9, 0.0))
+        bpy.ops.object.select_all(action="DESELECT")
+        housing.select_set(True)
+        stack.select_set(True)
+        bpy.context.view_layer.objects.active = housing
+        bpy.ops.object.join()
+        obj = bpy.context.active_object
+    elif kind in ("shack", "control_shack"):
+        body = _add_box("shack_body", w, h * 0.88, d, (0.0, h * 0.44, 0.0))
+        door = _add_box("shack_door", w * 0.35, h * 0.55, max(d * 0.06, 0.08), (0.0, h * 0.3, d * 0.47))
+        bpy.ops.object.select_all(action="DESELECT")
+        body.select_set(True)
+        door.select_set(True)
+        bpy.context.view_layer.objects.active = body
+        bpy.ops.object.join()
+        obj = bpy.context.active_object
+    elif kind in ("fence", "fence_chainlink"):
+        panel = _add_box("fence_panel", w, h, max(d, 0.08), (0.0, h * 0.5, 0.0))
+        post_l = _add_box("fence_post_l", max(w * 0.06, 0.08), h * 1.02, max(d * 0.5, 0.08), (-w * 0.45, h * 0.51, 0.0))
+        post_r = _add_box("fence_post_r", max(w * 0.06, 0.08), h * 1.02, max(d * 0.5, 0.08), (w * 0.45, h * 0.51, 0.0))
+        bpy.ops.object.select_all(action="DESELECT")
+        panel.select_set(True)
+        post_l.select_set(True)
+        post_r.select_set(True)
+        bpy.context.view_layer.objects.active = panel
+        bpy.ops.object.join()
+        obj = bpy.context.active_object
+    elif kind in ("gravel_pad",):
+        obj = _add_box("gravel_pad", w, max(h, 0.08), d, (0.0, max(h, 0.08) * 0.5, 0.0))
+    elif kind in ("warning_sign",):
+        post = _add_box("sign_post", max(w * 0.18, 0.08), h * 0.72, max(d * 0.5, 0.08), (0.0, h * 0.36, 0.0))
+        board = _add_box("sign_board", w, h * 0.42, max(d, 0.06), (0.0, h * 0.82, 0.0))
+        bpy.ops.object.select_all(action="DESELECT")
+        post.select_set(True)
+        board.select_set(True)
+        bpy.context.view_layer.objects.active = post
+        bpy.ops.object.join()
+        obj = bpy.context.active_object
+    elif kind in ("yard_kit",):
+        slab = _add_box("yard_slab", w, max(h * 0.08, 0.12), d, (0.0, max(h * 0.04, 0.06), 0.0))
+        frame = _add_box("yard_frame", w * 0.96, h * 0.55, d * 0.96, (0.0, h * 0.35, 0.0))
+        bpy.ops.object.select_all(action="DESELECT")
+        slab.select_set(True)
+        frame.select_set(True)
+        bpy.context.view_layer.objects.active = slab
+        bpy.ops.object.join()
+        obj = bpy.context.active_object
     else:
         obj = _add_box("module_prop", w, h, d, (0.0, h * 0.5, 0.0))
 

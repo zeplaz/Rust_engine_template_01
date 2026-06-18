@@ -52,11 +52,11 @@
     "relative_path": "debug_runs/infra_utility_overlay_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_infra_utility_overlay_live_witness",
-    "written_at_epoch_secs": 1781716813
+    "written_at_epoch_secs": 1781757587
   },
   "gate": "INFRA-UTILITY-OVERLAY-001",
   "green": true,
-  "legend_row_count": 5,
+  "legend_row_count": 9,
   "overlay_edge_rows": 3,
   "overlay_readability_polish": true,
   "power_stroke_rgb": [

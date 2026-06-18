@@ -1,0 +1,77 @@
+{
+  "task_id": "CMCP-SITE-ZONE-VALIDATE-001",
+  "green": true,
+  "pilot_count": 7,
+  "pilots": [
+    {
+      "path": "assets/configs/buildings/pilots/logistics_rail_warehouse_site_v0.json",
+      "site_id": "logistics_rail_warehouse_site_v0",
+      "green": true,
+      "status": "warning",
+      "error_count": 0,
+      "warning_count": 1
+    },
+    {
+      "path": "assets/configs/buildings/pilots/manufacturing_fabrication_hall_site_v0.json",
+      "site_id": "manufacturing_fabrication_hall_site_v0",
+      "green": true,
+      "status": "warning",
+      "error_count": 0,
+      "warning_count": 1
+    },
+    {
+      "path": "assets/configs/buildings/pilots/fuel_depot_tank_farm_site_v0.json",
+      "site_id": "fuel_depot_tank_farm_site_v0",
+      "green": true,
+      "status": "warning",
+      "error_count": 0,
+      "warning_count": 1
+    },
+    {
+      "path": "assets/configs/buildings/pilots/power_substation_yard_site_v0.json",
+      "site_id": "power_substation_yard_site_v0",
+      "green": true,
+      "status": "passed",
+      "error_count": 0,
+      "warning_count": 0
+    },
+    {
+      "path": "assets/configs/buildings/pilots/concrete_aggregate_mine_site_v0.json",
+      "site_id": "concrete_aggregate_mine_site_v0",
+      "green": true,
+      "status": "warning",
+      "error_count": 0,
+      "warning_count": 1
+    },
+    {
+      "path": "assets/configs/buildings/pilots/concrete_cement_kiln_site_v0.json",
+      "site_id": "concrete_cement_kiln_site_v0",
+      "green": true,
+      "status": "warning",
+      "error_count": 0,
+      "warning_count": 1
+    },
+    {
+      "path": "assets/configs/buildings/pilots/concrete_mixer_plant_site_v0.json",
+      "site_id": "concrete_mixer_plant_site_v0",
+      "green": true,
+      "status": "warning",
+      "error_count": 0,
+      "warning_count": 1
+    }
+  ],
+  "_agent_meta": {
+    "schema": "site_zone_validate_live_v1",
+    "profile": "CMCP_SITE_ZONE_VALIDATE",
+    "relative_path": "debug_runs/site_zone_validate_live.json",
+    "source_system": "site_zone_grid_validator",
+    "written_at_epoch_secs": 1781756317,
+    "ritual": "BLANG:WIT-HON CMCP-SITE-ZONE-VALIDATE-001"
+  },
+  "witness_honesty": {
+    "status": "passed",
+    "error_count": 0,
+    "warning_count": 0,
+    "summary": "witness_honesty debug_runs/site_zone_validate_live.json: 0 error(s), 0 issue(s)"
+  }
+}

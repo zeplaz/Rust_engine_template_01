@@ -1,0 +1,19 @@
+{
+    "asset_name": "Rail-edge logistics warehouse",
+    "asset_type": "Building",
+    "segment": "Industrial",
+    "description": "L-shaped warehouse along rail spur — high-bay storage and truck/rail transfer",
+    "supply_chain": "logistics_storage",
+    "supply_chain_role": "rail_warehouse",
+    "is_building": true,
+    "is_productive": false,
+    "building_size_x": 6,
+    "building_size_y": 5,
+    "building_height": 1,
+    "construction_cost": 1100,
+    "power_generation": 0,
+    "power_consumption": 15,
+    "produces_resources": [],
+    "consumes_resources": ["Labour", "Electricity"],
+    "version": "1.0.0"
+}

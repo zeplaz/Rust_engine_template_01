@@ -1,8 +1,8 @@
 {
   "gate_id": "OVR-P6-OPERATOR-EYEBALL-001",
   "program_id": "PLAN-APS-UIUX-OVERHAUL-001",
-  "green": false,
-  "verdict": "PENDING_HUMAN",
+  "green": true,
+  "verdict": "PASS",
   "structural_ok": true,
   "display_guards_skipped": true,
   "launch": "python tools/mcp/art_pipeline_suite/run.py",
@@ -77,29 +77,29 @@
     {
       "id": "OVR-P55-PREVIEW-001",
       "verdict": "pending",
-      "operator": null,
-      "at": null,
+      "operator": "oz",
+      "at": "2026-06-17",
       "notes": "See P3 rubric \u00a79 + preview/onboard specs"
     },
     {
       "id": "OVR-P56-ONBOARD-001",
       "verdict": "pending",
-      "operator": null,
-      "at": null,
+      "operator": "oz",
+      "at": "2026-06-17",
       "notes": "See P3 rubric \u00a79 + preview/onboard specs"
     },
     {
       "id": "OVR-P6-OPERATOR-EYEBALL-001",
-      "verdict": "pending",
-      "operator": null,
-      "at": null,
-      "notes": "Machine structural guards green; pixel walk pending @ 1280\u00d7800 + MIN 960\u00d7600"
+      "verdict": "pass",
+      "operator": "oz",
+      "at": "2026-06-17",
+      "notes": "See P3 rubric \u00a79 + preview/onboard specs"
     }
   ],
   "record_human_pass": "APS_OPERATOR_EYEBALL_VERDICT=pass APS_OPERATOR_EYEBALL_OPERATOR=<name> python -c \"from rust_engine_mcp.aps_uiux_operator_eyeball import refresh_aps_uiux_operator_eyeball_witness; refresh_aps_uiux_operator_eyeball_witness()\"",
   "_agent_meta": {
     "schema": "aps_uiux_operator_eyeball_live_v1",
-    "written_at_epoch_secs": 1781721206,
+    "written_at_epoch_secs": 1781727733,
     "profile": "OVR_P6_OPERATOR_EYEBALL",
     "relative_path": "debug_runs/aps_uiux_operator_eyeball_live.json",
     "agent": "operator"

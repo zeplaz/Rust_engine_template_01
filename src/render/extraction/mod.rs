@@ -15,7 +15,7 @@ pub use vegetation_visual_extract::{
     extract_glyph_deterministic, harness_topo_extract_witness_green,
     refresh_landscape_extract_sprite_witness, refresh_vegetation_extract_witness,
     vegetation_extract_witness_green, VegetationExtractFrame, VegetationExtractFrameSet,
-    VegetationVisualExtractPlugin, VegExtractRow, LANDSCAPE_GRAMMAR_EXTRACT_LIVE_JSON,
+    VegetationVisualExtractPlugin, VegExtractRow, VegExtractModifiers, LANDSCAPE_GRAMMAR_EXTRACT_LIVE_JSON,
 };
 pub use frame_snapshot::ExtractFrameSnapshot;
 pub use fire_emission_profile::{

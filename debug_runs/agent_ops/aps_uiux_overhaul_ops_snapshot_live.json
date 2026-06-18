@@ -1,20 +1,17 @@
 {
   "gate_id": "OPS-OVR-PROGRAM-SNAPSHOT-001",
   "program_id": "PLAN-APS-UIUX-OVERHAUL-001",
-  "program_status": "CLOSE_PENDING",
+  "program_status": "CLOSED",
   "snapshot_at": "2026-06-17",
   "progress": {
     "main_queue": {
-      "done": 23,
+      "done": 24,
       "total": 24,
-      "percent": 96,
+      "percent": 100,
       "by_status": {
-        "done": 23,
-        "ready": 1
+        "done": 24
       },
-      "ready": [
-        "OVR-P6-OPERATOR-EYEBALL-001"
-      ],
+      "ready": [],
       "blocked": []
     },
     "parallel_queue": {
@@ -41,16 +38,12 @@
     "ban_list_clean": true
   },
   "blockers": {
-    "human_gates_pending": [
-      "OVR-P6-OPERATOR-EYEBALL-001"
-    ],
-    "ready_now": [
-      "OVR-P6-OPERATOR-EYEBALL-001"
-    ]
+    "human_gates_pending": [],
+    "ready_now": []
   },
   "routing": {
     "next_coder_mcp": "idle \u2014 P1\u2013P6 machine phases done",
-    "next_operator": "OVR-P6-OPERATOR-EYEBALL-001",
+    "next_operator": null,
     "next_designer": null,
     "next_designer_mcp": null
   },
@@ -62,7 +55,7 @@
   },
   "_agent_meta": {
     "schema": "aps_uiux_overhaul_ops_snapshot_live_v1",
-    "written_at_epoch_secs": 1781721238,
+    "written_at_epoch_secs": 1781727791,
     "profile": "OPS_OVR_PROGRAM_SNAPSHOT",
     "relative_path": "debug_runs/agent_ops/aps_uiux_overhaul_ops_snapshot_live.json",
     "agent": "operations-intelligence"

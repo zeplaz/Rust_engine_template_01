@@ -2,7 +2,7 @@
     "asset_name": "Grid substation",
     "asset_type": "Building",
     "segment": "Utilities",
-    "description": "Bulk power substation — feeds transformers and heavy industrial loads",
+    "description": "Bulk power substation \u2014 feeds transformers and heavy industrial loads",
     "utility_role": "substation",
     "is_building": true,
     "is_power": true,
@@ -13,5 +13,7 @@
     "power_consumption": 8,
     "power_generation": 0,
     "transfer_capacity_mva": 120,
-    "version": "1.0.0"
+    "version": "1.0.0",
+    "procedural_module_id": "kit_substation_yard_production_001",
+    "model_glb": "assets/models/modules/kit_substation_yard_production_run001/model.glb"
 }

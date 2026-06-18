@@ -1,0 +1,52 @@
+{
+  "_meta": {
+    "version": "1.0.1",
+    "program_id": "PARALLEL-WAVE-FACILITY-BINDING-001",
+    "date": "2026-06-02",
+    "rule": "@designer-mcp — facility_binding on all G1 grammars + concrete site pilot",
+    "plan": "src/dev/plan_industrial_facility_grammar_suite_v1.md",
+    "witness": "debug_runs/art_pipeline/dmcp_facility_binding_lane_live.json",
+    "witness_cli": "python -m rust_engine_mcp.cli dmcp-facility-binding-lane-witness"
+  },
+  "dispatch_now": {
+    "designer-mcp": "ALL ROWS CLOSED — 3/3 G1 grammars with facility_binding"
+  },
+  "rows": [
+    {
+      "id": "DES-FACILITY-BINDING-001",
+      "owner": "designer-mcp",
+      "wave": 0,
+      "status": "done",
+      "deliverable": "src/dev/design_facility_binding_schema_v1.md",
+      "verdict": "PASS",
+      "handoff": "@designer DES-APS-FACILITY-NEEDS-001"
+    },
+    {
+      "id": "DMCP-GRAM-FACTORY-CLUSTER-001",
+      "owner": "designer-mcp",
+      "wave": 0,
+      "status": "done",
+      "deliverable": "assets/configs/buildings/grammars/factory_cluster_v1.ron",
+      "verdict": "PASS",
+      "handoff": "CMCP-GRAMMAR-FACILITY-BRIEF-001"
+    },
+    {
+      "id": "DMCP-GRAM-RAIL-EDGE-001",
+      "owner": "designer-mcp",
+      "wave": 0,
+      "status": "done",
+      "deliverable": "assets/configs/buildings/grammars/rail_edge_v1.ron",
+      "verdict": "PASS",
+      "handoff": "CMCP-GRAMMAR-FACILITY-BRIEF-001"
+    },
+    {
+      "id": "DMCP-PILOT-CONCRETE-SITE-001",
+      "owner": "designer-mcp",
+      "wave": 0,
+      "status": "done",
+      "deliverable": "assets/configs/buildings/pilots/concrete_portland_chain_pilot_v1.json",
+      "verdict": "PASS",
+      "handoff": "CMCP-SITE-ZONE-VALIDATE-001"
+    }
+  ]
+}

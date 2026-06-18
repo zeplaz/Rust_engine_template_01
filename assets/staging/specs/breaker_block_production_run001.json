@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "asset_id": "breaker_block",
+  "archetype": "module_prop",
+  "style_pack": "style_industrial_west",
+  "development_tier": "production",
+  "pbr_status": "pending",
+  "batch_id": "kit_utility_power_production_001",
+  "module": {
+    "grid_units": [
+      1,
+      1
+    ],
+    "snap": "floor_edge",
+    "pivot": "bottom_center"
+  },
+  "dimensions_m": {
+    "w": 2.0,
+    "h": 2.0,
+    "d": 2.0
+  },
+  "material_profile": "galvanized_steel_01",
+  "references": [
+    "ref:design:DES-ART-UTILITY-STYLE-001",
+    "ref:dmcp:DMCP-SPEC-SUBSTATION-YARD-001",
+    "ref:kit:kit_substation_yard_production_001"
+  ],
+  "feeds": "kit_substation_yard_production_001"
+}

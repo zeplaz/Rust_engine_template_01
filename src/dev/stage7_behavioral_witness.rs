@@ -141,6 +141,7 @@ pub fn build_stage7_behavioral_witness_payload(
         "s7b_m1_green": s7b_m1,
         "s7b_m2_green": s7b_m2,
         "s7b_m3_green": s7b_m3,
+        "m3_minimap_readers_wired": s7b_m3,
         "s7b_m4_play_001": {
             "gate": "S7B-M4-PLAY-001",
             "green": s7b_m4,

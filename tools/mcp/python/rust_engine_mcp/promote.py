@@ -16,6 +16,7 @@ from .library import (
     KIT_LOD0_002_JOB_IDS,
     KIT_LOD0_003_JOB_IDS,
     KIT_PRODUCTION_002_JOB_IDS,
+    KIT_UTILITY_POWER_PRODUCTION_001_JOB_IDS,
     register_module,
 )
 from .paths import repo_root, staging_root
@@ -87,6 +88,8 @@ def _infer_batch_id(job_id: str) -> str:
         return "kit_industrial_west_production_001"
     if job_id in KIT_PRODUCTION_002_JOB_IDS:
         return "kit_production_002"
+    if job_id in KIT_UTILITY_POWER_PRODUCTION_001_JOB_IDS:
+        return "kit_utility_power_production_001"
     return ""
 
 

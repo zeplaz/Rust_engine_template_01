@@ -53,12 +53,20 @@ def load_building_grammar_by_archetype(archetype_id: str) -> dict[str, Any]:
     raise KeyError(f"no grammar for archetype: {archetype_id}")
 
 
+def _json_mirror_for_ron(path: Path) -> Path:
+    """RON on disk + JSON mirror in schemas/examples (designer content lane)."""
+    return schemas_dir() / "examples" / f"building_grammar_{path.stem}.json"
+
+
 def _load_grammar_ron(path: Path) -> dict[str, Any]:
-    """Minimal RON → dict for pilot grammars (no full RON parser dependency)."""
-    example = schemas_dir() / "examples" / "building_grammar_industrial_warehouse_v1.json"
-    if path.stem == "industrial_warehouse_v1" and example.is_file():
-        return load_building_grammar_json(example)
-    raise NotImplementedError(f"RON grammar load not implemented for {path.name}; add JSON mirror")
+    """Load grammar via JSON mirror (RON is authoritative on disk for Rust)."""
+    mirror = _json_mirror_for_ron(path)
+    if mirror.is_file():
+        return load_building_grammar_json(mirror)
+    raise NotImplementedError(
+        f"RON grammar load not implemented for {path.name}; "
+        f"add JSON mirror at {mirror.relative_to(repo_root())}"
+    )
 
 
 def generate(archetype_id: str, district_style: str, seed: int) -> dict[str, Any]:

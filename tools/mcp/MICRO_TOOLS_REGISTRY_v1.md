@@ -195,6 +195,8 @@ Doc: [`docs/archive/2026-06-src-dev/plans/mcp_productivity_p1_plan_v1.md`](../..
 | `warehouse-track-guard` / `validate-report warehouse_track_guard` | Warehouse JSON paths need manifest or teaches | **SHIPPED** (MCP-GUARD-004) |
 | `build-set-guards-witness` | Refresh all GUARD-002…004 witnesses | **SHIPPED** |
 | `grammar_set_brief` | Pilot + grammar + preset inventory; gap lines | **SHIPPED** |
+| `grammar_set_tier` / `grammar-set-tier` | G0–G4 maturity from registry + coverage | **SHIPPED** |
+| `designer_grammar_quality_loop` | Designer iterate rollup — tier + guards + optional sweeps | **SHIPPED** |
 | `grammar_preset_pair_validate` | preset ↔ grammar_id ↔ pilot catalog row | **SHIPPED** |
 | `grammar_eval_sweep` | Seed sweep massing/roof histogram | **SHIPPED** |
 | `grammar_pilot_parity` | ValidationReport from catalog parity self-check | **SHIPPED** |

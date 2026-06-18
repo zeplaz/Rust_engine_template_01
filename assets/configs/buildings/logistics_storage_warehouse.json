@@ -1,0 +1,19 @@
+{
+    "asset_name": "Industrial storage warehouse",
+    "asset_type": "Building",
+    "segment": "Industrial",
+    "description": "General-purpose industrial hall — pallet storage and street-facing loading",
+    "supply_chain": "logistics_storage",
+    "supply_chain_role": "storage_warehouse",
+    "is_building": true,
+    "is_productive": false,
+    "building_size_x": 5,
+    "building_size_y": 4,
+    "building_height": 1,
+    "construction_cost": 850,
+    "power_generation": 0,
+    "power_consumption": 12,
+    "produces_resources": [],
+    "consumes_resources": ["Labour", "Electricity"],
+    "version": "1.0.0"
+}

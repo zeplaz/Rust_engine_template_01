@@ -1,0 +1,11 @@
+{
+  "profile_id": "galvanized_steel_01",
+  "seed": 43001,
+  "generator": "steel",
+  "size": 512,
+  "paths": {
+    "albedo": "assets/materials/textures/galvanized_steel_01/albedo.png",
+    "normal": "assets/materials/textures/galvanized_steel_01/normal.png",
+    "roughness": "assets/materials/textures/galvanized_steel_01/roughness.png"
+  }
+}

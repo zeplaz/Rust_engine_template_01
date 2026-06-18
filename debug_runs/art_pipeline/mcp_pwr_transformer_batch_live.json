@@ -1,0 +1,17 @@
+{
+  "gate": "MCP-PWR-TRANSFORMER-BATCH-001",
+  "staging_glb_exists": true,
+  "validate_asset_glb": "passed",
+  "grid_units": [
+    2,
+    2
+  ],
+  "green": true,
+  "_agent_meta": {
+    "schema": "mcp_pwr_transformer_batch_live_v1",
+    "written_at_epoch_secs": 1781792301,
+    "profile": "MCP_PWR_TRANSFORMER_BATCH",
+    "source_system": "mcp_pwr_utility",
+    "relative_path": "debug_runs/art_pipeline/mcp_pwr_transformer_batch_live.json"
+  }
+}

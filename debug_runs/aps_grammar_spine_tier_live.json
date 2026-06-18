@@ -1,0 +1,9 @@
+{
+  "grammar_set_tier_present": true,
+  "tier": "G1",
+  "assembly_copy_tier_aware": true,
+  "assembly_copy_g0_sample": "Generate from building type",
+  "assembly_copy_g1_sample": "Generate from building type",
+  "assembly_copy_g2_sample": "Tune shape bias; inspect rule chain",
+  "atlas_warn_when_below_g4": true
+}

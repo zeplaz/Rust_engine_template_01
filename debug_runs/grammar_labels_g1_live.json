@@ -1,0 +1,12 @@
+{
+  "human_labels_for_new_archetypes": true,
+  "archetype_labels": {
+    "FactoryCluster": "Factory Cluster",
+    "RailEdge": "Rail Edge Warehouse"
+  },
+  "district_styles_added": [
+    "manufacturing_row",
+    "rail_yard_corridor"
+  ],
+  "scanner": "test_aps_grammar_labels.py"
+}

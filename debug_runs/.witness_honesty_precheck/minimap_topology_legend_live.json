@@ -23,7 +23,7 @@
       "continuation_queue": "tools/orchestrator/queues/continuation_queue.json",
       "warning_registry": "tools/orchestrator/reports/warning_registry.md"
     },
-    "profile": "VEG-MINIMAP-OVERLAY-002",
+    "profile": "VEG-MINIMAP-LEGEND-UI-001",
     "related_proofs": [
       "debug_runs/stage5_full_app_live.json",
       "debug_runs/infrastructure_view_isolation_live.json",
@@ -52,10 +52,15 @@
     "relative_path": "debug_runs/minimap_topology_legend_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_minimap_topology_legend_live_witness",
-    "written_at_epoch_secs": 1781716813
+    "written_at_epoch_secs": 1781792417
   },
-  "gate": "VEG-MINIMAP-OVERLAY-002",
+  "burn_legend_wired": true,
+  "collapsed_label": "▶ 6 kinds",
+  "design_ref": "src/dev/design_minimap_veg_legend_wire_v1.md",
+  "fire_legend_row_count": 3,
+  "gate": "VEG-MINIMAP-LEGEND-UI-001",
   "green": true,
+  "legend_ui_wired": true,
   "operator_visible": true,
   "topology_kind_count_visible": 6,
   "topology_legend_wired": true

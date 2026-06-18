@@ -1,0 +1,12 @@
+{
+  "job_id": "control_shack_1u_production_run001",
+  "status": "done",
+  "log_path": "debug_runs/art_pipeline/control_shack_1u_production_run001.log",
+  "outputs": [
+    "assets/staging/control_shack_1u_production_run001/model.glb"
+  ],
+  "error": null,
+  "spec_ref": "assets/staging/specs/control_shack_1u_production_run001.json",
+  "job_path": "tools/mcp/schemas/examples/control_shack_1u_production_run001.json",
+  "updated_at": 1781792232.783547
+}

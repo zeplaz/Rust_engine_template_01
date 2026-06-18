@@ -20,6 +20,7 @@ mod visual_authority;
 mod build_tool_authority;
 mod build_toolbox;
 mod map_egui_projection;
+pub use map_egui_projection::world_to_sim_map_egui;
 mod commercial_menu;
 mod corridor_transport;
 mod construction_pipeline;
@@ -38,6 +39,7 @@ mod build_confidence;
 pub mod building_set;
 pub mod site_zone_grid;
 mod ghost_visual;
+mod grammar_labels;
 mod iso_draw_scale;
 pub mod pilot_catalog;
 mod placement_debug;
@@ -52,7 +54,8 @@ mod tool_hints;
 mod witness_collectors;
 mod round4_corridor;
 pub use round4_corridor::{
-    construction_r4_corridor_legend_wired_witness_green, ConstructionRound4ProductGate,
+    construction_r4_corridor_legend_wired_witness_green, draw_r4_corridor_tray_legend,
+    ConstructionRound4ProductGate,
 };
 mod parametric_commit;
 mod procedural_build_spawn;
@@ -90,6 +93,7 @@ mod staged_ghost_panel;
 pub mod weighted_footprint;
 mod residential_menu;
 mod roads;
+mod power_lines;
 mod rail;
 mod site_stage;
 mod site_stage_tick;
@@ -138,9 +142,11 @@ pub use pending_construction::{
 };
 pub use staged_ghost_panel::{
     build_approved_drains_staged_witness_green, commit_approved_staged_rows,
+    draw_staged_placements_panel_body, parametric_active_ghost_hud_line,
     staging_toggle_wired_witness_green, StagedPlacementBook, StagedPlacementMode,
-    StagedPlacementRow, StagedValidity,
+    StagedPlacementRow, StagedValidity, STAGED_PANEL_FLOATING_SIM,
 };
+pub use tool_hints::TOOL_HINTS_DRAW_IN_SIM;
 pub use pending_construction_panel::draw_pending_construction_queue_egui;
 pub use build_overlays::BuildOverlayVisibility;
 pub use tile_visual::{
@@ -168,11 +174,22 @@ pub use building_catalog::{
     ApartmentForm, ApartmentUnitKind, BuildingFamily, BuildingIntentPreview, DetachedResidenceForm,
     FootprintMatrix, ResidentialBuildingForm, default_preview_for_apartment,
 };
+pub use grammar_labels::{
+    grammar_labels_loaded_green, human_age_label, human_archetype_label, human_district_label,
+    human_massing_label,
+};
 pub use build_tool_authority::{
     apply_build_rail_tool_selection, ActiveBuildTool, BuildTool, BuildingArchetypeId, RailType,
     RoadType, ZoneTool,
 };
-pub use build_toolbox::{draw_build_toolbox_egui, draw_sim_build_rail_submenus_egui};
+pub use commercial_menu::draw_commercial_submenu;
+pub use residential_menu::draw_residential_submenu;
+pub use utilities_menu::{
+    draw_utilities_submenu, utilities_submenu_power_icons_wired, UtilitiesSubmenuIconUi,
+};
+pub use mock_shapes_menu::draw_mock_shapes_submenu;
+pub use build_toolbox::draw_build_toolbox_egui;
+pub use crate::gui::hud::sim_build_picker_sheet::draw_sim_build_rail_submenus_egui;
 pub use construction_stage_witness::{
     refresh_construction_stage_witness, ConstructionStageWitness, CONSTRUCTION_TODO_COUNT,
 };
@@ -183,9 +200,21 @@ pub use site_stage_tick::{
     SiteStageTickPlugin,
 };
 pub use roads::{
-    draw_road_path_ghost_egui, draw_road_tool_popup_egui, road_path_input_system,
-    sync_road_path_build_preview, sync_road_placement_width_from_tool,
-    update_road_path_preview_system, ActiveRoadPlacement, RoadSegmentPreview, RoadToolPopupState,
+    commit_road_path_to_queue, cursor_world_on_map, draw_road_path_ghost_egui,
+    draw_road_tool_popup_egui, road_path_input_system, sync_road_path_build_preview,
+    sync_road_placement_width_from_tool, update_road_path_preview_system, ActiveRoadPlacement,
+    RoadSegmentPreview, RoadToolPopupState,
+};
+pub use sessions::ActiveToolSession;
+pub use snap::RoadSnapSettings;
+pub use upgrade::enqueue_road_upgrade;
+pub use power_lines::{
+    commit_power_line_to_utility_graph, draw_power_line_path_ghost_egui,
+    power_line_draw_witness_green, power_line_ghost_preview_dashed_witness_green,
+    power_line_path_input_system,
+    power_line_routing_mode_hotkey_system, sync_power_line_build_preview,
+    sync_power_line_from_build_tool, sync_power_line_preview_overlay_system,
+    update_power_line_path_preview_system, ActivePowerLinePlacement, PowerLineRoutingMode,
 };
 pub use rail::{
     draw_rail_path_ghost_egui, rail_path_input_system, sync_rail_path_build_preview,
@@ -244,6 +273,7 @@ impl Plugin for BuildPlanningPlugin {
             .init_resource::<BuildModeState>()
             .init_resource::<ActiveRoadPlacement>()
             .init_resource::<ActiveRailPlacement>()
+            .init_resource::<ActivePowerLinePlacement>()
             .init_resource::<ActiveZonePaint>()
             .init_resource::<history::ConstructionHistory>()
             .init_resource::<roads::RoadToolPopupState>()
@@ -358,6 +388,19 @@ impl Plugin for BuildPlanningPlugin {
             .add_systems(
                 Update,
                 (
+                    sync_power_line_from_build_tool,
+                    update_power_line_path_preview_system,
+                    sync_power_line_build_preview.after(update_power_line_path_preview_system),
+                    sync_power_line_preview_overlay_system.after(sync_power_line_build_preview),
+                    power_line_path_input_system.after(sync_power_line_build_preview),
+                    power_line_routing_mode_hotkey_system,
+                )
+                    .chain()
+                    .run_if(in_simulation_or_editor),
+            )
+            .add_systems(
+                Update,
+                (
                     history::construction_undo_input_system,
                     history::construction_redo_input_system,
                 )
@@ -413,11 +456,17 @@ impl Plugin for BuildPlanningPlugin {
                     draw_build_toolbox_egui.run_if(product_egui_shell_active),
                     staged_ghost_panel::draw_staged_placements_panel_egui_system
                         .run_if(in_simulation_or_editor),
-                    draw_sim_build_rail_submenus_egui.run_if(in_simulation_or_editor),
+                    crate::gui::hud::sim_build_picker_sheet::draw_sim_build_picker_sheet_egui
+                        .run_if(in_simulation_or_editor),
+                    crate::gui::hud::context_tray_build_egui::draw_context_tray_build_body_egui
+                        .run_if(in_simulation_or_editor),
                     placement_debug::draw_construction_placement_debug_overlay
                         .run_if(in_simulation_or_editor),
                     tool_hints::draw_tool_hints_egui,
-                    draw_road_tool_popup_egui,
+                    crate::gui::hud::sim_road_tool_sheet::draw_sim_road_tool_sheet_egui,
+                    crate::gui::hud::sim_power_tool_sheet::draw_sim_power_tool_sheet_egui,
+                    crate::gui::hud::plant_focus_card::draw_plant_focus_card_egui,
+                    draw_power_line_path_ghost_egui,
                     visual_authority::draw_construction_visual_requests_egui,
                     phase_visual::draw_construction_phase_labels_egui,
                     build_footprint_overlay::build_footprint_validity_overlay_egui,

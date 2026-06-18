@@ -1,0 +1,11 @@
+{
+  "archetype_count": 3,
+  "archetype_ids": [
+    "FactoryCluster",
+    "IndustrialWarehouse",
+    "RailEdge"
+  ],
+  "ron_files_added": 2,
+  "json_mirrors_added": 2,
+  "validate_arch_build_grammar": "pass"
+}

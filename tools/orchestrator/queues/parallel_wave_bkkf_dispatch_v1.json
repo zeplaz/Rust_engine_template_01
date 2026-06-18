@@ -1,0 +1,43 @@
+{
+  "_meta": {
+    "version": "1.0.0",
+    "program_id": "PARALLEL-WAVE-BKKF-DISPATCH-001",
+    "date": "2026-06-02",
+    "rule": "Parallel @designer-mcp lane — LG-5 expand + FactoryCluster + kit002 concept",
+    "plan": "src/dev/plan_designer_work_202606_v1.md",
+    "witness": "debug_runs/art_pipeline/dmcp_parallel_lane_bkkf_live.json",
+    "witness_cli": "python -m rust_engine_mcp.cli dmcp-parallel-lane-bkkf-witness"
+  },
+  "dispatch_now": {
+    "designer-mcp": "ALL ROWS CLOSED — witness dmcp_parallel_lane_bkkf_live.json (3/3)"
+  },
+  "rows": [
+    {
+      "id": "DMCP-LG5-EXPAND-BAKE-001",
+      "owner": "designer-mcp",
+      "wave": 0,
+      "status": "done",
+      "deliverable": "src/dev/design_landscape_lg5_expand_bake_v1.md",
+      "verdict": "PASS_WITH_NOTES",
+      "handoff": "coder-mcp landscape_lg5_expanded_batch · Phase B G4 manual"
+    },
+    {
+      "id": "DMCP-GRAM-ARCHETYPE-FACTORY-001",
+      "owner": "designer-mcp",
+      "wave": 0,
+      "status": "done",
+      "deliverable": "src/dev/design_factory_cluster_concept_v1.md",
+      "verdict": "PASS",
+      "handoff": "DMCP-GRAM-FACTORY-CLUSTER-001 facility binding"
+    },
+    {
+      "id": "DMCP-MODULE-KIT002-001",
+      "owner": "designer-mcp",
+      "wave": 0,
+      "status": "done",
+      "deliverable": "src/dev/design_kit_production_002_concept_v1.md",
+      "verdict": "PASS_WITH_NOTES",
+      "handoff": "MCP-P2-KIT002-G4 operator keyframes"
+    }
+  ]
+}

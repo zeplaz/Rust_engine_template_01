@@ -76,28 +76,13 @@ def check_build_health() -> dict[str, Any]:
     }
 
 
-def run_pytest_aps_gate() -> dict[str, Any]:
-    """APS-EVO-E0-RELAUNCH-001 — full ``pytest -k aps`` (not collect-only)."""
-    py_root = repo_root() / "tools/mcp/python"
-    cmd = [
-        sys.executable,
-        "-m",
-        "pytest",
-        "tests/",
-        "-k",
-        "aps and not e0_e2_relaunch",
-        "-q",
-        "--tb=no",
-    ]
-    proc = subprocess.run(cmd, cwd=str(py_root), capture_output=True, text=True)
-    out = (proc.stdout or "") + (proc.stderr or "")
-    tail = out.strip().splitlines()
-    summary = tail[-1] if tail else ""
-    return {
-        "ok": proc.returncode == 0,
-        "summary": summary,
-        "returncode": proc.returncode,
-    }
+def run_pytest_aps_gate(*, tier: str = "full") -> dict[str, Any]:
+    """APS pytest gate — ``tier='fast'`` skips Tk; ``tier='full'`` (default) includes headless GUI."""
+    from .aps_test_gate import run_pytest_aps_fast_gate, run_pytest_aps_full_gate
+
+    if tier == "fast":
+        return run_pytest_aps_fast_gate()
+    return run_pytest_aps_full_gate()
 
 
 def refresh_aps_e0_relaunch(*, include_e2: bool = True) -> dict[str, Any]:

@@ -14,8 +14,19 @@ from module_viewer.pipeline_runner import find_latest_atlas_in
 from rust_engine_mcp.paths import repo_root
 
 from .aps_paned import add_pane, horizontal_paned
+from .aps_preview_state import apply_preview_photo, configure_preview_label, image_is_near_black, make_fidelity_chip
 from .aps_scroll import attach_wheel_area, bind_debounced_scrollregion, canvas_xscroll, canvas_yscroll, text_yscroll
-from .aps_theme import FONT_SMALL, track_wraplength
+from .aps_theme import (
+    COLOR_INPUT_BG,
+    COLOR_MUTED,
+    COLOR_TEXT_BODY,
+    COLOR_TEXT_SUBTLE,
+    FONT_SMALL,
+    FONT_UI,
+    FONT_UI_BOLD,
+    PREVIEW_THUMB_SM,
+    track_wraplength,
+)
 
 
 def _resolve_path(raw: str) -> Path:
@@ -99,43 +110,46 @@ class AtlasPreviewPanel(ttk.LabelFrame):
 
         atlas_col = ttk.Frame(top, padding=4)
         add_pane(top, atlas_col, weight=1, minsize=280)
-        ttk.Label(atlas_col, text="Packed atlas (UV grid)", font=("Segoe UI", 9, "bold")).pack(anchor=tk.W)
-        self._atlas_label = tk.Label(
-            atlas_col,
-            text="(set PNG folder)",
-            bg="#e8e8e8",
-            width=36,
-            height=14,
-            relief=tk.SUNKEN,
-        )
+        head = ttk.Frame(atlas_col)
+        head.pack(fill=tk.X)
+        ttk.Label(head, text="Packed atlas (UV grid)", font=FONT_UI_BOLD).pack(side=tk.LEFT)
+        make_fidelity_chip(head, "ship").pack(side=tk.LEFT, padx=(8, 0))
+        self._atlas_label = tk.Label(atlas_col, relief=tk.SUNKEN)
         self._atlas_label.pack(fill=tk.BOTH, expand=True, pady=4)
+        configure_preview_label(
+            self._atlas_label,
+            "empty",
+            detail="No packed tile sheet yet — run Pack atlas",
+            width=self.ATLAS_MAX,
+            height=self.ATLAS_MAX // 2,
+        )
         self._atlas_path_var = tk.StringVar(value="")
-        ttk.Label(atlas_col, textvariable=self._atlas_path_var, font=("Segoe UI", 9), foreground="#444").pack(
+        ttk.Label(atlas_col, textvariable=self._atlas_path_var, font=FONT_UI, foreground=COLOR_TEXT_SUBTLE).pack(
             anchor=tk.W
         )
         self._grid_legend_var = tk.StringVar(value="")
-        ttk.Label(atlas_col, textvariable=self._grid_legend_var, font=FONT_SMALL, foreground="#555").pack(
+        ttk.Label(atlas_col, textvariable=self._grid_legend_var, font=FONT_SMALL, foreground=COLOR_MUTED).pack(
             anchor=tk.W
         )
 
         detail_col = ttk.Frame(top, padding=4)
         add_pane(top, detail_col, weight=1, minsize=240)
-        ttk.Label(detail_col, text="Selected cell", font=("Segoe UI", 9, "bold")).pack(anchor=tk.W)
-        self._cell_label = tk.Label(
-            detail_col,
-            text="(click a cell below)",
-            bg="#ececec",
-            width=28,
-            height=12,
-            relief=tk.SUNKEN,
-        )
+        ttk.Label(detail_col, text="Selected cell", font=FONT_UI_BOLD).pack(anchor=tk.W)
+        self._cell_label = tk.Label(detail_col, relief=tk.SUNKEN)
         self._cell_label.pack(fill=tk.BOTH, expand=True, pady=4)
+        configure_preview_label(
+            self._cell_label,
+            "empty",
+            detail="Click a cell below",
+            width=PREVIEW_THUMB_SM * 2,
+            height=PREVIEW_THUMB_SM * 2,
+        )
         self._cell_meta_var = tk.StringVar(value="")
-        cell_meta_lbl = ttk.Label(detail_col, textvariable=self._cell_meta_var, font=("Segoe UI", 9), wraplength=280)
+        cell_meta_lbl = ttk.Label(detail_col, textvariable=self._cell_meta_var, font=FONT_UI, wraplength=280)
         cell_meta_lbl.pack(anchor=tk.W)
         track_wraplength(detail_col, cell_meta_lbl, minimum=200)
 
-        ttk.Label(self, text="Source PNG cells", font=("Segoe UI", 9, "bold")).pack(anchor=tk.W, pady=(8, 2))
+        ttk.Label(self, text="Source PNG cells", font=FONT_UI_BOLD).pack(anchor=tk.W, pady=(8, 2))
         cells_wrap = ttk.Frame(self)
         cells_wrap.pack(fill=tk.BOTH, expand=True)
         canvas = tk.Canvas(cells_wrap, highlightthickness=0, height=120)
@@ -163,7 +177,7 @@ class AtlasPreviewPanel(ttk.LabelFrame):
         self._cells_canvas = canvas
 
         self._meta_var = tk.StringVar(value="atlas_meta: —")
-        meta_lbl = ttk.Label(self, textvariable=self._meta_var, font=("Segoe UI", 9), foreground="#333", wraplength=720)
+        meta_lbl = ttk.Label(self, textvariable=self._meta_var, font=FONT_UI, foreground=COLOR_TEXT_BODY, wraplength=720)
         meta_lbl.pack(anchor=tk.W, pady=4)
         track_wraplength(self, meta_lbl, minimum=480)
 
@@ -179,13 +193,32 @@ class AtlasPreviewPanel(ttk.LabelFrame):
         if not self._folder:
             self._clear()
             return
+        configure_preview_label(
+            self._atlas_label,
+            "loading",
+            detail="Loading atlas…",
+            width=self.ATLAS_MAX,
+            height=self.ATLAS_MAX // 2,
+        )
         self._highlight = None
         self._refresh()
         self._on_log(f"atlas preview · {self._folder.name}")
 
     def _clear(self) -> None:
-        self._atlas_label.configure(image="", text="(set PNG folder)")
-        self._cell_label.configure(image="", text="(click a cell below)")
+        configure_preview_label(
+            self._atlas_label,
+            "empty",
+            detail="No packed tile sheet yet — run Pack atlas",
+            width=self.ATLAS_MAX,
+            height=self.ATLAS_MAX // 2,
+        )
+        configure_preview_label(
+            self._cell_label,
+            "empty",
+            detail="Click a cell below",
+            width=PREVIEW_THUMB_SM * 2,
+            height=PREVIEW_THUMB_SM * 2,
+        )
         self._atlas_path_var.set("")
         self._cell_meta_var.set("")
         self._meta_var.set("atlas_meta: —")
@@ -210,7 +243,13 @@ class AtlasPreviewPanel(ttk.LabelFrame):
             self._show_atlas_with_grid()
             self._atlas_path_var.set(self._atlas_path.name)
         else:
-            self._atlas_label.configure(image="", text="(no tile_map_*.png — run Pack atlas)")
+            configure_preview_label(
+                self._atlas_label,
+                "empty",
+                detail="No tile_map yet — run Pack atlas",
+                width=self.ATLAS_MAX,
+                height=self.ATLAS_MAX // 2,
+            )
             self._atlas_path_var.set("")
 
         tiles_by_png: dict[str, dict[str, Any]] = {}
@@ -226,8 +265,7 @@ class AtlasPreviewPanel(ttk.LabelFrame):
             tid = meta.get("tile_id") or meta.get("atlas_id") or "?"
             n = len(meta.get("tiles") or [])
             self._meta_var.set(
-                f"atlas_meta: tile_id={tid} · grid {cols}×{rows} · {n} cells · "
-                f"Next: tile-atlas-register / map stamp (see tools/mcp/README.md)"
+                f"Atlas: {n} tiles · grid {cols}×{rows} · Next: register this atlas for the map"
             )
             if self._grid_cols and self._grid_rows:
                 self._grid_legend_var.set(
@@ -244,13 +282,13 @@ class AtlasPreviewPanel(ttk.LabelFrame):
 
         pngs = _source_pngs(folder)
         if not pngs:
-            ttk.Label(self._cells_inner, text="(no source PNGs in folder)").pack(padx=8)
+            ttk.Label(self._cells_inner, text="○ No source PNGs in folder").pack(padx=8)
             return
 
         for i, png in enumerate(pngs):
             cell = ttk.Frame(self._cells_inner, padding=2)
             cell.grid(row=0, column=i, padx=2, pady=2)
-            lbl = tk.Label(cell, bg="#f0f0f0", cursor="hand2", relief=tk.RIDGE)
+            lbl = tk.Label(cell, bg=COLOR_INPUT_BG, cursor="hand2", relief=tk.RIDGE)
             lbl.pack()
             self._show_image(lbl, f"cell_{i}", png, max_size=self.THUMB)
             name = png.stem
@@ -280,9 +318,16 @@ class AtlasPreviewPanel(ttk.LabelFrame):
                 )
             photo = ImageTk.PhotoImage(img)
             self._photos["atlas"] = photo
-            self._atlas_label.configure(image=photo, text="")
+            apply_preview_photo(self._atlas_label, photo)
         except Exception as exc:  # noqa: BLE001
-            self._atlas_label.configure(image="", text=str(self._atlas_path.name)[:20])
+            configure_preview_label(
+                self._atlas_label,
+                "error",
+                detail="Atlas image unreadable",
+                hint=str(self._atlas_path.name)[:24],
+                width=self.ATLAS_MAX,
+                height=self.ATLAS_MAX // 2,
+            )
             self._on_log(f"atlas thumb fail: {exc}")
 
     def _on_cell_click(self, path: Path, hint: str, meta_row: dict[str, Any]) -> None:
@@ -306,10 +351,27 @@ class AtlasPreviewPanel(ttk.LabelFrame):
     def _show_image(self, label: tk.Label, key: str, path: Path, *, max_size: int) -> None:
         try:
             img = Image.open(path).convert("RGB")
+            if image_is_near_black(img):
+                configure_preview_label(
+                    label,
+                    "error",
+                    detail="Cell image blank",
+                    hint=path.name[:16],
+                    width=max_size,
+                    height=max_size,
+                )
+                return
             img.thumbnail((max_size, max_size), Image.Resampling.LANCZOS)
             photo = ImageTk.PhotoImage(img)
             self._photos[key] = photo
-            label.configure(image=photo, text="")
+            apply_preview_photo(label, photo)
         except Exception as exc:  # noqa: BLE001
-            label.configure(image="", text=str(path.name)[:20])
+            configure_preview_label(
+                label,
+                "error",
+                detail="Thumb failed",
+                hint=path.name[:16],
+                width=max_size,
+                height=max_size,
+            )
             self._on_log(f"thumb fail {path.name}: {exc}")

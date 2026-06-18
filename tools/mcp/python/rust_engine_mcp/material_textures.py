@@ -57,6 +57,11 @@ PILOT_PROFILES: dict[str, ProfileDef] = {
     "steel_panel_01": ProfileDef("steel_panel_01", "steel", 42010, 0.85, 0.42),
     "roof_metal_01": ProfileDef("roof_metal_01", "steel", 42011, 0.9, 0.38),
     "metal_roof_01": ProfileDef("metal_roof_01", "steel", 42011, 0.9, 0.38),
+    "galvanized_steel_01": ProfileDef("galvanized_steel_01", "steel", 43001, 0.82, 0.42),
+    "gravel_yard_01": ProfileDef("gravel_yard_01", "concrete", 43002, 0.0, 0.92),
+    "warning_paint_yellow_01": ProfileDef("warning_paint_yellow_01", "concrete", 43003, 0.0, 0.55),
+    "concrete_pad_01": ProfileDef("concrete_pad_01", "concrete", 43004, 0.0, 0.86),
+    "ceramic_insulator_01": ProfileDef("ceramic_insulator_01", "concrete", 43005, 0.0, 0.35),
 }
 
 

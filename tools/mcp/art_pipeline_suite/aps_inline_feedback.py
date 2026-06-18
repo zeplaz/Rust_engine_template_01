@@ -5,24 +5,14 @@ from __future__ import annotations
 import tkinter as tk
 from typing import Literal
 
-from .aps_theme import (
-    COLOR_ACCENT,
-    COLOR_FAIL,
-    COLOR_FAIL_BG,
-    COLOR_INPUT_BG,
-    COLOR_MUTED,
-    COLOR_PASS,
-    COLOR_PASS_BG,
-    COLOR_WARN,
-    COLOR_WARN_BG,
-)
+from . import aps_theme
 from .state import ArtDomain
 
 StatusState = Literal["pass", "fail", "warn", "pending", "working"]
 
 _STATUS_DEFAULT_WORD: dict[StatusState, str] = {
     "pass": "valid",
-    "fail": "FAIL",
+    "fail": "blocked",
     "warn": "partial",
     "pending": "pending",
     "working": "working",
@@ -44,17 +34,17 @@ def status_atom(
         "working": "⟳",
     }
     fg = {
-        "pass": COLOR_PASS,
-        "fail": COLOR_FAIL,
-        "warn": COLOR_WARN,
-        "pending": COLOR_MUTED,
-        "working": COLOR_ACCENT,
+        "pass": aps_theme.COLOR_PASS,
+        "fail": aps_theme.COLOR_FAIL,
+        "warn": aps_theme.COLOR_WARN,
+        "pending": aps_theme.COLOR_MUTED,
+        "working": aps_theme.COLOR_ACCENT,
     }
     bg = {
-        "pass": COLOR_PASS_BG,
-        "fail": COLOR_FAIL_BG,
-        "warn": COLOR_WARN_BG,
-        "pending": COLOR_INPUT_BG,
+        "pass": aps_theme.COLOR_PASS_BG,
+        "fail": aps_theme.COLOR_FAIL_BG,
+        "warn": aps_theme.COLOR_WARN_BG,
+        "pending": aps_theme.COLOR_INPUT_BG,
         "working": "",
     }
     label = (word or _STATUS_DEFAULT_WORD[state]).strip()
@@ -68,23 +58,127 @@ def format_status_line(state: StatusState, *, word: str | None = None, detail: s
     return f"{glyph} {label}"
 
 
+def power_tier_atom(
+    tier: str,
+    *,
+    detail: str | None = None,
+) -> tuple[str, str, str, str]:
+    """DES-POWER-TIER-001 — bolt glyph + tier word for Facility Needs strip."""
+    norm = str(tier or "light").lower()
+    glyphs = {
+        "light": "⚡",
+        "medium": "⚡⚡",
+        "heavy": "⚡⚡⚡",
+        "grid": "⊞",
+    }
+    fg = {
+        "light": aps_theme.COLOR_MUTED,
+        "medium": aps_theme.COLOR_WARN,
+        "heavy": aps_theme.COLOR_FAIL,
+        "grid": aps_theme.COLOR_ACCENT,
+    }
+    bg = {
+        "light": aps_theme.COLOR_INPUT_BG,
+        "medium": aps_theme.COLOR_WARN_BG,
+        "heavy": aps_theme.COLOR_FAIL_BG,
+        "grid": aps_theme.COLOR_PASS_BG,
+    }
+    glyph = glyphs.get(norm, "⚡")
+    word = f"{norm} power"
+    if detail:
+        word = f"{word} — {detail.strip()}"
+    return glyph, word, fg.get(norm, aps_theme.COLOR_MUTED), bg.get(norm, aps_theme.COLOR_INPUT_BG)
+
+
+def format_power_tier_line(tier: str, *, detail: str | None = None) -> str:
+    glyph, word, _fg, _bg = power_tier_atom(tier, detail=detail)
+    return f"{glyph} {word}"
+
+
+def apply_status_atom(
+    label: tk.Widget,
+    var: tk.StringVar,
+    state: StatusState,
+    *,
+    word: str | None = None,
+    detail: str | None = None,
+) -> None:
+    """Apply canonical §3.4 status atom to a label + string var."""
+    glyph, label_word, fg, bg = status_atom(state, word=word, detail=detail)
+    var.set(f"{glyph} {label_word}")
+    label.configure(foreground=fg)
+    if bg and isinstance(label, tk.Label):
+        label.configure(background=bg)
+
+
+def _detail_from_legacy(text: str) -> str:
+    t = text.strip()
+    low = t.lower()
+    for prefix in (
+        "validation: pass — ",
+        "validation: fail — ",
+        "validation: pass - ",
+        "validation: fail - ",
+        "validation: pass:",
+        "validation: fail:",
+    ):
+        if low.startswith(prefix):
+            return t[len(prefix) :].strip()
+    if low.startswith("pass:"):
+        return t[5:].strip()
+    if low.startswith("fail:"):
+        return t[5:].strip()
+    if low.startswith("register pass"):
+        return t[len("register pass") :].strip().lstrip("—- ").strip()
+    return t
+
+
+def material_texture_status(
+    status: str,
+) -> tuple[StatusState, str, str]:
+    """Map material card texture status → status_atom tuple (glyph, word, fg)."""
+    mapping: dict[str, tuple[StatusState, str]] = {
+        "ready": ("pass", "ready"),
+        "partial": ("warn", "partial"),
+        "missing": ("pending", "missing"),
+    }
+    state, word = mapping.get(status, ("pending", status))
+    glyph, label, fg, _bg = status_atom(state, word=word)
+    return glyph, label, fg
+
+
+def format_material_texture_status(status: str, *, profile_id: str | None = None) -> str:
+    glyph, label, _fg = material_texture_status(status)
+    line = f"{glyph} {label}"
+    if profile_id:
+        return f"{line} · {profile_id}"
+    return line
+
+
 def validation_foreground(ok: bool | None) -> str:
     if ok is True:
-        return COLOR_PASS
+        return aps_theme.COLOR_PASS
     if ok is False:
-        return COLOR_FAIL
-    return COLOR_WARN if ok is None else COLOR_MUTED
+        return aps_theme.COLOR_FAIL
+    return aps_theme.COLOR_WARN if ok is None else aps_theme.COLOR_MUTED
 
 
 def set_inline_status(
-    label: tk.Label | tk.Widget,
+    label: tk.Widget,
     var: tk.StringVar,
     text: str,
     *,
     ok: bool | None = None,
 ) -> None:
-    var.set(text)
-    label.configure(foreground=validation_foreground(ok))
+    if ok is None:
+        var.set(text)
+        _glyph, _word, fg, _bg = status_atom("pending")
+        label.configure(foreground=fg)
+        return
+    state: StatusState = "pass" if ok else "fail"
+    detail = _detail_from_legacy(text)
+    word = "valid" if ok else "blocked"
+    apply_status_atom(label, var, state, word=word, detail=detail or None)
 
 
 def flow_prerequisite_message(action: str, state) -> str | None:

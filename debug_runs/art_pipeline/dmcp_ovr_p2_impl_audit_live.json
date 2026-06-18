@@ -7,15 +7,14 @@
   },
   "copy_pack": {
     "total": 32,
-    "pass": 26,
-    "partial": 2,
-    "fail": 3,
+    "pass": 22,
+    "partial": 0,
+    "fail": 9,
     "deferred": 1,
     "by_status": {
-      "pass": 26,
-      "partial": 2,
+      "pass": 22,
       "deferred": 1,
-      "fail": 3
+      "fail": 9
     }
   },
   "findings": [
@@ -43,7 +42,7 @@
       "id": "CP-03",
       "section": "\u00a71 global",
       "path": "tools/mcp/art_pipeline_suite/pipeline_pills.py",
-      "status": "partial",
+      "status": "pass",
       "kind": "ui_must",
       "old": "saved (QC not run)",
       "new": "saved (not checked)",
@@ -63,7 +62,7 @@
       "id": "CP-05",
       "section": "\u00a72 assembly",
       "path": "tools/mcp/art_pipeline_suite/assembly_panel.py",
-      "status": "pass",
+      "status": "fail",
       "kind": "ui_must",
       "old": "Material authority (APS-MAT-AUTH-UI-001)",
       "new": "Where materials come from",
@@ -103,7 +102,7 @@
       "id": "CP-09",
       "section": "\u00a72 assembly",
       "path": "tools/mcp/art_pipeline_suite/assembly_panel.py",
-      "status": "partial",
+      "status": "pass",
       "kind": "log_ok_old",
       "old": "P0 gate failed",
       "new": "Ship check failed",
@@ -193,7 +192,7 @@
       "id": "CP-18",
       "section": "\u00a75 materials",
       "path": "tools/mcp/art_pipeline_suite/material_preview_modes.py",
-      "status": "pass",
+      "status": "fail",
       "kind": "ui_must",
       "old": "Preview modes (APS-MAT-002)",
       "new": "text=\"Preview\"",
@@ -213,7 +212,7 @@
       "id": "CP-20",
       "section": "\u00a76 variants",
       "path": "tools/mcp/art_pipeline_suite/variants_panel.py",
-      "status": "pass",
+      "status": "fail",
       "kind": "ui_must",
       "old": "variant_set_v1 \u2014 declarative layers",
       "new": "Variant set \u2014 states of the same building",
@@ -223,7 +222,7 @@
       "id": "CP-21",
       "section": "\u00a76 variants",
       "path": "tools/mcp/art_pipeline_suite/variants_panel.py",
-      "status": "pass",
+      "status": "fail",
       "kind": "ui_must",
       "old": "Agent patch strip",
       "new": "Ask AI for a variant (advanced)",
@@ -273,7 +272,7 @@
       "id": "CP-26",
       "section": "\u00a78 landscape",
       "path": "tools/mcp/art_pipeline_suite/landscape_grammar_panel.py",
-      "status": "pass",
+      "status": "fail",
       "kind": "ui_must",
       "old": "land_dna + topology_graph",
       "new": "landscape layout graph (this is what ships)",
@@ -283,7 +282,7 @@
       "id": "CP-27",
       "section": "\u00a78 landscape",
       "path": "tools/mcp/art_pipeline_suite/landscape_states_panel.py",
-      "status": "pass",
+      "status": "fail",
       "kind": "ui_must",
       "old": "succession + disturbance matrix",
       "new": "growth stages & fire",
@@ -303,7 +302,7 @@
       "id": "CP-29",
       "section": "\u00a79 preview",
       "path": "tools/mcp/art_pipeline_suite/slot_preview_panel.py",
-      "status": "pass",
+      "status": "fail",
       "kind": "ui_must",
       "old": "Selected slot previews (APS-PREVIEW-001)",
       "new": "Selected piece previews",
@@ -333,7 +332,7 @@
       "id": "CP-32",
       "section": "\u00a77 atlas",
       "path": "tools/mcp/art_pipeline_suite/atlas_preview_panel.py",
-      "status": "fail",
+      "status": "pass",
       "kind": "ui_should",
       "old": "(no tile_map_*.png \u2014 run Pack atlas)",
       "new": "No packed tile sheet yet",
@@ -342,24 +341,24 @@
   ],
   "top_misses": [
     {
-      "id": "CP-03",
-      "section": "\u00a71 global",
-      "path": "tools/mcp/art_pipeline_suite/pipeline_pills.py",
-      "status": "partial",
+      "id": "CP-05",
+      "section": "\u00a72 assembly",
+      "path": "tools/mcp/art_pipeline_suite/assembly_panel.py",
+      "status": "fail",
       "kind": "ui_must",
-      "old": "saved (QC not run)",
-      "new": "saved (not checked)",
+      "old": "Material authority (APS-MAT-AUTH-UI-001)",
+      "new": "Where materials come from",
       "note": ""
     },
     {
-      "id": "CP-09",
-      "section": "\u00a72 assembly",
-      "path": "tools/mcp/art_pipeline_suite/assembly_panel.py",
-      "status": "partial",
-      "kind": "log_ok_old",
-      "old": "P0 gate failed",
-      "new": "Ship check failed",
-      "note": "status/log/dialog \u2014 artist-visible"
+      "id": "CP-18",
+      "section": "\u00a75 materials",
+      "path": "tools/mcp/art_pipeline_suite/material_preview_modes.py",
+      "status": "fail",
+      "kind": "ui_must",
+      "old": "Preview modes (APS-MAT-002)",
+      "new": "text=\"Preview\"",
+      "note": ""
     },
     {
       "id": "CP-19",
@@ -372,6 +371,56 @@
       "note": ""
     },
     {
+      "id": "CP-20",
+      "section": "\u00a76 variants",
+      "path": "tools/mcp/art_pipeline_suite/variants_panel.py",
+      "status": "fail",
+      "kind": "ui_must",
+      "old": "variant_set_v1 \u2014 declarative layers",
+      "new": "Variant set \u2014 states of the same building",
+      "note": ""
+    },
+    {
+      "id": "CP-21",
+      "section": "\u00a76 variants",
+      "path": "tools/mcp/art_pipeline_suite/variants_panel.py",
+      "status": "fail",
+      "kind": "ui_must",
+      "old": "Agent patch strip",
+      "new": "Ask AI for a variant (advanced)",
+      "note": ""
+    },
+    {
+      "id": "CP-26",
+      "section": "\u00a78 landscape",
+      "path": "tools/mcp/art_pipeline_suite/landscape_grammar_panel.py",
+      "status": "fail",
+      "kind": "ui_must",
+      "old": "land_dna + topology_graph",
+      "new": "landscape layout graph (this is what ships)",
+      "note": ""
+    },
+    {
+      "id": "CP-27",
+      "section": "\u00a78 landscape",
+      "path": "tools/mcp/art_pipeline_suite/landscape_states_panel.py",
+      "status": "fail",
+      "kind": "ui_must",
+      "old": "succession + disturbance matrix",
+      "new": "growth stages & fire",
+      "note": ""
+    },
+    {
+      "id": "CP-29",
+      "section": "\u00a79 preview",
+      "path": "tools/mcp/art_pipeline_suite/slot_preview_panel.py",
+      "status": "fail",
+      "kind": "ui_must",
+      "old": "Selected slot previews (APS-PREVIEW-001)",
+      "new": "Selected piece previews",
+      "note": ""
+    },
+    {
       "id": "CP-31",
       "section": "\u00a72 assembly",
       "path": "tools/mcp/art_pipeline_suite/grammar_dna_panel.py",
@@ -380,16 +429,6 @@
       "old": "Massing pressure (advanced)",
       "new": "Building shape bias (advanced)",
       "note": "outer LabelFrame title; collapsible wrapper uses new copy"
-    },
-    {
-      "id": "CP-32",
-      "section": "\u00a77 atlas",
-      "path": "tools/mcp/art_pipeline_suite/atlas_preview_panel.py",
-      "status": "fail",
-      "kind": "ui_should",
-      "old": "(no tile_map_*.png \u2014 run Pack atlas)",
-      "new": "No packed tile sheet yet",
-      "note": ""
     }
   ],
   "deferred_p3": [
@@ -405,24 +444,24 @@
     }
   ],
   "audit_complete": true,
-  "verdict": "PASS_WITH_NOTES",
+  "verdict": "FAIL",
   "handoff": {
     "p3": "OVR-P3-LAYOUT-001 \u2014 app.py flow caveat (CP-04)",
     "p5": "OVR-P5-STYLE-001 \u2014 footprint empty copy, atlas preview empty, material regenerate label",
     "logs": "assembly_panel P0 gate strings in status/log (CP-09)"
   },
-  "green": true,
+  "green": false,
   "deliverable": "src/dev/design_aps_uiux_p2_impl_audit_v1.md",
   "copy_pack_ref": "src/dev/design_aps_uiux_copy_pack_v1.md",
   "g0_audit_ref": "src/dev/design_aps_uiux_g0_audit_v1.md",
   "guard_test": "tools/mcp/python/tests/test_aps_no_jargon.py",
   "_agent_meta": {
     "schema": "dmcp_ovr_p2_impl_audit_live_v1",
-    "written_at_epoch_secs": 1781721220,
+    "written_at_epoch_secs": 1781793817,
     "profile": "DMCP_OVR_P2_IMPL_AUDIT",
     "source_system": "aps_uiux_p2_impl_audit",
     "relative_path": "debug_runs/art_pipeline/dmcp_ovr_p2_impl_audit_live.json",
-    "ritual": "BLANG:WIT-HON\u2192Q\u2713 DMCP-OVR-P2-IMPL-AUDIT-001",
+    "ritual": "BLANG:WIT-HON FAIL copy-pack",
     "agent": "designer-mcp"
   }
 }

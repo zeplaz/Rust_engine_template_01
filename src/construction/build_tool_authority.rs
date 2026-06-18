@@ -2,6 +2,7 @@
 
 use bevy::prelude::*;
 
+use crate::infrastructure::VoltageClass;
 use crate::strategic::SiteArchetype;
 
 use super::build_strip::ToolContext;
@@ -80,6 +81,7 @@ pub enum BuildTool {
     Building(BuildingArchetypeId),
     Road(RoadType),
     Rail(RailType),
+    PowerLine(VoltageClass),
     Demolish,
 }
 
@@ -92,6 +94,7 @@ impl BuildTool {
             Self::Building(_) => "building",
             Self::Road(_) => "road",
             Self::Rail(_) => "rail",
+            Self::PowerLine(_) => "power_line",
             Self::Demolish => "demolish",
         }
     }
@@ -111,6 +114,7 @@ impl BuildTool {
             },
             Self::Road(_) => ToolContext::Roads,
             Self::Rail(_) => ToolContext::Rail,
+            Self::PowerLine(_) => ToolContext::Utilities,
             Self::Demolish => ToolContext::Military,
         }
     }
@@ -176,12 +180,12 @@ pub fn apply_build_rail_tool_selection(
     tool.clear_building_intent();
     tool.tool = BuildTool::from_tool_context(ctx);
     match ctx {
-        ToolContext::Civil => tool.residential_menu_open = true,
-        ToolContext::Industry => tool.industrial_menu_open = true,
-        ToolContext::Utilities => tool.utilities_menu_open = true,
-        ToolContext::Ecology => tool.commercial_menu_open = true,
-        ToolContext::Roads | ToolContext::Rail | ToolContext::Military => {}
-        ToolContext::None => {}
+        ToolContext::Roads | ToolContext::Rail | ToolContext::Military | ToolContext::Utilities => {}
+        ToolContext::Civil
+        | ToolContext::Industry
+        | ToolContext::Utilities
+        | ToolContext::Ecology
+        | ToolContext::None => {}
     }
 }
 
@@ -211,7 +215,7 @@ pub fn apply_active_build_tool_to_strip(
 /// Shift+LMB is only meaningful for zone paint and road path finalize — not building queue overlap.
 #[must_use]
 pub fn shift_lmb_applies_to_active_tool(tool: BuildTool) -> bool {
-    matches!(tool, BuildTool::Zone(_) | BuildTool::Road(_) | BuildTool::Rail(_))
+    matches!(tool, BuildTool::Zone(_) | BuildTool::Road(_) | BuildTool::Rail(_) | BuildTool::PowerLine(_))
 }
 
 /// **PARAM-002** — buildings use Enter commit + scale drag; Shift+LMB queue removed.

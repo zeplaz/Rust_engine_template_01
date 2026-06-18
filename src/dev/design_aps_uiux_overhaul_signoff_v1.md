@@ -36,7 +36,7 @@ The overhaul delivers on the **north star**: APS reads as a calm artist tool —
 | 6 | One status language; no jargon / gate IDs in visible strings | **pass** | `test_aps_no_jargon.py` · G0 audit `0` violations |
 | 7 | Preview: labelled states, not blank black | **pass w/ notes** | 2×2 thumb grid; full 4-state async contract partial |
 | 8 | First-run: how-it-works, not schema dump | **pass w/ notes** | `test_aps_onboarding.py`; metadata collapsed default |
-| 9 | Operator eyeball recorded | **pending** | `aps_uiux_operator_eyeball_live.json` — structural pre-pass |
+| 9 | Operator eyeball recorded | **pass** | `aps_uiux_operator_eyeball_live.json` PASS |
 
 ---
 
@@ -56,7 +56,7 @@ The overhaul delivers on the **north star**: APS reads as a calm artist tool —
 | Role | Verdict | Date |
 |:---|:---|:---|
 | `@designer` | **PASS WITH NOTES** | 2026-06-02 |
-| `@operator` | **pending** pixel walk | — |
+| `@operator` | **PASS** | 2026-06-02 (oz — informal approve) |
 
 ```text
 OVR-P6-DESIGN-SIGN-001 complete (designer)

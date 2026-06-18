@@ -1,0 +1,88 @@
+{
+  "gate": "DMCP-PARALLEL-LANE-BKKF-001",
+  "lanes": [
+    "LG-5 expanded bake",
+    "FactoryCluster",
+    "kit002 concept"
+  ],
+  "slice_count": 3,
+  "done_count": 3,
+  "rows": [
+    {
+      "id": "DMCP-LG5-EXPAND-BAKE-001",
+      "deliverable": "src/dev/design_landscape_lg5_expand_bake_v1.md",
+      "deliverable_exists": true,
+      "status": "done",
+      "batch_audit": {
+        "green": true,
+        "checks": {
+          "batch_on_disk": true,
+          "variant_count_16": true,
+          "bake_source_keyframe_pack": true,
+          "atlas_domain_landscape": true,
+          "matrix_ref": true
+        }
+      },
+      "verdict": "PASS_WITH_NOTES"
+    },
+    {
+      "id": "DMCP-GRAM-ARCHETYPE-FACTORY-001",
+      "deliverable": "src/dev/design_factory_cluster_concept_v1.md",
+      "deliverable_exists": true,
+      "status": "done",
+      "grammar_audit": {
+        "green": true,
+        "checks": {
+          "ron_on_disk": true,
+          "archetype_id": true,
+          "double_hall": true,
+          "manufacturing_row": true
+        }
+      },
+      "verdict": "PASS"
+    },
+    {
+      "id": "DMCP-MODULE-KIT002-001",
+      "deliverable": "src/dev/design_kit_production_002_concept_v1.md",
+      "deliverable_exists": true,
+      "status": "done",
+      "manifest_audit": {
+        "green": true,
+        "checks": {
+          "manifest_on_disk": true,
+          "batch_id": true,
+          "module_count_6": true,
+          "module_ids": true,
+          "production_tier": true
+        },
+        "module_ids": [
+          "corner_L",
+          "door_warehouse",
+          "roof_industrial_shed_2u",
+          "stack_chimney_1u",
+          "wall_steel_1u",
+          "win_industrial_3u"
+        ]
+      },
+      "verdict": "PASS_WITH_NOTES",
+      "g4_open": true
+    }
+  ],
+  "audit_complete": true,
+  "green": true,
+  "verdict": "PASS_WITH_NOTES",
+  "handoff": {
+    "coder_mcp_lg5": "python -m rust_engine_mcp.landscape_lg5_expanded_batch",
+    "coder_mcp_kit_g4": "operator keyframes \u2192 kit-production-002-g4-evaluate",
+    "designer": "DES-STYLE-INDUSTRIAL-WEST-001 parallel"
+  },
+  "_agent_meta": {
+    "schema": "dmcp_parallel_lane_bkkf_live_v1",
+    "written_at_epoch_secs": 1781755761,
+    "profile": "DMCP_PARALLEL_BKKF",
+    "source_system": "dmcp_parallel_lane_bkkf",
+    "relative_path": "debug_runs/art_pipeline/dmcp_parallel_lane_bkkf_live.json",
+    "ritual": "BLANG:WIT-HON\u2192Q\u2713 DMCP-PARALLEL-LANE-BKKF",
+    "agent": "designer-mcp"
+  }
+}

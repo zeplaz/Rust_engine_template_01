@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "grammar_id": "factory_cluster_v1",
+  "archetype": {
+    "id": "FactoryCluster",
+    "usage": "factory",
+    "footprint_bounds": {
+      "min_width": 5,
+      "max_width": 14,
+      "min_depth": 4,
+      "max_depth": 10,
+      "min_floors": 1,
+      "max_floors": 2
+    }
+  },
+  "massing": {
+    "strategies": [
+      { "id": "double_hall", "weight": 40, "width_depth_ratio": 1.35, "footprint_mode": "rect" },
+      { "id": "long_hall", "weight": 30, "width_depth_ratio": 1.85, "footprint_mode": "rect" },
+      { "id": "yard_complex", "weight": 20, "footprint_mode": "yard_interior" },
+      { "id": "l_shape", "weight": 10, "footprint_mode": "l_shape" }
+    ]
+  },
+  "roof": {
+    "default_slot": "roof_default",
+    "by_massing": [
+      { "massing_id": "double_hall", "slot": "roof_industrial" },
+      { "massing_id": "yard_complex", "slot": "roof_flat" }
+    ]
+  },
+  "facade": {
+    "window_slot": "window_industrial",
+    "door_slot": "door_wide",
+    "wall_slot": "wall_1u",
+    "placement_tags": ["exterior", "industrial", "factory", "street_facing"]
+  },
+  "detail": {
+    "prop_slot": "prop_clutter",
+    "density": 0.45,
+    "tags": ["vent", "pipe", "chimney", "skylight"]
+  },
+  "age": {
+    "bands": [
+      { "id": "new", "weight": 30, "variant_tags": ["clean"] },
+      { "id": "weathered", "weight": 50, "variant_tags": ["clean", "weathered"] },
+      { "id": "abandoned", "weight": 20, "variant_tags": ["abandoned", "damaged"] }
+    ]
+  },
+  "district_styles": [
+    {
+      "id": "manufacturing_row",
+      "style_pack_id": "style_industrial_west",
+      "style_tags": ["steel", "sawtooth", "brick", "factory_row"],
+      "zoning": "industrial",
+      "material_profiles": {
+        "wall_1u": "steel_panel_01",
+        "wall_2u": "steel_panel_01",
+        "door_default": "steel_door_warehouse_01",
+        "door_wide": "steel_door_warehouse_01",
+        "corner_outer": "steel_corner_01",
+        "roof_default": "roof_metal_01",
+        "roof_industrial": "roof_metal_01",
+        "roof_flat": "roof_metal_01",
+        "window_industrial": "glass_panel_01"
+      }
+    }
+  ],
+  "facility_binding": {
+    "catalog_id": "concrete_mixer_plant",
+    "chain_id": "concrete_portland",
+    "supply_chain_role": "concrete_mixer",
+    "power_tier": "light",
+    "site_template_id": "concrete_mixer_plant_site_v0",
+    "program_axes": {
+      "storage": "medium",
+      "loading": "high",
+      "office": "low"
+    }
+  }
+}

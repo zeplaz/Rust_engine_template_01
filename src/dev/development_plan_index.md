@@ -2,7 +2,7 @@
 
 Single map of **planning → proof → implementation** for this repo. Use with orchestrator tooling so markdown boards, runtime todo boards, and witnesses stay aligned.
 
-**Live status (2026-06-14):** [`status_overview_20260613_v1.md`](status_overview_20260613_v1.md) · **HUD spine (wired):** [`build_read_unwired_spine_v1.md`](build_read_unwired_spine_v1.md) · **Coder long-run Phase 6:** [`coder_longrun_plan_phase6_v1.md`](coder_longrun_plan_phase6_v1.md) · [`post_drain_phase6_coder_queue.json`](../tools/orchestrator/queues/post_drain_phase6_coder_queue.json) · **Veg runtime proof:** [`plan_veg_runtime_proof_001_v1.md`](plan_veg_runtime_proof_001_v1.md) · **Veg burn/extract:** [`plan_veg_burn_extract_001_v1.md`](plan_veg_burn_extract_001_v1.md) · **G-PLAY split:** [`plan_g_play_split_v1.md`](plan_g_play_split_v1.md) · **Queue sync:** [`plan_queue_sync_001_close_v1.md`](plan_queue_sync_001_close_v1.md) · **Landscape:** [`guide_landscape_grammar_v1.md`](guide_landscape_grammar_v1.md) · **Lexicon v1.4.0:** [`landscape_grammar_lexicon_v1.md`](../prompts/guides/landscape_grammar_lexicon_v1.md) · **Phase 5 (drained):** [`post_drain_phase5_queue.json`](../tools/orchestrator/queues/post_drain_phase5_queue.json)
+**Live status (2026-06-18):** [`status_overview_20260613_v1.md`](status_overview_20260613_v1.md) · **Sim HUD Phase 2:** [`plan_sim_hud_professional_polish_v1.md`](plan_sim_hud_professional_polish_v1.md) · [`design_sim_hud_reflection_audit_v1.md`](design_sim_hud_reflection_audit_v1.md) · [`designer_sim_hud_prompt_v1.md`](designer_sim_hud_prompt_v1.md) · **Designer backlog:** [`plan_designer_work_202606_v1.md`](plan_designer_work_202606_v1.md) · **Industrial facility grammar:** [`plan_industrial_facility_grammar_suite_v1.md`](plan_industrial_facility_grammar_suite_v1.md) · **APS design system:** [`aps_design_system_v1.md`](aps_design_system_v1.md)
 
 ---
 
@@ -14,6 +14,20 @@ Single map of **planning → proof → implementation** for this repo. Use with 
 **Start:** [`designer_mcp_onboarding_v1.md`](designer_mcp_onboarding_v1.md) · run [`tools/mcp/install_designer_mcp.ps1`](../../tools/mcp/install_designer_mcp.ps1) · restart Cursor for MCP
 
 **Feeds:** procedural module kit (50 greybox), construction Phase 4 placeholder art, `assets/configs/buildings/`.
+
+**APS grammar evolution (ACTIVE):** [`plan_aps_grammar_evolution_v1.md`](plan_aps_grammar_evolution_v1.md) — tier-gated UI + preview ladder as grammar set matures · parent [`plan_building_grammar_evolution_v1.md`](plan_building_grammar_evolution_v1.md).
+
+**Designer backlog (2026-06):** [`plan_designer_work_202606_v1.md`](plan_designer_work_202606_v1.md) — APS polish · art · style bibles · sim UX · prompt [`designer_work_prompt_202606_v1.md`](designer_work_prompt_202606_v1.md) · queue [`designer_active_queue.json`](../tools/orchestrator/queues/designer_active_queue.json).
+
+**Industrial facility grammar (2026-06):** [`plan_industrial_facility_grammar_suite_v1.md`](plan_industrial_facility_grammar_suite_v1.md) — power/process/site binding · APS iterate tools · prompts [`industrial_facility_grammar_prompts_v1.md`](industrial_facility_grammar_prompts_v1.md) · authority [`industrial_supply_chains.json`](../assets/configs/industrial_supply_chains.json).
+
+**Sim HUD Phase 2 (2026-06):** [`plan_sim_hud_professional_polish_v1.md`](plan_sim_hud_professional_polish_v1.md) — build picker · tray · popup discipline · audit [`design_sim_hud_reflection_audit_v1.md`](design_sim_hud_reflection_audit_v1.md) · prompt [`designer_sim_hud_prompt_v1.md`](designer_sim_hud_prompt_v1.md). Prior close: [`design_sim_hud_product_signoff_v1.md`](../docs/archive/2026-06-src-dev/plans/design_sim_hud_product_signoff_v1.md).
+
+**Power grid construction (2026-06):** [`plan_power_grid_construction_ux_v1.md`](plan_power_grid_construction_ux_v1.md) — line draw curved/90° · voltage classes · **grid islanding** (electrical) · targeting/repair · charter [`design_power_line_construction_ux_v1.md`](design_power_line_construction_ux_v1.md) · prompt [`designer_power_grid_prompt_v1.md`](designer_power_grid_prompt_v1.md).
+
+**Nuclear failure / meltdown (2026-06):** [`plan_nuclear_power_failure_meltdown_v1.md`](plan_nuclear_power_failure_meltdown_v1.md) — offsite power loss · SCRAM · decay heat · meltdown (type-specific) · [`design_nuclear_containment_failure_v1.md`](design_nuclear_containment_failure_v1.md).
+
+**Power grid art & assets (2026-06):** [`plan_power_grid_art_assets_v1.md`](plan_power_grid_art_assets_v1.md) — modules · lines · VFX · HUD · prompts [`designer_mcp_power_grid_art_prompt_v1.md`](designer_mcp_power_grid_art_prompt_v1.md).
 
 **Production iso tiles (ACTIVE):** [`plan_procedural_building_tiles_production_v1.md`](plan_procedural_building_tiles_production_v1.md) — sim→variant, `kit_production_*`, fire frames; witness [`procedural_tiles_production_witness_v1.md`](procedural_tiles_production_witness_v1.md). **Bake spine (mandatory):** [`design_tile_bake_spine_convergence_v1.md`](design_tile_bake_spine_convergence_v1.md) — keyframe → tilemapgen; ortho stub CI-only.
 

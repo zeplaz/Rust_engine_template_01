@@ -55,7 +55,7 @@
     "relative_path": "debug_runs/ui_shell_migration_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "simulation_shell_phase2_live_proof",
-    "written_at_epoch_secs": 1781717385
+    "written_at_epoch_secs": 1781756528
   },
   "backends": {
     "P1_ops_strip": "bevy_ui",
@@ -146,7 +146,7 @@
     "left_chrome_width_px_expanded": 458.0,
     "map_hole_inset": false,
     "overlay_absolute": true,
-    "phase2c_closed": true,
+    "phase2c_closed": false,
     "stack_body_width_px": 400.0
   },
   "phase4": {
@@ -164,7 +164,7 @@
     ]
   },
   "phase5": {
-    "pause_menu_bevy": false
+    "pause_menu_bevy": true
   },
   "profile": "UI_SHELL_MIGRATION_2B",
   "ui_oh_2a_001": {
@@ -182,24 +182,24 @@
     "gate": "UI-OH-P4-001",
     "green": false,
     "icon_atlas_loaded": false,
-    "p4_1_green": true,
+    "p4_1_green": false,
     "p5_br_green": false
   },
   "ui_oh_p5_001": {
     "gate": "UI-OH-P5-001",
-    "green": false,
-    "pause_menu_bevy": false
+    "green": true,
+    "pause_menu_bevy": true
   },
   "ui_p2a_coder_b": {
-    "green": true,
+    "green": false,
     "mock_zone_parity": true,
     "phase2_zones_live": true
   },
   "ui_p2a_tail": {
-    "build_rail_authoritative": true,
+    "build_rail_authoritative": false,
     "f03_green": true,
     "ops_zone_hover_token": true,
-    "p4_auth_green": true
+    "p4_auth_green": false
   },
   "ui_p2b_coder_b": {
     "build_toolbox_egui_gated": true,
@@ -217,7 +217,7 @@
     "minimap_chrome_aligned": true,
     "minimap_gpu_path": false
   },
-  "ui_p5_pause_001_green": false,
+  "ui_p5_pause_001_green": true,
   "ui_w3_2a_001": {
     "context_tray_wired": true,
     "gate": "UI-W3-2A-001",
@@ -232,11 +232,11 @@
     "product_egui_shell_in_simulation": false
   },
   "ui_w3_2c_001": {
-    "build_rail_authoritative": true,
+    "build_rail_authoritative": false,
     "build_rail_width_px": 52.0,
     "context_rail_width_px": 48.0,
     "gate": "UI-W3-2C-001",
-    "green": true,
+    "green": false,
     "layout_option": "2C-B",
     "left_chrome_width_px_collapsed": 106.0
   },
@@ -244,24 +244,24 @@
     "gate": "UI-W3-P4-001",
     "green": false,
     "icon_atlas_loaded": false,
-    "p4_auth_green": true,
+    "p4_auth_green": false,
     "p5_br_tab_wired": false,
     "petroleum_panel_tab_wired": false
   },
   "ui_w3_p5_001": {
     "egui_pass_count_in_sim": 0,
     "gate": "UI-W3-P5-001",
-    "green": false,
-    "pause_menu_bevy": false
+    "green": true,
+    "pause_menu_bevy": true
   },
   "ui_w3_p6_001": {
     "egui_pass_count_in_sim": 0,
     "gate": "UI-W3-P6-001",
-    "green": false,
-    "pause_menu_bevy": false,
+    "green": true,
+    "pause_menu_bevy": true,
     "phase2b_closed": true,
     "plan": "PLAN-UI-PHASE6-001",
-    "shell_perf_green": false
+    "shell_perf_green": true
   },
   "ui_w3_theme_001": {
     "gate": "PLAN-UI-THEME-MERGE-001",
@@ -281,14 +281,14 @@
   },
   "witness": {
     "alert_click_expanded_tray": true,
-    "build_rail_authoritative": true,
-    "build_rail_synced": true,
+    "build_rail_authoritative": false,
+    "build_rail_synced": false,
     "build_toolbox_egui_gated": true,
     "escape_collapsed_tray": true,
     "flat_v2_tab_chrome": true,
     "floating_egui_shells_gated": true,
     "intel_map_camera_request": true,
-    "interaction_block_green": true,
+    "interaction_block_green": false,
     "last_minimap_rect_delta_px": 1.0,
     "last_mission_count": 4,
     "minimap_chrome_aligned": true,
