@@ -521,9 +521,47 @@ fn sync_view_isolation_diagnostics(
         );
 }
 
+/// **VM-10-MINIMAP-LOCKSTEP** — lib witness: follow modes exempt; free+match flags suspect.
+#[must_use]
+pub fn vm10_minimap_lockstep_diagnostics_green() -> bool {
+    vm10_minimap_lockstep_self_check().is_ok()
+}
+
+fn vm10_minimap_lockstep_self_check() -> Result<(), &'static str> {
+    let main_t = Vec2::new(3.0, 4.0);
+    let main_z = 2.0;
+    let mut free = MapViewState::default();
+    free.follow_mode = MinimapFollowMode::Free;
+    free.camera_center = main_t;
+    free.zoom = main_z;
+    if !minimap_main_lockstep_suspect(&free, main_t, main_z) {
+        return Err("free_matching_main");
+    }
+    let mut follow = MapViewState::default();
+    follow.follow_mode = MinimapFollowMode::FollowCamera;
+    follow.camera_center = main_t;
+    follow.zoom = main_z;
+    if minimap_main_lockstep_suspect(&follow, main_t, main_z) {
+        return Err("follow_camera_exempt");
+    }
+    let mut bookmark = MapViewState::default();
+    bookmark.follow_mode = MinimapFollowMode::FollowBookmark;
+    bookmark.camera_center = main_t;
+    bookmark.zoom = main_z;
+    if minimap_main_lockstep_suspect(&bookmark, main_t, main_z) {
+        return Err("follow_bookmark_exempt");
+    }
+    Ok(())
+}
+
 #[cfg(test)]
 mod isolation_tests {
     use super::*;
+
+    #[test]
+    fn vm10_minimap_lockstep_diagnostics_witness_green() {
+        assert!(vm10_minimap_lockstep_diagnostics_green());
+    }
 
     #[test]
     fn minimap_follow_camera_never_suspect() {

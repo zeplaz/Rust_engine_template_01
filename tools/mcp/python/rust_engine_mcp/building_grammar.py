@@ -194,10 +194,10 @@ def _resolve_footprint(
     depth = min_d + (s % depth_span)
 
     sid = str(strategy["id"])
-    if sid in ("long_hall", "double_hall"):
+    if sid in ("long_hall", "double_hall", "row_infill"):
         ratio = float(strategy.get("width_depth_ratio") or 1.5)
         width = max(2, min(max_w, round(depth * ratio)))
-    elif sid == "l_shape":
+    elif sid in ("l_shape", "corner_anchored"):
         width = max(min_w, min(max_w, depth + 2))
     else:
         width_span = max_w - min_w + 1

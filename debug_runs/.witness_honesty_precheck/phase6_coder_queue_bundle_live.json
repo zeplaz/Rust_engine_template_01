@@ -52,7 +52,7 @@
     "relative_path": "debug_runs/phase6_coder_queue_bundle_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_phase6_tail_witnesses",
-    "written_at_epoch_secs": 1781716815
+    "written_at_epoch_secs": 1781978469
   },
   "gate": "PHASE6-TAIL-BUNDLE-001",
   "green": true,

@@ -55,14 +55,14 @@ mod infrastructure_overlay;
 mod power_map_overlay_draw;
 pub use infrastructure_overlay::{
     collect_infrastructure_overlay_edges_system, collect_transport_overlay_edges_system,
-    infra_overlay_polish_green, infrastructure_overlay_hud_legend_wired,
+    compute_island_partition, infra_overlay_polish_green, infrastructure_overlay_hud_legend_wired,
     infrastructure_overlay_legend_rows, infrastructure_overlay_polish_witness_fields,
     stroke_for_layer, InfrastructureEdgeOverlay, InfrastructureNetworkLayer,
     InfrastructureOverlayDrawRequests, InfrastructureOverlayLegendRow,
     InfrastructureOverlayPlugin, InfrastructureOverlaySettings, InfrastructureOverlayStroke,
     PowerLineOverlayState, PowerMapOverlayPresentation, power_map_overlay_green,
     power_map_overlay_witness_fields, power_overlay_extended_legend_rows,
-    stroke_for_power_line_state, stroke_for_voltage_class,
+    stroke_for_power_line_state, stroke_for_voltage_class, voltage_for_link,
     sync_power_overlay_auto_on_system, refresh_power_island_from_damage_system,
 };
 pub use power_map_overlay_draw::{
@@ -99,6 +99,7 @@ pub use tactical_vector_overlay::{
 };
 pub use visual_perf_budget::{
     sync_tile_raster_spike_feedback_system, FireExtractCadence, FireExtractClock,
+    FireExtractDiagnostics, FireExtractFrameReport,
     TileRasterBudget, TileRasterSpikeFeedback, RASTER_SPIKE_EMA_MS, RASTER_SPIKE_FRAME_MS,
 };
 pub use crate::gui::{MinimapOverlayMask, MinimapPresentationMode, MinimapShellState};
@@ -313,13 +314,15 @@ pub use domain_projection_frame::{
     DomainProjectionId, DomainProjectionSlice,
 };
 pub use frame_perf::{
-    attrib_fire_pipeline_after, attrib_fire_pipeline_before, attrib_preview_cpu_raster_after,
+    attrib_fire_build_view_after, attrib_fire_build_view_before, attrib_fire_particles_after,
+    attrib_fire_particles_before, attrib_fire_pipeline_after, attrib_fire_pipeline_before,
+    attrib_fire_project_after, attrib_fire_project_before, attrib_preview_cpu_raster_after,
     attrib_preview_cpu_raster_before, attrib_preview_gpu_present_after,
     attrib_preview_gpu_present_before, attrib_streaming_reconstruct_after,
     attrib_streaming_reconstruct_before, emit_frame_perf_summary, frame_perf_verbose,
-    intra_update_stall_log, log_perf_phase, record_frame_perf_ms, record_map_fit_sync_ms,
-    record_tile_storage_apply_ms, record_viewport_sync_ms,
-    reset_frame_perf_counters, scoped_ms,
+    intra_update_stall_log, log_perf_phase, minimap_size_trace_enabled, record_frame_perf_ms,
+    record_map_fit_sync_ms, record_tile_storage_apply_ms, record_viewport_sync_ms,
+    reset_frame_perf_counters, scoped_ms, trace_minimap_size_writer,
     timed, timed_opt, FramePerf, FramePerfPlugin, FramePerfSlot, FrameUpdateAttrib, FrameWallClock,
     PerfScope,
 };
@@ -330,8 +333,8 @@ pub use stall_watch::{
 };
 pub use perf_attribution_witness::{
     perf_attribution_witness_json, perf_attribution_witness_lib_fixture,
-    reset_perf_attribution_witness_on_enter_simulation, sync_perf_attribution_witness_system,
-    PerfAttributionWitness, PERF_ATTRIBUTION_WINDOW,
+    percentile_from_slice, reset_perf_attribution_witness_on_enter_simulation,
+    sync_perf_attribution_witness_system, PerfAttributionWitness, PERF_ATTRIBUTION_WINDOW,
 };
 pub use visual_readiness_witness::{
     reset_visual_readiness_witness_on_enter_simulation, sync_visual_readiness_witness_system,

@@ -9,7 +9,7 @@
     "hardening_rules": "src/dev/coder_queue_hardening_rules_v1.md",
     "parent_drain": "tools/orchestrator/queues/coder_master_drain_queue.json",
     "status_doc": "src/dev/vegetation_system_honest_status_v1.md",
-    "rule": "Drain seq 1→82 without stopping · exit_predicate on witness JSON required · lib green ≠ done",
+    "rule": "Drain seq 1\u219282 without stopping \u00b7 exit_predicate on witness JSON required \u00b7 lib green \u2260 done",
     "regression": "cargo test -p proc_A_dine01 --lib landscape_grammar fire_ecology",
     "operator_exit": "vegetation_program_close_live.json phases A-E green + play_scenario veg visible",
     "reopen_audit": {
@@ -86,7 +86,7 @@
     "VEG-LG2-FUEL-BRIDGE-001",
     "VEG-LG2-HARVEST-001",
     "VEG-WITNESS-LIVE-PROOF-001",
-    "VEG-Î»-INPUTS-001",
+    "VEG-\u00ce\u00bb-INPUTS-001",
     "VEG-PRESET-INDUSTRIAL-001",
     "VEG-PRESET-MILITARY-001",
     "VEG-PRESET-SETTLEMENT-001",
@@ -127,8 +127,8 @@
       "seq": 1,
       "phase": "A",
       "id": "VEG-A01-HARNESS-001",
-      "status": "done",
-      "reopen_reason": "WIT-HON FAIL landscape_grammar_sim_harness_live.json — operator+lib fixture on lib harness",
+      "status": "blocked",
+      "reopen_reason": "WIT-HON FAIL landscape_grammar_sim_harness_live.json \u2014 operator+lib fixture on lib harness",
       "reopen_date": "2026-06-02",
       "reconcile_note": "CDR-A-WIT-HON-ROLLUP-001 + sim_harness_refreshes_witness_json_green green 2026-06-17",
       "priority": "P0",
@@ -144,13 +144,15 @@
         "cargo test -p proc_A_dine01 --lib landscape_grammar_live_proof"
       ],
       "live_sim_required": true,
-      "completed": "2026-06-13"
+      "completed": "2026-06-13",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
+      "updated_at": "2026-06-20T21:19:25Z"
     },
     {
       "seq": 2,
       "phase": "A",
       "id": "VEG-A02-SCHEDULE-001",
-      "status": "done",
+      "status": "blocked",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "LG2 systems in Simulation schedule after fire tick",
@@ -163,13 +165,15 @@
         "witness_counter_zero",
         "witness_lib_green_without_green"
       ],
-      "completed": "2026-06-13"
+      "completed": "2026-06-13",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
+      "updated_at": "2026-06-20T21:19:25Z"
     },
     {
       "seq": 3,
       "phase": "A",
       "id": "VEG-A03-FIRE-IGNITE-001",
-      "status": "done",
+      "status": "blocked",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "Play/demo scenario ignites chunk with LandscapeProgramOnChunk",
@@ -183,7 +187,9 @@
         "single_chunk_pilot"
       ],
       "live_sim_required": true,
-      "completed": "2026-06-13"
+      "completed": "2026-06-13",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
+      "updated_at": "2026-06-20T21:19:25Z"
     },
     {
       "seq": 4,
@@ -218,7 +224,7 @@
       "seq": 5,
       "phase": "A",
       "id": "VEG-A05-FIRE-STAGE-001",
-      "status": "done",
+      "status": "blocked",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "OldGrowth to BurnScar SuccessionTopologyStage transition",
@@ -230,7 +236,9 @@
         "witness_counter_zero",
         "witness_lib_green_without_green"
       ],
-      "completed": "2026-06-13"
+      "completed": "2026-06-13",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
+      "updated_at": "2026-06-20T21:19:25Z"
     },
     {
       "seq": 6,
@@ -272,7 +280,7 @@
       "seq": 7,
       "phase": "A",
       "id": "VEG-A07-BUILD-FOOTPRINT-001",
-      "status": "done",
+      "status": "blocked",
       "priority": "P0",
       "owner": "coder_a",
       "goal": "Construction commit maps footprint tiles to chunk entities",
@@ -282,7 +290,9 @@
         "witness_counter_zero",
         "witness_lib_green_without_green"
       ],
-      "completed": "2026-06-13"
+      "completed": "2026-06-13",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
+      "updated_at": "2026-06-20T21:19:25Z"
     },
     {
       "seq": 8,
@@ -355,7 +365,7 @@
       "seq": 10,
       "phase": "A",
       "id": "VEG-A10-RECOVERY-TICK-001",
-      "status": "done",
+      "status": "blocked",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "BurnScar recovery ticks when heat clears",
@@ -365,7 +375,9 @@
       "forbidden_exit": [
         "lib_test_only"
       ],
-      "completed": "2026-06-13"
+      "completed": "2026-06-13",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
+      "updated_at": "2026-06-20T21:19:25Z"
     },
     {
       "seq": 11,
@@ -399,7 +411,7 @@
       "seq": 12,
       "phase": "A",
       "id": "VEG-A12-FUEL-MOD-001",
-      "status": "done",
+      "status": "blocked",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "SuccessionTopologyStage modulates ChunkFuelProfile",
@@ -412,7 +424,9 @@
         "witness_counter_zero",
         "witness_lib_green_without_green"
       ],
-      "completed": "2026-06-13"
+      "completed": "2026-06-13",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
+      "updated_at": "2026-06-20T21:19:25Z"
     },
     {
       "seq": 13,
@@ -438,7 +452,7 @@
       "seq": 14,
       "phase": "A",
       "id": "VEG-A14-HARVEST-PATH-001",
-      "status": "done",
+      "status": "blocked",
       "priority": "P2",
       "owner": "coder_a",
       "goal": "DisturbanceKind::Harvest event path",
@@ -447,7 +461,9 @@
         "witness_counter_zero",
         "witness_lib_green_without_green"
       ],
-      "completed": "2026-06-13"
+      "completed": "2026-06-13",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
+      "updated_at": "2026-06-20T21:19:25Z"
     },
     {
       "seq": 15,
@@ -481,7 +497,7 @@
       "seq": 16,
       "phase": "A",
       "id": "VEG-A16-LIVE-PROOF-WIRE-001",
-      "status": "done",
+      "status": "blocked",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "landscape_grammar_live_proof in dev/mod.rs (not cfg(test) only)",
@@ -492,7 +508,9 @@
       "forbidden_exit": [
         "lib_test_only"
       ],
-      "completed": "2026-06-13"
+      "completed": "2026-06-13",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
+      "updated_at": "2026-06-20T21:19:25Z"
     },
     {
       "seq": 17,
@@ -518,7 +536,7 @@
       "seq": 18,
       "phase": "A",
       "id": "VEG-A18-PHASE-A-CLOSE-001",
-      "status": "done",
+      "status": "reopened",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "Phase A rollup: lg2 green + fire_ecology keys",
@@ -532,13 +550,15 @@
         "witness_counter_zero",
         "witness_lib_green_without_green"
       ],
-      "completed": "2026-06-13"
+      "completed": "2026-06-13",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness file on disk",
+      "updated_at": "2026-06-20T21:19:25Z"
     },
     {
       "seq": 19,
       "phase": "B",
       "id": "VEG-BIND-LOAD-001",
-      "status": "done",
+      "status": "blocked",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "Load + validate preset industrial_barrier_v0.json",
@@ -551,13 +571,15 @@
         "witness_counter_zero",
         "witness_lib_green_without_green"
       ],
-      "completed": "2026-06-13"
+      "completed": "2026-06-13",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
+      "updated_at": "2026-06-20T21:19:26Z"
     },
     {
       "seq": 20,
       "phase": "B",
       "id": "VEG-BIND-EVAL-001",
-      "status": "done",
+      "status": "blocked",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "Evaluator produces graph for INDUSTRIAL preset",
@@ -569,13 +591,15 @@
         "witness_counter_zero",
         "witness_lib_green_without_green"
       ],
-      "completed": "2026-06-13"
+      "completed": "2026-06-13",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
+      "updated_at": "2026-06-20T21:19:26Z"
     },
     {
       "seq": 21,
       "phase": "B",
       "id": "VEG-BMIL-LOAD-001",
-      "status": "done",
+      "status": "blocked",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "Load + validate preset military_defensive_v0.json",
@@ -588,13 +612,15 @@
         "witness_counter_zero",
         "witness_lib_green_without_green"
       ],
-      "completed": "2026-06-13"
+      "completed": "2026-06-13",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
+      "updated_at": "2026-06-20T21:19:26Z"
     },
     {
       "seq": 22,
       "phase": "B",
       "id": "VEG-BMIL-EVAL-001",
-      "status": "done",
+      "status": "blocked",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "Evaluator produces graph for MILITARY preset",
@@ -606,13 +632,15 @@
         "witness_counter_zero",
         "witness_lib_green_without_green"
       ],
-      "completed": "2026-06-13"
+      "completed": "2026-06-13",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
+      "updated_at": "2026-06-20T21:19:26Z"
     },
     {
       "seq": 23,
       "phase": "B",
       "id": "VEG-BSET-LOAD-001",
-      "status": "done",
+      "status": "blocked",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "Load + validate preset settlement_park_v0.json",
@@ -625,13 +653,15 @@
         "witness_counter_zero",
         "witness_lib_green_without_green"
       ],
-      "completed": "2026-06-13"
+      "completed": "2026-06-13",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
+      "updated_at": "2026-06-20T21:19:26Z"
     },
     {
       "seq": 24,
       "phase": "B",
       "id": "VEG-BSET-EVAL-001",
-      "status": "done",
+      "status": "blocked",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "Evaluator produces graph for SETTLEMENT preset",
@@ -643,13 +673,15 @@
         "witness_counter_zero",
         "witness_lib_green_without_green"
       ],
-      "completed": "2026-06-13"
+      "completed": "2026-06-13",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
+      "updated_at": "2026-06-20T21:19:26Z"
     },
     {
       "seq": 25,
       "phase": "B",
       "id": "VEG-BFOR-LOAD-001",
-      "status": "done",
+      "status": "blocked",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "Load + validate preset old_growth_core_v0.json",
@@ -662,13 +694,15 @@
         "witness_counter_zero",
         "witness_lib_green_without_green"
       ],
-      "completed": "2026-06-13"
+      "completed": "2026-06-13",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
+      "updated_at": "2026-06-20T21:19:26Z"
     },
     {
       "seq": 26,
       "phase": "B",
       "id": "VEG-BFOR-EVAL-001",
-      "status": "done",
+      "status": "blocked",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "Evaluator produces graph for FOREST preset",
@@ -680,13 +714,15 @@
         "witness_counter_zero",
         "witness_lib_green_without_green"
       ],
-      "completed": "2026-06-13"
+      "completed": "2026-06-13",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
+      "updated_at": "2026-06-20T21:19:26Z"
     },
     {
       "seq": 27,
       "phase": "B",
       "id": "VEG-BAGR-LOAD-001",
-      "status": "done",
+      "status": "blocked",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "Load + validate preset agri_riparian_v0.json",
@@ -699,13 +735,15 @@
         "witness_counter_zero",
         "witness_lib_green_without_green"
       ],
-      "completed": "2026-06-13"
+      "completed": "2026-06-13",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
+      "updated_at": "2026-06-20T21:19:26Z"
     },
     {
       "seq": 28,
       "phase": "B",
       "id": "VEG-BAGR-EVAL-001",
-      "status": "done",
+      "status": "blocked",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "Evaluator produces graph for AGRI preset",
@@ -717,7 +755,9 @@
         "witness_counter_zero",
         "witness_lib_green_without_green"
       ],
-      "completed": "2026-06-13"
+      "completed": "2026-06-13",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
+      "updated_at": "2026-06-20T21:19:26Z"
     },
     {
       "seq": 29,
@@ -751,7 +791,7 @@
       "seq": 30,
       "phase": "B",
       "id": "VEG-B-ROLLOUT-Q1-001",
-      "status": "done",
+      "status": "blocked",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "Map rollout quarter 1: attach LandscapeProgramOnChunk (+4 chunks)",
@@ -765,13 +805,15 @@
         "witness_lib_green_without_green",
         "single_chunk_pilot"
       ],
-      "completed": "2026-06-13"
+      "completed": "2026-06-13",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
+      "updated_at": "2026-06-20T21:19:25Z"
     },
     {
       "seq": 31,
       "phase": "B",
       "id": "VEG-B-ROLLOUT-Q2-001",
-      "status": "done",
+      "status": "blocked",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "Map rollout quarter 2: attach LandscapeProgramOnChunk (+4 chunks)",
@@ -785,13 +827,15 @@
         "witness_lib_green_without_green",
         "single_chunk_pilot"
       ],
-      "completed": "2026-06-13"
+      "completed": "2026-06-13",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
+      "updated_at": "2026-06-20T21:19:25Z"
     },
     {
       "seq": 32,
       "phase": "B",
       "id": "VEG-B-ROLLOUT-Q3-001",
-      "status": "done",
+      "status": "blocked",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "Map rollout quarter 3: attach LandscapeProgramOnChunk (+4 chunks)",
@@ -805,13 +849,15 @@
         "witness_lib_green_without_green",
         "single_chunk_pilot"
       ],
-      "completed": "2026-06-13"
+      "completed": "2026-06-13",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
+      "updated_at": "2026-06-20T21:19:25Z"
     },
     {
       "seq": 33,
       "phase": "B",
       "id": "VEG-B-ROLLOUT-Q4-001",
-      "status": "done",
+      "status": "blocked",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "Map rollout quarter 4: attach LandscapeProgramOnChunk (+4 chunks)",
@@ -825,7 +871,9 @@
         "witness_lib_green_without_green",
         "single_chunk_pilot"
       ],
-      "completed": "2026-06-13"
+      "completed": "2026-06-13",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
+      "updated_at": "2026-06-20T21:19:25Z"
     },
     {
       "seq": 34,
@@ -868,7 +916,7 @@
       "seq": 35,
       "phase": "B",
       "id": "VEG-B-LAMBDA-HYDRO-001",
-      "status": "done",
+      "status": "blocked",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "LambdaExternalInputs reads hydrology (read-only)",
@@ -878,13 +926,15 @@
         "witness_counter_zero",
         "witness_lib_green_without_green"
       ],
-      "completed": "2026-06-13"
+      "completed": "2026-06-13",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
+      "updated_at": "2026-06-20T21:19:25Z"
     },
     {
       "seq": 36,
       "phase": "B",
       "id": "VEG-B-LAMBDA-TRANSPORT-001",
-      "status": "done",
+      "status": "blocked",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "LambdaExternalInputs reads transport (read-only)",
@@ -894,13 +944,15 @@
         "witness_counter_zero",
         "witness_lib_green_without_green"
       ],
-      "completed": "2026-06-13"
+      "completed": "2026-06-13",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
+      "updated_at": "2026-06-20T21:19:25Z"
     },
     {
       "seq": 37,
       "phase": "B",
       "id": "VEG-B-LAMBDA-CONSTRUCTION-001",
-      "status": "done",
+      "status": "blocked",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "LambdaExternalInputs reads construction (read-only)",
@@ -910,13 +962,15 @@
         "witness_counter_zero",
         "witness_lib_green_without_green"
       ],
-      "completed": "2026-06-13"
+      "completed": "2026-06-13",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
+      "updated_at": "2026-06-20T21:19:25Z"
     },
     {
       "seq": 38,
       "phase": "B",
       "id": "VEG-B-PARTITION-001",
-      "status": "done",
+      "status": "blocked",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "3-8 topology nodes per chunk partition",
@@ -929,13 +983,15 @@
         "witness_counter_zero",
         "witness_lib_green_without_green"
       ],
-      "completed": "2026-06-13"
+      "completed": "2026-06-13",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
+      "updated_at": "2026-06-20T21:19:25Z"
     },
     {
       "seq": 39,
       "phase": "B",
       "id": "VEG-B-NESTED-DEPTH-001",
-      "status": "done",
+      "status": "blocked",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "nested_depth_max >= 2 map-wide mean",
@@ -947,13 +1003,15 @@
         "witness_counter_zero",
         "witness_lib_green_without_green"
       ],
-      "completed": "2026-06-13"
+      "completed": "2026-06-13",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
+      "updated_at": "2026-06-20T21:19:25Z"
     },
     {
       "seq": 40,
       "phase": "B",
       "id": "VEG-B-PHASE-CLOSE-001",
-      "status": "done",
+      "status": "reopened",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "Phase B rollup green",
@@ -966,13 +1024,15 @@
         "witness_counter_zero",
         "witness_lib_green_without_green"
       ],
-      "completed": "2026-06-13"
+      "completed": "2026-06-13",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness file on disk",
+      "updated_at": "2026-06-20T21:19:25Z"
     },
     {
       "seq": 41,
       "phase": "C",
       "id": "VEG-C01-PREVIEW-RASTER-001",
-      "status": "done",
+      "status": "blocked",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "Wire topology_kind to ecology preview raster tint",
@@ -983,13 +1043,15 @@
         "witness_lib_green_without_green",
         "eval_math_without_render"
       ],
-      "completed": "2026-06-13"
+      "completed": "2026-06-13",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
+      "updated_at": "2026-06-20T21:19:26Z"
     },
     {
       "seq": 42,
       "phase": "C",
       "id": "VEG-C02-PREVIEW-SHADER-001",
-      "status": "done",
+      "status": "blocked",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "Material path samples topology tint not biome scalar only",
@@ -1000,13 +1062,15 @@
         "witness_lib_green_without_green",
         "eval_math_without_render"
       ],
-      "completed": "2026-06-13"
+      "completed": "2026-06-13",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
+      "updated_at": "2026-06-20T21:19:26Z"
     },
     {
       "seq": 43,
       "phase": "C",
       "id": "VEG-C03-PREVIEW-HEterogeneity-001",
-      "status": "done",
+      "status": "blocked",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "Pixel heterogeneity test: >=2 distinct tint buckets per chunk",
@@ -1016,13 +1080,15 @@
         "witness_lib_green_without_green",
         "eval_math_without_render"
       ],
-      "completed": "2026-06-13"
+      "completed": "2026-06-13",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
+      "updated_at": "2026-06-20T21:19:26Z"
     },
     {
       "seq": 44,
       "phase": "C",
       "id": "VEG-C04-PREVIEW-WITNESS-001",
-      "status": "done",
+      "status": "reopened",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "lg4 preview witness operator_visible:true green:true",
@@ -1052,13 +1118,15 @@
       ],
       "live_sim_required": true,
       "operator_visible": true,
-      "completed": "2026-06-13"
+      "completed": "2026-06-13",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 missing_exit_predicate",
+      "updated_at": "2026-06-20T21:19:26Z"
     },
     {
       "seq": 45,
       "phase": "C",
       "id": "VEG-C05-PREVIEW-GLYPH-001",
-      "status": "done",
+      "status": "blocked",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "Lexicon glyph map deterministic per topology kind",
@@ -1068,13 +1136,15 @@
         "witness_lib_green_without_green",
         "eval_math_without_render"
       ],
-      "completed": "2026-06-13"
+      "completed": "2026-06-13",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
+      "updated_at": "2026-06-20T21:19:26Z"
     },
     {
       "seq": 46,
       "phase": "C",
       "id": "VEG-C06-PREVIEW-OVERLAY-001",
-      "status": "done",
+      "status": "blocked",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "Diagnostics ecology overlay section wired",
@@ -1085,13 +1155,15 @@
         "witness_lib_green_without_green",
         "eval_math_without_render"
       ],
-      "completed": "2026-06-13"
+      "completed": "2026-06-13",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
+      "updated_at": "2026-06-20T21:19:26Z"
     },
     {
       "seq": 47,
       "phase": "C",
       "id": "VEG-C07-POPULATION-AUTH-001",
-      "status": "done",
+      "status": "blocked",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "VegetationPopulation authority over vegetation_field_tick",
@@ -1102,13 +1174,15 @@
         "witness_lib_green_without_green",
         "eval_math_without_render"
       ],
-      "completed": "2026-06-13"
+      "completed": "2026-06-13",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
+      "updated_at": "2026-06-20T21:19:26Z"
     },
     {
       "seq": 48,
       "phase": "C",
       "id": "VEG-C08-POPULATION-WITNESS-001",
-      "status": "done",
+      "status": "blocked",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "canopy_density tracks graph not biome alone",
@@ -1118,13 +1192,15 @@
         "witness_lib_green_without_green",
         "eval_math_without_render"
       ],
-      "completed": "2026-06-13"
+      "completed": "2026-06-13",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
+      "updated_at": "2026-06-20T21:19:26Z"
     },
     {
       "seq": 49,
       "phase": "C",
       "id": "VEG-C09-MINIMAP-LAYER-001",
-      "status": "done",
+      "status": "blocked",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "Minimap ecology layer topology boundaries",
@@ -1135,7 +1211,9 @@
         "witness_lib_green_without_green",
         "eval_math_without_render"
       ],
-      "completed": "2026-06-13"
+      "completed": "2026-06-13",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
+      "updated_at": "2026-06-20T21:19:26Z"
     },
     {
       "seq": 50,
@@ -1216,7 +1294,7 @@
       "seq": 53,
       "phase": "C",
       "id": "VEG-C13-VISUAL-SMOKE-001",
-      "status": "done",
+      "status": "blocked",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "--test visual smoke: ecology raster non-uniform (qualified)",
@@ -1228,7 +1306,9 @@
       ],
       "live_sim_required": true,
       "operator_visible": true,
-      "completed": "2026-06-13"
+      "completed": "2026-06-13",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
+      "updated_at": "2026-06-20T21:19:26Z"
     },
     {
       "seq": 54,
@@ -1253,7 +1333,7 @@
       "seq": 55,
       "phase": "C",
       "id": "VEG-C15-PHASE-CLOSE-001",
-      "status": "done",
+      "status": "reopened",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "Phase C rollup: preview+play+stage5 green",
@@ -1268,13 +1348,15 @@
         "witness_lib_green_without_green"
       ],
       "operator_visible": true,
-      "completed": "2026-06-13"
+      "completed": "2026-06-13",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness file on disk",
+      "updated_at": "2026-06-20T21:19:26Z"
     },
     {
       "seq": 56,
       "phase": "D",
       "id": "VEG-D01-SETTLEMENT-LANDUSE-001",
-      "status": "done",
+      "status": "blocked",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "Settlement district to LandUseInfluence (remove x%16 hack)",
@@ -1287,13 +1369,15 @@
         "witness_counter_zero",
         "witness_lib_green_without_green"
       ],
-      "completed": "2026-06-13"
+      "completed": "2026-06-13",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
+      "updated_at": "2026-06-20T21:19:26Z"
     },
     {
       "seq": 57,
       "phase": "D",
       "id": "VEG-D02-TRANSPORT-CORRIDOR-001",
-      "status": "done",
+      "status": "blocked",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "Transport edge proximity biases CORRIDOR preset",
@@ -1306,13 +1390,15 @@
         "witness_counter_zero",
         "witness_lib_green_without_green"
       ],
-      "completed": "2026-06-13"
+      "completed": "2026-06-13",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
+      "updated_at": "2026-06-20T21:19:26Z"
     },
     {
       "seq": 58,
       "phase": "D",
       "id": "VEG-D03-CONSTRUCTION-CLEAR-001",
-      "status": "done",
+      "status": "blocked",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "Construction site clear couples to lg2 disturbance",
@@ -1325,13 +1411,15 @@
         "witness_counter_zero",
         "witness_lib_green_without_green"
       ],
-      "completed": "2026-06-13"
+      "completed": "2026-06-13",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
+      "updated_at": "2026-06-20T21:19:26Z"
     },
     {
       "seq": 59,
       "phase": "D",
       "id": "VEG-D04-HYDRO-RIPARIAN-001",
-      "status": "done",
+      "status": "blocked",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "Hydrology band biases riparian preset pick",
@@ -1344,7 +1432,9 @@
         "witness_counter_zero",
         "witness_lib_green_without_green"
       ],
-      "completed": "2026-06-13"
+      "completed": "2026-06-13",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
+      "updated_at": "2026-06-20T21:19:26Z"
     },
     {
       "seq": 60,
@@ -1378,7 +1468,7 @@
       "seq": 61,
       "phase": "D",
       "id": "VEG-D06-SIM-EFFECT-001",
-      "status": "done",
+      "status": "blocked",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "SimEffect hook for landscape disturbance telemetry",
@@ -1391,13 +1481,15 @@
         "witness_counter_zero",
         "witness_lib_green_without_green"
       ],
-      "completed": "2026-06-13"
+      "completed": "2026-06-13",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
+      "updated_at": "2026-06-20T21:19:26Z"
     },
     {
       "seq": 62,
       "phase": "D",
       "id": "VEG-D07-PHASE-CLOSE-001",
-      "status": "done",
+      "status": "reopened",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "Phase D rollup",
@@ -1410,13 +1502,15 @@
         "witness_counter_zero",
         "witness_lib_green_without_green"
       ],
-      "completed": "2026-06-13"
+      "completed": "2026-06-13",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness file on disk",
+      "updated_at": "2026-06-20T21:19:26Z"
     },
     {
       "seq": 63,
       "phase": "E",
       "id": "VEG-E01-SUBCELL-GRID-001",
-      "status": "done",
+      "status": "blocked",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "4x4 subcell population grid per chunk",
@@ -1428,13 +1522,15 @@
         "witness_counter_zero",
         "witness_lib_green_without_green"
       ],
-      "completed": "2026-06-13"
+      "completed": "2026-06-13",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
+      "updated_at": "2026-06-20T21:19:26Z"
     },
     {
       "seq": 64,
       "phase": "E",
       "id": "VEG-E02-INSTANCE-SPAWN-001",
-      "status": "done",
+      "status": "blocked",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "Deterministic instance spawn bounded by budget",
@@ -1446,13 +1542,15 @@
         "witness_counter_zero",
         "witness_lib_green_without_green"
       ],
-      "completed": "2026-06-13"
+      "completed": "2026-06-13",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
+      "updated_at": "2026-06-20T21:19:26Z"
     },
     {
       "seq": 65,
       "phase": "E",
       "id": "VEG-E03-INSTANCE-EXTRACT-001",
-      "status": "done",
+      "status": "blocked",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "Extract glyph per instance from lexicon",
@@ -1464,13 +1562,15 @@
         "witness_counter_zero",
         "witness_lib_green_without_green"
       ],
-      "completed": "2026-06-13"
+      "completed": "2026-06-13",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
+      "updated_at": "2026-06-20T21:19:26Z"
     },
     {
       "seq": 66,
       "phase": "E",
       "id": "VEG-E04-FIRE-CORRIDOR-001",
-      "status": "done",
+      "status": "blocked",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "Fire corridor reads population fuel corridor",
@@ -1482,13 +1582,15 @@
         "witness_counter_zero",
         "witness_lib_green_without_green"
       ],
-      "completed": "2026-06-13"
+      "completed": "2026-06-13",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
+      "updated_at": "2026-06-20T21:19:26Z"
     },
     {
       "seq": 67,
       "phase": "E",
       "id": "VEG-E05-SUCCESSION-GRAPH-001",
-      "status": "done",
+      "status": "blocked",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "Graph node stage on disturbance not scalar only",
@@ -1500,7 +1602,9 @@
         "witness_counter_zero",
         "witness_lib_green_without_green"
       ],
-      "completed": "2026-06-13"
+      "completed": "2026-06-13",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
+      "updated_at": "2026-06-20T21:19:26Z"
     },
     {
       "seq": 68,
@@ -1544,7 +1648,7 @@
       "seq": 70,
       "phase": "E",
       "id": "VEG-E08-PHASE-CLOSE-001",
-      "status": "done",
+      "status": "reopened",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "Phase E rollup",
@@ -1557,7 +1661,9 @@
         "witness_counter_zero",
         "witness_lib_green_without_green"
       ],
-      "completed": "2026-06-13"
+      "completed": "2026-06-13",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness file on disk",
+      "updated_at": "2026-06-20T21:19:26Z"
     },
     {
       "seq": 71,
@@ -1582,7 +1688,7 @@
       "seq": 72,
       "phase": "F",
       "id": "VEG-F02-MCP-ATLAS-001",
-      "status": "blocked",
+      "status": "reopened",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "Tile batch + promote spec",
@@ -1595,13 +1701,15 @@
         "lib_test_only",
         "witness_counter_zero",
         "witness_lib_green_without_green"
-      ]
+      ],
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 contradiction",
+      "updated_at": "2026-06-20T21:19:26Z"
     },
     {
       "seq": 73,
       "phase": "F",
       "id": "VEG-F03-REGISTRY-STAMP-001",
-      "status": "done",
+      "status": "blocked",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "Bevy registry + chunk UV stamp from atlas meta",
@@ -1613,7 +1721,9 @@
         "witness_counter_zero",
         "witness_lib_green_without_green"
       ],
-      "completed": "2026-06-13"
+      "completed": "2026-06-13",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
+      "updated_at": "2026-06-20T21:19:26Z"
     },
     {
       "seq": 74,
@@ -1639,7 +1749,7 @@
       "phase": "F",
       "id": "VEG-F05-PROGRAM-CLOSE-001",
       "status": "done",
-      "reopen_reason": "WIT-HON FAIL vegetation_program_close_live.json — rollup child dishonest green",
+      "reopen_reason": "WIT-HON FAIL vegetation_program_close_live.json \u2014 rollup child dishonest green",
       "reopen_date": "2026-06-02",
       "superseded_by": "CDR-A-WIT-HON-ROLLUP-001",
       "reconcile_note": "vegetation_program_close_live.json green via CDR-A-WIT-HON-ROLLUP-001",
@@ -1661,7 +1771,7 @@
       "seq": 76,
       "phase": "F",
       "id": "VEG-F06-PRESET-EXPAND-001",
-      "status": "done",
+      "status": "blocked",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "presets_on_disk >= 10",
@@ -1673,13 +1783,15 @@
         "witness_counter_zero",
         "witness_lib_green_without_green"
       ],
-      "completed": "2026-06-13"
+      "completed": "2026-06-13",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
+      "updated_at": "2026-06-20T21:19:26Z"
     },
     {
       "seq": 77,
       "phase": "F",
       "id": "VEG-F07-NESTED-DEPTH-003-001",
-      "status": "done",
+      "status": "blocked",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "nested_depth_max >= 3 on industrial+forest",
@@ -1691,13 +1803,15 @@
         "witness_counter_zero",
         "witness_lib_green_without_green"
       ],
-      "completed": "2026-06-13"
+      "completed": "2026-06-13",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
+      "updated_at": "2026-06-20T21:19:26Z"
     },
     {
       "seq": 78,
       "phase": "F",
       "id": "VEG-F08-QUEUE-SYNC-001",
-      "status": "done",
+      "status": "blocked",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "Sync HANDOFF + coder_active_queue",
@@ -1709,13 +1823,15 @@
         "witness_counter_zero",
         "witness_lib_green_without_green"
       ],
-      "completed": "2026-06-13"
+      "completed": "2026-06-13",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
+      "updated_at": "2026-06-20T21:19:26Z"
     },
     {
       "seq": 79,
       "phase": "G",
       "id": "VEG-G01-OPERATOR-HISTORY-001",
-      "status": "done",
+      "status": "blocked",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "DisturbanceHistory timeline in diagnostics UI",
@@ -1728,7 +1844,9 @@
         "witness_counter_zero",
         "witness_lib_green_without_green"
       ],
-      "completed": "2026-06-13"
+      "completed": "2026-06-13",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
+      "updated_at": "2026-06-20T21:19:26Z"
     },
     {
       "seq": 80,
@@ -1766,19 +1884,21 @@
       "seq": 82,
       "phase": "G",
       "id": "VEG-G04-DRAIN-SYNC-001",
-      "status": "done",
+      "status": "blocked",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "Mark v3 drained; archive v2 false-done audit",
       "depends_on": [
         "VEG-F08-QUEUE-SYNC-001"
       ],
-      "completed": "2026-06-13"
+      "completed": "2026-06-13",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
+      "updated_at": "2026-06-20T21:19:26Z"
     }
   ],
   "maintain_after_each_seq": [
     "cargo test -p proc_A_dine01 --lib landscape_grammar fire_ecology",
     "BLANG:CARGO --cached --compress 4"
   ],
-  "operator_handoff": "Drain seq 1→82 without stopping. Read exit_predicate witness fields before marking done. Full prompt: src/dev/coder_vegetation_full_chain_prompt_v1.md"
+  "operator_handoff": "Drain seq 1\u219282 without stopping. Read exit_predicate witness fields before marking done. Full prompt: src/dev/coder_vegetation_full_chain_prompt_v1.md"
 }

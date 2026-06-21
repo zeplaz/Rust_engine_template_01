@@ -125,7 +125,7 @@ impl BuildTool {
             ToolContext::None => Self::None,
             ToolContext::Roads => Self::Road(RoadType::Street),
             ToolContext::Rail => Self::Rail(RailType::Standard),
-            ToolContext::Utilities => Self::Building(BuildingArchetypeId::WaterPlant),
+            ToolContext::Utilities => Self::PowerLine(VoltageClass::Medium),
             ToolContext::Military => Self::Demolish,
             ToolContext::Industry => Self::Building(BuildingArchetypeId::Factory),
             ToolContext::Ecology => Self::Zone(ZoneTool::MixedUse),
@@ -181,11 +181,7 @@ pub fn apply_build_rail_tool_selection(
     tool.tool = BuildTool::from_tool_context(ctx);
     match ctx {
         ToolContext::Roads | ToolContext::Rail | ToolContext::Military | ToolContext::Utilities => {}
-        ToolContext::Civil
-        | ToolContext::Industry
-        | ToolContext::Utilities
-        | ToolContext::Ecology
-        | ToolContext::None => {}
+        ToolContext::Civil | ToolContext::Industry | ToolContext::Ecology | ToolContext::None => {}
     }
 }
 

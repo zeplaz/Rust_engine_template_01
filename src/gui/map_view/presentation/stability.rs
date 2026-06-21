@@ -229,6 +229,14 @@ pub fn commit_map_view_viewport_suggestions(
     if suggestions.minimap_panel.active {
         shell.panel_viewport_suggestion_active = true;
         shell.panel_viewport_suggestion_logical_size = suggestions.minimap_panel.logical_size;
+        // PERF-INSTR-VFX-001: interaction-buffer path into the suggestion. After the prior fix the
+        // `queue_panel_extent` caller was removed, so this should be SILENT — if it logs, a writer
+        // re-activated `suggestions.minimap_panel`.
+        crate::render::trace_minimap_size_writer(
+            "commit_suggestions",
+            shell.panel_viewport_suggestion_logical_size.x,
+            shell.panel_viewport_suggestion_logical_size.y,
+        );
         suggestions.minimap_panel.active = false;
     }
 }

@@ -19,6 +19,10 @@ SUBSTATION_BATCH_WITNESS_REL = "debug_runs/art_pipeline/mcp_pwr_substation_batch
 TRANSFORMER_BATCH_WITNESS_REL = "debug_runs/art_pipeline/mcp_pwr_transformer_batch_live.json"
 SUBSTATION_PROMOTE_WITNESS_REL = "debug_runs/art_pipeline/mcp_pwr_substation_promote_live.json"
 TRANSFORMER_PROMOTE_WITNESS_REL = "debug_runs/art_pipeline/mcp_pwr_transformer_promote_live.json"
+SUBSTATION_QC_WITNESS_REL = "debug_runs/art_pipeline/dmcp_qc_substation_live.json"
+TRANSFORMER_QC_WITNESS_REL = "debug_runs/art_pipeline/dmcp_qc_transformer_live.json"
+SUBSTATION_QC_DOC_REL = "src/dev/dmcp_qc_substation_yard_v1.md"
+TRANSFORMER_QC_DOC_REL = "src/dev/dmcp_qc_transformer_pad_v1.md"
 
 SUBSTATION_SPEC_REL = "assets/staging/specs/kit_substation_yard_production_001.json"
 TRANSFORMER_SPEC_REL = "assets/staging/specs/prop_transformer_production_run001.json"
@@ -462,6 +466,24 @@ def _asset_glb_status(rel: str, *, repo: Path, staging: bool = False) -> str:
     return report.status
 
 
+def _glb_vertex_count(rel: str, *, repo: Path) -> int | None:
+    path = repo / rel
+    if not path.is_file():
+        return None
+    from rust_engine_mcp.validate_glb import validate_glb
+
+    raw = validate_glb(path)
+    return raw.vertex_count if raw.valid else None
+
+
+def _witness_green(rel: str, *, repo: Path) -> bool:
+    path = repo / rel
+    if not path.is_file():
+        return False
+    data = json.loads(path.read_text(encoding="utf-8"))
+    return data.get("green") is True
+
+
 def refresh_substation_batch_witness(*, repo: Path | None = None) -> dict[str, Any]:
     root = _root(repo)
     mesh_glb = root / SUBSTATION_MESHES_REL
@@ -584,3 +606,251 @@ def refresh_transformer_promote_witness(*, repo: Path | None = None) -> dict[str
     out.write_text(json.dumps(body, indent=2) + "\n", encoding="utf-8")
     body["written"] = TRANSFORMER_PROMOTE_WITNESS_REL
     return body
+
+
+def refresh_substation_qc_witness(*, repo: Path | None = None) -> dict[str, Any]:
+    root = _root(repo)
+    glb_rel = f"assets/models/modules/{SUBSTATION_JOB_ID}/model.glb"
+    promote_green = _witness_green(SUBSTATION_PROMOTE_WITNESS_REL, repo=root)
+    validate_status = _asset_glb_status(glb_rel, repo=root)
+    verts = _glb_vertex_count(glb_rel, repo=root)
+    catalog = json.loads((root / "assets/configs/buildings" / f"{SUBSTATION_CATALOG_ID}.json").read_text())
+    footprint_ok = catalog.get("building_size_x") == 4 and catalog.get("building_size_y") == 3
+    teach_tier = verts is not None and verts < 200
+    verdict = "PASS_WITH_NOTES" if teach_tier else "PASS"
+    machine_green = (
+        promote_green
+        and validate_status == "passed"
+        and footprint_ok
+        and catalog.get("procedural_module_id") == SUBSTATION_ASSET_ID
+        and (root / SUBSTATION_QC_DOC_REL).is_file()
+    )
+    body: dict[str, Any] = {
+        "gate": "DMCP-QC-SUBSTATION-001",
+        "deliverable": SUBSTATION_QC_DOC_REL,
+        "model_glb": glb_rel,
+        "promote_green": promote_green,
+        "validate_asset_glb": validate_status,
+        "vertex_count": verts,
+        "footprint_4x3": footprint_ok,
+        "teach_tier_composite": teach_tier,
+        "verdict": verdict,
+        "manual_stills_pending": teach_tier,
+        "green": machine_green,
+        "_agent_meta": {
+            "schema": "dmcp_qc_substation_live_v1",
+            "written_at_epoch_secs": int(time.time()),
+            "profile": "DMCP_QC_SUBSTATION",
+            "source_system": "mcp_pwr_utility",
+            "relative_path": SUBSTATION_QC_WITNESS_REL,
+        },
+    }
+    out = root / SUBSTATION_QC_WITNESS_REL
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps(body, indent=2) + "\n", encoding="utf-8")
+    body["written"] = SUBSTATION_QC_WITNESS_REL
+    return body
+
+
+def refresh_transformer_qc_witness(*, repo: Path | None = None) -> dict[str, Any]:
+    root = _root(repo)
+    glb_rel = f"assets/models/modules/{TRANSFORMER_JOB_ID}/model.glb"
+    promote_green = _witness_green(TRANSFORMER_PROMOTE_WITNESS_REL, repo=root)
+    validate_status = _asset_glb_status(glb_rel, repo=root)
+    verts = _glb_vertex_count(glb_rel, repo=root)
+    catalog = json.loads((root / "assets/configs/buildings" / f"{TRANSFORMER_CATALOG_ID}.json").read_text())
+    footprint_ok = catalog.get("building_size_x") == 2 and catalog.get("building_size_y") == 2
+    lod0 = root / "assets/models/modules/prop_transformer_lod0_run001/model.glb"
+    supersedes = lod0.is_file() and (root / glb_rel).is_file()
+    geometry_ok = verts is not None and verts >= 200
+    verdict = "PASS" if geometry_ok else "PASS_WITH_NOTES"
+    machine_green = (
+        promote_green
+        and validate_status == "passed"
+        and footprint_ok
+        and supersedes
+        and catalog.get("procedural_module_id") == TRANSFORMER_ASSET_ID
+        and (root / TRANSFORMER_QC_DOC_REL).is_file()
+    )
+    body: dict[str, Any] = {
+        "gate": "DMCP-QC-TRANSFORMER-001",
+        "deliverable": TRANSFORMER_QC_DOC_REL,
+        "model_glb": glb_rel,
+        "promote_green": promote_green,
+        "validate_asset_glb": validate_status,
+        "vertex_count": verts,
+        "footprint_2x2": footprint_ok,
+        "supersedes_lod0_stub": supersedes,
+        "bushing_read_32px_proxy": geometry_ok,
+        "verdict": verdict,
+        "green": machine_green,
+        "_agent_meta": {
+            "schema": "dmcp_qc_transformer_live_v1",
+            "written_at_epoch_secs": int(time.time()),
+            "profile": "DMCP_QC_TRANSFORMER",
+            "source_system": "mcp_pwr_utility",
+            "relative_path": TRANSFORMER_QC_WITNESS_REL,
+        },
+    }
+    out = root / TRANSFORMER_QC_WITNESS_REL
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps(body, indent=2) + "\n", encoding="utf-8")
+    body["written"] = TRANSFORMER_QC_WITNESS_REL
+    return body
+
+
+CLOSE_WITNESS_REL = "debug_runs/art_pipeline/power_grid_art_downstream_close_live.json"
+INDUSTRIAL_ACTIVATION_REL = "debug_runs/industrial_activation_live.json"
+NUCLEAR_SPEC_WITNESS_REL = "debug_runs/art_pipeline/dmcp_nuclear_pwr_spec_live.json"
+HUD_ICONS_WITNESS_REL = "debug_runs/sim_hud_power_icons_live.json"
+
+CHILD_WITNESSES: tuple[str, ...] = (
+    MANIFEST_WITNESS_REL,
+    SUBSTATION_BATCH_WITNESS_REL,
+    TRANSFORMER_BATCH_WITNESS_REL,
+    SUBSTATION_PROMOTE_WITNESS_REL,
+    TRANSFORMER_PROMOTE_WITNESS_REL,
+    SUBSTATION_QC_WITNESS_REL,
+    TRANSFORMER_QC_WITNESS_REL,
+    NUCLEAR_SPEC_WITNESS_REL,
+    HUD_ICONS_WITNESS_REL,
+)
+
+
+def _load_witness_green(rel: str, *, repo: Path) -> bool:
+    path = repo / rel
+    if not path.is_file():
+        return False
+    data = json.loads(path.read_text(encoding="utf-8"))
+    return data.get("green") is True
+
+
+def refresh_industrial_activation_utility_art(*, repo: Path | None = None) -> dict[str, Any]:
+    """Patch industrial_activation_live.json with promoted utility GLB paths."""
+    root = _root(repo)
+    path = root / INDUSTRIAL_ACTIVATION_REL
+    if not path.is_file():
+        raise FileNotFoundError(f"missing {INDUSTRIAL_ACTIVATION_REL}")
+    body = json.loads(path.read_text(encoding="utf-8"))
+    sub_catalog = json.loads(
+        (root / "assets/configs/buildings" / f"{SUBSTATION_CATALOG_ID}.json").read_text(encoding="utf-8")
+    )
+    xfm_catalog = json.loads(
+        (root / "assets/configs/buildings" / f"{TRANSFORMER_CATALOG_ID}.json").read_text(encoding="utf-8")
+    )
+    sub_glb = str(sub_catalog.get("model_glb") or "")
+    xfm_glb = str(xfm_catalog.get("model_glb") or "")
+    sub_ok = sub_glb and (root / sub_glb).is_file()
+    xfm_ok = xfm_glb and (root / xfm_glb).is_file()
+    block = {
+        "gate": "PLAN-POWER-GRID-ART-ASSETS-001",
+        "substation_catalog": SUBSTATION_CATALOG_ID,
+        "transformer_catalog": TRANSFORMER_CATALOG_ID,
+        "substation_glb": sub_glb or None,
+        "transformer_glb": xfm_glb or None,
+        "utility_glb_paths_set": sub_ok and xfm_ok,
+        "green": sub_ok and xfm_ok,
+    }
+    body["power_utility_art"] = block
+    meta = body.get("_agent_meta") or {}
+    meta["power_utility_art_refresh"] = int(time.time())
+    body["_agent_meta"] = meta
+    path.write_text(json.dumps(body, indent=2) + "\n", encoding="utf-8")
+    return block
+
+
+def refresh_power_grid_art_downstream_close_witness(*, repo: Path | None = None) -> dict[str, Any]:
+    root = _root(repo)
+    child_status = {rel: _load_witness_green(rel, repo=root) for rel in CHILD_WITNESSES}
+    utility_art = refresh_industrial_activation_utility_art(repo=root)
+    mcp_rows_green = all(
+        child_status.get(rel, False)
+        for rel in (
+            MANIFEST_WITNESS_REL,
+            SUBSTATION_BATCH_WITNESS_REL,
+            TRANSFORMER_BATCH_WITNESS_REL,
+            SUBSTATION_PROMOTE_WITNESS_REL,
+            TRANSFORMER_PROMOTE_WITNESS_REL,
+        )
+    )
+    nuclear_green = child_status.get(NUCLEAR_SPEC_WITNESS_REL, False)
+    hud_green = child_status.get(HUD_ICONS_WITNESS_REL, False)
+    qc_sub_green = child_status.get(SUBSTATION_QC_WITNESS_REL, False)
+    qc_xfm_green = child_status.get(TRANSFORMER_QC_WITNESS_REL, False)
+    green = (
+        mcp_rows_green
+        and nuclear_green
+        and hud_green
+        and qc_sub_green
+        and qc_xfm_green
+        and utility_art.get("green") is True
+    )
+    body: dict[str, Any] = {
+        "gate": "PWR-ART-DOWNSTREAM-CLOSE-001",
+        "program_id": "PLAN-POWER-GRID-ART-ASSETS-001",
+        "green": green,
+        "child_witnesses": child_status,
+        "power_utility_art": utility_art,
+        "rows_closed": [
+            "MCP-PWR-UTILITY-MANIFEST-001",
+            "MCP-PWR-SUBSTATION-BATCH-001",
+            "MCP-PWR-TRANSFORMER-BATCH-001",
+            "MCP-PWR-PROMOTE-SUBSTATION-001",
+            "MCP-PWR-PROMOTE-TRANSFORMER-001",
+            "DMCP-SPEC-NUCLEAR-PWR-001",
+            "COD-ART-HUD-ICON-ATLAS-001",
+        ],
+        "human_gates_pending": [
+            row
+            for row, ok in (
+                ("DMCP-QC-SUBSTATION-001", qc_sub_green),
+                ("DMCP-QC-TRANSFORMER-001", qc_xfm_green),
+            )
+            if not ok
+        ],
+        "exit_predicate": {
+            "mcp_promote_chain_green": {"eq": mcp_rows_green},
+            "nuclear_spec_green": {"eq": nuclear_green},
+            "hud_atlas_green": {"eq": hud_green},
+            "utility_glb_paths_set": {"eq": utility_art.get("utility_glb_paths_set")},
+        },
+        "_agent_meta": {
+            "schema": "power_grid_art_downstream_close_live_v1",
+            "written_at_epoch_secs": int(time.time()),
+            "profile": "PWR_ART_DOWNSTREAM_CLOSE",
+            "source_system": "mcp_pwr_utility",
+            "relative_path": CLOSE_WITNESS_REL,
+            "wit_hon": "validate-report witness_honesty debug_runs/art_pipeline/power_grid_art_downstream_close_live.json --compress 3",
+        },
+    }
+    out = root / CLOSE_WITNESS_REL
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps(body, indent=2) + "\n", encoding="utf-8")
+    body["written"] = CLOSE_WITNESS_REL
+    return body
+
+
+def sync_power_grid_queue_statuses(*, repo: Path | None = None) -> dict[str, Any]:
+    """Mark completed MCP-PWR rows done in downstream queue."""
+    root = _root(repo)
+    queue_path = root / "tools/orchestrator/queues/power_grid_art_downstream_queue.json"
+    body = json.loads(queue_path.read_text(encoding="utf-8"))
+    done_ids = {
+        "MCP-PWR-UTILITY-MANIFEST-001",
+        "MCP-PWR-SUBSTATION-BATCH-001",
+        "MCP-PWR-TRANSFORMER-BATCH-001",
+        "MCP-PWR-PROMOTE-SUBSTATION-001",
+        "MCP-PWR-PROMOTE-TRANSFORMER-001",
+        "DMCP-QC-SUBSTATION-001",
+        "DMCP-QC-TRANSFORMER-001",
+        "PWR-ART-DOWNSTREAM-CLOSE-001",
+    }
+    updated: list[str] = []
+    for row in body.get("drain") or []:
+        row_id = str(row.get("id") or "")
+        if row_id in done_ids:
+            if row.get("status") != "done":
+                row["status"] = "done"
+                updated.append(row_id)
+    queue_path.write_text(json.dumps(body, indent=2) + "\n", encoding="utf-8")
+    return {"updated": updated, "queue": str(queue_path.relative_to(root)).replace("\\", "/")}

@@ -9,7 +9,7 @@
     "import_ok": true,
     "import_error": null,
     "collect_ok": true,
-    "collect_summary": "210/541 tests collected (331 deselected) in 0.31s",
+    "collect_summary": "224/555 tests collected (331 deselected) in 0.31s",
     "reason": ""
   },
   "steps_ok": true,
@@ -69,7 +69,7 @@
     "profile": "APS_E0_RELAUNCH",
     "relative_path": "debug_runs/aps_artist_tool_e2e_live.json",
     "source_system": "aps_artist_tool_e2e",
-    "written_at_epoch_secs": 1781793822,
+    "written_at_epoch_secs": 1781800424,
     "ritual": "BLANG:WIT-HON APS-EVO-E0-RELAUNCH-001"
   },
   "witness_honesty": {

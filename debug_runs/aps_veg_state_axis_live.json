@@ -83,7 +83,7 @@
     "profile": "APS_E3_VEG_STATE_AXIS",
     "relative_path": "debug_runs/aps_veg_state_axis_live.json",
     "source_system": "aps_veg_state_axis",
-    "written_at_epoch_secs": 1781793818,
+    "written_at_epoch_secs": 1781800420,
     "ritual": "BLANG:WIT-HON APS-EVO-E3-VEG-STATE-AXIS-001"
   },
   "witness_honesty": {

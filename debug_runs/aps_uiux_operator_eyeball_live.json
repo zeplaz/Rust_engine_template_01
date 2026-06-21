@@ -1,10 +1,10 @@
 {
   "gate_id": "OVR-P6-OPERATOR-EYEBALL-001",
   "program_id": "PLAN-APS-UIUX-OVERHAUL-001",
-  "green": true,
-  "verdict": "PASS",
+  "green": false,
+  "verdict": "PENDING_HUMAN",
   "structural_ok": true,
-  "display_guards_skipped": true,
+  "display_guards_skipped": false,
   "launch": "python tools/mcp/art_pipeline_suite/run.py",
   "walk": {
     "lanes": [
@@ -23,14 +23,14 @@
       "tests/test_aps_no_jargon.py": {
         "ok": true,
         "skipped": false,
-        "passed": 1,
+        "passed": 3,
         "failed": 0,
         "command": "C:\\Users\\oz_\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe -m pytest tests/test_aps_no_jargon.py -q"
       },
       "tests/test_aps_onboarding.py": {
         "ok": true,
         "skipped": false,
-        "passed": 3,
+        "passed": 8,
         "failed": 0,
         "command": "C:\\Users\\oz_\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe -m pytest tests/test_aps_onboarding.py -q"
       },
@@ -65,9 +65,9 @@
     },
     "display": {
       "tests/test_aps_min_window_layout.py": {
-        "ok": false,
-        "skipped": true,
-        "passed": 0,
+        "ok": true,
+        "skipped": false,
+        "passed": 4,
         "failed": 0,
         "command": "C:\\Users\\oz_\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe -m pytest tests/test_aps_min_window_layout.py -q"
       }
@@ -77,29 +77,29 @@
     {
       "id": "OVR-P55-PREVIEW-001",
       "verdict": "pending",
-      "operator": "oz",
-      "at": "2026-06-17",
+      "operator": null,
+      "at": null,
       "notes": "See P3 rubric \u00a79 + preview/onboard specs"
     },
     {
       "id": "OVR-P56-ONBOARD-001",
       "verdict": "pending",
-      "operator": "oz",
-      "at": "2026-06-17",
+      "operator": null,
+      "at": null,
       "notes": "See P3 rubric \u00a79 + preview/onboard specs"
     },
     {
       "id": "OVR-P6-OPERATOR-EYEBALL-001",
-      "verdict": "pass",
-      "operator": "oz",
-      "at": "2026-06-17",
-      "notes": "See P3 rubric \u00a79 + preview/onboard specs"
+      "verdict": "pending",
+      "operator": null,
+      "at": null,
+      "notes": "Machine structural guards green; pixel walk pending @ 1280\u00d7800 + MIN 960\u00d7600"
     }
   ],
   "record_human_pass": "APS_OPERATOR_EYEBALL_VERDICT=pass APS_OPERATOR_EYEBALL_OPERATOR=<name> python -c \"from rust_engine_mcp.aps_uiux_operator_eyeball import refresh_aps_uiux_operator_eyeball_witness; refresh_aps_uiux_operator_eyeball_witness()\"",
   "_agent_meta": {
     "schema": "aps_uiux_operator_eyeball_live_v1",
-    "written_at_epoch_secs": 1781727733,
+    "written_at_epoch_secs": 1781797045,
     "profile": "OVR_P6_OPERATOR_EYEBALL",
     "relative_path": "debug_runs/aps_uiux_operator_eyeball_live.json",
     "agent": "operator"

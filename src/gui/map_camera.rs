@@ -404,6 +404,8 @@ fn map_camera_apply_input_to_desired(
     q_cam: Query<&Transform, With<MainWorldCamera>>,
     mut locals: Local<MapCameraInputLocals>,
 ) {
+    // PERF-INSTR-VFX-001: name this system inside the `map_cam` wall bracket (STALL/PERF only).
+    let _perf = crate::render::PerfScope::new("upd_map_camera_apply_input");
     locals.before_apply = None;
 
     if !matches!(state.get(), BaseState::Simulation | BaseState::Editor) {
@@ -440,6 +442,21 @@ fn map_camera_apply_input_to_desired(
             }
         })
     }).unwrap_or(false);
+
+    if active_map_surface
+        .0
+        .is_some_and(|id| id == crate::gui::MapViewInstanceId::Minimap)
+    {
+        // Minimap owns wheel / grip while hovered — see `minimap_bevy_scroll_zoom_system`.
+        let grip = keys.pressed(bindings.map_mouse_grip) || mouse_btn.pressed(MouseButton::Middle);
+        if grip {
+            return;
+        }
+        let scroll = input_frame.scroll_delta;
+        if scroll.abs() >= f32::EPSILON {
+            return;
+        }
+    }
 
     if active_map_surface.blocks_main_world_map_camera_input() {
         return;
@@ -636,6 +653,8 @@ pub fn derive_map_camera_desired_from_view_authority(
     mut desired: ResMut<MapCameraDesired>,
     profile: Res<Stage5ReadinessProfile>,
 ) {
+    // PERF-INSTR-VFX-001: name this system inside the `map_cam` wall bracket (STALL/PERF only).
+    let _perf = crate::render::PerfScope::new("upd_map_camera_derive");
     let before = desired.clone();
     *desired = map_camera_desired_from_view_authority(authority.as_ref());
     trace_map_camera_desired_write_if_full_app(
@@ -798,6 +817,8 @@ fn map_camera_smooth_toward_desired(
     mut last_desired_scale: Local<f32>,
     mut last_trace: Local<u64>,
 ) {
+    // PERF-INSTR-VFX-001: name this system inside the `map_cam` wall bracket (STALL/PERF only).
+    let _perf = crate::render::PerfScope::new("upd_map_camera_smooth");
     if !matches!(state.get(), BaseState::Simulation | BaseState::Editor) {
         return;
     }

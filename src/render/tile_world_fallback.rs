@@ -907,7 +907,11 @@ fn tile_world_fallback_rasterize(
         raster_ctrl.chunk_grid.mark_all_dirty();
     }
 
-    let chunk_budget = if spike_active {
+    // First paint must not inherit spike cap — GPU minimap compositor reads `fallback.image` and
+    // stays black until terrain RGBA is populated at least once.
+    let chunk_budget = if raster_ctrl.last_applied_revision.is_none() {
+        usize::MAX
+    } else if spike_active {
         raster_policy.chunks_per_frame.min(2)
     } else {
         raster_policy.chunks_per_frame
@@ -1202,6 +1206,9 @@ pub fn draw_simulation_minimap_egui(
     overlays: &crate::gui::MinimapOverlayMask,
     ecology_rows: u32,
     veg_burn_rows: u32,
+    infra_settings: Option<&crate::render::InfrastructureOverlaySettings>,
+    infra_overlays: Option<&crate::render::InfrastructureOverlayDrawRequests>,
+    power_presentation: Option<&crate::render::PowerMapOverlayPresentation>,
 ) {
     let rev = raster_dirty.revision();
     let w = fallback.last_w as f32;
@@ -1323,16 +1330,25 @@ pub fn draw_simulation_minimap_egui(
         let tex_size = UVec2::new(w.max(1.0) as u32, h.max(1.0) as u32);
         ensure_viewport_camera_initialized(presentation, w.max(1.0), h.max(1.0));
         let panel_size = Vec2::new(inner.width(), inner.height());
-        if panel_size.x > 1.0 && panel_size.y > 1.0 {
-            interaction.queue_panel_extent(panel_size);
-            shell.panel_viewport_suggestion_active = true;
-            shell.panel_viewport_suggestion_logical_size = panel_size;
-        }
+        // MINIMAP-RESIZE-FEEDBACK-FIX: do NOT write egui content size back into the panel-size
+        // authority (`panel_viewport_suggestion_*`) during layout. That authority is owned by the
+        // sliders + `resolve_minimap_panel_viewport`; feeding content size here (and the outer
+        // window rect below) ratcheted the window ~+2px/frame and re-bumped the resolve revision
+        // every frame. The minimap still renders at its allocated size because the painted image
+        // (`compute_map_fit_strict` over `inner`/`tex_size`) and the local fit camera follow the
+        // egui-allocated panel — we only stop the write-back loop.
         if panel_size.x > 1.0
             && panel_size.y > 1.0
             && (presentation.viewport_size - panel_size).length_squared() > 4.0
         {
             presentation.viewport_size = panel_size;
+            // PERF-INSTR-VFX-001: egui-allocated panel size written into the minimap presentation
+            // camera viewport. Trace to confirm whether this still ratchets vs the suggestion path.
+            crate::render::trace_minimap_size_writer(
+                "presentation.viewport_size",
+                panel_size.x,
+                panel_size.y,
+            );
             fit_viewport_to_map(presentation, panel_size, w.max(1.0), h.max(1.0));
         }
         let fit = compute_map_fit_strict(inner, tex_size, presentation.fit_mode);
@@ -1342,6 +1358,20 @@ pub fn draw_simulation_minimap_egui(
         let hit_zoom = fit.scale.max(1e-6);
         let painter = ui.painter().with_clip_rect(panel_rect);
         painter.image(tex_id, image_rect, sample_uv, egui::Color32::WHITE);
+        if let (Some(settings), Some(edges), Some(power)) =
+            (infra_settings, infra_overlays, power_presentation)
+        {
+            super::power_map_overlay_draw::draw_power_strokes_on_minimap(
+                &painter,
+                edges,
+                settings,
+                power,
+                w,
+                h,
+                image_rect,
+                sample_uv,
+            );
+        }
         if shell.show_tactical_viewport_frame {
             paint_tactical_viewport_frame_on_minimap(
                 &painter,
@@ -1422,15 +1452,23 @@ pub fn draw_simulation_minimap_egui(
                 &inner.response,
                 Some(pending_layout),
             );
-            let next_viewport = viewport_rect_sanity.inspect_logical_size(
-                Vec2::new(inner.response.rect.width(), inner.response.rect.height()),
-                ViewportRectSource::MinimapProductShellWindow,
-                default_viewport,
-                Some(shell_diag),
-            );
-            interaction.queue_panel_extent(next_viewport);
+            // MINIMAP-RESIZE-FEEDBACK-FIX: do NOT requeue the outer window rect (content + toolbar
+            // + sliders + legend chrome) as the next panel extent. That fed a value larger than the
+            // panel back into `panel_viewport_suggestion_logical_size` (via the interaction buffer →
+            // `update_minimap_view` → `commit_map_view_viewport_suggestions`), which then became the
+            // `default_viewport` that sized the window next frame — a ~+2px/frame ratchet that never
+            // settled and re-bumped the resolve revision every frame. The panel size authority is now
+            // the sliders + `resolve_minimap_panel_viewport` only. `viewport_rect_sanity` is still
+            // consulted for `default_viewport` above (sole sizing read).
         }
         shell.last_window_rect = Some(inner.response.rect);
+        // PERF-INSTR-VFX-001: outer egui window rect (content + toolbar + sliders + legend chrome).
+        // This feeds `apply_window_rect_layout` → body → suggestion. Prime ratchet suspect: trace it.
+        crate::render::trace_minimap_size_writer(
+            "shell.last_window_rect",
+            inner.response.rect.width(),
+            inner.response.rect.height(),
+        );
     }
     shell.visible = open;
     legacy.open = open;

@@ -123,6 +123,19 @@
         "lanes.atlas.lg5_witness",
         "lanes.atlas.tile_witness"
       ]
+    },
+    {
+      "path": "debug_runs/art_pipeline/power_grid_art_downstream_close_live.json",
+      "green_fields": ["green"],
+      "mandatory_children": [
+        "debug_runs/art_pipeline/mcp_pwr_utility_manifest_live.json",
+        "debug_runs/art_pipeline/mcp_pwr_substation_batch_live.json",
+        "debug_runs/art_pipeline/mcp_pwr_transformer_batch_live.json",
+        "debug_runs/art_pipeline/mcp_pwr_substation_promote_live.json",
+        "debug_runs/art_pipeline/mcp_pwr_transformer_promote_live.json",
+        "debug_runs/art_pipeline/dmcp_nuclear_pwr_spec_live.json",
+        "debug_runs/sim_hud_power_icons_live.json"
+      ]
     }
   ],
   "gate_drift_pairs": [

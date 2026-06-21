@@ -8,8 +8,8 @@
     "product_verify_queue": "tools/orchestrator/queues/coder_product_verify_queue.json",
     "hardening_rules": "src/dev/coder_queue_hardening_rules_v1.md",
     "vegetation_full_chain": "src/dev/coder_vegetation_full_chain_prompt_v1.md",
-    "next_pick": "none — coder drain clear",
-    "rule": "AUDIT-v19 SIGNED — construction P1-P6 + organic B drain CLOSED; coder A pulls infra A-tail (E4-E6); coder C weather primary; do not re-pick CON-P2 or infra B coder_b_next rows",
+    "next_pick": "multi_parallel_home_queues — filter owner",
+    "rule": "AUDIT-v19 SIGNED — pull from multi_parallel_home_queues_v1.json by owner; cross-drain when blocked",
     "reconcile_snapshot": "src/dev/fleet_snapshot_20260602_v3.md",
     "workload_plan": "docs/archive/2026-06-fleet-drain/fleet_closed/fleet_coder_workload_queue_20260602_v1.md",
     "dispatch": "docs/archive/2026-06-fleet-drain/fleet_closed/fleet_stability_phase2_dispatch_v1.md",
@@ -57,7 +57,10 @@
     "coder_b_backlog": "docs/archive/2026-06-src-dev/plans/coder_b_backlog_wave6_20260527_v1.md",
     "weather_lane": "docs/archive/2026-06-src-dev/plans/plan_weather_parallel_lane_v1.md",
     "weather_witness": "docs/archive/2026-06-src-dev/plans/plan_weather_witness_002_v1.md",
-    "last_sync": "2026-06-15"
+    "last_sync": "2026-06-20",
+    "multi_parallel_dispatch": "tools/orchestrator/queues/multi_parallel_tracks_dispatch_v1.json",
+    "multi_parallel_home": "tools/orchestrator/queues/multi_parallel_home_queues_v1.json",
+    "multi_parallel_prompts": "src/dev/multi_parallel_agent_prompts_v1.md"
   },
   "coder_a": {
     "p1_pick_one": false,

@@ -23,7 +23,7 @@ pub use engine_with_worldgen::*; // Use the world generation version
 pub use ux_orchestration::{
     legacy_flow_for_worldgen_generating, legacy_flow_for_worldgen_preview, ux_begin_world_gen_from_menu,
     ux_enter_world_from_world_gen, ux_pause_confirm_exit_to_shutdown, ux_pause_resume,
-    ux_return_to_main_menu, UxBridgeSet, UxOrchestrationPlugin,
+    ux_return_to_main_menu, ux_spike_active, UxBridgeSet, UxOrchestrationPlugin,
 };
 pub use ux_states::{
     worldgen_lifecycle_active, worldgen_preview_systems_enabled, AppState, PauseState,

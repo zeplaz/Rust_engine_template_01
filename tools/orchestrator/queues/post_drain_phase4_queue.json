@@ -7,7 +7,7 @@
     "plan_doc": "src/dev/plan_product_polish_exec_001_v1.md",
     "coder_drain": "tools/orchestrator/queues/coder_drain_queue.json",
     "prior_program": "POST-DRAIN-PHASE-3-001",
-    "rule": "Coder drains coder_drain_queue.json · sim spine wave 1 P0 · witness JSON wins",
+    "rule": "Coder drains coder_drain_queue.json \u00b7 sim spine wave 1 P0 \u00b7 witness JSON wins",
     "last_sync": "2026-06-15"
   },
   "lanes": {
@@ -16,7 +16,7 @@
       "owner_default": "operator"
     },
     "H_VIEW": {
-      "label": "Viewport · zoom · MAP-PICK",
+      "label": "Viewport \u00b7 zoom \u00b7 MAP-PICK",
       "owner_default": "coder"
     },
     "I_FIRE": {
@@ -24,7 +24,7 @@
       "owner_default": "coder"
     },
     "J_DESIGN": {
-      "label": "Player read · UX sign-off",
+      "label": "Player read \u00b7 UX sign-off",
       "owner_default": "designer"
     },
     "K_PLAN": {
@@ -32,7 +32,7 @@
       "owner_default": "planner"
     },
     "L_SIM": {
-      "label": "SimEffect spine · telemetry · triggers",
+      "label": "SimEffect spine \u00b7 telemetry \u00b7 triggers",
       "owner_default": "coder"
     }
   },
@@ -43,7 +43,7 @@
       "priority": 0,
       "agent": "operator",
       "status": "done",
-      "goal": "Playtest report — cursor, build, fire",
+      "goal": "Playtest report \u2014 cursor, build, fire",
       "witness": "src/dev/operator_playtest_report_20260612_v1.md",
       "completed": "2026-06-12"
     },
@@ -73,7 +73,7 @@
       "priority": 0,
       "agent": "coder",
       "status": "done",
-      "goal": "Fire visible in normal play when sim has real heat — overlay + sparks; CLI test worlds for fire/weather/VFX",
+      "goal": "Fire visible in normal play when sim has real heat \u2014 overlay + sparks; CLI test worlds for fire/weather/VFX",
       "docs": [
         "src/dev/operator_playtest_report_20260612_v1.md",
         "src/dev/design_zoom_fire_read_v1.md"
@@ -86,48 +86,54 @@
       "lane": "H_VIEW",
       "priority": 1,
       "agent": "coder",
-      "status": "done",
+      "status": "blocked",
       "depends_on": [
         "DESIGN-BUILD-UX-REDESIGN-001"
       ],
-      "goal": "Implement build UX — two-click place + Adjust modifiers",
+      "goal": "Implement build UX \u2014 two-click place + Adjust modifiers",
       "docs": [
         "src/dev/design_build_ux_redesign_v1.md"
       ],
-      "completed": "2026-06-11"
+      "completed": "2026-06-11",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
+      "updated_at": "2026-06-20T21:19:25Z"
     },
     {
       "id": "TRIAGE-CURSOR-UNIFY-001",
       "lane": "H_VIEW",
       "priority": 1,
       "agent": "coder",
-      "status": "done",
+      "status": "blocked",
       "depends_on": [
         "DESIGN-BUILD-UX-REDESIGN-001"
       ],
-      "goal": "Unified game cursor — hide OS cursor; align pick + UI",
+      "goal": "Unified game cursor \u2014 hide OS cursor; align pick + UI",
       "docs": [
         "src/dev/design_build_ux_redesign_v1.md"
       ],
-      "completed": "2026-06-11"
+      "completed": "2026-06-11",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
+      "updated_at": "2026-06-20T21:19:25Z"
     },
     {
       "id": "PLAN-PRODUCT-POLISH-001",
       "lane": "K_PLAN",
       "priority": 0,
       "agent": "planner",
-      "status": "done",
-      "goal": "Sign product polish exec — acceptance probes, defer MCP",
+      "status": "blocked",
+      "goal": "Sign product polish exec \u2014 acceptance probes, defer MCP",
       "deliverable": "src/dev/plan_product_polish_exec_001_v1.md",
-      "completed": "2026-06-11"
+      "completed": "2026-06-11",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
+      "updated_at": "2026-06-20T21:19:25Z"
     },
     {
       "id": "PLAN-MAP-ZOOM-SMOOTH-001",
       "lane": "K_PLAN",
       "priority": 1,
       "agent": "planner",
-      "status": "done",
-      "goal": "Thin exec — Option A (snap ortho on zoom) vs B (bounded tile dirty) for zoom ghost",
+      "status": "blocked",
+      "goal": "Thin exec \u2014 Option A (snap ortho on zoom) vs B (bounded tile dirty) for zoom ghost",
       "deliverable": "src/dev/plan_map_zoom_smooth_exec_001_v1.md",
       "depends_on": [
         "PLAN-PRODUCT-POLISH-001"
@@ -135,7 +141,9 @@
       "unblocks": [
         "TRIAGE-MAP-ZOOM-SMOOTH-001"
       ],
-      "completed": "2026-06-11"
+      "completed": "2026-06-11",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
+      "updated_at": "2026-06-20T21:19:25Z"
     },
     {
       "id": "TRIAGE-MAP-PICK-CLOSURE-001",
@@ -144,7 +152,7 @@
       "agent": "coder",
       "status": "done",
       "also_known_as": "P0-BUILD-FOOTPRINT-001",
-      "goal": "Close MAP-PICK / VR-10 — Pick Δ < 1 · Ghost Δ < 4px",
+      "goal": "Close MAP-PICK / VR-10 \u2014 Pick \u0394 < 1 \u00b7 Ghost \u0394 < 4px",
       "witness": "debug_runs/construction_stage_live.json",
       "exit": "map_pick_closure_001.green; footprint_projection_ok; pick_delta_world_max=1",
       "completed": "2026-06-12"
@@ -154,13 +162,13 @@
       "lane": "H_VIEW",
       "priority": 2,
       "agent": "coder",
-      "status": "done",
+      "status": "reopened",
       "depends_on": [
         "PLAN-MAP-ZOOM-SMOOTH-001",
         "TRIAGE-MAP-PICK-CLOSURE-001"
       ],
-      "goal": "Eliminate zoom ghost — ortho/tile sync vs pan smooth",
-      "note": "Tile/zoom + witness module wired — BUILD-READ-REWIRE-003 done · map_zoom_coherence_live.json green",
+      "goal": "Eliminate zoom ghost \u2014 ortho/tile sync vs pan smooth",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 stub_marker:todo",
       "docs": [
         "src/dev/plan_product_polish_exec_001_v1.md",
         "src/gui/map_camera.rs",
@@ -168,30 +176,33 @@
         "src/render/tile_world_fallback.rs"
       ],
       "witness": "debug_runs/map_zoom_coherence_live.json",
-      "completed": "2026-06-11"
+      "completed": "2026-06-11",
+      "updated_at": "2026-06-20T21:19:25Z"
     },
     {
       "id": "P0-VFX-ZOOM-LOCK-001",
       "lane": "H_VIEW",
       "priority": 1,
       "agent": "coder",
-      "status": "done",
-      "goal": "Remove default tactical camera lock on --test vfx — scroll zoom must not snap back",
-      "note": "Parallel @coder B · phase3 review bundle",
+      "status": "blocked",
+      "goal": "Remove default tactical camera lock on --test vfx \u2014 scroll zoom must not snap back",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
       "docs": [
         "src/render/stage5_full_app_harness.rs"
       ],
-      "completed": "2026-06-11"
+      "completed": "2026-06-11",
+      "updated_at": "2026-06-20T21:19:25Z"
     },
     {
       "id": "P0-TERRAIN-BLOB-001",
       "lane": "H_VIEW",
       "priority": 2,
       "agent": "coder",
-      "status": "done",
-      "goal": "Central terrain raster seam/blob — tile_world_fallback chunk grid",
-      "note": "After MAP-ZOOM or parallel if file territory clear",
-      "completed": "2026-06-11"
+      "status": "blocked",
+      "goal": "Central terrain raster seam/blob \u2014 tile_world_fallback chunk grid",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
+      "completed": "2026-06-11",
+      "updated_at": "2026-06-20T21:19:25Z"
     },
     {
       "id": "TRIAGE-FIRE-PRODUCT-001",
@@ -199,7 +210,7 @@
       "priority": 1,
       "agent": "coder",
       "status": "done",
-      "goal": "Fire product finish — sparks/smoke at play zoom · stable fire_inst",
+      "goal": "Fire product finish \u2014 sparks/smoke at play zoom \u00b7 stable fire_inst",
       "witness": "debug_runs/stage5_full_app_live.json",
       "exit": "triage_fire_product_001.green; operational_spark_rows_gt_0",
       "completed": "2026-06-08"
@@ -240,8 +251,8 @@
       "depends_on": [
         "TRIAGE-MAP-PICK-CLOSURE-001"
       ],
-      "goal": "Play scenario acceptance — MAP-PICK lib green; validate zoom after coder slice",
-      "note": "💬 unblocked for placement · zoom ghost still open",
+      "goal": "Play scenario acceptance \u2014 MAP-PICK lib green; validate zoom after coder slice",
+      "note": "\ud83d\udcac unblocked for placement \u00b7 zoom ghost still open",
       "docs": [
         "src/dev/plan_g_play_close_001_checklist_v1.md"
       ],
@@ -265,8 +276,8 @@
       "lane": "K_PLAN",
       "priority": 0,
       "agent": "planner",
-      "status": "done",
-      "goal": "Sign SimEffect spine guide + exec — telemetry before fire producers",
+      "status": "blocked",
+      "goal": "Sign SimEffect spine guide + exec \u2014 telemetry before fire producers",
       "deliverable": "src/dev/plan_sim_effect_spine_exec_001_v1.md",
       "docs": [
         "src/dev/guide_sim_effect_spine_v1.md"
@@ -274,14 +285,16 @@
       "completed": "2026-06-11",
       "unblocks": [
         "SIM-EFFECT-QUEUE-001"
-      ]
+      ],
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
+      "updated_at": "2026-06-20T21:19:25Z"
     },
     {
       "id": "SIM-EFFECT-QUEUE-001",
       "lane": "L_SIM",
       "priority": 0,
       "agent": "coder",
-      "status": "done",
+      "status": "reopened",
       "depends_on": [
         "PLAN-SIM-EFFECT-SPINE-001"
       ],
@@ -297,41 +310,46 @@
         "SIM-EFFECT-TEL-001",
         "FIRE-IGNITION-P0-001"
       ],
-      "completed": "2026-06-11"
+      "completed": "2026-06-11",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 stub_marker:stub",
+      "updated_at": "2026-06-20T21:19:25Z"
     },
     {
       "id": "SIM-EFFECT-TEL-001",
       "lane": "L_SIM",
       "priority": 0,
       "agent": "coder",
-      "status": "done",
+      "status": "reopened",
       "depends_on": [
         "SIM-EFFECT-QUEUE-001"
       ],
       "goal": "Telemetry IDs + causal graph + JSONL ledger",
-      "note": "Runtime JSONL only — Postgres is dev-workstation export, NOT in proc_A_dine01",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 stub_marker:stub",
       "docs": [
         "src/dev/guide_sim_effect_spine_v1.md"
       ],
       "witness": "debug_runs/sim_effect_spine_live.json",
-      "completed": "2026-06-11"
+      "completed": "2026-06-11",
+      "updated_at": "2026-06-20T21:19:25Z"
     },
     {
       "id": "FIRE-IGNITION-P0-001",
       "lane": "L_SIM",
       "priority": 1,
       "agent": "coder",
-      "status": "done",
+      "status": "reopened",
       "depends_on": [
         "SIM-EFFECT-TEL-001"
       ],
-      "goal": "Lightning + transformer producers → EmberSpotIgnitionEvent in normal play",
+      "goal": "Lightning + transformer producers \u2192 EmberSpotIgnitionEvent in normal play",
       "docs": [
         "src/dev/plan_sim_effect_spine_exec_001_v1.md",
         "src/systems/fire/play_fire_visibility.rs"
       ],
       "witness": "debug_runs/fire_ecology_live.json",
-      "completed": "2026-06-11"
+      "completed": "2026-06-11",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 stub_marker:stub",
+      "updated_at": "2026-06-20T21:19:24Z"
     },
     {
       "id": "SIM-STEWARD-FIRE-REGRESS-001",
@@ -341,14 +359,14 @@
       "status": "deferred",
       "goal": "Fire/replay regression after Phase 4 slices",
       "witness": "debug_runs/replay_editor_parity_live.json",
-      "note": "Moved to Phase 5 queue — see post_drain_phase5_queue.json"
+      "note": "Moved to Phase 5 queue \u2014 see post_drain_phase5_queue.json"
     }
   ],
   "paused": [
     {
       "id": "MCP-P2-KIT002-PLAN",
       "track": "J_MCP",
-      "reason": "Secondary — view/fire polish P0 first"
+      "reason": "Secondary \u2014 view/fire polish P0 first"
     }
   ]
 }

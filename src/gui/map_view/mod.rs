@@ -23,9 +23,8 @@ use presentation::{
 };
 
 pub use backend::{
-    minimap_cpu_raster_handle, minimap_effects_cpu_raster_active,
-    minimap_main_display_uses_gpu_compositor, resolve_minimap_effects_cpu_raster_source,
-    resolve_minimap_texture_source, resolve_world_preview_texture_source, MapTextureSource,
+    minimap_main_display_uses_gpu_compositor, resolve_minimap_texture_source,
+    resolve_world_preview_texture_source, MapTextureSource,
 };
 pub use consumers::{minimap, world_preview};
 pub use debug::{

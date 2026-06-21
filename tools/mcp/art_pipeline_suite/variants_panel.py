@@ -13,6 +13,7 @@ from rust_engine_mcp.schemas import validate_variant_set
 
 from . import aps_theme
 from .aps_inline_feedback import set_inline_status
+from .aps_onboarding_panel import empty_state_label
 from .aps_collapsible import CollapsibleSection
 from .aps_tk import themed_listbox, themed_text
 from .aps_workflow_layout import workflow_file_row, workflow_intro, workflow_lane_banner, workflow_status_label
@@ -56,6 +57,8 @@ class VariantsPanel(ttk.Frame):
         left = ttk.Frame(paned, padding=4)
         paned.add(left, weight=1)
         ttk.Label(left, text="Variants").pack(anchor=tk.W)
+        self._empty_state = empty_state_label(left, "variants")
+        self._empty_state.pack(anchor=tk.W, pady=2)
         self.variant_list = themed_listbox(left, exportselection=False)
         self.variant_list.pack(fill=tk.BOTH, expand=True)
         self.variant_list.bind("<<ListboxSelect>>", self.on_variant_select)
@@ -154,6 +157,14 @@ class VariantsPanel(ttk.Frame):
     def _set_status(self, text: str, *, ok: bool | None = None) -> None:
         set_inline_status(self._status_lbl, self.status_var, text, ok=ok)
 
+    def _set_empty_state_visible(self, visible: bool) -> None:
+        if not hasattr(self, "_empty_state"):
+            return
+        if visible and not self._empty_state.winfo_ismapped():
+            self._empty_state.pack(anchor=tk.W, pady=2, before=self.variant_list)
+        elif not visible and self._empty_state.winfo_ismapped():
+            self._empty_state.pack_forget()
+
     def _selected_index(self) -> int | None:
         sel = self.variant_list.curselection()
         if not sel or not self._data:
@@ -162,6 +173,8 @@ class VariantsPanel(ttk.Frame):
 
     def _refresh_list(self) -> None:
         self.variant_list.delete(0, tk.END)
+        has_variants = bool(self._data and (self._data.get("variants") or []))
+        self._set_empty_state_visible(not has_variants)
         if not self._data:
             return
         for entry in self._data.get("variants") or []:

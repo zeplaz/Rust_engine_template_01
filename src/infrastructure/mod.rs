@@ -20,8 +20,10 @@ pub use settlement::{
 };
 pub use utility::{
     infra_e4_003_utility_connection_witness_green, infra_e4_004_authoring_witness_green,
-    PowerLine, UtilityAuthoringMode, UtilityAuthoringTool, UtilityConnection, UtilityLink,
-    UtilityNetworkKind, UtilityNetworkSnapshot, UTILITY_NETWORK_SCHEMA_V1, VoltageClass, WaterPipe,
+    initial_utility_power_connected, sync_utility_connection_power_system,
+    utility_activation_link_witness_green, PowerLine, UtilityAuthoringMode, UtilityAuthoringTool,
+    UtilityConnection, UtilityLink, UtilityNetworkKind, UtilityNetworkSnapshot,
+    UTILITY_NETWORK_SCHEMA_V1, VoltageClass, WaterPipe,
 };
 
 /// **INFRA-E0-003** — legacy `entities::structure::Road` / `Rrails` stubs gated off default build.

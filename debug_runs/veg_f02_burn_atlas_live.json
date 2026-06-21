@@ -1,0 +1,14 @@
+{
+  "gate": "VEG-F02-BURN-ATLAS-001",
+  "green": true,
+  "burn_catalog_rows": 15,
+  "expanded_atlas_green": true,
+  "sign_atlas_green": true,
+  "ship": false,
+  "_agent_meta": {
+    "schema": "veg_f02_burn_atlas_live_v1",
+    "written_at_epoch_secs": 1781984039,
+    "profile": "VEG_F02_BURN_ATLAS",
+    "relative_path": "debug_runs/veg_f02_burn_atlas_live.json"
+  }
+}

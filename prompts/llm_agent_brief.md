@@ -550,11 +550,26 @@ Large orient docs: **`node .claude/skills/agent-lang/driver.mjs doc <path>`** (f
 
 ---
 
+## Tool layer — I/O notation (CB-notation report)
+
+The largest token lever is the **tool schemas** (≈96% of always-on budget), not replies. Conventions
+(full forms: `$ref:prompts/SYMBOLIC_LANGUAGE.meta.md §3.12` · plan: `$ref:src/dev/plan_io_notation_upgrade_v1.md`):
+
+```text
+schema   one-line SIGNATURE BOOK  name(req,[opt]):type=def -> result   (−92% @100% callable; ⚡never strip the EXACT name)
+result   status/diff ⟶ ●◐○ vector (−73% vs JSON)   ·   handoff ⟶ Δ-table (lossless)   ·   diagnosis ⟶ HYP/EV/INFER+ρ
+status   dense ●◐○✗ (emoji sparse only)   ·   confidence inline ~.5/.75/1.0
+gate     ship no notation w/o cold-decode ≥95% + token before/after ; tool layer also ⊨ callability ≥95% (separate axis)
+```
+
+---
+
 ## Changelog
 
 | Ver | Date | Note |
 |:---|:---|:---|
 | v1 | — | Original |
+| v3.5Ω | 2026-06-19 | Tool-layer I/O notation (signature-book schemas, ●◐○ results, HYP/EV/INFER, cold-decode gate) — CB-notation report |
 | v3Ω | 2026-06-07 | Meta brief + registry + BLANG |
 | v3.1Ω | 2026-06-07 | Full Ω graphics · emoji density · RESPONSE-CONTRACT |
 | v3.2Ω | 2026-06-07 | Multi-line fold atlas · no one-line topology dumps |

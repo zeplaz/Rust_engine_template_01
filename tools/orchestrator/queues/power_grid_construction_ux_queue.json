@@ -1,0 +1,357 @@
+{
+  "_meta": {
+    "version": "1.0.0",
+    "program_id": "PLAN-POWER-GRID-CONSTRUCTION-UX-001",
+    "date": "2026-06-20",
+    "hub_scan": "2026-06-20",
+    "plan_doc": "src/dev/plan_power_grid_construction_ux_v1.md",
+    "charter": "src/dev/design_power_line_construction_ux_v1.md",
+    "rule": "Track A closed on witness \u00b7 pick Track B\u2192D top-down \u00b7 witness exit_predicate required",
+    "regression": "cargo test -p proc_A_dine01 --lib power_line_draw_live_proof construction",
+    "wit_hon": "validate-report witness_honesty <witness> --compress 3"
+  },
+  "dispatch_now": {
+    "coder": "idle \u2014 POWER-UX closed \u00b7 SIM-HUD P0 witnesses green \u00b7 pick grammar/phase-6",
+    "coder_b": "idle \u2014 overlay + popup migrate green",
+    "designer": "on-call \u2014 DES-POWER-NODE-HOVER \u00b7 DES-SIM-HUD-OPS-002"
+  },
+  "tracks": {
+    "A": "Line construction UX \u2014 draw \u00b7 tool sheet \u00b7 routing \u00b7 commit",
+    "B": "Map read & overlay \u2014 strokes \u00b7 nodes \u00b7 island highlight",
+    "C": "Combat & repair UX \u2014 cut \u00b7 transformer KO \u00b7 repair queue",
+    "D": "Sim integration \u2014 activation link \u00b7 island toast \u00b7 tool rail"
+  },
+  "drain": [
+    {
+      "seq": 1,
+      "track": "A",
+      "id": "DES-POWER-LINE-TOOL-SHEET-001",
+      "status": "done",
+      "priority": "P0",
+      "owner": "designer",
+      "witness": "src/dev/design_power_line_tool_sheet_v1.md",
+      "unblocks": [
+        "COD-POWER-LINE-DRAW-001"
+      ]
+    },
+    {
+      "seq": 2,
+      "track": "A",
+      "id": "DES-POWER-ROUTING-MODE-001",
+      "status": "done",
+      "priority": "P0",
+      "owner": "designer",
+      "depends_on": [
+        "DES-POWER-LINE-TOOL-SHEET-001"
+      ],
+      "witness": "src/dev/design_power_routing_mode_v1.md",
+      "unblocks": [
+        "COD-POWER-ORTHOGONAL-ROUTER-001",
+        "COD-POWER-SPLINE-ROUTER-001"
+      ]
+    },
+    {
+      "seq": 3,
+      "track": "A",
+      "id": "DES-POWER-VOLTAGE-PICKER-001",
+      "status": "reopened",
+      "priority": "P0",
+      "owner": "designer",
+      "witness": "src/dev/design_power_voltage_picker_v1.md",
+      "unblocks": [
+        "COD-POWER-LINE-DRAW-001"
+      ],
+      "note": "INTEL-OFFICER tail cull \u00b7 stub_marker:stub",
+      "updated_at": "2026-06-20T21:19:34Z"
+    },
+    {
+      "seq": 4,
+      "track": "A",
+      "id": "DES-POWER-SNAP-RULES-001",
+      "status": "done",
+      "priority": "P0",
+      "owner": "designer",
+      "witness": "src/dev/design_power_line_tool_sheet_v1.md",
+      "note": "Snap rules embedded in tool sheet \u00a7Snaps \u2014 no separate doc"
+    },
+    {
+      "seq": 5,
+      "track": "A",
+      "id": "COD-POWER-LINE-DRAW-001",
+      "status": "done",
+      "completed": "2026-06-20",
+      "priority": "P0",
+      "owner": "coder",
+      "depends_on": [
+        "DES-POWER-LINE-TOOL-SHEET-001",
+        "DES-POWER-VOLTAGE-PICKER-001"
+      ],
+      "goal": "BuildTool::PowerLine \u00b7 placement resource \u00b7 input system",
+      "witness": "debug_runs/power_line_draw_live.json",
+      "verify": [
+        "cargo test -p proc_A_dine01 --lib power_line_draw_live_proof"
+      ],
+      "unblocks": [
+        "COD-POWER-LINE-COMMIT-001"
+      ]
+    },
+    {
+      "seq": 6,
+      "track": "A",
+      "id": "COD-POWER-LINE-COMMIT-001",
+      "status": "done",
+      "completed": "2026-06-20",
+      "priority": "P0",
+      "owner": "coder",
+      "depends_on": [
+        "COD-POWER-LINE-DRAW-001"
+      ],
+      "goal": "Commit \u2192 UtilityNetworkSnapshot / graph edge",
+      "witness": "debug_runs/power_line_draw_live.json",
+      "exit_predicate": {
+        "witness": "debug_runs/power_line_draw_live.json",
+        "must": [
+          {
+            "path": "commit_to_utility_graph",
+            "eq": true
+          }
+        ]
+      }
+    },
+    {
+      "seq": 7,
+      "track": "A",
+      "id": "COD-POWER-ORTHOGONAL-ROUTER-001",
+      "status": "done",
+      "completed": "2026-06-20",
+      "priority": "P0",
+      "owner": "coder",
+      "depends_on": [
+        "DES-POWER-ROUTING-MODE-001",
+        "COD-POWER-LINE-DRAW-001"
+      ],
+      "goal": "90\u00b0 Manhattan path generator",
+      "witness": "debug_runs/power_line_draw_live.json",
+      "exit_predicate": {
+        "witness": "debug_runs/power_line_draw_live.json",
+        "must": [
+          {
+            "path": "orthogonal_router",
+            "eq": true
+          }
+        ]
+      }
+    },
+    {
+      "seq": 8,
+      "track": "A",
+      "id": "COD-POWER-SPLINE-ROUTER-001",
+      "status": "done",
+      "completed": "2026-06-20",
+      "priority": "P0",
+      "owner": "coder",
+      "depends_on": [
+        "DES-POWER-ROUTING-MODE-001",
+        "COD-POWER-LINE-DRAW-001"
+      ],
+      "goal": "Curved router \u2014 reuse infra spline",
+      "witness": "debug_runs/power_line_draw_live.json",
+      "exit_predicate": {
+        "witness": "debug_runs/power_line_draw_live.json",
+        "must": [
+          {
+            "path": "spline_router",
+            "eq": true
+          }
+        ]
+      }
+    },
+    {
+      "seq": 9,
+      "track": "B",
+      "id": "DES-POWER-MAP-OVERLAY-002",
+      "status": "done",
+      "priority": "P1",
+      "owner": "designer",
+      "witness": "src/dev/design_power_map_overlay_v1.md",
+      "unblocks": [
+        "COD-POWER-OVERLAY-RENDER-001",
+        "COD-POWER-ISLAND-HIGHLIGHT-001"
+      ]
+    },
+    {
+      "seq": 10,
+      "track": "B",
+      "id": "DES-POWER-NODE-HOVER-001",
+      "status": "reopened",
+      "priority": "P1",
+      "owner": "designer",
+      "goal": "Transformer/substation hover cards",
+      "depends_on": [
+        "DES-POWER-MAP-OVERLAY-002"
+      ],
+      "witness": "src/dev/design_power_node_hover_v1.md",
+      "unblocks": [
+        "COD-POWER-NODE-HOVER-001"
+      ],
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 missing_exit_predicate",
+      "updated_at": "2026-06-20T21:19:24Z"
+    },
+    {
+      "seq": 11,
+      "track": "B",
+      "id": "COD-POWER-OVERLAY-RENDER-001",
+      "status": "reopened",
+      "completed": "2026-06-20",
+      "priority": "P1",
+      "owner": "coder_b",
+      "depends_on": [
+        "DES-POWER-MAP-OVERLAY-002",
+        "COD-POWER-LINE-DRAW-001"
+      ],
+      "goal": "Compositor strokes by VoltageClass + state",
+      "witness": "debug_runs/power_map_overlay_live.json",
+      "verify": [
+        "cargo test -p proc_A_dine01 --lib power_map_overlay"
+      ],
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 missing_exit_predicate",
+      "updated_at": "2026-06-20T21:19:24Z"
+    },
+    {
+      "seq": 12,
+      "track": "B",
+      "id": "COD-POWER-ISLAND-HIGHLIGHT-001",
+      "status": "reopened",
+      "completed": "2026-06-20",
+      "priority": "P1",
+      "owner": "coder",
+      "depends_on": [
+        "DES-POWER-MAP-OVERLAY-002",
+        "COD-POWER-LINE-COMMIT-001"
+      ],
+      "goal": "Island boundary + dim unpowered buildings",
+      "witness": "debug_runs/power_grid_track_bd_live.json",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 missing_exit_predicate",
+      "updated_at": "2026-06-20T21:19:24Z"
+    },
+    {
+      "seq": 13,
+      "track": "C",
+      "id": "DES-POWER-TARGETING-001",
+      "status": "done",
+      "priority": "P2",
+      "owner": "designer",
+      "witness": "src/dev/design_power_targeting_v1.md",
+      "unblocks": [
+        "COD-POWER-DAMAGE-SEGMENT-001"
+      ]
+    },
+    {
+      "seq": 14,
+      "track": "C",
+      "id": "DES-POWER-REPAIR-PANEL-001",
+      "status": "done",
+      "priority": "P2",
+      "owner": "designer",
+      "witness": "src/dev/design_power_repair_panel_v1.md",
+      "unblocks": [
+        "COD-POWER-REPAIR-QUEUE-001"
+      ]
+    },
+    {
+      "seq": 15,
+      "track": "C",
+      "id": "COD-POWER-DAMAGE-SEGMENT-001",
+      "status": "reopened",
+      "completed": "2026-06-20",
+      "priority": "P2",
+      "owner": "coder",
+      "depends_on": [
+        "DES-POWER-TARGETING-001",
+        "COD-POWER-LINE-COMMIT-001"
+      ],
+      "goal": "Segment HP + cut \u2192 graph split",
+      "witness": "debug_runs/power_grid_track_c_live.json",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 missing_exit_predicate",
+      "updated_at": "2026-06-20T21:19:24Z"
+    },
+    {
+      "seq": 16,
+      "track": "C",
+      "id": "COD-POWER-REPAIR-QUEUE-001",
+      "status": "done",
+      "completed": "2026-06-20",
+      "priority": "P2",
+      "owner": "coder",
+      "depends_on": [
+        "DES-POWER-REPAIR-PANEL-001",
+        "COD-POWER-DAMAGE-SEGMENT-001"
+      ],
+      "goal": "Repair jobs UI + sim hook",
+      "witness": "debug_runs/power_grid_track_c_live.json"
+    },
+    {
+      "seq": 17,
+      "track": "D",
+      "id": "COD-UTILITY-ACTIVATION-LINK-001",
+      "status": "reopened",
+      "completed": "2026-06-20",
+      "priority": "P1",
+      "owner": "coder",
+      "depends_on": [
+        "COD-POWER-LINE-COMMIT-001"
+      ],
+      "goal": "Activation reads UtilityConnection not radius hack",
+      "witness": "debug_runs/power_grid_track_bd_live.json",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 missing_exit_predicate",
+      "updated_at": "2026-06-20T21:19:24Z"
+    },
+    {
+      "seq": 18,
+      "track": "D",
+      "id": "COD-POWER-ISLAND-TOAST-001",
+      "status": "done",
+      "completed": "2026-06-20",
+      "priority": "P1",
+      "owner": "coder",
+      "depends_on": [
+        "COD-POWER-ISLAND-HIGHLIGHT-001"
+      ],
+      "goal": "Island toast + ops strip (extend IND-E03 pattern)",
+      "witness": "debug_runs/power_grid_track_bd_live.json"
+    },
+    {
+      "seq": 19,
+      "track": "D",
+      "id": "COD-POWER-TOOL-RAIL-001",
+      "status": "reopened",
+      "completed": "2026-06-20",
+      "priority": "P1",
+      "owner": "coder",
+      "depends_on": [
+        "COD-POWER-LINE-DRAW-001"
+      ],
+      "goal": "Utilities rail \u2192 Lines entry",
+      "witness": "debug_runs/power_grid_track_bd_live.json",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 missing_exit_predicate",
+      "updated_at": "2026-06-20T21:19:24Z"
+    },
+    {
+      "seq": 20,
+      "track": "B",
+      "id": "COD-POWER-NODE-HOVER-001",
+      "status": "done",
+      "completed": "2026-06-20",
+      "priority": "P1",
+      "owner": "coder",
+      "depends_on": [
+        "DES-POWER-NODE-HOVER-001"
+      ],
+      "goal": "Map-attached transformer/substation hover cards",
+      "witness": "debug_runs/power_node_hover_live.json",
+      "verify": [
+        "cargo test -p proc_A_dine01 --lib power_node_hover"
+      ]
+    }
+  ]
+}

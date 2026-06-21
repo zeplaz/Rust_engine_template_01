@@ -50,8 +50,8 @@ Absorption: [`designer_oncall_absorption_v1.md`](designer_oncall_absorption_v1.m
 | ID | Deliverable |
 |:---|:---|
 | **DMCP-SPEC-NUCLEAR-PWR-001** | `kit_nuclear_pwr_production_001.json` + dmcp doc |
-| DMCP-QC-SUBSTATION-001 | After promote — artist QC |
-| DMCP-QC-TRANSFORMER-001 | After promote — artist QC |
+| DMCP-QC-SUBSTATION-001 | After promote — artist QC | **done** PASS WITH NOTES |
+| DMCP-QC-TRANSFORMER-001 | After promote — artist QC | **done** PASS |
 
 ---
 
@@ -65,11 +65,11 @@ Absorption: [`designer_oncall_absorption_v1.md`](designer_oncall_absorption_v1.m
 
 ## Definition of done (this wave)
 
-- [ ] Substation + transformer **production GLBs promoted**
-- [ ] Catalog JSON points at `assets/models/modules/.../model.glb`
-- [ ] Nuclear **spec signed** (bpy deferred)
-- [ ] HUD power icons in atlas + lib tests green
-- [ ] Close witness WIT-HON pass
+- [x] Substation + transformer **production GLBs promoted**
+- [x] Catalog JSON points at `assets/models/modules/.../model.glb`
+- [x] Nuclear **spec signed** (bpy deferred)
+- [x] HUD power icons in atlas + lib tests green
+- [x] Close witness WIT-HON pass — `$ref:debug_runs/art_pipeline/power_grid_art_downstream_close_live.json`
 
 ```text
 [/PWR-DOWNSTREAM] manifest + nuclear spec + HUD parallel · then bpy→promote

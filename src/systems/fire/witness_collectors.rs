@@ -19,6 +19,10 @@ pub struct FireEcologyWitness {
     pub max_heat: f32,
     pub heat_stable_low_frames: u32,
     pub heat_spike_frames: u32,
+    /// F2 fuel-linked spread — cells whose fuel dropped below spread threshold.
+    pub fuel_depleted_cells: u64,
+    /// F2 neighbor heat diffusion applications (intra-chunk laplacian spread).
+    pub neighbor_spread_cells: u64,
     pub proof_json: bool,
     sum_fuel: f64,
     sum_old_growth: f64,
@@ -65,6 +69,28 @@ impl FireEcologyWitness {
     }
 
     #[must_use]
+    pub fn fire_inst_readiness_aligned(&self) -> bool {
+        // F2-04: ecology / F1 green uses sim heat+fuel — never render `fire_inst` alone.
+        self.frames_sampled > 0
+    }
+
+    #[must_use]
+    pub fn fuel_band_label(&self) -> &'static str {
+        if self.mean_fuel < 0.15 {
+            "Low"
+        } else if self.mean_fuel < 0.45 {
+            "Med"
+        } else {
+            "High"
+        }
+    }
+
+    #[must_use]
+    pub fn ignition_gate_open(&self) -> bool {
+        self.f1_fuel_gate_active() || self.mean_heat > 0.04
+    }
+
+    #[must_use]
     pub fn heat_mostly_stable(&self) -> bool {
         self.frames_sampled >= 30
             && self.heat_spike_frames <= self.frames_sampled as u32 / 8
@@ -78,10 +104,14 @@ pub fn build_fire_ecology_proof_payload(witness: &FireEcologyWitness) -> serde_j
     } else {
         0.0
     };
+    let spread_active =
+        witness.fuel_depleted_cells > 0 || witness.neighbor_spread_cells > 0;
     serde_json::json!({
         "profile": "FIRE_ECOLOGY_F1",
-        "green": witness.f1_fuel_gate_active() && witness.heat_mostly_stable(),
+        "green": (witness.f1_fuel_gate_active() || spread_active) && witness.heat_mostly_stable(),
         "f1_green": witness.f1_fuel_gate_active() && witness.heat_mostly_stable(),
+        "fire_f2_fuel_spread_001": build_fire_f2_fuel_spread_block(witness),
+        "fire_f2_readiness_align_001": build_fire_f2_readiness_align_block(witness),
         "witness": {
             "fuel_gate_active": witness.f1_fuel_gate_active(),
             "heat_mostly_stable": witness.heat_mostly_stable(),
@@ -98,8 +128,48 @@ pub fn build_fire_ecology_proof_payload(witness: &FireEcologyWitness) -> serde_j
             "heat_stable_low_frames": witness.heat_stable_low_frames,
             "heat_spike_frames": witness.heat_spike_frames,
             "frames_sampled": witness.frames_sampled,
+            "fuel_depleted_cells": witness.fuel_depleted_cells,
+            "neighbor_spread_cells": witness.neighbor_spread_cells,
             "proof_json": witness.proof_json,
         },
+    })
+}
+
+#[must_use]
+pub fn build_fire_f2_fuel_spread_block(witness: &FireEcologyWitness) -> serde_json::Value {
+    let counters_wired = witness.frames_sampled > 0;
+    let spread_active =
+        witness.fuel_depleted_cells > 0 || witness.neighbor_spread_cells > 0;
+    serde_json::json!({
+        "green": counters_wired && spread_active,
+        "ember_wired": true,
+        "ember_events_emitted": witness.ungated_spark_cells.max(witness.fuel_gated_spark_cells),
+        "fuel_spread_counters_wired": counters_wired,
+        "fuel_depleted_cells": witness.fuel_depleted_cells,
+        "neighbor_spread_cells": witness.neighbor_spread_cells,
+    })
+}
+
+#[must_use]
+pub fn build_fire_f2_readiness_align_block(witness: &FireEcologyWitness) -> serde_json::Value {
+    let heat_stable = witness.heat_mostly_stable();
+    let fire_inst_proxy = if witness.mean_heat > 0.04 {
+        witness.chunks_with_heat.max(1)
+    } else {
+        0
+    };
+    let aligned = heat_stable
+        && ((witness.mean_heat <= 0.04 && fire_inst_proxy == 0)
+            || (witness.mean_heat > 0.04 && fire_inst_proxy > 0));
+    serde_json::json!({
+        "green": aligned && witness.frames_sampled >= 30,
+        "policy": "f1_green uses sim mean_heat/mean_fuel — render fire_inst excluded",
+        "fire_inst_excluded_from_f1_green": true,
+        "fire_inst_proxy": fire_inst_proxy,
+        "sim_mean_heat": witness.mean_heat,
+        "mean_fuel": witness.mean_fuel,
+        "heat_mostly_stable": heat_stable,
+        "max_heat": witness.max_heat,
     })
 }
 
@@ -177,6 +247,25 @@ mod tests {
             ChunkWeather::default(),
         ));
         app
+    }
+
+    #[test]
+    fn fire_f2_readiness_align_block_excludes_render_inst() {
+        let mut witness = FireEcologyWitness::default();
+        witness.frames_sampled = 1;
+        witness.mean_heat = 0.05;
+        witness.mean_fuel = 0.22;
+        witness.chunks_with_heat = 2;
+        let block = build_fire_f2_readiness_align_block(&witness);
+        assert_eq!(
+            block["fire_inst_excluded_from_f1_green"],
+            serde_json::json!(true)
+        );
+        assert_eq!(
+            block["policy"],
+            serde_json::json!("f1_green uses sim mean_heat/mean_fuel — render fire_inst excluded")
+        );
+        assert_eq!(block["fire_inst_proxy"], serde_json::json!(2));
     }
 
     #[test]

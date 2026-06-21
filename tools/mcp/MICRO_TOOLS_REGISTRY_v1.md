@@ -2,6 +2,31 @@
 
 **Rule:** Deterministic steps = **micro CLI** or **MCP tool** that calls the same code. The LLM picks *which* tool, not *how to edit a glb byte-by-byte*.
 
+## Schema form — the signature book (canonical; biggest token lever)
+
+`$REPORT ≜ CB-notation research report` (external, referenced — never copied) finds **MCP tool
+schemas injected on every request are ~96% of the always-on token budget**, and a one-line
+**signature book** cuts them **−92% at 100% callability** (`$REPORT §13, W1`). Publish each tool as:
+
+```text
+# codebook once:  NS = <constant server prefix>   PK = project_key:str
+# sig: name(required, [optional]) :type =default -> result
+geometry_run_job(job_path, [out_dir]) -> status
+validate_report(validator, [target, --compress:int=4, --cached]) -> report
+```
+
+```text
+⚡ SACRED — never strip the EXACT tool/command name. Stripping the disambiguating segment drops
+   cold-callability 100% → 12% ($REPORT §13). Amortising the constant NS prefix is safe.
+⬡ gate — callability ≥95% (cold agent emits a valid call from the sig alone), reported on a SEPARATE
+   axis from token-Δ. A schema that won't call is worth 0.  The −92% is realised SERVER-SIDE (the MCP
+   server emits the book); this registry documents the form + indexes the tools.
+```
+
+Result/output encoding: status & diff outputs as a **`●◐○` vector** (−73% vs JSON, `$REPORT W5`);
+cross-agent handoffs as a **Δ-handoff table** (lossless, `$REPORT W7`); deep diagnoses as
+**HYP/EV/INFER + ρ** (`$REPORT §12`). Forms defined in `$ref:prompts/SYMBOLIC_LANGUAGE.meta.md §3.12`.
+
 ## Tier 1 — shipped (repo)
 
 | CLI command | MCP tool | Does |
@@ -27,15 +52,17 @@
 
 | CLI | MCP tool | Does |
 |:---|:---|:---|
-| `agent-queue-next <agent>` | `agent_queue_next` | Next drainable slice; drain fallback when stop-point blocked |
-| `agent-queue-update <id> <status>` | `agent_queue_update` | Checkpoint slice (`done` / `blocked` / `in_progress`) |
+| `get-que <agent> [--demand]` | `get_que` | Multi-parallel Q+ — next slice + drain board; `--demand` for ~1h todo list |
+| `agent-queue-demand <agent>` | `agent_queue_demand` | Ordered session slices only (track rotation) |
+| `agent-queue-next <agent>` | `agent_queue_next` | Next drainable slice; auto→multi_parallel; legacy queue via `--queue` |
+| `agent-queue-update <id> <status>` | `agent_queue_update` | Checkpoint slice (`done` / `blocked` / `in_progress`); queue auto + dual dispatch sync |
 | `agent-queue-board` | `agent_queue_board` | Tab-separated board (no full JSON dump) |
 | `witness-brief <path> [--profile honesty]` | `witness_brief` | Witness JSON: green + capped errors; `profile=honesty` → failed rule ids only |
 | `handoff-brief` | `handoff_brief` | HANDOFF Goal/Blockers/Next sections only |
 | `file-digest <path>` | `file_digest` | Head N lines + total line count |
 | `orchestrator-brief` | `orchestrator_brief` | `last_run.json` summary |
 | `token-savings-guide` | `token_savings_guide` | Policy: which tools replace raw logs |
-| `agent-lang-demo` | `agent_lang_demo` | Tk UI + `--headless` — multi-agent BLANG workflow proof |
+| ~~`agent-lang-demo`~~ | — | **removed in CLI refactor** — health smoke via driver `demo` (pipeline-preflight + handoff-brief) |
 
 Queues: `grammar` → `grammar_continuation_queue.json` · `continuation` → `continuation_queue.json`  
 Doc: [`docs/archive/2026-06-src-dev/plans/plan_agent_queue_mcp_v1.md`](../../docs/archive/2026-06-src-dev/plans/plan_agent_queue_mcp_v1.md)
@@ -47,7 +74,7 @@ Doc: [`docs/archive/2026-06-src-dev/plans/plan_agent_queue_mcp_v1.md`](../../doc
 | Token | MCP / CLI | When |
 |:---|:---|:---|
 | `BLANG:PRE` | `pipeline_preflight()` | Session start |
-| `BLANG:Q+` | `agent_queue_next(agent)` | Pick slice |
+| `BLANG:Q+` | `get_que(agent, demand=true)` or `agent_queue_next(agent)` | Pick slice (multi-parallel default) |
 | `BLANG:Q✓` | `agent_queue_update(id, status, note)` | After COMMIT:WIT |
 | `BLANG:HO` | `handoff_brief()` | Orient — not full HANDOFF Read |
 | `BLANG:OPS` | `ops_get_project_brief()` | Compressed ops_project_brief_v1 — not HANDOFF + 80 witnesses |
@@ -87,12 +114,18 @@ Queue: `phase4` → `$ref:tools/orchestrator/queues/post_drain_phase4_queue.json
 
 ## Tier 1-OPS — operations intelligence (JSON backend)
 
-| CLI | MCP tool | Does |
-|:---|:---|:---|
+| CLI | MCP | Role |
+|-----|-----|------|
+| `intel-officer-sweep` | `intel_officer_sweep` | **Intel officer** — false-positive done/green cull report |
+| `intel-officer-apply --ids X` | `intel_officer_apply(ids, apply=false)` | Preview supervised reopen/demote (dry-run default) |
+| `intel-officer-apply --ids X --apply` | `intel_officer_apply(ids, apply=true)` | Execute reopen / witness demote / signoff rollback |
+| `intel-officer-sweep-witness` | — | Refresh `debug_runs/agent_ops/intel_officer_sweep_live.json` |
 | `ops-get-project-brief` | `ops_get_project_brief` | `ops_project_brief_v1` — quality/utility, active picks, delta_wf focus |
-| `ops-get-retry-guidance <task_id>` | `ops_get_retry_guidance` | Phase3 queue row status + witness path (stub v1) |
+| `ops-get-retry-guidance <task_id>` | `ops_get_retry_guidance` | Phase3 queue row status + witness path |
 
-Witness: `debug_runs/agent_ops/ops_mcp_function_layer_live.json` · brief: `debug_runs/agent_ops/ops_project_brief_v1.json`  
+**Intel officer owner:** `@operations-intelligence` — only role authorized to run `intel-officer-apply --apply`.
+
+Witness: `debug_runs/agent_ops/ops_mcp_function_layer_live.json` · brief: `debug_runs/agent_ops/ops_project_brief_v1.json` · sweep: `debug_runs/agent_ops/intel_officer_sweep_live.json`  
 Doc: [`src/dev/ops_mcp_function_layer_v1.md`](../../src/dev/ops_mcp_function_layer_v1.md)
 
 ## Tier 1c — MCP productivity P0 (token chain)

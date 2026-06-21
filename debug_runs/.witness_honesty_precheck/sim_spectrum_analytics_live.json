@@ -1,0 +1,455 @@
+{
+  "_agent_meta": {
+    "agent_commands": [
+      "cargo run -p proc_A_dine01 --release -- --test vfx",
+      "cargo run -p proc_A_dine01 --release -- --test visual",
+      "SIM_ANALYTICS_FRAMES=1 cargo run -p proc_A_dine01 --release -- --test visual"
+    ],
+    "docs": {
+      "compile_warnings": "src/dev/COMPILE_WARNINGS_TODOS.md",
+      "stage5_directive": "prompts/guides/stage5_convergence_directive_v1.md",
+      "viewport_recovery": "src/dev/recovery_viewport.md"
+    },
+    "logging_env": {
+      "ORCHESTRATOR_EXPORT_HEALTH": false,
+      "PERF": false,
+      "PERF_DISK": false,
+      "RUST_LOG": null,
+      "SIM_ANALYTICS": false,
+      "SIM_ANALYTICS_FRAMES": false,
+      "SIM_ANALYTICS_QUIET": false,
+      "SIM_VIEW_SYNC_DEBUG": false,
+      "STAGE5_READINESS_VERBOSE": false,
+      "STAGE5_VERBOSE": false,
+      "STALL": false,
+      "VIEWPORT_AUTHORITY_DEBUG": false
+    },
+    "orchestrator": {
+      "build_report": "tools/orchestrator/reports/build_report.md",
+      "ci_entry": "tools/orchestrator/ci/run.ps1",
+      "continuation_queue": "tools/orchestrator/queues/continuation_queue.json",
+      "warning_registry": "tools/orchestrator/reports/warning_registry.md"
+    },
+    "profile": "SIM_SPECTRUM",
+    "related_proofs": [
+      "debug_runs/stage5_full_app_live.json",
+      "debug_runs/infrastructure_view_isolation_live.json",
+      "debug_runs/construction_stage_live.json",
+      "debug_runs/industrial_activation_live.json",
+      "debug_runs/fire_ecology_live.json",
+      "debug_runs/logistics_throughput_live.json",
+      "debug_runs/replay_editor_parity_live.json",
+      "debug_runs/orchestrator_thread_health.json",
+      "debug_runs/viewport_drift.json",
+      "debug_runs/viewport_authority_migration_witness.json",
+      "debug_runs/main_thread_orchestrator_live.json",
+      "debug_runs/stage6_virtualization_live.json",
+      "debug_runs/wave_s_hydrate_live.json",
+      "debug_runs/wave_p_live.json",
+      "debug_runs/wave_c_live.json",
+      "debug_runs/ui_shell_migration_live.json",
+      "debug_runs/minimap_compositor_live.json",
+      "debug_runs/sim_spectrum_analytics_live.json",
+      "debug_runs/stage7_behavioral_live.json",
+      "debug_runs/stage7_play_live.json",
+      "debug_runs/wss_substrate_live.json",
+      "debug_runs/f2_smoke_pipeline_live.json",
+      "debug_runs/play_scenario_live.json",
+      "debug_runs/transport_network_live.json"
+    ],
+    "relative_path": "debug_runs/sim_spectrum_analytics_live.json",
+    "schema": "debug_run_envelope_v1",
+    "source_system": "sim_spectrum_analytics",
+    "written_at_epoch_secs": 1781992672
+  },
+  "disk_flushes": 5,
+  "env": {
+    "PERF_DISK": false,
+    "SIM_ANALYTICS": false,
+    "SIM_ANALYTICS_FRAMES": false,
+    "SIM_ANALYTICS_QUIET": false,
+    "STALL": false,
+    "flush_interval_secs": 5.0
+  },
+  "frames_sampled": 57,
+  "jsonl_enabled": true,
+  "jsonl_path": "C:\\dev\\github\\Rust_engine_template_01\\debug_runs\\perf_frames\\frames_1781992639.jsonl",
+  "last_frame": {
+    "bottleneck_triage": {
+      "fire_extract_skipped_this_frame": false,
+      "interpretation": "Update fire BuildProfiles set (ECS extract + overlay sync + per-view fire frames) dominates.",
+      "primary_suspects": [
+        {
+          "label": "fire_build_profiles",
+          "ms": 225.4503936767578
+        },
+        {
+          "label": "map_camera_chain",
+          "ms": 213.5251007080078
+        },
+        {
+          "label": "attrib_fire_pipeline",
+          "ms": 208.45420837402344
+        },
+        {
+          "label": "post_world_repr",
+          "ms": 208.01690673828125
+        }
+      ],
+      "ux_spike_active": true
+    },
+    "chunk_residency": {
+      "cells_total": 225,
+      "core_cells": 169,
+      "ghost_band_cells": 56
+    },
+    "cpu": {
+      "egui_ms": 0.4503999948501587,
+      "gpu_gap_ms": 0.0,
+      "post_egui_ms": 1.6770999431610107,
+      "pre_egui_ms": 652.894775390625
+    },
+    "ecs_inventory": {
+      "entities": {
+        "cameras": 1,
+        "map_editor_roads": 0,
+        "test_scene_chunks": 100,
+        "tiles": 102407,
+        "world_markers": 1
+      },
+      "resources": {
+        "fire_simulation": {
+          "chunk_heat_cells": 0,
+          "instances": 0,
+          "stamp_tick": 45
+        },
+        "logistics_graph": {
+          "edges": 0,
+          "nodes": 0,
+          "revision": 0
+        },
+        "transport_topology_edges": 0,
+        "world_gen": {
+          "fraction": 0.0,
+          "label": "",
+          "running": false
+        }
+      }
+    },
+    "fire_extract": {
+      "cadence_due": true,
+      "cadence_skipped": false,
+      "chunk_heat_written": 0,
+      "chunks_fast_path": 0,
+      "chunks_iterated": 0,
+      "chunks_profiled": 0,
+      "extract_ms": 0.0008999999845400453,
+      "instances_written": 0,
+      "interval_elapsed": true,
+      "min_interval_secs": 0.06666667014360428,
+      "ran_full_scan": true,
+      "residency_scoped": true,
+      "runtime_chunks": 0,
+      "spike_active": true,
+      "tick_changed": true
+    },
+    "fire_runtime": {
+      "chunks_active": 0,
+      "chunks_total": 0,
+      "chunks_visual_active": 0
+    },
+    "frame_budget": {
+      "avg_frame_ms": 249.4073486328125,
+      "buckets": {
+        "GPU texture registration": {
+          "avg_ms": 0.0,
+          "events_last_frame": 0,
+          "last_ms": 0.0,
+          "max_ms": 0.0
+        },
+        "HUD shell": {
+          "avg_ms": 0.0,
+          "events_last_frame": 0,
+          "last_ms": 0.0,
+          "max_ms": 0.0
+        },
+        "Minimap raster": {
+          "avg_ms": 3.6960134506225586,
+          "events_last_frame": 0,
+          "last_ms": 4.008200168609619,
+          "max_ms": 7.717700004577637
+        },
+        "Overlay composition": {
+          "avg_ms": 0.0,
+          "events_last_frame": 0,
+          "last_ms": 0.0,
+          "max_ms": 0.0
+        },
+        "Particle upload": {
+          "avg_ms": 0.0,
+          "events_last_frame": 0,
+          "last_ms": 0.0,
+          "max_ms": 0.0
+        },
+        "Render extraction": {
+          "avg_ms": 0.1917049139738083,
+          "events_last_frame": 0,
+          "last_ms": 0.05000000074505806,
+          "max_ms": 0.8220000267028809
+        },
+        "Residency updates": {
+          "avg_ms": 0.03000958077609539,
+          "events_last_frame": 0,
+          "last_ms": 0.03179999813437462,
+          "max_ms": 0.03920000046491623
+        }
+      },
+      "last_anomaly": {
+        "detail": "frame 250.0 ms (avg 249.1 ms)",
+        "kind": "FrameSpike"
+      },
+      "layout_invalidations_frame": 0,
+      "max_frame_ms": 250.0,
+      "stage6": {
+        "active_residency_cells": 225,
+        "atlas_pressure": 0.0,
+        "dirty_region_count": 32,
+        "upload_bytes_frame": 0
+      },
+      "texture_rebuilds_frame": 0,
+      "upload_bytes_frame": 0,
+      "viewport_mutations_frame": 0
+    },
+    "frame_index": 114,
+    "minimap_gpu": {
+      "commits_queued": 34,
+      "last_dispatch": "StaleRefresh",
+      "last_skip": "NoChange",
+      "skips_no_change": 20,
+      "skips_no_terrain": 2,
+      "skips_rate_capped": 0,
+      "skips_upload_failed": 0
+    },
+    "perf_attribution_witness": {
+      "p95_frame_ms": 250.0,
+      "p95_raster_b_ms": 6.918300151824951,
+      "p95_view_fire_ms": 214.2224884033203,
+      "window_samples": 29
+    },
+    "perf_scopes": [
+      {
+        "label": "upd_veg_extract_frame",
+        "ms": 0.04560000076889992
+      },
+      {
+        "label": "upd_map_camera_apply_input",
+        "ms": 0.002300000051036477
+      },
+      {
+        "label": "upd_fire_build_view",
+        "ms": 0.002300000051036477
+      },
+      {
+        "label": "upd_map_camera_smooth",
+        "ms": 0.0017000000225380063
+      },
+      {
+        "label": "upd_map_camera_derive",
+        "ms": 0.0010999999940395355
+      },
+      {
+        "label": "upd_fire_sim_snapshot",
+        "ms": 0.0010000000474974513
+      },
+      {
+        "label": "upd_fire_sync_overlay",
+        "ms": 0.0003000000142492354
+      },
+      {
+        "label": "upd_fire_sync_visible",
+        "ms": 0.0003000000142492354
+      }
+    ],
+    "schedule_spans": {
+      "after_fire_build_ms": 225.4503936767578,
+      "after_view_sync_ms": 0.26820001006126404,
+      "before_world_repr_ms": 0.14339999854564667,
+      "domain_merge_ms": 0.010200000368058681,
+      "egui_ms": 0.38359999656677246,
+      "first_to_preupdate_ms": 0.03909999877214432,
+      "map_camera_chain_ms": 213.5251007080078,
+      "post_egui_to_last_ms": 0.5913000106811523,
+      "post_fire_project_ms": 0.19760000705718994,
+      "post_streaming_spine_ms": 0.03519999980926514,
+      "post_vt_to_pre_egui_ms": 0.027400000020861626,
+      "post_world_repr_ms": 208.01690673828125,
+      "postupdate_main_ms": 0.2531000077724457,
+      "postupdate_vt_ci_ms": 0.002400000113993883,
+      "readiness_ms": 1.069000005722046,
+      "update_ms": 0.19900000095367432,
+      "update_pre_map_camera_ms": 0.9089999794960022
+    },
+    "sim_loop": {
+      "app_state": "InGame",
+      "sim_time_micros": 13284598,
+      "tick": 57,
+      "world_gen_state": "Dismissed"
+    },
+    "spine": {
+      "atmosphere_gpu_extract_ms": 0.0004000000189989805,
+      "domain_merge_ms": 0.0,
+      "projection_graph_ms": 0.000800000037997961,
+      "readiness_ms": 0.13840000331401825,
+      "tile_raster_ms": 4.008200168609619,
+      "tile_raster_ran": true,
+      "world_repr_ms": 0.002199999988079071
+    },
+    "stall_hits": [
+      {
+        "label": "after_map_camera_smooth",
+        "ms": 213.5251007080078
+      },
+      {
+        "label": "after_fire_build",
+        "ms": 225.4503936767578
+      },
+      {
+        "label": "post_world_repr",
+        "ms": 208.01690673828125
+      }
+    ],
+    "tile_raster_policy": {
+      "chunks_per_frame": 2,
+      "cpu_minimap_pass": false,
+      "defer_zoom_dirty": true,
+      "minimap_cadence_hz": 10.0
+    },
+    "update_attrib": {
+      "fire_build_view_ms": 0.010200000368058681,
+      "fire_particles_ms": 0.030899999663233757,
+      "fire_pipeline_ms": 208.45420837402344,
+      "fire_project_ms": 0.019200000911951065,
+      "hud_egui_ms": 0.0,
+      "map_fit_sync_ms": 0.0,
+      "map_fit_validate_ms": 0.0,
+      "preview_cpu_raster_ms": 0.0,
+      "preview_gpu_present_ms": 0.003200000151991844,
+      "streaming_reconstruct_ms": 4.093299865722656,
+      "sum_ms": 212.55331420898438,
+      "tile_storage_apply_ms": 0.0,
+      "viewport_sync_ms": 0.0026000000070780516,
+      "world_gen_ui_ms": 0.0
+    },
+    "ux_spike_guard": {
+      "last_frame_ms": 250.0,
+      "max_ms": 33.0,
+      "spike_active": true,
+      "suppress_optional_diagnostics": true,
+      "suppress_preview": true
+    },
+    "wall_ms": 250.0
+  },
+  "profile": "SIM_SPECTRUM",
+  "rolling": {
+    "cpu_egui_ms": {
+      "max_ms": 585.3577270507812,
+      "p50_ms": 0.9876999258995056,
+      "p95_ms": 215.81350708007812,
+      "samples": 57
+    },
+    "cpu_pre_egui_ms": {
+      "max_ms": 1719.0777587890625,
+      "p50_ms": 637.82373046875,
+      "p95_ms": 715.8094482421875,
+      "samples": 57
+    },
+    "domain_merge_ms": {
+      "max_ms": 0.00020000000949949026,
+      "p50_ms": 0.00010000000474974513,
+      "p95_ms": 0.00010000000474974513,
+      "samples": 57
+    },
+    "fire_pipeline_ms": {
+      "max_ms": 216.529296875,
+      "p50_ms": 203.5919952392578,
+      "p95_ms": 212.19139099121094,
+      "samples": 57
+    },
+    "frame_wall_ms": {
+      "max_ms": 250.0,
+      "p50_ms": 250.0,
+      "p95_ms": 250.0,
+      "samples": 57
+    },
+    "frames_over_250ms": 33,
+    "frames_sampled": 57,
+    "gpu_gap_ms": {
+      "max_ms": 0.0001220703125,
+      "p50_ms": 0.0,
+      "p95_ms": 0.00006103515625,
+      "samples": 57
+    },
+    "map_camera_chain_ms": {
+      "max_ms": 230.5017852783203,
+      "p50_ms": 203.96328735351562,
+      "p95_ms": 214.1446075439453,
+      "samples": 57
+    },
+    "post_vt_to_egui_ms": {
+      "max_ms": 0.04600000008940697,
+      "p50_ms": 0.022599998861551285,
+      "p95_ms": 0.03229999914765358,
+      "samples": 57
+    },
+    "projection_graph_ms": {
+      "max_ms": 0.00139999995008111,
+      "p50_ms": 0.000699999975040555,
+      "p95_ms": 0.0010999999940395355,
+      "samples": 57
+    },
+    "readiness_ms": {
+      "max_ms": 0.3508000075817108,
+      "p50_ms": 0.13699999451637268,
+      "p95_ms": 0.2004999965429306,
+      "samples": 57
+    },
+    "spike_frames": 54,
+    "streaming_ms": {
+      "max_ms": 4.093299865722656,
+      "p50_ms": 0.33469998836517334,
+      "p95_ms": 3.812199831008911,
+      "samples": 57
+    },
+    "tile_raster_ms": {
+      "max_ms": 7.717700004577637,
+      "p50_ms": 3.5063998699188232,
+      "p95_ms": 6.680599689483643,
+      "samples": 57
+    },
+    "view_fire_ms": {
+      "max_ms": 1714.2181396484375,
+      "p50_ms": 219.91311645507812,
+      "p95_ms": 284.86053466796875,
+      "samples": 57
+    },
+    "window_target_frames": 3600,
+    "world_repr_ms": {
+      "max_ms": 0.005200000014156103,
+      "p50_ms": 0.0021000001579523087,
+      "p95_ms": 0.0027000000700354576,
+      "samples": 57
+    }
+  },
+  "schema_version": 1,
+  "session_elapsed_secs": 13.2846091,
+  "session_started_epoch_secs": 1781992639,
+  "test_instrumentation": {
+    "active": true,
+    "frame_jsonl": true,
+    "from_test_cli": true,
+    "maneuver": "DemoOpen",
+    "quiet_terminal": true,
+    "stall_spans": true,
+    "test_scene": "VfxSandbox"
+  }
+}

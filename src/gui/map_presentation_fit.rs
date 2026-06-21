@@ -146,6 +146,47 @@ pub fn map_fit_zoom_for_panel(panel: Vec2, tex_w: f32, tex_h: f32, margin: f32) 
     scale.clamp(PreviewLayers::ZOOM_MIN, PreviewLayers::ZOOM_MAX)
 }
 
+/// GPU minimap crop rect (texture pixel space) from presentation zoom + pan center.
+#[must_use]
+pub fn minimap_gpu_texture_pixel_rect(
+    camera_center: Vec2,
+    zoom: f32,
+    tex_w: u32,
+    tex_h: u32,
+    panel: Vec2,
+) -> bevy::math::Rect {
+    let tex_w = tex_w.max(1) as f32;
+    let tex_h = tex_h.max(1) as f32;
+    let fit_zoom = map_fit_zoom_for_panel(panel, tex_w, tex_h, 0.92);
+    let mag = (zoom / fit_zoom.max(1e-6)).max(1.0);
+    let crop_w = (tex_w / mag).clamp(1.0, tex_w);
+    let crop_h = (tex_h / mag).clamp(1.0, tex_h);
+    let min_x = (camera_center.x - crop_w * 0.5).clamp(0.0, tex_w - crop_w);
+    let min_y = (camera_center.y - crop_h * 0.5).clamp(0.0, tex_h - crop_h);
+    bevy::math::Rect {
+        min: Vec2::new(min_x, min_y),
+        max: Vec2::new(min_x + crop_w, min_y + crop_h),
+    }
+}
+
+/// Normalized UV rect matching [`minimap_gpu_texture_pixel_rect`] (GPU `ImageNode.rect` crop).
+#[must_use]
+pub fn minimap_gpu_texture_uv_rect(
+    camera_center: Vec2,
+    zoom: f32,
+    tex_w: u32,
+    tex_h: u32,
+    panel: Vec2,
+) -> egui::Rect {
+    let crop = minimap_gpu_texture_pixel_rect(camera_center, zoom, tex_w, tex_h, panel);
+    let tw = tex_w.max(1) as f32;
+    let th = tex_h.max(1) as f32;
+    egui::Rect::from_min_max(
+        egui::pos2(crop.min.x / tw, crop.min.y / th),
+        egui::pos2(crop.max.x / tw, crop.max.y / th),
+    )
+}
+
 pub fn fit_viewport_to_map(viewport: &mut EditorViewport, panel: Vec2, tex_w: f32, tex_h: f32) {
     viewport.reset_camera_for_map(tex_w, tex_h);
     viewport.zoom = map_fit_zoom_for_panel(panel, tex_w, tex_h, 0.92);
@@ -170,5 +211,48 @@ mod tests {
         let (_, uv) = map_fit_rect(panel, egui::vec2(320.0, 320.0), MapFitMode::Cover, 0.0);
         assert!(uv.height() < 1.0);
         assert_eq!(uv.width(), 1.0);
+    }
+
+    #[test]
+    fn minimap_gpu_crop_shrinks_when_zoomed_in() {
+        let panel = Vec2::new(220.0, 220.0);
+        let full = minimap_gpu_texture_pixel_rect(
+            Vec2::new(160.0, 160.0),
+            1.0,
+            320,
+            320,
+            panel,
+        );
+        let zoomed = minimap_gpu_texture_pixel_rect(
+            Vec2::new(160.0, 160.0),
+            2.0,
+            320,
+            320,
+            panel,
+        );
+        assert!(zoomed.width() <= full.width());
+        assert!(zoomed.height() <= full.height());
+    }
+
+    #[test]
+    fn minimap_gpu_uv_shrinks_when_zoomed_in() {
+        let panel = Vec2::new(220.0, 220.0);
+        let full = minimap_gpu_texture_uv_rect(
+            Vec2::new(160.0, 160.0),
+            1.0,
+            320,
+            320,
+            panel,
+        );
+        let zoomed = minimap_gpu_texture_uv_rect(
+            Vec2::new(160.0, 160.0),
+            2.0,
+            320,
+            320,
+            panel,
+        );
+        assert!(zoomed.width() < full.width());
+        assert!(zoomed.height() < full.height());
+        assert!(full.width() > 0.0 && full.height() > 0.0);
     }
 }

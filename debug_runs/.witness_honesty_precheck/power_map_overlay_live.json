@@ -52,8 +52,9 @@
     "relative_path": "debug_runs/power_map_overlay_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_power_map_overlay_live_witness",
-    "written_at_epoch_secs": 1781757587
+    "written_at_epoch_secs": 1781979188
   },
+  "design_ref": "src/dev/design_power_map_overlay_v1.md",
   "gate": "COD-POWER-OVERLAY-RENDER-001",
   "green": true,
   "island_highlight_active": true,
@@ -62,8 +63,10 @@
   "line_state_destroyed_gap": true,
   "line_state_live": true,
   "line_state_preview_dashed": true,
+  "load_heat_enabled": false,
   "map_draw_wired": true,
-  "minimap_power_strokes": false,
+  "minimap_power_strokes": true,
   "overlay_power_edge_rows": 2,
-  "power_overlay_auto_on_tool": true
+  "power_overlay_auto_on_tool": true,
+  "slice_id": "COD-POWER-OVERLAY-RENDER-001"
 }

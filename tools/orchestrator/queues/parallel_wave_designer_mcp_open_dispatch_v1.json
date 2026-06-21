@@ -1,0 +1,34 @@
+{
+  "_meta": {
+    "version": "1.0.0",
+    "program_id": "PARALLEL-WAVE-DESIGNER-MCP-OPEN-001",
+    "date": "2026-06-02",
+    "rule": "@designer-mcp open lane — veg atlas ship criteria + building atlas QC copy v2",
+    "plan": "src/dev/plan_designer_work_202606_v1.md",
+    "witness": "debug_runs/art_pipeline/dmcp_designer_mcp_open_lane_live.json",
+    "witness_cli": "python -m rust_engine_mcp.cli dmcp-designer-mcp-open-lane-witness"
+  },
+  "dispatch_now": {
+    "designer-mcp": "ALL ROWS CLOSED — witness dmcp_designer_mcp_open_lane_live.json (2/2)"
+  },
+  "rows": [
+    {
+      "id": "DMCP-VEG-ATLAS-SHIP-001",
+      "owner": "designer-mcp",
+      "wave": 0,
+      "status": "done",
+      "deliverable": "src/dev/dmcp_veg_atlas_ship_v1.md",
+      "verdict": "PASS_WITH_NOTES",
+      "handoff": "operator G4 manual · VEG-F01 @coder_a"
+    },
+    {
+      "id": "DMCP-ATLAS-QC-PLAIN-002",
+      "owner": "designer-mcp",
+      "wave": 0,
+      "status": "done",
+      "deliverable": "src/dev/design_aps_atlas_qc_copy_buildings_v2.md",
+      "verdict": "PASS",
+      "handoff": "wire _PLAIN map @coder-mcp"
+    }
+  ]
+}

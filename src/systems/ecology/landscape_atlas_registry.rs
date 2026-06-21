@@ -21,8 +21,6 @@ struct LandscapeAtlasIndexFile {
 struct LandscapeAtlasIndexEntryRaw {
     atlas_id: String,
     batch_id: String,
-    #[serde(default)]
-    assembly_id: String,
     tile_id: String,
     atlas_png: String,
     meta_json: String,
@@ -36,14 +34,6 @@ struct LandscapeAtlasIndexEntryRaw {
 
 #[derive(Debug, Clone, Deserialize)]
 struct AtlasMetaFile {
-    #[serde(default)]
-    schema_version: u32,
-    #[serde(default)]
-    batch_id: String,
-    #[serde(default)]
-    tile_id: String,
-    #[serde(default)]
-    atlas_id: String,
     #[serde(default)]
     tiles: Vec<AtlasMetaTile>,
 }

@@ -17,6 +17,10 @@ use crate::gui::{
 };
 
 const LAYOUT_EPS: f32 = 0.5;
+/// Hysteresis for the minimap panel resolve: a stable window must stop bumping the resolved
+/// revision. Only a logical-size change beyond this (px) is treated as a real resize. Larger than
+/// `LAYOUT_EPS` so sub-pixel egui jitter / rounding never re-bumps the revision every frame.
+const MINIMAP_PANEL_SETTLE_EPS: f32 = 1.5;
 /// Minimum logical px for the simulation map hole — smaller reads as a layout defect.
 const SIM_MAP_MIN_LOGICAL_EXTENT: f32 = 8.0;
 /// Below this, primary swapchain present is suppressed (VISUAL-STALL-SURFACE-001).
@@ -290,6 +294,13 @@ fn resolve_minimap_panel_viewport(
         return;
     }
 
+    // PERF-INSTR-VFX-001: trace the resolver INPUT (the suggestion read here) so the next run shows
+    // whether the +2px creep arrives via `panel_viewport_suggestion_logical_size`.
+    crate::render::trace_minimap_size_writer(
+        "resolve_input::shell.suggestion",
+        shell.panel_viewport_suggestion_logical_size.x,
+        shell.panel_viewport_suggestion_logical_size.y,
+    );
     let mut logical = shell.panel_viewport_suggestion_logical_size;
     logical.x = logical.x.clamp(180.0, 720.0);
     logical.y = logical.y.clamp(160.0, 720.0);
@@ -313,9 +324,20 @@ fn resolve_minimap_panel_viewport(
         half_extents: Vec2::new(logical.x * 0.5, logical.y * 0.5),
         valid: true,
     };
-    let minimap_changed = resolved.minimap_panel != next_minimap;
+    // Settle / hysteresis: only bump the revision on a real, beyond-threshold size change (or the
+    // first valid resolve). A stable window therefore reaches steady-state instead of climbing the
+    // revision every frame. We still publish `next_minimap` (cheap, idempotent) so the size stays
+    // correct — only the revision (which gates downstream re-resolve / re-composite) is gated.
+    let should_bump =
+        minimap_panel_resolve_should_bump(resolved.minimap_panel.valid, resolved.minimap_panel.logical_size, logical);
     resolved.minimap_panel = next_minimap;
-    if minimap_changed {
+    // PERF-INSTR-VFX-001: trace the resolver OUTPUT (post-clamp) — compare to the input above.
+    crate::render::trace_minimap_size_writer(
+        "resolve_output::minimap_panel",
+        resolved.minimap_panel.logical_size.x,
+        resolved.minimap_panel.logical_size.y,
+    );
+    if should_bump {
         bump_resolved_revision(&mut resolved);
     }
     log_resolved_viewport(
@@ -345,6 +367,20 @@ fn clamp_viewport_request(
 
 fn bump_resolved_revision(resolved: &mut ResolvedViewports) {
     resolved.revision = resolved.revision.wrapping_add(1);
+}
+
+/// Settle decision for the minimap panel resolve revision (MINIMAP-RESIZE-FEEDBACK-FIX).
+///
+/// Bumps on the first valid resolve, then only on a logical-size change beyond
+/// [`MINIMAP_PANEL_SETTLE_EPS`]. A stable suggestion (sub-pixel jitter, rounding) therefore stops
+/// climbing the revision — the resolve reaches steady-state.
+#[must_use]
+fn minimap_panel_resolve_should_bump(prev_valid: bool, prev_logical: Vec2, next_logical: Vec2) -> bool {
+    if !prev_valid {
+        return true;
+    }
+    (prev_logical - next_logical).length_squared()
+        > MINIMAP_PANEL_SETTLE_EPS * MINIMAP_PANEL_SETTLE_EPS
 }
 
 fn log_resolved_viewport(
@@ -407,6 +443,30 @@ mod tests {
             max: Vec2::new(100.0, 100.0),
         };
         assert!(simulation_map_viewport_defect(&oob, Vec2::new(800.0, 600.0)));
+    }
+
+    #[test]
+    fn minimap_panel_revision_settles_for_stable_window() {
+        // First valid resolve bumps.
+        assert!(minimap_panel_resolve_should_bump(
+            false,
+            Vec2::ZERO,
+            Vec2::new(260.0, 220.0)
+        ));
+        // An identical (or sub-threshold jittered) size must NOT re-bump — revision settles.
+        let stable = Vec2::new(260.0, 220.0);
+        assert!(!minimap_panel_resolve_should_bump(true, stable, stable));
+        assert!(!minimap_panel_resolve_should_bump(
+            true,
+            stable,
+            stable + Vec2::new(1.0, 0.0) // < MINIMAP_PANEL_SETTLE_EPS
+        ));
+        // A real resize (e.g. slider drag, beyond threshold) still bumps.
+        assert!(minimap_panel_resolve_should_bump(
+            true,
+            stable,
+            stable + Vec2::new(8.0, 0.0)
+        ));
     }
 }
 

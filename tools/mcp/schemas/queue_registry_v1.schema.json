@@ -16,7 +16,17 @@
     "_meta": {
       "type": "object",
       "properties": {
-        "plan_ref": { "type": "string" }
+        "plan_ref": { "type": "string" },
+        "excluded_rollups": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "path": { "type": "string" },
+              "reason": { "type": "string" }
+            }
+          }
+        }
       }
     }
   },
@@ -38,7 +48,12 @@
         "synthetic_done_buckets": {
           "type": "array",
           "items": { "$ref": "#/$defs/synthetic_bucket" }
-        }
+        },
+        "human_doc": { "type": "string" },
+        "prompts": { "type": "string" },
+        "wave_orders": { "type": "string" },
+        "note": { "type": "string" },
+        "generated_by": { "type": "string" }
       },
       "additionalProperties": false
     },

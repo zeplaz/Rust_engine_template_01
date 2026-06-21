@@ -27,7 +27,7 @@ use super::sim_hud_copy::{
     PICKER_TITLE_ROADS, PICKER_TITLE_SHAPES, PICKER_TITLE_UTILITIES, PICKER_TITLE_ZONE,
 };
 use super::sim_hud_egui_theme::{
-    apply_sim_hud_egui_theme, body_text, caption_text, data_text, picker_header_frame,
+    apply_sim_hud_egui_theme, body_text, caption_text, picker_header_frame,
     picker_sheet_frame, title_text,
 };
 

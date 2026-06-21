@@ -1,0 +1,120 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "cyclic_granfina_dashboard_v1.schema.json",
+  "title": "CyclicGranfinaDashboardV1",
+  "description": "MCP-CYCLIC-GRANFINA-001 — cyclic granfina dashboard schema for blocker tracking",
+  "type": "object",
+  "required": ["config", "cycle", "entries", "current_hash"],
+  "properties": {
+    "config": {
+      "type": "object",
+      "required": ["api_key", "hash_lock", "dashboard_path", "ignore_dcc_status", "process_driven"],
+      "properties": {
+        "api_key": {
+          "type": "string",
+          "description": "API key for accessing the dashboard (locked file)"
+        },
+        "hash_lock": {
+          "type": "string",
+          "description": "Hash lock for atomic operations"
+        },
+        "dashboard_path": {
+          "type": "string",
+          "description": "Path to the dashboard data file"
+        },
+        "ignore_dcc_status": {
+          "type": "boolean",
+          "description": "Whether to ignore DCC status in the UI bar"
+        },
+        "process_driven": {
+          "type": "boolean",
+          "description": "Whether to use process-driven workflows"
+        }
+      }
+    },
+    "cycle": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Current cycle number"
+    },
+    "entries": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/block_tracker_entry" }
+    },
+    "current_hash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$",
+      "description": "Current hash for integrity verification"
+    },
+    "previous_hash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$",
+      "description": "Hash of the previous dashboard state"
+    },
+    "last_updated": {
+      "type": "integer",
+      "description": "Timestamp of last update"
+    }
+  },
+  "definitions": {
+    "block_tracker_entry": {
+      "type": "object",
+      "required": ["id", "created_at", "updated_at", "status", "priority", "description", "dcc_components", "ignore_dcc", "previous_hash", "current_hash"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the blocker"
+        },
+        "created_at": {
+          "type": "integer",
+          "description": "Timestamp when the blocker was created"
+        },
+        "updated_at": {
+          "type": "integer",
+          "description": "Timestamp when the blocker was last updated"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["Open", "InProgress", "Resolved", "Blocked", "Closed"],
+          "description": "Status of the blocker"
+        },
+        "priority": {
+          "type": "string",
+          "enum": ["Low", "Medium", "High", "Critical"],
+          "description": "Priority level"
+        },
+        "description": {
+          "type": "string",
+          "description": "Description of the blocker"
+        },
+        "dcc_components": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Associated DCC (Digital Content Creation) components"
+        },
+        "ignore_dcc": {
+          "type": "boolean",
+          "description": "Whether DCC status should be ignored"
+        },
+        "previous_hash": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$",
+          "description": "Hash of the previous entry for cyclic integrity"
+        },
+        "current_hash": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$",
+          "description": "Current hash for integrity verification"
+        },
+        "exit_code": {
+          "type": ["integer", "null"],
+          "description": "Exit code or action result"
+        },
+        "locked": {
+          "type": "boolean",
+          "description": "Whether the entry is locked for API access"
+        }
+      }
+    }
+  }
+}

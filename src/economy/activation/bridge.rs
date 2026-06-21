@@ -7,7 +7,10 @@ use crate::dev::industrial_activation_todos::{
     sync_industrial_activation_board_from_witness, IndustrialActivationTodoBoard,
 };
 use crate::economy::supply_chain::insert_supply_chain_runtime_for_catalog;
-use crate::infrastructure::{UtilityConnection, UtilityNetworkKind};
+use crate::infrastructure::{
+    initial_utility_power_connected, sync_utility_connection_power_system, UtilityConnection,
+    UtilityNetworkKind,
+};
 use crate::strategic::{ConstructionSite, SiteConstructionPhase};
 
 /// Catalog row chosen at placement — authoritative link to `assets/configs/buildings/*.json`.
@@ -29,6 +32,7 @@ impl Plugin for IndustrialActivationPlugin {
             crate::economy::spatial_district::SpatialDistrictPlugin,
             crate::economy::logistics::LogisticsThroughputPlugin,
             super::grid_overload_ux::GridOverloadUxPlugin,
+            super::power_island_ux::PowerIslandUxPlugin,
         ));
         app.init_resource::<super::witness_collectors::IndustrialActivationLiveProofState>()
             .init_resource::<crate::dev::Stage7PlayLiveProofState>()
@@ -69,6 +73,7 @@ impl Plugin for IndustrialActivationPlugin {
                 super::concrete_chain_e2e::refresh_concrete_chain_e2e_witness_system,
                 refresh_industrial_activation_witness_system,
                 sync_industrial_activation_board_system,
+                sync_utility_connection_power_system,
                 super::witness_collectors::sync_industrial_proof_witness_flags,
             ),
         );
@@ -121,11 +126,12 @@ pub fn activate_industrial_facilities_system(
             continue;
         }
         let network_id = entity.to_bits();
+        let connected = initial_utility_power_connected(registry.as_ref(), def_ref.catalog_id.as_str());
         let utility = UtilityConnection {
             network_id,
             kind: UtilityNetworkKind::Power,
             demand: 1.0,
-            connected: true,
+            connected,
         };
         if def_ref.catalog_id.is_empty() || def_ref.catalog_id.starts_with("builtin:") {
             commands
@@ -380,6 +386,7 @@ mod tests {
                     max_transfer: 2.0,
                     capacity: 0.0,
                 },
+                crate::infrastructure::UtilityConnection::power(i as u64 + 1, 1.0, true),
             ));
         }
 

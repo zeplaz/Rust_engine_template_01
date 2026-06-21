@@ -180,6 +180,8 @@ impl Plugin for EnginePlugin {
             .add_plugins(ViewRepresentationPlugin)
             .add_plugins(StallWatchPlugin)
             .add_plugins(crate::render::VisualReadinessWitnessPlugin)
+            .add_plugins(crate::dev::TestRunInstrumentationPlugin)
+            .add_plugins(crate::dev::SimSpectrumAnalyticsPlugin)
             .add_plugins(ComputeDispatchPlugin);
         app.add_plugins((TestHarnessStatePlugin, TestHarnessMenuPlugin));
         let test_mode = app

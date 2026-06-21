@@ -81,6 +81,19 @@ confidence:     <◔|◑|◕|●>
 ```
 Confidence gate: escalate raw evidence when `< ◑`; act on known-fix when `≥ ◕`.
 
+## Deep diagnosis — REASONING-LATTICE (form §3.12)
+
+For a NON-OBVIOUS multi-hypothesis drift (≥2 plausible authority/contract roots), emit the diagnosis as a HYP/EV/INFER lattice with a computed posterior ρ instead of prose — still READ-ONLY, this replaces the *narrative*, ¬the routing packet. Simple single-cause findings stay the compact YAML packet (`$REPORT §12` costs tokens on short content — ¬over-apply).
+
+```text
+LEX  H<n>=hypothesis · π prior · ρ posterior · ▣ observed · ⊕→ supports ⊖→ refutes (╱ weak ╱╱ strong) · ⤳ causes
+HYP  H1 multi-writer ResolvedViewports · H2 stale view_authority mirror · H3 render-contract extraction Δ
+EV   E1 witness: committed≠render viewport ⊕╱╱→H1 ⊖→H2 · E2 SimMapProjectionFrame Pick Δ ⊕╱╱→H3
+INFER ρ(h) ∝ π(h)·∏ₑ LR(e,h)  ⟶  H1 0.81 ◕ (root) · H3 0.14 (trigger H1⤳H3) · H2 0.05
+FIX  collapse to single authority-writer   NEXT ΔWF→@coder ∨ @sim-steward
+```
+Round-trips to JSON lossless ⟹ doubles as machine output (the witness JSON you record at ⟨BP:SHARE⟩). ρ ¬substitute for the packet `owner`/`confidence` — pin the winning H as `root_cause`, ρ ⟶ `confidence`.
+
 ## Collective ritual — forced continuation (read-only)
 
 Principle: ⛔ end with diagnosis alone. Every report closes with `ΔWF→@agent` + a shared `⟨BP:SHARE⟩` marker so the prior writer is invited into review.

@@ -144,6 +144,8 @@ pub struct HudProductShellEguiParams<'w> {
     view_isolation: Res<'w, crate::gui::ViewIsolationDiagnostics>,
     update_attrib: Option<ResMut<'w, crate::render::FrameUpdateAttrib>>,
     infra_overlay: ResMut<'w, crate::render::InfrastructureOverlaySettings>,
+    infra_draw: Res<'w, crate::render::InfrastructureOverlayDrawRequests>,
+    power_presentation: Res<'w, crate::render::PowerMapOverlayPresentation>,
     growth_ui: ResMut<'w, GrowthInspectorUiState>,
     growth_queue: ResMut<'w, GrowthProposalQueue>,
     growth_policy: Option<Res<'w, AutoBuildPolicyBook>>,
@@ -267,6 +269,9 @@ pub fn hud_product_shell_egui_root(
             &minimap_overlays,
             ecology_rows,
             veg_burn_rows,
+            Some(panels.infra_overlay.as_ref()),
+            Some(panels.infra_draw.as_ref()),
+            Some(panels.power_presentation.as_ref()),
         );
         if panels.minimap.cached_texture_revision != *minimap_legend_revision {
             *minimap_legend_revision = panels.minimap.cached_texture_revision;

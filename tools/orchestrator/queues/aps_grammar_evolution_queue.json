@@ -42,25 +42,29 @@
       "wave": 0,
       "phase": "P0",
       "id": "ORCH-GRAM-001",
-      "status": "done",
+      "status": "blocked",
       "priority": "P0",
       "owner": "orchestrator-mcp",
       "goal": "Issue PLAN-APS-GRAMMAR-EVOLUTION-001; enforce no fake green on tier/content rows",
-      "deliverable": "debug_runs/agent_ops/aps_grammar_evolution_dispatch_live.json"
+      "deliverable": "debug_runs/agent_ops/aps_grammar_evolution_dispatch_live.json",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
+      "updated_at": "2026-06-20T21:19:25Z"
     },
     {
       "seq": 2,
       "wave": 0,
       "phase": "P0",
       "id": "PLAN-GRAM-WITNESS-001",
-      "status": "done",
+      "status": "blocked",
       "priority": "P1",
       "owner": "planner-mcp",
       "goal": "Witness envelope per row \u2014 exit_predicate.must fields",
       "deliverable": "src/dev/plan_aps_grammar_evolution_witness_v1.md",
       "parallel_ok": [
         "APS-GRAM-TIER-001"
-      ]
+      ],
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
+      "updated_at": "2026-06-20T21:19:25Z"
     },
     {
       "seq": 3,
@@ -487,7 +491,7 @@
       "wave": 0,
       "phase": "P0",
       "id": "STEWARD-GRAM-WIT-HON-001",
-      "status": "done",
+      "status": "blocked",
       "priority": "P1",
       "owner": "sim-steward",
       "goal": "Reject Q\u2713 when tier witness archetype_count disagrees with list_archetype_ids() or UI exposure table",
@@ -496,7 +500,9 @@
       ],
       "verify": [
         "validate-report witness_honesty debug_runs/grammar_set_tier_live.json --compress 3"
-      ]
+      ],
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
+      "updated_at": "2026-06-20T21:19:25Z"
     },
     {
       "seq": 14,

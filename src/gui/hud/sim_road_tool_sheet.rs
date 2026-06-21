@@ -13,7 +13,7 @@ use crate::construction::{
 };
 use crate::engine::states::BaseState;
 use crate::gui::hud::sim_build_picker_sheet::{
-    build_rail_slot_anchor_y, BUILD_PICKER_RAIL_GAP_PX, BUILD_PICKER_SHEET_W_PX,
+    build_rail_slot_anchor_y, BUILD_PICKER_RAIL_GAP_PX,
 };
 use crate::gui::hud::simulation_shell_phase2::{
     BUILD_RAIL_W_PX, COMMAND_LEFT_STACK_COLUMN_GAP_PX, CONTEXT_RAIL_W_PX,

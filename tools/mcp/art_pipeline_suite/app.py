@@ -122,6 +122,11 @@ class ArtPipelineSuiteApp(tk.Tk):
 
         self._lane_var = tk.StringVar(value=self.state.art_domain)
 
+        # Tracks the lane currently applied to the chrome/notebooks so a redundant
+        # click on the already-active lane is a cheap no-op (no disk reads, no
+        # widget rebuilds). Stays None until the first _apply_lane lands.
+        self._applied_lane: str | None = None
+
         self._build_lane_bar()
 
         # P7 Slice B — flow-verb handlers are kept (the spine's advance action runs
@@ -177,18 +182,36 @@ class ArtPipelineSuiteApp(tk.Tk):
         self._notebook_landscape.bind("<<NotebookTabChanged>>", self._on_tab_changed)
         self.bind("<Control-Key-1>", lambda _e: self._apply_lane(ArtDomain.BUILDINGS.value))
         self.bind("<Control-Key-2>", lambda _e: self._apply_lane(ArtDomain.LANDSCAPE.value))
+        self._onboarding_panel = None
         self._maybe_onboarding()
 
     def _maybe_onboarding(self) -> None:
-        from rust_engine_mcp.aps_uiux_onboard import load_onboarding_seen, mark_onboarding_seen
+        from rust_engine_mcp.aps_uiux_onboard import (
+            load_onboarding_seen,
+            mark_onboarding_seen,
+            onboarding_greeting_lines,
+        )
 
         if load_onboarding_seen():
             return
         mark_onboarding_seen()
-        self._log(
-            "Welcome — follow the pipeline at the top: Catalog → Materials → Assembly → Variants → Atlas. "
-            "The Next step line tells you what to do."
-        )
+        # Plain-language greeting also lands in the log so it survives dismissal.
+        self._log(" · ".join(onboarding_greeting_lines()))
+        self._show_onboarding_panel()
+
+    def _show_onboarding_panel(self) -> None:
+        """P5.6 — dismissible first-run "How this works" card over the work area."""
+        from .aps_onboarding_panel import OnboardingPanel
+
+        if getattr(self, "_onboarding_panel", None) is not None:
+            return
+        panel = OnboardingPanel(self._notebook_container, on_dismiss=self._dismiss_onboarding)
+        panel.place(relx=0.5, rely=0.0, anchor=tk.N, relwidth=0.9)
+        self._onboarding_panel = panel
+
+    def _dismiss_onboarding(self) -> None:
+        self._onboarding_panel = None
+        self._log("Onboarding dismissed — reopen the steps any time from the Next step line up top.")
 
     def _build_lane_bar(self) -> None:
         wrap = ttk.Frame(self, padding=(GAP_MD, 6, GAP_MD, 0))
@@ -231,12 +254,23 @@ class ArtPipelineSuiteApp(tk.Tk):
 
         lane = ArtDomain.LANDSCAPE.value if lane == ArtDomain.LANDSCAPE.value else ArtDomain.BUILDINGS.value
 
+        # Re-selecting the already-applied lane is a no-op: the heavy work (disk
+        # reads, pill rebuilds, lane persistence) only matters on an actual swap.
+        # The lane radio var is re-pinned so the radiobutton stays consistent.
+        if lane == self._applied_lane:
+
+            self._lane_var.set(lane)
+
+            return
+
         clear_cross_lane_selection(self.state, lane)
 
         self.state.art_domain = lane
 
         self._lane_var.set(lane)
 
+        # --- Instant visual swap (synchronous): the two notebooks are persistent
+        # (pack_forget/pack, never rebuilt) so their content survives the swap. ---
         if lane == ArtDomain.LANDSCAPE.value:
 
             self._notebook_buildings.pack_forget()
@@ -266,15 +300,11 @@ class ArtPipelineSuiteApp(tk.Tk):
             self._authority_border.configure(bg=fg)
         self._authority_lbl.configure(foreground=fg)
 
+        # set_domain rebuilds the correct pills so the spine shows the right steps
+        # immediately; the lighter atlas set_domain + spine refresh stay inline too.
         self.pipeline_status.set_domain(lane)
 
         if lane == ArtDomain.LANDSCAPE.value:
-
-            self.landscape_presets.refresh_list()
-
-            self.landscape_grammar.refresh_from_state()
-
-            self.landscape_states.refresh_from_state()
 
             self.landscape_atlas.set_domain(lane)
 
@@ -282,13 +312,40 @@ class ArtPipelineSuiteApp(tk.Tk):
 
             self.atlas.set_domain(lane)
 
-        save_active_lane(lane)
-
         self.pipeline_status.refresh()
+
+        self._applied_lane = lane
+
+        # --- Defer the heavy, jank-causing work off the click ---
+        # The landscape panel refreshes (disk reads + widget rebuilds) and the
+        # lane-persistence disk write run at idle so the swap feels instant. They
+        # only matter on the landscape lane; buildings panels need no re-read here.
+        if lane == ArtDomain.LANDSCAPE.value:
+
+            self.after_idle(self._refresh_landscape_panels)
+
+        self.after_idle(lambda lane=lane: save_active_lane(lane))
 
         if log:
 
             self._log(f"lane → {lane} · tab set swapped")
+
+
+
+    def _refresh_landscape_panels(self) -> None:
+        """Deferred (after_idle) refresh of the landscape panels — kept off the
+        lane-switch click so the swap feels instant. Guarded so a lane flip-back
+        before the idle callback runs does not refresh the wrong lane."""
+
+        if self._applied_lane != ArtDomain.LANDSCAPE.value:
+
+            return
+
+        self.landscape_presets.refresh_list()
+
+        self.landscape_grammar.refresh_from_state()
+
+        self.landscape_states.refresh_from_state()
 
 
 

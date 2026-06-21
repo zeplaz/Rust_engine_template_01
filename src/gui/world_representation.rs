@@ -12,8 +12,7 @@ use super::view_representation::{CameraVisualState, VisualBudgetSettings, Visual
 use crate::compute::AgentFrame;
 use crate::gui::lod_zone_authoring::refresh_lod_zone_registry;
 use crate::gui::map_camera::{
-    in_simulation_or_editor_map, map_zoom_alpha, MapCameraDesired, MapCameraSettings,
-    MapCameraSystemSet,
+    in_simulation_or_editor_map, map_zoom_alpha, MapCameraDesired, MapCameraSystemSet,
 };
 use crate::render::{ChunkFireHeat, FireSimulationSnapshot, Stage5LodBandLogWitness};
 use crate::systems::sim_control::{SimControlSystemSet, SimStepStamp, SimTick, SimTimeMicros};
@@ -552,7 +551,10 @@ pub fn resolution_for_band(band: WorldLodBand) -> WorldResolutionPolicy {
 }
 
 impl WorldRepresentationResolver {
-    pub fn resolve(
+    /// Resolves the camera frame and rewrites `lod_map` **in place** (reuses its allocation).
+    /// `world_extent` clamps the LOD sweep to the loaded chunk bounding box.
+    #[allow(clippy::too_many_arguments)]
+    pub fn resolve_into(
         &self,
         global: &GlobalLodState,
         engine: &WorldLodPolicyEngine,
@@ -562,44 +564,72 @@ impl WorldRepresentationResolver {
         focus_chunk: IVec2,
         interest_radius_chunks: i32,
         chunk_tiles: UVec2,
+        world_extent: Option<(IVec2, IVec2)>,
         stamp: SimStepStamp,
-    ) -> (WorldRepresentationFrame, WorldLodMap) {
+        lod_map: &mut WorldLodMap,
+    ) -> WorldRepresentationFrame {
         let mut frame = engine.evaluate(inputs, zones);
         frame.bands.global = band_max_fidelity(frame.bands.global, global.default_band);
         frame.visibility = engine.compute_visibility(frame.bands.global);
         frame.resolution = engine.compute_resolution(frame.bands.global);
         frame.sim_step_stamp = stamp;
-        let map = build_world_lod_map(
+        build_world_lod_map_into(
+            lod_map,
             stamp,
             focus_chunk,
             interest_radius_chunks,
             chunk_tiles,
+            world_extent,
             frame.bands.global,
             global.default_band,
             zones,
             bubbles,
         );
-        (frame, map)
+        frame
     }
 }
 
-fn build_world_lod_map(
+/// Sweeps the interest window into `out.cells` **in place** (clear + reuse the existing
+/// allocation; never `Vec::new()` per frame). The `dx`/`dy` window is intersected with the
+/// world chunk extent so a small world never sweeps the full `(2r+1)^2` block.
+#[allow(clippy::too_many_arguments)]
+fn build_world_lod_map_into(
+    out: &mut WorldLodMap,
     stamp: SimStepStamp,
     focus_chunk: IVec2,
     interest_radius_chunks: i32,
     chunk_tiles: UVec2,
+    world_extent: Option<(IVec2, IVec2)>,
     camera_band: WorldLodBand,
     global_floor: WorldLodBand,
     zones: &[OperationalLodZone],
     bubbles: &[TacticalLodBubble],
-) -> WorldLodMap {
-    let mut cells = Vec::new();
+) {
+    out.stamp = stamp;
+    let cells = &mut out.cells;
+    cells.clear();
     let radius = interest_radius_chunks.max(1);
     let cw = chunk_tiles.x.max(1) as f32;
     let ch = chunk_tiles.y.max(1) as f32;
-    for dy in -radius..=radius {
-        for dx in -radius..=radius {
-            let coord = focus_chunk + IVec2::new(dx, dy);
+    // Clamp the sweep window to the actual world chunk extent so a 10×10 world never sweeps
+    // ~9k cells. With no loaded chunks (headless / pre-stream) fall back to the radius box.
+    let (min_x, max_x, min_y, max_y) = match world_extent {
+        Some((min, max)) => (
+            (focus_chunk.x - radius).max(min.x),
+            (focus_chunk.x + radius).min(max.x),
+            (focus_chunk.y - radius).max(min.y),
+            (focus_chunk.y + radius).min(max.y),
+        ),
+        None => (
+            focus_chunk.x - radius,
+            focus_chunk.x + radius,
+            focus_chunk.y - radius,
+            focus_chunk.y + radius,
+        ),
+    };
+    for cy in min_y..=max_y {
+        for cx in min_x..=max_x {
+            let coord = IVec2::new(cx, cy);
             let sample_world = Vec2::new(
                 (coord.x as f32 + 0.5) * cw,
                 (coord.y as f32 + 0.5) * ch,
@@ -631,7 +661,6 @@ fn build_world_lod_map(
             });
         }
     }
-    WorldLodMap { stamp, cells }
 }
 
 fn decay_tactical_lod_bubbles(time: Res<Time>, mut bubbles: ResMut<TacticalLodBubbleRegistry>) {
@@ -649,6 +678,21 @@ fn tiles_per_chunk(chunks: &Query<(&Chunk, &ChunkCellMatrix)>) -> UVec2 {
         .next()
         .map(|(_, m)| m.size)
         .unwrap_or(UVec2::new(32, 32))
+}
+
+/// Bounding box (`min..=max`, inclusive chunk coords) of the currently loaded chunks.
+/// `None` while no chunks exist (headless / pre-stream) → LOD sweep falls back to the radius box.
+#[inline]
+fn loaded_chunk_extent(chunks: &Query<(&Chunk, &ChunkCellMatrix)>) -> Option<(IVec2, IVec2)> {
+    let mut iter = chunks.iter();
+    let first = iter.next()?.0.coord;
+    let mut min = first;
+    let mut max = first;
+    for (chunk, _) in iter {
+        min = min.min(chunk.coord);
+        max = max.max(chunk.coord);
+    }
+    Some((min, max))
 }
 
 /// Quantize zoom α so scroll wheel does not re-enqueue streaming every tick (0.1 bands).
@@ -669,10 +713,81 @@ pub fn interest_radius_chunks_from_zoom_alpha(zoom_alpha: f32) -> i32 {
     r.clamp(4, 48)
 }
 
+/// Dirty-gate fingerprint for [`compute_world_representation_frame`].
+///
+/// Captures the **real** inputs that change the derived frame / LOD map: sim cadence (heat,
+/// agents, bubbles advance per tick), camera pose (quantized so genuine pan/zoom still rebuilds
+/// but a perfectly static camera does not re-sweep), the interest radius / focus chunk, the
+/// loaded chunk extent, and the tier-2/tier-3 LOD registries. When this is unchanged the
+/// `(2r+1)^2` sweep + frame write is skipped — the previously-published frame stays valid.
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub struct WorldReprInputFingerprint {
+    stamp: SimStepStamp,
+    focus_chunk: IVec2,
+    interest_radius_chunks: i32,
+    /// Camera translation quantized to 0.5 world units (sub-pixel jitter ignored, real pan caught).
+    cam_xy_q: IVec2,
+    /// Zoom quantized to 1e-3 (band noise ignored, real zoom caught).
+    zoom_q: i32,
+    world_extent: Option<(IVec2, IVec2)>,
+    zones_len: usize,
+    /// Cheap order-sensitive digest of the tier-2 zones (band/center/radius/priority).
+    zones_digest: u64,
+    bubbles_len: usize,
+    /// Cheap digest of tier-3 bubbles (center/radius/escalation).
+    bubbles_digest: u64,
+    default_band: WorldLodBand,
+    readability_floor_q: i32,
+    readability_density_q: i32,
+}
+
+impl WorldReprInputFingerprint {
+    #[must_use]
+    fn same_except_stamp(self, other: Self) -> bool {
+        Self {
+            stamp: other.stamp,
+            ..self
+        } == other
+    }
+}
+
+#[inline]
+fn quantize_f32(v: f32, step: f32) -> i32 {
+    (v / step).round() as i32
+}
+
+fn digest_zones(zones: &[OperationalLodZone]) -> u64 {
+    let mut h = 0xcbf2_9ce4_8422_2325u64;
+    for z in zones {
+        for part in [
+            z.center.x,
+            z.center.y,
+            z.center.z,
+            z.radius,
+            z.priority,
+            band_fidelity_rank(z.band) as f32,
+        ] {
+            h ^= u64::from(part.to_bits());
+            h = h.wrapping_mul(0x0100_0000_01b3);
+        }
+    }
+    h
+}
+
+fn digest_bubbles(bubbles: &[TacticalLodBubble]) -> u64 {
+    let mut h = 0x84222325cbf29ce4u64;
+    for b in bubbles {
+        for part in [b.center.x, b.center.y, b.center.z, b.radius] {
+            h ^= u64::from(part.to_bits());
+            h = h.wrapping_mul(0x0100_0000_01b3);
+        }
+    }
+    h
+}
+
 pub fn compute_world_representation_frame(
     time: Res<Time>,
     desired: Res<MapCameraDesired>,
-    _settings: Res<MapCameraSettings>,
     sim: Res<SimTick>,
     sim_time: Res<SimTimeMicros>,
     chunks: Query<(&Chunk, &ChunkCellMatrix)>,
@@ -686,11 +801,63 @@ pub fn compute_world_representation_frame(
     mut frame: ResMut<WorldRepresentationFrame>,
     mut lod_map: ResMut<WorldLodMap>,
     mut perf: Option<ResMut<crate::render::FramePerf>>,
+    mut last_fingerprint: Local<Option<WorldReprInputFingerprint>>,
 ) {
+    let _perf = crate::render::PerfScope::new("upd_world_repr_frame");
     let t0 = std::time::Instant::now();
     let zoom = desired.scale.x;
     let translation = desired.translation.truncate();
     let za = map_zoom_alpha(zoom);
+
+    let stamp = SimStepStamp::from_tick(*sim, *sim_time);
+    let sz = tiles_per_chunk(&chunks);
+    let cw = sz.x.max(1) as f32;
+    let ch = sz.y.max(1) as f32;
+    let world_extent = loaded_chunk_extent(&chunks);
+    let interest_radius_chunks =
+        interest_radius_chunks_from_zoom_alpha(quantize_zoom_alpha_for_interest(za));
+    let focus_chunk = IVec2::new(
+        (desired.translation.x / cw).floor() as i32,
+        (desired.translation.y / ch).floor() as i32,
+    );
+
+    // DIRTY-GATE (perf: fire/LOD per-frame stall). Skip the full `(2r+1)^2` sweep + frame write
+    // when no real input changed. Gates on ALL inputs the frame depends on so a legitimately
+    // changed frame still rebuilds: sim cadence, camera pan/zoom, focus chunk, interest radius,
+    // loaded world extent, and the tier-2/tier-3 LOD registries.
+    let fingerprint = WorldReprInputFingerprint {
+        stamp,
+        focus_chunk,
+        interest_radius_chunks,
+        cam_xy_q: IVec2::new(quantize_f32(translation.x, 0.5), quantize_f32(translation.y, 0.5)),
+        zoom_q: quantize_f32(zoom, 1.0e-3),
+        world_extent,
+        zones_len: zones.zones.len(),
+        zones_digest: digest_zones(&zones.zones),
+        bubbles_len: tactical.bubbles.len(),
+        bubbles_digest: digest_bubbles(&tactical.bubbles),
+        default_band: global.default_band,
+        readability_floor_q: quantize_f32(global.readability_zoom_floor, 1.0e-3),
+        readability_density_q: quantize_f32(global.readability_screen_density, 1.0e-3),
+    };
+    if *last_fingerprint == Some(fingerprint) {
+        if let Some(perf) = perf.as_mut() {
+            crate::render::record_frame_perf_ms(
+                perf,
+                t0.elapsed().as_secs_f32() * 1000.0,
+                crate::render::FramePerfSlot::WorldRepr,
+            );
+        }
+        return;
+    }
+    if crate::engine::ux_spike_active()
+        && last_fingerprint
+            .is_some_and(|prev| prev.same_except_stamp(fingerprint))
+    {
+        return;
+    }
+    *last_fingerprint = Some(fingerprint);
+
     let velocity = if engine.camera.initialized {
         (translation - engine.camera.previous_translation).length() / time.delta_secs().max(1e-4)
     } else {
@@ -713,18 +880,7 @@ pub fn compute_world_representation_frame(
     };
     crate::gui::apply_tile_readability_lod_bias(global.as_ref(), &mut inputs);
 
-    let stamp = SimStepStamp::from_tick(*sim, *sim_time);
-    let sz = tiles_per_chunk(&chunks);
-    let cw = sz.x.max(1) as f32;
-    let ch = sz.y.max(1) as f32;
-    let interest_radius_chunks =
-        interest_radius_chunks_from_zoom_alpha(quantize_zoom_alpha_for_interest(za));
-    let focus_chunk = IVec2::new(
-        (desired.translation.x / cw).floor() as i32,
-        (desired.translation.y / ch).floor() as i32,
-    );
-
-    let (mut next, map) = resolver.resolve(
+    let mut next = resolver.resolve_into(
         &global,
         &engine,
         inputs,
@@ -733,7 +889,9 @@ pub fn compute_world_representation_frame(
         focus_chunk,
         interest_radius_chunks,
         sz,
+        world_extent,
         stamp,
+        &mut lod_map,
     );
 
     next.zoom = zoom;
@@ -742,7 +900,6 @@ pub fn compute_world_representation_frame(
     next.gameplay_importance = gameplay.gameplay_importance;
 
     *frame = next;
-    *lod_map = map;
     if let Some(perf) = perf.as_mut() {
         crate::render::record_frame_perf_ms(
             perf,
@@ -902,6 +1059,78 @@ mod tests {
         assert_eq!(a, b);
         let c = interest_radius_chunks_from_zoom_alpha(quantize_zoom_alpha_for_interest(0.24));
         assert_ne!(a, c);
+    }
+
+    #[test]
+    fn lod_map_clamps_sweep_to_world_extent() {
+        // 10×10-chunk world (coords 0..=9), radius 48 → unclamped would sweep ~9409 cells.
+        let extent = Some((IVec2::ZERO, IVec2::new(9, 9)));
+        let mut map = WorldLodMap::default();
+        build_world_lod_map_into(
+            &mut map,
+            SimStepStamp::default(),
+            IVec2::new(5, 5),
+            48,
+            UVec2::new(32, 32),
+            extent,
+            WorldLodBand::Strategic,
+            WorldLodBand::Strategic,
+            &[],
+            &[],
+        );
+        // Clamped to the 10×10 world = 100 cells, not (2*48+1)^2 = 9409.
+        assert_eq!(map.cells.len(), 100);
+        // No loaded chunks → falls back to the radius box (small radius here).
+        let mut unbounded = WorldLodMap::default();
+        build_world_lod_map_into(
+            &mut unbounded,
+            SimStepStamp::default(),
+            IVec2::ZERO,
+            2,
+            UVec2::new(32, 32),
+            None,
+            WorldLodBand::Strategic,
+            WorldLodBand::Strategic,
+            &[],
+            &[],
+        );
+        assert_eq!(unbounded.cells.len(), 25); // (2*2+1)^2
+    }
+
+    #[test]
+    fn lod_map_reuses_allocation_in_place() {
+        let extent = Some((IVec2::ZERO, IVec2::new(9, 9)));
+        let mut map = WorldLodMap::default();
+        build_world_lod_map_into(
+            &mut map,
+            SimStepStamp::default(),
+            IVec2::new(5, 5),
+            48,
+            UVec2::new(32, 32),
+            extent,
+            WorldLodBand::Strategic,
+            WorldLodBand::Strategic,
+            &[],
+            &[],
+        );
+        let cap_after_first = map.cells.capacity();
+        assert!(cap_after_first >= 100);
+        // Second build into the same buffer must not require a fresh allocation.
+        build_world_lod_map_into(
+            &mut map,
+            SimStepStamp::new(1, 1000),
+            IVec2::new(5, 5),
+            48,
+            UVec2::new(32, 32),
+            extent,
+            WorldLodBand::Strategic,
+            WorldLodBand::Strategic,
+            &[],
+            &[],
+        );
+        assert_eq!(map.cells.len(), 100);
+        assert!(map.cells.capacity() >= cap_after_first);
+        assert_eq!(map.stamp, SimStepStamp::new(1, 1000));
     }
 
     #[test]

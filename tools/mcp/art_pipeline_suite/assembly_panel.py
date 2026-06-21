@@ -37,9 +37,10 @@ from .aps_theme import (
     wrap_for_widget,
 )
 from .aps_tk import themed_listbox
+from .aps_onboarding_panel import empty_state_label
 from .facility_needs_strip import FacilityNeedsStrip
 from .footprint_canvas import FootprintCanvas
-from .metadata_flow_panel import MetadataFlowPanel
+from .assembly_onboard_strip import AssemblyOnboardStrip
 from .grammar_inspector import GrammarInspectorPanel
 from .grammar_iterate_panel import GrammarIteratePanel
 from .grammar_dna_panel import GrammarDnaPanel
@@ -112,7 +113,7 @@ class AssemblyPanel(ttk.Frame):
         )
         intro.pack(anchor=tk.W, pady=(0, 4))
         track_wraplength(self, intro, minimum=480)
-        self.metadata_flow = MetadataFlowPanel(self, context="assembly")
+        self.metadata_flow = AssemblyOnboardStrip(self)
         self.metadata_flow.pack(fill=tk.X, pady=(0, 6))
 
         # --- Step 1: Generate (primary workflow — always visible) ---
@@ -232,6 +233,8 @@ class AssemblyPanel(ttk.Frame):
         ttk.Label(footprint_pane, text="Footprint & placements", font=FONT_UI_BOLD).pack(
             anchor=tk.W
         )
+        self._empty_state = empty_state_label(footprint_pane, "assembly")
+        self._empty_state.pack(anchor=tk.W, pady=2)
         self.placement_list = themed_listbox(
             footprint_pane, exportselection=False, font=("Consolas", 9), height=5
         )
@@ -800,8 +803,17 @@ class AssemblyPanel(ttk.Frame):
 
     def _refresh_placement_list(self) -> None:
         self.placement_list.delete(0, tk.END)
+        self._set_empty_state_visible(self._snapshot is None)
         for p in self._sorted_placements():
             self.placement_list.insert(tk.END, self._placement_label(p))
+
+    def _set_empty_state_visible(self, visible: bool) -> None:
+        if not hasattr(self, "_empty_state"):
+            return
+        if visible and not self._empty_state.winfo_ismapped():
+            self._empty_state.pack(anchor=tk.W, pady=2, before=self.placement_list)
+        elif not visible and self._empty_state.winfo_ismapped():
+            self._empty_state.pack_forget()
 
     def _on_grammar_inspector_rule_select(self, layer: str, rule_id: str) -> None:
         count = self.footprint_canvas.highlight_for_rule(rule_id)

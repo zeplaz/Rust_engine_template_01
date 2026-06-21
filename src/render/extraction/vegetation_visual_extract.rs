@@ -91,6 +91,8 @@ pub fn build_vegetation_extract_frame(
         Option<&LandscapeProgramOnChunk>,
     )>,
 ) {
+    // PERF-INSTR-VFX-001: name this per-chunk veg scan inside the Update wall window (STALL/PERF only).
+    let _perf = crate::render::PerfScope::new("upd_veg_extract_frame");
     let stamp = SimStepStamp::new(tick.0, sim_time.0);
     if frame.stamp == stamp && !frame.rows.is_empty() {
         return;

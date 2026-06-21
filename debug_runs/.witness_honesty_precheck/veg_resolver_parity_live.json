@@ -52,7 +52,7 @@
     "relative_path": "debug_runs/art_pipeline/veg_resolver_parity_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_veg_resolver_parity_live_witness",
-    "written_at_epoch_secs": 1781756523
+    "written_at_epoch_secs": 1781979932
   },
   "byte_parity": true,
   "catalog_clamp_green": true,

@@ -57,7 +57,7 @@
     "profile": "APS_GRAM_CLOSE",
     "relative_path": "debug_runs/aps_grammar_evolution_close_live.json",
     "source_system": "grammar_build_set",
-    "written_at_epoch_secs": 1781793783
+    "written_at_epoch_secs": 1781800397
   },
   "witness_honesty": {
     "status": "passed",

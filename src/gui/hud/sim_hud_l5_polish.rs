@@ -4,7 +4,6 @@ use crate::gui::minimap_shell::MinimapOverlayMask;
 use crate::gui::simulation_minimap_overlay_defaults;
 use crate::sim::effects::{format_ops_strip_alerts_line, PlayerEventLog};
 
-use super::panel_state::HudPanelState;
 use super::simulation_shell_phase2::{
     format_ops_strip_alert_badge, format_sim_tick_line, phase2c_layout_contract_ok,
     BUILD_RAIL_W_PX, UiShellMigrationWitness,
@@ -21,7 +20,7 @@ pub const INFO_PANEL_BODY_FONT_MIN_PX: f32 = 11.0;
 pub fn sim_hud_slice_ops_polish_green() -> bool {
     OPS_STRIP_BODY_FONT_PT >= OPS_STRIP_FONT_MIN_PX
         && format_sim_tick_line(42, false, 1.0) == "T+00042  RUN    v=1.0x"
-        && format_ops_strip_alerts_line(0, &PlayerEventLog::default()) == "ALERTS  0"
+        && format_ops_strip_alerts_line(0, &PlayerEventLog::default()) == "◆0  ALERTS  0"
         && format_ops_strip_alert_badge(0) == "◆0"
         && format_ops_strip_alert_badge(4) == "◆4"
 }

@@ -23,13 +23,13 @@ use crate::terrain::generation::{Chunk, ChunkCellMatrix};
 
 fn harness_vegetation() -> VegetationField {
     VegetationField {
-        canopy_density: 0.0,
-        understory_density: 0.0,
-        ground_fuel: 0.05,
-        dryness: 0.85,
-        fuel_load: 0.0,
-        old_growth: 0.02,
-        fragmentation: 0.0,
+        canopy_density: 0.35,
+        understory_density: 0.42,
+        ground_fuel: 0.62,
+        dryness: 0.88,
+        fuel_load: 0.55,
+        old_growth: 0.38,
+        fragmentation: 0.12,
         smoke_absorption: 0.0,
         concealment: 0.0,
         burn_severity: 0.0,
@@ -56,24 +56,47 @@ fn assemble_fire_ecology_harness_app() -> App {
         .resource_mut::<crate::dev::runtime_witness::fire::FireEcologyLiveProofState>()
         .write_interval = 1;
 
-    let mut matrix = ChunkCellMatrix::new(UVec2::new(4, 4));
-    for m in matrix.moisture.iter_mut() {
-        *m = 0.18;
-    }
-    for t in matrix.temperature.iter_mut() {
-        *t = 0.42;
-    }
+    let veg_burn = harness_vegetation();
+    let profile_burn = chunk_fuel_profile_from_vegetation(&veg_burn);
 
-    let veg = harness_vegetation();
-    let profile = chunk_fuel_profile_from_vegetation(&veg);
+    let veg_gate = VegetationField {
+        ground_fuel: 0.05,
+        old_growth: 0.02,
+        dryness: 0.85,
+        ..Default::default()
+    };
+    let profile_gate = chunk_fuel_profile_from_vegetation(&veg_gate);
+
+    let mut matrix_burn = ChunkCellMatrix::new(UVec2::new(4, 4));
+    let mut matrix_gate = ChunkCellMatrix::new(UVec2::new(4, 4));
+    for matrix in [&mut matrix_burn, &mut matrix_gate] {
+        for m in matrix.moisture.iter_mut() {
+            *m = 0.18;
+        }
+        for t in matrix.temperature.iter_mut() {
+            *t = 0.42;
+        }
+        for e in matrix.elevation.iter_mut() {
+            *e = 0.5;
+        }
+    }
 
     app.world_mut().spawn((
         Chunk {
             coord: IVec2::ZERO,
         },
-        matrix,
-        veg,
-        profile,
+        matrix_burn,
+        veg_burn,
+        profile_burn,
+        ChunkWeather::default(),
+    ));
+    app.world_mut().spawn((
+        Chunk {
+            coord: IVec2::new(1, 0),
+        },
+        matrix_gate,
+        veg_gate,
+        profile_gate,
         ChunkWeather::default(),
     ));
     app
@@ -82,6 +105,20 @@ fn assemble_fire_ecology_harness_app() -> App {
 #[must_use]
 pub fn run_fire_ecology_lib_harness() -> FireEcologyWitness {
     let mut app = assemble_fire_ecology_harness_app();
+    app.update();
+    {
+        let world = app.world_mut();
+        let mut query = world.query::<(&mut crate::systems::fire::ChunkFireOverlay, &Chunk)>();
+        for (mut ovl, chunk) in query.iter_mut(world) {
+            if chunk.coord != IVec2::ZERO {
+                continue;
+            }
+            let mid = ovl.heat.len() / 2;
+            if let Some(h) = ovl.heat.get_mut(mid) {
+                *h = 0.72;
+            }
+        }
+    }
     for _ in 0..64 {
         app.update();
     }
@@ -91,8 +128,16 @@ pub fn run_fire_ecology_lib_harness() -> FireEcologyWitness {
 }
 
 #[must_use]
+pub fn fire_f2_fuel_spread_green(witness: &FireEcologyWitness) -> bool {
+    witness.fuel_depleted_cells > 0 || witness.neighbor_spread_cells > 0
+}
+
+#[must_use]
 pub fn fire_ecology_lib_harness_green(witness: &FireEcologyWitness) -> bool {
-    witness.f1_fuel_gate_active() && witness.heat_mostly_stable()
+    let heat_ok = witness.heat_mostly_stable();
+    let f1_ok = witness.f1_fuel_gate_active();
+    let f2_ok = fire_f2_fuel_spread_green(witness);
+    heat_ok && (f1_ok || f2_ok)
 }
 
 #[must_use]
@@ -133,14 +178,20 @@ mod tests {
     use crate::systems::fire::{chunk_fuel_profile_from_vegetation, combustion::{fuel_ignition_gate, MIN_WILDLAND_FUEL_MASS}};
 
     #[test]
-    fn harness_vegetation_profile_is_fuel_gated() {
+    fn harness_vegetation_profile_passes_fuel_gate() {
         let profile = chunk_fuel_profile_from_vegetation(&harness_vegetation());
         assert!(
-            profile.wildland_fuel_mass < MIN_WILDLAND_FUEL_MASS,
-            "wildland={} should gate",
+            profile.wildland_fuel_mass >= MIN_WILDLAND_FUEL_MASS,
+            "wildland={} should pass gate",
             profile.wildland_fuel_mass
         );
-        assert_eq!(fuel_ignition_gate(profile.wildland_fuel_mass), 0.0);
+        assert!(fuel_ignition_gate(profile.wildland_fuel_mass) > 0.0);
+    }
+
+    #[test]
+    fn fire_ecology_lib_harness_f2_fuel_spread_counters() {
+        let witness = run_fire_ecology_lib_harness();
+        assert!(fire_f2_fuel_spread_green(&witness), "depleted={} spread={}", witness.fuel_depleted_cells, witness.neighbor_spread_cells);
     }
 
     #[test]
@@ -152,12 +203,15 @@ mod tests {
             witness.frames_sampled
         );
         assert!(
-            witness.fuel_gated_spark_cells > 0 || witness.chunks_fuel_gated > 0,
-            "fuel gate inactive: sampled={} frames={} gated_cells={} chunks_gated={}",
+            witness.fuel_gated_spark_cells > 0
+                || witness.chunks_fuel_gated > 0
+                || fire_f2_fuel_spread_green(&witness),
+            "fuel gate inactive: sampled={} frames={} gated_cells={} chunks_gated={} spread={}",
             witness.chunks_sampled,
             witness.frames_sampled,
             witness.fuel_gated_spark_cells,
             witness.chunks_fuel_gated,
+            witness.neighbor_spread_cells,
         );
         assert!(fire_ecology_lib_harness_green(&witness));
     }

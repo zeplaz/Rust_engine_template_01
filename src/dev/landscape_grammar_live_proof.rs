@@ -2,13 +2,9 @@
 
 use crate::dev::debug_run_envelope::{wrap_debug_run, write_debug_run_json};
 use crate::systems::ecology::{
-    evaluate_landscape_program, load_landscape_grammar_catalog, refresh_lg2_witness,
-    LandscapeGrammarLg2Witness, LG1_PILOT_CHUNK,
-    LG1_PILOT_PRESET_ID, LANDSCAPE_GRAMMAR_LG2_LIVE_JSON,
-    LANDSCAPE_GRAMMAR_LG4_PREVIEW_LIVE_JSON, LandscapeProgramEvaluation,
+    refresh_lg2_witness, LandscapeGrammarLg2Witness, LANDSCAPE_GRAMMAR_LG2_LIVE_JSON,
+    LANDSCAPE_GRAMMAR_LG4_PREVIEW_LIVE_JSON,
 };
-use crate::systems::ecology::{ChunkEcology, VegetationField};
-use crate::systems::weather::ChunkWeather;
 
 pub const LANDSCAPE_GRAMMAR_LIVE_PROOF_JSON: &str =
     "debug_runs/landscape_grammar_live_proof.json";
@@ -47,8 +43,14 @@ pub fn commit_landscape_grammar_live_proof(
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use std::path::PathBuf;
+
+    use super::*;
+    use crate::systems::ecology::{
+        evaluate_landscape_program, load_landscape_grammar_catalog, ChunkEcology, LG1_PILOT_CHUNK,
+        LG1_PILOT_PRESET_ID, VegetationField,
+    };
+    use crate::systems::weather::ChunkWeather;
 
     fn repo_asset_path(rel: &str) -> PathBuf {
         std::env::var_os("CARGO_MANIFEST_DIR")

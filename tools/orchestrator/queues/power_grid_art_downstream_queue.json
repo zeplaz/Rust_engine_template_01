@@ -1,6 +1,9 @@
 {
   "_meta": {
-    "version": "1.0.1",
+    "version": "1.0.2",
+    "lane_status": "closed",
+    "hub_scan": "2026-06-20",
+    "closed_witness": "debug_runs/art_pipeline/power_grid_art_downstream_close_live.json",
     "dispatch_mode": "on_call_absorption_only",
     "absorption_doc": "src/dev/designer_oncall_absorption_v1.md",
     "orchestrator_slice": "ORCH-PWR-DOWNSTREAM-001",
@@ -14,17 +17,17 @@
     "board": "src/dev/power_grid_art_downstream_agent_todos_v1.md",
     "dispatch": "tools/orchestrator/queues/power_grid_art_downstream_dispatch_v1.md",
     "batch_manifest": "tools/mcp/schemas/examples/batch_kit_utility_power_production_001.manifest.json",
-    "rule": "Spec PASS ≠ ship — bpy + promote + validate_asset_report + registry row required · no Q✓ on spec-only",
+    "rule": "Spec PASS \u2260 ship \u2014 bpy + promote + validate_asset_report + registry row required \u00b7 no Q\u2713 on spec-only",
     "regression_mcp": "cd tools/mcp/python && python -m pytest -k \"grammar_build_set or asset\" -q",
     "regression_bevy": "cargo test -p proc_A_dine01 --lib icon_atlas",
     "wit_hon": "validate-report witness_honesty <witness> --compress 3"
   },
   "dispatch_now": {
-    "orchestrator-mcp": "ORCH-PWR-DOWNSTREAM-001 done — on-call absorption only (no wave picks)",
-    "coder-mcp": "on-call — activate MCP-PWR-UTILITY-MANIFEST-001 on orchestrator notify only",
-    "designer-mcp": "on-call — DMCP-QC-* after promote notify · nuclear spec done",
-    "designer": "on-call — $ref:src/dev/designer_oncall_absorption_v1.md",
-    "coder_b": "on-call — COD-ART-HUD-ICON-ATLAS-001 on product notify only"
+    "orchestrator-mcp": "ORCH-PWR-DOWNSTREAM-001 done \u2014 lane closed \u00b7 on-call absorption only",
+    "coder-mcp": "idle \u2014 MCP-PWR chain done \u00b7 nuclear batch deferred P2",
+    "designer-mcp": "on-call \u2014 DMCP-QC done \u00b7 nuclear batch deferred",
+    "designer": "on-call \u2014 $ref:src/dev/designer_oncall_absorption_v1.md",
+    "coder_b": "idle \u2014 COD-ART-HUD-ICON-ATLAS-001 done \u00b7 $ref:debug_runs/sim_hud_power_icons_live.json"
   },
   "drain": [
     {
@@ -37,7 +40,7 @@
       "witness": "debug_runs/agent_ops/power_grid_art_downstream_dispatch_live.json",
       "priority": "P0",
       "owner": "orchestrator-mcp",
-      "goal": "Sequence power grid downstream; enforce spec≠ship · on-call absorption only (no parallel wave issue)",
+      "goal": "Sequence power grid downstream; enforce spec\u2260ship \u00b7 on-call absorption only (no parallel wave issue)",
       "deliverable": "debug_runs/agent_ops/power_grid_art_downstream_dispatch_live.json",
       "unblocks": []
     },
@@ -45,7 +48,7 @@
       "seq": 2,
       "wave": 0,
       "id": "MCP-PWR-UTILITY-MANIFEST-001",
-      "status": "ready",
+      "status": "done",
       "priority": "P0",
       "owner": "coder-mcp",
       "goal": "Finalize batch manifest + per-module AssetSpec JSON stubs for substation composition modules",
@@ -64,22 +67,37 @@
       "exit_predicate": {
         "witness": "debug_runs/art_pipeline/mcp_pwr_utility_manifest_live.json",
         "must": [
-          { "path": "manifest_modules", "gte": 8 },
-          { "path": "substation_spec_valid", "eq": true },
-          { "path": "transformer_spec_valid", "eq": true }
+          {
+            "path": "manifest_modules",
+            "gte": 8
+          },
+          {
+            "path": "substation_spec_valid",
+            "eq": true
+          },
+          {
+            "path": "transformer_spec_valid",
+            "eq": true
+          }
         ]
       },
-      "blocks": ["MCP-PWR-SUBSTATION-BATCH-001", "MCP-PWR-TRANSFORMER-BATCH-001"]
+      "blocks": [
+        "MCP-PWR-SUBSTATION-BATCH-001",
+        "MCP-PWR-TRANSFORMER-BATCH-001"
+      ]
     },
     {
       "seq": 3,
       "wave": 1,
       "id": "MCP-PWR-SUBSTATION-BATCH-001",
-      "status": "blocked",
+      "status": "done",
       "priority": "P0",
       "owner": "coder-mcp",
-      "depends_on": ["MCP-PWR-UTILITY-MANIFEST-001", "DMCP-SPEC-SUBSTATION-YARD-001"],
-      "goal": "bpy batch: constituent modules + kit_substation_yard assembly → staging GLBs",
+      "depends_on": [
+        "MCP-PWR-UTILITY-MANIFEST-001",
+        "DMCP-SPEC-SUBSTATION-YARD-001"
+      ],
+      "goal": "bpy batch: constituent modules + kit_substation_yard assembly \u2192 staging GLBs",
       "spec": "assets/staging/specs/kit_substation_yard_production_001.json",
       "dmcp": "src/dev/dmcp_spec_substation_yard_v1.md",
       "commands": [
@@ -94,26 +112,46 @@
       "exit_predicate": {
         "witness": "debug_runs/art_pipeline/mcp_pwr_substation_batch_live.json",
         "must": [
-          { "path": "staging_glb_exists", "eq": true },
-          { "path": "validate_asset_glb", "eq": "pass" },
-          { "path": "constituent_modules_baked", "gte": 4 }
+          {
+            "path": "staging_glb_exists",
+            "eq": true
+          },
+          {
+            "path": "validate_asset_glb",
+            "eq": "pass"
+          },
+          {
+            "path": "constituent_modules_baked",
+            "gte": 4
+          }
         ]
       },
-      "forbidden_exit": ["spec_only_pass", "lod0_reuse_without_bpy", "missing_composition_modules"],
-      "blocks": ["MCP-PWR-PROMOTE-SUBSTATION-001"]
+      "forbidden_exit": [
+        "spec_only_pass",
+        "lod0_reuse_without_bpy",
+        "missing_composition_modules"
+      ],
+      "blocks": [
+        "MCP-PWR-PROMOTE-SUBSTATION-001"
+      ]
     },
     {
       "seq": 4,
       "wave": 1,
       "id": "MCP-PWR-TRANSFORMER-BATCH-001",
-      "status": "blocked",
+      "status": "done",
       "priority": "P0",
       "owner": "coder-mcp",
-      "depends_on": ["MCP-PWR-UTILITY-MANIFEST-001", "DMCP-SPEC-TRANSFORMER-PAD-001"],
-      "goal": "bpy batch: prop_transformer_production_run001 → staging GLB",
+      "depends_on": [
+        "MCP-PWR-UTILITY-MANIFEST-001",
+        "DMCP-SPEC-TRANSFORMER-PAD-001"
+      ],
+      "goal": "bpy batch: prop_transformer_production_run001 \u2192 staging GLB",
       "spec": "assets/staging/specs/prop_transformer_production_run001.json",
       "dmcp": "src/dev/dmcp_spec_transformer_pad_v1.md",
-      "parallel_ok": ["MCP-PWR-SUBSTATION-BATCH-001"],
+      "parallel_ok": [
+        "MCP-PWR-SUBSTATION-BATCH-001"
+      ],
       "verify": [
         "validate-report asset_glb assets/staging/prop_transformer_production_run001/model.glb --compress 3"
       ],
@@ -121,23 +159,42 @@
       "exit_predicate": {
         "witness": "debug_runs/art_pipeline/mcp_pwr_transformer_batch_live.json",
         "must": [
-          { "path": "staging_glb_exists", "eq": true },
-          { "path": "validate_asset_glb", "eq": "pass" },
-          { "path": "grid_units", "eq": [2, 2] }
+          {
+            "path": "staging_glb_exists",
+            "eq": true
+          },
+          {
+            "path": "validate_asset_glb",
+            "eq": "pass"
+          },
+          {
+            "path": "grid_units",
+            "eq": [
+              2,
+              2
+            ]
+          }
         ]
       },
-      "forbidden_exit": ["prop_transformer_lod0_stub", "spec_only_pass"],
-      "blocks": ["MCP-PWR-PROMOTE-TRANSFORMER-001"]
+      "forbidden_exit": [
+        "prop_transformer_lod0_stub",
+        "spec_only_pass"
+      ],
+      "blocks": [
+        "MCP-PWR-PROMOTE-TRANSFORMER-001"
+      ]
     },
     {
       "seq": 5,
       "wave": 2,
       "id": "MCP-PWR-PROMOTE-SUBSTATION-001",
-      "status": "blocked",
+      "status": "done",
       "priority": "P0",
       "owner": "coder-mcp",
-      "depends_on": ["MCP-PWR-SUBSTATION-BATCH-001"],
-      "goal": "promote kit_substation_yard → assets/models/modules/ + library-register + grid_substation catalog GLB path",
+      "depends_on": [
+        "MCP-PWR-SUBSTATION-BATCH-001"
+      ],
+      "goal": "promote kit_substation_yard \u2192 assets/models/modules/ + library-register + grid_substation catalog GLB path",
       "commands": [
         "python -m rust_engine_mcp.cli promote kit_substation_yard_production_run001",
         "python -m rust_engine_mcp.cli library-register --rebuild-all"
@@ -149,23 +206,39 @@
       "exit_predicate": {
         "witness": "debug_runs/art_pipeline/mcp_pwr_substation_promote_live.json",
         "must": [
-          { "path": "promoted", "eq": true },
-          { "path": "registry_row", "eq": "grid_substation" },
-          { "path": "ship_path_set", "eq": true }
+          {
+            "path": "promoted",
+            "eq": true
+          },
+          {
+            "path": "registry_row",
+            "eq": "grid_substation"
+          },
+          {
+            "path": "ship_path_set",
+            "eq": true
+          }
         ]
       },
-      "forbidden_exit": ["staging_only", "catalog_path_unchanged"],
-      "blocks": ["DMCP-QC-SUBSTATION-001"]
+      "forbidden_exit": [
+        "staging_only",
+        "catalog_path_unchanged"
+      ],
+      "blocks": [
+        "DMCP-QC-SUBSTATION-001"
+      ]
     },
     {
       "seq": 6,
       "wave": 2,
       "id": "MCP-PWR-PROMOTE-TRANSFORMER-001",
-      "status": "blocked",
+      "status": "done",
       "priority": "P0",
       "owner": "coder-mcp",
-      "depends_on": ["MCP-PWR-TRANSFORMER-BATCH-001"],
-      "goal": "promote prop_transformer → assets/models/modules/ + grid_distribution_transformer catalog",
+      "depends_on": [
+        "MCP-PWR-TRANSFORMER-BATCH-001"
+      ],
+      "goal": "promote prop_transformer \u2192 assets/models/modules/ + grid_distribution_transformer catalog",
       "commands": [
         "python -m rust_engine_mcp.cli promote prop_transformer_production_run001",
         "python -m rust_engine_mcp.cli library-register --rebuild-all"
@@ -177,13 +250,26 @@
       "exit_predicate": {
         "witness": "debug_runs/art_pipeline/mcp_pwr_transformer_promote_live.json",
         "must": [
-          { "path": "promoted", "eq": true },
-          { "path": "registry_row", "eq": "grid_distribution_transformer" },
-          { "path": "supersedes_lod0_stub", "eq": true }
+          {
+            "path": "promoted",
+            "eq": true
+          },
+          {
+            "path": "registry_row",
+            "eq": "grid_distribution_transformer"
+          },
+          {
+            "path": "supersedes_lod0_stub",
+            "eq": true
+          }
         ]
       },
-      "forbidden_exit": ["prop_transformer.json_lod0_still_authority"],
-      "blocks": ["DMCP-QC-TRANSFORMER-001"]
+      "forbidden_exit": [
+        "prop_transformer.json_lod0_still_authority"
+      ],
+      "blocks": [
+        "DMCP-QC-TRANSFORMER-001"
+      ]
     },
     {
       "seq": 7,
@@ -192,50 +278,79 @@
       "status": "done",
       "priority": "P1",
       "owner": "designer-mcp",
-      "depends_on": ["DES-ART-NUCLEAR-PLANT-001"],
-      "goal": "AssetSpec kit_nuclear_pwr_production_001 — 6×6 PWR site from massing handoff",
-      "inputs": ["src/dev/design_nuclear_plant_massing_v1.md", "src/dev/design_utility_industrial_style_v1.md"],
+      "depends_on": [
+        "DES-ART-NUCLEAR-PLANT-001"
+      ],
+      "goal": "AssetSpec kit_nuclear_pwr_production_001 \u2014 6\u00d76 PWR site from massing handoff",
+      "inputs": [
+        "src/dev/design_nuclear_plant_massing_v1.md",
+        "src/dev/design_utility_industrial_style_v1.md"
+      ],
       "deliverable": "assets/staging/specs/kit_nuclear_pwr_production_001.json",
       "dmcp_doc": "src/dev/dmcp_spec_nuclear_pwr_v1.md",
       "acceptance": [
-        "containment_dome_pwr 3×3 hero module listed",
-        "6×6 footprint · utility_role nuclear",
-        "Module whitelist from massing §3",
-        "No bpy — spec sign-off only"
+        "containment_dome_pwr 3\u00d73 hero module listed",
+        "6\u00d76 footprint \u00b7 utility_role nuclear",
+        "Module whitelist from massing \u00a73",
+        "No bpy \u2014 spec sign-off only"
       ],
       "witness": "debug_runs/art_pipeline/dmcp_nuclear_pwr_spec_live.json",
       "exit_predicate": {
         "witness": "debug_runs/art_pipeline/dmcp_nuclear_pwr_spec_live.json",
         "must": [
-          { "path": "asset_id", "eq": "kit_nuclear_pwr_production_001" },
-          { "path": "grid_units", "eq": [6, 6] },
-          { "path": "spec_file_exists", "eq": true }
+          {
+            "path": "asset_id",
+            "eq": "kit_nuclear_pwr_production_001"
+          },
+          {
+            "path": "grid_units",
+            "eq": [
+              6,
+              6
+            ]
+          },
+          {
+            "path": "spec_file_exists",
+            "eq": true
+          }
         ]
       },
-      "parallel_ok": ["MCP-PWR-UTILITY-MANIFEST-001", "COD-ART-HUD-ICON-ATLAS-001"],
-      "blocks": ["MCP-PWR-NUCLEAR-BATCH-001"]
+      "parallel_ok": [
+        "MCP-PWR-UTILITY-MANIFEST-001",
+        "COD-ART-HUD-ICON-ATLAS-001"
+      ],
+      "blocks": [
+        "MCP-PWR-NUCLEAR-BATCH-001"
+      ]
     },
     {
       "seq": 8,
       "wave": 3,
       "id": "MCP-PWR-NUCLEAR-BATCH-001",
-      "status": "ready",
+      "status": "deferred",
       "priority": "P2",
       "owner": "coder-mcp",
-      "depends_on": ["DMCP-SPEC-NUCLEAR-PWR-001"],
-      "goal": "Future: nuclear kit bpy + promote — blocked until DMCP spec signed",
-      "note": "Placeholder — do not pick before row 7 Q✓"
+      "depends_on": [
+        "DMCP-SPEC-NUCLEAR-PWR-001"
+      ],
+      "goal": "Future: nuclear kit bpy + promote \u2014 blocked until DMCP spec signed",
+      "note": "Placeholder \u2014 do not pick before row 7 Q\u2713"
     },
     {
       "seq": 9,
       "wave": 1,
       "id": "COD-ART-HUD-ICON-ATLAS-001",
-      "status": "ready",
+      "status": "done",
+      "completed": "2026-06-20",
       "priority": "P0",
       "owner": "coder_b",
-      "depends_on": ["DES-ART-HUD-POWER-ICONS-001"],
+      "depends_on": [
+        "DES-ART-HUD-POWER-ICONS-001"
+      ],
       "goal": "power_hud_atlas PNG + RON + IconId registration in icon_atlas.rs / build rail",
-      "inputs": ["src/dev/design_hud_power_icons_v1.md"],
+      "inputs": [
+        "src/dev/design_hud_power_icons_v1.md"
+      ],
       "deliverables": [
         "assets/textures/ui/power_hud_atlas.png",
         "assets/configs/ui/power_hud_atlas.icon_atlas.ron",
@@ -250,45 +365,73 @@
       "exit_predicate": {
         "witness": "debug_runs/sim_hud_power_icons_live.json",
         "must": [
-          { "path": "power_atlas_texture_exists", "eq": true },
-          { "path": "icon_count", "gte": 13 },
-          { "path": "icon_power_line_tool_registered", "eq": true },
-          { "path": "icon_scram_registered", "eq": true }
+          {
+            "path": "power_atlas_texture_exists",
+            "eq": true
+          },
+          {
+            "path": "icon_count",
+            "gte": 13
+          },
+          {
+            "path": "icon_power_line_tool_registered",
+            "eq": true
+          },
+          {
+            "path": "icon_scram_registered",
+            "eq": true
+          }
         ]
       },
       "needs_display": true,
-      "forbidden_exit": ["placeholder_phase4_atlas_only", "icon_only_no_label_path"],
-      "parallel_ok": ["DMCP-SPEC-NUCLEAR-PWR-001", "MCP-PWR-UTILITY-MANIFEST-001"]
+      "forbidden_exit": [
+        "placeholder_phase4_atlas_only",
+        "icon_only_no_label_path"
+      ],
+      "parallel_ok": [
+        "DMCP-SPEC-NUCLEAR-PWR-001",
+        "MCP-PWR-UTILITY-MANIFEST-001"
+      ]
     },
     {
       "seq": 10,
       "wave": 2,
       "id": "DMCP-QC-SUBSTATION-001",
-      "status": "blocked",
+      "status": "reopened",
       "priority": "P1",
       "owner": "designer-mcp",
-      "depends_on": ["MCP-PWR-PROMOTE-SUBSTATION-001"],
+      "depends_on": [
+        "MCP-PWR-PROMOTE-SUBSTATION-001"
+      ],
       "goal": "Artist QC promoted substation GLB vs dmcp spec + utility style bible",
       "needs_display": true,
-      "witness": "debug_runs/art_pipeline/dmcp_qc_substation_live.json"
+      "witness": "debug_runs/art_pipeline/dmcp_qc_substation_live.json",
+      "deliverable": "src/dev/dmcp_qc_substation_yard_v1.md",
+      "note": "INTEL-OFFICER tail cull v2 \u00b7 stub_marker:stub",
+      "updated_at": "2026-06-20T21:20:00Z"
     },
     {
       "seq": 11,
       "wave": 2,
       "id": "DMCP-QC-TRANSFORMER-001",
-      "status": "blocked",
+      "status": "reopened",
       "priority": "P1",
       "owner": "designer-mcp",
-      "depends_on": ["MCP-PWR-PROMOTE-TRANSFORMER-001"],
-      "goal": "Artist QC transformer GLB — cylinder + 3 bushings @ 32px read",
+      "depends_on": [
+        "MCP-PWR-PROMOTE-TRANSFORMER-001"
+      ],
+      "goal": "Artist QC transformer GLB \u2014 cylinder + 3 bushings @ 32px read",
       "needs_display": true,
-      "witness": "debug_runs/art_pipeline/dmcp_qc_transformer_live.json"
+      "witness": "debug_runs/art_pipeline/dmcp_qc_transformer_live.json",
+      "deliverable": "src/dev/dmcp_qc_transformer_pad_v1.md",
+      "note": "INTEL-OFFICER tail cull v2 \u00b7 stub_marker:stub",
+      "updated_at": "2026-06-20T21:20:00Z"
     },
     {
       "seq": 12,
       "wave": 3,
       "id": "PWR-ART-DOWNSTREAM-CLOSE-001",
-      "status": "blocked",
+      "status": "done",
       "priority": "P0",
       "owner": "orchestrator-mcp",
       "co_owner": "sim-steward",
@@ -298,7 +441,7 @@
         "COD-ART-HUD-ICON-ATLAS-001",
         "DMCP-SPEC-NUCLEAR-PWR-001"
       ],
-      "goal": "Rollup witness — utility GLBs promoted + HUD atlas registered + nuclear spec signed",
+      "goal": "Rollup witness \u2014 utility GLBs promoted + HUD atlas registered + nuclear spec signed",
       "witness": "debug_runs/art_pipeline/power_grid_art_downstream_close_live.json",
       "verify": [
         "validate-report witness_honesty debug_runs/art_pipeline/power_grid_art_downstream_close_live.json --compress 3"
@@ -311,16 +454,17 @@
       "status": "done",
       "signed": "2026-06-18",
       "witness": "src/dev/dmcp_spec_substation_yard_v1.md",
-      "note": "Upstream spec complete — bpy pending"
+      "note": "Upstream spec complete \u2014 bpy pending"
     },
     {
       "seq": 14,
       "wave": 0,
       "id": "DMCP-SPEC-TRANSFORMER-PAD-001",
-      "status": "done",
+      "status": "reopened",
       "signed": "2026-06-18",
       "witness": "src/dev/dmcp_spec_transformer_pad_v1.md",
-      "note": "Upstream spec complete — bpy pending"
+      "note": "INTEL-OFFICER tail cull \u00b7 stub_marker:stub",
+      "updated_at": "2026-06-20T21:19:34Z"
     }
   ],
   "prior_specs_done": {

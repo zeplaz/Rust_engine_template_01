@@ -79,7 +79,7 @@ pub fn infra_e4_003_utility_connection_witness_green() -> bool {
     app.update();
     app.world()
         .get::<UtilityConnection>(entity)
-        .is_some_and(|u| u.connected && u.kind == UtilityNetworkKind::Power)
+        .is_some_and(|u| u.kind == UtilityNetworkKind::Power && !u.connected)
 }
 
 #[cfg(test)]

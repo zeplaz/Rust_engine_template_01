@@ -52,7 +52,7 @@
     "relative_path": "debug_runs/landscape_grammar_extract_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_vegetation_extract_witness",
-    "written_at_epoch_secs": 1781756519
+    "written_at_epoch_secs": 1781979933
   },
   "burn_active_rows": 1,
   "extract_glyph_deterministic": true,

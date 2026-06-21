@@ -127,6 +127,31 @@ pub struct FireExtractClock {
     pub last_tick: u64,
 }
 
+/// Per-frame fire ECS extract report — flushed into sim-spectrum disk witness on `--test` runs.
+#[derive(Resource, Debug, Clone, Default)]
+pub struct FireExtractDiagnostics {
+    pub last: FireExtractFrameReport,
+}
+
+#[derive(Debug, Clone, Default)]
+pub struct FireExtractFrameReport {
+    pub ran_full_scan: bool,
+    pub cadence_skipped: bool,
+    pub cadence_due: bool,
+    pub spike_active: bool,
+    pub tick_changed: bool,
+    pub interval_elapsed: bool,
+    pub residency_scoped: bool,
+    pub extract_ms: f32,
+    pub chunks_iterated: u32,
+    pub chunks_fast_path: u32,
+    pub chunks_profiled: u32,
+    pub instances_written: u32,
+    pub chunk_heat_written: u32,
+    pub runtime_chunks: u32,
+    pub min_interval_secs: f32,
+}
+
 #[inline]
 fn debug_raster_chunks_override() -> Option<usize> {
     #[cfg(debug_assertions)]

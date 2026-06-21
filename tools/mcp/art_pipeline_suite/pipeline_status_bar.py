@@ -55,11 +55,23 @@ class PipelineStatusBar(ttk.Frame):
         ttk.Label(next_row, textvariable=self._next_var, font=FONT_HINT, foreground=COLOR_ACCENT).pack(
             side=tk.LEFT
         )
+        # B2 — reserve stable space: the advance button and the blocked-reason
+        # label stay packed for the life of the bar. Their visibility is toggled
+        # via text + state (and a fixed width) so the "Next step:" row never
+        # reflows when switching tabs. Packing/unpacking them was shifting the
+        # surrounding chrome on every tab click.
         self._advance_btn = ttk.Button(next_row, text="", command=self._advance, width=20)
+        self._advance_btn.pack(side=tk.LEFT, padx=(10, 0))
         self._advance_blocked_var = tk.StringVar(value="")
         self._advance_blocked_lbl = ttk.Label(
             next_row, textvariable=self._advance_blocked_var, font=FONT_HINT, foreground=COLOR_FAIL
         )
+        self._advance_blocked_lbl.pack(side=tk.LEFT, padx=(8, 0))
+        # Cached advance state so _sync_next_step only writes widgets on a real
+        # change (idempotent updates — no redundant configures between same-verb tabs).
+        self._advance_text: str | None = None
+        self._advance_state: str | None = None
+        self._advance_blocked_text: str | None = None
 
         self._rebuild_step_widgets()
         self._set_lane_hint()
@@ -115,11 +127,32 @@ class PipelineStatusBar(ttk.Frame):
         if self._advance_verb and self._on_advance is not None:
             self._on_advance(self._advance_verb)
 
+    def _set_advance_widgets(self, *, text: str, state: str, blocked_text: str) -> None:
+        """Idempotently drive the advance button + blocked label.
+
+        B2 — the widgets stay packed (reserved space); we only toggle text/state
+        and never pack_forget/pack, so the "Next step:" row keeps a stable height
+        and position across tab changes. Each property is written only when it
+        actually changed, so two tabs that share the same verb state cause no
+        widget churn at all.
+        """
+        if text != self._advance_text:
+            self._advance_btn.configure(text=text)
+            self._advance_text = text
+        if state != self._advance_state:
+            self._advance_btn.configure(state=state)
+            self._advance_state = state
+        if blocked_text != self._advance_blocked_text:
+            self._advance_blocked_var.set(blocked_text)
+            self._advance_blocked_text = blocked_text
+
     def _sync_next_step(self) -> None:
         """Drive the one 'Next step:' line + advance button from the current step.
 
         Disabled verbs show their reason inline (Phase 4.5 S2) instead of failing
-        only into a red string at the far end. Never auto-switches tabs.
+        only into a red string at the far end. Never auto-switches tabs. The
+        advance widgets keep their reserved space (B2) — toggled by text/state,
+        never repacked — so tab changes do not reflow the surrounding chrome.
         """
         guidance, verb = next_action_for(
             self._lane,
@@ -127,23 +160,25 @@ class PipelineStatusBar(ttk.Frame):
             grammar_tier=self.state.grammar_set_tier,
         )
         self._advance_verb = verb
-        self._next_var.set(guidance)
+        if guidance != self._next_var.get():
+            self._next_var.set(guidance)
         if not verb:
-            # terminal / no further verb — hide the button, just show guidance
-            self._advance_btn.pack_forget()
-            self._advance_blocked_lbl.pack_forget()
+            # terminal / no further verb — blank + disable the button (it keeps
+            # its reserved slot) and clear the blocked reason.
+            self._set_advance_widgets(text="", state=tk.DISABLED, blocked_text="")
             return
-        self._advance_btn.configure(text=f"{flow_verb_label(verb)} ▸")
-        self._advance_btn.pack(side=tk.LEFT, padx=(10, 0))
         reason = self._flow_blocked_reason(verb) if self._flow_blocked_reason else None
         ready = self._flow_ready(verb) if self._flow_ready else True
         if ready and not reason:
-            self._advance_btn.configure(state=tk.NORMAL)
-            self._advance_blocked_lbl.pack_forget()
+            self._set_advance_widgets(
+                text=f"{flow_verb_label(verb)} ▸", state=tk.NORMAL, blocked_text=""
+            )
         else:
-            self._advance_btn.configure(state=tk.DISABLED)
-            self._advance_blocked_var.set(reason or "Not ready yet.")
-            self._advance_blocked_lbl.pack(side=tk.LEFT, padx=(8, 0))
+            self._set_advance_widgets(
+                text=f"{flow_verb_label(verb)} ▸",
+                state=tk.DISABLED,
+                blocked_text=reason or "Not ready yet.",
+            )
 
     def _sync_current_markers(self) -> None:
         for step_key, (pill, lbl) in self._pills.items():

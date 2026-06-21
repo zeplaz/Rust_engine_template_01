@@ -1,0 +1,1090 @@
+{
+  "_meta": {
+    "version": "1.0.0",
+    "program_id": "PLAN-MULTI-PARALLEL-TRACKS-001",
+    "date": "2026-06-20",
+    "dispatch_rollup": "multi_parallel_tracks_dispatch_v1.json",
+    "plan_doc": "src/dev/plan_multi_parallel_tracks_v1.md",
+    "prompts": "src/dev/multi_parallel_agent_prompts_v1.md",
+    "rule": "Home queue for multi-parallel rows \u2014 dual Q\u2713 with dispatch rollup"
+  },
+  "drain": [
+    {
+      "track": "T1",
+      "track_id": "APS-STUDIO",
+      "wave": 0,
+      "seq": 1,
+      "id": "DES-APS-INTERACTION-001",
+      "status": "blocked",
+      "completed": "2026-06-20",
+      "priority": "P0",
+      "owner": "designer",
+      "goal": "Interaction spec \u2014 feedback, disabled reasons, spine affordance",
+      "plan": "src/dev/plan_designer_work_202606_v1.md",
+      "deliverable": "src/dev/design_aps_interaction_v1.md",
+      "home_queue": "multi_parallel_home_queues_v1.json",
+      "parallel_ok": [
+        "*"
+      ],
+      "program": "multi_parallel_tracks",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
+      "updated_at": "2026-06-20T21:19:24Z"
+    },
+    {
+      "track": "T1",
+      "track_id": "APS-STUDIO",
+      "wave": 0,
+      "seq": 2,
+      "id": "DES-APS-ONBOARD-SPEC-002",
+      "status": "blocked",
+      "completed": "2026-06-20",
+      "priority": "P0",
+      "owner": "designer",
+      "goal": "First-10s onboarding full spec",
+      "inputs": [
+        "src/dev/design_aps_uiux_onboard_outline_v1.md"
+      ],
+      "deliverable": "src/dev/design_aps_onboard_spec_v2.md",
+      "home_queue": "multi_parallel_home_queues_v1.json",
+      "parallel_ok": [
+        "*"
+      ],
+      "program": "multi_parallel_tracks",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
+      "updated_at": "2026-06-20T21:19:24Z"
+    },
+    {
+      "track": "T1",
+      "track_id": "APS-STUDIO",
+      "wave": 0,
+      "seq": 3,
+      "id": "DES-APS-PREVIEW-LADDER-001",
+      "status": "blocked",
+      "completed": "2026-06-20",
+      "priority": "P1",
+      "owner": "designer",
+      "goal": "Preview fidelity ladder G0\u2192G4",
+      "deliverable": "src/dev/design_aps_preview_ladder_v1.md",
+      "home_queue": "multi_parallel_home_queues_v1.json",
+      "parallel_ok": [
+        "*"
+      ],
+      "program": "multi_parallel_tracks",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
+      "updated_at": "2026-06-20T21:19:24Z"
+    },
+    {
+      "track": "T1",
+      "track_id": "APS-STUDIO",
+      "wave": 0,
+      "seq": 4,
+      "id": "DES-APS-MANUAL-FALLBACK-001",
+      "status": "blocked",
+      "completed": "2026-06-20",
+      "priority": "P1",
+      "owner": "designer",
+      "goal": "Manual footprint lane deprecation banner spec",
+      "deliverable": "src/dev/design_aps_manual_fallback_v1.md",
+      "home_queue": "multi_parallel_home_queues_v1.json",
+      "parallel_ok": [
+        "*"
+      ],
+      "program": "multi_parallel_tracks",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
+      "updated_at": "2026-06-20T21:19:24Z"
+    },
+    {
+      "track": "T1",
+      "track_id": "APS-STUDIO",
+      "wave": 0,
+      "seq": 5,
+      "id": "OVR-P5-TAIL-001",
+      "status": "done",
+      "witness": "tools/mcp/python/tests/test_aps_p7_wave2_style.py",
+      "priority": "P0",
+      "owner": "coder-mcp",
+      "goal": "status_atom migration \u2014 all APS panels",
+      "depends_on": [
+        "DES-APS-DS-V11-001"
+      ],
+      "territory": "tools/mcp/art_pipeline_suite/",
+      "cross_track_lock": [
+        "LOCK-APP-PY"
+      ],
+      "verify": [
+        "pytest tools/mcp/python/tests -k aps -q"
+      ],
+      "home_queue": "multi_parallel_home_queues_v1.json",
+      "parallel_ok": [
+        "T2",
+        "T3",
+        "T4",
+        "T5",
+        "T6",
+        "T8"
+      ],
+      "program": "multi_parallel_tracks"
+    },
+    {
+      "track": "T1",
+      "track_id": "APS-STUDIO",
+      "wave": 1,
+      "seq": 6,
+      "id": "DES-APS-OPERATOR-RUBRIC-002",
+      "status": "blocked",
+      "completed": "2026-06-20",
+      "priority": "P1",
+      "owner": "designer",
+      "goal": "APS pixel walk checklist v2 for operator",
+      "depends_on": [
+        "DES-APS-INTERACTION-001",
+        "DES-APS-ONBOARD-SPEC-002"
+      ],
+      "deliverable": "src/dev/design_aps_operator_rubric_v2.md",
+      "needs_display": true,
+      "home_queue": "multi_parallel_home_queues_v1.json",
+      "parallel_ok": [
+        "*"
+      ],
+      "program": "multi_parallel_tracks",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
+      "updated_at": "2026-06-20T21:19:24Z"
+    },
+    {
+      "track": "T1",
+      "track_id": "APS-STUDIO",
+      "wave": 1,
+      "seq": 7,
+      "id": "OVR-P55-PREVIEW-002",
+      "status": "done",
+      "witness": "tools/mcp/python/tests/test_aps_preview_variant_state.py",
+      "priority": "P1",
+      "owner": "coder-mcp",
+      "goal": "4-state preview implementation",
+      "depends_on": [
+        "DES-APS-PREVIEW-V2-001",
+        "OVR-P5-TAIL-001"
+      ],
+      "territory": "tools/mcp/art_pipeline_suite/",
+      "cross_track_lock": [
+        "LOCK-APP-PY"
+      ],
+      "home_queue": "multi_parallel_home_queues_v1.json",
+      "parallel_ok": [
+        "T2",
+        "T3",
+        "T4",
+        "T5",
+        "T6"
+      ],
+      "program": "multi_parallel_tracks"
+    },
+    {
+      "track": "T1",
+      "track_id": "APS-STUDIO",
+      "wave": 1,
+      "seq": 8,
+      "id": "OVR-P56-ONBOARD-001",
+      "status": "blocked",
+      "witness": "debug_runs/aps_uiux_onboard_live.json",
+      "priority": "P1",
+      "owner": "coder-mcp",
+      "goal": "Replace MetadataFlowPanel with onboarding spec",
+      "depends_on": [
+        "DES-APS-ONBOARD-SPEC-002",
+        "OVR-P55-PREVIEW-002"
+      ],
+      "territory": "tools/mcp/art_pipeline_suite/",
+      "cross_track_lock": [
+        "LOCK-APP-PY"
+      ],
+      "home_queue": "multi_parallel_home_queues_v1.json",
+      "parallel_ok": [
+        "T2",
+        "T3",
+        "T4",
+        "T5",
+        "T6"
+      ],
+      "program": "multi_parallel_tracks",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
+      "updated_at": "2026-06-20T21:19:25Z"
+    },
+    {
+      "track": "T1",
+      "track_id": "APS-STUDIO",
+      "wave": 2,
+      "seq": 9,
+      "id": "APS-STUDIO-CLOSE-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "orchestrator-mcp",
+      "goal": "APS studio polish rollup \u2014 pytest aps + operator rubric landed",
+      "depends_on": [
+        "DES-APS-OPERATOR-RUBRIC-002",
+        "OVR-P56-ONBOARD-001"
+      ],
+      "witness": "debug_runs/art_pipeline/aps_studio_close_live.json",
+      "parallel_ok": [],
+      "home_queue": "multi_parallel_home_queues_v1.json",
+      "program": "multi_parallel_tracks"
+    },
+    {
+      "track": "T2",
+      "track_id": "GRAMMAR-SHIP",
+      "wave": 0,
+      "seq": 1,
+      "id": "CODER-PILOT-REFACTOR-001",
+      "status": "done",
+      "witness": "debug_runs/pilot_catalog_parity_live.json",
+      "priority": "P0",
+      "owner": "coder",
+      "goal": "Remove warehouse-only Rust branches \u2014 catalog loader only",
+      "territory": "src/",
+      "home_queue": "multi_parallel_home_queues_v1.json",
+      "parallel_ok": [
+        "*"
+      ],
+      "program": "multi_parallel_tracks"
+    },
+    {
+      "track": "T2",
+      "track_id": "GRAMMAR-SHIP",
+      "wave": 0,
+      "seq": 2,
+      "id": "CMCP-GRAMMAR-FACILITY-BRIEF-001",
+      "status": "done",
+      "witness": "debug_runs/grammar_facility_brief_live.json",
+      "priority": "P1",
+      "owner": "coder-mcp",
+      "goal": "Grammar + catalog + chain brief MCP tool",
+      "inputs": [
+        "src/dev/design_aps_facility_needs_v1.md"
+      ],
+      "home_queue": "multi_parallel_home_queues_v1.json",
+      "parallel_ok": [
+        "*"
+      ],
+      "program": "multi_parallel_tracks"
+    },
+    {
+      "track": "T2",
+      "track_id": "GRAMMAR-SHIP",
+      "wave": 0,
+      "seq": 3,
+      "id": "CMCP-SITE-ZONE-VALIDATE-001",
+      "status": "done",
+      "witness": "debug_runs/site_zone_validate_live.json",
+      "priority": "P1",
+      "owner": "coder-mcp",
+      "goal": "Site zone grid validator",
+      "home_queue": "multi_parallel_home_queues_v1.json",
+      "parallel_ok": [
+        "*"
+      ],
+      "program": "multi_parallel_tracks"
+    },
+    {
+      "track": "T2",
+      "track_id": "GRAMMAR-SHIP",
+      "wave": 0,
+      "seq": 4,
+      "id": "CMCP-GRAM-SWEEP-PROCESS-001",
+      "status": "reopened",
+      "witness": "debug_runs/grammar_eval_sweep_live.json",
+      "priority": "P1",
+      "owner": "coder-mcp",
+      "goal": "Process histogram in grammar eval sweep",
+      "home_queue": "multi_parallel_home_queues_v1.json",
+      "parallel_ok": [
+        "*"
+      ],
+      "program": "multi_parallel_tracks",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness file on disk",
+      "updated_at": "2026-06-20T21:19:24Z"
+    },
+    {
+      "track": "T2",
+      "track_id": "GRAMMAR-SHIP",
+      "wave": 0,
+      "seq": 5,
+      "id": "GRAM-CONTENT-005",
+      "status": "done",
+      "witness": "assets/configs/buildings/grammars/civic_block_v1.ron",
+      "priority": "P1",
+      "owner": "coder-mcp",
+      "goal": "civic_block_v1.ron G1 archetype on disk",
+      "deliverable": "assets/configs/buildings/grammars/civic_block_v1.ron",
+      "home_queue": "multi_parallel_home_queues_v1.json",
+      "parallel_ok": [
+        "*"
+      ],
+      "program": "multi_parallel_tracks"
+    },
+    {
+      "track": "T2",
+      "track_id": "GRAMMAR-SHIP",
+      "wave": 1,
+      "seq": 6,
+      "id": "MCP-PILOT-GRAMMAR-001",
+      "status": "paused",
+      "priority": "P0",
+      "owner": "designer-mcp",
+      "goal": "Warehouse G4 manual keyframe + production bake",
+      "cross_track_lock": [
+        "LOCK-G4-OPERATOR",
+        "LOCK-BLENDER-BATCH"
+      ],
+      "home_queue": "multi_parallel_home_queues_v1.json",
+      "note": "Resume when operator completes pilot_grammar_001_g4_checklist_v1.md",
+      "program": "multi_parallel_tracks"
+    },
+    {
+      "track": "T2",
+      "track_id": "GRAMMAR-SHIP",
+      "wave": 1,
+      "seq": 7,
+      "id": "BUILD-READ-VISUAL-002",
+      "status": "blocked",
+      "priority": "P1",
+      "owner": "coder-mcp",
+      "goal": "Keyframe batch tile_rail_warehouse ship",
+      "depends_on": [
+        "MCP-PILOT-GRAMMAR-001"
+      ],
+      "home_queue": "multi_parallel_home_queues_v1.json",
+      "parallel_ok": [
+        "T1",
+        "T3",
+        "T5"
+      ],
+      "program": "multi_parallel_tracks"
+    },
+    {
+      "track": "T2",
+      "track_id": "GRAMMAR-SHIP",
+      "wave": 2,
+      "seq": 8,
+      "id": "GRAMMAR-SHIP-CLOSE-001",
+      "status": "done",
+      "priority": "P0",
+      "owner": "orchestrator-mcp",
+      "goal": "build_set_health grammar_pilot_count >= 4",
+      "depends_on": [
+        "GRAM-CONTENT-005",
+        "MCP-PILOT-GRAMMAR-001"
+      ],
+      "verify": [
+        "ops-get-build-set-health"
+      ],
+      "witness": "debug_runs/agent_ops/grammar_ship_close_live.json",
+      "home_queue": "multi_parallel_home_queues_v1.json",
+      "program": "multi_parallel_tracks"
+    },
+    {
+      "track": "T3",
+      "track_id": "VEG-SHIP",
+      "wave": 0,
+      "seq": 1,
+      "id": "APS-EVO-E4-ATLAS-EXPAND-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder-mcp",
+      "goal": "16 landscape keyframe stills + teach batch refresh \u2014 ship:false honest",
+      "witness": "debug_runs/art_pipeline/tile_landscape_expanded_live.json",
+      "g0": "debug_runs/art_pipeline/landscape_expanded_g0_rules.yaml",
+      "forbidden_exit": [
+        "ship_true_without_g4"
+      ],
+      "home_queue": "multi_parallel_home_queues_v1.json",
+      "parallel_ok": [
+        "*"
+      ],
+      "program": "multi_parallel_tracks"
+    },
+    {
+      "track": "T3",
+      "track_id": "VEG-SHIP",
+      "wave": 0,
+      "seq": 2,
+      "id": "DMCP-VEG-ATLAS-SHIP-001",
+      "status": "done",
+      "witness": "debug_runs/art_pipeline/dmcp_e3_vegetation_catalog_live.json",
+      "priority": "P0",
+      "owner": "designer-mcp",
+      "goal": "G4/G5 art-ship sign-off criteria for landscape atlas",
+      "deliverable": "src/dev/dmcp_veg_atlas_ship_v1.md",
+      "home_queue": "multi_parallel_home_queues_v1.json",
+      "parallel_ok": [
+        "*"
+      ],
+      "program": "multi_parallel_tracks"
+    },
+    {
+      "track": "T3",
+      "track_id": "VEG-SHIP",
+      "wave": 0,
+      "seq": 3,
+      "id": "VEG-CATALOG-BURN-ROWS-001",
+      "status": "done",
+      "witness": "debug_runs/veg_catalog_burn_rows_live.json",
+      "priority": "P1",
+      "owner": "coder-mcp",
+      "goal": "Burn/scar/recovery states in _vegetation_variant_catalog.ron",
+      "home_queue": "multi_parallel_home_queues_v1.json",
+      "parallel_ok": [
+        "*"
+      ],
+      "program": "multi_parallel_tracks"
+    },
+    {
+      "track": "T3",
+      "track_id": "VEG-SHIP",
+      "wave": 0,
+      "seq": 4,
+      "id": "CDR-B-VEG-MINIMAP-LEGEND-UI-001",
+      "status": "reopened",
+      "priority": "P1",
+      "owner": "coder_b",
+      "goal": "Minimap veg topology legend UI wired",
+      "depends_on": [
+        "DES-MINIMAP-VEG-LEGEND-002"
+      ],
+      "witness": "debug_runs/minimap_topology_legend_live.json",
+      "home_queue": "multi_parallel_home_queues_v1.json",
+      "parallel_ok": [
+        "*"
+      ],
+      "program": "multi_parallel_tracks",
+      "note": "INTEL-OFFICER-001 ops-intel supervised cull 2026-06-20 \u00b7 witness_honesty",
+      "updated_at": "2026-06-20T21:18:19.568528+00:00"
+    },
+    {
+      "track": "T3",
+      "track_id": "VEG-SHIP",
+      "wave": 1,
+      "seq": 5,
+      "id": "VEG-F01-ATLAS-SHIP-001",
+      "status": "reopened",
+      "witness": "debug_runs/veg_resolver_parity_live.json",
+      "priority": "P1",
+      "owner": "coder_a",
+      "goal": "Engine LG-5 consumer after atlas ship sign-off",
+      "depends_on": [
+        "DMCP-VEG-ATLAS-SHIP-001"
+      ],
+      "home_queue": "multi_parallel_home_queues_v1.json",
+      "parallel_ok": [
+        "*"
+      ],
+      "program": "multi_parallel_tracks",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness file on disk",
+      "updated_at": "2026-06-20T21:19:26Z"
+    },
+    {
+      "track": "T3",
+      "track_id": "VEG-SHIP",
+      "wave": 1,
+      "seq": 6,
+      "id": "VEG-F02-BURN-ATLAS-001",
+      "status": "done",
+      "witness": "debug_runs/veg_f02_burn_atlas_live.json",
+      "priority": "P1",
+      "owner": "coder-mcp",
+      "goal": "Burn atlas bake after catalog rows",
+      "depends_on": [
+        "VEG-CATALOG-BURN-ROWS-001",
+        "DMCP-VEG-ATLAS-SHIP-001"
+      ],
+      "cross_track_lock": [
+        "LOCK-BLENDER-BATCH"
+      ],
+      "home_queue": "multi_parallel_home_queues_v1.json",
+      "parallel_ok": [
+        "T1",
+        "T2",
+        "T4",
+        "T5",
+        "T6"
+      ],
+      "program": "multi_parallel_tracks"
+    },
+    {
+      "track": "T3",
+      "track_id": "VEG-SHIP",
+      "wave": 1,
+      "seq": 7,
+      "id": "CDR-A-VISUAL-SMOKE-ECO-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_a",
+      "goal": "Visual harness ecology raster capture",
+      "witness": "debug_runs/landscape_grammar_visual_smoke_live.json",
+      "cross_track_lock": [
+        "LOCK-WITNESS-STAGE5"
+      ],
+      "live_sim_required": true,
+      "home_queue": "multi_parallel_home_queues_v1.json",
+      "parallel_ok": [
+        "T4",
+        "T5",
+        "T6"
+      ],
+      "program": "multi_parallel_tracks"
+    },
+    {
+      "track": "T3",
+      "track_id": "VEG-SHIP",
+      "wave": 2,
+      "seq": 8,
+      "id": "VEG-SHIP-CLOSE-001",
+      "status": "done",
+      "witness": "debug_runs/vegetation_program_close_live.json",
+      "priority": "P0",
+      "owner": "sim-steward",
+      "goal": "Honest vegetation program close \u2014 operator_session_green",
+      "depends_on": [
+        "VEG-F01-ATLAS-SHIP-001",
+        "G-PLAY-OPERATOR-01"
+      ],
+      "parallel_ok": [],
+      "home_queue": "multi_parallel_home_queues_v1.json",
+      "program": "multi_parallel_tracks"
+    },
+    {
+      "track": "T4",
+      "track_id": "FIRE-SIM",
+      "wave": 0,
+      "seq": 1,
+      "id": "FIRE-F2-FUEL-SPREAD-001",
+      "status": "done",
+      "witness": "debug_runs/fire_ecology_live.json",
+      "priority": "P1",
+      "owner": "coder_a",
+      "goal": "Fuel-linked spread \u2014 ember + neighbor fuel depletion",
+      "plan": "src/dev/plan_fire_f2_extract_exec_001_v1.md",
+      "home_queue": "multi_parallel_home_queues_v1.json",
+      "parallel_ok": [
+        "*"
+      ],
+      "program": "multi_parallel_tracks"
+    },
+    {
+      "track": "T4",
+      "track_id": "FIRE-SIM",
+      "wave": 0,
+      "seq": 2,
+      "id": "WSS-SMOKE-BRIDGE-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder_a",
+      "goal": "WSS smoke substrate bridge",
+      "plan": "src/dev/plan_wss_smoke_bridge_exec_001_v1.md",
+      "home_queue": "multi_parallel_home_queues_v1.json",
+      "parallel_ok": [
+        "*"
+      ],
+      "witness": "debug_runs/f2_smoke_pipeline_live.json",
+      "program": "multi_parallel_tracks"
+    },
+    {
+      "track": "T4",
+      "track_id": "FIRE-SIM",
+      "wave": 0,
+      "seq": 3,
+      "id": "FIRE-F2-READINESS-ALIGN-001",
+      "status": "done",
+      "witness": "debug_runs/fire_f2_readiness_align_live.json",
+      "priority": "P2",
+      "owner": "coder_a",
+      "goal": "fire_inst readiness metric vs sim heat stability",
+      "plan": "src/dev/fire_ecology_f1_todos.md",
+      "home_queue": "multi_parallel_home_queues_v1.json",
+      "parallel_ok": [
+        "*"
+      ],
+      "program": "multi_parallel_tracks"
+    },
+    {
+      "track": "T4",
+      "track_id": "FIRE-SIM",
+      "wave": 1,
+      "seq": 4,
+      "id": "SIM-STEWARD-FIRE-REGRESS-001",
+      "status": "reopened",
+      "witness": "debug_runs/fire_ecology_live.json",
+      "priority": "P2",
+      "owner": "sim-steward",
+      "goal": "Fire ecology stage5 regression rollup",
+      "depends_on": [
+        "FIRE-F2-FUEL-SPREAD-001"
+      ],
+      "verify": [
+        "cargo test -p proc_A_dine01 --lib stage5 fire_ecology"
+      ],
+      "parallel_ok": [
+        "*"
+      ],
+      "home_queue": "multi_parallel_home_queues_v1.json",
+      "program": "multi_parallel_tracks",
+      "note": "INTEL-OFFICER-001 ops-intel supervised cull 2026-06-20 \u00b7 contradiction",
+      "updated_at": "2026-06-20T21:18:19.561168+00:00"
+    },
+    {
+      "track": "T4",
+      "track_id": "FIRE-SIM",
+      "wave": 1,
+      "seq": 5,
+      "id": "OPS-VT5-OPERATOR-001",
+      "status": "blocked",
+      "blocked_reason": "NEEDS-DISPLAY",
+      "priority": "P2",
+      "owner": "operator",
+      "goal": "VT-5 flicker visual confirm",
+      "needs_display": true,
+      "plan": "src/dev/visual_run_blockers.md",
+      "parallel_ok": [
+        "*"
+      ],
+      "home_queue": "multi_parallel_home_queues_v1.json",
+      "program": "multi_parallel_tracks"
+    },
+    {
+      "track": "T5",
+      "track_id": "SIM-HUD",
+      "wave": 0,
+      "seq": 1,
+      "id": "COD-SIM-HUD-EGUI-THEME-001",
+      "status": "blocked",
+      "completed": "2026-06-20",
+      "priority": "P0",
+      "owner": "coder",
+      "goal": "UiPalette + shell chrome enforcement",
+      "depends_on": [
+        "DES-SIM-HUD-COHESION-001"
+      ],
+      "plan": "src/dev/plan_sim_hud_professional_polish_v1.md",
+      "home_queue": "multi_parallel_home_queues_v1.json",
+      "parallel_ok": [
+        "*"
+      ],
+      "program": "multi_parallel_tracks",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
+      "updated_at": "2026-06-20T21:19:24Z"
+    },
+    {
+      "track": "T5",
+      "track_id": "SIM-HUD",
+      "wave": 0,
+      "seq": 2,
+      "id": "COD-SIM-HUD-BUILD-PICKER-001",
+      "status": "blocked",
+      "completed": "2026-06-20",
+      "priority": "P0",
+      "owner": "coder",
+      "goal": "Rail-anchored build picker \u2014 retire submenu list",
+      "depends_on": [
+        "DES-SIM-HUD-BUILD-PICKER-001"
+      ],
+      "territory": "src/gui/hud/",
+      "home_queue": "multi_parallel_home_queues_v1.json",
+      "parallel_ok": [
+        "*"
+      ],
+      "program": "multi_parallel_tracks",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
+      "updated_at": "2026-06-20T21:19:24Z"
+    },
+    {
+      "track": "T5",
+      "track_id": "SIM-HUD",
+      "wave": 0,
+      "seq": 3,
+      "id": "COD-SIM-HUD-TRAY-BUILD-001",
+      "status": "blocked",
+      "completed": "2026-06-20",
+      "priority": "P0",
+      "owner": "coder",
+      "goal": "Tray Build tab body",
+      "depends_on": [
+        "DES-SIM-HUD-TRAY-BUILD-001"
+      ],
+      "territory": "src/gui/hud/",
+      "home_queue": "multi_parallel_home_queues_v1.json",
+      "parallel_ok": [
+        "*"
+      ],
+      "program": "multi_parallel_tracks",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
+      "updated_at": "2026-06-20T21:19:24Z"
+    },
+    {
+      "track": "T5",
+      "track_id": "SIM-HUD",
+      "wave": 0,
+      "seq": 4,
+      "id": "COD-SIM-HUD-POPUP-MIGRATE-001",
+      "status": "blocked",
+      "completed": "2026-06-20",
+      "priority": "P0",
+      "owner": "coder_b",
+      "goal": "Popup tier migration \u2014 tray/sheet only",
+      "depends_on": [
+        "DES-SIM-HUD-POPUP-TIERS-001"
+      ],
+      "territory": "src/gui/",
+      "home_queue": "multi_parallel_home_queues_v1.json",
+      "parallel_ok": [
+        "*"
+      ],
+      "program": "multi_parallel_tracks",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
+      "updated_at": "2026-06-20T21:19:24Z"
+    },
+    {
+      "track": "T5",
+      "track_id": "SIM-HUD",
+      "wave": 1,
+      "seq": 5,
+      "id": "DES-SIM-HUD-OPS-002",
+      "status": "blocked",
+      "completed": "2026-06-20",
+      "priority": "P1",
+      "owner": "designer",
+      "goal": "Ops strip v2 spec \u2014 alert tiers, overflow",
+      "deliverable": "src/dev/design_sim_hud_ops_v2.md",
+      "parallel_ok": [
+        "*"
+      ],
+      "home_queue": "multi_parallel_home_queues_v1.json",
+      "program": "multi_parallel_tracks",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
+      "updated_at": "2026-06-20T21:19:24Z"
+    },
+    {
+      "track": "T5",
+      "track_id": "SIM-HUD",
+      "wave": 1,
+      "seq": 6,
+      "id": "COD-SIM-HUD-OPS-002",
+      "status": "blocked",
+      "completed": "2026-06-20",
+      "priority": "P1",
+      "owner": "coder_b",
+      "goal": "Ops strip wire",
+      "depends_on": [
+        "DES-SIM-HUD-OPS-002"
+      ],
+      "parallel_ok": [
+        "*"
+      ],
+      "home_queue": "multi_parallel_home_queues_v1.json",
+      "program": "multi_parallel_tracks",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
+      "updated_at": "2026-06-20T21:19:24Z"
+    },
+    {
+      "track": "T5",
+      "track_id": "SIM-HUD",
+      "wave": 1,
+      "seq": 7,
+      "id": "COD-SIM-HUD-CURSOR-001",
+      "status": "done",
+      "witness": "debug_runs/sim_hud_cursor_live.json",
+      "priority": "P2",
+      "owner": "coder_b",
+      "goal": "Unified sim cursor",
+      "parallel_ok": [
+        "*"
+      ],
+      "home_queue": "multi_parallel_home_queues_v1.json",
+      "program": "multi_parallel_tracks"
+    },
+    {
+      "track": "T5",
+      "track_id": "SIM-HUD",
+      "wave": 2,
+      "seq": 8,
+      "id": "SIM-HUD-PHASE2-CLOSE-001",
+      "status": "done",
+      "completed": "2026-06-20",
+      "priority": "P1",
+      "owner": "orchestrator",
+      "goal": "Sim HUD phase 2 product polish close",
+      "depends_on": [
+        "COD-SIM-HUD-BUILD-PICKER-001",
+        "COD-SIM-HUD-TRAY-BUILD-001",
+        "COD-SIM-HUD-POPUP-MIGRATE-001"
+      ],
+      "witness": "debug_runs/sim_hud_phase2_close_live.json",
+      "home_queue": "multi_parallel_home_queues_v1.json",
+      "program": "multi_parallel_tracks"
+    },
+    {
+      "track": "T6",
+      "track_id": "POWER-UX",
+      "wave": 1,
+      "seq": 1,
+      "id": "DES-POWER-NODE-HOVER-001",
+      "status": "reopened",
+      "completed": "2026-06-20",
+      "priority": "P1",
+      "owner": "designer",
+      "goal": "Transformer/substation hover cards",
+      "home_queue": "multi_parallel_home_queues_v1.json",
+      "parallel_ok": [
+        "*"
+      ],
+      "program": "multi_parallel_tracks",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 missing_exit_predicate",
+      "updated_at": "2026-06-20T21:19:24Z"
+    },
+    {
+      "track": "T6",
+      "track_id": "POWER-UX",
+      "wave": 1,
+      "seq": 2,
+      "id": "COD-POWER-OVERLAY-RENDER-001",
+      "status": "reopened",
+      "completed": "2026-06-20",
+      "priority": "P1",
+      "owner": "coder_b",
+      "goal": "Compositor strokes by VoltageClass + state",
+      "home_queue": "multi_parallel_home_queues_v1.json",
+      "parallel_ok": [
+        "*"
+      ],
+      "program": "multi_parallel_tracks",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 missing_exit_predicate",
+      "updated_at": "2026-06-20T21:19:24Z"
+    },
+    {
+      "track": "T6",
+      "track_id": "POWER-UX",
+      "wave": 1,
+      "seq": 3,
+      "id": "COD-POWER-ISLAND-HIGHLIGHT-001",
+      "status": "reopened",
+      "completed": "2026-06-20",
+      "priority": "P1",
+      "owner": "coder",
+      "goal": "Island boundary + dim unpowered",
+      "home_queue": "multi_parallel_home_queues_v1.json",
+      "parallel_ok": [
+        "*"
+      ],
+      "program": "multi_parallel_tracks",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 missing_exit_predicate",
+      "updated_at": "2026-06-20T21:19:24Z"
+    },
+    {
+      "track": "T6",
+      "track_id": "POWER-UX",
+      "wave": 2,
+      "seq": 4,
+      "id": "COD-POWER-DAMAGE-SEGMENT-001",
+      "status": "reopened",
+      "completed": "2026-06-20",
+      "priority": "P2",
+      "owner": "coder",
+      "goal": "Segment HP + cut \u2192 graph split",
+      "home_queue": "multi_parallel_home_queues_v1.json",
+      "parallel_ok": [
+        "*"
+      ],
+      "program": "multi_parallel_tracks",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 missing_exit_predicate",
+      "updated_at": "2026-06-20T21:19:24Z"
+    },
+    {
+      "track": "T6",
+      "track_id": "POWER-UX",
+      "wave": 2,
+      "seq": 5,
+      "id": "COD-UTILITY-ACTIVATION-LINK-001",
+      "status": "reopened",
+      "completed": "2026-06-20",
+      "priority": "P1",
+      "owner": "coder",
+      "goal": "Activation reads UtilityConnection",
+      "home_queue": "multi_parallel_home_queues_v1.json",
+      "parallel_ok": [
+        "*"
+      ],
+      "program": "multi_parallel_tracks",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 missing_exit_predicate",
+      "updated_at": "2026-06-20T21:19:24Z"
+    },
+    {
+      "track": "T6",
+      "track_id": "POWER-UX",
+      "wave": 2,
+      "seq": 6,
+      "id": "COD-POWER-TOOL-RAIL-001",
+      "status": "reopened",
+      "completed": "2026-06-20",
+      "priority": "P1",
+      "owner": "coder",
+      "goal": "Utilities rail \u2192 Lines entry",
+      "home_queue": "multi_parallel_home_queues_v1.json",
+      "parallel_ok": [
+        "*"
+      ],
+      "program": "multi_parallel_tracks",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 missing_exit_predicate",
+      "updated_at": "2026-06-20T21:19:24Z"
+    },
+    {
+      "track": "T7",
+      "track_id": "PLAY-ACCEPT",
+      "wave": 0,
+      "seq": 1,
+      "id": "G-PLAY-01",
+      "status": "blocked",
+      "blocked_reason": "NEEDS-DISPLAY",
+      "priority": "P0",
+      "owner": "operator",
+      "goal": "Play acceptance session \u2014 NEEDS-DISPLAY",
+      "plan": "src/dev/plan_g_play_close_001_checklist_v1.md",
+      "needs_display": true,
+      "home_queue": "multi_parallel_home_queues_v1.json",
+      "parallel_ok": [
+        "*"
+      ],
+      "program": "multi_parallel_tracks"
+    },
+    {
+      "track": "T7",
+      "track_id": "PLAY-ACCEPT",
+      "wave": 0,
+      "seq": 2,
+      "id": "G-PLAY-OPERATOR-01",
+      "status": "blocked",
+      "blocked_reason": "NEEDS-DISPLAY",
+      "priority": "P0",
+      "owner": "operator",
+      "goal": "Veg/fire/ecology operator checklist v2",
+      "needs_display": true,
+      "unblocks": [
+        "VEG-SHIP-CLOSE-001"
+      ],
+      "home_queue": "multi_parallel_home_queues_v1.json",
+      "parallel_ok": [
+        "*"
+      ],
+      "program": "multi_parallel_tracks"
+    },
+    {
+      "track": "T7",
+      "track_id": "PLAY-ACCEPT",
+      "wave": 0,
+      "seq": 3,
+      "id": "PERF-SHELL-001",
+      "status": "blocked",
+      "blocked_reason": "NEEDS-DISPLAY",
+      "priority": "P1",
+      "owner": "operator",
+      "goal": "Shell perf spot-check",
+      "needs_display": true,
+      "home_queue": "multi_parallel_home_queues_v1.json",
+      "parallel_ok": [
+        "*"
+      ],
+      "program": "multi_parallel_tracks"
+    },
+    {
+      "track": "T8",
+      "track_id": "INFRA-PERF",
+      "wave": 0,
+      "seq": 1,
+      "id": "TRIAGE-PERF-SHELL",
+      "status": "blocked",
+      "blocked_reason": "NEEDS-DISPLAY",
+      "priority": "P1",
+      "owner": "coder_b",
+      "goal": "Frame wall time / logging / egui cost triage",
+      "plan": "src/dev/stage5_triage_backlog.md",
+      "parallel_ok": [
+        "*"
+      ],
+      "home_queue": "multi_parallel_home_queues_v1.json",
+      "program": "multi_parallel_tracks"
+    },
+    {
+      "track": "T8",
+      "track_id": "INFRA-PERF",
+      "wave": 0,
+      "seq": 2,
+      "id": "OPS-F01-WC-D04-001",
+      "status": "done",
+      "witness": "debug_runs/stage6_virtualization_live.json",
+      "priority": "P2",
+      "owner": "coder_b",
+      "goal": "Infra slice 3 WC-D04 ops funnel",
+      "plan": "src/dev/infra_slice3_wc_d04_ops_f01_plan_v1.md",
+      "parallel_ok": [
+        "*"
+      ],
+      "home_queue": "multi_parallel_home_queues_v1.json",
+      "program": "multi_parallel_tracks"
+    },
+    {
+      "track": "T8",
+      "track_id": "INFRA-PERF",
+      "wave": 0,
+      "seq": 3,
+      "id": "VM-09-V2-INVERT-BRIDGE",
+      "status": "done",
+      "witness": "debug_runs/infrastructure_view_isolation_live.json",
+      "priority": "P2",
+      "owner": "sim-steward",
+      "goal": "VM-09 v2 invert bridge \u2014 slice 2 closed",
+      "plan": "src/dev/stage5_triage_backlog.md",
+      "co_owner": "coder",
+      "parallel_ok": [
+        "*"
+      ],
+      "home_queue": "multi_parallel_home_queues_v1.json",
+      "program": "multi_parallel_tracks"
+    },
+    {
+      "track": "T8",
+      "track_id": "INFRA-PERF",
+      "wave": 1,
+      "seq": 4,
+      "id": "VM-10-MINIMAP-LOCKSTEP",
+      "status": "done",
+      "witness": "debug_runs/infra_lane_close_live.json",
+      "priority": "P2",
+      "owner": "coder_a",
+      "goal": "Minimap vs main lockstep diagnostics",
+      "plan": "src/dev/stage5_triage_backlog.md",
+      "parallel_ok": [
+        "*"
+      ],
+      "home_queue": "multi_parallel_home_queues_v1.json",
+      "program": "multi_parallel_tracks"
+    },
+    {
+      "track": "T8",
+      "track_id": "INFRA-PERF",
+      "wave": 1,
+      "seq": 5,
+      "id": "VM-11-PREVIEW-AUDIT",
+      "status": "blocked",
+      "completed": "2026-06-20",
+      "deliverable": "src/dev/design_vm11_preview_audit_v1.md",
+      "priority": "P2",
+      "owner": "designer",
+      "goal": "Preview vs main semantic audit spec",
+      "co_owner": "coder",
+      "parallel_ok": [
+        "*"
+      ],
+      "home_queue": "multi_parallel_home_queues_v1.json",
+      "program": "multi_parallel_tracks",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
+      "updated_at": "2026-06-20T21:19:26Z"
+    }
+  ]
+}

@@ -98,6 +98,9 @@ pub fn build_infrastructure_view_isolation_payload(
             "overlay_masks_aligned": fire.vm08_overlay_masks_aligned,
         },
         "vm_10": {
+            "green": crate::gui::vm10_minimap_lockstep_diagnostics_green()
+                && !fire.vm10_minimap_lockstep,
+            "diagnostics_wired": crate::gui::vm10_minimap_lockstep_diagnostics_green(),
             "minimap_lockstep_suspect": fire.vm10_minimap_lockstep,
             "preview_lockstep_suspect": fire.vm10_preview_lockstep,
             "minimap_follow_exempt": isolation.minimap_main_lockstep_suspect == fire.vm10_minimap_lockstep,

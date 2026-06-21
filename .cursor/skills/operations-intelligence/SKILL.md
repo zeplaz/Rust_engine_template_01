@@ -1,87 +1,87 @@
+---
+name: operations-intelligence
+description: >-
+  Read-only pipeline/ops analyst — compress witness, queue, and run telemetry into a
+  DSM authority/risk/cost surface with Q/C/E scores and ΔWF routing, and gate new
+  proposals on a complexity budget. Use after a lane closes, before a big architecture
+  commit, when HANDOFF and witnesses disagree, or to stress-test a proposal. Triggers:
+  ops, DSM, complexity budget, value vs complexity, lane close, ΔWF, witness disagree,
+  proposal review, Q/C/E, project brief.
+---
+
 `⟦SYM⟧ lang⊳ $ref:prompts/SYMBOLIC_LANGUAGE.meta.md`
 
-# Operations Intelligence
+# operations-intelligence — DSM · Q/C/E · the complexity gate
 
-Readonly pipeline + agent **ops analyst** — DSM surfaces, Q/C/E scores, complexity budget, ΔWF routing. **Does not implement fixes.**
+`◉Q🎯↑ · 💰↓ · read-only⊚` — make the operating surface legible, gate spend on value.
 
-## When to use
-
-- After Track A/B/C lane close or warehouse spine attempt
-- Before major architecture commits or new telemetry infra
-- When HANDOFF and witnesses disagree (QUEST-loop lock)
-- Proposal stress-test (value/complexity ≥ 1.0 gate)
-
-## AGENT-LANG ritual (attach [agent-lang](../agent-lang/SKILL.md))
+## Pattern (transferable)
 
 ```text
-BLANG:PRE → ops scan → BLANG:HO → emit T[c,d,a,φ] + ΔWF table → ⟨COMMIT:WIT⟩
+◎telemetry ▷⊳ ▢DSM ─⬡[Q/C/E scored]▶ ◆EV/Cx? ▷⊳ ◎ΔWF-table ⤳ @owner
+  Q🎯 coherence/stability · 💰 compute/tokens · E🔬 clarity/confusion-risk
 ```
+Analyst ⊚: emit the routing package, ¬implement. Cheapest mechanism that clears the gate (JSON events ≺ database) until value justifies more. Swap telemetry sources + node set → transfers to any pipeline.
 
-**Tensor read:** `$ref:tools/orchestrator/queues/master_chain_tensor_v1.json` — collapse to ≤20 lines.
-
-**Status paste:** max 3 emoji per program row · `⟨ID⟩` + `$ref:` only in routing package.
-
-## Quick workflow
-
-1. Run scan (all lanes):
-   ```powershell
-   powershell -File tools/orchestrator/scripts/ops_intelligence_scan.ps1
-   ```
-2. Read **only** structured fields:
-   - `debug_runs/agent_ops/ops_report_latest.json` — `dsm_snapshot`, `qce`, `delta_wf`, `program_summary`
-   - `debug_runs/unified_witness_index.json` — `programs.<id>`, `construction_sub_witnesses`
-   - `tools/orchestrator/queues/OPS_LANE_REGISTRY.json` — program owners + HANDOFF priorities
-3. Cross-check `tools/orchestrator/queues/HANDOFF.md` for human intent — not as sole track truth
-4. Emit routing package (≤20 lines DSM + ΔWF table)
-5. Route ECS/viewport drift to **debug-intelligence** — do not duplicate
-
-## Witness spine (Track D) — all programs
-
-| Artifact | Role |
-|:---|:---|
-| `OPS_LANE_REGISTRY.json` | stage5, fire_vfx, construction, infra, economy, wave, art A/B/C |
-| `unified_witness_index.json` | All `*_live.json` by `program_id` |
-| `agent_ops/ops_report_latest.json` | DSM + Q/C/E + ΔWF + `program_summary` |
-| `construction_sub_witnesses` | Nested rows from `construction_stage_live.json` |
-| `agent_debug_index.json` | Rust refresh on sim proof write |
-
-**Honest gate classes:** `honest_green` · `dishonest_gate` · `schema_only` · `done_no_ship_flag`
-
-Reject re-queue when `honest_gate: dishonest_gate` without operator ΔWF.
-
-## DSM lexicon (compressed)
+## Complexity gate (form B — ◆ EV/Cx, headline output ¬footnote)
 
 ```text
-AUTH: MAT★⇢APS★⇢SNAP★⇢WRK○⇢ATL○⇢RT○
-FLOW: ART◇⇢APS⇢SNAP⇢WRK⇢PNG⇢ATL⇢RT
-LOOP: RUN⇢TEL★⇢KPI★⇢OPS★⇢ΔWF↺
+        ◆ EV/Cx ?
+   ┌──═[≥1.0]▶ 🟢 ✅APPROVE ▷⊳ @owner
+   ├──═[.5–1)▶ 🟡 ⚠REVISE ↻[≤2] ◆
+   └──═[<0.5]▶ 🧊 DEFER ▷⊳ ◎backlog        clever∧low-EV/Cx ⟶ 🧊, saying so = the job
 ```
 
-## Agent routing
+## In this repo — DSM surface (verified)
 
-| Finding | Owner |
-|:---|:---|
-| SNAP / MAT authority | `@sim-steward` + `@coder-mcp` |
-| WRK dishonest bake | `@orchestrator-mcp` + `@designer-mcp` |
-| APS preview gaps | `@coder-mcp` + `@designer` |
-| Grammar/content | `@planner-mcp` Track C |
-| Agent waste / wrong lane | `@orchestrator` + HANDOFF |
-| ECS viewport drift | `@debug-intelligence` |
+```bash
+node .claude/skills/agent-lang/driver.mjs ops-get-project-brief
+node .claude/skills/agent-lang/driver.mjs orchestrator-brief
+```
+`ops-get-project-brief` ▷⊳ `{quality_score, utility_score, auth_spine, known_failures, top_failures_ranked[severity]}` — ready-made DSM + risk surface.
 
-## Complexity budget (new proposals)
+Deeper scan (PowerShell) ▷⊳ `debug_runs/agent_ops/ops_report_latest.json`:
+
+```powershell
+powershell -File tools/orchestrator/scripts/ops_intelligence_scan.ps1
+```
+
+**Intel officer sweep** (false-green / stub-done cull):
+
+```bash
+node .claude/skills/agent-lang/driver.mjs intel-officer-sweep
+node .claude/skills/agent-lang/driver.mjs intel-officer-apply --ids TASK-ID --apply
+```
+
+Witness: `debug_runs/agent_ops/intel_officer_sweep_live.json`
+
+## DSM AUTH spine (form I — from `handoff-brief`)
 
 ```text
-Proposal Complexity: _ / 10
-Expected Value: _ / 10
-Recommendation: APPROVE | REVISE | DEFER | REJECT
+AUTH: MAT★ ⇢ APS★ ⇢ SNAP★ ⇢ WRK★ ⇢ ATL★ ⇢ RT★        (★ closed/witness-green · ○ open)
+
+        │ MAT APS SNAP WRK ATL RT
+   MAT  │  ★   ·    ·    ·   ·  ·     cell = dep weight · ⇢ = forward spine
+   APS  │  3   ★    ·    ·   ·  ·     below-diag = forward dep
+   SNAP │  ·   2    ★    ·   ·  ·     above-diag = feedback ⟶ re-sequence (⥁)
+   WRK  │  ·   ·    3    ★   ·  ·     col-sum = fan-in load · row-sum = blast radius
+   ATL  │  ·   ·    ·    3   ★  ·
+   RT   │  ·   ·    ·    ·   2  ★
+```
+Witness indices: `OPS_LANE_REGISTRY.json` · `unified_witness_index.json`. ECS/viewport/render drift ⤴ [debug-intelligence](../debug-intelligence/SKILL.md); this skill ⊚ pipeline/agent DSM.
+
+## Gotchas
+
+```text
+🏛 read-only        findings ▷⊳ ΔWF routing table for owners — never a direct edit
+✅ intel-officer    ONLY @operations-intelligence may `intel-officer-apply --apply` after sweep review
+⚖ gate=headline    a clever-but-low-EV/Cx proposal is a 🧊 DEFER · state it
 ```
 
-Prefer Phase 1 JSON events over PostgreSQL until value/complexity ≥ 1.0.
+## Source
 
-## Related
+Cursor original: [.cursor/skills/operations-intelligence/SKILL.md](../../../.cursor/skills/operations-intelligence/SKILL.md) · agent: [.cursor/agents/operations-intelligence.md](../../../.cursor/agents/operations-intelligence.md). Decision gate also in [`prompts/llm_agent_brief.md`](../../../prompts/llm_agent_brief.md) §DECISION.
 
-- **agent-lang** — normative BLANG, stream delimiters, `$ref` grammar
-- Agent: [`.cursor/agents/operations-intelligence.md`](../../agents/operations-intelligence.md)
-- Plan: [`src/dev/plan_agent_operations_intelligence_v1.md`](../../src/dev/plan_agent_operations_intelligence_v1.md)
-- Three-track: [`src/dev/plan_three_track_execution_v1.md`](../../src/dev/plan_three_track_execution_v1.md)
-- Complements: **debug-intelligence**, **validation-first**, **mcp-production-rules**
+```text
+⟦/operations-intelligence⟧ NEXT ⚑ ops-get-project-brief → DSM/Q-C-E → ◆EV/Cx → ◎ΔWF ⤳ @owner
+```

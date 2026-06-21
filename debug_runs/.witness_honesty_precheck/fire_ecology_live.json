@@ -23,7 +23,7 @@
       "continuation_queue": "tools/orchestrator/queues/continuation_queue.json",
       "warning_registry": "tools/orchestrator/reports/warning_registry.md"
     },
-    "profile": "FIRE-ECOLOGY-REFRESH-001",
+    "profile": "FIRE_ECOLOGY_F1",
     "related_proofs": [
       "debug_runs/stage5_full_app_live.json",
       "debug_runs/infrastructure_view_isolation_live.json",
@@ -51,45 +51,48 @@
     ],
     "relative_path": "debug_runs/fire_ecology_live.json",
     "schema": "debug_run_envelope_v1",
-    "source_system": "refresh_fire_ecology_lib_harness_witness",
-    "written_at_epoch_secs": 1781716487
+    "source_system": "fire_ecology_live_proof",
+    "written_at_epoch_secs": 1781984544
   },
-  "f1_green": true,
-  "gate": "FIRE-ECOLOGY-REFRESH-001",
+  "f1_green": false,
+  "fire_f2_fuel_spread_001": {
+    "ember_events_emitted": 2016,
+    "ember_wired": true,
+    "fuel_depleted_cells": 16,
+    "fuel_spread_counters_wired": true,
+    "green": true,
+    "neighbor_spread_cells": 0
+  },
+  "fire_f2_readiness_align_001": {
+    "fire_inst_excluded_from_f1_green": true,
+    "fire_inst_proxy": 63,
+    "green": true,
+    "heat_mostly_stable": true,
+    "max_heat": 0.3151220381259918,
+    "mean_fuel": 0.029999999329447746,
+    "policy": "f1_green uses sim mean_heat/mean_fuel — render fire_inst excluded",
+    "sim_mean_heat": 0.15310542285442352
+  },
   "green": true,
-  "lib_harness": true,
   "profile": "FIRE_ECOLOGY_F1",
-  "sim_effect_spine": {
-    "faction_react_hook_rows": 1,
-    "faction_react_wired": true,
-    "sim_effect_spine": {
-      "causal_chain_depth_max": 2,
-      "dedupe_ok": false,
-      "dedupe_rejected": 0,
-      "drain_us": 23,
-      "effect_rows": 3,
-      "ember_dispatched": 3,
-      "hydro_dispatched": 0,
-      "non_ecology_producer_dispatched": 3,
-      "queue_drain_ok": true
-    }
-  },
   "witness": {
-    "chunks_fuel_gated": 63,
-    "chunks_sampled": 63,
-    "chunks_with_heat": 0,
+    "chunks_fuel_gated": 0,
+    "chunks_sampled": 126,
+    "chunks_with_heat": 63,
     "frames_sampled": 64,
-    "fuel_gate_active": true,
+    "fuel_depleted_cells": 16,
+    "fuel_gate_active": false,
     "fuel_gated_ignitions": 0,
     "fuel_gated_spark_ratio": 0.0,
     "heat_mostly_stable": true,
     "heat_spike_frames": 0,
-    "heat_stable_low_frames": 63,
-    "max_heat": 0.0,
-    "mean_fuel": 0.05999999865889549,
-    "mean_heat": 0.0,
-    "mean_old_growth": 0.019999999552965164,
+    "heat_stable_low_frames": 0,
+    "max_heat": 0.3151220381259918,
+    "mean_fuel": 0.029999999329447746,
+    "mean_heat": 0.15310542285442352,
+    "mean_old_growth": 0.20000000298023224,
+    "neighbor_spread_cells": 0,
     "proof_json": true,
-    "ungated_spark_cells": 0
+    "ungated_spark_cells": 2016
   }
 }

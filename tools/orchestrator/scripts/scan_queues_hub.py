@@ -13,6 +13,7 @@ SKIP = {
     "master_chain_tensor_v1.json",
     "defer_registry.json",
     "parallel_wave_aps_veg_dispatch_v1.json",
+    "multi_parallel_tracks_dispatch_v1.json",
     "agent_hub_queue_v1.json",
 }
 
@@ -48,7 +49,7 @@ def norm_owner(raw: str) -> str:
 
 def row_lists(obj: dict) -> list[tuple[str, list]]:
     out: list[tuple[str, list]] = []
-    for k in ("drain", "tasks", "p2_tasks", "parallel", "items", "queue", "active", "optional_designer"):
+    for k in ("drain", "tasks", "p2_tasks", "parallel", "items", "queue", "active", "optional_designer", "multi_parallel_ready"):
         if isinstance(obj.get(k), list):
             out.append((k, obj[k]))
     # nested agent buckets in coder_active_queue

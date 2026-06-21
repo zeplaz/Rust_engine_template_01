@@ -115,6 +115,7 @@ pub fn sync_visible_fire_chunks_from_views(
     per_view_windows: Option<Res<PerViewResidencyConsumerWindow>>,
     mut visible: ResMut<VisibleFireChunkSet>,
 ) {
+    let _perf = crate::render::PerfScope::new("upd_fire_sync_visible");
     visible.per_view.clear();
     if active.chunks.is_empty() {
         return;
@@ -303,6 +304,36 @@ fn build_frame_for_allowed(
 
 /// Builds [`FireVisualFramesByView`] from the sim snapshot, [`VisibleFireChunkSet`], and [`FireChunkLodState`].
 /// When [`ViewManager`] is missing, world LOD defaults to [`WorldLodBand::Strategic`] (headless / tests).
+/// Dirty-gate fingerprint for [`build_fire_visual_frames_by_view`].
+///
+/// The four-view rebuild only changes when one of these moves: the sim snapshot cadence
+/// (`stamp` + instance/heat counts), the active-chunk set, the per-view visible-chunk windows
+/// (camera/view rect motion), or the per-view world LOD band (zoom). When unchanged the previous
+/// `FireVisualFramesByView` stays valid and downstream consumers read it as before.
+#[derive(Clone, PartialEq)]
+pub struct FireViewExtractFingerprint {
+    stamp: crate::systems::sim_control::SimStepStamp,
+    instances_len: usize,
+    chunk_heat_len: usize,
+    active_len: usize,
+    active_digest: u64,
+    vis_digest: u64,
+    bands: [(crate::gui::WorldLodBand, usize); 4],
+    proof: bool,
+}
+
+#[inline]
+fn xor_chunk_digest<'a>(chunks: impl Iterator<Item = &'a ChunkCoord>) -> u64 {
+    // Order-independent XOR of per-chunk hashes — stable for sets regardless of iteration order.
+    let mut acc = 0u64;
+    for c in chunks {
+        let h = (c.x as u64).wrapping_mul(0x9e37_79b9_7f4a_7c15)
+            ^ (c.y as u64).wrapping_mul(0xc2b2_ae3d_27d4_eb4f).rotate_left(17);
+        acc ^= h;
+    }
+    acc
+}
+
 pub fn build_fire_visual_frames_by_view(
     launch: Option<Res<crate::engine::EngineLaunchArgs>>,
     sim: Res<FireSimulationSnapshot>,
@@ -314,12 +345,65 @@ pub fn build_fire_visual_frames_by_view(
     profile: Res<Stage5ReadinessProfile>,
     mut fire_chunk_witness: ResMut<Stage5FireViewChunkWitness>,
     mut out: ResMut<FireVisualFramesByView>,
+    mut last_fingerprint: Local<Option<FireViewExtractFingerprint>>,
 ) {
-    out.by_id.clear();
+    let _perf = crate::render::PerfScope::new("upd_fire_build_view");
     let default_band = WorldLodBand::Strategic;
     let proof = launch
         .as_deref()
         .is_some_and(crate::engine::EngineLaunchArgs::visual_tactical_vfx_proof);
+
+    // DIRTY-GATE (perf: fire pipeline per-frame full rebuild). Build the fingerprint of every
+    // input that can change the four per-view frames, then skip the rebuild when nothing moved.
+    let bands = {
+        let mut out_bands = [(default_band, 0usize); 4];
+        for (slot, id) in [
+            ViewId::WorldMain,
+            ViewId::WorldPreview,
+            ViewId::Minimap,
+            ViewId::SimulationMap,
+        ]
+        .into_iter()
+        .enumerate()
+        {
+            let world_band = if proof && matches!(id, ViewId::WorldMain | ViewId::SimulationMap) {
+                WorldLodBand::LocalTactical
+            } else {
+                manager
+                    .as_deref()
+                    .and_then(|m| m.view(id))
+                    .map(|v| v.render_policy.lod_band)
+                    .unwrap_or(default_band)
+            };
+            let vis_len = vis.per_view.get(&id).map(|s| s.len()).unwrap_or(0);
+            out_bands[slot] = (world_band, vis_len);
+        }
+        out_bands
+    };
+    let fingerprint = FireViewExtractFingerprint {
+        stamp: sim.stamp,
+        instances_len: sim.instances.len(),
+        chunk_heat_len: sim.chunk_heat.len(),
+        active_len: active.chunks.len(),
+        active_digest: xor_chunk_digest(active.chunks.iter()),
+        vis_digest: vis
+            .per_view
+            .iter()
+            .fold(0u64, |acc, (id, set)| {
+                acc ^ (*id as u64)
+                    .wrapping_mul(0x100_0000_01b3)
+                    .rotate_left(7)
+                    ^ xor_chunk_digest(set.iter())
+            }),
+        bands,
+        proof,
+    };
+    if last_fingerprint.as_ref() == Some(&fingerprint) {
+        return;
+    }
+    *last_fingerprint = Some(fingerprint);
+
+    out.by_id.clear();
     for id in [
         ViewId::WorldMain,
         ViewId::WorldPreview,

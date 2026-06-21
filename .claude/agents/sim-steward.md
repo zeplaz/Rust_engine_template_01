@@ -66,6 +66,19 @@ defer     ▷⊳ `tools/orchestrator/invoke_handoff.ps1`  ∨  `HANDOFF.template
 end Shift C ▶ Shift-summary: shifts-run · `Outcome`(green|delegated|deferred) · witness-path · next-shift
 ```
 
+## Deep diagnosis — REASONING-LATTICE (form §3.12)
+
+When **Shift B — Decide** faces a NON-OBVIOUS *contested* root-cause (≥2 plausible authorities and the debug-intelligence packet `confidence < ◕`), express the root-cause decision as a HYP/EV/INFER lattice with a computed posterior ρ instead of prose — the winning H + ρ then feeds the Shift-B `root_cause`/`confidence` and the ◆ Shift-C mode gate. Simple bounded drift stays the compact Shift-B packet (`$REPORT §12` costs tokens on short content — ¬over-apply).
+
+```text
+LEX  H<n>=hypothesis · π prior · ρ posterior · ▣ observed · ⊕→ supports ⊖→ refutes (╱ weak ╱╱ strong) · ⤳ causes
+HYP  H1 dual ViewManager rebuild/frame · H2 stale view_authority mirror · H3 extraction writes sim
+EV   E1 witness: 2 rebuilds/frame ⊕╱╱→H1 ⊖→H2 · E2 render_projection_graph touches sim ⊕╱╱→H3
+INFER ρ(h) ∝ π(h)·∏ₑ LR(e,h)  ⟶  H1 0.79 ◕ (root) · H3 0.16 (trigger H1⤳H3) · H2 0.05
+FIX  single ViewManager rebuild gate   NEXT ◆Shift-C: bounded∧authority-clear ⟹ implement, else ΔWF→@coder
+```
+Round-trips to JSON lossless ⟹ doubles as machine output (the witness JSON recorded at Shift-C end before any @coder handoff).
+
 ## Task quota blocked — mandatory
 
 ```text

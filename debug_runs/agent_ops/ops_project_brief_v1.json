@@ -7,7 +7,7 @@
   "known_failures": [
     "track_b_ship_blocked__manual_keyframe_+_g4",
     "rollup_open__see_sub-gates_g-play-coder-*_+_g-play-operator-01",
-    "veg_rollup_dishonest__operator_rollup_still_blocked_on_g-play-op",
+    "g-play-coder-veg_closed__play_scenario_veg_topology_+_wit-hon_ro",
     "human_10_min_checklist__sole_operator_blocker_for_rollup",
     "warehouse_production_bake_paused__track_b"
   ],
@@ -21,7 +21,7 @@
       "severity": "P1"
     },
     {
-      "id": "veg_rollup_dishonest__operator_rollup_still_blocked_on_g-play-op",
+      "id": "g-play-coder-veg_closed__play_scenario_veg_topology_+_wit-hon_ro",
       "severity": "P1"
     }
   ],
@@ -43,23 +43,19 @@
   },
   "build_set_health": {
     "green": false,
-    "grammar_set_brief": "grammar pilots: 0 \u00b7 shape QA: 8 \u00b7 presets: 4\nF-axis covered: logistics, manufacturing, utility\ngaps: grammar_pilots=0 need \u22654; infrastructure_v0: missing F-axis power; infrastructure_v0: missing F-axis fuel",
+    "grammar_set_brief": "grammar pilots: 0 \u00b7 shape QA: 8 \u00b7 presets: 4\nF-axis covered: fuel, logistics, manufacturing, power\ngaps: grammar_pilots=0 need \u22654",
     "coverage_green": false,
     "parity_green": false,
     "hardcode_green": false,
     "grammar_pilot_count": 0,
     "preset_count": 4,
     "gaps": [
-      "grammar_pilots=0 need \u22654",
-      "infrastructure_v0: missing F-axis power",
-      "infrastructure_v0: missing F-axis fuel"
+      "grammar_pilots=0 need \u22654"
     ],
     "coverage_errors": [
       "industrial_west_v0: grammar pilots 0 < min",
       "infrastructure_v0: grammar pilots 0 < min",
-      "infrastructure_v0: F-axis power not covered",
-      "infrastructure_v0: F-axis fuel not covered",
-      "pilot_hardcode_lint violations=6"
+      "pilot_hardcode_lint violations=7"
     ]
   },
   "handoff_ok": true,
@@ -70,7 +66,7 @@
       "finding": "Track B ship blocked \u2014 manual keyframe + G4",
       "owner": "@designer-mcp + operator",
       "program_id": "art_B",
-      "next_artifact": "debug_runs/art_pipeline/mcp_pilot_grammar_001_live.json"
+      "next_artifact": "debug_runs/art_pipeline/kit_production_002_g4_live.json"
     },
     {
       "finding": "Rollup OPEN \u2014 see sub-gates G-PLAY-CODER-* + G-PLAY-OPERATOR-01",
@@ -79,7 +75,7 @@
       "next_artifact": "debug_runs/g_play_product_close_live.json"
     },
     {
-      "finding": "VEG rollup dishonest \u2014 operator rollup still blocked on G-PLAY-OPERATOR-01",
+      "finding": "G-PLAY-CODER-VEG closed \u2014 play_scenario veg_topology + WIT-HON rollup green; operator rollup still on G-PLAY-OPERATOR-01",
       "owner": "@coder A",
       "program_id": "stage7_play",
       "next_artifact": "debug_runs/g_play_product_close_live.json"
@@ -117,15 +113,8 @@
         "closed": null,
         "plan": "src/dev/plan_g_play_close_001_checklist_v1.md",
         "operator": "src/dev/plan_g_play_close_001_checklist_v1.md",
-        "note": "Rollup OPEN \u2014 G-PLAY-CODER-VEG reopened (WIT-HON bulk gate 2026-06-02) \u00b7 operator only on G-PLAY-OPERATOR-01",
+        "note": "Rollup OPEN \u2014 G-PLAY-CODER-VEG closed 2026-06-17 \u00b7 operator only on G-PLAY-OPERATOR-01",
         "open_sub_gates": [
-          {
-            "id": "G-PLAY-CODER-VEG",
-            "phi": 0,
-            "closed": false,
-            "plan": "src/dev/plan_veg_runtime_proof_001_v1.md",
-            "reopen_reason": "WIT-HON bulk reopen \u2014 rollup child fail; Review row pending scan"
-          },
           {
             "id": "G-PLAY-OPERATOR-01",
             "phi": 0,
@@ -143,7 +132,7 @@
   },
   "_agent_meta": {
     "schema": "ops_project_brief_v1",
-    "written_at_epoch_secs": 1781670224,
+    "written_at_epoch_secs": 1781979326,
     "profile": "OPS_PROJECT_BRIEF",
     "source_system": "ops_intelligence",
     "relative_path": "debug_runs/agent_ops/ops_project_brief_v1.json"

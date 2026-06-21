@@ -365,6 +365,29 @@ def _cmd_agent_queue_next(args: argparse.Namespace) -> int:
     return 0 if out.get("action") == "work" else 1
 
 
+def _cmd_get_que(args: argparse.Namespace) -> int:
+    out = agent_queue.agent_get_que(
+        args.agent,
+        track=args.track or "",
+        build_list=bool(args.demand),
+        minutes=int(args.minutes),
+        mark_in_progress=bool(args.mark_in_progress),
+    )
+    print(json.dumps(out, indent=2))
+    return 0 if out.get("action") == "work" else 1
+
+
+def _cmd_agent_queue_demand(args: argparse.Namespace) -> int:
+    out = agent_queue.agent_queue_demand(
+        args.agent,
+        minutes=int(args.minutes),
+        max_slices=int(args.max_slices),
+        track=args.track or "",
+    )
+    print(json.dumps(out, indent=2))
+    return 0 if out.get("action") == "work" else 1
+
+
 def _cmd_agent_queue_update(args: argparse.Namespace) -> int:
     out = agent_queue.agent_queue_update(
         args.slice_id,
@@ -375,6 +398,40 @@ def _cmd_agent_queue_update(args: argparse.Namespace) -> int:
     )
     print(json.dumps(out, indent=2))
     return 0 if out.get("ok") else 1
+
+
+def _cmd_intel_officer_sweep(args: argparse.Namespace) -> int:
+    from rust_engine_mcp import intel_officer
+
+    body = intel_officer.intel_officer_sweep(
+        queue_filter=args.queue_filter or "",
+        include_witness_scan=not bool(args.no_witness_scan),
+        compression_level=int(args.compress),
+    )
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
+def _cmd_intel_officer_apply(args: argparse.Namespace) -> int:
+    from rust_engine_mcp import intel_officer
+
+    ids = [x.strip() for x in args.ids.split(",") if x.strip()]
+    body = intel_officer.intel_officer_apply(
+        ids=ids,
+        dry_run=not bool(args.apply),
+        action=args.action,
+        note=args.note or "",
+    )
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("ok") else 1
+
+
+def _cmd_intel_officer_sweep_witness(_: argparse.Namespace) -> int:
+    from rust_engine_mcp import intel_officer
+
+    body = intel_officer.refresh_intel_officer_sweep_witness()
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
 
 
 def _cmd_queue_integrity_reconcile_witness(_: argparse.Namespace) -> int:
@@ -716,6 +773,14 @@ def _cmd_dmcp_e3_vegetation_catalog_witness(_: argparse.Namespace) -> int:
     return 0 if body.get("green") else 1
 
 
+def _cmd_veg_catalog_burn_rows_witness(_: argparse.Namespace) -> int:
+    from rust_engine_mcp.veg_catalog_loader import refresh_veg_catalog_burn_rows_witness
+
+    body = refresh_veg_catalog_burn_rows_witness()
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
 def _cmd_dmcp_e4_matrix_witness(_: argparse.Namespace) -> int:
     from rust_engine_mcp.dmcp_designer_signoff import refresh_dmcp_e4_matrix_witness
 
@@ -796,6 +861,22 @@ def _cmd_dmcp_art_spine_hub_wave_witness(_: argparse.Namespace) -> int:
     return 0 if body.get("green") else 1
 
 
+def _cmd_dmcp_designer_mcp_open_lane_witness(_: argparse.Namespace) -> int:
+    from rust_engine_mcp.dmcp_designer_mcp_open_lane import refresh_dmcp_designer_mcp_open_lane_witness
+
+    body = refresh_dmcp_designer_mcp_open_lane_witness()
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
+def _cmd_dmcp_style_landscape_riparian_witness(_: argparse.Namespace) -> int:
+    from rust_engine_mcp.dmcp_style_landscape_riparian import refresh_dmcp_style_landscape_riparian_witness
+
+    body = refresh_dmcp_style_landscape_riparian_witness()
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
 def _cmd_pwr_utility_manifest_witness(_: argparse.Namespace) -> int:
     from rust_engine_mcp.mcp_pwr_utility import refresh_pwr_utility_manifest_witness
 
@@ -868,6 +949,31 @@ def _cmd_pwr_transformer_promote_witness(_: argparse.Namespace) -> int:
     from rust_engine_mcp.mcp_pwr_utility import refresh_transformer_promote_witness
 
     body = refresh_transformer_promote_witness()
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
+def _cmd_pwr_downstream_close_witness(_: argparse.Namespace) -> int:
+    from rust_engine_mcp.mcp_pwr_utility import (
+        refresh_power_grid_art_downstream_close_witness,
+        refresh_substation_qc_witness,
+        refresh_transformer_qc_witness,
+        sync_power_grid_queue_statuses,
+    )
+
+    refresh_substation_qc_witness()
+    refresh_transformer_qc_witness()
+    body = refresh_power_grid_art_downstream_close_witness()
+    queue = sync_power_grid_queue_statuses()
+    body["queue_sync"] = queue
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
+def _cmd_pwr_industrial_activation_utility_refresh(_: argparse.Namespace) -> int:
+    from rust_engine_mcp.mcp_pwr_utility import refresh_industrial_activation_utility_art
+
+    body = refresh_industrial_activation_utility_art()
     print(json.dumps(body, indent=2))
     return 0 if body.get("green") else 1
 
@@ -1224,16 +1330,38 @@ def main(argv: list[str] | None = None) -> int:
     p.set_defaults(func=_cmd_write_tile_fix_designer_g4_witness)
 
     p = sub.add_parser("agent-queue-next")
-    p.add_argument("agent", help="planner | coder | designer | coder-mcp | designer-mcp")
+    p.add_argument(
+        "agent",
+        help="planner | coder | designer | coder-mcp | designer-mcp | coder_a | operator | …",
+    )
     p.add_argument("--queue", default="auto", choices=["auto", *sorted(agent_queue.QUEUE_REGISTRY)])
     p.add_argument("--mark-in-progress", action="store_true")
     p.set_defaults(func=_cmd_agent_queue_next)
+
+    p = sub.add_parser("get-que", help="BLANG:Q+ multi-parallel — next slice + drain board (alias: get que)")
+    p.add_argument("agent")
+    p.add_argument("--track", default="", help="T1..T8 or track_id filter")
+    p.add_argument("--demand", action="store_true", help="Attach hour-scale demand todo list")
+    p.add_argument("--minutes", default="60", help="Demand budget when --demand (default 60)")
+    p.add_argument("--mark-in-progress", action="store_true")
+    p.set_defaults(func=_cmd_get_que)
+
+    p = sub.add_parser("agent-queue-demand", help="Build ordered session todo list without picking first slice")
+    p.add_argument("agent")
+    p.add_argument("--minutes", default="60")
+    p.add_argument("--max-slices", default="8")
+    p.add_argument("--track", default="")
+    p.set_defaults(func=_cmd_agent_queue_demand)
 
     p = sub.add_parser("agent-queue-update")
     p.add_argument("slice_id")
     p.add_argument("status")
     p.add_argument("--note", default="")
-    p.add_argument("--queue", default="grammar", choices=sorted(agent_queue.QUEUE_REGISTRY))
+    p.add_argument(
+        "--queue",
+        default="auto",
+        choices=["auto", "designer_active", *sorted(agent_queue.QUEUE_REGISTRY)],
+    )
     p.add_argument(
         "--enforce",
         action="store_true",
@@ -1351,6 +1479,7 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("kit-production-002-g4-evaluate").set_defaults(func=_cmd_kit_production_002_g4_evaluate)
     sub.add_parser("kit-production-002-g4-witness").set_defaults(func=_cmd_kit_production_002_g4_witness)
     sub.add_parser("dmcp-e3-vegetation-catalog-witness").set_defaults(func=_cmd_dmcp_e3_vegetation_catalog_witness)
+    sub.add_parser("veg-catalog-burn-rows-witness").set_defaults(func=_cmd_veg_catalog_burn_rows_witness)
     sub.add_parser("dmcp-e4-matrix-charter-witness").set_defaults(func=_cmd_dmcp_e4_matrix_witness)
     sub.add_parser("dmcp-e0-artist-reverdict-witness").set_defaults(func=_cmd_dmcp_e0_artist_reverdict_witness)
     sub.add_parser("dmcp-ovr-g0-audit-witness").set_defaults(func=_cmd_dmcp_ovr_g0_audit_witness)
@@ -1361,6 +1490,12 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("dmcp-facility-binding-lane-witness").set_defaults(func=_cmd_dmcp_facility_binding_lane_witness)
     sub.add_parser("dmcp-nuclear-pwr-spec-witness").set_defaults(func=_cmd_dmcp_nuclear_pwr_spec_witness)
     sub.add_parser("dmcp-art-spine-hub-wave-witness").set_defaults(func=_cmd_dmcp_art_spine_hub_wave_witness)
+    sub.add_parser("dmcp-designer-mcp-open-lane-witness").set_defaults(
+        func=_cmd_dmcp_designer_mcp_open_lane_witness
+    )
+    sub.add_parser("dmcp-style-landscape-riparian-witness").set_defaults(
+        func=_cmd_dmcp_style_landscape_riparian_witness
+    )
     sub.add_parser("pwr-utility-manifest-witness").set_defaults(func=_cmd_pwr_utility_manifest_witness)
     sub.add_parser("pwr-substation-batch-run").set_defaults(func=_cmd_pwr_substation_batch_run)
     sub.add_parser("pwr-transformer-batch-run").set_defaults(func=_cmd_pwr_transformer_batch_run)
@@ -1370,9 +1505,28 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("pwr-transformer-batch-witness").set_defaults(func=_cmd_pwr_transformer_batch_witness)
     sub.add_parser("pwr-substation-promote-witness").set_defaults(func=_cmd_pwr_substation_promote_witness)
     sub.add_parser("pwr-transformer-promote-witness").set_defaults(func=_cmd_pwr_transformer_promote_witness)
+    sub.add_parser("pwr-downstream-close-witness").set_defaults(func=_cmd_pwr_downstream_close_witness)
+    sub.add_parser("pwr-industrial-activation-utility-refresh").set_defaults(
+        func=_cmd_pwr_industrial_activation_utility_refresh
+    )
     sub.add_parser("mcp-witness-honesty-validator-witness").set_defaults(
         func=_cmd_mcp_witness_honesty_validator_witness
     )
+    p = sub.add_parser("intel-officer-sweep", help="False-positive surveillance — done/green cull candidates")
+    p.add_argument("--queue-filter", default="", help="Limit queue_integrity scan to one queue_id")
+    p.add_argument("--no-witness-scan", action="store_true", help="Skip debug_runs *_live.json green scan")
+    p.add_argument("--compress", default="3", choices=["1", "2", "3", "4"])
+    p.set_defaults(func=_cmd_intel_officer_sweep)
+
+    p = sub.add_parser("intel-officer-apply", help="Supervised reopen/demote from sweep findings")
+    p.add_argument("--ids", required=True, help="Comma-separated slice_id or finding id")
+    p.add_argument("--apply", action="store_true", help="Execute (default is dry-run preview)")
+    p.add_argument("--action", default="reopen", choices=["reopen", "blocked"])
+    p.add_argument("--note", default="")
+    p.set_defaults(func=_cmd_intel_officer_apply)
+
+    sub.add_parser("intel-officer-sweep-witness").set_defaults(func=_cmd_intel_officer_sweep_witness)
+
     sub.add_parser("queue-integrity-reconcile-witness").set_defaults(func=_cmd_queue_integrity_reconcile_witness)
     sub.add_parser("mcp-witness-integrity-ops-witness").set_defaults(func=_cmd_mcp_witness_integrity_ops_witness)
     sub.add_parser("pilot-hardcode-lint").set_defaults(func=_cmd_pilot_hardcode_lint)

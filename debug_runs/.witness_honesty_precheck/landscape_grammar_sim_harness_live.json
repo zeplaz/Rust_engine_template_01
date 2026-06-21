@@ -52,16 +52,19 @@
     "relative_path": "debug_runs/landscape_grammar_sim_harness_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_landscape_grammar_harness_witnesses",
-    "written_at_epoch_secs": 1781716708
+    "written_at_epoch_secs": 1781979808
   },
   "chunks_with_program": 17,
   "construction_disturbances": 1,
   "fire_disturbances": 1,
   "gate": "VEG-A01-HARNESS-001",
-  "green": true,
+  "green": false,
   "lg2_path": "debug_runs/landscape_grammar_lg2_live.json",
   "lg3_path": "debug_runs/landscape_grammar_lg3_live.json",
   "map_rollout_path": "debug_runs/landscape_grammar_map_rollout_live.json",
   "operator_visible": true,
-  "topology_tint_visible_chunks": 17
+  "topology_tint_visible_chunks": 17,
+  "verdict": "FAIL",
+  "intel_officer_note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 witness_honesty debug_runs/.witness_honesty_precheck/landscape_grammar_sim_harness_live.json: 1 error(s), 1 issue(s)",
+  "intel_officer_demoted_at": 1781990366
 }

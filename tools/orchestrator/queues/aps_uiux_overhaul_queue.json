@@ -3,7 +3,7 @@
     "version": "1.0.1",
     "wave_1_issued": "2026-06-02",
     "dispatch_witness": "debug_runs/agent_ops/aps_uiux_overhaul_dispatch_live.json",
-    "p0_gate": "OVR-P0-DESIGN-LOCK signed 2026-06-17 — enforced",
+    "p0_gate": "OVR-P0-DESIGN-LOCK signed 2026-06-17 \u2014 enforced",
     "program_id": "PLAN-APS-UIUX-OVERHAUL-001",
     "program_status": "CLOSED",
     "date": "2026-06-17",
@@ -13,8 +13,8 @@
     "parallel_queue": "tools/orchestrator/queues/aps_uiux_overhaul_parallel_drain_v1.json",
     "prior_program": "APS-OPTION-D-001",
     "prior_closed": "debug_runs/agent_ops/aps_option_d_queue_reconcile_live.json",
-    "rule": "OVR-P0-DESIGN-LOCK gates ALL coder-mcp phases · P1→P6 sequential (app.py file lock) · pytest -k aps every phase · NEEDS-DISPLAY = operator eyeball, not Q✓",
-    "sequence": "P0 → P1 → P2 → P3 → P4 → P4.5 → P5 → P5.5 → P5.6 → P6",
+    "rule": "OVR-P0-DESIGN-LOCK gates ALL coder-mcp phases \u00b7 P1\u2192P6 sequential (app.py file lock) \u00b7 pytest -k aps every phase \u00b7 NEEDS-DISPLAY = operator eyeball, not Q\u2713",
+    "sequence": "P0 \u2192 P1 \u2192 P2 \u2192 P3 \u2192 P4 \u2192 P4.5 \u2192 P5 \u2192 P5.5 \u2192 P5.6 \u2192 P6",
     "regression": "cd tools/mcp/python && python -m pytest -k aps -q",
     "runtime_guards": [
       "tests/test_aps_imports.py",
@@ -31,23 +31,41 @@
     "file_lock": {
       "enforced_by": "ORCH-OVR-001",
       "wave_1_issued": "2026-06-02",
-      "rule": "ONE active @coder-mcp phase P1→P6 · commit between phases · app.py sole-writer only in P3/P4/P4.5",
+      "rule": "ONE active @coder-mcp phase P1\u2192P6 \u00b7 commit between phases \u00b7 app.py sole-writer only in P3/P4/P4.5",
       "active_phase": "P1",
       "active_row": "OVR-P1-TOKENS-001",
-      "app_py_exclusive_phases": ["P3", "P4", "P4.5"],
-      "sequence": ["P1", "P2", "P3", "P4", "P4.5", "P5", "P5.5", "P5.6", "P6"],
-      "forbidden": ["parallel coder-mcp on app.py", "skip phase", "P2+ Q✓ before prior phase Q✓"]
+      "app_py_exclusive_phases": [
+        "P3",
+        "P4",
+        "P4.5"
+      ],
+      "sequence": [
+        "P1",
+        "P2",
+        "P3",
+        "P4",
+        "P4.5",
+        "P5",
+        "P5.5",
+        "P5.6",
+        "P6"
+      ],
+      "forbidden": [
+        "parallel coder-mcp on app.py",
+        "skip phase",
+        "P2+ Q\u2713 before prior phase Q\u2713"
+      ]
     }
   },
   "dispatch_now": {
     "orchestrator-mcp": "reconcile CLOSED after operator eyeball",
-    "designer": "OVR-P6-DESIGN-SIGN-001 done — PASS WITH NOTES",
+    "designer": "OVR-P6-DESIGN-SIGN-001 done \u2014 PASS WITH NOTES",
     "planner-mcp": "idle",
-    "coder-mcp": "idle — P1–P6 machine done",
-    "designer-mcp": "DMCP-OVR-ARTIST-ACCEPT-001 done — 8/10",
-    "coder_a": "idle — no APS Tk scope",
-    "coder_b": "idle — no APS Tk scope",
-    "operator": "idle — OVR-P6-OPERATOR-EYEBALL-001 done (oz approved)"
+    "coder-mcp": "idle \u2014 P1\u2013P6 machine done",
+    "designer-mcp": "DMCP-OVR-ARTIST-ACCEPT-001 done \u2014 8/10",
+    "coder_a": "idle \u2014 no APS Tk scope",
+    "coder_b": "idle \u2014 no APS Tk scope",
+    "operator": "idle \u2014 OVR-P6-OPERATOR-EYEBALL-001 done (oz approved)"
   },
   "phase_legend": {
     "P0": "Design-system lock (GATE)",
@@ -74,7 +92,9 @@
       "owner": "orchestrator-mcp",
       "goal": "Sequence PLAN-APS-UIUX-OVERHAUL-001; enforce P0 gate + per-phase file lock",
       "queue": "tools/orchestrator/queues/aps_uiux_overhaul_queue.json",
-      "unblocks": ["OVR-P1-TOKENS-001"]
+      "unblocks": [
+        "OVR-P1-TOKENS-001"
+      ]
     },
     {
       "seq": 2,
@@ -86,7 +106,7 @@
       "witness": "src/dev/aps_design_system_v1.md",
       "priority": "P0",
       "owner": "designer",
-      "goal": "Author aps_design_system_v1.md — terminology, tokens, IA contract, status atom",
+      "goal": "Author aps_design_system_v1.md \u2014 terminology, tokens, IA contract, status atom",
       "deliverable": "src/dev/aps_design_system_v1.md",
       "inputs": [
         "src/dev/aps_sweep_text_20260616_v1.md",
@@ -95,7 +115,7 @@
         "src/dev/aps_sweep_style_20260616_v1.md",
         "src/dev/aps_sweep_workflow_tooltips_vibe_20260616_v1.md"
       ],
-      "acceptance": "Designer sign-off; cited by P1–P6",
+      "acceptance": "Designer sign-off; cited by P1\u2013P6",
       "blocks": [
         "OVR-P1-TOKENS-001",
         "OVR-DES-P2-COPY-PACK-001",
@@ -117,8 +137,12 @@
       "deliverable": "src/dev/plan_ovr_queue_registry_sign_v1.md",
       "signed": "2026-06-17",
       "witness": "debug_runs/mcp_planner_ovr_sign_live.json",
-      "verify": ["validate-report queue_integrity --compress 3"],
-      "parallel_ok": ["OVR-P0-DESIGN-LOCK"]
+      "verify": [
+        "validate-report queue_integrity --compress 3"
+      ],
+      "parallel_ok": [
+        "OVR-P0-DESIGN-LOCK"
+      ]
     },
     {
       "seq": 4,
@@ -132,7 +156,9 @@
       "deliverable": "src/dev/plan_aps_uiux_overhaul_witness_v1.md",
       "signed": "2026-06-17",
       "witness": "debug_runs/mcp_planner_ovr_sign_live.json",
-      "parallel_ok": ["OVR-P0-DESIGN-LOCK"]
+      "parallel_ok": [
+        "OVR-P0-DESIGN-LOCK"
+      ]
     },
     {
       "seq": 5,
@@ -145,11 +171,17 @@
       "verdict": "PASS_WITH_NOTES",
       "priority": "P1",
       "owner": "designer-mcp",
-      "depends_on": ["OVR-P0-DESIGN-LOCK"],
+      "depends_on": [
+        "OVR-P0-DESIGN-LOCK"
+      ],
       "goal": "G0 order-critique: terminology ban-list + voice rules audit (no jargon in artist strings)",
       "deliverable": "src/dev/design_aps_uiux_g0_audit_v1.md",
-      "parallel_ok": ["OVR-P1-TOKENS-001"],
-      "unblocks": ["OVR-P2-TEXT-001"],
+      "parallel_ok": [
+        "OVR-P1-TOKENS-001"
+      ],
+      "unblocks": [
+        "OVR-P2-TEXT-001"
+      ],
       "notes": "54 ban-list hits documented pre-P2; test_aps_no_jargon.py wired (expected FAIL until OVR-P2-TEXT-001)"
     },
     {
@@ -157,21 +189,34 @@
       "phase": "P1",
       "wave": 1,
       "id": "OVR-P1-TOKENS-001",
-      "status": "done",
+      "status": "blocked",
       "priority": "P0",
       "owner": "coder-mcp",
-      "depends_on": ["OVR-P0-DESIGN-LOCK", "ORCH-OVR-001"],
+      "depends_on": [
+        "OVR-P0-DESIGN-LOCK",
+        "ORCH-OVR-001"
+      ],
       "goal": "Token ramp + spacing scale + color roles; fix 7px font; style/density guards",
       "territory": "tools/mcp/art_pipeline_suite/aps_theme.py",
       "completed": "2026-06-02",
-      "file_lock": { "phase": "P1", "touches_app_py": false, "exclusive_files": ["aps_theme.py"] },
+      "file_lock": {
+        "phase": "P1",
+        "touches_app_py": false,
+        "exclusive_files": [
+          "aps_theme.py"
+        ]
+      },
       "verify": [
         "pytest tools/mcp/python/tests/test_aps_font_floor.py",
         "pytest tools/mcp/python/tests/test_aps_style_tokens.py",
         "pytest tools/mcp/python/tests/test_aps_ux_polish_density_tokens.py",
         "pytest tools/mcp/python/tests -k aps -q"
       ],
-      "blocks": ["OVR-P2-TEXT-001"]
+      "blocks": [
+        "OVR-P2-TEXT-001"
+      ],
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
+      "updated_at": "2026-06-20T21:19:25Z"
     },
     {
       "seq": 7,
@@ -183,30 +228,49 @@
       "witness": "src/dev/design_aps_uiux_copy_pack_v1.md",
       "priority": "P1",
       "owner": "designer",
-      "depends_on": ["OVR-P0-DESIGN-LOCK"],
+      "depends_on": [
+        "OVR-P0-DESIGN-LOCK"
+      ],
       "goal": "Signed copy pack: worst-offender rewrites + tooltip rewrites from text sweep",
       "deliverable": "src/dev/design_aps_uiux_copy_pack_v1.md",
-      "blocks": ["OVR-P2-TEXT-001"]
+      "blocks": [
+        "OVR-P2-TEXT-001"
+      ]
     },
     {
       "seq": 8,
       "phase": "P2",
       "wave": 2,
       "id": "OVR-P2-TEXT-001",
-      "status": "done",
+      "status": "blocked",
       "completed_date": "2026-06-02",
       "priority": "P0",
       "owner": "coder-mcp",
       "co_owner": "designer",
-      "depends_on": ["OVR-P1-TOKENS-001", "OVR-DES-P2-COPY-PACK-001"],
+      "depends_on": [
+        "OVR-P1-TOKENS-001",
+        "OVR-DES-P2-COPY-PACK-001"
+      ],
       "goal": "Implement terminology + ban-list + voice rules across panels and aps_tooltips.py",
       "territory": "tools/mcp/art_pipeline_suite/",
-      "file_lock": { "phase": "P2", "touches_app_py": false, "exclusive_files": ["aps_tooltips.py", "metadata_flow_panel.py", "*/panels"] },
+      "file_lock": {
+        "phase": "P2",
+        "touches_app_py": false,
+        "exclusive_files": [
+          "aps_tooltips.py",
+          "metadata_flow_panel.py",
+          "*/panels"
+        ]
+      },
       "verify": [
         "pytest tools/mcp/python/tests/test_aps_no_jargon.py",
         "pytest tools/mcp/python/tests -k aps -q"
       ],
-      "blocks": ["OVR-P3-LAYOUT-001"]
+      "blocks": [
+        "OVR-P3-LAYOUT-001"
+      ],
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
+      "updated_at": "2026-06-20T21:19:25Z"
     },
     {
       "seq": 9,
@@ -218,30 +282,49 @@
       "witness": "src/dev/design_aps_uiux_layout_delta_v1.md",
       "priority": "P1",
       "owner": "designer",
-      "depends_on": ["OVR-P0-DESIGN-LOCK"],
-      "goal": "Layout delta spec: chrome collapse, grid above fold, pane mins at 960×600",
+      "depends_on": [
+        "OVR-P0-DESIGN-LOCK"
+      ],
+      "goal": "Layout delta spec: chrome collapse, grid above fold, pane mins at 960\u00d7600",
       "deliverable": "src/dev/design_aps_uiux_layout_delta_v1.md",
-      "blocks": ["OVR-P3-LAYOUT-001"]
+      "blocks": [
+        "OVR-P3-LAYOUT-001"
+      ]
     },
     {
       "seq": 10,
       "phase": "P3",
       "wave": 3,
       "id": "OVR-P3-LAYOUT-001",
-      "status": "done",
+      "status": "blocked",
       "completed_date": "2026-06-02",
       "priority": "P0",
       "owner": "coder-mcp",
       "co_owner": "designer",
-      "depends_on": ["OVR-P2-TEXT-001", "OVR-DES-P3-LAYOUT-DELTA-001"],
+      "depends_on": [
+        "OVR-P2-TEXT-001",
+        "OVR-DES-P3-LAYOUT-DELTA-001"
+      ],
       "goal": "Reclaim work area; fix footprint overflow; migrate padding literals; no h-scroll at MIN",
       "territory": "tools/mcp/art_pipeline_suite/app.py",
-      "file_lock": { "phase": "P3", "touches_app_py": true, "exclusive_files": ["app.py", "scrollable.py", "footprint_canvas.py"] },
+      "file_lock": {
+        "phase": "P3",
+        "touches_app_py": true,
+        "exclusive_files": [
+          "app.py",
+          "scrollable.py",
+          "footprint_canvas.py"
+        ]
+      },
       "verify": [
         "pytest tools/mcp/python/tests/test_aps_min_window_layout.py",
         "pytest tools/mcp/python/tests -k aps -q"
       ],
-      "blocks": ["OVR-P4-IA-001"]
+      "blocks": [
+        "OVR-P4-IA-001"
+      ],
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
+      "updated_at": "2026-06-20T21:19:25Z"
     },
     {
       "seq": 11,
@@ -253,31 +336,50 @@
       "witness": "src/dev/design_aps_uiux_ia_sign_v1.md",
       "priority": "P1",
       "owner": "designer",
-      "depends_on": ["OVR-P0-DESIGN-LOCK"],
+      "depends_on": [
+        "OVR-P0-DESIGN-LOCK"
+      ],
       "goal": "Sign IA contract: Buildings tab reorder, Stamp fold, material authority map",
       "deliverable": "src/dev/design_aps_uiux_ia_sign_v1.md",
-      "blocks": ["OVR-P4-IA-001"]
+      "blocks": [
+        "OVR-P4-IA-001"
+      ]
     },
     {
       "seq": 12,
       "phase": "P4",
       "wave": 4,
       "id": "OVR-P4-IA-001",
-      "status": "done",
+      "status": "blocked",
       "completed_date": "2026-06-02",
       "priority": "P0",
       "owner": "coder-mcp",
       "co_owner": "designer",
-      "depends_on": ["OVR-P3-LAYOUT-001", "OVR-DES-P4-IA-SIGN-001"],
-      "goal": "R1 Stamp→Atlas; R2 dead catalog path; Buildings reorder; material vocab unify",
+      "depends_on": [
+        "OVR-P3-LAYOUT-001",
+        "OVR-DES-P4-IA-SIGN-001"
+      ],
+      "goal": "R1 Stamp\u2192Atlas; R2 dead catalog path; Buildings reorder; material vocab unify",
       "territory": "tools/mcp/art_pipeline_suite/domain_router.py",
-      "file_lock": { "phase": "P4", "touches_app_py": true, "exclusive_files": ["domain_router.py", "app.py", "catalog.py"] },
+      "file_lock": {
+        "phase": "P4",
+        "touches_app_py": true,
+        "exclusive_files": [
+          "domain_router.py",
+          "app.py",
+          "catalog.py"
+        ]
+      },
       "verify": [
         "pytest tools/mcp/python/tests/test_aps_lane_tab_swap.py",
         "pytest tools/mcp/python/tests/test_aps_runtime_callbacks.py",
         "pytest tools/mcp/python/tests -k aps -q"
       ],
-      "blocks": ["OVR-P45-SPINE-001"]
+      "blocks": [
+        "OVR-P45-SPINE-001"
+      ],
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
+      "updated_at": "2026-06-20T21:19:25Z"
     },
     {
       "seq": 13,
@@ -289,86 +391,137 @@
       "witness": "src/dev/design_aps_uiux_spine_spec_v1.md",
       "priority": "P1",
       "owner": "designer",
-      "depends_on": ["OVR-P0-DESIGN-LOCK", "OVR-DES-P4-IA-SIGN-001"],
-      "goal": "Pipeline spine interaction spec: clickable pills, ▣ here, advance verbs, no auto-tab-switch",
+      "depends_on": [
+        "OVR-P0-DESIGN-LOCK",
+        "OVR-DES-P4-IA-SIGN-001"
+      ],
+      "goal": "Pipeline spine interaction spec: clickable pills, \u25a3 here, advance verbs, no auto-tab-switch",
       "deliverable": "src/dev/design_aps_uiux_spine_spec_v1.md",
-      "blocks": ["OVR-P45-SPINE-001"]
+      "blocks": [
+        "OVR-P45-SPINE-001"
+      ]
     },
     {
       "seq": 14,
       "phase": "P4.5",
       "wave": 5,
       "id": "OVR-P45-SPINE-001",
-      "status": "done",
+      "status": "blocked",
       "completed_date": "2026-06-02",
       "priority": "P0",
       "owner": "coder-mcp",
       "co_owner": "designer",
-      "depends_on": ["OVR-P4-IA-001", "OVR-DES-P45-SPINE-SPEC-001"],
+      "depends_on": [
+        "OVR-P4-IA-001",
+        "OVR-DES-P45-SPINE-SPEC-001"
+      ],
       "goal": "Clickable pipeline spine; readiness gates flow verbs; narrate on_bake_variants",
       "territory": "tools/mcp/art_pipeline_suite/pipeline_status_bar.py",
-      "file_lock": { "phase": "P4.5", "touches_app_py": true, "exclusive_files": ["pipeline_status_bar.py", "app.py"] },
+      "file_lock": {
+        "phase": "P4.5",
+        "touches_app_py": true,
+        "exclusive_files": [
+          "pipeline_status_bar.py",
+          "app.py"
+        ]
+      },
       "verify": [
         "pytest tools/mcp/python/tests/test_aps_runtime_callbacks.py",
         "pytest tools/mcp/python/tests -k aps -q"
       ],
-      "blocks": ["OVR-P5-STYLE-001"]
+      "blocks": [
+        "OVR-P5-STYLE-001"
+      ],
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
+      "updated_at": "2026-06-20T21:19:25Z"
     },
     {
       "seq": 15,
       "phase": "P5",
       "wave": 6,
       "id": "OVR-P5-STYLE-001",
-      "status": "done",
+      "status": "blocked",
       "completed_date": "2026-06-02",
       "priority": "P0",
       "owner": "coder-mcp",
       "co_owner": "designer",
-      "depends_on": ["OVR-P45-SPINE-001"],
-      "goal": "status_atom() everywhere; tk→ttk migration; fix PASS-in-blue; section component",
+      "depends_on": [
+        "OVR-P45-SPINE-001"
+      ],
+      "goal": "status_atom() everywhere; tk\u2192ttk migration; fix PASS-in-blue; section component",
       "territory": "tools/mcp/art_pipeline_suite/aps_inline_feedback.py",
-      "file_lock": { "phase": "P5", "touches_app_py": false, "exclusive_files": ["aps_inline_feedback.py"] },
+      "file_lock": {
+        "phase": "P5",
+        "touches_app_py": false,
+        "exclusive_files": [
+          "aps_inline_feedback.py"
+        ]
+      },
       "verify": [
         "pytest tools/mcp/python/tests/test_aps_style_tokens.py",
         "pytest tools/mcp/python/tests -k aps -q"
       ],
-      "blocks": ["OVR-P55-PREVIEW-001"]
+      "blocks": [
+        "OVR-P55-PREVIEW-001"
+      ],
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
+      "updated_at": "2026-06-20T21:19:25Z"
     },
     {
       "seq": 16,
       "phase": "P5.5",
       "wave": 7,
       "id": "OVR-DES-P55-PREVIEW-SPEC-001",
-      "status": "done",
+      "status": "reopened",
       "signed_date": "2026-06-17",
       "witness": "src/dev/design_aps_uiux_preview_spec_v1.md",
       "priority": "P1",
       "owner": "designer",
-      "depends_on": ["OVR-P0-DESIGN-LOCK"],
+      "depends_on": [
+        "OVR-P0-DESIGN-LOCK"
+      ],
       "goal": "Preview surface contract: 4 states, fidelity labels, browser vs in-Tk story",
       "deliverable": "src/dev/design_aps_uiux_preview_spec_v1.md",
-      "blocks": ["OVR-P55-PREVIEW-001"]
+      "blocks": [
+        "OVR-P55-PREVIEW-001"
+      ],
+      "note": "INTEL-OFFICER tail cull \u00b7 stub_marker:placeholder",
+      "updated_at": "2026-06-20T21:19:34Z"
     },
     {
       "seq": 17,
       "phase": "P5.5",
       "wave": 7,
       "id": "OVR-P55-PREVIEW-001",
-      "status": "done",
+      "status": "blocked",
       "completed_date": "2026-06-02",
       "priority": "P0",
       "owner": "coder-mcp",
       "co_owner": "designer",
-      "depends_on": ["OVR-P5-STYLE-001", "OVR-DES-P55-PREVIEW-SPEC-001"],
+      "depends_on": [
+        "OVR-P5-STYLE-001",
+        "OVR-DES-P55-PREVIEW-SPEC-001"
+      ],
       "goal": "Unified preview states; no black/blank; async update-on-select; trimesh degradation",
       "territory": "tools/mcp/art_pipeline_suite/slot_preview_panel.py",
-      "file_lock": { "phase": "P5.5", "touches_app_py": false, "exclusive_files": ["slot_preview_panel.py", "atlas_panel.py"] },
+      "file_lock": {
+        "phase": "P5.5",
+        "touches_app_py": false,
+        "exclusive_files": [
+          "slot_preview_panel.py",
+          "atlas_panel.py"
+        ]
+      },
       "verify": [
         "pytest tools/mcp/python/tests/test_aps_runtime_callbacks.py",
         "pytest tools/mcp/python/tests -k aps -q"
       ],
       "needs_display": true,
-      "blocks": ["OVR-P56-ONBOARD-001"]
+      "blocks": [
+        "OVR-P56-ONBOARD-001"
+      ],
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
+      "updated_at": "2026-06-20T21:19:25Z"
     },
     {
       "seq": 18,
@@ -378,28 +531,44 @@
       "status": "done",
       "signed_date": "2026-06-17",
       "witness": "src/dev/design_aps_uiux_onboard_spec_v1.md",
-      "blocks": ["OVR-P56-ONBOARD-001"]
+      "blocks": [
+        "OVR-P56-ONBOARD-001"
+      ]
     },
     {
       "seq": 19,
       "phase": "P5.6",
       "wave": 8,
       "id": "OVR-P56-ONBOARD-001",
-      "status": "done",
+      "status": "blocked",
       "completed_date": "2026-06-02",
       "priority": "P0",
       "owner": "coder-mcp",
       "co_owner": "designer",
-      "depends_on": ["OVR-P55-PREVIEW-001", "OVR-DES-P56-ONBOARD-SPEC-001"],
+      "depends_on": [
+        "OVR-P55-PREVIEW-001",
+        "OVR-DES-P56-ONBOARD-SPEC-001"
+      ],
       "goal": "First-run greeting; friendly empty states; metadata_flow default collapsed; dismiss remembered",
       "territory": "tools/mcp/art_pipeline_suite/metadata_flow_panel.py",
-      "file_lock": { "phase": "P5.6", "touches_app_py": false, "exclusive_files": ["metadata_flow_panel.py", "state.py"] },
+      "file_lock": {
+        "phase": "P5.6",
+        "touches_app_py": false,
+        "exclusive_files": [
+          "metadata_flow_panel.py",
+          "state.py"
+        ]
+      },
       "verify": [
         "pytest tools/mcp/python/tests/test_aps_onboarding.py",
         "pytest tools/mcp/python/tests -k aps -q"
       ],
       "needs_display": true,
-      "blocks": ["OVR-P6-CLOSE-001"]
+      "blocks": [
+        "OVR-P6-CLOSE-001"
+      ],
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
+      "updated_at": "2026-06-20T21:19:25Z"
     },
     {
       "seq": 20,
@@ -411,16 +580,26 @@
       "priority": "P0",
       "owner": "coder-mcp",
       "co_owner": "designer",
-      "depends_on": ["OVR-P56-ONBOARD-001"],
+      "depends_on": [
+        "OVR-P56-ONBOARD-001"
+      ],
       "goal": "Full guard suite green; refresh aps_uiux_overhaul_close_live.json; WIT-HON",
       "witness": "debug_runs/aps_uiux_overhaul_close_live.json",
-      "file_lock": { "phase": "P6", "touches_app_py": false, "exclusive_files": ["witness refresh only"] },
-      "file_lock": { "phase": "P6", "touches_app_py": false, "exclusive_files": ["witness refresh only"] },
+      "file_lock": {
+        "phase": "P6",
+        "touches_app_py": false,
+        "exclusive_files": [
+          "witness refresh only"
+        ]
+      },
       "verify": [
         "pytest tools/mcp/python/tests -k aps -q",
         "validate-report witness_honesty debug_runs/aps_uiux_overhaul_close_live.json"
       ],
-      "blocks": ["OVR-P6-OPERATOR-EYEBALL-001", "OVR-P6-DESIGN-SIGN-001"]
+      "blocks": [
+        "OVR-P6-OPERATOR-EYEBALL-001",
+        "OVR-P6-DESIGN-SIGN-001"
+      ]
     },
     {
       "seq": 21,
@@ -433,12 +612,17 @@
       "verdict": "PASS",
       "priority": "P0",
       "owner": "operator",
-      "depends_on": ["OVR-P6-CLOSE-001"],
-      "goal": "Human eyeball: both lanes at 1280×800 + MIN 960×600 — text/layout/tabs/style vs P0 spec",
+      "depends_on": [
+        "OVR-P6-CLOSE-001"
+      ],
+      "goal": "Human eyeball: both lanes at 1280\u00d7800 + MIN 960\u00d7600 \u2014 text/layout/tabs/style vs P0 spec",
       "witness": "debug_runs/aps_uiux_operator_eyeball_live.json",
       "needs_display": true,
       "structural_pre_pass": true,
-      "forbidden_exit": ["headless_only", "lib_test_only"]
+      "forbidden_exit": [
+        "headless_only",
+        "lib_test_only"
+      ]
     },
     {
       "seq": 22,
@@ -449,7 +633,10 @@
       "completed_date": "2026-06-02",
       "priority": "P0",
       "owner": "designer",
-      "depends_on": ["OVR-P6-CLOSE-001", "OVR-P6-OPERATOR-EYEBALL-001"],
+      "depends_on": [
+        "OVR-P6-CLOSE-001",
+        "OVR-P6-OPERATOR-EYEBALL-001"
+      ],
       "goal": "Final designer sign-off on overhaul vs north star + P0 design system",
       "deliverable": "src/dev/design_aps_uiux_overhaul_signoff_v1.md",
       "witness": "debug_runs/aps_uiux_overhaul_close_live.json",
@@ -464,7 +651,9 @@
       "completed_date": "2026-06-02",
       "priority": "P1",
       "owner": "designer-mcp",
-      "depends_on": ["OVR-P6-DESIGN-SIGN-001"],
+      "depends_on": [
+        "OVR-P6-DESIGN-SIGN-001"
+      ],
       "goal": "Artist acceptance re-verdict post-overhaul (supersedes 7/10 building-only score)",
       "deliverable": "src/dev/design_aps_artist_ship_review_uiux_v1.md",
       "witness": "debug_runs/art_pipeline/dmcp_ovr_artist_accept_live.json",
@@ -475,12 +664,16 @@
       "phase": "P0",
       "wave": 0,
       "id": "ORCH-OVR-FILELOCK-001",
-      "status": "done",
+      "status": "blocked",
       "priority": "P1",
       "owner": "orchestrator-mcp",
       "goal": "Publish per-phase file-lock table in dispatch orders; one coder-mcp phase active",
       "deliverable": "tools/orchestrator/queues/aps_uiux_overhaul_dispatch_orders_v1.md",
-      "parallel_ok": ["OVR-P0-DESIGN-LOCK"]
+      "parallel_ok": [
+        "OVR-P0-DESIGN-LOCK"
+      ],
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
+      "updated_at": "2026-06-20T21:19:25Z"
     }
   ]
 }

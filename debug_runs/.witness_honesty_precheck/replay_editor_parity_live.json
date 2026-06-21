@@ -11,10 +11,15 @@
     "logging_env": {
       "ORCHESTRATOR_EXPORT_HEALTH": false,
       "PERF": false,
+      "PERF_DISK": false,
       "RUST_LOG": null,
+      "SIM_ANALYTICS": false,
+      "SIM_ANALYTICS_FRAMES": false,
+      "SIM_ANALYTICS_QUIET": false,
       "SIM_VIEW_SYNC_DEBUG": false,
       "STAGE5_READINESS_VERBOSE": false,
       "STAGE5_VERBOSE": false,
+      "STALL": false,
       "VIEWPORT_AUTHORITY_DEBUG": false
     },
     "orchestrator": {
@@ -42,6 +47,7 @@
       "debug_runs/wave_c_live.json",
       "debug_runs/ui_shell_migration_live.json",
       "debug_runs/minimap_compositor_live.json",
+      "debug_runs/sim_spectrum_analytics_live.json",
       "debug_runs/stage7_behavioral_live.json",
       "debug_runs/stage7_play_live.json",
       "debug_runs/wss_substrate_live.json",
@@ -51,14 +57,13 @@
     ],
     "relative_path": "debug_runs/replay_editor_parity_live.json",
     "schema": "debug_run_envelope_v1",
-    "source_system": "refresh_replay_editor_parity_live_witness",
-    "written_at_epoch_secs": 1781716814
+    "source_system": "replay_editor_parity",
+    "written_at_epoch_secs": 1781992672
   },
   "editor_scenario_panel": true,
   "infrastructure_isolation_json": true,
   "parity_green": true,
   "profile": "REPLAY_EDITOR_PARITY",
-  "replay_parity_001_green": true,
-  "replay_ring_len": 4,
+  "replay_ring_len": 57,
   "scenario_plugin_wired": true
 }

@@ -257,7 +257,6 @@ class CatalogPanel(ttk.Frame):
             f"topology kinds: {kinds}\n"
             f"validate: {summary.get('validate_status')} — {summary.get('validate_summary', '')}"
         )
-        self.validation.set("")
         set_inline_status(self._validation_lbl, self.validation, "", ok=None)
         self.meta_text.configure(state=tk.NORMAL)
         self.meta_text.delete("1.0", tk.END)
@@ -325,7 +324,7 @@ class CatalogPanel(ttk.Frame):
             f"GLB: {rec.glb_path}\n"
             f"Grid {grid} · dims {dim_txt} · batch {rec.index_row.get('batch_id', '—')}"
         )
-        self.validation.set("")
+        set_inline_status(self._validation_lbl, self.validation, "", ok=None)
         sidecar_json = json.dumps(rec.sidecar or {}, indent=2)
         self.meta_text.configure(state=tk.NORMAL)
         self.meta_text.delete("1.0", tk.END)

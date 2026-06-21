@@ -25,7 +25,11 @@ from rust_engine_mcp.material_profiles import (
 )
 from rust_engine_mcp.material_textures import PILOT_PROFILES, generate_profile
 
-from .aps_inline_feedback import format_material_texture_status, material_texture_status
+from .aps_inline_feedback import (
+    apply_material_card_status,
+    format_material_texture_status,
+    material_texture_status,
+)
 from .aps_preview_state import apply_preview_photo, configure_preview_label
 from .aps_paned import add_pane, horizontal_paned
 from .aps_scroll import attach_wheel_area, bind_debounced_scrollregion, canvas_yscroll
@@ -461,10 +465,6 @@ class MaterialLibraryWidget(ttk.Frame):
     def _status_label(self, status: str, profile_id: str | None = None) -> str:
         return format_material_texture_status(status, profile_id=profile_id)
 
-    def _status_foreground(self, status: str) -> str:
-        _glyph, _label, fg = material_texture_status(status)
-        return fg
-
     def _load_thumb(self, entry: MaterialProfileEntry, *, force_reload: bool = False) -> ImageTk.PhotoImage:
         if not force_reload and entry.profile_id in self._thumb_photos:
             return self._thumb_photos[entry.profile_id]
@@ -503,12 +503,8 @@ class MaterialLibraryWidget(ttk.Frame):
         status = entry.texture_status()
         top = ttk.Frame(frame)
         top.pack(fill=tk.X)
-        status_lbl = ttk.Label(
-            top,
-            text=self._status_label(status),
-            font=FONT_SMALL,
-            foreground=self._status_foreground(status),
-        )
+        status_lbl = ttk.Label(top, font=FONT_SMALL)
+        apply_material_card_status(status_lbl, status)
         status_lbl.pack(side=tk.LEFT)
         bind_aps_tooltip(status_lbl, "mat_status")
         photo = self._load_thumb(entry)

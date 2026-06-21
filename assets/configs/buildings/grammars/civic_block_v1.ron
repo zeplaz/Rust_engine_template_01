@@ -1,0 +1,75 @@
+(
+    schema_version: 1,
+    grammar_id: "civic_block_v1",
+    archetype: (
+        id: "CivicBlock",
+        usage: "civic",
+        footprint_bounds: (
+            min_width: 3,
+            max_width: 8,
+            min_depth: 3,
+            max_depth: 7,
+            min_floors: 1,
+            max_floors: 3,
+        ),
+    ),
+    massing: (
+        strategies: [
+            (id: "stepped_block", weight: 45, footprint_mode: "rect"),
+            (id: "corner_anchored", weight: 35, footprint_mode: "l_shape"),
+            (id: "row_infill", weight: 15, width_depth_ratio: 1.2, footprint_mode: "rect"),
+            (id: "plaza_setback", weight: 5, footprint_mode: "yard_interior"),
+        ],
+    ),
+    roof: (
+        default_slot: "roof_flat_parapet",
+        by_massing: [
+            (massing_id: "stepped_block", slot: "roof_flat_parapet"),
+            (massing_id: "plaza_setback", slot: "roof_terrace"),
+        ],
+    ),
+    facade: (
+        window_slot: "window_storefront_2u",
+        door_slot: "door_glass_entry",
+        wall_slot: "wall_brick_1u",
+        placement_tags: ["exterior", "civic", "commercial", "street_facing"],
+    ),
+    detail: (
+        prop_slot: "prop_clutter",
+        density: 0.28,
+        tags: ["awning", "sign_band", "planter", "lamp_post"],
+    ),
+    age: (
+        bands: [
+            (id: "new", weight: 50, variant_tags: ["clean"]),
+            (id: "weathered", weight: 40, variant_tags: ["clean", "weathered"]),
+            (id: "abandoned", weight: 10, variant_tags: ["abandoned", "damaged"]),
+        ],
+    ),
+    district_styles: [
+        (
+            id: "main_street_civic",
+            style_pack_id: "style_colonial",
+            style_tags: ["brick", "colonnade", "storefront"],
+            zoning: "commercial",
+            material_profiles: {
+                "wall_1u": "brick_red_01",
+                "door_default": "wood_plank_01",
+                "window_storefront_2u": "glass_panel_01",
+                "roof_flat_parapet": "roof_tile_01",
+            },
+        ),
+        (
+            id: "town_hall_row",
+            style_pack_id: "style_victorian",
+            style_tags: ["brick", "bay_window", "parapet"],
+            zoning: "civic",
+            material_profiles: {
+                "wall_1u": "brick_red_01",
+                "door_default": "wood_plank_01",
+                "window_storefront_2u": "glass_panel_01",
+                "roof_flat_parapet": "roof_tile_01",
+            },
+        ),
+    ],
+)

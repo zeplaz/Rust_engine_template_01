@@ -113,6 +113,7 @@ impl InfrastructureOverlaySettings {
 pub struct PowerMapOverlayPresentation {
     pub island_highlight_active: bool,
     pub island_offline_buildings: u32,
+    pub island_offline_world_positions: Vec<Vec2>,
     pub damaged_link_ids: HashSet<u64>,
     pub destroyed_link_ids: HashSet<u64>,
     pub island_unpowered_link_ids: HashSet<u64>,
@@ -393,7 +394,7 @@ pub fn compute_island_partition(
     _snap: &UtilityNetworkSnapshot,
     damaged: &HashSet<u64>,
     destroyed: &HashSet<u64>,
-) -> (HashSet<u64>, HashSet<u64>, u32) {
+) -> (HashSet<u64>, HashSet<u64>, u32, HashSet<u64>) {
     let mut adjacency: HashMap<u64, Vec<(u64, u64)>> = HashMap::new();
     for edge in &utility.power_edges {
         if destroyed.contains(&edge.link_id) {
@@ -469,7 +470,7 @@ pub fn compute_island_partition(
     }
 
     let offline_buildings = offline_nodes.len() as u32;
-    (unpowered_links, boundary_links, offline_buildings)
+    (unpowered_links, boundary_links, offline_buildings, offline_nodes)
 }
 
 pub fn sync_power_overlay_auto_on_system(
@@ -499,6 +500,7 @@ pub fn refresh_power_island_from_damage_system(
         presentation.island_boundary_link_ids.clear();
         presentation.island_highlight_active = false;
         presentation.island_offline_buildings = 0;
+        presentation.island_offline_world_positions.clear();
         return;
     }
     let Some(utility) = utility else {
@@ -512,7 +514,7 @@ pub fn refresh_power_island_from_damage_system(
         water_pipes: vec![],
     };
     let snap_body = snap.as_deref().map(|s| &s.0).unwrap_or(&empty_snap);
-    let (unpowered, boundary, offline) = compute_island_partition(
+    let (unpowered, boundary, offline, offline_nodes) = compute_island_partition(
         &utility,
         snap_body,
         &presentation.damaged_link_ids,
@@ -522,6 +524,16 @@ pub fn refresh_power_island_from_damage_system(
     presentation.island_highlight_active = !boundary.is_empty() || offline > 0;
     presentation.island_boundary_link_ids = boundary;
     presentation.island_offline_buildings = offline;
+    presentation.island_offline_world_positions = offline_nodes
+        .iter()
+        .filter_map(|id| {
+            utility
+                .nodes
+                .iter()
+                .find(|n| n.id == *id)
+                .map(|n| n.position)
+        })
+        .collect();
 }
 
 pub fn collect_infrastructure_overlay_edges_system(
@@ -592,7 +604,7 @@ pub fn collect_infrastructure_overlay_edges_system(
 pub fn collect_transport_overlay_edges_system(
     directory: Res<TransportEdgeDirectory>,
     settings: Res<InfrastructureOverlaySettings>,
-    mut overlays: ResMut<InfrastructureOverlayDrawRequests>,
+    overlays: ResMut<InfrastructureOverlayDrawRequests>,
 ) {
     collect_infrastructure_overlay_edges_system(
         directory,
@@ -629,7 +641,7 @@ pub fn power_map_overlay_witness_fields(
         ).gap_mode,
         "island_highlight_active": presentation.island_highlight_active,
         "island_offline_buildings": presentation.island_offline_buildings,
-        "minimap_power_strokes": false,
+        "minimap_power_strokes": minimap_power_strokes_wired(),
         "load_heat_enabled": false,
         "map_draw_wired": true,
     })
@@ -665,6 +677,7 @@ impl Plugin for InfrastructureOverlayPlugin {
                 Update,
                 (
                     sync_power_overlay_auto_on_system,
+                    crate::construction::sync_power_damage_to_presentation_system,
                     refresh_power_island_from_damage_system,
                     collect_infrastructure_overlay_edges_system,
                 )
@@ -676,6 +689,16 @@ impl Plugin for InfrastructureOverlayPlugin {
                 super::power_map_overlay_draw::draw_power_map_overlay_egui,
             );
     }
+}
+
+#[must_use]
+pub fn minimap_power_strokes_wired() -> bool {
+    true
+}
+
+#[must_use]
+pub fn island_offline_badges_wired() -> bool {
+    true
 }
 
 #[must_use]
@@ -711,7 +734,8 @@ pub fn power_map_overlay_green(
             .get("line_state_preview_dashed")
             .and_then(|v| v.as_bool())
             == Some(true)
-        && fields.get("minimap_power_strokes").and_then(|v| v.as_bool()) == Some(false)
+        && fields.get("minimap_power_strokes").and_then(|v| v.as_bool()) == Some(true)
+        && island_offline_badges_wired()
 }
 
 #[cfg(test)]
@@ -838,7 +862,7 @@ mod tests {
         let utility = hydrate_utility_graph_from_snapshot(&snap);
         let mut damaged = HashSet::new();
         damaged.insert(11);
-        let (unpowered, boundary, offline) =
+        let (unpowered, boundary, offline, _) =
             compute_island_partition(&utility, &snap, &damaged, &HashSet::new());
         assert!(boundary.contains(&11));
         assert!(offline >= 1 || !unpowered.is_empty());

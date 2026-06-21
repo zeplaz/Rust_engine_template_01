@@ -3,9 +3,9 @@
   "lane": "tile_batch",
   "_agent_meta": {
     "agent": "coder-mcp",
-    "updated_at": "2026-06-18T14:43:38.909258+00:00",
+    "updated_at": "2026-06-20T19:07:07.792669+00:00",
     "program": "MCP-TILE-CLOSE-001",
-    "dry_run": true
+    "dry_run": false
   },
   "gates": {
     "G0": "pass",
@@ -115,7 +115,7 @@
       "height": 64
     }
   ],
-  "real_bake": false,
+  "real_bake": true,
   "atlas_path": "C:\\dev\\github\\Rust_engine_template_01\\assets\\textures\\landscape\\staging\\landscape_lg5_expanded_v1_atlas.png",
   "meta_json": "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_landscape_expanded_v1\\atlas_meta.json",
   "batch_status": {
@@ -143,7 +143,7 @@
     ],
     "atlas_path": "C:\\dev\\github\\Rust_engine_template_01\\assets\\textures\\landscape\\staging\\landscape_lg5_expanded_v1_atlas.png",
     "meta_json": "assets/staging/tiles/tile_landscape_expanded_v1/atlas_meta.json",
-    "dry_run": true
+    "dry_run": false
   },
   "automation": "headless_only",
   "smoke_fallback_used": false,
@@ -157,5 +157,26 @@
   "variant_set_ref": null,
   "source_tier": "pilot",
   "development_tier": "pilot",
-  "ship": false
+  "ship": false,
+  "tile_atlas_index": {
+    "ok": true,
+    "entry": {
+      "atlas_id": "landscape_lg5_expanded_v1",
+      "batch_id": "tile_landscape_expanded_v1",
+      "assembly_id": "",
+      "tile_id": "landscape_lg5",
+      "atlas_png": "assets/textures/landscape/staging/landscape_lg5_expanded_v1_atlas.png",
+      "meta_json": "assets/staging/tiles/tile_landscape_expanded_v1/atlas_meta.json",
+      "development_tier": "pilot",
+      "style_pack_id": "landscape_lg5",
+      "ship_allowed": false
+    },
+    "written": "C:\\dev\\github\\Rust_engine_template_01\\assets\\configs\\landscape\\_landscape_atlas_index.ron",
+    "json_mirror": "C:\\dev\\github\\Rust_engine_template_01\\assets\\configs\\landscape\\_landscape_atlas_index.json",
+    "entry_count": 2,
+    "atlas_ids": [
+      "landscape_lg5_expanded_v1",
+      "landscape_lg5_pilot_v1"
+    ]
+  }
 }

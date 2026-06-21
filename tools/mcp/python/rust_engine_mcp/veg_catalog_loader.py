@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import re
 from pathlib import Path
 from typing import Any
@@ -103,3 +104,35 @@ def catalog_axis_summary(*, repo: Path | None = None) -> dict[str, Any]:
         "succession_rows": sum(1 for r in rows if r["axis"] == "succession"),
         "topology_rows": sum(1 for r in rows if r["axis"] == "topology_state"),
     }
+
+
+WITNESS_BURN_ROWS_REL = "debug_runs/veg_catalog_burn_rows_live.json"
+
+
+def refresh_veg_catalog_burn_rows_witness(*, repo: Path | None = None) -> dict[str, Any]:
+    """VEG-CATALOG-BURN-ROWS-001 — burn/scar/recovery rows present in variant catalog."""
+    root = repo or repo_root()
+    summary = catalog_axis_summary(repo=root)
+    burn_frame_count = int(summary.get("burn_frame_count") or 8)
+    burn_rows = int(summary.get("burn_rows") or 0)
+    scar_rows = sum(
+        1
+        for r in state_axis_rows(repo=root)
+        if r["axis"] == "topology_state" and "scar" in r["variant_key"]
+    )
+    green = burn_rows >= burn_frame_count and scar_rows >= 3
+    witness: dict[str, Any] = {
+        "gate": "VEG-CATALOG-BURN-ROWS-001",
+        "green": green,
+        "burn_frame_count": burn_frame_count,
+        "burn_rows": burn_rows,
+        "scar_rows": scar_rows,
+        "succession_rows": summary.get("succession_rows"),
+        "topology_rows": summary.get("topology_rows"),
+        "catalog_path": CATALOG_RON_REL,
+    }
+    out = root / WITNESS_BURN_ROWS_REL
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps(witness, indent=2) + "\n", encoding="utf-8")
+    witness["written"] = WITNESS_BURN_ROWS_REL
+    return witness

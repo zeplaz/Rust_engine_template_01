@@ -52,7 +52,7 @@
     "relative_path": "debug_runs/sim_hud_popup_tiers_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_sim_hud_popup_tiers_live_witness",
-    "written_at_epoch_secs": 1781757513
+    "written_at_epoch_secs": 1781978333
   },
   "gate": "COD-SIM-HUD-POPUP-MIGRATE-001",
   "green": true,
