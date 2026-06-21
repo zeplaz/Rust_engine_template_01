@@ -36,7 +36,10 @@
     "parallel_p2_open": 0,
     "parallel_p2_done": 4,
     "designer_queue_drained": false,
-    "designer_backlog_open": 15,
+    "designer_backlog_open": 9,
+    "multi_parallel_dispatch": "tools/orchestrator/queues/multi_parallel_tracks_dispatch_v1.json",
+    "multi_parallel_home": "tools/orchestrator/queues/multi_parallel_home_queues_v1.json",
+    "multi_parallel_prompts": "src/dev/multi_parallel_agent_prompts_v1.md",
     "power_grid_construction_plan": "src/dev/plan_power_grid_construction_ux_v1.md",
     "power_grid_art_plan": "src/dev/plan_power_grid_art_assets_v1.md",
     "sim_hud_phase2_plan": "src/dev/plan_sim_hud_professional_polish_v1.md",
@@ -79,7 +82,9 @@
       "signed_date": "2026-05-24",
       "status": "done",
       "witness": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/world_preview_d04_slide_sheet_spec_v1.md",
-      "unblocks": ["UI-WP-LAYOUT-002"]
+      "unblocks": [
+        "UI-WP-LAYOUT-002"
+      ]
     },
     {
       "id": "S7P-DESIGN-001",
@@ -88,13 +93,19 @@
       "signed_date": "2026-05-24",
       "status": "done",
       "witness": "docs/archive/2026-06-src-dev/plans/stage7_play_scenario_v1.md",
-      "unblocks": ["S7P-STEWARD-001"]
+      "unblocks": [
+        "S7P-STEWARD-001"
+      ]
     },
     {
       "id": "UI-OH-D2-SIGN-001",
-      "aliases": ["UI-OH-D2"],
+      "aliases": [
+        "UI-OH-D2"
+      ],
       "agent": "designer",
-      "depends_on": ["UI-OH-2A-001"],
+      "depends_on": [
+        "UI-OH-2A-001"
+      ],
       "signoff": "SIGNED",
       "signed_date": "2026-05-25",
       "status": "done",
@@ -104,7 +115,9 @@
     },
     {
       "id": "UI-OH-P4-ART-001",
-      "aliases": ["P4-ART-01"],
+      "aliases": [
+        "P4-ART-01"
+      ],
       "agent": "designer",
       "signoff": "SIGNED",
       "signed_date": "2026-05-25",
@@ -115,7 +128,9 @@
     },
     {
       "id": "DESIGN-UI-P2-SIGNOFF-001",
-      "aliases": ["DESIGN-UI-P2-SIGNOFF"],
+      "aliases": [
+        "DESIGN-UI-P2-SIGNOFF"
+      ],
       "agent": "designer",
       "signoff": "SIGNED",
       "signed_date": "2026-05-24",
@@ -124,9 +139,14 @@
     },
     {
       "id": "DESIGN-D-VFX-POST-001",
-      "aliases": ["D-VFX", "VFX-POST-REVIEW-DESIGN"],
+      "aliases": [
+        "D-VFX",
+        "VFX-POST-REVIEW-DESIGN"
+      ],
       "agent": "designer",
-      "depends_on": ["P2-FIRE-SPARK-011"],
+      "depends_on": [
+        "P2-FIRE-SPARK-011"
+      ],
       "signoff": "SIGNED",
       "signed_date": "2026-05-25",
       "status": "done",
@@ -137,7 +157,9 @@
     },
     {
       "id": "DESIGN-VFX-CAPTURE-001",
-      "aliases": ["VFX-CAPTURE-001"],
+      "aliases": [
+        "VFX-CAPTURE-001"
+      ],
       "agent": "designer",
       "signoff": "SIGNED",
       "signed_date": "2026-05-25",
@@ -153,32 +175,45 @@
       "signed_date": "2026-05-24",
       "status": "done",
       "witness": "docs/archive/2026-06-src-dev/plans/water_ocean_fixture_request_v1.md",
-      "unblocks": ["WATER-W1-OCEAN-001"]
+      "unblocks": [
+        "WATER-W1-OCEAN-001"
+      ]
     },
     {
       "id": "DESIGN-MINIMAP-M2-001",
-      "aliases": ["D-MINIMAP-M2", "MINIMAP-DESIGN-M2-001"],
+      "aliases": [
+        "D-MINIMAP-M2",
+        "MINIMAP-DESIGN-M2-001"
+      ],
       "agent": "designer",
       "signoff": "SIGNED",
       "signed_date": "2026-05-24",
       "status": "done",
       "verdict": "M2 COMPLETE",
       "witness": "docs/archive/2026-06-src-dev/plans/minimap_d_m2_signoff_v1.md",
-      "deferred": ["UI-P3-M2-TRAY-OPT"]
+      "deferred": [
+        "UI-P3-M2-TRAY-OPT"
+      ]
     },
     {
       "id": "MINIMAP-DESIGN-M3-001",
-      "aliases": ["D-MINIMAP-M3"],
+      "aliases": [
+        "D-MINIMAP-M3"
+      ],
       "agent": "designer",
       "signoff": "SIGNED",
       "signed_date": "2026-05-25",
       "status": "done",
       "witness": "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/minimap_m3_operational_overlay_spec_v1.md",
-      "unblocks": ["UI-P3-M4-001"]
+      "unblocks": [
+        "UI-P3-M4-001"
+      ]
     },
     {
       "id": "DESIGN-D-WP-REVIEW-001",
-      "aliases": ["D-WP-REVIEW"],
+      "aliases": [
+        "D-WP-REVIEW"
+      ],
       "agent": "designer",
       "signoff": "SIGNED",
       "signed_date": "2026-05-25",
@@ -189,7 +224,10 @@
     },
     {
       "id": "UX-E02-BQ128-001",
-      "aliases": ["BQ-128", "UX-E02"],
+      "aliases": [
+        "BQ-128",
+        "UX-E02"
+      ],
       "agent": "designer",
       "depends_on": [],
       "parallel": true,
@@ -197,7 +235,9 @@
       "signed_date": "2026-05-25",
       "status": "done",
       "witness": "docs/archive/2026-06-src-dev/plans/bq128_editor_path_design_note_v1.md",
-      "unblocks": ["BQ-128-APPLY-001"],
+      "unblocks": [
+        "BQ-128-APPLY-001"
+      ],
       "notes": "None (parallel)"
     },
     {
@@ -207,7 +247,9 @@
       "signed_date": "2026-05-25",
       "status": "done",
       "witness": "docs/archive/2026-06-src-dev/plans/stage7_behavioral_d_signoff_v1.md",
-      "unblocks": ["S7B-PLAN-001"]
+      "unblocks": [
+        "S7B-PLAN-001"
+      ]
     },
     {
       "id": "FIRE7-DESIGN-001",
@@ -216,7 +258,9 @@
       "signed_date": "2026-05-25",
       "status": "done",
       "witness": "docs/archive/2026-06-src-dev/plans/fire_lod_player_read_v1.md",
-      "unblocks": ["FIRE7-F7-C-001"]
+      "unblocks": [
+        "FIRE7-F7-C-001"
+      ]
     },
     {
       "id": "S7P-DESIGN-002",
@@ -225,7 +269,9 @@
       "signed_date": "2026-05-25",
       "status": "done",
       "witness": "docs/archive/2026-06-src-dev/plans/s7p_grid_overload_ux_note_v1.md",
-      "unblocks": ["S7P-GRID-UX-UI-001"]
+      "unblocks": [
+        "S7P-GRID-UX-UI-001"
+      ]
     },
     {
       "id": "DESIGN-M3-UNITS-001",
@@ -234,7 +280,9 @@
       "signed_date": "2026-05-26",
       "status": "done",
       "witness": "docs/archive/2026-06-src-dev/plans/minimap_unit_marker_visual_spec_v1.md",
-      "unblocks": ["UI-P3-M3-UNITS-001"]
+      "unblocks": [
+        "UI-P3-M3-UNITS-001"
+      ]
     },
     {
       "id": "DESIGN-M3-REPLAY-001",
@@ -243,7 +291,9 @@
       "signed_date": "2026-05-26",
       "status": "done",
       "witness": "docs/archive/2026-06-src-dev/plans/minimap_replay_scrub_visual_spec_v1.md",
-      "unblocks": ["UI-P3-M3-REPLAY-001"]
+      "unblocks": [
+        "UI-P3-M3-REPLAY-001"
+      ]
     },
     {
       "id": "DESIGN-CONSTRUCTION-MV-001",
@@ -252,7 +302,9 @@
       "signed_date": "2026-05-26",
       "status": "done",
       "witness": "docs/archive/2026-06-src-dev/plans/construction_multiview_ghost_readability_v1.md",
-      "unblocks": ["CONSTRUCTION-MV-SIM-001"],
+      "unblocks": [
+        "CONSTRUCTION-MV-SIM-001"
+      ],
       "notes": "Readability contract; sim witness already green"
     },
     {
@@ -263,7 +315,9 @@
       "status": "done",
       "verdict": "PASS (qualified)",
       "witness": "docs/archive/2026-06-src-dev/plans/vfx_visual_acceptance_record_v1.md",
-      "unblocks": ["VFX-VISUAL-SIGNOFF-001"]
+      "unblocks": [
+        "VFX-VISUAL-SIGNOFF-001"
+      ]
     },
     {
       "id": "DESIGN-WP-VISUAL-ACCEPT-001",
@@ -273,7 +327,9 @@
       "status": "done",
       "verdict": "PASS (qualified)",
       "witness": "docs/archive/2026-06-src-dev/plans/world_preview_visual_acceptance_record_v1.md",
-      "unblocks": ["UI-WP-VISUAL-001"]
+      "unblocks": [
+        "UI-WP-VISUAL-001"
+      ]
     },
     {
       "id": "DESIGN-S7P-TOAST-PASS-001",
@@ -283,7 +339,9 @@
       "status": "done",
       "verdict": "PASS (qualified)",
       "witness": "docs/archive/2026-06-src-dev/plans/s7p_grid_overload_ux_pass_record_v1.md",
-      "unblocks": ["S7P-GRID-UX-UI-001"],
+      "unblocks": [
+        "S7P-GRID-UX-UI-001"
+      ],
       "notes": "s7p_grid_ux_001 green on industrial_activation_live.json"
     },
     {
@@ -303,7 +361,9 @@
       "status": "done",
       "verdict": "PASS (qualified)",
       "witness": "docs/archive/2026-06-src-dev/plans/bq128_apply_ghost_ux_review_v1.md",
-      "unblocks": ["UX-E02-APPLY-POLISH-001"]
+      "unblocks": [
+        "UX-E02-APPLY-POLISH-001"
+      ]
     },
     {
       "id": "DESIGN-IND-E03-OPS-001",
@@ -313,7 +373,9 @@
       "status": "done",
       "verdict": "PASS (qualified)",
       "witness": "docs/archive/2026-06-src-dev/plans/ind_e03_ops_strip_polish_v1.md",
-      "unblocks": ["IND-E03-SIM-UX-001"]
+      "unblocks": [
+        "IND-E03-SIM-UX-001"
+      ]
     },
     {
       "id": "DESIGN-VFX-CAPTURE-ROUND-002",
@@ -323,7 +385,9 @@
       "status": "done",
       "verdict": "PASS (qualified)",
       "witness": "assets/vfx/reference/review_captures/vfx_capture_status_wave4.md",
-      "aliases": ["VX-P0-04"],
+      "aliases": [
+        "VX-P0-04"
+      ],
       "parent": "DESIGN-VFX-CAPTURE-001"
     },
     {
@@ -335,7 +399,9 @@
       "verdict": "PASS",
       "witness": "docs/archive/2026-06-src-dev/plans/construction_r4_corridor_map_ux_v1.md",
       "witness_json": "debug_runs/construction_stage_live.json",
-      "unblocks": ["R4-CORRIDOR-001"]
+      "unblocks": [
+        "R4-CORRIDOR-001"
+      ]
     },
     {
       "id": "DESIGN-R4-TRAY-001",
@@ -345,7 +411,9 @@
       "status": "done",
       "verdict": "DEFER",
       "witness": "docs/archive/2026-06-src-dev/plans/construction_r4_tray_legend_v1.md",
-      "unblocks": ["R4-TRAY-001"]
+      "unblocks": [
+        "R4-TRAY-001"
+      ]
     },
     {
       "id": "DESIGN-R4-MV-PASS-001",
@@ -355,7 +423,9 @@
       "status": "done",
       "verdict": "DEFER",
       "witness": "docs/archive/2026-06-src-dev/plans/construction_r4_mv_pass_record_v1.md",
-      "unblocks": ["R4-MV-GHOST-001"]
+      "unblocks": [
+        "R4-MV-GHOST-001"
+      ]
     },
     {
       "id": "DESIGN-M3-DEPTH-001",
@@ -365,7 +435,9 @@
       "status": "done",
       "verdict": "DEFER",
       "witness": "docs/archive/2026-06-src-dev/plans/minimap_m3_unit_aggregation_visual_v1.md",
-      "unblocks": ["UI-P3-M3-DEPTH-001"]
+      "unblocks": [
+        "UI-P3-M3-DEPTH-001"
+      ]
     },
     {
       "id": "DESIGN-REPLAY-LIVE-001",
@@ -375,7 +447,9 @@
       "status": "done",
       "verdict": "DEFER",
       "witness": "docs/archive/2026-06-src-dev/plans/minimap_replay_live_ring_visual_v1.md",
-      "unblocks": ["REPLAY-LIVE-RING-001"]
+      "unblocks": [
+        "REPLAY-LIVE-RING-001"
+      ]
     },
     {
       "id": "DESIGN-M3-TRAY-001",
@@ -385,7 +459,9 @@
       "status": "done",
       "verdict": "PASS (qualified)",
       "witness": "docs/archive/2026-06-src-dev/plans/minimap_m2_tray_overlay_bridge_v1.md",
-      "unblocks": ["UI-P3-M2-TRAY-OPT"]
+      "unblocks": [
+        "UI-P3-M2-TRAY-OPT"
+      ]
     },
     {
       "id": "DESIGN-F7-STREAM-001",
@@ -396,7 +472,9 @@
       "verdict": "PASS",
       "witness": "docs/archive/2026-06-src-dev/plans/fire_streaming_neighbor_wake_visual_v1.md",
       "witness_json": "debug_runs/fire_streaming_live.json",
-      "unblocks": ["FIRE7-STREAM-NEIGHBOR-WAKE-001"]
+      "unblocks": [
+        "FIRE7-STREAM-NEIGHBOR-WAKE-001"
+      ]
     },
     {
       "id": "DESIGN-F7-DEBUG-PASS-001",
@@ -406,7 +484,9 @@
       "status": "done",
       "verdict": "DEFER",
       "witness": "docs/archive/2026-06-src-dev/plans/fire7_f7_b_debug_pass_record_v1.md",
-      "unblocks": ["FIRE7-F7-B-DEBUG-UI-001"]
+      "unblocks": [
+        "FIRE7-F7-B-DEBUG-UI-001"
+      ]
     },
     {
       "id": "DESIGN-VT-SPREAD-001",
@@ -416,7 +496,9 @@
       "status": "done",
       "verdict": "PASS (qualified)",
       "witness": "docs/archive/2026-06-src-dev/plans/fire_vt_spread_visual_acceptance_v1.md",
-      "unblocks": ["STAGE5-VT-DEEP-001"]
+      "unblocks": [
+        "STAGE5-VT-DEEP-001"
+      ]
     },
     {
       "id": "WSS-DESIGN-GATE-001",
@@ -432,7 +514,11 @@
         "docs/archive/2026-06-src-dev/plans/wss_substrate_diagnostics_copy_v1.md",
         "docs/archive/2026-06-src-dev/plans/wss_substrate_debug_overlay_names_v1.md"
       ],
-      "unblocks": ["WSS-CHUNK-SLAB-001", "WSS-ATMOS-CLIPMAP-001", "WSS-HYDRO-RUNTIME-001"]
+      "unblocks": [
+        "WSS-CHUNK-SLAB-001",
+        "WSS-ATMOS-CLIPMAP-001",
+        "WSS-HYDRO-RUNTIME-001"
+      ]
     },
     {
       "id": "DESIGN-HYDRO-PLAYER-READ-001",
@@ -442,7 +528,10 @@
       "status": "done",
       "verdict": "PASS",
       "witness": "docs/archive/2026-06-src-dev/plans/wss_hydrology_player_read_v1.md",
-      "unblocks": ["WSS-HYDRO-RUNTIME-001", "B-H1"]
+      "unblocks": [
+        "WSS-HYDRO-RUNTIME-001",
+        "B-H1"
+      ]
     },
     {
       "id": "DESIGN-UI-P6-MULTIVIEW-001",
@@ -452,7 +541,9 @@
       "status": "done",
       "verdict": "PASS (qualified)",
       "witness": "docs/archive/2026-06-src-dev/plans/ui_phase6_multiview_readability_v1.md",
-      "unblocks": ["UI-W3-P6-001"]
+      "unblocks": [
+        "UI-W3-P6-001"
+      ]
     },
     {
       "id": "DESIGN-VFX-CAPTURE-WAVE5-001",
@@ -462,7 +553,9 @@
       "status": "done",
       "verdict": "PASS (qualified)",
       "witness": "assets/vfx/reference/review_captures/vfx_capture_status_wave5.md",
-      "unblocks": ["VFX-CAPTURE-WAVE5"]
+      "unblocks": [
+        "VFX-CAPTURE-WAVE5"
+      ]
     },
     {
       "id": "DESIGN-PARAM-STAGING-POLISH-002",
@@ -472,7 +565,10 @@
       "status": "done",
       "verdict": "PASS",
       "witness": "docs/archive/2026-06-src-dev/plans/construction_parametric_staging_ux_v2.md",
-      "unblocks": ["CONSTRUCTION-PARAM-CODER-004", "B-C4"]
+      "unblocks": [
+        "CONSTRUCTION-PARAM-CODER-004",
+        "B-C4"
+      ]
     },
     {
       "id": "DESIGN-PARAM-SCALE-HUD-001",
@@ -482,7 +578,10 @@
       "status": "done",
       "verdict": "PASS",
       "witness": "docs/archive/2026-06-src-dev/plans/construction_parametric_scale_hud_v1.md",
-      "unblocks": ["CONSTRUCTION-PARAM-CODER-006", "B-C5"]
+      "unblocks": [
+        "CONSTRUCTION-PARAM-CODER-006",
+        "B-C5"
+      ]
     },
     {
       "id": "DESIGN-CONTAMINATION-001",
@@ -492,7 +591,10 @@
       "status": "done",
       "verdict": "PASS",
       "witness": "docs/archive/2026-06-src-dev/plans/wss_contamination_visual_language_v1.md",
-      "unblocks": ["A-W2", "WSS-ATMOS-CLIPMAP-001"]
+      "unblocks": [
+        "A-W2",
+        "WSS-ATMOS-CLIPMAP-001"
+      ]
     },
     {
       "id": "DESIGN-SMOKE-LAYER-AB-001",
@@ -502,7 +604,10 @@
       "status": "done",
       "verdict": "PASS",
       "witness": "docs/archive/2026-06-src-dev/plans/wss_smoke_layer_a_b_visual_v1.md",
-      "unblocks": ["A-V3", "WSS-SMOKE-BRIDGE-001"]
+      "unblocks": [
+        "A-V3",
+        "WSS-SMOKE-BRIDGE-001"
+      ]
     },
     {
       "id": "DESIGN-THEME-COLLAGE-001",
@@ -512,7 +617,9 @@
       "status": "done",
       "verdict": "PASS (qualified)",
       "witness": "docs/archive/2026-06-src-dev/plans/ui_theme_collage_delta_v1.md",
-      "unblocks": ["PLAN-UI-THEME-MERGE-001"]
+      "unblocks": [
+        "PLAN-UI-THEME-MERGE-001"
+      ]
     },
     {
       "id": "DESIGN-WP-QUALIFIED-UPGRADE-001",
@@ -522,7 +629,9 @@
       "status": "done",
       "verdict": "PASS (qualified)",
       "witness": "docs/archive/2026-06-src-dev/plans/world_preview_visual_upgrade_checklist_v1.md",
-      "unblocks": ["UI-WP-VISUAL-001"]
+      "unblocks": [
+        "UI-WP-VISUAL-001"
+      ]
     },
     {
       "id": "DESIGN-OPERATOR-VISUAL-BUNDLE-001",
@@ -532,7 +641,9 @@
       "status": "done",
       "verdict": "PASS (qualified)",
       "witness": "docs/archive/2026-06-src-dev/plans/operator_visual_signoff_design_checklist_v1.md",
-      "unblocks": ["PLAN-OPERATOR-VISUAL-BUNDLE-001"]
+      "unblocks": [
+        "PLAN-OPERATOR-VISUAL-BUNDLE-001"
+      ]
     },
     {
       "id": "DESIGN-ATMOS-CLIPMAP-READ-001",
@@ -542,7 +653,10 @@
       "status": "done",
       "verdict": "PASS",
       "witness": "docs/archive/2026-06-src-dev/plans/wss_contamination_visual_language_v1.md",
-      "unblocks": ["A-W2", "WSS-ATMOS-CLIPMAP-001"],
+      "unblocks": [
+        "A-W2",
+        "WSS-ATMOS-CLIPMAP-001"
+      ],
       "notes": "Readability coverage accepted via contamination visual language pass."
     },
     {
@@ -554,7 +668,10 @@
       "verdict": "PASS",
       "witness": "docs/archive/2026-06-src-dev/plans/fire_f2_extract_readability_pass_001.md",
       "witness_json": "debug_runs/stage5_full_app_live.json",
-      "unblocks": ["FIRE-F2-EXTRACT-001", "A-V2"],
+      "unblocks": [
+        "FIRE-F2-EXTRACT-001",
+        "A-V2"
+      ],
       "notes": "fire_instance_buffer_rows > 0 and f2_extract_witness.green"
     },
     {
@@ -566,7 +683,11 @@
       "verdict": "PASS",
       "witness": "docs/archive/2026-06-src-dev/plans/wss_diagnostics_pass_002.md",
       "witness_json": "debug_runs/wss_substrate_live.json",
-      "unblocks": ["WSS-CHUNK-SLAB-001", "A-W1", "A-W2"],
+      "unblocks": [
+        "WSS-CHUNK-SLAB-001",
+        "A-W1",
+        "A-W2"
+      ],
       "notes": "Overlay naming verified against live substrate witness fields"
     },
     {
@@ -577,7 +698,10 @@
       "status": "done",
       "verdict": "PASS (qualified)",
       "witness": "docs/archive/2026-06-src-dev/plans/wss_dual_write_transition_ux_001.md",
-      "unblocks": ["PLAN-WSS-SLAB-PR-2", "WSS-SLAB-PR-2"],
+      "unblocks": [
+        "PLAN-WSS-SLAB-PR-2",
+        "WSS-SLAB-PR-2"
+      ],
       "notes": "PR-2 transition copy approved; waits on dual_write_shim keys"
     },
     {
@@ -589,7 +713,10 @@
       "verdict": "PASS",
       "witness": "docs/archive/2026-06-src-dev/plans/construction_r4_mv_post_param_001.md",
       "witness_json": "debug_runs/construction_stage_live.json",
-      "unblocks": ["R4-MV-GHOST-001", "B-C3"],
+      "unblocks": [
+        "R4-MV-GHOST-001",
+        "B-C3"
+      ],
       "notes": "Parametric rollup green and r4_mv_ghost green"
     },
     {
@@ -601,8 +728,14 @@
       "verdict": "PASS",
       "witness": "docs/archive/2026-06-src-dev/plans/minimap_replay_pass_002_v1.md",
       "witness_json": "debug_runs/minimap_compositor_live.json",
-      "pass_pointers": ["/replay_scrub_enabled", "/ui_p3_m3_replay_001_green"],
-      "unblocks": ["REPLAY-RING-LIVE-001", "M3-UNITS-DEPTH-001"],
+      "pass_pointers": [
+        "/replay_scrub_enabled",
+        "/ui_p3_m3_replay_001_green"
+      ],
+      "unblocks": [
+        "REPLAY-RING-LIVE-001",
+        "M3-UNITS-DEPTH-001"
+      ],
       "notes": "replay_ring_len>=2 on replay_editor_parity_live.json"
     },
     {
@@ -613,7 +746,10 @@
       "status": "done",
       "verdict": "PASS (qualified)",
       "witness": "docs/archive/2026-06-src-dev/plans/hanabi_event_vfx_style_bounds_v1.md",
-      "unblocks": ["H-A", "W4-C-event-embellishment"],
+      "unblocks": [
+        "H-A",
+        "W4-C-event-embellishment"
+      ],
       "notes": "Superseded by DESIGN-HANABI-SPIKE-REVIEW-001 H-A2 clearance"
     },
     {
@@ -626,7 +762,11 @@
       "witness": "docs/archive/2026-06-src-dev/plans/hanabi_spike_review_h_a2_gate_v1.md",
       "spike_report": "experiments/hanabi_validation/report_v1.md",
       "h_a2_gate": "CLEARED (qualified)",
-      "unblocks": ["H-A2", "hanabi_l3", "PLAN-HANABI-ADOPTION-001"],
+      "unblocks": [
+        "H-A2",
+        "hanabi_l3",
+        "PLAN-HANABI-ADOPTION-001"
+      ],
       "notes": "All ACCEPT presets within bounds; main plugin still forbidden on default binary"
     },
     {
@@ -638,8 +778,14 @@
       "verdict": "PASS (qualified)",
       "witness": "assets/vfx/reference/review_captures/vfx_capture_status_wave6.md",
       "witness_json": "debug_runs/stage5_full_app_live.json",
-      "pass_pointers": ["/tactical_vfx_witness/all_green", "/f2_extract_witness/green"],
-      "unblocks": ["VX-P0-04", "VFX-CAPTURE-WAVE6"],
+      "pass_pointers": [
+        "/tactical_vfx_witness/all_green",
+        "/f2_extract_witness/green"
+      ],
+      "unblocks": [
+        "VX-P0-04",
+        "VFX-CAPTURE-WAVE6"
+      ],
       "parent": "DESIGN-VFX-CAPTURE-WAVE5-001"
     },
     {
@@ -650,7 +796,10 @@
       "status": "done",
       "verdict": "PASS",
       "witness": "docs/archive/2026-06-src-dev/plans/project_identity_guard_rail_v1.md",
-      "unblocks": ["wssr_hybrid_assessment_review", "steward_identity_checkpoint"],
+      "unblocks": [
+        "wssr_hybrid_assessment_review",
+        "steward_identity_checkpoint"
+      ],
       "notes": "ACCEPT/TUNE/REJECT rubric for parallel VFX/WSS reviews"
     },
     {
@@ -673,7 +822,11 @@
         "/ecs_retire_smoke_prod_green",
         "/ecs_retire_smoke_cutover_complete"
       ],
-      "unblocks": ["WSS-SLAB-PR-5", "WSS-PR5-SMOKE-PROD-001", "diagnostics_ui WSS section"],
+      "unblocks": [
+        "WSS-SLAB-PR-5",
+        "WSS-PR5-SMOKE-PROD-001",
+        "diagnostics_ui WSS section"
+      ],
       "notes": "Absorption 2026-06-02: smoke prod closed; full PASS"
     },
     {
@@ -684,7 +837,11 @@
       "status": "done",
       "verdict": "PASS",
       "witness": "docs/archive/2026-06-src-dev/plans/visual_perf_spike_degrade_ux_v1.md",
-      "unblocks": ["PERF-P2-TILE-RASTER-BUDGET-001", "PERF-P2-FIRE-EXTRACT-CADENCE-001", "PLAN-VISUAL-PERF-EXEC-001"],
+      "unblocks": [
+        "PERF-P2-TILE-RASTER-BUDGET-001",
+        "PERF-P2-FIRE-EXTRACT-CADENCE-001",
+        "PLAN-VISUAL-PERF-EXEC-001"
+      ],
       "notes": "UxFrameSpikeGuard player vs dev suppression matrix"
     },
     {
@@ -696,7 +853,11 @@
       "verdict": "PASS (qualified)",
       "witness": "docs/archive/2026-06-src-dev/plans/play_scenario_acceptance_runbook_v1.md",
       "planner_pair": "PLAN-G-PLAY-001",
-      "unblocks": ["G-PLAY-001-BLOCKERS", "G-PLAY-01", "OPS-PLAY-001"],
+      "unblocks": [
+        "G-PLAY-001-BLOCKERS",
+        "G-PLAY-01",
+        "OPS-PLAY-001"
+      ],
       "notes": "Operator execution pending for full G-PLAY-01 close"
     },
     {
@@ -708,7 +869,9 @@
       "verdict": "PASS",
       "witness": "docs/archive/2026-06-src-dev/plans/wss_hydro_read_feature_pass_001.md",
       "baseline": "docs/archive/2026-06-src-dev/plans/wss_hydrology_player_read_v1.md",
-      "unblocks": ["FEAT-WSS-HYDRO-READ-001"]
+      "unblocks": [
+        "FEAT-WSS-HYDRO-READ-001"
+      ]
     },
     {
       "id": "DESIGN-PERF-DEGRADE-VALIDATE-001",
@@ -719,7 +882,10 @@
       "verdict": "PASS (qualified)",
       "witness": "docs/archive/2026-06-src-dev/plans/visual_perf_spike_degrade_validate_001_v1.md",
       "blocked_by": "OPS-PLAY-001",
-      "unblocks": ["PERF-P2-TILE-RASTER-BUDGET-001", "PERF-P2-FIRE-EXTRACT-CADENCE-001"]
+      "unblocks": [
+        "PERF-P2-TILE-RASTER-BUDGET-001",
+        "PERF-P2-FIRE-EXTRACT-CADENCE-001"
+      ]
     },
     {
       "id": "DESIGN-R4-UX-001",
@@ -729,7 +895,9 @@
       "status": "done",
       "verdict": "PASS",
       "witness": "docs/archive/2026-06-src-dev/plans/construction_r4_product_slice_ux_v1.md",
-      "unblocks": ["CONSTRUCTION-R4-PRODUCT-001"]
+      "unblocks": [
+        "CONSTRUCTION-R4-PRODUCT-001"
+      ]
     },
     {
       "id": "DESIGN-PROC-MODULE-KIT-001",
@@ -739,8 +907,12 @@
       "status": "done",
       "verdict": "PASS",
       "witness": "docs/archive/2026-06-src-dev/plans/design_procedural_module_kit_v1.md",
-      "unblocks": ["PROC-PG-2-001"],
-      "parallel_with": ["PROC-PG-1-001"],
+      "unblocks": [
+        "PROC-PG-2-001"
+      ],
+      "parallel_with": [
+        "PROC-PG-1-001"
+      ],
       "notes": "50 modules, 7 style packs, W/D/C grammar; greybox OK for PG-1"
     },
     {
@@ -751,8 +923,10 @@
       "status": "done",
       "verdict": "PASS",
       "witness": "docs/archive/2026-06-src-dev/plans/design_organic_growth_ux_v1.md",
-      "unblocks": ["PROC-OG-3-001"],
-      "notes": "Proposals dashed; never instant zone→built"
+      "unblocks": [
+        "PROC-OG-3-001"
+      ],
+      "notes": "Proposals dashed; never instant zone\u2192built"
     },
     {
       "id": "DESIGN-CONSTRUCTION-STAGE-READ-001",
@@ -762,8 +936,10 @@
       "status": "done",
       "verdict": "PASS",
       "witness": "docs/archive/2026-06-src-dev/plans/design_construction_site_stage_read_v1.md",
-      "unblocks": ["CON-P2"],
-      "notes": "Clearing→Operational HUD + minimap icons"
+      "unblocks": [
+        "CON-P2"
+      ],
+      "notes": "Clearing\u2192Operational HUD + minimap icons"
     },
     {
       "id": "DESIGN-CONSTRUCTION-SCALING-READ-001",
@@ -773,8 +949,15 @@
       "status": "done",
       "verdict": "PASS",
       "witness": "docs/archive/2026-06-src-dev/plans/design_construction_scaling_read_v1.md",
-      "unblocks": ["CON-P3-S1", "CON-P3-S2", "CON-P3-S3", "CON-P3-S4", "CON-P3-S5", "CON-P3-S6"],
-      "notes": "S1–S6 designer half + overlap messaging"
+      "unblocks": [
+        "CON-P3-S1",
+        "CON-P3-S2",
+        "CON-P3-S3",
+        "CON-P3-S4",
+        "CON-P3-S5",
+        "CON-P3-S6"
+      ],
+      "notes": "S1\u2013S6 designer half + overlap messaging"
     },
     {
       "id": "DESIGN-INFRA-NETWORK-OVERLAY-001",
@@ -784,7 +967,10 @@
       "status": "done",
       "verdict": "PASS",
       "witness": "docs/archive/2026-06-src-dev/plans/design_infra_network_overlay_v1.md",
-      "unblocks": ["INFRA-E6-003", "INFRA-E6-004"]
+      "unblocks": [
+        "INFRA-E6-003",
+        "INFRA-E6-004"
+      ]
     },
     {
       "id": "DESIGN-SETTLEMENT-HIERARCHY-READ-001",
@@ -794,14 +980,17 @@
       "status": "done",
       "verdict": "PASS",
       "witness": "docs/archive/2026-06-src-dev/plans/design_settlement_hierarchy_read_v1.md",
-      "unblocks": ["PROC-OG-4-001", "PLAN-SETTLEMENT-HIERARCHY-005"],
+      "unblocks": [
+        "PROC-OG-4-001",
+        "PLAN-SETTLEMENT-HIERARCHY-005"
+      ],
       "notes": "Town/District/Block labels; district picker vs zone tool"
     }
   ],
   "optional_designer": [
     {
       "id": "VX-P0-04",
-      "notes": "VFX ACCEPTED PNG round — harness green; see vfx_triage_v1.md"
+      "notes": "VFX ACCEPTED PNG round \u2014 harness green; see vfx_triage_v1.md"
     },
     {
       "id": "UX-E03",
@@ -873,7 +1062,10 @@
       "agent": "designer",
       "plan": "src/dev/plan_designer_work_202606_v1.md",
       "witness": "src/dev/design_aps_design_system_v11_delta_v1.md",
-      "unblocks": ["OVR-P5-TAIL-001", "DES-APS-SMOOTHNESS-001"]
+      "unblocks": [
+        "OVR-P5-TAIL-001",
+        "DES-APS-SMOOTHNESS-001"
+      ]
     },
     {
       "id": "DES-APS-SMOOTHNESS-001",
@@ -883,7 +1075,9 @@
       "agent": "designer",
       "plan": "src/dev/plan_designer_work_202606_v1.md",
       "witness": "src/dev/design_aps_smoothness_charter_v1.md",
-      "depends_on": ["DES-APS-DS-V11-001"]
+      "depends_on": [
+        "DES-APS-DS-V11-001"
+      ]
     },
     {
       "id": "DES-APS-GRAM-TIER-004",
@@ -893,7 +1087,9 @@
       "agent": "designer",
       "plan": "src/dev/plan_designer_work_202606_v1.md",
       "witness": "src/dev/design_aps_grammar_tier_exposure_v1.md#10",
-      "unblocks": ["APS-GRAM-TIER-004"]
+      "unblocks": [
+        "APS-GRAM-TIER-004"
+      ]
     },
     {
       "id": "DES-APS-PREVIEW-V2-001",
@@ -903,7 +1099,9 @@
       "agent": "designer",
       "plan": "src/dev/plan_designer_work_202606_v1.md",
       "witness": "src/dev/design_aps_preview_v2_spec_v1.md",
-      "unblocks": ["OVR-P55-PREVIEW-002"]
+      "unblocks": [
+        "OVR-P55-PREVIEW-002"
+      ]
     },
     {
       "id": "DES-STYLE-INDUSTRIAL-WEST-001",
@@ -913,7 +1111,10 @@
       "agent": "designer",
       "plan": "src/dev/plan_designer_work_202606_v1.md",
       "witness": "src/dev/design_style_industrial_west_v1.md",
-      "unblocks": ["DMCP-MODULE-KIT002-001", "DES-GRAM-ARCHETYPE-FACTORY-001"]
+      "unblocks": [
+        "DMCP-MODULE-KIT002-001",
+        "DES-GRAM-ARCHETYPE-FACTORY-001"
+      ]
     },
     {
       "id": "DES-APS-MAT-BROWSE-001",
@@ -923,7 +1124,9 @@
       "agent": "designer",
       "plan": "src/dev/plan_designer_work_202606_v1.md",
       "witness": "src/dev/design_aps_mat_browse_v1.md",
-      "unblocks": ["APS-MAT-002"]
+      "unblocks": [
+        "APS-MAT-002"
+      ]
     },
     {
       "id": "DES-MINIMAP-VEG-LEGEND-002",
@@ -943,7 +1146,10 @@
       "agent": "designer",
       "plan": "src/dev/plan_industrial_facility_grammar_suite_v1.md",
       "witness": "src/dev/design_industrial_process_research_v1.md",
-      "unblocks": ["DES-FACILITY-BINDING-001", "DMCP-PILOT-CONCRETE-SITE-001"]
+      "unblocks": [
+        "DES-FACILITY-BINDING-001",
+        "DMCP-PILOT-CONCRETE-SITE-001"
+      ]
     },
     {
       "id": "DES-FACILITY-SITE-ZONE-001",
@@ -953,7 +1159,10 @@
       "agent": "designer",
       "plan": "src/dev/plan_industrial_facility_grammar_suite_v1.md",
       "witness": "src/dev/design_facility_site_zone_taxonomy_v1.md",
-      "unblocks": ["CMCP-SITE-ZONE-VALIDATE-001", "DES-APS-SITE-PREVIEW-001"]
+      "unblocks": [
+        "CMCP-SITE-ZONE-VALIDATE-001",
+        "DES-APS-SITE-PREVIEW-001"
+      ]
     },
     {
       "id": "DES-POWER-TIER-001",
@@ -963,7 +1172,10 @@
       "agent": "designer",
       "plan": "src/dev/plan_industrial_facility_grammar_suite_v1.md",
       "witness": "src/dev/design_power_tier_bands_v1.md",
-      "unblocks": ["DES-APS-FACILITY-NEEDS-001", "CMCP-GRAM-SWEEP-PROCESS-001"]
+      "unblocks": [
+        "DES-APS-FACILITY-NEEDS-001",
+        "CMCP-GRAM-SWEEP-PROCESS-001"
+      ]
     },
     {
       "id": "DES-APS-FACILITY-NEEDS-001",
@@ -973,7 +1185,10 @@
       "agent": "designer",
       "plan": "src/dev/plan_industrial_facility_grammar_suite_v1.md",
       "witness": "src/dev/design_aps_facility_needs_v1.md",
-      "depends_on": ["DES-INDUSTRIAL-RESEARCH-001", "DES-POWER-TIER-001"],
+      "depends_on": [
+        "DES-INDUSTRIAL-RESEARCH-001",
+        "DES-POWER-TIER-001"
+      ],
       "handoff": "CMCP-FACILITY-NEEDS-PANEL-001"
     },
     {
@@ -984,7 +1199,9 @@
       "agent": "designer",
       "plan": "src/dev/plan_industrial_facility_grammar_suite_v1.md",
       "witness": "src/dev/design_aps_site_preview_v1.md",
-      "depends_on": ["DES-FACILITY-SITE-ZONE-001"],
+      "depends_on": [
+        "DES-FACILITY-SITE-ZONE-001"
+      ],
       "handoff": "CMCP-SITE-PREVIEW-PANEL-001"
     },
     {
@@ -995,7 +1212,10 @@
       "agent": "designer",
       "plan": "src/dev/plan_sim_hud_professional_polish_v1.md",
       "witness": "src/dev/design_sim_hud_cohesion_charter_v1.md",
-      "unblocks": ["DES-SIM-HUD-BUILD-PICKER-001", "COD-SIM-HUD-EGUI-THEME-001"]
+      "unblocks": [
+        "DES-SIM-HUD-BUILD-PICKER-001",
+        "COD-SIM-HUD-EGUI-THEME-001"
+      ]
     },
     {
       "id": "DES-SIM-HUD-BUILD-PICKER-001",
@@ -1005,7 +1225,9 @@
       "agent": "designer",
       "plan": "src/dev/plan_sim_hud_professional_polish_v1.md",
       "witness": "src/dev/design_sim_hud_build_picker_v1.md",
-      "depends_on": ["DES-SIM-HUD-COHESION-001"],
+      "depends_on": [
+        "DES-SIM-HUD-COHESION-001"
+      ],
       "handoff": "COD-SIM-HUD-BUILD-PICKER-001"
     },
     {
@@ -1035,7 +1257,10 @@
       "agent": "designer",
       "plan": "src/dev/plan_sim_hud_professional_polish_v1.md",
       "witness": "src/dev/design_sim_hud_popup_tiers_v1.md",
-      "depends_on": ["DES-SIM-HUD-TRAY-BUILD-001", "DES-SIM-HUD-BUILD-PICKER-001"],
+      "depends_on": [
+        "DES-SIM-HUD-TRAY-BUILD-001",
+        "DES-SIM-HUD-BUILD-PICKER-001"
+      ],
       "handoff": "COD-SIM-HUD-POPUP-MIGRATE-001"
     },
     {
@@ -1046,7 +1271,9 @@
       "agent": "designer",
       "plan": "src/dev/plan_power_grid_construction_ux_v1.md",
       "witness": "src/dev/design_power_line_tool_sheet_v1.md",
-      "unblocks": ["COD-POWER-LINE-DRAW-001"]
+      "unblocks": [
+        "COD-POWER-LINE-DRAW-001"
+      ]
     },
     {
       "id": "DES-POWER-ROUTING-MODE-001",
@@ -1056,18 +1283,27 @@
       "agent": "designer",
       "plan": "src/dev/plan_power_grid_construction_ux_v1.md",
       "witness": "src/dev/design_power_routing_mode_v1.md",
-      "depends_on": ["DES-POWER-LINE-TOOL-SHEET-001"],
-      "unblocks": ["COD-POWER-ORTHOGONAL-ROUTER-001", "COD-POWER-SPLINE-ROUTER-001"]
+      "depends_on": [
+        "DES-POWER-LINE-TOOL-SHEET-001"
+      ],
+      "unblocks": [
+        "COD-POWER-ORTHOGONAL-ROUTER-001",
+        "COD-POWER-SPLINE-ROUTER-001"
+      ]
     },
     {
       "id": "DES-POWER-VOLTAGE-PICKER-001",
-      "status": "done",
+      "status": "reopened",
       "priority": 0,
       "program": "power_grid_construction",
       "agent": "designer",
       "plan": "src/dev/plan_power_grid_construction_ux_v1.md",
       "witness": "src/dev/design_power_voltage_picker_v1.md",
-      "unblocks": ["COD-POWER-LINE-DRAW-001"]
+      "unblocks": [
+        "COD-POWER-LINE-DRAW-001"
+      ],
+      "note": "INTEL-OFFICER tail cull \u00b7 stub_marker:stub",
+      "updated_at": "2026-06-20T21:19:34Z"
     },
     {
       "id": "DES-POWER-MAP-OVERLAY-002",
@@ -1077,7 +1313,27 @@
       "agent": "designer",
       "plan": "src/dev/plan_power_grid_construction_ux_v1.md",
       "witness": "src/dev/design_power_map_overlay_v1.md",
-      "unblocks": ["COD-POWER-OVERLAY-RENDER-001", "COD-POWER-ISLAND-HIGHLIGHT-001"]
+      "unblocks": [
+        "COD-POWER-OVERLAY-RENDER-001",
+        "COD-POWER-ISLAND-HIGHLIGHT-001"
+      ]
+    },
+    {
+      "id": "DES-POWER-NODE-HOVER-001",
+      "status": "reopened",
+      "priority": 1,
+      "program": "power_grid_construction",
+      "agent": "designer",
+      "plan": "src/dev/plan_power_grid_construction_ux_v1.md",
+      "witness": "src/dev/design_power_node_hover_v1.md",
+      "depends_on": [
+        "DES-POWER-MAP-OVERLAY-002"
+      ],
+      "unblocks": [
+        "COD-POWER-NODE-HOVER-001"
+      ],
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 missing_exit_predicate",
+      "updated_at": "2026-06-20T21:19:24Z"
     },
     {
       "id": "DES-POWER-TARGETING-001",
@@ -1087,7 +1343,9 @@
       "agent": "designer",
       "plan": "src/dev/plan_power_grid_construction_ux_v1.md",
       "witness": "src/dev/design_power_targeting_v1.md",
-      "unblocks": ["COD-POWER-DAMAGE-SEGMENT-001"]
+      "unblocks": [
+        "COD-POWER-DAMAGE-SEGMENT-001"
+      ]
     },
     {
       "id": "DES-POWER-REPAIR-PANEL-001",
@@ -1097,7 +1355,9 @@
       "agent": "designer",
       "plan": "src/dev/plan_power_grid_construction_ux_v1.md",
       "witness": "src/dev/design_power_repair_panel_v1.md",
-      "unblocks": ["COD-POWER-REPAIR-QUEUE-001"]
+      "unblocks": [
+        "COD-POWER-REPAIR-QUEUE-001"
+      ]
     },
     {
       "id": "DES-ART-UTILITY-STYLE-001",
@@ -1107,7 +1367,11 @@
       "agent": "designer",
       "plan": "src/dev/plan_power_grid_art_assets_v1.md",
       "witness": "src/dev/design_utility_industrial_style_v1.md",
-      "unblocks": ["DMCP-SPEC-SUBSTATION-YARD-001", "DMCP-SPEC-TRANSFORMER-PAD-001", "DES-ART-NUCLEAR-PLANT-001"]
+      "unblocks": [
+        "DMCP-SPEC-SUBSTATION-YARD-001",
+        "DMCP-SPEC-TRANSFORMER-PAD-001",
+        "DES-ART-NUCLEAR-PLANT-001"
+      ]
     },
     {
       "id": "DES-ART-POWER-GLYPHS-001",
@@ -1136,7 +1400,9 @@
       "agent": "designer",
       "plan": "src/dev/plan_power_grid_art_assets_v1.md",
       "witness": "src/dev/design_nuclear_plant_massing_v1.md",
-      "depends_on": ["DES-ART-UTILITY-STYLE-001"],
+      "depends_on": [
+        "DES-ART-UTILITY-STYLE-001"
+      ],
       "handoff": "DMCP-SPEC-NUCLEAR-PWR-001"
     },
     {
@@ -1148,20 +1414,26 @@
       "plan": "src/dev/plan_power_grid_art_assets_v1.md",
       "witness": "src/dev/dmcp_spec_substation_yard_v1.md",
       "deliverable": "assets/staging/specs/kit_substation_yard_production_001.json",
-      "depends_on": ["DES-ART-UTILITY-STYLE-001"],
+      "depends_on": [
+        "DES-ART-UTILITY-STYLE-001"
+      ],
       "catalog": "assets/configs/buildings/grid_substation.json"
     },
     {
       "id": "DMCP-SPEC-TRANSFORMER-PAD-001",
-      "status": "done",
+      "status": "reopened",
       "priority": 0,
       "program": "power_grid_art",
       "agent": "designer-mcp",
       "plan": "src/dev/plan_power_grid_art_assets_v1.md",
       "witness": "src/dev/dmcp_spec_transformer_pad_v1.md",
       "deliverable": "assets/staging/specs/prop_transformer_production_run001.json",
-      "depends_on": ["DES-ART-UTILITY-STYLE-001"],
-      "catalog": "assets/configs/buildings/grid_distribution_transformer.json"
+      "depends_on": [
+        "DES-ART-UTILITY-STYLE-001"
+      ],
+      "catalog": "assets/configs/buildings/grid_distribution_transformer.json",
+      "note": "INTEL-OFFICER tail cull \u00b7 stub_marker:stub",
+      "updated_at": "2026-06-20T21:19:34Z"
     },
     {
       "id": "DMCP-SPEC-NUCLEAR-PWR-001",
@@ -1173,7 +1445,9 @@
       "witness": "debug_runs/art_pipeline/dmcp_nuclear_pwr_spec_live.json",
       "deliverable": "assets/staging/specs/kit_nuclear_pwr_production_001.json",
       "dmcp_doc": "src/dev/dmcp_spec_nuclear_pwr_v1.md",
-      "depends_on": ["DES-ART-NUCLEAR-PLANT-001"],
+      "depends_on": [
+        "DES-ART-NUCLEAR-PLANT-001"
+      ],
       "handoff": "MCP-PWR-NUCLEAR-BATCH-001"
     },
     {
@@ -1184,8 +1458,263 @@
       "agent": "designer",
       "plan": "src/dev/plan_power_grid_art_assets_v1.md",
       "witness": "src/dev/design_plant_card_gauges_v1.md",
-      "depends_on": ["DES-ART-HUD-POWER-ICONS-001"],
+      "depends_on": [
+        "DES-ART-HUD-POWER-ICONS-001"
+      ],
       "handoff": "COD-NUCLEAR-UX-WIRE-001"
+    }
+  ],
+  "multi_parallel_ready": [
+    {
+      "id": "DES-POWER-NODE-HOVER-001",
+      "status": "reopened",
+      "completed": "2026-06-20",
+      "priority": 1,
+      "track": "T6",
+      "program": "multi_parallel_tracks",
+      "agent": "designer",
+      "plan": "src/dev/plan_power_grid_construction_ux_v1.md",
+      "home_queue": "power_grid_construction_ux_queue.json",
+      "parallel_ok": [
+        "*"
+      ],
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 missing_exit_predicate",
+      "updated_at": "2026-06-20T21:19:24Z"
+    },
+    {
+      "id": "VM-11-PREVIEW-AUDIT",
+      "status": "blocked",
+      "completed": "2026-06-20",
+      "priority": 2,
+      "track": "T8",
+      "program": "multi_parallel_tracks",
+      "agent": "designer",
+      "plan": "src/dev/stage5_triage_backlog.md",
+      "witness": "src/dev/design_vm11_preview_audit_v1.md",
+      "home_queue": "multi_parallel_home_queues_v1.json",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
+      "updated_at": "2026-06-20T21:19:26Z"
+    }
+  ],
+  "done_designer_plan_batch_2026_06_20": [
+    {
+      "id": "DES-APS-MAT-SWATCH-001",
+      "status": "done",
+      "completed": "2026-06-20",
+      "agent": "designer",
+      "program": "plan_designer_work_202606",
+      "witness": "src/dev/design_aps_mat_swatch_v1.md"
+    },
+    {
+      "id": "DES-STYLE-VICTORIAN-ROW-001",
+      "status": "done",
+      "completed": "2026-06-20",
+      "agent": "designer",
+      "program": "plan_designer_work_202606",
+      "witness": "src/dev/design_style_victorian_row_v1.md"
+    },
+    {
+      "id": "DES-STYLE-ISO-READ-001",
+      "status": "done",
+      "completed": "2026-06-20",
+      "agent": "designer",
+      "program": "plan_designer_work_202606",
+      "witness": "src/dev/design_style_iso_read_v1.md"
+    },
+    {
+      "id": "DES-STYLE-PACK-REGISTRY-001",
+      "status": "done",
+      "completed": "2026-06-20",
+      "agent": "designer",
+      "program": "plan_designer_work_202606",
+      "witness": "src/dev/design_style_pack_registry_v1.md"
+    },
+    {
+      "id": "DES-CONCEPT-WORKFLOW-001",
+      "status": "done",
+      "completed": "2026-06-20",
+      "agent": "designer",
+      "program": "plan_designer_work_202606",
+      "witness": "src/dev/design_concept_workflow_v1.md"
+    },
+    {
+      "id": "DES-CONCEPT-THUMBNAIL-001",
+      "status": "done",
+      "completed": "2026-06-20",
+      "agent": "designer",
+      "program": "plan_designer_work_202606",
+      "witness": "src/dev/design_concept_thumbnail_v1.md"
+    },
+    {
+      "id": "DES-ECOLOGY-PREVIEW-V2-001",
+      "status": "done",
+      "completed": "2026-06-20",
+      "agent": "designer",
+      "program": "plan_designer_work_202606",
+      "witness": "src/dev/design_ecology_preview_v2.md"
+    },
+    {
+      "id": "DES-BUILD-READ-HUD-002",
+      "status": "done",
+      "completed": "2026-06-20",
+      "agent": "designer",
+      "program": "plan_designer_work_202606",
+      "witness": "src/dev/design_build_read_hud_v2.md"
+    },
+    {
+      "id": "DES-G-PLAY-OPERATOR-V2-001",
+      "status": "done",
+      "completed": "2026-06-20",
+      "agent": "designer",
+      "program": "plan_designer_work_202606",
+      "witness": "src/dev/design_g_play_operator_v2.md"
+    },
+    {
+      "id": "DES-S7B-INTEL-MINIMAP-001",
+      "status": "done",
+      "completed": "2026-06-20",
+      "agent": "designer",
+      "program": "plan_designer_work_202606",
+      "witness": "src/dev/design_s7b_intel_minimap_v1.md"
+    },
+    {
+      "id": "DES-SIM-HUD-OVERLAY-002",
+      "status": "done",
+      "completed": "2026-06-20",
+      "agent": "designer",
+      "program": "plan_sim_hud_professional_polish",
+      "witness": "src/dev/design_sim_hud_overlay_v2.md"
+    },
+    {
+      "id": "DES-SIM-HUD-MINIMAP-002",
+      "status": "done",
+      "completed": "2026-06-20",
+      "agent": "designer",
+      "program": "plan_sim_hud_professional_polish",
+      "witness": "src/dev/design_sim_hud_minimap_v2.md"
+    },
+    {
+      "id": "DES-SIM-HUD-PAUSE-002",
+      "status": "done",
+      "completed": "2026-06-20",
+      "agent": "designer",
+      "program": "plan_sim_hud_professional_polish",
+      "witness": "src/dev/design_sim_hud_pause_v2.md"
+    },
+    {
+      "id": "DES-SIM-HUD-OPS-002",
+      "status": "done",
+      "completed": "2026-06-20",
+      "agent": "designer",
+      "program": "plan_sim_hud_professional_polish",
+      "witness": "src/dev/design_sim_hud_ops_v2.md"
+    },
+    {
+      "id": "DES-SIM-HUD-A11Y-001",
+      "status": "done",
+      "completed": "2026-06-20",
+      "agent": "designer",
+      "program": "plan_sim_hud_professional_polish",
+      "witness": "src/dev/design_sim_hud_a11y_v1.md"
+    },
+    {
+      "id": "DES-SIM-HUD-ESC-CASCADE-001",
+      "status": "done",
+      "completed": "2026-06-20",
+      "agent": "designer",
+      "program": "plan_sim_hud_professional_polish",
+      "witness": "src/dev/design_sim_hud_esc_cascade_v1.md"
+    },
+    {
+      "id": "DES-APS-CHAIN-BROWSER-001",
+      "status": "done",
+      "completed": "2026-06-20",
+      "agent": "designer",
+      "program": "plan_industrial_facility_grammar",
+      "witness": "src/dev/design_aps_chain_browser_v1.md",
+      "unblocks": [
+        "CMCP-CHAIN-PILOT-GENERATE-001"
+      ]
+    },
+    {
+      "id": "DES-POWER-ISLAND-UX-001",
+      "status": "done",
+      "completed": "2026-06-20",
+      "agent": "designer",
+      "program": "plan_power_grid_construction_ux",
+      "witness": "src/dev/design_power_island_ux_v1.md"
+    },
+    {
+      "id": "DES-INDUSTRIAL-RESEARCH-002",
+      "status": "done",
+      "completed": "2026-06-20",
+      "agent": "designer",
+      "program": "plan_industrial_facility_grammar",
+      "witness": "src/dev/design_industrial_research_aluminum_v2.md"
+    },
+    {
+      "id": "DES-INDUSTRIAL-RESEARCH-003",
+      "status": "done",
+      "completed": "2026-06-20",
+      "agent": "designer",
+      "program": "plan_industrial_facility_grammar",
+      "witness": "src/dev/design_industrial_research_utility_v2.md"
+    },
+    {
+      "id": "DES-UTILITY-GRAMMAR-001",
+      "status": "done",
+      "completed": "2026-06-20",
+      "agent": "designer",
+      "program": "plan_industrial_facility_grammar",
+      "witness": "src/dev/design_utility_grammar_v1.md"
+    },
+    {
+      "id": "DES-LOGISTICS-SITE-001",
+      "status": "done",
+      "completed": "2026-06-20",
+      "agent": "designer",
+      "program": "plan_industrial_facility_grammar",
+      "witness": "src/dev/design_logistics_site_v1.md"
+    }
+  ],
+  "done_designer_mcp_open_lane_2026_06_02": [
+    {
+      "id": "DMCP-VEG-ATLAS-SHIP-001",
+      "status": "done",
+      "priority": 0,
+      "track": "T3",
+      "program": "multi_parallel_tracks",
+      "agent": "designer-mcp",
+      "deliverable": "src/dev/dmcp_veg_atlas_ship_v1.md",
+      "spec": "assets/staging/specs/veg_atlas_ship_001.json",
+      "witness": "debug_runs/art_pipeline/dmcp_designer_mcp_open_lane_live.json",
+      "verdict": "PASS_WITH_NOTES",
+      "unblocks": [
+        "VEG-F01-ATLAS-SHIP-001",
+        "VEG-F02-BURN-ATLAS-001"
+      ]
+    },
+    {
+      "id": "DMCP-ATLAS-QC-PLAIN-002",
+      "status": "done",
+      "priority": 0,
+      "program": "plan_designer_work_202606",
+      "agent": "designer-mcp",
+      "deliverable": "src/dev/design_aps_atlas_qc_copy_buildings_v2.md",
+      "witness": "debug_runs/art_pipeline/dmcp_designer_mcp_open_lane_live.json",
+      "verdict": "PASS",
+      "handoff": "CMCP-APS-ATLAS-QC-COPY-002"
+    },
+    {
+      "id": "DES-STYLE-LANDSCAPE-RIparian-001",
+      "status": "done",
+      "priority": 0,
+      "program": "plan_designer_work_202606",
+      "agent": "designer-mcp",
+      "deliverable": "src/dev/design_style_landscape_riparian_v1.md",
+      "witness": "debug_runs/art_pipeline/dmcp_style_landscape_riparian_live.json",
+      "verdict": "PASS",
+      "handoff": "VEG-DISTRICT-HYDRO-001"
     }
   ],
   "done_art_spine_hub_wave_2026_06_02": [
@@ -1241,7 +1770,11 @@
       "verdict": "PASS WITH NOTES",
       "witness": "docs/archive/2026-06-src-dev/plans/design_aps_ux_audit_v1.md",
       "witness_mcp": "docs/archive/2026-06-src-dev/plans/aps_ux_audit_001_designer_mcp_v1.md",
-      "unblocks": ["APS-PREVIEW-CATALOG-001", "APS-ATLAS-PREVIEW-002", "APS-UX-TOOLTIPS-002"],
+      "unblocks": [
+        "APS-PREVIEW-CATALOG-001",
+        "APS-ATLAS-PREVIEW-002",
+        "APS-UX-TOOLTIPS-002"
+      ],
       "notes": "Phase 0 closed; full PASS deferred to APS-UX-POLISH-001-SIGNOFF"
     },
     {
@@ -1280,7 +1813,9 @@
       "status": "done",
       "verdict": "PASS",
       "witness": "docs/archive/2026-06-src-dev/plans/design_weather_player_read_v1.md",
-      "unblocks": ["WEATHER-GPU-PRECIP-001"]
+      "unblocks": [
+        "WEATHER-GPU-PRECIP-001"
+      ]
     },
     {
       "id": "EGUI-DEV-UX-001",
@@ -1298,7 +1833,7 @@
       "program": "weather_hud",
       "witness": "docs/archive/2026-06-src-dev/plans/design_weather_player_read_v1.md",
       "handoff": "coder_c",
-      "notes": "§Implementation spec — witness JSON pending @coder C"
+      "notes": "\u00a7Implementation spec \u2014 witness JSON pending @coder C"
     },
     {
       "id": "TRIAGE-FIRE-OVERLAY-DBG-001",
@@ -1320,7 +1855,9 @@
       "status": "done",
       "verdict": "PASS",
       "witness": "docs/archive/2026-06-src-dev/plans/design_aps_ux_polish_signoff_v1.md",
-      "unblocks": ["APS-UX-AUDIT-001 lead PASS"]
+      "unblocks": [
+        "APS-UX-AUDIT-001 lead PASS"
+      ]
     },
     {
       "id": "APS-UX-AUDIT-001-LEAD",
@@ -1372,7 +1909,7 @@
       "status": "done",
       "verdict": "PASS",
       "witness": "docs/archive/2026-06-src-dev/plans/plan_wss_active_chunk_001_v1.md",
-      "notes": "Player read cap 64 — registry v1.8"
+      "notes": "Player read cap 64 \u2014 registry v1.8"
     },
     {
       "id": "DESIGN-BQ128-APPLY-UX-001",
@@ -1385,13 +1922,15 @@
   "next_phase": {
     "phase_id": "DESIGNER-ONCALL-2026-06-02",
     "playbook": "docs/archive/2026-06-src-dev/plans/designer_oncall_absorption_v1.md",
-    "rule": "On-call — implementation review on @coder notify; no long-run re-queue",
+    "rule": "On-call \u2014 implementation review on @coder notify; no long-run re-queue",
     "pg3_live_w3_trigger": {
       "id": "MCP-DUX-PG2-003",
-      "blocked_by": ["PROC-PG-3-001"],
+      "blocked_by": [
+        "PROC-PG-3-001"
+      ],
       "duration_min": 15,
       "rubric": "debug_runs/art_pipeline/procedural_assembly_pg2_signoff.yaml#w3_live_tactical_review",
-      "pass_when": "Victorian vs style_industrial_west side-by-side same footprint — W2/W3/W4/W5 in tactical view"
+      "pass_when": "Victorian vs style_industrial_west side-by-side same footprint \u2014 W2/W3/W4/W5 in tactical view"
     },
     "longrun_closed": [
       "DESIGN-PROC-MODULE-KIT-001",
@@ -1406,9 +1945,15 @@
       "DESIGN-S7B-M4-PLAY-READ-001",
       "DESIGN-CONSTRUCTION-R4-PRODUCT-001"
     ],
-    "on_call_ready": ["MCP-PROD-ROWHOUSE-SIGNOFF"],
-    "on_call_hold_art_full": ["DESIGN-PROC-ART-ACCEPTANCE-001"],
-    "operator_pending": ["G-PLAY-01"]
+    "on_call_ready": [
+      "MCP-PROD-ROWHOUSE-SIGNOFF"
+    ],
+    "on_call_hold_art_full": [
+      "DESIGN-PROC-ART-ACCEPTANCE-001"
+    ],
+    "operator_pending": [
+      "G-PLAY-01"
+    ]
   },
   "routed_to_coder": [
     {

@@ -52,7 +52,7 @@
     "relative_path": "debug_runs/minimap_fire_veg_coherence_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_minimap_fire_veg_coherence_live_witness",
-    "written_at_epoch_secs": 1781756520
+    "written_at_epoch_secs": 1781898654
   },
   "burn_active_rows": 1,
   "ecology_heat_default_on": true,

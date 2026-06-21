@@ -128,6 +128,70 @@ def test_no_raw_hex_in_chrome_panels_except_allowlist() -> None:
     assert not offenders, "raw hex in UI kwargs (use aps_theme tokens):\n" + "\n".join(offenders[:20])
 
 
+# --- Status-atom coverage guard (one status language EVERYWHERE) ---
+# These panels carry artist-visible status/feedback and MUST route it through the
+# §3.4 status atom (apply_status_atom / set_inline_status / apply_material_card_status),
+# never through a raw status-color literal applied to a widget by hand.
+STATUS_ATOM_PANELS = (
+    "variants_panel.py",
+    "catalog.py",
+    "material_library_widget.py",
+    "grammar_iterate_panel.py",
+)
+ATOM_HELPERS = ("apply_status_atom", "set_inline_status", "apply_material_card_status")
+
+# A status color reached a widget directly (not via the atom helpers) — banned in panels.
+RAW_STATUS_FG = re.compile(
+    r"""(?:foreground|fg)\s*=\s*[^,)\n]*\bCOLOR_(?:PASS|FAIL|WARN)\b"""
+)
+
+
+def test_status_atom_panels_import_a_status_helper() -> None:
+    missing: list[str] = []
+    for name in STATUS_ATOM_PANELS:
+        text = (SUITE / name).read_text(encoding="utf-8")
+        if not any(h in text for h in ATOM_HELPERS):
+            missing.append(name)
+    assert not missing, (
+        "panels with status feedback must import a status-atom helper "
+        f"({', '.join(ATOM_HELPERS)}): {missing}"
+    )
+
+
+def test_status_atom_panels_have_no_raw_status_color_application() -> None:
+    offenders: list[str] = []
+    for name in STATUS_ATOM_PANELS:
+        for i, line in enumerate((SUITE / name).read_text(encoding="utf-8").splitlines(), start=1):
+            if RAW_STATUS_FG.search(line):
+                offenders.append(f"{name}:{i}: {line.strip()[:100]}")
+    assert not offenders, (
+        "raw status-color applied to a widget (use the status atom):\n" + "\n".join(offenders)
+    )
+
+
+def test_status_atom_coverage_guard_catches_deliberate_violation(tmp_path: Path) -> None:
+    """Prove the coverage guard fires on a raw-status site — not a trivial pass."""
+    probe = tmp_path / "probe_status_panel.py"
+    probe.write_text(
+        'lbl.configure(foreground=COLOR_FAIL)\nother.configure(fg=COLOR_PASS)\n',
+        encoding="utf-8",
+    )
+    hits = [
+        i
+        for i, line in enumerate(probe.read_text(encoding="utf-8").splitlines(), start=1)
+        if RAW_STATUS_FG.search(line)
+    ]
+    assert hits == [1, 2], f"coverage guard blind to deliberate raw-status sites: {hits}"
+
+
+def test_material_card_status_routes_through_atom() -> None:
+    """material_library_widget cards apply status via the atom, not text=/foreground= by hand."""
+    text = (SUITE / "material_library_widget.py").read_text(encoding="utf-8")
+    assert "apply_material_card_status" in text
+    # The old hand-split helper must be gone (it returned a raw status color).
+    assert "_status_foreground" not in text
+
+
 @pytest.mark.skipif(not SUITE.joinpath("scrollable.py").is_file(), reason="suite missing")
 def test_scrollable_uses_attach_wheel_area_not_recursive_bind() -> None:
     text = (SUITE / "scrollable.py").read_text(encoding="utf-8")

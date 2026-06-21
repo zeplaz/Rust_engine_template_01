@@ -1,0 +1,20 @@
+{
+  "gate": "DMCP-QC-SUBSTATION-001",
+  "deliverable": "src/dev/dmcp_qc_substation_yard_v1.md",
+  "model_glb": "assets/models/modules/kit_substation_yard_production_run001/model.glb",
+  "promote_green": true,
+  "validate_asset_glb": "passed",
+  "vertex_count": 48,
+  "footprint_4x3": true,
+  "teach_tier_composite": true,
+  "verdict": "PASS_WITH_NOTES",
+  "manual_stills_pending": true,
+  "green": true,
+  "_agent_meta": {
+    "schema": "dmcp_qc_substation_live_v1",
+    "written_at_epoch_secs": 1781968439,
+    "profile": "DMCP_QC_SUBSTATION",
+    "source_system": "mcp_pwr_utility",
+    "relative_path": "debug_runs/art_pipeline/dmcp_qc_substation_live.json"
+  }
+}

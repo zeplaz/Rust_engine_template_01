@@ -170,6 +170,12 @@ pub fn apply_map_view_extents_from_authority(
     if let Some(surface) = authority.surface(ViewSurfaceId::Minimap) {
         if surface.render.valid {
             map_views.minimap.viewport_size = surface.render.logical_size;
+            // PERF-INSTR-VFX-001: authority → minimap presentation viewport (one-way mirror).
+            crate::render::trace_minimap_size_writer(
+                "authority.minimap.viewport_size",
+                surface.render.logical_size.x,
+                surface.render.logical_size.y,
+            );
         }
     }
 }

@@ -1,4 +1,4 @@
-# Sync .claude/skills to .cursor/skills (project base).
+# Sync .claude/skills to .cursor/skills AND .claude/agents to .cursor/agents (project base).
 # Overlays source files onto destination; never deletes cursor-only extras.
 param(
     [switch]$Force,
@@ -76,6 +76,24 @@ Get-ChildItem $sourceRoot -Directory | ForEach-Object {
         else { $report.updated += $name }
     } else {
         $report.skipped += $name
+    }
+}
+
+# --- agents: flat .md mirror (.claude/agents -> .cursor/agents) ---
+$agentSrc = Join-Path $repoRoot '.claude\agents'
+$agentDst = Join-Path $repoRoot '.cursor\agents'
+if (Test-Path $agentSrc) {
+    if (-not (Test-Path $agentDst) -and -not $WhatIf) { New-Item -ItemType Directory -Path $agentDst -Force | Out-Null }
+    Get-ChildItem $agentSrc -File -Filter *.md | ForEach-Object {
+        $target = Join-Path $agentDst $_.Name
+        $shouldCopy = $Force -or -not (Test-Path $target)
+        if (-not $shouldCopy -and (Test-Path $target)) {
+            $shouldCopy = $_.LastWriteTimeUtc -gt (Get-Item $target).LastWriteTimeUtc
+        }
+        if (-not $shouldCopy) { return }
+        if ($WhatIf) { Write-Output "[WhatIf] Would copy agent $($_.Name)"; $report.updated += "agent:$($_.BaseName)"; return }
+        Copy-Item $_.FullName $target -Force
+        $report.updated += "agent:$($_.BaseName)"
     }
 }
 

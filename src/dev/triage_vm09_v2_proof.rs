@@ -4,41 +4,10 @@
 
 use std::path::PathBuf;
 
-use serde_json::Value;
-
-const INFRA: &str = "debug_runs/infrastructure_view_isolation_live.json";
-
-const V2_GATES: &[&str] = &[
-    "/infrastructure_view_isolation_green",
-    "/vm_09/triage_vm09_v2_green",
-    "/vm_09/triage_vm09_coder_b_green",
-    "/vm_a/dual_writer_pose_violation",
-    "/vm_a/minimap_shell_wrote_map_camera_desired",
-];
-
 fn repo_root() -> PathBuf {
     std::env::var_os("CARGO_MANIFEST_DIR")
         .map(PathBuf::from)
         .unwrap_or_else(|| PathBuf::from("."))
-}
-
-fn read_json(rel: &str) -> Value {
-    let path = repo_root().join(rel);
-    let text = std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("read {rel}: {e}"));
-    serde_json::from_str(&text).unwrap_or_else(|e| panic!("parse {rel}: {e}"))
-}
-
-fn pointer_bool(v: &Value, ptr: &str) -> bool {
-    v.pointer(ptr)
-        .and_then(|x| x.as_bool())
-        .unwrap_or_else(|| panic!("missing or non-bool {ptr}"))
-}
-
-fn pointer_str(v: &Value, ptr: &str) -> String {
-    v.pointer(ptr)
-        .and_then(|x| x.as_str())
-        .map(str::to_owned)
-        .unwrap_or_else(|| panic!("missing or non-string {ptr}"))
 }
 
 /// INFRA-VM09-STRAY-001 — production `ResMut<MapCameraDesired>` only in derive shim (+ tests).
@@ -71,6 +40,36 @@ pub fn refresh_triage_vm09_v2_live_witness() -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use serde_json::Value;
+
+    const INFRA: &str = "debug_runs/infrastructure_view_isolation_live.json";
+
+    const V2_GATES: &[&str] = &[
+        "/infrastructure_view_isolation_green",
+        "/vm_09/triage_vm09_v2_green",
+        "/vm_09/triage_vm09_coder_b_green",
+        "/vm_a/dual_writer_pose_violation",
+        "/vm_a/minimap_shell_wrote_map_camera_desired",
+    ];
+
+    fn read_json(rel: &str) -> Value {
+        let path = repo_root().join(rel);
+        let text = std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("read {rel}: {e}"));
+        serde_json::from_str(&text).unwrap_or_else(|e| panic!("parse {rel}: {e}"))
+    }
+
+    fn pointer_bool(v: &Value, ptr: &str) -> bool {
+        v.pointer(ptr)
+            .and_then(|x| x.as_bool())
+            .unwrap_or_else(|| panic!("missing or non-bool {ptr}"))
+    }
+
+    fn pointer_str(v: &Value, ptr: &str) -> String {
+        v.pointer(ptr)
+            .and_then(|x| x.as_str())
+            .map(str::to_owned)
+            .unwrap_or_else(|| panic!("missing or non-string {ptr}"))
+    }
 
     /// **TRIAGE-VM-09-v2** — P1 close-out: invert bridge fields + VM-A guards.
     #[test]

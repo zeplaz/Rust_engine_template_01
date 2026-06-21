@@ -1403,10 +1403,12 @@
   {
     "id": "BUILD-READ-VISUAL-002-BATCH",
     "priority": 1,
-    "title": "Keyframe batch tile_rail_warehouse_pilot_v1 — tile_batch + variant_set + bdef",
+    "title": "Keyframe batch tile_rail_warehouse_pilot_v1 \u2014 tile_batch + variant_set + bdef",
     "lane": "mcp-coder",
     "agent": "coder-mcp",
-    "depends_on": ["BUILD-READ-GRAMMAR-v0-002"],
+    "depends_on": [
+      "BUILD-READ-GRAMMAR-v0-002"
+    ],
     "status": "done",
     "witness": "debug_runs/tile_rail_warehouse_pilot_batch_live.json",
     "docs": [
@@ -1422,32 +1424,35 @@
     "lane": "mcp-coder",
     "agent": "coder-mcp",
     "depends_on": [],
-    "status": "done",
+    "status": "blocked",
     "witness": "debug_runs/aps_build_read_grammar_v0_002_live.json",
     "docs": [
       "src/dev/plan_operator_build_readability_exec_001_v1.md",
       "tools/mcp/schemas/arch_build_grammar_v0.schema.json"
     ],
-    "updated_at": "2026-06-13T04:44:23.206607+00:00",
-    "note": "debug_runs/aps_build_read_grammar_v0_002_live.json"
+    "updated_at": "2026-06-20T21:19:24Z",
+    "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate"
   },
-    {
-      "id": "BUILD-READ-CONSUMER-MCP-001",
-      "priority": 2,
-      "title": "APS DNA+β consumer contract — snapshot fields for @coder",
-      "lane": "mcp-coder",
-      "agent": "coder-mcp",
-      "depends_on": ["BUILD-READ-GRAMMAR-v0-002"],
-      "status": "done",
-      "witness": "debug_runs/aps_dna_consumer_contract_live.json",
-      "commands": [
-        "python -m rust_engine_mcp.cli arch-dna-consumer-contract",
-        "python -m rust_engine_mcp.cli aps-dna-consumer-witness"
-      ],
-      "updated_at": "2026-06-02T12:00:00+00:00"
-    },
-    {
-      "id": "MCP-OPS-REPORT-001",
+  {
+    "id": "BUILD-READ-CONSUMER-MCP-001",
+    "priority": 2,
+    "title": "APS DNA+\u03b2 consumer contract \u2014 snapshot fields for @coder",
+    "lane": "mcp-coder",
+    "agent": "coder-mcp",
+    "depends_on": [
+      "BUILD-READ-GRAMMAR-v0-002"
+    ],
+    "status": "blocked",
+    "witness": "debug_runs/aps_dna_consumer_contract_live.json",
+    "commands": [
+      "python -m rust_engine_mcp.cli arch-dna-consumer-contract",
+      "python -m rust_engine_mcp.cli aps-dna-consumer-witness"
+    ],
+    "updated_at": "2026-06-20T21:19:24Z",
+    "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate"
+  },
+  {
+    "id": "MCP-OPS-REPORT-001",
     "priority": 3,
     "title": "ops_intelligence_scan MCP wrapper",
     "lane": "mcp-coder",
@@ -1490,7 +1495,9 @@
     "title": "MCP grammar + building-set guards plan (post-warehouse lesson)",
     "lane": "mcp-planner",
     "agent": "planner-mcp",
-    "depends_on": ["BUILD-READ-GRAMMAR-v0-002"],
+    "depends_on": [
+      "BUILD-READ-GRAMMAR-v0-002"
+    ],
     "status": "done",
     "deliverable": "src/dev/plan_mcp_grammar_build_set_guards_v1.md + src/dev/mcp_grammar_build_set_todos_v1.md",
     "docs": [
@@ -1502,13 +1509,18 @@
   {
     "id": "MCP-GUARD-001",
     "priority": 0,
-    "title": "pilot_hardcode_lint — block literal warehouse/pilot ids outside catalog allowlist",
+    "title": "pilot_hardcode_lint \u2014 block literal warehouse/pilot ids outside catalog allowlist",
     "lane": "mcp-coder",
     "agent": "coder-mcp",
-    "depends_on": ["PLAN-MCP-GRAMMAR-BUILD-SET-GUARDS-001"],
+    "depends_on": [
+      "PLAN-MCP-GRAMMAR-BUILD-SET-GUARDS-001"
+    ],
     "status": "done",
     "witness": "debug_runs/pilot_hardcode_lint_live.json",
-    "docs": ["src/dev/mcp_grammar_build_set_todos_v1.md", "tools/mcp/guard/pilot_hardcode_allowlist_v1.json"],
+    "docs": [
+      "src/dev/mcp_grammar_build_set_todos_v1.md",
+      "tools/mcp/guard/pilot_hardcode_allowlist_v1.json"
+    ],
     "commands": [
       "python -m rust_engine_mcp.cli pilot-hardcode-lint-witness",
       "python -m rust_engine_mcp.cli validate-report pilot_hardcode_lint"
@@ -1518,13 +1530,17 @@
   {
     "id": "MCP-GUARD-002",
     "priority": 0,
-    "title": "example_teachable_audit — _meta.teaches[] on schema examples",
+    "title": "example_teachable_audit \u2014 _meta.teaches[] on schema examples",
     "lane": "mcp-coder",
     "agent": "coder-mcp",
-    "depends_on": ["PLAN-MCP-GRAMMAR-BUILD-SET-GUARDS-001"],
+    "depends_on": [
+      "PLAN-MCP-GRAMMAR-BUILD-SET-GUARDS-001"
+    ],
     "status": "done",
     "witness": "debug_runs/example_teachable_audit_live.json",
-    "docs": ["src/dev/plan_mcp_grammar_build_set_guards_v1.md"],
+    "docs": [
+      "src/dev/plan_mcp_grammar_build_set_guards_v1.md"
+    ],
     "commands": [
       "python -m rust_engine_mcp.cli example-teachable-audit-witness",
       "python -m rust_engine_mcp.cli validate-report example_teachable_audit"
@@ -1534,10 +1550,12 @@
   {
     "id": "MCP-GUARD-003",
     "priority": 0,
-    "title": "single_archetype_ratio_guard — cap dominant archetype refs",
+    "title": "single_archetype_ratio_guard \u2014 cap dominant archetype refs",
     "lane": "mcp-coder",
     "agent": "coder-mcp",
-    "depends_on": ["MCP-BUILD-SET-002"],
+    "depends_on": [
+      "MCP-BUILD-SET-002"
+    ],
     "status": "done",
     "witness": "debug_runs/single_archetype_ratio_guard_live.json",
     "commands": [
@@ -1549,10 +1567,13 @@
   {
     "id": "MCP-GUARD-004",
     "priority": 0,
-    "title": "warehouse_track_guard — manifest or teaches on warehouse paths",
+    "title": "warehouse_track_guard \u2014 manifest or teaches on warehouse paths",
     "lane": "mcp-coder",
     "agent": "coder-mcp",
-    "depends_on": ["MCP-BUILD-SET-002", "MCP-GUARD-002"],
+    "depends_on": [
+      "MCP-BUILD-SET-002",
+      "MCP-GUARD-002"
+    ],
     "status": "done",
     "witness": "debug_runs/warehouse_track_guard_live.json",
     "commands": [
@@ -1564,49 +1585,71 @@
   {
     "id": "MCP-GRAMMAR-SET-001",
     "priority": 1,
-    "title": "grammar_set_brief — pilot/grammar/preset inventory + gaps",
+    "title": "grammar_set_brief \u2014 pilot/grammar/preset inventory + gaps",
     "lane": "mcp-coder",
     "agent": "coder-mcp",
-    "depends_on": ["PLAN-MCP-GRAMMAR-BUILD-SET-GUARDS-001"],
+    "depends_on": [
+      "PLAN-MCP-GRAMMAR-BUILD-SET-GUARDS-001"
+    ],
     "status": "done",
     "witness": "debug_runs/grammar_set_brief_live.json",
-    "commands": ["python -m rust_engine_mcp.cli grammar-set-brief"],
-    "docs": ["src/dev/plan_mcp_grammar_build_set_guards_v1.md"],
+    "commands": [
+      "python -m rust_engine_mcp.cli grammar-set-brief"
+    ],
+    "docs": [
+      "src/dev/plan_mcp_grammar_build_set_guards_v1.md"
+    ],
     "updated_at": "2026-06-13T20:00:00+00:00"
   },
   {
     "id": "MCP-GRAMMAR-SET-002",
     "priority": 1,
-    "title": "grammar_preset_pair_validate — preset ↔ grammar_id ↔ pilot",
+    "title": "grammar_preset_pair_validate \u2014 preset \u2194 grammar_id \u2194 pilot",
     "lane": "mcp-coder",
     "agent": "coder-mcp",
-    "depends_on": ["MCP-GRAMMAR-SET-001"],
+    "depends_on": [
+      "MCP-GRAMMAR-SET-001"
+    ],
     "status": "done",
-    "commands": ["python -m rust_engine_mcp.cli grammar-preset-pair-validate --preset-id logistics_rail_warehouse_v0"],
-    "docs": ["tools/mcp/schemas/arch_build_grammar_v0.schema.json"],
+    "commands": [
+      "python -m rust_engine_mcp.cli grammar-preset-pair-validate --preset-id logistics_rail_warehouse_v0"
+    ],
+    "docs": [
+      "tools/mcp/schemas/arch_build_grammar_v0.schema.json"
+    ],
     "updated_at": "2026-06-13T20:00:00+00:00"
   },
   {
     "id": "MCP-GRAMMAR-SET-003",
     "priority": 1,
-    "title": "grammar_eval_sweep — massing/roof histogram brief",
+    "title": "grammar_eval_sweep \u2014 massing/roof histogram brief",
     "lane": "mcp-coder",
     "agent": "coder-mcp",
-    "depends_on": ["MCP-GRAMMAR-SET-001"],
+    "depends_on": [
+      "MCP-GRAMMAR-SET-001"
+    ],
     "status": "done",
-    "commands": ["python -m rust_engine_mcp.cli grammar-eval-sweep"],
-    "docs": ["debug_runs/grammar_diversity_witness.json"],
+    "commands": [
+      "python -m rust_engine_mcp.cli grammar-eval-sweep"
+    ],
+    "docs": [
+      "debug_runs/grammar_diversity_witness.json"
+    ],
     "updated_at": "2026-06-13T20:00:00+00:00"
   },
   {
     "id": "MCP-GRAMMAR-SET-004",
     "priority": 1,
-    "title": "grammar_pilot_parity — MCP wrap of catalog parity self-check",
+    "title": "grammar_pilot_parity \u2014 MCP wrap of catalog parity self-check",
     "lane": "mcp-coder",
     "agent": "coder-mcp",
-    "depends_on": ["MCP-GRAMMAR-SET-001"],
+    "depends_on": [
+      "MCP-GRAMMAR-SET-001"
+    ],
     "status": "done",
-    "commands": ["python -m rust_engine_mcp.cli grammar-pilot-parity"],
+    "commands": [
+      "python -m rust_engine_mcp.cli grammar-pilot-parity"
+    ],
     "updated_at": "2026-06-13T20:00:00+00:00"
   },
   {
@@ -1615,7 +1658,9 @@
     "title": "building_set_manifest_v1 schema + _building_sets.ron spec",
     "lane": "mcp-planner",
     "agent": "planner-mcp",
-    "depends_on": ["PLAN-MCP-GRAMMAR-BUILD-SET-GUARDS-001"],
+    "depends_on": [
+      "PLAN-MCP-GRAMMAR-BUILD-SET-GUARDS-001"
+    ],
     "status": "done",
     "deliverable": "tools/mcp/schemas/building_set_manifest_v1.schema.json",
     "witness": "assets/configs/buildings/_building_sets.ron",
@@ -1627,7 +1672,9 @@
     "title": "building_set_manifest_validate",
     "lane": "mcp-coder",
     "agent": "coder-mcp",
-    "depends_on": ["PLAN-BUILD-SET-MANIFEST-001"],
+    "depends_on": [
+      "PLAN-BUILD-SET-MANIFEST-001"
+    ],
     "status": "done",
     "updated_at": "2026-06-13T20:00:00+00:00"
   },
@@ -1637,10 +1684,14 @@
     "title": "building_set_coverage_report",
     "lane": "mcp-coder",
     "agent": "coder-mcp",
-    "depends_on": ["PLAN-BUILD-SET-MANIFEST-001"],
+    "depends_on": [
+      "PLAN-BUILD-SET-MANIFEST-001"
+    ],
     "status": "done",
     "witness": "debug_runs/building_set_coverage_live.json",
-    "commands": ["python -m rust_engine_mcp.cli building-set-coverage-witness"],
+    "commands": [
+      "python -m rust_engine_mcp.cli building-set-coverage-witness"
+    ],
     "updated_at": "2026-06-13T20:00:00+00:00"
   },
   {
@@ -1649,20 +1700,27 @@
     "title": "building_set_health_brief for OPS rollup",
     "lane": "mcp-coder",
     "agent": "coder-mcp",
-    "depends_on": ["MCP-BUILD-SET-002"],
+    "depends_on": [
+      "MCP-BUILD-SET-002"
+    ],
     "status": "done",
     "updated_at": "2026-06-13T20:00:00+00:00"
   },
   {
     "id": "BUILD-SET-PILOT-002",
     "priority": 2,
-    "title": "Second grammar pilot — manufacturing_fabrication_hall_v0",
+    "title": "Second grammar pilot \u2014 manufacturing_fabrication_hall_v0",
     "lane": "grammar-designer",
     "agent": "designer-mcp",
-    "depends_on": ["PLAN-BUILD-SET-MANIFEST-001"],
+    "depends_on": [
+      "PLAN-BUILD-SET-MANIFEST-001"
+    ],
     "status": "done",
     "witness": "debug_runs/building_set_coverage_live.json",
-    "docs": ["assets/configs/buildings/_pilot_catalog.ron", "tools/mcp/schemas/examples/arch_dna_manufacturing_fabrication_hall_v0.json"],
+    "docs": [
+      "assets/configs/buildings/_pilot_catalog.ron",
+      "tools/mcp/schemas/examples/arch_dna_manufacturing_fabrication_hall_v0.json"
+    ],
     "updated_at": "2026-06-13T20:00:00+00:00"
   },
   {
@@ -1671,7 +1729,9 @@
     "title": "APS Grammar set brief strip on Assembly tab",
     "lane": "mcp-coder",
     "agent": "coder-mcp",
-    "depends_on": ["MCP-GRAMMAR-SET-001"],
+    "depends_on": [
+      "MCP-GRAMMAR-SET-001"
+    ],
     "status": "done",
     "deliverable": "tools/mcp/art_pipeline_suite/grammar_build_set_panel.py",
     "updated_at": "2026-06-13T20:00:00+00:00"
@@ -1682,7 +1742,9 @@
     "title": "APS Eval sweep button inline histogram",
     "lane": "mcp-coder",
     "agent": "coder-mcp",
-    "depends_on": ["MCP-GRAMMAR-SET-003"],
+    "depends_on": [
+      "MCP-GRAMMAR-SET-003"
+    ],
     "status": "done",
     "deliverable": "tools/mcp/art_pipeline_suite/grammar_build_set_panel.py",
     "updated_at": "2026-06-13T20:00:00+00:00"
@@ -1693,34 +1755,51 @@
     "title": "pipeline_preflight --check-build-set",
     "lane": "mcp-coder",
     "agent": "coder-mcp",
-    "depends_on": ["MCP-BUILD-SET-002", "MCP-GUARD-001"],
+    "depends_on": [
+      "MCP-BUILD-SET-002",
+      "MCP-GUARD-001"
+    ],
     "status": "done",
-    "commands": ["python -m rust_engine_mcp.cli pipeline-preflight --check-build-set"],
+    "commands": [
+      "python -m rust_engine_mcp.cli pipeline-preflight --check-build-set"
+    ],
     "updated_at": "2026-06-13T20:00:00+00:00"
   },
   {
     "id": "CODER-PILOT-REFACTOR-001",
     "priority": 1,
-    "title": "Remove warehouse-only Rust branches — catalog loader only",
+    "title": "Remove warehouse-only Rust branches \u2014 catalog loader only",
     "lane": "grammar-coder",
     "agent": "coder",
-    "depends_on": ["MCP-GUARD-001"],
-    "status": "pending",
+    "depends_on": [
+      "MCP-GUARD-001"
+    ],
+    "status": "done",
+    "witness": "debug_runs/pilot_catalog_parity_live.json",
+    "track": "T2",
+    "program": "multi_parallel_tracks",
+    "dispatch": "multi_parallel_tracks_dispatch_v1.json",
     "docs": [
       "src/construction/pilot_catalog.rs",
       "src/dev/plan_operator_build_readability_exec_001_v1.md"
-    ]
+    ],
+    "updated_at": "2026-06-20T00:00:00+00:00"
   },
   {
     "id": "MCP-INTEGRATE-001",
     "priority": 2,
-    "title": "grammar_integration_validate — complex snapshot gate",
+    "title": "grammar_integration_validate \u2014 complex snapshot gate",
     "lane": "mcp-coder",
     "agent": "coder-mcp",
-    "depends_on": ["MCP-GRAMMAR-SET-002", "MCP-GRAMMAR-SET-003"],
+    "depends_on": [
+      "MCP-GRAMMAR-SET-002",
+      "MCP-GRAMMAR-SET-003"
+    ],
     "status": "done",
     "witness": "debug_runs/grammar_integration_validate_live.json",
-    "docs": ["docs/archive/2026-06-src-dev/plans/aps_validator_plain_language_v1.md"],
+    "docs": [
+      "docs/archive/2026-06-src-dev/plans/aps_validator_plain_language_v1.md"
+    ],
     "commands": [
       "python -m rust_engine_mcp.cli grammar-integration-validate --write-witness",
       "python -m rust_engine_mcp.cli validate-report grammar_integration tools/mcp/schemas/examples/assembly_snapshot_warehouse_industrial_west_production_v1.json"
@@ -1733,9 +1812,103 @@
     "title": "ops_get_build_set_health in ops_project_brief_v1",
     "lane": "mcp-coder",
     "agent": "coder-mcp",
-    "depends_on": ["MCP-BUILD-SET-003"],
+    "depends_on": [
+      "MCP-BUILD-SET-003"
+    ],
     "status": "done",
-    "docs": ["src/dev/ops_mcp_function_layer_v1.md", "tools/mcp/python/rust_engine_mcp/ops_intelligence.py"],
+    "docs": [
+      "src/dev/ops_mcp_function_layer_v1.md",
+      "tools/mcp/python/rust_engine_mcp/ops_intelligence.py"
+    ],
     "updated_at": "2026-06-13T20:00:00+00:00"
+  },
+  {
+    "id": "OVR-P5-TAIL-001",
+    "priority": 0,
+    "title": "status_atom migration \u2014 all APS panels",
+    "lane": "aps-studio",
+    "agent": "coder-mcp",
+    "track": "T1",
+    "program": "multi_parallel_tracks",
+    "depends_on": [
+      "DES-APS-DS-V11-001"
+    ],
+    "status": "done",
+    "witness": "tools/mcp/python/tests/test_aps_p7_wave2_style.py",
+    "territory": "tools/mcp/art_pipeline_suite/",
+    "verify": [
+      "pytest tools/mcp/python/tests -k aps -q"
+    ],
+    "dispatch": "multi_parallel_tracks_dispatch_v1.json",
+    "updated_at": "2026-06-20T00:00:00+00:00"
+  },
+  {
+    "id": "CMCP-GRAMMAR-FACILITY-BRIEF-001",
+    "priority": 1,
+    "title": "Grammar + catalog + chain brief MCP tool",
+    "lane": "grammar-ship",
+    "agent": "coder-mcp",
+    "track": "T2",
+    "program": "multi_parallel_tracks",
+    "status": "done",
+    "witness": "debug_runs/grammar_facility_brief_live.json",
+    "docs": [
+      "src/dev/design_aps_facility_needs_v1.md"
+    ],
+    "dispatch": "multi_parallel_tracks_dispatch_v1.json",
+    "updated_at": "2026-06-20T00:00:00+00:00"
+  },
+  {
+    "id": "CMCP-SITE-ZONE-VALIDATE-001",
+    "priority": 1,
+    "title": "Site zone grid validator",
+    "lane": "grammar-ship",
+    "agent": "coder-mcp",
+    "track": "T2",
+    "program": "multi_parallel_tracks",
+    "status": "done",
+    "witness": "debug_runs/site_zone_validate_live.json",
+    "dispatch": "multi_parallel_tracks_dispatch_v1.json",
+    "updated_at": "2026-06-20T00:00:00+00:00"
+  },
+  {
+    "id": "CMCP-GRAM-SWEEP-PROCESS-001",
+    "priority": 1,
+    "title": "Process histogram in grammar eval sweep",
+    "lane": "grammar-ship",
+    "agent": "coder-mcp",
+    "track": "T2",
+    "program": "multi_parallel_tracks",
+    "status": "reopened",
+    "witness": "debug_runs/grammar_sweep_process_live.json",
+    "dispatch": "multi_parallel_tracks_dispatch_v1.json",
+    "updated_at": "2026-06-20T21:19:24Z",
+    "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness file on disk"
+  },
+  {
+    "id": "GRAM-CONTENT-005",
+    "priority": 1,
+    "title": "civic_block_v1.ron G1 archetype on disk",
+    "lane": "grammar-ship",
+    "agent": "coder-mcp",
+    "track": "T2",
+    "program": "multi_parallel_tracks",
+    "status": "done",
+    "deliverable": "assets/configs/buildings/grammars/civic_block_v1.ron",
+    "dispatch": "multi_parallel_tracks_dispatch_v1.json",
+    "updated_at": "2026-06-20T00:00:00+00:00"
+  },
+  {
+    "id": "VEG-CATALOG-BURN-ROWS-001",
+    "priority": 1,
+    "title": "Burn/scar/recovery in vegetation variant catalog",
+    "lane": "veg-ship",
+    "agent": "coder-mcp",
+    "track": "T3",
+    "program": "multi_parallel_tracks",
+    "status": "done",
+    "witness": "debug_runs/veg_catalog_burn_rows_live.json",
+    "dispatch": "multi_parallel_tracks_dispatch_v1.json",
+    "updated_at": "2026-06-20T00:00:00+00:00"
   }
 ]

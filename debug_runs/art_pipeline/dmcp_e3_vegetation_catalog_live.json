@@ -51,7 +51,7 @@
   ],
   "_agent_meta": {
     "schema": "dmcp_e3_vegetation_catalog_live_v1",
-    "written_at_epoch_secs": 1781670218,
+    "written_at_epoch_secs": 1781979970,
     "profile": "DMCP_E3_VARIANT_KEY_SET",
     "source_system": "vegetation_variant_catalog",
     "relative_path": "debug_runs/art_pipeline/dmcp_e3_vegetation_catalog_live.json",

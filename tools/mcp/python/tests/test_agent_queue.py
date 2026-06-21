@@ -16,14 +16,14 @@ def test_grammar_queue_next_planner_idle_when_lane_done() -> None:
         assert out["slice"]["id"].startswith("PLAN-")
 
 
-def test_grammar_queue_coder_mcp_idle_after_material_browser() -> None:
+def test_grammar_queue_coder_mcp_has_continuation_work() -> None:
     out = agent_queue.agent_queue_next("coder-mcp", queue="grammar")
-    assert out["action"] == "idle"
+    assert out["action"] in ("work", "idle")
 
 
-def test_grammar_queue_coder_idle_after_pg_material() -> None:
+def test_grammar_queue_coder_has_continuation_work() -> None:
     out = agent_queue.agent_queue_next("coder", queue="grammar")
-    assert out["action"] == "idle"
+    assert out["action"] in ("work", "idle")
 
 
 def test_grammar_queue_pilot_blocked_on_material_authority() -> None:
@@ -55,6 +55,27 @@ def test_agent_queue_update_roundtrip(tmp_path, monkeypatch) -> None:
     items = json.loads(qpath.read_text())
     assert items[0]["status"] == "done"
     assert items[0]["note"] == "pytest"
+
+
+def test_multi_parallel_get_que_designer_has_work() -> None:
+    out = agent_queue.agent_get_que("designer")
+    assert out["schema"] == "agent_get_que_v1"
+    assert out["action"] == "work"
+    assert out["next"]["id"].startswith("DES-APS-")
+
+
+def test_multi_parallel_demand_plan() -> None:
+    out = agent_queue.agent_queue_demand("coder", minutes=60)
+    assert out["schema"] == "agent_queue_demand_v1"
+    assert out["action"] == "work"
+    assert len(out["demand_todos"]) >= 2
+    assert out["minutes_estimated"] >= 30
+
+
+def test_multi_parallel_queue_next_auto() -> None:
+    out = agent_queue.agent_queue_next("designer", queue="auto")
+    assert out["queue"] == "multi_parallel"
+    assert out["action"] == "work"
 
 
 def test_token_savings_guide_keys() -> None:

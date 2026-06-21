@@ -1,0 +1,43 @@
+{
+  "gate": "DBG-TRIAGE-PERF-MINIMAP-FIRE-20260619",
+  "agent": "debug-intelligence",
+  "read_only": true,
+  "owner": "@coder",
+  "confidence": "high",
+  "issues": {
+    "fire_stall_repr": {
+      "root_cause": "per-frame full rebuild of WorldLodMap + FireVisualFramesByView with no dirty-gate; runs unconditionally every Update tick even when camera/LOD inputs unchanged",
+      "primary_offenders": [
+        "src/gui/world_representation.rs:672 compute_world_representation_frame (no run_if; *frame=next; *lod_map=map every frame)",
+        "src/gui/world_representation.rs:586 build_world_lod_map (O((2r+1)^2) cells, r up to 48 => ~9409 cells/frame, inner O(zones)+O(bubbles) sweep per cell)",
+        "src/gui/world_representation.rs:666 interest_radius_chunks_from_zoom_alpha (radius up to 48 over a 10x10-chunk world => thousands of out-of-world cells)",
+        "src/render/fire_view_extract.rs:306 build_fire_visual_frames_by_view (out.by_id.clear() + rebuild all 4 views every frame)"
+      ],
+      "authority_rule": "immutable frame state / no per-frame full rebuilds; dirty-gate derived view state",
+      "recommendation": "run_if(resource_changed::<MapCameraDesired>||changed LOD inputs) the ComputeFrame set; clamp interest radius to actual world chunk extent; reuse/diff WorldLodMap allocation instead of Vec::new each frame"
+    },
+    "minimap_resize_feedback_loop": {
+      "root_cause": "UI write-back loop: egui minimap window inner panel size written into shell.panel_viewport_suggestion_logical_size + presentation.viewport_size during egui layout, while the whole window outer rect (toolbar+sliders+legend) is queued as next default size -> window ratchets +2px/frame until clamp 720",
+      "primary_offenders": [
+        "src/render/tile_world_fallback.rs:1326-1337 (panel_size from ui.available_size() written back to suggestion + presentation.viewport_size during egui)",
+        "src/render/tile_world_fallback.rs:1409-1432 (inner.response.rect outer window rect queued as next_viewport -> feeds default_viewport sizing next frame)",
+        "src/render/viewport_pipeline.rs:276-327 resolve_minimap_panel_viewport (bumps resolved.revision every change -> revision 53->129->1096->148425 unbounded)",
+        "src/gui/view_representation.rs:404 apply_minimap_camera_intent (UI commits ViewProjectionAuthority -> ui_updates_camera_this_frame=true at frames 100/644)"
+      ],
+      "authority_rule": "UI must NOT write camera/viewport authority during extract; single authority per resolved viewport size",
+      "recommendation": "make the viewport resolver the sole authority for minimap_panel logical size; do not feed egui content/window size back into panel_viewport_suggestion_logical_size during layout; settle/clamp with hysteresis so a stable window stops re-resolving (revision must stop bumping)"
+    }
+  },
+  "coupling": "confirmed - minimap loop re-dirties camera/viewport authority every frame (main_camera_transform_changed_this_frame=true every frame in full_render_diagnostic), which keeps the ungated compute_world_representation_frame + map_camera smooth chain churning => map_cam/view_fire/repr spans inflate together",
+  "witness_evidence": [
+    "debug_runs/full_render_diagnostic_*.json frame ids climb 100->644->1096->3727->24179->72910->148425 (unbounded resolve revisions)",
+    "frame 100_101 & 644_645: ui_updates_camera_this_frame=true (UI->camera write during extract)",
+    "all frames: main_camera_transform_changed_this_frame=true (camera re-dirtied every frame)",
+    "world_fire_particle_frame active_count=336 yet view_fire/repr 300-630ms => algorithmic, not particle count"
+  ],
+  "regression_hint": "minimap default 260x220 (gui/minimap_shell.rs:170) matches operator start; the +2px ratchet was introduced when the egui window inner panel size began feeding back into panel_viewport_suggestion_logical_size (tile_world_fallback.rs:1329) AND the outer window rect into next_viewport (1431) without a settle/hysteresis gate - a recent minimap product-shell window rewrite",
+  "unverified": [
+    "exact commit that introduced the dual size write-back (suspect recent aps/ui-shell refactor; not git-bisected this session)",
+    "whether map_camera_smooth_toward_desired itself is heavy vs just bracketed wall-time in the churning segment"
+  ]
+}

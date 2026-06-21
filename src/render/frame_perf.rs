@@ -72,6 +72,15 @@ pub struct FrameUpdateAttrib {
     pub map_fit_sync_ms: f32,
     pub hud_egui_ms: f32,
     pub world_gen_ui_ms: f32,
+    // PERF-INSTR-VFX-001: fire-pipeline constituent sub-timers (subdivide `fire_pipeline_ms`).
+    // Measurement only — see `attrib_fire_build_view_*` / `attrib_fire_project_*` /
+    // `attrib_fire_particles_*` markers in `fire_visual_extract.rs`.
+    /// [`crate::render::build_fire_visual_frames_by_view`] (per-view extract / LOD rebuild).
+    pub fire_build_view_ms: f32,
+    /// [`crate::render::extraction::run_render_projection_graph`] (fire node CPU projection).
+    pub fire_project_ms: f32,
+    /// [`crate::render::gpu_particles::emit_world_fire_particles_from_projection`] (WorldFireParticleFrame build).
+    pub fire_particles_ms: f32,
 }
 
 /// RAII scope — logs `perf_scope` when elapsed ≥ [`PERF_SLOW_MS`] (see operational perf playbook).
@@ -102,6 +111,7 @@ impl Drop for PerfScope {
             info!(target: "perf_scope", "{} {ms:.2}ms", self.label);
         }
         intra_update_stall_log(self.label, ms);
+        crate::dev::perf_scope_frame_log::record_perf_scope(self.label, ms);
     }
 }
 
@@ -111,6 +121,10 @@ pub struct FrameAttribScratch {
     preview_gpu: Option<Instant>,
     fire: Option<Instant>,
     streaming: Option<Instant>,
+    // PERF-INSTR-VFX-001: fire-pipeline constituent start stamps.
+    fire_build_view: Option<Instant>,
+    fire_project: Option<Instant>,
+    fire_particles: Option<Instant>,
 }
 
 #[inline]
@@ -190,6 +204,77 @@ pub fn attrib_fire_pipeline_after(
     intra_update_stall_log("upd_fire_pipeline", ms);
 }
 
+// --- PERF-INSTR-VFX-001: fire-pipeline constituent sub-timers ----------------------------------
+// Mirror the `attrib_fire_pipeline_before/after` pattern, but bracket each constituent system so
+// the `upd_attrib` line names WHICH fire sub-step owns the cost when many cells are active.
+// Measurement only: these are pure marker systems (read/write scratch + attrib resources).
+
+pub fn attrib_fire_build_view_before(scratch: Option<ResMut<FrameAttribScratch>>) {
+    let Some(mut s) = scratch else {
+        return;
+    };
+    s.fire_build_view = Some(Instant::now());
+}
+
+pub fn attrib_fire_build_view_after(
+    scratch: Option<ResMut<FrameAttribScratch>>,
+    attrib: Option<ResMut<FrameUpdateAttrib>>,
+) {
+    let (Some(mut s), Some(mut a)) = (scratch, attrib) else {
+        return;
+    };
+    let Some(t0) = s.fire_build_view.take() else {
+        return;
+    };
+    let ms = t0.elapsed().as_secs_f32() * 1000.0;
+    a.fire_build_view_ms = ms;
+    intra_update_stall_log("upd_fire_build_view", ms);
+}
+
+pub fn attrib_fire_project_before(scratch: Option<ResMut<FrameAttribScratch>>) {
+    let Some(mut s) = scratch else {
+        return;
+    };
+    s.fire_project = Some(Instant::now());
+}
+
+pub fn attrib_fire_project_after(
+    scratch: Option<ResMut<FrameAttribScratch>>,
+    attrib: Option<ResMut<FrameUpdateAttrib>>,
+) {
+    let (Some(mut s), Some(mut a)) = (scratch, attrib) else {
+        return;
+    };
+    let Some(t0) = s.fire_project.take() else {
+        return;
+    };
+    let ms = t0.elapsed().as_secs_f32() * 1000.0;
+    a.fire_project_ms = ms;
+    intra_update_stall_log("upd_fire_project", ms);
+}
+
+pub fn attrib_fire_particles_before(scratch: Option<ResMut<FrameAttribScratch>>) {
+    let Some(mut s) = scratch else {
+        return;
+    };
+    s.fire_particles = Some(Instant::now());
+}
+
+pub fn attrib_fire_particles_after(
+    scratch: Option<ResMut<FrameAttribScratch>>,
+    attrib: Option<ResMut<FrameUpdateAttrib>>,
+) {
+    let (Some(mut s), Some(mut a)) = (scratch, attrib) else {
+        return;
+    };
+    let Some(t0) = s.fire_particles.take() else {
+        return;
+    };
+    let ms = t0.elapsed().as_secs_f32() * 1000.0;
+    a.fire_particles_ms = ms;
+    intra_update_stall_log("upd_fire_particles", ms);
+}
+
 pub fn attrib_streaming_reconstruct_before(scratch: Option<ResMut<FrameAttribScratch>>) {
     let Some(mut s) = scratch else {
         return;
@@ -215,6 +300,8 @@ pub fn attrib_streaming_reconstruct_after(
 impl FrameUpdateAttrib {
     #[must_use]
     pub fn attrib_sum_ms(&self) -> f32 {
+        // NOTE: `fire_build_view_ms` / `fire_project_ms` / `fire_particles_ms` are SUB-spans of
+        // `fire_pipeline_ms` (already counted); do not add them here or the sum double-counts.
         self.preview_cpu_raster_ms
             + self.preview_gpu_present_ms
             + self.fire_pipeline_ms
@@ -314,6 +401,12 @@ pub fn frame_perf_verbose() -> bool {
             .is_some_and(|v| v == "1" || v.eq_ignore_ascii_case("true"))
 }
 
+/// When sim-spectrum quiet mode is on, structured capture goes to disk only.
+#[must_use]
+fn perf_terminal_suppressed() -> bool {
+    crate::dev::test_run_instrumentation::instrumentation_quiet_terminal()
+}
+
 /// **PERF-PLAY-001** — default play logging: avoid `STAGE5_VERBOSE` / `STAGE5_READINESS_VERBOSE` in `--release`.
 #[must_use]
 pub fn perf_play_quiet_defaults_recommended() -> bool {
@@ -326,6 +419,59 @@ pub fn stage5_readiness_live_verbose() -> bool {
     std::env::var("STAGE5_READINESS_VERBOSE")
         .ok()
         .is_some_and(|v| v == "1" || v.eq_ignore_ascii_case("true"))
+}
+
+/// PERF-INSTR-VFX-001: gate for the minimap-panel-size writer trace (`MINIMAP_TRACE=1` or `PERF=1`).
+/// Off by default so normal runs are not spammed.
+#[must_use]
+pub fn minimap_size_trace_enabled() -> bool {
+    frame_perf_verbose()
+        || std::env::var("MINIMAP_TRACE")
+            .ok()
+            .is_some_and(|v| v == "1" || v.eq_ignore_ascii_case("true"))
+}
+
+thread_local! {
+    /// PERF-INSTR-VFX-001: per-writer-label last-seen `(x, y)` for the on-change minimap trace.
+    static MINIMAP_SIZE_LAST: std::cell::RefCell<std::collections::HashMap<&'static str, (f32, f32)>> =
+        std::cell::RefCell::new(std::collections::HashMap::new());
+}
+
+/// PERF-INSTR-VFX-001: log a minimap panel logical-size write, throttled to *on-change* per writer
+/// label (a tiny thread-local cache of the last value seen for each label). Each line carries the
+/// writer label so the next `--test vfx` run reveals which writer still grows the panel +2px/frame.
+///
+/// Measurement only — no behavior change. Callers do not manage state; the cache is internal.
+pub fn trace_minimap_size_writer(writer: &'static str, x: f32, y: f32) {
+    if !minimap_size_trace_enabled() {
+        return;
+    }
+    let delta = MINIMAP_SIZE_LAST.with(|cell| {
+        let mut map = cell.borrow_mut();
+        let prev = map.get(writer).copied();
+        let changed = match prev {
+            Some((px, py)) => (px - x).abs() > 0.01 || (py - y).abs() > 0.01,
+            None => true,
+        };
+        if !changed {
+            return None;
+        }
+        map.insert(writer, (x, y));
+        Some(prev.map(|(px, py)| (x - px, y - py)))
+    });
+    let Some(delta) = delta else {
+        return;
+    };
+    match delta {
+        Some((dx, dy)) => info!(
+            target: "minimap_size",
+            "MINIMAP_SIZE writer={writer} logical=({x:.2},{y:.2}) delta=({dx:.2},{dy:.2})"
+        ),
+        None => info!(
+            target: "minimap_size",
+            "MINIMAP_SIZE writer={writer} logical=({x:.2},{y:.2}) delta=init"
+        ),
+    }
 }
 
 pub fn record_frame_perf_ms(perf: &mut FramePerf, ms: f32, slot: FramePerfSlot) {
@@ -464,6 +610,10 @@ pub fn emit_frame_perf_summary(
         return;
     }
 
+    if perf_terminal_suppressed() {
+        return;
+    }
+
     let raster_ms = if perf.tile_raster_ran {
         perf.tile_raster_ms
     } else {
@@ -471,7 +621,7 @@ pub fn emit_frame_perf_summary(
     };
 
     let mut line = format!(
-        "PERF wall={:.2} instr={:.2} gap={:.2} | cpu_pre_egui={:.2} cpu_egui={:.2} cpu_post_egui={:.2} gpu_gap={:.2} | spine={:.2} world_repr={:.2} graph={:.2} merge={:.2} atm={:.2} readiness={:.2} raster={:.2}{} | upd_attrib sum={:.2} pv_cpu={:.2} pv_gpu={:.2} fire={:.2} stream={:.2} map_fit={:.2} hud={:.2} wgen={:.2}",
+        "PERF wall={:.2} instr={:.2} gap={:.2} | cpu_pre_egui={:.2} cpu_egui={:.2} cpu_post_egui={:.2} gpu_gap={:.2} | spine={:.2} world_repr={:.2} graph={:.2} merge={:.2} atm={:.2} readiness={:.2} raster={:.2}{} | upd_attrib sum={:.2} pv_cpu={:.2} pv_gpu={:.2} fire={:.2} stream={:.2} map_fit={:.2} hud={:.2} wgen={:.2} | fire_sub build_view={:.2} project={:.2} particles={:.2}",
         wall_ms,
         instrumented,
         gap_ms,
@@ -495,6 +645,9 @@ pub fn emit_frame_perf_summary(
         attrib_snap.map_fit_validate_ms,
         attrib_snap.hud_egui_ms,
         attrib_snap.world_gen_ui_ms,
+        attrib_snap.fire_build_view_ms,
+        attrib_snap.fire_project_ms,
+        attrib_snap.fire_particles_ms,
     );
 
     if let Some(b) = budget.as_deref() {
@@ -681,6 +834,10 @@ mod tests {
             map_fit_sync_ms: 0.5,
             hud_egui_ms: 6.0,
             world_gen_ui_ms: 7.0,
+            // Fire sub-spans are slices of `fire_pipeline_ms` and intentionally excluded from the sum.
+            fire_build_view_ms: 1.5,
+            fire_project_ms: 1.0,
+            fire_particles_ms: 0.5,
         };
         assert!((a.attrib_sum_ms() - 30.0).abs() < f32::EPSILON);
     }

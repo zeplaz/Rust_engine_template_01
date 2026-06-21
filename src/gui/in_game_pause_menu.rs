@@ -5,7 +5,7 @@
 use bevy::prelude::*;
 
 use crate::engine::states::InGameMenuState;
-use crate::gui::hud::{ContextTrayState, HudPanelState};
+use crate::gui::hud::ContextTrayState;
 use crate::gui::pause_menu_confirm::PauseMenuPendingAction;
 use crate::gui::ui_gates::in_simulation_or_editor;
 use crate::gui::InputBindings;
@@ -14,7 +14,12 @@ pub fn toggle_pause_menu_on_escape(
     keys: Res<ButtonInput<KeyCode>>,
     bindings: Res<InputBindings>,
     menu: Res<State<InGameMenuState>>,
+    picker: Res<crate::gui::hud::SimBuildPickerState>,
+    road_sheet: Res<crate::gui::hud::sim_road_tool_sheet::SimRoadToolSheetState>,
     context_tray: Res<ContextTrayState>,
+    tray: Res<crate::gui::hud::HudOverlayTrayState>,
+    layout: Res<crate::gui::hud::HudCommandShellLayout>,
+    transmission: Res<crate::gui::hud::TransmissionShellState>,
     mut next_menu: ResMut<NextState<InGameMenuState>>,
     mut pending: ResMut<PauseMenuPendingAction>,
 ) {
@@ -29,8 +34,14 @@ pub fn toggle_pause_menu_on_escape(
     if pending.is_pending() {
         return;
     }
-    // Let `hud_panel_escape_collapse_system` collapse tray/shells first; open pause on next Esc.
-    if context_tray.panel_state != HudPanelState::Collapsed {
+    if !super::hud::sim_hud_esc_cascade::sim_hud_esc_cascade_ready_for_pause(
+        &picker,
+        &road_sheet,
+        &context_tray,
+        &tray,
+        &layout,
+        &transmission,
+    ) {
         return;
     }
     NextState::set_if_neq(&mut *next_menu, InGameMenuState::Pause);
@@ -42,6 +53,7 @@ impl Plugin for InGamePauseMenuPlugin {
     fn build(&self, app: &mut App) {
         app.init_state::<InGameMenuState>()
             .init_resource::<PauseMenuPendingAction>()
+            .add_plugins(super::hud::sim_hud_esc_cascade::SimHudEscCascadePlugin)
             .add_plugins(super::pause_menu_bevy::PauseMenuBevyPlugin)
             .add_systems(
                 Update,

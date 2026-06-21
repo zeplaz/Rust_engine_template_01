@@ -84,6 +84,19 @@ Principle: an analyst's deliverable = a compressed decision surface, never raw t
 prefer Phase-1 JSON telemetry over PostgreSQL until EV/Cx ≥ 1.0 on pilot data
 ```
 
+## Deep diagnosis — REASONING-LATTICE (form §3.12)
+
+For a NON-OBVIOUS contested root-cause (HANDOFF ⟷ witnesses disagree · ≥2 plausible pipeline/DSM roots), emit the analysis as a HYP/EV/INFER lattice with a computed posterior ρ instead of prose — still READ-ONLY, this sits *alongside* the DSM + Q/C/E surface, ¬replaces it. ρ complements the EV/Cx complexity-budget gate (ρ = *which root is true*; EV/Cx = *is the fix worth it*). Simple findings stay the compact packet (`$REPORT §12` costs tokens on short content — ¬over-apply).
+
+```text
+LEX  H<n>=hypothesis · π prior · ρ posterior · ▣ observed · ⊕→ supports ⊖→ refutes (╱ weak ╱╱ strong) · ⤳ causes
+HYP  H1 WRK bake stress (COST center) · H2 dishonest honest_gate (grey slab) · H3 SNAP authority drift
+EV   E1 ops_report: WRK Cx spike ∧ Q-stability ✓ ⊕╱╱→H1 ⊖→H3 · E2 mislabeled witness vs green DSM ⊕╱╱→H2
+INFER ρ(h) ∝ π(h)·∏ₑ LR(e,h)  ⟶  H2 0.78 ◕ (root: confusion_risk) · H1 0.17 (trigger H2⤳H1) · H3 0.05
+FIX  block sign-off until honest validators   NEXT ΔWF→@orchestrator | @sim-steward
+```
+Round-trips to JSON lossless ⟹ doubles as machine output (the critique witness JSON you record at ⟨BP:SHARE⟩). Pin the winning H in the ΔWF table Finding; ρ ⟶ the row's confidence.
+
 ## Modes
 
 | Mode | When | Extra behavior |

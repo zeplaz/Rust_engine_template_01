@@ -52,7 +52,7 @@
     "relative_path": "debug_runs/play_scenario_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "play_scenario_001_tail_live_witness",
-    "written_at_epoch_secs": 1781756611
+    "written_at_epoch_secs": 1781979773
   },
   "demo_fire_sparks_visible_at_operational_zoom": true,
   "g_play_coder_rollup_green": true,

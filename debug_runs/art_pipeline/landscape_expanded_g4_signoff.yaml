@@ -1,0 +1,35 @@
+# landscape_expanded_g4_signoff.yaml — G4 manual keyframe review (DMCP-VEG-ATLAS-SHIP-001)
+gate: G4
+batch_id: tile_landscape_expanded_v1
+atlas_id: landscape_lg5_expanded_v1
+reviewer:
+  designer_mcp: pending
+  operator: pending
+proceed_ship: no
+verdict: OPEN
+minimum_set:
+  topology_patch_burn_04:
+    in_batch: true
+    teach_png: true
+    manual_still: false
+    notes: "Teach overlay OK — G4 manual still required for ship"
+  topology_patch_scar:
+    in_batch: true
+    teach_png: true
+    manual_still: false
+    notes: "Teach overlay OK — G4 manual still required for ship"
+  topology_corridor_regrowth_grass:
+    in_batch: false
+    teach_png: false
+    manual_still: false
+    notes: "Not in 16-cell batch — export via iso rig before ship flip"
+rubric_refs:
+  - src/dev/design_landscape_keyframe_burn_reqs_v1.md
+  - src/dev/design_veg_burn_visual_language_v1.md
+criteria_doc: src/dev/dmcp_veg_atlas_ship_v1.md
+blocked_by:
+  - "G4 manual stills incomplete"
+  - "topology_corridor_regrowth_grass missing"
+next:
+  - "Operator exports manual stills to keyframe_stills/tile_landscape_expanded_v1/"
+  - "designer-mcp reviews @ 64px iso — flip proceed_ship to yes when rubric passes"

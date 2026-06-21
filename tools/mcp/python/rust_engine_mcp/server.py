@@ -470,7 +470,7 @@ def variant_matrix_expand(
 @mcp.tool()
 def agent_queue_next(
     agent: str,
-    queue: str = "grammar",
+    queue: str = "auto",
     mark_in_progress: bool = False,
 ) -> str:
     """Next drainable slice for @planner/@coder/@designer — work or drain fallback, never wait-only idle."""
@@ -482,11 +482,46 @@ def agent_queue_next(
 
 
 @mcp.tool()
+def get_que(
+    agent: str,
+    track: str = "",
+    demand: bool = False,
+    minutes: int = 60,
+    mark_in_progress: bool = False,
+) -> str:
+    """BLANG:Q+ — multi-parallel next slice + drain board. Say 'get que' at session start. Use demand=true for ~1h todo list."""
+    return json.dumps(
+        agent_queue.agent_get_que(
+            agent,
+            track=track,
+            build_list=demand,
+            minutes=minutes,
+            mark_in_progress=mark_in_progress,
+        )
+    )
+
+
+@mcp.tool()
+def agent_queue_demand(
+    agent: str,
+    minutes: int = 60,
+    max_slices: int = 8,
+    track: str = "",
+) -> str:
+    """Ordered session todo list from ready rows across open tracks (~hour-scale)."""
+    return json.dumps(
+        agent_queue.agent_queue_demand(
+            agent, minutes=minutes, max_slices=max_slices, track=track
+        )
+    )
+
+
+@mcp.tool()
 def agent_queue_update(
     slice_id: str,
     status: str,
     note: str = "",
-    queue: str = "grammar",
+    queue: str = "auto",
     enforce: bool = False,
 ) -> str:
     """Checkpoint a queue slice (ready|blocked|in_progress|done|deferred)."""
@@ -505,6 +540,41 @@ def validate_queue_integrity_report(queue_filter: str = "", compress: int = 3) -
         compression_level=max(1, min(4, compress)),
     )
     return json.dumps(report.to_dict())
+
+
+@mcp.tool()
+def intel_officer_sweep(queue_filter: str = "", include_witness_scan: bool = True, compress: int = 3) -> str:
+    """Intel officer surveillance — false-positive done/green cull candidates (report-only)."""
+    from rust_engine_mcp import intel_officer
+
+    return json.dumps(
+        intel_officer.intel_officer_sweep(
+            queue_filter=queue_filter,
+            include_witness_scan=include_witness_scan,
+            compression_level=max(1, min(4, compress)),
+        )
+    )
+
+
+@mcp.tool()
+def intel_officer_apply(
+    ids: str,
+    apply: bool = False,
+    action: str = "reopen",
+    note: str = "",
+) -> str:
+    """Supervised cull — reopen queue rows / demote dishonest witnesses (dry_run unless apply=true)."""
+    from rust_engine_mcp import intel_officer
+
+    id_list = [x.strip() for x in ids.split(",") if x.strip()]
+    return json.dumps(
+        intel_officer.intel_officer_apply(
+            ids=id_list,
+            dry_run=not apply,
+            action=action,
+            note=note,
+        )
+    )
 
 
 @mcp.tool()
@@ -891,6 +961,8 @@ def micro_tool_help() -> str:
             ],
             "mcp_agent_tools": [
                 "agent_queue_next",
+                "get_que",
+                "agent_queue_demand",
                 "agent_queue_update",
                 "agent_queue_board",
                 "witness_brief",

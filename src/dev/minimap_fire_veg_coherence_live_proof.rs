@@ -57,7 +57,7 @@ pub fn refresh_veg_minimap_burn_merge_live_witness() -> bool {
     use crate::gui::MinimapPresentationSource;
     use crate::render::minimap_compositor::{
         fixture_ui_w3_m3_001_compositor, minimap_rgba_image, MinimapCompositePath,
-        MinimapCompositorState, MinimapGpuCompositorDiagnostics, MinimapRenderTargetRegistry,
+        MinimapGpuCompositorDiagnostics, MinimapRenderTargetRegistry,
     };
 
     let tray = crate::gui::hud::HudOverlayTrayState::default();

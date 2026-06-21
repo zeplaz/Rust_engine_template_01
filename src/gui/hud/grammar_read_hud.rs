@@ -7,7 +7,7 @@ use crate::construction::procedural::{
 use crate::construction::{
     human_age_label, human_archetype_label, human_district_label, human_massing_label,
     ActiveBuildTool, BuildGhostState, BuildPlacementMode, BuildPlacementPreview, BuildStripState,
-    ToolContext,
+    BuildTool, ToolContext,
 };
 use crate::gui::hud::validation_feedback;
 use crate::gui::input_bindings::InputBindings;
@@ -185,6 +185,121 @@ fn des_build_read_hud_001_self_check() -> Result<(), &'static str> {
     Ok(())
 }
 
+#[must_use]
+pub fn should_use_build_read_hud_v2(strip: &BuildStripState) -> bool {
+    strip.active != ToolContext::None
+}
+
+fn format_build_scale(ghost: &BuildGhostState) -> String {
+    let w = ((ghost.footprint.width as f32) * ghost.scale_factor).round() as u32;
+    let h = ((ghost.footprint.depth as f32) * ghost.scale_factor).round() as u32;
+    format!("{w}×{h}")
+}
+
+fn active_corridor_phase_label(
+    strip: &BuildStripState,
+    book: &crate::strategic::CorridorConstructionBook,
+) -> Option<u8> {
+    if !matches!(strip.active, ToolContext::Roads | ToolContext::Rail) {
+        return None;
+    }
+    use crate::strategic::ConstructionPhase;
+    book.rows.values().find_map(|row| {
+        if row.phase == ConstructionPhase::Completed {
+            None
+        } else {
+            Some(match row.phase {
+                ConstructionPhase::Planned => 1,
+                ConstructionPhase::InProgress => 2,
+                ConstructionPhase::Completed => 3,
+            })
+        }
+    })
+}
+
+/// **DES-BUILD-READ-HUD-002** — compact build strip (validity · scale · corridor).
+#[must_use]
+pub fn format_build_read_hud_v2_line(
+    tool: &ActiveBuildTool,
+    strip: &BuildStripState,
+    ghost: &BuildGhostState,
+    preview: &BuildPlacementPreview,
+    book: &crate::strategic::CorridorConstructionBook,
+) -> String {
+    use super::sim_hud_esc_cascade::truncate_build_read_line;
+
+    if tool.tool == BuildTool::Demolish {
+        return truncate_build_read_line("BUILD  ·  DEMOLISH · hover");
+    }
+    let scale = format_build_scale(ghost);
+    let mut line = if preview.report.allows_commit {
+        format!("BUILD  ·  Valid ✓  ·  {scale}")
+    } else {
+        let reason = validation_feedback::primary_validation_message(&preview.report)
+            .unwrap_or_else(|| "blocked".into());
+        format!("BUILD  ·  Blocked ✗ · {reason}  ·  {scale}")
+    };
+    if let Some(phase) = active_corridor_phase_label(strip, book) {
+        line.push_str(&format!("  ·  Corridor · phase {phase}"));
+    }
+    truncate_build_read_line(&line)
+}
+
+#[must_use]
+pub fn des_build_read_hud_002_witness_green() -> bool {
+    des_build_read_hud_002_self_check().is_ok()
+}
+
+fn des_build_read_hud_002_self_check() -> Result<(), &'static str> {
+    use crate::construction::BuildingArchetypeId;
+    use crate::strategic::{ConstructionPhase, CorridorConstructionBook, CorridorConstructionRow};
+    use crate::systems::transport::TransportEdgeId;
+
+    let tool = ActiveBuildTool {
+        tool: BuildTool::Building(BuildingArchetypeId::Factory),
+        ..Default::default()
+    };
+    let strip = BuildStripState {
+        active: ToolContext::Industry,
+    };
+    let ghost = BuildGhostState::default();
+    let mut preview = BuildPlacementPreview::default();
+    preview.report.allows_commit = true;
+    let book = CorridorConstructionBook::default();
+    let valid = format_build_read_hud_v2_line(&tool, &strip, &ghost, &preview, &book);
+    if !valid.contains("Valid ✓") {
+        return Err("valid_copy");
+    }
+    let demolish = ActiveBuildTool {
+        tool: BuildTool::Demolish,
+        ..Default::default()
+    };
+    let demo = format_build_read_hud_v2_line(&demolish, &strip, &ghost, &preview, &book);
+    if !demo.contains("DEMOLISH") {
+        return Err("demolish_copy");
+    }
+    let mut book2 = CorridorConstructionBook::default();
+    book2.rows.insert(
+        TransportEdgeId(1),
+        CorridorConstructionRow {
+            edge_id: TransportEdgeId(1),
+            phase: ConstructionPhase::InProgress,
+            progress: 0.5,
+        },
+    );
+    let strip_road = BuildStripState {
+        active: ToolContext::Roads,
+    };
+    if active_corridor_phase_label(&strip_road, &book2) != Some(2) {
+        return Err("corridor_phase");
+    }
+    let corridor = format_build_read_hud_v2_line(&tool, &strip_road, &ghost, &preview, &book2);
+    if !corridor.contains("Corridor") {
+        return Err("corridor_copy");
+    }
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -192,5 +307,10 @@ mod tests {
     #[test]
     fn des_build_read_hud_001_witness_self_check_green() {
         assert!(des_build_read_hud_001_witness_green());
+    }
+
+    #[test]
+    fn des_build_read_hud_002_witness_self_check_green() {
+        assert_eq!(des_build_read_hud_002_self_check(), Ok(()));
     }
 }

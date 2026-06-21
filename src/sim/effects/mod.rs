@@ -20,7 +20,7 @@ pub use player_event_log::{
     clear_player_event_crit_unread, event_log_ui_001_witness_green, event_log_ui_001_witness_json,
     event_log_ui_format_witness_green, event_log_ui_impl_witness_green,
     event_log_ui_ops_strip_witness_green, event_log_ui_projection_witness_green,
-    format_ops_strip_alerts_line, format_ops_strip_event_crit_line,
+    format_ops_strip_alert_badge_v2, format_ops_strip_alerts_line, ops_strip_alert_tier_counts, format_ops_strip_event_crit_line,
     format_player_event_row_line, format_player_event_tray_body, format_player_event_tray_row_line,
     project_player_event_log_from_drain, PlayerEventLog, PLAYER_EVENT_DEDUPE_TICKS,
     PLAYER_EVENT_LOG_CAP, PLAYER_EVENT_TRAY_BODY_MAX_ROWS,

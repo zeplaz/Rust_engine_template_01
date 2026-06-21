@@ -1,0 +1,10 @@
+{
+  "gate": "VEG-CATALOG-BURN-ROWS-001",
+  "green": true,
+  "burn_frame_count": 8,
+  "burn_rows": 15,
+  "scar_rows": 3,
+  "succession_rows": 5,
+  "topology_rows": 15,
+  "catalog_path": "assets/configs/landscape/_vegetation_variant_catalog.ron"
+}

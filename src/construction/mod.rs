@@ -20,7 +20,7 @@ mod visual_authority;
 mod build_tool_authority;
 mod build_toolbox;
 mod map_egui_projection;
-pub use map_egui_projection::world_to_sim_map_egui;
+pub use map_egui_projection::{world_to_sim_map_egui, ConstructionMapProjection};
 mod commercial_menu;
 mod corridor_transport;
 mod construction_pipeline;
@@ -209,12 +209,18 @@ pub use sessions::ActiveToolSession;
 pub use snap::RoadSnapSettings;
 pub use upgrade::enqueue_road_upgrade;
 pub use power_lines::{
-    commit_power_line_to_utility_graph, draw_power_line_path_ghost_egui,
-    power_line_draw_witness_green, power_line_ghost_preview_dashed_witness_green,
-    power_line_path_input_system,
-    power_line_routing_mode_hotkey_system, sync_power_line_build_preview,
+    commit_power_line_to_utility_graph, cut_power_line_segment, damage_power_line_segment,
+    draw_power_line_path_ghost_egui, node_key_for_world, power_damage_segment_witness_green,
+    power_line_cut_input_wired, power_line_demolish_cut_system, power_line_draw_witness_green,
+    power_line_ghost_preview_dashed_witness_green, power_line_path_input_system,
+    power_repair_queue_witness_green, power_line_routing_mode_hotkey_system,
+    preview_island_offline_from_cut, register_power_segments_from_graph_system,
+    sync_power_damage_to_presentation_system, sync_power_line_build_preview,
     sync_power_line_from_build_tool, sync_power_line_preview_overlay_system,
-    update_power_line_path_preview_system, ActivePowerLinePlacement, PowerLineRoutingMode,
+    tick_power_repair_queue_system, update_power_line_path_preview_system,
+    ActivePowerLinePlacement, PowerLineCutToast, PowerLineDamageBook, PowerLineRoutingMode,
+    PowerLineSegmentHealth, PowerRepairJob, PowerRepairQueue, POWER_REPAIR_PARTS_PER_SEGMENT,
+    POWER_REPAIR_TICKS_PER_JOB,
 };
 pub use rail::{
     draw_rail_path_ghost_egui, rail_path_input_system, sync_rail_path_build_preview,
@@ -274,6 +280,9 @@ impl Plugin for BuildPlanningPlugin {
             .init_resource::<ActiveRoadPlacement>()
             .init_resource::<ActiveRailPlacement>()
             .init_resource::<ActivePowerLinePlacement>()
+            .init_resource::<crate::construction::PowerLineDamageBook>()
+            .init_resource::<crate::construction::PowerRepairQueue>()
+            .init_resource::<crate::construction::PowerLineCutToast>()
             .init_resource::<ActiveZonePaint>()
             .init_resource::<history::ConstructionHistory>()
             .init_resource::<roads::RoadToolPopupState>()
@@ -315,6 +324,7 @@ impl Plugin for BuildPlanningPlugin {
             .init_resource::<ConstructionPlanQueue>()
             .init_resource::<ConstructionWorldRevision>()
             .init_resource::<ExecutedRoadNetwork>()
+            .init_resource::<crate::gui::hud::power_node_hover::PowerNodeHoverState>()
             .add_systems(Startup, hydro_coupling::register_construction_hydro_coupling_bridge)
             .add_message::<ConstructionQueueIntent>()
             .add_systems(
@@ -394,6 +404,10 @@ impl Plugin for BuildPlanningPlugin {
                     sync_power_line_preview_overlay_system.after(sync_power_line_build_preview),
                     power_line_path_input_system.after(sync_power_line_build_preview),
                     power_line_routing_mode_hotkey_system,
+                    power_lines::register_power_segments_from_graph_system,
+                    power_lines::tick_power_repair_queue_system,
+                    power_lines::power_line_demolish_cut_system,
+                    crate::gui::hud::power_node_hover::sync_power_node_hover_pick,
                 )
                     .chain()
                     .run_if(in_simulation_or_editor),
@@ -460,12 +474,15 @@ impl Plugin for BuildPlanningPlugin {
                         .run_if(in_simulation_or_editor),
                     crate::gui::hud::context_tray_build_egui::draw_context_tray_build_body_egui
                         .run_if(in_simulation_or_editor),
+                    crate::gui::hud::context_tray_power_repair_egui::draw_context_tray_power_repair_egui
+                        .run_if(in_simulation_or_editor),
                     placement_debug::draw_construction_placement_debug_overlay
                         .run_if(in_simulation_or_editor),
                     tool_hints::draw_tool_hints_egui,
                     crate::gui::hud::sim_road_tool_sheet::draw_sim_road_tool_sheet_egui,
                     crate::gui::hud::sim_power_tool_sheet::draw_sim_power_tool_sheet_egui,
                     crate::gui::hud::plant_focus_card::draw_plant_focus_card_egui,
+                    crate::gui::hud::power_node_hover_egui::draw_power_node_hover_egui,
                     draw_power_line_path_ghost_egui,
                     visual_authority::draw_construction_visual_requests_egui,
                     phase_visual::draw_construction_phase_labels_egui,

@@ -3,29 +3,28 @@ name: debug-intelligence
 description: >-
   Triage diagnostics into compressed, routed reports instead of fixing in place or
   dumping logs. Use when interpreting witness JSON, viewport/authority drift, render
-  contract mismatches, construction placement projection deltas, multi-writer ECS
-  resources, schedule hazards, or stale scaffolds. Produces a YAML routing packet for
-  @planner / @coder / @designer. Triggers: witness, drift, dual writer, render contract,
-  viewport, placement debug, Pick Δ, ghost misalign, diagnostics, panic, regression triage.
-disable-model-invocation: true
+  contract mismatches, multi-writer ECS resources, schedule hazards, or stale
+  scaffolds. Produces a YAML routing packet (root cause, affected systems, owner,
+  confidence) for @planner / @coder / @designer. Triggers: witness, drift, dual
+  writer, render contract, viewport, debug, diagnostics, panic, regression triage.
 ---
 
 `⟦SYM⟧ lang⊳ $ref:prompts/SYMBOLIC_LANGUAGE.meta.md`
 
 # debug-intelligence — compress evidence, route the fix
 
-## The pattern
+## The pattern (form M — extract ▷ compress ⬡ route)
 
 A triage agent does **not** fix and does **not** paste raw logs.
 
 ```text
-◎evidence ◂⊳ smallest sufficient source (witness DIGEST · code REGION · debug probe fields)
-  ▷⊳ ▢compress ─⬡[severity · root_cause · affected · migration · conf]▶
-  ▷⊳ ◆route ▶ ⦿owner + single next step
-  ⛔ log-walls — surface the DECISION not the dump
+◎evidence ◂⊳ smallest sufficient source (witness DIGEST ¬whole JSON · code REGION ¬file)
+  ▷⊳ ▢compress ─⬡[tiered finding: severity · root_cause · affected · migration · conf ◔◑◕●]▶
+  ▷⊳ ◆route ▶ ⦿owner-who-acts + single next step
+  ⛔ log-walls — surface the DECISION ¬the dump · adapt sources + owner set to pipeline
 ```
 
-Output = routing packet, not a patch:
+Output = routing packet ¬patch:
 
 ```yaml
 issue: <one line>
@@ -37,74 +36,52 @@ owner: "@planner | @coder | @designer | @orchestrator"
 confidence: 0.0–1.0
 ```
 
-## In this repo (scope)
+## In this repo (scope + watch surfaces)
 
 ```text
-⊚own  ECS / viewport / render / placement-projection DRIFT
-¬own  pipeline DSM / Q-C-E / three-track → operations-intelligence skill
+⊚own  ECS / viewport / render DRIFT only
+¬own  pipeline DSM / Q-C-E / three-track ⤵ [operations-intelligence](../operations-intelligence/SKILL.md)
 ```
-
-**Watch surfaces:**
 
 ```text
-src/gui/view_authority.rs · view_projection_authority.rs · map_camera.rs
-src/render/viewport_pipeline.rs · fire_visual_extract.rs · map_view/
-src/construction/placement_debug.rs · map_egui_projection.rs
+watch ⦃ src/gui/view_authority.rs ║ src/gui/view_projection_authority.rs ║ src/render/viewport_pipeline.rs ║ src/render/extraction/fire_visual_extract.rs ║ src/gui/map_view/ ⦄
+detects ⦃ multi-writer resources ║ hidden authority mutations ║ camera bleed ║ schedule hazards ║ stale scaffolds ⦄
+authority map ◂⊳ [bevy-simulation-grade](../bevy-simulation-grade/SKILL.md)
 ```
 
-**Detects:** multi-writer resources · hidden authority mutation · camera bleed · scissor/heal mismatch · schedule hazards · stale scaffolds · projection span confusion (`fixed_w` vs `visible_w`)
-
-Authority map: [bevy-simulation-grade/07-repo-authority-map.md](../bevy-simulation-grade/07-repo-authority-map.md)  
-Placement projection: [bevy-simulation-grade/09-sim-map-projection-placement.md](../bevy-simulation-grade/09-sim-map-projection-placement.md)
-
-## Construction placement debug (live overlay)
-
-When user reports cursor/ghost misalignment, read **probe fields** first (not perf logs):
-
-| Field | Drift signal |
-|-------|----------------|
-| `pick_delta_world` | cam vs manual egui inverse — want **< 1** |
-| `ghost_delta_camera_vs_egui_px` | draw path — want **< 4** |
-| `cursor_reproject_delta_px` | camera self-consistency |
-| `latch_using_hole` vs `camera_viewport_phys` | hole latch true but viewport full window → ortho/view_px bug |
-| `ortho_fixed_wh` vs `projection_visible_wh` | fixed = view/zoom; visible = manual span |
-| `camera_authoritative` | which pick path is live |
-
-**Routing examples:**
-
-```yaml
-# span bug
-issue: Pick Δ world large while camera roundtrip ok
-root_cause: sim_map_*_in_frame used fixed_w/h instead of visible_w/h
-owner: "@coder"
-confidence: 0.9
-
-# scissor heal bug
-issue: Ghost detached, latch_hole=true, viewport full window
-root_cause: view_px sized from sim hole while GPU draws window_px
-owner: "@coder"
-confidence: 0.85
-```
-
-Enable: `--test vfx` / `--test visual` or `CONSTRUCTION_PLACEMENT_DEBUG=1`.
-
-## Evidence commands
-
-Prefer validation-first and witness briefs over raw cargo:
+Evidence commands via the agent-lang driver (compressed ¬raw):
 
 ```bash
-cargo validate-report cargo --cached
-# witness: debug_runs/unified_witness_index.json · construction_stage_live.json
+node .claude/skills/agent-lang/driver.mjs witness-brief debug_runs/<witness>.json
+node .claude/skills/agent-lang/driver.mjs agent-queue-board
+node .claude/skills/agent-lang/driver.mjs doc src/gui/view_authority.rs    # file-digest (region peek)
 ```
 
-Escalate to `raw_log_path` only when `confidence < 0.7` or validator status failed with empty errors.
+```text
+◎witness-brief    ▷⊳ {green, status, summary}
+◎agent-queue-board ▷⊳ open ⟨ID⟩s + per-agent state (the ⟨BP:MIRROR⟩ orient before routing)
+```
+
+Collective ritual before routing (form M):
+
+```text
+⟨BP:MIRROR⟩ agent-queue-board + witness-brief <latest> ▷⊳ ⟨BP:SCAN⟩ witness-brief/doc ▷⊳ ▢emit YAML ▷⊳ ⟨BP:SHARE⟩ witness JSON + agent-queue-update <id> --note
+```
 
 ## Gotchas
 
-- Lone ✅ is not a verdict — close with 🧪 measured, 📜 witnessed, or ⊚ authority-valid
-- Do not read full witness JSON when a digest or probe struct suffices
-- Stale binary after `map_camera.rs` edit — confirm file non-empty and rebuild before deep triage
+```text
+⚠ lone ✅ ≠ verdict   close findings w/ evidence ⦃ 🟢✅🧪 measured ║ 🟢✅📜 witnessed ║ 🟢✅⊚ authority ⦄ → see [agent-lang](../agent-lang/SKILL.md)
+⚠ ¬read full witness JSON   witness-brief returns green/status/summary you need · escalate to raw file only when conf < ◑(.7)
+⚠ markers CLI removed in refactor   ⟨BP:MIRROR⟩ now reads agent-queue-board + witness-brief ; ⟨BP:SHARE⟩ records a witness JSON + queue --note (no agent-marker-append)
+```
 
 ## Source
 
-Full detection rules: [reference.md](reference.md)
+```text
+◎.cursor/skills/debug-intelligence/reference.md   Cursor original — detection + routing rules (the SKILL.md there is a stub)
+```
+
+```text
+⟦/debug-intelligence⟧ NEXT ⚑ ⟨BP:MIRROR⟩ agent-queue-board → ⟨BP:SCAN⟩ witness-brief → emit YAML packet → ΔWF→@owner (single next action)
+```

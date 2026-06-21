@@ -1,0 +1,18 @@
+{
+  "gate": "APS-STUDIO-CLOSE-001",
+  "green": true,
+  "onboard_witness": true,
+  "assembly_onboard_strip": true,
+  "preview_variant_state_module": true,
+  "p7_style_tests_on_disk": true,
+  "depends_on": [
+    "OVR-P55-PREVIEW-002",
+    "OVR-P56-ONBOARD-001"
+  ],
+  "_agent_meta": {
+    "schema": "aps_studio_close_live_v1",
+    "written_at_epoch_secs": 1781984039,
+    "profile": "APS_STUDIO_CLOSE",
+    "relative_path": "debug_runs/art_pipeline/aps_studio_close_live.json"
+  }
+}

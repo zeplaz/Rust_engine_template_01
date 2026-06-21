@@ -76,6 +76,8 @@ pub fn refresh_power_map_overlay_live_witness() -> bool {
         && preview_stroke.dashed;
     let body = serde_json::json!({
         "gate": "COD-POWER-OVERLAY-RENDER-001",
+        "slice_id": "COD-POWER-OVERLAY-RENDER-001",
+        "design_ref": "src/dev/design_power_map_overlay_v1.md",
         "green": green,
         "overlay_power_edge_rows": edges,
         "power_overlay_auto_on_tool": witness.get("power_overlay_auto_on_tool"),
@@ -86,6 +88,7 @@ pub fn refresh_power_map_overlay_live_witness() -> bool {
         "island_highlight_active": witness.get("island_highlight_active"),
         "island_offline_buildings": witness.get("island_offline_buildings"),
         "minimap_power_strokes": witness.get("minimap_power_strokes"),
+        "load_heat_enabled": witness.get("load_heat_enabled"),
         "map_draw_wired": witness.get("map_draw_wired"),
     });
     let wrapped = crate::dev::debug_run_envelope::wrap_debug_run(

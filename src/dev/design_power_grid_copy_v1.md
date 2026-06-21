@@ -37,3 +37,23 @@ Locked strings for power line UX — coder: `power_grid_copy.rs` or extend `sim_
 |:---|:---|
 | `power.island.toast` | `Power island — {n} buildings offline` |
 | `power.island.ops` | `⚠ Island · {n} offline` |
+
+## Node hover (DES-POWER-NODE-HOVER-001)
+
+| Key | String |
+|:---|:---|
+| `power.hover.transformer.title` | `Distribution transformer` |
+| `power.hover.substation.title` | `Grid substation` |
+| `power.hover.status.online` | `● Online` |
+| `power.hover.status.offline` | `○ Offline` |
+| `power.hover.status.damaged` | `◆ Damaged` |
+| `power.hover.status.destroyed` | `× Destroyed` |
+| `power.hover.status.overload` | `⟳ Overload` |
+| `power.hover.load` | `Load` |
+| `power.hover.capacity` | `Capacity` |
+| `power.hover.feeds` | `Feeds` |
+| `power.hover.links` | `Links` |
+| `power.hover.links.fmt` | `{lines} lines · {upstream} upstream` |
+| `power.hover.feeds.fmt` | `{n} consumers` |
+| `power.hover.capacity.fmt` | `{used} / {max} MVA` |
+| `power.hover.voltage.mixed` | `Mixed voltage` |

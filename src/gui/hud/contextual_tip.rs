@@ -126,17 +126,32 @@ pub fn update_developmental_context_strip_system(
     site_stub: Option<Res<crate::construction::SiteStubOverlayState>>,
     tool: Option<Res<crate::construction::ActiveBuildTool>>,
     registry: Option<Res<crate::construction::BuildingDefinitionRegistry>>,
+    book: Option<Res<crate::strategic::CorridorConstructionBook>>,
     mut q: Query<&mut Text, With<DevelopmentalContextStripLine>>,
 ) {
     let site_stub_overlay_on = site_stub
         .as_deref()
         .map(|s| s.preset_id.is_some())
         .unwrap_or(false);
-    let grammar = tool
+    let line = if super::grammar_read_hud::should_use_build_read_hud_v2(&strip) {
+        if let (Some(t), Some(b)) = (tool.as_deref(), book.as_deref()) {
+            super::grammar_read_hud::format_build_read_hud_v2_line(t, &strip, &ghost, &preview, b)
+        } else {
+            format_developmental_context_line(
+                &strip,
+                &ghost,
+                &preview,
+                &bindings,
+                policy.apply_routing_congestion,
+                policy.apply_ew_denial,
+                site_stub_overlay_on,
+            )
+        }
+    } else if let Some(ref ctx) = tool
         .as_deref()
         .zip(registry.as_deref())
-        .and_then(|(t, r)| super::grammar_read_hud::resolve_grammar_read_context(t, r, &ghost));
-    let line = if let Some(ref ctx) = grammar {
+        .and_then(|(t, r)| super::grammar_read_hud::resolve_grammar_read_context(t, r, &ghost))
+    {
         super::grammar_read_hud::format_developmental_context_line_with_grammar(
             &strip,
             &ghost,

@@ -1,6 +1,72 @@
 {
-  "slice_id": "CDR-B-VEG-RESOLVER-PARITY-001",
-  "green": true,
+  "_agent_meta": {
+    "agent_commands": [
+      "cargo test -p proc_A_dine01 --lib"
+    ],
+    "docs": {
+      "compile_warnings": "src/dev/COMPILE_WARNINGS_TODOS.md",
+      "stage5_directive": "prompts/guides/stage5_convergence_directive_v1.md",
+      "viewport_recovery": "src/dev/recovery_viewport.md"
+    },
+    "logging_env": {
+      "ORCHESTRATOR_EXPORT_HEALTH": false,
+      "PERF": false,
+      "RUST_LOG": null,
+      "SIM_VIEW_SYNC_DEBUG": false,
+      "STAGE5_READINESS_VERBOSE": false,
+      "STAGE5_VERBOSE": false,
+      "VIEWPORT_AUTHORITY_DEBUG": false
+    },
+    "orchestrator": {
+      "build_report": "tools/orchestrator/reports/build_report.md",
+      "ci_entry": "tools/orchestrator/ci/run.ps1",
+      "continuation_queue": "tools/orchestrator/queues/continuation_queue.json",
+      "warning_registry": "tools/orchestrator/reports/warning_registry.md"
+    },
+    "profile": "CDR-B-VEG-RESOLVER-PARITY-001",
+    "related_proofs": [
+      "debug_runs/stage5_full_app_live.json",
+      "debug_runs/infrastructure_view_isolation_live.json",
+      "debug_runs/construction_stage_live.json",
+      "debug_runs/industrial_activation_live.json",
+      "debug_runs/fire_ecology_live.json",
+      "debug_runs/logistics_throughput_live.json",
+      "debug_runs/replay_editor_parity_live.json",
+      "debug_runs/orchestrator_thread_health.json",
+      "debug_runs/viewport_drift.json",
+      "debug_runs/viewport_authority_migration_witness.json",
+      "debug_runs/main_thread_orchestrator_live.json",
+      "debug_runs/stage6_virtualization_live.json",
+      "debug_runs/wave_s_hydrate_live.json",
+      "debug_runs/wave_p_live.json",
+      "debug_runs/wave_c_live.json",
+      "debug_runs/ui_shell_migration_live.json",
+      "debug_runs/minimap_compositor_live.json",
+      "debug_runs/stage7_behavioral_live.json",
+      "debug_runs/stage7_play_live.json",
+      "debug_runs/wss_substrate_live.json",
+      "debug_runs/f2_smoke_pipeline_live.json",
+      "debug_runs/play_scenario_live.json",
+      "debug_runs/transport_network_live.json"
+    ],
+    "relative_path": "debug_runs/art_pipeline/veg_resolver_parity_live.json",
+    "schema": "debug_run_envelope_v1",
+    "source_system": "refresh_veg_resolver_parity_live_witness",
+    "written_at_epoch_secs": 1781979932
+  },
+  "byte_parity": true,
+  "catalog_clamp_green": true,
+  "catalog_path": "assets/configs/landscape/_vegetation_variant_catalog.ron",
+  "catalog_topology_count": 22,
+  "catalog_veg_count": 13,
+  "charter": "src/dev/plan_veg_variant_key_naming_v1.md",
+  "deliverable": "src/dev/veg_resolver_known_keys_v1.md",
+  "deliverable_written": "src/dev/veg_resolver_known_keys_v1.md",
+  "engine_topology_stamp_keys": [
+    "topology_patch",
+    "topology_corridor",
+    "topology_ring"
+  ],
   "engine_veg_keys": [
     "veg_clean_day",
     "veg_old_growth",
@@ -16,28 +82,16 @@
     "veg_burn_06",
     "veg_burn_07"
   ],
-  "engine_topology_stamp_keys": [
-    "topology_patch",
-    "topology_corridor",
-    "topology_ring"
-  ],
-  "catalog_veg_count": 13,
-  "catalog_topology_count": 22,
-  "missing_in_catalog": [],
   "extra_in_catalog": [],
-  "stamp_keys_missing_in_catalog": [],
-  "byte_parity": true,
-  "charter": "src/dev/plan_veg_variant_key_naming_v1.md",
-  "catalog_path": "assets/configs/landscape/_vegetation_variant_catalog.ron",
-  "deliverable": "src/dev/veg_resolver_known_keys_v1.md",
-  "deliverable_written": "src/dev/veg_resolver_known_keys_v1.md",
-  "_agent_meta": {
-    "schema": "veg_resolver_parity_live_v1",
-    "written_at_epoch_secs": 1781793818,
-    "profile": "CDR_B_VEG_RESOLVER_PARITY",
-    "source_system": "veg_resolver_parity",
-    "relative_path": "debug_runs/art_pipeline/veg_resolver_parity_live.json",
-    "ritual": "BLANG:Q\u2713 CDR-B-VEG-RESOLVER-PARITY-001",
-    "agent": "coder-mcp"
-  }
+  "extract_topo_authority": "variant_key_for_extract_row (non-burn program rows)",
+  "extract_topo_pattern": "veg_topo_{topology_kind_ascii_lower}",
+  "green": true,
+  "missing_in_catalog": [],
+  "q4_signoff": {
+    "burn_overrides_topology_tint": true,
+    "catalog_ron_path": "assets/configs/landscape/_vegetation_variant_catalog.ron",
+    "empty_variant_key_pre_lg5": true
+  },
+  "slice_id": "CDR-B-VEG-RESOLVER-PARITY-001",
+  "stamp_keys_missing_in_catalog": []
 }

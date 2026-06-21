@@ -4,8 +4,8 @@ use bevy::prelude::*;
 
 use crate::gui::map_tile_atlas_stamp::stamp_atlas_uv_into_rgba_subregion;
 use crate::systems::ecology::{
-    load_landscape_atlas_registry, topology_kind_to_variant_key, landscape_lg5_registry_stamped,
-    LandscapeAtlasRegistry, LandscapeProgramOnChunk, LG5_ATLAS_ID,
+    load_landscape_atlas_registry, topology_kind_to_variant_key, LandscapeAtlasRegistry,
+    LandscapeProgramOnChunk, LG5_ATLAS_ID,
 };
 
 /// One chunk iso stamp from LG-5 topology atlas.
@@ -179,6 +179,7 @@ fn landscape_lg5_chunk_uv_stamp_self_check() -> Result<(), &'static str> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::systems::ecology::landscape_lg5_registry_stamped;
 
     #[test]
     fn lg5_chunk_uv_stamp_witness_green() {

@@ -85,7 +85,7 @@
   },
   "_agent_meta": {
     "schema": "mcp_landscape_grammar_preset_batch_live_v1",
-    "written_at_epoch_secs": 1781671876,
+    "written_at_epoch_secs": 1781979327,
     "profile": "MCP_LG_VALID_PRESET",
     "source_system": "landscape_grammar_presets",
     "relative_path": "debug_runs/mcp_landscape_grammar_preset_batch_live.json"

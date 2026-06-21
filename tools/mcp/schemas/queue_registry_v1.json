@@ -1,7 +1,13 @@
 {
   "schema_version": "queue_registry_v1",
   "_meta": {
-    "plan_ref": "src/dev/plan_witness_queue_integrity_mcp_v1.md"
+    "plan_ref": "src/dev/plan_witness_queue_integrity_mcp_v1.md",
+    "excluded_rollups": [
+      {
+        "path": "tools/orchestrator/queues/agent_hub_queue_v1.json",
+        "reason": "hub pick_now rollup — not a work queue; scanned by scan_queues_hub.py"
+      }
+    ]
   },
   "status_normalization": {
     "closed": ["done", "lib_done", "signed", "closed"],
@@ -87,6 +93,14 @@
       "witness_fields": ["witness", "witness_json", "exit_predicate"]
     },
     {
+      "queue_id": "power_grid_construction_ux",
+      "path": "tools/orchestrator/queues/power_grid_construction_ux_queue.json",
+      "id_field": "id",
+      "rows_path": "drain",
+      "status_field": "status",
+      "witness_fields": ["witness", "witness_json", "exit_predicate"]
+    },
+    {
       "queue_id": "aps_grammar_evolution",
       "path": "tools/orchestrator/queues/aps_grammar_evolution_queue.json",
       "id_field": "id",
@@ -111,11 +125,26 @@
       "witness_fields": ["witness", "witness_json"]
     },
     {
-      "queue_id": "agent_hub",
-      "path": "tools/orchestrator/queues/agent_hub_queue_v1.json",
-      "human_doc": "src/dev/agent_hub_queue_v1.md",
-      "generated_by": "tools/orchestrator/scripts/scan_queues_hub.py",
-      "note": "rollup — pick_now + blocked_fallback; not a work queue"
+      "queue_id": "multi_parallel_home",
+      "path": "tools/orchestrator/queues/multi_parallel_home_queues_v1.json",
+      "id_field": "id",
+      "rows_path": "drain",
+      "status_field": "status",
+      "witness_fields": ["witness", "exit_predicate"],
+      "human_doc": "src/dev/plan_multi_parallel_tracks_v1.md",
+      "prompts": "src/dev/multi_parallel_agent_prompts_v1.md",
+      "note": "scanned into pick_now — dual Q✓ with dispatch rollup"
+    },
+    {
+      "queue_id": "multi_parallel_tracks",
+      "path": "tools/orchestrator/queues/multi_parallel_tracks_dispatch_v1.json",
+      "id_field": "id",
+      "rows_path": "drain",
+      "status_field": "status",
+      "witness_fields": ["witness", "exit_predicate"],
+      "human_doc": "src/dev/plan_multi_parallel_tracks_v1.md",
+      "wave_orders": "tools/orchestrator/queues/multi_parallel_tracks_wave0_orders_v1.md",
+      "note": "dispatch rollup — filter by owner; not scanned into pick_now (parallel with home queues)"
     }
   ]
 }

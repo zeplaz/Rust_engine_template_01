@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "spec_id": "veg_atlas_ship_001",
+  "gate": "DMCP-VEG-ATLAS-SHIP-001",
+  "development_tier": "pilot",
+  "ship": false,
+  "spec_only": true,
+  "atlas_domain": "landscape",
+  "batch_id": "tile_landscape_expanded_v1",
+  "atlas_id": "landscape_lg5_expanded_v1",
+  "tile_id": "landscape_lg5",
+  "render_seed": 550005,
+  "authority_doc": "src/dev/dmcp_veg_atlas_ship_v1.md",
+  "g0_rules": "debug_runs/art_pipeline/landscape_expanded_g0_rules.yaml",
+  "g4_signoff": "debug_runs/art_pipeline/landscape_expanded_g4_signoff.yaml",
+  "keyframe_folder": "assets/staging/tiles/keyframe_stills/tile_landscape_expanded_v1",
+  "batch_spec": "assets/staging/specs/tile_batch_landscape_expanded_v1.json",
+  "variant_count": 16,
+  "forbidden_until_g4": ["ship_true", "development_tier_production", "proceed_tile_ship_yes"],
+  "g4_minimum_review": [
+    "topology_patch_burn_04",
+    "topology_patch_scar",
+    "topology_corridor_regrowth_grass"
+  ],
+  "g4_rubric_refs": [
+    "src/dev/design_landscape_keyframe_burn_reqs_v1.md",
+    "src/dev/design_veg_burn_visual_language_v1.md"
+  ],
+  "rollup_witnesses": [
+    "debug_runs/art_pipeline/tile_landscape_expanded_v1_live.json",
+    "debug_runs/art_pipeline/tile_tile_landscape_expanded_v1_live.json",
+    "debug_runs/art_pipeline/landscape_expanded_g4_signoff.yaml"
+  ],
+  "unblocks": ["VEG-F01-ATLAS-SHIP-001", "VEG-F02-BURN-ATLAS-001"],
+  "note": "Criteria spec — ship flip requires g4_signoff proceed_ship:yes"
+}

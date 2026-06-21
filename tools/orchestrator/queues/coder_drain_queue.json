@@ -10,13 +10,13 @@
     "handoff": "tools/orchestrator/queues/HANDOFF.md",
     "phase4_queue": "tools/orchestrator/queues/post_drain_phase4_queue.json",
     "runbook": "src/dev/coder_drain_order_phase4_v1.md",
-    "rule": "One coder drains top→bottom. parallel_group = same wave OK on different files. No dev Postgres in game.",
+    "rule": "One coder drains top\u2192bottom. parallel_group = same wave OK on different files. No dev Postgres in game.",
     "regression": "cargo test -p proc_A_dine01 --lib sim_effects fire_ecology construction stage5",
     "blang_cargo": "validate-report cargo --cached --compress 4",
     "last_sync": "2026-06-15"
   },
   "sprint_decision": {
-    "primary_lane": "L_SIM — SimEffect spine P0–P2",
+    "primary_lane": "L_SIM \u2014 SimEffect spine P0\u2013P2",
     "parallel_lane": "H_VIEW + I_FIRE render + operator UX",
     "note": "Wave 1 sim spine unblocks real play fire (FIRE-IGNITION). Build UX + cursor parallel on coder B territory."
   },
@@ -63,7 +63,7 @@
       "seq": 1,
       "wave": 1,
       "id": "SIM-EFFECT-QUEUE-001",
-      "status": "done",
+      "status": "reopened",
       "priority": "P0",
       "owner": "coder_a",
       "territory": "src/sim/effects/",
@@ -78,13 +78,15 @@
       "witness": "debug_runs/sim_effect_spine_live.json",
       "verify": "cargo test -p proc_A_dine01 --lib sim_effects",
       "handoff_line": "Implement src/sim/effects/ per plan P0; hydro dedupe pattern; drain after AdvanceSimTick",
-      "completed": "2026-06-11"
+      "completed": "2026-06-11",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 stub_marker:stub",
+      "updated_at": "2026-06-20T21:19:25Z"
     },
     {
       "seq": 2,
       "wave": 1,
       "id": "SIM-EFFECT-TEL-001",
-      "status": "done",
+      "status": "reopened",
       "priority": "P0",
       "owner": "coder_a",
       "depends_on": [
@@ -101,33 +103,37 @@
         "dev Postgres in proc_A_dine01"
       ],
       "handoff_line": "P1 telemetry JSONL; same witness rollup; no PG",
-      "completed": "2026-06-11"
+      "completed": "2026-06-11",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 stub_marker:stub",
+      "updated_at": "2026-06-20T21:19:25Z"
     },
     {
       "seq": 3,
       "wave": 2,
       "parallel_group": "ux",
       "id": "TRIAGE-BUILD-CLICK-PLACE-001",
-      "status": "done",
+      "status": "blocked",
       "priority": "P0",
       "owner": "coder_b",
       "depends_on": [
         "DESIGN-BUILD-UX-REDESIGN-001"
       ],
       "territory": "src/construction/build_interaction.rs",
-      "goal": "Two-click place: lock → Ctrl rotate / Shift size → click place",
+      "goal": "Two-click place: lock \u2192 Ctrl rotate / Shift size \u2192 click place",
       "design": "src/dev/design_build_ux_redesign_v1.md",
       "exit": "enter_commits_single_ghost optional; LMB two-click primary",
       "witness": "debug_runs/construction_stage_live.json",
       "verify": "cargo test -p proc_A_dine01 --lib construction::build_interaction",
-      "completed": "2026-06-11"
+      "completed": "2026-06-11",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
+      "updated_at": "2026-06-20T21:19:25Z"
     },
     {
       "seq": 4,
       "wave": 2,
       "parallel_group": "ux",
       "id": "TRIAGE-CURSOR-UNIFY-001",
-      "status": "done",
+      "status": "blocked",
       "priority": "P0",
       "owner": "coder_b",
       "depends_on": [
@@ -137,20 +143,22 @@
       "goal": "Hide OS cursor in sim; unified game cursor for pick + UI",
       "design": "src/dev/design_build_ux_redesign_v1.md",
       "exit": "operator single cursor over game window",
-      "completed": "2026-06-11"
+      "completed": "2026-06-11",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
+      "updated_at": "2026-06-20T21:19:25Z"
     },
     {
       "seq": 5,
       "wave": 3,
       "id": "FIRE-IGNITION-P0-001",
-      "status": "done",
+      "status": "reopened",
       "priority": "P1",
       "owner": "coder_a",
       "depends_on": [
         "SIM-EFFECT-TEL-001"
       ],
       "territory": "src/systems/fire/",
-      "goal": "Lightning + transformer → SimEffect → ember in normal play",
+      "goal": "Lightning + transformer \u2192 SimEffect \u2192 ember in normal play",
       "exec": "src/dev/plan_sim_effect_spine_exec_001_v1.md",
       "refs": [
         "src/systems/fire/play_fire_visibility.rs"
@@ -160,7 +168,9 @@
       "forbidden": [
         "harness seed in normal Simulation"
       ],
-      "completed": "2026-06-11"
+      "completed": "2026-06-11",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 stub_marker:stub",
+      "updated_at": "2026-06-20T21:19:24Z"
     },
     {
       "seq": 6,
@@ -177,14 +187,14 @@
         "src/dev/design_zoom_fire_read_v1.md"
       ],
       "exit": "operator sees heat or sparks without --test flags",
-      "note": "May start parallel to wave 1 if file territory clear — completes after FIRE-IGNITION for full loop",
+      "note": "May start parallel to wave 1 if file territory clear \u2014 completes after FIRE-IGNITION for full loop",
       "completed": "2026-06-11"
     },
     {
       "seq": 7,
       "wave": 4,
       "id": "TRIAGE-MAP-ZOOM-SMOOTH-001",
-      "status": "done",
+      "status": "reopened",
       "priority": "P1",
       "owner": "coder_a",
       "depends_on": [
@@ -192,33 +202,39 @@
         "TRIAGE-MAP-PICK-CLOSURE-001"
       ],
       "territory": "src/gui/map_camera.rs",
-      "goal": "Eliminate zoom ghost — ortho/tile sync vs pan smooth",
+      "goal": "Eliminate zoom ghost \u2014 ortho/tile sync vs pan smooth",
       "exec": "src/dev/plan_map_zoom_smooth_exec_001_v1.md",
       "witness": "debug_runs/map_zoom_coherence_live.json",
-      "completed": "2026-06-11"
+      "completed": "2026-06-11",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 stub_marker:todo",
+      "updated_at": "2026-06-20T21:19:25Z"
     },
     {
       "seq": 8,
       "wave": 4,
       "id": "P0-VFX-ZOOM-LOCK-001",
-      "status": "done",
+      "status": "blocked",
       "priority": "P2",
       "owner": "coder_b",
       "territory": "src/render/stage5_full_app_harness.rs",
       "goal": "--test vfx scroll zoom must not snap back",
       "exit": "vfx sandbox zoom free",
-      "completed": "2026-06-11"
+      "completed": "2026-06-11",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
+      "updated_at": "2026-06-20T21:19:25Z"
     },
     {
       "seq": 9,
       "wave": 4,
       "id": "P0-TERRAIN-BLOB-001",
-      "status": "done",
+      "status": "blocked",
       "priority": "P2",
       "owner": "coder_b",
       "territory": "src/render/tile_world_fallback.rs",
       "goal": "Central terrain raster seam/blob fix or instrument",
-      "completed": "2026-06-11"
+      "completed": "2026-06-11",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
+      "updated_at": "2026-06-20T21:19:25Z"
     },
     {
       "seq": 10,
@@ -260,7 +276,7 @@
         "BUILD-READ-GRAMMAR-v0-003",
         "BUILD-READ-SHAPE-002"
       ],
-      "goal": "β massing pick → footprint_mode + FootprintMatrix export on commit path",
+      "goal": "\u03b2 massing pick \u2192 footprint_mode + FootprintMatrix export on commit path",
       "plan_doc": "src/dev/plan_operator_build_readability_exec_001_v1.md",
       "completed": "2026-06-11"
     },
@@ -274,7 +290,7 @@
       "depends_on": [
         "BUILD-READ-WORLD-001"
       ],
-      "goal": "Iso draw scale multiplier Option A — designer scale table",
+      "goal": "Iso draw scale multiplier Option A \u2014 designer scale table",
       "plan_doc": "src/dev/design_build_readability_v1.md",
       "completed": "2026-06-11"
     },
@@ -303,17 +319,17 @@
         "SIM-EFFECT-TEL-001",
         "DESIGN-EVENT-LOG-001"
       ],
-      "goal": "RTS event log panel from telemetry ledger — RAM ring first",
+      "goal": "RTS event log panel from telemetry ledger \u2014 RAM ring first",
       "plan_doc": "src/dev/design_event_log_ui_v1.md",
       "witness": "debug_runs/design_event_log_ui_live.json",
-      "note": "DESIGN-EVENT-LOG-001 PASS 2026-06-12 — Events context tray + ops strip",
+      "note": "DESIGN-EVENT-LOG-001 PASS 2026-06-12 \u2014 Events context tray + ops strip",
       "completed": "2026-06-11"
     },
     {
       "seq": 15,
       "wave": 5,
       "id": "FACTION-REACT-001",
-      "status": "done",
+      "status": "blocked",
       "priority": "P3",
       "owner": "coder_a",
       "depends_on": [
@@ -321,7 +337,9 @@
       ],
       "goal": "Faction stress hooks read telemetry rows",
       "exec": "src/dev/plan_sim_effect_spine_exec_001_v1.md",
-      "completed": "2026-06-14"
+      "completed": "2026-06-14",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
+      "updated_at": "2026-06-20T21:19:24Z"
     },
     {
       "seq": 16,
@@ -329,7 +347,7 @@
       "id": "SIM-EFFECT-EMBED-DB-001",
       "status": "deferred",
       "priority": "P4",
-      "goal": "Embedded DB only if GAME-STORE-GATE passes — not P0–P2",
+      "goal": "Embedded DB only if GAME-STORE-GATE passes \u2014 not P0\u2013P2",
       "forbidden": [
         "dev Postgres in game"
       ]
@@ -341,7 +359,7 @@
       "status": "deferred",
       "priority": "P4",
       "owner": "designer",
-      "goal": "Lazy NL from telemetry → NarrativeObservationBus"
+      "goal": "Lazy NL from telemetry \u2192 NarrativeObservationBus"
     }
   ],
   "done": [
@@ -453,5 +471,5 @@
     "cargo test -p proc_A_dine01 --lib sim_effects fire_ecology construction stage5",
     "BLANG:CARGO --cached --compress 4"
   ],
-  "operator_handoff": "Implement src/sim/effects/ per plan_sim_effect_spine_exec_001_v1.md P0–P1; hydro pattern + ember waist; JSONL telemetry; no dev Postgres; witness debug_runs/sim_effect_spine_live.json"
+  "operator_handoff": "Implement src/sim/effects/ per plan_sim_effect_spine_exec_001_v1.md P0\u2013P1; hydro pattern + ember waist; JSONL telemetry; no dev Postgres; witness debug_runs/sim_effect_spine_live.json"
 }

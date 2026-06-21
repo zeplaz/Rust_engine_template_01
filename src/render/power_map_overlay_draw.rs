@@ -96,6 +96,27 @@ pub fn draw_power_map_overlay_egui(
         }
     }
 
+    if presentation.island_highlight_active {
+        for world in &presentation.island_offline_world_positions {
+            let Some(pos) = world_to_sim_map_egui(Vec3::new(world.x, world.y, 0.0), auth, desired, map_vp, params)
+            else {
+                continue;
+            };
+            painter.circle_stroke(
+                pos,
+                6.0,
+                egui::Stroke::new(1.5, egui::Color32::from_rgb(220, 80, 80)),
+            );
+            painter.text(
+                pos + egui::vec2(0.0, -8.0),
+                egui::Align2::CENTER_BOTTOM,
+                "○",
+                egui::FontId::proportional(11.0),
+                egui::Color32::from_rgb(240, 100, 100),
+            );
+        }
+    }
+
     Ok(())
 }
 
@@ -172,6 +193,44 @@ pub fn power_map_overlay_draw_witness_green() -> bool {
     use super::infrastructure_overlay::stroke_for_voltage_class;
     let live = stroke_for_voltage_class(VoltageClass::Medium, false);
     live.alpha > 0.99 && !live.dashed
+}
+
+/// Power line strokes on the CPU minimap image (COD-POWER-OVERLAY-MINIMAP-001).
+pub fn draw_power_strokes_on_minimap(
+    painter: &egui::Painter,
+    overlays: &InfrastructureOverlayDrawRequests,
+    settings: &InfrastructureOverlaySettings,
+    presentation: &PowerMapOverlayPresentation,
+    tex_w: f32,
+    tex_h: f32,
+    image_rect: egui::Rect,
+    sample_uv: egui::Rect,
+) {
+    let draw = (settings.enabled && settings.power) || presentation.island_highlight_active;
+    if !draw {
+        return;
+    }
+    use crate::gui::world_tile_to_minimap_screen;
+    for edge in &overlays.edges {
+        if edge.layer != InfrastructureNetworkLayer::Power {
+            continue;
+        }
+        let from = world_tile_to_minimap_screen(
+            Vec2::new(edge.head.x, edge.head.y),
+            tex_w,
+            tex_h,
+            image_rect,
+            sample_uv,
+        );
+        let to = world_tile_to_minimap_screen(
+            Vec2::new(edge.tail.x, edge.tail.y),
+            tex_w,
+            tex_h,
+            image_rect,
+            sample_uv,
+        );
+        paint_stroke_line(painter, from, to, edge.stroke);
+    }
 }
 
 #[cfg(test)]

@@ -74,17 +74,17 @@
     },
     {
       "queue": "designer_active_queue.json",
-      "done": 34,
-      "pick": 4,
+      "done": 41,
+      "pick": 0,
       "blocked": 0,
       "other": 1
     },
     {
       "queue": "grammar_continuation_queue.json",
-      "done": 102,
+      "done": 109,
       "pick": 1,
       "blocked": 2,
-      "other": 1
+      "other": 0
     },
     {
       "queue": "mcp_active_queue.json",
@@ -101,11 +101,26 @@
       "other": 0
     },
     {
+      "queue": "multi_parallel_home_queues_v1.json",
+      "done": 45,
+      "pick": 0,
+      "blocked": 7,
+      "other": 0
+    },
+    {
       "queue": "OPS_LANE_REGISTRY.json",
       "error": "no_row_list"
     },
     {
+      "queue": "parallel_wave_art_spine_hub_dispatch_v1.json",
+      "error": "no_row_list"
+    },
+    {
       "queue": "parallel_wave_bkkf_dispatch_v1.json",
+      "error": "no_row_list"
+    },
+    {
+      "queue": "parallel_wave_designer_mcp_open_dispatch_v1.json",
       "error": "no_row_list"
     },
     {
@@ -170,9 +185,16 @@
     },
     {
       "queue": "power_grid_art_downstream_queue.json",
-      "done": 3,
-      "pick": 4,
-      "blocked": 7,
+      "done": 13,
+      "pick": 0,
+      "blocked": 1,
+      "other": 0
+    },
+    {
+      "queue": "power_grid_construction_ux_queue.json",
+      "done": 20,
+      "pick": 0,
+      "blocked": 0,
       "other": 0
     },
     {
@@ -184,81 +206,6 @@
     }
   ],
   "pick_now": {
-    "coder-mcp": [
-      {
-        "id": "MCP-PWR-UTILITY-MANIFEST-001",
-        "status": "ready",
-        "owner": "coder-mcp",
-        "queue": "power_grid_art_downstream_queue.json",
-        "program": "PLAN-POWER-GRID-ART-ASSETS-001",
-        "depends_on": [
-          "ORCH-PWR-DOWNSTREAM-001"
-        ],
-        "priority": "P0"
-      },
-      {
-        "id": "MCP-PWR-NUCLEAR-BATCH-001",
-        "status": "ready",
-        "owner": "coder-mcp",
-        "queue": "power_grid_art_downstream_queue.json",
-        "program": "PLAN-POWER-GRID-ART-ASSETS-001",
-        "depends_on": [
-          "DMCP-SPEC-NUCLEAR-PWR-001"
-        ],
-        "priority": "P2"
-      }
-    ],
-    "coder_b": [
-      {
-        "id": "COD-ART-HUD-ICON-ATLAS-001",
-        "status": "ready",
-        "owner": "coder_b",
-        "queue": "power_grid_art_downstream_queue.json",
-        "program": "PLAN-POWER-GRID-ART-ASSETS-001",
-        "depends_on": [
-          "DES-ART-HUD-POWER-ICONS-001"
-        ],
-        "priority": "P0"
-      }
-    ],
-    "designer": [
-      {
-        "id": "DES-APS-PREVIEW-V2-001",
-        "status": "done",
-        "owner": "designer",
-        "queue": "designer_active_queue.json",
-        "program": "aps_uiux_phase2",
-        "depends_on": [],
-        "priority": 1
-      },
-      {
-        "id": "DES-STYLE-INDUSTRIAL-WEST-001",
-        "status": "done",
-        "owner": "designer",
-        "queue": "designer_active_queue.json",
-        "program": "style_concepts",
-        "depends_on": [],
-        "priority": 1
-      },
-      {
-        "id": "DES-APS-MAT-BROWSE-001",
-        "status": "done",
-        "owner": "designer",
-        "queue": "designer_active_queue.json",
-        "program": "aps_materials",
-        "depends_on": [],
-        "priority": 1
-      },
-      {
-        "id": "DES-MINIMAP-VEG-LEGEND-002",
-        "status": "done",
-        "owner": "designer",
-        "queue": "designer_active_queue.json",
-        "program": "product_ui",
-        "depends_on": [],
-        "priority": 2
-      }
-    ],
     "operator": [
       {
         "id": "PERF-SHELL-001",
@@ -297,17 +244,6 @@
         "program": "",
         "depends_on": [],
         "priority": 99
-      },
-      {
-        "id": "ORCH-PWR-DOWNSTREAM-001",
-        "status": "done",
-        "owner": "orchestrator-mcp",
-        "queue": "power_grid_art_downstream_queue.json",
-        "program": "PLAN-POWER-GRID-ART-ASSETS-001",
-        "scope": "on_call_absorption_only",
-        "witness": "debug_runs/agent_ops/power_grid_art_downstream_dispatch_live.json",
-        "depends_on": [],
-        "priority": "P0"
       }
     ]
   },
@@ -365,6 +301,17 @@
         "priority": 3
       },
       {
+        "id": "BUILD-READ-VISUAL-002",
+        "status": "blocked",
+        "owner": "coder-mcp",
+        "queue": "multi_parallel_home_queues_v1.json",
+        "program": "PLAN-MULTI-PARALLEL-TRACKS-001",
+        "depends_on": [
+          "MCP-PILOT-GRAMMAR-001"
+        ],
+        "priority": "P1"
+      },
+      {
         "id": "MCP-OPS-REPORT-001",
         "status": "deferred",
         "owner": "coder-mcp",
@@ -414,50 +361,15 @@
         "priority": 2
       },
       {
-        "id": "MCP-PWR-SUBSTATION-BATCH-001",
-        "status": "blocked",
+        "id": "MCP-PWR-NUCLEAR-BATCH-001",
+        "status": "deferred",
         "owner": "coder-mcp",
         "queue": "power_grid_art_downstream_queue.json",
         "program": "PLAN-POWER-GRID-ART-ASSETS-001",
         "depends_on": [
-          "MCP-PWR-UTILITY-MANIFEST-001",
-          "DMCP-SPEC-SUBSTATION-YARD-001"
+          "DMCP-SPEC-NUCLEAR-PWR-001"
         ],
-        "priority": "P0"
-      },
-      {
-        "id": "MCP-PWR-TRANSFORMER-BATCH-001",
-        "status": "blocked",
-        "owner": "coder-mcp",
-        "queue": "power_grid_art_downstream_queue.json",
-        "program": "PLAN-POWER-GRID-ART-ASSETS-001",
-        "depends_on": [
-          "MCP-PWR-UTILITY-MANIFEST-001",
-          "DMCP-SPEC-TRANSFORMER-PAD-001"
-        ],
-        "priority": "P0"
-      },
-      {
-        "id": "MCP-PWR-PROMOTE-SUBSTATION-001",
-        "status": "blocked",
-        "owner": "coder-mcp",
-        "queue": "power_grid_art_downstream_queue.json",
-        "program": "PLAN-POWER-GRID-ART-ASSETS-001",
-        "depends_on": [
-          "MCP-PWR-SUBSTATION-BATCH-001"
-        ],
-        "priority": "P0"
-      },
-      {
-        "id": "MCP-PWR-PROMOTE-TRANSFORMER-001",
-        "status": "blocked",
-        "owner": "coder-mcp",
-        "queue": "power_grid_art_downstream_queue.json",
-        "program": "PLAN-POWER-GRID-ART-ASSETS-001",
-        "depends_on": [
-          "MCP-PWR-TRANSFORMER-BATCH-001"
-        ],
-        "priority": "P0"
+        "priority": "P2"
       }
     ],
     "coder_a": [
@@ -490,6 +402,17 @@
         "depends_on": [
           "VEG-E08-PHASE-CLOSE-001"
         ],
+        "priority": "P1"
+      }
+    ],
+    "coder_b": [
+      {
+        "id": "TRIAGE-PERF-SHELL",
+        "status": "blocked",
+        "owner": "coder_b",
+        "queue": "multi_parallel_home_queues_v1.json",
+        "program": "PLAN-MULTI-PARALLEL-TRACKS-001",
+        "depends_on": [],
         "priority": "P1"
       }
     ],
@@ -582,6 +505,15 @@
         "priority": 4
       },
       {
+        "id": "MCP-PILOT-GRAMMAR-001",
+        "status": "paused",
+        "owner": "designer-mcp",
+        "queue": "multi_parallel_home_queues_v1.json",
+        "program": "PLAN-MULTI-PARALLEL-TRACKS-001",
+        "depends_on": [],
+        "priority": "P0"
+      },
+      {
         "id": "BUILD-READ-PILOT-002",
         "status": "blocked",
         "owner": "designer-mcp",
@@ -591,31 +523,45 @@
           "BUILD-READ-PILOT-001"
         ],
         "priority": 2
-      },
-      {
-        "id": "DMCP-QC-SUBSTATION-001",
-        "status": "blocked",
-        "owner": "designer-mcp",
-        "queue": "power_grid_art_downstream_queue.json",
-        "program": "PLAN-POWER-GRID-ART-ASSETS-001",
-        "depends_on": [
-          "MCP-PWR-PROMOTE-SUBSTATION-001"
-        ],
-        "priority": "P1"
-      },
-      {
-        "id": "DMCP-QC-TRANSFORMER-001",
-        "status": "blocked",
-        "owner": "designer-mcp",
-        "queue": "power_grid_art_downstream_queue.json",
-        "program": "PLAN-POWER-GRID-ART-ASSETS-001",
-        "depends_on": [
-          "MCP-PWR-PROMOTE-TRANSFORMER-001"
-        ],
-        "priority": "P1"
       }
     ],
     "operator": [
+      {
+        "id": "OPS-VT5-OPERATOR-001",
+        "status": "blocked",
+        "owner": "operator",
+        "queue": "multi_parallel_home_queues_v1.json",
+        "program": "PLAN-MULTI-PARALLEL-TRACKS-001",
+        "depends_on": [],
+        "priority": "P2"
+      },
+      {
+        "id": "G-PLAY-01",
+        "status": "blocked",
+        "owner": "operator",
+        "queue": "multi_parallel_home_queues_v1.json",
+        "program": "PLAN-MULTI-PARALLEL-TRACKS-001",
+        "depends_on": [],
+        "priority": "P0"
+      },
+      {
+        "id": "G-PLAY-OPERATOR-01",
+        "status": "blocked",
+        "owner": "operator",
+        "queue": "multi_parallel_home_queues_v1.json",
+        "program": "PLAN-MULTI-PARALLEL-TRACKS-001",
+        "depends_on": [],
+        "priority": "P0"
+      },
+      {
+        "id": "PERF-SHELL-001",
+        "status": "blocked",
+        "owner": "operator",
+        "queue": "multi_parallel_home_queues_v1.json",
+        "program": "PLAN-MULTI-PARALLEL-TRACKS-001",
+        "depends_on": [],
+        "priority": "P1"
+      },
       {
         "id": "G-PLAY-01",
         "status": "blocked",
@@ -635,22 +581,6 @@
         "program": "POST-DRAIN-PHASE-5-001",
         "depends_on": [],
         "priority": 0
-      }
-    ],
-    "orchestrator-mcp": [
-      {
-        "id": "PWR-ART-DOWNSTREAM-CLOSE-001",
-        "status": "blocked",
-        "owner": "orchestrator-mcp",
-        "queue": "power_grid_art_downstream_queue.json",
-        "program": "PLAN-POWER-GRID-ART-ASSETS-001",
-        "depends_on": [
-          "MCP-PWR-PROMOTE-SUBSTATION-001",
-          "MCP-PWR-PROMOTE-TRANSFORMER-001",
-          "COD-ART-HUD-ICON-ATLAS-001",
-          "DMCP-SPEC-NUCLEAR-PWR-001"
-        ],
-        "priority": "P0"
       }
     ],
     "planner": [

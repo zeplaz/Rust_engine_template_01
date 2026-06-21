@@ -1,5 +1,7 @@
 //! UX orchestration plugin — drives legacy engine states from [`super::ux_states`].
 
+use std::sync::atomic::{AtomicBool, Ordering};
+
 use bevy::prelude::*;
 
 use crate::engine::states::{
@@ -15,6 +17,14 @@ use super::test_harness::{DebugQuickWorldGenPending, TestWorldHarness};
 use super::ux_states::{
     AppState, PauseState, UxFrameSpikeGuard, WorldGenChromeLatch, WorldGenState,
 };
+
+static UX_SPIKE_ACTIVE: AtomicBool = AtomicBool::new(false);
+
+/// Process-wide spike latch for cheap checks from hot systems (no extra ECS params).
+#[must_use]
+pub fn ux_spike_active() -> bool {
+    UX_SPIKE_ACTIVE.load(Ordering::Relaxed)
+}
 
 #[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
 pub struct UxBridgeSet;
@@ -434,6 +444,7 @@ fn ux_frame_spike_watchdog(
     }
     guard.spike_active =
         guard.spike_over_budget_streak >= guard.spike_enter_frames.max(1);
+    UX_SPIKE_ACTIVE.store(guard.spike_active, Ordering::Relaxed);
     if guard.spike_active {
         guard.suppress_preview_this_frame = true;
         guard.suppress_optional_diagnostics = true;

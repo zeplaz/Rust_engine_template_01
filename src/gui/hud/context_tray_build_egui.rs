@@ -100,7 +100,7 @@ pub fn draw_context_tray_build_body_egui(
 
     let is_build =
         matches!(params.tool.tool, BuildTool::Building(_)) && params.strip.active != ToolContext::None;
-    let screen_h = ctx.input(|i| i.screen_rect().height());
+    let screen_h = ctx.input(|i| i.content_rect().height());
     let anchor_y = screen_h - CONTEXT_TRAY_TAB_H_PX - body_h;
 
     if params.tray.panel_state == HudPanelState::Peek {

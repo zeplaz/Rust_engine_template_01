@@ -1,7 +1,7 @@
 # AGENT-HUB-QUEUE-001 — unified pick board for all agents
 
 ```text
-Generated: 2026-06-17 (refresh with scan_queues_hub.py)
+Generated: 2026-06-20 (refresh with scan_queues_hub.py)
 Machine truth: tools/orchestrator/queues/agent_hub_queue_v1.json
 Plans index:   src/dev/plan_designer_work_202606_v1.md · src/dev/development_plan_index.md
 Handoff:       tools/orchestrator/queues/HANDOFF.md
@@ -9,15 +9,37 @@ Handoff:       tools/orchestrator/queues/HANDOFF.md
 
 ## How to use this hub
 
-1. **Session start:** read this file (or `agent_hub_queue_v1.json`) + `HANDOFF.md` — do not guess from memory.
-2. **Pick PRIMARY** for your agent role below (highest priority `ready` / `open` row).
-3. **If blocked:** do **not idle**. Pick any **FALLBACK** row for the same agent (or `parallel_ok` lane). Mark blocked row `blocked_by` in your witness; re-check primary next session after dependency Q✓.
-4. **If your lane is closed:** pull from **Plan backlog** section — many rows are signed in plans but not yet machine-queued.
-5. **Refresh:** `python tools/orchestrator/scripts/scan_queues_hub.py` after any queue edit.
+1. **Session start:** read **`plan_multi_parallel_tracks_v1.md`** + dispatch board + `HANDOFF.md` — do not guess from memory.
+2. **Pick model:** **no global primary.** Filter `multi_parallel_tracks_dispatch_v1.json` by `owner=<you>` + `status=ready` + lowest `wave` — pull from **any track**.
+3. **Cross-drain:** blocked on track A → pick next `ready` row on track B (same owner). Never idle.
+4. **Dual Q✓:** close dispatch row **and** home program queue row + witness.
+5. **pick_now below** = auto-scan of home queues only — use dispatch board for parallel pull across tracks.
+6. **Refresh:** `python tools/orchestrator/scripts/scan_queues_hub.py` after home queue edits.
 
 ```text
-BLOCKED on X  →  pick FALLBACK same agent  →  fellow agent lands Q✓  →  re-check X
+FILTER owner → wave-0 ready on ANY track → blocked? → cross-drain same owner → WIT-HON → dual Q✓
 ```
+
+---
+
+## Multi-parallel tracks (AUTHORITATIVE pull board)
+
+**Plan:** [`plan_multi_parallel_tracks_v1.md`](plan_multi_parallel_tracks_v1.md)  
+**Machine:** [`multi_parallel_tracks_dispatch_v1.json`](../tools/orchestrator/queues/multi_parallel_tracks_dispatch_v1.json) (52 rows)  
+**Wave-0 orders:** [`multi_parallel_tracks_wave0_orders_v1.md`](../tools/orchestrator/queues/multi_parallel_tracks_wave0_orders_v1.md)
+
+| Track | ID | Focus | Wave-0 pull (examples) |
+|:---|:---|:---|:---|
+| **T1** | APS-STUDIO | Tk artist studio 9/10 | DES-APS-INTERACTION · ONBOARD · OVR-P5-TAIL |
+| **T2** | GRAMMAR-SHIP | pilots + G4 + build-set | CODER-PILOT-REFACTOR · CMCP-GRAM-* · GRAM-CONTENT-005 |
+| **T3** | VEG-SHIP | ecology art · ship:false honest | DMCP-VEG-ATLAS-SHIP · E4 expand · minimap legend |
+| **T4** | FIRE-SIM | fuel spread · smoke bridge | FIRE-F2-FUEL-SPREAD · WSS-SMOKE-BRIDGE |
+| **T5** | SIM-HUD | picker · tray · popup · theme | COD-SIM-HUD-BUILD-PICKER · TRAY · POPUP-MIGRATE |
+| **T6** | POWER-UX | construction B/C/D (A done) | COD-POWER-OVERLAY · ISLAND-HIGHLIGHT |
+| **T7** | PLAY-ACCEPT | G-PLAY operator rollup | G-PLAY-01 · G-PLAY-OPERATOR-01 · PERF-SHELL |
+| **T8** | INFRA-PERF | VM · perf triage | TRIAGE-PERF-SHELL · VM-09-V2 |
+
+**Cross-track locks:** `LOCK-APP-PY` · `LOCK-G4-OPERATOR` · `LOCK-WITNESS-STAGE5` · `LOCK-BLENDER-BATCH` — skip locked row, pick next ready.
 
 ---
 
@@ -45,7 +67,7 @@ BLOCKED on X  →  pick FALLBACK same agent  →  fellow agent lands Q✓  →  
 | Program | Queue | Status | Your peeps pick |
 |:---|:---|:---|:---|
 | **UI/UX overhaul** (Tk chrome, tabs, design system) | `aps_uiux_overhaul_queue.json` | Machine **CLOSED** | **@designer:** DES-APS-PREVIEW-V2, INTERACTION, ONBOARD, OPERATOR-RUBRIC · **@coder-mcp:** status_atom tail (OVR-P5) |
-| **Veg capability evolution** (domain router, landscape tab, LG-5) | `mcp_aps_evolution_queue.json` + `parallel_wave_aps_veg_dispatch_v1.json` | E0–E5 machine **done** | **@coder-mcp:** maintain E4 — **`ship:false`** until G4 keyframes · **@designer-mcp:** DMCP-LG5-KEYFRAME-QC-001, DMCP-VEG-ATLAS-SHIP-001 |
+| **Veg capability evolution** (domain router, landscape tab, LG-5) | `mcp_aps_evolution_queue.json` + `parallel_wave_aps_veg_dispatch_v1.json` | E0–E5 machine **done** | **@coder-mcp:** maintain E4 — **`ship:false`** until G4 manual · **@designer-mcp:** criteria done (`DMCP-VEG-ATLAS-SHIP-001`) |
 
 **Stale doc alert:** [`plan_aps_uiux_overhaul_20260616_v1.md`](plan_aps_uiux_overhaul_20260616_v1.md) still says “DRAIN P3 next” — **ignore**; machine queue is 24/24 done. Tails live in designer work plan Track A.
 
@@ -99,7 +121,7 @@ BLOCKED on X  →  pick FALLBACK same agent  →  fellow agent lands Q✓  →  
 
 **@coder-mcp:** after utility manifest, **APS-EVO-E4** maintenance + do **not** flip `ship:true` without designer-mcp G4 sign-off.
 
-**@designer-mcp:** DMCP-VEG-ATLAS-SHIP-001 → unblocks VEG-F01/F02 (keyframe QC closed).
+**@designer-mcp:** **VEG-F01** unblocked (criteria done) — actual `ship:true` still blocked on operator G4 (`landscape_expanded_g4_signoff.yaml`).
 
 ---
 
@@ -129,7 +151,8 @@ Fire is **split across sim ecology, render extract, operator play, and steward r
 
 | Program | Status | Queue / plan |
 |:---|:---|:---|
-| **PLAN-POWER-GRID-ART-ASSETS-001** downstream | **ACTIVE** P0 | [`power_grid_art_downstream_queue.json`](../tools/orchestrator/queues/power_grid_art_downstream_queue.json) |
+| **PLAN-POWER-GRID-CONSTRUCTION-UX-001** | **ACTIVE** Track B | [`power_grid_construction_ux_queue.json`](../tools/orchestrator/queues/power_grid_construction_ux_queue.json) |
+| **PLAN-POWER-GRID-ART-ASSETS-001** downstream | **CLOSED** | [`power_grid_art_downstream_queue.json`](../tools/orchestrator/queues/power_grid_art_downstream_queue.json) |
 | **PLAN-DESIGNER-WORK-202606-001** | **ACTIVE** (multi-track) | [`plan_designer_work_202606_v1.md`](plan_designer_work_202606_v1.md) |
 | **PLAN-APS-UIUX-OVERHAUL-001** | **CLOSED** 24/24 | [`aps_uiux_overhaul_queue.json`](../tools/orchestrator/queues/aps_uiux_overhaul_queue.json) |
 | **PLAN-APS-GRAMMAR-EVOLUTION-001** | **CLOSED** 15/15 | [`aps_grammar_evolution_queue.json`](../tools/orchestrator/queues/aps_grammar_evolution_queue.json) |
@@ -150,8 +173,8 @@ Fire is **split across sim ecology, render extract, operator play, and steward r
 
 | ID | Priority | Goal | Unblocks |
 |:---|:---|:---|:---|
-| **MCP-PWR-UTILITY-MANIFEST-001** | P0 | Utility batch manifest from [`batch_kit_utility_power_production_001.manifest.json`](../tools/mcp/schemas/examples/batch_kit_utility_power_production_001.manifest.json) | substation + transformer bpy rows |
-| **MCP-PWR-NUCLEAR-BATCH-001** | P2 | Nuclear kit bpy + promote (spec **done**) | PWR downstream close |
+| **APS-EVO-E4-ATLAS-EXPAND-001** | P1 | Landscape teach batch maintenance · **ship:false** until G4 | veg atlas ship |
+| **MCP-PWR-NUCLEAR-BATCH-001** | P2 | Nuclear kit bpy + promote (deferred — on-call only) | — |
 
 ### FALLBACK (same agent — if utility blocked on Blender/env)
 
@@ -168,11 +191,9 @@ Fire is **split across sim ecology, render extract, operator play, and steward r
 
 | ID | Blocked by |
 |:---|:---|
-| MCP-PWR-SUBSTATION-BATCH-001 | MCP-PWR-UTILITY-MANIFEST-001 |
-| MCP-PWR-TRANSFORMER-BATCH-001 | MCP-PWR-UTILITY-MANIFEST-001 |
-| MCP-PWR-PROMOTE-SUBSTATION-001 | MCP-PWR-SUBSTATION-BATCH-001 |
-| MCP-PWR-PROMOTE-TRANSFORMER-001 | MCP-PWR-TRANSFORMER-BATCH-001 |
 | BUILD-READ-VISUAL-002 | BUILD-READ-SHAPE-001 (@designer-mcp pilot) |
+
+**Closed (2026-06-20):** MCP-PWR-* utility chain · DMCP-QC-* · COD-ART-HUD-ICON-ATLAS-001 — witness [`power_grid_art_downstream_close_live.json`](../debug_runs/art_pipeline/power_grid_art_downstream_close_live.json).
 
 **Regression:** `cd tools/mcp/python && python -m pytest -k aps -q`
 
@@ -184,29 +205,29 @@ Fire is **split across sim ecology, render extract, operator play, and steward r
 
 ### PRIMARY
 
-Power-grid specs **done** (substation, transformer, nuclear). Next machine row:
+Power-grid art downstream **closed** (2026-06-20). On-call only:
 
 | ID | Priority | Goal |
 |:---|:---|:---|
-| **MCP-PWR-NUCLEAR-BATCH-001** | P2 | Coordinate with @coder-mcp on nuclear bpy — or **QC after promote** rows |
+| **MCP-PWR-NUCLEAR-BATCH-001** | P2 | Nuclear kit bpy + promote (deferred) |
 
 ### FALLBACK (plan backlog — no machine row yet)
 
-| ID | Track | Deliverable | Status |
-|:---|:---|:---|:---|
-| **DMCP-VEG-ATLAS-SHIP-001** | B1 | G4/G5 art-ship sign-off when atlas registers | open |
-| **DMCP-ATLAS-QC-PLAIN-002** | B2 | Plain-language QC copy v2 for warehouse/shopfront/bunker | open |
-| **DES-STYLE-LANDSCAPE-RIparian-001** | C1 | Riparian/agri visual language | open |
+**All fallback rows closed (2026-06-02).** Next @designer-mcp work is **on-call** only — see blocked/deferred below.
 
-**Closed this wave (2026-06-02):** DMCP-LG5-KEYFRAME-QC-001 · DMCP-TILE-ROWHOUSE-V2-001 · DMCP-MAT-PROFILE-PILOT-002 · DES-GRAM-ARCHETYPE-CIVIC-001 — witness [`dmcp_art_spine_hub_wave_live.json`](../debug_runs/art_pipeline/dmcp_art_spine_hub_wave_live.json).
+**Closed riparian (2026-06-02):** DES-STYLE-LANDSCAPE-RIparian-001 — witness [`dmcp_style_landscape_riparian_live.json`](../debug_runs/art_pipeline/dmcp_style_landscape_riparian_live.json).
+
+**Closed open lane (2026-06-02):** DMCP-VEG-ATLAS-SHIP-001 · DMCP-ATLAS-QC-PLAIN-002 — witness [`dmcp_designer_mcp_open_lane_live.json`](../debug_runs/art_pipeline/dmcp_designer_mcp_open_lane_live.json).
+
+**Closed art spine hub (2026-06-02):** DMCP-LG5-KEYFRAME-QC-001 · DMCP-TILE-ROWHOUSE-V2-001 · DMCP-MAT-PROFILE-PILOT-002 · DES-GRAM-ARCHETYPE-CIVIC-001 — witness [`dmcp_art_spine_hub_wave_live.json`](../debug_runs/art_pipeline/dmcp_art_spine_hub_wave_live.json).
 
 ### BLOCKED (re-check after promote)
 
 | ID | Blocked by |
 |:---|:---|
-| DMCP-QC-SUBSTATION-001 | MCP-PWR-PROMOTE-SUBSTATION-001 |
-| DMCP-QC-TRANSFORMER-001 | MCP-PWR-PROMOTE-TRANSFORMER-001 |
 | BUILD-READ-PILOT-002 | BUILD-READ-PILOT-001 |
+
+**Closed (2026-06-20):** DMCP-QC-SUBSTATION-001 · DMCP-QC-TRANSFORMER-001 · utility bpy/promote chain.
 
 ---
 
@@ -218,25 +239,26 @@ Power-grid specs **done** (substation, transformer, nuclear). Next machine row:
 
 | ID | Priority | Goal | Inputs |
 |:---|:---|:---|:---|
-| **COD-ART-HUD-ICON-ATLAS-001** | P0 | `power_hud_atlas` PNG + RON + IconId in Bevy HUD | [`design_hud_power_icons_v1.md`](design_hud_power_icons_v1.md) |
+| **COD-POWER-OVERLAY-RENDER-001** | P1 | Compositor strokes by `VoltageClass` + state (Track B) | [`design_power_map_overlay_v1.md`](design_power_map_overlay_v1.md) |
+| **COD-POWER-ISLAND-HIGHLIGHT-001** | P1 | Island boundary + dim unpowered | [`design_power_map_overlay_v1.md`](design_power_map_overlay_v1.md) |
 
-### @coder B — FALLBACK
+### @coder B — FALLBACK (sim HUD polish tail)
 
 | ID | Track | Notes |
 |:---|:---|:---|
-| **CDR-B-VEG-MINIMAP-LEGEND-UI-001** | Track D | After **DES-MINIMAP-VEG-LEGEND-002** wire spec |
 | **COD-SIM-HUD-BUILD-PICKER-001** | Track F | [`design_sim_hud_build_picker_v1.md`](design_sim_hud_build_picker_v1.md) signed |
 | **COD-SIM-HUD-TRAY-BUILD-001** | Track F | Tray Build tab |
 | **COD-SIM-HUD-POPUP-MIGRATE-001** | Track F | Popup tier migration |
-| **COD-POWER-LINE-DRAW-001** | Track G | Power line draw/commit (design specs done) |
-| **COD-POWER-OVERLAY-RENDER-001** | Track G | Map overlay states |
+| **CDR-B-VEG-MINIMAP-LEGEND-UI-001** | Track D | After **DES-MINIMAP-VEG-LEGEND-002** wire spec |
 
-### @coder A — FALLBACK (drain clear — infra tail closed)
+### @coder A — PRIMARY / FALLBACK
 
 | ID | Track | Notes |
 |:---|:---|:---|
-| **VEG-C14-OPERATOR-CHECKLIST-001** | Veg | Blocked on operator checklist — pick phase-6 hardening or sim-steward triage |
-| **OPS-F01 / WC-D04** | Infra slice 3 | [`infra_slice3_wc_d04_ops_f01_plan_v1.md`](infra_slice3_wc_d04_ops_f01_plan_v1.md) |
+| **COD-POWER-ISLAND-HIGHLIGHT-001** | Power Track B | [`power_grid_construction_ux_queue.json`](../tools/orchestrator/queues/power_grid_construction_ux_queue.json) |
+| **COD-UTILITY-ACTIVATION-LINK-001** | Power Track D | Activation reads `UtilityConnection` |
+| **COD-POWER-TOOL-RAIL-001** | Power Track D | Utilities rail → Lines entry |
+| **VEG-C14-OPERATOR-CHECKLIST-001** | Veg | Blocked on operator checklist |
 | Stage 5 regression | Spine | `cargo test -p proc_A_dine01 --lib stage5` |
 
 ### BLOCKED (cross-agent)
@@ -290,7 +312,7 @@ Power-grid specs **done** (substation, transformer, nuclear). Next machine row:
 
 | ID | Goal |
 |:---|:---|
-| **ORCH-PWR-DOWNSTREAM-001** | Sequence downstream · spec≠ship gate · **on-call absorption only** (done 2026-06-02) |
+| **ORCH-PWR-DOWNSTREAM-001** | **done** — lane closed 2026-06-20 · on-call absorption only |
 
 ### FALLBACK
 
@@ -303,7 +325,9 @@ Power-grid specs **done** (substation, transformer, nuclear). Next machine row:
 
 | ID | Blocked by |
 |:---|:---|
-| PWR-ART-DOWNSTREAM-CLOSE-001 | promote substation + transformer + HUD atlas + nuclear batch |
+| — | PWR downstream **closed** |
+
+**Closed:** PWR-ART-DOWNSTREAM-CLOSE-001 · COD-ART-HUD-ICON-ATLAS-001 · MCP-PWR utility chain.
 
 ---
 
@@ -364,8 +388,8 @@ From [`plan_designer_work_202606_v1.md`](plan_designer_work_202606_v1.md) — us
 | **D** Sim product UX | @designer → @coder B | MINIMAP-VEG-LEGEND, ECOLOGY-PREVIEW |
 | **E** Industrial grammar | all three | CMCP facility tools (specs **done**) |
 | **F** Sim HUD phase 2 | @designer → @coder | BUILD-PICKER, TRAY, POPUP tiers (specs **done**) |
-| **G** Power construction | @designer → @coder | Line draw/overlay (specs **done**) |
-| **H** Power art | active downstream | utility bpy + HUD atlas |
+| **G** Power construction | **ACTIVE** Track B | [`power_grid_construction_ux_queue.json`](../tools/orchestrator/queues/power_grid_construction_ux_queue.json) — Track A done |
+| **H** Power art | **CLOSED** | utility bpy + HUD atlas — witness close live |
 
 ---
 
@@ -373,10 +397,12 @@ From [`plan_designer_work_202606_v1.md`](plan_designer_work_202606_v1.md) — us
 
 | File | Role |
 |:---|:---|
-| [`agent_hub_queue_v1.json`](../tools/orchestrator/queues/agent_hub_queue_v1.json) | Auto-scan output — pick_now + blocked_fallback |
+| [`multi_parallel_tracks_dispatch_v1.json`](../tools/orchestrator/queues/multi_parallel_tracks_dispatch_v1.json) | **AUTHORITATIVE** 8-track parallel pull board |
+| [`multi_parallel_tracks_wave0_orders_v1.md`](../tools/orchestrator/queues/multi_parallel_tracks_wave0_orders_v1.md) | Wave-0 copy-paste agent orders |
 | [`designer_active_queue.json`](../tools/orchestrator/queues/designer_active_queue.json) | @designer + @designer-mcp active assignments |
 | [`coder_active_queue.json`](../tools/orchestrator/queues/coder_active_queue.json) | @coder A/B/C territory + meta |
-| [`power_grid_art_downstream_queue.json`](../tools/orchestrator/queues/power_grid_art_downstream_queue.json) | **ACTIVE** art downstream |
+| [`power_grid_art_downstream_queue.json`](../tools/orchestrator/queues/power_grid_art_downstream_queue.json) | **CLOSED** art downstream |
+| [`power_grid_construction_ux_queue.json`](../tools/orchestrator/queues/power_grid_construction_ux_queue.json) | **ACTIVE** construction UX — Track A done |
 | [`mcp_active_queue.json`](../tools/orchestrator/queues/mcp_active_queue.json) | MCP lane history |
 | [`grammar_continuation_queue.json`](../tools/orchestrator/queues/grammar_continuation_queue.json) | WH-TRACK-B (paused) |
 | [`post_drain_phase5_queue.json`](../tools/orchestrator/queues/post_drain_phase5_queue.json) | Build-read (blocked) |

@@ -1,0 +1,85 @@
+{
+  "gate": "DMCP-DESIGNER-MCP-OPEN-LANE-001",
+  "lanes": [
+    "DMCP-VEG-ATLAS-SHIP-001",
+    "DMCP-ATLAS-QC-PLAIN-002"
+  ],
+  "slice_count": 2,
+  "done_count": 2,
+  "rows": [
+    {
+      "id": "DMCP-VEG-ATLAS-SHIP-001",
+      "deliverable": "src/dev/dmcp_veg_atlas_ship_v1.md",
+      "deliverable_exists": true,
+      "status": "done",
+      "verdict": "PASS_WITH_NOTES",
+      "audit": {
+        "green": true,
+        "verdict": "PASS_WITH_NOTES",
+        "checks": {
+          "dmcp_doc": true,
+          "spec_on_disk": true,
+          "g0_rules": true,
+          "g4_signoff_template": true,
+          "lg5_qc_prerequisite": true,
+          "gate_id_match": true,
+          "ship_false_honest": true,
+          "spec_only": true,
+          "variant_count_16": true,
+          "g4_minimum_set": true,
+          "keyframes_16_on_disk": true,
+          "proceed_ship_honest_no": true,
+          "g0_proceed_tile_ship_no": true
+        },
+        "png_count": 16,
+        "proceed_ship": "no",
+        "g4_gap": "topology_corridor_regrowth_grass"
+      }
+    },
+    {
+      "id": "DMCP-ATLAS-QC-PLAIN-002",
+      "deliverable": "src/dev/design_aps_atlas_qc_copy_buildings_v2.md",
+      "deliverable_exists": true,
+      "status": "done",
+      "verdict": "PASS",
+      "audit": {
+        "green": true,
+        "verdict": "PASS",
+        "checks": {
+          "doc_on_disk": true,
+          "gate_id": true,
+          "warehouse_batch_ref": true,
+          "shopfront_batch_ref": true,
+          "bunker_batch_ref": true,
+          "footprint_messages": true,
+          "burn_damage_gaps": true,
+          "pilot_ship_false_note": true,
+          "supersedes_v1_note": true,
+          "batch_examples_on_disk": true
+        },
+        "batch_examples": {
+          "tile_warehouse_industrial_west_production_v1": true,
+          "tile_shopfront_colonial_production_v1": true,
+          "tile_bunker_military_production_v1": true
+        }
+      }
+    }
+  ],
+  "audit_complete": true,
+  "green": true,
+  "verdict": "PASS_WITH_NOTES",
+  "handoff": {
+    "veg_ship_flip": "operator G4 manual \u2192 landscape_expanded_g4_signoff.yaml proceed_ship:yes",
+    "veg_engine": "VEG-F01-ATLAS-SHIP-001 @coder_a",
+    "buildings_qc": "wire copy into aps_atlas_qc.py _PLAIN map @coder-mcp"
+  },
+  "_agent_meta": {
+    "schema": "dmcp_designer_mcp_open_lane_live_v1",
+    "written_at_epoch_secs": 1781979540,
+    "profile": "DMCP_DESIGNER_MCP_OPEN",
+    "source_system": "dmcp_designer_mcp_open_lane",
+    "relative_path": "debug_runs/art_pipeline/dmcp_designer_mcp_open_lane_live.json",
+    "ritual": "BLANG:WIT-HON\u2192Q\u2713 DMCP-OPEN-LANE",
+    "agent": "designer-mcp"
+  }
+}

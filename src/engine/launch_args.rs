@@ -157,6 +157,52 @@ impl EngineLaunchArgs {
         self.full_capture_active()
             || matches!(self.test_scene, TestScene::Visual | TestScene::VfxSandbox)
     }
+
+    /// Disk analytics + stall spans + ECS inventory for `--test` harness runs.
+    #[must_use]
+    pub fn test_instrumentation_profile(&self) -> TestInstrumentationProfile {
+        if !self.test_mode() {
+            return TestInstrumentationProfile::default();
+        }
+        let frame_jsonl = matches!(
+            self.test_scene,
+            TestScene::Weather
+                | TestScene::Fire
+                | TestScene::Atmosphere
+                | TestScene::Visual
+                | TestScene::VfxSandbox
+        ) || self.full_capture_active();
+        let flush_secs = if self.full_capture_active() { 2.0 } else { 5.0 };
+        TestInstrumentationProfile {
+            active: true,
+            quiet_terminal: true,
+            frame_jsonl,
+            stall_spans: true,
+            flush_secs,
+        }
+    }
+}
+
+/// Auto instrumentation profile published when [`EngineLaunchArgs::test_mode`] is true.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct TestInstrumentationProfile {
+    pub active: bool,
+    pub quiet_terminal: bool,
+    pub frame_jsonl: bool,
+    pub stall_spans: bool,
+    pub flush_secs: f32,
+}
+
+impl Default for TestInstrumentationProfile {
+    fn default() -> Self {
+        Self {
+            active: false,
+            quiet_terminal: false,
+            frame_jsonl: false,
+            stall_spans: false,
+            flush_secs: 5.0,
+        }
+    }
 }
 
 #[cfg(test)]
@@ -217,5 +263,21 @@ mod tests {
         let a = EngineLaunchArgs::from_cli(Some("atmosphere".into()), false, None);
         assert_eq!(a.test_scene, TestScene::Atmosphere);
         assert!(a.test_mode());
+    }
+
+    #[test]
+    fn test_instrumentation_profile_vfx() {
+        let a = EngineLaunchArgs::from_cli(Some("vfx".into()), false, None);
+        let p = a.test_instrumentation_profile();
+        assert!(p.active);
+        assert!(p.quiet_terminal);
+        assert!(p.frame_jsonl);
+        assert!(p.stall_spans);
+    }
+
+    #[test]
+    fn test_instrumentation_profile_visual_flush() {
+        let a = EngineLaunchArgs::from_cli(Some("visual".into()), false, None);
+        assert!((a.test_instrumentation_profile().flush_secs - 2.0).abs() < f32::EPSILON);
     }
 }

@@ -2,11 +2,12 @@
   "gate_id": "OVR-P56-ONBOARD-001",
   "green": true,
   "metadata_collapsed_default": true,
+  "assembly_onboard_strip": true,
   "onboarding_prefs_key": "onboarding_seen_v1",
   "onboarding_seen": false,
   "_agent_meta": {
     "schema": "aps_uiux_onboard_live_v1",
-    "written_at_epoch_secs": 1781793802,
+    "written_at_epoch_secs": 1781984039,
     "profile": "OVR_P56_ONBOARD",
     "relative_path": "debug_runs/aps_uiux_onboard_live.json"
   }

@@ -91,7 +91,7 @@ pub use minimap_shell::{
     minimap_uv_to_world_tile, native_minimap_window_supported, simulation_minimap_bootstrap_rect,
     simulation_minimap_overlay_defaults, MinimapCameraBookmark, MinimapEdge, MinimapFollowMode,
     MinimapOverlayMask, MinimapPresentationMode, MinimapPresentationSource, MinimapShellState,
-    MINIMAP_TITLE_BAR_H_PX,
+    MINIMAP_EDGE_RAIL_PX, MINIMAP_RESIZE_GRIP_PX, MINIMAP_TITLE_BAR_H_PX,
 };
 pub use minimap_egui_dev::{minimap_egui_dev_enabled, MinimapEguiDevGate};
 pub use minimap_viewport_frame::{
@@ -242,7 +242,7 @@ pub use view_authority::{
     DebugFlags, OverlayMask, PerViewLodHints, ViewAuthorityPlugin, ViewAuthoritySystemSet,
     ViewCameraState, ViewCameraTag, ViewFilterMask, ViewId, ViewInstance, ViewInteractionState,
     ViewIsolationDiagnostics, ViewManager, ViewProjection, ViewRenderPolicy, ViewRenderTarget,
-    VIEW_NO_ENTITY,
+    VIEW_NO_ENTITY, vm10_minimap_lockstep_diagnostics_green,
 };
 pub use view_projection_authority::{
     camera_translation, camera_zoom, view_instance, view_surface_screen_to_world,

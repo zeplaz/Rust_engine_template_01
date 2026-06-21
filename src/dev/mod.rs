@@ -8,6 +8,9 @@ pub mod stage7_play_witness;
 pub mod stage7_behavioral_witness;
 pub mod runtime_witness;
 pub mod schedule_cycle_probe;
+pub mod perf_scope_frame_log;
+pub mod sim_spectrum_analytics;
+pub mod test_run_instrumentation;
 pub mod construction_live_todos;
 pub mod construction_finish_todos;
 pub mod construction_phase2_todos;
@@ -54,7 +57,6 @@ pub mod coder_b_ui_shell_tail_closure_v1;
 pub mod coder_b_ui_w3_witness_proof;
 #[cfg(test)]
 pub mod coder_b_ui_w3_p6_proof;
-#[cfg(test)]
 pub mod triage_vm09_v2_proof;
 #[cfg(test)]
 pub mod s7b_m2_m3_coder_proof;
@@ -91,6 +93,11 @@ pub mod minimap_topology_legend_live_proof;
 pub mod infra_e0_profile_catalog_live_proof;
 pub mod infra_utility_overlay_live_proof;
 pub mod power_map_overlay_live_proof;
+pub mod power_grid_track_bd_live_proof;
+pub mod power_grid_track_c_live_proof;
+pub mod sim_hud_phase2_close_live_proof;
+pub mod power_grid_construction_ux_close_live_proof;
+pub mod power_node_hover_live_proof;
 pub mod utility_network_live_proof;
 pub mod infra_overlay_live_proof;
 pub mod nav_agent_routing_live_proof;
@@ -101,6 +108,8 @@ pub mod aps_dna_consumer_live_proof;
 pub mod landscape_map_stamp_contract_live_proof;
 pub mod landscape_map_stamp_runtime_live_proof;
 pub mod des_build_read_hud_001_live_proof;
+pub mod des_build_read_hud_002_live_proof;
+pub mod sim_hud_esc_cascade_live_proof;
 pub mod facility_binding_read_live_proof;
 pub mod power_line_draw_live_proof;
 pub mod sim_hud_power_icons_live_proof;
@@ -110,6 +119,12 @@ pub mod ind_play_witness_live_proof;
 pub mod coder_b_parallel_wave_live_proof;
 pub mod coder_a_parallel_wave_live_proof;
 pub mod vt5_flicker_triage_live_proof;
+pub mod grammar_ship_close_live_proof;
+pub mod veg_ship_close_live_proof;
+pub mod sim_hud_ops_v2_live_proof;
+pub mod sim_hud_cursor_live_proof;
+pub mod fire_f2_readiness_live_proof;
+pub mod infra_lane_close_live_proof;
 pub mod sim_hud_l5_polish_live_proof;
 pub mod sim_hud_professional_polish_live_proof;
 pub mod veg_resolver_parity_live_proof;
@@ -192,6 +207,15 @@ pub use stage7_behavioral_witness::{
 pub use stage7_play_witness::{
     build_stage7_play_witness_payload, write_stage7_play_witness_system,
     Stage7PlayLiveProofState, STAGE7_PLAY_LIVE_JSON,
+};
+pub use sim_spectrum_analytics::{
+    sim_spectrum_analytics_enabled, sim_spectrum_analytics_quiet_terminal,
+    SimSpectrumAnalyticsPlugin, SIM_SPECTRUM_LIVE_JSON,
+};
+pub use test_run_instrumentation::{
+    instrumentation_active, instrumentation_flush_secs, instrumentation_frame_jsonl,
+    instrumentation_quiet_terminal, instrumentation_stall_spans, TestRunInstrumentation,
+    TestRunInstrumentationPlugin,
 };
 #[cfg(test)]
 pub use coder_b_queue_bundle_proof::refresh_coder_b_queue_bundle_live_witnesses;

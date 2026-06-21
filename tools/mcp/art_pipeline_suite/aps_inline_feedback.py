@@ -155,6 +155,30 @@ def format_material_texture_status(status: str, *, profile_id: str | None = None
     return line
 
 
+def apply_material_card_status(
+    label: tk.Widget,
+    status: str,
+    *,
+    profile_id: str | None = None,
+    var: tk.StringVar | None = None,
+) -> None:
+    """Apply the §3.4 status atom to a material card label — one status code path.
+
+    Mirrors :func:`apply_status_atom` for the material texture-status mapping so
+    cards stop setting ``text=``/``foreground=`` by hand. When ``var`` is given the
+    line is pushed through it; otherwise the label text is configured directly.
+    """
+    glyph, word, fg = material_texture_status(status)
+    line = f"{glyph} {word}"
+    if profile_id:
+        line = f"{line} · {profile_id}"
+    if var is not None:
+        var.set(line)
+    else:
+        label.configure(text=line)
+    label.configure(foreground=fg)
+
+
 def validation_foreground(ok: bool | None) -> str:
     if ok is True:
         return aps_theme.COLOR_PASS

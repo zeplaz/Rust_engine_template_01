@@ -146,13 +146,7 @@ pub const PLAYER_EVENT_TRAY_BODY_MAX_ROWS: usize = 8;
 
 #[must_use]
 pub fn format_player_event_tray_row_line(row: &PlayerEventRow) -> String {
-    let cat = match row.category {
-        PlayerEventCategory::Fire => "FIRE",
-        PlayerEventCategory::Grid => "GRID",
-        PlayerEventCategory::Weather => "WEATHER",
-        PlayerEventCategory::Build => "BUILD",
-        PlayerEventCategory::Script => "SCRIPT",
-    };
+    let cat = player_event_category_ops_tag(row.category);
     let parent = row
         .parent_id
         .map(|id| format!("  ←#{id}"))
@@ -194,10 +188,43 @@ fn player_event_category_ops_tag(category: PlayerEventCategory) -> &'static str 
     }
 }
 
-/// Ops strip ALERTS zone — append latest CRIT/WARN when unread (EVENT-LOG-UI-001).
+/// Ops strip ALERTS zone — tier badge + count (DES-SIM-HUD-OPS-002 / EVENT-LOG-UI-001).
+#[must_use]
+pub fn ops_strip_alert_tier_counts(log: &PlayerEventLog) -> (usize, usize) {
+    let p0 = log.unread_crit as usize;
+    let p1 = log
+        .rows
+        .iter()
+        .filter(|r| r.severity == PlayerEventSeverity::Warn && r.dispatch_ok)
+        .count();
+    (p0, p1)
+}
+
+#[must_use]
+pub fn format_ops_strip_alert_badge_v2(p0: usize, p1: usize) -> String {
+    if p0 > 0 {
+        if p0 > 99 {
+            "◆99+".to_string()
+        } else {
+            format!("◆{p0}")
+        }
+    } else if p1 > 0 {
+        if p1 > 99 {
+            "▲99+".to_string()
+        } else {
+            format!("▲{p1}")
+        }
+    } else {
+        "◆0".to_string()
+    }
+}
+
 #[must_use]
 pub fn format_ops_strip_alerts_line(n_missions: usize, log: &PlayerEventLog) -> String {
-    if log.unread_crit > 0 {
+    let (p0, p1) = ops_strip_alert_tier_counts(log);
+    let n = p0 + p1;
+    let badge = format_ops_strip_alert_badge_v2(p0, p1);
+    if p0 > 0 {
         if let Some(row) = log
             .rows
             .iter()
@@ -205,22 +232,26 @@ pub fn format_ops_strip_alerts_line(n_missions: usize, log: &PlayerEventLog) -> 
             .find(|r| r.severity == PlayerEventSeverity::Crit && r.dispatch_ok)
         {
             return format!(
-                "ALERT · {} · {} · T{}",
-                player_event_category_ops_tag(row.category),
-                short_label(&row.label, 28),
-                row.tick
+                "{badge}  ALERTS  {n} · {}",
+                short_label(&row.label, 24)
             );
         }
     }
-    if let Some(row) = log
-        .rows
-        .iter()
-        .rev()
-        .find(|r| r.severity == PlayerEventSeverity::Warn && r.dispatch_ok)
-    {
-        return format!("WARN · {}", short_label(&row.label, 28));
+    if p1 > 0 && p0 == 0 {
+        if let Some(row) = log
+            .rows
+            .iter()
+            .rev()
+            .find(|r| r.severity == PlayerEventSeverity::Warn && r.dispatch_ok)
+        {
+            return format!(
+                "{badge}  ALERTS  {n} · {}",
+                short_label(&row.label, 24)
+            );
+        }
     }
-    format!("ALERTS  {n_missions}")
+    let _ = n_missions;
+    format!("{badge}  ALERTS  {n}")
 }
 
 pub fn clear_player_event_crit_unread(log: &mut PlayerEventLog) {
@@ -350,7 +381,7 @@ pub fn event_log_ui_format_witness_green() -> bool {
     let empty_tray = format_player_event_tray_body(&PlayerEventLog::default());
     tray.contains("[WEATHER]")
         && tray.contains("ch(12,34)")
-        && format_ops_strip_alerts_line(4, &log).starts_with("ALERT ·")
+        && format_ops_strip_alerts_line(4, &log).starts_with("◆")
         && empty_tray.contains("No events yet")
 }
 

@@ -45,11 +45,12 @@ A glyph exists **only** if it drives one of three outcomes. No outcome ⟶ cut i
 ⏩ PRODUCTIVITY   instant parse · no prose to decode · unambiguous routing
 💰↓ TOKEN-ECONOMY one symbol replaces a clause · graph replaces a paragraph (≈ −70%)
 🎯 QUALITY        forces evidence/confidence/authority to be explicit · no hand-wave
+🔍 FIDELITY-GATE  must DECODE COLD (fresh reader · no legend · ≥95%) — the axis the others can't fake ($REPORT §9)
 ```
 
 | Glyph class | Drives | Why it earns the slot |
 |:--|:--|:--|
-| status 🟢🟡🔴🧊 · confidence ◔◑◕● | 🎯 + ⏩ | state read at a glance; nothing to parse |
+| dense status ●◐○✗ (emoji sparse) · confidence ~.5/.75/1.0 | 🎯 + ⏩ | state at a glance; ½ the tokens of emoji ($REPORT §8) |
 | evidence closers 🧪🔬📜⊚ | 🎯 | a bare ✅ is banned — proof is mandatory |
 | dimensions (§2.1, **1 glyph each**) | 💰↓ + 🎯 | one symbol = a sentence of caveats |
 | edges + annotations (§2.4) | ⏩ + 🎯 | topology **+** condition **+** state in one scan |
@@ -61,8 +62,11 @@ REFINE-RULE
  • decorative glyph (serves no outcome) = ⛔ — delete it (this is L2, enforced)
  • 1 glyph / concept — never a cluster where one suffices
  • COST: an emoji is 1–3 input tokens; a geometric operator (⊚ ▷ ◆ ⬡ ═▶) is usually cheaper
-   → reserve EMOJI for STATUS (the visual hit earns its cost); use GEOMETRIC glyphs for
-     STRUCTURE (edges, nodes, scope). Mixing by role keeps clusters short and cheap.
+   → reserve EMOJI for SPARSE headline status only; use the cheap GEOMETRIC status set ●◐○✗
+     for DENSE vectors (§2.2) and geometric operators for STRUCTURE. ($REPORT §8,§15)
+ • BLEND ≻ pure: pure-symbolic is the WORST encoding ($REPORT §5) — symbolise status/rules/relations/
+   recurring concepts only; leave narrative as prose. Single-glyph token wins are tokenizer-fragile
+   ($REPORT §30); STRUCTURE + AMORTIZATION wins are invariant — trust those.
 ```
 
 ---
@@ -79,6 +83,8 @@ L5  COMPRESS      prefer ⊚digest over 📄full; emit at ▾3–▾4 unless ask
 L6  ROUTE         end with NEXT: ⚑ / ΔWF→@role — never a dangling state
 L7  PRECISION     a glyph means exactly one thing (§2); ambiguity ⟶ pick a sharper glyph
 L8  NO-NL-WALLS   ⛔ paragraphs of status; ⛔ restating a table in prose
+L9  COLD-DECODE   ship no notation w/o (a) cold-decode ≥95% (fresh reader, no legend) ∧ (b) token before/after vs prose ($REPORT §9). A token win that won't decode = ⛔ not a win.
+L10 BLEND-DEFAULT default = the blend ($REPORT §5); pure-symbolic loses. Symbolise dense-status/rules/relations/recurring-concepts; narrative stays prose.
 ```
 
 ---
@@ -101,12 +107,15 @@ Fill level uses 🟨 quanta (§3.2), e.g. `Au:🏛🟨🟨🟨🟨` = authority 
 
 ### §2.2 Status — the spine
 
+**Dense status — the cheap geometric set** (½ the tokens of emoji, equally glance-legible — $REPORT §8,§16):
+
 | Glyph | Means | Glyph | Means |
 |:--|:--|:--|:--|
-| 🟢 | green / pass | 🔴 | blocked / bad |
-| 🟡 | partial / qualified | 🧊 | explicit defer |
-| ✅ | verified (needs closer →§2.3) | ❌ | known-bad |
-| ⏳ | in-progress / drifting | ⛔ | forbidden |
+| ● | pass / done | ✗ | fail |
+| ◐ | running / partial | ○ | skip / open |
+| ⊘ | closed / blocked | ✎ | draft |
+
+**Sparse headline status** — reserve emoji for a *single* attention mark, never a dense vector (emoji cost 2–3 tok each, $REPORT §15): 🟢 green · 🟡 qualified · 🔴 blocked · 🧊 defer · ✅ + closer (§2.3, never lone) · ❌ known-bad · ⛔ forbidden · ⏳ wip
 
 ### §2.3 Evidence closers (attach to ✅)
 
@@ -223,6 +232,8 @@ gate → EV/Cx ≥ 1.0 ✅APPROVE · 0.5–1.0 ⚠REVISE · <0.5 🧊DEFER
 ```text
 ◔ ≈.25 low    ◑ ≈.50 even    ◕ ≈.75 high    ● =1.0 certain    ◌ unknown/unmeasured
 gate: escalate raw evidence when < ◑ ; act on known-fix when ≥ ◕
+COST: the ◔◑◕● set ≈ 7 tok ($REPORT) — for INLINE confidence prefer ~.5 / ~.75 / 1.0 (cheaper, clearer);
+reserve ◔◑◕● for a dense confidence vector where the glance-bar earns it.
 ```
 
 ### §2.12 Priority / gate / scope delimiters
@@ -238,6 +249,8 @@ Registered for landscape program plans, solutions, and witness charts. **Complet
 $ref:prompts/guides/landscape_grammar_lexicon_v1.md (§1.0–§1.19 planning · §2 extract · §3 mapping · §1.11 semantic · §1.17 composite).
 
 **Law:** `VegetationTopology ≠ VegetationShape` — glyphs denote **intersecting topologies + field overlays**, not biome labels.
+
+**⚠ GATE — domain glyphs lose by default ($REPORT §11 Rec5):** a terse English term usually beats a bespoke glyph (a cold reader resolves a domain glyph only via expensive search). Register/keep a §2.13 glyph ONLY when it (a) recurs ≥3× in the artifact, (b) cold-decodes ≥95% OR carries a 1-line in-context legend, AND (c) beats the English term on payload+fidelity (L9). Otherwise write the term. This set is opt-in, scoped under a `⟨VEG⟩` block header.
 
 **Planning / chart set — canopy & structure:**
 
@@ -581,6 +594,43 @@ HYBRID   swimlane-with-gates = D ⋈⟨stage⟩ A   ; each lane stage IS a gated
 LAW      a referenced ⟨G:name⟩ must be defined once with ≝ ; ≤7 nodes per definition (nest the rest)
 ```
 
+### §3.12 I/O FORMS (from $REPORT §6,§12,§13 — the measured-cheapest shapes)
+
+**STATUS-VECTOR** — dense state as default+exception (`$REPORT W2,W5`; −65%→−87% at scale, −73% vs JSON):
+
+```text
+states: ●=pass ◐=running ○=skip ✗=fail   (gate ≜ build∧test∧appr≥2)
+Δmods(12): all ● except ✗ test:appstarter · ◐ build:nuke   release ○ (blocked on gate)
+```
+
+**SIGNATURE-BOOK** — tool/CLI schemas as one line each (`$REPORT W1`; −92% @ 100% callable):
+
+```text
+# codebook once: NS=<const-prefix>  PK=project_key:str
+# sig: name(req, [opt]):type =default -> result
+create_issue(PK, summary, type, [assignee, desc:md]) -> issue
+⚡ SACRED: keep the EXACT tool name — stripping the disambiguating segment ⟶ 12% callable ($REPORT §13)
+```
+
+**Δ-HANDOFF** — lossless record set for a consumer that parses it back (`$REPORT W7`; −61% vs JSON, 100% round-trip):
+
+```text
+cols: id title state appr pipe        [legend: state ●done ◐wip ○open ✗fail]
+DEV-1 "fix race" ◐ 1 ✗ ; DEV-2 "atlas" ● 2 ●
+keep the column header + legend; drop NO field (the §3.12 vector is lossy by design — use this full table when records must reconstruct)
+```
+
+**REASONING-LATTICE** — deep diagnosis as HYP/EV/INFER with computed ρ (`$REPORT §12`; −16/−22% AND auditable):
+
+```text
+LEX  H<n>=hypothesis · π prior · ρ posterior · ▣ observed ⊡ measured · ⊕→ supports ⊖→ refutes (╱ weak ╱╱ strong) · ⤳ causes ⊸ prevents
+HYP  H1 layer-race · H2 import-cycle
+EV   E1 repro⟺concurrent ⊕╱╱→H1 ⊖→H3 · E2 path off-by-1 ⊕╱╱→H2
+INFER ρ(h) ∝ π(h)·∏ₑ LR(e,h)  ⟶  H2 0.84 ◕ (root) · H1 0.16 (trigger: H1⤳H2)
+FIX  break import cycle  NEXT ΔWF→@owner
+```
+(round-trips to JSON lossless ⟹ doubles as machine output. `do(·)`/LTL/decision-matrix add *correctness* at +token cost — use when auditability matters, not for thrift.)
+
 ---
 
 ## §4 REF & ROUTING (drift-resistant schematization)
@@ -704,19 +754,23 @@ annotation ::= "「" natural-language "」"           ; ≤1 line, last resort (
 ## §9 ENFORCEMENT — checklist & anti-patterns
 
 ```text
+☑ COLD-DECODE ≥95% (fresh reader, no legend) + token before/after measured — the SHIP gate (L9)
+☑ BLEND: narrative=prose · dense status=●◐○✗ · emoji sparse only · rules=∀⇒≥ (L10)
 ☑ CHART-FIRST: artifact opens with a packet/table, not a paragraph
 ☑ CLUSTERS ≤4, parsed L→R, every ✅ has a closer (🧪|🔬|📜|⊚)
-☑ confidence as ◔◑◕● ; numbers cited or ASK: ; no invented values
+☑ confidence inline ~.5/.75/1.0 (◔◑◕● dense vectors only) ; numbers cited or ASK:
 ☑ claims carry $ref/$sym ; reads via ⊚digest at ▾3–▾4
 ☑ ends with NEXT (⚑ / ΔWF→@role) ; never a dangling state
 ☑ NL only inside 「…」 and ≤1 line
 
 ANTI ⛔
-  ✗ 「The system passed and looks good」      → ⟨ID⟩ 🟢✅🧪 ◕
+  ✗ 「The system passed and looks good」      → ⟨ID⟩ 🟢✅🧪 ~.75
   ✗ restating a table's contents in prose      → delete the prose
   ✗ lone ✅ / decorative emoji                 → close it or drop it
+  ✗ emoji for a DENSE status vector            → ●◐○✗ (½ the tokens, $REPORT §8)
+  ✗ token win never cold-decoded               → measure first; un-decodable = not a win (L9)
   ✗ pasting full logs / full witness JSON       → ⊚digest + path, escalate only < ◑
-  ✗ "confidence: 0.9"                           → ◕
+  ✗ "confidence: 0.9"                           → ~.75
 ```
 
 ---
@@ -758,16 +812,17 @@ EDGES   ═▶hard ━▶soft ┅▶weak ⇢spine ☍conflict ⊗coupled ⛓dep 
         ═[g]▶guard ▷⊳emit ◂⊳consume ⬡▶gated ⇧promote ⊰derive ═w▶weight
         ⊕▶fan-out ▶⊕fan-in ↻[n]loop≤n ⤳async ⤳⧖defer ⛔▶forbid ⊸invalidate ⟲rollback
 ANNOT   [t:Type]payload · ⟨cost:w⟩ · ⟨≤Δt⟩SLA · ⟨↻k⟨τ⟩⟩retry · ⟨◕⟩edge-confidence · 1▶n card
-STATUS  🟢pass 🟡partial 🔴block 🧊defer  ✅+closer{🧪🔬📜⊚🎯}  ⏳wip ⛔forbid ⚠caution 🚦gate
-CONF    ◔.25 ◑.5 ◕.75 ●1 ◌?          act≥◕ · escalate<◑
+STATUS  dense ●pass ◐run ○skip ✗fail ⊘blocked  ·  sparse(emoji) 🟢🟡🔴🧊 ⏳ ⛔ ⚠ 🚦 · ✅+closer{🧪🔬📜⊚} never lone
+CONF    inline ~.5/.75/1.0 (cheap) · dense-vec ◔◑◕● ◌?  ·  act≥◕ · escalate<◑
 LOGIC   ∧∨¬⊕ ⇒⇔ ∴∵ ⊨   SETS ∀∃∄∅∈∉⊆∩∪   Δ +−~!≈⇄   TIME ⊳now ⊲past ⊳⊳next ⟳cycle ⧖await ⌛stale
 FORMS   A pipeline · B branch · C fan · D swimlane · E state · F DAG · G feedback · H subgraph
         I matrix · J timeline · K router · L retry · M sequence · N tree · O sankey · P concurrency
+I/O     §3.12 status-vector ●◐○ · signature-book name(req,[opt])->r (SACRED name) · Δ-handoff table · reasoning-lattice HYP/EV/INFER+ρ
 DIMS    Ct💰 Cx🌀 Cm♻ Dp⛓ Au🏛 Rk⚠ Q🎯 Δ⚖ U⌁ T⏱ E🔬 H👁 S🌐   (1 glyph/dim · fill 🟨)
 ALGEBRA ⟨G:name⟩ · G1⨟G2 seq · G1∥G2 lanes · G1▸G2 nest · G1⋈⟨k⟩G2 join · G1⊕G2 choice · ↻[n]G
 SCOPE   ⟦block⟧ ⟨id⟩ 「NL≤1line」 ⦃set⦄ ▸nested      COMPRESS ▾1..▾4 · ⊚digest ≻ 📄full
-LAWS    chart/graph-first · cluster≤4 L→R · ✅+closer · cite $ref/$sym · end NEXT⚑ · NL only in 「…」
-OUTCOME every glyph ⊨ ⏩ ∨ 💰↓ ∨ 🎯 ; else cut (L2)  ·  emoji=STATUS · geometric=STRUCTURE
+LAWS    cold-decode≥95%+token-Δ (L9) · blend≻pure (L10) · chart/graph-first · cluster≤4 · ✅+closer · cite $ref/$sym · end NEXT⚑
+OUTCOME every glyph ⊨ ⏩ ∨ 💰↓ ∨ 🎯 ∨ 🔍fidelity ; else cut (L2)  ·  emoji=SPARSE-status · geometric=STRUCTURE+dense-status
 ```
 
 ---

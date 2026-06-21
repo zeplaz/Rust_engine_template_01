@@ -52,8 +52,8 @@ Red hatch overlay on tile strip + stroke `danger` @ 80% — paired with strip `b
 
 | Node | Map | Hover card (P1) |
 |:---|:---|:---|
-| Transformer | ▣ + coil | `{class} · {load}% · {n} consumers` |
-| Substation | ▣ yard ring | `Feeds {n} consumers` |
+| Transformer | ▣ + coil | see [`design_power_node_hover_v1.md`](design_power_node_hover_v1.md) §3 |
+| Substation | ▣ yard ring | see [`design_power_node_hover_v1.md`](design_power_node_hover_v1.md) §4 |
 | Power plant | building + ⚡ | `{MW} out` |
 | Junction tee | ● | `{n} edges` |
 

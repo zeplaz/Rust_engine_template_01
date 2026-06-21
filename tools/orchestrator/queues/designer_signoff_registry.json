@@ -1,8 +1,8 @@
 {
-    "_meta": {
+  "_meta": {
     "version": "3.0.0",
     "date": "2026-06-17",
-    "designer_queue_drained": "2026-06-17 — OVR + GRAM + minimap + build-read HUD",
+    "designer_queue_drained": "2026-06-17 \u2014 OVR + GRAM + minimap + build-read HUD",
     "aps_uiux_overhaul_parallel_specs": "OVR-DES-P2/P3/P4/P55 done 2026-06-17",
     "chrome_mockup": "DES-APS-CHROME-MOCKUP-001",
     "aps_uiux_overhaul_gate": "OVR-P0-DESIGN-LOCK",
@@ -11,12 +11,12 @@
     "on_call_playbook": "src/dev/designer_oncall_absorption_v1.md",
     "longrun_closed": "DESIGN-PROC-MODULE-KIT-001, DESIGN-ORGANIC-GROWTH-UX-001, DESIGN-CONSTRUCTION-STAGE-READ-001, DESIGN-CONSTRUCTION-SCALING-READ-001, DESIGN-INFRA-NETWORK-OVERLAY-001, DESIGN-SETTLEMENT-HIERARCHY-READ-001",
     "wave4_designer_closed": "DESIGN-HANABI-SPIKE-REVIEW-001, DESIGN-VFX-CAPTURE-ROUND-003, DESIGN-PR4-RETIRE-UX-001",
-    "on_call_absorption_2026_06_02": "DESIGN-PR4-RETIRE-UX-001 qualified→PASS",
+    "on_call_absorption_2026_06_02": "DESIGN-PR4-RETIRE-UX-001 qualified\u2192PASS",
     "on_call_closed": "DESIGN-VISUAL-PERF-DEGRADE-001",
     "stability_phase2_closed": "DESIGN-G-PLAY-001, DESIGN-WSS-HYDRO-READ-001, DESIGN-PERF-DEGRADE-VALIDATE-001, DESIGN-R4-UX-001",
     "on_call_hold": "DESIGN-S7B-M4-PLAY-READ-001, DESIGN-HANABI-H-A2-PROD-001",
     "owner": "@designer",
-    "purpose": "Orchestrator-readable designer sign-offs — status SIGNED + witness path per @designer todo",
+    "purpose": "Orchestrator-readable designer sign-offs \u2014 status SIGNED + witness path per @designer todo",
     "human_board": "src/dev/stage_designer_todos_v1.md",
     "active_queue": "tools/orchestrator/queues/designer_active_queue.json",
     "continuation_queue": "tools/orchestrator/queues/continuation_queue.json"
@@ -25,15 +25,19 @@
     {
       "id": "UI4-DESIGN-001",
       "agent": "designer",
-      "status": "done",
-      "signoff": "SIGNED",
+      "status": "open",
+      "signoff": "PENDING",
       "signed_date": "2026-05-24",
       "witness": "prompts/guides/ui/world_preview_d04_slide_sheet_spec_v1.md",
       "artifacts": [
         "assets/ui/world_preview/slide_sheet_spec_v1.png"
       ],
-      "unblocks": ["UI-WP-LAYOUT-002"],
-      "notes": "D-04 slide sheet spec; LAYOUT-002 coder DONE"
+      "unblocks": [
+        "UI-WP-LAYOUT-002"
+      ],
+      "notes": "D-04 slide sheet spec; LAYOUT-002 coder DONE",
+      "intel_officer_note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 SIGNED but witness file missing",
+      "reopened_at": "2026-06-20"
     },
     {
       "id": "S7P-DESIGN-001",
@@ -42,7 +46,9 @@
       "signoff": "SIGNED",
       "signed_date": "2026-05-24",
       "witness": "src/dev/stage7_play_scenario_v1.md",
-      "unblocks": ["S7P-STEWARD-001"],
+      "unblocks": [
+        "S7P-STEWARD-001"
+      ],
       "notes": "Stage 7 Play scenario script; steward witness green 2026-05-25"
     },
     {
@@ -52,7 +58,9 @@
       "signoff": "SIGNED",
       "signed_date": "2026-05-25",
       "witness": "src/dev/s7p_grid_overload_ux_note_v1.md",
-      "unblocks": ["S7P-GRID-UX-UI-001"],
+      "unblocks": [
+        "S7P-GRID-UX-UI-001"
+      ],
       "notes": "Grid overload toast vs tray vs diagnostics; unblocks Coder B3"
     },
     {
@@ -63,7 +71,9 @@
       "signed_date": "2026-05-26",
       "verdict": "PASS (qualified)",
       "witness": "src/dev/s7p_grid_overload_ux_pass_record_v1.md",
-      "unblocks": ["S7P-GRID-UX-UI-001"],
+      "unblocks": [
+        "S7P-GRID-UX-UI-001"
+      ],
       "prereq": "S7P-DESIGN-002"
     },
     {
@@ -73,7 +83,9 @@
       "signoff": "SIGNED",
       "signed_date": "2026-05-25",
       "witness": "src/dev/fire_lod_player_read_v1.md",
-      "unblocks": ["FIRE7-F7-C-001"],
+      "unblocks": [
+        "FIRE7-F7-C-001"
+      ],
       "notes": "LOD player-read table; F7-C policy after F7-A-001"
     },
     {
@@ -83,7 +95,9 @@
       "signoff": "SIGNED",
       "signed_date": "2026-05-26",
       "witness": "src/dev/minimap_unit_marker_visual_spec_v1.md",
-      "unblocks": ["UI-P3-M3-UNITS-001"]
+      "unblocks": [
+        "UI-P3-M3-UNITS-001"
+      ]
     },
     {
       "id": "DESIGN-M3-REPLAY-001",
@@ -92,17 +106,23 @@
       "signoff": "SIGNED",
       "signed_date": "2026-05-26",
       "witness": "src/dev/minimap_replay_scrub_visual_spec_v1.md",
-      "unblocks": ["UI-P3-M3-REPLAY-001"]
+      "unblocks": [
+        "UI-P3-M3-REPLAY-001"
+      ]
     },
     {
       "id": "DESIGN-CONSTRUCTION-MV-001",
       "agent": "designer",
-      "status": "done",
-      "signoff": "SIGNED",
+      "status": "open",
+      "signoff": "PENDING",
       "signed_date": "2026-05-26",
       "witness": "src/dev/construction_multiview_ghost_readability_v1.md",
-      "unblocks": ["CONSTRUCTION-MV-SIM-001"],
-      "notes": "DQ-POST-04 readability; sim witness green"
+      "unblocks": [
+        "CONSTRUCTION-MV-SIM-001"
+      ],
+      "notes": "DQ-POST-04 readability; sim witness green",
+      "intel_officer_note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 stub_marker:stub",
+      "reopened_at": "2026-06-20"
     },
     {
       "id": "DESIGN-VFX-VISUAL-ACCEPT-001",
@@ -112,7 +132,9 @@
       "signed_date": "2026-05-26",
       "verdict": "PASS (qualified)",
       "witness": "src/dev/vfx_visual_acceptance_record_v1.md",
-      "unblocks": ["VFX-VISUAL-SIGNOFF-001"]
+      "unblocks": [
+        "VFX-VISUAL-SIGNOFF-001"
+      ]
     },
     {
       "id": "DESIGN-WP-VISUAL-ACCEPT-001",
@@ -122,11 +144,15 @@
       "signed_date": "2026-05-26",
       "verdict": "PASS (qualified)",
       "witness": "src/dev/world_preview_visual_acceptance_record_v1.md",
-      "unblocks": ["UI-WP-VISUAL-001"]
+      "unblocks": [
+        "UI-WP-VISUAL-001"
+      ]
     },
     {
       "id": "DESIGN-F7-B-DEBUG-001",
-      "aliases": ["FIRE7-DESIGN-002"],
+      "aliases": [
+        "FIRE7-DESIGN-002"
+      ],
       "agent": "designer",
       "status": "done",
       "signoff": "SIGNED",
@@ -143,9 +169,14 @@
       "verdict": "PASS",
       "witness": "src/dev/bq128_apply_ghost_ux_review_v1.md",
       "witness_json": "debug_runs/wave_s_blueprint_roundtrip.json",
-      "pass_pointers": ["/roundtrip_ok"],
-      "unblocks": ["BQ-128-APPLY-001", "UX-E02-APPLY-POLISH-001"],
-      "notes": "Preset picker → ghost flow signed; roundtrip_ok witness green"
+      "pass_pointers": [
+        "/roundtrip_ok"
+      ],
+      "unblocks": [
+        "BQ-128-APPLY-001",
+        "UX-E02-APPLY-POLISH-001"
+      ],
+      "notes": "Preset picker \u2192 ghost flow signed; roundtrip_ok witness green"
     },
     {
       "id": "DESIGN-IND-E03-OPS-001",
@@ -155,11 +186,15 @@
       "signed_date": "2026-05-26",
       "verdict": "PASS (qualified)",
       "witness": "src/dev/ind_e03_ops_strip_polish_v1.md",
-      "unblocks": ["IND-E03-SIM-UX-001"]
+      "unblocks": [
+        "IND-E03-SIM-UX-001"
+      ]
     },
     {
       "id": "DESIGN-VFX-CAPTURE-ROUND-002",
-      "aliases": ["VX-P0-04"],
+      "aliases": [
+        "VX-P0-04"
+      ],
       "agent": "designer",
       "status": "done",
       "signoff": "SIGNED",
@@ -170,29 +205,49 @@
     },
     {
       "id": "UI-OH-D2-SIGN-001",
-      "aliases": ["UI-OH-D2", "DESIGN-UI-P2-SIGNOFF", "UI-P2-DESIGN"],
+      "aliases": [
+        "UI-OH-D2",
+        "DESIGN-UI-P2-SIGNOFF",
+        "UI-P2-DESIGN"
+      ],
       "agent": "designer",
       "status": "done",
       "signoff": "SIGNED",
       "signed_date": "2026-05-25",
       "verdict": "PASS",
-      "depends_on": ["UI-OH-2A-001", "UI-P2A-CODER-B"],
+      "depends_on": [
+        "UI-OH-2A-001",
+        "UI-P2A-CODER-B"
+      ],
       "witness": "src/dev/ui_oh_d2_signoff_record_v1.md",
       "brief": "prompts/guides/ui/ui_phase2_designer_signoff_v1.md",
       "witness_json": "debug_runs/ui_shell_migration_live.json",
-      "pass_panels": ["P1", "P2", "P3", "P4-2C-B"],
-      "deferred": ["Phase5-pause"],
+      "pass_panels": [
+        "P1",
+        "P2",
+        "P3",
+        "P4-2C-B"
+      ],
+      "deferred": [
+        "Phase5-pause"
+      ],
       "notes": "Phase 2 sign-off after 2A mock_zone_parity green; ratifies v2.2.0 checklist"
     },
     {
       "id": "UI-OH-P4-ART-001",
-      "aliases": ["P4-ART-01", "P4-ART", "UI-OH-P4-ART"],
+      "aliases": [
+        "P4-ART-01",
+        "P4-ART",
+        "UI-OH-P4-ART"
+      ],
       "agent": "designer",
-      "status": "done",
-      "signoff": "SIGNED",
+      "status": "open",
+      "signoff": "PENDING",
       "signed_date": "2026-05-25",
-      "verdict": "PASS",
-      "depends_on": ["PLAN-UI-P4-ATLAS-001"],
+      "verdict": "FAIL",
+      "depends_on": [
+        "PLAN-UI-P4-ATLAS-001"
+      ],
       "witness": "src/dev/ui_oh_p4_art_signoff_record_v1.md",
       "wave3_sheet": "src/dev/ui_icon_atlas_sheet_v1.md",
       "brief": "prompts/guides/ui/ui_phase4_icon_atlas_brief_v1.md",
@@ -203,58 +258,90 @@
         "src/dev/ui_icon_atlas_sheet_v1.md",
         "tools/orchestrator/scripts/bake_icon_atlas_phase4.py"
       ],
-      "unblocks": ["P4-F03", "P4-VEH-01"],
-      "notes": "Traced 256x128 silhouette atlas; RON unchanged; §5 blind test optional @operator"
+      "unblocks": [
+        "P4-F03",
+        "P4-VEH-01"
+      ],
+      "notes": "Traced 256x128 silhouette atlas; RON unchanged; \u00a75 blind test optional @operator",
+      "intel_officer_note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 stub_marker:placeholder",
+      "reopened_at": "2026-06-20"
     },
     {
       "id": "UI-P5-DESIGN-001",
-      "aliases": ["P5-DESIGN-001", "UI-P5-DESIGN", "P5-DESIGN"],
+      "aliases": [
+        "P5-DESIGN-001",
+        "UI-P5-DESIGN",
+        "P5-DESIGN"
+      ],
       "agent": "designer",
-      "status": "done",
-      "signoff": "SIGNED",
+      "status": "open",
+      "signoff": "PENDING",
       "signed_date": "2026-05-25",
-      "verdict": "PASS",
-      "depends_on": ["UI-P5-PAUSE-001"],
+      "verdict": "FAIL",
+      "depends_on": [
+        "UI-P5-PAUSE-001"
+      ],
       "witness": "src/dev/ui_p5_design_signoff_v1.md",
       "brief": "prompts/guides/ui/ui_phase5_pause_menu_plan_v1.md",
       "implementation": "src/gui/pause_menu_bevy.rs",
       "witness_json": "debug_runs/ui_shell_migration_live.json",
-      "notes": "Vellum card, gold Resume bar, F-03 hover; P5-SAVE-001 still deferred"
+      "notes": "Vellum card, gold Resume bar, F-03 hover; P5-SAVE-001 still deferred",
+      "intel_officer_note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 stub_marker:stub",
+      "reopened_at": "2026-06-20"
     },
     {
       "id": "DESIGN-UI-P2-SIGNOFF-001",
-      "aliases": ["DESIGN-UI-P2-SIGNOFF"],
+      "aliases": [
+        "DESIGN-UI-P2-SIGNOFF"
+      ],
       "agent": "designer",
-      "status": "done",
-      "signoff": "SIGNED",
+      "status": "open",
+      "signoff": "PENDING",
       "signed_date": "2026-05-24",
       "witness": "prompts/guides/ui/ui_phase2_designer_signoff_v1.md",
       "witness_version": "v2.2.0",
       "unblocks": [],
-      "notes": "Historical Phase 2 HUD gate — verify file only"
+      "notes": "Historical Phase 2 HUD gate \u2014 verify file only",
+      "intel_officer_note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 SIGNED but witness file missing",
+      "reopened_at": "2026-06-20"
     },
     {
       "id": "DESIGN-D-VFX-POST-001",
-      "aliases": ["D-VFX", "VFX-POST-REVIEW-DESIGN", "VFX2-DESIGN-001"],
+      "aliases": [
+        "D-VFX",
+        "VFX-POST-REVIEW-DESIGN",
+        "VFX2-DESIGN-001"
+      ],
       "agent": "designer",
       "status": "done",
       "signoff": "SIGNED",
       "signed_date": "2026-05-25",
       "verdict": "PASS",
-      "depends_on": ["P2-VFX-VISUAL-001", "P2-FIRE-SPARK-011"],
+      "depends_on": [
+        "P2-VFX-VISUAL-001",
+        "P2-FIRE-SPARK-011"
+      ],
       "prereq_coder": "P2-FIRE-SPARK-011",
       "prereq_owner": "@coder A",
       "witness": "src/dev/vfx_design_review_record_v1.md",
       "brief": "prompts/guides/ui/vfx_post_implementation_review_v1.md",
       "water_detail": "src/dev/water_vfx_review_record_v1.md",
       "witness_json": "debug_runs/stage5_full_app_live.json",
-      "related": ["DESIGN-VFX-CAPTURE-001", "VFX-CAPTURE-001"],
-      "deferred": ["F-T02", "F-T03"],
+      "related": [
+        "DESIGN-VFX-CAPTURE-001",
+        "VFX-CAPTURE-001"
+      ],
+      "deferred": [
+        "F-T02",
+        "F-T03"
+      ],
       "notes": "After P2-FIRE-SPARK-011 (Coder A); fire+water PASS @ tactical 0.85"
     },
     {
       "id": "DESIGN-VFX-CAPTURE-001",
-      "aliases": ["VFX-CAPTURE-001"],
+      "aliases": [
+        "VFX-CAPTURE-001"
+      ],
       "agent": "designer",
       "status": "done",
       "signoff": "SIGNED",
@@ -277,12 +364,17 @@
       "signed_date": "2026-05-24",
       "witness": "src/dev/water_ocean_fixture_request_v1.md",
       "fixture_test": "water_w1_ocean_001_dem_deep_band_fills_ocean_tiles",
-      "unblocks": ["WATER-W1-OCEAN-001"],
+      "unblocks": [
+        "WATER-W1-OCEAN-001"
+      ],
       "notes": "Ocean fixture seed for coders; ocean tiles green in witness"
     },
     {
       "id": "DESIGN-MINIMAP-M2-001",
-      "aliases": ["D-MINIMAP-M2", "MINIMAP-DESIGN-M2-001"],
+      "aliases": [
+        "D-MINIMAP-M2",
+        "MINIMAP-DESIGN-M2-001"
+      ],
       "agent": "designer",
       "status": "done",
       "signoff": "SIGNED",
@@ -290,45 +382,78 @@
       "witness": "src/dev/minimap_d_m2_signoff_v1.md",
       "verdict": "M2 COMPLETE",
       "witness_json": "debug_runs/minimap_compositor_live.json",
-      "deferred": ["UI-P3-M2-TRAY-OPT"],
+      "deferred": [
+        "UI-P3-M2-TRAY-OPT"
+      ],
       "notes": "Strategic overlays M2-01..M2-03; tray bridge optional coder slice"
     },
     {
       "id": "MINIMAP-DESIGN-M3-001",
-      "aliases": ["D-MINIMAP-M3", "DESIGN-MINIMAP-M3-001"],
+      "aliases": [
+        "D-MINIMAP-M3",
+        "DESIGN-MINIMAP-M3-001"
+      ],
       "agent": "designer",
-      "status": "done",
-      "signoff": "SIGNED",
+      "status": "open",
+      "signoff": "PENDING",
       "signed_date": "2026-05-25",
       "witness": "prompts/guides/ui/minimap_m3_operational_overlay_spec_v1.md",
       "witness_signoff": "src/dev/minimap_d_m3_signoff_v1.md",
-      "artifacts_optional": ["assets/ui/minimap/m3_operational_target_v1.png"],
-      "unblocks": ["UI-P3-M4-001", "UI-P3-M3-UNITS-001", "UI-P3-M3-REPLAY-001"],
-      "notes": "M3 FoW/EW/units/replay scrub; PNG optional; impl OPEN on coder"
+      "artifacts_optional": [
+        "assets/ui/minimap/m3_operational_target_v1.png"
+      ],
+      "unblocks": [
+        "UI-P3-M4-001",
+        "UI-P3-M3-UNITS-001",
+        "UI-P3-M3-REPLAY-001"
+      ],
+      "notes": "M3 FoW/EW/units/replay scrub; PNG optional; impl OPEN on coder",
+      "intel_officer_note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 SIGNED but witness file missing",
+      "reopened_at": "2026-06-20"
     },
     {
       "id": "DESIGN-D-WP-REVIEW-001",
-      "aliases": ["D-WP-REVIEW", "D-WP-POST-IMPL"],
+      "aliases": [
+        "D-WP-REVIEW",
+        "D-WP-POST-IMPL"
+      ],
       "agent": "designer",
-      "status": "done",
-      "signoff": "SIGNED",
+      "status": "open",
+      "signoff": "PENDING",
       "signed_date": "2026-05-25",
-      "verdict": "PASS",
+      "verdict": "FAIL",
       "witness": "src/dev/world_preview_d_wp_review_record_v1.md",
       "brief": "prompts/guides/ui/world_preview_d_wp_post_impl_review_v1.md",
       "track": "prompts/guides/ui/world_preview_d_wp_track_signoff_v1.md",
       "witness_json": "debug_runs/wave_p_live.json",
       "prereq_coder": "COD-B-WP-WITNESS-001",
-      "pass_slices": ["D-01", "D-02", "D-04", "D-07"],
-      "deferred": ["D-05", "D-08", "D-09", "D-10", "D-12", "WP-L4"],
-      "notes": "Post-impl D-WP review; operational chrome green; not full mock parity"
+      "pass_slices": [
+        "D-01",
+        "D-02",
+        "D-04",
+        "D-07"
+      ],
+      "deferred": [
+        "D-05",
+        "D-08",
+        "D-09",
+        "D-10",
+        "D-12",
+        "WP-L4"
+      ],
+      "notes": "Post-impl D-WP review; operational chrome green; not full mock parity",
+      "intel_officer_note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 stub_marker:todo",
+      "reopened_at": "2026-06-20"
     },
     {
       "id": "UX-E02-BQ128-001",
-      "aliases": ["BQ-128", "UX-E02"],
+      "aliases": [
+        "BQ-128",
+        "UX-E02"
+      ],
       "agent": "designer",
-      "status": "done",
-      "signoff": "SIGNED",
+      "status": "open",
+      "signoff": "PENDING",
       "signed_date": "2026-05-25",
       "depends_on": [],
       "parallel": true,
@@ -336,23 +461,35 @@
       "witness": "src/dev/bq128_editor_path_design_note_v1.md",
       "backlog": "BQ-128",
       "witness_json": "debug_runs/wave_s_blueprint_roundtrip.json",
-      "unblocks": ["BQ-128-APPLY-001"],
-      "notes": "None (parallel) — no designer gate; WS-A03 code already landed"
+      "unblocks": [
+        "BQ-128-APPLY-001"
+      ],
+      "notes": "None (parallel) \u2014 no designer gate; WS-A03 code already landed",
+      "intel_officer_note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 stub_marker:stub",
+      "reopened_at": "2026-06-20"
     },
     {
       "id": "S7B-DESIGN-001",
-      "aliases": ["S7-BEHAV-DESIGN", "D-S7B-001"],
+      "aliases": [
+        "S7-BEHAV-DESIGN",
+        "D-S7B-001"
+      ],
       "agent": "designer",
-      "status": "done",
-      "signoff": "SIGNED",
+      "status": "open",
+      "signoff": "PENDING",
       "signed_date": "2026-05-25",
       "witness": "prompts/guides/stage7_behavioral_decision_worksheet_v1.md",
       "witness_signoff": "src/dev/stage7_behavioral_d_signoff_v1.md",
       "brief": "prompts/guides/stage7_behavioral_world_designer_brief_v1.md",
       "plan": "src/dev/stage7_behavioral_full_plan_v1.md",
-      "unblocks": ["S7B-PLAN-001", "S7B-M1-001"],
+      "unblocks": [
+        "S7B-PLAN-001",
+        "S7B-M1-001"
+      ],
       "vm09_policy": "PROJ-2 + worksheet; v2 for M2+ comm authority only",
-      "notes": "D-S7-01..06 locked; no Rust; planner handoff next"
+      "notes": "D-S7-01..06 locked; no Rust; planner handoff next",
+      "intel_officer_note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 SIGNED but witness file missing",
+      "reopened_at": "2026-06-20"
     },
     {
       "id": "DESIGN-R4-CORRIDOR-001",
@@ -363,8 +500,13 @@
       "verdict": "PASS",
       "witness": "src/dev/construction_r4_corridor_map_ux_v1.md",
       "witness_json": "debug_runs/construction_stage_live.json",
-      "pass_pointers": ["/construction_r4_corridor_001/green", "/construction_r4_corridor_001/corridor_phase_visual_wired"],
-      "unblocks": ["R4-CORRIDOR-001"]
+      "pass_pointers": [
+        "/construction_r4_corridor_001/green",
+        "/construction_r4_corridor_001/corridor_phase_visual_wired"
+      ],
+      "unblocks": [
+        "R4-CORRIDOR-001"
+      ]
     },
     {
       "id": "DESIGN-R4-TRAY-001",
@@ -374,7 +516,9 @@
       "signed_date": "2026-05-26",
       "verdict": "DEFER",
       "witness": "src/dev/construction_r4_tray_legend_v1.md",
-      "unblocks": ["R4-TRAY-001"]
+      "unblocks": [
+        "R4-TRAY-001"
+      ]
     },
     {
       "id": "DESIGN-R4-MV-PASS-001",
@@ -384,7 +528,9 @@
       "signed_date": "2026-05-26",
       "verdict": "DEFER",
       "witness": "src/dev/construction_r4_mv_pass_record_v1.md",
-      "unblocks": ["R4-MV-GHOST-001"]
+      "unblocks": [
+        "R4-MV-GHOST-001"
+      ]
     },
     {
       "id": "DESIGN-M3-DEPTH-001",
@@ -394,7 +540,9 @@
       "signed_date": "2026-05-26",
       "verdict": "DEFER",
       "witness": "src/dev/minimap_m3_unit_aggregation_visual_v1.md",
-      "unblocks": ["UI-P3-M3-DEPTH-001"]
+      "unblocks": [
+        "UI-P3-M3-DEPTH-001"
+      ]
     },
     {
       "id": "DESIGN-REPLAY-LIVE-001",
@@ -404,7 +552,9 @@
       "signed_date": "2026-05-26",
       "verdict": "DEFER",
       "witness": "src/dev/minimap_replay_live_ring_visual_v1.md",
-      "unblocks": ["REPLAY-LIVE-RING-001"]
+      "unblocks": [
+        "REPLAY-LIVE-RING-001"
+      ]
     },
     {
       "id": "DESIGN-M3-TRAY-001",
@@ -414,7 +564,9 @@
       "signed_date": "2026-05-26",
       "verdict": "PASS (qualified)",
       "witness": "src/dev/minimap_m2_tray_overlay_bridge_v1.md",
-      "unblocks": ["UI-P3-M2-TRAY-OPT"]
+      "unblocks": [
+        "UI-P3-M2-TRAY-OPT"
+      ]
     },
     {
       "id": "DESIGN-F7-STREAM-001",
@@ -425,8 +577,13 @@
       "verdict": "PASS",
       "witness": "src/dev/fire_streaming_neighbor_wake_visual_v1.md",
       "witness_json": "debug_runs/fire_streaming_live.json",
-      "pass_pointers": ["/neighbor_wake_observed", "/green"],
-      "unblocks": ["F7-STREAM-DEEP-001"]
+      "pass_pointers": [
+        "/neighbor_wake_observed",
+        "/green"
+      ],
+      "unblocks": [
+        "F7-STREAM-DEEP-001"
+      ]
     },
     {
       "id": "DESIGN-F7-DEBUG-PASS-001",
@@ -436,7 +593,9 @@
       "signed_date": "2026-05-26",
       "verdict": "DEFER",
       "witness": "src/dev/fire7_f7_b_debug_pass_record_v1.md",
-      "unblocks": ["FIRE7-F7-B-DEBUG-UI-001"]
+      "unblocks": [
+        "FIRE7-F7-B-DEBUG-UI-001"
+      ]
     },
     {
       "id": "DESIGN-VT-SPREAD-001",
@@ -446,7 +605,9 @@
       "signed_date": "2026-05-26",
       "verdict": "PASS (qualified)",
       "witness": "src/dev/fire_vt_spread_visual_acceptance_v1.md",
-      "unblocks": ["STAGE5-VT-DEEP-001"]
+      "unblocks": [
+        "STAGE5-VT-DEEP-001"
+      ]
     },
     {
       "id": "DESIGN-UI-P6-MULTIVIEW-001",
@@ -456,8 +617,12 @@
       "signed_date": "2026-05-26",
       "verdict": "PASS (qualified)",
       "witness": "src/dev/ui_phase6_multiview_readability_v1.md",
-      "pass_pointers": ["/ui_w3_p6_001/green"],
-      "unblocks": ["UI-W3-P6-001"]
+      "pass_pointers": [
+        "/ui_w3_p6_001/green"
+      ],
+      "unblocks": [
+        "UI-W3-P6-001"
+      ]
     },
     {
       "id": "DESIGN-THEME-COLLAGE-001",
@@ -467,7 +632,9 @@
       "signed_date": "2026-05-26",
       "verdict": "PASS (qualified)",
       "witness": "src/dev/ui_theme_collage_delta_v1.md",
-      "unblocks": ["PLAN-UI-THEME-MERGE-001"]
+      "unblocks": [
+        "PLAN-UI-THEME-MERGE-001"
+      ]
     },
     {
       "id": "DESIGN-WP-QUALIFIED-UPGRADE-001",
@@ -477,19 +644,27 @@
       "signed_date": "2026-05-26",
       "verdict": "PASS (qualified)",
       "witness": "src/dev/world_preview_visual_upgrade_checklist_v1.md",
-      "unblocks": ["UI-WP-VISUAL-001"]
+      "unblocks": [
+        "UI-WP-VISUAL-001"
+      ]
     },
     {
       "id": "DESIGN-VFX-CAPTURE-WAVE5-001",
       "agent": "designer",
-      "status": "done",
-      "signoff": "SIGNED",
+      "status": "open",
+      "signoff": "PENDING",
       "signed_date": "2026-05-26",
-      "verdict": "PASS (qualified)",
+      "verdict": "FAIL",
       "witness": "assets/vfx/reference/review_captures/vfx_capture_status_wave5.md",
       "witness_json": "debug_runs/stage5_full_app_live.json",
-      "pass_pointers": ["/tactical_vfx_witness/all_green"],
-      "unblocks": ["VFX-CAPTURE-WAVE5"]
+      "pass_pointers": [
+        "/tactical_vfx_witness/all_green"
+      ],
+      "unblocks": [
+        "VFX-CAPTURE-WAVE5"
+      ],
+      "intel_officer_note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 stub_marker:tbd",
+      "reopened_at": "2026-06-20"
     },
     {
       "id": "DESIGN-HYDRO-PLAYER-READ-001",
@@ -499,7 +674,10 @@
       "signed_date": "2026-05-26",
       "verdict": "PASS",
       "witness": "src/dev/wss_hydrology_player_read_v1.md",
-      "unblocks": ["WSS-HYDRO-RUNTIME-001", "B-H1"]
+      "unblocks": [
+        "WSS-HYDRO-RUNTIME-001",
+        "B-H1"
+      ]
     },
     {
       "id": "DESIGN-OPERATOR-VISUAL-BUNDLE-001",
@@ -509,18 +687,25 @@
       "signed_date": "2026-05-26",
       "verdict": "PASS (qualified)",
       "witness": "src/dev/operator_visual_signoff_design_checklist_v1.md",
-      "unblocks": ["PLAN-OPERATOR-VISUAL-BUNDLE-001"]
+      "unblocks": [
+        "PLAN-OPERATOR-VISUAL-BUNDLE-001"
+      ]
     },
     {
       "id": "DESIGN-ATMOS-CLIPMAP-READ-001",
       "agent": "designer",
-      "status": "done",
-      "signoff": "SIGNED",
+      "status": "open",
+      "signoff": "PENDING",
       "signed_date": "2026-05-27",
-      "verdict": "PASS",
+      "verdict": "FAIL",
       "witness": "src/dev/wss_contamination_visual_language_v1.md",
-      "unblocks": ["A-W2", "WSS-ATMOS-CLIPMAP-001"],
-      "notes": "Readability pass accepted from contamination visual language doc."
+      "unblocks": [
+        "A-W2",
+        "WSS-ATMOS-CLIPMAP-001"
+      ],
+      "notes": "Readability pass accepted from contamination visual language doc.",
+      "intel_officer_note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 stub_marker:stub",
+      "reopened_at": "2026-06-20"
     },
     {
       "id": "CONSTRUCTION-PARAM-DESIGN-001",
@@ -549,7 +734,9 @@
         "CONSTRUCTION-PARAM-CODER-005",
         "CONSTRUCTION-PARAM-CODER-006"
       ],
-      "depends_on": ["PLAN-CONSTRUCTION-PARAM-001"]
+      "depends_on": [
+        "PLAN-CONSTRUCTION-PARAM-001"
+      ]
     },
     {
       "id": "DESIGN-PARAM-STAGING-POLISH-002",
@@ -559,7 +746,10 @@
       "signed_date": "2026-05-26",
       "verdict": "PASS",
       "witness": "src/dev/construction_parametric_staging_ux_v2.md",
-      "unblocks": ["CONSTRUCTION-PARAM-CODER-004", "B-C4"],
+      "unblocks": [
+        "CONSTRUCTION-PARAM-CODER-004",
+        "B-C4"
+      ],
       "notes": "Replaces blocked_design on PARAM-004"
     },
     {
@@ -570,36 +760,49 @@
       "signed_date": "2026-05-26",
       "verdict": "PASS",
       "witness": "src/dev/construction_parametric_scale_hud_v1.md",
-      "unblocks": ["CONSTRUCTION-PARAM-CODER-006", "B-C5"],
+      "unblocks": [
+        "CONSTRUCTION-PARAM-CODER-006",
+        "B-C5"
+      ],
       "notes": "Tray economy readout; PARAM-006 not blocked_design"
     },
     {
       "id": "DESIGN-CONTAMINATION-001",
       "agent": "designer",
-      "status": "done",
-      "signoff": "SIGNED",
+      "status": "open",
+      "signoff": "PENDING",
       "signed_date": "2026-05-26",
-      "verdict": "PASS",
+      "verdict": "FAIL",
       "witness": "src/dev/wss_contamination_visual_language_v1.md",
-      "unblocks": ["A-W2", "WSS-ATMOS-CLIPMAP-001"]
+      "unblocks": [
+        "A-W2",
+        "WSS-ATMOS-CLIPMAP-001"
+      ],
+      "intel_officer_note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 stub_marker:stub",
+      "reopened_at": "2026-06-20"
     },
     {
       "id": "DESIGN-SMOKE-LAYER-AB-001",
       "agent": "designer",
-      "status": "done",
-      "signoff": "SIGNED",
+      "status": "open",
+      "signoff": "PENDING",
       "signed_date": "2026-05-26",
-      "verdict": "PASS",
+      "verdict": "FAIL",
       "witness": "src/dev/wss_smoke_layer_a_b_visual_v1.md",
-      "unblocks": ["A-V3", "WSS-SMOKE-BRIDGE-001"]
+      "unblocks": [
+        "A-V3",
+        "WSS-SMOKE-BRIDGE-001"
+      ],
+      "intel_officer_note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 stub_marker:stub",
+      "reopened_at": "2026-06-20"
     },
     {
       "id": "WSS-DESIGN-GATE-001",
       "agent": "designer",
-      "status": "done",
-      "signoff": "SIGNED",
+      "status": "open",
+      "signoff": "PENDING",
       "signed_date": "2026-05-26",
-      "verdict": "PASS (qualified)",
+      "verdict": "FAIL",
       "witness": "src/dev/wssr_design_signoff_v1.md",
       "brief": "src/dev/wssr_design_gate_brief_v1.md",
       "slab_preflight": "src/dev/wss_design_gate_parent_closure_v1.md",
@@ -610,7 +813,13 @@
         "src/dev/wss_substrate_diagnostics_copy_v1.md",
         "src/dev/wss_substrate_debug_overlay_names_v1.md"
       ],
-      "unblocks": ["WSS-CHUNK-SLAB-001", "WSS-ATMOS-CLIPMAP-001", "WSS-HYDRO-RUNTIME-001"]
+      "unblocks": [
+        "WSS-CHUNK-SLAB-001",
+        "WSS-ATMOS-CLIPMAP-001",
+        "WSS-HYDRO-RUNTIME-001"
+      ],
+      "intel_officer_note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 stub_marker:stub",
+      "reopened_at": "2026-06-20"
     },
     {
       "id": "DESIGN-F2-EXTRACT-READ-001",
@@ -626,7 +835,10 @@
         "/f2_extract_witness/fire_instance_buffer_rows",
         "/projection_graph/fire_instance_buffer_rows"
       ],
-      "unblocks": ["FIRE-F2-EXTRACT-001", "A-V2"]
+      "unblocks": [
+        "FIRE-F2-EXTRACT-001",
+        "A-V2"
+      ]
     },
     {
       "id": "DESIGN-WSS-DIAGNOSTICS-PASS-002",
@@ -643,7 +855,11 @@
         "/resident_count",
         "/dirty_count"
       ],
-      "unblocks": ["WSS-CHUNK-SLAB-001", "A-W1", "A-W2"]
+      "unblocks": [
+        "WSS-CHUNK-SLAB-001",
+        "A-W1",
+        "A-W2"
+      ]
     },
     {
       "id": "DESIGN-DUAL-WRITE-UX-001",
@@ -659,7 +875,11 @@
         "/dual_write_drift_max",
         "/green"
       ],
-      "unblocks": ["PLAN-WSS-SLAB-PR-2", "WSS-SLAB-PR-2", "DESIGN-DUAL-WRITE-FULL-PASS-001"]
+      "unblocks": [
+        "PLAN-WSS-SLAB-PR-2",
+        "WSS-SLAB-PR-2",
+        "DESIGN-DUAL-WRITE-FULL-PASS-001"
+      ]
     },
     {
       "id": "DESIGN-DUAL-WRITE-FULL-PASS-001",
@@ -675,7 +895,9 @@
         "/dual_write_drift_max"
       ],
       "prereq": "DESIGN-DUAL-WRITE-UX-001",
-      "unblocks": ["PLAN-WSS-HYBRID-RETIRE-PR4-001"],
+      "unblocks": [
+        "PLAN-WSS-HYBRID-RETIRE-PR4-001"
+      ],
       "notes": "Full PASS after shim on + drift_max=0; player footnote + F3 labels in witness doc v1.1"
     },
     {
@@ -694,8 +916,11 @@
         "/active_runtime_activate_test_ok",
         "/active_runtime_entity_count"
       ],
-      "unblocks": ["PLAN-WSS-HYBRID-RETIRE-PR4-001", "WSS-SLAB-PR-3"],
-      "notes": "Player read: cap 64; reason labels FireFront/FloodSolve/HydrologyEvent/Construction/PlayerProximity; sim-focus only — no per-camera activation"
+      "unblocks": [
+        "PLAN-WSS-HYBRID-RETIRE-PR4-001",
+        "WSS-SLAB-PR-3"
+      ],
+      "notes": "Player read: cap 64; reason labels FireFront/FloodSolve/HydrologyEvent/Construction/PlayerProximity; sim-focus only \u2014 no per-camera activation"
     },
     {
       "id": "DESIGN-R4-MV-POST-PARAM-001",
@@ -710,7 +935,10 @@
         "/construction_parametric_placement_001/green",
         "/construction_r4_mv_ghost_001/green"
       ],
-      "unblocks": ["R4-MV-GHOST-001", "B-C3"]
+      "unblocks": [
+        "R4-MV-GHOST-001",
+        "B-C3"
+      ]
     },
     {
       "id": "DESIGN-M3-REPLAY-PASS-002",
@@ -721,8 +949,14 @@
       "verdict": "PASS",
       "witness": "src/dev/minimap_replay_pass_002_v1.md",
       "witness_json": "debug_runs/minimap_compositor_live.json",
-      "pass_pointers": ["/replay_scrub_enabled", "/ui_p3_m3_replay_001_green"],
-      "unblocks": ["REPLAY-RING-LIVE-001", "M3-UNITS-DEPTH-001"]
+      "pass_pointers": [
+        "/replay_scrub_enabled",
+        "/ui_p3_m3_replay_001_green"
+      ],
+      "unblocks": [
+        "REPLAY-RING-LIVE-001",
+        "M3-UNITS-DEPTH-001"
+      ]
     },
     {
       "id": "DESIGN-HANABI-BOUNDS-001",
@@ -732,7 +966,10 @@
       "signed_date": "2026-05-27",
       "verdict": "PASS (qualified)",
       "witness": "src/dev/hanabi_event_vfx_style_bounds_v1.md",
-      "unblocks": ["H-A", "W4-C-event-embellishment"]
+      "unblocks": [
+        "H-A",
+        "W4-C-event-embellishment"
+      ]
     },
     {
       "id": "DESIGN-IDENTITY-CHECKPOINT-001",
@@ -742,7 +979,10 @@
       "signed_date": "2026-05-27",
       "verdict": "PASS",
       "witness": "src/dev/project_identity_guard_rail_v1.md",
-      "unblocks": ["wssr_hybrid_assessment_review", "steward_identity_checkpoint"]
+      "unblocks": [
+        "wssr_hybrid_assessment_review",
+        "steward_identity_checkpoint"
+      ]
     },
     {
       "id": "DESIGN-HANABI-SPIKE-REVIEW-001",
@@ -756,21 +996,35 @@
       "bounds": "src/dev/hanabi_event_vfx_style_bounds_v1.md",
       "h_a2_gate": "CLEARED (qualified)",
       "witness_json": "debug_runs/stage5_full_app_live.json",
-      "pass_pointers": ["/tactical_vfx_witness/all_green"],
-      "unblocks": ["H-A2", "hanabi_l3", "PLAN-HANABI-ADOPTION-001"]
+      "pass_pointers": [
+        "/tactical_vfx_witness/all_green"
+      ],
+      "unblocks": [
+        "H-A2",
+        "hanabi_l3",
+        "PLAN-HANABI-ADOPTION-001"
+      ]
     },
     {
       "id": "DESIGN-VFX-CAPTURE-ROUND-003",
       "agent": "designer",
-      "status": "done",
-      "signoff": "SIGNED",
+      "status": "open",
+      "signoff": "PENDING",
       "signed_date": "2026-05-27",
-      "verdict": "PASS (qualified)",
+      "verdict": "FAIL",
       "witness": "assets/vfx/reference/review_captures/vfx_capture_status_wave6.md",
       "witness_json": "debug_runs/stage5_full_app_live.json",
-      "pass_pointers": ["/tactical_vfx_witness/all_green", "/f2_extract_witness/green"],
+      "pass_pointers": [
+        "/tactical_vfx_witness/all_green",
+        "/f2_extract_witness/green"
+      ],
       "parent": "DESIGN-VFX-CAPTURE-WAVE5-001",
-      "unblocks": ["VX-P0-04", "VFX-CAPTURE-WAVE6"]
+      "unblocks": [
+        "VX-P0-04",
+        "VFX-CAPTURE-WAVE6"
+      ],
+      "intel_officer_note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 stub_marker:tbd",
+      "reopened_at": "2026-06-20"
     },
     {
       "id": "DESIGN-PR4-RETIRE-UX-001",
@@ -792,17 +1046,24 @@
         "/ecs_retire_smoke_prod_green",
         "/ecs_retire_smoke_cutover_complete"
       ],
-      "unblocks": ["WSS-SLAB-PR-5", "WSS-PR5-SMOKE-PROD-001", "diagnostics_ui WSS section"],
+      "unblocks": [
+        "WSS-SLAB-PR-5",
+        "WSS-PR5-SMOKE-PROD-001",
+        "diagnostics_ui WSS section"
+      ],
       "notes": "Smoke prod closed; PR5-SMOKE-CLOSED player footnote enabled"
     },
     {
       "id": "DESIGN-PROC-ART-ACCEPTANCE-001",
       "agent": "designer",
-      "status": "ready",
-      "signoff": "PENDING",
+      "status": "hold",
+      "signoff": "HOLD",
       "witness": "src/dev/design_procedural_art_acceptance_v1.md",
       "trigger": "art assets in assets/meshes/buildings/modules/",
-      "unblocks": ["PROC-PG-2 textured LOD"]
+      "notes": "Full 50-module sign-off \u2014 HOLD until rowhouse production pilot closes per stage_designer_workboard_v1.md",
+      "unblocks": [
+        "PROC-PG-2 textured LOD"
+      ]
     },
     {
       "id": "DESIGN-VISUAL-PERF-DEGRADE-001",
@@ -812,7 +1073,10 @@
       "signed_date": "2026-05-28",
       "verdict": "PASS",
       "witness": "src/dev/visual_perf_spike_degrade_ux_v1.md",
-      "unblocks": ["PERF-P2-TILE-RASTER-BUDGET-001", "PERF-P2-FIRE-EXTRACT-CADENCE-001"]
+      "unblocks": [
+        "PERF-P2-TILE-RASTER-BUDGET-001",
+        "PERF-P2-FIRE-EXTRACT-CADENCE-001"
+      ]
     },
     {
       "id": "DESIGN-G-PLAY-001",
@@ -822,7 +1086,10 @@
       "signed_date": "2026-05-28",
       "verdict": "PASS (qualified)",
       "witness": "src/dev/play_scenario_acceptance_runbook_v1.md",
-      "unblocks": ["G-PLAY-001-BLOCKERS", "G-PLAY-01"]
+      "unblocks": [
+        "G-PLAY-001-BLOCKERS",
+        "G-PLAY-01"
+      ]
     },
     {
       "id": "DESIGN-WSS-HYDRO-READ-001",
@@ -832,17 +1099,24 @@
       "signed_date": "2026-05-28",
       "verdict": "PASS",
       "witness": "src/dev/wss_hydro_read_feature_pass_001.md",
-      "unblocks": ["FEAT-WSS-HYDRO-READ-001"]
+      "unblocks": [
+        "FEAT-WSS-HYDRO-READ-001"
+      ]
     },
     {
       "id": "DESIGN-PERF-DEGRADE-VALIDATE-001",
       "agent": "designer",
-      "status": "done",
-      "signoff": "SIGNED",
+      "status": "open",
+      "signoff": "PENDING",
       "signed_date": "2026-05-28",
-      "verdict": "PASS (qualified)",
+      "verdict": "FAIL",
       "witness": "src/dev/visual_perf_spike_degrade_validate_001_v1.md",
-      "unblocks": ["PERF-P2-TILE-RASTER-BUDGET-001", "PERF-P2-FIRE-EXTRACT-CADENCE-001"]
+      "unblocks": [
+        "PERF-P2-TILE-RASTER-BUDGET-001",
+        "PERF-P2-FIRE-EXTRACT-CADENCE-001"
+      ],
+      "intel_officer_note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 stub_marker:tbd",
+      "reopened_at": "2026-06-20"
     },
     {
       "id": "DESIGN-R4-UX-001",
@@ -852,17 +1126,23 @@
       "signed_date": "2026-05-28",
       "verdict": "PASS",
       "witness": "src/dev/construction_r4_product_slice_ux_v1.md",
-      "unblocks": ["CONSTRUCTION-R4-PRODUCT-001"]
+      "unblocks": [
+        "CONSTRUCTION-R4-PRODUCT-001"
+      ]
     },
     {
       "id": "DESIGN-PROC-MODULE-KIT-001",
       "agent": "designer",
-      "status": "done",
-      "signoff": "SIGNED",
+      "status": "open",
+      "signoff": "PENDING",
       "signed_date": "2026-06-02",
-      "verdict": "PASS",
+      "verdict": "FAIL",
       "witness": "src/dev/design_procedural_module_kit_v1.md",
-      "unblocks": ["PROC-PG-2-001"]
+      "unblocks": [
+        "PROC-PG-2-001"
+      ],
+      "intel_officer_note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 stub_marker:placeholder",
+      "reopened_at": "2026-06-20"
     },
     {
       "id": "DESIGN-ORGANIC-GROWTH-UX-001",
@@ -872,7 +1152,9 @@
       "signed_date": "2026-06-02",
       "verdict": "PASS",
       "witness": "src/dev/design_organic_growth_ux_v1.md",
-      "unblocks": ["PROC-OG-3-001"]
+      "unblocks": [
+        "PROC-OG-3-001"
+      ]
     },
     {
       "id": "DESIGN-CONSTRUCTION-STAGE-READ-001",
@@ -882,7 +1164,9 @@
       "signed_date": "2026-06-02",
       "verdict": "PASS",
       "witness": "src/dev/design_construction_site_stage_read_v1.md",
-      "unblocks": ["CON-P2"]
+      "unblocks": [
+        "CON-P2"
+      ]
     },
     {
       "id": "DESIGN-CONSTRUCTION-SCALING-READ-001",
@@ -892,7 +1176,14 @@
       "signed_date": "2026-06-02",
       "verdict": "PASS",
       "witness": "src/dev/design_construction_scaling_read_v1.md",
-      "unblocks": ["CON-P3-S1", "CON-P3-S2", "CON-P3-S3", "CON-P3-S4", "CON-P3-S5", "CON-P3-S6"]
+      "unblocks": [
+        "CON-P3-S1",
+        "CON-P3-S2",
+        "CON-P3-S3",
+        "CON-P3-S4",
+        "CON-P3-S5",
+        "CON-P3-S6"
+      ]
     },
     {
       "id": "DESIGN-INFRA-NETWORK-OVERLAY-001",
@@ -902,7 +1193,10 @@
       "signed_date": "2026-06-02",
       "verdict": "PASS",
       "witness": "src/dev/design_infra_network_overlay_v1.md",
-      "unblocks": ["INFRA-E6-003", "INFRA-E6-004"]
+      "unblocks": [
+        "INFRA-E6-003",
+        "INFRA-E6-004"
+      ]
     },
     {
       "id": "DESIGN-SETTLEMENT-HIERARCHY-READ-001",
@@ -912,31 +1206,44 @@
       "signed_date": "2026-06-02",
       "verdict": "PASS",
       "witness": "src/dev/design_settlement_hierarchy_read_v1.md",
-      "unblocks": ["PROC-OG-4-001", "PLAN-SETTLEMENT-HIERARCHY-005"]
+      "unblocks": [
+        "PROC-OG-4-001",
+        "PLAN-SETTLEMENT-HIERARCHY-005"
+      ]
     },
     {
       "id": "BUILD-READ-DESIGN-002",
       "agent": "designer",
-      "status": "done",
-      "signoff": "SIGNED",
+      "status": "open",
+      "signoff": "PENDING",
       "signed_date": "2026-06-13",
-      "verdict": "PASS",
+      "verdict": "FAIL",
       "witness": "src/dev/design_build_toolbox_hud_v1.md",
       "live_witness": "debug_runs/design_build_toolbox_hud_live.json",
-      "unblocks": ["BUILD-READ-SHAPE-002", "BUILD-READ-SITE-v0-002"],
-      "notes": "Context strip Preview/Adjust copy wired; witness green 2026-06-13"
+      "unblocks": [
+        "BUILD-READ-SHAPE-002",
+        "BUILD-READ-SITE-v0-002"
+      ],
+      "notes": "Context strip Preview/Adjust copy wired; witness green 2026-06-13",
+      "intel_officer_note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 stub_marker:stub",
+      "reopened_at": "2026-06-20"
     },
     {
       "id": "BUILD-READ-D-001_D004",
       "agent": "designer",
-      "status": "done",
-      "signoff": "SIGNED",
+      "status": "open",
+      "signoff": "PENDING",
       "signed_date": "2026-06-14",
-      "verdict": "PASS",
+      "verdict": "FAIL",
       "witness": "src/dev/design_build_read_d001_d004_v1.md",
       "witness_json": "debug_runs/design_build_read_d001_d004_live.json",
-      "unblocks": ["BUILD-READ-VISUAL-002-BATCH", "TILE-PROD-004"],
-      "notes": "D-001 scale · D-002 footprint · D-003 site · D-004 variant matrix + 128px G4"
+      "unblocks": [
+        "BUILD-READ-VISUAL-002-BATCH",
+        "TILE-PROD-004"
+      ],
+      "notes": "D-001 scale \u00b7 D-002 footprint \u00b7 D-003 site \u00b7 D-004 variant matrix + 128px G4",
+      "intel_officer_note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 stub_marker:stub",
+      "reopened_at": "2026-06-20"
     },
     {
       "id": "DES-APS-E1-IA-OPTION-D-001",
@@ -946,8 +1253,10 @@
       "signed_date": "2026-06-16",
       "verdict": "PASS",
       "witness": "src/dev/design_aps_domain_ia_sign_v1.md",
-      "unblocks": ["APS-EVO-E1-DOMAIN-ROUTER-001"],
-      "notes": "Option D lane switch signed — not 6th tab"
+      "unblocks": [
+        "APS-EVO-E1-DOMAIN-ROUTER-001"
+      ],
+      "notes": "Option D lane switch signed \u2014 not 6th tab"
     },
     {
       "id": "DES-APS-PRESET-BROWSE-UX-001",
@@ -957,7 +1266,9 @@
       "signed_date": "2026-06-16",
       "verdict": "PASS",
       "witness": "src/dev/design_aps_preset_browse_layout_v1.md",
-      "unblocks": ["APS-EVO-E2-PRESET-BROWSE-001"]
+      "unblocks": [
+        "APS-EVO-E2-PRESET-BROWSE-001"
+      ]
     },
     {
       "id": "DES-APS-STATE-AXIS-LABELS-001",
@@ -969,7 +1280,9 @@
       "witness": "src/dev/design_aps_veg_state_labels_v1.md",
       "witness_version": "v2",
       "schema_ref": "tools/mcp/schemas/vegetation_variant_catalog_v1.schema.json",
-      "unblocks": ["APS-EVO-E3-VEG-STATE-AXIS-001"],
+      "unblocks": [
+        "APS-EVO-E3-VEG-STATE-AXIS-001"
+      ],
       "notes": "Schema-aligned succession/regrowth/burn labels + States tab wireframe"
     },
     {
@@ -980,7 +1293,9 @@
       "signed_date": "2026-06-16",
       "verdict": "PASS",
       "witness": "src/dev/design_aps_veg_parity_panel_v1.md",
-      "unblocks": ["APS-EVO-E5-PARITY-PANEL-001"]
+      "unblocks": [
+        "APS-EVO-E5-PARITY-PANEL-001"
+      ]
     },
     {
       "id": "DES-APS-DOMAIN-A11Y-001",
@@ -990,7 +1305,9 @@
       "signed_date": "2026-06-16",
       "verdict": "PASS",
       "witness": "src/dev/design_aps_domain_a11y_v1.md",
-      "unblocks": ["APS-EVO-E1-LANE-A11Y-001"]
+      "unblocks": [
+        "APS-EVO-E1-LANE-A11Y-001"
+      ]
     },
     {
       "id": "DES-G-PLAY-OPERATOR-FLOW-001",
@@ -1000,7 +1317,10 @@
       "signed_date": "2026-06-16",
       "verdict": "PASS (qualified)",
       "witness": "src/dev/design_g_play_veg_operator_v1.md",
-      "unblocks": ["VEG-C14", "G-PLAY-01-veg-addendum"]
+      "unblocks": [
+        "VEG-C14",
+        "G-PLAY-01-veg-addendum"
+      ]
     },
     {
       "id": "DES-APS-STYLE-TOKENS-001",
@@ -1010,7 +1330,9 @@
       "signed_date": "2026-06-16",
       "verdict": "PASS",
       "witness": "src/dev/design_aps_style_tokens_handoff_v1.md",
-      "unblocks": ["APS-EVO-E1-THEME-TOKENS-001"]
+      "unblocks": [
+        "APS-EVO-E1-THEME-TOKENS-001"
+      ]
     },
     {
       "id": "DES-ECOLOGY-READ-HUD-001",
@@ -1020,7 +1342,9 @@
       "signed_date": "2026-06-16",
       "verdict": "PASS",
       "witness": "src/dev/design_ecology_preview_legend_v1.md",
-      "unblocks": ["CDR-A-STAGE5-LIVE-ECO-001"]
+      "unblocks": [
+        "CDR-A-STAGE5-LIVE-ECO-001"
+      ]
     },
     {
       "id": "DES-APS-ASSEMBLY-DENSITY-001",
@@ -1030,7 +1354,9 @@
       "signed_date": "2026-06-16",
       "verdict": "PASS",
       "witness": "src/dev/design_aps_assembly_density_v1.md",
-      "unblocks": ["APS-UX-ASSEMBLY-RESPONSIVE-001"]
+      "unblocks": [
+        "APS-UX-ASSEMBLY-RESPONSIVE-001"
+      ]
     },
     {
       "id": "DES-APS-COLOR-A11Y-001",
@@ -1040,7 +1366,9 @@
       "signed_date": "2026-06-16",
       "verdict": "PASS",
       "witness": "src/dev/design_aps_color_a11y_audit_v1.md",
-      "unblocks": ["APS-UX-NONCOLOR-COMPLETE-001"]
+      "unblocks": [
+        "APS-UX-NONCOLOR-COMPLETE-001"
+      ]
     },
     {
       "id": "DES-APS-CHROME-MOCKUP-001",
@@ -1050,7 +1378,9 @@
       "signed_date": "2026-06-16",
       "verdict": "PASS",
       "witness": "src/dev/design_aps_chrome_mockup_spec_v1.md",
-      "unblocks": ["APS-E1-CHROME-001"]
+      "unblocks": [
+        "APS-E1-CHROME-001"
+      ]
     },
     {
       "id": "DES-APS-GRAMMAR-PANEL-UX-001",
@@ -1060,7 +1390,9 @@
       "signed_date": "2026-06-16",
       "verdict": "PASS",
       "witness": "src/dev/design_aps_grammar_panel_v1.md",
-      "unblocks": ["APS-E2-GRAMMAR-PANEL-001"]
+      "unblocks": [
+        "APS-E2-GRAMMAR-PANEL-001"
+      ]
     },
     {
       "id": "DES-APS-PIPELINE-PILLS-001",
@@ -1070,7 +1402,9 @@
       "signed_date": "2026-06-16",
       "verdict": "PASS",
       "witness": "src/dev/design_aps_pipeline_pills_v1.md",
-      "unblocks": ["APS-E1-PIPELINE-LANE-001"]
+      "unblocks": [
+        "APS-E1-PIPELINE-LANE-001"
+      ]
     },
     {
       "id": "OVR-P0-DESIGN-LOCK",
@@ -1100,7 +1434,9 @@
       "verdict": "PASS",
       "witness": "src/dev/design_aps_uiux_copy_pack_v1.md",
       "program": "PLAN-APS-UIUX-OVERHAUL-001",
-      "unblocks": ["OVR-P2-TEXT-001"]
+      "unblocks": [
+        "OVR-P2-TEXT-001"
+      ]
     },
     {
       "id": "OVR-DES-P3-LAYOUT-DELTA-001",
@@ -1111,7 +1447,9 @@
       "verdict": "PASS",
       "witness": "src/dev/design_aps_uiux_layout_delta_v1.md",
       "program": "PLAN-APS-UIUX-OVERHAUL-001",
-      "unblocks": ["OVR-P3-LAYOUT-001"]
+      "unblocks": [
+        "OVR-P3-LAYOUT-001"
+      ]
     },
     {
       "id": "OVR-DES-P4-IA-SIGN-001",
@@ -1122,18 +1460,25 @@
       "verdict": "PASS",
       "witness": "src/dev/design_aps_uiux_ia_sign_v1.md",
       "program": "PLAN-APS-UIUX-OVERHAUL-001",
-      "unblocks": ["OVR-P4-IA-001", "OVR-DES-P45-SPINE-SPEC-001"]
+      "unblocks": [
+        "OVR-P4-IA-001",
+        "OVR-DES-P45-SPINE-SPEC-001"
+      ]
     },
     {
       "id": "OVR-DES-P55-PREVIEW-SPEC-001",
       "agent": "designer",
-      "status": "done",
-      "signoff": "SIGNED",
+      "status": "open",
+      "signoff": "PENDING",
       "signed_date": "2026-06-17",
-      "verdict": "PASS",
+      "verdict": "FAIL",
       "witness": "src/dev/design_aps_uiux_preview_spec_v1.md",
       "program": "PLAN-APS-UIUX-OVERHAUL-001",
-      "unblocks": ["OVR-P55-PREVIEW-001"]
+      "unblocks": [
+        "OVR-P55-PREVIEW-001"
+      ],
+      "intel_officer_note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 stub_marker:placeholder",
+      "reopened_at": "2026-06-20"
     },
     {
       "id": "GRAM-CONTENT-001",
@@ -1144,7 +1489,9 @@
       "verdict": "PASS",
       "witness": "src/dev/design_grammar_archetype_family_g1_v1.md",
       "program": "PLAN-APS-GRAMMAR-EVOLUTION-001",
-      "unblocks": ["GRAM-CONTENT-002"]
+      "unblocks": [
+        "GRAM-CONTENT-002"
+      ]
     },
     {
       "id": "DMCP-OVR-G0-AUDIT-001",
@@ -1156,8 +1503,10 @@
       "witness": "debug_runs/art_pipeline/dmcp_ovr_g0_audit_live.json",
       "deliverable": "src/dev/design_aps_uiux_g0_audit_v1.md",
       "program": "PLAN-APS-UIUX-OVERHAUL-001",
-      "notes": "54 §2b hits pre-P2; guard test_aps_no_jargon.py wired",
-      "unblocks": ["OVR-P2-TEXT-001"]
+      "notes": "54 \u00a72b hits pre-P2; guard test_aps_no_jargon.py wired",
+      "unblocks": [
+        "OVR-P2-TEXT-001"
+      ]
     },
     {
       "id": "OVR-DES-P45-SPINE-SPEC-001",
@@ -1168,18 +1517,23 @@
       "verdict": "PASS",
       "witness": "src/dev/design_aps_uiux_spine_spec_v1.md",
       "program": "PLAN-APS-UIUX-OVERHAUL-001",
-      "unblocks": ["OVR-P45-SPINE-001", "OVR-DES-P56-ONBOARD-SPEC-001"]
+      "unblocks": [
+        "OVR-P45-SPINE-001",
+        "OVR-DES-P56-ONBOARD-SPEC-001"
+      ]
     },
     {
       "id": "DES-OVR-P56-ONBOARD-OUTLINE-001",
       "agent": "designer",
-      "status": "done",
-      "signoff": "SIGNED",
+      "status": "open",
+      "signoff": "PENDING",
       "signed_date": "2026-06-02",
-      "verdict": "PASS",
+      "verdict": "FAIL",
       "witness": "src/dev/design_aps_uiux_onboard_outline_v1.md",
       "program": "PLAN-APS-UIUX-OVERHAUL-001",
-      "notes": "Outline only — full spec after P4.5 lands"
+      "notes": "Outline only \u2014 full spec after P4.5 lands",
+      "intel_officer_note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 stub_marker:outline only",
+      "reopened_at": "2026-06-20"
     },
     {
       "id": "DMCP-OVR-P2-IMPL-AUDIT-001",
@@ -1191,7 +1545,7 @@
       "witness": "debug_runs/art_pipeline/dmcp_ovr_p2_impl_audit_live.json",
       "deliverable": "src/dev/design_aps_uiux_p2_impl_audit_v1.md",
       "program": "PLAN-APS-UIUX-OVERHAUL-001",
-      "notes": "ban-list 0 · copy 25/32 · 7 tails P3/P5"
+      "notes": "ban-list 0 \u00b7 copy 25/32 \u00b7 7 tails P3/P5"
     },
     {
       "id": "DMCP-OVR-P3-ACCEPT-RUBRIC-001",
@@ -1214,7 +1568,9 @@
       "verdict": "PASS",
       "witness": "src/dev/design_aps_uiux_onboard_spec_v1.md",
       "program": "PLAN-APS-UIUX-OVERHAUL-001",
-      "unblocks": ["OVR-P56-ONBOARD-001"]
+      "unblocks": [
+        "OVR-P56-ONBOARD-001"
+      ]
     },
     {
       "id": "APS-GRAM-TIER-003",
@@ -1225,19 +1581,26 @@
       "verdict": "PASS",
       "witness": "src/dev/design_aps_grammar_tier_wireframes_v1.md",
       "program": "PLAN-APS-GRAMMAR-EVOLUTION-001",
-      "unblocks": ["APS-GRAM-TIER-002"]
+      "unblocks": [
+        "APS-GRAM-TIER-002"
+      ]
     },
     {
       "id": "DES-APS-GRAM-TIER-EXPOSURE-001",
       "agent": "designer",
-      "status": "done",
-      "signoff": "SIGNED",
+      "status": "open",
+      "signoff": "PENDING",
       "signed_date": "2026-06-17",
-      "verdict": "PASS",
+      "verdict": "FAIL",
       "witness": "src/dev/design_aps_grammar_tier_exposure_v1.md",
       "program": "PLAN-APS-GRAMMAR-EVOLUTION-001",
-      "notes": "@designer owns APS exposure per tier — canonical G0-G4 matrix",
-      "unblocks": ["APS-GRAM-TIER-002", "APS-GRAM-TIER-004"]
+      "notes": "@designer owns APS exposure per tier \u2014 canonical G0-G4 matrix",
+      "unblocks": [
+        "APS-GRAM-TIER-002",
+        "APS-GRAM-TIER-004"
+      ],
+      "intel_officer_note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 stub_marker:placeholder",
+      "reopened_at": "2026-06-20"
     },
     {
       "id": "APS-GRAM-P3-003",
@@ -1248,7 +1611,9 @@
       "verdict": "PASS",
       "witness": "src/dev/design_aps_grammar_why_copy_v1.md",
       "program": "PLAN-APS-GRAMMAR-EVOLUTION-001",
-      "unblocks": ["APS-GRAM-P3-001"]
+      "unblocks": [
+        "APS-GRAM-P3-001"
+      ]
     },
     {
       "id": "DES-MINIMAP-VEG-LEGEND-001",
@@ -1258,29 +1623,40 @@
       "signed_date": "2026-06-17",
       "verdict": "PASS",
       "witness": "src/dev/design_minimap_veg_legend_v1.md",
-      "unblocks": ["minimap_compositor ecology legend"]
+      "unblocks": [
+        "minimap_compositor ecology legend"
+      ]
     },
     {
       "id": "DES-BUILD-READ-HUD-001",
       "agent": "designer",
-      "status": "done",
-      "signoff": "SIGNED",
+      "status": "open",
+      "signoff": "PENDING",
       "signed_date": "2026-06-17",
-      "verdict": "PASS",
+      "verdict": "FAIL",
       "witness": "src/dev/design_build_grammar_read_hud_v1.md",
-      "unblocks": ["CDR-B-BUILD-CONSUMER-MCP-001"]
+      "unblocks": [
+        "CDR-B-BUILD-CONSUMER-MCP-001"
+      ],
+      "intel_officer_note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 stub_marker:stub",
+      "reopened_at": "2026-06-20"
     },
     {
       "id": "DES-APS-DS-V11-001",
       "agent": "designer",
-      "status": "done",
-      "signoff": "SIGNED",
+      "status": "open",
+      "signoff": "PENDING",
       "signed_date": "2026-06-17",
-      "verdict": "PASS",
+      "verdict": "FAIL",
       "witness": "src/dev/design_aps_design_system_v11_delta_v1.md",
       "program": "aps_uiux_phase2",
       "notes": "Panel-by-panel status_atom migration map; closes overhaul sign-off N1",
-      "unblocks": ["OVR-P5-TAIL-001", "DES-APS-SMOOTHNESS-001"]
+      "unblocks": [
+        "OVR-P5-TAIL-001",
+        "DES-APS-SMOOTHNESS-001"
+      ],
+      "intel_officer_note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 stub_marker:placeholder",
+      "reopened_at": "2026-06-20"
     },
     {
       "id": "DES-APS-SMOOTHNESS-001",
@@ -1291,32 +1667,43 @@
       "verdict": "PASS",
       "witness": "src/dev/design_aps_smoothness_charter_v1.md",
       "program": "aps_uiux_phase2",
-      "notes": "Tk-realistic smoothness — inline ack, disabled-why, no layout jump",
-      "depends_on": ["DES-APS-DS-V11-001"]
+      "notes": "Tk-realistic smoothness \u2014 inline ack, disabled-why, no layout jump",
+      "depends_on": [
+        "DES-APS-DS-V11-001"
+      ]
     },
     {
       "id": "DES-APS-GRAM-TIER-004",
       "agent": "designer",
-      "status": "done",
-      "signoff": "SIGNED",
+      "status": "open",
+      "signoff": "PENDING",
       "signed_date": "2026-06-17",
-      "verdict": "PASS",
+      "verdict": "FAIL",
       "witness": "src/dev/design_aps_grammar_tier_exposure_v1.md",
       "program": "PLAN-APS-GRAMMAR-EVOLUTION-001",
-      "notes": "§10 G0 kit-hint + G1 unlock empty states when archetype_combo_count >= 3",
-      "unblocks": ["APS-GRAM-TIER-004"]
+      "notes": "\u00a710 G0 kit-hint + G1 unlock empty states when archetype_combo_count >= 3",
+      "unblocks": [
+        "APS-GRAM-TIER-004"
+      ],
+      "intel_officer_note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 stub_marker:placeholder",
+      "reopened_at": "2026-06-20"
     },
     {
       "id": "DES-INDUSTRIAL-RESEARCH-001",
       "agent": "designer",
-      "status": "done",
-      "signoff": "SIGNED",
+      "status": "open",
+      "signoff": "PENDING",
       "signed_date": "2026-06-18",
-      "verdict": "PASS",
+      "verdict": "FAIL",
       "witness": "src/dev/design_industrial_process_research_v1.md",
       "program": "PLAN-INDUSTRIAL-FACILITY-GRAMMAR-001",
       "notes": "Concrete Portland + aluminum + utility yards from industrial_supply_chains.json",
-      "unblocks": ["DES-FACILITY-BINDING-001", "DMCP-PILOT-CONCRETE-SITE-001"]
+      "unblocks": [
+        "DES-FACILITY-BINDING-001",
+        "DMCP-PILOT-CONCRETE-SITE-001"
+      ],
+      "intel_officer_note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 stub_marker:stub",
+      "reopened_at": "2026-06-20"
     },
     {
       "id": "DES-FACILITY-SITE-ZONE-001",
@@ -1327,8 +1714,11 @@
       "verdict": "PASS",
       "witness": "src/dev/design_facility_site_zone_taxonomy_v1.md",
       "program": "PLAN-INDUSTRIAL-FACILITY-GRAMMAR-001",
-      "notes": "Seven zone ids + required/optional matrix — builds on 4 site_v0 pilots",
-      "unblocks": ["CMCP-SITE-ZONE-VALIDATE-001", "DES-APS-SITE-PREVIEW-001"]
+      "notes": "Seven zone ids + required/optional matrix \u2014 builds on 4 site_v0 pilots",
+      "unblocks": [
+        "CMCP-SITE-ZONE-VALIDATE-001",
+        "DES-APS-SITE-PREVIEW-001"
+      ]
     },
     {
       "id": "DES-POWER-TIER-001",
@@ -1339,8 +1729,11 @@
       "verdict": "PASS",
       "witness": "src/dev/design_power_tier_bands_v1.md",
       "program": "PLAN-INDUSTRIAL-FACILITY-GRAMMAR-001",
-      "notes": "light/medium/heavy/grid bands → power_tier_atom glyphs for APS",
-      "unblocks": ["DES-APS-FACILITY-NEEDS-001", "CMCP-GRAM-SWEEP-PROCESS-001"]
+      "notes": "light/medium/heavy/grid bands \u2192 power_tier_atom glyphs for APS",
+      "unblocks": [
+        "DES-APS-FACILITY-NEEDS-001",
+        "CMCP-GRAM-SWEEP-PROCESS-001"
+      ]
     },
     {
       "id": "DES-APS-FACILITY-NEEDS-001",
@@ -1351,32 +1744,44 @@
       "verdict": "PASS",
       "witness": "src/dev/design_aps_facility_needs_v1.md",
       "program": "PLAN-INDUSTRIAL-FACILITY-GRAMMAR-001",
-      "notes": "Facility Needs strip — schema-aligned v1.1; grammar_facility_brief witness; facility_binding_v1",
-      "unblocks": ["CMCP-FACILITY-NEEDS-PANEL-001", "DES-FACILITY-BINDING-001"]
+      "notes": "Facility Needs strip \u2014 schema-aligned v1.1; grammar_facility_brief witness; facility_binding_v1",
+      "unblocks": [
+        "CMCP-FACILITY-NEEDS-PANEL-001",
+        "DES-FACILITY-BINDING-001"
+      ]
     },
     {
       "id": "DES-APS-SITE-PREVIEW-001",
       "agent": "designer",
-      "status": "done",
-      "signoff": "SIGNED",
+      "status": "open",
+      "signoff": "PENDING",
       "signed_date": "2026-06-18",
-      "verdict": "PASS",
+      "verdict": "FAIL",
       "witness": "src/dev/design_aps_site_preview_v1.md",
       "program": "PLAN-INDUSTRIAL-FACILITY-GRAMMAR-001",
-      "notes": "Two-level footprint + site zone grid overlay — tier-gated Layout view",
-      "unblocks": ["CMCP-SITE-PREVIEW-PANEL-001"]
+      "notes": "Two-level footprint + site zone grid overlay \u2014 tier-gated Layout view",
+      "unblocks": [
+        "CMCP-SITE-PREVIEW-PANEL-001"
+      ],
+      "intel_officer_note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 stub_marker:placeholder",
+      "reopened_at": "2026-06-20"
     },
     {
       "id": "DES-SIM-HUD-COHESION-001",
       "agent": "designer",
-      "status": "done",
-      "signoff": "SIGNED",
+      "status": "open",
+      "signoff": "PENDING",
       "signed_date": "2026-06-18",
-      "verdict": "PASS",
+      "verdict": "FAIL",
       "witness": "src/dev/design_sim_hud_cohesion_charter_v1.md",
       "program": "PLAN-SIM-HUD-PROFESSIONAL-POLISH-001",
-      "notes": "Bevy/egui parity — tokens, spacing, selection, focus",
-      "unblocks": ["DES-SIM-HUD-BUILD-PICKER-001", "COD-SIM-HUD-EGUI-THEME-001"]
+      "notes": "Bevy/egui parity \u2014 tokens, spacing, selection, focus",
+      "unblocks": [
+        "DES-SIM-HUD-BUILD-PICKER-001",
+        "COD-SIM-HUD-EGUI-THEME-001"
+      ],
+      "intel_officer_note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 stub_marker:stub",
+      "reopened_at": "2026-06-20"
     },
     {
       "id": "DES-SIM-HUD-BUILD-PICKER-001",
@@ -1387,31 +1792,40 @@
       "verdict": "PASS",
       "witness": "src/dev/design_sim_hud_build_picker_v1.md",
       "program": "PLAN-SIM-HUD-PROFESSIONAL-POLISH-001",
-      "notes": "Rail-anchored picker sheet — Industry chain cards + power tier",
-      "unblocks": ["COD-SIM-HUD-BUILD-PICKER-001"]
+      "notes": "Rail-anchored picker sheet \u2014 Industry chain cards + power tier",
+      "unblocks": [
+        "COD-SIM-HUD-BUILD-PICKER-001"
+      ]
     },
     {
       "id": "DES-SIM-HUD-COPY-REGISTRY-001",
       "agent": "designer",
-      "status": "done",
-      "signoff": "SIGNED",
+      "status": "open",
+      "signoff": "PENDING",
       "signed_date": "2026-06-18",
-      "verdict": "PASS",
+      "verdict": "FAIL",
       "witness": "src/dev/sim_hud_copy_registry_v1.md",
       "program": "PLAN-SIM-HUD-PROFESSIONAL-POLISH-001",
-      "notes": "Single locked string table — strip, picker, tray, toast"
+      "notes": "Single locked string table \u2014 strip, picker, tray, toast",
+      "intel_officer_note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 stub_marker:stub",
+      "reopened_at": "2026-06-20"
     },
     {
       "id": "DES-SIM-HUD-TRAY-BUILD-001",
       "agent": "designer",
-      "status": "done",
-      "signoff": "SIGNED",
+      "status": "open",
+      "signoff": "PENDING",
       "signed_date": "2026-06-18",
-      "verdict": "PASS",
+      "verdict": "FAIL",
       "witness": "src/dev/design_sim_hud_tray_build_v1.md",
       "program": "PLAN-SIM-HUD-PROFESSIONAL-POLISH-001",
-      "notes": "Build tab — site legend, staging rows, queue summary",
-      "unblocks": ["COD-SIM-HUD-TRAY-BUILD-001", "COD-SIM-HUD-POPUP-MIGRATE-001"]
+      "notes": "Build tab \u2014 site legend, staging rows, queue summary",
+      "unblocks": [
+        "COD-SIM-HUD-TRAY-BUILD-001",
+        "COD-SIM-HUD-POPUP-MIGRATE-001"
+      ],
+      "intel_officer_note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 stub_marker:stub",
+      "reopened_at": "2026-06-20"
     },
     {
       "id": "DES-SIM-HUD-POPUP-TIERS-001",
@@ -1422,8 +1836,10 @@
       "verdict": "PASS",
       "witness": "src/dev/design_sim_hud_popup_tiers_v1.md",
       "program": "PLAN-SIM-HUD-PROFESSIONAL-POLISH-001",
-      "notes": "Popup tier system + migration map — staged/road/hints/submenus",
-      "unblocks": ["COD-SIM-HUD-POPUP-MIGRATE-001"]
+      "notes": "Popup tier system + migration map \u2014 staged/road/hints/submenus",
+      "unblocks": [
+        "COD-SIM-HUD-POPUP-MIGRATE-001"
+      ]
     },
     {
       "id": "DES-POWER-LINE-TOOL-SHEET-001",
@@ -1434,8 +1850,10 @@
       "verdict": "PASS",
       "witness": "src/dev/design_power_line_tool_sheet_v1.md",
       "program": "PLAN-POWER-GRID-CONSTRUCTION-UX-001",
-      "notes": "Rail-anchored power line sheet — mode, voltage, snap, commit",
-      "unblocks": ["COD-POWER-LINE-DRAW-001"]
+      "notes": "Rail-anchored power line sheet \u2014 mode, voltage, snap, commit",
+      "unblocks": [
+        "COD-POWER-LINE-DRAW-001"
+      ]
     },
     {
       "id": "DES-POWER-ROUTING-MODE-001",
@@ -1446,20 +1864,27 @@
       "verdict": "PASS",
       "witness": "src/dev/design_power_routing_mode_v1.md",
       "program": "PLAN-POWER-GRID-CONSTRUCTION-UX-001",
-      "notes": "Curved spline vs 90° Manhattan — key O, corner rules",
-      "unblocks": ["COD-POWER-ORTHOGONAL-ROUTER-001", "COD-POWER-SPLINE-ROUTER-001"]
+      "notes": "Curved spline vs 90\u00b0 Manhattan \u2014 key O, corner rules",
+      "unblocks": [
+        "COD-POWER-ORTHOGONAL-ROUTER-001",
+        "COD-POWER-SPLINE-ROUTER-001"
+      ]
     },
     {
       "id": "DES-POWER-VOLTAGE-PICKER-001",
       "agent": "designer",
-      "status": "done",
-      "signoff": "SIGNED",
+      "status": "open",
+      "signoff": "PENDING",
       "signed_date": "2026-06-18",
-      "verdict": "PASS",
+      "verdict": "FAIL",
       "witness": "src/dev/design_power_voltage_picker_v1.md",
       "program": "PLAN-POWER-GRID-CONSTRUCTION-UX-001",
-      "notes": "Distribution/MV/HV → VoltageClass + mismatch copy",
-      "unblocks": ["COD-POWER-LINE-DRAW-001"]
+      "notes": "Distribution/MV/HV \u2192 VoltageClass + mismatch copy",
+      "unblocks": [
+        "COD-POWER-LINE-DRAW-001"
+      ],
+      "intel_officer_note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 stub_marker:stub",
+      "reopened_at": "2026-06-20"
     },
     {
       "id": "DES-POWER-MAP-OVERLAY-002",
@@ -1470,8 +1895,25 @@
       "verdict": "PASS",
       "witness": "src/dev/design_power_map_overlay_v1.md",
       "program": "PLAN-POWER-GRID-CONSTRUCTION-UX-001",
-      "notes": "Line states live/preview/damaged/destroyed/island — auto-on with tool",
-      "unblocks": ["COD-POWER-OVERLAY-RENDER-001", "COD-POWER-ISLAND-HIGHLIGHT-001"]
+      "notes": "Line states live/preview/damaged/destroyed/island \u2014 auto-on with tool",
+      "unblocks": [
+        "COD-POWER-OVERLAY-RENDER-001",
+        "COD-POWER-ISLAND-HIGHLIGHT-001"
+      ]
+    },
+    {
+      "id": "DES-POWER-NODE-HOVER-001",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-06-18",
+      "verdict": "PASS",
+      "witness": "src/dev/design_power_node_hover_v1.md",
+      "program": "PLAN-POWER-GRID-CONSTRUCTION-UX-001",
+      "notes": "Map-attached hover \u2014 transformer + substation load/capacity/feeds",
+      "unblocks": [
+        "COD-POWER-NODE-HOVER-001"
+      ]
     },
     {
       "id": "DES-POWER-TARGETING-001",
@@ -1482,8 +1924,10 @@
       "verdict": "PASS",
       "witness": "src/dev/design_power_targeting_v1.md",
       "program": "PLAN-POWER-GRID-CONSTRUCTION-UX-001",
-      "notes": "Cut line / transformer KO preview — graph-true island count",
-      "unblocks": ["COD-POWER-DAMAGE-SEGMENT-001"]
+      "notes": "Cut line / transformer KO preview \u2014 graph-true island count",
+      "unblocks": [
+        "COD-POWER-DAMAGE-SEGMENT-001"
+      ]
     },
     {
       "id": "DES-POWER-REPAIR-PANEL-001",
@@ -1494,8 +1938,10 @@
       "verdict": "PASS",
       "witness": "src/dev/design_power_repair_panel_v1.md",
       "program": "PLAN-POWER-GRID-CONSTRUCTION-UX-001",
-      "notes": "Repair queue in Logistics tray — parts, priority 1–100",
-      "unblocks": ["COD-POWER-REPAIR-QUEUE-001"]
+      "notes": "Repair queue in Logistics tray \u2014 parts, priority 1\u2013100",
+      "unblocks": [
+        "COD-POWER-REPAIR-QUEUE-001"
+      ]
     },
     {
       "id": "DMCP-LG5-EXPAND-BAKE-001",
@@ -1507,8 +1953,11 @@
       "witness": "debug_runs/art_pipeline/dmcp_parallel_lane_bkkf_live.json",
       "deliverable": "src/dev/design_landscape_lg5_expand_bake_v1.md",
       "program": "PLAN-DESIGNER-WORK-202606",
-      "notes": "Phase A teach bake OK · Phase B G4 manual required · 16-cell expanded batch",
-      "unblocks": ["DMCP-LG5-KEYFRAME-QC-001", "coder-mcp landscape_lg5_expanded_batch"]
+      "notes": "Phase A teach bake OK \u00b7 Phase B G4 manual required \u00b7 16-cell expanded batch",
+      "unblocks": [
+        "DMCP-LG5-KEYFRAME-QC-001",
+        "coder-mcp landscape_lg5_expanded_batch"
+      ]
     },
     {
       "id": "DMCP-GRAM-ARCHETYPE-FACTORY-001",
@@ -1520,8 +1969,11 @@
       "witness": "debug_runs/art_pipeline/dmcp_parallel_lane_bkkf_live.json",
       "deliverable": "src/dev/design_factory_cluster_concept_v1.md",
       "program": "PLAN-DESIGNER-WORK-202606",
-      "notes": "G1 second archetype FactoryCluster · factory_cluster_v1.ron on disk",
-      "unblocks": ["DES-GRAM-ARCHETYPE-FACTORY-001", "DMCP-GRAM-FACTORY-CLUSTER-001"]
+      "notes": "G1 second archetype FactoryCluster \u00b7 factory_cluster_v1.ron on disk",
+      "unblocks": [
+        "DES-GRAM-ARCHETYPE-FACTORY-001",
+        "DMCP-GRAM-FACTORY-CLUSTER-001"
+      ]
     },
     {
       "id": "DMCP-MODULE-KIT002-001",
@@ -1533,8 +1985,10 @@
       "witness": "debug_runs/art_pipeline/dmcp_parallel_lane_bkkf_live.json",
       "deliverable": "src/dev/design_kit_production_002_concept_v1.md",
       "program": "PLAN-DESIGNER-WORK-202606",
-      "notes": "6-module manifest sketch · G4 keyframes still open (MCP-P2-KIT002-G4)",
-      "unblocks": ["kit-production-002-g4-evaluate"]
+      "notes": "6-module manifest sketch \u00b7 G4 keyframes still open (MCP-P2-KIT002-G4)",
+      "unblocks": [
+        "kit-production-002-g4-evaluate"
+      ]
     },
     {
       "id": "DES-FACILITY-BINDING-001",
@@ -1546,8 +2000,11 @@
       "witness": "debug_runs/art_pipeline/dmcp_facility_binding_lane_live.json",
       "deliverable": "src/dev/design_facility_binding_schema_v1.md",
       "program": "PLAN-INDUSTRIAL-FACILITY-GRAMMAR-001",
-      "notes": "Schema draft · @designer APS IA sign-off pending",
-      "unblocks": ["CMCP-GRAMMAR-FACILITY-BRIEF-001", "DES-APS-FACILITY-NEEDS-001"]
+      "notes": "Schema draft \u00b7 @designer APS IA sign-off pending",
+      "unblocks": [
+        "CMCP-GRAMMAR-FACILITY-BRIEF-001",
+        "DES-APS-FACILITY-NEEDS-001"
+      ]
     },
     {
       "id": "DMCP-GRAM-FACTORY-CLUSTER-001",
@@ -1559,8 +2016,10 @@
       "witness": "debug_runs/art_pipeline/dmcp_facility_binding_lane_live.json",
       "deliverable": "assets/configs/buildings/grammars/factory_cluster_v1.ron",
       "program": "PLAN-INDUSTRIAL-FACILITY-GRAMMAR-001",
-      "notes": "facility_binding → concrete_mixer_plant · power_tier light · all G1 grammars bound",
-      "unblocks": ["CMCP-GRAMMAR-FACILITY-BRIEF-001"]
+      "notes": "facility_binding \u2192 concrete_mixer_plant \u00b7 power_tier light \u00b7 all G1 grammars bound",
+      "unblocks": [
+        "CMCP-GRAMMAR-FACILITY-BRIEF-001"
+      ]
     },
     {
       "id": "DMCP-PILOT-CONCRETE-SITE-001",
@@ -1572,8 +2031,11 @@
       "witness": "debug_runs/art_pipeline/dmcp_facility_binding_lane_live.json",
       "deliverable": "assets/configs/buildings/pilots/concrete_portland_chain_pilot_v1.json",
       "program": "PLAN-INDUSTRIAL-FACILITY-GRAMMAR-001",
-      "notes": "3-step Portland chain · mine/kiln/mixer site grids",
-      "unblocks": ["CMCP-SITE-ZONE-VALIDATE-001", "CMCP-CHAIN-PILOT-GENERATE-001"]
+      "notes": "3-step Portland chain \u00b7 mine/kiln/mixer site grids",
+      "unblocks": [
+        "CMCP-SITE-ZONE-VALIDATE-001",
+        "CMCP-CHAIN-PILOT-GENERATE-001"
+      ]
     },
     {
       "id": "DMCP-GRAM-RAIL-EDGE-001",
@@ -1585,8 +2047,10 @@
       "witness": "debug_runs/art_pipeline/dmcp_facility_binding_lane_live.json",
       "deliverable": "assets/configs/buildings/grammars/rail_edge_v1.ron",
       "program": "PLAN-INDUSTRIAL-FACILITY-GRAMMAR-001",
-      "notes": "facility_binding → logistics_rail_warehouse · logistics_storage chain",
-      "unblocks": ["CMCP-GRAMMAR-FACILITY-BRIEF-001"]
+      "notes": "facility_binding \u2192 logistics_rail_warehouse \u00b7 logistics_storage chain",
+      "unblocks": [
+        "CMCP-GRAMMAR-FACILITY-BRIEF-001"
+      ]
     },
     {
       "id": "DES-ART-UTILITY-STYLE-001",
@@ -1597,8 +2061,12 @@
       "verdict": "PASS",
       "witness": "src/dev/design_utility_industrial_style_v1.md",
       "program": "PLAN-POWER-GRID-ART-ASSETS-001",
-      "notes": "Utility industrial style bible — blocks all module specs",
-      "unblocks": ["DMCP-SPEC-SUBSTATION-YARD-001", "DMCP-SPEC-TRANSFORMER-PAD-001", "DES-ART-NUCLEAR-PLANT-001"]
+      "notes": "Utility industrial style bible \u2014 blocks all module specs",
+      "unblocks": [
+        "DMCP-SPEC-SUBSTATION-YARD-001",
+        "DMCP-SPEC-TRANSFORMER-PAD-001",
+        "DES-ART-NUCLEAR-PLANT-001"
+      ]
     },
     {
       "id": "DES-ART-POWER-GLYPHS-001",
@@ -1609,7 +2077,7 @@
       "verdict": "PASS",
       "witness": "assets/ui/infrastructure/power_glyphs_spec_v1.md",
       "program": "PLAN-POWER-GRID-ART-ASSETS-001",
-      "notes": "Map node + state glyphs — 24×24 overlay grid"
+      "notes": "Map node + state glyphs \u2014 24\u00d724 overlay grid"
     },
     {
       "id": "DES-ART-HUD-POWER-ICONS-001",
@@ -1620,8 +2088,10 @@
       "verdict": "PASS",
       "witness": "src/dev/design_hud_power_icons_v1.md",
       "program": "PLAN-POWER-GRID-ART-ASSETS-001",
-      "notes": "Build rail + tool sheet — v1.1 pixel wires: line tool, L/M/H bars, curved/90°",
-      "unblocks": ["COD-ART-HUD-ICON-ATLAS-001"]
+      "notes": "Build rail + tool sheet \u2014 v1.1 pixel wires: line tool, L/M/H bars, curved/90\u00b0",
+      "unblocks": [
+        "COD-ART-HUD-ICON-ATLAS-001"
+      ]
     },
     {
       "id": "DES-ART-NUCLEAR-PLANT-001",
@@ -1632,8 +2102,10 @@
       "verdict": "PASS",
       "witness": "src/dev/design_nuclear_plant_massing_v1.md",
       "program": "PLAN-POWER-GRID-ART-ASSETS-001",
-      "notes": "PWR massing concept — 6×6 site zones",
-      "unblocks": ["DMCP-SPEC-NUCLEAR-PWR-001"]
+      "notes": "PWR massing concept \u2014 6\u00d76 site zones",
+      "unblocks": [
+        "DMCP-SPEC-NUCLEAR-PWR-001"
+      ]
     },
     {
       "id": "DMCP-SPEC-SUBSTATION-YARD-001",
@@ -1645,35 +2117,47 @@
       "witness": "src/dev/dmcp_spec_substation_yard_v1.md",
       "deliverable": "assets/staging/specs/kit_substation_yard_production_001.json",
       "program": "PLAN-POWER-GRID-ART-ASSETS-001",
-      "notes": "4×3 substation yard kit — grid_substation.json",
-      "depends_on": ["DES-ART-UTILITY-STYLE-001"]
+      "notes": "4\u00d73 substation yard kit \u2014 grid_substation.json",
+      "depends_on": [
+        "DES-ART-UTILITY-STYLE-001"
+      ]
     },
     {
       "id": "DMCP-SPEC-TRANSFORMER-PAD-001",
       "agent": "designer-mcp",
-      "status": "done",
-      "signoff": "SIGNED",
+      "status": "open",
+      "signoff": "PENDING",
       "signed_date": "2026-06-18",
-      "verdict": "PASS",
+      "verdict": "FAIL",
       "witness": "src/dev/dmcp_spec_transformer_pad_v1.md",
       "deliverable": "assets/staging/specs/prop_transformer_production_run001.json",
       "program": "PLAN-POWER-GRID-ART-ASSETS-001",
-      "notes": "2×2 transformer pad — supersedes lod0 prop_transformer",
-      "depends_on": ["DES-ART-UTILITY-STYLE-001"]
+      "notes": "2\u00d72 transformer pad \u2014 supersedes lod0 prop_transformer",
+      "depends_on": [
+        "DES-ART-UTILITY-STYLE-001"
+      ],
+      "intel_officer_note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 stub_marker:stub",
+      "reopened_at": "2026-06-20"
     },
     {
       "id": "DMCP-SPEC-NUCLEAR-PWR-001",
       "agent": "designer-mcp",
-      "status": "done",
-      "signoff": "SIGNED",
+      "status": "open",
+      "signoff": "PENDING",
       "signed_date": "2026-06-02",
-      "verdict": "PASS",
+      "verdict": "FAIL",
       "witness": "debug_runs/art_pipeline/dmcp_nuclear_pwr_spec_live.json",
       "deliverable": "assets/staging/specs/kit_nuclear_pwr_production_001.json",
       "program": "PLAN-POWER-GRID-ART-ASSETS-001",
-      "notes": "6×6 PWR kit spec only — bpy_blocked until MCP-PWR-NUCLEAR-BATCH-001",
-      "depends_on": ["DES-ART-NUCLEAR-PLANT-001"],
-      "unblocks": ["MCP-PWR-NUCLEAR-BATCH-001"]
+      "notes": "6\u00d76 PWR kit spec only \u2014 bpy_blocked until MCP-PWR-NUCLEAR-BATCH-001",
+      "depends_on": [
+        "DES-ART-NUCLEAR-PLANT-001"
+      ],
+      "unblocks": [
+        "MCP-PWR-NUCLEAR-BATCH-001"
+      ],
+      "intel_officer_note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 spec_only_json",
+      "reopened_at": "2026-06-20"
     },
     {
       "id": "DES-ART-PLANT-CARD-001",
@@ -1684,21 +2168,61 @@
       "verdict": "PASS",
       "witness": "src/dev/design_plant_card_gauges_v1.md",
       "program": "PLAN-POWER-GRID-ART-ASSETS-001",
-      "notes": "Plant focus card — core heat, diesel fuel, containment gauges",
-      "depends_on": ["DES-ART-HUD-POWER-ICONS-001"],
-      "unblocks": ["COD-NUCLEAR-UX-WIRE-001"]
+      "notes": "Plant focus card \u2014 core heat, diesel fuel, containment gauges",
+      "depends_on": [
+        "DES-ART-HUD-POWER-ICONS-001"
+      ],
+      "unblocks": [
+        "COD-NUCLEAR-UX-WIRE-001"
+      ]
+    },
+    {
+      "id": "DMCP-QC-SUBSTATION-001",
+      "agent": "designer-mcp",
+      "status": "open",
+      "signoff": "PENDING",
+      "signed_date": "2026-06-18",
+      "verdict": "FAIL",
+      "witness": "src/dev/dmcp_qc_substation_yard_v1.md",
+      "program": "PLAN-POWER-GRID-ART-ASSETS-001",
+      "notes": "Promoted yard GLB \u2014 teach composite 48v \u00b7 G4 manual stills open",
+      "depends_on": [
+        "MCP-PWR-PROMOTE-SUBSTATION-001"
+      ],
+      "intel_officer_note": "INTEL-OFFICER tail cull v2 \u00b7 stub_marker:stub",
+      "reopened_at": "2026-06-20"
+    },
+    {
+      "id": "DMCP-QC-TRANSFORMER-001",
+      "agent": "designer-mcp",
+      "status": "open",
+      "signoff": "PENDING",
+      "signed_date": "2026-06-18",
+      "verdict": "FAIL",
+      "witness": "src/dev/dmcp_qc_transformer_pad_v1.md",
+      "program": "PLAN-POWER-GRID-ART-ASSETS-001",
+      "notes": "Production transformer \u2014 cylinder + bushings @ 32px proxy green",
+      "depends_on": [
+        "MCP-PWR-PROMOTE-TRANSFORMER-001"
+      ],
+      "intel_officer_note": "INTEL-OFFICER tail cull v2 \u00b7 stub_marker:stub",
+      "reopened_at": "2026-06-20"
     },
     {
       "id": "DES-APS-PREVIEW-V2-001",
       "agent": "designer",
-      "status": "done",
-      "signoff": "SIGNED",
+      "status": "open",
+      "signoff": "PENDING",
       "signed_date": "2026-06-18",
-      "verdict": "PASS",
+      "verdict": "FAIL",
       "witness": "src/dev/design_aps_preview_v2_spec_v1.md",
       "program": "PLAN-DESIGNER-WORK-202606",
-      "notes": "4-state preview strip — clean/night/damaged/burning · async-on-select",
-      "unblocks": ["OVR-P55-PREVIEW-002"]
+      "notes": "4-state preview strip \u2014 clean/night/damaged/burning \u00b7 async-on-select",
+      "unblocks": [
+        "OVR-P55-PREVIEW-002"
+      ],
+      "intel_officer_note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 stub_marker:placeholder",
+      "reopened_at": "2026-06-20"
     },
     {
       "id": "DES-STYLE-INDUSTRIAL-WEST-001",
@@ -1709,8 +2233,10 @@
       "verdict": "PASS",
       "witness": "src/dev/design_style_industrial_west_v1.md",
       "program": "PLAN-DESIGNER-WORK-202606",
-      "notes": "Style bible — massing, sawtooth, bay rhythm, palette, weathering",
-      "unblocks": ["DMCP-MODULE-KIT002-001"]
+      "notes": "Style bible \u2014 massing, sawtooth, bay rhythm, palette, weathering",
+      "unblocks": [
+        "DMCP-MODULE-KIT002-001"
+      ]
     },
     {
       "id": "DES-APS-MAT-BROWSE-001",
@@ -1721,8 +2247,10 @@
       "verdict": "PASS",
       "witness": "src/dev/design_aps_mat_browse_v1.md",
       "program": "PLAN-DESIGNER-WORK-202606",
-      "notes": "Materials IA — tree + search + recents + unsorted @ 300+ profiles",
-      "unblocks": ["APS-MAT-002"]
+      "notes": "Materials IA \u2014 tree + search + recents + unsorted @ 300+ profiles",
+      "unblocks": [
+        "APS-MAT-002"
+      ]
     },
     {
       "id": "DES-MINIMAP-VEG-LEGEND-002",
@@ -1733,8 +2261,10 @@
       "verdict": "PASS",
       "witness": "src/dev/design_minimap_veg_legend_wire_v1.md",
       "program": "PLAN-DESIGNER-WORK-202606",
-      "notes": "Legend UI wire + burn scar tokens — hands off coder B",
-      "unblocks": ["CDR-B-VEG-MINIMAP-LEGEND-UI-001"]
+      "notes": "Legend UI wire + burn scar tokens \u2014 hands off coder B",
+      "unblocks": [
+        "CDR-B-VEG-MINIMAP-LEGEND-UI-001"
+      ]
     },
     {
       "id": "DMCP-LG5-KEYFRAME-QC-001",
@@ -1746,9 +2276,14 @@
       "witness": "debug_runs/art_pipeline/dmcp_art_spine_hub_wave_live.json",
       "deliverable": "src/dev/design_landscape_lg5_keyframe_qc_v1.md",
       "program": "PLAN-DESIGNER-WORK-202606",
-      "notes": "16 teach keyframes @64px green · topology_corridor_regrowth_grass G4 manual still open",
-      "depends_on": ["DMCP-LG5-EXPAND-BAKE-001"],
-      "unblocks": ["DMCP-VEG-ATLAS-SHIP-001", "coder-mcp landscape_lg5_g4_manual"]
+      "notes": "16 teach keyframes @64px green \u00b7 topology_corridor_regrowth_grass G4 manual still open",
+      "depends_on": [
+        "DMCP-LG5-EXPAND-BAKE-001"
+      ],
+      "unblocks": [
+        "DMCP-VEG-ATLAS-SHIP-001",
+        "coder-mcp landscape_lg5_g4_manual"
+      ]
     },
     {
       "id": "DMCP-TILE-ROWHOUSE-V2-001",
@@ -1760,8 +2295,11 @@
       "witness": "debug_runs/art_pipeline/dmcp_art_spine_hub_wave_live.json",
       "deliverable": "src/dev/design_rowhouse_v2_operator_qc_v1.md",
       "program": "PLAN-DESIGNER-WORK-202606",
-      "notes": "14 variants on disk — damage + burning_00–07 + atlas_meta match",
-      "unblocks": ["MCP-PROD-ROWHOUSE-SIGNOFF", "APS preview rowhouse strip"]
+      "notes": "14 variants on disk \u2014 damage + burning_00\u201307 + atlas_meta match",
+      "unblocks": [
+        "MCP-PROD-ROWHOUSE-SIGNOFF",
+        "APS preview rowhouse strip"
+      ]
     },
     {
       "id": "DES-GRAM-ARCHETYPE-CIVIC-001",
@@ -1773,8 +2311,11 @@
       "witness": "debug_runs/art_pipeline/dmcp_art_spine_hub_wave_live.json",
       "deliverable": "src/dev/design_civic_block_concept_v1.md",
       "program": "PLAN-DESIGNER-WORK-202606",
-      "notes": "CivicBlock G1 concept — civic_block_v1 RON deferred GRAM-CONTENT-005",
-      "unblocks": ["GRAM-CONTENT-005", "civic_block_v1.ron @coder-mcp"]
+      "notes": "CivicBlock G1 concept \u2014 civic_block_v1 RON deferred GRAM-CONTENT-005",
+      "unblocks": [
+        "GRAM-CONTENT-005",
+        "civic_block_v1.ron @coder-mcp"
+      ]
     },
     {
       "id": "DMCP-MAT-PROFILE-PILOT-002",
@@ -1786,9 +2327,379 @@
       "witness": "debug_runs/art_pipeline/dmcp_art_spine_hub_wave_live.json",
       "deliverable": "assets/staging/specs/mat_profile_pilot_002_pack.json",
       "program": "PLAN-DESIGNER-WORK-202606",
-      "notes": "24 profile stubs spec_only — merge after @coder-mcp validate",
-      "depends_on": ["DES-APS-MAT-BROWSE-001"],
-      "unblocks": ["CMCP-MAT-PROFILE-VALIDATE-002", "material_profiles merge pilot"]
+      "notes": "24 profile stubs spec_only \u2014 merge after @coder-mcp validate",
+      "depends_on": [
+        "DES-APS-MAT-BROWSE-001"
+      ],
+      "unblocks": [
+        "CMCP-MAT-PROFILE-VALIDATE-002",
+        "material_profiles merge pilot"
+      ]
+    },
+    {
+      "id": "DMCP-QC-SUBSTATION-001",
+      "agent": "designer-mcp",
+      "status": "open",
+      "signoff": "PENDING",
+      "signed_date": "2026-06-18",
+      "verdict": "FAIL",
+      "witness": "src/dev/dmcp_qc_substation_yard_v1.md",
+      "program": "PLAN-POWER-GRID-ART-ASSETS-001",
+      "notes": "Promoted yard GLB \u2014 teach composite 48v \u00b7 G4 manual stills open",
+      "depends_on": [
+        "MCP-PWR-PROMOTE-SUBSTATION-001"
+      ],
+      "intel_officer_note": "INTEL-OFFICER tail cull v2 \u00b7 stub_marker:stub",
+      "reopened_at": "2026-06-20"
+    },
+    {
+      "id": "DMCP-QC-TRANSFORMER-001",
+      "agent": "designer-mcp",
+      "status": "open",
+      "signoff": "PENDING",
+      "signed_date": "2026-06-18",
+      "verdict": "FAIL",
+      "witness": "src/dev/dmcp_qc_transformer_pad_v1.md",
+      "program": "PLAN-POWER-GRID-ART-ASSETS-001",
+      "notes": "Production transformer \u2014 cylinder + bushings @ 32px proxy green",
+      "depends_on": [
+        "MCP-PWR-PROMOTE-TRANSFORMER-001"
+      ],
+      "intel_officer_note": "INTEL-OFFICER tail cull v2 \u00b7 stub_marker:stub",
+      "reopened_at": "2026-06-20"
+    },
+    {
+      "id": "DES-APS-INTERACTION-001",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "PASS",
+      "completed": "2026-06-20",
+      "program": "PLAN-MULTI-PARALLEL-TRACKS-001",
+      "track": "T1",
+      "witness": "src/dev/design_aps_interaction_v1.md",
+      "deliverable": "src/dev/design_aps_interaction_v1.md",
+      "notes": "Wave-0 APS interaction spec \u2014 feedback, disabled reasons, spine affordance"
+    },
+    {
+      "id": "DES-APS-ONBOARD-SPEC-002",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "PASS",
+      "completed": "2026-06-20",
+      "program": "PLAN-MULTI-PARALLEL-TRACKS-001",
+      "track": "T1",
+      "witness": "src/dev/design_aps_onboard_spec_v2.md",
+      "deliverable": "src/dev/design_aps_onboard_spec_v2.md",
+      "notes": "Wave-0 onboarding / first-10s APS studio flow"
+    },
+    {
+      "id": "DES-APS-PREVIEW-LADDER-001",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "PASS",
+      "completed": "2026-06-20",
+      "program": "PLAN-MULTI-PARALLEL-TRACKS-001",
+      "track": "T1",
+      "witness": "src/dev/design_aps_preview_ladder_v1.md",
+      "deliverable": "src/dev/design_aps_preview_ladder_v1.md",
+      "notes": "Preview fidelity ladder G0\u2013G4 \u00d7 P0\u2013P4"
+    },
+    {
+      "id": "DES-APS-MANUAL-FALLBACK-001",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "PASS",
+      "completed": "2026-06-20",
+      "program": "PLAN-MULTI-PARALLEL-TRACKS-001",
+      "track": "T1",
+      "witness": "src/dev/design_aps_manual_fallback_v1.md",
+      "deliverable": "src/dev/design_aps_manual_fallback_v1.md",
+      "notes": "Manual fallback collapse + G3/G4 deprecation banner"
+    },
+    {
+      "id": "DES-APS-OPERATOR-RUBRIC-002",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "PASS",
+      "completed": "2026-06-20",
+      "program": "PLAN-MULTI-PARALLEL-TRACKS-001",
+      "track": "T1",
+      "wave": 1,
+      "witness": "src/dev/design_aps_operator_rubric_v2.md",
+      "deliverable": "src/dev/design_aps_operator_rubric_v2.md",
+      "notes": "Operator pixel walk rubric v2 \u2014 MIN window \u00b7 needs_display session"
+    },
+    {
+      "id": "DMCP-VEG-ATLAS-SHIP-001",
+      "agent": "designer-mcp",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-06-02",
+      "verdict": "PASS_WITH_NOTES",
+      "witness": "debug_runs/art_pipeline/dmcp_designer_mcp_open_lane_live.json",
+      "deliverable": "src/dev/dmcp_veg_atlas_ship_v1.md",
+      "program": "PLAN-MULTI-PARALLEL-TRACKS-001",
+      "track": "T3",
+      "notes": "G4/G5 criteria locked \u00b7 ship:false honest \u00b7 G4 manual corridor regrowth open",
+      "depends_on": [
+        "DMCP-LG5-KEYFRAME-QC-001"
+      ],
+      "unblocks": [
+        "VEG-F01-ATLAS-SHIP-001",
+        "VEG-F02-BURN-ATLAS-001"
+      ]
+    },
+    {
+      "id": "DMCP-ATLAS-QC-PLAIN-002",
+      "agent": "designer-mcp",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-06-02",
+      "verdict": "PASS",
+      "witness": "debug_runs/art_pipeline/dmcp_designer_mcp_open_lane_live.json",
+      "deliverable": "src/dev/design_aps_atlas_qc_copy_buildings_v2.md",
+      "program": "PLAN-DESIGNER-WORK-202606",
+      "notes": "Warehouse \u00b7 shopfront \u00b7 bunker plain-language QC copy v2",
+      "unblocks": [
+        "CMCP-APS-ATLAS-QC-COPY-002"
+      ]
+    },
+    {
+      "id": "DES-STYLE-LANDSCAPE-RIparian-001",
+      "agent": "designer-mcp",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-06-02",
+      "verdict": "PASS",
+      "witness": "debug_runs/art_pipeline/dmcp_style_landscape_riparian_live.json",
+      "deliverable": "src/dev/design_style_landscape_riparian_v1.md",
+      "program": "PLAN-DESIGNER-WORK-202606",
+      "notes": "Ag riparian style bible \u2014 AGRI-LANDSCAPE-\u03949 \u00b7 agri_riparian_v0 preset",
+      "unblocks": [
+        "VEG-DISTRICT-HYDRO-001",
+        "LG-5 riparian atlas rows"
+      ]
+    },
+    {
+      "id": "VM-11-PREVIEW-AUDIT",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "PASS",
+      "completed": "2026-06-20",
+      "witness": "src/dev/design_vm11_preview_audit_v1.md",
+      "program": "PLAN-MULTI-PARALLEL-TRACKS-001",
+      "track": "T8",
+      "notes": "Preview vs main semantic audit checklist \u2014 coder isolation follow-up"
+    },
+    {
+      "id": "DES-SIM-HUD-OPS-002",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "PASS",
+      "completed": "2026-06-20",
+      "witness": "src/dev/design_sim_hud_ops_v2.md",
+      "program": "PLAN-SIM-HUD-PROFESSIONAL-POLISH-001",
+      "unblocks": [
+        "COD-SIM-HUD-OPS-002"
+      ]
+    },
+    {
+      "id": "DES-SIM-HUD-OVERLAY-002",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "PASS",
+      "completed": "2026-06-20",
+      "witness": "src/dev/design_sim_hud_overlay_v2.md",
+      "program": "PLAN-SIM-HUD-PROFESSIONAL-POLISH-001"
+    },
+    {
+      "id": "DES-SIM-HUD-MINIMAP-002",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "PASS",
+      "completed": "2026-06-20",
+      "witness": "src/dev/design_sim_hud_minimap_v2.md",
+      "program": "PLAN-SIM-HUD-PROFESSIONAL-POLISH-001"
+    },
+    {
+      "id": "DES-SIM-HUD-PAUSE-002",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "PASS",
+      "completed": "2026-06-20",
+      "witness": "src/dev/design_sim_hud_pause_v2.md",
+      "program": "PLAN-SIM-HUD-PROFESSIONAL-POLISH-001"
+    },
+    {
+      "id": "DES-APS-MAT-SWATCH-001",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "PASS",
+      "completed": "2026-06-20",
+      "witness": "src/dev/design_aps_mat_swatch_v1.md",
+      "program": "PLAN-DESIGNER-WORK-202606"
+    },
+    {
+      "id": "DES-STYLE-VICTORIAN-ROW-001",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "PASS",
+      "completed": "2026-06-20",
+      "witness": "src/dev/design_style_victorian_row_v1.md",
+      "program": "PLAN-DESIGNER-WORK-202606"
+    },
+    {
+      "id": "DES-STYLE-ISO-READ-001",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "PASS",
+      "completed": "2026-06-20",
+      "witness": "src/dev/design_style_iso_read_v1.md",
+      "program": "PLAN-DESIGNER-WORK-202606"
+    },
+    {
+      "id": "DES-STYLE-PACK-REGISTRY-001",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "PASS",
+      "completed": "2026-06-20",
+      "witness": "src/dev/design_style_pack_registry_v1.md",
+      "program": "PLAN-DESIGNER-WORK-202606"
+    },
+    {
+      "id": "DES-CONCEPT-WORKFLOW-001",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "PASS",
+      "completed": "2026-06-20",
+      "witness": "src/dev/design_concept_workflow_v1.md",
+      "program": "PLAN-DESIGNER-WORK-202606"
+    },
+    {
+      "id": "DES-CONCEPT-THUMBNAIL-001",
+      "agent": "designer",
+      "status": "open",
+      "signoff": "PENDING",
+      "completed": "2026-06-20",
+      "witness": "src/dev/design_concept_thumbnail_v1.md",
+      "program": "PLAN-DESIGNER-WORK-202606",
+      "intel_officer_note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 stub_marker:placeholder",
+      "reopened_at": "2026-06-20"
+    },
+    {
+      "id": "DES-ECOLOGY-PREVIEW-V2-001",
+      "agent": "designer",
+      "status": "open",
+      "signoff": "PENDING",
+      "completed": "2026-06-20",
+      "witness": "src/dev/design_ecology_preview_v2.md",
+      "program": "PLAN-DESIGNER-WORK-202606",
+      "intel_officer_note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 stub_marker:todo",
+      "reopened_at": "2026-06-20"
+    },
+    {
+      "id": "DES-BUILD-READ-HUD-002",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "PASS",
+      "completed": "2026-06-20",
+      "witness": "src/dev/design_build_read_hud_v2.md",
+      "program": "PLAN-DESIGNER-WORK-202606"
+    },
+    {
+      "id": "DES-G-PLAY-OPERATOR-V2-001",
+      "agent": "designer",
+      "status": "open",
+      "signoff": "PENDING",
+      "completed": "2026-06-20",
+      "witness": "src/dev/design_g_play_operator_v2.md",
+      "program": "PLAN-DESIGNER-WORK-202606",
+      "intel_officer_note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 stub_marker:todo",
+      "reopened_at": "2026-06-20"
+    },
+    {
+      "id": "DES-S7B-INTEL-MINIMAP-001",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "PASS",
+      "completed": "2026-06-20",
+      "witness": "src/dev/design_s7b_intel_minimap_v1.md",
+      "program": "PLAN-DESIGNER-WORK-202606"
+    },
+    {
+      "id": "DES-SIM-HUD-A11Y-001",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "PASS",
+      "completed": "2026-06-20",
+      "witness": "src/dev/design_sim_hud_a11y_v1.md",
+      "program": "PLAN-SIM-HUD-PROFESSIONAL-POLISH-001"
+    },
+    {
+      "id": "DES-SIM-HUD-ESC-CASCADE-001",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "PASS",
+      "completed": "2026-06-20",
+      "witness": "src/dev/design_sim_hud_esc_cascade_v1.md",
+      "program": "PLAN-SIM-HUD-PROFESSIONAL-POLISH-001"
+    },
+    {
+      "id": "DES-APS-CHAIN-BROWSER-001",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "PASS",
+      "completed": "2026-06-20",
+      "witness": "src/dev/design_aps_chain_browser_v1.md",
+      "program": "PLAN-INDUSTRIAL-FACILITY-GRAMMAR-001",
+      "unblocks": [
+        "CMCP-CHAIN-PILOT-GENERATE-001"
+      ]
+    },
+    {
+      "id": "DES-POWER-ISLAND-UX-001",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "PASS",
+      "completed": "2026-06-20",
+      "witness": "src/dev/design_power_island_ux_v1.md",
+      "program": "PLAN-POWER-GRID-CONSTRUCTION-UX-001"
+    },
+    {
+      "id": "DES-INDUSTRIAL-RESEARCH-002",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "PASS",
+      "completed": "2026-06-20",
+      "witness": "src/dev/design_industrial_research_aluminum_v2.md",
+      "program": "PLAN-INDUSTRIAL-FACILITY-GRAMMAR-001"
+    },
+    {
+      "id": "DES-INDUSTRIAL-RESEARCH-003",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "PASS",
+      "completed": "2026-06-20",
+      "witness": "src/dev/design_industrial_research_utility_v2.md",
+      "program": "PLAN-INDUSTRIAL-FACILITY-GRAMMAR-001"
+    },
+    {
+      "id": "DES-UTILITY-GRAMMAR-001",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "PASS",
+      "completed": "2026-06-20",
+      "witness": "src/dev/design_utility_grammar_v1.md",
+      "program": "PLAN-INDUSTRIAL-FACILITY-GRAMMAR-001"
+    },
+    {
+      "id": "DES-LOGISTICS-SITE-001",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "PASS",
+      "completed": "2026-06-20",
+      "witness": "src/dev/design_logistics_site_v1.md",
+      "program": "PLAN-INDUSTRIAL-FACILITY-GRAMMAR-001"
     }
   ]
 }

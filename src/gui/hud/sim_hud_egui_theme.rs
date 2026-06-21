@@ -15,6 +15,23 @@ pub fn sim_hud_egui_theme_enforcement_wired() -> bool {
     true
 }
 
+/// **DES-SIM-HUD-A11Y-001** — validity copy uses ✓/✗ glyphs (not color-only).
+#[must_use]
+pub fn sim_hud_a11y_invalid_label(reason: &str) -> String {
+    format!("Blocked ✗ · {reason}")
+}
+
+#[must_use]
+pub fn sim_hud_a11y_valid_label() -> &'static str {
+    "Valid ✓"
+}
+
+#[must_use]
+pub fn sim_hud_a11y_witness_green() -> bool {
+    sim_hud_a11y_invalid_label("terrain").contains("Blocked")
+        && sim_hud_a11y_valid_label().contains('✓')
+}
+
 #[must_use]
 pub fn picker_sheet_frame(palette: &UiPalette) -> egui::Frame {
     egui::Frame::new()

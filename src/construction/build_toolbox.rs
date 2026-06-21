@@ -3,7 +3,6 @@
 use bevy::prelude::*;
 use bevy_egui::egui;
 
-use crate::engine::states::BaseState;
 use crate::gui::InputBindings;
 use crate::gui::hud::{
     capture_shell_layout, draw_shell_window_chrome, floating_unanchored_default_pos,
@@ -13,7 +12,6 @@ use crate::gui::hud::{
 use crate::gui::std_floating;
 
 use super::build_state::{BuildGhostState, BuildPlacementPreview};
-use super::build_strip::{BuildStripState, ToolContext};
 use super::build_tool_authority::{
     ActiveBuildTool, BuildTool, RailType, RoadType, ZoneTool,
 };

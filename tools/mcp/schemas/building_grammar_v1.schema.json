@@ -112,7 +112,16 @@
       "properties": {
         "id": {
           "type": "string",
-          "enum": ["long_hall", "double_hall", "l_shape", "yard_complex"]
+          "enum": [
+            "long_hall",
+            "double_hall",
+            "l_shape",
+            "yard_complex",
+            "stepped_block",
+            "corner_anchored",
+            "row_infill",
+            "plaza_setback"
+          ]
         },
         "weight": { "type": "integer", "minimum": 1, "maximum": 100 },
         "width_depth_ratio": {

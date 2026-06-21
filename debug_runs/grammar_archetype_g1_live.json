@@ -1,11 +1,12 @@
 {
-  "archetype_count": 3,
+  "archetype_count": 4,
   "archetype_ids": [
+    "CivicBlock",
     "FactoryCluster",
     "IndustrialWarehouse",
     "RailEdge"
   ],
-  "ron_files_added": 2,
+  "ron_files_added": 3,
   "json_mirrors_added": 2,
   "validate_arch_build_grammar": "pass"
 }

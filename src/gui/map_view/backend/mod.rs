@@ -103,7 +103,7 @@ pub fn resolve_minimap_texture_source(
             MapTextureSource::GpuRenderTarget(registry.committed_image.clone())
         }
         MinimapPresentationSource::SharedRenderTargetImage | MinimapPresentationSource::SharedCpuRaster => {
-            MapTextureSource::SharedCpuRaster(minimap_cpu_raster_handle(fallback))
+            resolve_minimap_effects_cpu_raster_source(fallback)
         }
     }
 }

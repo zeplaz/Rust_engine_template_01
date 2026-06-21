@@ -50,6 +50,16 @@ Full list: [`MICRO_TOOLS_REGISTRY_v1.md`](MICRO_TOOLS_REGISTRY_v1.md). Agents mu
 | `write_witness` | `debug_runs/art_pipeline/<batch>_live.json` |
 | `micro_tool_help` | CLI command list (same code path) |
 
+## Schema form — the signature book (token lever)
+
+Tool **schemas injected per request are ~96% of the always-on token budget**; publishing them as a
+one-line **signature book** cuts that **−92% at 100% callability** (CB-notation research report,
+`§13 / W1`). Form + the **SACRED exact-name rule** (never strip the tool name → 12% callable) live in
+[`MICRO_TOOLS_REGISTRY_v1.md` §Schema form](MICRO_TOOLS_REGISTRY_v1.md). Encode tool **results** as
+`●◐○` vectors (−73% vs JSON) and deep diagnoses as `HYP/EV/INFER + ρ`
+(`$ref:prompts/SYMBOLIC_LANGUAGE.meta.md §3.12`). The −92% is realised **server-side** (the MCP
+server emits the book); gate on **callability ≥95%**, reported separately from token-Δ.
+
 ## Layout
 
 See repo `tools/mcp/` — schemas, blender scripts, python package, job status under `tools/mcp/jobs/`.

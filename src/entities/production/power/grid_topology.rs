@@ -8,8 +8,9 @@ use crate::entities::production::power::components::{
     ElectricalComponent, ElectricalGrid, PowerLineComponent, TransformerComponent,
 };
 use crate::entities::structure::components::Building;
+use crate::infrastructure::{UtilityConnection, UtilityNetworkKind};
 
-/// World-space radius for associating a load bus with a transformer or line segment (square metres, XZ plane).
+/// World-space radius for associating a connected load with a transformer host (XZ plane).
 #[derive(Resource, Clone, Copy, Debug)]
 pub struct GridConnectionRadiusSq(pub f32);
 
@@ -33,14 +34,20 @@ pub fn rebuild_electrical_grid_topology(
         (&Transform, &mut ElectricalGrid),
         Or<(With<TransformerComponent>, With<PowerLineComponent>)>,
     >,
-    buildings: Query<(Entity, &Transform), (With<Building>, With<ElectricalComponent>)>,
+    buildings: Query<
+        (Entity, &Transform, &UtilityConnection),
+        (With<Building>, With<ElectricalComponent>),
+    >,
 ) {
     let r2 = radius.0;
 
     for (host_tf, mut grid) in &mut hosts {
         grid.members.clear();
         let host_pos = host_tf.translation;
-        for (b_entity, b_tf) in buildings.iter() {
+        for (b_entity, b_tf, utility) in buildings.iter() {
+            if utility.kind != UtilityNetworkKind::Power || !utility.connected {
+                continue;
+            }
             if host_pos.distance_squared(b_tf.translation) <= r2 {
                 grid.members.insert(b_entity);
             }

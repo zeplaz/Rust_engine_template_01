@@ -313,7 +313,7 @@
         "A-V2"
       ],
       "completed": "2026-05-26",
-      "notes": "P0 parallel wave — READY for coder A-V2"
+      "notes": "P0 parallel wave \u2014 READY for coder A-V2"
     },
     {
       "id": "PLAN-CONSTRUCTION-PARAM-P3P4-001",
@@ -340,7 +340,7 @@
         "A-W4"
       ],
       "completed": "2026-05-26",
-      "notes": "P0 — smoke bridge exec for A-V3"
+      "notes": "P0 \u2014 smoke bridge exec for A-V3"
     },
     {
       "id": "WEATHER-SIM-PLAN-001",
@@ -348,7 +348,7 @@
       "plan_doc": "docs/archive/2026-06-src-dev/plans/weather_simulation_runbook_v2_plan_v1.md",
       "workboard": "docs/archive/2026-06-src-dev/plans/planner_parallel_workboard_v1.md",
       "completed": "2026-05-27",
-      "notes": "P1 SIGNED v1.0.0 (2026-05-27) — checkpoint met: wss_atmos_clipmap_001.green"
+      "notes": "P1 SIGNED v1.0.0 (2026-05-27) \u2014 checkpoint met: wss_atmos_clipmap_001.green"
     },
     {
       "id": "PLAN-WSS-SLAB-PR-2-EXEC-001",
@@ -359,7 +359,7 @@
         "WSS-SLAB-PR-2"
       ],
       "completed": "2026-05-27",
-      "notes": "P1 SIGNED v1.0.0 (2026-05-27) — checkpoint met: wss_chunk_slab_001.green + hydrate_wired"
+      "notes": "P1 SIGNED v1.0.0 (2026-05-27) \u2014 checkpoint met: wss_chunk_slab_001.green + hydrate_wired"
     },
     {
       "id": "PLAN-CONSTRUCTION-R4-EXEC-001",
@@ -424,7 +424,7 @@
       ],
       "acceptance": "wss_hydro_runtime_001.construction_hydro_coupling_wired=true; execute emits ConstructionComplete, preview emits zero",
       "completed": "2026-05-27",
-      "notes": "Event bus spec READY — B-H2"
+      "notes": "Event bus spec READY \u2014 B-H2"
     },
     {
       "id": "PLAN-WSS-SLAB-PR-3-EXEC-001",
@@ -445,7 +445,7 @@
       "plan_doc": "docs/archive/2026-06-src-dev/plans/plan_ledger_refresh_007_checklist_v1.md",
       "witness": "docs/archive/2026-06-fleet-drain/planner_audits/planner_status_audit_v9.md",
       "completed": "2026-05-27",
-      "notes": "Audit v9 SIGNED — post-drain fleet truth"
+      "notes": "Audit v9 SIGNED \u2014 post-drain fleet truth"
     },
     {
       "id": "PLAN-WSS-ACTIVE-CHUNK-001",
@@ -458,7 +458,7 @@
       ],
       "acceptance": "active_runtime_policy_wired=true and active_runtime_cap_respected; PR-3 criteria table wired",
       "completed": "2026-05-27",
-      "notes": "Hot-region policy READY — pairs PR-3 exec"
+      "notes": "Hot-region policy READY \u2014 pairs PR-3 exec"
     },
     {
       "id": "PLAN-HANABI-ADOPTION-001",
@@ -491,7 +491,7 @@
       "plan_doc": "docs/archive/2026-06-src-dev/plans/plan_ledger_refresh_008_checklist_v1.md",
       "witness": "docs/archive/2026-06-fleet-drain/planner_audits/planner_status_audit_v10.md",
       "completed": "2026-05-27",
-      "notes": "Audit v10 SIGNED — wave6_archive witness reconcile"
+      "notes": "Audit v10 SIGNED \u2014 wave6_archive witness reconcile"
     },
     {
       "id": "PLAN-ELEMENTAL-WAVE2-INDEX-001",
@@ -515,7 +515,7 @@
       ],
       "acceptance": "PR-4 persist_roundtrip_ok; PR-5 ecs_retire_fixture_green after drift window",
       "completed": "2026-05-27",
-      "notes": "READY — prereq PR-3 CLOSED on disk"
+      "notes": "READY \u2014 prereq PR-3 CLOSED on disk"
     },
     {
       "id": "PLAN-BQ128-APPLY-EXEC-001",
@@ -527,7 +527,7 @@
       ],
       "acceptance": "roundtrip_ok=true; apply_sets_ghost_without_commit; enter_commit_unchanged",
       "completed": "2026-05-27",
-      "notes": "READY — roundtrip green; apply ghost OPEN for coder"
+      "notes": "READY \u2014 roundtrip green; apply ghost OPEN for coder"
     },
     {
       "id": "PLAN-LEDGER-REFRESH-009",
@@ -535,7 +535,7 @@
       "plan_doc": "docs/archive/2026-06-src-dev/plans/plan_ledger_refresh_009_checklist_v1.md",
       "witness": "docs/archive/2026-06-fleet-drain/planner_audits/planner_status_audit_v12.md",
       "completed": "2026-05-27",
-      "notes": "Audit v12 SIGNED — wave 4 planner picks reconcile"
+      "notes": "Audit v12 SIGNED \u2014 wave 4 planner picks reconcile"
     },
     {
       "id": "PLAN-WSS-PR4-EXEC-001",
@@ -547,7 +547,7 @@
       ],
       "acceptance": "substrate_persist_roundtrip_ok; dynamic_overlay_migrated",
       "completed": "2026-05-27",
-      "notes": "PR4-1..3 exec READY — coder A primary"
+      "notes": "PR4-1..3 exec READY \u2014 coder A primary"
     },
     {
       "id": "PLAN-IND-E02-PLAY-EXEC-001",
@@ -559,7 +559,7 @@
       ],
       "acceptance": "ind_e02_green; default_play_writer; no seed_only_path",
       "completed": "2026-05-27",
-      "notes": "IND-E02-EX-1..3 exec READY — coder B primary"
+      "notes": "IND-E02-EX-1..3 exec READY \u2014 coder B primary"
     },
     {
       "id": "PLAN-LEDGER-REFRESH-010",
@@ -567,7 +567,7 @@
       "plan_doc": "docs/archive/2026-06-fleet-drain/planner_audits/plan_ledger_refresh_010_checklist_v1.md",
       "witness": "docs/archive/2026-06-fleet-drain/planner_audits/planner_status_audit_v14.md",
       "completed": "2026-05-27",
-      "notes": "Audit v14 SIGNED — full coder-return reconcile"
+      "notes": "Audit v14 SIGNED \u2014 full coder-return reconcile"
     },
     {
       "id": "PLAN-WSS-PR5-SMOKE-PROD-001",
@@ -579,7 +579,7 @@
       ],
       "acceptance": "hybrid_ecs_smoke_authoritative false; ecs_retire_smoke_prod_green",
       "completed": "2026-05-27",
-      "notes": "PR5-SM-1..3 exec READY — live sim cutover"
+      "notes": "PR5-SM-1..3 exec READY \u2014 live sim cutover"
     },
     {
       "id": "PLAN-HANABI-H-A2-EXEC-001",
@@ -591,7 +591,7 @@
       ],
       "acceptance": "hanabi_spike_report_present; hanabi_l3 feature only",
       "completed": "2026-05-27",
-      "notes": "H-A2-1..3 exec READY — no default EnginePlugin Hanabi"
+      "notes": "H-A2-1..3 exec READY \u2014 no default EnginePlugin Hanabi"
     },
     {
       "id": "PLAN-STAGE7-M3-STEWARD-001",
@@ -603,7 +603,7 @@
       ],
       "acceptance": "s7b_m3_green=true and s7b_steward_green=true on disk after Simulation proof write",
       "completed": "2026-05-27",
-      "notes": "READY for @coder B P1 — disk regression 2026-05-27"
+      "notes": "READY for @coder B P1 \u2014 disk regression 2026-05-27"
     },
     {
       "id": "PLAN-CONSTRUCTION-R4-PRODUCT-OPEN-001",
@@ -613,7 +613,7 @@
       "unblocks": [],
       "acceptance": "product_board_open policy documented; board OPEN on disk with R4 witnesses green",
       "completed": "2026-05-27",
-      "notes": "SIGNED policy — optional; no new R4 impl until product names scope"
+      "notes": "SIGNED policy \u2014 optional; no new R4 impl until product names scope"
     },
     {
       "id": "PLAN-CONSTRUCTION-STAGE-PIPELINE-002",
@@ -627,7 +627,7 @@
       ],
       "acceptance": "CON-P2-001..003; SiteConstructionPhase only; no parallel ConstructionStage",
       "completed": "2026-06-02",
-      "notes": "Phase 2 exec — primary coder pull now"
+      "notes": "Phase 2 exec \u2014 primary coder pull now"
     },
     {
       "id": "PLAN-PROC-BUILD-EXEC-001",
@@ -702,7 +702,7 @@
       ],
       "acceptance": "G-TOWN-ONE; TownBook/DistrictBook/BlockBook; SET-P5 PR train",
       "completed": "2026-06-02",
-      "notes": "SET-P5-003 witness unblocked — CON-P2 green on disk"
+      "notes": "SET-P5-003 witness unblocked \u2014 CON-P2 green on disk"
     },
     {
       "id": "PLAN-CONSTRUCTION-SCALING-AUDIT-003",
@@ -716,7 +716,7 @@
         "CON-P3-S3",
         "CON-P3-WIT"
       ],
-      "acceptance": "S1–S6 matrix; B-half done; A-half + witness refresh open",
+      "acceptance": "S1\u2013S6 matrix; B-half done; A-half + witness refresh open",
       "completed": "2026-06-02",
       "witness_prereq": "construction_site_stage_pipeline_001.green true on disk"
     },
@@ -748,7 +748,7 @@
       "id": "PLAN-ORG-GROWTH-EXEC-002",
       "status": "done",
       "signoff": "SUPERSEDED",
-      "notes": "Organic save/approve/policy on disk — thin exec doc optional; coders closed",
+      "notes": "Organic save/approve/policy on disk \u2014 thin exec doc optional; coders closed",
       "completed": "2026-06-03"
     },
     {
@@ -812,7 +812,7 @@
       "status": "done",
       "signoff": "SIGNED",
       "deliverable": "src/dev/plan_territory_matrix_002_v1.md",
-      "notes": "File prefix → program chain → agent; §3 hotspot merge rules",
+      "notes": "File prefix \u2192 program chain \u2192 agent; \u00a73 hotspot merge rules",
       "completed": "2026-06-07"
     },
     {
@@ -889,7 +889,7 @@
       "status": "done",
       "signoff": "SIGNED",
       "deliverable": "src/dev/plan_veg_runtime_proof_001_v1.md",
-      "note": "Plan closed 2026-06-17 — witness WIT-HON fix is CDR-A-WIT-HON-ROLLUP-001 not plan reopen",
+      "note": "Plan closed 2026-06-17 \u2014 witness WIT-HON fix is CDR-A-WIT-HON-ROLLUP-001 not plan reopen",
       "witness_reopen": "debug_runs/veg_runtime_proof_live.json",
       "unblocks": [
         "VEG-HARD-FULLAPP-001",
@@ -903,7 +903,7 @@
       "status": "done",
       "signoff": "SIGNED",
       "deliverable": "src/dev/plan_g_play_split_v1.md",
-      "note": "Rollup model closed — G-PLAY-OPERATOR-01 sole open gate",
+      "note": "Rollup model closed \u2014 G-PLAY-OPERATOR-01 sole open gate",
       "completed": "2026-06-14"
     },
     {
@@ -934,14 +934,16 @@
   "active": [
     {
       "id": "PLAN-MAP-ZOOM-SMOOTH-001",
-      "status": "done",
+      "status": "blocked",
       "priority": 1,
       "lane": "A1",
       "deliverable": "src/dev/plan_map_zoom_smooth_exec_001_v1.md",
       "unblocks": [
         "TRIAGE-MAP-ZOOM-SMOOTH-001"
       ],
-      "completed": "2026-06-14"
+      "completed": "2026-06-14",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
+      "updated_at": "2026-06-20T21:19:25Z"
     },
     {
       "id": "PLAN-AUDIT-020",
@@ -950,7 +952,7 @@
       "lane": "A2",
       "defer_registry": "PLAN-AUDIT-020",
       "unblock_when": "G-PLAY-OPERATOR-01 executed",
-      "snag": "operator human checklist only — coder sub-gates mostly green",
+      "snag": "operator human checklist only \u2014 coder sub-gates mostly green",
       "docs": [
         "src/dev/plan_g_play_split_v1.md"
       ]
@@ -981,7 +983,7 @@
       "APS-ATLAS-PREVIEW-002",
       "APS-UX-TOOLTIPS-002"
     ],
-    "agent_ritual": "token_savings_guide → pipeline_preflight → agent_queue_next; touch: snapshot_digest | validate_p0_gate_plain | witness_brief",
+    "agent_ritual": "token_savings_guide \u2192 pipeline_preflight \u2192 agent_queue_next; touch: snapshot_digest | validate_p0_gate_plain | witness_brief",
     "do_not_add": [
       "postgres_telemetry",
       "llm_validators",
@@ -1018,7 +1020,7 @@
     "phase_id": "UNIFIED-PATH-2026-06",
     "unified_path": "docs/archive/2026-06-src-dev/plans/planner_unified_path_20260603_v1.md",
     "alignment_hub": "src/dev/planner_program_alignment_v1.md",
-    "primary_theme": "Phase 6 veg runtime proof — G-PLAY rollup open on G-PLAY-OPERATOR-01 + G-PLAY-CODER-VEG",
+    "primary_theme": "Phase 6 veg runtime proof \u2014 G-PLAY rollup open on G-PLAY-OPERATOR-01 + G-PLAY-CODER-VEG",
     "secondary_theme": "MCP P0 briefs + APS Tk 2-4 (coder-mcp parallel)",
     "rule": "Planner Lane A does not block on MCP P0; coder-mcp P0 does not block Rust coders"
   },

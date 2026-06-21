@@ -1,0 +1,45 @@
+{
+  "gate": "DES-STYLE-LANDSCAPE-RIparian-001",
+  "deliverable": "src/dev/design_style_landscape_riparian_v1.md",
+  "deliverable_exists": true,
+  "status": "done",
+  "verdict": "PASS",
+  "checks": {
+    "doc_on_disk": true,
+    "gate_id": true,
+    "preset_ref": true,
+    "chart_ref": true,
+    "canopy_mass_section": true,
+    "edge_softness_section": true,
+    "burn_read_section": true,
+    "palette_section": true,
+    "burn_cross_ref": true,
+    "three_concept_refs": true,
+    "preset_on_disk": true,
+    "dna_example_on_disk": true,
+    "preset_id_match": true,
+    "topologies_in_preset": true
+  },
+  "preset_id": "agri_riparian_v0",
+  "required_topologies": [
+    "CORRIDOR_RIPARIAN",
+    "RING_SHELTERBELT",
+    "PATCH_IRREGULAR",
+    "FRINGE_EDGE"
+  ],
+  "audit_complete": true,
+  "green": true,
+  "handoff": {
+    "coder_mcp": "VEG-DISTRICT-HYDRO-001 \u00b7 LG-5 corridor atlas rows",
+    "designer_mcp": "G4 topology_corridor_regrowth_grass manual still"
+  },
+  "_agent_meta": {
+    "schema": "dmcp_style_landscape_riparian_live_v1",
+    "written_at_epoch_secs": 1781982373,
+    "profile": "DES_STYLE_LANDSCAPE_RIPARIAN",
+    "source_system": "dmcp_style_landscape_riparian",
+    "relative_path": "debug_runs/art_pipeline/dmcp_style_landscape_riparian_live.json",
+    "ritual": "BLANG:WIT-HON\u2192Q\u2713 DES-STYLE-LANDSCAPE-RIparian-001",
+    "agent": "designer-mcp"
+  }
+}

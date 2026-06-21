@@ -1,0 +1,93 @@
+{
+  "_agent_meta": {
+    "schema": "debug_run_envelope_v1",
+    "written_at_epoch_secs": 1781756524,
+    "profile": "CYCLIC-GRANFINA-DASHBOARD-001",
+    "source_system": "cyclic_granfina_dashboard",
+    "relative_path": "debug_runs/cyclic_granfina_dashboard_live.json",
+    "logging_env": {
+      "RUST_LOG": null,
+      "PERF": false,
+      "STAGE5_VERBOSE": false,
+      "STAGE5_READINESS_VERBOSE": false,
+      "SIM_VIEW_SYNC_DEBUG": false,
+      "VIEWPORT_AUTHORITY_DEBUG": false,
+      "ORCHESTRATOR_EXPORT_HEALTH": false
+    },
+    "agent_commands": [
+      "cargo test -p proc_A_dine01 --lib cyclic_granfina_dashboard"
+    ],
+    "related_proofs": [
+      "debug_runs/stage5_full_app_live.json",
+      "debug_runs/infrastructure_view_isolation_live.json",
+      "debug_runs/vt5_flicker_triage_live.json",
+      "debug_runs/triage_vm09_v2_live.json"
+    ],
+    "orchestrator": {
+      "build_report": "tools/orchestrator/reports/build_report.md",
+      "warning_registry": "tools/orchestrator/reports/warning_registry.md",
+      "continuation_queue": "tools/orchestrator/queues/continuation_queue.json",
+      "ci_entry": "tools/orchestrator/ci/run.ps1"
+    },
+    "docs": {
+      "stage5_directive": "prompts/guides/stage5_convergence_directive_v1.md",
+      "compile_warnings": "src/dev/COMPILE_WARNINGS_TODOS.md",
+      "viewport_recovery": "src/dev/recovery_viewport.md"
+    }
+  },
+  "config": {
+    "api_key": "granfina_api_key_2026",
+    "hash_lock": "granfina_hash_lock_2026",
+    "dashboard_path": "debug_runs/cyclic_granfina_dashboard_live.json",
+    "ignore_dcc_status": true,
+    "process_driven": true
+  },
+  "cycle": 1,
+  "entries": [
+    {
+      "id": "BLOCKER-001",
+      "created_at": 1781756524,
+      "updated_at": 1781756524,
+      "status": "Open",
+      "priority": "High",
+      "description": "DCC component integration issue",
+      "dcc_components": ["DCC-COMPONENT-001", "DCC-COMPONENT-002"],
+      "ignore_dcc": true,
+      "previous_hash": "",
+      "current_hash": "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2",
+      "exit_code": null,
+      "locked": true
+    },
+    {
+      "id": "BLOCKER-002",
+      "created_at": 1781756525,
+      "updated_at": 1781756526,
+      "status": "InProgress",
+      "priority": "Medium",
+      "description": "Process-driven workflow issue",
+      "dcc_components": ["DCC-COMPONENT-003"],
+      "ignore_dcc": true,
+      "previous_hash": "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2",
+      "current_hash": "b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3",
+      "exit_code": 0,
+      "locked": true
+    },
+    {
+      "id": "BLOCKER-003",
+      "created_at": 1781756527,
+      "updated_at": 1781756528,
+      "status": "Resolved",
+      "priority": "Low",
+      "description": "Hash lock verification issue",
+      "dcc_components": ["DCC-COMPONENT-004"],
+      "ignore_dcc": true,
+      "previous_hash": "b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3",
+      "current_hash": "c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4",
+      "exit_code": 1,
+      "locked": true
+    }
+  ],
+  "current_hash": "d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5",
+  "previous_hash": "",
+  "last_updated": 1781756528
+}

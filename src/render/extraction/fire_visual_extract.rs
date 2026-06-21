@@ -20,7 +20,9 @@ use std::collections::HashMap;
 
 use crate::gui::{MapCameraSystemSet, ViewAuthoritySystemSet};
 use crate::render::{
-    attrib_fire_pipeline_after, attrib_fire_pipeline_before,
+    attrib_fire_build_view_after, attrib_fire_build_view_before, attrib_fire_particles_after,
+    attrib_fire_particles_before, attrib_fire_pipeline_after, attrib_fire_pipeline_before,
+    attrib_fire_project_after, attrib_fire_project_before,
     build_fire_visual_frames_by_view, sync_active_fire_chunk_set, sync_fire_chunk_lod_from_snapshot,
     sync_visible_fire_chunks_from_views, tactical_fire_visual, ActiveFireChunkSet, ChunkCoord, FireChunk,
     FireChunkLodState, FireChunkRuntime, FireSimulationSnapshot, FireVisualFramesByView,
@@ -119,6 +121,7 @@ impl Plugin for FireVisualFramePlugin {
             .init_resource::<SmokeVisualBridgeWitness>()
             .init_resource::<crate::render::FireExtractCadence>()
             .init_resource::<crate::render::FireExtractClock>()
+            .init_resource::<crate::render::FireExtractDiagnostics>()
             .configure_sets(Update, crate::render::fire_streaming::FireStreamingSleepWakeSet)
             .configure_sets(
                 Update,
@@ -154,10 +157,17 @@ impl Plugin for FireVisualFramePlugin {
                     sync_shared_overlay_from_simulation.after(extract_fire_simulation_snapshot),
                     sync_visible_fire_chunks_from_views.after(extract_fire_simulation_snapshot),
                     sync_fire_chunk_lod_from_snapshot.after(extract_fire_simulation_snapshot),
-                    build_fire_visual_frames_by_view
+                    // PERF-INSTR-VFX-001: bracket the per-view extract/LOD rebuild → `fire_build_view`.
+                    attrib_fire_build_view_before
                         .after(sync_active_fire_chunk_set)
                         .after(sync_visible_fire_chunks_from_views)
                         .after(sync_fire_chunk_lod_from_snapshot),
+                    build_fire_visual_frames_by_view
+                        .after(attrib_fire_build_view_before)
+                        .after(sync_active_fire_chunk_set)
+                        .after(sync_visible_fire_chunks_from_views)
+                        .after(sync_fire_chunk_lod_from_snapshot),
+                    attrib_fire_build_view_after.after(build_fire_visual_frames_by_view),
                     sync_sim_fire_emitter_visual_from_frame.after(build_fire_visual_frames_by_view),
                     sync_atmosphere_diag_fire_instance_count.after(sync_sim_fire_emitter_visual_from_frame),
                     commit_fire_visual_snapshot.after(sync_atmosphere_diag_fire_instance_count),
@@ -189,13 +199,23 @@ impl Plugin for FireVisualFramePlugin {
             )
             .add_systems(
                 Update,
-                run_render_projection_graph.in_set(FireVisualFrameSet::ProjectGpu),
+                (
+                    // PERF-INSTR-VFX-001: bracket the fire-node CPU projection → `fire_project`.
+                    attrib_fire_project_before,
+                    run_render_projection_graph,
+                    attrib_fire_project_after,
+                )
+                    .chain()
+                    .in_set(FireVisualFrameSet::ProjectGpu),
             )
             .add_systems(
                 Update,
                 (
+                    // PERF-INSTR-VFX-001: bracket the WorldFireParticleFrame build → `fire_particles`.
+                    attrib_fire_particles_before,
                     crate::render::gpu_particles::sync_fire_particle_camera_scale,
                     emit_world_fire_particles_from_projection,
+                    attrib_fire_particles_after,
                 )
                     .chain()
                     .in_set(FireVisualFrameSet::EmitParticles),
@@ -253,6 +273,7 @@ pub fn sync_shared_overlay_from_simulation(
     profile: Res<crate::render::Stage5ReadinessProfile>,
     mut fire_playback: ResMut<crate::render::FirePlaybackStabilityWitness>,
 ) {
+    let _perf = crate::render::PerfScope::new("upd_fire_sync_overlay");
     shared.stamp = sim.stamp;
     let residency = residency.as_deref();
     let mut next = build_chunk_fire_heat_overlay_map(&sim, residency);
@@ -327,6 +348,7 @@ pub fn extract_fire_simulation_snapshot(
     time: Res<Time>,
     cadence: Res<crate::render::FireExtractCadence>,
     mut clock: ResMut<crate::render::FireExtractClock>,
+    mut extract_diag: ResMut<crate::render::FireExtractDiagnostics>,
     mut sim: ResMut<FireSimulationSnapshot>,
     mut runtime: ResMut<FireChunkRuntime>,
     ecs_retire: Option<Res<crate::substrate::EcsRetireState>>,
@@ -346,28 +368,44 @@ pub fn extract_fire_simulation_snapshot(
         Option<&MaterializedChunk>,
     )>,
 ) {
+    let extract_started = std::time::Instant::now();
+    let mut report = crate::render::FireExtractFrameReport {
+        min_interval_secs: cadence.min_interval_secs,
+        ..Default::default()
+    };
+    // PERF-INSTR-VFX-001: name the fire-sim ECS snapshot scan separately from the per-view rebuild
+    // (`fire_build_view`) so an idle frame where this scan is the cost lands on a named line.
+    let _perf = crate::render::PerfScope::new("upd_fire_sim_snapshot");
     let stamp = crate::systems::sim_control::SimStepStamp::from_tick(*tick, *sim_time);
     sim.stamp = stamp;
 
     let now = time.elapsed_secs();
     let tick_changed = clock.last_tick != tick.0;
+    report.tick_changed = tick_changed;
     let interval_elapsed =
         (now - clock.last_full_extract_secs).max(0.0) >= cadence.min_interval_secs;
-    let cadence_due = if cadence.full_scan_on_sim_tick {
+    report.interval_elapsed = interval_elapsed;
+    let spike_active = spike_guard.as_deref().is_some_and(|g| g.spike_active);
+    report.spike_active = spike_active;
+    // Under frame spike, never run full-world ECS scan every sim tick — that locks ~200ms+ and
+    // prevents raster/minimap from catching up (death spiral at ~1.5 FPS).
+    let cadence_due = if spike_active {
+        interval_elapsed
+    } else if cadence.full_scan_on_sim_tick {
         tick_changed || interval_elapsed
     } else {
         interval_elapsed
     };
+    report.cadence_due = cadence_due;
     if !cadence_due {
-        return;
-    }
-    // Spike tightens cadence: interval-only refresh deferred; sim tick still runs extract.
-    let spike_active = spike_guard.as_deref().is_some_and(|g| g.spike_active);
-    if spike_active && !tick_changed {
+        report.cadence_skipped = true;
+        report.extract_ms = extract_started.elapsed().as_secs_f32() * 1000.0;
+        extract_diag.last = report;
         return;
     }
     clock.last_tick = tick.0;
     clock.last_full_extract_secs = now;
+    report.ran_full_scan = true;
 
     sim.instances.clear();
     sim.chunk_heat.clear();
@@ -378,6 +416,7 @@ pub fn extract_fire_simulation_snapshot(
     let residency_table = residency.as_ref();
     let scope_residency = cadence.residency_scoped
         && residency_table.is_some_and(|t| !t.entries.is_empty());
+    report.residency_scoped = scope_residency;
 
     let slab_fire_extract = ecs_retire
         .as_ref()
@@ -385,6 +424,7 @@ pub fn extract_fire_simulation_snapshot(
         && substrate.is_some();
 
     for (chunk, matrix, overlay, fire, em, smoke, prof, eco, wx, mat_chunk) in &q {
+        report.chunks_iterated = report.chunks_iterated.saturating_add(1);
         let coord = chunk.coord;
         if scope_residency {
             let in_residency = residency_table
@@ -403,6 +443,35 @@ pub fn extract_fire_simulation_snapshot(
         } else {
             None
         };
+        let mut quick_heat = fire.heat.max(slab_heat.unwrap_or(0.0));
+        if let Some(ovl) = overlay {
+            if !ovl.heat.is_empty() {
+                quick_heat = quick_heat.max(ovl.heat.iter().copied().fold(0.0_f32, f32::max));
+            }
+        }
+        let was_warm = prev
+            .get(&coord)
+            .is_some_and(|p| p.visual_active || p.active);
+        if quick_heat <= FIRE_SIM_CHUNK_ACTIVE_EPS && !was_warm {
+            report.chunks_fast_path = report.chunks_fast_path.saturating_add(1);
+            runtime.chunks.insert(
+                coord,
+                FireChunk {
+                    coord,
+                    active: false,
+                    visual_active: false,
+                    heat_sum: quick_heat,
+                    max_heat: quick_heat,
+                    last_active_tick: prev
+                        .get(&coord)
+                        .map(|p| p.last_active_tick)
+                        .unwrap_or(0),
+                    dirty: false,
+                },
+            );
+            continue;
+        }
+        report.chunks_profiled = report.chunks_profiled.saturating_add(1);
         let profile = infer_fire_emission_profile(
             chunk,
             fire,
@@ -417,12 +486,14 @@ pub fn extract_fire_simulation_snapshot(
             slab_heat,
         );
         sim.instances.push(FireVisualGpuInstance::from(&profile));
+        report.instances_written = report.instances_written.saturating_add(1);
         let coord = profile.chunk_coord;
         sim.chunk_heat.push(ChunkFireHeat {
             chunk: coord,
             heat: profile.heat,
             smoke: profile.smoke_density,
         });
+        report.chunk_heat_written = report.chunk_heat_written.saturating_add(1);
 
         let visual_active = profile.heat > FIRE_VISUAL_ACTIVE_HEAT_EPS;
         let active = profile.heat > FIRE_SIM_CHUNK_ACTIVE_EPS;
@@ -528,6 +599,10 @@ pub fn extract_fire_simulation_snapshot(
             }
         }
     }
+
+    report.runtime_chunks = runtime.chunks.len().min(u32::MAX as usize) as u32;
+    report.extract_ms = extract_started.elapsed().as_secs_f32() * 1000.0;
+    extract_diag.last = report;
 }
 
 fn build_fire_clusters_into_scratch(

@@ -53,7 +53,7 @@
     "relative_path": "debug_runs/stage7_behavioral_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "stage7_behavioral_witness",
-    "written_at_epoch_secs": 1781756524
+    "written_at_epoch_secs": 1781978469
   },
   "behavioral_contract_ok": true,
   "communication_plane_v1": "StrategicCommand",

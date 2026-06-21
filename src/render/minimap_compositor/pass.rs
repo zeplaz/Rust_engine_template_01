@@ -5,7 +5,10 @@ use bevy::ecs::system::SystemParam;
 use bevy::math::UVec2;
 use bevy::prelude::*;
 
-use crate::gui::{MapViewInstances, MinimapPresentationSource, MinimapShellState};
+use crate::gui::{
+    resolve_minimap_texture_source, MapTextureSource, MapViewInstances,
+    MinimapPresentationSource, MinimapShellState,
+};
 use crate::construction::site_phase_tile_instances::ConstructionPhaseGpuChannel;
 use crate::render::{
     EcologyVisualSnapshot, LogisticsVisualSnapshot, MinimapOperationalSnapshot, ResolvedViewports,
@@ -279,10 +282,11 @@ pub fn run_minimap_compositor_pass(
     }
     *cadence = 0.0;
 
-    let terrain = if fallback.minimap_image != Handle::default() {
-        fallback.minimap_image.clone()
-    } else {
-        fallback.image.clone()
+    // Match tile fallback raster authority: GPU HUD path paints `fallback.image` only;
+    // `minimap_image` is the effects-lane CPU raster (see `tile_fallback_cpu_minimap_raster_needed`).
+    let terrain = match resolve_minimap_texture_source(&shell, &fallback, &registry) {
+        MapTextureSource::GpuRenderTarget(_) => fallback.image.clone(),
+        MapTextureSource::SharedCpuRaster(handle) => handle,
     };
     if terrain == Handle::default() {
         dispatch.commit_stamp = 0;

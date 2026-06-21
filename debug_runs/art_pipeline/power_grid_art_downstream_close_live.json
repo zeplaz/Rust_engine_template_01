@@ -1,0 +1,57 @@
+{
+  "gate": "PWR-ART-DOWNSTREAM-CLOSE-001",
+  "program_id": "PLAN-POWER-GRID-ART-ASSETS-001",
+  "green": true,
+  "child_witnesses": {
+    "debug_runs/art_pipeline/mcp_pwr_utility_manifest_live.json": true,
+    "debug_runs/art_pipeline/mcp_pwr_substation_batch_live.json": true,
+    "debug_runs/art_pipeline/mcp_pwr_transformer_batch_live.json": true,
+    "debug_runs/art_pipeline/mcp_pwr_substation_promote_live.json": true,
+    "debug_runs/art_pipeline/mcp_pwr_transformer_promote_live.json": true,
+    "debug_runs/art_pipeline/dmcp_qc_substation_live.json": true,
+    "debug_runs/art_pipeline/dmcp_qc_transformer_live.json": true,
+    "debug_runs/art_pipeline/dmcp_nuclear_pwr_spec_live.json": true,
+    "debug_runs/sim_hud_power_icons_live.json": true
+  },
+  "power_utility_art": {
+    "gate": "PLAN-POWER-GRID-ART-ASSETS-001",
+    "substation_catalog": "grid_substation",
+    "transformer_catalog": "grid_distribution_transformer",
+    "substation_glb": "assets/models/modules/kit_substation_yard_production_run001/model.glb",
+    "transformer_glb": "assets/models/modules/prop_transformer_production_run001/model.glb",
+    "utility_glb_paths_set": true,
+    "green": true
+  },
+  "rows_closed": [
+    "MCP-PWR-UTILITY-MANIFEST-001",
+    "MCP-PWR-SUBSTATION-BATCH-001",
+    "MCP-PWR-TRANSFORMER-BATCH-001",
+    "MCP-PWR-PROMOTE-SUBSTATION-001",
+    "MCP-PWR-PROMOTE-TRANSFORMER-001",
+    "DMCP-SPEC-NUCLEAR-PWR-001",
+    "COD-ART-HUD-ICON-ATLAS-001"
+  ],
+  "human_gates_pending": [],
+  "exit_predicate": {
+    "mcp_promote_chain_green": {
+      "eq": true
+    },
+    "nuclear_spec_green": {
+      "eq": true
+    },
+    "hud_atlas_green": {
+      "eq": true
+    },
+    "utility_glb_paths_set": {
+      "eq": true
+    }
+  },
+  "_agent_meta": {
+    "schema": "power_grid_art_downstream_close_live_v1",
+    "written_at_epoch_secs": 1781968440,
+    "profile": "PWR_ART_DOWNSTREAM_CLOSE",
+    "source_system": "mcp_pwr_utility",
+    "relative_path": "debug_runs/art_pipeline/power_grid_art_downstream_close_live.json",
+    "wit_hon": "validate-report witness_honesty debug_runs/art_pipeline/power_grid_art_downstream_close_live.json --compress 3"
+  }
+}

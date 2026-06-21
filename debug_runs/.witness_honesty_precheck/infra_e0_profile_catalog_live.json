@@ -52,7 +52,7 @@
     "relative_path": "debug_runs/infra_e0_profile_catalog_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_infra_e0_profile_catalog_live_witness",
-    "written_at_epoch_secs": 1781756519
+    "written_at_epoch_secs": 1781978467
   },
   "gate": "INFRA-E0-003",
   "green": true,

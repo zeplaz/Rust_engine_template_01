@@ -97,7 +97,7 @@ Track G — Power grid construction   (@designer line UX → @coder draw/commit 
 |:---|:---|:---|:---|
 | **DMCP-LG5-EXPAND-BAKE-001** | @designer-mcp | Execute expanded matrix bake per [`design_landscape_lg5_expansion_matrix_v1.md`](design_landscape_lg5_expansion_matrix_v1.md) | **done** — Phase A Q✓ · Phase B G4 manual |
 | **DMCP-LG5-KEYFRAME-QC-001** | @designer-mcp | Keyframe still QC per [`design_landscape_keyframe_burn_reqs_v1.md`](design_landscape_keyframe_burn_reqs_v1.md) | **done** — teach tier PASS WITH NOTES · G4 corridor regrowth manual |
-| **DMCP-VEG-ATLAS-SHIP-001** | @designer-mcp | G4/G5 art-ship criteria sign-off when atlas registers | blocks engine LG-5 consumer |
+| **DMCP-VEG-ATLAS-SHIP-001** | @designer-mcp | G4/G5 art-ship criteria sign-off when atlas registers | **done** — criteria Q✓ · ship:false until G4 manual |
 
 ### B2 — Building tiles & modules
 
@@ -105,7 +105,7 @@ Track G — Power grid construction   (@designer line UX → @coder draw/commit 
 |:---|:---|:---|
 | **DMCP-TILE-ROWHOUSE-V2-001** | @designer-mcp | Rowhouse variant completeness — damage + burning frames operator-visible | **done** — 14 variants Q✓ |
 | **DMCP-MODULE-KIT002-001** | @designer-mcp | kit_production_002 concept + module manifest sketch (planner-mcp unfreeze) | **done** — concept Q✓ · G4 open |
-| **DMCP-ATLAS-QC-PLAIN-002** | @designer-mcp | Plain-language QC copy v2 for warehouse/shopfront/bunker batches |
+| **DMCP-ATLAS-QC-PLAIN-002** | @designer-mcp | Plain-language QC copy v2 for warehouse/shopfront/bunker batches | **done** — buildings copy v2 Q✓ |
 
 ### B3 — Materials library at scale
 
@@ -127,7 +127,7 @@ Track G — Power grid construction   (@designer line UX → @coder draw/commit 
 |:---|:---|:---|:---|
 | **DES-STYLE-INDUSTRIAL-WEST-001** | @designer | Style bible: massing, roof, door/window rhythm, palette, weathering — **concept sheet + 3 refs** | IndustrialWarehouse grammar · kit002 |
 | **DES-STYLE-VICTORIAN-ROW-001** | @designer | Style bible for rowhouse production v1 — bay rhythm, brick bands, night windows | tile_rowhouse_victorian |
-| **DES-STYLE-LANDSCAPE-RIparian-001** | @designer-mcp | Riparian/agri visual language — canopy mass, edge softness, burn read | landscape presets |
+| **DES-STYLE-LANDSCAPE-RIparian-001** | @designer-mcp | Riparian/agri visual language — canopy mass, edge softness, burn read | **done** — style bible Q✓ |
 | **DES-STYLE-ISO-READ-001** | @designer | Global iso readability rules — silhouette, roof legibility @ 64px, fire read @ operational zoom | all atlases |
 
 ### C2 — Grammar / archetype content (G1)

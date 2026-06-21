@@ -184,7 +184,11 @@ pub fn chunk_fire_overlay_tick(
                 ovl.heat[i] = nh;
 
                 let burn = nh * 0.012 * dt_e;
+                let fuel_before = ovl.fuel[i];
                 ovl.fuel[i] = (ovl.fuel[i] - burn).max(0.0);
+                if fuel_before >= MIN_CELL_FUEL_FOR_SPREAD && ovl.fuel[i] < MIN_CELL_FUEL_FOR_SPREAD {
+                    witness.fuel_depleted_cells = witness.fuel_depleted_cells.saturating_add(1);
+                }
 
                 ovl.smoke[i] = (ovl.smoke[i] * (1.0 - dt_e * 1.15) + nh * smoke_k * 1.2 * dt_e
                     - wx.rain_intensity * 0.18 * dt_e)
@@ -223,7 +227,12 @@ pub fn chunk_fire_overlay_tick(
                 scratch[i] = if ovl.fuel[i] < MIN_CELL_FUEL_FOR_SPREAD || fuel_gate <= 0.0 {
                     0.0
                 } else {
-                    lap * 0.65 * b_here * rain_suppress * dt_e * wind_boost.powf(0.35)
+                    let spread = lap * 0.65 * b_here * rain_suppress * dt_e * wind_boost.powf(0.35);
+                    if spread.abs() > 1e-8 {
+                        witness.neighbor_spread_cells =
+                            witness.neighbor_spread_cells.saturating_add(1);
+                    }
+                    spread
                 };
             }
         }

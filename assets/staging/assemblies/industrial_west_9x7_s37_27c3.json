@@ -1,0 +1,2219 @@
+{
+  "schema_version": 1,
+  "assembly_id": "industrial_west_9x7_s37_27c3",
+  "style_pack_id": "style_industrial_west",
+  "source_tier": "production",
+  "procedural_rules_version": "building_grammar_v1",
+  "reference_tags": [
+    "grammar:rail_edge_v1",
+    "archetype:RailEdge",
+    "district:rail_yard_corridor",
+    "massing:l_shape",
+    "age:new",
+    "building_grammar_v1",
+    "chain:archetype:RailEdge",
+    "chain:district_style:rail_yard_corridor",
+    "chain:massing:l_shape",
+    "chain:roof:roof_industrial",
+    "chain:facade:facade_v1",
+    "chain:detail:prop_clutter",
+    "chain:age:new",
+    "chain:massing:l_shape_v1"
+  ],
+  "seed": 37,
+  "footprint": {
+    "width": 9,
+    "depth": 7,
+    "floors": 1,
+    "wdc_cell_count": 28
+  },
+  "module_placements": [
+    {
+      "module_id": "corner_L",
+      "job_id": "corner_L_industrial_west_production_run001",
+      "slot_key": "corner_outer",
+      "token": "C",
+      "grid_x": 0,
+      "grid_y": 0,
+      "floor": 0,
+      "glb_path": "assets/models/modules/corner_L_industrial_west_production_run001/model.glb",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "corner_L_0_0_f0",
+      "material_profile": "steel_corner_01",
+      "placement_tags": [
+        "exterior",
+        "corner"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production",
+      "semantic_tags": {
+        "location": [
+          "street_facing",
+          "corner"
+        ]
+      },
+      "weathering": "light"
+    },
+    {
+      "module_id": "wall_steel_1u",
+      "job_id": "wall_steel_1u_production_run001",
+      "slot_key": "wall_1u",
+      "token": "W",
+      "grid_x": 1,
+      "grid_y": 0,
+      "floor": 0,
+      "glb_path": "assets/models/modules/wall_steel_1u_production_run001/model.glb",
+      "position": [
+        1.0,
+        0.0,
+        0.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "wall_steel_1u_1_0_f0",
+      "material_profile": "steel_panel_01",
+      "placement_tags": [
+        "exterior",
+        "industrial"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "architectural": [
+          "industrial"
+        ]
+      },
+      "weathering": "light"
+    },
+    {
+      "module_id": "wall_steel_1u",
+      "job_id": "wall_steel_1u_production_run001",
+      "slot_key": "wall_1u",
+      "token": "W",
+      "grid_x": 2,
+      "grid_y": 0,
+      "floor": 0,
+      "glb_path": "assets/models/modules/wall_steel_1u_production_run001/model.glb",
+      "position": [
+        2.0,
+        0.0,
+        0.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "wall_steel_1u_2_0_f0",
+      "material_profile": "steel_panel_01",
+      "placement_tags": [
+        "exterior",
+        "industrial"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "architectural": [
+          "industrial"
+        ]
+      },
+      "weathering": "light"
+    },
+    {
+      "module_id": "wall_steel_1u",
+      "job_id": "wall_steel_1u_production_run001",
+      "slot_key": "wall_1u",
+      "token": "W",
+      "grid_x": 3,
+      "grid_y": 0,
+      "floor": 0,
+      "glb_path": "assets/models/modules/wall_steel_1u_production_run001/model.glb",
+      "position": [
+        3.0,
+        0.0,
+        0.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "wall_steel_1u_3_0_f0",
+      "material_profile": "steel_panel_01",
+      "placement_tags": [
+        "exterior",
+        "industrial"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "architectural": [
+          "industrial"
+        ]
+      },
+      "weathering": "light"
+    },
+    {
+      "module_id": "door_warehouse",
+      "job_id": "door_warehouse_production_run001",
+      "slot_key": "door_wide",
+      "token": "D",
+      "grid_x": 4,
+      "grid_y": 0,
+      "floor": 0,
+      "glb_path": "assets/models/modules/door_warehouse_production_run001/model.glb",
+      "position": [
+        4.0,
+        0.0,
+        0.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "door_warehouse_4_0_f0",
+      "material_profile": "steel_door_warehouse_01",
+      "placement_tags": [
+        "exterior",
+        "door"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "detail": [
+          "door_rollup"
+        ]
+      },
+      "weathering": "light"
+    },
+    {
+      "module_id": "wall_steel_1u",
+      "job_id": "wall_steel_1u_production_run001",
+      "slot_key": "wall_1u",
+      "token": "W",
+      "grid_x": 5,
+      "grid_y": 0,
+      "floor": 0,
+      "glb_path": "assets/models/modules/wall_steel_1u_production_run001/model.glb",
+      "position": [
+        5.0,
+        0.0,
+        0.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "wall_steel_1u_5_0_f0",
+      "material_profile": "steel_panel_01",
+      "placement_tags": [
+        "exterior",
+        "industrial"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "architectural": [
+          "industrial"
+        ]
+      },
+      "weathering": "light"
+    },
+    {
+      "module_id": "wall_steel_1u",
+      "job_id": "wall_steel_1u_production_run001",
+      "slot_key": "wall_1u",
+      "token": "W",
+      "grid_x": 6,
+      "grid_y": 0,
+      "floor": 0,
+      "glb_path": "assets/models/modules/wall_steel_1u_production_run001/model.glb",
+      "position": [
+        6.0,
+        0.0,
+        0.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "wall_steel_1u_6_0_f0",
+      "material_profile": "steel_panel_01",
+      "placement_tags": [
+        "exterior",
+        "industrial"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "architectural": [
+          "industrial"
+        ]
+      },
+      "weathering": "light"
+    },
+    {
+      "module_id": "wall_steel_1u",
+      "job_id": "wall_steel_1u_production_run001",
+      "slot_key": "wall_1u",
+      "token": "W",
+      "grid_x": 7,
+      "grid_y": 0,
+      "floor": 0,
+      "glb_path": "assets/models/modules/wall_steel_1u_production_run001/model.glb",
+      "position": [
+        7.0,
+        0.0,
+        0.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "wall_steel_1u_7_0_f0",
+      "material_profile": "steel_panel_01",
+      "placement_tags": [
+        "exterior",
+        "industrial"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "architectural": [
+          "industrial"
+        ]
+      },
+      "weathering": "light"
+    },
+    {
+      "module_id": "corner_L",
+      "job_id": "corner_L_industrial_west_production_run001",
+      "slot_key": "corner_outer",
+      "token": "C",
+      "grid_x": 8,
+      "grid_y": 0,
+      "floor": 0,
+      "glb_path": "assets/models/modules/corner_L_industrial_west_production_run001/model.glb",
+      "position": [
+        8.0,
+        0.0,
+        0.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "corner_L_8_0_f0",
+      "material_profile": "steel_corner_01",
+      "placement_tags": [
+        "exterior",
+        "corner"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production",
+      "semantic_tags": {
+        "location": [
+          "street_facing",
+          "corner"
+        ]
+      },
+      "weathering": "light"
+    },
+    {
+      "module_id": "wall_steel_1u",
+      "job_id": "wall_steel_1u_production_run001",
+      "slot_key": "wall_1u",
+      "token": "W",
+      "grid_x": 0,
+      "grid_y": 1,
+      "floor": 0,
+      "glb_path": "assets/models/modules/wall_steel_1u_production_run001/model.glb",
+      "position": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "wall_steel_1u_0_1_f0",
+      "material_profile": "steel_panel_01",
+      "placement_tags": [
+        "exterior",
+        "industrial"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "architectural": [
+          "industrial"
+        ]
+      },
+      "weathering": "light"
+    },
+    {
+      "module_id": "wall_steel_1u",
+      "job_id": "wall_steel_1u_production_run001",
+      "slot_key": "wall_1u",
+      "token": "W",
+      "grid_x": 8,
+      "grid_y": 1,
+      "floor": 0,
+      "glb_path": "assets/models/modules/wall_steel_1u_production_run001/model.glb",
+      "position": [
+        8.0,
+        0.0,
+        1.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "wall_steel_1u_8_1_f0",
+      "material_profile": "steel_panel_01",
+      "placement_tags": [
+        "exterior",
+        "industrial"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "architectural": [
+          "industrial"
+        ]
+      },
+      "weathering": "light"
+    },
+    {
+      "module_id": "wall_steel_1u",
+      "job_id": "wall_steel_1u_production_run001",
+      "slot_key": "wall_1u",
+      "token": "W",
+      "grid_x": 0,
+      "grid_y": 2,
+      "floor": 0,
+      "glb_path": "assets/models/modules/wall_steel_1u_production_run001/model.glb",
+      "position": [
+        0.0,
+        0.0,
+        2.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "wall_steel_1u_0_2_f0",
+      "material_profile": "steel_panel_01",
+      "placement_tags": [
+        "exterior",
+        "industrial"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "architectural": [
+          "industrial"
+        ]
+      },
+      "weathering": "light"
+    },
+    {
+      "module_id": "wall_steel_1u",
+      "job_id": "wall_steel_1u_production_run001",
+      "slot_key": "wall_1u",
+      "token": "W",
+      "grid_x": 8,
+      "grid_y": 2,
+      "floor": 0,
+      "glb_path": "assets/models/modules/wall_steel_1u_production_run001/model.glb",
+      "position": [
+        8.0,
+        0.0,
+        2.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "wall_steel_1u_8_2_f0",
+      "material_profile": "steel_panel_01",
+      "placement_tags": [
+        "exterior",
+        "industrial"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "architectural": [
+          "industrial"
+        ]
+      },
+      "weathering": "light"
+    },
+    {
+      "module_id": "wall_steel_1u",
+      "job_id": "wall_steel_1u_production_run001",
+      "slot_key": "wall_1u",
+      "token": "W",
+      "grid_x": 0,
+      "grid_y": 3,
+      "floor": 0,
+      "glb_path": "assets/models/modules/wall_steel_1u_production_run001/model.glb",
+      "position": [
+        0.0,
+        0.0,
+        3.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "wall_steel_1u_0_3_f0",
+      "material_profile": "steel_panel_01",
+      "placement_tags": [
+        "exterior",
+        "industrial"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "architectural": [
+          "industrial"
+        ]
+      },
+      "weathering": "light"
+    },
+    {
+      "module_id": "wall_steel_1u",
+      "job_id": "wall_steel_1u_production_run001",
+      "slot_key": "wall_1u",
+      "token": "W",
+      "grid_x": 8,
+      "grid_y": 3,
+      "floor": 0,
+      "glb_path": "assets/models/modules/wall_steel_1u_production_run001/model.glb",
+      "position": [
+        8.0,
+        0.0,
+        3.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "wall_steel_1u_8_3_f0",
+      "material_profile": "steel_panel_01",
+      "placement_tags": [
+        "exterior",
+        "industrial"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "architectural": [
+          "industrial"
+        ]
+      },
+      "weathering": "light"
+    },
+    {
+      "module_id": "wall_steel_1u",
+      "job_id": "wall_steel_1u_production_run001",
+      "slot_key": "wall_1u",
+      "token": "W",
+      "grid_x": 0,
+      "grid_y": 4,
+      "floor": 0,
+      "glb_path": "assets/models/modules/wall_steel_1u_production_run001/model.glb",
+      "position": [
+        0.0,
+        0.0,
+        4.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "wall_steel_1u_0_4_f0",
+      "material_profile": "steel_panel_01",
+      "placement_tags": [
+        "exterior",
+        "industrial"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "architectural": [
+          "industrial"
+        ]
+      },
+      "weathering": "light"
+    },
+    {
+      "module_id": "wall_steel_1u",
+      "job_id": "wall_steel_1u_production_run001",
+      "slot_key": "wall_1u",
+      "token": "W",
+      "grid_x": 8,
+      "grid_y": 4,
+      "floor": 0,
+      "glb_path": "assets/models/modules/wall_steel_1u_production_run001/model.glb",
+      "position": [
+        8.0,
+        0.0,
+        4.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "wall_steel_1u_8_4_f0",
+      "material_profile": "steel_panel_01",
+      "placement_tags": [
+        "exterior",
+        "industrial"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "architectural": [
+          "industrial"
+        ]
+      },
+      "weathering": "light"
+    },
+    {
+      "module_id": "wall_steel_1u",
+      "job_id": "wall_steel_1u_production_run001",
+      "slot_key": "wall_1u",
+      "token": "W",
+      "grid_x": 0,
+      "grid_y": 5,
+      "floor": 0,
+      "glb_path": "assets/models/modules/wall_steel_1u_production_run001/model.glb",
+      "position": [
+        0.0,
+        0.0,
+        5.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "wall_steel_1u_0_5_f0",
+      "material_profile": "steel_panel_01",
+      "placement_tags": [
+        "exterior",
+        "industrial"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "architectural": [
+          "industrial"
+        ]
+      },
+      "weathering": "light"
+    },
+    {
+      "module_id": "wall_steel_1u",
+      "job_id": "wall_steel_1u_production_run001",
+      "slot_key": "wall_1u",
+      "token": "W",
+      "grid_x": 8,
+      "grid_y": 5,
+      "floor": 0,
+      "glb_path": "assets/models/modules/wall_steel_1u_production_run001/model.glb",
+      "position": [
+        8.0,
+        0.0,
+        5.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "wall_steel_1u_8_5_f0",
+      "material_profile": "steel_panel_01",
+      "placement_tags": [
+        "exterior",
+        "industrial"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "architectural": [
+          "industrial"
+        ]
+      },
+      "weathering": "light"
+    },
+    {
+      "module_id": "corner_L",
+      "job_id": "corner_L_industrial_west_production_run001",
+      "slot_key": "corner_outer",
+      "token": "C",
+      "grid_x": 0,
+      "grid_y": 6,
+      "floor": 0,
+      "glb_path": "assets/models/modules/corner_L_industrial_west_production_run001/model.glb",
+      "position": [
+        0.0,
+        0.0,
+        6.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "corner_L_0_6_f0",
+      "material_profile": "steel_corner_01",
+      "placement_tags": [
+        "exterior",
+        "corner"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production",
+      "semantic_tags": {
+        "location": [
+          "street_facing",
+          "corner"
+        ]
+      },
+      "weathering": "light"
+    },
+    {
+      "module_id": "wall_steel_1u",
+      "job_id": "wall_steel_1u_production_run001",
+      "slot_key": "wall_1u",
+      "token": "W",
+      "grid_x": 1,
+      "grid_y": 6,
+      "floor": 0,
+      "glb_path": "assets/models/modules/wall_steel_1u_production_run001/model.glb",
+      "position": [
+        1.0,
+        0.0,
+        6.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "wall_steel_1u_1_6_f0",
+      "material_profile": "steel_panel_01",
+      "placement_tags": [
+        "exterior",
+        "industrial"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "architectural": [
+          "industrial"
+        ]
+      },
+      "weathering": "light"
+    },
+    {
+      "module_id": "wall_steel_1u",
+      "job_id": "wall_steel_1u_production_run001",
+      "slot_key": "wall_1u",
+      "token": "W",
+      "grid_x": 2,
+      "grid_y": 6,
+      "floor": 0,
+      "glb_path": "assets/models/modules/wall_steel_1u_production_run001/model.glb",
+      "position": [
+        2.0,
+        0.0,
+        6.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "wall_steel_1u_2_6_f0",
+      "material_profile": "steel_panel_01",
+      "placement_tags": [
+        "exterior",
+        "industrial"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "architectural": [
+          "industrial"
+        ]
+      },
+      "weathering": "light"
+    },
+    {
+      "module_id": "wall_steel_1u",
+      "job_id": "wall_steel_1u_production_run001",
+      "slot_key": "wall_1u",
+      "token": "W",
+      "grid_x": 3,
+      "grid_y": 6,
+      "floor": 0,
+      "glb_path": "assets/models/modules/wall_steel_1u_production_run001/model.glb",
+      "position": [
+        3.0,
+        0.0,
+        6.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "wall_steel_1u_3_6_f0",
+      "material_profile": "steel_panel_01",
+      "placement_tags": [
+        "exterior",
+        "industrial"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "architectural": [
+          "industrial"
+        ]
+      },
+      "weathering": "light"
+    },
+    {
+      "module_id": "wall_steel_1u",
+      "job_id": "wall_steel_1u_production_run001",
+      "slot_key": "wall_1u",
+      "token": "W",
+      "grid_x": 4,
+      "grid_y": 6,
+      "floor": 0,
+      "glb_path": "assets/models/modules/wall_steel_1u_production_run001/model.glb",
+      "position": [
+        4.0,
+        0.0,
+        6.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "wall_steel_1u_4_6_f0",
+      "material_profile": "steel_panel_01",
+      "placement_tags": [
+        "exterior",
+        "industrial"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "architectural": [
+          "industrial"
+        ]
+      },
+      "weathering": "light"
+    },
+    {
+      "module_id": "wall_steel_1u",
+      "job_id": "wall_steel_1u_production_run001",
+      "slot_key": "wall_1u",
+      "token": "W",
+      "grid_x": 5,
+      "grid_y": 6,
+      "floor": 0,
+      "glb_path": "assets/models/modules/wall_steel_1u_production_run001/model.glb",
+      "position": [
+        5.0,
+        0.0,
+        6.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "wall_steel_1u_5_6_f0",
+      "material_profile": "steel_panel_01",
+      "placement_tags": [
+        "exterior",
+        "industrial"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "architectural": [
+          "industrial"
+        ]
+      },
+      "weathering": "light"
+    },
+    {
+      "module_id": "wall_steel_1u",
+      "job_id": "wall_steel_1u_production_run001",
+      "slot_key": "wall_1u",
+      "token": "W",
+      "grid_x": 6,
+      "grid_y": 6,
+      "floor": 0,
+      "glb_path": "assets/models/modules/wall_steel_1u_production_run001/model.glb",
+      "position": [
+        6.0,
+        0.0,
+        6.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "wall_steel_1u_6_6_f0",
+      "material_profile": "steel_panel_01",
+      "placement_tags": [
+        "exterior",
+        "industrial"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "architectural": [
+          "industrial"
+        ]
+      },
+      "weathering": "light"
+    },
+    {
+      "module_id": "wall_steel_1u",
+      "job_id": "wall_steel_1u_production_run001",
+      "slot_key": "wall_1u",
+      "token": "W",
+      "grid_x": 7,
+      "grid_y": 6,
+      "floor": 0,
+      "glb_path": "assets/models/modules/wall_steel_1u_production_run001/model.glb",
+      "position": [
+        7.0,
+        0.0,
+        6.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "wall_steel_1u_7_6_f0",
+      "material_profile": "steel_panel_01",
+      "placement_tags": [
+        "exterior",
+        "industrial"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "architectural": [
+          "industrial"
+        ]
+      },
+      "weathering": "light"
+    },
+    {
+      "module_id": "corner_L",
+      "job_id": "corner_L_industrial_west_production_run001",
+      "slot_key": "corner_outer",
+      "token": "C",
+      "grid_x": 8,
+      "grid_y": 6,
+      "floor": 0,
+      "glb_path": "assets/models/modules/corner_L_industrial_west_production_run001/model.glb",
+      "position": [
+        8.0,
+        0.0,
+        6.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "corner_L_8_6_f0",
+      "material_profile": "steel_corner_01",
+      "placement_tags": [
+        "exterior",
+        "corner"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production",
+      "semantic_tags": {
+        "location": [
+          "street_facing",
+          "corner"
+        ]
+      },
+      "weathering": "light"
+    },
+    {
+      "module_id": "roof_shed",
+      "job_id": "roof_shed_production_run001",
+      "slot_key": "roof_industrial",
+      "token": "R",
+      "grid_x": 0,
+      "grid_y": 0,
+      "floor": 1,
+      "glb_path": "assets/models/modules/roof_shed_production_run001/model.glb",
+      "position": [
+        0.0,
+        3.0,
+        0.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "roof_shed_0_0_f1",
+      "material_profile": "roof_metal_01",
+      "placement_tags": [
+        "exterior",
+        "industrial"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "architectural": [
+          "industrial"
+        ]
+      },
+      "weathering": "light"
+    },
+    {
+      "module_id": "roof_shed",
+      "job_id": "roof_shed_production_run001",
+      "slot_key": "roof_industrial",
+      "token": "R",
+      "grid_x": 1,
+      "grid_y": 0,
+      "floor": 1,
+      "glb_path": "assets/models/modules/roof_shed_production_run001/model.glb",
+      "position": [
+        1.0,
+        3.0,
+        0.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "roof_shed_1_0_f1",
+      "material_profile": "roof_metal_01",
+      "placement_tags": [
+        "exterior",
+        "industrial"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "architectural": [
+          "industrial"
+        ]
+      },
+      "weathering": "light"
+    },
+    {
+      "module_id": "roof_shed",
+      "job_id": "roof_shed_production_run001",
+      "slot_key": "roof_industrial",
+      "token": "R",
+      "grid_x": 2,
+      "grid_y": 0,
+      "floor": 1,
+      "glb_path": "assets/models/modules/roof_shed_production_run001/model.glb",
+      "position": [
+        2.0,
+        3.0,
+        0.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "roof_shed_2_0_f1",
+      "material_profile": "roof_metal_01",
+      "placement_tags": [
+        "exterior",
+        "industrial"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "architectural": [
+          "industrial"
+        ]
+      },
+      "weathering": "light"
+    },
+    {
+      "module_id": "roof_shed",
+      "job_id": "roof_shed_production_run001",
+      "slot_key": "roof_industrial",
+      "token": "R",
+      "grid_x": 3,
+      "grid_y": 0,
+      "floor": 1,
+      "glb_path": "assets/models/modules/roof_shed_production_run001/model.glb",
+      "position": [
+        3.0,
+        3.0,
+        0.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "roof_shed_3_0_f1",
+      "material_profile": "roof_metal_01",
+      "placement_tags": [
+        "exterior",
+        "industrial"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "architectural": [
+          "industrial"
+        ]
+      },
+      "weathering": "light"
+    },
+    {
+      "module_id": "roof_shed",
+      "job_id": "roof_shed_production_run001",
+      "slot_key": "roof_industrial",
+      "token": "R",
+      "grid_x": 4,
+      "grid_y": 0,
+      "floor": 1,
+      "glb_path": "assets/models/modules/roof_shed_production_run001/model.glb",
+      "position": [
+        4.0,
+        3.0,
+        0.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "roof_shed_4_0_f1",
+      "material_profile": "roof_metal_01",
+      "placement_tags": [
+        "exterior",
+        "industrial"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "architectural": [
+          "industrial"
+        ]
+      },
+      "weathering": "light"
+    },
+    {
+      "module_id": "roof_shed",
+      "job_id": "roof_shed_production_run001",
+      "slot_key": "roof_industrial",
+      "token": "R",
+      "grid_x": 5,
+      "grid_y": 0,
+      "floor": 1,
+      "glb_path": "assets/models/modules/roof_shed_production_run001/model.glb",
+      "position": [
+        5.0,
+        3.0,
+        0.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "roof_shed_5_0_f1",
+      "material_profile": "roof_metal_01",
+      "placement_tags": [
+        "exterior",
+        "industrial"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "architectural": [
+          "industrial"
+        ]
+      },
+      "weathering": "light"
+    },
+    {
+      "module_id": "roof_shed",
+      "job_id": "roof_shed_production_run001",
+      "slot_key": "roof_industrial",
+      "token": "R",
+      "grid_x": 6,
+      "grid_y": 0,
+      "floor": 1,
+      "glb_path": "assets/models/modules/roof_shed_production_run001/model.glb",
+      "position": [
+        6.0,
+        3.0,
+        0.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "roof_shed_6_0_f1",
+      "material_profile": "roof_metal_01",
+      "placement_tags": [
+        "exterior",
+        "industrial"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "architectural": [
+          "industrial"
+        ]
+      },
+      "weathering": "light"
+    },
+    {
+      "module_id": "roof_shed",
+      "job_id": "roof_shed_production_run001",
+      "slot_key": "roof_industrial",
+      "token": "R",
+      "grid_x": 7,
+      "grid_y": 0,
+      "floor": 1,
+      "glb_path": "assets/models/modules/roof_shed_production_run001/model.glb",
+      "position": [
+        7.0,
+        3.0,
+        0.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "roof_shed_7_0_f1",
+      "material_profile": "roof_metal_01",
+      "placement_tags": [
+        "exterior",
+        "industrial"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "architectural": [
+          "industrial"
+        ]
+      },
+      "weathering": "light"
+    },
+    {
+      "module_id": "roof_shed",
+      "job_id": "roof_shed_production_run001",
+      "slot_key": "roof_industrial",
+      "token": "R",
+      "grid_x": 8,
+      "grid_y": 0,
+      "floor": 1,
+      "glb_path": "assets/models/modules/roof_shed_production_run001/model.glb",
+      "position": [
+        8.0,
+        3.0,
+        0.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "roof_shed_8_0_f1",
+      "material_profile": "roof_metal_01",
+      "placement_tags": [
+        "exterior",
+        "industrial"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "architectural": [
+          "industrial"
+        ]
+      },
+      "weathering": "light"
+    },
+    {
+      "module_id": "roof_shed",
+      "job_id": "roof_shed_production_run001",
+      "slot_key": "roof_industrial",
+      "token": "R",
+      "grid_x": 0,
+      "grid_y": 1,
+      "floor": 1,
+      "glb_path": "assets/models/modules/roof_shed_production_run001/model.glb",
+      "position": [
+        0.0,
+        3.0,
+        1.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "roof_shed_0_1_f1",
+      "material_profile": "roof_metal_01",
+      "placement_tags": [
+        "exterior",
+        "industrial"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "architectural": [
+          "industrial"
+        ]
+      },
+      "weathering": "light"
+    },
+    {
+      "module_id": "roof_shed",
+      "job_id": "roof_shed_production_run001",
+      "slot_key": "roof_industrial",
+      "token": "R",
+      "grid_x": 8,
+      "grid_y": 1,
+      "floor": 1,
+      "glb_path": "assets/models/modules/roof_shed_production_run001/model.glb",
+      "position": [
+        8.0,
+        3.0,
+        1.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "roof_shed_8_1_f1",
+      "material_profile": "roof_metal_01",
+      "placement_tags": [
+        "exterior",
+        "industrial"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "architectural": [
+          "industrial"
+        ]
+      },
+      "weathering": "light"
+    },
+    {
+      "module_id": "roof_shed",
+      "job_id": "roof_shed_production_run001",
+      "slot_key": "roof_industrial",
+      "token": "R",
+      "grid_x": 0,
+      "grid_y": 2,
+      "floor": 1,
+      "glb_path": "assets/models/modules/roof_shed_production_run001/model.glb",
+      "position": [
+        0.0,
+        3.0,
+        2.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "roof_shed_0_2_f1",
+      "material_profile": "roof_metal_01",
+      "placement_tags": [
+        "exterior",
+        "industrial"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "architectural": [
+          "industrial"
+        ]
+      },
+      "weathering": "light"
+    },
+    {
+      "module_id": "roof_shed",
+      "job_id": "roof_shed_production_run001",
+      "slot_key": "roof_industrial",
+      "token": "R",
+      "grid_x": 8,
+      "grid_y": 2,
+      "floor": 1,
+      "glb_path": "assets/models/modules/roof_shed_production_run001/model.glb",
+      "position": [
+        8.0,
+        3.0,
+        2.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "roof_shed_8_2_f1",
+      "material_profile": "roof_metal_01",
+      "placement_tags": [
+        "exterior",
+        "industrial"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "architectural": [
+          "industrial"
+        ]
+      },
+      "weathering": "light"
+    },
+    {
+      "module_id": "roof_shed",
+      "job_id": "roof_shed_production_run001",
+      "slot_key": "roof_industrial",
+      "token": "R",
+      "grid_x": 0,
+      "grid_y": 3,
+      "floor": 1,
+      "glb_path": "assets/models/modules/roof_shed_production_run001/model.glb",
+      "position": [
+        0.0,
+        3.0,
+        3.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "roof_shed_0_3_f1",
+      "material_profile": "roof_metal_01",
+      "placement_tags": [
+        "exterior",
+        "industrial"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "architectural": [
+          "industrial"
+        ]
+      },
+      "weathering": "light"
+    },
+    {
+      "module_id": "roof_shed",
+      "job_id": "roof_shed_production_run001",
+      "slot_key": "roof_industrial",
+      "token": "R",
+      "grid_x": 8,
+      "grid_y": 3,
+      "floor": 1,
+      "glb_path": "assets/models/modules/roof_shed_production_run001/model.glb",
+      "position": [
+        8.0,
+        3.0,
+        3.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "roof_shed_8_3_f1",
+      "material_profile": "roof_metal_01",
+      "placement_tags": [
+        "exterior",
+        "industrial"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "architectural": [
+          "industrial"
+        ]
+      },
+      "weathering": "light"
+    },
+    {
+      "module_id": "roof_shed",
+      "job_id": "roof_shed_production_run001",
+      "slot_key": "roof_industrial",
+      "token": "R",
+      "grid_x": 0,
+      "grid_y": 4,
+      "floor": 1,
+      "glb_path": "assets/models/modules/roof_shed_production_run001/model.glb",
+      "position": [
+        0.0,
+        3.0,
+        4.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "roof_shed_0_4_f1",
+      "material_profile": "roof_metal_01",
+      "placement_tags": [
+        "exterior",
+        "industrial"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "architectural": [
+          "industrial"
+        ]
+      },
+      "weathering": "light"
+    },
+    {
+      "module_id": "roof_shed",
+      "job_id": "roof_shed_production_run001",
+      "slot_key": "roof_industrial",
+      "token": "R",
+      "grid_x": 8,
+      "grid_y": 4,
+      "floor": 1,
+      "glb_path": "assets/models/modules/roof_shed_production_run001/model.glb",
+      "position": [
+        8.0,
+        3.0,
+        4.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "roof_shed_8_4_f1",
+      "material_profile": "roof_metal_01",
+      "placement_tags": [
+        "exterior",
+        "industrial"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "architectural": [
+          "industrial"
+        ]
+      },
+      "weathering": "light"
+    },
+    {
+      "module_id": "roof_shed",
+      "job_id": "roof_shed_production_run001",
+      "slot_key": "roof_industrial",
+      "token": "R",
+      "grid_x": 0,
+      "grid_y": 5,
+      "floor": 1,
+      "glb_path": "assets/models/modules/roof_shed_production_run001/model.glb",
+      "position": [
+        0.0,
+        3.0,
+        5.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "roof_shed_0_5_f1",
+      "material_profile": "roof_metal_01",
+      "placement_tags": [
+        "exterior",
+        "industrial"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "architectural": [
+          "industrial"
+        ]
+      },
+      "weathering": "light"
+    },
+    {
+      "module_id": "roof_shed",
+      "job_id": "roof_shed_production_run001",
+      "slot_key": "roof_industrial",
+      "token": "R",
+      "grid_x": 8,
+      "grid_y": 5,
+      "floor": 1,
+      "glb_path": "assets/models/modules/roof_shed_production_run001/model.glb",
+      "position": [
+        8.0,
+        3.0,
+        5.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "roof_shed_8_5_f1",
+      "material_profile": "roof_metal_01",
+      "placement_tags": [
+        "exterior",
+        "industrial"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "architectural": [
+          "industrial"
+        ]
+      },
+      "weathering": "light"
+    },
+    {
+      "module_id": "roof_shed",
+      "job_id": "roof_shed_production_run001",
+      "slot_key": "roof_industrial",
+      "token": "R",
+      "grid_x": 0,
+      "grid_y": 6,
+      "floor": 1,
+      "glb_path": "assets/models/modules/roof_shed_production_run001/model.glb",
+      "position": [
+        0.0,
+        3.0,
+        6.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "roof_shed_0_6_f1",
+      "material_profile": "roof_metal_01",
+      "placement_tags": [
+        "exterior",
+        "industrial"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "architectural": [
+          "industrial"
+        ]
+      },
+      "weathering": "light"
+    },
+    {
+      "module_id": "roof_shed",
+      "job_id": "roof_shed_production_run001",
+      "slot_key": "roof_industrial",
+      "token": "R",
+      "grid_x": 1,
+      "grid_y": 6,
+      "floor": 1,
+      "glb_path": "assets/models/modules/roof_shed_production_run001/model.glb",
+      "position": [
+        1.0,
+        3.0,
+        6.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "roof_shed_1_6_f1",
+      "material_profile": "roof_metal_01",
+      "placement_tags": [
+        "exterior",
+        "industrial"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "architectural": [
+          "industrial"
+        ]
+      },
+      "weathering": "light"
+    },
+    {
+      "module_id": "roof_shed",
+      "job_id": "roof_shed_production_run001",
+      "slot_key": "roof_industrial",
+      "token": "R",
+      "grid_x": 2,
+      "grid_y": 6,
+      "floor": 1,
+      "glb_path": "assets/models/modules/roof_shed_production_run001/model.glb",
+      "position": [
+        2.0,
+        3.0,
+        6.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "roof_shed_2_6_f1",
+      "material_profile": "roof_metal_01",
+      "placement_tags": [
+        "exterior",
+        "industrial"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "architectural": [
+          "industrial"
+        ]
+      },
+      "weathering": "light"
+    },
+    {
+      "module_id": "roof_shed",
+      "job_id": "roof_shed_production_run001",
+      "slot_key": "roof_industrial",
+      "token": "R",
+      "grid_x": 3,
+      "grid_y": 6,
+      "floor": 1,
+      "glb_path": "assets/models/modules/roof_shed_production_run001/model.glb",
+      "position": [
+        3.0,
+        3.0,
+        6.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "roof_shed_3_6_f1",
+      "material_profile": "roof_metal_01",
+      "placement_tags": [
+        "exterior",
+        "industrial"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "architectural": [
+          "industrial"
+        ]
+      },
+      "weathering": "light"
+    },
+    {
+      "module_id": "roof_shed",
+      "job_id": "roof_shed_production_run001",
+      "slot_key": "roof_industrial",
+      "token": "R",
+      "grid_x": 4,
+      "grid_y": 6,
+      "floor": 1,
+      "glb_path": "assets/models/modules/roof_shed_production_run001/model.glb",
+      "position": [
+        4.0,
+        3.0,
+        6.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "roof_shed_4_6_f1",
+      "material_profile": "roof_metal_01",
+      "placement_tags": [
+        "exterior",
+        "industrial"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "architectural": [
+          "industrial"
+        ]
+      },
+      "weathering": "light"
+    },
+    {
+      "module_id": "roof_shed",
+      "job_id": "roof_shed_production_run001",
+      "slot_key": "roof_industrial",
+      "token": "R",
+      "grid_x": 5,
+      "grid_y": 6,
+      "floor": 1,
+      "glb_path": "assets/models/modules/roof_shed_production_run001/model.glb",
+      "position": [
+        5.0,
+        3.0,
+        6.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "roof_shed_5_6_f1",
+      "material_profile": "roof_metal_01",
+      "placement_tags": [
+        "exterior",
+        "industrial"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "architectural": [
+          "industrial"
+        ]
+      },
+      "weathering": "light"
+    },
+    {
+      "module_id": "roof_shed",
+      "job_id": "roof_shed_production_run001",
+      "slot_key": "roof_industrial",
+      "token": "R",
+      "grid_x": 6,
+      "grid_y": 6,
+      "floor": 1,
+      "glb_path": "assets/models/modules/roof_shed_production_run001/model.glb",
+      "position": [
+        6.0,
+        3.0,
+        6.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "roof_shed_6_6_f1",
+      "material_profile": "roof_metal_01",
+      "placement_tags": [
+        "exterior",
+        "industrial"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "architectural": [
+          "industrial"
+        ]
+      },
+      "weathering": "light"
+    },
+    {
+      "module_id": "roof_shed",
+      "job_id": "roof_shed_production_run001",
+      "slot_key": "roof_industrial",
+      "token": "R",
+      "grid_x": 7,
+      "grid_y": 6,
+      "floor": 1,
+      "glb_path": "assets/models/modules/roof_shed_production_run001/model.glb",
+      "position": [
+        7.0,
+        3.0,
+        6.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "roof_shed_7_6_f1",
+      "material_profile": "roof_metal_01",
+      "placement_tags": [
+        "exterior",
+        "industrial"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "architectural": [
+          "industrial"
+        ]
+      },
+      "weathering": "light"
+    },
+    {
+      "module_id": "roof_shed",
+      "job_id": "roof_shed_production_run001",
+      "slot_key": "roof_industrial",
+      "token": "R",
+      "grid_x": 8,
+      "grid_y": 6,
+      "floor": 1,
+      "glb_path": "assets/models/modules/roof_shed_production_run001/model.glb",
+      "position": [
+        8.0,
+        3.0,
+        6.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "roof_shed_8_6_f1",
+      "material_profile": "roof_metal_01",
+      "placement_tags": [
+        "exterior",
+        "industrial"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "architectural": [
+          "industrial"
+        ]
+      },
+      "weathering": "light"
+    }
+  ],
+  "archetype_id": "RailEdge",
+  "district_style": "rail_yard_corridor",
+  "grammar_rule_chain": {
+    "footprint_mode": "l_shape",
+    "archetype": "RailEdge",
+    "massing": "l_shape",
+    "roof": "roof_industrial",
+    "facade": "facade_v1",
+    "detail": "prop_clutter",
+    "age": "new"
+  }
+}

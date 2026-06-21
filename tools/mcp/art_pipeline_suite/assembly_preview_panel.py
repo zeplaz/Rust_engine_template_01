@@ -55,6 +55,14 @@ class AssemblyPreviewPanel(ttk.LabelFrame):
         thumb_pane = ttk.Frame(body, width=200)
         body.add(thumb_pane, weight=0)
         make_fidelity_chip(thumb_pane, "interactive").pack(anchor=tk.W, padx=4, pady=(4, 0))
+        from .aps_preview_variant_state import VARIANT_STATES, variant_state_label
+
+        chip_row = ttk.Frame(thumb_pane)
+        chip_row.pack(anchor=tk.W, padx=4, pady=(0, 2))
+        for state in VARIANT_STATES:
+            ttk.Label(chip_row, text=variant_state_label(state), font=FONT_SMALL).pack(
+                side=tk.LEFT, padx=2
+            )
         self._thumb_label = tk.Label(thumb_pane, relief=tk.SUNKEN)
         self._thumb_label.pack(fill=tk.BOTH, expand=True, padx=4, pady=4)
         configure_preview_label(

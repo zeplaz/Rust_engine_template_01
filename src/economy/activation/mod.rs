@@ -3,6 +3,7 @@
 mod bridge;
 mod concrete_chain_e2e;
 pub mod grid_overload_ux;
+pub mod power_island_ux;
 mod witness_collectors;
 pub mod scale;
 
@@ -10,6 +11,11 @@ pub use grid_overload_ux::{
     apply_grid_overload_ops_strip_toast_system, ingest_grid_overload_toast_system,
     s7p_grid_ux_001_green, s7p_grid_ux_toast_ui_wired, GridOverloadToastState,
     GridOverloadUxPlugin, GRID_OVERLOAD_TOAST_MESSAGE, GRID_OVERLOAD_TOAST_TICKS,
+};
+pub use power_island_ux::{
+    apply_power_island_ops_strip_toast_system, ingest_power_island_toast_system,
+    power_island_toast_message, power_island_ux_001_green, power_island_ux_toast_ui_wired,
+    PowerIslandToastState, PowerIslandUxPlugin, POWER_ISLAND_TOAST_TICKS,
 };
 pub use concrete_chain_e2e::{
     commit_concrete_portland_chain_in_play, fast_forward_portland_chain_sites_to_operational,

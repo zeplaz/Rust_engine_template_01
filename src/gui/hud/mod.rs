@@ -38,6 +38,7 @@ pub mod world_interaction_diagnostics;
 pub mod cause_chain;
 pub mod contextual_tip;
 pub mod grammar_read_hud;
+pub mod sim_hud_esc_cascade;
 pub mod minimap_topology_legend;
 pub mod strategic_preview;
 pub mod tool_help;
@@ -60,7 +61,11 @@ pub mod sim_hud_egui_theme;
 pub mod sim_build_picker_sheet;
 pub mod sim_road_tool_sheet;
 pub mod sim_power_tool_sheet;
+pub mod power_grid_copy;
+pub mod power_node_hover;
+pub mod power_node_hover_egui;
 pub mod context_tray_build_egui;
+pub mod context_tray_power_repair_egui;
 pub mod ui_stress_state;
 pub mod ui_shell_migration;
 
@@ -103,7 +108,8 @@ pub use simulation_shell_phase2::{
     BuildRailToolLabel, BuildRailToolSlot, ContextTrayBodyLine, ContextTrayBodyRoot,
     ContextTrayRoot, ContextTrayState,
     ContextTrayTab, ContextTrayTabButton, ContextTrayTabLabel, MapViewportFrameInset,
-    MinimapChromeRoot, MinimapGpuImageNode, OpsStripAlertBadge, OpsStripAlertBadgeText,
+    MinimapChromeRoot, MinimapChromeOverlayHint, MinimapChromeResizeGrip, MinimapChromeTitleBar,
+    MinimapChromeTitleText, MinimapGpuImageNode, OpsStripAlertBadge, OpsStripAlertBadgeText,
     OpsStripAlerts, OpsStripIntel, OpsStripPower, OpsStripTime, OpsStripTrayAffordance,
     OpsStripWeather, OpsStripZone, OpsStripOrdersPendingText, LogisticsVehicleChip,
     LogisticsVehicleChipIcon,

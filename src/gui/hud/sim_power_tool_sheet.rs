@@ -37,6 +37,10 @@ impl SimPowerToolSheetState {
     pub fn sync_from_tool(&mut self, tool: &ActiveBuildTool) {
         self.open = matches!(tool.tool, BuildTool::PowerLine(_));
     }
+
+    pub fn close(&mut self) {
+        self.open = false;
+    }
 }
 
 #[derive(SystemParam)]

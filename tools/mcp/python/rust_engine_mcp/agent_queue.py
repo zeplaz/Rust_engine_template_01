@@ -11,26 +11,49 @@ from typing import Any
 from .paths import repo_root
 
 QUEUE_REGISTRY: dict[str, str] = {
+    "multi_parallel": "tools/orchestrator/queues/multi_parallel_home_queues_v1.json",
     "grammar": "tools/orchestrator/queues/grammar_continuation_queue.json",
     "continuation": "tools/orchestrator/queues/continuation_queue.json",
     "simulation": "tools/orchestrator/queues/simulation_continuation_queue.json",
     "phase4": "tools/orchestrator/queues/post_drain_phase4_queue.json",
+    "power_ux": "tools/orchestrator/queues/power_grid_construction_ux_queue.json",
 }
 
-WITNESS_PROFILES = frozenset({"map_pick", "construction", "fire_product", "honesty"})
+MULTI_PARALLEL_DISPATCH = "tools/orchestrator/queues/multi_parallel_tracks_dispatch_v1.json"
+DESIGNER_ACTIVE_QUEUE = "tools/orchestrator/queues/designer_active_queue.json"
 
-VALID_STATUS = frozenset({"ready", "blocked", "in_progress", "done", "deferred", "cancelled"})
+PICK_STATUS = frozenset({"ready", "in_progress"})
+WAIT_STATUS = frozenset({"blocked", "paused", "deferred"})
 
 AGENT_ALIASES: dict[str, str] = {
     "planner-mcp": "planner",
     "coder-mcp": "coder-mcp",
     "designer-mcp": "designer-mcp",
+    "orchestrator-mcp": "orchestrator-mcp",
     "@planner": "planner",
     "@coder": "coder",
     "@designer": "designer",
     "@coder-mcp": "coder-mcp",
     "@designer-mcp": "designer-mcp",
+    "@operator": "operator",
+    "@sim-steward": "sim-steward",
+    "coder a": "coder_a",
+    "coder b": "coder_b",
+    "coder c": "coder_c",
+    "coder_a": "coder_a",
+    "coder_b": "coder_b",
+    "coder_c": "coder_c",
+    "@coder a": "coder_a",
+    "@coder b": "coder_b",
+    "@coder c": "coder_c",
+    "operator": "operator",
+    "sim-steward": "sim-steward",
+    "orchestrator": "orchestrator",
 }
+
+WITNESS_PROFILES = frozenset({"map_pick", "construction", "fire_product", "honesty"})
+
+VALID_STATUS = frozenset({"ready", "blocked", "in_progress", "done", "deferred", "cancelled", "reopened"})
 
 
 def _normalize_agent(agent: str) -> str:
@@ -50,17 +73,371 @@ def _read_queue_file(path: Path) -> tuple[list[dict[str, Any]], dict[str, Any] |
     if isinstance(data, list):
         return data, None
     if isinstance(data, dict):
-        tasks = data.get("tasks")
-        if isinstance(tasks, list):
-            return tasks, data
-    raise ValueError(f"queue must be a JSON array or object with tasks[]: {path}")
+        for k in ("drain", "tasks", "multi_parallel_ready", "active"):
+            rows = data.get(k)
+            if isinstance(rows, list) and rows and isinstance(rows[0], dict):
+                return rows, data
+            if isinstance(rows, list) and not rows:
+                return rows, data
+    raise ValueError(f"queue must be a JSON array or object with drain[]/tasks[]: {path}")
+
+
+def _row_agent(row: dict[str, Any]) -> str:
+    return _normalize_agent(str(row.get("owner") or row.get("agent") or ""))
+
+
+def _priority_num(row: dict[str, Any]) -> int:
+    pri = row.get("priority")
+    if isinstance(pri, str) and pri.upper().startswith("P") and len(pri) > 1 and pri[1].isdigit():
+        return int(pri[1])
+    try:
+        return int(pri)  # type: ignore[arg-type]
+    except (TypeError, ValueError):
+        return 9
+
+
+def _pick_sort_key(row: dict[str, Any]) -> tuple[int, int, str]:
+    wave = int(row.get("wave") or 0)
+    return (wave, _priority_num(row), str(row.get("id") or ""))
+
+
+def _load_designer_parallel_ready() -> list[dict[str, Any]]:
+    path = repo_root() / DESIGNER_ACTIVE_QUEUE
+    if not path.is_file():
+        return []
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return []
+    rows = data.get("multi_parallel_ready")
+    if not isinstance(rows, list):
+        return []
+    return [r for r in rows if isinstance(r, dict) and r.get("id")]
+
+
+def load_multi_parallel_items(*, include_designer_mirror: bool = True) -> list[dict[str, Any]]:
+    """Merged work rows from multi_parallel home queue (+ designer mirror for specs)."""
+    items = load_queue("multi_parallel")
+    by_id = {str(r["id"]): r for r in items if r.get("id")}
+    if include_designer_mirror:
+        for row in _load_designer_parallel_ready():
+            sid = str(row.get("id") or "")
+            if not sid:
+                continue
+            if sid not in by_id:
+                by_id[sid] = row
+            elif str(by_id[sid].get("status")) in WAIT_STATUS and str(row.get("status")) == "ready":
+                by_id[sid] = {**by_id[sid], **row}
+    return list(by_id.values())
+
+
+def _track_filter(row: dict[str, Any], track: str) -> bool:
+    if not track:
+        return True
+    t = track.strip().upper()
+    row_track = str(row.get("track") or row.get("track_id") or "").upper()
+    if t in row_track:
+        return True
+    if t.startswith("T") and t[1:].isdigit():
+        return row_track == t or row_track.endswith(t)
+    return t in row_track
+
+
+def _estimate_slice_minutes(row: dict[str, Any]) -> int:
+    agent = _row_agent(row)
+    sid = str(row.get("id") or "")
+    if agent == "operator" or row.get("needs_display"):
+        return 15
+    if agent in ("designer", "designer-mcp"):
+        return 20 if "DES-" in sid or "DMCP-" in sid else 25
+    if agent == "coder-mcp":
+        return 30 if row.get("territory") and "app.py" in str(row.get("territory")) else 25
+    if agent in ("coder", "coder_a", "coder_b", "coder_c"):
+        return 25
+    if agent == "sim-steward":
+        return 15
+    return 20
+
+
+def _demand_plan_minutes(row: dict[str, Any]) -> int:
+    """Planning estimate for session lists — shorter than execution estimate to fit ~4–6 slices/hour."""
+    return min(15, max(10, _estimate_slice_minutes(row) // 2))
+
+
+def _compress_work_row(row: dict[str, Any]) -> dict[str, Any]:
+    keep = (
+        "id",
+        "title",
+        "goal",
+        "priority",
+        "owner",
+        "agent",
+        "track",
+        "track_id",
+        "wave",
+        "status",
+        "deliverable",
+        "witness",
+        "plan",
+        "depends_on",
+        "territory",
+        "verify",
+        "home_queue",
+        "parallel_ok",
+        "needs_display",
+        "note",
+    )
+    out = {k: row[k] for k in keep if k in row and row[k] not in (None, "", [])}
+    if "goal" in row and "title" not in out:
+        out["title"] = str(row.get("goal") or "")[:120]
+    return out
+
+
+def _tracks_summary(items: list[dict[str, Any]], agent: str) -> dict[str, int]:
+    counts: dict[str, int] = {}
+    for row in items:
+        if _row_agent(row) != agent:
+            continue
+        if str(row.get("status")) not in PICK_STATUS:
+            continue
+        key = str(row.get("track") or row.get("track_id") or "?")
+        counts[key] = counts.get(key, 0) + 1
+    return counts
+
+
+def agent_queue_demand(
+    agent: str,
+    *,
+    minutes: int = 60,
+    max_slices: int = 8,
+    track_rotate: bool = True,
+    track: str = "",
+) -> dict[str, Any]:
+    """Build an hour-scale session todo list from ready rows (cross-track)."""
+    norm = _normalize_agent(agent)
+    items = load_multi_parallel_items()
+    ready = [
+        r
+        for r in items
+        if _row_agent(r) == norm
+        and str(r.get("status")) == "ready"
+        and _deps_satisfied(r, _by_id(items))
+        and _track_filter(r, track)
+    ]
+    ready.sort(key=_pick_sort_key)
+
+    if not ready:
+        return {
+            "schema": "agent_queue_demand_v1",
+            "ok": True,
+            "agent": norm,
+            "minutes_budget": minutes,
+            "action": "idle",
+            "demand_todos": [],
+            "hint": "No ready rows — try get-que with cross_drain or another agent lane",
+        }
+
+    plan: list[dict[str, Any]] = []
+    used_tracks: set[str] = set()
+    budget = max(15, minutes)
+    spent = 0
+    pool = list(ready)
+
+    while pool and len(plan) < max_slices and spent < budget:
+        pick_idx = 0
+        if track_rotate and len(pool) > 1:
+            for i, row in enumerate(pool):
+                tr = str(row.get("track") or row.get("track_id") or "")
+                if tr and tr not in used_tracks:
+                    pick_idx = i
+                    break
+        row = pool.pop(pick_idx)
+        est = _demand_plan_minutes(row)
+        if spent + est > budget and plan:
+            break
+        tr = str(row.get("track") or row.get("track_id") or "")
+        used_tracks.add(tr)
+        spent += est
+        plan.append(
+            {
+                "n": len(plan) + 1,
+                "id": row.get("id"),
+                "track": tr,
+                "wave": row.get("wave"),
+                "est_minutes": est,
+                "title": (row.get("goal") or row.get("title") or "")[:80],
+                "deliverable": row.get("deliverable"),
+                "witness": row.get("witness"),
+            }
+        )
+
+    return {
+        "schema": "agent_queue_demand_v1",
+        "ok": True,
+        "agent": norm,
+        "minutes_budget": minutes,
+        "minutes_estimated": spent,
+        "action": "work",
+        "demand_todos": plan,
+        "session_loop": [
+            "For each todo n: slice_exec_brief(id) → work → WIT-HON → dual Q✓",
+            "Blocked mid-slice? get-que again — cross-drain to next todo",
+            f"Regression after every 2 coder slices",
+        ],
+        "hint": f"Demand plan: {len(plan)} slices · ~{spent}m — say 'get que' between slices",
+    }
+
+
+def agent_get_que(
+    agent: str,
+    *,
+    track: str = "",
+    build_list: bool = False,
+    minutes: int = 60,
+    mark_in_progress: bool = False,
+) -> dict[str, Any]:
+    """
+    BLANG:Q+ for multi-parallel tracks — 'get que' entry point.
+    Returns next slice + ready board + optional hour-scale demand plan.
+    """
+    norm = _normalize_agent(agent)
+    items = load_multi_parallel_items()
+    by_id = _by_id(items)
+    work, blocked_primary, reason = _pick_next_multi(items, norm, track=track)
+
+    if work and mark_in_progress and str(work.get("status")) == "ready":
+        _mark_slice_in_progress(str(work["id"]))
+
+    mine_ready = [
+        r
+        for r in items
+        if _row_agent(r) == norm
+        and str(r.get("status")) == "ready"
+        and _deps_satisfied(r, by_id)
+        and _track_filter(r, track)
+    ]
+    mine_ready.sort(key=_pick_sort_key)
+
+    cross_drain = [r for r in mine_ready if work and r.get("id") != work.get("id")][:8]
+
+    out: dict[str, Any] = {
+        "schema": "agent_get_que_v1",
+        "ok": True,
+        "agent": norm,
+        "queue": "multi_parallel",
+        "action": "work" if work else "idle",
+        "drain_reason": reason,
+        "tracks_open": _tracks_summary(items, norm),
+        "ready_count": len(mine_ready),
+        "next": _compress_work_row(work) if work else None,
+        "drain_todos": [_compress_work_row(r) for r in mine_ready[:12]],
+        "cross_drain": [_compress_work_row(r) for r in cross_drain],
+        "board_counts_agent": _status_counts(items, norm),
+        "queue_path": QUEUE_REGISTRY["multi_parallel"],
+        "dispatch_path": MULTI_PARALLEL_DISPATCH,
+        "plan_doc": "src/dev/plan_multi_parallel_tracks_v1.md",
+        "prompts_doc": "src/dev/multi_parallel_agent_prompts_v1.md",
+        "session_loop": [
+            "BLANG:PRE → get-que <agent> → slice_exec_brief(next.id)",
+            "work → validate-report witness_honesty → agent-queue-update --enforce (dual Q✓)",
+            "blocked? get-que again (cross_drain picks another track)",
+            "hour session? get-que <agent> --demand --minutes 60",
+        ],
+        "aliases": ["get que", "get-que", "agent-get-que", "agent_queue_next --queue multi_parallel"],
+    }
+    if blocked_primary:
+        out["blocked_primary"] = {
+            "id": blocked_primary.get("id"),
+            "status": blocked_primary.get("status"),
+            "depends_on": blocked_primary.get("depends_on"),
+        }
+    if build_list:
+        out["demand"] = agent_queue_demand(
+            norm, minutes=minutes, track=track
+        )
+    if work:
+        brief = slice_exec_brief(str(work["id"]), queue="multi_parallel")
+        if brief.get("ok"):
+            out["slice_brief"] = {
+                "files": brief.get("files"),
+                "witness": brief.get("witness"),
+                "exit_predicate": brief.get("exit_predicate"),
+            }
+    return out
+
+
+def _pick_next_multi(
+    items: list[dict[str, Any]],
+    agent: str,
+    *,
+    track: str = "",
+) -> tuple[dict[str, Any] | None, dict[str, Any] | None, str]:
+    by_id = _by_id(items)
+    mine = [r for r in items if _row_agent(r) == agent and _track_filter(r, track)]
+    mine.sort(key=_pick_sort_key)
+
+    blocked_primary: dict[str, Any] | None = None
+    for row in mine:
+        st = str(row.get("status") or "")
+        if st not in PICK_STATUS:
+            continue
+        if st == "ready" and _deps_satisfied(row, by_id):
+            return row, None, "next_ready"
+        if st in ("ready", "blocked", "in_progress") and not _deps_satisfied(row, by_id):
+            blocked_primary = row
+            break
+
+    if blocked_primary:
+        for row in mine:
+            if row.get("id") == blocked_primary.get("id"):
+                continue
+            if str(row.get("status")) != "ready":
+                continue
+            if not _deps_satisfied(row, by_id):
+                continue
+            return row, blocked_primary, f"cross_drain:{blocked_primary.get('id')}"
+
+    for row in mine:
+        if str(row.get("status")) == "ready" and _deps_satisfied(row, by_id):
+            return row, None, "next_ready"
+
+    return None, blocked_primary, "lane_idle"
+
+
+def _mark_slice_in_progress(slice_id: str) -> None:
+    items = load_queue("multi_parallel")
+    for row in items:
+        if str(row.get("id")) == slice_id and str(row.get("status")) == "ready":
+            row["status"] = "in_progress"
+            row["started_at"] = datetime.now(timezone.utc).isoformat()
+            break
+    save_queue("multi_parallel", items)
+
+
+def _save_multi_parallel_drain(items: list[dict[str, Any]]) -> Path:
+    return save_queue("multi_parallel", items)
 
 
 def resolve_agent_queue(agent: str, queue: str) -> str:
-    """Prefer phase4 for @coder when G-PLAY-01 is still open (MCP-P2-QUEUE-PHASE4-001)."""
+    """Default auto → multi_parallel home queue; legacy grammar/phase4 when explicitly requested."""
     if queue != "auto":
         return queue
     norm = _normalize_agent(agent)
+    productive = {
+        "planner",
+        "coder",
+        "coder-mcp",
+        "designer",
+        "designer-mcp",
+        "coder_a",
+        "coder_b",
+        "coder_c",
+        "operator",
+        "sim-steward",
+        "orchestrator-mcp",
+    }
+    if norm in productive:
+        return "multi_parallel"
     if norm == "coder":
         try:
             tasks = {str(t.get("id")): t for t in load_queue("phase4")}
@@ -81,33 +458,74 @@ def load_queue(queue: str) -> list[dict[str, Any]]:
 
 
 def save_queue(queue: str, items: list[dict[str, Any]]) -> Path:
-    path = queue_path(queue)
+    path = queue_path(queue) if queue != "designer_active" else repo_root() / DESIGNER_ACTIVE_QUEUE
     path.parent.mkdir(parents=True, exist_ok=True)
-    if queue == "phase4" and path.is_file():
+    if queue in ("phase4", "multi_parallel") and path.is_file():
         try:
             raw = json.loads(path.read_text(encoding="utf-8"))
         except json.JSONDecodeError:
             raw = {}
         if isinstance(raw, dict):
-            raw["tasks"] = items
+            key = "drain" if queue == "multi_parallel" else "tasks"
+            raw[key] = items
+            path.write_text(json.dumps(raw, indent=2) + "\n", encoding="utf-8")
+            return path
+    if queue == "designer_active" and path.is_file():
+        raw = json.loads(path.read_text(encoding="utf-8"))
+        if isinstance(raw, dict):
+            raw["multi_parallel_ready"] = items
             path.write_text(json.dumps(raw, indent=2) + "\n", encoding="utf-8")
             return path
     path.write_text(json.dumps(items, indent=2) + "\n", encoding="utf-8")
     return path
 
 
+def _sync_dispatch_row(slice_id: str, status: str, note: str) -> dict[str, Any] | None:
+    """Dual Q✓ — mirror status into multi_parallel dispatch rollup when row exists."""
+    path = repo_root() / MULTI_PARALLEL_DISPATCH
+    if not path.is_file():
+        return None
+    try:
+        raw = json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return None
+    drain = raw.get("drain")
+    if not isinstance(drain, list):
+        return None
+    synced = False
+    for row in drain:
+        if str(row.get("id")) != slice_id:
+            continue
+        row["status"] = status
+        if note:
+            row["note"] = note
+        row["updated_at"] = datetime.now(timezone.utc).isoformat()
+        synced = True
+        break
+    if synced:
+        raw["drain"] = drain
+        path.write_text(json.dumps(raw, indent=2) + "\n", encoding="utf-8")
+        return {"dispatch_synced": True, "path": MULTI_PARALLEL_DISPATCH}
+    return None
+
+
 def find_queue_task(slice_id: str, *, queue: str | None = None) -> tuple[str, dict[str, Any]]:
     needle = slice_id.strip()
-    queues = [queue] if queue else list(QUEUE_REGISTRY.keys())
-    for q in queues:
-        if not q:
+    order = [queue] if queue else ["multi_parallel", *QUEUE_REGISTRY.keys()]
+    seen: set[str] = set()
+    for q in order:
+        if not q or q in seen:
             continue
+        seen.add(q)
         try:
             for row in load_queue(q):
                 if str(row.get("id") or "") == needle:
                     return q, row
         except (FileNotFoundError, ValueError, json.JSONDecodeError, KeyError):
             continue
+    for row in _load_designer_parallel_ready():
+        if str(row.get("id") or "") == needle:
+            return "designer_active", row
     raise KeyError(f"slice_id not in queues: {needle}")
 
 
@@ -124,7 +542,7 @@ def slice_exec_brief(slice_id: str, *, queue: str | None = None) -> dict[str, An
         docs.insert(0, deliverable)
     files = [d for d in docs if "/" in d or d.endswith((".md", ".rs", ".json"))]
     status = str(row.get("status") or "ready")
-    agent = str(row.get("agent") or "")
+    agent = str(row.get("owner") or row.get("agent") or "")
     witness_rel = str(row.get("witness") or row.get("witness_json") or "")
     return {
         "ok": True,
@@ -165,7 +583,7 @@ def _deps_satisfied(item: dict[str, Any], by_id: dict[str, dict[str, Any]]) -> b
 def _status_counts(items: list[dict[str, Any]], agent: str | None = None) -> dict[str, int]:
     counts: dict[str, int] = {}
     for row in items:
-        if agent and _normalize_agent(str(row.get("agent") or "")) != agent:
+        if agent and _row_agent(row) != agent:
             continue
         st = str(row.get("status") or "ready")
         counts[st] = counts.get(st, 0) + 1
@@ -252,8 +670,47 @@ def agent_queue_next(
 ) -> dict[str, Any]:
     """Next drainable slice for an agent — never returns wait-only without a drain alternative."""
     resolved_queue = resolve_agent_queue(agent, queue)
-    items = load_queue(resolved_queue)
     norm = _normalize_agent(agent)
+
+    if resolved_queue == "multi_parallel":
+        items = load_multi_parallel_items()
+        work, blocked_primary, reason = _pick_next_multi(items, norm)
+        if work and mark_in_progress and str(work.get("status")) == "ready":
+            _mark_slice_in_progress(str(work["id"]), load_queue("multi_parallel"))
+        board_lines = [
+            f"{row.get('id')}|{row.get('status')}|{_row_agent(row)}|{row.get('track', '')}"
+            for row in sorted(items, key=_pick_sort_key)
+            if _row_agent(row) == norm
+        ]
+        out: dict[str, Any] = {
+            "queue": resolved_queue,
+            "queue_requested": queue,
+            "agent": norm,
+            "action": "work" if work else "idle",
+            "drain_reason": reason,
+            "board_counts": _status_counts(items),
+            "board_counts_agent": _status_counts(items, norm),
+            "board_lines": board_lines,
+            "tracks_open": _tracks_summary(items, norm),
+            "token_policy": [
+                "Use validate_*_report compress=4 — not raw cargo/blender logs",
+                "Use witness_brief / handoff_brief — not full JSON/markdown dumps",
+                "On exit: agent_queue_update(slice_id, done|blocked) + dual Q✓ dispatch",
+            ],
+            "queue_path": QUEUE_REGISTRY["multi_parallel"],
+            "get_que_hint": f"get-que {norm} --demand --minutes 60 for hour-scale todo list",
+        }
+        if work:
+            out["slice"] = _compress_work_row(work)
+        if blocked_primary:
+            out["blocked_primary"] = {
+                "id": blocked_primary.get("id"),
+                "status": blocked_primary.get("status"),
+                "depends_on": blocked_primary.get("depends_on"),
+            }
+        return out
+
+    items = load_queue(resolved_queue)
     work, blocked_primary, reason = _pick_next(items, norm)
 
     if work and mark_in_progress and str(work.get("status")) == "ready":
@@ -268,7 +725,7 @@ def agent_queue_next(
         for row in sorted(items, key=lambda x: int(x.get("priority") or 999))
     ]
 
-    out: dict[str, Any] = {
+    out = {
         "queue": resolved_queue,
         "queue_requested": queue,
         "agent": norm,
@@ -301,14 +758,28 @@ def agent_queue_update(
     status: str,
     *,
     note: str = "",
-    queue: str = "grammar",
+    queue: str = "auto",
     enforce: bool = False,
 ) -> dict[str, Any]:
     st = status.strip().lower()
     if st not in VALID_STATUS:
         raise ValueError(f"invalid status {status!r}; use one of {sorted(VALID_STATUS)}")
 
-    items = load_queue(queue)
+    if queue == "auto":
+        queue, _ = find_queue_task(slice_id)
+    else:
+        queue = queue
+
+    if queue == "designer_active":
+        path = repo_root() / DESIGNER_ACTIVE_QUEUE
+        raw = json.loads(path.read_text(encoding="utf-8"))
+        rows = raw.get("multi_parallel_ready")
+        if not isinstance(rows, list):
+            raise KeyError(f"slice_id not in designer_active mirror: {slice_id}")
+        items = rows
+    else:
+        items = load_queue(queue)
+
     found = False
     target_row: dict[str, Any] | None = None
     for row in items:
@@ -338,6 +809,7 @@ def agent_queue_update(
         raise KeyError(f"slice_id not in queue: {slice_id}")
 
     save_queue(queue, items)
+    dispatch = _sync_dispatch_row(slice_id, st, note) if queue in ("multi_parallel", "designer_active") else None
     return {
         "ok": True,
         "slice_id": slice_id,
@@ -345,6 +817,7 @@ def agent_queue_update(
         "queue": queue,
         "enforce": bool(enforce),
         "had_exit_predicate": isinstance((target_row or {}).get("exit_predicate"), dict),
+        "dispatch_sync": dispatch,
     }
 
 
@@ -1041,6 +1514,8 @@ def token_savings_guide() -> dict[str, Any]:
             "simulation": "simulation_queue_brief() — weather train open rows",
             "coder_mcp_drain": "coder_mcp_drain_brief() — full @coder-mcp drain board",
             "orchestrator_mcp_lane": "orchestrator-mcp-lane-brief — @orchestrator-mcp P2 pick + explicit order",
+            "get_que": "get_que('<agent>', demand=true, minutes=60) — multi-parallel Q+ + hour todo list",
+            "agent_queue_demand": "agent_queue_demand('<agent>', minutes=60) — ordered session slices only",
         },
         "witness_integrity": {
             "blang": "BLANG:WIT-HON",

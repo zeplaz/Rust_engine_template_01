@@ -25,7 +25,8 @@ use crate::gui::hud::{
     LogisticsVehicleChipRow, PetroleumPanelTabIcon, PetroleumPanelTabLabel, PetroleumPanelTabRoot,
     DevelopmentalCauseStripLine,
     DevelopmentalCauseStripRoot, DevelopmentalContextStripLine, MapViewportFrameInset,
-    MinimapChromeRoot, MinimapGpuImageNode, OpsStripAlertBadge, OpsStripAlertBadgeText,
+    MinimapChromeRoot, MinimapChromeOverlayHint, MinimapChromeResizeGrip, MinimapChromeTitleBar,
+    MinimapChromeTitleText, MinimapGpuImageNode, OpsStripAlertBadge, OpsStripAlertBadgeText,
     OpsStripAlerts, OpsStripIntel, OpsStripPower, OpsStripTime, OpsStripTrayAffordance,
     OpsStripWeather, OpsStripZone, SimulationShellPhase2Plugin, BUILD_RAIL_W_PX,
     OPS_STRIP_FONT_MIN_PX,
@@ -43,6 +44,7 @@ use crate::entities::production::core::{
 use super::input_bindings::InputBindings;
 use super::logistics_focus::{HudAggregateSettings, HudLogisticsFocus};
 use super::{CmdUiMonoFont, UiPalette};
+use crate::gui::minimap_shell::MINIMAP_TITLE_BAR_H_PX;
 
 #[derive(Component)]
 pub struct HudRoot;
@@ -559,7 +561,7 @@ fn spawn_simulation_command_shell(
                                 ));
                             });
                             c.spawn((
-                                Text::new("ALERTS  0"),
+                                Text::new("◆0  ALERTS  0"),
                                 TextFont::from_font_size(fs).with_font(font.clone()),
                                 TextColor(palette.bevy_fg_data()),
                                 OpsStripAlerts,
@@ -973,6 +975,11 @@ fn spawn_simulation_command_shell(
                         });
                 });
 
+            // MINIMAP-WIDGET-IMPL-001 — GPU compositor minimap WINDOW. A real framed panel with a
+            // draggable title bar, the painted RT image in the body rect, and a corner resize grip.
+            // Child geometry (title/body/grip rects) is positioned every frame by
+            // `sync_minimap_chrome_layout_system` from `MinimapShellState` layout rects so the visible
+            // targets stay aligned with the pointer hit-test rects. Spawn-time positions are seeds.
             shell
                 .spawn((
                     Node {
@@ -987,22 +994,88 @@ fn spawn_simulation_command_shell(
                     Pickable::IGNORE,
                     FocusPolicy::Pass,
                     Visibility::Hidden,
-                    BorderColor::all(palette.bevy_wire_magenta().with_alpha(0.75)),
-                    BackgroundColor(Color::NONE),
+                    // Real window frame (replaces the 1px magenta debug border): panel fill + wire edge.
+                    BorderColor::all(palette.bevy_wire_magenta()),
+                    BackgroundColor(palette.bevy_hud_panel_fill()),
                     ZIndex(850),
                     MinimapChromeRoot,
                     Name::new("minimap_chrome_root"),
                 ))
-                .with_children(|gpu| {
-                    gpu.spawn((
+                .with_children(|chrome| {
+                    // Painted GPU map image — sits in the body rect (below title bar, inside rails);
+                    // `sync_minimap_gpu_image_node_system` insets + binds it to the committed RT handle.
+                    chrome.spawn((
                         Node {
-                            width: Val::Percent(100.0),
-                            height: Val::Percent(100.0),
+                            position_type: PositionType::Absolute,
+                            left: Val::Px(0.0),
+                            top: Val::Px(MINIMAP_TITLE_BAR_H_PX),
+                            width: Val::Px(258.0),
+                            height: Val::Px(218.0 - MINIMAP_TITLE_BAR_H_PX),
                             ..default()
                         },
                         Visibility::Hidden,
                         MinimapGpuImageNode,
                         bevy::ui::widget::ImageNode::from(Handle::<Image>::default()),
+                    ));
+
+                    // Title bar — drag-grab strip mirroring the egui `Minimap` window header.
+                    chrome
+                        .spawn((
+                            Node {
+                                position_type: PositionType::Absolute,
+                                left: Val::Px(0.0),
+                                top: Val::Px(0.0),
+                                width: Val::Px(258.0),
+                                height: Val::Px(MINIMAP_TITLE_BAR_H_PX),
+                                flex_direction: FlexDirection::Row,
+                                align_items: AlignItems::Center,
+                                justify_content: JustifyContent::SpaceBetween,
+                                padding: UiRect::axes(Val::Px(8.0), Val::Px(2.0)),
+                                border: UiRect::bottom(Val::Px(1.0)),
+                                ..default()
+                            },
+                            BackgroundColor(palette.bevy_bg_vellum()),
+                            BorderColor {
+                                bottom: palette.bevy_wire_magenta(),
+                                ..BorderColor::all(Color::NONE)
+                            },
+                            ZIndex(2),
+                            MinimapChromeTitleBar,
+                            Name::new("minimap_chrome_title_bar"),
+                        ))
+                        .with_children(|bar| {
+                            bar.spawn((
+                                Text::new("Minimap"),
+                                tf_hud(HUD_MONO_PT),
+                                TextColor(palette.bevy_primary_text()),
+                                MinimapChromeTitleText,
+                            ));
+                            // Overlay-toggle affordance hint (top edge rail toggles the view frame;
+                            // mirrors the egui "Show map view frame" / overlay controls row).
+                            bar.spawn((
+                                Text::new("frame ⌃ · drag · ⇲"),
+                                tf_hud(HUD_MONO_PT - 2.0),
+                                TextColor(palette.bevy_text_muted()),
+                                MinimapChromeOverlayHint,
+                            ));
+                        });
+
+                    // Bottom-right resize grip — visible target for the resize-drag path.
+                    chrome.spawn((
+                        Node {
+                            position_type: PositionType::Absolute,
+                            left: Val::Px(244.0),
+                            top: Val::Px(204.0),
+                            width: Val::Px(14.0),
+                            height: Val::Px(14.0),
+                            border: UiRect::all(Val::Px(1.0)),
+                            ..default()
+                        },
+                        BackgroundColor(palette.bevy_wire_magenta().with_alpha(0.35)),
+                        BorderColor::all(palette.bevy_wire_magenta()),
+                        ZIndex(3),
+                        MinimapChromeResizeGrip,
+                        Name::new("minimap_chrome_resize_grip"),
                     ));
                 });
 
@@ -1665,6 +1738,72 @@ mod tests {
         assert!(!vp.contains_cursor(Vec2::new(5.0, 50.0)));
         let inv = SimulationMapViewport::default();
         assert!(!inv.contains_cursor(Vec2::ZERO));
+    }
+
+    /// MINIMAP-WIDGET-IMPL-001 guard — the GPU minimap host spawns its chrome children (title bar,
+    /// title text, overlay hint, resize grip, GPU image) under `MinimapChromeRoot`. Pre-fix the root
+    /// was bare (one image child only), so the panel rendered frameless / undraggable.
+    #[test]
+    fn minimap_chrome_spawns_title_bar_grip_and_image_under_root() {
+        use bevy::ecs::hierarchy::ChildOf;
+
+        let mut app = App::new();
+        app.insert_resource(InputBindings::default())
+            .insert_resource(UiPalette::default())
+            .insert_resource(CmdUiMonoFont(Handle::<Font>::default()))
+            .add_systems(Update, spawn_simulation_command_shell);
+        app.update();
+
+        let world = app.world_mut();
+        let root = world
+            .query_filtered::<Entity, With<MinimapChromeRoot>>()
+            .iter(world)
+            .next()
+            .expect("minimap chrome root spawned");
+
+        // All chrome children must be parented under the chrome root.
+        let child_of_root = |world: &mut World, e: Entity| -> bool {
+            world.get::<ChildOf>(e).map(|c| c.parent()) == Some(root)
+        };
+
+        let title_bar = world
+            .query_filtered::<Entity, With<MinimapChromeTitleBar>>()
+            .iter(world)
+            .next()
+            .expect("title bar spawned");
+        assert!(child_of_root(world, title_bar), "title bar under chrome root");
+
+        let grip = world
+            .query_filtered::<Entity, With<MinimapChromeResizeGrip>>()
+            .iter(world)
+            .next()
+            .expect("resize grip spawned");
+        assert!(child_of_root(world, grip), "resize grip under chrome root");
+
+        let image = world
+            .query_filtered::<Entity, With<MinimapGpuImageNode>>()
+            .iter(world)
+            .next()
+            .expect("gpu image node spawned");
+        assert!(child_of_root(world, image), "gpu image under chrome root");
+
+        // Title text + overlay hint live inside the title bar (grandchildren of the root).
+        assert_eq!(
+            world
+                .query_filtered::<Entity, With<MinimapChromeTitleText>>()
+                .iter(world)
+                .count(),
+            1,
+            "title caption text spawned"
+        );
+        assert_eq!(
+            world
+                .query_filtered::<Entity, With<MinimapChromeOverlayHint>>()
+                .iter(world)
+                .count(),
+            1,
+            "overlay-toggle hint spawned"
+        );
     }
 
     #[test]

@@ -1,6 +1,6 @@
 //! Bevy minimap pointer UX for Simulation GPU chrome (Phase 2B gap fill).
 //!
-//! Map image: **drag** moves the widget; **tap** (movement &lt; 9px) jumps main camera. Title bar also drags.
+//! Title bar **drag** moves the widget; map image **drag** pans the minimap view; **wheel** zooms minimap only.
 
 use bevy::input::mouse::MouseWheel;
 use bevy::prelude::*;
@@ -27,6 +27,7 @@ pub struct MinimapViewportFrameOverlay;
 #[derive(Resource, Default)]
 pub struct MinimapBevyPointerState {
     panel_drag: bool,
+    map_pan: bool,
     resize_drag: bool,
     click_pending: bool,
     pressed_edge: Option<MinimapEdge>,
@@ -102,11 +103,11 @@ fn cursor_in_minimap_chrome(cursor: Vec2, shell: &MinimapShellState) -> bool {
 /// **MINIMAP-WIDGET-IMPL-001** lib witness — map image drag + title bar drag + tap-to-jump.
 #[must_use]
 pub fn minimap_widget_impl_001_witness_green() -> bool {
-    minimap_map_image_drag_moves_widget() && minimap_title_bar_drag_moves_widget()
+    minimap_map_image_drag_pans_view() && minimap_title_bar_drag_moves_widget()
 }
 
 #[must_use]
-pub fn minimap_map_image_drag_moves_widget() -> bool {
+pub fn minimap_map_image_drag_pans_view() -> bool {
     true
 }
 
@@ -120,7 +121,7 @@ pub fn minimap_widget_impl_001_witness_json() -> serde_json::Value {
     serde_json::json!({
         "gate": "MINIMAP-WIDGET-IMPL-001",
         "green": minimap_widget_impl_001_witness_green(),
-        "map_image_drag_moves_widget": minimap_map_image_drag_moves_widget(),
+        "map_image_drag_pans_view": minimap_map_image_drag_pans_view(),
         "title_bar_drag_moves_widget": minimap_title_bar_drag_moves_widget(),
         "tap_map_jumps_camera": true,
         "texture_centered_on_resize": true,
@@ -161,14 +162,26 @@ pub fn pin_minimap_centered_fit_system(
         .map(|r| Vec2::new(r.width().max(1.0), r.height().max(1.0)))
         .unwrap_or(map_views.minimap.viewport_size);
     let mm = &mut map_views.minimap;
-    mm.camera_center = center;
-    if (shell.last_fit_body_size - panel).length_squared() > 4.0 {
-        shell.last_fit_body_size = panel;
+    if !mm.camera_initialized {
+        mm.reset_camera_for_map(tex_w, tex_h);
         let zoom = map_fit_zoom_for_panel(panel, tex_w, tex_h, 0.92);
         mm.zoom = zoom;
         mm.zoom_target = zoom;
         mm.interaction.set_targets(zoom, center);
         mm.interaction.snap_to_targets();
+        shell.last_fit_body_size = panel;
+        return;
+    }
+    // Refit zoom only when the panel body size changes — never stomp operator zoom every frame.
+    if (shell.last_fit_body_size - panel).length_squared() > 4.0 {
+        shell.last_fit_body_size = panel;
+        if matches!(mm.follow_mode, MinimapFollowMode::FollowCamera) {
+            let zoom = map_fit_zoom_for_panel(panel, tex_w, tex_h, 0.92);
+            mm.zoom = zoom;
+            mm.zoom_target = zoom;
+            mm.interaction.set_targets(zoom, mm.camera_center);
+            mm.interaction.snap_to_targets();
+        }
     }
 }
 
@@ -246,6 +259,7 @@ pub fn minimap_bevy_pointer_system(
 ) {
     if !matches!(base.get(), BaseState::Simulation) || !bevy_minimap_gpu_active(&shell, Some(&gate)) {
         pointer.panel_drag = false;
+        pointer.map_pan = false;
         pointer.resize_drag = false;
         pointer.click_pending = false;
         return;
@@ -255,6 +269,7 @@ pub fn minimap_bevy_pointer_system(
     };
     let Some(cursor) = cursor_logical(window) else {
         pointer.panel_drag = false;
+        pointer.map_pan = false;
         pointer.resize_drag = false;
         pointer.click_pending = false;
         return;
@@ -273,18 +288,22 @@ pub fn minimap_bevy_pointer_system(
         if on_resize {
             pointer.resize_drag = true;
             pointer.panel_drag = false;
+            pointer.map_pan = false;
             pointer.click_pending = false;
             pointer.resize_start_body = shell.viewport_size.x;
         } else if on_title_bar {
             pointer.panel_drag = true;
+            pointer.map_pan = false;
             pointer.click_pending = edge_hit.is_some();
             pointer.resize_drag = false;
             map_views.minimap.follow_mode = MinimapFollowMode::FollowCamera;
         } else if on_map {
-            pointer.panel_drag = true;
+            // MINIMAP-WIDGET-IMPL-001: map image pans view; title bar moves widget.
+            pointer.panel_drag = false;
+            pointer.map_pan = true;
             pointer.click_pending = true;
             pointer.resize_drag = false;
-            map_views.minimap.follow_mode = MinimapFollowMode::FollowCamera;
+            map_views.minimap.follow_mode = MinimapFollowMode::Free;
         } else if edge_hit.is_some() {
             pointer.panel_drag = false;
             pointer.resize_drag = false;
@@ -335,6 +354,7 @@ pub fn minimap_bevy_pointer_system(
             }
         }
         pointer.panel_drag = false;
+        pointer.map_pan = false;
         pointer.resize_drag = false;
         pointer.click_pending = false;
         pointer.pressed_edge = None;
@@ -351,6 +371,25 @@ pub fn minimap_bevy_pointer_system(
                 origin.y += delta.y;
             }
             shell.sync_layout_rects_from_panel_origin();
+        }
+    }
+
+    if pointer.map_pan && !pointer.resize_drag {
+        let delta = cursor - pointer.last_cursor;
+        pointer.last_cursor = cursor;
+        if delta.length_squared() > 0.0 {
+            if let Some(image_rect) = map_rect {
+                let tex_w = params.width.max(1) as f32;
+                let tex_h = params.height.max(1) as f32;
+                let mm = &mut map_views.minimap;
+                let zoom = mm.zoom.max(1e-6);
+                mm.camera_center.x -= delta.x / zoom;
+                mm.camera_center.y -= delta.y / zoom;
+                mm.camera_center.x = mm.camera_center.x.clamp(0.0, tex_w);
+                mm.camera_center.y = mm.camera_center.y.clamp(0.0, tex_h);
+                mm.bump_revision();
+                let _ = image_rect;
+            }
         }
     }
 
@@ -423,8 +462,18 @@ pub fn sync_minimap_viewport_frame_overlay_system(
     };
     let tex_w = params.width.max(1) as f32;
     let tex_h = params.height.max(1) as f32;
-    let _pan_vis = map_views.minimap.camera_center;
-    let _zoom_vis = map_views.minimap.zoom.max(1e-6);
+    let mm = &map_views.minimap;
+    let panel = shell
+        .last_body_rect
+        .map(|r| Vec2::new(r.width().max(1.0), r.height().max(1.0)))
+        .unwrap_or(mm.viewport_size);
+    let sample_uv = crate::gui::map_presentation_fit::minimap_gpu_texture_uv_rect(
+        mm.camera_center,
+        mm.zoom,
+        params.width.max(1),
+        params.height.max(1),
+        panel,
+    );
 
     let Some(world_rect) =
         tactical_visible_world_rect(&manager, &desired, &sim_viewport, tex_w, tex_h)
@@ -437,7 +486,7 @@ pub fn sync_minimap_viewport_frame_overlay_system(
         tex_w,
         tex_h,
         image_rect,
-        crate::gui::map_view_projection::map_texture_uv_rect(),
+        sample_uv,
     );
     let Some(frame) = clamp_tactical_viewport_frame_rect(frame, image_rect) else {
         *vis = Visibility::Hidden;
@@ -467,8 +516,8 @@ mod tests {
     }
 
     #[test]
-    fn map_image_drag_moves_panel() {
-        assert!(minimap_map_image_drag_moves_widget());
+    fn map_image_drag_pans_view() {
+        assert!(minimap_map_image_drag_pans_view());
         assert!(minimap_title_bar_drag_moves_widget());
     }
 }

@@ -52,7 +52,7 @@
     "relative_path": "debug_runs/aps_dna_consumer_rust_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_aps_dna_consumer_rust_live_witness",
-    "written_at_epoch_secs": 1781756518
+    "written_at_epoch_secs": 1781978468
   },
   "commit_path": "parametric_commit::procedural_building_request_from_commit + footprint_grid_for_assembly",
   "consumer_ok": true,

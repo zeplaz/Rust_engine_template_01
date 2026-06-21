@@ -7,8 +7,10 @@ use bevy_egui::egui;
 
 /// Title bar height for GPU minimap widget (MINIMAP-WIDGET-IMPL-001).
 pub const MINIMAP_TITLE_BAR_H_PX: f32 = 24.0;
-const MINIMAP_EDGE_RAIL_PX: f32 = 6.0;
-const MINIMAP_RESIZE_GRIP_PX: f32 = 14.0;
+/// Body inset from the outer panel edge (matches the rail hit-test rects).
+pub const MINIMAP_EDGE_RAIL_PX: f32 = 6.0;
+/// Bottom-right resize grip square side (matches the resize hit-test rect).
+pub const MINIMAP_RESIZE_GRIP_PX: f32 = 14.0;
 
 /// Edge rail hit targets on the minimap widget body.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -229,6 +231,13 @@ impl MinimapShellState {
         self.panel_viewport_suggestion_active = true;
         self.panel_viewport_suggestion_logical_size =
             Vec2::new(rect.width().max(180.0), rect.height().max(160.0));
+        // PERF-INSTR-VFX-001: this is the chrome/layout-driven write of the suggestion authority.
+        // `rect` comes from last_image_rect / last_body_rect / last_window_rect — the ratchet chain.
+        crate::render::trace_minimap_size_writer(
+            "shell.sync_from_layout",
+            self.panel_viewport_suggestion_logical_size.x,
+            self.panel_viewport_suggestion_logical_size.y,
+        );
     }
 
     pub fn ensure_panel_screen_origin(&mut self, window_w: f32, window_h: f32) {
@@ -239,17 +248,6 @@ impl MinimapShellState {
             simulation_minimap_bootstrap_rect(window_w, window_h, self.viewport_size)
         });
         self.panel_screen_origin = Some(Vec2::new(rect.min.x, rect.min.y));
-    }
-
-    /// Sync pointer hit-test rects from the outer Bevy chrome box (logical px).
-    ///
-    /// Does **not** overwrite [`panel_screen_origin`] — drag uses origin + [`sync_layout_rects_from_panel_origin`].
-    pub fn apply_chrome_outer_rect(&mut self, min_x: f32, min_y: f32, outer_w: f32, outer_h: f32) {
-        let window = egui::Rect::from_min_size(
-            egui::pos2(min_x, min_y),
-            egui::vec2(outer_w.max(1.0), outer_h.max(1.0)),
-        );
-        self.apply_window_rect_layout(window);
     }
 
     fn apply_window_rect_layout(&mut self, window: egui::Rect) {
@@ -270,6 +268,14 @@ impl MinimapShellState {
         let body = egui::Rect::from_min_max(body_min, body_max);
         self.last_body_rect = Some(body);
         self.last_image_rect = Some(body);
+        // PERF-INSTR-VFX-001: this body rect (derived from the outer `window` rect) becomes the
+        // suggestion via `sync_panel_viewport_suggestion_from_layout`. Trace it to see if the outer
+        // window rect (`last_window_rect`) is the +2px/frame ratchet source feeding the body.
+        crate::render::trace_minimap_size_writer(
+            "shell.apply_window_rect_body",
+            body.width(),
+            body.height(),
+        );
         self.top_rail_rect = Some(egui::Rect::from_min_max(
             egui::pos2(window.min.x, title.max.y),
             egui::pos2(window.max.x, body_min.y),
@@ -389,5 +395,74 @@ mod tests {
         assert!(r.max.x <= 1280.0);
         assert!(r.min.y >= 64.0);
         assert!(r.width() > 100.0);
+    }
+
+    /// MINIMAP-WIDGET-IMPL-001 chrome geometry: a content rect yields a title bar pinned to the top,
+    /// a body inset from the edges, and a resize grip in the bottom-right corner. These rects are
+    /// what `sync_minimap_chrome_layout_system` renders the title-bar / grip children from.
+    #[test]
+    fn chrome_layout_rects_match_window_regions() {
+        let mut state = MinimapShellState::default();
+        state.viewport_size = Vec2::new(260.0, 220.0);
+        state.panel_screen_origin = Some(Vec2::new(100.0, 80.0));
+        state.sync_layout_rects_from_panel_origin();
+
+        let window = state.last_window_rect.expect("content rect");
+        let title = state.title_bar_rect.expect("title rect");
+        let body = state.last_body_rect.expect("body rect");
+        let grip = state.resize_grip_rect.expect("grip rect");
+
+        // Title bar pinned to the top edge of the content, full width, fixed bar height.
+        assert!((title.min.x - window.min.x).abs() < 0.01);
+        assert!((title.min.y - window.min.y).abs() < 0.01);
+        assert!((title.width() - window.width()).abs() < 0.01);
+        assert!((title.height() - MINIMAP_TITLE_BAR_H_PX).abs() < 0.01);
+
+        // Body sits below the title bar, inset by the edge rails — strictly inside the window.
+        assert!(body.min.y >= title.max.y - 0.01);
+        assert!(body.min.x > window.min.x);
+        assert!(body.max.x < window.max.x);
+        assert!(body.width() > 0.0 && body.height() > 0.0);
+
+        // Resize grip is the bottom-right square of the content box.
+        assert!((grip.max.x - window.max.x).abs() < 0.01);
+        assert!((grip.max.y - window.max.y).abs() < 0.01);
+        assert!((grip.width() - MINIMAP_RESIZE_GRIP_PX).abs() < 0.01);
+    }
+
+    /// MINIMAP-SIZE-AUTHORITY-001 regression guard: repeated chrome layout passes on an UNCHANGED
+    /// window must produce a byte-stable content rect (no +Npx/frame ratchet). Pre-fix, feeding the
+    /// outer (content + stroke pad) box back as the next content rect grew the panel every frame.
+    #[test]
+    fn static_window_layout_does_not_ratchet() {
+        let mut state = MinimapShellState::default();
+        state.viewport_size = Vec2::new(300.0, 240.0);
+        state.panel_screen_origin = Some(Vec2::new(200.0, 120.0));
+
+        state.sync_layout_rects_from_panel_origin();
+        let first = state.last_window_rect.expect("content rect");
+        let first_body = state.last_body_rect.expect("body rect");
+
+        // Re-run the layout many times as the schedule would each frame for a static window.
+        for _ in 0..120 {
+            state.sync_layout_rects_from_panel_origin();
+        }
+        let last = state.last_window_rect.expect("content rect");
+        let last_body = state.last_body_rect.expect("body rect");
+
+        assert_eq!(first.width(), last.width(), "content width must not ratchet");
+        assert_eq!(first.height(), last.height(), "content height must not ratchet");
+        assert_eq!(first_body.width(), last_body.width(), "body width must not ratchet");
+        assert_eq!(first_body.height(), last_body.height(), "body height must not ratchet");
+
+        // The suggestion that feeds `resolve_minimap_panel_viewport` is likewise stable.
+        state.sync_panel_viewport_suggestion_from_layout();
+        let suggestion_a = state.panel_viewport_suggestion_logical_size;
+        for _ in 0..16 {
+            state.sync_layout_rects_from_panel_origin();
+            state.sync_panel_viewport_suggestion_from_layout();
+        }
+        let suggestion_b = state.panel_viewport_suggestion_logical_size;
+        assert_eq!(suggestion_a, suggestion_b, "panel size suggestion must settle");
     }
 }

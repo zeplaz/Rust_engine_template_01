@@ -18,6 +18,8 @@ path = "src/bin/bevy_preview_worker.rs"
 
 [features]
 default = []
+# Extra Bevy entity/frame diagnostics plugins during `--test` runs (runtime latch still works without this).
+test_instrumentation = []
 # H-A2: optional Hanabi L3 embellishment (no default EnginePlugin registration).
 hanabi_l3 = ["dep:bevy_hanabi"]
 # Historical `src/engine/engine.rs` stub (DefaultPlugins + egui only). Canonical: `engine_with_worldgen::EnginePlugin`.

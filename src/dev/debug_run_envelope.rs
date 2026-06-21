@@ -31,6 +31,7 @@ pub const KNOWN_LIVE_PROOF_PATHS: &[&str] = &[
     "debug_runs/wave_c_live.json",
     "debug_runs/ui_shell_migration_live.json",
     "debug_runs/minimap_compositor_live.json",
+    "debug_runs/sim_spectrum_analytics_live.json",
     "debug_runs/stage7_behavioral_live.json",
     "debug_runs/stage7_play_live.json",
     "debug_runs/wss_substrate_live.json",
@@ -75,6 +76,11 @@ pub fn logging_env_snapshot() -> Value {
     serde_json::json!({
         "RUST_LOG": env_opt("RUST_LOG"),
         "PERF": env_flag("PERF"),
+        "STALL": env_flag("STALL"),
+        "SIM_ANALYTICS": env_flag("SIM_ANALYTICS"),
+        "SIM_ANALYTICS_QUIET": env_flag("SIM_ANALYTICS_QUIET"),
+        "SIM_ANALYTICS_FRAMES": env_flag("SIM_ANALYTICS_FRAMES"),
+        "PERF_DISK": env_flag("PERF_DISK"),
         "STAGE5_VERBOSE": env_flag("STAGE5_VERBOSE"),
         "STAGE5_READINESS_VERBOSE": env_flag("STAGE5_READINESS_VERBOSE"),
         "SIM_VIEW_SYNC_DEBUG": env_flag("SIM_VIEW_SYNC_DEBUG"),
@@ -102,6 +108,11 @@ pub fn agent_commands_for_profile(profile: &str) -> Vec<&'static str> {
             "cargo test -p proc_A_dine01 --lib stage5",
             "cargo test -p proc_A_dine01 --lib minimap_compositor",
             "MINIMAP_GPU_COMPOSITOR=1 cargo run -p proc_A_dine01 --release -- --test visual",
+        ],
+        "SIM_SPECTRUM" => vec![
+            "cargo run -p proc_A_dine01 --release -- --test vfx",
+            "cargo run -p proc_A_dine01 --release -- --test visual",
+            "SIM_ANALYTICS_FRAMES=1 cargo run -p proc_A_dine01 --release -- --test visual",
         ],
         "CONSTRUCTION_STAGE" => vec![
             "cargo test -p proc_A_dine01 construction:: --lib",

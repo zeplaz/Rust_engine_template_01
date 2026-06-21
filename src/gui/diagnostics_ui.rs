@@ -141,6 +141,7 @@ pub struct DiagnosticsSpinePanels<'w> {
     logistics_diag: Option<Res<'w, crate::economy::logistics::LogisticsDiagnostics>>,
     logistics_rt: Option<Res<'w, crate::economy::logistics::LogisticsThroughputRuntimeWitness>>,
     fire_witness: Option<Res<'w, FireStreamingWitness>>,
+    fire_ecology: Option<Res<'w, crate::systems::fire::witness_collectors::FireEcologyWitness>>,
     fire_active: Option<Res<'w, ActiveFireChunkSet>>,
     fire_runtime: Option<Res<'w, FireChunkRuntime>>,
     fire_proof: Option<Res<'w, FireStreamingLiveProofState>>,
@@ -339,6 +340,45 @@ pub fn diagnostics_ui_system(
                                 ),
                             );
                         }
+                    });
+            }
+
+            if let Some(eco) = spine.fire_ecology.as_deref() {
+                ui.separator();
+                egui::CollapsingHeader::new("Fire ecology preview (DES-ECOLOGY-PREVIEW-V2)")
+                    .default_open(false)
+                    .show(ui, |ui| {
+                        section_heading(ui, &palette, CmdHeadingStyle::Gt, "Sim heat / fuel");
+                        primary_label(
+                            ui,
+                            &palette,
+                            format!(
+                                "fuel={} band={} old_growth={:.2} heat={:.3} max={:.3}",
+                                eco.mean_fuel,
+                                eco.fuel_band_label(),
+                                eco.mean_old_growth,
+                                eco.mean_heat,
+                                eco.max_heat,
+                            ),
+                        );
+                        primary_label(
+                            ui,
+                            &palette,
+                            format!(
+                                "ignition_gate={} heat_stable={} frames={}",
+                                if eco.ignition_gate_open() { "open" } else { "closed" },
+                                eco.heat_mostly_stable(),
+                                eco.frames_sampled,
+                            ),
+                        );
+                        muted_label(
+                            ui,
+                            &palette,
+                            format!(
+                                "spread: depleted={} neighbor={}",
+                                eco.fuel_depleted_cells, eco.neighbor_spread_cells,
+                            ),
+                        );
                     });
             }
 

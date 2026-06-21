@@ -1,0 +1,14 @@
+{
+  "schema": "debug_intelligence_routing_packet_v1",
+  "issue": "Minimap product-shell WINDOW structurally regressed: bare panel, no chrome/bars, not draggable, no image, no scroll/zoom",
+  "agent": "debug-intelligence",
+  "ts_date": "2026-06-19",
+  "owner": "@coder",
+  "severity": "high",
+  "confidence": "high",
+  "root_cause": "Two competing minimap paths. GPU compositor (default MINIMAP_GPU_COMPOSITOR unset->true, presentation_source=SharedRenderTargetImage default) makes resolve_minimap_egui_texture() return None (src/gui/map_view/consumers/minimap.rs:27-30), so the rich egui product-shell window draw_simulation_minimap_egui (title bar / drag / painter.image / scroll-zoom) is NEVER called (hud_root_tick.rs:237 guard). Fallback Bevy chrome host MinimapChromeRoot (in_game_hud.rs:976-1007) is a bare 260x220 node with a 1px magenta wire border and a single empty-handle image child - NO title bar / edge rail / resize chrome entities, and drag depends on panel_screen_origin that the bevy pointer path only seeds on interaction.",
+  "regressing_commits": ["5dade169 refactor from damgge of corruption (introduced GPU-suppress early-return in consumers/minimap.rs + backend gate)", "949fd914 mage wave (introduced bare MinimapChromeRoot spawn block in in_game_hud.rs)"],
+  "introduced_by_me_uncommitted_edit": false,
+  "uncommitted_edit_assessment": "tile_world_fallback.rs ~1326-1345/1431-1442 removed queue_panel_extent + window-rect write-back. Lives ENTIRELY in the egui path which is currently DEAD under GPU default. Did NOT break window move/sizing of the live (bevy-chrome) minimap. Safe re: this regression.",
+  "highest_leverage_fix": "Decide ONE owning path. Fastest restore: run with MINIMAP_GPU_COMPOSITOR=0 (forces SharedCpuRaster -> egui product-shell window returns) to confirm the full window comes back, then either keep egui as product path OR build real Bevy UI chrome children (title bar/rails/grip) under MinimapChromeRoot in in_game_hud.rs:996."
+}

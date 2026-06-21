@@ -81,6 +81,7 @@ pub fn stall_watch_enabled() -> bool {
         || std::env::var("STALL")
             .ok()
             .is_some_and(|v| v == "1" || v.eq_ignore_ascii_case("true"))
+        || crate::dev::test_run_instrumentation::instrumentation_stall_spans()
 }
 
 /// Extra Update checkpoints + 1ms stall lines (`STALL_SPAN_DEBUG=1`). Pair with `PERF=1` + `STALL=1`.
