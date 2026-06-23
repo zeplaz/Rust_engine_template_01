@@ -50,9 +50,9 @@ pub struct FrameScheduleSpans {
     pub before_world_repr_ms: f32,
     /// Update: `update_begin` → [`crate::gui::MapCameraSystemSet::ApplyInput`] (un-ordered Update work).
     pub update_pre_map_camera_ms: f32,
-    /// Update: map camera ApplyInput → Smooth.
+    /// Update: map camera ApplyInput → Smooth (same segment as [`Self::map_camera_chain_ms`]).
     pub map_camera_chain_ms: f32,
-    /// Update: PreUpdate end → map camera smooth (legacy alias; use [`Self::update_pre_map_camera_ms`] + [`Self::map_camera_chain_ms`]).
+    /// Update: map camera ApplyInput → Smooth (explicit alias for triage witnesses).
     pub after_map_camera_smooth_ms: f32,
     /// Update: [`crate::gui::ViewAuthoritySystemSet::SyncViewManager`] → next checkpoint.
     pub after_view_sync_ms: f32,
@@ -66,12 +66,36 @@ pub struct FrameScheduleSpans {
     pub post_domain_merge_ms: f32,
 }
 
+/// PERF-INSTR-VFX-001 — wall-time between consecutive systems inside hot Update chains.
+#[derive(Resource, Clone, Debug, Default)]
+pub struct FrameSubstageSpans {
+    pub map_apply_input_ms: f32,
+    pub map_derive_ms: f32,
+    pub map_smooth_ms: f32,
+    pub minimap_intent_ms: f32,
+    pub view_sync_ms: f32,
+    pub fire_sim_snapshot_ms: f32,
+    pub fire_sync_overlay_ms: f32,
+    pub fire_sync_visible_ms: f32,
+    pub fire_sync_lod_ms: f32,
+    pub fire_sync_active_ms: f32,
+    pub fire_build_view_ms: f32,
+    pub fire_emitter_sync_ms: f32,
+    pub fire_commit_ms: f32,
+    pub repr_decay_lod_ms: f32,
+    pub repr_refresh_lod_ms: f32,
+    pub repr_compute_frame_ms: f32,
+    pub repr_apply_result_ms: f32,
+    pub repr_proc_extract_ms: f32,
+}
+
 #[derive(Resource, Clone, Debug, Default)]
 pub struct FrameStallWatch {
     last: Option<Instant>,
     postupdate_started: Option<Instant>,
     pub segments: Vec<(String, f32)>,
     pub spans: FrameScheduleSpans,
+    pub substages: FrameSubstageSpans,
 }
 
 #[must_use]
@@ -107,6 +131,7 @@ impl FrameStallWatch {
         self.postupdate_started = None;
         self.segments.clear();
         self.spans = FrameScheduleSpans::default();
+        self.substages = FrameSubstageSpans::default();
     }
 
     pub fn checkpoint(&mut self, label: &str) {
@@ -133,7 +158,26 @@ impl FrameStallWatch {
             "before_map_camera" => self.spans.update_pre_map_camera_ms = ms,
             "after_map_camera_smooth" => {
                 self.spans.map_camera_chain_ms = ms;
+                self.spans.after_map_camera_smooth_ms = ms;
             }
+            "substage_map_apply_input" => self.substages.map_apply_input_ms = ms,
+            "substage_map_derive" => self.substages.map_derive_ms = ms,
+            "substage_map_smooth" => self.substages.map_smooth_ms = ms,
+            "substage_minimap_intent" => self.substages.minimap_intent_ms = ms,
+            "substage_view_sync" => self.substages.view_sync_ms = ms,
+            "substage_fire_sim_snapshot" => self.substages.fire_sim_snapshot_ms = ms,
+            "substage_fire_sync_overlay" => self.substages.fire_sync_overlay_ms = ms,
+            "substage_fire_sync_visible" => self.substages.fire_sync_visible_ms = ms,
+            "substage_fire_sync_lod" => self.substages.fire_sync_lod_ms = ms,
+            "substage_fire_sync_active" => self.substages.fire_sync_active_ms = ms,
+            "substage_fire_build_view" => self.substages.fire_build_view_ms = ms,
+            "substage_fire_emitter_sync" => self.substages.fire_emitter_sync_ms = ms,
+            "substage_fire_commit" => self.substages.fire_commit_ms = ms,
+            "substage_repr_decay_lod" => self.substages.repr_decay_lod_ms = ms,
+            "substage_repr_refresh_lod" => self.substages.repr_refresh_lod_ms = ms,
+            "substage_repr_compute_frame" => self.substages.repr_compute_frame_ms = ms,
+            "substage_repr_apply_result" => self.substages.repr_apply_result_ms = ms,
+            "substage_repr_proc_extract" => self.substages.repr_proc_extract_ms = ms,
             "after_view_sync" => self.spans.after_view_sync_ms = ms,
             "after_fire_build" => self.spans.after_fire_build_ms = ms,
             "before_world_repr" => self.spans.before_world_repr_ms = ms,
@@ -246,6 +290,33 @@ pub fn stall_checkpoint_after_fire_build(mut watch: ResMut<FrameStallWatch>) {
     watch.checkpoint("after_fire_build");
 }
 
+macro_rules! stall_substage_fn {
+    ($name:ident, $label:literal) => {
+        pub fn $name(mut watch: ResMut<FrameStallWatch>) {
+            watch.checkpoint($label);
+        }
+    };
+}
+
+stall_substage_fn!(stall_substage_map_apply_input, "substage_map_apply_input");
+stall_substage_fn!(stall_substage_map_derive, "substage_map_derive");
+stall_substage_fn!(stall_substage_map_smooth, "substage_map_smooth");
+stall_substage_fn!(stall_substage_minimap_intent, "substage_minimap_intent");
+stall_substage_fn!(stall_substage_view_sync, "substage_view_sync");
+stall_substage_fn!(stall_substage_fire_sim_snapshot, "substage_fire_sim_snapshot");
+stall_substage_fn!(stall_substage_fire_sync_overlay, "substage_fire_sync_overlay");
+stall_substage_fn!(stall_substage_fire_sync_visible, "substage_fire_sync_visible");
+stall_substage_fn!(stall_substage_fire_sync_lod, "substage_fire_sync_lod");
+stall_substage_fn!(stall_substage_fire_sync_active, "substage_fire_sync_active");
+stall_substage_fn!(stall_substage_fire_build_view, "substage_fire_build_view");
+stall_substage_fn!(stall_substage_fire_emitter_sync, "substage_fire_emitter_sync");
+stall_substage_fn!(stall_substage_fire_commit, "substage_fire_commit");
+stall_substage_fn!(stall_substage_repr_decay_lod, "substage_repr_decay_lod");
+stall_substage_fn!(stall_substage_repr_refresh_lod, "substage_repr_refresh_lod");
+stall_substage_fn!(stall_substage_repr_compute_frame, "substage_repr_compute_frame");
+stall_substage_fn!(stall_substage_repr_apply_result, "substage_repr_apply_result");
+stall_substage_fn!(stall_substage_repr_proc_extract, "substage_repr_proc_extract");
+
 pub struct StallWatchPlugin;
 
 impl Plugin for StallWatchPlugin {
@@ -288,21 +359,53 @@ impl Plugin for StallWatchPlugin {
                 Update,
                 stall_checkpoint_after_map_camera_smooth
                     .after(crate::gui::MapCameraSystemSet::Smooth)
-                    .before(crate::gui::WorldRepresentationSystemSet::ComputeFrame),
+                    .before(crate::gui::apply_minimap_camera_intent)
+                    .before(crate::gui::ViewAuthoritySystemSet::SyncViewManager),
             )
             .add_systems(
                 Update,
                 stall_checkpoint_after_view_sync
                     .after(crate::gui::ViewAuthoritySystemSet::SyncViewManager)
                     .after(stall_checkpoint_after_map_camera_smooth)
-                    .before(crate::gui::WorldRepresentationSystemSet::ComputeFrame),
+                    .before(crate::render::extraction::FireVisualFrameSet::BuildProfiles),
             )
             .add_systems(
                 Update,
                 stall_checkpoint_after_fire_build
-                    .after(crate::render::extraction::FireVisualFrameSet::BuildProfiles)
+                    .after(crate::render::visual_snapshot_commit::commit_fire_visual_snapshot)
                     .after(stall_checkpoint_after_view_sync)
-                    .before(crate::gui::WorldRepresentationSystemSet::ComputeFrame),
+                    .before(stall_checkpoint_before_world_repr),
+            )
+            // PERF-INSTR-VFX-001 — map camera substages
+            .add_systems(
+                Update,
+                stall_substage_map_apply_input
+                    .after(crate::gui::MapCameraSystemSet::ApplyInput)
+                    .before(crate::gui::MapCameraSystemSet::DeriveDesired),
+            )
+            .add_systems(
+                Update,
+                stall_substage_map_derive
+                    .after(crate::gui::MapCameraSystemSet::DeriveDesired)
+                    .before(crate::gui::MapCameraSystemSet::Smooth),
+            )
+            .add_systems(
+                Update,
+                stall_substage_map_smooth
+                    .after(crate::gui::MapCameraSystemSet::Smooth)
+                    .before(crate::gui::apply_minimap_camera_intent),
+            )
+            .add_systems(
+                Update,
+                stall_substage_minimap_intent
+                    .after(crate::gui::apply_minimap_camera_intent)
+                    .before(crate::gui::ViewAuthoritySystemSet::SyncViewManager),
+            )
+            .add_systems(
+                Update,
+                stall_substage_view_sync
+                    .after(crate::gui::ViewAuthoritySystemSet::SyncViewManager)
+                    .before(crate::render::extraction::FireVisualFrameSet::BuildProfiles),
             );
     }
 }
@@ -319,6 +422,7 @@ mod tests {
         watch.record_span("after_fire_build", 4.0);
         watch.record_span("before_world_repr", 800.0);
         assert_eq!(watch.spans.map_camera_chain_ms, 2.0);
+        assert_eq!(watch.spans.after_map_camera_smooth_ms, 2.0);
         assert_eq!(watch.spans.after_view_sync_ms, 3.0);
         assert_eq!(watch.spans.after_fire_build_ms, 4.0);
         assert_eq!(watch.spans.before_world_repr_ms, 800.0);

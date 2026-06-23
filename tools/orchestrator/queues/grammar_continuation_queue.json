@@ -1879,11 +1879,13 @@
     "agent": "coder-mcp",
     "track": "T2",
     "program": "multi_parallel_tracks",
-    "status": "reopened",
+    "status": "done",
     "witness": "debug_runs/grammar_sweep_process_live.json",
     "dispatch": "multi_parallel_tracks_dispatch_v1.json",
     "updated_at": "2026-06-20T21:19:24Z",
-    "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness file on disk"
+    "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness file on disk",
+    "completed": "2026-06-21",
+    "witness_refresh": "2026-06-21T02:32:23Z"
   },
   {
     "id": "GRAM-CONTENT-005",

@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "job_id": "diesel_gen_pad_2x2_production_run001",
+  "batch_id": "kit_nuclear_pwr_production_001",
+  "development_tier": "production",
+  "spec_ref": "assets/staging/specs/diesel_gen_pad_2x2_production_run001.json",
+  "operation": "module_prop",
+  "params": {
+    "width_m": 4.0,
+    "height_m": 2.0,
+    "depth_m": 4.0,
+    "material_profile": "gravel_yard_01",
+    "seed": 44001,
+    "profile": "box",
+    "prop_kind": "diesel_gen_pad_2x2"
+  },
+  "output": {
+    "glb": "assets/staging/diesel_gen_pad_2x2_production_run001/model.glb",
+    "thumbnail": "assets/staging/diesel_gen_pad_2x2_production_run001/preview.png"
+  }
+}

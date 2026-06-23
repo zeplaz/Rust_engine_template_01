@@ -23,7 +23,7 @@ Parent index: $ref:src/dev/development_plan_index.md
 |:---|:---|:---|
 | **APS UI/UX overhaul** | CLOSED · 8/10 artist accept | N1 status_atom not everywhere · N2 preview async partial · N3 assembly strip confirm · landscape atlas **ship:false** |
 | **Design system** | `aps_design_system_v1.md` **LOCKED** | Implementation drift — literals, three status dialects linger in edge panels |
-| **Grammar maturity** | **G0** (1 archetype) | Tier exposure **signed** — content does not match chrome depth |
+| **Grammar maturity** | **G3** on disk (4 archetypes, 4 presets) | G4 blocked on `building_set_coverage` + hardcode lint — not UI |
 | **Landscape art** | Pilot 3-tile LG-5 · catalog on disk | Expanded matrix **chartered** · bake **not production-ship** |
 | **Building art** | Rowhouse production v1 · module kit partial | Victorian/industrial **style packs** thin · concept sheets missing |
 | **Materials** | Category tree v1 · profiles growing | 300+ profile **browse UX** + swatch/a11y not signed for scale |

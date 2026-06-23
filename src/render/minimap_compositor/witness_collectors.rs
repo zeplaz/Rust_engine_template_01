@@ -81,6 +81,14 @@ pub fn ui_w3_m2_001_green(compositor: &MinimapCompositorState) -> bool {
         && compositor.construction_rows > 0
 }
 
+/// Headless witness tray — full M2/M3 mask (not operator Simulation defaults).
+#[must_use]
+pub fn witness_harness_tray() -> crate::gui::hud::HudOverlayTrayState {
+    let mut tray = crate::gui::hud::HudOverlayTrayState::default();
+    tray.set_minimap_overlay_mask(crate::gui::minimap_overlay_witness_harness());
+    tray
+}
+
 /// Headless M2 witness fixture — logistics + construction rows for lib proof refresh.
 #[must_use]
 pub fn fixture_ui_oh_m2_001_compositor(tray: &crate::gui::hud::HudOverlayTrayState) -> MinimapCompositorState {

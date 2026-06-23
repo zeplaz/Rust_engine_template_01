@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import sys
 from pathlib import Path
 
@@ -64,10 +65,31 @@ def test_write_aps_grammar_tier_gates_witness(gui_panel_host) -> None:
         build_set_expanded_default=bool(snap["build_set_expanded_default"]),
         kit_hint_visible=bool(snap["kit_hint_visible"]),
         archetype_combo_count=int(snap["archetype_combo_count"]),
+        rel_path=grammar_build_set.GRAMMAR_TIER_GATES_G0_FIXTURE,
     )
     assert body["tier"] == "G0"
     assert body["dna_panel_visible"] is False
     assert body["kit_hint_visible"] is True
+
+
+def test_write_aps_grammar_tier_gates_live_witness(gui_panel_host) -> None:
+    from rust_engine_mcp import grammar_build_set
+    from rust_engine_mcp.paths import repo_root
+
+    panel = _make_panel(gui_panel_host)
+    panel.refresh_grammar_tier_from_registry()
+    gui_panel_host.winfo_toplevel().update_idletasks()
+
+    expected_tier = grammar_build_set.grammar_set_tier()["tier"]
+    body = grammar_build_set.write_aps_grammar_tier_gates_live_witness()
+    assert body["green"] is True
+    assert body["tier"] == expected_tier
+    assert body["grammar_set_tier"] == expected_tier
+    assert expected_tier != "G0"
+    live_path = repo_root() / grammar_build_set.GRAMMAR_TIER_GATES_LIVE_WITNESS
+    assert live_path.is_file()
+    live = json.loads(live_path.read_text(encoding="utf-8"))
+    assert live["tier"] == expected_tier
 
 
 def test_apply_grammar_tier_g1_refresh(gui_panel_host) -> None:

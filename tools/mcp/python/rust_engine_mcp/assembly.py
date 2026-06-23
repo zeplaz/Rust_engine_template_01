@@ -195,6 +195,62 @@ def _module_glb_path(row: dict[str, Any]) -> Path:
     return repo_root() / "assets" / "models" / "modules" / job_id / "model.glb"
 
 
+def explain_module_resolve(
+    module_id: str,
+    *,
+    style_pack_id: str = "",
+    source_tier: str = "production",
+) -> dict[str, Any]:
+    """CMCP-ASM-RESOLVE-HONEST-001 — inline reason when production GLB missing."""
+    index = load_index_json()
+    row = _resolve_module_row(
+        module_id,
+        index,
+        style_pack_id=style_pack_id,
+        source_tier=source_tier,
+    )
+    if not row:
+        return {
+            "module_id": module_id,
+            "ok": False,
+            "reason": "not_in_index",
+            "label": f"✗ No module index row — validate or register {module_id}",
+            "hint": "library-register or kit batch promote",
+        }
+    tier = str(row.get("development_tier") or "")
+    glb = _module_glb_path(row)
+    if not glb.is_file():
+        return {
+            "module_id": module_id,
+            "ok": False,
+            "reason": "glb_missing",
+            "job_id": str(row.get("job_id") or ""),
+            "label": f"✗ GLB missing — promote {row.get('job_id')}",
+            "hint": "validate-report asset_glb then library-promote",
+        }
+    if source_tier == "production" and tier != "production":
+        return {
+            "module_id": module_id,
+            "ok": True,
+            "reason": "lod0_fallback",
+            "resolved_tier": "lod0",
+            "job_id": str(row.get("job_id") or ""),
+            "glb_path": str(glb.relative_to(repo_root())).replace("\\", "/"),
+            "label": f"◐ Production missing — showing {tier} ({row.get('job_id')})",
+            "hint": "Run ship check or remap to kit_production_001",
+        }
+    return {
+        "module_id": module_id,
+        "ok": True,
+        "reason": "ok_production" if tier == "production" else "ok_lod0",
+        "resolved_tier": tier or source_tier,
+        "job_id": str(row.get("job_id") or ""),
+        "glb_path": str(glb.relative_to(repo_root())).replace("\\", "/"),
+        "label": f"✓ {tier} · {row.get('job_id')}",
+        "hint": "",
+    }
+
+
 FootprintToken = str  # W | D | C | R
 
 
@@ -434,6 +490,28 @@ def update_placement(
             row["lod_policy"] = lod_policy
         if module_id is not None:
             row["module_id"] = module_id
+            style_pack = str(out.get("style_pack_id") or "")
+            tier = str(out.get("source_tier") or "lod0")
+            mod_row = _resolve_module_row(
+                module_id,
+                load_index_json(),
+                style_pack_id=style_pack,
+                source_tier=tier,
+            )
+            if mod_row:
+                glb = _module_glb_path(mod_row)
+                row["job_id"] = str(mod_row.get("job_id") or "")
+                if glb.is_file():
+                    row["glb_path"] = str(glb.relative_to(repo_root())).replace("\\", "/")
+                else:
+                    row.pop("glb_path", None)
+                if tier == "production" and str(mod_row.get("development_tier") or "") != "production":
+                    row["mesh_tier_fallback"] = "lod0"
+                else:
+                    row.pop("mesh_tier_fallback", None)
+            else:
+                row.pop("glb_path", None)
+                row.pop("job_id", None)
         placements.append(enrich_placement(row, source_tier=str(out.get("source_tier") or "lod0")))
     if not found:
         raise KeyError(f"placement node_id not found: {node_id}")

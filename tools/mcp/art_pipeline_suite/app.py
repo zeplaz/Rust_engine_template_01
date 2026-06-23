@@ -510,7 +510,13 @@ class ArtPipelineSuiteApp(tk.Tk):
 
         self.variants = self._add_scrollable_tab(
 
-            nb, VariantsPanel, "Variants", state=self.state, on_log=self._log, **job_kw
+            nb,
+            VariantsPanel,
+            "Variants",
+            state=self.state,
+            on_log=self._log,
+            on_go_assembly=self._focus_assembly_tab,
+            **job_kw,
 
         )
 
@@ -793,6 +799,12 @@ class ArtPipelineSuiteApp(tk.Tk):
 
         self._log(f"materials → assembly · {profile_id}")
 
+    def _focus_assembly_tab(self) -> None:
+        self.notebook.select(self.assembly._aps_tab_root)
+        if hasattr(self.assembly, "refresh_generation_trace"):
+            self.assembly.refresh_generation_trace()
+        self._log("variants → assembly · edit generation")
+
 
 
     def _open_material_in_materials_tab(self, profile_id: str) -> None:
@@ -839,13 +851,19 @@ class ArtPipelineSuiteApp(tk.Tk):
 
             self._log("Bake variants — step 1: using your existing variant set.")
 
-        self._log("Bake variants — step 2: expanding the variant set into a tile job.")
+        self._log("Bake variants — step 2: preview selected variant")
+        if self.state.assembly_snapshot_data:
+            self.variants.preview_selected_variant(force=True)
+        else:
+            self._log("Bake variants — step 2: warn — no assembly snapshot; preview skipped")
+
+        self._log("Bake variants — step 3: expanding the variant set into a tile job.")
 
         self.atlas.on_batch_from_variant_set()
 
         self.notebook.select(self.atlas._aps_tab_root)
 
-        self._log("Bake variants — step 3: tile job prepared on the Atlas step. Pack it next.")
+        self._log("Bake variants — step 4: tile job prepared on the Atlas step. Pack it next.")
 
 
 

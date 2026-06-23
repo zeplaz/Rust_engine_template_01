@@ -56,7 +56,7 @@
       "lane": "N_LANDSCAPE",
       "priority": 2,
       "agent": "coder",
-      "status": "reopened",
+      "status": "done",
       "goal": "LG-1 pilot \u2014 landscape grammar evaluator on agri_riparian_v0 (no stubs)",
       "docs": [
         "src/dev/plan_landscape_grammar_exec_001_v1.md",
@@ -67,14 +67,17 @@
       "exit": "green && topology_kind_count>=4 && nested_depth_max>=2 && lambda_blended && required_topologies_met",
       "verify": "cargo test -p proc_A_dine01 --lib landscape_grammar",
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 stub_marker:stub",
-      "updated_at": "2026-06-20T21:19:25Z"
+      "updated_at": "2026-06-20T21:19:25Z",
+      "witness_refresh": "2026-06-21T02:54:33Z",
+      "completed": "2026-06-21",
+      "reconcile_note": "witness-green auto-close (reconcile_coder_crisis.py)"
     },
     {
       "id": "LG-2-SUCCESSION-001",
       "lane": "N_LANDSCAPE",
       "priority": 3,
       "agent": "coder",
-      "status": "reopened",
+      "status": "done",
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 deliverable_missing",
       "depends_on": [
         "PLAN-LANDSCAPE-GRAMMAR-001"
@@ -85,7 +88,10 @@
       ],
       "witness": "debug_runs/landscape_grammar_lg2_live.json",
       "exit": "succession_age_ticks && disturbance_history_linked",
-      "updated_at": "2026-06-20T21:19:24Z"
+      "updated_at": "2026-06-20T21:19:24Z",
+      "witness_refresh": "2026-06-21T02:54:33Z",
+      "completed": "2026-06-21",
+      "reconcile_note": "witness-green auto-close (reconcile_coder_crisis.py)"
     },
     {
       "id": "G-PLAY-01",
@@ -176,7 +182,7 @@
       "lane": "J_REWIRE",
       "priority": 0,
       "agent": "coder",
-      "status": "reopened",
+      "status": "done",
       "goal": "Add map_zoom_coherence_001 witness module; wire map_zoom_coherence_live_proof",
       "docs": [
         "src/dev/build_read_unwired_spine_v1.md",
@@ -190,7 +196,9 @@
       ],
       "completed": "2026-06-11",
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 stub_marker:stub",
-      "updated_at": "2026-06-20T21:19:24Z"
+      "updated_at": "2026-06-20T21:19:24Z",
+      "witness_refresh": "2026-06-21T02:54:33Z",
+      "reconcile_note": "witness-green auto-close (reconcile_coder_crisis.py)"
     },
     {
       "id": "BUILD-READ-REWIRE-001",
@@ -260,7 +268,8 @@
       "lane": "J_REWIRE",
       "priority": 1,
       "agent": "coder",
-      "status": "reopened",
+      "status": "deferred",
+      "blocked_reason": "pilot_hardcode_lint transitional until BUILD-SET-GUARD-002 (6 needles, 1 transitional file)",
       "goal": "Pilot catalog authority in parametric_commit / visual_authority \u2014 not warehouse branches",
       "docs": [
         "src/dev/build_read_unwired_spine_v1.md",
@@ -280,7 +289,7 @@
       "lane": "J_REWIRE",
       "priority": 2,
       "agent": "coder",
-      "status": "reopened",
+      "status": "done",
       "goal": "Wire assembly_snapshot_qc_ui.rs into gui/mod.rs + plugin",
       "docs": [
         "src/dev/build_read_unwired_spine_v1.md",
@@ -289,7 +298,9 @@
       "witness": "debug_runs/aps_bevy_qc_hud_001_live.json",
       "completed": "2026-06-13",
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 stub_marker:stub",
-      "updated_at": "2026-06-20T21:19:24Z"
+      "updated_at": "2026-06-20T21:19:24Z",
+      "witness_refresh": "2026-06-21T02:54:33Z",
+      "reconcile_note": "witness-green auto-close (reconcile_coder_crisis.py)"
     },
     {
       "id": "BUILD-READ-P0-002",
@@ -420,7 +431,7 @@
       "lane": "L_MCP",
       "priority": 0,
       "agent": "planner-mcp",
-      "status": "reopened",
+      "status": "done",
       "goal": "Sign sim product validators plan \u2014 unblocks 3 coder-mcp P2 tasks",
       "plan_deliverable": "docs/archive/2026-06-src-dev/plans/plan_mcp_sim_product_validators_v1.md",
       "signed": "2026-06-17",
@@ -432,28 +443,34 @@
       ],
       "mcp_queue_ref": "tools/orchestrator/queues/mcp_active_queue.json#MCP-P2-SIM-VALIDATORS-PLAN-001",
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 stub_marker:stub",
-      "updated_at": "2026-06-20T21:19:25Z"
+      "updated_at": "2026-06-20T21:19:25Z",
+      "witness_refresh": "2026-06-21T02:54:33Z",
+      "completed": "2026-06-21",
+      "reconcile_note": "witness-green auto-close (reconcile_coder_crisis.py)"
     },
     {
       "id": "MCP-P2-KIT002-PLAN",
       "lane": "L_MCP",
       "priority": 1,
       "agent": "planner-mcp",
-      "status": "reopened",
+      "status": "done",
       "goal": "Write mcp_kit_production_002_unfreeze_v1.md \u2014 kit002+ frozen lane",
       "plan_deliverable": "docs/archive/2026-06-src-dev/plans/mcp_kit_production_002_unfreeze_v1.md",
       "mcp_queue_ref": "tools/orchestrator/queues/mcp_active_queue.json#MCP-P2-KIT002-PLAN",
       "witness": "debug_runs/mcp_kit002_arch002_sign_live.json",
       "signed": "2026-06-14",
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 missing_exit_predicate",
-      "updated_at": "2026-06-20T21:19:25Z"
+      "updated_at": "2026-06-20T21:19:25Z",
+      "witness_refresh": "2026-06-21T02:54:33Z",
+      "completed": "2026-06-21",
+      "reconcile_note": "witness-green auto-close (reconcile_coder_crisis.py)"
     },
     {
       "id": "ARCH-002",
       "lane": "L_MCP",
       "priority": 2,
       "agent": "planner-mcp",
-      "status": "reopened",
+      "status": "done",
       "goal": "Formal Variant Graph JSON schema variant_graph_v1.schema.json",
       "plan_doc": "src/dev/arch_variant_graph_002_v1.md",
       "plan_deliverable": "tools/mcp/schemas/variant_graph_v1.schema.json",
@@ -461,7 +478,10 @@
       "witness": "debug_runs/mcp_kit002_arch002_sign_live.json",
       "signed": "2026-06-14",
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 missing_exit_predicate",
-      "updated_at": "2026-06-20T21:19:24Z"
+      "updated_at": "2026-06-20T21:19:24Z",
+      "witness_refresh": "2026-06-21T02:54:33Z",
+      "completed": "2026-06-21",
+      "reconcile_note": "witness-green auto-close (reconcile_coder_crisis.py)"
     },
     {
       "id": "PLAN-AUDIT-020",

@@ -299,8 +299,12 @@ impl render_graph::Node for MinimapCompositeNode {
             CachedPipelineState::Ok(_) => self.pipeline_ready = true,
             CachedPipelineState::Err(PipelineCacheError::ShaderNotLoaded(_)) => {}
             CachedPipelineState::Err(e) => {
-                panic!(
-                    "Loading assets/{MINIMAP_COMPOSITE_SHADER} for minimap compositor:\n{e}"
+                super::diagnostics::MINIMAP_GPU_SHADER_FAILED
+                    .store(true, std::sync::atomic::Ordering::Relaxed);
+                bevy::log::error!(
+                    target: "minimap_compositor",
+                    "GPU minimap shader failed — falling back to CPU raster. \
+                     Fix assets/{MINIMAP_COMPOSITE_SHADER}: {e}"
                 );
             }
             _ => {}

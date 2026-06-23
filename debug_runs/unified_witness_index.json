@@ -1,22 +1,22 @@
 {
   "_agent_meta": {
     "schema": "unified_witness_index_v2",
-    "written_at_epoch_secs": 1781979326,
+    "written_at_epoch_secs": 1782016220,
     "profile": "UNIFIED_WITNESS_INDEX",
     "source_system": "ops_witness_index",
     "relative_path": "debug_runs/unified_witness_index.json",
     "registry": "tools/orchestrator/queues/OPS_LANE_REGISTRY.json"
   },
   "profile": "UNIFIED_WITNESS_INDEX",
-  "proof_count": 412,
+  "proof_count": 450,
   "program_count": 7,
   "programs": {
     "unclassified": [
       {
         "path": "debug_runs/.witness_honesty_precheck/aps_bevy_qc_hud_001_live.json",
         "exists": true,
-        "bytes": 2909,
-        "modified_epoch_secs": 1781756518,
+        "bytes": 3113,
+        "modified_epoch_secs": 1782014004,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -42,8 +42,8 @@
       {
         "path": "debug_runs/.witness_honesty_precheck/aps_bevy_qc_hud_001_v2_live.json",
         "exists": true,
-        "bytes": 2355,
-        "modified_epoch_secs": 1781756518,
+        "bytes": 2559,
+        "modified_epoch_secs": 1782014004,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -123,8 +123,8 @@
       {
         "path": "debug_runs/.witness_honesty_precheck/build_read_visual_001_live.json",
         "exists": true,
-        "bytes": 2879,
-        "modified_epoch_secs": 1781756518,
+        "bytes": 3083,
+        "modified_epoch_secs": 1782009781,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -177,8 +177,8 @@
       {
         "path": "debug_runs/.witness_honesty_precheck/build_verify_debug_live.json",
         "exists": true,
-        "bytes": 2501,
-        "modified_epoch_secs": 1781756518,
+        "bytes": 2705,
+        "modified_epoch_secs": 1782010074,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -204,8 +204,8 @@
       {
         "path": "debug_runs/.witness_honesty_precheck/build_verify_pointer_live.json",
         "exists": true,
-        "bytes": 2413,
-        "modified_epoch_secs": 1781716709,
+        "bytes": 2617,
+        "modified_epoch_secs": 1782010074,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -312,8 +312,8 @@
       {
         "path": "debug_runs/.witness_honesty_precheck/construction_placement_live.json",
         "exists": true,
-        "bytes": 2871,
-        "modified_epoch_secs": 1781756518,
+        "bytes": 3075,
+        "modified_epoch_secs": 1782010074,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -388,6 +388,33 @@
           "readiness_passes": null,
           "blocked_by": null,
           "_witness_rel": "debug_runs/.witness_honesty_precheck/des_build_read_hud_001_live.json",
+          "honest_gate": "queue_stale"
+        }
+      },
+      {
+        "path": "debug_runs/.witness_honesty_precheck/des_build_read_hud_002_live.json",
+        "exists": true,
+        "bytes": 2518,
+        "modified_epoch_secs": 1781984376,
+        "summary": {
+          "parse_ok": true,
+          "program_id": "unclassified",
+          "program_label": null,
+          "track": null,
+          "lane": "DES-BUILD-READ-HUD-002",
+          "task_id": "DES-BUILD-READ-HUD-002",
+          "green": true,
+          "proceed_ship": null,
+          "art_quality": null,
+          "ok": null,
+          "status": null,
+          "profile": "DES-BUILD-READ-HUD-002",
+          "agent_role": null,
+          "owner": null,
+          "validator_status": null,
+          "readiness_passes": null,
+          "blocked_by": null,
+          "_witness_rel": "debug_runs/.witness_honesty_precheck/des_build_read_hud_002_live.json",
           "honest_gate": "honest_green"
         }
       },
@@ -448,8 +475,8 @@
       {
         "path": "debug_runs/.witness_honesty_precheck/design_fire_play_visibility_live.json",
         "exists": true,
-        "bytes": 2840,
-        "modified_epoch_secs": 1781756519,
+        "bytes": 3044,
+        "modified_epoch_secs": 1782009817,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -475,8 +502,8 @@
       {
         "path": "debug_runs/.witness_honesty_precheck/design_minimap_widget_live.json",
         "exists": true,
-        "bytes": 2506,
-        "modified_epoch_secs": 1781898653,
+        "bytes": 2707,
+        "modified_epoch_secs": 1782009781,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -529,8 +556,8 @@
       {
         "path": "debug_runs/.witness_honesty_precheck/fire_ecology_live.json",
         "exists": true,
-        "bytes": 3288,
-        "modified_epoch_secs": 1781874141,
+        "bytes": 4169,
+        "modified_epoch_secs": 1782010468,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -554,10 +581,37 @@
         }
       },
       {
+        "path": "debug_runs/.witness_honesty_precheck/fire_f2_readiness_align_live.json",
+        "exists": true,
+        "bytes": 2684,
+        "modified_epoch_secs": 1781984545,
+        "summary": {
+          "parse_ok": true,
+          "program_id": "unclassified",
+          "program_label": null,
+          "track": null,
+          "lane": "FIRE-F2-READINESS-ALIGN-001",
+          "task_id": null,
+          "green": null,
+          "proceed_ship": null,
+          "art_quality": null,
+          "ok": null,
+          "status": null,
+          "profile": "FIRE-F2-READINESS-ALIGN-001",
+          "agent_role": null,
+          "owner": null,
+          "validator_status": null,
+          "readiness_passes": null,
+          "blocked_by": null,
+          "_witness_rel": "debug_runs/.witness_honesty_precheck/fire_f2_readiness_align_live.json",
+          "honest_gate": "unknown"
+        }
+      },
+      {
         "path": "debug_runs/.witness_honesty_precheck/fire_streaming_live.json",
         "exists": true,
-        "bytes": 2431,
-        "modified_epoch_secs": 1781884836,
+        "bytes": 2635,
+        "modified_epoch_secs": 1782015366,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -583,8 +637,8 @@
       {
         "path": "debug_runs/.witness_honesty_precheck/g_play_product_close_live.json",
         "exists": true,
-        "bytes": 3082,
-        "modified_epoch_secs": 1781716789,
+        "bytes": 3286,
+        "modified_epoch_secs": 1782010076,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -611,7 +665,7 @@
         "path": "debug_runs/.witness_honesty_precheck/grammar_ship_close_live.json",
         "exists": true,
         "bytes": 2527,
-        "modified_epoch_secs": 1781979319,
+        "modified_epoch_secs": 1781982787,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -664,8 +718,8 @@
       {
         "path": "debug_runs/.witness_honesty_precheck/industrial_activation_live.json",
         "exists": true,
-        "bytes": 6638,
-        "modified_epoch_secs": 1781756531,
+        "bytes": 7264,
+        "modified_epoch_secs": 1782013814,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -714,6 +768,33 @@
           "blocked_by": null,
           "_witness_rel": "debug_runs/.witness_honesty_precheck/infra_e0_profile_catalog_live.json",
           "honest_gate": "honest_green"
+        }
+      },
+      {
+        "path": "debug_runs/.witness_honesty_precheck/infra_lane_close_live.json",
+        "exists": true,
+        "bytes": 2408,
+        "modified_epoch_secs": 1781984206,
+        "summary": {
+          "parse_ok": true,
+          "program_id": "unclassified",
+          "program_label": null,
+          "track": null,
+          "lane": "INFRA-LANE-CLOSE-001",
+          "task_id": null,
+          "green": null,
+          "proceed_ship": null,
+          "art_quality": null,
+          "ok": null,
+          "status": null,
+          "profile": "INFRA-LANE-CLOSE-001",
+          "agent_role": null,
+          "owner": null,
+          "validator_status": null,
+          "readiness_passes": null,
+          "blocked_by": null,
+          "_witness_rel": "debug_runs/.witness_honesty_precheck/infra_lane_close_live.json",
+          "honest_gate": "unknown"
         }
       },
       {
@@ -771,10 +852,38 @@
         }
       },
       {
+        "path": "debug_runs/.witness_honesty_precheck/infrastructure_view_isolation_live.json",
+        "exists": true,
+        "bytes": 5083,
+        "modified_epoch_secs": 1781984463,
+        "summary": {
+          "parse_ok": true,
+          "program_id": "unclassified",
+          "program_label": null,
+          "track": null,
+          "lane": "INFRASTRUCTURE_VIEW_ISOLATION",
+          "task_id": null,
+          "green": null,
+          "proceed_ship": null,
+          "art_quality": null,
+          "ok": null,
+          "status": null,
+          "profile": "INFRASTRUCTURE_VIEW_ISOLATION",
+          "agent_role": null,
+          "owner": null,
+          "validator_status": null,
+          "readiness_passes": null,
+          "blocked_by": null,
+          "infrastructure_view_isolation_green": true,
+          "_witness_rel": "debug_runs/.witness_honesty_precheck/infrastructure_view_isolation_live.json",
+          "honest_gate": "unknown"
+        }
+      },
+      {
         "path": "debug_runs/.witness_honesty_precheck/landscape_grammar_burn_chain_live.json",
         "exists": true,
-        "bytes": 2471,
-        "modified_epoch_secs": 1781756521,
+        "bytes": 2675,
+        "modified_epoch_secs": 1782013655,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -800,8 +909,8 @@
       {
         "path": "debug_runs/.witness_honesty_precheck/landscape_grammar_burn_overlay_live.json",
         "exists": true,
-        "bytes": 2462,
-        "modified_epoch_secs": 1781756548,
+        "bytes": 2666,
+        "modified_epoch_secs": 1782013771,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -827,8 +936,8 @@
       {
         "path": "debug_runs/.witness_honesty_precheck/landscape_grammar_composite_live.json",
         "exists": true,
-        "bytes": 2512,
-        "modified_epoch_secs": 1781716518,
+        "bytes": 2716,
+        "modified_epoch_secs": 1782013730,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -854,8 +963,8 @@
       {
         "path": "debug_runs/.witness_honesty_precheck/landscape_grammar_disturbance_log_live.json",
         "exists": true,
-        "bytes": 2444,
-        "modified_epoch_secs": 1781716518,
+        "bytes": 2648,
+        "modified_epoch_secs": 1782013730,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -881,21 +990,21 @@
       {
         "path": "debug_runs/.witness_honesty_precheck/landscape_grammar_extract_live.json",
         "exists": true,
-        "bytes": 2510,
-        "modified_epoch_secs": 1781756519,
+        "bytes": 3006,
+        "modified_epoch_secs": 1782013731,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
           "program_label": null,
           "track": null,
-          "lane": "VEG-BURN-EXTRACT-004",
-          "task_id": null,
+          "lane": "CDR-A-EXTRACT-SPRITE-001",
+          "task_id": "CDR-A-EXTRACT-SPRITE-001",
           "green": true,
           "proceed_ship": null,
           "art_quality": null,
           "ok": null,
           "status": null,
-          "profile": "VEG-BURN-EXTRACT-004",
+          "profile": "CDR-A-EXTRACT-SPRITE-001",
           "agent_role": null,
           "owner": null,
           "validator_status": null,
@@ -908,8 +1017,8 @@
       {
         "path": "debug_runs/.witness_honesty_precheck/landscape_grammar_fire_harvest_wire_live.json",
         "exists": true,
-        "bytes": 2727,
-        "modified_epoch_secs": 1781756548,
+        "bytes": 2931,
+        "modified_epoch_secs": 1782013771,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -935,8 +1044,8 @@
       {
         "path": "debug_runs/.witness_honesty_precheck/landscape_grammar_lg1_live.json",
         "exists": true,
-        "bytes": 4925,
-        "modified_epoch_secs": 1781704749,
+        "bytes": 5129,
+        "modified_epoch_secs": 1782010168,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -962,8 +1071,8 @@
       {
         "path": "debug_runs/.witness_honesty_precheck/landscape_grammar_lg2_live.json",
         "exists": true,
-        "bytes": 2556,
-        "modified_epoch_secs": 1781716520,
+        "bytes": 2760,
+        "modified_epoch_secs": 1782013732,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -989,8 +1098,8 @@
       {
         "path": "debug_runs/.witness_honesty_precheck/landscape_grammar_lg3_live.json",
         "exists": true,
-        "bytes": 2465,
-        "modified_epoch_secs": 1781716518,
+        "bytes": 2669,
+        "modified_epoch_secs": 1782013730,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -1016,8 +1125,8 @@
       {
         "path": "debug_runs/.witness_honesty_precheck/landscape_grammar_lg4_preview_live.json",
         "exists": true,
-        "bytes": 2722,
-        "modified_epoch_secs": 1781716519,
+        "bytes": 2926,
+        "modified_epoch_secs": 1782013731,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -1043,8 +1152,8 @@
       {
         "path": "debug_runs/.witness_honesty_precheck/landscape_grammar_lg5_live.json",
         "exists": true,
-        "bytes": 2985,
-        "modified_epoch_secs": 1781716519,
+        "bytes": 3189,
+        "modified_epoch_secs": 1782013731,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -1070,8 +1179,8 @@
       {
         "path": "debug_runs/.witness_honesty_precheck/landscape_grammar_map_rollout_live.json",
         "exists": true,
-        "bytes": 2402,
-        "modified_epoch_secs": 1781884836,
+        "bytes": 2605,
+        "modified_epoch_secs": 1782015889,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -1097,8 +1206,8 @@
       {
         "path": "debug_runs/.witness_honesty_precheck/landscape_grammar_sim_harness_live.json",
         "exists": true,
-        "bytes": 2683,
-        "modified_epoch_secs": 1781716708,
+        "bytes": 2887,
+        "modified_epoch_secs": 1782010396,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -1118,14 +1227,14 @@
           "readiness_passes": null,
           "blocked_by": null,
           "_witness_rel": "debug_runs/.witness_honesty_precheck/landscape_grammar_sim_harness_live.json",
-          "honest_gate": "honest_green"
+          "honest_gate": "inflated_green"
         }
       },
       {
         "path": "debug_runs/.witness_honesty_precheck/landscape_grammar_visual_smoke_live.json",
         "exists": true,
-        "bytes": 2694,
-        "modified_epoch_secs": 1781756553,
+        "bytes": 2898,
+        "modified_epoch_secs": 1782010279,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -1205,8 +1314,8 @@
       {
         "path": "debug_runs/.witness_honesty_precheck/map_zoom_coherence_live.json",
         "exists": true,
-        "bytes": 2752,
-        "modified_epoch_secs": 1781756520,
+        "bytes": 2956,
+        "modified_epoch_secs": 1782010115,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -1232,8 +1341,8 @@
       {
         "path": "debug_runs/.witness_honesty_precheck/minimap_compositor_live.json",
         "exists": true,
-        "bytes": 5411,
-        "modified_epoch_secs": 1781898656,
+        "bytes": 5652,
+        "modified_epoch_secs": 1782015366,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -1259,8 +1368,8 @@
       {
         "path": "debug_runs/.witness_honesty_precheck/minimap_fire_veg_coherence_live.json",
         "exists": true,
-        "bytes": 2637,
-        "modified_epoch_secs": 1781898654,
+        "bytes": 2841,
+        "modified_epoch_secs": 1782000394,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -1286,8 +1395,8 @@
       {
         "path": "debug_runs/.witness_honesty_precheck/minimap_topology_legend_live.json",
         "exists": true,
-        "bytes": 2620,
-        "modified_epoch_secs": 1781978467,
+        "bytes": 2824,
+        "modified_epoch_secs": 1782013917,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -1307,7 +1416,7 @@
           "readiness_passes": null,
           "blocked_by": null,
           "_witness_rel": "debug_runs/.witness_honesty_precheck/minimap_topology_legend_live.json",
-          "honest_gate": "honest_green"
+          "honest_gate": "inflated_green"
         }
       },
       {
@@ -1367,8 +1476,8 @@
       {
         "path": "debug_runs/.witness_honesty_precheck/pilot_catalog_parity_live.json",
         "exists": true,
-        "bytes": 2364,
-        "modified_epoch_secs": 1781979271,
+        "bytes": 2568,
+        "modified_epoch_secs": 1782009780,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -1394,8 +1503,8 @@
       {
         "path": "debug_runs/.witness_honesty_precheck/play_scenario_live.json",
         "exists": true,
-        "bytes": 3658,
-        "modified_epoch_secs": 1781756611,
+        "bytes": 3862,
+        "modified_epoch_secs": 1782013917,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -1421,8 +1530,8 @@
       {
         "path": "debug_runs/.witness_honesty_precheck/power_grid_construction_ux_close_live.json",
         "exists": true,
-        "bytes": 2470,
-        "modified_epoch_secs": 1781978418,
+        "bytes": 2674,
+        "modified_epoch_secs": 1782004104,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -1448,8 +1557,8 @@
       {
         "path": "debug_runs/.witness_honesty_precheck/power_grid_track_bd_live.json",
         "exists": true,
-        "bytes": 2594,
-        "modified_epoch_secs": 1781978418,
+        "bytes": 2798,
+        "modified_epoch_secs": 1782004104,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -1475,8 +1584,8 @@
       {
         "path": "debug_runs/.witness_honesty_precheck/power_grid_track_c_live.json",
         "exists": true,
-        "bytes": 2630,
-        "modified_epoch_secs": 1781978418,
+        "bytes": 2834,
+        "modified_epoch_secs": 1782004104,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -1502,8 +1611,8 @@
       {
         "path": "debug_runs/.witness_honesty_precheck/power_line_draw_live.json",
         "exists": true,
-        "bytes": 2727,
-        "modified_epoch_secs": 1781978417,
+        "bytes": 2931,
+        "modified_epoch_secs": 1782004103,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -1529,8 +1638,8 @@
       {
         "path": "debug_runs/.witness_honesty_precheck/power_map_overlay_live.json",
         "exists": true,
-        "bytes": 2799,
-        "modified_epoch_secs": 1781979188,
+        "bytes": 3003,
+        "modified_epoch_secs": 1782004129,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -1550,7 +1659,7 @@
           "readiness_passes": null,
           "blocked_by": null,
           "_witness_rel": "debug_runs/.witness_honesty_precheck/power_map_overlay_live.json",
-          "honest_gate": "honest_green"
+          "honest_gate": "queue_stale"
         }
       },
       {
@@ -1610,8 +1719,8 @@
       {
         "path": "debug_runs/.witness_honesty_precheck/replay_editor_parity_live.json",
         "exists": true,
-        "bytes": 2499,
-        "modified_epoch_secs": 1781978468,
+        "bytes": 2648,
+        "modified_epoch_secs": 1782015365,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -1638,8 +1747,8 @@
       {
         "path": "debug_runs/.witness_honesty_precheck/sim_effect_spine_live.json",
         "exists": true,
-        "bytes": 2594,
-        "modified_epoch_secs": 1781756521,
+        "bytes": 2798,
+        "modified_epoch_secs": 1782010140,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -1690,6 +1799,33 @@
         }
       },
       {
+        "path": "debug_runs/.witness_honesty_precheck/sim_hud_cursor_live.json",
+        "exists": true,
+        "bytes": 2453,
+        "modified_epoch_secs": 1781982619,
+        "summary": {
+          "parse_ok": true,
+          "program_id": "unclassified",
+          "program_label": null,
+          "track": null,
+          "lane": "COD-SIM-HUD-CURSOR-001",
+          "task_id": "TRIAGE-CURSOR-UNIFY-001",
+          "green": null,
+          "proceed_ship": null,
+          "art_quality": null,
+          "ok": null,
+          "status": null,
+          "profile": "COD-SIM-HUD-CURSOR-001",
+          "agent_role": null,
+          "owner": null,
+          "validator_status": null,
+          "readiness_passes": null,
+          "blocked_by": null,
+          "_witness_rel": "debug_runs/.witness_honesty_precheck/sim_hud_cursor_live.json",
+          "honest_gate": "unknown"
+        }
+      },
+      {
         "path": "debug_runs/.witness_honesty_precheck/sim_hud_egui_theme_live.json",
         "exists": true,
         "bytes": 2408,
@@ -1713,6 +1849,33 @@
           "readiness_passes": null,
           "blocked_by": null,
           "_witness_rel": "debug_runs/.witness_honesty_precheck/sim_hud_egui_theme_live.json",
+          "honest_gate": "honest_green"
+        }
+      },
+      {
+        "path": "debug_runs/.witness_honesty_precheck/sim_hud_esc_cascade_live.json",
+        "exists": true,
+        "bytes": 2610,
+        "modified_epoch_secs": 1781984139,
+        "summary": {
+          "parse_ok": true,
+          "program_id": "unclassified",
+          "program_label": null,
+          "track": null,
+          "lane": "COD-SIM-HUD-ESC-CASCADE-001",
+          "task_id": "COD-SIM-HUD-ESC-CASCADE-001",
+          "green": true,
+          "proceed_ship": null,
+          "art_quality": null,
+          "ok": null,
+          "status": null,
+          "profile": "COD-SIM-HUD-ESC-CASCADE-001",
+          "agent_role": null,
+          "owner": null,
+          "validator_status": null,
+          "readiness_passes": null,
+          "blocked_by": null,
+          "_witness_rel": "debug_runs/.witness_honesty_precheck/sim_hud_esc_cascade_live.json",
           "honest_gate": "honest_green"
         }
       },
@@ -1827,8 +1990,8 @@
       {
         "path": "debug_runs/.witness_honesty_precheck/sim_hud_power_icons_live.json",
         "exists": true,
-        "bytes": 2988,
-        "modified_epoch_secs": 1781792381,
+        "bytes": 3192,
+        "modified_epoch_secs": 1782003965,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -1879,10 +2042,37 @@
         }
       },
       {
+        "path": "debug_runs/.witness_honesty_precheck/sim_spectrum_analytics_live.json",
+        "exists": true,
+        "bytes": 18212,
+        "modified_epoch_secs": 1782015364,
+        "summary": {
+          "parse_ok": true,
+          "program_id": "unclassified",
+          "program_label": null,
+          "track": null,
+          "lane": "SIM_SPECTRUM",
+          "task_id": null,
+          "green": null,
+          "proceed_ship": null,
+          "art_quality": null,
+          "ok": null,
+          "status": null,
+          "profile": "SIM_SPECTRUM",
+          "agent_role": null,
+          "owner": null,
+          "validator_status": null,
+          "readiness_passes": null,
+          "blocked_by": null,
+          "_witness_rel": "debug_runs/.witness_honesty_precheck/sim_spectrum_analytics_live.json",
+          "honest_gate": "unknown"
+        }
+      },
+      {
         "path": "debug_runs/.witness_honesty_precheck/stage5_full_app_live.json",
         "exists": true,
-        "bytes": 23434,
-        "modified_epoch_secs": 1781717503,
+        "bytes": 23624,
+        "modified_epoch_secs": 1782015826,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -1906,10 +2096,38 @@
         }
       },
       {
+        "path": "debug_runs/.witness_honesty_precheck/stage6_virtualization_live.json",
+        "exists": true,
+        "bytes": 3411,
+        "modified_epoch_secs": 1781984206,
+        "summary": {
+          "parse_ok": true,
+          "program_id": "unclassified",
+          "program_label": null,
+          "track": null,
+          "lane": "STAGE6_VIRTUALIZATION",
+          "task_id": null,
+          "green": null,
+          "proceed_ship": null,
+          "art_quality": null,
+          "ok": null,
+          "status": null,
+          "profile": "STAGE6_VIRTUALIZATION",
+          "agent_role": null,
+          "owner": null,
+          "validator_status": null,
+          "readiness_passes": null,
+          "blocked_by": null,
+          "stage6_virtualization_green": true,
+          "_witness_rel": "debug_runs/.witness_honesty_precheck/stage6_virtualization_live.json",
+          "honest_gate": "unknown"
+        }
+      },
+      {
         "path": "debug_runs/.witness_honesty_precheck/stage7_behavioral_live.json",
         "exists": true,
-        "bytes": 3977,
-        "modified_epoch_secs": 1781978469,
+        "bytes": 4181,
+        "modified_epoch_secs": 1782000395,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -1988,10 +2206,37 @@
         }
       },
       {
+        "path": "debug_runs/.witness_honesty_precheck/triage_perf_vfx_fix_2026-06-11_live.json",
+        "exists": true,
+        "bytes": 7551,
+        "modified_epoch_secs": 1782015364,
+        "summary": {
+          "parse_ok": true,
+          "program_id": "unclassified",
+          "program_label": null,
+          "track": null,
+          "lane": "PERF-INSTR-VFX-001",
+          "task_id": null,
+          "green": null,
+          "proceed_ship": null,
+          "art_quality": null,
+          "ok": null,
+          "status": null,
+          "profile": "PERF-INSTR-VFX-001",
+          "agent_role": null,
+          "owner": null,
+          "validator_status": null,
+          "readiness_passes": null,
+          "blocked_by": null,
+          "_witness_rel": "debug_runs/.witness_honesty_precheck/triage_perf_vfx_fix_2026-06-11_live.json",
+          "honest_gate": "unknown"
+        }
+      },
+      {
         "path": "debug_runs/.witness_honesty_precheck/ui_shell_migration_live.json",
         "exists": true,
-        "bytes": 8797,
-        "modified_epoch_secs": 1781898710,
+        "bytes": 8958,
+        "modified_epoch_secs": 1782015827,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -2071,8 +2316,8 @@
       {
         "path": "debug_runs/.witness_honesty_precheck/veg_resolver_parity_live.json",
         "exists": true,
-        "bytes": 3558,
-        "modified_epoch_secs": 1781756523,
+        "bytes": 3762,
+        "modified_epoch_secs": 1782013652,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -2098,8 +2343,8 @@
       {
         "path": "debug_runs/.witness_honesty_precheck/veg_runtime_proof_live.json",
         "exists": true,
-        "bytes": 3267,
-        "modified_epoch_secs": 1781756523,
+        "bytes": 3471,
+        "modified_epoch_secs": 1782013731,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -2123,10 +2368,37 @@
         }
       },
       {
+        "path": "debug_runs/.witness_honesty_precheck/veg_ship_close_live.json",
+        "exists": true,
+        "bytes": 2689,
+        "modified_epoch_secs": 1782013656,
+        "summary": {
+          "parse_ok": true,
+          "program_id": "unclassified",
+          "program_label": null,
+          "track": null,
+          "lane": "VEG-SHIP-CLOSE-001",
+          "task_id": null,
+          "green": null,
+          "proceed_ship": null,
+          "art_quality": null,
+          "ok": null,
+          "status": null,
+          "profile": "VEG-SHIP-CLOSE-001",
+          "agent_role": null,
+          "owner": null,
+          "validator_status": null,
+          "readiness_passes": null,
+          "blocked_by": null,
+          "_witness_rel": "debug_runs/.witness_honesty_precheck/veg_ship_close_live.json",
+          "honest_gate": "unknown"
+        }
+      },
+      {
         "path": "debug_runs/.witness_honesty_precheck/vegetation_program_close_live.json",
         "exists": true,
-        "bytes": 2672,
-        "modified_epoch_secs": 1781716519,
+        "bytes": 2876,
+        "modified_epoch_secs": 1782013732,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -2152,8 +2424,8 @@
       {
         "path": "debug_runs/.witness_honesty_precheck/vegetation_snapshot_roundtrip_live.json",
         "exists": true,
-        "bytes": 2389,
-        "modified_epoch_secs": 1781978467,
+        "bytes": 2593,
+        "modified_epoch_secs": 1782013918,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -2179,8 +2451,8 @@
       {
         "path": "debug_runs/.witness_honesty_precheck/vegetation_variant_catalog_load_live.json",
         "exists": true,
-        "bytes": 2925,
-        "modified_epoch_secs": 1781756523,
+        "bytes": 3129,
+        "modified_epoch_secs": 1782013651,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -2206,8 +2478,8 @@
       {
         "path": "debug_runs/.witness_honesty_precheck/vfx_fire_test_highlight_live.json",
         "exists": true,
-        "bytes": 2407,
-        "modified_epoch_secs": 1781756524,
+        "bytes": 2611,
+        "modified_epoch_secs": 1782009817,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -2558,7 +2830,7 @@
         "path": "debug_runs/agent_ops/grammar_ship_close_live.json",
         "exists": true,
         "bytes": 2527,
-        "modified_epoch_secs": 1781979319,
+        "modified_epoch_secs": 1781982787,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -2584,8 +2856,8 @@
       {
         "path": "debug_runs/agent_ops/intel_officer_sweep_live.json",
         "exists": true,
-        "bytes": 6661,
-        "modified_epoch_secs": 1781975243,
+        "bytes": 1158,
+        "modified_epoch_secs": 1781990400,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -2593,7 +2865,7 @@
           "track": null,
           "lane": "INTEL_OFFICER",
           "task_id": null,
-          "green": false,
+          "green": true,
           "proceed_ship": null,
           "art_quality": null,
           "ok": true,
@@ -2605,14 +2877,14 @@
           "readiness_passes": null,
           "blocked_by": null,
           "_witness_rel": "debug_runs/agent_ops/intel_officer_sweep_live.json",
-          "honest_gate": "done_no_ship_flag"
+          "honest_gate": "honest_green"
         }
       },
       {
         "path": "debug_runs/agent_ops/mcp_phase4_queue_live.json",
         "exists": true,
-        "bytes": 6108,
-        "modified_epoch_secs": 1781670225,
+        "bytes": 6324,
+        "modified_epoch_secs": 1782004079,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -2639,7 +2911,7 @@
         "path": "debug_runs/agent_ops/mcp_valid_construction_live.json",
         "exists": true,
         "bytes": 1549,
-        "modified_epoch_secs": 1781670225,
+        "modified_epoch_secs": 1782004079,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -2663,10 +2935,37 @@
         }
       },
       {
+        "path": "debug_runs/agent_ops/ops_dashboard_live.json",
+        "exists": true,
+        "bytes": 16157,
+        "modified_epoch_secs": 1782016212,
+        "summary": {
+          "parse_ok": true,
+          "program_id": "unclassified",
+          "program_label": null,
+          "track": null,
+          "lane": "OPS_DASHBOARD",
+          "task_id": "OPS-DASHBOARD-001",
+          "green": null,
+          "proceed_ship": null,
+          "art_quality": null,
+          "ok": true,
+          "status": null,
+          "profile": "OPS_DASHBOARD",
+          "agent_role": "operations-intelligence",
+          "owner": null,
+          "validator_status": null,
+          "readiness_passes": null,
+          "blocked_by": null,
+          "_witness_rel": "debug_runs/agent_ops/ops_dashboard_live.json",
+          "honest_gate": "done_no_ship_flag"
+        }
+      },
+      {
         "path": "debug_runs/agent_ops/ops_mcp_function_layer_live.json",
         "exists": true,
         "bytes": 3139,
-        "modified_epoch_secs": 1781979103,
+        "modified_epoch_secs": 1782016015,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -2714,6 +3013,60 @@
           "blocked_by": null,
           "_witness_rel": "debug_runs/agent_ops/power_grid_art_downstream_dispatch_live.json",
           "honest_gate": "honest_green"
+        }
+      },
+      {
+        "path": "debug_runs/agent_ops/test_atomic_witness.json",
+        "exists": true,
+        "bytes": 597,
+        "modified_epoch_secs": 1782016131,
+        "summary": {
+          "parse_ok": true,
+          "program_id": "unclassified",
+          "program_label": null,
+          "track": null,
+          "lane": "TEST",
+          "task_id": null,
+          "green": null,
+          "proceed_ship": null,
+          "art_quality": null,
+          "ok": null,
+          "status": null,
+          "profile": "TEST",
+          "agent_role": "ops_crash_exporter",
+          "owner": null,
+          "validator_status": null,
+          "readiness_passes": null,
+          "blocked_by": null,
+          "_witness_rel": "debug_runs/agent_ops/test_atomic_witness.json",
+          "honest_gate": "unknown"
+        }
+      },
+      {
+        "path": "debug_runs/agent_ops/triage_live.json",
+        "exists": true,
+        "bytes": 4929,
+        "modified_epoch_secs": 1782016164,
+        "summary": {
+          "parse_ok": true,
+          "program_id": "unclassified",
+          "program_label": null,
+          "track": null,
+          "lane": "OPS-TRIAGE-LIVE",
+          "task_id": "OPS-TRIAGE-DASH-001",
+          "green": null,
+          "proceed_ship": null,
+          "art_quality": null,
+          "ok": true,
+          "status": null,
+          "profile": "OPS-TRIAGE-LIVE",
+          "agent_role": "ops_crash_exporter",
+          "owner": null,
+          "validator_status": null,
+          "readiness_passes": null,
+          "blocked_by": null,
+          "_witness_rel": "debug_runs/agent_ops/triage_live.json",
+          "honest_gate": "done_no_ship_flag"
         }
       },
       {
@@ -2774,7 +3127,7 @@
         "path": "debug_runs/aps_artist_tool_e2e_live.json",
         "exists": true,
         "bytes": 2386,
-        "modified_epoch_secs": 1781800424,
+        "modified_epoch_secs": 1782012878,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -2800,8 +3153,8 @@
       {
         "path": "debug_runs/aps_artist_tool_modules_live.json",
         "exists": true,
-        "bytes": 2614,
-        "modified_epoch_secs": 1781800424,
+        "bytes": 2776,
+        "modified_epoch_secs": 1782012878,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -2821,14 +3174,14 @@
           "readiness_passes": null,
           "blocked_by": null,
           "_witness_rel": "debug_runs/aps_artist_tool_modules_live.json",
-          "honest_gate": "unknown"
+          "honest_gate": "queue_stale"
         }
       },
       {
         "path": "debug_runs/aps_atlas_land_register_live.json",
         "exists": true,
         "bytes": 1992,
-        "modified_epoch_secs": 1781800363,
+        "modified_epoch_secs": 1782012798,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -2882,7 +3235,7 @@
         "path": "debug_runs/aps_atlas_preview_002_live.json",
         "exists": true,
         "bytes": 452,
-        "modified_epoch_secs": 1781800423,
+        "modified_epoch_secs": 1782012875,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -2909,7 +3262,7 @@
         "path": "debug_runs/aps_bevy_preview_002_live.json",
         "exists": true,
         "bytes": 716,
-        "modified_epoch_secs": 1781800424,
+        "modified_epoch_secs": 1782012878,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -2935,8 +3288,8 @@
       {
         "path": "debug_runs/aps_bevy_qc_hud_001_live.json",
         "exists": true,
-        "bytes": 2909,
-        "modified_epoch_secs": 1781756519,
+        "bytes": 3113,
+        "modified_epoch_secs": 1782014005,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -2962,8 +3315,8 @@
       {
         "path": "debug_runs/aps_bevy_qc_hud_001_v2_live.json",
         "exists": true,
-        "bytes": 2355,
-        "modified_epoch_secs": 1781756518,
+        "bytes": 2559,
+        "modified_epoch_secs": 1782014005,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -3017,7 +3370,7 @@
         "path": "debug_runs/aps_dna_consumer_contract_live.json",
         "exists": true,
         "bytes": 2411,
-        "modified_epoch_secs": 1781800424,
+        "modified_epoch_secs": 1782012878,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -3070,8 +3423,8 @@
       {
         "path": "debug_runs/aps_domain_router_live.json",
         "exists": true,
-        "bytes": 2438,
-        "modified_epoch_secs": 1781800368,
+        "bytes": 2439,
+        "modified_epoch_secs": 1782012812,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -3097,8 +3450,8 @@
       {
         "path": "debug_runs/aps_grammar_evolution_close_live.json",
         "exists": true,
-        "bytes": 2142,
-        "modified_epoch_secs": 1781800397,
+        "bytes": 2173,
+        "modified_epoch_secs": 1782012813,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -3125,7 +3478,7 @@
         "path": "debug_runs/aps_grammar_p3_live.json",
         "exists": true,
         "bytes": 207,
-        "modified_epoch_secs": 1781800400,
+        "modified_epoch_secs": 1782012818,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -3152,7 +3505,7 @@
         "path": "debug_runs/aps_grammar_spine_tier_live.json",
         "exists": true,
         "bytes": 315,
-        "modified_epoch_secs": 1781800400,
+        "modified_epoch_secs": 1782012819,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -3179,7 +3532,7 @@
         "path": "debug_runs/aps_grammar_tier_g1_gates_live.json",
         "exists": true,
         "bytes": 189,
-        "modified_epoch_secs": 1781800405,
+        "modified_epoch_secs": 1782012833,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -3203,10 +3556,10 @@
         }
       },
       {
-        "path": "debug_runs/aps_grammar_tier_gates_live.json",
+        "path": "debug_runs/aps_grammar_tier_gates_g0_fixture_live.json",
         "exists": true,
         "bytes": 227,
-        "modified_epoch_secs": 1781800404,
+        "modified_epoch_secs": 1782012827,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -3225,15 +3578,70 @@
           "validator_status": null,
           "readiness_passes": null,
           "blocked_by": null,
-          "_witness_rel": "debug_runs/aps_grammar_tier_gates_live.json",
+          "_witness_rel": "debug_runs/aps_grammar_tier_gates_g0_fixture_live.json",
           "honest_gate": "unknown"
+        }
+      },
+      {
+        "path": "debug_runs/aps_grammar_tier_gates_live.json",
+        "exists": true,
+        "bytes": 1264,
+        "modified_epoch_secs": 1782012832,
+        "summary": {
+          "parse_ok": true,
+          "program_id": "unclassified",
+          "program_label": null,
+          "track": null,
+          "lane": "APS_GRAM_TIER_GATES",
+          "task_id": "APS-GRAM-TIER-GATES-LIVE-001",
+          "green": true,
+          "proceed_ship": null,
+          "art_quality": null,
+          "ok": null,
+          "status": null,
+          "profile": "APS_GRAM_TIER_GATES",
+          "agent_role": null,
+          "owner": null,
+          "validator_status": null,
+          "readiness_passes": null,
+          "blocked_by": null,
+          "_witness_rel": "debug_runs/aps_grammar_tier_gates_live.json",
+          "honest_gate": "honest_green"
+        }
+      },
+      {
+        "path": "debug_runs/aps_guard_brief_parity_live.json",
+        "exists": true,
+        "bytes": 1146,
+        "modified_epoch_secs": 1782012787,
+        "summary": {
+          "parse_ok": true,
+          "program_id": "unclassified",
+          "program_label": null,
+          "track": null,
+          "lane": "APS_GUARD_BRIEF_PARITY",
+          "task_id": "APS-GUARD-BRIEF-PARITY-001",
+          "green": true,
+          "proceed_ship": null,
+          "art_quality": null,
+          "ok": null,
+          "status": null,
+          "profile": "APS_GUARD_BRIEF_PARITY",
+          "agent_role": null,
+          "owner": null,
+          "validator_status": null,
+          "readiness_passes": null,
+          "blocked_by": null,
+          "parity_green": true,
+          "_witness_rel": "debug_runs/aps_guard_brief_parity_live.json",
+          "honest_gate": "honest_green"
         }
       },
       {
         "path": "debug_runs/aps_landscape_preset_browse_live.json",
         "exists": true,
         "bytes": 2326,
-        "modified_epoch_secs": 1781800396,
+        "modified_epoch_secs": 1782012812,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -3260,7 +3668,7 @@
         "path": "debug_runs/aps_mat_002_live.json",
         "exists": true,
         "bytes": 636,
-        "modified_epoch_secs": 1781800424,
+        "modified_epoch_secs": 1782012878,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -3287,7 +3695,7 @@
         "path": "debug_runs/aps_mat_003_category_tree_live.json",
         "exists": true,
         "bytes": 252,
-        "modified_epoch_secs": 1781800420,
+        "modified_epoch_secs": 1782012867,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -3395,7 +3803,7 @@
         "path": "debug_runs/aps_preview_001_live.json",
         "exists": true,
         "bytes": 246,
-        "modified_epoch_secs": 1781800423,
+        "modified_epoch_secs": 1782012875,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -3448,8 +3856,8 @@
       {
         "path": "debug_runs/aps_preview_002_live.json",
         "exists": true,
-        "bytes": 1072,
-        "modified_epoch_secs": 1781801491,
+        "bytes": 883,
+        "modified_epoch_secs": 1782012878,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -3476,7 +3884,7 @@
         "path": "debug_runs/aps_preview_catalog_live.json",
         "exists": true,
         "bytes": 347,
-        "modified_epoch_secs": 1781800423,
+        "modified_epoch_secs": 1782012875,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -3500,10 +3908,37 @@
         }
       },
       {
+        "path": "debug_runs/aps_session_presence_live.json",
+        "exists": true,
+        "bytes": 2231,
+        "modified_epoch_secs": 1782012862,
+        "summary": {
+          "parse_ok": true,
+          "program_id": "unclassified",
+          "program_label": null,
+          "track": null,
+          "lane": "APS_SESSION_PRESENCE",
+          "task_id": null,
+          "green": true,
+          "proceed_ship": null,
+          "art_quality": null,
+          "ok": null,
+          "status": null,
+          "profile": "APS_SESSION_PRESENCE",
+          "agent_role": null,
+          "owner": null,
+          "validator_status": null,
+          "readiness_passes": null,
+          "blocked_by": null,
+          "_witness_rel": "debug_runs/aps_session_presence_live.json",
+          "honest_gate": "honest_green"
+        }
+      },
+      {
         "path": "debug_runs/aps_uiux_onboard_live.json",
         "exists": true,
-        "bytes": 372,
-        "modified_epoch_secs": 1781800408,
+        "bytes": 406,
+        "modified_epoch_secs": 1782012862,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -3611,7 +4046,7 @@
         "path": "debug_runs/aps_ux_async_001_live.json",
         "exists": true,
         "bytes": 542,
-        "modified_epoch_secs": 1781800420,
+        "modified_epoch_secs": 1782012867,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -3665,7 +4100,7 @@
         "path": "debug_runs/aps_ux_nonblock_001_live.json",
         "exists": true,
         "bytes": 941,
-        "modified_epoch_secs": 1781800420,
+        "modified_epoch_secs": 1782012867,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -3692,7 +4127,7 @@
         "path": "debug_runs/aps_ux_polish_001_live.json",
         "exists": true,
         "bytes": 406,
-        "modified_epoch_secs": 1781800420,
+        "modified_epoch_secs": 1782012867,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -3800,7 +4235,7 @@
         "path": "debug_runs/aps_validator_plain_002_live.json",
         "exists": true,
         "bytes": 1160,
-        "modified_epoch_secs": 1781800420,
+        "modified_epoch_secs": 1782012867,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -3826,8 +4261,8 @@
       {
         "path": "debug_runs/aps_veg_extract_parity_live.json",
         "exists": true,
-        "bytes": 2703,
-        "modified_epoch_secs": 1781800421,
+        "bytes": 2733,
+        "modified_epoch_secs": 1782012871,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -3855,7 +4290,7 @@
         "path": "debug_runs/aps_veg_state_axis_live.json",
         "exists": true,
         "bytes": 2486,
-        "modified_epoch_secs": 1781800420,
+        "modified_epoch_secs": 1782012867,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -3892,7 +4327,7 @@
         "path": "debug_runs/atl_sign_001_live.json",
         "exists": true,
         "bytes": 908,
-        "modified_epoch_secs": 1781800422,
+        "modified_epoch_secs": 1782012874,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -3955,8 +4390,8 @@
       {
         "path": "debug_runs/build_read_visual_001_live.json",
         "exists": true,
-        "bytes": 2879,
-        "modified_epoch_secs": 1781756519,
+        "bytes": 3083,
+        "modified_epoch_secs": 1782009781,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -4009,8 +4444,8 @@
       {
         "path": "debug_runs/build_verify_debug_live.json",
         "exists": true,
-        "bytes": 2501,
-        "modified_epoch_secs": 1781756518,
+        "bytes": 2705,
+        "modified_epoch_secs": 1782010074,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -4036,8 +4471,8 @@
       {
         "path": "debug_runs/build_verify_pointer_live.json",
         "exists": true,
-        "bytes": 2413,
-        "modified_epoch_secs": 1781716709,
+        "bytes": 2617,
+        "modified_epoch_secs": 1782010074,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -4225,8 +4660,8 @@
       {
         "path": "debug_runs/construction_placement_live.json",
         "exists": true,
-        "bytes": 2871,
-        "modified_epoch_secs": 1781756519,
+        "bytes": 3075,
+        "modified_epoch_secs": 1782010074,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -4273,6 +4708,33 @@
           "readiness_passes": null,
           "blocked_by": null,
           "_witness_rel": "debug_runs/des_build_read_hud_001_live.json",
+          "honest_gate": "queue_stale"
+        }
+      },
+      {
+        "path": "debug_runs/des_build_read_hud_002_live.json",
+        "exists": true,
+        "bytes": 2518,
+        "modified_epoch_secs": 1781984376,
+        "summary": {
+          "parse_ok": true,
+          "program_id": "unclassified",
+          "program_label": null,
+          "track": null,
+          "lane": "DES-BUILD-READ-HUD-002",
+          "task_id": "DES-BUILD-READ-HUD-002",
+          "green": true,
+          "proceed_ship": null,
+          "art_quality": null,
+          "ok": null,
+          "status": null,
+          "profile": "DES-BUILD-READ-HUD-002",
+          "agent_role": null,
+          "owner": null,
+          "validator_status": null,
+          "readiness_passes": null,
+          "blocked_by": null,
+          "_witness_rel": "debug_runs/des_build_read_hud_002_live.json",
           "honest_gate": "honest_green"
         }
       },
@@ -4414,8 +4876,8 @@
       {
         "path": "debug_runs/design_fire_play_visibility_live.json",
         "exists": true,
-        "bytes": 2840,
-        "modified_epoch_secs": 1781756519,
+        "bytes": 3044,
+        "modified_epoch_secs": 1782009818,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -4468,8 +4930,8 @@
       {
         "path": "debug_runs/design_minimap_widget_live.json",
         "exists": true,
-        "bytes": 2506,
-        "modified_epoch_secs": 1781898654,
+        "bytes": 2707,
+        "modified_epoch_secs": 1782009782,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -4776,8 +5238,8 @@
       {
         "path": "debug_runs/fire_ecology_live.json",
         "exists": true,
-        "bytes": 3288,
-        "modified_epoch_secs": 1781874141,
+        "bytes": 4169,
+        "modified_epoch_secs": 1782010468,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -4801,6 +5263,33 @@
         }
       },
       {
+        "path": "debug_runs/fire_f2_readiness_align_live.json",
+        "exists": true,
+        "bytes": 2684,
+        "modified_epoch_secs": 1781984545,
+        "summary": {
+          "parse_ok": true,
+          "program_id": "unclassified",
+          "program_label": null,
+          "track": null,
+          "lane": "FIRE-F2-READINESS-ALIGN-001",
+          "task_id": null,
+          "green": null,
+          "proceed_ship": null,
+          "art_quality": null,
+          "ok": null,
+          "status": null,
+          "profile": "FIRE-F2-READINESS-ALIGN-001",
+          "agent_role": null,
+          "owner": null,
+          "validator_status": null,
+          "readiness_passes": null,
+          "blocked_by": null,
+          "_witness_rel": "debug_runs/fire_f2_readiness_align_live.json",
+          "honest_gate": "unknown"
+        }
+      },
+      {
         "path": "debug_runs/fire_overlay_debug_spec_live.json",
         "exists": true,
         "bytes": 0,
@@ -4813,8 +5302,8 @@
       {
         "path": "debug_runs/fire_streaming_live.json",
         "exists": true,
-        "bytes": 2431,
-        "modified_epoch_secs": 1781884836,
+        "bytes": 2635,
+        "modified_epoch_secs": 1782015366,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -4840,8 +5329,8 @@
       {
         "path": "debug_runs/g_play_product_close_live.json",
         "exists": true,
-        "bytes": 3082,
-        "modified_epoch_secs": 1781716789,
+        "bytes": 3286,
+        "modified_epoch_secs": 1782010077,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -4921,8 +5410,8 @@
       {
         "path": "debug_runs/grammar_archetype_g1_live.json",
         "exists": true,
-        "bytes": 209,
-        "modified_epoch_secs": 1781755939,
+        "bytes": 227,
+        "modified_epoch_secs": 1781980085,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -4976,7 +5465,7 @@
         "path": "debug_runs/grammar_facility_brief_live.json",
         "exists": true,
         "bytes": 5306,
-        "modified_epoch_secs": 1781756431,
+        "modified_epoch_secs": 1782004068,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -5030,7 +5519,7 @@
         "path": "debug_runs/grammar_iter_001_aps1_live.json",
         "exists": true,
         "bytes": 189,
-        "modified_epoch_secs": 1781800424,
+        "modified_epoch_secs": 1782012878,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -5111,7 +5600,7 @@
         "path": "debug_runs/grammar_labels_g1_live.json",
         "exists": true,
         "bytes": 281,
-        "modified_epoch_secs": 1781800396,
+        "modified_epoch_secs": 1782012812,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -5138,7 +5627,7 @@
         "path": "debug_runs/grammar_set_brief_live.json",
         "exists": true,
         "bytes": 1557,
-        "modified_epoch_secs": 1781361882,
+        "modified_epoch_secs": 1782012789,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -5164,8 +5653,8 @@
       {
         "path": "debug_runs/grammar_set_tier_live.json",
         "exists": true,
-        "bytes": 318,
-        "modified_epoch_secs": 1781800401,
+        "bytes": 347,
+        "modified_epoch_secs": 1782012821,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -5191,8 +5680,8 @@
       {
         "path": "debug_runs/grammar_sweep_process_live.json",
         "exists": true,
-        "bytes": 923,
-        "modified_epoch_secs": 1781756231,
+        "bytes": 980,
+        "modified_epoch_secs": 1782009859,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -5212,7 +5701,7 @@
           "readiness_passes": null,
           "blocked_by": null,
           "_witness_rel": "debug_runs/grammar_sweep_process_live.json",
-          "honest_gate": "honest_green"
+          "honest_gate": "queue_stale"
         }
       },
       {
@@ -5245,8 +5734,8 @@
       {
         "path": "debug_runs/industrial_activation_live.json",
         "exists": true,
-        "bytes": 7111,
-        "modified_epoch_secs": 1781968440,
+        "bytes": 7264,
+        "modified_epoch_secs": 1782013814,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -5295,6 +5784,33 @@
           "blocked_by": null,
           "_witness_rel": "debug_runs/infra_e0_profile_catalog_live.json",
           "honest_gate": "honest_green"
+        }
+      },
+      {
+        "path": "debug_runs/infra_lane_close_live.json",
+        "exists": true,
+        "bytes": 2408,
+        "modified_epoch_secs": 1781984207,
+        "summary": {
+          "parse_ok": true,
+          "program_id": "unclassified",
+          "program_label": null,
+          "track": null,
+          "lane": "INFRA-LANE-CLOSE-001",
+          "task_id": null,
+          "green": null,
+          "proceed_ship": null,
+          "art_quality": null,
+          "ok": null,
+          "status": null,
+          "profile": "INFRA-LANE-CLOSE-001",
+          "agent_role": null,
+          "owner": null,
+          "validator_status": null,
+          "readiness_passes": null,
+          "blocked_by": null,
+          "_witness_rel": "debug_runs/infra_lane_close_live.json",
+          "honest_gate": "unknown"
         }
       },
       {
@@ -5354,8 +5870,8 @@
       {
         "path": "debug_runs/infrastructure_view_isolation_live.json",
         "exists": true,
-        "bytes": 5016,
-        "modified_epoch_secs": 1781367219,
+        "bytes": 5083,
+        "modified_epoch_secs": 1781984464,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -5374,7 +5890,7 @@
           "validator_status": null,
           "readiness_passes": null,
           "blocked_by": null,
-          "infrastructure_view_isolation_green": false,
+          "infrastructure_view_isolation_green": true,
           "_witness_rel": "debug_runs/infrastructure_view_isolation_live.json",
           "honest_gate": "unknown"
         }
@@ -5382,8 +5898,8 @@
       {
         "path": "debug_runs/landscape_grammar_burn_chain_live.json",
         "exists": true,
-        "bytes": 2471,
-        "modified_epoch_secs": 1781756522,
+        "bytes": 2675,
+        "modified_epoch_secs": 1782013656,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -5409,8 +5925,8 @@
       {
         "path": "debug_runs/landscape_grammar_burn_overlay_live.json",
         "exists": true,
-        "bytes": 2462,
-        "modified_epoch_secs": 1781756548,
+        "bytes": 2666,
+        "modified_epoch_secs": 1782013771,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -5436,8 +5952,8 @@
       {
         "path": "debug_runs/landscape_grammar_composite_live.json",
         "exists": true,
-        "bytes": 2512,
-        "modified_epoch_secs": 1781716518,
+        "bytes": 2716,
+        "modified_epoch_secs": 1782013730,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -5463,8 +5979,8 @@
       {
         "path": "debug_runs/landscape_grammar_disturbance_log_live.json",
         "exists": true,
-        "bytes": 2444,
-        "modified_epoch_secs": 1781716518,
+        "bytes": 2648,
+        "modified_epoch_secs": 1782013730,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -5490,21 +6006,21 @@
       {
         "path": "debug_runs/landscape_grammar_extract_live.json",
         "exists": true,
-        "bytes": 2510,
-        "modified_epoch_secs": 1781756520,
+        "bytes": 3006,
+        "modified_epoch_secs": 1782013732,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
           "program_label": null,
           "track": null,
-          "lane": "VEG-BURN-EXTRACT-004",
-          "task_id": null,
+          "lane": "CDR-A-EXTRACT-SPRITE-001",
+          "task_id": "CDR-A-EXTRACT-SPRITE-001",
           "green": true,
           "proceed_ship": null,
           "art_quality": null,
           "ok": null,
           "status": null,
-          "profile": "VEG-BURN-EXTRACT-004",
+          "profile": "CDR-A-EXTRACT-SPRITE-001",
           "agent_role": null,
           "owner": null,
           "validator_status": null,
@@ -5517,8 +6033,8 @@
       {
         "path": "debug_runs/landscape_grammar_fire_harvest_wire_live.json",
         "exists": true,
-        "bytes": 2727,
-        "modified_epoch_secs": 1781756548,
+        "bytes": 2931,
+        "modified_epoch_secs": 1782013771,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -5544,8 +6060,8 @@
       {
         "path": "debug_runs/landscape_grammar_lg1_live.json",
         "exists": true,
-        "bytes": 4925,
-        "modified_epoch_secs": 1781704749,
+        "bytes": 5129,
+        "modified_epoch_secs": 1782010169,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -5571,8 +6087,8 @@
       {
         "path": "debug_runs/landscape_grammar_lg2_live.json",
         "exists": true,
-        "bytes": 2556,
-        "modified_epoch_secs": 1781716520,
+        "bytes": 2760,
+        "modified_epoch_secs": 1782013732,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -5598,8 +6114,8 @@
       {
         "path": "debug_runs/landscape_grammar_lg3_live.json",
         "exists": true,
-        "bytes": 2465,
-        "modified_epoch_secs": 1781716519,
+        "bytes": 2669,
+        "modified_epoch_secs": 1782013731,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -5625,8 +6141,8 @@
       {
         "path": "debug_runs/landscape_grammar_lg4_preview_live.json",
         "exists": true,
-        "bytes": 2722,
-        "modified_epoch_secs": 1781716519,
+        "bytes": 2926,
+        "modified_epoch_secs": 1782013731,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -5652,8 +6168,8 @@
       {
         "path": "debug_runs/landscape_grammar_lg5_live.json",
         "exists": true,
-        "bytes": 2985,
-        "modified_epoch_secs": 1781716519,
+        "bytes": 3189,
+        "modified_epoch_secs": 1782013731,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -5679,8 +6195,8 @@
       {
         "path": "debug_runs/landscape_grammar_map_rollout_live.json",
         "exists": true,
-        "bytes": 2402,
-        "modified_epoch_secs": 1781884836,
+        "bytes": 2605,
+        "modified_epoch_secs": 1782015890,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -5706,8 +6222,8 @@
       {
         "path": "debug_runs/landscape_grammar_sim_harness_live.json",
         "exists": true,
-        "bytes": 2683,
-        "modified_epoch_secs": 1781716709,
+        "bytes": 2887,
+        "modified_epoch_secs": 1782010396,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -5727,14 +6243,14 @@
           "readiness_passes": null,
           "blocked_by": null,
           "_witness_rel": "debug_runs/landscape_grammar_sim_harness_live.json",
-          "honest_gate": "honest_green"
+          "honest_gate": "inflated_green"
         }
       },
       {
         "path": "debug_runs/landscape_grammar_visual_smoke_live.json",
         "exists": true,
-        "bytes": 2694,
-        "modified_epoch_secs": 1781756553,
+        "bytes": 2898,
+        "modified_epoch_secs": 1782010279,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -5842,8 +6358,8 @@
       {
         "path": "debug_runs/map_zoom_coherence_live.json",
         "exists": true,
-        "bytes": 2752,
-        "modified_epoch_secs": 1781756520,
+        "bytes": 2956,
+        "modified_epoch_secs": 1782010115,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -5978,7 +6494,7 @@
         "path": "debug_runs/mcp_landscape_grammar_preset_batch_live.json",
         "exists": true,
         "bytes": 2644,
-        "modified_epoch_secs": 1781979103,
+        "modified_epoch_secs": 1782016015,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -6032,7 +6548,7 @@
         "path": "debug_runs/mcp_landscape_sign_atlas_live.json",
         "exists": true,
         "bytes": 1525,
-        "modified_epoch_secs": 1781670221,
+        "modified_epoch_secs": 1781983745,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -6040,7 +6556,7 @@
           "track": null,
           "lane": "MCP_LANDSCAPE_SIGN_ATLAS",
           "task_id": null,
-          "green": false,
+          "green": true,
           "proceed_ship": null,
           "art_quality": null,
           "ok": null,
@@ -6052,7 +6568,7 @@
           "readiness_passes": null,
           "blocked_by": null,
           "_witness_rel": "debug_runs/mcp_landscape_sign_atlas_live.json",
-          "honest_gate": "unknown"
+          "honest_gate": "honest_green"
         }
       },
       {
@@ -6409,8 +6925,8 @@
       {
         "path": "debug_runs/mcp_witness_integrity_ops_live.json",
         "exists": true,
-        "bytes": 1492,
-        "modified_epoch_secs": 1781670227,
+        "bytes": 1486,
+        "modified_epoch_secs": 1782016016,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -6436,8 +6952,8 @@
       {
         "path": "debug_runs/minimap_compositor_live.json",
         "exists": true,
-        "bytes": 5411,
-        "modified_epoch_secs": 1781898656,
+        "bytes": 5652,
+        "modified_epoch_secs": 1782015367,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -6463,8 +6979,8 @@
       {
         "path": "debug_runs/minimap_fire_veg_coherence_live.json",
         "exists": true,
-        "bytes": 2637,
-        "modified_epoch_secs": 1781898654,
+        "bytes": 2841,
+        "modified_epoch_secs": 1782000395,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -6490,8 +7006,8 @@
       {
         "path": "debug_runs/minimap_topology_legend_live.json",
         "exists": true,
-        "bytes": 2620,
-        "modified_epoch_secs": 1781978467,
+        "bytes": 2824,
+        "modified_epoch_secs": 1782013918,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -6511,7 +7027,7 @@
           "readiness_passes": null,
           "blocked_by": null,
           "_witness_rel": "debug_runs/minimap_topology_legend_live.json",
-          "honest_gate": "honest_green"
+          "honest_gate": "inflated_green"
         }
       },
       {
@@ -6632,8 +7148,8 @@
       {
         "path": "debug_runs/pilot_catalog_parity_live.json",
         "exists": true,
-        "bytes": 2364,
-        "modified_epoch_secs": 1781979271,
+        "bytes": 2568,
+        "modified_epoch_secs": 1782009781,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -6713,8 +7229,8 @@
       {
         "path": "debug_runs/power_grid_construction_ux_close_live.json",
         "exists": true,
-        "bytes": 2470,
-        "modified_epoch_secs": 1781978418,
+        "bytes": 2674,
+        "modified_epoch_secs": 1782004104,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -6740,8 +7256,8 @@
       {
         "path": "debug_runs/power_grid_track_bd_live.json",
         "exists": true,
-        "bytes": 2594,
-        "modified_epoch_secs": 1781978418,
+        "bytes": 2798,
+        "modified_epoch_secs": 1782004104,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -6767,8 +7283,8 @@
       {
         "path": "debug_runs/power_grid_track_c_live.json",
         "exists": true,
-        "bytes": 2630,
-        "modified_epoch_secs": 1781978418,
+        "bytes": 2834,
+        "modified_epoch_secs": 1782004104,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -6794,8 +7310,8 @@
       {
         "path": "debug_runs/power_line_draw_live.json",
         "exists": true,
-        "bytes": 2727,
-        "modified_epoch_secs": 1781978417,
+        "bytes": 2931,
+        "modified_epoch_secs": 1782004103,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -6821,8 +7337,8 @@
       {
         "path": "debug_runs/power_map_overlay_live.json",
         "exists": true,
-        "bytes": 2799,
-        "modified_epoch_secs": 1781979189,
+        "bytes": 3003,
+        "modified_epoch_secs": 1782004129,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -6842,7 +7358,7 @@
           "readiness_passes": null,
           "blocked_by": null,
           "_witness_rel": "debug_runs/power_map_overlay_live.json",
-          "honest_gate": "honest_green"
+          "honest_gate": "queue_stale"
         }
       },
       {
@@ -6929,8 +7445,8 @@
       {
         "path": "debug_runs/queue_integrity_reconcile_live.json",
         "exists": true,
-        "bytes": 10043,
-        "modified_epoch_secs": 1781670225,
+        "bytes": 892,
+        "modified_epoch_secs": 1781990366,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -6938,7 +7454,7 @@
           "track": null,
           "lane": "MCP_WIT_QUEUE_INTEGRITY",
           "task_id": null,
-          "green": false,
+          "green": true,
           "proceed_ship": null,
           "art_quality": null,
           "ok": null,
@@ -6950,14 +7466,14 @@
           "readiness_passes": null,
           "blocked_by": null,
           "_witness_rel": "debug_runs/queue_integrity_reconcile_live.json",
-          "honest_gate": "unknown"
+          "honest_gate": "honest_green"
         }
       },
       {
         "path": "debug_runs/replay_editor_parity_live.json",
         "exists": true,
-        "bytes": 2499,
-        "modified_epoch_secs": 1781978468,
+        "bytes": 2648,
+        "modified_epoch_secs": 1782015366,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -7038,8 +7554,8 @@
       {
         "path": "debug_runs/sim_effect_spine_live.json",
         "exists": true,
-        "bytes": 2594,
-        "modified_epoch_secs": 1781756521,
+        "bytes": 2798,
+        "modified_epoch_secs": 1782010140,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -7090,6 +7606,33 @@
         }
       },
       {
+        "path": "debug_runs/sim_hud_cursor_live.json",
+        "exists": true,
+        "bytes": 2453,
+        "modified_epoch_secs": 1781982620,
+        "summary": {
+          "parse_ok": true,
+          "program_id": "unclassified",
+          "program_label": null,
+          "track": null,
+          "lane": "COD-SIM-HUD-CURSOR-001",
+          "task_id": "TRIAGE-CURSOR-UNIFY-001",
+          "green": null,
+          "proceed_ship": null,
+          "art_quality": null,
+          "ok": null,
+          "status": null,
+          "profile": "COD-SIM-HUD-CURSOR-001",
+          "agent_role": null,
+          "owner": null,
+          "validator_status": null,
+          "readiness_passes": null,
+          "blocked_by": null,
+          "_witness_rel": "debug_runs/sim_hud_cursor_live.json",
+          "honest_gate": "unknown"
+        }
+      },
+      {
         "path": "debug_runs/sim_hud_egui_theme_live.json",
         "exists": true,
         "bytes": 2408,
@@ -7113,6 +7656,33 @@
           "readiness_passes": null,
           "blocked_by": null,
           "_witness_rel": "debug_runs/sim_hud_egui_theme_live.json",
+          "honest_gate": "honest_green"
+        }
+      },
+      {
+        "path": "debug_runs/sim_hud_esc_cascade_live.json",
+        "exists": true,
+        "bytes": 2610,
+        "modified_epoch_secs": 1781984139,
+        "summary": {
+          "parse_ok": true,
+          "program_id": "unclassified",
+          "program_label": null,
+          "track": null,
+          "lane": "COD-SIM-HUD-ESC-CASCADE-001",
+          "task_id": "COD-SIM-HUD-ESC-CASCADE-001",
+          "green": true,
+          "proceed_ship": null,
+          "art_quality": null,
+          "ok": null,
+          "status": null,
+          "profile": "COD-SIM-HUD-ESC-CASCADE-001",
+          "agent_role": null,
+          "owner": null,
+          "validator_status": null,
+          "readiness_passes": null,
+          "blocked_by": null,
+          "_witness_rel": "debug_runs/sim_hud_esc_cascade_live.json",
           "honest_gate": "honest_green"
         }
       },
@@ -7254,8 +7824,8 @@
       {
         "path": "debug_runs/sim_hud_power_icons_live.json",
         "exists": true,
-        "bytes": 2988,
-        "modified_epoch_secs": 1781792381,
+        "bytes": 3192,
+        "modified_epoch_secs": 1782003965,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -7441,6 +8011,33 @@
         }
       },
       {
+        "path": "debug_runs/sim_spectrum_analytics_live.json",
+        "exists": true,
+        "bytes": 18212,
+        "modified_epoch_secs": 1782015364,
+        "summary": {
+          "parse_ok": true,
+          "program_id": "unclassified",
+          "program_label": null,
+          "track": null,
+          "lane": "SIM_SPECTRUM",
+          "task_id": null,
+          "green": null,
+          "proceed_ship": null,
+          "art_quality": null,
+          "ok": null,
+          "status": null,
+          "profile": "SIM_SPECTRUM",
+          "agent_role": null,
+          "owner": null,
+          "validator_status": null,
+          "readiness_passes": null,
+          "blocked_by": null,
+          "_witness_rel": "debug_runs/sim_spectrum_analytics_live.json",
+          "honest_gate": "unknown"
+        }
+      },
+      {
         "path": "debug_runs/single_archetype_ratio_guard_live.json",
         "exists": true,
         "bytes": 657,
@@ -7471,7 +8068,7 @@
         "path": "debug_runs/site_zone_validate_live.json",
         "exists": true,
         "bytes": 2348,
-        "modified_epoch_secs": 1781756317,
+        "modified_epoch_secs": 1782009133,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -7498,7 +8095,7 @@
         "path": "debug_runs/stage6_virtualization_live.json",
         "exists": true,
         "bytes": 3411,
-        "modified_epoch_secs": 1781367219,
+        "modified_epoch_secs": 1781984206,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -7525,8 +8122,8 @@
       {
         "path": "debug_runs/stage7_behavioral_live.json",
         "exists": true,
-        "bytes": 3977,
-        "modified_epoch_secs": 1781978469,
+        "bytes": 4181,
+        "modified_epoch_secs": 1782000395,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -7686,10 +8283,37 @@
         }
       },
       {
+        "path": "debug_runs/triage_perf_vfx_fix_2026-06-11_live.json",
+        "exists": true,
+        "bytes": 7551,
+        "modified_epoch_secs": 1782015364,
+        "summary": {
+          "parse_ok": true,
+          "program_id": "unclassified",
+          "program_label": null,
+          "track": null,
+          "lane": "PERF-INSTR-VFX-001",
+          "task_id": null,
+          "green": null,
+          "proceed_ship": null,
+          "art_quality": null,
+          "ok": null,
+          "status": null,
+          "profile": "PERF-INSTR-VFX-001",
+          "agent_role": null,
+          "owner": null,
+          "validator_status": null,
+          "readiness_passes": null,
+          "blocked_by": null,
+          "_witness_rel": "debug_runs/triage_perf_vfx_fix_2026-06-11_live.json",
+          "honest_gate": "unknown"
+        }
+      },
+      {
         "path": "debug_runs/ui_shell_migration_live.json",
         "exists": true,
-        "bytes": 8797,
-        "modified_epoch_secs": 1781898710,
+        "bytes": 8958,
+        "modified_epoch_secs": 1782015828,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -7740,6 +8364,33 @@
         }
       },
       {
+        "path": "debug_runs/veg_catalog_burn_rows_live.json",
+        "exists": true,
+        "bytes": 246,
+        "modified_epoch_secs": 1782012862,
+        "summary": {
+          "parse_ok": true,
+          "program_id": "unclassified",
+          "program_label": null,
+          "track": null,
+          "lane": null,
+          "task_id": null,
+          "green": true,
+          "proceed_ship": null,
+          "art_quality": null,
+          "ok": null,
+          "status": null,
+          "profile": null,
+          "agent_role": null,
+          "owner": null,
+          "validator_status": null,
+          "readiness_passes": null,
+          "blocked_by": null,
+          "_witness_rel": "debug_runs/veg_catalog_burn_rows_live.json",
+          "honest_gate": "honest_green"
+        }
+      },
+      {
         "path": "debug_runs/veg_diag_extract_panel_live.json",
         "exists": true,
         "bytes": 2563,
@@ -7767,10 +8418,37 @@
         }
       },
       {
+        "path": "debug_runs/veg_f02_burn_atlas_live.json",
+        "exists": true,
+        "bytes": 369,
+        "modified_epoch_secs": 1782012862,
+        "summary": {
+          "parse_ok": true,
+          "program_id": "unclassified",
+          "program_label": null,
+          "track": null,
+          "lane": "VEG_F02_BURN_ATLAS",
+          "task_id": null,
+          "green": true,
+          "proceed_ship": null,
+          "art_quality": null,
+          "ok": null,
+          "status": null,
+          "profile": "VEG_F02_BURN_ATLAS",
+          "agent_role": null,
+          "owner": null,
+          "validator_status": null,
+          "readiness_passes": null,
+          "blocked_by": null,
+          "_witness_rel": "debug_runs/veg_f02_burn_atlas_live.json",
+          "honest_gate": "honest_green"
+        }
+      },
+      {
         "path": "debug_runs/veg_runtime_proof_live.json",
         "exists": true,
-        "bytes": 3267,
-        "modified_epoch_secs": 1781756524,
+        "bytes": 3471,
+        "modified_epoch_secs": 1782013731,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -7790,14 +8468,41 @@
           "readiness_passes": null,
           "blocked_by": null,
           "_witness_rel": "debug_runs/veg_runtime_proof_live.json",
-          "honest_gate": "honest_green"
+          "honest_gate": "inflated_green"
+        }
+      },
+      {
+        "path": "debug_runs/veg_ship_close_live.json",
+        "exists": true,
+        "bytes": 2689,
+        "modified_epoch_secs": 1782013657,
+        "summary": {
+          "parse_ok": true,
+          "program_id": "unclassified",
+          "program_label": null,
+          "track": null,
+          "lane": "VEG-SHIP-CLOSE-001",
+          "task_id": null,
+          "green": null,
+          "proceed_ship": null,
+          "art_quality": null,
+          "ok": null,
+          "status": null,
+          "profile": "VEG-SHIP-CLOSE-001",
+          "agent_role": null,
+          "owner": null,
+          "validator_status": null,
+          "readiness_passes": null,
+          "blocked_by": null,
+          "_witness_rel": "debug_runs/veg_ship_close_live.json",
+          "honest_gate": "unknown"
         }
       },
       {
         "path": "debug_runs/vegetation_program_close_live.json",
         "exists": true,
-        "bytes": 2672,
-        "modified_epoch_secs": 1781716520,
+        "bytes": 2876,
+        "modified_epoch_secs": 1782013732,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -7823,8 +8528,8 @@
       {
         "path": "debug_runs/vegetation_snapshot_roundtrip_live.json",
         "exists": true,
-        "bytes": 2389,
-        "modified_epoch_secs": 1781978467,
+        "bytes": 2593,
+        "modified_epoch_secs": 1782013919,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -7850,8 +8555,8 @@
       {
         "path": "debug_runs/vegetation_variant_catalog_load_live.json",
         "exists": true,
-        "bytes": 2925,
-        "modified_epoch_secs": 1781794061,
+        "bytes": 3129,
+        "modified_epoch_secs": 1782013652,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -7877,8 +8582,8 @@
       {
         "path": "debug_runs/vfx_fire_test_highlight_live.json",
         "exists": true,
-        "bytes": 2407,
-        "modified_epoch_secs": 1781756524,
+        "bytes": 2611,
+        "modified_epoch_secs": 1782009817,
         "summary": {
           "parse_ok": true,
           "program_id": "unclassified",
@@ -8176,8 +8881,8 @@
       {
         "path": "debug_runs/.witness_honesty_precheck/power_node_hover_live.json",
         "exists": true,
-        "bytes": 2697,
-        "modified_epoch_secs": 1781978384,
+        "bytes": 2901,
+        "modified_epoch_secs": 1782004282,
         "summary": {
           "parse_ok": true,
           "program_id": "art_B",
@@ -8251,6 +8956,33 @@
           "readiness_passes": null,
           "blocked_by": null,
           "_witness_rel": "debug_runs/art_pipeline/aps_pilot_rowhouse_live.json",
+          "honest_gate": "honest_green"
+        }
+      },
+      {
+        "path": "debug_runs/art_pipeline/aps_studio_close_live.json",
+        "exists": true,
+        "bytes": 481,
+        "modified_epoch_secs": 1782012862,
+        "summary": {
+          "parse_ok": true,
+          "program_id": "art_B",
+          "program_label": "MCP pipeline spine / warehouse integration",
+          "track": "B",
+          "lane": "APS_STUDIO_CLOSE",
+          "task_id": null,
+          "green": true,
+          "proceed_ship": null,
+          "art_quality": null,
+          "ok": null,
+          "status": null,
+          "profile": "APS_STUDIO_CLOSE",
+          "agent_role": null,
+          "owner": "@orchestrator-mcp",
+          "validator_status": null,
+          "readiness_passes": null,
+          "blocked_by": null,
+          "_witness_rel": "debug_runs/art_pipeline/aps_studio_close_live.json",
           "honest_gate": "honest_green"
         }
       },
@@ -8336,6 +9068,33 @@
         }
       },
       {
+        "path": "debug_runs/art_pipeline/dmcp_designer_mcp_open_lane_live.json",
+        "exists": true,
+        "bytes": 2671,
+        "modified_epoch_secs": 1781979540,
+        "summary": {
+          "parse_ok": true,
+          "program_id": "art_B",
+          "program_label": "MCP pipeline spine / warehouse integration",
+          "track": "B",
+          "lane": "DMCP_DESIGNER_MCP_OPEN",
+          "task_id": null,
+          "green": true,
+          "proceed_ship": null,
+          "art_quality": null,
+          "ok": null,
+          "status": null,
+          "profile": "DMCP_DESIGNER_MCP_OPEN",
+          "agent_role": "designer-mcp",
+          "owner": "@orchestrator-mcp",
+          "validator_status": null,
+          "readiness_passes": null,
+          "blocked_by": null,
+          "_witness_rel": "debug_runs/art_pipeline/dmcp_designer_mcp_open_lane_live.json",
+          "honest_gate": "honest_green"
+        }
+      },
+      {
         "path": "debug_runs/art_pipeline/dmcp_e0_artist_reverdict_live.json",
         "exists": true,
         "bytes": 1167,
@@ -8366,7 +9125,7 @@
         "path": "debug_runs/art_pipeline/dmcp_e3_vegetation_catalog_live.json",
         "exists": true,
         "bytes": 1833,
-        "modified_epoch_secs": 1781670218,
+        "modified_epoch_secs": 1781979970,
         "summary": {
           "parse_ok": true,
           "program_id": "art_B",
@@ -8413,7 +9172,7 @@
           "readiness_passes": null,
           "blocked_by": null,
           "_witness_rel": "debug_runs/art_pipeline/dmcp_e4_matrix_charter_live.json",
-          "honest_gate": "honest_green"
+          "honest_gate": "queue_stale"
         }
       },
       {
@@ -8447,7 +9206,7 @@
         "path": "debug_runs/art_pipeline/dmcp_nuclear_pwr_spec_live.json",
         "exists": true,
         "bytes": 1631,
-        "modified_epoch_secs": 1781792318,
+        "modified_epoch_secs": 1782004068,
         "summary": {
           "parse_ok": true,
           "program_id": "art_B",
@@ -8501,7 +9260,7 @@
         "path": "debug_runs/art_pipeline/dmcp_ovr_g0_audit_live.json",
         "exists": true,
         "bytes": 1130,
-        "modified_epoch_secs": 1781800420,
+        "modified_epoch_secs": 1782012867,
         "summary": {
           "parse_ok": true,
           "program_id": "art_B",
@@ -8528,7 +9287,7 @@
         "path": "debug_runs/art_pipeline/dmcp_ovr_p2_impl_audit_live.json",
         "exists": true,
         "bytes": 13822,
-        "modified_epoch_secs": 1781800419,
+        "modified_epoch_secs": 1782012866,
         "summary": {
           "parse_ok": true,
           "program_id": "art_B",
@@ -8555,7 +9314,7 @@
         "path": "debug_runs/art_pipeline/dmcp_ovr_p3_accept_rubric_live.json",
         "exists": true,
         "bytes": 1170,
-        "modified_epoch_secs": 1781800420,
+        "modified_epoch_secs": 1782012866,
         "summary": {
           "parse_ok": true,
           "program_id": "art_B",
@@ -8609,7 +9368,7 @@
         "path": "debug_runs/art_pipeline/dmcp_qc_substation_live.json",
         "exists": true,
         "bytes": 667,
-        "modified_epoch_secs": 1781968439,
+        "modified_epoch_secs": 1782008699,
         "summary": {
           "parse_ok": true,
           "program_id": "art_B",
@@ -8636,7 +9395,7 @@
         "path": "debug_runs/art_pipeline/dmcp_qc_transformer_live.json",
         "exists": true,
         "bytes": 660,
-        "modified_epoch_secs": 1781968439,
+        "modified_epoch_secs": 1782008699,
         "summary": {
           "parse_ok": true,
           "program_id": "art_B",
@@ -8656,6 +9415,87 @@
           "readiness_passes": null,
           "blocked_by": null,
           "_witness_rel": "debug_runs/art_pipeline/dmcp_qc_transformer_live.json",
+          "honest_gate": "honest_green"
+        }
+      },
+      {
+        "path": "debug_runs/art_pipeline/dmcp_reaction_territory_events_live.json",
+        "exists": true,
+        "bytes": 2697,
+        "modified_epoch_secs": 1782008809,
+        "summary": {
+          "parse_ok": true,
+          "program_id": "art_B",
+          "program_label": "MCP pipeline spine / warehouse integration",
+          "track": "B",
+          "lane": "DES_REACTION_TERRITORY_EVENTS",
+          "task_id": null,
+          "green": true,
+          "proceed_ship": null,
+          "art_quality": null,
+          "ok": null,
+          "status": null,
+          "profile": "DES_REACTION_TERRITORY_EVENTS",
+          "agent_role": "designer-mcp",
+          "owner": "@orchestrator-mcp",
+          "validator_status": null,
+          "readiness_passes": null,
+          "blocked_by": null,
+          "_witness_rel": "debug_runs/art_pipeline/dmcp_reaction_territory_events_live.json",
+          "honest_gate": "honest_green"
+        }
+      },
+      {
+        "path": "debug_runs/art_pipeline/dmcp_style_landscape_riparian_live.json",
+        "exists": true,
+        "bytes": 1389,
+        "modified_epoch_secs": 1781982373,
+        "summary": {
+          "parse_ok": true,
+          "program_id": "art_B",
+          "program_label": "MCP pipeline spine / warehouse integration",
+          "track": "B",
+          "lane": "DES_STYLE_LANDSCAPE_RIPARIAN",
+          "task_id": null,
+          "green": true,
+          "proceed_ship": null,
+          "art_quality": null,
+          "ok": null,
+          "status": "done",
+          "profile": "DES_STYLE_LANDSCAPE_RIPARIAN",
+          "agent_role": "designer-mcp",
+          "owner": "@orchestrator-mcp",
+          "validator_status": null,
+          "readiness_passes": null,
+          "blocked_by": null,
+          "_witness_rel": "debug_runs/art_pipeline/dmcp_style_landscape_riparian_live.json",
+          "honest_gate": "honest_green"
+        }
+      },
+      {
+        "path": "debug_runs/art_pipeline/dmcp_transformer_pad_spec_live.json",
+        "exists": true,
+        "bytes": 1403,
+        "modified_epoch_secs": 1782008697,
+        "summary": {
+          "parse_ok": true,
+          "program_id": "art_B",
+          "program_label": "MCP pipeline spine / warehouse integration",
+          "track": "B",
+          "lane": "DMCP_TRANSFORMER_PAD_SPEC",
+          "task_id": null,
+          "green": true,
+          "proceed_ship": null,
+          "art_quality": null,
+          "ok": null,
+          "status": null,
+          "profile": "DMCP_TRANSFORMER_PAD_SPEC",
+          "agent_role": "designer-mcp",
+          "owner": "@orchestrator-mcp",
+          "validator_status": null,
+          "readiness_passes": null,
+          "blocked_by": null,
+          "_witness_rel": "debug_runs/art_pipeline/dmcp_transformer_pad_spec_live.json",
           "honest_gate": "honest_green"
         }
       },
@@ -8710,6 +9550,33 @@
           "readiness_passes": null,
           "blocked_by": null,
           "_witness_rel": "debug_runs/art_pipeline/eng_pt_4_warehouse_map_stamp_live.json",
+          "honest_gate": "honest_green"
+        }
+      },
+      {
+        "path": "debug_runs/art_pipeline/facility_needs_panel_live.json",
+        "exists": true,
+        "bytes": 202,
+        "modified_epoch_secs": 1782009223,
+        "summary": {
+          "parse_ok": true,
+          "program_id": "art_B",
+          "program_label": "MCP pipeline spine / warehouse integration",
+          "track": "B",
+          "lane": null,
+          "task_id": "CMCP-FACILITY-NEEDS-PANEL-001",
+          "green": true,
+          "proceed_ship": null,
+          "art_quality": null,
+          "ok": null,
+          "status": null,
+          "profile": null,
+          "agent_role": null,
+          "owner": "@orchestrator-mcp",
+          "validator_status": null,
+          "readiness_passes": null,
+          "blocked_by": null,
+          "_witness_rel": "debug_runs/art_pipeline/facility_needs_panel_live.json",
           "honest_gate": "honest_green"
         }
       },
@@ -9625,6 +10492,87 @@
         }
       },
       {
+        "path": "debug_runs/art_pipeline/mcp_pwr_nuclear_batch_live.json",
+        "exists": true,
+        "bytes": 570,
+        "modified_epoch_secs": 1782004208,
+        "summary": {
+          "parse_ok": true,
+          "program_id": "art_B",
+          "program_label": "MCP pipeline spine / warehouse integration",
+          "track": "B",
+          "lane": "MCP_PWR_NUCLEAR_BATCH",
+          "task_id": null,
+          "green": true,
+          "proceed_ship": null,
+          "art_quality": null,
+          "ok": null,
+          "status": null,
+          "profile": "MCP_PWR_NUCLEAR_BATCH",
+          "agent_role": null,
+          "owner": "@orchestrator-mcp",
+          "validator_status": null,
+          "readiness_passes": null,
+          "blocked_by": null,
+          "_witness_rel": "debug_runs/art_pipeline/mcp_pwr_nuclear_batch_live.json",
+          "honest_gate": "honest_green"
+        }
+      },
+      {
+        "path": "debug_runs/art_pipeline/mcp_pwr_nuclear_manifest_live.json",
+        "exists": true,
+        "bytes": 688,
+        "modified_epoch_secs": 1782004232,
+        "summary": {
+          "parse_ok": true,
+          "program_id": "art_B",
+          "program_label": "MCP pipeline spine / warehouse integration",
+          "track": "B",
+          "lane": "MCP_PWR_NUCLEAR_MANIFEST",
+          "task_id": null,
+          "green": true,
+          "proceed_ship": null,
+          "art_quality": null,
+          "ok": null,
+          "status": null,
+          "profile": "MCP_PWR_NUCLEAR_MANIFEST",
+          "agent_role": null,
+          "owner": "@orchestrator-mcp",
+          "validator_status": null,
+          "readiness_passes": null,
+          "blocked_by": null,
+          "_witness_rel": "debug_runs/art_pipeline/mcp_pwr_nuclear_manifest_live.json",
+          "honest_gate": "honest_green"
+        }
+      },
+      {
+        "path": "debug_runs/art_pipeline/mcp_pwr_nuclear_promote_live.json",
+        "exists": true,
+        "bytes": 566,
+        "modified_epoch_secs": 1782004213,
+        "summary": {
+          "parse_ok": true,
+          "program_id": "art_B",
+          "program_label": "MCP pipeline spine / warehouse integration",
+          "track": "B",
+          "lane": "MCP_PWR_NUCLEAR_PROMOTE",
+          "task_id": null,
+          "green": true,
+          "proceed_ship": null,
+          "art_quality": null,
+          "ok": null,
+          "status": null,
+          "profile": "MCP_PWR_NUCLEAR_PROMOTE",
+          "agent_role": null,
+          "owner": "@orchestrator-mcp",
+          "validator_status": null,
+          "readiness_passes": null,
+          "blocked_by": null,
+          "_witness_rel": "debug_runs/art_pipeline/mcp_pwr_nuclear_promote_live.json",
+          "honest_gate": "honest_green"
+        }
+      },
+      {
         "path": "debug_runs/art_pipeline/mcp_pwr_substation_batch_live.json",
         "exists": true,
         "bytes": 527,
@@ -9736,7 +10684,7 @@
         "path": "debug_runs/art_pipeline/mcp_pwr_utility_manifest_live.json",
         "exists": true,
         "bytes": 671,
-        "modified_epoch_secs": 1781968201,
+        "modified_epoch_secs": 1782004232,
         "summary": {
           "parse_ok": true,
           "program_id": "art_B",
@@ -9897,8 +10845,8 @@
       {
         "path": "debug_runs/art_pipeline/power_grid_art_downstream_close_live.json",
         "exists": true,
-        "bytes": 2150,
-        "modified_epoch_secs": 1781968440,
+        "bytes": 2211,
+        "modified_epoch_secs": 1782008699,
         "summary": {
           "parse_ok": true,
           "program_id": "art_B",
@@ -10219,6 +11167,33 @@
         }
       },
       {
+        "path": "debug_runs/art_pipeline/site_preview_panel_live.json",
+        "exists": true,
+        "bytes": 276,
+        "modified_epoch_secs": 1782009223,
+        "summary": {
+          "parse_ok": true,
+          "program_id": "art_B",
+          "program_label": "MCP pipeline spine / warehouse integration",
+          "track": "B",
+          "lane": null,
+          "task_id": "CMCP-SITE-PREVIEW-PANEL-001",
+          "green": true,
+          "proceed_ship": null,
+          "art_quality": null,
+          "ok": null,
+          "status": null,
+          "profile": null,
+          "agent_role": null,
+          "owner": "@orchestrator-mcp",
+          "validator_status": null,
+          "readiness_passes": null,
+          "blocked_by": null,
+          "_witness_rel": "debug_runs/art_pipeline/site_preview_panel_live.json",
+          "honest_gate": "honest_green"
+        }
+      },
+      {
         "path": "debug_runs/art_pipeline/style_packs_manifest_live.json",
         "exists": true,
         "bytes": 491,
@@ -10384,7 +11359,7 @@
         "path": "debug_runs/art_pipeline/tile_landscape_expanded_live.json",
         "exists": true,
         "bytes": 883,
-        "modified_epoch_secs": 1781800421,
+        "modified_epoch_secs": 1782012871,
         "summary": {
           "parse_ok": true,
           "program_id": "art_B",
@@ -10485,14 +11460,14 @@
           "readiness_passes": null,
           "blocked_by": null,
           "_witness_rel": "debug_runs/art_pipeline/tile_tile_factory_floor_greybox_001_live.json",
-          "honest_gate": "honest_green"
+          "honest_gate": "inflated_green"
         }
       },
       {
         "path": "debug_runs/art_pipeline/tile_tile_landscape_expanded_v1_live.json",
         "exists": true,
         "bytes": 5410,
-        "modified_epoch_secs": 1781800421,
+        "modified_epoch_secs": 1782012871,
         "summary": {
           "parse_ok": true,
           "program_id": "art_B",
@@ -10786,24 +11761,78 @@
         }
       },
       {
-        "path": "debug_runs/art_pipeline/veg_resolver_parity_live.json",
+        "path": "debug_runs/art_pipeline/variants_reaction_territory_live.json",
         "exists": true,
-        "bytes": 1264,
-        "modified_epoch_secs": 1781800420,
+        "bytes": 6930,
+        "modified_epoch_secs": 1782009027,
         "summary": {
           "parse_ok": true,
           "program_id": "art_B",
           "program_label": "MCP pipeline spine / warehouse integration",
           "track": "B",
-          "lane": "CDR_B_VEG_RESOLVER_PARITY",
+          "lane": "APS_REACTION_TERRITORY",
+          "task_id": null,
+          "green": true,
+          "proceed_ship": null,
+          "art_quality": null,
+          "ok": null,
+          "status": null,
+          "profile": "APS_REACTION_TERRITORY",
+          "agent_role": null,
+          "owner": "@orchestrator-mcp",
+          "validator_status": null,
+          "readiness_passes": null,
+          "blocked_by": null,
+          "_witness_rel": "debug_runs/art_pipeline/variants_reaction_territory_live.json",
+          "honest_gate": "honest_green"
+        }
+      },
+      {
+        "path": "debug_runs/art_pipeline/variants_sessions_live.json",
+        "exists": true,
+        "bytes": 1086,
+        "modified_epoch_secs": 1782015974,
+        "summary": {
+          "parse_ok": true,
+          "program_id": "art_B",
+          "program_label": "MCP pipeline spine / warehouse integration",
+          "track": "B",
+          "lane": "APS_VARIANTS_SESSIONS",
+          "task_id": null,
+          "green": true,
+          "proceed_ship": null,
+          "art_quality": null,
+          "ok": null,
+          "status": null,
+          "profile": "APS_VARIANTS_SESSIONS",
+          "agent_role": null,
+          "owner": "@orchestrator-mcp",
+          "validator_status": null,
+          "readiness_passes": null,
+          "blocked_by": null,
+          "_witness_rel": "debug_runs/art_pipeline/variants_sessions_live.json",
+          "honest_gate": "honest_green"
+        }
+      },
+      {
+        "path": "debug_runs/art_pipeline/veg_resolver_parity_live.json",
+        "exists": true,
+        "bytes": 3762,
+        "modified_epoch_secs": 1782013652,
+        "summary": {
+          "parse_ok": true,
+          "program_id": "art_B",
+          "program_label": "MCP pipeline spine / warehouse integration",
+          "track": "B",
+          "lane": "CDR-B-VEG-RESOLVER-PARITY-001",
           "task_id": "CDR-B-VEG-RESOLVER-PARITY-001",
           "green": true,
           "proceed_ship": null,
           "art_quality": null,
           "ok": null,
           "status": null,
-          "profile": "CDR_B_VEG_RESOLVER_PARITY",
-          "agent_role": "coder-mcp",
+          "profile": "CDR-B-VEG-RESOLVER-PARITY-001",
+          "agent_role": null,
           "owner": "@orchestrator-mcp",
           "validator_status": null,
           "readiness_passes": null,
@@ -10923,8 +11952,8 @@
       {
         "path": "debug_runs/power_node_hover_live.json",
         "exists": true,
-        "bytes": 2697,
-        "modified_epoch_secs": 1781978384,
+        "bytes": 2901,
+        "modified_epoch_secs": 1782004282,
         "summary": {
           "parse_ok": true,
           "program_id": "art_B",
@@ -10953,7 +11982,7 @@
         "path": "debug_runs/aps_material_studio_live.json",
         "exists": true,
         "bytes": 1629,
-        "modified_epoch_secs": 1781800423,
+        "modified_epoch_secs": 1782012875,
         "summary": {
           "parse_ok": true,
           "program_id": "art_A",
@@ -11067,8 +12096,8 @@
       {
         "path": "debug_runs/play_scenario_live.json",
         "exists": true,
-        "bytes": 3658,
-        "modified_epoch_secs": 1781756611,
+        "bytes": 3862,
+        "modified_epoch_secs": 1782013917,
         "summary": {
           "parse_ok": true,
           "program_id": "stage7_play",
@@ -11096,8 +12125,8 @@
       {
         "path": "debug_runs/stage5_full_app_live.json",
         "exists": true,
-        "bytes": 23434,
-        "modified_epoch_secs": 1781717503,
+        "bytes": 23624,
+        "modified_epoch_secs": 1782015828,
         "summary": {
           "parse_ok": true,
           "program_id": "stage5_spine",
@@ -11126,8 +12155,8 @@
     {
       "path": "debug_runs/.witness_honesty_precheck/aps_bevy_qc_hud_001_live.json",
       "exists": true,
-      "bytes": 2909,
-      "modified_epoch_secs": 1781756518,
+      "bytes": 3113,
+      "modified_epoch_secs": 1782014004,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -11153,8 +12182,8 @@
     {
       "path": "debug_runs/.witness_honesty_precheck/aps_bevy_qc_hud_001_v2_live.json",
       "exists": true,
-      "bytes": 2355,
-      "modified_epoch_secs": 1781756518,
+      "bytes": 2559,
+      "modified_epoch_secs": 1782014004,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -11234,8 +12263,8 @@
     {
       "path": "debug_runs/.witness_honesty_precheck/build_read_visual_001_live.json",
       "exists": true,
-      "bytes": 2879,
-      "modified_epoch_secs": 1781756518,
+      "bytes": 3083,
+      "modified_epoch_secs": 1782009781,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -11288,8 +12317,8 @@
     {
       "path": "debug_runs/.witness_honesty_precheck/build_verify_debug_live.json",
       "exists": true,
-      "bytes": 2501,
-      "modified_epoch_secs": 1781756518,
+      "bytes": 2705,
+      "modified_epoch_secs": 1782010074,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -11315,8 +12344,8 @@
     {
       "path": "debug_runs/.witness_honesty_precheck/build_verify_pointer_live.json",
       "exists": true,
-      "bytes": 2413,
-      "modified_epoch_secs": 1781716709,
+      "bytes": 2617,
+      "modified_epoch_secs": 1782010074,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -11423,8 +12452,8 @@
     {
       "path": "debug_runs/.witness_honesty_precheck/construction_placement_live.json",
       "exists": true,
-      "bytes": 2871,
-      "modified_epoch_secs": 1781756518,
+      "bytes": 3075,
+      "modified_epoch_secs": 1782010074,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -11499,6 +12528,33 @@
         "readiness_passes": null,
         "blocked_by": null,
         "_witness_rel": "debug_runs/.witness_honesty_precheck/des_build_read_hud_001_live.json",
+        "honest_gate": "queue_stale"
+      }
+    },
+    {
+      "path": "debug_runs/.witness_honesty_precheck/des_build_read_hud_002_live.json",
+      "exists": true,
+      "bytes": 2518,
+      "modified_epoch_secs": 1781984376,
+      "summary": {
+        "parse_ok": true,
+        "program_id": "unclassified",
+        "program_label": null,
+        "track": null,
+        "lane": "DES-BUILD-READ-HUD-002",
+        "task_id": "DES-BUILD-READ-HUD-002",
+        "green": true,
+        "proceed_ship": null,
+        "art_quality": null,
+        "ok": null,
+        "status": null,
+        "profile": "DES-BUILD-READ-HUD-002",
+        "agent_role": null,
+        "owner": null,
+        "validator_status": null,
+        "readiness_passes": null,
+        "blocked_by": null,
+        "_witness_rel": "debug_runs/.witness_honesty_precheck/des_build_read_hud_002_live.json",
         "honest_gate": "honest_green"
       }
     },
@@ -11559,8 +12615,8 @@
     {
       "path": "debug_runs/.witness_honesty_precheck/design_fire_play_visibility_live.json",
       "exists": true,
-      "bytes": 2840,
-      "modified_epoch_secs": 1781756519,
+      "bytes": 3044,
+      "modified_epoch_secs": 1782009817,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -11586,8 +12642,8 @@
     {
       "path": "debug_runs/.witness_honesty_precheck/design_minimap_widget_live.json",
       "exists": true,
-      "bytes": 2506,
-      "modified_epoch_secs": 1781898653,
+      "bytes": 2707,
+      "modified_epoch_secs": 1782009781,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -11640,8 +12696,8 @@
     {
       "path": "debug_runs/.witness_honesty_precheck/fire_ecology_live.json",
       "exists": true,
-      "bytes": 3288,
-      "modified_epoch_secs": 1781874141,
+      "bytes": 4169,
+      "modified_epoch_secs": 1782010468,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -11665,10 +12721,37 @@
       }
     },
     {
+      "path": "debug_runs/.witness_honesty_precheck/fire_f2_readiness_align_live.json",
+      "exists": true,
+      "bytes": 2684,
+      "modified_epoch_secs": 1781984545,
+      "summary": {
+        "parse_ok": true,
+        "program_id": "unclassified",
+        "program_label": null,
+        "track": null,
+        "lane": "FIRE-F2-READINESS-ALIGN-001",
+        "task_id": null,
+        "green": null,
+        "proceed_ship": null,
+        "art_quality": null,
+        "ok": null,
+        "status": null,
+        "profile": "FIRE-F2-READINESS-ALIGN-001",
+        "agent_role": null,
+        "owner": null,
+        "validator_status": null,
+        "readiness_passes": null,
+        "blocked_by": null,
+        "_witness_rel": "debug_runs/.witness_honesty_precheck/fire_f2_readiness_align_live.json",
+        "honest_gate": "unknown"
+      }
+    },
+    {
       "path": "debug_runs/.witness_honesty_precheck/fire_streaming_live.json",
       "exists": true,
-      "bytes": 2431,
-      "modified_epoch_secs": 1781884836,
+      "bytes": 2635,
+      "modified_epoch_secs": 1782015366,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -11694,8 +12777,8 @@
     {
       "path": "debug_runs/.witness_honesty_precheck/g_play_product_close_live.json",
       "exists": true,
-      "bytes": 3082,
-      "modified_epoch_secs": 1781716789,
+      "bytes": 3286,
+      "modified_epoch_secs": 1782010076,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -11722,7 +12805,7 @@
       "path": "debug_runs/.witness_honesty_precheck/grammar_ship_close_live.json",
       "exists": true,
       "bytes": 2527,
-      "modified_epoch_secs": 1781979319,
+      "modified_epoch_secs": 1781982787,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -11775,8 +12858,8 @@
     {
       "path": "debug_runs/.witness_honesty_precheck/industrial_activation_live.json",
       "exists": true,
-      "bytes": 6638,
-      "modified_epoch_secs": 1781756531,
+      "bytes": 7264,
+      "modified_epoch_secs": 1782013814,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -11825,6 +12908,33 @@
         "blocked_by": null,
         "_witness_rel": "debug_runs/.witness_honesty_precheck/infra_e0_profile_catalog_live.json",
         "honest_gate": "honest_green"
+      }
+    },
+    {
+      "path": "debug_runs/.witness_honesty_precheck/infra_lane_close_live.json",
+      "exists": true,
+      "bytes": 2408,
+      "modified_epoch_secs": 1781984206,
+      "summary": {
+        "parse_ok": true,
+        "program_id": "unclassified",
+        "program_label": null,
+        "track": null,
+        "lane": "INFRA-LANE-CLOSE-001",
+        "task_id": null,
+        "green": null,
+        "proceed_ship": null,
+        "art_quality": null,
+        "ok": null,
+        "status": null,
+        "profile": "INFRA-LANE-CLOSE-001",
+        "agent_role": null,
+        "owner": null,
+        "validator_status": null,
+        "readiness_passes": null,
+        "blocked_by": null,
+        "_witness_rel": "debug_runs/.witness_honesty_precheck/infra_lane_close_live.json",
+        "honest_gate": "unknown"
       }
     },
     {
@@ -11882,10 +12992,38 @@
       }
     },
     {
+      "path": "debug_runs/.witness_honesty_precheck/infrastructure_view_isolation_live.json",
+      "exists": true,
+      "bytes": 5083,
+      "modified_epoch_secs": 1781984463,
+      "summary": {
+        "parse_ok": true,
+        "program_id": "unclassified",
+        "program_label": null,
+        "track": null,
+        "lane": "INFRASTRUCTURE_VIEW_ISOLATION",
+        "task_id": null,
+        "green": null,
+        "proceed_ship": null,
+        "art_quality": null,
+        "ok": null,
+        "status": null,
+        "profile": "INFRASTRUCTURE_VIEW_ISOLATION",
+        "agent_role": null,
+        "owner": null,
+        "validator_status": null,
+        "readiness_passes": null,
+        "blocked_by": null,
+        "infrastructure_view_isolation_green": true,
+        "_witness_rel": "debug_runs/.witness_honesty_precheck/infrastructure_view_isolation_live.json",
+        "honest_gate": "unknown"
+      }
+    },
+    {
       "path": "debug_runs/.witness_honesty_precheck/landscape_grammar_burn_chain_live.json",
       "exists": true,
-      "bytes": 2471,
-      "modified_epoch_secs": 1781756521,
+      "bytes": 2675,
+      "modified_epoch_secs": 1782013655,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -11911,8 +13049,8 @@
     {
       "path": "debug_runs/.witness_honesty_precheck/landscape_grammar_burn_overlay_live.json",
       "exists": true,
-      "bytes": 2462,
-      "modified_epoch_secs": 1781756548,
+      "bytes": 2666,
+      "modified_epoch_secs": 1782013771,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -11938,8 +13076,8 @@
     {
       "path": "debug_runs/.witness_honesty_precheck/landscape_grammar_composite_live.json",
       "exists": true,
-      "bytes": 2512,
-      "modified_epoch_secs": 1781716518,
+      "bytes": 2716,
+      "modified_epoch_secs": 1782013730,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -11965,8 +13103,8 @@
     {
       "path": "debug_runs/.witness_honesty_precheck/landscape_grammar_disturbance_log_live.json",
       "exists": true,
-      "bytes": 2444,
-      "modified_epoch_secs": 1781716518,
+      "bytes": 2648,
+      "modified_epoch_secs": 1782013730,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -11992,21 +13130,21 @@
     {
       "path": "debug_runs/.witness_honesty_precheck/landscape_grammar_extract_live.json",
       "exists": true,
-      "bytes": 2510,
-      "modified_epoch_secs": 1781756519,
+      "bytes": 3006,
+      "modified_epoch_secs": 1782013731,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
         "program_label": null,
         "track": null,
-        "lane": "VEG-BURN-EXTRACT-004",
-        "task_id": null,
+        "lane": "CDR-A-EXTRACT-SPRITE-001",
+        "task_id": "CDR-A-EXTRACT-SPRITE-001",
         "green": true,
         "proceed_ship": null,
         "art_quality": null,
         "ok": null,
         "status": null,
-        "profile": "VEG-BURN-EXTRACT-004",
+        "profile": "CDR-A-EXTRACT-SPRITE-001",
         "agent_role": null,
         "owner": null,
         "validator_status": null,
@@ -12019,8 +13157,8 @@
     {
       "path": "debug_runs/.witness_honesty_precheck/landscape_grammar_fire_harvest_wire_live.json",
       "exists": true,
-      "bytes": 2727,
-      "modified_epoch_secs": 1781756548,
+      "bytes": 2931,
+      "modified_epoch_secs": 1782013771,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -12046,8 +13184,8 @@
     {
       "path": "debug_runs/.witness_honesty_precheck/landscape_grammar_lg1_live.json",
       "exists": true,
-      "bytes": 4925,
-      "modified_epoch_secs": 1781704749,
+      "bytes": 5129,
+      "modified_epoch_secs": 1782010168,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -12073,8 +13211,8 @@
     {
       "path": "debug_runs/.witness_honesty_precheck/landscape_grammar_lg2_live.json",
       "exists": true,
-      "bytes": 2556,
-      "modified_epoch_secs": 1781716520,
+      "bytes": 2760,
+      "modified_epoch_secs": 1782013732,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -12100,8 +13238,8 @@
     {
       "path": "debug_runs/.witness_honesty_precheck/landscape_grammar_lg3_live.json",
       "exists": true,
-      "bytes": 2465,
-      "modified_epoch_secs": 1781716518,
+      "bytes": 2669,
+      "modified_epoch_secs": 1782013730,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -12127,8 +13265,8 @@
     {
       "path": "debug_runs/.witness_honesty_precheck/landscape_grammar_lg4_preview_live.json",
       "exists": true,
-      "bytes": 2722,
-      "modified_epoch_secs": 1781716519,
+      "bytes": 2926,
+      "modified_epoch_secs": 1782013731,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -12154,8 +13292,8 @@
     {
       "path": "debug_runs/.witness_honesty_precheck/landscape_grammar_lg5_live.json",
       "exists": true,
-      "bytes": 2985,
-      "modified_epoch_secs": 1781716519,
+      "bytes": 3189,
+      "modified_epoch_secs": 1782013731,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -12181,8 +13319,8 @@
     {
       "path": "debug_runs/.witness_honesty_precheck/landscape_grammar_map_rollout_live.json",
       "exists": true,
-      "bytes": 2402,
-      "modified_epoch_secs": 1781884836,
+      "bytes": 2605,
+      "modified_epoch_secs": 1782015889,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -12208,8 +13346,8 @@
     {
       "path": "debug_runs/.witness_honesty_precheck/landscape_grammar_sim_harness_live.json",
       "exists": true,
-      "bytes": 2683,
-      "modified_epoch_secs": 1781716708,
+      "bytes": 2887,
+      "modified_epoch_secs": 1782010396,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -12229,14 +13367,14 @@
         "readiness_passes": null,
         "blocked_by": null,
         "_witness_rel": "debug_runs/.witness_honesty_precheck/landscape_grammar_sim_harness_live.json",
-        "honest_gate": "honest_green"
+        "honest_gate": "inflated_green"
       }
     },
     {
       "path": "debug_runs/.witness_honesty_precheck/landscape_grammar_visual_smoke_live.json",
       "exists": true,
-      "bytes": 2694,
-      "modified_epoch_secs": 1781756553,
+      "bytes": 2898,
+      "modified_epoch_secs": 1782010279,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -12316,8 +13454,8 @@
     {
       "path": "debug_runs/.witness_honesty_precheck/map_zoom_coherence_live.json",
       "exists": true,
-      "bytes": 2752,
-      "modified_epoch_secs": 1781756520,
+      "bytes": 2956,
+      "modified_epoch_secs": 1782010115,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -12343,8 +13481,8 @@
     {
       "path": "debug_runs/.witness_honesty_precheck/minimap_compositor_live.json",
       "exists": true,
-      "bytes": 5411,
-      "modified_epoch_secs": 1781898656,
+      "bytes": 5652,
+      "modified_epoch_secs": 1782015366,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -12370,8 +13508,8 @@
     {
       "path": "debug_runs/.witness_honesty_precheck/minimap_fire_veg_coherence_live.json",
       "exists": true,
-      "bytes": 2637,
-      "modified_epoch_secs": 1781898654,
+      "bytes": 2841,
+      "modified_epoch_secs": 1782000394,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -12397,8 +13535,8 @@
     {
       "path": "debug_runs/.witness_honesty_precheck/minimap_topology_legend_live.json",
       "exists": true,
-      "bytes": 2620,
-      "modified_epoch_secs": 1781978467,
+      "bytes": 2824,
+      "modified_epoch_secs": 1782013917,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -12418,7 +13556,7 @@
         "readiness_passes": null,
         "blocked_by": null,
         "_witness_rel": "debug_runs/.witness_honesty_precheck/minimap_topology_legend_live.json",
-        "honest_gate": "honest_green"
+        "honest_gate": "inflated_green"
       }
     },
     {
@@ -12478,8 +13616,8 @@
     {
       "path": "debug_runs/.witness_honesty_precheck/pilot_catalog_parity_live.json",
       "exists": true,
-      "bytes": 2364,
-      "modified_epoch_secs": 1781979271,
+      "bytes": 2568,
+      "modified_epoch_secs": 1782009780,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -12505,8 +13643,8 @@
     {
       "path": "debug_runs/.witness_honesty_precheck/play_scenario_live.json",
       "exists": true,
-      "bytes": 3658,
-      "modified_epoch_secs": 1781756611,
+      "bytes": 3862,
+      "modified_epoch_secs": 1782013917,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -12532,8 +13670,8 @@
     {
       "path": "debug_runs/.witness_honesty_precheck/power_grid_construction_ux_close_live.json",
       "exists": true,
-      "bytes": 2470,
-      "modified_epoch_secs": 1781978418,
+      "bytes": 2674,
+      "modified_epoch_secs": 1782004104,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -12559,8 +13697,8 @@
     {
       "path": "debug_runs/.witness_honesty_precheck/power_grid_track_bd_live.json",
       "exists": true,
-      "bytes": 2594,
-      "modified_epoch_secs": 1781978418,
+      "bytes": 2798,
+      "modified_epoch_secs": 1782004104,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -12586,8 +13724,8 @@
     {
       "path": "debug_runs/.witness_honesty_precheck/power_grid_track_c_live.json",
       "exists": true,
-      "bytes": 2630,
-      "modified_epoch_secs": 1781978418,
+      "bytes": 2834,
+      "modified_epoch_secs": 1782004104,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -12613,8 +13751,8 @@
     {
       "path": "debug_runs/.witness_honesty_precheck/power_line_draw_live.json",
       "exists": true,
-      "bytes": 2727,
-      "modified_epoch_secs": 1781978417,
+      "bytes": 2931,
+      "modified_epoch_secs": 1782004103,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -12640,8 +13778,8 @@
     {
       "path": "debug_runs/.witness_honesty_precheck/power_map_overlay_live.json",
       "exists": true,
-      "bytes": 2799,
-      "modified_epoch_secs": 1781979188,
+      "bytes": 3003,
+      "modified_epoch_secs": 1782004129,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -12661,14 +13799,14 @@
         "readiness_passes": null,
         "blocked_by": null,
         "_witness_rel": "debug_runs/.witness_honesty_precheck/power_map_overlay_live.json",
-        "honest_gate": "honest_green"
+        "honest_gate": "queue_stale"
       }
     },
     {
       "path": "debug_runs/.witness_honesty_precheck/power_node_hover_live.json",
       "exists": true,
-      "bytes": 2697,
-      "modified_epoch_secs": 1781978384,
+      "bytes": 2901,
+      "modified_epoch_secs": 1782004282,
       "summary": {
         "parse_ok": true,
         "program_id": "art_B",
@@ -12748,8 +13886,8 @@
     {
       "path": "debug_runs/.witness_honesty_precheck/replay_editor_parity_live.json",
       "exists": true,
-      "bytes": 2499,
-      "modified_epoch_secs": 1781978468,
+      "bytes": 2648,
+      "modified_epoch_secs": 1782015365,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -12776,8 +13914,8 @@
     {
       "path": "debug_runs/.witness_honesty_precheck/sim_effect_spine_live.json",
       "exists": true,
-      "bytes": 2594,
-      "modified_epoch_secs": 1781756521,
+      "bytes": 2798,
+      "modified_epoch_secs": 1782010140,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -12828,6 +13966,33 @@
       }
     },
     {
+      "path": "debug_runs/.witness_honesty_precheck/sim_hud_cursor_live.json",
+      "exists": true,
+      "bytes": 2453,
+      "modified_epoch_secs": 1781982619,
+      "summary": {
+        "parse_ok": true,
+        "program_id": "unclassified",
+        "program_label": null,
+        "track": null,
+        "lane": "COD-SIM-HUD-CURSOR-001",
+        "task_id": "TRIAGE-CURSOR-UNIFY-001",
+        "green": null,
+        "proceed_ship": null,
+        "art_quality": null,
+        "ok": null,
+        "status": null,
+        "profile": "COD-SIM-HUD-CURSOR-001",
+        "agent_role": null,
+        "owner": null,
+        "validator_status": null,
+        "readiness_passes": null,
+        "blocked_by": null,
+        "_witness_rel": "debug_runs/.witness_honesty_precheck/sim_hud_cursor_live.json",
+        "honest_gate": "unknown"
+      }
+    },
+    {
       "path": "debug_runs/.witness_honesty_precheck/sim_hud_egui_theme_live.json",
       "exists": true,
       "bytes": 2408,
@@ -12851,6 +14016,33 @@
         "readiness_passes": null,
         "blocked_by": null,
         "_witness_rel": "debug_runs/.witness_honesty_precheck/sim_hud_egui_theme_live.json",
+        "honest_gate": "honest_green"
+      }
+    },
+    {
+      "path": "debug_runs/.witness_honesty_precheck/sim_hud_esc_cascade_live.json",
+      "exists": true,
+      "bytes": 2610,
+      "modified_epoch_secs": 1781984139,
+      "summary": {
+        "parse_ok": true,
+        "program_id": "unclassified",
+        "program_label": null,
+        "track": null,
+        "lane": "COD-SIM-HUD-ESC-CASCADE-001",
+        "task_id": "COD-SIM-HUD-ESC-CASCADE-001",
+        "green": true,
+        "proceed_ship": null,
+        "art_quality": null,
+        "ok": null,
+        "status": null,
+        "profile": "COD-SIM-HUD-ESC-CASCADE-001",
+        "agent_role": null,
+        "owner": null,
+        "validator_status": null,
+        "readiness_passes": null,
+        "blocked_by": null,
+        "_witness_rel": "debug_runs/.witness_honesty_precheck/sim_hud_esc_cascade_live.json",
         "honest_gate": "honest_green"
       }
     },
@@ -12965,8 +14157,8 @@
     {
       "path": "debug_runs/.witness_honesty_precheck/sim_hud_power_icons_live.json",
       "exists": true,
-      "bytes": 2988,
-      "modified_epoch_secs": 1781792381,
+      "bytes": 3192,
+      "modified_epoch_secs": 1782003965,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -13017,10 +14209,37 @@
       }
     },
     {
+      "path": "debug_runs/.witness_honesty_precheck/sim_spectrum_analytics_live.json",
+      "exists": true,
+      "bytes": 18212,
+      "modified_epoch_secs": 1782015364,
+      "summary": {
+        "parse_ok": true,
+        "program_id": "unclassified",
+        "program_label": null,
+        "track": null,
+        "lane": "SIM_SPECTRUM",
+        "task_id": null,
+        "green": null,
+        "proceed_ship": null,
+        "art_quality": null,
+        "ok": null,
+        "status": null,
+        "profile": "SIM_SPECTRUM",
+        "agent_role": null,
+        "owner": null,
+        "validator_status": null,
+        "readiness_passes": null,
+        "blocked_by": null,
+        "_witness_rel": "debug_runs/.witness_honesty_precheck/sim_spectrum_analytics_live.json",
+        "honest_gate": "unknown"
+      }
+    },
+    {
       "path": "debug_runs/.witness_honesty_precheck/stage5_full_app_live.json",
       "exists": true,
-      "bytes": 23434,
-      "modified_epoch_secs": 1781717503,
+      "bytes": 23624,
+      "modified_epoch_secs": 1782015826,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -13044,10 +14263,38 @@
       }
     },
     {
+      "path": "debug_runs/.witness_honesty_precheck/stage6_virtualization_live.json",
+      "exists": true,
+      "bytes": 3411,
+      "modified_epoch_secs": 1781984206,
+      "summary": {
+        "parse_ok": true,
+        "program_id": "unclassified",
+        "program_label": null,
+        "track": null,
+        "lane": "STAGE6_VIRTUALIZATION",
+        "task_id": null,
+        "green": null,
+        "proceed_ship": null,
+        "art_quality": null,
+        "ok": null,
+        "status": null,
+        "profile": "STAGE6_VIRTUALIZATION",
+        "agent_role": null,
+        "owner": null,
+        "validator_status": null,
+        "readiness_passes": null,
+        "blocked_by": null,
+        "stage6_virtualization_green": true,
+        "_witness_rel": "debug_runs/.witness_honesty_precheck/stage6_virtualization_live.json",
+        "honest_gate": "unknown"
+      }
+    },
+    {
       "path": "debug_runs/.witness_honesty_precheck/stage7_behavioral_live.json",
       "exists": true,
-      "bytes": 3977,
-      "modified_epoch_secs": 1781978469,
+      "bytes": 4181,
+      "modified_epoch_secs": 1782000395,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -13126,10 +14373,37 @@
       }
     },
     {
+      "path": "debug_runs/.witness_honesty_precheck/triage_perf_vfx_fix_2026-06-11_live.json",
+      "exists": true,
+      "bytes": 7551,
+      "modified_epoch_secs": 1782015364,
+      "summary": {
+        "parse_ok": true,
+        "program_id": "unclassified",
+        "program_label": null,
+        "track": null,
+        "lane": "PERF-INSTR-VFX-001",
+        "task_id": null,
+        "green": null,
+        "proceed_ship": null,
+        "art_quality": null,
+        "ok": null,
+        "status": null,
+        "profile": "PERF-INSTR-VFX-001",
+        "agent_role": null,
+        "owner": null,
+        "validator_status": null,
+        "readiness_passes": null,
+        "blocked_by": null,
+        "_witness_rel": "debug_runs/.witness_honesty_precheck/triage_perf_vfx_fix_2026-06-11_live.json",
+        "honest_gate": "unknown"
+      }
+    },
+    {
       "path": "debug_runs/.witness_honesty_precheck/ui_shell_migration_live.json",
       "exists": true,
-      "bytes": 8797,
-      "modified_epoch_secs": 1781898710,
+      "bytes": 8958,
+      "modified_epoch_secs": 1782015827,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -13209,8 +14483,8 @@
     {
       "path": "debug_runs/.witness_honesty_precheck/veg_resolver_parity_live.json",
       "exists": true,
-      "bytes": 3558,
-      "modified_epoch_secs": 1781756523,
+      "bytes": 3762,
+      "modified_epoch_secs": 1782013652,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -13236,8 +14510,8 @@
     {
       "path": "debug_runs/.witness_honesty_precheck/veg_runtime_proof_live.json",
       "exists": true,
-      "bytes": 3267,
-      "modified_epoch_secs": 1781756523,
+      "bytes": 3471,
+      "modified_epoch_secs": 1782013731,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -13261,10 +14535,37 @@
       }
     },
     {
+      "path": "debug_runs/.witness_honesty_precheck/veg_ship_close_live.json",
+      "exists": true,
+      "bytes": 2689,
+      "modified_epoch_secs": 1782013656,
+      "summary": {
+        "parse_ok": true,
+        "program_id": "unclassified",
+        "program_label": null,
+        "track": null,
+        "lane": "VEG-SHIP-CLOSE-001",
+        "task_id": null,
+        "green": null,
+        "proceed_ship": null,
+        "art_quality": null,
+        "ok": null,
+        "status": null,
+        "profile": "VEG-SHIP-CLOSE-001",
+        "agent_role": null,
+        "owner": null,
+        "validator_status": null,
+        "readiness_passes": null,
+        "blocked_by": null,
+        "_witness_rel": "debug_runs/.witness_honesty_precheck/veg_ship_close_live.json",
+        "honest_gate": "unknown"
+      }
+    },
+    {
       "path": "debug_runs/.witness_honesty_precheck/vegetation_program_close_live.json",
       "exists": true,
-      "bytes": 2672,
-      "modified_epoch_secs": 1781716519,
+      "bytes": 2876,
+      "modified_epoch_secs": 1782013732,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -13290,8 +14591,8 @@
     {
       "path": "debug_runs/.witness_honesty_precheck/vegetation_snapshot_roundtrip_live.json",
       "exists": true,
-      "bytes": 2389,
-      "modified_epoch_secs": 1781978467,
+      "bytes": 2593,
+      "modified_epoch_secs": 1782013918,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -13317,8 +14618,8 @@
     {
       "path": "debug_runs/.witness_honesty_precheck/vegetation_variant_catalog_load_live.json",
       "exists": true,
-      "bytes": 2925,
-      "modified_epoch_secs": 1781756523,
+      "bytes": 3129,
+      "modified_epoch_secs": 1782013651,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -13344,8 +14645,8 @@
     {
       "path": "debug_runs/.witness_honesty_precheck/vfx_fire_test_highlight_live.json",
       "exists": true,
-      "bytes": 2407,
-      "modified_epoch_secs": 1781756524,
+      "bytes": 2611,
+      "modified_epoch_secs": 1782009817,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -13696,7 +14997,7 @@
       "path": "debug_runs/agent_ops/grammar_ship_close_live.json",
       "exists": true,
       "bytes": 2527,
-      "modified_epoch_secs": 1781979319,
+      "modified_epoch_secs": 1781982787,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -13722,8 +15023,8 @@
     {
       "path": "debug_runs/agent_ops/intel_officer_sweep_live.json",
       "exists": true,
-      "bytes": 6661,
-      "modified_epoch_secs": 1781975243,
+      "bytes": 1158,
+      "modified_epoch_secs": 1781990400,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -13731,7 +15032,7 @@
         "track": null,
         "lane": "INTEL_OFFICER",
         "task_id": null,
-        "green": false,
+        "green": true,
         "proceed_ship": null,
         "art_quality": null,
         "ok": true,
@@ -13743,14 +15044,14 @@
         "readiness_passes": null,
         "blocked_by": null,
         "_witness_rel": "debug_runs/agent_ops/intel_officer_sweep_live.json",
-        "honest_gate": "done_no_ship_flag"
+        "honest_gate": "honest_green"
       }
     },
     {
       "path": "debug_runs/agent_ops/mcp_phase4_queue_live.json",
       "exists": true,
-      "bytes": 6108,
-      "modified_epoch_secs": 1781670225,
+      "bytes": 6324,
+      "modified_epoch_secs": 1782004079,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -13777,7 +15078,7 @@
       "path": "debug_runs/agent_ops/mcp_valid_construction_live.json",
       "exists": true,
       "bytes": 1549,
-      "modified_epoch_secs": 1781670225,
+      "modified_epoch_secs": 1782004079,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -13801,10 +15102,37 @@
       }
     },
     {
+      "path": "debug_runs/agent_ops/ops_dashboard_live.json",
+      "exists": true,
+      "bytes": 16157,
+      "modified_epoch_secs": 1782016212,
+      "summary": {
+        "parse_ok": true,
+        "program_id": "unclassified",
+        "program_label": null,
+        "track": null,
+        "lane": "OPS_DASHBOARD",
+        "task_id": "OPS-DASHBOARD-001",
+        "green": null,
+        "proceed_ship": null,
+        "art_quality": null,
+        "ok": true,
+        "status": null,
+        "profile": "OPS_DASHBOARD",
+        "agent_role": "operations-intelligence",
+        "owner": null,
+        "validator_status": null,
+        "readiness_passes": null,
+        "blocked_by": null,
+        "_witness_rel": "debug_runs/agent_ops/ops_dashboard_live.json",
+        "honest_gate": "done_no_ship_flag"
+      }
+    },
+    {
       "path": "debug_runs/agent_ops/ops_mcp_function_layer_live.json",
       "exists": true,
       "bytes": 3139,
-      "modified_epoch_secs": 1781979103,
+      "modified_epoch_secs": 1782016015,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -13852,6 +15180,60 @@
         "blocked_by": null,
         "_witness_rel": "debug_runs/agent_ops/power_grid_art_downstream_dispatch_live.json",
         "honest_gate": "honest_green"
+      }
+    },
+    {
+      "path": "debug_runs/agent_ops/test_atomic_witness.json",
+      "exists": true,
+      "bytes": 597,
+      "modified_epoch_secs": 1782016131,
+      "summary": {
+        "parse_ok": true,
+        "program_id": "unclassified",
+        "program_label": null,
+        "track": null,
+        "lane": "TEST",
+        "task_id": null,
+        "green": null,
+        "proceed_ship": null,
+        "art_quality": null,
+        "ok": null,
+        "status": null,
+        "profile": "TEST",
+        "agent_role": "ops_crash_exporter",
+        "owner": null,
+        "validator_status": null,
+        "readiness_passes": null,
+        "blocked_by": null,
+        "_witness_rel": "debug_runs/agent_ops/test_atomic_witness.json",
+        "honest_gate": "unknown"
+      }
+    },
+    {
+      "path": "debug_runs/agent_ops/triage_live.json",
+      "exists": true,
+      "bytes": 4929,
+      "modified_epoch_secs": 1782016164,
+      "summary": {
+        "parse_ok": true,
+        "program_id": "unclassified",
+        "program_label": null,
+        "track": null,
+        "lane": "OPS-TRIAGE-LIVE",
+        "task_id": "OPS-TRIAGE-DASH-001",
+        "green": null,
+        "proceed_ship": null,
+        "art_quality": null,
+        "ok": true,
+        "status": null,
+        "profile": "OPS-TRIAGE-LIVE",
+        "agent_role": "ops_crash_exporter",
+        "owner": null,
+        "validator_status": null,
+        "readiness_passes": null,
+        "blocked_by": null,
+        "_witness_rel": "debug_runs/agent_ops/triage_live.json",
+        "honest_gate": "done_no_ship_flag"
       }
     },
     {
@@ -13912,7 +15294,7 @@
       "path": "debug_runs/aps_artist_tool_e2e_live.json",
       "exists": true,
       "bytes": 2386,
-      "modified_epoch_secs": 1781800424,
+      "modified_epoch_secs": 1782012878,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -13938,8 +15320,8 @@
     {
       "path": "debug_runs/aps_artist_tool_modules_live.json",
       "exists": true,
-      "bytes": 2614,
-      "modified_epoch_secs": 1781800424,
+      "bytes": 2776,
+      "modified_epoch_secs": 1782012878,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -13959,14 +15341,14 @@
         "readiness_passes": null,
         "blocked_by": null,
         "_witness_rel": "debug_runs/aps_artist_tool_modules_live.json",
-        "honest_gate": "unknown"
+        "honest_gate": "queue_stale"
       }
     },
     {
       "path": "debug_runs/aps_atlas_land_register_live.json",
       "exists": true,
       "bytes": 1992,
-      "modified_epoch_secs": 1781800363,
+      "modified_epoch_secs": 1782012798,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -14020,7 +15402,7 @@
       "path": "debug_runs/aps_atlas_preview_002_live.json",
       "exists": true,
       "bytes": 452,
-      "modified_epoch_secs": 1781800423,
+      "modified_epoch_secs": 1782012875,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -14047,7 +15429,7 @@
       "path": "debug_runs/aps_bevy_preview_002_live.json",
       "exists": true,
       "bytes": 716,
-      "modified_epoch_secs": 1781800424,
+      "modified_epoch_secs": 1782012878,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -14073,8 +15455,8 @@
     {
       "path": "debug_runs/aps_bevy_qc_hud_001_live.json",
       "exists": true,
-      "bytes": 2909,
-      "modified_epoch_secs": 1781756519,
+      "bytes": 3113,
+      "modified_epoch_secs": 1782014005,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -14100,8 +15482,8 @@
     {
       "path": "debug_runs/aps_bevy_qc_hud_001_v2_live.json",
       "exists": true,
-      "bytes": 2355,
-      "modified_epoch_secs": 1781756518,
+      "bytes": 2559,
+      "modified_epoch_secs": 1782014005,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -14155,7 +15537,7 @@
       "path": "debug_runs/aps_dna_consumer_contract_live.json",
       "exists": true,
       "bytes": 2411,
-      "modified_epoch_secs": 1781800424,
+      "modified_epoch_secs": 1782012878,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -14208,8 +15590,8 @@
     {
       "path": "debug_runs/aps_domain_router_live.json",
       "exists": true,
-      "bytes": 2438,
-      "modified_epoch_secs": 1781800368,
+      "bytes": 2439,
+      "modified_epoch_secs": 1782012812,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -14235,8 +15617,8 @@
     {
       "path": "debug_runs/aps_grammar_evolution_close_live.json",
       "exists": true,
-      "bytes": 2142,
-      "modified_epoch_secs": 1781800397,
+      "bytes": 2173,
+      "modified_epoch_secs": 1782012813,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -14263,7 +15645,7 @@
       "path": "debug_runs/aps_grammar_p3_live.json",
       "exists": true,
       "bytes": 207,
-      "modified_epoch_secs": 1781800400,
+      "modified_epoch_secs": 1782012818,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -14290,7 +15672,7 @@
       "path": "debug_runs/aps_grammar_spine_tier_live.json",
       "exists": true,
       "bytes": 315,
-      "modified_epoch_secs": 1781800400,
+      "modified_epoch_secs": 1782012819,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -14317,7 +15699,7 @@
       "path": "debug_runs/aps_grammar_tier_g1_gates_live.json",
       "exists": true,
       "bytes": 189,
-      "modified_epoch_secs": 1781800405,
+      "modified_epoch_secs": 1782012833,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -14341,10 +15723,10 @@
       }
     },
     {
-      "path": "debug_runs/aps_grammar_tier_gates_live.json",
+      "path": "debug_runs/aps_grammar_tier_gates_g0_fixture_live.json",
       "exists": true,
       "bytes": 227,
-      "modified_epoch_secs": 1781800404,
+      "modified_epoch_secs": 1782012827,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -14363,15 +15745,70 @@
         "validator_status": null,
         "readiness_passes": null,
         "blocked_by": null,
-        "_witness_rel": "debug_runs/aps_grammar_tier_gates_live.json",
+        "_witness_rel": "debug_runs/aps_grammar_tier_gates_g0_fixture_live.json",
         "honest_gate": "unknown"
+      }
+    },
+    {
+      "path": "debug_runs/aps_grammar_tier_gates_live.json",
+      "exists": true,
+      "bytes": 1264,
+      "modified_epoch_secs": 1782012832,
+      "summary": {
+        "parse_ok": true,
+        "program_id": "unclassified",
+        "program_label": null,
+        "track": null,
+        "lane": "APS_GRAM_TIER_GATES",
+        "task_id": "APS-GRAM-TIER-GATES-LIVE-001",
+        "green": true,
+        "proceed_ship": null,
+        "art_quality": null,
+        "ok": null,
+        "status": null,
+        "profile": "APS_GRAM_TIER_GATES",
+        "agent_role": null,
+        "owner": null,
+        "validator_status": null,
+        "readiness_passes": null,
+        "blocked_by": null,
+        "_witness_rel": "debug_runs/aps_grammar_tier_gates_live.json",
+        "honest_gate": "honest_green"
+      }
+    },
+    {
+      "path": "debug_runs/aps_guard_brief_parity_live.json",
+      "exists": true,
+      "bytes": 1146,
+      "modified_epoch_secs": 1782012787,
+      "summary": {
+        "parse_ok": true,
+        "program_id": "unclassified",
+        "program_label": null,
+        "track": null,
+        "lane": "APS_GUARD_BRIEF_PARITY",
+        "task_id": "APS-GUARD-BRIEF-PARITY-001",
+        "green": true,
+        "proceed_ship": null,
+        "art_quality": null,
+        "ok": null,
+        "status": null,
+        "profile": "APS_GUARD_BRIEF_PARITY",
+        "agent_role": null,
+        "owner": null,
+        "validator_status": null,
+        "readiness_passes": null,
+        "blocked_by": null,
+        "parity_green": true,
+        "_witness_rel": "debug_runs/aps_guard_brief_parity_live.json",
+        "honest_gate": "honest_green"
       }
     },
     {
       "path": "debug_runs/aps_landscape_preset_browse_live.json",
       "exists": true,
       "bytes": 2326,
-      "modified_epoch_secs": 1781800396,
+      "modified_epoch_secs": 1782012812,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -14398,7 +15835,7 @@
       "path": "debug_runs/aps_mat_002_live.json",
       "exists": true,
       "bytes": 636,
-      "modified_epoch_secs": 1781800424,
+      "modified_epoch_secs": 1782012878,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -14425,7 +15862,7 @@
       "path": "debug_runs/aps_mat_003_category_tree_live.json",
       "exists": true,
       "bytes": 252,
-      "modified_epoch_secs": 1781800420,
+      "modified_epoch_secs": 1782012867,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -14506,7 +15943,7 @@
       "path": "debug_runs/aps_material_studio_live.json",
       "exists": true,
       "bytes": 1629,
-      "modified_epoch_secs": 1781800423,
+      "modified_epoch_secs": 1782012875,
       "summary": {
         "parse_ok": true,
         "program_id": "art_A",
@@ -14560,7 +15997,7 @@
       "path": "debug_runs/aps_preview_001_live.json",
       "exists": true,
       "bytes": 246,
-      "modified_epoch_secs": 1781800423,
+      "modified_epoch_secs": 1782012875,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -14613,8 +16050,8 @@
     {
       "path": "debug_runs/aps_preview_002_live.json",
       "exists": true,
-      "bytes": 1072,
-      "modified_epoch_secs": 1781801491,
+      "bytes": 883,
+      "modified_epoch_secs": 1782012878,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -14641,7 +16078,7 @@
       "path": "debug_runs/aps_preview_catalog_live.json",
       "exists": true,
       "bytes": 347,
-      "modified_epoch_secs": 1781800423,
+      "modified_epoch_secs": 1782012875,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -14665,10 +16102,37 @@
       }
     },
     {
+      "path": "debug_runs/aps_session_presence_live.json",
+      "exists": true,
+      "bytes": 2231,
+      "modified_epoch_secs": 1782012862,
+      "summary": {
+        "parse_ok": true,
+        "program_id": "unclassified",
+        "program_label": null,
+        "track": null,
+        "lane": "APS_SESSION_PRESENCE",
+        "task_id": null,
+        "green": true,
+        "proceed_ship": null,
+        "art_quality": null,
+        "ok": null,
+        "status": null,
+        "profile": "APS_SESSION_PRESENCE",
+        "agent_role": null,
+        "owner": null,
+        "validator_status": null,
+        "readiness_passes": null,
+        "blocked_by": null,
+        "_witness_rel": "debug_runs/aps_session_presence_live.json",
+        "honest_gate": "honest_green"
+      }
+    },
+    {
       "path": "debug_runs/aps_uiux_onboard_live.json",
       "exists": true,
-      "bytes": 372,
-      "modified_epoch_secs": 1781800408,
+      "bytes": 406,
+      "modified_epoch_secs": 1782012862,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -14776,7 +16240,7 @@
       "path": "debug_runs/aps_ux_async_001_live.json",
       "exists": true,
       "bytes": 542,
-      "modified_epoch_secs": 1781800420,
+      "modified_epoch_secs": 1782012867,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -14857,7 +16321,7 @@
       "path": "debug_runs/aps_ux_nonblock_001_live.json",
       "exists": true,
       "bytes": 941,
-      "modified_epoch_secs": 1781800420,
+      "modified_epoch_secs": 1782012867,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -14884,7 +16348,7 @@
       "path": "debug_runs/aps_ux_polish_001_live.json",
       "exists": true,
       "bytes": 406,
-      "modified_epoch_secs": 1781800420,
+      "modified_epoch_secs": 1782012867,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -14992,7 +16456,7 @@
       "path": "debug_runs/aps_validator_plain_002_live.json",
       "exists": true,
       "bytes": 1160,
-      "modified_epoch_secs": 1781800420,
+      "modified_epoch_secs": 1782012867,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -15018,8 +16482,8 @@
     {
       "path": "debug_runs/aps_veg_extract_parity_live.json",
       "exists": true,
-      "bytes": 2703,
-      "modified_epoch_secs": 1781800421,
+      "bytes": 2733,
+      "modified_epoch_secs": 1782012871,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -15047,7 +16511,7 @@
       "path": "debug_runs/aps_veg_state_axis_live.json",
       "exists": true,
       "bytes": 2486,
-      "modified_epoch_secs": 1781800420,
+      "modified_epoch_secs": 1782012867,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -15121,6 +16585,33 @@
         "readiness_passes": null,
         "blocked_by": null,
         "_witness_rel": "debug_runs/art_pipeline/aps_pilot_rowhouse_live.json",
+        "honest_gate": "honest_green"
+      }
+    },
+    {
+      "path": "debug_runs/art_pipeline/aps_studio_close_live.json",
+      "exists": true,
+      "bytes": 481,
+      "modified_epoch_secs": 1782012862,
+      "summary": {
+        "parse_ok": true,
+        "program_id": "art_B",
+        "program_label": "MCP pipeline spine / warehouse integration",
+        "track": "B",
+        "lane": "APS_STUDIO_CLOSE",
+        "task_id": null,
+        "green": true,
+        "proceed_ship": null,
+        "art_quality": null,
+        "ok": null,
+        "status": null,
+        "profile": "APS_STUDIO_CLOSE",
+        "agent_role": null,
+        "owner": "@orchestrator-mcp",
+        "validator_status": null,
+        "readiness_passes": null,
+        "blocked_by": null,
+        "_witness_rel": "debug_runs/art_pipeline/aps_studio_close_live.json",
         "honest_gate": "honest_green"
       }
     },
@@ -15206,6 +16697,33 @@
       }
     },
     {
+      "path": "debug_runs/art_pipeline/dmcp_designer_mcp_open_lane_live.json",
+      "exists": true,
+      "bytes": 2671,
+      "modified_epoch_secs": 1781979540,
+      "summary": {
+        "parse_ok": true,
+        "program_id": "art_B",
+        "program_label": "MCP pipeline spine / warehouse integration",
+        "track": "B",
+        "lane": "DMCP_DESIGNER_MCP_OPEN",
+        "task_id": null,
+        "green": true,
+        "proceed_ship": null,
+        "art_quality": null,
+        "ok": null,
+        "status": null,
+        "profile": "DMCP_DESIGNER_MCP_OPEN",
+        "agent_role": "designer-mcp",
+        "owner": "@orchestrator-mcp",
+        "validator_status": null,
+        "readiness_passes": null,
+        "blocked_by": null,
+        "_witness_rel": "debug_runs/art_pipeline/dmcp_designer_mcp_open_lane_live.json",
+        "honest_gate": "honest_green"
+      }
+    },
+    {
       "path": "debug_runs/art_pipeline/dmcp_e0_artist_reverdict_live.json",
       "exists": true,
       "bytes": 1167,
@@ -15236,7 +16754,7 @@
       "path": "debug_runs/art_pipeline/dmcp_e3_vegetation_catalog_live.json",
       "exists": true,
       "bytes": 1833,
-      "modified_epoch_secs": 1781670218,
+      "modified_epoch_secs": 1781979970,
       "summary": {
         "parse_ok": true,
         "program_id": "art_B",
@@ -15283,7 +16801,7 @@
         "readiness_passes": null,
         "blocked_by": null,
         "_witness_rel": "debug_runs/art_pipeline/dmcp_e4_matrix_charter_live.json",
-        "honest_gate": "honest_green"
+        "honest_gate": "queue_stale"
       }
     },
     {
@@ -15317,7 +16835,7 @@
       "path": "debug_runs/art_pipeline/dmcp_nuclear_pwr_spec_live.json",
       "exists": true,
       "bytes": 1631,
-      "modified_epoch_secs": 1781792318,
+      "modified_epoch_secs": 1782004068,
       "summary": {
         "parse_ok": true,
         "program_id": "art_B",
@@ -15371,7 +16889,7 @@
       "path": "debug_runs/art_pipeline/dmcp_ovr_g0_audit_live.json",
       "exists": true,
       "bytes": 1130,
-      "modified_epoch_secs": 1781800420,
+      "modified_epoch_secs": 1782012867,
       "summary": {
         "parse_ok": true,
         "program_id": "art_B",
@@ -15398,7 +16916,7 @@
       "path": "debug_runs/art_pipeline/dmcp_ovr_p2_impl_audit_live.json",
       "exists": true,
       "bytes": 13822,
-      "modified_epoch_secs": 1781800419,
+      "modified_epoch_secs": 1782012866,
       "summary": {
         "parse_ok": true,
         "program_id": "art_B",
@@ -15425,7 +16943,7 @@
       "path": "debug_runs/art_pipeline/dmcp_ovr_p3_accept_rubric_live.json",
       "exists": true,
       "bytes": 1170,
-      "modified_epoch_secs": 1781800420,
+      "modified_epoch_secs": 1782012866,
       "summary": {
         "parse_ok": true,
         "program_id": "art_B",
@@ -15479,7 +16997,7 @@
       "path": "debug_runs/art_pipeline/dmcp_qc_substation_live.json",
       "exists": true,
       "bytes": 667,
-      "modified_epoch_secs": 1781968439,
+      "modified_epoch_secs": 1782008699,
       "summary": {
         "parse_ok": true,
         "program_id": "art_B",
@@ -15506,7 +17024,7 @@
       "path": "debug_runs/art_pipeline/dmcp_qc_transformer_live.json",
       "exists": true,
       "bytes": 660,
-      "modified_epoch_secs": 1781968439,
+      "modified_epoch_secs": 1782008699,
       "summary": {
         "parse_ok": true,
         "program_id": "art_B",
@@ -15526,6 +17044,87 @@
         "readiness_passes": null,
         "blocked_by": null,
         "_witness_rel": "debug_runs/art_pipeline/dmcp_qc_transformer_live.json",
+        "honest_gate": "honest_green"
+      }
+    },
+    {
+      "path": "debug_runs/art_pipeline/dmcp_reaction_territory_events_live.json",
+      "exists": true,
+      "bytes": 2697,
+      "modified_epoch_secs": 1782008809,
+      "summary": {
+        "parse_ok": true,
+        "program_id": "art_B",
+        "program_label": "MCP pipeline spine / warehouse integration",
+        "track": "B",
+        "lane": "DES_REACTION_TERRITORY_EVENTS",
+        "task_id": null,
+        "green": true,
+        "proceed_ship": null,
+        "art_quality": null,
+        "ok": null,
+        "status": null,
+        "profile": "DES_REACTION_TERRITORY_EVENTS",
+        "agent_role": "designer-mcp",
+        "owner": "@orchestrator-mcp",
+        "validator_status": null,
+        "readiness_passes": null,
+        "blocked_by": null,
+        "_witness_rel": "debug_runs/art_pipeline/dmcp_reaction_territory_events_live.json",
+        "honest_gate": "honest_green"
+      }
+    },
+    {
+      "path": "debug_runs/art_pipeline/dmcp_style_landscape_riparian_live.json",
+      "exists": true,
+      "bytes": 1389,
+      "modified_epoch_secs": 1781982373,
+      "summary": {
+        "parse_ok": true,
+        "program_id": "art_B",
+        "program_label": "MCP pipeline spine / warehouse integration",
+        "track": "B",
+        "lane": "DES_STYLE_LANDSCAPE_RIPARIAN",
+        "task_id": null,
+        "green": true,
+        "proceed_ship": null,
+        "art_quality": null,
+        "ok": null,
+        "status": "done",
+        "profile": "DES_STYLE_LANDSCAPE_RIPARIAN",
+        "agent_role": "designer-mcp",
+        "owner": "@orchestrator-mcp",
+        "validator_status": null,
+        "readiness_passes": null,
+        "blocked_by": null,
+        "_witness_rel": "debug_runs/art_pipeline/dmcp_style_landscape_riparian_live.json",
+        "honest_gate": "honest_green"
+      }
+    },
+    {
+      "path": "debug_runs/art_pipeline/dmcp_transformer_pad_spec_live.json",
+      "exists": true,
+      "bytes": 1403,
+      "modified_epoch_secs": 1782008697,
+      "summary": {
+        "parse_ok": true,
+        "program_id": "art_B",
+        "program_label": "MCP pipeline spine / warehouse integration",
+        "track": "B",
+        "lane": "DMCP_TRANSFORMER_PAD_SPEC",
+        "task_id": null,
+        "green": true,
+        "proceed_ship": null,
+        "art_quality": null,
+        "ok": null,
+        "status": null,
+        "profile": "DMCP_TRANSFORMER_PAD_SPEC",
+        "agent_role": "designer-mcp",
+        "owner": "@orchestrator-mcp",
+        "validator_status": null,
+        "readiness_passes": null,
+        "blocked_by": null,
+        "_witness_rel": "debug_runs/art_pipeline/dmcp_transformer_pad_spec_live.json",
         "honest_gate": "honest_green"
       }
     },
@@ -15580,6 +17179,33 @@
         "readiness_passes": null,
         "blocked_by": null,
         "_witness_rel": "debug_runs/art_pipeline/eng_pt_4_warehouse_map_stamp_live.json",
+        "honest_gate": "honest_green"
+      }
+    },
+    {
+      "path": "debug_runs/art_pipeline/facility_needs_panel_live.json",
+      "exists": true,
+      "bytes": 202,
+      "modified_epoch_secs": 1782009223,
+      "summary": {
+        "parse_ok": true,
+        "program_id": "art_B",
+        "program_label": "MCP pipeline spine / warehouse integration",
+        "track": "B",
+        "lane": null,
+        "task_id": "CMCP-FACILITY-NEEDS-PANEL-001",
+        "green": true,
+        "proceed_ship": null,
+        "art_quality": null,
+        "ok": null,
+        "status": null,
+        "profile": null,
+        "agent_role": null,
+        "owner": "@orchestrator-mcp",
+        "validator_status": null,
+        "readiness_passes": null,
+        "blocked_by": null,
+        "_witness_rel": "debug_runs/art_pipeline/facility_needs_panel_live.json",
         "honest_gate": "honest_green"
       }
     },
@@ -16495,6 +18121,87 @@
       }
     },
     {
+      "path": "debug_runs/art_pipeline/mcp_pwr_nuclear_batch_live.json",
+      "exists": true,
+      "bytes": 570,
+      "modified_epoch_secs": 1782004208,
+      "summary": {
+        "parse_ok": true,
+        "program_id": "art_B",
+        "program_label": "MCP pipeline spine / warehouse integration",
+        "track": "B",
+        "lane": "MCP_PWR_NUCLEAR_BATCH",
+        "task_id": null,
+        "green": true,
+        "proceed_ship": null,
+        "art_quality": null,
+        "ok": null,
+        "status": null,
+        "profile": "MCP_PWR_NUCLEAR_BATCH",
+        "agent_role": null,
+        "owner": "@orchestrator-mcp",
+        "validator_status": null,
+        "readiness_passes": null,
+        "blocked_by": null,
+        "_witness_rel": "debug_runs/art_pipeline/mcp_pwr_nuclear_batch_live.json",
+        "honest_gate": "honest_green"
+      }
+    },
+    {
+      "path": "debug_runs/art_pipeline/mcp_pwr_nuclear_manifest_live.json",
+      "exists": true,
+      "bytes": 688,
+      "modified_epoch_secs": 1782004232,
+      "summary": {
+        "parse_ok": true,
+        "program_id": "art_B",
+        "program_label": "MCP pipeline spine / warehouse integration",
+        "track": "B",
+        "lane": "MCP_PWR_NUCLEAR_MANIFEST",
+        "task_id": null,
+        "green": true,
+        "proceed_ship": null,
+        "art_quality": null,
+        "ok": null,
+        "status": null,
+        "profile": "MCP_PWR_NUCLEAR_MANIFEST",
+        "agent_role": null,
+        "owner": "@orchestrator-mcp",
+        "validator_status": null,
+        "readiness_passes": null,
+        "blocked_by": null,
+        "_witness_rel": "debug_runs/art_pipeline/mcp_pwr_nuclear_manifest_live.json",
+        "honest_gate": "honest_green"
+      }
+    },
+    {
+      "path": "debug_runs/art_pipeline/mcp_pwr_nuclear_promote_live.json",
+      "exists": true,
+      "bytes": 566,
+      "modified_epoch_secs": 1782004213,
+      "summary": {
+        "parse_ok": true,
+        "program_id": "art_B",
+        "program_label": "MCP pipeline spine / warehouse integration",
+        "track": "B",
+        "lane": "MCP_PWR_NUCLEAR_PROMOTE",
+        "task_id": null,
+        "green": true,
+        "proceed_ship": null,
+        "art_quality": null,
+        "ok": null,
+        "status": null,
+        "profile": "MCP_PWR_NUCLEAR_PROMOTE",
+        "agent_role": null,
+        "owner": "@orchestrator-mcp",
+        "validator_status": null,
+        "readiness_passes": null,
+        "blocked_by": null,
+        "_witness_rel": "debug_runs/art_pipeline/mcp_pwr_nuclear_promote_live.json",
+        "honest_gate": "honest_green"
+      }
+    },
+    {
       "path": "debug_runs/art_pipeline/mcp_pwr_substation_batch_live.json",
       "exists": true,
       "bytes": 527,
@@ -16606,7 +18313,7 @@
       "path": "debug_runs/art_pipeline/mcp_pwr_utility_manifest_live.json",
       "exists": true,
       "bytes": 671,
-      "modified_epoch_secs": 1781968201,
+      "modified_epoch_secs": 1782004232,
       "summary": {
         "parse_ok": true,
         "program_id": "art_B",
@@ -16767,8 +18474,8 @@
     {
       "path": "debug_runs/art_pipeline/power_grid_art_downstream_close_live.json",
       "exists": true,
-      "bytes": 2150,
-      "modified_epoch_secs": 1781968440,
+      "bytes": 2211,
+      "modified_epoch_secs": 1782008699,
       "summary": {
         "parse_ok": true,
         "program_id": "art_B",
@@ -17089,6 +18796,33 @@
       }
     },
     {
+      "path": "debug_runs/art_pipeline/site_preview_panel_live.json",
+      "exists": true,
+      "bytes": 276,
+      "modified_epoch_secs": 1782009223,
+      "summary": {
+        "parse_ok": true,
+        "program_id": "art_B",
+        "program_label": "MCP pipeline spine / warehouse integration",
+        "track": "B",
+        "lane": null,
+        "task_id": "CMCP-SITE-PREVIEW-PANEL-001",
+        "green": true,
+        "proceed_ship": null,
+        "art_quality": null,
+        "ok": null,
+        "status": null,
+        "profile": null,
+        "agent_role": null,
+        "owner": "@orchestrator-mcp",
+        "validator_status": null,
+        "readiness_passes": null,
+        "blocked_by": null,
+        "_witness_rel": "debug_runs/art_pipeline/site_preview_panel_live.json",
+        "honest_gate": "honest_green"
+      }
+    },
+    {
       "path": "debug_runs/art_pipeline/smoke_geometry_live.json",
       "exists": true,
       "bytes": 184,
@@ -17264,7 +18998,7 @@
       "path": "debug_runs/art_pipeline/tile_landscape_expanded_live.json",
       "exists": true,
       "bytes": 883,
-      "modified_epoch_secs": 1781800421,
+      "modified_epoch_secs": 1782012871,
       "summary": {
         "parse_ok": true,
         "program_id": "art_B",
@@ -17365,14 +19099,14 @@
         "readiness_passes": null,
         "blocked_by": null,
         "_witness_rel": "debug_runs/art_pipeline/tile_tile_factory_floor_greybox_001_live.json",
-        "honest_gate": "honest_green"
+        "honest_gate": "inflated_green"
       }
     },
     {
       "path": "debug_runs/art_pipeline/tile_tile_landscape_expanded_v1_live.json",
       "exists": true,
       "bytes": 5410,
-      "modified_epoch_secs": 1781800421,
+      "modified_epoch_secs": 1782012871,
       "summary": {
         "parse_ok": true,
         "program_id": "art_B",
@@ -17666,24 +19400,78 @@
       }
     },
     {
-      "path": "debug_runs/art_pipeline/veg_resolver_parity_live.json",
+      "path": "debug_runs/art_pipeline/variants_reaction_territory_live.json",
       "exists": true,
-      "bytes": 1264,
-      "modified_epoch_secs": 1781800420,
+      "bytes": 6930,
+      "modified_epoch_secs": 1782009027,
       "summary": {
         "parse_ok": true,
         "program_id": "art_B",
         "program_label": "MCP pipeline spine / warehouse integration",
         "track": "B",
-        "lane": "CDR_B_VEG_RESOLVER_PARITY",
+        "lane": "APS_REACTION_TERRITORY",
+        "task_id": null,
+        "green": true,
+        "proceed_ship": null,
+        "art_quality": null,
+        "ok": null,
+        "status": null,
+        "profile": "APS_REACTION_TERRITORY",
+        "agent_role": null,
+        "owner": "@orchestrator-mcp",
+        "validator_status": null,
+        "readiness_passes": null,
+        "blocked_by": null,
+        "_witness_rel": "debug_runs/art_pipeline/variants_reaction_territory_live.json",
+        "honest_gate": "honest_green"
+      }
+    },
+    {
+      "path": "debug_runs/art_pipeline/variants_sessions_live.json",
+      "exists": true,
+      "bytes": 1086,
+      "modified_epoch_secs": 1782015974,
+      "summary": {
+        "parse_ok": true,
+        "program_id": "art_B",
+        "program_label": "MCP pipeline spine / warehouse integration",
+        "track": "B",
+        "lane": "APS_VARIANTS_SESSIONS",
+        "task_id": null,
+        "green": true,
+        "proceed_ship": null,
+        "art_quality": null,
+        "ok": null,
+        "status": null,
+        "profile": "APS_VARIANTS_SESSIONS",
+        "agent_role": null,
+        "owner": "@orchestrator-mcp",
+        "validator_status": null,
+        "readiness_passes": null,
+        "blocked_by": null,
+        "_witness_rel": "debug_runs/art_pipeline/variants_sessions_live.json",
+        "honest_gate": "honest_green"
+      }
+    },
+    {
+      "path": "debug_runs/art_pipeline/veg_resolver_parity_live.json",
+      "exists": true,
+      "bytes": 3762,
+      "modified_epoch_secs": 1782013652,
+      "summary": {
+        "parse_ok": true,
+        "program_id": "art_B",
+        "program_label": "MCP pipeline spine / warehouse integration",
+        "track": "B",
+        "lane": "CDR-B-VEG-RESOLVER-PARITY-001",
         "task_id": "CDR-B-VEG-RESOLVER-PARITY-001",
         "green": true,
         "proceed_ship": null,
         "art_quality": null,
         "ok": null,
         "status": null,
-        "profile": "CDR_B_VEG_RESOLVER_PARITY",
-        "agent_role": "coder-mcp",
+        "profile": "CDR-B-VEG-RESOLVER-PARITY-001",
+        "agent_role": null,
         "owner": "@orchestrator-mcp",
         "validator_status": null,
         "readiness_passes": null,
@@ -17804,7 +19592,7 @@
       "path": "debug_runs/atl_sign_001_live.json",
       "exists": true,
       "bytes": 908,
-      "modified_epoch_secs": 1781800422,
+      "modified_epoch_secs": 1782012874,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -17867,8 +19655,8 @@
     {
       "path": "debug_runs/build_read_visual_001_live.json",
       "exists": true,
-      "bytes": 2879,
-      "modified_epoch_secs": 1781756519,
+      "bytes": 3083,
+      "modified_epoch_secs": 1782009781,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -17921,8 +19709,8 @@
     {
       "path": "debug_runs/build_verify_debug_live.json",
       "exists": true,
-      "bytes": 2501,
-      "modified_epoch_secs": 1781756518,
+      "bytes": 2705,
+      "modified_epoch_secs": 1782010074,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -17948,8 +19736,8 @@
     {
       "path": "debug_runs/build_verify_pointer_live.json",
       "exists": true,
-      "bytes": 2413,
-      "modified_epoch_secs": 1781716709,
+      "bytes": 2617,
+      "modified_epoch_secs": 1782010074,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -18137,8 +19925,8 @@
     {
       "path": "debug_runs/construction_placement_live.json",
       "exists": true,
-      "bytes": 2871,
-      "modified_epoch_secs": 1781756519,
+      "bytes": 3075,
+      "modified_epoch_secs": 1782010074,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -18213,6 +20001,33 @@
         "readiness_passes": null,
         "blocked_by": null,
         "_witness_rel": "debug_runs/des_build_read_hud_001_live.json",
+        "honest_gate": "queue_stale"
+      }
+    },
+    {
+      "path": "debug_runs/des_build_read_hud_002_live.json",
+      "exists": true,
+      "bytes": 2518,
+      "modified_epoch_secs": 1781984376,
+      "summary": {
+        "parse_ok": true,
+        "program_id": "unclassified",
+        "program_label": null,
+        "track": null,
+        "lane": "DES-BUILD-READ-HUD-002",
+        "task_id": "DES-BUILD-READ-HUD-002",
+        "green": true,
+        "proceed_ship": null,
+        "art_quality": null,
+        "ok": null,
+        "status": null,
+        "profile": "DES-BUILD-READ-HUD-002",
+        "agent_role": null,
+        "owner": null,
+        "validator_status": null,
+        "readiness_passes": null,
+        "blocked_by": null,
+        "_witness_rel": "debug_runs/des_build_read_hud_002_live.json",
         "honest_gate": "honest_green"
       }
     },
@@ -18354,8 +20169,8 @@
     {
       "path": "debug_runs/design_fire_play_visibility_live.json",
       "exists": true,
-      "bytes": 2840,
-      "modified_epoch_secs": 1781756519,
+      "bytes": 3044,
+      "modified_epoch_secs": 1782009818,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -18408,8 +20223,8 @@
     {
       "path": "debug_runs/design_minimap_widget_live.json",
       "exists": true,
-      "bytes": 2506,
-      "modified_epoch_secs": 1781898654,
+      "bytes": 2707,
+      "modified_epoch_secs": 1782009782,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -18716,8 +20531,8 @@
     {
       "path": "debug_runs/fire_ecology_live.json",
       "exists": true,
-      "bytes": 3288,
-      "modified_epoch_secs": 1781874141,
+      "bytes": 4169,
+      "modified_epoch_secs": 1782010468,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -18741,6 +20556,33 @@
       }
     },
     {
+      "path": "debug_runs/fire_f2_readiness_align_live.json",
+      "exists": true,
+      "bytes": 2684,
+      "modified_epoch_secs": 1781984545,
+      "summary": {
+        "parse_ok": true,
+        "program_id": "unclassified",
+        "program_label": null,
+        "track": null,
+        "lane": "FIRE-F2-READINESS-ALIGN-001",
+        "task_id": null,
+        "green": null,
+        "proceed_ship": null,
+        "art_quality": null,
+        "ok": null,
+        "status": null,
+        "profile": "FIRE-F2-READINESS-ALIGN-001",
+        "agent_role": null,
+        "owner": null,
+        "validator_status": null,
+        "readiness_passes": null,
+        "blocked_by": null,
+        "_witness_rel": "debug_runs/fire_f2_readiness_align_live.json",
+        "honest_gate": "unknown"
+      }
+    },
+    {
       "path": "debug_runs/fire_overlay_debug_spec_live.json",
       "exists": true,
       "bytes": 0,
@@ -18753,8 +20595,8 @@
     {
       "path": "debug_runs/fire_streaming_live.json",
       "exists": true,
-      "bytes": 2431,
-      "modified_epoch_secs": 1781884836,
+      "bytes": 2635,
+      "modified_epoch_secs": 1782015366,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -18780,8 +20622,8 @@
     {
       "path": "debug_runs/g_play_product_close_live.json",
       "exists": true,
-      "bytes": 3082,
-      "modified_epoch_secs": 1781716789,
+      "bytes": 3286,
+      "modified_epoch_secs": 1782010077,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -18861,8 +20703,8 @@
     {
       "path": "debug_runs/grammar_archetype_g1_live.json",
       "exists": true,
-      "bytes": 209,
-      "modified_epoch_secs": 1781755939,
+      "bytes": 227,
+      "modified_epoch_secs": 1781980085,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -18916,7 +20758,7 @@
       "path": "debug_runs/grammar_facility_brief_live.json",
       "exists": true,
       "bytes": 5306,
-      "modified_epoch_secs": 1781756431,
+      "modified_epoch_secs": 1782004068,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -18970,7 +20812,7 @@
       "path": "debug_runs/grammar_iter_001_aps1_live.json",
       "exists": true,
       "bytes": 189,
-      "modified_epoch_secs": 1781800424,
+      "modified_epoch_secs": 1782012878,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -19051,7 +20893,7 @@
       "path": "debug_runs/grammar_labels_g1_live.json",
       "exists": true,
       "bytes": 281,
-      "modified_epoch_secs": 1781800396,
+      "modified_epoch_secs": 1782012812,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -19078,7 +20920,7 @@
       "path": "debug_runs/grammar_set_brief_live.json",
       "exists": true,
       "bytes": 1557,
-      "modified_epoch_secs": 1781361882,
+      "modified_epoch_secs": 1782012789,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -19104,8 +20946,8 @@
     {
       "path": "debug_runs/grammar_set_tier_live.json",
       "exists": true,
-      "bytes": 318,
-      "modified_epoch_secs": 1781800401,
+      "bytes": 347,
+      "modified_epoch_secs": 1782012821,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -19131,8 +20973,8 @@
     {
       "path": "debug_runs/grammar_sweep_process_live.json",
       "exists": true,
-      "bytes": 923,
-      "modified_epoch_secs": 1781756231,
+      "bytes": 980,
+      "modified_epoch_secs": 1782009859,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -19152,7 +20994,7 @@
         "readiness_passes": null,
         "blocked_by": null,
         "_witness_rel": "debug_runs/grammar_sweep_process_live.json",
-        "honest_gate": "honest_green"
+        "honest_gate": "queue_stale"
       }
     },
     {
@@ -19185,8 +21027,8 @@
     {
       "path": "debug_runs/industrial_activation_live.json",
       "exists": true,
-      "bytes": 7111,
-      "modified_epoch_secs": 1781968440,
+      "bytes": 7264,
+      "modified_epoch_secs": 1782013814,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -19235,6 +21077,33 @@
         "blocked_by": null,
         "_witness_rel": "debug_runs/infra_e0_profile_catalog_live.json",
         "honest_gate": "honest_green"
+      }
+    },
+    {
+      "path": "debug_runs/infra_lane_close_live.json",
+      "exists": true,
+      "bytes": 2408,
+      "modified_epoch_secs": 1781984207,
+      "summary": {
+        "parse_ok": true,
+        "program_id": "unclassified",
+        "program_label": null,
+        "track": null,
+        "lane": "INFRA-LANE-CLOSE-001",
+        "task_id": null,
+        "green": null,
+        "proceed_ship": null,
+        "art_quality": null,
+        "ok": null,
+        "status": null,
+        "profile": "INFRA-LANE-CLOSE-001",
+        "agent_role": null,
+        "owner": null,
+        "validator_status": null,
+        "readiness_passes": null,
+        "blocked_by": null,
+        "_witness_rel": "debug_runs/infra_lane_close_live.json",
+        "honest_gate": "unknown"
       }
     },
     {
@@ -19294,8 +21163,8 @@
     {
       "path": "debug_runs/infrastructure_view_isolation_live.json",
       "exists": true,
-      "bytes": 5016,
-      "modified_epoch_secs": 1781367219,
+      "bytes": 5083,
+      "modified_epoch_secs": 1781984464,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -19314,7 +21183,7 @@
         "validator_status": null,
         "readiness_passes": null,
         "blocked_by": null,
-        "infrastructure_view_isolation_green": false,
+        "infrastructure_view_isolation_green": true,
         "_witness_rel": "debug_runs/infrastructure_view_isolation_live.json",
         "honest_gate": "unknown"
       }
@@ -19322,8 +21191,8 @@
     {
       "path": "debug_runs/landscape_grammar_burn_chain_live.json",
       "exists": true,
-      "bytes": 2471,
-      "modified_epoch_secs": 1781756522,
+      "bytes": 2675,
+      "modified_epoch_secs": 1782013656,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -19349,8 +21218,8 @@
     {
       "path": "debug_runs/landscape_grammar_burn_overlay_live.json",
       "exists": true,
-      "bytes": 2462,
-      "modified_epoch_secs": 1781756548,
+      "bytes": 2666,
+      "modified_epoch_secs": 1782013771,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -19376,8 +21245,8 @@
     {
       "path": "debug_runs/landscape_grammar_composite_live.json",
       "exists": true,
-      "bytes": 2512,
-      "modified_epoch_secs": 1781716518,
+      "bytes": 2716,
+      "modified_epoch_secs": 1782013730,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -19403,8 +21272,8 @@
     {
       "path": "debug_runs/landscape_grammar_disturbance_log_live.json",
       "exists": true,
-      "bytes": 2444,
-      "modified_epoch_secs": 1781716518,
+      "bytes": 2648,
+      "modified_epoch_secs": 1782013730,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -19430,21 +21299,21 @@
     {
       "path": "debug_runs/landscape_grammar_extract_live.json",
       "exists": true,
-      "bytes": 2510,
-      "modified_epoch_secs": 1781756520,
+      "bytes": 3006,
+      "modified_epoch_secs": 1782013732,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
         "program_label": null,
         "track": null,
-        "lane": "VEG-BURN-EXTRACT-004",
-        "task_id": null,
+        "lane": "CDR-A-EXTRACT-SPRITE-001",
+        "task_id": "CDR-A-EXTRACT-SPRITE-001",
         "green": true,
         "proceed_ship": null,
         "art_quality": null,
         "ok": null,
         "status": null,
-        "profile": "VEG-BURN-EXTRACT-004",
+        "profile": "CDR-A-EXTRACT-SPRITE-001",
         "agent_role": null,
         "owner": null,
         "validator_status": null,
@@ -19457,8 +21326,8 @@
     {
       "path": "debug_runs/landscape_grammar_fire_harvest_wire_live.json",
       "exists": true,
-      "bytes": 2727,
-      "modified_epoch_secs": 1781756548,
+      "bytes": 2931,
+      "modified_epoch_secs": 1782013771,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -19484,8 +21353,8 @@
     {
       "path": "debug_runs/landscape_grammar_lg1_live.json",
       "exists": true,
-      "bytes": 4925,
-      "modified_epoch_secs": 1781704749,
+      "bytes": 5129,
+      "modified_epoch_secs": 1782010169,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -19511,8 +21380,8 @@
     {
       "path": "debug_runs/landscape_grammar_lg2_live.json",
       "exists": true,
-      "bytes": 2556,
-      "modified_epoch_secs": 1781716520,
+      "bytes": 2760,
+      "modified_epoch_secs": 1782013732,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -19538,8 +21407,8 @@
     {
       "path": "debug_runs/landscape_grammar_lg3_live.json",
       "exists": true,
-      "bytes": 2465,
-      "modified_epoch_secs": 1781716519,
+      "bytes": 2669,
+      "modified_epoch_secs": 1782013731,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -19565,8 +21434,8 @@
     {
       "path": "debug_runs/landscape_grammar_lg4_preview_live.json",
       "exists": true,
-      "bytes": 2722,
-      "modified_epoch_secs": 1781716519,
+      "bytes": 2926,
+      "modified_epoch_secs": 1782013731,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -19592,8 +21461,8 @@
     {
       "path": "debug_runs/landscape_grammar_lg5_live.json",
       "exists": true,
-      "bytes": 2985,
-      "modified_epoch_secs": 1781716519,
+      "bytes": 3189,
+      "modified_epoch_secs": 1782013731,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -19619,8 +21488,8 @@
     {
       "path": "debug_runs/landscape_grammar_map_rollout_live.json",
       "exists": true,
-      "bytes": 2402,
-      "modified_epoch_secs": 1781884836,
+      "bytes": 2605,
+      "modified_epoch_secs": 1782015890,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -19646,8 +21515,8 @@
     {
       "path": "debug_runs/landscape_grammar_sim_harness_live.json",
       "exists": true,
-      "bytes": 2683,
-      "modified_epoch_secs": 1781716709,
+      "bytes": 2887,
+      "modified_epoch_secs": 1782010396,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -19667,14 +21536,14 @@
         "readiness_passes": null,
         "blocked_by": null,
         "_witness_rel": "debug_runs/landscape_grammar_sim_harness_live.json",
-        "honest_gate": "honest_green"
+        "honest_gate": "inflated_green"
       }
     },
     {
       "path": "debug_runs/landscape_grammar_visual_smoke_live.json",
       "exists": true,
-      "bytes": 2694,
-      "modified_epoch_secs": 1781756553,
+      "bytes": 2898,
+      "modified_epoch_secs": 1782010279,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -19809,8 +21678,8 @@
     {
       "path": "debug_runs/map_zoom_coherence_live.json",
       "exists": true,
-      "bytes": 2752,
-      "modified_epoch_secs": 1781756520,
+      "bytes": 2956,
+      "modified_epoch_secs": 1782010115,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -19945,7 +21814,7 @@
       "path": "debug_runs/mcp_landscape_grammar_preset_batch_live.json",
       "exists": true,
       "bytes": 2644,
-      "modified_epoch_secs": 1781979103,
+      "modified_epoch_secs": 1782016015,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -19999,7 +21868,7 @@
       "path": "debug_runs/mcp_landscape_sign_atlas_live.json",
       "exists": true,
       "bytes": 1525,
-      "modified_epoch_secs": 1781670221,
+      "modified_epoch_secs": 1781983745,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -20007,7 +21876,7 @@
         "track": null,
         "lane": "MCP_LANDSCAPE_SIGN_ATLAS",
         "task_id": null,
-        "green": false,
+        "green": true,
         "proceed_ship": null,
         "art_quality": null,
         "ok": null,
@@ -20019,7 +21888,7 @@
         "readiness_passes": null,
         "blocked_by": null,
         "_witness_rel": "debug_runs/mcp_landscape_sign_atlas_live.json",
-        "honest_gate": "unknown"
+        "honest_gate": "honest_green"
       }
     },
     {
@@ -20376,8 +22245,8 @@
     {
       "path": "debug_runs/mcp_witness_integrity_ops_live.json",
       "exists": true,
-      "bytes": 1492,
-      "modified_epoch_secs": 1781670227,
+      "bytes": 1486,
+      "modified_epoch_secs": 1782016016,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -20403,8 +22272,8 @@
     {
       "path": "debug_runs/minimap_compositor_live.json",
       "exists": true,
-      "bytes": 5411,
-      "modified_epoch_secs": 1781898656,
+      "bytes": 5652,
+      "modified_epoch_secs": 1782015367,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -20430,8 +22299,8 @@
     {
       "path": "debug_runs/minimap_fire_veg_coherence_live.json",
       "exists": true,
-      "bytes": 2637,
-      "modified_epoch_secs": 1781898654,
+      "bytes": 2841,
+      "modified_epoch_secs": 1782000395,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -20457,8 +22326,8 @@
     {
       "path": "debug_runs/minimap_topology_legend_live.json",
       "exists": true,
-      "bytes": 2620,
-      "modified_epoch_secs": 1781978467,
+      "bytes": 2824,
+      "modified_epoch_secs": 1782013918,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -20478,7 +22347,7 @@
         "readiness_passes": null,
         "blocked_by": null,
         "_witness_rel": "debug_runs/minimap_topology_legend_live.json",
-        "honest_gate": "honest_green"
+        "honest_gate": "inflated_green"
       }
     },
     {
@@ -20599,8 +22468,8 @@
     {
       "path": "debug_runs/pilot_catalog_parity_live.json",
       "exists": true,
-      "bytes": 2364,
-      "modified_epoch_secs": 1781979271,
+      "bytes": 2568,
+      "modified_epoch_secs": 1782009781,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -20680,8 +22549,8 @@
     {
       "path": "debug_runs/play_scenario_live.json",
       "exists": true,
-      "bytes": 3658,
-      "modified_epoch_secs": 1781756611,
+      "bytes": 3862,
+      "modified_epoch_secs": 1782013917,
       "summary": {
         "parse_ok": true,
         "program_id": "stage7_play",
@@ -20707,8 +22576,8 @@
     {
       "path": "debug_runs/power_grid_construction_ux_close_live.json",
       "exists": true,
-      "bytes": 2470,
-      "modified_epoch_secs": 1781978418,
+      "bytes": 2674,
+      "modified_epoch_secs": 1782004104,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -20734,8 +22603,8 @@
     {
       "path": "debug_runs/power_grid_track_bd_live.json",
       "exists": true,
-      "bytes": 2594,
-      "modified_epoch_secs": 1781978418,
+      "bytes": 2798,
+      "modified_epoch_secs": 1782004104,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -20761,8 +22630,8 @@
     {
       "path": "debug_runs/power_grid_track_c_live.json",
       "exists": true,
-      "bytes": 2630,
-      "modified_epoch_secs": 1781978418,
+      "bytes": 2834,
+      "modified_epoch_secs": 1782004104,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -20788,8 +22657,8 @@
     {
       "path": "debug_runs/power_line_draw_live.json",
       "exists": true,
-      "bytes": 2727,
-      "modified_epoch_secs": 1781978417,
+      "bytes": 2931,
+      "modified_epoch_secs": 1782004103,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -20815,8 +22684,8 @@
     {
       "path": "debug_runs/power_map_overlay_live.json",
       "exists": true,
-      "bytes": 2799,
-      "modified_epoch_secs": 1781979189,
+      "bytes": 3003,
+      "modified_epoch_secs": 1782004129,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -20836,14 +22705,14 @@
         "readiness_passes": null,
         "blocked_by": null,
         "_witness_rel": "debug_runs/power_map_overlay_live.json",
-        "honest_gate": "honest_green"
+        "honest_gate": "queue_stale"
       }
     },
     {
       "path": "debug_runs/power_node_hover_live.json",
       "exists": true,
-      "bytes": 2697,
-      "modified_epoch_secs": 1781978384,
+      "bytes": 2901,
+      "modified_epoch_secs": 1782004282,
       "summary": {
         "parse_ok": true,
         "program_id": "art_B",
@@ -20950,8 +22819,8 @@
     {
       "path": "debug_runs/queue_integrity_reconcile_live.json",
       "exists": true,
-      "bytes": 10043,
-      "modified_epoch_secs": 1781670225,
+      "bytes": 892,
+      "modified_epoch_secs": 1781990366,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -20959,7 +22828,7 @@
         "track": null,
         "lane": "MCP_WIT_QUEUE_INTEGRITY",
         "task_id": null,
-        "green": false,
+        "green": true,
         "proceed_ship": null,
         "art_quality": null,
         "ok": null,
@@ -20971,14 +22840,14 @@
         "readiness_passes": null,
         "blocked_by": null,
         "_witness_rel": "debug_runs/queue_integrity_reconcile_live.json",
-        "honest_gate": "unknown"
+        "honest_gate": "honest_green"
       }
     },
     {
       "path": "debug_runs/replay_editor_parity_live.json",
       "exists": true,
-      "bytes": 2499,
-      "modified_epoch_secs": 1781978468,
+      "bytes": 2648,
+      "modified_epoch_secs": 1782015366,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -21059,8 +22928,8 @@
     {
       "path": "debug_runs/sim_effect_spine_live.json",
       "exists": true,
-      "bytes": 2594,
-      "modified_epoch_secs": 1781756521,
+      "bytes": 2798,
+      "modified_epoch_secs": 1782010140,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -21111,6 +22980,33 @@
       }
     },
     {
+      "path": "debug_runs/sim_hud_cursor_live.json",
+      "exists": true,
+      "bytes": 2453,
+      "modified_epoch_secs": 1781982620,
+      "summary": {
+        "parse_ok": true,
+        "program_id": "unclassified",
+        "program_label": null,
+        "track": null,
+        "lane": "COD-SIM-HUD-CURSOR-001",
+        "task_id": "TRIAGE-CURSOR-UNIFY-001",
+        "green": null,
+        "proceed_ship": null,
+        "art_quality": null,
+        "ok": null,
+        "status": null,
+        "profile": "COD-SIM-HUD-CURSOR-001",
+        "agent_role": null,
+        "owner": null,
+        "validator_status": null,
+        "readiness_passes": null,
+        "blocked_by": null,
+        "_witness_rel": "debug_runs/sim_hud_cursor_live.json",
+        "honest_gate": "unknown"
+      }
+    },
+    {
       "path": "debug_runs/sim_hud_egui_theme_live.json",
       "exists": true,
       "bytes": 2408,
@@ -21134,6 +23030,33 @@
         "readiness_passes": null,
         "blocked_by": null,
         "_witness_rel": "debug_runs/sim_hud_egui_theme_live.json",
+        "honest_gate": "honest_green"
+      }
+    },
+    {
+      "path": "debug_runs/sim_hud_esc_cascade_live.json",
+      "exists": true,
+      "bytes": 2610,
+      "modified_epoch_secs": 1781984139,
+      "summary": {
+        "parse_ok": true,
+        "program_id": "unclassified",
+        "program_label": null,
+        "track": null,
+        "lane": "COD-SIM-HUD-ESC-CASCADE-001",
+        "task_id": "COD-SIM-HUD-ESC-CASCADE-001",
+        "green": true,
+        "proceed_ship": null,
+        "art_quality": null,
+        "ok": null,
+        "status": null,
+        "profile": "COD-SIM-HUD-ESC-CASCADE-001",
+        "agent_role": null,
+        "owner": null,
+        "validator_status": null,
+        "readiness_passes": null,
+        "blocked_by": null,
+        "_witness_rel": "debug_runs/sim_hud_esc_cascade_live.json",
         "honest_gate": "honest_green"
       }
     },
@@ -21275,8 +23198,8 @@
     {
       "path": "debug_runs/sim_hud_power_icons_live.json",
       "exists": true,
-      "bytes": 2988,
-      "modified_epoch_secs": 1781792381,
+      "bytes": 3192,
+      "modified_epoch_secs": 1782003965,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -21462,6 +23385,33 @@
       }
     },
     {
+      "path": "debug_runs/sim_spectrum_analytics_live.json",
+      "exists": true,
+      "bytes": 18212,
+      "modified_epoch_secs": 1782015364,
+      "summary": {
+        "parse_ok": true,
+        "program_id": "unclassified",
+        "program_label": null,
+        "track": null,
+        "lane": "SIM_SPECTRUM",
+        "task_id": null,
+        "green": null,
+        "proceed_ship": null,
+        "art_quality": null,
+        "ok": null,
+        "status": null,
+        "profile": "SIM_SPECTRUM",
+        "agent_role": null,
+        "owner": null,
+        "validator_status": null,
+        "readiness_passes": null,
+        "blocked_by": null,
+        "_witness_rel": "debug_runs/sim_spectrum_analytics_live.json",
+        "honest_gate": "unknown"
+      }
+    },
+    {
       "path": "debug_runs/single_archetype_ratio_guard_live.json",
       "exists": true,
       "bytes": 657,
@@ -21492,7 +23442,7 @@
       "path": "debug_runs/site_zone_validate_live.json",
       "exists": true,
       "bytes": 2348,
-      "modified_epoch_secs": 1781756317,
+      "modified_epoch_secs": 1782009133,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -21518,8 +23468,8 @@
     {
       "path": "debug_runs/stage5_full_app_live.json",
       "exists": true,
-      "bytes": 23434,
-      "modified_epoch_secs": 1781717503,
+      "bytes": 23624,
+      "modified_epoch_secs": 1782015828,
       "summary": {
         "parse_ok": true,
         "program_id": "stage5_spine",
@@ -21546,7 +23496,7 @@
       "path": "debug_runs/stage6_virtualization_live.json",
       "exists": true,
       "bytes": 3411,
-      "modified_epoch_secs": 1781367219,
+      "modified_epoch_secs": 1781984206,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -21573,8 +23523,8 @@
     {
       "path": "debug_runs/stage7_behavioral_live.json",
       "exists": true,
-      "bytes": 3977,
-      "modified_epoch_secs": 1781978469,
+      "bytes": 4181,
+      "modified_epoch_secs": 1782000395,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -21734,10 +23684,37 @@
       }
     },
     {
+      "path": "debug_runs/triage_perf_vfx_fix_2026-06-11_live.json",
+      "exists": true,
+      "bytes": 7551,
+      "modified_epoch_secs": 1782015364,
+      "summary": {
+        "parse_ok": true,
+        "program_id": "unclassified",
+        "program_label": null,
+        "track": null,
+        "lane": "PERF-INSTR-VFX-001",
+        "task_id": null,
+        "green": null,
+        "proceed_ship": null,
+        "art_quality": null,
+        "ok": null,
+        "status": null,
+        "profile": "PERF-INSTR-VFX-001",
+        "agent_role": null,
+        "owner": null,
+        "validator_status": null,
+        "readiness_passes": null,
+        "blocked_by": null,
+        "_witness_rel": "debug_runs/triage_perf_vfx_fix_2026-06-11_live.json",
+        "honest_gate": "unknown"
+      }
+    },
+    {
       "path": "debug_runs/ui_shell_migration_live.json",
       "exists": true,
-      "bytes": 8797,
-      "modified_epoch_secs": 1781898710,
+      "bytes": 8958,
+      "modified_epoch_secs": 1782015828,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -21788,6 +23765,33 @@
       }
     },
     {
+      "path": "debug_runs/veg_catalog_burn_rows_live.json",
+      "exists": true,
+      "bytes": 246,
+      "modified_epoch_secs": 1782012862,
+      "summary": {
+        "parse_ok": true,
+        "program_id": "unclassified",
+        "program_label": null,
+        "track": null,
+        "lane": null,
+        "task_id": null,
+        "green": true,
+        "proceed_ship": null,
+        "art_quality": null,
+        "ok": null,
+        "status": null,
+        "profile": null,
+        "agent_role": null,
+        "owner": null,
+        "validator_status": null,
+        "readiness_passes": null,
+        "blocked_by": null,
+        "_witness_rel": "debug_runs/veg_catalog_burn_rows_live.json",
+        "honest_gate": "honest_green"
+      }
+    },
+    {
       "path": "debug_runs/veg_diag_extract_panel_live.json",
       "exists": true,
       "bytes": 2563,
@@ -21815,10 +23819,37 @@
       }
     },
     {
+      "path": "debug_runs/veg_f02_burn_atlas_live.json",
+      "exists": true,
+      "bytes": 369,
+      "modified_epoch_secs": 1782012862,
+      "summary": {
+        "parse_ok": true,
+        "program_id": "unclassified",
+        "program_label": null,
+        "track": null,
+        "lane": "VEG_F02_BURN_ATLAS",
+        "task_id": null,
+        "green": true,
+        "proceed_ship": null,
+        "art_quality": null,
+        "ok": null,
+        "status": null,
+        "profile": "VEG_F02_BURN_ATLAS",
+        "agent_role": null,
+        "owner": null,
+        "validator_status": null,
+        "readiness_passes": null,
+        "blocked_by": null,
+        "_witness_rel": "debug_runs/veg_f02_burn_atlas_live.json",
+        "honest_gate": "honest_green"
+      }
+    },
+    {
       "path": "debug_runs/veg_runtime_proof_live.json",
       "exists": true,
-      "bytes": 3267,
-      "modified_epoch_secs": 1781756524,
+      "bytes": 3471,
+      "modified_epoch_secs": 1782013731,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -21838,14 +23869,41 @@
         "readiness_passes": null,
         "blocked_by": null,
         "_witness_rel": "debug_runs/veg_runtime_proof_live.json",
-        "honest_gate": "honest_green"
+        "honest_gate": "inflated_green"
+      }
+    },
+    {
+      "path": "debug_runs/veg_ship_close_live.json",
+      "exists": true,
+      "bytes": 2689,
+      "modified_epoch_secs": 1782013657,
+      "summary": {
+        "parse_ok": true,
+        "program_id": "unclassified",
+        "program_label": null,
+        "track": null,
+        "lane": "VEG-SHIP-CLOSE-001",
+        "task_id": null,
+        "green": null,
+        "proceed_ship": null,
+        "art_quality": null,
+        "ok": null,
+        "status": null,
+        "profile": "VEG-SHIP-CLOSE-001",
+        "agent_role": null,
+        "owner": null,
+        "validator_status": null,
+        "readiness_passes": null,
+        "blocked_by": null,
+        "_witness_rel": "debug_runs/veg_ship_close_live.json",
+        "honest_gate": "unknown"
       }
     },
     {
       "path": "debug_runs/vegetation_program_close_live.json",
       "exists": true,
-      "bytes": 2672,
-      "modified_epoch_secs": 1781716520,
+      "bytes": 2876,
+      "modified_epoch_secs": 1782013732,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -21871,8 +23929,8 @@
     {
       "path": "debug_runs/vegetation_snapshot_roundtrip_live.json",
       "exists": true,
-      "bytes": 2389,
-      "modified_epoch_secs": 1781978467,
+      "bytes": 2593,
+      "modified_epoch_secs": 1782013919,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -21898,8 +23956,8 @@
     {
       "path": "debug_runs/vegetation_variant_catalog_load_live.json",
       "exists": true,
-      "bytes": 2925,
-      "modified_epoch_secs": 1781794061,
+      "bytes": 3129,
+      "modified_epoch_secs": 1782013652,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -21925,8 +23983,8 @@
     {
       "path": "debug_runs/vfx_fire_test_highlight_live.json",
       "exists": true,
-      "bytes": 2407,
-      "modified_epoch_secs": 1781756524,
+      "bytes": 2611,
+      "modified_epoch_secs": 1782009817,
       "summary": {
         "parse_ok": true,
         "program_id": "unclassified",
@@ -22221,11 +24279,11 @@
     }
   ],
   "integrity_cache": {
-    "fail_count": null,
-    "inflated_green_count": null,
-    "rollup_inflated_count": null,
-    "queue_contradiction_count": null,
-    "queue_stale_count": null
+    "fail_count": 76,
+    "inflated_green_count": 6,
+    "rollup_inflated_count": 0,
+    "queue_contradiction_count": 9,
+    "queue_stale_count": 54
   },
   "construction_sub_witnesses": [
     {

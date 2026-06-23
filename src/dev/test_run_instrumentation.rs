@@ -16,7 +16,7 @@ use bevy::prelude::*;
 use serde_json::{json, Value};
 
 use crate::engine::test_harness::TestSceneSimChunk;
-use crate::engine::EngineLaunchArgs;
+use crate::engine::{EngineLaunchArgs, TestScene};
 use crate::gui::editor::map_editor::MapEditorRoadMarkerV1;
 use crate::render::FireSimulationSnapshot;
 use crate::strategic::LogisticsGraph;
@@ -121,6 +121,7 @@ fn merge_env_overrides(inst: &mut TestRunInstrumentation) {
 pub fn bootstrap_test_run_instrumentation(
     launch: Res<EngineLaunchArgs>,
     mut inst: ResMut<TestRunInstrumentation>,
+    mut fire_cadence: Option<ResMut<crate::render::FireExtractCadence>>,
 ) {
     let profile = launch.test_instrumentation_profile();
     if profile.active {
@@ -135,6 +136,12 @@ pub fn bootstrap_test_run_instrumentation(
     }
     merge_env_overrides(&mut inst);
     publish_atomics(&inst);
+
+    if matches!(launch.test_scene, TestScene::VfxSandbox | TestScene::Visual) {
+        if let Some(cadence) = fire_cadence.as_mut() {
+            crate::render::FireExtractCadence::clamp_for_runtime(cadence, true);
+        }
+    }
 
     if inst.active {
         info!(

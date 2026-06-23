@@ -5,9 +5,12 @@ from __future__ import annotations
 import pytest
 
 from rust_engine_mcp.aps_uiux_onboard import (
+    ASSEMBLY_EMPTY_G0_G1,
+    ASSEMBLY_EMPTY_G2_PLUS,
     EMPTY_STATES,
     ONBOARDING_PREFS_KEY,
     ONBOARDING_STEPS,
+    assembly_empty_state_text,
     empty_state_text,
     load_onboarding_seen,
     mark_onboarding_seen,
@@ -148,4 +151,34 @@ def test_app_renders_empty_states_on_primary_surfaces(tk_root) -> None:
     tk_root.assembly._refresh_placement_list()
     tk_root.update_idletasks()
     assert tk_root.assembly._empty_state.winfo_ismapped()
-    assert tk_root.assembly._empty_state.cget("text") == empty_state_text("assembly")
+    assert tk_root.assembly._empty_state.cget("text") == assembly_empty_state_text(
+        tk_root.assembly._grammar_set_tier
+    )
+
+
+def test_assembly_empty_state_text_tier_bands() -> None:
+    assert assembly_empty_state_text("G0") == ASSEMBLY_EMPTY_G0_G1
+    assert assembly_empty_state_text("G1") == ASSEMBLY_EMPTY_G0_G1
+    assert assembly_empty_state_text("G2") == ASSEMBLY_EMPTY_G2_PLUS
+    assert assembly_empty_state_text("G3") == ASSEMBLY_EMPTY_G2_PLUS
+    assert assembly_empty_state_text("G4") == ASSEMBLY_EMPTY_G2_PLUS
+    assert empty_state_text("assembly") == ASSEMBLY_EMPTY_G0_G1
+
+
+@pytest.mark.aps_gui
+def test_assembly_empty_label_tier_aware(gui_panel_host) -> None:
+    from art_pipeline_suite.assembly_panel import AssemblyPanel
+    from art_pipeline_suite.state import SuiteState
+
+    panel = AssemblyPanel(gui_panel_host, SuiteState(), on_log=lambda _m: None, start_job=None)
+    panel.pack(fill="both", expand=True)
+    panel._snapshot = None
+    panel.apply_grammar_tier("G0")
+    panel._refresh_placement_list()
+    gui_panel_host.winfo_toplevel().update_idletasks()
+    assert panel._empty_state.cget("text") == ASSEMBLY_EMPTY_G0_G1
+
+    panel.apply_grammar_tier("G3")
+    panel._refresh_placement_list()
+    gui_panel_host.winfo_toplevel().update_idletasks()
+    assert panel._empty_state.cget("text") == ASSEMBLY_EMPTY_G2_PLUS

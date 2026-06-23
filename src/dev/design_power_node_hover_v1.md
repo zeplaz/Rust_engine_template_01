@@ -188,3 +188,15 @@ Align glyphs: [`power_glyphs_spec_v1.md`](../assets/ui/infrastructure/power_glyp
 | Role | Verdict | Date |
 |:---|:---|:---|
 | `@designer` | **PASS** | 2026-06-18 |
+
+---
+
+## 11. Exit predicate
+
+| Field | Value |
+|:---|:---|
+| **Deliverable** | This spec on disk with **PASS** verdict |
+| **Marker** | `DES-POWER-NODE-HOVER-001 Q✓` in header fence |
+| **Registry** | `designer_signoff_registry.json` → **SIGNED** |
+| **Coder witness** | `debug_runs/power_node_hover_live.json` → `hover_card_wired: true` (post-wire) |
+| **Unblocks** | `COD-POWER-NODE-HOVER-001` |

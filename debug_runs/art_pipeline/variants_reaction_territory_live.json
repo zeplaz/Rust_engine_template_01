@@ -1,0 +1,187 @@
+{
+  "gate": "APS-P0-REACTION-TERRITORY-001",
+  "green": true,
+  "event_ids": [
+    "heritage_site_destruction",
+    "language_ban",
+    "transparent_bilingual_service_continuation"
+  ],
+  "catalog_event_ids": [
+    "heritage_site_destruction",
+    "language_ban",
+    "transparent_bilingual_service_continuation",
+    "forced_assimilation_in_schools",
+    "archive_seizure_or_censorship",
+    "forced_renaming",
+    "banning_cultural_or_religious_practices",
+    "removal_of_children_from_institutions",
+    "forced_displacement",
+    "erasure_of_local_history",
+    "imperial_institution_replacement"
+  ],
+  "reaction_session_count": 5,
+  "reaction_session_count_p0": 5,
+  "reaction_session_count_full_catalog": 19,
+  "sample_variant_keys": [
+    "heritage_site_destruction__damaged_day__97197c18",
+    "heritage_site_destruction__burning_00__97197c18",
+    "heritage_site_destruction__clean_day__97197c18",
+    "language_ban__clean_night_off__0f4024c5",
+    "transparent_bilingual_service_continuation__clean_night_on__4f38710c",
+    "forced_assimilation_in_schools__clean_night_off__a5a9ed78",
+    "forced_assimilation_in_schools__damaged_day__a5a9ed78",
+    "archive_seizure_or_censorship__damaged_day__48db76e8",
+    "archive_seizure_or_censorship__clean_day__48db76e8",
+    "forced_renaming__clean_night_off__8f89cd93",
+    "forced_renaming__damaged_day__8f89cd93",
+    "banning_cultural_or_religious_practices__clean_night_off__16de8384",
+    "removal_of_children_from_institutions__damaged_day__1f57608f",
+    "removal_of_children_from_institutions__clean_day__1f57608f",
+    "forced_displacement__damaged_day__6c826fed",
+    "forced_displacement__clean_day__6c826fed",
+    "erasure_of_local_history__damaged_day__5d899436",
+    "erasure_of_local_history__clean_day__5d899436",
+    "imperial_institution_replacement__clean_night_off__f28f5b40"
+  ],
+  "sample_reaction_key_language_ban": "0f4024c5",
+  "cmcp_resolve_001_green": true,
+  "cmcp_preview_001_green": true,
+  "resolver_checks": {
+    "heritage_site_destruction@building_warehouse": true,
+    "heritage_site_destruction@building_rowhouse": true,
+    "heritage_site_destruction@landscape_topology": true,
+    "heritage_site_destruction@heritage_civic": true,
+    "language_ban@building_warehouse": true,
+    "language_ban@building_rowhouse": true,
+    "language_ban@landscape_topology": true,
+    "language_ban@heritage_civic": true,
+    "transparent_bilingual_service_continuation@building_warehouse": true,
+    "transparent_bilingual_service_continuation@building_rowhouse": true,
+    "transparent_bilingual_service_continuation@landscape_topology": true,
+    "transparent_bilingual_service_continuation@heritage_civic": true,
+    "forced_assimilation_in_schools@building_warehouse": true,
+    "forced_assimilation_in_schools@building_rowhouse": true,
+    "forced_assimilation_in_schools@landscape_topology": true,
+    "forced_assimilation_in_schools@heritage_civic": true,
+    "archive_seizure_or_censorship@building_warehouse": true,
+    "archive_seizure_or_censorship@building_rowhouse": true,
+    "archive_seizure_or_censorship@landscape_topology": true,
+    "archive_seizure_or_censorship@heritage_civic": true,
+    "forced_renaming@building_warehouse": true,
+    "forced_renaming@building_rowhouse": true,
+    "forced_renaming@landscape_topology": true,
+    "forced_renaming@heritage_civic": true,
+    "banning_cultural_or_religious_practices@building_warehouse": true,
+    "banning_cultural_or_religious_practices@building_rowhouse": true,
+    "banning_cultural_or_religious_practices@landscape_topology": true,
+    "banning_cultural_or_religious_practices@heritage_civic": true,
+    "removal_of_children_from_institutions@building_warehouse": true,
+    "removal_of_children_from_institutions@building_rowhouse": true,
+    "removal_of_children_from_institutions@landscape_topology": true,
+    "removal_of_children_from_institutions@heritage_civic": true,
+    "forced_displacement@building_warehouse": true,
+    "forced_displacement@building_rowhouse": true,
+    "forced_displacement@landscape_topology": true,
+    "forced_displacement@heritage_civic": true,
+    "erasure_of_local_history@building_warehouse": true,
+    "erasure_of_local_history@building_rowhouse": true,
+    "erasure_of_local_history@landscape_topology": true,
+    "erasure_of_local_history@heritage_civic": true,
+    "imperial_institution_replacement@building_warehouse": true,
+    "imperial_institution_replacement@building_rowhouse": true,
+    "imperial_institution_replacement@landscape_topology": true,
+    "imperial_institution_replacement@heritage_civic": true
+  },
+  "heritage_civic_resolve": {
+    "event_id": "heritage_site_destruction",
+    "domain": "heritage_civic",
+    "abstract_variant_keys": [
+      "damaged_heavy",
+      "burning",
+      "scar_recovery_0"
+    ],
+    "concrete_variant_keys": [
+      "damaged_day",
+      "burning_00",
+      "clean_day"
+    ],
+    "resolution_map": {
+      "damaged_heavy": "damaged_day",
+      "burning": "burning_00",
+      "scar_recovery_0": "clean_day"
+    },
+    "preview_states": [
+      "damaged",
+      "burning",
+      "clean"
+    ],
+    "preview_visual_states": [
+      "damaged",
+      "burning",
+      "clean"
+    ],
+    "tag_anchors": {
+      "light": [],
+      "fire": [
+        "sim_fire",
+        "fire_frame_axis",
+        "burn_origin"
+      ],
+      "heritage": [
+        "heritage_integrity",
+        "site_marker_role",
+        "heritage_marker",
+        "institutional_memory",
+        "record_preservation",
+        "archive_slot"
+      ]
+    }
+  },
+  "catalog_json": "tools/mcp/schemas/examples/reaction_territory_events_v1.json",
+  "catalog_yaml": "tools/mcp/schemas/examples/reaction_territory_events_v1.yaml",
+  "tag_families": {
+    "light": [
+      "day_lit",
+      "night_on",
+      "night_off",
+      "night_lights",
+      "censorship_overlay",
+      "service_continuity",
+      "censorship"
+    ],
+    "fire": [
+      "sim_fire",
+      "fire_frame_0",
+      "fire_frame_axis",
+      "emissive_overlay",
+      "burning_session",
+      "burn_origin"
+    ],
+    "heritage": [
+      "cultural_survival",
+      "heritage_integrity",
+      "language_vitality",
+      "cultural_continuity",
+      "institutional_memory",
+      "record_preservation",
+      "legitimacy",
+      "essential_service_continuity",
+      "cultural_erasure",
+      "service_continuity",
+      "bilingual_transparency",
+      "legitimate_civil_change",
+      "heritage_marker",
+      "archive_slot",
+      "language_script",
+      "signage_locale"
+    ]
+  },
+  "_agent_meta": {
+    "schema": "variants_reaction_territory_live_v1",
+    "written_at_epoch_secs": 1782030566,
+    "profile": "APS_REACTION_TERRITORY",
+    "source_system": "reaction_territory",
+    "relative_path": "debug_runs/art_pipeline/variants_reaction_territory_live.json",
+    "ritual": "BLANG:WIT-HON CMCP-REACTION-TERRITORY-RESOLVE+PREVIEW"
+  }
+}

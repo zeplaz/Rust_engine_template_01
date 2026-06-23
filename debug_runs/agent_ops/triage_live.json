@@ -1,0 +1,172 @@
+{
+  "schema": "ops_triage_live_v1",
+  "task_id": "OPS-TRIAGE-DASH-001",
+  "ok": true,
+  "generated_at": "2026-06-21T04:29:24.919681+00:00",
+  "ignore_dcc_status_bar": true,
+  "metrics": {
+    "crash_alerts": 0,
+    "slip_ups": 15,
+    "open_gates": 1,
+    "ftr": null,
+    "dcc_processes": 0
+  },
+  "glyph_chain": "\u26a0\u26d4",
+  "blockers": [
+    {
+      "id": "G-PLAY-01",
+      "severity": "warn",
+      "glyph": "\u26a0",
+      "detail": "G-PLAY-01"
+    }
+  ],
+  "slip_ups": [
+    {
+      "kind": "witness_honesty",
+      "severity": "alert",
+      "detail": "dishonest_gate",
+      "path": "debug_runs/art_pipeline/kit_production_002_g4_live.json"
+    },
+    {
+      "kind": "witness_honesty",
+      "severity": "alert",
+      "detail": "dishonest_gate",
+      "path": "debug_runs/art_pipeline/mcp_pilot_grammar_001_live.json"
+    },
+    {
+      "kind": "witness_honesty",
+      "severity": "alert",
+      "detail": "dishonest_gate",
+      "path": "debug_runs/art_pipeline/mcp_pilot_grammar_001_rejected_live.json"
+    },
+    {
+      "kind": "witness_honesty",
+      "severity": "alert",
+      "detail": "dishonest_gate",
+      "path": "debug_runs/art_pipeline/tile_fix_09_phase_c_warehouse_g4_live.json"
+    },
+    {
+      "kind": "witness_honesty",
+      "severity": "alert",
+      "detail": "dishonest_gate",
+      "path": "debug_runs/art_pipeline/tile_fix_10_warehouse_industrial_live.json"
+    },
+    {
+      "kind": "witness_honesty",
+      "severity": "alert",
+      "detail": "dishonest_gate",
+      "path": "debug_runs/art_pipeline/warehouse_production_keyframe_g4_live.json"
+    },
+    {
+      "kind": "queue_contradiction",
+      "severity": "alert",
+      "detail": "Queue rows contradict witness rollup",
+      "path": null
+    },
+    {
+      "kind": "witness_honesty",
+      "severity": "warn",
+      "detail": "inflated_green",
+      "path": "debug_runs/.witness_honesty_precheck/landscape_grammar_sim_harness_live.json"
+    },
+    {
+      "kind": "witness_honesty",
+      "severity": "warn",
+      "detail": "inflated_green",
+      "path": "debug_runs/.witness_honesty_precheck/minimap_topology_legend_live.json"
+    },
+    {
+      "kind": "witness_honesty",
+      "severity": "warn",
+      "detail": "inflated_green",
+      "path": "debug_runs/art_pipeline/tile_tile_factory_floor_greybox_001_live.json"
+    },
+    {
+      "kind": "witness_honesty",
+      "severity": "warn",
+      "detail": "inflated_green",
+      "path": "debug_runs/landscape_grammar_sim_harness_live.json"
+    },
+    {
+      "kind": "witness_honesty",
+      "severity": "warn",
+      "detail": "inflated_green",
+      "path": "debug_runs/minimap_topology_legend_live.json"
+    },
+    {
+      "kind": "witness_honesty",
+      "severity": "warn",
+      "detail": "inflated_green",
+      "path": "debug_runs/veg_runtime_proof_live.json"
+    },
+    {
+      "kind": "delta_wf",
+      "severity": "warn",
+      "detail": "Track B ship blocked \u2014 manual keyframe + G4",
+      "path": null
+    },
+    {
+      "kind": "delta_wf",
+      "severity": "warn",
+      "detail": "Rollup OPEN \u2014 see sub-gates G-PLAY-CODER-* + G-PLAY-OPERATOR-01",
+      "path": null
+    }
+  ],
+  "crash": {
+    "task_id": "OPS-CRASH-EXPORT-001",
+    "schema": "ops_crash_scan_v1",
+    "ok": true,
+    "scanned_at": "2026-06-21T04:29:15.975185+00:00",
+    "process_count": 3,
+    "dcc_process_count": 0,
+    "crash_alert_count": 0,
+    "slip_up_count": 0,
+    "slip_ups": [],
+    "processes": [
+      {
+        "name": "python.exe",
+        "pid": "32532",
+        "mem": "14\u00ff244 Ko",
+        "is_dcc": false
+      },
+      {
+        "name": "python.exe",
+        "pid": "1712",
+        "mem": "12\u00ff388 Ko",
+        "is_dcc": false
+      },
+      {
+        "name": "python.exe",
+        "pid": "30496",
+        "mem": "45\u00ff632 Ko",
+        "is_dcc": false
+      }
+    ],
+    "glyph_summary": "",
+    "prometheus_path": "debug_runs/agent_ops/prometheus/rust_engine_ops.prom"
+  },
+  "ops_dashboard": {
+    "path": "debug_runs/agent_ops/ops_dashboard_live.json",
+    "slip_up_count": 15
+  },
+  "prometheus": {
+    "path": "debug_runs/agent_ops/prometheus/rust_engine_ops.prom",
+    "written": "debug_runs/agent_ops/prometheus/rust_engine_ops.prom"
+  },
+  "grafana": {
+    "triage_dashboard": "tools/orchestrator/dashboard/grafana_triage_overview.json",
+    "alert_rules": "tools/orchestrator/dashboard/prometheus_alert_rules.yml"
+  },
+  "previous_hash": "",
+  "content_hash": "99e55a15a9c484a558c3a0b56cb7767f26704ea976479ff96b97b0decc29a065",
+  "hash_lock_id": "granfina_has\u2026",
+  "_agent_meta": {
+    "schema": "debug_run_envelope_v1",
+    "written_at_epoch_secs": 1782016164,
+    "profile": "OPS-TRIAGE-LIVE",
+    "source_system": "ops_crash_exporter",
+    "relative_path": "debug_runs/agent_ops/triage_live.json",
+    "agent": "ops_crash_exporter",
+    "content_hash": "99e55a15a9c484a558c3a0b56cb7767f26704ea976479ff96b97b0decc29a065"
+  }
+}

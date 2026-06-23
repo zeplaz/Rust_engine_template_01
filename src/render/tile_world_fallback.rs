@@ -208,6 +208,9 @@ fn tile_fallback_cpu_minimap_raster_needed(
 }
 
 fn refresh_tile_raster_budget(
+    base: Res<State<crate::engine::states::BaseState>>,
+    launch: Option<Res<crate::engine::launch_args::EngineLaunchArgs>>,
+    test_scene: Option<Res<crate::engine::ActiveTestScene>>,
     params: Res<WorldGenParams>,
     budgets: Res<crate::gui::VisualBudgetSettings>,
     mut raster_budget: ResMut<crate::render::TileRasterBudget>,
@@ -216,6 +219,10 @@ fn refresh_tile_raster_budget(
     *raster_budget =
         crate::render::TileRasterBudget::from_world_and_settings(params.width, params.height, &budgets);
     *fire_cadence = crate::render::FireExtractCadence::from(&*budgets);
+    let harness = launch.as_deref().is_some_and(|l| l.test_mode()) || test_scene.is_some();
+    if harness || matches!(base.get(), crate::engine::states::BaseState::Simulation) {
+        crate::render::FireExtractCadence::clamp_for_runtime(&mut fire_cadence, harness);
+    }
 }
 
 fn rebuild_tile_world_fallback_index(

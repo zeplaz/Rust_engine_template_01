@@ -1,0 +1,82 @@
+{
+  "gate": "DES-APS-SESSION-DUMP-001",
+  "green": true,
+  "grammar_set_tier": {
+    "tier": "G3",
+    "archetype_count": 4,
+    "district_count": 5,
+    "grammar_files": [
+      "civic_block_v1.ron",
+      "factory_cluster_v1.ron",
+      "industrial_warehouse_v1.ron",
+      "rail_edge_v1.ron"
+    ],
+    "reasons": [
+      "building_set_coverage not green for G4"
+    ],
+    "source": "grammar_set_tier()",
+    "preset_count": 4,
+    "f_axis_count": 4
+  },
+  "grammar_set_brief": {
+    "green": true,
+    "gaps": []
+  },
+  "g4_guards": {
+    "building_set_coverage_green": false,
+    "grammar_pilot_parity_green": true
+  },
+  "ui_presence": {
+    "tier": "G3",
+    "tier_chip": "G3 \u2014 layer depth",
+    "kit_hint_visible": false,
+    "dna_panel_visible": true,
+    "iterate_panel_visible": true,
+    "set_health_visible": true,
+    "build_set_expanded_default": true,
+    "archetype_combo_count": 4,
+    "default_archetype_label": "Civicblock",
+    "default_district_label": "Main Street Civic",
+    "assembly_empty_label": "No assembly yet \u2014 Generate one to begin, then tune shape bias in the panels below."
+  },
+  "onboarding_seen": false,
+  "expansion": {
+    "building_g4_blocked": true,
+    "landscape_lg5_matrix_cells": 16,
+    "landscape_lane_active": false
+  },
+  "sources": [
+    "grammar_set_tier()",
+    "grammar_tier_ui_presence_from_tier()",
+    "grammar_set_brief()",
+    "building_set_coverage_report()",
+    "grammar_pilot_parity()"
+  ],
+  "exit_predicate": {
+    "witness": "debug_runs/aps_session_presence_live.json",
+    "must": [
+      {
+        "path": "ui_presence.tier",
+        "eq": "G3"
+      },
+      {
+        "path": "grammar_set_tier.tier",
+        "eq": "G3"
+      }
+    ]
+  },
+  "_agent_meta": {
+    "schema": "aps_session_presence_live_v1",
+    "profile": "APS_SESSION_PRESENCE",
+    "relative_path": "debug_runs/aps_session_presence_live.json",
+    "source_system": "grammar_build_set",
+    "written_at_epoch_secs": 1782012862,
+    "ritual": "BLANG:WIT-HON DES-APS-SESSION-DUMP-001"
+  },
+  "witness_honesty": {
+    "status": "passed",
+    "error_count": 0,
+    "warning_count": 0,
+    "summary": "witness_honesty debug_runs/aps_session_presence_live.json: 0 error(s), 0 issue(s)"
+  }
+}

@@ -1,0 +1,536 @@
+{
+  "schema": "ops_dashboard_v1",
+  "task_id": "OPS-DASHBOARD-001",
+  "ok": true,
+  "generated_at": "2026-06-21T04:30:12.874300+00:00",
+  "run_id": "9b095141-8b95-4762-b0a3-197724df94d9",
+  "auth_spine": "AUTH: MAT\u2605\u21e2APS\u2605\u21e2SNAP\u2605\u21e2WRK\u2605\u21e2ATL\u2605\u21e2RT\u2605 | SIM\u2605\u21e2CON\u2605\u21e2INFRA\u2605\u21e2FIRE\u2605\u21e2ECO\u2605",
+  "qce": {
+    "Q_coherence": {
+      "score": 7,
+      "evidence": "stage5 spine + construction operational; art_B dishonest=6"
+    },
+    "Q_stability": {
+      "score": 7,
+      "evidence": "FULL_APP + infra isolation + construction operational_green"
+    },
+    "C_compute": {
+      "score": 5,
+      "evidence": "fire_streaming + wave virtualization indexed; weather_sim_live when green"
+    },
+    "C_tokens": {
+      "score": null,
+      "evidence": "append agent_run_event_v1 on HANDOFF close"
+    },
+    "E_clarity": {
+      "score": 6,
+      "evidence": "construction sub-witness rollup in index; APS previews green"
+    },
+    "E_confusion_risk": {
+      "score": 9,
+      "evidence": "art dishonest=6; construction red=1; inflated_green=6; rollup_inflated=0; queue_contradiction=9"
+    }
+  },
+  "metrics_tier1": {
+    "ftr": null,
+    "rtr": null,
+    "events_per_day": 0.0,
+    "status": "sparse",
+    "note": "FTR/RTR from status=done on non-test events; sparse if HANDOFF -OpsEvent unused",
+    "drift_alerts": 7,
+    "drift_warns": 8,
+    "active_processes": 4,
+    "crash_alert_count": 0,
+    "dcc_process_count": 0,
+    "glyph_summary": ""
+  },
+  "run_events": {
+    "task_id": "OPS-TEL-RUN-EVENTS-001",
+    "schema": "ops_run_events_rollup_v1",
+    "ok": true,
+    "window_hours": 24,
+    "total_events": 0,
+    "non_test_events": 0,
+    "by_agent": {},
+    "by_status": {},
+    "top_slices": [],
+    "top_tools": [],
+    "demo_event_count": 0,
+    "pytest_event_count": 0,
+    "done_count": 0,
+    "metrics_tier1": {
+      "ftr": null,
+      "rtr": null,
+      "events_per_day": 0.0,
+      "status": "sparse",
+      "note": "FTR/RTR from status=done on non-test events; sparse if HANDOFF -OpsEvent unused",
+      "drift_alerts": 7,
+      "drift_warns": 8,
+      "active_processes": 4,
+      "crash_alert_count": 0,
+      "dcc_process_count": 0,
+      "glyph_summary": ""
+    },
+    "slip_ups": [],
+    "ledger_path": "debug_runs/agent_ops/run_events.jsonl"
+  },
+  "processes": {
+    "task_id": "OPS-TEL-PROCESS-001",
+    "schema": "ops_process_scan_v1",
+    "ok": true,
+    "error": null,
+    "process_count": 4,
+    "processes": [
+      {
+        "name": "python.exe",
+        "pid": "32532",
+        "mem": "11\u00ff672 Ko"
+      },
+      {
+        "name": "python.exe",
+        "pid": "1712",
+        "mem": "12\u00ff364 Ko"
+      },
+      {
+        "name": "python.exe",
+        "pid": "30496",
+        "mem": "45\u00ff516 Ko"
+      },
+      {
+        "name": "python.exe",
+        "pid": "23312",
+        "mem": "32\u00ff556 Ko"
+      }
+    ],
+    "slip_ups": [],
+    "platform": "win32"
+  },
+  "drift": {
+    "task_id": "OPS-TEL-DRIFT-001",
+    "schema": "ops_drift_scan_v1",
+    "ok": true,
+    "instance_count": 29,
+    "alert_count": 7,
+    "warn_count": 8,
+    "instances": [
+      {
+        "kind": "viewport_authority",
+        "path": "debug_runs/viewport_drift.json",
+        "status": "closed",
+        "severity": "info",
+        "detail": "viewport_authority_migration"
+      },
+      {
+        "kind": "witness_honesty",
+        "path": "debug_runs/.witness_honesty_precheck/landscape_grammar_sim_harness_live.json",
+        "honest_gate": "inflated_green",
+        "program_id": null,
+        "severity": "warn",
+        "green": true
+      },
+      {
+        "kind": "witness_honesty",
+        "path": "debug_runs/.witness_honesty_precheck/minimap_topology_legend_live.json",
+        "honest_gate": "inflated_green",
+        "program_id": null,
+        "severity": "warn",
+        "green": true
+      },
+      {
+        "kind": "witness_honesty",
+        "path": "debug_runs/art_pipeline/kit_production_002_g4_live.json",
+        "honest_gate": "dishonest_gate",
+        "program_id": null,
+        "severity": "alert",
+        "green": false
+      },
+      {
+        "kind": "witness_honesty",
+        "path": "debug_runs/art_pipeline/mcp_pilot_grammar_001_live.json",
+        "honest_gate": "dishonest_gate",
+        "program_id": null,
+        "severity": "alert",
+        "green": false
+      },
+      {
+        "kind": "witness_honesty",
+        "path": "debug_runs/art_pipeline/mcp_pilot_grammar_001_rejected_live.json",
+        "honest_gate": "dishonest_gate",
+        "program_id": null,
+        "severity": "alert",
+        "green": false
+      },
+      {
+        "kind": "witness_honesty",
+        "path": "debug_runs/art_pipeline/tile_fix_09_phase_c_warehouse_g4_live.json",
+        "honest_gate": "dishonest_gate",
+        "program_id": null,
+        "severity": "alert",
+        "green": false
+      },
+      {
+        "kind": "witness_honesty",
+        "path": "debug_runs/art_pipeline/tile_fix_10_warehouse_industrial_live.json",
+        "honest_gate": "dishonest_gate",
+        "program_id": null,
+        "severity": "alert",
+        "green": false
+      },
+      {
+        "kind": "witness_honesty",
+        "path": "debug_runs/art_pipeline/tile_tile_factory_floor_greybox_001_live.json",
+        "honest_gate": "inflated_green",
+        "program_id": null,
+        "severity": "warn",
+        "green": true
+      },
+      {
+        "kind": "witness_honesty",
+        "path": "debug_runs/art_pipeline/warehouse_production_keyframe_g4_live.json",
+        "honest_gate": "dishonest_gate",
+        "program_id": null,
+        "severity": "alert",
+        "green": false
+      },
+      {
+        "kind": "witness_honesty",
+        "path": "debug_runs/landscape_grammar_sim_harness_live.json",
+        "honest_gate": "inflated_green",
+        "program_id": null,
+        "severity": "warn",
+        "green": true
+      },
+      {
+        "kind": "witness_honesty",
+        "path": "debug_runs/minimap_topology_legend_live.json",
+        "honest_gate": "inflated_green",
+        "program_id": null,
+        "severity": "warn",
+        "green": true
+      },
+      {
+        "kind": "witness_honesty",
+        "path": "debug_runs/veg_runtime_proof_live.json",
+        "honest_gate": "inflated_green",
+        "program_id": null,
+        "severity": "warn",
+        "green": true
+      },
+      {
+        "kind": "queue_contradiction",
+        "severity": "alert",
+        "count": 9,
+        "detail": "Queue rows contradict witness rollup"
+      },
+      {
+        "kind": "delta_wf",
+        "severity": "warn",
+        "finding": "Track B ship blocked \u2014 manual keyframe + G4",
+        "owner": "@designer-mcp + operator",
+        "program_id": "art_B"
+      },
+      {
+        "kind": "delta_wf",
+        "severity": "warn",
+        "finding": "Rollup OPEN \u2014 see sub-gates G-PLAY-CODER-* + G-PLAY-OPERATOR-01",
+        "owner": "Operator",
+        "program_id": "stage7_play"
+      },
+      {
+        "kind": "agent_marker",
+        "severity": "info",
+        "agent": "pytest",
+        "slice_id": "AGENT-LANG-DEMO-001",
+        "delta_wf": "\u0394WF\u2192@designer-mcp",
+        "ts": "2026-06-07T08:08:03+00:00"
+      },
+      {
+        "kind": "agent_marker",
+        "severity": "info",
+        "agent": "pytest",
+        "slice_id": "AGENT-LANG-DEMO-001",
+        "delta_wf": "\u0394WF\u2192@designer-mcp",
+        "ts": "2026-06-08T01:32:09+00:00"
+      },
+      {
+        "kind": "agent_marker",
+        "severity": "info",
+        "agent": "pytest",
+        "slice_id": "AGENT-LANG-DEMO-001",
+        "delta_wf": "\u0394WF\u2192@designer-mcp",
+        "ts": "2026-06-08T01:32:15+00:00"
+      },
+      {
+        "kind": "agent_marker",
+        "severity": "info",
+        "agent": "pytest",
+        "slice_id": "AGENT-LANG-DEMO-001",
+        "delta_wf": "\u0394WF\u2192@designer-mcp",
+        "ts": "2026-06-08T01:34:19+00:00"
+      },
+      {
+        "kind": "agent_marker",
+        "severity": "info",
+        "agent": "pytest",
+        "slice_id": "AGENT-LANG-DEMO-001",
+        "delta_wf": "\u0394WF\u2192@designer-mcp",
+        "ts": "2026-06-08T01:37:12+00:00"
+      },
+      {
+        "kind": "agent_marker",
+        "severity": "info",
+        "agent": "pytest",
+        "slice_id": "AGENT-LANG-DEMO-001",
+        "delta_wf": "\u0394WF\u2192@designer-mcp",
+        "ts": "2026-06-08T01:51:42+00:00"
+      },
+      {
+        "kind": "agent_marker",
+        "severity": "info",
+        "agent": "pytest",
+        "slice_id": "AGENT-LANG-DEMO-001",
+        "delta_wf": "\u0394WF\u2192@designer-mcp",
+        "ts": "2026-06-10T15:19:07+00:00"
+      },
+      {
+        "kind": "agent_marker",
+        "severity": "info",
+        "agent": "pytest",
+        "slice_id": "AGENT-LANG-DEMO-001",
+        "delta_wf": "\u0394WF\u2192@designer-mcp",
+        "ts": "2026-06-10T15:25:54+00:00"
+      },
+      {
+        "kind": "agent_marker",
+        "severity": "info",
+        "agent": "pytest",
+        "slice_id": "AGENT-LANG-DEMO-001",
+        "delta_wf": "\u0394WF\u2192@designer-mcp",
+        "ts": "2026-06-13T04:42:21+00:00"
+      },
+      {
+        "kind": "agent_marker",
+        "severity": "info",
+        "agent": "pytest",
+        "slice_id": "AGENT-LANG-DEMO-001",
+        "delta_wf": "\u0394WF\u2192@designer-mcp",
+        "ts": "2026-06-13T04:43:07+00:00"
+      },
+      {
+        "kind": "agent_marker",
+        "severity": "info",
+        "agent": "pytest",
+        "slice_id": "AGENT-LANG-DEMO-001",
+        "delta_wf": "\u0394WF\u2192@designer-mcp",
+        "ts": "2026-06-13T04:46:18+00:00"
+      },
+      {
+        "kind": "agent_marker",
+        "severity": "info",
+        "agent": "pytest",
+        "slice_id": "AGENT-LANG-DEMO-001",
+        "delta_wf": "\u0394WF\u2192@designer-mcp",
+        "ts": "2026-06-17T04:22:43+00:00"
+      },
+      {
+        "kind": "agent_marker",
+        "severity": "info",
+        "agent": "pytest",
+        "slice_id": "AGENT-LANG-DEMO-001",
+        "delta_wf": "\u0394WF\u2192@designer-mcp",
+        "ts": "2026-06-17T04:23:20+00:00"
+      }
+    ],
+    "unified_index_path": "debug_runs/unified_witness_index.json"
+  },
+  "slip_ups": [
+    {
+      "kind": "witness_honesty",
+      "severity": "alert",
+      "detail": "dishonest_gate",
+      "path": "debug_runs/art_pipeline/kit_production_002_g4_live.json"
+    },
+    {
+      "kind": "witness_honesty",
+      "severity": "alert",
+      "detail": "dishonest_gate",
+      "path": "debug_runs/art_pipeline/mcp_pilot_grammar_001_live.json"
+    },
+    {
+      "kind": "witness_honesty",
+      "severity": "alert",
+      "detail": "dishonest_gate",
+      "path": "debug_runs/art_pipeline/mcp_pilot_grammar_001_rejected_live.json"
+    },
+    {
+      "kind": "witness_honesty",
+      "severity": "alert",
+      "detail": "dishonest_gate",
+      "path": "debug_runs/art_pipeline/tile_fix_09_phase_c_warehouse_g4_live.json"
+    },
+    {
+      "kind": "witness_honesty",
+      "severity": "alert",
+      "detail": "dishonest_gate",
+      "path": "debug_runs/art_pipeline/tile_fix_10_warehouse_industrial_live.json"
+    },
+    {
+      "kind": "witness_honesty",
+      "severity": "alert",
+      "detail": "dishonest_gate",
+      "path": "debug_runs/art_pipeline/warehouse_production_keyframe_g4_live.json"
+    },
+    {
+      "kind": "queue_contradiction",
+      "severity": "alert",
+      "detail": "Queue rows contradict witness rollup",
+      "path": null
+    },
+    {
+      "kind": "witness_honesty",
+      "severity": "warn",
+      "detail": "inflated_green",
+      "path": "debug_runs/.witness_honesty_precheck/landscape_grammar_sim_harness_live.json"
+    },
+    {
+      "kind": "witness_honesty",
+      "severity": "warn",
+      "detail": "inflated_green",
+      "path": "debug_runs/.witness_honesty_precheck/minimap_topology_legend_live.json"
+    },
+    {
+      "kind": "witness_honesty",
+      "severity": "warn",
+      "detail": "inflated_green",
+      "path": "debug_runs/art_pipeline/tile_tile_factory_floor_greybox_001_live.json"
+    },
+    {
+      "kind": "witness_honesty",
+      "severity": "warn",
+      "detail": "inflated_green",
+      "path": "debug_runs/landscape_grammar_sim_harness_live.json"
+    },
+    {
+      "kind": "witness_honesty",
+      "severity": "warn",
+      "detail": "inflated_green",
+      "path": "debug_runs/minimap_topology_legend_live.json"
+    },
+    {
+      "kind": "witness_honesty",
+      "severity": "warn",
+      "detail": "inflated_green",
+      "path": "debug_runs/veg_runtime_proof_live.json"
+    },
+    {
+      "kind": "delta_wf",
+      "severity": "warn",
+      "detail": "Track B ship blocked \u2014 manual keyframe + G4",
+      "path": null
+    },
+    {
+      "kind": "delta_wf",
+      "severity": "warn",
+      "detail": "Rollup OPEN \u2014 see sub-gates G-PLAY-CODER-* + G-PLAY-OPERATOR-01",
+      "path": null
+    }
+  ],
+  "slip_up_count": 15,
+  "program_summary": {
+    "agent_ops": {
+      "count": 1,
+      "green_count": 1,
+      "label": "Agent continuity"
+    },
+    "art_A": {
+      "count": 2,
+      "green_count": 2,
+      "label": "APS product / material studio"
+    },
+    "art_B": {
+      "count": 114,
+      "green_count": 75,
+      "label": "MCP pipeline spine / warehouse integration"
+    },
+    "construction": {
+      "count": 1,
+      "green_count": 1,
+      "label": "Construction phases"
+    },
+    "stage5_spine": {
+      "count": 1,
+      "green_count": 1,
+      "label": "Stage 5 FULL_APP readiness"
+    },
+    "stage7_play": {
+      "count": 1,
+      "green_count": 0,
+      "label": "Stage 7 play scenarios"
+    },
+    "unclassified": {
+      "count": 328,
+      "green_count": 255,
+      "label": null
+    }
+  },
+  "delta_wf": [
+    {
+      "finding": "Track B ship blocked \u2014 manual keyframe + G4",
+      "owner": "@designer-mcp + operator",
+      "program_id": "art_B",
+      "next_artifact": "debug_runs/art_pipeline/kit_production_002_g4_live.json"
+    },
+    {
+      "finding": "Rollup OPEN \u2014 see sub-gates G-PLAY-CODER-* + G-PLAY-OPERATOR-01",
+      "owner": "Operator",
+      "program_id": "stage7_play",
+      "next_artifact": "debug_runs/g_play_product_close_live.json"
+    },
+    {
+      "finding": "G-PLAY-CODER-VEG closed \u2014 play_scenario veg_topology + WIT-HON rollup green; operator rollup still on G-PLAY-OPERATOR-01",
+      "owner": "@coder A",
+      "program_id": "stage7_play",
+      "next_artifact": "debug_runs/g_play_product_close_live.json"
+    },
+    {
+      "finding": "Human 10 min checklist \u2014 sole operator blocker for rollup",
+      "owner": "Operator",
+      "program_id": "stage7_play",
+      "next_artifact": "src/dev/plan_g_play_close_001_checklist_v1.md"
+    },
+    {
+      "finding": "Warehouse production bake paused \u2014 Track B",
+      "owner": "@coder-mcp + operator",
+      "program_id": "art_B",
+      "next_artifact": "debug_runs/ops_007_warehouse_production_pause_live.json"
+    }
+  ],
+  "sources": {
+    "ops_report": "debug_runs/agent_ops/ops_report_latest.json",
+    "run_events": "debug_runs/agent_ops/run_events.jsonl",
+    "unified_index": "debug_runs/unified_witness_index.json",
+    "triage_live": "debug_runs/agent_ops/triage_live.json",
+    "prometheus": "debug_runs/agent_ops/prometheus/rust_engine_ops.prom"
+  },
+  "grafana": {
+    "panel_hints": [
+      "slip_ups[] \u2014 alert table",
+      "metrics_tier1.ftr / rtr \u2014 stat panels",
+      "processes.process_count \u2014 gauge",
+      "drift.alert_count \u2014 gauge",
+      "run_events.by_agent \u2014 bar chart",
+      "metrics_tier1.crash_alert_count \u2014 DCC/crash gauge"
+    ],
+    "refresh_cli": "python -m rust_engine_mcp.cli ops-dashboard-refresh",
+    "triage_dashboard": "tools/orchestrator/dashboard/grafana_triage_overview.json",
+    "provision_path": "tools/orchestrator/dashboard/grafana_ops_overview.json"
+  },
+  "_agent_meta": {
+    "schema": "ops_dashboard_v1",
+    "written_at_epoch_secs": 1782016212,
+    "profile": "OPS_DASHBOARD",
+    "source_system": "ops_telemetry",
+    "relative_path": "debug_runs/agent_ops/ops_dashboard_live.json",
+    "agent": "operations-intelligence"
+  }
+}

@@ -125,6 +125,19 @@ KIT_UTILITY_POWER_PRODUCTION_001_JOB_IDS = frozenset(
     }
 )
 
+KIT_NUCLEAR_PWR_PRODUCTION_001_JOB_IDS = frozenset(
+    {
+        "containment_dome_pwr_production_run001",
+        "turbine_hall_1u_production_run001",
+        "cooling_tower_1u_production_run001",
+        "diesel_gen_pad_2x2_production_run001",
+        "switchyard_edge_1u_production_run001",
+        "warning_sign_nuclear_1u_production_run001",
+        "kit_nuclear_pwr_production_run001",
+        "fence_chainlink_1u_production_run001",
+    }
+)
+
 # Greybox smoke module_id → canonical kit id when lod0 row supersedes harness art.
 SMOKE_TO_CANONICAL_MODULE_ID: dict[str, str] = {
     "door_residential_1u": "door_residential",
@@ -183,6 +196,8 @@ def _infer_batch_id(job_id: str, module_id: str) -> str:
         return "kit_production_002"
     if job_id in KIT_UTILITY_POWER_PRODUCTION_001_JOB_IDS:
         return "kit_utility_power_production_001"
+    if job_id in KIT_NUCLEAR_PWR_PRODUCTION_001_JOB_IDS:
+        return "kit_nuclear_pwr_production_001"
     return ""
 
 

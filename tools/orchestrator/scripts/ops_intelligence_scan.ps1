@@ -19,6 +19,16 @@ Write-Host '[ops] witness integrity hook...'
 python (Join-Path $RepoRoot "tools\orchestrator\scripts\witness_honesty_lib.py") run-hook
 $hookExit = $LASTEXITCODE
 
+Write-Host '[ops] dashboard telemetry...'
+$McpPy = Join-Path $RepoRoot "tools\mcp\python"
+$env:PYTHONPATH = $McpPy
+python -m rust_engine_mcp.cli ops-dashboard-refresh
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+Write-Host '[ops] triage + crash export...'
+python -m rust_engine_mcp.cli ops-triage-refresh
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
 if ($hookExit -ne 0) {
     if ($env:RUST_ENGINE_WITNESS_INTEGRITY_ENFORCE -eq "1") {
         Write-Host ('[ops] witness integrity ENFORCE - exit ' + $hookExit) -ForegroundColor Red
@@ -27,5 +37,5 @@ if ($hookExit -ne 0) {
     Write-Host '[ops] witness integrity warn-only (set RUST_ENGINE_WITNESS_INTEGRITY_ENFORCE=1 to fail)' -ForegroundColor Yellow
 }
 
-Write-Host '[ops] done -> debug_runs/unified_witness_index.json'
+Write-Host '[ops] done -> unified_witness_index + ops_dashboard_live + triage_live + prometheus'
 exit 0

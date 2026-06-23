@@ -122,6 +122,18 @@ Queue: `phase4` → `$ref:tools/orchestrator/queues/post_drain_phase4_queue.json
 | `intel-officer-sweep-witness` | — | Refresh `debug_runs/agent_ops/intel_officer_sweep_live.json` |
 | `ops-get-project-brief` | `ops_get_project_brief` | `ops_project_brief_v1` — quality/utility, active picks, delta_wf focus |
 | `ops-get-retry-guidance <task_id>` | `ops_get_retry_guidance` | Phase3 queue row status + witness path |
+| `ops-get-active-blockers` | `ops_get_active_blockers` | Open gates from master_chain_tensor |
+| `ops-dashboard-refresh` | `ops_dashboard_snapshot(write_witness=true)` | Processes + drift + run_events → `ops_dashboard_live.json` |
+| `ops-process-scan` | `ops_process_scan_tool` | OS scan for python/blender/cargo/bevy |
+| `ops-drift-scan` | `ops_drift_scan_tool` | Drift / dishonest witness instances |
+| `ops-run-events-rollup` | `ops_run_events_rollup_tool` | FTR/RTR proxies + repeat-slice slip-ups |
+| `ops-crash-scan` | `ops_crash_scan_tool` | DCC crash + preview failures + data drops |
+| `ops-triage-refresh` | `ops_triage_refresh_tool` | Triage witness + Prometheus textfile |
+| `ops-crash-daemon` | — (CLI only) | Background Python daemon — not cron |
+
+**Dashboard:** `ops_dashboard_live.json` · **Triage:** `triage_live.json` · **Prometheus:** `debug_runs/agent_ops/prometheus/rust_engine_ops.prom`  
+**Grafana:** `grafana_triage_overview.json` · alerts `prometheus_alert_rules.yml` · daemon `ops_crash_daemon.ps1`  
+Doc: [`ops_dashboard_oversight_v1.md`](../../src/dev/ops_dashboard_oversight_v1.md) · [`ops_triage_crash_monitor_v1.md`](../../src/dev/ops_triage_crash_monitor_v1.md)
 
 **Intel officer owner:** `@operations-intelligence` — only role authorized to run `intel-officer-apply --apply`.
 

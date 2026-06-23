@@ -33,30 +33,30 @@
   "active_picks": {
     "Operator": "G-PLAY-01"
   },
-  "last_20_runs_summary": "ops_report_latest.json, ops_project_brief_v1.json",
+  "last_20_runs_summary": "ops_report_latest.json, ops_project_brief_v1.json, ops_dashboard_live.json",
   "metrics_tier1": {
     "q_per_token": null,
-    "ftr": null,
+    "ftr": 0.0,
     "rtr": null,
-    "status": "not_measured",
-    "note": "Tier-1 KPIs require agent_run_event telemetry"
+    "status": "measured",
+    "note": "FTR/RTR from status=done on non-test events; sparse if HANDOFF -OpsEvent unused",
+    "events_per_day": 0.86
   },
   "build_set_health": {
     "green": false,
-    "grammar_set_brief": "grammar pilots: 0 \u00b7 shape QA: 8 \u00b7 presets: 4\nF-axis covered: fuel, logistics, manufacturing, power\ngaps: grammar_pilots=0 need \u22654",
+    "grammar_set_brief": "grammar pilots: 4 \u00b7 shape QA: 4 \u00b7 presets: 4\nF-axis covered: fuel, logistics, manufacturing, power\ngaps: none",
     "coverage_green": false,
-    "parity_green": false,
+    "parity_green": true,
     "hardcode_green": false,
-    "grammar_pilot_count": 0,
+    "grammar_pilot_count": 4,
     "preset_count": 4,
-    "gaps": [
-      "grammar_pilots=0 need \u22654"
-    ],
+    "gaps": [],
     "coverage_errors": [
-      "industrial_west_v0: grammar pilots 0 < min",
-      "infrastructure_v0: grammar pilots 0 < min",
       "pilot_hardcode_lint violations=7"
-    ]
+    ],
+    "counts_aligned": true,
+    "set_health_honest": true,
+    "pilot_hardcode_green": false
   },
   "handoff_ok": true,
   "ops_report_path": "debug_runs/agent_ops/ops_report_latest.json",
@@ -132,7 +132,7 @@
   },
   "_agent_meta": {
     "schema": "ops_project_brief_v1",
-    "written_at_epoch_secs": 1781979326,
+    "written_at_epoch_secs": 1782016222,
     "profile": "OPS_PROJECT_BRIEF",
     "source_system": "ops_intelligence",
     "relative_path": "debug_runs/agent_ops/ops_project_brief_v1.json"

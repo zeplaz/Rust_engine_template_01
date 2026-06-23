@@ -1,0 +1,38 @@
+{
+  "tracked_pids": {
+    "32532": {
+      "name": "python.exe",
+      "is_dcc": false,
+      "seen_at": "2026-06-21T04:29:26.815652+00:00"
+    },
+    "1712": {
+      "name": "python.exe",
+      "is_dcc": false,
+      "seen_at": "2026-06-21T04:29:26.815673+00:00"
+    },
+    "30496": {
+      "name": "python.exe",
+      "is_dcc": false,
+      "seen_at": "2026-06-21T04:29:26.815675+00:00"
+    },
+    "29076": {
+      "name": "python.exe",
+      "is_dcc": false,
+      "seen_at": "2026-06-21T04:29:26.815678+00:00"
+    }
+  },
+  "last_scan_epoch": 1782016166,
+  "previous_hash": "",
+  "content_hash": "1ebbb47d965abe92722382d456f35003103a6b3cc00f639cdb7d1ff0adae111a",
+  "hash_lock_id": "granfina_has\u2026",
+  "glyph_chain": "\u2705",
+  "_agent_meta": {
+    "schema": "debug_run_envelope_v1",
+    "written_at_epoch_secs": 1782016166,
+    "profile": "CRASH-DAEMON-STATE",
+    "source_system": "ops_crash_exporter",
+    "relative_path": "debug_runs/agent_ops/crash_daemon_state.json",
+    "agent": "ops_crash_exporter",
+    "content_hash": "1ebbb47d965abe92722382d456f35003103a6b3cc00f639cdb7d1ff0adae111a"
+  }
+}

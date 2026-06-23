@@ -120,11 +120,35 @@ impl From<&VisualBudgetSettings> for FireExtractCadence {
     }
 }
 
+impl FireExtractCadence {
+    /// Simulation play + `--test` harness: never full-scan on every sim tick.
+    ///
+    /// A 320×320 world holds 100k+ tile entities; tick-coupled scans cost ~200ms+ and lock
+    /// the main thread (death spiral with `UxFrameSpikeGuard`). Interval + fingerprint skip
+    /// is sufficient for proof capture and operator play.
+    pub fn clamp_for_runtime(cadence: &mut Self, harness: bool) {
+        cadence.full_scan_on_sim_tick = false;
+        if harness {
+            cadence.min_interval_secs = cadence.min_interval_secs.max(0.25);
+        }
+    }
+}
+
 /// Bookkeeping for [`extract_fire_simulation_snapshot`] throttle.
 #[derive(Resource, Debug, Clone, Copy, Default)]
 pub struct FireExtractClock {
     pub last_full_extract_secs: f32,
     pub last_tick: u64,
+    pub last_input_fingerprint: FireExtractInputFingerprint,
+}
+
+/// Cheap digest of sim fire inputs — skip full ECS scan when cadence due but state unchanged.
+/// **Excludes sim tick** — tick advances every frame; runtime/residency digest captures real fire churn.
+#[derive(Resource, Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub struct FireExtractInputFingerprint {
+    pub runtime_len: u32,
+    pub active_digest: u64,
+    pub residency_cells: u32,
 }
 
 /// Per-frame fire ECS extract report — flushed into sim-spectrum disk witness on `--test` runs.
@@ -150,6 +174,7 @@ pub struct FireExtractFrameReport {
     pub chunk_heat_written: u32,
     pub runtime_chunks: u32,
     pub min_interval_secs: f32,
+    pub fingerprint_skipped: bool,
 }
 
 #[inline]
@@ -172,6 +197,21 @@ fn debug_raster_chunks_override() -> Option<usize> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn fire_extract_fingerprint_ignores_tick_advance() {
+        let a = FireExtractInputFingerprint {
+            runtime_len: 4,
+            active_digest: 0xabc,
+            residency_cells: 2,
+        };
+        let b = FireExtractInputFingerprint {
+            runtime_len: 4,
+            active_digest: 0xabc,
+            residency_cells: 2,
+        };
+        assert_eq!(a, b);
+    }
 
     #[test]
     fn tile_budget_release_default_is_four_chunks() {
@@ -248,5 +288,20 @@ mod tests {
     #[test]
     fn perf_vis_002_p2d_residency_scoped_by_default() {
         assert!(FireExtractCadence::default().residency_scoped);
+    }
+
+    #[test]
+    fn fire_extract_clamp_for_runtime_decouples_sim_tick() {
+        let mut cadence = FireExtractCadence {
+            min_interval_secs: 0.1,
+            full_scan_on_sim_tick: true,
+            residency_scoped: true,
+        };
+        FireExtractCadence::clamp_for_runtime(&mut cadence, false);
+        assert!(!cadence.full_scan_on_sim_tick);
+        assert!((cadence.min_interval_secs - 0.1).abs() < f32::EPSILON);
+
+        FireExtractCadence::clamp_for_runtime(&mut cadence, true);
+        assert!((cadence.min_interval_secs - 0.25).abs() < f32::EPSILON);
     }
 }

@@ -1,0 +1,12 @@
+{
+  "job_id": "diesel_gen_pad_2x2_production_run001",
+  "status": "done",
+  "log_path": "C:\\dev\\github\\Rust_engine_template_01\\debug_runs\\art_pipeline\\diesel_gen_pad_2x2_production_run001.log",
+  "outputs": [
+    "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\diesel_gen_pad_2x2_production_run001\\model.glb"
+  ],
+  "error": null,
+  "spec_ref": "assets/staging/specs/diesel_gen_pad_2x2_production_run001.json",
+  "job_path": "C:\\dev\\github\\Rust_engine_template_01\\tools\\mcp\\schemas\\examples\\diesel_gen_pad_2x2_production_run001.json",
+  "updated_at": 1782004199.2729142
+}

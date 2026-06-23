@@ -97,3 +97,14 @@ Committed **live** strokes: solid — see overlay spec.
 | Role | Verdict | Date |
 |:---|:---|:---|
 | `@designer` | **PASS** | 2026-06-18 |
+
+---
+
+## 8. Exit predicate
+
+| Field | Value |
+|:---|:---|
+| **Deliverable** | This spec on disk with **PASS** verdict |
+| **Marker** | `DES-POWER-VOLTAGE-PICKER-001 Q✓` in header fence |
+| **Registry** | `designer_signoff_registry.json` → **SIGNED** |
+| **Unblocks** | `COD-POWER-LINE-DRAW-001` |

@@ -12,10 +12,15 @@
     "logging_env": {
       "ORCHESTRATOR_EXPORT_HEALTH": false,
       "PERF": false,
+      "PERF_DISK": false,
       "RUST_LOG": null,
+      "SIM_ANALYTICS": false,
+      "SIM_ANALYTICS_FRAMES": false,
+      "SIM_ANALYTICS_QUIET": false,
       "SIM_VIEW_SYNC_DEBUG": false,
       "STAGE5_READINESS_VERBOSE": false,
       "STAGE5_VERBOSE": false,
+      "STALL": false,
       "VIEWPORT_AUTHORITY_DEBUG": false
     },
     "orchestrator": {
@@ -43,6 +48,7 @@
       "debug_runs/wave_c_live.json",
       "debug_runs/ui_shell_migration_live.json",
       "debug_runs/minimap_compositor_live.json",
+      "debug_runs/sim_spectrum_analytics_live.json",
       "debug_runs/stage7_behavioral_live.json",
       "debug_runs/stage7_play_live.json",
       "debug_runs/wss_substrate_live.json",
@@ -53,7 +59,7 @@
     "relative_path": "debug_runs/stage7_behavioral_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "stage7_behavioral_witness",
-    "written_at_epoch_secs": 1781978469
+    "written_at_epoch_secs": 1782031552
   },
   "behavioral_contract_ok": true,
   "communication_plane_v1": "StrategicCommand",
@@ -65,7 +71,7 @@
     "d_s7_05": "tray_and_map_tint",
     "d_s7_06": "f3_and_context_tray"
   },
-  "delivered_dispatch_count": 0,
+  "delivered_dispatch_count": 3,
   "dispatch_delay_model": "fixed_ticks",
   "dispatch_delay_ticks": 8,
   "explainability_surface": "f3_and_context_tray",
@@ -73,7 +79,7 @@
   "impl_plan": "src/dev/stage7_behavioral_implementation_plan_v1.md",
   "intel_stale_surface": "tray_and_map_tint",
   "logistics_stress_overlay_enabled": true,
-  "logistics_stress_sample_count": 18,
+  "logistics_stress_sample_count": 2,
   "m3_minimap_readers_wired": true,
   "mission_kinds_supported": [
     "MoveCorridor",
@@ -84,29 +90,29 @@
     "Recon",
     "LogisticsStress"
   ],
-  "pending_dispatch_count": 1,
+  "pending_dispatch_count": 0,
   "profile": "STAGE7_BEHAVIORAL",
   "recon_overlay_enabled": true,
   "recon_overlay_sample_count": 100,
-  "s7b_m1_green": true,
+  "s7b_m1_green": false,
   "s7b_m2_green": true,
   "s7b_m3_green": true,
   "s7b_m4_play_001": {
     "gate": "S7B-M4-PLAY-001",
-    "green": true,
-    "pending_dispatch_count": 1,
+    "green": false,
+    "pending_dispatch_count": 0,
     "play_enqueue_wired": true
   },
-  "s7b_m4_play_green": true,
+  "s7b_m4_play_green": false,
   "s7b_preflight_green": true,
-  "s7b_steward_green": true,
+  "s7b_steward_green": false,
   "s7b_tune_delay_001": {
     "dispatch_delay_ticks": 8,
     "gate": "S7B-TUNE-DELAY-001",
     "green": true
   },
   "s7b_tune_delay_001_green": true,
-  "s7p_play_witness_ok": true,
-  "stale_intel_surface": true,
+  "s7p_play_witness_ok": false,
+  "stale_intel_surface": false,
   "witness_spec": "src/dev/stage7_behavioral_live_witness_spec_v1.md"
 }

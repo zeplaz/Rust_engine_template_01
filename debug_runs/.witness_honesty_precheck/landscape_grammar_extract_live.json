@@ -11,10 +11,15 @@
     "logging_env": {
       "ORCHESTRATOR_EXPORT_HEALTH": false,
       "PERF": false,
+      "PERF_DISK": false,
       "RUST_LOG": null,
+      "SIM_ANALYTICS": false,
+      "SIM_ANALYTICS_FRAMES": false,
+      "SIM_ANALYTICS_QUIET": false,
       "SIM_VIEW_SYNC_DEBUG": false,
       "STAGE5_READINESS_VERBOSE": false,
       "STAGE5_VERBOSE": false,
+      "STALL": false,
       "VIEWPORT_AUTHORITY_DEBUG": false
     },
     "orchestrator": {
@@ -23,7 +28,7 @@
       "continuation_queue": "tools/orchestrator/queues/continuation_queue.json",
       "warning_registry": "tools/orchestrator/reports/warning_registry.md"
     },
-    "profile": "VEG-BURN-EXTRACT-004",
+    "profile": "CDR-A-EXTRACT-SPRITE-001",
     "related_proofs": [
       "debug_runs/stage5_full_app_live.json",
       "debug_runs/infrastructure_view_isolation_live.json",
@@ -42,6 +47,7 @@
       "debug_runs/wave_c_live.json",
       "debug_runs/ui_shell_migration_live.json",
       "debug_runs/minimap_compositor_live.json",
+      "debug_runs/sim_spectrum_analytics_live.json",
       "debug_runs/stage7_behavioral_live.json",
       "debug_runs/stage7_play_live.json",
       "debug_runs/wss_substrate_live.json",
@@ -51,17 +57,27 @@
     ],
     "relative_path": "debug_runs/landscape_grammar_extract_live.json",
     "schema": "debug_run_envelope_v1",
-    "source_system": "refresh_vegetation_extract_witness",
-    "written_at_epoch_secs": 1781979933
+    "source_system": "refresh_landscape_extract_sprite_witness",
+    "written_at_epoch_secs": 1782013731
   },
-  "burn_active_rows": 1,
+  "burn_active_rows": 0,
   "extract_glyph_deterministic": true,
-  "gate": "VEG-BURN-EXTRACT-004",
+  "gate": "CDR-A-EXTRACT-SPRITE-001",
+  "gate_id": "VEG-BURN-EXTRACT-004",
   "green": true,
   "revision": 1,
-  "row_count": 1,
+  "row_count": 17,
   "sample_variant_keys": [
-    "veg_burn_02"
+    "veg_topo_barrier",
+    "veg_topo_cluster",
+    "veg_topo_barrier",
+    "veg_topo_barrier",
+    "veg_topo_barrier",
+    "veg_topo_barrier",
+    "veg_topo_barrier",
+    "veg_topo_barrier"
   ],
-  "sprite_variant_from_program": false
+  "slice_id": "CDR-A-EXTRACT-SPRITE-001",
+  "sprite_variant_from_program": true,
+  "topo_sprite_rows": 17
 }

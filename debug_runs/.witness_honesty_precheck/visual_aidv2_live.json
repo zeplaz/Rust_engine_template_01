@@ -1,0 +1,116 @@
+{
+  "_agent_meta": {
+    "agent_commands": [
+      "cargo test -p proc_A_dine01 --lib"
+    ],
+    "docs": {
+      "compile_warnings": "src/dev/COMPILE_WARNINGS_TODOS.md",
+      "stage5_directive": "prompts/guides/stage5_convergence_directive_v1.md",
+      "viewport_recovery": "src/dev/recovery_viewport.md"
+    },
+    "logging_env": {
+      "ORCHESTRATOR_EXPORT_HEALTH": false,
+      "PERF": false,
+      "PERF_DISK": false,
+      "RUST_LOG": null,
+      "SIM_ANALYTICS": false,
+      "SIM_ANALYTICS_FRAMES": false,
+      "SIM_ANALYTICS_QUIET": false,
+      "SIM_VIEW_SYNC_DEBUG": false,
+      "STAGE5_READINESS_VERBOSE": false,
+      "STAGE5_VERBOSE": false,
+      "STALL": false,
+      "VIEWPORT_AUTHORITY_DEBUG": false
+    },
+    "orchestrator": {
+      "build_report": "tools/orchestrator/reports/build_report.md",
+      "ci_entry": "tools/orchestrator/ci/run.ps1",
+      "continuation_queue": "tools/orchestrator/queues/continuation_queue.json",
+      "warning_registry": "tools/orchestrator/reports/warning_registry.md"
+    },
+    "profile": "VISUAL_AID_V2",
+    "related_proofs": [
+      "debug_runs/stage5_full_app_live.json",
+      "debug_runs/infrastructure_view_isolation_live.json",
+      "debug_runs/construction_stage_live.json",
+      "debug_runs/industrial_activation_live.json",
+      "debug_runs/fire_ecology_live.json",
+      "debug_runs/logistics_throughput_live.json",
+      "debug_runs/replay_editor_parity_live.json",
+      "debug_runs/orchestrator_thread_health.json",
+      "debug_runs/viewport_drift.json",
+      "debug_runs/viewport_authority_migration_witness.json",
+      "debug_runs/main_thread_orchestrator_live.json",
+      "debug_runs/stage6_virtualization_live.json",
+      "debug_runs/wave_s_hydrate_live.json",
+      "debug_runs/wave_p_live.json",
+      "debug_runs/wave_c_live.json",
+      "debug_runs/ui_shell_migration_live.json",
+      "debug_runs/minimap_compositor_live.json",
+      "debug_runs/sim_spectrum_analytics_live.json",
+      "debug_runs/stage7_behavioral_live.json",
+      "debug_runs/stage7_play_live.json",
+      "debug_runs/wss_substrate_live.json",
+      "debug_runs/f2_smoke_pipeline_live.json",
+      "debug_runs/play_scenario_live.json",
+      "debug_runs/transport_network_live.json"
+    ],
+    "relative_path": "debug_runs/visual_aidv2_live.json",
+    "schema": "debug_run_envelope_v1",
+    "source_system": "visual_aidv2_live_todos",
+    "written_at_epoch_secs": 1782222521
+  },
+  "board": "VISUAL_AID_V2",
+  "done": 6,
+  "green": true,
+  "lib_fixture": false,
+  "proof_grade": "visual_capture",
+  "rows": [
+    {
+      "goal": "HUD cycles Collapsed/Peek/Expanded/Pinned; ESC collapses unpinned panels.",
+      "id": "VISUAL-AID-V2-01",
+      "runtime_check": "HudPanelStateWitness::cycle_ok + unit tests hud_panel_state.",
+      "status": "Done"
+    },
+    {
+      "goal": "Building ghost emits GPU tile footprint on sim map (TileDebug WorldMain).",
+      "id": "VISUAL-AID-V2-02",
+      "runtime_check": "FootprintTileWitness::gpu_path_active && footprint_tile_count > 0.",
+      "status": "Done"
+    },
+    {
+      "goal": "screen_pixels_per_tile >= min under zoom-out (LOD zoom floor).",
+      "id": "VISUAL-AID-V2-03",
+      "runtime_check": "TileReadabilityWitness::clamp_active.",
+      "status": "Done"
+    },
+    {
+      "goal": "Band change alters building_visual_simplified on RepresentationResult.",
+      "id": "VISUAL-AID-V2-04",
+      "runtime_check": "VisualAidV2Witness::lod_building_policy_differs_across_bands.",
+      "status": "Done"
+    },
+    {
+      "goal": "ZoomVisualBias active; simulation tile size unchanged.",
+      "id": "VISUAL-AID-V2-05",
+      "runtime_check": "VisualAidV2Witness::zoom_visual_bias_active.",
+      "status": "Done"
+    },
+    {
+      "goal": "Macro band publishes icon instances via projection graph scaffold.",
+      "id": "VISUAL-AID-V2-06",
+      "runtime_check": "VisualAidV2Witness::macro_icon_instance_count > 0 (scaffold).",
+      "status": "Done"
+    }
+  ],
+  "total": 6,
+  "witness": {
+    "footprint_tile_count": 4,
+    "footprint_tile_overlay_ok": true,
+    "hud_panel_state_cycle_ok": true,
+    "lod_building_policy_differs_across_bands": true,
+    "macro_icon_instance_count": 1,
+    "tile_readability_clamp_active": true,
+    "zoom_visual_bias_active": true
+  }
+}

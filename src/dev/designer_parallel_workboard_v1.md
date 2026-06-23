@@ -89,7 +89,16 @@ WSS-DESIGN-GATE-001 · CONSTRUCTION-PARAM-DESIGN-001 · wave 4/5 signoffs · FIR
 
 ## Next designer work
 
+**Gang rollup:** [`designer_gang_lane_status_v1.md`](designer_gang_lane_status_v1.md) — cross-lane PICK snapshot (2026-06-02).
+
 Queue `active` is empty — see [`stage_designer_workboard_v1.md`](stage_designer_workboard_v1.md) and optional / `routed_to_coder` lanes only.
+
+### P0 — APS presence (designer closed, coder-mcp picks)
+
+| ID | Status |
+|:---|:---|
+| DES-APS-DEFAULT-PRESENCE-AUDIT-001 | **PASS (qualified)** |
+| DES-APS-ASSEMBLY-EMPTY-G2-001 | **PASS** — copy only; coder-mcp wires label |
 
 ---
 

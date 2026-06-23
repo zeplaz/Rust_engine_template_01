@@ -12,6 +12,20 @@ pub const MINIMAP_EDGE_RAIL_PX: f32 = 6.0;
 /// Bottom-right resize grip square side (matches the resize hit-test rect).
 pub const MINIMAP_RESIZE_GRIP_PX: f32 = 14.0;
 
+/// Logical client size — matches [`Window::width`]/[`Window::height`] and [`Window::cursor_position`].
+#[inline]
+#[must_use]
+pub fn minimap_window_logical_size(window: &Window) -> Vec2 {
+    Vec2::new(window.width().max(1.0), window.height().max(1.0))
+}
+
+/// Pointer position in the same space as [`minimap_window_logical_size`] and layout rects.
+#[inline]
+#[must_use]
+pub fn minimap_cursor_logical(window: &Window) -> Option<Vec2> {
+    window.cursor_position()
+}
+
 /// Edge rail hit targets on the minimap widget body.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum MinimapEdge {
@@ -53,11 +67,25 @@ pub struct MinimapOverlayMask {
 
 /// Default minimap overlay toggles for **operator Simulation** (VX-P0-01).
 ///
-/// Fire heat stays **off** so ambient `chunk_fire_heat` does not paint a full-map pink wash at
-/// strategic zoom; operators enable **Fire heat** in the overlay tray or diagnostics when needed.
-/// M2 logistics / construction / ecology remain on for play-readability.
+/// Fire/ecology stay **off** by default so witness/ambient heat does not wash the strategic panel;
+/// logistics remains on for corridor readability. Operators enable layers in the overlay tray.
 #[must_use]
 pub const fn simulation_minimap_overlay_defaults() -> MinimapOverlayMask {
+    MinimapOverlayMask {
+        fire_heat: false,
+        logistics_heat: true,
+        construction_heat: false,
+        ecology_heat: false,
+        fow: false,
+        ew: false,
+        units: false,
+        replay_scrub: false,
+    }
+}
+
+/// Full M2/M3 overlay mask for **`--test visual`** / lib witness refresh only — not operator play.
+#[must_use]
+pub const fn minimap_overlay_witness_harness() -> MinimapOverlayMask {
     MinimapOverlayMask {
         fire_heat: false,
         logistics_heat: true,
@@ -205,34 +233,42 @@ impl MinimapShellState {
         self.world_center = world;
     }
 
-    /// Seed Bevy minimap chrome before the first egui layout pass (sim has no editor product shell).
+    /// Seed Bevy minimap chrome before the first GPU layout pass (sim has no editor product shell).
+    ///
+    /// Must populate **all** hit-test rects (title bar, body, rails, grip) on frame 0 — the old path
+    /// only set `last_window_rect`, leaving `title_bar_rect` / `last_body_rect` empty until a later
+    /// chrome sync, so drag/resize/wheel missed input on the first seconds of Simulation.
     pub fn bootstrap_simulation_layout_rect(&mut self, window_width: f32, window_height: f32) {
-        if self.last_window_rect.is_none() && self.last_image_rect.is_none() {
-            self.last_window_rect = Some(simulation_minimap_bootstrap_rect(
+        if self.panel_screen_origin.is_none() {
+            let rect = simulation_minimap_bootstrap_rect(
                 window_width,
                 window_height,
                 self.viewport_size,
-            ));
+            );
+            self.panel_screen_origin = Some(Vec2::new(rect.min.x, rect.min.y));
         }
+        self.sync_layout_rects_from_panel_origin();
         self.sync_panel_viewport_suggestion_from_layout();
     }
 
     /// GPU compositor resize reads [`panel_viewport_suggestion_*`] — sim must set without egui layout.
     pub fn sync_panel_viewport_suggestion_from_layout(&mut self) {
-        let rect = self
-            .last_image_rect
-            .or(self.last_body_rect)
-            .or(self.last_window_rect)
-            .unwrap_or_else(|| simulation_minimap_bootstrap_rect(1280.0, 720.0, self.viewport_size));
         if !self.visible || self.minimized {
             self.panel_viewport_suggestion_active = false;
             return;
         }
         self.panel_viewport_suggestion_active = true;
-        self.panel_viewport_suggestion_logical_size =
-            Vec2::new(rect.width().max(180.0), rect.height().max(160.0));
-        // PERF-INSTR-VFX-001: this is the chrome/layout-driven write of the suggestion authority.
-        // `rect` comes from last_image_rect / last_body_rect / last_window_rect — the ratchet chain.
+        // Authoritative content size — never derive from chrome body rects (sub-pixel jitter
+        // caused +1px RT resize churn and compositor rebind tearing).
+        let logical = Vec2::new(
+            self.viewport_size.x.round().max(180.0),
+            self.viewport_size.y.round().max(160.0),
+        );
+        let prev = self.panel_viewport_suggestion_logical_size;
+        if (prev - logical).length_squared() <= 1.0 {
+            return;
+        }
+        self.panel_viewport_suggestion_logical_size = logical;
         crate::render::trace_minimap_size_writer(
             "shell.sync_from_layout",
             self.panel_viewport_suggestion_logical_size.x,
@@ -354,6 +390,9 @@ mod tests {
         state.bootstrap_simulation_layout_rect(1280.0, 720.0);
         assert!(state.panel_viewport_suggestion_active);
         assert!(state.panel_viewport_suggestion_logical_size.x >= 180.0);
+        assert!(state.panel_screen_origin.is_some());
+        assert!(state.title_bar_rect.is_some());
+        assert!(state.last_body_rect.is_some());
     }
 
     #[test]

@@ -866,15 +866,16 @@ impl Plugin for SimulationShellPhase2Plugin {
                 )
                     .chain()
                     .after(super::hud_root_tick::hud_product_shell_egui_root)
-                    .run_if(in_simulation_or_editor),
+                    .run_if(in_simulation_or_editor)
+                    .run_if(crate::gui::ui_gates::minimap_chrome_egui_sync_active),
             )
             .add_systems(
                 PostUpdate,
                 (
-                    super::minimap_bevy_interaction::minimap_bevy_pointer_system,
                     sync_minimap_chrome_root_system,
                     sync_minimap_chrome_layout_system,
                     sync_minimap_gpu_image_node_system,
+                    super::minimap_bevy_interaction::minimap_bevy_pointer_system,
                     super::minimap_bevy_interaction::sync_minimap_viewport_frame_overlay_system,
                     replay_ui_shell_witness_interactions_system,
                     write_ui_shell_migration_live_proof_system,
@@ -1543,12 +1544,12 @@ fn sync_petroleum_panel_tab_system(
 
 fn sync_minimap_gpu_image_node_system(
     registry: Res<MinimapRenderTargetRegistry>,
+    fallback: Res<crate::render::TileWorldFallbackState>,
     mut shell: ResMut<MinimapShellState>,
     mut compositor: ResMut<MinimapCompositorState>,
     mut witness: ResMut<UiShellMigrationWitness>,
     map_views: Res<crate::gui::MapViewInstances>,
     params: Res<WorldGenParams>,
-    win: Query<&Window, With<PrimaryWindow>>,
     chrome_q: Query<&Node, (With<MinimapChromeRoot>, Without<MinimapGpuImageNode>)>,
     mut gpu_q: Query<
         (&mut Node, &mut Visibility, &mut bevy::ui::widget::ImageNode),
@@ -1558,55 +1559,57 @@ fn sync_minimap_gpu_image_node_system(
     let Ok((mut node, mut vis, mut image)) = gpu_q.single_mut() else {
         return;
     };
-    let gpu_active = minimap_gpu_compositor_env_enabled()
-        && shell.presentation_source == crate::gui::MinimapPresentationSource::SharedRenderTargetImage
-        && shell.visible
-        && !shell.minimized
-        && registry.committed_image != Handle::default();
-    if !gpu_active {
+    let display = crate::gui::map_view::resolve_minimap_bevy_display_handle(
+        &shell,
+        &fallback,
+        &registry,
+        compositor.stamp,
+    );
+    if display == Handle::default() {
         *vis = Visibility::Hidden;
         compositor.dual_minimap_present = false;
         witness.minimap_gpu_path = false;
         return;
     }
-    witness.minimap_gpu_path = true;
+    let using_gpu_rt =
+        display == registry.committed_image && compositor.stamp > 0;
+    witness.minimap_gpu_path = using_gpu_rt;
     *vis = Visibility::Visible;
     let mm = &map_views.minimap;
     let panel = shell
         .last_body_rect
         .map(|r| Vec2::new(r.width().max(1.0), r.height().max(1.0)))
         .unwrap_or(mm.viewport_size);
-    let crop = crate::gui::map_presentation_fit::minimap_gpu_texture_pixel_rect(
-        mm.camera_center,
-        mm.zoom,
-        params.width.max(1),
-        params.height.max(1),
-        panel,
-    );
+    let crop = if using_gpu_rt
+        && crate::gui::map_presentation_fit::minimap_gpu_presentation_uses_crop(mm.follow_mode)
+    {
+        crate::gui::map_presentation_fit::minimap_gpu_texture_pixel_rect(
+            mm.camera_center,
+            mm.zoom,
+            params.width.max(1),
+            params.height.max(1),
+            panel,
+        )
+    } else {
+        bevy::math::Rect {
+            min: Vec2::ZERO,
+            max: Vec2::new(params.width.max(1) as f32, params.height.max(1) as f32),
+        }
+    };
     *image = bevy::ui::widget::ImageNode {
         rect: Some(crop),
-        ..bevy::ui::widget::ImageNode::from(registry.committed_image.clone())
+        ..bevy::ui::widget::ImageNode::from(display)
     };
 
-    let scale = win
-        .single()
-        .map(|w| w.scale_factor())
-        .unwrap_or(1.0)
-        .max(1e-6);
-    // Inset the painted RT into the BODY rect (below the title bar, inside the edge rails). The image
-    // node is absolutely positioned relative to the chrome root's top-left. The root's top-left sits
-    // at `content.min - pad` (the outer stroke box), so body-in-node = body.min - (content.min - pad).
-    // `shell.last_body_rect` is derived (content-relative) by `apply_window_rect_layout`; it does NOT
-    // re-grow the panel — `sync_minimap_chrome_root_system` owns content size.
     let pad = MINIMAP_CHROME_STROKE_PAD_PX;
     let _ = chrome_q; // root geometry mirrors `last_window_rect`; rects come from the shell directly.
     if let (Some(content), Some(body)) = (shell.last_window_rect, shell.last_body_rect) {
         let root_origin = egui::pos2(content.min.x - pad, content.min.y - pad);
         node.position_type = PositionType::Absolute;
-        node.left = Val::Px((body.min.x - root_origin.x) / scale);
-        node.top = Val::Px((body.min.y - root_origin.y) / scale);
-        node.width = Val::Px((body.width().max(1.0)) / scale);
-        node.height = Val::Px((body.height().max(1.0)) / scale);
+        node.left = Val::Px(body.min.x - root_origin.x);
+        node.top = Val::Px(body.min.y - root_origin.y);
+        node.width = Val::Px(body.width().max(1.0));
+        node.height = Val::Px(body.height().max(1.0));
         // Image fills exactly the body rect — this IS the painted-image rect.
         shell.last_image_rect = Some(body);
     } else {
@@ -1665,25 +1668,19 @@ fn sync_minimap_chrome_root_system(
             egui::vec2(minimap.viewport_size.x, minimap.viewport_size.y),
         ));
     *vis = Visibility::Visible;
-    let scale = win
-        .single()
-        .map(|w| w.scale_factor())
-        .unwrap_or(1.0)
-        .max(1e-6);
-    // The Bevy node is the OUTER stroke box (content grown by the chrome stroke pad). This pad lives
-    // ONLY on the node geometry — it is never written back into the shell content rects.
+    // Layout rects and cursor_position share logical client pixels (see `minimap_window_logical_size`).
     let pad = MINIMAP_CHROME_STROKE_PAD_PX;
     let min_x = content.min.x - pad;
     let min_y = content.min.y - pad;
     let w_px = content.width() + pad * 2.0;
     let h_px = content.height() + pad * 2.0;
-    node.left = Val::Px(min_x / scale);
-    node.top = Val::Px(min_y / scale);
-    node.width = Val::Px(w_px / scale);
-    node.height = Val::Px(h_px / scale);
+    node.left = Val::Px(min_x);
+    node.top = Val::Px(min_y);
+    node.width = Val::Px(w_px);
+    node.height = Val::Px(h_px);
     minimap.sync_panel_viewport_suggestion_from_layout();
     witness.last_minimap_rect_delta_px = pad;
-    witness.minimap_chrome_aligned = pad <= 2.0 && w_px / scale > 10.0;
+    witness.minimap_chrome_aligned = pad <= 2.0 && w_px > 10.0;
 }
 
 /// MINIMAP-WIDGET-IMPL-001 — position the title bar + resize grip chrome children inside the chrome
@@ -1693,7 +1690,6 @@ fn sync_minimap_chrome_root_system(
 #[allow(clippy::type_complexity)]
 fn sync_minimap_chrome_layout_system(
     minimap: Res<MinimapShellState>,
-    win: Query<&Window, With<PrimaryWindow>>,
     mut title_q: Query<
         &mut Node,
         (
@@ -1712,28 +1708,23 @@ fn sync_minimap_chrome_layout_system(
     let Some(content) = minimap.last_window_rect else {
         return;
     };
-    let scale = win
-        .single()
-        .map(|w| w.scale_factor())
-        .unwrap_or(1.0)
-        .max(1e-6);
     let pad = MINIMAP_CHROME_STROKE_PAD_PX;
     // Chrome root top-left in screen space (the outer stroke box).
     let root_origin = egui::pos2(content.min.x - pad, content.min.y - pad);
 
     if let (Ok(mut title), Some(bar)) = (title_q.single_mut(), minimap.title_bar_rect) {
         title.position_type = PositionType::Absolute;
-        title.left = Val::Px((bar.min.x - root_origin.x) / scale);
-        title.top = Val::Px((bar.min.y - root_origin.y) / scale);
-        title.width = Val::Px((bar.width().max(1.0)) / scale);
-        title.height = Val::Px((bar.height().max(1.0)) / scale);
+        title.left = Val::Px(bar.min.x - root_origin.x);
+        title.top = Val::Px(bar.min.y - root_origin.y);
+        title.width = Val::Px(bar.width().max(1.0));
+        title.height = Val::Px(bar.height().max(1.0));
     }
     if let (Ok(mut grip), Some(g)) = (grip_q.single_mut(), minimap.resize_grip_rect) {
         grip.position_type = PositionType::Absolute;
-        grip.left = Val::Px((g.min.x - root_origin.x) / scale);
-        grip.top = Val::Px((g.min.y - root_origin.y) / scale);
-        grip.width = Val::Px((g.width().max(1.0)) / scale);
-        grip.height = Val::Px((g.height().max(1.0)) / scale);
+        grip.left = Val::Px(g.min.x - root_origin.x);
+        grip.top = Val::Px(g.min.y - root_origin.y);
+        grip.width = Val::Px(g.width().max(1.0));
+        grip.height = Val::Px(g.height().max(1.0));
     }
 }
 

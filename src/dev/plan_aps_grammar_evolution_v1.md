@@ -8,7 +8,8 @@
 | **Agent board** | [`aps_grammar_evolution_agent_todos_v1.md`](aps_grammar_evolution_agent_todos_v1.md) |
 | **Dispatch** | [`aps_grammar_evolution_dispatch_orders_v1.md`](../tools/orchestrator/queues/aps_grammar_evolution_dispatch_orders_v1.md) |
 | **Witness** | [`plan_aps_grammar_evolution_witness_v1.md`](plan_aps_grammar_evolution_witness_v1.md) |
-| **Date** | 2026-06-07 |
+| **Presence correction** | [`planner_routing_aps_presence_v1.md`](planner_routing_aps_presence_v1.md) · [`design_aps_default_presence_audit_v1.md`](design_aps_default_presence_audit_v1.md) |
+| **Date** | 2026-06-07 · **G3 reconcile** 2026-06-21 |
 | **Owner** | @planner (plan) → @designer (IA) → @coder-mcp (APS/MCP) → @coder-mcp + @designer-mcp (content) |
 | **Parent** | [`plan_building_grammar_evolution_v1.md`](plan_building_grammar_evolution_v1.md) · [`plan_mcp_grammar_build_set_guards_v1.md`](plan_mcp_grammar_build_set_guards_v1.md) |
 | **APS UX** | [`plan_aps_uiux_overhaul_20260616_v1.md`](plan_aps_uiux_overhaul_20260616_v1.md) · [`aps_design_system_v1.md`](aps_design_system_v1.md) |
@@ -19,7 +20,7 @@
 
 ## Why this plan exists
 
-APS **grammar tooling** and **grammar content** are at different maturity levels. The UI currently exposes **every grammar concept at once** (generate, build-set brief, DNA/pressure, iterate, inspector) while the repo only ships **one building grammar** (`industrial_warehouse_v1.ron`). That makes the tool feel broken or “mashed together” even when the backend is working.
+APS **grammar tooling** and **grammar content** matured at different speeds. The repo now ships **four building grammars** and four ARCH-DNA presets; APS cold-starts at **G3 — layer depth** (`refresh_grammar_tier_from_registry()`). Earlier plan copy still described **G0 singleton** — that was **pilot-era baseline**, not today's disk.
 
 **Rule for this program:** what APS **shows**, **previews**, and **asks the artist to do next** must **track grammar-set maturity** — not a fixed chrome layout from the pilot era.
 
@@ -68,15 +69,19 @@ Ship check → Variants → Atlas
 
 ## Grammar set maturity model (G0–G4)
 
-Reported authoritatively by `grammar_set_brief` + `building_set_coverage_report` (see [`plan_mcp_grammar_build_set_guards_v1.md`](plan_mcp_grammar_build_set_guards_v1.md)).
+Reported authoritatively by `grammar_set_tier()` + `grammar_set_brief` + `building_set_coverage_report` (see [`plan_mcp_grammar_build_set_guards_v1.md`](plan_mcp_grammar_build_set_guards_v1.md)).
 
-| Tier | Content bar | Example today |
+| Tier | Content bar | Example today (2026-06-21) |
 |:---|:---|:---|
-| **G0 — Pilot singleton** | 1 archetype, ≥1 district, grammar generates placements | **Current** — `IndustrialWarehouse` / `industrial_west` only |
-| **G1 — Family seed** | ≥3 archetypes *or* ≥3 districts in one lineage; JSON mirrors for MCP | Not met |
-| **G2 — Axis coverage** | ARCH-DNA axes represented across set (F,L,C,D,W… per v0 baseline) | Partial presets only |
-| **G3 — Layer depth** | `grammar_rule_chain` includes facade + detail + age layers in snapshots | Massing + roof partial |
-| **G4 — Production set** | Diversity witness green; module audit gaps closed; G4 bake path unblocked | Blocked on kit/G4 |
+| **G0 — Pilot singleton** | 1 archetype, ≥1 district, grammar generates placements | **Fixture only** — CI matrix wiring; not cold-start tier |
+| **G1 — Family seed** | ≥3 archetypes *or* ≥3 districts in one lineage; JSON mirrors for MCP | **Met** — 4 archetypes on disk |
+| **G2 — Axis coverage** | ARCH-DNA axes represented across set (F,L,C,D,W… per v0 baseline) | **Met** — 4 F-axis presets (fuel, logistics, manufacturing, power) |
+| **G3 — Layer depth** | `grammar_rule_chain` includes facade + detail + age layers in snapshots | **Current cold-start** — DNA + iterate visible; kit hint off; set-health promoted |
+| **G4 — Production set** | Diversity witness green; module audit gaps closed; G4 bake path unblocked | **Blocked** — `building_set_coverage` not green; `pilot_hardcode_green` false |
+
+**Live tier witness:** `debug_runs/grammar_set_tier_live.json` → **G3** (4 archetypes, 5 districts, 4 presets).
+
+**G4 gap (honest):** pilot counts align (`APS-GUARD-BRIEF-PARITY-001` green) but coverage/hardcode guards still red — tier reasons include `building_set_coverage not green for G4`.
 
 **APS reads tier at runtime** (cached from last `grammar_set_brief` or witness) — do not hardcode “we have grammar” from a single file on disk.
 
@@ -190,7 +195,7 @@ Buildings grammar evolves on **Assembly**; landscape on **Presets → Grammar �
 | **APS-GRAM-TIER-004** | @coder-mcp | Pipeline bar reads tier; step copy from table above | APS-GRAM-TIER-001 |
 | **APS-GRAM-REG-001** | @coder-mcp | Archetype/district combos driven from registry only — no fallback `["IndustrialWarehouse"]` in UI | `list_archetype_ids()` |
 
-**Exit:** Launch APS at G0 → only Phase 0 surfaces expanded; tier strip shows `G0 — pilot kit`; pytest `test_aps_grammar_tier_gates.py`.
+**Exit (Phase 1):** Launch APS → `refresh_grammar_tier_from_registry()` applies **live tier** (G3 today); tier chip shows `G3 — layer depth`; pytest `test_aps_grammar_tier_gates.py` — **live** witness at `aps_grammar_tier_gates_live.json`, **G0 fixture** at `aps_grammar_tier_gates_g0_fixture_live.json` only.
 
 ### Phase 2 — Content G1 (family seed)
 
@@ -201,7 +206,7 @@ Buildings grammar evolves on **Assembly**; landscape on **Presets → Grammar �
 | **GRAM-CONTENT-003** | @coder-mcp | `grammar_labels_v1.json` + `aps_grammar_labels.py` entries for new ids | GRAM-CONTENT-002 |
 | **GRAM-CONTENT-004** | @coder-mcp | `building_set_coverage_report` → G1 green witness | GRAM-CONTENT-002 |
 
-**Exit:** Dropdowns show ≥3 meaningful choices; kit hint removed or downgraded; `debug_runs/grammar_set_tier_g1.json`.
+**Exit:** Dropdowns show ≥3 meaningful choices; kit hint removed or downgraded; `debug_runs/grammar_set_tier_g1.json`. **Status:** content bar met; live tier is G3.
 
 ### Phase 3 — Inspector ↔ preview coupling (P3)
 
@@ -234,24 +239,30 @@ Buildings grammar evolves on **Assembly**; landscape on **Presets → Grammar �
 
 | Witness | Proves |
 |:---|:---|
-| `debug_runs/grammar_set_brief_live.json` | Tier + brief text + green |
-| `debug_runs/grammar_set_tier_g{N}.json` | APS exposure matches tier (scanner or smoke) |
+| `debug_runs/grammar_set_tier_live.json` | **Live** tier + counts from `grammar_set_tier()` |
+| `debug_runs/grammar_set_brief_live.json` | Brief green + pilot inventory |
+| `debug_runs/aps_grammar_tier_gates_live.json` | **Live** UI exposure matches registry tier (anti-fake-green) |
+| `debug_runs/aps_grammar_tier_gates_g0_fixture_live.json` | **Fixture** — G0 matrix wiring only; not cold-start truth |
+| `debug_runs/aps_session_presence_live.json` | Bundled presence rollup (tier + brief + guards + ui_presence) |
+| `debug_runs/grammar_set_tier_g{N}.json` | Tier milestone snapshots (G1 historical) |
 | `debug_runs/aps_grammar_p3_live.json` | Inspector ↔ grid link |
 | `debug_runs/grammar_diversity_witness.json` | Content diversity (existing) |
 | `pytest -k aps` | No regression on generate callbacks |
 
-**Validation-first:** `validate-report mcp_job` / `grammar_set_brief` MCP tool — agents reason on JSON, not Tk screenshots.
+**Validation-first:** `validate-report witness_honesty` on live witnesses — agents reason on JSON, not Tk screenshots.
 
 ---
 
 ## Suggested work order (next 2–3 sessions)
 
 ```text
-1. APS-GRAM-TIER-001 + APS-GRAM-TIER-002   (stop mashed UI — tier gates)
-2. GRAM-CONTENT-001..002                   (unblock sparse dropdowns)
-3. APS-GRAM-P3-001                         (make inspector feel purposeful)
-4. APS-GRAM-TIER-004                       (pipeline copy matches tier)
+1. G4 guard green     pilot_hardcode_lint + building_set_coverage → tier G4 honest
+2. DES-APS-SESSION-DUMP-001   bundled aps_session_presence_live.json
+3. OVR-APS-PRESENCE-OPERATOR-001   operator rubric walk + HANDOFF attach
+4. APS-GRAM-G4-001    P4 preview chip + ship check ↔ diversity witness
 ```
+
+**Do not:** re-open tier exposure IA — [`design_aps_grammar_tier_exposure_v1.md`](design_aps_grammar_tier_exposure_v1.md) PASS at G3.
 
 ---
 
@@ -280,4 +291,5 @@ Parent: plan_building_grammar_evolution_v1.md · Guards: plan_mcp_grammar_build_
 
 | Version | Date | Notes |
 |:---|:---|:---|
+| v1.1.0 | 2026-06-21 | **G3 reconcile** — maturity table, witness split (live vs G0 fixture), Phase 1 exit, work order → G4 path · `PLAN-APS-PRESENCE-PLAN-EDIT-001` |
 | v1.0.0 | 2026-06-07 | Initial plan — maturity-driven APS exposure + preview ladder |

@@ -97,7 +97,7 @@
     },
     "dna_function": {
       "type": "string",
-      "enum": ["logistics", "manufacturing", "housing", "military", "utility", "port", "commercial", "government"]
+      "enum": ["logistics", "manufacturing", "housing", "military", "utility", "port", "commercial", "government", "power", "fuel"]
     },
     "dna_lineage": {
       "type": "string",

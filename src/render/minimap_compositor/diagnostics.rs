@@ -9,6 +9,9 @@ use serde::Serialize;
 pub static MINIMAP_GPU_EXECUTE_COUNT: AtomicU64 = AtomicU64::new(0);
 /// Render-world dedup skips (same `commit_stamp` seen again before main queued a new one).
 pub static MINIMAP_GPU_DEDUP_SKIP_COUNT: AtomicU64 = AtomicU64::new(0);
+/// Set when compute pipeline fails to compile — main thread falls back to CPU raster.
+pub static MINIMAP_GPU_SHADER_FAILED: std::sync::atomic::AtomicBool =
+    std::sync::atomic::AtomicBool::new(false);
 
 #[must_use]
 pub fn minimap_gpu_debug_logging_enabled() -> bool {

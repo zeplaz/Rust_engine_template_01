@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from rust_engine_mcp import assembly
 from rust_engine_mcp.paths import repo_root
 from rust_engine_mcp.validators.site_zone_grid import (
     validate_site_zone_grid_path,
@@ -37,6 +38,52 @@ def test_facility_needs_strip_factory_cluster() -> None:
     assert strip._line1_var.get()  # noqa: SLF001
     assert "Concrete" in strip._line2_var.get() or "Cement" in strip._line2_var.get()  # noqa: SLF001
     root.destroy()
+
+
+def test_facility_needs_strip_line4_g3() -> None:
+    from art_pipeline_suite.facility_needs_strip import FacilityNeedsStrip, refresh_facility_needs_witness
+
+    import tkinter as tk
+
+    root = tk.Tk()
+    root.withdraw()
+    strip = FacilityNeedsStrip(root)
+    strip.set_grammar_tier("G3")
+    strip.refresh(archetype_id="FactoryCluster", lane="buildings")
+    line4 = strip._line4_var.get()  # noqa: SLF001
+    assert "site:" in line4
+    assert "storage" in line4
+    root.destroy()
+    witness = refresh_facility_needs_witness()
+    assert witness["green"] is True
+
+
+def test_site_preview_panel_witness_green() -> None:
+    from art_pipeline_suite.site_preview_panel import SiteLayoutPreviewSection, refresh_site_preview_witness
+
+    import tkinter as tk
+
+    root = tk.Tk()
+    root.withdraw()
+    section = SiteLayoutPreviewSection(root)
+    section.set_grammar_tier("G2")
+    section.refresh(archetype_id="RailEdge", lane="buildings")
+    root.update_idletasks()
+    root.destroy()
+    body = refresh_site_preview_witness()
+    assert body["green"] is True
+    assert body["site_preview_visible"] is True
+
+
+def test_explain_module_resolve_lod0_fallback_label() -> None:
+    body = assembly.explain_module_resolve(
+        "wall_brick_1u",
+        style_pack_id="style_victorian",
+        source_tier="production",
+    )
+    assert body["ok"] is True
+    assert body["reason"] in ("ok_production", "lod0_fallback", "ok_lod0")
+    assert body["label"]
 
 
 def test_grammar_eval_sweep_process_histogram() -> None:

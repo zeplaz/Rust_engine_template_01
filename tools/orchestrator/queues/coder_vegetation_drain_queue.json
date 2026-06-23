@@ -536,7 +536,7 @@
       "seq": 18,
       "phase": "A",
       "id": "VEG-A18-PHASE-A-CLOSE-001",
-      "status": "reopened",
+      "status": "done",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "Phase A rollup: lg2 green + fire_ecology keys",
@@ -552,7 +552,9 @@
       ],
       "completed": "2026-06-13",
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness file on disk",
-      "updated_at": "2026-06-20T21:19:25Z"
+      "updated_at": "2026-06-20T21:19:25Z",
+      "witness_refresh": "2026-06-21T03:54:01Z",
+      "reconcile_note": "witness-green auto-close (reconcile_coder_crisis.py)"
     },
     {
       "seq": 19,
@@ -1011,7 +1013,7 @@
       "seq": 40,
       "phase": "B",
       "id": "VEG-B-PHASE-CLOSE-001",
-      "status": "reopened",
+      "status": "done",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "Phase B rollup green",
@@ -1026,7 +1028,9 @@
       ],
       "completed": "2026-06-13",
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness file on disk",
-      "updated_at": "2026-06-20T21:19:25Z"
+      "updated_at": "2026-06-20T21:19:25Z",
+      "witness_refresh": "2026-06-21T03:54:01Z",
+      "reconcile_note": "witness-green auto-close (reconcile_coder_crisis.py)"
     },
     {
       "seq": 41,
@@ -1088,7 +1092,7 @@
       "seq": 44,
       "phase": "C",
       "id": "VEG-C04-PREVIEW-WITNESS-001",
-      "status": "reopened",
+      "status": "done",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "lg4 preview witness operator_visible:true green:true",
@@ -1120,7 +1124,9 @@
       "operator_visible": true,
       "completed": "2026-06-13",
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 missing_exit_predicate",
-      "updated_at": "2026-06-20T21:19:26Z"
+      "updated_at": "2026-06-20T21:19:26Z",
+      "witness_refresh": "2026-06-21T03:54:01Z",
+      "reconcile_note": "witness-green auto-close (reconcile_coder_crisis.py)"
     },
     {
       "seq": 45,
@@ -1333,7 +1339,7 @@
       "seq": 55,
       "phase": "C",
       "id": "VEG-C15-PHASE-CLOSE-001",
-      "status": "reopened",
+      "status": "done",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "Phase C rollup: preview+play+stage5 green",
@@ -1350,7 +1356,9 @@
       "operator_visible": true,
       "completed": "2026-06-13",
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness file on disk",
-      "updated_at": "2026-06-20T21:19:26Z"
+      "updated_at": "2026-06-20T21:19:26Z",
+      "witness_refresh": "2026-06-21T03:54:01Z",
+      "reconcile_note": "witness-green auto-close (reconcile_coder_crisis.py)"
     },
     {
       "seq": 56,
@@ -1489,7 +1497,7 @@
       "seq": 62,
       "phase": "D",
       "id": "VEG-D07-PHASE-CLOSE-001",
-      "status": "reopened",
+      "status": "done",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "Phase D rollup",
@@ -1504,7 +1512,9 @@
       ],
       "completed": "2026-06-13",
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness file on disk",
-      "updated_at": "2026-06-20T21:19:26Z"
+      "updated_at": "2026-06-20T21:19:26Z",
+      "witness_refresh": "2026-06-21T03:54:01Z",
+      "reconcile_note": "witness-green auto-close (reconcile_coder_crisis.py)"
     },
     {
       "seq": 63,
@@ -1648,7 +1658,7 @@
       "seq": 70,
       "phase": "E",
       "id": "VEG-E08-PHASE-CLOSE-001",
-      "status": "reopened",
+      "status": "done",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "Phase E rollup",
@@ -1663,7 +1673,9 @@
       ],
       "completed": "2026-06-13",
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness file on disk",
-      "updated_at": "2026-06-20T21:19:26Z"
+      "updated_at": "2026-06-20T21:19:26Z",
+      "witness_refresh": "2026-06-21T03:54:01Z",
+      "reconcile_note": "witness-green auto-close (reconcile_coder_crisis.py)"
     },
     {
       "seq": 71,
@@ -1688,7 +1700,7 @@
       "seq": 72,
       "phase": "F",
       "id": "VEG-F02-MCP-ATLAS-001",
-      "status": "reopened",
+      "status": "done",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "Tile batch + promote spec",
@@ -1703,7 +1715,10 @@
         "witness_lib_green_without_green"
       ],
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 contradiction",
-      "updated_at": "2026-06-20T21:19:26Z"
+      "updated_at": "2026-06-20T21:19:26Z",
+      "witness_refresh": "2026-06-21T03:54:01Z",
+      "completed": "2026-06-21",
+      "reconcile_note": "witness-green auto-close (reconcile_coder_crisis.py)"
     },
     {
       "seq": 73,

@@ -34,8 +34,10 @@ def test_ops_build_project_brief_schema_keys():
     assert isinstance(brief["quality_score"], int)
     assert isinstance(brief["utility_score"], (int, float))
     assert isinstance(brief["active_picks"], dict)
-    assert brief["metrics_tier1"]["q_per_token"] is None
-    assert brief["metrics_tier1"]["ftr"] is None
+    tier1 = brief["metrics_tier1"]
+    assert tier1["q_per_token"] is None
+    assert tier1["status"] in ("not_measured", "measured", "sparse")
+    assert "ftr" in tier1
 
 
 def test_ops_get_project_brief_ok_true():

@@ -22,6 +22,61 @@ APS_PREVIEW_WITNESS_JSON = "debug_runs/aps_preview_002_live.json"
 PREVIEW_WORKER_WITNESS_JSON = "debug_runs/preview_worker_smoke_live.json"
 PREVIEW_SCHEMA_VERSION = 1
 
+PREVIEW_VARIANT_STATES = frozenset({"clean", "night", "damaged", "burning"})
+
+
+def extract_preview_variant_state(snapshot: dict[str, Any]) -> str:
+    """Read preview_variant_state from snapshot (merge_variant_patch output)."""
+    state = str(snapshot.get("preview_variant_state") or "").strip().lower()
+    if state in PREVIEW_VARIANT_STATES:
+        return state
+    variants = snapshot.get("variants")
+    if isinstance(variants, dict):
+        if variants.get("emissive_overlay"):
+            return "burning"
+        dmg_state = str(variants.get("damage_state") or "").lower()
+        dmg_val = float(variants.get("damage") or 0.0)
+        if dmg_state in ("damaged", "ruined") or dmg_val >= 0.25:
+            return "damaged"
+        lit = str(variants.get("lighting") or "").lower()
+        if lit in ("night_on", "night_off") or variants.get("night_lights"):
+            return "night"
+    return "clean"
+
+
+def _apply_variant_tint_trimesh_scene(scene: Any, variant_state: str) -> None:
+    """Quick renderer tint — damaged/burning/night distinct without separate GLBs."""
+    if variant_state == "clean":
+        return
+    try:
+        import numpy as np
+    except ImportError:
+        return
+    tints: dict[str, tuple[float, float, float, float]] = {
+        "night": (0.55, 0.62, 0.92, 1.0),
+        "damaged": (0.78, 0.72, 0.66, 1.0),
+        "burning": (1.0, 0.58, 0.28, 1.0),
+    }
+    mult = tints.get(variant_state)
+    if mult is None:
+        return
+    m = np.array(mult, dtype=np.float64)
+    for geom in scene.geometry.values():
+        vis = getattr(geom, "visual", None)
+        if vis is None:
+            continue
+        try:
+            if hasattr(vis, "face_colors") and vis.face_colors is not None:
+                fc = np.asarray(vis.face_colors, dtype=np.float64)
+                if fc.size:
+                    vis.face_colors = np.clip(fc * m[: fc.shape[1]], 0, 255).astype(np.uint8)
+            elif hasattr(vis, "vertex_colors") and vis.vertex_colors is not None:
+                vc = np.asarray(vis.vertex_colors, dtype=np.float64)
+                if vc.size:
+                    vis.vertex_colors = np.clip(vc * m[: vc.shape[1]], 0, 255).astype(np.uint8)
+        except Exception:
+            continue
+
 # Keep HTTP servers alive (daemon threads alone are GC'd when CLI exits).
 _ACTIVE_PREVIEW_SERVERS: list[HTTPServer] = []
 
@@ -230,7 +285,32 @@ def _free_port() -> int:
         return int(sock.getsockname()[1])
 
 
-def _three_js_html(title: str, placements_json: str) -> str:
+def _three_js_html(title: str, placements_json: str, *, variant_state: str = "clean") -> str:
+    vs = variant_state if variant_state in PREVIEW_VARIANT_STATES else "clean"
+    bg = {"clean": "0x2a2a30", "night": "0x101018", "damaged": "0x282624", "burning": "0x221810"}.get(
+        vs, "0x2a2a30"
+    )
+    ambient = {"clean": 0.55, "night": 0.22, "damaged": 0.48, "burning": 0.42}.get(vs, 0.55)
+    key_int = {"clean": 1.1, "night": 0.65, "damaged": 0.95, "burning": 1.25}.get(vs, 1.1)
+    emissive_js = ""
+    if vs == "burning":
+        emissive_js = """
+      root.traverse((c) => {
+        if (c.isMesh && c.material) {
+          c.material = c.material.clone();
+          c.material.emissive = new THREE.Color(0xff6600);
+          c.material.emissiveIntensity = 0.35;
+        }
+      });"""
+    elif vs == "night":
+        emissive_js = """
+      root.traverse((c) => {
+        if (c.isMesh && c.material) {
+          c.material = c.material.clone();
+          c.material.emissive = new THREE.Color(0xffcc66);
+          c.material.emissiveIntensity = 0.12;
+        }
+      });"""
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -244,7 +324,7 @@ def _three_js_html(title: str, placements_json: str) -> str:
   </style>
 </head>
 <body>
-  <div id="bar">{title} · three.js multi-GLB (APS-PREVIEW-002 degraded) · drag orbit · scroll zoom</div>
+  <div id="bar">{title} · {vs} · three.js multi-GLB · drag orbit · scroll zoom</div>
   <canvas id="canvas"></canvas>
   <script type="importmap">
   {{"imports":{{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
@@ -255,17 +335,18 @@ def _three_js_html(title: str, placements_json: str) -> str:
   import {{ OrbitControls }} from 'three/addons/controls/OrbitControls.js';
   import {{ GLTFLoader }} from 'three/addons/loaders/GLTFLoader.js';
   const placements = {placements_json};
+  const variantState = {json.dumps(vs)!r};
   const canvas = document.getElementById('canvas');
   const renderer = new THREE.WebGLRenderer({{ canvas, antialias: true }});
   renderer.setPixelRatio(window.devicePixelRatio);
   renderer.shadowMap.enabled = true;
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x2a2a30);
+  scene.background = new THREE.Color({bg});
   const camera = new THREE.PerspectiveCamera(45, 1, 0.05, 500);
   const controls = new OrbitControls(camera, canvas);
   controls.enableDamping = true;
-  scene.add(new THREE.AmbientLight(0xffffff, 0.55));
-  const key = new THREE.DirectionalLight(0xffffff, 1.1);
+  scene.add(new THREE.AmbientLight(0xffffff, {ambient}));
+  const key = new THREE.DirectionalLight(0xffffff, {key_int});
   key.position.set(8, 14, 10);
   key.castShadow = true;
   scene.add(key);
@@ -282,6 +363,7 @@ def _three_js_html(title: str, placements_json: str) -> str:
       const root = gltf.scene;
       root.position.set(p.position[0], p.position[1], p.position[2]);
       root.rotation.set(p.rotation[0], p.rotation[1], p.rotation[2], 'XYZ');
+      {emissive_js}
       root.traverse((c) => {{ if (c.isMesh) {{ c.castShadow = true; c.receiveShadow = true; }} }});
       group.add(root);
       box.expandByObject(root);
@@ -362,6 +444,7 @@ def preview_assembly_browser(
     *,
     title: str = "Assembly preview",
     open_browser: bool = True,
+    variant_state: str = "clean",
 ) -> str:
     """Serve multi-GLB three.js preview; returns local URL."""
     if not placements:
@@ -379,7 +462,7 @@ def preview_assembly_browser(
         }
         for p in placements
     ]
-    html = _three_js_html(title, json.dumps(payload)).encode("utf-8")
+    html = _three_js_html(title, json.dumps(payload), variant_state=variant_state).encode("utf-8")
 
     port = _free_port()
     handler = _AssemblyPreviewHandler
@@ -491,7 +574,12 @@ def try_render_glb_thumbnail_bytes(glb_path: Path, *, resolution: tuple[int, int
     return png
 
 
-def try_render_thumbnail_png(placements: list[PreviewPlacement], out_png: Path) -> bool:
+def try_render_thumbnail_png(
+    placements: list[PreviewPlacement],
+    out_png: Path,
+    *,
+    variant_state: str = "clean",
+) -> bool:
     """Best-effort orthographic PNG via trimesh (optional dependency)."""
     try:
         import trimesh
@@ -513,6 +601,7 @@ def try_render_thumbnail_png(placements: list[PreviewPlacement], out_png: Path) 
         scene.add_geometry(loaded, transform=tx)
     if not scene.geometry:
         return False
+    _apply_variant_tint_trimesh_scene(scene, variant_state)
     try:
         png_bytes = scene.save_image(resolution=(512, 512))
     except Exception:
@@ -540,6 +629,7 @@ def preview_assembly(
         candidate = (repo_root() / raw).resolve()
         snapshot_path = candidate if candidate.is_file() else raw.resolve()
     snapshot = _load_snapshot(snapshot_path)
+    variant_state = extract_preview_variant_state(snapshot)
     placements, missing = collect_preview_placements(snapshot)
     assembly_id = str(snapshot.get("assembly_id") or snapshot_path.stem)
 
@@ -587,9 +677,14 @@ def preview_assembly(
     if mode != "bevy_worker":
         if placements:
             title = f"{assembly_id} · {len(placements)} modules"
-            preview_url = preview_assembly_browser(placements, title=title, open_browser=open_browser)
+            preview_url = preview_assembly_browser(
+                placements,
+                title=title,
+                open_browser=open_browser,
+                variant_state=variant_state,
+            )
             if not png_path.is_file():
-                try_render_thumbnail_png(placements, png_path)
+                try_render_thumbnail_png(placements, png_path, variant_state=variant_state)
         mode = "browser_threejs"
 
     server_note = ""
@@ -619,6 +714,7 @@ def preview_assembly(
         "server_note": server_note,
         "preview_job": _rel_repo(job_path),
         "png": _rel_repo(png_path) if png_path.is_file() else "",
+        "preview_variant_state": variant_state,
         "bevy_status": bevy_status,
         "elapsed_ms": elapsed_ms,
     }

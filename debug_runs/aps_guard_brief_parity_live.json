@@ -1,0 +1,38 @@
+{
+  "task_id": "APS-GUARD-BRIEF-PARITY-001",
+  "green": true,
+  "counts_aligned": true,
+  "grammar_pilot_count": 4,
+  "brief_grammar_pilot_count": 4,
+  "coverage_grammar_pilot_count": 4,
+  "parity_grammar_pilot_count": 4,
+  "brief_green": true,
+  "coverage_green": false,
+  "parity_green": true,
+  "grammar_pilot_ids": [
+    "logistics_rail_warehouse_v0",
+    "manufacturing_fabrication_hall_v0",
+    "power_substation_yard_v0",
+    "fuel_depot_tank_farm_v0"
+  ],
+  "tier": "G3",
+  "tier_reasons": [
+    "building_set_coverage not green for G4"
+  ],
+  "no_green_brief_with_red_guards": true,
+  "pilot_hardcode_green": false,
+  "_agent_meta": {
+    "schema": "aps_guard_brief_parity_live_v1",
+    "profile": "APS_GUARD_BRIEF_PARITY",
+    "relative_path": "debug_runs/aps_guard_brief_parity_live.json",
+    "source_system": "grammar_build_set",
+    "written_at_epoch_secs": 1782012787,
+    "ritual": "BLANG:WIT-HON APS-GUARD-BRIEF-PARITY-001"
+  },
+  "witness_honesty": {
+    "status": "passed",
+    "error_count": 0,
+    "warning_count": 0,
+    "summary": "witness_honesty debug_runs/aps_guard_brief_parity_live.json: 0 error(s), 0 issue(s)"
+  }
+}

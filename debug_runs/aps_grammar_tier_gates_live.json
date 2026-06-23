@@ -1,9 +1,44 @@
 {
-  "tier": "G0",
-  "dna_panel_visible": false,
-  "iterate_panel_visible": false,
-  "build_set_expanded_default": false,
-  "kit_hint_visible": true,
-  "scanner": "test_aps_grammar_tier_gates.py",
-  "archetype_combo_count": 3
+  "tier": "G3",
+  "dna_panel_visible": true,
+  "iterate_panel_visible": true,
+  "build_set_expanded_default": true,
+  "kit_hint_visible": false,
+  "archetype_combo_count": 4,
+  "grammar_set_tier": "G3",
+  "source": "grammar_tier_gates_snapshot()",
+  "task_id": "APS-GRAM-TIER-GATES-LIVE-001",
+  "green": true,
+  "grammar_set_tier_match": true,
+  "grammar_set_tier_reasons": [
+    "building_set_coverage not green for G4"
+  ],
+  "scanner": "grammar_build_set.write_aps_grammar_tier_gates_live_witness",
+  "exit_predicate": {
+    "witness": "debug_runs/aps_grammar_tier_gates_live.json",
+    "must": [
+      {
+        "path": "tier",
+        "eq": "G3"
+      },
+      {
+        "path": "grammar_set_tier",
+        "eq": "G3"
+      }
+    ]
+  },
+  "_agent_meta": {
+    "schema": "aps_grammar_tier_gates_live_v1",
+    "profile": "APS_GRAM_TIER_GATES",
+    "relative_path": "debug_runs/aps_grammar_tier_gates_live.json",
+    "source_system": "grammar_build_set",
+    "written_at_epoch_secs": 1782012832,
+    "ritual": "BLANG:WIT-HON APS-GRAM-TIER-GATES-LIVE-001"
+  },
+  "witness_honesty": {
+    "status": "passed",
+    "error_count": 0,
+    "warning_count": 0,
+    "summary": "witness_honesty debug_runs/aps_grammar_tier_gates_live.json: 0 error(s), 0 issue(s)"
+  }
 }

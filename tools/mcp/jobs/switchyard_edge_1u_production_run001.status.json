@@ -1,0 +1,12 @@
+{
+  "job_id": "switchyard_edge_1u_production_run001",
+  "status": "done",
+  "log_path": "C:\\dev\\github\\Rust_engine_template_01\\debug_runs\\art_pipeline\\switchyard_edge_1u_production_run001.log",
+  "outputs": [
+    "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\switchyard_edge_1u_production_run001\\model.glb"
+  ],
+  "error": null,
+  "spec_ref": "assets/staging/specs/switchyard_edge_1u_production_run001.json",
+  "job_path": "C:\\dev\\github\\Rust_engine_template_01\\tools\\mcp\\schemas\\examples\\switchyard_edge_1u_production_run001.json",
+  "updated_at": 1782004201.0194492
+}

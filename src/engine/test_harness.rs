@@ -241,6 +241,27 @@ impl Plugin for TestHarnessPlugin {
                 maintain_test_scene_fire_overlay
                     .before(crate::render::extraction::extract_fire_simulation_snapshot)
                     .run_if(in_state(BaseState::Simulation)),
+            )
+            .add_systems(
+                Update,
+                (
+                    drive_visual_aidv2_proof_harness,
+                    drive_visual_aidv2_esc_injection
+                        .after(drive_visual_aidv2_proof_harness),
+                )
+                    .chain()
+                    .before(crate::gui::hud::panel_state::hud_panel_escape_collapse_system)
+                    .run_if(in_state(BaseState::Simulation))
+                    .run_if(post_enter_sim_frame_at_least(1)),
+            )
+            .add_systems(
+                PostUpdate,
+                (
+                    apply_visual_aidv2_macro_zoom_camera
+                        .before(crate::render::stage5_full_app_harness::maintain_visual_tactical_vfx_camera),
+                    arm_visual_test_exit_on_va2_live_proof,
+                )
+                    .run_if(in_state(BaseState::Simulation)),
             );
     }
 }
@@ -861,7 +882,7 @@ fn apply_visual_logistics_minimap_defaults(
         }
     }
     if let Some(map_views) = map_views {
-        map_views.minimap.overlays = crate::gui::simulation_minimap_overlay_defaults();
+        map_views.minimap.overlays = crate::gui::minimap_overlay_witness_harness();
         map_views.minimap.bump_revision();
     }
     if let Some(tray) = overlay_tray {
@@ -1592,6 +1613,123 @@ fn apply_test_scene_defaults(
     }
     harness.defaults_applied = true;
     raster_dirty.bump();
+}
+
+/// Normalized zoom for VA2 macro icon probe (`--test visual` only).
+const VA2_PROOF_MACRO_ZOOM_ALPHA: f32 = 0.0;
+
+/// VA2-HARNESS-01/02/03 — seed build ghost + arm ESC/macro probes after sim entry.
+fn drive_visual_aidv2_proof_harness(
+    launch: Option<Res<EngineLaunchArgs>>,
+    harness: Res<TestWorldHarness>,
+    mut va2: ResMut<crate::dev::VisualAidV2HarnessState>,
+    mut picker: ResMut<crate::gui::hud::SimBuildPickerState>,
+    mut strip: ResMut<crate::construction::BuildStripState>,
+    mut tool: ResMut<crate::construction::ActiveBuildTool>,
+    mut ghost: ResMut<crate::construction::BuildGhostState>,
+    mut preview: ResMut<crate::construction::BuildPlacementPreview>,
+) {
+    if !launch.is_some_and(|l| l.full_capture_active()) {
+        return;
+    }
+    const ESC_ARM_FRAME: u32 = 8;
+    const BUILD_FRAME: u32 = 10;
+    const MACRO_PROBE_FRAME: u32 = 12;
+    let frame = harness.post_enter_sim_frame;
+
+    if frame == ESC_ARM_FRAME && !va2.esc_injected {
+        picker.open_for_slot(crate::construction::ToolContext::Civil);
+        va2.esc_armed = true;
+    }
+
+    if frame >= BUILD_FRAME {
+        strip.active = crate::construction::ToolContext::Industry;
+        tool.tool = crate::construction::BuildTool::Building(
+            crate::construction::BuildingArchetypeId::Factory,
+        );
+        ghost.origin = Some(crate::strategic::BuildSiteTile { x: 8, z: 8 });
+        preview.report.valid = true;
+        preview.report.allows_commit = true;
+        va2.build_seeded = true;
+    }
+
+    if frame >= MACRO_PROBE_FRAME {
+        va2.macro_icon_probe = true;
+    }
+}
+
+/// VA2-HARNESS-01 — inject Escape after build picker opens (same frame as arm+1).
+fn drive_visual_aidv2_esc_injection(
+    launch: Option<Res<EngineLaunchArgs>>,
+    harness: Res<TestWorldHarness>,
+    mut va2: ResMut<crate::dev::VisualAidV2HarnessState>,
+    mut keys: ResMut<ButtonInput<KeyCode>>,
+) {
+    if !launch.is_some_and(|l| l.full_capture_active()) {
+        return;
+    }
+    const ESC_INJECT_FRAME: u32 = 9;
+    if harness.post_enter_sim_frame != ESC_INJECT_FRAME || va2.esc_injected || !va2.esc_armed {
+        return;
+    }
+    keys.press(KeyCode::Escape);
+    va2.esc_injected = true;
+}
+
+/// After VA2 live proof commits, request graceful `--test visual` exit (not gated on FINISH-UX-06).
+fn arm_visual_test_exit_on_va2_live_proof(
+    va2: Res<crate::dev::VisualAidV2HarnessState>,
+    mut visual_exit: ResMut<crate::render::VisualTestGracefulExit>,
+) {
+    if !va2.request_visual_exit || visual_exit.armed {
+        return;
+    }
+    visual_exit.armed = true;
+    visual_exit.frames_remaining = crate::render::VisualTestGracefulExit::FRAMES_AFTER_PROOF;
+}
+
+/// VA2-HARNESS-03 — zoom out for macro icon scaffold while tactical VFX lock is suspended.
+fn apply_visual_aidv2_macro_zoom_camera(
+    launch: Option<Res<EngineLaunchArgs>>,
+    va2: Res<crate::dev::VisualAidV2HarnessState>,
+    params: Res<WorldGenParams>,
+    windows: Query<&Window, With<bevy::window::PrimaryWindow>>,
+    sim_viewport: Res<crate::gui::SimulationMapViewport>,
+    mut authority: ResMut<crate::render::view_runtime::ViewProjectionAuthority>,
+    mut trace: ResMut<crate::render::view_runtime::ViewRuntimeTrace>,
+    mut cam: Query<&mut Transform, With<crate::gui::MainWorldCamera>>,
+) {
+    if !launch.is_some_and(|l| l.full_capture_active()) || !va2.macro_icon_probe {
+        return;
+    }
+    if params.width == 0 || params.height == 0 {
+        return;
+    }
+    let world_w = params.width as f32;
+    let world_h = params.height as f32;
+    let window_px = windows
+        .single()
+        .ok()
+        .map(|w| Vec2::new(w.width().max(1.0), w.height().max(1.0)))
+        .unwrap_or(Vec2::new(1280.0, 720.0));
+    let viewport = crate::gui::map_camera_viewport_pixels(window_px, Some(sim_viewport.as_ref()));
+    let (zoom_lo, zoom_hi) = crate::gui::map_zoom_limits_for_world(world_w, world_h, viewport);
+    let zoom = crate::gui::map_scale_for_zoom_alpha(VA2_PROOF_MACRO_ZOOM_ALPHA, zoom_lo, zoom_hi);
+    let cx = world_w * 0.5;
+    let cy = world_h * 0.5;
+    let mut pose = crate::gui::map_camera_desired_from_view_authority(authority.as_ref());
+    pose.translation = Vec3::new(cx, cy, 0.0);
+    pose.scale = Vec3::splat(zoom);
+    crate::gui::commit_map_camera_pose_to_view_authority(
+        authority.as_mut(),
+        trace.as_mut(),
+        &pose,
+    );
+    for mut t in cam.iter_mut() {
+        t.translation.x = cx;
+        t.translation.y = cy;
+        t.scale = Vec3::splat(zoom);
+    }
 }
 
 /// Keeps CLI test worlds burning after world-gen + fire extract (re-seed if sim cooled, refresh overlay).

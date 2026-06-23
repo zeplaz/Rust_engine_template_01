@@ -1,0 +1,110 @@
+{
+  "schema_version": 1,
+  "batch_id": "kit_nuclear_pwr_production_001",
+  "development_tier": "production",
+  "pilot_scope": "POWER-GRID-NUCLEAR-A2",
+  "pilot_style_pack_id": "style_industrial_west",
+  "plan_ref": "src/dev/plan_power_grid_art_assets_v1.md",
+  "downstream_queue": "tools/orchestrator/queues/power_grid_art_downstream_queue.json",
+  "wave": "001",
+  "module_count": 8,
+  "modules": [
+    {
+      "module_id": "containment_dome_pwr",
+      "style_pack_id": "style_industrial_west",
+      "material_profile": "concrete_grey_01",
+      "development_tier": "production",
+      "asset_id": "containment_dome_pwr",
+      "job_id": "containment_dome_pwr_production_run001",
+      "spec": "assets/staging/specs/containment_dome_pwr_production_run001.json",
+      "priority": "P0",
+      "status": "pending",
+      "feeds": "kit_nuclear_pwr_production_001"
+    },
+    {
+      "module_id": "turbine_hall_1u",
+      "style_pack_id": "style_industrial_west",
+      "material_profile": "concrete_grey_01",
+      "development_tier": "production",
+      "asset_id": "turbine_hall_1u",
+      "job_id": "turbine_hall_1u_production_run001",
+      "spec": "assets/staging/specs/turbine_hall_1u_production_run001.json",
+      "priority": "P0",
+      "status": "pending",
+      "feeds": "kit_nuclear_pwr_production_001"
+    },
+    {
+      "module_id": "cooling_tower_1u",
+      "style_pack_id": "style_industrial_west",
+      "material_profile": "concrete_grey_01",
+      "development_tier": "production",
+      "asset_id": "cooling_tower_1u",
+      "job_id": "cooling_tower_1u_production_run001",
+      "spec": "assets/staging/specs/cooling_tower_1u_production_run001.json",
+      "priority": "P0",
+      "status": "pending",
+      "feeds": "kit_nuclear_pwr_production_001"
+    },
+    {
+      "module_id": "diesel_gen_pad_2x2",
+      "style_pack_id": "style_industrial_west",
+      "material_profile": "gravel_yard_01",
+      "development_tier": "production",
+      "asset_id": "diesel_gen_pad_2x2",
+      "job_id": "diesel_gen_pad_2x2_production_run001",
+      "spec": "assets/staging/specs/diesel_gen_pad_2x2_production_run001.json",
+      "priority": "P1",
+      "status": "pending",
+      "feeds": "kit_nuclear_pwr_production_001"
+    },
+    {
+      "module_id": "switchyard_edge_1u",
+      "style_pack_id": "style_industrial_west",
+      "material_profile": "galvanized_steel_01",
+      "development_tier": "production",
+      "asset_id": "switchyard_edge_1u",
+      "job_id": "switchyard_edge_1u_production_run001",
+      "spec": "assets/staging/specs/switchyard_edge_1u_production_run001.json",
+      "priority": "P1",
+      "status": "pending",
+      "feeds": "kit_nuclear_pwr_production_001"
+    },
+    {
+      "module_id": "fence_chainlink_1u",
+      "style_pack_id": "style_industrial_west",
+      "material_profile": "galvanized_steel_01",
+      "development_tier": "production",
+      "asset_id": "fence_chainlink_1u",
+      "job_id": "fence_chainlink_1u_production_run001",
+      "spec": "assets/staging/specs/fence_chainlink_1u_production_run001.json",
+      "priority": "P1",
+      "status": "pending",
+      "feeds": "kit_nuclear_pwr_production_001",
+      "reuse_from": "kit_utility_power_production_001"
+    },
+    {
+      "module_id": "warning_sign_nuclear_1u",
+      "style_pack_id": "style_industrial_west",
+      "material_profile": "warning_paint_yellow_01",
+      "development_tier": "production",
+      "asset_id": "warning_sign_nuclear_1u",
+      "job_id": "warning_sign_nuclear_1u_production_run001",
+      "spec": "assets/staging/specs/warning_sign_nuclear_1u_production_run001.json",
+      "priority": "P2",
+      "status": "pending",
+      "feeds": "kit_nuclear_pwr_production_001"
+    },
+    {
+      "module_id": "kit_nuclear_pwr_production_001",
+      "style_pack_id": "style_industrial_west",
+      "development_tier": "production",
+      "asset_id": "kit_nuclear_pwr_production_001",
+      "job_id": "kit_nuclear_pwr_production_run001",
+      "spec": "assets/staging/specs/kit_nuclear_pwr_production_001.json",
+      "priority": "P0",
+      "status": "promoted",
+      "catalog": "assets/configs/buildings/nuclear_plant_pwr.json",
+      "type": "assembly_kit"
+    }
+  ]
+}

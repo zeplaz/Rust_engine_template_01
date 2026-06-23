@@ -2,10 +2,10 @@
   "gate_id": "APS-PREVIEW-002",
   "green": true,
   "mode": "browser_threejs",
-  "assembly_id": "industrial_west_9x7_s37_27c3",
-  "snapshot": "debug_runs/preview_jobs/industrial_west_9x7_s37_27c3_preview_tmp.json",
-  "modules_loaded": 56,
-  "modules_requested": 56,
+  "assembly_id": "industrial_west_7x5_s39_9fa1",
+  "snapshot": "tools/mcp/schemas/examples/assembly_snapshot_warehouse_industrial_west_production_v1.json",
+  "modules_loaded": 40,
+  "modules_requested": 40,
   "missing_glb": [],
   "material_profiles_sample": [
     "roof_metal_01",
@@ -13,18 +13,11 @@
     "steel_door_warehouse_01",
     "steel_panel_01"
   ],
-  "preview_url": "http://127.0.0.1:50619/",
+  "preview_url": "http://127.0.0.1:60443/",
   "preview_url_hint": "Open in browser while this process runs. CLI without --serve-seconds exits and kills the server.",
   "server_note": "",
-  "preview_job": "debug_runs/preview_jobs/preview_industrial_west_9x7_s37_27c3_preview_tmp_dcc80ee0.json",
-  "png": "debug_runs/preview_jobs/industrial_west_9x7_s37_27c3_thumb.png",
-  "bevy_status": {
-    "status": "failed",
-    "png": "debug_runs/preview_jobs/industrial_west_9x7_s37_27c3_thumb.png",
-    "elapsed_ms": 1256,
-    "modules_loaded": 56,
-    "mode": "bevy_worker",
-    "error": "preview PNG missing, too small, or blank"
-  },
-  "elapsed_ms": 10070
+  "preview_job": "debug_runs/preview_jobs/preview_assembly_snapshot_warehouse_industrial_west_production_v1_d7f663c8.json",
+  "png": "debug_runs/preview_jobs/industrial_west_7x5_s39_9fa1_thumb.png",
+  "preview_variant_state": "clean",
+  "elapsed_ms": 0
 }

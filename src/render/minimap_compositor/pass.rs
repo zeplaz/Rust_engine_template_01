@@ -30,7 +30,7 @@ use super::render_target::{
 };
 
 /// Force a composite when visible even if fingerprint unchanged (seconds).
-const MINIMAP_GPU_MAX_STALE_SECS: f64 = 2.0;
+const MINIMAP_GPU_MAX_STALE_SECS: f64 = 5.0;
 
 /// Bundles optional heat sources so `run_minimap_compositor_pass` stays within Bevy param limits.
 #[derive(SystemParam)]
@@ -222,6 +222,13 @@ pub(crate) fn perf_vis_p1b_witness_json(
     })
 }
 
+/// GPU compositor env on and shader pipeline healthy (no runtime fallback).
+#[must_use]
+pub fn minimap_gpu_compositor_runtime_enabled() -> bool {
+    minimap_gpu_compositor_env_enabled()
+        && !super::diagnostics::MINIMAP_GPU_SHADER_FAILED.load(std::sync::atomic::Ordering::Relaxed)
+}
+
 /// P1-B: Simulation main HUD → GPU RT when compositor env on. CPU raster is not auto-fallback.
 pub fn sync_minimap_presentation_source(
     base: Res<State<crate::engine::states::BaseState>>,
@@ -230,7 +237,15 @@ pub fn sync_minimap_presentation_source(
     if !matches!(base.get(), crate::engine::states::BaseState::Simulation) {
         return;
     }
-    shell.presentation_source = if minimap_gpu_compositor_env_enabled() {
+    if super::diagnostics::MINIMAP_GPU_SHADER_FAILED.load(std::sync::atomic::Ordering::Relaxed) {
+        shell.presentation_source = MinimapPresentationSource::SharedCpuRaster;
+        warn!(
+            target: "minimap_compositor",
+            "MINIMAP_GPU_SHADER_FAILED — using CPU minimap raster until restart"
+        );
+        return;
+    }
+    shell.presentation_source = if minimap_gpu_compositor_runtime_enabled() {
         MinimapPresentationSource::SharedRenderTargetImage
     } else {
         MinimapPresentationSource::SharedCpuRaster
@@ -285,7 +300,15 @@ pub fn run_minimap_compositor_pass(
     // Match tile fallback raster authority: GPU HUD path paints `fallback.image` only;
     // `minimap_image` is the effects-lane CPU raster (see `tile_fallback_cpu_minimap_raster_needed`).
     let terrain = match resolve_minimap_texture_source(&shell, &fallback, &registry) {
-        MapTextureSource::GpuRenderTarget(_) => fallback.image.clone(),
+        MapTextureSource::GpuRenderTarget(_) => {
+            if fallback.image != Handle::default() {
+                fallback.image.clone()
+            } else if fallback.minimap_image != Handle::default() {
+                fallback.minimap_image.clone()
+            } else {
+                Handle::default()
+            }
+        }
         MapTextureSource::SharedCpuRaster(handle) => handle,
     };
     if terrain == Handle::default() {

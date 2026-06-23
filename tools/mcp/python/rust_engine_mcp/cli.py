@@ -545,6 +545,66 @@ def _cmd_ops_get_active_blockers(_: argparse.Namespace) -> int:
     return 0 if body.get("ok") else 1
 
 
+def _cmd_ops_dashboard_refresh(args: argparse.Namespace) -> int:
+    from rust_engine_mcp.ops_telemetry import write_ops_dashboard_witness
+
+    hours = int(getattr(args, "window_hours", 168) or 168)
+    body = write_ops_dashboard_witness(window_hours=hours)
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("ok") else 1
+
+
+def _cmd_ops_process_scan(_: argparse.Namespace) -> int:
+    from rust_engine_mcp.ops_telemetry import scan_processes
+
+    print(json.dumps(scan_processes(), indent=2))
+    return 0
+
+
+def _cmd_ops_drift_scan(_: argparse.Namespace) -> int:
+    from rust_engine_mcp.ops_telemetry import scan_drift_instances
+
+    print(json.dumps(scan_drift_instances(), indent=2))
+    return 0
+
+
+def _cmd_ops_run_events_rollup(args: argparse.Namespace) -> int:
+    from rust_engine_mcp.ops_telemetry import scan_run_events
+
+    hours = int(getattr(args, "window_hours", 168) or 168)
+    print(json.dumps(scan_run_events(window_hours=hours), indent=2))
+    return 0
+
+
+def _cmd_ops_crash_scan(_: argparse.Namespace) -> int:
+    from rust_engine_mcp.ops_crash_exporter import run_crash_scan, write_prometheus_metrics
+
+    body = run_crash_scan(record_events=True)
+    body["prometheus_written"] = write_prometheus_metrics(body)
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("ok") else 1
+
+
+def _cmd_ops_triage_refresh(args: argparse.Namespace) -> int:
+    from rust_engine_mcp.ops_crash_exporter import write_triage_witness
+
+    hours = int(getattr(args, "window_hours", 168) or 168)
+    body = write_triage_witness(window_hours=hours)
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("ok") else 1
+
+
+def _cmd_ops_crash_daemon(args: argparse.Namespace) -> int:
+    from rust_engine_mcp.ops_crash_exporter import daemon_loop
+
+    interval = int(getattr(args, "interval_sec", 30) or 30)
+    max_cycles = getattr(args, "max_cycles", None)
+    if max_cycles is not None:
+        max_cycles = int(max_cycles)
+    daemon_loop(interval_sec=interval, max_cycles=max_cycles)
+    return 0
+
+
 def _cmd_ops_mcp_function_layer_witness(_: argparse.Namespace) -> int:
     from rust_engine_mcp import ops_intelligence
 
@@ -693,6 +753,33 @@ def _cmd_building_set_coverage_witness(_: argparse.Namespace) -> int:
     from rust_engine_mcp import grammar_build_set
 
     body = grammar_build_set.write_building_set_coverage_witness()
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
+def _cmd_aps_guard_brief_parity_witness(_: argparse.Namespace) -> int:
+    from rust_engine_mcp.grammar_build_set import write_aps_guard_brief_parity_witness
+
+    body = write_aps_guard_brief_parity_witness()
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
+def _cmd_aps_grammar_tier_gates_live_witness(_: argparse.Namespace) -> int:
+    from rust_engine_mcp.grammar_build_set import write_aps_grammar_tier_gates_live_witness
+
+    body = write_aps_grammar_tier_gates_live_witness()
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
+def _cmd_aps_session_presence_dump(args: argparse.Namespace) -> int:
+    from rust_engine_mcp.grammar_build_set import aps_session_presence_dump, write_aps_session_presence_witness
+
+    if getattr(args, "write_witness", False):
+        body = write_aps_session_presence_witness()
+    else:
+        body = aps_session_presence_dump()
     print(json.dumps(body, indent=2))
     return 0 if body.get("green") else 1
 
@@ -853,6 +940,14 @@ def _cmd_dmcp_nuclear_pwr_spec_witness(_: argparse.Namespace) -> int:
     return 0 if body.get("green") else 1
 
 
+def _cmd_dmcp_transformer_pad_spec_witness(_: argparse.Namespace) -> int:
+    from rust_engine_mcp.dmcp_transformer_pad_spec import refresh_dmcp_transformer_pad_spec_witness
+
+    body = refresh_dmcp_transformer_pad_spec_witness()
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
 def _cmd_dmcp_art_spine_hub_wave_witness(_: argparse.Namespace) -> int:
     from rust_engine_mcp.dmcp_art_spine_hub_wave import refresh_dmcp_art_spine_hub_wave_witness
 
@@ -873,6 +968,30 @@ def _cmd_dmcp_style_landscape_riparian_witness(_: argparse.Namespace) -> int:
     from rust_engine_mcp.dmcp_style_landscape_riparian import refresh_dmcp_style_landscape_riparian_witness
 
     body = refresh_dmcp_style_landscape_riparian_witness()
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
+def _cmd_dmcp_reaction_territory_events_witness(_: argparse.Namespace) -> int:
+    from rust_engine_mcp.dmcp_reaction_territory_events import refresh_dmcp_reaction_territory_events_witness
+
+    body = refresh_dmcp_reaction_territory_events_witness()
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
+def _cmd_reaction_territory_resolve(args: argparse.Namespace) -> int:
+    from rust_engine_mcp.reaction_territory import resolve_reaction_territory_variant
+
+    body = resolve_reaction_territory_variant(args.event_id, args.domain)
+    print(json.dumps(body, indent=2))
+    return 0
+
+
+def _cmd_reaction_territory_sessions_witness(_: argparse.Namespace) -> int:
+    from rust_engine_mcp.reaction_territory import refresh_reaction_territory_witness
+
+    body = refresh_reaction_territory_witness()
     print(json.dumps(body, indent=2))
     return 0 if body.get("green") else 1
 
@@ -974,6 +1093,48 @@ def _cmd_pwr_industrial_activation_utility_refresh(_: argparse.Namespace) -> int
     from rust_engine_mcp.mcp_pwr_utility import refresh_industrial_activation_utility_art
 
     body = refresh_industrial_activation_utility_art()
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
+def _cmd_pwr_nuclear_manifest_witness(_: argparse.Namespace) -> int:
+    from rust_engine_mcp.mcp_pwr_nuclear import refresh_nuclear_manifest_witness
+
+    body = refresh_nuclear_manifest_witness()
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
+def _cmd_pwr_nuclear_batch_run(_: argparse.Namespace) -> int:
+    from rust_engine_mcp.mcp_pwr_nuclear import refresh_nuclear_batch_witness, run_nuclear_batch
+
+    result = run_nuclear_batch()
+    witness = refresh_nuclear_batch_witness()
+    print(json.dumps({"batch": result, "witness": witness}, indent=2))
+    return 0 if witness.get("green") else 1
+
+
+def _cmd_pwr_nuclear_promote(_: argparse.Namespace) -> int:
+    from rust_engine_mcp.mcp_pwr_nuclear import promote_nuclear, refresh_nuclear_promote_witness
+
+    result = promote_nuclear()
+    witness = refresh_nuclear_promote_witness()
+    print(json.dumps({"promote": result, "witness": witness}, indent=2))
+    return 0 if witness.get("green") else 1
+
+
+def _cmd_pwr_nuclear_batch_witness(_: argparse.Namespace) -> int:
+    from rust_engine_mcp.mcp_pwr_nuclear import refresh_nuclear_batch_witness
+
+    body = refresh_nuclear_batch_witness()
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
+def _cmd_pwr_nuclear_promote_witness(_: argparse.Namespace) -> int:
+    from rust_engine_mcp.mcp_pwr_nuclear import refresh_nuclear_promote_witness
+
+    body = refresh_nuclear_promote_witness()
     print(json.dumps(body, indent=2))
     return 0 if body.get("green") else 1
 
@@ -1420,6 +1581,28 @@ def main(argv: list[str] | None = None) -> int:
     p = sub.add_parser("ops-get-active-blockers")
     p.set_defaults(func=_cmd_ops_get_active_blockers)
 
+    p = sub.add_parser("ops-dashboard-refresh")
+    p.add_argument("--window-hours", type=int, default=168)
+    p.set_defaults(func=_cmd_ops_dashboard_refresh)
+
+    sub.add_parser("ops-process-scan").set_defaults(func=_cmd_ops_process_scan)
+    sub.add_parser("ops-drift-scan").set_defaults(func=_cmd_ops_drift_scan)
+
+    p = sub.add_parser("ops-run-events-rollup")
+    p.add_argument("--window-hours", type=int, default=168)
+    p.set_defaults(func=_cmd_ops_run_events_rollup)
+
+    sub.add_parser("ops-crash-scan").set_defaults(func=_cmd_ops_crash_scan)
+
+    p = sub.add_parser("ops-triage-refresh")
+    p.add_argument("--window-hours", type=int, default=168)
+    p.set_defaults(func=_cmd_ops_triage_refresh)
+
+    p = sub.add_parser("ops-crash-daemon")
+    p.add_argument("--interval-sec", type=int, default=30)
+    p.add_argument("--max-cycles", type=int, default=None)
+    p.set_defaults(func=_cmd_ops_crash_daemon)
+
     p = sub.add_parser("ops-mcp-function-layer-witness")
     p.set_defaults(func=_cmd_ops_mcp_function_layer_witness)
 
@@ -1462,6 +1645,13 @@ def main(argv: list[str] | None = None) -> int:
 
     sub.add_parser("building-set-coverage").set_defaults(func=_cmd_building_set_coverage)
     sub.add_parser("building-set-coverage-witness").set_defaults(func=_cmd_building_set_coverage_witness)
+    sub.add_parser("aps-guard-brief-parity-witness").set_defaults(func=_cmd_aps_guard_brief_parity_witness)
+    sub.add_parser("aps-grammar-tier-gates-live-witness").set_defaults(
+        func=_cmd_aps_grammar_tier_gates_live_witness
+    )
+    p = sub.add_parser("aps-session-presence-dump")
+    p.add_argument("--write-witness", action="store_true")
+    p.set_defaults(func=_cmd_aps_session_presence_dump)
     sub.add_parser("landscape-grammar-presets-witness").set_defaults(func=_cmd_landscape_grammar_presets_witness)
 
     p = sub.add_parser("landscape-sign-atlas-witness")
@@ -1489,12 +1679,20 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("dmcp-parallel-lane-bkkf-witness").set_defaults(func=_cmd_dmcp_parallel_lane_bkkf_witness)
     sub.add_parser("dmcp-facility-binding-lane-witness").set_defaults(func=_cmd_dmcp_facility_binding_lane_witness)
     sub.add_parser("dmcp-nuclear-pwr-spec-witness").set_defaults(func=_cmd_dmcp_nuclear_pwr_spec_witness)
+    sub.add_parser("dmcp-transformer-pad-spec-witness").set_defaults(func=_cmd_dmcp_transformer_pad_spec_witness)
     sub.add_parser("dmcp-art-spine-hub-wave-witness").set_defaults(func=_cmd_dmcp_art_spine_hub_wave_witness)
     sub.add_parser("dmcp-designer-mcp-open-lane-witness").set_defaults(
         func=_cmd_dmcp_designer_mcp_open_lane_witness
     )
-    sub.add_parser("dmcp-style-landscape-riparian-witness").set_defaults(
-        func=_cmd_dmcp_style_landscape_riparian_witness
+    sub.add_parser("dmcp-reaction-territory-events-witness").set_defaults(
+        func=_cmd_dmcp_reaction_territory_events_witness
+    )
+    p = sub.add_parser("reaction-territory-resolve")
+    p.add_argument("event_id")
+    p.add_argument("domain")
+    p.set_defaults(func=_cmd_reaction_territory_resolve)
+    sub.add_parser("reaction-territory-sessions-witness").set_defaults(
+        func=_cmd_reaction_territory_sessions_witness
     )
     sub.add_parser("pwr-utility-manifest-witness").set_defaults(func=_cmd_pwr_utility_manifest_witness)
     sub.add_parser("pwr-substation-batch-run").set_defaults(func=_cmd_pwr_substation_batch_run)
@@ -1509,6 +1707,11 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("pwr-industrial-activation-utility-refresh").set_defaults(
         func=_cmd_pwr_industrial_activation_utility_refresh
     )
+    sub.add_parser("pwr-nuclear-manifest-witness").set_defaults(func=_cmd_pwr_nuclear_manifest_witness)
+    sub.add_parser("pwr-nuclear-batch-run").set_defaults(func=_cmd_pwr_nuclear_batch_run)
+    sub.add_parser("pwr-nuclear-promote").set_defaults(func=_cmd_pwr_nuclear_promote)
+    sub.add_parser("pwr-nuclear-batch-witness").set_defaults(func=_cmd_pwr_nuclear_batch_witness)
+    sub.add_parser("pwr-nuclear-promote-witness").set_defaults(func=_cmd_pwr_nuclear_promote_witness)
     sub.add_parser("mcp-witness-honesty-validator-witness").set_defaults(
         func=_cmd_mcp_witness_honesty_validator_witness
     )

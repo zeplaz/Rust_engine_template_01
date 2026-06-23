@@ -23,5 +23,5 @@
   ],
   "atlas_path": "C:\\dev\\github\\Rust_engine_template_01\\assets\\textures\\landscape\\staging\\landscape_lg5_expanded_v1_atlas.png",
   "meta_json": "assets/staging/tiles/tile_landscape_expanded_v1/atlas_meta.json",
-  "dry_run": false
+  "dry_run": true
 }

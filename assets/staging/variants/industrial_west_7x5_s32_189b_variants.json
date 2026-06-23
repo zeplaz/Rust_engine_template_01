@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "variant_set_id": "industrial_west_7x5_s32_189b_variants",
+  "assembly_id": "industrial_west_7x5_s32_189b",
+  "style_pack_id": "style_industrial_west",
+  "seed": 32,
+  "axes": {
+    "state": [
+      "clean",
+      "dirty",
+      "damaged",
+      "ruined"
+    ],
+    "power": [
+      "off",
+      "partial",
+      "on"
+    ],
+    "fill": [
+      "empty",
+      "half",
+      "full"
+    ],
+    "lighting": [
+      "day",
+      "night_off",
+      "night_on"
+    ]
+  },
+  "variants": [
+    {
+      "variant_key": "clean_day",
+      "tags": [
+        "default",
+        "stylepack_industrial_west"
+      ],
+      "layers": {
+        "lighting": {
+          "lighting": "day",
+          "power": "off"
+        },
+        "damage": {
+          "state": "clean",
+          "damage": 0.0
+        },
+        "fill": {
+          "fill": "empty"
+        }
+      }
+    }
+  ]
+}

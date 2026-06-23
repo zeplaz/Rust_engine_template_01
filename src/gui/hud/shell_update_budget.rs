@@ -78,6 +78,39 @@ impl ProductShellUpdateBudget {
         self.frame_index = self.frame_index.wrapping_add(1);
     }
 
+    /// Deep-debug witness: shell refresh queue shape (no widget internals).
+    #[must_use]
+    pub fn debug_queue_snapshot(&self) -> serde_json::Value {
+        let mut visible = 0u32;
+        let mut occluded = 0u32;
+        let mut focused = 0u32;
+        let mut suspended = 0u32;
+        for rt in &self.runtime {
+            if rt.visible {
+                visible += 1;
+            }
+            if rt.occluded {
+                occluded += 1;
+            }
+            if rt.focused {
+                focused += 1;
+            }
+            if matches!(rt.refresh_policy, ShellRefreshPolicy::Suspended) {
+                suspended += 1;
+            }
+        }
+        serde_json::json!({
+            "frame_index": self.frame_index,
+            "bypass_throttle": self.bypass_throttle,
+            "background_hz": self.background_hz,
+            "detached_hz": self.detached_hz,
+            "visible_widgets": visible,
+            "occluded_widgets": occluded,
+            "focused_widgets": focused,
+            "suspended_widgets": suspended,
+        })
+    }
+
     pub fn set_bypass_throttle(&mut self, bypass: bool) {
         self.bypass_throttle = bypass;
     }

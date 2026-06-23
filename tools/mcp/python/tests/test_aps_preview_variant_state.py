@@ -36,3 +36,27 @@ def test_merge_variant_patch_preserves_base() -> None:
     assert merged["variants"]["seed"] == 42
     assert merged["variants"]["lighting"] == "night_on"
     assert merged["preview_variant_state"] == "night"
+
+
+def test_extract_preview_variant_state_from_merged_snapshot() -> None:
+    from rust_engine_mcp.assembly_preview import extract_preview_variant_state
+
+    snap = merge_variant_patch({"assembly_id": "test", "module_placements": []}, "burning")
+    assert extract_preview_variant_state(snap) == "burning"
+    night = merge_variant_patch({"assembly_id": "test"}, "night")
+    assert extract_preview_variant_state(night) == "night"
+
+
+def test_variant_entry_to_visual_state_night_and_burning() -> None:
+    from art_pipeline_suite.aps_preview_variant_state import variant_entry_to_visual_state
+
+    assert variant_entry_to_visual_state({"variant_key": "burning_00"}) == "burning"
+    assert (
+        variant_entry_to_visual_state(
+            {
+                "variant_key": "clean_night_on",
+                "layers": {"lighting": {"lighting": "night_on", "night_lights": True}},
+            }
+        )
+        == "night"
+    )

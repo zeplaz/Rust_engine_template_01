@@ -10,7 +10,9 @@
         { "id": "rear", "label": "Rear", "grammar_use": "facade.secondary" },
         { "id": "interior", "label": "Interior court", "grammar_use": "massing.yard_interior" },
         { "id": "yard_facing", "label": "Yard facing", "grammar_use": "massing.yard" },
-        { "id": "alley_facing", "label": "Alley facing", "grammar_use": "facade.service" }
+        { "id": "alley_facing", "label": "Alley facing", "grammar_use": "facade.service" },
+        { "id": "rail_adjacent", "label": "Rail adjacent", "grammar_use": "massing.rail_corridor" },
+        { "id": "waterfront", "label": "Waterfront", "grammar_use": "facade.harbor_edge" }
       ]
     },
     "architectural": {
@@ -22,7 +24,8 @@
         { "id": "residential", "label": "Residential" },
         { "id": "military", "label": "Military" },
         { "id": "civic", "label": "Civic" },
-        { "id": "agricultural", "label": "Agricultural" }
+        { "id": "agricultural", "label": "Agricultural" },
+        { "id": "utility", "label": "Utility / plant", "grammar_use": "massing.process_plant" }
       ]
     },
     "detail": {
@@ -39,7 +42,9 @@
         { "id": "crane", "label": "Crane" },
         { "id": "platform", "label": "Platform" },
         { "id": "window_band", "label": "Window band" },
-        { "id": "door_rollup", "label": "Roll-up door" }
+        { "id": "door_rollup", "label": "Roll-up door" },
+        { "id": "cooling_tower", "label": "Cooling tower", "grammar_use": "detail.process_cooling" },
+        { "id": "transformer_yard", "label": "Transformer yard", "grammar_use": "detail.power_equipment" }
       ]
     },
     "condition": {
@@ -51,7 +56,8 @@
         { "id": "damaged", "label": "Damaged" },
         { "id": "abandoned", "label": "Abandoned" },
         { "id": "construction", "label": "Under construction" },
-        { "id": "fire", "label": "Fire damage" }
+        { "id": "fire", "label": "Fire damage" },
+        { "id": "decommissioned", "label": "Decommissioned", "grammar_use": "condition.powered_down" }
       ]
     }
   },

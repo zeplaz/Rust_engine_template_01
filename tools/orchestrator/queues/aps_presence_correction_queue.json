@@ -1,0 +1,196 @@
+{
+  "_meta": {
+    "version": "1.0.0",
+    "program_id": "APS-PRESENCE-CORRECTION-001",
+    "date": "2026-06-18",
+    "priority": "P1",
+    "status": "OPEN",
+    "routing": "src/dev/planner_routing_aps_presence_v1.md",
+    "audit": "src/dev/design_aps_default_presence_audit_v1.md",
+    "rule": "Presence truth before new APS UI — brief/coverage/parity must agree; live tier witnesses must not use G0 fixture",
+    "dependency_order": [
+      "APS-GUARD-BRIEF-PARITY-001",
+      "APS-GRAM-TIER-GATES-LIVE-001",
+      "DES-APS-SESSION-DUMP-001",
+      "DES-APS-ASSEMBLY-EMPTY-G2-001",
+      "OVR-APS-PRESENCE-OPERATOR-001"
+    ],
+    "regression": "cd tools/mcp/python && python -m pytest -k aps -q",
+    "wit_hon": "validate-report witness_honesty debug_runs/aps_session_presence_live.json --compress 3"
+  },
+  "dispatch_now": {
+    "coder-mcp": "done — operator OVR-APS-PRESENCE-OPERATOR-001",
+    "planner": "idle — PLAN-APS-PRESENCE-PLAN-EDIT-001 done 2026-06-21",
+    "operator": "OVR-APS-PRESENCE-OPERATOR-001"
+  },
+  "drain": [
+    {
+      "seq": 1,
+      "phase": "P0",
+      "id": "APS-GUARD-BRIEF-PARITY-001",
+      "status": "done",
+      "priority": "P0",
+      "owner": "coder-mcp",
+      "goal": "Single pilot-count authority for grammar_set_brief · building_set_coverage · grammar_pilot_parity",
+      "territory": "tools/mcp/python/rust_engine_mcp/grammar_build_set.py",
+      "acceptance": [
+        "grammar_set_brief pilot count == building_set_coverage pilot count == grammar_pilot_parity pilot count",
+        "grammar_set_tier().reasons empty at G4 bar OR Set health shows honest red when guards fail",
+        "No green brief with red coverage/parity mismatch"
+      ],
+      "verify": [
+        "python -m rust_engine_mcp.cli grammar-set-brief --write-witness",
+        "python -m rust_engine_mcp.cli building-set-coverage --write-witness",
+        "pytest tools/mcp/python/tests/test_grammar_build_set.py -q",
+        "pytest tools/mcp/python/tests -k aps -q"
+      ],
+      "witness": "debug_runs/aps_guard_brief_parity_live.json",
+      "unblocks": [
+        "APS-GRAM-TIER-GATES-LIVE-001",
+        "DES-APS-SESSION-DUMP-001"
+      ],
+      "routing_ref": "src/dev/planner_routing_aps_presence_v1.md § Queue seeds"
+    },
+    {
+      "seq": 2,
+      "phase": "P0",
+      "id": "APS-GRAM-TIER-GATES-LIVE-001",
+      "status": "done",
+      "priority": "P0",
+      "owner": "coder-mcp",
+      "depends_on": [
+        "APS-GUARD-BRIEF-PARITY-001"
+      ],
+      "goal": "Refresh aps_grammar_tier_gates_live.json from refresh_grammar_tier_from_registry(), not apply('G0') fixture",
+      "territory": [
+        "tools/mcp/python/rust_engine_mcp/grammar_build_set.py",
+        "tools/mcp/python/tests/test_aps_grammar_tier_gates.py",
+        "tools/mcp/art_pipeline_suite/assembly_panel.py"
+      ],
+      "acceptance": [
+        "aps_grammar_tier_gates_live.json tier == grammar_set_tier_live.json tier",
+        "test_write_aps_grammar_tier_gates_witness does not overwrite live file with G0 fixture",
+        "Split aps_grammar_tier_gates_g0_fixture_live.json for G0 matrix CI"
+      ],
+      "verify": [
+        "pytest tools/mcp/python/tests/test_aps_grammar_tier_gates.py::test_refresh_grammar_tier_from_registry_matches_api -q",
+        "pytest tools/mcp/python/tests/test_aps_grammar_tier_gates.py::test_write_aps_grammar_tier_gates_witness -q",
+        "validate-report witness_honesty debug_runs/aps_grammar_tier_gates_live.json --compress 3"
+      ],
+      "witness": "debug_runs/aps_grammar_tier_gates_live.json",
+      "parallel_ok": [
+        "DES-APS-SESSION-DUMP-001"
+      ],
+      "unblocks": [
+        "OVR-APS-PRESENCE-OPERATOR-001"
+      ],
+      "routing_ref": "src/dev/design_aps_default_presence_audit_v1.md §4.4"
+    },
+    {
+      "seq": 3,
+      "phase": "P0",
+      "id": "DES-APS-SESSION-DUMP-001",
+      "status": "done",
+      "priority": "P0",
+      "owner": "coder-mcp",
+      "depends_on": [
+        "APS-GUARD-BRIEF-PARITY-001"
+      ],
+      "goal": "Implement aps_session_presence_live.json bundled witness + CLI aps-session-presence-dump --write-witness",
+      "territory": [
+        "tools/mcp/python/rust_engine_mcp/grammar_build_set.py",
+        "tools/mcp/python/rust_engine_mcp/cli.py"
+      ],
+      "acceptance": [
+        "debug_runs/aps_session_presence_live.json written by one CLI command",
+        "ui_presence.tier must equal grammar_set_tier.tier — else WIT-HON fail",
+        "Bundle includes grammar_set_tier, grammar_set_brief, g4_guards, ui_presence, expansion block"
+      ],
+      "verify": [
+        "python -m rust_engine_mcp.cli aps-session-presence-dump --write-witness",
+        "validate-report witness_honesty debug_runs/aps_session_presence_live.json --compress 3"
+      ],
+      "witness": "debug_runs/aps_session_presence_live.json",
+      "schema_ref": "src/dev/design_aps_default_presence_audit_v1.md §4.3",
+      "parallel_ok": [
+        "APS-GRAM-TIER-GATES-LIVE-001"
+      ],
+      "unblocks": [
+        "OVR-APS-PRESENCE-OPERATOR-001"
+      ]
+    },
+    {
+      "seq": 4,
+      "phase": "P1",
+      "id": "OVR-APS-PRESENCE-OPERATOR-001",
+      "status": "open",
+      "priority": "P1",
+      "owner": "operator",
+      "depends_on": [
+        "APS-GRAM-TIER-GATES-LIVE-001",
+        "DES-APS-SESSION-DUMP-001"
+      ],
+      "goal": "Run §4.2 presence dump before next APS rubric walk; attach 3 JSON paths to HANDOFF",
+      "commands": [
+        "cd C:\\dev\\github\\Rust_engine_template_01",
+        "$env:APS_TEST_HEADLESS = \"1\"",
+        "python -m rust_engine_mcp.cli aps-session-presence-dump --write-witness",
+        "python -m rust_engine_mcp.cli grammar-set-tier --write-witness",
+        "python -m rust_engine_mcp.cli grammar-set-brief --write-witness"
+      ],
+      "attach_to_handoff": [
+        "debug_runs/aps_session_presence_live.json",
+        "debug_runs/grammar_set_tier_live.json",
+        "debug_runs/grammar_set_brief_live.json"
+      ],
+      "acceptance": [
+        "aps_session_presence_live.json WIT-HON green",
+        "HANDOFF.md updated with 3 witness paths",
+        "Operator rubric walk uses live tier (G3), not G0 fixture"
+      ],
+      "routing_ref": "src/dev/design_aps_default_presence_audit_v1.md §4.2"
+    },
+    {
+      "seq": 5,
+      "phase": "P1",
+      "id": "DES-APS-ASSEMBLY-EMPTY-G2-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "designer",
+      "coder_mcp_impl": "done",
+      "coder_mcp_verify": "pytest tools/mcp/python/tests/test_aps_onboarding.py::test_assembly_empty_label_tier_aware -q",
+      "goal": "Tier-aware assembly empty-state tail copy @ G2+",
+      "deliverable": "src/dev/design_aps_assembly_empty_g2_v1.md",
+      "acceptance": [
+        "G0-G1 label unchanged",
+        "G2+ adds shape-bias tail per audit §1.3",
+        "pytest string match by coder-mcp"
+      ],
+      "witness": "src/dev/design_aps_assembly_empty_g2_v1.md",
+      "signed_date": "2026-06-02",
+      "parallel_ok": [
+        "APS-GRAM-TIER-GATES-LIVE-001",
+        "DES-APS-SESSION-DUMP-001"
+      ],
+      "routing_ref": "src/dev/planner_routing_aps_presence_v1.md"
+    },
+    {
+      "seq": 0,
+      "phase": "P0",
+      "id": "PLAN-APS-PRESENCE-PLAN-EDIT-001",
+      "status": "done",
+      "priority": "P0",
+      "owner": "planner",
+      "completed": "2026-06-21",
+      "goal": "Amend grammar evolution plan docs — G3 example today; split fixture G0 vs live tier witnesses",
+      "deliverables": [
+        "src/dev/plan_aps_grammar_evolution_v1.md",
+        "src/dev/plan_aps_grammar_evolution_witness_v1.md"
+      ],
+      "parallel_ok": [
+        "APS-GUARD-BRIEF-PARITY-001"
+      ],
+      "routing_ref": "src/dev/planner_routing_aps_presence_v1.md § Plan doc edits"
+    }
+  ]
+}

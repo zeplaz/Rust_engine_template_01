@@ -35,6 +35,7 @@ class SuiteState:
     # APS-UX-PIPELINE-VALIDITY-001 — None = P0 not run yet for the current snapshot,
     # True = P0 gate passed, False = P0 gate failed. Reset to None on generate/load.
     assembly_p0_passed: bool | None = None
+    assembly_generation_approved: bool = False
     module_ids_in_assembly: list[str] = field(default_factory=list)
     variant_set_path: str | None = None
     variant_set_data: dict[str, Any] | None = None

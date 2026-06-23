@@ -4,15 +4,22 @@
   "queue_stats": [
     {
       "queue": "aps_grammar_evolution_queue.json",
-      "done": 15,
+      "done": 12,
       "pick": 0,
-      "blocked": 0,
+      "blocked": 3,
       "other": 0
     },
     {
       "queue": "aps_option_d_agent_queue.json",
-      "done": 23,
+      "done": 19,
       "pick": 0,
+      "blocked": 4,
+      "other": 0
+    },
+    {
+      "queue": "aps_presence_correction_queue.json",
+      "done": 5,
+      "pick": 1,
       "blocked": 0,
       "other": 0
     },
@@ -25,30 +32,30 @@
     },
     {
       "queue": "aps_uiux_overhaul_queue.json",
-      "done": 24,
+      "done": 15,
       "pick": 0,
-      "blocked": 0,
+      "blocked": 9,
       "other": 0
     },
     {
       "queue": "coder_active_queue.json",
-      "done": 246,
-      "pick": 0,
+      "done": 247,
+      "pick": 1,
       "blocked": 1,
       "other": 21
     },
     {
       "queue": "coder_drain_queue.json",
-      "done": 16,
+      "done": 11,
       "pick": 0,
-      "blocked": 2,
+      "blocked": 7,
       "other": 0
     },
     {
       "queue": "coder_master_drain_queue.json",
-      "done": 24,
+      "done": 14,
       "pick": 0,
-      "blocked": 6,
+      "blocked": 16,
       "other": 0
     },
     {
@@ -60,9 +67,9 @@
     },
     {
       "queue": "coder_vegetation_drain_queue.json",
-      "done": 78,
+      "done": 26,
       "pick": 0,
-      "blocked": 4,
+      "blocked": 56,
       "other": 0
     },
     {
@@ -81,16 +88,16 @@
     },
     {
       "queue": "grammar_continuation_queue.json",
-      "done": 109,
+      "done": 107,
       "pick": 1,
-      "blocked": 2,
+      "blocked": 4,
       "other": 0
     },
     {
       "queue": "mcp_active_queue.json",
-      "done": 31,
+      "done": 13,
       "pick": 0,
-      "blocked": 0,
+      "blocked": 18,
       "other": 0
     },
     {
@@ -102,9 +109,9 @@
     },
     {
       "queue": "multi_parallel_home_queues_v1.json",
-      "done": 45,
+      "done": 39,
       "pick": 0,
-      "blocked": 7,
+      "blocked": 13,
       "other": 0
     },
     {
@@ -129,9 +136,9 @@
     },
     {
       "queue": "planner_active_queue.json",
-      "done": 1,
-      "pick": 0,
-      "blocked": 1,
+      "done": 0,
+      "pick": 1,
+      "blocked": 2,
       "other": 0
     },
     {
@@ -157,16 +164,16 @@
     },
     {
       "queue": "post_drain_phase4_queue.json",
-      "done": 18,
+      "done": 11,
       "pick": 0,
-      "blocked": 3,
+      "blocked": 10,
       "other": 0
     },
     {
       "queue": "post_drain_phase5_queue.json",
-      "done": 20,
+      "done": 15,
       "pick": 0,
-      "blocked": 8,
+      "blocked": 13,
       "other": 0
     },
     {
@@ -178,16 +185,16 @@
     },
     {
       "queue": "post_drain_phase6_coder_queue.json",
-      "done": 32,
+      "done": 10,
       "pick": 0,
-      "blocked": 0,
+      "blocked": 22,
       "other": 0
     },
     {
       "queue": "power_grid_art_downstream_queue.json",
-      "done": 13,
+      "done": 15,
       "pick": 0,
-      "blocked": 1,
+      "blocked": 0,
       "other": 0
     },
     {
@@ -206,7 +213,41 @@
     }
   ],
   "pick_now": {
+    "?": [
+      {
+        "id": "PLAN-APS-PRESENCE-001",
+        "status": "open",
+        "owner": "?",
+        "queue": "planner_active_queue.json",
+        "program": "APS-PRESENCE-CORRECTION-001",
+        "depends_on": [],
+        "priority": 1
+      }
+    ],
+    "coder_b": [
+      {
+        "id": "PERF-INSTR-VFX-002",
+        "status": "in_progress",
+        "owner": "coder_b",
+        "queue": "coder_active_queue.json",
+        "program": "",
+        "depends_on": [],
+        "priority": "P0"
+      }
+    ],
     "operator": [
+      {
+        "id": "OVR-APS-PRESENCE-OPERATOR-001",
+        "status": "open",
+        "owner": "operator",
+        "queue": "aps_presence_correction_queue.json",
+        "program": "APS-PRESENCE-CORRECTION-001",
+        "depends_on": [
+          "APS-GRAM-TIER-GATES-LIVE-001",
+          "DES-APS-SESSION-DUMP-001"
+        ],
+        "priority": "P1"
+      },
       {
         "id": "PERF-SHELL-001",
         "status": "ready",
@@ -268,6 +309,15 @@
         "priority": "P4"
       },
       {
+        "id": "PLAN-MAP-ZOOM-SMOOTH-001",
+        "status": "blocked",
+        "owner": "?",
+        "queue": "planner_active_queue.json",
+        "program": "",
+        "depends_on": [],
+        "priority": 1
+      },
+      {
         "id": "PLAN-AUDIT-020",
         "status": "blocked",
         "owner": "?",
@@ -277,7 +327,247 @@
         "priority": 3
       }
     ],
+    "coder": [
+      {
+        "id": "COD-SIM-HUD-EGUI-THEME-001",
+        "status": "blocked",
+        "owner": "coder",
+        "queue": "multi_parallel_home_queues_v1.json",
+        "program": "PLAN-MULTI-PARALLEL-TRACKS-001",
+        "depends_on": [
+          "DES-SIM-HUD-COHESION-001"
+        ],
+        "priority": "P0"
+      },
+      {
+        "id": "COD-SIM-HUD-BUILD-PICKER-001",
+        "status": "blocked",
+        "owner": "coder",
+        "queue": "multi_parallel_home_queues_v1.json",
+        "program": "PLAN-MULTI-PARALLEL-TRACKS-001",
+        "depends_on": [
+          "DES-SIM-HUD-BUILD-PICKER-001"
+        ],
+        "priority": "P0"
+      },
+      {
+        "id": "COD-SIM-HUD-TRAY-BUILD-001",
+        "status": "blocked",
+        "owner": "coder",
+        "queue": "multi_parallel_home_queues_v1.json",
+        "program": "PLAN-MULTI-PARALLEL-TRACKS-001",
+        "depends_on": [
+          "DES-SIM-HUD-TRAY-BUILD-001"
+        ],
+        "priority": "P0"
+      },
+      {
+        "id": "TRIAGE-BUILD-CLICK-PLACE-001",
+        "status": "blocked",
+        "owner": "coder",
+        "queue": "post_drain_phase4_queue.json",
+        "program": "POST-DRAIN-PHASE-4-001",
+        "depends_on": [
+          "DESIGN-BUILD-UX-REDESIGN-001"
+        ],
+        "priority": 1
+      },
+      {
+        "id": "TRIAGE-CURSOR-UNIFY-001",
+        "status": "blocked",
+        "owner": "coder",
+        "queue": "post_drain_phase4_queue.json",
+        "program": "POST-DRAIN-PHASE-4-001",
+        "depends_on": [
+          "DESIGN-BUILD-UX-REDESIGN-001"
+        ],
+        "priority": 1
+      },
+      {
+        "id": "P0-VFX-ZOOM-LOCK-001",
+        "status": "blocked",
+        "owner": "coder",
+        "queue": "post_drain_phase4_queue.json",
+        "program": "POST-DRAIN-PHASE-4-001",
+        "depends_on": [],
+        "priority": 1
+      },
+      {
+        "id": "P0-TERRAIN-BLOB-001",
+        "status": "blocked",
+        "owner": "coder",
+        "queue": "post_drain_phase4_queue.json",
+        "program": "POST-DRAIN-PHASE-4-001",
+        "depends_on": [],
+        "priority": 2
+      },
+      {
+        "id": "BUILD-READ-REWIRE-001",
+        "status": "blocked",
+        "owner": "coder",
+        "queue": "post_drain_phase5_queue.json",
+        "program": "POST-DRAIN-PHASE-5-001",
+        "depends_on": [],
+        "priority": 0
+      },
+      {
+        "id": "BUILD-READ-REWIRE-002",
+        "status": "blocked",
+        "owner": "coder",
+        "queue": "post_drain_phase5_queue.json",
+        "program": "POST-DRAIN-PHASE-5-001",
+        "depends_on": [],
+        "priority": 0
+      },
+      {
+        "id": "MINIMAP-REWIRE-001",
+        "status": "blocked",
+        "owner": "coder",
+        "queue": "post_drain_phase5_queue.json",
+        "program": "POST-DRAIN-PHASE-5-001",
+        "depends_on": [],
+        "priority": 1
+      },
+      {
+        "id": "BUILD-READ-REWIRE-004",
+        "status": "deferred",
+        "owner": "coder",
+        "queue": "post_drain_phase5_queue.json",
+        "program": "POST-DRAIN-PHASE-5-001",
+        "depends_on": [],
+        "priority": 1
+      }
+    ],
     "coder-mcp": [
+      {
+        "id": "APS-E1-FLOW-LANE-001",
+        "status": "blocked",
+        "owner": "coder-mcp",
+        "queue": "aps_option_d_agent_queue.json",
+        "program": "APS-OPTION-D-001",
+        "depends_on": [
+          "APS-E1-TAB-SWAP-001"
+        ],
+        "priority": "P0"
+      },
+      {
+        "id": "APS-E1-PIPELINE-LANE-001",
+        "status": "blocked",
+        "owner": "coder-mcp",
+        "queue": "aps_option_d_agent_queue.json",
+        "program": "APS-OPTION-D-001",
+        "depends_on": [
+          "APS-E1-TAB-SWAP-001"
+        ],
+        "priority": "P0"
+      },
+      {
+        "id": "APS-E2-GRAMMAR-PANEL-001",
+        "status": "blocked",
+        "owner": "coder-mcp",
+        "queue": "aps_option_d_agent_queue.json",
+        "program": "APS-OPTION-D-001",
+        "depends_on": [
+          "APS-E1-TAB-SWAP-001",
+          "DES-APS-GRAMMAR-PANEL-UX-001"
+        ],
+        "priority": "P1"
+      },
+      {
+        "id": "OVR-P1-TOKENS-001",
+        "status": "blocked",
+        "owner": "coder-mcp",
+        "queue": "aps_uiux_overhaul_queue.json",
+        "program": "PLAN-APS-UIUX-OVERHAUL-001",
+        "depends_on": [
+          "OVR-P0-DESIGN-LOCK",
+          "ORCH-OVR-001"
+        ],
+        "priority": "P0"
+      },
+      {
+        "id": "OVR-P2-TEXT-001",
+        "status": "blocked",
+        "owner": "coder-mcp",
+        "queue": "aps_uiux_overhaul_queue.json",
+        "program": "PLAN-APS-UIUX-OVERHAUL-001",
+        "depends_on": [
+          "OVR-P1-TOKENS-001",
+          "OVR-DES-P2-COPY-PACK-001"
+        ],
+        "priority": "P0"
+      },
+      {
+        "id": "OVR-P3-LAYOUT-001",
+        "status": "blocked",
+        "owner": "coder-mcp",
+        "queue": "aps_uiux_overhaul_queue.json",
+        "program": "PLAN-APS-UIUX-OVERHAUL-001",
+        "depends_on": [
+          "OVR-P2-TEXT-001",
+          "OVR-DES-P3-LAYOUT-DELTA-001"
+        ],
+        "priority": "P0"
+      },
+      {
+        "id": "OVR-P4-IA-001",
+        "status": "blocked",
+        "owner": "coder-mcp",
+        "queue": "aps_uiux_overhaul_queue.json",
+        "program": "PLAN-APS-UIUX-OVERHAUL-001",
+        "depends_on": [
+          "OVR-P3-LAYOUT-001",
+          "OVR-DES-P4-IA-SIGN-001"
+        ],
+        "priority": "P0"
+      },
+      {
+        "id": "OVR-P45-SPINE-001",
+        "status": "blocked",
+        "owner": "coder-mcp",
+        "queue": "aps_uiux_overhaul_queue.json",
+        "program": "PLAN-APS-UIUX-OVERHAUL-001",
+        "depends_on": [
+          "OVR-P4-IA-001",
+          "OVR-DES-P45-SPINE-SPEC-001"
+        ],
+        "priority": "P0"
+      },
+      {
+        "id": "OVR-P5-STYLE-001",
+        "status": "blocked",
+        "owner": "coder-mcp",
+        "queue": "aps_uiux_overhaul_queue.json",
+        "program": "PLAN-APS-UIUX-OVERHAUL-001",
+        "depends_on": [
+          "OVR-P45-SPINE-001"
+        ],
+        "priority": "P0"
+      },
+      {
+        "id": "OVR-P55-PREVIEW-001",
+        "status": "blocked",
+        "owner": "coder-mcp",
+        "queue": "aps_uiux_overhaul_queue.json",
+        "program": "PLAN-APS-UIUX-OVERHAUL-001",
+        "depends_on": [
+          "OVR-P5-STYLE-001",
+          "OVR-DES-P55-PREVIEW-SPEC-001"
+        ],
+        "priority": "P0"
+      },
+      {
+        "id": "OVR-P56-ONBOARD-001",
+        "status": "blocked",
+        "owner": "coder-mcp",
+        "queue": "aps_uiux_overhaul_queue.json",
+        "program": "PLAN-APS-UIUX-OVERHAUL-001",
+        "depends_on": [
+          "OVR-P55-PREVIEW-001",
+          "OVR-DES-P56-ONBOARD-SPEC-001"
+        ],
+        "priority": "P0"
+      },
       {
         "id": "BUILD-READ-VISUAL-002",
         "status": "blocked",
@@ -290,6 +580,26 @@
         "priority": "P2"
       },
       {
+        "id": "BUILD-READ-GRAMMAR-v0-002",
+        "status": "blocked",
+        "owner": "coder-mcp",
+        "queue": "grammar_continuation_queue.json",
+        "program": "",
+        "depends_on": [],
+        "priority": 2
+      },
+      {
+        "id": "BUILD-READ-CONSUMER-MCP-001",
+        "status": "blocked",
+        "owner": "coder-mcp",
+        "queue": "grammar_continuation_queue.json",
+        "program": "",
+        "depends_on": [
+          "BUILD-READ-GRAMMAR-v0-002"
+        ],
+        "priority": 2
+      },
+      {
         "id": "MCP-OPS-REPORT-001",
         "status": "deferred",
         "owner": "coder-mcp",
@@ -299,6 +609,132 @@
           "MCP-DOC-READ-002-IMPL"
         ],
         "priority": 3
+      },
+      {
+        "id": "MCP-PROD-B2",
+        "status": "blocked",
+        "owner": "coder-mcp",
+        "queue": "mcp_active_queue.json",
+        "program": "",
+        "depends_on": [],
+        "priority": "P0"
+      },
+      {
+        "id": "MCP-PROD-C-PILOT",
+        "status": "blocked",
+        "owner": "coder-mcp",
+        "queue": "mcp_active_queue.json",
+        "program": "",
+        "depends_on": [],
+        "priority": "P0"
+      },
+      {
+        "id": "MCP-P2-KIT002-G2",
+        "status": "blocked",
+        "owner": "coder-mcp",
+        "queue": "mcp_active_queue.json",
+        "program": "",
+        "depends_on": [
+          "MCP-P2-KIT002-G0"
+        ],
+        "priority": "P1"
+      },
+      {
+        "id": "MCP-P2-KIT002-G3",
+        "status": "blocked",
+        "owner": "coder-mcp",
+        "queue": "mcp_active_queue.json",
+        "program": "",
+        "depends_on": [
+          "MCP-P2-KIT002-G1",
+          "MCP-P2-KIT002-G2"
+        ],
+        "priority": "P1"
+      },
+      {
+        "id": "MCP-PROD-TILE-VAL",
+        "status": "blocked",
+        "owner": "coder-mcp",
+        "queue": "mcp_active_queue.json",
+        "program": "",
+        "depends_on": [],
+        "priority": "P1"
+      },
+      {
+        "id": "MCP-PROD-INDEX",
+        "status": "blocked",
+        "owner": "coder-mcp",
+        "queue": "mcp_active_queue.json",
+        "program": "",
+        "depends_on": [],
+        "priority": "P2"
+      },
+      {
+        "id": "MCP-WIT-001",
+        "status": "blocked",
+        "owner": "coder-mcp",
+        "queue": "mcp_active_queue.json",
+        "program": "",
+        "depends_on": [],
+        "priority": "P0"
+      },
+      {
+        "id": "MCP-WIT-010",
+        "status": "blocked",
+        "owner": "coder-mcp",
+        "queue": "mcp_active_queue.json",
+        "program": "",
+        "depends_on": [
+          "MCP-WIT-001"
+        ],
+        "priority": "P0"
+      },
+      {
+        "id": "MCP-WIT-020",
+        "status": "blocked",
+        "owner": "coder-mcp",
+        "queue": "mcp_active_queue.json",
+        "program": "",
+        "depends_on": [
+          "MCP-WIT-010"
+        ],
+        "priority": "P1"
+      },
+      {
+        "id": "MCP-WIT-030",
+        "status": "blocked",
+        "owner": "coder-mcp",
+        "queue": "mcp_active_queue.json",
+        "program": "",
+        "depends_on": [
+          "MCP-WIT-001"
+        ],
+        "priority": "P1"
+      },
+      {
+        "id": "MCP-WIT-040",
+        "status": "blocked",
+        "owner": "coder-mcp",
+        "queue": "mcp_active_queue.json",
+        "program": "",
+        "depends_on": [
+          "MCP-WIT-001",
+          "MCP-WIT-010",
+          "MCP-WIT-030"
+        ],
+        "priority": "P1"
+      },
+      {
+        "id": "OVR-P56-ONBOARD-001",
+        "status": "blocked",
+        "owner": "coder-mcp",
+        "queue": "multi_parallel_home_queues_v1.json",
+        "program": "PLAN-MULTI-PARALLEL-TRACKS-001",
+        "depends_on": [
+          "DES-APS-ONBOARD-SPEC-002",
+          "OVR-P55-PREVIEW-002"
+        ],
+        "priority": "P1"
       },
       {
         "id": "BUILD-READ-VISUAL-002",
@@ -359,20 +795,416 @@
           "BUILD-READ-GRAMMAR-v0-001"
         ],
         "priority": 2
-      },
-      {
-        "id": "MCP-PWR-NUCLEAR-BATCH-001",
-        "status": "deferred",
-        "owner": "coder-mcp",
-        "queue": "power_grid_art_downstream_queue.json",
-        "program": "PLAN-POWER-GRID-ART-ASSETS-001",
-        "depends_on": [
-          "DMCP-SPEC-NUCLEAR-PWR-001"
-        ],
-        "priority": "P2"
       }
     ],
     "coder_a": [
+      {
+        "id": "FACTION-REACT-001",
+        "status": "blocked",
+        "owner": "coder_a",
+        "queue": "coder_drain_queue.json",
+        "program": "POST-DRAIN-PHASE-4-001",
+        "depends_on": [
+          "SIM-EFFECT-TEL-001"
+        ],
+        "priority": "P3"
+      },
+      {
+        "id": "VEG-A01-HARNESS-001",
+        "status": "blocked",
+        "owner": "coder_a",
+        "queue": "coder_master_drain_queue.json",
+        "program": "CODER-MASTER-DRAIN-001",
+        "depends_on": [],
+        "priority": "P0"
+      },
+      {
+        "id": "VEG-DRAIN-CONTINUE",
+        "status": "blocked",
+        "owner": "coder_a",
+        "queue": "coder_master_drain_queue.json",
+        "program": "CODER-MASTER-DRAIN-001",
+        "depends_on": [],
+        "priority": "P1"
+      },
+      {
+        "id": "FACTION-REACT-001",
+        "status": "blocked",
+        "owner": "coder_a",
+        "queue": "coder_master_drain_queue.json",
+        "program": "CODER-MASTER-DRAIN-001",
+        "depends_on": [
+          "G-PLAY-01"
+        ],
+        "priority": "P3"
+      },
+      {
+        "id": "VEG-A01-HARNESS-001",
+        "status": "blocked",
+        "owner": "coder_a",
+        "queue": "coder_vegetation_drain_queue.json",
+        "program": "VEGETATION-PROGRAM-001",
+        "depends_on": [],
+        "priority": "P0"
+      },
+      {
+        "id": "VEG-A02-SCHEDULE-001",
+        "status": "blocked",
+        "owner": "coder_a",
+        "queue": "coder_vegetation_drain_queue.json",
+        "program": "VEGETATION-PROGRAM-001",
+        "depends_on": [
+          "VEG-A01-HARNESS-001"
+        ],
+        "priority": "P1"
+      },
+      {
+        "id": "VEG-A03-FIRE-IGNITE-001",
+        "status": "blocked",
+        "owner": "coder_a",
+        "queue": "coder_vegetation_drain_queue.json",
+        "program": "VEGETATION-PROGRAM-001",
+        "depends_on": [
+          "VEG-A02-SCHEDULE-001"
+        ],
+        "priority": "P1"
+      },
+      {
+        "id": "VEG-A05-FIRE-STAGE-001",
+        "status": "blocked",
+        "owner": "coder_a",
+        "queue": "coder_vegetation_drain_queue.json",
+        "program": "VEGETATION-PROGRAM-001",
+        "depends_on": [
+          "VEG-A04-FIRE-EVENT-001"
+        ],
+        "priority": "P1"
+      },
+      {
+        "id": "VEG-A07-BUILD-FOOTPRINT-001",
+        "status": "blocked",
+        "owner": "coder_a",
+        "queue": "coder_vegetation_drain_queue.json",
+        "program": "VEGETATION-PROGRAM-001",
+        "depends_on": [],
+        "priority": "P0"
+      },
+      {
+        "id": "VEG-A10-RECOVERY-TICK-001",
+        "status": "blocked",
+        "owner": "coder_a",
+        "queue": "coder_vegetation_drain_queue.json",
+        "program": "VEGETATION-PROGRAM-001",
+        "depends_on": [
+          "VEG-A06-FIRE-WITNESS-001"
+        ],
+        "priority": "P1"
+      },
+      {
+        "id": "VEG-A12-FUEL-MOD-001",
+        "status": "blocked",
+        "owner": "coder_a",
+        "queue": "coder_vegetation_drain_queue.json",
+        "program": "VEGETATION-PROGRAM-001",
+        "depends_on": [
+          "VEG-A05-FIRE-STAGE-001"
+        ],
+        "priority": "P1"
+      },
+      {
+        "id": "VEG-A14-HARVEST-PATH-001",
+        "status": "blocked",
+        "owner": "coder_a",
+        "queue": "coder_vegetation_drain_queue.json",
+        "program": "VEGETATION-PROGRAM-001",
+        "depends_on": [],
+        "priority": "P2"
+      },
+      {
+        "id": "VEG-A16-LIVE-PROOF-WIRE-001",
+        "status": "blocked",
+        "owner": "coder_a",
+        "queue": "coder_vegetation_drain_queue.json",
+        "program": "VEGETATION-PROGRAM-001",
+        "depends_on": [
+          "VEG-A09-BUILD-WITNESS-001"
+        ],
+        "priority": "P1"
+      },
+      {
+        "id": "VEG-BIND-LOAD-001",
+        "status": "blocked",
+        "owner": "coder_a",
+        "queue": "coder_vegetation_drain_queue.json",
+        "program": "VEGETATION-PROGRAM-001",
+        "depends_on": [],
+        "priority": "P1"
+      },
+      {
+        "id": "VEG-BIND-EVAL-001",
+        "status": "blocked",
+        "owner": "coder_a",
+        "queue": "coder_vegetation_drain_queue.json",
+        "program": "VEGETATION-PROGRAM-001",
+        "depends_on": [
+          "VEG-BIND-LOAD-001"
+        ],
+        "priority": "P1"
+      },
+      {
+        "id": "VEG-BMIL-LOAD-001",
+        "status": "blocked",
+        "owner": "coder_a",
+        "queue": "coder_vegetation_drain_queue.json",
+        "program": "VEGETATION-PROGRAM-001",
+        "depends_on": [],
+        "priority": "P1"
+      },
+      {
+        "id": "VEG-BMIL-EVAL-001",
+        "status": "blocked",
+        "owner": "coder_a",
+        "queue": "coder_vegetation_drain_queue.json",
+        "program": "VEGETATION-PROGRAM-001",
+        "depends_on": [
+          "VEG-BMIL-LOAD-001"
+        ],
+        "priority": "P1"
+      },
+      {
+        "id": "VEG-BSET-LOAD-001",
+        "status": "blocked",
+        "owner": "coder_a",
+        "queue": "coder_vegetation_drain_queue.json",
+        "program": "VEGETATION-PROGRAM-001",
+        "depends_on": [],
+        "priority": "P1"
+      },
+      {
+        "id": "VEG-BSET-EVAL-001",
+        "status": "blocked",
+        "owner": "coder_a",
+        "queue": "coder_vegetation_drain_queue.json",
+        "program": "VEGETATION-PROGRAM-001",
+        "depends_on": [
+          "VEG-BSET-LOAD-001"
+        ],
+        "priority": "P1"
+      },
+      {
+        "id": "VEG-BFOR-LOAD-001",
+        "status": "blocked",
+        "owner": "coder_a",
+        "queue": "coder_vegetation_drain_queue.json",
+        "program": "VEGETATION-PROGRAM-001",
+        "depends_on": [],
+        "priority": "P1"
+      },
+      {
+        "id": "VEG-BFOR-EVAL-001",
+        "status": "blocked",
+        "owner": "coder_a",
+        "queue": "coder_vegetation_drain_queue.json",
+        "program": "VEGETATION-PROGRAM-001",
+        "depends_on": [
+          "VEG-BFOR-LOAD-001"
+        ],
+        "priority": "P1"
+      },
+      {
+        "id": "VEG-BAGR-LOAD-001",
+        "status": "blocked",
+        "owner": "coder_a",
+        "queue": "coder_vegetation_drain_queue.json",
+        "program": "VEGETATION-PROGRAM-001",
+        "depends_on": [],
+        "priority": "P1"
+      },
+      {
+        "id": "VEG-BAGR-EVAL-001",
+        "status": "blocked",
+        "owner": "coder_a",
+        "queue": "coder_vegetation_drain_queue.json",
+        "program": "VEGETATION-PROGRAM-001",
+        "depends_on": [
+          "VEG-BAGR-LOAD-001"
+        ],
+        "priority": "P1"
+      },
+      {
+        "id": "VEG-B-ROLLOUT-Q1-001",
+        "status": "blocked",
+        "owner": "coder_a",
+        "queue": "coder_vegetation_drain_queue.json",
+        "program": "VEGETATION-PROGRAM-001",
+        "depends_on": [
+          "VEG-B-CATALOG-INDEX-001"
+        ],
+        "priority": "P1"
+      },
+      {
+        "id": "VEG-B-ROLLOUT-Q2-001",
+        "status": "blocked",
+        "owner": "coder_a",
+        "queue": "coder_vegetation_drain_queue.json",
+        "program": "VEGETATION-PROGRAM-001",
+        "depends_on": [
+          "VEG-B-CATALOG-INDEX-001"
+        ],
+        "priority": "P1"
+      },
+      {
+        "id": "VEG-B-ROLLOUT-Q3-001",
+        "status": "blocked",
+        "owner": "coder_a",
+        "queue": "coder_vegetation_drain_queue.json",
+        "program": "VEGETATION-PROGRAM-001",
+        "depends_on": [
+          "VEG-B-CATALOG-INDEX-001"
+        ],
+        "priority": "P1"
+      },
+      {
+        "id": "VEG-B-ROLLOUT-Q4-001",
+        "status": "blocked",
+        "owner": "coder_a",
+        "queue": "coder_vegetation_drain_queue.json",
+        "program": "VEGETATION-PROGRAM-001",
+        "depends_on": [
+          "VEG-B-CATALOG-INDEX-001"
+        ],
+        "priority": "P1"
+      },
+      {
+        "id": "VEG-B-LAMBDA-HYDRO-001",
+        "status": "blocked",
+        "owner": "coder_a",
+        "queue": "coder_vegetation_drain_queue.json",
+        "program": "VEGETATION-PROGRAM-001",
+        "depends_on": [],
+        "priority": "P1"
+      },
+      {
+        "id": "VEG-B-LAMBDA-TRANSPORT-001",
+        "status": "blocked",
+        "owner": "coder_a",
+        "queue": "coder_vegetation_drain_queue.json",
+        "program": "VEGETATION-PROGRAM-001",
+        "depends_on": [],
+        "priority": "P1"
+      },
+      {
+        "id": "VEG-B-LAMBDA-CONSTRUCTION-001",
+        "status": "blocked",
+        "owner": "coder_a",
+        "queue": "coder_vegetation_drain_queue.json",
+        "program": "VEGETATION-PROGRAM-001",
+        "depends_on": [],
+        "priority": "P1"
+      },
+      {
+        "id": "VEG-B-PARTITION-001",
+        "status": "blocked",
+        "owner": "coder_a",
+        "queue": "coder_vegetation_drain_queue.json",
+        "program": "VEGETATION-PROGRAM-001",
+        "depends_on": [
+          "VEG-B-ROLLOUT-WITNESS-001"
+        ],
+        "priority": "P1"
+      },
+      {
+        "id": "VEG-B-NESTED-DEPTH-001",
+        "status": "blocked",
+        "owner": "coder_a",
+        "queue": "coder_vegetation_drain_queue.json",
+        "program": "VEGETATION-PROGRAM-001",
+        "depends_on": [
+          "VEG-B-PARTITION-001"
+        ],
+        "priority": "P1"
+      },
+      {
+        "id": "VEG-C01-PREVIEW-RASTER-001",
+        "status": "blocked",
+        "owner": "coder_a",
+        "queue": "coder_vegetation_drain_queue.json",
+        "program": "VEGETATION-PROGRAM-001",
+        "depends_on": [],
+        "priority": "P1"
+      },
+      {
+        "id": "VEG-C02-PREVIEW-SHADER-001",
+        "status": "blocked",
+        "owner": "coder_a",
+        "queue": "coder_vegetation_drain_queue.json",
+        "program": "VEGETATION-PROGRAM-001",
+        "depends_on": [],
+        "priority": "P1"
+      },
+      {
+        "id": "VEG-C03-PREVIEW-HEterogeneity-001",
+        "status": "blocked",
+        "owner": "coder_a",
+        "queue": "coder_vegetation_drain_queue.json",
+        "program": "VEGETATION-PROGRAM-001",
+        "depends_on": [],
+        "priority": "P1"
+      },
+      {
+        "id": "VEG-C05-PREVIEW-GLYPH-001",
+        "status": "blocked",
+        "owner": "coder_a",
+        "queue": "coder_vegetation_drain_queue.json",
+        "program": "VEGETATION-PROGRAM-001",
+        "depends_on": [],
+        "priority": "P1"
+      },
+      {
+        "id": "VEG-C06-PREVIEW-OVERLAY-001",
+        "status": "blocked",
+        "owner": "coder_a",
+        "queue": "coder_vegetation_drain_queue.json",
+        "program": "VEGETATION-PROGRAM-001",
+        "depends_on": [],
+        "priority": "P1"
+      },
+      {
+        "id": "VEG-C07-POPULATION-AUTH-001",
+        "status": "blocked",
+        "owner": "coder_a",
+        "queue": "coder_vegetation_drain_queue.json",
+        "program": "VEGETATION-PROGRAM-001",
+        "depends_on": [],
+        "priority": "P1"
+      },
+      {
+        "id": "VEG-C08-POPULATION-WITNESS-001",
+        "status": "blocked",
+        "owner": "coder_a",
+        "queue": "coder_vegetation_drain_queue.json",
+        "program": "VEGETATION-PROGRAM-001",
+        "depends_on": [],
+        "priority": "P1"
+      },
+      {
+        "id": "VEG-C09-MINIMAP-LAYER-001",
+        "status": "blocked",
+        "owner": "coder_a",
+        "queue": "coder_vegetation_drain_queue.json",
+        "program": "VEGETATION-PROGRAM-001",
+        "depends_on": [],
+        "priority": "P1"
+      },
+      {
+        "id": "VEG-C13-VISUAL-SMOKE-001",
+        "status": "blocked",
+        "owner": "coder_a",
+        "queue": "coder_vegetation_drain_queue.json",
+        "program": "VEGETATION-PROGRAM-001",
+        "depends_on": [],
+        "priority": "P1"
+      },
       {
         "id": "VEG-C14-OPERATOR-CHECKLIST-001",
         "status": "blocked",
@@ -380,6 +1212,116 @@
         "queue": "coder_vegetation_drain_queue.json",
         "program": "VEGETATION-PROGRAM-001",
         "depends_on": [],
+        "priority": "P1"
+      },
+      {
+        "id": "VEG-D01-SETTLEMENT-LANDUSE-001",
+        "status": "blocked",
+        "owner": "coder_a",
+        "queue": "coder_vegetation_drain_queue.json",
+        "program": "VEGETATION-PROGRAM-001",
+        "depends_on": [
+          "VEG-C15-PHASE-CLOSE-001"
+        ],
+        "priority": "P1"
+      },
+      {
+        "id": "VEG-D02-TRANSPORT-CORRIDOR-001",
+        "status": "blocked",
+        "owner": "coder_a",
+        "queue": "coder_vegetation_drain_queue.json",
+        "program": "VEGETATION-PROGRAM-001",
+        "depends_on": [
+          "VEG-C15-PHASE-CLOSE-001"
+        ],
+        "priority": "P1"
+      },
+      {
+        "id": "VEG-D03-CONSTRUCTION-CLEAR-001",
+        "status": "blocked",
+        "owner": "coder_a",
+        "queue": "coder_vegetation_drain_queue.json",
+        "program": "VEGETATION-PROGRAM-001",
+        "depends_on": [
+          "VEG-C15-PHASE-CLOSE-001"
+        ],
+        "priority": "P1"
+      },
+      {
+        "id": "VEG-D04-HYDRO-RIPARIAN-001",
+        "status": "blocked",
+        "owner": "coder_a",
+        "queue": "coder_vegetation_drain_queue.json",
+        "program": "VEGETATION-PROGRAM-001",
+        "depends_on": [
+          "VEG-C15-PHASE-CLOSE-001"
+        ],
+        "priority": "P1"
+      },
+      {
+        "id": "VEG-D06-SIM-EFFECT-001",
+        "status": "blocked",
+        "owner": "coder_a",
+        "queue": "coder_vegetation_drain_queue.json",
+        "program": "VEGETATION-PROGRAM-001",
+        "depends_on": [
+          "VEG-C15-PHASE-CLOSE-001"
+        ],
+        "priority": "P1"
+      },
+      {
+        "id": "VEG-E01-SUBCELL-GRID-001",
+        "status": "blocked",
+        "owner": "coder_a",
+        "queue": "coder_vegetation_drain_queue.json",
+        "program": "VEGETATION-PROGRAM-001",
+        "depends_on": [
+          "VEG-D07-PHASE-CLOSE-001"
+        ],
+        "priority": "P1"
+      },
+      {
+        "id": "VEG-E02-INSTANCE-SPAWN-001",
+        "status": "blocked",
+        "owner": "coder_a",
+        "queue": "coder_vegetation_drain_queue.json",
+        "program": "VEGETATION-PROGRAM-001",
+        "depends_on": [
+          "VEG-D07-PHASE-CLOSE-001"
+        ],
+        "priority": "P1"
+      },
+      {
+        "id": "VEG-E03-INSTANCE-EXTRACT-001",
+        "status": "blocked",
+        "owner": "coder_a",
+        "queue": "coder_vegetation_drain_queue.json",
+        "program": "VEGETATION-PROGRAM-001",
+        "depends_on": [
+          "VEG-D07-PHASE-CLOSE-001"
+        ],
+        "priority": "P1"
+      },
+      {
+        "id": "VEG-E04-FIRE-CORRIDOR-001",
+        "status": "blocked",
+        "owner": "coder_a",
+        "queue": "coder_vegetation_drain_queue.json",
+        "program": "VEGETATION-PROGRAM-001",
+        "depends_on": [
+          "VEG-D07-PHASE-CLOSE-001"
+        ],
+        "priority": "P1"
+      },
+      {
+        "id": "VEG-E05-SUCCESSION-GRAPH-001",
+        "status": "blocked",
+        "owner": "coder_a",
+        "queue": "coder_vegetation_drain_queue.json",
+        "program": "VEGETATION-PROGRAM-001",
+        "depends_on": [
+          "VEG-D07-PHASE-CLOSE-001"
+        ],
         "priority": "P1"
       },
       {
@@ -394,7 +1336,7 @@
         "priority": "P1"
       },
       {
-        "id": "VEG-F02-MCP-ATLAS-001",
+        "id": "VEG-F03-REGISTRY-STAMP-001",
         "status": "blocked",
         "owner": "coder_a",
         "queue": "coder_vegetation_drain_queue.json",
@@ -403,9 +1345,278 @@
           "VEG-E08-PHASE-CLOSE-001"
         ],
         "priority": "P1"
+      },
+      {
+        "id": "VEG-F06-PRESET-EXPAND-001",
+        "status": "blocked",
+        "owner": "coder_a",
+        "queue": "coder_vegetation_drain_queue.json",
+        "program": "VEGETATION-PROGRAM-001",
+        "depends_on": [
+          "VEG-E08-PHASE-CLOSE-001"
+        ],
+        "priority": "P1"
+      },
+      {
+        "id": "VEG-F07-NESTED-DEPTH-003-001",
+        "status": "blocked",
+        "owner": "coder_a",
+        "queue": "coder_vegetation_drain_queue.json",
+        "program": "VEGETATION-PROGRAM-001",
+        "depends_on": [
+          "VEG-E08-PHASE-CLOSE-001"
+        ],
+        "priority": "P1"
+      },
+      {
+        "id": "VEG-F08-QUEUE-SYNC-001",
+        "status": "blocked",
+        "owner": "coder_a",
+        "queue": "coder_vegetation_drain_queue.json",
+        "program": "VEGETATION-PROGRAM-001",
+        "depends_on": [
+          "VEG-E08-PHASE-CLOSE-001"
+        ],
+        "priority": "P1"
+      },
+      {
+        "id": "VEG-G01-OPERATOR-HISTORY-001",
+        "status": "blocked",
+        "owner": "coder_a",
+        "queue": "coder_vegetation_drain_queue.json",
+        "program": "VEGETATION-PROGRAM-001",
+        "depends_on": [
+          "VEG-F05-PROGRAM-CLOSE-001"
+        ],
+        "priority": "P1"
+      },
+      {
+        "id": "VEG-G04-DRAIN-SYNC-001",
+        "status": "blocked",
+        "owner": "coder_a",
+        "queue": "coder_vegetation_drain_queue.json",
+        "program": "VEGETATION-PROGRAM-001",
+        "depends_on": [
+          "VEG-F08-QUEUE-SYNC-001"
+        ],
+        "priority": "P1"
+      },
+      {
+        "id": "VEG-\u00ce\u00bb-LIVE-001",
+        "status": "blocked",
+        "owner": "coder_a",
+        "queue": "post_drain_phase6_coder_queue.json",
+        "program": "POST-DRAIN-PHASE-6-001",
+        "depends_on": [],
+        "priority": "P1"
+      },
+      {
+        "id": "VEG-DIAG-COMPOSITE-001",
+        "status": "blocked",
+        "owner": "coder_a",
+        "queue": "post_drain_phase6_coder_queue.json",
+        "program": "POST-DRAIN-PHASE-6-001",
+        "depends_on": [],
+        "priority": "P2"
+      },
+      {
+        "id": "INFRA-E0-003",
+        "status": "blocked",
+        "owner": "coder_a",
+        "queue": "post_drain_phase6_coder_queue.json",
+        "program": "POST-DRAIN-PHASE-6-001",
+        "depends_on": [],
+        "priority": "P1"
+      },
+      {
+        "id": "INFRA-VM-DEEP-001",
+        "status": "blocked",
+        "owner": "coder_a",
+        "queue": "post_drain_phase6_coder_queue.json",
+        "program": "POST-DRAIN-PHASE-6-001",
+        "depends_on": [],
+        "priority": "P3"
+      },
+      {
+        "id": "PROC-PG-2-TAIL-001",
+        "status": "blocked",
+        "owner": "coder_a",
+        "queue": "post_drain_phase6_coder_queue.json",
+        "program": "POST-DRAIN-PHASE-6-001",
+        "depends_on": [],
+        "priority": "P1"
+      },
+      {
+        "id": "PROC-OG-4-001",
+        "status": "blocked",
+        "owner": "coder_a",
+        "queue": "post_drain_phase6_coder_queue.json",
+        "program": "POST-DRAIN-PHASE-6-001",
+        "depends_on": [],
+        "priority": "P2"
+      },
+      {
+        "id": "PT-5-002",
+        "status": "blocked",
+        "owner": "coder_a",
+        "queue": "post_drain_phase6_coder_queue.json",
+        "program": "POST-DRAIN-PHASE-6-001",
+        "depends_on": [],
+        "priority": "P2"
+      },
+      {
+        "id": "S7B-M1-001",
+        "status": "blocked",
+        "owner": "coder_a",
+        "queue": "post_drain_phase6_coder_queue.json",
+        "program": "POST-DRAIN-PHASE-6-001",
+        "depends_on": [],
+        "priority": "P1"
+      },
+      {
+        "id": "FACTION-REACT-002",
+        "status": "blocked",
+        "owner": "coder_a",
+        "queue": "post_drain_phase6_coder_queue.json",
+        "program": "POST-DRAIN-PHASE-6-001",
+        "depends_on": [],
+        "priority": "P3"
       }
     ],
     "coder_b": [
+      {
+        "id": "TRIAGE-BUILD-CLICK-PLACE-001",
+        "status": "blocked",
+        "owner": "coder_b",
+        "queue": "coder_drain_queue.json",
+        "program": "POST-DRAIN-PHASE-4-001",
+        "depends_on": [
+          "DESIGN-BUILD-UX-REDESIGN-001"
+        ],
+        "priority": "P0"
+      },
+      {
+        "id": "TRIAGE-CURSOR-UNIFY-001",
+        "status": "blocked",
+        "owner": "coder_b",
+        "queue": "coder_drain_queue.json",
+        "program": "POST-DRAIN-PHASE-4-001",
+        "depends_on": [
+          "TRIAGE-BUILD-CLICK-PLACE-001"
+        ],
+        "priority": "P0"
+      },
+      {
+        "id": "P0-VFX-ZOOM-LOCK-001",
+        "status": "blocked",
+        "owner": "coder_b",
+        "queue": "coder_drain_queue.json",
+        "program": "POST-DRAIN-PHASE-4-001",
+        "depends_on": [],
+        "priority": "P2"
+      },
+      {
+        "id": "P0-TERRAIN-BLOB-001",
+        "status": "blocked",
+        "owner": "coder_b",
+        "queue": "coder_drain_queue.json",
+        "program": "POST-DRAIN-PHASE-4-001",
+        "depends_on": [],
+        "priority": "P2"
+      },
+      {
+        "id": "BUILD-READ-REWIRE-001",
+        "status": "blocked",
+        "owner": "coder_b",
+        "queue": "coder_master_drain_queue.json",
+        "program": "CODER-MASTER-DRAIN-001",
+        "depends_on": [],
+        "priority": "P0"
+      },
+      {
+        "id": "BUILD-READ-REWIRE-002",
+        "status": "blocked",
+        "owner": "coder_b",
+        "queue": "coder_master_drain_queue.json",
+        "program": "CODER-MASTER-DRAIN-001",
+        "depends_on": [],
+        "priority": "P0"
+      },
+      {
+        "id": "MINIMAP-REWIRE-001",
+        "status": "blocked",
+        "owner": "coder_b",
+        "queue": "coder_master_drain_queue.json",
+        "program": "CODER-MASTER-DRAIN-001",
+        "depends_on": [],
+        "priority": "P1"
+      },
+      {
+        "id": "BUILD-READ-P0-003",
+        "status": "blocked",
+        "owner": "coder_b",
+        "queue": "coder_master_drain_queue.json",
+        "program": "CODER-MASTER-DRAIN-001",
+        "depends_on": [
+          "BUILD-READ-REWIRE-001",
+          "BUILD-READ-REWIRE-002"
+        ],
+        "priority": "P1"
+      },
+      {
+        "id": "BUILD-READ-DEBUG-001",
+        "status": "blocked",
+        "owner": "coder_b",
+        "queue": "coder_master_drain_queue.json",
+        "program": "CODER-MASTER-DRAIN-001",
+        "depends_on": [
+          "BUILD-READ-REWIRE-001"
+        ],
+        "priority": "P1"
+      },
+      {
+        "id": "BUILD-READ-REWIRE-004",
+        "status": "deferred",
+        "owner": "coder_b",
+        "queue": "coder_master_drain_queue.json",
+        "program": "CODER-MASTER-DRAIN-001",
+        "depends_on": [],
+        "priority": "P1"
+      },
+      {
+        "id": "BUILD-READ-REWIRE-005",
+        "status": "blocked",
+        "owner": "coder_b",
+        "queue": "coder_master_drain_queue.json",
+        "program": "CODER-MASTER-DRAIN-001",
+        "depends_on": [
+          "BUILD-READ-REWIRE-001",
+          "BUILD-READ-REWIRE-003"
+        ],
+        "priority": "P2"
+      },
+      {
+        "id": "COD-SIM-HUD-POPUP-MIGRATE-001",
+        "status": "blocked",
+        "owner": "coder_b",
+        "queue": "multi_parallel_home_queues_v1.json",
+        "program": "PLAN-MULTI-PARALLEL-TRACKS-001",
+        "depends_on": [
+          "DES-SIM-HUD-POPUP-TIERS-001"
+        ],
+        "priority": "P0"
+      },
+      {
+        "id": "COD-SIM-HUD-OPS-002",
+        "status": "blocked",
+        "owner": "coder_b",
+        "queue": "multi_parallel_home_queues_v1.json",
+        "program": "PLAN-MULTI-PARALLEL-TRACKS-001",
+        "depends_on": [
+          "DES-SIM-HUD-OPS-002"
+        ],
+        "priority": "P1"
+      },
       {
         "id": "TRIAGE-PERF-SHELL",
         "status": "blocked",
@@ -414,6 +1625,118 @@
         "program": "PLAN-MULTI-PARALLEL-TRACKS-001",
         "depends_on": [],
         "priority": "P1"
+      },
+      {
+        "id": "BQ128-APPLY-001",
+        "status": "blocked",
+        "owner": "coder_b",
+        "queue": "post_drain_phase6_coder_queue.json",
+        "program": "POST-DRAIN-PHASE-6-001",
+        "depends_on": [],
+        "priority": "P1"
+      },
+      {
+        "id": "VEG-MINIMAP-OVERLAY-002",
+        "status": "blocked",
+        "owner": "coder_b",
+        "queue": "post_drain_phase6_coder_queue.json",
+        "program": "POST-DRAIN-PHASE-6-001",
+        "depends_on": [
+          "VEG-HARD-PREVIEW-PIXEL-001"
+        ],
+        "priority": "P2"
+      },
+      {
+        "id": "BUILD-GRAMMAR-PROGRAM-001",
+        "status": "blocked",
+        "owner": "coder_b",
+        "queue": "post_drain_phase6_coder_queue.json",
+        "program": "POST-DRAIN-PHASE-6-001",
+        "depends_on": [],
+        "priority": "P1"
+      },
+      {
+        "id": "BUILD-GRAMMAR-SITE-ZONE-001",
+        "status": "blocked",
+        "owner": "coder_b",
+        "queue": "post_drain_phase6_coder_queue.json",
+        "program": "POST-DRAIN-PHASE-6-001",
+        "depends_on": [
+          "BUILD-GRAMMAR-PROGRAM-001"
+        ],
+        "priority": "P1"
+      },
+      {
+        "id": "BUILD-GRAMMAR-\u00ce\u00b2-WORLD-001",
+        "status": "blocked",
+        "owner": "coder_b",
+        "queue": "post_drain_phase6_coder_queue.json",
+        "program": "POST-DRAIN-PHASE-6-001",
+        "depends_on": [],
+        "priority": "P2"
+      },
+      {
+        "id": "BUILD-READ-CONSUMER-MCP-001",
+        "status": "blocked",
+        "owner": "coder_b",
+        "queue": "post_drain_phase6_coder_queue.json",
+        "program": "POST-DRAIN-PHASE-6-001",
+        "depends_on": [],
+        "priority": "P2"
+      },
+      {
+        "id": "INFRA-TRANSPORT-R8-001",
+        "status": "blocked",
+        "owner": "coder_b",
+        "queue": "post_drain_phase6_coder_queue.json",
+        "program": "POST-DRAIN-PHASE-6-001",
+        "depends_on": [],
+        "priority": "P2"
+      },
+      {
+        "id": "INFRA-UTILITY-OVERLAY-001",
+        "status": "blocked",
+        "owner": "coder_b",
+        "queue": "post_drain_phase6_coder_queue.json",
+        "program": "POST-DRAIN-PHASE-6-001",
+        "depends_on": [],
+        "priority": "P2"
+      },
+      {
+        "id": "PROC-OG-UX-WIRE-001",
+        "status": "blocked",
+        "owner": "coder_b",
+        "queue": "post_drain_phase6_coder_queue.json",
+        "program": "POST-DRAIN-PHASE-6-001",
+        "depends_on": [],
+        "priority": "P2"
+      },
+      {
+        "id": "CON-R4-TAIL-001",
+        "status": "blocked",
+        "owner": "coder_b",
+        "queue": "post_drain_phase6_coder_queue.json",
+        "program": "POST-DRAIN-PHASE-6-001",
+        "depends_on": [],
+        "priority": "P2"
+      },
+      {
+        "id": "REPLAY-RING-001",
+        "status": "blocked",
+        "owner": "coder_b",
+        "queue": "post_drain_phase6_coder_queue.json",
+        "program": "POST-DRAIN-PHASE-6-001",
+        "depends_on": [],
+        "priority": "P2"
+      },
+      {
+        "id": "SIM-EFFECT-PLUGIN-001",
+        "status": "blocked",
+        "owner": "coder_b",
+        "queue": "post_drain_phase6_coder_queue.json",
+        "program": "POST-DRAIN-PHASE-6-001",
+        "depends_on": [],
+        "priority": "P2"
       }
     ],
     "designer": [
@@ -457,6 +1780,15 @@
       }
     ],
     "designer-mcp": [
+      {
+        "id": "DMCP-E4-MATRIX-CHARTER-001",
+        "status": "blocked",
+        "owner": "designer-mcp",
+        "queue": "aps_option_d_agent_queue.json",
+        "program": "APS-OPTION-D-001",
+        "depends_on": [],
+        "priority": "P1"
+      },
       {
         "id": "BUILD-READ-PILOT-002",
         "status": "blocked",
@@ -503,6 +1835,70 @@
           "BUILD-WORKER-001"
         ],
         "priority": 4
+      },
+      {
+        "id": "MCP-PROD-PBR-PILOT",
+        "status": "blocked",
+        "owner": "designer-mcp",
+        "queue": "mcp_active_queue.json",
+        "program": "",
+        "depends_on": [],
+        "priority": "P0"
+      },
+      {
+        "id": "MCP-PROD-MOD-G0-G5",
+        "status": "blocked",
+        "owner": "designer-mcp",
+        "queue": "mcp_active_queue.json",
+        "program": "",
+        "depends_on": [
+          "MCP-PROD-C-PILOT",
+          "MCP-PROD-PBR-PILOT"
+        ],
+        "priority": "P0"
+      },
+      {
+        "id": "MCP-PROD-ATLAS-G0-G4",
+        "status": "blocked",
+        "owner": "designer-mcp",
+        "queue": "mcp_active_queue.json",
+        "program": "",
+        "depends_on": [],
+        "priority": "P1"
+      },
+      {
+        "id": "MCP-P2-KIT002-G0",
+        "status": "blocked",
+        "owner": "designer-mcp",
+        "queue": "mcp_active_queue.json",
+        "program": "",
+        "depends_on": [
+          "MCP-P2-KIT002-PLAN",
+          "ARCH-002"
+        ],
+        "priority": "P0"
+      },
+      {
+        "id": "MCP-P2-KIT002-G4",
+        "status": "blocked",
+        "owner": "designer-mcp",
+        "queue": "mcp_active_queue.json",
+        "program": "",
+        "depends_on": [
+          "MCP-P2-KIT002-G3"
+        ],
+        "priority": "P0"
+      },
+      {
+        "id": "MCP-P2-KIT002-G1",
+        "status": "blocked",
+        "owner": "designer-mcp",
+        "queue": "mcp_active_queue.json",
+        "program": "",
+        "depends_on": [
+          "MCP-P2-KIT002-G0"
+        ],
+        "priority": "P0"
       },
       {
         "id": "MCP-PILOT-GRAMMAR-001",
@@ -583,6 +1979,26 @@
         "priority": 0
       }
     ],
+    "orchestrator-mcp": [
+      {
+        "id": "ORCH-GRAM-001",
+        "status": "blocked",
+        "owner": "orchestrator-mcp",
+        "queue": "aps_grammar_evolution_queue.json",
+        "program": "PLAN-APS-GRAMMAR-EVOLUTION-001",
+        "depends_on": [],
+        "priority": "P0"
+      },
+      {
+        "id": "ORCH-OVR-FILELOCK-001",
+        "status": "blocked",
+        "owner": "orchestrator-mcp",
+        "queue": "aps_uiux_overhaul_queue.json",
+        "program": "PLAN-APS-UIUX-OVERHAUL-001",
+        "depends_on": [],
+        "priority": "P1"
+      }
+    ],
     "planner": [
       {
         "id": "PLAN-AUDIT-020",
@@ -618,6 +2034,26 @@
         "priority": 2
       },
       {
+        "id": "PLAN-PRODUCT-POLISH-001",
+        "status": "blocked",
+        "owner": "planner",
+        "queue": "post_drain_phase4_queue.json",
+        "program": "POST-DRAIN-PHASE-4-001",
+        "depends_on": [],
+        "priority": 0
+      },
+      {
+        "id": "PLAN-MAP-ZOOM-SMOOTH-001",
+        "status": "blocked",
+        "owner": "planner",
+        "queue": "post_drain_phase4_queue.json",
+        "program": "POST-DRAIN-PHASE-4-001",
+        "depends_on": [
+          "PLAN-PRODUCT-POLISH-001"
+        ],
+        "priority": 1
+      },
+      {
         "id": "PLAN-AUDIT-020",
         "status": "blocked",
         "owner": "planner",
@@ -629,6 +2065,15 @@
         "priority": 2
       },
       {
+        "id": "PLAN-SIM-EFFECT-SPINE-001",
+        "status": "blocked",
+        "owner": "planner",
+        "queue": "post_drain_phase4_queue.json",
+        "program": "POST-DRAIN-PHASE-4-001",
+        "depends_on": [],
+        "priority": 0
+      },
+      {
         "id": "PLAN-AUDIT-020",
         "status": "blocked",
         "owner": "planner",
@@ -638,9 +2083,49 @@
           "G-PLAY-01"
         ],
         "priority": 2
+      },
+      {
+        "id": "PLAN-QUEUE-SYNC-001",
+        "status": "blocked",
+        "owner": "planner",
+        "queue": "post_drain_phase5_queue.json",
+        "program": "POST-DRAIN-PHASE-5-001",
+        "depends_on": [],
+        "priority": 3
+      }
+    ],
+    "planner-mcp": [
+      {
+        "id": "PLAN-GRAM-WITNESS-001",
+        "status": "blocked",
+        "owner": "planner-mcp",
+        "queue": "aps_grammar_evolution_queue.json",
+        "program": "PLAN-APS-GRAMMAR-EVOLUTION-001",
+        "depends_on": [],
+        "priority": "P1"
+      },
+      {
+        "id": "PLAN-WITNESS-QUEUE-INTEGRITY-001",
+        "status": "blocked",
+        "owner": "planner-mcp",
+        "queue": "mcp_active_queue.json",
+        "program": "",
+        "depends_on": [
+          "MCP-WIT-040"
+        ],
+        "priority": "P0"
       }
     ],
     "sim-steward": [
+      {
+        "id": "STEWARD-GRAM-WIT-HON-001",
+        "status": "blocked",
+        "owner": "sim-steward",
+        "queue": "aps_grammar_evolution_queue.json",
+        "program": "PLAN-APS-GRAMMAR-EVOLUTION-001",
+        "depends_on": [],
+        "priority": "P1"
+      },
       {
         "id": "SIM-STEWARD-FIRE-REGRESS-001",
         "status": "deferred",
@@ -670,6 +2155,15 @@
         "program": "POST-DRAIN-PHASE-5-001",
         "depends_on": [],
         "priority": 3
+      },
+      {
+        "id": "SIM-STEWARD-COMBINED-001",
+        "status": "blocked",
+        "owner": "sim-steward",
+        "queue": "post_drain_phase6_coder_queue.json",
+        "program": "POST-DRAIN-PHASE-6-001",
+        "depends_on": [],
+        "priority": "P1"
       }
     ]
   },

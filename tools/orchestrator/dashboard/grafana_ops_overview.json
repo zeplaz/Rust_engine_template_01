@@ -1,0 +1,177 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "ops-infinity-json"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 1 },
+              { "color": "red", "value": 3 }
+            ]
+          }
+        }
+      },
+      "gridPos": { "h": 4, "w": 4, "x": 0, "y": 0 },
+      "id": 1,
+      "options": { "colorMode": "value", "graphMode": "none", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
+      "targets": [
+        {
+          "columns": [{ "selector": "slip_up_count", "text": "slip_up_count", "type": "number" }],
+          "format": "table",
+          "refId": "A",
+          "root_selector": "",
+          "source": "url",
+          "type": "json",
+          "url": "file:///C:/dev/github/Rust_engine_template_01/debug_runs/agent_ops/ops_dashboard_live.json",
+          "url_options": { "method": "GET" }
+        }
+      ],
+      "title": "Slip-ups (total)",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "ops-infinity-json" },
+      "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "unit": "percentunit", "decimals": 2 } },
+      "gridPos": { "h": 4, "w": 4, "x": 4, "y": 0 },
+      "id": 2,
+      "options": { "colorMode": "value", "graphMode": "none", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
+      "targets": [
+        {
+          "columns": [{ "selector": "metrics_tier1.ftr", "text": "ftr", "type": "number" }],
+          "format": "table",
+          "refId": "A",
+          "source": "url",
+          "type": "json",
+          "url": "file:///C:/dev/github/Rust_engine_template_01/debug_runs/agent_ops/ops_dashboard_live.json"
+        }
+      ],
+      "title": "FTR (first-time resolve proxy)",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "ops-infinity-json" },
+      "fieldConfig": { "defaults": { "color": { "mode": "thresholds" } } },
+      "gridPos": { "h": 4, "w": 4, "x": 8, "y": 0 },
+      "id": 3,
+      "options": { "colorMode": "value", "graphMode": "none", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
+      "targets": [
+        {
+          "columns": [{ "selector": "processes.process_count", "text": "process_count", "type": "number" }],
+          "format": "table",
+          "refId": "A",
+          "source": "url",
+          "type": "json",
+          "url": "file:///C:/dev/github/Rust_engine_template_01/debug_runs/agent_ops/ops_dashboard_live.json"
+        }
+      ],
+      "title": "Engine processes",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "ops-infinity-json" },
+      "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "red", "value": 1 }] } } },
+      "gridPos": { "h": 4, "w": 4, "x": 12, "y": 0 },
+      "id": 4,
+      "options": { "colorMode": "value", "graphMode": "none", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
+      "targets": [
+        {
+          "columns": [{ "selector": "drift.alert_count", "text": "alert_count", "type": "number" }],
+          "format": "table",
+          "refId": "A",
+          "source": "url",
+          "type": "json",
+          "url": "file:///C:/dev/github/Rust_engine_template_01/debug_runs/agent_ops/ops_dashboard_live.json"
+        }
+      ],
+      "title": "Drift alerts",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "ops-infinity-json" },
+      "gridPos": { "h": 10, "w": 16, "x": 0, "y": 4 },
+      "id": 5,
+      "options": { "showHeader": true },
+      "targets": [
+        {
+          "columns": [
+            { "selector": "severity", "text": "severity", "type": "string" },
+            { "selector": "kind", "text": "kind", "type": "string" },
+            { "selector": "detail", "text": "detail", "type": "string" },
+            { "selector": "path", "text": "path", "type": "string" }
+          ],
+          "format": "table",
+          "refId": "A",
+          "root_selector": "slip_ups",
+          "source": "url",
+          "type": "json",
+          "url": "file:///C:/dev/github/Rust_engine_template_01/debug_runs/agent_ops/ops_dashboard_live.json"
+        }
+      ],
+      "title": "Slip-ups table",
+      "type": "table"
+    },
+    {
+      "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "ops-infinity-json" },
+      "gridPos": { "h": 10, "w": 8, "x": 16, "y": 4 },
+      "id": 6,
+      "options": { "showHeader": true },
+      "targets": [
+        {
+          "columns": [
+            { "selector": "kind", "text": "kind", "type": "string" },
+            { "selector": "severity", "text": "severity", "type": "string" },
+            { "selector": "path", "text": "path", "type": "string" },
+            { "selector": "honest_gate", "text": "honest_gate", "type": "string" }
+          ],
+          "format": "table",
+          "refId": "A",
+          "root_selector": "drift.instances",
+          "source": "url",
+          "type": "json",
+          "url": "file:///C:/dev/github/Rust_engine_template_01/debug_runs/agent_ops/ops_dashboard_live.json"
+        }
+      ],
+      "title": "Drift instances",
+      "type": "table"
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "tags": ["ops", "agents", "rust-engine"],
+  "templating": { "list": [] },
+  "time": { "from": "now-6h", "to": "now" },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "Rust Engine — OPS Oversight",
+  "uid": "rust-engine-ops-overview",
+  "version": 1,
+  "__inputs": [
+    {
+      "description": "Infinity datasource reading ops_dashboard_live.json",
+      "label": "Infinity",
+      "name": "DS_INFINITY",
+      "pluginId": "yesoreyeram-infinity-datasource",
+      "pluginName": "Infinity",
+      "type": "datasource"
+    }
+  ],
+  "__requires": [
+    { "id": "grafana", "name": "Grafana", "type": "grafana", "version": "10.0.0" },
+    { "id": "yesoreyeram-infinity-datasource", "name": "Infinity", "type": "datasource", "version": "2.0.0" }
+  ]
+}

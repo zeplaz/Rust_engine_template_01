@@ -1,0 +1,16 @@
+{
+  "schema": "test_v1",
+  "n": 2,
+  "previous_hash": "37f7e01ee05fcece5a8e01e197da291fee908cf6208fc414589253c2683f93a9",
+  "content_hash": "22bc956d7fb79610a15e68b708b815262bbbd0d9f0b22d8e2c30e3d8ed5e5917",
+  "hash_lock_id": "granfina_has\u2026",
+  "_agent_meta": {
+    "schema": "debug_run_envelope_v1",
+    "written_at_epoch_secs": 1782016131,
+    "profile": "TEST",
+    "source_system": "test",
+    "relative_path": "debug_runs/agent_ops/test_atomic_witness.json",
+    "agent": "ops_crash_exporter",
+    "content_hash": "22bc956d7fb79610a15e68b708b815262bbbd0d9f0b22d8e2c30e3d8ed5e5917"
+  }
+}

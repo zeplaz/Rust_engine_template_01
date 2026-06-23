@@ -21,7 +21,8 @@
     "fleet_closed": false,
     "construction_drain": "docs/archive/2026-06-src-dev/plans/construction_coder_drain_order_v1.md",
     "three_track_hub": "src/dev/plan_three_track_execution_v1.md",
-    "last_sync": "2026-06-15"
+    "last_sync": "2026-06-18",
+    "aps_presence_correction": "tools/orchestrator/queues/aps_presence_correction_queue.json"
   },
   "done": [
     {
@@ -932,6 +933,24 @@
     }
   ],
   "active": [
+    {
+      "id": "PLAN-APS-PRESENCE-001",
+      "status": "open",
+      "priority": 1,
+      "lane": "APS",
+      "program": "APS-PRESENCE-CORRECTION-001",
+      "queue": "tools/orchestrator/queues/aps_presence_correction_queue.json",
+      "todos": "src/dev/aps_presence_correction_todos_v1.md",
+      "routing": "src/dev/planner_routing_aps_presence_v1.md",
+      "audit": "src/dev/design_aps_default_presence_audit_v1.md",
+      "unblocks": [
+        "APS-GUARD-BRIEF-PARITY-001",
+        "APS-GRAM-TIER-GATES-LIVE-001",
+        "DES-APS-SESSION-DUMP-001",
+        "OVR-APS-PRESENCE-OPERATOR-001"
+      ],
+      "note": "P1 — presence truth before G4 expansion; operator pick OVR-APS-PRESENCE-OPERATOR-001"
+    },
     {
       "id": "PLAN-MAP-ZOOM-SMOOTH-001",
       "status": "blocked",

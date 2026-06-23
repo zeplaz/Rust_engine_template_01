@@ -21,10 +21,10 @@
     "fuel_depot_tank_farm_v0"
   ],
   "preset_ids": [
-    "fuel_depot_tank_farm_v0",
     "logistics_rail_warehouse_v0",
     "manufacturing_fabrication_hall_v0",
-    "power_substation_yard_v0"
+    "power_substation_yard_v0",
+    "fuel_depot_tank_farm_v0"
   ],
   "f_axis_values": [
     "fuel",

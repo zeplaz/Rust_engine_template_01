@@ -155,6 +155,7 @@ fn fill_ecology_heat_from_snapshot(
     h: u32,
     ecology: Option<&EcologyVisualSnapshot>,
     enabled: bool,
+    world_size: (u32, u32),
 ) -> u32 {
     if !enabled {
         return 0;
@@ -167,12 +168,17 @@ fn fill_ecology_heat_from_snapshot(
     }
     let ww = w.max(1);
     let hh = h.max(1);
+    let world_w = world_size.0.max(1);
+    let world_h = world_size.1.max(1);
     for row in &eco.chunk_rows {
-        let cx = row.x as u32 % ww;
-        let cy = (row.x as u32 / ww) % hh;
+        let idx = row.x.max(0.0) as u32;
+        let cx = idx % world_w;
+        let cy = (idx / world_w) % world_h;
+        let px = (cx * ww / world_w).min(ww.saturating_sub(1));
+        let py = (cy * hh / world_h).min(hh.saturating_sub(1));
         let biomass = (row.y.clamp(0.0, 1.0) * 255.0) as u8;
         let risk = (row.z.clamp(0.0, 1.0) * 255.0) as u8;
-        let base = ((cy * ww + cx) * 4) as usize;
+        let base = ((py * ww + px) * 4) as usize;
         if base + 2 < out.len() {
             out[base + 1] = out[base + 1].saturating_add(biomass);
             out[base + 2] = out[base + 2].saturating_add(risk);
@@ -211,8 +217,10 @@ pub fn merge_veg_extract_burn_into_ecology_heat(
             continue;
         }
         stats.veg_burn_rows = stats.veg_burn_rows.saturating_add(1);
-        let px = (row.coord.x.rem_euclid(cw as i32) as u32).min(w.saturating_sub(1));
-        let py = (row.coord.y.rem_euclid(ch as i32) as u32).min(h.saturating_sub(1));
+        let cx = row.coord.x.rem_euclid(cw as i32) as u32;
+        let cy = row.coord.y.rem_euclid(ch as i32) as u32;
+        let px = (cx * w / cw).min(w.saturating_sub(1));
+        let py = (cy * h / ch).min(h.saturating_sub(1));
         let base = ((py * w + px) * 4) as usize;
         if base + 2 >= out.len() {
             continue;
@@ -467,6 +475,7 @@ pub fn upload_minimap_heat_textures(
         h,
         ecology,
         map_views.minimap.overlays.ecology_heat,
+        chunk_count,
     );
     let veg_merge = merge_veg_extract_burn_into_ecology_heat(
         &mut ecology_buf,
@@ -664,7 +673,9 @@ mod tests {
         let mut heat = MinimapCompositeHeatTextures::default();
         let mut map_views = MapViewInstances::default();
         map_views.minimap.overlays = crate::gui::simulation_minimap_overlay_defaults();
+        map_views.minimap.overlays.construction_heat = true;
         map_views.minimap.overlays.ecology_heat = true;
+        map_views.minimap.overlays.units = true;
         let fallback = TileWorldFallbackState {
             last_w: 64,
             last_h: 64,

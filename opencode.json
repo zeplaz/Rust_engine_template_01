@@ -1,0 +1,23 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "default_agent": "steward",
+  "instructions": [
+    "opencode/STEWARD_CHARTER.md",
+    "opencode/guards/GUARD_POLICY.md",
+    "prompts/SYMBOLIC_LANGUAGE.meta.md",
+    "prompts/llm_agent_brief.md",
+    "AGENTS.md"
+  ],
+  "permission": {
+    "edit": "ask",
+    "write": "ask",
+    "bash": "ask"
+  },
+  "mcp": {
+    "rust-engine-art": {
+      "type": "local",
+      "command": ["cmd", "/c", "C:\\dev\\github\\Rust_engine_template_01\\tools\\mcp\\scripts\\run_rust_engine_mcp.cmd"],
+      "enabled": true
+    }
+  }
+}

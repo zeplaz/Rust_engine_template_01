@@ -1,25 +1,31 @@
 {
   "_meta": {
-    "version": "1.0.0",
+    "version": "1.0.1",
     "program_id": "PLAN-POWER-GRID-CONSTRUCTION-UX-001",
     "date": "2026-06-20",
     "hub_scan": "2026-06-20",
     "plan_doc": "src/dev/plan_power_grid_construction_ux_v1.md",
     "charter": "src/dev/design_power_line_construction_ux_v1.md",
-    "rule": "Track A closed on witness \u00b7 pick Track B\u2192D top-down \u00b7 witness exit_predicate required",
-    "regression": "cargo test -p proc_A_dine01 --lib power_line_draw_live_proof construction",
+    "track_a_status": "closed",
+    "tracks_bcd_status": "active",
+    "primary_track": "B",
+    "close_witness": "debug_runs/power_grid_construction_ux_close_live.json",
+    "rule": "Track A closed on witness \u00b7 pick Track B\u2192D top-down \u00b7 re-witness with exit_predicate before Q\u2713",
+    "regression": "cargo test -p proc_A_dine01 --lib power_line_draw_live_proof power_map_overlay power_node_hover",
     "wit_hon": "validate-report witness_honesty <witness> --compress 3"
   },
   "dispatch_now": {
-    "coder": "idle \u2014 POWER-UX closed \u00b7 SIM-HUD P0 witnesses green \u00b7 pick grammar/phase-6",
-    "coder_b": "idle \u2014 overlay + popup migrate green",
-    "designer": "on-call \u2014 DES-POWER-NODE-HOVER \u00b7 DES-SIM-HUD-OPS-002"
+    "coder": "Track B/D ready \u2014 COD-POWER-ISLAND-HIGHLIGHT \u00b7 COD-UTILITY-ACTIVATION-LINK \u00b7 COD-POWER-TOOL-RAIL",
+    "coder_b": "Track B ready \u2014 COD-POWER-OVERLAY-RENDER-001",
+    "designer": "Track B ready \u2014 DES-POWER-NODE-HOVER-001 (spec refresh + exit_predicate)",
+    "coder_a": "idle \u2014 cross-drain T4 fire or T3 veg",
+    "note": "Track A done \u00b7 SIM-HUD T5 parallel OK \u00b7 see multi_parallel_tracks_dispatch_v1.json"
   },
   "tracks": {
-    "A": "Line construction UX \u2014 draw \u00b7 tool sheet \u00b7 routing \u00b7 commit",
-    "B": "Map read & overlay \u2014 strokes \u00b7 nodes \u00b7 island highlight",
-    "C": "Combat & repair UX \u2014 cut \u00b7 transformer KO \u00b7 repair queue",
-    "D": "Sim integration \u2014 activation link \u00b7 island toast \u00b7 tool rail"
+    "A": "Line construction UX \u2014 CLOSED (draw \u00b7 commit \u00b7 routers)",
+    "B": "Map read & overlay \u2014 ACTIVE primary",
+    "C": "Combat & repair UX \u2014 ACTIVE",
+    "D": "Sim integration \u2014 ACTIVE"
   },
   "drain": [
     {
@@ -54,15 +60,14 @@
       "seq": 3,
       "track": "A",
       "id": "DES-POWER-VOLTAGE-PICKER-001",
-      "status": "reopened",
+      "status": "done",
+      "completed": "2026-06-20",
       "priority": "P0",
       "owner": "designer",
       "witness": "src/dev/design_power_voltage_picker_v1.md",
       "unblocks": [
         "COD-POWER-LINE-DRAW-001"
-      ],
-      "note": "INTEL-OFFICER tail cull \u00b7 stub_marker:stub",
-      "updated_at": "2026-06-20T21:19:34Z"
+      ]
     },
     {
       "seq": 4,
@@ -91,6 +96,15 @@
       "verify": [
         "cargo test -p proc_A_dine01 --lib power_line_draw_live_proof"
       ],
+      "exit_predicate": {
+        "witness": "debug_runs/power_line_draw_live.json",
+        "must": [
+          {
+            "path": "power_line_tool_active",
+            "eq": true
+          }
+        ]
+      },
       "unblocks": [
         "COD-POWER-LINE-COMMIT-001"
       ]
@@ -183,10 +197,10 @@
       "seq": 10,
       "track": "B",
       "id": "DES-POWER-NODE-HOVER-001",
-      "status": "reopened",
+      "status": "done",
       "priority": "P1",
       "owner": "designer",
-      "goal": "Transformer/substation hover cards",
+      "goal": "Transformer/substation hover cards \u2014 spec refresh + exit_predicate on witness",
       "depends_on": [
         "DES-POWER-MAP-OVERLAY-002"
       ],
@@ -194,45 +208,62 @@
       "unblocks": [
         "COD-POWER-NODE-HOVER-001"
       ],
-      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 missing_exit_predicate",
-      "updated_at": "2026-06-20T21:19:24Z"
+      "note": "Primary Track B pick \u00b7 consumer COD-POWER-NODE-HOVER-001 already has lib witness",
+      "completed": "2026-06-21",
+      "witness_refresh": "2026-06-21T01:11:35Z"
     },
     {
       "seq": 11,
       "track": "B",
       "id": "COD-POWER-OVERLAY-RENDER-001",
-      "status": "reopened",
-      "completed": "2026-06-20",
+      "status": "done",
       "priority": "P1",
       "owner": "coder_b",
       "depends_on": [
         "DES-POWER-MAP-OVERLAY-002",
         "COD-POWER-LINE-DRAW-001"
       ],
-      "goal": "Compositor strokes by VoltageClass + state",
+      "goal": "Compositor strokes by VoltageClass + state \u2014 re-witness with exit_predicate",
       "witness": "debug_runs/power_map_overlay_live.json",
       "verify": [
         "cargo test -p proc_A_dine01 --lib power_map_overlay"
       ],
-      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 missing_exit_predicate",
-      "updated_at": "2026-06-20T21:19:24Z"
+      "exit_predicate": {
+        "witness": "debug_runs/power_map_overlay_live.json",
+        "must": [
+          {
+            "path": "COD-POWER-OVERLAY-RENDER-001",
+            "eq": true
+          }
+        ]
+      },
+      "completed": "2026-06-21",
+      "witness_refresh": "2026-06-21T01:11:35Z"
     },
     {
       "seq": 12,
       "track": "B",
       "id": "COD-POWER-ISLAND-HIGHLIGHT-001",
-      "status": "reopened",
-      "completed": "2026-06-20",
+      "status": "done",
       "priority": "P1",
       "owner": "coder",
       "depends_on": [
         "DES-POWER-MAP-OVERLAY-002",
         "COD-POWER-LINE-COMMIT-001"
       ],
-      "goal": "Island boundary + dim unpowered buildings",
+      "goal": "Island boundary + dim unpowered buildings \u2014 re-witness",
       "witness": "debug_runs/power_grid_track_bd_live.json",
-      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 missing_exit_predicate",
-      "updated_at": "2026-06-20T21:19:24Z"
+      "exit_predicate": {
+        "witness": "debug_runs/power_grid_track_bd_live.json",
+        "must": [
+          {
+            "path": "COD-POWER-ISLAND-HIGHLIGHT-001",
+            "eq": true
+          }
+        ]
+      },
+      "completed": "2026-06-21",
+      "witness_refresh": "2026-06-21T01:11:35Z"
     },
     {
       "seq": 13,
@@ -262,18 +293,26 @@
       "seq": 15,
       "track": "C",
       "id": "COD-POWER-DAMAGE-SEGMENT-001",
-      "status": "reopened",
-      "completed": "2026-06-20",
+      "status": "done",
       "priority": "P2",
       "owner": "coder",
       "depends_on": [
         "DES-POWER-TARGETING-001",
         "COD-POWER-LINE-COMMIT-001"
       ],
-      "goal": "Segment HP + cut \u2192 graph split",
+      "goal": "Segment HP + cut \u2192 graph split \u2014 re-witness",
       "witness": "debug_runs/power_grid_track_c_live.json",
-      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 missing_exit_predicate",
-      "updated_at": "2026-06-20T21:19:24Z"
+      "exit_predicate": {
+        "witness": "debug_runs/power_grid_track_c_live.json",
+        "must": [
+          {
+            "path": "COD-POWER-DAMAGE-SEGMENT-001",
+            "eq": true
+          }
+        ]
+      },
+      "completed": "2026-06-21",
+      "witness_refresh": "2026-06-21T01:11:35Z"
     },
     {
       "seq": 16,
@@ -288,23 +327,40 @@
         "COD-POWER-DAMAGE-SEGMENT-001"
       ],
       "goal": "Repair jobs UI + sim hook",
-      "witness": "debug_runs/power_grid_track_c_live.json"
+      "witness": "debug_runs/power_grid_track_c_live.json",
+      "exit_predicate": {
+        "witness": "debug_runs/power_grid_track_c_live.json",
+        "must": [
+          {
+            "path": "COD-POWER-REPAIR-QUEUE-001",
+            "eq": true
+          }
+        ]
+      }
     },
     {
       "seq": 17,
       "track": "D",
       "id": "COD-UTILITY-ACTIVATION-LINK-001",
-      "status": "reopened",
-      "completed": "2026-06-20",
+      "status": "done",
       "priority": "P1",
       "owner": "coder",
       "depends_on": [
         "COD-POWER-LINE-COMMIT-001"
       ],
-      "goal": "Activation reads UtilityConnection not radius hack",
+      "goal": "Activation reads UtilityConnection not radius hack \u2014 re-witness",
       "witness": "debug_runs/power_grid_track_bd_live.json",
-      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 missing_exit_predicate",
-      "updated_at": "2026-06-20T21:19:24Z"
+      "exit_predicate": {
+        "witness": "debug_runs/power_grid_track_bd_live.json",
+        "must": [
+          {
+            "path": "COD-UTILITY-ACTIVATION-LINK-001",
+            "eq": true
+          }
+        ]
+      },
+      "completed": "2026-06-21",
+      "witness_refresh": "2026-06-21T01:11:35Z"
     },
     {
       "seq": 18,
@@ -318,23 +374,40 @@
         "COD-POWER-ISLAND-HIGHLIGHT-001"
       ],
       "goal": "Island toast + ops strip (extend IND-E03 pattern)",
-      "witness": "debug_runs/power_grid_track_bd_live.json"
+      "witness": "debug_runs/power_grid_track_bd_live.json",
+      "exit_predicate": {
+        "witness": "debug_runs/power_grid_track_bd_live.json",
+        "must": [
+          {
+            "path": "COD-POWER-ISLAND-TOAST-001",
+            "eq": true
+          }
+        ]
+      }
     },
     {
       "seq": 19,
       "track": "D",
       "id": "COD-POWER-TOOL-RAIL-001",
-      "status": "reopened",
-      "completed": "2026-06-20",
+      "status": "done",
       "priority": "P1",
       "owner": "coder",
       "depends_on": [
         "COD-POWER-LINE-DRAW-001"
       ],
-      "goal": "Utilities rail \u2192 Lines entry",
+      "goal": "Utilities rail \u2192 Lines entry \u2014 re-witness",
       "witness": "debug_runs/power_grid_track_bd_live.json",
-      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 missing_exit_predicate",
-      "updated_at": "2026-06-20T21:19:24Z"
+      "exit_predicate": {
+        "witness": "debug_runs/power_grid_track_bd_live.json",
+        "must": [
+          {
+            "path": "COD-POWER-TOOL-RAIL-001",
+            "eq": true
+          }
+        ]
+      },
+      "completed": "2026-06-21",
+      "witness_refresh": "2026-06-21T01:11:35Z"
     },
     {
       "seq": 20,
@@ -351,7 +424,16 @@
       "witness": "debug_runs/power_node_hover_live.json",
       "verify": [
         "cargo test -p proc_A_dine01 --lib power_node_hover"
-      ]
+      ],
+      "exit_predicate": {
+        "witness": "debug_runs/power_node_hover_live.json",
+        "must": [
+          {
+            "path": "green",
+            "eq": true
+          }
+        ]
+      }
     }
   ]
 }

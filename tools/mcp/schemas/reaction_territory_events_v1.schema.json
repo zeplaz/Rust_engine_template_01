@@ -1,0 +1,114 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "reaction_territory_events_v1.schema.json",
+  "title": "ReactionTerritoryEventsV1",
+  "description": "DES-REACTION-TERRITORY-EVENTS-001 — map occupation/cultural liquidation doc events to variant layers, metric deltas, tag anchors, and APS preview states.",
+  "type": "object",
+  "required": ["schema_version", "catalog_id", "source_doc", "events", "variant_layer_catalog", "variant_layer_resolution"],
+  "properties": {
+    "schema_version": { "type": "integer", "const": 1 },
+    "catalog_id": { "type": "string", "const": "reaction_territory_events_v1" },
+    "source_doc": { "type": "string", "minLength": 1 },
+    "owner": { "type": "string" },
+    "consumer": { "type": "string" },
+    "spec_only": { "type": "boolean" },
+    "gate": { "type": "string" },
+    "variant_layer_catalog": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/variant_layer" }
+    },
+    "variant_layer_resolution": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": { "type": "string", "minLength": 1 }
+      }
+    },
+    "tag_anchor_catalog": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/tag_anchor" }
+    },
+    "occupied_region_metrics": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/metric_range" }
+    },
+    "events": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": { "$ref": "#/$defs/territory_event" }
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "variant_layer": {
+      "type": "object",
+      "required": ["layer", "aps_preview_group"],
+      "properties": {
+        "layer": { "type": "string", "enum": ["damage", "fire", "recovery", "policy"] },
+        "aps_preview_group": { "type": "string" },
+        "regrowth_macro_phase": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "tag_anchor": {
+      "type": "object",
+      "required": ["domain", "binds"],
+      "properties": {
+        "domain": { "type": "string" },
+        "binds": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "minItems": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "metric_range": {
+      "type": "object",
+      "required": ["min", "max"],
+      "properties": {
+        "min": { "type": "number" },
+        "max": { "type": "number" }
+      },
+      "additionalProperties": false
+    },
+    "territory_event": {
+      "type": "object",
+      "required": ["label", "variant_keys", "metric_deltas", "tag_anchors", "preview_states"],
+      "properties": {
+        "label": { "type": "string", "minLength": 1 },
+        "cultural_liquidation_trigger": { "type": ["string", "null"] },
+        "mandate_family": { "type": "string" },
+        "variant_keys": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "minItems": 1
+        },
+        "metric_deltas": {
+          "type": "object",
+          "additionalProperties": { "type": "number" },
+          "minProperties": 1
+        },
+        "tag_anchors": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "minItems": 1
+        },
+        "preview_states": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["clean", "damaged", "burning", "night", "scar"]
+          },
+          "minItems": 1
+        },
+        "default_resolution_domain": { "type": "string" },
+        "agent_preferred_response": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

@@ -17,6 +17,8 @@ OVR-DES-P55-PREVIEW-SPEC-001 Q✓
 Unblocks: OVR-P55-PREVIEW-001
 ```
 
+**Exit predicate:** spec **PASS** on disk + registry **SIGNED** → unblocks `OVR-P55-PREVIEW-001`.
+
 ---
 
 ## 0. Problem statement

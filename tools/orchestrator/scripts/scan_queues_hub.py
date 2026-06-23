@@ -88,6 +88,7 @@ def main() -> None:
         if not lists:
             stats.append({"queue": fp.name, "error": "no_row_list"})
             continue
+        lane_closed = meta.get("lane_status") == "closed"
         d = r = b = o = 0
         for _, rows in lists:
             for row in rows:
@@ -96,6 +97,10 @@ def main() -> None:
                 st = row.get("status", "?")
                 if st in done_st:
                     d += 1
+                    continue
+                # Closed lanes: only surface deferred tails; absorb reopened/ready noise
+                if lane_closed and st not in wait_st:
+                    o += 1
                     continue
                 owner = norm_owner(str(row.get("owner") or row.get("agent") or row.get("co_owner") or "?"))
                 dep = row.get("depends_on") or row.get("blocked_by") or []

@@ -11,10 +11,15 @@
     "logging_env": {
       "ORCHESTRATOR_EXPORT_HEALTH": false,
       "PERF": false,
+      "PERF_DISK": false,
       "RUST_LOG": null,
+      "SIM_ANALYTICS": false,
+      "SIM_ANALYTICS_FRAMES": false,
+      "SIM_ANALYTICS_QUIET": false,
       "SIM_VIEW_SYNC_DEBUG": false,
       "STAGE5_READINESS_VERBOSE": false,
       "STAGE5_VERBOSE": false,
+      "STALL": false,
       "VIEWPORT_AUTHORITY_DEBUG": false
     },
     "orchestrator": {
@@ -42,6 +47,7 @@
       "debug_runs/wave_c_live.json",
       "debug_runs/ui_shell_migration_live.json",
       "debug_runs/minimap_compositor_live.json",
+      "debug_runs/sim_spectrum_analytics_live.json",
       "debug_runs/stage7_behavioral_live.json",
       "debug_runs/stage7_play_live.json",
       "debug_runs/wss_substrate_live.json",
@@ -52,12 +58,12 @@
     "relative_path": "debug_runs/design_minimap_widget_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_design_minimap_widget_live_witness",
-    "written_at_epoch_secs": 1781898653
+    "written_at_epoch_secs": 1782031079
   },
   "content_pan_offset": 0,
   "gate": "MINIMAP-WIDGET-IMPL-001",
   "green": true,
-  "map_image_drag_moves_widget": true,
+  "map_image_drag_pans_view": true,
   "tap_map_jumps_camera": true,
   "texture_centered_on_resize": true,
   "title_bar_drag_moves_widget": true

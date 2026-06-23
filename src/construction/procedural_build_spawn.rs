@@ -66,6 +66,7 @@ pub fn spawn_procedural_build_on_site_operational(
         (With<PlannedSite>, Without<ProceduralBuildSpawned>),
     >,
 ) {
+    let _perf = crate::render::PerfScope::new("upd_repr_proc_spawn");
     if !visual.meshes_active {
         return;
     }

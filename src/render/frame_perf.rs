@@ -64,6 +64,8 @@ impl FrameWallClock {
 pub struct FrameUpdateAttrib {
     pub preview_cpu_raster_ms: f32,
     pub preview_gpu_present_ms: f32,
+    /// BuildProfiles chain only (`attrib_fire_pipeline_before` → `after` at commit). Does **not**
+    /// include Clusters/ProjectGpu/particles or unrelated Update work scheduled between fire sets.
     pub fire_pipeline_ms: f32,
     pub streaming_reconstruct_ms: f32,
     pub map_fit_validate_ms: f32,

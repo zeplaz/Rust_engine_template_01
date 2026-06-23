@@ -50,9 +50,7 @@ pub fn bevy_minimap_gpu_active(shell: &MinimapShellState, gate: Option<&MinimapE
 
 #[inline]
 fn cursor_logical(window: &Window) -> Option<Vec2> {
-    window
-        .cursor_position()
-        .map(|p| p / window.scale_factor().max(1e-6))
+    crate::gui::minimap_cursor_logical(window)
 }
 
 #[inline]
@@ -364,8 +362,8 @@ pub fn minimap_bevy_pointer_system(
         let delta = cursor - pointer.last_cursor;
         pointer.last_cursor = cursor;
         if delta.length_squared() > 0.0 {
-            let scale = window.scale_factor().max(1e-6);
-            shell.ensure_panel_screen_origin(window.width() / scale, window.height() / scale);
+            let win_size = crate::gui::minimap_window_logical_size(window);
+            shell.ensure_panel_screen_origin(win_size.x, win_size.y);
             if let Some(origin) = shell.panel_screen_origin.as_mut() {
                 origin.x += delta.x;
                 origin.y += delta.y;
@@ -426,8 +424,10 @@ pub fn minimap_bevy_scroll_zoom_system(
     for ev in scroll.read() {
         let delta = ev.y * 0.035;
         let mm = &mut map_views.minimap;
+        mm.follow_mode = MinimapFollowMode::Free;
         mm.zoom_target = (mm.zoom_target + delta).clamp(0.35, 4.0);
         mm.zoom = mm.zoom_target;
+        mm.bump_revision();
     }
 }
 
@@ -467,13 +467,17 @@ pub fn sync_minimap_viewport_frame_overlay_system(
         .last_body_rect
         .map(|r| Vec2::new(r.width().max(1.0), r.height().max(1.0)))
         .unwrap_or(mm.viewport_size);
-    let sample_uv = crate::gui::map_presentation_fit::minimap_gpu_texture_uv_rect(
-        mm.camera_center,
-        mm.zoom,
-        params.width.max(1),
-        params.height.max(1),
-        panel,
-    );
+    let sample_uv = if crate::gui::map_presentation_fit::minimap_gpu_presentation_uses_crop(mm.follow_mode) {
+        crate::gui::map_presentation_fit::minimap_gpu_texture_uv_rect(
+            mm.camera_center,
+            mm.zoom,
+            params.width.max(1),
+            params.height.max(1),
+            panel,
+        )
+    } else {
+        crate::gui::map_view_projection::map_texture_uv_rect()
+    };
 
     let Some(world_rect) =
         tactical_visible_world_rect(&manager, &desired, &sim_viewport, tex_w, tex_h)

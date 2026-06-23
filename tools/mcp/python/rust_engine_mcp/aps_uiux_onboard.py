@@ -28,13 +28,25 @@ ONBOARDING_STEPS: tuple[tuple[str, str], ...] = (
 ONBOARDING_DISMISS = "Got it"
 
 # P5.6 — friendly per-tab empty states for the primary surfaces.
+ASSEMBLY_EMPTY_G0_G1 = "No assembly yet — Generate one to begin."
+ASSEMBLY_EMPTY_G2_PLUS = (
+    "No assembly yet — Generate one to begin, then tune shape bias in the panels below."
+)
 EMPTY_STATES: dict[str, str] = {
     "catalog": "No module selected — pick one from the list to see its details.",
     "materials": "No materials yet — Generate or add one to begin.",
-    "assembly": "No assembly yet — Generate one to begin.",
+    "assembly": ASSEMBLY_EMPTY_G0_G1,
     "variants": "No variant set yet — New from assembly or Load example to begin.",
     "atlas": "No tiles yet — bake variants first, then pack them here.",
 }
+
+
+def assembly_empty_state_text(tier: str) -> str:
+    """DES-APS-ASSEMBLY-EMPTY-G2-001 — tier band copy for assembly footprint empty label."""
+    band = str(tier or "G0").upper()
+    if band in ("G0", "G1"):
+        return ASSEMBLY_EMPTY_G0_G1
+    return ASSEMBLY_EMPTY_G2_PLUS
 
 
 def onboarding_greeting_lines() -> list[str]:

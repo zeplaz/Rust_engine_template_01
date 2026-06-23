@@ -65,7 +65,7 @@
     "profile": "CMCP_SITE_ZONE_VALIDATE",
     "relative_path": "debug_runs/site_zone_validate_live.json",
     "source_system": "site_zone_grid_validator",
-    "written_at_epoch_secs": 1781980083,
+    "written_at_epoch_secs": 1782009133,
     "ritual": "BLANG:WIT-HON CMCP-SITE-ZONE-VALIDATE-001"
   },
   "witness_honesty": {

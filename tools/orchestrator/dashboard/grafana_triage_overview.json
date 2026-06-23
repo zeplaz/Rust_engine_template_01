@@ -1,0 +1,144 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [
+    {
+      "title": "OPS Overview",
+      "url": "/d/rust-engine-ops-overview/rust-engine-ops-oversight",
+      "type": "link"
+    }
+  ],
+  "panels": [
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "red", "value": 1 }
+            ]
+          }
+        }
+      },
+      "gridPos": { "h": 4, "w": 4, "x": 0, "y": 0 },
+      "id": 1,
+      "options": { "colorMode": "value", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [{ "expr": "rust_engine_ops_crash_alerts_total", "refId": "A" }],
+      "title": "Crash alerts ⛔",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "color": { "mode": "thresholds" } } },
+      "gridPos": { "h": 4, "w": 4, "x": 4, "y": 0 },
+      "id": 2,
+      "options": { "colorMode": "value", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [{ "expr": "rust_engine_ops_slip_ups_total", "refId": "A" }],
+      "title": "Slip-ups ⚠",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 4, "w": 4, "x": 8, "y": 0 },
+      "id": 3,
+      "options": { "colorMode": "value", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [{ "expr": "rust_engine_dcc_process_count", "refId": "A" }],
+      "title": "DCC processes (bar ignores feature flag)",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 4, "w": 4, "x": 12, "y": 0 },
+      "id": 4,
+      "options": { "colorMode": "value", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [{ "expr": "rust_engine_engine_process_count", "refId": "A" }],
+      "title": "Engine processes",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "ops-infinity-json" },
+      "gridPos": { "h": 10, "w": 12, "x": 0, "y": 4 },
+      "id": 5,
+      "options": { "showHeader": true },
+      "targets": [
+        {
+          "columns": [
+            { "selector": "severity", "text": "sev", "type": "string" },
+            { "selector": "glyph", "text": "glyph", "type": "string" },
+            { "selector": "kind", "text": "kind", "type": "string" },
+            { "selector": "detail", "text": "detail", "type": "string" }
+          ],
+          "format": "table",
+          "refId": "A",
+          "root_selector": "slip_ups",
+          "source": "url",
+          "type": "json",
+          "url": "file:///C:/dev/github/Rust_engine_template_01/debug_runs/agent_ops/triage_live.json"
+        }
+      ],
+      "title": "Triage slip-ups",
+      "type": "table"
+    },
+    {
+      "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "ops-infinity-json" },
+      "gridPos": { "h": 10, "w": 12, "x": 12, "y": 4 },
+      "id": 6,
+      "options": { "showHeader": true },
+      "targets": [
+        {
+          "columns": [
+            { "selector": "id", "text": "gate", "type": "string" },
+            { "selector": "glyph", "text": "glyph", "type": "string" },
+            { "selector": "detail", "text": "detail", "type": "string" }
+          ],
+          "format": "table",
+          "refId": "A",
+          "root_selector": "blockers",
+          "source": "url",
+          "type": "json",
+          "url": "file:///C:/dev/github/Rust_engine_template_01/debug_runs/agent_ops/triage_live.json"
+        }
+      ],
+      "title": "Open gates / blockers",
+      "type": "table"
+    },
+    {
+      "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "ops-infinity-json" },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 14 },
+      "id": 7,
+      "options": { "showHeader": true },
+      "targets": [
+        {
+          "columns": [
+            { "selector": "name", "text": "name", "type": "string" },
+            { "selector": "pid", "text": "pid", "type": "string" },
+            { "selector": "is_dcc", "text": "dcc", "type": "boolean" }
+          ],
+          "format": "table",
+          "refId": "A",
+          "root_selector": "crash.processes",
+          "source": "url",
+          "type": "json",
+          "url": "file:///C:/dev/github/Rust_engine_template_01/debug_runs/agent_ops/triage_live.json"
+        }
+      ],
+      "title": "DCC monitor — live processes",
+      "type": "table"
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "tags": ["triage", "ops", "dcc", "crash"],
+  "templating": { "list": [] },
+  "time": { "from": "now-6h", "to": "now" },
+  "timezone": "browser",
+  "title": "Rust Engine — Triage & Crash",
+  "uid": "rust-engine-triage-overview",
+  "version": 1
+}

@@ -1,0 +1,8 @@
+{
+  "task_id": "CMCP-SITE-PREVIEW-PANEL-001",
+  "green": true,
+  "site_preview_visible": true,
+  "site_preview_expanded": false,
+  "sample_site_id": "logistics_rail_warehouse_site_v0",
+  "sample_path": "assets/configs/buildings/pilots/logistics_rail_warehouse_site_v0.json"
+}

@@ -13,7 +13,7 @@ tools: Read, Grep, Glob, Bash
 ```text
 node .claude/skills/agent-lang/driver.mjs boot operations-intelligence
 ```
-Runs **PRE ⨟ BOOT ⨟ HO**: `pipeline-preflight` · BOOT = direct read of `prompts/llm_agent_brief.md` §FIELD◈ + `prompts/SYMBOLIC_LANGUAGE.meta.md` (SYMLANG◈) · `handoff-brief` ▷⊳ AUTH spine + queue picks. Replaces the Cursor `BLANG:STATS → BOOT → ROLE → ops scan` chain — orient via `… doc <path>` (file-digest) ¬raw-Read the brief. Re-run `boot` each session. Then run the ops scan: `tools/orchestrator/scripts/ops_intelligence_scan.ps1` ▷⊳ `debug_runs/agent_ops/ops_report_latest.json`. Review `doc_reads_brief_latest.json` for Ct💰 waste on repeated orient reads.
+Runs **PRE ⨟ BOOT ⨟ HO**: `pipeline-preflight` · BOOT = direct read of `prompts/llm_agent_brief.md` §FIELD◈ + `prompts/SYMBOLIC_LANGUAGE.meta.md` (SYMLANG◈) · `handoff-brief` ▷⊳ AUTH spine + queue picks. Replaces the Cursor `BLANG:STATS → BOOT → ROLE → ops scan` chain — orient via `… doc <path>` (file-digest) ¬raw-Read the brief. Re-run `boot` each session. Then run the ops scan: `tools/orchestrator/scripts/ops_intelligence_scan.ps1` ▷⊳ `ops_report_latest.json` **+** `ops_dashboard_live.json` **+** `triage_live.json` (processes · drift · crash · blockers). Optional background: `ops_crash_daemon.ps1`. Review `doc_reads_brief_latest.json` for Ct💰 waste on repeated orient reads.
 
 ```text
 ⊚own  RUN → TEL → KPI → OPS → ΔWF layer — ops analyst + adversarial reviewer for art-pipeline spine AND agent workflows
@@ -136,8 +136,8 @@ sampling for deep review: 100% errors · 50% expensive runs · 20% success · 5%
 ## Collective ritual — forced continuation (read-only analyst)
 
 ```text
-⟨BP:COLLECT⟩ ops scan + intel-officer-sweep (compress 3)
-⟨BP:MIRROR⟩  witness-brief <dishonest witness> · slice-exec-brief <false-done id>
+⟨BP:COLLECT⟩ ops scan + intel-officer-sweep + ops-dashboard-refresh (compress 3)
+⟨BP:MIRROR⟩  witness-brief <dishonest witness> · slice-exec-brief <false-done id> · ops_drift_scan_tool
 ⟨BP:SCAN⟩    cull_candidates by_signature — prioritize INTEL-WITNESS-DISHONEST · INTEL-STUB-DELIVERABLE
 ⟶ ΔWF table + dry-run intel-officer-apply
 ⟨BP:SHARE⟩   intel-officer-sweep-witness + agent-queue-update on reopened rows

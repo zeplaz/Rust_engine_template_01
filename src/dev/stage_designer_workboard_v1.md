@@ -2,9 +2,10 @@
 
 | Field | Value |
 |:---|:---|
-| **Version** | `3.2.0` |
+| **Version** | `3.3.0` |
 | **Date** | 2026-06-02 |
-| **Mode** | **On-call** — industrial/military tile lanes + PG-3 W3 **pass** |
+| **Mode** | **On-call** — gang rollup + APS presence hygiene |
+| **Gang status** | [`designer_gang_lane_status_v1.md`](designer_gang_lane_status_v1.md) |
 | **Playbook** | [`designer_oncall_absorption_v1.md`](designer_oncall_absorption_v1.md) |
 | **Registry** | [`designer_signoff_registry.json`](../../tools/orchestrator/queues/designer_signoff_registry.json) v2.4 |
 

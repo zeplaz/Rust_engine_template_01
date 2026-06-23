@@ -105,6 +105,22 @@ TOOLTIPS: dict[str, str] = {
     "mat_category_tree": "Nested category tree — industrial, residential, roof, …",
     "mat_apply": "Apply selected material to Assembly piece (via callback).",
     "mat_reload_preview": "Refresh preview thumbs after texture generate.",
+    # Variants — DES-APS-VARIANTS-LIVE-PREVIEW-001
+    "var_apply_layers": (
+        "Save layer dropdowns onto the selected variant row. Preview updates live while you "
+        "edit; Apply commits the row before Save / tile batch."
+    ),
+    "var_lighting": "Day · night_off · night_on — drives tile lighting layer and Night preview chip.",
+    "var_power": "Grid story for reaction sessions — off · partial · on.",
+    "var_damage": "clean · dirty · damaged · ruined — wear read for tile stills.",
+    "var_fill": "Occupancy overlay for sim tiles — not a geometry swap.",
+    "var_draft_preview": "Preview shows your current controls. Apply layers commits them to the variant row.",
+    "var_layers": "Lighting, damage, fill, and tags become variant_key data. Apply, then Save.",
+    "var_reaction_filter": "Filter sessions by reaction event — shows suggested tag anchors when selected.",
+    "gen_trace_approve": (
+        "Artist sign-off that this assembly snapshot is the parent for variant rows and tile bake."
+    ),
+    "gen_trace_edit_assembly": "Switch to Assembly tab to change archetype, district, seed, or regenerate.",
     # Metadata / misc
     "meta_flow": "Show how metadata flows Catalog → Assembly → Variants → Atlas.",
 }
@@ -113,6 +129,30 @@ TOOLTIPS: dict[str, str] = {
 def _tooltip_text(key: str) -> str:
     if key in TOOLTIPS:
         return TOOLTIPS[key]
+    if key.startswith("var_mandate_tag:"):
+        tag_id = key.split(":", 1)[1]
+        try:
+            from rust_engine_mcp.aps_tag_vocabulary import mandate_tag_hint
+
+            return mandate_tag_hint(tag_id)
+        except ImportError:
+            return tag_id
+    if key.startswith("asm_semantic_tag:"):
+        tag_id = key.split(":", 1)[1]
+        try:
+            from rust_engine_mcp.aps_tag_vocabulary import semantic_tag_hint
+
+            return semantic_tag_hint(tag_id)
+        except ImportError:
+            return tag_id
+    if key.startswith("asm_variant_tag:"):
+        tag_id = key.split(":", 1)[1]
+        try:
+            from rust_engine_mcp.aps_tag_vocabulary import assembly_variant_tag_hint
+
+            return assembly_variant_tag_hint(tag_id)
+        except ImportError:
+            return tag_id
     if key.startswith("asm_grammar_dna_"):
         return "Shape control — affects how dense / spread out the building is."
     if key.startswith("asm_grammar_beta_"):

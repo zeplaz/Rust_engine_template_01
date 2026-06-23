@@ -58,15 +58,15 @@
     "relative_path": "debug_runs/agent_debug_index.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "debug_run_envelope",
-    "written_at_epoch_secs": 1781992673
+    "written_at_epoch_secs": 1782222546
   },
   "profile": "AGENT_DEBUG_INDEX",
   "proof_count": 24,
   "proofs": [
     {
-      "bytes": 23438,
+      "bytes": 23624,
       "exists": true,
-      "modified_epoch_secs": 1781982762,
+      "modified_epoch_secs": 1782015828,
       "path": "debug_runs/stage5_full_app_live.json",
       "summary": {
         "activation_green": null,
@@ -82,9 +82,9 @@
       }
     },
     {
-      "bytes": 5083,
+      "bytes": 5607,
       "exists": true,
-      "modified_epoch_secs": 1781984464,
+      "modified_epoch_secs": 1782030986,
       "path": "debug_runs/infrastructure_view_isolation_live.json",
       "summary": {
         "activation_green": null,
@@ -100,9 +100,9 @@
       }
     },
     {
-      "bytes": 13800,
+      "bytes": 14004,
       "exists": true,
-      "modified_epoch_secs": 1781978437,
+      "modified_epoch_secs": 1782030985,
       "path": "debug_runs/construction_stage_live.json",
       "summary": {
         "activation_green": null,
@@ -118,9 +118,9 @@
       }
     },
     {
-      "bytes": 6640,
+      "bytes": 7274,
       "exists": true,
-      "modified_epoch_secs": 1781979703,
+      "modified_epoch_secs": 1782030984,
       "path": "debug_runs/industrial_activation_live.json",
       "summary": {
         "activation_green": false,
@@ -136,9 +136,9 @@
       }
     },
     {
-      "bytes": 3487,
+      "bytes": 3633,
       "exists": true,
-      "modified_epoch_secs": 1781984545,
+      "modified_epoch_secs": 1782030986,
       "path": "debug_runs/fire_ecology_live.json",
       "summary": {
         "activation_green": null,
@@ -154,9 +154,9 @@
       }
     },
     {
-      "bytes": 3527,
+      "bytes": 3165,
       "exists": true,
-      "modified_epoch_secs": 1781367222,
+      "modified_epoch_secs": 1782032230,
       "path": "debug_runs/logistics_throughput_live.json",
       "summary": {
         "activation_green": null,
@@ -168,13 +168,13 @@
         "readiness_passes": null,
         "readiness_violation_count": null,
         "stage6_virtualization_green": null,
-        "throughput_green": true
+        "throughput_green": false
       }
     },
     {
       "bytes": 2648,
       "exists": true,
-      "modified_epoch_secs": 1781992672,
+      "modified_epoch_secs": 1782222546,
       "path": "debug_runs/replay_editor_parity_live.json",
       "summary": {
         "activation_green": null,
@@ -290,9 +290,9 @@
       }
     },
     {
-      "bytes": 3772,
+      "bytes": 3986,
       "exists": true,
-      "modified_epoch_secs": 1781898707,
+      "modified_epoch_secs": 1782031099,
       "path": "debug_runs/wave_p_live.json",
       "summary": {
         "activation_green": null,
@@ -308,9 +308,9 @@
       }
     },
     {
-      "bytes": 2726,
+      "bytes": 2930,
       "exists": true,
-      "modified_epoch_secs": 1781367219,
+      "modified_epoch_secs": 1782032328,
       "path": "debug_runs/wave_c_live.json",
       "summary": {
         "activation_green": null,
@@ -326,9 +326,9 @@
       }
     },
     {
-      "bytes": 8971,
+      "bytes": 8941,
       "exists": true,
-      "modified_epoch_secs": 1781992652,
+      "modified_epoch_secs": 1782222532,
       "path": "debug_runs/ui_shell_migration_live.json",
       "summary": {
         "activation_green": null,
@@ -344,9 +344,9 @@
       }
     },
     {
-      "bytes": 5650,
+      "bytes": 5667,
       "exists": true,
-      "modified_epoch_secs": 1781992671,
+      "modified_epoch_secs": 1782222540,
       "path": "debug_runs/minimap_compositor_live.json",
       "summary": {
         "activation_green": null,
@@ -362,9 +362,9 @@
       }
     },
     {
-      "bytes": 13384,
+      "bytes": 18297,
       "exists": true,
-      "modified_epoch_secs": 1781992672,
+      "modified_epoch_secs": 1782222545,
       "path": "debug_runs/sim_spectrum_analytics_live.json",
       "summary": {
         "activation_green": null,
@@ -380,9 +380,9 @@
       }
     },
     {
-      "bytes": 3977,
+      "bytes": 4186,
       "exists": true,
-      "modified_epoch_secs": 1781978469,
+      "modified_epoch_secs": 1782031554,
       "path": "debug_runs/stage7_behavioral_live.json",
       "summary": {
         "activation_green": null,
@@ -398,12 +398,12 @@
       }
     },
     {
-      "bytes": 2844,
+      "bytes": 3055,
       "exists": true,
-      "modified_epoch_secs": 1781978469,
+      "modified_epoch_secs": 1782031099,
       "path": "debug_runs/stage7_play_live.json",
       "summary": {
-        "activation_green": true,
+        "activation_green": false,
         "infrastructure_view_isolation_green": null,
         "operational_green": null,
         "parity_green": null,
@@ -416,9 +416,9 @@
       }
     },
     {
-      "bytes": 5751,
+      "bytes": 5906,
       "exists": true,
-      "modified_epoch_secs": 1781367221,
+      "modified_epoch_secs": 1782031551,
       "path": "debug_runs/wss_substrate_live.json",
       "summary": {
         "activation_green": null,
@@ -452,9 +452,9 @@
       }
     },
     {
-      "bytes": 3658,
+      "bytes": 3873,
       "exists": true,
-      "modified_epoch_secs": 1781979773,
+      "modified_epoch_secs": 1782031551,
       "path": "debug_runs/play_scenario_live.json",
       "summary": {
         "activation_green": null,

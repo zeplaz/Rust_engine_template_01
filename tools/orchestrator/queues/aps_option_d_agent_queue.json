@@ -20,7 +20,9 @@
     {
       "seq": 1,
       "id": "DES-APS-CHROME-MOCKUP-001",
-      "status": "blocked",
+      "status": "done",
+      "witness": "src/dev/design_aps_chrome_mockup_spec_v1.md",
+      "exit_predicate": "design_aps_chrome_mockup_spec_v1.md verdict PASS",
       "priority": "P0",
       "owner": "designer",
       "goal": "Mockup \u2192 Tk chrome spec: segmented lane, pipeline pills, tab styling",
@@ -36,7 +38,9 @@
     {
       "seq": 1.5,
       "id": "DES-APS-PIPELINE-PILLS-001",
-      "status": "blocked",
+      "status": "done",
+      "witness": "src/dev/design_aps_pipeline_pills_v1.md",
+      "exit_predicate": "design_aps_pipeline_pills_v1.md verdict PASS",
       "priority": "P1",
       "owner": "designer",
       "goal": "Pipeline pill validity copy + tooltip keys (pipeline_*)",
@@ -105,7 +109,7 @@
     {
       "seq": 5,
       "id": "APS-E1-CHROME-001",
-      "status": "reopened",
+      "status": "done",
       "priority": "P0",
       "owner": "coder-mcp",
       "depends_on": [
@@ -116,7 +120,10 @@
       "territory": "tools/mcp/art_pipeline_suite/app.py",
       "deliverable_ref": "src/dev/design_aps_chrome_mockup_spec_v1.md",
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 missing_exit_predicate",
-      "updated_at": "2026-06-20T21:19:10Z"
+      "updated_at": "2026-06-20T21:19:10Z",
+      "witness_refresh": "2026-06-21T03:54:01Z",
+      "completed": "2026-06-21",
+      "reconcile_note": "witness-green auto-close (reconcile_coder_crisis.py)"
     },
     {
       "seq": 6,
@@ -201,7 +208,9 @@
     {
       "seq": 11,
       "id": "DES-APS-GRAMMAR-PANEL-UX-001",
-      "status": "blocked",
+      "status": "done",
+      "witness": "src/dev/design_aps_grammar_panel_v1.md",
+      "exit_predicate": "design_aps_grammar_panel_v1.md verdict PASS",
       "priority": "P1",
       "owner": "designer",
       "goal": "Grammar tab topology-graph workspace wireframe (not footprint)",

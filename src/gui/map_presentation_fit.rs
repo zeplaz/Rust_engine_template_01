@@ -146,6 +146,16 @@ pub fn map_fit_zoom_for_panel(panel: Vec2, tex_w: f32, tex_h: f32, margin: f32) 
     scale.clamp(PreviewLayers::ZOOM_MIN, PreviewLayers::ZOOM_MAX)
 }
 
+/// When true, GPU minimap uses [`minimap_gpu_texture_pixel_rect`] crop (Free pan/zoom).
+/// Follow-camera shows the full composited RT (10 Hz) — crop sliding on a stale texture caused tearing.
+#[must_use]
+pub fn minimap_gpu_presentation_uses_crop(follow_mode: crate::gui::MinimapFollowMode) -> bool {
+    !matches!(
+        follow_mode,
+        crate::gui::MinimapFollowMode::FollowCamera
+    )
+}
+
 /// GPU minimap crop rect (texture pixel space) from presentation zoom + pan center.
 #[must_use]
 pub fn minimap_gpu_texture_pixel_rect(
@@ -211,6 +221,15 @@ mod tests {
         let (_, uv) = map_fit_rect(panel, egui::vec2(320.0, 320.0), MapFitMode::Cover, 0.0);
         assert!(uv.height() < 1.0);
         assert_eq!(uv.width(), 1.0);
+    }
+
+    #[test]
+    fn follow_camera_skips_gpu_crop() {
+        use crate::gui::MinimapFollowMode;
+        assert!(!minimap_gpu_presentation_uses_crop(
+            MinimapFollowMode::FollowCamera
+        ));
+        assert!(minimap_gpu_presentation_uses_crop(MinimapFollowMode::Free));
     }
 
     #[test]
