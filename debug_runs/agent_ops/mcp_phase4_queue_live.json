@@ -48,10 +48,10 @@
         "key": "P0-D",
         "task_id": "P0-VFX-ZOOM-LOCK-001",
         "label": "P0-VFX-ZOOM-LOCK-001",
-        "status": "done",
+        "status": "blocked",
         "agent": "coder",
-        "blocker": null,
-        "delta_wf": null,
+        "blocker": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
+        "delta_wf": "\u0394WF\u2192@coder",
         "witness": null,
         "vr_id": null
       }
@@ -146,35 +146,38 @@
     "action": "idle",
     "drain_reason": "lane_idle",
     "board_counts": {
-      "done": 18,
-      "blocked": 2,
+      "done": 7,
+      "blocked": 9,
+      "reopened": 4,
       "deferred": 1
     },
     "board_counts_agent": {
-      "done": 11
+      "done": 3,
+      "blocked": 4,
+      "reopened": 4
     },
     "board_lines": [
-      "TRIAGE-BUILD-CLICK-PLACE-001|done|coder",
-      "TRIAGE-CURSOR-UNIFY-001|done|coder",
-      "PLAN-MAP-ZOOM-SMOOTH-001|done|planner",
-      "P0-VFX-ZOOM-LOCK-001|done|coder",
+      "TRIAGE-BUILD-CLICK-PLACE-001|blocked|coder",
+      "TRIAGE-CURSOR-UNIFY-001|blocked|coder",
+      "PLAN-MAP-ZOOM-SMOOTH-001|blocked|planner",
+      "P0-VFX-ZOOM-LOCK-001|blocked|coder",
       "TRIAGE-FIRE-PRODUCT-001|done|coder",
       "DESIGN-ZOOM-FIRE-READ-001|done|designer",
       "P0-MINIMAP-WIDGET-001|done|designer",
-      "FIRE-IGNITION-P0-001|done|coder",
-      "TRIAGE-MAP-ZOOM-SMOOTH-001|done|coder",
-      "P0-TERRAIN-BLOB-001|done|coder",
+      "FIRE-IGNITION-P0-001|reopened|coder",
+      "TRIAGE-MAP-ZOOM-SMOOTH-001|reopened|coder",
+      "P0-TERRAIN-BLOB-001|blocked|coder",
       "PLAN-AUDIT-020|blocked|planner",
       "SIM-STEWARD-FIRE-REGRESS-001|deferred|sim-steward",
       "G-PLAY-OP-REPORT-001|done|operator",
       "DESIGN-BUILD-UX-REDESIGN-001|done|designer",
       "TRIAGE-FIRE-PLAY-VIS-001|done|coder",
-      "PLAN-PRODUCT-POLISH-001|done|planner",
+      "PLAN-PRODUCT-POLISH-001|blocked|planner",
       "TRIAGE-MAP-PICK-CLOSURE-001|done|coder",
       "G-PLAY-01|blocked|operator",
-      "PLAN-SIM-EFFECT-SPINE-001|done|planner",
-      "SIM-EFFECT-QUEUE-001|done|coder",
-      "SIM-EFFECT-TEL-001|done|coder"
+      "PLAN-SIM-EFFECT-SPINE-001|blocked|planner",
+      "SIM-EFFECT-QUEUE-001|reopened|coder",
+      "SIM-EFFECT-TEL-001|reopened|coder"
     ],
     "token_policy": [
       "Use validate_*_report compress=4 \u2014 not raw cargo/blender logs",
@@ -185,7 +188,7 @@
   },
   "_agent_meta": {
     "schema": "mcp_phase4_queue_live_v1",
-    "written_at_epoch_secs": 1781670225,
+    "written_at_epoch_secs": 1782004079,
     "profile": "MCP_PHASE4_QUEUE",
     "source_system": "ops_intelligence",
     "relative_path": "debug_runs/agent_ops/mcp_phase4_queue_live.json"

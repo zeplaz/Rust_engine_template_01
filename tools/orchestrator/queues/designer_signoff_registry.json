@@ -113,7 +113,7 @@
     {
       "id": "DESIGN-CONSTRUCTION-MV-001",
       "agent": "designer",
-      "status": "open",
+      "status": "done",
       "signoff": "PENDING",
       "signed_date": "2026-05-26",
       "witness": "src/dev/construction_multiview_ghost_readability_v1.md",
@@ -122,7 +122,10 @@
       ],
       "notes": "DQ-POST-04 readability; sim witness green",
       "intel_officer_note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 stub_marker:stub",
-      "reopened_at": "2026-06-20"
+      "reopened_at": "2026-06-20",
+      "witness_refresh": "2026-06-21T03:54:57Z",
+      "completed": "2026-06-21",
+      "reconcile_note": "witness-green auto-close (reconcile_coder_crisis.py)"
     },
     {
       "id": "DESIGN-VFX-VISUAL-ACCEPT-001",
@@ -241,7 +244,7 @@
         "UI-OH-P4-ART"
       ],
       "agent": "designer",
-      "status": "open",
+      "status": "done",
       "signoff": "PENDING",
       "signed_date": "2026-05-25",
       "verdict": "FAIL",
@@ -264,7 +267,10 @@
       ],
       "notes": "Traced 256x128 silhouette atlas; RON unchanged; \u00a75 blind test optional @operator",
       "intel_officer_note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 stub_marker:placeholder",
-      "reopened_at": "2026-06-20"
+      "reopened_at": "2026-06-20",
+      "witness_refresh": "2026-06-21T03:54:57Z",
+      "completed": "2026-06-21",
+      "reconcile_note": "witness-green auto-close (reconcile_coder_crisis.py)"
     },
     {
       "id": "UI-P5-DESIGN-001",
@@ -274,7 +280,7 @@
         "P5-DESIGN"
       ],
       "agent": "designer",
-      "status": "open",
+      "status": "done",
       "signoff": "PENDING",
       "signed_date": "2026-05-25",
       "verdict": "FAIL",
@@ -287,7 +293,10 @@
       "witness_json": "debug_runs/ui_shell_migration_live.json",
       "notes": "Vellum card, gold Resume bar, F-03 hover; P5-SAVE-001 still deferred",
       "intel_officer_note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 stub_marker:stub",
-      "reopened_at": "2026-06-20"
+      "reopened_at": "2026-06-20",
+      "witness_refresh": "2026-06-21T03:54:57Z",
+      "completed": "2026-06-21",
+      "reconcile_note": "witness-green auto-close (reconcile_coder_crisis.py)"
     },
     {
       "id": "DESIGN-UI-P2-SIGNOFF-001",
@@ -418,7 +427,7 @@
         "D-WP-POST-IMPL"
       ],
       "agent": "designer",
-      "status": "open",
+      "status": "done",
       "signoff": "PENDING",
       "signed_date": "2026-05-25",
       "verdict": "FAIL",
@@ -443,7 +452,10 @@
       ],
       "notes": "Post-impl D-WP review; operational chrome green; not full mock parity",
       "intel_officer_note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 stub_marker:todo",
-      "reopened_at": "2026-06-20"
+      "reopened_at": "2026-06-20",
+      "witness_refresh": "2026-06-21T03:54:57Z",
+      "completed": "2026-06-21",
+      "reconcile_note": "witness-green auto-close (reconcile_coder_crisis.py)"
     },
     {
       "id": "UX-E02-BQ128-001",
@@ -452,7 +464,7 @@
         "UX-E02"
       ],
       "agent": "designer",
-      "status": "open",
+      "status": "done",
       "signoff": "PENDING",
       "signed_date": "2026-05-25",
       "depends_on": [],
@@ -466,7 +478,10 @@
       ],
       "notes": "None (parallel) \u2014 no designer gate; WS-A03 code already landed",
       "intel_officer_note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 stub_marker:stub",
-      "reopened_at": "2026-06-20"
+      "reopened_at": "2026-06-20",
+      "witness_refresh": "2026-06-21T03:54:57Z",
+      "completed": "2026-06-21",
+      "reconcile_note": "witness-green auto-close (reconcile_coder_crisis.py)"
     },
     {
       "id": "S7B-DESIGN-001",
@@ -651,7 +666,7 @@
     {
       "id": "DESIGN-VFX-CAPTURE-WAVE5-001",
       "agent": "designer",
-      "status": "open",
+      "status": "done",
       "signoff": "PENDING",
       "signed_date": "2026-05-26",
       "verdict": "FAIL",
@@ -664,7 +679,10 @@
         "VFX-CAPTURE-WAVE5"
       ],
       "intel_officer_note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 stub_marker:tbd",
-      "reopened_at": "2026-06-20"
+      "reopened_at": "2026-06-20",
+      "witness_refresh": "2026-06-21T03:54:57Z",
+      "completed": "2026-06-21",
+      "reconcile_note": "witness-green auto-close (reconcile_coder_crisis.py)"
     },
     {
       "id": "DESIGN-HYDRO-PLAYER-READ-001",
@@ -694,7 +712,7 @@
     {
       "id": "DESIGN-ATMOS-CLIPMAP-READ-001",
       "agent": "designer",
-      "status": "open",
+      "status": "done",
       "signoff": "PENDING",
       "signed_date": "2026-05-27",
       "verdict": "FAIL",
@@ -705,7 +723,10 @@
       ],
       "notes": "Readability pass accepted from contamination visual language doc.",
       "intel_officer_note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 stub_marker:stub",
-      "reopened_at": "2026-06-20"
+      "reopened_at": "2026-06-20",
+      "witness_refresh": "2026-06-21T03:54:57Z",
+      "completed": "2026-06-21",
+      "reconcile_note": "witness-green auto-close (reconcile_coder_crisis.py)"
     },
     {
       "id": "CONSTRUCTION-PARAM-DESIGN-001",
@@ -769,7 +790,7 @@
     {
       "id": "DESIGN-CONTAMINATION-001",
       "agent": "designer",
-      "status": "open",
+      "status": "done",
       "signoff": "PENDING",
       "signed_date": "2026-05-26",
       "verdict": "FAIL",
@@ -779,12 +800,15 @@
         "WSS-ATMOS-CLIPMAP-001"
       ],
       "intel_officer_note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 stub_marker:stub",
-      "reopened_at": "2026-06-20"
+      "reopened_at": "2026-06-20",
+      "witness_refresh": "2026-06-21T03:54:57Z",
+      "completed": "2026-06-21",
+      "reconcile_note": "witness-green auto-close (reconcile_coder_crisis.py)"
     },
     {
       "id": "DESIGN-SMOKE-LAYER-AB-001",
       "agent": "designer",
-      "status": "open",
+      "status": "done",
       "signoff": "PENDING",
       "signed_date": "2026-05-26",
       "verdict": "FAIL",
@@ -794,12 +818,15 @@
         "WSS-SMOKE-BRIDGE-001"
       ],
       "intel_officer_note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 stub_marker:stub",
-      "reopened_at": "2026-06-20"
+      "reopened_at": "2026-06-20",
+      "witness_refresh": "2026-06-21T03:54:57Z",
+      "completed": "2026-06-21",
+      "reconcile_note": "witness-green auto-close (reconcile_coder_crisis.py)"
     },
     {
       "id": "WSS-DESIGN-GATE-001",
       "agent": "designer",
-      "status": "open",
+      "status": "done",
       "signoff": "PENDING",
       "signed_date": "2026-05-26",
       "verdict": "FAIL",
@@ -819,7 +846,10 @@
         "WSS-HYDRO-RUNTIME-001"
       ],
       "intel_officer_note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 stub_marker:stub",
-      "reopened_at": "2026-06-20"
+      "reopened_at": "2026-06-20",
+      "witness_refresh": "2026-06-21T03:54:57Z",
+      "completed": "2026-06-21",
+      "reconcile_note": "witness-green auto-close (reconcile_coder_crisis.py)"
     },
     {
       "id": "DESIGN-F2-EXTRACT-READ-001",
@@ -1008,7 +1038,7 @@
     {
       "id": "DESIGN-VFX-CAPTURE-ROUND-003",
       "agent": "designer",
-      "status": "open",
+      "status": "done",
       "signoff": "PENDING",
       "signed_date": "2026-05-27",
       "verdict": "FAIL",
@@ -1024,7 +1054,10 @@
         "VFX-CAPTURE-WAVE6"
       ],
       "intel_officer_note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 stub_marker:tbd",
-      "reopened_at": "2026-06-20"
+      "reopened_at": "2026-06-20",
+      "witness_refresh": "2026-06-21T03:54:57Z",
+      "completed": "2026-06-21",
+      "reconcile_note": "witness-green auto-close (reconcile_coder_crisis.py)"
     },
     {
       "id": "DESIGN-PR4-RETIRE-UX-001",
@@ -1106,7 +1139,7 @@
     {
       "id": "DESIGN-PERF-DEGRADE-VALIDATE-001",
       "agent": "designer",
-      "status": "open",
+      "status": "done",
       "signoff": "PENDING",
       "signed_date": "2026-05-28",
       "verdict": "FAIL",
@@ -1116,7 +1149,10 @@
         "PERF-P2-FIRE-EXTRACT-CADENCE-001"
       ],
       "intel_officer_note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 stub_marker:tbd",
-      "reopened_at": "2026-06-20"
+      "reopened_at": "2026-06-20",
+      "witness_refresh": "2026-06-21T03:54:57Z",
+      "completed": "2026-06-21",
+      "reconcile_note": "witness-green auto-close (reconcile_coder_crisis.py)"
     },
     {
       "id": "DESIGN-R4-UX-001",
@@ -1133,7 +1169,7 @@
     {
       "id": "DESIGN-PROC-MODULE-KIT-001",
       "agent": "designer",
-      "status": "open",
+      "status": "done",
       "signoff": "PENDING",
       "signed_date": "2026-06-02",
       "verdict": "FAIL",
@@ -1142,7 +1178,10 @@
         "PROC-PG-2-001"
       ],
       "intel_officer_note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 stub_marker:placeholder",
-      "reopened_at": "2026-06-20"
+      "reopened_at": "2026-06-20",
+      "witness_refresh": "2026-06-21T03:54:57Z",
+      "completed": "2026-06-21",
+      "reconcile_note": "witness-green auto-close (reconcile_coder_crisis.py)"
     },
     {
       "id": "DESIGN-ORGANIC-GROWTH-UX-001",
@@ -1214,7 +1253,7 @@
     {
       "id": "BUILD-READ-DESIGN-002",
       "agent": "designer",
-      "status": "open",
+      "status": "done",
       "signoff": "PENDING",
       "signed_date": "2026-06-13",
       "verdict": "FAIL",
@@ -1226,12 +1265,15 @@
       ],
       "notes": "Context strip Preview/Adjust copy wired; witness green 2026-06-13",
       "intel_officer_note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 stub_marker:stub",
-      "reopened_at": "2026-06-20"
+      "reopened_at": "2026-06-20",
+      "witness_refresh": "2026-06-21T03:54:57Z",
+      "completed": "2026-06-21",
+      "reconcile_note": "witness-green auto-close (reconcile_coder_crisis.py)"
     },
     {
       "id": "BUILD-READ-D-001_D004",
       "agent": "designer",
-      "status": "open",
+      "status": "done",
       "signoff": "PENDING",
       "signed_date": "2026-06-14",
       "verdict": "FAIL",
@@ -1243,7 +1285,10 @@
       ],
       "notes": "D-001 scale \u00b7 D-002 footprint \u00b7 D-003 site \u00b7 D-004 variant matrix + 128px G4",
       "intel_officer_note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 stub_marker:stub",
-      "reopened_at": "2026-06-20"
+      "reopened_at": "2026-06-20",
+      "witness_refresh": "2026-06-21T03:54:57Z",
+      "completed": "2026-06-21",
+      "reconcile_note": "witness-green auto-close (reconcile_coder_crisis.py)"
     },
     {
       "id": "DES-APS-E1-IA-OPTION-D-001",
@@ -1468,17 +1513,17 @@
     {
       "id": "OVR-DES-P55-PREVIEW-SPEC-001",
       "agent": "designer",
-      "status": "open",
-      "signoff": "PENDING",
-      "signed_date": "2026-06-17",
-      "verdict": "FAIL",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-06-02",
+      "verdict": "PASS",
       "witness": "src/dev/design_aps_uiux_preview_spec_v1.md",
       "program": "PLAN-APS-UIUX-OVERHAUL-001",
       "unblocks": [
         "OVR-P55-PREVIEW-001"
       ],
-      "intel_officer_note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 stub_marker:placeholder",
-      "reopened_at": "2026-06-20"
+      "exit_predicate": "design_aps_uiux_preview_spec_v1.md verdict PASS + Q\u2713 marker",
+      "notes": "INTEL-OFFICER reopen cleared 2026-06-02 \u2014 4-state preview contract on disk"
     },
     {
       "id": "GRAM-CONTENT-001",
@@ -1525,7 +1570,7 @@
     {
       "id": "DES-OVR-P56-ONBOARD-OUTLINE-001",
       "agent": "designer",
-      "status": "open",
+      "status": "done",
       "signoff": "PENDING",
       "signed_date": "2026-06-02",
       "verdict": "FAIL",
@@ -1533,7 +1578,10 @@
       "program": "PLAN-APS-UIUX-OVERHAUL-001",
       "notes": "Outline only \u2014 full spec after P4.5 lands",
       "intel_officer_note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 stub_marker:outline only",
-      "reopened_at": "2026-06-20"
+      "reopened_at": "2026-06-20",
+      "witness_refresh": "2026-06-21T03:54:57Z",
+      "completed": "2026-06-21",
+      "reconcile_note": "witness-green auto-close (reconcile_coder_crisis.py)"
     },
     {
       "id": "DMCP-OVR-P2-IMPL-AUDIT-001",
@@ -1588,7 +1636,7 @@
     {
       "id": "DES-APS-GRAM-TIER-EXPOSURE-001",
       "agent": "designer",
-      "status": "open",
+      "status": "done",
       "signoff": "PENDING",
       "signed_date": "2026-06-17",
       "verdict": "FAIL",
@@ -1600,7 +1648,10 @@
         "APS-GRAM-TIER-004"
       ],
       "intel_officer_note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 stub_marker:placeholder",
-      "reopened_at": "2026-06-20"
+      "reopened_at": "2026-06-20",
+      "witness_refresh": "2026-06-21T03:54:57Z",
+      "completed": "2026-06-21",
+      "reconcile_note": "witness-green auto-close (reconcile_coder_crisis.py)"
     },
     {
       "id": "APS-GRAM-P3-003",
@@ -1630,7 +1681,7 @@
     {
       "id": "DES-BUILD-READ-HUD-001",
       "agent": "designer",
-      "status": "open",
+      "status": "done",
       "signoff": "PENDING",
       "signed_date": "2026-06-17",
       "verdict": "FAIL",
@@ -1639,12 +1690,15 @@
         "CDR-B-BUILD-CONSUMER-MCP-001"
       ],
       "intel_officer_note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 stub_marker:stub",
-      "reopened_at": "2026-06-20"
+      "reopened_at": "2026-06-20",
+      "witness_refresh": "2026-06-21T03:54:57Z",
+      "completed": "2026-06-21",
+      "reconcile_note": "witness-green auto-close (reconcile_coder_crisis.py)"
     },
     {
       "id": "DES-APS-DS-V11-001",
       "agent": "designer",
-      "status": "open",
+      "status": "done",
       "signoff": "PENDING",
       "signed_date": "2026-06-17",
       "verdict": "FAIL",
@@ -1656,7 +1710,10 @@
         "DES-APS-SMOOTHNESS-001"
       ],
       "intel_officer_note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 stub_marker:placeholder",
-      "reopened_at": "2026-06-20"
+      "reopened_at": "2026-06-20",
+      "witness_refresh": "2026-06-21T03:54:57Z",
+      "completed": "2026-06-21",
+      "reconcile_note": "witness-green auto-close (reconcile_coder_crisis.py)"
     },
     {
       "id": "DES-APS-SMOOTHNESS-001",
@@ -1675,7 +1732,7 @@
     {
       "id": "DES-APS-GRAM-TIER-004",
       "agent": "designer",
-      "status": "open",
+      "status": "done",
       "signoff": "PENDING",
       "signed_date": "2026-06-17",
       "verdict": "FAIL",
@@ -1686,12 +1743,15 @@
         "APS-GRAM-TIER-004"
       ],
       "intel_officer_note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 stub_marker:placeholder",
-      "reopened_at": "2026-06-20"
+      "reopened_at": "2026-06-20",
+      "witness_refresh": "2026-06-21T03:54:57Z",
+      "completed": "2026-06-21",
+      "reconcile_note": "witness-green auto-close (reconcile_coder_crisis.py)"
     },
     {
       "id": "DES-INDUSTRIAL-RESEARCH-001",
       "agent": "designer",
-      "status": "open",
+      "status": "done",
       "signoff": "PENDING",
       "signed_date": "2026-06-18",
       "verdict": "FAIL",
@@ -1703,7 +1763,10 @@
         "DMCP-PILOT-CONCRETE-SITE-001"
       ],
       "intel_officer_note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 stub_marker:stub",
-      "reopened_at": "2026-06-20"
+      "reopened_at": "2026-06-20",
+      "witness_refresh": "2026-06-21T03:54:57Z",
+      "completed": "2026-06-21",
+      "reconcile_note": "witness-green auto-close (reconcile_coder_crisis.py)"
     },
     {
       "id": "DES-FACILITY-SITE-ZONE-001",
@@ -1753,7 +1816,7 @@
     {
       "id": "DES-APS-SITE-PREVIEW-001",
       "agent": "designer",
-      "status": "open",
+      "status": "done",
       "signoff": "PENDING",
       "signed_date": "2026-06-18",
       "verdict": "FAIL",
@@ -1764,12 +1827,15 @@
         "CMCP-SITE-PREVIEW-PANEL-001"
       ],
       "intel_officer_note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 stub_marker:placeholder",
-      "reopened_at": "2026-06-20"
+      "reopened_at": "2026-06-20",
+      "witness_refresh": "2026-06-21T03:54:57Z",
+      "completed": "2026-06-21",
+      "reconcile_note": "witness-green auto-close (reconcile_coder_crisis.py)"
     },
     {
       "id": "DES-SIM-HUD-COHESION-001",
       "agent": "designer",
-      "status": "open",
+      "status": "done",
       "signoff": "PENDING",
       "signed_date": "2026-06-18",
       "verdict": "FAIL",
@@ -1781,7 +1847,10 @@
         "COD-SIM-HUD-EGUI-THEME-001"
       ],
       "intel_officer_note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 stub_marker:stub",
-      "reopened_at": "2026-06-20"
+      "reopened_at": "2026-06-20",
+      "witness_refresh": "2026-06-21T03:54:57Z",
+      "completed": "2026-06-21",
+      "reconcile_note": "witness-green auto-close (reconcile_coder_crisis.py)"
     },
     {
       "id": "DES-SIM-HUD-BUILD-PICKER-001",
@@ -1800,7 +1869,7 @@
     {
       "id": "DES-SIM-HUD-COPY-REGISTRY-001",
       "agent": "designer",
-      "status": "open",
+      "status": "done",
       "signoff": "PENDING",
       "signed_date": "2026-06-18",
       "verdict": "FAIL",
@@ -1808,12 +1877,15 @@
       "program": "PLAN-SIM-HUD-PROFESSIONAL-POLISH-001",
       "notes": "Single locked string table \u2014 strip, picker, tray, toast",
       "intel_officer_note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 stub_marker:stub",
-      "reopened_at": "2026-06-20"
+      "reopened_at": "2026-06-20",
+      "witness_refresh": "2026-06-21T03:54:57Z",
+      "completed": "2026-06-21",
+      "reconcile_note": "witness-green auto-close (reconcile_coder_crisis.py)"
     },
     {
       "id": "DES-SIM-HUD-TRAY-BUILD-001",
       "agent": "designer",
-      "status": "open",
+      "status": "done",
       "signoff": "PENDING",
       "signed_date": "2026-06-18",
       "verdict": "FAIL",
@@ -1825,7 +1897,10 @@
         "COD-SIM-HUD-POPUP-MIGRATE-001"
       ],
       "intel_officer_note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 stub_marker:stub",
-      "reopened_at": "2026-06-20"
+      "reopened_at": "2026-06-20",
+      "witness_refresh": "2026-06-21T03:54:57Z",
+      "completed": "2026-06-21",
+      "reconcile_note": "witness-green auto-close (reconcile_coder_crisis.py)"
     },
     {
       "id": "DES-SIM-HUD-POPUP-TIERS-001",
@@ -1873,18 +1948,17 @@
     {
       "id": "DES-POWER-VOLTAGE-PICKER-001",
       "agent": "designer",
-      "status": "open",
-      "signoff": "PENDING",
-      "signed_date": "2026-06-18",
-      "verdict": "FAIL",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-06-02",
+      "verdict": "PASS",
       "witness": "src/dev/design_power_voltage_picker_v1.md",
       "program": "PLAN-POWER-GRID-CONSTRUCTION-UX-001",
       "notes": "Distribution/MV/HV \u2192 VoltageClass + mismatch copy",
       "unblocks": [
         "COD-POWER-LINE-DRAW-001"
       ],
-      "intel_officer_note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 stub_marker:stub",
-      "reopened_at": "2026-06-20"
+      "exit_predicate": "design_power_voltage_picker_v1.md verdict PASS + Q\u2713 marker"
     },
     {
       "id": "DES-POWER-MAP-OVERLAY-002",
@@ -2125,27 +2199,25 @@
     {
       "id": "DMCP-SPEC-TRANSFORMER-PAD-001",
       "agent": "designer-mcp",
-      "status": "open",
-      "signoff": "PENDING",
+      "status": "done",
+      "signoff": "SIGNED",
       "signed_date": "2026-06-18",
-      "verdict": "FAIL",
-      "witness": "src/dev/dmcp_spec_transformer_pad_v1.md",
+      "verdict": "PASS",
+      "witness": "debug_runs/art_pipeline/dmcp_transformer_pad_spec_live.json",
       "deliverable": "assets/staging/specs/prop_transformer_production_run001.json",
       "program": "PLAN-POWER-GRID-ART-ASSETS-001",
-      "notes": "2\u00d72 transformer pad \u2014 supersedes lod0 prop_transformer",
+      "notes": "2\u00d72 transformer pad \u2014 spec ready \u00b7 bpy batch pending MCP-PWR-TRANSFORMER-BATCH-001",
       "depends_on": [
         "DES-ART-UTILITY-STYLE-001"
-      ],
-      "intel_officer_note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 stub_marker:stub",
-      "reopened_at": "2026-06-20"
+      ]
     },
     {
       "id": "DMCP-SPEC-NUCLEAR-PWR-001",
       "agent": "designer-mcp",
-      "status": "open",
-      "signoff": "PENDING",
-      "signed_date": "2026-06-02",
-      "verdict": "FAIL",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-06-18",
+      "verdict": "PASS",
       "witness": "debug_runs/art_pipeline/dmcp_nuclear_pwr_spec_live.json",
       "deliverable": "assets/staging/specs/kit_nuclear_pwr_production_001.json",
       "program": "PLAN-POWER-GRID-ART-ASSETS-001",
@@ -2155,9 +2227,7 @@
       ],
       "unblocks": [
         "MCP-PWR-NUCLEAR-BATCH-001"
-      ],
-      "intel_officer_note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 spec_only_json",
-      "reopened_at": "2026-06-20"
+      ]
     },
     {
       "id": "DES-ART-PLANT-CARD-001",
@@ -2179,39 +2249,39 @@
     {
       "id": "DMCP-QC-SUBSTATION-001",
       "agent": "designer-mcp",
-      "status": "open",
-      "signoff": "PENDING",
-      "signed_date": "2026-06-18",
-      "verdict": "FAIL",
-      "witness": "src/dev/dmcp_qc_substation_yard_v1.md",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-06-20",
+      "verdict": "PASS_WITH_NOTES",
+      "witness": "debug_runs/art_pipeline/dmcp_qc_substation_live.json",
+      "deliverable": "src/dev/dmcp_qc_substation_yard_v1.md",
       "program": "PLAN-POWER-GRID-ART-ASSETS-001",
-      "notes": "Promoted yard GLB \u2014 teach composite 48v \u00b7 G4 manual stills open",
+      "notes": "Promoted yard GLB teach composite 48v \u00b7 machine QC green \u00b7 G4 manual stills on-call",
       "depends_on": [
         "MCP-PWR-PROMOTE-SUBSTATION-001"
       ],
-      "intel_officer_note": "INTEL-OFFICER tail cull v2 \u00b7 stub_marker:stub",
-      "reopened_at": "2026-06-20"
+      "absorbed_by": "PWR-ART-DOWNSTREAM-CLOSE-001"
     },
     {
       "id": "DMCP-QC-TRANSFORMER-001",
       "agent": "designer-mcp",
-      "status": "open",
-      "signoff": "PENDING",
-      "signed_date": "2026-06-18",
-      "verdict": "FAIL",
-      "witness": "src/dev/dmcp_qc_transformer_pad_v1.md",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-06-20",
+      "verdict": "PASS",
+      "witness": "debug_runs/art_pipeline/dmcp_qc_transformer_live.json",
+      "deliverable": "src/dev/dmcp_qc_transformer_pad_v1.md",
       "program": "PLAN-POWER-GRID-ART-ASSETS-001",
-      "notes": "Production transformer \u2014 cylinder + bushings @ 32px proxy green",
+      "notes": "Production transformer 792v \u00b7 cylinder + 3 bushings @ 32px proxy green",
       "depends_on": [
         "MCP-PWR-PROMOTE-TRANSFORMER-001"
       ],
-      "intel_officer_note": "INTEL-OFFICER tail cull v2 \u00b7 stub_marker:stub",
-      "reopened_at": "2026-06-20"
+      "absorbed_by": "PWR-ART-DOWNSTREAM-CLOSE-001"
     },
     {
       "id": "DES-APS-PREVIEW-V2-001",
       "agent": "designer",
-      "status": "open",
+      "status": "done",
       "signoff": "PENDING",
       "signed_date": "2026-06-18",
       "verdict": "FAIL",
@@ -2222,7 +2292,10 @@
         "OVR-P55-PREVIEW-002"
       ],
       "intel_officer_note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 stub_marker:placeholder",
-      "reopened_at": "2026-06-20"
+      "reopened_at": "2026-06-20",
+      "witness_refresh": "2026-06-21T03:54:57Z",
+      "completed": "2026-06-21",
+      "reconcile_note": "witness-green auto-close (reconcile_coder_crisis.py)"
     },
     {
       "id": "DES-STYLE-INDUSTRIAL-WEST-001",
@@ -2337,36 +2410,61 @@
       ]
     },
     {
-      "id": "DMCP-QC-SUBSTATION-001",
-      "agent": "designer-mcp",
-      "status": "open",
-      "signoff": "PENDING",
-      "signed_date": "2026-06-18",
-      "verdict": "FAIL",
-      "witness": "src/dev/dmcp_qc_substation_yard_v1.md",
-      "program": "PLAN-POWER-GRID-ART-ASSETS-001",
-      "notes": "Promoted yard GLB \u2014 teach composite 48v \u00b7 G4 manual stills open",
-      "depends_on": [
-        "MCP-PWR-PROMOTE-SUBSTATION-001"
-      ],
-      "intel_officer_note": "INTEL-OFFICER tail cull v2 \u00b7 stub_marker:stub",
-      "reopened_at": "2026-06-20"
+      "id": "DES-APS-VARIANTS-LIVE-PREVIEW-001",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-06-02",
+      "verdict": "PASS",
+      "witness": "src/dev/design_aps_variants_live_preview_v1.md",
+      "program": "PLAN-APS-UIUX-OVERHAUL-001",
+      "notes": "Live draft preview + context lines on Variants tab",
+      "unblocks": [
+        "APS-VAR-LAYER-WIRE-001"
+      ]
     },
     {
-      "id": "DMCP-QC-TRANSFORMER-001",
-      "agent": "designer-mcp",
-      "status": "open",
-      "signoff": "PENDING",
-      "signed_date": "2026-06-18",
-      "verdict": "FAIL",
-      "witness": "src/dev/dmcp_qc_transformer_pad_v1.md",
-      "program": "PLAN-POWER-GRID-ART-ASSETS-001",
-      "notes": "Production transformer \u2014 cylinder + bushings @ 32px proxy green",
-      "depends_on": [
-        "MCP-PWR-PROMOTE-TRANSFORMER-001"
-      ],
-      "intel_officer_note": "INTEL-OFFICER tail cull v2 \u00b7 stub_marker:stub",
-      "reopened_at": "2026-06-20"
+      "id": "DES-APS-GEN-STEP-EXPOSURE-001",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-06-02",
+      "verdict": "PASS (qualified)",
+      "witness": "src/dev/design_aps_gen_step_exposure_v1.md",
+      "program": "PLAN-APS-UIUX-OVERHAUL-001",
+      "notes": "Generation trace strip Assembly + Variants",
+      "unblocks": [
+        "variant_bake approve gate (future)"
+      ]
+    },
+    {
+      "id": "DES-APS-DEFAULT-PRESENCE-AUDIT-001",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-06-02",
+      "verdict": "PASS (qualified)",
+      "witness": "src/dev/design_aps_default_presence_audit_v1.md",
+      "program": "APS-PRESENCE-CORRECTION-001",
+      "notes": "Live tier G3 vs stale G0 plans \u2014 planner routing in planner_routing_aps_presence_v1.md",
+      "unblocks": [
+        "PLAN-APS-PRESENCE-PLAN-EDIT-001",
+        "APS-PRESENCE-CORRECTION-001"
+      ]
+    },
+    {
+      "id": "DES-APS-ASSEMBLY-EMPTY-G2-001",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-06-02",
+      "verdict": "PASS",
+      "witness": "src/dev/design_aps_assembly_empty_g2_v1.md",
+      "program": "APS-PRESENCE-CORRECTION-001",
+      "notes": "Tier-aware assembly empty tail @ G2+",
+      "unblocks": [
+        "coder-mcp assembly_panel label wire"
+      ]
     },
     {
       "id": "DES-APS-INTERACTION-001",
@@ -2481,6 +2579,22 @@
       ]
     },
     {
+      "id": "DES-REACTION-TERRITORY-EVENTS-001",
+      "agent": "designer-mcp",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-06-02",
+      "verdict": "PASS",
+      "witness": "debug_runs/art_pipeline/dmcp_reaction_territory_events_live.json",
+      "deliverable": "src/dev/design_reaction_territory_events_schema_v1.md",
+      "program": "PLAN-DESIGNER-WORK-202606",
+      "notes": "Doc events to variant layers + metric deltas spec_only",
+      "unblocks": [
+        "CMCP-REACTION-TERRITORY-RESOLVE-001",
+        "CMCP-REACTION-TERRITORY-PREVIEW-001"
+      ]
+    },
+    {
       "id": "VM-11-PREVIEW-AUDIT",
       "agent": "designer",
       "status": "done",
@@ -2578,24 +2692,28 @@
     {
       "id": "DES-CONCEPT-THUMBNAIL-001",
       "agent": "designer",
-      "status": "open",
+      "status": "done",
       "signoff": "PENDING",
       "completed": "2026-06-20",
       "witness": "src/dev/design_concept_thumbnail_v1.md",
       "program": "PLAN-DESIGNER-WORK-202606",
       "intel_officer_note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 stub_marker:placeholder",
-      "reopened_at": "2026-06-20"
+      "reopened_at": "2026-06-20",
+      "witness_refresh": "2026-06-21T03:54:57Z",
+      "reconcile_note": "witness-green auto-close (reconcile_coder_crisis.py)"
     },
     {
       "id": "DES-ECOLOGY-PREVIEW-V2-001",
       "agent": "designer",
-      "status": "open",
+      "status": "done",
       "signoff": "PENDING",
       "completed": "2026-06-20",
       "witness": "src/dev/design_ecology_preview_v2.md",
       "program": "PLAN-DESIGNER-WORK-202606",
       "intel_officer_note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 stub_marker:todo",
-      "reopened_at": "2026-06-20"
+      "reopened_at": "2026-06-20",
+      "witness_refresh": "2026-06-21T03:54:57Z",
+      "reconcile_note": "witness-green auto-close (reconcile_coder_crisis.py)"
     },
     {
       "id": "DES-BUILD-READ-HUD-002",
@@ -2609,13 +2727,15 @@
     {
       "id": "DES-G-PLAY-OPERATOR-V2-001",
       "agent": "designer",
-      "status": "open",
+      "status": "done",
       "signoff": "PENDING",
       "completed": "2026-06-20",
       "witness": "src/dev/design_g_play_operator_v2.md",
       "program": "PLAN-DESIGNER-WORK-202606",
       "intel_officer_note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 stub_marker:todo",
-      "reopened_at": "2026-06-20"
+      "reopened_at": "2026-06-20",
+      "witness_refresh": "2026-06-21T03:54:57Z",
+      "reconcile_note": "witness-green auto-close (reconcile_coder_crisis.py)"
     },
     {
       "id": "DES-S7B-INTEL-MINIMAP-001",

@@ -5,7 +5,7 @@
 | **Program ID** | **PLAN-OPS-INTELLIGENCE-001** |
 | **Sources** | [`docs/reference/outside/dsm_ops_subagent_tooling.ini`](../../docs/reference/outside/dsm_ops_subagent_tooling.ini) · [`docs/reference/outside/effwecny_mpc_draft.md`](../../docs/reference/outside/effwecny_mpc_draft.md) (archive) · **split:** [`plan_ops_metalogic_split_v1.md`](plan_ops_metalogic_split_v1.md) |
 | **Agent** | `@operations-intelligence` — [`.cursor/agents/operations-intelligence.md`](../../.cursor/agents/operations-intelligence.md) |
-| **Status** | **PLANNED** — agent definition ready; telemetry Phase 1 not started |
+| **Status** | **ACTIVE** — agent + Phase 1 telemetry **SHIPPED** (`ops_telemetry.py`, `ops_dashboard_live.json`) |
 | **Date** | 2026-06-03 |
 
 ---

@@ -205,6 +205,19 @@ impl Default for VisualBudgetSettings {
     }
 }
 
+impl VisualBudgetSettings {
+    /// Operator Simulation — lower multirate cost; minimap still readable at 6 Hz.
+    #[must_use]
+    pub const fn simulation_play() -> Self {
+        Self {
+            preview_hz: 8.0,
+            minimap_hz: 6.0,
+            atmosphere_hz: 15.0,
+            overlay_hz: 10.0,
+        }
+    }
+}
+
 impl From<&VisualBudgetSettings> for VisualCadence {
     fn from(b: &VisualBudgetSettings) -> Self {
         Self {
@@ -401,7 +414,7 @@ pub enum ViewRepresentationSystemSet {
 // --- Plugin -----------------------------------------------------------------
 
 /// VM-A: minimap shell focus updates **minimap presentation only** — never [`MapCameraDesired`].
-fn apply_minimap_camera_intent(
+pub fn apply_minimap_camera_intent(
     mut shell: ResMut<MinimapShellState>,
     mut map_views: ResMut<super::MapViewInstances>,
     mut authority: ResMut<ViewProjectionAuthority>,

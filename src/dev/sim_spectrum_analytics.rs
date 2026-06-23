@@ -8,6 +8,7 @@
 //! (auto-on for `--test`). Optional: `SIM_ANALYTICS_FRAMES=1` appends one JSON object per frame
 //! under `debug_runs/perf_frames/` (auto-on for `--test vfx|visual|…`).
 
+use std::collections::HashMap;
 use std::fs::{self, OpenOptions};
 use std::io::Write;
 use std::path::PathBuf;
@@ -141,6 +142,10 @@ pub struct SimSpectrumAnalytics {
     graph_ms: MetricRing,
     world_repr_ms: MetricRing,
     post_vt_to_egui_ms: MetricRing,
+    after_map_camera_smooth_ms: MetricRing,
+    after_fire_build_ms: MetricRing,
+    post_world_repr_ms: MetricRing,
+    substage_ms: HashMap<String, MetricRing>,
     jsonl_path: Option<PathBuf>,
 }
 
@@ -171,12 +176,34 @@ impl Default for SimSpectrumAnalytics {
             graph_ms: MetricRing::with_capacity(ROLLING_WINDOW),
             world_repr_ms: MetricRing::with_capacity(ROLLING_WINDOW),
             post_vt_to_egui_ms: MetricRing::with_capacity(ROLLING_WINDOW),
+            after_map_camera_smooth_ms: MetricRing::with_capacity(ROLLING_WINDOW),
+            after_fire_build_ms: MetricRing::with_capacity(ROLLING_WINDOW),
+            post_world_repr_ms: MetricRing::with_capacity(ROLLING_WINDOW),
+            substage_ms: HashMap::new(),
             jsonl_path: None,
         }
     }
 }
 
 impl SimSpectrumAnalytics {
+    fn substage_ring(&mut self, key: &str) -> &mut MetricRing {
+        self.substage_ms
+            .entry(key.to_string())
+            .or_insert_with(|| MetricRing::with_capacity(ROLLING_WINDOW))
+    }
+
+    fn substage_rolling_summary(&self) -> Value {
+        let mut out = serde_json::Map::new();
+        let mut keys: Vec<_> = self.substage_ms.keys().cloned().collect();
+        keys.sort();
+        for key in keys {
+            if let Some(ring) = self.substage_ms.get(&key) {
+                out.insert(key, Self::metric_summary(ring));
+            }
+        }
+        Value::Object(out)
+    }
+
     fn metric_summary(ring: &MetricRing) -> Value {
         json!({
             "p50_ms": ring.p50(),
@@ -204,6 +231,10 @@ impl SimSpectrumAnalytics {
             "projection_graph_ms": Self::metric_summary(&self.graph_ms),
             "world_repr_ms": Self::metric_summary(&self.world_repr_ms),
             "post_vt_to_egui_ms": Self::metric_summary(&self.post_vt_to_egui_ms),
+            "after_map_camera_smooth_ms": Self::metric_summary(&self.after_map_camera_smooth_ms),
+            "after_fire_build_ms": Self::metric_summary(&self.after_fire_build_ms),
+            "post_world_repr_ms": Self::metric_summary(&self.post_world_repr_ms),
+            "substage_ms": self.substage_rolling_summary(),
             "spike_frames": self.spike_frames,
             "frames_over_250ms": self.frames_over_250ms,
         })
@@ -277,12 +308,36 @@ fn residency_json(table: &ChunkResidencyTable) -> Value {
     })
 }
 
+fn substages_json(sub: &crate::render::FrameSubstageSpans) -> Value {
+    json!({
+        "map_apply_input_ms": sub.map_apply_input_ms,
+        "map_derive_ms": sub.map_derive_ms,
+        "map_smooth_ms": sub.map_smooth_ms,
+        "minimap_intent_ms": sub.minimap_intent_ms,
+        "view_sync_ms": sub.view_sync_ms,
+        "fire_sim_snapshot_ms": sub.fire_sim_snapshot_ms,
+        "fire_sync_overlay_ms": sub.fire_sync_overlay_ms,
+        "fire_sync_visible_ms": sub.fire_sync_visible_ms,
+        "fire_sync_lod_ms": sub.fire_sync_lod_ms,
+        "fire_sync_active_ms": sub.fire_sync_active_ms,
+        "fire_build_view_ms": sub.fire_build_view_ms,
+        "fire_emitter_sync_ms": sub.fire_emitter_sync_ms,
+        "fire_commit_ms": sub.fire_commit_ms,
+        "repr_decay_lod_ms": sub.repr_decay_lod_ms,
+        "repr_refresh_lod_ms": sub.repr_refresh_lod_ms,
+        "repr_compute_frame_ms": sub.repr_compute_frame_ms,
+        "repr_apply_result_ms": sub.repr_apply_result_ms,
+        "repr_proc_extract_ms": sub.repr_proc_extract_ms,
+    })
+}
+
 fn schedule_spans_json(sp: &crate::render::FrameScheduleSpans) -> Value {
     json!({
         "first_to_preupdate_ms": sp.first_to_preupdate_ms,
         "update_ms": sp.update_ms,
         "update_pre_map_camera_ms": sp.update_pre_map_camera_ms,
         "map_camera_chain_ms": sp.map_camera_chain_ms,
+        "after_map_camera_smooth_ms": sp.after_map_camera_smooth_ms,
         "after_view_sync_ms": sp.after_view_sync_ms,
         "after_fire_build_ms": sp.after_fire_build_ms,
         "before_world_repr_ms": sp.before_world_repr_ms,
@@ -303,6 +358,7 @@ fn fire_extract_json(report: &FireExtractFrameReport) -> Value {
     json!({
         "ran_full_scan": report.ran_full_scan,
         "cadence_skipped": report.cadence_skipped,
+        "fingerprint_skipped": report.fingerprint_skipped,
         "cadence_due": report.cadence_due,
         "spike_active": report.spike_active,
         "tick_changed": report.tick_changed,
@@ -326,6 +382,7 @@ fn build_bottleneck_triage(params: &SpectrumCapture) -> Value {
         for (label, ms) in [
             ("update_pre_map_camera", s.update_pre_map_camera_ms),
             ("map_camera_chain", s.map_camera_chain_ms),
+            ("after_map_camera_smooth", s.after_map_camera_smooth_ms),
             ("after_view_sync", s.after_view_sync_ms),
             ("fire_build_profiles", s.after_fire_build_ms),
             ("before_world_repr", s.before_world_repr_ms),
@@ -337,6 +394,25 @@ fn build_bottleneck_triage(params: &SpectrumCapture) -> Value {
             ("egui", s.egui_ms),
         ] {
             if ms >= 8.0 {
+                suspects.push((label.to_string(), ms));
+            }
+        }
+        let sub = &sp.substages;
+        for (label, ms) in [
+            ("substage_fire_sim_snapshot", sub.fire_sim_snapshot_ms),
+            ("substage_fire_sync_overlay", sub.fire_sync_overlay_ms),
+            ("substage_fire_sync_visible", sub.fire_sync_visible_ms),
+            ("substage_fire_sync_lod", sub.fire_sync_lod_ms),
+            ("substage_fire_sync_active", sub.fire_sync_active_ms),
+            ("substage_fire_build_view", sub.fire_build_view_ms),
+            ("substage_fire_emitter_sync", sub.fire_emitter_sync_ms),
+            ("substage_fire_commit", sub.fire_commit_ms),
+            ("substage_repr_compute_frame", sub.repr_compute_frame_ms),
+            ("substage_repr_apply_result", sub.repr_apply_result_ms),
+            ("substage_map_smooth", sub.map_smooth_ms),
+            ("substage_view_sync", sub.view_sync_ms),
+        ] {
+            if ms >= 50.0 {
                 suspects.push((label.to_string(), ms));
             }
         }
@@ -375,14 +451,18 @@ fn build_bottleneck_triage(params: &SpectrumCapture) -> Value {
         "primary_suspects": primary,
         "ux_spike_active": spike,
         "fire_extract_skipped_this_frame": fire_skip,
-        "interpretation": if suspects.first().map(|(l, _)| l.as_str()) == Some("fire_build_profiles") {
-            "Update fire BuildProfiles set (ECS extract + overlay sync + per-view fire frames) dominates."
-        } else if suspects.first().map(|(l, _)| l.as_str()) == Some("map_camera_chain") {
-            "Map camera smooth/chain dominates — check upd_map_camera_* scopes."
+        "interpretation": if suspects.first().map(|(l, _)| l.as_str()) == Some("attrib_fire_pipeline")
+            || suspects.first().map(|(l, _)| l.as_str()) == Some("substage_fire_sim_snapshot")
+        {
+            "Fire BuildProfiles (extract + overlay + per-view frames). Trust `upd_fire_*` perf_scopes — stall substages can include unrelated Update work between checkpoints."
+        } else if suspects.first().map(|(l, _)| l.as_str()) == Some("map_camera_chain")
+            || suspects.first().map(|(l, _)| l.as_str()) == Some("substage_map_apply_input")
+        {
+            "Map camera chain — trust `upd_map_camera_*` scopes; `substage_map_apply_input` can include unrelated pre-camera Update work."
         } else if suspects.first().map(|(l, _)| l.as_str()) == Some("post_world_repr") {
-            "WorldRepresentation ComputeFrame dominates — check world repr / LOD spine."
+            "WorldRepresentation ComputeFrame — trust `upd_world_repr_frame` / `upd_repr_proc_*` scopes; stall span can include spawn/extract between checkpoints."
         } else {
-            "See schedule_spans + perf_scopes for frame-local detail."
+            "See schedule_spans + perf_scopes (not stall substages alone) for frame-local detail."
         },
     })
 }
@@ -451,6 +531,7 @@ fn build_frame_snapshot(params: &SpectrumCapture) -> Value {
 
     if let Some(sp) = params.stall.as_deref() {
         frame["schedule_spans"] = schedule_spans_json(&sp.spans);
+        frame["substage_spans"] = substages_json(&sp.substages);
         if !sp.segments.is_empty() {
             frame["stall_hits"] = json!(sp
                 .segments
@@ -612,6 +693,34 @@ fn capture_sim_spectrum_frame(
         analytics.view_fire_ms.push(s.spans.after_fire_build_ms);
         analytics.map_camera_ms.push(s.spans.map_camera_chain_ms);
         analytics.post_vt_to_egui_ms.push(s.spans.post_vt_to_pre_egui_ms);
+        analytics
+            .after_map_camera_smooth_ms
+            .push(s.spans.after_map_camera_smooth_ms);
+        analytics.after_fire_build_ms.push(s.spans.after_fire_build_ms);
+        analytics.post_world_repr_ms.push(s.spans.post_world_repr_ms);
+        let sub = &s.substages;
+        for (key, ms) in [
+            ("map_apply_input_ms", sub.map_apply_input_ms),
+            ("map_derive_ms", sub.map_derive_ms),
+            ("map_smooth_ms", sub.map_smooth_ms),
+            ("minimap_intent_ms", sub.minimap_intent_ms),
+            ("view_sync_ms", sub.view_sync_ms),
+            ("fire_sim_snapshot_ms", sub.fire_sim_snapshot_ms),
+            ("fire_sync_overlay_ms", sub.fire_sync_overlay_ms),
+            ("fire_sync_visible_ms", sub.fire_sync_visible_ms),
+            ("fire_sync_lod_ms", sub.fire_sync_lod_ms),
+            ("fire_sync_active_ms", sub.fire_sync_active_ms),
+            ("fire_build_view_ms", sub.fire_build_view_ms),
+            ("fire_emitter_sync_ms", sub.fire_emitter_sync_ms),
+            ("fire_commit_ms", sub.fire_commit_ms),
+            ("repr_decay_lod_ms", sub.repr_decay_lod_ms),
+            ("repr_refresh_lod_ms", sub.repr_refresh_lod_ms),
+            ("repr_compute_frame_ms", sub.repr_compute_frame_ms),
+            ("repr_apply_result_ms", sub.repr_apply_result_ms),
+            ("repr_proc_extract_ms", sub.repr_proc_extract_ms),
+        ] {
+            analytics.substage_ring(key).push(ms);
+        }
     }
     if spike.is_some_and(|g| g.spike_active) {
         analytics.spike_frames = analytics.spike_frames.saturating_add(1);
@@ -643,14 +752,17 @@ pub fn flush_sim_spectrum_analytics(
     }
     analytics.last_flush = Instant::now();
 
+    let rolling = analytics.rolling_summary();
+    let frames_sampled = analytics.frames_sampled;
+
     let body = json!({
         "schema_version": 1,
         "profile": "SIM_SPECTRUM",
         "session_started_epoch_secs": analytics.session_started_epoch_secs,
         "session_elapsed_secs": time.elapsed_secs_f64(),
-        "frames_sampled": analytics.frames_sampled,
+        "frames_sampled": frames_sampled,
         "disk_flushes": analytics.disk_flushes,
-        "rolling": analytics.rolling_summary(),
+        "rolling": rolling.clone(),
         "last_frame": analytics.last_frame.clone().unwrap_or(Value::Null),
         "jsonl_enabled": sim_spectrum_frame_jsonl_enabled(),
         "jsonl_path": analytics
@@ -679,6 +791,16 @@ pub fn flush_sim_spectrum_analytics(
     let wrapped = wrap_debug_run("SIM_SPECTRUM", "sim_spectrum_analytics", SIM_SPECTRUM_LIVE_JSON, body);
     if write_debug_run_json(SIM_SPECTRUM_LIVE_JSON, wrapped) {
         analytics.disk_flushes = analytics.disk_flushes.saturating_add(1);
+    }
+
+    if inst
+        .as_deref()
+        .is_some_and(|i| matches!(i.test_scene, crate::engine::TestScene::VfxSandbox))
+    {
+        let _ = crate::dev::triage_perf_vfx_fix_live_proof::write_triage_perf_vfx_fix_live_witness(
+            &rolling,
+            frames_sampled,
+        );
     }
 }
 

@@ -59,7 +59,7 @@
   "catalog_source_switches": true,
   "buildings_catalog_source": "building_modules",
   "landscape_catalog_source": "landscape_presets",
-  "building_modules_count": 99,
+  "building_modules_count": 100,
   "landscape_preset_ship_count": 10,
   "modules_ok": true,
   "presets_ok": true,
@@ -86,7 +86,7 @@
     "profile": "APS_E1_DOMAIN_ROUTER",
     "relative_path": "debug_runs/aps_domain_router_live.json",
     "source_system": "aps_domain_router",
-    "written_at_epoch_secs": 1781800368,
+    "written_at_epoch_secs": 1782012812,
     "ritual": "BLANG:WIT-HON APS-EVO-E1-DOMAIN-ROUTER-001"
   },
   "witness_honesty": {

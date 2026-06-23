@@ -94,7 +94,9 @@
         "rear",
         "interior",
         "yard_facing",
-        "alley_facing"
+        "alley_facing",
+        "rail_adjacent",
+        "waterfront"
       ]
     },
     "architectural_tag_id": {
@@ -105,7 +107,8 @@
         "residential",
         "military",
         "civic",
-        "agricultural"
+        "agricultural",
+        "utility"
       ]
     },
     "detail_tag_id": {
@@ -121,12 +124,14 @@
         "crane",
         "platform",
         "window_band",
-        "door_rollup"
+        "door_rollup",
+        "cooling_tower",
+        "transformer_yard"
       ]
     },
     "condition_tag_id": {
       "type": "string",
-      "enum": ["clean", "weathered", "damaged", "abandoned", "construction", "fire"]
+      "enum": ["clean", "weathered", "damaged", "abandoned", "construction", "fire", "decommissioned"]
     }
   }
 }

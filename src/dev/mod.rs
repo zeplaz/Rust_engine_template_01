@@ -10,6 +10,7 @@ pub mod runtime_witness;
 pub mod schedule_cycle_probe;
 pub mod perf_scope_frame_log;
 pub mod sim_spectrum_analytics;
+pub mod triage_perf_vfx_fix_live_proof;
 pub mod test_run_instrumentation;
 pub mod construction_live_todos;
 pub mod construction_finish_todos;
@@ -21,6 +22,7 @@ pub mod construction_operational_todos;
 pub mod industrial_activation_todos;
 pub mod logistics_throughput_todos;
 pub mod orchestrator_health;
+pub mod engine_deep_debug;
 pub mod proof_grade;
 pub mod replay_editor_parity;
 pub mod stage5_live_todos;
@@ -194,8 +196,10 @@ pub use logistics_throughput_todos::{
 };
 pub use visual_aidv2_live_todos::{
     hook_post_readiness_visual_aidv2, register_visual_aidv2_runtime_hooks,
-    sync_visual_aidv2_todo_board_predicates, VisualAidV2LiveTodo, VisualAidV2LiveTodoBoard,
-    VisualAidV2Witness, VISUAL_AID_V2_TODOS,
+    sync_visual_aidv2_todo_board_predicates, visual_aidv2_live_board_json,
+    write_visual_aidv2_live_proof, VisualAidV2HarnessState, VisualAidV2LiveTodo,
+    VisualAidV2LiveTodoBoard, VisualAidV2Witness, refresh_visual_aidv2_harness_lib_witness,
+    VISUAL_AID_V2_LIVE_JSON, VISUAL_AID_V2_TODOS,
 };
 pub use stage7_behavioral_witness::{
     build_stage7_behavioral_witness_payload, commit_stage7_behavioral_witness,

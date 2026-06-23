@@ -127,6 +127,7 @@ pub fn extract_procedural_build_assembly(
     visual: Res<ProceduralModuleVisualPolicy>,
     mut extract: ResMut<ProceduralBuildExtract>,
 ) {
+    let _perf = crate::render::PerfScope::new("upd_repr_proc_extract");
     if !policy.procedural_module_meshes || !visual.meshes_active {
         extract.instances.clear();
         extract.module_ids_used.clear();

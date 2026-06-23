@@ -7,7 +7,7 @@ use crate::gui::editor::world_preview::{
     WorldPreviewTexture,
 };
 use crate::gui::{MinimapPresentationSource, MinimapShellState};
-use crate::render::{minimap_gpu_compositor_env_enabled, MinimapRenderTargetRegistry};
+use crate::render::MinimapRenderTargetRegistry;
 use crate::render::TileWorldFallbackState;
 
 /// Authoritative pixel source for a map consumer (resolved by the backend, not egui).
@@ -61,8 +61,39 @@ pub fn minimap_effects_cpu_raster_active(shell: &MinimapShellState) -> bool {
 #[inline]
 #[must_use]
 pub fn minimap_main_display_uses_gpu_compositor(shell: &MinimapShellState) -> bool {
-    minimap_gpu_compositor_env_enabled()
+    crate::render::minimap_compositor::minimap_gpu_compositor_runtime_enabled()
         && shell.presentation_source == MinimapPresentationSource::SharedRenderTargetImage
+}
+
+/// Best-effort texture for Bevy minimap chrome — GPU RT when composited, else main/CPU terrain.
+#[must_use]
+pub fn resolve_minimap_bevy_display_handle(
+    shell: &MinimapShellState,
+    fallback: &TileWorldFallbackState,
+    registry: &MinimapRenderTargetRegistry,
+    compositor_stamp: u64,
+) -> Handle<Image> {
+    if !shell.visible || shell.minimized {
+        return Handle::default();
+    }
+    if minimap_main_display_uses_gpu_compositor(shell)
+        && registry.committed_image != Handle::default()
+        && compositor_stamp > 0
+    {
+        return registry.committed_image.clone();
+    }
+    if fallback.image != Handle::default() {
+        return fallback.image.clone();
+    }
+    if fallback.minimap_image != Handle::default() {
+        return fallback.minimap_image.clone();
+    }
+    if shell.presentation_source == MinimapPresentationSource::SharedRenderTargetImage
+        && registry.committed_image != Handle::default()
+    {
+        return registry.committed_image.clone();
+    }
+    Handle::default()
 }
 
 #[must_use]
@@ -120,6 +151,28 @@ pub fn resolve_minimap_effects_cpu_raster_source(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::render::minimap_gpu_compositor_env_enabled;
+
+    #[test]
+    fn bevy_display_falls_back_to_main_terrain_before_compositor_stamp() {
+        let shell = MinimapShellState {
+            visible: true,
+            presentation_source: MinimapPresentationSource::SharedRenderTargetImage,
+            ..Default::default()
+        };
+        let mut images = Assets::<Image>::default();
+        let main = images.add(Image::default());
+        let fallback = TileWorldFallbackState {
+            image: main.clone(),
+            ..Default::default()
+        };
+        let mut registry = MinimapRenderTargetRegistry::default();
+        registry.committed_image = images.add(Image::default());
+        assert_eq!(
+            resolve_minimap_bevy_display_handle(&shell, &fallback, &registry, 0),
+            main
+        );
+    }
 
     #[test]
     fn main_sim_path_gpu_when_compositor_on() {

@@ -1,0 +1,338 @@
+{
+  "schema_version": 1,
+  "assembly_id": "victorian_8x7_s32_9663",
+  "style_pack_id": "style_victorian",
+  "source_tier": "production",
+  "procedural_rules_version": "building_grammar_v1",
+  "reference_tags": [
+    "grammar:civic_block_v1",
+    "archetype:CivicBlock",
+    "district:town_hall_row",
+    "massing:row_infill",
+    "age:new",
+    "building_grammar_v1",
+    "chain:archetype:CivicBlock",
+    "chain:district_style:town_hall_row",
+    "chain:massing:row_infill",
+    "chain:roof:roof_flat_parapet",
+    "chain:facade:facade_v1",
+    "chain:detail:prop_clutter",
+    "chain:age:new"
+  ],
+  "seed": 32,
+  "footprint": {
+    "width": 8,
+    "depth": 7,
+    "floors": 2,
+    "wdc_cell_count": 52
+  },
+  "module_placements": [
+    {
+      "module_id": "corner_L",
+      "job_id": "corner_L_production_run001",
+      "slot_key": "corner_outer",
+      "token": "C",
+      "grid_x": 0,
+      "grid_y": 0,
+      "floor": 0,
+      "glb_path": "assets/models/modules/corner_L_production_run001/model.glb",
+      "position": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "corner_L_0_0_f0",
+      "material_profile": "brick_red_01",
+      "placement_tags": [
+        "exterior",
+        "corner"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production",
+      "semantic_tags": {
+        "location": [
+          "street_facing",
+          "corner"
+        ]
+      },
+      "weathering": "light"
+    },
+    {
+      "module_id": "corner_L",
+      "job_id": "corner_L_production_run001",
+      "slot_key": "corner_outer",
+      "token": "C",
+      "grid_x": 7,
+      "grid_y": 0,
+      "floor": 0,
+      "glb_path": "assets/models/modules/corner_L_production_run001/model.glb",
+      "position": [
+        7.0,
+        0.0,
+        0.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "corner_L_7_0_f0",
+      "material_profile": "brick_red_01",
+      "placement_tags": [
+        "exterior",
+        "corner"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production",
+      "semantic_tags": {
+        "location": [
+          "street_facing",
+          "corner"
+        ]
+      },
+      "weathering": "light"
+    },
+    {
+      "module_id": "corner_L",
+      "job_id": "corner_L_production_run001",
+      "slot_key": "corner_outer",
+      "token": "C",
+      "grid_x": 0,
+      "grid_y": 6,
+      "floor": 0,
+      "glb_path": "assets/models/modules/corner_L_production_run001/model.glb",
+      "position": [
+        0.0,
+        0.0,
+        6.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "corner_L_0_6_f0",
+      "material_profile": "brick_red_01",
+      "placement_tags": [
+        "exterior",
+        "corner"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production",
+      "semantic_tags": {
+        "location": [
+          "street_facing",
+          "corner"
+        ]
+      },
+      "weathering": "light"
+    },
+    {
+      "module_id": "corner_L",
+      "job_id": "corner_L_production_run001",
+      "slot_key": "corner_outer",
+      "token": "C",
+      "grid_x": 7,
+      "grid_y": 6,
+      "floor": 0,
+      "glb_path": "assets/models/modules/corner_L_production_run001/model.glb",
+      "position": [
+        7.0,
+        0.0,
+        6.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "corner_L_7_6_f0",
+      "material_profile": "brick_red_01",
+      "placement_tags": [
+        "exterior",
+        "corner"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production",
+      "semantic_tags": {
+        "location": [
+          "street_facing",
+          "corner"
+        ]
+      },
+      "weathering": "light"
+    },
+    {
+      "module_id": "corner_L",
+      "job_id": "corner_L_production_run001",
+      "slot_key": "corner_outer",
+      "token": "C",
+      "grid_x": 0,
+      "grid_y": 0,
+      "floor": 1,
+      "glb_path": "assets/models/modules/corner_L_production_run001/model.glb",
+      "position": [
+        0.0,
+        3.0,
+        0.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "corner_L_0_0_f1",
+      "material_profile": "brick_red_01",
+      "placement_tags": [
+        "exterior",
+        "corner"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production",
+      "semantic_tags": {
+        "location": [
+          "street_facing",
+          "corner"
+        ]
+      },
+      "weathering": "light"
+    },
+    {
+      "module_id": "corner_L",
+      "job_id": "corner_L_production_run001",
+      "slot_key": "corner_outer",
+      "token": "C",
+      "grid_x": 7,
+      "grid_y": 0,
+      "floor": 1,
+      "glb_path": "assets/models/modules/corner_L_production_run001/model.glb",
+      "position": [
+        7.0,
+        3.0,
+        0.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "corner_L_7_0_f1",
+      "material_profile": "brick_red_01",
+      "placement_tags": [
+        "exterior",
+        "corner"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production",
+      "semantic_tags": {
+        "location": [
+          "street_facing",
+          "corner"
+        ]
+      },
+      "weathering": "light"
+    },
+    {
+      "module_id": "corner_L",
+      "job_id": "corner_L_production_run001",
+      "slot_key": "corner_outer",
+      "token": "C",
+      "grid_x": 0,
+      "grid_y": 6,
+      "floor": 1,
+      "glb_path": "assets/models/modules/corner_L_production_run001/model.glb",
+      "position": [
+        0.0,
+        3.0,
+        6.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "corner_L_0_6_f1",
+      "material_profile": "brick_red_01",
+      "placement_tags": [
+        "exterior",
+        "corner"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production",
+      "semantic_tags": {
+        "location": [
+          "street_facing",
+          "corner"
+        ]
+      },
+      "weathering": "light"
+    },
+    {
+      "module_id": "corner_L",
+      "job_id": "corner_L_production_run001",
+      "slot_key": "corner_outer",
+      "token": "C",
+      "grid_x": 7,
+      "grid_y": 6,
+      "floor": 1,
+      "glb_path": "assets/models/modules/corner_L_production_run001/model.glb",
+      "position": [
+        7.0,
+        3.0,
+        6.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "node_id": "corner_L_7_6_f1",
+      "material_profile": "brick_red_01",
+      "placement_tags": [
+        "exterior",
+        "corner"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production",
+      "semantic_tags": {
+        "location": [
+          "street_facing",
+          "corner"
+        ]
+      },
+      "weathering": "light"
+    }
+  ],
+  "archetype_id": "CivicBlock",
+  "district_style": "town_hall_row",
+  "grammar_rule_chain": {
+    "footprint_mode": "rect",
+    "archetype": "CivicBlock",
+    "massing": "row_infill",
+    "roof": "roof_flat_parapet",
+    "facade": "facade_v1",
+    "detail": "prop_clutter",
+    "age": "new"
+  }
+}

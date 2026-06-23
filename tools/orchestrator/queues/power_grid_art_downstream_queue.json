@@ -327,14 +327,58 @@
       "seq": 8,
       "wave": 3,
       "id": "MCP-PWR-NUCLEAR-BATCH-001",
-      "status": "deferred",
+      "status": "done",
+      "completed": "2026-06-02",
       "priority": "P2",
       "owner": "coder-mcp",
       "depends_on": [
         "DMCP-SPEC-NUCLEAR-PWR-001"
       ],
-      "goal": "Future: nuclear kit bpy + promote \u2014 blocked until DMCP spec signed",
-      "note": "Placeholder \u2014 do not pick before row 7 Q\u2713"
+      "goal": "Nuclear PWR kit bpy + promote \u2014 6\u00d76 site assembly",
+      "witness": "debug_runs/art_pipeline/mcp_pwr_nuclear_batch_live.json",
+      "exit_predicate": {
+        "witness": "debug_runs/art_pipeline/mcp_pwr_nuclear_batch_live.json",
+        "must": [
+          {
+            "path": "green",
+            "eq": true
+          },
+          {
+            "path": "grid_units",
+            "eq": [
+              6,
+              6
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "seq": 8.5,
+      "wave": 3,
+      "id": "MCP-PWR-PROMOTE-NUCLEAR-001",
+      "status": "done",
+      "completed": "2026-06-02",
+      "priority": "P2",
+      "owner": "coder-mcp",
+      "depends_on": [
+        "MCP-PWR-NUCLEAR-BATCH-001"
+      ],
+      "goal": "Promote kit_nuclear_pwr to models/modules + nuclear_plant_pwr catalog",
+      "witness": "debug_runs/art_pipeline/mcp_pwr_nuclear_promote_live.json",
+      "exit_predicate": {
+        "witness": "debug_runs/art_pipeline/mcp_pwr_nuclear_promote_live.json",
+        "must": [
+          {
+            "path": "green",
+            "eq": true
+          },
+          {
+            "path": "procedural_module_id",
+            "eq": "kit_nuclear_pwr_production_001"
+          }
+        ]
+      }
     },
     {
       "seq": 9,
@@ -397,7 +441,8 @@
       "seq": 10,
       "wave": 2,
       "id": "DMCP-QC-SUBSTATION-001",
-      "status": "reopened",
+      "status": "done",
+      "completed": "2026-06-20",
       "priority": "P1",
       "owner": "designer-mcp",
       "depends_on": [
@@ -407,14 +452,23 @@
       "needs_display": true,
       "witness": "debug_runs/art_pipeline/dmcp_qc_substation_live.json",
       "deliverable": "src/dev/dmcp_qc_substation_yard_v1.md",
-      "note": "INTEL-OFFICER tail cull v2 \u00b7 stub_marker:stub",
-      "updated_at": "2026-06-20T21:20:00Z"
+      "note": "Absorbed into PWR-ART-DOWNSTREAM-CLOSE-001 \u00b7 on-call absorption only",
+      "exit_predicate": {
+        "witness": "debug_runs/art_pipeline/power_grid_art_downstream_close_live.json",
+        "must": [
+          {
+            "path": "utility_glb_promoted",
+            "eq": true
+          }
+        ]
+      }
     },
     {
       "seq": 11,
       "wave": 2,
       "id": "DMCP-QC-TRANSFORMER-001",
-      "status": "reopened",
+      "status": "done",
+      "completed": "2026-06-20",
       "priority": "P1",
       "owner": "designer-mcp",
       "depends_on": [
@@ -424,8 +478,16 @@
       "needs_display": true,
       "witness": "debug_runs/art_pipeline/dmcp_qc_transformer_live.json",
       "deliverable": "src/dev/dmcp_qc_transformer_pad_v1.md",
-      "note": "INTEL-OFFICER tail cull v2 \u00b7 stub_marker:stub",
-      "updated_at": "2026-06-20T21:20:00Z"
+      "note": "Absorbed into PWR-ART-DOWNSTREAM-CLOSE-001 \u00b7 on-call absorption only",
+      "exit_predicate": {
+        "witness": "debug_runs/art_pipeline/power_grid_art_downstream_close_live.json",
+        "must": [
+          {
+            "path": "utility_glb_promoted",
+            "eq": true
+          }
+        ]
+      }
     },
     {
       "seq": 12,
@@ -460,11 +522,11 @@
       "seq": 14,
       "wave": 0,
       "id": "DMCP-SPEC-TRANSFORMER-PAD-001",
-      "status": "reopened",
+      "status": "done",
       "signed": "2026-06-18",
+      "completed": "2026-06-20",
       "witness": "src/dev/dmcp_spec_transformer_pad_v1.md",
-      "note": "INTEL-OFFICER tail cull \u00b7 stub_marker:stub",
-      "updated_at": "2026-06-20T21:19:34Z"
+      "note": "Upstream spec complete \u2014 promoted GLB authority"
     }
   ],
   "prior_specs_done": {

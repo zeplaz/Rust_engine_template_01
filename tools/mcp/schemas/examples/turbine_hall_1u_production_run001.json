@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "job_id": "turbine_hall_1u_production_run001",
+  "batch_id": "kit_nuclear_pwr_production_001",
+  "development_tier": "production",
+  "spec_ref": "assets/staging/specs/turbine_hall_1u_production_run001.json",
+  "operation": "module_prop",
+  "params": {
+    "width_m": 4.0,
+    "height_m": 3.0,
+    "depth_m": 2.0,
+    "material_profile": "concrete_grey_01",
+    "seed": 44001,
+    "profile": "box",
+    "prop_kind": "turbine_hall_1u"
+  },
+  "output": {
+    "glb": "assets/staging/turbine_hall_1u_production_run001/model.glb",
+    "thumbnail": "assets/staging/turbine_hall_1u_production_run001/preview.png"
+  }
+}

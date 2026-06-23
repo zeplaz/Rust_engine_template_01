@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "job_id": "containment_dome_pwr_production_run001",
+  "batch_id": "kit_nuclear_pwr_production_001",
+  "development_tier": "production",
+  "spec_ref": "assets/staging/specs/containment_dome_pwr_production_run001.json",
+  "operation": "module_prop",
+  "params": {
+    "width_m": 6.0,
+    "height_m": 6.0,
+    "depth_m": 6.0,
+    "material_profile": "concrete_grey_01",
+    "seed": 44001,
+    "profile": "box",
+    "prop_kind": "containment_dome_pwr"
+  },
+  "output": {
+    "glb": "assets/staging/containment_dome_pwr_production_run001/model.glb",
+    "thumbnail": "assets/staging/containment_dome_pwr_production_run001/preview.png"
+  }
+}

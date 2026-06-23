@@ -147,6 +147,7 @@ impl Plugin for FireVisualFramePlugin {
                     sync_active_fire_chunk_set
                         .after(crate::render::fire_streaming::FireStreamingSleepWakeSet)
                         .before(build_fire_visual_frames_by_view),
+                    crate::render::stall_substage_fire_sync_active,
                 ),
             )
             .add_systems(
@@ -154,9 +155,13 @@ impl Plugin for FireVisualFramePlugin {
                 (
                     attrib_fire_pipeline_before,
                     extract_fire_simulation_snapshot,
+                    crate::render::stall_substage_fire_sim_snapshot,
                     sync_shared_overlay_from_simulation.after(extract_fire_simulation_snapshot),
+                    crate::render::stall_substage_fire_sync_overlay,
                     sync_visible_fire_chunks_from_views.after(extract_fire_simulation_snapshot),
+                    crate::render::stall_substage_fire_sync_visible,
                     sync_fire_chunk_lod_from_snapshot.after(extract_fire_simulation_snapshot),
+                    crate::render::stall_substage_fire_sync_lod,
                     // PERF-INSTR-VFX-001: bracket the per-view extract/LOD rebuild → `fire_build_view`.
                     attrib_fire_build_view_before
                         .after(sync_active_fire_chunk_set)
@@ -167,10 +172,16 @@ impl Plugin for FireVisualFramePlugin {
                         .after(sync_active_fire_chunk_set)
                         .after(sync_visible_fire_chunks_from_views)
                         .after(sync_fire_chunk_lod_from_snapshot),
+                    crate::render::stall_substage_fire_build_view,
                     attrib_fire_build_view_after.after(build_fire_visual_frames_by_view),
                     sync_sim_fire_emitter_visual_from_frame.after(build_fire_visual_frames_by_view),
+                    crate::render::stall_substage_fire_emitter_sync,
                     sync_atmosphere_diag_fire_instance_count.after(sync_sim_fire_emitter_visual_from_frame),
                     commit_fire_visual_snapshot.after(sync_atmosphere_diag_fire_instance_count),
+                    crate::render::stall_substage_fire_commit,
+                    // Close the BuildProfiles timer here — do NOT wait for Clusters/ProjectGpu or
+                    // unrelated Update systems (world repr, minimap compositor) inflate `fire_pipeline_ms`.
+                    attrib_fire_pipeline_after,
                 )
                     .chain()
                     .in_set(FireVisualFrameSet::BuildProfiles),
@@ -224,12 +235,6 @@ impl Plugin for FireVisualFramePlugin {
                 Update,
                 crate::render::emit_domain_overlay_frame_from_projection
                     .in_set(FireVisualFrameSet::EmitDomainOverlays),
-            )
-            .add_systems(
-                Update,
-                attrib_fire_pipeline_after
-                    .after(emit_world_fire_particles_from_projection)
-                    .after(crate::render::emit_domain_overlay_frame_from_projection),
             );
     }
 }
@@ -342,6 +347,28 @@ fn sync_atmosphere_diag_fire_instance_count(
     diag.last_emitter_extract_count = frame.instances.len();
 }
 
+fn fire_extract_input_fingerprint(
+    runtime: &FireChunkRuntime,
+    residency_cells: u32,
+) -> crate::render::FireExtractInputFingerprint {
+    let mut active_digest = 0u64;
+    for c in runtime.chunks.values() {
+        if c.active || c.visual_active {
+            active_digest ^= (c.coord.x as u64)
+                .wrapping_mul(0x9e37_79b9_7f4a_7c15)
+                ^ (c.coord.y as u64)
+                    .wrapping_mul(0xc2b2_ae3d_27d4_eb4f)
+                    .rotate_left(11)
+                ^ (c.max_heat.to_bits() as u64).rotate_left(23);
+        }
+    }
+    crate::render::FireExtractInputFingerprint {
+        runtime_len: runtime.chunks.len() as u32,
+        active_digest,
+        residency_cells,
+    }
+}
+
 pub fn extract_fire_simulation_snapshot(
     tick: Res<crate::systems::sim_control::SimTick>,
     sim_time: Res<crate::systems::sim_control::SimTimeMicros>,
@@ -397,6 +424,24 @@ pub fn extract_fire_simulation_snapshot(
         interval_elapsed
     };
     report.cadence_due = cadence_due;
+
+    let residency_cells = residency
+        .as_ref()
+        .map(|t| t.entries.len() as u32)
+        .unwrap_or(0);
+    let input_fingerprint = fire_extract_input_fingerprint(&runtime, residency_cells);
+
+    // Fingerprint skip is safe even during UX spike — spike throttling above already caps cadence;
+    // blocking skip here caused a death spiral (~250ms frames → spike latch → full ECS scan every
+    // cadence tick → never recover).
+    if cadence_due && input_fingerprint == clock.last_input_fingerprint {
+        report.cadence_skipped = true;
+        report.fingerprint_skipped = true;
+        report.extract_ms = extract_started.elapsed().as_secs_f32() * 1000.0;
+        extract_diag.last = report;
+        return;
+    }
+
     if !cadence_due {
         report.cadence_skipped = true;
         report.extract_ms = extract_started.elapsed().as_secs_f32() * 1000.0;
@@ -405,6 +450,7 @@ pub fn extract_fire_simulation_snapshot(
     }
     clock.last_tick = tick.0;
     clock.last_full_extract_secs = now;
+    clock.last_input_fingerprint = input_fingerprint;
     report.ran_full_scan = true;
 
     sim.instances.clear();

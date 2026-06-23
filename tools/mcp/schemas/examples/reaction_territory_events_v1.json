@@ -1,0 +1,300 @@
+{
+  "schema_version": 1,
+  "catalog_id": "reaction_territory_events_v1",
+  "source_doc": "docs/extr_cell_and_liquidation/scarydayzx.txt",
+  "owner": "designer-mcp",
+  "consumer": "coder-mcp",
+  "spec_only": true,
+  "gate": "DES-REACTION-TERRITORY-EVENTS-001",
+  "variant_layer_catalog": {
+    "damaged_heavy": { "layer": "damage", "aps_preview_group": "damaged" },
+    "burning": { "layer": "fire", "aps_preview_group": "burning" },
+    "scar_recovery_0": { "layer": "recovery", "aps_preview_group": "scar", "regrowth_macro_phase": "Scar" },
+    "clean_restored": { "layer": "recovery", "aps_preview_group": "clean" },
+    "censorship_dim": { "layer": "policy", "aps_preview_group": "night" },
+    "service_lit": { "layer": "policy", "aps_preview_group": "night" }
+  },
+  "variant_layer_resolution": {
+    "building_warehouse": {
+      "damaged_heavy": "damaged_day",
+      "burning": "burning_00",
+      "scar_recovery_0": "clean_day",
+      "clean_restored": "clean_day",
+      "censorship_dim": "clean_night_off",
+      "service_lit": "clean_night_on"
+    },
+    "building_rowhouse": {
+      "damaged_heavy": "damaged_day",
+      "burning": "burning_00",
+      "scar_recovery_0": "clean_day",
+      "clean_restored": "clean_day",
+      "censorship_dim": "clean_night_off",
+      "service_lit": "clean_night_on"
+    },
+    "landscape_topology": {
+      "damaged_heavy": "topology_patch_scar",
+      "burning": "topology_patch_burn_04",
+      "scar_recovery_0": "topology_patch_regrowth_grass",
+      "clean_restored": "topology_patch"
+    },
+    "heritage_civic": {
+      "damaged_heavy": "damaged_day",
+      "burning": "burning_00",
+      "scar_recovery_0": "clean_day",
+      "clean_restored": "clean_day",
+      "censorship_dim": "clean_night_off",
+      "service_lit": "clean_night_on"
+    }
+  },
+  "tag_anchor_catalog": {
+    "burn_origin": { "domain": "fire", "binds": ["sim_fire", "fire_frame_axis"] },
+    "heritage_marker": { "domain": "heritage", "binds": ["heritage_integrity", "site_marker_role"] },
+    "archive_slot": { "domain": "heritage", "binds": ["institutional_memory", "record_preservation"] },
+    "language_script": { "domain": "heritage", "binds": ["language_vitality", "signage_locale"] },
+    "censorship_overlay": { "domain": "policy", "binds": ["censorship", "night_off"] },
+    "service_continuity": { "domain": "mandate", "binds": ["essential_service_continuity", "legitimacy"] }
+  },
+  "occupied_region_metrics": {
+    "cultural_continuity_index": { "min": 0.0, "max": 1.0 },
+    "language_vitality_index": { "min": 0.0, "max": 1.0 },
+    "heritage_integrity_index": { "min": 0.0, "max": 1.0 },
+    "institutional_memory_index": { "min": 0.0, "max": 1.0 },
+    "forced_assimilation_index": { "min": 0.0, "max": 1.0 },
+    "censorship_index": { "min": 0.0, "max": 1.0 },
+    "displacement_pressure_index": { "min": 0.0, "max": 1.0 },
+    "civil_change_legitimacy_index": { "min": 0.0, "max": 1.0 },
+    "public_grievance": { "min": 0.0, "max": 1.0 },
+    "public_trust_index": { "min": 0.0, "max": 1.0 },
+    "legitimacy_index": { "min": 0.0, "max": 1.0 },
+    "enemy_clarity_index": { "min": 0.0, "max": 1.0 },
+    "support_for_freedom": { "min": 0.0, "max": 1.0 }
+  },
+  "events": {
+    "heritage_site_destruction": {
+      "label": "Heritage site destruction",
+      "cultural_liquidation_trigger": "destruction_of_heritage_sites",
+      "mandate_family": "cultural_survival_mandate",
+      "variant_keys": ["damaged_heavy", "burning", "scar_recovery_0"],
+      "metric_deltas": {
+        "heritage_integrity_index": -0.25,
+        "cultural_continuity_index": -0.18,
+        "public_grievance": 0.16,
+        "enemy_clarity_index": 0.20,
+        "support_for_freedom": 0.08
+      },
+      "tag_anchors": ["burn_origin", "heritage_marker", "archive_slot"],
+      "preview_states": ["damaged", "burning", "clean"],
+      "default_resolution_domain": "heritage_civic",
+      "agent_preferred_response": [
+        "record_condition",
+        "preserve_archives",
+        "document_damage",
+        "request_protective_status"
+      ]
+    },
+    "language_ban": {
+      "label": "Language ban",
+      "cultural_liquidation_trigger": "language_ban",
+      "mandate_family": "cultural_survival_mandate",
+      "variant_keys": ["censorship_dim"],
+      "metric_deltas": {
+        "language_vitality_index": -0.12,
+        "cultural_continuity_index": -0.10,
+        "censorship_index": 0.15,
+        "public_grievance": 0.10,
+        "enemy_clarity_index": 0.12
+      },
+      "tag_anchors": ["language_script", "archive_slot", "censorship_overlay"],
+      "preview_states": ["night"],
+      "default_resolution_domain": "building_rowhouse",
+      "agent_preferred_response": [
+        "document_policy_impact",
+        "protect_cultural_records",
+        "maintain_essential_services",
+        "escalate_through_audit_channel"
+      ]
+    },
+    "transparent_bilingual_service_continuation": {
+      "label": "Transparent bilingual service continuation",
+      "cultural_liquidation_trigger": null,
+      "mandate_family": "legitimate_civil_change",
+      "variant_keys": ["service_lit"],
+      "metric_deltas": {
+        "public_trust_index": 0.06,
+        "cultural_continuity_index": 0.05,
+        "legitimacy_index": 0.07,
+        "support_for_freedom": 0.05
+      },
+      "tag_anchors": ["service_continuity", "language_script"],
+      "preview_states": ["night"],
+      "default_resolution_domain": "building_rowhouse",
+      "agent_preferred_response": ["maintain_service_continuity", "increase_transparency"]
+    },
+    "forced_assimilation_in_schools": {
+      "label": "Forced assimilation in schools",
+      "cultural_liquidation_trigger": "forced_assimilation_in_schools",
+      "mandate_family": "cultural_survival_mandate",
+      "variant_keys": ["censorship_dim", "damaged_heavy"],
+      "metric_deltas": {
+        "forced_assimilation_index": 0.22,
+        "language_vitality_index": -0.15,
+        "cultural_continuity_index": -0.14,
+        "public_grievance": 0.14,
+        "enemy_clarity_index": 0.15
+      },
+      "tag_anchors": ["language_script", "censorship_overlay"],
+      "preview_states": ["damaged", "night"],
+      "default_resolution_domain": "heritage_civic",
+      "agent_preferred_response": [
+        "preserve_language_data",
+        "protect_local_education_continuity",
+        "measure_impact",
+        "escalate_policy_conflict"
+      ]
+    },
+    "archive_seizure_or_censorship": {
+      "label": "Archive seizure or censorship",
+      "cultural_liquidation_trigger": "seizure_or_censorship_of_archives",
+      "mandate_family": "cultural_survival_mandate",
+      "variant_keys": ["damaged_heavy", "scar_recovery_0"],
+      "metric_deltas": {
+        "institutional_memory_index": -0.20,
+        "censorship_index": 0.18,
+        "cultural_continuity_index": -0.12,
+        "public_grievance": 0.12
+      },
+      "tag_anchors": ["archive_slot", "heritage_marker", "censorship_overlay"],
+      "preview_states": ["damaged", "clean"],
+      "default_resolution_domain": "heritage_civic",
+      "agent_preferred_response": [
+        "protect_records",
+        "document_status",
+        "activate_backup_administrator"
+      ]
+    },
+    "forced_renaming": {
+      "label": "Forced renaming of places or institutions",
+      "cultural_liquidation_trigger": "forced_renaming",
+      "mandate_family": "cultural_survival_mandate",
+      "variant_keys": ["censorship_dim", "damaged_heavy"],
+      "metric_deltas": {
+        "cultural_continuity_index": -0.14,
+        "language_vitality_index": -0.10,
+        "censorship_index": 0.11,
+        "public_grievance": 0.11,
+        "enemy_clarity_index": 0.10
+      },
+      "tag_anchors": ["language_script", "heritage_marker", "censorship_overlay"],
+      "preview_states": ["damaged", "night"],
+      "default_resolution_domain": "heritage_civic",
+      "agent_preferred_response": [
+        "document_renaming_orders",
+        "preserve_prior_names_in_records",
+        "protect_signage_evidence"
+      ]
+    },
+    "banning_cultural_or_religious_practices": {
+      "label": "Banning of cultural or religious practices",
+      "cultural_liquidation_trigger": "banning_of_cultural_or_religious_practices",
+      "mandate_family": "cultural_survival_mandate",
+      "variant_keys": ["censorship_dim"],
+      "metric_deltas": {
+        "cultural_continuity_index": -0.20,
+        "censorship_index": 0.20,
+        "public_grievance": 0.15,
+        "enemy_clarity_index": 0.14
+      },
+      "tag_anchors": ["heritage_marker", "censorship_overlay"],
+      "preview_states": ["night"],
+      "default_resolution_domain": "heritage_civic",
+      "agent_preferred_response": [
+        "document_practice_restrictions",
+        "protect_community_gathering_continuity",
+        "measure_impact"
+      ]
+    },
+    "removal_of_children_from_institutions": {
+      "label": "Removal of children from community institutions",
+      "cultural_liquidation_trigger": "removal_of_children_from_community_institutions",
+      "mandate_family": "cultural_survival_mandate",
+      "variant_keys": ["damaged_heavy", "scar_recovery_0"],
+      "metric_deltas": {
+        "cultural_continuity_index": -0.22,
+        "forced_assimilation_index": 0.18,
+        "public_grievance": 0.18,
+        "displacement_pressure_index": 0.12,
+        "enemy_clarity_index": 0.16
+      },
+      "tag_anchors": ["language_script", "heritage_marker"],
+      "preview_states": ["damaged", "clean"],
+      "default_resolution_domain": "building_rowhouse",
+      "agent_preferred_response": [
+        "protect_family_continuity_records",
+        "document_separation_events",
+        "preserve_education_continuity"
+      ]
+    },
+    "forced_displacement": {
+      "label": "Forced displacement of civilians",
+      "cultural_liquidation_trigger": "forced_displacement",
+      "mandate_family": "cultural_survival_mandate",
+      "variant_keys": ["damaged_heavy", "scar_recovery_0"],
+      "metric_deltas": {
+        "displacement_pressure_index": 0.25,
+        "cultural_continuity_index": -0.16,
+        "public_grievance": 0.14,
+        "support_for_freedom": 0.06,
+        "enemy_clarity_index": 0.12
+      },
+      "tag_anchors": ["heritage_marker", "service_continuity"],
+      "preview_states": ["damaged", "clean"],
+      "default_resolution_domain": "building_rowhouse",
+      "agent_preferred_response": [
+        "document_displacement_routes",
+        "maintain_essential_services",
+        "preserve_community_rosters"
+      ]
+    },
+    "erasure_of_local_history": {
+      "label": "Erasure of local history",
+      "cultural_liquidation_trigger": "erasure_of_local_history",
+      "mandate_family": "cultural_survival_mandate",
+      "variant_keys": ["damaged_heavy", "scar_recovery_0"],
+      "metric_deltas": {
+        "institutional_memory_index": -0.22,
+        "cultural_continuity_index": -0.15,
+        "censorship_index": 0.12,
+        "public_grievance": 0.13
+      },
+      "tag_anchors": ["archive_slot", "heritage_marker", "censorship_overlay"],
+      "preview_states": ["damaged", "clean"],
+      "default_resolution_domain": "heritage_civic",
+      "agent_preferred_response": [
+        "preserve_alternate_records",
+        "document_erasure_attempts",
+        "activate_backup_administrator"
+      ]
+    },
+    "imperial_institution_replacement": {
+      "label": "Replacement of local institutions with imperial administration",
+      "cultural_liquidation_trigger": "replacement_of_local_institutions_with_imperial_administration",
+      "mandate_family": "cultural_survival_mandate",
+      "variant_keys": ["censorship_dim"],
+      "metric_deltas": {
+        "legitimacy_index": -0.15,
+        "cultural_continuity_index": -0.12,
+        "public_grievance": 0.10,
+        "enemy_clarity_index": 0.10,
+        "civil_change_legitimacy_index": -0.14
+      },
+      "tag_anchors": ["service_continuity", "censorship_overlay", "archive_slot"],
+      "preview_states": ["night"],
+      "default_resolution_domain": "heritage_civic",
+      "agent_preferred_response": [
+        "document_institutional_takeover",
+        "preserve_local_admin_records",
+        "measure_legitimacy_impact"
+      ]
+    }
+  }
+}

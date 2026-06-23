@@ -56,7 +56,8 @@
       "T8": [
         "stage5_triage_backlog.md"
       ]
-    }
+    },
+    "last_subqueue_sync": "2026-06-21T08:59:10Z"
   },
   "dispatch_now": {
     "orchestrator": "No global primary \u2014 wave-0 on all tracks \u00b7 see wave0_orders",
@@ -157,7 +158,7 @@
       "wave": 0,
       "seq": 5,
       "id": "OVR-P5-TAIL-001",
-      "status": "ready",
+      "status": "done",
       "priority": "P0",
       "owner": "coder-mcp",
       "goal": "status_atom migration \u2014 all APS panels",
@@ -179,7 +180,9 @@
         "T5",
         "T6",
         "T8"
-      ]
+      ],
+      "witness": "tools/mcp/python/tests/test_aps_p7_wave2_style.py",
+      "updated_at": "2026-06-21T01:02:17Z"
     },
     {
       "track": "T1",
@@ -211,7 +214,7 @@
       "wave": 1,
       "seq": 7,
       "id": "OVR-P55-PREVIEW-002",
-      "status": "ready",
+      "status": "done",
       "priority": "P1",
       "owner": "coder-mcp",
       "goal": "4-state preview implementation",
@@ -230,7 +233,9 @@
         "T4",
         "T5",
         "T6"
-      ]
+      ],
+      "witness": "tools/mcp/python/tests/test_aps_preview_variant_state.py",
+      "updated_at": "2026-06-21T01:02:17Z"
     },
     {
       "track": "T1",
@@ -267,7 +272,7 @@
       "wave": 2,
       "seq": 9,
       "id": "APS-STUDIO-CLOSE-001",
-      "status": "ready",
+      "status": "done",
       "priority": "P1",
       "owner": "orchestrator-mcp",
       "goal": "APS studio polish rollup \u2014 pytest aps + operator rubric landed",
@@ -276,7 +281,8 @@
         "OVR-P56-ONBOARD-001"
       ],
       "witness": "debug_runs/art_pipeline/aps_studio_close_live.json",
-      "parallel_ok": []
+      "parallel_ok": [],
+      "updated_at": "2026-06-21T01:02:17Z"
     },
     {
       "track": "T2",
@@ -301,7 +307,7 @@
       "wave": 0,
       "seq": 2,
       "id": "CMCP-GRAMMAR-FACILITY-BRIEF-001",
-      "status": "ready",
+      "status": "done",
       "priority": "P1",
       "owner": "coder-mcp",
       "goal": "Grammar + catalog + chain brief MCP tool",
@@ -311,7 +317,9 @@
       "home_queue": "designer_active_queue.json",
       "parallel_ok": [
         "*"
-      ]
+      ],
+      "witness": "debug_runs/grammar_facility_brief_live.json",
+      "updated_at": "2026-06-21T01:02:17Z"
     },
     {
       "track": "T2",
@@ -319,14 +327,16 @@
       "wave": 0,
       "seq": 3,
       "id": "CMCP-SITE-ZONE-VALIDATE-001",
-      "status": "ready",
+      "status": "done",
       "priority": "P1",
       "owner": "coder-mcp",
       "goal": "Site zone grid validator",
       "home_queue": "designer_active_queue.json",
       "parallel_ok": [
         "*"
-      ]
+      ],
+      "witness": "debug_runs/site_zone_validate_live.json",
+      "updated_at": "2026-06-21T01:02:17Z"
     },
     {
       "track": "T2",
@@ -334,7 +344,7 @@
       "wave": 0,
       "seq": 4,
       "id": "CMCP-GRAM-SWEEP-PROCESS-001",
-      "status": "reopened",
+      "status": "done",
       "priority": "P1",
       "owner": "coder-mcp",
       "goal": "Process histogram in grammar eval sweep",
@@ -343,7 +353,9 @@
         "*"
       ],
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness file on disk",
-      "updated_at": "2026-06-20T21:19:24.304474+00:00"
+      "updated_at": "2026-06-20T21:19:24.304474+00:00",
+      "completed": "2026-06-21",
+      "witness_refresh": "2026-06-21T01:11:35Z"
     },
     {
       "track": "T2",
@@ -351,7 +363,7 @@
       "wave": 0,
       "seq": 5,
       "id": "GRAM-CONTENT-005",
-      "status": "ready",
+      "status": "done",
       "priority": "P1",
       "owner": "coder-mcp",
       "goal": "civic_block_v1.ron G1 archetype on disk",
@@ -359,7 +371,9 @@
       "home_queue": "designer_signoff_registry.json",
       "parallel_ok": [
         "*"
-      ]
+      ],
+      "witness": "assets/configs/buildings/grammars/civic_block_v1.ron",
+      "updated_at": "2026-06-21T01:02:17Z"
     },
     {
       "track": "T2",
@@ -404,7 +418,7 @@
       "wave": 2,
       "seq": 8,
       "id": "GRAMMAR-SHIP-CLOSE-001",
-      "status": "ready",
+      "status": "done",
       "priority": "P0",
       "owner": "orchestrator-mcp",
       "goal": "build_set_health grammar_pilot_count >= 4",
@@ -415,7 +429,8 @@
       "verify": [
         "ops-get-build-set-health"
       ],
-      "witness": "debug_runs/agent_ops/grammar_ship_close_live.json"
+      "witness": "debug_runs/agent_ops/grammar_ship_close_live.json",
+      "updated_at": "2026-06-21T01:02:17Z"
     },
     {
       "track": "T3",
@@ -423,7 +438,7 @@
       "wave": 0,
       "seq": 1,
       "id": "APS-EVO-E4-ATLAS-EXPAND-001",
-      "status": "ready",
+      "status": "done",
       "priority": "P1",
       "owner": "coder-mcp",
       "goal": "16 landscape keyframe stills + teach batch refresh \u2014 ship:false honest",
@@ -435,7 +450,8 @@
       "home_queue": "aps_option_d_agent_queue.json",
       "parallel_ok": [
         "*"
-      ]
+      ],
+      "updated_at": "2026-06-21T01:02:17Z"
     },
     {
       "track": "T3",
@@ -461,14 +477,16 @@
       "wave": 0,
       "seq": 3,
       "id": "VEG-CATALOG-BURN-ROWS-001",
-      "status": "ready",
+      "status": "done",
       "priority": "P1",
       "owner": "coder-mcp",
       "goal": "Burn/scar/recovery states in _vegetation_variant_catalog.ron",
       "home_queue": "parallel_wave_aps_veg_dispatch_v1.json",
       "parallel_ok": [
         "*"
-      ]
+      ],
+      "witness": "debug_runs/veg_catalog_burn_rows_live.json",
+      "updated_at": "2026-06-21T01:02:17Z"
     },
     {
       "track": "T3",
@@ -476,7 +494,7 @@
       "wave": 0,
       "seq": 4,
       "id": "CDR-B-VEG-MINIMAP-LEGEND-UI-001",
-      "status": "reopened",
+      "status": "done",
       "priority": "P1",
       "owner": "coder_b",
       "goal": "Minimap veg topology legend UI wired",
@@ -489,7 +507,9 @@
         "*"
       ],
       "note": "INTEL-OFFICER-001 ops-intel supervised cull 2026-06-20 \u00b7 witness_honesty",
-      "updated_at": "2026-06-20T21:18:19.574093+00:00"
+      "updated_at": "2026-06-20T21:18:19.574093+00:00",
+      "completed": "2026-06-21",
+      "witness_refresh": "2026-06-21T01:11:35Z"
     },
     {
       "track": "T3",
@@ -497,7 +517,7 @@
       "wave": 1,
       "seq": 5,
       "id": "VEG-F01-ATLAS-SHIP-001",
-      "status": "reopened",
+      "status": "done",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "Engine LG-5 consumer after atlas ship sign-off",
@@ -509,7 +529,9 @@
         "*"
       ],
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness file on disk",
-      "updated_at": "2026-06-20T21:19:26.452249+00:00"
+      "updated_at": "2026-06-20T21:19:26.452249+00:00",
+      "completed": "2026-06-21",
+      "witness_refresh": "2026-06-21T01:11:35Z"
     },
     {
       "track": "T3",
@@ -517,7 +539,7 @@
       "wave": 1,
       "seq": 6,
       "id": "VEG-F02-BURN-ATLAS-001",
-      "status": "ready",
+      "status": "done",
       "priority": "P1",
       "owner": "coder-mcp",
       "goal": "Burn atlas bake after catalog rows",
@@ -535,7 +557,9 @@
         "T4",
         "T5",
         "T6"
-      ]
+      ],
+      "witness": "debug_runs/veg_f02_burn_atlas_live.json",
+      "updated_at": "2026-06-21T01:02:17Z"
     },
     {
       "track": "T3",
@@ -543,7 +567,7 @@
       "wave": 1,
       "seq": 7,
       "id": "CDR-A-VISUAL-SMOKE-ECO-001",
-      "status": "ready",
+      "status": "done",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "Visual harness ecology raster capture",
@@ -557,7 +581,8 @@
         "T4",
         "T5",
         "T6"
-      ]
+      ],
+      "updated_at": "2026-06-21T01:02:17Z"
     },
     {
       "track": "T3",
@@ -565,7 +590,7 @@
       "wave": 2,
       "seq": 8,
       "id": "VEG-SHIP-CLOSE-001",
-      "status": "ready",
+      "status": "done",
       "priority": "P0",
       "owner": "sim-steward",
       "goal": "Honest vegetation program close \u2014 operator_session_green",
@@ -574,7 +599,8 @@
         "G-PLAY-OPERATOR-01"
       ],
       "witness": "debug_runs/vegetation_program_close_live.json",
-      "parallel_ok": []
+      "parallel_ok": [],
+      "updated_at": "2026-06-21T01:02:17Z"
     },
     {
       "track": "T4",
@@ -582,7 +608,7 @@
       "wave": 0,
       "seq": 1,
       "id": "FIRE-F2-FUEL-SPREAD-001",
-      "status": "ready",
+      "status": "done",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "Fuel-linked spread \u2014 ember + neighbor fuel depletion",
@@ -590,7 +616,9 @@
       "home_queue": "post_drain_active_queue.json",
       "parallel_ok": [
         "*"
-      ]
+      ],
+      "witness": "debug_runs/fire_ecology_live.json",
+      "updated_at": "2026-06-21T01:02:17Z"
     },
     {
       "track": "T4",
@@ -598,7 +626,7 @@
       "wave": 0,
       "seq": 2,
       "id": "WSS-SMOKE-BRIDGE-001",
-      "status": "ready",
+      "status": "done",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "WSS smoke substrate bridge",
@@ -606,7 +634,9 @@
       "home_queue": "post_drain_active_queue.json",
       "parallel_ok": [
         "*"
-      ]
+      ],
+      "witness": "debug_runs/f2_smoke_pipeline_live.json",
+      "updated_at": "2026-06-21T01:02:17Z"
     },
     {
       "track": "T4",
@@ -631,7 +661,7 @@
       "wave": 1,
       "seq": 4,
       "id": "SIM-STEWARD-FIRE-REGRESS-001",
-      "status": "reopened",
+      "status": "done",
       "priority": "P2",
       "owner": "sim-steward",
       "goal": "Fire ecology stage5 regression rollup",
@@ -645,7 +675,9 @@
         "*"
       ],
       "note": "INTEL-OFFICER-001 ops-intel supervised cull 2026-06-20 \u00b7 contradiction",
-      "updated_at": "2026-06-20T21:18:19.562181+00:00"
+      "updated_at": "2026-06-20T21:18:19.562181+00:00",
+      "completed": "2026-06-21",
+      "witness_refresh": "2026-06-21T01:11:35Z"
     },
     {
       "track": "T4",
@@ -653,7 +685,7 @@
       "wave": 1,
       "seq": 5,
       "id": "OPS-VT5-OPERATOR-001",
-      "status": "ready",
+      "status": "blocked",
       "priority": "P2",
       "owner": "operator",
       "goal": "VT-5 flicker visual confirm",
@@ -661,7 +693,9 @@
       "plan": "src/dev/visual_run_blockers.md",
       "parallel_ok": [
         "*"
-      ]
+      ],
+      "blocked_reason": "NEEDS-DISPLAY",
+      "updated_at": "2026-06-21T01:02:17Z"
     },
     {
       "track": "T5",
@@ -791,13 +825,15 @@
       "wave": 1,
       "seq": 7,
       "id": "COD-SIM-HUD-CURSOR-001",
-      "status": "ready",
+      "status": "done",
       "priority": "P2",
       "owner": "coder_b",
       "goal": "Unified sim cursor",
       "parallel_ok": [
         "*"
-      ]
+      ],
+      "witness": "debug_runs/sim_hud_cursor_live.json",
+      "updated_at": "2026-06-21T01:02:17Z"
     },
     {
       "track": "T5",
@@ -805,7 +841,7 @@
       "wave": 2,
       "seq": 8,
       "id": "SIM-HUD-PHASE2-CLOSE-001",
-      "status": "ready",
+      "status": "done",
       "priority": "P1",
       "owner": "orchestrator",
       "goal": "Sim HUD phase 2 product polish close",
@@ -814,7 +850,8 @@
         "COD-SIM-HUD-TRAY-BUILD-001",
         "COD-SIM-HUD-POPUP-MIGRATE-001"
       ],
-      "witness": "debug_runs/sim_hud_phase2_close_live.json"
+      "witness": "debug_runs/sim_hud_phase2_close_live.json",
+      "updated_at": "2026-06-21T01:02:17Z"
     },
     {
       "track": "T6",
@@ -822,8 +859,8 @@
       "wave": 1,
       "seq": 1,
       "id": "DES-POWER-NODE-HOVER-001",
-      "status": "reopened",
-      "completed": "2026-06-20",
+      "status": "done",
+      "completed": "2026-06-21",
       "priority": "P1",
       "owner": "designer",
       "goal": "Transformer/substation hover cards",
@@ -832,7 +869,8 @@
         "*"
       ],
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 missing_exit_predicate",
-      "updated_at": "2026-06-20T21:19:24.746293+00:00"
+      "updated_at": "2026-06-20T21:19:24.746293+00:00",
+      "witness_refresh": "2026-06-21T01:11:35Z"
     },
     {
       "track": "T6",
@@ -857,8 +895,8 @@
       "wave": 1,
       "seq": 2,
       "id": "COD-POWER-OVERLAY-RENDER-001",
-      "status": "reopened",
-      "completed": "2026-06-20",
+      "status": "done",
+      "completed": "2026-06-21",
       "priority": "P1",
       "owner": "coder_b",
       "goal": "Compositor strokes by VoltageClass + state",
@@ -867,7 +905,8 @@
         "*"
       ],
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 missing_exit_predicate",
-      "updated_at": "2026-06-20T21:19:24.390803+00:00"
+      "updated_at": "2026-06-20T21:19:24.390803+00:00",
+      "witness_refresh": "2026-06-21T01:11:35Z"
     },
     {
       "track": "T6",
@@ -875,8 +914,8 @@
       "wave": 1,
       "seq": 3,
       "id": "COD-POWER-ISLAND-HIGHLIGHT-001",
-      "status": "reopened",
-      "completed": "2026-06-20",
+      "status": "done",
+      "completed": "2026-06-21",
       "priority": "P1",
       "owner": "coder",
       "goal": "Island boundary + dim unpowered",
@@ -885,7 +924,8 @@
         "*"
       ],
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 missing_exit_predicate",
-      "updated_at": "2026-06-20T21:19:24.362849+00:00"
+      "updated_at": "2026-06-20T21:19:24.362849+00:00",
+      "witness_refresh": "2026-06-21T01:11:35Z"
     },
     {
       "track": "T6",
@@ -893,8 +933,8 @@
       "wave": 2,
       "seq": 4,
       "id": "COD-POWER-DAMAGE-SEGMENT-001",
-      "status": "reopened",
-      "completed": "2026-06-20",
+      "status": "done",
+      "completed": "2026-06-21",
       "priority": "P2",
       "owner": "coder",
       "goal": "Segment HP + cut \u2192 graph split",
@@ -903,7 +943,8 @@
         "*"
       ],
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 missing_exit_predicate",
-      "updated_at": "2026-06-20T21:19:24.332178+00:00"
+      "updated_at": "2026-06-20T21:19:24.332178+00:00",
+      "witness_refresh": "2026-06-21T01:11:35Z"
     },
     {
       "track": "T6",
@@ -911,8 +952,8 @@
       "wave": 2,
       "seq": 5,
       "id": "COD-UTILITY-ACTIVATION-LINK-001",
-      "status": "reopened",
-      "completed": "2026-06-20",
+      "status": "done",
+      "completed": "2026-06-21",
       "priority": "P1",
       "owner": "coder",
       "goal": "Activation reads UtilityConnection",
@@ -921,7 +962,8 @@
         "*"
       ],
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 missing_exit_predicate",
-      "updated_at": "2026-06-20T21:19:24.559439+00:00"
+      "updated_at": "2026-06-20T21:19:24.559439+00:00",
+      "witness_refresh": "2026-06-21T01:11:35Z"
     },
     {
       "track": "T6",
@@ -929,8 +971,8 @@
       "wave": 2,
       "seq": 6,
       "id": "COD-POWER-TOOL-RAIL-001",
-      "status": "reopened",
-      "completed": "2026-06-20",
+      "status": "done",
+      "completed": "2026-06-21",
       "priority": "P1",
       "owner": "coder",
       "goal": "Utilities rail \u2192 Lines entry",
@@ -939,7 +981,8 @@
         "*"
       ],
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 missing_exit_predicate",
-      "updated_at": "2026-06-20T21:19:24.416212+00:00"
+      "updated_at": "2026-06-20T21:19:24.416212+00:00",
+      "witness_refresh": "2026-06-21T01:11:35Z"
     },
     {
       "track": "T7",
@@ -947,7 +990,7 @@
       "wave": 0,
       "seq": 1,
       "id": "G-PLAY-01",
-      "status": "ready",
+      "status": "blocked",
       "priority": "P0",
       "owner": "operator",
       "goal": "Play acceptance session \u2014 NEEDS-DISPLAY",
@@ -956,7 +999,9 @@
       "home_queue": "post_drain_phase2_queue.json",
       "parallel_ok": [
         "*"
-      ]
+      ],
+      "blocked_reason": "NEEDS-DISPLAY",
+      "updated_at": "2026-06-21T01:02:17Z"
     },
     {
       "track": "T7",
@@ -964,7 +1009,7 @@
       "wave": 0,
       "seq": 2,
       "id": "G-PLAY-OPERATOR-01",
-      "status": "ready",
+      "status": "blocked",
       "priority": "P0",
       "owner": "operator",
       "goal": "Veg/fire/ecology operator checklist v2",
@@ -975,7 +1020,9 @@
       "home_queue": "post_drain_phase3_queue.json",
       "parallel_ok": [
         "*"
-      ]
+      ],
+      "blocked_reason": "NEEDS-DISPLAY",
+      "updated_at": "2026-06-21T01:02:17Z"
     },
     {
       "track": "T7",
@@ -983,7 +1030,7 @@
       "wave": 0,
       "seq": 3,
       "id": "PERF-SHELL-001",
-      "status": "ready",
+      "status": "blocked",
       "priority": "P1",
       "owner": "operator",
       "goal": "Shell perf spot-check",
@@ -991,7 +1038,49 @@
       "home_queue": "post_drain_phase2_queue.json",
       "parallel_ok": [
         "*"
-      ]
+      ],
+      "blocked_reason": "NEEDS-DISPLAY",
+      "updated_at": "2026-06-21T01:02:17Z"
+    },
+    {
+      "track": "T5",
+      "track_id": "SIM-HUD",
+      "wave": 0,
+      "seq": 0,
+      "id": "VA2-HARNESS-CLOSE-001",
+      "status": "done",
+      "priority": "P0",
+      "owner": "coder",
+      "goal": "Visual Aid v2 harness \u2014 ESC + build mode + macro zoom closes board 3/6\u21926/6 on --test visual",
+      "plan": "src/dev/plan_visual_test_dump_response_20260621_v1.md",
+      "witness": "debug_runs/visual_aidv2_live.json",
+      "home_queue": "multi_parallel_home_queues_v1.json",
+      "parallel_ok": [
+        "T8",
+        "T4"
+      ],
+      "updated_at": "2026-06-21T12:00:00Z",
+      "completed": "2026-06-21",
+      "witness_refresh": "2026-06-21T08:59:09Z"
+    },
+    {
+      "track": "T8",
+      "track_id": "INFRA-PERF",
+      "wave": 0,
+      "seq": 0,
+      "id": "PERF-INSTR-VFX-002",
+      "status": "in_progress",
+      "priority": "P0",
+      "owner": "coder_b",
+      "goal": "VFX perf \u2014 Phase 2A\u20132D dirty gates (fire fingerprint, world repr stamp skip, map camera at-rest)",
+      "plan": "src/dev/perf_visual_full_fix_todo_v1.md",
+      "witness": "debug_runs/triage_perf_vfx_fix_2026-06-11_live.json",
+      "home_queue": "multi_parallel_home_queues_v1.json",
+      "parallel_ok": [
+        "T4",
+        "T6"
+      ],
+      "updated_at": "2026-06-21T01:10:00Z"
     },
     {
       "track": "T8",
@@ -999,14 +1088,16 @@
       "wave": 0,
       "seq": 1,
       "id": "TRIAGE-PERF-SHELL",
-      "status": "ready",
+      "status": "blocked",
       "priority": "P1",
       "owner": "coder_b",
       "goal": "Frame wall time / logging / egui cost triage",
       "plan": "src/dev/stage5_triage_backlog.md",
       "parallel_ok": [
         "*"
-      ]
+      ],
+      "blocked_reason": "NEEDS-DISPLAY",
+      "updated_at": "2026-06-21T01:02:17Z"
     },
     {
       "track": "T8",
@@ -1014,14 +1105,16 @@
       "wave": 0,
       "seq": 2,
       "id": "OPS-F01-WC-D04-001",
-      "status": "ready",
+      "status": "done",
       "priority": "P2",
       "owner": "coder_b",
       "goal": "Infra slice 3 WC-D04 ops funnel",
       "plan": "src/dev/infra_slice3_wc_d04_ops_f01_plan_v1.md",
       "parallel_ok": [
         "*"
-      ]
+      ],
+      "witness": "debug_runs/stage6_virtualization_live.json",
+      "updated_at": "2026-06-21T01:02:17Z"
     },
     {
       "track": "T8",
@@ -1029,7 +1122,7 @@
       "wave": 0,
       "seq": 3,
       "id": "VM-09-V2-INVERT-BRIDGE",
-      "status": "ready",
+      "status": "done",
       "priority": "P2",
       "owner": "sim-steward",
       "goal": "VM-09 v2 invert bridge \u2014 slice 2 closed",
@@ -1037,7 +1130,9 @@
       "co_owner": "coder",
       "parallel_ok": [
         "*"
-      ]
+      ],
+      "witness": "debug_runs/infrastructure_view_isolation_live.json",
+      "updated_at": "2026-06-21T01:02:17Z"
     },
     {
       "track": "T8",

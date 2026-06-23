@@ -1,0 +1,200 @@
+Occupation creates the condition.
+Freedom policy defines the goal.
+Logistics determines whether the goal is believable.
+Diffuse management keeps the system alive.
+Faction support measures whether civilians see the policy as legitimate.
+The enemy is coercive domination, not civilian identity.
+
+
+## Cultural Liquidation and Civil Change Under Occupation
+
+### Main Correction
+
+A freedom policy is not realistic if it only protects services and ignores cultural survival.
+
+Under occupation, the mandate must include:
+
+```text
+life protection
++ essential services
++ cultural survival
++ language continuity
++ heritage protection
++ institutional memory
++ protection from forced assimilation
+The enemy is not a people.
+The enemy is the policy posture of coercive cultural erasure.
+
+Cultural Liquidation Trigger
+cultural_liquidation_trigger:
+  activate_when:
+    - language_ban
+    - forced_renaming
+    - destruction_of_heritage_sites
+    - seizure_or_censorship_of_archives
+    - forced_assimilation_in_schools
+    - banning_of_cultural_or_religious_practices
+    - removal_of_children_from_community_institutions
+    - forced_displacement
+    - erasure_of_local_history
+    - replacement_of_local_institutions_with_imperial_administration
+
+  activate_policy:
+    cultural_survival_mandate
+Cultural Survival Mandate
+cultural_survival_mandate:
+  purpose:
+    Preserve the people, language, memory, institutions, and dignity of the occupied society.
+
+  priority_order:
+    - protect_life
+    - prevent_forced_cultural_erasure
+    - preserve_language_and_memory
+    - protect_heritage_and_archives
+    - maintain_essential_services
+    - document_violations
+    - preserve_legitimacy
+    - avoid_identity_based_revenge
+
+  red_lines:
+    - no_deliberate_civilian_harm
+    - no_collective_punishment
+    - no_targeting_by_identity
+    - no_cultural_erasure
+    - no_forced_assimilation
+    - no_destruction_of_heritage
+    - no_false_reporting
+Civil Change Under Occupation
+Not all change is illegitimate. Some changes are administrative or emergency-based.
+
+A civil change is legitimate only if it passes this test:
+
+legitimate_civil_change:
+  required_conditions:
+    - protects_civilians
+    - is_non_discriminatory
+    - preserves_basic_rights
+    - is_transparent
+    - is_proportionate
+    - does_not_erase_identity
+    - does_not_force_assimilation
+    - preserves_essential_services
+    - allows_local_institutional_continuity
+A civil change becomes illegitimate occupation policy when it includes:
+
+illegitimate_civil_change:
+  indicators:
+    - forced_language_replacement
+    - banning_local_names
+    - destroying_cultural_sites
+    - removing_children_from_cultural_education
+    - censoring_local_history
+    - replacing_local_law_without_local_consent
+    - collective_punishment
+    - forced_displacement
+    - targeting_religious_or_cultural_practice
+    - erasing_local_institutions
+Updated Support Formula
+faction_support_model:
+  support_for_freedom =
+    0.15 * life_protection
+  + 0.15 * essential_service_continuity
+  + 0.15 * cultural_survival
+  + 0.15 * language_continuity
+  + 0.10 * heritage_protection
+  + 0.10 * institutional_memory
+  + 0.10 * public_legitimacy
+  + 0.10 * logistics_equity
+  - 0.20 * civilian_harm
+  - 0.15 * forced_assimilation
+  - 0.15 * cultural_erasure
+  - 0.10 * displacement
+  - 0.10 * censorship
+Cultural Continuity Metrics
+occupied_region_metrics:
+  cultural_continuity_index: 0.0-1.0
+  language_vitality_index: 0.0-1.0
+  heritage_integrity_index: 0.0-1.0
+  institutional_memory_index: 0.0-1.0
+  forced_assimilation_index: 0.0-1.0
+  censorship_index: 0.0-1.0
+  displacement_pressure_index: 0.0-1.0
+  civil_change_legitimacy_index: 0.0-1.0
+Agent Decision Integration
+Agents score actions using cultural survival, not just service continuity.
+
+agent_action_score:
+  score =
+    life_safety
+  + essential_service_continuity
+  + cultural_survival_effect
+  + language_protection_effect
+  + heritage_protection_effect
+  + public_legitimacy_effect
+  - civilian_harm_risk
+  - forced_assimilation_risk
+  - cultural_erasure_risk
+  - displacement_risk
+  - policy_violation_risk
+Example Events
+event: language_ban
+effects:
+  language_vitality_index: -0.12
+  cultural_continuity_index: -0.10
+  censorship_index: +0.15
+  public_grievance: +0.10
+  enemy_clarity_index: +0.12
+
+agent_preferred_response:
+  - document_policy_impact
+  - protect_cultural_records
+  - maintain_essential_services
+  - increase_transparency
+  - escalate_through_audit_channel
+event: heritage_site_destruction
+effects:
+  heritage_integrity_index: -0.25
+  cultural_continuity_index: -0.18
+  public_grievance: +0.16
+  enemy_clarity_index: +0.20
+  support_for_freedom: +0.08
+event: transparent_bilingual_service_continuation
+effects:
+  public_trust_index: +0.06
+  cultural_continuity_index: +0.05
+  legitimacy_index: +0.07
+  support_for_freedom: +0.05
+Diffuse Management Continuity
+diffuse_management_continuity:
+  if_cultural_institution_threatened:
+    actions:
+      - document_status
+      - protect_records
+      - maintain_service_continuity
+      - activate_backup_administrator
+      - report_through_audit_channel
+
+  if_forced_assimilation_detected:
+    actions:
+      - measure_impact
+      - preserve_language_data
+      - protect_local_education_continuity
+      - escalate_policy_conflict
+      - maintain_nonsectarian_legitimacy
+
+  if_heritage_site_at_risk:
+    actions:
+      - record_condition
+      - request_protective_status
+      - preserve_archives
+      - document_damage
+      - prevent_unauthorized_destruction
+Final Rule
+When occupation becomes cultural liquidation,
+the policy mandate becomes harder, not softer.
+
+Civil change is legitimate only when it protects people
+without erasing identity.
+
+Cultural survival is not symbolic.
+It is a core simulation variable.

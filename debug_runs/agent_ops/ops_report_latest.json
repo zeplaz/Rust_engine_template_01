@@ -1,7 +1,7 @@
 {
   "_agent_meta": {
     "schema": "ops_report_v2",
-    "written_at_epoch_secs": 1781979326,
+    "written_at_epoch_secs": 1782016220,
     "profile": "OPS_REPORT",
     "source_system": "ops_witness_index+ops_project_brief",
     "relative_path": "debug_runs/agent_ops/ops_report_latest.json",
@@ -21,8 +21,8 @@
     "ECONOMY/LOG: 0 green / 0 proofs",
     "WAVE/STAGE6: 0 green / 0 proofs",
     "STAGE7/PLAY: 0 green / 1 proofs",
-    "ART-A/B/C: 2/102/0 proofs \u00b7 B ship\u26d4=True",
-    "UI: 0 proofs \u00b7 UNCLASSIFIED: 304",
+    "ART-A/B/C: 2/114/0 proofs \u00b7 B ship\u26d4=True",
+    "UI: 0 proofs \u00b7 UNCLASSIFIED: 330",
     "FAIL-PROP[art_B]: Track B manual keyframe \u2014 warehouse paused (does not block ATL\u2605/RT\u2605)",
     "FAIL-PROP[construction]: red sub-witnesses: construction_site_stage_tick_002"
   ],
@@ -49,7 +49,7 @@
     },
     "E_confusion_risk": {
       "score": 9,
-      "evidence": "art dishonest=6; construction red=1; inflated_green=0; rollup_inflated=0; queue_contradiction=0"
+      "evidence": "art dishonest=6; construction red=1; inflated_green=6; rollup_inflated=0; queue_contradiction=9"
     }
   },
   "delta_wf": [
@@ -96,8 +96,8 @@
       "label": "APS product / material studio"
     },
     "art_B": {
-      "count": 102,
-      "green_count": 63,
+      "count": 114,
+      "green_count": 75,
       "label": "MCP pipeline spine / warehouse integration"
     },
     "construction": {
@@ -116,8 +116,8 @@
       "label": "Stage 7 play scenarios"
     },
     "unclassified": {
-      "count": 304,
-      "green_count": 241,
+      "count": 330,
+      "green_count": 256,
       "label": null
     }
   },
@@ -244,9 +244,10 @@
   "utility_score": 0.0,
   "metrics_tier1": {
     "q_per_token": null,
-    "ftr": null,
+    "ftr": 0.0,
     "rtr": null,
-    "status": "not_measured",
-    "note": "Tier-1 KPIs require agent_run_event telemetry"
+    "status": "measured",
+    "note": "FTR/RTR from status=done on non-test events; sparse if HANDOFF -OpsEvent unused",
+    "events_per_day": 0.86
   }
 }

@@ -2,6 +2,24 @@
 
 Cross-model reference for skills and agents. All paths resolve to `.cursor/` directory.
 
+## Governance — benevolent steward + guards (read first)
+
+Any model OpenCode launches is **welcomed and guided**, never gatekept (charter: collaborative, not
+combative — build everyone up, honour every contribution, protect files kindly).
+
+| Piece | File | Role |
+|---|---|---|
+| Charter | [STEWARD_CHARTER.md](STEWARD_CHARTER.md) | the values — welcome · build-up · honour-all · synergy-of-Δ · protect-kindly |
+| Steward | `.opencode/agents/steward.md` | **default** primary agent — onboards any model, meets it where it is, routes, honours contributions, is the kind voice when a guard pauses |
+| Guard | `.opencode/plugins/guard.js` + [guards/GUARD_POLICY.md](guards/GUARD_POLICY.md) | `tool.execute.before` safety net — ask-default, **warm-throw only on irreversibles**, fails-open |
+| Config | `opencode.json` (repo root) | `default_agent=steward` · `permission edit/write/bash=ask` · `mcp rust-engine-art` · `instructions`=charter+SYMLANG+brief |
+
+**Live now:** OpenCode auto-loads `.opencode/agents/*.md` + `.opencode/plugins/*.js`; `opencode.json`
+sets the steward as default and routes risky ops through `ask`. The guard self-resolves the repo root
+and **fails open** (never breaks honest work — it throws only on path-escape / destructive-shell / blank-an-authored-file).
+**To enable `@coder`/`@planner`/… routing:** copy `opencode/agents/*.md` → `.opencode/agents/`
+(parallel to the `.claude`→`.cursor` skill sync). Until then the steward points agents at the files.
+
 ## Quick Reference
 
 | Type | Entry | Description |

@@ -9,11 +9,12 @@ mod render_target;
 
 pub use diagnostics::{
     diagnostics_json_snapshot, minimap_gpu_debug_logging_enabled, MinimapGpuCompositorDiagnostics,
+    MinimapGpuDispatchReason, MinimapGpuSkipReason,
 };
 
 pub use witness_collectors::{
     build_minimap_compositor_proof_payload, build_minimap_compositor_proof_payload_with_tray,
-    fixture_ui_oh_m2_001_compositor, fixture_ui_w3_m3_001_compositor,
+    fixture_ui_oh_m2_001_compositor, fixture_ui_w3_m3_001_compositor, witness_harness_tray,
     ui_oh_m2_001_green, ui_oh_m3_001_green, ui_w3_m3_001_green, ui_w3_m3_001_operational_green,
     ui_w3_m3_001_stage7_operational_green, ui_p3_m2_minimap_acceptance_green,
     ui_p3_m2_tray_opt_green, ui_p3_m3_minimap_acceptance_green, ui_p3_m3_replay_001_green,
@@ -32,7 +33,8 @@ pub use pass::{
     commit_minimap_render_target_bind_system,
     minimap_gpu_compositor_default_on_unset, minimap_gpu_compositor_env_enabled,
     perf_vis_p1b_gpu_default_001_green, queue_minimap_render_target_resize,
-    run_minimap_compositor_pass, sync_minimap_presentation_source, MinimapCompositePath,
+    run_minimap_compositor_pass, sync_minimap_presentation_source,
+    minimap_gpu_compositor_runtime_enabled, MinimapCompositePath,
     MinimapCompositorState,
 };
 pub use render_target::{
@@ -66,7 +68,8 @@ impl Plugin for MinimapCompositorPlugin {
         register_minimap_composite_gpu(app);
         app.add_systems(
             OnEnter(BaseState::Simulation),
-            bootstrap_minimap_gpu_render_target,
+            bootstrap_minimap_gpu_render_target
+                .after(crate::gui::hud::simulation_session::apply_simulation_map_presentation_defaults),
         )
         .add_systems(
             Update,
@@ -90,6 +93,7 @@ impl Plugin for MinimapCompositorPlugin {
                 .after(ViewRepresentationSystemSet::SyncOverlayField)
                 .after(FireVisualFrameSet::BuildProfiles)
                 .after(VegetationExtractFrameSet::BuildProfiles)
+                .after(crate::render::TileWorldFallbackAfterFireExtract)
                 .in_set(ViewRepresentationSystemSet::WorldRender)
                 .run_if(on_visual_cadence_minimap),
         )
@@ -183,7 +187,7 @@ mod tests {
         assert_eq!(v["construction_rows"], serde_json::json!(18));
         assert_eq!(v["logistics_heat_enabled"], serde_json::json!(true));
         assert_eq!(v["construction_heat_enabled"], serde_json::json!(true));
-        let tray = HudOverlayTrayState::default();
+        let tray = super::witness_collectors::witness_harness_tray();
         let compositor = super::witness_collectors::fixture_ui_oh_m2_001_compositor(&tray);
         assert!(ui_w3_m2_001_green(&compositor));
     }
@@ -205,7 +209,7 @@ mod tests {
         assert_eq!(v["construction_heat_enabled"], serde_json::json!(true));
         assert_eq!(v["ui_p3_m2_green"], serde_json::json!(true));
         assert_eq!(v["composite_path"], serde_json::json!("GpuCompute"));
-        let tray = HudOverlayTrayState::default();
+        let tray = super::witness_collectors::witness_harness_tray();
         let compositor = super::witness_collectors::fixture_ui_oh_m2_001_compositor(&tray);
         assert!(ui_oh_m2_001_green(&compositor));
     }
@@ -217,7 +221,7 @@ mod tests {
         use super::pass::MinimapCompositorState;
         use crate::gui::hud::HudOverlayTrayState;
 
-        let tray = HudOverlayTrayState::default();
+        let tray = super::witness_collectors::witness_harness_tray();
         let compositor = MinimapCompositorState {
             stamp: 4,
             compositor_revision: 2,
@@ -311,7 +315,7 @@ mod tests {
             ecology_heat_enabled: false,
             ..Default::default()
         };
-        let mut tray = HudOverlayTrayState::default();
+        let mut tray = super::witness_collectors::witness_harness_tray();
         tray.fire_heat = true;
         tray.ecology_heat = false;
         assert!(ui_p3_m2_tray_opt_green(&compositor, &tray));
@@ -381,7 +385,7 @@ mod tests {
         let mut images = Assets::<Image>::default();
         let mut heat = MinimapCompositeHeatTextures::default();
         let mut map_views = MapViewInstances::default();
-        map_views.minimap.overlays = crate::gui::simulation_minimap_overlay_defaults();
+        map_views.minimap.overlays = crate::gui::minimap_overlay_witness_harness();
         let fallback = TileWorldFallbackState {
             last_w: 64,
             last_h: 64,

@@ -49,7 +49,7 @@ use super::test_harness::{TestHarnessMenuPlugin, TestHarnessPlugin, TestHarnessS
 use super::DebugManeuverPlugin;
 use bevy::asset::AssetPlugin;
 use bevy::prelude::*;
-use bevy::winit::{UpdateMode, WinitSettings};
+use bevy::winit::WinitSettings;
 use bevy::window::{PresentMode, Window, WindowPlugin};
 use bevy_egui::EguiPlugin;
 
@@ -91,10 +91,7 @@ impl Plugin for EnginePlugin {
         )
             // PERF-PLAY: keep simulation in continuous mode; reactive low-power mode can sleep
             // near 1s between frames and makes camera/minimap feel "broken" under active play.
-            .insert_resource(WinitSettings {
-                focused_mode: UpdateMode::Continuous,
-                unfocused_mode: UpdateMode::Continuous,
-            })
+            .insert_resource(WinitSettings::game())
             .add_systems(Startup, spawn_primary_ui_camera)
             .add_plugins(LocalLightPlugin)
             .add_plugins(DebugManeuverPlugin)
@@ -248,6 +245,7 @@ impl Plugin for EnginePlugin {
         });
 
         app.add_plugins(crate::dev::OrchestratorHealthPlugin);
+        app.add_plugins(crate::dev::engine_deep_debug::EngineDeepDebugPlugin);
         crate::dev::stage5_live_todos::register_stage5_todo_runtime_hooks(app);
         crate::dev::visual_aidv2_live_todos::register_visual_aidv2_runtime_hooks(app);
         crate::dev::construction_live_todos::register_construction_todo_runtime_hooks(app);
@@ -259,6 +257,20 @@ impl Plugin for EnginePlugin {
         crate::dev::industrial_activation_todos::register_industrial_activation_todo_hooks(app);
         crate::dev::logistics_throughput_todos::register_logistics_throughput_todo_hooks(app);
         crate::dev::replay_editor_parity::register_replay_editor_parity_hooks(app);
+
+        // PERF-VFX-002: serialize the hot Update spine so stall probes and extract don't interleave.
+        app.configure_sets(
+            Update,
+            (
+                crate::gui::MapCameraSystemSet::ApplyInput,
+                crate::gui::MapCameraSystemSet::DeriveDesired,
+                crate::gui::MapCameraSystemSet::Smooth,
+                crate::gui::ViewAuthoritySystemSet::SyncViewManager,
+                crate::render::extraction::FireVisualFrameSet::BuildProfiles,
+                crate::gui::WorldRepresentationSystemSet::ComputeFrame,
+            )
+                .chain(),
+        );
 
         info!(
             "Engine initialized. Debug maneuvers: \

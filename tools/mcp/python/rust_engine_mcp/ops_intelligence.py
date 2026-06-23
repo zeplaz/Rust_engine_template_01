@@ -217,6 +217,25 @@ def ops_build_project_brief(
     except Exception:  # noqa: BLE001
         build_set_health = {"green": False, "error": "building_set_health_unavailable"}
 
+    metrics_tier1: dict[str, Any] = {
+        "q_per_token": None,
+        "ftr": None,
+        "rtr": None,
+        "status": "not_measured",
+        "note": "Tier-1 KPIs require agent_run_event telemetry",
+    }
+    try:
+        from .ops_telemetry import scan_run_events
+
+        rollup = scan_run_events()
+        merged = dict(metrics_tier1)
+        merged.update(rollup.get("metrics_tier1") or {})
+        metrics_tier1 = merged
+        if rollup.get("slip_ups"):
+            metrics_tier1["slip_up_count"] = len(rollup.get("slip_ups") or [])
+    except Exception:  # noqa: BLE001
+        pass
+
     brief: dict[str, Any] = {
         "schema": "ops_project_brief_v1",
         "project": root.name,
@@ -228,14 +247,8 @@ def ops_build_project_brief(
         "recent_improvements": recent,
         "suggested_focus": str(delta_wf[0].get("finding")) if delta_wf else "Spine green — pick phase3 ready row",
         "active_picks": _active_picks_from_phase3(root),
-        "last_20_runs_summary": "ops_report_latest.json, ops_project_brief_v1.json",
-        "metrics_tier1": {
-            "q_per_token": None,
-            "ftr": None,
-            "rtr": None,
-            "status": "not_measured",
-            "note": "Tier-1 KPIs require agent_run_event telemetry",
-        },
+        "last_20_runs_summary": "ops_report_latest.json, ops_project_brief_v1.json, ops_dashboard_live.json",
+        "metrics_tier1": metrics_tier1,
         "build_set_health": build_set_health,
         "handoff_ok": True,
         "ops_report_path": OPS_REPORT_REL,

@@ -1,0 +1,85 @@
+{
+  "gate": "DES-REACTION-TERRITORY-EVENTS-001",
+  "catalog_id": "reaction_territory_events_v1",
+  "deliverable": "src/dev/design_reaction_territory_events_schema_v1.md",
+  "catalog_json": "tools/mcp/schemas/examples/reaction_territory_events_v1.json",
+  "event_ids": [
+    "archive_seizure_or_censorship",
+    "banning_cultural_or_religious_practices",
+    "erasure_of_local_history",
+    "forced_assimilation_in_schools",
+    "forced_displacement",
+    "forced_renaming",
+    "heritage_site_destruction",
+    "imperial_institution_replacement",
+    "language_ban",
+    "removal_of_children_from_institutions",
+    "transparent_bilingual_service_continuation"
+  ],
+  "heritage_site_destruction": {
+    "variant_keys": [
+      "damaged_heavy",
+      "burning",
+      "scar_recovery_0"
+    ],
+    "preview_states": [
+      "damaged",
+      "burning",
+      "clean"
+    ],
+    "tag_anchors": [
+      "burn_origin",
+      "heritage_marker",
+      "archive_slot"
+    ]
+  },
+  "checks": {
+    "design_doc": true,
+    "catalog_json": true,
+    "catalog_yaml": true,
+    "schema_json": true,
+    "source_doc": true,
+    "gate_id": true,
+    "spec_only": true,
+    "event_count_11": true,
+    "all_required_events": true,
+    "liquidation_triggers_complete": true,
+    "metrics_registered": true,
+    "variant_keys": true,
+    "metric_deltas_core": true,
+    "tag_anchors": true,
+    "preview_states": true,
+    "domain_building_warehouse": true,
+    "domain_building_rowhouse": true,
+    "domain_landscape_topology": true,
+    "domain_heritage_civic": true,
+    "layer_damaged_heavy_defined": true,
+    "layer_burning_defined": true,
+    "layer_scar_recovery_0_defined": true,
+    "heritage_resolves_damaged_heavy": true,
+    "heritage_resolves_burning": true,
+    "heritage_resolves_scar_recovery_0": true
+  },
+  "audit_complete": true,
+  "green": true,
+  "verdict": "PASS",
+  "handoff": {
+    "coder_mcp": [
+      "CMCP-REACTION-TERRITORY-RESOLVE-001",
+      "CMCP-REACTION-TERRITORY-PREVIEW-001"
+    ],
+    "resolver_input": "event_id + default_resolution_domain \u2192 variant_layer_resolution",
+    "cmcp_resolve_001_green": true,
+    "cmcp_preview_001_green": true,
+    "variants_reaction_territory_witness": "debug_runs/art_pipeline/variants_reaction_territory_live.json"
+  },
+  "_agent_meta": {
+    "schema": "dmcp_reaction_territory_events_live_v1",
+    "written_at_epoch_secs": 1782008809,
+    "profile": "DES_REACTION_TERRITORY_EVENTS",
+    "source_system": "dmcp_reaction_territory_events",
+    "relative_path": "debug_runs/art_pipeline/dmcp_reaction_territory_events_live.json",
+    "ritual": "BLANG:WIT-HON\u2192Q\u2713 DES-REACTION-TERRITORY-EVENTS-001",
+    "agent": "designer-mcp"
+  }
+}

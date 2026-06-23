@@ -162,7 +162,7 @@
       "lane": "H_VIEW",
       "priority": 2,
       "agent": "coder",
-      "status": "reopened",
+      "status": "done",
       "depends_on": [
         "PLAN-MAP-ZOOM-SMOOTH-001",
         "TRIAGE-MAP-PICK-CLOSURE-001"
@@ -177,7 +177,9 @@
       ],
       "witness": "debug_runs/map_zoom_coherence_live.json",
       "completed": "2026-06-11",
-      "updated_at": "2026-06-20T21:19:25Z"
+      "updated_at": "2026-06-20T21:19:25Z",
+      "witness_refresh": "2026-06-21T02:54:33Z",
+      "reconcile_note": "witness-green auto-close (reconcile_coder_crisis.py)"
     },
     {
       "id": "P0-VFX-ZOOM-LOCK-001",
@@ -294,7 +296,7 @@
       "lane": "L_SIM",
       "priority": 0,
       "agent": "coder",
-      "status": "reopened",
+      "status": "done",
       "depends_on": [
         "PLAN-SIM-EFFECT-SPINE-001"
       ],
@@ -312,14 +314,16 @@
       ],
       "completed": "2026-06-11",
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 stub_marker:stub",
-      "updated_at": "2026-06-20T21:19:25Z"
+      "updated_at": "2026-06-20T21:19:25Z",
+      "witness_refresh": "2026-06-21T02:54:33Z",
+      "reconcile_note": "witness-green auto-close (reconcile_coder_crisis.py)"
     },
     {
       "id": "SIM-EFFECT-TEL-001",
       "lane": "L_SIM",
       "priority": 0,
       "agent": "coder",
-      "status": "reopened",
+      "status": "done",
       "depends_on": [
         "SIM-EFFECT-QUEUE-001"
       ],
@@ -330,14 +334,16 @@
       ],
       "witness": "debug_runs/sim_effect_spine_live.json",
       "completed": "2026-06-11",
-      "updated_at": "2026-06-20T21:19:25Z"
+      "updated_at": "2026-06-20T21:19:25Z",
+      "witness_refresh": "2026-06-21T02:54:33Z",
+      "reconcile_note": "witness-green auto-close (reconcile_coder_crisis.py)"
     },
     {
       "id": "FIRE-IGNITION-P0-001",
       "lane": "L_SIM",
       "priority": 1,
       "agent": "coder",
-      "status": "reopened",
+      "status": "done",
       "depends_on": [
         "SIM-EFFECT-TEL-001"
       ],
@@ -349,7 +355,9 @@
       "witness": "debug_runs/fire_ecology_live.json",
       "completed": "2026-06-11",
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 stub_marker:stub",
-      "updated_at": "2026-06-20T21:19:24Z"
+      "updated_at": "2026-06-20T21:19:24Z",
+      "witness_refresh": "2026-06-21T02:54:33Z",
+      "reconcile_note": "witness-green auto-close (reconcile_coder_crisis.py)"
     },
     {
       "id": "SIM-STEWARD-FIRE-REGRESS-001",

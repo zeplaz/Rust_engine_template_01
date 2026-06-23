@@ -11,10 +11,15 @@
     "logging_env": {
       "ORCHESTRATOR_EXPORT_HEALTH": false,
       "PERF": false,
+      "PERF_DISK": false,
       "RUST_LOG": null,
+      "SIM_ANALYTICS": false,
+      "SIM_ANALYTICS_FRAMES": false,
+      "SIM_ANALYTICS_QUIET": false,
       "SIM_VIEW_SYNC_DEBUG": false,
       "STAGE5_READINESS_VERBOSE": false,
       "STAGE5_VERBOSE": false,
+      "STALL": false,
       "VIEWPORT_AUTHORITY_DEBUG": false
     },
     "orchestrator": {
@@ -42,6 +47,7 @@
       "debug_runs/wave_c_live.json",
       "debug_runs/ui_shell_migration_live.json",
       "debug_runs/minimap_compositor_live.json",
+      "debug_runs/sim_spectrum_analytics_live.json",
       "debug_runs/stage7_behavioral_live.json",
       "debug_runs/stage7_play_live.json",
       "debug_runs/wss_substrate_live.json",
@@ -52,19 +58,16 @@
     "relative_path": "debug_runs/minimap_topology_legend_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_minimap_topology_legend_live_witness",
-    "written_at_epoch_secs": 1781979933
+    "written_at_epoch_secs": 1782031078
   },
   "burn_legend_wired": true,
-  "collapsed_label": "\u25b6 6 kinds",
+  "collapsed_label": "▶ 6 kinds",
   "design_ref": "src/dev/design_minimap_veg_legend_wire_v1.md",
   "fire_legend_row_count": 3,
   "gate": "VEG-MINIMAP-LEGEND-UI-001",
-  "green": false,
+  "green": true,
   "legend_ui_wired": true,
   "operator_visible": true,
   "topology_kind_count_visible": 6,
-  "topology_legend_wired": true,
-  "verdict": "FAIL",
-  "intel_officer_note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 witness_honesty debug_runs/.witness_honesty_precheck/minimap_topology_legend_live.json: 1 error(s), 1 issue(s)",
-  "intel_officer_demoted_at": 1781990366
+  "topology_legend_wired": true
 }

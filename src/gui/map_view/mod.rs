@@ -23,8 +23,8 @@ use presentation::{
 };
 
 pub use backend::{
-    minimap_main_display_uses_gpu_compositor, resolve_minimap_texture_source,
-    resolve_world_preview_texture_source, MapTextureSource,
+    minimap_main_display_uses_gpu_compositor, resolve_minimap_bevy_display_handle,
+    resolve_minimap_texture_source, resolve_world_preview_texture_source, MapTextureSource,
 };
 pub use consumers::{minimap, world_preview};
 pub use debug::{

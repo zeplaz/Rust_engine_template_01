@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "asset_id": "diesel_gen_pad_2x2",
+  "archetype": "module_prop",
+  "style_pack": "style_industrial_west",
+  "development_tier": "production",
+  "pbr_status": "pending",
+  "batch_id": "kit_nuclear_pwr_production_001",
+  "module": {
+    "grid_units": [
+      2,
+      2
+    ],
+    "snap": "floor_edge",
+    "pivot": "bottom_center"
+  },
+  "dimensions_m": {
+    "w": 4.0,
+    "h": 2.0,
+    "d": 4.0
+  },
+  "material_profile": "gravel_yard_01",
+  "feeds": "kit_nuclear_pwr_production_001",
+  "references": [
+    "ref:design:DES-ART-NUCLEAR-PLANT-001",
+    "ref:dmcp:DMCP-SPEC-NUCLEAR-PWR-001",
+    "ref:kit:kit_nuclear_pwr_production_001"
+  ]
+}

@@ -126,7 +126,7 @@
       "lane": "HARDEN",
       "wave": 1,
       "id": "IND-E02-DEFAULT-JSON-001",
-      "status": "reopened",
+      "status": "done",
       "priority": "P1",
       "owner": "coder_b",
       "goal": "Default industrial play witness writer sets ind_e02_green when activation seed fires",
@@ -139,7 +139,10 @@
         "lib_test_only"
       ],
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 stub_marker:todo",
-      "updated_at": "2026-06-20T21:19:24Z"
+      "updated_at": "2026-06-20T21:19:24Z",
+      "witness_refresh": "2026-06-21T02:54:33Z",
+      "completed": "2026-06-21",
+      "reconcile_note": "witness-green auto-close (reconcile_coder_crisis.py)"
     },
     {
       "seq": 5,
@@ -177,7 +180,7 @@
       "lane": "VEG",
       "wave": 2,
       "id": "VEG-COMPOSITE-EVAL-001",
-      "status": "reopened",
+      "status": "done",
       "priority": "P1",
       "owner": "coder_a",
       "depends_on": [
@@ -193,14 +196,17 @@
         "lib_test_only"
       ],
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 stub_marker:stub",
-      "updated_at": "2026-06-20T21:19:26Z"
+      "updated_at": "2026-06-20T21:19:26Z",
+      "witness_refresh": "2026-06-21T02:54:33Z",
+      "completed": "2026-06-21",
+      "reconcile_note": "witness-green auto-close (reconcile_coder_crisis.py)"
     },
     {
       "seq": 8,
       "lane": "VEG",
       "wave": 2,
       "id": "VEG-PRESET-INDUSTRIAL-002",
-      "status": "reopened",
+      "status": "done",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "Industrial + military presets anchored to settlement/transport (not coord heuristic)",
@@ -213,7 +219,10 @@
         "single_chunk_pilot"
       ],
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 deliverable_missing",
-      "updated_at": "2026-06-20T21:19:26Z"
+      "updated_at": "2026-06-20T21:19:26Z",
+      "witness_refresh": "2026-06-21T02:54:33Z",
+      "completed": "2026-06-21",
+      "reconcile_note": "witness-green auto-close (reconcile_coder_crisis.py)"
     },
     {
       "seq": 9,

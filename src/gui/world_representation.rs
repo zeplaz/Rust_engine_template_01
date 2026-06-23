@@ -850,10 +850,19 @@ pub fn compute_world_representation_frame(
         }
         return;
     }
-    if crate::engine::ux_spike_active()
-        && last_fingerprint
-            .is_some_and(|prev| prev.same_except_stamp(fingerprint))
+    // Stamp-only advance: sim tick moved but camera / LOD registry inputs unchanged.
+    if last_fingerprint
+        .is_some_and(|prev| prev.same_except_stamp(fingerprint))
     {
+        frame.sim_step_stamp = stamp;
+        *last_fingerprint = Some(fingerprint);
+        if let Some(perf) = perf.as_mut() {
+            crate::render::record_frame_perf_ms(
+                perf,
+                t0.elapsed().as_secs_f32() * 1000.0,
+                crate::render::FramePerfSlot::WorldRepr,
+            );
+        }
         return;
     }
     *last_fingerprint = Some(fingerprint);
@@ -1027,15 +1036,20 @@ pub(crate) fn register_world_representation_frame(app: &mut App) {
             Update,
             (
                 decay_tactical_lod_bubbles,
+                crate::render::stall_substage_repr_decay_lod,
                 refresh_lod_zone_registry,
+                crate::render::stall_substage_repr_refresh_lod,
                 crate::render::stall_checkpoint_before_world_repr,
                 sync_procedural_tile_primary_active,
                 compute_world_representation_frame,
+                crate::render::stall_substage_repr_compute_frame,
                 witness_stage5_lod_band_log_after_world_representation,
                 apply_representation_result,
+                crate::render::stall_substage_repr_apply_result,
                 crate::render::extraction::sync_procedural_module_visual_policy,
                 crate::construction::sync_procedural_assembly_request_from_sites,
                 crate::render::extraction::extract_procedural_build_assembly,
+                crate::render::stall_substage_repr_proc_extract,
                 crate::construction::spawn_procedural_build_on_site_operational
                     .after(crate::construction::advance_site_construction_tick_system)
                     .after(crate::render::extraction::extract_procedural_build_assembly),

@@ -334,6 +334,7 @@ pub(crate) fn refresh_visual_proof_fire_particles(
 pub(crate) fn maintain_visual_tactical_vfx_camera(
     launch: Option<Res<crate::engine::EngineLaunchArgs>>,
     test_scene: Option<Res<crate::engine::ActiveTestScene>>,
+    va2_harness: Option<Res<crate::dev::VisualAidV2HarnessState>>,
     params: Res<crate::terrain::generation::world_generator_enhanced::WorldGenParams>,
     windows: Query<&Window, With<bevy::window::PrimaryWindow>>,
     sim_viewport: Res<crate::gui::SimulationMapViewport>,
@@ -345,6 +346,12 @@ pub(crate) fn maintain_visual_tactical_vfx_camera(
         return;
     }
     if !visual_tactical_vfx_camera_lock_required() {
+        return;
+    }
+    if va2_harness
+        .as_ref()
+        .is_some_and(|h| h.macro_icon_probe)
+    {
         return;
     }
     if params.width == 0 || params.height == 0 {
@@ -1185,6 +1192,9 @@ pub(crate) struct Stage5FullAppLiveProofReads<'w> {
     overlay_tray: Option<Res<'w, HudOverlayTrayState>>,
     visual_witness: Option<Res<'w, crate::render::VisualReadinessWitness>>,
     tactical_vector: Option<Res<'w, crate::render::TacticalVectorOverlayState>>,
+    va2_board: Option<Res<'w, crate::dev::VisualAidV2LiveTodoBoard>>,
+    va2_witness: Option<Res<'w, crate::dev::VisualAidV2Witness>>,
+    va2_hud: Option<Res<'w, crate::gui::hud::HudPanelStateWitness>>,
 }
 
 fn stage5_live_todo_board_snapshot(board: &Stage5LiveTodoBoard) -> serde_json::Value {
@@ -2119,6 +2129,27 @@ pub(crate) fn finalize_visual_full_app_live_probe(
         streak = streak_n,
         "wrote stage5 FULL_APP live proof (FINISH-UX-06 streak complete)"
     );
+
+    if let (Some(board), Some(witness), Some(hud)) = (
+        proof_reads.va2_board.as_ref(),
+        proof_reads.va2_witness.as_ref(),
+        proof_reads.va2_hud.as_ref(),
+    ) {
+        if crate::dev::write_visual_aidv2_live_proof(board, witness, hud) {
+            let done = board
+                .status
+                .iter()
+                .filter(|s| **s == crate::dev::stage5_live_todos::TodoStatus::Done)
+                .count();
+            info!(
+                target: "visual_aidv2_live_todos",
+                path = crate::dev::VISUAL_AID_V2_LIVE_JSON,
+                done,
+                total = crate::dev::VISUAL_AID_V2_TODOS.len(),
+                "wrote visual aid v2 live proof"
+            );
+        }
+    }
 
     state.proof_committed = true;
 

@@ -154,6 +154,104 @@ def build(params: dict) -> bpy.types.Object:
         bpy.context.view_layer.objects.active = slab
         bpy.ops.object.join()
         obj = bpy.context.active_object
+    elif kind in ("containment_dome", "containment_dome_pwr"):
+        base_h = h * 0.42
+        dome_r = min(w, d) * 0.42
+        base = _add_box("containment_base", w * 0.92, base_h, d * 0.92, (0.0, base_h * 0.5, 0.0))
+        bpy.ops.mesh.primitive_uv_sphere_add(
+            segments=24,
+            ring_count=12,
+            radius=dome_r,
+            location=(0.0, base_h + dome_r * 0.82, 0.0),
+        )
+        dome = bpy.context.active_object
+        dome.name = "containment_dome"
+        dome.scale = (1.0, 0.72, 1.0)
+        bpy.ops.object.transform_apply(scale=True)
+        bpy.ops.object.select_all(action="DESELECT")
+        base.select_set(True)
+        dome.select_set(True)
+        bpy.context.view_layer.objects.active = base
+        bpy.ops.object.join()
+        obj = bpy.context.active_object
+    elif kind in ("turbine_hall", "turbine_hall_1u"):
+        hall_h = h * 0.72
+        body = _add_box("turbine_hall_body", w, hall_h, d, (0.0, hall_h * 0.5, 0.0))
+        ridge = _add_box("turbine_hall_ridge", w * 0.88, max(h * 0.12, 0.15), d * 0.35, (0.0, hall_h + max(h * 0.06, 0.08), 0.0))
+        bpy.ops.object.select_all(action="DESELECT")
+        body.select_set(True)
+        ridge.select_set(True)
+        bpy.context.view_layer.objects.active = body
+        bpy.ops.object.join()
+        obj = bpy.context.active_object
+    elif kind in ("cooling_tower", "cooling_tower_1u"):
+        base_r = min(w, d) * 0.42
+        top_r = base_r * 0.62
+        mid_h = h * 0.78
+        bpy.ops.mesh.primitive_cylinder_add(
+            vertices=20,
+            radius=base_r,
+            depth=mid_h,
+            location=(0.0, mid_h * 0.5, 0.0),
+        )
+        tower = bpy.context.active_object
+        tower.name = "cooling_tower_body"
+        bpy.ops.mesh.primitive_cone_add(
+            vertices=20,
+            radius1=top_r,
+            radius2=top_r * 0.35,
+            depth=max(h * 0.22, 0.4),
+            location=(0.0, mid_h + max(h * 0.11, 0.2), 0.0),
+        )
+        cap = bpy.context.active_object
+        cap.name = "cooling_tower_cap"
+        bpy.ops.object.select_all(action="DESELECT")
+        tower.select_set(True)
+        cap.select_set(True)
+        bpy.context.view_layer.objects.active = tower
+        bpy.ops.object.join()
+        obj = bpy.context.active_object
+    elif kind in ("diesel_gen_pad", "diesel_gen_pad_2x2"):
+        pad_h = max(h * 0.12, 0.12)
+        pad = _add_box("diesel_pad", w, pad_h, d, (0.0, pad_h * 0.5, 0.0))
+        gen = _add_box("diesel_gen", w * 0.55, h * 0.55, d * 0.45, (0.0, pad_h + h * 0.28, 0.0))
+        exhaust = _add_box("diesel_exhaust", w * 0.12, h * 0.35, d * 0.12, (w * 0.28, pad_h + h * 0.62, 0.0))
+        bpy.ops.object.select_all(action="DESELECT")
+        pad.select_set(True)
+        gen.select_set(True)
+        exhaust.select_set(True)
+        bpy.context.view_layer.objects.active = pad
+        bpy.ops.object.join()
+        obj = bpy.context.active_object
+    elif kind in ("switchyard_edge", "switchyard_edge_1u"):
+        base = _add_box("switchyard_base", w, h * 0.65, d, (0.0, h * 0.33, 0.0))
+        bus = _add_box("switchyard_bus", w * 0.85, max(h * 0.1, 0.12), d * 0.18, (0.0, h * 0.82, 0.0))
+        bpy.ops.object.select_all(action="DESELECT")
+        base.select_set(True)
+        bus.select_set(True)
+        bpy.context.view_layer.objects.active = base
+        bpy.ops.object.join()
+        obj = bpy.context.active_object
+    elif kind in ("warning_sign_nuclear", "warning_sign_nuclear_1u"):
+        post = _add_box("nuclear_sign_post", max(w * 0.16, 0.08), h * 0.68, max(d * 0.45, 0.08), (0.0, h * 0.34, 0.0))
+        board = _add_box("nuclear_sign_board", w, h * 0.38, max(d, 0.06), (0.0, h * 0.8, 0.0))
+        trefoil = _add_box("nuclear_trefoil", w * 0.28, h * 0.18, max(d * 0.5, 0.06), (0.0, h * 0.82, d * 0.12))
+        bpy.ops.object.select_all(action="DESELECT")
+        post.select_set(True)
+        board.select_set(True)
+        trefoil.select_set(True)
+        bpy.context.view_layer.objects.active = post
+        bpy.ops.object.join()
+        obj = bpy.context.active_object
+    elif kind in ("nuclear_yard_kit",):
+        slab = _add_box("nuclear_yard_slab", w, max(h * 0.06, 0.1), d, (0.0, max(h * 0.03, 0.05), 0.0))
+        berm = _add_box("nuclear_yard_berm", w * 0.94, h * 0.42, d * 0.94, (0.0, h * 0.28, 0.0))
+        bpy.ops.object.select_all(action="DESELECT")
+        slab.select_set(True)
+        berm.select_set(True)
+        bpy.context.view_layer.objects.active = slab
+        bpy.ops.object.join()
+        obj = bpy.context.active_object
     else:
         obj = _add_box("module_prop", w, h, d, (0.0, h * 0.5, 0.0))
 

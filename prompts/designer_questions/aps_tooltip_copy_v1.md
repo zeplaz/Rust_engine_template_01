@@ -109,8 +109,14 @@
 | `var_save` | Save JSON / RON | Write variant_set to disk — required before tile batch expand. | **new** |
 | `var_validate` | Validate | Check variant_set schema and assembly_id linkage. | **new** |
 | `var_layers` | Layer controls (general) | Lighting, damage, fill, and material overrides become variant_key rows. Apply layers, then Save. | ✓ |
-| `var_lighting` | Lighting combobox | day · night_off · night_on — drives variant_key lighting layer. | **new** |
-| `var_damage` | Damage state combobox | clean · dirty · damaged · ruined — visual damage layer. | **new** |
+| `var_apply_layers` | Apply layers to selected | Commit dropdowns onto the selected variant row. Preview updates live while editing; Apply saves the row. | ✓ |
+| `var_lighting` | Lighting combobox | day · night_off · night_on — drives tile lighting layer and Night preview chip. | ✓ |
+| `var_power` | Power combobox | Grid story for reaction sessions — off · partial · on. | ✓ |
+| `var_damage` | Damage state combobox | clean · dirty · damaged · ruined — visual damage layer. | ✓ |
+| `var_fill` | Fill combobox | Occupancy overlay for sim tiles — not a geometry swap. | ✓ |
+| `var_draft_preview` | Variant preview panel | Preview shows current controls. Draft strip until Apply commits the row. | ✓ |
+| `gen_trace_approve` | Approve snapshot checkbox | Artist sign-off that this assembly is the parent for variant rows and tile bake. | ✓ |
+| `gen_trace_edit_assembly` | Edit on Assembly | Switch to Assembly tab to change archetype, district, seed, or regenerate. | ✓ |
 | `var_bake_hint` | Flow / Atlas link | After Save: Atlas tab → From variant set → Run tile batch. | **new** |
 
 ---

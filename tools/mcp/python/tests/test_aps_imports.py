@@ -19,6 +19,7 @@ APS_PANEL_IMPORTS: list[tuple[str, str]] = [
     ("art_pipeline_suite.assembly_preview_panel", "AssemblyPreviewPanel"),
     ("art_pipeline_suite.materials_panel", "MaterialsPanel"),
     ("art_pipeline_suite.variants_panel", "VariantsPanel"),
+    ("art_pipeline_suite.variants_preview_panel", "VariantsPreviewPanel"),
     ("art_pipeline_suite.atlas_panel", "AtlasPanel"),
     ("art_pipeline_suite.landscape_presets_panel", "LandscapePresetsPanel"),
     ("art_pipeline_suite.landscape_grammar_panel", "LandscapeGrammarPanel"),
@@ -52,6 +53,7 @@ APS_BACKEND_SYMBOLS: list[tuple[str, str]] = [
     ("rust_engine_mcp.landscape_preset_browse", "list_landscape_presets"),
     ("rust_engine_mcp.material_brief", "material_profile_brief"),
     ("rust_engine_mcp.variant_set", "load_variant_set"),
+    ("rust_engine_mcp.variants_sessions", "build_variant_set_from_assembly"),
 ]
 
 

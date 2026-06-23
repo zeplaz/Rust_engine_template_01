@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "asset_id": "containment_dome_pwr",
+  "archetype": "module_prop",
+  "style_pack": "style_industrial_west",
+  "development_tier": "production",
+  "pbr_status": "pending",
+  "batch_id": "kit_nuclear_pwr_production_001",
+  "module": {
+    "grid_units": [
+      3,
+      3
+    ],
+    "snap": "floor_edge",
+    "pivot": "bottom_center"
+  },
+  "dimensions_m": {
+    "w": 6.0,
+    "h": 6.0,
+    "d": 6.0
+  },
+  "material_profile": "concrete_grey_01",
+  "feeds": "kit_nuclear_pwr_production_001",
+  "references": [
+    "ref:design:DES-ART-NUCLEAR-PLANT-001",
+    "ref:dmcp:DMCP-SPEC-NUCLEAR-PWR-001",
+    "ref:kit:kit_nuclear_pwr_production_001"
+  ]
+}

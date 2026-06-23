@@ -28,6 +28,8 @@
     "MCP-PWR-TRANSFORMER-BATCH-001",
     "MCP-PWR-PROMOTE-SUBSTATION-001",
     "MCP-PWR-PROMOTE-TRANSFORMER-001",
+    "DMCP-QC-SUBSTATION-001",
+    "DMCP-QC-TRANSFORMER-001",
     "DMCP-SPEC-NUCLEAR-PWR-001",
     "COD-ART-HUD-ICON-ATLAS-001"
   ],
@@ -48,7 +50,7 @@
   },
   "_agent_meta": {
     "schema": "power_grid_art_downstream_close_live_v1",
-    "written_at_epoch_secs": 1781968440,
+    "written_at_epoch_secs": 1782008699,
     "profile": "PWR_ART_DOWNSTREAM_CLOSE",
     "source_system": "mcp_pwr_utility",
     "relative_path": "debug_runs/art_pipeline/power_grid_art_downstream_close_live.json",

@@ -20,7 +20,7 @@ const LAYOUT_EPS: f32 = 0.5;
 /// Hysteresis for the minimap panel resolve: a stable window must stop bumping the resolved
 /// revision. Only a logical-size change beyond this (px) is treated as a real resize. Larger than
 /// `LAYOUT_EPS` so sub-pixel egui jitter / rounding never re-bumps the revision every frame.
-const MINIMAP_PANEL_SETTLE_EPS: f32 = 1.5;
+const MINIMAP_PANEL_SETTLE_EPS: f32 = 2.5;
 /// Minimum logical px for the simulation map hole — smaller reads as a layout defect.
 const SIM_MAP_MIN_LOGICAL_EXTENT: f32 = 8.0;
 /// Below this, primary swapchain present is suppressed (VISUAL-STALL-SURFACE-001).

@@ -12,7 +12,7 @@
   "green": true,
   "_agent_meta": {
     "schema": "dmcp_qc_substation_live_v1",
-    "written_at_epoch_secs": 1781968439,
+    "written_at_epoch_secs": 1782008699,
     "profile": "DMCP_QC_SUBSTATION",
     "source_system": "mcp_pwr_utility",
     "relative_path": "debug_runs/art_pipeline/dmcp_qc_substation_live.json"

@@ -88,8 +88,9 @@ pub use vfx_fire_test_highlight::{
 };
 pub use input_bindings::InputBindings;
 pub use minimap_shell::{
-    minimap_uv_to_world_tile, native_minimap_window_supported, simulation_minimap_bootstrap_rect,
-    simulation_minimap_overlay_defaults, MinimapCameraBookmark, MinimapEdge, MinimapFollowMode,
+    minimap_cursor_logical, minimap_uv_to_world_tile, minimap_window_logical_size,
+    native_minimap_window_supported, simulation_minimap_bootstrap_rect,
+    minimap_overlay_witness_harness, simulation_minimap_overlay_defaults, MinimapCameraBookmark, MinimapEdge, MinimapFollowMode,
     MinimapOverlayMask, MinimapPresentationMode, MinimapPresentationSource, MinimapShellState,
     MINIMAP_EDGE_RAIL_PX, MINIMAP_RESIZE_GRIP_PX, MINIMAP_TITLE_BAR_H_PX,
 };
@@ -253,7 +254,7 @@ pub use view_representation_snapshot::{
     SnapshotCameraState, ViewRepresentationSnapshot, WorldBounds,
 };
 pub use view_representation::{
-    apply_camera_visual_from_map_snapshot,
+    apply_camera_visual_from_map_snapshot, apply_minimap_camera_intent,
     camera_owner_label, on_visual_cadence_atmosphere, on_visual_cadence_minimap,
     on_visual_cadence_overlay, on_visual_cadence_preview, preview_partial_min_interval_from_hz,
     preview_partial_min_interval_secs, ActiveCameraOwner, AtmosphereFx, CameraIntent, CameraOwner,

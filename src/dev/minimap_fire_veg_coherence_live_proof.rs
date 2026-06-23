@@ -14,7 +14,7 @@ pub fn build_minimap_fire_veg_coherence_body() -> serde_json::Value {
     let overlay_stamp = SimStepStamp::new(frame.stamp.tick, frame.stamp.sim_time_micros);
     let revision_aligned =
         frame.revision > 0 && frame.stamp == overlay_stamp && frame.rows.iter().any(|r| r.burn_active);
-    let policy_ok = !defaults.fire_heat && defaults.ecology_heat;
+    let policy_ok = !defaults.fire_heat && !defaults.ecology_heat;
     let green = revision_aligned && policy_ok;
 
     serde_json::json!({
@@ -23,7 +23,7 @@ pub fn build_minimap_fire_veg_coherence_body() -> serde_json::Value {
         "green": green,
         "revision_aligned": revision_aligned,
         "fire_heat_default_off": !defaults.fire_heat,
-        "ecology_heat_default_on": defaults.ecology_heat,
+        "ecology_heat_default_off": !defaults.ecology_heat,
         "sim_overlay_policy_ok": policy_ok,
         "veg_extract_revision": frame.revision,
         "veg_extract_stamp_tick": frame.stamp.tick,

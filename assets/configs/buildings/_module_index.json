@@ -635,6 +635,30 @@
       "replaced_by": "door_warehouse"
     },
     {
+      "module_id": "kit_nuclear_pwr_production_001",
+      "job_id": "kit_nuclear_pwr_production_run001",
+      "category": "wall",
+      "glb": "assets/models/modules/kit_nuclear_pwr_production_run001/model.glb",
+      "glb_path": "assets/models/modules/kit_nuclear_pwr_production_run001/model.glb",
+      "archetype": "module_kit",
+      "style_pack": "style_industrial_west",
+      "grid_units": [
+        6,
+        6
+      ],
+      "snap": "floor_edge",
+      "material_profile": "concrete_grey_01",
+      "style_tags": [
+        "concrete",
+        "grey",
+        "industrial_west"
+      ],
+      "batch_id": "kit_nuclear_pwr_production_001",
+      "development_tier": "production",
+      "pbr_status": "shipped",
+      "stylepack_visible": true
+    },
+    {
       "module_id": "kit_substation_yard_production_001",
       "job_id": "kit_substation_yard_production_run001",
       "category": "wall",

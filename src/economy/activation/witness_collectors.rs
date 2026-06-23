@@ -68,6 +68,50 @@ fn board_snapshot(ids: &[&str], statuses: &[TodoStatus]) -> serde_json::Value {
     )
 }
 
+fn repo_root_from_manifest() -> PathBuf {
+    std::env::var_os("CARGO_MANIFEST_DIR")
+        .map(PathBuf::from)
+        .unwrap_or_else(|| PathBuf::from("."))
+}
+
+fn catalog_model_glb(catalog_id: &str) -> (Option<String>, bool) {
+    let path = repo_root_from_manifest()
+        .join("assets/configs/buildings")
+        .join(format!("{catalog_id}.json"));
+    let Ok(text) = std::fs::read_to_string(&path) else {
+        return (None, false);
+    };
+    let Ok(body) = serde_json::from_str::<serde_json::Value>(&text) else {
+        return (None, false);
+    };
+    let glb = body
+        .get("model_glb")
+        .and_then(|v| v.as_str())
+        .map(str::to_string);
+    let on_disk = glb
+        .as_ref()
+        .map(|rel| repo_root_from_manifest().join(rel).is_file())
+        .unwrap_or(false);
+    (glb, on_disk)
+}
+
+/// Power grid art coupling — promoted utility GLBs referenced from building catalogs.
+#[must_use]
+pub fn power_utility_art_witness_export() -> serde_json::Value {
+    let (substation_glb, sub_ok) = catalog_model_glb("grid_substation");
+    let (transformer_glb, xfm_ok) = catalog_model_glb("grid_distribution_transformer");
+    let paths_set = sub_ok && xfm_ok;
+    serde_json::json!({
+        "gate": "PLAN-POWER-GRID-ART-ASSETS-001",
+        "substation_catalog": "grid_substation",
+        "transformer_catalog": "grid_distribution_transformer",
+        "substation_glb": substation_glb,
+        "transformer_glb": transformer_glb,
+        "utility_glb_paths_set": paths_set,
+        "green": paths_set,
+    })
+}
+
 #[must_use]
 pub fn build_industrial_activation_proof_payload(
     board: Option<&IndustrialActivationTodoBoard>,
@@ -143,6 +187,7 @@ pub fn build_industrial_activation_proof_payload(
             && flow.map(|f| f.overload_events_total > 0).unwrap_or(false),
         "s7p_grid_ux_001": s7p_grid_ux,
         "ind_e02_default_play_002": ind_e02_default_play_002_witness(chain),
+        "power_utility_art": power_utility_art_witness_export(),
     })
 }
 
@@ -706,5 +751,49 @@ mod live_proof_tests {
     #[test]
     fn simulation_ind_e02_default_play_writer_sets_ind_e02_green() {
         simulation_ind_e02_default_play_002_writer_sets_ind_e02_green();
+    }
+}
+
+#[cfg(test)]
+mod power_utility_art_tests {
+    use super::power_utility_art_witness_export;
+
+    #[test]
+    fn power_utility_art_witness_reads_promoted_catalog_glbs() {
+        let block = power_utility_art_witness_export();
+        assert_eq!(
+            block["gate"].as_str(),
+            Some("PLAN-POWER-GRID-ART-ASSETS-001")
+        );
+        assert_eq!(
+            block["substation_catalog"].as_str(),
+            Some("grid_substation")
+        );
+        assert_eq!(
+            block["transformer_catalog"].as_str(),
+            Some("grid_distribution_transformer")
+        );
+        assert!(
+            block["substation_glb"]
+                .as_str()
+                .unwrap_or("")
+                .contains("kit_substation"),
+            "substation_glb: {block}"
+        );
+        assert!(
+            block["transformer_glb"]
+                .as_str()
+                .unwrap_or("")
+                .contains("prop_transformer"),
+            "transformer_glb: {block}"
+        );
+        assert!(
+            block["utility_glb_paths_set"].as_bool().unwrap_or(false),
+            "expected promoted GLBs on disk: {block}"
+        );
+        assert_eq!(
+            block["green"].as_bool(),
+            block["utility_glb_paths_set"].as_bool()
+        );
     }
 }

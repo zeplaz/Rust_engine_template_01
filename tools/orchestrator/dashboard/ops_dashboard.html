@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Rust Engine — OPS Oversight</title>
+  <style>
+    :root { --bg: #0f1419; --card: #1a2332; --text: #e7ecf3; --muted: #8b9cb3; --alert: #ff6b6b; --warn: #ffb020; --ok: #3dd68c; }
+    * { box-sizing: border-box; }
+    body { font-family: system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 1.5rem; }
+    h1 { margin: 0 0 0.25rem; font-size: 1.4rem; }
+    .sub { color: var(--muted); margin-bottom: 1.25rem; font-size: 0.9rem; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.75rem; margin-bottom: 1.25rem; }
+    .stat { background: var(--card); border-radius: 8px; padding: 0.85rem 1rem; }
+    .stat .label { color: var(--muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em; }
+    .stat .value { font-size: 1.6rem; font-weight: 600; margin-top: 0.25rem; }
+    table { width: 100%; border-collapse: collapse; background: var(--card); border-radius: 8px; overflow: hidden; }
+    th, td { text-align: left; padding: 0.55rem 0.75rem; border-bottom: 1px solid #2a3548; font-size: 0.85rem; }
+    th { color: var(--muted); font-weight: 600; }
+    .sev-alert { color: var(--alert); }
+    .sev-warn { color: var(--warn); }
+    .sev-info { color: var(--ok); }
+    section { margin-bottom: 1.5rem; }
+    section h2 { font-size: 1rem; margin: 0 0 0.5rem; }
+    .err { color: var(--alert); white-space: pre-wrap; }
+    button { background: #2d6cdf; color: white; border: 0; border-radius: 6px; padding: 0.45rem 0.85rem; cursor: pointer; }
+    input[type=file] { margin-left: 0.75rem; color: var(--muted); }
+  </style>
+</head>
+<body>
+  <h1>OPS Oversight Dashboard</h1>
+  <p class="sub">Processes · drift · run_events slip-ups · tier-1 KPIs</p>
+  <p>
+    <button id="reload">Reload JSON</button>
+    <input type="file" id="filePick" accept="application/json" />
+    <span class="sub" id="meta"></span>
+  </p>
+  <div id="error" class="err"></div>
+  <div class="grid" id="stats"></div>
+  <section>
+    <h2>Slip-ups</h2>
+    <table><thead><tr><th>Severity</th><th>Kind</th><th>Detail</th><th>Path</th></tr></thead><tbody id="slipUps"></tbody></table>
+  </section>
+  <section>
+    <h2>Drift instances</h2>
+    <table><thead><tr><th>Severity</th><th>Kind</th><th>Detail</th><th>Path</th></tr></thead><tbody id="drift"></tbody></table>
+  </section>
+  <section>
+    <h2>Active processes</h2>
+    <table><thead><tr><th>Name</th><th>PID</th><th>Mem</th></tr></thead><tbody id="procs"></tbody></table>
+  </section>
+  <script>
+    const JSON_PATH = "../../../debug_runs/agent_ops/ops_dashboard_live.json";
+    function sevClass(s) { return s === "alert" ? "sev-alert" : s === "warn" ? "sev-warn" : "sev-info"; }
+    function render(data) {
+      document.getElementById("error").textContent = "";
+      const t1 = data.metrics_tier1 || {};
+      const stats = [
+        ["Slip-ups", data.slip_up_count ?? (data.slip_ups || []).length],
+        ["FTR", t1.ftr ?? "—"],
+        ["RTR", t1.rtr ?? "—"],
+        ["Processes", t1.active_processes ?? data.processes?.process_count ?? "—"],
+        ["Drift alerts", t1.drift_alerts ?? data.drift?.alert_count ?? "—"],
+        ["Events / day", t1.events_per_day ?? "—"]
+      ];
+      document.getElementById("stats").innerHTML = stats.map(([l,v]) =>
+        `<div class="stat"><div class="label">${l}</div><div class="value">${v}</div></div>`).join("");
+      document.getElementById("meta").textContent = data.generated_at ? `Generated ${data.generated_at}` : "";
+      const slipBody = document.getElementById("slipUps");
+      slipBody.innerHTML = (data.slip_ups || []).map(r =>
+        `<tr><td class="${sevClass(r.severity)}">${r.severity||""}</td><td>${r.kind||""}</td><td>${r.detail||""}</td><td>${r.path||""}</td></tr>`).join("") || "<tr><td colspan=4>No slip-ups</td></tr>";
+      const driftBody = document.getElementById("drift");
+      driftBody.innerHTML = (data.drift?.instances || []).map(r =>
+        `<tr><td class="${sevClass(r.severity)}">${r.severity||""}</td><td>${r.kind||""}</td><td>${r.detail||r.finding||r.honest_gate||""}</td><td>${r.path||""}</td></tr>`).join("") || "<tr><td colspan=4>No drift instances</td></tr>";
+      const procBody = document.getElementById("procs");
+      procBody.innerHTML = (data.processes?.processes || []).map(r =>
+        `<tr><td>${r.name||""}</td><td>${r.pid||""}</td><td>${r.mem||""}</td></tr>`).join("") || "<tr><td colspan=3>No matching processes</td></tr>";
+    }
+    async function loadDefault() {
+      try {
+        const res = await fetch(JSON_PATH + "?t=" + Date.now());
+        if (!res.ok) throw new Error("Fetch failed — open this file via a local server or use file picker.\nPath: " + JSON_PATH);
+        render(await res.json());
+      } catch (e) {
+        document.getElementById("error").textContent = String(e.message || e);
+      }
+    }
+    document.getElementById("reload").addEventListener("click", loadDefault);
+    document.getElementById("filePick").addEventListener("change", ev => {
+      const f = ev.target.files[0]; if (!f) return;
+      const reader = new FileReader();
+      reader.onload = () => { try { render(JSON.parse(reader.result)); } catch (e) { document.getElementById("error").textContent = String(e); } };
+      reader.readAsText(f);
+    });
+    loadDefault();
+  </script>
+</body>
+</html>

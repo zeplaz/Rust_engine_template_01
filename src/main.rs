@@ -27,6 +27,9 @@ struct Cli {
     /// Consolidated visual / viewport / render-spine diagnostics (`visual_diag` target).
     #[arg(long)]
     debug_visual_diag: bool,
+    /// ENGINE-DEEP-DEBUG-001: intrusive minimap/GPU/schedule witnesses (see runbook).
+    #[arg(long)]
+    deep_debug: bool,
     /// With `--test visual` / `capture`: keep the window open after proof (no auto `AppExit`).
     #[arg(long)]
     stay_open: bool,
@@ -34,6 +37,9 @@ struct Cli {
 
 fn main() {
     let cli = Cli::parse();
+    if cli.deep_debug {
+        proc_A_dine01::dev::engine_deep_debug::arm_deep_debug_from_cli();
+    }
     let launch = EngineLaunchArgs::from_cli(cli.test, cli.stay_open, cli.unittest_world);
     if launch.maneuver == proc_A_dine01::engine::DebugManeuver::FrameScreen {
         std::env::set_var("UI_LAYOUT_DEBUG", "1");

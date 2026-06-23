@@ -701,7 +701,7 @@ mod tests {
         assert!(!mask.logistics_heat);
         assert!(mask.construction_heat);
         tray.set_minimap_overlay_mask(simulation_minimap_overlay_defaults());
-        assert!(tray.ecology_heat);
+        assert!(!tray.ecology_heat);
     }
 
     #[test]

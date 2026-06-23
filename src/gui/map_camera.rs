@@ -339,6 +339,8 @@ const ROTATE_STEP: f32 = 1.35_f32.to_radians();
 const SMOOTH_LAMBDA: f32 = 12.0;
 /// MAP-ZOOM-001 / Option A — relative scale change above this snaps pan (ortho already instant).
 pub const MAP_ZOOM_AXIS_SNAP_EPS: f32 = 0.002;
+/// Pan/rotation already matched — skip lerp + clamp work.
+const MAP_CAMERA_AT_REST_EPS: f32 = 0.05;
 /// Cap smoothing dt so multi-second frame spikes do not overshoot pan/zoom lerp.
 const MAX_CAMERA_SMOOTH_DT_SECS: f32 = 0.05;
 
@@ -656,7 +658,11 @@ pub fn derive_map_camera_desired_from_view_authority(
     // PERF-INSTR-VFX-001: name this system inside the `map_cam` wall bracket (STALL/PERF only).
     let _perf = crate::render::PerfScope::new("upd_map_camera_derive");
     let before = desired.clone();
-    *desired = map_camera_desired_from_view_authority(authority.as_ref());
+    let next = map_camera_desired_from_view_authority(authority.as_ref());
+    if *desired == next {
+        return;
+    }
+    *desired = next;
     trace_map_camera_desired_write_if_full_app(
         profile.as_ref(),
         "derive_map_camera_desired_from_view_authority",
@@ -829,10 +835,21 @@ fn map_camera_smooth_toward_desired(
     let zoom_axis_changed =
         (*last_desired_scale - desired.scale.x).abs() > MAP_ZOOM_AXIS_SNAP_EPS;
     *last_desired_scale = desired.scale.x;
-    let k = 1.0 - (-dt * SMOOTH_LAMBDA).exp();
     let Ok(mut xf) = q_cam.single_mut() else {
         return;
     };
+    if !zoom_axis_changed {
+        let pan_rest = xf
+            .translation
+            .truncate()
+            .distance_squared(desired.translation.truncate())
+            <= MAP_CAMERA_AT_REST_EPS * MAP_CAMERA_AT_REST_EPS;
+        let rot_rest = xf.rotation.dot(desired.rotation).abs() >= 1.0 - 1.0e-5;
+        if pan_rest && rot_rest {
+            return;
+        }
+    }
+    let k = 1.0 - (-dt * SMOOTH_LAMBDA).exp();
     if zoom_axis_changed {
         xf.translation = desired.translation;
         xf.rotation = desired.rotation;

@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "job_id": "kit_nuclear_pwr_production_run001",
+  "batch_id": "kit_nuclear_pwr_production_001",
+  "development_tier": "production",
+  "spec_ref": "assets/staging/specs/kit_nuclear_pwr_production_001.json",
+  "operation": "module_prop",
+  "params": {
+    "width_m": 12.0,
+    "height_m": 9.0,
+    "depth_m": 12.0,
+    "material_profile": "concrete_grey_01",
+    "seed": 44010,
+    "profile": "box",
+    "prop_kind": "nuclear_yard_kit",
+    "name": "kit_nuclear_pwr_production_001"
+  },
+  "output": {
+    "glb": "assets/staging/kit_nuclear_pwr_production_run001/model.glb",
+    "thumbnail": "assets/staging/kit_nuclear_pwr_production_run001/preview.png"
+  }
+}

@@ -21,16 +21,17 @@ use crate::gui::hud::{
     ProductShellWidgetId, TransmissionMediaProviderRegistry, TransmissionShellState,
 };
 use crate::gui::{MinimapPresentationSource, MinimapShellState};
+use crate::engine::launch_args::EngineLaunchArgs;
 use crate::engine::ActiveTestScene;
 use crate::gui::map_view::MapViewInstanceId;
 use crate::gui::MapViewInstances;
 use crate::gui::simulation_minimap_overlay_defaults;
 use crate::gui::{
     map_camera_viewport_pixels, map_zoom_limits_for_world, MapCameraDesired, SimulationMapViewport,
+    VisualBudgetSettings, VisualCadence,
 };
 use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
 use crate::gui::MainWorldCamera;
-use crate::render::minimap_gpu_compositor_env_enabled;
 use crate::render::{
     seed_minimap_m2_overlay_witness, seed_minimap_m3_fow_ew_witness, EcologyVisualSnapshot,
     FireSimulationSnapshot, MinimapOperationalSnapshot, SharedOverlayFieldBuffers,
@@ -118,7 +119,7 @@ pub fn apply_simulation_map_presentation_defaults(
     minimap.visible = true;
     minimap.minimized = false;
     // P1-B: main sim HUD → GPU RT. CPU layered raster remains for explicit `SharedCpuRaster` effects.
-    minimap.presentation_source = if minimap_gpu_compositor_env_enabled() {
+    minimap.presentation_source = if crate::render::minimap_compositor::minimap_gpu_compositor_runtime_enabled() {
         MinimapPresentationSource::SharedRenderTargetImage
     } else {
         MinimapPresentationSource::SharedCpuRaster
@@ -140,12 +141,19 @@ pub fn apply_simulation_map_presentation_defaults(
 }
 
 /// UI-P3-M3-001 — ecology + construction snapshots before first GPU minimap composite.
+/// **Test / visual harness only** — must not inject witness rows into operator play.
 fn seed_minimap_m2_ecology_construction_on_simulation_enter(
+    launch: Option<Res<EngineLaunchArgs>>,
+    test_scene: Option<Res<ActiveTestScene>>,
     fire: Option<Res<FireSimulationSnapshot>>,
     book: Option<ResMut<CorridorConstructionBook>>,
     climate: Option<ResMut<ClimateVisualAggregate>>,
     ecology: Option<ResMut<EcologyVisualSnapshot>>,
 ) {
+    let witness_lane = launch.as_deref().is_some_and(|l| l.test_mode()) || test_scene.is_some();
+    if !witness_lane {
+        return;
+    }
     let (Some(fire), Some(mut book), Some(mut climate), Some(mut ecology)) =
         (fire, book, climate, ecology)
     else {
@@ -157,14 +165,35 @@ fn seed_minimap_m2_ecology_construction_on_simulation_enter(
     seed_minimap_m2_overlay_witness(&fire, &mut book, &mut climate, &mut ecology);
 }
 
-/// **UI-P3-M4-001** — design M3 fog/EW snapshot (not **UI-P3-M3-001** M2 construction/ecology).
+/// **UI-P3-M4-001** — design M3 fog/EW snapshot (test / visual harness only).
 fn seed_minimap_m3_fow_ew_on_simulation_enter(
+    launch: Option<Res<EngineLaunchArgs>>,
+    test_scene: Option<Res<ActiveTestScene>>,
     operational: Option<ResMut<MinimapOperationalSnapshot>>,
 ) {
+    let witness_lane = launch.as_deref().is_some_and(|l| l.test_mode()) || test_scene.is_some();
+    if !witness_lane {
+        return;
+    }
     let Some(mut operational) = operational else {
         return;
     };
     seed_minimap_m3_fow_ew_witness(&mut operational);
+}
+
+/// Lower visual multirate on Simulation enter (main-thread perf).
+pub fn apply_simulation_play_visual_budget(
+    launch: Option<Res<EngineLaunchArgs>>,
+    test_scene: Option<Res<ActiveTestScene>>,
+    mut budgets: ResMut<VisualBudgetSettings>,
+    mut cadence: ResMut<VisualCadence>,
+    mut fire_cadence: ResMut<crate::render::FireExtractCadence>,
+) {
+    *budgets = VisualBudgetSettings::simulation_play();
+    *cadence = VisualCadence::from(&*budgets);
+    *fire_cadence = crate::render::FireExtractCadence::from(&*budgets);
+    let harness = launch.as_deref().is_some_and(|l| l.test_mode()) || test_scene.is_some();
+    crate::render::FireExtractCadence::clamp_for_runtime(&mut fire_cadence, harness);
 }
 
 /// Frame the whole world on normal sim enter (not CLI test scenes — those set tactical zoom).
@@ -270,14 +299,96 @@ pub fn enforce_world_gen_chrome_closed_in_simulation(
     );
 }
 
+/// Keep minimap panel alive during Simulation — re-bootstrap if layout authority was lost.
+pub fn maintain_simulation_minimap_shell(
+    base: Res<State<BaseState>>,
+    primary_window: Query<&Window, With<PrimaryWindow>>,
+    mut minimap: ResMut<MinimapShellState>,
+    mut dock: ResMut<HudDockRegistry>,
+) {
+    if !matches!(base.get(), BaseState::Simulation) {
+        return;
+    }
+    minimap.visible = true;
+    minimap.minimized = false;
+    dock.slot_mut(ProductShellWidgetId::Minimap).visible = true;
+    dock.slot_mut(ProductShellWidgetId::Minimap).minimized = false;
+
+    let undersized = minimap.viewport_size.x < 180.0 || minimap.viewport_size.y < 160.0;
+    if undersized {
+        minimap.viewport_size = Vec2::new(260.0, 220.0);
+    }
+
+    if let Ok(window) = primary_window.single() {
+        if minimap.panel_screen_origin.is_none() || minimap.last_window_rect.is_none() {
+            minimap.bootstrap_simulation_layout_rect(window.width(), window.height());
+        }
+    }
+    if minimap.panel_screen_origin.is_some() {
+        minimap.sync_layout_rects_from_panel_origin();
+    }
+    minimap.sync_panel_viewport_suggestion_from_layout();
+}
+
+#[derive(Resource, Default)]
+struct MinimapGpuBootstrapWatch {
+    no_terrain_frames: u32,
+}
+
+/// Degrade to CPU minimap presentation when GPU compositor never gets terrain (blank panel).
+fn maintain_minimap_gpu_bootstrap_fallback(
+    base: Res<State<BaseState>>,
+    compositor: Res<crate::render::minimap_compositor::MinimapCompositorState>,
+    gpu_diag: Res<crate::render::minimap_compositor::MinimapGpuCompositorDiagnostics>,
+    fallback: Res<crate::render::TileWorldFallbackState>,
+    mut shell: ResMut<MinimapShellState>,
+    mut watch: ResMut<MinimapGpuBootstrapWatch>,
+) {
+    if !matches!(base.get(), BaseState::Simulation) {
+        return;
+    }
+    if !crate::render::minimap_compositor::minimap_gpu_compositor_runtime_enabled() {
+        watch.no_terrain_frames = 0;
+        return;
+    }
+    if shell.presentation_source != MinimapPresentationSource::SharedRenderTargetImage {
+        watch.no_terrain_frames = 0;
+        return;
+    }
+    if compositor.stamp > 0 {
+        watch.no_terrain_frames = 0;
+        return;
+    }
+    if gpu_diag.last_skip != crate::render::minimap_compositor::MinimapGpuSkipReason::NoTerrain {
+        return;
+    }
+    if fallback.image == Handle::default() && fallback.minimap_image == Handle::default() {
+        return;
+    }
+    watch.no_terrain_frames = watch.no_terrain_frames.saturating_add(1);
+    if watch.no_terrain_frames >= 120 {
+        shell.presentation_source = MinimapPresentationSource::SharedCpuRaster;
+        watch.no_terrain_frames = 0;
+        warn!(
+            target: "minimap_compositor",
+            "GPU minimap compositor had no terrain for 120 frames — switched to CPU raster"
+        );
+    }
+}
+
 pub struct SimulationSessionPlugin;
 
 impl Plugin for SimulationSessionPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(OnEnter(BaseState::Simulation), apply_simulation_hud_defaults)
+        app.init_resource::<MinimapGpuBootstrapWatch>()
+            .add_systems(OnEnter(BaseState::Simulation), apply_simulation_hud_defaults)
             .add_systems(
                 OnEnter(BaseState::Simulation),
-                seed_ux_e03_transmission_on_simulation_enter.after(apply_simulation_hud_defaults),
+                apply_simulation_play_visual_budget.after(apply_simulation_hud_defaults),
+            )
+            .add_systems(
+                OnEnter(BaseState::Simulation),
+                seed_ux_e03_transmission_on_simulation_enter.after(apply_simulation_play_visual_budget),
             )
             .add_systems(
                 OnEnter(BaseState::Simulation),
@@ -303,6 +414,8 @@ impl Plugin for SimulationSessionPlugin {
                 (
                     enforce_world_gen_chrome_closed_in_simulation,
                     enforce_simulation_product_egui_gates,
+                    maintain_simulation_minimap_shell,
+                    maintain_minimap_gpu_bootstrap_fallback,
                 )
                     .chain()
                     .after(crate::gui::editor::world_gen_ui::toggle_world_gen_ui_system),

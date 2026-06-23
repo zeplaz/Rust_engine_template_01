@@ -1,0 +1,253 @@
+{
+  "_agent_meta": {
+    "agent_commands": [
+      "cargo test -p proc_A_dine01 --lib"
+    ],
+    "docs": {
+      "compile_warnings": "src/dev/COMPILE_WARNINGS_TODOS.md",
+      "stage5_directive": "prompts/guides/stage5_convergence_directive_v1.md",
+      "viewport_recovery": "src/dev/recovery_viewport.md"
+    },
+    "logging_env": {
+      "ORCHESTRATOR_EXPORT_HEALTH": false,
+      "PERF": false,
+      "PERF_DISK": false,
+      "RUST_LOG": null,
+      "SIM_ANALYTICS": false,
+      "SIM_ANALYTICS_FRAMES": false,
+      "SIM_ANALYTICS_QUIET": false,
+      "SIM_VIEW_SYNC_DEBUG": false,
+      "STAGE5_READINESS_VERBOSE": false,
+      "STAGE5_VERBOSE": false,
+      "STALL": false,
+      "VIEWPORT_AUTHORITY_DEBUG": false
+    },
+    "orchestrator": {
+      "build_report": "tools/orchestrator/reports/build_report.md",
+      "ci_entry": "tools/orchestrator/ci/run.ps1",
+      "continuation_queue": "tools/orchestrator/queues/continuation_queue.json",
+      "warning_registry": "tools/orchestrator/reports/warning_registry.md"
+    },
+    "profile": "PERF-INSTR-VFX-001",
+    "related_proofs": [
+      "debug_runs/stage5_full_app_live.json",
+      "debug_runs/infrastructure_view_isolation_live.json",
+      "debug_runs/construction_stage_live.json",
+      "debug_runs/industrial_activation_live.json",
+      "debug_runs/fire_ecology_live.json",
+      "debug_runs/logistics_throughput_live.json",
+      "debug_runs/replay_editor_parity_live.json",
+      "debug_runs/orchestrator_thread_health.json",
+      "debug_runs/viewport_drift.json",
+      "debug_runs/viewport_authority_migration_witness.json",
+      "debug_runs/main_thread_orchestrator_live.json",
+      "debug_runs/stage6_virtualization_live.json",
+      "debug_runs/wave_s_hydrate_live.json",
+      "debug_runs/wave_p_live.json",
+      "debug_runs/wave_c_live.json",
+      "debug_runs/ui_shell_migration_live.json",
+      "debug_runs/minimap_compositor_live.json",
+      "debug_runs/sim_spectrum_analytics_live.json",
+      "debug_runs/stage7_behavioral_live.json",
+      "debug_runs/stage7_play_live.json",
+      "debug_runs/wss_substrate_live.json",
+      "debug_runs/f2_smoke_pipeline_live.json",
+      "debug_runs/play_scenario_live.json",
+      "debug_runs/transport_network_live.json"
+    ],
+    "relative_path": "debug_runs/triage_perf_vfx_fix_2026-06-11_live.json",
+    "schema": "debug_run_envelope_v1",
+    "source_system": "write_triage_perf_vfx_fix_live_witness",
+    "written_at_epoch_secs": 1782024306
+  },
+  "acceptance_targets": {
+    "main_camera_transform_changed_steady_pct": 90.0,
+    "slice_p50_ms": 5.0,
+    "steady_wall_p50_ms": 33.0
+  },
+  "after": {
+    "after_fire_build_ms": {
+      "max_ms": 0.3785000145435333,
+      "p50_ms": 0.006300000008195639,
+      "p95_ms": 0.015400000847876072,
+      "samples": 1107
+    },
+    "after_map_camera_smooth_ms": {
+      "max_ms": 13.875300407409668,
+      "p50_ms": 0.0071000000461936,
+      "p95_ms": 0.01140000019222498,
+      "samples": 1107
+    },
+    "frame_wall_ms": {
+      "max_ms": 250.0,
+      "p50_ms": 250.0,
+      "p95_ms": 250.0,
+      "samples": 1107
+    },
+    "post_world_repr_ms": {
+      "max_ms": 733.3009643554688,
+      "p50_ms": 212.7834014892578,
+      "p95_ms": 327.881103515625,
+      "samples": 1107
+    },
+    "substage_ms": {
+      "fire_build_view_ms": {
+        "max_ms": 0.09640000015497208,
+        "p50_ms": 0.009700000286102295,
+        "p95_ms": 0.019099999219179153,
+        "samples": 1107
+      },
+      "fire_commit_ms": {
+        "max_ms": 0.0348999984562397,
+        "p50_ms": 0.007900000549852848,
+        "p95_ms": 0.017400000244379044,
+        "samples": 1107
+      },
+      "fire_emitter_sync_ms": {
+        "max_ms": 0.055699996650218964,
+        "p50_ms": 0.006700000260025263,
+        "p95_ms": 0.014999999664723873,
+        "samples": 1107
+      },
+      "fire_sim_snapshot_ms": {
+        "max_ms": 2712.2119140625,
+        "p50_ms": 229.83421325683594,
+        "p95_ms": 384.353515625,
+        "samples": 1107
+      },
+      "fire_sync_active_ms": {
+        "max_ms": 85.38590240478516,
+        "p50_ms": 0.04450000077486038,
+        "p95_ms": 0.7759999632835388,
+        "samples": 1107
+      },
+      "fire_sync_lod_ms": {
+        "max_ms": 8.138999938964844,
+        "p50_ms": 0.004200000315904617,
+        "p95_ms": 0.012399999424815178,
+        "samples": 1107
+      },
+      "fire_sync_overlay_ms": {
+        "max_ms": 85.12110137939453,
+        "p50_ms": 0.19019998610019684,
+        "p95_ms": 0.7502000331878662,
+        "samples": 1107
+      },
+      "fire_sync_visible_ms": {
+        "max_ms": 123.46769714355469,
+        "p50_ms": 0.011799999512732029,
+        "p95_ms": 0.019499998539686203,
+        "samples": 1107
+      },
+      "map_apply_input_ms": {
+        "max_ms": 41843.47265625,
+        "p50_ms": 214.29330444335938,
+        "p95_ms": 370.3537902832031,
+        "samples": 1107
+      },
+      "map_derive_ms": {
+        "max_ms": 156.12399291992188,
+        "p50_ms": 0.164900004863739,
+        "p95_ms": 0.5074000358581543,
+        "samples": 1107
+      },
+      "map_smooth_ms": {
+        "max_ms": 139.63710021972656,
+        "p50_ms": 0.009700000286102295,
+        "p95_ms": 0.02449999935925007,
+        "samples": 1107
+      },
+      "minimap_intent_ms": {
+        "max_ms": 0.07309999316930771,
+        "p50_ms": 0.005400000140070915,
+        "p95_ms": 0.013900000602006912,
+        "samples": 1107
+      },
+      "repr_apply_result_ms": {
+        "max_ms": 0.05049999803304672,
+        "p50_ms": 0.004999999888241291,
+        "p95_ms": 0.00989999994635582,
+        "samples": 1107
+      },
+      "repr_compute_frame_ms": {
+        "max_ms": 0.13590000569820404,
+        "p50_ms": 0.008700000122189522,
+        "p95_ms": 0.015400000847876072,
+        "samples": 1107
+      },
+      "repr_decay_lod_ms": {
+        "max_ms": 6.067800045013428,
+        "p50_ms": 0.026100000366568565,
+        "p95_ms": 0.2506999969482422,
+        "samples": 1107
+      },
+      "repr_proc_extract_ms": {
+        "max_ms": 0.4992000162601471,
+        "p50_ms": 0.03129999712109566,
+        "p95_ms": 0.05779999867081642,
+        "samples": 1107
+      },
+      "repr_refresh_lod_ms": {
+        "max_ms": 4.002799987792969,
+        "p50_ms": 0.010400000028312206,
+        "p95_ms": 0.03579999879002571,
+        "samples": 1107
+      },
+      "view_sync_ms": {
+        "max_ms": 4.18779993057251,
+        "p50_ms": 0.012900000438094139,
+        "p95_ms": 0.058400001376867294,
+        "samples": 1107
+      }
+    }
+  },
+  "before": {
+    "after_fire_build_ms": {
+      "p50_ms": 220.28,
+      "p95_ms": 365.65
+    },
+    "after_map_camera_smooth_ms": {
+      "p50_ms": 1.49,
+      "p95_ms": 215.14
+    },
+    "frame_wall_ms": {
+      "p50_ms": 233.84,
+      "p95_ms": 250.0
+    },
+    "note": "Stall checkpoints mis-ordered — slice attribution conflated fire/view-sync into map_camera and fire_build.",
+    "post_world_repr_ms": {
+      "p50_ms": 214.4,
+      "p95_ms": 224.8
+    }
+  },
+  "frames_sampled": 1107,
+  "lane": "PERF-INSTR-VFX-001",
+  "measurement_note": "Stall substage p50 can overlap the same wall interval across labels; trust PerfScope lines (upd_fire_sim_snapshot, upd_world_repr_frame) and fire_extract.fingerprint_skipped for steady frames.",
+  "owners_ge_50ms_p50": [
+    {
+      "p50_ms": 229.83421325683594,
+      "slice": "fire_sim_snapshot_ms"
+    },
+    {
+      "p50_ms": 214.29330444335938,
+      "slice": "map_apply_input_ms"
+    },
+    {
+      "p50_ms": 212.7834014892578,
+      "slice": "post_world_repr_ms"
+    }
+  ],
+  "phase": "phase2a_2d_shipped",
+  "phase2_next": [
+    "2E fire_sim_snapshot stall attribution vs upd_fire_sim_snapshot scope",
+    "2F map_apply_input wall — systems between ApplyInput and DeriveDesired checkpoints",
+    "display acceptance: steady_wall_p50_ms <= 33"
+  ],
+  "phase2_shipped": [
+    "2A fire extract fingerprint",
+    "2B world repr stamp skip",
+    "2C map camera at-rest early exit",
+    "2D camera zoom bounds derive no-op"
+  ],
+  "schema_version": 1
+}

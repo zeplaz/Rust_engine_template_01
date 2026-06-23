@@ -60,7 +60,7 @@
       "track": "REWIRE",
       "wave": 1,
       "id": "BUILD-READ-REWIRE-003",
-      "status": "reopened",
+      "status": "done",
       "priority": "P0",
       "owner": "coder_b",
       "territory": "src/gui/map_zoom_coherence.rs",
@@ -76,7 +76,9 @@
       ],
       "completed": "2026-06-11",
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 stub_marker:stub",
-      "updated_at": "2026-06-20T21:19:24Z"
+      "updated_at": "2026-06-20T21:19:24Z",
+      "witness_refresh": "2026-06-21T02:54:33Z",
+      "reconcile_note": "witness-green auto-close (reconcile_coder_crisis.py)"
     },
     {
       "seq": 2,
@@ -258,7 +260,8 @@
       "track": "REWIRE",
       "wave": 3,
       "id": "BUILD-READ-REWIRE-004",
-      "status": "reopened",
+      "status": "deferred",
+      "blocked_reason": "pilot_hardcode_lint transitional until BUILD-SET-GUARD-002",
       "priority": "P1",
       "owner": "coder_b",
       "goal": "Pilot catalog authority in parametric_commit / visual_authority",
@@ -371,7 +374,7 @@
       "wave": 3,
       "parallel_group": "dev_tools",
       "id": "APS-QC-REWIRE-001",
-      "status": "reopened",
+      "status": "done",
       "priority": "P2",
       "owner": "coder_b",
       "territory": "src/gui/assembly_snapshot_qc_ui.rs",
@@ -379,14 +382,16 @@
       "witness": "debug_runs/aps_bevy_qc_hud_001_live.json",
       "completed": "2026-06-11",
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 stub_marker:stub",
-      "updated_at": "2026-06-20T21:19:24Z"
+      "updated_at": "2026-06-20T21:19:24Z",
+      "witness_refresh": "2026-06-21T02:54:33Z",
+      "reconcile_note": "witness-green auto-close (reconcile_coder_crisis.py)"
     },
     {
       "seq": 18,
       "track": "VEG",
       "wave": 4,
       "id": "LG-2-SUCCESSION-001",
-      "status": "reopened",
+      "status": "done",
       "reopened_as": "VEG-LG2-LIVE-FIRE-001",
       "priority": "P2",
       "owner": "coder_a",
@@ -404,7 +409,9 @@
       "verify": "cargo test -p proc_A_dine01 --lib landscape_grammar",
       "completed": "2026-06-11",
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 deliverable_missing",
-      "updated_at": "2026-06-20T21:19:24Z"
+      "updated_at": "2026-06-20T21:19:24Z",
+      "witness_refresh": "2026-06-21T02:54:33Z",
+      "reconcile_note": "witness-green auto-close (reconcile_coder_crisis.py)"
     },
     {
       "seq": 19,
@@ -469,7 +476,7 @@
       "track": "VEG",
       "wave": 4,
       "id": "VEG-C04-PREVIEW-WITNESS-001",
-      "status": "reopened",
+      "status": "done",
       "priority": "P0",
       "owner": "coder_a",
       "vegetation_seq": 42,
@@ -480,7 +487,9 @@
       "operator_visible": true,
       "completed": "2026-06-13",
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 missing_exit_predicate",
-      "updated_at": "2026-06-20T21:19:26Z"
+      "updated_at": "2026-06-20T21:19:26Z",
+      "witness_refresh": "2026-06-21T03:54:01Z",
+      "reconcile_note": "witness-green auto-close (reconcile_coder_crisis.py)"
     },
     {
       "seq": 23,

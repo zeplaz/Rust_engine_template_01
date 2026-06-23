@@ -472,8 +472,8 @@
       "phase": "P5.5",
       "wave": 7,
       "id": "OVR-DES-P55-PREVIEW-SPEC-001",
-      "status": "reopened",
-      "signed_date": "2026-06-17",
+      "status": "done",
+      "signed_date": "2026-06-02",
       "witness": "src/dev/design_aps_uiux_preview_spec_v1.md",
       "priority": "P1",
       "owner": "designer",
@@ -485,8 +485,9 @@
       "blocks": [
         "OVR-P55-PREVIEW-001"
       ],
-      "note": "INTEL-OFFICER tail cull \u00b7 stub_marker:placeholder",
-      "updated_at": "2026-06-20T21:19:34Z"
+      "exit_predicate": "design_aps_uiux_preview_spec_v1.md verdict PASS",
+      "completed": "2026-06-02",
+      "updated_at": "2026-06-02T12:00:00Z"
     },
     {
       "seq": 17,

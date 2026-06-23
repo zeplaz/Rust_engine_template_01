@@ -31,6 +31,7 @@ pub struct StrategicIconInstanceBuffer {
 /// Scaffold: populate icon buffer when macro/strategic band (no parallel extract yet).
 pub fn sync_strategic_icon_instances_scaffold(
     rep: Res<RepresentationResult>,
+    harness: Option<Res<crate::dev::VisualAidV2HarnessState>>,
     mut buffer: ResMut<StrategicIconInstanceBuffer>,
     mut witness: ResMut<crate::dev::VisualAidV2Witness>,
 ) {
@@ -39,7 +40,10 @@ pub fn sync_strategic_icon_instances_scaffold(
         rep.world_lod_band,
         WorldLodBand::Macro | WorldLodBand::Strategic
     );
-    if macro_band && rep.building_visual_simplified {
+    let harness_macro_probe = harness
+        .as_ref()
+        .is_some_and(|h| h.macro_icon_probe);
+    if (macro_band && rep.building_visual_simplified) || harness_macro_probe {
         buffer.instances.push(StrategicIconInstance {
             world_pos: Vec2::ZERO,
             size: 12.0,

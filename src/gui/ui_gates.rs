@@ -9,6 +9,11 @@ pub fn in_simulation_or_editor(base: Res<State<BaseState>>) -> bool {
     matches!(base.get(), BaseState::Simulation | BaseState::Editor)
 }
 
+/// GPU Bevy minimap chrome sync in PostUpdate — skip duplicate Egui-pass sync in Simulation.
+pub fn minimap_chrome_egui_sync_active(base: Res<State<BaseState>>) -> bool {
+    !matches!(base.get(), BaseState::Simulation)
+}
+
 /// PLAY-01 Phase 2B: floating product-shell egui (dock windows, side rail, minimap texture dock).
 ///
 /// Simulation keeps Bevy chrome only; egui in sim is limited to F3 diagnostics and editor/world-gen

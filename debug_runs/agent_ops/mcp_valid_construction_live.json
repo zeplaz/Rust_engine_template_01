@@ -48,7 +48,7 @@
   },
   "_agent_meta": {
     "schema": "mcp_valid_construction_live_v1",
-    "written_at_epoch_secs": 1781670225,
+    "written_at_epoch_secs": 1782004079,
     "profile": "MCP_VALID_CONSTRUCTION",
     "source_system": "ops_intelligence",
     "relative_path": "debug_runs/agent_ops/mcp_valid_construction_live.json"

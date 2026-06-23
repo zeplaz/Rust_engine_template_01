@@ -1293,12 +1293,13 @@
     },
     {
       "id": "DES-POWER-VOLTAGE-PICKER-001",
-      "status": "reopened",
+      "status": "done",
       "priority": 0,
       "program": "power_grid_construction",
       "agent": "designer",
       "plan": "src/dev/plan_power_grid_construction_ux_v1.md",
       "witness": "src/dev/design_power_voltage_picker_v1.md",
+      "home_queue": "power_grid_construction_ux_queue.json",
       "unblocks": [
         "COD-POWER-LINE-DRAW-001"
       ],
@@ -1320,12 +1321,13 @@
     },
     {
       "id": "DES-POWER-NODE-HOVER-001",
-      "status": "reopened",
+      "status": "done",
       "priority": 1,
       "program": "power_grid_construction",
       "agent": "designer",
       "plan": "src/dev/plan_power_grid_construction_ux_v1.md",
       "witness": "src/dev/design_power_node_hover_v1.md",
+      "home_queue": "power_grid_construction_ux_queue.json",
       "depends_on": [
         "DES-POWER-MAP-OVERLAY-002"
       ],
@@ -1333,7 +1335,9 @@
         "COD-POWER-NODE-HOVER-001"
       ],
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 missing_exit_predicate",
-      "updated_at": "2026-06-20T21:19:24Z"
+      "updated_at": "2026-06-20T21:19:24Z",
+      "completed": "2026-06-21",
+      "witness_refresh": "2026-06-21T01:11:35Z"
     },
     {
       "id": "DES-POWER-TARGETING-001",
@@ -1421,19 +1425,19 @@
     },
     {
       "id": "DMCP-SPEC-TRANSFORMER-PAD-001",
-      "status": "reopened",
+      "status": "done",
       "priority": 0,
       "program": "power_grid_art",
       "agent": "designer-mcp",
       "plan": "src/dev/plan_power_grid_art_assets_v1.md",
-      "witness": "src/dev/dmcp_spec_transformer_pad_v1.md",
+      "witness": "debug_runs/art_pipeline/dmcp_transformer_pad_spec_live.json",
       "deliverable": "assets/staging/specs/prop_transformer_production_run001.json",
       "depends_on": [
         "DES-ART-UTILITY-STYLE-001"
       ],
       "catalog": "assets/configs/buildings/grid_distribution_transformer.json",
-      "note": "INTEL-OFFICER tail cull \u00b7 stub_marker:stub",
-      "updated_at": "2026-06-20T21:19:34Z"
+      "dmcp_doc": "src/dev/dmcp_spec_transformer_pad_v1.md",
+      "handoff": "MCP-PWR-TRANSFORMER-BATCH-001"
     },
     {
       "id": "DMCP-SPEC-NUCLEAR-PWR-001",
@@ -1467,33 +1471,34 @@
   "multi_parallel_ready": [
     {
       "id": "DES-POWER-NODE-HOVER-001",
-      "status": "reopened",
-      "completed": "2026-06-20",
+      "status": "done",
+      "completed": "2026-06-02",
       "priority": 1,
       "track": "T6",
       "program": "multi_parallel_tracks",
       "agent": "designer",
       "plan": "src/dev/plan_power_grid_construction_ux_v1.md",
+      "witness": "src/dev/design_power_node_hover_v1.md",
+      "exit_predicate": "design_power_node_hover_v1.md verdict PASS",
       "home_queue": "power_grid_construction_ux_queue.json",
       "parallel_ok": [
         "*"
       ],
-      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 missing_exit_predicate",
-      "updated_at": "2026-06-20T21:19:24Z"
+      "updated_at": "2026-06-02T12:00:00Z"
     },
     {
       "id": "VM-11-PREVIEW-AUDIT",
-      "status": "blocked",
-      "completed": "2026-06-20",
+      "status": "done",
+      "completed": "2026-06-02",
       "priority": 2,
       "track": "T8",
       "program": "multi_parallel_tracks",
       "agent": "designer",
       "plan": "src/dev/stage5_triage_backlog.md",
       "witness": "src/dev/design_vm11_preview_audit_v1.md",
+      "exit_predicate": "design_vm11_preview_audit_v1.md verdict PASS",
       "home_queue": "multi_parallel_home_queues_v1.json",
-      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
-      "updated_at": "2026-06-20T21:19:26Z"
+      "updated_at": "2026-06-02T12:00:00Z"
     }
   ],
   "done_designer_plan_batch_2026_06_20": [

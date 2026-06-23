@@ -30,12 +30,12 @@ FILTER owner → wave-0 ready on ANY track → blocked? → cross-drain same own
 
 | Track | ID | Focus | Wave-0 pull (examples) |
 |:---|:---|:---|:---|
-| **T1** | APS-STUDIO | Tk artist studio 9/10 | DES-APS-INTERACTION · ONBOARD · OVR-P5-TAIL |
+| **T1** | APS-STUDIO | Tk artist studio 9/10 | DES-APS-INTERACTION · **ASM-PREFAB-IA** · OVR-P5-TAIL |
 | **T2** | GRAMMAR-SHIP | pilots + G4 + build-set | CODER-PILOT-REFACTOR · CMCP-GRAM-* · GRAM-CONTENT-005 |
 | **T3** | VEG-SHIP | ecology art · ship:false honest | DMCP-VEG-ATLAS-SHIP · E4 expand · minimap legend |
 | **T4** | FIRE-SIM | fuel spread · smoke bridge | FIRE-F2-FUEL-SPREAD · WSS-SMOKE-BRIDGE |
 | **T5** | SIM-HUD | picker · tray · popup · theme | COD-SIM-HUD-BUILD-PICKER · TRAY · POPUP-MIGRATE |
-| **T6** | POWER-UX | construction B/C/D (A done) | COD-POWER-OVERLAY · ISLAND-HIGHLIGHT |
+| **T6** | POWER-UX | construction B/C/D (A closed) | DES-POWER-NODE-HOVER · COD-POWER-OVERLAY · ISLAND-HIGHLIGHT |
 | **T7** | PLAY-ACCEPT | G-PLAY operator rollup | G-PLAY-01 · G-PLAY-OPERATOR-01 · PERF-SHELL |
 | **T8** | INFRA-PERF | VM · perf triage | TRIAGE-PERF-SHELL · VM-09-V2 |
 
@@ -57,6 +57,44 @@ FILTER owner → wave-0 ready on ANY track → blocked? → cross-drain same own
 | **Veg sim + art tooling** | Drain **~78/82 done** | Visual smoke not operator-signed; F01/F02 atlas **blocked**; minimap legend unwired | [`coder_vegetation_drain_queue.json`](../tools/orchestrator/queues/coder_vegetation_drain_queue.json) · [`vegetation_system_honest_status_v1.md`](vegetation_system_honest_status_v1.md) |
 | **Landscape LG-5/6** | Pilot + 16-tile teach batch green | **Not production-ship** · keyframe QC · burn rows · LG-6 flowers deferred | [`design_landscape_lg5_expansion_matrix_v1.md`](design_landscape_lg5_expansion_matrix_v1.md) · witness `tile_tile_landscape_expanded_v1_live.json` (`ship: false`) |
 | **Fire** | F2 extract **done**; G-PLAY-FIRE **done** | F2 fuel spread · smoke bridge · steward regress **deferred** · ecology play read | [`fire_ecology_f1_todos.md`](fire_ecology_f1_todos.md) · [`stage5_triage_backlog.md`](stage5_triage_backlog.md) T3 |
+
+---
+
+### Assembly prefab listing & module potential (YOUR CONCERN)
+
+**Symptom:** Buildings/modules **exist on disk** (`_module_index` · promoted GLBs · utility kits) but Assembly feels like it **doesn't use them** — placement list is grammar-assigned only, module field is **read-only**, Catalog is a **separate tab**, and complexity sliders are **buried**.
+
+| Layer | What exists | What's missing |
+|:---|:---|:---|
+| **Index** | 100+ rows in `_module_index.json` — production + lod0 per `module_id` × `style_pack` | No in-Assembly browse filtered by **style-pack whitelist** ([`design_style_pack_registry_v1.md`](design_style_pack_registry_v1.md) signed but **not wired to picker UI**) |
+| **Generate** | `assembly.generate_assembly_snapshot()` picks modules via grammar + `_resolve_module_row()` | Artist cannot **swap** a slot to another whitelisted prefab after generate |
+| **Placement list** | `placement_list` + footprint grid — shows `module_id` per cell | **Not a prefab browser** — select cell → readonly `module_var` Entry |
+| **Catalog tab** | `list_modules(batch_id, category)` full browse | **No "assign to selected slot"** bridge back to Assembly |
+| **Sliders / push complexity** | `GrammarDnaPanel` β sliders (0–1) · `GrammarIteratePanel` (massing, W×D, modes) | Hidden in **collapsed "advanced"** sections; tier **G3 on disk** should expand DNA/iterate — easy to miss |
+| **Source tier** | `production` vs `lod0` combobox (manual lane) | When production GLB missing, resolver **falls back to lod0** silently → looks like "failed potential" |
+| **Set health** | `grammar_set_brief` · eval sweep · tier chip G3 | **Not G4** — `building_set_coverage` blocks full production-set claims |
+
+**Code anchors:**
+- Readonly module: `assembly_panel.py` ~L304–307 (`module_var` Entry `state="readonly"`)
+- Resolver: `assembly.py` `_resolve_module_row()` — filters by `style_pack_id`, `development_tier`, `stylepack_visible`
+- Sliders: `grammar_dna_panel.py` · iterate: `grammar_iterate_panel.py`
+- Tier exposure: `apply_grammar_tier()` in `assembly_panel.py` — G3 → DNA/iterate **visible** when sections expanded
+
+**Queue gap:** No row in `multi_parallel_tracks_dispatch_v1.json` for **Assembly module picker / prefab swap**. Related **done** work: PG-MODULE-AUDIT-002 (production corners/doors), APS-GRAM-P3-001 (inspector↔footprint), grammar evolution closed.
+
+**Recommended picks (new — add to T1 APS-STUDIO when scheduling):**
+
+| ID | Owner | Deliverable |
+|:---|:---|:---|
+| **DES-APS-ASM-PREFAB-IA-001** | @designer | Slot module picker IA — whitelist filter, tier badge (prod/lod0/missing GLB), Catalog→slot handoff |
+| **CMCP-ASM-MODULE-PICKER-001** | @coder-mcp | Replace readonly module Entry with searchable combobox · `library_search` · persist on snapshot |
+| **CMCP-ASM-RESOLVE-HONEST-001** | @coder-mcp | When prod missing: inline reason + link to validate/promote — no silent lod0 fallback in UI label |
+
+**Until those land — artist workarounds:**
+1. Generate with **Source tier = production** (Setup → Manual override section when grammar off, or ensure grammar path passes `source_tier=production`).
+2. At **G3**, expand **"Building shape bias"** + **"Tweak one style layer"** for β sliders and iterate modes.
+3. Use **Catalog** to find module IDs · cross-check `_module_index` for production row + GLB on disk.
+4. Run **Set health → Run sweep** on Assembly for massing spread before blaming prefabs.
 
 ---
 
@@ -151,8 +189,8 @@ Fire is **split across sim ecology, render extract, operator play, and steward r
 
 | Program | Status | Queue / plan |
 |:---|:---|:---|
-| **PLAN-POWER-GRID-CONSTRUCTION-UX-001** | **ACTIVE** Track B | [`power_grid_construction_ux_queue.json`](../tools/orchestrator/queues/power_grid_construction_ux_queue.json) |
-| **PLAN-POWER-GRID-ART-ASSETS-001** downstream | **CLOSED** | [`power_grid_art_downstream_queue.json`](../tools/orchestrator/queues/power_grid_art_downstream_queue.json) |
+| **PLAN-POWER-GRID-CONSTRUCTION-UX-001** | **ACTIVE** Track B/C/D (A closed) | [`power_grid_construction_ux_queue.json`](../tools/orchestrator/queues/power_grid_construction_ux_queue.json) |
+| **PLAN-POWER-GRID-ART-ASSETS-001** downstream | **CLOSED** (hub scan skips picks) | [`power_grid_art_downstream_queue.json`](../tools/orchestrator/queues/power_grid_art_downstream_queue.json) |
 | **PLAN-DESIGNER-WORK-202606-001** | **ACTIVE** (multi-track) | [`plan_designer_work_202606_v1.md`](plan_designer_work_202606_v1.md) |
 | **PLAN-APS-UIUX-OVERHAUL-001** | **CLOSED** 24/24 | [`aps_uiux_overhaul_queue.json`](../tools/orchestrator/queues/aps_uiux_overhaul_queue.json) |
 | **PLAN-APS-GRAMMAR-EVOLUTION-001** | **CLOSED** 15/15 | [`aps_grammar_evolution_queue.json`](../tools/orchestrator/queues/aps_grammar_evolution_queue.json) |
@@ -202,6 +240,17 @@ Fire is **split across sim ecology, render extract, operator play, and steward r
 ## @designer-mcp
 
 **Rule:** AssetSpec authority; critique before bpy; no Bevy HUD code.
+
+### DMCP-QC (designer-mcp · post-promote artist QC)
+
+| ID | Verdict | Witness | On-call tail |
+|:---|:---|:---|:---|
+| **DMCP-QC-SUBSTATION-001** | PASS WITH NOTES | [`dmcp_qc_substation_live.json`](../debug_runs/art_pipeline/dmcp_qc_substation_live.json) | G4 manual stills in [`dmcp_qc_substation_yard_v1.md`](dmcp_qc_substation_yard_v1.md) §4 |
+| **DMCP-QC-TRANSFORMER-001** | PASS | [`dmcp_qc_transformer_live.json`](../debug_runs/art_pipeline/dmcp_qc_transformer_live.json) | 32px keyframe still optional |
+
+**Refresh:** `python -m rust_engine_mcp.cli pwr-downstream-close-witness` · rollup [`power_grid_art_downstream_close_live.json`](../debug_runs/art_pipeline/power_grid_art_downstream_close_live.json)
+
+**Rule:** QC rubrics = **@designer-mcp**; bpy/promote = **@coder-mcp**. Substation machine `green` is teach-tier (48v) — not full art-ship.
 
 ### PRIMARY
 
@@ -278,6 +327,7 @@ Power-grid art downstream **closed** (2026-06-20). On-call only:
 
 | ID | Priority | Program | Witness target |
 |:---|:---|:---|:---|
+| **DES-POWER-NODE-HOVER-001** | P1 | Power Track B | [`design_power_node_hover_v1.md`](design_power_node_hover_v1.md) — **primary construction UX pick** |
 | **DES-APS-PREVIEW-V2-001** | P1 | APS phase 2 | [`design_aps_preview_v2_spec_v1.md`](design_aps_preview_v2_spec_v1.md) |
 | **DES-STYLE-INDUSTRIAL-WEST-001** | P1 | Style C1 | [`design_style_industrial_west_v1.md`](design_style_industrial_west_v1.md) — unblocks kit002 + factory grammar |
 | **DES-APS-MAT-BROWSE-001** | P1 | Materials B3 | [`design_aps_mat_browse_v1.md`](design_aps_mat_browse_v1.md) |

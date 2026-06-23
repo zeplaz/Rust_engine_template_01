@@ -99,6 +99,7 @@ pub use tactical_vector_overlay::{
 };
 pub use visual_perf_budget::{
     sync_tile_raster_spike_feedback_system, FireExtractCadence, FireExtractClock,
+    FireExtractInputFingerprint,
     FireExtractDiagnostics, FireExtractFrameReport,
     TileRasterBudget, TileRasterSpikeFeedback, RASTER_SPIKE_EMA_MS, RASTER_SPIKE_FRAME_MS,
 };
@@ -329,7 +330,13 @@ pub use frame_perf::{
 pub use stall_watch::{
     stall_checkpoint_before_world_repr, stall_checkpoint_post_fire_project, stall_checkpoint_post_streaming_spine,
     stall_checkpoint_post_world_repr, stall_watch_enabled, FrameScheduleSpans, FrameStallWatch,
-    StallWatchPlugin, STALL_THRESHOLD_MS,
+    FrameSubstageSpans, StallWatchPlugin, STALL_THRESHOLD_MS,
+    stall_substage_fire_build_view, stall_substage_fire_commit, stall_substage_fire_emitter_sync,
+    stall_substage_fire_sim_snapshot, stall_substage_fire_sync_active, stall_substage_fire_sync_lod,
+    stall_substage_fire_sync_overlay, stall_substage_fire_sync_visible, stall_substage_map_apply_input,
+    stall_substage_map_derive, stall_substage_map_smooth, stall_substage_minimap_intent,
+    stall_substage_repr_apply_result, stall_substage_repr_compute_frame, stall_substage_repr_decay_lod,
+    stall_substage_repr_proc_extract, stall_substage_repr_refresh_lod, stall_substage_view_sync,
 };
 pub use perf_attribution_witness::{
     perf_attribution_witness_json, perf_attribution_witness_lib_fixture,

@@ -3,10 +3,12 @@
   "green": true,
   "process_histogram": {
     "power_tier": {
-      "light": 1
+      "light": 3
     },
     "supply_chain_role": {
-      "concrete_mixer": 1
+      "concrete_mixer": 1,
+      "storage_warehouse": 1,
+      "rail_warehouse": 1
     }
   },
   "sweep": {
@@ -24,7 +26,7 @@
     "profile": "CMCP_GRAM_SWEEP_PROCESS",
     "relative_path": "debug_runs/grammar_sweep_process_live.json",
     "source_system": "grammar_build_set",
-    "written_at_epoch_secs": 1781756231,
+    "written_at_epoch_secs": 1782009859,
     "ritual": "BLANG:WIT-HON CMCP-GRAM-SWEEP-PROCESS-001"
   },
   "witness_honesty": {

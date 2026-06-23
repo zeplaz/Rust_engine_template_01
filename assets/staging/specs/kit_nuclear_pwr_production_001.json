@@ -4,14 +4,17 @@
   "archetype": "module_kit",
   "style_pack": "style_industrial_west",
   "development_tier": "production",
-  "pbr_status": "pending",
+  "pbr_status": "shipped",
   "batch_id": "kit_nuclear_pwr_production_001",
   "utility_role": "nuclear",
   "power_tier": "grid",
   "plant_definition_id": "pwr_4loop_1100mw_v1",
   "catalog_id_planned": "nuclear_plant_pwr",
   "module": {
-    "grid_units": [6, 6],
+    "grid_units": [
+      6,
+      6
+    ],
     "snap": "floor_edge",
     "pivot": "bottom_center"
   },
@@ -29,28 +32,40 @@
   "material_profile": "concrete_grey_01",
   "hero_module": {
     "module_id": "containment_dome_pwr",
-    "grid": [3, 3]
+    "grid": [
+      3,
+      3
+    ]
   },
   "composition": [
     {
       "module_id": "containment_dome_pwr",
-      "grid": [3, 3],
+      "grid": [
+        3,
+        3
+      ],
       "count": 1,
       "zone": "primary",
       "placement": "north_center",
-      "note": "PWR containment dome — primary landmark @ 64px iso"
+      "note": "PWR containment dome \u2014 primary landmark @ 64px iso"
     },
     {
       "module_id": "turbine_hall_1u",
-      "grid": [2, 1],
+      "grid": [
+        2,
+        1
+      ],
       "count": 2,
       "zone": "primary",
       "placement": "south_of_dome",
-      "note": "Low turbine hall — repeat along E-W axis"
+      "note": "Low turbine hall \u2014 repeat along E-W axis"
     },
     {
       "module_id": "cooling_tower_1u",
-      "grid": [1, 1],
+      "grid": [
+        1,
+        1
+      ],
       "count": 2,
       "zone": "utility",
       "placement": "south_east",
@@ -58,23 +73,32 @@
     },
     {
       "module_id": "diesel_gen_pad_2x2",
-      "grid": [2, 2],
+      "grid": [
+        2,
+        2
+      ],
       "count": 1,
       "zone": "service",
       "placement": "south_west",
-      "note": "Backup diesel — links icon_diesel HUD read"
+      "note": "Backup diesel \u2014 links icon_diesel HUD read"
     },
     {
       "module_id": "switchyard_edge_1u",
-      "grid": [1, 1],
+      "grid": [
+        1,
+        1
+      ],
       "count": 4,
       "zone": "utility",
       "placement": "east_edge",
-      "note": "Bus + fence segment — shares utility steel palette"
+      "note": "Bus + fence segment \u2014 shares utility steel palette"
     },
     {
       "module_id": "fence_chainlink_1u",
-      "grid": [1, 1],
+      "grid": [
+        1,
+        1
+      ],
       "count": 10,
       "zone": "buffer",
       "placement": "perimeter",
@@ -82,11 +106,14 @@
     },
     {
       "module_id": "warning_sign_nuclear_1u",
-      "grid": [1, 1],
+      "grid": [
+        1,
+        1
+      ],
       "count": 2,
       "zone": "utility",
       "placement": "gate_entries",
-      "note": "Yellow + simplified trefoil — no photoreal hazard art"
+      "note": "Yellow + simplified trefoil \u2014 no photoreal hazard art"
     }
   ],
   "module_whitelist": [
@@ -99,13 +126,23 @@
     "warning_sign_nuclear_1u"
   ],
   "state_read": [
-    { "state": "normal", "visual": "dome + steady stack" },
-    { "state": "scram", "visual": "amber dome wash + icon_scram HUD" },
-    { "state": "meltdown", "visual": "column effect + danger adjunct" },
-    { "state": "diesel_run", "visual": "aux pad exhaust animation" }
+    {
+      "state": "normal",
+      "visual": "dome + steady stack"
+    },
+    {
+      "state": "scram",
+      "visual": "amber dome wash + icon_scram HUD"
+    },
+    {
+      "state": "meltdown",
+      "visual": "column effect + danger adjunct"
+    },
+    {
+      "state": "diesel_run",
+      "visual": "aux pad exhaust animation"
+    }
   ],
-  "spec_only": true,
-  "bpy_blocked": true,
   "references": [
     "ref:design:DES-ART-NUCLEAR-PLANT-001",
     "ref:design:DES-ART-UTILITY-STYLE-001",

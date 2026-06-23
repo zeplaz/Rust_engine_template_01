@@ -8,7 +8,7 @@ from pathlib import Path
 from tkinter import filedialog, messagebox, ttk
 from typing import Any
 
-from rust_engine_mcp import aps_tags, assembly, arch_build_grammar, building_grammar, grammar_build_set
+from rust_engine_mcp import aps_tags, assembly, arch_build_grammar, building_grammar, grammar_build_set, library
 from rust_engine_mcp.aps_grammar_labels import human_label
 from rust_engine_mcp.aps_mat_auth_ui import save_hint
 from rust_engine_mcp.aps_validator_plain import format_p0_display
@@ -40,11 +40,13 @@ from .aps_tk import themed_listbox
 from .aps_onboarding_panel import empty_state_label
 from .facility_needs_strip import FacilityNeedsStrip
 from .footprint_canvas import FootprintCanvas
+from .site_preview_panel import SiteLayoutPreviewSection
 from .assembly_onboard_strip import AssemblyOnboardStrip
 from .grammar_inspector import GrammarInspectorPanel
 from .grammar_iterate_panel import GrammarIteratePanel
 from .grammar_dna_panel import GrammarDnaPanel
 from .grammar_build_set_panel import GrammarBuildSetPanel
+from .generation_trace_strip import GenerationTraceStrip
 from .material_browser import MaterialBrowserPanel
 from .assembly_preview_panel import AssemblyPreviewPanel
 from .slot_preview_panel import SlotPreviewPanel
@@ -115,6 +117,13 @@ class AssemblyPanel(ttk.Frame):
         track_wraplength(self, intro, minimum=480)
         self.metadata_flow = AssemblyOnboardStrip(self)
         self.metadata_flow.pack(fill=tk.X, pady=(0, 6))
+
+        self._gen_trace = GenerationTraceStrip(
+            self,
+            self.state,
+            get_snapshot=lambda: self._snapshot or self.state.assembly_snapshot_data,
+        )
+        self._gen_trace.pack(fill=tk.X, pady=(0, 6))
 
         # --- Step 1: Generate (primary workflow — always visible) ---
         gen = ttk.Frame(self)
@@ -248,6 +257,8 @@ class AssemblyPanel(ttk.Frame):
         self.footprint_canvas = FootprintCanvas(footprint_pane, on_cell_select=self._on_grid_cell_select)
         self.footprint_canvas.pack(fill=tk.BOTH, expand=True)
         bind_aps_tooltip(self.footprint_canvas, "asm_footprint")
+        self.site_layout = SiteLayoutPreviewSection(footprint_pane, on_log=self._on_log)
+        bind_aps_tooltip(self.site_layout, "asm_site_layout")
         bind_aps_tooltip(self.placement_list, "asm_footprint_heatmap")
 
         mat_frame = ttk.LabelFrame(
@@ -303,9 +314,17 @@ class AssemblyPanel(ttk.Frame):
 
         ttk.Label(slot, text="Module").grid(row=1, column=0, sticky=tk.W, pady=4)
         self.module_var = tk.StringVar(value="")
-        ttk.Entry(slot, textvariable=self.module_var, width=28, state="readonly").grid(
-            row=1, column=1, sticky=tk.W, padx=4
-        )
+        mod_row = ttk.Frame(slot)
+        mod_row.grid(row=1, column=1, sticky=tk.W, padx=4)
+        self.module_combo = ttk.Combobox(mod_row, textvariable=self.module_var, width=26, values=[])
+        self.module_combo.pack(side=tk.LEFT)
+        self.module_combo.bind("<<ComboboxSelected>>", self._on_module_picked)
+        self.module_combo.bind("<Return>", self._on_module_picked)
+        bind_aps_tooltip(self.module_combo, "asm_module_picker")
+        self._module_resolve_var = tk.StringVar(value="")
+        ttk.Label(
+            mod_row, textvariable=self._module_resolve_var, font=FONT_SMALL, foreground=COLOR_TEXT_SUBTLE
+        ).pack(side=tk.LEFT, padx=(8, 0))
 
         ttk.Label(slot, text="Material").grid(row=2, column=0, sticky=tk.W, pady=4)
         self.material_var = tk.StringVar(value="—")
@@ -368,7 +387,11 @@ class AssemblyPanel(ttk.Frame):
         for i, tag in enumerate(assembly.COMMON_VARIANT_TAGS):
             var = tk.BooleanVar(value=False)
             self._variant_tag_vars[tag] = var
-            ttk.Checkbutton(var_grid, text=tag, variable=var).grid(row=0, column=i, sticky=tk.W, padx=4)
+            from rust_engine_mcp.aps_tag_vocabulary import assembly_variant_tag_label
+
+            cb = ttk.Checkbutton(var_grid, text=assembly_variant_tag_label(tag), variable=var)
+            cb.grid(row=0, column=i, sticky=tk.W, padx=4)
+            bind_aps_tooltip(cb, f"asm_variant_tag:{tag}")
 
         btn_row = ttk.Frame(tag_body)
         btn_row.pack(fill=tk.X, pady=(4, 0))
@@ -551,6 +574,7 @@ class AssemblyPanel(ttk.Frame):
         self._grammar_set_tier = tier
         self._grammar_set_tier_var.set(self._TIER_STRIP_LABELS.get(tier, tier))
         self.facility_needs.set_grammar_tier(tier)
+        self.site_layout.set_grammar_tier(tier)
         self._refresh_facility_needs()
 
         if tier == "G0":
@@ -598,6 +622,16 @@ class AssemblyPanel(ttk.Frame):
             self._grammar_set_section._expanded = False
             self._grammar_set_section._head_btn.configure(text=self._grammar_set_section._header_text())
             self._grammar_set_section._sync_body()
+
+        self._refresh_assembly_empty_label()
+
+    def _refresh_assembly_empty_label(self) -> None:
+        """DES-APS-ASSEMBLY-EMPTY-G2-001 — tier-aware empty label on footprint pane."""
+        if not hasattr(self, "_empty_state"):
+            return
+        from rust_engine_mcp.aps_uiux_onboard import assembly_empty_state_text
+
+        self._empty_state.configure(text=assembly_empty_state_text(self._grammar_set_tier))
 
     @staticmethod
     def _apply_tier_section(
@@ -655,12 +689,26 @@ class AssemblyPanel(ttk.Frame):
                 label = str(row.get("label") or tag_id)
                 var = tk.BooleanVar(value=False)
                 self._semantic_tag_vars[cat][tag_id] = var
-                ttk.Checkbutton(grid, text=label, variable=var).grid(
-                    row=i // 3, column=i % 3, sticky=tk.W, padx=4
+                cb = ttk.Checkbutton(grid, text=label, variable=var)
+                cb.grid(row=i // 3, column=i % 3, sticky=tk.W, padx=4)
+                grammar_use = str(row.get("grammar_use") or "")
+                from rust_engine_mcp.aps_tag_vocabulary import semantic_tag_hint
+
+                bind_aps_tooltip(cb, f"asm_semantic_tag:{tag_id}")
+                cb.bind(
+                    "<Enter>",
+                    lambda _e, tid=tag_id, gu=grammar_use: self._show_tag_hint(
+                        semantic_tag_hint(tid, grammar_use=gu)
+                    ),
+                    add="+",
                 )
 
     def _set_validation_result(self, text: str, *, ok: bool | None = None) -> None:
         set_inline_status(self._validation_lbl, self.validation_var, text, ok=ok)
+
+    def _show_tag_hint(self, text: str) -> None:
+        if hasattr(self, "next_step_var"):
+            self.next_step_var.set(text[:220])
 
     def show_material_assign_callout(self, profile_id: str) -> None:
         if self._snapshot:
@@ -738,10 +786,73 @@ class AssemblyPanel(ttk.Frame):
 
     def _refresh_facility_needs(self) -> None:
         archetype_id = None
+        site_template_id = None
         if self.use_grammar_var.get():
             label = self.archetype_var.get()
             archetype_id = self._archetype_label_to_id.get(label, label)
+            try:
+                grammar = building_grammar.load_building_grammar_by_archetype(archetype_id)
+                binding = grammar.get("facility_binding") or {}
+                site_template_id = binding.get("site_template_id")
+            except (KeyError, FileNotFoundError, NotImplementedError):
+                site_template_id = None
         self.facility_needs.refresh(archetype_id=archetype_id, lane=self.state.art_domain)
+        inset: list[tuple[int, int]] = []
+        if self._snapshot:
+            for p in self._sorted_placements():
+                if int(p.get("floor") or 0) == int(self.footprint_canvas.floor_var.get()):
+                    inset.append((int(p.get("grid_x") or 0), int(p.get("grid_y") or 0)))
+        self.site_layout.refresh(
+            archetype_id=archetype_id,
+            lane=self.state.art_domain,
+            site_template_id=str(site_template_id) if site_template_id else None,
+            footprint_cells=inset,
+        )
+
+    def _refresh_module_picker_values(self) -> None:
+        style_pack = str((self._snapshot or {}).get("style_pack_id") or self.state.style_pack_id or "")
+        rows = library.search_modules(style_pack=style_pack or None)
+        if not rows:
+            rows = library.load_index_json()
+        ids = sorted({str(r.get("module_id") or "") for r in rows if r.get("module_id")})
+        self.module_combo.configure(values=ids)
+
+    def _refresh_module_resolve_label(self, module_id: str) -> None:
+        if not module_id:
+            self._module_resolve_var.set("")
+            return
+        snap = self._snapshot or {}
+        body = assembly.explain_module_resolve(
+            module_id,
+            style_pack_id=str(snap.get("style_pack_id") or self.state.style_pack_id or ""),
+            source_tier=str(snap.get("source_tier") or self.tier_var.get() or "production"),
+        )
+        self._module_resolve_var.set(str(body.get("label") or ""))
+
+    def _on_module_picked(self, _event=None) -> None:
+        if not self._snapshot or not self._selected_node_id:
+            self._set_validation_result("Select a placement row first.", ok=False)
+            return
+        module_id = self.module_var.get().strip()
+        if not module_id:
+            return
+        try:
+            self._snapshot = assembly.update_placement(
+                self._snapshot,
+                self._selected_node_id,
+                module_id=module_id,
+            )
+        except Exception as exc:  # noqa: BLE001
+            self._set_validation_result(f"Module apply failed: {exc}", ok=False)
+            return
+        self.state.assembly_snapshot_data = self._snapshot
+        self._refresh_module_resolve_label(module_id)
+        self._refresh_placement_list()
+        self._refresh_footprint_grid()
+        self._refresh_facility_needs()
+        self.on_placement_select()
+        self._on_log(f"module {module_id} → {self._selected_node_id}")
+        self._set_validation_result(f"Module {module_id} applied — Save snapshot before bake", ok=None)
 
     def _on_archetype_change(self, _event=None) -> None:
         archetype = self._resolve_archetype_id()
@@ -866,6 +977,8 @@ class AssemblyPanel(ttk.Frame):
         # unvalidated; clear any stale P0 verdict so the pipeline bar shows "saved
         # (P0 not run)" until the gate is actually run.
         self.state.assembly_p0_passed = None
+        if hasattr(self, "_gen_trace"):
+            self._gen_trace.reset_approval()
         self._sync_state_from_snapshot(self._snapshot)
         self.iterate_panel.set_base_snapshot(self._snapshot)
         self.grammar_dna_panel.set_from_snapshot(self._snapshot)
@@ -879,6 +992,11 @@ class AssemblyPanel(ttk.Frame):
         if self.placement_list.size():
             self.placement_list.selection_set(0)
             self.on_placement_select()
+        self.refresh_generation_trace()
+
+    def refresh_generation_trace(self) -> None:
+        if hasattr(self, "_gen_trace"):
+            self._gen_trace.refresh()
 
     def on_generate(self) -> None:
         seed = int(self.seed_var.get())
@@ -1107,6 +1225,8 @@ class AssemblyPanel(ttk.Frame):
         self._selected_node_id = assembly.placement_node_id(p)
         self.node_id_var.set(self._selected_node_id)
         self.module_var.set(str(p.get("module_id") or ""))
+        self._refresh_module_picker_values()
+        self._refresh_module_resolve_label(str(p.get("module_id") or ""))
         mat = str(p.get("material_profile") or "")
         self.material_var.set(mat or "—")
         self._update_material_category(mat)

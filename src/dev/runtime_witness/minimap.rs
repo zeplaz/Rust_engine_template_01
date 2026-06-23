@@ -98,7 +98,7 @@ pub fn refresh_ui_w3_m3_001_live_witness() -> bool {
         ui_w3_m3_001_green, minimap_rgba_image, MinimapGpuCompositorDiagnostics,
     };
 
-    let tray = crate::gui::hud::HudOverlayTrayState::default();
+    let tray = crate::render::minimap_compositor::witness_harness_tray();
     let compositor = fixture_ui_w3_m3_001_compositor(&tray);
     assert!(ui_w3_m3_001_green(&compositor), "UI-W3-M3-001 construction + ecology");
     assert!(ui_w3_m2_001_green(&compositor), "UI-W3-M2-001 logistics + construction");
@@ -148,7 +148,7 @@ pub fn refresh_ui_oh_m2_001_live_witness() -> bool {
         MinimapGpuCompositorDiagnostics,
     };
 
-    let tray = crate::gui::hud::HudOverlayTrayState::default();
+    let tray = crate::render::minimap_compositor::witness_harness_tray();
     let compositor = fixture_ui_oh_m2_001_compositor(&tray);
     assert!(ui_oh_m2_001_green(&compositor), "UI-OH-M2-001 predicate");
     let mut registry = MinimapRenderTargetRegistry::default();
@@ -186,7 +186,7 @@ pub fn refresh_perf_vis_p1b_gpu_default_live_witness() -> bool {
         MinimapGpuCompositorDiagnostics,
     };
 
-    let tray = crate::gui::hud::HudOverlayTrayState::default();
+    let tray = crate::render::minimap_compositor::witness_harness_tray();
     let compositor = fixture_ui_oh_m2_001_compositor(&tray);
     let mut registry = MinimapRenderTargetRegistry::default();
     let mut images = Assets::<Image>::default();
@@ -230,7 +230,7 @@ mod tests {
 
     #[test]
     fn minimap_runtime_witness_commit_roundtrip() {
-        let tray = crate::gui::hud::HudOverlayTrayState::default();
+        let tray = crate::render::minimap_compositor::witness_harness_tray();
         let compositor = fixture_ui_oh_m2_001_compositor(&tray);
         let mut registry = MinimapRenderTargetRegistry::default();
         let mut images = Assets::<Image>::default();

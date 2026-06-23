@@ -133,6 +133,8 @@
         "debug_runs/art_pipeline/mcp_pwr_transformer_batch_live.json",
         "debug_runs/art_pipeline/mcp_pwr_substation_promote_live.json",
         "debug_runs/art_pipeline/mcp_pwr_transformer_promote_live.json",
+        "debug_runs/art_pipeline/mcp_pwr_nuclear_batch_live.json",
+        "debug_runs/art_pipeline/mcp_pwr_nuclear_promote_live.json",
         "debug_runs/art_pipeline/dmcp_nuclear_pwr_spec_live.json",
         "debug_runs/sim_hud_power_icons_live.json"
       ]

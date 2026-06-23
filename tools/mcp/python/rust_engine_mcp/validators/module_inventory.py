@@ -73,5 +73,13 @@ CANONICAL_MODULE_IDS: frozenset[str] = frozenset(
         "warning_sign_1u",
         "kit_substation_yard_production_001",
         "prop_transformer_production_run001",
+        # nuclear PWR kit (kit_nuclear_pwr_production_001)
+        "containment_dome_pwr",
+        "turbine_hall_1u",
+        "cooling_tower_1u",
+        "diesel_gen_pad_2x2",
+        "switchyard_edge_1u",
+        "warning_sign_nuclear_1u",
+        "kit_nuclear_pwr_production_001",
     }
 )

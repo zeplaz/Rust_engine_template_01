@@ -26,10 +26,24 @@ pub fn resolve_minimap_egui_texture(
     // Main sim HUD uses Bevy GPU chrome — egui CPU minimap only for explicit effects opt-in.
     if crate::gui::map_view::minimap_main_display_uses_gpu_compositor(shell) {
         cache.binding_mut(MapViewInstanceId::Minimap).clear();
+        crate::dev::engine_deep_debug::record_minimap_egui_bind(
+            None,
+            0,
+            false,
+            "gpu_compositor_main_path",
+            true,
+        );
         return None;
     }
     if !shell.visible || fallback.sprite_entity.is_none() {
         cache.binding_mut(MapViewInstanceId::Minimap).clear();
+        crate::dev::engine_deep_debug::record_minimap_egui_bind(
+            None,
+            0,
+            false,
+            "hidden_or_no_sprite",
+            false,
+        );
         return None;
     }
 

@@ -1,0 +1,40 @@
+groups:
+  - name: rust_engine_ops
+    rules:
+      - alert: RustEngineCrashAlerts
+        expr: rust_engine_ops_crash_alerts_total > 0
+        for: 1m
+        labels:
+          severity: critical
+          team: operations-intelligence
+        annotations:
+          summary: "DCC/crash alerts detected"
+          description: "rust_engine_ops_crash_alerts_total={{ $value }} — check triage_live.json slip_ups"
+
+      - alert: RustEngineSlipUpSurge
+        expr: rust_engine_ops_slip_ups_total >= 5
+        for: 5m
+        labels:
+          severity: warning
+          team: operations-intelligence
+        annotations:
+          summary: "OPS slip-up surge"
+          description: "{{ $value }} slip-ups in latest scan — review ops_dashboard + triage"
+
+      - alert: RustEngineStaleWitness
+        expr: rust_engine_ops_slip_ups_total >= 1 and rust_engine_engine_process_count == 0
+        for: 30m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Possible data drop — no engine processes and slip-ups present"
+          description: "Run ops_intelligence_scan.ps1 and ops-triage-refresh"
+
+      - alert: RustEngineManyDccProcesses
+        expr: rust_engine_dcc_process_count > 2
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Multiple DCC (Blender) processes"
+          description: "{{ $value }} DCC processes — stale headless bakes?"

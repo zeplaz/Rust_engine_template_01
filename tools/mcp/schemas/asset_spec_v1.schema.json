@@ -52,13 +52,48 @@
             "maxItems": 2
           },
           "count": { "type": "integer", "minimum": 1 },
-          "zone": { "type": "string" }
+          "zone": { "type": "string" },
+          "placement": { "type": "string" },
+          "note": { "type": "string" }
         },
         "required": ["module_id", "grid"]
       }
     },
     "geometry_notes": { "type": "object" },
-    "feeds": { "type": "string" }
+    "feeds": { "type": "string" },
+    "utility_role": { "type": "string" },
+    "power_tier": { "type": "string" },
+    "plant_definition_id": { "type": "string" },
+    "catalog_id_planned": { "type": "string" },
+    "hero_module": {
+      "type": "object",
+      "properties": {
+        "module_id": { "type": "string" },
+        "grid": {
+          "type": "array",
+          "items": { "type": "integer", "minimum": 1 },
+          "minItems": 2,
+          "maxItems": 2
+        }
+      }
+    },
+    "site_zones": {
+      "type": "object",
+      "additionalProperties": { "type": "number" }
+    },
+    "module_whitelist": { "type": "array", "items": { "type": "string" } },
+    "state_read": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "state": { "type": "string" },
+          "visual": { "type": "string" }
+        }
+      }
+    },
+    "spec_only": { "type": "boolean" },
+    "bpy_blocked": { "type": "boolean" }
   },
   "additionalProperties": false
 }

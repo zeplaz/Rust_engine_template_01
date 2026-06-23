@@ -2,14 +2,16 @@
 
 from __future__ import annotations
 
+import json
 import tkinter as tk
+from pathlib import Path
 from tkinter import ttk
 from typing import Any
 
 from rust_engine_mcp import building_grammar, grammar_facility_brief
 
 from .aps_inline_feedback import power_tier_atom
-from .aps_theme import COLOR_MUTED, COLOR_TEXT_SUBTLE, FONT_SMALL, FONT_UI, track_wraplength
+from .aps_theme import COLOR_FAIL, COLOR_MUTED, COLOR_TEXT_SUBTLE, FONT_SMALL, FONT_UI, track_wraplength
 from .state import ArtDomain
 
 _STEP_LABELS: dict[str, str] = {
@@ -64,6 +66,29 @@ def _line2(brief: dict[str, Any]) -> str:
     return "  ·  ".join(parts)
 
 
+def _line4(brief: dict[str, Any], *, tier: str) -> str:
+    derived = brief.get("derived") or {}
+    parts: list[str] = []
+    site = derived.get("site_template_id")
+    if site and tier in ("G2", "G3", "G4"):
+        parts.append(f"site: {site}")
+    axes = derived.get("program_axes")
+    if isinstance(axes, dict) and tier in ("G3", "G4"):
+        level_abbrev = {"low": "low", "medium": "med", "high": "high"}
+        axis_bits = [
+            f"{key} {level_abbrev.get(str(val).lower(), str(val))}" for key, val in sorted(axes.items())
+        ]
+        if axis_bits:
+            parts.append(" · ".join(axis_bits))
+    if not parts:
+        return ""
+    if len(parts) == 1:
+        return parts[0]
+    if parts[0].startswith("site:"):
+        return f"{parts[0]} · {parts[1]}" if len(parts) > 1 else parts[0]
+    return " · ".join(parts)
+
+
 class FacilityNeedsStrip(ttk.Frame):
     """DES-APS-FACILITY-NEEDS-001 — catalog authority only; no invented numbers."""
 
@@ -73,6 +98,8 @@ class FacilityNeedsStrip(ttk.Frame):
         self._line1_var = tk.StringVar(value="")
         self._line2_var = tk.StringVar(value="")
         self._line3_var = tk.StringVar(value="")
+        self._line4_var = tk.StringVar(value="")
+        self._error_var = tk.StringVar(value="")
         self._line1 = ttk.Label(self, textvariable=self._line1_var, font=FONT_UI, wraplength=880)
         self._line2 = ttk.Label(
             self, textvariable=self._line2_var, font=FONT_SMALL, foreground=COLOR_TEXT_SUBTLE, wraplength=880
@@ -80,6 +107,10 @@ class FacilityNeedsStrip(ttk.Frame):
         self._line3 = ttk.Label(
             self, textvariable=self._line3_var, font=FONT_SMALL, foreground=COLOR_MUTED, wraplength=880
         )
+        self._line4 = ttk.Label(
+            self, textvariable=self._line4_var, font=FONT_SMALL, foreground=COLOR_MUTED, wraplength=880
+        )
+        self._error = ttk.Label(self, textvariable=self._error_var, font=FONT_SMALL, foreground=COLOR_FAIL, wraplength=880)
         self._empty_var = tk.StringVar(value="○ Visual-only grammar — no process binding")
         self._empty = ttk.Label(
             self, textvariable=self._empty_var, font=FONT_SMALL, foreground=COLOR_MUTED, wraplength=880
@@ -87,13 +118,15 @@ class FacilityNeedsStrip(ttk.Frame):
         track_wraplength(self, self._line1, minimum=480)
         track_wraplength(self, self._line2, minimum=480)
         track_wraplength(self, self._line3, minimum=480)
+        track_wraplength(self, self._line4, minimum=480)
+        track_wraplength(self, self._error, minimum=480)
         track_wraplength(self, self._empty, minimum=480)
 
     def set_grammar_tier(self, tier: str) -> None:
         self._tier = str(tier or "G0").upper()
 
     def refresh(self, *, archetype_id: str | None, lane: str) -> None:
-        for child in (self._line1, self._line2, self._line3, self._empty):
+        for child in (self._line1, self._line2, self._line3, self._line4, self._error, self._empty):
             child.pack_forget()
         if lane == ArtDomain.LANDSCAPE.value:
             return
@@ -110,15 +143,64 @@ class FacilityNeedsStrip(ttk.Frame):
         if not brief or not brief.get("facility_binding"):
             self._empty.pack(anchor=tk.W)
             return
-        self._line1_var.set(_line1(brief))
+        errors = list(brief.get("errors") or [])
+        derived = brief.get("derived") or {}
         tier = self._tier
-        if tier in ("G1", "G2", "G3", "G4"):
+        if errors:
+            self._error_var.set(f"✗ {errors[0]}")
+            self._error.pack(anchor=tk.W)
+            return
+        if derived.get("power_tier_binding_match") is False and derived.get("power_tier_from_catalog"):
+            self._error_var.set(
+                f"◐ Tier drift — update grammar power_tier to {derived.get('power_tier_from_catalog')}"
+            )
+            self._error.pack(anchor=tk.W)
+            return
+        if not brief.get("catalog"):
+            catalog_id = (brief.get("facility_binding") or {}).get("catalog_id") or "?"
+            self._error_var.set(f"✗ Catalog missing — {catalog_id}")
+            self._error.pack(anchor=tk.W)
+            return
+        self._line1_var.set(_line1(brief))
+        if tier in ("G0", "G1", "G2", "G3", "G4"):
             self._line1.pack(anchor=tk.W)
+        if tier in ("G1", "G2", "G3", "G4"):
             self._line2_var.set(_line2(brief))
             self._line2.pack(anchor=tk.W)
-        elif tier == "G0":
-            self._line1.pack(anchor=tk.W)
         if tier in ("G2", "G3", "G4"):
             catalog = (brief.get("catalog") or {}).get("catalog_id") or ""
             self._line3_var.set(f"catalog: {catalog}.json")
             self._line3.pack(anchor=tk.W)
+        line4 = _line4(brief, tier=tier)
+        if line4 and tier in ("G2", "G3", "G4"):
+            self._line4_var.set(line4)
+            self._line4.pack(anchor=tk.W)
+
+
+def refresh_facility_needs_witness(*, repo: Path | None = None) -> dict[str, Any]:
+    """CMCP-FACILITY-NEEDS-PANEL-001 witness — line 4 + error rows wired."""
+    from rust_engine_mcp.paths import repo_root as root_fn
+
+    root = repo or root_fn()
+    body_brief = grammar_facility_brief.grammar_facility_brief(grammar_id="factory_cluster_v1")
+    brief = body_brief.get("brief") or {}
+    line4_ok = "site:" in _line4(brief, tier="G3")
+    tk_root = tk.Tk()
+    tk_root.withdraw()
+    strip = FacilityNeedsStrip(tk_root)
+    strip.set_grammar_tier("G3")
+    strip.refresh(archetype_id="FactoryCluster", lane="buildings")
+    line4_ui = strip._line4_var.get()  # noqa: SLF001
+    tk_root.destroy()
+    green = line4_ok and bool(line4_ui) and "concrete_mixer" in line4_ui
+    body: dict[str, Any] = {
+        "task_id": "CMCP-FACILITY-NEEDS-PANEL-001",
+        "green": green,
+        "line4_sample": line4_ui,
+        "brief_green": brief.get("green"),
+    }
+    out = root / "debug_runs" / "art_pipeline" / "facility_needs_panel_live.json"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps(body, indent=2) + "\n", encoding="utf-8")
+    body["written"] = "debug_runs/art_pipeline/facility_needs_panel_live.json"
+    return body

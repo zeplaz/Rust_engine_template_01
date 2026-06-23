@@ -1,0 +1,12 @@
+# HELP rust_engine_ops_crash_alerts_total Crash/DCC alert count this scan
+# TYPE rust_engine_ops_crash_alerts_total gauge
+rust_engine_ops_crash_alerts_total 0
+# HELP rust_engine_ops_slip_ups_total Slip-ups this scan
+# TYPE rust_engine_ops_slip_ups_total gauge
+rust_engine_ops_slip_ups_total 0
+# HELP rust_engine_dcc_process_count Live DCC processes
+# TYPE rust_engine_dcc_process_count gauge
+rust_engine_dcc_process_count 0
+# HELP rust_engine_engine_process_count Live engine-related processes
+# TYPE rust_engine_engine_process_count gauge
+rust_engine_engine_process_count 4

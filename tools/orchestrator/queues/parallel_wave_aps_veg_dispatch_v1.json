@@ -38,7 +38,7 @@
     "designer-mcp": "ALL ROWS CLOSED — witness dmcp_veg_wave_tail_reconcile_live.json (14/14)",
     "designer": "Filter owner=designer wave=0 \u00b7 start DES-APS-E1-IA-OPTION-D-001",
     "coder_a": "Filter owner=coder_a wave=0 \u00b7 wave-0 veg harden CLOSED 2026-06-17 \u00b7 coder_a_parallel_wave_live.json",
-    "coder_b": "Filter owner=coder_b \u00b7 wave-0 + P3 infra polish CLOSED 2026-06-17",
+    "coder_b": "Filter owner=coder_b \u00b7 wave-0 + P3 infra polish CLOSED 2026-06-17"
   },
   "drain": [
     {
@@ -446,7 +446,7 @@
       "deliverable": "src/dev/plan_veg_runtime_proof_001_v1.md",
       "signed": "2026-06-17",
       "note": "Plan closed — witness WIT-HON → CDR-A-WIT-HON-ROLLUP-001",
-      "witness_reopen": "debug_runs/veg_runtime_proof_live.json",
+      "witness_reopen": "debug_runs/veg_runtime_proof_live.json"
     },
     {
       "wave": 0,
@@ -1162,7 +1162,7 @@
       "program": "BUILD",
       "goal": "Grammar diversity witness refresh \u2014 >=3 massing picks per DNA family",
       "witness": "debug_runs/grammar_diversity_witness.json",
-      "completed": "2026-06-17",
+      "completed": "2026-06-17"
     },
     {
       "wave": 0,
@@ -1185,7 +1185,7 @@
       "program": "IND",
       "goal": "Industrial activation play witness ind_e02_green stable on default scenario",
       "witness": "debug_runs/ind_play_witness_live.json",
-      "completed": "2026-06-17",
+      "completed": "2026-06-17"
     },
     {
       "wave": 0,

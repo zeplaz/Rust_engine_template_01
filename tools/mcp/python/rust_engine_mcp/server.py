@@ -666,6 +666,58 @@ def ops_get_active_blockers() -> str:
 
 
 @mcp.tool()
+def ops_dashboard_snapshot(window_hours: int = 168, write_witness: bool = False) -> str:
+    """OPS oversight dashboard — processes, drift, run_events slip-ups (compressed JSON)."""
+    from rust_engine_mcp.ops_telemetry import build_ops_dashboard, write_ops_dashboard_witness
+
+    if write_witness:
+        return json.dumps(write_ops_dashboard_witness(window_hours=max(1, min(720, window_hours))))
+    return json.dumps(build_ops_dashboard(window_hours=max(1, min(720, window_hours))))
+
+
+@mcp.tool()
+def ops_process_scan_tool() -> str:
+    """Scan OS for engine-related processes (python, blender, cargo, bevy)."""
+    from rust_engine_mcp.ops_telemetry import scan_processes
+
+    return json.dumps(scan_processes())
+
+
+@mcp.tool()
+def ops_drift_scan_tool() -> str:
+    """Drift / dishonesty instances from witnesses and unified index."""
+    from rust_engine_mcp.ops_telemetry import scan_drift_instances
+
+    return json.dumps(scan_drift_instances())
+
+
+@mcp.tool()
+def ops_run_events_rollup_tool(window_hours: int = 168) -> str:
+    """Roll up run_events.jsonl — FTR/RTR proxies and repeat-slice slip-ups."""
+    from rust_engine_mcp.ops_telemetry import scan_run_events
+
+    return json.dumps(scan_run_events(window_hours=max(1, min(720, window_hours))))
+
+
+@mcp.tool()
+def ops_crash_scan_tool(record_events: bool = True) -> str:
+    """DCC/process crash scan + preview job failures + data-drop detection."""
+    from rust_engine_mcp.ops_crash_exporter import run_crash_scan, write_prometheus_metrics
+
+    body = run_crash_scan(record_events=record_events)
+    body["prometheus_written"] = write_prometheus_metrics(body)
+    return json.dumps(body)
+
+
+@mcp.tool()
+def ops_triage_refresh_tool(window_hours: int = 168) -> str:
+    """Triage dashboard witness — blockers + crash + ops slip-ups + Prometheus export."""
+    from rust_engine_mcp.ops_crash_exporter import write_triage_witness
+
+    return json.dumps(write_triage_witness(window_hours=max(1, min(720, window_hours))))
+
+
+@mcp.tool()
 def landscape_grammar_presets_witness() -> str:
     """MCP-LG-VALID-PRESET-001 — batch validate ship presets + refresh witnesses."""
     from rust_engine_mcp import landscape_grammar_presets

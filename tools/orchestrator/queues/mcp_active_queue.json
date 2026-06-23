@@ -51,7 +51,7 @@
       "week": 1,
       "agent": "planner-mcp",
       "priority": "P0",
-      "status": "reopened",
+      "status": "done",
       "goal": "SIGN sim product validators plan \u2014 Tier 1e Phases 1\u20133 authorized",
       "plan_deliverable": "docs/archive/2026-06-src-dev/plans/plan_mcp_sim_product_validators_v1.md",
       "depends_on": [],
@@ -63,14 +63,17 @@
       "signed": "2026-06-17",
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 stub_marker:stub",
       "witness": "docs/archive/2026-06-src-dev/plans/plan_mcp_sim_product_validators_v1.md",
-      "updated_at": "2026-06-20T21:19:25Z"
+      "updated_at": "2026-06-20T21:19:25Z",
+      "witness_refresh": "2026-06-21T03:54:01Z",
+      "completed": "2026-06-21",
+      "reconcile_note": "witness-green auto-close (reconcile_coder_crisis.py)"
     },
     {
       "id": "MCP-P2-QUEUE-PHASE4-001",
       "week": 1,
       "agent": "coder-mcp",
       "priority": "P1",
-      "status": "reopened",
+      "status": "done",
       "depends_on": [
         "MCP-P2-SIM-VALIDATORS-PLAN-001"
       ],
@@ -84,14 +87,17 @@
         "python -m rust_engine_mcp.cli mcp-phase4-queue-witness"
       ],
       "updated_at": "2026-06-20T21:19:25Z",
-      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 stub_marker:stub"
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 stub_marker:stub",
+      "witness_refresh": "2026-06-21T03:54:01Z",
+      "completed": "2026-06-21",
+      "reconcile_note": "witness-green auto-close (reconcile_coder_crisis.py)"
     },
     {
       "id": "MCP-P2-VALID-CONSTRUCTION-001",
       "week": 1,
       "agent": "coder-mcp",
       "priority": "P1",
-      "status": "reopened",
+      "status": "done",
       "depends_on": [
         "MCP-P2-SIM-VALIDATORS-PLAN-001"
       ],
@@ -105,14 +111,17 @@
         "python -m rust_engine_mcp.cli validate-report construction debug_runs/construction_placement_live.json"
       ],
       "updated_at": "2026-06-20T21:19:25Z",
-      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 stub_marker:stub"
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 stub_marker:stub",
+      "witness_refresh": "2026-06-21T03:54:01Z",
+      "completed": "2026-06-21",
+      "reconcile_note": "witness-green auto-close (reconcile_coder_crisis.py)"
     },
     {
       "id": "MCP-P2-OPS-BRIEF-002",
       "week": 2,
       "agent": "coder-mcp",
       "priority": "P2",
-      "status": "reopened",
+      "status": "done",
       "depends_on": [
         "MCP-P2-QUEUE-PHASE4-001"
       ],
@@ -127,14 +136,17 @@
         "python -m rust_engine_mcp.cli ops-mcp-function-layer-witness"
       ],
       "updated_at": "2026-06-20T21:19:25Z",
-      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 missing_exit_predicate"
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 missing_exit_predicate",
+      "witness_refresh": "2026-06-21T03:54:01Z",
+      "completed": "2026-06-21",
+      "reconcile_note": "witness-green auto-close (reconcile_coder_crisis.py)"
     },
     {
       "id": "MCP-LANDSCAPE-GRAMMAR-SIGN-001",
       "week": 1,
       "agent": "planner-mcp",
       "priority": "P0",
-      "status": "reopened",
+      "status": "done",
       "goal": "SIGN landscape_grammar_v0 schema + preset validator CI",
       "plan_deliverable": "src/dev/plan_landscape_grammar_mcp_sign_delegate_v1.md",
       "depends_on": [],
@@ -145,14 +157,17 @@
       "signed": "2026-06-14",
       "witness": "debug_runs/mcp_landscape_grammar_sign_live.json",
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 missing_exit_predicate",
-      "updated_at": "2026-06-20T21:19:24Z"
+      "updated_at": "2026-06-20T21:19:24Z",
+      "witness_refresh": "2026-06-21T03:54:01Z",
+      "completed": "2026-06-21",
+      "reconcile_note": "witness-green auto-close (reconcile_coder_crisis.py)"
     },
     {
       "id": "MCP-LG-VALID-PRESET-001",
       "week": 1,
       "agent": "coder-mcp",
       "priority": "P2",
-      "status": "reopened",
+      "status": "done",
       "depends_on": [
         "MCP-LANDSCAPE-GRAMMAR-SIGN-001"
       ],
@@ -166,14 +181,17 @@
         "python -m rust_engine_mcp.cli landscape-grammar-presets-witness"
       ],
       "updated_at": "2026-06-20T21:19:24Z",
-      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 missing_exit_predicate"
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 missing_exit_predicate",
+      "witness_refresh": "2026-06-21T03:54:01Z",
+      "completed": "2026-06-21",
+      "reconcile_note": "witness-green auto-close (reconcile_coder_crisis.py)"
     },
     {
       "id": "VEG-F02-MCP-ATLAS-001",
       "week": 1,
       "agent": "coder-mcp",
       "priority": "P1",
-      "status": "reopened",
+      "status": "done",
       "depends_on": [
         "MCP-LANDSCAPE-GRAMMAR-SIGN-001",
         "MCP-LG-VALID-PRESET-001"
@@ -185,14 +203,17 @@
         "python -m rust_engine_mcp.cli landscape-sign-atlas-witness"
       ],
       "updated_at": "2026-06-20T21:19:26Z",
-      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 contradiction"
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 contradiction",
+      "witness_refresh": "2026-06-21T03:54:01Z",
+      "completed": "2026-06-21",
+      "reconcile_note": "witness-green auto-close (reconcile_coder_crisis.py)"
     },
     {
       "id": "MCP-P2-KIT002-PLAN",
       "week": 1,
       "agent": "planner-mcp",
       "priority": "P0",
-      "status": "reopened",
+      "status": "done",
       "goal": "Unfreeze criteria + batch_kit_production_002 manifest sketch",
       "plan_deliverable": "docs/archive/2026-06-src-dev/plans/mcp_kit_production_002_unfreeze_v1.md",
       "manifest": "tools/mcp/schemas/examples/batch_kit_production_002.manifest.json",
@@ -203,14 +224,17 @@
       "signed": "2026-06-14",
       "witness": "debug_runs/mcp_kit002_arch002_sign_live.json",
       "updated_at": "2026-06-20T21:19:25Z",
-      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 missing_exit_predicate"
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 missing_exit_predicate",
+      "witness_refresh": "2026-06-21T03:54:01Z",
+      "completed": "2026-06-21",
+      "reconcile_note": "witness-green auto-close (reconcile_coder_crisis.py)"
     },
     {
       "id": "MCP-P2-RUN-EVENT-001",
       "week": 1,
       "agent": "coder-mcp",
       "priority": "P1",
-      "status": "reopened",
+      "status": "done",
       "goal": "agent_run_append MCP wrapper \u2014 OPS Phase 1 telemetry",
       "docs": [
         "src/dev/plan_agent_operations_intelligence_v1.md",
@@ -219,14 +243,17 @@
       "witness": "debug_runs/mcp_p2_run_event_001_live.json",
       "depends_on": [],
       "updated_at": "2026-06-20T21:19:25Z",
-      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 missing_exit_predicate"
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 missing_exit_predicate",
+      "witness_refresh": "2026-06-21T03:54:01Z",
+      "completed": "2026-06-21",
+      "reconcile_note": "witness-green auto-close (reconcile_coder_crisis.py)"
     },
     {
       "id": "MCP-P2-HONEST-BAKE-001",
       "week": 1,
       "agent": "coder-mcp",
       "priority": "P2",
-      "status": "reopened",
+      "status": "done",
       "goal": "tile_promotion_honest_check \u2014 reject headless-as-ship before G4",
       "depends_on": [
         "MCP-P2-RUN-EVENT-001"
@@ -236,14 +263,17 @@
       ],
       "witness": "debug_runs/mcp_p2_honest_bake_001_live.json",
       "updated_at": "2026-06-20T21:19:24Z",
-      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 missing_exit_predicate"
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 missing_exit_predicate",
+      "witness_refresh": "2026-06-21T03:54:01Z",
+      "completed": "2026-06-21",
+      "reconcile_note": "witness-green auto-close (reconcile_coder_crisis.py)"
     },
     {
       "id": "ARCH-002",
       "week": 2,
       "agent": "planner-mcp",
       "priority": "P1",
-      "status": "reopened",
+      "status": "done",
       "goal": "Formal Variant Graph JSON schema variant_graph_v1.schema.json",
       "plan_deliverable": "tools/mcp/schemas/variant_graph_v1.schema.json",
       "plan_doc": "src/dev/arch_variant_graph_002_v1.md",
@@ -257,7 +287,10 @@
       "signed": "2026-06-14",
       "witness": "debug_runs/mcp_kit002_arch002_sign_live.json",
       "updated_at": "2026-06-20T21:19:24Z",
-      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 missing_exit_predicate"
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 missing_exit_predicate",
+      "witness_refresh": "2026-06-21T03:54:01Z",
+      "completed": "2026-06-21",
+      "reconcile_note": "witness-green auto-close (reconcile_coder_crisis.py)"
     }
   ],
   "tasks": [

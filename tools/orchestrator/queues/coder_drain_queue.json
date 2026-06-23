@@ -63,7 +63,7 @@
       "seq": 1,
       "wave": 1,
       "id": "SIM-EFFECT-QUEUE-001",
-      "status": "reopened",
+      "status": "done",
       "priority": "P0",
       "owner": "coder_a",
       "territory": "src/sim/effects/",
@@ -80,13 +80,15 @@
       "handoff_line": "Implement src/sim/effects/ per plan P0; hydro dedupe pattern; drain after AdvanceSimTick",
       "completed": "2026-06-11",
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 stub_marker:stub",
-      "updated_at": "2026-06-20T21:19:25Z"
+      "updated_at": "2026-06-20T21:19:25Z",
+      "witness_refresh": "2026-06-21T02:54:33Z",
+      "reconcile_note": "witness-green auto-close (reconcile_coder_crisis.py)"
     },
     {
       "seq": 2,
       "wave": 1,
       "id": "SIM-EFFECT-TEL-001",
-      "status": "reopened",
+      "status": "done",
       "priority": "P0",
       "owner": "coder_a",
       "depends_on": [
@@ -105,7 +107,9 @@
       "handoff_line": "P1 telemetry JSONL; same witness rollup; no PG",
       "completed": "2026-06-11",
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 stub_marker:stub",
-      "updated_at": "2026-06-20T21:19:25Z"
+      "updated_at": "2026-06-20T21:19:25Z",
+      "witness_refresh": "2026-06-21T02:54:33Z",
+      "reconcile_note": "witness-green auto-close (reconcile_coder_crisis.py)"
     },
     {
       "seq": 3,
@@ -151,7 +155,7 @@
       "seq": 5,
       "wave": 3,
       "id": "FIRE-IGNITION-P0-001",
-      "status": "reopened",
+      "status": "done",
       "priority": "P1",
       "owner": "coder_a",
       "depends_on": [
@@ -170,7 +174,9 @@
       ],
       "completed": "2026-06-11",
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 stub_marker:stub",
-      "updated_at": "2026-06-20T21:19:24Z"
+      "updated_at": "2026-06-20T21:19:24Z",
+      "witness_refresh": "2026-06-21T02:54:33Z",
+      "reconcile_note": "witness-green auto-close (reconcile_coder_crisis.py)"
     },
     {
       "seq": 6,
@@ -194,7 +200,7 @@
       "seq": 7,
       "wave": 4,
       "id": "TRIAGE-MAP-ZOOM-SMOOTH-001",
-      "status": "reopened",
+      "status": "done",
       "priority": "P1",
       "owner": "coder_a",
       "depends_on": [
@@ -207,7 +213,9 @@
       "witness": "debug_runs/map_zoom_coherence_live.json",
       "completed": "2026-06-11",
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 stub_marker:todo",
-      "updated_at": "2026-06-20T21:19:25Z"
+      "updated_at": "2026-06-20T21:19:25Z",
+      "witness_refresh": "2026-06-21T02:54:33Z",
+      "reconcile_note": "witness-green auto-close (reconcile_coder_crisis.py)"
     },
     {
       "seq": 8,

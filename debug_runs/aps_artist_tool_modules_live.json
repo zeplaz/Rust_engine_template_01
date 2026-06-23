@@ -9,11 +9,14 @@
     "aps_onboarding_panel.py",
     "aps_paned.py",
     "aps_preview_state.py",
+    "aps_preview_variant_state.py",
+    "aps_reaction_context.py",
     "aps_scroll.py",
     "aps_theme.py",
     "aps_tk.py",
     "aps_tooltips.py",
     "aps_workflow_layout.py",
+    "assembly_onboard_strip.py",
     "assembly_panel.py",
     "assembly_preview_panel.py",
     "atlas_panel.py",
@@ -42,13 +45,15 @@
     "pipeline_status_bar.py",
     "run.py",
     "scrollable.py",
+    "site_preview_panel.py",
     "slot_preview_panel.py",
     "slot_preview_render.py",
     "state.py",
     "status_log_panel.py",
-    "variants_panel.py"
+    "variants_panel.py",
+    "variants_preview_panel.py"
   ],
-  "module_count": 45,
+  "module_count": 50,
   "pytest": {
     "ok": true,
     "summary": "1 passed",
@@ -87,7 +92,7 @@
     "profile": "APS_WITNESS_REFRESH",
     "relative_path": "debug_runs/aps_artist_tool_modules_live.json",
     "source_system": "aps_witness_refresh",
-    "written_at_epoch_secs": 1781800424
+    "written_at_epoch_secs": 1782012878
   },
   "witness_honesty": {
     "status": "skipped",

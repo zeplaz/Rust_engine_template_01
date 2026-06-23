@@ -1,0 +1,35 @@
+{
+  "gate": "APS-P0-VARIANTS-SESSIONS-001",
+  "green": true,
+  "session_variant_keys": [
+    "clean_day",
+    "clean_night_on",
+    "damaged_day",
+    "burning_00",
+    "heritage_site_destruction__damaged_day__97197c18",
+    "heritage_site_destruction__burning_00__97197c18",
+    "heritage_site_destruction__clean_day__97197c18",
+    "language_ban__clean_night_off__0f4024c5",
+    "transparent_bilingual_service_continuation__clean_night_on__4f38710c"
+  ],
+  "session_count": 9,
+  "minimum_keys": [
+    "clean_day",
+    "clean_night_on",
+    "damaged_day",
+    "burning_00"
+  ],
+  "reaction_pack_included": true,
+  "reaction_catalog": true,
+  "variants_preview_panel": true,
+  "variants_panel_wired": true,
+  "default_matrix": "debug_runs/art_pipeline/variant_matrix_warehouse_v1.yaml",
+  "default_matrix_exists": true,
+  "_agent_meta": {
+    "schema": "variants_sessions_live_v1",
+    "written_at_epoch_secs": 1782015974,
+    "profile": "APS_VARIANTS_SESSIONS",
+    "source_system": "variants_sessions",
+    "relative_path": "debug_runs/art_pipeline/variants_sessions_live.json"
+  }
+}

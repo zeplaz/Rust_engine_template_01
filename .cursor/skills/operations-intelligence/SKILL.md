@@ -40,11 +40,18 @@ node .claude/skills/agent-lang/driver.mjs orchestrator-brief
 ```
 `ops-get-project-brief` ▷⊳ `{quality_score, utility_score, auth_spine, known_failures, top_failures_ranked[severity]}` — ready-made DSM + risk surface.
 
-Deeper scan (PowerShell) ▷⊳ `debug_runs/agent_ops/ops_report_latest.json`:
+Deeper scan (PowerShell) ▷⊳ `debug_runs/agent_ops/ops_report_latest.json` **+** `ops_dashboard_live.json`:
 
 ```powershell
 powershell -File tools/orchestrator/scripts/ops_intelligence_scan.ps1
+powershell -File tools/orchestrator/scripts/ops_dashboard_refresh.ps1
 ```
+
+MCP: `ops_dashboard_snapshot` · `ops_process_scan_tool` · `ops_drift_scan_tool` · `ops_run_events_rollup_tool` · `ops_crash_scan_tool` · `ops_triage_refresh_tool`  
+Viewers: `ops_dashboard.html` · Grafana `grafana_ops_overview.json` · **triage** `grafana_triage_overview.json`  
+Daemon: `tools/orchestrator/scripts/ops_crash_daemon.ps1` (Python loop, not cron)  
+Prometheus: `debug_runs/agent_ops/prometheus/rust_engine_ops.prom` + `prometheus_alert_rules.yml`  
+Doc: `src/dev/ops_dashboard_oversight_v1.md` · `src/dev/ops_triage_crash_monitor_v1.md`
 
 **Intel officer sweep** (false-green / stub-done cull):
 

@@ -6,7 +6,8 @@
     "dispatch_rollup": "multi_parallel_tracks_dispatch_v1.json",
     "plan_doc": "src/dev/plan_multi_parallel_tracks_v1.md",
     "prompts": "src/dev/multi_parallel_agent_prompts_v1.md",
-    "rule": "Home queue for multi-parallel rows \u2014 dual Q\u2713 with dispatch rollup"
+    "rule": "Home queue for multi-parallel rows \u2014 dual Q\u2713 with dispatch rollup",
+    "last_dispatch_subqueue_sync": "2026-06-21T08:59:10Z"
   },
   "drain": [
     {
@@ -15,7 +16,9 @@
       "wave": 0,
       "seq": 1,
       "id": "DES-APS-INTERACTION-001",
-      "status": "blocked",
+      "status": "done",
+      "witness": "src/dev/design_aps_interaction_v1.md",
+      "exit_predicate": "design_aps_interaction_v1.md verdict PASS",
       "completed": "2026-06-20",
       "priority": "P0",
       "owner": "designer",
@@ -27,8 +30,7 @@
         "*"
       ],
       "program": "multi_parallel_tracks",
-      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
-      "updated_at": "2026-06-20T21:19:24Z"
+      "updated_at": "2026-06-02T12:00:00Z"
     },
     {
       "track": "T1",
@@ -36,7 +38,9 @@
       "wave": 0,
       "seq": 2,
       "id": "DES-APS-ONBOARD-SPEC-002",
-      "status": "blocked",
+      "status": "done",
+      "witness": "src/dev/design_aps_onboard_spec_v2.md",
+      "exit_predicate": "design_aps_onboard_spec_v2.md verdict PASS",
       "completed": "2026-06-20",
       "priority": "P0",
       "owner": "designer",
@@ -59,7 +63,9 @@
       "wave": 0,
       "seq": 3,
       "id": "DES-APS-PREVIEW-LADDER-001",
-      "status": "blocked",
+      "status": "done",
+      "witness": "src/dev/design_aps_preview_ladder_v1.md",
+      "exit_predicate": "design_aps_preview_ladder_v1.md verdict PASS",
       "completed": "2026-06-20",
       "priority": "P1",
       "owner": "designer",
@@ -79,7 +85,9 @@
       "wave": 0,
       "seq": 4,
       "id": "DES-APS-MANUAL-FALLBACK-001",
-      "status": "blocked",
+      "status": "done",
+      "witness": "src/dev/design_aps_manual_fallback_v1.md",
+      "exit_predicate": "design_aps_manual_fallback_v1.md verdict PASS",
       "completed": "2026-06-20",
       "priority": "P1",
       "owner": "designer",
@@ -131,7 +139,9 @@
       "wave": 1,
       "seq": 6,
       "id": "DES-APS-OPERATOR-RUBRIC-002",
-      "status": "blocked",
+      "status": "done",
+      "witness": "src/dev/design_aps_operator_rubric_v2.md",
+      "exit_predicate": "design_aps_operator_rubric_v2.md verdict PASS",
       "completed": "2026-06-20",
       "priority": "P1",
       "owner": "designer",
@@ -290,7 +300,7 @@
       "wave": 0,
       "seq": 4,
       "id": "CMCP-GRAM-SWEEP-PROCESS-001",
-      "status": "reopened",
+      "status": "done",
       "witness": "debug_runs/grammar_eval_sweep_live.json",
       "priority": "P1",
       "owner": "coder-mcp",
@@ -301,7 +311,9 @@
       ],
       "program": "multi_parallel_tracks",
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness file on disk",
-      "updated_at": "2026-06-20T21:19:24Z"
+      "updated_at": "2026-06-20T21:19:24Z",
+      "completed": "2026-06-21",
+      "witness_refresh": "2026-06-21T01:11:35Z"
     },
     {
       "track": "T2",
@@ -443,7 +455,7 @@
       "wave": 0,
       "seq": 4,
       "id": "CDR-B-VEG-MINIMAP-LEGEND-UI-001",
-      "status": "reopened",
+      "status": "done",
       "priority": "P1",
       "owner": "coder_b",
       "goal": "Minimap veg topology legend UI wired",
@@ -457,7 +469,9 @@
       ],
       "program": "multi_parallel_tracks",
       "note": "INTEL-OFFICER-001 ops-intel supervised cull 2026-06-20 \u00b7 witness_honesty",
-      "updated_at": "2026-06-20T21:18:19.568528+00:00"
+      "updated_at": "2026-06-20T21:18:19.568528+00:00",
+      "completed": "2026-06-21",
+      "witness_refresh": "2026-06-21T01:11:35Z"
     },
     {
       "track": "T3",
@@ -465,7 +479,7 @@
       "wave": 1,
       "seq": 5,
       "id": "VEG-F01-ATLAS-SHIP-001",
-      "status": "reopened",
+      "status": "done",
       "witness": "debug_runs/veg_resolver_parity_live.json",
       "priority": "P1",
       "owner": "coder_a",
@@ -479,7 +493,9 @@
       ],
       "program": "multi_parallel_tracks",
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness file on disk",
-      "updated_at": "2026-06-20T21:19:26Z"
+      "updated_at": "2026-06-20T21:19:26Z",
+      "completed": "2026-06-21",
+      "witness_refresh": "2026-06-21T01:11:35Z"
     },
     {
       "track": "T3",
@@ -611,7 +627,7 @@
       "wave": 1,
       "seq": 4,
       "id": "SIM-STEWARD-FIRE-REGRESS-001",
-      "status": "reopened",
+      "status": "done",
       "witness": "debug_runs/fire_ecology_live.json",
       "priority": "P2",
       "owner": "sim-steward",
@@ -628,7 +644,9 @@
       "home_queue": "multi_parallel_home_queues_v1.json",
       "program": "multi_parallel_tracks",
       "note": "INTEL-OFFICER-001 ops-intel supervised cull 2026-06-20 \u00b7 contradiction",
-      "updated_at": "2026-06-20T21:18:19.561168+00:00"
+      "updated_at": "2026-06-20T21:18:19.561168+00:00",
+      "completed": "2026-06-21",
+      "witness_refresh": "2026-06-21T01:11:35Z"
     },
     {
       "track": "T4",
@@ -747,7 +765,9 @@
       "wave": 1,
       "seq": 5,
       "id": "DES-SIM-HUD-OPS-002",
-      "status": "blocked",
+      "status": "done",
+      "witness": "src/dev/design_sim_hud_ops_v2.md",
+      "exit_predicate": "design_sim_hud_ops_v2.md verdict PASS",
       "completed": "2026-06-20",
       "priority": "P1",
       "owner": "designer",
@@ -826,8 +846,8 @@
       "wave": 1,
       "seq": 1,
       "id": "DES-POWER-NODE-HOVER-001",
-      "status": "reopened",
-      "completed": "2026-06-20",
+      "status": "done",
+      "completed": "2026-06-21",
       "priority": "P1",
       "owner": "designer",
       "goal": "Transformer/substation hover cards",
@@ -837,7 +857,8 @@
       ],
       "program": "multi_parallel_tracks",
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 missing_exit_predicate",
-      "updated_at": "2026-06-20T21:19:24Z"
+      "updated_at": "2026-06-20T21:19:24Z",
+      "witness_refresh": "2026-06-21T01:11:35Z"
     },
     {
       "track": "T6",
@@ -845,8 +866,8 @@
       "wave": 1,
       "seq": 2,
       "id": "COD-POWER-OVERLAY-RENDER-001",
-      "status": "reopened",
-      "completed": "2026-06-20",
+      "status": "done",
+      "completed": "2026-06-21",
       "priority": "P1",
       "owner": "coder_b",
       "goal": "Compositor strokes by VoltageClass + state",
@@ -856,7 +877,8 @@
       ],
       "program": "multi_parallel_tracks",
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 missing_exit_predicate",
-      "updated_at": "2026-06-20T21:19:24Z"
+      "updated_at": "2026-06-20T21:19:24Z",
+      "witness_refresh": "2026-06-21T01:11:35Z"
     },
     {
       "track": "T6",
@@ -864,8 +886,8 @@
       "wave": 1,
       "seq": 3,
       "id": "COD-POWER-ISLAND-HIGHLIGHT-001",
-      "status": "reopened",
-      "completed": "2026-06-20",
+      "status": "done",
+      "completed": "2026-06-21",
       "priority": "P1",
       "owner": "coder",
       "goal": "Island boundary + dim unpowered",
@@ -875,7 +897,8 @@
       ],
       "program": "multi_parallel_tracks",
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 missing_exit_predicate",
-      "updated_at": "2026-06-20T21:19:24Z"
+      "updated_at": "2026-06-20T21:19:24Z",
+      "witness_refresh": "2026-06-21T01:11:35Z"
     },
     {
       "track": "T6",
@@ -883,8 +906,8 @@
       "wave": 2,
       "seq": 4,
       "id": "COD-POWER-DAMAGE-SEGMENT-001",
-      "status": "reopened",
-      "completed": "2026-06-20",
+      "status": "done",
+      "completed": "2026-06-21",
       "priority": "P2",
       "owner": "coder",
       "goal": "Segment HP + cut \u2192 graph split",
@@ -894,7 +917,8 @@
       ],
       "program": "multi_parallel_tracks",
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 missing_exit_predicate",
-      "updated_at": "2026-06-20T21:19:24Z"
+      "updated_at": "2026-06-20T21:19:24Z",
+      "witness_refresh": "2026-06-21T01:11:35Z"
     },
     {
       "track": "T6",
@@ -902,8 +926,8 @@
       "wave": 2,
       "seq": 5,
       "id": "COD-UTILITY-ACTIVATION-LINK-001",
-      "status": "reopened",
-      "completed": "2026-06-20",
+      "status": "done",
+      "completed": "2026-06-21",
       "priority": "P1",
       "owner": "coder",
       "goal": "Activation reads UtilityConnection",
@@ -913,7 +937,8 @@
       ],
       "program": "multi_parallel_tracks",
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 missing_exit_predicate",
-      "updated_at": "2026-06-20T21:19:24Z"
+      "updated_at": "2026-06-20T21:19:24Z",
+      "witness_refresh": "2026-06-21T01:11:35Z"
     },
     {
       "track": "T6",
@@ -921,8 +946,8 @@
       "wave": 2,
       "seq": 6,
       "id": "COD-POWER-TOOL-RAIL-001",
-      "status": "reopened",
-      "completed": "2026-06-20",
+      "status": "done",
+      "completed": "2026-06-21",
       "priority": "P1",
       "owner": "coder",
       "goal": "Utilities rail \u2192 Lines entry",
@@ -932,7 +957,8 @@
       ],
       "program": "multi_parallel_tracks",
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 missing_exit_predicate",
-      "updated_at": "2026-06-20T21:19:24Z"
+      "updated_at": "2026-06-20T21:19:24Z",
+      "witness_refresh": "2026-06-21T01:11:35Z"
     },
     {
       "track": "T7",
@@ -1071,7 +1097,9 @@
       "wave": 1,
       "seq": 5,
       "id": "VM-11-PREVIEW-AUDIT",
-      "status": "blocked",
+      "status": "done",
+      "witness": "src/dev/design_vm11_preview_audit_v1.md",
+      "exit_predicate": "design_vm11_preview_audit_v1.md verdict PASS",
       "completed": "2026-06-20",
       "deliverable": "src/dev/design_vm11_preview_audit_v1.md",
       "priority": "P2",
