@@ -1,54 +1,17 @@
 {
   "task_id": "MCP-GUARD-001",
   "gate_id": "pilot_hardcode_lint",
-  "ok": false,
-  "green": false,
-  "scanned_files": 1739,
+  "ok": true,
+  "green": true,
+  "scanned_files": 2025,
   "needle_count": 3,
-  "hit_count": 6,
-  "violation_count": 6,
+  "hit_count": 0,
+  "violation_count": 0,
   "transitional_hit_count": 1,
-  "permanent_allowlist_hit_count": 9,
+  "permanent_allowlist_hit_count": 10,
   "transitional_until": "BUILD-SET-GUARD-002",
   "allowlist": "tools/mcp/guard/pilot_hardcode_allowlist_v1.json",
-  "violations": [
-    {
-      "file": "src/construction/building_definitions.rs",
-      "line": 121,
-      "needle": "IndustrialWarehouse",
-      "hint": "hardcoded pilot needle `IndustrialWarehouse` \u2014 use catalog/manifest loaders"
-    },
-    {
-      "file": "src/dev/aps_dna_consumer_live_proof.rs",
-      "line": 14,
-      "needle": "logistics_rail_warehouse_v0",
-      "hint": "hardcoded pilot needle `logistics_rail_warehouse_v0` \u2014 use catalog/manifest loaders"
-    },
-    {
-      "file": "src/dev/phase6_coder_queue_bundle_proof.rs",
-      "line": 91,
-      "needle": "logistics_rail_warehouse_v0",
-      "hint": "hardcoded pilot needle `logistics_rail_warehouse_v0` \u2014 use catalog/manifest loaders"
-    },
-    {
-      "file": "src/gui/map_tile_atlas_stamp.rs",
-      "line": 82,
-      "needle": "logistics_rail_warehouse_v0",
-      "hint": "hardcoded pilot needle `logistics_rail_warehouse_v0` \u2014 use catalog/manifest loaders"
-    },
-    {
-      "file": "src/gui/map_tile_atlas_stamp.rs",
-      "line": 85,
-      "needle": "pilot:logistics_rail_warehouse_v0",
-      "hint": "hardcoded pilot needle `pilot:logistics_rail_warehouse_v0` \u2014 use catalog/manifest loaders"
-    },
-    {
-      "file": "src/construction/procedural/mod.rs",
-      "line": 23,
-      "needle": "logistics_rail_warehouse_v0",
-      "hint": "hardcoded pilot needle `logistics_rail_warehouse_v0` \u2014 use catalog/manifest loaders"
-    }
-  ],
+  "violations": [],
   "transitional_files": [
     "src/construction/procedural/assembly_snapshot.rs"
   ],

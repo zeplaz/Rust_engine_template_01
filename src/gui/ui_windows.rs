@@ -1,5 +1,5 @@
 use bevy::{prelude::*, window::PrimaryWindow};
-use bevy_egui::{egui, EguiContextSettings, EguiContexts};
+use bevy_egui::{egui, EguiContext, EguiContexts};
 
 use crate::gui::InputBindings;
 // will go in gui:
@@ -45,19 +45,19 @@ pub fn update_ui_scale_factor_system(
     keyboard_input: Res<ButtonInput<KeyCode>>,
     bindings: Res<InputBindings>,
     mut toggle_scale_factor: Local<Option<bool>>,
-    mut egui_ctx: Query<&mut EguiContextSettings>,
+    mut egui_ctx: Query<&mut EguiContext>,
     windows: Query<&Window, With<PrimaryWindow>>,
 ) {
     if keyboard_input.just_pressed(bindings.toggle_egui_ui_scale) || toggle_scale_factor.is_none() {
         *toggle_scale_factor = Some(!toggle_scale_factor.unwrap_or(true));
 
-        if let (Ok(window), Ok(mut settings)) = (windows.single(), egui_ctx.single_mut()) {
-            let scale_factor = if toggle_scale_factor.unwrap() {
+        if let (Ok(window), Ok(mut ctx)) = (windows.single(), egui_ctx.single_mut()) {
+            let pixels_per_point = if toggle_scale_factor.unwrap() {
                 1.0
             } else {
                 1.0 / window.scale_factor()
             };
-            settings.scale_factor = scale_factor;
+            ctx.get_mut().set_pixels_per_point(pixels_per_point);
         }
     }
 }

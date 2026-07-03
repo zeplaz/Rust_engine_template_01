@@ -365,6 +365,14 @@ pub fn witness_refresh_due(relative_path: &str, frame: u32) -> bool {
     true
 }
 
+/// Clears the process-global live-witness throttle (lib tests spawn fresh apps at frame 0).
+#[cfg(test)]
+pub fn reset_witness_refresh_gate_for_tests() {
+    if let Ok(mut gate) = witness_system_run_gate().lock() {
+        gate.clear();
+    }
+}
+
 fn agent_index_refresh_gate() -> &'static Mutex<Instant> {
     static GATE: OnceLock<Mutex<Instant>> = OnceLock::new();
     GATE.get_or_init(|| Mutex::new(Instant::now() - AGENT_INDEX_REFRESH_INTERVAL))

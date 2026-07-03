@@ -3,11 +3,10 @@
 use std::borrow::Cow;
 
 use bevy::asset::AssetServer;
-use bevy::core_pipeline::core_2d::{graph::Core2d, CORE_2D_DEPTH_FORMAT};
+use bevy::core_pipeline::{Core2d, core_2d::CORE_2D_DEPTH_FORMAT};
 use bevy::prelude::*;
 use bevy::render::{
     camera::ExtractedCamera,
-    render_graph::{self, RenderGraph, RenderLabel, ViewNode, ViewNodeRunner},
     render_resource::{
         binding_types::{sampler, texture_2d, uniform_buffer},
         BindGroup, BindGroupEntry, BindGroupLayoutDescriptor, BindGroupLayoutEntries,
@@ -18,8 +17,8 @@ use bevy::render::{
         RenderPassDescriptor, RenderPipelineDescriptor, ShaderStages, StencilFaceState,
         StencilState, StoreOp, TextureFormat, TextureSampleType, UniformBuffer, VertexState,
     },
-    renderer::{RenderContext, RenderDevice, RenderQueue},
-    view::{Msaa, ViewDepthTexture, ViewTarget},
+    renderer::{RenderContext, RenderDevice, RenderQueue, ViewQuery},
+    view::{ExtractedView, Msaa, ViewDepthTexture, ViewTarget},
     Render, RenderApp, RenderStartup, RenderSystems,
 };
 use bevy::render::{
@@ -31,6 +30,9 @@ use bevy::render::extract_resource::{ExtractResource, ExtractResourcePlugin};
 use bytemuck::{Pod, Zeroable};
 
 use crate::gui::MainWorldCamera;
+use crate::render::core2d_overlay_order::{
+    core2d_overlay_pipeline_hdr_index, Core2dOverlaySet, CORE2D_OVERLAY_SDR_FORMAT,
+};
 use crate::render::gpu_buffer_registry::{
     BufferVisibility, GPUBufferRegistry, RegisteredBufferDescriptor, TERRAIN_INSTANCES_BUFFER,
 };
@@ -85,9 +87,6 @@ pub struct TerrainInstanceMap {
     pub revision: u64,
 }
 
-#[derive(Debug, Hash, PartialEq, Eq, Clone, RenderLabel)]
-pub(crate) struct TerrainInstancedPassLabel;
-
 #[derive(Resource)]
 struct TerrainInstancedPipeline {
     globals_layout: BindGroupLayoutDescriptor,
@@ -104,8 +103,8 @@ struct TerrainInstancedBindGpu {
     atlas_revision: u64,
 }
 
-#[derive(Default)]
-struct TerrainInstancedNode {
+#[derive(Resource, Default)]
+struct TerrainInstancedPassReady {
     pipeline_ready: bool,
 }
 
@@ -133,10 +132,8 @@ pub fn register_terrain_instanced_draw(app: &mut App) {
     };
     render_app
         .init_resource::<TerrainInstancedBindGpu>()
-        .add_systems(
-            RenderStartup,
-            (init_terrain_instanced_pipeline, install_terrain_instanced_graph_node).chain(),
-        )
+        .init_resource::<TerrainInstancedPassReady>()
+        .add_systems(RenderStartup, init_terrain_instanced_pipeline)
         .add_systems(
             Render,
             (
@@ -144,6 +141,15 @@ pub fn register_terrain_instanced_draw(app: &mut App) {
                 prepare_terrain_instanced_bind_groups.after(prepare_terrain_instance_storage),
             )
                 .in_set(RenderSystems::PrepareBindGroups),
+        )
+        .add_systems(
+            Core2d,
+            (
+                ensure_terrain_instanced_pipeline_ready,
+                terrain_instanced_pass.after(ensure_terrain_instanced_pipeline_ready),
+            )
+                .chain()
+                .in_set(Core2dOverlaySet::TerrainInstanced),
         );
 }
 
@@ -305,16 +311,16 @@ fn init_terrain_instanced_pipeline(
     let shader = asset_server.load(TERRAIN_INSTANCED_WGSL);
     let pipelines = std::array::from_fn(|hdr| {
         let fmt = if hdr == 0 {
-            TextureFormat::bevy_default()
+            CORE2D_OVERLAY_SDR_FORMAT
         } else {
-            ViewTarget::TEXTURE_FORMAT_HDR
+            TextureFormat::Rgba16Float
         };
         std::array::from_fn(|si| {
             let samples = MSAA_SAMPLES[si];
             let desc = RenderPipelineDescriptor {
                 label: Some(Cow::Borrowed("terrain_instanced")),
                 layout: vec![globals_layout.clone(), instances_layout.clone()],
-                push_constant_ranges: vec![],
+                immediate_size: 0,
                 vertex: VertexState {
                     shader: shader.clone(),
                     entry_point: Some(Cow::Borrowed("vs_main")),
@@ -342,8 +348,8 @@ fn init_terrain_instanced_pipeline(
                 },
                 depth_stencil: Some(DepthStencilState {
                     format: CORE_2D_DEPTH_FORMAT,
-                    depth_write_enabled: false,
-                    depth_compare: CompareFunction::LessEqual,
+                    depth_write_enabled: Some(false),
+                    depth_compare: Some(CompareFunction::LessEqual),
                     stencil: StencilState {
                         front: StencilFaceState::IGNORE,
                         back: StencilFaceState::IGNORE,
@@ -368,15 +374,6 @@ fn init_terrain_instanced_pipeline(
         instances_layout,
         pipelines,
     });
-}
-
-fn install_terrain_instanced_graph_node(world: &mut World) {
-    let runner = ViewNodeRunner::<TerrainInstancedNode>::from_world(world);
-    let mut graph = world.resource_mut::<RenderGraph>();
-    let Some(sub) = graph.get_sub_graph_mut(Core2d) else {
-        return;
-    };
-    sub.add_node(TerrainInstancedPassLabel, runner);
 }
 
 fn prepare_terrain_instanced_bind_groups(
@@ -459,103 +456,102 @@ fn atlas_revision_changed(prev: u64, next: u64) -> bool {
     prev != next
 }
 
-impl ViewNode for TerrainInstancedNode {
-    type ViewQuery = (
-        &'static ExtractedCamera,
-        &'static ViewTarget,
-        &'static ViewDepthTexture,
-        &'static Msaa,
-        Has<TerrainInstancedRenderHost>,
-    );
-
-    fn update(&mut self, world: &mut World) {
-        if self.pipeline_ready {
-            return;
-        }
-        let Some(pl) = world.get_resource::<TerrainInstancedPipeline>() else {
-            return;
-        };
-        let cache = world.resource::<PipelineCache>();
-        let mut all_ok = true;
-        for row in &pl.pipelines {
-            for id in row {
-                match cache.get_render_pipeline_state(*id) {
-                    CachedPipelineState::Ok(_) => {}
-                    CachedPipelineState::Queued | CachedPipelineState::Creating(_) => {
+fn ensure_terrain_instanced_pipeline_ready(
+    pipeline: Option<Res<TerrainInstancedPipeline>>,
+    cache: Res<PipelineCache>,
+    mut ready: ResMut<TerrainInstancedPassReady>,
+) {
+    if ready.pipeline_ready {
+        return;
+    }
+    let Some(pl) = pipeline else {
+        return;
+    };
+    let mut all_ok = true;
+    let mut saw_shader_loading = false;
+    for row in &pl.pipelines {
+        for id in row {
+            match cache.get_render_pipeline_state(*id) {
+                CachedPipelineState::Ok(_) => {}
+                CachedPipelineState::Queued | CachedPipelineState::Creating(_) => {
+                    all_ok = false;
+                }
+                CachedPipelineState::Err(e) => {
+                    let detail = format!("{e:?}");
+                    if detail.contains("ShaderNotLoaded")
+                        || detail.contains("ShaderImportNotYetAvailable")
+                    {
+                        saw_shader_loading = true;
                         all_ok = false;
-                    }
-                    CachedPipelineState::Err(e) => {
-                        let detail = format!("{e:?}");
-                        if detail.contains("ShaderNotLoaded")
-                            || detail.contains("ShaderImportNotYetAvailable")
-                        {
-                            all_ok = false;
-                        } else {
-                            panic!("terrain_instanced pipeline ({TERRAIN_INSTANCED_WGSL}): {e}");
-                        }
+                    } else {
+                        panic!("terrain_instanced pipeline ({TERRAIN_INSTANCED_WGSL}): {e}");
                     }
                 }
             }
         }
-        if all_ok {
-            self.pipeline_ready = true;
-        }
     }
-
-    fn run(
-        &self,
-        _graph: &mut render_graph::RenderGraphContext,
-        render_context: &mut RenderContext,
-        (camera, view_target, depth, msaa, host): bevy::ecs::query::QueryItem<Self::ViewQuery>,
-        world: &World,
-    ) -> Result<(), render_graph::NodeRunError> {
-        if !host || !self.pipeline_ready {
-            return Ok(());
-        }
-        let globals = world.resource::<TerrainInstancedDrawGlobals>();
-        if globals.instance_count == 0 {
-            return Ok(());
-        }
-        let bind = world.resource::<TerrainInstancedBindGpu>();
-        let Some(bg0) = bind.bind_group_0.as_ref() else {
-            return Ok(());
-        };
-        let Some(bg1) = bind.bind_group_1.as_ref() else {
-            return Ok(());
-        };
-
-        let pipeline_res = world.resource::<TerrainInstancedPipeline>();
-        let cache = world.resource::<PipelineCache>();
-        let hdr = usize::from(view_target.is_hdr());
-        let si = msaa_index(msaa.samples());
-        let pipeline_id = pipeline_res.pipelines[hdr][si];
-        let Some(pl) = cache.get_render_pipeline(pipeline_id) else {
-            return Ok(());
-        };
-
-        let mut color = view_target.get_color_attachment();
-        color.ops.load = LoadOp::Load;
-        let depth_stencil = Some(depth.get_attachment(StoreOp::Store));
-
-        let mut pass = render_context.begin_tracked_render_pass(RenderPassDescriptor {
-            label: Some("terrain_instanced"),
-            color_attachments: &[Some(color)],
-            depth_stencil_attachment: depth_stencil,
-            timestamp_writes: None,
-            occlusion_query_set: None,
-        });
-
-        if let Some(viewport) = camera.viewport.as_ref() {
-            pass.set_camera_viewport(viewport);
-        }
-
-        pass.set_render_pipeline(pl);
-        pass.set_bind_group(0, bg0, &[]);
-        pass.set_bind_group(1, bg1, &[]);
-        pass.draw(0..6, 0..globals.instance_count);
-
-        Ok(())
+    if all_ok {
+        ready.pipeline_ready = true;
+    } else if !saw_shader_loading {
+        // Queued / creating — wait.
     }
+}
+
+fn terrain_instanced_pass(
+    world: &World,
+    view: ViewQuery<(
+        &ExtractedCamera,
+        &ExtractedView,
+        &ViewTarget,
+        &ViewDepthTexture,
+        &Msaa,
+        Has<TerrainInstancedRenderHost>,
+    )>,
+    mut ctx: RenderContext,
+    ready: Res<TerrainInstancedPassReady>,
+) {
+    let (_camera, extracted_view, view_target, depth, msaa, host) = view.into_inner();
+    if !host || !ready.pipeline_ready {
+        return;
+    }
+    let globals = world.resource::<TerrainInstancedDrawGlobals>();
+    if globals.instance_count == 0 {
+        return;
+    }
+    let bind = world.resource::<TerrainInstancedBindGpu>();
+    let Some(bg0) = bind.bind_group_0.as_ref() else {
+        return;
+    };
+    let Some(bg1) = bind.bind_group_1.as_ref() else {
+        return;
+    };
+
+    let pipeline_res = world.resource::<TerrainInstancedPipeline>();
+    let cache = world.resource::<PipelineCache>();
+    let hdr = core2d_overlay_pipeline_hdr_index(extracted_view.target_format);
+    let si = msaa_index(msaa.samples());
+    let pipeline_id = pipeline_res.pipelines[hdr][si];
+    let Some(pl) = cache.get_render_pipeline(pipeline_id) else {
+        return;
+    };
+
+    let mut color = view_target.get_color_attachment();
+    color.ops.load = LoadOp::Load;
+    let depth_stencil = Some(depth.get_attachment(StoreOp::Store));
+
+    let mut pass = ctx.begin_tracked_render_pass(RenderPassDescriptor {
+        label: Some("terrain_instanced"),
+        color_attachments: &[Some(color)],
+        depth_stencil_attachment: depth_stencil,
+        timestamp_writes: None,
+        occlusion_query_set: None,
+        multiview_mask: None,
+    });
+
+    pass.set_render_pipeline(pl);
+    pass.set_bind_group(0, bg0, &[]);
+    pass.set_bind_group(1, bg1, &[]);
+    pass.draw(0..6, 0..globals.instance_count);
 }
 
 #[cfg(test)]

@@ -27,7 +27,7 @@ use crate::gui::{MapViewInstances, MapViewPresentationStates, MapViewState};
 use crate::gui::{map_toolbar, map_toolbar_minimap_zoom, MapToolbarConfig};
 use crate::gui::{
     camera_translation, compute_map_fit_strict, resolve_minimap_texture_source,
-    ActiveMapViewInput, InputBindings, MapCameraDesired, MapPresentationDiagnostics,
+    ActiveMapViewInput, InputBindings, MapCameraDesired, MapCameraDesiredRes, MapPresentationDiagnostics,
     MapTextureSource, MapViewInstanceId, MinimapInteractionBuffer, MinimapPresentationSource,
     MinimapShellState, ResolvedMapViewFrames, SimulationMapViewport, ViewAuthoritySystemSet,
     ViewId, ViewManager, native_minimap_window_supported, paint_tactical_viewport_frame_on_minimap,
@@ -252,7 +252,7 @@ fn rebuild_tile_world_fallback_index(
             &Temperature,
         ), With<TileMarker>>,
         Query<&MapEditorRoadMarkerV1>,
-        Query<(&Chunk, &ChunkCellMatrix)>,
+        Query<(&Chunk, &ChunkCellMatrix, Option<&crate::systems::fire::ChunkFireOverlay>)>,
     )>,
 ) {
     if index.revision == Some(revision) {
@@ -263,7 +263,7 @@ fn rebuild_tile_world_fallback_index(
     index.roads_by_chunk.clear();
     let chunk_tiles = RASTER_CHUNK_TILES as usize;
     if queries.p0().is_empty() {
-        for (chunk, matrix) in queries.p2().iter() {
+        for (chunk, matrix, _) in queries.p2().iter() {
             let sx = matrix.size.x as usize;
             let sy = matrix.size.y as usize;
             if sx == 0 || sy == 0 {
@@ -405,6 +405,21 @@ pub fn tile_raster_dirty_on_zoom_band_change_enabled() -> bool {
     true
 }
 
+/// Any main-camera zoom delta — full tile re-raster (prevents RTT zoom "ghost" from stale chunks).
+fn bump_tile_raster_on_main_camera_zoom(
+    desired: Res<MapCameraDesiredRes>,
+    mut dirty: ResMut<TileWorldFallbackRasterDirty>,
+    mut ctrl: ResMut<TileWorldFallbackRasterCtrl>,
+    mut last_zoom: Local<f32>,
+) {
+    let z = desired.scale.x;
+    if *last_zoom > 0.0 && (z - *last_zoom).abs() > 1e-4 {
+        ctrl.chunk_grid.mark_all_dirty();
+        dirty.bump();
+    }
+    *last_zoom = z;
+}
+
 /// Runs **after** [`FireVisualFrameSet::BuildProfiles`](crate::render::FireVisualFrameSet) so minimap RGBA sees fresh [`SharedOverlayFieldBuffers`].
 #[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
 pub struct TileWorldFallbackAfterFireExtract;
@@ -443,6 +458,12 @@ impl Plugin for TileWorldFallbackPlugin {
             )
             .add_systems(
                 Update,
+                bump_tile_raster_on_main_camera_zoom
+                    .after(crate::gui::MapCameraSystemSet::Smooth)
+                    .run_if(crate::gui::in_simulation_or_editor_map),
+            )
+            .add_systems(
+                Update,
                 refresh_tile_raster_budget.run_if(|params: Res<WorldGenParams>| params.is_changed()),
             )
             .add_systems(
@@ -463,7 +484,7 @@ impl Plugin for TileWorldFallbackPlugin {
                     tile_world_fallback_rasterize
                         .after(sync_tile_fallback_raster_policy)
                         .after(crate::render::WaterSurfaceVisualSet)
-                        .run_if(in_state(BaseState::Simulation).or(in_state(BaseState::Editor))),
+                        .run_if(in_state(BaseState::Simulation).or_else(in_state(BaseState::Editor))),
                     tile_world_fallback_rasterize_perf
                         .after(tile_world_fallback_rasterize),
                 )
@@ -556,7 +577,7 @@ fn focus_main_camera_on_world_params(
 /// After [`focus_main_camera_on_world_params`], align minimap follow state with the committed main map pose.
 fn sync_minimap_follow_camera_on_sim_enter(
     params: Res<WorldGenParams>,
-    desired: Res<MapCameraDesired>,
+    desired: Res<MapCameraDesiredRes>,
     mut map_views: ResMut<crate::gui::MapViewInstances>,
     mut shell: ResMut<MinimapShellState>,
 ) {
@@ -663,6 +684,7 @@ fn tile_world_fallback_sync_spawner(
         let e = commands
             .spawn((
                 TileWorldFallbackSprite,
+                crate::gui::simulation_map_rtt_render_layers(),
                 Sprite {
                     image: image.clone(),
                     custom_size: Some(Vec2::new(w as f32, h as f32)),
@@ -890,13 +912,14 @@ fn raster_tile_fallback_subregion(
     reg_opt: Option<&MaterialRegistry>,
     fam_opt: Option<&crate::terrain::TerrainFamilyRegistry>,
     chunk_geom: &[(bevy::math::IVec2, bevy::math::UVec2)],
+    cell_fire_heat: &[(bevy::math::IVec2, bevy::math::UVec2, &[f32])],
     overlay: &SharedOverlayFieldBuffers,
     fire_heat_visibility_boost: f32,
     water_catalog: Option<&crate::render::WaterSurfaceVisualCatalog>,
     time_secs: f32,
     zoom_alpha: f32,
 ) {
-    let Some(image) = images.get_mut(handle) else {
+    let Some(mut image) = images.get_mut(handle) else {
         return;
     };
     let Some(data) = image.data.as_mut() else {
@@ -918,17 +941,30 @@ fn raster_tile_fallback_subregion(
         fam_opt,
     );
     if fire_heat_overlay {
-        crate::gui::map_tile_raster::apply_shared_fire_heat_to_rgba_subregion(
-            data.as_mut_slice(),
-            tex_w,
-            x0,
-            y0,
-            x1,
-            y1,
-            chunk_geom,
-            &overlay.chunk_fire_heat,
-            fire_heat_visibility_boost,
-        );
+        if !cell_fire_heat.is_empty() {
+            crate::gui::map_tile_raster::apply_cell_fire_heat_to_rgba_subregion(
+                data.as_mut_slice(),
+                tex_w,
+                x0,
+                y0,
+                x1,
+                y1,
+                cell_fire_heat,
+                fire_heat_visibility_boost,
+            );
+        } else {
+            crate::gui::map_tile_raster::apply_shared_fire_heat_to_rgba_subregion(
+                data.as_mut_slice(),
+                tex_w,
+                x0,
+                y0,
+                x1,
+                y1,
+                chunk_geom,
+                &overlay.chunk_fire_heat,
+                fire_heat_visibility_boost,
+            );
+        }
     }
     if let Some(catalog) = water_catalog {
         crate::render::apply_water_surface_overlay_subregion(
@@ -962,11 +998,11 @@ fn tile_world_fallback_rasterize(
             &Temperature,
         ), With<TileMarker>>,
         Query<&MapEditorRoadMarkerV1>,
-        Query<(&Chunk, &ChunkCellMatrix)>,
+        Query<(&Chunk, &ChunkCellMatrix, Option<&crate::systems::fire::ChunkFireOverlay>)>,
     )>,
     overlay: Res<SharedOverlayFieldBuffers>,
     water_catalog: Option<Res<crate::render::WaterSurfaceVisualCatalog>>,
-    camera: Res<MapCameraDesired>,
+    camera: Res<MapCameraDesiredRes>,
     raster_dirty: Res<TileWorldFallbackRasterDirty>,
     mut raster_ctrl: ResMut<TileWorldFallbackRasterCtrl>,
     time: Res<Time>,
@@ -1098,7 +1134,22 @@ fn tile_world_fallback_rasterize(
     let chunk_geom: Vec<(bevy::math::IVec2, bevy::math::UVec2)> = queries
         .p2()
         .iter()
-        .map(|(c, m)| (c.coord, m.size))
+        .map(|(c, m, _)| (c.coord, m.size))
+        .collect();
+    let cell_fire_owned: Vec<(bevy::math::IVec2, bevy::math::UVec2, Vec<f32>)> = queries
+        .p2()
+        .iter()
+        .filter_map(|(c, m, ovl)| {
+            let ovl = ovl?;
+            if ovl.heat.is_empty() {
+                return None;
+            }
+            Some((c.coord, m.size, ovl.heat.clone()))
+        })
+        .collect();
+    let cell_fire_heat: Vec<(bevy::math::IVec2, bevy::math::UVec2, &[f32])> = cell_fire_owned
+        .iter()
+        .map(|(c, s, h)| (*c, *s, h.as_slice()))
         .collect();
 
     let sim = presentation.get(MapViewInstanceId::SimulationMap);
@@ -1157,6 +1208,7 @@ fn tile_world_fallback_rasterize(
             reg_opt,
             fam_opt,
             &chunk_geom,
+            &cell_fire_heat,
             overlay.as_ref(),
             fire_boost_main,
             water_catalog,
@@ -1165,7 +1217,7 @@ fn tile_world_fallback_rasterize(
         );
 
         if !raster_ctrl.atlas_stamps.is_empty() && !atlas_slices.is_empty() {
-            if let Some(dest_image) = images.get_mut(&state.image) {
+            if let Some(mut dest_image) = images.get_mut(&state.image) {
                 if let Some(data) = dest_image.data.as_mut() {
                     crate::gui::map_tile_atlas_stamp::apply_atlas_stamps_to_rgba_subregion(
                         data,
@@ -1207,6 +1259,7 @@ fn tile_world_fallback_rasterize(
                 reg_opt,
                 fam_opt,
                 &chunk_geom,
+                &cell_fire_heat,
                 overlay.as_ref(),
                 fire_boost_minimap,
                 water_catalog,
@@ -1261,7 +1314,7 @@ fn minimap_shell_smooth_zoom_system(
 fn sync_map_follow_from_game_camera(
     mut map_views: ResMut<MapViewInstances>,
     view_manager: Res<ViewManager>,
-    desired: Res<MapCameraDesired>,
+    desired: Res<MapCameraDesiredRes>,
     mut shell: ResMut<MinimapShellState>,
 ) {
     if map_views.minimap.follow_mode != crate::gui::MinimapFollowMode::FollowCamera {
@@ -1536,7 +1589,7 @@ pub fn draw_simulation_minimap_egui(
         );
         if response.hovered() {
             active_input.0 = Some(MapViewInstanceId::Minimap);
-            let scroll = ui.input(|input| input.raw_scroll_delta.y);
+            let scroll = ui.input(|input| input.smooth_scroll_delta.y);
             if scroll != 0.0 {
                 interaction.queue_scroll_zoom(scroll * 0.035);
             }

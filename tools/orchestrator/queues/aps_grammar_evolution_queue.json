@@ -30,7 +30,7 @@
   },
   "dispatch_now": {
     "orchestrator-mcp": "idle \u2014 APS-GRAM-CLOSE-001 machine green; operator NEEDS-DISPLAY pending",
-    "coder-mcp": "idle \u2014 grammar evolution coder drain complete 2026-06-18",
+    "coder-mcp": "idle — APS spine drained 2026-07-03 (G4 green); CITY-C8 when G1 gate",
     "designer-mcp": "idle",
     "designer": "idle \u2014 operator eyeball TIER-002/REFRESH/TIER-004",
     "planner-mcp": "idle",
@@ -540,6 +540,35 @@
       ],
       "goal": "Copy for why-this-module tooltips \u2014 aps_grammar_labels + grammar_why_detail",
       "deliverable": "src/dev/design_aps_grammar_why_copy_v1.md"
+    },
+    {
+      "seq": 16,
+      "wave": 0,
+      "phase": "P0",
+      "id": "APS-G4-COVERAGE-001",
+      "status": "done",
+      "priority": "P0",
+      "owner": "coder-mcp",
+      "depends_on": [],
+      "unblocks_from": "APS-PRESENCE-CORRECTION-001 closed 2026-07-03",
+      "goal": "building_set_coverage_green + pilot_hardcode lint — honest G4 tier bar",
+      "territory": [
+        "tools/mcp/python/rust_engine_mcp/grammar_build_set.py"
+      ],
+      "acceptance": [
+        "building_set_coverage_report().green == true",
+        "grammar_set_tier().reasons empty at G4 bar OR honest red with documented gaps only",
+        "pytest tools/mcp/python/tests -k aps -q"
+      ],
+      "verify": [
+        "python -m rust_engine_mcp.cli building-set-coverage --write-witness",
+        "python -m rust_engine_mcp.cli grammar-set-tier --write-witness",
+        "python -m rust_engine_mcp.cli aps-g4-coverage-witness"
+      ],
+      "witness": "debug_runs/aps_g4_coverage_live.json",
+      "routing_ref": "src/dev/plan_finish_execution_backlog_v1.md",
+      "updated_at": "2026-07-03T17:00:00+00:00",
+      "note": "pilot_hardcode lint green; tier G4; coverage 2 sets × 4 grammar pilots"
     }
   ]
 }

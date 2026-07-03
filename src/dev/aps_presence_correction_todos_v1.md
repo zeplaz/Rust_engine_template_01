@@ -4,7 +4,7 @@
 ⟦SYMLANG⟧⟐v1  ◈TODOS
 ⟨ID⟩ APS-PRESENCE-CORRECTION-001
 Date: 2026-06-18
-Status: **OPEN**
+Status: **CLOSED** (2026-07-03)
 Queue: tools/orchestrator/queues/aps_presence_correction_queue.json
 Routing: src/dev/planner_routing_aps_presence_v1.md
 Audit: src/dev/design_aps_default_presence_audit_v1.md
@@ -65,7 +65,7 @@ OVR-APS-PRESENCE-OPERATOR-001    (operator rubric walk)
 
 | ☐ | ID | Task | Attach to HANDOFF |
 |:---|:---|:---|:---|
-| ☐ | **OVR-APS-PRESENCE-OPERATOR-001** | Run §4.2 dump **before** next APS rubric walk | `aps_session_presence_live.json` · `grammar_set_tier_live.json` · `grammar_set_brief_live.json` |
+| ☑ | **OVR-APS-PRESENCE-OPERATOR-001** | Operator lease attestation + G3 checklist | `aps_presence_operator_attestation_live.json` PASS 2026-07-03 |
 
 **Commands:** see audit [`design_aps_default_presence_audit_v1.md`](design_aps_default_presence_audit_v1.md) §4.2
 
@@ -77,11 +77,12 @@ OVR-APS-PRESENCE-OPERATOR-001    (operator rubric walk)
 - [x] `aps_grammar_tier_gates_live.json` tier matches live registry (G3 today)
 - [x] `aps_session_presence_live.json` bundles tier + brief + guards + ui_presence
 - [x] `ui_presence.tier == grammar_set_tier.tier` (WIT-HON)
-- [x] Operator HANDOFF has 3 witness paths attached
-- [ ] Plan docs no longer claim G0 as "example today"
+- [x] Operator HANDOFF has 3 witness paths attached (+ attestation witness)
+- [x] Plan docs no longer claim G0 as "example today"
+- [x] OVR-APS-PRESENCE-OPERATOR-001 Q✓ (operator lease 2026-07-03)
 
 **Do not open** new designer tier-matrix specs — [`design_aps_grammar_tier_exposure_v1.md`](design_aps_grammar_tier_exposure_v1.md) already PASS.
 
 ```text
-[/APS-PRESENCE-CORRECTION-001] OPEN — pick OVR-APS-PRESENCE-OPERATOR-001 @operator (coder-mcp 3/3 done)
+[/APS-PRESENCE-CORRECTION-001] CLOSED 2026-07-03 — APS-G4-COVERAGE-001 done · tier G4 · city G0 is next engine lane
 ```

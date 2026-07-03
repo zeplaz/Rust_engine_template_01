@@ -61,12 +61,12 @@ ron = "0.8"
 reqwest = { version = "0.11", features = ["json"] }
 sha2 = "0.10"
 
-# --- Bevy and UI (Bevy 0.18 line) ---
+# --- Bevy and UI (Bevy 0.19 line) ---
 # Pin companions from https://github.com/vladbat00/bevy_egui compatibility table at lock time.
-bevy = { version = "0.18", features = ["serialize", "bevy_gizmos", "bevy_gizmos_render"] }
-# PNG + GIF for gameplay capture (match `bevy_egui` → `arboard` → image 0.24 line).
-image = { version = "0.24", default-features = false, features = ["png", "gif"] }
-bevy_egui = "0.39"
+bevy = { version = "0.19", features = ["serialize", "bevy_gizmos", "bevy_gizmos_render", "multi_threaded"] }
+# PNG + GIF for gameplay capture (match `bevy_egui` → `arboard` → image line).
+image = { version = "0.25", default-features = false, features = ["png", "gif"] }
+bevy_egui = "0.41"
 bitflags = "2"
 rustc-hash = "2.1"
 bytemuck = { version = "1.14", features = ["derive"] }
@@ -83,8 +83,8 @@ rand = "0.8.5"
 rand_chacha = "0.3.1"
 nalgebra = "0.32.2"
 bevy_ecs_tilemap = { version = "0.18.1", optional = true, default-features = false }
-bevy_hanabi = { version = "0.18", optional = true, default-features = false, features = ["3d"] }
-bevy_vector_shapes = "0.12.0"
+bevy_hanabi = { version = "0.19", optional = true, default-features = false, features = ["3d"] }
+bevy_vector_shapes = "0.13.0"
 
 # Optional linfa stack for `research_lmodels` — **not integrated** in `engine::lmodels` yet (stub module).
 linfa = { version = "0.8.1", optional = true, default-features = false }

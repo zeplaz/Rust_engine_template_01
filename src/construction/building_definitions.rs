@@ -118,7 +118,7 @@ pub struct BuildingDefinition {
     pub procedural_glb_path: Option<String>,
     /// Bevy asset path (no `assets/` prefix) for `AssetServer::load`.
     pub procedural_glb_asset: Option<String>,
-    /// Grammar pilot — PG-2 archetype id (`IndustrialWarehouse`, …).
+    /// Grammar pilot — PG-2 archetype id from catalog (`grammar_archetype_id` field).
     pub grammar_archetype_id: Option<String>,
     pub arch_dna_preset: Option<String>,
     pub site_json_path: Option<String>,

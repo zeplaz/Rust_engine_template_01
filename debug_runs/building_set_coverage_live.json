@@ -14,9 +14,28 @@
         "rail",
         "road"
       ]
+    },
+    {
+      "set_id": "infrastructure_v0",
+      "grammar_pilots": 2,
+      "f_axis": [
+        "fuel",
+        "power"
+      ],
+      "i_axis": [
+        "power_hub",
+        "road"
+      ]
     }
   ],
   "errors": [],
-  "preset_count": 2,
+  "preset_count": 4,
+  "grammar_pilot_count": 4,
+  "grammar_pilot_ids": [
+    "logistics_rail_warehouse_v0",
+    "manufacturing_fabrication_hall_v0",
+    "power_substation_yard_v0",
+    "fuel_depot_tank_farm_v0"
+  ],
   "pilot_hardcode_green": true
 }

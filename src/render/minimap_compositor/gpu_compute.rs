@@ -1,20 +1,18 @@
 //! GPU compute dispatch for minimap compositor (render world).
 
 use std::borrow::Cow;
-use std::sync::atomic::AtomicU64;
 
 use bevy::prelude::*;
 use bevy::render::extract_resource::ExtractResourcePlugin;
 use bevy::render::render_asset::RenderAssets;
-use bevy::render::render_graph::{self, RenderGraph, RenderLabel};
 use bevy::render::render_resource::{
     binding_types::{texture_storage_2d, uniform_buffer},
     *,
 };
-use bevy::render::renderer::{RenderContext, RenderDevice, RenderQueue};
+use bevy::render::renderer::{RenderContext, RenderDevice, RenderGraph, RenderGraphSystems, RenderQueue};
 use bevy::render::texture::GpuImage;
 use bevy::render::{Render, RenderApp, RenderStartup, RenderSystems};
-use bevy::shader::PipelineCacheError;
+use bevy::shader::ShaderCacheError;
 
 use super::composite::{
     MinimapCompositeDispatch, MinimapCompositeHeatTextures, MinimapCompositeParamsGpu,
@@ -61,8 +59,8 @@ impl From<MinimapCompositeParamsGpu> for MinimapCompositeUniforms {
     }
 }
 
-#[derive(Debug, Hash, PartialEq, Eq, Clone, RenderLabel)]
-struct MinimapCompositeLabel;
+#[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
+struct MinimapCompositePassSet;
 
 #[derive(Resource)]
 struct MinimapCompositePipeline {
@@ -90,18 +88,10 @@ struct MinimapCompositeBindGpu {
     ew_enabled: u32,
 }
 
-struct MinimapCompositeNode {
+#[derive(Resource, Default)]
+struct MinimapCompositePassReady {
     pipeline_ready: bool,
-    last_executed_commit_stamp: AtomicU64,
-}
-
-impl Default for MinimapCompositeNode {
-    fn default() -> Self {
-        Self {
-            pipeline_ready: false,
-            last_executed_commit_stamp: AtomicU64::new(0),
-        }
-    }
+    last_executed_commit_stamp: u64,
 }
 
 pub fn register_minimap_composite_gpu(app: &mut App) {
@@ -119,18 +109,18 @@ pub fn register_minimap_composite_gpu(app: &mut App) {
     };
     render_app
         .init_resource::<MinimapCompositeBindGpu>()
+        .init_resource::<MinimapCompositePassReady>()
         .add_systems(RenderStartup, init_minimap_composite_pipeline)
         .add_systems(
             Render,
             prepare_minimap_composite_bind_groups.in_set(RenderSystems::PrepareBindGroups),
+        )
+        .add_systems(
+            RenderGraph,
+            minimap_composite_pass
+                .in_set(RenderGraphSystems::Render)
+                .in_set(MinimapCompositePassSet),
         );
-
-    let mut graph = render_app.world_mut().resource_mut::<RenderGraph>();
-    graph.add_node(MinimapCompositeLabel, MinimapCompositeNode::default());
-    graph.add_node_edge(
-        MinimapCompositeLabel,
-        bevy::render::graph::CameraDriverLabel,
-    );
 }
 
 fn init_minimap_composite_pipeline(
@@ -288,93 +278,77 @@ fn prepare_minimap_composite_bind_groups(
     bind_gpu.ew_enabled = dispatch.params.ew_heat_enabled;
 }
 
-impl render_graph::Node for MinimapCompositeNode {
-    fn update(&mut self, world: &mut World) {
-        if self.pipeline_ready {
+fn minimap_composite_pass(
+    mut ctx: RenderContext,
+    pipeline: Option<Res<MinimapCompositePipeline>>,
+    cache: Res<PipelineCache>,
+    mut ready: ResMut<MinimapCompositePassReady>,
+    dispatch: Res<MinimapCompositeDispatch>,
+    bind_gpu: Res<MinimapCompositeBindGpu>,
+    heat: Res<MinimapCompositeHeatTextures>,
+    gpu_images: Res<RenderAssets<GpuImage>>,
+) {
+    if !ready.pipeline_ready {
+        if let Some(pipeline) = pipeline.as_ref() {
+            match cache.get_compute_pipeline_state(pipeline.pipeline) {
+                CachedPipelineState::Ok(_) => ready.pipeline_ready = true,
+                CachedPipelineState::Err(ShaderCacheError::ShaderNotLoaded(_)) => {}
+                CachedPipelineState::Err(e) => {
+                    super::diagnostics::MINIMAP_GPU_SHADER_FAILED
+                        .store(true, std::sync::atomic::Ordering::Relaxed);
+                    bevy::log::error!(
+                        target: "minimap_compositor",
+                        "GPU minimap shader failed — falling back to CPU raster. \
+                         Fix assets/{MINIMAP_COMPOSITE_SHADER}: {e}"
+                    );
+                }
+                _ => {}
+            }
+        }
+        if !ready.pipeline_ready {
             return;
         }
-        let pipeline = world.resource::<MinimapCompositePipeline>();
-        let cache = world.resource::<PipelineCache>();
-        match cache.get_compute_pipeline_state(pipeline.pipeline) {
-            CachedPipelineState::Ok(_) => self.pipeline_ready = true,
-            CachedPipelineState::Err(PipelineCacheError::ShaderNotLoaded(_)) => {}
-            CachedPipelineState::Err(e) => {
-                super::diagnostics::MINIMAP_GPU_SHADER_FAILED
-                    .store(true, std::sync::atomic::Ordering::Relaxed);
-                bevy::log::error!(
-                    target: "minimap_compositor",
-                    "GPU minimap shader failed — falling back to CPU raster. \
-                     Fix assets/{MINIMAP_COMPOSITE_SHADER}: {e}"
-                );
-            }
-            _ => {}
-        }
     }
 
-    fn run(
-        &self,
-        _ctx: &mut render_graph::RenderGraphContext,
-        render_ctx: &mut RenderContext,
-        world: &World,
-    ) -> Result<(), render_graph::NodeRunError> {
-        if !self.pipeline_ready {
-            return Ok(());
-        }
-
-        let dispatch = world.resource::<MinimapCompositeDispatch>();
-        if !dispatch.has_commit() {
-            return Ok(());
-        }
-
-        if dispatch.commit_stamp
-            == self
-                .last_executed_commit_stamp
-                .load(std::sync::atomic::Ordering::Relaxed)
-        {
-            MINIMAP_GPU_DEDUP_SKIP_COUNT.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-            return Ok(());
-        }
-
-        let bind_gpu = world.resource::<MinimapCompositeBindGpu>();
-        let Some(bind_group) = bind_gpu.bind_group.as_ref() else {
-            return Ok(());
-        };
-
-        let pipeline_res = world.resource::<MinimapCompositePipeline>();
-        let cache = world.resource::<PipelineCache>();
-        let Some(pl) = cache.get_compute_pipeline(pipeline_res.pipeline) else {
-            return Ok(());
-        };
-
-        let heat = world.resource::<MinimapCompositeHeatTextures>();
-        let Some(terrain_gpu) = world
-            .resource::<RenderAssets<GpuImage>>()
-            .get(&heat.terrain)
-        else {
-            return Ok(());
-        };
-
-        let w = terrain_gpu.size.width;
-        let h = terrain_gpu.size.height;
-        if w == 0 || h == 0 {
-            return Ok(());
-        }
-
-        let dx = w.div_ceil(WORKGROUP);
-        let dy = h.div_ceil(WORKGROUP);
-
-        let mut pass = render_ctx
-            .command_encoder()
-            .begin_compute_pass(&ComputePassDescriptor::default());
-        pass.set_pipeline(pl);
-        pass.set_bind_group(0, bind_group, &[]);
-        pass.dispatch_workgroups(dx, dy, 1);
-        self.last_executed_commit_stamp.store(
-            dispatch.commit_stamp,
-            std::sync::atomic::Ordering::Relaxed,
-        );
-        MINIMAP_GPU_EXECUTE_COUNT.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-
-        Ok(())
+    if !dispatch.has_commit() {
+        return;
     }
+
+    if dispatch.commit_stamp == ready.last_executed_commit_stamp {
+        MINIMAP_GPU_DEDUP_SKIP_COUNT.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        return;
+    }
+
+    let Some(bind_group) = bind_gpu.bind_group.as_ref() else {
+        return;
+    };
+
+    let Some(pipeline) = pipeline.as_ref() else {
+        return;
+    };
+    let Some(pl) = cache.get_compute_pipeline(pipeline.pipeline) else {
+        return;
+    };
+
+    let Some(terrain_gpu) = gpu_images.get(&heat.terrain) else {
+        return;
+    };
+
+    let w = terrain_gpu.texture_descriptor.size.width;
+    let h = terrain_gpu.texture_descriptor.size.height;
+    if w == 0 || h == 0 {
+        return;
+    }
+
+    let dx = w.div_ceil(WORKGROUP);
+    let dy = h.div_ceil(WORKGROUP);
+
+    let mut pass = ctx
+        .command_encoder()
+        .begin_compute_pass(&ComputePassDescriptor::default());
+    pass.set_pipeline(pl);
+    pass.set_bind_group(0, bind_group, &[]);
+    pass.dispatch_workgroups(dx, dy, 1);
+    ready.last_executed_commit_stamp = dispatch.commit_stamp;
+    MINIMAP_GPU_EXECUTE_COUNT.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
 }

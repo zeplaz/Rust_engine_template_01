@@ -143,7 +143,9 @@ pub fn apply_simulation_map_presentation_defaults(
     }
     tray.set_minimap_overlay_mask(mask);
     let sim_pres = presentation.get_mut(MapViewInstanceId::SimulationMap);
-    sim_pres.overlays.fire_heat = false;
+    sim_pres.overlays.fire_heat = test_scene
+        .as_ref()
+        .is_some_and(|s| s.0.seeds_fire_overlay());
     sim_pres.bump_revision();
     if test_scene.is_none() {
         shared_overlay.chunk_fire_heat.clear();

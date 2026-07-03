@@ -93,8 +93,14 @@ Abstract layers resolve per **domain** at runtime:
 | `transparent_bilingual_service_continuation` | — (legitimate change) | service_lit |
 | `forced_assimilation_in_schools` | `forced_assimilation_in_schools` | censorship_dim · damaged_heavy |
 | `archive_seizure_or_censorship` | `seizure_or_censorship_of_archives` | damaged_heavy · scar_recovery_0 |
+| `forced_renaming` | `forced_renaming` | censorship_dim · damaged_heavy |
+| `banning_cultural_or_religious_practices` | `banning_of_cultural_or_religious_practices` | censorship_dim |
+| `removal_of_children_from_institutions` | `removal_of_children_from_community_institutions` | damaged_heavy · scar_recovery_0 |
+| `forced_displacement` | `forced_displacement` | damaged_heavy · scar_recovery_0 |
+| `erasure_of_local_history` | `erasure_of_local_history` | damaged_heavy · scar_recovery_0 |
+| `imperial_institution_replacement` | `replacement_of_local_institutions_with_imperial_administration` | censorship_dim |
 
-Full rows: YAML catalog § `events`.
+Full rows: YAML catalog § `events` (**11** events · **10/10** liquidation triggers).
 
 ---
 

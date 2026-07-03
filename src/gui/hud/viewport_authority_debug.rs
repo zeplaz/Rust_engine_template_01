@@ -214,38 +214,24 @@ pub fn trace_viewport_drift(measured: Vec2, committed: Vec2) {
     }
 }
 
-/// Debug-only: assert authoritative vs presentation vs camera scissor (VP-06).
+/// Debug-only: assert fill rect is internally consistent (RTT path — no camera scissor compare).
 pub fn assert_viewport_integrity(
-    authority: &crate::gui::AuthoritativeViewport,
-    sim: &crate::gui::SimulationMapViewport,
-    cam_logical: Option<UiViewportRect>,
+    fill: &crate::gui::SimulationMapViewport,
+    _cam_logical: Option<UiViewportRect>,
 ) {
     if !viewport_authority_debug_enabled() {
         return;
     }
-    if !authority.valid {
+    if !fill.valid {
         return;
     }
-    let auth_wh = authority.logical_size();
-    let sim_wh = sim.logical_size();
-    let d_sim = (auth_wh - sim_wh).abs();
-    if d_sim.length() > 0.5 {
+    let wh = fill.logical_size();
+    if !fill.is_adequate_for_camera() {
         panic!(
-            "viewport integrity: SimulationMapViewport dimensions != AuthoritativeViewport \
-             auth={auth_wh:?} sim={sim_wh:?} delta={d_sim:?}"
+            "viewport integrity: fill rect inadequate for camera wh={wh:?} min={:?} max={:?}",
+            fill.min,
+            fill.max
         );
-    }
-    if let Some(cam) = cam_logical {
-        if cam.valid {
-            let cam_wh = (cam.logical_max - cam.logical_min).max(Vec2::ZERO);
-            let d_cam = (auth_wh - cam_wh).abs();
-            if sim.valid && d_cam.length() > 1.0 {
-                panic!(
-                    "viewport integrity: camera scissor != authoritative \
-                     auth={auth_wh:?} cam={cam_wh:?} delta={d_cam:?}"
-                );
-            }
-        }
     }
 }
 
@@ -256,19 +242,18 @@ impl Plugin for ViewportIntegrityAssertPlugin {
         app.add_systems(
             PostUpdate,
             run_viewport_integrity_assert
-                .after(crate::gui::SimulationViewportSyncSet::ApplyCameraScissor)
+                .after(crate::gui::SimulationViewportSyncSet::ApplyCameraProjection)
                 .run_if(viewport_authority_debug_enabled),
         );
     }
 }
 
 fn run_viewport_integrity_assert(
-    authority: Res<crate::gui::AuthoritativeViewport>,
-    sim: Res<crate::gui::SimulationMapViewport>,
+    fill: Res<crate::gui::SimulationMapViewport>,
     cam: Query<&Camera, With<crate::gui::MainWorldCamera>>,
     win: Query<&Window, With<PrimaryWindow>>,
 ) {
-    let cam_logical = cam.single().ok().and_then(|c| {
+    let _cam_logical = cam.single().ok().and_then(|c| {
         let scale = win.single().ok()?.scale_factor();
         c.viewport.as_ref().map(|vp| {
             let s = scale.max(1e-6);
@@ -282,7 +267,7 @@ fn run_viewport_integrity_assert(
             }
         })
     });
-    assert_viewport_integrity(authority.as_ref(), sim.as_ref(), cam_logical);
+    assert_viewport_integrity(fill.as_ref(), None);
 }
 
 pub fn stroke_viewport_debug_rect(

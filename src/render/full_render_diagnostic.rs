@@ -21,7 +21,7 @@ use crate::gui::hud::layout_store::HudLayoutStore;
 use crate::gui::hud::shell_framework::HudWidgetId;
 use crate::gui::{map_display_rect, map_texture_uv_rect};
 use crate::gui::MapViewInstances;
-use crate::gui::{MapCameraDesired, MinimapShellState, SimulationMapViewport};
+use crate::gui::{MapCameraDesiredRes, MinimapShellState, SimulationMapViewport};
 use crate::gui::MainWorldCamera;
 use crate::render::gpu_particles::WorldFireParticleFrame;
 use crate::render::overlay_field_buffers::SharedOverlayFieldBuffers;
@@ -395,7 +395,7 @@ pub struct FullRenderDiagnosticReads<'w> {
     sim_tick: Res<'w, SimTick>,
     sim_time: Res<'w, SimTimeMicros>,
     frame_count: Res<'w, FrameCount>,
-    desired: Res<'w, MapCameraDesired>,
+    desired: Res<'w, MapCameraDesiredRes>,
     map_views: Res<'w, MapViewInstances>,
     feedback: Res<'w, FullRenderDiagnosticFeedback>,
     ui_probe: Res<'w, FullRenderUiLayoutProbe>,

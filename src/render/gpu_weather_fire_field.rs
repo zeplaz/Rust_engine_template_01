@@ -25,16 +25,15 @@ use bevy::{
     render::{
         extract_resource::{ExtractResource, ExtractResourcePlugin},
         render_asset::RenderAssets,
-        render_graph::{self, RenderGraph, RenderLabel},
         render_resource::{
             binding_types::{texture_storage_2d, uniform_buffer},
             *,
         },
-        renderer::{RenderContext, RenderDevice, RenderQueue},
+        renderer::{RenderContext, RenderDevice, RenderGraph, RenderGraphSystems, RenderQueue},
         texture::GpuImage,
         Render, RenderApp, RenderStartup, RenderSystems,
     },
-    shader::PipelineCacheError,
+    shader::ShaderCacheError,
 };
 
 use crate::gui::{representation_band_from_world_lod, GPU_FIRE_INSTANCE_BUDGET_CEILING};
@@ -374,6 +373,7 @@ fn maybe_spawn_debug_sprite(
     }
     commands.spawn((
         DebugFieldSpriteTag,
+        crate::gui::simulation_map_rtt_render_layers(),
         Name::new("WeatherFireFieldDebug"),
         Sprite {
             image: tex.texture_a.clone(),
@@ -449,6 +449,7 @@ impl Plugin for GpuWeatherFireFieldPlugin {
             .init_resource::<FireVisualGpuInstanceStorage>()
             .init_resource::<WorldFireParticleGpuStorage>()
             .init_resource::<GpuRepresentationMetrics>()
+            .init_resource::<WeatherFieldPingState>()
             .add_systems(RenderStartup, init_weather_fire_pipeline)
             .add_systems(
                 Render,
@@ -461,19 +462,41 @@ impl Plugin for GpuWeatherFireFieldPlugin {
                 )
                     .chain()
                     .in_set(RenderSystems::PrepareBindGroups),
+            )
+            .add_systems(
+                RenderGraph,
+                (
+                    ensure_weather_fire_field_pipeline_ready,
+                    advance_weather_field_ping_state.after(ensure_weather_fire_field_pipeline_ready),
+                    weather_fire_field_pass.after(advance_weather_field_ping_state),
+                )
+                    .chain()
+                    .in_set(RenderGraphSystems::Render)
+                    .in_set(WeatherFireFieldPassSet),
             );
-
-        let mut graph = render_app.world_mut().resource_mut::<RenderGraph>();
-        graph.add_node(WeatherFireFieldLabel, WeatherFireFieldNode::default());
-        graph.add_node_edge(
-            WeatherFireFieldLabel,
-            crate::render::gpu_spark_compute::FireSparkComputeLabel,
+        render_app.configure_sets(
+            RenderGraph,
+            (
+                WeatherFireFieldPassSet,
+                crate::render::gpu_spark_compute::FireSparkComputePassSet,
+                crate::render::gpu_particle_draw::WorldFireParticleDrawPassSet,
+            )
+                .chain()
+                .in_set(RenderGraphSystems::Render),
         );
     }
 }
 
-#[derive(Debug, Hash, PartialEq, Eq, Clone, RenderLabel)]
-struct WeatherFireFieldLabel;
+#[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
+pub(crate) struct WeatherFireFieldPassSet;
+
+#[derive(Resource, Default)]
+enum WeatherFieldPingState {
+    #[default]
+    Loading,
+    PingA,
+    PingB,
+}
 
 #[derive(Resource)]
 struct WeatherFireFieldBindGroups {
@@ -627,100 +650,89 @@ fn init_weather_fire_pipeline(
     });
 }
 
-enum WfState {
-    Loading,
-    PingA,
-    PingB,
-}
-
-struct WeatherFireFieldNode {
-    state: WfState,
-}
-
-impl Default for WeatherFireFieldNode {
-    fn default() -> Self {
-        Self {
-            state: WfState::Loading,
+fn ensure_weather_fire_field_pipeline_ready(
+    pipeline: Option<Res<WeatherFireFieldPipeline>>,
+    cache: Res<PipelineCache>,
+    mut state: ResMut<WeatherFieldPingState>,
+) {
+    if !matches!(*state, WeatherFieldPingState::Loading) {
+        return;
+    }
+    let Some(pipeline) = pipeline else {
+        return;
+    };
+    match cache.get_compute_pipeline_state(pipeline.update_pipeline) {
+        CachedPipelineState::Ok(_) => *state = WeatherFieldPingState::PingA,
+        CachedPipelineState::Err(ShaderCacheError::ShaderNotLoaded(_)) => {}
+        CachedPipelineState::Err(e) => {
+            panic!("Loading assets/{SHADER_PATH} for weather/fire field:\n{e}")
         }
+        _ => {}
     }
 }
 
-impl render_graph::Node for WeatherFireFieldNode {
-    fn update(&mut self, world: &mut World) {
-        let pipeline = world.resource::<WeatherFireFieldPipeline>();
-        let cache = world.resource::<PipelineCache>();
-        match self.state {
-            WfState::Loading => match cache.get_compute_pipeline_state(pipeline.update_pipeline) {
-                CachedPipelineState::Ok(_) => self.state = WfState::PingA,
-                CachedPipelineState::Err(PipelineCacheError::ShaderNotLoaded(_)) => {}
-                CachedPipelineState::Err(e) => {
-                    panic!("Loading assets/{SHADER_PATH} for weather/fire field:\n{e}")
-                }
-                _ => {}
-            },
-            WfState::PingA => self.state = WfState::PingB,
-            WfState::PingB => self.state = WfState::PingA,
-        }
+fn advance_weather_field_ping_state(mut state: ResMut<WeatherFieldPingState>) {
+    match *state {
+        WeatherFieldPingState::Loading => {}
+        WeatherFieldPingState::PingA => *state = WeatherFieldPingState::PingB,
+        WeatherFieldPingState::PingB => *state = WeatherFieldPingState::PingA,
+    }
+}
+
+fn weather_fire_field_pass(
+    world: &World,
+    mut ctx: RenderContext,
+    state: Res<WeatherFieldPingState>,
+) {
+    let groups = &world.resource::<WeatherFireFieldBindGroups>().field;
+    let fire_bg = world.resource::<WeatherFireFieldFireBindGroup>();
+    let cache = world.resource::<PipelineCache>();
+    let pipeline = world.resource::<WeatherFireFieldPipeline>();
+    let partial = world.resource::<AtmospherePartialGpuExtract>();
+    let _uniforms = world.resource::<WeatherFireFieldUniforms>();
+
+    let (dx, dy) = if P2H_GPU_PARTIAL_WRITES_AUTHORITATIVE && partial.partial_dispatch_active {
+        (
+            partial.partial_dispatch_extent.x.div_ceil(WORKGROUP),
+            partial.partial_dispatch_extent.y.div_ceil(WORKGROUP),
+        )
+    } else if P2H_GPU_PARTIAL_WRITES_AUTHORITATIVE && partial.full_field_fallback {
+        (
+            WEATHER_FIRE_FIELD_SIZE.x.div_ceil(WORKGROUP),
+            WEATHER_FIRE_FIELD_SIZE.y.div_ceil(WORKGROUP),
+        )
+    } else if P2H_GPU_PARTIAL_WRITES_AUTHORITATIVE {
+        (0, 0)
+    } else {
+        (
+            WEATHER_FIRE_FIELD_SIZE.x.div_ceil(WORKGROUP),
+            WEATHER_FIRE_FIELD_SIZE.y.div_ceil(WORKGROUP),
+        )
+    };
+
+    if dx == 0 || dy == 0 {
+        return;
     }
 
-    fn run(
-        &self,
-        _ctx: &mut render_graph::RenderGraphContext,
-        render_ctx: &mut RenderContext,
-        world: &World,
-    ) -> Result<(), render_graph::NodeRunError> {
-        let groups = &world.resource::<WeatherFireFieldBindGroups>().field;
-        let fire_bg = world.resource::<WeatherFireFieldFireBindGroup>();
-        let cache = world.resource::<PipelineCache>();
-        let pipeline = world.resource::<WeatherFireFieldPipeline>();
-        let partial = world.resource::<AtmospherePartialGpuExtract>();
-        let uniforms = world.resource::<WeatherFireFieldUniforms>();
+    let mut pass = ctx
+        .command_encoder()
+        .begin_compute_pass(&ComputePassDescriptor::default());
 
-        let mut pass = render_ctx
-            .command_encoder()
-            .begin_compute_pass(&ComputePassDescriptor::default());
-
-        let (dx, dy) = if P2H_GPU_PARTIAL_WRITES_AUTHORITATIVE && partial.partial_dispatch_active {
-            (
-                partial.partial_dispatch_extent.x.div_ceil(WORKGROUP),
-                partial.partial_dispatch_extent.y.div_ceil(WORKGROUP),
-            )
-        } else if P2H_GPU_PARTIAL_WRITES_AUTHORITATIVE && partial.full_field_fallback {
-            (
-                WEATHER_FIRE_FIELD_SIZE.x.div_ceil(WORKGROUP),
-                WEATHER_FIRE_FIELD_SIZE.y.div_ceil(WORKGROUP),
-            )
-        } else if P2H_GPU_PARTIAL_WRITES_AUTHORITATIVE {
-            (0, 0)
-        } else {
-            (
-                WEATHER_FIRE_FIELD_SIZE.x.div_ceil(WORKGROUP),
-                WEATHER_FIRE_FIELD_SIZE.y.div_ceil(WORKGROUP),
-            )
-        };
-
-        if dx == 0 || dy == 0 {
-            return Ok(());
+    match *state {
+        WeatherFieldPingState::Loading => {}
+        WeatherFieldPingState::PingA => {
+            let pl = cache.get_compute_pipeline(pipeline.update_pipeline).unwrap();
+            pass.set_bind_group(0, &groups[0], &[]);
+            pass.set_bind_group(1, &fire_bg.0, &[]);
+            pass.set_pipeline(pl);
+            pass.dispatch_workgroups(dx, dy, 1);
         }
-
-        match self.state {
-            WfState::Loading => {}
-            WfState::PingA => {
-                let pl = cache.get_compute_pipeline(pipeline.update_pipeline).unwrap();
-                pass.set_bind_group(0, &groups[0], &[]);
-                pass.set_bind_group(1, &fire_bg.0, &[]);
-                pass.set_pipeline(pl);
-                pass.dispatch_workgroups(dx, dy, 1);
-            }
-            WfState::PingB => {
-                let pl = cache.get_compute_pipeline(pipeline.update_pipeline).unwrap();
-                pass.set_bind_group(0, &groups[1], &[]);
-                pass.set_bind_group(1, &fire_bg.0, &[]);
-                pass.set_pipeline(pl);
-                pass.dispatch_workgroups(dx, dy, 1);
-            }
+        WeatherFieldPingState::PingB => {
+            let pl = cache.get_compute_pipeline(pipeline.update_pipeline).unwrap();
+            pass.set_bind_group(0, &groups[1], &[]);
+            pass.set_bind_group(1, &fire_bg.0, &[]);
+            pass.set_pipeline(pl);
+            pass.dispatch_workgroups(dx, dy, 1);
         }
-        let _ = uniforms;
-        Ok(())
     }
 }

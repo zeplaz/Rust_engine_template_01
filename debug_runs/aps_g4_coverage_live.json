@@ -1,0 +1,51 @@
+{
+  "task_id": "APS-G4-COVERAGE-001",
+  "green": true,
+  "building_set_coverage_green": true,
+  "pilot_hardcode_green": true,
+  "grammar_set_tier": "G4",
+  "grammar_set_tier_reasons": [],
+  "coverage_errors": [],
+  "grammar_pilot_count": 4,
+  "preset_count": 4,
+  "coverage_rows": [
+    {
+      "set_id": "industrial_west_v0",
+      "grammar_pilots": 2,
+      "f_axis": [
+        "logistics",
+        "manufacturing"
+      ],
+      "i_axis": [
+        "rail",
+        "road"
+      ]
+    },
+    {
+      "set_id": "infrastructure_v0",
+      "grammar_pilots": 2,
+      "f_axis": [
+        "fuel",
+        "power"
+      ],
+      "i_axis": [
+        "power_hub",
+        "road"
+      ]
+    }
+  ],
+  "_agent_meta": {
+    "schema": "aps_g4_coverage_live_v1",
+    "profile": "APS_G4_COVERAGE",
+    "relative_path": "debug_runs/aps_g4_coverage_live.json",
+    "source_system": "grammar_build_set",
+    "written_at_epoch_secs": 1783098001,
+    "ritual": "BLANG:WIT-HON APS-G4-COVERAGE-001"
+  },
+  "witness_honesty": {
+    "status": "passed",
+    "error_count": 0,
+    "warning_count": 0,
+    "summary": "witness_honesty debug_runs/aps_g4_coverage_live.json: 0 error(s), 0 issue(s)"
+  }
+}

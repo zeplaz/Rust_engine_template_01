@@ -135,6 +135,42 @@ fn draw_legend_grid(ui: &mut egui::Ui, entries: &[TopologyLegendEntry]) {
         });
 }
 
+/// GPU compositor path — legend chrome below the Bevy minimap image (not map raster).
+pub fn draw_minimap_topology_legend_gpu_chrome(
+    ctx: &egui::Context,
+    shell: &mut MinimapShellState,
+    overlays: &MinimapOverlayMask,
+    ecology_rows: u32,
+    veg_burn_rows: u32,
+    base: BaseState,
+) {
+    let Some(content) = shell.last_window_rect else {
+        return;
+    };
+    let legend_top = shell
+        .last_image_rect
+        .map(|r| r.max.y)
+        .unwrap_or(content.max.y);
+    let available_h = (content.max.y - legend_top).max(0.0);
+    if available_h < 20.0 {
+        return;
+    }
+    let est_h: f32 = if shell.topology_legend_expanded {
+        72.0
+    } else {
+        26.0
+    };
+    let width = content.width().max(120.0);
+    let height = est_h.min(available_h);
+    crate::render::trace_minimap_size_writer("legend.gpu_chrome", width, height);
+    egui::Area::new(egui::Id::new("minimap_topology_legend_gpu"))
+        .fixed_pos(egui::pos2(content.min.x, legend_top))
+        .show(ctx, |ui| {
+            ui.set_width(width);
+            draw_minimap_topology_legend_ui(ui, shell, overlays, ecology_rows, veg_burn_rows, base);
+        });
+}
+
 pub fn draw_minimap_topology_legend_ui(
     ui: &mut egui::Ui,
     shell: &mut MinimapShellState,

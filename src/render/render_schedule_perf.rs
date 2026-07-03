@@ -218,7 +218,7 @@ fn install_render_app_systems(render_app: &mut bevy::app::SubApp) {
             render_schedule_perf_after_extract_commands.after(RenderSystems::ExtractCommands),
             render_schedule_perf_after_prepare_assets.after(RenderSystems::PrepareAssets),
             render_schedule_perf_after_prepare_meshes.after(RenderSystems::PrepareMeshes),
-            render_schedule_perf_after_manage_views.after(RenderSystems::ManageViews),
+            render_schedule_perf_after_manage_views.after(RenderSystems::CreateViews),
             render_schedule_perf_after_queue.after(RenderSystems::Queue),
             render_schedule_perf_after_phase_sort.after(RenderSystems::PhaseSort),
             render_schedule_perf_after_prepare.after(RenderSystems::Prepare),

@@ -50,7 +50,7 @@ impl Default for MapViewPresentationState {
         Self {
             layers,
             overlays: crate::gui::MinimapOverlayMask {
-                fire_heat: true,
+                fire_heat: false,
                 logistics_heat: false,
                 ..Default::default()
             },

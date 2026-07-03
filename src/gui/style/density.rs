@@ -2,9 +2,8 @@
 
 use bevy::prelude::*;
 use bevy_egui::egui;
-use bevy_egui::EguiContextSettings;
 
-/// Default egui widget scale multiplier (applied via [`EguiContextSettings::scale_factor`]).
+/// Default egui widget scale multiplier (applied via [`egui::Context::set_pixels_per_point`]).
 pub const DEFAULT_UI_GLOBAL_SCALE: f32 = 0.86;
 const UI_GLOBAL_SCALE_MIN: f32 = 0.65;
 const UI_GLOBAL_SCALE_MAX: f32 = 1.25;
@@ -70,7 +69,7 @@ pub fn resolve_ui_scale(ctx: &egui::Context, density: &HudDensityProfile) -> f32
 /// Single writer for egui widget scale — absolute multiplier, not compounded each frame.
 pub fn sync_egui_context_scale_factor(
     profile: &HudDensityProfile,
-    settings: &mut EguiContextSettings,
+    ctx: &egui::Context,
     gate: &mut UiScaleApplicationGate,
 ) {
     let factor = profile.clamped_global_scale();
@@ -83,8 +82,10 @@ pub fn sync_egui_context_scale_factor(
             factor,
         );
     }
-    if (settings.scale_factor - factor).abs() > 1e-4 {
-        settings.scale_factor = factor;
+    let native = native_ui_pixels_per_point(ctx);
+    let pixels_per_point = resolved_hud_pixels_per_point(native, profile);
+    if (ctx.pixels_per_point() - pixels_per_point).abs() > 1e-4 {
+        ctx.set_pixels_per_point(pixels_per_point);
     }
     gate.last_applied_scale = factor;
 }
@@ -97,6 +98,7 @@ pub fn apply_density_to_egui_style(style: &mut egui::Style, profile: &HudDensity
     style.spacing.interact_size = egui::vec2(profile.icon_size * 2.0, profile.icon_size + 2.0);
     style.spacing.scroll.bar_width = (profile.item_spacing + 4.0).max(6.0);
     style.spacing.scroll.bar_inner_margin = 2.0;
+    style.spacing.scroll.bar_outer_margin = 2.0;
     style.spacing.menu_margin = egui::Margin::same(profile.window_padding.round() as i8);
     if profile.compact_mode {
         style.text_styles.insert(egui::TextStyle::Body, egui::FontId::proportional(13.0));
@@ -112,7 +114,7 @@ pub fn spacing_for_density(profile: &HudDensityProfile) -> egui::Vec2 {
 }
 
 pub fn apply_hud_density_profile(ctx: &egui::Context, profile: &HudDensityProfile) {
-    ctx.style_mut(|style| apply_density_to_egui_style(style, profile));
+    ctx.global_style_mut(|style| apply_density_to_egui_style(style, profile));
 }
 
 pub fn reset_ui_scale_application_gate(gate: &mut UiScaleApplicationGate) {

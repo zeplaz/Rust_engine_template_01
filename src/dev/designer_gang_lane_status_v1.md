@@ -1,4 +1,4 @@
-# Designer gang lane status `v1` — who is doing what (2026-06-02)
+# Designer gang lane status `v1` — who is doing what (2026-07-03)
 
 | Field | Value |
 |:---|:---|
@@ -14,70 +14,64 @@
 
 | Lane | PICK now | Program | Notes |
 |:---|:---|:---|:---|
-| **coder-mcp** | `APS-GRAM-TIER-GATES-LIVE-001` · `DES-APS-SESSION-DUMP-001` | APS-PRESENCE-CORRECTION | Guard parity **done**; tier gates + session dump parallel |
-| **coder-mcp** | `APS-E1-CHROME-001` · MCP-P2-* · VEG-F02 | APS-OPTION-D / MCP-P2 | Chrome blocked on DES mockup — **PASS on disk** |
-| **coder** | `BUILD-READ-REWIRE-003/004` · `SIM-EFFECT-*` · `APS-QC-REWIRE` | POST-DRAIN phase 4/5 | Reopened by INTEL-OFFICER — witnesses mostly green |
-| **planner** | `PLAN-APS-PRESENCE-PLAN-EDIT-001` | APS-PRESENCE-CORRECTION | Amend G0→G3 plan examples |
-| **operator** | `G-PLAY-01` · `PERF-SHELL-001` | POST-DRAIN phase 2/3 | Needs display session |
-| **operator** | `OVR-APS-PRESENCE-OPERATOR-001` | APS-PRESENCE | **Blocked** until session dump green |
-| **sim-steward** | VM-09 bridge tail | infra | Lockstep / invert bridge |
-| **orchestrator-mcp** | `WH-TRACK-B-PAUSE` | grammar continuation | Track B pause witness |
+| **coder-mcp** | **idle** | APS spine | G4 + tier-2 + polish tail **done** 2026-07-03 |
+| **coder_a** | `CITY-G0-S11-001` | PLAN-CITY-GRAMMAR-v1 | Typed grammar ids (G0a) |
+| **coder_b** | `CITY-G0-S1C-001` | PLAN-CITY-GRAMMAR-v1 | `building_grammar.rs` split (G0b) |
+| **coder** | `MIG-P0-G2-001` · `CITY-G0-WIT-001` after G0a/b | MIG + city | Determinism witness (G0c) |
+| **designer-mcp** | **blocked** | PLAN-CITY-GRAMMAR-v1 | `DES-CITY-BLOCK-RECIPE-001` after G0c |
+| **operator** | `APS-G4 pixel follow-up` (optional) · `G-PLAY-01` | POST-DRAIN | Needs display session |
+| **operator** | `DES-APS-TAG-RUBRIC-001` tier-1 walk | APS tags | Charter ready |
 
 ---
 
-## P0 — designer lane (this session)
+## P0 — designer lane (APS building UI — closed)
 
 | ID | Action | Status |
 |:---|:---|:---|
-| **DES-APS-DEFAULT-PRESENCE-AUDIT-001** | Audit PASS — registered | **done** |
-| **DES-APS-ASSEMBLY-EMPTY-G2-001** | Copy spec for coder-mcp | **done** |
-| **INTEL-OFFICER re-close** | Power · P55 · VM-11 · T1 APS blocked→done | **in flight** |
-| **OVR-DES-P55-PREVIEW-SPEC-001** | Spec PASS — unblocks `OVR-P55-PREVIEW-001` | **re-close** |
-| **DES-POWER-NODE-HOVER / VOLTAGE** | PASS specs — registry sync | **re-close** |
+| **DES-APS-DEFAULT-PRESENCE-AUDIT-001** | Audit PASS | **done** |
+| **DES-APS-ASSEMBLY-EMPTY-G2-001** | Copy spec | **done** · coder-mcp wired |
+| **APS-UX-AUDIT-001 v2** | PASS WITH NOTES | **done** · polish tail shipped |
+| **DES-APS-GRAM-TIER-004** | G0/G1 empty copy | **done** — **building** tier only |
+| **DES-APS-TAG-TIER2-001** | Preset spec | **done** · coder-mcp wired |
+| **DES-APS-TAG-RUBRIC-001** | Operator charter | **done** (operator pending) |
 
 ---
 
-## Dependency spine (APS presence)
+## P2 — city grammar (designer-mcp — NOT YET ACTIVE)
+
+| ID | Phase | Status | Blocker | Notes |
+|:---|:---|:---|:---|:---|
+| **DES-CITY-BLOCK-RECIPE-001** | G1 / CITY-C3 | **DRAFT** | `CITY-G0-WIT-001` | Charter on disk — designer-mcp PASS after G0c |
+| **DES-CITY-PALETTE-VARIATION-001** | G2 / CITY-C5 | **blocked** | G1 gate (`CITY-G1-C3-001`) | Kit × palette charter — **designer-mcp** |
+
+**Queue:** [`city_grammar_queue.json`](../../tools/orchestrator/queues/city_grammar_queue.json)
+
+**Gap vs APS specs:** Existing APS designer work covers **building grammar UI** (tier chips, tags, presence). City plan adds a **block tier** above buildings — **no designer spec on disk yet**; rows above are seeded and blocked correctly on G0.
+
+---
+
+## Dependency spine (updated)
 
 ```text
-APS-GUARD-BRIEF-PARITY-001          [coder-mcp DONE]
-        ├─ APS-GRAM-TIER-GATES-LIVE-001   [coder-mcp PICK]
-        ├─ DES-APS-SESSION-DUMP-001       [coder-mcp PICK]
-        └─ DES-APS-ASSEMBLY-EMPTY-G2-001  [designer copy DONE → coder-mcp impl]
-                ↓
-PLAN-APS-PRESENCE-PLAN-EDIT-001     [planner PICK]
-OVR-APS-PRESENCE-OPERATOR-001       [operator WAIT]
+APS-PRESENCE + G4-COVERAGE          [coder-mcp DONE 2026-07-03]
+        ↓
+CITY-G0-S11 / G0-S1C              [coder_a / coder_b PICK]
+        ↓
+CITY-G0-WIT-001                   [coder — determinism witness]
+        ↓
+DES-CITY-BLOCK-RECIPE-001         [designer-mcp — first city designer pick]
+        ↓
+CITY-G1 (C1→C2→C3)               [coder + designer-mcp recipe]
+        ↓
+DES-CITY-PALETTE-VARIATION-001    [designer-mcp G2]
 ```
-
----
-
-## Coder spine (post-drain — not designer)
-
-| Track | Hot rows | Designer already shipped |
-|:---|:---|:---|
-| **T2 BUILD-READ** | REWIRE 003/004 · pilot lint | [`design_build_read_hud_v2.md`](design_build_read_hud_v2.md) |
-| **T4 FIRE** | F2 extract done · ignition P0 | [`fire_f2_extract_readability_pass_001.md`](fire_f2_extract_readability_pass_001.md) |
-| **T5 SIM-HUD** | ESC cascade done · theme wired | F2 overlay/minimap/pause v2 specs |
-| **T6 POWER** | COD-POWER-* waits on design PASS | All Track A–D specs PASS on disk |
-| **T8 INFRA** | VM-10 lockstep green · VM-11 audit | [`design_vm11_preview_audit_v1.md`](design_vm11_preview_audit_v1.md) |
-
----
-
-## Designer queue hygiene targets
-
-| Queue | Issue | Fix |
-|:---|:---|:---|
-| `multi_parallel_home_queues_v1.json` | T1 APS rows `blocked` despite PASS specs | `done` + `witness` + `exit_predicate` |
-| `designer_signoff_registry.json` | INTEL-OFFICER reopen stubs | Restore **SIGNED** where spec **PASS** |
-| `aps_uiux_overhaul_queue.json` | P55 spec `reopened` | Mark **done** — unblocks coder-mcp preview |
-| `designer_active_queue.json` | `multi_parallel_ready` stale reopen | Align with registry |
 
 ---
 
 ## Do not open (designer)
 
-- New tier matrix specs — [`design_aps_grammar_tier_exposure_v1.md`](design_aps_grammar_tier_exposure_v1.md) still authoritative
-- Landscape LG-5 matrix amend — separate spine per audit §3.2
+- New **building** tier matrix specs — [`design_aps_grammar_tier_exposure_v1.md`](design_aps_grammar_tier_exposure_v1.md) still authoritative for APS
+- Block-tier UI in APS before G1 engine lands — charter recipes first (designer-mcp)
 - Stage 5 / construction param re-litigation — closed boards
 
 ---
@@ -87,3 +81,4 @@ OVR-APS-PRESENCE-OPERATOR-001       [operator WAIT]
 | Date | Notes |
 |:---|:---|
 | 2026-06-02 | Initial gang rollup + APS presence designer tail |
+| 2026-07-03 | G4 closed · city grammar designer-mcp rows seeded · APS building designer lane closed |

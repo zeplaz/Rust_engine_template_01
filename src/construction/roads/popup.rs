@@ -9,7 +9,7 @@ use crate::construction::construction_pipeline::{ConstructionPlanQueue, Executed
 use crate::construction::sessions::ActiveToolSession;
 use crate::construction::snap::RoadSnapSettings;
 use crate::construction::upgrade::enqueue_road_upgrade;
-use crate::gui::{MapCameraDesired, SimulationMapViewport};
+use crate::gui::{MapCameraDesiredRes, SimulationMapViewport};
 use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
 
 use super::commit::commit_road_path_to_queue;
@@ -33,7 +33,7 @@ pub fn draw_road_tool_popup_egui(
     params: Res<WorldGenParams>,
     win: Query<&Window, With<PrimaryWindow>>,
     authority: Option<Res<crate::render::view_runtime::ViewProjectionAuthority>>,
-    desired: Res<MapCameraDesired>,
+    desired: Res<MapCameraDesiredRes>,
     map_vp: Res<SimulationMapViewport>,
 ) -> Result {
     popup.cancel_requested = false;

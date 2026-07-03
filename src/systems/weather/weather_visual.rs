@@ -2,23 +2,21 @@
 //! from [`ClimateVisualAggregate`](crate::render::ClimateVisualAggregate) (synced in atmosphere visual extract).
 //!
 //! Not physically accurate—sets up ECS structure, hooks, and tunables for later art/VFX swaps.
-//! Overlay + flakes live under the primary [`Camera2d`] so they track the view.
+//! Overlay + flakes live under [`MainWorldCamera`] (RTT layer) above world tiles.
 
 use std::f32::consts::TAU;
 
 use bevy::prelude::*;
 use rand::{thread_rng, Rng};
 
-use crate::gui::{
-    camera_translation, camera_zoom, map_zoom_alpha, MapCameraDesired, ViewId, ViewManager,
-    MAP_ZOOM_CLAMP,
-};
-use crate::render::{resolved_particle_half_extents, ResolvedViewports, ViewportPipelineSet};
+use crate::render::ExtractedCameraMetrics;
+use crate::render::{resolved_particle_half_extents, ResolvedViewports};
 use crate::systems::atmosphere::pipeline::AtmospherePipelineSet;
 use crate::render::ClimateVisualAggregate;
 use crate::render::{trace_particle_routing, DebugRenderTraceConfig};
 use crate::systems::weather::ChunkWeather;
 use crate::terrain::generation::Chunk;
+use crate::engine::states::BaseState;
 
 /// Enable / cap weather visuals (designer can toggle from diagnostics later).
 #[derive(Resource, Debug, Clone)]
@@ -103,6 +101,10 @@ pub struct WeatherPrecipVisualSample {
     pub chunk_count: u32,
 }
 
+/// Z above tile fallback sprite (z=0) so precip reads on top of the world in RTT.
+const WEATHER_OVERLAY_Z: f32 = 480.0;
+const WEATHER_PRECIP_Z_BASE: f32 = 360.0;
+
 #[derive(Component)]
 pub struct WeatherVfxCameraChild;
 
@@ -162,6 +164,7 @@ fn attach_weather_vfx_to_camera(
     let vfx_root = commands
         .spawn((
             WeatherVfxCameraChild,
+            crate::gui::simulation_map_rtt_render_layers(),
             Name::new("WeatherVfxRoot"),
             Transform::default(),
             Visibility::Visible,
@@ -171,7 +174,7 @@ fn attach_weather_vfx_to_camera(
                 WeatherPrecipOverlay,
                 Mesh2d(overlay_mesh),
                 MeshMaterial2d(overlay_mat.clone()),
-                Transform::from_translation(Vec3::new(0.0, 0.0, -400.0)),
+                Transform::from_translation(Vec3::new(0.0, 0.0, WEATHER_OVERLAY_Z)),
                 Visibility::Visible,
             ));
             for i in 0..cap {
@@ -198,7 +201,7 @@ fn attach_weather_vfx_to_camera(
                 parent.spawn((
                     Mesh2d(mesh),
                     MeshMaterial2d(mat),
-                    Transform::from_translation(Vec3::new(x, y, -200.0 + i as f32 * 0.01)),
+                    Transform::from_translation(Vec3::new(x, y, WEATHER_PRECIP_Z_BASE + i as f32 * 0.01)),
                     Visibility::Hidden,
                     PrecipParticle {
                         kind,
@@ -231,7 +234,7 @@ fn update_overlay_from_weather(
     };
     if !settings.enabled || !settings.overlay {
         *last_alpha = -1.0;
-        if let Some(m) = materials.get_mut(&handles.overlay) {
+        if let Some(mut m) = materials.get_mut(&handles.overlay) {
             m.color = Color::WHITE.with_alpha(0.0);
         }
         return;
@@ -243,20 +246,18 @@ fn update_overlay_from_weather(
         return;
     }
     *last_alpha = alpha;
-    if let Some(m) = materials.get_mut(&handles.overlay) {
+    if let Some(mut m) = materials.get_mut(&handles.overlay) {
         m.color = Color::srgba(0.52, 0.58, 0.78, alpha);
     }
 }
 
 fn sync_precip_sample_at_camera_focus(
     climate: Res<ClimateVisualAggregate>,
-    view_manager: Res<ViewManager>,
-    desired: Res<MapCameraDesired>,
+    metrics: Res<ExtractedCameraMetrics>,
     weather: Query<(&Chunk, &ChunkWeather)>,
     mut sample: ResMut<WeatherPrecipVisualSample>,
 ) {
-    let focus = camera_translation(&view_manager, ViewId::WorldMain)
-        .unwrap_or_else(|| desired.translation.truncate());
+    let focus = metrics.translation;
     let mut local_rain = 0.0_f32;
     let mut local_snow = 0.0_f32;
     let mut local_fog = 0.0_f32;
@@ -296,8 +297,7 @@ fn tick_precip_particles(
     time: Res<Time>,
     settings: Res<WeatherVisualSettings>,
     sample: Res<WeatherPrecipVisualSample>,
-    view_manager: Res<ViewManager>,
-    desired: Res<MapCameraDesired>,
+    metrics: Res<ExtractedCameraMetrics>,
     resolved: Res<ResolvedViewports>,
     mut q: Query<(&mut Transform, &mut Visibility, &mut PrecipParticle)>,
     mut last_trace: Local<u64>,
@@ -318,10 +318,7 @@ fn tick_precip_particles(
         );
     }
 
-    let zoom = camera_zoom(&view_manager, ViewId::WorldMain)
-        .unwrap_or(desired.scale.x)
-        .clamp(MAP_ZOOM_CLAMP.0, MAP_ZOOM_CLAMP.1);
-    let zoom_alpha = map_zoom_alpha(zoom);
+    let zoom_alpha = metrics.zoom_alpha;
     let zoom_t = 1.0 - zoom_alpha;
     let focus_strength = 0.2 + 0.8 * zoom_t;
     let background_strength = 0.15 + 0.35 * (1.0 - zoom_t);
@@ -400,7 +397,7 @@ fn tick_precip_particles(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::gui::map_scale_for_zoom_alpha;
+    use crate::gui::{map_scale_for_zoom_alpha, map_zoom_alpha, MAP_ZOOM_CLAMP};
 
     fn rainy_sample() -> WeatherPrecipVisualSample {
         WeatherPrecipVisualSample {
@@ -463,6 +460,7 @@ impl Plugin for WeatherVisualPlugin {
         app.init_resource::<WeatherVisualSettings>()
             .init_resource::<WeatherPrecipVisualSample>()
             .add_systems(PostStartup, attach_weather_vfx_to_camera)
+            .add_systems(OnEnter(BaseState::Simulation), attach_weather_vfx_to_camera)
             .add_systems(
                 Update,
                 (
@@ -470,11 +468,10 @@ impl Plugin for WeatherVisualPlugin {
                         .after(AtmospherePipelineSet::VisualExtract)
                         .after(crate::gui::ViewAuthoritySystemSet::SyncViewManager),
                     update_overlay_from_weather.after(AtmospherePipelineSet::VisualExtract),
+                    tick_precip_particles
+                        .after(crate::render::ExtractedCameraMetricsSet::Sync)
+                        .after(sync_precip_sample_at_camera_focus),
                 ),
-            )
-            .add_systems(
-                PostUpdate,
-                tick_precip_particles.after(ViewportPipelineSet::Resolve),
             );
     }
 }

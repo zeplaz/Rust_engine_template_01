@@ -12,7 +12,7 @@ use super::gpu_buffer_registry::{
     WATER_PARTICLE_INSTANCES_BUFFER,
 };
 use crate::render::domain_overlay_gpu::{EcologyOverlayGpuRow, LogisticsOverlayGpuRow};
-use crate::render::gpu_particles::{GpuParticleInstance, GpuParticleQuadVertex};
+use crate::render::fire_vfx::pack::{GpuParticleInstance, GpuParticleQuadVertex};
 use crate::render::gpu_water_particles::{GpuWaterParticleInstance, GpuWaterParticleQuadVertex};
 use crate::render::sim_visual_extract::FireVisualGpuInstance;
 
@@ -22,6 +22,7 @@ pub struct PackedFormatId(pub u32);
 
 pub const FIRE_VISUAL_INSTANCE_FORMAT: PackedFormatId = PackedFormatId(1);
 pub const HEAT_DIFFUSION_CELL_FORMAT: PackedFormatId = PackedFormatId(2);
+/// Fire lane uses [`GpuParticleInstance`] — same 32-byte stride as [`GpuInstancedQuadInstance`].
 pub const FIRE_PARTICLE_INSTANCE_FORMAT: PackedFormatId = PackedFormatId(3);
 pub const FIRE_PARTICLE_EXPANDED_VERTEX_FORMAT: PackedFormatId = PackedFormatId(6);
 pub const WATER_PARTICLE_INSTANCE_FORMAT: PackedFormatId = PackedFormatId(7);

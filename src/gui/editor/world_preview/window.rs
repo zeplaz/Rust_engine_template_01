@@ -153,10 +153,10 @@ pub(crate) fn display_world_preview(
             let sp = world_gen.spacing.clone();
             let sheet_width = super::d04_sheet_width_px(ui.available_width());
 
-            egui::TopBottomPanel::top("world_preview_toolbar")
+            egui::Panel::top("world_preview_toolbar")
                 .frame(panel_frame)
                 .resizable(false)
-                .show_inside(ui, |ui| {
+                .show(ui, |ui| {
                     ui.horizontal(|ui| {
                         world_preview_toolbar(
                             ui,
@@ -187,10 +187,10 @@ pub(crate) fn display_world_preview(
                     });
                 });
 
-            egui::TopBottomPanel::bottom("world_preview_status")
+            egui::Panel::bottom("world_preview_status")
                 .frame(panel_frame)
                 .resizable(false)
-                .show_inside(ui, |ui| {
+                .show(ui, |ui| {
                     world_preview_status_bar(
                         ui,
                         view.layers,
@@ -202,12 +202,12 @@ pub(crate) fn display_world_preview(
                 });
 
             let sidebar_max = super::d02_sidebar_max_width_px(ui.available_width());
-            egui::SidePanel::left("world_preview_sidebar")
+            egui::Panel::left("world_preview_sidebar")
                 .frame(panel_frame)
                 .resizable(true)
-                .default_width(180.0_f32.min(sidebar_max))
-                .width_range(super::D02_SIDEBAR_MIN_W..=sidebar_max)
-                .show_inside(ui, |ui| {
+                .default_size(180.0_f32.min(sidebar_max))
+                .size_range(super::D02_SIDEBAR_MIN_W..=sidebar_max)
+                .show(ui, |ui| {
                     widget_scroll_vertical_fill("world_preview_sidebar_scroll", ui.available_height())
                         .show(ui, |ui| {
                             world_preview_sidebar(
@@ -235,12 +235,12 @@ pub(crate) fn display_world_preview(
             if sheet_open {
                 let sheet_id = egui::Id::new("world_gen_parameters_sheet");
                 ui.ctx().memory_mut(|m| m.request_focus(sheet_id));
-                egui::SidePanel::left("world_gen_parameters_sheet")
+                egui::Panel::left("world_gen_parameters_sheet")
                     .frame(panel_frame)
                     .resizable(true)
-                    .default_width(sheet_width)
-                    .width_range(super::D04_SHEET_WIDTH_MIN..=super::D04_SHEET_WIDTH_MAX)
-                    .show_inside(ui, |ui| {
+                    .default_size(sheet_width)
+                    .size_range(super::D04_SHEET_WIDTH_MIN..=super::D04_SHEET_WIDTH_MAX)
+                    .show(ui, |ui| {
                         ui.push_id(sheet_id, |ui| {
                             draw_world_gen_panel(ui, &mut world_gen, &mut tuning_io_hint, true);
                         });
@@ -251,7 +251,7 @@ pub(crate) fn display_world_preview(
             let mut d07_inset_side = 0.0f32;
             egui::CentralPanel::default()
                 .frame(panel_frame)
-                .show_inside(ui, |ui| {
+                .show(ui, |ui| {
                     let available = ui.available_size();
                     let size = viewport_rect_sanity.inspect_logical_size(
                         Vec2::new(available.x, available.y),

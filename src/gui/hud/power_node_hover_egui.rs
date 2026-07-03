@@ -9,7 +9,7 @@ use crate::construction::{
 };
 use crate::engine::states::BaseState;
 use crate::gui::hud::simulation_pointer_gate::SimulationMapPointerGate;
-use crate::gui::{MapCameraDesired, SimulationMapViewport, UiPalette};
+use crate::gui::{MapCameraDesiredRes, SimulationMapViewport, UiPalette};
 use crate::render::view_runtime::ViewProjectionAuthority;
 use crate::strategic::SiteFootprint;
 
@@ -65,7 +65,7 @@ pub fn draw_power_node_hover_egui(
     strip: Res<BuildStripState>,
     tool: Res<ActiveBuildTool>,
     authority: Option<Res<ViewProjectionAuthority>>,
-    desired: Res<MapCameraDesired>,
+    desired: Res<MapCameraDesiredRes>,
     params: Res<crate::terrain::generation::world_generator_enhanced::WorldGenParams>,
     sites: Query<&SiteFootprint>,
 ) -> Result {

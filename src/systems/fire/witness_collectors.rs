@@ -270,6 +270,7 @@ mod tests {
 
     #[test]
     fn simulation_writes_fire_ecology_live_json() {
+        crate::dev::debug_run_envelope::reset_witness_refresh_gate_for_tests();
         let _ = fs::remove_file(proof_output_path());
         let mut app = assemble_fire_proof_app();
         for _ in 0..24 {

@@ -13,10 +13,12 @@ from .paths import repo_root
 QUEUE_REGISTRY: dict[str, str] = {
     "multi_parallel": "tools/orchestrator/queues/multi_parallel_home_queues_v1.json",
     "grammar": "tools/orchestrator/queues/grammar_continuation_queue.json",
+    "aps_grammar": "tools/orchestrator/queues/aps_grammar_evolution_queue.json",
     "continuation": "tools/orchestrator/queues/continuation_queue.json",
     "simulation": "tools/orchestrator/queues/simulation_continuation_queue.json",
     "phase4": "tools/orchestrator/queues/post_drain_phase4_queue.json",
     "power_ux": "tools/orchestrator/queues/power_grid_construction_ux_queue.json",
+    "aps_presence": "tools/orchestrator/queues/aps_presence_correction_queue.json",
 }
 
 MULTI_PARALLEL_DISPATCH = "tools/orchestrator/queues/multi_parallel_tracks_dispatch_v1.json"
@@ -460,13 +462,13 @@ def load_queue(queue: str) -> list[dict[str, Any]]:
 def save_queue(queue: str, items: list[dict[str, Any]]) -> Path:
     path = queue_path(queue) if queue != "designer_active" else repo_root() / DESIGNER_ACTIVE_QUEUE
     path.parent.mkdir(parents=True, exist_ok=True)
-    if queue in ("phase4", "multi_parallel") and path.is_file():
+    if queue in ("phase4", "multi_parallel", "aps_presence", "aps_grammar") and path.is_file():
         try:
             raw = json.loads(path.read_text(encoding="utf-8"))
         except json.JSONDecodeError:
             raw = {}
         if isinstance(raw, dict):
-            key = "drain" if queue == "multi_parallel" else "tasks"
+            key = "drain" if queue in ("multi_parallel", "aps_presence", "aps_grammar") else "tasks"
             raw[key] = items
             path.write_text(json.dumps(raw, indent=2) + "\n", encoding="utf-8")
             return path

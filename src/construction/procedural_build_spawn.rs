@@ -1,6 +1,7 @@
 //! PG-2 / PG-3.5 — spawn [`ProceduralBuildExtract`] module scenes at site transform on **Operational**.
 
 use bevy::prelude::*;
+use bevy::world_serialization::WorldAssetRoot;
 
 use crate::construction::iso_draw_scale::ConstructionIsoDrawScale;
 use crate::construction::procedural::{
@@ -107,7 +108,7 @@ pub fn spawn_procedural_build_on_site_operational(
                 local.scale = scale;
                 if let Some(scene) = inst.scene.as_ref() {
                     parent.spawn((
-                        SceneRoot(scene.clone()),
+                        WorldAssetRoot(scene.clone()),
                         local,
                         ProceduralBuildModuleChild {
                             module_id: inst.module_id.clone(),

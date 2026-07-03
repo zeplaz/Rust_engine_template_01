@@ -140,6 +140,9 @@ class VariantsPanel(ttk.Frame):
         reaction_combo.pack(side=tk.LEFT, padx=4, fill=tk.X, expand=True)
         reaction_combo.bind("<<ComboboxSelected>>", self._on_reaction_filter_change)
         bind_aps_tooltip(reaction_combo, "var_reaction_filter")
+        self._suggested_tags_row = ttk.Frame(left)
+        self._suggested_tags_row.pack(fill=tk.X, pady=(0, 4))
+        self._suggested_tag_buttons: list[ttk.Button] = []
         ttk.Label(left, text="Variants").pack(anchor=tk.W)
         self._empty_state = empty_state_label(left, "variants")
         self._empty_state.pack(anchor=tk.W, pady=2)
@@ -262,7 +265,10 @@ class VariantsPanel(ttk.Frame):
         ).grid(row=7, column=0, columnspan=4, sticky=tk.W, pady=(0, 4))
 
         apply_btn = ttk.Button(layer_row, text="Apply layers to selected", command=self.on_apply_layers)
-        apply_btn.grid(row=6, column=0, columnspan=4, pady=6, sticky=tk.W)
+        apply_btn.grid(row=6, column=0, columnspan=2, pady=6, sticky=tk.W)
+        ttk.Button(layer_row, text="Apply tag preset…", command=self._on_apply_tag_preset).grid(
+            row=6, column=2, columnspan=2, pady=6, sticky=tk.W
+        )
         bind_aps_tooltip(apply_btn, "var_apply_layers")
         bind_aps_tooltip(self._preview, "var_draft_preview")
 
@@ -444,6 +450,7 @@ class VariantsPanel(ttk.Frame):
                         break
             except (OSError, json.JSONDecodeError, KeyError):
                 pass
+        self._refresh_suggested_tag_chips()
         prev_key = self.state.selected_variant_key
         self._refresh_list()
         if prev_key and self._data:
@@ -459,6 +466,60 @@ class VariantsPanel(ttk.Frame):
         else:
             self._set_status("No variant rows match this reaction filter.", ok=None)
         self.preview_selected_variant(force=True)
+
+    def _current_archetype_id(self) -> str:
+        snap = self.state.assembly_snapshot_data or {}
+        return str(snap.get("archetype_id") or "IndustrialWarehouse")
+
+    def _refresh_suggested_tag_chips(self) -> None:
+        from rust_engine_mcp.aps_tag_tier2 import suggested_mandate_tags_for_event
+
+        for child in self._suggested_tags_row.winfo_children():
+            child.destroy()
+        self._suggested_tag_buttons.clear()
+        filt = self._reaction_filter_value()
+        if not filt or filt == "__base__":
+            return
+        tags = suggested_mandate_tags_for_event(filt)
+        if not tags:
+            return
+        ttk.Label(self._suggested_tags_row, text="Suggested tags:", font=FONT_SMALL).pack(side=tk.LEFT)
+        from rust_engine_mcp.aps_tag_vocabulary import mandate_tag_label
+
+        for tag in tags[:6]:
+            btn = ttk.Button(
+                self._suggested_tags_row,
+                text=mandate_tag_label(tag),
+                command=lambda t=tag: self._on_suggested_tag_chip(t),
+            )
+            btn.pack(side=tk.LEFT, padx=2)
+            self._suggested_tag_buttons.append(btn)
+
+    def _on_suggested_tag_chip(self, tag: str) -> None:
+        var = self._tag_vars.get(tag)
+        if var is not None:
+            var.set(True)
+            self._on_tag_draft(tag)
+            self._on_log(f"suggested tag chip: {tag}")
+
+    def _on_apply_tag_preset(self) -> None:
+        from rust_engine_mcp.aps_tag_tier2 import preset_confirm_lines, preset_for_archetype
+
+        archetype_id = self._current_archetype_id()
+        row = preset_for_archetype(archetype_id)
+        if not row:
+            self._set_status(f"No tier-2 tag preset for {archetype_id}.", ok=None)
+            return
+        lines = "\n".join(preset_confirm_lines(archetype_id))
+        if not messagebox.askyesno("Apply tag preset?", f"{lines}\n\nApply these mandate tags to the draft?"):
+            return
+        for tag in row.get("mandate_tags") or []:
+            var = self._tag_vars.get(str(tag))
+            if var is not None:
+                var.set(True)
+        self._tag_focus = None
+        self._refresh_tag_context()
+        self._on_log(f"tag preset {row.get('preset_name')} applied (draft) — Apply layers to save")
 
     def _load_data(self, data: dict, path: str | None) -> None:
         validate_variant_set(data)

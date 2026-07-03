@@ -98,9 +98,12 @@ def test_expanded_atlas_batch_witness(tile_dry_run: None) -> None:
     prev = os.environ.get("RUST_ENGINE_TILE_DRY_RUN")
     body = refresh_tile_landscape_expanded_witness()
     assert body.get("green") is True
-    assert body.get("png_count", 0) > 3
+    assert body.get("png_count", 0) >= 16
+    assert body.get("keyframe_count", 0) >= 16
     assert body.get("atlas_domain") == "landscape"
     assert body.get("bake_source") == "keyframe_pack"
+    assert body.get("ship_honest") is True
+    assert body.get("witness_honesty", {}).get("status") == "passed"
     rollup = repo_root() / EXPANDED_WITNESS_REL
     assert rollup.is_file()
     data = json.loads(rollup.read_text(encoding="utf-8"))

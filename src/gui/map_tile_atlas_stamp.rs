@@ -120,10 +120,9 @@ pub const ROWHOUSE_VICTORIAN_TILE_ID: &str = "rowhouse_victorian";
 pub const WAREHOUSE_INDUSTRIAL_TILE_ID: &str = "warehouse_industrial";
 pub const WAREHOUSE_INDUSTRIAL_ATLAS_ID: &str = "warehouse_industrial_west_v2";
 
-/// BUILD-READ-VISUAL-001 — rail warehouse pilot iso tile (logistics_rail_warehouse_v0).
+/// BUILD-READ-VISUAL-001 — first grammar pilot iso tile/atlas ids (tile atlas registry).
 pub const RAIL_WAREHOUSE_PILOT_TILE_ID: &str = "tile_rail_warehouse_pilot_v1";
 pub const RAIL_WAREHOUSE_PILOT_ATLAS_ID: &str = "rail_warehouse_pilot_v1";
-pub const RAIL_WAREHOUSE_PILOT_CATALOG_ID: &str = "pilot:logistics_rail_warehouse_v0";
 pub const TILE_FIX_10_WAREHOUSE_WITNESS_JSON: &str =
     "debug_runs/art_pipeline/tile_fix_10_warehouse_industrial_live.json";
 pub const ENG_PT4_WAREHOUSE_MAP_STAMP_LIVE_JSON: &str =
@@ -213,9 +212,9 @@ pub fn build_read_visual_pilot_stamp_request_green() -> bool {
     let Some(pilot) = pilots.first_grammar_pilot() else {
         return false;
     };
-    if pilot.catalog_id != RAIL_WAREHOUSE_PILOT_CATALOG_ID {
+    let Some(preset_id) = pilot.arch_dna_preset.clone() else {
         return false;
-    }
+    };
     let planned = PlannedSite {
         site_id: SiteId(1),
         origin: BuildSiteTile { x: 0, z: 0 },
@@ -255,7 +254,7 @@ pub fn build_read_visual_pilot_stamp_request_green() -> bool {
         floors: 1,
         style: StylePackId("style_industrial_west".into()),
         seed: 440013,
-        arch_dna_preset_id: Some("logistics_rail_warehouse_v0".into()),
+        arch_dna_preset_id: Some(preset_id),
     });
     let Some(req) = stamp_request_for_site(
         &registry,
@@ -280,23 +279,22 @@ pub fn resolve_atlas_entry_for_planned_site<'a>(
     planned: &PlannedSite,
     spec: Option<&ProceduralBuildingSpec>,
 ) -> Option<&'a crate::construction::procedural::TileAtlasEntry> {
-    if let Some(catalog) = planned.catalog_id.as_deref() {
-        if catalog == RAIL_WAREHOUSE_PILOT_CATALOG_ID
-            || (catalog.starts_with("pilot:") && catalog.contains("logistics_rail"))
-        {
+    if let Some(catalog_id) = planned.catalog_id.as_deref() {
+        let pilots = crate::construction::PilotCatalog::load_from_disk();
+        if catalog_id.starts_with("pilot:") && pilots.by_catalog_id(catalog_id).is_some() {
             if let Some(entry) = registry.atlas_for_tile_id(RAIL_WAREHOUSE_PILOT_TILE_ID) {
                 return Some(entry);
             }
         }
-        if let Some(entry) = registry.atlas_for_tile_id(catalog) {
+        if let Some(entry) = registry.atlas_for_tile_id(catalog_id) {
             return Some(entry);
         }
-        if catalog.contains("rowhouse") || catalog.contains("victorian") {
+        if catalog_id.contains("rowhouse") || catalog_id.contains("victorian") {
             if let Some(entry) = registry.atlas_for_tile_id(ROWHOUSE_VICTORIAN_TILE_ID) {
                 return Some(entry);
             }
         }
-        if catalog.contains("warehouse") || catalog.contains("industrial") {
+        if catalog_id.contains("warehouse") || catalog_id.contains("industrial") {
             if let Some(entry) = registry.atlas_for_tile_id(WAREHOUSE_INDUSTRIAL_TILE_ID) {
                 return Some(entry);
             }

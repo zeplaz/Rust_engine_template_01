@@ -6,13 +6,16 @@ use bevy::prelude::*;
 pub fn probe_update_schedule(world: &mut World) -> Result<(), String> {
     world
         .try_schedule_scope(Update, |world, schedule| {
-            schedule.initialize(world).map_err(|err| {
-                format!(
-                    "Update schedule initialize failed.\nDebug: {:?}\nDisplay:\n{}",
-                    err,
-                    err.to_string(schedule.graph(), world)
-                )
-            })
+            schedule
+                .initialize(world)
+                .map_err(|err| {
+                    format!(
+                        "Update schedule initialize failed.\nDebug: {:?}\nDisplay:\n{}",
+                        err,
+                        err.to_string(schedule.graph(), world)
+                    )
+                })
+                .map(|_| ())
         })
         .map_err(|_| "Update schedule missing".to_string())?
 }

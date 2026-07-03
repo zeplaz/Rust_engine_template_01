@@ -5,8 +5,8 @@ use std::collections::HashMap;
 use bevy::math::{IVec2, UVec2};
 
 use crate::gui::editor::world_preview::{
-    blend_fire_overlay, chunk_cell_key_for_world_tile, preview_biome_rgba_for_tile,
-    terrain_family_preview_rgba,
+    blend_fire_overlay, chunk_cell_key_for_world_tile, chunk_cell_layer_at_world_tile,
+    preview_biome_rgba_for_tile, terrain_family_preview_rgba,
 };
 use crate::render::CHUNK_FIRE_OVERLAY_DISPLAY_MIN;
 use crate::gui::editor::world_preview::{
@@ -219,6 +219,40 @@ pub fn apply_shared_fire_heat_to_rgba_subregion(
                 continue;
             };
             let heat = chunk_fire_heat.get(&key.chunk).copied().unwrap_or(0.0);
+            if heat < CHUNK_FIRE_OVERLAY_DISPLAY_MIN {
+                continue;
+            }
+            let i = 4 * (y * tex_w + x);
+            if i + 3 >= data.len() {
+                continue;
+            }
+            let base = [data[i], data[i + 1], data[i + 2], data[i + 3]];
+            let tint = (heat * boost * 0.42).min(0.72);
+            let out = blend_fire_overlay(base, tint, 0.0);
+            data[i..i + 4].copy_from_slice(&out);
+        }
+    }
+}
+
+/// Per-cell fire tint — only hot cells inside chunk slabs are painted (not whole chunks).
+pub fn apply_cell_fire_heat_to_rgba_subregion(
+    data: &mut [u8],
+    tex_w: usize,
+    x0: usize,
+    y0: usize,
+    x1: usize,
+    y1: usize,
+    cell_heat_layers: &[(IVec2, UVec2, &[f32])],
+    visibility_boost: f32,
+) {
+    if cell_heat_layers.is_empty() {
+        return;
+    }
+    let boost = visibility_boost.max(1.0);
+    for y in y0..y1 {
+        for x in x0..x1 {
+            let heat = chunk_cell_layer_at_world_tile(x as u32, y as u32, cell_heat_layers)
+                .unwrap_or(0.0);
             if heat < CHUNK_FIRE_OVERLAY_DISPLAY_MIN {
                 continue;
             }

@@ -107,12 +107,12 @@ pub fn init_world_preview_texture(
     let back_img = rgba_preview_image(params.width, params.height);
     let front = images.add(front_img);
     let back = images.add(back_img);
-    if let Some(image) = images.get_mut(&front) {
+    if let Some(mut image) = images.get_mut(&front) {
         if let Some(data) = image.data.as_mut() {
             data.fill(0);
         }
     }
-    if let Some(image) = images.get_mut(&back) {
+    if let Some(mut image) = images.get_mut(&back) {
         if let Some(data) = image.data.as_mut() {
             data.fill(0);
         }

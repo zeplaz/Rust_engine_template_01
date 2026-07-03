@@ -1,0 +1,39 @@
+{
+  "_agent_meta": {
+    "program": "PLAN-BEVY-019-MIG-v1",
+    "issue": "MIG-P0-G3-001",
+    "captured_at": "2026-07-03T18:40:00Z",
+    "branch": "master",
+    "bevy_version": "0.19"
+  },
+  "audit_pass": true,
+  "bevy_features": {
+    "enabled": ["serialize", "bevy_gizmos", "bevy_gizmos_render", "multi_threaded"],
+    "added_for_019": ["multi_threaded"],
+    "notes": {
+      "multi_threaded": "Required explicitly in Bevy 0.19 for parallel transform propagation.",
+      "audio": "Not used — no bevy audio features enabled; 2d/3d/ui no longer imply audio.",
+      "default_features": "Package default = [] — no implicit audio/window feature bundles."
+    }
+  },
+  "optional_features": {
+    "bevy_tilemap_adapter": {
+      "status": "deferred",
+      "reason": "bevy_ecs_tilemap 0.18.1 — blocked until 0.19-compatible release"
+    },
+    "hanabi_l3": {
+      "status": "go",
+      "crate": "bevy_hanabi 0.19"
+    },
+    "bevy_vector_shapes": {
+      "status": "go",
+      "crate": "0.13.0"
+    }
+  },
+  "ecosystem_pins": {
+    "bevy_egui": "0.41",
+    "image": "0.25",
+    "egui_panel_api": "migrated to Panel::show(ui) + root Ui helper (src/gui/egui_root.rs)"
+  },
+  "occlusion_culling": "enabled by default upstream — note for MIG-A adoption slices"
+}

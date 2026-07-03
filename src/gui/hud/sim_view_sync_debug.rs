@@ -19,6 +19,7 @@ use crate::gui::hud::{HudDockRegistry, HudWidgetId, ViewportRectSanity};
 use crate::gui::CommandLeftStackState;
 use crate::gui::map_camera::{
     MainWorldCamera, MainWorldCameraOrthoTrace, MainWorldCameraViewportLatch, MapCameraDesired,
+    MapCameraDesiredRes,
 };
 use crate::gui::{
     MinimapShellState, SimulationMapViewport, SimulationMapViewportDebug, SimulationMapViewportTrace,
@@ -145,7 +146,7 @@ pub(crate) struct SimViewSyncCtx<'w, 's> {
     dock: Res<'w, HudDockRegistry>,
     viewport_sanity: Res<'w, ViewportRectSanity>,
     left_stack: Res<'w, CommandLeftStackState>,
-    map_desired: Res<'w, MapCameraDesired>,
+    map_desired: Res<'w, MapCameraDesiredRes>,
     minimap: Res<'w, MinimapShellState>,
 }
 

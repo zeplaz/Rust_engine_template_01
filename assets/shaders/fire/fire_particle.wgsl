@@ -2,6 +2,8 @@
 // and expands each into four billboard vertices for `WorldFireFx` draw.
 // Phase A (FX-FIRE-SPARK-001): tiny spark half-edges; twinkle in draw fragment shader.
 // Asset path: `shaders/fire/fire_particle.wgsl` (`FIRE_PARTICLE_WGSL`).
+//
+// Rust backend: `GpuInstancedQuadInstance` / fire alias `GpuParticleInstance` — same 32-byte stride.
 
 struct ParticleDrawUniforms {
     instance_count: u32,
@@ -9,6 +11,7 @@ struct ParticleDrawUniforms {
     time_secs: f32,
     camera_zoom: f32,
     zoom_alpha: f32,
+    // FireSparkDrawExtension — separate bind when a second consumer lands.
     spark_sim_enabled: f32,
 }
 
@@ -19,7 +22,7 @@ struct SparkSimState {
 
 struct GpuParticleInstance {
     world_xyz_heat: vec4<f32>,
-    /// xy zw lane order matches Rust `GpuParticleInstance`; `.z` is **world half-edge base** for billboard expansion.
+    /// `.z` is **world half-edge base** for billboard expansion (not light falloff radius).
     ember_class_radius_smoke: vec4<f32>,
 }
 
@@ -42,16 +45,13 @@ fn expand_instances(@builtin(global_invocation_id) gid: vec3<u32>) {
     let heat = row.world_xyz_heat.w;
     let ember = row.ember_class_radius_smoke.x;
     let class_id = row.ember_class_radius_smoke.y;
-    // Rust supplies a world **half-edge** already (not light falloff radius — that is 100+ world units).
     let base_half = row.ember_class_radius_smoke.z;
     let smoke = row.ember_class_radius_smoke.w;
     let za = clamp(params.zoom_alpha, 0.0, 1.0);
-    // Phase B: advected spark centers from `fire_spark_compute.wgsl` when enabled.
     var world = row.world_xyz_heat.xyz;
     if params.spark_sim_enabled > 0.5 {
         world = spark_state[i].pos.xyz;
     }
-    // Rust already clamps world half-edge; only apply tactical zoom fade (D-F01 / D-F07 / D-F09).
     var half = base_half * (0.82 + heat * 0.18);
     half = half * (0.32 + za * 0.68);
     half = clamp(half, 0.015, 1.5);

@@ -1,0 +1,49 @@
+(
+    schema_version: 1,
+    table_id: "block_archetype_thresholds_v1",
+    default_archetype: ForestPark,
+    bands: [
+        (
+            archetype: ForestPark,
+            max_pressure_residential: Some(0.20),
+            max_pressure_commercial: Some(0.20),
+            max_pressure_industrial: Some(0.18),
+            max_saturation: Some(0.25),
+            max_transport_access: Some(0.40),
+            zoning_any_of: [Rural],
+        ),
+        (
+            archetype: Civic,
+            min_transport_access: Some(0.55),
+            max_saturation: Some(0.45),
+            zoning_any_of: [Civic],
+        ),
+        (
+            archetype: Industrial,
+            min_pressure_industrial: Some(0.52),
+            min_transport_access: Some(0.35),
+            zoning_any_of: [Industrial, MixedUse],
+        ),
+        (
+            archetype: HighDensityCommercial,
+            min_pressure_commercial: Some(0.58),
+            min_saturation: Some(0.38),
+            min_transport_access: Some(0.50),
+            zoning_any_of: [Commercial, MixedUse],
+        ),
+        (
+            archetype: MediumDensityRes,
+            min_pressure_residential: Some(0.48),
+            min_saturation: Some(0.28),
+            max_saturation: Some(0.62),
+            zoning_any_of: [Residential, MixedUse],
+        ),
+        (
+            archetype: LowDensityRes,
+            min_pressure_residential: Some(0.32),
+            max_saturation: Some(0.38),
+            max_transport_access: Some(0.72),
+            zoning_any_of: [Residential, Rural],
+        ),
+    ],
+)

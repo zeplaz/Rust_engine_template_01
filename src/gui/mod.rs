@@ -12,9 +12,11 @@ mod minimap_shell;
 mod minimap_egui_dev;
 mod minimap_viewport_frame;
 mod map_camera;
+pub mod sim_map_rtt;
 mod map_zoom_coherence;
 mod sim_map_projection;
 mod vfx_fire_test_highlight;
+mod settlement_block_frame_debug;
 mod assembly_snapshot_qc_ui;
 mod map_view;
 mod map_presentation_controls;
@@ -36,7 +38,8 @@ pub mod map_tile_raster;
 pub mod map_tile_atlas_stamp;
 pub mod landscape_chunk_atlas_stamp;
 pub mod construction_growth_inspector;
-pub mod egui_window;
+pub mod egui_root;
+mod egui_window;
 mod app_shell;
 mod main_menu;
 mod splash;
@@ -85,6 +88,10 @@ pub use vfx_fire_test_highlight::{
     draw_vfx_fire_test_highlight_overlay, refresh_vfx_fire_test_highlight_from_burning,
     vfx_fire_test_highlight_001_witness_green, vfx_fire_test_highlight_001_witness_json,
     VfxFireTestHighlight, VfxFireTestHighlightPlugin,
+};
+pub use settlement_block_frame_debug::{
+    draw_block_frame_debug_overlay, settlement_block_frame_debug_overlay_wired_witness_green,
+    BlockFrameDebugUiState, SettlementBlockFrameDebugPlugin,
 };
 pub use input_bindings::InputBindings;
 pub use minimap_shell::{
@@ -153,17 +160,26 @@ pub use style::{
     UiThemePlugin,
     VertSpace,
 };
+pub use egui_root::new_root_ui;
 pub use egui_window::std_floating;
+pub use sim_map_rtt::{
+    apply_simulation_map_camera_clear, insert_simulation_map_texture, simulation_map_rtt_clear_color,
+    simulation_map_rtt_image, simulation_map_rtt_render_layers, simulation_map_texture_extent,
+    spawn_simulation_hud_ui_camera, SimulationHudUiCamera, SimulationMapFillRect,
+    SimulationMapTexture, SIMULATION_MAP_RTT_RENDER_LAYER,
+};
 pub use authoritative_viewport::{
     bootstrap_authoritative_viewport_on_enter_simulation, measure_sim_map_fill_viewport,
-    AuthoritativeViewport, CENTER_ROW_HORIZONTAL_PAD_PX, SimulationMapViewportHoleLatch,
+    sync_simulation_map_fill_debug_trace, AuthoritativeViewport, CENTER_ROW_HORIZONTAL_PAD_PX,
 };
 pub use map_camera::{
     default_map_zoom_for_world, in_simulation_or_editor_map, map_camera_viewport_pixels,
     map_zoom_limits_for_world, orthographic_fixed_world_span, primary_cursor_world_xy,
     MainWorldCamera,
-    MainWorldCameraOrthoTrace, MainWorldCameraViewportLatch, MapCameraDesired, MapCameraMode,
+    MainWorldCameraOrthoTrace, MainWorldCameraViewportLatch, MapCameraDesired, MapCameraDesiredRes,
+    MapCameraMode,
     reset_main_world_camera_viewport_latch_on_enter_simulation,
+    sync_main_world_camera_viewport_and_projection,
     MapCameraPlugin, MapCameraSettings, MapCameraSystemSet,
     derive_map_camera_desired_from_view_authority, mirror_world_main_camera_from_map_desired,
     map_scale_for_zoom_alpha, map_zoom_alpha, map_zoom_alpha_with_limits,
@@ -240,6 +256,7 @@ pub use viewport_authority::{
 pub use view_authority::{
     commit_map_camera_pose_to_view_authority, commit_world_main_map_focus,
     map_camera_desired_from_view_authority, sync_view_manager_world_main_from_authority,
+    tactical_camera_world_pose,
     view_camera_state_from_map_camera_desired,
     DebugFlags, OverlayMask, PerViewLodHints, ViewAuthorityPlugin, ViewAuthoritySystemSet,
     ViewCameraState, ViewCameraTag, ViewFilterMask, ViewId, ViewInstance, ViewInteractionState,

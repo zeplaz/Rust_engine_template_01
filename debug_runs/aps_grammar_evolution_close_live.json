@@ -2,7 +2,7 @@
   "gate": "APS-GRAM-CLOSE-001",
   "program_id": "PLAN-APS-GRAMMAR-EVOLUTION-001",
   "status": "pass",
-  "tier": "G3",
+  "tier": "G4",
   "rows_closed": 8,
   "green": true,
   "slices": {
@@ -26,7 +26,7 @@
     "APS-GRAM-TIER-004": "debug_runs/aps_grammar_spine_tier_live.json"
   },
   "grammar_set_tier": {
-    "tier": "G3",
+    "tier": "G4",
     "archetype_count": 4,
     "district_count": 5,
     "grammar_files": [
@@ -35,9 +35,7 @@
       "industrial_warehouse_v1.ron",
       "rail_edge_v1.ron"
     ],
-    "reasons": [
-      "building_set_coverage not green for G4"
-    ],
+    "reasons": [],
     "source": "grammar_set_tier()",
     "preset_count": 4,
     "f_axis_count": 4
@@ -58,7 +56,7 @@
     "profile": "APS_GRAM_CLOSE",
     "relative_path": "debug_runs/aps_grammar_evolution_close_live.json",
     "source_system": "grammar_build_set",
-    "written_at_epoch_secs": 1782012813
+    "written_at_epoch_secs": 1783098002
   },
   "witness_honesty": {
     "status": "passed",

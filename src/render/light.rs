@@ -142,7 +142,7 @@ fn spawn_local_light_slots_once(
                 color: Color::WHITE,
                 intensity: 0.0,
                 range: 1.0,
-                shadows_enabled: false,
+                shadow_maps_enabled: false,
                 ..default()
             },
             Name::new(format!("LocalLightSlot_{i}")),

@@ -32,7 +32,7 @@ pub use tile_chunk_map::{
 };
 pub use editor_chunk_tile_sync::sync_tile_markers_into_affected_chunk_matrices;
 pub use derived::{compute_slope_grade, stitch_all_chunk_slope_grades, stitch_chunk_slope_grades, ChunkDerivedMetrics};
-pub use chunk::Chunk;
+pub use chunk::{chunk_cell_world_center, chunk_world_center, chunk_world_origin, Chunk};
 pub use geo_plugin::*;
 pub use world_generator::*;
 pub use bevy_terrain_gen::*;

@@ -186,6 +186,7 @@ pub(crate) fn sync_world_preview_offscreen_camera(
     preview_cam: Res<PreviewCameraState>,
     gpu_rt: Res<WorldPreviewGpuRuntime>,
     images: Res<Assets<Image>>,
+    palette: Res<crate::gui::UiPalette>,
     contract: Res<super::render_target_barrier::WorldPreviewRenderViewportContract>,
     mut bind_barrier: ResMut<WorldPreviewRenderTargetBindBarrier>,
     mut registry: ResMut<WorldPreviewRenderTargetRegistry>,
@@ -232,7 +233,7 @@ pub(crate) fn sync_world_preview_offscreen_camera(
     if q_gpu.is_empty() {
         let mut camera = Camera {
             order: 2,
-            clear_color: ClearColorConfig::Custom(Color::srgb(0.06, 0.09, 0.14)),
+            clear_color: ClearColorConfig::Custom(palette.bevy_sim_map_field_clear()),
             ..default()
         };
         camera.viewport = viewport;
@@ -398,7 +399,7 @@ pub(crate) fn sync_world_preview_gpu_chunk_quads(
                 .insert(Transform::from_translation(center));
             if recolor {
                 if let Ok((_, quad)) = sync.q_chunks.get(entity) {
-                    if let Some(mat) = sync.color_materials.get_mut(&quad.material) {
+                    if let Some(mut mat) = sync.color_materials.get_mut(&quad.material) {
                         mat.color = color;
                     }
                 }

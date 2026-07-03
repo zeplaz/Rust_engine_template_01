@@ -190,6 +190,11 @@ pub fn load_landscape_atlas_registry_from_path(path: &Path) -> LandscapeAtlasReg
     registry
 }
 
+/// Startup resource — single load of LG-5 index for runtime consumers (VEG-F01).
+pub fn init_landscape_atlas_registry(mut commands: Commands) {
+    commands.insert_resource(load_landscape_atlas_registry());
+}
+
 #[must_use]
 pub fn load_landscape_atlas_registry() -> LandscapeAtlasRegistry {
     let json_path = repo_asset_path(LANDSCAPE_ATLAS_INDEX_JSON);

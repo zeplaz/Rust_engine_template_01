@@ -66,6 +66,7 @@ impl SemanticViewportRect {
             valid: self.valid,
             min: self.min,
             max: self.max,
+            ..Default::default()
         }
     }
 }
@@ -189,8 +190,7 @@ pub fn viewport_rescue_floor(window: Vec2) -> SemanticViewportRect {
 
 /// When frozen envelope exceeds adequate semantic measure, follow semantic (heal hud_root overshoot).
 #[must_use]
-/// @orchestrator-status IN_PROGRESS
-/// @orchestrator-do-not-cleanup
+#[allow(dead_code)] // hole publish path removed (RTT); retained for layout-solver tests + heal contract
 pub fn frozen_exceeds_semantic_authority(
     frozen: &SemanticViewportRect,
     semantic: &SemanticViewportRect,

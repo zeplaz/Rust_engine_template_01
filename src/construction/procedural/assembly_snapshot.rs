@@ -399,6 +399,125 @@ pub fn staging_relative_path(snapshot: &AssemblySnapshot) -> String {
     )
 }
 
+/// **CITY-G0-WIT-001** — fixed grammar→assembly spec for determinism witness.
+pub const CITY_G0_WIT_ARCHETYPE: &str = "IndustrialWarehouse";
+pub const CITY_G0_WIT_DISTRICT: &str = "industrial_west";
+pub const CITY_G0_WIT_SEED: u64 = 43;
+pub const CITY_G0_WIT_RUNS: u32 = 3;
+pub const CITY_G0_WIT_LIVE_JSON: &str = "debug_runs/city_g0_wit_001_live.json";
+
+/// Stable SHA-256 hex over canonical JSON bytes (field order = struct definition).
+#[must_use]
+pub fn assembly_snapshot_stable_hash(snapshot: &AssemblySnapshot) -> String {
+    let bytes = serde_json::to_vec(snapshot).unwrap_or_default();
+    let digest = Sha256::digest(&bytes);
+    digest.iter().map(|b| format!("{b:02x}")).collect()
+}
+
+#[must_use]
+pub fn build_city_g0_wit_001_witness_body() -> serde_json::Value {
+    use super::building_grammar::{
+        city_g0_s11_typed_ids_witness_green, city_g0_s1c_split_witness_green,
+    };
+
+    let modules = super::load_procedural_module_registry();
+    let packs = super::load_style_pack_registry();
+    let registry_ok = modules.load_errors.is_empty() && packs.load_errors.is_empty();
+
+    let mut run_hashes = Vec::new();
+    let mut contract_ok = false;
+    for _ in 0..CITY_G0_WIT_RUNS {
+        match build_assembly_snapshot_from_grammar(
+            CITY_G0_WIT_ARCHETYPE,
+            CITY_G0_WIT_DISTRICT,
+            CITY_G0_WIT_SEED,
+            &modules,
+            &packs,
+        ) {
+            Ok(snapshot) => {
+                contract_ok = snapshot_passes_auto_001_contract(&snapshot);
+                run_hashes.push(assembly_snapshot_stable_hash(&snapshot));
+            }
+            Err(err) => {
+                return serde_json::json!({
+                    "gate": "CITY-G0-WIT-001",
+                    "green": false,
+                    "error": err,
+                    "registry_ok": registry_ok,
+                });
+            }
+        }
+    }
+
+    let three_run_stable = run_hashes.len() == CITY_G0_WIT_RUNS as usize
+        && run_hashes.windows(2).all(|w| w[0] == w[1]);
+
+    let seed_sensitivity_ok = build_assembly_snapshot_from_grammar(
+        CITY_G0_WIT_ARCHETYPE,
+        CITY_G0_WIT_DISTRICT,
+        CITY_G0_WIT_SEED.wrapping_add(1),
+        &modules,
+        &packs,
+    )
+    .ok()
+    .map(|s| assembly_snapshot_stable_hash(&s))
+    .is_some_and(|h| run_hashes.first().is_some_and(|base| h != *base));
+
+    let s11 = city_g0_s11_typed_ids_witness_green();
+    let s1c = city_g0_s1c_split_witness_green();
+    let green = registry_ok && three_run_stable && contract_ok && seed_sensitivity_ok && s11 && s1c;
+
+    serde_json::json!({
+        "gate": "CITY-G0-WIT-001",
+        "issue": "CITY-G0c",
+        "green": green,
+        "spec": {
+            "archetype_id": CITY_G0_WIT_ARCHETYPE,
+            "district_style": CITY_G0_WIT_DISTRICT,
+            "seed": CITY_G0_WIT_SEED,
+            "consecutive_runs": CITY_G0_WIT_RUNS,
+        },
+        "registry_ok": registry_ok,
+        "auto_001_contract": contract_ok,
+        "three_run_stable": three_run_stable,
+        "seed_sensitivity_ok": seed_sensitivity_ok,
+        "stable_hash": run_hashes.first(),
+        "run_hashes": run_hashes,
+        "g0_prerequisites": {
+            "city_g0_s11": s11,
+            "city_g0_s1c": s1c,
+        },
+    })
+}
+
+/// **CITY-G0-WIT-001** lib witness — same seed ⇒ identical assembly snapshot hash (3 runs).
+#[must_use]
+pub fn city_g0_wit_001_determinism_witness_green() -> bool {
+    build_city_g0_wit_001_witness_body()
+        .get("green")
+        .and_then(|v| v.as_bool())
+        .unwrap_or(false)
+}
+
+/// Write `debug_runs/city_g0_wit_001_live.json`.
+#[must_use]
+pub fn refresh_city_g0_wit_001_grammar_determinism_witness() -> bool {
+    use crate::dev::debug_run_envelope::{wrap_debug_run, write_debug_run_json};
+
+    let body = build_city_g0_wit_001_witness_body();
+    let green = body
+        .get("green")
+        .and_then(|v| v.as_bool())
+        .unwrap_or(false);
+    let wrapped = wrap_debug_run(
+        "CITY-G0-WIT-001",
+        "refresh_city_g0_wit_001_grammar_determinism_witness",
+        CITY_G0_WIT_LIVE_JSON,
+        body,
+    );
+    write_debug_run_json(CITY_G0_WIT_LIVE_JSON, wrapped) && green
+}
+
 /// Required AUTO-001 keys present and placements non-empty.
 #[must_use]
 pub fn snapshot_passes_auto_001_contract(snapshot: &AssemblySnapshot) -> bool {
@@ -540,6 +659,16 @@ mod tests {
             .find(|p| p.token == "R")
             .map(|p| p.slot_key.as_str());
         assert_ne!(roof_a, roof_b);
+    }
+
+    #[test]
+    fn city_g0_wit_001_assembly_snapshot_hash_stable_three_runs() {
+        assert!(city_g0_wit_001_determinism_witness_green());
+        let body = build_city_g0_wit_001_witness_body();
+        assert!(body["three_run_stable"].as_bool().unwrap_or(false));
+        let hashes = body["run_hashes"].as_array().expect("run_hashes");
+        assert_eq!(hashes.len(), CITY_G0_WIT_RUNS as usize);
+        assert!(body["seed_sensitivity_ok"].as_bool().unwrap_or(false));
     }
 
     #[test]

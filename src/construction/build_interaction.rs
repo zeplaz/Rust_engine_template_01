@@ -4,7 +4,7 @@ use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
 
 use crate::construction::map_egui_projection::ConstructionMapProjection;
-use crate::gui::{InputBindings, MapCameraDesired, SimulationMapViewport};
+use crate::gui::{InputBindings, MapCameraDesiredRes, SimulationMapViewport};
 use crate::render::view_runtime::ViewProjectionAuthority;
 use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
 use bevy_egui::EguiContexts;
@@ -73,7 +73,7 @@ pub fn build_pick_ghost_tile_system(
     buttons: Res<ButtonInput<MouseButton>>,
     win: Query<&Window, With<PrimaryWindow>>,
     authority: Option<Res<ViewProjectionAuthority>>,
-    desired: Res<MapCameraDesired>,
+    desired: Res<MapCameraDesiredRes>,
     map_vp: Res<SimulationMapViewport>,
     params: Res<WorldGenParams>,
     strip: Res<BuildStripState>,
@@ -108,7 +108,7 @@ pub fn build_pick_ghost_tile_system(
     let Ok(ctx) = egui_ctx.ctx_mut() else {
         return;
     };
-    if ctx.wants_pointer_input() {
+    if ctx.egui_wants_pointer_input() {
         return;
     }
 
@@ -116,7 +116,7 @@ pub fn build_pick_ghost_tile_system(
         return;
     };
 
-    if map_vp.valid && !map_vp.contains_cursor(cursor_px) {
+    if !map_vp.contains_cursor(cursor_px) {
         return;
     }
 
@@ -135,6 +135,10 @@ pub fn build_pick_ghost_tile_system(
     let tile = BuildSiteTile { x, z };
     let _conform_y = conform_world_y(world_xy.x, world_xy.y, &params);
 
+    if buttons.just_released(MouseButton::Left) {
+        ghost.drag_active = false;
+    }
+
     if buttons.just_pressed(MouseButton::Left) {
         if matches!(
             tool.tool,
@@ -149,10 +153,11 @@ pub fn build_pick_ghost_tile_system(
 
     if buttons.pressed(MouseButton::Left) && ghost.drag_active {
         ghost.origin = Some(tile);
+        return;
     }
 
-    if buttons.just_released(MouseButton::Left) {
-        ghost.drag_active = false;
+    if matches!(tool.tool, BuildTool::Building(_)) {
+        ghost.origin = Some(tile);
     }
 }
 

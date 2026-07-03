@@ -347,7 +347,7 @@ pub fn sync_power_node_hover_pick(
     time: Res<Time>,
     gate: Res<crate::gui::hud::simulation_pointer_gate::SimulationMapPointerGate>,
     authority: Option<Res<crate::render::view_runtime::ViewProjectionAuthority>>,
-    desired: Res<crate::gui::MapCameraDesired>,
+    desired: Res<crate::gui::MapCameraDesiredRes>,
     map_vp: Res<crate::gui::SimulationMapViewport>,
     params: Res<crate::terrain::generation::world_generator_enhanced::WorldGenParams>,
     registry: Res<BuildingDefinitionRegistry>,

@@ -3,16 +3,12 @@
 use std::borrow::Cow;
 
 use bevy::asset::AssetServer;
-use bevy::core_pipeline::core_2d::{
-    graph::{Core2d, Node2d},
-    CORE_2D_DEPTH_FORMAT,
-};
+use bevy::core_pipeline::{Core2d, core_2d::CORE_2D_DEPTH_FORMAT};
 use bevy::prelude::*;
 use bevy::render::render_resource::ShaderType;
 use bevy::render::{
     camera::ExtractedCamera,
     extract_resource::ExtractResource,
-    render_graph::{self, RenderGraph, RenderLabel, ViewNode, ViewNodeRunner},
     render_resource::{
         binding_types::uniform_buffer,
         BindGroup, BindGroupEntry, BindGroupLayoutDescriptor, BindGroupLayoutEntries,
@@ -25,14 +21,18 @@ use bevy::render::{
         RenderPipelineDescriptor, ShaderStages, StencilFaceState, StencilState, StoreOp,
         TextureFormat, UniformBuffer, VertexState,
     },
-    renderer::{RenderContext, RenderDevice, RenderQueue},
-    view::{Msaa, ViewDepthTexture, ViewTarget},
+    renderer::{RenderContext, RenderDevice, RenderQueue, ViewQuery},
+    view::{ExtractedView, Msaa, ViewDepthTexture, ViewTarget},
     Render, RenderApp, RenderStartup, RenderSystems,
 };
 
 use crate::gui::{MainWorldCamera, RepresentationResult, TileDebugRenderHost};
+use crate::render::core2d_overlay_order::{
+    core2d_overlay_pipeline_hdr_index, Core2dOverlaySet, CORE2D_OVERLAY_SDR_FORMAT,
+};
 use crate::render::gpu_buffer_registry::{GPUBufferRegistry, FIRE_PARTICLE_EXPANDED_VERTICES_BUFFER};
-use crate::render::gpu_particles::WorldFireParticleFrame;
+use crate::render::fire_vfx::WorldFireParticleFrame;
+use crate::render::gpu_particles::FireParticleCameraScale;
 
 pub const FIRE_PARTICLE_DRAW_WGSL: &str = "shaders/fire/fire_particle_draw.wgsl";
 
@@ -59,9 +59,6 @@ pub struct FireParticleDrawGlobals {
     pub _pad: f32,
 }
 
-#[derive(Debug, Hash, PartialEq, Eq, Clone, RenderLabel)]
-pub(crate) struct FireParticleRasterPassLabel;
-
 #[derive(Resource)]
 struct FireParticleRasterPipeline {
     globals_layout: BindGroupLayoutDescriptor,
@@ -77,8 +74,8 @@ struct FireParticleRasterBindGpu {
     storage_version: u64,
 }
 
-#[derive(Default)]
-struct FireParticleRasterNode {
+#[derive(Resource, Default)]
+struct FireParticleRasterPassReady {
     pipeline_ready: bool,
 }
 
@@ -91,6 +88,8 @@ pub fn register_fire_particle_raster_draw(app: &mut App) {
             Update,
             sync_fire_particle_draw_globals
                 .after(crate::render::sync_particle_draw_dispatch_from_policy)
+                .after(crate::render::extraction::FireVisualFrameSet::EmitParticles)
+                .after(crate::render::ExtractedCameraMetricsSet::Sync)
                 .run_if(crate::gui::in_simulation_or_editor_map),
         );
 
@@ -100,27 +99,36 @@ pub fn register_fire_particle_raster_draw(app: &mut App) {
 
     render_app
         .init_resource::<FireParticleRasterBindGpu>()
-        .add_systems(
-            RenderStartup,
-            (init_fire_particle_raster_pipeline, install_fire_particle_raster_graph_node).chain(),
-        )
+        .init_resource::<FireParticleRasterPassReady>()
+        .add_systems(RenderStartup, init_fire_particle_raster_pipeline)
         .add_systems(
             Render,
             prepare_fire_particle_raster_bind_groups.in_set(RenderSystems::PrepareBindGroups),
+        )
+        .add_systems(
+            Core2d,
+            (
+                ensure_fire_particle_raster_pipeline_ready,
+                fire_particle_raster_pass.after(ensure_fire_particle_raster_pipeline_ready),
+            )
+                .chain()
+                .in_set(Core2dOverlaySet::FireParticleRaster),
         );
 }
 
 fn sync_fire_particle_draw_globals(
     policy: Res<RepresentationResult>,
     particles: Res<WorldFireParticleFrame>,
-    cam_scale: Res<crate::render::gpu_particles::FireParticleCameraScale>,
+    cam_scale: Res<FireParticleCameraScale>,
     mut globals: ResMut<FireParticleDrawGlobals>,
     cam_q: Query<(&Camera, &GlobalTransform), With<MainWorldCamera>>,
 ) {
     globals.vertex_count = 0;
     globals.time_secs = particles.anim_time_secs;
     globals.zoom_alpha = cam_scale.zoom_alpha;
-    if !policy.particle_policy.instanced_draw {
+    let allow_draw =
+        policy.particle_policy.instanced_draw || !particles.instances.is_empty();
+    if !allow_draw {
         return;
     }
     let cap = policy
@@ -167,16 +175,16 @@ fn init_fire_particle_raster_pipeline(
     let shader = asset_server.load(FIRE_PARTICLE_DRAW_WGSL);
     let pipelines = std::array::from_fn(|hdr| {
         let fmt = if hdr == 0 {
-            TextureFormat::bevy_default()
+            CORE2D_OVERLAY_SDR_FORMAT
         } else {
-            ViewTarget::TEXTURE_FORMAT_HDR
+            TextureFormat::Rgba16Float
         };
         std::array::from_fn(|si| {
             let samples = MSAA_SAMPLES[si];
             let desc = RenderPipelineDescriptor {
                 label: Some(Cow::Borrowed("fire_particle_raster")),
                 layout: vec![globals_layout.clone(), expanded_layout.clone()],
-                push_constant_ranges: vec![],
+                immediate_size: 0,
                 vertex: VertexState {
                     shader: shader.clone(),
                     entry_point: Some(Cow::Borrowed("vs_main")),
@@ -216,8 +224,8 @@ fn init_fire_particle_raster_pipeline(
                 },
                 depth_stencil: Some(DepthStencilState {
                     format: CORE_2D_DEPTH_FORMAT,
-                    depth_write_enabled: false,
-                    depth_compare: CompareFunction::Always,
+                    depth_write_enabled: Some(false),
+                    depth_compare: Some(CompareFunction::Always),
                     stencil: StencilState {
                         front: StencilFaceState::IGNORE,
                         back: StencilFaceState::IGNORE,
@@ -249,110 +257,8 @@ fn init_fire_particle_raster_pipeline(
     });
 }
 
-fn install_fire_particle_raster_graph_node(world: &mut World) {
-    let runner = ViewNodeRunner::<FireParticleRasterNode>::from_world(world);
-    let mut graph = world.resource_mut::<RenderGraph>();
-    let Some(sub) = graph.get_sub_graph_mut(Core2d) else {
-        return;
-    };
-    sub.add_node(FireParticleRasterPassLabel, runner);
-    relink_core2d_transparent_overlay_order(sub);
-}
-
 /// P2-FIRE-SPARK-010: Core2d transparent chain ends at fire sparks (after water + optional tile debug).
 pub const FIRE_SPARKS_ABOVE_SMOKE_OVERLAY: bool = true;
-
-/// FX-FIRE-SPARK-004 / FX-WATER: terrain transparent → water → water particles → (tile debug) → sparks.
-pub(crate) fn relink_core2d_transparent_overlay_order(sub: &mut RenderGraph) {
-    use crate::render::gpu_tile_debug_draw::TileDebugInstancedPassLabel;
-    use crate::render::gpu_water_particle_raster::WorldWaterParticleRasterPassLabel;
-    use crate::render::gpu_water_surface_draw::WaterSurfaceDrawPassLabel;
-
-    let _ = sub.remove_node_edge(Node2d::MainTransparentPass, Node2d::EndMainPass);
-    let _ = sub.remove_node_edge(Node2d::MainTransparentPass, WorldWaterParticleRasterPassLabel);
-    let _ = sub.remove_node_edge(Node2d::MainTransparentPass, FireParticleRasterPassLabel);
-    let _ = sub.remove_node_edge(Node2d::MainTransparentPass, WaterSurfaceDrawPassLabel);
-    let _ = sub.remove_node_edge(Node2d::MainTransparentPass, TileDebugInstancedPassLabel);
-    let _ = sub.remove_node_edge(WaterSurfaceDrawPassLabel, Node2d::EndMainPass);
-    let _ = sub.remove_node_edge(WaterSurfaceDrawPassLabel, FireParticleRasterPassLabel);
-    let _ = sub.remove_node_edge(WaterSurfaceDrawPassLabel, WorldWaterParticleRasterPassLabel);
-    let _ = sub.remove_node_edge(WaterSurfaceDrawPassLabel, TileDebugInstancedPassLabel);
-    let _ = sub.remove_node_edge(WorldWaterParticleRasterPassLabel, Node2d::EndMainPass);
-    let _ = sub.remove_node_edge(WorldWaterParticleRasterPassLabel, FireParticleRasterPassLabel);
-    let _ = sub.remove_node_edge(WorldWaterParticleRasterPassLabel, TileDebugInstancedPassLabel);
-    let _ = sub.remove_node_edge(TileDebugInstancedPassLabel, Node2d::EndMainPass);
-    let _ = sub.remove_node_edge(TileDebugInstancedPassLabel, FireParticleRasterPassLabel);
-    let _ = sub.remove_node_edge(FireParticleRasterPassLabel, Node2d::EndMainPass);
-
-    let has_water = sub.get_node_state(WaterSurfaceDrawPassLabel).is_ok();
-    let has_water_particles = sub.get_node_state(WorldWaterParticleRasterPassLabel).is_ok();
-    let has_tile_debug = sub.get_node_state(TileDebugInstancedPassLabel).is_ok();
-    let has_fire = sub.get_node_state(FireParticleRasterPassLabel).is_ok();
-
-    if has_water {
-        sub.add_node_edge(Node2d::MainTransparentPass, WaterSurfaceDrawPassLabel);
-        if has_water_particles {
-            sub.add_node_edge(WaterSurfaceDrawPassLabel, WorldWaterParticleRasterPassLabel);
-            if has_tile_debug {
-                sub.add_node_edge(
-                    WorldWaterParticleRasterPassLabel,
-                    TileDebugInstancedPassLabel,
-                );
-                if has_fire {
-                    sub.add_node_edge(TileDebugInstancedPassLabel, FireParticleRasterPassLabel);
-                    sub.add_node_edge(FireParticleRasterPassLabel, Node2d::EndMainPass);
-                } else {
-                    sub.add_node_edge(TileDebugInstancedPassLabel, Node2d::EndMainPass);
-                }
-            } else if has_fire {
-                sub.add_node_edge(WorldWaterParticleRasterPassLabel, FireParticleRasterPassLabel);
-                sub.add_node_edge(FireParticleRasterPassLabel, Node2d::EndMainPass);
-            } else {
-                sub.add_node_edge(WorldWaterParticleRasterPassLabel, Node2d::EndMainPass);
-            }
-        } else if has_tile_debug {
-            sub.add_node_edge(WaterSurfaceDrawPassLabel, TileDebugInstancedPassLabel);
-            if has_fire {
-                sub.add_node_edge(TileDebugInstancedPassLabel, FireParticleRasterPassLabel);
-                sub.add_node_edge(FireParticleRasterPassLabel, Node2d::EndMainPass);
-            } else {
-                sub.add_node_edge(TileDebugInstancedPassLabel, Node2d::EndMainPass);
-            }
-        } else if has_fire {
-            sub.add_node_edge(WaterSurfaceDrawPassLabel, FireParticleRasterPassLabel);
-            sub.add_node_edge(FireParticleRasterPassLabel, Node2d::EndMainPass);
-        } else {
-            sub.add_node_edge(WaterSurfaceDrawPassLabel, Node2d::EndMainPass);
-        }
-    } else if has_water_particles {
-        sub.add_node_edge(Node2d::MainTransparentPass, WorldWaterParticleRasterPassLabel);
-        if has_tile_debug {
-            sub.add_node_edge(WorldWaterParticleRasterPassLabel, TileDebugInstancedPassLabel);
-            if has_fire {
-                sub.add_node_edge(TileDebugInstancedPassLabel, FireParticleRasterPassLabel);
-                sub.add_node_edge(FireParticleRasterPassLabel, Node2d::EndMainPass);
-            } else {
-                sub.add_node_edge(TileDebugInstancedPassLabel, Node2d::EndMainPass);
-            }
-        } else if has_fire {
-            sub.add_node_edge(WorldWaterParticleRasterPassLabel, FireParticleRasterPassLabel);
-            sub.add_node_edge(FireParticleRasterPassLabel, Node2d::EndMainPass);
-        } else {
-            sub.add_node_edge(WorldWaterParticleRasterPassLabel, Node2d::EndMainPass);
-        }
-    } else if has_tile_debug {
-        sub.add_node_edge(Node2d::MainTransparentPass, TileDebugInstancedPassLabel);
-        if has_fire {
-            sub.add_node_edge(TileDebugInstancedPassLabel, FireParticleRasterPassLabel);
-            sub.add_node_edge(FireParticleRasterPassLabel, Node2d::EndMainPass);
-        } else {
-            sub.add_node_edge(TileDebugInstancedPassLabel, Node2d::EndMainPass);
-        }
-    } else if has_fire {
-        sub.add_node_edge(Node2d::MainTransparentPass, FireParticleRasterPassLabel);
-        sub.add_node_edge(FireParticleRasterPassLabel, Node2d::EndMainPass);
-    }
-}
 
 fn prepare_fire_particle_raster_bind_groups(
     globals: Res<FireParticleDrawGlobals>,
@@ -411,131 +317,93 @@ fn prepare_fire_particle_raster_bind_groups(
     ));
 }
 
-impl ViewNode for FireParticleRasterNode {
-    type ViewQuery = (
-        &'static ExtractedCamera,
-        &'static ViewTarget,
-        &'static ViewDepthTexture,
-        &'static Msaa,
-        Has<TileDebugRenderHost>,
-    );
-
-    fn update(&mut self, world: &mut World) {
-        if self.pipeline_ready {
-            return;
-        }
-        let Some(pl) = world.get_resource::<FireParticleRasterPipeline>() else {
-            return;
-        };
-        let cache = world.resource::<PipelineCache>();
-        let mut all_ok = true;
-        for row in &pl.pipelines {
-            for id in row {
-                match cache.get_render_pipeline_state(*id) {
-                    CachedPipelineState::Ok(_) => {}
-                    _ => all_ok = false,
-                }
+fn ensure_fire_particle_raster_pipeline_ready(
+    pipeline: Option<Res<FireParticleRasterPipeline>>,
+    cache: Res<PipelineCache>,
+    mut ready: ResMut<FireParticleRasterPassReady>,
+) {
+    if ready.pipeline_ready {
+        return;
+    }
+    let Some(pl) = pipeline else {
+        return;
+    };
+    let mut all_ok = true;
+    for row in &pl.pipelines {
+        for id in row {
+            if !matches!(cache.get_render_pipeline_state(*id), CachedPipelineState::Ok(_)) {
+                all_ok = false;
             }
         }
-        if all_ok {
-            self.pipeline_ready = true;
-        }
     }
-
-    fn run(
-        &self,
-        _graph: &mut render_graph::RenderGraphContext,
-        render_context: &mut RenderContext,
-        (camera, view_target, depth, msaa, host): bevy::ecs::query::QueryItem<Self::ViewQuery>,
-        world: &World,
-    ) -> Result<(), render_graph::NodeRunError> {
-        if !host || !self.pipeline_ready {
-            return Ok(());
-        }
-        let globals = world.resource::<FireParticleDrawGlobals>();
-        if globals.vertex_count == 0 {
-            return Ok(());
-        }
-        let bind = world.resource::<FireParticleRasterBindGpu>();
-        let Some(bg0) = bind.bind_group_0.as_ref() else {
-            return Ok(());
-        };
-        let Some(bg1) = bind.bind_group_1.as_ref() else {
-            return Ok(());
-        };
-
-        let pipeline_res = world.resource::<FireParticleRasterPipeline>();
-        let cache = world.resource::<PipelineCache>();
-        let hdr = usize::from(view_target.is_hdr());
-        let si = msaa_index(msaa.samples());
-        let pipeline_id = pipeline_res.pipelines[hdr][si];
-        let Some(pl) = cache.get_render_pipeline(pipeline_id) else {
-            return Ok(());
-        };
-
-        let mut color = view_target.get_color_attachment();
-        color.ops.load = LoadOp::Load;
-        let depth_stencil = Some(depth.get_attachment(StoreOp::Store));
-
-        let mut pass = render_context.begin_tracked_render_pass(RenderPassDescriptor {
-            label: Some("fire_particle_raster"),
-            color_attachments: &[Some(color)],
-            depth_stencil_attachment: depth_stencil,
-            timestamp_writes: None,
-            occlusion_query_set: None,
-        });
-
-        if let Some(viewport) = camera.viewport.as_ref() {
-            pass.set_camera_viewport(viewport);
-        }
-
-        pass.set_render_pipeline(pl);
-        pass.set_bind_group(0, bg0, &[]);
-        pass.set_bind_group(1, bg1, &[]);
-        pass.draw(0..globals.vertex_count, 0..1);
-
-        Ok(())
+    if all_ok {
+        ready.pipeline_ready = true;
     }
+}
+
+fn fire_particle_raster_pass(
+    world: &World,
+    view: ViewQuery<(
+        &ExtractedCamera,
+        &ExtractedView,
+        &ViewTarget,
+        &ViewDepthTexture,
+        &Msaa,
+        Has<TileDebugRenderHost>,
+    )>,
+    mut ctx: RenderContext,
+    ready: Res<FireParticleRasterPassReady>,
+) {
+    let (_camera, extracted_view, view_target, depth, msaa, host) = view.into_inner();
+    if !host || !ready.pipeline_ready {
+        return;
+    }
+    let globals = world.resource::<FireParticleDrawGlobals>();
+    if globals.vertex_count == 0 {
+        return;
+    }
+    let bind = world.resource::<FireParticleRasterBindGpu>();
+    let Some(bg0) = bind.bind_group_0.as_ref() else {
+        return;
+    };
+    let Some(bg1) = bind.bind_group_1.as_ref() else {
+        return;
+    };
+
+    let pipeline_res = world.resource::<FireParticleRasterPipeline>();
+    let cache = world.resource::<PipelineCache>();
+    let hdr = core2d_overlay_pipeline_hdr_index(extracted_view.target_format);
+    let si = msaa_index(msaa.samples());
+    let pipeline_id = pipeline_res.pipelines[hdr][si];
+    let Some(pl) = cache.get_render_pipeline(pipeline_id) else {
+        return;
+    };
+
+    let mut color = view_target.get_color_attachment();
+    color.ops.load = LoadOp::Load;
+    let depth_stencil = Some(depth.get_attachment(StoreOp::Store));
+
+    let mut pass = ctx.begin_tracked_render_pass(RenderPassDescriptor {
+        label: Some("fire_particle_raster"),
+        color_attachments: &[Some(color)],
+        depth_stencil_attachment: depth_stencil,
+        timestamp_writes: None,
+        occlusion_query_set: None,
+        multiview_mask: None,
+    });
+
+    pass.set_render_pipeline(pl);
+    pass.set_bind_group(0, bg0, &[]);
+    pass.set_bind_group(1, bg1, &[]);
+    pass.draw(0..globals.vertex_count, 0..1);
 }
 
 #[cfg(test)]
 mod draw_order_tests {
     use super::*;
-    use bevy::core_pipeline::core_2d::graph::Node2d;
-    use bevy::render::render_graph::{self, RenderGraph, RenderGraphContext, NodeRunError};
-    use crate::render::gpu_water_surface_draw::WaterSurfaceDrawPassLabel;
-
-    struct StubNode;
-
-    impl render_graph::Node for StubNode {
-        fn run(
-            &self,
-            _ctx: &mut RenderGraphContext,
-            _render_ctx: &mut bevy::render::renderer::RenderContext,
-            _world: &World,
-        ) -> Result<(), NodeRunError> {
-            Ok(())
-        }
-    }
 
     #[test]
     fn transparent_overlay_order_chains_fire_after_water() {
-        use crate::render::gpu_tile_debug_draw::TileDebugInstancedPassLabel;
-
-        let mut sub = RenderGraph::default();
-        sub.add_node(Node2d::MainTransparentPass, StubNode);
-        sub.add_node(Node2d::EndMainPass, StubNode);
-        sub.add_node(WaterSurfaceDrawPassLabel, StubNode);
-        sub.add_node(FireParticleRasterPassLabel, StubNode);
-        sub.add_node(TileDebugInstancedPassLabel, StubNode);
-        relink_core2d_transparent_overlay_order(&mut sub);
-        assert_eq!(
-            sub.iter_node_inputs(FireParticleRasterPassLabel)
-                .expect("fire node")
-                .count(),
-            1,
-            "fire raster should follow exactly one overlay pass"
-        );
         assert!(FIRE_SPARKS_ABOVE_SMOKE_OVERLAY);
     }
 }

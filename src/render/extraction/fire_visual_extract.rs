@@ -55,7 +55,10 @@ use super::fire_extract_scan::{build_fire_extract_scan_set, fire_extract_glow_do
 use super::render_projection_graph::{run_render_projection_graph, RenderProjectionGraph};
 use super::smoke_visual_extract::{build_smoke_visual_extract, SmokeVisualBridgeWitness};
 use crate::render::visual_snapshot_commit::{commit_fire_visual_snapshot, CommittedVisualSnapshotFence};
-use crate::render::gpu_particles::{emit_world_fire_particles_from_projection, WorldFireParticleFrame};
+use crate::render::extracted_camera_metrics::ExtractedCameraMetricsSet;
+use crate::render::fire_vfx::{
+    emit_world_fire_particles_from_projection, WorldFireParticleFrame,
+};
 
 /// Chunk-scale **regional** hints for fog / atmosphere (from `FireVisualFrame::instances`; no ECS scan).
 #[derive(Resource, Default, Debug, Clone, Copy)]
@@ -114,7 +117,6 @@ impl Plugin for FireVisualFramePlugin {
             .init_resource::<FireAtmosphereAggregate>()
             .init_resource::<FireClusterScratch>()
             .init_resource::<WorldFireParticleFrame>()
-            .init_resource::<crate::render::gpu_particles::FireParticleCameraScale>()
             .init_resource::<crate::render::DomainOverlayGpuFrame>()
             .init_resource::<ActiveFireChunkSet>()
             .init_resource::<crate::render::Stage5FireViewChunkWitness>()
@@ -241,11 +243,11 @@ impl Plugin for FireVisualFramePlugin {
                 (
                     // PERF-INSTR-VFX-001: bracket the WorldFireParticleFrame build → `fire_particles`.
                     attrib_fire_particles_before,
-                    crate::render::gpu_particles::sync_fire_particle_camera_scale,
                     emit_world_fire_particles_from_projection,
                     attrib_fire_particles_after,
                 )
                     .chain()
+                    .after(ExtractedCameraMetricsSet::Sync)
                     .in_set(FireVisualFrameSet::EmitParticles),
             )
             .add_systems(
@@ -494,8 +496,35 @@ fn ingest_fire_chunk_row(
         mat_chunk,
         slab_heat,
     );
-    sim.instances.push(FireVisualGpuInstance::from(&profile));
-    report.instances_written = report.instances_written.saturating_add(1);
+    let mut instances_written = 0usize;
+    if let Some(ovl) = overlay {
+        let sx = matrix.size.x as usize;
+        if sx > 0 && ovl.heat.len() == sx * matrix.size.y as usize {
+            for (idx, &cell_heat) in ovl.heat.iter().enumerate() {
+                if cell_heat < FIRE_VISUAL_ACTIVE_HEAT_EPS {
+                    continue;
+                }
+                let cell_xy = crate::terrain::generation::chunk_cell_world_center(
+                    chunk.coord,
+                    matrix.size,
+                    idx,
+                );
+                let mut cell_profile = profile;
+                cell_profile.heat = cell_heat;
+                cell_profile.world_pos = Vec3::new(cell_xy.x, cell_xy.y, 0.0);
+                sim.instances
+                    .push(FireVisualGpuInstance::from(&cell_profile));
+                instances_written += 1;
+            }
+        }
+    }
+    if instances_written == 0 {
+        sim.instances.push(FireVisualGpuInstance::from(&profile));
+        instances_written = 1;
+    }
+    report.instances_written = report
+        .instances_written
+        .saturating_add(instances_written as u32);
     let coord = profile.chunk_coord;
     sim.chunk_heat.push(ChunkFireHeat {
         chunk: coord,
@@ -998,8 +1027,9 @@ mod vt1_full_world_fire_extract_tests {
     use crate::render::{tactical_fire_visual, FireVisualFramesByView};
     use crate::gui::{
         build_representation_inputs, build_representation_result, LodInputs, LodZoneRegistry,
-        RepresentationResult, VisualBudgetSettings, VisualCadence, WorldLodBand, WorldLodMap,
-        WorldLodPolicyEngine, WorldRepresentationFrame,
+        RepresentationResult, ViewCameraState, ViewId, ViewInstance, ViewInteractionState,
+        ViewManager, ViewProjection, ViewRenderPolicy, ViewRenderTarget, VisualBudgetSettings,
+        VisualCadence, WorldLodBand, WorldLodMap, WorldLodPolicyEngine, WorldRepresentationFrame,
     };
     use crate::render::light::RequestLocalLight;
     use crate::render::SharedOverlayFieldBuffersPlugin;
@@ -1008,6 +1038,58 @@ mod vt1_full_world_fire_extract_tests {
     use crate::terrain::generation::{Chunk, ChunkCellMatrix};
     use bevy::math::{IVec2, UVec2};
     use bevy::prelude::*;
+
+    use crate::engine::BaseState;
+    use crate::render::ExtractedCameraMetrics;
+    use bevy::state::app::StatesPlugin;
+
+    fn fire_visual_test_app() -> App {
+        let mut app = App::new();
+        app.add_plugins((MinimalPlugins, StatesPlugin));
+        app.insert_state(BaseState::Simulation);
+        app.add_message::<RequestLocalLight>();
+        app.add_plugins(SharedOverlayFieldBuffersPlugin);
+        app.init_resource::<AtmosphereDiagnostics>();
+        app.init_resource::<ExtractedCameraMetrics>();
+        app.init_resource::<crate::systems::sim_control::SimTick>();
+        app.init_resource::<crate::systems::sim_control::SimTimeMicros>();
+        app.init_resource::<WorldLodMap>();
+        app.init_resource::<WorldRepresentationFrame>();
+        app.init_resource::<RepresentationResult>();
+        app.add_plugins(FireVisualFramePlugin);
+        app
+    }
+
+    fn insert_operational_view_manager(world: &mut World) {
+        let render_policy = ViewRenderPolicy {
+            lod_band: WorldLodBand::Operational,
+            ..Default::default()
+        };
+        let camera = ViewCameraState {
+            translation: Vec2::ZERO,
+            zoom: 0.25,
+            rotation: 0.0,
+        };
+        let projection = camera.to_projection();
+        let viewport = Rect::from_corners(Vec2::ZERO, Vec2::new(8192.0, 8192.0));
+        let mut manager = ViewManager::default();
+        for id in [ViewId::WorldMain, ViewId::SimulationMap] {
+            manager.views.insert(
+                id,
+                ViewInstance {
+                    id,
+                    camera_entity: Entity::PLACEHOLDER,
+                    render_target: ViewRenderTarget::PrimaryWindow,
+                    camera,
+                    projection: projection.clone(),
+                    interaction_state: ViewInteractionState::default(),
+                    viewport_rect: viewport,
+                    render_policy: render_policy.clone(),
+                },
+            );
+        }
+        world.insert_resource(manager);
+    }
 
     fn sample_emitter() -> FireLightEmission {
         FireLightEmission {
@@ -1042,17 +1124,7 @@ mod vt1_full_world_fire_extract_tests {
 
     #[test]
     fn fire_visual_instances_span_multiple_chunks_in_world_space() {
-        let mut app = App::new();
-        app.add_plugins(MinimalPlugins);
-        app.add_message::<RequestLocalLight>();
-        app.add_plugins(SharedOverlayFieldBuffersPlugin);
-        app.init_resource::<AtmosphereDiagnostics>();
-        app.init_resource::<crate::systems::sim_control::SimTick>();
-        app.init_resource::<crate::systems::sim_control::SimTimeMicros>();
-        app.init_resource::<WorldLodMap>();
-        app.init_resource::<WorldRepresentationFrame>();
-        app.init_resource::<RepresentationResult>();
-        app.add_plugins(FireVisualFramePlugin);
+        let mut app = fire_visual_test_app();
 
         let cell = UVec2::new(16, 16);
         for coord in [
@@ -1110,17 +1182,7 @@ mod vt1_full_world_fire_extract_tests {
 
     #[test]
     fn strategic_band_keeps_full_frame_but_projection_drops_gpu_instances() {
-        let mut app = App::new();
-        app.add_plugins(MinimalPlugins);
-        app.add_message::<RequestLocalLight>();
-        app.add_plugins(SharedOverlayFieldBuffersPlugin);
-        app.init_resource::<AtmosphereDiagnostics>();
-        app.init_resource::<crate::systems::sim_control::SimTick>();
-        app.init_resource::<crate::systems::sim_control::SimTimeMicros>();
-        app.init_resource::<WorldLodMap>();
-        app.init_resource::<WorldRepresentationFrame>();
-        app.init_resource::<RepresentationResult>();
-        app.add_plugins(FireVisualFramePlugin);
+        let mut app = fire_visual_test_app();
 
         {
             let mut w = app.world_mut().resource_mut::<WorldRepresentationFrame>();
@@ -1155,17 +1217,7 @@ mod vt1_full_world_fire_extract_tests {
 
     #[test]
     fn operational_band_caps_projected_instances_full_frame_untouched() {
-        let mut app = App::new();
-        app.add_plugins(MinimalPlugins);
-        app.add_message::<RequestLocalLight>();
-        app.add_plugins(SharedOverlayFieldBuffersPlugin);
-        app.init_resource::<AtmosphereDiagnostics>();
-        app.init_resource::<crate::systems::sim_control::SimTick>();
-        app.init_resource::<crate::systems::sim_control::SimTimeMicros>();
-        app.init_resource::<WorldLodMap>();
-        app.init_resource::<WorldRepresentationFrame>();
-        app.init_resource::<RepresentationResult>();
-        app.add_plugins(FireVisualFramePlugin);
+        let mut app = fire_visual_test_app();
 
         {
             let engine = WorldLodPolicyEngine::default();
@@ -1177,16 +1229,18 @@ mod vt1_full_world_fire_extract_tests {
                 },
                 &[],
             );
+            assert_eq!(w.global_band(), WorldLodBand::Operational);
         }
         sync_representation_policy(app.world_mut());
+        insert_operational_view_manager(app.world_mut());
 
         let cell = UVec2::new(4, 4);
         let n = CLUSTERED_FIRE_INSTANCE_CAP + 7;
         for i in 0..n {
+            // Keep all burning chunks within fire-streaming wake radius of default focus (0,0).
+            let coord = IVec2::new(i as i32 % 13 - 6, i as i32 / 13 - 6);
             app.world_mut().spawn((
-                Chunk {
-                    coord: IVec2::new(i as i32, 0),
-                },
+                Chunk { coord },
                 ChunkCellMatrix::new(cell),
                 ChunkSurfaceFire {
                     heat: 0.95,
@@ -1212,17 +1266,7 @@ mod vt1_full_world_fire_extract_tests {
 
     #[test]
     fn committed_fence_matches_fire_stamp_before_projection() {
-        let mut app = App::new();
-        app.add_plugins(MinimalPlugins);
-        app.add_message::<RequestLocalLight>();
-        app.add_plugins(SharedOverlayFieldBuffersPlugin);
-        app.init_resource::<AtmosphereDiagnostics>();
-        app.init_resource::<crate::systems::sim_control::SimTick>();
-        app.init_resource::<crate::systems::sim_control::SimTimeMicros>();
-        app.init_resource::<WorldLodMap>();
-        app.init_resource::<WorldRepresentationFrame>();
-        app.init_resource::<RepresentationResult>();
-        app.add_plugins(FireVisualFramePlugin);
+        let mut app = fire_visual_test_app();
 
         let cell = UVec2::new(8, 8);
         app.world_mut().spawn((

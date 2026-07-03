@@ -7,8 +7,7 @@ use std::collections::HashMap;
 
 use bevy::prelude::*;
 use bevy::ui::FocusPolicy;
-use bevy::ui::{ComputedNode, Display, UiGlobalTransform, UiSystems};
-use bevy::window::PrimaryWindow;
+use bevy::ui::Display;
 
 use crate::engine::BaseState;
 use crate::strategic::{
@@ -66,7 +65,7 @@ pub struct OperationsStripRoot;
 #[derive(Component)]
 pub struct SimulationCommandShellRoot;
 
-/// Flex “hole” over the live map (world visible through this node). Used to gate map picks vs chrome.
+/// Flex node displaying the tactical map RTT ([`crate::gui::SimulationMapTexture`]).
 #[derive(Component)]
 pub struct SimulationMapViewportFill;
 
@@ -133,74 +132,33 @@ pub fn simulation_map_fallback_logical_extent(window: Vec2) -> Vec2 {
     )
 }
 
-/// Presentation copy of [`crate::gui::AuthoritativeViewport`] (logical window coords).
-///
-/// Dimensions always match authoritative; `valid` is true only when the hole latch is settled
-/// (pointer hit-test / build overlays). Camera scissor and [`crate::render::ResolvedViewports`]
-/// use [`Self::is_adequate_for_camera`] (dimensions only — not gated on `valid`).
-#[derive(Resource, Clone, Copy, Debug, Default)]
-pub struct SimulationMapViewport {
-    pub valid: bool,
-    pub min: Vec2,
-    pub max: Vec2,
-}
+/// Screen-space rect of the tactical map UI fill — see [`crate::gui::sim_map_rtt::SimulationMapFillRect`].
+pub use crate::gui::sim_map_rtt::SimulationMapFillRect as SimulationMapViewport;
 
-/// Per-frame diagnostics for [`sync_simulation_map_viewport_system`] (`SIM_VIEW_SYNC_DEBUG`).
+/// Legacy debug witness slots (hole latch removed — RTT path).
 #[derive(Resource, Clone, Copy, Debug, Default)]
 pub struct SimulationMapViewportTrace {
     pub measured_valid: bool,
     pub measured_size: Vec2,
-    pub committed_from_stable_hold: bool,
     pub committed_size: Vec2,
+    pub committed_from_stable_hold: bool,
     pub settle_streak: u8,
     pub layout_settled: bool,
 }
 
-/// Stable/pending hole internals for [`crate::render::visual_diagnostics`].
 #[derive(Resource, Clone, Copy, Debug, Default)]
 pub struct SimulationMapViewportDebug {
+    pub measured_valid: bool,
+    pub measured_min: Vec2,
+    pub measured_max: Vec2,
+    pub solver_valid: bool,
+    pub solver_min: Vec2,
+    pub solver_max: Vec2,
+    pub last_commit: &'static str,
     pub frozen: bool,
     pub pending_min: Vec2,
     pub pending_max: Vec2,
     pub pending_wh: Vec2,
-    /// Last raw UI measure before commit (for overlay / authority trace).
-    pub measured_valid: bool,
-    pub measured_min: Vec2,
-    pub measured_max: Vec2,
-    /// Floor-stabilized semantic authority (`commit_authority_from_semantic`; sim_map_fill only).
-    pub solver_valid: bool,
-    pub solver_min: Vec2,
-    pub solver_max: Vec2,
-    /// Last hole-latch branch ([`crate::gui::authoritative_viewport::advance_simulation_map_hole_latch`]).
-    pub last_commit: &'static str,
-}
-
-impl SimulationMapViewport {
-    /// Logical hole size in window coordinates.
-    #[inline]
-    #[must_use]
-    pub fn logical_size(self) -> Vec2 {
-        (self.max - self.min).max(Vec2::ZERO)
-    }
-
-    /// Large enough for map camera scissor + orthographic fit (matches [`ViewportRectSanity`]).
-    /// Does **not** require [`Self::valid`] — render must not wait on hole latch settle.
-    #[inline]
-    #[must_use]
-    pub fn is_adequate_for_camera(self) -> bool {
-        crate::gui::authoritative_viewport::simulation_map_viewport_adequate_dims(self.min, self.max)
-    }
-
-    /// `cursor` from [`Window::cursor_position`] (logical px).
-    #[inline]
-    #[must_use]
-    pub fn contains_cursor(self, cursor: Vec2) -> bool {
-        self.valid
-            && cursor.x >= self.min.x
-            && cursor.x <= self.max.x
-            && cursor.y >= self.min.y
-            && cursor.y <= self.max.y
-    }
 }
 
 /// When **compact**, the strategic HUD shows a one-line summary; full line includes city-planning hints.
@@ -209,11 +167,11 @@ pub struct StrategicHudStripState {
     pub compact: bool,
 }
 
-/// PostUpdate ordering: measure Bevy UI map hole before camera scissor + ortho fit.
+/// PostUpdate ordering: measure Bevy UI map fill before camera ortho fit.
 #[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
 pub enum SimulationViewportSyncSet {
     MeasureUiHole,
-    ApplyCameraScissor,
+    ApplyCameraProjection,
 }
 
 pub struct InGameHudPlugin;
@@ -224,7 +182,7 @@ impl Plugin for InGameHudPlugin {
             PostUpdate,
             (
                 SimulationViewportSyncSet::MeasureUiHole,
-                SimulationViewportSyncSet::ApplyCameraScissor,
+                SimulationViewportSyncSet::ApplyCameraProjection,
             )
                 .chain(),
         );
@@ -232,20 +190,27 @@ impl Plugin for InGameHudPlugin {
             .init_resource::<HudAggregateSettings>()
             .init_resource::<StrategicHudStripState>()
             .init_resource::<CommandLeftStackState>()
-            .init_resource::<crate::gui::AuthoritativeViewport>()
-            .init_resource::<SimulationMapViewport>()
-            .init_resource::<crate::gui::viewport_layout_solver::SemanticViewportRect>()
             .init_resource::<SimulationMapViewportTrace>()
             .init_resource::<SimulationMapViewportDebug>()
-            .init_resource::<crate::gui::SimulationMapViewportHoleLatch>()
+            .init_resource::<crate::gui::sim_map_rtt::SimulationMapFillRect>()
             .init_resource::<crate::gui::hud::ViewportRectSanity>()
             .add_plugins(crate::gui::hud::ViewportIntegrityAssertPlugin)
-            .add_plugins(SimulationShellPhase2Plugin);
+            .add_plugins(SimulationShellPhase2Plugin)
+            .add_systems(
+                PostUpdate,
+                (
+                    crate::gui::sim_map_rtt::sync_simulation_map_fill_rect_system,
+                    crate::gui::sim_map_rtt::sync_simulation_map_image_node_system,
+                )
+                    .chain()
+                    .run_if(in_simulation_or_editor)
+                    .after(bevy::ui::UiSystems::Stack)
+                    .in_set(SimulationViewportSyncSet::MeasureUiHole),
+            );
         register_sim_command_shell_lifecycle(app);
         app.add_systems(
                 Update,
-                reset_simulation_map_viewport_on_left_stack_toggle
-                    .run_if(in_simulation_or_editor),
+                reset_simulation_map_fill_on_left_stack_toggle.run_if(in_simulation_or_editor),
             )
             .add_systems(
                 Update,
@@ -282,17 +247,6 @@ impl Plugin for InGameHudPlugin {
             .add_systems(
                 Update,
                 update_strategic_ops_hud.run_if(in_simulation_or_editor),
-            )
-            .add_systems(
-                PostUpdate,
-                (
-                    sync_simulation_map_viewport_system,
-                    crate::render::view_runtime::commit_simulation_map_hole_to_authority,
-                )
-                    .chain()
-                    .run_if(in_simulation_or_editor)
-                    .after(UiSystems::Stack)
-                    .in_set(SimulationViewportSyncSet::MeasureUiHole),
             );
     }
 }
@@ -306,98 +260,14 @@ fn register_sim_command_shell_lifecycle(app: &mut App) {
         );
 }
 
-/// Left-stack show/hide changes flex width — reset settle so the map hole can be re-measured.
-fn reset_simulation_map_viewport_on_left_stack_toggle(
+/// Left-stack show/hide changes flex width — fill rect re-measures next PostUpdate.
+fn reset_simulation_map_fill_on_left_stack_toggle(
     state: Res<CommandLeftStackState>,
-    mut latch: ResMut<crate::gui::SimulationMapViewportHoleLatch>,
     mut last: Local<Option<bool>>,
 ) {
     let collapsed = state.collapsed;
-    if last.map_or(false, |p| p != collapsed) {
-        latch.reset_for_layout_change();
-    }
+    let _ = last.map_or(false, |p| p != collapsed);
     *last = Some(collapsed);
-}
-
-pub fn sync_simulation_map_viewport_system(
-    q: Query<(&ComputedNode, &UiGlobalTransform), With<SimulationMapViewportFill>>,
-    mut authority: ResMut<crate::gui::AuthoritativeViewport>,
-    mut out: ResMut<SimulationMapViewport>,
-    mut semantic: ResMut<crate::gui::viewport_layout_solver::SemanticViewportRect>,
-    mut trace: ResMut<SimulationMapViewportTrace>,
-    mut sim_dbg: ResMut<SimulationMapViewportDebug>,
-    mut latch: ResMut<crate::gui::SimulationMapViewportHoleLatch>,
-    mut cam_latch: ResMut<crate::gui::MainWorldCameraViewportLatch>,
-    win: Query<&Window, With<PrimaryWindow>>,
-    mut sanity: ResMut<crate::gui::hud::ViewportRectSanity>,
-    mut generation: Local<u64>,
-) {
-    let Ok(w) = win.single() else {
-        out.valid = false;
-        latch.hole_ready = false;
-        latch.settle_streak = 0;
-        return;
-    };
-    if w.width() < 32.0 || w.height() < 32.0 {
-        out.valid = false;
-        return;
-    }
-    let scale = w.scale_factor().max(1e-6);
-    let Ok((node, xf)) = q.single() else {
-        out.valid = false;
-        return;
-    };
-    let window_logical = Vec2::new(w.width(), w.height());
-    if latch.last_window_logical != Vec2::ZERO
-        && (window_logical - latch.last_window_logical).length_squared() > 4.0
-    {
-        latch.reset_for_layout_change();
-        cam_latch.using_hole = false;
-        cam_latch.valid_streak = 0;
-        cam_latch.invalid_streak = 0;
-    }
-    let mut measured = crate::gui::authoritative_viewport::measure_sim_map_fill_viewport(
-        node,
-        xf,
-        scale,
-        window_logical,
-        sanity.as_mut(),
-    );
-
-    if crate::gui::hud::ui_layout_tree_debug_enabled() {
-        let (raw_min, raw_max) =
-            crate::gui::authoritative_viewport::measure_sim_map_fill_corners_crosscheck(
-                node, xf, scale,
-            );
-        let (cmin, cmax) = crate::gui::authoritative_viewport::clamp_simulation_map_aabb_to_window(
-            raw_min,
-            raw_max,
-            window_logical,
-        );
-        let d = (cmax - cmin) - (measured.max - measured.min);
-        if d.length() > 1.0 {
-            warn!(
-                target: "viewport_authority::measure",
-                ?d,
-                "ComputedNode center vs corner AABB mismatch"
-            );
-        }
-    }
-
-    *generation = generation.wrapping_add(1);
-    measured.generation = *generation;
-
-    crate::gui::authoritative_viewport::publish_simulation_map_viewport(
-        &mut measured,
-        semantic.as_mut(),
-        latch.as_mut(),
-        out.as_mut(),
-        trace.as_mut(),
-        sim_dbg.as_mut(),
-        window_logical,
-        *generation,
-    );
-    *authority = measured;
 }
 
 fn despawn_simulation_command_shell(
@@ -414,6 +284,7 @@ fn spawn_simulation_command_shell(
     bindings: Res<InputBindings>,
     palette: Res<UiPalette>,
     mono: Res<CmdUiMonoFont>,
+    tex: Option<Res<crate::gui::SimulationMapTexture>>,
     existing: Query<Entity, With<SimulationCommandShellRoot>>,
 ) {
     if !existing.is_empty() {
@@ -423,6 +294,10 @@ fn spawn_simulation_command_shell(
     let font = mono.0.clone();
     let fs = OPS_STRIP_MONO_PT;
     let tf_hud = |size: f32| TextFont::from_font_size(size).with_font(font.clone());
+    let map_image = tex
+        .as_ref()
+        .map(|t| bevy::ui::widget::ImageNode::new(t.0.clone()))
+        .unwrap_or_default();
 
     let tools = format!(
         "Tools — Options/keys {} · Diagnostics {} · Pressure {} · Faction {} · Logistics list {} · Cycle focus {} · World gen {} · Agent perms {} · Collapse left stack {}.",
@@ -500,6 +375,8 @@ fn spawn_simulation_command_shell(
                     BackgroundColor(palette.bevy_paper_fill()),
                     strip_border,
                     ZIndex(1200),
+                    FocusPolicy::Block,
+                    Interaction::default(),
                     OperationsStripRoot,
                 ))
                 .with_children(|parent| {
@@ -667,8 +544,8 @@ fn spawn_simulation_command_shell(
                     BackgroundColor(palette.bevy_hud_panel_fill()),
                     strip_border,
                     ZIndex(1150),
-                    Pickable::IGNORE,
-                    FocusPolicy::Pass,
+                    FocusPolicy::Block,
+                    Interaction::default(),
                 ))
                 .with_children(|ctx_row| {
                     ctx_row.spawn((
@@ -700,8 +577,8 @@ fn spawn_simulation_command_shell(
                     BackgroundColor(palette.bevy_hud_panel_fill()),
                     strip_border,
                     ZIndex(1140),
-                    Pickable::IGNORE,
-                    FocusPolicy::Pass,
+                    FocusPolicy::Block,
+                    Interaction::default(),
                     Visibility::Visible,
                     DevelopmentalCauseStripRoot,
                 ))
@@ -742,9 +619,11 @@ fn spawn_simulation_command_shell(
                             overflow: Overflow::clip(),
                             ..default()
                         },
-                        Pickable::IGNORE,
                         FocusPolicy::Pass,
+                        Interaction::default(),
                         SimulationMapViewportFill,
+                        map_image,
+                        BackgroundColor(palette.bevy_hud_panel_fill()),
                         crate::gui::hud::DebugLayoutTag("sim_map_fill"),
                         Name::new("sim_map_fill"),
                     ))
@@ -782,7 +661,8 @@ fn spawn_simulation_command_shell(
                         overflow: Overflow::clip(),
                         ..default()
                     },
-                    FocusPolicy::Pass,
+                    FocusPolicy::Block,
+                    Interaction::default(),
                     ZIndex(900),
                     CommandLeftStackOverlay,
                     crate::gui::hud::DebugLayoutTag("left_stack_overlay"),
@@ -991,8 +871,8 @@ fn spawn_simulation_command_shell(
                         border: UiRect::all(Val::Px(1.0)),
                         ..default()
                     },
-                    Pickable::IGNORE,
-                    FocusPolicy::Pass,
+                    FocusPolicy::Block,
+                    Interaction::default(),
                     Visibility::Hidden,
                     // Real window frame (replaces the 1px magenta debug border): panel fill + wire edge.
                     BorderColor::all(palette.bevy_wire_magenta()),
@@ -1093,6 +973,8 @@ fn spawn_simulation_command_shell(
                     },
                     Visibility::Hidden,
                     ZIndex(1100),
+                    FocusPolicy::Block,
+                    Interaction::default(),
                     ContextTrayRoot,
                     Name::new("context_tray_root"),
                 ))
@@ -1733,6 +1615,7 @@ mod tests {
             valid: true,
             min: Vec2::new(10.0, 20.0),
             max: Vec2::new(100.0, 200.0),
+            ..Default::default()
         };
         assert!(vp.contains_cursor(Vec2::new(50.0, 50.0)));
         assert!(!vp.contains_cursor(Vec2::new(5.0, 50.0)));

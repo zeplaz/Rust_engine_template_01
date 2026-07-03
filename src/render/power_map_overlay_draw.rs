@@ -5,7 +5,7 @@ use bevy_egui::{egui, EguiContexts};
 
 use crate::construction::world_to_sim_map_egui;
 use crate::engine::states::BaseState;
-use crate::gui::{MapCameraDesired, SimulationMapViewport};
+use crate::gui::{MapCameraDesiredRes, SimulationMapViewport};
 use crate::infrastructure::utility::VoltageClass;
 use crate::render::view_runtime::ViewProjectionAuthority;
 use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
@@ -23,7 +23,7 @@ pub fn draw_power_map_overlay_egui(
     presentation: Res<PowerMapOverlayPresentation>,
     overlays: Res<InfrastructureOverlayDrawRequests>,
     authority: Option<Res<ViewProjectionAuthority>>,
-    desired: Res<MapCameraDesired>,
+    desired: Res<MapCameraDesiredRes>,
     map_vp: Res<SimulationMapViewport>,
     params: Res<WorldGenParams>,
 ) -> Result {

@@ -1,6 +1,7 @@
 //! PG-2 procedural build assembly extract — grid → StylePack slot → lod0 GLB.
 
 use bevy::prelude::*;
+use bevy::world_serialization::WorldAsset;
 
 use crate::construction::procedural::{
     footprint_grid_for_assembly, FootprintCell, FootprintGrid, FootprintToken,
@@ -20,7 +21,7 @@ pub struct ProceduralBuildInstance {
     pub grid_x: u32,
     pub grid_y: u32,
     pub floor: u32,
-    pub scene: Option<Handle<Scene>>,
+    pub scene: Option<Handle<WorldAsset>>,
     pub hidden: bool,
 }
 

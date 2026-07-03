@@ -6,7 +6,7 @@
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 
-use super::map_camera::{MainWorldCameraOrthoTrace, MapCameraDesired};
+use super::map_camera::{MainWorldCameraOrthoTrace, MapCameraDesired, MapCameraDesiredRes};
 use super::SimulationMapViewport;
 use super::world_representation::{GlobalLodState, LodInputs};
 
@@ -116,7 +116,7 @@ pub fn apply_readability_to_lod_inputs(
 
 pub fn sync_tile_readability_witness(
     inputs: TileReadabilityInputs,
-    desired: Res<MapCameraDesired>,
+    desired: Res<MapCameraDesiredRes>,
     mut global: ResMut<GlobalLodState>,
     mut witness: ResMut<TileReadabilityWitness>,
     mut va_witness: ResMut<crate::dev::VisualAidV2Witness>,

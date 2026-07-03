@@ -217,7 +217,7 @@ impl Default for MinimapShellState {
             pending_camera_focus_zoom: None,
             diagnostic_ui_wrote_camera: false,
             diagnostic_camera_drove_ui: false,
-            show_tactical_viewport_frame: true,
+            show_tactical_viewport_frame: false,
             topology_legend_expanded: false,
             topology_legend_user_toggled: false,
         }

@@ -197,6 +197,7 @@ pub fn fixture_blocks_with_site_count(district_id: &DistrictId, site_count: u32)
             district_id: district_id.clone(),
             tiles: HashSet::new(),
             site_ids: (0..site_count as u64).collect(),
+            archetype: None,
         },
     );
     blocks

@@ -29,7 +29,8 @@ use crate::systems::transport::{TransportSchedule, TransportSimulationPlugin};
 use crate::strategic::StrategicFieldPipeline;
 use crate::compute::ComputeDispatchPlugin;
 use crate::render::{
-    FramePerfPlugin, GpuWeatherFireFieldPlugin, LocalLightPlugin, RenderSchedulePerfPlugin,
+    Core2dOverlayOrderPlugin, FramePerfPlugin, GpuWeatherFireFieldPlugin, LocalLightPlugin,
+    RenderSchedulePerfPlugin,
     SharedOverlayFieldBuffersPlugin,
     StallWatchPlugin, Stage5ReadinessProfile, TerrainInstancedDrawPlugin,
     TerrainMaterialAtlasPlugin, TerrainRenderAuthorityPlugin, TileWorldFallbackPlugin,
@@ -51,15 +52,45 @@ use crate::gui::hud::SimViewSyncDebugPlugin;
 use crate::render::{DebugViewportOverlayPlugin, VisualDiagnosticsPlugin};
 use super::test_harness::{TestHarnessMenuPlugin, TestHarnessPlugin, TestHarnessStatePlugin};
 use super::DebugManeuverPlugin;
+use bevy::camera::{ImageRenderTarget, RenderTarget};
 use bevy::asset::AssetPlugin;
 use bevy::prelude::*;
 use bevy::winit::WinitSettings;
 use bevy::window::{PresentMode, Window, WindowPlugin};
 use bevy_egui::EguiPlugin;
 
-/// Root camera for **Bevy UI** (splash, in-game HUD). Without this, the window stays clear/black.
-fn spawn_primary_ui_camera(mut commands: Commands) {
-    commands.spawn((MainWorldCamera, Camera2d, TileDebugRenderHost, TerrainInstancedRenderHost));
+/// Root camera for tactical map — renders to [`crate::gui::SimulationMapTexture`].
+fn spawn_primary_ui_camera(
+    mut commands: Commands,
+    mut images: ResMut<Assets<Image>>,
+    palette: Res<crate::gui::UiPalette>,
+) {
+    let handle = crate::gui::insert_simulation_map_texture(
+        images.as_mut(),
+        &mut commands,
+        1920,
+        1080,
+    );
+    let rt = RenderTarget::Image(ImageRenderTarget {
+        handle: handle.clone(),
+        scale_factor: 1.0,
+    });
+    let mut camera = Camera {
+        order: 0,
+        ..default()
+    };
+    crate::gui::apply_simulation_map_camera_clear(&mut camera, palette.as_ref());
+    commands.spawn((
+        MainWorldCamera,
+        Camera2d,
+        rt,
+        crate::gui::simulation_map_rtt_render_layers(),
+        camera,
+        crate::gui::MapCameraDesired::default(),
+        TileDebugRenderHost,
+        TerrainInstancedRenderHost,
+    ));
+    crate::gui::spawn_simulation_hud_ui_camera(&mut commands, palette.as_ref());
 }
 
 pub struct EnginePlugin;
@@ -129,12 +160,14 @@ impl Plugin for EnginePlugin {
             .add_plugins(crate::io::save::WorldSaveSpinePlugin)
             .add_plugins(crate::render::Stage6VirtualizationPlugin)
             .add_plugins(ChunkSimLodPlugin)
+            .add_plugins(crate::render::ExtractedCameraMetricsPlugin)
             .add_plugins(FirePlugin)
             .add_plugins(EcologyPlugin)
             .add_plugins(AtmospherePlugin)
             .add_plugins(WeatherPlugin)
             .add_plugins(FramePerfPlugin)
             .add_plugins(RenderSchedulePerfPlugin)
+            .add_plugins(Core2dOverlayOrderPlugin)
             .add_plugins(GpuWeatherFireFieldPlugin)
             .add_plugins(crate::infrastructure::InfrastructureProfilesPlugin)
             .add_plugins(crate::infrastructure::InfrastructureTransportPlugin)
@@ -238,6 +271,7 @@ impl Plugin for EnginePlugin {
             .add_plugins(BuildPlanningPlugin)
             .add_plugins(crate::gui::AssemblySnapshotQcUiPlugin)
             .add_plugins(crate::gui::VfxFireTestHighlightPlugin)
+            .add_plugins(crate::gui::SettlementBlockFrameDebugPlugin)
             .add_plugins(LogisticsTargetsPanelPlugin)
             // World generation editor + runtime.
             .add_plugins(WorldGenToolsPlugin)

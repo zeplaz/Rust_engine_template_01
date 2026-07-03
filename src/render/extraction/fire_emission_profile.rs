@@ -15,7 +15,7 @@ use crate::systems::fire::{
 };
 use crate::systems::weather::ChunkWeather;
 use crate::terrain::family::{TerrainFamilyId, DEFAULT_TERRAIN_FAMILY_ID};
-use crate::terrain::generation::{Chunk, ChunkCellMatrix};
+use crate::terrain::generation::{chunk_cell_world_center, Chunk, ChunkCellMatrix};
 use crate::terrain::material::{MaterialId, MaterializedChunk};
 
 use crate::render::sim_visual_extract::FireVisualGpuInstance;
@@ -170,7 +170,7 @@ pub fn infer_fire_emission_profile(
     let sy = matrix.size.y as f32;
     let ox = chunk.coord.x as f32 * sx;
     let oy = chunk.coord.y as f32 * sy;
-    let world_pos = Vec3::new(ox + sx * 0.5, oy + sy * 0.5, 0.0);
+    let mut world_pos = Vec3::new(ox + sx * 0.5, oy + sy * 0.5, 0.0);
 
     let terrain = terrain_family_at_chunk_center(matrix);
     let material = materialized
@@ -185,6 +185,19 @@ pub fn infer_fire_emission_profile(
         if !ovl.heat.is_empty() {
             let peak = ovl.heat.iter().copied().fold(0.0f32, f32::max);
             heat = heat.max(peak);
+            if let Some((idx, cell_heat)) = ovl
+                .heat
+                .iter()
+                .enumerate()
+                .max_by(|a, b| a.1.partial_cmp(b.1).unwrap_or(std::cmp::Ordering::Equal))
+            {
+                if *cell_heat > crate::render::sim_visual_extract::FIRE_VISUAL_ACTIVE_HEAT_EPS {
+                    let cell_xy =
+                        chunk_cell_world_center(chunk.coord, matrix.size, idx);
+                    world_pos = Vec3::new(cell_xy.x, cell_xy.y, 0.0);
+                    heat = heat.max(*cell_heat);
+                }
+            }
         }
     }
     let heat = heat.clamp(0.0, 1.0);

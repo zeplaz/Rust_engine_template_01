@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use bevy_egui::{update_ui_size_and_scale_system, EguiContexts, EguiContextSettings, EguiPreUpdateSet};
+use bevy_egui::{update_ui_screen_rect, EguiContext, EguiContexts, EguiPreUpdateSet};
 
 use super::fonts::{install_egui_cmd_mono_font, load_cmd_ui_mono_font};
 use super::{
@@ -27,7 +27,7 @@ impl Plugin for UiThemePlugin {
                 PreUpdate,
                 (
                     reset_ui_scale_application_gate_system,
-                    sync_egui_density_scale_system.before(update_ui_size_and_scale_system),
+                    sync_egui_density_scale_system.before(update_ui_screen_rect),
                 )
                     .chain(),
             )
@@ -44,11 +44,11 @@ fn reset_ui_scale_application_gate_system(mut gate: ResMut<UiScaleApplicationGat
 
 fn sync_egui_density_scale_system(
     density: Res<HudDensityProfile>,
-    mut settings: Query<&mut EguiContextSettings>,
+    mut contexts: Query<&mut EguiContext>,
     mut gate: ResMut<UiScaleApplicationGate>,
 ) {
-    for mut egui_settings in &mut settings {
-        sync_egui_context_scale_factor(&density, &mut egui_settings, &mut gate);
+    for mut ctx in &mut contexts {
+        sync_egui_context_scale_factor(&density, ctx.get_mut(), &mut gate);
     }
 }
 
@@ -67,5 +67,5 @@ fn apply_egui_theme_system(
     }
     ctx.set_visuals(palette.to_egui_visuals());
     apply_hud_density_profile(ctx, &density);
-    ctx.style_mut(|style| apply_scroll_style(style, &palette));
+    ctx.global_style_mut(|style| apply_scroll_style(style, &palette));
 }

@@ -11,8 +11,9 @@ use crate::construction::building_catalog::{BuildingFamily, FootprintMatrix};
 use crate::construction::building_definitions::BuildingDefinitionRegistry;
 use crate::construction::placement_scaling::{clamp_scale_factor, default_scale_factor_for_family};
 use crate::strategic::{
-    BuildSiteTile, CommittedPlacementSnapshot, CommitConstructionSiteEvent, FootprintTiles,
-    LayerType, ProceduralBuildingSpec, SiteArchetype, SiteConstructionBook, SiteId, SiteIdIssuer,
+    building_grammar_seed_for_site, BuildSiteTile, CommittedPlacementSnapshot,
+    CommitConstructionSiteEvent, FootprintTiles, LayerType, ProceduralBuildingSpec,
+    SiteArchetype, SiteConstructionBook, SiteId, SiteIdIssuer, DEFAULT_WORLD_SEED,
 };
 use crate::strategic::commit_construction_site_system;
 
@@ -154,7 +155,7 @@ pub fn procedural_building_request_from_commit(
                 if let Ok(grammar) = generate_with_arch_dna_preset(
                     archetype_id,
                     district,
-                    site_id.0,
+                    building_grammar_seed_for_site(DEFAULT_WORLD_SEED, site_id.0, archetype_id),
                     preset,
                 ) {
                     let matrix = &def.footprint;
@@ -164,7 +165,11 @@ pub fn procedural_building_request_from_commit(
                         depth: matrix.depth.max(footprint.depth),
                         floors: grammar.floors,
                         style: StylePackId(grammar.style_pack_id),
-                        seed: site_id.0,
+                        seed: building_grammar_seed_for_site(
+                            DEFAULT_WORLD_SEED,
+                            site_id.0,
+                            archetype_id,
+                        ),
                         arch_dna_preset_id: preset.map(str::to_owned),
                     });
                 }
@@ -178,7 +183,11 @@ pub fn procedural_building_request_from_commit(
         depth: footprint.depth,
         floors: default_floors_for_archetype(archetype, placement),
         style: style_pack_for_site_archetype(archetype),
-        seed: site_id.0,
+        seed: building_grammar_seed_for_site(
+            DEFAULT_WORLD_SEED,
+            site_id.0,
+            "rect_perimeter",
+        ),
         arch_dna_preset_id: None,
     })
 }
@@ -385,7 +394,10 @@ mod pg3_tests {
         assert_eq!(req.width, 3);
         assert_eq!(req.depth, 2);
         assert_eq!(req.style.as_str(), "style_industrial_west");
-        assert_eq!(req.seed, 42);
+        assert_eq!(
+            req.seed,
+            building_grammar_seed_for_site(DEFAULT_WORLD_SEED, 42, "rect_perimeter")
+        );
     }
 
     #[test]

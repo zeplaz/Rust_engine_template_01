@@ -18,6 +18,9 @@ WITNESS_CHECKS: dict[str, tuple[str, str]] = {
     "COD-POWER-OVERLAY-RENDER-001": ("power_map_overlay_live.json", "green"),
     "COD-POWER-DAMAGE-SEGMENT-001": ("power_grid_track_c_live.json", "COD-POWER-DAMAGE-SEGMENT-001"),
     "CMCP-GRAM-SWEEP-PROCESS-001": ("grammar_sweep_process_live.json", "green"),
+    "APS-TAG-TIER2-IMPL": ("aps_tag_tier2_live.json", "green"),
+    "APS-UX-POLISH-TAIL-001": ("aps_ux_polish_tail_live.json", "green"),
+    "APS-G4-COVERAGE-001": ("aps_g4_coverage_live.json", "green"),
     "CMCP-FACILITY-NEEDS-PANEL-001": ("art_pipeline/facility_needs_panel_live.json", "green"),
     "CMCP-SITE-PREVIEW-PANEL-001": ("art_pipeline/site_preview_panel_live.json", "green"),
     "CDR-B-VEG-MINIMAP-LEGEND-UI-001": ("minimap_topology_legend_live.json", "green"),
@@ -61,6 +64,9 @@ def witness_green(task_id: str) -> bool:
         "CMCP-FACILITY-NEEDS-PANEL-001",
         "CMCP-SITE-PREVIEW-PANEL-001",
         "SIM-STEWARD-FIRE-REGRESS-001",
+        "APS-TAG-TIER2-IMPL",
+        "APS-UX-POLISH-TAIL-001",
+        "APS-G4-COVERAGE-001",
     ):
         return data.get("green") is True
     return val is True or data.get(task_id) is True

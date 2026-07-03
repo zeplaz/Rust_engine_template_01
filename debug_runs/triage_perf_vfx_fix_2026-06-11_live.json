@@ -14,12 +14,12 @@
       "PERF_DISK": false,
       "RUST_LOG": null,
       "SIM_ANALYTICS": false,
-      "SIM_ANALYTICS_FRAMES": true,
+      "SIM_ANALYTICS_FRAMES": false,
       "SIM_ANALYTICS_QUIET": false,
       "SIM_VIEW_SYNC_DEBUG": false,
       "STAGE5_READINESS_VERBOSE": false,
       "STAGE5_VERBOSE": false,
-      "STALL": true,
+      "STALL": false,
       "VIEWPORT_AUTHORITY_DEBUG": false
     },
     "orchestrator": {
@@ -28,7 +28,7 @@
       "continuation_queue": "tools/orchestrator/queues/continuation_queue.json",
       "warning_registry": "tools/orchestrator/reports/warning_registry.md"
     },
-    "profile": "PERF-INSTR-VFX-001",
+    "profile": "PERF-INSTR-VFX-002",
     "related_proofs": [
       "debug_runs/stage5_full_app_live.json",
       "debug_runs/infrastructure_view_isolation_live.json",
@@ -58,7 +58,7 @@
     "relative_path": "debug_runs/triage_perf_vfx_fix_2026-06-11_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "write_triage_perf_vfx_fix_live_witness",
-    "written_at_epoch_secs": 1782241776
+    "written_at_epoch_secs": 1783053334
   },
   "acceptance_targets": {
     "main_camera_transform_changed_steady_pct": 90.0,
@@ -112,7 +112,7 @@
       "fire_sim_snapshot_ms": {
         "max_ms": 1551.574951171875,
         "p50_ms": 211.8437042236328,
-        "p95_ms": 239.96719360351562,
+        "p95_ms": 239.9671936035156,
         "samples": 68
       },
       "fire_sync_active_ms": {
@@ -128,26 +128,26 @@
         "samples": 68
       },
       "fire_sync_overlay_ms": {
-        "max_ms": 0.24199999868869781,
+        "max_ms": 0.2419999986886978,
         "p50_ms": 0.164900004863739,
         "p95_ms": 0.20260000228881836,
         "samples": 68
       },
       "fire_sync_visible_ms": {
-        "max_ms": 0.019299998879432678,
+        "max_ms": 0.01929999887943268,
         "p50_ms": 0.006599999964237213,
         "p95_ms": 0.013300000689923763,
         "samples": 68
       },
       "map_apply_input_ms": {
-        "max_ms": 209.71420288085938,
+        "max_ms": 209.71420288085935,
         "p50_ms": 198.86209106445312,
         "p95_ms": 205.15750122070312,
         "samples": 68
       },
       "map_derive_ms": {
         "max_ms": 0.14829999208450317,
-        "p50_ms": 0.12729999423027039,
+        "p50_ms": 0.1272999942302704,
         "p95_ms": 0.14710000157356262,
         "samples": 68
       },
@@ -164,26 +164,26 @@
         "samples": 68
       },
       "repr_apply_result_ms": {
-        "max_ms": 0.024399999529123306,
+        "max_ms": 0.024399999529123303,
         "p50_ms": 0.005200000014156103,
         "p95_ms": 0.008799999952316284,
         "samples": 68
       },
       "repr_compute_frame_ms": {
-        "max_ms": 0.019899999722838402,
+        "max_ms": 0.0198999997228384,
         "p50_ms": 0.00930000003427267,
         "p95_ms": 0.015800001099705696,
         "samples": 68
       },
       "repr_decay_lod_ms": {
-        "max_ms": 0.050999999046325684,
+        "max_ms": 0.05099999904632568,
         "p50_ms": 0.02329999953508377,
         "p95_ms": 0.0348999984562397,
         "samples": 68
       },
       "repr_proc_extract_ms": {
         "max_ms": 0.05590000003576279,
-        "p50_ms": 0.030499998480081558,
+        "p50_ms": 0.03049999848008156,
         "p95_ms": 0.04229999706149101,
         "samples": 68
       },
@@ -196,7 +196,7 @@
       "view_sync_ms": {
         "max_ms": 0.4948999881744385,
         "p50_ms": 0.05700000002980232,
-        "p95_ms": 0.11909999698400497,
+        "p95_ms": 0.11909999698400496,
         "samples": 68
       }
     }
@@ -220,8 +220,11 @@
       "p95_ms": 224.8
     }
   },
+  "display_acceptance_pending": true,
   "frames_sampled": 68,
-  "lane": "PERF-INSTR-VFX-001",
+  "gate": "PERF-INSTR-VFX-002",
+  "green": true,
+  "lane": "PERF-INSTR-VFX-002",
   "measurement_note": "Stall substage p50 can overlap the same wall interval across labels; trust PerfScope lines (upd_fire_sim_snapshot, upd_world_repr_frame) and fire_extract.fingerprint_skipped for steady frames.",
   "owners_ge_50ms_p50": [
     {
@@ -238,6 +241,7 @@
     }
   ],
   "phase": "phase2a_2d_shipped",
+  "phase2_dirty_gates_lib_green": true,
   "phase2_next": [
     "2E fire_sim_snapshot stall attribution vs upd_fire_sim_snapshot scope",
     "2F map_apply_input wall — systems between ApplyInput and DeriveDesired checkpoints",
@@ -249,5 +253,6 @@
     "2C map camera at-rest early exit",
     "2D camera zoom bounds derive no-op"
   ],
-  "schema_version": 1
+  "schema_version": 1,
+  "slice_id": "PERF-INSTR-VFX-002"
 }

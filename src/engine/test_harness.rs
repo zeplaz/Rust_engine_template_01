@@ -1490,10 +1490,11 @@ fn apply_test_scene_defaults(
     wx.enabled = true;
     wx.overlay = true;
     wx.particles = true;
-    gpu.show = true;
+    gpu.show = false;
 
     match kind {
         TestScene::Weather => {
+            gpu.show = true;
             let mut n = 0u32;
             for mut w in &mut wx_q {
                 if n >= 12 {
@@ -1535,6 +1536,7 @@ fn apply_test_scene_defaults(
         }
         TestScene::Visual => {
             wx.particles = true;
+            wx.background_aesthetic = true;
             // LOD tile debug (green squares) off in visual proof — enable via dev tooling if needed.
             focus_debug.enabled = false;
             tile_debug.use_batched_mesh_overlay = true;
@@ -1550,8 +1552,8 @@ fn apply_test_scene_defaults(
                     break;
                 }
                 w.wind_speed = w.wind_speed.max(0.5);
-                w.fog_density = w.fog_density.max(0.1);
-                w.rain_intensity = w.rain_intensity.max(0.22);
+                w.fog_density = w.fog_density.max(0.12);
+                w.rain_intensity = w.rain_intensity.max(0.55);
                 wn += 1;
             }
             let mut fi = 0u32;
@@ -1571,7 +1573,7 @@ fn apply_test_scene_defaults(
                 gw.direction = Vec2::new(1.0, 0.2).normalize_or_zero();
                 gw.speed = 6.0;
             }
-            gpu.show = false;
+            gpu.show = true;
             seed_test_fire_near_world_center(&params, &mut fire_q, 28, 0.92, 0.75);
             let mut wn = 0u32;
             for mut w in &mut wx_q {

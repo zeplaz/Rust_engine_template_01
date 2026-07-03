@@ -13,10 +13,10 @@
     "steel_door_warehouse_01",
     "steel_panel_01"
   ],
-  "preview_url": "http://127.0.0.1:60443/",
+  "preview_url": "http://127.0.0.1:51794/",
   "preview_url_hint": "Open in browser while this process runs. CLI without --serve-seconds exits and kills the server.",
   "server_note": "",
-  "preview_job": "debug_runs/preview_jobs/preview_assembly_snapshot_warehouse_industrial_west_production_v1_d7f663c8.json",
+  "preview_job": "debug_runs/preview_jobs/preview_assembly_snapshot_warehouse_industrial_west_production_v1_d904326e.json",
   "png": "debug_runs/preview_jobs/industrial_west_7x5_s39_9fa1_thumb.png",
   "preview_variant_state": "clean",
   "elapsed_ms": 0

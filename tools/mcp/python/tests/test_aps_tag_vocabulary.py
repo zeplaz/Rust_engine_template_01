@@ -44,6 +44,21 @@ def test_reaction_event_context_includes_anchors() -> None:
     assert "Burn origin" in line
 
 
+def test_sim_coupled_taxonomy_tags_present() -> None:
+    import json
+
+    from rust_engine_mcp.paths import repo_root
+
+    data = json.loads(
+        (repo_root() / "tools/mcp/schemas/examples/aps_tag_taxonomy_v1.json").read_text(encoding="utf-8")
+    )
+    detail = {t["id"] for t in data["categories"]["detail"]["tags"]}
+    condition = {t["id"] for t in data["categories"]["condition"]["tags"]}
+    assert "district_power_feed" in detail
+    assert "bilingual_signage" in detail
+    assert "occupation_banner" in condition
+
+
 def test_tag_families_no_duplicate_entries() -> None:
     for family, tags in TAG_FAMILIES.items():
         assert len(tags) == len(set(tags)), f"duplicate tags in {family}"

@@ -9,12 +9,11 @@ use bevy::math::Vec4;
 use bevy::prelude::*;
 use bevy::render::render_resource::ShaderType;
 use bevy::render::{
-    render_graph::{self, RenderGraph, RenderLabel},
     render_resource::{
         binding_types::uniform_buffer,
         *,
     },
-    renderer::{RenderContext, RenderDevice, RenderQueue},
+    renderer::{RenderContext, RenderDevice, RenderGraph, RenderGraphSystems, RenderQueue},
     Render, RenderApp, RenderStartup, RenderSystems,
 };
 
@@ -30,7 +29,7 @@ use crate::render::gpu_buffer_registry::{
     BufferVisibility, FIRE_PARTICLE_INSTANCES_BUFFER, FIRE_SPARK_ATTRACTORS_BUFFER,
     FIRE_SPARK_STATE_BUFFER, GPUBufferRegistry, RegisteredBufferDescriptor,
 };
-use crate::render::gpu_particles::{fire_spark_compute_enabled, GpuParticleInstance, WorldFireParticleFrame, WorldFireParticleGpuStorage};
+use crate::render::fire_vfx::{fire_spark_compute_enabled, GpuParticleInstance, WorldFireParticleFrame, WorldFireParticleGpuStorage};
 
 const SPARK_WORKGROUP: u32 = 64;
 const MAX_ATTRACTORS: usize = 24;
@@ -87,18 +86,13 @@ pub(crate) struct FireSparkComputePipeline {
     pipeline: CachedComputePipelineId,
 }
 
-#[derive(Debug, Hash, PartialEq, Eq, Clone, RenderLabel)]
-pub(crate) struct FireSparkComputeLabel;
-
-struct FireSparkComputeNode {
+#[derive(Resource, Default)]
+struct FireSparkComputePassReady {
     ready: bool,
 }
 
-impl Default for FireSparkComputeNode {
-    fn default() -> Self {
-        Self { ready: false }
-    }
-}
+#[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
+pub(crate) struct FireSparkComputePassSet;
 
 #[must_use]
 pub fn build_fire_spark_attractors(instances: &[GpuParticleInstance]) -> FireSparkAttractors {
@@ -158,6 +152,7 @@ pub fn register_fire_spark_compute(app: &mut App) {
         .init_resource::<FireSparkAttractors>()
         .insert_resource(FireSparkComputeUniformGpu::new())
         .init_resource::<WorldFireSparkComputeDispatch>()
+        .init_resource::<FireSparkComputePassReady>()
         .add_systems(RenderStartup, init_fire_spark_compute_pipeline)
         .add_systems(
             Render,
@@ -170,19 +165,21 @@ pub fn register_fire_spark_compute(app: &mut App) {
                 .chain()
                 .in_set(RenderSystems::PrepareBindGroups)
                 .in_set(FireSparkComputePrepareSet),
+        )
+        .add_systems(
+            RenderGraph,
+            (
+                ensure_fire_spark_compute_pipeline_ready,
+                fire_spark_compute_pass.after(ensure_fire_spark_compute_pipeline_ready),
+            )
+                .chain()
+                .in_set(RenderGraphSystems::Render)
+                .in_set(FireSparkComputePassSet),
         );
-
-    let mut graph = render_app.world_mut().resource_mut::<RenderGraph>();
-    graph.add_node(FireSparkComputeLabel, FireSparkComputeNode::default());
 }
 
-/// Wire spark advection before expand once both render-graph nodes exist.
-pub(crate) fn link_spark_compute_before_particle_expand(graph: &mut RenderGraph) {
-    graph.add_node_edge(
-        FireSparkComputeLabel,
-        super::gpu_particle_draw::WorldFireParticleDrawLabel,
-    );
-}
+/// Spark advection runs before particle expand on the render graph schedule.
+/// Ordering is configured by [`super::gpu_weather_fire_field::GpuWeatherFireFieldPlugin`].
 
 fn init_fire_spark_compute_pipeline(
     mut commands: Commands,
@@ -473,66 +470,63 @@ fn record_fire_spark_compute_dispatch(
     };
 }
 
-impl render_graph::Node for FireSparkComputeNode {
-    fn update(&mut self, world: &mut World) {
-        if self.ready {
-            return;
-        }
-        let pipeline = world.resource::<FireSparkComputePipeline>();
-        let cache = world.resource::<PipelineCache>();
-        if matches!(
-            cache.get_compute_pipeline_state(pipeline.pipeline),
-            CachedPipelineState::Ok(_)
-        ) {
-            self.ready = true;
-        }
+fn ensure_fire_spark_compute_pipeline_ready(
+    pipeline: Option<Res<FireSparkComputePipeline>>,
+    cache: Res<PipelineCache>,
+    mut ready: ResMut<FireSparkComputePassReady>,
+) {
+    if ready.ready {
+        return;
     }
+    let Some(pipeline) = pipeline else {
+        return;
+    };
+    if matches!(
+        cache.get_compute_pipeline_state(pipeline.pipeline),
+        CachedPipelineState::Ok(_)
+    ) {
+        ready.ready = true;
+    }
+}
 
-    fn run(
-        &self,
-        _ctx: &mut render_graph::RenderGraphContext,
-        render_ctx: &mut RenderContext,
-        world: &World,
-    ) -> Result<(), render_graph::NodeRunError> {
-        if !self.ready || !fire_spark_compute_enabled() {
-            return Ok(());
-        }
-        let dispatch = world.resource::<WorldFireSparkComputeDispatch>();
-        if dispatch.dispatch_count == 0 {
-            return Ok(());
-        }
-        let Some(uniform_gpu) = world.get_resource::<FireSparkComputeUniformGpu>() else {
-            return Ok(());
-        };
-        let Some(uniform_bg) = uniform_gpu.bind_group.as_ref() else {
-            return Ok(());
-        };
-        let bind_registry = world.resource::<GPUBindGroupRegistry>();
-        let Some(instance_entry) = bind_registry.get(FIRE_SPARK_INSTANCES_BIND_GROUP) else {
-            return Ok(());
-        };
-        let Some(spark_entry) = bind_registry.get(FIRE_SPARK_STATE_BIND_GROUP) else {
-            return Ok(());
-        };
-        let Some(att_entry) = bind_registry.get(FIRE_SPARK_ATTRACTORS_BIND_GROUP) else {
-            return Ok(());
-        };
-        let pipeline = world.resource::<FireSparkComputePipeline>();
-        let cache = world.resource::<PipelineCache>();
-        let pl = cache
-            .get_compute_pipeline(pipeline.pipeline)
-            .expect("fire spark compute pipeline");
-        let mut pass = render_ctx
-            .command_encoder()
-            .begin_compute_pass(&ComputePassDescriptor::default());
-        pass.set_pipeline(pl);
-        pass.set_bind_group(0, uniform_bg, &[]);
-        pass.set_bind_group(1, &instance_entry.bind_group, &[]);
-        pass.set_bind_group(2, &spark_entry.bind_group, &[]);
-        pass.set_bind_group(3, &att_entry.bind_group, &[]);
-        pass.dispatch_workgroups(dispatch.dispatch_count, 1, 1);
-        Ok(())
+fn fire_spark_compute_pass(world: &World, mut ctx: RenderContext, ready: Res<FireSparkComputePassReady>) {
+    if !ready.ready || !fire_spark_compute_enabled() {
+        return;
     }
+    let dispatch = world.resource::<WorldFireSparkComputeDispatch>();
+    if dispatch.dispatch_count == 0 {
+        return;
+    }
+    let Some(uniform_gpu) = world.get_resource::<FireSparkComputeUniformGpu>() else {
+        return;
+    };
+    let Some(uniform_bg) = uniform_gpu.bind_group.as_ref() else {
+        return;
+    };
+    let bind_registry = world.resource::<GPUBindGroupRegistry>();
+    let Some(instance_entry) = bind_registry.get(FIRE_SPARK_INSTANCES_BIND_GROUP) else {
+        return;
+    };
+    let Some(spark_entry) = bind_registry.get(FIRE_SPARK_STATE_BIND_GROUP) else {
+        return;
+    };
+    let Some(att_entry) = bind_registry.get(FIRE_SPARK_ATTRACTORS_BIND_GROUP) else {
+        return;
+    };
+    let pipeline = world.resource::<FireSparkComputePipeline>();
+    let cache = world.resource::<PipelineCache>();
+    let pl = cache
+        .get_compute_pipeline(pipeline.pipeline)
+        .expect("fire spark compute pipeline");
+    let mut pass = ctx
+        .command_encoder()
+        .begin_compute_pass(&ComputePassDescriptor::default());
+    pass.set_pipeline(pl);
+    pass.set_bind_group(0, uniform_bg, &[]);
+    pass.set_bind_group(1, &instance_entry.bind_group, &[]);
+    pass.set_bind_group(2, &spark_entry.bind_group, &[]);
+    pass.set_bind_group(3, &att_entry.bind_group, &[]);
+    pass.dispatch_workgroups(dispatch.dispatch_count, 1, 1);
 }
 
 

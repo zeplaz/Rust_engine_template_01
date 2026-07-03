@@ -117,29 +117,43 @@ def _rollup_expanded_witness(batch_witness: dict[str, Any], *, batch: dict[str, 
 
 
 def refresh_tile_landscape_expanded_witness(*, repo: Path | None = None) -> dict[str, Any]:
+    from rust_engine_mcp.aps_witness_honesty import write_aps_live_witness
+
     root = repo or repo_root()
     result = run_landscape_expanded_atlas_batch(refresh_keyframes=True, repo=root)
     batch_witness_path = root / BATCH_WITNESS_REL
     batch_witness: dict[str, Any] = {}
     if batch_witness_path.is_file():
         batch_witness = json.loads(batch_witness_path.read_text(encoding="utf-8"))
-    batch = load_json_file(root / BATCH_JSON.relative_to(root) if not BATCH_JSON.is_absolute() else BATCH_JSON)
-    if not batch and BATCH_JSON.is_file():
-        batch = load_json_file(BATCH_JSON)
+    batch = load_json_file(BATCH_JSON)
     body = _rollup_expanded_witness(batch_witness, batch=batch)
     body["run_ok"] = bool(result.get("ok"))
+    body["keyframe_count"] = len(list((root / KEYFRAME_REL).glob("*.png")))
     green = (
         body.get("green")
-        and body.get("png_count", 0) > 3
+        and body.get("png_count", 0) >= 16
+        and body.get("keyframe_count", 0) >= 16
         and body.get("atlas_domain") == "landscape"
         and body.get("bake_source") == "keyframe_pack"
+        and batch_witness.get("ship") is False
     )
     body["green"] = green
-    out = root / EXPANDED_WITNESS_REL
-    out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(json.dumps(body, indent=2) + "\n", encoding="utf-8")
-    body["written"] = str(out.relative_to(root)).replace("\\", "/")
-    return body
+    body["ship_honest"] = batch_witness.get("ship") is False
+    return write_aps_live_witness(
+        body,
+        EXPANDED_WITNESS_REL,
+        schema="tile_landscape_expanded_live_v1",
+        profile="APS_E4_ATLAS_EXPAND",
+        source_system="landscape_lg5_expanded_batch",
+        ritual="BLANG:WIT-HON APS-EVO-E4-ATLAS-EXPAND-001" if green else None,
+        exit_predicate_must=[
+            {"path": "png_count", "eq": 16},
+            {"path": "keyframe_count", "eq": 16},
+            {"path": "atlas_domain", "eq": "landscape"},
+            {"path": "bake_source", "eq": "keyframe_pack"},
+            {"path": "ship_honest", "eq": True},
+        ],
+    )
 
 
 def run_landscape_expanded_atlas_batch(

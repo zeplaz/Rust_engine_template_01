@@ -4,7 +4,7 @@ use bevy::prelude::*;
 
 use crate::construction::ConstructionQueuePanelView;
 use crate::gui::view_projection_authority::camera_translation;
-use crate::gui::{MapCameraDesired, MapViewInstances, MinimapShellState, ViewId, ViewManager};
+use crate::gui::{MapCameraDesiredRes, MapViewInstances, MinimapShellState, ViewId, ViewManager};
 
 #[derive(Resource, Clone, Debug, Default)]
 pub struct WorldInteractionDiagnostics {
@@ -24,7 +24,7 @@ pub fn refresh_world_interaction_diagnostics(
     minimap: Res<MinimapShellState>,
     map_views: Res<MapViewInstances>,
     view_manager: Res<ViewManager>,
-    desired: Res<MapCameraDesired>,
+    desired: Res<MapCameraDesiredRes>,
     time: Res<Time>,
     mut diag: ResMut<WorldInteractionDiagnostics>,
 ) {

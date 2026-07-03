@@ -728,6 +728,38 @@ def _cmd_grammar_sweep_process_witness(_: argparse.Namespace) -> int:
     return 0 if body.get("green") else 1
 
 
+def _cmd_city_seed_chain_witness(_: argparse.Namespace) -> int:
+    from rust_engine_mcp import city_seed_chain
+
+    body = city_seed_chain.write_city_g1_c4_001_witness()
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
+def _cmd_landscape_expanded_keyframes_refresh(_: argparse.Namespace) -> int:
+    from rust_engine_mcp.landscape_lg5_expanded_batch import refresh_tile_landscape_expanded_witness
+
+    body = refresh_tile_landscape_expanded_witness()
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
+def _cmd_aps_tag_tier2_witness(_: argparse.Namespace) -> int:
+    from rust_engine_mcp.aps_tag_tier2 import write_aps_tag_tier2_witness
+
+    body = write_aps_tag_tier2_witness()
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
+def _cmd_aps_ux_polish_tail_witness(_: argparse.Namespace) -> int:
+    from rust_engine_mcp.aps_ux_polish_tail_witness import write_aps_ux_polish_tail_witness
+
+    body = write_aps_ux_polish_tail_witness()
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
 def _cmd_designer_grammar_quality_loop(args: argparse.Namespace) -> int:
     from rust_engine_mcp.designer_grammar_quality_loop import run_designer_grammar_quality_loop
 
@@ -757,6 +789,14 @@ def _cmd_building_set_coverage_witness(_: argparse.Namespace) -> int:
     return 0 if body.get("green") else 1
 
 
+def _cmd_aps_g4_coverage_witness(_: argparse.Namespace) -> int:
+    from rust_engine_mcp import grammar_build_set
+
+    body = grammar_build_set.write_aps_g4_coverage_witness()
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
 def _cmd_aps_guard_brief_parity_witness(_: argparse.Namespace) -> int:
     from rust_engine_mcp.grammar_build_set import write_aps_guard_brief_parity_witness
 
@@ -780,6 +820,14 @@ def _cmd_aps_session_presence_dump(args: argparse.Namespace) -> int:
         body = write_aps_session_presence_witness()
     else:
         body = aps_session_presence_dump()
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
+def _cmd_aps_presence_operator_attestation(args: argparse.Namespace) -> int:
+    from rust_engine_mcp.aps_presence_operator_attestation import refresh_aps_presence_operator_attestation_witness
+
+    body = refresh_aps_presence_operator_attestation_witness()
     print(json.dumps(body, indent=2))
     return 0 if body.get("green") else 1
 
@@ -976,6 +1024,22 @@ def _cmd_dmcp_reaction_territory_events_witness(_: argparse.Namespace) -> int:
     from rust_engine_mcp.dmcp_reaction_territory_events import refresh_dmcp_reaction_territory_events_witness
 
     body = refresh_dmcp_reaction_territory_events_witness()
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
+def _cmd_dmcp_aps_variants_reaction_pullup_witness(_: argparse.Namespace) -> int:
+    from rust_engine_mcp.dmcp_aps_variants_reaction_pullup import refresh_dmcp_aps_variants_reaction_pullup_witness
+
+    body = refresh_dmcp_aps_variants_reaction_pullup_witness()
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
+def _cmd_dmcp_city_block_recipe_witness(_: argparse.Namespace) -> int:
+    from rust_engine_mcp.dmcp_city_block_recipe import refresh_city_block_recipe_charter_witness
+
+    body = refresh_city_block_recipe_charter_witness()
     print(json.dumps(body, indent=2))
     return 0 if body.get("green") else 1
 
@@ -1636,6 +1700,12 @@ def main(argv: list[str] | None = None) -> int:
 
     sub.add_parser("site-zone-validate-witness").set_defaults(func=_cmd_site_zone_validate_witness)
     sub.add_parser("grammar-sweep-process-witness").set_defaults(func=_cmd_grammar_sweep_process_witness)
+    sub.add_parser("city-seed-chain-witness").set_defaults(func=_cmd_city_seed_chain_witness)
+    sub.add_parser("landscape-expanded-keyframes-refresh").set_defaults(
+        func=_cmd_landscape_expanded_keyframes_refresh
+    )
+    sub.add_parser("aps-tag-tier2-witness").set_defaults(func=_cmd_aps_tag_tier2_witness)
+    sub.add_parser("aps-ux-polish-tail-witness").set_defaults(func=_cmd_aps_ux_polish_tail_witness)
 
     p = sub.add_parser("designer-grammar-quality-loop")
     p.add_argument("--full", action="store_true", help="Run grammar_eval_sweep per archetype")
@@ -1645,6 +1715,7 @@ def main(argv: list[str] | None = None) -> int:
 
     sub.add_parser("building-set-coverage").set_defaults(func=_cmd_building_set_coverage)
     sub.add_parser("building-set-coverage-witness").set_defaults(func=_cmd_building_set_coverage_witness)
+    sub.add_parser("aps-g4-coverage-witness").set_defaults(func=_cmd_aps_g4_coverage_witness)
     sub.add_parser("aps-guard-brief-parity-witness").set_defaults(func=_cmd_aps_guard_brief_parity_witness)
     sub.add_parser("aps-grammar-tier-gates-live-witness").set_defaults(
         func=_cmd_aps_grammar_tier_gates_live_witness
@@ -1652,6 +1723,9 @@ def main(argv: list[str] | None = None) -> int:
     p = sub.add_parser("aps-session-presence-dump")
     p.add_argument("--write-witness", action="store_true")
     p.set_defaults(func=_cmd_aps_session_presence_dump)
+    p = sub.add_parser("aps-presence-operator-attestation")
+    p.add_argument("--write-witness", action="store_true")
+    p.set_defaults(func=_cmd_aps_presence_operator_attestation)
     sub.add_parser("landscape-grammar-presets-witness").set_defaults(func=_cmd_landscape_grammar_presets_witness)
 
     p = sub.add_parser("landscape-sign-atlas-witness")
@@ -1687,6 +1761,10 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("dmcp-reaction-territory-events-witness").set_defaults(
         func=_cmd_dmcp_reaction_territory_events_witness
     )
+    sub.add_parser("dmcp-aps-variants-reaction-pullup-witness").set_defaults(
+        func=_cmd_dmcp_aps_variants_reaction_pullup_witness
+    )
+    sub.add_parser("dmcp-city-block-recipe-witness").set_defaults(func=_cmd_dmcp_city_block_recipe_witness)
     p = sub.add_parser("reaction-territory-resolve")
     p.add_argument("event_id")
     p.add_argument("domain")

@@ -32,7 +32,7 @@ use crate::gui::WorldRepresentationFrame;
 
 /// Draw the docked left status panel (call early in the egui pass).
 pub fn draw_hud_side_status_panel_egui(
-    ctx: &mut egui::Context,
+    ui: &mut egui::Ui,
     layout: &mut HudCommandShellLayout,
     palette: &UiPalette,
     bindings: &InputBindings,
@@ -55,11 +55,11 @@ pub fn draw_hud_side_status_panel_egui(
     let width = layout.status_side_panel_state.target_width();
     let mut panel_state = layout.status_side_panel_state;
 
-    let panel_response = egui::SidePanel::left("hud_status_side_panel")
-        .exact_width(width)
+    let panel_response = egui::Panel::left("hud_status_side_panel")
+        .exact_size(width)
         .resizable(false)
         .frame(hud_side_rail_frame(palette))
-        .show(ctx, |ui| {
+        .show(ui, |ui| {
             side_panel_header(ui, palette, "STATUS", &mut panel_state);
 
             if !panel_state.shows_content() {

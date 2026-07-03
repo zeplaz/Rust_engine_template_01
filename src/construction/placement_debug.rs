@@ -24,7 +24,7 @@ use crate::gui::{
     map_camera_pose_for_presentation, sim_map_projection_frame,
     sim_map_screen_to_world_xy_in_frame, sim_map_world_vec3_to_egui,
     sim_map_world_vec3_to_egui_rendered, MainWorldCamera, MainWorldCameraOrthoTrace,
-    MainWorldCameraViewportLatch, MapCameraDesired, SimulationMapViewport, TileDebugDrawGlobals,
+    MainWorldCameraViewportLatch, MapCameraDesired, MapCameraDesiredRes, SimulationMapViewport, TileDebugDrawGlobals,
     TileGpuDebugSettings,
 };
 use crate::render::view_runtime::{ViewProjectionAuthority, ViewSurfaceId};
@@ -279,7 +279,7 @@ fn build_read_debug_001_self_check() -> Result<(), &'static str> {
 pub fn sync_construction_placement_debug_probe(
     win: Query<&Window, With<PrimaryWindow>>,
     authority: Option<Res<ViewProjectionAuthority>>,
-    desired: Res<MapCameraDesired>,
+    desired: Res<MapCameraDesiredRes>,
     map_vp: Res<SimulationMapViewport>,
     pointer_gate: Res<SimulationMapPointerGate>,
     params: Res<WorldGenParams>,
@@ -468,7 +468,7 @@ pub fn draw_construction_placement_debug_overlay(
     mut overlay: ResMut<ConstructionPlacementDebugOverlay>,
     launch: Option<Res<EngineLaunchArgs>>,
     probe: Option<Res<ConstructionPlacementDebugProbe>>,
-    desired: Res<MapCameraDesired>,
+    desired: Res<MapCameraDesiredRes>,
     authority: Option<Res<ViewProjectionAuthority>>,
     params: Res<WorldGenParams>,
     strip: Res<BuildStripState>,
@@ -812,7 +812,9 @@ fn draw_placement_crosshairs(
         for dx in 0..ghost.footprint.width.min(3) as i32 {
             let world = Vec3::new((ox + dx) as f32 + 0.5, 0.0, (oz + dz) as f32 + 0.5);
             if let Ok((camera, xf)) = cam_q.single() {
-                if let Some(p) = camera_map_plane_vec3_to_logical_screen(camera, xf, world) {
+                if let Some(p) =
+                    camera_map_plane_vec3_to_logical_screen(camera, xf, world)
+                {
                     if map_vp.contains_cursor(p) {
                         painter.circle_filled(
                             egui::pos2(p.x, p.y),

@@ -195,7 +195,7 @@ pub fn update_world_preview_texture(
     };
     let wrote_to_swap_back = targets.swap.back != Handle::default();
 
-    let image = match targets.images.get_mut(&write_handle) {
+    let mut image = match targets.images.get_mut(&write_handle) {
         Some(image) => image,
         None => return,
     };

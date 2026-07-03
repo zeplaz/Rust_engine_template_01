@@ -6,7 +6,7 @@ use bevy_egui::{egui, EguiContexts};
 use crate::construction::{BuildGhostState, BuildStripState};
 use crate::engine::launch_args::{EngineLaunchArgs, TestScene};
 use crate::gui::{
-    MapCameraDesired, MapPresentationDiagnostics, MinimapShellState,
+    MapCameraDesiredRes, MapPresentationDiagnostics, MinimapShellState,
     SimulationMapViewport, ViewManager,
 };
 use crate::render::{SharedOverlayFieldBuffers, TileWorldFallbackState};
@@ -28,7 +28,7 @@ pub fn draw_render_surface_debug_overlay(
     overlay: Res<RenderSurfaceDebugOverlay>,
     launch: Option<Res<EngineLaunchArgs>>,
     map_vp: Res<SimulationMapViewport>,
-    desired: Res<MapCameraDesired>,
+    desired: Res<MapCameraDesiredRes>,
     manager: Res<ViewManager>,
     fallback: Res<TileWorldFallbackState>,
     minimap: Res<MinimapShellState>,

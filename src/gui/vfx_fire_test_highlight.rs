@@ -7,11 +7,12 @@ use bevy_egui::{egui, EguiContexts, EguiPrimaryContextPass};
 
 use crate::engine::ActiveTestScene;
 use crate::gui::map_camera::{
-    map_camera_viewport_pixels, map_zoom_alpha_with_limits, map_zoom_limits_for_world,
-    sim_map_world_vec3_to_egui, MapCameraDesired,
+    map_camera_viewport_pixels, map_zoom_alpha_with_limits,
+    map_zoom_limits_for_world, MainWorldCameraViewportLatch, MapCameraDesired,
+    MapCameraDesiredRes, sim_map_world_xy_to_egui_with_window,
 };
 use crate::gui::view_authority::map_camera_desired_from_view_authority;
-use crate::gui::{SimulationMapViewport};
+use crate::gui::SimulationMapViewport;
 use crate::render::view_runtime::ViewProjectionAuthority;
 use crate::systems::fire::ChunkSurfaceFire;
 use crate::terrain::generation::{world_generator_enhanced::WorldGenParams, Chunk, ChunkCellMatrix};
@@ -119,21 +120,27 @@ fn project_tile_aabb_to_egui(
     map_vp: &SimulationMapViewport,
     world_w: f32,
     world_h: f32,
+    latch: &MainWorldCameraViewportLatch,
 ) -> Option<egui::Rect> {
-    if !map_vp.is_adequate_for_camera() {
-        return None;
-    }
     let corners = [
-        Vec3::new(min_tile.x, min_tile.y, 0.0),
-        Vec3::new(max_tile.x, min_tile.y, 0.0),
-        Vec3::new(max_tile.x, max_tile.y, 0.0),
-        Vec3::new(min_tile.x, max_tile.y, 0.0),
+        Vec2::new(min_tile.x, min_tile.y),
+        Vec2::new(max_tile.x, min_tile.y),
+        Vec2::new(max_tile.x, max_tile.y),
+        Vec2::new(min_tile.x, max_tile.y),
     ];
     let mut min_s = egui::pos2(f32::INFINITY, f32::INFINITY);
     let mut max_s = egui::pos2(f32::NEG_INFINITY, f32::NEG_INFINITY);
     let mut projected = 0u32;
-    for world in corners {
-        let Some(p) = sim_map_world_vec3_to_egui(world, desired, map_vp, world_w, world_h) else {
+    for world_xy in corners {
+        let Some(p) = sim_map_world_xy_to_egui_with_window(
+            world_xy,
+            desired,
+            map_vp,
+            world_w,
+            world_h,
+            None,
+            Some(latch),
+        ) else {
             continue;
         };
         min_s.x = min_s.x.min(p.x);
@@ -164,11 +171,11 @@ pub fn draw_vfx_fire_test_highlight_overlay(
     mut contexts: EguiContexts,
     highlight: Res<VfxFireTestHighlight>,
     scene: Option<Res<ActiveTestScene>>,
-    desired: Res<MapCameraDesired>,
+    desired: Res<MapCameraDesiredRes>,
     authority: Option<Res<ViewProjectionAuthority>>,
     map_vp: Res<SimulationMapViewport>,
+    latch: Res<MainWorldCameraViewportLatch>,
     params: Res<WorldGenParams>,
-    windows: Query<&Window, With<bevy::window::PrimaryWindow>>,
 ) -> Result {
     let active = scene.is_some_and(|s| s.0.seeds_fire_overlay());
     if !active || !highlight.enabled {
@@ -179,16 +186,17 @@ pub fn draw_vfx_fire_test_highlight_overlay(
     };
     let world_w = params.width.max(1) as f32;
     let world_h = params.height.max(1) as f32;
-    let window_px = windows
-        .single()
-        .map(|w| Vec2::new(w.width().max(1.0), w.height().max(1.0)))
-        .unwrap_or(Vec2::new(1280.0, 720.0));
+    let window_px = if map_vp.window_logical.x > 1.0 {
+        map_vp.window_logical
+    } else {
+        Vec2::new(1280.0, 720.0)
+    };
     let viewport = map_camera_viewport_pixels(window_px, Some(map_vp.as_ref()));
     let (zoom_lo, zoom_hi) = map_zoom_limits_for_world(world_w, world_h, viewport);
     let camera_desired = if let Some(auth) = authority.as_ref() {
         map_camera_desired_from_view_authority(auth)
     } else {
-        desired.as_ref().clone()
+        (**desired).clone()
     };
     let Some(mut rect) = project_tile_aabb_to_egui(
         highlight.min_tile,
@@ -197,6 +205,7 @@ pub fn draw_vfx_fire_test_highlight_overlay(
         map_vp.as_ref(),
         world_w,
         world_h,
+        latch.as_ref(),
     ) else {
         return Ok(());
     };
@@ -204,14 +213,13 @@ pub fn draw_vfx_fire_test_highlight_overlay(
     if zoom_alpha < ZOOMED_OUT_ALPHA {
         rect = expand_rect_min_screen_size(rect, MIN_SCREEN_WHEN_ZOOMED_OUT_PX);
     }
-    if !map_vp.valid {
-        return Ok(());
+    if map_vp.valid {
+        let vp = egui::Rect::from_min_max(
+            egui::pos2(map_vp.min.x, map_vp.min.y),
+            egui::pos2(map_vp.max.x, map_vp.max.y),
+        );
+        rect = rect.intersect(vp);
     }
-    let vp = egui::Rect::from_min_max(
-        egui::pos2(map_vp.min.x, map_vp.min.y),
-        egui::pos2(map_vp.max.x, map_vp.max.y),
-    );
-    rect = rect.intersect(vp);
     if rect.width() < 4.0 || rect.height() < 4.0 {
         return Ok(());
     }

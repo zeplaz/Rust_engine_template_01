@@ -16,6 +16,8 @@ use crate::gui::{
     MinimapPresentationSource, MinimapShellState, SimulationMapViewport,
     ViewRepresentationSnapshot, WorldBounds,
 };
+#[cfg(test)]
+use crate::gui::MapCameraDesiredRes;
 use crate::render::extraction::RenderProjectionGraph;
 use crate::render::gpu_indirect_draw::GpuIndirectDrawSpine;
 use crate::render::gpu_particles::WorldFireParticleFrame;
@@ -51,12 +53,6 @@ pub(crate) fn tactical_vfx_proof_enabled() -> bool {
         std::env::var("TACTICAL_VFX_PROOF").as_deref(),
         Ok("1") | Ok("true") | Ok("on")
     )
-}
-
-/// Minimap double-tap / operator scroll extends tactical VFX camera override window.
-#[derive(Resource, Debug, Default)]
-pub struct TacticalVfxCameraUserOverride {
-    pub release_after_secs: f64,
 }
 
 /// P2-VFX-VISUAL-001: `--test visual` / VfxSandbox always require tactical particle witness before proof commit.
@@ -350,10 +346,6 @@ pub(crate) fn refresh_visual_proof_fire_particles(
         *cam,
     );
 }
-
-/// Removed — was forcing tactical zoom every PostUpdate when `TACTICAL_VFX_PROOF=1`.
-#[allow(dead_code)]
-pub(crate) fn maintain_visual_tactical_vfx_camera() {}
 
 pub const STAGE5_FULL_APP_LIVE_JSON: &str = "debug_runs/stage5_full_app_live.json";
 
@@ -761,8 +753,9 @@ pub fn refresh_log_e01_and_tactical_vfx_stage5_live_witness() -> bool {
         &mut particles,
         None,
         FireParticleCameraScale {
-            camera_zoom: 1.0,
+            zoom_level: 1.0,
             zoom_alpha: FIRE_SPARK_TACTICAL_PROOF_ZOOM_ALPHA,
+            ..Default::default()
         },
         None,
     );
@@ -784,8 +777,9 @@ pub fn refresh_log_e01_and_tactical_vfx_stage5_live_witness() -> bool {
         &catalog,
         &mut water,
         FireParticleCameraScale {
-            camera_zoom: 1.0,
+            zoom_level: 1.0,
             zoom_alpha: crate::render::gpu_water_particles::WATER_TACTICAL_WITNESS_ZOOM_ALPHA,
+            ..Default::default()
         },
         0.0,
     );
@@ -1059,7 +1053,7 @@ fn assemble_headless_full_app_readiness_app() -> App {
     app.init_resource::<ClimateVisualAggregate>();
     app.init_resource::<TransportEdgeDirectory>();
     app.init_resource::<MapCameraSettings>();
-    app.init_resource::<MapCameraDesired>();
+    app.init_resource::<MapCameraDesiredRes>();
     app.init_resource::<WorldPreviewState>();
     app.init_resource::<WorldGenUiState>();
     app.init_resource::<VisualAgreementFrame>();
@@ -2216,8 +2210,9 @@ mod tests {
             &mut particles,
             None,
             FireParticleCameraScale {
-                camera_zoom: 1.0,
+                zoom_level: 1.0,
                 zoom_alpha: crate::render::gpu_particles::FIRE_SPARK_TACTICAL_PROOF_ZOOM_ALPHA,
+                ..Default::default()
             },
             None,
         );
@@ -2237,8 +2232,9 @@ mod tests {
             &catalog,
             &mut water,
             FireParticleCameraScale {
-                camera_zoom: 1.0,
+                zoom_level: 1.0,
                 zoom_alpha: 0.8,
+                ..Default::default()
             },
             0.0,
         );

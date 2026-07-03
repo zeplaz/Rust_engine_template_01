@@ -45,8 +45,21 @@ class GrammarBuildSetPanel(ttk.LabelFrame):
     def _run_sweep(self) -> None:
         try:
             body = grammar_build_set.grammar_eval_sweep()
-            lines = body.get("lines") or []
-            self.sweep_var.set(" · ".join(lines[:6]) or body.get("text") or "sweep empty")
+            lines = list(body.get("lines") or [])
+            proc = body.get("process_histogram") or {}
+            pt = proc.get("power_tier") or {}
+            roles = proc.get("supply_chain_role") or {}
+            zones = proc.get("zone_coverage") or {}
+            if pt or roles or zones:
+                proc_bits: list[str] = []
+                if pt:
+                    proc_bits.append("power " + ", ".join(f"{k}:{v}" for k, v in sorted(pt.items())))
+                if roles:
+                    proc_bits.append("roles " + ", ".join(f"{k}:{v}" for k, v in sorted(roles.items())))
+                if zones:
+                    proc_bits.append("zones " + ", ".join(f"{k}:{v}" for k, v in sorted(zones.items())))
+                lines.append("process · " + " · ".join(proc_bits))
+            self.sweep_var.set(" · ".join(lines[:8]) or body.get("text") or "sweep empty")
             self._on_log(f"grammar_eval_sweep seeds={body.get('seed_count')}")
         except Exception as exc:  # noqa: BLE001
             self.sweep_var.set(f"sweep failed: {exc}")
