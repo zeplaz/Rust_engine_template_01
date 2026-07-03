@@ -15,6 +15,7 @@ use crate::gui::{
     ViewRepresentationPlugin, StrategicToolingPlugin,
     UiThemePlugin,
 };
+use crate::render::TerrainInstancedRenderHost;
 #[cfg(feature = "bevy_tilemap_adapter")]
 use crate::render::TilemapAdapterPlugin;
 use crate::systems::production::{
@@ -28,8 +29,11 @@ use crate::systems::transport::{TransportSchedule, TransportSimulationPlugin};
 use crate::strategic::StrategicFieldPipeline;
 use crate::compute::ComputeDispatchPlugin;
 use crate::render::{
-    FramePerfPlugin, GpuWeatherFireFieldPlugin, LocalLightPlugin, SharedOverlayFieldBuffersPlugin,
-    StallWatchPlugin, Stage5ReadinessProfile, TileWorldFallbackPlugin, ViewportPipelinePlugin,
+    FramePerfPlugin, GpuWeatherFireFieldPlugin, LocalLightPlugin, RenderSchedulePerfPlugin,
+    SharedOverlayFieldBuffersPlugin,
+    StallWatchPlugin, Stage5ReadinessProfile, TerrainInstancedDrawPlugin,
+    TerrainMaterialAtlasPlugin, TerrainRenderAuthorityPlugin, TileWorldFallbackPlugin,
+    ViewportPipelinePlugin,
     ViewRuntimePlugin, GpuWaterParticlesPlugin, WaterSurfaceVisualPlugin,
     register_water_surface_draw, register_world_water_particle_draw,
 };
@@ -55,7 +59,7 @@ use bevy_egui::EguiPlugin;
 
 /// Root camera for **Bevy UI** (splash, in-game HUD). Without this, the window stays clear/black.
 fn spawn_primary_ui_camera(mut commands: Commands) {
-    commands.spawn((MainWorldCamera, Camera2d, TileDebugRenderHost));
+    commands.spawn((MainWorldCamera, Camera2d, TileDebugRenderHost, TerrainInstancedRenderHost));
 }
 
 pub struct EnginePlugin;
@@ -69,6 +73,10 @@ impl Plugin for EnginePlugin {
         let present_mode = if std::env::var("PERF_NO_VSYNC")
             .ok()
             .is_some_and(|v| v == "1" || v.eq_ignore_ascii_case("true"))
+            || std::env::var("PERF_VSYNC")
+                .ok()
+                .is_some_and(|v| v == "0" || v.eq_ignore_ascii_case("false"))
+            || cfg!(not(debug_assertions))
         {
             PresentMode::AutoNoVsync
         } else {
@@ -126,6 +134,7 @@ impl Plugin for EnginePlugin {
             .add_plugins(AtmospherePlugin)
             .add_plugins(WeatherPlugin)
             .add_plugins(FramePerfPlugin)
+            .add_plugins(RenderSchedulePerfPlugin)
             .add_plugins(GpuWeatherFireFieldPlugin)
             .add_plugins(crate::infrastructure::InfrastructureProfilesPlugin)
             .add_plugins(crate::infrastructure::InfrastructureTransportPlugin)
@@ -201,6 +210,9 @@ impl Plugin for EnginePlugin {
             ),
         );
         app.add_plugins(TileWorldFallbackPlugin)
+            .add_plugins(TerrainRenderAuthorityPlugin)
+            .add_plugins(TerrainMaterialAtlasPlugin)
+            .add_plugins(TerrainInstancedDrawPlugin)
             .add_plugins(crate::render::TacticalVectorOverlayPlugin)
             .add_plugins(WaterSurfaceVisualPlugin)
             .add_plugins(GpuWaterParticlesPlugin);

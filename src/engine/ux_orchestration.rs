@@ -10,6 +10,7 @@ use crate::engine::states::{
 use crate::gui::editor::world_gen_ui::WorldGenUiState;
 use crate::gui::editor::world_preview::WorldPreviewUiState;
 use crate::gui::hud::frame_budget_diagnostics::FrameBudgetDiagnostics;
+use crate::render::{FramePerf, FrameUpdateAttrib};
 use crate::gui::PauseMenuPendingAction;
 use crate::terrain::generation::world_generator_enhanced::WorldGenJobSlot;
 
@@ -46,10 +47,13 @@ impl Plugin for UxOrchestrationPlugin {
                 (
                     sync_legacy_to_ux,
                     bridge_ux_to_legacy.in_set(UxBridgeSet),
-                    ux_frame_spike_watchdog,
                 )
                     .chain()
                     .after(crate::gui::toggle_pause_menu_on_escape),
+            )
+            .add_systems(
+                Last,
+                ux_frame_spike_watchdog.after(crate::render::emit_frame_perf_summary),
             )
             .add_systems(OnEnter(AppState::Setup), ux_on_enter_setup)
             .add_systems(OnEnter(AppState::WorldGen), ux_on_enter_world_gen)
@@ -428,16 +432,40 @@ fn ux_on_enter_worldgen_dismissed(
 }
 
 /// FINISH-UX-06: spike detection for throttling preview / heavy paths.
+///
+/// Only CPU-attributed overrun may latch spike. GPU/present-bound frames (shell delta pinned
+/// at 250ms while spine+attrib stay green) must not throttle raster cadence or fire extract.
 fn ux_frame_spike_watchdog(
     budget: Option<Res<FrameBudgetDiagnostics>>,
+    attrib: Option<Res<FrameUpdateAttrib>>,
+    perf: Option<Res<FramePerf>>,
     mut guard: ResMut<UxFrameSpikeGuard>,
 ) {
-    let frame_ms = budget.map(|b| b.frame_time_ms).unwrap_or(0.0);
+    let shell_ms = budget.map(|b| b.frame_time_ms).unwrap_or(0.0);
+    let spine_ms = perf.as_ref().map(|p| {
+        p.world_repr_ms
+            + p.projection_graph_ms
+            + p.readiness_ms
+            + if p.tile_raster_ran { p.tile_raster_ms } else { 0.0 }
+    }).unwrap_or(0.0);
+    let attrib_ms = attrib.as_ref().map(|a| a.attrib_sum_ms()).unwrap_or(0.0);
+    let accounted_ms = spine_ms + attrib_ms;
+
     let was_spike = guard.spike_active;
-    guard.last_frame_ms = frame_ms;
+    guard.last_frame_ms = shell_ms;
     guard.suppress_preview_this_frame = false;
     guard.suppress_optional_diagnostics = false;
-    if frame_ms > guard.max_ms {
+
+    // CPU spine green — do not latch spike on GPU/present stalls (Bevy delta cap ≈ 250ms).
+    if accounted_ms < 20.0 {
+        guard.spike_over_budget_streak = 0;
+        guard.spike_active = false;
+        UX_SPIKE_ACTIVE.store(false, Ordering::Relaxed);
+        return;
+    }
+
+    let cpu_frame_ms = accounted_ms;
+    if cpu_frame_ms > guard.max_ms {
         guard.spike_over_budget_streak = guard.spike_over_budget_streak.saturating_add(1);
     } else {
         guard.spike_over_budget_streak = 0;
@@ -451,8 +479,8 @@ fn ux_frame_spike_watchdog(
         if !was_spike {
             warn!(
                 target: "ux::perf",
-                "frame spike {:.1}ms > {:.1}ms for {} frames — suppress_preview",
-                frame_ms,
+                "CPU spike {:.1}ms > {:.1}ms for {} frames — suppress_preview",
+                cpu_frame_ms,
                 guard.max_ms,
                 guard.spike_over_budget_streak
             );

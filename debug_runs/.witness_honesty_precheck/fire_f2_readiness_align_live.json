@@ -11,10 +11,15 @@
     "logging_env": {
       "ORCHESTRATOR_EXPORT_HEALTH": false,
       "PERF": false,
+      "PERF_DISK": false,
       "RUST_LOG": null,
+      "SIM_ANALYTICS": false,
+      "SIM_ANALYTICS_FRAMES": false,
+      "SIM_ANALYTICS_QUIET": false,
       "SIM_VIEW_SYNC_DEBUG": false,
       "STAGE5_READINESS_VERBOSE": false,
       "STAGE5_VERBOSE": false,
+      "STALL": false,
       "VIEWPORT_AUTHORITY_DEBUG": false
     },
     "orchestrator": {
@@ -42,6 +47,7 @@
       "debug_runs/wave_c_live.json",
       "debug_runs/ui_shell_migration_live.json",
       "debug_runs/minimap_compositor_live.json",
+      "debug_runs/sim_spectrum_analytics_live.json",
       "debug_runs/stage7_behavioral_live.json",
       "debug_runs/stage7_play_live.json",
       "debug_runs/wss_substrate_live.json",
@@ -52,17 +58,17 @@
     "relative_path": "debug_runs/fire_f2_readiness_align_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_fire_f2_readiness_align_witness",
-    "written_at_epoch_secs": 1781984545
+    "written_at_epoch_secs": 1783027344
   },
   "fire_f2_readiness_align_001": {
     "fire_inst_excluded_from_f1_green": true,
     "fire_inst_proxy": 64,
     "green": true,
     "heat_mostly_stable": true,
-    "max_heat": 0.3151220381259918,
+    "max_heat": 0.3147251307964325,
     "mean_fuel": 0.029999999329447746,
     "policy": "f1_green uses sim mean_heat/mean_fuel — render fire_inst excluded",
-    "sim_mean_heat": 0.15298865735530853
+    "sim_mean_heat": 0.15229733288288116
   },
   "gate": "FIRE-F2-READINESS-ALIGN-001"
 }

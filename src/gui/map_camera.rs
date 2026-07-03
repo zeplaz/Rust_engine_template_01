@@ -1,12 +1,17 @@
 //! Pan / zoom / edge-scroll / rotate for [`MainWorldCamera`] using [`InputBindings`](crate::gui::InputBindings).
 //!
-//! **P1-F:** Input writes [`MapCameraDesired`]; a follow-up system lerps [`Transform`] toward it (smoothing).
-//! Skips input while egui wants the pointer or keyboard. Edge pan respects [`MapCameraSettings::edge_scroll_enabled`].
+//! **P1-F:** Input writes [`ViewProjectionAuthority`] (WorldMain); [`derive_map_camera_desired_from_view_authority`]
+//! mirrors into [`MapCameraDesired`]; smooth + ortho sync follow.
 //!
-//! **vm-07:** When [`crate::gui::ActiveMapViewInput`] names [`crate::gui::MapViewInstanceId::WorldPreview`] or
-//! [`crate::gui::MapViewInstanceId::Minimap`], keyboard / edge / grip / scroll zoom are skipped so auxiliary
-//! map surfaces do not fight the main tactical camera.
+//! **Input priority (tactical map vs egui):**
+//! 1. [`ActiveMapViewInput`] — World Preview blocks; minimap chrome uses [`minimap_bevy_scroll_zoom_system`].
+//! 2. [`simulation_pointer_gate::SimulationMapPointerGate`] — Bevy chrome rects (pre-egui) + floating HUD (post-egui).
+//! 3. Wheel — [`map_camera_wheel_zoom_system`] in Update (OS [`AccumulatedMouseScroll`] only).
+//! 4. Pan/keys — [`map_camera_apply_input_to_desired`] blocks when `wants_pointer_input` and cursor outside hole.
 
+use bevy::input::mouse::{AccumulatedMouseScroll, MouseWheel};
+use bevy::camera::ClearColorConfig;
+use bevy::diagnostic::FrameCount;
 use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
 use bevy_egui::egui;
@@ -18,9 +23,8 @@ use crate::engine::{ActiveTestScene, TestScene};
 use crate::gui::view_authority::map_camera_desired_from_view_authority;
 use crate::render::view_runtime::ViewProjectionAuthority;
 use crate::gui::ActiveMapViewInput;
-use crate::gui::{SimulationMapViewport, SimulationViewportSyncSet};
-use crate::gui::InputBindings;
-use crate::gui::InputFrame;
+use crate::gui::hud::simulation_pointer_gate;
+use crate::gui::{InputBindings, InputFrame, SimulationMapViewport, SimulationViewportSyncSet};
 use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
 use crate::gui::representation_governance::ScaffoldContract;
 use crate::render::{trace_camera_sync, DebugRenderTraceConfig, Stage5ReadinessProfile};
@@ -89,6 +93,10 @@ impl MainWorldCameraViewportLatch {
                 self.steady_flip_count = self.steady_flip_count.saturating_add(1);
             }
         }
+        if TACTICAL_MAP_FULL_WINDOW_RENDER {
+            self.using_hole = false;
+            return false;
+        }
         self.using_hole
     }
 }
@@ -106,6 +114,58 @@ pub struct MainWorldCameraOrthoTrace {
     pub fixed_height: f32,
     pub view_pixels: Vec2,
     pub using_hole: bool,
+    /// True when the camera scissor matches the sim-map hole (not healed to full window).
+    pub use_hole_scissor: bool,
+    pub authority_zoom: f32,
+    pub desired_zoom: f32,
+}
+
+/// Per-frame zoom audit — enable `RUST_LOG=map_camera_zoom=debug` (warn on reverts).
+#[derive(Resource, Clone, Debug, Default)]
+pub struct MapCameraZoomAudit {
+    pub frame: u32,
+    pub authority_zoom: f32,
+    pub desired_zoom: f32,
+    pub ortho_fixed_w: f32,
+    pub ortho_fixed_h: f32,
+    pub view_px: Vec2,
+    pub use_hole_scissor: bool,
+    pub latch_using_hole: bool,
+    pub last_commit_writer: Option<crate::render::view_runtime::ViewAuthorityWriter>,
+    pub last_commit_prev_zoom: f32,
+    pub last_commit_new_zoom: f32,
+    pub revert_warn_count: u32,
+}
+
+/// Called from [`ViewProjectionAuthority::commit_pose`] for WorldMain (every pose writer).
+pub fn on_world_main_pose_committed(
+    writer: crate::render::view_runtime::ViewAuthorityWriter,
+    prev_zoom: Option<f32>,
+    new_zoom: f32,
+) {
+    use crate::render::view_runtime::ViewAuthorityWriter;
+    let writer_name = match writer {
+        ViewAuthorityWriter::MapCameraInput => "MapCameraInput",
+        ViewAuthorityWriter::BridgeCompat => "BridgeCompat",
+        ViewAuthorityWriter::ViewportPipeline => "ViewportPipeline",
+        ViewAuthorityWriter::MinimapFollow => "MinimapFollow",
+        ViewAuthorityWriter::MinimapShell => "MinimapShell",
+        ViewAuthorityWriter::PreviewPanel => "PreviewPanel",
+        ViewAuthorityWriter::Unset => "Unset",
+    };
+    if let Some(prev) = prev_zoom {
+        let ratio = if prev > 1e-6 { new_zoom / prev } else { 1.0 };
+        if ratio < 0.65 && (prev - new_zoom).abs() > 0.05 {
+            bevy::log::warn!(
+                target: "map_camera_zoom",
+                "ZOOM_REVERT writer={writer_name} {prev:.4} -> {new_zoom:.4} (ratio={ratio:.3})"
+            );
+        }
+    }
+    bevy::log::debug!(
+        target: "map_camera_zoom",
+        "POSE_COMMIT writer={writer_name} zoom={new_zoom:.4}"
+    );
 }
 
 /// Logical pose after map input (smoothing target).
@@ -134,7 +194,6 @@ impl Default for MapCameraDesired {
 #[derive(Default)]
 struct MapCameraInputLocals {
     middle_tap: Option<f32>,
-    synced_from_cam: bool,
     before_apply: Option<MapCameraDesired>,
 }
 
@@ -226,8 +285,13 @@ impl Plugin for MapCameraPlugin {
             )
             .add_systems(
                 Update,
-                map_camera_apply_input_to_desired
+                (
+                    map_camera_apply_input_to_desired,
+                    map_camera_wheel_zoom_system.after(map_camera_apply_input_to_desired),
+                )
+                    .chain()
                     .in_set(MapCameraSystemSet::ApplyInput)
+                    .after(crate::gui::hud::simulation_pointer_gate::sync_simulation_map_pointer_gate_system)
                     .run_if(in_simulation_or_editor_map),
             )
             .add_systems(
@@ -238,6 +302,7 @@ impl Plugin for MapCameraPlugin {
             )
             .init_resource::<MainWorldCameraViewportLatch>()
             .init_resource::<MainWorldCameraOrthoTrace>()
+            .init_resource::<MapCameraZoomAudit>()
             .add_systems(
                 Update,
                 map_camera_smooth_toward_desired
@@ -245,8 +310,21 @@ impl Plugin for MapCameraPlugin {
                     .run_if(in_simulation_or_editor_map),
             )
             .add_systems(
+                Update,
+                apply_main_world_camera_ortho_immediate
+                    .after(MapCameraSystemSet::Smooth)
+                    .run_if(in_simulation_or_editor_map),
+            )
+            .add_systems(
                 PostUpdate,
-                sync_main_world_camera_viewport_and_projection
+                (
+                    advance_main_world_camera_viewport_latch,
+                    sync_main_world_camera_viewport_and_projection
+                        .after(advance_main_world_camera_viewport_latch),
+                    map_camera_zoom_audit_system
+                        .after(sync_main_world_camera_viewport_and_projection),
+                )
+                    .chain()
                     .in_set(SimulationViewportSyncSet::ApplyCameraScissor)
                     .run_if(in_simulation_or_editor_map),
             );
@@ -265,18 +343,105 @@ const KEY_PAN: f32 = 520.0;
 const EDGE_PAN: f32 = 340.0;
 const GRIP_PAN: f32 = 620.0;
 const ZOOM_FACTOR: f32 = 1.20;
-/// Fallback zoom limits when viewport/world size is unknown.
+/// Fallback logical window size when the primary window is unavailable (camera math only).
+pub const MAP_CAMERA_DEFAULT_WINDOW_PX: Vec2 = Vec2::new(1280.0, 720.0);
+/// Z-plane for [`MainWorldCamera`] and map pose lift (weather/VFX children share this stack).
+pub const MAIN_WORLD_CAMERA_Z: f32 = 999.0;
+/// Fallback zoom limits when viewport/world size is unknown (witness / alpha only).
 pub const MAP_ZOOM_CLAMP: (f32, f32) = (0.35, 10000.0);
 
-/// Logical pixel size for map camera math — prefer the simulation map viewport hole when valid.
+#[inline]
+fn sanitize_map_zoom_input(scale: f32) -> f32 {
+    if scale.is_finite() && scale > 0.0 {
+        scale
+    } else {
+        1.0
+    }
+}
+
+/// Primary window logical size for map camera math.
+#[inline]
+#[must_use]
+pub fn primary_window_logical_px(windows: &Query<&Window, With<PrimaryWindow>>) -> Vec2 {
+    windows
+        .single()
+        .map(|w| Vec2::new(w.width().max(1.0), w.height().max(1.0)))
+        .unwrap_or(MAP_CAMERA_DEFAULT_WINDOW_PX)
+}
+
+/// Logical pixel size for map camera math — match the **active** camera viewport (hole scissor vs full window).
 #[must_use]
 pub fn map_camera_viewport_pixels(
     window: Vec2,
     map_viewport: Option<&SimulationMapViewport>,
 ) -> Vec2 {
-    if let Some(vp) = map_viewport {
-        if vp.is_adequate_for_camera() {
-            return vp.logical_size();
+    map_camera_viewport_pixels_for_scissor(window, map_viewport, false)
+}
+
+/// Tactical map renders **full window** — sim chrome is opaque Bevy UI on top.
+/// Subrect `Camera.viewport` scissor leaves swapchain margins uncleared (burnt-in ghost frames at prior zoom).
+const TACTICAL_MAP_FULL_WINDOW_RENDER: bool = true;
+
+/// Logical view pixels for ortho / clamp — matches [`apply_main_world_camera_ortho`].
+#[must_use]
+pub fn map_camera_tactical_view_pixels(
+    window_px: Vec2,
+    sim_viewport: &SimulationMapViewport,
+    latch: &MainWorldCameraViewportLatch,
+) -> Vec2 {
+    if TACTICAL_MAP_FULL_WINDOW_RENDER {
+        return map_camera_ortho_view_pixels(window_px, sim_viewport, false);
+    }
+    let hole = resolve_map_camera_hole_scissor_active(sim_viewport, latch, window_px);
+    map_camera_ortho_view_pixels(window_px, sim_viewport, hole)
+}
+
+/// Whether the map camera uses hole scissor this frame (heal logic shared with PostUpdate sync).
+#[must_use]
+pub fn resolve_map_camera_hole_scissor_active(
+    sim: &SimulationMapViewport,
+    latch: &MainWorldCameraViewportLatch,
+    window_px: Vec2,
+) -> bool {
+    if TACTICAL_MAP_FULL_WINDOW_RENDER || !latch.using_hole {
+        return false;
+    }
+    const MIN_HOLE_PHYSICAL_PX: f32 = 32.0;
+    let w_log = (sim.max.x - sim.min.x).max(1.0);
+    let h_log = (sim.max.y - sim.min.y).max(1.0);
+    if !sim.is_adequate_for_camera()
+        || w_log < MIN_HOLE_PHYSICAL_PX
+        || h_log < MIN_HOLE_PHYSICAL_PX
+    {
+        return false;
+    }
+    let _ = window_px;
+    true
+}
+
+/// Logical pixel size for orthographic fit — shared by wheel, clamp, and PostUpdate sync.
+#[must_use]
+pub fn map_camera_ortho_view_pixels(
+    window_px: Vec2,
+    sim_viewport: &SimulationMapViewport,
+    hole_scissor_active: bool,
+) -> Vec2 {
+    let hole_active = hole_scissor_active && sim_viewport.is_adequate_for_camera();
+    map_camera_viewport_pixels_for_scissor(window_px, Some(sim_viewport), hole_active)
+}
+
+/// Same as [`map_camera_viewport_pixels`] but uses hole dimensions only when hole scissor is active.
+#[must_use]
+pub fn map_camera_viewport_pixels_for_scissor(
+    window: Vec2,
+    map_viewport: Option<&SimulationMapViewport>,
+    hole_scissor_active: bool,
+) -> Vec2 {
+    if hole_scissor_active {
+        if let Some(vp) = map_viewport {
+            if vp.is_adequate_for_camera() {
+                return vp.logical_size();
+            }
         }
     }
     Vec2::new(window.x.max(1.0), window.y.max(1.0))
@@ -398,12 +563,12 @@ fn map_camera_apply_input_to_desired(
     input_frame: Res<InputFrame>,
     windows: Query<&Window, With<PrimaryWindow>>,
     sim_viewport: Res<SimulationMapViewport>,
+    latch: Res<MainWorldCameraViewportLatch>,
     mut contexts: EguiContexts,
     params: Res<WorldGenParams>,
     active_map_surface: Res<ActiveMapViewInput>,
     mut settings: ResMut<MapCameraSettings>,
     mut authority: ResMut<ViewProjectionAuthority>,
-    q_cam: Query<&Transform, With<MainWorldCamera>>,
     mut locals: Local<MapCameraInputLocals>,
 ) {
     // PERF-INSTR-VFX-001: name this system inside the `map_cam` wall bracket (STALL/PERF only).
@@ -414,20 +579,12 @@ fn map_camera_apply_input_to_desired(
         return;
     }
 
-    if state.is_changed() {
-        locals.synced_from_cam = false;
-    }
-
-    let Ok(ctx) = contexts.ctx_mut() else {
-        return;
-    };
-    // Do not block map wheel/pan just because some text widget has keyboard focus.
-    // Input should be gated by pointer ownership, then by whether the pointer is over the map.
-    let pointer_over_ui = ctx.wants_pointer_input();
-    let window_px = windows
-        .single()
-        .map(|w| Vec2::new(w.width().max(1.0), w.height().max(1.0)))
-        .unwrap_or(Vec2::new(1280.0, 720.0));
+    let pointer_over_ui = contexts
+        .ctx_mut()
+        .ok()
+        .map(|ctx| ctx.wants_pointer_input())
+        .unwrap_or(false);
+    let window_px = primary_window_logical_px(&windows);
     let cursor_over_sim_map = windows.single().ok().and_then(|window| {
         window.cursor_position().map(|cursor| {
             if sim_viewport.is_adequate_for_camera() {
@@ -436,7 +593,6 @@ fn map_camera_apply_input_to_desired(
                     && cursor.y >= sim_viewport.min.y
                     && cursor.y <= sim_viewport.max.y
             } else {
-                // WorldGen / layout settle: allow wheel zoom on the full client area.
                 cursor.x >= 0.0
                     && cursor.y >= 0.0
                     && cursor.x <= window_px.x
@@ -449,13 +605,11 @@ fn map_camera_apply_input_to_desired(
         .0
         .is_some_and(|id| id == crate::gui::MapViewInstanceId::Minimap)
     {
-        // Minimap owns wheel / grip while hovered — see `minimap_bevy_scroll_zoom_system`.
         let grip = keys.pressed(bindings.map_mouse_grip) || mouse_btn.pressed(MouseButton::Middle);
         if grip {
             return;
         }
-        let scroll = input_frame.scroll_delta;
-        if scroll.abs() >= f32::EPSILON {
+        if input_frame.scroll_delta.abs() >= f32::EPSILON {
             return;
         }
     }
@@ -464,27 +618,14 @@ fn map_camera_apply_input_to_desired(
         return;
     }
 
-    // MAP-ZOOM-001: egui panels (world-gen chrome) steal wheel unless cursor is over the map hole.
-    if pointer_over_ui && !cursor_over_sim_map {
-        return;
-    }
-
     let dt = time.delta_secs();
     if dt <= 0.0 {
         return;
     }
 
-    let mut desired = map_camera_desired_from_view_authority(authority.as_ref());
+    let pointer_blocks_mouse = pointer_over_ui && !cursor_over_sim_map;
 
-    if !locals.synced_from_cam {
-        if let Ok(t) = q_cam.single() {
-            desired.translation = t.translation;
-            desired.scale = t.scale;
-            desired.rotation = t.rotation;
-            commit_map_camera_pose_to_view_authority_simple(authority.as_mut(), &desired);
-            locals.synced_from_cam = true;
-        }
-    }
+    let mut desired = map_camera_desired_from_view_authority(authority.as_ref());
 
     locals.before_apply = Some(desired.clone());
 
@@ -530,15 +671,14 @@ fn map_camera_apply_input_to_desired(
         desired.scale = Vec3::splat(default_z);
     }
 
-    let viewport = map_camera_viewport_pixels(window_px, Some(sim_viewport.as_ref()));
+    let viewport = map_camera_tactical_view_pixels(window_px, sim_viewport.as_ref(), latch.as_ref());
     let world = Vec2::new(world_w, world_h);
-    let (zoom_lo, zoom_hi) = map_zoom_limits_for_world(world_w, world_h, viewport);
 
     if keys.just_pressed(bindings.map_frame_world) {
         desired.translation = center_xy;
         let margin = 0.9;
         let s = margin * (viewport.x / world_w.max(1.0)).min(viewport.y / world_h.max(1.0));
-        desired.scale = Vec3::splat(s.clamp(zoom_lo, zoom_hi));
+        desired.scale = Vec3::splat(sanitize_map_zoom_input(s));
     }
 
     let fast = keys.pressed(bindings.map_pan_fast_modifier);
@@ -562,13 +702,13 @@ fn map_camera_apply_input_to_desired(
     }
 
     let grip = keys.pressed(bindings.map_mouse_grip) || mouse_btn.pressed(MouseButton::Middle);
-    if grip {
+    if grip && !pointer_blocks_mouse {
         let sum = input_frame.pointer_delta;
         desired.translation +=
             Vec3::new(-sum.x, sum.y, 0.0) * GRIP_PAN * dt * 0.045 * if fast { 1.35 } else { 1.0 };
     }
 
-    if settings.edge_scroll_enabled {
+    if settings.edge_scroll_enabled && !pointer_blocks_mouse {
         if let Ok(win) = windows.single() {
             let size = Vec2::new(win.width(), win.height());
             if let Some(cursor) = win.cursor_position() {
@@ -593,20 +733,13 @@ fn map_camera_apply_input_to_desired(
         }
     }
 
-    let scroll = input_frame.scroll_delta;
-    if scroll.abs() >= f32::EPSILON {
-        let z = ZOOM_FACTOR.powf(scroll.clamp(-5.0, 5.0));
-        let s = (desired.scale.x * z).clamp(zoom_lo, zoom_hi);
-        desired.scale = Vec3::splat(s);
-    }
-
     let zoom_key = 4.0 * dt;
     if keys.pressed(bindings.map_zoom_in) {
-        let s = (desired.scale.x * (1.0 + zoom_key)).clamp(zoom_lo, zoom_hi);
+        let s = sanitize_map_zoom_input(desired.scale.x * (1.0 + zoom_key));
         desired.scale = Vec3::splat(s);
     }
     if keys.pressed(bindings.map_zoom_out) {
-        let s = (desired.scale.x / (1.0 + zoom_key)).clamp(zoom_lo, zoom_hi);
+        let s = sanitize_map_zoom_input(desired.scale.x / (1.0 + zoom_key));
         desired.scale = Vec3::splat(s);
     }
 
@@ -617,7 +750,7 @@ fn map_camera_apply_input_to_desired(
         desired.rotation *= Quat::from_rotation_z(-ROTATE_STEP);
     }
 
-    let scale = desired.scale.x.clamp(zoom_lo, zoom_hi);
+    let scale = sanitize_map_zoom_input(desired.scale.x);
     desired.scale = Vec3::splat(scale);
     let clamped = clamp_map_camera_translation_xy(
         Vec2::new(desired.translation.x, desired.translation.y),
@@ -627,9 +760,197 @@ fn map_camera_apply_input_to_desired(
     );
     desired.translation.x = clamped.x;
     desired.translation.y = clamped.y;
-    desired.translation.z = 999.0;
+    desired.translation.z = MAIN_WORLD_CAMERA_Z;
 
+    if locals.before_apply.as_ref() == Some(&desired) {
+        return;
+    }
+
+    ensure_world_main_authority_bootstrapped(authority.as_mut(), &desired);
+    if locals
+        .before_apply
+        .as_ref()
+        .is_some_and(|b| (b.scale.x - desired.scale.x).abs() > 1e-6)
+    {
+        bevy::log::info!(
+            target: "map_camera_zoom",
+            "KEY_ZOOM scale {:.4} -> {:.4}",
+            locals.before_apply.as_ref().map(|b| b.scale.x).unwrap_or(0.0),
+            desired.scale.x
+        );
+    }
     commit_map_camera_pose_to_view_authority_simple(authority.as_mut(), &desired);
+}
+
+/// Returns true when scroll changed the committed map zoom.
+#[must_use]
+pub fn apply_map_camera_wheel_zoom(
+    scroll: f32,
+    params: &WorldGenParams,
+    sim_viewport: &SimulationMapViewport,
+    window_px: Vec2,
+    latch: &MainWorldCameraViewportLatch,
+    authority: &mut ViewProjectionAuthority,
+) -> bool {
+    if scroll.abs() < f32::EPSILON {
+        return false;
+    }
+    let world_w = params.width as f32;
+    let world_h = params.height as f32;
+    if world_w <= 0.0 || world_h <= 0.0 {
+        return false;
+    }
+    let viewport = map_camera_tactical_view_pixels(window_px, sim_viewport, latch);
+
+    let mut desired = map_camera_desired_from_view_authority(authority);
+    let before_scale = desired.scale.x;
+    let z = ZOOM_FACTOR.powf(scroll.clamp(-24.0, 24.0));
+    let scale = sanitize_map_zoom_input(desired.scale.x * z);
+    if (scale - before_scale).abs() < 1e-6 {
+        return false;
+    }
+    desired.scale = Vec3::splat(scale);
+    let clamped = clamp_map_camera_translation_xy(
+        Vec2::new(desired.translation.x, desired.translation.y),
+        scale,
+        Vec2::new(world_w, world_h),
+        viewport,
+    );
+    desired.translation.x = clamped.x;
+    desired.translation.y = clamped.y;
+    desired.translation.z = MAIN_WORLD_CAMERA_Z;
+    commit_map_camera_pose_to_view_authority_simple(authority, &desired);
+    true
+}
+
+/// Cursor inside the measured sim-map hole (ignores [`SimulationMapViewport::valid`] — wheel must not freeze while latch settles).
+#[inline]
+#[must_use]
+pub fn cursor_in_sim_map_adequate_aabb(cursor: Vec2, map_vp: &SimulationMapViewport) -> bool {
+    if !map_vp.is_adequate_for_camera() {
+        return true;
+    }
+    cursor.x >= map_vp.min.x
+        && cursor.x <= map_vp.max.x
+        && cursor.y >= map_vp.min.y
+        && cursor.y <= map_vp.max.y
+}
+
+/// True when tactical map wheel zoom must not run (world preview only).
+#[inline]
+fn tactical_map_wheel_zoom_blocked(active: &ActiveMapViewInput) -> bool {
+    active.blocks_main_world_map_camera_input()
+}
+
+/// Single scroll source for tactical wheel zoom (Update — OS accumulators + InputFrame mirror).
+#[inline]
+fn resolve_tactical_map_wheel_scroll(
+    scroll_acc: &AccumulatedMouseScroll,
+    input_frame: &InputFrame,
+    wheel_events: &mut MessageReader<MouseWheel>,
+) -> f32 {
+    let os = scroll_acc.delta.y + scroll_acc.delta.x * 0.25;
+    if os.abs() >= f32::EPSILON {
+        return os;
+    }
+    if input_frame.scroll_delta.abs() >= f32::EPSILON {
+        return input_frame.scroll_delta;
+    }
+    let mut sum = 0.0f32;
+    for ev in wheel_events.read() {
+        sum += ev.y + ev.x * 0.25;
+    }
+    sum
+}
+
+/// Sole tactical map wheel zoom — runs in Update after pan/keys, before derive.
+fn map_camera_wheel_zoom_system(
+    state: Res<State<BaseState>>,
+    active_map_surface: Res<ActiveMapViewInput>,
+    latch: Res<MainWorldCameraViewportLatch>,
+    params: Res<WorldGenParams>,
+    sim_viewport: Res<SimulationMapViewport>,
+    desired: Res<MapCameraDesired>,
+    windows: Query<&Window, With<PrimaryWindow>>,
+    scroll_acc: Res<AccumulatedMouseScroll>,
+    input_frame: Res<InputFrame>,
+    mut wheel_events: MessageReader<MouseWheel>,
+    mut authority: ResMut<ViewProjectionAuthority>,
+) {
+    let _perf = crate::render::PerfScope::new("map_camera_wheel");
+    if !matches!(state.get(), BaseState::Simulation | BaseState::Editor) {
+        return;
+    }
+    let scroll = resolve_tactical_map_wheel_scroll(
+        scroll_acc.as_ref(),
+        input_frame.as_ref(),
+        &mut wheel_events,
+    );
+    let blocked = tactical_map_wheel_zoom_blocked(active_map_surface.as_ref());
+    if blocked {
+        if scroll.abs() > f32::EPSILON {
+            bevy::log::warn!(
+                target: "map_camera_zoom",
+                "WHEEL_BLOCKED scroll={scroll:.3} active={:?}",
+                active_map_surface.0,
+            );
+        }
+        return;
+    }
+    if scroll.abs() < f32::EPSILON {
+        return;
+    }
+
+    ensure_world_main_authority_bootstrapped(authority.as_mut(), desired.as_ref());
+    let window_px = primary_window_logical_px(&windows);
+    let before = authority
+        .surface(crate::render::view_runtime::ViewSurfaceId::WorldMain)
+        .map(|s| s.camera.zoom)
+        .unwrap_or(0.0);
+    if apply_map_camera_wheel_zoom(
+        scroll,
+        params.as_ref(),
+        sim_viewport.as_ref(),
+        window_px,
+        latch.as_ref(),
+        authority.as_mut(),
+    ) {
+        let after = authority
+            .surface(crate::render::view_runtime::ViewSurfaceId::WorldMain)
+            .map(|s| s.camera.zoom)
+            .unwrap_or(0.0);
+        bevy::log::info!(
+            target: "map_camera_zoom",
+            "WHEEL_APPLIED scroll={scroll:.3} zoom {before:.4} -> {after:.4}"
+        );
+    }
+}
+
+/// Advance hole scissor latch once per frame ([`sync_main_world_camera_viewport_and_projection`] may run twice).
+pub fn advance_main_world_camera_viewport_latch(
+    sim: Res<SimulationMapViewport>,
+    mut latch: ResMut<MainWorldCameraViewportLatch>,
+    frame: Res<FrameCount>,
+    mut last_advanced: Local<u32>,
+) {
+    let f = frame.0;
+    if *last_advanced == f {
+        return;
+    }
+    *last_advanced = f;
+    let was = latch.using_hole;
+    latch.advance(sim.is_adequate_for_camera());
+    if TACTICAL_MAP_FULL_WINDOW_RENDER {
+        latch.using_hole = false;
+    }
+    if latch.using_hole != was {
+        crate::gui::hud::trace_viewport_authority(
+            crate::gui::hud::ViewportAuthoritySource::CameraLatch,
+            sim.min,
+            sim.max,
+            latch.using_hole,
+        );
+    }
 }
 
 /// RTS input → authority without trace param (keeps system under Bevy param limit).
@@ -649,6 +970,29 @@ fn commit_map_camera_pose_to_view_authority_simple(
     );
 }
 
+/// Seed WorldMain when RTS input runs before the view bridge has published a surface.
+fn ensure_world_main_authority_bootstrapped(
+    authority: &mut ViewProjectionAuthority,
+    fallback: &MapCameraDesired,
+) {
+    use crate::render::view_runtime::{ViewAuthorityWriter, ViewSurfaceId};
+    if authority.surface(ViewSurfaceId::WorldMain).is_some() {
+        return;
+    }
+    let cam = crate::gui::view_authority::view_camera_state_from_map_camera_desired(fallback);
+    authority.commit_pose(ViewSurfaceId::WorldMain, cam, ViewAuthorityWriter::MapCameraInput);
+    authority.commit_pose(
+        ViewSurfaceId::SimulationMap,
+        cam,
+        ViewAuthorityWriter::MapCameraInput,
+    );
+    bevy::log::warn!(
+        target: "map_camera_zoom",
+        "BOOTSTRAP WorldMain from MapCameraDesired zoom={:.4}",
+        fallback.scale.x
+    );
+}
+
 /// **TRIAGE-VM-09-v2:** sole production writer to [`MapCameraDesired`] — mirror from WorldMain authority.
 pub fn derive_map_camera_desired_from_view_authority(
     authority: Res<ViewProjectionAuthority>,
@@ -657,8 +1001,20 @@ pub fn derive_map_camera_desired_from_view_authority(
 ) {
     // PERF-INSTR-VFX-001: name this system inside the `map_cam` wall bracket (STALL/PERF only).
     let _perf = crate::render::PerfScope::new("upd_map_camera_derive");
+    use crate::render::view_runtime::ViewSurfaceId;
+    let Some(cam) = authority
+        .surface(ViewSurfaceId::WorldMain)
+        .map(|s| s.camera)
+    else {
+        // Never wipe desired with Default when authority has not bootstrapped WorldMain yet.
+        return;
+    };
     let before = desired.clone();
-    let next = map_camera_desired_from_view_authority(authority.as_ref());
+    let next = MapCameraDesired {
+        translation: Vec3::new(cam.translation.x, cam.translation.y, MAIN_WORLD_CAMERA_Z),
+        scale: Vec3::splat(cam.zoom.max(1e-4)),
+        rotation: Quat::from_rotation_z(cam.rotation),
+    };
     if *desired == next {
         return;
     }
@@ -680,14 +1036,120 @@ pub fn mirror_world_main_camera_from_map_desired(
     derive_map_camera_desired_from_view_authority(authority, desired, profile);
 }
 
-/// After Bevy UI layout: apply scissor + orthographic fit from the **same** viewport decision.
-pub fn sync_main_world_camera_viewport_and_projection(
+/// Apply authority zoom → orthographic projection + pan (shared Update + PostUpdate).
+fn apply_main_world_camera_ortho_core(
+    camera: &mut Camera,
+    tf: &mut Transform,
+    proj: &mut Projection,
+    window_px: Vec2,
+    sim: &SimulationMapViewport,
+    latch: &MainWorldCameraViewportLatch,
+    authority: &ViewProjectionAuthority,
+    desired: &MapCameraDesired,
+    params: &WorldGenParams,
+    ortho_trace: &mut MainWorldCameraOrthoTrace,
+    zoom_audit: &mut MapCameraZoomAudit,
+) {
+    use crate::render::view_runtime::ViewSurfaceId;
+
+    // Full-window render — subrect scissor leaves burnt-in prior frames in swapchain margins.
+    camera.viewport = None;
+
+    let view_px = map_camera_tactical_view_pixels(window_px, sim, latch);
+    let auth_cam = authority.surface(ViewSurfaceId::WorldMain).map(|s| s.camera);
+    let auth_zoom = auth_cam.map(|c| c.zoom).unwrap_or(desired.scale.x);
+    let zoom = auth_zoom.max(1e-4);
+
+    if let Some(cam) = auth_cam {
+        tf.translation = Vec3::new(cam.translation.x, cam.translation.y, MAIN_WORLD_CAMERA_Z);
+    } else {
+        tf.translation = desired.translation;
+    }
+
+    let world_w = params.width as f32;
+    let world_h = params.height as f32;
+    let (fixed_w, fixed_h) = orthographic_fixed_world_span(view_px, zoom, world_w, world_h);
+
+    ortho_trace.fixed_width = fixed_w;
+    ortho_trace.fixed_height = fixed_h;
+    ortho_trace.view_pixels = view_px;
+    ortho_trace.using_hole = latch.using_hole && sim.is_adequate_for_camera();
+    ortho_trace.use_hole_scissor = false;
+    ortho_trace.authority_zoom = auth_zoom;
+    ortho_trace.desired_zoom = desired.scale.x;
+
+    zoom_audit.ortho_fixed_w = fixed_w;
+    zoom_audit.ortho_fixed_h = fixed_h;
+    zoom_audit.view_px = view_px;
+    zoom_audit.use_hole_scissor = false;
+    zoom_audit.latch_using_hole = latch.using_hole;
+    zoom_audit.authority_zoom = auth_zoom;
+    zoom_audit.desired_zoom = desired.scale.x;
+
+    camera.clear_color = ClearColorConfig::Custom(Color::srgba(0.04, 0.05, 0.07, 1.0));
+
+    let Projection::Orthographic(ref mut ortho) = *proj else {
+        return;
+    };
+    tf.scale = Vec3::ONE;
+    ortho.scale = 1.0;
+    ortho.scaling_mode = bevy::camera::ScalingMode::Fixed {
+        width: fixed_w,
+        height: fixed_h,
+    };
+    ortho.viewport_origin = Vec2::new(0.5, 0.5);
+}
+
+/// Update: apply ortho immediately after input/smooth (same frame as wheel/keys).
+fn apply_main_world_camera_ortho_immediate(
     sim: Res<SimulationMapViewport>,
+    authority: Res<ViewProjectionAuthority>,
     desired: Res<MapCameraDesired>,
     params: Res<WorldGenParams>,
     windows: Query<&Window, With<PrimaryWindow>>,
-    mut latch: ResMut<MainWorldCameraViewportLatch>,
+    latch: Res<MainWorldCameraViewportLatch>,
     mut ortho_trace: ResMut<MainWorldCameraOrthoTrace>,
+    mut zoom_audit: ResMut<MapCameraZoomAudit>,
+    mut q: Query<(&mut Camera, &mut Transform, &mut Projection), With<MainWorldCamera>>,
+) {
+    let Ok((mut camera, mut tf, mut proj)) = q.single_mut() else {
+        return;
+    };
+    let Ok(win) = windows.single() else {
+        camera.is_active = false;
+        return;
+    };
+    if !crate::render::primary_window_logical_presentable(win.width(), win.height()) {
+        camera.is_active = false;
+        return;
+    }
+    camera.is_active = true;
+    let window_px = Vec2::new(win.width().max(1.0), win.height().max(1.0));
+    apply_main_world_camera_ortho_core(
+        &mut camera,
+        &mut tf,
+        &mut proj,
+        window_px,
+        sim.as_ref(),
+        latch.as_ref(),
+        authority.as_ref(),
+        desired.as_ref(),
+        params.as_ref(),
+        ortho_trace.as_mut(),
+        zoom_audit.as_mut(),
+    );
+}
+
+/// After Bevy UI layout: apply scissor + orthographic fit from the **same** viewport decision.
+pub fn sync_main_world_camera_viewport_and_projection(
+    sim: Res<SimulationMapViewport>,
+    authority: Res<ViewProjectionAuthority>,
+    desired: Res<MapCameraDesired>,
+    params: Res<WorldGenParams>,
+    windows: Query<&Window, With<PrimaryWindow>>,
+    latch: Res<MainWorldCameraViewportLatch>,
+    mut ortho_trace: ResMut<MainWorldCameraOrthoTrace>,
+    mut zoom_audit: ResMut<MapCameraZoomAudit>,
     cfg: Option<Res<DebugRenderTraceConfig>>,
     mut q: Query<(&mut Camera, &mut Transform, &mut Projection), With<MainWorldCamera>>,
 ) {
@@ -700,8 +1162,7 @@ pub fn sync_main_world_camera_viewport_and_projection(
         return;
     };
 
-    if !crate::render::primary_window_logical_presentable(win.width(), win.height())
-    {
+    if !crate::render::primary_window_logical_presentable(win.width(), win.height()) {
         camera.viewport = None;
         camera.is_active = false;
         return;
@@ -709,106 +1170,98 @@ pub fn sync_main_world_camera_viewport_and_projection(
     camera.is_active = true;
 
     let window_px = Vec2::new(win.width().max(1.0), win.height().max(1.0));
-    let sim_adequate = sim.is_adequate_for_camera();
-    let latch_was = latch.using_hole;
-    let render_hole = latch.advance(sim_adequate);
-    if latch.using_hole != latch_was {
-        crate::gui::hud::trace_viewport_authority(
-            crate::gui::hud::ViewportAuthoritySource::CameraLatch,
-            sim.min,
-            sim.max,
-            latch.using_hole,
-        );
-    }
+    apply_main_world_camera_ortho_core(
+        &mut camera,
+        &mut tf,
+        &mut proj,
+        window_px,
+        sim.as_ref(),
+        latch.as_ref(),
+        authority.as_ref(),
+        desired.as_ref(),
+        params.as_ref(),
+        ortho_trace.as_mut(),
+        zoom_audit.as_mut(),
+    );
 
-    const MIN_HOLE_PHYSICAL_PX: u32 = 32;
-
-    let mut use_hole_scissor = render_hole;
-    if render_hole {
-        let scale = win.resolution.scale_factor().max(1e-6);
-        let phys_w = win.physical_width().max(1);
-        let phys_h = win.physical_height().max(1);
-        let w_log = (sim.max.x - sim.min.x).max(1.0);
-        let h_log = (sim.max.y - sim.min.y).max(1.0);
-        let pos_x = (sim.min.x * scale).round().max(0.0) as u32;
-        let pos_y = (sim.min.y * scale).round().max(0.0) as u32;
-        let mut size_w = (w_log * scale).round().max(1.0) as u32;
-        let mut size_h = (h_log * scale).round().max(1.0) as u32;
-        if pos_x >= phys_w || pos_y >= phys_h || size_w == 0 || size_h == 0 {
-            camera.viewport = None;
-            latch.using_hole = false;
-            latch.invalid_streak = u8::MAX;
-            use_hole_scissor = false;
-        } else {
-            size_w = size_w.min(phys_w - pos_x);
-            size_h = size_h.min(phys_h - pos_y);
-            if size_w < MIN_HOLE_PHYSICAL_PX || size_h < MIN_HOLE_PHYSICAL_PX {
-                // MAP-SCISSOR-HEAL: degenerate 1×1 scissor while ortho still fits full window.
-                camera.viewport = None;
-                use_hole_scissor = false;
-            } else {
-                camera.viewport = Some(bevy::camera::Viewport {
-                    physical_position: UVec2::new(pos_x, pos_y),
-                    physical_size: UVec2::new(size_w, size_h),
-                    depth: 0.0..1.0,
-                });
-            }
-        }
-    } else {
-        camera.viewport = None;
-    }
-
-    let view_px = if render_hole && sim_adequate {
-        sim.logical_size()
-    } else {
-        window_px
-    };
-
-    let zoom = desired.scale.x.max(1e-4);
-    let world_w = params.width as f32;
-    let world_h = params.height as f32;
-    let (fixed_w, fixed_h) = orthographic_fixed_world_span(view_px, zoom, world_w, world_h);
-    ortho_trace.fixed_width = fixed_w;
-    ortho_trace.fixed_height = fixed_h;
-    ortho_trace.view_pixels = view_px;
-    ortho_trace.using_hole = render_hole && sim_adequate;
-
-    if use_hole_scissor {
-        crate::gui::hud::trace_viewport_authority(
-            crate::gui::hud::ViewportAuthoritySource::CameraApplied,
-            sim.min,
-            sim.max,
-            true,
-        );
-    } else {
-        crate::gui::hud::trace_viewport_authority(
-            crate::gui::hud::ViewportAuthoritySource::CameraApplied,
-            Vec2::ZERO,
-            window_px,
-            false,
-        );
-    }
-
-    let Projection::Orthographic(ref mut ortho) = *proj else {
-        return;
-    };
-    tf.scale = Vec3::ONE;
-    ortho.scale = 1.0 / zoom;
-    ortho.scaling_mode = bevy::camera::ScalingMode::Fixed {
-        width: fixed_w,
-        height: fixed_h,
-    };
-    ortho.viewport_origin = Vec2::new(0.5, 0.5);
+    crate::gui::hud::trace_viewport_authority(
+        crate::gui::hud::ViewportAuthoritySource::CameraApplied,
+        Vec2::ZERO,
+        window_px,
+        false,
+    );
 
     if cfg.as_ref().is_some_and(|c| c.camera_sync_trace) {
         trace_camera_sync(
             cfg.as_ref().unwrap(),
             &format!(
-                "hole={} view_px=({:.0},{:.0}) fixed=({:.1},{:.1}) zoom={:.3}",
-                latch.using_hole, view_px.x, view_px.y, fixed_w, fixed_h, zoom
+                "full_window view_px=({:.0},{:.0}) fixed=({:.1},{:.1}) zoom={:.3} auth_z={:.3} des_z={:.3}",
+                ortho_trace.view_pixels.x,
+                ortho_trace.view_pixels.y,
+                ortho_trace.fixed_width,
+                ortho_trace.fixed_height,
+                ortho_trace.authority_zoom,
+                ortho_trace.authority_zoom,
+                ortho_trace.desired_zoom
             ),
         );
     }
+}
+
+/// End-of-frame zoom audit — logs drift between authority, desired, and ortho fit.
+pub fn map_camera_zoom_audit_system(
+    frame: Res<FrameCount>,
+    authority: Res<ViewProjectionAuthority>,
+    desired: Res<MapCameraDesired>,
+    ortho: Res<MainWorldCameraOrthoTrace>,
+    latch: Res<MainWorldCameraViewportLatch>,
+    mut audit: ResMut<MapCameraZoomAudit>,
+) {
+    use crate::render::view_runtime::ViewSurfaceId;
+    audit.frame = frame.0;
+    audit.authority_zoom = authority
+        .surface(ViewSurfaceId::WorldMain)
+        .map(|s| s.camera.zoom)
+        .unwrap_or(0.0);
+    audit.desired_zoom = desired.scale.x;
+    audit.ortho_fixed_w = ortho.fixed_width;
+    audit.ortho_fixed_h = ortho.fixed_height;
+    audit.view_px = ortho.view_pixels;
+    audit.use_hole_scissor = ortho.use_hole_scissor;
+    audit.latch_using_hole = latch.using_hole;
+
+    let auth_des_drift = (audit.authority_zoom - audit.desired_zoom).abs();
+    if auth_des_drift > 0.02 {
+        bevy::log::warn!(
+            target: "map_camera_zoom",
+            "AUTH_DESIRED_DRIFT frame={} auth={:.4} desired={:.4}",
+            frame.0,
+            audit.authority_zoom,
+            audit.desired_zoom
+        );
+    }
+
+    if latch.using_hole && !ortho.use_hole_scissor {
+        bevy::log::warn!(
+            target: "map_camera_zoom",
+            "SCISSOR_HEAL frame={} latch_hole=true but rendering full window (ghost risk)",
+            frame.0
+        );
+    }
+
+    bevy::log::debug!(
+        target: "map_camera_zoom",
+        "FRAME frame={} auth_z={:.4} des_z={:.4} fixed=({:.1},{:.1}) view_px=({:.0},{:.0}) latch_hole={} scissor={}",
+        frame.0,
+        audit.authority_zoom,
+        audit.desired_zoom,
+        audit.ortho_fixed_w,
+        audit.ortho_fixed_h,
+        audit.view_px.x,
+        audit.view_px.y,
+        latch.using_hole,
+        ortho.use_hole_scissor
+    );
 }
 
 fn map_camera_smooth_toward_desired(
@@ -819,6 +1272,7 @@ fn map_camera_smooth_toward_desired(
     params: Res<WorldGenParams>,
     windows: Query<&Window, With<PrimaryWindow>>,
     sim_viewport: Res<SimulationMapViewport>,
+    latch: Res<MainWorldCameraViewportLatch>,
     mut q_cam: Query<&mut Transform, With<MainWorldCamera>>,
     mut last_desired_scale: Local<f32>,
     mut last_trace: Local<u64>,
@@ -846,6 +1300,7 @@ fn map_camera_smooth_toward_desired(
             <= MAP_CAMERA_AT_REST_EPS * MAP_CAMERA_AT_REST_EPS;
         let rot_rest = xf.rotation.dot(desired.rotation).abs() >= 1.0 - 1.0e-5;
         if pan_rest && rot_rest {
+            xf.scale = Vec3::ONE;
             return;
         }
     }
@@ -859,11 +1314,12 @@ fn map_camera_smooth_toward_desired(
     }
     xf.scale = Vec3::ONE;
     {
-        let window_px = windows
-            .single()
-            .map(|w| Vec2::new(w.width().max(1.0), w.height().max(1.0)))
-            .unwrap_or(Vec2::new(1280.0, 720.0));
-        let viewport = map_camera_viewport_pixels(window_px, Some(sim_viewport.as_ref()));
+        let window_px = primary_window_logical_px(&windows);
+        let viewport = map_camera_tactical_view_pixels(
+            window_px,
+            sim_viewport.as_ref(),
+            latch.as_ref(),
+        );
         let world_size = Vec2::new(params.width as f32, params.height as f32);
         if world_size.x > 0.0 && world_size.y > 0.0 {
             let scale = desired.scale.x;
@@ -1029,6 +1485,46 @@ pub fn sim_map_world_vec3_to_egui(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn apply_map_camera_wheel_zoom_commits_authority() {
+        use crate::render::view_runtime::{ViewAuthorityWriter, ViewProjectionAuthority, ViewSurfaceId};
+
+        let mut authority = ViewProjectionAuthority::default();
+        authority.commit_pose(
+            ViewSurfaceId::WorldMain,
+            crate::gui::ViewCameraState {
+                translation: Vec2::new(100.0, 200.0),
+                zoom: 1.0,
+                rotation: 0.0,
+            },
+            ViewAuthorityWriter::MapCameraInput,
+        );
+        let mut vp = SimulationMapViewport::default();
+        vp.valid = true;
+        vp.min = Vec2::ZERO;
+        vp.max = Vec2::new(800.0, 600.0);
+        let params = WorldGenParams {
+            width: 512,
+            height: 512,
+            ..Default::default()
+        };
+        let latch = MainWorldCameraViewportLatch::default();
+        assert!(apply_map_camera_wheel_zoom(
+            1.0,
+            &params,
+            &vp,
+            Vec2::new(800.0, 600.0),
+            &latch,
+            &mut authority,
+        ));
+        let z = authority
+            .surface(ViewSurfaceId::WorldMain)
+            .expect("WorldMain")
+            .camera
+            .zoom;
+        assert!(z > 1.0, "wheel must increase committed zoom, got {z}");
+    }
 
     #[test]
     fn sim_map_projection_matches_ortho_aspect() {

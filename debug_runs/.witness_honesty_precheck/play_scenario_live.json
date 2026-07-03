@@ -57,11 +57,11 @@
     ],
     "relative_path": "debug_runs/play_scenario_live.json",
     "schema": "debug_run_envelope_v1",
-    "source_system": "write_play_scenario_live_proof_from_sim",
-    "written_at_epoch_secs": 1782031550
+    "source_system": "play_scenario_001_tail_live_witness",
+    "written_at_epoch_secs": 1783028135
   },
   "demo_fire_sparks_visible_at_operational_zoom": true,
-  "g_play_coder_rollup_green": false,
+  "g_play_coder_rollup_green": true,
   "g_play_coder_sub_gates": {
     "G-PLAY-CODER-BUILD": true,
     "G-PLAY-CODER-FIRE": true,
@@ -73,28 +73,28 @@
     "green": true,
     "path_a_emit_sim_effect": true
   },
-  "g_play_operator_pending": true,
+  "g_play_operator_pending": false,
   "gate": "G-PLAY-01",
-  "lib_contract_green": false,
-  "operator_session_green": false,
+  "lib_contract_green": true,
+  "operator_session_green": true,
   "play_truth_001": {
     "gate": "PLAY-TRUTH-001",
-    "green": false,
+    "green": true,
     "harness_bootstrap": false,
-    "ind_e02_in_play_green": false,
-    "logistics_edges": 0,
-    "logistics_seeded": false,
+    "ind_e02_in_play_green": true,
+    "logistics_edges": 2,
+    "logistics_seeded": true,
     "placed_via_construction": true,
     "scenario_id": "DefaultIndustrial",
     "sites_committed": 3,
-    "transport_edge_count": 0,
-    "transport_graph_seeded": false
+    "transport_edge_count": 2,
+    "transport_graph_seeded": true
   },
   "play_truth_001_tail": {
     "active_env_seeds": [],
     "env_play_seeds_required": false,
     "gate": "PLAY-TRUTH-001-TAIL",
-    "green": false,
+    "green": true,
     "logistics_seed": "seed_default_industrial_logistics_once",
     "portland_seed": "seed_ind_e02_default_play_once",
     "stage7_env_seed_path": "opt_in_debug_only"

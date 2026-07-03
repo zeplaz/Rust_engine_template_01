@@ -5,6 +5,7 @@
 use std::fs;
 use std::path::PathBuf;
 
+use bevy::diagnostic::FrameCount;
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -16,7 +17,7 @@ use super::landscape_grammar::{
 };
 use super::landscape_grammar_lg2::{attach_lg2_bundle_on_chunk, LandUseDistrictKind, LandUseInfluence};
 use super::{ChunkEcology, VegetationField};
-use crate::dev::debug_run_envelope::{wrap_debug_run, write_debug_run_json};
+use crate::dev::debug_run_envelope::{witness_refresh_due, wrap_debug_run, write_debug_run_json};
 use crate::strategic::StrategicRasterConfig;
 use crate::systems::chunk_environment_set::ChunkEnvironmentSet;
 use crate::systems::weather::ChunkWeather;
@@ -249,9 +250,13 @@ pub fn rollout_landscape_program_on_chunks(
 }
 
 pub fn refresh_map_rollout_witness_system(
+    frame: Res<FrameCount>,
     program_q: Query<&LandscapeProgramOnChunk>,
     mut witness: ResMut<LandscapeMapRolloutWitness>,
 ) {
+    if !witness_refresh_due(LANDSCAPE_GRAMMAR_MAP_ROLLOUT_LIVE_JSON, frame.0) {
+        return;
+    }
     let n = program_q.iter().count() as u32;
     if n > witness.chunks_with_program {
         witness.chunks_with_program = n;

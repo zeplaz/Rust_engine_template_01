@@ -1,0 +1,1679 @@
+{
+  "_agent_meta": {
+    "profile": "ENGINE-DEEP-DEBUG",
+    "relative_path": "debug_runs/deep_debug/engine_deep_debug_live.json",
+    "source_system": "engine_deep_debug"
+  },
+  "body": {
+    "frame": 120,
+    "gpu_image_formats_sample": [
+      {
+        "format": "Rgba16Float",
+        "h": 64,
+        "id": "AssetId<bevy_image::image::Image>{ index: 0, generation: 0}",
+        "w": 64
+      },
+      {
+        "format": "Rgba16Float",
+        "h": 32,
+        "id": "AssetId<bevy_image::image::Image>{ index: 1, generation: 0}",
+        "w": 32
+      },
+      {
+        "format": "Rgb9e5Ufloat",
+        "h": 48,
+        "id": "AssetId<bevy_image::image::Image>{ index: 2, generation: 0}",
+        "w": 48
+      },
+      {
+        "format": "Rgba8UnormSrgb",
+        "h": 1,
+        "id": "AssetId<bevy_image::image::Image>{ index: 3, generation: 0}",
+        "w": 3
+      },
+      {
+        "format": "Rg8Unorm",
+        "h": 560,
+        "id": "AssetId<bevy_image::image::Image>{ index: 4, generation: 0}",
+        "w": 160
+      },
+      {
+        "format": "R8Unorm",
+        "h": 16,
+        "id": "AssetId<bevy_image::image::Image>{ index: 5, generation: 0}",
+        "w": 64
+      },
+      {
+        "format": "Rgba8Unorm",
+        "h": 1,
+        "id": "AssetId<bevy_image::image::Image>{ index: 6, generation: 0}",
+        "w": 1
+      },
+      {
+        "format": "Rgba8UnormSrgb",
+        "h": 1080,
+        "id": "AssetId<bevy_image::image::Image>{ index: 7, generation: 0}",
+        "w": 1920
+      }
+    ],
+    "inventory": {
+      "images": 143,
+      "materials": 48,
+      "meshes": 53
+    },
+    "map_view_minimap_revision": 98,
+    "minimap_compositor": {
+      "construction_rows": 22,
+      "display_handle_gpu": true,
+      "dual_minimap": false,
+      "ecology_rows": 100,
+      "logistics_rows": 2,
+      "path": "GpuCompute",
+      "stamp": 14
+    },
+    "minimap_fallback": {
+      "last_h": 320,
+      "last_w": 320,
+      "main_image": true,
+      "minimap_image": true,
+      "sprite_entity": true
+    },
+    "minimap_gpu_diagnostics": {
+      "commits_queued": 14,
+      "debug_logging": true,
+      "gpu_dedup_skips": 1,
+      "gpu_executes": 14,
+      "justified": true,
+      "last_commit_stamp": 14,
+      "last_dispatch": "stale_refresh",
+      "last_fingerprint": 5968559289790425158,
+      "last_skip": "no_change",
+      "overflow_ratio": 1.0,
+      "skips_hidden": 0,
+      "skips_no_change": 103,
+      "skips_no_rt": 0,
+      "skips_no_terrain": 2,
+      "skips_rate_capped": 0,
+      "skips_upload_failed": 0,
+      "target_hz": 6.0
+    },
+    "minimap_registry": {
+      "committed_size": [
+        260,
+        220
+      ],
+      "has_rt": true,
+      "revision": 2
+    },
+    "minimap_shell": {
+      "minimized": false,
+      "panel_viewport": [
+        260.0,
+        220.0
+      ],
+      "presentation_source": "SharedRenderTargetImage",
+      "visible": true
+    },
+    "minimap_trace": {
+      "anomaly_count": 0,
+      "compositor_tail": [
+        {
+          "committed": false,
+          "composite_path": "GpuCompute",
+          "construction_rows": 22,
+          "dispatch_reason": "StaleRefresh",
+          "ecology_rows": 100,
+          "fallback_h": 320,
+          "fallback_w": 320,
+          "fingerprint": 5968559289790425158,
+          "frame": 120,
+          "gpu_compositor_env": true,
+          "logistics_rows": 2,
+          "minimap_image_valid": true,
+          "overlay_revision": 3,
+          "panel_viewport": [
+            260.0,
+            220.0
+          ],
+          "presentation_source": "SharedRenderTargetImage",
+          "rt_size": [
+            260,
+            220
+          ],
+          "shell_minimized": false,
+          "shell_visible": true,
+          "skip_reason": "NoChange",
+          "stamp": 14,
+          "terrain_handle_valid": true
+        },
+        {
+          "committed": false,
+          "composite_path": "GpuCompute",
+          "construction_rows": 22,
+          "dispatch_reason": "StaleRefresh",
+          "ecology_rows": 100,
+          "fallback_h": 320,
+          "fallback_w": 320,
+          "fingerprint": 5968559289790425158,
+          "frame": 119,
+          "gpu_compositor_env": true,
+          "logistics_rows": 2,
+          "minimap_image_valid": true,
+          "overlay_revision": 3,
+          "panel_viewport": [
+            260.0,
+            220.0
+          ],
+          "presentation_source": "SharedRenderTargetImage",
+          "rt_size": [
+            260,
+            220
+          ],
+          "shell_minimized": false,
+          "shell_visible": true,
+          "skip_reason": "NoChange",
+          "stamp": 14,
+          "terrain_handle_valid": true
+        },
+        {
+          "committed": false,
+          "composite_path": "GpuCompute",
+          "construction_rows": 22,
+          "dispatch_reason": "StaleRefresh",
+          "ecology_rows": 100,
+          "fallback_h": 320,
+          "fallback_w": 320,
+          "fingerprint": 5968559289790425158,
+          "frame": 118,
+          "gpu_compositor_env": true,
+          "logistics_rows": 2,
+          "minimap_image_valid": true,
+          "overlay_revision": 3,
+          "panel_viewport": [
+            260.0,
+            220.0
+          ],
+          "presentation_source": "SharedRenderTargetImage",
+          "rt_size": [
+            260,
+            220
+          ],
+          "shell_minimized": false,
+          "shell_visible": true,
+          "skip_reason": "NoChange",
+          "stamp": 14,
+          "terrain_handle_valid": true
+        },
+        {
+          "committed": false,
+          "composite_path": "GpuCompute",
+          "construction_rows": 22,
+          "dispatch_reason": "StaleRefresh",
+          "ecology_rows": 100,
+          "fallback_h": 320,
+          "fallback_w": 320,
+          "fingerprint": 5968559289790425158,
+          "frame": 117,
+          "gpu_compositor_env": true,
+          "logistics_rows": 2,
+          "minimap_image_valid": true,
+          "overlay_revision": 3,
+          "panel_viewport": [
+            260.0,
+            220.0
+          ],
+          "presentation_source": "SharedRenderTargetImage",
+          "rt_size": [
+            260,
+            220
+          ],
+          "shell_minimized": false,
+          "shell_visible": true,
+          "skip_reason": "NoChange",
+          "stamp": 14,
+          "terrain_handle_valid": true
+        },
+        {
+          "committed": false,
+          "composite_path": "GpuCompute",
+          "construction_rows": 22,
+          "dispatch_reason": "StaleRefresh",
+          "ecology_rows": 100,
+          "fallback_h": 320,
+          "fallback_w": 320,
+          "fingerprint": 5968559289790425158,
+          "frame": 116,
+          "gpu_compositor_env": true,
+          "logistics_rows": 2,
+          "minimap_image_valid": true,
+          "overlay_revision": 3,
+          "panel_viewport": [
+            260.0,
+            220.0
+          ],
+          "presentation_source": "SharedRenderTargetImage",
+          "rt_size": [
+            260,
+            220
+          ],
+          "shell_minimized": false,
+          "shell_visible": true,
+          "skip_reason": "NoChange",
+          "stamp": 14,
+          "terrain_handle_valid": true
+        },
+        {
+          "committed": false,
+          "composite_path": "GpuCompute",
+          "construction_rows": 22,
+          "dispatch_reason": "StaleRefresh",
+          "ecology_rows": 100,
+          "fallback_h": 320,
+          "fallback_w": 320,
+          "fingerprint": 5968559289790425158,
+          "frame": 115,
+          "gpu_compositor_env": true,
+          "logistics_rows": 2,
+          "minimap_image_valid": true,
+          "overlay_revision": 3,
+          "panel_viewport": [
+            260.0,
+            220.0
+          ],
+          "presentation_source": "SharedRenderTargetImage",
+          "rt_size": [
+            260,
+            220
+          ],
+          "shell_minimized": false,
+          "shell_visible": true,
+          "skip_reason": "NoChange",
+          "stamp": 14,
+          "terrain_handle_valid": true
+        },
+        {
+          "committed": false,
+          "composite_path": "GpuCompute",
+          "construction_rows": 22,
+          "dispatch_reason": "StaleRefresh",
+          "ecology_rows": 100,
+          "fallback_h": 320,
+          "fallback_w": 320,
+          "fingerprint": 5968559289790425158,
+          "frame": 114,
+          "gpu_compositor_env": true,
+          "logistics_rows": 2,
+          "minimap_image_valid": true,
+          "overlay_revision": 3,
+          "panel_viewport": [
+            260.0,
+            220.0
+          ],
+          "presentation_source": "SharedRenderTargetImage",
+          "rt_size": [
+            260,
+            220
+          ],
+          "shell_minimized": false,
+          "shell_visible": true,
+          "skip_reason": "NoChange",
+          "stamp": 14,
+          "terrain_handle_valid": true
+        },
+        {
+          "committed": false,
+          "composite_path": "GpuCompute",
+          "construction_rows": 22,
+          "dispatch_reason": "StaleRefresh",
+          "ecology_rows": 100,
+          "fallback_h": 320,
+          "fallback_w": 320,
+          "fingerprint": 5968559289790425158,
+          "frame": 113,
+          "gpu_compositor_env": true,
+          "logistics_rows": 2,
+          "minimap_image_valid": true,
+          "overlay_revision": 3,
+          "panel_viewport": [
+            260.0,
+            220.0
+          ],
+          "presentation_source": "SharedRenderTargetImage",
+          "rt_size": [
+            260,
+            220
+          ],
+          "shell_minimized": false,
+          "shell_visible": true,
+          "skip_reason": "NoChange",
+          "stamp": 14,
+          "terrain_handle_valid": true
+        },
+        {
+          "committed": true,
+          "composite_path": "GpuCompute",
+          "construction_rows": 22,
+          "dispatch_reason": "StaleRefresh",
+          "ecology_rows": 100,
+          "fallback_h": 320,
+          "fallback_w": 320,
+          "fingerprint": 5968559289790425158,
+          "frame": 112,
+          "gpu_compositor_env": true,
+          "logistics_rows": 2,
+          "minimap_image_valid": true,
+          "overlay_revision": 3,
+          "panel_viewport": [
+            260.0,
+            220.0
+          ],
+          "presentation_source": "SharedRenderTargetImage",
+          "rt_size": [
+            260,
+            220
+          ],
+          "shell_minimized": false,
+          "shell_visible": true,
+          "skip_reason": null,
+          "stamp": 14,
+          "terrain_handle_valid": true
+        },
+        {
+          "committed": false,
+          "composite_path": "GpuCompute",
+          "construction_rows": 22,
+          "dispatch_reason": "OverlayChanged",
+          "ecology_rows": 100,
+          "fallback_h": 320,
+          "fallback_w": 320,
+          "fingerprint": 5968559289790425158,
+          "frame": 111,
+          "gpu_compositor_env": true,
+          "logistics_rows": 2,
+          "minimap_image_valid": true,
+          "overlay_revision": 3,
+          "panel_viewport": [
+            260.0,
+            220.0
+          ],
+          "presentation_source": "SharedRenderTargetImage",
+          "rt_size": [
+            260,
+            220
+          ],
+          "shell_minimized": false,
+          "shell_visible": true,
+          "skip_reason": "NoChange",
+          "stamp": 13,
+          "terrain_handle_valid": true
+        },
+        {
+          "committed": false,
+          "composite_path": "GpuCompute",
+          "construction_rows": 22,
+          "dispatch_reason": "OverlayChanged",
+          "ecology_rows": 100,
+          "fallback_h": 320,
+          "fallback_w": 320,
+          "fingerprint": 5968559289790425158,
+          "frame": 110,
+          "gpu_compositor_env": true,
+          "logistics_rows": 2,
+          "minimap_image_valid": true,
+          "overlay_revision": 3,
+          "panel_viewport": [
+            260.0,
+            220.0
+          ],
+          "presentation_source": "SharedRenderTargetImage",
+          "rt_size": [
+            260,
+            220
+          ],
+          "shell_minimized": false,
+          "shell_visible": true,
+          "skip_reason": "NoChange",
+          "stamp": 13,
+          "terrain_handle_valid": true
+        },
+        {
+          "committed": false,
+          "composite_path": "GpuCompute",
+          "construction_rows": 22,
+          "dispatch_reason": "OverlayChanged",
+          "ecology_rows": 100,
+          "fallback_h": 320,
+          "fallback_w": 320,
+          "fingerprint": 5968559289790425158,
+          "frame": 109,
+          "gpu_compositor_env": true,
+          "logistics_rows": 2,
+          "minimap_image_valid": true,
+          "overlay_revision": 3,
+          "panel_viewport": [
+            260.0,
+            220.0
+          ],
+          "presentation_source": "SharedRenderTargetImage",
+          "rt_size": [
+            260,
+            220
+          ],
+          "shell_minimized": false,
+          "shell_visible": true,
+          "skip_reason": "NoChange",
+          "stamp": 13,
+          "terrain_handle_valid": true
+        },
+        {
+          "committed": false,
+          "composite_path": "GpuCompute",
+          "construction_rows": 22,
+          "dispatch_reason": "OverlayChanged",
+          "ecology_rows": 100,
+          "fallback_h": 320,
+          "fallback_w": 320,
+          "fingerprint": 5968559289790425158,
+          "frame": 108,
+          "gpu_compositor_env": true,
+          "logistics_rows": 2,
+          "minimap_image_valid": true,
+          "overlay_revision": 3,
+          "panel_viewport": [
+            260.0,
+            220.0
+          ],
+          "presentation_source": "SharedRenderTargetImage",
+          "rt_size": [
+            260,
+            220
+          ],
+          "shell_minimized": false,
+          "shell_visible": true,
+          "skip_reason": "NoChange",
+          "stamp": 13,
+          "terrain_handle_valid": true
+        },
+        {
+          "committed": false,
+          "composite_path": "GpuCompute",
+          "construction_rows": 22,
+          "dispatch_reason": "OverlayChanged",
+          "ecology_rows": 100,
+          "fallback_h": 320,
+          "fallback_w": 320,
+          "fingerprint": 5968559289790425158,
+          "frame": 107,
+          "gpu_compositor_env": true,
+          "logistics_rows": 2,
+          "minimap_image_valid": true,
+          "overlay_revision": 3,
+          "panel_viewport": [
+            260.0,
+            220.0
+          ],
+          "presentation_source": "SharedRenderTargetImage",
+          "rt_size": [
+            260,
+            220
+          ],
+          "shell_minimized": false,
+          "shell_visible": true,
+          "skip_reason": "NoChange",
+          "stamp": 13,
+          "terrain_handle_valid": true
+        },
+        {
+          "committed": false,
+          "composite_path": "GpuCompute",
+          "construction_rows": 22,
+          "dispatch_reason": "OverlayChanged",
+          "ecology_rows": 100,
+          "fallback_h": 320,
+          "fallback_w": 320,
+          "fingerprint": 5968559289790425158,
+          "frame": 106,
+          "gpu_compositor_env": true,
+          "logistics_rows": 2,
+          "minimap_image_valid": true,
+          "overlay_revision": 3,
+          "panel_viewport": [
+            260.0,
+            220.0
+          ],
+          "presentation_source": "SharedRenderTargetImage",
+          "rt_size": [
+            260,
+            220
+          ],
+          "shell_minimized": false,
+          "shell_visible": true,
+          "skip_reason": "NoChange",
+          "stamp": 13,
+          "terrain_handle_valid": true
+        },
+        {
+          "committed": false,
+          "composite_path": "GpuCompute",
+          "construction_rows": 22,
+          "dispatch_reason": "OverlayChanged",
+          "ecology_rows": 100,
+          "fallback_h": 320,
+          "fallback_w": 320,
+          "fingerprint": 5968559289790425158,
+          "frame": 105,
+          "gpu_compositor_env": true,
+          "logistics_rows": 2,
+          "minimap_image_valid": true,
+          "overlay_revision": 3,
+          "panel_viewport": [
+            260.0,
+            220.0
+          ],
+          "presentation_source": "SharedRenderTargetImage",
+          "rt_size": [
+            260,
+            220
+          ],
+          "shell_minimized": false,
+          "shell_visible": true,
+          "skip_reason": "NoChange",
+          "stamp": 13,
+          "terrain_handle_valid": true
+        },
+        {
+          "committed": false,
+          "composite_path": "GpuCompute",
+          "construction_rows": 22,
+          "dispatch_reason": "OverlayChanged",
+          "ecology_rows": 100,
+          "fallback_h": 320,
+          "fallback_w": 320,
+          "fingerprint": 5968559289790425158,
+          "frame": 104,
+          "gpu_compositor_env": true,
+          "logistics_rows": 2,
+          "minimap_image_valid": true,
+          "overlay_revision": 3,
+          "panel_viewport": [
+            260.0,
+            220.0
+          ],
+          "presentation_source": "SharedRenderTargetImage",
+          "rt_size": [
+            260,
+            220
+          ],
+          "shell_minimized": false,
+          "shell_visible": true,
+          "skip_reason": "NoChange",
+          "stamp": 13,
+          "terrain_handle_valid": true
+        },
+        {
+          "committed": false,
+          "composite_path": "GpuCompute",
+          "construction_rows": 22,
+          "dispatch_reason": "OverlayChanged",
+          "ecology_rows": 100,
+          "fallback_h": 320,
+          "fallback_w": 320,
+          "fingerprint": 5968559289790425158,
+          "frame": 103,
+          "gpu_compositor_env": true,
+          "logistics_rows": 2,
+          "minimap_image_valid": true,
+          "overlay_revision": 3,
+          "panel_viewport": [
+            260.0,
+            220.0
+          ],
+          "presentation_source": "SharedRenderTargetImage",
+          "rt_size": [
+            260,
+            220
+          ],
+          "shell_minimized": false,
+          "shell_visible": true,
+          "skip_reason": "NoChange",
+          "stamp": 13,
+          "terrain_handle_valid": true
+        },
+        {
+          "committed": false,
+          "composite_path": "GpuCompute",
+          "construction_rows": 22,
+          "dispatch_reason": "OverlayChanged",
+          "ecology_rows": 100,
+          "fallback_h": 320,
+          "fallback_w": 320,
+          "fingerprint": 5968559289790425158,
+          "frame": 102,
+          "gpu_compositor_env": true,
+          "logistics_rows": 2,
+          "minimap_image_valid": true,
+          "overlay_revision": 3,
+          "panel_viewport": [
+            260.0,
+            220.0
+          ],
+          "presentation_source": "SharedRenderTargetImage",
+          "rt_size": [
+            260,
+            220
+          ],
+          "shell_minimized": false,
+          "shell_visible": true,
+          "skip_reason": "NoChange",
+          "stamp": 13,
+          "terrain_handle_valid": true
+        },
+        {
+          "committed": false,
+          "composite_path": "GpuCompute",
+          "construction_rows": 22,
+          "dispatch_reason": "OverlayChanged",
+          "ecology_rows": 100,
+          "fallback_h": 320,
+          "fallback_w": 320,
+          "fingerprint": 5968559289790425158,
+          "frame": 101,
+          "gpu_compositor_env": true,
+          "logistics_rows": 2,
+          "minimap_image_valid": true,
+          "overlay_revision": 3,
+          "panel_viewport": [
+            260.0,
+            220.0
+          ],
+          "presentation_source": "SharedRenderTargetImage",
+          "rt_size": [
+            260,
+            220
+          ],
+          "shell_minimized": false,
+          "shell_visible": true,
+          "skip_reason": "NoChange",
+          "stamp": 13,
+          "terrain_handle_valid": true
+        },
+        {
+          "committed": false,
+          "composite_path": "GpuCompute",
+          "construction_rows": 22,
+          "dispatch_reason": "OverlayChanged",
+          "ecology_rows": 100,
+          "fallback_h": 320,
+          "fallback_w": 320,
+          "fingerprint": 5968559289790425158,
+          "frame": 100,
+          "gpu_compositor_env": true,
+          "logistics_rows": 2,
+          "minimap_image_valid": true,
+          "overlay_revision": 3,
+          "panel_viewport": [
+            260.0,
+            220.0
+          ],
+          "presentation_source": "SharedRenderTargetImage",
+          "rt_size": [
+            260,
+            220
+          ],
+          "shell_minimized": false,
+          "shell_visible": true,
+          "skip_reason": "NoChange",
+          "stamp": 13,
+          "terrain_handle_valid": true
+        },
+        {
+          "committed": false,
+          "composite_path": "GpuCompute",
+          "construction_rows": 22,
+          "dispatch_reason": "OverlayChanged",
+          "ecology_rows": 100,
+          "fallback_h": 320,
+          "fallback_w": 320,
+          "fingerprint": 5968559289790425158,
+          "frame": 99,
+          "gpu_compositor_env": true,
+          "logistics_rows": 2,
+          "minimap_image_valid": true,
+          "overlay_revision": 3,
+          "panel_viewport": [
+            260.0,
+            220.0
+          ],
+          "presentation_source": "SharedRenderTargetImage",
+          "rt_size": [
+            260,
+            220
+          ],
+          "shell_minimized": false,
+          "shell_visible": true,
+          "skip_reason": "NoChange",
+          "stamp": 13,
+          "terrain_handle_valid": true
+        },
+        {
+          "committed": false,
+          "composite_path": "GpuCompute",
+          "construction_rows": 22,
+          "dispatch_reason": "OverlayChanged",
+          "ecology_rows": 100,
+          "fallback_h": 320,
+          "fallback_w": 320,
+          "fingerprint": 5968559289790425158,
+          "frame": 98,
+          "gpu_compositor_env": true,
+          "logistics_rows": 2,
+          "minimap_image_valid": true,
+          "overlay_revision": 3,
+          "panel_viewport": [
+            260.0,
+            220.0
+          ],
+          "presentation_source": "SharedRenderTargetImage",
+          "rt_size": [
+            260,
+            220
+          ],
+          "shell_minimized": false,
+          "shell_visible": true,
+          "skip_reason": "NoChange",
+          "stamp": 13,
+          "terrain_handle_valid": true
+        },
+        {
+          "committed": false,
+          "composite_path": "GpuCompute",
+          "construction_rows": 22,
+          "dispatch_reason": "OverlayChanged",
+          "ecology_rows": 100,
+          "fallback_h": 320,
+          "fallback_w": 320,
+          "fingerprint": 5968559289790425158,
+          "frame": 97,
+          "gpu_compositor_env": true,
+          "logistics_rows": 2,
+          "minimap_image_valid": true,
+          "overlay_revision": 3,
+          "panel_viewport": [
+            260.0,
+            220.0
+          ],
+          "presentation_source": "SharedRenderTargetImage",
+          "rt_size": [
+            260,
+            220
+          ],
+          "shell_minimized": false,
+          "shell_visible": true,
+          "skip_reason": "NoChange",
+          "stamp": 13,
+          "terrain_handle_valid": true
+        },
+        {
+          "committed": false,
+          "composite_path": "GpuCompute",
+          "construction_rows": 22,
+          "dispatch_reason": "OverlayChanged",
+          "ecology_rows": 100,
+          "fallback_h": 320,
+          "fallback_w": 320,
+          "fingerprint": 5968559289790425158,
+          "frame": 96,
+          "gpu_compositor_env": true,
+          "logistics_rows": 2,
+          "minimap_image_valid": true,
+          "overlay_revision": 3,
+          "panel_viewport": [
+            260.0,
+            220.0
+          ],
+          "presentation_source": "SharedRenderTargetImage",
+          "rt_size": [
+            260,
+            220
+          ],
+          "shell_minimized": false,
+          "shell_visible": true,
+          "skip_reason": "NoChange",
+          "stamp": 13,
+          "terrain_handle_valid": true
+        },
+        {
+          "committed": false,
+          "composite_path": "GpuCompute",
+          "construction_rows": 22,
+          "dispatch_reason": "OverlayChanged",
+          "ecology_rows": 100,
+          "fallback_h": 320,
+          "fallback_w": 320,
+          "fingerprint": 5968559289790425158,
+          "frame": 95,
+          "gpu_compositor_env": true,
+          "logistics_rows": 2,
+          "minimap_image_valid": true,
+          "overlay_revision": 3,
+          "panel_viewport": [
+            260.0,
+            220.0
+          ],
+          "presentation_source": "SharedRenderTargetImage",
+          "rt_size": [
+            260,
+            220
+          ],
+          "shell_minimized": false,
+          "shell_visible": true,
+          "skip_reason": "NoChange",
+          "stamp": 13,
+          "terrain_handle_valid": true
+        },
+        {
+          "committed": false,
+          "composite_path": "GpuCompute",
+          "construction_rows": 22,
+          "dispatch_reason": "OverlayChanged",
+          "ecology_rows": 100,
+          "fallback_h": 320,
+          "fallback_w": 320,
+          "fingerprint": 5968559289790425158,
+          "frame": 94,
+          "gpu_compositor_env": true,
+          "logistics_rows": 2,
+          "minimap_image_valid": true,
+          "overlay_revision": 3,
+          "panel_viewport": [
+            260.0,
+            220.0
+          ],
+          "presentation_source": "SharedRenderTargetImage",
+          "rt_size": [
+            260,
+            220
+          ],
+          "shell_minimized": false,
+          "shell_visible": true,
+          "skip_reason": "NoChange",
+          "stamp": 13,
+          "terrain_handle_valid": true
+        },
+        {
+          "committed": false,
+          "composite_path": "GpuCompute",
+          "construction_rows": 22,
+          "dispatch_reason": "OverlayChanged",
+          "ecology_rows": 100,
+          "fallback_h": 320,
+          "fallback_w": 320,
+          "fingerprint": 5968559289790425158,
+          "frame": 93,
+          "gpu_compositor_env": true,
+          "logistics_rows": 2,
+          "minimap_image_valid": true,
+          "overlay_revision": 3,
+          "panel_viewport": [
+            260.0,
+            220.0
+          ],
+          "presentation_source": "SharedRenderTargetImage",
+          "rt_size": [
+            260,
+            220
+          ],
+          "shell_minimized": false,
+          "shell_visible": true,
+          "skip_reason": "NoChange",
+          "stamp": 13,
+          "terrain_handle_valid": true
+        },
+        {
+          "committed": true,
+          "composite_path": "GpuCompute",
+          "construction_rows": 22,
+          "dispatch_reason": "OverlayChanged",
+          "ecology_rows": 100,
+          "fallback_h": 320,
+          "fallback_w": 320,
+          "fingerprint": 5968559289790425158,
+          "frame": 92,
+          "gpu_compositor_env": true,
+          "logistics_rows": 2,
+          "minimap_image_valid": true,
+          "overlay_revision": 3,
+          "panel_viewport": [
+            260.0,
+            220.0
+          ],
+          "presentation_source": "SharedRenderTargetImage",
+          "rt_size": [
+            260,
+            220
+          ],
+          "shell_minimized": false,
+          "shell_visible": true,
+          "skip_reason": null,
+          "stamp": 13,
+          "terrain_handle_valid": true
+        },
+        {
+          "committed": false,
+          "composite_path": "GpuCompute",
+          "construction_rows": 22,
+          "dispatch_reason": "StaleRefresh",
+          "ecology_rows": 100,
+          "fallback_h": 320,
+          "fallback_w": 320,
+          "fingerprint": 5594725114419930225,
+          "frame": 91,
+          "gpu_compositor_env": true,
+          "logistics_rows": 2,
+          "minimap_image_valid": true,
+          "overlay_revision": 2,
+          "panel_viewport": [
+            260.0,
+            220.0
+          ],
+          "presentation_source": "SharedRenderTargetImage",
+          "rt_size": [
+            260,
+            220
+          ],
+          "shell_minimized": false,
+          "shell_visible": true,
+          "skip_reason": "NoChange",
+          "stamp": 12,
+          "terrain_handle_valid": true
+        },
+        {
+          "committed": false,
+          "composite_path": "GpuCompute",
+          "construction_rows": 22,
+          "dispatch_reason": "StaleRefresh",
+          "ecology_rows": 100,
+          "fallback_h": 320,
+          "fallback_w": 320,
+          "fingerprint": 5594725114419930225,
+          "frame": 90,
+          "gpu_compositor_env": true,
+          "logistics_rows": 2,
+          "minimap_image_valid": true,
+          "overlay_revision": 2,
+          "panel_viewport": [
+            260.0,
+            220.0
+          ],
+          "presentation_source": "SharedRenderTargetImage",
+          "rt_size": [
+            260,
+            220
+          ],
+          "shell_minimized": false,
+          "shell_visible": true,
+          "skip_reason": "NoChange",
+          "stamp": 12,
+          "terrain_handle_valid": true
+        },
+        {
+          "committed": false,
+          "composite_path": "GpuCompute",
+          "construction_rows": 22,
+          "dispatch_reason": "StaleRefresh",
+          "ecology_rows": 100,
+          "fallback_h": 320,
+          "fallback_w": 320,
+          "fingerprint": 5594725114419930225,
+          "frame": 89,
+          "gpu_compositor_env": true,
+          "logistics_rows": 2,
+          "minimap_image_valid": true,
+          "overlay_revision": 2,
+          "panel_viewport": [
+            260.0,
+            220.0
+          ],
+          "presentation_source": "SharedRenderTargetImage",
+          "rt_size": [
+            260,
+            220
+          ],
+          "shell_minimized": false,
+          "shell_visible": true,
+          "skip_reason": "NoChange",
+          "stamp": 12,
+          "terrain_handle_valid": true
+        },
+        {
+          "committed": false,
+          "composite_path": "GpuCompute",
+          "construction_rows": 22,
+          "dispatch_reason": "StaleRefresh",
+          "ecology_rows": 100,
+          "fallback_h": 320,
+          "fallback_w": 320,
+          "fingerprint": 5594725114419930225,
+          "frame": 88,
+          "gpu_compositor_env": true,
+          "logistics_rows": 2,
+          "minimap_image_valid": true,
+          "overlay_revision": 2,
+          "panel_viewport": [
+            260.0,
+            220.0
+          ],
+          "presentation_source": "SharedRenderTargetImage",
+          "rt_size": [
+            260,
+            220
+          ],
+          "shell_minimized": false,
+          "shell_visible": true,
+          "skip_reason": "NoChange",
+          "stamp": 12,
+          "terrain_handle_valid": true
+        },
+        {
+          "committed": false,
+          "composite_path": "GpuCompute",
+          "construction_rows": 22,
+          "dispatch_reason": "StaleRefresh",
+          "ecology_rows": 100,
+          "fallback_h": 320,
+          "fallback_w": 320,
+          "fingerprint": 5594725114419930225,
+          "frame": 87,
+          "gpu_compositor_env": true,
+          "logistics_rows": 2,
+          "minimap_image_valid": true,
+          "overlay_revision": 2,
+          "panel_viewport": [
+            260.0,
+            220.0
+          ],
+          "presentation_source": "SharedRenderTargetImage",
+          "rt_size": [
+            260,
+            220
+          ],
+          "shell_minimized": false,
+          "shell_visible": true,
+          "skip_reason": "NoChange",
+          "stamp": 12,
+          "terrain_handle_valid": true
+        },
+        {
+          "committed": true,
+          "composite_path": "GpuCompute",
+          "construction_rows": 22,
+          "dispatch_reason": "StaleRefresh",
+          "ecology_rows": 100,
+          "fallback_h": 320,
+          "fallback_w": 320,
+          "fingerprint": 5594725114419930225,
+          "frame": 86,
+          "gpu_compositor_env": true,
+          "logistics_rows": 2,
+          "minimap_image_valid": true,
+          "overlay_revision": 2,
+          "panel_viewport": [
+            260.0,
+            220.0
+          ],
+          "presentation_source": "SharedRenderTargetImage",
+          "rt_size": [
+            260,
+            220
+          ],
+          "shell_minimized": false,
+          "shell_visible": true,
+          "skip_reason": null,
+          "stamp": 12,
+          "terrain_handle_valid": true
+        },
+        {
+          "committed": false,
+          "composite_path": "GpuCompute",
+          "construction_rows": 22,
+          "dispatch_reason": "StaleRefresh",
+          "ecology_rows": 100,
+          "fallback_h": 320,
+          "fallback_w": 320,
+          "fingerprint": 5594725114419930225,
+          "frame": 85,
+          "gpu_compositor_env": true,
+          "logistics_rows": 2,
+          "minimap_image_valid": true,
+          "overlay_revision": 2,
+          "panel_viewport": [
+            260.0,
+            220.0
+          ],
+          "presentation_source": "SharedRenderTargetImage",
+          "rt_size": [
+            260,
+            220
+          ],
+          "shell_minimized": false,
+          "shell_visible": true,
+          "skip_reason": "NoChange",
+          "stamp": 11,
+          "terrain_handle_valid": true
+        },
+        {
+          "committed": false,
+          "composite_path": "GpuCompute",
+          "construction_rows": 22,
+          "dispatch_reason": "StaleRefresh",
+          "ecology_rows": 100,
+          "fallback_h": 320,
+          "fallback_w": 320,
+          "fingerprint": 5594725114419930225,
+          "frame": 84,
+          "gpu_compositor_env": true,
+          "logistics_rows": 2,
+          "minimap_image_valid": true,
+          "overlay_revision": 2,
+          "panel_viewport": [
+            260.0,
+            220.0
+          ],
+          "presentation_source": "SharedRenderTargetImage",
+          "rt_size": [
+            260,
+            220
+          ],
+          "shell_minimized": false,
+          "shell_visible": true,
+          "skip_reason": "NoChange",
+          "stamp": 11,
+          "terrain_handle_valid": true
+        },
+        {
+          "committed": false,
+          "composite_path": "GpuCompute",
+          "construction_rows": 22,
+          "dispatch_reason": "StaleRefresh",
+          "ecology_rows": 100,
+          "fallback_h": 320,
+          "fallback_w": 320,
+          "fingerprint": 5594725114419930225,
+          "frame": 83,
+          "gpu_compositor_env": true,
+          "logistics_rows": 2,
+          "minimap_image_valid": true,
+          "overlay_revision": 2,
+          "panel_viewport": [
+            260.0,
+            220.0
+          ],
+          "presentation_source": "SharedRenderTargetImage",
+          "rt_size": [
+            260,
+            220
+          ],
+          "shell_minimized": false,
+          "shell_visible": true,
+          "skip_reason": "NoChange",
+          "stamp": 11,
+          "terrain_handle_valid": true
+        },
+        {
+          "committed": false,
+          "composite_path": "GpuCompute",
+          "construction_rows": 22,
+          "dispatch_reason": "StaleRefresh",
+          "ecology_rows": 100,
+          "fallback_h": 320,
+          "fallback_w": 320,
+          "fingerprint": 5594725114419930225,
+          "frame": 82,
+          "gpu_compositor_env": true,
+          "logistics_rows": 2,
+          "minimap_image_valid": true,
+          "overlay_revision": 2,
+          "panel_viewport": [
+            260.0,
+            220.0
+          ],
+          "presentation_source": "SharedRenderTargetImage",
+          "rt_size": [
+            260,
+            220
+          ],
+          "shell_minimized": false,
+          "shell_visible": true,
+          "skip_reason": "NoChange",
+          "stamp": 11,
+          "terrain_handle_valid": true
+        },
+        {
+          "committed": false,
+          "composite_path": "GpuCompute",
+          "construction_rows": 22,
+          "dispatch_reason": "StaleRefresh",
+          "ecology_rows": 100,
+          "fallback_h": 320,
+          "fallback_w": 320,
+          "fingerprint": 5594725114419930225,
+          "frame": 81,
+          "gpu_compositor_env": true,
+          "logistics_rows": 2,
+          "minimap_image_valid": true,
+          "overlay_revision": 2,
+          "panel_viewport": [
+            260.0,
+            220.0
+          ],
+          "presentation_source": "SharedRenderTargetImage",
+          "rt_size": [
+            260,
+            220
+          ],
+          "shell_minimized": false,
+          "shell_visible": true,
+          "skip_reason": "NoChange",
+          "stamp": 11,
+          "terrain_handle_valid": true
+        },
+        {
+          "committed": false,
+          "composite_path": "GpuCompute",
+          "construction_rows": 22,
+          "dispatch_reason": "StaleRefresh",
+          "ecology_rows": 100,
+          "fallback_h": 320,
+          "fallback_w": 320,
+          "fingerprint": 5594725114419930225,
+          "frame": 80,
+          "gpu_compositor_env": true,
+          "logistics_rows": 2,
+          "minimap_image_valid": true,
+          "overlay_revision": 2,
+          "panel_viewport": [
+            260.0,
+            220.0
+          ],
+          "presentation_source": "SharedRenderTargetImage",
+          "rt_size": [
+            260,
+            220
+          ],
+          "shell_minimized": false,
+          "shell_visible": true,
+          "skip_reason": "NoChange",
+          "stamp": 11,
+          "terrain_handle_valid": true
+        },
+        {
+          "committed": false,
+          "composite_path": "GpuCompute",
+          "construction_rows": 22,
+          "dispatch_reason": "StaleRefresh",
+          "ecology_rows": 100,
+          "fallback_h": 320,
+          "fallback_w": 320,
+          "fingerprint": 5594725114419930225,
+          "frame": 79,
+          "gpu_compositor_env": true,
+          "logistics_rows": 2,
+          "minimap_image_valid": true,
+          "overlay_revision": 2,
+          "panel_viewport": [
+            260.0,
+            220.0
+          ],
+          "presentation_source": "SharedRenderTargetImage",
+          "rt_size": [
+            260,
+            220
+          ],
+          "shell_minimized": false,
+          "shell_visible": true,
+          "skip_reason": "NoChange",
+          "stamp": 11,
+          "terrain_handle_valid": true
+        },
+        {
+          "committed": false,
+          "composite_path": "GpuCompute",
+          "construction_rows": 22,
+          "dispatch_reason": "StaleRefresh",
+          "ecology_rows": 100,
+          "fallback_h": 320,
+          "fallback_w": 320,
+          "fingerprint": 5594725114419930225,
+          "frame": 78,
+          "gpu_compositor_env": true,
+          "logistics_rows": 2,
+          "minimap_image_valid": true,
+          "overlay_revision": 2,
+          "panel_viewport": [
+            260.0,
+            220.0
+          ],
+          "presentation_source": "SharedRenderTargetImage",
+          "rt_size": [
+            260,
+            220
+          ],
+          "shell_minimized": false,
+          "shell_visible": true,
+          "skip_reason": "NoChange",
+          "stamp": 11,
+          "terrain_handle_valid": true
+        },
+        {
+          "committed": false,
+          "composite_path": "GpuCompute",
+          "construction_rows": 22,
+          "dispatch_reason": "StaleRefresh",
+          "ecology_rows": 100,
+          "fallback_h": 320,
+          "fallback_w": 320,
+          "fingerprint": 5594725114419930225,
+          "frame": 77,
+          "gpu_compositor_env": true,
+          "logistics_rows": 2,
+          "minimap_image_valid": true,
+          "overlay_revision": 2,
+          "panel_viewport": [
+            260.0,
+            220.0
+          ],
+          "presentation_source": "SharedRenderTargetImage",
+          "rt_size": [
+            260,
+            220
+          ],
+          "shell_minimized": false,
+          "shell_visible": true,
+          "skip_reason": "NoChange",
+          "stamp": 11,
+          "terrain_handle_valid": true
+        },
+        {
+          "committed": false,
+          "composite_path": "GpuCompute",
+          "construction_rows": 22,
+          "dispatch_reason": "StaleRefresh",
+          "ecology_rows": 100,
+          "fallback_h": 320,
+          "fallback_w": 320,
+          "fingerprint": 5594725114419930225,
+          "frame": 76,
+          "gpu_compositor_env": true,
+          "logistics_rows": 2,
+          "minimap_image_valid": true,
+          "overlay_revision": 2,
+          "panel_viewport": [
+            260.0,
+            220.0
+          ],
+          "presentation_source": "SharedRenderTargetImage",
+          "rt_size": [
+            260,
+            220
+          ],
+          "shell_minimized": false,
+          "shell_visible": true,
+          "skip_reason": "NoChange",
+          "stamp": 11,
+          "terrain_handle_valid": true
+        },
+        {
+          "committed": false,
+          "composite_path": "GpuCompute",
+          "construction_rows": 22,
+          "dispatch_reason": "StaleRefresh",
+          "ecology_rows": 100,
+          "fallback_h": 320,
+          "fallback_w": 320,
+          "fingerprint": 5594725114419930225,
+          "frame": 75,
+          "gpu_compositor_env": true,
+          "logistics_rows": 2,
+          "minimap_image_valid": true,
+          "overlay_revision": 2,
+          "panel_viewport": [
+            260.0,
+            220.0
+          ],
+          "presentation_source": "SharedRenderTargetImage",
+          "rt_size": [
+            260,
+            220
+          ],
+          "shell_minimized": false,
+          "shell_visible": true,
+          "skip_reason": "NoChange",
+          "stamp": 11,
+          "terrain_handle_valid": true
+        },
+        {
+          "committed": false,
+          "composite_path": "GpuCompute",
+          "construction_rows": 22,
+          "dispatch_reason": "StaleRefresh",
+          "ecology_rows": 100,
+          "fallback_h": 320,
+          "fallback_w": 320,
+          "fingerprint": 5594725114419930225,
+          "frame": 74,
+          "gpu_compositor_env": true,
+          "logistics_rows": 2,
+          "minimap_image_valid": true,
+          "overlay_revision": 2,
+          "panel_viewport": [
+            260.0,
+            220.0
+          ],
+          "presentation_source": "SharedRenderTargetImage",
+          "rt_size": [
+            260,
+            220
+          ],
+          "shell_minimized": false,
+          "shell_visible": true,
+          "skip_reason": "NoChange",
+          "stamp": 11,
+          "terrain_handle_valid": true
+        },
+        {
+          "committed": false,
+          "composite_path": "GpuCompute",
+          "construction_rows": 22,
+          "dispatch_reason": "StaleRefresh",
+          "ecology_rows": 100,
+          "fallback_h": 320,
+          "fallback_w": 320,
+          "fingerprint": 5594725114419930225,
+          "frame": 73,
+          "gpu_compositor_env": true,
+          "logistics_rows": 2,
+          "minimap_image_valid": true,
+          "overlay_revision": 2,
+          "panel_viewport": [
+            260.0,
+            220.0
+          ],
+          "presentation_source": "SharedRenderTargetImage",
+          "rt_size": [
+            260,
+            220
+          ],
+          "shell_minimized": false,
+          "shell_visible": true,
+          "skip_reason": "NoChange",
+          "stamp": 11,
+          "terrain_handle_valid": true
+        }
+      ],
+      "egui_bind_tail": []
+    },
+    "subsystem_isolation": {
+      "base_state": "Simulation",
+      "minimap_overlay_mask": {
+        "construction_heat": false,
+        "ecology_heat": true,
+        "ew": false,
+        "fire_heat": false,
+        "fow": false,
+        "logistics_heat": true,
+        "replay_scrub": false,
+        "units": false
+      },
+      "minimap_view_revision": 98,
+      "shell_refresh_queue": {
+        "background_hz": 5.0,
+        "bypass_throttle": false,
+        "detached_hz": 10.0,
+        "focused_widgets": 0,
+        "frame_index": 120,
+        "occluded_widgets": 0,
+        "suspended_widgets": 9,
+        "visible_widgets": 0
+      },
+      "spike_guard": {
+        "last_frame_ms": 250.0,
+        "max_ms": 33.0,
+        "over_budget_streak": 90,
+        "spike_active": true,
+        "suppress_optional_diagnostics": true,
+        "suppress_preview_this_frame": true
+      },
+      "tile_raster": {
+        "chunks_per_frame": 4,
+        "effective_chunks_per_frame": 2,
+        "fire_overlay_mark_interval_frames": 3,
+        "minimap_cpu_allowed": false,
+        "zoom_band_quantum": 0.10000000149011612
+      },
+      "tile_raster_feedback": {
+        "defer_zoom_dirty": true
+      },
+      "visual_budgets": {
+        "atmosphere_hz": 15.0,
+        "minimap_hz": 6.0,
+        "overlay_hz": 10.0,
+        "preview_hz": 8.0
+      },
+      "visual_cadence": {
+        "atmosphere_hz": 15.0,
+        "minimap_hz": 6.0,
+        "overlay_hz": 10.0,
+        "preview_hz": 8.0
+      },
+      "witness_lane_active": true
+    },
+    "view_runtime_trace_len": 0,
+    "view_runtime_violations": [],
+    "visual_memory_queues": {
+      "asset_images": 143,
+      "bucket_queues": [
+        {
+          "avg_ms": 0.0,
+          "bucket": "HUD shell",
+          "events_last_frame": 0,
+          "last_ms": 0.0,
+          "max_ms": 0.0
+        },
+        {
+          "avg_ms": 3.6140310764312744,
+          "bucket": "Minimap raster",
+          "events_last_frame": 0,
+          "last_ms": 3.7986998558044434,
+          "max_ms": 8.059700012207031
+        },
+        {
+          "avg_ms": 0.0,
+          "bucket": "Overlay composition",
+          "events_last_frame": 0,
+          "last_ms": 0.0,
+          "max_ms": 0.0
+        },
+        {
+          "avg_ms": 0.0,
+          "bucket": "Particle upload",
+          "events_last_frame": 0,
+          "last_ms": 0.0,
+          "max_ms": 0.0
+        },
+        {
+          "avg_ms": 0.03261822834610939,
+          "bucket": "Residency updates",
+          "events_last_frame": 0,
+          "last_ms": 0.03070000186562538,
+          "max_ms": 0.24540001153945923
+        },
+        {
+          "avg_ms": 0.0,
+          "bucket": "GPU texture registration",
+          "events_last_frame": 0,
+          "last_ms": 0.0,
+          "max_ms": 0.0
+        },
+        {
+          "avg_ms": 0.00002613068681966979,
+          "bucket": "Render extraction",
+          "events_last_frame": 0,
+          "last_ms": 0.0,
+          "max_ms": 0.7220000624656677
+        }
+      ],
+      "frame": {
+        "avg_frame_ms": 249.99960327148438,
+        "frame_index": 120,
+        "frame_time_ms": 250.0,
+        "max_frame_ms": 250.0,
+        "texture_rebinds_frame": 0,
+        "texture_rebuilds_frame": 0,
+        "upload_bytes_frame": 0,
+        "upload_bytes_per_sec": 0.0
+      },
+      "gpu_compositor_queue": {
+        "commits_queued": 14,
+        "debug_logging": true,
+        "gpu_dedup_skips": 1,
+        "gpu_executes": 14,
+        "justified": true,
+        "last_commit_stamp": 14,
+        "last_dispatch": "stale_refresh",
+        "last_fingerprint": 5968559289790425158,
+        "last_skip": "no_change",
+        "overflow_ratio": 1.0,
+        "skips_hidden": 0,
+        "skips_no_change": 103,
+        "skips_no_rt": 0,
+        "skips_no_terrain": 2,
+        "skips_rate_capped": 0,
+        "skips_upload_failed": 0,
+        "target_hz": 6.0
+      },
+      "last_anomaly": {
+        "detail": "frame 250.0 ms (avg 250.0 ms)",
+        "kind": "FrameSpike",
+        "suppressed": 2
+      },
+      "minimap_heat_est_bytes": 1372800,
+      "minimap_rt_est_bytes": 228800,
+      "minimap_rt_size": [
+        260,
+        220
+      ],
+      "stage6_virtualization": {
+        "active_residency_cells": 225,
+        "atlas_pressure": 0.0,
+        "dirty_region_count": 34,
+        "overlay_update_count": 91,
+        "upload_bytes_frame": 0
+      }
+    }
+  },
+  "glyph_chain": "⛔⚠🔴⚡🧊",
+  "ok": true,
+  "schema": "engine_deep_debug_live_v1",
+  "task_id": "ENGINE-DEEP-DEBUG-001",
+  "written_at_epoch_secs": 1782225883
+}

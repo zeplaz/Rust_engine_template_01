@@ -520,6 +520,22 @@ mod tests {
     }
 
     #[test]
+    fn vt4_particle_projection_requires_fence_tick_alignment() {
+        let mut scenario = build_deterministic_ci_scenario();
+        scenario.fence.fire = scenario.fire.stamp;
+        scenario.particles.snapshot_stamp = scenario.fence.fire.tick;
+        let agreement = VisualAgreementFrame::default();
+        let mut report = Vt4CiReport::default();
+        apply_vt4_ci_surface_checks(&scenario, &agreement, &mut report);
+        assert_eq!(report.failing_surface_mask & Vt4SurfaceId::ParticleProjection.bit(), 0);
+
+        scenario.particles.snapshot_stamp = scenario.fence.fire.tick.saturating_sub(2);
+        let mut report = Vt4CiReport::default();
+        apply_vt4_ci_surface_checks(&scenario, &agreement, &mut report);
+        assert_ne!(report.failing_surface_mask & Vt4SurfaceId::ParticleProjection.bit(), 0);
+    }
+
+    #[test]
     fn vt4_ci_overlay_debug_receives_surface_mask() {
         let scenario = build_deterministic_ci_scenario();
         let mut agreement = VisualAgreementFrame::default();

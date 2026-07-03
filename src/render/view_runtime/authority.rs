@@ -37,6 +37,7 @@ impl ViewProjectionAuthority {
         camera: ViewCameraState,
         writer: ViewAuthorityWriter,
     ) {
+        let prev_zoom = self.surfaces.get(&id).map(|s| s.camera.zoom);
         if let Some(surface) = self.surfaces.get_mut(&id) {
             surface.camera = camera;
         } else {
@@ -57,6 +58,68 @@ impl ViewProjectionAuthority {
         }
         self.last_pose_writer.insert(id, writer);
         self.last_commit_revision = self.last_commit_revision.saturating_add(1);
+        if id == ViewSurfaceId::WorldMain {
+            crate::gui::on_world_main_pose_committed(writer, prev_zoom, camera.zoom);
+        }
+    }
+
+    /// Update render contract + presentation policy — **never** overwrites gameplay pose.
+    pub fn commit_bridge_render_policy(
+        &mut self,
+        id: ViewSurfaceId,
+        group: ViewIsolationGroup,
+        camera_entity: Entity,
+        render: RenderViewportContract,
+        render_policy: crate::gui::ViewRenderPolicy,
+        inst: &ViewInstance,
+    ) {
+        let gameplay_pose = self
+            .last_pose_writer
+            .get(&id)
+            .copied()
+            .is_some_and(|w| w == ViewAuthorityWriter::MapCameraInput);
+
+        if let Some(surface) = self.surfaces.get_mut(&id) {
+            surface.render = render;
+            surface.render_policy = render_policy;
+            surface.camera_entity = camera_entity;
+            surface.interaction.pan_delta = inst.interaction_state.pan_delta;
+            surface.interaction.zoom_factor = inst.interaction_state.zoom_factor;
+            if !gameplay_pose {
+                surface.camera = inst.camera;
+            }
+            self.last_render_writer
+                .insert(id, ViewAuthorityWriter::BridgeCompat);
+            self.last_commit_revision = self.last_commit_revision.saturating_add(1);
+            return;
+        }
+
+        let camera = self
+            .surface(ViewSurfaceId::WorldMain)
+            .map(|s| s.camera)
+            .unwrap_or(inst.camera);
+        let surface = ViewSurface {
+            id,
+            group,
+            camera_entity,
+            semantic: None,
+            render,
+            interaction: InteractionViewportState {
+                captured: false,
+                pan_delta: inst.interaction_state.pan_delta,
+                zoom_factor: inst.interaction_state.zoom_factor,
+            },
+            overlay: OverlayViewportPolicy {
+                allow_debug_outline: inst.render_policy.debug_flags.show_viewport_outline,
+                allow_construction_ghost: false,
+            },
+            camera,
+            render_policy,
+        };
+        self.surfaces.insert(id, surface);
+        self.last_render_writer
+            .insert(id, ViewAuthorityWriter::BridgeCompat);
+        self.last_commit_revision = self.last_commit_revision.saturating_add(1);
     }
 
     pub fn commit_render_contract(
@@ -68,6 +131,11 @@ impl ViewProjectionAuthority {
         if let Some(surface) = self.surfaces.get_mut(&id) {
             surface.render = render;
         } else {
+            let camera = self
+                .surfaces
+                .get(&ViewSurfaceId::WorldMain)
+                .map(|s| s.camera)
+                .unwrap_or_default();
             self.surfaces.insert(
                 id,
                 ViewSurface {
@@ -78,7 +146,7 @@ impl ViewProjectionAuthority {
                     render,
                     interaction: InteractionViewportState::default(),
                     overlay: OverlayViewportPolicy::default(),
-                    camera: ViewCameraState::default(),
+                    camera,
                     render_policy: crate::gui::ViewRenderPolicy::default(),
                 },
             );
@@ -102,24 +170,15 @@ impl ViewProjectionAuthority {
     ) {
         let prior_pose_writer = self.last_pose_writer.get(&id).copied();
         let prior_camera = self.surfaces.get(&id).map(|s| s.camera);
-        let camera = match (prior_camera, prior_pose_writer) {
-            (Some(pc), Some(w))
-                if w != ViewAuthorityWriter::BridgeCompat
-                    && w != ViewAuthorityWriter::Unset
-                    && pc == inst.camera =>
-            {
-                pc
+        // BridgeCompat must never overwrite pose committed by gameplay / viewport writers.
+        let camera = match prior_pose_writer {
+            Some(w) if w != ViewAuthorityWriter::BridgeCompat && w != ViewAuthorityWriter::Unset => {
+                prior_camera.unwrap_or(inst.camera)
             }
             _ => inst.camera,
         };
-        let pose_writer = match (prior_pose_writer, prior_camera) {
-            (Some(w), Some(pc))
-                if w != ViewAuthorityWriter::BridgeCompat
-                    && w != ViewAuthorityWriter::Unset
-                    && pc == camera =>
-            {
-                w
-            }
+        let pose_writer = match prior_pose_writer {
+            Some(w) if w != ViewAuthorityWriter::BridgeCompat && w != ViewAuthorityWriter::Unset => w,
             _ => writer,
         };
         let surface = ViewSurface {

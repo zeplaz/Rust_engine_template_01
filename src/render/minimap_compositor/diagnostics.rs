@@ -35,6 +35,7 @@ pub enum MinimapGpuSkipReason {
     UploadFailed,
     NoChange,
     RateCapped,
+    WorldGenBusy,
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize)]
@@ -82,6 +83,7 @@ impl MinimapGpuCompositorDiagnostics {
             MinimapGpuSkipReason::UploadFailed => self.skips_upload_failed += 1,
             MinimapGpuSkipReason::NoChange => self.skips_no_change += 1,
             MinimapGpuSkipReason::RateCapped => self.skips_rate_capped += 1,
+            MinimapGpuSkipReason::WorldGenBusy => self.skips_no_change += 1,
             _ => {}
         }
     }

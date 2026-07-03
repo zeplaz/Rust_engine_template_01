@@ -1,16 +1,25 @@
 //! Shared envelope for `debug_runs/*.json` — timestamps, env flags, and agent navigation hints.
 
+use std::collections::HashMap;
 use std::fs;
+use std::hash::{Hash, Hasher};
 use std::path::{Path, PathBuf};
 use std::process::Command;
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::sync::{Mutex, OnceLock};
+use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
 use serde_json::{Map, Value};
 
 pub const ENVELOPE_SCHEMA: &str = "debug_run_envelope_v1";
 pub const WITNESS_HONESTY_ENFORCE_ENV: &str = "RUST_ENGINE_WITNESS_INTEGRITY_ENFORCE";
 pub const WITNESS_HONESTY_SKIP_ENV: &str = "RUST_ENGINE_WITNESS_INTEGRITY_SKIP";
+/// Min **frames** between live-witness system refreshes (preferred under variable dt).
+pub const WITNESS_REFRESH_FRAMES_ENV: &str = "RUST_ENGINE_WITNESS_REFRESH_FRAMES";
+/// Legacy wall-clock override (seconds); ignored when frame index is supplied.
+pub const WITNESS_REFRESH_INTERVAL_ENV: &str = "RUST_ENGINE_WITNESS_REFRESH_SECS";
 const WITNESS_HONESTY_PRECHECK_DIR: &str = "debug_runs/.witness_honesty_precheck";
+const DEFAULT_WITNESS_REFRESH_FRAMES: u32 = 8;
+const AGENT_INDEX_REFRESH_INTERVAL: Duration = Duration::from_secs(5);
 
 /// Primary live proofs agents should read (relative to repo root).
 pub const KNOWN_LIVE_PROOF_PATHS: &[&str] = &[
@@ -233,11 +242,16 @@ fn repo_root_path() -> PathBuf {
 
 /// WIT-RUST-004 — run MCP witness_honesty validator (subprocess) before writing `*_live.json`.
 ///
-/// When [`WITNESS_HONESTY_ENFORCE_ENV`] is set, a failed check blocks the write.
-/// Set [`WITNESS_HONESTY_SKIP_ENV`] to bypass (tests / offline).
+/// The validator only runs when [`WITNESS_HONESTY_ENFORCE_ENV`] is set: spawning a Python
+/// subprocess costs ~200ms on this machine, and witness systems write from the frame loop.
+/// Without enforce the result was advisory-only (never blocked), so skipping it is
+/// behavior-preserving. Set [`WITNESS_HONESTY_SKIP_ENV`] to bypass even under enforce.
 #[must_use]
 pub fn assert_witness_honesty_before_write(relative_path: &str, body: &Value) -> bool {
-    if !relative_path.ends_with("_live.json") || env_flag(WITNESS_HONESTY_SKIP_ENV) {
+    if !relative_path.ends_with("_live.json")
+        || env_flag(WITNESS_HONESTY_SKIP_ENV)
+        || !env_flag(WITNESS_HONESTY_ENFORCE_ENV)
+    {
         return true;
     }
 
@@ -300,15 +314,119 @@ pub fn assert_witness_honesty_before_write(relative_path: &str, body: &Value) ->
     }
 }
 
+fn witness_refresh_interval_frames() -> u32 {
+    std::env::var(WITNESS_REFRESH_FRAMES_ENV)
+        .ok()
+        .and_then(|s| s.parse::<u32>().ok())
+        .filter(|&n| n > 0)
+        .unwrap_or(DEFAULT_WITNESS_REFRESH_FRAMES)
+}
+
+fn witness_system_run_gate() -> &'static Mutex<HashMap<String, u32>> {
+    static GATE: OnceLock<Mutex<HashMap<String, u32>>> = OnceLock::new();
+    GATE.get_or_init(|| Mutex::new(HashMap::new()))
+}
+
+/// Whether live-witness refresh systems may run this process (release play defaults off).
+#[must_use]
+pub fn witness_live_refresh_enabled() -> bool {
+    if cfg!(test) {
+        return true;
+    }
+    if crate::dev::test_run_instrumentation::instrumentation_active() {
+        return true;
+    }
+    if cfg!(debug_assertions) {
+        return true;
+    }
+    crate::dev::runtime_witness::gate::witness_writes_enabled()
+}
+
+/// Returns `true` when a live-witness refresh system may run heavy work (ECS query + JSON).
+#[must_use]
+pub fn witness_refresh_due(relative_path: &str, frame: u32) -> bool {
+    if !relative_path.ends_with("_live.json") {
+        return true;
+    }
+    if !witness_live_refresh_enabled() {
+        return false;
+    }
+    let interval = witness_refresh_interval_frames();
+    let Ok(mut gate) = witness_system_run_gate().lock() else {
+        return true;
+    };
+    let last = gate.get(relative_path).copied();
+    if let Some(last) = last {
+        if frame.saturating_sub(last) < interval {
+            return false;
+        }
+    }
+    gate.insert(relative_path.to_string(), frame);
+    true
+}
+
+fn agent_index_refresh_gate() -> &'static Mutex<Instant> {
+    static GATE: OnceLock<Mutex<Instant>> = OnceLock::new();
+    GATE.get_or_init(|| Mutex::new(Instant::now() - AGENT_INDEX_REFRESH_INTERVAL))
+}
+
+fn agent_index_refresh_due() -> bool {
+    let Ok(mut last) = agent_index_refresh_gate().lock() else {
+        return true;
+    };
+    if last.elapsed() < AGENT_INDEX_REFRESH_INTERVAL {
+        return false;
+    }
+    *last = Instant::now();
+    true
+}
+
+/// Per-path (content hash, last write time) used to skip redundant witness writes.
+fn write_gate() -> &'static Mutex<HashMap<String, (u64, Instant)>> {
+    static GATE: OnceLock<Mutex<HashMap<String, (u64, Instant)>>> = OnceLock::new();
+    GATE.get_or_init(|| Mutex::new(HashMap::new()))
+}
+
+/// Hash the payload ignoring `_agent_meta.written_at_epoch_secs` so a timestamp-only
+/// difference does not count as new content.
+fn payload_content_hash(payload: &Value) -> u64 {
+    let mut clone = payload.clone();
+    if let Some(meta) = clone.get_mut("_agent_meta").and_then(Value::as_object_mut) {
+        meta.remove("written_at_epoch_secs");
+    }
+    let text = serde_json::to_string(&clone).unwrap_or_default();
+    let mut hasher = std::collections::hash_map::DefaultHasher::new();
+    text.hash(&mut hasher);
+    hasher.finish()
+}
+
 /// Write pretty JSON and refresh [`AGENT_DEBUG_INDEX_PATH`] (unless writing the index itself).
+///
+/// Witness systems call this from the frame loop, so redundant writes are elided:
+/// unchanged content is never rewritten, and changed content is rewritten at most
+/// once per second per path (callers re-emit every frame, so the final state lands).
 pub fn write_debug_run_json(relative_path: &str, payload: Value) -> bool {
+    const MIN_REWRITE_INTERVAL: Duration = Duration::from_secs(1);
+    let hash = payload_content_hash(&payload);
+    if let Ok(gate) = write_gate().lock() {
+        match gate.get(relative_path) {
+            Some((last_hash, _)) if *last_hash == hash => return true,
+            Some((_, last_at)) if !cfg!(test) && last_at.elapsed() < MIN_REWRITE_INTERVAL => {
+                return true;
+            }
+            _ => {}
+        }
+    }
     if !assert_witness_honesty_before_write(relative_path, &payload) {
         return false;
     }
     if !write_json_file(relative_path, &payload) {
         return false;
     }
-    if relative_path != AGENT_DEBUG_INDEX_PATH {
+    if let Ok(mut gate) = write_gate().lock() {
+        gate.insert(relative_path.to_string(), (hash, Instant::now()));
+    }
+    if relative_path != AGENT_DEBUG_INDEX_PATH && agent_index_refresh_due() {
         let _ = refresh_agent_debug_index();
     }
     true
@@ -401,6 +519,14 @@ pub fn refresh_agent_debug_index() -> std::io::Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn witness_refresh_due_throttles_live_paths() {
+        let path = "debug_runs/test_witness_gate_live.json";
+        assert!(witness_refresh_due(path, 0));
+        assert!(!witness_refresh_due(path, 1));
+        assert!(witness_refresh_due(path, 8));
+    }
 
     #[test]
     fn wrap_inserts_agent_meta() {

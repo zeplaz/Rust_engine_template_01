@@ -16,7 +16,48 @@ use crate::strategic::{
     SiteArchetype, SiteConstructionPhase, SiteFootprint,
 };
 
-/// One building iso stamp for the overworld fallback texture.
+/// GPU terrain stamp indices (world tile → material index), not CPU RGBA blit.
+#[derive(Resource, Debug, Default, Clone)]
+pub struct TerrainGpuStampIndices {
+    pub tiles: HashMap<IVec2, u32>,
+}
+
+/// Record building stamp tiles for GPU terrain instance patch (P0-D).
+pub fn queue_gpu_terrain_stamp_indices(
+    stamps: &[TileAtlasStampRequest],
+    out: &mut TerrainGpuStampIndices,
+) {
+    out.tiles.clear();
+    for req in stamps {
+        let material_index = req.frame as u32;
+        for dy in 0..req.footprint_h {
+            for dx in 0..req.footprint_w {
+                let tile = req.origin + IVec2::new(dx as i32, dy as i32);
+                out.tiles.insert(tile, material_index);
+            }
+        }
+    }
+}
+
+/// Patch instanced terrain rows at stamped world tiles (no CPU blit).
+pub fn apply_gpu_stamps_to_terrain_instances(
+    stamps: &TerrainGpuStampIndices,
+    instances: &mut [crate::render::TerrainTileInstance],
+) {
+    if stamps.tiles.is_empty() {
+        return;
+    }
+    for inst in instances.iter_mut() {
+        let tile = IVec2::new(
+            (inst.world_pos[0] - 0.5).round() as i32,
+            (inst.world_pos[1] - 0.5).round() as i32,
+        );
+        if let Some(idx) = stamps.tiles.get(&tile) {
+            inst.material_index = *idx;
+        }
+    }
+}
+
 #[derive(Clone, Debug)]
 pub struct TileAtlasStampRequest {
     pub atlas_id: String,
@@ -721,6 +762,29 @@ mod tests {
         }
         assert!(super::build_read_visual_pilot_stamp_request_green());
         assert!(super::build_read_visual_pilot_tile_stamp_lib_green());
+    }
+
+    #[test]
+    fn gpu_stamp_updates_instance_index_not_cpu_buffer() {
+        let mut stamps = TerrainGpuStampIndices::default();
+        let req = TileAtlasStampRequest {
+            atlas_id: "test".into(),
+            variant_key: "clean_day".into(),
+            facing: 0,
+            frame: 7,
+            uv: [0.0, 0.0, 0.25, 0.25],
+            origin: IVec2::new(4, 4),
+            footprint_w: 2,
+            footprint_h: 2,
+        };
+        queue_gpu_terrain_stamp_indices(&[req], &mut stamps);
+        let mut instances = vec![crate::render::TerrainTileInstance {
+            world_pos: [4.5, 4.5],
+            material_index: 0,
+            _pad: 0,
+        }];
+        apply_gpu_stamps_to_terrain_instances(&stamps, &mut instances);
+        assert_eq!(instances[0].material_index, 7);
     }
 
     #[test]

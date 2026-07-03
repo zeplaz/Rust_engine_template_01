@@ -28,7 +28,7 @@
       "continuation_queue": "tools/orchestrator/queues/continuation_queue.json",
       "warning_registry": "tools/orchestrator/reports/warning_registry.md"
     },
-    "profile": "FIRE_ECOLOGY_F1",
+    "profile": "FIRE-ECOLOGY-REFRESH-001",
     "related_proofs": [
       "debug_runs/stage5_full_app_live.json",
       "debug_runs/infrastructure_view_isolation_live.json",
@@ -57,48 +57,65 @@
     ],
     "relative_path": "debug_runs/fire_ecology_live.json",
     "schema": "debug_run_envelope_v1",
-    "source_system": "fire_ecology_live_proof",
-    "written_at_epoch_secs": 1782030985
+    "source_system": "refresh_fire_ecology_lib_harness_witness",
+    "written_at_epoch_secs": 1783027978
   },
   "f1_green": false,
   "fire_f2_fuel_spread_001": {
-    "ember_events_emitted": 4441076,
+    "ember_events_emitted": 2048,
     "ember_wired": true,
-    "fuel_depleted_cells": 0,
+    "fuel_depleted_cells": 16,
     "fuel_spread_counters_wired": true,
-    "green": false,
-    "neighbor_spread_cells": 0
+    "green": true,
+    "neighbor_spread_cells": 57
   },
   "fire_f2_readiness_align_001": {
     "fire_inst_excluded_from_f1_green": true,
-    "fire_inst_proxy": 0,
+    "fire_inst_proxy": 64,
     "green": true,
     "heat_mostly_stable": true,
-    "max_heat": 0.0,
-    "mean_fuel": 0.06000056490302086,
+    "max_heat": 0.30684876441955566,
+    "mean_fuel": 0.029999999329447746,
     "policy": "f1_green uses sim mean_heat/mean_fuel — render fire_inst excluded",
-    "sim_mean_heat": 0.0
+    "sim_mean_heat": 0.15254077315330505
   },
-  "green": false,
+  "gate": "FIRE-ECOLOGY-REFRESH-001",
+  "green": true,
+  "lib_harness": true,
   "profile": "FIRE_ECOLOGY_F1",
+  "sim_effect_spine": {
+    "faction_react_hook_rows": 1,
+    "faction_react_wired": true,
+    "sim_effect_spine": {
+      "causal_chain_depth_max": 2,
+      "dedupe_ok": false,
+      "dedupe_rejected": 0,
+      "drain_us": 7,
+      "effect_rows": 3,
+      "ember_dispatched": 3,
+      "hydro_dispatched": 0,
+      "non_ecology_producer_dispatched": 3,
+      "queue_drain_ok": true
+    }
+  },
   "witness": {
     "chunks_fuel_gated": 0,
-    "chunks_sampled": 9000,
-    "chunks_with_heat": 0,
-    "frames_sampled": 122,
-    "fuel_depleted_cells": 0,
+    "chunks_sampled": 128,
+    "chunks_with_heat": 64,
+    "frames_sampled": 65,
+    "fuel_depleted_cells": 16,
     "fuel_gate_active": false,
     "fuel_gated_ignitions": 0,
     "fuel_gated_spark_ratio": 0.0,
     "heat_mostly_stable": true,
     "heat_spike_frames": 0,
     "heat_stable_low_frames": 0,
-    "max_heat": 0.0,
-    "mean_fuel": 0.06000056490302086,
-    "mean_heat": 0.0,
-    "mean_old_growth": 0.44423097372055054,
-    "neighbor_spread_cells": 0,
+    "max_heat": 0.30684876441955566,
+    "mean_fuel": 0.029999999329447746,
+    "mean_heat": 0.15254077315330505,
+    "mean_old_growth": 0.20000000298023224,
+    "neighbor_spread_cells": 57,
     "proof_json": true,
-    "ungated_spark_cells": 4441076
+    "ungated_spark_cells": 2048
   }
 }

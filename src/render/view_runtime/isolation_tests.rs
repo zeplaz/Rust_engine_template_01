@@ -166,6 +166,53 @@ fn bridge_upsert_preserves_map_camera_pose_writer_tag() {
 }
 
 #[test]
+fn bridge_upsert_preserves_map_camera_input_zoom_when_inst_stale() {
+    use crate::gui::ViewCameraState;
+    use crate::render::view_runtime::layers::RenderViewportContract;
+    use crate::render::view_runtime::{ViewIsolationGroup, ViewSurfaceId};
+    use crate::gui::{ViewInstance, ViewRenderTarget};
+
+    let mut authority = ViewProjectionAuthority::default();
+    authority.commit_pose(
+        ViewSurfaceId::WorldMain,
+        ViewCameraState {
+            translation: Vec2::new(10.0, 20.0),
+            zoom: 8.0,
+            rotation: 0.0,
+        },
+        ViewAuthorityWriter::MapCameraInput,
+    );
+    let stale_fit = ViewInstance {
+        id: ViewId::WorldMain,
+        camera_entity: Entity::PLACEHOLDER,
+        render_target: ViewRenderTarget::PrimaryWindow,
+        camera: ViewCameraState {
+            translation: Vec2::new(10.0, 20.0),
+            zoom: 0.17,
+            rotation: 0.0,
+        },
+        projection: Default::default(),
+        interaction_state: Default::default(),
+        viewport_rect: bevy::math::Rect::from_corners(Vec2::ZERO, Vec2::new(800.0, 600.0)),
+        render_policy: Default::default(),
+    };
+    authority.upsert_from_view_instance(
+        ViewSurfaceId::WorldMain,
+        ViewIsolationGroup::WorldSimulation,
+        &stale_fit,
+        RenderViewportContract::default(),
+        ViewAuthorityWriter::BridgeCompat,
+    );
+    let wm = authority
+        .surface(ViewSurfaceId::WorldMain)
+        .expect("WorldMain");
+    assert!(
+        (wm.camera.zoom - 8.0).abs() < 1e-4,
+        "bridge must not stomp MapCameraInput zoom with fit-to-world stale inst"
+    );
+}
+
+#[test]
 fn deferred_preview_commits_preview_panel_writer() {
     use crate::gui::MapViewInstances;
     use crate::render::view_runtime::ViewSurfaceId;

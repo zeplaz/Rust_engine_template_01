@@ -10,7 +10,7 @@
     },
     "logging_env": {
       "ORCHESTRATOR_EXPORT_HEALTH": false,
-      "PERF": false,
+      "PERF": true,
       "PERF_DISK": false,
       "RUST_LOG": null,
       "SIM_ANALYTICS": false,
@@ -19,7 +19,7 @@
       "SIM_VIEW_SYNC_DEBUG": false,
       "STAGE5_READINESS_VERBOSE": false,
       "STAGE5_VERBOSE": false,
-      "STALL": false,
+      "STALL": true,
       "VIEWPORT_AUTHORITY_DEBUG": false
     },
     "orchestrator": {
@@ -58,7 +58,7 @@
     "relative_path": "debug_runs/replay_editor_parity_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "replay_editor_parity",
-    "written_at_epoch_secs": 1782222545
+    "written_at_epoch_secs": 1783050891
   },
   "editor_scenario_panel": true,
   "infrastructure_isolation_json": true,

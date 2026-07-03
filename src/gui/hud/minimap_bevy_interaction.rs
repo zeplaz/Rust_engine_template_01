@@ -16,7 +16,9 @@ use crate::gui::minimap_viewport_frame::{
 use crate::gui::{
     map_fit_zoom_for_panel, map_surface_screen_to_world, ActiveMapViewInput, MapCameraDesired,
     MapViewInstances, MinimapFollowMode, MinimapShellState, SimulationMapViewport, ViewManager,
+    commit_map_camera_pose_to_view_authority, map_camera_desired_from_view_authority,
 };
+use crate::render::view_runtime::{ViewProjectionAuthority, ViewRuntimeTrace};
 use crate::gui::minimap_egui_dev::{minimap_egui_dev_enabled, MinimapEguiDevGate};
 use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
 
@@ -147,21 +149,31 @@ pub fn pin_minimap_centered_fit_system(
     mut shell: ResMut<MinimapShellState>,
     gate: Res<MinimapEguiDevGate>,
     params: Res<WorldGenParams>,
+    registry: Res<crate::render::MinimapRenderTargetRegistry>,
+    compositor: Res<crate::render::MinimapCompositorState>,
     mut map_views: ResMut<MapViewInstances>,
 ) {
     if !matches!(base.get(), BaseState::Simulation) || !bevy_minimap_gpu_active(&shell, Some(&gate)) {
         return;
     }
-    let tex_w = params.width.max(1) as f32;
-    let tex_h = params.height.max(1) as f32;
-    let center = Vec2::new(tex_w * 0.5, tex_h * 0.5);
+    let tex_extent = crate::gui::map_view::minimap_bevy_display_texel_extent(
+        &shell,
+        &registry,
+        compositor.stamp,
+        &params,
+    );
+    let tex_w = tex_extent.x.max(1) as f32;
+    let tex_h = tex_extent.y.max(1) as f32;
+    let world_w = params.width.max(1) as f32;
+    let world_h = params.height.max(1) as f32;
+    let center = Vec2::new(world_w * 0.5, world_h * 0.5);
     let panel = shell
         .last_body_rect
         .map(|r| Vec2::new(r.width().max(1.0), r.height().max(1.0)))
         .unwrap_or(map_views.minimap.viewport_size);
     let mm = &mut map_views.minimap;
     if !mm.camera_initialized {
-        mm.reset_camera_for_map(tex_w, tex_h);
+        mm.reset_camera_for_map(world_w, world_h);
         let zoom = map_fit_zoom_for_panel(panel, tex_w, tex_h, 0.92);
         mm.zoom = zoom;
         mm.zoom_target = zoom;
@@ -248,9 +260,9 @@ pub fn minimap_bevy_pointer_system(
     gate: Res<MinimapEguiDevGate>,
     mut shell: ResMut<MinimapShellState>,
     mut map_views: ResMut<MapViewInstances>,
-    mut desired: ResMut<MapCameraDesired>,
+    mut authority: ResMut<ViewProjectionAuthority>,
+    mut trace: ResMut<ViewRuntimeTrace>,
     mut pointer: ResMut<MinimapBevyPointerState>,
-    mut vfx_override: Option<ResMut<crate::render::stage5_full_app_harness::TacticalVfxCameraUserOverride>>,
     mouse: Res<ButtonInput<MouseButton>>,
     params: Res<WorldGenParams>,
     window: Query<&Window, With<PrimaryWindow>>,
@@ -338,15 +350,18 @@ pub fn minimap_bevy_pointer_system(
                         let now = time.elapsed_secs();
                         let double_clicked = now - pointer.last_click_at < 0.45;
                         pointer.last_click_at = now;
-                        desired.translation.x = world.x;
-                        desired.translation.y = world.y;
+                        let mut pose = map_camera_desired_from_view_authority(authority.as_ref());
+                        pose.translation.x = world.x;
+                        pose.translation.y = world.y;
                         if double_clicked {
-                            let z = desired.scale.x.abs().max(1e-6);
-                            desired.scale = Vec3::splat((z * 1.15).clamp(0.35, 4.0));
+                            let z = pose.scale.x.abs().max(1e-6);
+                            pose.scale = Vec3::splat(z * 1.15);
                         }
-                        if let Some(o) = vfx_override.as_deref_mut() {
-                            o.release_after_secs = time.elapsed_secs_f64() + 12.0;
-                        }
+                        commit_map_camera_pose_to_view_authority(
+                            authority.as_mut(),
+                            trace.as_mut(),
+                            &pose,
+                        );
                     }
                 }
             }
@@ -437,10 +452,13 @@ pub fn sync_minimap_viewport_frame_overlay_system(
     shell: Res<MinimapShellState>,
     gate: Res<MinimapEguiDevGate>,
     manager: Res<ViewManager>,
+    authority: Res<crate::render::view_runtime::ViewProjectionAuthority>,
     desired: Res<MapCameraDesired>,
     sim_viewport: Res<SimulationMapViewport>,
     params: Res<WorldGenParams>,
     map_views: Res<MapViewInstances>,
+    registry: Res<crate::render::MinimapRenderTargetRegistry>,
+    compositor: Res<crate::render::MinimapCompositorState>,
     mut overlay_q: Query<
         (&mut Node, &mut Visibility, &mut BackgroundColor, &mut BorderColor),
         With<MinimapViewportFrameOverlay>,
@@ -460,19 +478,27 @@ pub fn sync_minimap_viewport_frame_overlay_system(
         *vis = Visibility::Hidden;
         return;
     };
-    let tex_w = params.width.max(1) as f32;
-    let tex_h = params.height.max(1) as f32;
+    let world_w = params.width.max(1) as f32;
+    let world_h = params.height.max(1) as f32;
     let mm = &map_views.minimap;
     let panel = shell
         .last_body_rect
         .map(|r| Vec2::new(r.width().max(1.0), r.height().max(1.0)))
         .unwrap_or(mm.viewport_size);
+    let display_extent = crate::gui::map_view::minimap_bevy_display_texel_extent(
+        &shell,
+        &registry,
+        compositor.stamp,
+        &params,
+    );
     let sample_uv = if crate::gui::map_presentation_fit::minimap_gpu_presentation_uses_crop(mm.follow_mode) {
-        crate::gui::map_presentation_fit::minimap_gpu_texture_uv_rect(
+        crate::gui::map_presentation_fit::minimap_gpu_texture_uv_rect_from_world(
             mm.camera_center,
             mm.zoom,
             params.width.max(1),
             params.height.max(1),
+            display_extent.x,
+            display_extent.y,
             panel,
         )
     } else {
@@ -480,15 +506,22 @@ pub fn sync_minimap_viewport_frame_overlay_system(
     };
 
     let Some(world_rect) =
-        tactical_visible_world_rect(&manager, &desired, &sim_viewport, tex_w, tex_h)
+        tactical_visible_world_rect(
+            Some(authority.as_ref()),
+            &manager,
+            &desired,
+            &sim_viewport,
+            world_w,
+            world_h,
+        )
     else {
         *vis = Visibility::Hidden;
         return;
     };
     let frame = tactical_viewport_screen_rect(
         world_rect,
-        tex_w,
-        tex_h,
+        world_w,
+        world_h,
         image_rect,
         sample_uv,
     );

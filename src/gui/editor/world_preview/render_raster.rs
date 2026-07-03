@@ -10,11 +10,11 @@ use crate::render::SharedOverlayFieldBuffers;
 use crate::systems::fire::{ChunkSmokeField, FireFuelField};
 use crate::systems::weather::ChunkWeather;
 use crate::systems::terrain::TerrainRegistriesHandles;
+use crate::terrain::generation::{Chunk, ChunkCellMatrix, ChunkDerivedMetrics, WorldGenDenseTerrainCache};
 use crate::terrain::generation::world_generator_enhanced::{
     Height, MacroRegionRaster, Moisture, Temperature, TerrainType, TileMarker, TileRegionIndex,
     WorldGenParams,
 };
-use crate::terrain::generation::{Chunk, ChunkCellMatrix, ChunkDerivedMetrics};
 use crate::terrain::material::{
     MaterialId, MaterialRegistry, MaterializedChunk, TagRegistry, TagSet, WorldPreviewState,
 };
@@ -67,6 +67,7 @@ pub(crate) struct WorldPreviewTileChunkQueries<'w, 's> {
     >,
     pub(crate) terrain_overlay: Res<'w, DynamicTerrainOverlay>,
     pub(crate) shared_overlay_fields: Res<'w, SharedOverlayFieldBuffers>,
+    pub(crate) dense_cache: Option<Res<'w, WorldGenDenseTerrainCache>>,
 }
 
 #[derive(Clone, Copy, Default)]
@@ -300,62 +301,186 @@ pub fn update_world_preview_texture(
     let tile_heights_ref = (!tile_heights_lut.is_empty()).then_some(&tile_heights_lut);
     let macro_r = macro_region_raster.as_ref().map(|r| &**r);
 
-    for (transform, tile_height, moisture, temperature, terrain, region_ix) in queries.tile_query.iter()
-    {
-        let x = transform.translation.x as usize;
-        let y = transform.translation.z as usize;
-
-        if x >= tex_w || y >= tex_h {
-            continue;
+    if queries.tile_query.is_empty() {
+        // Chunk-authoritative world gen: no TileMarker entities — paint dense cache or chunk matrices.
+        if let Some(cache) = queries.dense_cache.as_deref() {
+            let cw = cache.width as usize;
+            let ch = cache.height as usize;
+            for y in 0..ch {
+                for x in 0..cw {
+                    if x >= tex_w || y >= tex_h {
+                        continue;
+                    }
+                    let tx = x as u32;
+                    let ty = y as u32;
+                    if partial_ok && !tile_in_any_dirty_chunk(tx, ty, &dirty_set, &chunk_geom_map) {
+                        continue;
+                    }
+                    let pixel_index = 4 * (y * tex_w + x);
+                    if pixel_index + 3 >= data.len() {
+                        continue;
+                    }
+                    let i = y * cw + x;
+                    let color = layers.composite_rgba_for_tile(
+                        tx,
+                        ty,
+                        width,
+                        height,
+                        cache.elevation[i],
+                        cache.moisture[i],
+                        cache.temperature[i],
+                        cache.family[i],
+                        cache.region_index.get(i).copied().map(TileRegionIndex),
+                        &world_gen_params,
+                        macro_r,
+                        &elev_slices,
+                        &moist_slices,
+                        &temp_slices,
+                        &family_slices,
+                        &mat_slices,
+                        reg_opt,
+                        fam_opt,
+                        tag_reg_opt,
+                        &tag_slices,
+                        tile_heights_ref,
+                        &slope_slices,
+                        &chunk_geom,
+                        &queries.terrain_overlay,
+                        mob_reg_opt,
+                        world_gen_ui_state.mobility_profile_index,
+                        &ecology_slices,
+                    );
+                    data[pixel_index] = color[0];
+                    data[pixel_index + 1] = color[1];
+                    data[pixel_index + 2] = color[2];
+                    data[pixel_index + 3] = color[3];
+                }
+            }
+        } else {
+            for (chunk, matrix) in queries.chunk_cells.iter() {
+                let sx = matrix.size.x as usize;
+                let sy = matrix.size.y as usize;
+                if sx == 0 || sy == 0 {
+                    continue;
+                }
+                for y in 0..sy {
+                    for x in 0..sx {
+                        let wx = chunk.coord.x as isize * sx as isize + x as isize;
+                        let wy = chunk.coord.y as isize * sy as isize + y as isize;
+                        if wx < 0 || wy < 0 {
+                            continue;
+                        }
+                        let xu = wx as usize;
+                        let yu = wy as usize;
+                        if xu >= tex_w || yu >= tex_h {
+                            continue;
+                        }
+                        let tx = xu as u32;
+                        let ty = yu as u32;
+                        if partial_ok && !tile_in_any_dirty_chunk(tx, ty, &dirty_set, &chunk_geom_map) {
+                            continue;
+                        }
+                        let pixel_index = 4 * (yu * tex_w + xu);
+                        if pixel_index + 3 >= data.len() {
+                            continue;
+                        }
+                        let i = matrix.idx(x as u32, y as u32);
+                        let color = layers.composite_rgba_for_tile(
+                            tx,
+                            ty,
+                            width,
+                            height,
+                            matrix.elevation[i],
+                            matrix.moisture[i],
+                            matrix.temperature[i],
+                            matrix.family[i],
+                            None,
+                            &world_gen_params,
+                            macro_r,
+                            &elev_slices,
+                            &moist_slices,
+                            &temp_slices,
+                            &family_slices,
+                            &mat_slices,
+                            reg_opt,
+                            fam_opt,
+                            tag_reg_opt,
+                            &tag_slices,
+                            tile_heights_ref,
+                            &slope_slices,
+                            &chunk_geom,
+                            &queries.terrain_overlay,
+                            mob_reg_opt,
+                            world_gen_ui_state.mobility_profile_index,
+                            &ecology_slices,
+                        );
+                        data[pixel_index] = color[0];
+                        data[pixel_index + 1] = color[1];
+                        data[pixel_index + 2] = color[2];
+                        data[pixel_index + 3] = color[3];
+                    }
+                }
+            }
         }
+    } else {
+        for (transform, tile_height, moisture, temperature, terrain, region_ix) in
+            queries.tile_query.iter()
+        {
+            let x = transform.translation.x as usize;
+            let y = transform.translation.z as usize;
 
-        let tx = x as u32;
-        let ty = y as u32;
+            if x >= tex_w || y >= tex_h {
+                continue;
+            }
 
-        if partial_ok && !tile_in_any_dirty_chunk(tx, ty, &dirty_set, &chunk_geom_map) {
-            continue;
+            let tx = x as u32;
+            let ty = y as u32;
+
+            if partial_ok && !tile_in_any_dirty_chunk(tx, ty, &dirty_set, &chunk_geom_map) {
+                continue;
+            }
+
+            let pixel_index = 4 * (y * tex_w + x);
+
+            if pixel_index + 3 >= data.len() {
+                continue;
+            }
+
+            let color = layers.composite_rgba_for_tile(
+                tx,
+                ty,
+                width,
+                height,
+                tile_height.0,
+                moisture.0,
+                temperature.0,
+                terrain.0,
+                region_ix.copied(),
+                &world_gen_params,
+                macro_r,
+                &elev_slices,
+                &moist_slices,
+                &temp_slices,
+                &family_slices,
+                &mat_slices,
+                reg_opt,
+                fam_opt,
+                tag_reg_opt,
+                &tag_slices,
+                tile_heights_ref,
+                &slope_slices,
+                &chunk_geom,
+                &queries.terrain_overlay,
+                mob_reg_opt,
+                world_gen_ui_state.mobility_profile_index,
+                &ecology_slices,
+            );
+
+            data[pixel_index] = color[0];
+            data[pixel_index + 1] = color[1];
+            data[pixel_index + 2] = color[2];
+            data[pixel_index + 3] = color[3];
         }
-
-        let pixel_index = 4 * (y * tex_w + x);
-
-        if pixel_index + 3 >= data.len() {
-            continue;
-        }
-
-        let color = layers.composite_rgba_for_tile(
-            tx,
-            ty,
-            width,
-            height,
-            tile_height.0,
-            moisture.0,
-            temperature.0,
-            terrain.0,
-            region_ix.copied(),
-            &world_gen_params,
-            macro_r,
-            &elev_slices,
-            &moist_slices,
-            &temp_slices,
-            &family_slices,
-            &mat_slices,
-            reg_opt,
-            fam_opt,
-            tag_reg_opt,
-            &tag_slices,
-            tile_heights_ref,
-            &slope_slices,
-            &chunk_geom,
-            &queries.terrain_overlay,
-            mob_reg_opt,
-            world_gen_ui_state.mobility_profile_index,
-            &ecology_slices,
-        );
-
-        data[pixel_index] = color[0];
-        data[pixel_index + 1] = color[1];
-        data[pixel_index + 2] = color[2];
-        data[pixel_index + 3] = color[3];
     }
 
     runtime.scratch.initialized = true;

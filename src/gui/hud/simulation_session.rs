@@ -20,7 +20,7 @@ use crate::gui::hud::{
     HudDockRegistry, HudOverlayTrayState, HudPanelState, ProductShellUpdateBudget,
     ProductShellWidgetId, TransmissionMediaProviderRegistry, TransmissionShellState,
 };
-use crate::gui::{MinimapPresentationSource, MinimapShellState};
+use crate::gui::{MinimapFollowMode, MinimapPresentationSource, MinimapShellState};
 use crate::engine::launch_args::EngineLaunchArgs;
 use crate::engine::ActiveTestScene;
 use crate::gui::map_view::MapViewInstanceId;
@@ -112,6 +112,7 @@ pub fn apply_simulation_map_presentation_defaults(
     mut tray: ResMut<HudOverlayTrayState>,
     mut presentation: ResMut<crate::gui::MapViewPresentationStates>,
     mut shared_overlay: ResMut<SharedOverlayFieldBuffers>,
+    params: Res<crate::terrain::generation::world_generator_enhanced::WorldGenParams>,
     test_scene: Option<Res<ActiveTestScene>>,
     _scenario: Option<Res<crate::engine::ActivePlayScenario>>,
     primary_window: Query<&Window, With<PrimaryWindow>>,
@@ -127,6 +128,19 @@ pub fn apply_simulation_map_presentation_defaults(
     let mask = simulation_minimap_overlay_defaults();
     map_views.minimap.overlays = mask;
     map_views.minimap.bump_revision();
+    // GPU compositor bakes the full world — show the committed RT, not a Free-mode crop at world coords.
+    if minimap.presentation_source == MinimapPresentationSource::SharedRenderTargetImage {
+        map_views.minimap.follow_mode = MinimapFollowMode::FollowCamera;
+        if params.width > 0 && params.height > 0 {
+            let center = Vec2::new(params.width as f32 * 0.5, params.height as f32 * 0.5);
+            map_views.minimap.camera_center = center;
+            minimap.world_center = center;
+        }
+        map_views.minimap.zoom = 1.0;
+        map_views.minimap.zoom_target = 1.0;
+        minimap.zoom = 1.0;
+        minimap.zoom_target = 1.0;
+    }
     tray.set_minimap_overlay_mask(mask);
     let sim_pres = presentation.get_mut(MapViewInstanceId::SimulationMap);
     sim_pres.overlays.fire_heat = false;
@@ -185,6 +199,7 @@ fn seed_minimap_m3_fow_ew_on_simulation_enter(
 pub fn apply_simulation_play_visual_budget(
     launch: Option<Res<EngineLaunchArgs>>,
     test_scene: Option<Res<ActiveTestScene>>,
+    params: Res<WorldGenParams>,
     mut budgets: ResMut<VisualBudgetSettings>,
     mut cadence: ResMut<VisualCadence>,
     mut fire_cadence: ResMut<crate::render::FireExtractCadence>,
@@ -193,7 +208,12 @@ pub fn apply_simulation_play_visual_budget(
     *cadence = VisualCadence::from(&*budgets);
     *fire_cadence = crate::render::FireExtractCadence::from(&*budgets);
     let harness = launch.as_deref().is_some_and(|l| l.test_mode()) || test_scene.is_some();
-    crate::render::FireExtractCadence::clamp_for_runtime(&mut fire_cadence, harness);
+    crate::render::FireExtractCadence::clamp_for_world(
+        &mut fire_cadence,
+        params.width.max(1),
+        params.height.max(1),
+        harness,
+    );
 }
 
 /// Frame the whole world on normal sim enter (not CLI test scenes — those set tactical zoom).
@@ -237,7 +257,7 @@ pub fn refit_simulation_map_camera_on_enter(
     for mut t in cam.iter_mut() {
         t.translation = center;
         t.translation.z = 999.0;
-        t.scale = Vec3::splat(zoom);
+        t.scale = Vec3::ONE;
         t.rotation = Quat::IDENTITY;
     }
 }

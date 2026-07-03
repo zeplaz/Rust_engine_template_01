@@ -8,7 +8,9 @@ use bevy_egui::egui;
 
 use crate::gui::map_camera::sim_map_visible_world_span;
 use crate::gui::style::UiPalette;
+use crate::gui::view_authority::tactical_camera_world_pose;
 use crate::gui::{MapCameraDesired, SimulationMapViewport, ViewId, ViewManager};
+use crate::render::view_runtime::ViewProjectionAuthority;
 
 /// Map world-tile coordinates into minimap image space (after strict fit + UV crop).
 #[must_use]
@@ -38,16 +40,14 @@ pub fn world_tile_to_minimap_screen(
 /// minimap frame tracks pan/zoom when the measured sim-map viewport is valid.
 #[must_use]
 pub fn tactical_visible_world_rect(
+    authority: Option<&ViewProjectionAuthority>,
     manager: &ViewManager,
     desired: &MapCameraDesired,
     sim_viewport: &SimulationMapViewport,
     tex_w: f32,
     tex_h: f32,
 ) -> Option<Rect> {
-    let (cam, zoom) = manager
-        .view(ViewId::WorldMain)
-        .map(|v| (v.camera.translation, v.camera.zoom))
-        .unwrap_or_else(|| (desired.translation.truncate(), desired.scale.x));
+    let (cam, zoom) = tactical_camera_world_pose(authority, manager, desired);
 
     if sim_viewport.is_adequate_for_camera() {
         let zoom = zoom.max(1e-4);
@@ -109,6 +109,7 @@ pub fn tactical_viewport_screen_rect(
 pub fn paint_tactical_viewport_frame_on_minimap(
     painter: &egui::Painter,
     palette: &UiPalette,
+    authority: Option<&ViewProjectionAuthority>,
     manager: &ViewManager,
     desired: &MapCameraDesired,
     sim_viewport: &SimulationMapViewport,
@@ -117,7 +118,8 @@ pub fn paint_tactical_viewport_frame_on_minimap(
     image_rect: egui::Rect,
     sample_uv: egui::Rect,
 ) {
-    let Some(world_rect) = tactical_visible_world_rect(manager, desired, sim_viewport, tex_w, tex_h)
+    let Some(world_rect) =
+        tactical_visible_world_rect(authority, manager, desired, sim_viewport, tex_w, tex_h)
     else {
         return;
     };

@@ -123,12 +123,15 @@ impl std::fmt::Display for CameraProjectionInfo {
 
 #[inline]
 pub fn viewport_authority_debug_enabled() -> bool {
-    static ENV: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
-    *ENV.get_or_init(|| {
-        std::env::var_os("VISUAL_DIAG").is_some()
-            || std::env::var_os("VIEWPORT_DEBUG_OVERLAY").is_some()
-            || std::env::var_os("STAGE5_VERBOSE").is_some()
-    })
+    crate::dev::test_run_instrumentation::diagnostics_operator_trace_enabled(
+        false,
+        &[
+            "VISUAL_DIAG",
+            "VIEWPORT_DEBUG_OVERLAY",
+            "VIEWPORT_AUTHORITY_DEBUG",
+            "STAGE5_VERBOSE",
+        ],
+    )
 }
 
 #[inline]

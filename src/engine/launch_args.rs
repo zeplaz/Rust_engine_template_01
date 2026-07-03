@@ -158,6 +158,16 @@ impl EngineLaunchArgs {
             || matches!(self.test_scene, TestScene::Visual | TestScene::VfxSandbox)
     }
 
+    /// Tactical zoom on sim enter — proof capture / VfxSandbox only; interactive `--test demo` stays world-fit.
+    #[must_use]
+    pub fn sim_enter_uses_tactical_camera_zoom(&self) -> bool {
+        match self.test_scene {
+            TestScene::VfxSandbox => true,
+            TestScene::Visual => self.full_capture_active(),
+            _ => false,
+        }
+    }
+
     /// Disk analytics + stall spans + ECS inventory for `--test` harness runs.
     #[must_use]
     pub fn test_instrumentation_profile(&self) -> TestInstrumentationProfile {
@@ -173,12 +183,19 @@ impl EngineLaunchArgs {
                 | TestScene::VfxSandbox
         ) || self.full_capture_active();
         let flush_secs = if self.full_capture_active() { 2.0 } else { 5.0 };
+        let frame_jsonl_stride = match self.test_scene {
+            TestScene::Visual => 30,
+            TestScene::VfxSandbox => 10,
+            TestScene::Weather | TestScene::Fire | TestScene::Atmosphere => 15,
+            TestScene::None => 1,
+        };
         TestInstrumentationProfile {
             active: true,
             quiet_terminal: true,
             frame_jsonl,
             stall_spans: true,
             flush_secs,
+            frame_jsonl_stride,
         }
     }
 }
@@ -191,6 +208,7 @@ pub struct TestInstrumentationProfile {
     pub frame_jsonl: bool,
     pub stall_spans: bool,
     pub flush_secs: f32,
+    pub frame_jsonl_stride: u32,
 }
 
 impl Default for TestInstrumentationProfile {
@@ -201,6 +219,7 @@ impl Default for TestInstrumentationProfile {
             frame_jsonl: false,
             stall_spans: false,
             flush_secs: 5.0,
+            frame_jsonl_stride: 1,
         }
     }
 }
@@ -209,6 +228,17 @@ impl Default for TestInstrumentationProfile {
 mod tests {
     use super::*;
     use crate::engine::debug_maneuver::DebugManeuver;
+
+    #[test]
+    fn demo_open_uses_world_fit_camera_not_tactical_proof() {
+        let a = EngineLaunchArgs::from_cli(Some("demo".into()), false, None);
+        assert_eq!(a.maneuver, DebugManeuver::DemoOpen);
+        assert_eq!(a.test_scene, TestScene::Visual);
+        assert!(!a.full_capture_active());
+        assert!(!a.sim_enter_uses_tactical_camera_zoom());
+        let capture = EngineLaunchArgs::from_cli(Some("visual".into()), false, None);
+        assert!(capture.sim_enter_uses_tactical_camera_zoom());
+    }
 
     #[test]
     fn cli_visual_maps_full_capture() {

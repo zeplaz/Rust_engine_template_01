@@ -3,6 +3,7 @@
 
 use std::collections::HashMap;
 
+use bevy::diagnostic::FrameCount;
 use bevy::math::UVec2;
 use bevy::prelude::*;
 
@@ -260,6 +261,8 @@ fn tiles_per_chunk(chunks: &Query<(&Chunk, &ChunkCellMatrix)>) -> UVec2 {
 }
 
 pub fn refresh_lod_zone_registry(
+    frame: Res<FrameCount>,
+    mut last_refresh_frame: Local<u32>,
     chunks: Query<(&Chunk, &ChunkCellMatrix)>,
     settlements: Query<&SettlementSite>,
     objectives: Query<&ScenarioObjectiveMarker>,
@@ -267,6 +270,13 @@ pub fn refresh_lod_zone_registry(
     directory: Res<TransportEdgeDirectory>,
     mut registry: ResMut<LodZoneRegistry>,
 ) {
+    const REFRESH_INTERVAL_FRAMES: u32 = 30;
+    if *last_refresh_frame != 0
+        && frame.0.saturating_sub(*last_refresh_frame) < REFRESH_INTERVAL_FRAMES
+    {
+        return;
+    }
+    *last_refresh_frame = frame.0 as u32;
     let chunk_tiles = tiles_per_chunk(&chunks);
     let settlement_rows: Vec<SettlementSite> = settlements.iter().cloned().collect();
     let objective_rows: Vec<ScenarioObjectiveMarker> = objectives.iter().cloned().collect();

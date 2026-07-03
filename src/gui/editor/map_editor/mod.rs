@@ -1265,7 +1265,12 @@ fn map_editor_map_snapshot_io(
                 *ghost = RoadAuthoringGhostPreview::default();
 
                 let world_root = commands
-                    .spawn((WorldMarker, Name::new("Map snapshot world")))
+                    .spawn((
+                        WorldMarker,
+                        Transform::default(),
+                        GlobalTransform::default(),
+                        Name::new("Map snapshot world"),
+                    ))
                     .id();
 
                 let w = snap.width;

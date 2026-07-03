@@ -1,5 +1,6 @@
 //! Sim → render **extraction** passes (ephemeral buffers, messages, no gameplay ownership).
 
+mod fire_extract_scan;
 mod fire_emission_profile;
 mod frame_snapshot;
 mod fire_visual_extract;
@@ -27,6 +28,9 @@ pub use fire_visual_extract::{
     extract_fire_simulation_snapshot, sync_shared_overlay_from_simulation, FireAtmosphereAggregate,
     FireVisualFramePlugin, FireVisualFrameSet,
 };
+pub use fire_extract_scan::{
+    build_fire_extract_scan_set, expand_moore_rim_one, fire_extract_glow_domain,
+};
 pub use smoke_visual_extract::{build_smoke_visual_extract, SmokeVisualBridgeWitness};
 pub use crate::render::sim_visual_extract::FireVisualFrame;
 pub use procedural_build_extract::{
@@ -41,5 +45,6 @@ pub use render_projection_graph::{
     f2_tactical_fire_projection_fixture, fire_projection_stamp_aligned,
     projection_graph_build_signature, projection_graph_runtime_order_snapshot,
     run_render_projection_graph, spatial_distribution_stats, FireProjectionNode, ProjectionNodeTrait,
-    RenderProjectionContext, RenderProjectionGraph, CLUSTERED_FIRE_INSTANCE_CAP,
+    ProjectionGraphFrameCoherence, RenderProjectionContext, RenderProjectionGraph,
+    CLUSTERED_FIRE_INSTANCE_CAP,
 };

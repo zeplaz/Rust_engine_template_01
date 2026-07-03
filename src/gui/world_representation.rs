@@ -680,7 +680,27 @@ fn tiles_per_chunk(chunks: &Query<(&Chunk, &ChunkCellMatrix)>) -> UVec2 {
         .unwrap_or(UVec2::new(32, 32))
 }
 
-/// Bounding box (`min..=max`, inclusive chunk coords) of the currently loaded chunks.
+/// Cached chunk layout for [`compute_world_representation_frame`] dirty-gate (avoids full extent scan each tick).
+#[derive(Resource, Clone, Copy, Debug, Default)]
+pub struct WorldChunkLayoutCache {
+    pub extent: Option<(IVec2, IVec2)>,
+    pub chunk_count: usize,
+    pub tiles_per_chunk: UVec2,
+}
+
+pub fn sync_world_chunk_layout_cache(
+    chunks: Query<(&Chunk, &ChunkCellMatrix)>,
+    mut cache: ResMut<WorldChunkLayoutCache>,
+) {
+    let count = chunks.iter().len();
+    if count == cache.chunk_count && cache.extent.is_some() {
+        return;
+    }
+    cache.chunk_count = count;
+    cache.tiles_per_chunk = tiles_per_chunk(&chunks);
+    cache.extent = loaded_chunk_extent(&chunks);
+}
+
 /// `None` while no chunks exist (headless / pre-stream) → LOD sweep falls back to the radius box.
 #[inline]
 fn loaded_chunk_extent(chunks: &Query<(&Chunk, &ChunkCellMatrix)>) -> Option<(IVec2, IVec2)> {
@@ -790,7 +810,7 @@ pub fn compute_world_representation_frame(
     desired: Res<MapCameraDesired>,
     sim: Res<SimTick>,
     sim_time: Res<SimTimeMicros>,
-    chunks: Query<(&Chunk, &ChunkCellMatrix)>,
+    layout: Res<WorldChunkLayoutCache>,
     fire_sim: Res<FireSimulationSnapshot>,
     agents: Res<AgentFrame>,
     tactical: Res<TacticalLodBubbleRegistry>,
@@ -810,10 +830,10 @@ pub fn compute_world_representation_frame(
     let za = map_zoom_alpha(zoom);
 
     let stamp = SimStepStamp::from_tick(*sim, *sim_time);
-    let sz = tiles_per_chunk(&chunks);
+    let sz = layout.tiles_per_chunk;
     let cw = sz.x.max(1) as f32;
     let ch = sz.y.max(1) as f32;
-    let world_extent = loaded_chunk_extent(&chunks);
+    let world_extent = layout.extent;
     let interest_radius_chunks =
         interest_radius_chunks_from_zoom_alpha(quantize_zoom_alpha_for_interest(za));
     let focus_chunk = IVec2::new(
@@ -1008,7 +1028,8 @@ pub(crate) fn register_world_representation_frame(app: &mut App) {
             .after(crate::render::extraction::FireVisualFrameSet::BuildProfiles)
             .before(crate::render::extraction::FireVisualFrameSet::ProjectGpu),
     );
-    app.init_resource::<WorldLodPolicyEngine>()
+    app.init_resource::<WorldChunkLayoutCache>()
+        .init_resource::<WorldLodPolicyEngine>()
         .init_resource::<GlobalLodState>()
         .init_resource::<LodZoneRegistry>()
         .init_resource::<TacticalLodBubbleRegistry>()
@@ -1024,8 +1045,6 @@ pub(crate) fn register_world_representation_frame(app: &mut App) {
         .add_systems(
             Startup,
             (
-                crate::construction::procedural::init_procedural_module_registry,
-                crate::construction::procedural::init_style_pack_registry,
                 crate::construction::procedural::init_variant_catalog,
                 crate::render::extraction::load_procedural_module_scenes,
             )
@@ -1039,6 +1058,7 @@ pub(crate) fn register_world_representation_frame(app: &mut App) {
                 crate::render::stall_substage_repr_decay_lod,
                 refresh_lod_zone_registry,
                 crate::render::stall_substage_repr_refresh_lod,
+                sync_world_chunk_layout_cache,
                 crate::render::stall_checkpoint_before_world_repr,
                 sync_procedural_tile_primary_active,
                 compute_world_representation_frame,
@@ -1052,7 +1072,8 @@ pub(crate) fn register_world_representation_frame(app: &mut App) {
                 crate::render::stall_substage_repr_proc_extract,
                 crate::construction::spawn_procedural_build_on_site_operational
                     .after(crate::construction::advance_site_construction_tick_system)
-                    .after(crate::render::extraction::extract_procedural_build_assembly),
+                    .after(crate::render::extraction::extract_procedural_build_assembly)
+                    .after(crate::economy::ensure_site_world_transform_system),
                 crate::render::stall_checkpoint_post_world_repr,
             )
                 .chain()

@@ -167,6 +167,7 @@ pub use map_camera::{
     MapCameraPlugin, MapCameraSettings, MapCameraSystemSet,
     derive_map_camera_desired_from_view_authority, mirror_world_main_camera_from_map_desired,
     map_scale_for_zoom_alpha, map_zoom_alpha, map_zoom_alpha_with_limits,
+    on_world_main_pose_committed,
     sim_map_cursor_world_xy, sim_map_image_rect,
     sim_map_screen_to_world_xy, sim_map_visible_world_span, sim_map_world_vec3_to_egui,
     sim_map_world_xy_to_egui, TACTICAL_VFX_PROOF_ZOOM_ALPHA,

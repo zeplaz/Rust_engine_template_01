@@ -67,7 +67,8 @@ impl FrameBudgetBucket {
     pub const fn label(self) -> &'static str {
         match self {
             Self::HudShell => "HUD shell",
-            Self::MinimapRaster => "Minimap raster",
+            // Main overworld CPU tile raster (`tile_world_fallback_rasterize`), not the minimap widget.
+            Self::MinimapRaster => "Tile world raster",
             Self::OverlayComposition => "Overlay composition",
             Self::ParticleUpload => "Particle upload",
             Self::ResidencyUpdates => "Residency updates",

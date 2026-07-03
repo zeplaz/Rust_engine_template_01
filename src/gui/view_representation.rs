@@ -210,10 +210,10 @@ impl VisualBudgetSettings {
     #[must_use]
     pub const fn simulation_play() -> Self {
         Self {
-            preview_hz: 8.0,
+            preview_hz: 6.0,
             minimap_hz: 6.0,
-            atmosphere_hz: 15.0,
-            overlay_hz: 10.0,
+            atmosphere_hz: 12.0,
+            overlay_hz: 6.0,
         }
     }
 }

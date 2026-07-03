@@ -11,10 +11,15 @@
     "logging_env": {
       "ORCHESTRATOR_EXPORT_HEALTH": false,
       "PERF": false,
+      "PERF_DISK": false,
       "RUST_LOG": null,
+      "SIM_ANALYTICS": false,
+      "SIM_ANALYTICS_FRAMES": false,
+      "SIM_ANALYTICS_QUIET": false,
       "SIM_VIEW_SYNC_DEBUG": false,
       "STAGE5_READINESS_VERBOSE": false,
       "STAGE5_VERBOSE": false,
+      "STALL": false,
       "VIEWPORT_AUTHORITY_DEBUG": false
     },
     "orchestrator": {
@@ -42,6 +47,7 @@
       "debug_runs/wave_c_live.json",
       "debug_runs/ui_shell_migration_live.json",
       "debug_runs/minimap_compositor_live.json",
+      "debug_runs/sim_spectrum_analytics_live.json",
       "debug_runs/stage7_behavioral_live.json",
       "debug_runs/stage7_play_live.json",
       "debug_runs/wss_substrate_live.json",
@@ -52,11 +58,11 @@
     "relative_path": "debug_runs/ind_play_witness_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_ind_play_witness_live",
-    "written_at_epoch_secs": 1781715768
+    "written_at_epoch_secs": 1783027285
   },
   "gate": "CDR-B-IND-PLAY-WITNESS-001",
-  "green": true,
-  "ind_e02_in_play_green": true,
+  "green": false,
+  "ind_e02_in_play_green": false,
   "slice_id": "CDR-B-IND-PLAY-WITNESS-001",
   "source_witness": "debug_runs/play_scenario_live.json"
 }

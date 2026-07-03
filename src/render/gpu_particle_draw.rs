@@ -537,7 +537,7 @@ mod tests {
     }
 
     #[test]
-    fn zero_particle_cap_zeroes_draw_dispatch() {
+    fn zero_instances_zero_dispatch() {
         let mut app = App::new();
         app.init_resource::<WorldFireParticleDrawDispatch>();
         app.init_resource::<GpuRepresentationMetrics>();

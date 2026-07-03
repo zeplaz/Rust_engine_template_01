@@ -80,6 +80,15 @@ impl FireSimulationSnapshot {
     pub fn chunk_coords_with_active_heat(&self) -> HashSet<ChunkCoord> {
         chunk_coords_above_visual_eps(&self.instances, &self.chunk_heat)
     }
+
+    /// Drop sim rows for one chunk before bounded re-extract of that coord.
+    pub fn remove_chunk_rows(&mut self, coord: ChunkCoord) {
+        self.instances.retain(|row| {
+            let xy = row.chunk_grid_xy();
+            ChunkCoord::new(xy.x as i32, xy.y as i32) != coord
+        });
+        self.chunk_heat.retain(|h| h.chunk != coord);
+    }
 }
 
 /// Chunks with [`FireChunk::visual_active`] after the latest sim rollup.
@@ -146,7 +155,14 @@ pub fn fire_lod_band_for_visual_heat(heat: f32) -> FireLodBand {
     }
 }
 
-pub fn sync_active_fire_chunk_set(runtime: Res<FireChunkRuntime>, mut set: ResMut<ActiveFireChunkSet>) {
+pub fn sync_active_fire_chunk_set(
+    coherence: Option<Res<crate::render::FireExtractDiagnostics>>,
+    runtime: Res<FireChunkRuntime>,
+    mut set: ResMut<ActiveFireChunkSet>,
+) {
+    if coherence.as_deref().is_some_and(|d| d.snapshot_unchanged) {
+        return;
+    }
     set.chunks = runtime
         .chunks
         .iter()
@@ -155,7 +171,14 @@ pub fn sync_active_fire_chunk_set(runtime: Res<FireChunkRuntime>, mut set: ResMu
         .collect();
 }
 
-pub fn sync_fire_chunk_lod_from_snapshot(sim: Res<FireSimulationSnapshot>, mut lod: ResMut<FireChunkLodState>) {
+pub fn sync_fire_chunk_lod_from_snapshot(
+    sim: Res<FireSimulationSnapshot>,
+    coherence: Option<Res<crate::render::FireExtractDiagnostics>>,
+    mut lod: ResMut<FireChunkLodState>,
+) {
+    if coherence.as_deref().is_some_and(|d| d.snapshot_unchanged) {
+        return;
+    }
     *lod = fire_chunk_lod_state_from_simulation(sim.as_ref());
 }
 

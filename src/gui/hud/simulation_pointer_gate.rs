@@ -31,7 +31,11 @@ pub struct SimulationMapPointerGate {
     pub cursor: Vec2,
     pub window_logical: Vec2,
     pub chrome_blocks: bool,
+    /// Chrome rects only (left stack / minimap / tray) — not egui `wants_pointer_input`.
+    pub chrome_blocks_pre_egui: bool,
     pub in_play_area: bool,
+    /// Map hole minus chrome; stable for wheel even when egui captures pointer for text focus.
+    pub wheel_play_area: bool,
     /// Set after egui pass — floating HUD panels / menus over the map hole.
     pub egui_blocks: bool,
     /// Last frame OS cursor visibility (debug / witness).
@@ -61,11 +65,18 @@ pub fn sync_simulation_map_pointer_gate_system(
         minimap.as_ref(),
         context_tray.as_ref(),
     );
+    gate.chrome_blocks_pre_egui = gate.chrome_blocks;
     gate.in_play_area = if map_vp.is_adequate_for_camera() {
         (!map_vp.valid || map_vp.contains_cursor(cursor)) && !gate.chrome_blocks
     } else {
         false
     };
+    gate.wheel_play_area = map_wheel_play_area_allowed(
+        cursor,
+        window_logical,
+        map_vp.as_ref(),
+        gate.chrome_blocks_pre_egui,
+    );
     gate.egui_blocks = false;
     gate.os_cursor_visible = true;
 }
@@ -73,6 +84,7 @@ pub fn sync_simulation_map_pointer_gate_system(
 /// After egui HUD: block map picks / hide unified cursor when floating panels capture the pointer.
 pub fn finalize_simulation_map_pointer_gate_egui_system(
     mut gate: ResMut<SimulationMapPointerGate>,
+    map_vp: Res<SimulationMapViewport>,
     dock: Res<HudDockRegistry>,
     layout: Res<HudLayoutStore>,
     strip: Res<BuildStripState>,
@@ -82,13 +94,40 @@ pub fn finalize_simulation_map_pointer_gate_egui_system(
     let Ok(ctx) = contexts.ctx_mut() else {
         return;
     };
-    let egui_blocks = ctx.wants_pointer_input()
-        || cursor_over_visible_hud_widget(gate.cursor, &dock, &layout)
+    let over_floating_hud = cursor_over_visible_hud_widget(gate.cursor, &dock, &layout)
         || sim_build_rail_submenu_blocks_pointer(strip.as_ref(), tool.as_ref(), gate.cursor);
+    let egui_blocks = ctx.wants_pointer_input() || over_floating_hud;
     gate.egui_blocks = egui_blocks;
     if egui_blocks {
         gate.chrome_blocks = true;
         gate.in_play_area = false;
+    }
+    gate.wheel_play_area = map_wheel_play_area_allowed(
+        gate.cursor,
+        gate.window_logical,
+        map_vp.as_ref(),
+        gate.chrome_blocks_pre_egui,
+    ) && !over_floating_hud;
+}
+
+/// Whether the cursor is over the tactical map hole (excluding chrome), for wheel zoom routing.
+#[inline]
+pub fn map_wheel_play_area_allowed(
+    cursor: Vec2,
+    window_logical: Vec2,
+    map_vp: &SimulationMapViewport,
+    chrome_blocks: bool,
+) -> bool {
+    if chrome_blocks {
+        return false;
+    }
+    if map_vp.is_adequate_for_camera() {
+        !map_vp.valid || map_vp.contains_cursor(cursor)
+    } else {
+        cursor.x >= 0.0
+            && cursor.y >= 0.0
+            && cursor.x <= window_logical.x.max(1.0)
+            && cursor.y <= window_logical.y.max(1.0)
     }
 }
 

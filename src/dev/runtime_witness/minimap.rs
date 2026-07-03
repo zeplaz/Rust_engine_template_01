@@ -1,5 +1,6 @@
 //! Minimap compositor witness — `debug_runs/minimap_compositor_live.json` (DEV-CONTAIN-SLICE-1).
 
+use bevy::diagnostic::FrameCount;
 use bevy::prelude::*;
 
 use crate::gui::MinimapShellState;
@@ -50,6 +51,7 @@ pub fn commit_minimap_compositor_live_proof(
 }
 
 pub fn write_minimap_compositor_live_proof_system(
+    frame: Res<FrameCount>,
     mut state: ResMut<MinimapCompositorLiveProofState>,
     compositor: Res<MinimapCompositorState>,
     registry: Res<MinimapRenderTargetRegistry>,
@@ -60,6 +62,9 @@ pub fn write_minimap_compositor_live_proof_system(
     diagnostics: Res<MinimapGpuCompositorDiagnostics>,
 ) {
     if !minimap_gpu_compositor_env_enabled() {
+        return;
+    }
+    if !crate::dev::debug_run_envelope::witness_refresh_due(MINIMAP_COMPOSITOR_JSON, frame.0) {
         return;
     }
     state.frames_since_write = state.frames_since_write.saturating_add(1);

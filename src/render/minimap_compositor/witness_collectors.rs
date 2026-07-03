@@ -111,6 +111,9 @@ pub fn fixture_ui_oh_m2_001_compositor(tray: &crate::gui::hud::HudOverlayTraySta
         units_heat_enabled: true,
         unit_marker_rows: 6,
         replay_scrub_enabled: true,
+        veg_burn_rows: 1,
+        burn_overrides_topology: true,
+        veg_extract_revision: 1,
         composite_path: MinimapCompositePath::GpuCompute,
         ..Default::default()
     }
@@ -237,10 +240,12 @@ pub fn build_minimap_compositor_proof_payload(
         "veg_burn_rows": compositor.veg_burn_rows,
         "burn_overrides_topology": compositor.burn_overrides_topology,
         "veg_extract_revision": compositor.veg_extract_revision,
+        "terrain_source": compositor.terrain_source_label,
         "veg_minimap_burn_merge_green": compositor.veg_burn_rows >= 1
             && compositor.burn_overrides_topology,
         "ui_p3_m3_units_001_green": ui_p3_m3_units_001_green(compositor),
         "ui_p3_m3_replay_001_green": ui_p3_m3_replay_001_green(compositor),
+        "unit_markers_reader_green": crate::render::unit_markers_real_reader_witness_green(),
         "gpu_budget": diagnostics_json_snapshot(diagnostics),
         "ui_p3_001_green": ui_p3_001_minimap_acceptance_green(compositor, registry, shell),
         "ui_p3_m4_green": ui_p3_m4_minimap_acceptance_green(compositor),

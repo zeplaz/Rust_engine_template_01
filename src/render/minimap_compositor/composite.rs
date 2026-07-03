@@ -436,55 +436,68 @@ pub fn upload_minimap_heat_textures(
     let chunk_count = (fallback.last_w.max(1), fallback.last_h.max(1));
 
     let mut fire_buf = vec![0u8; (w * h * 4) as usize];
-    fill_heat_layer(&mut fire_buf, w, h, 0, |x, y| {
-        let cx = (x * chunk_count.0 / w.max(1)) as i32;
-        let cy = (y * chunk_count.1 / h.max(1)) as i32;
-        fire_heat_at_chunk(IVec2::new(cx, cy), overlay, map_views)
-    });
+    if map_views.minimap.overlays.fire_heat {
+        fill_heat_layer(&mut fire_buf, w, h, 0, |x, y| {
+            let cx = (x * chunk_count.0 / w.max(1)) as i32;
+            let cy = (y * chunk_count.1 / h.max(1)) as i32;
+            fire_heat_at_chunk(IVec2::new(cx, cy), overlay, map_views)
+        });
+    }
 
     let mut log_buf = vec![0u8; (w * h * 4) as usize];
-    fill_logistics_heat_from_snapshot(
-        &mut log_buf,
-        w,
-        h,
-        logistics,
-        map_views.minimap.overlays.logistics_heat,
-    );
-    let logistics_rows = logistics
-        .map(|l| l.active_overlay_rows)
-        .unwrap_or(0);
+    if map_views.minimap.overlays.logistics_heat {
+        fill_logistics_heat_from_snapshot(
+            &mut log_buf,
+            w,
+            h,
+            logistics,
+            true,
+        );
+    }
+    let logistics_rows = if map_views.minimap.overlays.logistics_heat {
+        logistics.map(|l| l.active_overlay_rows).unwrap_or(0)
+    } else {
+        0
+    };
 
     let mut construction_buf = vec![0u8; (w * h * 4) as usize];
-    let mut construction_rows = fill_construction_heat_from_book(
-        &mut construction_buf,
-        w,
-        h,
-        construction_book,
-        map_views.minimap.overlays.construction_heat,
-    );
-    if let Some(channel) = construction_channel {
-        if channel.active {
-            construction_rows = construction_rows.max(channel.instance_count);
+    let mut construction_rows = 0u32;
+    if map_views.minimap.overlays.construction_heat {
+        construction_rows = fill_construction_heat_from_book(
+            &mut construction_buf,
+            w,
+            h,
+            construction_book,
+            true,
+        );
+        if let Some(channel) = construction_channel {
+            if channel.active {
+                construction_rows = construction_rows.max(channel.instance_count);
+            }
         }
     }
 
     let mut ecology_buf = vec![0u8; (w * h * 4) as usize];
-    let ecology_rows = fill_ecology_heat_from_snapshot(
-        &mut ecology_buf,
-        w,
-        h,
-        ecology,
-        map_views.minimap.overlays.ecology_heat,
-        chunk_count,
-    );
-    let veg_merge = merge_veg_extract_burn_into_ecology_heat(
-        &mut ecology_buf,
-        w,
-        h,
-        veg_extract,
-        map_views.minimap.overlays.ecology_heat,
-        chunk_count,
-    );
+    let mut ecology_rows = 0u32;
+    let mut veg_merge = VegEcologyBurnMerge::default();
+    if map_views.minimap.overlays.ecology_heat {
+        ecology_rows = fill_ecology_heat_from_snapshot(
+            &mut ecology_buf,
+            w,
+            h,
+            ecology,
+            true,
+            chunk_count,
+        );
+        veg_merge = merge_veg_extract_burn_into_ecology_heat(
+            &mut ecology_buf,
+            w,
+            h,
+            veg_extract,
+            true,
+            chunk_count,
+        );
+    }
 
     if let Some(img) = images.get_mut(&heat.fire) {
         img.data = Some(fire_buf);

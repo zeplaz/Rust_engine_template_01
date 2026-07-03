@@ -128,8 +128,29 @@ impl FireExtractCadence {
     /// is sufficient for proof capture and operator play.
     pub fn clamp_for_runtime(cadence: &mut Self, harness: bool) {
         cadence.full_scan_on_sim_tick = false;
-        if harness {
-            cadence.min_interval_secs = cadence.min_interval_secs.max(0.25);
+        let floor = if harness { 2.0 } else { 0.5 };
+        cadence.min_interval_secs = cadence.min_interval_secs.max(floor);
+    }
+
+    /// Scale extract interval with world tile count (large worlds cannot afford 10 Hz overlay scans).
+    pub fn clamp_for_world(cadence: &mut Self, tex_w: u32, tex_h: u32, harness: bool) {
+        Self::clamp_for_runtime(cadence, harness);
+        let tiles = tex_w.saturating_mul(tex_h);
+        if tiles >= 48 * 48 {
+            cadence.min_interval_secs = cadence.min_interval_secs.max(if harness { 2.0 } else { 1.0 });
+        }
+        if tiles >= 256 * 256 {
+            cadence.min_interval_secs = cadence.min_interval_secs.max(if harness { 3.0 } else { 1.5 });
+        }
+    }
+
+    /// Wall-clock minimum between full ECS scans while UX spike guard is latched.
+    #[must_use]
+    pub fn effective_min_interval_secs(&self, spike_active: bool) -> f32 {
+        if spike_active {
+            self.min_interval_secs * 2.5
+        } else {
+            self.min_interval_secs
         }
     }
 }
@@ -138,8 +159,18 @@ impl FireExtractCadence {
 #[derive(Resource, Debug, Clone, Copy, Default)]
 pub struct FireExtractClock {
     pub last_full_extract_secs: f32,
+    pub last_full_reconcile_sim_secs: f64,
     pub last_tick: u64,
     pub last_input_fingerprint: FireExtractInputFingerprint,
+    pub last_index_revision: u64,
+    pub last_overlay_revision: u64,
+    pub empty_residency_warned: bool,
+}
+
+/// Phase 6 sim-event dirty coords — MVP ships empty; populated when fire sim hooks land.
+#[derive(Resource, Debug, Clone, Default)]
+pub struct FireExtractDirtyQueue {
+    pub coords: Vec<bevy::math::IVec2>,
 }
 
 /// Cheap digest of sim fire inputs — skip full ECS scan when cadence due but state unchanged.
@@ -155,6 +186,8 @@ pub struct FireExtractInputFingerprint {
 #[derive(Resource, Debug, Clone, Default)]
 pub struct FireExtractDiagnostics {
     pub last: FireExtractFrameReport,
+    /// True when extract skipped this frame (cadence or fingerprint) — downstream may no-op.
+    pub snapshot_unchanged: bool,
 }
 
 #[derive(Debug, Clone, Default)]
@@ -166,6 +199,11 @@ pub struct FireExtractFrameReport {
     pub tick_changed: bool,
     pub interval_elapsed: bool,
     pub residency_scoped: bool,
+    pub bounded_path: bool,
+    pub full_reconcile: bool,
+    pub scan_set_len: u32,
+    pub index_len: u32,
+    pub residency_len: u32,
     pub extract_ms: f32,
     pub chunks_iterated: u32,
     pub chunks_fast_path: u32,
@@ -175,6 +213,8 @@ pub struct FireExtractFrameReport {
     pub runtime_chunks: u32,
     pub min_interval_secs: f32,
     pub fingerprint_skipped: bool,
+    pub overlay_dirty: bool,
+    pub residency_dirty: bool,
 }
 
 #[inline]
@@ -197,6 +237,16 @@ fn debug_raster_chunks_override() -> Option<usize> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn fire_extract_frame_report_bounded_fields_default_false() {
+        let r = FireExtractFrameReport::default();
+        assert!(!r.bounded_path);
+        assert!(!r.full_reconcile);
+        assert_eq!(r.scan_set_len, 0);
+        assert_eq!(r.index_len, 0);
+        assert_eq!(r.residency_len, 0);
+    }
 
     #[test]
     fn fire_extract_fingerprint_ignores_tick_advance() {
@@ -299,9 +349,32 @@ mod tests {
         };
         FireExtractCadence::clamp_for_runtime(&mut cadence, false);
         assert!(!cadence.full_scan_on_sim_tick);
-        assert!((cadence.min_interval_secs - 0.1).abs() < f32::EPSILON);
+        assert!((cadence.min_interval_secs - 0.5).abs() < f32::EPSILON);
 
         FireExtractCadence::clamp_for_runtime(&mut cadence, true);
-        assert!((cadence.min_interval_secs - 0.25).abs() < f32::EPSILON);
+        assert!((cadence.min_interval_secs - 2.0).abs() < f32::EPSILON);
+    }
+
+    #[test]
+    fn fire_extract_clamp_for_world_scales_320_world() {
+        let mut cadence = FireExtractCadence::from(&VisualBudgetSettings::simulation_play());
+        FireExtractCadence::clamp_for_world(&mut cadence, 320, 320, false);
+        assert!(!cadence.full_scan_on_sim_tick);
+        assert!(cadence.min_interval_secs >= 1.5);
+
+        let mut harness = FireExtractCadence::from(&VisualBudgetSettings::simulation_play());
+        FireExtractCadence::clamp_for_world(&mut harness, 320, 320, true);
+        assert!(harness.min_interval_secs >= 3.0);
+    }
+
+    #[test]
+    fn fire_extract_spike_doubles_effective_interval() {
+        let cadence = FireExtractCadence {
+            min_interval_secs: 1.0,
+            full_scan_on_sim_tick: false,
+            residency_scoped: true,
+        };
+        assert!((cadence.effective_min_interval_secs(false) - 1.0).abs() < f32::EPSILON);
+        assert!(cadence.effective_min_interval_secs(true) >= 2.5);
     }
 }

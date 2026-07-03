@@ -283,10 +283,72 @@ impl ProjectionNodeTrait for RenderProjectionGraph {
     }
 }
 
+/// Set by [`run_render_projection_graph`] when evaluate is skipped (stamp-only advance).
+#[derive(Resource, Debug, Clone, Copy, Default)]
+pub struct ProjectionGraphFrameCoherence {
+    pub evaluate_skipped: bool,
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub struct ProjectionGraphInputFingerprint {
+    policy_tick: u64,
+    lod_tick: u64,
+    fire_instances: usize,
+    fire_heat_cells: usize,
+    logistics_rows: u32,
+    ecology_rows: u32,
+    lod_map_cells: usize,
+}
+
+impl ProjectionGraphInputFingerprint {
+    #[must_use]
+    fn from_ctx(ctx: &RenderProjectionContext<'_>) -> Self {
+        Self {
+            policy_tick: ctx.policy.stamp.tick,
+            lod_tick: ctx.lod.sim_step_stamp.tick,
+            fire_instances: ctx.fire.instances.len(),
+            fire_heat_cells: ctx.fire.chunk_heat.len(),
+            logistics_rows: ctx.logistics.edge_rows.len() as u32,
+            ecology_rows: ctx.ecology.chunk_rows.len() as u32,
+            lod_map_cells: ctx.lod_map.cells.len(),
+        }
+    }
+
+    #[must_use]
+    fn same_except_ticks(self, other: Self) -> bool {
+        Self {
+            policy_tick: other.policy_tick,
+            lod_tick: other.lod_tick,
+            ..self
+        } == other
+    }
+}
+
+/// Stamp-only advance when graph evaluate is skipped — keeps VT-4 particle projection aligned with fence.
+fn overlay_projection_idle(policy: &crate::gui::RepresentationResult, fire: &crate::render::FireVisualFrame) -> bool {
+    let m = &policy.overlay_matrix;
+    !m.fire_heat
+        && !m.logistics
+        && !m.ecology
+        && !m.construction_phase
+        && fire.instances.is_empty()
+        && fire.chunk_heat.is_empty()
+}
+
+/// Stamp-only advance when graph evaluate is skipped — keeps VT-4 particle projection aligned with fence.
+fn advance_projection_graph_snapshot_stamps(
+    graph: &mut RenderProjectionGraph,
+    committed: SimStepStamp,
+) {
+    let tick = committed.tick;
+    graph.fire.snapshot_stamp = tick;
+    graph.logistics.snapshot_stamp = tick;
+    graph.ecology.snapshot_stamp = tick;
+}
+
 /// Single-line snapshot for live readiness: confirms **fire → logistics → ecology** slots
 /// on the resource after `run_render_projection_graph` (same evaluate order as the graph).
 #[must_use]
-/// Stable counts for log dedup (excludes monotonic snapshot ticks that change every frame).
 pub fn projection_graph_build_signature(graph: &RenderProjectionGraph) -> String {
     format!(
         "order=fire+logistics+ecology fire_inst={} fire_heat={} log_rows={} eco_rows={}",
@@ -375,9 +437,12 @@ pub fn run_render_projection_graph(
     fence: Res<crate::render::CommittedVisualSnapshotFence>,
     profile: Res<Stage5ReadinessProfile>,
     mut graph: ResMut<RenderProjectionGraph>,
+    mut coherence: ResMut<ProjectionGraphFrameCoherence>,
     mut perf: Option<ResMut<crate::render::FramePerf>>,
+    mut last_fingerprint: Local<Option<ProjectionGraphInputFingerprint>>,
     mut last_build_log: Local<Option<String>>,
 ) {
+    coherence.evaluate_skipped = false;
     let per_view = per_view_policy.as_ref();
     let fire = fire_frame_for_projection_graph(
         fire_by_view.as_ref(),
@@ -385,6 +450,11 @@ pub fn run_render_projection_graph(
         per_view,
         policy.as_ref(),
     );
+    if overlay_projection_idle(policy.as_ref(), &fire) {
+        advance_projection_graph_snapshot_stamps(&mut graph, fence.fire);
+        coherence.evaluate_skipped = true;
+        return;
+    }
     let ctx = RenderProjectionContext {
         policy: &policy,
         lod: &lod,
@@ -394,6 +464,21 @@ pub fn run_render_projection_graph(
         ecology: &ecology,
         committed_stamp: fence.fire,
     };
+    let fingerprint = ProjectionGraphInputFingerprint::from_ctx(&ctx);
+    if let Some(prev) = *last_fingerprint {
+        if prev == fingerprint {
+            advance_projection_graph_snapshot_stamps(&mut graph, fence.fire);
+            coherence.evaluate_skipped = true;
+            return;
+        }
+        if prev.same_except_ticks(fingerprint) {
+            *last_fingerprint = Some(fingerprint);
+            advance_projection_graph_snapshot_stamps(&mut graph, fence.fire);
+            coherence.evaluate_skipped = true;
+            return;
+        }
+    }
+    *last_fingerprint = Some(fingerprint);
     let t0 = std::time::Instant::now();
     graph.evaluate(&ctx);
     if let Some(perf) = perf.as_mut() {
@@ -759,5 +844,17 @@ mod tests {
             6,
             "ecology rows are capped by the same GPU budget ceiling as fire projection"
         );
+    }
+
+    #[test]
+    fn advance_snapshot_stamps_on_evaluate_skip_matches_fence_tick() {
+        let mut graph = RenderProjectionGraph::default();
+        graph.fire.snapshot_stamp = 37;
+        graph.logistics.snapshot_stamp = 37;
+        graph.ecology.snapshot_stamp = 37;
+        advance_projection_graph_snapshot_stamps(&mut graph, SimStepStamp::new(44, 9_000));
+        assert_eq!(graph.fire.snapshot_stamp, 44);
+        assert_eq!(graph.logistics.snapshot_stamp, 44);
+        assert_eq!(graph.ecology.snapshot_stamp, 44);
     }
 }

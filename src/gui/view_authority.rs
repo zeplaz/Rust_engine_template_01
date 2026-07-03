@@ -22,7 +22,7 @@ use std::collections::HashMap;
 use bevy::math::{Rect, Vec2};
 use bevy::prelude::*;
 
-use crate::gui::map_camera::{MainWorldCamera, MapCameraDesired, MapCameraSystemSet};
+use crate::gui::map_camera::{MainWorldCamera, MapCameraDesired, MapCameraSystemSet, MAIN_WORLD_CAMERA_Z};
 use crate::gui::map_view::{MapViewInstances, MapViewPresentationStates};
 use crate::gui::{MapViewState, MinimapFollowMode};
 use crate::gui::MinimapOverlayMask;
@@ -187,6 +187,30 @@ impl ViewManager {
     }
 }
 
+/// WorldMain camera center + zoom (authority-only; [`ViewManager`] / [`MapCameraDesired`] are read mirrors).
+#[inline]
+#[must_use]
+pub fn tactical_camera_world_pose(
+    authority: Option<&crate::render::view_runtime::ViewProjectionAuthority>,
+    manager: &ViewManager,
+    desired: &MapCameraDesired,
+) -> (Vec2, f32) {
+    use crate::render::view_runtime::ViewSurfaceId;
+
+    if let Some(auth) = authority {
+        if let Some(surface) = auth.surface(ViewSurfaceId::WorldMain) {
+            return (
+                surface.camera.translation,
+                surface.camera.zoom.max(1e-4),
+            );
+        }
+    }
+    if let Some(view) = manager.view(ViewId::WorldMain) {
+        return (view.camera.translation, view.camera.zoom.max(1e-4));
+    }
+    (desired.translation.truncate(), desired.scale.x.max(1e-4))
+}
+
 /// Build [`MapCameraDesired`] from authoritative WorldMain pose (**TRIAGE-VM-09-v2** derive shim).
 #[inline]
 #[must_use]
@@ -202,7 +226,7 @@ pub fn map_camera_desired_from_view_authority(
         return MapCameraDesired::default();
     };
     MapCameraDesired {
-        translation: Vec3::new(cam.translation.x, cam.translation.y, 999.0),
+        translation: Vec3::new(cam.translation.x, cam.translation.y, MAIN_WORLD_CAMERA_Z),
         scale: Vec3::splat(cam.zoom.max(1e-4)),
         rotation: Quat::from_rotation_z(cam.rotation),
     }
@@ -398,7 +422,7 @@ impl Plugin for ViewAuthorityPlugin {
                         .before(ViewAuthoritySystemSet::SyncViewManager),
                     ViewAuthoritySystemSet::SyncViewManager
                         .after(ViewportPipelineSet::Resolve)
-                        .after(MapCameraSystemSet::ApplyInput),
+                        .after(MapCameraSystemSet::DeriveDesired),
                 ),
             )
             .add_systems(
@@ -499,10 +523,10 @@ fn sync_view_isolation_diagnostics(
     mut out: ResMut<ViewIsolationDiagnostics>,
     manager: Res<ViewManager>,
     map_views: Res<MapViewInstances>,
+    authority: Res<crate::render::view_runtime::ViewProjectionAuthority>,
     desired: Res<MapCameraDesired>,
 ) {
-    let main_t = desired.translation.truncate();
-    let main_z = desired.scale.x;
+    let (main_t, main_z) = tactical_camera_world_pose(Some(authority.as_ref()), manager.as_ref(), desired.as_ref());
     out.minimap_main_lockstep_suspect =
         minimap_main_lockstep_suspect(&map_views.minimap, main_t, main_z);
     out.preview_main_lockstep_suspect =

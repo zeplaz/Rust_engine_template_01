@@ -6,6 +6,8 @@ Single map of **planning → proof → implementation** for this repo. Use with 
 
 **Live status (2026-06-18):** [`status_overview_20260613_v1.md`](status_overview_20260613_v1.md) · **Sim HUD Phase 2:** [`plan_sim_hud_professional_polish_v1.md`](plan_sim_hud_professional_polish_v1.md) · [`design_sim_hud_reflection_audit_v1.md`](design_sim_hud_reflection_audit_v1.md) · [`designer_sim_hud_prompt_v1.md`](designer_sim_hud_prompt_v1.md) · **Designer backlog:** [`plan_designer_work_202606_v1.md`](plan_designer_work_202606_v1.md) · **Industrial facility grammar:** [`plan_industrial_facility_grammar_suite_v1.md`](plan_industrial_facility_grammar_suite_v1.md) · **APS design system:** [`aps_design_system_v1.md`](aps_design_system_v1.md)
 
+**GPU terrain / sim perf (ACTIVE — 2026-07-02):** [`plan_gpu_terrain_production_exec_001_v1.md`](plan_gpu_terrain_production_exec_001_v1.md) — **PERF-GPU-TERRAIN-001..004** · retire CPU `tile_world_fallback` default · strip dead render passes · **no partial sign-off** · parent [`plan_visual_perf_production_exec_001_v1.md`](plan_visual_perf_production_exec_001_v1.md)
+
 ---
 
 ## Designer art MCP + Blender (2026-06-02)

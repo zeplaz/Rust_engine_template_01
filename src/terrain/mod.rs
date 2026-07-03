@@ -16,6 +16,7 @@ pub mod mobility;
 pub mod fire;
 pub mod dynamic_overlay;
 pub mod editor;
+pub mod world_map_scale;
 
 // Public exports
 pub use locational::*;
@@ -29,6 +30,10 @@ pub use ecology::*;
 pub use tiles::*;
 pub use voronoi::*;
 pub use world::*;
+pub use world_map_scale::{
+    derive_land_features, LandFeatureRhythm, TerrainFieldStorage, TileExtentPreset,
+    WorldMapScale,
+};
 pub use dynamic_overlay::{
     apply_chunk_weather_to_dynamic_overlay, decay_dynamic_terrain_overlay,
     overlay_mud_at, stub_accumulate_overlay_from_chunk_fields, ChunkCellKey, DynamicTerrainOverlay,

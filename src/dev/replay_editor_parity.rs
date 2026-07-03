@@ -2,6 +2,7 @@
 
 use std::path::Path;
 
+use bevy::diagnostic::FrameCount;
 use bevy::prelude::*;
 use serde::Serialize;
 
@@ -46,14 +47,16 @@ pub fn refresh_replay_editor_parity_witness_system(
 }
 
 pub fn write_replay_editor_parity_live_proof_system(
+    frame: Res<FrameCount>,
     base: Res<State<BaseState>>,
     witness: Res<ReplayEditorParityWitness>,
     mut wrote: Local<bool>,
 ) {
+    const PROOF_PATH: &str = "debug_runs/replay_editor_parity_live.json";
     if !matches!(base.get(), BaseState::Simulation) {
         return;
     }
-    if *wrote && witness.replay_ring_len < 2 {
+    if !crate::dev::debug_run_envelope::witness_refresh_due(PROOF_PATH, frame.0) {
         return;
     }
     if witness.replay_ring_len < 2 {
@@ -67,7 +70,6 @@ pub fn write_replay_editor_parity_live_proof_system(
         "editor_scenario_panel": witness.editor_scenario_panel,
         "infrastructure_isolation_json": witness.infrastructure_isolation_json,
     });
-    const PROOF_PATH: &str = "debug_runs/replay_editor_parity_live.json";
     let wrapped = crate::dev::debug_run_envelope::wrap_debug_run(
         "REPLAY_EDITOR_PARITY",
         "replay_editor_parity",

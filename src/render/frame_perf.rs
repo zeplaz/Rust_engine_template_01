@@ -48,12 +48,20 @@ impl FrameWallClock {
         }
     }
 
-    fn finalize_phases(&mut self, wall_ms: f32) {
+    #[must_use]
+    pub fn stamped_wall_ms(&self) -> f32 {
+        Self::ms_between(self.frame_start, self.last)
+    }
+
+    fn finalize_phases(&mut self, wall_ms: f32, instrumented_ms: f32) {
         self.cpu_pre_egui_ms = Self::ms_between(self.frame_start, self.pre_egui);
         self.cpu_egui_ms = Self::ms_between(self.pre_egui, self.post_egui);
         self.cpu_post_egui_ms = Self::ms_between(self.post_egui, self.last);
-        let cpu = self.cpu_pre_egui_ms + self.cpu_egui_ms + self.cpu_post_egui_ms;
-        self.gpu_gap_ms = (wall_ms - cpu).max(0.0);
+        let stamped_wall_ms = self.stamped_wall_ms();
+        // Bevy `Time::delta` caps near 250ms; instant stamps can exceed shell delta when
+        // present/GPU blocks the main thread inside the pre-egui bracket.
+        let effective_wall_ms = wall_ms.max(stamped_wall_ms);
+        self.gpu_gap_ms = (effective_wall_ms - instrumented_ms).max(0.0);
     }
 }
 
@@ -576,6 +584,7 @@ pub fn emit_frame_perf_summary(
     mut wall: ResMut<FrameWallClock>,
     update_attrib: Option<Res<FrameUpdateAttrib>>,
     stall: Option<Res<crate::render::FrameStallWatch>>,
+    render_schedule: Option<Res<crate::render::RenderScheduleWitness>>,
     shell: Option<Res<crate::gui::hud::ProductShellDiagnostics>>,
     budget: Option<Res<crate::gui::hud::FrameBudgetDiagnostics>>,
     raster_policy: Option<Res<crate::render::TileFallbackRasterPolicy>>,
@@ -586,21 +595,25 @@ pub fn emit_frame_perf_summary(
         .map(|d| d.last_frame_delta_secs.max(0.0) * 1000.0)
         .unwrap_or(0.0);
     let stamped_wall_ms = FrameWallClock::ms_between(wall.frame_start, wall.last);
-    let wall_ms = if stamped_wall_ms > 0.05 {
+    // Stamped wall ends at Last (before render/present). Prefer shell delta when GPU-bound.
+    let wall_ms = if shell_wall_ms > stamped_wall_ms + 8.0 {
+        shell_wall_ms
+    } else if stamped_wall_ms > 0.05 {
         stamped_wall_ms
     } else {
         shell_wall_ms
     };
-    wall.finalize_phases(wall_ms);
+    let effective_wall_ms = wall_ms.max(stamped_wall_ms);
 
     let attrib_snap = update_attrib
         .as_deref()
         .cloned()
         .unwrap_or_default();
     let instrumented = perf.instrumented_ms();
+    wall.finalize_phases(wall_ms, instrumented);
     let attrib_sum = attrib_snap.attrib_sum_ms();
     let budget_sum = budget.as_deref().map(budget_accounted_ms).unwrap_or(0.0);
-    let gap_ms = (wall_ms - instrumented).max(0.0);
+    let gap_ms = (effective_wall_ms - instrumented).max(0.0);
 
     if !frame_perf_verbose()
         && wall_ms < PERF_SLOW_MS
@@ -735,6 +748,25 @@ pub fn emit_frame_perf_summary(
         }
     }
 
+    if let Some(rs) = render_schedule.as_deref() {
+        let r = &rs.spans;
+        if r.total_render_app_ms > 0.05 || rs.main_thread_handoff_total_ms > 0.05 {
+            line.push_str(&format!(
+                " | render_thread total={:.2} extract={:.2} prepare={:.2} queue={:.2} draw+present={:.2} cleanup={:.2} handoff={:.2}",
+                r.total_render_app_ms,
+                r.extract_schedule_ms + r.extract_commands_ms,
+                r.prepare_assets_ms
+                    + r.prepare_meshes_ms
+                    + r.manage_views_ms
+                    + r.prepare_ms,
+                r.queue_ms + r.phase_sort_ms,
+                r.render_and_present_ms,
+                r.cleanup_ms + r.post_cleanup_ms,
+                rs.main_thread_handoff_total_ms,
+            ));
+        }
+    }
+
     info!(target: "perf", "{line}");
 
     const UX_SPIKE_MS: f32 = 250.0;
@@ -824,6 +856,24 @@ mod tests {
     use super::*;
 
     #[test]
+    fn finalize_phases_attributes_gpu_when_delta_capped() {
+        let t0 = Instant::now();
+        let mut wall = FrameWallClock {
+            frame_start: Some(t0),
+            pre_egui: Some(t0 + std::time::Duration::from_millis(220)),
+            post_egui: Some(t0 + std::time::Duration::from_millis(222)),
+            last: Some(t0 + std::time::Duration::from_millis(224)),
+            ..Default::default()
+        };
+        wall.finalize_phases(250.0, 1.5);
+        assert!(
+            wall.gpu_gap_ms > 200.0,
+            "expected GPU/present wait, got gpu_gap_ms={}",
+            wall.gpu_gap_ms
+        );
+    }
+
+    #[test]
     fn update_attrib_sum_aggregates_buckets() {
         let a = FrameUpdateAttrib {
             preview_cpu_raster_ms: 1.0,
@@ -857,7 +907,9 @@ impl Plugin for FramePerfPlugin {
             .add_systems(
                 PostUpdate,
                 (
-                    stamp_frame_wall_pre_egui.before(EguiPostUpdateSet::EndPass),
+                    stamp_frame_wall_pre_egui
+                        .after(crate::render::stall_pre_egui)
+                        .before(EguiPostUpdateSet::EndPass),
                     stamp_frame_wall_post_egui.after(EguiPostUpdateSet::PostProcessOutput),
                 ),
             )

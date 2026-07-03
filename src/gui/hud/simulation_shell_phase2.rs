@@ -822,7 +822,7 @@ impl Plugin for SimulationShellPhase2Plugin {
                     super::minimap_bevy_interaction::minimap_bevy_active_input_system
                         .before(crate::gui::map_camera::MapCameraSystemSet::ApplyInput),
                     super::minimap_bevy_interaction::minimap_bevy_scroll_zoom_system
-                        .before(crate::gui::map_camera::MapCameraSystemSet::ApplyInput),
+                        .after(crate::gui::map_camera::MapCameraSystemSet::ApplyInput),
                     super::minimap_bevy_interaction::pin_minimap_centered_fit_system,
                     prime_phase2a_ops_zones_witness_when_strip_live,
                     ops_strip_zone_click_system,
@@ -1580,20 +1580,30 @@ fn sync_minimap_gpu_image_node_system(
         .last_body_rect
         .map(|r| Vec2::new(r.width().max(1.0), r.height().max(1.0)))
         .unwrap_or(mm.viewport_size);
+    let tex_extent = crate::gui::map_view::minimap_bevy_display_texel_extent(
+        &shell,
+        &registry,
+        compositor.stamp,
+        &params,
+    );
+    let tex_w = tex_extent.x;
+    let tex_h = tex_extent.y;
     let crop = if using_gpu_rt
         && crate::gui::map_presentation_fit::minimap_gpu_presentation_uses_crop(mm.follow_mode)
     {
-        crate::gui::map_presentation_fit::minimap_gpu_texture_pixel_rect(
+        crate::gui::map_presentation_fit::minimap_gpu_texture_pixel_rect_from_world(
             mm.camera_center,
             mm.zoom,
             params.width.max(1),
             params.height.max(1),
+            tex_w,
+            tex_h,
             panel,
         )
     } else {
         bevy::math::Rect {
             min: Vec2::ZERO,
-            max: Vec2::new(params.width.max(1) as f32, params.height.max(1) as f32),
+            max: Vec2::new(tex_w as f32, tex_h as f32),
         }
     };
     *image = bevy::ui::widget::ImageNode {

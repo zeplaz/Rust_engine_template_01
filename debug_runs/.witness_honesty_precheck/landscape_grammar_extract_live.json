@@ -58,7 +58,7 @@
     "relative_path": "debug_runs/landscape_grammar_extract_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_landscape_extract_sprite_witness",
-    "written_at_epoch_secs": 1782013731
+    "written_at_epoch_secs": 1783028015
   },
   "burn_active_rows": 0,
   "extract_glyph_deterministic": true,
