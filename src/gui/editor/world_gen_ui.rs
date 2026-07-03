@@ -22,6 +22,7 @@ use crate::terrain::generation::world_generator_enhanced::{
     RegionMethod, TerrainNoiseProfile, WorldGenParams, WorldGenPhase, WorldGenProgress, WorldMarker,
     WORLD_GEN_TUNING_JSON_PATH, WORLD_GEN_TUNING_RON_PATH,
 };
+use crate::terrain::world_map_scale::TileExtentPreset;
 use crate::terrain::generation::WorldGenLastDebugReport;
 
 // Re-export for `tilemap_adapter` and other call sites.
@@ -325,8 +326,53 @@ pub(crate) fn draw_world_gen_panel(
                             ui,
                             pal,
                             format!(
-                                "Preview pass uses a downscaled grid (max {} per side) for speed; full generation uses these sliders up to {}×{} tiles. Use World Preview zoom to inspect.",
-                                PREVIEW_WORLD_MAX_AXIS, MAX_WORLD_GEN_AXIS, MAX_WORLD_GEN_AXIS
+                                "Symbolic extent @ {:.0} m/tile: {} ({:.0} km²). Preview pass max {} per side; full gen up to {}×{} tiles.",
+                                cx.world_gen_params.map_scale.meters_per_tile,
+                                cx.world_gen_params.map_scale.extent_label(
+                                    cx.world_gen_params.width,
+                                    cx.world_gen_params.height,
+                                ),
+                                cx.world_gen_params.area_km2(),
+                                PREVIEW_WORLD_MAX_AXIS,
+                                MAX_WORLD_GEN_AXIS,
+                                MAX_WORLD_GEN_AXIS,
+                            ),
+                        );
+
+                        ui.horizontal(|ui| {
+                            if ui
+                                .button("Medium-small (320²)")
+                                .on_hover_text("~32 km square @ 100 m/tile — visual harness default")
+                                .clicked()
+                            {
+                                cx.world_gen_params
+                                    .apply_tile_extent_preset(TileExtentPreset::MediumSmall);
+                            }
+                            if ui
+                                .button("Standard (512²)")
+                                .on_hover_text("~51 km square @ 100 m/tile — editor default")
+                                .clicked()
+                            {
+                                cx.world_gen_params
+                                    .apply_tile_extent_preset(TileExtentPreset::Standard);
+                            }
+                            if ui
+                                .button("Sync land features")
+                                .on_hover_text(
+                                    "Recompute regions, relief noise, rivers, lakes from symbolic km rhythm",
+                                )
+                                .clicked()
+                            {
+                                cx.world_gen_params.recompute_symbolic_land_features();
+                            }
+                        });
+
+                        muted_label(
+                            ui,
+                            pal,
+                            format!(
+                                "Preview pass uses a downscaled grid (max {} per side) for speed; use World Preview zoom to inspect.",
+                                PREVIEW_WORLD_MAX_AXIS
                             ),
                         );
 

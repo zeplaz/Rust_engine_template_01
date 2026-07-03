@@ -24,6 +24,8 @@ use crate::systems::fire::{ChunkFuelProfile, ChunkSurfaceFire, FireLightEmission
 use crate::systems::terrain::materialize_chunks;
 use crate::systems::weather::{ChunkWeather, WeatherVisualSettings};
 use crate::terrain::fire::fuel_depot_profile;
+use crate::terrain::world_map_scale::TileExtentPreset;
+use crate::terrain::world_map_scale::TerrainFieldStorage;
 use crate::terrain::generation::world_generator_enhanced::{
     despawn_generated_world_entities, GenerateWorldEvent, WorldGenJobSlot, WorldGenParams,
     WorldGenPhase, WorldGenProgress, WorldMarker,
@@ -257,8 +259,7 @@ impl Plugin for TestHarnessPlugin {
             .add_systems(
                 PostUpdate,
                 (
-                    apply_visual_aidv2_macro_zoom_camera
-                        .before(crate::render::stage5_full_app_harness::maintain_visual_tactical_vfx_camera),
+                    apply_visual_aidv2_macro_zoom_camera,
                     arm_visual_test_exit_on_va2_live_proof,
                 )
                     .run_if(in_state(BaseState::Simulation)),
@@ -413,18 +414,18 @@ fn world_gen_params_for_maneuver(
     let mut p = WorldGenParams::default();
     match maneuver {
         DebugManeuver::FrameScreen => {
-            p.width = 192;
-            p.height = 192;
+            p.apply_tile_extent_preset(TileExtentPreset::TacticalSmall);
         }
         DebugManeuver::UnittestWorld => {
             let fixture = UnittestWorldFixture::load_resolved(
                 launch.unittest_fixture_path.as_deref(),
             );
             fixture.apply_to_params(&mut p);
+            p.recompute_symbolic_land_features();
         }
         DebugManeuver::FullCapture | DebugManeuver::DemoOpen | DebugManeuver::None => {
-            p.width = 320;
-            p.height = 320;
+            p.apply_tile_extent_preset(TileExtentPreset::MediumSmall);
+            p.field_storage = TerrainFieldStorage::ChunkCellMatrixAuthoritative;
         }
     }
     p
@@ -875,6 +876,7 @@ fn apply_visual_logistics_minimap_defaults(
     policy: Option<&mut crate::gui::RepresentationResult>,
     map_views: Option<&mut crate::gui::MapViewInstances>,
     overlay_tray: Option<&mut crate::gui::hud::HudOverlayTrayState>,
+    full_capture: bool,
 ) {
     if !graph.edges.is_empty() {
         if let Some(policy) = policy {
@@ -882,7 +884,11 @@ fn apply_visual_logistics_minimap_defaults(
         }
     }
     if let Some(map_views) = map_views {
-        map_views.minimap.overlays = crate::gui::minimap_overlay_witness_harness();
+        map_views.minimap.overlays = if full_capture {
+            crate::gui::minimap_overlay_witness_harness()
+        } else {
+            crate::gui::simulation_minimap_overlay_defaults()
+        };
         map_views.minimap.bump_revision();
     }
     if let Some(tray) = overlay_tray {
@@ -958,6 +964,7 @@ fn startup_seed_visual_logistics_when_cli_visual(
         policy.as_deref_mut(),
         map_views.as_deref_mut(),
         overlay_tray.as_deref_mut(),
+        launch.full_capture_active(),
     );
     harness.logistics_visual_seeded = !graph.edges.is_empty() && overlay_rows > 0;
     info!(
@@ -1029,6 +1036,7 @@ fn apply_visual_logistics_proof_pending(
         policy.as_deref_mut(),
         map_views.as_deref_mut(),
         overlay_tray.as_deref_mut(),
+        true,
     );
     info!(
         target: "test_harness::logistics",
@@ -1114,6 +1122,7 @@ fn seed_visual_test_logistics_proof(
         policy.as_deref_mut(),
         map_views.as_deref_mut(),
         overlay_tray.as_deref_mut(),
+        launch.full_capture_active(),
     );
     info!(
         target: "test_harness::logistics",
@@ -1688,7 +1697,7 @@ fn arm_visual_test_exit_on_va2_live_proof(
     visual_exit.frames_remaining = crate::render::VisualTestGracefulExit::FRAMES_AFTER_PROOF;
 }
 
-/// VA2-HARNESS-03 — zoom out for macro icon scaffold while tactical VFX lock is suspended.
+/// VA2-HARNESS-03 — one-shot macro zoom for icon scaffold witness (not a per-frame lock).
 fn apply_visual_aidv2_macro_zoom_camera(
     launch: Option<Res<EngineLaunchArgs>>,
     va2: Res<crate::dev::VisualAidV2HarnessState>,
@@ -1698,7 +1707,11 @@ fn apply_visual_aidv2_macro_zoom_camera(
     mut authority: ResMut<crate::render::view_runtime::ViewProjectionAuthority>,
     mut trace: ResMut<crate::render::view_runtime::ViewRuntimeTrace>,
     mut cam: Query<&mut Transform, With<crate::gui::MainWorldCamera>>,
+    mut applied: Local<bool>,
 ) {
+    if *applied {
+        return;
+    }
     if !launch.is_some_and(|l| l.full_capture_active()) || !va2.macro_icon_probe {
         return;
     }
@@ -1730,6 +1743,7 @@ fn apply_visual_aidv2_macro_zoom_camera(
         t.translation.y = cy;
         t.scale = Vec3::splat(zoom);
     }
+    *applied = true;
 }
 
 /// Keeps CLI test worlds burning after world-gen + fire extract (re-seed if sim cooled, refresh overlay).
@@ -1781,6 +1795,10 @@ fn maintain_test_scene_fire_overlay(
                 extract_priority: 0.5 + fire.heat * 2.0,
             });
         }
+    }
+    const OVERLAY_SYNC_INTERVAL_FRAMES: u32 = 15;
+    if burning >= 3 && frame.0 % OVERLAY_SYNC_INTERVAL_FRAMES != 0 {
+        return;
     }
     sync_test_fire_overlay_from_ecs(&fire_q, &mut shared_overlay);
 }

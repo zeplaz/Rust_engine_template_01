@@ -156,6 +156,45 @@ pub fn minimap_gpu_presentation_uses_crop(follow_mode: crate::gui::MinimapFollow
     )
 }
 
+/// Map world tile center → GPU compositor RT pixel center (full-world bake into smaller RT).
+#[must_use]
+pub fn minimap_gpu_rt_center_from_world(
+    world_center: Vec2,
+    world_w: u32,
+    world_h: u32,
+    rt_w: u32,
+    rt_h: u32,
+) -> Vec2 {
+    let uw = world_w.max(1) as f32;
+    let uh = world_h.max(1) as f32;
+    let rtw = rt_w.max(1) as f32;
+    let rth = rt_h.max(1) as f32;
+    Vec2::new(
+        (world_center.x / uw * rtw).clamp(0.0, rtw),
+        (world_center.y / uh * rth).clamp(0.0, rth),
+    )
+}
+
+/// GPU minimap crop when [`camera_center`] is in **world tile** coords and the compositor RT
+/// is a downscaled full-world bake (`world_w×world_h` → `rt_w×rt_h`).
+#[must_use]
+pub fn minimap_gpu_texture_pixel_rect_from_world(
+    camera_center_world: Vec2,
+    zoom: f32,
+    world_w: u32,
+    world_h: u32,
+    rt_w: u32,
+    rt_h: u32,
+    panel: Vec2,
+) -> bevy::math::Rect {
+    let rt_center = if world_w == rt_w && world_h == rt_h {
+        camera_center_world
+    } else {
+        minimap_gpu_rt_center_from_world(camera_center_world, world_w, world_h, rt_w, rt_h)
+    };
+    minimap_gpu_texture_pixel_rect(rt_center, zoom, rt_w, rt_h, panel)
+}
+
 /// GPU minimap crop rect (texture pixel space) from presentation zoom + pan center.
 #[must_use]
 pub fn minimap_gpu_texture_pixel_rect(
@@ -179,7 +218,38 @@ pub fn minimap_gpu_texture_pixel_rect(
     }
 }
 
+/// Normalized UV rect matching [`minimap_gpu_texture_pixel_rect_from_world`].
+#[must_use]
+pub fn minimap_gpu_texture_uv_rect_from_world(
+    camera_center_world: Vec2,
+    zoom: f32,
+    world_w: u32,
+    world_h: u32,
+    rt_w: u32,
+    rt_h: u32,
+    panel: Vec2,
+) -> egui::Rect {
+    let crop = minimap_gpu_texture_pixel_rect_from_world(
+        camera_center_world,
+        zoom,
+        world_w,
+        world_h,
+        rt_w,
+        rt_h,
+        panel,
+    );
+    let tw = rt_w.max(1) as f32;
+    let th = rt_h.max(1) as f32;
+    egui::Rect::from_min_max(
+        egui::pos2(crop.min.x / tw, crop.min.y / th),
+        egui::pos2(crop.max.x / tw, crop.max.y / th),
+    )
+}
+
 /// Normalized UV rect matching [`minimap_gpu_texture_pixel_rect`] (GPU `ImageNode.rect` crop).
+// Test-only consumer today (see `minimap_gpu_uv_shrinks_when_zoomed_in`); kept as the
+// normalized-UV sibling of `minimap_gpu_texture_pixel_rect` for the GPU-compositor crop path.
+#[allow(dead_code)]
 #[must_use]
 pub fn minimap_gpu_texture_uv_rect(
     camera_center: Vec2,
@@ -251,6 +321,33 @@ mod tests {
         );
         assert!(zoomed.width() <= full.width());
         assert!(zoomed.height() <= full.height());
+    }
+
+    #[test]
+    fn gpu_rt_world_center_maps_to_rt_pixels() {
+        let rt = minimap_gpu_rt_center_from_world(Vec2::new(160.0, 160.0), 320, 320, 260, 220);
+        assert!((rt.x - 130.0).abs() < 0.01);
+        assert!((rt.y - 110.0).abs() < 0.01);
+    }
+
+    #[test]
+    fn gpu_crop_from_world_center_not_corner_clamped() {
+        let panel = Vec2::new(248.0, 170.0);
+        let bad = minimap_gpu_texture_pixel_rect(Vec2::new(160.0, 160.0), 1.0, 260, 220, panel);
+        let good = minimap_gpu_texture_pixel_rect_from_world(
+            Vec2::new(160.0, 160.0),
+            1.0,
+            320,
+            320,
+            260,
+            220,
+            panel,
+        );
+        assert!(
+            good.min.x < bad.min.x
+                || (good.center().x - bad.center().x).abs() > 1.0
+        );
+        assert!(good.center().x > 50.0);
     }
 
     #[test]

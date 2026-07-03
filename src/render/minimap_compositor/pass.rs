@@ -43,6 +43,8 @@ pub struct MinimapCompositorHeatSources<'w> {
     pub construction_channel: Option<Res<'w, ConstructionPhaseGpuChannel>>,
     pub replay: Option<Res<'w, crate::systems::sim_frame_delta::CommittedSimReplayRing>>,
     pub veg_extract: Option<Res<'w, crate::render::extraction::VegetationExtractFrame>>,
+    pub terrain_authority: Res<'w, crate::render::TerrainRenderAuthority>,
+    pub terrain_atlas: Res<'w, crate::render::TerrainMaterialAtlasGpu>,
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -52,7 +54,7 @@ pub enum MinimapCompositePath {
     GpuCompute,
 }
 
-#[derive(Resource, Debug, Clone, Default)]
+#[derive(Resource, Debug, Clone)]
 pub struct MinimapCompositorState {
     pub stamp: u64,
     pub compositor_revision: u64,
@@ -78,6 +80,39 @@ pub struct MinimapCompositorState {
     pub veg_burn_rows: u32,
     pub burn_overrides_topology: bool,
     pub veg_extract_revision: u64,
+    /// Witness: `gpu_atlas` | `cpu_fallback`.
+    pub terrain_source_label: &'static str,
+}
+
+impl Default for MinimapCompositorState {
+    fn default() -> Self {
+        Self {
+            stamp: 0,
+            compositor_revision: 0,
+            last_overlay_revision: 0,
+            dual_minimap_present: false,
+            extent_match_px: 0.0,
+            composite_path: MinimapCompositePath::default(),
+            logistics_rows: 0,
+            construction_rows: 0,
+            ecology_rows: 0,
+            fow_rows: 0,
+            ew_rows: 0,
+            fire_heat_enabled: false,
+            logistics_heat_enabled: false,
+            construction_heat_enabled: false,
+            ecology_heat_enabled: false,
+            fow_heat_enabled: false,
+            ew_heat_enabled: false,
+            units_heat_enabled: false,
+            unit_marker_rows: 0,
+            replay_scrub_enabled: false,
+            veg_burn_rows: 0,
+            burn_overrides_topology: false,
+            veg_extract_revision: 0,
+            terrain_source_label: "cpu_fallback",
+        }
+    }
 }
 
 /// Allocate committed minimap RT immediately on sim enter so Bevy chrome never binds CPU terrain.
@@ -268,6 +303,7 @@ pub fn run_minimap_compositor_pass(
     mut shell: ResMut<MinimapShellState>,
     mut images: ResMut<Assets<Image>>,
     visual_cadence: Res<crate::gui::VisualCadence>,
+    world_gen: Option<Res<crate::terrain::generation::world_generator_enhanced::WorldGenProgress>>,
 ) {
     let now_secs = time.elapsed_secs_f64();
     diagnostics.refresh_budget_verdict(now_secs, visual_cadence.minimap_hz);
@@ -297,19 +333,24 @@ pub fn run_minimap_compositor_pass(
     }
     *cadence = 0.0;
 
-    // Match tile fallback raster authority: GPU HUD path paints `fallback.image` only;
-    // `minimap_image` is the effects-lane CPU raster (see `tile_fallback_cpu_minimap_raster_needed`).
-    let terrain = match resolve_minimap_texture_source(&shell, &fallback, &registry) {
-        MapTextureSource::GpuRenderTarget(_) => {
-            if fallback.image != Handle::default() {
-                fallback.image.clone()
-            } else if fallback.minimap_image != Handle::default() {
-                fallback.minimap_image.clone()
-            } else {
-                Handle::default()
+    // GPU terrain: sample material atlas (not CPU fallback RGBA repaint).
+    let authority = heat_sources.terrain_authority.as_ref();
+    let atlas = heat_sources.terrain_atlas.as_ref();
+    let terrain = if authority.is_gpu() && atlas.image != Handle::default() {
+        atlas.image.clone()
+    } else {
+        match resolve_minimap_texture_source(&shell, &fallback, &registry) {
+            MapTextureSource::GpuRenderTarget(_) => {
+                if fallback.image != Handle::default() {
+                    fallback.image.clone()
+                } else if fallback.minimap_image != Handle::default() {
+                    fallback.minimap_image.clone()
+                } else {
+                    Handle::default()
+                }
             }
+            MapTextureSource::SharedCpuRaster(handle) => handle,
         }
-        MapTextureSource::SharedCpuRaster(handle) => handle,
     };
     if terrain == Handle::default() {
         dispatch.commit_stamp = 0;
@@ -406,6 +447,17 @@ pub fn run_minimap_compositor_pass(
         return;
     };
 
+    if world_gen.as_ref().is_some_and(|p| p.running)
+        && !matches!(
+            dispatch_reason,
+            MinimapGpuDispatchReason::Initial | MinimapGpuDispatchReason::RtResize
+        )
+    {
+        diagnostics.record_skip(MinimapGpuSkipReason::WorldGenBusy);
+        dispatch.commit_stamp = 0;
+        return;
+    }
+
     let max_commits_per_sec = hz * 1.25;
     let window_elapsed = (now_secs - diagnostics.window_start_secs).max(1e-3);
     let effective_hz = diagnostics.window_commits as f32 / window_elapsed as f32;
@@ -484,6 +536,11 @@ pub fn run_minimap_compositor_pass(
     }
 
     compositor.compositor_revision = registry.revision;
+    compositor.terrain_source_label = if authority.is_gpu() {
+        "gpu_atlas"
+    } else {
+        "cpu_fallback"
+    };
     compositor.last_overlay_revision = overlay_revision;
     compositor.logistics_rows = logistics_rows;
     compositor.construction_rows = construction_rows;

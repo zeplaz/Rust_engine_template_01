@@ -5,6 +5,7 @@ mod composite;
 mod diagnostics;
 mod gpu_compute;
 mod pass;
+mod plugin;
 mod render_target;
 
 pub use diagnostics::{
@@ -41,68 +42,7 @@ pub use render_target::{
     committed_minimap_render_target_handle, minimap_rgba_image, try_commit_minimap_render_target,
     MinimapGpuResizeQueue, MinimapRenderTargetBindBarrier, MinimapRenderTargetRegistry,
 };
-
-use bevy::prelude::*;
-
-use crate::engine::states::BaseState;
-use crate::gui::{on_visual_cadence_minimap, ViewRepresentationSystemSet};
-use crate::render::extraction::{FireVisualFrameSet, VegetationExtractFrameSet};
-use crate::render::ViewportPipelineSet;
-
-use composite::{MinimapCompositeDispatch, MinimapCompositeHeatTextures};
-use gpu_compute::register_minimap_composite_gpu;
-
-pub struct MinimapCompositorPlugin;
-
-impl Plugin for MinimapCompositorPlugin {
-    fn build(&self, app: &mut App) {
-        app.init_resource::<MinimapGpuResizeQueue>()
-            .init_resource::<MinimapRenderTargetRegistry>()
-            .init_resource::<MinimapRenderTargetBindBarrier>()
-            .init_resource::<MinimapCompositorState>()
-            .init_resource::<MinimapGpuCompositorDiagnostics>()
-            .init_resource::<MinimapCompositorLiveProofState>()
-            .init_resource::<MinimapCompositeHeatTextures>()
-            .init_resource::<MinimapCompositeDispatch>()
-            .init_resource::<crate::render::MinimapOperationalSnapshot>();
-        register_minimap_composite_gpu(app);
-        app.add_systems(
-            OnEnter(BaseState::Simulation),
-            bootstrap_minimap_gpu_render_target
-                .after(crate::gui::hud::simulation_session::apply_simulation_map_presentation_defaults),
-        )
-        .add_systems(
-            Update,
-            (
-                bootstrap_minimap_gpu_render_target,
-                queue_minimap_render_target_resize,
-                apply_minimap_gpu_resize_request,
-                commit_minimap_render_target_bind_system,
-            )
-                .chain()
-                .in_set(ViewRepresentationSystemSet::RenderTargets)
-                .after(ViewportPipelineSet::Resolve),
-        )
-        .add_systems(
-            Update,
-            (
-                sync_minimap_presentation_source,
-                run_minimap_compositor_pass,
-            )
-                .chain()
-                .after(ViewRepresentationSystemSet::SyncOverlayField)
-                .after(FireVisualFrameSet::BuildProfiles)
-                .after(VegetationExtractFrameSet::BuildProfiles)
-                .after(crate::render::TileWorldFallbackAfterFireExtract)
-                .in_set(ViewRepresentationSystemSet::WorldRender)
-                .run_if(on_visual_cadence_minimap),
-        )
-        .add_systems(
-            PostUpdate,
-            write_minimap_compositor_live_proof_system.run_if(in_state(BaseState::Simulation)),
-        );
-    }
-}
+pub use plugin::MinimapCompositorPlugin;
 
 #[cfg(test)]
 mod tests {

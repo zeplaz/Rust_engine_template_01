@@ -91,7 +91,7 @@
 
 | Item | Notes |
 |------|--------|
-| **Tilemap adapter / GPU terrain** | `bevy_tilemap_adapter` feature removes CPU fallback entirely when enabled. |
+| **Tilemap adapter / GPU terrain** | **→ ACTIVE:** [`plan_gpu_terrain_production_exec_001_v1.md`](plan_gpu_terrain_production_exec_001_v1.md) (PERF-GPU-TERRAIN-001..004). `bevy_tilemap_adapter` + retire CPU fallback as Simulation default. |
 | **Hanabi / GPU particles** | Keep extract on projection graph; don’t duplicate CPU overlay rebuild. |
 | **WSS substrate fire** | Slab path already partially wired; ensure extract does not dual-scan ECS + slab. |
 

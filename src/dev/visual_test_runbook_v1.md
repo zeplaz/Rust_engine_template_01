@@ -94,6 +94,28 @@ If `to_map` is huge but `map_view` / `view_fire` are tiny, cost is in **Update s
 
 ---
 
+## Perf truth (PLAN-GPU-TERRAIN — release, no env overrides)
+
+```powershell
+cargo run -p proc_A_dine01 --release -- --test demo --stay-open
+```
+
+After ~60s steady Simulation (no camera move):
+
+| Witness field | Gate |
+|---------------|------|
+| `last_frame.spine.tile_raster_ms` | `== 0` |
+| `last_frame.spine.terrain_authority` | `GpuInstancedAtlas` (or `GpuTilemap`) |
+| `last_frame.perf.terrain_gpu_authoritative` | `true` |
+| `last_frame.render_schedule.render_and_present_ms` | p95 ≤ 16 ms |
+| `minimap_compositor_live.json` → `terrain_source` | `gpu_atlas` |
+
+Read `debug_runs/sim_spectrum_analytics_live.json` + `debug_runs/stage5_full_app_live.json`. Do **not** set `RASTER_*`, `PERF_*`, or `STALL=1` for baseline sign-off.
+
+Optional deep dive: [`tracy_integration.md`](tracy_integration.md).
+
+---
+
 ## Related docs
 
 - [`visual_run_blockers.md`](visual_run_blockers.md)

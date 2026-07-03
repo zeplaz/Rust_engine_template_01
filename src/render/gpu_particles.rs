@@ -276,6 +276,7 @@ pub fn emit_world_fire_particles_from_projection(
     time: Res<Time>,
     cfg: Option<Res<DebugRenderTraceConfig>>,
     graph: Res<RenderProjectionGraph>,
+    coherence: Option<Res<crate::render::extraction::ProjectionGraphFrameCoherence>>,
     chunk_lod: Res<FireChunkLodState>,
     cam: Res<FireParticleCameraScale>,
     view_manager: Option<Res<crate::gui::ViewManager>>,
@@ -284,6 +285,11 @@ pub fn emit_world_fire_particles_from_projection(
     mut frame: ResMut<WorldFireParticleFrame>,
     mut last_trace: Local<u64>,
 ) {
+    if coherence.as_deref().is_some_and(|c| c.evaluate_skipped) {
+        frame.snapshot_stamp = graph.fire.snapshot_stamp;
+        frame.anim_time_secs = time.elapsed_secs();
+        return;
+    }
     update_world_fire_particles_from_projection(
         graph.as_ref(),
         frame.as_mut(),

@@ -41,6 +41,8 @@ pub const WATER_PARTICLE_INSTANCES_BUFFER: BufferId = BufferId(10);
 pub const WATER_PARTICLE_EXPANDED_VERTICES_BUFFER: BufferId = BufferId(11);
 /// Tile LOD / fire debug logical instances (`assets/shaders/debug/tile_debug_instanced.wgsl` group 1).
 pub const TILE_DEBUG_INSTANCES_BUFFER: BufferId = BufferId(7);
+/// Instanced terrain tile rows (`terrain_instanced.wgsl`).
+pub const TERRAIN_INSTANCES_BUFFER: BufferId = BufferId(12);
 
 /// Prevents accidental cross-graph buffer sharing until explicitly allowed.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

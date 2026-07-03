@@ -44,6 +44,13 @@ fn main() {
     if launch.maneuver == proc_A_dine01::engine::DebugManeuver::FrameScreen {
         std::env::set_var("UI_LAYOUT_DEBUG", "1");
     }
+    // Debug builds default to vsync; `--test` harness runs need uncapped present for honest perf.
+    if launch.test_mode()
+        && std::env::var("PERF_NO_VSYNC").ok().is_none()
+        && std::env::var("PERF_VSYNC").ok().is_none()
+    {
+        std::env::set_var("PERF_NO_VSYNC", "1");
+    }
     let debug_trace = DebugRenderTraceConfig::from_cli_flags(
         cli.debug_viewport_trace,
         cli.debug_camera_sync,

@@ -11,6 +11,7 @@ use crate::render::extraction::{
     assemble_procedural_build_instances, ProceduralBuildExtract, ProceduralBuildInstance,
     ProceduralModuleSceneCatalog, ProceduralModuleVisualPolicy,
 };
+use crate::economy::site_placement::site_world_position;
 use crate::strategic::{
     ConstructionSite, PlannedSite, ProceduralBuildingSpec, SiteConstructionPhase,
 };
@@ -62,7 +63,7 @@ pub fn spawn_procedural_build_on_site_operational(
     visual: Res<ProceduralModuleVisualPolicy>,
     iso_draw: Res<ConstructionIsoDrawScale>,
     q: Query<
-        (Entity, &ConstructionSite, &ProceduralBuildingSpec),
+        (Entity, &ConstructionSite, &ProceduralBuildingSpec, &PlannedSite, Option<&Transform>),
         (With<PlannedSite>, Without<ProceduralBuildSpawned>),
     >,
 ) {
@@ -71,9 +72,17 @@ pub fn spawn_procedural_build_on_site_operational(
         return;
     }
 
-    for (site_entity, site, spec) in &q {
+    for (site_entity, site, spec, planned, site_transform) in &q {
         if site.phase != SiteConstructionPhase::Operational {
             continue;
+        }
+
+        if site_transform.is_none() {
+            commands.entity(site_entity).insert((
+                Transform::from_translation(site_world_position(planned.origin)),
+                GlobalTransform::default(),
+                crate::economy::site_placement::SiteWorldTransformApplied,
+            ));
         }
 
         let instances = instances_for_operational_site(
@@ -100,7 +109,6 @@ pub fn spawn_procedural_build_on_site_operational(
                     parent.spawn((
                         SceneRoot(scene.clone()),
                         local,
-                        GlobalTransform::default(),
                         ProceduralBuildModuleChild {
                             module_id: inst.module_id.clone(),
                         },
@@ -108,7 +116,6 @@ pub fn spawn_procedural_build_on_site_operational(
                 } else {
                     parent.spawn((
                         local,
-                        GlobalTransform::default(),
                         ProceduralBuildModuleChild {
                             module_id: inst.module_id.clone(),
                         },

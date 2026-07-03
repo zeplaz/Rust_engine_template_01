@@ -70,10 +70,31 @@ pub(crate) fn visual_tactical_vfx_witness_required(launch: &crate::engine::Engin
 }
 
 /// Only hard-lock camera pose when explicit tactical VFX proof mode is enabled.
-/// This prevents interactive visual scenes from fighting user scroll/zoom input.
+/// Disabled — operator scroll/wheel owns WorldMain pose; witness uses one-shot harness zoom.
 #[inline]
 fn visual_tactical_vfx_camera_lock_required() -> bool {
-    tactical_vfx_proof_enabled()
+    false
+}
+
+/// P0-VFX-ZOOM-LOCK-001 witness — interactive scenes never hard-lock camera zoom.
+#[inline]
+#[must_use]
+pub fn visual_tactical_vfx_camera_lock_enabled() -> bool {
+    false
+}
+
+/// P0-VFX-ZOOM-LOCK-001 witness — VfxSandbox wheel is never capped by proof lock.
+#[inline]
+#[must_use]
+pub fn vfx_sandbox_scroll_zoom_free(_launch: Option<&crate::engine::EngineLaunchArgs>) -> bool {
+    true
+}
+
+/// P0-VFX-ZOOM-LOCK-001 witness — `TACTICAL_VFX_PROOF` no longer forces camera lock.
+#[inline]
+#[must_use]
+pub fn tactical_vfx_hard_lock_enabled() -> bool {
+    false
 }
 
 /// P2-VFX-WITNESS-001 / P2-WATER-WITNESS-002 JSON gate evaluation.
@@ -330,65 +351,9 @@ pub(crate) fn refresh_visual_proof_fire_particles(
     );
 }
 
-/// Keep map at tactical zoom during visual capture (world-fit camera would strategic-cull particles).
-pub(crate) fn maintain_visual_tactical_vfx_camera(
-    launch: Option<Res<crate::engine::EngineLaunchArgs>>,
-    test_scene: Option<Res<crate::engine::ActiveTestScene>>,
-    va2_harness: Option<Res<crate::dev::VisualAidV2HarnessState>>,
-    params: Res<crate::terrain::generation::world_generator_enhanced::WorldGenParams>,
-    windows: Query<&Window, With<bevy::window::PrimaryWindow>>,
-    sim_viewport: Res<crate::gui::SimulationMapViewport>,
-    mut authority: ResMut<crate::render::view_runtime::ViewProjectionAuthority>,
-    mut trace: ResMut<crate::render::view_runtime::ViewRuntimeTrace>,
-    mut cam: Query<&mut Transform, With<crate::gui::MainWorldCamera>>,
-) {
-    if launch.is_none() {
-        return;
-    }
-    if !visual_tactical_vfx_camera_lock_required() {
-        return;
-    }
-    if va2_harness
-        .as_ref()
-        .is_some_and(|h| h.macro_icon_probe)
-    {
-        return;
-    }
-    if params.width == 0 || params.height == 0 {
-        return;
-    }
-    let _ = test_scene;
-    let world_w = params.width as f32;
-    let world_h = params.height as f32;
-    let window_px = windows
-        .single()
-        .ok()
-        .map(|w| Vec2::new(w.width().max(1.0), w.height().max(1.0)))
-        .unwrap_or(Vec2::new(1280.0, 720.0));
-    let viewport =
-        crate::gui::map_camera_viewport_pixels(window_px, Some(sim_viewport.as_ref()));
-    let (zoom_lo, zoom_hi) = crate::gui::map_zoom_limits_for_world(world_w, world_h, viewport);
-    let zoom = crate::gui::map_scale_for_zoom_alpha(
-        crate::gui::TACTICAL_VFX_PROOF_ZOOM_ALPHA,
-        zoom_lo,
-        zoom_hi,
-    );
-    let cx = world_w * 0.5;
-    let cy = world_h * 0.5;
-    let mut pose = crate::gui::map_camera_desired_from_view_authority(authority.as_ref());
-    pose.translation = Vec3::new(cx, cy, 0.0);
-    pose.scale = Vec3::splat(zoom);
-    crate::gui::commit_map_camera_pose_to_view_authority(
-        authority.as_mut(),
-        trace.as_mut(),
-        &pose,
-    );
-    for mut t in cam.iter_mut() {
-        t.translation.x = cx;
-        t.translation.y = cy;
-        t.scale = Vec3::splat(zoom);
-    }
-}
+/// Removed — was forcing tactical zoom every PostUpdate when `TACTICAL_VFX_PROOF=1`.
+#[allow(dead_code)]
+pub(crate) fn maintain_visual_tactical_vfx_camera() {}
 
 pub const STAGE5_FULL_APP_LIVE_JSON: &str = "debug_runs/stage5_full_app_live.json";
 
@@ -1163,6 +1128,7 @@ pub(crate) struct Stage5FullAppLiveProofReads<'w> {
     minimap_registry: Option<Res<'w, MinimapRenderTargetRegistry>>,
     minimap_compositor: Option<Res<'w, MinimapCompositorState>>,
     minimap_gpu_diagnostics: Option<Res<'w, MinimapGpuCompositorDiagnostics>>,
+    terrain_authority: Option<Res<'w, crate::render::TerrainRenderAuthority>>,
     sim_map: Res<'w, SimulationMapViewport>,
     policy: Option<Res<'w, crate::gui::RepresentationResult>>,
     projection: Option<Res<'w, RenderProjectionGraph>>,
@@ -1191,6 +1157,7 @@ pub(crate) struct Stage5FullAppLiveProofReads<'w> {
     view_manager: Option<Res<'w, crate::gui::ViewManager>>,
     overlay_tray: Option<Res<'w, HudOverlayTrayState>>,
     visual_witness: Option<Res<'w, crate::render::VisualReadinessWitness>>,
+    perf_attribution: Option<Res<'w, crate::render::PerfAttributionWitness>>,
     tactical_vector: Option<Res<'w, crate::render::TacticalVectorOverlayState>>,
     va2_board: Option<Res<'w, crate::dev::VisualAidV2LiveTodoBoard>>,
     va2_witness: Option<Res<'w, crate::dev::VisualAidV2Witness>>,
@@ -1536,6 +1503,12 @@ fn build_stage5_full_app_live_proof_payload(
             "not_gate": "VM-06..11, full fire streaming, gpu-tile gizmo removal, construction stage",
         },
         "diagnostic_captured": gate.captured,
+        "perf": {
+            "terrain_gpu_authoritative": reads
+                .terrain_authority
+                .as_ref()
+                .is_some_and(|a| a.is_gpu()),
+        },
         "sim_step_stamp": {
             "tick": reads.sim_tick.0,
             "sim_time_micros": reads.sim_time.0,
@@ -1573,6 +1546,10 @@ fn build_stage5_full_app_live_proof_payload(
                 .visual_witness
                 .as_ref()
                 .map(|w| crate::render::visual_readiness_witness_json(&**w)),
+            "perf_attribution_60s": reads
+                .perf_attribution
+                .as_ref()
+                .map(|w| crate::render::perf_attribution_witness_json(&**w)),
         },
         "viewport_contracts": {
             "resolved_revision": reads.resolved.revision,

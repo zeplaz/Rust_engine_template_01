@@ -15,9 +15,13 @@ pub struct SmokeVisualBridgeWitness {
 
 /// Aggregates chunk smoke GPU rows published by atmosphere `publish_sim_visual_extract`.
 pub fn build_smoke_visual_extract(
+    coherence: Option<Res<crate::render::FireExtractDiagnostics>>,
     smoke: Res<SimChunkSmokeVisualExtract>,
     mut witness: ResMut<SmokeVisualBridgeWitness>,
 ) {
+    if coherence.as_deref().is_some_and(|d| d.snapshot_unchanged) {
+        return;
+    }
     witness.smoke_density_sum = smoke
         .instances
         .iter()

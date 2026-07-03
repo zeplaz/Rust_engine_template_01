@@ -4,6 +4,10 @@
 //! (projection + viewport from view authority). [`VisibleFireChunkSet`] stores [`FxHashSet`]s per
 //! [`ViewId`]. When a view disables fire in [`ViewRenderPolicy::overlays`], its set is empty.
 //! [`WorldLodBand`] from the view clamps heat-derived [`FireLodBand`] (smoke vs flame at distance).
+//!
+//! **Minimap never renders fire particles** — it is a GPU-composited 2D widget
+//! ([`crate::render::minimap_compositor`]), not a Bevy camera pass. Per-view extract for
+//! [`ViewId::Minimap`] is skipped (empty frame only).
 
 use std::collections::HashMap;
 use std::sync::OnceLock;
@@ -12,6 +16,7 @@ use bevy::math::Rect;
 use bevy::prelude::*;
 use rustc_hash::FxHashSet;
 
+use crate::engine::states::BaseState;
 use crate::gui::{ViewId, ViewInstance, ViewManager, WorldLodBand};
 use crate::render::fire_chunk_runtime::{
     ActiveFireChunkSet, ChunkCoord, FireChunkLodState, FireLodBand, FireSimulationSnapshot, VisibleFireChunkSet,
@@ -310,7 +315,7 @@ fn build_frame_for_allowed(
 /// (`stamp` + instance/heat counts), the active-chunk set, the per-view visible-chunk windows
 /// (camera/view rect motion), or the per-view world LOD band (zoom). When unchanged the previous
 /// `FireVisualFramesByView` stays valid and downstream consumers read it as before.
-#[derive(Clone, PartialEq)]
+#[derive(Clone, Copy, PartialEq)]
 pub struct FireViewExtractFingerprint {
     stamp: crate::systems::sim_control::SimStepStamp,
     instances_len: usize,
@@ -320,6 +325,16 @@ pub struct FireViewExtractFingerprint {
     vis_digest: u64,
     bands: [(crate::gui::WorldLodBand, usize); 4],
     proof: bool,
+}
+
+impl FireViewExtractFingerprint {
+    #[must_use]
+    fn same_except_stamp(self, other: Self) -> bool {
+        Self {
+            stamp: other.stamp,
+            ..self
+        } == other
+    }
 }
 
 #[inline]
@@ -334,8 +349,32 @@ fn xor_chunk_digest<'a>(chunks: impl Iterator<Item = &'a ChunkCoord>) -> u64 {
     acc
 }
 
+#[inline]
+fn world_preview_fire_extract_wired(base: Option<&BaseState>) -> bool {
+    base.is_some_and(|b| !matches!(b, BaseState::Simulation))
+}
+
+#[inline]
+fn empty_fire_frame(stamp: crate::systems::sim_control::SimStepStamp) -> FireVisualFrame {
+    FireVisualFrame {
+        stamp,
+        ..Default::default()
+    }
+}
+
+/// Views that need a full per-view fire extract rebuild (not the minimap widget).
+#[inline]
+fn needs_full_fire_extract(id: ViewId, base: Option<&BaseState>) -> bool {
+    match id {
+        ViewId::Minimap => false,
+        ViewId::WorldPreview => world_preview_fire_extract_wired(base),
+        ViewId::WorldMain | ViewId::SimulationMap => true,
+    }
+}
+
 pub fn build_fire_visual_frames_by_view(
     launch: Option<Res<crate::engine::EngineLaunchArgs>>,
+    base: Res<State<BaseState>>,
     sim: Res<FireSimulationSnapshot>,
     vis: Res<VisibleFireChunkSet>,
     lod: Res<FireChunkLodState>,
@@ -398,18 +437,33 @@ pub fn build_fire_visual_frames_by_view(
         bands,
         proof,
     };
-    if last_fingerprint.as_ref() == Some(&fingerprint) {
-        return;
+    if let Some(prev) = *last_fingerprint {
+        if prev == fingerprint {
+            return;
+        }
+        // Sim tick advanced but snapshot / visibility inputs unchanged — keep prior per-view frames.
+        if prev.same_except_stamp(fingerprint) {
+            *last_fingerprint = Some(fingerprint);
+            for frame in out.by_id.values_mut() {
+                frame.stamp = fingerprint.stamp;
+            }
+            return;
+        }
     }
     *last_fingerprint = Some(fingerprint);
 
     out.by_id.clear();
+    let base_ref = Some(base.get());
     for id in [
         ViewId::WorldMain,
         ViewId::WorldPreview,
         ViewId::Minimap,
         ViewId::SimulationMap,
     ] {
+        if !needs_full_fire_extract(id, base_ref) {
+            out.by_id.insert(id, empty_fire_frame(fingerprint.stamp));
+            continue;
+        }
         let allowed = allowed_chunks_for_view(id, &vis, &active);
         let world_band = if proof && matches!(id, ViewId::WorldMain | ViewId::SimulationMap) {
             WorldLodBand::LocalTactical
@@ -603,6 +657,22 @@ mod tests {
             &by_view,
             &vis,
             &ActiveFireChunkSet::default()
+        ));
+    }
+
+    #[test]
+    fn minimap_skips_full_fire_extract_in_simulation() {
+        assert!(!needs_full_fire_extract(
+            ViewId::Minimap,
+            Some(&BaseState::Simulation),
+        ));
+        assert!(!needs_full_fire_extract(
+            ViewId::WorldPreview,
+            Some(&BaseState::Simulation),
+        ));
+        assert!(needs_full_fire_extract(
+            ViewId::SimulationMap,
+            Some(&BaseState::Simulation),
         ));
     }
 

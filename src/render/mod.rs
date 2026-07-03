@@ -15,12 +15,16 @@ pub mod lighting;
 mod light;
 pub mod shaders;
 pub mod sim_visual_extract;
+mod fire_chunk_entity_index;
 mod fire_chunk_runtime;
 mod fire7_f7_a_exit;
 pub(crate) mod fire_streaming;
 mod fire_view_extract;
 mod vfx_capture_hook;
 mod tile_world_fallback;
+mod terrain_render_authority;
+mod terrain_material_atlas;
+mod terrain_instanced_draw;
 mod tactical_vector_overlay;
 mod visual_perf_budget;
 mod overlay_field_buffers;
@@ -73,6 +77,7 @@ pub mod view_runtime;
 mod spine_governance_matrix;
 mod domain_projection_frame;
 mod frame_perf;
+mod render_schedule_perf;
 mod stall_watch;
 mod visual_readiness_witness;
 mod perf_attribution_witness;
@@ -86,6 +91,18 @@ pub mod minimap_compositor;
 #[cfg(feature = "bevy_tilemap_adapter")]
 pub mod tilemap_adapter;
 
+pub use terrain_render_authority::{
+    resolve_sim_default_authority, terrain_cpu_fallback_env_forced, TerrainRenderAuthority,
+    TerrainRenderAuthorityPlugin,
+};
+pub use terrain_material_atlas::{
+    atlas_uv_for_material, rebuild_terrain_material_atlas, sync_terrain_material_atlas_from_registry,
+    TerrainMaterialAtlasGpu, TerrainMaterialAtlasPlugin,
+};
+pub use terrain_instanced_draw::{
+    register_terrain_instanced_draw, TerrainInstancedDrawGlobals, TerrainInstancedDrawPlugin,
+    TerrainInstancedRenderHost, TerrainInstanceMap, TerrainTileInstance, TERRAIN_INSTANCED_WGSL,
+};
 pub use tile_world_fallback::{
     draw_simulation_minimap_egui, simulation_minimap_egui_texture, SimMinimapUiState,
     tile_raster_dirty_on_zoom_band_change_enabled, TileFallbackRasterPolicy,
@@ -99,9 +116,13 @@ pub use tactical_vector_overlay::{
 };
 pub use visual_perf_budget::{
     sync_tile_raster_spike_feedback_system, FireExtractCadence, FireExtractClock,
-    FireExtractInputFingerprint,
+    FireExtractDirtyQueue, FireExtractInputFingerprint,
     FireExtractDiagnostics, FireExtractFrameReport,
     TileRasterBudget, TileRasterSpikeFeedback, RASTER_SPIKE_EMA_MS, RASTER_SPIKE_FRAME_MS,
+};
+pub use fire_chunk_entity_index::{
+    bootstrap_chunk_fire_entity_index_if_empty, sync_chunk_fire_entity_index_added,
+    sync_chunk_fire_entity_index_removed, ChunkFireEntityIndex,
 };
 pub use crate::gui::{MinimapOverlayMask, MinimapPresentationMode, MinimapShellState};
 
@@ -178,7 +199,7 @@ pub use gpu_buffer_registry::{
     WATER_PARTICLE_EXPANDED_VERTICES_BUFFER, WATER_PARTICLE_INSTANCES_BUFFER,
     FIRE_VISUAL_INSTANCES_BUFFER, GpuSlice, GPUBufferEntry, GPUBufferRegistry,
     HEAT_DIFFUSION_FIELD_BUFFER, LOGISTICS_OVERLAY_BUFFER, RegisteredBufferDescriptor,
-    RegistryBufferAllocation, RegistryError, RegistryUploadStats, TILE_DEBUG_INSTANCES_BUFFER,
+    RegistryBufferAllocation, RegistryError, RegistryUploadStats,     TILE_DEBUG_INSTANCES_BUFFER, TERRAIN_INSTANCES_BUFFER,
 };
 pub use fire_smoke_shader_handles::{
     FireSmokeShaderHandles, FIRE_PARTICLE_WGSL, FIRE_SPARK_COMPUTE_WGSL, SMOKE_VOLUME_WGSL,
@@ -327,16 +348,21 @@ pub use frame_perf::{
     timed, timed_opt, FramePerf, FramePerfPlugin, FramePerfSlot, FrameUpdateAttrib, FrameWallClock,
     PerfScope,
 };
+pub use render_schedule_perf::{
+    drain_render_schedule_witness_system, render_schedule_perf_enabled, RenderSchedulePerfPlugin,
+    RenderScheduleSpans, RenderScheduleWitness,
+};
 pub use stall_watch::{
     stall_checkpoint_before_world_repr, stall_checkpoint_post_fire_project, stall_checkpoint_post_streaming_spine,
     stall_checkpoint_post_world_repr, stall_watch_enabled, FrameScheduleSpans, FrameStallWatch,
     FrameSubstageSpans, StallWatchPlugin, STALL_THRESHOLD_MS,
     stall_substage_fire_build_view, stall_substage_fire_commit, stall_substage_fire_emitter_sync,
-    stall_substage_fire_sim_snapshot, stall_substage_fire_sync_active, stall_substage_fire_sync_lod,
+    stall_substage_fire_pre_extract, stall_substage_fire_sim_snapshot, stall_substage_fire_sync_active, stall_substage_fire_sync_lod,
     stall_substage_fire_sync_overlay, stall_substage_fire_sync_visible, stall_substage_map_apply_input,
     stall_substage_map_derive, stall_substage_map_smooth, stall_substage_minimap_intent,
     stall_substage_repr_apply_result, stall_substage_repr_compute_frame, stall_substage_repr_decay_lod,
     stall_substage_repr_proc_extract, stall_substage_repr_refresh_lod, stall_substage_view_sync,
+    stall_pre_egui,
 };
 pub use perf_attribution_witness::{
     perf_attribution_witness_json, perf_attribution_witness_lib_fixture,

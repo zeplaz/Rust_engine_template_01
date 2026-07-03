@@ -400,8 +400,14 @@ pub fn materialize_chunks(
         return;
     };
 
+    let chunk_field_authoritative = params.field_storage
+        == crate::terrain::world_map_scale::TerrainFieldStorage::ChunkCellMatrixAuthoritative;
+
     for (entity, chunk, mut matrix) in q.iter_mut() {
-        fill_fields(&mut matrix, chunk.coord, &params, None);
+        // Dense world-gen cache hydrates matrices; fill_fields would overwrite rivers/biomes.
+        if !chunk_field_authoritative {
+            fill_fields(&mut matrix, chunk.coord, &params, None);
+        }
         apply_threshold_tags(&mut matrix, &params.biome_tuning, tag_reg, &params.tag_pool);
         classify_cells(&mut matrix, &params.biome_tuning, tag_reg, families);
         apply_hydrology_chunk(&mut matrix, &params.biome_tuning, tag_reg, &params.tag_pool);

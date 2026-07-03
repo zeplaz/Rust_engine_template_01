@@ -32,11 +32,10 @@ pub const VISUAL_DIAG_TARGET: &str = "visual_diag";
 
 #[inline]
 pub fn visual_diag_enabled(cfg: Option<&DebugRenderTraceConfig>) -> bool {
-    static ENV: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
-    let env = *ENV.get_or_init(|| {
-        std::env::var_os("VISUAL_DIAG").is_some() || std::env::var_os("STAGE5_VERBOSE").is_some()
-    });
-    env || cfg.is_some_and(|c| c.visual_diag_trace)
+    crate::dev::test_run_instrumentation::diagnostics_operator_trace_enabled(
+        cfg.is_some_and(|c| c.visual_diag_trace),
+        &["VISUAL_DIAG", "STAGE5_VERBOSE"],
+    )
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
@@ -579,6 +578,9 @@ impl Plugin for VisualDiagnosticsPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<SimulationMapViewportDebug>()
             .add_systems(Startup, log_visual_diag_startup)
-            .add_systems(Last, trace_visual_diagnostics);
+            .add_systems(
+                Last,
+                trace_visual_diagnostics.after(crate::render::emit_frame_perf_summary),
+            );
     }
 }

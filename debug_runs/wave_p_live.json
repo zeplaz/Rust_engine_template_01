@@ -60,51 +60,51 @@
     "relative_path": "debug_runs/wave_p_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "wave_p_witness",
-    "written_at_epoch_secs": 1782031098
+    "written_at_epoch_secs": 1783027470
   },
-  "cod_b_wp_witness_001_green": false,
+  "cod_b_wp_witness_001_green": true,
   "profile": "WAVE_P_PREVIEW",
   "ui_phase4_wp_tail_001": {
     "d02_present": true,
     "d07_present": true,
     "gate": "UI-PHASE4-WP-TAIL-001",
-    "green": false,
-    "layout_002_green": false,
-    "layout_d07_green": false,
+    "green": true,
+    "layout_002_green": true,
+    "layout_d07_green": true,
     "optional": true,
     "wave_p_green": true
   },
   "ui_wp_layout_002": {
-    "d04_generator_sheet_open": false,
+    "d04_generator_sheet_open": true,
     "d04_map_dim_alpha": 102,
     "d04_sheet_body_wired": true,
-    "d04_sheet_width_px": 720.0,
-    "d04_unified_workspace": false,
-    "ui_wp_layout_002_green": false
+    "d04_sheet_width_px": 520.0,
+    "d04_unified_workspace": true,
+    "ui_wp_layout_002_green": true
   },
-  "ui_wp_layout_002_green": false,
+  "ui_wp_layout_002_green": true,
   "ui_wp_layout_d02": {
-    "d02_map_area_fraction": 0.8244855999946594,
+    "d02_map_area_fraction": 0.7829861044883728,
     "d02_map_min_area_frac": 0.6499999761581421,
     "d02_sidebar_max_w": 220.0,
     "ui_wp_layout_d02_opt_green": true
   },
   "ui_wp_layout_d02_opt_green": true,
   "ui_wp_layout_d07": {
-    "d07_corner_inset_on_map": false,
+    "d07_corner_inset_on_map": true,
     "d07_inset_side_px": 140.0,
     "d07_sidebar_minimap_removed": true,
-    "ui_wp_layout_d07_green": false
+    "ui_wp_layout_d07_green": true
   },
-  "ui_wp_layout_d07_green": false,
+  "ui_wp_layout_d07_green": true,
   "wave_p_green": true,
   "wave_p_readiness": {
     "passes": true,
     "report": {
-      "composite_graph_sources": 1,
+      "composite_graph_sources": 4,
       "composite_layer_bindings": 10,
       "consumer_contract_ok": true,
-      "gpu_authoritative_surface": true,
+      "gpu_authoritative_surface": false,
       "open_backlog_items": 0,
       "save_chunk_schema_version": 1,
       "save_manifest_schema_version": 1

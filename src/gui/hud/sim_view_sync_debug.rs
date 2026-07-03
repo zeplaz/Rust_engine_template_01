@@ -27,12 +27,10 @@ use crate::render::{DebugRenderTraceConfig, ResolvedViewports, TileWorldFallback
 
 #[inline]
 pub fn sim_view_sync_debug_enabled(cfg: Option<&DebugRenderTraceConfig>) -> bool {
-    static ENV: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
-    let env = *ENV.get_or_init(|| {
-        std::env::var_os("SIM_VIEW_SYNC_DEBUG").is_some()
-            || std::env::var_os("STAGE5_VERBOSE").is_some()
-    });
-    env || cfg.is_some_and(|c| c.sim_view_sync_trace)
+    crate::dev::test_run_instrumentation::diagnostics_operator_trace_enabled(
+        cfg.is_some_and(|c| c.sim_view_sync_trace),
+        &["SIM_VIEW_SYNC_DEBUG", "STAGE5_VERBOSE"],
+    )
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]

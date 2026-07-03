@@ -6,8 +6,13 @@ use bevy::prelude::*;
 use bevy_egui::{egui, EguiContexts, EguiPrimaryContextPass};
 
 use crate::engine::ActiveTestScene;
-use crate::gui::map_camera::sim_map_world_vec3_to_egui;
-use crate::gui::{MapCameraDesired, SimulationMapViewport};
+use crate::gui::map_camera::{
+    map_camera_viewport_pixels, map_zoom_alpha_with_limits, map_zoom_limits_for_world,
+    sim_map_world_vec3_to_egui, MapCameraDesired,
+};
+use crate::gui::view_authority::map_camera_desired_from_view_authority;
+use crate::gui::{SimulationMapViewport};
+use crate::render::view_runtime::ViewProjectionAuthority;
 use crate::systems::fire::ChunkSurfaceFire;
 use crate::terrain::generation::{world_generator_enhanced::WorldGenParams, Chunk, ChunkCellMatrix};
 
@@ -119,10 +124,10 @@ fn project_tile_aabb_to_egui(
         return None;
     }
     let corners = [
-        Vec3::new(min_tile.x, 0.0, min_tile.y),
-        Vec3::new(max_tile.x, 0.0, min_tile.y),
-        Vec3::new(max_tile.x, 0.0, max_tile.y),
-        Vec3::new(min_tile.x, 0.0, max_tile.y),
+        Vec3::new(min_tile.x, min_tile.y, 0.0),
+        Vec3::new(max_tile.x, min_tile.y, 0.0),
+        Vec3::new(max_tile.x, max_tile.y, 0.0),
+        Vec3::new(min_tile.x, max_tile.y, 0.0),
     ];
     let mut min_s = egui::pos2(f32::INFINITY, f32::INFINITY);
     let mut max_s = egui::pos2(f32::NEG_INFINITY, f32::NEG_INFINITY);
@@ -160,8 +165,10 @@ pub fn draw_vfx_fire_test_highlight_overlay(
     highlight: Res<VfxFireTestHighlight>,
     scene: Option<Res<ActiveTestScene>>,
     desired: Res<MapCameraDesired>,
+    authority: Option<Res<ViewProjectionAuthority>>,
     map_vp: Res<SimulationMapViewport>,
     params: Res<WorldGenParams>,
+    windows: Query<&Window, With<bevy::window::PrimaryWindow>>,
 ) -> Result {
     let active = scene.is_some_and(|s| s.0.seeds_fire_overlay());
     if !active || !highlight.enabled {
@@ -172,17 +179,28 @@ pub fn draw_vfx_fire_test_highlight_overlay(
     };
     let world_w = params.width.max(1) as f32;
     let world_h = params.height.max(1) as f32;
+    let window_px = windows
+        .single()
+        .map(|w| Vec2::new(w.width().max(1.0), w.height().max(1.0)))
+        .unwrap_or(Vec2::new(1280.0, 720.0));
+    let viewport = map_camera_viewport_pixels(window_px, Some(map_vp.as_ref()));
+    let (zoom_lo, zoom_hi) = map_zoom_limits_for_world(world_w, world_h, viewport);
+    let camera_desired = if let Some(auth) = authority.as_ref() {
+        map_camera_desired_from_view_authority(auth)
+    } else {
+        desired.as_ref().clone()
+    };
     let Some(mut rect) = project_tile_aabb_to_egui(
         highlight.min_tile,
         highlight.max_tile,
-        desired.as_ref(),
+        &camera_desired,
         map_vp.as_ref(),
         world_w,
         world_h,
     ) else {
         return Ok(());
     };
-    let zoom_alpha = desired.scale.x.abs().max(1e-6);
+    let zoom_alpha = map_zoom_alpha_with_limits(camera_desired.scale.x, zoom_lo, zoom_hi);
     if zoom_alpha < ZOOMED_OUT_ALPHA {
         rect = expand_rect_min_screen_size(rect, MIN_SCREEN_WHEN_ZOOMED_OUT_PX);
     }
@@ -203,7 +221,7 @@ pub fn draw_vfx_fire_test_highlight_overlay(
         egui::Id::new("vfx_fire_test_highlight"),
     );
     let painter = ctx.layer_painter(layer);
-    let stroke_w = (STROKE_PX_BASE * zoom_alpha.clamp(0.25, 1.25)).clamp(1.0, 4.0);
+    let stroke_w = (STROKE_PX_BASE * (0.65 + zoom_alpha * 0.6)).clamp(1.0, 4.0);
     let stroke = egui::Stroke::new(stroke_w, egui::Color32::from_rgb(255, 40, 32));
     painter.rect_stroke(rect, 0.0, stroke, egui::StrokeKind::Outside);
     painter.rect_filled(

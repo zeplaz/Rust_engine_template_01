@@ -62,7 +62,7 @@
     "relative_path": "debug_runs/landscape_grammar_burn_chain_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_veg_burn_chain_live_witness",
-    "written_at_epoch_secs": 1782013655
+    "written_at_epoch_secs": 1783043066
   },
   "burn_active_rows": 1,
   "gate": "VEG-BURN-CHAIN-001",

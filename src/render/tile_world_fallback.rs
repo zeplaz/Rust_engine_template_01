@@ -16,12 +16,13 @@ use std::collections::HashMap;
 
 use bevy::image::{ImageFilterMode, ImageSampler, ImageSamplerDescriptor};
 use bevy::diagnostic::FrameCount;
+use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 use bevy::render::render_resource::{Extent3d, TextureDescriptor, TextureDimension, TextureFormat, TextureUsages};
 
 use bevy_egui::{egui, EguiContexts};
 
-use crate::engine::{ActiveTestScene, BaseState};
+use crate::engine::{ActiveTestScene, BaseState, EngineLaunchArgs, TestScene};
 use crate::gui::{MapViewInstances, MapViewPresentationStates, MapViewState};
 use crate::gui::{map_toolbar, map_toolbar_minimap_zoom, MapToolbarConfig};
 use crate::gui::{
@@ -52,12 +53,19 @@ use crate::systems::terrain::TerrainRegistriesHandles;
 use crate::terrain::generation::world_generator_enhanced::{
     Height, Moisture, Temperature, TerrainType, TileMarker, WorldGenParams,
 };
-use crate::terrain::generation::{Chunk, ChunkCellMatrix};
+use crate::render::terrain_render_authority::TerrainRenderAuthority;
+use crate::terrain::generation::{Chunk, ChunkCellMatrix, WorldGenDenseTerrainCache};
 use crate::terrain::material::MaterialRegistry;
 
 /// Marks the full-map fallback sprite entity.
 #[derive(Component)]
 pub struct TileWorldFallbackSprite;
+
+#[derive(SystemParam)]
+struct TileFallbackGpuStampInputs<'w> {
+    authority: Res<'w, TerrainRenderAuthority>,
+    gpu_stamps: ResMut<'w, crate::gui::map_tile_atlas_stamp::TerrainGpuStampIndices>,
+}
 
 #[derive(Resource, Default)]
 pub struct TileWorldFallbackState {
@@ -221,7 +229,12 @@ fn refresh_tile_raster_budget(
     *fire_cadence = crate::render::FireExtractCadence::from(&*budgets);
     let harness = launch.as_deref().is_some_and(|l| l.test_mode()) || test_scene.is_some();
     if harness || matches!(base.get(), crate::engine::states::BaseState::Simulation) {
-        crate::render::FireExtractCadence::clamp_for_runtime(&mut fire_cadence, harness);
+        crate::render::FireExtractCadence::clamp_for_world(
+            &mut fire_cadence,
+            params.width.max(1),
+            params.height.max(1),
+            harness,
+        );
     }
 }
 
@@ -249,27 +262,62 @@ fn rebuild_tile_world_fallback_index(
     index.tiles_by_chunk.clear();
     index.roads_by_chunk.clear();
     let chunk_tiles = RASTER_CHUNK_TILES as usize;
-    for (tf, terrain, height, moisture, temperature) in queries.p0().iter() {
-        let x = tf.translation.x.round() as isize;
-        let y = tf.translation.z.round() as isize;
-        if x < 0 || y < 0 {
-            continue;
+    if queries.p0().is_empty() {
+        for (chunk, matrix) in queries.p2().iter() {
+            let sx = matrix.size.x as usize;
+            let sy = matrix.size.y as usize;
+            if sx == 0 || sy == 0 {
+                continue;
+            }
+            for y in 0..sy {
+                for x in 0..sx {
+                    let wx = chunk.coord.x as isize * sx as isize + x as isize;
+                    let wy = chunk.coord.y as isize * sy as isize + y as isize;
+                    if wx < 0 || wy < 0 {
+                        continue;
+                    }
+                    let xu = wx as usize;
+                    let yu = wy as usize;
+                    if xu >= tex_w || yu >= tex_h {
+                        continue;
+                    }
+                    let i = matrix.idx(x as u32, y as u32);
+                    let cx = (xu / chunk_tiles) as u32;
+                    let cz = (yu / chunk_tiles) as u32;
+                    index.tiles_by_chunk.entry((cx, cz)).or_default().push((
+                        xu,
+                        yu,
+                        matrix.family[i],
+                        matrix.elevation[i],
+                        matrix.moisture[i],
+                        matrix.temperature[i],
+                    ));
+                }
+            }
         }
-        let x = x as usize;
-        let y = y as usize;
-        if x >= tex_w || y >= tex_h {
-            continue;
+    } else {
+        for (tf, terrain, height, moisture, temperature) in queries.p0().iter() {
+            let x = tf.translation.x.round() as isize;
+            let y = tf.translation.z.round() as isize;
+            if x < 0 || y < 0 {
+                continue;
+            }
+            let x = x as usize;
+            let y = y as usize;
+            if x >= tex_w || y >= tex_h {
+                continue;
+            }
+            let cx = (x / chunk_tiles) as u32;
+            let cz = (y / chunk_tiles) as u32;
+            index.tiles_by_chunk.entry((cx, cz)).or_default().push((
+                x,
+                y,
+                terrain.0,
+                height.0,
+                moisture.0,
+                temperature.0,
+            ));
         }
-        let cx = (x / chunk_tiles) as u32;
-        let cz = (y / chunk_tiles) as u32;
-        index.tiles_by_chunk.entry((cx, cz)).or_default().push((
-            x,
-            y,
-            terrain.0,
-            height.0,
-            moisture.0,
-            temperature.0,
-        ));
     }
     for road in queries.p1().iter() {
         let x = road.tile_x as usize;
@@ -376,13 +424,18 @@ impl Plugin for TileWorldFallbackPlugin {
             .init_resource::<crate::render::FireExtractClock>()
             .init_resource::<crate::render::TileRasterSpikeFeedback>()
             .init_resource::<crate::gui::map_tile_atlas_stamp::TileAtlasGpuCache>()
+            .init_resource::<crate::gui::map_tile_atlas_stamp::TerrainGpuStampIndices>()
             .configure_sets(
                 Update,
                 TileWorldFallbackAfterFireExtract.after(FireVisualFrameSet::BuildProfiles),
             )
             .add_systems(
                 OnEnter(BaseState::Simulation),
-                (focus_main_camera_on_world_params, refresh_tile_raster_budget),
+                (
+                    focus_main_camera_on_world_params,
+                    sync_minimap_follow_camera_on_sim_enter.after(focus_main_camera_on_world_params),
+                    refresh_tile_raster_budget,
+                ),
             )
             .add_systems(
                 OnEnter(BaseState::Editor),
@@ -434,6 +487,7 @@ fn focus_main_camera_on_world_params(
     mut cam: Query<&mut Transform, With<MainWorldCamera>>,
     params: Res<WorldGenParams>,
     test_scene: Option<Res<ActiveTestScene>>,
+    launch: Option<Res<EngineLaunchArgs>>,
     windows: Query<&Window, With<bevy::window::PrimaryWindow>>,
     sim_viewport: Res<crate::gui::SimulationMapViewport>,
     mut authority: ResMut<crate::render::view_runtime::ViewProjectionAuthority>,
@@ -452,31 +506,39 @@ fn focus_main_camera_on_world_params(
         .unwrap_or(Vec2::new(1280.0, 720.0));
     let viewport = crate::gui::map_camera_viewport_pixels(window_px, Some(sim_viewport.as_ref()));
     let (zoom_lo, zoom_hi) = crate::gui::map_zoom_limits_for_world(world_w, world_h, viewport);
-    let zoom = match test_scene.as_ref().map(|s| s.0) {
-        Some(crate::engine::TestScene::Visual) | Some(crate::engine::TestScene::VfxSandbox) => {
-            // P2-VFX-VISUAL-001: tactical zoom so fire/water particles are not strategic-culled.
-            crate::gui::map_scale_for_zoom_alpha(
-                crate::gui::TACTICAL_VFX_PROOF_ZOOM_ALPHA,
-                zoom_lo,
-                zoom_hi,
-            )
-        }
-        Some(crate::engine::TestScene::Fire) | Some(crate::engine::TestScene::Atmosphere) => {
-            let margin = 0.9;
-            let fit: f32 = margin * (viewport.x / world_w).min(viewport.y / world_h);
-            fit.clamp(zoom_lo, zoom_hi)
-        }
-        _ => {
-            let margin = 0.9;
-            let fit = margin * (viewport.x / world_w.max(1.0)).min(viewport.y / world_h.max(1.0));
-            fit.clamp(zoom_lo, zoom_hi)
+    let tactical_proof = test_scene
+        .as_ref()
+        .map(|s| s.0)
+        .is_some_and(|scene| match scene {
+            TestScene::VfxSandbox => true,
+            TestScene::Visual => launch.as_ref().is_some_and(|l| l.full_capture_active()),
+            _ => false,
+        });
+    let zoom = if tactical_proof {
+        crate::gui::map_scale_for_zoom_alpha(
+            crate::gui::TACTICAL_VFX_PROOF_ZOOM_ALPHA,
+            zoom_lo,
+            zoom_hi,
+        )
+    } else {
+        match test_scene.as_ref().map(|s| s.0) {
+            Some(TestScene::Fire) | Some(TestScene::Atmosphere) => {
+                let margin = 0.9;
+                let fit: f32 = margin * (viewport.x / world_w).min(viewport.y / world_h);
+                fit.clamp(zoom_lo, zoom_hi)
+            }
+            _ => {
+                let margin = 0.9;
+                let fit = margin * (viewport.x / world_w.max(1.0)).min(viewport.y / world_h.max(1.0));
+                fit.clamp(zoom_lo, zoom_hi)
+            }
         }
     };
     for mut t in cam.iter_mut() {
         t.translation.x = cx;
         t.translation.y = cy;
         t.translation.z = 999.0;
-        t.scale = Vec3::splat(zoom);
+        t.scale = Vec3::ONE;
         t.rotation = Quat::IDENTITY;
     }
     let pose = MapCameraDesired {
@@ -489,6 +551,31 @@ fn focus_main_camera_on_world_params(
         trace.as_mut(),
         &pose,
     );
+}
+
+/// After [`focus_main_camera_on_world_params`], align minimap follow state with the committed main map pose.
+fn sync_minimap_follow_camera_on_sim_enter(
+    params: Res<WorldGenParams>,
+    desired: Res<MapCameraDesired>,
+    mut map_views: ResMut<crate::gui::MapViewInstances>,
+    mut shell: ResMut<MinimapShellState>,
+) {
+    if map_views.minimap.follow_mode != crate::gui::MinimapFollowMode::FollowCamera {
+        return;
+    }
+    let center = if params.width > 0 && params.height > 0 {
+        Vec2::new(desired.translation.x, desired.translation.y)
+    } else {
+        map_views.minimap.camera_center
+    };
+    map_views.minimap.camera_center = center;
+    shell.world_center = center;
+    // GPU compositor shows the full-world RT in FollowCamera — keep panel zoom neutral.
+    map_views.minimap.zoom = 1.0;
+    map_views.minimap.zoom_target = 1.0;
+    shell.zoom = 1.0;
+    shell.zoom_target = 1.0;
+    shell.clamp_zoom();
 }
 
 fn make_rgba_image(w: u32, h: u32, label: &'static str) -> Image {
@@ -524,16 +611,34 @@ fn tile_world_fallback_sync_spawner(
     mut commands: Commands,
     mut images: ResMut<Assets<Image>>,
     params: Res<WorldGenParams>,
+    authority: Res<TerrainRenderAuthority>,
     tiles: Query<(), With<TileMarker>>,
+    terrain_chunks: Query<(), With<ChunkCellMatrix>>,
+    dense_cache: Option<Res<WorldGenDenseTerrainCache>>,
     #[cfg(feature = "bevy_tilemap_adapter")] chunk_maps: Query<(), With<crate::render::ChunkTilemaps>>,
     mut state: ResMut<TileWorldFallbackState>,
     mut raster_dirty: ResMut<TileWorldFallbackRasterDirty>,
     mut raster_ctrl: ResMut<TileWorldFallbackRasterCtrl>,
 ) {
+    if authority.uses_gpu_sprite_display() {
+        // GPU path: one sprite + dirty-gated texture bake (no per-frame CPU paint).
+    } else if authority.is_gpu() {
+        if let Some(e) = state.sprite_entity.take() {
+            commands.entity(e).despawn();
+        }
+        state.last_w = 0;
+        state.last_h = 0;
+        state.image = Handle::default();
+        return;
+    }
+
+    let has_terrain = !tiles.is_empty()
+        || dense_cache.is_some()
+        || !terrain_chunks.is_empty();
     #[cfg(feature = "bevy_tilemap_adapter")]
-    let active = !tiles.is_empty() && chunk_maps.is_empty();
+    let active = has_terrain && chunk_maps.is_empty();
     #[cfg(not(feature = "bevy_tilemap_adapter"))]
-    let active = !tiles.is_empty();
+    let active = has_terrain;
 
     if !active {
         if let Some(e) = state.sprite_entity.take() {
@@ -630,7 +735,9 @@ fn sync_tile_fallback_raster_policy(
     mut policy: ResMut<TileFallbackRasterPolicy>,
     mut raster_ctrl: ResMut<TileWorldFallbackRasterCtrl>,
     mut atlas_cache: ResMut<crate::gui::map_tile_atlas_stamp::TileAtlasGpuCache>,
+    mut gpu_stamp_inputs: TileFallbackGpuStampInputs,
 ) {
+    let authority = gpu_stamp_inputs.authority.as_ref();
     let spike_active = spike_guard
         .as_deref()
         .is_some_and(|g| g.spike_active)
@@ -679,6 +786,14 @@ fn sync_tile_fallback_raster_policy(
                 raster_ctrl.atlas_stamps.push(stamp);
             }
         }
+    }
+    if authority.is_gpu() {
+        crate::gui::map_tile_atlas_stamp::queue_gpu_terrain_stamp_indices(
+            &raster_ctrl.atlas_stamps,
+            gpu_stamp_inputs.gpu_stamps.as_mut(),
+        );
+    } else {
+        gpu_stamp_inputs.gpu_stamps.tiles.clear();
     }
 }
 
@@ -831,6 +946,7 @@ fn raster_tile_fallback_subregion(
 }
 
 fn tile_world_fallback_rasterize(
+    authority: Res<TerrainRenderAuthority>,
     mut images: ResMut<Assets<Image>>,
     state: Res<TileWorldFallbackState>,
     handles: Res<TerrainRegistriesHandles>,
@@ -857,6 +973,10 @@ fn tile_world_fallback_rasterize(
     raster_policy: Res<TileFallbackRasterPolicy>,
     atlas_cache: Res<crate::gui::map_tile_atlas_stamp::TileAtlasGpuCache>,
 ) {
+    if !authority.uses_cpu_fallback_raster() && !authority.uses_gpu_sprite_display() {
+        raster_ctrl.last_applied_revision = Some(raster_dirty.revision());
+        return;
+    }
     if state.sprite_entity.is_none()
         || state.image == Handle::default()
         || state.minimap_image == Handle::default()
@@ -864,7 +984,8 @@ fn tile_world_fallback_rasterize(
         raster_ctrl.last_applied_revision = None;
         return;
     }
-    if queries.p0().is_empty() {
+    // Chunk-authoritative world gen has no TileMarker entities; raster from ChunkCellMatrix.
+    if queries.p0().is_empty() && queries.p2().is_empty() {
         return;
     }
     let tex_w_u = state.last_w;
@@ -1102,6 +1223,7 @@ fn tile_world_fallback_rasterize(
 }
 
 fn tile_world_fallback_rasterize_perf(
+    authority: Res<crate::render::terrain_render_authority::TerrainRenderAuthority>,
     mut raster_ctrl: ResMut<TileWorldFallbackRasterCtrl>,
     mut budget: Option<ResMut<FrameBudgetDiagnostics>>,
     mut perf: Option<ResMut<crate::render::FramePerf>>,
@@ -1109,6 +1231,10 @@ fn tile_world_fallback_rasterize_perf(
     let Some(raster_ms) = raster_ctrl.last_ms.take() else {
         return;
     };
+    // GPU sprite bakes are dirty-gated; §10 gate counts only CPU fallback raster.
+    if !authority.uses_cpu_fallback_raster() {
+        return;
+    }
     if let Some(budget) = budget.as_mut() {
         budget.record_bucket_ms(FrameBudgetBucket::MinimapRaster, raster_ms);
     }
@@ -1383,6 +1509,7 @@ pub fn draw_simulation_minimap_egui(
             paint_tactical_viewport_frame_on_minimap(
                 &painter,
                 palette,
+                None,
                 manager,
                 desired,
                 sim_map_viewport,

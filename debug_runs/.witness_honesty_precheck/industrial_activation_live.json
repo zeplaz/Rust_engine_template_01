@@ -57,8 +57,8 @@
     ],
     "relative_path": "debug_runs/industrial_activation_live.json",
     "schema": "debug_run_envelope_v1",
-    "source_system": "industrial_activation_live_proof",
-    "written_at_epoch_secs": 1782030984
+    "source_system": "ind_e02_default_play_002_witness",
+    "written_at_epoch_secs": 1783028067
   },
   "activation_green": false,
   "board": [
@@ -188,19 +188,19 @@
     }
   ],
   "concrete_chain_e2e": {
-    "activated_kiln": 0,
-    "activated_mine": 0,
-    "activated_mixer": 0,
+    "activated_kiln": 1,
+    "activated_mine": 1,
+    "activated_mixer": 1,
     "chain_id": "concrete_portland",
-    "chain_operational": false,
-    "flow_edges": 0,
-    "ind_e02_green": false,
-    "operational_kiln": 0,
-    "operational_mine": 0,
-    "operational_mixer": 0,
+    "chain_operational": true,
+    "flow_edges": 2,
+    "ind_e02_green": true,
+    "operational_kiln": 1,
+    "operational_mine": 1,
+    "operational_mixer": 1,
     "placed_via_construction": true,
-    "production_green": false,
-    "production_ticks": 121,
+    "production_green": true,
+    "production_ticks": 95,
     "sites_committed": 3
   },
   "governance_violation_count": 0,
@@ -212,13 +212,13 @@
     "ind_e03_green": false,
     "ind_e03_witness_001_green": false,
     "overload_events_total": 0,
-    "production_green": false
+    "production_green": true
   },
   "ind_e02_default_play_002": {
     "env_seeds_required": false,
     "gate": "IND-E02-DEFAULT-PLAY-002",
-    "green": false,
-    "ind_e02_green": false,
+    "green": true,
+    "ind_e02_green": true,
     "placed_via_construction": true,
     "requires_rust_engine_ind_e02_seed": false,
     "sites_committed": 3,
@@ -232,7 +232,7 @@
     "ind_e03_green": false,
     "ind_e03_witness_001_green": false,
     "overload_events_total": 0,
-    "production_green": false
+    "production_green": true
   },
   "industrial_i3_02_green": false,
   "open_todos": 1,

@@ -4,7 +4,7 @@
 ⟦SYMLANG⟧⟐v1  ◈PLAN
 ⟨ID⟩ PLAN-CODER-B-VEG-FIRE-MINIMAP-TAIL-001
 Date: 2026-06-17
-Status: **SIGNED** (@planner)
+Status: **CLOSED** (@coder B · witness bundle green · `post_drain_phase6_b_tail_queue.json` seq 1–9 done)
 Owner: @planner → **@coder B**
 Prior: POST-DRAIN-PHASE-6-001 (32/32 done) · parallel_wave wave-0 CDR-B done
 Honest: $ref:src/dev/vegetation_system_honest_status_v1.md

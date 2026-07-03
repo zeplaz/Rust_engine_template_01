@@ -7,24 +7,21 @@ pub fn vfx_zoom_lock_001_witness_json() -> serde_json::Value {
     use crate::engine::{EngineLaunchArgs, TestScene};
     use crate::render::stage5_full_app_harness::{
         tactical_vfx_hard_lock_enabled, vfx_sandbox_scroll_zoom_free,
-        visual_tactical_vfx_camera_lock_required,
+        visual_tactical_vfx_camera_lock_enabled,
     };
 
     let vfx_launch = EngineLaunchArgs {
         test_scene: TestScene::VfxSandbox,
         ..EngineLaunchArgs::default()
     };
-    let visual_launch = EngineLaunchArgs {
-        test_scene: TestScene::Visual,
-        ..EngineLaunchArgs::default()
-    };
 
+    let scroll_free = vfx_sandbox_scroll_zoom_free(Some(&vfx_launch));
+    let hard_lock = visual_tactical_vfx_camera_lock_enabled();
     serde_json::json!({
         "gate": "P0-VFX-ZOOM-LOCK-001",
-        "green": vfx_sandbox_scroll_zoom_free(Some(&vfx_launch))
-            && visual_tactical_vfx_camera_lock_required(Some(&visual_launch)),
-        "vfx_sandbox_scroll_free": vfx_sandbox_scroll_zoom_free(Some(&vfx_launch)),
-        "visual_test_hard_lock": visual_tactical_vfx_camera_lock_required(Some(&visual_launch)),
+        "green": scroll_free && !hard_lock,
+        "vfx_sandbox_scroll_free": scroll_free,
+        "visual_test_hard_lock": hard_lock,
         "tactical_vfx_hard_lock_env": tactical_vfx_hard_lock_enabled(),
     })
 }

@@ -58,28 +58,28 @@
     "relative_path": "debug_runs/stage7_play_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "stage7_play_witness",
-    "written_at_epoch_secs": 1782031098
+    "written_at_epoch_secs": 1783027436
   },
-  "activation_green": false,
+  "activation_green": true,
   "concrete_chain_e2e": {
-    "flow_edges": 0,
-    "ind_e02_green": false,
-    "operational_kiln": 0,
-    "operational_mine": 0,
-    "operational_mixer": 0,
+    "flow_edges": 2,
+    "ind_e02_green": true,
+    "operational_kiln": 1,
+    "operational_mine": 1,
+    "operational_mixer": 1,
     "placed_via_construction": true,
-    "production_green": false,
-    "production_ticks": 151
+    "production_green": true,
+    "production_ticks": 30
   },
   "ind_e03": {
-    "grid_overload_hook": false,
-    "ind_e03_green": false,
-    "overload_events_total": 0
+    "grid_overload_hook": true,
+    "ind_e03_green": true,
+    "overload_events_total": 30
   },
-  "open_todos": 1,
+  "open_todos": 0,
   "profile": "STAGE7_PLAY",
-  "s7p_grid_optional_green": false,
-  "s7p_steward_green": false,
+  "s7p_grid_optional_green": true,
+  "s7p_steward_green": true,
   "scenario": "src/dev/stage7_play_scenario_v1.md",
   "scenario_step_8_optional": "ind_e03.ind_e03_green"
 }

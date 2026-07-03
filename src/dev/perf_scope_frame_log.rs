@@ -15,6 +15,16 @@ pub fn record_perf_scope(label: &'static str, ms: f32) {
     }
 }
 
+/// Peak scoped CPU this frame without draining the buffer.
+#[must_use]
+pub fn max_perf_scope_ms() -> f32 {
+    SCOPES
+        .lock()
+        .ok()
+        .map(|scopes| scopes.iter().map(|(_, ms)| *ms).fold(0.0_f32, f32::max))
+        .unwrap_or(0.0)
+}
+
 /// Drain scopes recorded this frame (sorted descending by ms).
 #[must_use]
 pub fn take_perf_scopes_json() -> Value {

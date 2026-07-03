@@ -57,8 +57,8 @@
     ],
     "relative_path": "debug_runs/infrastructure_view_isolation_live.json",
     "schema": "debug_run_envelope_v1",
-    "source_system": "view_runtime_live_proof",
-    "written_at_epoch_secs": 1782030986
+    "source_system": "refresh_infrastructure_view_isolation_live_witness",
+    "written_at_epoch_secs": 1783027437
   },
   "fire7_f7_a_001": {
     "f7_a_per_view_extract_bounded": true,
@@ -88,10 +88,10 @@
     "minimap_main_lockstep_suspect": false,
     "minimap_overlay_fire_heat": false,
     "preview_main_lockstep_suspect": false,
-    "preview_overlay_fire_heat": true,
-    "simulation_map_shares_main_camera": true,
+    "preview_overlay_fire_heat": false,
+    "simulation_map_shares_main_camera": false,
     "vm08_overlay_masks_aligned": true,
-    "world_main_overlay_fire_heat": true
+    "world_main_overlay_fire_heat": false
   },
   "profile": "INFRASTRUCTURE_VIEW_ISOLATION",
   "trace": {
@@ -136,31 +136,16 @@
   "vm_11": {
     "f7_a_per_view_extract_bounded": true,
     "minimap_cap_respected": true,
-    "per_view_chunk_heat": {
-      "Minimap": 0,
-      "SimulationMap": 0,
-      "WorldMain": 0,
-      "WorldPreview": 0
-    },
-    "per_view_fire_instances": {
-      "Minimap": 0,
-      "SimulationMap": 0,
-      "WorldMain": 0,
-      "WorldPreview": 0
-    },
+    "per_view_chunk_heat": {},
+    "per_view_fire_instances": {},
     "preview_cap_respected": true,
     "preview_semantic_audit_green": true,
     "projection_fire_source": "WorldMain"
   },
   "vm_a": {
-    "authority_revision": 1804,
+    "authority_revision": 0,
     "dual_writer_pose_violation": false,
     "minimap_shell_wrote_map_camera_desired": false,
-    "pose_writers": {
-      "Minimap": "MinimapShell",
-      "SimulationMap": "MapCameraInput",
-      "WorldMain": "MapCameraInput",
-      "WorldPreview": "PreviewPanel"
-    }
+    "pose_writers": {}
   }
 }

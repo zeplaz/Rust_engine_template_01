@@ -39,11 +39,10 @@ pub(crate) struct ChromeSnapshot {
 
 #[inline]
 pub fn worldgen_chrome_debug_enabled() -> bool {
-    static ENABLED: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
-    *ENABLED.get_or_init(|| {
-        std::env::var_os("WORLDGEN_CHROME_DEBUG").is_some()
-            || std::env::var_os("STAGE5_VERBOSE").is_some()
-    })
+    crate::dev::test_run_instrumentation::diagnostics_operator_trace_enabled(
+        false,
+        &["WORLDGEN_CHROME_DEBUG", "STAGE5_VERBOSE"],
+    )
 }
 
 pub fn log_chrome_dismiss(reason: &'static str, latch: bool, wg_visible: bool, preview_open: bool) {

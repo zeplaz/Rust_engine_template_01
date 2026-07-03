@@ -61,7 +61,7 @@
     "relative_path": "debug_runs/ui_shell_migration_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "simulation_shell_phase2_live_proof",
-    "written_at_epoch_secs": 1782222532
+    "written_at_epoch_secs": 1783039066
   },
   "backends": {
     "P1_ops_strip": "bevy_ui",

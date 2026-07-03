@@ -185,16 +185,25 @@ pub fn hook_post_readiness_visual_aidv2(world: &mut World) {
             .filter(|s| **s == TodoStatus::Done)
             .count();
         if done > 0 {
-            info!(
-                target: "visual_aidv2_live_todos",
-                "VISUAL_AID_V2_BOARD done={done}/{} footprint_ok={} readability={} icons={}",
-                VISUAL_AID_V2_TODOS.len(),
-                witness.map(|w| w.footprint_tile_overlay_ok).unwrap_or(false),
-                witness
-                    .map(|w| w.tile_readability_clamp_active)
-                    .unwrap_or(false),
-                witness.map(|w| w.macro_icon_instance_count).unwrap_or(0),
-            );
+            let footprint_ok = witness.map(|w| w.footprint_tile_overlay_ok).unwrap_or(false);
+            let readability = witness
+                .map(|w| w.tile_readability_clamp_active)
+                .unwrap_or(false);
+            let icons = witness.map(|w| w.macro_icon_instance_count).unwrap_or(0);
+            let sig = (done, footprint_ok, readability, icons);
+            let should_log = world
+                .get_resource_mut::<VisualAidV2HarnessState>()
+                .is_none_or(|h| h.last_board_log != Some(sig));
+            if should_log {
+                if let Some(mut h) = world.get_resource_mut::<VisualAidV2HarnessState>() {
+                    h.last_board_log = Some(sig);
+                }
+                info!(
+                    target: "visual_aidv2_live_todos",
+                    "VISUAL_AID_V2_BOARD done={done}/{} footprint_ok={footprint_ok} readability={readability} icons={icons}",
+                    VISUAL_AID_V2_TODOS.len(),
+                );
+            }
         }
     }
 }
@@ -277,6 +286,8 @@ pub struct VisualAidV2HarnessState {
     pub green_streak: u32,
     /// Arm graceful GPU exit after live proof (when `visual_auto_exit`).
     pub request_visual_exit: bool,
+    /// Throttle per-frame `VISUAL_AID_V2_BOARD` terminal spam during readiness eval.
+    pub last_board_log: Option<(usize, bool, bool, u32)>,
 }
 
 pub const VISUAL_AID_V2_LIVE_JSON: &str = "debug_runs/visual_aidv2_live.json";

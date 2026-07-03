@@ -65,6 +65,21 @@ pub struct MinimapOverlayMask {
     pub replay_scrub: bool,
 }
 
+impl MinimapOverlayMask {
+    /// True when any GPU heat layer upload / compositor blend is required beyond terrain.
+    #[must_use]
+    pub const fn needs_gpu_heat_upload(self) -> bool {
+        self.fire_heat
+            || self.logistics_heat
+            || self.construction_heat
+            || self.ecology_heat
+            || self.fow
+            || self.ew
+            || self.units
+            || self.replay_scrub
+    }
+}
+
 /// Default minimap overlay toggles for **operator Simulation** (VX-P0-01).
 ///
 /// Fire/ecology stay **off** by default so witness/ambient heat does not wash the strategic panel;
@@ -383,6 +398,19 @@ pub fn minimap_uv_to_world_tile(uv: Vec2, world_width: f32, world_height: f32) -
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn simulation_defaults_skip_fire_heat_upload() {
+        let defaults = simulation_minimap_overlay_defaults();
+        assert!(!defaults.fire_heat);
+        assert!(defaults.needs_gpu_heat_upload());
+        let terrain_only = MinimapOverlayMask {
+            fire_heat: false,
+            logistics_heat: false,
+            ..Default::default()
+        };
+        assert!(!terrain_only.needs_gpu_heat_upload());
+    }
 
     #[test]
     fn bootstrap_activates_panel_viewport_suggestion() {

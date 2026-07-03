@@ -21,12 +21,14 @@ use crate::gui::editor::map_editor::MapEditorRoadMarkerV1;
 use crate::render::FireSimulationSnapshot;
 use crate::strategic::LogisticsGraph;
 use crate::systems::transport::TransportTopology;
-use crate::terrain::generation::world_generator_enhanced::{TileMarker, WorldGenProgress, WorldMarker};
+use crate::terrain::generation::world_generator_enhanced::{TileMarker, WorldGenParams, WorldGenProgress, WorldMarker};
+use crate::terrain::world_map_scale::TerrainFieldStorage;
 
 static ACTIVE: AtomicBool = AtomicBool::new(false);
 static QUIET_TERMINAL: AtomicBool = AtomicBool::new(false);
 static FRAME_JSONL: AtomicBool = AtomicBool::new(false);
 static STALL_SPANS: AtomicBool = AtomicBool::new(false);
+static FRAME_JSONL_STRIDE: std::sync::OnceLock<u32> = std::sync::OnceLock::new();
 static FLUSH_SECS: std::sync::OnceLock<f32> = std::sync::OnceLock::new();
 
 /// Live latch state — readable from systems; atomics mirror this for pre-Startup callers.
@@ -37,6 +39,8 @@ pub struct TestRunInstrumentation {
     pub frame_jsonl: bool,
     pub stall_spans: bool,
     pub flush_secs: f32,
+    /// Append full frame JSONL every N frames (1 = every frame).
+    pub frame_jsonl_stride: u32,
     pub from_test_cli: bool,
     pub test_scene: crate::engine::TestScene,
     pub maneuver: crate::engine::DebugManeuver,
@@ -50,6 +54,7 @@ impl Default for TestRunInstrumentation {
             frame_jsonl: false,
             stall_spans: false,
             flush_secs: 5.0,
+            frame_jsonl_stride: 1,
             from_test_cli: false,
             test_scene: crate::engine::TestScene::None,
             maneuver: crate::engine::DebugManeuver::None,
@@ -86,6 +91,42 @@ pub fn instrumentation_stall_spans() -> bool {
     STALL_SPANS.load(Ordering::Relaxed)
 }
 
+/// Explicit operator request for per-frame viewport / sim-view trace (not implied by `--test` quiet mode).
+#[must_use]
+pub fn instrumentation_explicit_verbose_trace() -> bool {
+    env_flag("STAGE5_VERBOSE")
+        || env_flag("VISUAL_DIAG")
+        || env_flag("SIM_VIEW_SYNC_DEBUG")
+        || env_flag("VIEWPORT_AUTHORITY_DEBUG")
+        || env_flag("WORLDGEN_CHROME_DEBUG")
+        || env_flag("STALL")
+        || env_flag("PERF")
+}
+
+/// Operator-facing trace (env / CLI) gated by `--test` quiet terminal unless explicitly requested.
+#[must_use]
+pub fn diagnostics_operator_trace_enabled(cfg_cli: bool, env_keys: &[&str]) -> bool {
+    if instrumentation_quiet_terminal() && !instrumentation_explicit_verbose_trace() {
+        return cfg_cli;
+    }
+    cfg_cli || env_keys.iter().any(|k| env_flag(k))
+}
+
+/// STALL lines go to disk witness always when enabled; terminal only when not quiet.
+#[must_use]
+pub fn stall_terminal_logging_enabled() -> bool {
+    !instrumentation_quiet_terminal() || instrumentation_explicit_verbose_trace()
+}
+
+#[must_use]
+pub fn instrumentation_frame_jsonl_stride() -> u32 {
+    std::env::var("SIM_ANALYTICS_FRAME_STRIDE")
+        .ok()
+        .and_then(|s| s.parse::<u32>().ok())
+        .filter(|v| *v >= 1)
+        .unwrap_or_else(|| FRAME_JSONL_STRIDE.get().copied().unwrap_or(1))
+}
+
 #[must_use]
 pub fn instrumentation_flush_secs() -> f32 {
     std::env::var("SIM_ANALYTICS_FLUSH_SECS")
@@ -101,6 +142,7 @@ fn publish_atomics(inst: &TestRunInstrumentation) {
     FRAME_JSONL.store(inst.frame_jsonl, Ordering::Relaxed);
     STALL_SPANS.store(inst.stall_spans, Ordering::Relaxed);
     let _ = FLUSH_SECS.set(inst.flush_secs);
+    let _ = FRAME_JSONL_STRIDE.set(inst.frame_jsonl_stride.max(1));
 }
 
 fn merge_env_overrides(inst: &mut TestRunInstrumentation) {
@@ -130,6 +172,7 @@ pub fn bootstrap_test_run_instrumentation(
         inst.frame_jsonl = profile.frame_jsonl;
         inst.stall_spans = profile.stall_spans;
         inst.flush_secs = profile.flush_secs;
+        inst.frame_jsonl_stride = profile.frame_jsonl_stride;
         inst.from_test_cli = true;
         inst.test_scene = launch.test_scene;
         inst.maneuver = launch.maneuver;
@@ -139,6 +182,7 @@ pub fn bootstrap_test_run_instrumentation(
 
     if matches!(launch.test_scene, TestScene::VfxSandbox | TestScene::Visual) {
         if let Some(cadence) = fire_cadence.as_mut() {
+            // World size may not be seeded yet — bootstrap applies harness floor; sim enter reclamps.
             crate::render::FireExtractCadence::clamp_for_runtime(cadence, true);
         }
     }
@@ -169,7 +213,7 @@ pub struct EcsResourceInventory {
 impl Default for EcsResourceInventory {
     fn default() -> Self {
         Self {
-            sample_every_frames: 15,
+            sample_every_frames: 60,
             frames_since_sample: 0,
             last_json: None,
         }
@@ -178,6 +222,7 @@ impl Default for EcsResourceInventory {
 
 #[derive(SystemParam)]
 struct InventoryProbe<'w, 's> {
+    params: Res<'w, WorldGenParams>,
     tiles: Query<'w, 's, (), With<TileMarker>>,
     worlds: Query<'w, 's, (), With<WorldMarker>>,
     roads: Query<'w, 's, (), With<MapEditorRoadMarkerV1>>,
@@ -202,8 +247,20 @@ fn sample_ecs_resource_inventory(
     }
     inventory.frames_since_sample = 0;
 
+    let tile_entities = if probe.params.field_storage == TerrainFieldStorage::ChunkCellMatrixAuthoritative {
+        0u64
+    } else {
+        probe.tiles.iter().count() as u64
+    };
+    let terrain_tiles = probe
+        .params
+        .width
+        .saturating_mul(probe.params.height) as u64;
+
     let entities = json!({
-        "tiles": probe.tiles.iter().count(),
+        "tiles": tile_entities,
+        "terrain_tiles_symbolic": terrain_tiles,
+        "terrain_storage": format!("{:?}", probe.params.field_storage),
         "world_markers": probe.worlds.iter().count(),
         "map_editor_roads": probe.roads.iter().count(),
         "test_scene_chunks": probe.test_chunks.iter().count(),

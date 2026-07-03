@@ -1,5 +1,6 @@
 //! **FIRE7-F7-B-001** — fire chunk sleep/wake streaming (sim) + `fire_streaming_live.json`.
 
+use bevy::diagnostic::FrameCount;
 use bevy::math::IVec2;
 use bevy::prelude::*;
 
@@ -28,6 +29,10 @@ pub struct FireStreamingLiveProofState {
     pub frames_since_write: u32,
     pub write_interval: u32,
     pub written: bool,
+}
+
+impl FireStreamingLiveProofState {
+    pub const DEFAULT_WRITE_INTERVAL: u32 = 90;
 }
 
 /// Mutates [`FireChunkRuntime`] before [`crate::render::sync_active_fire_chunk_set`].
@@ -107,6 +112,7 @@ fn build_fire_streaming_payload(
 }
 
 pub fn write_fire_streaming_live_proof_system(
+    frame: Res<FrameCount>,
     base: Res<State<BaseState>>,
     mut state: ResMut<FireStreamingLiveProofState>,
     witness: Res<FireStreamingWitness>,
@@ -114,6 +120,12 @@ pub fn write_fire_streaming_live_proof_system(
 ) {
     if !matches!(base.get(), BaseState::Simulation) {
         return;
+    }
+    if !crate::dev::debug_run_envelope::witness_refresh_due(FIRE_STREAMING_LIVE_JSON, frame.0) {
+        return;
+    }
+    if state.write_interval == 0 {
+        state.write_interval = FireStreamingLiveProofState::DEFAULT_WRITE_INTERVAL;
     }
     state.frames_since_write = state.frames_since_write.saturating_add(1);
     if state.frames_since_write < state.write_interval {
@@ -194,8 +206,12 @@ pub struct FireStreamingPlugin;
 
 impl Plugin for FireStreamingPlugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<FireStreamingWitness>()
-            .init_resource::<FireStreamingLiveProofState>();
+        app.init_resource::<FireStreamingWitness>().insert_resource(
+            FireStreamingLiveProofState {
+                write_interval: FireStreamingLiveProofState::DEFAULT_WRITE_INTERVAL,
+                ..Default::default()
+            },
+        );
     }
 }
 

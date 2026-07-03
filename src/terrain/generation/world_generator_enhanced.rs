@@ -24,6 +24,7 @@ use super::terrain_noise::{
 pub use super::terrain_noise::TerrainNoiseProfile;
 
 use super::tuning_io;
+use super::world_gen_dense_cache::{hydrate_chunk_matrices_from_dense_terrain, WorldGenDenseTerrainCache};
 use crate::terrain::voronoi_enhanced::*;
 use crate::terrain::world::GeoRegion;
 use crate::terrain::biome::BiomeTuning;
@@ -34,11 +35,14 @@ use crate::engine::WorldGenFlowState;
 use crate::terrain::generation::hydrology::{
     compute_hydrology_world, HydrologyParams, HydrologyResult,
 };
-use crate::render::{TileWorldFallbackRasterDirty, WaterSurfaceVisualCatalog};
+use crate::render::{TileWorldFallbackRasterDirty, WaterSurfaceVisualCatalog, ChunkFireEntityIndex};
 use crate::terrain::generation::world_gen_diagnostics::{
     summary_line, write_world_gen_debug_report, WorldGenLastDebugReport, WorldGenRunTiming,
 };
 use crate::terrain::material::TagSet;
+use crate::terrain::world_map_scale::{
+    derive_land_features, LandFeatureRhythm, TerrainFieldStorage, TileExtentPreset, WorldMapScale,
+};
 
 pub use crate::terrain::generation::polygon_world_semantics::{
     apply_strategic_field_nudge, classify_strategic_tile, MacroStrategicKind,
@@ -95,6 +99,15 @@ pub struct WorldGenParams {
     pub island_falloff: f32,
     /// Tags permitted in pass 2 / 4 (`ChunkCellMatrix`). Unchecked tags in the World Generator UI are cleared here.
     pub tag_pool: TagSet,
+
+    /// Symbolic real-world scale (100 m/tile default). Sim grid stays 1 unit/tile.
+    pub map_scale: WorldMapScale,
+    /// Km-scale targets for deriving `num_regions`, `noise_scale`, rivers, lakes.
+    pub feature_rhythm: LandFeatureRhythm,
+    /// When true, recompute derived land features at each generation job from map size + rhythm.
+    pub auto_symbolic_land_features: bool,
+    /// Terrain storage strategy (per-tile ECS is legacy; chunk matrix is the scale target).
+    pub field_storage: TerrainFieldStorage,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Serialize, Deserialize)]
@@ -109,15 +122,15 @@ pub enum RegionMethod {
 
 impl Default for WorldGenParams {
     fn default() -> Self {
-        Self {
+        let mut p = Self {
             width: 512,
             height: 512,
             seed: rand::random(),
-            num_regions: 24,
+            num_regions: 0,
             region_method: RegionMethod::Centroidal,
             region_iterations: 3,
             strategic_field_coupling: 0.0,
-            noise_scale: 0.024,
+            noise_scale: 0.0,
             noise_octaves: 6,
             noise_lacunarity: 2.0,
             noise_persistence: 0.5,
@@ -129,13 +142,56 @@ impl Default for WorldGenParams {
             temperature_bias: 0.03,
             noise_sampling: NoiseSamplingTuning::default(),
             biome_tuning: BiomeTuning::default(),
-            river_count: 5,
-            lake_count: 3,
+            river_count: 0,
+            lake_count: 0,
             mountain_threshold: 0.7,
             island_mode: false,
             island_falloff: 3.0,
             tag_pool: TagSet::ALL,
-        }
+            map_scale: WorldMapScale::default(),
+            feature_rhythm: LandFeatureRhythm::default(),
+            auto_symbolic_land_features: true,
+            field_storage: TerrainFieldStorage::PerTileEntities,
+        };
+        p.recompute_symbolic_land_features();
+        p
+    }
+}
+
+impl WorldGenParams {
+    /// Apply a named tile-count preset (km extent follows [`Self::map_scale`]).
+    pub fn apply_tile_extent_preset(&mut self, preset: TileExtentPreset) {
+        let n = preset.tiles_per_axis();
+        self.width = n;
+        self.height = n;
+        self.recompute_symbolic_land_features();
+    }
+
+    /// Derive `num_regions`, `noise_scale`, `river_count`, `lake_count` from symbolic km rhythm.
+    pub fn recompute_symbolic_land_features(&mut self) {
+        let derived = derive_land_features(
+            self.width,
+            self.height,
+            &self.map_scale,
+            &self.feature_rhythm,
+        );
+        self.num_regions = derived.num_regions;
+        self.noise_scale = derived.noise_scale;
+        self.river_count = derived.river_count;
+        self.lake_count = derived.lake_count;
+    }
+
+    #[must_use]
+    pub fn extent_km(&self) -> (f32, f32) {
+        (
+            self.map_scale.extent_km(self.width),
+            self.map_scale.extent_km(self.height),
+        )
+    }
+
+    #[must_use]
+    pub fn area_km2(&self) -> f32 {
+        self.map_scale.area_km2(self.width, self.height)
     }
 }
 
@@ -200,12 +256,13 @@ pub fn build_world_noise_kernels(params: &WorldGenParams, tuning: &NoiseSampling
 
 /// One tile after parallel height-field sampling (ECS spawn reads this on the main thread).
 #[derive(Clone, Copy)]
-struct TileSpawnData {
-    moisture: f32,
-    temperature: f32,
-    terrain_family: TerrainFamilyId,
-    region_index: usize,
-    strategic_kind: MacroStrategicKind,
+/// Per-tile sampled fields from parallel world-gen raster (before ECS spawn or dense cache).
+pub(crate) struct TileSpawnData {
+    pub(crate) moisture: f32,
+    pub(crate) temperature: f32,
+    pub(crate) terrain_family: TerrainFamilyId,
+    pub(crate) region_index: usize,
+    pub(crate) strategic_kind: MacroStrategicKind,
 }
 
 /// Raster produced on a background thread (`rayon` per row), then consumed for batched ECS spawns.
@@ -370,6 +427,8 @@ pub fn despawn_generated_world_entities(
     query: &Query<Entity, With<WorldMarker>>,
 ) {
     commands.remove_resource::<MacroRegionRaster>();
+    commands.remove_resource::<super::world_gen_dense_cache::WorldGenDenseTerrainCache>();
+    commands.insert_resource(super::world_gen_dense_cache::DenseTerrainHydrationGate::default());
     for entity in query.iter() {
         commands.entity(entity).despawn();
     }
@@ -587,6 +646,7 @@ fn finalize_world_gen_job(
         p.lake_count,
         p.width,
         p.height,
+        &p.map_scale,
         &job.timing,
         &job.height_grid,
         &job.biome_counts,
@@ -618,9 +678,27 @@ fn finalize_world_gen_job(
     progress.fraction = 0.0;
 }
 
+fn spawn_hydrology_markers_only(commands: &mut Commands, hydro: &HydrologyResult) {
+    for (river_index, _path) in hydro.rivers.iter().enumerate() {
+        commands.spawn((
+            RiverMarker,
+            Name::new(format!("River {}", river_index)),
+        ));
+    }
+    for (lake_index, lake) in hydro.lakes.iter().enumerate() {
+        if lake.cells.is_empty() {
+            continue;
+        }
+        commands.spawn((
+            LakeMarker,
+            Name::new(format!("Lake {}", lake_index)),
+        ));
+    }
+}
+
 fn world_gen_pipeline_tick(
     mut commands: Commands,
-    params: Res<WorldGenParams>,
+    mut params: ResMut<WorldGenParams>,
     mut pending: ResMut<WorldGenPending>,
     mut slot: ResMut<WorldGenJobSlot>,
     mut progress: ResMut<WorldGenProgress>,
@@ -628,6 +706,8 @@ fn world_gen_pipeline_tick(
     mut completed: MessageWriter<WorldGenCompletedEvent>,
     mut last_debug: ResMut<WorldGenLastDebugReport>,
     mut raster_dirty: Option<ResMut<TileWorldFallbackRasterDirty>>,
+    mut dense_cache: Option<ResMut<WorldGenDenseTerrainCache>>,
+    mut fire_chunk_index: Option<ResMut<ChunkFireEntityIndex>>,
 ) {
     if let Some(job) = slot.0.as_mut() {
         if matches!(job.step, WorldGenPipelineStep::HydrologyPending) {
@@ -656,23 +736,33 @@ fn world_gen_pipeline_tick(
                     progress.label = "Spawning rivers / lakes…".to_string();
                     progress.fraction = 0.95;
 
-                    if job.run_params.river_count > 0 {
-                        spawn_hydrology_rivers(
-                            &mut commands,
-                            &job.run_params,
-                            &job.tile_lookup,
-                            &hydro,
-                        );
-                    }
-                    if job.run_params.lake_count > 0 {
-                        spawn_hydrology_lakes(
-                            &mut commands,
-                            &job.run_params,
-                            &job.tile_lookup,
-                            &job.geo_regions,
-                            &job.region_entities,
-                            &hydro,
-                        );
+                    let chunk_authoritative = job.run_params.field_storage
+                        == TerrainFieldStorage::ChunkCellMatrixAuthoritative;
+
+                    if chunk_authoritative {
+                        if let Some(cache) = dense_cache.as_mut() {
+                            cache.apply_hydrology(&job.run_params, &hydro);
+                        }
+                        spawn_hydrology_markers_only(&mut commands, &hydro);
+                    } else {
+                        if job.run_params.river_count > 0 {
+                            spawn_hydrology_rivers(
+                                &mut commands,
+                                &job.run_params,
+                                &job.tile_lookup,
+                                &hydro,
+                            );
+                        }
+                        if job.run_params.lake_count > 0 {
+                            spawn_hydrology_lakes(
+                                &mut commands,
+                                &job.run_params,
+                                &job.tile_lookup,
+                                &job.geo_regions,
+                                &job.region_entities,
+                                &hydro,
+                            );
+                        }
                     }
                     let catalog = WaterSurfaceVisualCatalog::from_hydrology(&hydro, &job.run_params);
                     commands.insert_resource(catalog);
@@ -747,6 +837,9 @@ fn world_gen_pipeline_tick(
             return;
         };
 
+        if params.auto_symbolic_land_features {
+            params.recompute_symbolic_land_features();
+        }
         let run_params = effective_params_for_phase(&params, phase);
         let tiles = (run_params.width as u64).saturating_mul(run_params.height as u64);
 
@@ -782,6 +875,9 @@ fn world_gen_pipeline_tick(
         );
 
         despawn_generated_world_entities(&mut commands, &world_roots);
+        if let Some(index) = fire_chunk_index.as_mut() {
+            index.clear();
+        }
 
         info!(
             "Generating {phase:?} world with seed: {} ({}×{})",
@@ -797,7 +893,12 @@ fn world_gen_pipeline_tick(
         let regions_ms = t_regions.elapsed().as_secs_f64() * 1000.0;
 
         let world_entity = commands
-            .spawn((WorldMarker, Name::new("World")))
+            .spawn((
+                WorldMarker,
+                Transform::default(),
+                GlobalTransform::default(),
+                Name::new("World"),
+            ))
             .id();
 
         let mut geo_regions = Vec::new();
@@ -888,6 +989,9 @@ fn world_gen_pipeline_tick(
         "spawn_cells must match raster size"
     );
 
+    let chunk_authoritative = job.run_params.field_storage
+        == TerrainFieldStorage::ChunkCellMatrixAuthoritative;
+
     for y in job.next_tile_row..y_end {
         let row_off = y as usize * w;
         for x in 0..job.run_params.width {
@@ -908,6 +1012,10 @@ fn world_gen_pipeline_tick(
 
             if idx < job.region_index_raster.len() {
                 job.region_index_raster[idx] = cell.region_index as u32;
+            }
+
+            if chunk_authoritative {
+                continue;
             }
 
             let tile_entity = commands
@@ -943,13 +1051,41 @@ fn world_gen_pipeline_tick(
     } else {
         y_end as f32 / h as f32 * 0.9
     };
-    progress.label = format!("Terrain (spawning tiles)… {y_end} / {h}");
+    progress.label = if chunk_authoritative {
+        format!("Terrain (committing fields)… {y_end} / {h}")
+    } else {
+        format!("Terrain (spawning tiles)… {y_end} / {h}")
+    };
 
     if y_end < h {
         return;
     }
 
-    job.spawn_cells = Vec::new();
+    if chunk_authoritative {
+        let cache = WorldGenDenseTerrainCache::from_world_gen_raster(
+            job.run_params.width,
+            job.run_params.height,
+            job.height_grid.clone(),
+            job.moisture_grid.clone(),
+            &job.spawn_cells,
+            job.region_index_raster.clone(),
+        );
+        commands.insert_resource(cache);
+        commands.insert_resource(super::world_gen_dense_cache::DenseTerrainHydrationGate::default());
+        if let Some(dirty) = raster_dirty.as_mut() {
+            dirty.bump();
+        }
+        job.spawn_cells = Vec::new();
+        info!(
+            target: "world_gen",
+            "Chunk-authoritative terrain: {}×{} fields ({} tiles, 0 TileMarker entities)",
+            job.run_params.width,
+            job.run_params.height,
+            job.run_params.width.saturating_mul(job.run_params.height),
+        );
+    } else {
+        job.spawn_cells = Vec::new();
+    }
 
     job.timing.tiling_ms = job
         .timing
@@ -1187,6 +1323,7 @@ pub struct WorldGeneratorPlugin;
 impl Plugin for WorldGeneratorPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<WorldGenParams>()
+            .init_resource::<super::world_gen_dense_cache::DenseTerrainHydrationGate>()
             .init_resource::<WorldGenPending>()
             .init_resource::<WorldGenJobSlot>()
             .init_resource::<WorldGenProgress>()
@@ -1202,6 +1339,8 @@ impl Plugin for WorldGeneratorPlugin {
                     apply_generate_world_request,
                     cancel_active_world_gen_on_request,
                     world_gen_pipeline_tick,
+                    hydrate_chunk_matrices_from_dense_terrain
+                        .before(crate::systems::terrain::materialize_chunks),
                     world_gen_apply_completion,
                 )
                     .chain(),

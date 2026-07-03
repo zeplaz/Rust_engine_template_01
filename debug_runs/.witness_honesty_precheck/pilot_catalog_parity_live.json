@@ -58,7 +58,7 @@
     "relative_path": "debug_runs/pilot_catalog_parity_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_pilot_catalog_parity_live_witness",
-    "written_at_epoch_secs": 1782009780
+    "written_at_epoch_secs": 1783027962
   },
   "gate": "BUILD-READ-PILOT-001",
   "green": true,

@@ -44,6 +44,11 @@ pub struct FrameScheduleSpans {
     pub post_vt_to_pre_egui_ms: f32,
     pub egui_ms: f32,
     pub post_egui_to_last_ms: f32,
+    /// First schedule → previous frame `last` checkpoint (render / present / GPU wait).
+    pub post_render_gap_ms: f32,
+    /// Sum of mid-Update wall gaps ≥100ms that no perf scope accounts for (uninstrumented
+    /// CPU, blocking call, or render/present wait — not necessarily GPU).
+    pub unattributed_gap_ms: f32,
     /// Update: end of streaming spine reconstruct chain (late Update, after world repr).
     pub post_streaming_spine_ms: f32,
     /// Update: PreUpdate end → first pre-repr slice (usually dominates when “pre_repr” is huge).
@@ -74,6 +79,8 @@ pub struct FrameSubstageSpans {
     pub map_smooth_ms: f32,
     pub minimap_intent_ms: f32,
     pub view_sync_ms: f32,
+    /// Wall time from view_sync → fire extract chain start (scheduling / GPU bubble).
+    pub fire_pre_extract_ms: f32,
     pub fire_sim_snapshot_ms: f32,
     pub fire_sync_overlay_ms: f32,
     pub fire_sync_visible_ms: f32,
@@ -92,6 +99,8 @@ pub struct FrameSubstageSpans {
 #[derive(Resource, Clone, Debug, Default)]
 pub struct FrameStallWatch {
     last: Option<Instant>,
+    /// Previous frame end stamp — consumed at First to attribute GPU/present wait.
+    frame_boundary_end: Option<Instant>,
     postupdate_started: Option<Instant>,
     pub segments: Vec<(String, f32)>,
     pub spans: FrameScheduleSpans,
@@ -100,12 +109,13 @@ pub struct FrameStallWatch {
 
 #[must_use]
 pub fn stall_watch_enabled() -> bool {
-    frame_perf_verbose()
-        || stall_span_debug_enabled()
-        || std::env::var("STALL")
-            .ok()
-            .is_some_and(|v| v == "1" || v.eq_ignore_ascii_case("true"))
-        || crate::dev::test_run_instrumentation::instrumentation_stall_spans()
+    if std::env::var("STALL")
+        .ok()
+        .is_some_and(|v| v == "1" || v.eq_ignore_ascii_case("true"))
+    {
+        return true;
+    }
+    frame_perf_verbose() || stall_span_debug_enabled()
 }
 
 /// Extra Update checkpoints + 1ms stall lines (`STALL_SPAN_DEBUG=1`). Pair with `PERF=1` + `STALL=1`.
@@ -145,8 +155,22 @@ impl FrameStallWatch {
         let ms = now.duration_since(prev).as_secs_f32() * 1000.0;
         self.record_span(label, ms);
         if stall_watch_enabled() && ms >= stall_log_threshold_ms() {
-            self.segments.push((label.to_string(), ms));
-            info!(target: "stall", "STALL {label}: {ms:.2}ms");
+            let segment_label = if is_unattributed_gap(label, ms) {
+                format!("unattributed_gap@{label}")
+            } else {
+                label.to_string()
+            };
+            self.segments.push((segment_label.clone(), ms));
+            if crate::dev::test_run_instrumentation::stall_terminal_logging_enabled() {
+                if is_unattributed_gap(label, ms) {
+                    info!(
+                        target: "stall",
+                        "STALL unattributed_gap (before {label}): {ms:.2}ms — wall gap outside perf scopes (uninstrumented CPU, blocking call, or render/present wait)"
+                    );
+                } else {
+                    info!(target: "stall", "STALL {label}: {ms:.2}ms");
+                }
+            }
         }
     }
 
@@ -165,6 +189,7 @@ impl FrameStallWatch {
             "substage_map_smooth" => self.substages.map_smooth_ms = ms,
             "substage_minimap_intent" => self.substages.minimap_intent_ms = ms,
             "substage_view_sync" => self.substages.view_sync_ms = ms,
+            "substage_fire_pre_extract" => self.substages.fire_pre_extract_ms = ms,
             "substage_fire_sim_snapshot" => self.substages.fire_sim_snapshot_ms = ms,
             "substage_fire_sync_overlay" => self.substages.fire_sync_overlay_ms = ms,
             "substage_fire_sync_visible" => self.substages.fire_sync_visible_ms = ms,
@@ -196,13 +221,58 @@ impl FrameStallWatch {
             "pre_egui" => self.spans.post_readiness_to_pre_egui_ms = ms,
             "post_egui" => self.spans.egui_ms = ms,
             "last" => self.spans.post_egui_to_last_ms = ms,
+            "post_render_gap" => self.spans.post_render_gap_ms = ms,
             _ => {}
+        }
+        if is_unattributed_gap(label, ms) {
+            self.spans.unattributed_gap_ms += ms;
         }
     }
 }
 
+/// Large wall gaps at schedule checkpoints that no perf scope accounts for. These can be
+/// GPU/present waits, but have also been uninstrumented main-thread CPU (e.g. blocking
+/// subprocess spawns in witness writers) — do not assume GPU without render-thread evidence.
+#[inline]
+fn is_unattributed_gap(label: &str, ms: f32) -> bool {
+    ms >= 100.0
+        && matches!(
+            label,
+            "substage_map_apply_input"
+                | "substage_fire_pre_extract"
+                | "post_world_repr"
+                | "after_readiness"
+                | "post_egui"
+                | "post_render_gap"
+        )
+}
+
 pub fn reset_stall_watch(mut watch: ResMut<FrameStallWatch>) {
-    watch.reset(Instant::now());
+    let now = Instant::now();
+    if let Some(prev) = watch.frame_boundary_end.take() {
+        let gap_ms = now.duration_since(prev).as_secs_f32() * 1000.0;
+        watch.record_span("post_render_gap", gap_ms);
+        if stall_watch_enabled() && gap_ms >= stall_log_threshold_ms() {
+            watch
+                .segments
+                .push(("post_render_gap".to_string(), gap_ms));
+            if crate::dev::test_run_instrumentation::stall_terminal_logging_enabled() {
+                if is_unattributed_gap("post_render_gap", gap_ms) {
+                    info!(
+                        target: "stall",
+                        "STALL unattributed_gap (before post_render_gap): {gap_ms:.2}ms — frame-boundary gap (render/present wait or uninstrumented CPU)"
+                    );
+                } else {
+                    info!(target: "stall", "STALL post_render_gap: {gap_ms:.2}ms");
+                }
+            }
+        }
+    }
+    watch.reset(now);
+}
+
+pub fn record_stall_frame_boundary(mut watch: ResMut<FrameStallWatch>) {
+    watch.frame_boundary_end = watch.last;
 }
 
 pub fn stall_preupdate_end(mut watch: ResMut<FrameStallWatch>) {
@@ -303,6 +373,9 @@ stall_substage_fn!(stall_substage_map_derive, "substage_map_derive");
 stall_substage_fn!(stall_substage_map_smooth, "substage_map_smooth");
 stall_substage_fn!(stall_substage_minimap_intent, "substage_minimap_intent");
 stall_substage_fn!(stall_substage_view_sync, "substage_view_sync");
+// `substage_fire_pre_extract` — view_sync → extract chain entry (often GPU wait bubble).
+// `substage_fire_sim_snapshot` — isolated `extract_fire_simulation_snapshot` wall time.
+stall_substage_fn!(stall_substage_fire_pre_extract, "substage_fire_pre_extract");
 stall_substage_fn!(stall_substage_fire_sim_snapshot, "substage_fire_sim_snapshot");
 stall_substage_fn!(stall_substage_fire_sync_overlay, "substage_fire_sync_overlay");
 stall_substage_fn!(stall_substage_fire_sync_visible, "substage_fire_sync_visible");
@@ -347,7 +420,10 @@ impl Plugin for StallWatchPlugin {
             )
             .add_systems(
                 Last,
-                stall_last.before(stamp_frame_wall_last),
+                (
+                    stall_last.before(stamp_frame_wall_last),
+                    record_stall_frame_boundary.after(stall_last),
+                ),
             )
             .add_systems(Update, stall_checkpoint_update_begin)
             .add_systems(

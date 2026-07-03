@@ -14,11 +14,12 @@ use std::io::Write;
 use std::path::PathBuf;
 use std::time::{Instant, SystemTime, UNIX_EPOCH};
 
+use bevy::diagnostic::FrameCount;
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 use serde_json::{json, Value};
 
-use crate::dev::debug_run_envelope::{debug_runs_dir, wrap_debug_run, write_debug_run_json};
+use crate::dev::debug_run_envelope::{debug_runs_dir, witness_refresh_due, wrap_debug_run, write_debug_run_json};
 use crate::dev::perf_scope_frame_log;
 use crate::dev::test_run_instrumentation::{
     self, EcsResourceInventory, TestRunInstrumentation,
@@ -29,7 +30,8 @@ use crate::io::streaming::{ChunkResidencyRole, ChunkResidencyTable};
 use crate::render::minimap_compositor::MinimapGpuCompositorDiagnostics;
 use crate::render::{
     percentile_from_slice, FireChunkRuntime, FireExtractFrameReport, FramePerf, FrameStallWatch,
-    FrameUpdateAttrib, FrameWallClock, PerfAttributionWitness, TileFallbackRasterPolicy,
+    FrameUpdateAttrib, FrameWallClock, PerfAttributionWitness, RenderScheduleWitness,
+    TileFallbackRasterPolicy,
 };
 use crate::systems::sim_control::{SimTick, SimTimeMicros};
 
@@ -145,8 +147,12 @@ pub struct SimSpectrumAnalytics {
     after_map_camera_smooth_ms: MetricRing,
     after_fire_build_ms: MetricRing,
     post_world_repr_ms: MetricRing,
+    /// Simulation-only frame times (`PerfAttributionWitness` active after `OnEnter(Simulation)`).
+    steady_sim_frame_ms: MetricRing,
+    steady_sim_render_present_ms: MetricRing,
     substage_ms: HashMap<String, MetricRing>,
     jsonl_path: Option<PathBuf>,
+    last_steady_frame: Option<Value>,
 }
 
 impl Default for SimSpectrumAnalytics {
@@ -179,8 +185,11 @@ impl Default for SimSpectrumAnalytics {
             after_map_camera_smooth_ms: MetricRing::with_capacity(ROLLING_WINDOW),
             after_fire_build_ms: MetricRing::with_capacity(ROLLING_WINDOW),
             post_world_repr_ms: MetricRing::with_capacity(ROLLING_WINDOW),
+            steady_sim_frame_ms: MetricRing::with_capacity(ROLLING_WINDOW),
+            steady_sim_render_present_ms: MetricRing::with_capacity(ROLLING_WINDOW),
             substage_ms: HashMap::new(),
             jsonl_path: None,
+            last_steady_frame: None,
         }
     }
 }
@@ -234,6 +243,8 @@ impl SimSpectrumAnalytics {
             "after_map_camera_smooth_ms": Self::metric_summary(&self.after_map_camera_smooth_ms),
             "after_fire_build_ms": Self::metric_summary(&self.after_fire_build_ms),
             "post_world_repr_ms": Self::metric_summary(&self.post_world_repr_ms),
+            "steady_sim_frame_ms": Self::metric_summary(&self.steady_sim_frame_ms),
+            "steady_sim_render_present_ms": Self::metric_summary(&self.steady_sim_render_present_ms),
             "substage_ms": self.substage_rolling_summary(),
             "spike_frames": self.spike_frames,
             "frames_over_250ms": self.frames_over_250ms,
@@ -260,6 +271,8 @@ struct SpectrumCapture<'w> {
     minimap_diag: Option<Res<'w, MinimapGpuCompositorDiagnostics>>,
     inventory: Option<Res<'w, EcsResourceInventory>>,
     fire_extract: Option<Res<'w, crate::render::FireExtractDiagnostics>>,
+    render_schedule: Option<Res<'w, RenderScheduleWitness>>,
+    terrain_authority: Option<Res<'w, crate::render::TerrainRenderAuthority>>,
 }
 
 fn budget_bucket_json(budget: &FrameBudgetDiagnostics) -> Value {
@@ -315,6 +328,7 @@ fn substages_json(sub: &crate::render::FrameSubstageSpans) -> Value {
         "map_smooth_ms": sub.map_smooth_ms,
         "minimap_intent_ms": sub.minimap_intent_ms,
         "view_sync_ms": sub.view_sync_ms,
+        "fire_pre_extract_ms": sub.fire_pre_extract_ms,
         "fire_sim_snapshot_ms": sub.fire_sim_snapshot_ms,
         "fire_sync_overlay_ms": sub.fire_sync_overlay_ms,
         "fire_sync_visible_ms": sub.fire_sync_visible_ms,
@@ -351,6 +365,8 @@ fn schedule_spans_json(sp: &crate::render::FrameScheduleSpans) -> Value {
         "post_vt_to_pre_egui_ms": sp.post_vt_to_pre_egui_ms,
         "egui_ms": sp.egui_ms,
         "post_egui_to_last_ms": sp.post_egui_to_last_ms,
+        "post_render_gap_ms": sp.post_render_gap_ms,
+        "unattributed_gap_ms": sp.unattributed_gap_ms,
     })
 }
 
@@ -364,6 +380,11 @@ fn fire_extract_json(report: &FireExtractFrameReport) -> Value {
         "tick_changed": report.tick_changed,
         "interval_elapsed": report.interval_elapsed,
         "residency_scoped": report.residency_scoped,
+        "bounded_path": report.bounded_path,
+        "full_reconcile": report.full_reconcile,
+        "scan_set_len": report.scan_set_len,
+        "index_len": report.index_len,
+        "residency_len": report.residency_len,
         "min_interval_secs": report.min_interval_secs,
         "extract_ms": report.extract_ms,
         "chunks_iterated": report.chunks_iterated,
@@ -375,8 +396,89 @@ fn fire_extract_json(report: &FireExtractFrameReport) -> Value {
     })
 }
 
+/// Max scoped CPU time recorded this frame (`perf_scope` log).
+fn max_perf_scope_ms() -> f32 {
+    perf_scope_frame_log::max_perf_scope_ms()
+}
+
+/// Instrumented ECS + spine CPU this frame (does not include Bevy Render schedule).
+fn instrumented_cpu_ms(params: &SpectrumCapture) -> f32 {
+    let perf = params.perf.as_deref().cloned().unwrap_or_default();
+    let attrib = params.attrib.as_deref().cloned().unwrap_or_default();
+    perf.spine_instr_ms() + attrib.attrib_sum_ms()
+}
+
+/// GPU-bound steady sim: scoped ECS CPU is tiny, render/present dominates, tile raster off.
+fn gpu_bound_idle_steady(
+    params: &SpectrumCapture,
+    scope_max_ms: f32,
+    render_present_ms: f32,
+    render_thread_draw_ms: f32,
+) -> bool {
+    if scope_max_ms >= 5.0 {
+        return false;
+    }
+    let tile_raster_off = params
+        .perf
+        .as_deref()
+        .map(|p| !p.tile_raster_ran || p.tile_raster_ms <= 0.0)
+        .unwrap_or(true);
+    if !tile_raster_off {
+        return false;
+    }
+    render_present_ms >= 8.0 || render_thread_draw_ms >= 8.0
+}
+
 fn build_bottleneck_triage(params: &SpectrumCapture) -> Value {
+    let shell_wall_ms = params
+        .budget
+        .as_deref()
+        .map(|b| b.frame_time_ms)
+        .unwrap_or(0.0);
+    let stamped_wall_ms = params
+        .wall
+        .as_deref()
+        .map(|w| w.stamped_wall_ms())
+        .unwrap_or(0.0);
+    let wall_ms = shell_wall_ms.max(stamped_wall_ms);
+    let gpu_gap_ms = params
+        .wall
+        .as_deref()
+        .map(|w| w.gpu_gap_ms)
+        .unwrap_or(0.0);
+    let post_render_gap_ms = params
+        .stall
+        .as_deref()
+        .map(|s| s.spans.post_render_gap_ms)
+        .unwrap_or(0.0);
+    let instr_ms = instrumented_cpu_ms(params);
+    let scope_max_ms = max_perf_scope_ms();
+    let render_present_ms = (wall_ms - instr_ms).max(gpu_gap_ms).max(0.0);
+    let render_thread_draw_ms = params
+        .render_schedule
+        .as_deref()
+        .map(|r| r.spans.render_and_present_ms)
+        .unwrap_or(0.0);
+
     let mut suspects: Vec<(String, f32)> = Vec::new();
+
+    // Authoritative when stall checkpoints disagree with scoped CPU (common on debug GPU builds).
+    if render_thread_draw_ms >= 16.0 {
+        suspects.push((
+            "render_thread_draw_and_present".to_string(),
+            render_thread_draw_ms,
+        ));
+    }
+    if render_present_ms >= 16.0 {
+        suspects.push(("render_present_uninstrumented".to_string(), render_present_ms));
+    }
+    if gpu_gap_ms >= 16.0 && gpu_gap_ms + 0.01 < render_present_ms {
+        suspects.push(("gpu_gap_wall_clock".to_string(), gpu_gap_ms));
+    }
+    if post_render_gap_ms >= 16.0 {
+        suspects.push(("post_render_gap".to_string(), post_render_gap_ms));
+    }
+
     if let Some(sp) = params.stall.as_deref() {
         let s = &sp.spans;
         for (label, ms) in [
@@ -399,6 +501,7 @@ fn build_bottleneck_triage(params: &SpectrumCapture) -> Value {
         }
         let sub = &sp.substages;
         for (label, ms) in [
+            ("substage_fire_pre_extract", sub.fire_pre_extract_ms),
             ("substage_fire_sim_snapshot", sub.fire_sim_snapshot_ms),
             ("substage_fire_sync_overlay", sub.fire_sync_overlay_ms),
             ("substage_fire_sync_visible", sub.fire_sync_visible_ms),
@@ -431,7 +534,22 @@ fn build_bottleneck_triage(params: &SpectrumCapture) -> Value {
             ));
         }
     }
+    if let Some(p) = params.perf.as_deref() {
+        if p.tile_raster_ran && p.tile_raster_ms >= 8.0 {
+            suspects.push(("tile_world_raster".to_string(), p.tile_raster_ms));
+        }
+    }
+
     suspects.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
+    suspects.dedup_by(|a, b| a.0 == b.0);
+
+    let stall_mismatch = suspects.iter().any(|(l, ms)| {
+        *ms >= 50.0
+            && l.starts_with("substage_")
+            && scope_max_ms < 5.0
+            && render_present_ms > *ms * 0.5
+    }) && !gpu_bound_idle_steady(params, scope_max_ms, render_present_ms, render_thread_draw_ms);
+
     let primary = suspects
         .iter()
         .take(6)
@@ -447,41 +565,70 @@ fn build_bottleneck_triage(params: &SpectrumCapture) -> Value {
         .as_deref()
         .is_some_and(|d| d.last.cadence_skipped);
 
+    let interpretation = if suspects
+        .first()
+        .map(|(l, _)| l.as_str())
+        .is_some_and(|l| {
+            l == "render_thread_draw_and_present"
+                || l == "render_present_uninstrumented"
+                || l == "gpu_gap_wall_clock"
+        })
+        || stall_mismatch
+    {
+        "Bevy Render schedule + GPU present on the render thread. Stall labels like `substage_fire_pre_extract` / `readiness` are wall gaps between main-thread checkpoints — trust `render_schedule.*`, `spine.*`, `update_attrib`, and `perf_scopes` for ECS CPU."
+    } else if suspects.first().map(|(l, _)| l.as_str()) == Some("tile_world_raster") {
+        "Main overworld CPU tile raster (`tile_world_fallback_rasterize`) — 320×320 chunk repaints, not the minimap widget."
+    } else if suspects.first().map(|(l, _)| l.as_str()) == Some("attrib_streaming_reconstruct") {
+        "Streaming spine reconstruct — see `update_attrib.streaming_reconstruct_ms`."
+    } else if suspects.first().map(|(l, _)| l.as_str()) == Some("substage_fire_sim_snapshot") {
+        "Fire extract (`extract_fire_simulation_snapshot`) — trust `upd_fire_sim_snapshot` perf_scope."
+    } else {
+        "See `spine`, `update_attrib`, and `perf_scopes` — stall substages alone are not authoritative."
+    };
+
     json!({
         "primary_suspects": primary,
         "ux_spike_active": spike,
         "fire_extract_skipped_this_frame": fire_skip,
-        "interpretation": if suspects.first().map(|(l, _)| l.as_str()) == Some("attrib_fire_pipeline")
-            || suspects.first().map(|(l, _)| l.as_str()) == Some("substage_fire_sim_snapshot")
-        {
-            "Fire BuildProfiles (extract + overlay + per-view frames). Trust `upd_fire_*` perf_scopes — stall substages can include unrelated Update work between checkpoints."
-        } else if suspects.first().map(|(l, _)| l.as_str()) == Some("map_camera_chain")
-            || suspects.first().map(|(l, _)| l.as_str()) == Some("substage_map_apply_input")
-        {
-            "Map camera chain — trust `upd_map_camera_*` scopes; `substage_map_apply_input` can include unrelated pre-camera Update work."
-        } else if suspects.first().map(|(l, _)| l.as_str()) == Some("post_world_repr") {
-            "WorldRepresentation ComputeFrame — trust `upd_world_repr_frame` / `upd_repr_proc_*` scopes; stall span can include spawn/extract between checkpoints."
-        } else {
-            "See schedule_spans + perf_scopes (not stall substages alone) for frame-local detail."
+        "attribution_honesty": {
+            "wall_ms": wall_ms,
+            "instrumented_cpu_ms": instr_ms,
+            "render_present_uninstrumented_ms": render_present_ms,
+            "gpu_gap_ms": gpu_gap_ms,
+            "post_render_gap_ms": post_render_gap_ms,
+            "max_perf_scope_ms": scope_max_ms,
+            "stall_checkpoint_mismatch": stall_mismatch,
         },
+        "interpretation": interpretation,
     })
 }
 
 fn build_frame_snapshot(params: &SpectrumCapture) -> Value {
-    let wall_ms = params
+    let shell_wall_ms = params
         .budget
         .as_deref()
         .map(|b| b.frame_time_ms)
-        .unwrap_or_else(|| {
-            params
-                .wall
-                .as_deref()
-                .map(|w| w.cpu_pre_egui_ms + w.cpu_egui_ms + w.cpu_post_egui_ms + w.gpu_gap_ms)
-                .unwrap_or(0.0)
-        });
+        .unwrap_or(0.0);
+    let stamped_wall_ms = params
+        .wall
+        .as_deref()
+        .map(|w| w.stamped_wall_ms())
+        .unwrap_or(0.0);
+    let wall_ms = shell_wall_ms.max(stamped_wall_ms).max(
+        params
+            .wall
+            .as_deref()
+            .map(|w| w.cpu_pre_egui_ms + w.cpu_egui_ms + w.cpu_post_egui_ms + w.gpu_gap_ms)
+            .unwrap_or(0.0),
+    );
 
     let attrib = params.attrib.as_deref().cloned().unwrap_or_default();
     let perf = params.perf.as_deref().cloned().unwrap_or_default();
+    let terrain_authority = params
+        .terrain_authority
+        .as_deref()
+        .copied()
+        .unwrap_or(crate::render::TerrainRenderAuthority::CpuFallback);
 
     let cpu = params.wall.as_deref().map(|w| {
         json!({
@@ -504,6 +651,10 @@ fn build_frame_snapshot(params: &SpectrumCapture) -> Value {
             "readiness_ms": perf.readiness_ms,
             "tile_raster_ms": if perf.tile_raster_ran { perf.tile_raster_ms } else { 0.0 },
             "tile_raster_ran": perf.tile_raster_ran,
+            "terrain_authority": format!("{:?}", terrain_authority),
+        },
+        "perf": {
+            "terrain_gpu_authoritative": terrain_authority.is_gpu() && !perf.tile_raster_ran,
         },
         "update_attrib": {
             "preview_cpu_raster_ms": attrib.preview_cpu_raster_ms,
@@ -619,8 +770,28 @@ fn build_frame_snapshot(params: &SpectrumCapture) -> Value {
         frame["fire_extract"] = fire_extract_json(&fe.last);
     }
 
-    frame["perf_scopes"] = perf_scope_frame_log::take_perf_scopes_json();
     frame["bottleneck_triage"] = build_bottleneck_triage(params);
+    frame["perf_scopes"] = perf_scope_frame_log::take_perf_scopes_json();
+
+    if let Some(rs) = params.render_schedule.as_deref() {
+        let r = &rs.spans;
+        frame["render_schedule"] = json!({
+            "main_thread_handoff_total_ms": rs.main_thread_handoff_total_ms,
+            "frames_received": rs.frames_received,
+            "extract_schedule_ms": r.extract_schedule_ms,
+            "extract_commands_ms": r.extract_commands_ms,
+            "prepare_assets_ms": r.prepare_assets_ms,
+            "prepare_meshes_ms": r.prepare_meshes_ms,
+            "manage_views_ms": r.manage_views_ms,
+            "queue_ms": r.queue_ms,
+            "phase_sort_ms": r.phase_sort_ms,
+            "prepare_ms": r.prepare_ms,
+            "render_and_present_ms": r.render_and_present_ms,
+            "cleanup_ms": r.cleanup_ms,
+            "post_cleanup_ms": r.post_cleanup_ms,
+            "total_render_app_ms": r.total_render_app_ms,
+        });
+    }
 
     frame
 }
@@ -725,6 +896,23 @@ fn capture_sim_spectrum_frame(
     if spike.is_some_and(|g| g.spike_active) {
         analytics.spike_frames = analytics.spike_frames.saturating_add(1);
     }
+    if let (Some(budget), Some(pw)) = (
+        params.budget.as_deref(),
+        params.perf_witness.as_deref(),
+    ) {
+        const STEADY_WARMUP_FRAMES: u64 = 30;
+        const STEADY_SPIKE_MS: f32 = 100.0;
+        let frame_ms = budget.frame_time_ms;
+        if pw.frames_recorded > STEADY_WARMUP_FRAMES && frame_ms < STEADY_SPIKE_MS {
+            analytics.steady_sim_frame_ms.push(frame_ms);
+            if let Some(rs) = params.render_schedule.as_deref() {
+                analytics
+                    .steady_sim_render_present_ms
+                    .push(rs.spans.render_and_present_ms);
+            }
+            analytics.last_steady_frame = Some(snapshot.clone());
+        }
+    }
     if wall_ms >= 250.0 {
         analytics.frames_over_250ms = analytics.frames_over_250ms.saturating_add(1);
     }
@@ -733,27 +921,83 @@ fn capture_sim_spectrum_frame(
     analytics.last_frame = Some(snapshot.clone());
 
     if sim_spectrum_frame_jsonl_enabled() {
-        let path = ensure_jsonl_path(&mut analytics);
-        let _ = append_jsonl(&path, &snapshot);
+        let stride = test_run_instrumentation::instrumentation_frame_jsonl_stride();
+        let frame_index = params
+            .perf
+            .as_deref()
+            .map(|p| p.frame_index)
+            .unwrap_or(analytics.frames_sampled);
+        if stride <= 1 || frame_index % stride as u64 == 0 {
+            let path = ensure_jsonl_path(&mut analytics);
+            let _ = append_jsonl(&path, &snapshot);
+        }
     }
 }
 
 pub fn flush_sim_spectrum_analytics(
+    frame: Res<FrameCount>,
     mut analytics: ResMut<SimSpectrumAnalytics>,
     time: Res<Time>,
     inst: Option<Res<TestRunInstrumentation>>,
+    perf_witness: Option<Res<PerfAttributionWitness>>,
 ) {
     if !sim_spectrum_analytics_enabled() {
         return;
     }
-    let interval = flush_interval_secs();
-    if analytics.last_flush.elapsed().as_secs_f32() < interval {
+    if !witness_refresh_due(SIM_SPECTRUM_LIVE_JSON, frame.0) {
         return;
     }
     analytics.last_flush = Instant::now();
+    let interval = flush_interval_secs();
 
     let rolling = analytics.rolling_summary();
     let frames_sampled = analytics.frames_sampled;
+    let steady_p95 = analytics.steady_sim_frame_ms.p95();
+    let steady_render_p95 = analytics.steady_sim_render_present_ms.p95();
+    let steady_samples = analytics.steady_sim_frame_ms.samples().len();
+    let attrib_p95 = perf_witness.as_deref().map(|w| w.p95_frame_ms()).unwrap_or(0.0);
+    let attrib_samples = perf_witness.as_deref().map(|w| w.window_samples()).unwrap_or(0);
+    let gate_p95 = if attrib_samples >= 30 {
+        attrib_p95
+    } else {
+        steady_p95
+    };
+    let gate_render_p95 = if steady_render_p95 > 0.0 {
+        steady_render_p95
+    } else {
+        analytics
+            .last_steady_frame
+            .as_ref()
+            .or(analytics.last_frame.as_ref())
+            .and_then(|f| f.pointer("/render_schedule/render_and_present_ms"))
+            .and_then(|v| v.as_f64())
+            .unwrap_or(0.0) as f32
+    };
+    let steady_ref = analytics
+        .last_steady_frame
+        .as_ref()
+        .or(analytics.last_frame.as_ref());
+    let last_tile_raster = steady_ref
+        .and_then(|f| f.pointer("/spine/tile_raster_ms"))
+        .and_then(|v| v.as_f64())
+        .unwrap_or(0.0) as f32;
+    let last_stall_mismatch = steady_ref
+        .and_then(|f| f.pointer("/attribution_honesty/stall_checkpoint_mismatch"))
+        .and_then(|v| v.as_bool())
+        .unwrap_or(true);
+    let program_exit_gate = json!({
+        "p95_frame_ms": gate_p95,
+        "p95_render_present_ms": gate_render_p95,
+        "steady_samples": steady_samples,
+        "perf_attribution_samples": attrib_samples,
+        "tile_raster_ms_steady": last_tile_raster,
+        "stall_checkpoint_mismatch_idle": last_stall_mismatch,
+        "green": (attrib_samples >= 30 || steady_samples >= 30)
+            && gate_p95 <= 33.0
+            && gate_render_p95 <= 16.0
+            && last_tile_raster <= 0.0
+            && !last_stall_mismatch,
+    });
 
     let body = json!({
         "schema_version": 1,
@@ -762,6 +1006,7 @@ pub fn flush_sim_spectrum_analytics(
         "session_elapsed_secs": time.elapsed_secs_f64(),
         "frames_sampled": frames_sampled,
         "disk_flushes": analytics.disk_flushes,
+        "program_exit_gate": program_exit_gate,
         "rolling": rolling.clone(),
         "last_frame": analytics.last_frame.clone().unwrap_or(Value::Null),
         "jsonl_enabled": sim_spectrum_frame_jsonl_enabled(),

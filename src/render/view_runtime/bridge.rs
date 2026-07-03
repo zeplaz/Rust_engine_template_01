@@ -188,13 +188,27 @@ pub fn publish_view_surfaces_to_authority(
             _ => &resolved.primary_window,
         };
         let render = render_contract_from_resolved(wp.logical_size, wp.physical_extent, wp.valid);
-        authority.upsert_from_view_instance(
-            surface_id,
-            default_isolation_group(surface_id),
-            &inst,
-            render,
-            ViewAuthorityWriter::BridgeCompat,
-        );
+        match surface_id {
+            ViewSurfaceId::WorldMain | ViewSurfaceId::SimulationMap => {
+                authority.commit_bridge_render_policy(
+                    surface_id,
+                    default_isolation_group(surface_id),
+                    inst.camera_entity,
+                    render,
+                    inst.render_policy.clone(),
+                    &inst,
+                );
+            }
+            _ => {
+                authority.upsert_from_view_instance(
+                    surface_id,
+                    default_isolation_group(surface_id),
+                    &inst,
+                    render,
+                    ViewAuthorityWriter::BridgeCompat,
+                );
+            }
+        }
     }
 }
 

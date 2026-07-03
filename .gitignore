@@ -8,3 +8,19 @@
 /tools/orchestrator/state/last_run.json
 /tools/orchestrator/target/
 /tools/orchestrator/queues/HANDOFF.md
+
+# Ephemeral Bevy trace_chrome / probe stdout (repo root or debug_runs)
+/chrome_*.json
+/chrome_*.log
+/trace-*.json
+/debug_runs/trace-*.json
+/debug_runs/trace_visual.json
+/debug_runs/trace_run.log
+/debug_runs/bisect_*.log
+/debug_runs/perf_frames/
+/debug_runs/validators/*.log
+/debug_runs/world_gen_17*.json
+
+# Python bytecode (MCP toolchain)
+**/__pycache__/
+*.pyc

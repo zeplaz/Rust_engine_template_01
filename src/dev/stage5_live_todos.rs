@@ -622,7 +622,7 @@ pub fn register_stage5_todo_runtime_hooks(app: &mut App) {
         Update,
         hook_map_camera_post
             .after(mirror_world_main_camera_from_map_desired)
-            .in_set(MapCameraSystemSet::ApplyInput)
+            .in_set(MapCameraSystemSet::DeriveDesired)
             .run_if(full_app_hooks_enabled),
     );
     app.add_systems(

@@ -17,6 +17,9 @@ name = "bevy_preview_worker"
 path = "src/bin/bevy_preview_worker.rs"
 
 [features]
+# `bevy_tilemap_adapter` is NOT default: it spawns ~3x tile entities per chunk with render
+# disabled (U6 ECS sync only) — enabling it by default cost ~600ms/frame in debug and
+# despawned the fallback terrain sprite (minimap terrain source). Opt in explicitly.
 default = []
 # Extra Bevy entity/frame diagnostics plugins during `--test` runs (runtime latch still works without this).
 test_instrumentation = []
@@ -43,6 +46,8 @@ legacy_transport_ecs_stubs = []
 hud_native_minimap_window = []
 # ENGINE-DEEP-DEBUG-001: intrusive minimap/GPU/schedule witnesses + Bevy diagnostics (see runbook).
 engine_deep_debug = []
+# PLAN-GPU-TERRAIN-P3: optional Tracy (not required for ship gate).
+tracy = ["bevy/trace_tracy"]
 # `legacy_io_templates` removed 2026-04-26: src/io/templates.rs retired.
 
 [package.metadata.'cargo-features']
