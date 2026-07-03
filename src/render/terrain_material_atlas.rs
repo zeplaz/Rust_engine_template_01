@@ -108,12 +108,11 @@ pub fn rebuild_terrain_material_atlas(
         ..default()
     });
 
-    if atlas.image == Handle::default() || images.get(&atlas.image).is_none() {
+    let handle = atlas.image.clone();
+    if handle == Handle::default() || images.get(&handle).is_none() {
         atlas.image = images.add(image);
-    } else if let Some(existing) = images.get_mut(&atlas.image) {
+    } else if let Some(mut existing) = images.get_mut(&handle) {
         *existing = image;
-    } else {
-        atlas.image = images.add(image);
     }
 
     atlas.revision = atlas.revision.wrapping_add(1);

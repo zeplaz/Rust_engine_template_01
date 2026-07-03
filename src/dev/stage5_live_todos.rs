@@ -26,8 +26,8 @@
 use bevy::prelude::*;
 
 use crate::gui::{
-    fire_visual_producer_count, mirror_world_main_camera_from_map_desired, MapCameraDesired,
-    MapCameraSystemSet, RepresentationResult, ViewId, ViewManager, WorldRepresentationFrame,
+    fire_visual_producer_count, mirror_world_main_camera_from_map_desired,
+    MapCameraDesiredRes, MapCameraSystemSet, RepresentationResult, ViewId, ViewManager, WorldRepresentationFrame,
 };
 use crate::systems::atmosphere::AtmospherePartialWriteMetrics;
 use crate::render::extraction::{extract_fire_simulation_snapshot, RenderProjectionGraph};
@@ -113,14 +113,14 @@ pub static STAGE5_TODOS: &[Stage5LiveTodo] = &[
         file: "src/gui/map_camera.rs, src/gui/view_authority.rs",
         system: "ViewManager, MapCameraDesired, mirror + trace",
         goal: "ViewManager sole authority for WorldMain camera pose after bridge; MapCameraDesired only mirrored.",
-        runtime_check: "FULL_APP + RUST_LOG=map_camera_desired::write=debug: MAP_CAMERA_DESIRED_WRITE lines from map_camera_apply_input_to_desired, tile_world_fallback::focus_main_camera_on_world_params, view_representation::apply_minimap_camera_intent when pose changes.",
+        runtime_check: "FULL_APP + RUST_LOG=map_camera_desired::write=debug: MAP_CAMERA_DESIRED_WRITE lines from map_camera_apply_input, tile_world_fallback::focus_main_camera_on_world_params, view_representation::apply_minimap_camera_intent when pose changes.",
         failure_mode: "minimap/world drift, dual-write inconsistency.",
     },
     Stage5LiveTodo {
         id: "TODO-05",
         status: TodoStatus::Open,
         file: "src/gui/map_camera.rs",
-        system: "map_camera_apply_input_to_desired, mirror_world_main_camera_from_map_desired",
+        system: "map_camera_apply_input, mirror_world_main_camera_from_map_desired",
         goal: "No hidden second writer path for world main camera (VM-09B closed).",
         runtime_check: "RUST_LOG=stage5_live_todos=info: STAGE5_MAP_CAMERA_HOOK post_mirror bridge_drift + desired vs WorldMain; no unexplained spikes.",
         failure_mode: "Jitter + desync minimap vs world.",
@@ -517,7 +517,7 @@ fn hook_map_camera_post(world: &mut World) {
     if *world.resource::<Stage5ReadinessProfile>() != Stage5ReadinessProfile::FULL_APP {
         return;
     }
-    let desired = world.resource::<MapCameraDesired>();
+    let desired = world.resource::<MapCameraDesiredRes>();
     let vm = world.resource::<ViewManager>();
     let dt = desired.translation.truncate();
     let d_zoom = desired.scale.x;

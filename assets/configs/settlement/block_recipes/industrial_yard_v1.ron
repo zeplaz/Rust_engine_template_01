@@ -1,0 +1,36 @@
+(
+    schema: "block_recipe_v1",
+    version: "1.0.0",
+    recipe_id: "block_recipe_industrial_yard_v1",
+    block_archetype: "Industrial",
+    label: "Industrial yard block",
+    default_district_style: "industrial_west",
+    _meta: (
+        teaches: ["lot_row", "edge", "scatter", "block_archetype:Industrial"],
+    ),
+    steps: [
+        (
+            kind: "lot_row",
+            count: 2,
+            depth: 2,
+            facing: "street",
+            setback: 1,
+            building_archetype: "IndustrialWarehouse",
+            district_style: "industrial_west",
+        ),
+        (
+            kind: "edge",
+            asset: "fence",
+            spacing: 1.0,
+            offset: 0,
+            sim_authority: false,
+        ),
+        (
+            kind: "scatter",
+            asset: "tree_small",
+            density: 0.15,
+            jitter: 0.2,
+            zone: "rear",
+        ),
+    ],
+)

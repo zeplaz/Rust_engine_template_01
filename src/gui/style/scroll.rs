@@ -10,13 +10,13 @@ fn configure_scroll_area(area: ScrollArea) -> ScrollArea {
 
 /// Vertical scroll for a panel body; use [`widget_scroll_vertical_capped`] when height is fixed.
 #[must_use]
-pub fn widget_scroll_vertical(id_salt: impl std::hash::Hash) -> ScrollArea {
+pub fn widget_scroll_vertical(id_salt: impl std::hash::Hash + std::fmt::Debug) -> ScrollArea {
     configure_scroll_area(ScrollArea::vertical().id_salt(id_salt))
 }
 
 /// Vertical scroll with an explicit max height (lists, log panes).
 #[must_use]
-pub fn widget_scroll_vertical_capped(id_salt: impl std::hash::Hash, max_height: f32) -> ScrollArea {
+pub fn widget_scroll_vertical_capped(id_salt: impl std::hash::Hash + std::fmt::Debug, max_height: f32) -> ScrollArea {
     configure_scroll_area(
         ScrollArea::vertical()
             .id_salt(id_salt)
@@ -26,7 +26,7 @@ pub fn widget_scroll_vertical_capped(id_salt: impl std::hash::Hash, max_height: 
 
 /// Vertical scroll sized to the remaining space in the current layout.
 #[must_use]
-pub fn widget_scroll_vertical_fill(id_salt: impl std::hash::Hash, available_height: f32) -> ScrollArea {
+pub fn widget_scroll_vertical_fill(id_salt: impl std::hash::Hash + std::fmt::Debug, available_height: f32) -> ScrollArea {
     configure_scroll_area(
         ScrollArea::vertical()
             .id_salt(id_salt)
@@ -36,7 +36,7 @@ pub fn widget_scroll_vertical_fill(id_salt: impl std::hash::Hash, available_heig
 
 /// Horizontal + vertical scroll (large canvases, minimap editors).
 #[must_use]
-pub fn widget_scroll_both(id_salt: impl std::hash::Hash) -> ScrollArea {
+pub fn widget_scroll_both(id_salt: impl std::hash::Hash + std::fmt::Debug) -> ScrollArea {
     configure_scroll_area(ScrollArea::both().id_salt(id_salt))
 }
 

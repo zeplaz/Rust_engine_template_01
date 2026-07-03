@@ -44,8 +44,8 @@ pub use landscape_grammar_lg2::{
 };
 pub use landscape_grammar::attach_landscape_program_pilot;
 pub use landscape_atlas_registry::{
-    load_landscape_atlas_registry, topology_kind_to_variant_key, LandscapeAtlasEntry,
-    LandscapeAtlasRegistry,
+    init_landscape_atlas_registry, load_landscape_atlas_registry, topology_kind_to_variant_key,
+    LandscapeAtlasEntry, LandscapeAtlasRegistry,
 };
 pub use landscape_grammar_map::{
     map_rollout_witness_green,     pick_preset_id_for_chunk, refresh_lg3_witness,
@@ -112,7 +112,7 @@ impl Plugin for EcologyPlugin {
         landscape_grammar_lg2::landscape_grammar_lg2_plugin(app);
         landscape_grammar_burn::landscape_grammar_burn_plugin(app);
         landscape_grammar_map::landscape_grammar_map_plugin(app);
-        app.add_systems(Startup, init_vegetation_variant_catalog);
+        app.add_systems(Startup, (init_vegetation_variant_catalog, init_landscape_atlas_registry));
         app.add_systems(
             Update,
             (

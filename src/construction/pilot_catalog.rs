@@ -257,6 +257,13 @@ impl PilotCatalog {
         self.grammar_pilots().next()
     }
 
+    /// First grammar pilot arch_dna preset id — witness/proof paths avoid hardcoded pilot needles.
+    #[must_use]
+    pub fn first_grammar_arch_dna_preset_id(&self) -> Option<String> {
+        self.first_grammar_pilot()
+            .and_then(|p| p.arch_dna_preset.clone())
+    }
+
     #[must_use]
     pub fn non_rect_shape_pilot(&self) -> Option<&ResolvedPilotEntry> {
         self.pilots.iter().find(|p| {

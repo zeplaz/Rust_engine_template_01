@@ -1,262 +1,22 @@
-//! ARCH-BUILD-GRAMMAR-002 — hierarchical building grammar evaluator (T1 core).
-//!
-//! Contract: `generate(archetype_id, district_style, seed)` → footprint + slot overrides + rule chain.
+//! **CITY-G0-S1C-001** — grammar evaluation, witnesses, and public generate API.
 
 use std::collections::{HashMap, HashSet};
-use std::fs;
 use std::hash::{Hash, Hasher};
-use std::path::{Path, PathBuf};
 
-use bevy::prelude::Resource;
-use serde::Deserialize;
-use serde::Deserializer;
-
-use super::arch_build_grammar_v0::{
+use super::grammar_deserialize::{load_building_grammar_registry, repo_asset_path};
+use super::grammar_types::{
+    BuildingGrammar, BuildingGrammarRegistry, FacilityBindingV1, FacilityPowerTier,
+    FootprintMode, GrammarGenerateResult, GrammarRuleStep, MassingId, MassingStrategy,
+    PgQuality001Metrics, PG_QUALITY_001_SEED_SWEEP, FACILITY_BINDING_G1_MIN,
+    FACILITY_BINDING_SCHEMA, GRAMMAR_DIVERSITY_WITNESS_JSON, GRAMMAR_RULES_VERSION,
+};
+use crate::construction::procedural::types::{ProceduralBuildingRequest, StylePackId};
+use crate::construction::procedural::arch_build_grammar_v0::{
     floors_from_beta_vert, reweight_massing_strategies, ArchDnaConsumerFields,
 };
-use super::footprint_grid::FootprintGrid;
-use super::types::{ProceduralBuildingRequest, StylePackId};
-
-pub const GRAMMARS_DIR: &str = "assets/configs/buildings/grammars";
-pub const GRAMMAR_RULES_VERSION: &str = "building_grammar_v1";
-pub const GRAMMAR_DIVERSITY_WITNESS_JSON: &str = "debug_runs/grammar_diversity_witness.json";
-pub const PG_QUALITY_001_SEED_SWEEP: u64 = 64;
-
-#[derive(Debug, Clone, Deserialize)]
-pub struct FootprintBounds {
-    pub min_width: u32,
-    pub max_width: u32,
-    pub min_depth: u32,
-    pub max_depth: u32,
-    pub min_floors: u32,
-    pub max_floors: u32,
-}
-
-#[derive(Debug, Clone, Deserialize)]
-pub struct ArchetypeRule {
-    pub id: String,
-    pub usage: String,
-    pub footprint_bounds: FootprintBounds,
-}
-
-#[derive(Debug, Clone, Deserialize)]
-pub struct MassingStrategy {
-    pub id: String,
-    pub weight: u32,
-    #[serde(default = "default_ratio")]
-    pub width_depth_ratio: f32,
-    #[serde(default = "default_footprint_mode")]
-    pub footprint_mode: String,
-}
-
-fn default_ratio() -> f32 {
-    1.5
-}
-
-fn default_footprint_mode() -> String {
-    "rect".into()
-}
-
-#[derive(Debug, Clone, Deserialize)]
-pub struct MassingRule {
-    pub strategies: Vec<MassingStrategy>,
-}
-
-#[derive(Debug, Clone, Deserialize)]
-pub struct RoofMassingOverride {
-    pub massing_id: String,
-    pub slot: String,
-}
-
-#[derive(Debug, Clone, Deserialize)]
-pub struct RoofRule {
-    pub default_slot: String,
-    #[serde(default)]
-    pub by_massing: Vec<RoofMassingOverride>,
-}
-
-#[derive(Debug, Clone, Deserialize)]
-pub struct FacadeRule {
-    #[serde(default)]
-    pub window_slot: String,
-    #[serde(default)]
-    pub door_slot: String,
-    #[serde(default)]
-    pub wall_slot: String,
-    #[serde(default)]
-    pub placement_tags: Vec<String>,
-}
-
-#[derive(Debug, Clone, Deserialize)]
-pub struct DetailRule {
-    #[serde(default)]
-    pub prop_slot: String,
-    #[serde(default)]
-    pub density: f32,
-    #[serde(default)]
-    pub tags: Vec<String>,
-}
-
-#[derive(Debug, Clone, Deserialize)]
-pub struct AgeBand {
-    pub id: String,
-    pub weight: u32,
-    pub variant_tags: Vec<String>,
-}
-
-#[derive(Debug, Clone, Deserialize)]
-pub struct AgeRule {
-    pub bands: Vec<AgeBand>,
-}
-
-#[derive(Debug, Clone, Deserialize)]
-pub struct DistrictStyleBinding {
-    pub id: String,
-    pub style_pack_id: String,
-    #[serde(default)]
-    pub style_tags: Vec<String>,
-    #[serde(default)]
-    pub zoning: String,
-    /// Slot key → material_profile id (PG-MATERIAL-GENERATION-001).
-    #[serde(default)]
-    pub material_profiles: HashMap<String, String>,
-}
-
-/// **COD-FACILITY-BINDING-READ-001** — optional join to catalog + chain (Layer 3 authority).
-/// Grammar holds references only — no `power_consumption` / I/O lists.
-pub const FACILITY_BINDING_SCHEMA: &str = "facility_binding_v1";
-
-/// RON grammars use bare tuples/strings for optional fields (not `Some(...)`).
-fn deserialize_ron_optional_field<'de, T, D>(deserializer: D) -> Result<Option<T>, D::Error>
-where
-    T: Deserialize<'de>,
-    D: Deserializer<'de>,
-{
-    #[derive(Deserialize)]
-    #[serde(untagged)]
-    enum Repr<T> {
-        Value(T),
-        Option(Option<T>),
-    }
-    match Repr::<T>::deserialize(deserializer) {
-        Ok(Repr::Value(v)) => Ok(Some(v)),
-        Ok(Repr::Option(v)) => Ok(v),
-        Err(e) => Err(e),
-    }
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
-#[serde(rename_all = "lowercase")]
-pub enum FacilityPowerTier {
-    Light,
-    Medium,
-    Heavy,
-    Grid,
-}
-
-impl FacilityPowerTier {
-    #[must_use]
-    pub const fn as_str(self) -> &'static str {
-        match self {
-            Self::Light => "light",
-            Self::Medium => "medium",
-            Self::Heavy => "heavy",
-            Self::Grid => "grid",
-        }
-    }
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
-#[serde(rename_all = "lowercase")]
-pub enum ProgramAxisLevel {
-    Low,
-    Medium,
-    High,
-}
-
-#[derive(Debug, Clone, Default, Deserialize)]
-pub struct FacilityProgramAxes {
-    #[serde(default, deserialize_with = "deserialize_ron_optional_field")]
-    pub storage: Option<ProgramAxisLevel>,
-    #[serde(default, deserialize_with = "deserialize_ron_optional_field")]
-    pub loading: Option<ProgramAxisLevel>,
-    #[serde(default, deserialize_with = "deserialize_ron_optional_field")]
-    pub office: Option<ProgramAxisLevel>,
-    #[serde(default, deserialize_with = "deserialize_ron_optional_field")]
-    pub service: Option<ProgramAxisLevel>,
-    #[serde(default, deserialize_with = "deserialize_ron_optional_field")]
-    pub expansion: Option<ProgramAxisLevel>,
-}
-
-#[derive(Debug, Clone, Deserialize)]
-pub struct FacilityBindingV1 {
-    pub catalog_id: String,
-    pub chain_id: String,
-    pub supply_chain_role: String,
-    pub power_tier: FacilityPowerTier,
-    #[serde(default, deserialize_with = "deserialize_ron_optional_field")]
-    pub site_template_id: Option<String>,
-    #[serde(default, deserialize_with = "deserialize_ron_optional_field")]
-    pub program_axes: Option<FacilityProgramAxes>,
-}
-
-#[derive(Debug, Clone, Deserialize)]
-pub struct BuildingGrammar {
-    pub schema_version: u32,
-    pub grammar_id: String,
-    pub archetype: ArchetypeRule,
-    pub massing: MassingRule,
-    pub roof: RoofRule,
-    pub facade: FacadeRule,
-    pub detail: DetailRule,
-    pub age: AgeRule,
-    pub district_styles: Vec<DistrictStyleBinding>,
-    #[serde(default, deserialize_with = "deserialize_ron_optional_field")]
-    pub facility_binding: Option<FacilityBindingV1>,
-}
-
-#[derive(Debug, Clone)]
-pub struct GrammarRuleStep {
-    pub layer: &'static str,
-    pub rule_id: String,
-    pub detail: String,
-}
-
-/// Deterministic output of `generate(archetype, district_style, seed)`.
-#[derive(Debug, Clone)]
-pub struct GrammarGenerateResult {
-    pub grammar_id: String,
-    pub archetype_id: String,
-    pub district_style: String,
-    pub seed: u64,
-    pub massing_strategy: String,
-    pub footprint_mode: String,
-    pub width: u32,
-    pub depth: u32,
-    pub floors: u32,
-    pub style_pack_id: String,
-    pub slot_overrides: HashMap<String, String>,
-    pub placement_tags: Vec<String>,
-    pub variant_tags: Vec<String>,
-    pub detail_density: f32,
-    pub age_band: String,
-    pub rule_chain: Vec<GrammarRuleStep>,
-    /// Resolved slot → material_profile from district binding.
-    pub material_profiles: HashMap<String, String>,
-    /// Weathering band derived from age rule (APS / worker apply).
-    pub weathering: String,
-    /// BUILD-READ-CONSUMER-MCP-001 — ARCH-DNA preset when snapshot consumer wired.
-    pub arch_dna_preset_id: Option<String>,
-}
-
-#[derive(Resource, Debug, Default)]
-pub struct BuildingGrammarRegistry {
-    pub grammars: HashMap<String, BuildingGrammar>,
-    pub load_errors: Vec<String>,
-}
+use crate::construction::procedural::footprint_grid::FootprintGrid;
 
 impl BuildingGrammarRegistry {
-    /// Lookup by `grammar_id` field (registry map keys are archetype ids).
     #[must_use]
     pub fn by_grammar_id(&self, grammar_id: &str) -> Option<&BuildingGrammar> {
         self.grammars
@@ -264,7 +24,6 @@ impl BuildingGrammarRegistry {
             .find(|g| g.grammar_id == grammar_id)
     }
 
-    /// Read-only facility bindings loaded from grammar RON files.
     #[must_use]
     pub fn facility_bindings(&self) -> Vec<(&BuildingGrammar, &FacilityBindingV1)> {
         self.grammars
@@ -273,7 +32,6 @@ impl BuildingGrammarRegistry {
             .collect()
     }
 
-    /// Facility binding for an archetype id (`BuildingGrammar.archetype.id`).
     #[must_use]
     pub fn facility_binding_for_archetype(&self, archetype_id: &str) -> Option<&FacilityBindingV1> {
         self.grammars
@@ -282,12 +40,12 @@ impl BuildingGrammarRegistry {
     }
 }
 
-pub const FACILITY_BINDING_G1_MIN: usize = 2;
-
-/// **COD-FACILITY-BINDING-READ-001** — G1 grammars deserialize optional `facility_binding`.
 #[must_use]
 pub fn facility_binding_read_witness_green() -> bool {
-    facility_binding_read_witness_body().get("green").and_then(|v| v.as_bool()) == Some(true)
+    facility_binding_read_witness_body()
+        .get("green")
+        .and_then(|v| v.as_bool())
+        == Some(true)
 }
 
 #[must_use]
@@ -338,14 +96,6 @@ pub fn facility_binding_read_witness_body() -> serde_json::Value {
     })
 }
 
-#[must_use]
-fn repo_asset_path(rel: &str) -> PathBuf {
-    std::env::var_os("CARGO_MANIFEST_DIR")
-        .map(PathBuf::from)
-        .map(|root| root.join(rel))
-        .unwrap_or_else(|| PathBuf::from(rel))
-}
-
 fn mix_seed(seed: u64, salt: &str) -> u64 {
     let mut h = std::collections::hash_map::DefaultHasher::new();
     seed.hash(&mut h);
@@ -353,7 +103,7 @@ fn mix_seed(seed: u64, salt: &str) -> u64 {
     h.finish()
 }
 
-fn pick_weighted_index<'a>(items: &'a [(u32, usize)], seed: u64) -> usize {
+fn pick_weighted_index(items: &[(u32, usize)], seed: u64) -> usize {
     let total: u32 = items.iter().map(|(w, _)| *w).sum();
     if total == 0 {
         return 0;
@@ -370,13 +120,12 @@ fn pick_weighted_index<'a>(items: &'a [(u32, usize)], seed: u64) -> usize {
 }
 
 impl BuildingGrammar {
-    /// Read-only facility join block when present on disk grammar.
     #[must_use]
     pub fn facility_binding(&self) -> Option<&FacilityBindingV1> {
         self.facility_binding.as_ref()
     }
 
-    pub fn district_binding(&self, district_style: &str) -> Option<&DistrictStyleBinding> {
+    pub fn district_binding(&self, district_style: &str) -> Option<&super::grammar_types::DistrictStyleBinding> {
         self.district_styles
             .iter()
             .find(|d| d.id == district_style)
@@ -390,20 +139,16 @@ impl BuildingGrammar {
         let depth_span = b.max_depth.saturating_sub(b.min_depth) + 1;
         let depth = b.min_depth + (s as u32 % depth_span);
 
-        let width = match strategy.id.as_str() {
-            "long_hall" | "double_hall" => {
-                let ratio = strategy.width_depth_ratio.max(1.1);
-                let w = ((depth as f32) * ratio).round() as u32;
-                w.clamp(b.min_width, b.max_width)
-            }
-            "l_shape" => {
-                let w = depth + 2;
-                w.clamp(b.min_width, b.max_width)
-            }
-            _ => {
-                let width_span = b.max_width.saturating_sub(b.min_width) + 1;
-                b.min_width + ((s >> 16) as u32 % width_span)
-            }
+        let width = if strategy.id.is_long_hall() {
+            let ratio = strategy.width_depth_ratio.max(1.1);
+            let w = ((depth as f32) * ratio).round() as u32;
+            w.clamp(b.min_width, b.max_width)
+        } else if strategy.id.is_l_shape() {
+            let w = depth + 2;
+            w.clamp(b.min_width, b.max_width)
+        } else {
+            let width_span = b.max_width.saturating_sub(b.min_width) + 1;
+            b.min_width + ((s >> 16) as u32 % width_span)
         };
 
         let floor_span = b.max_floors.saturating_sub(b.min_floors) + 1;
@@ -412,21 +157,19 @@ impl BuildingGrammar {
         (width.max(2), depth.max(2), floors.max(1))
     }
 
-    fn roof_slot_for_massing(&self, massing_id: &str) -> &str {
+    fn roof_slot_for_massing(&self, massing_id: &MassingId) -> &str {
         self.roof
             .by_massing
             .iter()
-            .find(|r| r.massing_id == massing_id)
+            .find(|r| r.massing_id == *massing_id)
             .map(|r| r.slot.as_str())
-            .unwrap_or(self.roof.default_slot.as_str())
+            .unwrap_or_else(|| self.roof.default_slot.as_str())
     }
 
-    /// Evaluate full grammar chain for one archetype + district + seed.
     pub fn generate(&self, district_style: &str, seed: u64) -> Result<GrammarGenerateResult, String> {
         self.generate_with_arch_dna(district_style, seed, None)
     }
 
-    /// BUILD-READ-CONSUMER-MCP-001 — β re-rank massing when ARCH-DNA consumer present.
     pub fn generate_with_arch_dna(
         &self,
         district_style: &str,
@@ -444,7 +187,7 @@ impl BuildingGrammar {
                     self.massing
                         .strategies
                         .iter()
-                        .position(|s| s.id == id)
+                        .position(|s| s.id.as_str() == id)
                         .map(|i| (w, i))
                 })
                 .collect()
@@ -484,14 +227,14 @@ impl BuildingGrammar {
             "roof_default".into(),
             self.roof_slot_for_massing(&strategy.id).into(),
         );
-        if !self.facade.wall_slot.is_empty() {
-            slot_overrides.insert("wall_1u".into(), self.facade.wall_slot.clone());
+        if !self.facade.wall_slot.as_str().is_empty() {
+            slot_overrides.insert("wall_1u".into(), self.facade.wall_slot.to_string());
         }
-        if !self.facade.door_slot.is_empty() {
-            slot_overrides.insert("door_default".into(), self.facade.door_slot.clone());
+        if !self.facade.door_slot.as_str().is_empty() {
+            slot_overrides.insert("door_default".into(), self.facade.door_slot.to_string());
         }
-        if !self.facade.window_slot.is_empty() {
-            slot_overrides.insert("window_1u".into(), self.facade.window_slot.clone());
+        if !self.facade.window_slot.as_str().is_empty() {
+            slot_overrides.insert("window_1u".into(), self.facade.window_slot.to_string());
         }
 
         let mut rule_chain = vec![
@@ -503,12 +246,15 @@ impl BuildingGrammar {
             GrammarRuleStep {
                 layer: "district_style",
                 rule_id: district.id.clone(),
-                detail: format!("style_pack={}", district.style_pack_id),
+                detail: format!("style_pack={}", district.style_pack_id.as_str()),
             },
             GrammarRuleStep {
                 layer: "massing",
-                rule_id: strategy.id.clone(),
-                detail: format!("{width}x{depth}x{floors} mode={}", strategy.footprint_mode),
+                rule_id: strategy.id.to_string(),
+                detail: format!(
+                    "{width}x{depth}x{floors} mode={}",
+                    strategy.footprint_mode.as_str()
+                ),
             },
             GrammarRuleStep {
                 layer: "roof",
@@ -518,17 +264,14 @@ impl BuildingGrammar {
             GrammarRuleStep {
                 layer: "facade",
                 rule_id: "facade_v1".into(),
-                detail: format!(
-                    "tags={}",
-                    self.facade.placement_tags.join(",")
-                ),
+                detail: format!("tags={}", self.facade.placement_tags.join(",")),
             },
             GrammarRuleStep {
                 layer: "detail",
-                rule_id: if self.detail.prop_slot.is_empty() {
+                rule_id: if self.detail.prop_slot.as_str().is_empty() {
                     "none".into()
                 } else {
-                    self.detail.prop_slot.clone()
+                    self.detail.prop_slot.to_string()
                 },
                 detail: format!("density={:.2}", self.detail.density),
             },
@@ -539,7 +282,7 @@ impl BuildingGrammar {
             },
         ];
 
-        if strategy.footprint_mode == "l_shape" {
+        if strategy.footprint_mode == FootprintMode::LShape {
             rule_chain.push(GrammarRuleStep {
                 layer: "massing",
                 rule_id: "l_shape_v1".into(),
@@ -555,12 +298,12 @@ impl BuildingGrammar {
             archetype_id: self.archetype.id.clone(),
             district_style: district_style.into(),
             seed,
-            massing_strategy: strategy.id.clone(),
-            footprint_mode: strategy.footprint_mode.clone(),
+            massing_strategy: strategy.id.to_string(),
+            footprint_mode: strategy.footprint_mode.as_str().into(),
             width,
             depth,
             floors,
-            style_pack_id: district.style_pack_id.clone(),
+            style_pack_id: district.style_pack_id.as_str().to_owned(),
             slot_overrides,
             placement_tags: self.facade.placement_tags.clone(),
             variant_tags: age_band.variant_tags.clone(),
@@ -585,13 +328,45 @@ fn weathering_for_age_band(age_band: &str) -> String {
 }
 
 impl GrammarGenerateResult {
-    /// Style-pack slot key → material_profile (PG-MATERIAL-GENERATION-001).
     #[must_use]
     pub fn material_profile_for_slot(&self, slot_key: &str) -> Option<&str> {
         self.material_profiles
             .get(slot_key)
             .map(|s| s.as_str())
             .or_else(|| default_material_for_token_slot(slot_key, &self.style_pack_id))
+    }
+
+    #[must_use]
+    pub fn procedural_request(&self) -> ProceduralBuildingRequest {
+        ProceduralBuildingRequest {
+            archetype_id: self.archetype_id.clone(),
+            width: self.width,
+            depth: self.depth,
+            floors: self.floors,
+            style: StylePackId(self.style_pack_id.clone()),
+            seed: self.seed,
+            arch_dna_preset_id: self.arch_dna_preset_id.clone(),
+        }
+    }
+
+    #[must_use]
+    pub fn footprint_grid(&self) -> FootprintGrid {
+        FootprintGrid::from_grammar(self)
+    }
+
+    #[must_use]
+    pub fn slot_key_for_token(&self, token: &str) -> Option<&str> {
+        let base = match token {
+            "W" => "wall_1u",
+            "D" => "door_default",
+            "C" => "corner_outer",
+            "R" => "roof_default",
+            _ => return None,
+        };
+        self.slot_overrides
+            .get(base)
+            .map(|s| s.as_str())
+            .or(Some(base))
     }
 }
 
@@ -616,81 +391,6 @@ fn default_material_for_token_slot(slot_key: &str, style_pack_id: &str) -> Optio
     }
 }
 
-impl GrammarGenerateResult {
-    #[must_use]
-    pub fn procedural_request(&self) -> ProceduralBuildingRequest {
-        ProceduralBuildingRequest {
-            archetype_id: self.archetype_id.clone(),
-            width: self.width,
-            depth: self.depth,
-            floors: self.floors,
-            style: StylePackId(self.style_pack_id.clone()),
-            seed: self.seed,
-            arch_dna_preset_id: self.arch_dna_preset_id.clone(),
-        }
-    }
-
-    #[must_use]
-    pub fn footprint_grid(&self) -> FootprintGrid {
-        FootprintGrid::from_grammar(self)
-    }
-
-    /// Style-pack slot key for a footprint token (`W`/`D`/`C`/`R`).
-    #[must_use]
-    pub fn slot_key_for_token(&self, token: &str) -> Option<&str> {
-        let base = match token {
-            "W" => "wall_1u",
-            "D" => "door_default",
-            "C" => "corner_outer",
-            "R" => "roof_default",
-            _ => return None,
-        };
-        self.slot_overrides
-            .get(base)
-            .map(|s| s.as_str())
-            .or(Some(base))
-    }
-}
-
-/// Load all `*.ron` grammars under [`GRAMMARS_DIR`].
-#[must_use]
-pub fn load_building_grammar_registry_from_dir(dir: &Path) -> BuildingGrammarRegistry {
-    let mut registry = BuildingGrammarRegistry::default();
-    if !dir.is_dir() {
-        registry
-            .load_errors
-            .push(format!("grammars dir missing: {}", dir.display()));
-        return registry;
-    }
-    for entry in fs::read_dir(dir).into_iter().flatten().flatten() {
-        let path = entry.path();
-        if path.extension().and_then(|e| e.to_str()) != Some("ron") {
-            continue;
-        }
-        match load_building_grammar_from_path(&path) {
-            Ok(grammar) => {
-                let key = grammar.archetype.id.clone();
-                registry.grammars.insert(key, grammar);
-            }
-            Err(err) => registry
-                .load_errors
-                .push(format!("{}: {err}", path.display())),
-        }
-    }
-    registry
-}
-
-pub fn load_building_grammar_from_path(path: &Path) -> Result<BuildingGrammar, String> {
-    let text = fs::read_to_string(path).map_err(|e| e.to_string())?;
-    ron::from_str(&text).map_err(|e| format!("RON parse {}: {e}", path.display()))
-}
-
-#[must_use]
-pub fn load_building_grammar_registry() -> BuildingGrammarRegistry {
-    load_building_grammar_registry_from_dir(&repo_asset_path(GRAMMARS_DIR))
-}
-
-/// Resolve grammar by archetype id and evaluate; optional ARCH-DNA preset re-ranks β massing.
 pub fn generate(
     archetype_id: &str,
     district_style: &str,
@@ -699,7 +399,6 @@ pub fn generate(
     generate_with_arch_dna_preset(archetype_id, district_style, seed, None)
 }
 
-/// BUILD-READ-CONSUMER-MCP-001 — preset id loads DNA+β consumer on commit / snapshot path.
 pub fn generate_with_arch_dna_preset(
     archetype_id: &str,
     district_style: &str,
@@ -707,7 +406,7 @@ pub fn generate_with_arch_dna_preset(
     arch_dna_preset_id: Option<&str>,
 ) -> Result<GrammarGenerateResult, String> {
     let consumer = arch_dna_preset_id
-        .and_then(|id| super::arch_build_grammar_v0::arch_dna_consumer_from_preset_id(id).ok());
+        .and_then(|id| super::super::arch_build_grammar_v0::arch_dna_consumer_from_preset_id(id).ok());
     let registry = load_building_grammar_registry();
     if !registry.load_errors.is_empty() {
         return Err(registry.load_errors.join("; "));
@@ -719,7 +418,6 @@ pub fn generate_with_arch_dna_preset(
     grammar.generate_with_arch_dna(district_style, seed, consumer.as_ref())
 }
 
-/// Reference tags for assembly snapshot (parity with MCP `grammar_reference_tags`).
 #[must_use]
 pub fn grammar_reference_tags(result: &GrammarGenerateResult) -> Vec<String> {
     let mut tags = vec![
@@ -734,18 +432,6 @@ pub fn grammar_reference_tags(result: &GrammarGenerateResult) -> Vec<String> {
         tags.push(format!("chain:{}:{}", step.layer, step.rule_id));
     }
     tags
-}
-
-#[derive(Debug, Clone, serde::Serialize)]
-pub struct PgQuality001Metrics {
-    pub archetype_id: String,
-    pub district_style: String,
-    pub seeds_swept: u64,
-    pub massing_strategy_count: usize,
-    pub roof_slot_count: usize,
-    pub footprint_silhouette_count: usize,
-    pub massing_strategies: Vec<String>,
-    pub roof_slots: Vec<String>,
 }
 
 #[must_use]
@@ -810,7 +496,9 @@ pub fn build_pg_quality_001_witness_body() -> serde_json::Value {
     let green = metrics
         .as_ref()
         .ok()
-        .is_some_and(|m| m.massing_strategy_count >= 3 && m.roof_slot_count >= 2 && m.footprint_silhouette_count >= 2)
+        .is_some_and(|m| {
+            m.massing_strategy_count >= 3 && m.roof_slot_count >= 2 && m.footprint_silhouette_count >= 2
+        })
         && dna_depth_green;
     let (metrics_ok, metrics_err) = match metrics {
         Ok(m) => (Some(m), None),
@@ -837,7 +525,6 @@ pub fn build_pg_quality_001_witness_body() -> serde_json::Value {
     })
 }
 
-/// PG-QUALITY-002 — embed grammar massing diversity into PG-2 `procedural_assembly_live.json`.
 #[must_use]
 pub fn pg_quality_002_pg2_hook_body() -> serde_json::Value {
     let metrics = pg_quality_001_collect_metrics(
@@ -877,7 +564,6 @@ pub fn pg_quality_002_pg2_hook_green() -> bool {
         .unwrap_or(false)
 }
 
-/// Refresh PG-QUALITY-001 witness (`debug_runs/grammar_diversity_witness.json`).
 #[must_use]
 pub fn refresh_pg_quality_001_grammar_diversity_witness() -> bool {
     use crate::dev::debug_run_envelope::{wrap_debug_run, write_debug_run_json};
@@ -892,14 +578,49 @@ pub fn refresh_pg_quality_001_grammar_diversity_witness() -> bool {
     write_debug_run_json(GRAMMAR_DIVERSITY_WITNESS_JSON, wrapped) && pg_quality_001_witness_green()
 }
 
+/// **CITY-G0-S11-001** lib witness — typed ids + deserialize validation.
+#[must_use]
+pub fn city_g0_s11_typed_ids_witness_green() -> bool {
+    use super::grammar_types::{corridor_type_for_profile, CorridorType, MassingId, UsageId};
+
+    let registry = load_building_grammar_registry();
+    if !registry.load_errors.is_empty() {
+        return false;
+    }
+    let all_usage_ok = registry.grammars.values().all(|g| {
+        UsageId::try_new(g.archetype.usage.as_str()).is_ok()
+            && g.massing
+                .strategies
+                .iter()
+                .all(|s| MassingId::try_new(s.id.as_str()).is_ok())
+    });
+    all_usage_ok
+        && corridor_type_for_profile("default_rail") == CorridorType::Rail
+        && UsageId::try_new("bogus_usage").is_err()
+}
+
+/// **CITY-G0-S1C-001** lib witness — 3-way module split + behavior unchanged.
+#[must_use]
+pub fn city_g0_s1c_split_witness_green() -> bool {
+    let root = repo_asset_path("src/construction/procedural/building_grammar");
+    let types = root.join("grammar_types.rs");
+    let deserialize = root.join("grammar_deserialize.rs");
+    let evaluation = root.join("grammar_evaluation.rs");
+    types.is_file()
+        && deserialize.is_file()
+        && evaluation.is_file()
+        && generate("IndustrialWarehouse", "industrial_west", 43).is_ok()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use super::super::grammar_types::ProgramAxisLevel;
 
     #[test]
-    fn facility_binding_read_witness_green() {
-        assert!(super::facility_binding_read_witness_green());
-        let body = super::facility_binding_read_witness_body();
+    fn facility_binding_read_witness_is_green() {
+        assert!(facility_binding_read_witness_green());
+        let body = facility_binding_read_witness_body();
         assert!(body["g1_min_ok"].as_bool().unwrap_or(false));
         assert!(body["factory_cluster_v1"].as_bool().unwrap_or(false));
     }
@@ -934,7 +655,7 @@ mod tests {
 
     #[test]
     fn grammar_massing_strategies_vary_by_seed() {
-        let mut strategies = std::collections::HashSet::new();
+        let mut strategies = HashSet::new();
         for seed in 0..64 {
             let r = generate("IndustrialWarehouse", "industrial_west", seed).unwrap();
             strategies.insert(r.massing_strategy);
@@ -947,13 +668,13 @@ mod tests {
 
     #[test]
     fn pg_quality_001_witness_metrics_green() {
-        assert!(super::pg_quality_001_witness_green());
+        assert!(pg_quality_001_witness_green());
     }
 
     #[test]
     fn refresh_pg_quality_001_writes_grammar_diversity_witness() {
-        assert!(super::refresh_pg_quality_001_grammar_diversity_witness());
-        let path = super::repo_asset_path(super::GRAMMAR_DIVERSITY_WITNESS_JSON);
+        assert!(refresh_pg_quality_001_grammar_diversity_witness());
+        let path = repo_asset_path(GRAMMAR_DIVERSITY_WITNESS_JSON);
         let text = std::fs::read_to_string(path).expect("witness file");
         let body: serde_json::Value = serde_json::from_str(&text).expect("json");
         let green = body
@@ -961,5 +682,15 @@ mod tests {
             .or_else(|| body.get("payload").and_then(|p| p.get("green")))
             .and_then(|v| v.as_bool());
         assert_eq!(green, Some(true));
+    }
+
+    #[test]
+    fn city_g0_s11_typed_ids_witness_green_lib() {
+        assert!(city_g0_s11_typed_ids_witness_green());
+    }
+
+    #[test]
+    fn city_g0_s1c_split_witness_green_lib() {
+        assert!(city_g0_s1c_split_witness_green());
     }
 }

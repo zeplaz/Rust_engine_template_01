@@ -49,6 +49,7 @@ pub fn assign_block_for_tile(
             district_id,
             tiles: HashSet::new(),
             site_ids: Vec::new(),
+            archetype: None,
         })
         .tiles
         .insert(tile);

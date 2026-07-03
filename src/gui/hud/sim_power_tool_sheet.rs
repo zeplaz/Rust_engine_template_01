@@ -13,10 +13,6 @@ use crate::gui::hud::power_hud_icon_atlas::{
     draw_power_hud_icon_labeled, PowerHudEguiTextureCache, PowerHudIconAtlasManifest,
     PowerHudIconAtlasUi, PowerHudIconId,
 };
-use crate::gui::hud::sim_build_picker_sheet::{build_rail_slot_anchor_y, BUILD_PICKER_RAIL_GAP_PX};
-use crate::gui::hud::simulation_shell_phase2::{
-    BUILD_RAIL_W_PX, COMMAND_LEFT_STACK_COLUMN_GAP_PX, CONTEXT_RAIL_W_PX,
-};
 use crate::gui::UiPalette;
 use crate::infrastructure::utility::graph::{UtilityGraph, UtilityNetworkSnapshotResource};
 use crate::infrastructure::VoltageClass;
@@ -58,12 +54,12 @@ pub struct SimPowerToolSheetDrawParams<'w> {
 }
 
 #[must_use]
-pub fn power_tool_sheet_anchor(_strip: &BuildStripState) -> egui::Pos2 {
-    let x = CONTEXT_RAIL_W_PX
-        + COMMAND_LEFT_STACK_COLUMN_GAP_PX
-        + BUILD_RAIL_W_PX
-        + BUILD_PICKER_RAIL_GAP_PX;
-    egui::pos2(x, build_rail_slot_anchor_y(ToolContext::Utilities))
+pub fn power_tool_sheet_anchor(strip: &BuildStripState, left_stack_collapsed: bool) -> egui::Pos2 {
+    let _ = strip;
+    super::simulation_shell_phase2::build_rail_slot_anchor_xy(
+        ToolContext::Utilities,
+        left_stack_collapsed,
+    )
 }
 
 fn voltage_label(v: VoltageClass) -> &'static str {
@@ -77,6 +73,7 @@ fn voltage_label(v: VoltageClass) -> &'static str {
 pub fn draw_sim_power_tool_sheet_egui(
     mut contexts: bevy_egui::EguiContexts,
     base: Res<State<BaseState>>,
+    left_stack: Res<crate::gui::CommandLeftStackState>,
     mut draw: SimPowerToolSheetDrawParams,
 ) -> Result {
     if !matches!(base.get(), BaseState::Simulation) {
@@ -109,7 +106,7 @@ pub fn draw_sim_power_tool_sheet_egui(
         .and_then(|atlas| draw.manifests.get(&atlas.manifest));
     let ctx = contexts.ctx_mut()?;
     apply_sim_hud_egui_theme(ctx, &draw.palette);
-    let anchor = power_tool_sheet_anchor(draw.strip.as_ref());
+    let anchor = power_tool_sheet_anchor(draw.strip.as_ref(), left_stack.collapsed);
     let icon_tint = draw.palette.accent_terminal;
     let selected_tint = draw.palette.accent_action;
 

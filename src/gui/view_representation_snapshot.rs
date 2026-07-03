@@ -4,7 +4,7 @@ use bevy::math::{Rect, UVec2, Vec2};
 use bevy::prelude::*;
 
 use crate::gui::editor::world_preview::{PreviewCameraState, WorldPreviewRenderTargetRegistry};
-use crate::gui::map_camera::MapCameraDesired;
+use crate::gui::map_camera::{MapCameraDesiredRes};
 use crate::gui::{ViewId, ViewManager};
 use crate::render::{
     AppStage5ReadinessReport, GpuParticleInstance, ResolvedViewports, Stage5ReadinessProfile,
@@ -60,7 +60,7 @@ pub fn build_view_representation_snapshot(
     registry: Res<WorldPreviewRenderTargetRegistry>,
     preview_cam: Res<PreviewCameraState>,
     view_manager: Res<ViewManager>,
-    map_desired: Res<MapCameraDesired>,
+    map_desired: Res<MapCameraDesiredRes>,
     particles: Option<Res<WorldFireParticleFrame>>,
     mut snapshot: ResMut<ViewRepresentationSnapshot>,
 ) {

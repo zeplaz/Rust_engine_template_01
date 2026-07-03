@@ -1,0 +1,46 @@
+{
+  "gate": "CMCP-CITY-G1-C4-001",
+  "issue": "CITY-C4",
+  "green": true,
+  "three_run_stable": true,
+  "auto_001_contract": true,
+  "chain_layers": {
+    "town_seed": "0x4ac870faab87f9ad",
+    "block_seed": "0x490697089ff6f2f5",
+    "lot_seed": "0x59dcfef41af9f0f9",
+    "building_grammar_seed": "0x035111798ad871aa"
+  },
+  "stable_hash": "e8463a8e28b40a7ff93c3061014afb7a07ef7ed54db4fafe1a09f487157fcc7d",
+  "run_hashes": [
+    "e8463a8e28b40a7ff93c3061014afb7a07ef7ed54db4fafe1a09f487157fcc7d",
+    "e8463a8e28b40a7ff93c3061014afb7a07ef7ed54db4fafe1a09f487157fcc7d",
+    "e8463a8e28b40a7ff93c3061014afb7a07ef7ed54db4fafe1a09f487157fcc7d"
+  ],
+  "witness_context": {
+    "world_seed": 99001,
+    "town_id": "portland",
+    "block_id": "industrial_west_b01",
+    "lot_idx": 7,
+    "archetype_id": "IndustrialWarehouse",
+    "district_style": "industrial_west"
+  },
+  "rules_check": {
+    "passed": true,
+    "blocked_by": [],
+    "seed": "238991468945502634"
+  },
+  "_agent_meta": {
+    "schema": "city_g1_c4_seed_chain_live_v1",
+    "profile": "CMCP_CITY_G1_C4",
+    "relative_path": "debug_runs/city_g1_c4_001_live.json",
+    "source_system": "city_seed_chain",
+    "written_at_epoch_secs": 1783101219,
+    "ritual": "BLANG:WIT-HON CMCP-CITY-G1-C4-001"
+  },
+  "witness_honesty": {
+    "status": "passed",
+    "error_count": 0,
+    "warning_count": 0,
+    "summary": "witness_honesty debug_runs/city_g1_c4_001_live.json: 0 error(s), 0 issue(s)"
+  }
+}

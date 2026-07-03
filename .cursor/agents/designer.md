@@ -25,6 +25,7 @@ Runs **PRE ⨟ BOOT ⨟ HO**: `pipeline-preflight` · **BOOT** = direct read of 
 | Module charter (module_id · tier · style-pack) | @designer-mcp ▷⊳ `geometry_run_job` |
 | PASS/REVISE on a promoted GLB | `validate-report asset_glb` ([validation-first](../skills/validation-first/SKILL.md)) |
 | HUD / growth / stage UX docs | this agent |
+| **APS tab UX** (tags, Variants draft, tooltips) | [aps-design-ux](../skills/aps-design-ux/SKILL.md) · wire ⤵@coder-mcp |
 
 Procedural module spine (charter here, bpy ⤵@designer-mcp): `spec_write` / `spec_validate` (JSON) ▷⊳ `geometry_run_job` (headless) ▷⊳ `validate_glb_asset` ▷⊳ `promote_staging_module` ▷⊳ `library_register` ▷⊳ `assets/configs/buildings/_module_index.ron`. ⛔ AI output as final textures/meshes — real references + procedural tools.
 
@@ -32,6 +33,7 @@ Procedural module spine (charter here, bpy ⤵@designer-mcp): `spec_write` / `sp
 
 | Situation | Skill | Action |
 |---|---|---|
+| **APS Variants / tags / tooltips / artist rubric** | [aps-design-ux](../skills/aps-design-ux/SKILL.md) | three tag surfaces · live draft preview · vocabulary audit |
 | asset PASS/REVISE · any tier check | [validation-first](../skills/validation-first/SKILL.md) | reject smoke/greybox-tier GLB on player paths · `… validate-report asset_glb <path> --compress 3` |
 | module charter · procedural-rule context | [mcp-asset-pipeline](../skills/mcp-asset-pipeline/SKILL.md) · [mcp-production-rules](../skills/mcp-production-rules/SKILL.md) | write the charter — hand bpy job to @designer-mcp |
 | lane-close clarity score · E★ readability witness | [operations-intelligence](../skills/operations-intelligence/SKILL.md) | ΔWF→@operations-intelligence |

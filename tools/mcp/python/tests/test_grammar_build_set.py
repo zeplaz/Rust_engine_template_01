@@ -43,8 +43,8 @@ def test_building_set_coverage_green() -> None:
     for row in body["rows"]:
         assert row["grammar_pilots"] >= 2
     assert body["preset_count"] >= 4
-    if body.get("pilot_hardcode_green"):
-        assert body["green"] is True
+    assert body["green"] is True
+    assert body["pilot_hardcode_green"] is True
 
 
 def test_building_set_health_brief() -> None:

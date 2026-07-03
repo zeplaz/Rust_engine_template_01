@@ -75,6 +75,7 @@ pub mod build_read_visual_001_live_proof;
 pub mod build_read_debug_live_proof;
 pub mod construction_placement_live_proof;
 pub mod vfx_fire_test_highlight_live_proof;
+pub mod vfx_zoom_lock_live_proof;
 pub mod landscape_grammar_live_proof;
 pub mod landscape_grammar_sim_harness;
 pub mod veg_runtime_proof_live;
@@ -84,6 +85,10 @@ pub mod sim_effect_spine_live_proof;
 pub mod design_event_log_ui_live_proof;
 pub mod pilot_catalog_parity_live_proof;
 pub mod build_read_grammar_v003_live_proof;
+pub mod city_g0_wit_001_live_proof;
+pub mod city_g1_c1_001_live_proof;
+pub mod city_g1_c2_001_live_proof;
+pub mod city_g1_c4_001_live_proof;
 pub mod aps_bevy_qc_hud_live_proof;
 #[cfg(test)]
 pub mod coder_b_queue_bundle_proof;

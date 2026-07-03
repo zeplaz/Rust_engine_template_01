@@ -89,9 +89,34 @@ WSS-DESIGN-GATE-001 · CONSTRUCTION-PARAM-DESIGN-001 · wave 4/5 signoffs · FIR
 
 ## Next designer work
 
-**Gang rollup:** [`designer_gang_lane_status_v1.md`](designer_gang_lane_status_v1.md) — cross-lane PICK snapshot (2026-06-02).
+**Gang rollup:** [`designer_gang_lane_status_v1.md`](designer_gang_lane_status_v1.md) — cross-lane PICK snapshot.
+
+**Skill:** [`.cursor/skills/aps-design-ux/SKILL.md`](../../.cursor/skills/aps-design-ux/SKILL.md) — APS tags · Variants draft preview · tooltips.
 
 Queue `active` is empty — see [`stage_designer_workboard_v1.md`](stage_designer_workboard_v1.md) and optional / `routed_to_coder` lanes only.
+
+### P0 — city grammar (designer-mcp — blocked on G0)
+
+| ID | Action | Owner | Status |
+|:---|:---|:---|:---|
+| **DES-CITY-BLOCK-RECIPE-001** | [`design_city_block_recipe_v1.md`](design_city_block_recipe_v1.md) DRAFT | designer-mcp | **blocked** on G0c · critique → PASS |
+| **DES-CITY-PALETTE-VARIATION-001** | Kit × palette variation charter (CITY-C5) | designer-mcp | **blocked** until G1 gate |
+
+Queue: [`tools/orchestrator/queues/city_grammar_queue.json`](../../tools/orchestrator/queues/city_grammar_queue.json) · Plan: [`plan_city_grammar_upgrade_v1.md`](plan_city_grammar_upgrade_v1.md)
+
+**Note:** APS building-tier specs (tier-2 tags, UX audit, G0/G1 empty copy) remain valid for **APS panels**; they do **not** cover block-tier town grammar — new designer-mcp charters above.
+
+### P0 — open design (2026-06-02 scan)
+
+| ID | Action | Owner |
+|:---|:---|:---|
+| ~~**DES-APS-TAG-TIER2-001**~~ | **PASS (qualified)** — [`design_aps_tag_tier2_v1.md`](design_aps_tag_tier2_v1.md) | done |
+| ~~**APS-UX-AUDIT-001**~~ | **PASS WITH NOTES** v2 — [`design_aps_ux_audit_v2.md`](design_aps_ux_audit_v2.md) | done |
+| ~~**DES-APS-GRAM-TIER-004**~~ | G0/G1 empty copy — [`design_aps_grammar_tier_g1_empty_v1.md`](design_aps_grammar_tier_g1_empty_v1.md) | done |
+| ~~**DESIGN-WEATHER-PLAYER-READ-001**~~ | Charter in `src/dev/` — registry signed | done |
+| **DES-APS-TAG-RUBRIC-001** | Operator tier-1 walk — **READY** | @operator |
+| **MCP-PROD-ROWHOUSE-SIGNOFF** | Production pilot G4 review | designer-mcp tail (blocked on TILE) |
+| **BUILD-READ-DESIGN-001/002** | **PASS on disk** — post_drain queue synced | done |
 
 ### P0 — APS presence (designer closed, coder-mcp picks)
 
@@ -109,3 +134,4 @@ Queue `active` is empty — see [`stage_designer_workboard_v1.md`](stage_designe
 | v1.0.0 | 2026-05-26 | Parallel designer wave |
 | v1.1.0 | 2026-05-26 | P0 parallel batch PASS (param staging/HUD + WSS contamination/smoke) |
 | v1.2.1 | 2026-05-27 | P2 witness batch (F2 / dual-write / R4 MV / WSS diagnostics) documented closed |
+| v1.2.2 | 2026-06-02 | APS UX v2 audit · tier-2 tags · G0/G1 empty · weather charter · operator rubric |

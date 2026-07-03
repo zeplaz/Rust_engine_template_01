@@ -12,12 +12,44 @@
   "charter": "src/dev/design_landscape_lg5_expansion_matrix_v1.md",
   "_agent_meta": {
     "schema": "tile_landscape_expanded_live_v1",
-    "written_at_epoch_secs": 1782012871,
     "profile": "APS_E4_ATLAS_EXPAND",
-    "source_system": "landscape_lg5_expanded_batch",
     "relative_path": "debug_runs/art_pipeline/tile_landscape_expanded_live.json",
-    "ritual": "BLANG:WIT-HON APS-EVO-E4-ATLAS-EXPAND-001",
-    "agent": "coder-mcp"
+    "source_system": "landscape_lg5_expanded_batch",
+    "written_at_epoch_secs": 1783098080,
+    "ritual": "BLANG:WIT-HON APS-EVO-E4-ATLAS-EXPAND-001"
   },
-  "run_ok": true
+  "run_ok": true,
+  "keyframe_count": 16,
+  "ship_honest": true,
+  "exit_predicate": {
+    "witness": "debug_runs/art_pipeline/tile_landscape_expanded_live.json",
+    "must": [
+      {
+        "path": "png_count",
+        "eq": 16
+      },
+      {
+        "path": "keyframe_count",
+        "eq": 16
+      },
+      {
+        "path": "atlas_domain",
+        "eq": "landscape"
+      },
+      {
+        "path": "bake_source",
+        "eq": "keyframe_pack"
+      },
+      {
+        "path": "ship_honest",
+        "eq": true
+      }
+    ]
+  },
+  "witness_honesty": {
+    "status": "passed",
+    "error_count": 0,
+    "warning_count": 0,
+    "summary": "witness_honesty debug_runs/art_pipeline/tile_landscape_expanded_live.json: 0 error(s), 0 issue(s)"
+  }
 }

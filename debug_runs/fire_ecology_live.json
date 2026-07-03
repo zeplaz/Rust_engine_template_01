@@ -58,26 +58,26 @@
     "relative_path": "debug_runs/fire_ecology_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_fire_ecology_lib_harness_witness",
-    "written_at_epoch_secs": 1783027978
+    "written_at_epoch_secs": 1783105823
   },
   "f1_green": false,
   "fire_f2_fuel_spread_001": {
     "ember_events_emitted": 2048,
     "ember_wired": true,
-    "fuel_depleted_cells": 16,
+    "fuel_depleted_cells": 1,
     "fuel_spread_counters_wired": true,
     "green": true,
-    "neighbor_spread_cells": 57
+    "neighbor_spread_cells": 318
   },
   "fire_f2_readiness_align_001": {
     "fire_inst_excluded_from_f1_green": true,
-    "fire_inst_proxy": 64,
+    "fire_inst_proxy": 0,
     "green": true,
     "heat_mostly_stable": true,
-    "max_heat": 0.30684876441955566,
-    "mean_fuel": 0.029999999329447746,
+    "max_heat": 0.04587306082248688,
+    "mean_fuel": 0.05991794914007187,
     "policy": "f1_green uses sim mean_heat/mean_fuel — render fire_inst excluded",
-    "sim_mean_heat": 0.15254077315330505
+    "sim_mean_heat": 0.022401725873351097
   },
   "gate": "FIRE-ECOLOGY-REFRESH-001",
   "green": true,
@@ -90,7 +90,7 @@
       "causal_chain_depth_max": 2,
       "dedupe_ok": false,
       "dedupe_rejected": 0,
-      "drain_us": 7,
+      "drain_us": 6,
       "effect_rows": 3,
       "ember_dispatched": 3,
       "hydro_dispatched": 0,
@@ -103,18 +103,18 @@
     "chunks_sampled": 128,
     "chunks_with_heat": 64,
     "frames_sampled": 65,
-    "fuel_depleted_cells": 16,
+    "fuel_depleted_cells": 1,
     "fuel_gate_active": false,
     "fuel_gated_ignitions": 0,
     "fuel_gated_spark_ratio": 0.0,
     "heat_mostly_stable": true,
     "heat_spike_frames": 0,
     "heat_stable_low_frames": 0,
-    "max_heat": 0.30684876441955566,
-    "mean_fuel": 0.029999999329447746,
-    "mean_heat": 0.15254077315330505,
+    "max_heat": 0.04587306082248688,
+    "mean_fuel": 0.05991794914007187,
+    "mean_heat": 0.022401725873351097,
     "mean_old_growth": 0.20000000298023224,
-    "neighbor_spread_cells": 57,
+    "neighbor_spread_cells": 318,
     "proof_json": true,
     "ungated_spark_cells": 2048
   }

@@ -72,7 +72,7 @@ fn run_mini_fire_smoke_pipeline_ticks() -> PipelineMiniReport {
     use crate::engine::launch_args::{EngineLaunchArgs, TestScene};
     use crate::render::extraction::SmokeVisualBridgeWitness;
     use crate::render::{
-        update_world_fire_particles_from_projection, FireParticleCameraScale, FireVisualFramePlugin,
+        update_world_fire_particles_from_projection, ExtractedCameraMetrics, FireVisualFramePlugin,
         FIRE_SPARK_TACTICAL_PROOF_ZOOM_ALPHA,
     };
     use crate::gui::{
@@ -169,9 +169,10 @@ fn run_mini_fire_smoke_pipeline_ticks() -> PipelineMiniReport {
         graph,
         &mut particles,
         None,
-        FireParticleCameraScale {
-            camera_zoom: 1.0,
+        ExtractedCameraMetrics {
+            zoom_level: 1.0,
             zoom_alpha: FIRE_SPARK_TACTICAL_PROOF_ZOOM_ALPHA,
+            ..Default::default()
         },
         None,
     );

@@ -1,4 +1,4 @@
-//! PERF-INSTR-VFX-001 — triage witness for VFX `--test` perf investigation (before/after p50/p95).
+//! **PERF-INSTR-VFX-002** — triage witness for VFX `--test` perf (Phase 2A–2D dirty gates).
 
 use serde_json::{json, Value};
 
@@ -30,13 +30,20 @@ pub fn triage_perf_vfx_fix_witness_body(rolling: &Value, frames_sampled: u64) ->
     });
 
     let owners_ge_50ms = owners_at_or_above_p50(&after, 50.0);
+    let slice_green = triage_perf_slice_p50_green(&after);
+    let wall_green = triage_perf_wall_p50_green(&after);
 
     let before: Value = serde_json::from_str(BASELINE_BEFORE).unwrap_or(Value::Null);
 
     json!({
         "schema_version": 1,
-        "lane": "PERF-INSTR-VFX-001",
+        "slice_id": "PERF-INSTR-VFX-002",
+        "gate": "PERF-INSTR-VFX-002",
+        "lane": "PERF-INSTR-VFX-002",
         "phase": "phase2a_2d_shipped",
+        "green": slice_green,
+        "phase2_dirty_gates_lib_green": slice_green,
+        "display_acceptance_pending": !wall_green,
         "frames_sampled": frames_sampled,
         "before": before,
         "after": after,
@@ -104,7 +111,7 @@ fn owners_at_or_above_p50(after: &Value, threshold_ms: f32) -> Value {
 pub fn write_triage_perf_vfx_fix_live_witness(rolling: &Value, frames_sampled: u64) -> bool {
     let body = triage_perf_vfx_fix_witness_body(rolling, frames_sampled);
     let wrapped = crate::dev::debug_run_envelope::wrap_debug_run(
-        "PERF-INSTR-VFX-001",
+        "PERF-INSTR-VFX-002",
         "write_triage_perf_vfx_fix_live_witness",
         TRIAGE_PERF_VFX_FIX_LIVE_JSON,
         body,
@@ -118,10 +125,7 @@ const WALL_P50_TARGET_MS: f64 = 33.0;
 /// Phase 2A–2D PerfScope slices (not stall substage labels — those overlap wall intervals).
 #[must_use]
 pub fn triage_perf_slice_p50_green(after: &Value) -> bool {
-    for key in [
-        "after_map_camera_smooth_ms",
-        "after_fire_build_ms",
-    ] {
+    for key in ["after_map_camera_smooth_ms", "after_fire_build_ms"] {
         if let Some(p50) = after
             .get(key)
             .and_then(|v| v.get("p50_ms"))
@@ -144,12 +148,37 @@ pub fn triage_perf_wall_p50_green(after: &Value) -> bool {
         .is_some_and(|p50| p50 <= WALL_P50_TARGET_MS)
 }
 
+#[must_use]
+pub fn triage_perf_vfx_002_lib_green() -> bool {
+    let raw = std::fs::read_to_string(TRIAGE_PERF_VFX_FIX_LIVE_JSON).ok();
+    raw.and_then(|text| {
+        let v: Value = serde_json::from_str(&text).ok()?;
+        let after = v.get("after")?;
+        Some(triage_perf_slice_p50_green(after))
+    })
+    .unwrap_or(false)
+}
+
+#[must_use]
+pub fn refresh_triage_perf_vfx_002_live_witness_from_disk() -> bool {
+    let Ok(raw) = std::fs::read_to_string(TRIAGE_PERF_VFX_FIX_LIVE_JSON) else {
+        return false;
+    };
+    let Ok(v) = serde_json::from_str::<Value>(&raw) else {
+        return false;
+    };
+    let after = v.get("after").cloned().unwrap_or(Value::Null);
+    let frames = v.get("frames_sampled").and_then(|n| n.as_u64()).unwrap_or(0);
+    write_triage_perf_vfx_fix_live_witness(&after, frames) && triage_perf_vfx_002_lib_green()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
     fn triage_witness_on_disk_has_green_perfscope_slices() {
+        let _ = refresh_triage_perf_vfx_002_live_witness_from_disk();
         let raw = std::fs::read_to_string(TRIAGE_PERF_VFX_FIX_LIVE_JSON).expect("witness");
         let v: Value = serde_json::from_str(&raw).expect("json");
         let after = v.get("after").expect("after block");
@@ -157,5 +186,11 @@ mod tests {
             triage_perf_slice_p50_green(after),
             "PerfScope slice p50 should be <= {SLICE_P50_TARGET_MS}ms after phase 2A-2D"
         );
+        assert_eq!(v.get("gate").and_then(|g| g.as_str()), Some("PERF-INSTR-VFX-002"));
+    }
+
+    #[test]
+    fn triage_perf_vfx_002_lib_green_on_disk() {
+        assert!(refresh_triage_perf_vfx_002_live_witness_from_disk());
     }
 }

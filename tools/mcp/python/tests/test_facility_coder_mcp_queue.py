@@ -92,6 +92,19 @@ def test_grammar_eval_sweep_process_histogram() -> None:
     body = grammar_build_set.grammar_eval_sweep()
     hist = body.get("process_histogram") or {}
     assert hist.get("power_tier", {}).get("light", 0) >= 1
+    zones = hist.get("zone_coverage") or {}
+    assert zones.get("primary", 0) >= 1
+    assert "rail" in zones or "utility" in zones
+
+
+def test_grammar_sweep_process_witness_green() -> None:
+    from rust_engine_mcp import grammar_build_set
+
+    body = grammar_build_set.write_grammar_sweep_process_witness()
+    assert body.get("green") is True
+    assert body.get("witness_honesty", {}).get("status") == "passed"
+    hist = body.get("process_histogram") or {}
+    assert hist.get("zone_coverage")
 
 
 def test_veg_catalog_burn_rows_witness_green() -> None:

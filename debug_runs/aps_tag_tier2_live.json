@@ -1,0 +1,24 @@
+{
+  "task_id": "APS-TAG-TIER2-IMPL",
+  "green": true,
+  "preset_count": 4,
+  "missing_archetypes": [],
+  "sim_coupled_tags_present": true,
+  "ui_preset_buttons_wired": true,
+  "ui_suggested_tags_wired": true,
+  "presets_path": "tools/mcp/schemas/examples/aps_tag_tier2_presets_v1.json",
+  "_agent_meta": {
+    "schema": "aps_tag_tier2_live_v1",
+    "profile": "APS_TAG_TIER2",
+    "relative_path": "debug_runs/aps_tag_tier2_live.json",
+    "source_system": "aps_tag_tier2",
+    "written_at_epoch_secs": 1783098008,
+    "ritual": "BLANG:WIT-HON APS-TAG-TIER2-IMPL"
+  },
+  "witness_honesty": {
+    "status": "passed",
+    "error_count": 0,
+    "warning_count": 0,
+    "summary": "witness_honesty debug_runs/aps_tag_tier2_live.json: 0 error(s), 0 issue(s)"
+  }
+}

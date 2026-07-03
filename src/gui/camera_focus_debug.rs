@@ -4,17 +4,19 @@
 
 use bevy::math::Isometry2d;
 use bevy::prelude::*;
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
-use crate::gui::map_camera::{in_simulation_or_editor_map, MainWorldCamera, MapCameraDesired};
-use crate::gui::view_projection_authority::camera_zoom;
+use crate::gui::map_camera::{in_simulation_or_editor_map, MapCameraDesiredRes};
+use crate::gui::view_authority::tactical_camera_world_pose;
 use crate::gui::world_representation::WorldRepresentationFrame;
-use crate::gui::{ViewAuthoritySystemSet, ViewId, ViewManager};
+use crate::gui::{ViewAuthoritySystemSet, ViewManager};
 use crate::render::{tactical_fire_visual, FireVisualFramesByView};
-use crate::render::sim_visual_extract::FireVisualFrame;
+use crate::render::sim_visual_extract::{FireVisualFrame, FIRE_VISUAL_ACTIVE_HEAT_EPS};
+use crate::terrain::generation::{chunk_world_center, Chunk, ChunkCellMatrix};
 
 /// Approximate world extent (XY) covered by one chunk index step for debug tiling.
-pub const DEBUG_CHUNK_SPACING_WORLD: f32 = 64.0;
+/// Default slab size when chunk matrix is unavailable (see test harness `SLAB = 32`).
+pub const DEBUG_CHUNK_SPACING_WORLD: f32 = 32.0;
 
 /// Dev overlay: camera world XY, derived chunk, LOD band, optional nearest zone id.
 #[derive(Resource, Debug, Clone, Copy)]
@@ -64,14 +66,6 @@ impl Plugin for CameraFocusDebugPlugin {
     }
 }
 
-fn world_xy_to_focus_chunk(world: Vec2) -> IVec2 {
-    let s = DEBUG_CHUNK_SPACING_WORLD.max(1.0);
-    IVec2::new(
-        (world.x / s).floor() as i32,
-        (world.y / s).floor() as i32,
-    )
-}
-
 /// Chunks that have fire above the active threshold in either GPU instance rows or `chunk_heat`
 /// (same union as tile-debug overlay — avoids logs showing `fire_active=0` when `chunk_heat` still has heat).
 #[must_use]
@@ -80,23 +74,29 @@ pub fn fire_chunk_coords_above_visual_eps(fire: &FireVisualFrame) -> HashSet<IVe
 }
 
 pub fn update_camera_focus_debug(
-    desired: Res<MapCameraDesired>,
-    cam_q: Query<&Transform, With<MainWorldCamera>>,
+    desired: Res<MapCameraDesiredRes>,
     view_manager: Res<ViewManager>,
+    authority: Option<Res<crate::render::view_runtime::ViewProjectionAuthority>>,
     lod_frame: Res<WorldRepresentationFrame>,
     zones: Res<crate::gui::LodZoneRegistry>,
+    chunks: Query<(&Chunk, &ChunkCellMatrix)>,
     mut debug: ResMut<CameraFocusDebug>,
 ) {
     if !debug.enabled {
         return;
     }
-    let world_pos = view_manager
-        .view(ViewId::WorldMain)
-        .map(|v| v.camera.translation)
-        .or_else(|| cam_q.single().ok().map(|t| t.translation.truncate()))
-        .unwrap_or_else(|| desired.translation.truncate());
+    let (world_pos, _) = tactical_camera_world_pose(authority.as_deref(), &view_manager, &desired);
     debug.world_pos = world_pos;
-    debug.focus_chunk = world_xy_to_focus_chunk(world_pos);
+    let default_size = chunks
+        .iter()
+        .next()
+        .map(|(_, m)| m.size)
+        .unwrap_or(bevy::math::UVec2::splat(32));
+    let spacing = default_size.x.max(default_size.y).max(1) as f32;
+    debug.focus_chunk = IVec2::new(
+        (world_pos.x / spacing).floor() as i32,
+        (world_pos.y / spacing).floor() as i32,
+    );
     debug.lod_band = lod_frame.global_band();
 
     let mut best: Option<(u32, f32)> = None;
@@ -151,9 +151,10 @@ pub fn trace_camera_focus_line(
 pub fn draw_sim_focus_debug_overlay(
     debug: Res<CameraFocusDebug>,
     view_manager: Res<ViewManager>,
-    desired: Res<MapCameraDesired>,
+    desired: Res<MapCameraDesiredRes>,
+    authority: Option<Res<crate::render::view_runtime::ViewProjectionAuthority>>,
     mut gizmos: Gizmos,
-    chunks: Query<&crate::terrain::generation::Chunk>,
+    chunks: Query<(&Chunk, &ChunkCellMatrix)>,
     fire_by_view: Res<FireVisualFramesByView>,
 ) {
     if !debug.enabled {
@@ -161,19 +162,23 @@ pub fn draw_sim_focus_debug_overlay(
     }
     let fire = tactical_fire_visual(fire_by_view.as_ref());
     let mut chunk_set = HashSet::<IVec2>::default();
-    for c in &chunks {
+    let mut chunk_sizes: HashMap<IVec2, bevy::math::UVec2> = HashMap::new();
+    for (c, m) in &chunks {
         chunk_set.insert(c.coord);
+        chunk_sizes.insert(c.coord, m.size);
     }
-    let fire_chunks = fire_chunk_coords_above_visual_eps(fire);
+
+    let default_size = chunk_sizes
+        .values()
+        .next()
+        .copied()
+        .unwrap_or(bevy::math::UVec2::splat(32));
+    let grid_step = Vec2::new(default_size.x as f32, default_size.y as f32);
 
     let r = debug.overlay_radius_chunks.clamp(1, 12);
     let center = debug.focus_chunk;
-    let half = DEBUG_CHUNK_SPACING_WORLD * 0.45;
-    let base = half * 2.0;
-    let cam_scale = camera_zoom(&view_manager, ViewId::WorldMain)
-        .unwrap_or(desired.scale.x)
-        .abs()
-        .max(0.001);
+    let (_, cam_scale) = tactical_camera_world_pose(authority.as_deref(), &view_manager, &desired);
+    let cam_scale = cam_scale.abs().max(0.001);
     let lod_size_mul = match debug.lod_band {
         crate::gui::world_representation::WorldLodBand::LocalTactical => 0.85,
         crate::gui::world_representation::WorldLodBand::Operational => 0.95,
@@ -184,26 +189,43 @@ pub fn draw_sim_focus_debug_overlay(
     for dy in -r..=r {
         for dx in -r..=r {
             let tile = center + IVec2::new(dx, dy);
-            let pos = Vec2::new(
-                tile.x as f32 * DEBUG_CHUNK_SPACING_WORLD + DEBUG_CHUNK_SPACING_WORLD * 0.5,
-                tile.y as f32 * DEBUG_CHUNK_SPACING_WORLD + DEBUG_CHUNK_SPACING_WORLD * 0.5,
-            );
+            let size = chunk_sizes.get(&tile).copied().unwrap_or(default_size);
+            let pos = chunk_world_center(tile, size);
             let is_focus = tile == center;
-            let mut size = Vec2::splat(base * lod_size_mul * if is_focus { 1.12 } else { 1.0 });
+            let mut extent = Vec2::new(size.x as f32, size.y as f32) * lod_size_mul;
+            if is_focus {
+                extent *= 1.08;
+            }
             if debug.screen_stabilize_lod_overlay {
-                size /= cam_scale;
-                size = size.clamp(Vec2::splat(6.0), Vec2::splat(DEBUG_CHUNK_SPACING_WORLD * 1.25));
+                extent /= cam_scale;
+                extent = extent.clamp(Vec2::splat(6.0), grid_step * 1.25);
             }
             let color = if is_focus {
                 Color::srgb(0.95, 0.85, 0.15)
-            } else if fire_chunks.contains(&tile) {
-                Color::srgb(1.0, 0.15, 0.12)
             } else if chunk_set.contains(&tile) {
                 Color::srgb(0.2, 0.75, 0.25)
             } else {
                 Color::srgb(0.12, 0.12, 0.14)
             };
-            gizmos.rect_2d(Isometry2d::from_translation(pos), size, color);
+            gizmos.rect_2d(Isometry2d::from_translation(pos), extent, color);
         }
+    }
+
+    for row in &fire.instances {
+        if row.heat() < FIRE_VISUAL_ACTIVE_HEAT_EPS {
+            continue;
+        }
+        let pos = Vec2::new(row.world_xyz_radius.x, row.world_xyz_radius.y);
+        let heat = row.heat().clamp(0.0, 1.0);
+        let mut marker = Vec2::splat(3.0 + heat * 5.0);
+        if debug.screen_stabilize_lod_overlay {
+            marker /= cam_scale;
+            marker = marker.clamp(Vec2::splat(2.0), Vec2::splat(12.0));
+        }
+        gizmos.rect_2d(
+            Isometry2d::from_translation(pos),
+            marker,
+            Color::srgb(1.0, 0.15, 0.12),
+        );
     }
 }

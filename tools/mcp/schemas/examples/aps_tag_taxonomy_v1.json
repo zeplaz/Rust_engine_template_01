@@ -44,7 +44,9 @@
         { "id": "window_band", "label": "Window band" },
         { "id": "door_rollup", "label": "Roll-up door" },
         { "id": "cooling_tower", "label": "Cooling tower", "grammar_use": "detail.process_cooling" },
-        { "id": "transformer_yard", "label": "Transformer yard", "grammar_use": "detail.power_equipment" }
+        { "id": "transformer_yard", "label": "Transformer yard", "grammar_use": "detail.power_equipment" },
+        { "id": "district_power_feed", "label": "District power feed", "grammar_use": "detail.grid_tie" },
+        { "id": "bilingual_signage", "label": "Bilingual signage", "grammar_use": "detail.locale_signage" }
       ]
     },
     "condition": {
@@ -57,7 +59,8 @@
         { "id": "abandoned", "label": "Abandoned" },
         { "id": "construction", "label": "Under construction" },
         { "id": "fire", "label": "Fire damage" },
-        { "id": "decommissioned", "label": "Decommissioned", "grammar_use": "condition.powered_down" }
+        { "id": "decommissioned", "label": "Decommissioned", "grammar_use": "condition.powered_down" },
+        { "id": "occupation_banner", "label": "Occupation banner", "grammar_use": "condition.transitional_governance" }
       ]
     }
   },

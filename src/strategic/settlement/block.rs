@@ -6,6 +6,7 @@ use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 
 use super::ids::{BlockId, DistrictId};
+use super::block_archetype::BlockArchetype;
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub struct BlockRecord {
@@ -13,6 +14,9 @@ pub struct BlockRecord {
     pub district_id: DistrictId,
     pub tiles: HashSet<IVec2>,
     pub site_ids: Vec<u64>,
+    /// **CITY-G1-C1-001** — resolved after threshold table + district fields.
+    #[serde(default)]
+    pub archetype: Option<BlockArchetype>,
 }
 
 #[derive(Resource, Debug, Default, Clone)]

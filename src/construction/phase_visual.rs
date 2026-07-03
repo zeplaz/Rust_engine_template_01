@@ -5,7 +5,7 @@ use bevy_egui::{egui, EguiContexts};
 
 use crate::engine::states::BaseState;
 use crate::gui::{
-    construction_phase_on_instanced_path, MapCameraDesired, SimulationMapViewport,
+    construction_phase_on_instanced_path, MapCameraDesiredRes, SimulationMapViewport,
     TileDebugInstanceMap, TileGpuDebugSettings,
 };
 use crate::render::view_runtime::ViewProjectionAuthority;
@@ -75,7 +75,7 @@ pub fn draw_construction_phase_labels_egui(
     tile_debug: Option<Res<TileDebugInstanceMap>>,
     gpu_tile: Option<Res<TileGpuDebugSettings>>,
     authority: Option<Res<ViewProjectionAuthority>>,
-    desired: Res<MapCameraDesired>,
+    desired: Res<MapCameraDesiredRes>,
     map_vp: Res<SimulationMapViewport>,
     params: Res<WorldGenParams>,
     sites: Query<(&ConstructionSite, &PlannedSite, &SiteFootprint)>,

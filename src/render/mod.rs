@@ -1,4 +1,5 @@
 // Rendering systems
+mod extracted_camera_metrics;
 mod debug_render_trace;
 mod visual_diagnostics;
 mod debug_viewport_overlay;
@@ -29,6 +30,8 @@ mod tactical_vector_overlay;
 mod visual_perf_budget;
 mod overlay_field_buffers;
 mod domain_overlay_gpu;
+mod fire_vfx;
+mod gpu_instanced_quad;
 mod gpu_particles;
 mod gpu_particle_draw;
 mod gpu_spark_compute;
@@ -84,6 +87,7 @@ mod perf_attribution_witness;
 mod gpu_indirect_draw;
 mod gpu_tile_debug_buffer;
 mod gpu_tile_debug_draw;
+mod core2d_overlay_order;
 mod gpu_surface_teardown;
 mod water_surface_visual;
 pub mod minimap_compositor;
@@ -135,7 +139,7 @@ pub use gpu_bind_group_registry::{
 pub use gpu_representation_metrics::GpuRepresentationMetrics;
 pub use gpu_particle_draw::{
     register_world_fire_particle_draw, sync_particle_draw_dispatch_from_policy,
-    WorldFireParticleDrawDispatch,
+    FireParticlePipelineConfig, InstancedParticleExpandPipeline, WorldFireParticleDrawDispatch,
 };
 pub use gpu_spark_compute::{
     build_fire_spark_attractors, register_fire_spark_compute,
@@ -171,13 +175,23 @@ pub use domain_overlay_gpu::{
     emit_domain_overlay_frame_from_projection, DomainOverlayGpuFrame, EcologyOverlayGpuRow,
     LogisticsOverlayGpuRow,
 };
-pub use gpu_particles::{
-    emit_world_fire_particles_from_projection, fire_spark_011_green, fire_spark_compute_enabled,
-    seed_world_fire_particles_from_overlay_heat, sync_fire_particle_camera_scale,
-    update_world_fire_particles_from_projection,
-    FireParticleCameraScale, FireSparkWitness, GpuParticleInstance, GpuParticleQuadVertex,
-    ParticleClass, WorldFireParticleFrame, WorldFireParticleGpuStorage,     FIRE_SPARK_OPERATIONAL_PLAY_ZOOM_ALPHA, FIRE_SPARK_SCATTER_MAX,
+pub use extracted_camera_metrics::{
+    sync_extracted_camera_metrics, sync_fire_particle_camera_scale, ExtractedCameraMetrics,
+    ExtractedCameraMetricsPlugin, ExtractedCameraMetricsSet, FireParticleCameraScale,
+};
+pub use fire_vfx::{
+    fire_spark_011_green, fire_spark_compute_enabled, FireSparkWitness,
+    FIRE_SPARK_OPERATIONAL_PLAY_ZOOM_ALPHA, FIRE_SPARK_SCATTER_MAX,
     FIRE_SPARK_STRATEGIC_ZOOM_ALPHA, FIRE_SPARK_TACTICAL_PROOF_ZOOM_ALPHA,
+};
+pub use gpu_instanced_quad::{
+    GpuInstancedQuadInstance, GpuInstancedQuadVertex, ParticleSystemUniforms,
+};
+pub use gpu_particles::{
+    emit_world_fire_particles_from_projection, seed_world_fire_particles_from_overlay_heat,
+    update_world_fire_particles_from_projection,
+    view_aware_particle_cull_wired, GpuParticleInstance,
+    GpuParticleQuadVertex, ParticleClass, WorldFireParticleFrame, WorldFireParticleGpuStorage,
 };
 pub use stage5_full_app_harness::{
     LogE01CaptureLane, STAGE5_FULL_APP_LIVE_JSON,
@@ -295,7 +309,6 @@ pub use fire_view_extract::{
     tactical_fire_visual, FireVisualFramesByView, FIRE_LOD_CAP_STRATEGIC, FIRE_LOD_CAP_TACTICAL,
     FIRE_VIEW_CHUNK_SPACING_WORLD,
 };
-pub use gpu_particles::view_aware_particle_cull_wired;
 pub use gpu_surface_teardown::visual_teardown_vr02_wired;
 pub use vfx_capture_hook::{VfxCaptureHookPlugin, VfxCaptureHookState};
 pub use sim_visual_extract::{
@@ -373,6 +386,9 @@ pub use visual_readiness_witness::{
     reset_visual_readiness_witness_on_enter_simulation, sync_visual_readiness_witness_system,
     visual_readiness_witness_json, visual_readiness_witness_lib_fixture, VisualReadinessWitness,
     VisualReadinessWitnessPlugin,
+};
+pub use core2d_overlay_order::{
+    core2d_overlay_pipeline_hdr_index, Core2dOverlayOrderPlugin, CORE2D_OVERLAY_SDR_FORMAT,
 };
 pub use gpu_tile_debug_buffer::register_tile_debug_instance_storage_upload;
 pub use gpu_tile_debug_draw::register_tile_debug_instanced_draw;

@@ -1,0 +1,19 @@
+{
+  "_agent_meta": {
+    "program": "PLAN-BEVY-019-MIG-v1",
+    "issue": "MIG-P0-G1-001",
+    "captured_at": "2026-07-03T17:15:00Z",
+    "branch": "master"
+  },
+  "go": true,
+  "crates": {
+    "bevy": { "target": "0.19", "status": "go" },
+    "bevy_egui": { "target": "0.41", "status": "go", "note": "egui 0.35 Panel API migration required" },
+    "bevy_vector_shapes": { "target": "0.13.0", "status": "go" },
+    "bevy_hanabi": { "target": "0.19", "status": "go", "feature": "hanabi_l3 optional" },
+    "bevy_ecs_tilemap": { "target": "0.18.1", "status": "defer", "note": "bevy_tilemap_adapter feature blocked until tilemap 0.19 ships; default OFF" },
+    "image": { "target": "0.25", "status": "go", "note": "bevy_egui 0.41 chain" }
+  },
+  "cargo_features_added": ["multi_threaded"],
+  "blockers": []
+}

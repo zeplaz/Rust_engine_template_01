@@ -21,7 +21,7 @@ use super::representation_policy::RepresentationResult;
 
 use super::map_camera::{
     in_simulation_or_editor_map, map_camera_viewport_pixels, map_zoom_alpha_with_limits,
-    map_zoom_limits_for_world, MapCameraDesired, MapCameraMode, MapCameraSettings,
+    map_zoom_limits_for_world, MapCameraDesired, MapCameraDesiredRes, MapCameraMode, MapCameraSettings,
     MapCameraSystemSet, MAP_ZOOM_CLAMP,
 };
 use super::view_projection_authority::camera_zoom;
@@ -574,7 +574,7 @@ pub fn resolve_world_main_camera_scale(
 
 fn sync_camera_visual_state_from_map_camera(
     settings: Res<MapCameraSettings>,
-    desired: Option<Res<MapCameraDesired>>,
+    desired: Option<Res<MapCameraDesiredRes>>,
     view_manager: Option<Res<ViewManager>>,
     params: Res<WorldGenParams>,
     windows: Query<&Window, With<PrimaryWindow>>,
@@ -595,7 +595,7 @@ fn sync_camera_visual_state_from_map_camera(
     };
     let scale_x = resolve_world_main_camera_scale(
         view_manager.as_deref(),
-        desired.as_deref(),
+        desired.as_ref().map(|res| &res.0),
     );
     apply_camera_visual_from_map_snapshot(
         &settings,

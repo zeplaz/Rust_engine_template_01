@@ -629,7 +629,7 @@ fn panel_state_checkbox(ui: &mut egui::Ui, label: &str, state: &mut HudPanelStat
 }
 
 pub fn draw_hud_dock_minimized_strip_egui(
-    ctx: &mut egui::Context,
+    ui: &mut egui::Ui,
     policy: &super::widget_presentation::WidgetPresentationPolicy,
     dock: &mut HudDockRegistry,
     minimap: &mut MinimapShellState,
@@ -641,9 +641,9 @@ pub fn draw_hud_dock_minimized_strip_egui(
     if !HudWidgetId::ALL.iter().any(|id| dock.slot(*id).minimized) {
         return;
     }
-    egui::TopBottomPanel::bottom("hud_dock_minimized_strip")
+    egui::Panel::bottom("hud_dock_minimized_strip")
         .frame(egui::Frame::NONE)
-        .show(ctx, |ui| {
+        .show(ui, |ui| {
             ui.horizontal(|ui| {
                 for id in HudWidgetId::ALL {
                     if draw_minimized_shell_chip(ui, id, dock) {

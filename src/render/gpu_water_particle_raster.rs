@@ -3,16 +3,12 @@
 use std::borrow::Cow;
 
 use bevy::asset::AssetServer;
-use bevy::core_pipeline::core_2d::{
-    graph::Core2d,
-    CORE_2D_DEPTH_FORMAT,
-};
+use bevy::core_pipeline::{Core2d, core_2d::CORE_2D_DEPTH_FORMAT};
 use bevy::prelude::*;
 use bevy::render::render_resource::ShaderType;
 use bevy::render::{
     camera::ExtractedCamera,
     extract_resource::ExtractResource,
-    render_graph::{self, RenderGraph, RenderLabel, ViewNode, ViewNodeRunner},
     render_resource::{
         binding_types::uniform_buffer,
         BindGroup, BindGroupEntry, BindGroupLayoutDescriptor, BindGroupLayoutEntries,
@@ -24,12 +20,15 @@ use bevy::render::{
         RenderPipelineDescriptor, ShaderStages, StencilFaceState, StencilState, StoreOp,
         TextureFormat, UniformBuffer, VertexState,
     },
-    renderer::{RenderContext, RenderDevice, RenderQueue},
-    view::{Msaa, ViewDepthTexture, ViewTarget},
+    renderer::{RenderContext, RenderDevice, RenderQueue, ViewQuery},
+    view::{ExtractedView, Msaa, ViewDepthTexture, ViewTarget},
     Render, RenderApp, RenderStartup, RenderSystems,
 };
 
 use crate::gui::{MainWorldCamera, RepresentationResult, TileDebugRenderHost};
+use crate::render::core2d_overlay_order::{
+    core2d_overlay_pipeline_hdr_index, Core2dOverlaySet, CORE2D_OVERLAY_SDR_FORMAT,
+};
 use crate::render::gpu_buffer_registry::{GPUBufferRegistry, WATER_PARTICLE_EXPANDED_VERTICES_BUFFER};
 use crate::render::gpu_water_particles::WorldWaterParticleFrame;
 
@@ -57,9 +56,6 @@ pub struct WaterParticleDrawGlobals {
     pub _pad: f32,
 }
 
-#[derive(Debug, Hash, PartialEq, Eq, Clone, RenderLabel)]
-pub(crate) struct WorldWaterParticleRasterPassLabel;
-
 #[derive(Resource)]
 struct WaterParticleRasterPipeline {
     globals_layout: BindGroupLayoutDescriptor,
@@ -75,8 +71,8 @@ struct WaterParticleRasterBindGpu {
     storage_version: u64,
 }
 
-#[derive(Default)]
-struct WaterParticleRasterNode {
+#[derive(Resource, Default)]
+struct WaterParticleRasterPassReady {
     pipeline_ready: bool,
 }
 
@@ -98,13 +94,20 @@ pub fn register_world_water_particle_raster(app: &mut App) {
 
     render_app
         .init_resource::<WaterParticleRasterBindGpu>()
-        .add_systems(
-            RenderStartup,
-            (init_water_particle_raster_pipeline, install_water_particle_raster_graph_node).chain(),
-        )
+        .init_resource::<WaterParticleRasterPassReady>()
+        .add_systems(RenderStartup, init_water_particle_raster_pipeline)
         .add_systems(
             Render,
             prepare_water_particle_raster_bind_groups.in_set(RenderSystems::PrepareBindGroups),
+        )
+        .add_systems(
+            Core2d,
+            (
+                ensure_water_particle_raster_pipeline_ready,
+                water_particle_raster_pass.after(ensure_water_particle_raster_pipeline_ready),
+            )
+                .chain()
+                .in_set(Core2dOverlaySet::WaterParticleRaster),
         );
 }
 
@@ -162,16 +165,16 @@ fn init_water_particle_raster_pipeline(
     let shader = asset_server.load(WATER_PARTICLE_DRAW_WGSL);
     let pipelines = std::array::from_fn(|hdr| {
         let fmt = if hdr == 0 {
-            TextureFormat::bevy_default()
+            CORE2D_OVERLAY_SDR_FORMAT
         } else {
-            ViewTarget::TEXTURE_FORMAT_HDR
+            TextureFormat::Rgba16Float
         };
         std::array::from_fn(|si| {
             let samples = MSAA_SAMPLES[si];
             let desc = RenderPipelineDescriptor {
                 label: Some(Cow::Borrowed("water_particle_raster")),
                 layout: vec![globals_layout.clone(), expanded_layout.clone()],
-                push_constant_ranges: vec![],
+                immediate_size: 0,
                 vertex: VertexState {
                     shader: shader.clone(),
                     entry_point: Some(Cow::Borrowed("vs_main")),
@@ -210,8 +213,8 @@ fn init_water_particle_raster_pipeline(
                 },
                 depth_stencil: Some(DepthStencilState {
                     format: CORE_2D_DEPTH_FORMAT,
-                    depth_write_enabled: false,
-                    depth_compare: CompareFunction::Always,
+                    depth_write_enabled: Some(false),
+                    depth_compare: Some(CompareFunction::Always),
                     stencil: StencilState {
                         front: StencilFaceState::IGNORE,
                         back: StencilFaceState::IGNORE,
@@ -240,16 +243,6 @@ fn init_water_particle_raster_pipeline(
         expanded_layout,
         pipelines,
     });
-}
-
-fn install_water_particle_raster_graph_node(world: &mut World) {
-    let runner = ViewNodeRunner::<WaterParticleRasterNode>::from_world(world);
-    let mut graph = world.resource_mut::<RenderGraph>();
-    let Some(sub) = graph.get_sub_graph_mut(Core2d) else {
-        return;
-    };
-    sub.add_node(WorldWaterParticleRasterPassLabel, runner);
-    crate::render::gpu_fire_particle_raster::relink_core2d_transparent_overlay_order(sub);
 }
 
 fn prepare_water_particle_raster_bind_groups(
@@ -309,88 +302,83 @@ fn prepare_water_particle_raster_bind_groups(
     ));
 }
 
-impl ViewNode for WaterParticleRasterNode {
-    type ViewQuery = (
-        &'static ExtractedCamera,
-        &'static ViewTarget,
-        &'static ViewDepthTexture,
-        &'static Msaa,
-        Has<TileDebugRenderHost>,
-    );
-
-    fn update(&mut self, world: &mut World) {
-        if self.pipeline_ready {
-            return;
-        }
-        let Some(pl) = world.get_resource::<WaterParticleRasterPipeline>() else {
-            return;
-        };
-        let cache = world.resource::<PipelineCache>();
-        let mut all_ok = true;
-        for row in &pl.pipelines {
-            for id in row {
-                match cache.get_render_pipeline_state(*id) {
-                    CachedPipelineState::Ok(_) => {}
-                    _ => all_ok = false,
-                }
+fn ensure_water_particle_raster_pipeline_ready(
+    pipeline: Option<Res<WaterParticleRasterPipeline>>,
+    cache: Res<PipelineCache>,
+    mut ready: ResMut<WaterParticleRasterPassReady>,
+) {
+    if ready.pipeline_ready {
+        return;
+    }
+    let Some(pl) = pipeline else {
+        return;
+    };
+    let mut all_ok = true;
+    for row in &pl.pipelines {
+        for id in row {
+            if !matches!(cache.get_render_pipeline_state(*id), CachedPipelineState::Ok(_)) {
+                all_ok = false;
             }
         }
-        if all_ok {
-            self.pipeline_ready = true;
-        }
     }
-
-    fn run(
-        &self,
-        _graph: &mut render_graph::RenderGraphContext,
-        render_context: &mut RenderContext,
-        (camera, view_target, depth, msaa, host): bevy::ecs::query::QueryItem<Self::ViewQuery>,
-        world: &World,
-    ) -> Result<(), render_graph::NodeRunError> {
-        if !host || !self.pipeline_ready {
-            return Ok(());
-        }
-        let globals = world.resource::<WaterParticleDrawGlobals>();
-        if globals.vertex_count == 0 {
-            return Ok(());
-        }
-        let bind = world.resource::<WaterParticleRasterBindGpu>();
-        let Some(bg0) = bind.bind_group_0.as_ref() else {
-            return Ok(());
-        };
-        let Some(bg1) = bind.bind_group_1.as_ref() else {
-            return Ok(());
-        };
-
-        let pipeline_res = world.resource::<WaterParticleRasterPipeline>();
-        let cache = world.resource::<PipelineCache>();
-        let hdr = usize::from(view_target.is_hdr());
-        let si = msaa_index(msaa.samples());
-        let pipeline_id = pipeline_res.pipelines[hdr][si];
-        let Some(pl) = cache.get_render_pipeline(pipeline_id) else {
-            return Ok(());
-        };
-
-        let mut color = view_target.get_color_attachment();
-        color.ops.load = LoadOp::Load;
-        let depth_stencil = Some(depth.get_attachment(StoreOp::Store));
-
-        let mut pass = render_context.begin_tracked_render_pass(RenderPassDescriptor {
-            label: Some("water_particle_raster"),
-            color_attachments: &[Some(color)],
-            depth_stencil_attachment: depth_stencil,
-            timestamp_writes: None,
-            occlusion_query_set: None,
-        });
-
-        if let Some(viewport) = camera.viewport.as_ref() {
-            pass.set_camera_viewport(viewport);
-        }
-
-        pass.set_render_pipeline(pl);
-        pass.set_bind_group(0, bg0, &[]);
-        pass.set_bind_group(1, bg1, &[]);
-        pass.draw(0..globals.vertex_count, 0..1);
-        Ok(())
+    if all_ok {
+        ready.pipeline_ready = true;
     }
+}
+
+fn water_particle_raster_pass(
+    world: &World,
+    view: ViewQuery<(
+        &ExtractedCamera,
+        &ExtractedView,
+        &ViewTarget,
+        &ViewDepthTexture,
+        &Msaa,
+        Has<TileDebugRenderHost>,
+    )>,
+    mut ctx: RenderContext,
+    ready: Res<WaterParticleRasterPassReady>,
+) {
+    let (_camera, extracted_view, view_target, depth, msaa, host) = view.into_inner();
+    if !host || !ready.pipeline_ready {
+        return;
+    }
+    let globals = world.resource::<WaterParticleDrawGlobals>();
+    if globals.vertex_count == 0 {
+        return;
+    }
+    let bind = world.resource::<WaterParticleRasterBindGpu>();
+    let Some(bg0) = bind.bind_group_0.as_ref() else {
+        return;
+    };
+    let Some(bg1) = bind.bind_group_1.as_ref() else {
+        return;
+    };
+
+    let pipeline_res = world.resource::<WaterParticleRasterPipeline>();
+    let cache = world.resource::<PipelineCache>();
+    let hdr = core2d_overlay_pipeline_hdr_index(extracted_view.target_format);
+    let si = msaa_index(msaa.samples());
+    let pipeline_id = pipeline_res.pipelines[hdr][si];
+    let Some(pl) = cache.get_render_pipeline(pipeline_id) else {
+        return;
+    };
+
+    let mut color = view_target.get_color_attachment();
+    color.ops.load = LoadOp::Load;
+    let depth_stencil = Some(depth.get_attachment(StoreOp::Store));
+
+    let mut pass = ctx.begin_tracked_render_pass(RenderPassDescriptor {
+        label: Some("water_particle_raster"),
+        color_attachments: &[Some(color)],
+        depth_stencil_attachment: depth_stencil,
+        timestamp_writes: None,
+        occlusion_query_set: None,
+        multiview_mask: None,
+    });
+
+    pass.set_render_pipeline(pl);
+    pass.set_bind_group(0, bg0, &[]);
+    pass.set_bind_group(1, bg1, &[]);
+    pass.draw(0..globals.vertex_count, 0..1);
 }

@@ -4,7 +4,7 @@ use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
 use bevy_egui::EguiContexts;
 
-use crate::gui::{MapCameraDesired, SimulationMapViewport};
+use crate::gui::{MapCameraDesiredRes, SimulationMapViewport};
 use crate::infrastructure::utility::UtilityGraph;
 use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
 
@@ -26,7 +26,7 @@ pub fn power_line_demolish_cut_system(
     tool: Res<ActiveBuildTool>,
     win: Query<&Window, With<PrimaryWindow>>,
     authority: Option<Res<crate::render::view_runtime::ViewProjectionAuthority>>,
-    desired: Res<MapCameraDesired>,
+    desired: Res<MapCameraDesiredRes>,
     map_vp: Res<SimulationMapViewport>,
     params: Res<WorldGenParams>,
     utility: Option<Res<UtilityGraph>>,
@@ -44,7 +44,7 @@ pub fn power_line_demolish_cut_system(
     let Ok(ctx) = egui_ctx.ctx_mut() else {
         return;
     };
-    if ctx.wants_pointer_input() {
+    if ctx.egui_wants_pointer_input() {
         return;
     }
     let Ok(window) = win.single() else {

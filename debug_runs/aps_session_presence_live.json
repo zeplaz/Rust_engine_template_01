@@ -2,7 +2,7 @@
   "gate": "DES-APS-SESSION-DUMP-001",
   "green": true,
   "grammar_set_tier": {
-    "tier": "G3",
+    "tier": "G4",
     "archetype_count": 4,
     "district_count": 5,
     "grammar_files": [
@@ -11,9 +11,7 @@
       "industrial_warehouse_v1.ron",
       "rail_edge_v1.ron"
     ],
-    "reasons": [
-      "building_set_coverage not green for G4"
-    ],
+    "reasons": [],
     "source": "grammar_set_tier()",
     "preset_count": 4,
     "f_axis_count": 4
@@ -23,12 +21,12 @@
     "gaps": []
   },
   "g4_guards": {
-    "building_set_coverage_green": false,
+    "building_set_coverage_green": true,
     "grammar_pilot_parity_green": true
   },
   "ui_presence": {
-    "tier": "G3",
-    "tier_chip": "G3 \u2014 layer depth",
+    "tier": "G4",
+    "tier_chip": "G4 \u2014 production set",
     "kit_hint_visible": false,
     "dna_panel_visible": true,
     "iterate_panel_visible": true,
@@ -41,7 +39,7 @@
   },
   "onboarding_seen": false,
   "expansion": {
-    "building_g4_blocked": true,
+    "building_g4_blocked": false,
     "landscape_lg5_matrix_cells": 16,
     "landscape_lane_active": false
   },
@@ -57,11 +55,11 @@
     "must": [
       {
         "path": "ui_presence.tier",
-        "eq": "G3"
+        "eq": "G4"
       },
       {
         "path": "grammar_set_tier.tier",
-        "eq": "G3"
+        "eq": "G4"
       }
     ]
   },
@@ -70,7 +68,7 @@
     "profile": "APS_SESSION_PRESENCE",
     "relative_path": "debug_runs/aps_session_presence_live.json",
     "source_system": "grammar_build_set",
-    "written_at_epoch_secs": 1782012862,
+    "written_at_epoch_secs": 1783098008,
     "ritual": "BLANG:WIT-HON DES-APS-SESSION-DUMP-001"
   },
   "witness_honesty": {

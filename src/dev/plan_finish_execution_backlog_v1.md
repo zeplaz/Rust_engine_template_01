@@ -21,7 +21,7 @@ Owner: @orchestrator routes · @coder / @coder-mcp implement
 | **Stale plan copy** | e.g. designer backlog says **G0**, repo boots **G3** | `PLAN-APS-PRESENCE-PLAN-EDIT-001` + stop citing outdated §0 tables |
 | **HANDOFF drift** | Active programs table omits open queues | Sync HANDOFF when seeding new queue |
 | **Operator gates** | G-PLAY-OPERATOR-01, APS rubric walks | Machine green ≠ product sign-off |
-| **G4 content bar** | Tier stuck G3: `coverage_green: false`, `pilot_hardcode_green: false` | Fix hardcode lint + building set coverage, not more UI plans |
+| **G4 content bar** | ~~Tier stuck G3~~ | **Done** 2026-07-03 — `aps_g4_coverage_live.json` · tier **G4** |
 
 **Rule:** No new SIGNED plans until the **top open row** in this backlog has a witness path or explicit defer in `defer_registry.json`.
 
@@ -32,10 +32,11 @@ Owner: @orchestrator routes · @coder / @coder-mcp implement
 | ☐ | ID | Owner | Exit witness | Notes |
 |:---|:---|:---|:---|:---|
 | ☑ | APS-GUARD-BRIEF-PARITY-001 | coder-mcp | `debug_runs/aps_guard_brief_parity_live.json` | **Done** — counts aligned; G4 still blocked on coverage/hardcode |
-| ☐ | APS-GRAM-TIER-GATES-LIVE-001 | coder-mcp | `aps_grammar_tier_gates_live.json` tier == G3 | **Still G0 on disk** — test fixture overwrites live |
-| ☐ | DES-APS-SESSION-DUMP-001 | coder-mcp | `aps_session_presence_live.json` | CLI **not implemented** |
-| ☐ | PLAN-APS-PRESENCE-PLAN-EDIT-001 | planner | plan docs amended | **Done** 2026-06-21 |
-| ☐ | OVR-APS-PRESENCE-OPERATOR-001 | operator | HANDOFF + 3 JSON paths | After dump green |
+| ☑ | APS-GRAM-TIER-GATES-LIVE-001 | coder-mcp | `aps_grammar_tier_gates_live.json` tier == G3 | **Done** — live tier G3 |
+| ☑ | DES-APS-SESSION-DUMP-001 | coder-mcp | `aps_session_presence_live.json` | **Done** — CLI + WIT-HON green |
+| ☑ | PLAN-APS-PRESENCE-PLAN-EDIT-001 | planner | plan docs amended | **Done** 2026-06-21 |
+| ☑ | OVR-APS-PRESENCE-OPERATOR-001 | operator | HANDOFF + attestation witness | **Done** 2026-07-03 · `aps_presence_operator_attestation_live.json` |
+| ☑ | APS-G4-COVERAGE-001 | coder-mcp | `debug_runs/aps_g4_coverage_live.json` | **Done** 2026-07-03 — tier **G4** · pilot_hardcode green |
 
 **Queue:** `tools/orchestrator/queues/aps_presence_correction_queue.json`
 
@@ -74,11 +75,9 @@ Owner: @orchestrator routes · @coder / @coder-mcp implement
 ## Recommended pick order (next 2 weeks)
 
 ```text
-Week 1  @coder-mcp  APS-GRAM-TIER-GATES-LIVE-001 + DES-APS-SESSION-DUMP-001 (parallel)
-        @planner    PLAN-APS-PRESENCE-PLAN-EDIT-001
-        @operator   OVR-APS-PRESENCE-OPERATOR-001
+Week 1  @coder_a/@coder_b  CITY-G0-S11-001 / CITY-G0-S1C-001 (plan_city_grammar G0)
 
-Week 1  @coder-mcp  pilot_hardcode_lint green → building_set_coverage green → tier G4 honest
+Week 1  @operator   (optional) APS rubric v2 pixel follow-up @ display session
 
 Week 2  @coder      COD-NUCLEAR-GRID-LINK-001 P1 (LOOP/SCRAM only)
         @designer-mcp DMCP-SPEC-SUBSTATION-YARD-001 + TRANSFORMER-PAD-001

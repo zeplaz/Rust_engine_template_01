@@ -20,8 +20,9 @@ pub use arch_build_grammar_v0::{
     arch_dna_consumer_wired, beta_with_world_transport_bias, build_read_grammar_v0_003_witness_body,
     build_read_grammar_v0_003_witness_green, build_read_consumer_mcp_001_witness_green,
     arch_dna_massing_diversity_witness_green, build_arch_dna_massing_diversity_rows,
-    load_arch_dna_preset, list_arch_dna_preset_ids, load_preset_from_path, load_preset_for_id,
-    load_logistics_rail_warehouse_v0_preset, program_graph_stub_for_preset,
+    load_arch_dna_preset, list_arch_dna_preset_ids,     load_preset_from_path, load_preset_for_id,
+    load_logistics_rail_warehouse_v0_preset,
+    program_graph_stub_for_preset,
     site_zones_for_preset,
     ArchDnaConsumerFields, ArchGrammarV0Preset, PressureFieldV0, ARCH_DNA_EXAMPLES_DIR,
     ARCH_GRAMMAR_V0_PRESET_JSON,
@@ -37,10 +38,13 @@ pub use building_grammar::{
     FACILITY_BINDING_SCHEMA, facility_binding_read_witness_body, facility_binding_read_witness_green,
 };
 pub use assembly_snapshot::{
-    assembly_id_for, build_assembly_snapshot, build_assembly_snapshot_from_grammar,
-    build_assembly_snapshot_from_grammar_with_preset, grammar_rule_chain_snapshot, snapshot_passes_auto_001_contract, staging_relative_path,
-    write_assembly_snapshot, procedural_module_local_translation, AssemblyGrammarRuleChain,
-    AssemblyModulePlacement, AssemblySnapshot, ASSEMBLY_SNAPSHOT_SCHEMA, ASSEMBLY_SNAPSHOT_STAGING,
+    assembly_id_for, assembly_snapshot_stable_hash, build_assembly_snapshot,
+    build_assembly_snapshot_from_grammar, build_assembly_snapshot_from_grammar_with_preset,
+    build_city_g0_wit_001_witness_body, city_g0_wit_001_determinism_witness_green,
+    grammar_rule_chain_snapshot, refresh_city_g0_wit_001_grammar_determinism_witness,
+    snapshot_passes_auto_001_contract, staging_relative_path, write_assembly_snapshot,
+    procedural_module_local_translation, AssemblyGrammarRuleChain, AssemblyModulePlacement,
+    AssemblySnapshot, ASSEMBLY_SNAPSHOT_SCHEMA, ASSEMBLY_SNAPSHOT_STAGING, CITY_G0_WIT_LIVE_JSON,
     PROCEDURAL_RULES_VERSION,
 };
 pub use footprint_grid::{FootprintCell, FootprintGrid, FootprintToken};

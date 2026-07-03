@@ -238,7 +238,7 @@
     "operator": [
       {
         "id": "OVR-APS-PRESENCE-OPERATOR-001",
-        "status": "open",
+        "status": "done",
         "owner": "operator",
         "queue": "aps_presence_correction_queue.json",
         "program": "APS-PRESENCE-CORRECTION-001",
@@ -246,7 +246,9 @@
           "APS-GRAM-TIER-GATES-LIVE-001",
           "DES-APS-SESSION-DUMP-001"
         ],
-        "priority": "P1"
+        "priority": "P1",
+        "witness": "debug_runs/aps_presence_operator_attestation_live.json",
+        "note": "closed 2026-07-03 operator lease"
       },
       {
         "id": "PERF-SHELL-001",
@@ -439,6 +441,17 @@
       }
     ],
     "coder-mcp": [
+      {
+        "id": "APS-G4-COVERAGE-001",
+        "status": "done",
+        "owner": "coder-mcp",
+        "queue": "aps_grammar_evolution_queue.json",
+        "program": "PLAN-APS-GRAMMAR-EVOLUTION-001",
+        "depends_on": [],
+        "priority": "P0",
+        "witness": "debug_runs/aps_g4_coverage_live.json",
+        "note": "tier G4 · pilot_hardcode green · closed 2026-07-03"
+      },
       {
         "id": "APS-E1-FLOW-LANE-001",
         "status": "blocked",

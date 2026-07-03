@@ -129,6 +129,7 @@ pub fn enqueue_grid_overload_sim_effects(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::substrate::hydrology::HydrologyEventQueue;
     use crate::sim::effects::drain::drain_sim_effect_queue_system;
     use crate::sim::effects::SimEffectSpineWitness;
     use crate::sim::effects::SimEffectTelemetryLedger;
@@ -139,6 +140,8 @@ mod tests {
     fn test_app() -> App {
         let mut app = App::new();
         app.add_plugins(MinimalPlugins)
+            .init_resource::<HydrologyEventQueue>()
+            .init_resource::<crate::sim::effects::player_event_log::PlayerEventLog>()
             .init_resource::<SimEffectQueue>()
             .init_resource::<SimControlState>()
             .init_resource::<SimTick>()

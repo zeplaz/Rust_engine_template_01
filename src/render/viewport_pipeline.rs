@@ -417,6 +417,7 @@ mod tests {
             valid: true,
             min: Vec2::new(100.0, 80.0),
             max: Vec2::new(900.0, 400.0),
+            ..Default::default()
         };
         let primary = Vec2::new(1280.0, 720.0);
         assert!(!simulation_map_viewport_defect(&sim, primary));
@@ -435,12 +436,14 @@ mod tests {
             valid: true,
             min: Vec2::ZERO,
             max: Vec2::new(4.0, 4.0),
+            ..Default::default()
         };
         assert!(simulation_map_viewport_defect(&tiny, Vec2::new(800.0, 600.0)));
         let oob = SimulationMapViewport {
             valid: true,
             min: Vec2::new(-10.0, 0.0),
             max: Vec2::new(100.0, 100.0),
+            ..Default::default()
         };
         assert!(simulation_map_viewport_defect(&oob, Vec2::new(800.0, 600.0)));
     }

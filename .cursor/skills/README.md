@@ -21,6 +21,7 @@ After MCP/Python toolchain changes: **reload Cursor MCP** server `rust-engine-ar
 | [agent-lang](agent-lang/SKILL.md) | **Base** — all agents, every session |
 | [sync-claude-skills](sync-claude-skills/SKILL.md) | Mirror `.claude/skills` → `.cursor/skills` |
 | [validation-first](validation-first/SKILL.md) | validate-report after builds |
+| [aps-design-ux](aps-design-ux/SKILL.md) | APS tag vocabulary · Variants draft preview · tooltips |
 | [bevy-simulation-grade](bevy-simulation-grade/SKILL.md) | ECS / viewport authority |
 | [debug-intelligence](debug-intelligence/SKILL.md) | Witness drift, viewport/ECS |
 | [cleanup-completion-intelligence](cleanup-completion-intelligence/SKILL.md) | Before deletes |

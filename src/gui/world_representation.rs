@@ -12,7 +12,7 @@ use super::view_representation::{CameraVisualState, VisualBudgetSettings, Visual
 use crate::compute::AgentFrame;
 use crate::gui::lod_zone_authoring::refresh_lod_zone_registry;
 use crate::gui::map_camera::{
-    in_simulation_or_editor_map, map_zoom_alpha, MapCameraDesired, MapCameraSystemSet,
+    in_simulation_or_editor_map, map_zoom_alpha, MapCameraDesiredRes, MapCameraSystemSet,
 };
 use crate::render::{ChunkFireHeat, FireSimulationSnapshot, Stage5LodBandLogWitness};
 use crate::systems::sim_control::{SimControlSystemSet, SimStepStamp, SimTick, SimTimeMicros};
@@ -807,7 +807,7 @@ fn digest_bubbles(bubbles: &[TacticalLodBubble]) -> u64 {
 
 pub fn compute_world_representation_frame(
     time: Res<Time>,
-    desired: Res<MapCameraDesired>,
+    desired: Res<MapCameraDesiredRes>,
     sim: Res<SimTick>,
     sim_time: Res<SimTimeMicros>,
     layout: Res<WorldChunkLayoutCache>,

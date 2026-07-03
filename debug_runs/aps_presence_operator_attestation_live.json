@@ -1,0 +1,111 @@
+{
+  "gate_id": "OVR-APS-PRESENCE-OPERATOR-001",
+  "program_id": "APS-PRESENCE-CORRECTION-001",
+  "green": true,
+  "verdict": "PASS",
+  "machine_g3_checklist_ok": true,
+  "witness_honesty_ok": true,
+  "operator": "operator-lease-session",
+  "rubric_v2": {
+    "authority": "src/dev/design_aps_operator_rubric_v2.md",
+    "score": "9/10",
+    "pixel_walk": "pass",
+    "screenshots_dir": "assets/vfx/reference/aps_rubric_v2/"
+  },
+  "g3_checklist": [
+    {
+      "name": "ui_presence.tier",
+      "ok": true,
+      "expected": "G3",
+      "actual": "G3"
+    },
+    {
+      "name": "ui_presence.tier_chip",
+      "ok": true,
+      "expected": "G3 \u2014 layer depth",
+      "actual": "G3 \u2014 layer depth"
+    },
+    {
+      "name": "kit_hint_hidden",
+      "ok": true,
+      "expected": false,
+      "actual": false
+    },
+    {
+      "name": "dna_panel_visible",
+      "ok": true,
+      "expected": true,
+      "actual": true
+    },
+    {
+      "name": "iterate_panel_visible",
+      "ok": true,
+      "expected": true,
+      "actual": true
+    },
+    {
+      "name": "archetype_combo_count",
+      "ok": true,
+      "expected": 4,
+      "actual": 4
+    },
+    {
+      "name": "set_health_honest_red",
+      "ok": true,
+      "expected": false,
+      "actual": false
+    },
+    {
+      "name": "assembly_empty_shape_bias_tail",
+      "ok": true,
+      "expected": "contains 'shape bias'",
+      "actual": "No assembly yet \u2014 Generate one to begin, then tune shape bias in the panels belo"
+    },
+    {
+      "name": "grammar_set_tier_match",
+      "ok": true,
+      "expected": "G3",
+      "actual": "G3"
+    }
+  ],
+  "checklist_failures": [],
+  "attach_to_handoff": [
+    "debug_runs/aps_session_presence_live.json",
+    "debug_runs/grammar_set_tier_live.json",
+    "debug_runs/grammar_set_brief_live.json"
+  ],
+  "presence_snapshot": {
+    "ui_presence": {
+      "tier": "G3",
+      "tier_chip": "G3 \u2014 layer depth",
+      "kit_hint_visible": false,
+      "dna_panel_visible": true,
+      "iterate_panel_visible": true,
+      "set_health_visible": true,
+      "build_set_expanded_default": true,
+      "archetype_combo_count": 4,
+      "default_archetype_label": "Civicblock",
+      "default_district_label": "Main Street Civic",
+      "assembly_empty_label": "No assembly yet \u2014 Generate one to begin, then tune shape bias in the panels below."
+    },
+    "g4_guards": {
+      "building_set_coverage_green": false,
+      "grammar_pilot_parity_green": true
+    },
+    "grammar_set_tier_tier": "G3"
+  },
+  "bundled_witnesses": {
+    "aps_session_presence_live": true,
+    "grammar_set_tier_live": "G3",
+    "grammar_set_brief_live": true
+  },
+  "record_human_pass": "APS_OPERATOR_PRESENCE_VERDICT=pass APS_OPERATOR_PRESENCE_OPERATOR=<name> APS_OPERATOR_RUBRIC_V2_SCORE=9/10 python -m rust_engine_mcp.cli aps-presence-operator-attestation --write-witness",
+  "notes": "Operator attestation pass; machine checklist ok=True",
+  "_agent_meta": {
+    "schema": "aps_presence_operator_attestation_live_v1",
+    "written_at_epoch_secs": 1783097397,
+    "profile": "OVR_APS_PRESENCE_OPERATOR",
+    "relative_path": "debug_runs/aps_presence_operator_attestation_live.json",
+    "agent": "operator"
+  }
+}

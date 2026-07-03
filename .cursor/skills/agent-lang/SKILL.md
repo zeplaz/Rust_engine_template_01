@@ -53,11 +53,11 @@ powershell -NoProfile -File .cursor/skills/sync-claude-skills/scripts/sync.ps1
 |:--|:--|
 | `PRE` | `pipeline-preflight` (env + queue staleness) |
 | `BOOT` | read `prompts/llm_agent_brief.md` §FIELD◈ + `prompts/SYMBOLIC_LANGUAGE.meta.md` (direct) |
-| `Q+` | `agent-queue-next <agent>` |
-| `Q✓` | `agent-queue-update <id> done --note <witness>` |
+| `Q+` | `get-que <agent> [--demand --minutes 60]` (multi-parallel) · legacy `agent-queue-next` |
+| `Q✓` | `agent-queue-update <id> done --note <witness>` (auto queue; dual Q✓ dispatch) |
 | `HO` | `handoff-brief` |
 | `WIT` | `witness-brief <path>` |
-| `WIT-HON` | `validate-report witness_honesty <path>` · `--scan debug_runs` · `validate-report queue_integrity` |
+| `WIT-HON` | `validate-report witness_honesty` · `intel_officer_sweep` · `validate-report queue_integrity` |
 | `CARGO` | `validate-report cargo --cached --compress 4` (structured report ¬raw stderr) |
 | `REF` | `doc <path>` → `file-digest` (⊚digest, compressed) |
 | `GUIDE` | `guide` (token-savings-guide: BLANG token → CLI map) |

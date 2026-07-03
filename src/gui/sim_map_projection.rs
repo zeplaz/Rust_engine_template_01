@@ -56,7 +56,17 @@ pub fn sim_map_projection_frame(
     if !map_vp.is_adequate_for_camera() {
         return None;
     }
-    let screen_rect = sim_map_image_rect(map_vp);
+    let screen_rect = if super::map_camera::tactical_map_full_window_render()
+        && map_vp.window_logical.x > 1.0
+        && map_vp.window_logical.y > 1.0
+    {
+        egui::Rect::from_min_size(
+            egui::pos2(0.0, 0.0),
+            egui::vec2(map_vp.window_logical.x, map_vp.window_logical.y),
+        )
+    } else {
+        sim_map_image_rect(map_vp)
+    };
     let (visible_w, visible_h) = ortho
         .map(|o| (o.fixed_width, o.fixed_height))
         .unwrap_or((screen_rect.width(), screen_rect.height()));
@@ -84,6 +94,7 @@ pub fn sim_map_screen_to_world_xy_in_frame(
     )
 }
 
+/// [`Camera::world_to_viewport`] — already logical px (matches [`Window::cursor_position`]).
 #[must_use]
 pub fn camera_map_plane_vec3_to_logical_screen(
     camera: &Camera,
@@ -101,19 +112,16 @@ pub fn sim_map_world_vec3_to_egui_rendered(
     world: Vec3,
     desired: &MapCameraDesired,
     map_vp: &SimulationMapViewport,
-    camera: &Camera,
-    xf: &GlobalTransform,
+    _camera: &Camera,
+    _xf: &GlobalTransform,
     _window: &Window,
     _ortho: Option<&MainWorldCameraOrthoTrace>,
 ) -> Option<egui::Pos2> {
-    if let Some(logical) = camera_map_plane_vec3_to_logical_screen(camera, xf, world) {
-        return Some(egui::pos2(logical.x, logical.y));
-    }
     sim_map_world_vec3_to_egui(
         world,
         desired,
         map_vp,
-        map_vp.max.x.max(1.0),
-        map_vp.max.y.max(1.0),
+        map_vp.window_logical.x.max(map_vp.max.x).max(1.0),
+        map_vp.window_logical.y.max(map_vp.max.y).max(1.0),
     )
 }

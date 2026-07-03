@@ -25,7 +25,7 @@
   ],
   "_agent_meta": {
     "schema": "dmcp_ovr_p3_accept_rubric_live_v1",
-    "written_at_epoch_secs": 1782012866,
+    "written_at_epoch_secs": 1783098009,
     "profile": "DMCP_OVR_P3_ACCEPT_RUBRIC",
     "source_system": "aps_uiux_p3_accept_rubric",
     "relative_path": "debug_runs/art_pipeline/dmcp_ovr_p3_accept_rubric_live.json",

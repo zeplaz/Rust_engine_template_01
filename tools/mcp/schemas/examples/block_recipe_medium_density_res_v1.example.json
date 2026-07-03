@@ -1,0 +1,36 @@
+{
+  "schema": "block_recipe_v1",
+  "version": "1.0.0",
+  "recipe_id": "block_recipe_medium_density_res_v1",
+  "block_archetype": "MediumDensityRes",
+  "label": "Medium density rowhouse block",
+  "default_district_style": "colonial",
+  "_meta": {
+    "teaches": ["lot_row", "edge", "scatter", "block_archetype:MediumDensityRes"]
+  },
+  "steps": [
+    {
+      "kind": "lot_row",
+      "count": 4,
+      "depth": 2,
+      "facing": "street",
+      "setback": 0,
+      "building_archetype": "CivicBlock",
+      "district_style": "colonial"
+    },
+    {
+      "kind": "edge",
+      "asset": "lamp_row",
+      "spacing": 2.0,
+      "offset": 0,
+      "sim_authority": false
+    },
+    {
+      "kind": "scatter",
+      "asset": "shrub",
+      "density": 0.1,
+      "jitter": 0.15,
+      "zone": "interior"
+    }
+  ]
+}

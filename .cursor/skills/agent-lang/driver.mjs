@@ -116,6 +116,8 @@ function step(label, args) {
 
 const USAGE = `agent-lang driver — drive the Rust_engine_template_01 BLANG/agent-lang system.
 
+  node driver.mjs get-que <agent> [--demand] [--minutes 60]
+                                      Multi-parallel Q+ (alias: get que <agent>). Hour session: --demand.
   node driver.mjs boot <agent>        Session ritual (BLANG:PRE -> BOOT -> HO):
                                       pipeline-preflight + (read brief+SYMLANG) + handoff-brief.
                                       <agent> = coder | planner | designer | sim-steward |
@@ -138,6 +140,17 @@ function main() {
   if (!sub || sub === "--help" || sub === "-h") {
     console.log(USAGE);
     process.exit(0);
+  }
+
+  if (sub === "get-que" || (sub === "get" && argv[1] === "que")) {
+    const agentIdx = sub === "get-que" ? 1 : 2;
+    const agent = argv[agentIdx];
+    if (!agent) {
+      console.error("get-que needs an agent, e.g. `node driver.mjs get-que designer --demand`");
+      process.exit(1);
+    }
+    const extra = argv.slice(agentIdx + 1);
+    process.exit(step(`get-que ${agent}`, ["get-que", agent, ...extra]).status ?? 1);
   }
 
   if (sub === "boot") {

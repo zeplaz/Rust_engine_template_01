@@ -89,14 +89,22 @@ pub fn finalize_simulation_map_pointer_gate_egui_system(
     layout: Res<HudLayoutStore>,
     strip: Res<BuildStripState>,
     tool: Res<ActiveBuildTool>,
+    picker: Res<crate::gui::hud::sim_build_picker_sheet::SimBuildPickerState>,
+    left_stack: Res<CommandLeftStackState>,
     mut contexts: EguiContexts,
 ) {
     let Ok(ctx) = contexts.ctx_mut() else {
         return;
     };
     let over_floating_hud = cursor_over_visible_hud_widget(gate.cursor, &dock, &layout)
-        || sim_build_rail_submenu_blocks_pointer(strip.as_ref(), tool.as_ref(), gate.cursor);
-    let egui_blocks = ctx.wants_pointer_input() || over_floating_hud;
+        || sim_build_rail_submenu_blocks_pointer(
+            strip.as_ref(),
+            tool.as_ref(),
+            picker.as_ref(),
+            left_stack.as_ref(),
+            gate.cursor,
+        );
+    let egui_blocks = ctx.egui_wants_pointer_input() || over_floating_hud;
     gate.egui_blocks = egui_blocks;
     if egui_blocks {
         gate.chrome_blocks = true;
@@ -135,12 +143,15 @@ pub fn map_wheel_play_area_allowed(
 fn sim_build_rail_submenu_blocks_pointer(
     strip: &BuildStripState,
     tool: &ActiveBuildTool,
+    picker: &crate::gui::hud::sim_build_picker_sheet::SimBuildPickerState,
+    left_stack: &CommandLeftStackState,
     cursor: Vec2,
 ) -> bool {
     if strip.active == ToolContext::None {
         return false;
     }
-    if !tool.residential_menu_open
+    if !picker.open
+        && !tool.residential_menu_open
         && !tool.commercial_menu_open
         && !tool.industrial_menu_open
         && !tool.utilities_menu_open
@@ -148,7 +159,8 @@ fn sim_build_rail_submenu_blocks_pointer(
     {
         return false;
     }
-    sim_build_rail_submenu_block_rect().contains(egui::pos2(cursor.x, cursor.y))
+    sim_build_rail_submenu_block_rect(picker, left_stack.collapsed)
+        .contains(egui::pos2(cursor.x, cursor.y))
 }
 
 #[inline]
@@ -300,9 +312,15 @@ pub fn build_verify_pointer_001_witness_green() -> bool {
         industrial_menu_open: true,
         ..Default::default()
     };
-    let rect = sim_build_rail_submenu_block_rect();
+    let picker = crate::gui::hud::sim_build_picker_sheet::SimBuildPickerState {
+        open: true,
+        category: crate::gui::hud::sim_build_picker_sheet::BuildPickerCategory::Industry,
+        anchor_slot: ToolContext::Industry,
+    };
+    let left_stack = CommandLeftStackState { collapsed: true };
+    let rect = sim_build_rail_submenu_block_rect(&picker, left_stack.collapsed);
     let cursor = Vec2::new(rect.center().x, rect.center().y);
-    sim_build_rail_submenu_blocks_pointer(&strip, &tool, cursor)
+    sim_build_rail_submenu_blocks_pointer(&strip, &tool, &picker, &left_stack, cursor)
 }
 
 #[must_use]
@@ -340,6 +358,7 @@ mod tests {
             valid: true,
             min: Vec2::ZERO,
             max: Vec2::new(1280.0, 720.0),
+            ..Default::default()
         };
         let left = CommandLeftStackState { collapsed: true };
         let minimap = MinimapShellState::default();

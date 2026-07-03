@@ -12,13 +12,7 @@ use crate::construction::{
     RoadSnapSettings, RoadToolPopupState, ToolContext,
 };
 use crate::engine::states::BaseState;
-use crate::gui::hud::sim_build_picker_sheet::{
-    build_rail_slot_anchor_y, BUILD_PICKER_RAIL_GAP_PX,
-};
-use crate::gui::hud::simulation_shell_phase2::{
-    BUILD_RAIL_W_PX, COMMAND_LEFT_STACK_COLUMN_GAP_PX, CONTEXT_RAIL_W_PX,
-};
-use crate::gui::{MapCameraDesired, SimulationMapViewport, UiPalette};
+use crate::gui::{MapCameraDesiredRes, SimulationMapViewport, UiPalette};
 use crate::render::view_runtime::ViewProjectionAuthority;
 use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
 
@@ -61,27 +55,24 @@ pub struct SimRoadToolSheetDrawParams<'w> {
     pub snap: ResMut<'w, RoadSnapSettings>,
     pub roads: Res<'w, ExecutedRoadNetwork>,
     pub params: Res<'w, WorldGenParams>,
-    pub desired: Res<'w, MapCameraDesired>,
+    pub desired: Res<'w, MapCameraDesiredRes>,
     pub map_vp: Res<'w, SimulationMapViewport>,
 }
 
 #[must_use]
-pub fn road_tool_sheet_anchor(strip: &BuildStripState) -> egui::Pos2 {
+pub fn road_tool_sheet_anchor(strip: &BuildStripState, left_stack_collapsed: bool) -> egui::Pos2 {
     let slot = match strip.active {
         ToolContext::Rail => ToolContext::Rail,
         _ => ToolContext::Roads,
     };
-    let x = CONTEXT_RAIL_W_PX
-        + COMMAND_LEFT_STACK_COLUMN_GAP_PX
-        + BUILD_RAIL_W_PX
-        + BUILD_PICKER_RAIL_GAP_PX;
-    egui::pos2(x, build_rail_slot_anchor_y(slot))
+    super::simulation_shell_phase2::build_rail_slot_anchor_xy(slot, left_stack_collapsed)
 }
 
 pub fn draw_sim_road_tool_sheet_egui(
     mut contexts: bevy_egui::EguiContexts,
     base: Res<State<BaseState>>,
     mut draw: SimRoadToolSheetDrawParams,
+    left_stack: Res<crate::gui::CommandLeftStackState>,
     win: Query<&Window, With<PrimaryWindow>>,
     authority: Option<Res<ViewProjectionAuthority>>,
 ) -> Result {
@@ -140,7 +131,7 @@ pub fn draw_sim_road_tool_sheet_egui(
 
     let ctx = contexts.ctx_mut()?;
     apply_sim_hud_egui_theme(ctx, &draw.palette);
-    let anchor = road_tool_sheet_anchor(draw.strip.as_ref());
+    let anchor = road_tool_sheet_anchor(draw.strip.as_ref(), left_stack.collapsed);
 
     egui::Area::new(egui::Id::new("sim_road_tool_sheet"))
         .order(egui::Order::Foreground)

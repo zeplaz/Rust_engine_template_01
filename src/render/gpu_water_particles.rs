@@ -135,8 +135,9 @@ pub fn evaluate_water_vfx_witness_bands(
         catalog,
         &mut strategic_frame,
         FireParticleCameraScale {
-            camera_zoom: 1.0,
+            zoom_level: 1.0,
             zoom_alpha: WATER_PARTICLE_STRATEGIC_ZOOM_ALPHA * 0.5,
+            ..Default::default()
         },
         time_secs,
     );
@@ -146,8 +147,9 @@ pub fn evaluate_water_vfx_witness_bands(
         catalog,
         &mut tactical_frame,
         FireParticleCameraScale {
-            camera_zoom: 1.0,
+            zoom_level: 1.0,
             zoom_alpha: tactical_zoom,
+            ..Default::default()
         },
         time_secs,
     );
@@ -366,7 +368,7 @@ fn emit_river_streaks_for_segment(
         let cross = Vec2::new(-flow.y, flow.x);
         let jitter = (hash_u32(seg.path_id, i as u32, salt) & 0xff) as f32 / 255.0 - 0.5;
         let world = along + cross * jitter * seg.half_width;
-        let half = water_particle_half_world(WaterParticleProfile::RiverStreak, cam.zoom_alpha, cam.camera_zoom);
+        let half = water_particle_half_world(WaterParticleProfile::RiverStreak, cam.zoom_alpha, cam.zoom_level);
         push_instance(
             out,
             world,
@@ -417,7 +419,7 @@ fn emit_river_foam_at_bends(
             continue;
         }
         let world = next.start;
-        let half = water_particle_half_world(WaterParticleProfile::RiverFoam, cam.zoom_alpha, cam.camera_zoom);
+        let half = water_particle_half_world(WaterParticleProfile::RiverFoam, cam.zoom_alpha, cam.zoom_level);
         push_instance(
             out,
             world,
@@ -465,7 +467,7 @@ fn emit_coast_foam_at(
     ty: u32,
     cam: FireParticleCameraScale,
 ) {
-    let half = water_particle_half_world(WaterParticleProfile::OceanFoam, cam.zoom_alpha, cam.camera_zoom);
+    let half = water_particle_half_world(WaterParticleProfile::OceanFoam, cam.zoom_alpha, cam.zoom_level);
     push_instance(
         out,
         Vec2::new(tx as f32 + 0.5, ty as f32 + 0.5),
@@ -487,7 +489,7 @@ fn emit_lake_glint_at(
     if h % 5 != 0 {
         return false;
     }
-    let half = water_particle_half_world(WaterParticleProfile::LakeGlint, cam.zoom_alpha, cam.camera_zoom);
+    let half = water_particle_half_world(WaterParticleProfile::LakeGlint, cam.zoom_alpha, cam.zoom_level);
     push_instance(
         out,
         Vec2::new(tx as f32 + 0.5, ty as f32 + 0.5),
@@ -650,7 +652,7 @@ impl Plugin for GpuWaterParticlesPlugin {
             .add_systems(
                 Update,
                 emit_world_water_particles_from_catalog
-                    .after(super::gpu_particles::sync_fire_particle_camera_scale)
+                    .after(crate::render::ExtractedCameraMetricsSet::Sync)
                     .in_set(super::WaterSurfaceVisualSet),
             );
     }
@@ -701,8 +703,9 @@ mod tests {
             &catalog,
             &mut frame,
             FireParticleCameraScale {
-                camera_zoom: 1.0,
+                zoom_level: 1.0,
                 zoom_alpha: 0.2,
+                ..Default::default()
             },
             0.0,
         );
@@ -728,8 +731,9 @@ mod tests {
             &catalog,
             &mut frame,
             FireParticleCameraScale {
-                camera_zoom: 1.0,
+                zoom_level: 1.0,
                 zoom_alpha: 0.8,
+                ..Default::default()
             },
             1.0,
         );
@@ -756,8 +760,9 @@ mod tests {
             &catalog,
             &mut frame,
             FireParticleCameraScale {
-                camera_zoom: 1.0,
+                zoom_level: 1.0,
                 zoom_alpha: 0.8,
+                ..Default::default()
             },
             1.0,
         );
@@ -797,8 +802,9 @@ mod tests {
             &catalog,
             &mut frame,
             FireParticleCameraScale {
-                camera_zoom: 1.0,
+                zoom_level: 1.0,
                 zoom_alpha: 0.8,
+                ..Default::default()
             },
             0.0,
         );
@@ -850,8 +856,9 @@ mod tests {
             &catalog,
             &mut frame,
             FireParticleCameraScale {
-                camera_zoom: 1.0,
+                zoom_level: 1.0,
                 zoom_alpha: 0.8,
+                ..Default::default()
             },
             0.0,
         );
@@ -884,8 +891,9 @@ mod tests {
             &catalog,
             &mut frame,
             FireParticleCameraScale {
-                camera_zoom: 1.0,
+                zoom_level: 1.0,
                 zoom_alpha: 0.75,
+                ..Default::default()
             },
             0.0,
         );

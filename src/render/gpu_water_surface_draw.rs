@@ -3,33 +3,32 @@
 use std::borrow::Cow;
 
 use bevy::asset::AssetServer;
-use bevy::core_pipeline::core_2d::{
-    graph::Core2d,
-    CORE_2D_DEPTH_FORMAT,
-};
+use bevy::core_pipeline::{Core2d, core_2d::CORE_2D_DEPTH_FORMAT};
 use bevy::prelude::*;
 use bevy::render::render_resource::ShaderType;
 use bevy::render::extract_resource::ExtractResource;
 use bevy::render::{
     camera::ExtractedCamera,
     extract_resource::ExtractResourcePlugin,
-    render_graph::{self, RenderGraph, RenderLabel, ViewNode, ViewNodeRunner},
     render_resource::{
         binding_types::uniform_buffer,
         BindGroup, BindGroupEntry, BindGroupLayoutDescriptor, BindGroupLayoutEntries,
         BindGroupLayoutEntry, BindingResource, BindingType, Buffer, BufferBinding,
-        BufferBindingType, BufferDescriptor, BufferUsages, CachedRenderPipelineId, ColorTargetState, ColorWrites, CompareFunction, DepthBiasState,
+        BufferBindingType, BufferDescriptor, BufferUsages, CachedPipelineState, CachedRenderPipelineId, ColorTargetState, ColorWrites, CompareFunction, DepthBiasState,
         DepthStencilState, FragmentState, FrontFace, LoadOp, MultisampleState, PipelineCache,
         PolygonMode, PrimitiveState, PrimitiveTopology, RenderPassDescriptor,
         RenderPipelineDescriptor, ShaderStages, StencilFaceState, StencilState, StoreOp,
         TextureFormat, UniformBuffer, VertexState,
     },
-    renderer::{RenderContext, RenderDevice, RenderQueue},
-    view::{Msaa, ViewDepthTexture, ViewTarget},
+    renderer::{RenderContext, RenderDevice, RenderQueue, ViewQuery},
+    view::{ExtractedView, Msaa, ViewDepthTexture, ViewTarget},
     Render, RenderApp, RenderStartup, RenderSystems,
 };
 
 use crate::gui::{MainWorldCamera, TileDebugRenderHost};
+use crate::render::core2d_overlay_order::{
+    core2d_overlay_pipeline_hdr_index, Core2dOverlaySet, CORE2D_OVERLAY_SDR_FORMAT,
+};
 use crate::render::water_surface_visual::{WaterOverlayDrawFrame, WaterOverlayGpuInstance};
 
 pub const WATER_OVERLAY_WGSL: &str = "shaders/water/water_overlay.wgsl";
@@ -55,9 +54,6 @@ pub struct WaterOverlayDrawGlobals {
     pub zoom_alpha: f32,
 }
 
-#[derive(Debug, Hash, PartialEq, Eq, Clone, RenderLabel)]
-pub(crate) struct WaterSurfaceDrawPassLabel;
-
 #[derive(Resource)]
 struct WaterSurfaceDrawPipeline {
     globals_layout: BindGroupLayoutDescriptor,
@@ -74,8 +70,10 @@ struct WaterSurfaceDrawBindGpu {
     bind_group_1: Option<BindGroup>,
 }
 
-#[derive(Default)]
-struct WaterSurfaceDrawNode;
+#[derive(Resource, Default)]
+struct WaterSurfaceDrawPassReady {
+    pipeline_ready: bool,
+}
 
 pub fn register_water_surface_draw(app: &mut App) {
     app.init_resource::<WaterOverlayDrawGlobals>()
@@ -92,13 +90,20 @@ pub fn register_water_surface_draw(app: &mut App) {
 
     render_app
         .init_resource::<WaterSurfaceDrawBindGpu>()
-        .add_systems(
-            RenderStartup,
-            (init_water_surface_draw_pipeline, install_water_surface_graph_node).chain(),
-        )
+        .init_resource::<WaterSurfaceDrawPassReady>()
+        .add_systems(RenderStartup, init_water_surface_draw_pipeline)
         .add_systems(
             Render,
             prepare_water_surface_draw_bind_groups.in_set(RenderSystems::PrepareBindGroups),
+        )
+        .add_systems(
+            Core2d,
+            (
+                ensure_water_surface_draw_pipeline_ready,
+                water_surface_draw_pass.after(ensure_water_surface_draw_pipeline_ready),
+            )
+                .chain()
+                .in_set(Core2dOverlaySet::WaterSurface),
         );
 }
 
@@ -151,16 +156,16 @@ fn init_water_surface_draw_pipeline(
     let shader = asset_server.load(WATER_OVERLAY_WGSL);
     let pipelines = std::array::from_fn(|hdr| {
         let fmt = if hdr == 0 {
-            TextureFormat::bevy_default()
+            CORE2D_OVERLAY_SDR_FORMAT
         } else {
-            ViewTarget::TEXTURE_FORMAT_HDR
+            TextureFormat::Rgba16Float
         };
         std::array::from_fn(|si| {
             let samples = MSAA_SAMPLES[si];
             let desc = RenderPipelineDescriptor {
                 label: Some(Cow::Borrowed("water_surface_overlay")),
                 layout: vec![globals_layout.clone(), instances_layout.clone()],
-                push_constant_ranges: vec![],
+                immediate_size: 0,
                 vertex: VertexState {
                     shader: shader.clone(),
                     entry_point: Some(Cow::Borrowed("vs_main")),
@@ -188,8 +193,8 @@ fn init_water_surface_draw_pipeline(
                 },
                 depth_stencil: Some(DepthStencilState {
                     format: CORE_2D_DEPTH_FORMAT,
-                    depth_write_enabled: false,
-                    depth_compare: CompareFunction::Always,
+                    depth_write_enabled: Some(false),
+                    depth_compare: Some(CompareFunction::Always),
                     stencil: StencilState {
                         front: StencilFaceState::IGNORE,
                         back: StencilFaceState::IGNORE,
@@ -214,16 +219,6 @@ fn init_water_surface_draw_pipeline(
         instances_layout,
         pipelines,
     });
-}
-
-fn install_water_surface_graph_node(world: &mut World) {
-    let runner = ViewNodeRunner::<WaterSurfaceDrawNode>::from_world(world);
-    let mut graph = world.resource_mut::<RenderGraph>();
-    let Some(sub) = graph.get_sub_graph_mut(Core2d) else {
-        return;
-    };
-    sub.add_node(WaterSurfaceDrawPassLabel, runner);
-    // Overlay ordering relinked once water particle + fire raster nodes exist.
 }
 
 fn prepare_water_surface_draw_bind_groups(
@@ -289,65 +284,80 @@ fn prepare_water_surface_draw_bind_groups(
     bind_gpu.bind_group_1 = Some(instances_bind);
 }
 
-impl ViewNode for WaterSurfaceDrawNode {
-    type ViewQuery = (
-        &'static ExtractedCamera,
-        &'static ViewTarget,
-        &'static ViewDepthTexture,
-        &'static Msaa,
-        Has<TileDebugRenderHost>,
-    );
-
-    fn run(
-        &self,
-        _graph: &mut render_graph::RenderGraphContext,
-        render_context: &mut RenderContext,
-        (camera, target, depth, msaa, host): bevy::ecs::query::QueryItem<Self::ViewQuery>,
-        world: &World,
-    ) -> Result<(), render_graph::NodeRunError> {
-        let _ = camera;
-        if !host {
-            return Ok(());
-        }
-        let pipeline = world.resource::<WaterSurfaceDrawPipeline>();
-        let bind_gpu = world.resource::<WaterSurfaceDrawBindGpu>();
-        let globals = world.resource::<WaterOverlayDrawGlobals>();
-        if globals.instance_count == 0 {
-            return Ok(());
-        }
-        let (Some(bg0), Some(bg1)) = (bind_gpu.bind_group_0.as_ref(), bind_gpu.bind_group_1.as_ref())
-        else {
-            return Ok(());
-        };
-
-        let pipeline_cache = world.resource::<PipelineCache>();
-        let hdr = if target.is_hdr() { 1 } else { 0 };
-        let pid = pipeline.pipelines[hdr][msaa_index(msaa.samples())];
-        let Some(p) = pipeline_cache.get_render_pipeline(pid) else {
-            return Ok(());
-        };
-
-        let mut color = target.get_color_attachment();
-        color.ops.load = LoadOp::Load;
-        let depth_stencil = Some(depth.get_attachment(StoreOp::Store));
-
-        let mut pass = render_context.begin_tracked_render_pass(RenderPassDescriptor {
-            label: Some("water_surface_overlay"),
-            color_attachments: &[Some(color)],
-            depth_stencil_attachment: depth_stencil,
-            timestamp_writes: None,
-            occlusion_query_set: None,
-        });
-
-        if let Some(viewport) = camera.viewport.as_ref() {
-            pass.set_camera_viewport(viewport);
-        }
-
-        pass.set_render_pipeline(p);
-        pass.set_bind_group(0, bg0, &[]);
-        pass.set_bind_group(1, bg1, &[]);
-        let verts = globals.instance_count.saturating_mul(6);
-        pass.draw(0..verts, 0..1);
-        Ok(())
+fn ensure_water_surface_draw_pipeline_ready(
+    pipeline: Option<Res<WaterSurfaceDrawPipeline>>,
+    cache: Res<PipelineCache>,
+    mut ready: ResMut<WaterSurfaceDrawPassReady>,
+) {
+    if ready.pipeline_ready {
+        return;
     }
+    let Some(pipeline) = pipeline else {
+        return;
+    };
+    let mut all_ok = true;
+    for row in &pipeline.pipelines {
+        for id in row {
+            if !matches!(cache.get_render_pipeline_state(*id), CachedPipelineState::Ok(_)) {
+                all_ok = false;
+            }
+        }
+    }
+    if all_ok {
+        ready.pipeline_ready = true;
+    }
+}
+
+fn water_surface_draw_pass(
+    world: &World,
+    view: ViewQuery<(
+        &ExtractedCamera,
+        &ExtractedView,
+        &ViewTarget,
+        &ViewDepthTexture,
+        &Msaa,
+        Has<TileDebugRenderHost>,
+    )>,
+    mut ctx: RenderContext,
+    ready: Res<WaterSurfaceDrawPassReady>,
+) {
+    let (_camera, extracted_view, target, depth, msaa, host) = view.into_inner();
+    if !host || !ready.pipeline_ready {
+        return;
+    }
+    let pipeline = world.resource::<WaterSurfaceDrawPipeline>();
+    let bind_gpu = world.resource::<WaterSurfaceDrawBindGpu>();
+    let globals = world.resource::<WaterOverlayDrawGlobals>();
+    if globals.instance_count == 0 {
+        return;
+    }
+    let (Some(bg0), Some(bg1)) = (bind_gpu.bind_group_0.as_ref(), bind_gpu.bind_group_1.as_ref()) else {
+        return;
+    };
+
+    let pipeline_cache = world.resource::<PipelineCache>();
+    let hdr = core2d_overlay_pipeline_hdr_index(extracted_view.target_format);
+    let pid = pipeline.pipelines[hdr][msaa_index(msaa.samples())];
+    let Some(p) = pipeline_cache.get_render_pipeline(pid) else {
+        return;
+    };
+
+    let mut color = target.get_color_attachment();
+    color.ops.load = LoadOp::Load;
+    let depth_stencil = Some(depth.get_attachment(StoreOp::Store));
+
+    let mut pass = ctx.begin_tracked_render_pass(RenderPassDescriptor {
+        label: Some("water_surface_overlay"),
+        color_attachments: &[Some(color)],
+        depth_stencil_attachment: depth_stencil,
+        timestamp_writes: None,
+        occlusion_query_set: None,
+        multiview_mask: None,
+    });
+
+    pass.set_render_pipeline(p);
+    pass.set_bind_group(0, bg0, &[]);
+    pass.set_bind_group(1, bg1, &[]);
+    let verts = globals.instance_count.saturating_mul(6);
+    pass.draw(0..verts, 0..1);
 }

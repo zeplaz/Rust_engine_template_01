@@ -7,7 +7,7 @@
   "coverage_grammar_pilot_count": 4,
   "parity_grammar_pilot_count": 4,
   "brief_green": true,
-  "coverage_green": false,
+  "coverage_green": true,
   "parity_green": true,
   "grammar_pilot_ids": [
     "logistics_rail_warehouse_v0",
@@ -15,18 +15,16 @@
     "power_substation_yard_v0",
     "fuel_depot_tank_farm_v0"
   ],
-  "tier": "G3",
-  "tier_reasons": [
-    "building_set_coverage not green for G4"
-  ],
+  "tier": "G4",
+  "tier_reasons": [],
   "no_green_brief_with_red_guards": true,
-  "pilot_hardcode_green": false,
+  "pilot_hardcode_green": true,
   "_agent_meta": {
     "schema": "aps_guard_brief_parity_live_v1",
     "profile": "APS_GUARD_BRIEF_PARITY",
     "relative_path": "debug_runs/aps_guard_brief_parity_live.json",
     "source_system": "grammar_build_set",
-    "written_at_epoch_secs": 1782012787,
+    "written_at_epoch_secs": 1783097982,
     "ritual": "BLANG:WIT-HON APS-GUARD-BRIEF-PARITY-001"
   },
   "witness_honesty": {

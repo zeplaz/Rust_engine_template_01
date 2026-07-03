@@ -405,26 +405,27 @@
       "lane": "K_DESIGN",
       "priority": 1,
       "agent": "designer",
-      "status": "blocked",
+      "status": "done",
       "goal": "Readability brief \u2014 site 15\u201340% rule, footprint partial-alpha, mesh vs tile authority",
       "plan_doc": "src/dev/plan_operator_build_readability_exec_001_v1.md",
       "exit": "designer_signoff_registry row",
-      "snag": "designer/mcp lane \u2014 not coder pick"
+      "witness": "src/dev/design_build_readability_v1.md",
+      "completed": "2026-06-02"
     },
     {
       "id": "BUILD-READ-DESIGN-002",
       "lane": "K_DESIGN",
       "priority": 2,
       "agent": "designer",
-      "status": "blocked",
+      "status": "done",
       "depends_on": [
         "BUILD-READ-DESIGN-001"
       ],
       "goal": "HUD copy for Adjust mode \u2014 Ctrl rotate, Shift scale",
       "witness": "debug_runs/design_build_toolbox_hud_live.json",
       "deliverable": "src/dev/design_build_toolbox_hud_v1.md",
-      "updated_at": "2026-06-13T12:00:00+00:00",
-      "snag": "operator/designer-mcp blocked"
+      "updated_at": "2026-06-02T00:00:00+00:00",
+      "completed": "2026-06-02"
     },
     {
       "id": "MCP-P2-SIM-VALIDATORS-PLAN-001",

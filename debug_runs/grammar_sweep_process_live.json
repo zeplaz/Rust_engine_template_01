@@ -9,6 +9,15 @@
       "concrete_mixer": 1,
       "storage_warehouse": 1,
       "rail_warehouse": 1
+    },
+    "zone_coverage": {
+      "rail": 5,
+      "parking": 41,
+      "buffer": 167,
+      "primary": 80,
+      "utility": 56,
+      "loading": 15,
+      "service": 12
     }
   },
   "sweep": {
@@ -26,7 +35,7 @@
     "profile": "CMCP_GRAM_SWEEP_PROCESS",
     "relative_path": "debug_runs/grammar_sweep_process_live.json",
     "source_system": "grammar_build_set",
-    "written_at_epoch_secs": 1782009859,
+    "written_at_epoch_secs": 1783052443,
     "ritual": "BLANG:WIT-HON CMCP-GRAM-SWEEP-PROCESS-001"
   },
   "witness_honesty": {

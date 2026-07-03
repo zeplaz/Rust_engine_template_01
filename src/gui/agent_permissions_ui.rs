@@ -160,7 +160,7 @@ pub fn permissions_ui_system(
                         ui.separator();
                         
                         // Tab view for different permission views
-                        egui::TopBottomPanel::top("tabs").show_inside(ui, |ui| {
+                        egui::Panel::top("tabs").show(ui, |ui| {
                             ui.horizontal(|ui| {
                                 ui.selectable_value(&mut ui_state.filter_domain, None, "All Permissions");
                                 

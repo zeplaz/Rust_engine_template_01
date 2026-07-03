@@ -602,7 +602,7 @@ fn map_editor_raster_minimap(
     if *last_applied_revision == Some(rev) {
         return;
     }
-    let Some(image) = images.get_mut(&map_tex.texture) else {
+    let Some(mut image) = images.get_mut(&map_tex.texture) else {
         return;
     };
     let Some(data) = image.data.as_mut() else {

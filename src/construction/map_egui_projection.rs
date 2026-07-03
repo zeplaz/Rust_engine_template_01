@@ -177,6 +177,7 @@ pub fn egui_footprint_hotfix_a_witness_green() -> bool {
         valid: true,
         min: Vec2::new(80.0, 60.0),
         max: Vec2::new(880.0, 540.0),
+        window_logical: Vec2::new(960.0, 600.0),
     };
     let params = WorldGenParams::default();
     let desired = MapCameraDesired {
@@ -243,6 +244,7 @@ mod tests {
             valid: true,
             min: Vec2::new(80.0, 60.0),
             max: Vec2::new(880.0, 540.0),
+            window_logical: Vec2::new(960.0, 600.0),
         };
         let params = WorldGenParams::default();
         let world = Vec3::new(64.5, 0.0, 64.5);

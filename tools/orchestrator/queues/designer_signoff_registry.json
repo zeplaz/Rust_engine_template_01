@@ -1254,21 +1254,17 @@
       "id": "BUILD-READ-DESIGN-002",
       "agent": "designer",
       "status": "done",
-      "signoff": "PENDING",
-      "signed_date": "2026-06-13",
-      "verdict": "FAIL",
+      "signoff": "SIGNED",
+      "signed_date": "2026-06-02",
+      "verdict": "PASS",
       "witness": "src/dev/design_build_toolbox_hud_v1.md",
       "live_witness": "debug_runs/design_build_toolbox_hud_live.json",
       "unblocks": [
         "BUILD-READ-SHAPE-002",
         "BUILD-READ-SITE-v0-002"
       ],
-      "notes": "Context strip Preview/Adjust copy wired; witness green 2026-06-13",
-      "intel_officer_note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 stub_marker:stub",
-      "reopened_at": "2026-06-20",
-      "witness_refresh": "2026-06-21T03:54:57Z",
-      "completed": "2026-06-21",
-      "reconcile_note": "witness-green auto-close (reconcile_coder_crisis.py)"
+      "exit_predicate": "design_build_toolbox_hud_live.json green",
+      "notes": "Context strip Preview/Adjust copy wired"
     },
     {
       "id": "BUILD-READ-D-001_D004",
@@ -1733,20 +1729,15 @@
       "id": "DES-APS-GRAM-TIER-004",
       "agent": "designer",
       "status": "done",
-      "signoff": "PENDING",
-      "signed_date": "2026-06-17",
-      "verdict": "FAIL",
-      "witness": "src/dev/design_aps_grammar_tier_exposure_v1.md",
+      "signoff": "SIGNED",
+      "signed_date": "2026-06-02",
+      "verdict": "PASS",
+      "witness": "src/dev/design_aps_grammar_tier_g1_empty_v1.md",
       "program": "PLAN-APS-GRAMMAR-EVOLUTION-001",
-      "notes": "\u00a710 G0 kit-hint + G1 unlock empty states when archetype_combo_count >= 3",
+      "notes": "\u00a710 G0 kit-hint + G1 unlock empty states \u2014 standalone extract signed",
       "unblocks": [
         "APS-GRAM-TIER-004"
-      ],
-      "intel_officer_note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 stub_marker:placeholder",
-      "reopened_at": "2026-06-20",
-      "witness_refresh": "2026-06-21T03:54:57Z",
-      "completed": "2026-06-21",
-      "reconcile_note": "witness-green auto-close (reconcile_coder_crisis.py)"
+      ]
     },
     {
       "id": "DES-INDUSTRIAL-RESEARCH-001",
@@ -2438,6 +2429,35 @@
       ]
     },
     {
+      "id": "DES-APS-TAG-VOCAB-CREATIVE-001",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-06-02",
+      "verdict": "PASS (qualified)",
+      "witness": "src/dev/design_aps_tag_vocab_creative_pass_v1.md",
+      "program": "PLAN-APS-UIUX-OVERHAUL-001",
+      "notes": "Human mandate labels + taxonomy +6; tier-2 backlog",
+      "unblocks": [
+        "DES-APS-TAG-TIER2-001"
+      ]
+    },
+    {
+      "id": "BUILD-READ-DESIGN-001",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-06-02",
+      "verdict": "PASS",
+      "witness": "src/dev/design_build_readability_v1.md",
+      "live_witness": "debug_runs/design_build_readability_live.json",
+      "unblocks": [
+        "BUILD-READ-DESIGN-002",
+        "BUILD-READ-WORLD-002",
+        "BUILD-READ-SITE-v0-002"
+      ]
+    },
+    {
       "id": "DES-APS-DEFAULT-PRESENCE-AUDIT-001",
       "agent": "designer",
       "status": "done",
@@ -2592,6 +2612,21 @@
       "unblocks": [
         "CMCP-REACTION-TERRITORY-RESOLVE-001",
         "CMCP-REACTION-TERRITORY-PREVIEW-001"
+      ]
+    },
+    {
+      "id": "DMCP-APS-VARIANTS-REACTION-PULLUP-001",
+      "agent": "designer-mcp",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-07-03",
+      "verdict": "PASS",
+      "witness": "debug_runs/art_pipeline/dmcp_aps_variants_reaction_pullup_live.json",
+      "deliverable": "src/dev/dmcp_aps_variants_reaction_pullup_critique_v1.md",
+      "program": "PLAN-DESIGNER-WORK-202606",
+      "notes": "Variants tab pull-up confront — proper workflow UI, not horror show; P2 polish tails @coder-mcp",
+      "depends_on": [
+        "DES-REACTION-TERRITORY-EVENTS-001"
       ]
     },
     {
@@ -2820,6 +2855,93 @@
       "completed": "2026-06-20",
       "witness": "src/dev/design_logistics_site_v1.md",
       "program": "PLAN-INDUSTRIAL-FACILITY-GRAMMAR-001"
+    },
+    {
+      "id": "APS-UX-AUDIT-001",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-06-02",
+      "verdict": "PASS WITH NOTES",
+      "witness": "src/dev/design_aps_ux_audit_v2.md",
+      "live_witness": "debug_runs/aps_ux_audit_v2_live.json",
+      "program": "PLAN-APS-ARTIST-TOOL-EXEC-001",
+      "notes": "v2 post tag/preview pass; operator rubric tail open",
+      "unblocks": [
+        "DES-APS-TAG-RUBRIC-001",
+        "APS-UX-POLISH tail"
+      ]
+    },
+    {
+      "id": "DESIGN-WEATHER-PLAYER-READ-001",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-06-03",
+      "verdict": "PASS",
+      "witness": "src/dev/design_weather_player_read_v1.md",
+      "program": "PLAN-WEATHER-PARALLEL-LANE-001",
+      "unblocks": [
+        "DESIGN-WX-HUD-IMPL-001",
+        "WEATHER-GPU-PRECIP-001"
+      ]
+    },
+    {
+      "id": "DES-APS-TAG-TIER2-001",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-06-02",
+      "verdict": "PASS (qualified)",
+      "witness": "src/dev/design_aps_tag_tier2_v1.md",
+      "program": "PLAN-APS-UIUX-OVERHAUL-001",
+      "notes": "Archetype presets + sim-coupled tags — **wired** APS-TAG-TIER2-IMPL 2026-07-03",
+      "depends_on": [
+        "DES-APS-TAG-RUBRIC-001"
+      ],
+      "unblocks": [
+        "APS-TAG-TIER2-IMPL"
+      ]
+    },
+    {
+      "id": "DES-APS-TAG-RUBRIC-001",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-06-02",
+      "verdict": "READY",
+      "witness": "src/dev/design_aps_tag_operator_rubric_v1.md",
+      "program": "APS-UX-AUDIT-001",
+      "notes": "Operator execution pending; charter complete",
+      "unblocks": [
+        "DES-APS-TAG-TIER2-001 wire"
+      ]
+    },
+    {
+      "id": "DES-CITY-BLOCK-RECIPE-001",
+      "agent": "designer-mcp",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-07-03",
+      "verdict": "PASS",
+      "program": "PLAN-CITY-GRAMMAR-v1",
+      "witness": "debug_runs/city_block_recipe_charter_live.json",
+      "deliverable": "src/dev/design_city_block_recipe_v1.md",
+      "depends_on": ["CITY-G0-WIT-001"],
+      "unblocks": ["CITY-G1-C3-001"],
+      "notes": "BlockRecipe v1 charter + 3 RON examples — evaluator handoff @coder after C2"
+    },
+    {
+      "id": "DES-CITY-PALETTE-VARIATION-001",
+      "agent": "designer-mcp",
+      "status": "planned",
+      "signoff": "PENDING",
+      "verdict": "BLOCKED",
+      "program": "PLAN-CITY-GRAMMAR-v1",
+      "witness": "src/dev/design_city_palette_variation_v1.md",
+      "depends_on": ["CITY-G1-C3-001"],
+      "unblocks": ["CITY-G2-C5-001"],
+      "notes": "Kit × palette axis charter — G2 after G1 block recipes land; APS-G4 no longer blocks C5"
     }
   ]
 }

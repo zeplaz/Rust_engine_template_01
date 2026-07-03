@@ -210,19 +210,6 @@
         "normal": "assets/materials/textures/ceramic_insulator_01/normal.png",
         "roughness": "assets/materials/textures/ceramic_insulator_01/roughness.png"
       }
-    },
-    "ac_unit_01": {
-      "generator": "concrete",
-      "seed": 931,
-      "metallic": 0.0,
-      "roughness_base": 0.75,
-      "category": "other",
-      "label": "Ac Unit 01",
-      "textures": {
-        "albedo": "assets/materials/textures/ac_unit_01/albedo.png",
-        "normal": "assets/materials/textures/ac_unit_01/normal.png",
-        "roughness": "assets/materials/textures/ac_unit_01/roughness.png"
-      }
     }
   }
 }

@@ -1,0 +1,27 @@
+{
+  "task_id": "APS-UX-POLISH-TAIL-001",
+  "program_id": "APS-UX-AUDIT-001",
+  "green": true,
+  "fixes": {
+    "f5_pipeline_valid_vs_saved": true,
+    "f6_footprint_swatch_text": true,
+    "f7_flow_bar_feedback": true,
+    "f4_font_small_9pt": true,
+    "tag_tier2_impl": true
+  },
+  "audit_ref": "src/dev/design_aps_ux_audit_v2.md",
+  "_agent_meta": {
+    "schema": "aps_ux_polish_tail_live_v1",
+    "profile": "APS_UX_POLISH_TAIL",
+    "relative_path": "debug_runs/aps_ux_polish_tail_live.json",
+    "source_system": "aps_ux_polish_tail_witness",
+    "written_at_epoch_secs": 1783098008,
+    "ritual": "BLANG:WIT-HON APS-UX-POLISH-TAIL-001"
+  },
+  "witness_honesty": {
+    "status": "passed",
+    "error_count": 0,
+    "warning_count": 0,
+    "summary": "witness_honesty debug_runs/aps_ux_polish_tail_live.json: 0 error(s), 0 issue(s)"
+  }
+}

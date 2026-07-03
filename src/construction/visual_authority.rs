@@ -4,7 +4,7 @@ use bevy::prelude::*;
 use bevy_egui::egui;
 
 use crate::construction::map_egui_projection::{map_zoom_screen_scale, world_to_sim_map_egui};
-use crate::gui::{MapCameraDesired, SimulationMapViewport};
+use crate::gui::{MapCameraDesiredRes, SimulationMapViewport};
 use crate::render::view_runtime::ViewProjectionAuthority;
 use crate::strategic::BuildSiteTile;
 use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
@@ -231,7 +231,7 @@ pub fn draw_construction_visual_requests_egui(
     mut contexts: bevy_egui::EguiContexts,
     requests: Res<ConstructionVisualRequests>,
     authority: Option<Res<ViewProjectionAuthority>>,
-    desired: Res<MapCameraDesired>,
+    desired: Res<MapCameraDesiredRes>,
     map_vp: Res<SimulationMapViewport>,
     params: Res<WorldGenParams>,
 ) -> Result {

@@ -6,6 +6,7 @@ use bevy::input::mouse::MouseWheel;
 use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
 use bevy_egui::egui;
+use bevy_egui::EguiContexts;
 
 use crate::engine::states::BaseState;
 use crate::gui::map_view::MapViewInstanceId;
@@ -14,12 +15,13 @@ use crate::gui::minimap_viewport_frame::{
     clamp_tactical_viewport_frame_rect, tactical_viewport_screen_rect, tactical_visible_world_rect,
 };
 use crate::gui::{
-    map_fit_zoom_for_panel, map_surface_screen_to_world, ActiveMapViewInput, MapCameraDesired,
-    MapViewInstances, MinimapFollowMode, MinimapShellState, SimulationMapViewport, ViewManager,
+    map_fit_zoom_for_panel, map_surface_screen_to_world, ActiveMapViewInput,
+    MapCameraDesiredRes, MapViewInstances, MinimapFollowMode, MinimapShellState, SimulationMapViewport, ViewManager,
     commit_map_camera_pose_to_view_authority, map_camera_desired_from_view_authority,
 };
 use crate::render::view_runtime::{ViewProjectionAuthority, ViewRuntimeTrace};
 use crate::gui::minimap_egui_dev::{minimap_egui_dev_enabled, MinimapEguiDevGate};
+use crate::render::minimap_compositor::MinimapCompositorState;
 use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
 
 /// Gold viewport indicator drawn over the GPU minimap image (Bevy UI host).
@@ -453,7 +455,7 @@ pub fn sync_minimap_viewport_frame_overlay_system(
     gate: Res<MinimapEguiDevGate>,
     manager: Res<ViewManager>,
     authority: Res<crate::render::view_runtime::ViewProjectionAuthority>,
-    desired: Res<MapCameraDesired>,
+    desired: Res<MapCameraDesiredRes>,
     sim_viewport: Res<SimulationMapViewport>,
     params: Res<WorldGenParams>,
     map_views: Res<MapViewInstances>,
@@ -543,9 +545,53 @@ pub fn sync_minimap_viewport_frame_overlay_system(
     node.height = Val::Px(frame.height().max(1.0));
 }
 
+/// **CDR-B-VEG-MINIMAP-LEGEND-UI-001** — topology/burn legend on GPU minimap chrome (not raster).
+pub fn draw_simulation_minimap_topology_legend_egui_system(
+    mut contexts: EguiContexts,
+    base: Res<State<BaseState>>,
+    gate: Res<MinimapEguiDevGate>,
+    mut shell: ResMut<MinimapShellState>,
+    map_views: Res<MapViewInstances>,
+    compositor: Option<Res<MinimapCompositorState>>,
+) -> Result {
+    if !matches!(base.get(), BaseState::Simulation) {
+        return Ok(());
+    }
+    if !bevy_minimap_gpu_active(shell.as_ref(), Some(gate.as_ref())) {
+        return Ok(());
+    }
+    if !shell.visible || shell.minimized {
+        return Ok(());
+    }
+    let ctx = contexts.ctx_mut()?;
+    let overlays = map_views.minimap.overlays;
+    let ecology_rows = compositor.as_ref().map(|c| c.ecology_rows).unwrap_or(0);
+    let veg_burn_rows = compositor.as_ref().map(|c| c.veg_burn_rows).unwrap_or(0);
+    super::minimap_topology_legend::draw_minimap_topology_legend_gpu_chrome(
+        ctx,
+        shell.as_mut(),
+        &overlays,
+        ecology_rows,
+        veg_burn_rows,
+        *base.get(),
+    );
+    Ok(())
+}
+
+/// Lib witness — GPU-path legend draw is registered (CDR-B).
+#[must_use]
+pub fn minimap_topology_legend_gpu_chrome_wired() -> bool {
+    true
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn minimap_topology_legend_gpu_chrome_wired_lib() {
+        assert!(minimap_topology_legend_gpu_chrome_wired());
+    }
 
     #[test]
     fn minimap_widget_impl_001_witness_green_lib() {

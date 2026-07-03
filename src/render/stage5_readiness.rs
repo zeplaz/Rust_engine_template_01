@@ -853,11 +853,11 @@ impl Plugin for Stage5ReadinessPlugin {
             .add_systems(
                 PostUpdate,
                 (
-                    crate::render::gpu_particles::sync_fire_particle_camera_scale,
                     crate::render::stage5_full_app_harness::refresh_visual_proof_fire_particles,
                     crate::render::stage5_full_app_harness::refresh_visual_proof_water_particles,
                 )
                     .chain()
+                    .after(crate::render::ExtractedCameraMetricsSet::Sync)
                     .before(crate::render::FullRenderDiagnosticSet::Capture),
             )
             .add_systems(

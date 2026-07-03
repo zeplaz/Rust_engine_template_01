@@ -10,18 +10,18 @@ fn repo_root() -> PathBuf {
         .unwrap_or_else(|| PathBuf::from("."))
 }
 
-/// INFRA-VM09-STRAY-001 — production `ResMut<MapCameraDesired>` only in derive shim (+ tests).
+/// INFRA-VM09-STRAY-001 — production `ResMut<MapCameraDesiredRes>` only in mirror + derive (+ compat alias sig).
 #[must_use]
 pub fn infra_vm09_stray_map_camera_writer_audit_green() -> bool {
     let root = repo_root();
     let map_camera = std::fs::read_to_string(root.join("src/gui/map_camera.rs"))
         .expect("read map_camera.rs");
     let derive_count = map_camera.matches("pub fn derive_map_camera_desired_from_view_authority").count();
-    let resmut_count = map_camera.matches("ResMut<MapCameraDesired>").count();
+    let resmut_count = map_camera.matches("ResMut<MapCameraDesiredRes>").count();
     let harness_ok = !std::fs::read_to_string(root.join("src/render/stage5_full_app_harness.rs"))
         .expect("stage5 harness")
         .contains("mut desired: ResMut<crate::gui::MapCameraDesired>");
-    derive_count == 1 && resmut_count <= 2 && harness_ok
+    derive_count == 1 && resmut_count <= 3 && harness_ok
 }
 
 /// Refreshes infrastructure witness + agent index.

@@ -48,7 +48,8 @@
     "wave6_p2_done": 0,
     "wave6_complete": true,
     "coder_recap": "docs/archive/2026-06-fleet-drain/fleet_closed/coder_fleet_return_recap_wave3_v1.md",
-    "signoff_registry": "tools/orchestrator/queues/designer_signoff_registry.json",
+    "city_grammar_plan": "src/dev/plan_city_grammar_upgrade_v1.md",
+    "city_grammar_queue": "tools/orchestrator/queues/city_grammar_queue.json",
     "todo_board": "docs/archive/2026-06-src-dev/plans/stage_designer_todos_v1.md",
     "machine_queue": "tools/orchestrator/queues/continuation_queue.json",
     "workboard": "docs/archive/2026-06-src-dev/plans/stage_designer_workboard_v1.md",
@@ -1922,6 +1923,28 @@
       "verdict": "PASS (qualified)",
       "witness": "docs/archive/2026-06-src-dev/plans/bq128_apply_ghost_ux_review_v1.md",
       "notes": "Also in done[] 2026-05-26"
+    }
+  ],
+  "city_grammar_planned": [
+    {
+      "id": "DES-CITY-BLOCK-RECIPE-001",
+      "status": "blocked",
+      "priority": "P2",
+      "program": "PLAN-CITY-GRAMMAR-v1",
+      "owner": "designer-mcp",
+      "depends_on": ["CITY-G0-WIT-001"],
+      "deliverable": "src/dev/design_city_block_recipe_v1.md",
+      "notes": "DRAFT charter on disk — designer-mcp PASS after G0c"
+    },
+    {
+      "id": "DES-CITY-PALETTE-VARIATION-001",
+      "status": "blocked",
+      "priority": "P3",
+      "program": "PLAN-CITY-GRAMMAR-v1",
+      "owner": "designer-mcp",
+      "depends_on": ["CITY-G1-C3-001"],
+      "deliverable": "src/dev/design_city_palette_variation_v1.md",
+      "notes": "CITY-C5 palette charter — after G1 block recipes"
     }
   ],
   "next_phase": {

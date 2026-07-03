@@ -396,6 +396,9 @@ class AssemblyPanel(ttk.Frame):
         btn_row = ttk.Frame(tag_body)
         btn_row.pack(fill=tk.X, pady=(4, 0))
         ttk.Button(btn_row, text="Save tags to this piece", command=self.on_apply_slot).pack(side=tk.LEFT, padx=2)
+        ttk.Button(btn_row, text="Apply tag preset…", command=self._on_apply_semantic_preset).pack(
+            side=tk.LEFT, padx=2
+        )
 
         grammar_section = CollapsibleSection(
             inspector_pane, "Grammar inspector", expanded=False, padding=2
@@ -726,6 +729,26 @@ class AssemblyPanel(ttk.Frame):
                 frame.pack(fill=tk.X, pady=2)
             else:
                 frame.pack_forget()
+
+    def _on_apply_semantic_preset(self) -> None:
+        from rust_engine_mcp.aps_tag_tier2 import preset_confirm_lines, preset_for_archetype
+
+        archetype_id = self._resolve_archetype_id()
+        row = preset_for_archetype(archetype_id)
+        if not row:
+            self._on_log(f"Tag preset: no tier-2 preset for {archetype_id}")
+            return
+        lines = "\n".join(preset_confirm_lines(archetype_id))
+        if not messagebox.askyesno("Apply tag preset?", f"{lines}\n\nApply semantic tags to the picker?"):
+            return
+        semantic = row.get("semantic_tags") or {}
+        for cat, tag_ids in semantic.items():
+            tag_map = self._semantic_tag_vars.get(str(cat)) or {}
+            for tid in tag_ids or []:
+                var = tag_map.get(str(tid))
+                if var is not None:
+                    var.set(True)
+        self._on_log(f"semantic tag preset {row.get('preset_name')} applied — Save tags to this piece to commit")
 
     def _count_active_tags(self) -> int:
         n = sum(1 for tag_map in self._semantic_tag_vars.values() for var in tag_map.values() if var.get())

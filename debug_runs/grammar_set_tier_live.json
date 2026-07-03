@@ -1,5 +1,5 @@
 {
-  "tier": "G3",
+  "tier": "G4",
   "archetype_count": 4,
   "district_count": 5,
   "grammar_files": [
@@ -8,9 +8,7 @@
     "industrial_warehouse_v1.ron",
     "rail_edge_v1.ron"
   ],
-  "reasons": [
-    "building_set_coverage not green for G4"
-  ],
+  "reasons": [],
   "source": "grammar_set_tier()",
   "preset_count": 4,
   "f_axis_count": 4

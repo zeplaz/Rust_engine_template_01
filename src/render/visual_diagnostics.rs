@@ -16,7 +16,7 @@ use crate::engine::{AppState, WorldGenState};
 use crate::gui::hud::{HudDockRegistry, HudWidgetId};
 use crate::gui::{
     CameraVisualState, MainWorldCamera, MainWorldCameraOrthoTrace, MainWorldCameraViewportLatch,
-    MapCameraDesired, MapPresentationDiagnostics, MapViewInstanceId, RepresentationBand,
+    MapCameraDesiredRes, MapPresentationDiagnostics, MapViewInstanceId, RepresentationBand,
     RepresentationResult, ResolvedMapViewFrames, SimulationMapViewport, SimulationMapViewportDebug,
     SimulationMapViewportTrace,
 };
@@ -149,7 +149,7 @@ pub(crate) struct VisualDiagCtx<'w, 's> {
     sim_dbg: Res<'w, SimulationMapViewportDebug>,
     latch: Res<'w, MainWorldCameraViewportLatch>,
     ortho: Res<'w, MainWorldCameraOrthoTrace>,
-    desired: Res<'w, MapCameraDesired>,
+    desired: Res<'w, MapCameraDesiredRes>,
     cam: Query<'w, 's, &'static Camera, With<MainWorldCamera>>,
     resolved: Res<'w, ResolvedViewports>,
     mismatch: Res<'w, ViewportPresentationMismatch>,

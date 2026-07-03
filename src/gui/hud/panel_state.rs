@@ -165,7 +165,7 @@ pub fn hud_panel_click_outside_collapse_system(
     let Ok(ctx) = contexts.ctx_mut() else {
         return;
     };
-    if ctx.is_pointer_over_area() {
+    if ctx.is_pointer_over_egui() {
         return;
     }
     tray.tray_panel_state.collapse_unpinned();

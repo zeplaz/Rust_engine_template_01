@@ -4,7 +4,7 @@ use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
 use bevy_egui::EguiContexts;
 
-use crate::gui::{MapCameraDesired, SimulationMapViewport};
+use crate::gui::{MapCameraDesiredRes, SimulationMapViewport};
 use crate::infrastructure::utility::graph::{UtilityGraph, UtilityNetworkSnapshotResource};
 use crate::infrastructure::UtilityAuthoringMode;
 use crate::infrastructure::UtilityAuthoringTool;
@@ -84,7 +84,7 @@ pub fn update_power_line_path_preview_system(
     keys: Res<ButtonInput<KeyCode>>,
     win: Query<&Window, With<PrimaryWindow>>,
     authority: Option<Res<ViewProjectionAuthority>>,
-    desired: Res<MapCameraDesired>,
+    desired: Res<MapCameraDesiredRes>,
     map_vp: Res<SimulationMapViewport>,
     params: Res<WorldGenParams>,
     mut placement: ResMut<ActivePowerLinePlacement>,
@@ -97,7 +97,7 @@ pub fn update_power_line_path_preview_system(
     let Ok(ctx) = egui_ctx.ctx_mut() else {
         return;
     };
-    if ctx.wants_pointer_input() {
+    if ctx.egui_wants_pointer_input() {
         placement.generated_segments.clear();
         return;
     }
@@ -189,7 +189,7 @@ pub fn power_line_path_input_system(
     keys: Res<ButtonInput<KeyCode>>,
     win: Query<&Window, With<PrimaryWindow>>,
     authority: Option<Res<ViewProjectionAuthority>>,
-    desired: Res<MapCameraDesired>,
+    desired: Res<MapCameraDesiredRes>,
     map_vp: Res<SimulationMapViewport>,
     params: Res<WorldGenParams>,
     mut placement: ResMut<ActivePowerLinePlacement>,
@@ -203,7 +203,7 @@ pub fn power_line_path_input_system(
     let Ok(ctx) = egui_ctx.ctx_mut() else {
         return;
     };
-    if ctx.wants_pointer_input() {
+    if ctx.egui_wants_pointer_input() {
         return;
     }
     let Ok(window) = win.single() else {

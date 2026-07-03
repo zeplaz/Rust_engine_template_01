@@ -1,0 +1,59 @@
+{
+  "program_id": "APS-UX-AUDIT-001",
+  "version": "v2",
+  "track": "A",
+  "phase": 0,
+  "green": true,
+  "audit_complete": true,
+  "artist_would_ship_today": true,
+  "artist_would_ship_notes": "Launch OK; MIN-window Assembly + pipeline valid≠saved remain",
+  "production_lens_ship_score": 7,
+  "production_lens_target_after_phase_5": 7,
+  "verdict_designer_lead": "PASS WITH NOTES",
+  "updated": "2026-06-02",
+  "_agent_meta": {
+    "agent": "designer",
+    "audit_doc": "src/dev/design_aps_ux_audit_v2.md",
+    "prior_witness": "debug_runs/aps_ux_audit_001_live.json",
+    "brief": "prompts/designer_questions/aps_ux_audit_brief_v1.md"
+  },
+  "scores": {
+    "clarity": 7,
+    "discoverability": 7,
+    "error_recovery": 7,
+    "accessibility": 6,
+    "workflow_efficiency": 7,
+    "composite": 6.8
+  },
+  "shipped_since_v1": [
+    "DES-APS-VARIANTS-LIVE-PREVIEW-001",
+    "DES-APS-GEN-STEP-EXPOSURE-001",
+    "DES-APS-TAG-VOCAB-CREATIVE-001",
+    "DES-APS-ASSEMBLY-EMPTY-G2-001"
+  ],
+  "top_coder_mcp_fixes": [
+    "F5 pipeline valid vs saved",
+    "F3 Assembly MIN-window + Advanced collapse",
+    "F4 FONT_SMALL 9px primary labels",
+    "DES-APS-TAG-TIER2 preset loader",
+    "F6 footprint/swatch non-color signal"
+  ],
+  "accessibility_checklist": {
+    "status_not_glyph_alone": "partial",
+    "variants_draft_before_apply": true,
+    "tag_surfaces_distinguished": true,
+    "critical_actions_not_tooltip_only": true,
+    "paned_960x600": false,
+    "operator_rubric_pending": "DES-APS-TAG-RUBRIC-001"
+  },
+  "verification": {
+    "pytest_tag_vocabulary": "tools/mcp/python/tests/test_aps_tag_vocabulary.py",
+    "pytest_variants_context": "tools/mcp/python/tests/test_variants_layer_context.py",
+    "tool_launch": "python -m art_pipeline_suite.run"
+  },
+  "unblocks": [
+    "DES-APS-TAG-RUBRIC-001",
+    "DES-APS-TAG-TIER2-001",
+    "APS-UX-POLISH tail"
+  ]
+}

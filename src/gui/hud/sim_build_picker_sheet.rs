@@ -16,9 +16,6 @@ use crate::engine::states::BaseState;
 use crate::gui::hud::power_hud_icon_atlas::{
     PowerHudEguiTextureCache, PowerHudIconAtlasManifest, PowerHudIconAtlasUi,
 };
-use crate::gui::hud::simulation_shell_phase2::{
-    BUILD_RAIL_W_PX, COMMAND_LEFT_STACK_COLUMN_GAP_PX, CONTEXT_RAIL_W_PX,
-};
 use crate::gui::UiPalette;
 
 use super::sim_hud_copy::{
@@ -32,7 +29,9 @@ use super::sim_hud_egui_theme::{
 };
 
 pub const BUILD_PICKER_SHEET_W_PX: f32 = 320.0;
-pub const BUILD_PICKER_RAIL_GAP_PX: f32 = 8.0;
+/// Gap between build rail and picker sheet — authority: [`super::simulation_shell_phase2::BUILD_PICKER_SHEET_GAP_PX`].
+pub const BUILD_PICKER_RAIL_GAP_PX: f32 =
+    super::simulation_shell_phase2::BUILD_PICKER_SHEET_GAP_PX;
 pub const BUILD_PICKER_MAX_H_PX: f32 = 480.0;
 pub const AD_HOC_SUBMENU_WINDOWS: u32 = 0;
 
@@ -118,28 +117,20 @@ impl SimBuildPickerState {
 
 #[must_use]
 pub fn build_rail_slot_anchor_y(slot: ToolContext) -> f32 {
-    const SLOT_STEP: f32 = 36.0;
-    const BASE_Y: f32 = 96.0;
-    let idx = match slot {
-        ToolContext::Roads => 0,
-        ToolContext::Rail => 1,
-        ToolContext::Utilities => 2,
-        ToolContext::Military => 3,
-        ToolContext::Industry => 4,
-        ToolContext::Ecology => 5,
-        ToolContext::Civil => 6,
-        ToolContext::None => 0,
-    };
-    BASE_Y + idx as f32 * SLOT_STEP
+    super::simulation_shell_phase2::build_rail_slot_anchor_y(slot)
 }
 
 #[must_use]
-pub fn sim_build_picker_sheet_rect(state: &SimBuildPickerState) -> egui::Rect {
-    let anchor_x =
-        CONTEXT_RAIL_W_PX + COMMAND_LEFT_STACK_COLUMN_GAP_PX + BUILD_RAIL_W_PX + BUILD_PICKER_RAIL_GAP_PX;
-    let anchor_y = build_rail_slot_anchor_y(state.anchor_slot);
+pub fn sim_build_picker_sheet_rect(
+    state: &SimBuildPickerState,
+    left_stack_collapsed: bool,
+) -> egui::Rect {
+    let anchor = super::simulation_shell_phase2::build_rail_slot_anchor_xy(
+        state.anchor_slot,
+        left_stack_collapsed,
+    );
     egui::Rect::from_min_size(
-        egui::pos2(anchor_x, anchor_y),
+        anchor,
         egui::vec2(BUILD_PICKER_SHEET_W_PX, BUILD_PICKER_MAX_H_PX),
     )
 }
@@ -153,6 +144,7 @@ pub fn draw_sim_build_picker_sheet_egui(
     mut contexts: bevy_egui::EguiContexts,
     base: Res<State<BaseState>>,
     strip: Res<BuildStripState>,
+    left_stack: Res<crate::gui::CommandLeftStackState>,
     palette: Res<UiPalette>,
     mut tool: ResMut<ActiveBuildTool>,
     mut picker: ResMut<SimBuildPickerState>,
@@ -186,7 +178,7 @@ pub fn draw_sim_build_picker_sheet_egui(
     let ctx = contexts.ctx_mut()?;
     apply_sim_hud_egui_theme(ctx, &palette);
 
-    let anchor = sim_build_picker_sheet_rect(picker.as_ref()).min;
+    let anchor = sim_build_picker_sheet_rect(picker.as_ref(), left_stack.collapsed).min;
     let mut close_requested = false;
 
     egui::Area::new(egui::Id::new("sim_build_picker_sheet"))
@@ -392,6 +384,7 @@ pub fn draw_sim_build_rail_submenus_egui(
     contexts: bevy_egui::EguiContexts,
     base: Res<State<BaseState>>,
     strip: Res<BuildStripState>,
+    left_stack: Res<crate::gui::CommandLeftStackState>,
     palette: Res<UiPalette>,
     tool: ResMut<ActiveBuildTool>,
     picker: ResMut<SimBuildPickerState>,
@@ -404,6 +397,7 @@ pub fn draw_sim_build_rail_submenus_egui(
         contexts,
         base,
         strip,
+        left_stack,
         palette,
         tool,
         picker,

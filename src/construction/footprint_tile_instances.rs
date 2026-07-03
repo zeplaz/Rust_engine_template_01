@@ -8,11 +8,9 @@
 use bevy::prelude::*;
 
 use crate::gui::{
-    tile_flags, MapCameraDesired, ScaffoldContract, TileDebugInstance, TileDebugInstanceMap,
-    TileDebugViewId,
+    tile_flags, CameraFocusDebug, ScaffoldContract, TileDebugInstance, TileDebugInstanceMap,
+    TileDebugViewId, TileGpuDebugSettings,
 };
-use crate::render::view_runtime::ViewProjectionAuthority;
-
 use super::build_state::BuildGhostState;
 use super::build_strip::{BuildStripState, ToolContext};
 use super::visual_authority::{FootprintTileColorKind, ConstructionVisualRequests};
@@ -45,8 +43,8 @@ pub fn push_footprint_tile_instances(
     strip: Res<BuildStripState>,
     ghost: Res<BuildGhostState>,
     requests: Res<ConstructionVisualRequests>,
-    _authority: Option<Res<ViewProjectionAuthority>>,
-    _desired: Res<MapCameraDesired>,
+    debug: Res<CameraFocusDebug>,
+    tile_settings: Res<TileGpuDebugSettings>,
     mut map: ResMut<TileDebugInstanceMap>,
     mut witness: ResMut<FootprintTileWitness>,
 ) {
@@ -60,16 +58,10 @@ pub fn push_footprint_tile_instances(
         return;
     }
     witness.egui_path_active = true;
-    // Match ortho tile extent: fixed world half-size scaled by camera zoom (see LOD debug path).
-    let cam_scale = _authority
-        .as_ref()
-        .and_then(|a| {
-            a.surface(crate::render::view_runtime::ViewSurfaceId::SimulationMap)
-                .or_else(|| a.surface(crate::render::view_runtime::ViewSurfaceId::WorldMain))
-        })
-        .map(|s| s.camera.zoom.abs().max(0.001))
-        .unwrap_or_else(|| _desired.scale.x.abs().max(0.001));
-    let size = (0.48 / cam_scale).clamp(0.08, 2.0);
+    if !tile_settings.use_batched_mesh_overlay || !debug.enabled {
+        return;
+    }
+    const FOOTPRINT_TILE_WORLD: f32 = 0.92;
     let rows = map
         .per_view
         .entry(TileDebugViewId::WorldMain)
@@ -80,7 +72,7 @@ pub fn push_footprint_tile_instances(
                 tile.tile.x as f32 + 0.5,
                 tile.tile.y as f32 + 0.5,
             ],
-            size,
+            size: FOOTPRINT_TILE_WORLD,
             lod: 0,
             flags: footprint_flag_for_kind(tile.color_kind),
         });

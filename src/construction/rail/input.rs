@@ -4,7 +4,7 @@ use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
 use bevy_egui::EguiContexts;
 
-use crate::gui::{MapCameraDesired, SimulationMapViewport};
+use crate::gui::{MapCameraDesiredRes, SimulationMapViewport};
 use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
 
 use super::commit::commit_rail_path_to_queue;
@@ -34,7 +34,7 @@ pub fn update_rail_path_preview_system(
     keys: Res<ButtonInput<KeyCode>>,
     win: Query<&Window, With<PrimaryWindow>>,
     authority: Option<Res<crate::render::view_runtime::ViewProjectionAuthority>>,
-    desired: Res<MapCameraDesired>,
+    desired: Res<MapCameraDesiredRes>,
     map_vp: Res<SimulationMapViewport>,
     params: Res<WorldGenParams>,
     snap: Res<RoadSnapSettings>,
@@ -52,7 +52,7 @@ pub fn update_rail_path_preview_system(
     let Ok(ctx) = egui_ctx.ctx_mut() else {
         return;
     };
-    if ctx.wants_pointer_input() {
+    if ctx.egui_wants_pointer_input() {
         placement.generated_segments.clear();
         return;
     }
@@ -126,7 +126,7 @@ pub fn rail_path_input_system(
     keys: Res<ButtonInput<KeyCode>>,
     win: Query<&Window, With<PrimaryWindow>>,
     authority: Option<Res<crate::render::view_runtime::ViewProjectionAuthority>>,
-    desired: Res<MapCameraDesired>,
+    desired: Res<MapCameraDesiredRes>,
     map_vp: Res<SimulationMapViewport>,
     params: Res<WorldGenParams>,
     snap: Res<RoadSnapSettings>,
@@ -144,7 +144,7 @@ pub fn rail_path_input_system(
     let Ok(ctx) = egui_ctx.ctx_mut() else {
         return;
     };
-    if ctx.wants_pointer_input() {
+    if ctx.egui_wants_pointer_input() {
         return;
     }
     let Ok(window) = win.single() else {

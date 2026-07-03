@@ -25,6 +25,7 @@
     "domain_router.py",
     "facility_needs_strip.py",
     "footprint_canvas.py",
+    "generation_trace_strip.py",
     "grammar_build_set_panel.py",
     "grammar_dna_panel.py",
     "grammar_inspector.py",
@@ -50,10 +51,11 @@
     "slot_preview_render.py",
     "state.py",
     "status_log_panel.py",
+    "variants_layer_context.py",
     "variants_panel.py",
     "variants_preview_panel.py"
   ],
-  "module_count": 50,
+  "module_count": 52,
   "pytest": {
     "ok": true,
     "summary": "1 passed",
@@ -92,7 +94,7 @@
     "profile": "APS_WITNESS_REFRESH",
     "relative_path": "debug_runs/aps_artist_tool_modules_live.json",
     "source_system": "aps_witness_refresh",
-    "written_at_epoch_secs": 1782012878
+    "written_at_epoch_secs": 1783098084
   },
   "witness_honesty": {
     "status": "skipped",

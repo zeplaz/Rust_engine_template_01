@@ -1,0 +1,65 @@
+{
+  "gate": "DMCP-APS-VARIANTS-REACTION-PULLUP-001",
+  "verdict": "PASS",
+  "critique_doc": "src/dev/dmcp_aps_variants_reaction_pullup_critique_v1.md",
+  "event_count": 11,
+  "checks": {
+    "critique_doc": true,
+    "variants_panel": true,
+    "variants_preview_panel": true,
+    "reaction_filter_combobox": true,
+    "variants_preview_panel_wired": true,
+    "preview_four_state_strip": true,
+    "empty_state_label": true,
+    "agent_patch_collapsed": true,
+    "catalog_event_count_11": true,
+    "schema_witness_green": true,
+    "liquidation_triggers_complete": true,
+    "reaction_territory_witness_green": true,
+    "cmcp_resolve_green": true,
+    "cmcp_preview_green": true,
+    "catalog_spec_only": true
+  },
+  "schema_audit": {
+    "green": true,
+    "event_ids": [
+      "archive_seizure_or_censorship",
+      "banning_cultural_or_religious_practices",
+      "erasure_of_local_history",
+      "forced_assimilation_in_schools",
+      "forced_displacement",
+      "forced_renaming",
+      "heritage_site_destruction",
+      "imperial_institution_replacement",
+      "language_ban",
+      "removal_of_children_from_institutions",
+      "transparent_bilingual_service_continuation"
+    ]
+  },
+  "reaction_territory": {
+    "green": true,
+    "reaction_session_count_full_catalog": 19
+  },
+  "confront_summary": {
+    "ui_shell": "aps_tk_variants_tab",
+    "horror_show": false,
+    "proper_workflow_ui": true,
+    "ship_score_band": "8/10 internal tool"
+  },
+  "green": true,
+  "handoff_tails": [
+    "CMCP default filter Base sessions",
+    "CMCP list label humanization",
+    "CMCP mandate tag collapse",
+    "CMCP-REACTION-TERRITORY-PREVIEW-001"
+  ],
+  "_agent_meta": {
+    "schema": "dmcp_aps_variants_reaction_pullup_live_v1",
+    "written_at_epoch_secs": 1783100902,
+    "profile": "DMCP_APS_VARIANTS_REACTION_PULLUP",
+    "source_system": "dmcp_aps_variants_reaction_pullup",
+    "relative_path": "debug_runs/art_pipeline/dmcp_aps_variants_reaction_pullup_live.json",
+    "ritual": "BLANG:WIT-HON\u2192Q\u2713 DMCP-APS-VARIANTS-REACTION-PULLUP-001",
+    "agent": "designer-mcp"
+  }
+}

@@ -1,0 +1,79 @@
+{
+  "gate": "DES-CITY-BLOCK-RECIPE-001",
+  "issue": "CITY-C3",
+  "program": "PLAN-CITY-GRAMMAR-v1",
+  "charter_doc": "src/dev/design_city_block_recipe_v1.md",
+  "recipe_ron_paths": [
+    "assets/configs/settlement/block_recipes/industrial_yard_v1.ron",
+    "assets/configs/settlement/block_recipes/low_density_res_v1.ron",
+    "assets/configs/settlement/block_recipes/medium_density_res_v1.ron"
+  ],
+  "recipe_json_examples": [
+    "tools/mcp/schemas/examples/block_recipe_industrial_yard_v1.example.json",
+    "tools/mcp/schemas/examples/block_recipe_low_density_res_v1.example.json",
+    "tools/mcp/schemas/examples/block_recipe_medium_density_res_v1.example.json"
+  ],
+  "checks": {
+    "charter_doc": true,
+    "g0_dependency": true,
+    "vocabulary_five_primitives": true,
+    "seed_chain_documented": true,
+    "three_recipe_charters": true,
+    "civic_block_grammar": true,
+    "factory_cluster_grammar": true,
+    "no_rust_layout_shortcut": true,
+    "block_recipe_industrial_yard_v1_file": true,
+    "block_recipe_industrial_yard_v1_schema_v1": true,
+    "block_recipe_industrial_yard_v1_teaches": true,
+    "block_recipe_industrial_yard_v1_lot_row": true,
+    "block_recipe_industrial_yard_v1_catalog_archetype": true,
+    "block_recipe_low_density_res_v1_file": true,
+    "block_recipe_low_density_res_v1_schema_v1": true,
+    "block_recipe_low_density_res_v1_teaches": true,
+    "block_recipe_low_density_res_v1_lot_row": true,
+    "block_recipe_low_density_res_v1_catalog_archetype": true,
+    "block_recipe_medium_density_res_v1_file": true,
+    "block_recipe_medium_density_res_v1_schema_v1": true,
+    "block_recipe_medium_density_res_v1_teaches": true,
+    "block_recipe_medium_density_res_v1_lot_row": true,
+    "block_recipe_medium_density_res_v1_catalog_archetype": true,
+    "block_recipe_industrial_yard_v1_id_match": true,
+    "block_recipe_industrial_yard_v1_teaches_min2": true,
+    "block_recipe_industrial_yard_v1_steps_nonempty": true,
+    "block_recipe_industrial_yard_v1_edge_sim_authority_false": true,
+    "block_recipe_low_density_res_v1_id_match": true,
+    "block_recipe_low_density_res_v1_teaches_min2": true,
+    "block_recipe_low_density_res_v1_steps_nonempty": true,
+    "block_recipe_low_density_res_v1_edge_sim_authority_false": true,
+    "block_recipe_medium_density_res_v1_id_match": true,
+    "block_recipe_medium_density_res_v1_teaches_min2": true,
+    "block_recipe_medium_density_res_v1_steps_nonempty": true,
+    "block_recipe_medium_density_res_v1_edge_sim_authority_false": true
+  },
+  "acceptance": {
+    "B1_vocabulary": true,
+    "B2_three_charters": true,
+    "B3_ron_on_disk": true,
+    "B4_seed_chain": true,
+    "B5_catalog_ids": true,
+    "B8_critique_no_rust_layout": true
+  },
+  "green": true,
+  "verdict": "PASS",
+  "handoff": {
+    "coder_mcp": "block_recipe_v1.schema.json",
+    "coder": "CITY-G1-C3-001 block_recipe_evaluator",
+    "blocked_on": [
+      "CITY-G1-C2-001 BlockFrame"
+    ]
+  },
+  "_agent_meta": {
+    "schema": "city_block_recipe_charter_live_v1",
+    "written_at_epoch_secs": 1783102537,
+    "profile": "DES_CITY_BLOCK_RECIPE",
+    "source_system": "dmcp_city_block_recipe",
+    "relative_path": "debug_runs/city_block_recipe_charter_live.json",
+    "ritual": "BLANG:WIT-HON\u2192Q\u2713 DES-CITY-BLOCK-RECIPE-001",
+    "agent": "designer-mcp"
+  }
+}

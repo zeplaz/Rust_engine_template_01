@@ -4,7 +4,7 @@ use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
 use bevy_egui::EguiContexts;
 
-use crate::gui::{MapCameraDesired, SimulationMapViewport};
+use crate::gui::{MapCameraDesiredRes, SimulationMapViewport};
 use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
 use crate::strategic::{
     evaluate_site_placement_at_world_tile, BuildSiteTile, FootprintTiles, StrategicRasterConfig,
@@ -62,7 +62,7 @@ pub fn zone_paint_input_system(
     tool: Res<ActiveBuildTool>,
     win: Query<&Window, With<PrimaryWindow>>,
     authority: Option<Res<crate::render::view_runtime::ViewProjectionAuthority>>,
-    desired: Res<MapCameraDesired>,
+    desired: Res<MapCameraDesiredRes>,
     map_vp: Res<SimulationMapViewport>,
     params: Res<WorldGenParams>,
     config: Option<Res<StrategicRasterConfig>>,
@@ -81,7 +81,7 @@ pub fn zone_paint_input_system(
     let Ok(ctx) = egui_ctx.ctx_mut() else {
         return;
     };
-    if ctx.wants_pointer_input() {
+    if ctx.egui_wants_pointer_input() {
         return;
     }
 

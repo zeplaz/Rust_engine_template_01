@@ -499,16 +499,16 @@ pub fn upload_minimap_heat_textures(
         );
     }
 
-    if let Some(img) = images.get_mut(&heat.fire) {
+    if let Some(mut img) = images.get_mut(&heat.fire) {
         img.data = Some(fire_buf);
     }
-    if let Some(img) = images.get_mut(&heat.logistics) {
+    if let Some(mut img) = images.get_mut(&heat.logistics) {
         img.data = Some(log_buf);
     }
-    if let Some(img) = images.get_mut(&heat.construction) {
+    if let Some(mut img) = images.get_mut(&heat.construction) {
         img.data = Some(construction_buf);
     }
-    if let Some(img) = images.get_mut(&heat.ecology) {
+    if let Some(mut img) = images.get_mut(&heat.ecology) {
         img.data = Some(ecology_buf);
     }
 
@@ -537,10 +537,10 @@ pub fn upload_minimap_heat_textures(
         replay,
         map_views.minimap.overlays.replay_scrub,
     );
-    if let Some(img) = images.get_mut(&heat.fow) {
+    if let Some(mut img) = images.get_mut(&heat.fow) {
         img.data = Some(fow_buf);
     }
-    if let Some(img) = images.get_mut(&heat.ew) {
+    if let Some(mut img) = images.get_mut(&heat.ew) {
         img.data = Some(ew_buf);
     }
     (
@@ -585,7 +585,7 @@ pub fn sync_minimap_terrain_storage(
     if out.len() != (dw * dh * 4) as usize {
         return false;
     }
-    if let Some(dst) = images.get_mut(&heat.terrain) {
+    if let Some(mut dst) = images.get_mut(&heat.terrain) {
         dst.data = Some(out);
         true
     } else {

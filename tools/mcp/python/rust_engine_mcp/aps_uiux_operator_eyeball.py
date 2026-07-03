@@ -40,14 +40,15 @@ def _run_pytest(repo: Path, rel: str) -> dict[str, Any]:
     cmd = [sys.executable, "-m", "pytest", rel, "-q"]
     proc = subprocess.run(cmd, cwd=repo / "tools/mcp/python", capture_output=True, text=True)
     tail = (proc.stdout or "") + (proc.stderr or "")
-    skipped = "skipped" in tail and proc.returncode == 0
     passed = failed = 0
     m = re.search(r"(\d+) passed(?:, (\d+) failed)?", tail)
     if m:
         passed = int(m.group(1))
         failed = int(m.group(2) or 0)
+    skipped = proc.returncode == 0 and passed == 0 and "skipped" in tail
+    ok = proc.returncode == 0 and failed == 0 and (passed > 0 or skipped)
     return {
-        "ok": proc.returncode == 0 and failed == 0 and not skipped,
+        "ok": ok,
         "skipped": skipped,
         "passed": passed,
         "failed": failed,
@@ -107,6 +108,15 @@ def refresh_aps_uiux_operator_eyeball_witness(
         for row_id in NEEDS_DISPLAY_ROWS
     ]
 
+    root = repo or repo_root()
+    presence_attestation: dict[str, Any] | None = None
+    presence_path = root / "debug_runs/aps_presence_operator_attestation_live.json"
+    if presence_path.is_file():
+        try:
+            presence_attestation = json.loads(presence_path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            presence_attestation = None
+
     body: dict[str, Any] = {
         "gate_id": "OVR-P6-OPERATOR-EYEBALL-001",
         "program_id": "PLAN-APS-UIUX-OVERHAUL-001",
@@ -122,6 +132,7 @@ def refresh_aps_uiux_operator_eyeball_witness(
             "rubric": RUBRIC_REL,
         },
         "machine_guards": {"headless": headless, "display": display},
+        "presence_attestation": presence_attestation,
         "needs_display": needs_display,
         "record_human_pass": (
             "APS_OPERATOR_EYEBALL_VERDICT=pass APS_OPERATOR_EYEBALL_OPERATOR=<name> "

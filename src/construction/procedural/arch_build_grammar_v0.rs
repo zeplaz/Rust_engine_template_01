@@ -121,14 +121,14 @@ pub fn reweight_massing_strategies(
     let mut scored: Vec<(String, f32)> = strategies
         .iter()
         .map(|s| {
-            let b = massing_bias(&s.id);
+            let b = massing_bias(s.id.as_str());
             let score = s.weight as f32
                 + K_BIAS * pressure.beta_yard * b.yard
                 + K_BIAS * pressure.beta_svc * b.svc
                 + K_BIAS * pressure.beta_sym * b.sym
                 + K_BIAS * pressure.beta_exp * b.exp
                 + K_BIAS * pressure.beta_irr * b.irr;
-            (s.id.clone(), score.max(0.0))
+            (s.id.as_str().to_string(), score.max(0.0))
         })
         .collect();
 
@@ -136,7 +136,7 @@ pub fn reweight_massing_strategies(
     if total <= 0.0 {
         return strategies
             .iter()
-            .map(|s| (s.id.clone(), s.weight.max(1)))
+            .map(|s| (s.id.as_str().to_string(), s.weight.max(1)))
             .collect();
     }
 

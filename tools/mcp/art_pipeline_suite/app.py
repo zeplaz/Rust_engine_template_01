@@ -66,6 +66,8 @@ from .domain_router import (
 
     pipeline_steps_for,
 
+    next_action_for,
+
     save_active_lane,
 
 )
@@ -763,11 +765,20 @@ class ArtPipelineSuiteApp(tk.Tk):
 
             if step_key == key:
 
-                self.notebook.select(i)
-
+                try:
+                    current = int(self.notebook.index(self.notebook.select()))
+                except tk.TclError:
+                    current = -1
+                if current == i:
+                    hint = next_action_for(self.state, key)
+                    self._log(f"Pipeline: already on {key} — {hint}")
+                else:
+                    self.notebook.select(i)
                 self.pipeline_status.set_current(key)
-
+                self.pipeline_status.refresh()
                 return
+
+        self._log(f"Pipeline: unknown step {key!r}")
 
 
 

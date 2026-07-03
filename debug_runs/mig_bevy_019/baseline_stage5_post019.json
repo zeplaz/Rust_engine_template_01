@@ -1,0 +1,40 @@
+{
+  "_agent_meta": {
+    "agent_commands": [
+      "cargo check -p proc_A_dine01",
+      "cargo test -p proc_A_dine01 --lib stage5 --release",
+      "cargo test -p proc_A_dine01 --lib vt_ci --release",
+      "cargo test -p proc_A_dine01 --lib fire --release"
+    ],
+    "profile": "MIG-G2-post",
+    "program": "PLAN-BEVY-019-MIG-v1",
+    "issue": "MIG-V1-001",
+    "bevy_version": "0.19",
+    "branch": "master",
+    "captured_at": "2026-07-03T19:15:00Z"
+  },
+  "green": true,
+  "stage5_lib_tests": {
+    "passed": 39,
+    "failed": 0,
+    "filtered": 1331
+  },
+  "vt_ci_lib_tests": {
+    "passed": 16,
+    "failed": 0,
+    "filtered": 1354
+  },
+  "fire_lib_tests": {
+    "passed": 140,
+    "failed": 0,
+    "filtered": 1230
+  },
+  "cargo_lock_sha256": "2488503f37d9620338068613fc227b993b2a795e80a88c2073ece5ea1992856c",
+  "pre019_baseline": "debug_runs/mig_bevy_019/baseline_stage5_pre019.json",
+  "related_witnesses": [
+    "debug_runs/stage5_full_app_live.json",
+    "debug_runs/mig_bevy_019/feature_flag_audit_g3.json",
+    "debug_runs/mig_bevy_019/mig_v1_gate.json"
+  ],
+  "notes": "Post-M1 Bevy 0.19 lib gate anchor. Visual `--test visual` tracked separately in mig_v1_gate.json."
+}

@@ -1,4 +1,4 @@
-//! On-screen viewport debug window + stroke overlays (logical UI vs physical camera).
+//! On-screen viewport debug window + stroke overlays (RTT fill rect + ortho trace).
 
 use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
@@ -9,10 +9,10 @@ use crate::gui::hud::{
     RenderViewportRect, UiViewportRect,
 };
 use crate::gui::{
-    AuthoritativeViewport, MainWorldCamera, MainWorldCameraOrthoTrace,
-    MainWorldCameraViewportLatch, SimulationMapViewport, SimulationMapViewportDebug,
-    SimulationMapViewportTrace,
+    MainWorldCamera, MainWorldCameraOrthoTrace, SimulationMapTexture, SimulationMapViewport,
+    SimulationMapViewportDebug, SimulationMapViewportTrace,
 };
+use crate::gui::simulation_map_texture_extent;
 use crate::render::ResolvedViewports;
 
 #[inline]
@@ -23,12 +23,12 @@ pub fn debug_viewport_overlay_enabled() -> bool {
 /// F4-adjacent: always on when `VIEWPORT_DEBUG_OVERLAY=1` / `VISUAL_DIAG=1`.
 pub fn draw_debug_viewport_overlay(
     mut contexts: EguiContexts,
-    authority: Res<AuthoritativeViewport>,
-    sim: Res<SimulationMapViewport>,
+    fill: Res<SimulationMapViewport>,
     trace: Res<SimulationMapViewportTrace>,
     sim_dbg: Res<SimulationMapViewportDebug>,
     ortho: Res<MainWorldCameraOrthoTrace>,
-    latch: Res<MainWorldCameraViewportLatch>,
+    tex: Res<SimulationMapTexture>,
+    images: Res<Assets<Image>>,
     resolved: Res<ResolvedViewports>,
     cam: Query<&Camera, With<MainWorldCamera>>,
     win: Query<&Window, With<PrimaryWindow>>,
@@ -45,23 +45,9 @@ pub fn draw_debug_viewport_overlay(
         .map(|w| Vec2::new(w.width(), w.height()))
         .unwrap_or(Vec2::ONE);
     let scale = win.single().map(|w| w.scale_factor()).unwrap_or(1.0);
+    let rtt_extent = simulation_map_texture_extent(tex.as_ref(), images.as_ref());
 
-    let ui_committed = UiViewportRect::from_sim(&sim);
-    let ui_authoritative = UiViewportRect {
-        logical_min: authority.min,
-        logical_max: authority.max,
-        valid: authority.valid,
-    };
-    let ui_measured = UiViewportRect {
-        logical_min: sim_dbg.measured_min,
-        logical_max: sim_dbg.measured_max,
-        valid: sim_dbg.measured_valid,
-    };
-    let ui_solver = UiViewportRect {
-        logical_min: sim_dbg.solver_min,
-        logical_max: sim_dbg.solver_max,
-        valid: sim_dbg.solver_valid,
-    };
+    let ui_fill = UiViewportRect::from_sim(&fill);
 
     let render_scissor = cam.single().ok().and_then(|c| {
         c.viewport.as_ref().map(|vp| RenderViewportRect {
@@ -78,7 +64,7 @@ pub fn draw_debug_viewport_overlay(
         using_hole: ortho.using_hole,
     };
 
-    egui::Window::new("VIEWPORT DEBUG")
+    egui::Window::new("VIEWPORT DEBUG (RTT)")
         .default_pos([10.0, 10.0])
         .resizable(true)
         .collapsible(true)
@@ -88,35 +74,24 @@ pub fn draw_debug_viewport_overlay(
             ui.label(format!("scale: {scale:.3}"));
 
             ui.separator();
-            ui.heading("Simulation (logical UI)");
-            ui.label(format!("valid: {}", sim.valid));
-            ui.label(format!("authoritative: {}", ui_authoritative));
-            ui.label(format!("committed: {}", ui_committed));
-            ui.label(format!("measured:  {}", ui_measured));
-            ui.label(format!("solver:    {}", ui_solver));
-            ui.label(format!("auth gen: {}", authority.generation));
-            ui.label(format!(
-                "drift measured→committed: {:.1} × {:.1}",
-                trace.measured_size.x - trace.committed_size.x,
-                trace.measured_size.y - trace.committed_size.y
-            ));
+            ui.heading("Map fill (UI logical)");
+            ui.label(format!("valid: {}", fill.valid));
+            ui.label(format!("fill: {}", ui_fill));
+            ui.label(format!("adequate: {}", fill.is_adequate_for_camera()));
+            ui.label(format!("rtt extent: {:.0} × {:.0}", rtt_extent.x, rtt_extent.y));
             ui.label(format!("last_commit: {}", sim_dbg.last_commit));
             ui.label(format!(
-                "settle: streak={} settled={} frozen={}",
-                trace.settle_streak, trace.layout_settled, sim_dbg.frozen
+                "trace: measured={:?} committed={:?} settled={}",
+                trace.measured_size, trace.committed_size, trace.layout_settled
             ));
 
             ui.separator();
-            ui.heading("Camera (do not compare to UI rects directly)");
-            ui.label(format!("latch.using_hole: {}", latch.using_hole));
-            ui.label(format!("render_hole (ortho): {}", ortho.using_hole));
+            ui.heading("Camera ortho (RTT — not UI scissor)");
             ui.label(format!("{cam_proj}"));
             if let Some(r) = render_scissor {
-                ui.label(format!("scissor physical: {r}"));
-                let logical = r.to_logical(scale);
-                ui.label(format!("scissor logical: {}", logical));
+                ui.label(format!("camera viewport physical: {r}"));
             } else {
-                ui.label("scissor: full window");
+                ui.label("camera viewport: default (RTT target)");
             }
 
             ui.separator();
@@ -132,7 +107,7 @@ pub fn draw_debug_viewport_overlay(
             ui.separator();
             ui.colored_label(
                 egui::Color32::LIGHT_GRAY,
-                "Overlay: green=measured red=committed blue=camera (cyan=solver)",
+                "Overlay: green=fill rect (map ImageNode screen AABB)",
             );
         });
 
@@ -141,44 +116,14 @@ pub fn draw_debug_viewport_overlay(
         egui::Id::new("debug_viewport_overlay_strokes"),
     ));
 
-    if ui_measured.valid {
+    if ui_fill.valid {
         stroke_viewport_debug_rect(
             &painter,
-            ui_measured.logical_min,
-            ui_measured.logical_max,
+            ui_fill.logical_min,
+            ui_fill.logical_max,
             egui::Color32::from_rgb(40, 220, 80),
-            "measured",
+            "fill",
         );
-    }
-    if ui_solver.valid {
-        stroke_viewport_debug_rect(
-            &painter,
-            ui_solver.logical_min,
-            ui_solver.logical_max,
-            egui::Color32::from_rgb(0, 200, 255),
-            "solver",
-        );
-    }
-    if ui_committed.valid || ui_authoritative.valid {
-        stroke_viewport_debug_rect(
-            &painter,
-            ui_committed.logical_min,
-            ui_committed.logical_max,
-            egui::Color32::from_rgb(255, 50, 50),
-            "committed",
-        );
-    }
-    if let Some(r) = render_scissor {
-        let logical = r.to_logical(scale);
-        if logical.valid {
-            stroke_viewport_debug_rect(
-                &painter,
-                logical.logical_min,
-                logical.logical_max,
-                egui::Color32::from_rgb(60, 120, 255),
-                "camera",
-            );
-        }
     }
 }
 

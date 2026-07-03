@@ -5,6 +5,7 @@ use std::time::Instant;
 
 use bevy::asset::LoadState;
 use bevy::prelude::*;
+use bevy::world_serialization::{WorldAsset, WorldAssetRoot};
 use bevy::render::view::screenshot::{save_to_disk, Captured, Screenshot};
 use bevy::window::{PresentMode, Window, WindowPlugin};
 use serde::Serialize;
@@ -135,7 +136,7 @@ fn spawn_preview_scene(
     commands.spawn((
         DirectionalLight {
             illuminance: 14_000.0,
-            shadows_enabled: true,
+            shadow_maps_enabled: true,
             ..default()
         },
         Transform::from_rotation(Quat::from_euler(EulerRot::XYZ, -0.9, 0.4, 0.0)),
@@ -159,7 +160,7 @@ fn spawn_preview_scene(
         iso_camera_transform(center, config.job.camera.distance_m),
     ));
 
-    let mut scene_handles: Vec<Handle<Scene>> = Vec::new();
+    let mut scene_handles: Vec<Handle<WorldAsset>> = Vec::new();
     for (i, row) in snapshot.module_placements.iter().enumerate() {
         let rel = row.glb_path.replace('\\', "/");
         let glb = config.repo_root.join(&rel);
@@ -168,7 +169,7 @@ fn spawn_preview_scene(
             continue;
         }
         let asset_path = rel.strip_prefix("assets/").unwrap_or(&rel);
-        let handle: Handle<Scene> = asset_server.load(format!("{asset_path}#Scene0"));
+        let handle: Handle<WorldAsset> = asset_server.load(format!("{asset_path}#Scene0"));
         scene_handles.push(handle.clone());
 
         let pos = Vec3::new(
@@ -183,7 +184,7 @@ fn spawn_preview_scene(
             row.rotation_euler[2] as f32,
         );
         commands.spawn((
-            SceneRoot(handle),
+            WorldAssetRoot(handle),
             Transform::from_translation(pos).with_rotation(rot),
             Visibility::default(),
         ));
@@ -195,7 +196,7 @@ fn spawn_preview_scene(
 }
 
 #[derive(Resource)]
-struct PreviewSceneHandles(Vec<Handle<Scene>>);
+struct PreviewSceneHandles(Vec<Handle<WorldAsset>>);
 
 fn scenes_ready(asset_server: Res<AssetServer>, handles: Option<Res<PreviewSceneHandles>>) -> bool {
     let Some(handles) = handles else {

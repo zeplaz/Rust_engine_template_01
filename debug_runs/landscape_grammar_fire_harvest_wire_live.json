@@ -58,7 +58,7 @@
     "relative_path": "debug_runs/landscape_grammar_fire_harvest_wire_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_fire_harvest_wire_live_witness",
-    "written_at_epoch_secs": 1783027924
+    "written_at_epoch_secs": 1783105823
   },
   "cause_id": "CDR-A-FIRE-HARVEST-WIRE-001",
   "fire_disturbances": 1,

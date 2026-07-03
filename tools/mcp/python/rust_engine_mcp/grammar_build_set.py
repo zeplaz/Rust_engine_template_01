@@ -300,8 +300,27 @@ def grammar_preset_pair_validate(*, preset_id: str | None = None, path: str | Pa
     }
 
 
+def _zone_coverage_histogram() -> dict[str, int]:
+    """CMCP-GRAM-SWEEP-PROCESS-001 — aggregate zone kinds from pilot site grids."""
+    from rust_engine_mcp.validators.site_zone_grid import DEFAULT_PILOT_PATHS, _zone_counts
+
+    counts: Counter[str] = Counter()
+    root = repo_root()
+    for rel in DEFAULT_PILOT_PATHS:
+        path = root / rel
+        if not path.is_file():
+            continue
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        for zone, n in _zone_counts(list(data.get("cells") or [])).items():
+            counts[str(zone)] += int(n)
+    return dict(counts)
+
+
 def _process_sweep_histogram() -> dict[str, dict[str, int]]:
-    """CMCP-GRAM-SWEEP-PROCESS-001 — power_tier + role counts from facility bindings."""
+    """CMCP-GRAM-SWEEP-PROCESS-001 — power_tier + role + zone coverage from facility bindings."""
     from rust_engine_mcp import grammar_facility_brief
 
     body = grammar_facility_brief.grammar_facility_brief()
@@ -318,9 +337,11 @@ def _process_sweep_histogram() -> dict[str, dict[str, int]]:
             power_tier[str(tier)] += 1
         if role_key:
             role[str(role_key)] += 1
+    zone_coverage = _zone_coverage_histogram()
     return {
         "power_tier": dict(power_tier),
         "supply_chain_role": dict(role),
+        "zone_coverage": zone_coverage,
     }
 
 
@@ -372,10 +393,12 @@ def write_grammar_sweep_process_witness() -> dict[str, Any]:
     from rust_engine_mcp.aps_witness_honesty import write_aps_live_witness
 
     sweep = grammar_eval_sweep()
+    hist = sweep.get("process_histogram") or {}
+    green = bool(hist.get("power_tier")) and bool(hist.get("zone_coverage"))
     body = {
         "task_id": "CMCP-GRAM-SWEEP-PROCESS-001",
-        "green": bool(sweep.get("process_histogram", {}).get("power_tier")),
-        "process_histogram": sweep.get("process_histogram"),
+        "green": green,
+        "process_histogram": hist,
         "sweep": {
             "archetype_id": sweep.get("archetype_id"),
             "seed_count": sweep.get("seed_count"),
@@ -564,6 +587,34 @@ def write_building_set_coverage_witness() -> dict[str, Any]:
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(body, indent=2) + "\n", encoding="utf-8")
     return body
+
+
+def write_aps_g4_coverage_witness() -> dict[str, Any]:
+    """APS-G4-COVERAGE-001 — building_set_coverage + pilot_hardcode + tier G4 bar."""
+    from rust_engine_mcp.aps_witness_honesty import write_aps_live_witness
+
+    coverage = building_set_coverage_report()
+    tier = grammar_set_tier()
+    body = {
+        "task_id": "APS-G4-COVERAGE-001",
+        "green": bool(coverage.get("green")) and tier.get("tier") == "G4" and not tier.get("reasons"),
+        "building_set_coverage_green": coverage.get("green"),
+        "pilot_hardcode_green": coverage.get("pilot_hardcode_green"),
+        "grammar_set_tier": tier.get("tier"),
+        "grammar_set_tier_reasons": tier.get("reasons") or [],
+        "coverage_errors": coverage.get("errors") or [],
+        "grammar_pilot_count": coverage.get("grammar_pilot_count"),
+        "preset_count": coverage.get("preset_count"),
+        "coverage_rows": coverage.get("rows") or [],
+    }
+    return write_aps_live_witness(
+        body,
+        "debug_runs/aps_g4_coverage_live.json",
+        schema="aps_g4_coverage_live_v1",
+        profile="APS_G4_COVERAGE",
+        source_system="grammar_build_set",
+        ritual="BLANG:WIT-HON APS-G4-COVERAGE-001" if body.get("green") else None,
+    )
 
 
 def write_grammar_set_brief_witness() -> dict[str, Any]:

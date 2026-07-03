@@ -1912,5 +1912,41 @@
     "witness": "debug_runs/veg_catalog_burn_rows_live.json",
     "dispatch": "multi_parallel_tracks_dispatch_v1.json",
     "updated_at": "2026-06-20T00:00:00+00:00"
+  },
+  {
+    "id": "APS-TAG-TIER2-IMPL",
+    "priority": 2,
+    "title": "Archetype tag presets + reaction suggested tags",
+    "lane": "aps-coder",
+    "agent": "coder-mcp",
+    "depends_on": ["DES-APS-TAG-TIER2-001"],
+    "status": "done",
+    "witness": "debug_runs/aps_tag_tier2_live.json",
+    "commands": [
+      "python -m rust_engine_mcp.cli aps-tag-tier2-witness",
+      "pytest tools/mcp/python/tests/test_aps_tag_tier2.py"
+    ],
+    "docs": [
+      "src/dev/design_aps_tag_tier2_v1.md"
+    ],
+    "updated_at": "2026-07-03T04:30:00+00:00"
+  },
+  {
+    "id": "APS-UX-POLISH-TAIL-001",
+    "priority": 2,
+    "title": "UX audit v2 tail — F5 valid vs saved, F6 footprint text, F7 flow bar",
+    "lane": "aps-coder",
+    "agent": "coder-mcp",
+    "depends_on": ["APS-TAG-TIER2-IMPL", "APS-UX-POLISH-001"],
+    "status": "done",
+    "witness": "debug_runs/aps_ux_polish_tail_live.json",
+    "commands": [
+      "python -m rust_engine_mcp.cli aps-ux-polish-tail-witness",
+      "pytest tools/mcp/python/tests/test_aps_tag_tier2.py::test_ux_polish_tail_witness"
+    ],
+    "docs": [
+      "src/dev/design_aps_ux_audit_v2.md"
+    ],
+    "updated_at": "2026-07-03T04:30:00+00:00"
   }
 ]

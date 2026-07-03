@@ -16,7 +16,7 @@ use crate::strategic::settlement::{AutoBuildPolicyBook, GrowthProposalQueue};
 use crate::gui::MapFitValidationLog;
 use crate::gui::ui_gates::product_egui_shell_active;
 use crate::gui::{
-    minimap::resolve_minimap_egui_texture, MapCameraDesired, MapPresentationDiagnostics,
+    minimap::resolve_minimap_egui_texture, MapCameraDesiredRes, MapPresentationDiagnostics,
     MapViewTextureCache, MinimapShellState, ResolvedMapViewFrames,
 };
 use crate::render::{
@@ -94,7 +94,7 @@ pub struct HudProductShellEguiParams<'w> {
     preview_debug: Option<Res<'w, PreviewPresentationDebug>>,
     minimap: ResMut<'w, MinimapShellState>,
     legacy_minimap: ResMut<'w, SimMinimapUiState>,
-    map_desired: Res<'w, MapCameraDesired>,
+    map_desired: Res<'w, MapCameraDesiredRes>,
     map_views: ResMut<'w, crate::gui::MapViewInstances>,
     map_ready: ResMut<'w, crate::gui::MapViewReadyStates>,
     map_view_interaction: ResMut<'w, crate::gui::MapViewInteractionByView>,
@@ -212,8 +212,9 @@ pub fn hud_product_shell_egui_root(
         tex
     };
     let ctx = contexts.ctx_mut()?;
+    let mut root_ui = crate::gui::new_root_ui(ctx);
     draw_hud_side_status_panel_egui(
-        ctx,
+        &mut root_ui,
         &mut panels.layout,
         &panels.palette,
         &bindings,
@@ -292,7 +293,7 @@ pub fn hud_product_shell_egui_root(
         return Ok(());
     }
     draw_hud_dock_minimized_strip_egui(
-        ctx,
+        &mut root_ui,
         &panels.presentation,
         &mut panels.dock,
         &mut panels.minimap,

@@ -1,0 +1,25 @@
+{
+  "_agent_meta": {
+    "agent_commands": [
+      "cargo test -p proc_A_dine01 --lib stage5 --release"
+    ],
+    "profile": "MIG-G2",
+    "program": "PLAN-BEVY-019-MIG-v1",
+    "issue": "MIG-P0-G2-001",
+    "bevy_version": "0.18",
+    "branch": "master",
+    "captured_at": "2026-07-03T17:05:00Z"
+  },
+  "green": true,
+  "stage5_lib_tests": {
+    "passed": 39,
+    "failed": 0,
+    "filtered": 1306
+  },
+  "cargo_lock_sha256": "963c1e13e32a303df6c6dae765c009b6d8d4c63c2048d0e544d9f5264f3e8ea6",
+  "related_witnesses": [
+    "debug_runs/stage5_full_app_live.json",
+    "debug_runs/play_scenario_live.json"
+  ],
+  "notes": "Pre-M1 bump 0.18 baseline anchor for MIG-V1 perf comparison. Cargo.lock snapshot hash only; restore from git if rollback needed."
+}

@@ -1,0 +1,43 @@
+{
+  "schema_version": "aps_tag_tier2_presets_v1",
+  "archetypes": {
+    "IndustrialWarehouse": {
+      "preset_name": "industrial_logistics",
+      "label": "Industrial logistics",
+      "mandate_tags": ["day_lit", "service_continuity"],
+      "semantic_tags": {
+        "location": ["loading_dock", "rail_adjacent"],
+        "architectural": ["industrial"]
+      }
+    },
+    "FactoryCluster": {
+      "preset_name": "process_plant",
+      "label": "Process plant",
+      "mandate_tags": ["day_lit"],
+      "semantic_tags": {
+        "architectural": ["utility"],
+        "detail": ["cooling_tower", "pipework", "transformer_yard"]
+      }
+    },
+    "CivicBlock": {
+      "preset_name": "civic_day",
+      "label": "Civic day",
+      "mandate_tags": ["day_lit", "heritage_integrity"],
+      "semantic_tags": {
+        "architectural": ["civic"],
+        "location": ["street_facing"],
+        "detail": ["signage"]
+      }
+    },
+    "RailEdge": {
+      "preset_name": "rail_corridor",
+      "label": "Rail corridor",
+      "mandate_tags": ["day_lit"],
+      "semantic_tags": {
+        "location": ["rail_adjacent"],
+        "architectural": ["industrial"],
+        "detail": ["loading_dock"]
+      }
+    }
+  }
+}

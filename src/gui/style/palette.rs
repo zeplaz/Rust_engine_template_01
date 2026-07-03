@@ -224,8 +224,7 @@ impl UiPalette {
         )
     }
 
-    /// Ops strip paper field (`design_theme` archival wash).
-    #[must_use]
+    /// Paper field wash (ops strip / archival panels).
     pub fn bevy_paper_fill(&self) -> Color {
         let c = self.bg_paper;
         Color::srgba(
@@ -234,6 +233,12 @@ impl UiPalette {
             c.b() as f32 / 255.0,
             0.94,
         )
+    }
+
+    /// Tactical map RTT void — cool gray-blue (matches world-preview GPU clear).
+    #[must_use]
+    pub fn bevy_sim_map_field_clear(&self) -> Color {
+        Color::srgb(0.06, 0.09, 0.14)
     }
 
     /// Telemetry mono (`T+00042` tick line).

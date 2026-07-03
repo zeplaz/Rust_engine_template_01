@@ -4,16 +4,17 @@ use std::borrow::Cow;
 
 use bevy::prelude::*;
 use bevy::render::{
-    render_graph::{self, RenderGraph, RenderLabel},
     render_resource::{
         binding_types::uniform_buffer,
         *,
     },
-    renderer::{RenderContext, RenderDevice, RenderQueue},
+    renderer::{RenderContext, RenderDevice, RenderGraph, RenderGraphSystems, RenderQueue},
     Render, RenderApp, RenderStartup, RenderSystems,
 };
 
 use crate::gui::{GPU_FIRE_INSTANCE_BUDGET_CEILING, RepresentationResult};
+#[cfg(test)]
+use crate::render::gpu_instanced_quad::{FireSparkDrawExtension, ParticleSystemUniforms};
 use crate::render::fire_smoke_shader_handles::FIRE_PARTICLE_WGSL;
 use crate::render::gpu_bind_group_registry::{
     BindGroupBufferBinding, GPUBindGroupRegistry, WORLD_FIRE_PARTICLE_DRAW_BIND_GROUP,
@@ -23,12 +24,9 @@ use crate::render::gpu_buffer_registry::{
     FIRE_PARTICLE_EXPANDED_VERTICES_BUFFER, FIRE_PARTICLE_INSTANCES_BUFFER,
     FIRE_SPARK_STATE_BUFFER, GPUBufferRegistry, RegisteredBufferDescriptor, BufferVisibility,
 };
-use crate::render::gpu_particles::fire_spark_compute_enabled;
-use crate::render::gpu_spark_compute::{link_spark_compute_before_particle_expand, FireSparkComputePrepareSet};
-use crate::render::gpu_packed_formats::{
-    fire_particle_expanded_vertex_format, packed_byte_size,
-};
-use crate::render::gpu_particles::{GpuParticleQuadVertex, WorldFireParticleGpuStorage};
+use crate::render::fire_vfx::{fire_spark_compute_enabled, GpuParticleQuadVertex, WorldFireParticleGpuStorage};
+use crate::render::gpu_packed_formats::{fire_particle_expanded_vertex_format, packed_byte_size};
+use crate::render::gpu_spark_compute::FireSparkComputePrepareSet;
 use crate::render::gpu_representation_metrics::GpuRepresentationMetrics;
 
 const PARTICLE_WORKGROUP: u32 = 64;
@@ -41,6 +39,27 @@ pub struct WorldFireParticleDrawUniforms {
     pub camera_zoom: f32,
     pub zoom_alpha: f32,
     pub spark_sim_enabled: f32,
+}
+
+#[cfg(test)]
+impl WorldFireParticleDrawUniforms {
+    #[must_use]
+    pub fn particle_system(&self) -> ParticleSystemUniforms {
+        ParticleSystemUniforms {
+            instance_count: self.instance_count,
+            max_instances: self.max_instances,
+            time_secs: self.time_secs,
+            camera_zoom: self.camera_zoom,
+            zoom_alpha: self.zoom_alpha,
+        }
+    }
+
+    #[must_use]
+    pub fn fire_extension(&self) -> FireSparkDrawExtension {
+        FireSparkDrawExtension {
+            spark_sim_enabled: self.spark_sim_enabled,
+        }
+    }
 }
 
 impl Default for WorldFireParticleDrawUniforms {
@@ -77,6 +96,16 @@ impl Default for WorldFireParticleDrawUniformGpu {
     }
 }
 
+#[derive(Resource, Clone)]
+pub struct InstancedParticleExpandPipeline {
+    pub expand_shader: Handle<Shader>,
+    pub entry_point: Cow<'static, str>,
+}
+
+/// Fire lane registers the expand compute shader path.
+#[derive(Resource, Clone, Default)]
+pub struct FireParticlePipelineConfig;
+
 #[derive(Resource)]
 struct WorldFireParticleDrawPipeline {
     layout: BindGroupLayoutDescriptor,
@@ -86,17 +115,12 @@ struct WorldFireParticleDrawPipeline {
     pipeline: CachedComputePipelineId,
 }
 
-#[derive(Debug, Hash, PartialEq, Eq, Clone, RenderLabel)]
-pub(crate) struct WorldFireParticleDrawLabel;
+#[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
+pub(crate) struct WorldFireParticleDrawPassSet;
 
-struct WorldFireParticleDrawNode {
+#[derive(Resource, Default)]
+struct WorldFireParticleDrawPassReady {
     ready: bool,
-}
-
-impl Default for WorldFireParticleDrawNode {
-    fn default() -> Self {
-        Self { ready: false }
-    }
 }
 
 pub fn register_world_fire_particle_draw(app: &mut App) {
@@ -113,23 +137,30 @@ pub fn register_world_fire_particle_draw(app: &mut App) {
         .init_resource::<WorldFireParticleDrawUniforms>()
         .init_resource::<WorldFireParticleDrawUniformGpu>()
         .init_resource::<WorldFireParticleDrawDispatch>()
+        .init_resource::<WorldFireParticleDrawPassReady>()
         .add_systems(RenderStartup, init_world_fire_particle_draw_pipeline)
         .add_systems(
             Render,
             (
-                prepare_world_fire_particle_draw_uniforms,
-                prepare_world_fire_particle_draw_bind_group.after(FireSparkComputePrepareSet),
+                prepare_world_fire_particle_draw_uniforms.after(FireSparkComputePrepareSet),
+                prepare_world_fire_particle_draw_bind_group
+                    .after(prepare_world_fire_particle_draw_uniforms),
                 record_world_fire_particle_draw_dispatch
                     .after(prepare_world_fire_particle_draw_bind_group),
             )
                 .chain()
                 .in_set(RenderSystems::PrepareBindGroups),
+        )
+        .add_systems(
+            RenderGraph,
+            (
+                ensure_world_fire_particle_draw_pipeline_ready,
+                world_fire_particle_draw_pass.after(ensure_world_fire_particle_draw_pipeline_ready),
+            )
+                .chain()
+                .in_set(RenderGraphSystems::Render)
+                .in_set(WorldFireParticleDrawPassSet),
         );
-
-    let mut graph = render_app.world_mut().resource_mut::<RenderGraph>();
-    graph.add_node(WorldFireParticleDrawLabel, WorldFireParticleDrawNode::default());
-    graph.add_node_edge(WorldFireParticleDrawLabel, bevy::render::graph::CameraDriverLabel);
-    link_spark_compute_before_particle_expand(&mut graph);
 }
 
 fn init_world_fire_particle_draw_pipeline(
@@ -184,6 +215,11 @@ fn init_world_fire_particle_draw_pipeline(
         }],
     };
     let shader = asset_server.load(FIRE_PARTICLE_WGSL);
+    commands.insert_resource(InstancedParticleExpandPipeline {
+        expand_shader: shader.clone(),
+        entry_point: Cow::Borrowed("expand_instances"),
+    });
+    commands.insert_resource(FireParticlePipelineConfig);
     let pipeline = pipeline_cache.queue_compute_pipeline(ComputePipelineDescriptor {
         layout: vec![
             layout.clone(),
@@ -206,8 +242,8 @@ fn init_world_fire_particle_draw_pipeline(
 
 fn prepare_world_fire_particle_draw_uniforms(
     storage: Option<Res<WorldFireParticleGpuStorage>>,
-    extracted: Option<Res<crate::render::gpu_particles::WorldFireParticleFrame>>,
-    cam: Option<Res<crate::render::gpu_particles::FireParticleCameraScale>>,
+    extracted: Option<Res<crate::render::fire_vfx::WorldFireParticleFrame>>,
+    cam: Option<Res<crate::render::ExtractedCameraMetrics>>,
     mut uniforms: ResMut<WorldFireParticleDrawUniforms>,
 ) {
     let count = storage.as_ref().map(|s| s.instance_count).unwrap_or(0);
@@ -226,7 +262,7 @@ fn prepare_world_fire_particle_draw_uniforms(
         .map(|f| f.anim_time_secs)
         .unwrap_or(0.0);
     if let Some(c) = cam.as_deref() {
-        uniforms.camera_zoom = c.camera_zoom;
+        uniforms.camera_zoom = c.zoom_level;
         uniforms.zoom_alpha = c.zoom_alpha;
     }
     uniforms.spark_sim_enabled = if fire_spark_compute_enabled() { 1.0 } else { 0.0 };
@@ -386,7 +422,7 @@ fn prepare_world_fire_particle_draw_bind_group(
 
 fn record_world_fire_particle_draw_dispatch(
     storage: Option<Res<WorldFireParticleGpuStorage>>,
-    extracted: Option<Res<crate::render::gpu_particles::WorldFireParticleFrame>>,
+    extracted: Option<Res<crate::render::fire_vfx::WorldFireParticleFrame>>,
     mut draw: ResMut<WorldFireParticleDrawDispatch>,
     mut metrics: ResMut<GpuRepresentationMetrics>,
 ) {
@@ -411,71 +447,72 @@ fn record_world_fire_particle_draw_dispatch(
     metrics.record_dispatch_count(draw.dispatch_count);
 }
 
-impl render_graph::Node for WorldFireParticleDrawNode {
-    fn update(&mut self, world: &mut World) {
-        if self.ready {
-            return;
-        }
-        let pipeline = world.resource::<WorldFireParticleDrawPipeline>();
-        let cache = world.resource::<PipelineCache>();
-        if matches!(
-            cache.get_compute_pipeline_state(pipeline.pipeline),
-            CachedPipelineState::Ok(_)
-        ) {
-            self.ready = true;
-        }
+fn ensure_world_fire_particle_draw_pipeline_ready(
+    pipeline: Option<Res<WorldFireParticleDrawPipeline>>,
+    cache: Res<PipelineCache>,
+    mut ready: ResMut<WorldFireParticleDrawPassReady>,
+) {
+    if ready.ready {
+        return;
     }
+    let Some(pipeline) = pipeline else {
+        return;
+    };
+    if matches!(
+        cache.get_compute_pipeline_state(pipeline.pipeline),
+        CachedPipelineState::Ok(_)
+    ) {
+        ready.ready = true;
+    }
+}
 
-    fn run(
-        &self,
-        _ctx: &mut render_graph::RenderGraphContext,
-        render_ctx: &mut RenderContext,
-        world: &World,
-    ) -> Result<(), render_graph::NodeRunError> {
-        if !self.ready {
-            return Ok(());
-        }
-        let draw = world.resource::<WorldFireParticleDrawDispatch>();
-        if draw.dispatch_count == 0 {
-            return Ok(());
-        }
-        let Some(uniform_gpu) = world.get_resource::<WorldFireParticleDrawUniformGpu>() else {
-            return Ok(());
-        };
-        let Some(uniform_bg) = uniform_gpu.bind_group.as_ref() else {
-            return Ok(());
-        };
-        let bind_registry = world.resource::<GPUBindGroupRegistry>();
-        let Some(instance_entry) = bind_registry.get(WORLD_FIRE_PARTICLE_DRAW_BIND_GROUP) else {
-            return Ok(());
-        };
-        let Some(expanded_entry) = bind_registry.get(WORLD_FIRE_PARTICLE_EXPANDED_BIND_GROUP) else {
-            return Ok(());
-        };
-        let Some(spark_entry) = bind_registry.get(WORLD_FIRE_PARTICLE_SPARK_BIND_GROUP) else {
-            return Ok(());
-        };
-        let pipeline = world.resource::<WorldFireParticleDrawPipeline>();
-        let cache = world.resource::<PipelineCache>();
-        let pl = cache
-            .get_compute_pipeline(pipeline.pipeline)
-            .expect("world fire particle draw pipeline must be ready");
-        let mut pass = render_ctx
-            .command_encoder()
-            .begin_compute_pass(&ComputePassDescriptor::default());
-        pass.set_pipeline(pl);
-        pass.set_bind_group(0, uniform_bg, &[]);
-        pass.set_bind_group(1, &instance_entry.bind_group, &[]);
-        pass.set_bind_group(2, &expanded_entry.bind_group, &[]);
-        pass.set_bind_group(3, &spark_entry.bind_group, &[]);
-        pass.dispatch_workgroups(draw.dispatch_count, 1, 1);
-        Ok(())
+fn world_fire_particle_draw_pass(
+    world: &World,
+    mut ctx: RenderContext,
+    ready: Res<WorldFireParticleDrawPassReady>,
+) {
+    if !ready.ready {
+        return;
     }
+    let draw = world.resource::<WorldFireParticleDrawDispatch>();
+    if draw.dispatch_count == 0 {
+        return;
+    }
+    let Some(uniform_gpu) = world.get_resource::<WorldFireParticleDrawUniformGpu>() else {
+        return;
+    };
+    let Some(uniform_bg) = uniform_gpu.bind_group.as_ref() else {
+        return;
+    };
+    let bind_registry = world.resource::<GPUBindGroupRegistry>();
+    let Some(instance_entry) = bind_registry.get(WORLD_FIRE_PARTICLE_DRAW_BIND_GROUP) else {
+        return;
+    };
+    let Some(expanded_entry) = bind_registry.get(WORLD_FIRE_PARTICLE_EXPANDED_BIND_GROUP) else {
+        return;
+    };
+    let Some(spark_entry) = bind_registry.get(WORLD_FIRE_PARTICLE_SPARK_BIND_GROUP) else {
+        return;
+    };
+    let pipeline = world.resource::<WorldFireParticleDrawPipeline>();
+    let cache = world.resource::<PipelineCache>();
+    let pl = cache
+        .get_compute_pipeline(pipeline.pipeline)
+        .expect("world fire particle draw pipeline must be ready");
+    let mut pass = ctx
+        .command_encoder()
+        .begin_compute_pass(&ComputePassDescriptor::default());
+    pass.set_pipeline(pl);
+    pass.set_bind_group(0, uniform_bg, &[]);
+    pass.set_bind_group(1, &instance_entry.bind_group, &[]);
+    pass.set_bind_group(2, &expanded_entry.bind_group, &[]);
+    pass.set_bind_group(3, &spark_entry.bind_group, &[]);
+    pass.dispatch_workgroups(draw.dispatch_count, 1, 1);
 }
 
 pub fn sync_particle_draw_dispatch_from_policy(
     policy: Res<RepresentationResult>,
-    particles: Res<crate::render::gpu_particles::WorldFireParticleFrame>,
+    particles: Res<crate::render::fire_vfx::WorldFireParticleFrame>,
     mut draw: ResMut<WorldFireParticleDrawDispatch>,
     mut metrics: ResMut<GpuRepresentationMetrics>,
 ) {
@@ -521,8 +558,8 @@ mod tests {
         let mut app = App::new();
         app.init_resource::<WorldFireParticleDrawDispatch>();
         app.init_resource::<GpuRepresentationMetrics>();
-        app.init_resource::<crate::render::gpu_particles::WorldFireParticleFrame>();
-        let mut particles = crate::render::gpu_particles::WorldFireParticleFrame::default();
+        app.init_resource::<crate::render::fire_vfx::WorldFireParticleFrame>();
+        let mut particles = crate::render::fire_vfx::WorldFireParticleFrame::default();
         particles.instances.resize(8, Default::default());
         app.insert_resource(particles);
         let mut policy = RepresentationResult::default();
@@ -541,7 +578,7 @@ mod tests {
         let mut app = App::new();
         app.init_resource::<WorldFireParticleDrawDispatch>();
         app.init_resource::<GpuRepresentationMetrics>();
-        app.init_resource::<crate::render::gpu_particles::WorldFireParticleFrame>();
+        app.init_resource::<crate::render::fire_vfx::WorldFireParticleFrame>();
         app.insert_resource(RepresentationResult {
             active_band: RepresentationBand::Strategic,
             gpu_budget: GpuBudgetPolicy {
@@ -577,6 +614,22 @@ mod tests {
         } else {
             assert_eq!(uniforms.spark_sim_enabled, 0.0);
         }
+    }
+
+    #[test]
+    fn draw_uniforms_split_into_system_and_fire_extension() {
+        let u = WorldFireParticleDrawUniforms {
+            instance_count: 4,
+            max_instances: 64,
+            time_secs: 1.5,
+            camera_zoom: 0.8,
+            zoom_alpha: 0.72,
+            spark_sim_enabled: 1.0,
+        };
+        let sys = u.particle_system();
+        assert_eq!(sys.instance_count, 4);
+        assert_eq!(sys.zoom_alpha, 0.72);
+        assert_eq!(u.fire_extension().spark_sim_enabled, 1.0);
     }
 
     #[test]

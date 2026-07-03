@@ -223,13 +223,19 @@ pub use site::{
     ZoneEmitter,
 };
 pub use settlement::{
-    construction_organic_growth_001_witness_green, set_p5_002_block_assignment_witness_green,
+    build_city_g1_c1_001_witness_body, build_city_g1_c2_001_witness_body,
+    build_city_g1_c4_001_witness_body, building_grammar_seed_for_site,
+    city_g1_c1_001_block_archetype_witness_green, city_g1_c2_001_block_frame_witness_green,
+    city_g1_c4_001_seed_chain_witness_green, construction_organic_growth_001_witness_green,
+    refresh_city_g1_c1_001_block_archetype_witness, refresh_city_g1_c2_001_block_frame_witness,
+    refresh_city_g1_c4_001_seed_chain_witness, set_p5_002_block_assignment_witness_green,
     assign_block_for_tile, register_site_on_commit, AutoBuildPolicy, AutoBuildPolicyBook,
-    BlockBook, BlockId, BlockRecord, BuildingUsage, DevelopmentPressure, DevelopmentPressureBook,
-    DistrictBook, DistrictId, DistrictMetrics, DistrictMetricsBook, DistrictRecord,
-    GrowthActorLayer, GrowthProposal, GrowthProposalGhostState, GrowthProposalQueue,
-    GrowthReasonCode, MarketSaturation, MarketSaturationBook, SettlementPlugin, TownBook,
-    TownId, TownRecord, ZoningClass,
+    BlockArchetype, BlockBook, BlockFrame, BlockFrameBook, BlockId, BlockRecord, BlockScore,
+    BuildingUsage, DEFAULT_WORLD_SEED, DevelopmentPressure, DevelopmentPressureBook, DistrictBook,
+    DistrictId, DistrictMetrics, DistrictMetricsBook, DistrictRecord, GrowthActorLayer,
+    GrowthProposal, GrowthProposalGhostState, GrowthProposalQueue, GrowthReasonCode,
+    MarketSaturation, MarketSaturationBook, SettlementPlugin, StreetSide, TownBook, TownId,
+    TownRecord, ZoningClass,
 };
 pub use hybrid_brain::{
     apply_agent_intent, agent_decision_score, agent_decision_score_with_world, control_variance,

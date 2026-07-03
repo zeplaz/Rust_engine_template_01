@@ -4,10 +4,12 @@
     "program_id": "APS-PRESENCE-CORRECTION-001",
     "date": "2026-06-18",
     "priority": "P1",
-    "status": "OPEN",
+    "status": "CLOSED",
+    "closed_date": "2026-07-03",
+    "close_witness": "debug_runs/aps_presence_operator_attestation_live.json",
     "routing": "src/dev/planner_routing_aps_presence_v1.md",
     "audit": "src/dev/design_aps_default_presence_audit_v1.md",
-    "rule": "Presence truth before new APS UI — brief/coverage/parity must agree; live tier witnesses must not use G0 fixture",
+    "rule": "Presence truth before new APS UI \u2014 brief/coverage/parity must agree; live tier witnesses must not use G0 fixture",
     "dependency_order": [
       "APS-GUARD-BRIEF-PARITY-001",
       "APS-GRAM-TIER-GATES-LIVE-001",
@@ -19,9 +21,9 @@
     "wit_hon": "validate-report witness_honesty debug_runs/aps_session_presence_live.json --compress 3"
   },
   "dispatch_now": {
-    "coder-mcp": "done — operator OVR-APS-PRESENCE-OPERATOR-001",
+    "coder-mcp": "done — APS-PRESENCE + G4 closed 2026-07-03; next: CITY-G0 (coder_a/b) or blocked UIUX rows",
     "planner": "idle — PLAN-APS-PRESENCE-PLAN-EDIT-001 done 2026-06-21",
-    "operator": "OVR-APS-PRESENCE-OPERATOR-001"
+    "operator": "done — OVR-APS-PRESENCE-OPERATOR-001 closed 2026-07-03"
   },
   "drain": [
     {
@@ -31,7 +33,7 @@
       "status": "done",
       "priority": "P0",
       "owner": "coder-mcp",
-      "goal": "Single pilot-count authority for grammar_set_brief · building_set_coverage · grammar_pilot_parity",
+      "goal": "Single pilot-count authority for grammar_set_brief \u00b7 building_set_coverage \u00b7 grammar_pilot_parity",
       "territory": "tools/mcp/python/rust_engine_mcp/grammar_build_set.py",
       "acceptance": [
         "grammar_set_brief pilot count == building_set_coverage pilot count == grammar_pilot_parity pilot count",
@@ -49,7 +51,7 @@
         "APS-GRAM-TIER-GATES-LIVE-001",
         "DES-APS-SESSION-DUMP-001"
       ],
-      "routing_ref": "src/dev/planner_routing_aps_presence_v1.md § Queue seeds"
+      "routing_ref": "src/dev/planner_routing_aps_presence_v1.md \u00a7 Queue seeds"
     },
     {
       "seq": 2,
@@ -84,7 +86,7 @@
       "unblocks": [
         "OVR-APS-PRESENCE-OPERATOR-001"
       ],
-      "routing_ref": "src/dev/design_aps_default_presence_audit_v1.md §4.4"
+      "routing_ref": "src/dev/design_aps_default_presence_audit_v1.md \u00a74.4"
     },
     {
       "seq": 3,
@@ -103,7 +105,7 @@
       ],
       "acceptance": [
         "debug_runs/aps_session_presence_live.json written by one CLI command",
-        "ui_presence.tier must equal grammar_set_tier.tier — else WIT-HON fail",
+        "ui_presence.tier must equal grammar_set_tier.tier \u2014 else WIT-HON fail",
         "Bundle includes grammar_set_tier, grammar_set_brief, g4_guards, ui_presence, expansion block"
       ],
       "verify": [
@@ -111,7 +113,7 @@
         "validate-report witness_honesty debug_runs/aps_session_presence_live.json --compress 3"
       ],
       "witness": "debug_runs/aps_session_presence_live.json",
-      "schema_ref": "src/dev/design_aps_default_presence_audit_v1.md §4.3",
+      "schema_ref": "src/dev/design_aps_default_presence_audit_v1.md \u00a74.3",
       "parallel_ok": [
         "APS-GRAM-TIER-GATES-LIVE-001"
       ],
@@ -123,14 +125,14 @@
       "seq": 4,
       "phase": "P1",
       "id": "OVR-APS-PRESENCE-OPERATOR-001",
-      "status": "open",
+      "status": "done",
       "priority": "P1",
       "owner": "operator",
       "depends_on": [
         "APS-GRAM-TIER-GATES-LIVE-001",
         "DES-APS-SESSION-DUMP-001"
       ],
-      "goal": "Run §4.2 presence dump before next APS rubric walk; attach 3 JSON paths to HANDOFF",
+      "goal": "Run \u00a74.2 presence dump before next APS rubric walk; attach 3 JSON paths to HANDOFF",
       "commands": [
         "cd C:\\dev\\github\\Rust_engine_template_01",
         "$env:APS_TEST_HEADLESS = \"1\"",
@@ -148,7 +150,9 @@
         "HANDOFF.md updated with 3 witness paths",
         "Operator rubric walk uses live tier (G3), not G0 fixture"
       ],
-      "routing_ref": "src/dev/design_aps_default_presence_audit_v1.md §4.2"
+      "routing_ref": "src/dev/design_aps_default_presence_audit_v1.md \u00a74.2",
+      "note": "operator lease closed; aps_session_presence + presence attestation + eyeball pass",
+      "updated_at": "2026-07-03T16:50:44.227693+00:00"
     },
     {
       "seq": 5,
@@ -163,7 +167,7 @@
       "deliverable": "src/dev/design_aps_assembly_empty_g2_v1.md",
       "acceptance": [
         "G0-G1 label unchanged",
-        "G2+ adds shape-bias tail per audit §1.3",
+        "G2+ adds shape-bias tail per audit \u00a71.3",
         "pytest string match by coder-mcp"
       ],
       "witness": "src/dev/design_aps_assembly_empty_g2_v1.md",
@@ -182,7 +186,7 @@
       "priority": "P0",
       "owner": "planner",
       "completed": "2026-06-21",
-      "goal": "Amend grammar evolution plan docs — G3 example today; split fixture G0 vs live tier witnesses",
+      "goal": "Amend grammar evolution plan docs \u2014 G3 example today; split fixture G0 vs live tier witnesses",
       "deliverables": [
         "src/dev/plan_aps_grammar_evolution_v1.md",
         "src/dev/plan_aps_grammar_evolution_witness_v1.md"
@@ -190,7 +194,7 @@
       "parallel_ok": [
         "APS-GUARD-BRIEF-PARITY-001"
       ],
-      "routing_ref": "src/dev/planner_routing_aps_presence_v1.md § Plan doc edits"
+      "routing_ref": "src/dev/planner_routing_aps_presence_v1.md \u00a7 Plan doc edits"
     }
   ]
 }

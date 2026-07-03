@@ -91,22 +91,35 @@ pub fn refresh_phase6_tail_witnesses() -> bool {
 }
 
 #[must_use]
+fn first_grammar_preset_id() -> Option<String> {
+    crate::construction::PilotCatalog::load_from_disk().first_grammar_arch_dna_preset_id()
+}
+
+#[must_use]
 fn build_grammar_program_witness_green() -> bool {
-    crate::construction::procedural::program_graph_stub_for_preset("logistics_rail_warehouse_v0")
+    let Some(preset_id) = first_grammar_preset_id() else {
+        return false;
+    };
+    crate::construction::procedural::program_graph_stub_for_preset(&preset_id)
         .is_some_and(|g| !g.site_zones.is_empty())
 }
 
 #[must_use]
 fn build_grammar_site_zone_witness_green() -> bool {
     use crate::construction::pilot_catalog::site_zone_grid_for_arch_dna_preset;
-    site_zone_grid_for_arch_dna_preset("logistics_rail_warehouse_v0")
+    let Some(preset_id) = first_grammar_preset_id() else {
+        return false;
+    };
+    site_zone_grid_for_arch_dna_preset(&preset_id)
         .is_some_and(|g| crate::construction::site_zone_grid::site_zone_occupancy_witness_green(&g))
 }
 
 #[must_use]
 fn build_grammar_beta_world_witness_green() -> bool {
-    let Ok(preset) = crate::construction::procedural::load_logistics_rail_warehouse_v0_preset()
-    else {
+    let Some(preset_id) = first_grammar_preset_id() else {
+        return false;
+    };
+    let Ok(preset) = crate::construction::procedural::load_preset_for_id(&preset_id) else {
         return false;
     };
     let biased =

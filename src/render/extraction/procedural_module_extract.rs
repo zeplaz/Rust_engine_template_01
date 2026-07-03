@@ -3,6 +3,7 @@
 use std::collections::{HashMap, HashSet};
 
 use bevy::prelude::*;
+use bevy::world_serialization::WorldAsset;
 
 use crate::construction::procedural::{ProceduralModuleRegistry, StylePackRegistry};
 use crate::gui::RepresentationResult;
@@ -10,7 +11,7 @@ use crate::gui::RepresentationResult;
 /// `AssetServer` scene handles keyed by `module_id` (from `_module_index.ron`).
 #[derive(Resource, Debug, Default)]
 pub struct ProceduralModuleSceneCatalog {
-    pub scenes: HashMap<String, Handle<Scene>>,
+    pub scenes: HashMap<String, Handle<WorldAsset>>,
     pub load_started: bool,
 }
 
@@ -82,7 +83,7 @@ pub fn scene_for_module<'a>(
     catalog: &'a ProceduralModuleSceneCatalog,
     registry: &ProceduralModuleRegistry,
     module_id: &str,
-) -> Option<&'a Handle<Scene>> {
+) -> Option<&'a Handle<WorldAsset>> {
     let canonical = registry.resolve_canonical_module_id(module_id);
     if let Some(handle) = catalog.scenes.get(canonical) {
         return Some(handle);

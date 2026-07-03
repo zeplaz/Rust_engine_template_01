@@ -43,8 +43,54 @@ pub const CONTEXT_RAIL_W_PX: f32 = 48.0;
 pub const BUILD_RAIL_W_PX: f32 = 52.0;
 /// Gap between columns on `CommandLeftStackOverlay`.
 pub const COMMAND_LEFT_STACK_COLUMN_GAP_PX: f32 = 6.0;
+/// Build rail container + slot geometry (must match `in_game_hud` spawn).
+pub const BUILD_RAIL_CONTAINER_PAD_PX: f32 = 4.0;
+pub const BUILD_RAIL_SLOT_MIN_H_PX: f32 = 32.0;
+pub const BUILD_RAIL_SLOT_PAD_Y_PX: f32 = 3.0;
+pub const BUILD_RAIL_ROW_GAP_PX: f32 = 4.0;
+/// Gap between build rail and egui picker sheets.
+pub const BUILD_PICKER_SHEET_GAP_PX: f32 = 8.0;
 /// Expanded narrative stack body width (`LeftContextStackBody`).
 pub const LEFT_CONTEXT_STACK_BODY_W_PX: f32 = 400.0;
+
+#[must_use]
+pub fn build_rail_slot_step_px() -> f32 {
+    BUILD_RAIL_SLOT_MIN_H_PX + BUILD_RAIL_SLOT_PAD_Y_PX * 2.0 + BUILD_RAIL_ROW_GAP_PX
+}
+
+/// Screen anchor for an egui sheet beside the Bevy build rail (logical px).
+#[must_use]
+pub fn build_rail_slot_anchor_xy(slot: ToolContext, left_stack_collapsed: bool) -> egui::Pos2 {
+    use crate::gui::in_game_hud::{CENTER_ROW_EDGE_PAD_PX, SIMULATION_MAP_VIEWPORT_TOP_CHROME_PX};
+
+    let idx = match slot {
+        ToolContext::Roads => 0,
+        ToolContext::Rail => 1,
+        ToolContext::Utilities => 2,
+        ToolContext::Military => 3,
+        ToolContext::Industry => 4,
+        ToolContext::Ecology => 5,
+        ToolContext::Civil => 6,
+        ToolContext::None => 0,
+    };
+    let x = CENTER_ROW_EDGE_PAD_PX
+        + if left_stack_collapsed {
+            CONTEXT_RAIL_W_PX + COMMAND_LEFT_STACK_COLUMN_GAP_PX + BUILD_RAIL_W_PX
+        } else {
+            BUILD_RAIL_W_PX
+        }
+        + BUILD_PICKER_SHEET_GAP_PX;
+    let y = SIMULATION_MAP_VIEWPORT_TOP_CHROME_PX
+        + BUILD_RAIL_CONTAINER_PAD_PX
+        + idx as f32 * build_rail_slot_step_px();
+    egui::pos2(x, y)
+}
+
+/// Legacy Y-only helper — prefer [`build_rail_slot_anchor_xy`].
+#[must_use]
+pub fn build_rail_slot_anchor_y(slot: ToolContext) -> f32 {
+    build_rail_slot_anchor_xy(slot, true).y
+}
 
 /// Signed Phase 2C layout option (mock § P4).
 pub const PHASE_2C_LAYOUT_OPTION: &str = "2C-B";
@@ -61,13 +107,13 @@ pub fn command_left_stack_footprint_px(collapsed: bool) -> f32 {
 
 /// Screen rect for build picker sheet (pointer gate hit test).
 #[must_use]
-pub fn sim_build_rail_submenu_block_rect() -> egui::Rect {
+pub fn sim_build_rail_submenu_block_rect(
+    picker: &crate::gui::hud::sim_build_picker_sheet::SimBuildPickerState,
+    left_stack_collapsed: bool,
+) -> egui::Rect {
     crate::gui::hud::sim_build_picker_sheet::sim_build_picker_sheet_rect(
-        &crate::gui::hud::sim_build_picker_sheet::SimBuildPickerState {
-            open: true,
-            category: crate::gui::hud::sim_build_picker_sheet::BuildPickerCategory::Industry,
-            anchor_slot: crate::construction::ToolContext::Industry,
-        },
+        picker,
+        left_stack_collapsed,
     )
 }
 
@@ -863,6 +909,7 @@ impl Plugin for SimulationShellPhase2Plugin {
                     super::simulation_pointer_gate::finalize_simulation_map_pointer_gate_egui_system,
                     sync_minimap_chrome_root_system,
                     sync_minimap_chrome_layout_system,
+                    super::minimap_bevy_interaction::draw_simulation_minimap_topology_legend_egui_system,
                 )
                     .chain()
                     .after(super::hud_root_tick::hud_product_shell_egui_root)

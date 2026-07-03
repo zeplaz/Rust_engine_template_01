@@ -6,16 +6,16 @@ use bevy::prelude::*;
 use bevy::render::extract_component::ExtractComponentPlugin;
 use bevy::render::extract_resource::ExtractResourcePlugin;
 
-use super::camera_focus_debug::{fire_chunk_coords_above_visual_eps, CameraFocusDebug, DEBUG_CHUNK_SPACING_WORLD};
-use super::map_camera::{in_simulation_or_editor_map, MainWorldCamera, MapCameraDesired};
+use super::camera_focus_debug::{CameraFocusDebug, DEBUG_CHUNK_SPACING_WORLD};
+use super::map_camera::{in_simulation_or_editor_map, MainWorldCamera, MapCameraDesiredRes};
 use super::{ViewAuthoritySystemSet, ViewId, ViewManager};
 use super::tile_debug_types::{
     FireDebugOverride, TileDebugDrawGlobals, TileDebugInstance, TileDebugInstanceMap, TileDebugRenderHost,
     TileDebugViewId, TileGpuDebugSettings, tile_flags,
 };
-use crate::engine::BaseState;
 use crate::render::{tactical_fire_visual, FireVisualFramesByView};
-use crate::terrain::generation::Chunk;
+use crate::terrain::generation::{chunk_world_center, Chunk, ChunkCellMatrix};
+use crate::render::sim_visual_extract::FIRE_VISUAL_ACTIVE_HEAT_EPS;
 
 pub struct GpuTileDebugPlugin;
 
@@ -33,18 +33,17 @@ impl Plugin for GpuTileDebugPlugin {
         crate::render::register_tile_debug_instance_storage_upload(app);
         crate::render::register_tile_debug_instanced_draw(app);
         app.add_systems(
-            OnEnter(BaseState::Simulation),
-            enable_tile_gpu_instanced_authoritative,
+            Update,
+            build_tile_debug_instances
+                .after(crate::gui::camera_focus_debug::update_camera_focus_debug)
+                .after(ViewAuthoritySystemSet::SyncViewManager)
+                .run_if(in_simulation_or_editor_map),
         )
         .add_systems(
-            Update,
-            (
-                build_tile_debug_instances
-                    .after(crate::gui::camera_focus_debug::update_camera_focus_debug)
-                    .after(ViewAuthoritySystemSet::SyncViewManager),
-                sync_tile_debug_draw_globals.after(build_tile_debug_instances),
-            )
-                .chain()
+            PostUpdate,
+            sync_tile_debug_draw_globals
+                .after(crate::construction::footprint_tile_instances::push_footprint_tile_instances)
+                .after(crate::construction::site_phase_tile_instances::push_site_phase_tile_instances)
                 .run_if(in_simulation_or_editor_map),
         );
     }
@@ -60,18 +59,13 @@ pub fn triage_gpu_tile_wgsl_001_green() -> bool {
             .unwrap_or(false)
 }
 
-/// IN-C06: simulation uses GPU instanced tile debug; gizmo path only when explicitly disabled.
-fn enable_tile_gpu_instanced_authoritative(mut settings: ResMut<TileGpuDebugSettings>) {
-    settings.use_batched_mesh_overlay = true;
-}
-
 pub fn build_tile_debug_instances(
     settings: Res<TileGpuDebugSettings>,
     fire_override: Res<FireDebugOverride>,
     debug: Res<CameraFocusDebug>,
     view_manager: Res<ViewManager>,
-    desired: Res<MapCameraDesired>,
-    chunks: Query<&Chunk>,
+    desired: Res<MapCameraDesiredRes>,
+    chunks: Query<(&Chunk, &ChunkCellMatrix)>,
     fire_by_view: Res<FireVisualFramesByView>,
     mut map: ResMut<TileDebugInstanceMap>,
 ) {
@@ -80,16 +74,21 @@ pub fn build_tile_debug_instances(
         return;
     }
     let mut chunk_set = std::collections::HashSet::new();
-    for c in &chunks {
+    let mut chunk_sizes: std::collections::HashMap<bevy::math::IVec2, bevy::math::UVec2> =
+        std::collections::HashMap::new();
+    for (c, m) in &chunks {
         chunk_set.insert(c.coord);
+        chunk_sizes.insert(c.coord, m.size);
     }
     let fire = tactical_fire_visual(fire_by_view.as_ref());
-    let fire_chunks = fire_chunk_coords_above_visual_eps(fire);
+    let default_size = chunk_sizes
+        .values()
+        .next()
+        .copied()
+        .unwrap_or(bevy::math::UVec2::splat(32));
 
     let r = debug.overlay_radius_chunks.clamp(1, 12);
     let center = debug.focus_chunk;
-    let half = DEBUG_CHUNK_SPACING_WORLD * 0.45;
-    let base = half * 2.0;
     let cam_scale = view_manager
         .view(ViewId::WorldMain)
         .map(|v| v.camera.zoom.abs().max(0.001))
@@ -114,49 +113,67 @@ pub fn build_tile_debug_instances(
                 break 'outer;
             }
             let tile = center + IVec2::new(dx, dy);
-            let pos = Vec2::new(
-                tile.x as f32 * DEBUG_CHUNK_SPACING_WORLD + DEBUG_CHUNK_SPACING_WORLD * 0.5,
-                tile.y as f32 * DEBUG_CHUNK_SPACING_WORLD + DEBUG_CHUNK_SPACING_WORLD * 0.5,
-            );
+            let size = chunk_sizes.get(&tile).copied().unwrap_or(default_size);
+            let pos = chunk_world_center(tile, size);
             let is_focus = tile == center;
-            let mut size = base * lod_size_mul * if is_focus { 1.12 } else { 1.0 };
+            let mut extent = (size.x.max(size.y) as f32) * lod_size_mul;
+            if is_focus {
+                extent *= 1.08;
+            }
             if debug.screen_stabilize_lod_overlay {
-                size /= cam_scale;
-                size = size.clamp(6.0, DEBUG_CHUNK_SPACING_WORLD * 1.25);
+                extent /= cam_scale;
+                extent = extent.clamp(6.0, DEBUG_CHUNK_SPACING_WORLD * 1.25);
             }
             let mut flags = 0u32;
             if is_focus {
                 flags |= tile_flags::FOCUS;
-            }
-            if fire_chunks.contains(&tile) || fire_override.force_visible {
-                flags |= tile_flags::FIRE;
             }
             if chunk_set.contains(&tile) {
                 flags |= tile_flags::TERRAIN;
             }
             out.push(TileDebugInstance {
                 world_pos: pos.to_array(),
-                size,
+                size: extent,
                 lod: lod_u32,
                 flags,
             });
         }
     }
 
+    for row in &fire.instances {
+        if out.len() >= settings.max_instances {
+            break;
+        }
+        if row.heat() < FIRE_VISUAL_ACTIVE_HEAT_EPS && !fire_override.force_visible {
+            continue;
+        }
+        let pos = Vec2::new(row.world_xyz_radius.x, row.world_xyz_radius.y);
+        let heat = row.heat().clamp(0.0, 1.0);
+        let mut marker = 3.0 + heat * 5.0;
+        if debug.screen_stabilize_lod_overlay {
+            marker /= cam_scale;
+            marker = marker.clamp(2.0, 12.0);
+        }
+        out.push(TileDebugInstance {
+            world_pos: pos.to_array(),
+            size: marker,
+            lod: lod_u32,
+            flags: tile_flags::FIRE,
+        });
+    }
+
     map.per_view.insert(TileDebugViewId::WorldMain, out);
 }
 
-fn sync_tile_debug_draw_globals(
+pub fn sync_tile_debug_draw_globals(
     mut globals: ResMut<TileDebugDrawGlobals>,
     settings: Res<TileGpuDebugSettings>,
     debug: Res<CameraFocusDebug>,
-    footprint: Option<Res<crate::construction::FootprintTileWitness>>,
     cam_q: Query<(&Camera, &GlobalTransform), With<MainWorldCamera>>,
     map: Res<TileDebugInstanceMap>,
 ) {
     *globals = TileDebugDrawGlobals::default();
-    let footprint_active = footprint.as_deref().is_some_and(|w| w.gpu_path_active);
-    if !footprint_active && (!settings.use_batched_mesh_overlay || !debug.enabled) {
+    if !settings.use_batched_mesh_overlay || !debug.enabled {
         return;
     }
     let Ok((camera, gt)) = cam_q.single() else {

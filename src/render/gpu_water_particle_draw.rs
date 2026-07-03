@@ -4,12 +4,11 @@ use std::borrow::Cow;
 
 use bevy::prelude::*;
 use bevy::render::{
-    render_graph::{self, RenderGraph, RenderLabel},
     render_resource::{
         binding_types::uniform_buffer,
         *,
     },
-    renderer::{RenderContext, RenderDevice, RenderQueue},
+    renderer::{RenderContext, RenderDevice, RenderGraph, RenderGraphSystems, RenderQueue},
     Render, RenderApp, RenderStartup, RenderSystems,
 };
 
@@ -89,17 +88,12 @@ pub struct WorldWaterParticleGpuStorage {
     pub expanded_vertex_count: u32,
 }
 
-#[derive(Debug, Hash, PartialEq, Eq, Clone, RenderLabel)]
-pub(crate) struct WorldWaterParticleDrawLabel;
+#[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
+pub(crate) struct WorldWaterParticleDrawPassSet;
 
-struct WorldWaterParticleDrawNode {
+#[derive(Resource, Default)]
+struct WorldWaterParticleDrawPassReady {
     ready: bool,
-}
-
-impl Default for WorldWaterParticleDrawNode {
-    fn default() -> Self {
-        Self { ready: false }
-    }
 }
 
 pub fn register_world_water_particle_draw(app: &mut App) {
@@ -115,6 +109,7 @@ pub fn register_world_water_particle_draw(app: &mut App) {
         .init_resource::<WorldWaterParticleDrawUniformGpu>()
         .init_resource::<WorldWaterParticleDrawDispatch>()
         .init_resource::<WorldWaterParticleGpuStorage>()
+        .init_resource::<WorldWaterParticleDrawPassReady>()
         .add_systems(RenderStartup, init_world_water_particle_draw_pipeline)
         .add_systems(
             Render,
@@ -128,14 +123,18 @@ pub fn register_world_water_particle_draw(app: &mut App) {
             )
                 .chain()
                 .in_set(RenderSystems::PrepareBindGroups),
+        )
+        .add_systems(
+            RenderGraph,
+            (
+                ensure_world_water_particle_draw_pipeline_ready,
+                world_water_particle_draw_pass
+                    .after(ensure_world_water_particle_draw_pipeline_ready),
+            )
+                .chain()
+                .in_set(RenderGraphSystems::Render)
+                .in_set(WorldWaterParticleDrawPassSet),
         );
-
-    let mut graph = render_app.world_mut().resource_mut::<RenderGraph>();
-    graph.add_node(WorldWaterParticleDrawLabel, WorldWaterParticleDrawNode::default());
-    graph.add_node_edge(
-        WorldWaterParticleDrawLabel,
-        bevy::render::graph::CameraDriverLabel,
-    );
 }
 
 fn init_world_water_particle_draw_pipeline(
@@ -209,7 +208,7 @@ fn prepare_world_water_particle_draw_uniforms(
         .unwrap_or(0);
     uniforms.time_secs = extracted.as_ref().map(|f| f.anim_time_secs).unwrap_or(0.0);
     if let Some(c) = cam.as_deref() {
-        uniforms.camera_zoom = c.camera_zoom;
+        uniforms.camera_zoom = c.zoom_level;
         uniforms.zoom_alpha = c.zoom_alpha;
     }
 }
@@ -368,62 +367,63 @@ fn record_world_water_particle_draw_dispatch(
     };
 }
 
-impl render_graph::Node for WorldWaterParticleDrawNode {
-    fn update(&mut self, world: &mut World) {
-        if self.ready {
-            return;
-        }
-        let pipeline = world.resource::<WorldWaterParticleDrawPipeline>();
-        let cache = world.resource::<PipelineCache>();
-        if matches!(
-            cache.get_compute_pipeline_state(pipeline.pipeline),
-            CachedPipelineState::Ok(_)
-        ) {
-            self.ready = true;
-        }
+fn ensure_world_water_particle_draw_pipeline_ready(
+    pipeline: Option<Res<WorldWaterParticleDrawPipeline>>,
+    cache: Res<PipelineCache>,
+    mut ready: ResMut<WorldWaterParticleDrawPassReady>,
+) {
+    if ready.ready {
+        return;
     }
+    let Some(pipeline) = pipeline else {
+        return;
+    };
+    if matches!(
+        cache.get_compute_pipeline_state(pipeline.pipeline),
+        CachedPipelineState::Ok(_)
+    ) {
+        ready.ready = true;
+    }
+}
 
-    fn run(
-        &self,
-        _ctx: &mut render_graph::RenderGraphContext,
-        render_ctx: &mut RenderContext,
-        world: &World,
-    ) -> Result<(), render_graph::NodeRunError> {
-        if !self.ready {
-            return Ok(());
-        }
-        let draw = world.resource::<WorldWaterParticleDrawDispatch>();
-        if draw.dispatch_count == 0 {
-            return Ok(());
-        }
-        let Some(uniform_gpu) = world.get_resource::<WorldWaterParticleDrawUniformGpu>() else {
-            return Ok(());
-        };
-        let Some(uniform_bg) = uniform_gpu.bind_group.as_ref() else {
-            return Ok(());
-        };
-        let bind_registry = world.resource::<GPUBindGroupRegistry>();
-        let Some(instance_entry) = bind_registry.get(WORLD_WATER_PARTICLE_DRAW_BIND_GROUP) else {
-            return Ok(());
-        };
-        let Some(expanded_entry) = bind_registry.get(WORLD_WATER_PARTICLE_EXPANDED_BIND_GROUP) else {
-            return Ok(());
-        };
-        let pipeline = world.resource::<WorldWaterParticleDrawPipeline>();
-        let cache = world.resource::<PipelineCache>();
-        let pl = cache
-            .get_compute_pipeline(pipeline.pipeline)
-            .expect("water particle expand pipeline");
-        let mut pass = render_ctx
-            .command_encoder()
-            .begin_compute_pass(&ComputePassDescriptor::default());
-        pass.set_pipeline(pl);
-        pass.set_bind_group(0, uniform_bg, &[]);
-        pass.set_bind_group(1, &instance_entry.bind_group, &[]);
-        pass.set_bind_group(2, &expanded_entry.bind_group, &[]);
-        pass.dispatch_workgroups(draw.dispatch_count, 1, 1);
-        Ok(())
+fn world_water_particle_draw_pass(
+    world: &World,
+    mut ctx: RenderContext,
+    ready: Res<WorldWaterParticleDrawPassReady>,
+) {
+    if !ready.ready {
+        return;
     }
+    let draw = world.resource::<WorldWaterParticleDrawDispatch>();
+    if draw.dispatch_count == 0 {
+        return;
+    }
+    let Some(uniform_gpu) = world.get_resource::<WorldWaterParticleDrawUniformGpu>() else {
+        return;
+    };
+    let Some(uniform_bg) = uniform_gpu.bind_group.as_ref() else {
+        return;
+    };
+    let bind_registry = world.resource::<GPUBindGroupRegistry>();
+    let Some(instance_entry) = bind_registry.get(WORLD_WATER_PARTICLE_DRAW_BIND_GROUP) else {
+        return;
+    };
+    let Some(expanded_entry) = bind_registry.get(WORLD_WATER_PARTICLE_EXPANDED_BIND_GROUP) else {
+        return;
+    };
+    let pipeline = world.resource::<WorldWaterParticleDrawPipeline>();
+    let cache = world.resource::<PipelineCache>();
+    let pl = cache
+        .get_compute_pipeline(pipeline.pipeline)
+        .expect("water particle expand pipeline");
+    let mut pass = ctx
+        .command_encoder()
+        .begin_compute_pass(&ComputePassDescriptor::default());
+    pass.set_pipeline(pl);
+    pass.set_bind_group(0, uniform_bg, &[]);
+    pass.set_bind_group(1, &instance_entry.bind_group, &[]);
+    pass.set_bind_group(2, &expanded_entry.bind_group, &[]);
+    pass.dispatch_workgroups(draw.dispatch_count, 1, 1);
 }
 
 #[cfg(test)]

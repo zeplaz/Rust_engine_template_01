@@ -13,7 +13,7 @@ name = "hanabi_validation"
 path = "src/main.rs"
 
 [dependencies]
-bevy = { version = "0.18", default-features = false, features = [
+bevy = { version = "0.19", default-features = false, features = [
     "bevy_asset",
     "bevy_log",
     "bevy_state",
@@ -24,4 +24,4 @@ bevy = { version = "0.18", default-features = false, features = [
     "bevy_pbr",
     "x11",
 ] }
-bevy_hanabi = { version = "0.18", default-features = false, features = ["3d"] }
+bevy_hanabi = { version = "0.19", default-features = false, features = ["3d"] }
