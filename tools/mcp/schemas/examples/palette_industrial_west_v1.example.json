@@ -1,0 +1,43 @@
+{
+  "schema": "palette_catalog_v1",
+  "version": "1.0.0",
+  "palette_id": "palette_industrial_west_v1",
+  "style_pack": "style_industrial_west",
+  "label": "Industrial west material variations",
+  "_meta": {
+    "teaches": ["palette_variation", "material_slot_remap", "style_pack:style_industrial_west"]
+  },
+  "variations": [
+    {
+      "variation_id": "iw_rust_clean",
+      "label": "Clean corrugated hall",
+      "material_slots": {
+        "wall_primary": "mat_steel_corrugated_clean",
+        "trim": "mat_galvanized",
+        "roof": "mat_metal_roof_grey",
+        "door": "mat_rollup_door_grey"
+      }
+    },
+    {
+      "variation_id": "iw_rust_weathered",
+      "label": "Weathered working yard",
+      "material_slots": {
+        "wall_primary": "mat_steel_corrugated_rust",
+        "trim": "mat_galvanized_weathered",
+        "roof": "mat_metal_roof_dark",
+        "door": "mat_rollup_door_rust"
+      },
+      "variant_tags": ["weathering", "industrial_age"]
+    },
+    {
+      "variation_id": "iw_painted_blue",
+      "label": "Painted utility hall",
+      "material_slots": {
+        "wall_primary": "mat_metal_painted_blue",
+        "trim": "mat_galvanized",
+        "roof": "mat_metal_roof_white",
+        "door": "mat_rollup_door_blue"
+      }
+    }
+  ]
+}

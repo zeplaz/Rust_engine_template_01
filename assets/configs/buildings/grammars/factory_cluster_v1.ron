@@ -15,10 +15,10 @@
     ),
     massing: (
         strategies: [
-            (id: "double_hall", weight: 40, width_depth_ratio: 1.35, footprint_mode: "rect"),
-            (id: "long_hall", weight: 30, width_depth_ratio: 1.85, footprint_mode: "rect"),
-            (id: "yard_complex", weight: 20, footprint_mode: "yard_interior"),
-            (id: "l_shape", weight: 10, footprint_mode: "l_shape"),
+            (id: "double_hall", weight: 40, width_depth_ratio: 1.35, footprint_mode: rect),
+            (id: "long_hall", weight: 30, width_depth_ratio: 1.85, footprint_mode: rect),
+            (id: "yard_complex", weight: 20, footprint_mode: yard_interior),
+            (id: "l_shape", weight: 10, footprint_mode: l_shape),
         ],
     ),
     roof: (

@@ -58,7 +58,7 @@
     "relative_path": "debug_runs/sim_effect_spine_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "sim_effect_spine_live_proof",
-    "written_at_epoch_secs": 1783027978
+    "written_at_epoch_secs": 1783111825
   },
   "faction_react_hook_rows": 1,
   "faction_react_wired": true,
@@ -66,7 +66,7 @@
     "causal_chain_depth_max": 2,
     "dedupe_ok": false,
     "dedupe_rejected": 0,
-    "drain_us": 4,
+    "drain_us": 11,
     "effect_rows": 3,
     "ember_dispatched": 3,
     "hydro_dispatched": 0,

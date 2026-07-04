@@ -14,7 +14,14 @@ from module_viewer.pipeline_runner import find_latest_atlas_in
 from rust_engine_mcp.paths import repo_root
 
 from .aps_paned import add_pane, horizontal_paned
-from .aps_preview_state import apply_preview_photo, configure_preview_label, image_is_near_black, make_fidelity_chip
+from .preview_state_display import (
+    apply_preview_photo,
+    configure_preview_label,
+    image_is_near_black,
+    make_fidelity_chip,
+    set_preview_status,
+    show_image_file_thumbnail,
+)
 from .aps_scroll import attach_wheel_area, bind_debounced_scrollregion, canvas_xscroll, canvas_yscroll, text_yscroll
 from .aps_theme import (
     COLOR_INPUT_BG,
@@ -349,29 +356,11 @@ class AtlasPreviewPanel(ttk.LabelFrame):
         self._cell_meta_var.set(" · ".join(parts))
 
     def _show_image(self, label: tk.Label, key: str, path: Path, *, max_size: int) -> None:
-        try:
-            img = Image.open(path).convert("RGB")
-            if image_is_near_black(img):
-                configure_preview_label(
-                    label,
-                    "error",
-                    detail="Cell image blank",
-                    hint=path.name[:16],
-                    width=max_size,
-                    height=max_size,
-                )
-                return
-            img.thumbnail((max_size, max_size), Image.Resampling.LANCZOS)
-            photo = ImageTk.PhotoImage(img)
-            self._photos[key] = photo
-            apply_preview_photo(label, photo)
-        except Exception as exc:  # noqa: BLE001
-            configure_preview_label(
-                label,
-                "error",
-                detail="Thumb failed",
-                hint=path.name[:16],
-                width=max_size,
-                height=max_size,
-            )
-            self._on_log(f"thumb fail {path.name}: {exc}")
+        show_image_file_thumbnail(
+            label,
+            path,
+            max_size=max_size,
+            on_log=self._on_log,
+            photos_cache=self._photos,
+            cache_key=key,
+        )

@@ -1088,6 +1088,32 @@ mod tests {
     use bevy::MinimalPlugins;
 
     #[test]
+    fn world_repr_fingerprint_same_except_stamp() {
+        let stamp_a = SimStepStamp::new(1, 0);
+        let stamp_b = SimStepStamp::new(2, 1_000);
+        let base = WorldReprInputFingerprint {
+            stamp: stamp_a,
+            focus_chunk: IVec2::new(3, 4),
+            interest_radius_chunks: 12,
+            cam_xy_q: IVec2::new(10, 20),
+            zoom_q: 42,
+            world_extent: Some((IVec2::ZERO, IVec2::new(9, 9))),
+            zones_len: 1,
+            zones_digest: 0xabc,
+            bubbles_len: 0,
+            bubbles_digest: 0,
+            default_band: WorldLodBand::Operational,
+            readability_floor_q: 1,
+            readability_density_q: 2,
+        };
+        let mut advanced = base;
+        advanced.stamp = stamp_b;
+        assert!(base.same_except_stamp(advanced));
+        advanced.focus_chunk = IVec2::new(4, 4);
+        assert!(!base.same_except_stamp(advanced));
+    }
+
+    #[test]
     fn interest_radius_stable_within_zoom_quantum_band() {
         let a = interest_radius_chunks_from_zoom_alpha(quantize_zoom_alpha_for_interest(0.14));
         let b = interest_radius_chunks_from_zoom_alpha(quantize_zoom_alpha_for_interest(0.16));

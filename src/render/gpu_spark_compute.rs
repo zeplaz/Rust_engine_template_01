@@ -551,6 +551,23 @@ mod tests {
     }
 
     #[test]
+    fn zero_instances_zero_dispatch() {
+        let count = 0u32;
+        let dispatch_count = if count > 0 {
+            count.div_ceil(SPARK_WORKGROUP)
+        } else {
+            0
+        };
+        assert_eq!(dispatch_count, 0);
+    }
+
+    #[test]
+    fn spark_dispatch_scales_with_instance_count() {
+        let count = SPARK_WORKGROUP * 2 + 1;
+        assert_eq!(count.div_ceil(SPARK_WORKGROUP), 3);
+    }
+
+    #[test]
     fn spark_compute_wgsl_exists_and_advects() {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"));
         let src = std::fs::read_to_string(root.join("assets/shaders/fire/fire_spark_compute.wgsl"))

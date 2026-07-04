@@ -1,0 +1,24 @@
+{
+  "task_id": "APSR-A4-Q1-001",
+  "gate": "APSR-A4-Q1-001",
+  "green": true,
+  "qc_strip_sample": "Building QC witness: pass \u00b7 1 assembly row(s) \u00b7 threshold 70",
+  "building_quality_witness": "debug_runs/building_quality_live.json",
+  "bq_a1_wired": true,
+  "approve_blocks_on_red_qc": true,
+  "plan_ref": "src/dev/plan_aps_refactor_v1.md#APSR-Q1",
+  "_agent_meta": {
+    "schema": "apsr_a4_q1_live_v1",
+    "profile": "APSR_A4_Q1",
+    "relative_path": "debug_runs/apsr_a4_q1_001_live.json",
+    "source_system": "apsr_a4_q1",
+    "written_at_epoch_secs": 1783118446,
+    "ritual": "BLANG:WIT-HON APSR-A4-Q1-001"
+  },
+  "witness_honesty": {
+    "status": "passed",
+    "error_count": 0,
+    "warning_count": 0,
+    "summary": "witness_honesty debug_runs/apsr_a4_q1_001_live.json: 0 error(s), 0 issue(s)"
+  }
+}

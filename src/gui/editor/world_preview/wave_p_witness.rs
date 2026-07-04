@@ -285,9 +285,12 @@ mod tests {
         app.init_state::<BaseState>();
         app.init_state::<AppState>();
         app.insert_resource(WavePLiveProofState {
-            write_interval: 120,
-            ..Default::default()
+            cadence: crate::dev::runtime_witness::common::WitnessWriteCadence {
+                write_interval: 120,
+                ..Default::default()
+            },
         });
+        app.add_plugins(crate::dev::runtime_witness::LiveProofCadencePlugin);
         app.insert_resource(PreviewPathAuthority::default());
         app.insert_resource(WorldPreviewUiState {
             window_open: true,
@@ -309,13 +312,17 @@ mod tests {
         app.world_mut()
             .resource_mut::<NextState<AppState>>()
             .set(AppState::InGame);
-        app.add_systems(Update, write_wave_p_witness_system);
+        app.add_systems(
+            Update,
+            write_wave_p_witness_system
+                .run_if(crate::dev::runtime_witness::wave_p_live_proof_due),
+        );
         app.update();
         for _ in 0..119 {
             app.update();
         }
         let state = app.world().resource::<WavePLiveProofState>();
-        assert!(state.written, "expected write after 120 Simulation frames");
+        assert!(state.cadence.written, "expected write after 120 Simulation frames");
         let text = std::fs::read_to_string(WAVE_P_LIVE_JSON).expect("witness json");
         let v: serde_json::Value = serde_json::from_str(&text).expect("parse");
         assert!(v["ui_wp_layout_002_green"].as_bool().unwrap_or(false));

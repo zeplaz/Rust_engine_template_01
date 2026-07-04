@@ -60,21 +60,9 @@
     ],
     "relative_path": "debug_runs/stage5_full_app_live.json",
     "schema": "debug_run_envelope_v1",
-    "source_system": "log_e01_and_tactical_vfx_stage5_witness_refresh",
-    "written_at_epoch_secs": 1783105823
+    "source_system": "log_e01_fullapp_upgrade_001_witness_refresh",
+    "written_at_epoch_secs": 1783111897
   },
-  "agent_cleanup_hints": null,
-  "authority_revisions": {
-    "overlay_fields": 3,
-    "preview_viewport_authority": 71,
-    "render_target_registry": 2,
-    "resolved_viewports": 71
-  },
-  "committed_visual_fence": {
-    "fire_sim_time_micros": 29519587,
-    "fire_tick": 121
-  },
-  "diagnostic_captured": true,
   "ecology_active_rows": 17,
   "ecology_rows_source": "live_landscape_program_on_chunk",
   "f2_extract_witness": {
@@ -86,24 +74,6 @@
     "gate": "VEG-FIRE-CORRIDOR-FULLAPP-001",
     "green": true,
     "population_fuel_wired": true
-  },
-  "fire_f2_004_001": {
-    "chunks_with_heat": 64,
-    "fire_inst_readiness_aligned": true,
-    "fire_inst_readiness_metric": true,
-    "fire_instance_buffer_rows": 1,
-    "gate": "FIRE-F2-004-001",
-    "green": true,
-    "heat_mostly_stable": true,
-    "max_heat": 0.18568697571754456,
-    "sim_heat_present": true
-  },
-  "fire_playback": {
-    "active_fire_chunks": 28,
-    "consecutive_frames_with_heat": 84,
-    "held_empty_snapshot_frames": 83,
-    "stable": true,
-    "stable_frame_threshold": 10
   },
   "log_e01_fullapp_upgrade_001": {
     "capture_lane": "lib_fixture",
@@ -130,137 +100,7 @@
     "green": true,
     "logistics_active_rows": 1
   },
-  "map_presentation_stability": {
-    "fit_mode_mismatch": false,
-    "minimap_mismatch": false,
-    "minimap_scale": 1.0,
-    "mismatch_frames": 0,
-    "preview_scale": 1.832226514816284,
-    "world_preview_mismatch": false
-  },
-  "map_view_consumers": {
-    "minimap": {
-      "allocated_rect": null,
-      "aspect_panel": 1.0,
-      "aspect_texture": 1.0,
-      "camera_zoom": 1.0,
-      "fit_mode": "Cover",
-      "fit_validation": {
-        "delta_pixels": null,
-        "mismatch": false,
-        "uv_delta": 0.0
-      },
-      "image_rect": null,
-      "overlay_revision": 3,
-      "padding": 0.0,
-      "presentation_revision": 89,
-      "projection_revision": 944893805417,
-      "stale_binding_count_frame": 0,
-      "texture_rebinds_frame": 0,
-      "texture_rebinds_total": 0,
-      "texture_source": "GpuRenderTarget",
-      "uv_rect": {
-        "height": 1.0,
-        "max": {
-          "x": 1.0,
-          "y": 1.0
-        },
-        "min": {
-          "x": 0.0,
-          "y": 0.0
-        },
-        "width": 1.0
-      },
-      "viewport_extent": {
-        "x": 260,
-        "y": 220
-      }
-    },
-    "world_preview": {
-      "allocated_rect": {
-        "height": 594.3125,
-        "max": {
-          "x": 1869.78125,
-          "y": 674.28125
-        },
-        "min": {
-          "x": 1143.21875,
-          "y": 79.96875
-        },
-        "width": 726.5625
-      },
-      "aspect_panel": 1.2225260734558103,
-      "aspect_texture": 1.0,
-      "camera_zoom": 1.7086485624313354,
-      "fit_mode": "Contain",
-      "fit_validation": {
-        "delta_pixels": 0.0,
-        "mismatch": false,
-        "uv_delta": 0.0
-      },
-      "image_rect": {
-        "height": 586.3125,
-        "max": {
-          "x": 1799.65625,
-          "y": 670.28125
-        },
-        "min": {
-          "x": 1213.34375,
-          "y": 83.96875
-        },
-        "width": 586.3125
-      },
-      "overlay_revision": 3,
-      "padding": 4.0,
-      "presentation_revision": 35,
-      "projection_revision": 2551212574560,
-      "stale_binding_count_frame": 0,
-      "texture_rebinds_frame": 0,
-      "texture_rebinds_total": 2,
-      "texture_source": "GpuRenderTarget",
-      "uv_rect": {
-        "height": 1.0,
-        "max": {
-          "x": 1.0,
-          "y": 1.0
-        },
-        "min": {
-          "x": 0.0,
-          "y": 0.0
-        },
-        "width": 1.0
-      },
-      "viewport_extent": {
-        "x": 727,
-        "y": 594
-      }
-    }
-  },
-  "minimap_source": {
-    "cached_texture_revision": 14,
-    "composite_ok": true,
-    "compositor_revision": 1,
-    "construction_rows": 36,
-    "dual_minimap_present": false,
-    "ecology_heat_enabled": true,
-    "ecology_rows": 100,
-    "extent": {
-      "x": 260,
-      "y": 220
-    },
-    "extent_match_px": 0.0,
-    "gpu_compositor_env": true,
-    "overlay_revision": 3,
-    "presentation_source": "GpuRenderTarget",
-    "rt_bound": true,
-    "shared_projection": true,
-    "stamp": 14,
-    "ui_p3_m2_green": true,
-    "ui_p3_m3_green": true
-  },
   "particle_routing": {
-    "active_particle_rows": 336,
-    "coordinate_space": "world",
     "fire_particle_view_culled": false,
     "fire_spark_011_green": true,
     "fire_spark_additive_blend": true,
@@ -273,46 +113,11 @@
     "fire_spark_scatter_slots": 11,
     "fire_spark_tactical_proof_zoom_alpha": 0.8500000238418579,
     "fire_spark_zoom_alpha": 0.8500000238418579,
-    "resolved_half_extents": {
-      "x": 640.0,
-      "y": 360.0
-    },
-    "snapshot_particle_bounds": {
-      "max": {
-        "x": 517.4603271484375,
-        "y": 480.0
-      },
-      "min": {
-        "x": 132.05859375,
-        "y": 122.9780731201172
-      }
-    },
     "water_particle_river_streaks": 3,
     "water_particle_rows": 19,
     "water_particle_strategic_culled": false,
     "water_particle_zoom_alpha": 0.75,
     "water_shader_motion_always_on": true
-  },
-  "phase_f_live": {
-    "draw_dispatch_instance_count": 0,
-    "draw_instances": 0,
-    "indirect_dispatch_count": 0,
-    "indirect_instance_count": 0,
-    "instance_rows": 0,
-    "particle_bounds": {
-      "max": {
-        "x": 517.4603271484375,
-        "y": 480.0
-      },
-      "min": {
-        "x": 132.05859375,
-        "y": 122.9780731201172
-      }
-    },
-    "particle_rows": 0,
-    "phase_f_lod_proof_ok": true,
-    "phase_f_samples": 121,
-    "upload_bytes": 0
   },
   "profile": "FULL_APP",
   "projection_graph": {
@@ -327,115 +132,6 @@
     "fire_projection_graph_native": true
   },
   "readiness": {
-    "duplicate_visual_scan_count": 0,
-    "finish_ux06_streak": {
-      "consecutive_good": 120,
-      "last_blocker": null,
-      "streak_target": 120
-    },
-    "gpu_field_authoritative": true,
-    "instanced_dispatch_ok": true,
-    "live_finish_todo_board": {
-      "all_done": true,
-      "done_count": 8,
-      "registry_len": 8,
-      "rows": [
-        {
-          "id": "FINISH-UX-01",
-          "status": "Done"
-        },
-        {
-          "id": "FINISH-UX-02",
-          "status": "Done"
-        },
-        {
-          "id": "FINISH-UX-03",
-          "status": "Done"
-        },
-        {
-          "id": "FINISH-UX-04",
-          "status": "Done"
-        },
-        {
-          "id": "FINISH-UX-05",
-          "status": "Done"
-        },
-        {
-          "id": "FINISH-UX-06",
-          "status": "Done"
-        },
-        {
-          "id": "FINISH-UX-07",
-          "status": "Done"
-        },
-        {
-          "id": "FINISH-UX-08",
-          "status": "Done"
-        }
-      ]
-    },
-    "live_todo_board": {
-      "all_done": true,
-      "done_count": 13,
-      "registry_len": 13,
-      "rows": [
-        {
-          "id": "TODO-01",
-          "status": "Done"
-        },
-        {
-          "id": "TODO-02",
-          "status": "Done"
-        },
-        {
-          "id": "TODO-03",
-          "status": "Done"
-        },
-        {
-          "id": "TODO-04",
-          "status": "Done"
-        },
-        {
-          "id": "TODO-05",
-          "status": "Done"
-        },
-        {
-          "id": "TODO-06",
-          "status": "Done"
-        },
-        {
-          "id": "TODO-07",
-          "status": "Done"
-        },
-        {
-          "id": "TODO-08",
-          "status": "Done"
-        },
-        {
-          "id": "TODO-09",
-          "status": "Done"
-        },
-        {
-          "id": "TODO-10",
-          "status": "Done"
-        },
-        {
-          "id": "TODO-11",
-          "status": "Done"
-        },
-        {
-          "id": "TODO-12",
-          "status": "Done"
-        },
-        {
-          "id": "TODO-13",
-          "status": "Done"
-        }
-      ]
-    },
-    "overlay_from_shared_buffers_only": true,
-    "particle_lod_scales": true,
-    "passes": true,
     "perf_attribution_60s": {
       "frames_recorded": 720,
       "p95_frame_ms": 24.0,
@@ -444,14 +140,6 @@
       "window_samples": 720,
       "window_target_frames": 3600
     },
-    "phase_d_ok": true,
-    "phase_f_lod_proof_ok": true,
-    "phase_f_ok": true,
-    "preview_render_target_active": true,
-    "projection_domains": 3,
-    "registered_producers": 2,
-    "single_fire_extract": true,
-    "violations": [],
     "visual_witness": {
       "frame_budget": {
         "avg_ms": 18.0,
@@ -482,49 +170,7 @@
       "viewport": {
         "render_hole_steady_flip_count": 0
       }
-    },
-    "vt4_ok": true,
-    "vt5_ok": true
-  },
-  "readiness_eval_invocation": 120,
-  "render_anomalies": {
-    "camera_count_gt_one_world_camera": false,
-    "egui_rect_ne_viewport_rect": false,
-    "particle_screen_space_detected": false,
-    "render_target_mismatch": false,
-    "stale_texture_usage": false,
-    "viewport_zero_size_detected": false
-  },
-  "render_targets": {
-    "committed_revision": 2,
-    "committed_size": {
-      "x": 727,
-      "y": 594
-    },
-    "gpu_present_count": 3,
-    "preview_mode": "GpuRenderTarget",
-    "preview_path_authority": "GpuRenderTarget",
-    "render_contract": {
-      "camera_ready": true,
-      "size": {
-        "x": 727,
-        "y": 594
-      },
-      "version": 2
     }
-  },
-  "sim_step_stamp": {
-    "sim_time_micros": 29519587,
-    "tick": 121
-  },
-  "stage5_closure": {
-    "checklist": "docs/archive/2026-06-src-dev/plans/stage5_close_checklist.md",
-    "finish_todos_all_done": true,
-    "not_gate": "VM-06..11, full fire streaming, gpu-tile gizmo removal, construction stage",
-    "operational_gate": "FULL_APP",
-    "passes": true,
-    "spine_todos_all_done": true,
-    "triage_backlog": "src/dev/stage5_triage_backlog.md"
   },
   "tactical_vfx_witness": {
     "all_green": true,
@@ -554,67 +200,6 @@
     "water_witness_foam_or_ocean_green": true,
     "water_witness_rollup_green": true
   },
-  "test_scene": "visual",
-  "texture_stale_reasons": {
-    "minimap_cached_behind_raster": 14,
-    "preview_stale_binding": false
-  },
-  "triage_fire_extract_final_001": {
-    "f7_a_per_view_extract_bounded": true,
-    "full_world_scan_absent": true,
-    "gate": "TRIAGE-FIRE-EXTRACT-FINAL-001",
-    "green": true,
-    "minimap_cap_respected": true,
-    "no_camera_global_shortcut": true,
-    "per_view_visible_derived_from_projection": true,
-    "preview_cap_respected": true,
-    "projection_fire_source": "WorldMain",
-    "visible_fire_chunk_set_authoritative": true
-  },
-  "triage_fire_lod_tiers_001": {
-    "cinematic_band_policy": "FireChunkLodState per-chunk; tactical cap 512 is WorldLodBand::LocalTactical only",
-    "design_ref": "docs/archive/2026-06-src-dev/plans/fire_lod_player_read_v1.md",
-    "designer_table_wired": true,
-    "fire7_f7_c_001_green": true,
-    "fire_lod_cap_operational": 128,
-    "fire_lod_cap_strategic": 32,
-    "fire_lod_cap_tactical": 512,
-    "gate": "TRIAGE-FIRE-LOD-TIERS-001",
-    "green": true,
-    "per_band_caps_enforced_in_extract": true
-  },
-  "triage_fire_product_001": {
-    "design_ref": "docs/archive/2026-06-src-dev/plans/fire_lod_player_read_v1.md",
-    "fire7_bands_wired": true,
-    "fire_inst_readiness_aligned": true,
-    "gate": "TRIAGE-FIRE-PRODUCT-001",
-    "green": true,
-    "map_blink_overlay_hold_wired": true,
-    "operational_play_zoom_alpha": 0.41999998688697815,
-    "operational_spark_play_green": true,
-    "operational_spark_rows_gt_0": true,
-    "strategic_sparks_culled": true
-  },
-  "triage_gpu_tile_001": {
-    "gate": "TRIAGE-GPU-TILE-001",
-    "gizmo_fallback_policy": "GPU instanced quads authoritative in BaseState::Simulation (OnEnter sets use_batched_mesh_overlay). Legacy gizmo rects run only when tile_debug_use_gizmos_instead is true: instanced off or non-Simulation.",
-    "gizmo_fallback_when": "use_batched_mesh_overlay == false OR BaseState != Simulation",
-    "green": true,
-    "instanced_authoritative_in_simulation": true,
-    "simulation_enables_instanced_on_enter": true,
-    "wgsl_storage_instanced": true
-  },
-  "triage_phase_f_cull_001": {
-    "fire_spark_min_zoom_alpha": 0.2800000011920929,
-    "gate": "TRIAGE-PHASE-F-CULL-001",
-    "green": true,
-    "low_zoom_culled": true,
-    "minimap_sparks_culled": true,
-    "preview_sparks_culled": true,
-    "tactical_views_only_sparks": true,
-    "tactical_zoom_rows_positive": true,
-    "view_aware_particle_cull_wired": true
-  },
   "veg_burn_witness": {
     "burn_active_rows": 1,
     "burn_rows": [
@@ -633,194 +218,5 @@
     "sample_variant_keys": [
       "veg_burn_01"
     ]
-  },
-  "viewport_contracts": {
-    "egui_world_preview_viewport": {
-      "height": 594.3125,
-      "width": 726.5625
-    },
-    "minimap_panel": {
-      "logical_size": {
-        "x": 260.0,
-        "y": 220.0
-      },
-      "physical_extent": {
-        "x": 260,
-        "y": 220
-      },
-      "valid": true
-    },
-    "mismatch_flags": {
-      "minimap_panel_extent_mismatch": false,
-      "simulation_map_extent_mismatch": false,
-      "stale_texture_binding": false,
-      "world_preview_extent_mismatch": false
-    },
-    "preview_authority": {
-      "committed": true,
-      "gpu_authoritative": true,
-      "logical_viewport": {
-        "x": 726.5625,
-        "y": 594.3125
-      },
-      "physical_render_extent": {
-        "x": 727,
-        "y": 594
-      },
-      "revision": 71
-    },
-    "resolved_revision": 71,
-    "simulation_map": {
-      "max": {
-        "x": 1280.0,
-        "y": 720.0
-      },
-      "min": {
-        "x": 0.0,
-        "y": 0.0
-      },
-      "valid": true
-    },
-    "view_isolation": {
-      "minimap_main_lockstep_suspect": false,
-      "minimap_overlay_fire_heat": false,
-      "note": "infrastructure_lane_non_gating",
-      "preview_main_lockstep_suspect": false,
-      "preview_overlay_fire_heat": true,
-      "simulation_map_shares_main_camera": true,
-      "view_runtime": {
-        "authority_revision": 1800,
-        "pose_writers": {
-          "Minimap": "MinimapShell",
-          "SimulationMap": "MapCameraInput",
-          "WorldMain": "MapCameraInput",
-          "WorldPreview": "PreviewPanel"
-        },
-        "world_preview_logical": {
-          "valid": true,
-          "x": 726.5625,
-          "y": 594.3125
-        }
-      },
-      "vm_a_witness": {
-        "dual_writer_pose_violation": false,
-        "infrastructure_view_isolation_green": true,
-        "minimap_shell_wrote_map_camera_desired": false
-      },
-      "world_main_viewport": {
-        "height": 720.0,
-        "width": 1280.0
-      },
-      "world_main_visible_fire_orphans": 0
-    },
-    "view_snapshot": {
-      "committed": true,
-      "frame_id": 121,
-      "gpu_target_size": {
-        "x": 727,
-        "y": 594
-      },
-      "viewport": {
-        "height": 594.3125,
-        "width": 726.5625
-      }
-    },
-    "world_preview": {
-      "logical_size": {
-        "x": 726.5625,
-        "y": 594.3125
-      },
-      "physical_extent": {
-        "x": 727,
-        "y": 594
-      },
-      "valid": true,
-      "world_extent": {
-        "x": 727,
-        "y": 594
-      }
-    }
-  },
-  "water_surface": {
-    "tactical_witness_gates": {
-      "all_green": true,
-      "fire_spark_011_green": true,
-      "fire_spark_rows_gt_0": true,
-      "fire_spark_tactical_proof_zoom_alpha": 0.8500000238418579,
-      "fire_sparks_above_smoke": true,
-      "fire_tactical_zoom": true,
-      "proof_gate_enabled": false,
-      "tactical_zoom_alpha_min": 0.6499999761581421,
-      "water_has_river_segments": true,
-      "water_particle_river_streaks_when_rivers": true,
-      "water_particle_rows_gt_0": true,
-      "water_particle_strategic_not_culled": true,
-      "water_shader_motion_always_on": true,
-      "water_strategic_001_green": true,
-      "water_strategic_001_shader_motion_green": true,
-      "water_strategic_gates_green": true,
-      "water_tactical_zoom": true,
-      "water_w1_river_read_green": true,
-      "water_w2_foam_001_green": true,
-      "water_witness_001_green": true,
-      "water_witness_foam_or_ocean_green": true,
-      "water_witness_rollup_green": true
-    },
-    "water_lake_tiles": 6941,
-    "water_ocean_tiles": 2897,
-    "water_particle_coast_foam": 144,
-    "water_particle_lake_glints": 72,
-    "water_particle_river_foam": 7,
-    "water_particle_river_streaks": 24,
-    "water_particle_rows": 247,
-    "water_particle_strategic_culled": false,
-    "water_particle_zoom_alpha": 0.8500000238418579,
-    "water_river_segments": 15,
-    "water_river_tiles": 10241,
-    "water_shader_motion_always_on": true,
-    "water_strategic_001_green": true,
-    "water_strategic_gates_green": true,
-    "water_vfx_witness": {
-      "catalog_has_coast_ocean": true,
-      "catalog_has_river_bend": true,
-      "strategic_band": {
-        "coast_foam": 0,
-        "lake_glints": 0,
-        "river_foam": 0,
-        "river_streaks": 0,
-        "rows": 0,
-        "shader_motion_always_on": true,
-        "strategic_culled": true,
-        "zoom_alpha": 0.17499999701976776
-      },
-      "strategic_zoom_cutoff": 0.3499999940395355,
-      "tactical_band": {
-        "coast_foam": 144,
-        "lake_glints": 72,
-        "river_foam": 7,
-        "river_streaks": 24,
-        "rows": 247,
-        "shader_motion_always_on": true,
-        "strategic_culled": false,
-        "zoom_alpha": 0.8500000238418579
-      },
-      "tactical_witness_zoom_alpha": 0.75,
-      "water_strategic_001_green": true,
-      "water_w2_foam_001_green": true,
-      "water_witness_001_green": true,
-      "water_witness_foam_or_ocean_green": true
-    },
-    "water_w1_green": true,
-    "water_w1_ocean_001_green": true,
-    "water_w1_ocean_green": true,
-    "water_w1_river_green": true,
-    "water_w1_river_read_green": true,
-    "water_w2_foam_001_green": true,
-    "water_witness_001_green": true,
-    "water_witness_rollup_green": true
-  },
-  "world_preview_layout": {
-    "d01_unified_workspace": true,
-    "ui_wp_layout_001": "signed"
   }
 }

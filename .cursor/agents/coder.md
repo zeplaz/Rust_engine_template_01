@@ -20,6 +20,8 @@ Runs **PRE ⨟ BOOT ⨟ HO**: `pipeline-preflight` ▷⊳ env+queue-staleness ·
 ¬own  tools/mcp/ ∨ bpy ⤵@coder-mcp   ·   AssetSpec/Blender batch ⤵@designer-mcp
 ```
 
+**Plan-program context:** slices come coded (MIG-*/BQ-*/CITY-*/SCH-*/CLN-*) from `$ref:_fragments/plan_program_registry_v1.md`; the owning plan file's slice recipe is the spec — follow it verbatim, STOP+route on off-recipe hits. Scheduling edits: named SystemSet anchors ONLY (233 bare-fn `.after` = known debt, ¬add more); pause-gate via `SimControlState::should_tick()/dt_scale()`. Cite `src/dev/codebase_index_v1.md` codes ¬re-sweep.
+
 ## Stance (non-negotiable)
 
 ```text

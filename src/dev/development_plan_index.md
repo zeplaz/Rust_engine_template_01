@@ -2,20 +2,25 @@
 
 Single map of **planning → proof → implementation** for this repo. Use with orchestrator tooling so markdown boards, runtime todo boards, and witnesses stay aligned.
 
-**Bevy 0.19 migration (P0 PRIMARY — 2026-07-03):** [`plan_bevy_019_migration_v1.md`](plan_bevy_019_migration_v1.md) — **highest priority** · **master only** · Phase 0 gates MIG-G1/G2 · render-graph port MIG-R1–R6 · post-MIG-V1 GPU perf MIG-A10–A18 · lease [`HANDOFF.md`](../tools/orchestrator/queues/HANDOFF.md) § PLAN-BEVY-019-MIG-v1 · **defers** cleanup Phase 2+ and schedule-sync Wave 2+ while MIG-P1–P3 in flight
+**Cross-program deferrals (2026-07-03):** [`plan_deferral_registry_v1.md`](plan_deferral_registry_v1.md) + [`defer_registry.json`](../tools/orchestrator/queues/defer_registry.json)
 
-**Multi-parallel dispatch (2026-06-20):** [`plan_multi_parallel_tracks_v1.md`](plan_multi_parallel_tracks_v1.md) — **8 parallel tracks** · secondary while MIG-P0 active · [`multi_parallel_agent_prompts_v1.md`](multi_parallel_agent_prompts_v1.md) · home [`multi_parallel_home_queues_v1.json`](../tools/orchestrator/queues/multi_parallel_home_queues_v1.json)
+**Cross-front pick queue (2026-07-03):** [`cross_front_pick_queue_v1.md`](cross_front_pick_queue_v1.md) — parallel lanes · pick-one-primary per session
+
+**Bevy 0.19 migration (2026-07-03):** [`plan_bevy_019_migration_v1.md`](plan_bevy_019_migration_v1.md) — **0.19 on master** · **P0–V1 + MIG-A core COMPLETE** · **Cross-program deferrals:** [`plan_deferral_registry_v1.md`](plan_deferral_registry_v1.md) + [`defer_registry.json`](../tools/orchestrator/queues/defer_registry.json) · **active = RTT/VFX operator verify (P0)** · deep MIG-A perf incremental OK · lease [`HANDOFF.md`](../tools/orchestrator/queues/HANDOFF.md) § PLAN-BEVY-019-MIG-v1 · cleanup/schedule Phase 2+ → DR-CLEANUP-P2 / DR-SCHED-W2
+
+**Multi-parallel dispatch (2026-06-20):** [`plan_multi_parallel_tracks_v1.md`](plan_multi_parallel_tracks_v1.md) — **8 parallel tracks** · secondary while RTT/VFX verify active · defer rows: [`plan_deferral_registry_v1.md`](plan_deferral_registry_v1.md)
 
 **Live status (2026-06-18):** [`status_overview_20260613_v1.md`](status_overview_20260613_v1.md) · **Sim HUD Phase 2:** [`plan_sim_hud_professional_polish_v1.md`](plan_sim_hud_professional_polish_v1.md) · [`design_sim_hud_reflection_audit_v1.md`](design_sim_hud_reflection_audit_v1.md) · [`designer_sim_hud_prompt_v1.md`](designer_sim_hud_prompt_v1.md) · **Designer backlog:** [`plan_designer_work_202606_v1.md`](plan_designer_work_202606_v1.md) · **Industrial facility grammar:** [`plan_industrial_facility_grammar_suite_v1.md`](plan_industrial_facility_grammar_suite_v1.md) · **APS design system:** [`aps_design_system_v1.md`](aps_design_system_v1.md)
 
-**GPU terrain / sim perf (ACTIVE — 2026-07-02):** [`plan_gpu_terrain_production_exec_001_v1.md`](plan_gpu_terrain_production_exec_001_v1.md) — **PERF-GPU-TERRAIN-001..004** · retire CPU `tile_world_fallback` default · strip dead render passes · **no partial sign-off** · parent [`plan_visual_perf_production_exec_001_v1.md`](plan_visual_perf_production_exec_001_v1.md)
+**GPU terrain / sim perf (ACTIVE):** [`gpu_todos_v1.md`](gpu_todos_v1.md) · [`plan_gpu_terrain_production_exec_001_v1.md`](plan_gpu_terrain_production_exec_001_v1.md) — P0-C′-PRIME next · P0-C tilemap **blocked DR-MIG-TILEMAP**
 
-**Codebase cleanup (P1 on master — 2026-07-03):** [`plan_cleanup_v1.md`](plan_cleanup_v1.md) — Phase 0 hygiene · Phase 2+ frozen while MIG-P1–P3 in flight · [`HANDOFF.md`](../tools/orchestrator/queues/HANDOFF.md) § PLAN-CLEANUP-v1
+**Codebase cleanup (P1 on master — 2026-07-03):** [`plan_cleanup_v1.md`](plan_cleanup_v1.md) — Phase 0 hygiene · Phase 2+ parallel after RTT/VFX operator lane closes · [`HANDOFF.md`](../tools/orchestrator/queues/HANDOFF.md) § PLAN-CLEANUP-v1
 
-**City + building grammar (P2 on master — 2026-07-03):** [`plan_city_grammar_upgrade_v1.md`](plan_city_grammar_upgrade_v1.md) · machine queue [`city_grammar_queue.json`](../tools/orchestrator/queues/city_grammar_queue.json) — bevy_city-pattern block tier · G0 typed ids + grammar split + determinism witness · **designer-mcp blocked until G0c** (`DES-CITY-BLOCK-RECIPE-001`) · [`HANDOFF.md`](../tools/orchestrator/queues/HANDOFF.md) § PLAN-CITY-GRAMMAR-v1 · owns cleanup **S11/S1c** (do not double-pick)
+**City + building grammar (P3 — coder closed 2026-07-03):** [`plan_city_grammar_upgrade_v1.md`](plan_city_grammar_upgrade_v1.md) · G0–G3 + P1/P2 green · machine queue [`city_grammar_queue.json`](../tools/orchestrator/queues/city_grammar_queue.json) · **active:** PLAN-BUILDING-QUALITY-v1
 
-**Schedule sync (DEFER — 2026-07-03):** [`plan_schedule_sync_v1.md`](plan_schedule_sync_v1.md) — frozen while MIG-P1–P3 in flight on master
+**Schedule sync (2026-07-03):** [`plan_schedule_sync_v1.md`](plan_schedule_sync_v1.md) — Wave 1 unblocked (MIG-V1 green); Wave 2+ → **DR-SCHED-W2**
 
+**Building quality + APS refactor (P2 — 2026-07-03):** [`plan_building_quality_v1.md`](plan_building_quality_v1.md) — **integration hub** · BQ Phase F (~80% visible) + APSR guardrails/services · companion [`plan_aps_refactor_v1.md`](plan_aps_refactor_v1.md) · golden-seed done bar · [`HANDOFF.md`](../tools/orchestrator/queues/HANDOFF.md) § PLAN-BUILDING-QUALITY-v1
 
 ## Designer art MCP + Blender (2026-06-02)
 

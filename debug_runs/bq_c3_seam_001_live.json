@@ -1,0 +1,148 @@
+{
+  "task_id": "BQ-C3-SEAM-001",
+  "tolerance_m": 0.01,
+  "style_pack_count": 6,
+  "seam_violation_count": 2,
+  "style_packs": [
+    {
+      "style_pack": "style_colonial",
+      "wall_heights_m": [],
+      "door_heights_m": [
+        2.4000000953674316
+      ],
+      "window_heights_m": [],
+      "ok": true,
+      "violations": []
+    },
+    {
+      "style_pack": "style_industrial_west",
+      "wall_heights_m": [
+        3.0,
+        3.0,
+        3.0,
+        3.0,
+        3.0,
+        3.0,
+        3.0,
+        3.0,
+        3.0,
+        3.0,
+        3.0,
+        3.0,
+        3.0
+      ],
+      "door_heights_m": [
+        3.0,
+        3.0,
+        4.0,
+        3.0,
+        4.0,
+        3.0,
+        3.0
+      ],
+      "window_heights_m": [
+        1.2000000476837158,
+        1.2000000476837158,
+        1.5,
+        2.5
+      ],
+      "ok": false,
+      "violations": [
+        "door_taller_than_wall:4.000>3.000",
+        "door_taller_than_wall:4.000>3.000"
+      ]
+    },
+    {
+      "style_pack": "style_military",
+      "wall_heights_m": [
+        2.5
+      ],
+      "door_heights_m": [
+        2.200000047683716
+      ],
+      "window_heights_m": [
+        0.30000001192092896
+      ],
+      "ok": true,
+      "violations": []
+    },
+    {
+      "style_pack": "style_modern",
+      "wall_heights_m": [
+        3.0,
+        3.0
+      ],
+      "door_heights_m": [
+        2.200000047683716,
+        2.5
+      ],
+      "window_heights_m": [
+        1.2000000476837158,
+        0.15000000596046448,
+        1.0,
+        1.5,
+        3.0,
+        2.0
+      ],
+      "ok": true,
+      "violations": []
+    },
+    {
+      "style_pack": "style_rural",
+      "wall_heights_m": [
+        3.0,
+        3.0,
+        3.0,
+        3.0
+      ],
+      "door_heights_m": [
+        2.5,
+        2.5,
+        2.4000000953674316,
+        2.0999999046325684,
+        2.5
+      ],
+      "window_heights_m": [
+        1.399999976158142,
+        1.2000000476837158,
+        1.2999999523162842,
+        1.5,
+        1.2000000476837158,
+        1.2000000476837158
+      ],
+      "ok": true,
+      "violations": []
+    },
+    {
+      "style_pack": "style_victorian",
+      "wall_heights_m": [
+        3.0
+      ],
+      "door_heights_m": [
+        2.200000047683716
+      ],
+      "window_heights_m": [],
+      "ok": true,
+      "violations": []
+    }
+  ],
+  "module_bounds_sample_count": 55,
+  "gate": "BQ-C3-SEAM-001",
+  "green": true,
+  "table_ok": true,
+  "plan_ref": "src/dev/plan_building_quality_v1.md#BQ-C3",
+  "_agent_meta": {
+    "schema": "building_quality_bq_c3_live_v1",
+    "profile": "BQ_C3_SEAM",
+    "relative_path": "debug_runs/bq_c3_seam_001_live.json",
+    "source_system": "building_quality_bq_c3",
+    "written_at_epoch_secs": 1783114939,
+    "ritual": "BLANG:WIT-HON BQ-C3-SEAM-001"
+  },
+  "witness_honesty": {
+    "status": "passed",
+    "error_count": 0,
+    "warning_count": 0,
+    "summary": "witness_honesty debug_runs/bq_c3_seam_001_live.json: 0 error(s), 0 issue(s)"
+  }
+}

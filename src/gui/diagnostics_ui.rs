@@ -595,7 +595,7 @@ pub fn diagnostics_ui_system(
                         let runtime_writer = spine
                             .fire_proof
                             .as_deref()
-                            .map(|p| p.written)
+                            .map(FireStreamingLiveProofState::written)
                             .unwrap_or(false);
                         muted_label(
                             ui,

@@ -123,6 +123,17 @@ TOOLTIPS: dict[str, str] = {
     "gen_trace_edit_assembly": "Switch to Assembly tab to change archetype, district, seed, or regenerate.",
     # Metadata / misc
     "meta_flow": "Show how metadata flows Catalog → Assembly → Variants → Atlas.",
+    "onboard_dismiss": "Hide the welcome card — reopen from Help → getting started.",
+    "onboard_steps": "Expand the five-step pipeline guide for this tab.",
+    "job_cancel": "Cancel the running background job.",
+    "grammar_set_refresh": "Reload building style set brief from disk.",
+    "grammar_eval_sweep": "Run grammar evaluation sweep across seeds.",
+    "landscape_validate_schema": "Validate landscape grammar schema for the selected preset.",
+    "landscape_preset_refresh": "Reload landscape preset list.",
+    "landscape_preset_validate": "Validate selected landscape preset JSON.",
+    "landscape_preset_pick": "Select this landscape preset for Grammar and States tabs.",
+    "preview_open_url": "Open assembly preview URL in the system browser.",
+    "preview_copy_url": "Copy assembly preview URL to clipboard.",
 }
 
 

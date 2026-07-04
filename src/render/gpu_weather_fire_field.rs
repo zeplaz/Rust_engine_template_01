@@ -736,3 +736,29 @@ fn weather_fire_field_pass(
         }
     }
 }
+
+#[cfg(test)]
+mod weather_dispatch_tests {
+    use super::{WORKGROUP, WEATHER_FIRE_FIELD_SIZE};
+    use crate::systems::atmosphere::P2H_GPU_PARTIAL_WRITES_AUTHORITATIVE;
+
+    #[test]
+    fn zero_partial_extent_zero_dispatch() {
+        if !P2H_GPU_PARTIAL_WRITES_AUTHORITATIVE {
+            return;
+        }
+        let extent = bevy::math::UVec2::ZERO;
+        let dx = extent.x.div_ceil(WORKGROUP);
+        let dy = extent.y.div_ceil(WORKGROUP);
+        assert_eq!(dx, 0);
+        assert_eq!(dy, 0);
+    }
+
+    #[test]
+    fn full_field_dispatch_nonzero_when_fallback() {
+        let dx = WEATHER_FIRE_FIELD_SIZE.x.div_ceil(WORKGROUP);
+        let dy = WEATHER_FIRE_FIELD_SIZE.y.div_ceil(WORKGROUP);
+        assert!(dx > 0);
+        assert!(dy > 0);
+    }
+}

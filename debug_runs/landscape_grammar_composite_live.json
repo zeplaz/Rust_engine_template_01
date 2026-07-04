@@ -58,7 +58,7 @@
     "relative_path": "debug_runs/landscape_grammar_composite_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_composite_eval_witness",
-    "written_at_epoch_secs": 1783028014
+    "written_at_epoch_secs": 1783111825
   },
   "base_graph_nodes": 5,
   "composition_macros": [

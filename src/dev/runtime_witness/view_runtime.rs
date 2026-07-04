@@ -9,6 +9,7 @@ use crate::render::view_runtime::{
     ViewProjectionAuthority, ViewRuntimeTrace, ViewRuntimeWitness,
 };
 
+use super::common::WitnessWriteCadence;
 use super::io::{write_enveloped_witness, write_enveloped_witness_unchecked};
 
 pub const INFRASTRUCTURE_VIEW_ISOLATION_JSON: &str =
@@ -18,29 +19,17 @@ const PROFILE: &str = "INFRASTRUCTURE_VIEW_ISOLATION";
 
 #[derive(Resource, Debug)]
 pub struct ViewRuntimeLiveProofState {
-    pub frames_since_write: u32,
-    pub write_interval: u32,
-    pub written: bool,
+    pub cadence: WitnessWriteCadence,
 }
 
 impl Default for ViewRuntimeLiveProofState {
     fn default() -> Self {
         Self {
-            frames_since_write: 0,
-            write_interval: 90,
-            written: false,
+            cadence: WitnessWriteCadence {
+                write_interval: 90,
+                ..Default::default()
+            },
         }
-    }
-}
-
-impl ViewRuntimeLiveProofState {
-    fn tick(&mut self) -> bool {
-        self.frames_since_write = self.frames_since_write.saturating_add(1);
-        if self.frames_since_write < self.write_interval {
-            return false;
-        }
-        self.frames_since_write = 0;
-        true
     }
 }
 
@@ -176,9 +165,6 @@ pub fn write_view_runtime_live_proof_system(
     if !matches!(base.get(), BaseState::Simulation) {
         return;
     }
-    if !state.tick() {
-        return;
-    }
     let body = build_infrastructure_view_isolation_payload(
         witness.as_ref(),
         isolation.as_ref(),
@@ -193,7 +179,7 @@ pub fn write_view_runtime_live_proof_system(
         INFRASTRUCTURE_VIEW_ISOLATION_JSON,
         body,
     ) {
-        state.written = true;
+        state.cadence.written = true;
     }
 }
 

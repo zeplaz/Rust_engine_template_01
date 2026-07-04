@@ -3,6 +3,7 @@
 //! Domain modules expose read-only collectors; this tree owns envelope wrap, cadence,
 //! file I/O, and the [`gate`] switch.
 
+pub mod cadence_plugin;
 pub mod common;
 pub mod containment;
 pub mod construction;
@@ -39,7 +40,19 @@ pub use fire::{
 pub use containment::{
     phase0_containment_green, scan_live_proof_containment_violations, LiveProofContainmentViolation,
 };
-pub use common::{tick_live_proof_cadence, LiveProofCadence};
+pub use cadence_plugin::{
+    arm_construction_live_proof_cadence, arm_fire_ecology_live_proof_cadence,
+    arm_global_live_proof_cadence, arm_wss_substrate_live_proof_cadence,
+    construction_live_proof_due, fire_ecology_live_proof_due,
+    fire_streaming_live_proof_due, industrial_activation_live_proof_due,
+    logistics_throughput_live_proof_due, stage7_behavioral_live_proof_due,
+    stage7_play_live_proof_due, view_runtime_live_proof_due, wave_p_live_proof_due,
+    wss_substrate_live_proof_due, LiveProofCadencePlugin,
+};
+pub use common::{
+    arm_live_proof_cadence, arm_witness_write_cadence, live_proof_cadence_due,
+    live_proof_write_latched, tick_live_proof_cadence, LiveProofCadence, LiveProofWriteLatch,
+};
 pub use gate::{
     witness_gate_snapshot, witness_writes_enabled, ENV_RUNTIME_WITNESS_WRITES,
     ENV_RUNTIME_WITNESS_WRITES_FORCE_OFF,

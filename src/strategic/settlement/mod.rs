@@ -5,7 +5,13 @@ mod assign;
 mod block;
 mod block_archetype;
 mod block_frame;
+mod block_lod_impostor;
+mod block_perf;
+mod block_recipe;
+mod block_rollout;
+mod block_street_visual;
 mod district;
+mod execute;
 mod growth;
 mod ids;
 mod market;
@@ -40,9 +46,50 @@ pub use block_archetype::{
     BlockArchetypeBand, BlockArchetypeRegistry, BlockArchetypeThresholdTable, BlockScore,
     BLOCK_ARCHETYPE_THRESHOLDS_RON, CITY_G1_C1_LIVE_JSON,
 };
+pub use block_recipe::{
+    block_recipe_lot_list_stable_hash, build_city_g1_c3_001_witness_body,
+    city_g1_c3_001_block_recipe_witness_green, evaluate_block_recipe,
+    evaluate_block_recipe_for_archetype, load_block_recipe_from_path,
+    load_block_recipe_registry, refresh_city_g1_c3_001_block_recipe_witness,
+    BlockEdgePlacement, BlockLotPlacement, BlockParkFillPlacement, BlockPlazaPlacement,
+    BlockRecipe,
+    BlockRecipeEvaluation, BlockRecipeRegistry, BlockRecipeStep, BlockScatterPlacement,
+    BLOCK_RECIPES_DIR, CITY_G1_C3_LIVE_JSON,
+};
+pub use block_rollout::{
+    advance_block_rollout_staging_system, begin_block_rollout_staging_system,
+    block_rollout_fixture_witness_green, build_city_g3_rollout_witness_body,
+    city_g3_rollout_witness_green,     evaluate_block_recipes_system, execute_staged_block_growth_system,
+    push_block_recipe_visual_requests_system, refresh_city_g3_rollout_witness,
+    release_staged_block_lot_proposals_system, resolve_block_archetypes_system, BlockAssembled,
+    BlockCommitted, BlockPlanned, BlockRecipeEvaluationBook, BlockRolloutGrowthBook,
+    BlockRolloutStagingBook, CITY_G3_ROLLOUT_LIVE_JSON,
+};
+pub use block_street_visual::{
+    block_street_visual_fixture_witness_green, build_city_c6_bsn_witness_body,
+    city_c6_bsn_witness_green, load_block_street_furniture_scenes,
+    refresh_city_c6_bsn_witness, spawn_block_street_furniture_system,
+    BlockStreetFurnitureCatalog, BlockStreetFurniturePiece, BlockStreetFurnitureRoot,
+    BlockStreetVisualBook,     PresentationOnlyStreetVisual, CITY_C6_BSN_LIVE_JSON,
+};
+pub use block_lod_impostor::{
+    block_lod_impostor_fixture_witness_green, build_city_p2_witness_body, city_p2_witness_green,
+    load_block_lod_impostor_scene, refresh_city_p2_witness, spawn_block_lod_impostors_system,
+    sync_block_lod_impostor_visibility_system, BlockLodImpostor, BlockLodImpostorBook,
+    BlockLodImpostorCatalog, CITY_P2_LIVE_JSON,
+};
+pub use block_perf::{
+    build_city_p1_witness_body, city_p1_witness_green, refresh_city_p1_witness,
+    CITY_P1_LIVE_JSON,
+};
 pub use district::{
     DevelopmentPressure, DevelopmentPressureBook, DistrictBook, DistrictMetrics,
     DistrictMetricsBook, DistrictRecord, DistrictStyleRules,
+};
+pub use execute::{
+    approve_all_growth_proposals_into_pending, approve_growth_proposal_into_pending,
+    enqueue_approved_growth_proposal, growth_approve_execute_pipeline_witness_green,
+    pending_blueprint_from_growth_proposal, site_archetype_for_growth_proposal,
 };
 pub use growth::{growth_proposal_tick_system, score_proposal, GrowthProposal, GrowthProposalQueue};
 pub use ids::{ArchetypeId, BlockId, DistrictId, RegionId, TownId};
@@ -92,9 +139,22 @@ pub fn construction_organic_growth_001_witness_green() -> bool {
 
 pub struct SettlementPlugin;
 
+fn settlement_registry_startup(mut commands: Commands) {
+    commands.insert_resource(load_block_recipe_registry());
+    commands.insert_resource(load_block_archetype_registry());
+}
+
 impl Plugin for SettlementPlugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<TownBook>()
+        app.add_systems(Startup, settlement_registry_startup)
+            .add_systems(
+                Startup,
+                (
+                    load_block_street_furniture_scenes,
+                    load_block_lod_impostor_scene,
+                ),
+            )
+            .init_resource::<TownBook>()
             .init_resource::<DistrictBook>()
             .init_resource::<BlockBook>()
             .init_resource::<DistrictMetricsBook>()
@@ -104,6 +164,16 @@ impl Plugin for SettlementPlugin {
             .init_resource::<AutoBuildPolicyBook>()
             .init_resource::<BlockFrameBook>()
             .init_resource::<GrowthProposalGhostState>()
+            .init_resource::<BlockRecipeEvaluationBook>()
+            .init_resource::<BlockRolloutGrowthBook>()
+            .init_resource::<BlockRolloutStagingBook>()
+            .init_resource::<BlockStreetFurnitureCatalog>()
+            .init_resource::<BlockStreetVisualBook>()
+            .init_resource::<BlockLodImpostorCatalog>()
+            .init_resource::<BlockLodImpostorBook>()
+            .add_message::<BlockPlanned>()
+            .add_message::<BlockAssembled>()
+            .add_message::<BlockCommitted>()
             .add_systems(
                 Update,
                 (
@@ -114,6 +184,16 @@ impl Plugin for SettlementPlugin {
                     sync_growth_proposal_ghosts_system,
                     push_proposal_ghosts_to_visual_requests,
                     sync_block_frames_system,
+                    resolve_block_archetypes_system,
+                    evaluate_block_recipes_system,
+                    advance_block_rollout_staging_system,
+                    begin_block_rollout_staging_system,
+                    release_staged_block_lot_proposals_system,
+                    execute_staged_block_growth_system,
+                    spawn_block_street_furniture_system,
+                    spawn_block_lod_impostors_system,
+                    sync_block_lod_impostor_visibility_system,
+                    push_block_recipe_visual_requests_system,
                 )
                     .chain()
                     .after(InfrastructureSiteSet::Planning),

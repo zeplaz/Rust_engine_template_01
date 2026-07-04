@@ -1,6 +1,8 @@
 # APS PROFESSIONAL-TOOL REFACTOR v1 — clean, organized, predictable
 # Generated 2026-07-03 from full-architecture audit (53 files, ~11.9k LOC Python/Tk,
-# tools/mcp/art_pipeline_suite/). Companions: plan_building_quality_v1.md (QC surfaces feed in) ·
+# tools/mcp/art_pipeline_suite/).
+# **Companion plan** — execution hub + integrated queue seed live in
+# [`plan_building_quality_v1.md`](plan_building_quality_v1.md) (BQ↔APSR coupling, Week 0 picks).
 # aps-design-ux skill (tag surfaces, tooltip rules, operator rubric — authority for copy/UX rules).
 # Issue codes: APSR-S# (state/services) · APSR-P# (panels) · APSR-D# (design system) ·
 #              APSR-T# (tests/specs) · APSR-Q# (quality surfaces)
@@ -9,7 +11,8 @@
 # PROGRAM METADATA
 # ═════════════════════════════════════════════════════════════════════
 # id:           PLAN-APS-REFACTOR-v1
-# status:       PLANNED — audit signed 2026-07-03
+# status:       PLANNED — audit signed 2026-07-03; execution sequenced via plan_building_quality_v1.md
+# integration:  plan_building_quality_v1.md § INTEGRATED EXECUTION GRAPH + queue seed
 # priority:     parallel-safe with EVERYTHING (pure Python lane; zero overlap with Bevy MIG /
 #               cleanup / schedule plans). Natural partner: run alongside PLAN-BUILDING-QUALITY-v1
 #               so QC surfaces (APSR-Q#) land as BQ gates come online.

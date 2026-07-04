@@ -17,6 +17,7 @@ from rust_engine_mcp.paths import repo_root
 from .aps_inline_feedback import set_inline_status
 from .aps_scroll import attach_wheel_area, bind_debounced_scrollregion, canvas_yscroll
 from .aps_theme import FONT_HINT, FONT_SMALL
+from .aps_tooltips import bind_aps_tooltip
 from .aps_workflow_layout import workflow_intro, workflow_primary_row
 from .state import SuiteState
 
@@ -95,8 +96,10 @@ class LandscapePresetsPanel(ttk.Frame):
         ttk.Label(bar, text="Presets", font=("Segoe UI", 9, "bold")).pack(side=tk.LEFT)
         refresh_btn = ttk.Button(bar, text="Refresh", command=self.refresh_list)
         refresh_btn.pack(side=tk.RIGHT)
+        bind_aps_tooltip(refresh_btn, "landscape_preset_refresh")
         validate_btn = ttk.Button(bar, text="Validate preset", command=self._validate_selected)
         validate_btn.pack(side=tk.RIGHT, padx=(0, 8))
+        bind_aps_tooltip(validate_btn, "landscape_preset_validate")
 
         list_wrap = ttk.Frame(self)
         list_wrap.pack(fill=tk.BOTH, expand=True)
@@ -151,6 +154,7 @@ class LandscapePresetsPanel(ttk.Frame):
                 command=lambda p=pid: self._select_preset(p),
             )
             btn.pack(fill=tk.X, pady=1, padx=2)
+            bind_aps_tooltip(btn, "landscape_preset_pick")
         self._on_log(f"landscape presets · listed {len(self._preset_ids)}")
 
     def _select_preset(self, preset_id: str) -> None:

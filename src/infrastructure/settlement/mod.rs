@@ -24,7 +24,9 @@ pub struct SettlementNode {
     pub attached_transport_nodes: Vec<String>,
 }
 
-/// Attach settlement to nearest transport node key within `radius` tiles (v1 stub).
+/// Attach settlement to nearest transport node key within `radius` tiles.
+/// **INFRA-E5-001** (board: `plan_infrastructure_world_layers_exec_001_v1.md`) — v1 coarse stub
+/// until node positions are indexed on `TransportEdgeDirectory`.
 #[must_use]
 pub fn attach_settlement_to_nearest_transport_node(
     directory: &TransportEdgeDirectory,

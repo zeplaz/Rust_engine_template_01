@@ -321,6 +321,10 @@ def format_index_ron(entries: list[dict[str, Any]]) -> str:
         pbr = e.get("pbr_status") or "none"
         stylepack_vis = "true" if e.get("stylepack_visible", tier != "smoke") else "false"
         replaced = e.get("replaced_by")
+        from rust_engine_mcp.city_palette_g2 import palette_fields_for_entry
+
+        palette = palette_fields_for_entry(e)
+        e = {**e, **palette}
         lines.extend(
             [
                 "        (",
@@ -340,6 +344,14 @@ def format_index_ron(entries: list[dict[str, Any]]) -> str:
                 f"            material_profile: {_ron_str(e['material_profile'])},",
             ]
         )
+        if palette.get("palette_family"):
+            lines.append(f"            palette_family: {_ron_str(str(palette['palette_family']))},")
+            lines.append(
+                f"            palette_variation_count: {int(palette.get('palette_variation_count') or 1)},"
+            )
+            lines.append(
+                f"            default_variation_id: {_ron_str(str(palette.get('default_variation_id') or ''))},"
+            )
         if replaced:
             lines.append(f"            replaced_by: Some({_ron_str(str(replaced))}),")
         lines.append("        ),")

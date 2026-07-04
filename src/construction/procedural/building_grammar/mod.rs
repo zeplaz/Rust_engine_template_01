@@ -17,8 +17,9 @@ pub use grammar_evaluation::{
     pg_quality_002_pg2_hook_green, refresh_pg_quality_001_grammar_diversity_witness,
 };
 pub use grammar_types::{
-    BuildingGrammar, BuildingGrammarRegistry, FacilityBindingV1, FacilityPowerTier,
-    FacilityProgramAxes, GrammarGenerateResult, GrammarRuleStep, MassingStrategy,
-    PgQuality001Metrics, ProgramAxisLevel, FACILITY_BINDING_G1_MIN, FACILITY_BINDING_SCHEMA,
-    GRAMMAR_DIVERSITY_WITNESS_JSON, GRAMMAR_RULES_VERSION, GRAMMARS_DIR, PG_QUALITY_001_SEED_SWEEP,
+    default_door_rhythm_for_massing, BuildingGrammar, BuildingGrammarRegistry, FacilityBindingV1,
+    FacilityPowerTier, FacilityProgramAxes, GrammarGenerateResult, GrammarRuleStep, MassingId,
+    MassingStrategy, PgQuality001Metrics, ProgramAxisLevel, ResolvedFacade, FACILITY_BINDING_G1_MIN,
+    FACILITY_BINDING_SCHEMA, GRAMMAR_DIVERSITY_WITNESS_JSON, GRAMMAR_RULES_VERSION, GRAMMARS_DIR,
+    PG_QUALITY_001_SEED_SWEEP,
 };

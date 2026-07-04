@@ -39,10 +39,17 @@ impl FootprintGrid {
     /// Build perimeter grammar for a rectangle (min 2×2).
     #[must_use]
     pub fn from_rect(width: u32, depth: u32, floors: u32) -> Self {
+        Self::from_rect_with_door(width, depth, floors, None)
+    }
+
+    /// **BQ-H2** — optional door column; defaults to legacy center when `None`.
+    #[must_use]
+    pub fn from_rect_with_door(width: u32, depth: u32, floors: u32, door_x: Option<u32>) -> Self {
         let width = width.max(2);
         let depth = depth.max(2);
         let floors = floors.max(1);
-        let door_x = width / 2;
+        let door_x = door_x.unwrap_or_else(|| width / 2);
+        let door_x = door_x.clamp(1, width.saturating_sub(2).max(1));
         let mut cells = Vec::new();
 
         for floor in 0..floors {
@@ -98,7 +105,15 @@ impl FootprintGrid {
     /// Build footprint from grammar massing (`rect`, `yard_interior`, `l_shape` v1 rect).
     #[must_use]
     pub fn from_grammar(result: &super::building_grammar::GrammarGenerateResult) -> Self {
-        let mut grid = Self::from_rect(result.width, result.depth, result.floors);
+        let door_x = street_facing_door_column(
+            result.width,
+            result.depth,
+            &result.placement_tags,
+            result.seed,
+            &result.massing_strategy,
+            &result.door_rhythm,
+        );
+        let mut grid = Self::from_rect_with_door(result.width, result.depth, result.floors, Some(door_x));
         match result.footprint_mode.as_str() {
             "yard_interior" => grid.inject_interior_yard(),
             "l_shape" => grid.inject_l_shape_yard_v1(),
@@ -196,6 +211,111 @@ fn is_corner(x: u32, y: u32, width: u32, depth: u32) -> bool {
     (x == 0 || x + 1 == width) && (y == 0 || y + 1 == depth)
 }
 
+/// **BQ-H1/H2** — street-facing door column from grammar tags + massing rhythm (seeded, not width/2).
+#[must_use]
+pub fn street_facing_door_column(
+    width: u32,
+    _depth: u32,
+    placement_tags: &[String],
+    seed: u64,
+    massing_strategy: &str,
+    door_rhythm: &str,
+) -> u32 {
+    let width = width.max(2);
+    let min_x = 1u32;
+    let max_x = width.saturating_sub(2).max(min_x);
+    let span = max_x.saturating_sub(min_x) + 1;
+
+    let street_tagged = placement_tags.iter().any(|t| {
+        matches!(
+            t.as_str(),
+            "street_facing" | "commercial" | "storefront" | "civic"
+        )
+    });
+    let loading = placement_tags.iter().any(|t| {
+        matches!(t.as_str(), "loading_dock" | "logistics" | "rail" | "industrial")
+    });
+
+    let rhythm_bias = match door_rhythm {
+        "linear_center" => span / 2,
+        "perimeter_only" => (min_x + span / 4).max(min_x),
+        "leg_offset" => min_x + span / 3,
+        "loading_bay" => min_x + span * 2 / 3,
+        _ if massing_strategy.contains("long_hall") || massing_strategy.contains("double_hall") => {
+            span / 2
+        }
+        _ if massing_strategy.contains("l_shape") => min_x + span / 3,
+        _ if street_tagged => min_x + span / 2,
+        _ if loading => min_x + span * 2 / 3,
+        _ => width / 2,
+    };
+
+    let jitter = (seed % span.max(1) as u64) as u32;
+    let base = if street_tagged || loading {
+        rhythm_bias.saturating_add(jitter / 2)
+    } else {
+        rhythm_bias
+    };
+    base.clamp(min_x, max_x)
+}
+
+#[must_use]
+pub fn bq_h2_street_facing_witness_green() -> bool {
+    let col = street_facing_door_column(
+        6,
+        4,
+        &["street_facing".into(), "commercial".into()],
+        42,
+        "row_infill",
+        "linear_center",
+    );
+    col >= 1 && col <= 4 && col != 0 && col != 5
+}
+
+#[must_use]
+pub fn build_bq_h2_openings_witness_body() -> serde_json::Value {
+    let grid = FootprintGrid::from_grammar(&super::building_grammar::generate(
+        "IndustrialWarehouse",
+        "industrial_west",
+        43,
+    )
+    .expect("grammar"));
+    let door = grid
+        .cells
+        .iter()
+        .find(|c| c.token == FootprintToken::Door && c.floor == 0)
+        .map(|c| (c.x, c.y));
+    let green = bq_h2_street_facing_witness_green()
+        && door.is_some_and(|(_, y)| y == 0)
+        && door.is_some_and(|(x, _)| x >= 1);
+    serde_json::json!({
+        "gate": "BQ-H2-OPENINGS-001",
+        "green": green,
+        "door_cell_floor0": door.map(|(x, y)| serde_json::json!({"x": x, "y": y})),
+        "uses_street_facing_heuristic": true,
+        "plan_ref": "src/dev/plan_building_quality_v1.md#BQ-H2",
+    })
+}
+
+#[must_use]
+pub fn bq_h_openings_witness_green() -> bool {
+    build_bq_h2_openings_witness_body()
+        .get("green")
+        .and_then(|v| v.as_bool())
+        .unwrap_or(false)
+}
+
+#[must_use]
+pub fn refresh_bq_h2_openings_witness() -> bool {
+    use crate::dev::debug_run_envelope::{wrap_debug_run, write_debug_run_json};
+
+    const JSON: &str = "debug_runs/bq_h2_openings_001_live.json";
+    let body = build_bq_h2_openings_witness_body();
+    let green = body.get("green").and_then(|v| v.as_bool()).unwrap_or(false);
+    let wrapped = wrap_debug_run("BQ-H2-OPENINGS-001", "refresh_bq_h2_openings_witness", JSON, body);
+    write_debug_run_json(JSON, wrapped) && green
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -232,6 +352,28 @@ mod tests {
                 cell.x,
                 cell.y
             );
+        }
+    }
+
+    #[test]
+    fn footprint_grid_door_not_on_corner_when_street_tagged() {
+        let col = street_facing_door_column(4, 2, &["street_facing".into()], 7, "long_hall", "linear_center");
+        assert!(col >= 1 && col <= 2);
+        let grid = FootprintGrid::from_rect_with_door(4, 2, 1, Some(col));
+        let door = grid.cells.iter().find(|c| c.token == FootprintToken::Door).unwrap();
+        assert_ne!(door.x, 0);
+        assert_ne!(door.x + 1, grid.width);
+    }
+
+    #[test]
+    fn bq_h2_openings_witness_green_lib() {
+        assert!(bq_h_openings_witness_green());
+    }
+
+    #[test]
+    fn bq_h2_refresh_witness_when_green() {
+        if bq_h_openings_witness_green() {
+            assert!(refresh_bq_h2_openings_witness());
         }
     }
 }

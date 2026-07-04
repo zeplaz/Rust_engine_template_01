@@ -432,6 +432,34 @@ pub fn map_zoom_alpha_with_limits(scale_x: f32, zoom_lo: f32, zoom_hi: f32) -> f
     ((z - zoom_lo) / span).clamp(0.0, 1.0)
 }
 
+/// Pan/zoom the tactical camera to frame a world-space tile AABB (fire test / intel focus).
+#[must_use]
+pub fn map_camera_desired_fit_tile_aabb(
+    min_tile: Vec2,
+    max_tile: Vec2,
+    map_vp: &SimulationMapViewport,
+    window_px: Vec2,
+    tex_extent: Vec2,
+    world_w: f32,
+    world_h: f32,
+    margin: f32,
+) -> MapCameraDesired {
+    let center = (min_tile + max_tile) * 0.5;
+    let span = (max_tile - min_tile).max(Vec2::splat(32.0));
+    let viewport = map_camera_viewport_pixels(window_px, Some(map_vp));
+    let view_px = map_camera_rtt_view_pixels(map_vp, tex_extent);
+    let (zoom_lo, zoom_hi) = map_zoom_limits_for_world(world_w, world_h, viewport);
+    let m = margin.max(1.05);
+    let zoom = (view_px.x / (span.x * m))
+        .min(view_px.y / (span.y * m))
+        .clamp(zoom_lo, zoom_hi);
+    MapCameraDesired {
+        translation: Vec3::new(center.x, center.y, MAIN_WORLD_CAMERA_Z),
+        scale: Vec3::splat(zoom),
+        ..Default::default()
+    }
+}
+
 #[inline]
 fn test_scene_zoom(test_scene: Option<Res<ActiveTestScene>>) -> f32 {
     test_scene

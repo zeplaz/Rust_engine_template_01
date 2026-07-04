@@ -78,7 +78,8 @@ impl Plugin for FirePlugin {
                     .after(chunk_fire_overlay_tick)
                     .in_set(ChunkEnvironmentSet::Fire),
                 witness_collectors::write_fire_ecology_live_proof_system
-                    .after(witness_collectors::finalize_fire_ecology_witness_frame),
+                    .after(witness_collectors::finalize_fire_ecology_witness_frame)
+                    .run_if(crate::dev::runtime_witness::fire_ecology_live_proof_due),
                 emit_ember_spot_ignition_events.in_set(ChunkEnvironmentSet::Fire),
                 apply_ember_spot_ignitions.in_set(ChunkEnvironmentSet::Fire),
                 chunk_surface_fire_tick.in_set(ChunkEnvironmentSet::Fire),

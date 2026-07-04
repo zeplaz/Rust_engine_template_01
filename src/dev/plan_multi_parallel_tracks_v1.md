@@ -9,6 +9,8 @@ Owner: @orchestrator (sequencing) · all agents pull rows
 Machine board: tools/orchestrator/queues/multi_parallel_tracks_dispatch_v1.json
 Wave-0 orders: tools/orchestrator/queues/multi_parallel_tracks_wave0_orders_v1.md
 Hub: src/dev/agent_hub_queue_v1.md §Multi-parallel pull
+Deferrals: src/dev/plan_deferral_registry_v1.md — evaluate DR-* before picking blocked rows
+Migration truth: debug_runs/mig_bevy_019/mig_v1_gate.json (MIG-V1 green)
 ```
 
 **Headline:** Eight **independent waterfalls** run at the same time. Agents never wait for another track’s primary — they pull the next `ready` row **in their owner lane** on **any** track. Tracks only serialize **within themselves** (wave 0 → 1 → 2). Cross-track work is **`parallel_ok` by default** unless a `cross_track_lock` is listed.

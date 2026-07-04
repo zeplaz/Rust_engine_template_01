@@ -4,6 +4,7 @@ mod apply;
 mod budget;
 mod chunk_cache;
 mod diagnostics;
+mod entity_reserve;
 mod hydrate;
 mod interest;
 mod manifest_cache;
@@ -566,6 +567,8 @@ pub fn reconstruct_staged_chunks_into_cache(
 #[derive(Resource, Debug, Default, Clone)]
 pub struct PendingStreamApplyQueue {
     pub ready_bodies: Vec<(IVec2, SavedChunkBody)>,
+    /// MIG-A5 — pre-allocated entity ids for pending apply batch (freed after apply if unused).
+    pub reserved_entities: Vec<Entity>,
 }
 
 pub fn finalize_stream_domain_reconstruct(
@@ -599,6 +602,7 @@ impl Plugin for StreamingSpinePlugin {
             .init_resource::<ChunkStreamIoDispatcher>()
             .init_resource::<StreamHydrateDiagnostics>()
             .init_resource::<PendingStreamApplyQueue>()
+            .init_resource::<entity_reserve::StreamingEntityReserveSpine>()
             .init_resource::<PendingTileStorageDiffQueue>()
             .init_resource::<TileStorageSmoothTransitionState>()
             .init_resource::<TileStorageApplyReport>()
@@ -607,6 +611,7 @@ impl Plugin for StreamingSpinePlugin {
             .init_resource::<StreamingSpineDiagState>()
             .init_resource::<StreamingSpineBudget>()
             .init_resource::<StreamingManifestCache>()
+            .add_systems(Startup, entity_reserve::init_streaming_entity_reserve_spine)
             .add_systems(
                 Update,
                 (
@@ -626,7 +631,11 @@ impl Plugin for StreamingSpinePlugin {
                     attrib_streaming_reconstruct_before,
                     reconstruct_staged_chunks_into_cache
                         .run_if(diagnostics::streaming_warm_gate_allows_reconstruct()),
+                    entity_reserve::mig_a5_reserve_before_stream_apply
+                        .run_if(diagnostics::streaming_warm_gate_allows_reconstruct()),
                     apply::apply_pending_stream_chunk_bodies
+                        .run_if(diagnostics::streaming_warm_gate_allows_reconstruct()),
+                    entity_reserve::mig_a5_release_after_stream_apply
                         .run_if(diagnostics::streaming_warm_gate_allows_reconstruct()),
                     crate::render::clear_async_domain_apply_labels_after_stream_apply
                         .after(apply::apply_pending_stream_chunk_bodies)
@@ -638,7 +647,8 @@ impl Plugin for StreamingSpinePlugin {
                     tick_tile_storage_smooth_transitions,
                     attrib_streaming_reconstruct_after,
                     diagnostics::log_streaming_spine_frame_summary_system,
-                    wave_c::write_wave_c_live_proof_system,
+                    wave_c::write_wave_c_live_proof_system
+                        .run_if(crate::dev::runtime_witness::live_proof_cadence_due),
                 )
                     .chain()
                     .after(crate::gui::WorldRepresentationSystemSet::ComputeFrame),
@@ -653,6 +663,9 @@ impl Plugin for StreamingSpinePlugin {
 
 pub use crate::dev::runtime_witness::wave_c::{
     commit_wave_c_live_proof, wc_depth_001_green, WAVE_C_LIVE_JSON, WaveCLiveProofState,
+};
+pub use entity_reserve::{
+    mig_a5_stream_entity_reserve_enabled, StreamingEntityReserveSpine,
 };
 pub use wave_c_prerequisites::WAVE_C_DEPTH_001_CLOSED_ITEM;
 

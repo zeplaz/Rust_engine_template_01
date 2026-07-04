@@ -1,4 +1,5 @@
-//! JSON loader for road vehicle configs. Legacy Drez helpers: [`super::legacy_drez`].
+//! JSON loader for road vehicle configs.
+//! Drez-era `.dat` loaders removed **CLN-P0-R4-001** (2026-07-03); migration complete.
 
 use crate::entities::RoadVehicleConfig;
 use std::fs;

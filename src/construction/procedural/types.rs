@@ -3,7 +3,7 @@
 use std::collections::HashMap;
 
 use bevy::prelude::Resource;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 /// High-level zoning / usage hint for archetype ↔ StylePack matching.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Deserialize)]
@@ -127,6 +127,28 @@ pub enum FallbackPolicy {
     PrimitiveFootprint,
 }
 
+/// Why a facade slot was hidden under **`hide_slot`** (**BQ-F3-SLOT-001**).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum MissingSlotReason {
+    SlotUnresolved,
+    ModuleNotFound,
+    SmokeModule,
+    GreyboxModule,
+}
+
+/// Recorded when `fallback_policy: hide_slot` culls a cell (**BQ-F3-SLOT-001**).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct MissingSlotViolation {
+    pub slot_key: String,
+    pub style_pack_id: String,
+    pub grid_x: u32,
+    pub grid_y: u32,
+    pub floor: u32,
+    pub module_id: String,
+    pub reason: MissingSlotReason,
+}
+
 /// One promoted style pack — slot map only; meshes resolve via `ProceduralModuleRegistry`.
 #[derive(Debug, Clone)]
 pub struct StylePack {
@@ -140,6 +162,11 @@ pub struct StylePack {
 }
 
 impl StylePack {
+    #[must_use]
+    pub fn records_hide_slot_violations(&self) -> bool {
+        self.fallback_policy == FallbackPolicy::HideSlot
+    }
+
     #[must_use]
     pub fn resolve_slot(&self, key: StylePackSlotKey) -> Option<&str> {
         self.slots.get(key.ron_key()).map(|s| s.as_str())

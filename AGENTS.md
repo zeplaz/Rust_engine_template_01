@@ -8,6 +8,21 @@ Policy: [`src/dev/single_worktree_policy_v1.md`](src/dev/single_worktree_policy_
 
 ---
 
+**Bevy 0.19 migration (2026-07-03):** **CLOSED on master** · `mig_a_program_close.json` · **Do not pick MIG-*** — use [`coder_todos_v1.md`](src/dev/coder_todos_v1.md)
+
+| Doc | Purpose |
+|-----|---------|
+| [`src/dev/plan_bevy_019_migration_v1.md`](src/dev/plan_bevy_019_migration_v1.md) | Plan + **§ AGENT ROUTING** — deferral taxonomy |
+| [`src/dev/plan_deferral_registry_v1.md`](src/dev/plan_deferral_registry_v1.md) | **Cross-program DR-*** deferrals + `unblock_when` predicates (all plans cite this) |
+| [`tools/orchestrator/queues/defer_registry.json`](tools/orchestrator/queues/defer_registry.json) | Machine queue defer rows |
+| [`debug_runs/mig_bevy_019/mig_v1_gate.json`](debug_runs/mig_bevy_019/mig_v1_gate.json) | P0–V1 gate + `deferral_taxonomy` + `pick_now` |
+| [`debug_runs/mig_bevy_019/mig_a_rollup.json`](debug_runs/mig_bevy_019/mig_a_rollup.json) | MIG-A per-slice status |
+| [`tools/orchestrator/queues/HANDOFF.md`](tools/orchestrator/queues/HANDOFF.md) § PLAN-BEVY-019-MIG-v1 | Operator lane + priority ladder |
+
+**Do not re-pick:** MIG-G/M/R/V1 or shipped MIG-A core. **BSN is not migration** — MIG-A9 handoff complete; route to [`plan_city_grammar_upgrade_v1.md`](src/dev/plan_city_grammar_upgrade_v1.md) § BSN ASSEMBLY CHARTER. Before other DEFER rows: evaluate **DR-*** in `plan_deferral_registry_v1.md`.
+
+---
+
 ## Stage 5 convergence (primary lane)
 
 Visual / world representation work follows **convergent growth**, not a feature freeze. New systems must **attach to authoritative contracts** (`RepresentationResult`, `FireVisualFrame`, `SharedOverlayFieldBuffers`, projection graph, registry GPU upload) and must **not** introduce parallel extraction or duplicate LOD. Transitional scaffolds require a declared `ScaffoldContract` (`src/gui/representation_governance.rs`).

@@ -415,11 +415,8 @@ pub fn sync_construction_proof_witness_flags(
     mut phase2: ResMut<crate::dev::construction_phase2_todos::ConstructionPhase2Witness>,
     mut p9: ResMut<crate::dev::construction_p9_todos::ConstructionP9Witness>,
 ) {
-    let due_this_frame = proof
-        .frames_since_write
-        .saturating_add(1)
-        >= proof.write_interval;
-    if proof.written || due_this_frame {
+    let due_this_frame = proof.cadence.write_due;
+    if proof.written() || due_this_frame {
         operational.proof_json = true;
         phase2.construction_proof_json = true;
         *p9 = crate::dev::construction_p9_todos::ConstructionP9Witness::from_phase2(phase2.as_ref());
@@ -503,6 +500,7 @@ mod live_proof_sim_tests {
 
         app.world_mut()
             .resource_mut::<ConstructionLiveProofState>()
+            .cadence
             .write_interval = 10;
 
         app.add_systems(
@@ -570,7 +568,7 @@ mod live_proof_sim_tests {
         );
         assert!(json.get("p9_build").is_some());
         assert!(app.world().resource::<ConstructionP9TodoBoard>().is_green());
-        assert!(app.world().resource::<ConstructionLiveProofState>().written);
+        assert!(app.world().resource::<ConstructionLiveProofState>().written());
         assert_eq!(
             json["construction_mv_001"]["green"],
             serde_json::json!(true),

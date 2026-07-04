@@ -80,6 +80,34 @@ pub fn simulation_map_rtt_clear_color(palette: &UiPalette) -> Color {
     palette.bevy_sim_map_field_clear()
 }
 
+/// One full sim-day cycle length for RTT clear day/night lerp (8 minutes at 1× sim speed).
+pub const SIM_MAP_DAY_CYCLE_MICROS: u64 = 480_000_000;
+
+/// Normalized daylight in `[0, 1]` from monotonic sim time (sinusoidal day/night).
+#[must_use]
+pub fn sim_map_daylight_factor(sim_time_micros: u64) -> f32 {
+    let phase = (sim_time_micros % SIM_MAP_DAY_CYCLE_MICROS) as f64 / SIM_MAP_DAY_CYCLE_MICROS as f64;
+    (((phase * std::f64::consts::TAU).sin() + 1.0) * 0.5) as f32
+}
+
+/// Drive MainWorldCamera + HUD UI camera clear from sim time day/night cycle.
+pub fn sync_sim_map_clear_from_day_cycle(
+    palette: Res<UiPalette>,
+    sim_time: Res<crate::systems::sim_control::SimTimeMicros>,
+    mut main_cams: Query<&mut Camera, With<MainWorldCamera>>,
+    mut hud_cams: Query<&mut Camera, With<SimulationHudUiCamera>>,
+) {
+    let color = palette.bevy_sim_map_field_clear_for_daylight(sim_map_daylight_factor(sim_time.0));
+    let cfg = ClearColorConfig::Custom(color);
+    for mut cam in main_cams.iter_mut().chain(hud_cams.iter_mut()) {
+        cam.clear_color = cfg;
+        cam.output_mode = CameraOutputMode::Write {
+            blend_state: None,
+            clear_color: cfg,
+        };
+    }
+}
+
 /// Pre-pass + upscaling write clear for [`MainWorldCamera`] / HUD UI camera.
 pub fn apply_simulation_map_camera_clear(camera: &mut Camera, palette: &UiPalette) {
     let color = simulation_map_rtt_clear_color(palette);
@@ -227,6 +255,11 @@ pub fn sync_simulation_map_image_node_system(
 impl Plugin for SimulationMapRttPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<crate::gui::sim_map_rtt::SimulationMapFillRect>()
+            .add_systems(
+                Update,
+                sync_sim_map_clear_from_day_cycle
+                    .after(crate::systems::sim_control::SimControlSystemSet::AdvanceSimTick),
+            )
             .add_systems(
                 PostUpdate,
                 (

@@ -7,15 +7,15 @@ use bevy_egui::{egui, EguiContexts, EguiPrimaryContextPass};
 
 use crate::engine::ActiveTestScene;
 use crate::gui::map_camera::{
-    map_camera_viewport_pixels, map_zoom_alpha_with_limits,
-    map_zoom_limits_for_world, MainWorldCameraViewportLatch, MapCameraDesired,
+    map_camera_desired_fit_tile_aabb, map_camera_viewport_pixels, map_zoom_alpha_with_limits,
+    map_zoom_limits_for_world, MainWorldCamera, MainWorldCameraViewportLatch, MapCameraDesired,
     MapCameraDesiredRes, sim_map_world_xy_to_egui_with_window,
 };
-use crate::gui::view_authority::map_camera_desired_from_view_authority;
-use crate::gui::SimulationMapViewport;
-use crate::render::view_runtime::ViewProjectionAuthority;
+use crate::gui::view_authority::{commit_map_camera_pose_to_view_authority, map_camera_desired_from_view_authority};
+use crate::gui::{SimulationMapTexture, SimulationMapViewport};
+use crate::render::view_runtime::{ViewProjectionAuthority, ViewRuntimeTrace};
 use crate::systems::fire::ChunkSurfaceFire;
-use crate::terrain::generation::{world_generator_enhanced::WorldGenParams, Chunk, ChunkCellMatrix};
+use crate::terrain::generation::{chunk_world_origin, world_generator_enhanced::WorldGenParams, Chunk, ChunkCellMatrix};
 
 /// Tile-space AABB around seeded test fire (XY = map plane; Z unused in projection).
 #[derive(Resource, Clone, Debug)]
@@ -23,6 +23,8 @@ pub struct VfxFireTestHighlight {
     pub enabled: bool,
     pub min_tile: Vec2,
     pub max_tile: Vec2,
+    /// One-shot request to pan/zoom the tactical camera onto the burning region.
+    pub needs_camera_focus: bool,
 }
 
 impl Default for VfxFireTestHighlight {
@@ -31,6 +33,7 @@ impl Default for VfxFireTestHighlight {
             enabled: false,
             min_tile: Vec2::ZERO,
             max_tile: Vec2::ONE,
+            needs_camera_focus: false,
         }
     }
 }
@@ -67,8 +70,9 @@ pub fn highlight_region_from_burning_chunks(
         any = true;
         let slab_x = matrix.size.x.max(1) as f32;
         let slab_y = matrix.size.y.max(1) as f32;
-        let c_min = Vec2::new(chunk.coord.x as f32 * slab_x, chunk.coord.y as f32 * slab_y);
-        let c_max = c_min + Vec2::new(slab_x, slab_y);
+        let origin = chunk_world_origin(chunk.coord, matrix.size);
+        let c_min = origin;
+        let c_max = origin + Vec2::new(slab_x, slab_y);
         min = min.min(c_min);
         max = max.max(c_max);
     }
@@ -110,6 +114,7 @@ pub fn refresh_vfx_fire_test_highlight_from_burning(
     if let Some((min_tile, max_tile)) = highlight_region_from_burning_chunks(fire_q, params, 48.0) {
         highlight.min_tile = min_tile;
         highlight.max_tile = max_tile;
+        highlight.needs_camera_focus = true;
     }
 }
 
@@ -257,6 +262,7 @@ impl Plugin for VfxFireTestHighlightPlugin {
                 (
                     sync_vfx_fire_test_highlight_armed,
                     sync_vfx_fire_test_highlight_from_burning_system,
+                    focus_vfx_fire_test_camera_on_burning_region,
                 )
                     .chain(),
             )
@@ -283,6 +289,51 @@ fn sync_vfx_fire_test_highlight_from_burning_system(
     mut highlight: ResMut<VfxFireTestHighlight>,
 ) {
     refresh_vfx_fire_test_highlight_from_burning(params.as_ref(), &fire_q, highlight.as_mut());
+}
+
+fn focus_vfx_fire_test_camera_on_burning_region(
+    scene: Option<Res<ActiveTestScene>>,
+    mut highlight: ResMut<VfxFireTestHighlight>,
+    params: Res<WorldGenParams>,
+    map_vp: Res<SimulationMapViewport>,
+    tex: Res<SimulationMapTexture>,
+    images: Res<Assets<Image>>,
+    windows: Query<&Window, With<bevy::window::PrimaryWindow>>,
+    mut authority: ResMut<ViewProjectionAuthority>,
+    mut trace: ResMut<ViewRuntimeTrace>,
+    mut cam: Query<&mut Transform, With<MainWorldCamera>>,
+) {
+    if !highlight.enabled || !highlight.needs_camera_focus {
+        return;
+    }
+    if !scene.is_some_and(|s| s.0.seeds_fire_overlay()) {
+        return;
+    }
+    let world_w = params.width.max(1) as f32;
+    let world_h = params.height.max(1) as f32;
+    let window_px = windows
+        .single()
+        .ok()
+        .map(|w| Vec2::new(w.width().max(1.0), w.height().max(1.0)))
+        .unwrap_or(Vec2::new(1280.0, 720.0));
+    let tex_extent = crate::gui::simulation_map_texture_extent(tex.as_ref(), images.as_ref());
+    let desired = map_camera_desired_fit_tile_aabb(
+        highlight.min_tile,
+        highlight.max_tile,
+        map_vp.as_ref(),
+        window_px,
+        tex_extent,
+        world_w,
+        world_h,
+        1.15,
+    );
+    commit_map_camera_pose_to_view_authority(authority.as_mut(), trace.as_mut(), &desired);
+    for mut t in cam.iter_mut() {
+        t.translation.x = desired.translation.x;
+        t.translation.y = desired.translation.y;
+        t.scale = desired.scale;
+    }
+    highlight.needs_camera_focus = false;
 }
 
 #[must_use]

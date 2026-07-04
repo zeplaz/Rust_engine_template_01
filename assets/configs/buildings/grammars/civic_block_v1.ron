@@ -15,10 +15,10 @@
     ),
     massing: (
         strategies: [
-            (id: "stepped_block", weight: 45, footprint_mode: "rect"),
-            (id: "corner_anchored", weight: 35, footprint_mode: "l_shape"),
-            (id: "row_infill", weight: 15, width_depth_ratio: 1.2, footprint_mode: "rect"),
-            (id: "plaza_setback", weight: 5, footprint_mode: "yard_interior"),
+            (id: "stepped_block", weight: 45, footprint_mode: rect),
+            (id: "corner_anchored", weight: 35, footprint_mode: l_shape),
+            (id: "row_infill", weight: 15, width_depth_ratio: 1.2, footprint_mode: rect),
+            (id: "plaza_setback", weight: 5, footprint_mode: yard_interior),
         ],
     ),
     roof: (

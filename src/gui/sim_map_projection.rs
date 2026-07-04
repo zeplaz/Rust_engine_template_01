@@ -90,7 +90,7 @@ pub fn sim_map_screen_to_world_xy_in_frame(
     let cam = pose.translation.truncate();
     Vec2::new(
         cam.x + (nx - 0.5) * frame.visible_w,
-        cam.y + (0.5 - ny) * frame.visible_h,
+        cam.y + (ny - 0.5) * frame.visible_h,
     )
 }
 

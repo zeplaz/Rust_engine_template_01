@@ -15,7 +15,7 @@
     },
     "operation": {
       "type": "string",
-      "enum": ["module_wall", "module_roof", "module_door", "module_window", "module_prop"]
+      "enum": ["module_wall", "module_roof", "module_door", "module_window", "module_prop", "module_variant_merge"]
     },
     "params": {
       "type": "object",

@@ -59,7 +59,7 @@
     "relative_path": "debug_runs/landscape_grammar_lg4_preview_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_lg4_preview_witness",
-    "written_at_epoch_secs": 1783028015
+    "written_at_epoch_secs": 1783111825
   },
   "gate": "LG-4-PREVIEW-001",
   "green": true,

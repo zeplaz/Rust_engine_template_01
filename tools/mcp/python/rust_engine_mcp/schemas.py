@@ -24,6 +24,10 @@ def validate_geometry_job(data: dict[str, Any]) -> None:
     jsonschema.validate(instance=data, schema=_load_schema("geometry_job_v1.schema.json"))
 
 
+def validate_module_contract(data: dict[str, Any]) -> None:
+    jsonschema.validate(instance=data, schema=_load_schema("module_contract_v1.schema.json"))
+
+
 def validate_building_grammar(data: dict[str, Any]) -> None:
     jsonschema.validate(instance=data, schema=_load_schema("building_grammar_v1.schema.json"))
 

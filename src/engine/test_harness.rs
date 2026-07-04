@@ -1508,6 +1508,7 @@ fn apply_test_scene_defaults(
             }
         }
         TestScene::Fire => {
+            tile_debug.use_batched_mesh_overlay = true;
             seed_test_fire_near_world_center(&params, &mut fire_q, 6, 0.78, 0.65);
         }
         TestScene::Atmosphere => {
@@ -1567,6 +1568,7 @@ fn apply_test_scene_defaults(
         }
         TestScene::VfxSandbox => {
             wx.particles = true;
+            wx.background_aesthetic = true;
             focus_debug.enabled = false;
             tile_debug.use_batched_mesh_overlay = true;
             if let Some(gw) = global_wind.as_mut() {

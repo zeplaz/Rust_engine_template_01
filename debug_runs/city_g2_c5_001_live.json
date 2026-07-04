@@ -1,0 +1,177 @@
+{
+  "_agent_meta": {
+    "agent_commands": [
+      "cargo test -p proc_A_dine01 --lib"
+    ],
+    "docs": {
+      "compile_warnings": "src/dev/COMPILE_WARNINGS_TODOS.md",
+      "stage5_directive": "prompts/guides/stage5_convergence_directive_v1.md",
+      "viewport_recovery": "src/dev/recovery_viewport.md"
+    },
+    "logging_env": {
+      "ORCHESTRATOR_EXPORT_HEALTH": false,
+      "PERF": false,
+      "PERF_DISK": false,
+      "RUST_LOG": null,
+      "SIM_ANALYTICS": false,
+      "SIM_ANALYTICS_FRAMES": false,
+      "SIM_ANALYTICS_QUIET": false,
+      "SIM_VIEW_SYNC_DEBUG": false,
+      "STAGE5_READINESS_VERBOSE": false,
+      "STAGE5_VERBOSE": false,
+      "STALL": false,
+      "VIEWPORT_AUTHORITY_DEBUG": false
+    },
+    "orchestrator": {
+      "build_report": "tools/orchestrator/reports/build_report.md",
+      "ci_entry": "tools/orchestrator/ci/run.ps1",
+      "continuation_queue": "tools/orchestrator/queues/continuation_queue.json",
+      "warning_registry": "tools/orchestrator/reports/warning_registry.md"
+    },
+    "profile": "CITY-G2-C5-001",
+    "related_proofs": [
+      "debug_runs/stage5_full_app_live.json",
+      "debug_runs/infrastructure_view_isolation_live.json",
+      "debug_runs/construction_stage_live.json",
+      "debug_runs/industrial_activation_live.json",
+      "debug_runs/fire_ecology_live.json",
+      "debug_runs/logistics_throughput_live.json",
+      "debug_runs/replay_editor_parity_live.json",
+      "debug_runs/orchestrator_thread_health.json",
+      "debug_runs/viewport_drift.json",
+      "debug_runs/viewport_authority_migration_witness.json",
+      "debug_runs/main_thread_orchestrator_live.json",
+      "debug_runs/stage6_virtualization_live.json",
+      "debug_runs/wave_s_hydrate_live.json",
+      "debug_runs/wave_p_live.json",
+      "debug_runs/wave_c_live.json",
+      "debug_runs/ui_shell_migration_live.json",
+      "debug_runs/minimap_compositor_live.json",
+      "debug_runs/sim_spectrum_analytics_live.json",
+      "debug_runs/stage7_behavioral_live.json",
+      "debug_runs/stage7_play_live.json",
+      "debug_runs/wss_substrate_live.json",
+      "debug_runs/f2_smoke_pipeline_live.json",
+      "debug_runs/play_scenario_live.json",
+      "debug_runs/transport_network_live.json"
+    ],
+    "relative_path": "debug_runs/city_g2_c5_001_live.json",
+    "schema": "debug_run_envelope_v1",
+    "source_system": "refresh_city_g2_c5_001_palette_witness",
+    "written_at_epoch_secs": 1783114114
+  },
+  "city_g0_prerequisites_ok": true,
+  "city_g0_wit_note": "module index load only — full CITY-G0-WIT assembly may fail on grammar RON parse debt unrelated to C5",
+  "city_g1_c3_still_green": true,
+  "gate": "CITY-G2-C5-001",
+  "green": true,
+  "issue": "CITY-C5",
+  "matrix": [
+    {
+      "district_style": "industrial_west",
+      "hash": "4c4bb41c6fbeae0d",
+      "lot_seed": "0x59dcfef41af9f0f9",
+      "module_id": "wall_concrete_2u",
+      "palette_id": "palette_industrial_west_v1",
+      "pick_index": 1,
+      "variation_id": "iw_rust_weathered",
+      "visual_variant_id": "wall_concrete_2u::palette_industrial_west_v1::iw_rust_weathered"
+    },
+    {
+      "district_style": "industrial_west",
+      "hash": "d44abb800a64509c",
+      "lot_seed": "0xa1b2c3d4e5f60718",
+      "module_id": "wall_concrete_2u",
+      "palette_id": "palette_industrial_west_v1",
+      "pick_index": 0,
+      "variation_id": "iw_rust_clean",
+      "visual_variant_id": "wall_concrete_2u::palette_industrial_west_v1::iw_rust_clean"
+    },
+    {
+      "district_style": "industrial_west",
+      "hash": "7a474272642be7e3",
+      "lot_seed": "0x0102030405060708",
+      "module_id": "wall_concrete_2u",
+      "palette_id": "palette_industrial_west_v1",
+      "pick_index": 1,
+      "variation_id": "iw_rust_weathered",
+      "visual_variant_id": "wall_concrete_2u::palette_industrial_west_v1::iw_rust_weathered"
+    },
+    {
+      "district_style": "colonial",
+      "hash": "8ff83d2fcb91bf0b",
+      "lot_seed": "0x59dcfef41af9f0f9",
+      "module_id": "wall_brick_1u",
+      "palette_id": "palette_colonial_res_v1",
+      "pick_index": 1,
+      "variation_id": "cr_clapboard_white",
+      "visual_variant_id": "wall_brick_1u::palette_colonial_res_v1::cr_clapboard_white"
+    },
+    {
+      "district_style": "colonial",
+      "hash": "969d72ea69047a83",
+      "lot_seed": "0xa1b2c3d4e5f60718",
+      "module_id": "wall_brick_1u",
+      "palette_id": "palette_colonial_res_v1",
+      "pick_index": 0,
+      "variation_id": "cr_brick_red",
+      "visual_variant_id": "wall_brick_1u::palette_colonial_res_v1::cr_brick_red"
+    },
+    {
+      "district_style": "colonial",
+      "hash": "81fb334545bdcc75",
+      "lot_seed": "0x0102030405060708",
+      "module_id": "wall_brick_1u",
+      "palette_id": "palette_colonial_res_v1",
+      "pick_index": 2,
+      "variation_id": "cr_stone_accent",
+      "visual_variant_id": "wall_brick_1u::palette_colonial_res_v1::cr_stone_accent"
+    },
+    {
+      "district_style": "victorian",
+      "hash": "85c83206540eb518",
+      "lot_seed": "0x59dcfef41af9f0f9",
+      "module_id": "wall_brick_1u",
+      "palette_id": "palette_rowhouse_urban_v1",
+      "pick_index": 0,
+      "variation_id": "rh_brownstone",
+      "visual_variant_id": "wall_brick_1u::palette_rowhouse_urban_v1::rh_brownstone"
+    },
+    {
+      "district_style": "victorian",
+      "hash": "f917a56d622f1eeb",
+      "lot_seed": "0xa1b2c3d4e5f60718",
+      "module_id": "wall_brick_1u",
+      "palette_id": "palette_rowhouse_urban_v1",
+      "pick_index": 2,
+      "variation_id": "rh_brick_party",
+      "visual_variant_id": "wall_brick_1u::palette_rowhouse_urban_v1::rh_brick_party"
+    },
+    {
+      "district_style": "victorian",
+      "hash": "3299f14d52a8c4c6",
+      "lot_seed": "0x0102030405060708",
+      "module_id": "wall_brick_1u",
+      "palette_id": "palette_rowhouse_urban_v1",
+      "pick_index": 2,
+      "variation_id": "rh_brick_party",
+      "visual_variant_id": "wall_brick_1u::palette_rowhouse_urban_v1::rh_brick_party"
+    }
+  ],
+  "matrix_rows": 9,
+  "pilot_palette_family_count": 16,
+  "registry_ok": true,
+  "run_hashes": [
+    "4c4bb41c6fbeae0d",
+    "d44abb800a64509c",
+    "7a474272642be7e3",
+    "8ff83d2fcb91bf0b",
+    "969d72ea69047a83",
+    "81fb334545bdcc75",
+    "85c83206540eb518",
+    "f917a56d622f1eeb",
+    "3299f14d52a8c4c6"
+  ],
+  "stability_ok": true,
+  "three_palettes_loaded": true
+}

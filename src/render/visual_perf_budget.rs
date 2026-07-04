@@ -155,6 +155,32 @@ impl FireExtractCadence {
     }
 }
 
+/// Whether a full fire ECS extract is due this frame (GPU-P1-D cadence contract).
+#[must_use]
+pub fn fire_extract_cadence_due(
+    clock: &FireExtractClock,
+    cadence: &FireExtractCadence,
+    now_secs: f32,
+    tick_changed: bool,
+    spike_active: bool,
+    overlay_dirty: bool,
+    residency_dirty: bool,
+) -> bool {
+    if clock.last_full_extract_secs == 0.0 && clock.last_tick == 0 {
+        return true;
+    }
+    let min_interval = cadence.effective_min_interval_secs(spike_active);
+    let interval_elapsed =
+        (now_secs - clock.last_full_extract_secs).max(0.0) >= min_interval;
+    if spike_active {
+        interval_elapsed
+    } else if cadence.full_scan_on_sim_tick {
+        tick_changed || interval_elapsed || overlay_dirty || residency_dirty
+    } else {
+        interval_elapsed || overlay_dirty || residency_dirty
+    }
+}
+
 /// Bookkeeping for [`extract_fire_simulation_snapshot`] throttle.
 #[derive(Resource, Debug, Clone, Copy, Default)]
 pub struct FireExtractClock {
@@ -210,6 +236,10 @@ pub struct FireExtractFrameReport {
     pub chunks_profiled: u32,
     pub instances_written: u32,
     pub chunk_heat_written: u32,
+    /// MIG-A13 — CPU greedy light clusters built this frame.
+    pub cpu_light_clusters: u32,
+    pub cpu_light_instances_sampled: u32,
+    pub cpu_light_requests: u32,
     pub runtime_chunks: u32,
     pub min_interval_secs: f32,
     pub fingerprint_skipped: bool,
@@ -376,5 +406,68 @@ mod tests {
         };
         assert!((cadence.effective_min_interval_secs(false) - 1.0).abs() < f32::EPSILON);
         assert!(cadence.effective_min_interval_secs(true) >= 2.5);
+    }
+
+    #[test]
+    fn fire_extract_cadence_due_first_frame_always() {
+        let clock = FireExtractClock::default();
+        let cadence = FireExtractCadence::default();
+        assert!(fire_extract_cadence_due(
+            &clock, &cadence, 0.0, false, false, false, false
+        ));
+    }
+
+    #[test]
+    fn fire_extract_cadence_skips_when_interval_not_elapsed() {
+        let cadence = FireExtractCadence {
+            min_interval_secs: 1.0,
+            full_scan_on_sim_tick: false,
+            residency_scoped: true,
+        };
+        let clock = FireExtractClock {
+            last_full_extract_secs: 0.5,
+            last_tick: 1,
+            ..Default::default()
+        };
+        assert!(!fire_extract_cadence_due(
+            &clock, &cadence, 0.6, true, false, false, false
+        ));
+    }
+
+    #[test]
+    fn fire_extract_spike_mode_ignores_tick_without_interval() {
+        let cadence = FireExtractCadence {
+            min_interval_secs: 1.0,
+            full_scan_on_sim_tick: true,
+            residency_scoped: true,
+        };
+        let clock = FireExtractClock {
+            last_full_extract_secs: 0.2,
+            last_tick: 5,
+            ..Default::default()
+        };
+        assert!(!fire_extract_cadence_due(
+            &clock, &cadence, 0.5, true, true, false, false
+        ));
+        assert!(fire_extract_cadence_due(
+            &clock, &cadence, 1.3, true, true, false, false
+        ));
+    }
+
+    #[test]
+    fn fire_extract_residency_dirty_forces_cadence() {
+        let cadence = FireExtractCadence {
+            min_interval_secs: 5.0,
+            full_scan_on_sim_tick: false,
+            residency_scoped: true,
+        };
+        let clock = FireExtractClock {
+            last_full_extract_secs: 1.0,
+            last_tick: 10,
+            ..Default::default()
+        };
+        assert!(fire_extract_cadence_due(
+            &clock, &cadence, 1.1, false, false, false, true
+        ));
     }
 }

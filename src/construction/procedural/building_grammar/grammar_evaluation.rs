@@ -222,19 +222,21 @@ impl BuildingGrammar {
         let ai = pick_weighted_index(&age_weights, mix_seed(seed, "age"));
         let age_band = &self.age.bands[ai];
 
+        let resolved_facade = self.facade.resolve_for_massing(&strategy.id);
+
         let mut slot_overrides = HashMap::new();
         slot_overrides.insert(
             "roof_default".into(),
             self.roof_slot_for_massing(&strategy.id).into(),
         );
-        if !self.facade.wall_slot.as_str().is_empty() {
-            slot_overrides.insert("wall_1u".into(), self.facade.wall_slot.to_string());
+        if !resolved_facade.wall_slot.as_str().is_empty() {
+            slot_overrides.insert("wall_1u".into(), resolved_facade.wall_slot.to_string());
         }
-        if !self.facade.door_slot.as_str().is_empty() {
-            slot_overrides.insert("door_default".into(), self.facade.door_slot.to_string());
+        if !resolved_facade.door_slot.as_str().is_empty() {
+            slot_overrides.insert("door_default".into(), resolved_facade.door_slot.to_string());
         }
-        if !self.facade.window_slot.as_str().is_empty() {
-            slot_overrides.insert("window_1u".into(), self.facade.window_slot.to_string());
+        if !resolved_facade.window_slot.as_str().is_empty() {
+            slot_overrides.insert("window_1u".into(), resolved_facade.window_slot.to_string());
         }
 
         let mut rule_chain = vec![
@@ -263,8 +265,12 @@ impl BuildingGrammar {
             },
             GrammarRuleStep {
                 layer: "facade",
-                rule_id: "facade_v1".into(),
-                detail: format!("tags={}", self.facade.placement_tags.join(",")),
+                rule_id: format!("facade_{}", strategy.id),
+                detail: format!(
+                    "tags={}; rhythm={}",
+                    resolved_facade.placement_tags.join(","),
+                    resolved_facade.door_rhythm
+                ),
             },
             GrammarRuleStep {
                 layer: "detail",
@@ -305,7 +311,7 @@ impl BuildingGrammar {
             floors,
             style_pack_id: district.style_pack_id.as_str().to_owned(),
             slot_overrides,
-            placement_tags: self.facade.placement_tags.clone(),
+            placement_tags: resolved_facade.placement_tags,
             variant_tags: age_band.variant_tags.clone(),
             detail_density: self.detail.density,
             age_band: age_band.id.clone(),
@@ -313,6 +319,7 @@ impl BuildingGrammar {
             material_profiles,
             weathering,
             arch_dna_preset_id: arch_dna.map(|c| c.preset_id.clone()),
+            door_rhythm: resolved_facade.door_rhythm,
         })
     }
 }

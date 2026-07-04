@@ -301,6 +301,7 @@ impl Plugin for BuildPlanningPlugin {
                     procedural::init_procedural_module_registry,
                     procedural::init_tile_atlas_registry,
                     procedural::init_style_pack_registry,
+                    procedural::init_palette_catalog_registry,
                     procedural::init_variant_catalog,
                     building_definitions::init_building_definition_registry,
                     ensure_build_toolbox_shell_visible,
@@ -354,7 +355,8 @@ impl Plugin for BuildPlanningPlugin {
                         construction_stage_witness::sync_construction_round2_board_system,
                         construction_stage_witness::sync_construction_round3_board_system,
                         construction_stage_witness::sync_construction_operational_board_system,
-                        witness_collectors::write_construction_live_proof_system,
+                        witness_collectors::write_construction_live_proof_system
+                            .run_if(crate::dev::runtime_witness::construction_live_proof_due),
                     )
                         .chain(),
                 )

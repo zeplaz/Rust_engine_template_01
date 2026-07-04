@@ -9,21 +9,21 @@ use crate::gui::editor::world_preview::{
     PreviewPathAuthority, WAVE_P_LIVE_JSON,
 };
 
+use super::common::WitnessWriteCadence;
 use super::io::write_enveloped_witness;
 
 #[derive(Resource, Debug)]
 pub struct WavePLiveProofState {
-    pub frames_since_write: u32,
-    pub write_interval: u32,
-    pub written: bool,
+    pub cadence: WitnessWriteCadence,
 }
 
 impl Default for WavePLiveProofState {
     fn default() -> Self {
         Self {
-            frames_since_write: 0,
-            write_interval: 120,
-            written: false,
+            cadence: WitnessWriteCadence {
+                write_interval: 120,
+                ..Default::default()
+            },
         }
     }
 }
@@ -55,11 +55,6 @@ pub fn write_wave_p_witness_system(
     if !matches!(base.get(), BaseState::Simulation) && !chrome_active {
         return;
     }
-    state.frames_since_write = state.frames_since_write.saturating_add(1);
-    if state.frames_since_write < state.write_interval {
-        return;
-    }
-    state.frames_since_write = 0;
 
     let layers = graph
         .as_deref()
@@ -105,6 +100,6 @@ pub fn write_wave_p_witness_system(
     );
     let body = build_wave_p_witness_payload(&report, Some(d04), Some(d07), Some(d02));
     if commit_wave_p_witness(body) {
-        state.written = true;
+        state.cadence.written = true;
     }
 }

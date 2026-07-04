@@ -1,6 +1,5 @@
 // Serialization and deserialization
 mod deserializers;
-mod legacy_drez;
 mod resource_deserializer;
 
 // Public exports

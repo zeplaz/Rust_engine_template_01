@@ -95,12 +95,13 @@ WSS-DESIGN-GATE-001 · CONSTRUCTION-PARAM-DESIGN-001 · wave 4/5 signoffs · FIR
 
 Queue `active` is empty — see [`stage_designer_workboard_v1.md`](stage_designer_workboard_v1.md) and optional / `routed_to_coder` lanes only.
 
-### P0 — city grammar (designer-mcp — blocked on G0)
+### P0 — city grammar (designer-mcp — G1/G2 charters closed)
 
 | ID | Action | Owner | Status |
 |:---|:---|:---|:---|
-| **DES-CITY-BLOCK-RECIPE-001** | [`design_city_block_recipe_v1.md`](design_city_block_recipe_v1.md) DRAFT | designer-mcp | **blocked** on G0c · critique → PASS |
-| **DES-CITY-PALETTE-VARIATION-001** | Kit × palette variation charter (CITY-C5) | designer-mcp | **blocked** until G1 gate |
+| ~~**DES-CITY-BLOCK-RECIPE-001**~~ | **PASS** — [`design_city_block_recipe_v1.md`](design_city_block_recipe_v1.md) | designer-mcp | done |
+| ~~**DES-CITY-PALETTE-VARIATION-001**~~ | **PASS** — [`design_city_palette_variation_v1.md`](design_city_palette_variation_v1.md) | designer-mcp | done |
+| ~~**DES-CITY-BLOCK-DEBUG-READ-001**~~ | **PASS** — [`design_city_block_debug_read_v1.md`](design_city_block_debug_read_v1.md) | @designer | done |
 
 Queue: [`tools/orchestrator/queues/city_grammar_queue.json`](../../tools/orchestrator/queues/city_grammar_queue.json) · Plan: [`plan_city_grammar_upgrade_v1.md`](plan_city_grammar_upgrade_v1.md)
 
@@ -134,4 +135,4 @@ Queue: [`tools/orchestrator/queues/city_grammar_queue.json`](../../tools/orchest
 | v1.0.0 | 2026-05-26 | Parallel designer wave |
 | v1.1.0 | 2026-05-26 | P0 parallel batch PASS (param staging/HUD + WSS contamination/smoke) |
 | v1.2.1 | 2026-05-27 | P2 witness batch (F2 / dual-write / R4 MV / WSS diagnostics) documented closed |
-| v1.2.2 | 2026-06-02 | APS UX v2 audit · tier-2 tags · G0/G1 empty · weather charter · operator rubric |
+| v1.2.3 | 2026-07-03 | Registry hygiene 24 rows · DES-CITY-BLOCK-DEBUG-READ-001 · hub BUILD-READ sync |

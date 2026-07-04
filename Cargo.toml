@@ -17,9 +17,8 @@ name = "bevy_preview_worker"
 path = "src/bin/bevy_preview_worker.rs"
 
 [features]
-# `bevy_tilemap_adapter` is NOT default: it spawns ~3x tile entities per chunk with render
-# disabled (U6 ECS sync only) — enabling it by default cost ~600ms/frame in debug and
-# despawned the fallback terrain sprite (minimap terrain source). Opt in explicitly.
+# `bevy_tilemap_adapter` is NOT default: `bevy_ecs_tilemap` 0.18.1 — no 0.19 crate yet.
+# Keep OFF until upgraded; see src/dev/coder_remaining_post_019_v1.md § Feature gates.
 default = []
 # Extra Bevy entity/frame diagnostics plugins during `--test` runs (runtime latch still works without this).
 test_instrumentation = []
@@ -39,7 +38,7 @@ research_lmodels = [
 # U6: `bevy_ecs_tilemap` with **render disabled** — headless-safe ECS + `TileTextureIndex` sync only.
 bevy_tilemap_adapter = ["dep:bevy_ecs_tilemap"]
 # U7: rule-trace component + materialize tracing (no extra deps).
-dev_tools = []
+dev_tools = ["bevy/bevy_dev_tools"]
 # INFRA-E0-003: opt-in legacy ECS `Road` / `Rrails` stubs under `entities::structure`.
 legacy_transport_ecs_stubs = []
 # Optional detached native minimap host (consumer-only; **BQ-131**).

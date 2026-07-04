@@ -400,6 +400,21 @@ mod tests {
     use super::*;
 
     #[test]
+    fn witness_harness_overlays_richer_than_simulation_defaults() {
+        let sim = simulation_minimap_overlay_defaults();
+        let harness = minimap_overlay_witness_harness();
+        assert_eq!(sim.fire_heat, harness.fire_heat);
+        assert!(harness.construction_heat);
+        assert!(harness.ecology_heat);
+        assert!(harness.fow);
+        assert!(harness.ew);
+        assert!(harness.units);
+        assert!(harness.replay_scrub);
+        assert!(!sim.construction_heat);
+        assert!(!sim.ecology_heat);
+    }
+
+    #[test]
     fn simulation_defaults_skip_fire_heat_upload() {
         let defaults = simulation_minimap_overlay_defaults();
         assert!(!defaults.fire_heat);

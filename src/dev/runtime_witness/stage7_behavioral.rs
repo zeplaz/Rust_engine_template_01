@@ -12,23 +12,23 @@ use crate::strategic::{
     Stage7BehavioralHud, Stage7BehavioralWitnessState, Stage7BeliefState, StrategicCommandQueue,
 };
 
+use super::common::WitnessWriteCadence;
 use super::io::{write_enveloped_witness, write_enveloped_witness_unchecked};
 
 pub const STAGE7_BEHAVIORAL_LIVE_JSON: &str = "debug_runs/stage7_behavioral_live.json";
 
 #[derive(Resource, Debug)]
 pub struct Stage7BehavioralLiveProofState {
-    pub frames_since_write: u32,
-    pub write_interval: u32,
-    pub written: bool,
+    pub cadence: WitnessWriteCadence,
 }
 
 impl Default for Stage7BehavioralLiveProofState {
     fn default() -> Self {
         Self {
-            frames_since_write: 0,
-            write_interval: 120,
-            written: false,
+            cadence: WitnessWriteCadence {
+                write_interval: 120,
+                ..Default::default()
+            },
         }
     }
 }
@@ -75,11 +75,6 @@ pub fn write_stage7_behavioral_witness_system(
     if !matches!(base.get(), BaseState::Simulation) {
         return;
     }
-    state.frames_since_write = state.frames_since_write.saturating_add(1);
-    if state.frames_since_write < state.write_interval {
-        return;
-    }
-    state.frames_since_write = 0;
 
     ensure_stage7_behavioral_m3_witness_fields(
         behavioral.as_mut(),
@@ -103,6 +98,6 @@ pub fn write_stage7_behavioral_witness_system(
         STAGE7_BEHAVIORAL_LIVE_JSON,
         body,
     ) {
-        state.written = true;
+        state.cadence.written = true;
     }
 }

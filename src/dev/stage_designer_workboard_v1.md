@@ -2,8 +2,8 @@
 
 | Field | Value |
 |:---|:---|
-| **Version** | `3.3.0` |
-| **Date** | 2026-06-02 |
+| **Version** | `3.4.0` |
+| **Date** | 2026-07-03 |
 | **Mode** | **On-call** — gang rollup + APS presence hygiene |
 | **Gang status** | [`designer_gang_lane_status_v1.md`](designer_gang_lane_status_v1.md) |
 | **Playbook** | [`designer_oncall_absorption_v1.md`](designer_oncall_absorption_v1.md) |
@@ -22,7 +22,7 @@
 | 2 | **Absorption** | **DESIGN-PR4-RETIRE-UX-001** qualified→**PASS** (smoke witness) | **Done** 2026-06-02 |
 | 3 | **Production pilot** | **MCP-PROD-ROWHOUSE-SIGNOFF** — rowhouse production G4 only ([`mcp_fleet_production_pilot_rowhouse_v1.md`](mcp_fleet_production_pilot_rowhouse_v1.md)) | **READY** (after coder-mcp TILE) |
 | 4 | **Artist (hold)** | **DESIGN-PROC-ART-ACCEPTANCE-001** — full 50 modules | **HOLD** until rowhouse pilot closes |
-| 5 | **Operator** | **G-PLAY-01** — `@operator` runs runbook | **Pending** |
+| 5 | **Operator** | **DES-APS-TAG-RUBRIC-001** · **G-PLAY-01** | **Pending** — charters ready |
 | — | **Hold** | Hanabi H-A2 prod, S7B play read, R4 product board | See below |
 
 ---

@@ -15,55 +15,44 @@
 | Lane | PICK now | Program | Notes |
 |:---|:---|:---|:---|
 | **coder-mcp** | **idle** | APS spine | G4 + tier-2 + polish tail **done** 2026-07-03 |
-| **coder_a** | `CITY-G0-S11-001` | PLAN-CITY-GRAMMAR-v1 | Typed grammar ids (G0a) |
-| **coder_b** | `CITY-G0-S1C-001` | PLAN-CITY-GRAMMAR-v1 | `building_grammar.rs` split (G0b) |
-| **coder** | `MIG-P0-G2-001` · `CITY-G0-WIT-001` after G0a/b | MIG + city | Determinism witness (G0c) |
-| **designer-mcp** | **blocked** | PLAN-CITY-GRAMMAR-v1 | `DES-CITY-BLOCK-RECIPE-001` after G0c |
+| **coder_a** | **idle** | CITY-G0 | G0a done 2026-07-03 |
+| **coder_b** | **idle** | CITY-G0 | G0b done 2026-07-03 |
+| **coder** | **`CITY-G2-C5-001`** | PLAN-CITY-GRAMMAR-v1 G2 | Palette resolver — charter signed |
+| **designer-mcp** | **idle** | CITY | Block + palette charters **PASS** |
 | **operator** | `APS-G4 pixel follow-up` (optional) · `G-PLAY-01` | POST-DRAIN | Needs display session |
 | **operator** | `DES-APS-TAG-RUBRIC-001` tier-1 walk | APS tags | Charter ready |
 
 ---
 
-## P0 — designer lane (APS building UI — closed)
+## P0 — designer lane (APS + city — closed)
 
 | ID | Action | Status |
 |:---|:---|:---|
-| **DES-APS-DEFAULT-PRESENCE-AUDIT-001** | Audit PASS | **done** |
-| **DES-APS-ASSEMBLY-EMPTY-G2-001** | Copy spec | **done** · coder-mcp wired |
-| **APS-UX-AUDIT-001 v2** | PASS WITH NOTES | **done** · polish tail shipped |
-| **DES-APS-GRAM-TIER-004** | G0/G1 empty copy | **done** — **building** tier only |
-| **DES-APS-TAG-TIER2-001** | Preset spec | **done** · coder-mcp wired |
-| **DES-APS-TAG-RUBRIC-001** | Operator charter | **done** (operator pending) |
+| **DES-APS-*** building UI tail | tags · UX audit · tier exposure | **done** |
+| **DES-SIM-HUD-COHESION/COPY/TRAY** | Track F P0 specs | **done** · registry re-signed |
+| **DES-CITY-BLOCK-DEBUG-READ-001** | F3 block/recipe overlay legend | **done** 2026-07-03 |
 
 ---
 
-## P2 — city grammar (designer-mcp — NOT YET ACTIVE)
+## P2 — city grammar (designer-mcp — G1/G2 charters closed)
 
-| ID | Phase | Status | Blocker | Notes |
-|:---|:---|:---|:---|:---|
-| **DES-CITY-BLOCK-RECIPE-001** | G1 / CITY-C3 | **DRAFT** | `CITY-G0-WIT-001` | Charter on disk — designer-mcp PASS after G0c |
-| **DES-CITY-PALETTE-VARIATION-001** | G2 / CITY-C5 | **blocked** | G1 gate (`CITY-G1-C3-001`) | Kit × palette charter — **designer-mcp** |
+| ID | Phase | Status | Notes |
+|:---|:---|:---|:---|
+| **DES-CITY-BLOCK-RECIPE-001** | G1 / CITY-C3 | **PASS** | BlockRecipe v1 + 3 RON examples |
+| **DES-CITY-BLOCK-DEBUG-READ-001** | G1 debug | **PASS** | F3 overlay legend — engineer path |
 
-**Queue:** [`city_grammar_queue.json`](../../tools/orchestrator/queues/city_grammar_queue.json)
-
-**Gap vs APS specs:** Existing APS designer work covers **building grammar UI** (tier chips, tags, presence). City plan adds a **block tier** above buildings — **no designer spec on disk yet**; rows above are seeded and blocked correctly on G0.
+**Queue:** [`city_grammar_queue.json`](../../tools/orchestrator/queues/city_grammar_queue.json) · active phase **G2**
 
 ---
 
 ## Dependency spine (updated)
 
 ```text
-APS-PRESENCE + G4-COVERAGE          [coder-mcp DONE 2026-07-03]
+CITY-G0 + G1 (C1→C4→C3)          [DONE 2026-07-03]
+DES-CITY-BLOCK-RECIPE-001         [designer-mcp PASS]
+DES-CITY-PALETTE-VARIATION-001    [designer-mcp PASS 2026-07-03]
         ↓
-CITY-G0-S11 / G0-S1C              [coder_a / coder_b PICK]
-        ↓
-CITY-G0-WIT-001                   [coder — determinism witness]
-        ↓
-DES-CITY-BLOCK-RECIPE-001         [designer-mcp — first city designer pick]
-        ↓
-CITY-G1 (C1→C2→C3)               [coder + designer-mcp recipe]
-        ↓
-DES-CITY-PALETTE-VARIATION-001    [designer-mcp G2]
+CITY-G2-C5-001                    [coder PICK — module_index + tile_atlas_index]
 ```
 
 ---
@@ -81,4 +70,4 @@ DES-CITY-PALETTE-VARIATION-001    [designer-mcp G2]
 | Date | Notes |
 |:---|:---|
 | 2026-06-02 | Initial gang rollup + APS presence designer tail |
-| 2026-07-03 | G4 closed · city grammar designer-mcp rows seeded · APS building designer lane closed |
+| 2026-07-03 | Registry hygiene 24× SIGNED · **DES-CITY-BLOCK-DEBUG-READ-001** |

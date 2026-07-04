@@ -1,0 +1,21 @@
+{
+  "task_id": "APSR-A3-D1-001",
+  "gate": "APSR-A3-D1-001",
+  "green": true,
+  "violation_count": 0,
+  "plan_ref": "src/dev/plan_aps_refactor_v1.md#APSR-D1",
+  "_agent_meta": {
+    "schema": "apsr_a3_d1_live_v1",
+    "profile": "APSR_A3_D1",
+    "relative_path": "debug_runs/apsr_a3_d1_001_live.json",
+    "source_system": "apsr_a3_d1",
+    "written_at_epoch_secs": 1783118444,
+    "ritual": "BLANG:WIT-HON APSR-A3-D1-001"
+  },
+  "witness_honesty": {
+    "status": "passed",
+    "error_count": 0,
+    "warning_count": 0,
+    "summary": "witness_honesty debug_runs/apsr_a3_d1_001_live.json: 0 error(s), 0 issue(s)"
+  }
+}

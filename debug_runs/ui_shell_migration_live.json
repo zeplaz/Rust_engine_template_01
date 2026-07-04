@@ -13,7 +13,7 @@
     },
     "logging_env": {
       "ORCHESTRATOR_EXPORT_HEALTH": false,
-      "PERF": true,
+      "PERF": false,
       "PERF_DISK": false,
       "RUST_LOG": null,
       "SIM_ANALYTICS": false,
@@ -22,7 +22,7 @@
       "SIM_VIEW_SYNC_DEBUG": false,
       "STAGE5_READINESS_VERBOSE": false,
       "STAGE5_VERBOSE": false,
-      "STALL": true,
+      "STALL": false,
       "VIEWPORT_AUTHORITY_DEBUG": false
     },
     "orchestrator": {
@@ -61,7 +61,7 @@
     "relative_path": "debug_runs/ui_shell_migration_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "simulation_shell_phase2_live_proof",
-    "written_at_epoch_secs": 1783107594
+    "written_at_epoch_secs": 1783111897
   },
   "backends": {
     "P1_ops_strip": "bevy_ui",
@@ -91,7 +91,7 @@
     }
   },
   "context_tray": {
-    "active_tab": "Intel",
+    "active_tab": "Alerts",
     "build_rail_width_px": 52.0,
     "map_frame_inset_px": 4.0,
     "panel_state": "Collapsed",
@@ -136,7 +136,7 @@
       "F-11"
     ],
     "minimap_chrome_pad_px": 1.0,
-    "minimap_gpu_path": true,
+    "minimap_gpu_path": false,
     "ops_strip_top_offset_px": 2.0,
     "zones_live": true
   },
@@ -157,7 +157,7 @@
   },
   "phase4": {
     "atlas_texture": "textures/ui/icon_atlas_phase4_v1.png",
-    "icon_atlas_loaded": true,
+    "icon_atlas_loaded": false,
     "manifest_ron": "configs/ui/icon_atlas_phase4.icon_atlas.ron",
     "p4_veh_chips_wired": false,
     "p5_br_tab_wired": false,
@@ -170,7 +170,7 @@
     ]
   },
   "phase5": {
-    "pause_menu_bevy": true
+    "pause_menu_bevy": false
   },
   "profile": "UI_SHELL_MIGRATION_2B",
   "ui_oh_2a_001": {
@@ -187,14 +187,14 @@
   "ui_oh_p4_001": {
     "gate": "UI-OH-P4-001",
     "green": false,
-    "icon_atlas_loaded": true,
+    "icon_atlas_loaded": false,
     "p4_1_green": true,
     "p5_br_green": false
   },
   "ui_oh_p5_001": {
     "gate": "UI-OH-P5-001",
-    "green": true,
-    "pause_menu_bevy": true
+    "green": false,
+    "pause_menu_bevy": false
   },
   "ui_p2a_coder_b": {
     "green": true,
@@ -221,9 +221,9 @@
     "compositor_ui_p3_001_green": true,
     "gate": "UI-P3-SHELL-ROLLUP-001",
     "minimap_chrome_aligned": true,
-    "minimap_gpu_path": true
+    "minimap_gpu_path": false
   },
-  "ui_p5_pause_001_green": true,
+  "ui_p5_pause_001_green": false,
   "ui_w3_2a_001": {
     "context_tray_wired": true,
     "gate": "UI-W3-2A-001",
@@ -249,7 +249,7 @@
   "ui_w3_p4_001": {
     "gate": "UI-W3-P4-001",
     "green": false,
-    "icon_atlas_loaded": true,
+    "icon_atlas_loaded": false,
     "p4_auth_green": true,
     "p5_br_tab_wired": false,
     "petroleum_panel_tab_wired": false
@@ -257,17 +257,17 @@
   "ui_w3_p5_001": {
     "egui_pass_count_in_sim": 0,
     "gate": "UI-W3-P5-001",
-    "green": true,
-    "pause_menu_bevy": true
+    "green": false,
+    "pause_menu_bevy": false
   },
   "ui_w3_p6_001": {
     "egui_pass_count_in_sim": 0,
     "gate": "UI-W3-P6-001",
-    "green": true,
-    "pause_menu_bevy": true,
+    "green": false,
+    "pause_menu_bevy": false,
     "phase2b_closed": true,
     "plan": "PLAN-UI-PHASE6-001",
-    "shell_perf_green": true
+    "shell_perf_green": false
   },
   "ui_w3_theme_001": {
     "gate": "PLAN-UI-THEME-MERGE-001",
@@ -281,8 +281,8 @@
   },
   "ux_e03_coder_a": {
     "gate": "UX-E03-CODER-A",
-    "green": true,
-    "media_registry_wired": true,
+    "green": false,
+    "media_registry_wired": false,
     "strategic_enqueue_from_transmission_ui": false
   },
   "witness": {
@@ -296,7 +296,7 @@
     "intel_map_camera_request": true,
     "interaction_block_green": true,
     "last_minimap_rect_delta_px": 1.0,
-    "last_mission_count": 0,
+    "last_mission_count": 4,
     "minimap_chrome_aligned": true,
     "ops_zone_hover_token": true,
     "ops_zones_wired": true,

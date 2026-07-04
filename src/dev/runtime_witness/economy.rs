@@ -15,6 +15,7 @@ use crate::engine::states::BaseState;
 use crate::strategic::PlannedSite;
 use crate::systems::transport::{TransportEdgeDirectory, TransportNavExport};
 
+use super::common::WitnessWriteCadence;
 use super::io::write_enveloped_witness;
 
 pub const INDUSTRIAL_ACTIVATION_JSON: &str = "debug_runs/industrial_activation_live.json";
@@ -22,35 +23,47 @@ pub const LOGISTICS_THROUGHPUT_JSON: &str = "debug_runs/logistics_throughput_liv
 
 #[derive(Resource, Debug)]
 pub struct IndustrialActivationLiveProofState {
-    pub frames_since_write: u32,
-    pub write_interval: u32,
-    pub written: bool,
+    pub cadence: WitnessWriteCadence,
 }
 
 impl Default for IndustrialActivationLiveProofState {
     fn default() -> Self {
         Self {
-            frames_since_write: 0,
-            write_interval: 90,
-            written: false,
+            cadence: WitnessWriteCadence {
+                write_interval: 90,
+                ..Default::default()
+            },
         }
+    }
+}
+
+impl IndustrialActivationLiveProofState {
+    #[must_use]
+    pub fn written(&self) -> bool {
+        self.cadence.written()
     }
 }
 
 #[derive(Resource, Debug)]
 pub struct LogisticsThroughputLiveProofState {
-    pub frames_since_write: u32,
-    pub write_interval: u32,
-    pub written: bool,
+    pub cadence: WitnessWriteCadence,
 }
 
 impl Default for LogisticsThroughputLiveProofState {
     fn default() -> Self {
         Self {
-            frames_since_write: 0,
-            write_interval: 90,
-            written: false,
+            cadence: WitnessWriteCadence {
+                write_interval: 90,
+                ..Default::default()
+            },
         }
+    }
+}
+
+impl LogisticsThroughputLiveProofState {
+    #[must_use]
+    pub fn written(&self) -> bool {
+        self.cadence.written()
     }
 }
 
@@ -95,11 +108,6 @@ pub fn write_industrial_activation_live_proof_system(
     if !matches!(base.as_deref().map(|s| s.get()), Some(BaseState::Simulation)) {
         return;
     }
-    state.frames_since_write = state.frames_since_write.saturating_add(1);
-    if state.frames_since_write < state.write_interval {
-        return;
-    }
-    state.frames_since_write = 0;
 
     let gov_count = buildings
         .as_deref()
@@ -117,7 +125,7 @@ pub fn write_industrial_activation_live_proof_system(
         flow.as_deref(),
         toast.as_deref(),
     ) {
-        state.written = true;
+        state.cadence.written = true;
     }
 }
 
@@ -178,12 +186,6 @@ pub fn write_logistics_throughput_live_proof_system(
     if !matches!(base.as_deref().map(|s| s.get()), Some(BaseState::Simulation)) {
         return;
     }
-    state.frames_since_write = state.frames_since_write.saturating_add(1);
-    if state.written && state.frames_since_write < state.write_interval {
-        return;
-    }
-    state.frames_since_write = 0;
-    state.written = true;
 
     let infra_e5 = infra_e5_002_proof_extension(
         flow.as_deref(),
@@ -191,11 +193,13 @@ pub fn write_logistics_throughput_live_proof_system(
         directory.as_deref(),
         &portals,
     );
-    let _ = commit_logistics_throughput_live_proof(
+    if commit_logistics_throughput_live_proof(
         board.as_deref(),
         witness.as_ref(),
         diagnostics.as_ref(),
         runtime.as_deref(),
         Some(infra_e5),
-    );
+    ) {
+        state.cadence.written = true;
+    }
 }

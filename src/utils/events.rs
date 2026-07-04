@@ -1,4 +1,4 @@
-//! Ownership-event **documentation** and future hooks.
+//! **CLN-P0-T4-001** — ownership-event hook scaffold; wire when render entities key off `EntityId`.
 //! Canonical event type: `crate::events::ownership_events::OwnershipChangeEvent`.
 //!
 //! Visual reactivity should map `EntityId` → Bevy `Entity` via a registry resource before mutating `Sprite` / materials.

@@ -17,6 +17,9 @@
             style_pack: "style_industrial_west",
             snap: "floor_edge",
             material_profile: "steel_corner_01",
+            palette_family: "palette_industrial_west",
+            palette_variation_count: 3,
+            default_variation_id: "iw_rust_clean",
         ),
         (
             module_id: "corner_L",
@@ -33,6 +36,9 @@
             style_pack: "style_industrial_west",
             snap: "floor_edge",
             material_profile: "concrete_grey_01",
+            palette_family: "palette_industrial_west",
+            palette_variation_count: 3,
+            default_variation_id: "iw_rust_clean",
         ),
         (
             module_id: "corner_L",
@@ -49,6 +55,9 @@
             style_pack: "style_victorian",
             snap: "floor_corner",
             material_profile: "brick_red_01",
+            palette_family: "palette_rowhouse_urban",
+            palette_variation_count: 4,
+            default_variation_id: "rh_brownstone",
         ),
         (
             module_id: "corner_T",
@@ -321,6 +330,9 @@
             style_pack: "style_victorian",
             snap: "floor_edge",
             material_profile: "wood_plank_01",
+            palette_family: "palette_rowhouse_urban",
+            palette_variation_count: 4,
+            default_variation_id: "rh_brownstone",
         ),
         (
             module_id: "door_residential_1u",
@@ -387,6 +399,9 @@
             style_pack: "style_industrial_west",
             snap: "floor_edge",
             material_profile: "steel_door_warehouse_01",
+            palette_family: "palette_industrial_west",
+            palette_variation_count: 3,
+            default_variation_id: "iw_rust_clean",
         ),
         (
             module_id: "door_warehouse",
@@ -403,6 +418,9 @@
             style_pack: "style_industrial_west",
             snap: "floor_edge",
             material_profile: "steel_door_warehouse_01",
+            palette_family: "palette_industrial_west",
+            palette_variation_count: 3,
+            default_variation_id: "iw_rust_clean",
         ),
         (
             module_id: "door_warehouse_2u",
@@ -854,6 +872,9 @@
             style_pack: "style_victorian",
             snap: "roof_edge",
             material_profile: "roof_tile_01",
+            palette_family: "palette_rowhouse_urban",
+            palette_variation_count: 4,
+            default_variation_id: "rh_brownstone",
         ),
         (
             module_id: "roof_pitched_hip",
@@ -935,6 +956,9 @@
             style_pack: "style_industrial_west",
             snap: "roof_ridge",
             material_profile: "roof_metal_01",
+            palette_family: "palette_industrial_west",
+            palette_variation_count: 3,
+            default_variation_id: "iw_rust_clean",
         ),
         (
             module_id: "roof_shed",
@@ -951,6 +975,9 @@
             style_pack: "style_industrial_west",
             snap: "roof_ridge",
             material_profile: "roof_metal_01",
+            palette_family: "palette_industrial_west",
+            palette_variation_count: 3,
+            default_variation_id: "iw_rust_clean",
         ),
         (
             module_id: "roof_tile",
@@ -983,6 +1010,9 @@
             style_pack: "style_industrial_west",
             snap: "roof_ridge",
             material_profile: "steel_panel_01",
+            palette_family: "palette_industrial_west",
+            palette_variation_count: 3,
+            default_variation_id: "iw_rust_clean",
         ),
         (
             module_id: "wall_brick_1u",
@@ -1016,6 +1046,9 @@
             style_pack: "style_industrial_west",
             snap: "floor_edge",
             material_profile: "brick_red_01",
+            palette_family: "palette_industrial_west",
+            palette_variation_count: 3,
+            default_variation_id: "iw_rust_clean",
         ),
         (
             module_id: "wall_brick_1u",
@@ -1032,6 +1065,9 @@
             style_pack: "style_victorian",
             snap: "floor_edge",
             material_profile: "brick_red_01",
+            palette_family: "palette_rowhouse_urban",
+            palette_variation_count: 4,
+            default_variation_id: "rh_brownstone",
         ),
         (
             module_id: "wall_brick_2u",
@@ -1114,6 +1150,9 @@
             style_pack: "style_industrial_west",
             snap: "floor_edge",
             material_profile: "concrete_grey_01",
+            palette_family: "palette_industrial_west",
+            palette_variation_count: 3,
+            default_variation_id: "iw_rust_clean",
         ),
         (
             module_id: "wall_concrete_2u",
@@ -1130,6 +1169,9 @@
             style_pack: "style_industrial_west",
             snap: "floor_edge",
             material_profile: "concrete_grey_01",
+            palette_family: "palette_industrial_west",
+            palette_variation_count: 3,
+            default_variation_id: "iw_rust_clean",
         ),
         (
             module_id: "wall_concrete_2u",
@@ -1252,7 +1294,7 @@
             glb: "assets/models/modules/wall_steel_1u_production_run001/model.glb",
             grid_units: (1, 1),
             style_tags: ["steel", "panel", "industrial_west"],
-            batch_id: "",
+            batch_id: "kit_production_002",
             development_tier: "production",
             pbr_status: "shipped",
             stylepack_visible: true,
@@ -1423,6 +1465,9 @@
             style_pack: "style_industrial_west",
             snap: "floor_edge",
             material_profile: "glass_panel_01",
+            palette_family: "palette_industrial_west",
+            palette_variation_count: 3,
+            default_variation_id: "iw_rust_clean",
         ),
         (
             module_id: "win_industrial_3u",
@@ -1439,6 +1484,9 @@
             style_pack: "style_industrial_west",
             snap: "floor_edge",
             material_profile: "glass_panel_01",
+            palette_family: "palette_industrial_west",
+            palette_variation_count: 3,
+            default_variation_id: "iw_rust_clean",
         ),
         (
             module_id: "win_office_1u",

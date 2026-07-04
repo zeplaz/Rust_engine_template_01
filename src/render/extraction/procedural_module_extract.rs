@@ -1,6 +1,6 @@
 //! Procedural module GLB handles — read [`ProceduralModuleRegistry`] + [`RepresentationResult`].
 
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 
 use bevy::prelude::*;
 use bevy::world_serialization::WorldAsset;
@@ -24,7 +24,7 @@ pub struct ProceduralModuleVisualPolicy {
 pub fn load_procedural_module_scenes(
     mut catalog: ResMut<ProceduralModuleSceneCatalog>,
     registry: Res<ProceduralModuleRegistry>,
-    style_packs: Option<Res<StylePackRegistry>>,
+    _style_packs: Option<Res<StylePackRegistry>>,
     asset_server: Res<AssetServer>,
 ) {
     if catalog.load_started {
@@ -35,38 +35,16 @@ pub fn load_procedural_module_scenes(
         return;
     }
 
-    let module_ids: HashSet<String> = if let Some(packs) = style_packs.as_ref() {
-        if packs.packs.is_empty() {
-            registry
-                .modules_for_stylepack()
-                .map(|e| e.module_id.clone())
-                .collect()
-        } else {
-            packs
-                .referenced_module_ids()
-                .map(str::to_owned)
-                .collect()
-        }
-    } else {
-        registry
-            .modules_for_stylepack()
-            .map(|e| e.module_id.clone())
-            .collect()
-    };
-
-    for module_id in module_ids {
-        let Some(entry) = registry.resolve_module_id(&module_id) else {
-            continue;
-        };
+    for entry in registry.entries.iter().filter(|e| e.visible_in_stylepack()) {
         let label = format!("{}#Scene0", entry.glb_asset);
         catalog
             .scenes
-            .insert(entry.module_id.clone(), asset_server.load(label));
+            .insert(entry.job_id.clone(), asset_server.load(label));
     }
     catalog.load_started = true;
     info!(
         target: "procedural_module",
-        "ProceduralModuleSceneCatalog: {} scene handles (style-pack scoped)",
+        "ProceduralModuleSceneCatalog: {} scene handles (job_id keyed)",
         catalog.scenes.len()
     );
 }
@@ -76,6 +54,17 @@ pub fn sync_procedural_module_visual_policy(
     mut visual: ResMut<ProceduralModuleVisualPolicy>,
 ) {
     visual.meshes_active = policy.procedural_module_meshes;
+}
+
+#[must_use]
+pub fn scene_for_resolved_entry<'a>(
+    catalog: &'a ProceduralModuleSceneCatalog,
+    entry: &crate::construction::procedural::ProceduralModuleEntry,
+) -> Option<&'a Handle<WorldAsset>> {
+    catalog
+        .scenes
+        .get(&entry.job_id)
+        .or_else(|| catalog.scenes.get(&entry.module_id))
 }
 
 #[must_use]
@@ -90,5 +79,5 @@ pub fn scene_for_module<'a>(
     }
     registry
         .resolve_module_id(module_id)
-        .and_then(|entry| catalog.scenes.get(&entry.module_id))
+        .and_then(|entry| scene_for_resolved_entry(catalog, entry))
 }

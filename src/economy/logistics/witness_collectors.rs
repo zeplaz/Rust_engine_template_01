@@ -23,8 +23,9 @@ pub struct InfraE502ProofExtension {
 pub fn request_logistics_throughput_live_proof_refresh(
     state: &mut crate::dev::runtime_witness::economy::LogisticsThroughputLiveProofState,
 ) {
-    state.written = false;
-    state.frames_since_write = state.write_interval;
+    state.cadence.written = false;
+    state.cadence.frames_since_write = state.cadence.write_interval;
+    state.cadence.write_due = true;
 }
 
 #[allow(dead_code)]
@@ -295,7 +296,9 @@ mod live_proof_sim_tests {
         });
         app.world_mut()
             .resource_mut::<LogisticsThroughputLiveProofState>()
+            .cadence
             .write_interval = 3;
+        app.add_plugins(crate::dev::runtime_witness::LiveProofCadencePlugin);
         app
     }
 

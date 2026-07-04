@@ -1,0 +1,12 @@
+{
+  "job_id": "city_c8_pilot_merge_run001",
+  "status": "done",
+  "log_path": "debug_runs/art_pipeline/city_c8_pilot_merge_run001.log",
+  "outputs": [
+    "assets/staging/city_c8_pilot_merge_run001/model.glb"
+  ],
+  "error": null,
+  "spec_ref": null,
+  "job_path": "tools/mcp/schemas/examples/city_c8_pilot_merge_run001.json",
+  "updated_at": 1783112700.615131
+}

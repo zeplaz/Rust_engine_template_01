@@ -42,6 +42,28 @@ PostUpdate (construction — after camera scissor applied)
        (.after ApplyCameraScissor — pick uses synced viewport + ortho trace)
 ```
 
+## Sim spine (verified 2026-07-03 sweep — SCH-D1; full audit: `src/dev/plan_schedule_sync_v1.md`)
+
+```text
+Update (simulation — runs beside the view spine above)
+  SimControlSystemSet::ApplyOperatorInput → AdvanceSimTick        (sim_control.rs:99; pause gate = should_tick()/dt_scale())
+    ├─ ChunkEnvironmentSet: Lod → Weather → Ecology(⊃LandscapeBurnSet) → Fire   (chunk_environment_set.rs:26)
+    │    └─ Fire → AtmospherePipelineSet::FieldFill → … → VisualExtract → Diagnostics (atmosphere/pipeline.rs:35-49)
+    │                                    Diagnostics → TransportSchedule::Topology   (engine_with_worldgen.rs:196-200)
+    ├─ SimEffectSystemSet::Drain (after AdvanceSimTick ONLY — ⚠ unordered vs fire tick, SCH-E2)
+    ├─ TransportSchedule: Topology → FieldIntegrate → CostCache   (transport/mod.rs:47-49)
+    │    ├─ NavSets::DamageSpeedAdjustment → MotionCalculation
+    │    ├─ StrategicFieldPipeline::GraphSync … → InfrastructureSiteSet chain (strategic/plugin.rs:196-215)
+    │    └─ LogisticsSimulationSet chain → HybridSimPipeline (strategic/sim.rs:230-232)
+    └─ MapCameraSystemSet … (view spine above) → FireVisualFrameSet::BuildProfiles
+         → WorldRepresentationSystemSet::ComputeFrame → ComputeDispatchSystemSet::Dispatch
+         → FireVisualFrameSet::ProjectGpu → LocalLightExtractSet::Collect (engine:186-238,303-314)
+```
+
+Known gaps (do not "fix" ad-hoc — plan items): SCH-E2 effect-drain order · SCH-E3 fire→extract edge is
+transitive-only via atmosphere · SCH-T1 strategic agents ignore pause · 233 bare-fn `.after` anchors (SCH-A1).
+No FixedUpdate anywhere: sim is dt-scaled Update (frame-rate consistent, not independent — SCH-T5 ADR).
+
 ## SystemSet reference
 
 | SystemSet | File | Role |

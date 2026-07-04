@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "asset_id": "door_concrete_service_1u",
+  "archetype": "module_door",
+  "batch_id": "kit_fill_bq_k1_001",
+  "style_pack": "style_modern",
+  "style_packs": [
+    "style_modern",
+    "style_military"
+  ],
+  "development_tier": "production",
+  "pbr_status": "planned",
+  "material_profile": "concrete_pad_01",
+  "material_family": "concrete",
+  "module": {
+    "grid_units": [
+      1,
+      1
+    ],
+    "snap": "floor_edge",
+    "pivot": "bottom_center"
+  },
+  "dimensions_m": {
+    "w": 1.4,
+    "h": 2.4,
+    "d": 0.25
+  },
+  "references": [
+    "ref:charter:BQ-K1-KITFILL-001",
+    "ref:contract:src/dev/design_bq_k1_kitfill_charter_v1.md",
+    "ref:contract:tools/mcp/schemas/module_contract_v1.json"
+  ],
+  "_meta": {
+    "teaches": [
+      "concrete",
+      "door",
+      "kit_fill_bq_k1"
+    ]
+  }
+}

@@ -238,7 +238,32 @@ impl UiPalette {
     /// Tactical map RTT void — cool gray-blue (matches world-preview GPU clear).
     #[must_use]
     pub fn bevy_sim_map_field_clear(&self) -> Color {
+        self.bevy_sim_map_field_clear_for_daylight(1.0)
+    }
+
+    /// Lighter cool gray-blue for daylight on the tactical map void.
+    #[must_use]
+    pub fn bevy_sim_map_field_clear_day(&self) -> Color {
+        Color::srgb(0.48, 0.54, 0.64)
+    }
+
+    /// Deep void for night on the tactical map.
+    #[must_use]
+    pub fn bevy_sim_map_field_clear_night(&self) -> Color {
         Color::srgb(0.06, 0.09, 0.14)
+    }
+
+    /// Interpolate day ↔ night clear for the sim-map RTT field.
+    #[must_use]
+    pub fn bevy_sim_map_field_clear_for_daylight(&self, daylight: f32) -> Color {
+        let d = daylight.clamp(0.0, 1.0);
+        let day = self.bevy_sim_map_field_clear_day().to_srgba();
+        let night = self.bevy_sim_map_field_clear_night().to_srgba();
+        Color::srgb(
+            day.red * d + night.red * (1.0 - d),
+            day.green * d + night.green * (1.0 - d),
+            day.blue * d + night.blue * (1.0 - d),
+        )
     }
 
     /// Telemetry mono (`T+00042` tick line).

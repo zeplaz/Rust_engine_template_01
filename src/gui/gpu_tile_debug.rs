@@ -14,6 +14,7 @@ use super::tile_debug_types::{
     TileDebugViewId, TileGpuDebugSettings, tile_flags,
 };
 use crate::render::{tactical_fire_visual, FireVisualFramesByView};
+use crate::systems::fire::ChunkSurfaceFire;
 use crate::terrain::generation::{chunk_world_center, Chunk, ChunkCellMatrix};
 use crate::render::sim_visual_extract::FIRE_VISUAL_ACTIVE_HEAT_EPS;
 
@@ -66,11 +67,12 @@ pub fn build_tile_debug_instances(
     view_manager: Res<ViewManager>,
     desired: Res<MapCameraDesiredRes>,
     chunks: Query<(&Chunk, &ChunkCellMatrix)>,
+    fire_chunks: Query<(&Chunk, &ChunkCellMatrix, &ChunkSurfaceFire)>,
     fire_by_view: Res<FireVisualFramesByView>,
     mut map: ResMut<TileDebugInstanceMap>,
 ) {
     map.per_view.clear();
-    if !settings.use_batched_mesh_overlay || !debug.enabled {
+    if !settings.use_batched_mesh_overlay {
         return;
     }
     let mut chunk_set = std::collections::HashSet::new();
@@ -87,8 +89,6 @@ pub fn build_tile_debug_instances(
         .copied()
         .unwrap_or(bevy::math::UVec2::splat(32));
 
-    let r = debug.overlay_radius_chunks.clamp(1, 12);
-    let center = debug.focus_chunk;
     let cam_scale = view_manager
         .view(ViewId::WorldMain)
         .map(|v| v.camera.zoom.abs().max(0.001))
@@ -107,36 +107,40 @@ pub fn build_tile_debug_instances(
     };
 
     let mut out = Vec::new();
-    'outer: for dy in -r..=r {
-        for dx in -r..=r {
-            if out.len() >= settings.max_instances {
-                break 'outer;
+    if debug.enabled {
+        let r = debug.overlay_radius_chunks.clamp(1, 12);
+        let center = debug.focus_chunk;
+        'outer: for dy in -r..=r {
+            for dx in -r..=r {
+                if out.len() >= settings.max_instances {
+                    break 'outer;
+                }
+                let tile = center + IVec2::new(dx, dy);
+                let size = chunk_sizes.get(&tile).copied().unwrap_or(default_size);
+                let pos = chunk_world_center(tile, size);
+                let is_focus = tile == center;
+                let mut extent = (size.x.max(size.y) as f32) * lod_size_mul;
+                if is_focus {
+                    extent *= 1.08;
+                }
+                if debug.screen_stabilize_lod_overlay {
+                    extent /= cam_scale;
+                    extent = extent.clamp(6.0, DEBUG_CHUNK_SPACING_WORLD * 1.25);
+                }
+                let mut flags = 0u32;
+                if is_focus {
+                    flags |= tile_flags::FOCUS;
+                }
+                if chunk_set.contains(&tile) {
+                    flags |= tile_flags::TERRAIN;
+                }
+                out.push(TileDebugInstance {
+                    world_pos: pos.to_array(),
+                    size: extent,
+                    lod: lod_u32,
+                    flags,
+                });
             }
-            let tile = center + IVec2::new(dx, dy);
-            let size = chunk_sizes.get(&tile).copied().unwrap_or(default_size);
-            let pos = chunk_world_center(tile, size);
-            let is_focus = tile == center;
-            let mut extent = (size.x.max(size.y) as f32) * lod_size_mul;
-            if is_focus {
-                extent *= 1.08;
-            }
-            if debug.screen_stabilize_lod_overlay {
-                extent /= cam_scale;
-                extent = extent.clamp(6.0, DEBUG_CHUNK_SPACING_WORLD * 1.25);
-            }
-            let mut flags = 0u32;
-            if is_focus {
-                flags |= tile_flags::FOCUS;
-            }
-            if chunk_set.contains(&tile) {
-                flags |= tile_flags::TERRAIN;
-            }
-            out.push(TileDebugInstance {
-                world_pos: pos.to_array(),
-                size: extent,
-                lod: lod_u32,
-                flags,
-            });
         }
     }
 
@@ -162,18 +166,39 @@ pub fn build_tile_debug_instances(
         });
     }
 
+    for (chunk, matrix, fire) in &fire_chunks {
+        if out.len() >= settings.max_instances {
+            break;
+        }
+        if fire.heat <= 0.02 && !fire_override.force_visible {
+            continue;
+        }
+        let pos = chunk_world_center(chunk.coord, matrix.size);
+        let heat = fire.heat.clamp(0.0, 1.0);
+        let mut marker = (matrix.size.x.max(matrix.size.y) as f32) * 0.35 + heat * 4.0;
+        if debug.screen_stabilize_lod_overlay {
+            marker /= cam_scale;
+            marker = marker.clamp(2.0, 14.0);
+        }
+        out.push(TileDebugInstance {
+            world_pos: pos.to_array(),
+            size: marker,
+            lod: lod_u32,
+            flags: tile_flags::FIRE,
+        });
+    }
+
     map.per_view.insert(TileDebugViewId::WorldMain, out);
 }
 
 pub fn sync_tile_debug_draw_globals(
     mut globals: ResMut<TileDebugDrawGlobals>,
     settings: Res<TileGpuDebugSettings>,
-    debug: Res<CameraFocusDebug>,
     cam_q: Query<(&Camera, &GlobalTransform), With<MainWorldCamera>>,
     map: Res<TileDebugInstanceMap>,
 ) {
     *globals = TileDebugDrawGlobals::default();
-    if !settings.use_batched_mesh_overlay || !debug.enabled {
+    if !settings.use_batched_mesh_overlay {
         return;
     }
     let Ok((camera, gt)) = cam_q.single() else {

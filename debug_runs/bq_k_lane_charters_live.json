@@ -1,0 +1,34 @@
+{
+  "gate": "BQ-K-LANE",
+  "program": "PLAN-BUILDING-QUALITY-v1",
+  "gates": {
+    "BQ-K1-KITFILL-001": {
+      "green": true,
+      "witness": "debug_runs/bq_k1_kitfill_001_live.json"
+    },
+    "BQ-K2-COVERAGE-001": {
+      "green": true,
+      "witness": "debug_runs/bq_k2_coverage_001_live.json"
+    },
+    "BQ-K3-GRAMMAR-001": {
+      "green": true,
+      "witness": "debug_runs/bq_k3_grammar_001_live.json"
+    }
+  },
+  "green": true,
+  "verdict": "PASS",
+  "unblocks": [
+    "coder_mcp kit bake",
+    "APSR-Q2 kit panel",
+    "BQ-H1 facade merge"
+  ],
+  "_agent_meta": {
+    "schema": "bq_k_lane_live_v1",
+    "written_at_epoch_secs": 1783118482,
+    "profile": "BQ_K_LANE",
+    "source_system": "dmcp_bq_k_lane",
+    "relative_path": "debug_runs/bq_k_lane_charters_live.json",
+    "ritual": "BLANG:WIT-HON\u2192Q\u2713 BQ-K-LANE",
+    "agent": "designer-mcp"
+  }
+}

@@ -9,6 +9,7 @@ from typing import Callable
 from rust_engine_mcp import grammar_build_set
 
 from .aps_theme import COLOR_TEXT_SUBTLE
+from .aps_tooltips import bind_aps_tooltip
 
 
 class GrammarBuildSetPanel(ttk.LabelFrame):
@@ -26,8 +27,12 @@ class GrammarBuildSetPanel(ttk.LabelFrame):
         )
         row = ttk.Frame(self)
         row.pack(fill=tk.X, pady=4)
-        ttk.Button(row, text="Refresh brief", command=self.refresh_brief).pack(side=tk.LEFT, padx=(0, 6))
-        ttk.Button(row, text="Eval sweep", command=self._run_sweep).pack(side=tk.LEFT)
+        refresh_btn = ttk.Button(row, text="Refresh brief", command=self.refresh_brief)
+        refresh_btn.pack(side=tk.LEFT, padx=(0, 6))
+        bind_aps_tooltip(refresh_btn, "grammar_set_refresh")
+        sweep_btn = ttk.Button(row, text="Eval sweep", command=self._run_sweep)
+        sweep_btn.pack(side=tk.LEFT)
+        bind_aps_tooltip(sweep_btn, "grammar_eval_sweep")
         self.sweep_var = tk.StringVar(value="")
         ttk.Label(self, textvariable=self.sweep_var, foreground=COLOR_TEXT_SUBTLE, wraplength=720).pack(
             anchor=tk.W, fill=tk.X

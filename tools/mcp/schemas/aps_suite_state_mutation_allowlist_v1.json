@@ -1,0 +1,204 @@
+{
+  "schema_version": 1,
+  "gate": "APSR-A0-T1-001",
+  "sites": [
+    {
+      "id": "tools/mcp/art_pipeline_suite/app.py:68",
+      "file": "tools/mcp/art_pipeline_suite/app.py",
+      "line": 68,
+      "field": "art_domain"
+    },
+    {
+      "id": "tools/mcp/art_pipeline_suite/app.py:183",
+      "file": "tools/mcp/art_pipeline_suite/app.py",
+      "line": 183,
+      "field": "art_domain"
+    },
+    {
+      "id": "tools/mcp/art_pipeline_suite/app.py:534",
+      "file": "tools/mcp/art_pipeline_suite/app.py",
+      "line": 534,
+      "field": "landscape_stamp_registered"
+    },
+    {
+      "id": "tools/mcp/art_pipeline_suite/aps_services/assembly_service.py:59",
+      "file": "tools/mcp/art_pipeline_suite/aps_services/assembly_service.py",
+      "line": 59,
+      "field": "style_pack_id"
+    },
+    {
+      "id": "tools/mcp/art_pipeline_suite/aps_services/assembly_service.py:63",
+      "file": "tools/mcp/art_pipeline_suite/aps_services/assembly_service.py",
+      "line": 63,
+      "field": "footprint"
+    },
+    {
+      "id": "tools/mcp/art_pipeline_suite/aps_services/assembly_service.py:65",
+      "file": "tools/mcp/art_pipeline_suite/aps_services/assembly_service.py",
+      "line": 65,
+      "field": "floors"
+    },
+    {
+      "id": "tools/mcp/art_pipeline_suite/aps_services/assembly_service.py:67",
+      "file": "tools/mcp/art_pipeline_suite/aps_services/assembly_service.py",
+      "line": 67,
+      "field": "seed"
+    },
+    {
+      "id": "tools/mcp/art_pipeline_suite/catalog.py:250",
+      "file": "tools/mcp/art_pipeline_suite/catalog.py",
+      "line": 250,
+      "field": "selected_landscape_preset_id"
+    },
+    {
+      "id": "tools/mcp/art_pipeline_suite/catalog.py:251",
+      "file": "tools/mcp/art_pipeline_suite/catalog.py",
+      "line": 251,
+      "field": "selected_module_id"
+    },
+    {
+      "id": "tools/mcp/art_pipeline_suite/catalog.py:252",
+      "file": "tools/mcp/art_pipeline_suite/catalog.py",
+      "line": 252,
+      "field": "selected_module_ids"
+    },
+    {
+      "id": "tools/mcp/art_pipeline_suite/catalog.py:317",
+      "file": "tools/mcp/art_pipeline_suite/catalog.py",
+      "line": 317,
+      "field": "selected_module_id"
+    },
+    {
+      "id": "tools/mcp/art_pipeline_suite/catalog.py:318",
+      "file": "tools/mcp/art_pipeline_suite/catalog.py",
+      "line": 318,
+      "field": "selected_module_ids"
+    },
+    {
+      "id": "tools/mcp/art_pipeline_suite/catalog.py:335",
+      "file": "tools/mcp/art_pipeline_suite/catalog.py",
+      "line": 335,
+      "field": "style_pack_id"
+    },
+    {
+      "id": "tools/mcp/art_pipeline_suite/domain_router.py:97",
+      "file": "tools/mcp/art_pipeline_suite/domain_router.py",
+      "line": 97,
+      "field": "grammar_set_tier"
+    },
+    {
+      "id": "tools/mcp/art_pipeline_suite/domain_router.py:265",
+      "file": "tools/mcp/art_pipeline_suite/domain_router.py",
+      "line": 265,
+      "field": "selected_module_id"
+    },
+    {
+      "id": "tools/mcp/art_pipeline_suite/domain_router.py:266",
+      "file": "tools/mcp/art_pipeline_suite/domain_router.py",
+      "line": 266,
+      "field": "selected_module_ids"
+    },
+    {
+      "id": "tools/mcp/art_pipeline_suite/domain_router.py:268",
+      "file": "tools/mcp/art_pipeline_suite/domain_router.py",
+      "line": 268,
+      "field": "selected_landscape_preset_id"
+    },
+    {
+      "id": "tools/mcp/art_pipeline_suite/generation_trace_strip.py:65",
+      "file": "tools/mcp/art_pipeline_suite/generation_trace_strip.py",
+      "line": 65,
+      "field": "assembly_generation_approved"
+    },
+    {
+      "id": "tools/mcp/art_pipeline_suite/generation_trace_strip.py:74",
+      "file": "tools/mcp/art_pipeline_suite/generation_trace_strip.py",
+      "line": 74,
+      "field": "assembly_generation_approved"
+    },
+    {
+      "id": "tools/mcp/art_pipeline_suite/generation_trace_strip.py:117",
+      "file": "tools/mcp/art_pipeline_suite/generation_trace_strip.py",
+      "line": 117,
+      "field": "assembly_generation_approved"
+    },
+    {
+      "id": "tools/mcp/art_pipeline_suite/landscape_grammar_panel.py:204",
+      "file": "tools/mcp/art_pipeline_suite/landscape_grammar_panel.py",
+      "line": 204,
+      "field": "landscape_grammar_saved"
+    },
+    {
+      "id": "tools/mcp/art_pipeline_suite/landscape_presets_panel.py:157",
+      "file": "tools/mcp/art_pipeline_suite/landscape_presets_panel.py",
+      "line": 157,
+      "field": "selected_landscape_preset_id"
+    },
+    {
+      "id": "tools/mcp/art_pipeline_suite/landscape_presets_panel.py:158",
+      "file": "tools/mcp/art_pipeline_suite/landscape_presets_panel.py",
+      "line": 158,
+      "field": "landscape_preset_validate_ok"
+    },
+    {
+      "id": "tools/mcp/art_pipeline_suite/landscape_presets_panel.py:189",
+      "file": "tools/mcp/art_pipeline_suite/landscape_presets_panel.py",
+      "line": 189,
+      "field": "landscape_preset_validate_ok"
+    },
+    {
+      "id": "tools/mcp/art_pipeline_suite/landscape_states_panel.py:185",
+      "file": "tools/mcp/art_pipeline_suite/landscape_states_panel.py",
+      "line": 185,
+      "field": "landscape_catalog_validate_ok"
+    },
+    {
+      "id": "tools/mcp/art_pipeline_suite/landscape_states_panel.py:264",
+      "file": "tools/mcp/art_pipeline_suite/landscape_states_panel.py",
+      "line": 264,
+      "field": "landscape_catalog_validate_ok"
+    },
+    {
+      "id": "tools/mcp/art_pipeline_suite/landscape_states_panel.py:265",
+      "file": "tools/mcp/art_pipeline_suite/landscape_states_panel.py",
+      "line": 265,
+      "field": "landscape_states_ready"
+    },
+    {
+      "id": "tools/mcp/art_pipeline_suite/variants_panel.py:529",
+      "file": "tools/mcp/art_pipeline_suite/variants_panel.py",
+      "line": 529,
+      "field": "variant_set_data"
+    },
+    {
+      "id": "tools/mcp/art_pipeline_suite/variants_panel.py:530",
+      "file": "tools/mcp/art_pipeline_suite/variants_panel.py",
+      "line": 530,
+      "field": "variant_set_path"
+    },
+    {
+      "id": "tools/mcp/art_pipeline_suite/variants_panel.py:636",
+      "file": "tools/mcp/art_pipeline_suite/variants_panel.py",
+      "line": 636,
+      "field": "variant_set_path"
+    },
+    {
+      "id": "tools/mcp/art_pipeline_suite/variants_panel.py:658",
+      "file": "tools/mcp/art_pipeline_suite/variants_panel.py",
+      "line": 658,
+      "field": "selected_variant_key"
+    },
+    {
+      "id": "tools/mcp/art_pipeline_suite/variants_panel.py:751",
+      "file": "tools/mcp/art_pipeline_suite/variants_panel.py",
+      "line": 751,
+      "field": "variant_set_data"
+    },
+    {
+      "id": "tools/mcp/art_pipeline_suite/variants_panel.py:822",
+      "file": "tools/mcp/art_pipeline_suite/variants_panel.py",
+      "line": 822,
+      "field": "variant_set_data"
+    }
+  ]
+}

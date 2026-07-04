@@ -62,7 +62,7 @@
     "relative_path": "debug_runs/sim_hud_phase2_close_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_sim_hud_phase2_close_live_witness",
-    "written_at_epoch_secs": 1783027411
+    "written_at_epoch_secs": 1783111825
   },
   "gate": "SIM-HUD-PHASE2-CLOSE-001",
   "green": true,

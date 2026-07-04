@@ -1,6 +1,7 @@
 # SCHEDULE SYNC AUDIT + IMPROVEMENT PLAN v1 — Update-schedule / SystemSet ordering
 # Generated 2026-07-03 from full sweep (3-agent audit + hand verification of all H claims).
 # Companions: codebase_index_v1.md (entry codes, K##) · plan_cleanup_v1.md (R#/S#/P#/T#/D#)
+# Deferrals: plan_deferral_registry_v1.md — DR-SCHED-W2 (Wave 2+) · Wave 1 unblocked (MIG-V1 green)
 # Canonical references: .cursor/skills/bevy-simulation-grade/07-repo-authority-map.md ·
 #                       docs/archive/2026-06-prompts-guides/runbooks/guides/ecs_systems_schedule_runbook_v1.md
 # Issue codes here: SCH-E# (set-edge topology) · SCH-A# (ordering anchors) · SCH-T# (timing/pause)
@@ -24,7 +25,7 @@
 #   P0  OVR-APS-PRESENCE-OPERATOR-001 — human operator lease; orthogonal
 #   P1  PERF-INSTR-VFX-002 — baseline before SCH-T3 run_if(sim_ticking) additions
 #   P1  PLAN-SCHEDULE-SYNC Wave 1 — SCH-E1 + SCH-T1 (low risk; safe parallel to perf baseline)
-#   P2  Wave 2 SCH-E2 / SCH-A1 — fire authority + anchor sets; steward review required
+#   P2  Wave 2 SCH-E2 / SCH-A1 — fire authority + anchor sets; **DR-SCHED-W2** (steward review + Wave 1 gate)
 #   P2  plan_cleanup Phase 1 D2/D3 — sequence SCH-A1 items 4,6 after instrumentation gating
 #   P3  Wave 3 SimClock + SCH-D1 authority-map paste
 
@@ -57,7 +58,7 @@
 # ═════════════════════════════════════════════════════════════════════
 # current:   Wave 1 PLANNED — picks in HANDOFF.md § PLAN-SCHEDULE-SYNC-v1
 # next_pick: SCH-W1-E1-001 (ambiguity warn) then SCH-W1-T1-001 (pause dt)
-# blocked:   SCH-E2 until fire semantics decision + debug-intelligence routing if touching R2/R3 files
+# blocked:   SCH-E2 until fire semantics decision + **DR-SCHED-W2** predicates (Wave 1 gate + no RTT file conflict)
 
 # ═════════════════════════════════════════════════════════════════════
 # WAVE 1 QUEUE SEED (ready for HANDOFF / agent pick)

@@ -1,0 +1,78 @@
+{
+  "gate": "DES-CITY-PALETTE-VARIATION-001",
+  "issue": "CITY-C5",
+  "program": "PLAN-CITY-GRAMMAR-v1",
+  "charter_doc": "src/dev/design_city_palette_variation_v1.md",
+  "palette_ron_paths": [
+    "assets/configs/buildings/palettes/industrial_west_v1.ron",
+    "assets/configs/buildings/palettes/colonial_res_v1.ron",
+    "assets/configs/buildings/palettes/rowhouse_urban_v1.ron"
+  ],
+  "palette_json_examples": [
+    "tools/mcp/schemas/examples/palette_industrial_west_v1.example.json",
+    "tools/mcp/schemas/examples/palette_colonial_res_v1.example.json",
+    "tools/mcp/schemas/examples/palette_rowhouse_urban_v1.example.json"
+  ],
+  "checks": {
+    "charter_doc": true,
+    "g1_c3_dependency": true,
+    "vocabulary_documented": true,
+    "seed_resolution_documented": true,
+    "three_palette_charters": true,
+    "module_index_extension": true,
+    "tile_atlas_extension": true,
+    "presentation_only": true,
+    "block_recipe_handoff": true,
+    "palette_industrial_west_v1_file": true,
+    "palette_industrial_west_v1_schema_v1": true,
+    "palette_industrial_west_v1_teaches": true,
+    "palette_industrial_west_v1_style_pack": true,
+    "palette_industrial_west_v1_variations_min2": true,
+    "palette_industrial_west_v1_material_slots": true,
+    "palette_colonial_res_v1_file": true,
+    "palette_colonial_res_v1_schema_v1": true,
+    "palette_colonial_res_v1_teaches": true,
+    "palette_colonial_res_v1_style_pack": true,
+    "palette_colonial_res_v1_variations_min2": true,
+    "palette_colonial_res_v1_material_slots": true,
+    "palette_rowhouse_urban_v1_file": true,
+    "palette_rowhouse_urban_v1_schema_v1": true,
+    "palette_rowhouse_urban_v1_teaches": true,
+    "palette_rowhouse_urban_v1_style_pack": true,
+    "palette_rowhouse_urban_v1_variations_min2": true,
+    "palette_rowhouse_urban_v1_material_slots": true,
+    "palette_industrial_west_v1_id_match": true,
+    "palette_industrial_west_v1_teaches_min2": true,
+    "palette_colonial_res_v1_id_match": true,
+    "palette_colonial_res_v1_teaches_min2": true,
+    "palette_rowhouse_urban_v1_id_match": true,
+    "palette_rowhouse_urban_v1_teaches_min2": true
+  },
+  "acceptance": {
+    "C1_vocabulary": true,
+    "C2_three_charters": true,
+    "C3_ron_on_disk": true,
+    "C4_seed_resolution": true,
+    "C5_style_packs": true,
+    "C6_presentation_only": true,
+    "C8_critique_no_rust_colormap": true
+  },
+  "green": true,
+  "verdict": "PASS",
+  "handoff": {
+    "coder_mcp": "palette_catalog_v1.schema.json",
+    "coder": "CITY-G2-C5-001 palette resolver in module_index + tile_atlas_index",
+    "unblocks": [
+      "CITY-G2-C5-001"
+    ]
+  },
+  "_agent_meta": {
+    "schema": "city_palette_variation_charter_live_v1",
+    "written_at_epoch_secs": 1783110214,
+    "profile": "DES_CITY_PALETTE_VARIATION",
+    "source_system": "dmcp_city_palette_variation",
+    "relative_path": "debug_runs/city_palette_variation_charter_live.json",
+    "ritual": "BLANG:WIT-HON\u2192Q\u2713 DES-CITY-PALETTE-VARIATION-001",
+    "agent": "designer-mcp"
+  }
+}

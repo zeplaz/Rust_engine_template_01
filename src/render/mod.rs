@@ -80,6 +80,7 @@ pub mod view_runtime;
 mod spine_governance_matrix;
 mod domain_projection_frame;
 mod frame_perf;
+mod mig_a_adoption;
 mod render_schedule_perf;
 mod stall_watch;
 mod visual_readiness_witness;
@@ -119,7 +120,8 @@ pub use tactical_vector_overlay::{
     TacticalVectorOverlayPlugin, TacticalVectorOverlayState,
 };
 pub use visual_perf_budget::{
-    sync_tile_raster_spike_feedback_system, FireExtractCadence, FireExtractClock,
+    sync_tile_raster_spike_feedback_system, fire_extract_cadence_due, FireExtractCadence,
+    FireExtractClock,
     FireExtractDirtyQueue, FireExtractInputFingerprint,
     FireExtractDiagnostics, FireExtractFrameReport,
     TileRasterBudget, TileRasterSpikeFeedback, RASTER_SPIKE_EMA_MS, RASTER_SPIKE_FRAME_MS,
@@ -361,6 +363,12 @@ pub use frame_perf::{
     timed, timed_opt, FramePerf, FramePerfPlugin, FramePerfSlot, FrameUpdateAttrib, FrameWallClock,
     PerfScope,
 };
+pub use mig_a_adoption::{
+    build_mig_a_rollup_json, mig_a_static_bulk_bundle, mig_a_static_scene_enabled,
+    mig_a1_static_transform_optimizations_enabled, mig_a10_spine_dispatch_authority,
+    mig_a4_render_recovery_enabled, MigAAdoptionPlugin, MigAAdoptionState, MigAStaticBulk,
+    MigAStaticScenePlugin, MIG_A1_A2_A16_JSON, MIG_A_ROLLUP_JSON,
+};
 pub use render_schedule_perf::{
     drain_render_schedule_witness_system, render_schedule_perf_enabled, RenderSchedulePerfPlugin,
     RenderScheduleSpans, RenderScheduleWitness,
@@ -393,8 +401,9 @@ pub use core2d_overlay_order::{
 pub use gpu_tile_debug_buffer::register_tile_debug_instance_storage_upload;
 pub use gpu_tile_debug_draw::register_tile_debug_instanced_draw;
 pub use gpu_indirect_draw::{
-    compact_world_fire_indirect_draw, sync_world_fire_indirect_draw, GpuIndirectDrawSpine,
-    GpuIndirectDrawSpinePlugin, WorldFireIndirectDrawArgs, WORLD_FIRE_VERTICES_PER_INSTANCE,
+    apply_gpu_indirect_spine_dispatch_authority, compact_world_fire_indirect_draw,
+    sync_world_fire_indirect_draw, GpuIndirectDrawSpine, GpuIndirectDrawSpinePlugin,
+    GPU_INDIRECT_DISPATCH_WORKGROUP, WorldFireIndirectDrawArgs, WORLD_FIRE_VERTICES_PER_INSTANCE,
 };
 pub use minimap_compositor::{
     build_minimap_compositor_proof_payload, build_minimap_compositor_proof_payload_with_tray,

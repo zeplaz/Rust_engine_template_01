@@ -245,7 +245,8 @@ pub use hybrid_brain::{
     resolve_world_state_from_masses, ActionWeights, HybridActionKind, HybridAgentEmotions,
     HybridAgentTraits, HybridBeliefBias, HybridBrainSample, HybridResolutionMasses,
     HybridResolutionTelemetry, HybridSimLastResolved, HybridSimPhaseClock, HybridSimScratch,
-    Perception, resolve_world_state, StateControlModel, WorldEvent, WorldIntentField,
+    Perception, resolve_world_state, sch_w1_t1_hybrid_pause_witness_green, StateControlModel,
+    WorldEvent, WorldIntentField,
 };
 pub use hybrid_fields::{
     region_stats_spatial_smoothing_system, regional_target_from_world, smooth, RegionStats,
@@ -267,7 +268,7 @@ pub use schedule::{StrategicOverlayCouplingScratch, StrategicOverlayDisplayPolic
 pub use sim::{
     CityPlanningHints, HybridSimPipeline, InfrastructureCorridor, LogisticsAiRuntime,
     OperationalTheaterSummary, SettlementSite, SimDebugView, StrategicSimulationPlugin,
-    StrategicTransportCorridor,
+    StrategicTransportCorridor, sch_w1_t1_settlement_pause_witness_green,
 };
 
 pub use runbook_rounds::city_planning::{

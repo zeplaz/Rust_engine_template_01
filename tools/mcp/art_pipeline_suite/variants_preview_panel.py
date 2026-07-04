@@ -19,8 +19,13 @@ from rust_engine_mcp.paths import repo_root
 
 from rust_engine_mcp.reaction_territory import preview_visual_states_for_entry
 
-from .aps_inline_feedback import apply_status_atom, set_inline_status
-from .aps_preview_state import apply_preview_photo, configure_preview_label, image_is_near_black
+from .aps_inline_feedback import apply_status_atom
+from .preview_state_display import (
+    apply_preview_photo,
+    configure_preview_label,
+    load_png_thumbnail,
+    set_preview_status,
+)
 from .aps_preview_variant_state import (
     VARIANT_STATES,
     VariantVisualState,
@@ -123,7 +128,7 @@ class VariantsPreviewPanel(ttk.LabelFrame):
         ttk.Label(meta, textvariable=self._variant_var, font=FONT_SMALL, foreground=COLOR_MUTED).pack(anchor=tk.W)
 
     def _set_status(self, text: str, *, ok: bool | None = None) -> None:
-        set_inline_status(self._status_lbl, self._status_var, text, ok=ok)
+        set_preview_status(self._status_lbl, self._status_var, text, ok=ok)
 
     def _apply_active_states(self, states: list[str]) -> None:
         allowed = tuple(s for s in VARIANT_STATES if s in states) or VARIANT_STATES
@@ -313,46 +318,14 @@ class VariantsPreviewPanel(ttk.LabelFrame):
         self._on_log(f"variant preview {variant_key} · {mode} · modules={loaded}")
 
     def _load_thumbnail(self, png_rel: str) -> None:
-        if not png_rel or Image is None or ImageTk is None:
-            configure_preview_label(
-                self._thumb_label,
-                "empty",
-                detail="No thumbnail",
-                width=PREVIEW_THUMB_MD,
-                height=PREVIEW_THUMB_MD,
-            )
-            return
-        path = repo_root() / png_rel.replace("\\", "/")
-        if not path.is_file():
-            configure_preview_label(
-                self._thumb_label,
-                "error",
-                detail="Thumbnail missing",
-                width=PREVIEW_THUMB_MD,
-                height=PREVIEW_THUMB_MD,
-            )
-            return
-        try:
-            img = Image.open(path).convert("RGB")
-        except Exception:  # noqa: BLE001
-            configure_preview_label(
-                self._thumb_label,
-                "error",
-                detail="Thumbnail unreadable",
-                width=PREVIEW_THUMB_MD,
-                height=PREVIEW_THUMB_MD,
-            )
-            return
-        if image_is_near_black(img):
-            configure_preview_label(
-                self._thumb_label,
-                "empty",
-                detail="Preview blank",
-                hint="check GLB paths",
-                width=PREVIEW_THUMB_MD,
-                height=PREVIEW_THUMB_MD,
-            )
-            return
-        img.thumbnail((PREVIEW_THUMB_MD, PREVIEW_THUMB_MD), Image.Resampling.LANCZOS)
-        self._thumb_photo = ImageTk.PhotoImage(img)
-        apply_preview_photo(self._thumb_label, self._thumb_photo)
+        photo = load_png_thumbnail(
+            self._thumb_label,
+            png_rel,
+            width=PREVIEW_THUMB_MD,
+            height=PREVIEW_THUMB_MD,
+            empty_detail="No thumbnail",
+            error_detail="Thumbnail missing",
+            near_black_detail="Preview blank",
+            near_black_hint="check GLB paths",
+        )
+        self._thumb_photo = photo

@@ -5,6 +5,7 @@
   "style_pack": "style_industrial_west",
   "development_tier": "lod0",
   "pbr_status": "deferred",
+  "batch_id": "kit_lod0_003",
   "module": {
     "grid_units": [
       2,

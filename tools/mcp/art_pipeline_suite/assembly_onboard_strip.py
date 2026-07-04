@@ -9,6 +9,7 @@ from rust_engine_mcp.aps_uiux_onboard import ONBOARDING_INTRO, ONBOARDING_STEPS,
 
 from . import aps_theme
 from .aps_theme import FONT_SMALL, FONT_UI, FONT_UI_BOLD
+from .aps_tooltips import bind_aps_tooltip
 
 
 class AssemblyOnboardStrip(ttk.LabelFrame):
@@ -26,6 +27,7 @@ class AssemblyOnboardStrip(ttk.LabelFrame):
             command=self._toggle,
         )
         chk.pack(side=tk.LEFT)
+        bind_aps_tooltip(chk, "onboard_steps")
         self._collapsed_hint = ttk.Label(
             head,
             text=ONBOARDING_INTRO,

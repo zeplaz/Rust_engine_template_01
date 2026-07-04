@@ -325,7 +325,10 @@ impl ProjectionGraphInputFingerprint {
 }
 
 /// Stamp-only advance when graph evaluate is skipped — keeps VT-4 particle projection aligned with fence.
-fn overlay_projection_idle(policy: &crate::gui::RepresentationResult, fire: &crate::render::FireVisualFrame) -> bool {
+pub(crate) fn overlay_projection_idle(
+    policy: &crate::gui::RepresentationResult,
+    fire: &crate::render::FireVisualFrame,
+) -> bool {
     let m = &policy.overlay_matrix;
     !m.fire_heat
         && !m.logistics
@@ -856,5 +859,25 @@ mod tests {
         assert_eq!(graph.fire.snapshot_stamp, 44);
         assert_eq!(graph.logistics.snapshot_stamp, 44);
         assert_eq!(graph.ecology.snapshot_stamp, 44);
+    }
+
+    #[test]
+    fn overlay_projection_idle_when_no_overlays_and_no_fire() {
+        let stamp = SimStepStamp::new(1, 0);
+        let lod = WorldRepresentationFrame::default();
+        let policy_inputs = build_representation_inputs(
+            &crate::gui::CameraVisualState::default(),
+            &LodZoneRegistry::default(),
+            &VisualBudgetSettings::default(),
+            &VisualCadence::from(&VisualBudgetSettings::default()),
+            stamp,
+        );
+        let mut policy = build_representation_result(&lod, &policy_inputs);
+        policy.overlay_matrix.fire_heat = false;
+        policy.overlay_matrix.logistics = false;
+        policy.overlay_matrix.ecology = false;
+        policy.overlay_matrix.construction_phase = false;
+        let fire = FireVisualFrame::default();
+        assert!(super::overlay_projection_idle(&policy, &fire));
     }
 }

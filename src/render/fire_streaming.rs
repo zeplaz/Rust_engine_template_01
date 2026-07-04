@@ -7,6 +7,7 @@ use bevy::prelude::*;
 use crate::engine::states::BaseState;
 use crate::gui::CameraFocusDebug;
 use crate::render::fire_chunk_runtime::{ActiveFireChunkSet, ChunkCoord, FireChunkRuntime};
+use crate::dev::runtime_witness::common::WitnessWriteCadence;
 
 pub const FIRE_STREAMING_LIVE_JSON: &str = "debug_runs/fire_streaming_live.json";
 
@@ -26,13 +27,24 @@ pub struct FireStreamingWitness {
 
 #[derive(Resource, Debug, Clone, Default)]
 pub struct FireStreamingLiveProofState {
-    pub frames_since_write: u32,
-    pub write_interval: u32,
-    pub written: bool,
+    pub cadence: WitnessWriteCadence,
 }
 
 impl FireStreamingLiveProofState {
     pub const DEFAULT_WRITE_INTERVAL: u32 = 90;
+
+    #[must_use]
+    pub fn default_cadence() -> WitnessWriteCadence {
+        WitnessWriteCadence {
+            write_interval: Self::DEFAULT_WRITE_INTERVAL,
+            ..Default::default()
+        }
+    }
+
+    #[must_use]
+    pub fn written(&self) -> bool {
+        self.cadence.written()
+    }
 }
 
 /// Mutates [`FireChunkRuntime`] before [`crate::render::sync_active_fire_chunk_set`].
@@ -124,14 +136,6 @@ pub fn write_fire_streaming_live_proof_system(
     if !crate::dev::debug_run_envelope::witness_refresh_due(FIRE_STREAMING_LIVE_JSON, frame.0) {
         return;
     }
-    if state.write_interval == 0 {
-        state.write_interval = FireStreamingLiveProofState::DEFAULT_WRITE_INTERVAL;
-    }
-    state.frames_since_write = state.frames_since_write.saturating_add(1);
-    if state.frames_since_write < state.write_interval {
-        return;
-    }
-    state.frames_since_write = 0;
     let body = build_fire_streaming_payload(witness.as_ref(), active.as_ref());
     let wrapped = crate::dev::debug_run_envelope::wrap_debug_run(
         "FIRE_STREAMING",
@@ -140,7 +144,7 @@ pub fn write_fire_streaming_live_proof_system(
         body,
     );
     if crate::dev::debug_run_envelope::write_debug_run_json(FIRE_STREAMING_LIVE_JSON, wrapped) {
-        state.written = true;
+        state.cadence.written = true;
     }
 }
 
@@ -208,8 +212,7 @@ impl Plugin for FireStreamingPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<FireStreamingWitness>().insert_resource(
             FireStreamingLiveProofState {
-                write_interval: FireStreamingLiveProofState::DEFAULT_WRITE_INTERVAL,
-                ..Default::default()
+                cadence: FireStreamingLiveProofState::default_cadence(),
             },
         );
     }

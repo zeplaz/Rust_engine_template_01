@@ -12,6 +12,33 @@ use crate::terrain::generation::{Chunk, ChunkCellMatrix};
 use super::diagnostics::AtmosphereDiagnostics;
 use super::field::{AtmosphereCell, AtmosphereField};
 
+#[inline]
+fn write_atmosphere_cell_from_chunk(
+    field: &mut AtmosphereField,
+    chunk: &Chunk,
+    wx: &ChunkWeather,
+    eco: &ChunkEcology,
+    fire_opt: Option<&ChunkSurfaceFire>,
+) {
+    let Some(cell) = field.cell_mut_at_chunk(chunk.coord) else {
+        return;
+    };
+    let heat = fire_opt.map(|f| f.heat).unwrap_or(0.0);
+    let smoke_gen = heat * eco.biomass * (1.0 + eco.fire_risk);
+    let fog = wx.fog_density + wx.rain_intensity * 0.2;
+    let toxicity = smoke_gen * 0.45;
+    let ember_density = heat * wx.wind_speed * eco.biomass;
+    let visibility = (1.0 - smoke_gen * 0.7 - fog * 0.45).clamp(0.05, 1.0);
+
+    cell.smoke_density = smoke_gen.clamp(0.0, 1.0);
+    cell.fog_density = fog.clamp(0.0, 1.0);
+    cell.toxicity = toxicity.clamp(0.0, 1.0);
+    cell.ember_density = ember_density.clamp(0.0, 1.0);
+    cell.visibility = visibility;
+    cell.heat_distortion = (heat * 0.8).clamp(0.0, 1.0);
+    cell.ash_density = (smoke_gen * 0.35).clamp(0.0, 1.0);
+}
+
 pub fn atmosphere_field_fill_from_chunks(
     ctrl: Res<SimControlState>,
     mut field: ResMut<AtmosphereField>,
@@ -31,24 +58,26 @@ pub fn atmosphere_field_fill_from_chunks(
         *c = AtmosphereCell::default();
     }
 
-    for (chunk, wx, eco, fire_opt) in &q {
-        let Some(cell) = field.cell_mut_at_chunk(chunk.coord) else {
-            continue;
-        };
-        let heat = fire_opt.map(|f| f.heat).unwrap_or(0.0);
-        let smoke_gen = heat * eco.biomass * (1.0 + eco.fire_risk);
-        let fog = wx.fog_density + wx.rain_intensity * 0.2;
-        let toxicity = smoke_gen * 0.45;
-        let ember_density = heat * wx.wind_speed * eco.biomass;
-        let visibility = (1.0 - smoke_gen * 0.7 - fog * 0.45).clamp(0.05, 1.0);
-
-        cell.smoke_density = smoke_gen.clamp(0.0, 1.0);
-        cell.fog_density = fog.clamp(0.0, 1.0);
-        cell.toxicity = toxicity.clamp(0.0, 1.0);
-        cell.ember_density = ember_density.clamp(0.0, 1.0);
-        cell.visibility = visibility;
-        cell.heat_distortion = (heat * 0.8).clamp(0.0, 1.0);
-        cell.ash_density = (smoke_gen * 0.35).clamp(0.0, 1.0);
+    diag.last_fill_contiguous = false;
+    if let Ok(batches) = q.contiguous_iter() {
+        diag.last_fill_contiguous = true;
+        for (chunks, weathers, ecos, fires) in batches {
+            let n = chunks.len();
+            for i in 0..n {
+                let fire_opt = fires.as_ref().map(|slice| &slice[i]);
+                write_atmosphere_cell_from_chunk(
+                    &mut field,
+                    &chunks[i],
+                    &weathers[i],
+                    &ecos[i],
+                    fire_opt,
+                );
+            }
+        }
+    } else {
+        for (chunk, wx, eco, fire_opt) in &q {
+            write_atmosphere_cell_from_chunk(&mut field, chunk, wx, eco, fire_opt);
+        }
     }
 }
 

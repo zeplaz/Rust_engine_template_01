@@ -58,7 +58,7 @@
     "relative_path": "debug_runs/city_g1_c1_001_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_city_g1_c1_001_block_archetype_witness",
-    "written_at_epoch_secs": 1783103393
+    "written_at_epoch_secs": 1783114441
   },
   "band_results": [
     {
@@ -98,10 +98,10 @@
       "resolved": "civic"
     }
   ],
-  "city_g0_wit_still_green": false,
-  "city_g1_c4_still_green": false,
+  "city_g0_wit_still_green": true,
+  "city_g1_c4_still_green": true,
   "gate": "CITY-G1-C1-001",
-  "green": false,
+  "green": true,
   "issue": "CITY-C1",
   "noise_jitter_demo": 0.4851222634315491,
   "per_band_ok": true,

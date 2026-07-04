@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "job_id": "roof_brick_gable_2u_production_run001",
+  "batch_id": "kit_fill_bq_k1_001",
+  "development_tier": "production",
+  "spec_ref": "assets/staging/specs/kit_fill/roof_brick_gable_2u_production.json",
+  "operation": "module_roof",
+  "params": {
+    "w": 8.0,
+    "h": 1.8,
+    "d": 4.0,
+    "pitch_deg": 32,
+    "profile": "brick",
+    "seed": 550101
+  },
+  "output": {
+    "glb": "assets/staging/roof_brick_gable_2u_production_run001/model.glb",
+    "thumbnail": "assets/staging/roof_brick_gable_2u_production_run001/preview.png"
+  }
+}

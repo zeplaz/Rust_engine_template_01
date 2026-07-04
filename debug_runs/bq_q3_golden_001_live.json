@@ -1,0 +1,166 @@
+{
+  "_agent_meta": {
+    "agent_commands": [
+      "cargo test -p proc_A_dine01 --lib"
+    ],
+    "docs": {
+      "compile_warnings": "src/dev/COMPILE_WARNINGS_TODOS.md",
+      "stage5_directive": "prompts/guides/stage5_convergence_directive_v1.md",
+      "viewport_recovery": "src/dev/recovery_viewport.md"
+    },
+    "logging_env": {
+      "ORCHESTRATOR_EXPORT_HEALTH": false,
+      "PERF": false,
+      "PERF_DISK": false,
+      "RUST_LOG": null,
+      "SIM_ANALYTICS": false,
+      "SIM_ANALYTICS_FRAMES": false,
+      "SIM_ANALYTICS_QUIET": false,
+      "SIM_VIEW_SYNC_DEBUG": false,
+      "STAGE5_READINESS_VERBOSE": false,
+      "STAGE5_VERBOSE": false,
+      "STALL": false,
+      "VIEWPORT_AUTHORITY_DEBUG": false
+    },
+    "orchestrator": {
+      "build_report": "tools/orchestrator/reports/build_report.md",
+      "ci_entry": "tools/orchestrator/ci/run.ps1",
+      "continuation_queue": "tools/orchestrator/queues/continuation_queue.json",
+      "warning_registry": "tools/orchestrator/reports/warning_registry.md"
+    },
+    "profile": "BQ-Q3-GOLDEN-001",
+    "related_proofs": [
+      "debug_runs/stage5_full_app_live.json",
+      "debug_runs/infrastructure_view_isolation_live.json",
+      "debug_runs/construction_stage_live.json",
+      "debug_runs/industrial_activation_live.json",
+      "debug_runs/fire_ecology_live.json",
+      "debug_runs/logistics_throughput_live.json",
+      "debug_runs/replay_editor_parity_live.json",
+      "debug_runs/orchestrator_thread_health.json",
+      "debug_runs/viewport_drift.json",
+      "debug_runs/viewport_authority_migration_witness.json",
+      "debug_runs/main_thread_orchestrator_live.json",
+      "debug_runs/stage6_virtualization_live.json",
+      "debug_runs/wave_s_hydrate_live.json",
+      "debug_runs/wave_p_live.json",
+      "debug_runs/wave_c_live.json",
+      "debug_runs/ui_shell_migration_live.json",
+      "debug_runs/minimap_compositor_live.json",
+      "debug_runs/sim_spectrum_analytics_live.json",
+      "debug_runs/stage7_behavioral_live.json",
+      "debug_runs/stage7_play_live.json",
+      "debug_runs/wss_substrate_live.json",
+      "debug_runs/f2_smoke_pipeline_live.json",
+      "debug_runs/play_scenario_live.json",
+      "debug_runs/transport_network_live.json"
+    ],
+    "relative_path": "debug_runs/bq_q3_golden_001_live.json",
+    "schema": "debug_run_envelope_v1",
+    "source_system": "refresh_bq_q3_golden_witness",
+    "written_at_epoch_secs": 1783116192
+  },
+  "gate": "BQ-Q3-GOLDEN-001",
+  "green": true,
+  "pass_count": 12,
+  "plan_ref": "src/dev/plan_building_quality_v1.md#BQ-Q3",
+  "seeds": [
+    {
+      "actual_hash": "6d8031cfea5ad1c3ec81f891386f6375b422cd668a2958cb49cdfb0a849f6b09",
+      "archetype_id": "IndustrialWarehouse",
+      "district_style": "industrial_west",
+      "expected_hash": "6d8031cfea5ad1c3ec81f891386f6375b422cd668a2958cb49cdfb0a849f6b09",
+      "match": true,
+      "seed": 43
+    },
+    {
+      "actual_hash": "e70133127bd7ad0609ac042953acae6dbc4c499e8a138fa341b18cb28ed2f30e",
+      "archetype_id": "IndustrialWarehouse",
+      "district_style": "industrial_west",
+      "expected_hash": "e70133127bd7ad0609ac042953acae6dbc4c499e8a138fa341b18cb28ed2f30e",
+      "match": true,
+      "seed": 44
+    },
+    {
+      "actual_hash": "fa0f147f89014aba668ec53c6b672e05e129a8a52df4bdb954de7aa2ec21c708",
+      "archetype_id": "IndustrialWarehouse",
+      "district_style": "industrial_west",
+      "expected_hash": "fa0f147f89014aba668ec53c6b672e05e129a8a52df4bdb954de7aa2ec21c708",
+      "match": true,
+      "seed": 45
+    },
+    {
+      "actual_hash": "cfe4516da50c45d5ad2900920116f490243e70c01c7b21d1eb1c5814aa40b2f6",
+      "archetype_id": "IndustrialWarehouse",
+      "district_style": "industrial_west",
+      "expected_hash": "cfe4516da50c45d5ad2900920116f490243e70c01c7b21d1eb1c5814aa40b2f6",
+      "match": true,
+      "seed": 46
+    },
+    {
+      "actual_hash": "46062d59c423463839e5f34d4f5e4009c9759bcabc6a4a9ce8b976db0e5ded11",
+      "archetype_id": "FactoryCluster",
+      "district_style": "manufacturing_row",
+      "expected_hash": "46062d59c423463839e5f34d4f5e4009c9759bcabc6a4a9ce8b976db0e5ded11",
+      "match": true,
+      "seed": 35
+    },
+    {
+      "actual_hash": "ee500d058422475ae2a3c172c37e1ff993cf0626737a599f2081e0a5aacc688a",
+      "archetype_id": "FactoryCluster",
+      "district_style": "manufacturing_row",
+      "expected_hash": "ee500d058422475ae2a3c172c37e1ff993cf0626737a599f2081e0a5aacc688a",
+      "match": true,
+      "seed": 36
+    },
+    {
+      "actual_hash": "22478b847a5505a560657ef51644b8a4a64c87b6832a8f54b643eea71a90a1e1",
+      "archetype_id": "FactoryCluster",
+      "district_style": "manufacturing_row",
+      "expected_hash": "22478b847a5505a560657ef51644b8a4a64c87b6832a8f54b643eea71a90a1e1",
+      "match": true,
+      "seed": 37
+    },
+    {
+      "actual_hash": "f6aef61394775c267cedce830774d6e15ae069b588bca89f6d56a5310cf63cf0",
+      "archetype_id": "RailEdge",
+      "district_style": "rail_yard_corridor",
+      "expected_hash": "f6aef61394775c267cedce830774d6e15ae069b588bca89f6d56a5310cf63cf0",
+      "match": true,
+      "seed": 42
+    },
+    {
+      "actual_hash": "ff4c2c49c3ad2715224499116b27109c73dfb823546c8a6f5ed62582d182892f",
+      "archetype_id": "RailEdge",
+      "district_style": "rail_yard_corridor",
+      "expected_hash": "ff4c2c49c3ad2715224499116b27109c73dfb823546c8a6f5ed62582d182892f",
+      "match": true,
+      "seed": 43
+    },
+    {
+      "actual_hash": "27baa743f456f8435d9bf77b5ebfc5337a1761b675095b9081d6b22f18b68ee7",
+      "archetype_id": "CivicBlock",
+      "district_style": "main_street_civic",
+      "expected_hash": "27baa743f456f8435d9bf77b5ebfc5337a1761b675095b9081d6b22f18b68ee7",
+      "match": true,
+      "seed": 99
+    },
+    {
+      "actual_hash": "c308a92a81a2256017ba4ce1a9bd38e0b9b83b4465800b6889eab037667bde92",
+      "archetype_id": "CivicBlock",
+      "district_style": "main_street_civic",
+      "expected_hash": "c308a92a81a2256017ba4ce1a9bd38e0b9b83b4465800b6889eab037667bde92",
+      "match": true,
+      "seed": 100
+    },
+    {
+      "actual_hash": "c9213893df4abb6bf56e115386c25d4ed9bab3b4d1733c5c73411aaf132bc5e1",
+      "archetype_id": "CivicBlock",
+      "district_style": "town_hall_row",
+      "expected_hash": "c9213893df4abb6bf56e115386c25d4ed9bab3b4d1733c5c73411aaf132bc5e1",
+      "match": true,
+      "seed": 101
+    }
+  ],
+  "total": 12
+}

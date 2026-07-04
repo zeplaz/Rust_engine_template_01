@@ -1928,23 +1928,41 @@
   "city_grammar_planned": [
     {
       "id": "DES-CITY-BLOCK-RECIPE-001",
-      "status": "blocked",
+      "status": "done",
       "priority": "P2",
       "program": "PLAN-CITY-GRAMMAR-v1",
       "owner": "designer-mcp",
       "depends_on": ["CITY-G0-WIT-001"],
       "deliverable": "src/dev/design_city_block_recipe_v1.md",
-      "notes": "DRAFT charter on disk — designer-mcp PASS after G0c"
+      "witness": "debug_runs/city_block_recipe_charter_live.json",
+      "verdict": "PASS",
+      "closed": "2026-07-03"
     },
     {
       "id": "DES-CITY-PALETTE-VARIATION-001",
-      "status": "blocked",
+      "status": "done",
       "priority": "P3",
       "program": "PLAN-CITY-GRAMMAR-v1",
       "owner": "designer-mcp",
       "depends_on": ["CITY-G1-C3-001"],
       "deliverable": "src/dev/design_city_palette_variation_v1.md",
-      "notes": "CITY-C5 palette charter — after G1 block recipes"
+      "witness": "debug_runs/city_palette_variation_charter_live.json",
+      "verdict": "PASS",
+      "closed": "2026-07-03",
+      "unblocks": ["CITY-G2-C5-001"],
+      "notes": "CITY-C5 palette charter — G1-C3 closed"
+    },
+    {
+      "id": "DES-CITY-BLOCK-DEBUG-READ-001",
+      "status": "done",
+      "priority": "P3",
+      "program": "PLAN-CITY-GRAMMAR-v1",
+      "owner": "designer",
+      "depends_on": ["CITY-G1-C3-001"],
+      "deliverable": "src/dev/design_city_block_debug_read_v1.md",
+      "verdict": "PASS",
+      "closed": "2026-07-03",
+      "notes": "F3 block/recipe debug overlay legend"
     }
   ],
   "next_phase": {

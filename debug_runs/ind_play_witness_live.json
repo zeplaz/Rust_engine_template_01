@@ -58,11 +58,11 @@
     "relative_path": "debug_runs/ind_play_witness_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_ind_play_witness_live",
-    "written_at_epoch_secs": 1783027285
+    "written_at_epoch_secs": 1783111825
   },
   "gate": "CDR-B-IND-PLAY-WITNESS-001",
-  "green": false,
-  "ind_e02_in_play_green": false,
+  "green": true,
+  "ind_e02_in_play_green": true,
   "slice_id": "CDR-B-IND-PLAY-WITNESS-001",
   "source_witness": "debug_runs/play_scenario_live.json"
 }

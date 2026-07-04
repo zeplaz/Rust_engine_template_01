@@ -54,6 +54,7 @@ fn assemble_fire_ecology_harness_app() -> App {
     app.init_resource::<crate::dev::runtime_witness::fire::FireEcologyLiveProofState>();
     app.world_mut()
         .resource_mut::<crate::dev::runtime_witness::fire::FireEcologyLiveProofState>()
+        .cadence
         .write_interval = 1;
 
     let veg_burn = harness_vegetation();

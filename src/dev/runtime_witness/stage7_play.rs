@@ -6,23 +6,23 @@ use crate::dev::stage7_play_witness::build_stage7_play_witness_payload;
 use crate::economy::activation::ConcreteChainE2eWitness;
 use crate::engine::states::BaseState;
 
+use super::common::WitnessWriteCadence;
 use super::io::{write_enveloped_witness, write_enveloped_witness_unchecked};
 
 pub const STAGE7_PLAY_LIVE_JSON: &str = "debug_runs/stage7_play_live.json";
 
 #[derive(Resource, Debug)]
 pub struct Stage7PlayLiveProofState {
-    pub frames_since_write: u32,
-    pub write_interval: u32,
-    pub written: bool,
+    pub cadence: WitnessWriteCadence,
 }
 
 impl Default for Stage7PlayLiveProofState {
     fn default() -> Self {
         Self {
-            frames_since_write: 0,
-            write_interval: 120,
-            written: false,
+            cadence: WitnessWriteCadence {
+                write_interval: 120,
+                ..Default::default()
+            },
         }
     }
 }
@@ -61,11 +61,6 @@ pub fn write_stage7_play_witness_system(
     if !matches!(base.get(), BaseState::Simulation) {
         return;
     }
-    state.frames_since_write = state.frames_since_write.saturating_add(1);
-    if state.frames_since_write < state.write_interval {
-        return;
-    }
-    state.frames_since_write = 0;
 
     let open_todos = board
         .as_ref()
@@ -98,6 +93,6 @@ pub fn write_stage7_play_witness_system(
         STAGE7_PLAY_LIVE_JSON,
         body,
     ) {
-        state.written = true;
+        state.cadence.written = true;
     }
 }

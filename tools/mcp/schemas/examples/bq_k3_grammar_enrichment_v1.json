@@ -1,0 +1,192 @@
+{
+  "schema": "bq_k3_grammar_enrichment_v1",
+  "gate": "BQ-K3-GRAMMAR-001",
+  "charter": "src/dev/design_bq_k3_grammar_enrichment_v1.md",
+  "reference_pattern": "assets/configs/buildings/grammars/industrial_warehouse_v1.ron",
+  "age_band_aps_map": {
+    "clean": {
+      "mandate_tags": ["surface_clean"],
+      "condition_tags": ["new"]
+    },
+    "weathered": {
+      "mandate_tags": ["surface_weathered", "edge_wear"],
+      "condition_tags": ["aged"]
+    },
+    "abandoned": {
+      "mandate_tags": ["surface_abandoned", "vandalism"],
+      "condition_tags": ["derelict"]
+    },
+    "damaged": {
+      "mandate_tags": ["surface_damaged", "structural_stress"],
+      "condition_tags": ["damaged"]
+    }
+  },
+  "grammar_patches": [
+    {
+      "grammar_id": "civic_block_v1",
+      "grammar_ron": "assets/configs/buildings/grammars/civic_block_v1.ron",
+      "archetype_id": "CivicBlock",
+      "add_massing_strategies": [
+        {
+          "id": "t_block",
+          "weight": 12,
+          "footprint_mode": "t_shape"
+        },
+        {
+          "id": "u_courtyard",
+          "weight": 8,
+          "footprint_mode": "u_shape"
+        }
+      ],
+      "roof_by_massing_add": [
+        {
+          "massing_id": "t_block",
+          "slot": "roof_flat_parapet"
+        },
+        {
+          "massing_id": "u_courtyard",
+          "slot": "roof_terrace"
+        }
+      ],
+      "facade_by_massing_add": [
+        {
+          "massing_id": "t_block",
+          "door_rhythm": "stem_center",
+          "placement_tags": ["t_stem", "street_facing"]
+        },
+        {
+          "massing_id": "u_courtyard",
+          "door_rhythm": "court_perimeter",
+          "door_slot": "door_glass_entry",
+          "placement_tags": ["courtyard_perimeter", "commercial"]
+        },
+        {
+          "massing_id": "stepped_block",
+          "door_rhythm": "shopfront_row",
+          "placement_tags": ["storefront", "street_facing"]
+        },
+        {
+          "massing_id": "corner_anchored",
+          "door_rhythm": "corner_primary",
+          "placement_tags": ["corner_anchor", "street_facing"]
+        }
+      ],
+      "age_bands_patch": {
+        "append_aps_mandate_tags": true
+      }
+    },
+    {
+      "grammar_id": "factory_cluster_v1",
+      "grammar_ron": "assets/configs/buildings/grammars/factory_cluster_v1.ron",
+      "archetype_id": "FactoryCluster",
+      "add_massing_strategies": [
+        {
+          "id": "stepped_row",
+          "weight": 15,
+          "footprint_mode": "rect",
+          "width_depth_ratio": 1.1
+        },
+        {
+          "id": "t_loading",
+          "weight": 10,
+          "footprint_mode": "t_shape"
+        }
+      ],
+      "roof_by_massing_add": [
+        {
+          "massing_id": "stepped_row",
+          "slot": "roof_industrial"
+        },
+        {
+          "massing_id": "t_loading",
+          "slot": "roof_flat"
+        }
+      ],
+      "facade_by_massing_add": [
+        {
+          "massing_id": "double_hall",
+          "door_rhythm": "loading_bay",
+          "placement_tags": ["loading_dock", "factory"]
+        },
+        {
+          "massing_id": "long_hall",
+          "door_rhythm": "linear_center",
+          "placement_tags": ["sawtooth", "factory_row"]
+        },
+        {
+          "massing_id": "stepped_row",
+          "door_rhythm": "bay_alternating",
+          "placement_tags": ["stepped_facade", "factory"]
+        },
+        {
+          "massing_id": "t_loading",
+          "door_rhythm": "leg_offset",
+          "door_slot": "door_wide",
+          "placement_tags": ["loading_leg", "rail_adjacent"]
+        },
+        {
+          "massing_id": "yard_complex",
+          "door_rhythm": "perimeter_only",
+          "placement_tags": ["yard_perimeter"]
+        }
+      ],
+      "age_bands_patch": {
+        "append_aps_mandate_tags": true
+      }
+    },
+    {
+      "grammar_id": "rail_edge_v1",
+      "grammar_ron": "assets/configs/buildings/grammars/rail_edge_v1.ron",
+      "archetype_id": "RailEdge",
+      "add_massing_strategies": [
+        {
+          "id": "t_rail_spur",
+          "weight": 15,
+          "footprint_mode": "t_shape"
+        },
+        {
+          "id": "stepped_dock",
+          "weight": 10,
+          "footprint_mode": "rect",
+          "width_depth_ratio": 1.25
+        }
+      ],
+      "roof_by_massing_add": [
+        {
+          "massing_id": "t_rail_spur",
+          "slot": "roof_industrial"
+        },
+        {
+          "massing_id": "stepped_dock",
+          "slot": "roof_flat"
+        }
+      ],
+      "facade_by_massing_add": [
+        {
+          "massing_id": "l_shape",
+          "door_rhythm": "leg_offset",
+          "placement_tags": ["loading_dock", "rail"]
+        },
+        {
+          "massing_id": "t_rail_spur",
+          "door_rhythm": "spur_end",
+          "door_slot": "door_wide",
+          "placement_tags": ["rail_spur", "loading_dock"]
+        },
+        {
+          "massing_id": "stepped_dock",
+          "door_rhythm": "bay_alternating",
+          "placement_tags": ["stepped_dock", "rail_buffer"]
+        },
+        {
+          "massing_id": "long_hall",
+          "door_rhythm": "linear_center",
+          "placement_tags": ["rail_corridor"]
+        }
+      ],
+      "age_bands_patch": {
+        "append_aps_mandate_tags": true
+      }
+    }
+  ]
+}

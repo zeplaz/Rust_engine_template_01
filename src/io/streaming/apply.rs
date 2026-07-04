@@ -75,5 +75,6 @@ mod tests {
     fn pending_stream_apply_queue_defaults_empty() {
         let queue = PendingStreamApplyQueue::default();
         assert!(queue.ready_bodies.is_empty());
+        assert!(queue.reserved_entities.is_empty());
     }
 }

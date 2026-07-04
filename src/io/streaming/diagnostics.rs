@@ -271,4 +271,31 @@ mod tests {
         let b = pending_coords_signature(&[IVec2::new(1, 2), IVec2::new(3, 4)]);
         assert_eq!(a, b);
     }
+
+    #[test]
+    fn warm_gate_skips_when_pending_all_cached_and_idle() {
+        use crate::io::streaming::chunk_cache::{ChunkCache, ChunkCacheEntry};
+        use crate::io::streaming::ChunkStreamingScheduler;
+
+        let coord = IVec2::new(1, 2);
+        let mut scheduler = ChunkStreamingScheduler::default();
+        scheduler.pending_chunks.push(coord);
+        let mut cache = ChunkCache::default();
+        cache.entries.insert(
+            coord,
+            ChunkCacheEntry {
+                coord,
+                material_names: Vec::new(),
+                content_hash: 1,
+                last_touch: 1,
+            },
+        );
+        let gate = refresh_streaming_spine_warm_gate(
+            &scheduler,
+            &cache,
+            &PendingStreamApplyQueue::default(),
+            &PendingTileStorageDiffQueue::default(),
+        );
+        assert!(gate.skip_reconstruct_chain);
+    }
 }

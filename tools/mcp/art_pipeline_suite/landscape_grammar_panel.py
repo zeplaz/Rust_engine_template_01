@@ -12,6 +12,7 @@ from . import aps_theme
 from .aps_inline_feedback import set_inline_status
 from .aps_paned import add_pane, horizontal_paned
 from .aps_theme import FONT_HINT, FONT_SMALL
+from .aps_tooltips import bind_aps_tooltip
 from .aps_tk import themed_text
 from .aps_workflow_layout import workflow_intro, workflow_primary_row
 from .state import SuiteState
@@ -45,7 +46,9 @@ class LandscapeGrammarPanel(ttk.Frame):
 
         actions = workflow_primary_row(self)
         ttk.Label(actions, text="Grammar graph", font=("Segoe UI", 9, "bold")).pack(side=tk.LEFT, padx=(0, 8))
-        ttk.Button(actions, text="Validate schema", command=self._validate_schema).pack(side=tk.LEFT, padx=(0, 6))
+        validate_btn = ttk.Button(actions, text="Validate schema", command=self._validate_schema)
+        validate_btn.pack(side=tk.LEFT, padx=(0, 6))
+        bind_aps_tooltip(validate_btn, "landscape_validate_schema")
         self._validate_var = tk.StringVar(value="")
         self._validate_lbl = ttk.Label(actions, textvariable=self._validate_var, font=FONT_HINT)
         self._validate_lbl.pack(side=tk.LEFT, padx=6)

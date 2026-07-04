@@ -15,6 +15,7 @@ from rust_engine_mcp.material_studio_preview import (
 
 from .aps_preview_state import apply_preview_photo, configure_preview_label, image_is_near_black, make_fidelity_chip
 from .aps_theme import COLOR_MUTED, FONT_SMALL, PREVIEW_THUMB_MD
+from .aps_tooltips import bind_aps_tooltip
 from rust_engine_mcp.material_profiles import MaterialProfileEntry, ensure_profile_textures
 
 
@@ -35,14 +36,18 @@ class MaterialPreviewModesPanel(ttk.LabelFrame):
             ("wall_strip", "Wall"),
             ("building_section", "Building section"),
         ):
-            ttk.Radiobutton(
+            rb = ttk.Radiobutton(
                 row,
                 text=label,
                 value=mode,
                 variable=self._mode_var,
                 command=self._refresh_mode,
-            ).pack(side=tk.LEFT, padx=4)
-        ttk.Button(row, text="Refresh", command=self._refresh_mode).pack(side=tk.LEFT, padx=8)
+            )
+            rb.pack(side=tk.LEFT, padx=4)
+            bind_aps_tooltip(rb, "mat_preview_modes")
+        refresh_btn = ttk.Button(row, text="Refresh", command=self._refresh_mode)
+        refresh_btn.pack(side=tk.LEFT, padx=8)
+        bind_aps_tooltip(refresh_btn, "mat_reload_preview")
         make_fidelity_chip(self, "quick").pack(anchor=tk.W)
         self._canvas = tk.Label(self, relief=tk.SUNKEN)
         self._canvas.pack(fill=tk.BOTH, expand=True)

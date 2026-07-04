@@ -15,8 +15,17 @@ from rust_engine_mcp import assembly_preview
 from rust_engine_mcp.paths import repo_root
 
 from .aps_inline_feedback import apply_status_atom, set_inline_status
-from .aps_preview_state import apply_preview_photo, configure_preview_label, image_is_near_black, make_fidelity_chip
+from .preview_state_display import (
+    apply_preview_photo,
+    build_variant_state_chip_row,
+    configure_preview_label,
+    load_png_thumbnail,
+    make_fidelity_chip,
+    set_preview_status,
+    show_image_file_thumbnail,
+)
 from .aps_theme import COLOR_MUTED, FONT_SMALL, PREVIEW_THUMB_MD
+from .aps_tooltips import bind_aps_tooltip
 from .job_controller import JobRecord, JobResult
 
 
@@ -55,14 +64,8 @@ class AssemblyPreviewPanel(ttk.LabelFrame):
         thumb_pane = ttk.Frame(body, width=200)
         body.add(thumb_pane, weight=0)
         make_fidelity_chip(thumb_pane, "interactive").pack(anchor=tk.W, padx=4, pady=(4, 0))
-        from .aps_preview_variant_state import VARIANT_STATES, variant_state_label
-
-        chip_row = ttk.Frame(thumb_pane)
+        chip_row = build_variant_state_chip_row(thumb_pane)
         chip_row.pack(anchor=tk.W, padx=4, pady=(0, 2))
-        for state in VARIANT_STATES:
-            ttk.Label(chip_row, text=variant_state_label(state), font=FONT_SMALL).pack(
-                side=tk.LEFT, padx=2
-            )
         self._thumb_label = tk.Label(thumb_pane, relief=tk.SUNKEN)
         self._thumb_label.pack(fill=tk.BOTH, expand=True, padx=4, pady=4)
         configure_preview_label(
@@ -80,8 +83,13 @@ class AssemblyPreviewPanel(ttk.LabelFrame):
         btn_row.pack(anchor=tk.W, pady=2)
         self._preview_btn = ttk.Button(btn_row, text="Preview assembly", command=self.on_preview)
         self._preview_btn.pack(side=tk.LEFT, padx=2)
-        ttk.Button(btn_row, text="Open URL", command=self.on_open_url).pack(side=tk.LEFT, padx=2)
-        ttk.Button(btn_row, text="Copy URL", command=self.on_copy_url).pack(side=tk.LEFT, padx=2)
+        bind_aps_tooltip(self._preview_btn, "asm_preview")
+        open_btn = ttk.Button(btn_row, text="Open URL", command=self.on_open_url)
+        open_btn.pack(side=tk.LEFT, padx=2)
+        bind_aps_tooltip(open_btn, "preview_open_url")
+        copy_btn = ttk.Button(btn_row, text="Copy URL", command=self.on_copy_url)
+        copy_btn.pack(side=tk.LEFT, padx=2)
+        bind_aps_tooltip(copy_btn, "preview_copy_url")
 
         self._status_var = tk.StringVar(value="")
         self._status_lbl = ttk.Label(controls, textvariable=self._status_var, wraplength=320, justify=tk.LEFT)
@@ -102,7 +110,7 @@ class AssemblyPreviewPanel(ttk.LabelFrame):
         body.bind("<Configure>", _sync_panes)
 
     def _set_status(self, text: str, *, ok: bool | None = None) -> None:
-        set_inline_status(self._status_lbl, self._status_var, text, ok=ok)
+        set_preview_status(self._status_lbl, self._status_var, text, ok=ok)
 
     def set_snapshot(self, snapshot: dict | None) -> None:
         self._snapshot = snapshot
@@ -215,45 +223,11 @@ class AssemblyPreviewPanel(ttk.LabelFrame):
         self._set_status(f"Copied: {url}", ok=True)
 
     def _load_thumbnail(self, png_rel: str) -> None:
-        if not png_rel or Image is None or ImageTk is None:
-            return
-        path = repo_root() / str(png_rel).replace("\\", "/")
-        if not path.is_file():
-            self._on_log(f"preview thumb missing {path.name}")
-            configure_preview_label(
-                self._thumb_label,
-                "error",
-                detail="Thumbnail unavailable",
-                hint="use Open in browser",
-                width=PREVIEW_THUMB_MD,
-                height=PREVIEW_THUMB_MD,
-            )
-            return
-        try:
-            img = Image.open(path).convert("RGB")
-        except Exception as exc:  # noqa: BLE001
-            self._on_log(f"preview thumb unreadable {path.name}: {exc}")
-            configure_preview_label(
-                self._thumb_label,
-                "error",
-                detail="Thumbnail unreadable",
-                hint="use Open in browser",
-                width=PREVIEW_THUMB_MD,
-                height=PREVIEW_THUMB_MD,
-            )
-            return
-        if image_is_near_black(img):
-            self._thumb_photo = None
-            configure_preview_label(
-                self._thumb_label,
-                "error",
-                detail="Thumbnail unavailable",
-                hint="use Open in browser",
-                width=PREVIEW_THUMB_MD,
-                height=PREVIEW_THUMB_MD,
-            )
-            self._on_log(f"preview thumb blank/black {path.name} — kept browser URL")
-            return
-        img.thumbnail((200, 200), Image.Resampling.LANCZOS)
-        self._thumb_photo = ImageTk.PhotoImage(img)
-        apply_preview_photo(self._thumb_label, self._thumb_photo)
+        photo = load_png_thumbnail(
+            self._thumb_label,
+            png_rel,
+            width=200,
+            height=200,
+            on_log=self._on_log,
+        )
+        self._thumb_photo = photo

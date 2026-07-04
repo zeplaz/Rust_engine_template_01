@@ -11,14 +11,12 @@
     "snap": "roof_ridge",
     "pivot": "bottom_center"
   },
-  "dimensions_m": {
-    "w": 8,
-    "h": 0.3,
-    "d": 10
-  },
+  "dimensions_m": { "w": 8, "h": 0.3, "d": 10 },
   "material_profile": "metal_roof_01",
   "references": [
     "ref:kit:kit_production_002",
-    "ref:gate:MCP-P2-KIT002-G2"
+    "ref:gate:MCP-P2-KIT002-G1",
+    "ref:gate:MCP-P2-KIT002-G2",
+    "ref:manifest:batch_kit_production_002"
   ]
 }

@@ -36,7 +36,7 @@ fn tick_manufacturing_nodes(
         return;
     }
     for mut node in nodes.iter_mut() {
-        // TODO: drive throughput vs blueprint, decay/efficiency curves, alert events.
+        // **INDUSTRIAL-MFG-01** (board: `industrial_activation_todos.rs`) — throughput vs blueprint.
         let _ = &mut *node;
     }
 }

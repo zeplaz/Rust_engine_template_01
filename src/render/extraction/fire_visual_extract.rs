@@ -208,6 +208,7 @@ impl Plugin for FireVisualFramePlugin {
             .add_systems(
                 Update,
                 crate::render::fire_streaming::write_fire_streaming_live_proof_system
+                    .run_if(crate::dev::runtime_witness::fire_streaming_live_proof_due)
                     .after(FireVisualFrameSet::BuildProfiles)
                     .run_if(in_state(crate::engine::states::BaseState::Simulation)),
             )
@@ -709,17 +710,15 @@ pub fn extract_fire_simulation_snapshot(
     let residency_dirty = !overlay_inputs.dirty_queue.coords.is_empty();
     report.overlay_dirty = overlay_dirty;
     report.residency_dirty = residency_dirty;
-    // Under frame spike, never run full-world ECS scan every sim tick — that locks ~200ms+ and
-    // prevents raster/minimap from catching up (death spiral at ~1.5 FPS).
-    let cadence_due = if clock.last_full_extract_secs == 0.0 && clock.last_tick == 0 {
-        true
-    } else if spike_active {
-        interval_elapsed
-    } else if cadence.full_scan_on_sim_tick {
-        tick_changed || interval_elapsed || overlay_dirty || residency_dirty
-    } else {
-        interval_elapsed || overlay_dirty || residency_dirty
-    };
+    let cadence_due = crate::render::fire_extract_cadence_due(
+        &clock,
+        &cadence,
+        now,
+        tick_changed,
+        spike_active,
+        overlay_dirty,
+        residency_dirty,
+    );
     report.cadence_due = cadence_due;
 
     if !cadence_due {
@@ -922,6 +921,7 @@ pub fn extract_fire_simulation_snapshot(
 
 fn build_fire_clusters_into_scratch(
     coherence: Option<Res<crate::render::FireExtractDiagnostics>>,
+    mut extract_diag: Option<ResMut<crate::render::FireExtractDiagnostics>>,
     by_view: Res<FireVisualFramesByView>,
     mut scratch: ResMut<FireClusterScratch>,
 ) {
@@ -936,6 +936,10 @@ fn build_fire_clusters_into_scratch(
         .map(FireVisualGpuInstance::cluster_emission)
         .collect();
     scratch.clusters = build_fire_light_clusters(&samples);
+    if let Some(diag) = extract_diag.as_mut() {
+        diag.last.cpu_light_instances_sampled = samples.len() as u32;
+        diag.last.cpu_light_clusters = scratch.clusters.len() as u32;
+    }
 }
 
 fn aggregate_fire_atmosphere_from_frame(
@@ -975,14 +979,19 @@ const LUMINOSITY_TO_POINTLIGHT: f32 = 24_000.0;
 
 fn emit_fire_light_requests_from_cluster_scratch(
     coherence: Option<Res<crate::render::FireExtractDiagnostics>>,
+    mut extract_diag: Option<ResMut<crate::render::FireExtractDiagnostics>>,
     scratch: Res<FireClusterScratch>,
     mut writer: MessageWriter<RequestLocalLight>,
 ) {
     if coherence.as_deref().is_some_and(|d| d.snapshot_unchanged) {
         return;
     }
+    let cluster_count = scratch.clusters.len() as u32;
     for cluster in &scratch.clusters {
         writer.write(cluster_to_request(cluster));
+    }
+    if let Some(diag) = extract_diag.as_mut() {
+        diag.last.cpu_light_requests = cluster_count;
     }
 }
 

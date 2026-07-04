@@ -1,0 +1,33 @@
+{
+  "task_id": "APSR-A2-P3-001",
+  "gate": "APSR-A2-P3-001",
+  "green": true,
+  "material_browser_module": "tools/mcp/art_pipeline_suite/material_browser.py",
+  "mount_sites": [
+    {
+      "file": "tools/mcp/art_pipeline_suite/assembly_panel_layout.py",
+      "uses_mount_factory": true,
+      "direct_widget_import": false
+    },
+    {
+      "file": "tools/mcp/art_pipeline_suite/materials_panel.py",
+      "uses_mount_factory": true,
+      "direct_widget_import": false
+    }
+  ],
+  "plan_ref": "src/dev/plan_aps_refactor_v1.md#APSR-P3",
+  "_agent_meta": {
+    "schema": "apsr_a2_p3_live_v1",
+    "profile": "APSR_A2_P3",
+    "relative_path": "debug_runs/apsr_a2_p3_001_live.json",
+    "source_system": "apsr_a2_p3",
+    "written_at_epoch_secs": 1783118442,
+    "ritual": "BLANG:WIT-HON APSR-A2-P3-001"
+  },
+  "witness_honesty": {
+    "status": "passed",
+    "error_count": 0,
+    "warning_count": 0,
+    "summary": "witness_honesty debug_runs/apsr_a2_p3_001_live.json: 0 error(s), 0 issue(s)"
+  }
+}

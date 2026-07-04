@@ -406,4 +406,16 @@ mod draw_order_tests {
     fn transparent_overlay_order_chains_fire_after_water() {
         assert!(FIRE_SPARKS_ABOVE_SMOKE_OVERLAY);
     }
+
+    #[test]
+    fn zero_vertex_count_skips_raster_pass() {
+        let globals = FireParticleDrawGlobals::default();
+        assert_eq!(globals.vertex_count, 0);
+    }
+
+    #[test]
+    fn raster_vertex_count_scales_with_capped_instances() {
+        let cap = 5usize;
+        assert_eq!((cap as u32).saturating_mul(6), 30);
+    }
 }

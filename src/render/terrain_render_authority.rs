@@ -42,7 +42,8 @@ pub fn terrain_cpu_fallback_env_forced() -> bool {
         .is_some_and(|v| v == "1" || v.eq_ignore_ascii_case("true"))
 }
 
-/// Opt-in GPU instanced atlas (P0-C′ experimental): `TERRAIN_GPU_INSTANCED=1`.
+/// Opt-in GPU instanced atlas override (legacy): `TERRAIN_GPU_INSTANCED=1`.
+/// Release Simulation defaults to [`TerrainRenderAuthority::GpuInstancedAtlas`] without this env.
 #[must_use]
 pub fn terrain_gpu_instanced_env_enabled() -> bool {
     std::env::var("TERRAIN_GPU_INSTANCED")
@@ -50,8 +51,11 @@ pub fn terrain_gpu_instanced_env_enabled() -> bool {
         .is_some_and(|v| v == "1" || v.eq_ignore_ascii_case("true"))
 }
 
-/// Release Simulation default: CPU fallback raster (minimap + full-world paint).
-/// GPU instanced atlas is opt-in via [`terrain_gpu_instanced_env_enabled`].
+/// Simulation default terrain authority (P0-C′-PRIME).
+///
+/// Release: [`TerrainRenderAuthority::GpuInstancedAtlas`] (dirty-gated GPU sprite display).
+/// Debug: [`TerrainRenderAuthority::CpuFallback`] unless `TERRAIN_GPU_INSTANCED=1`.
+/// Rollback: `TERRAIN_CPU_FALLBACK=1` forces CPU paint in any build.
 #[must_use]
 pub fn resolve_sim_default_authority() -> TerrainRenderAuthority {
     if terrain_cpu_fallback_env_forced() {
@@ -60,7 +64,14 @@ pub fn resolve_sim_default_authority() -> TerrainRenderAuthority {
     if terrain_gpu_instanced_env_enabled() {
         return TerrainRenderAuthority::GpuInstancedAtlas;
     }
-    TerrainRenderAuthority::CpuFallback
+    #[cfg(not(debug_assertions))]
+    {
+        return TerrainRenderAuthority::GpuInstancedAtlas;
+    }
+    #[cfg(debug_assertions)]
+    {
+        TerrainRenderAuthority::CpuFallback
+    }
 }
 
 pub fn apply_simulation_terrain_authority(mut authority: ResMut<TerrainRenderAuthority>) {
@@ -90,15 +101,35 @@ mod tests {
     use super::*;
 
     #[test]
-    fn sim_default_cpu_until_gpu_opt_in() {
+    fn sim_default_gpu_in_release_cpu_in_debug() {
         std::env::remove_var("TERRAIN_CPU_FALLBACK");
         std::env::remove_var("TERRAIN_GPU_INSTANCED");
         let auth = resolve_sim_default_authority();
-        assert_eq!(auth, TerrainRenderAuthority::CpuFallback);
+        if cfg!(debug_assertions) {
+            assert_eq!(auth, TerrainRenderAuthority::CpuFallback);
+        } else {
+            assert_eq!(auth, TerrainRenderAuthority::GpuInstancedAtlas);
+        }
+    }
+
+    #[test]
+    fn debug_opt_in_gpu_instanced_env() {
+        if !cfg!(debug_assertions) {
+            return;
+        }
+        std::env::remove_var("TERRAIN_CPU_FALLBACK");
         std::env::set_var("TERRAIN_GPU_INSTANCED", "1");
-        let auth = resolve_sim_default_authority();
-        assert_eq!(auth, TerrainRenderAuthority::GpuInstancedAtlas);
+        assert_eq!(
+            resolve_sim_default_authority(),
+            TerrainRenderAuthority::GpuInstancedAtlas
+        );
         std::env::remove_var("TERRAIN_GPU_INSTANCED");
+    }
+
+    #[test]
+    fn gpu_authority_skips_cpu_fallback_raster_metric() {
+        assert!(!TerrainRenderAuthority::GpuInstancedAtlas.uses_cpu_fallback_raster());
+        assert!(TerrainRenderAuthority::GpuInstancedAtlas.uses_gpu_sprite_display());
     }
 
     #[test]
@@ -107,5 +138,31 @@ mod tests {
         let auth = resolve_sim_default_authority();
         assert_eq!(auth, TerrainRenderAuthority::CpuFallback);
         std::env::remove_var("TERRAIN_CPU_FALLBACK");
+    }
+
+    #[test]
+    fn simulation_enter_applies_default_authority() {
+        use bevy::state::app::StatesPlugin;
+        use crate::engine::states::BaseState;
+
+        std::env::remove_var("TERRAIN_CPU_FALLBACK");
+        std::env::remove_var("TERRAIN_GPU_INSTANCED");
+
+        let mut app = App::new();
+        app.add_plugins((MinimalPlugins, StatesPlugin));
+        app.init_state::<BaseState>();
+        app.insert_state(BaseState::Editor);
+        app.add_plugins(TerrainRenderAuthorityPlugin);
+
+        app.world_mut()
+            .insert_resource(NextState::Pending(BaseState::Simulation));
+        app.update();
+
+        let auth = app.world().resource::<TerrainRenderAuthority>();
+        if cfg!(debug_assertions) {
+            assert_eq!(*auth, TerrainRenderAuthority::CpuFallback);
+        } else {
+            assert_eq!(*auth, TerrainRenderAuthority::GpuInstancedAtlas);
+        }
     }
 }

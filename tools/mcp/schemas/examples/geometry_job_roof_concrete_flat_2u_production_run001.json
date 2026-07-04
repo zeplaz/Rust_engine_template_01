@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "job_id": "roof_concrete_flat_2u_production_run001",
+  "batch_id": "kit_fill_bq_k1_001",
+  "development_tier": "production",
+  "spec_ref": "assets/staging/specs/kit_fill/roof_concrete_flat_2u_production.json",
+  "operation": "module_roof",
+  "params": {
+    "w": 8.0,
+    "h": 0.4,
+    "d": 4.0,
+    "profile": "concrete",
+    "seed": 550108
+  },
+  "output": {
+    "glb": "assets/staging/roof_concrete_flat_2u_production_run001/model.glb",
+    "thumbnail": "assets/staging/roof_concrete_flat_2u_production_run001/preview.png"
+  }
+}

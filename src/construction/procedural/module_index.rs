@@ -79,6 +79,12 @@ struct ModuleIndexEntryRon {
     snap: String,
     #[serde(default)]
     material_profile: String,
+    #[serde(default)]
+    palette_family: String,
+    #[serde(default)]
+    palette_variation_count: u8,
+    #[serde(default)]
+    default_variation_id: String,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -118,6 +124,12 @@ struct ModuleIndexEntryJson {
     snap: String,
     #[serde(default)]
     material_profile: String,
+    #[serde(default)]
+    palette_family: String,
+    #[serde(default)]
+    palette_variation_count: u8,
+    #[serde(default)]
+    default_variation_id: String,
 }
 
 /// One promoted procedural module row from the MCP library index.
@@ -141,6 +153,9 @@ pub struct ProceduralModuleEntry {
     pub style_pack: String,
     pub snap: String,
     pub material_profile: String,
+    pub palette_family: String,
+    pub palette_variation_count: u8,
+    pub default_variation_id: String,
 }
 
 impl ProceduralModuleEntry {
@@ -192,21 +207,47 @@ impl ProceduralModuleRegistry {
 
     #[must_use]
     pub fn stylepack_entry(&self, module_id: &str) -> Option<&ProceduralModuleEntry> {
+        self.stylepack_entry_for(module_id, None).0
+    }
+
+    /// StylePack / PG-2 path — optional `style_pack_id` filters before tier preference.
+    #[must_use]
+    pub fn stylepack_entry_for(
+        &self,
+        module_id: &str,
+        style_pack_id: Option<&str>,
+    ) -> (Option<&ProceduralModuleEntry>, StylePackResolveMeta) {
         let canonical = self.resolve_canonical_module_id(module_id);
-        let mut best: Option<&ProceduralModuleEntry> = None;
-        for entry in &self.entries {
-            if entry.module_id != canonical || !entry.visible_in_stylepack() {
-                continue;
-            }
-            best = Some(match best {
-                None => entry,
-                Some(cur) => prefer_stylepack_tier(entry, cur),
-            });
-        }
-        best
+        pick_stylepack_entry(
+            self.entries
+                .iter()
+                .filter(|entry| entry.module_id == canonical && entry.visible_in_stylepack()),
+            style_pack_id,
+        )
+    }
+
+    #[must_use]
+    pub fn stylepack_glb_asset_for(
+        &self,
+        module_id: &str,
+        style_pack_id: Option<&str>,
+    ) -> Option<&str> {
+        self.stylepack_entry_for(module_id, style_pack_id)
+            .0
+            .map(|e| e.glb_asset.as_str())
     }
 
     /// PG-2 / StylePack path — canonical lod0+ row; never returns smoke-tier entries.
+    #[must_use]
+    pub fn resolve_module_id_for(
+        &self,
+        module_id: &str,
+        style_pack_id: Option<&str>,
+    ) -> (Option<&ProceduralModuleEntry>, StylePackResolveMeta) {
+        self.stylepack_entry_for(module_id, style_pack_id)
+    }
+
+    /// Legacy tier-only resolve (no style filter) — prefer [`resolve_module_id_for`].
     #[must_use]
     pub fn resolve_module_id(&self, module_id: &str) -> Option<&ProceduralModuleEntry> {
         self.stylepack_entry(module_id)
@@ -262,6 +303,64 @@ pub fn default_module_index_ron_path() -> PathBuf {
     repo_asset_path(MODULE_INDEX_RON)
 }
 
+/// Resolution metadata for style-pack module lookup (**BQ-F2-STYLE-001**).
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub struct StylePackResolveMeta {
+    pub cross_style_fallback: bool,
+}
+
+pub const BQ_F2_STYLE_001_LIVE_JSON: &str = "debug_runs/bq_f2_style_001_live.json";
+fn style_pack_matches(entry: &ProceduralModuleEntry, style_pack_id: &str) -> bool {
+    entry.style_pack == style_pack_id
+}
+
+#[must_use]
+fn pick_stylepack_entry<'a>(
+    entries: impl Iterator<Item = &'a ProceduralModuleEntry>,
+    style_pack_id: Option<&str>,
+) -> (Option<&'a ProceduralModuleEntry>, StylePackResolveMeta) {
+    let mut tier_best: Option<&ProceduralModuleEntry> = None;
+    let mut style_best: Option<&ProceduralModuleEntry> = None;
+
+    for entry in entries {
+        tier_best = Some(match tier_best {
+            None => entry,
+            Some(cur) => prefer_stylepack_tier(entry, cur),
+        });
+        if style_pack_id.is_some_and(|id| style_pack_matches(entry, id)) {
+            style_best = Some(match style_best {
+                None => entry,
+                Some(cur) => prefer_stylepack_tier(entry, cur),
+            });
+        }
+    }
+
+    if let Some(style_id) = style_pack_id {
+        if let Some(best) = style_best {
+            return (Some(best), StylePackResolveMeta::default());
+        }
+        if let Some(fallback) = tier_best {
+            warn!(
+                target: "procedural_module",
+                module_id = %fallback.module_id,
+                requested_style = %style_id,
+                resolved_style = %fallback.style_pack,
+                job_id = %fallback.job_id,
+                "stylepack cross-style fallback (BQ-F2)"
+            );
+            return (
+                Some(fallback),
+                StylePackResolveMeta {
+                    cross_style_fallback: true,
+                },
+            );
+        }
+        return (None, StylePackResolveMeta::default());
+    }
+
+    (tier_best, StylePackResolveMeta::default())
+}
+
 /// PG-2 / assembly prefers **lod0** over production when both are stylepack-visible.
 fn prefer_stylepack_tier<'a>(
     candidate: &'a ProceduralModuleEntry,
@@ -305,6 +404,9 @@ fn normalize_entry(
     style_pack: String,
     snap: String,
     material_profile: String,
+    palette_family: String,
+    palette_variation_count: u8,
+    default_variation_id: String,
 ) -> ProceduralModuleEntry {
     let tier = DevelopmentTier::parse(&development_tier, &batch_id);
     let glb_asset = glb_to_asset_path(&glb_path);
@@ -325,6 +427,9 @@ fn normalize_entry(
         style_pack,
         snap,
         material_profile,
+        palette_family,
+        palette_variation_count,
+        default_variation_id,
     }
 }
 
@@ -346,6 +451,9 @@ fn entry_from_ron(raw: ModuleIndexEntryRon) -> ProceduralModuleEntry {
         raw.style_pack,
         raw.snap,
         raw.material_profile,
+        raw.palette_family,
+        raw.palette_variation_count,
+        raw.default_variation_id,
     )
 }
 
@@ -375,6 +483,9 @@ fn entry_from_json(raw: ModuleIndexEntryJson) -> ProceduralModuleEntry {
         raw.style_pack,
         raw.snap,
         raw.material_profile,
+        raw.palette_family,
+        raw.palette_variation_count,
+        raw.default_variation_id,
     )
 }
 
@@ -468,6 +579,88 @@ pub fn init_procedural_module_registry(mut commands: Commands) {
     commands.insert_resource(registry);
 }
 
+#[must_use]
+pub fn build_bq_f2_style_001_witness_body() -> serde_json::Value {
+    use crate::render::extraction::{
+        assemble_procedural_build_instances, ProceduralModuleSceneCatalog,
+    };
+
+    let reg = load_procedural_module_registry();
+    let packs = super::load::load_style_pack_registry();
+    let table_ok = reg.load_errors.is_empty() && packs.load_errors.is_empty();
+
+    let (victorian_entry, victorian_meta) =
+        reg.stylepack_entry_for("wall_brick_1u", Some("style_victorian"));
+    let (ungated_entry, _) = reg.stylepack_entry_for("wall_brick_1u", None);
+    let victorian_style_ok = victorian_entry
+        .is_some_and(|e| e.style_pack == "style_victorian" && !victorian_meta.cross_style_fallback);
+    let tier_only_differs = match (victorian_entry, ungated_entry) {
+        (Some(v), Some(u)) => v.job_id != u.job_id,
+        _ => false,
+    };
+
+    let mut cross_style_fallback_count = 0u32;
+    if let Some(pack) = packs.get("style_victorian") {
+        let request = crate::construction::procedural::ProceduralBuildingRequest {
+            archetype_id: "rect_perimeter".into(),
+            width: 4,
+            depth: 2,
+            floors: 2,
+            style: crate::construction::procedural::StylePackId("style_victorian".into()),
+            seed: 1,
+            arch_dna_preset_id: None,
+        };
+        let grid = crate::construction::procedural::FootprintGrid::from_request(&request);
+        let extract = assemble_procedural_build_instances(
+            &request,
+            pack,
+            &grid,
+            &reg,
+            &ProceduralModuleSceneCatalog::default(),
+        );
+        cross_style_fallback_count = extract.cross_style_fallback_count;
+    }
+
+    let green = table_ok && victorian_style_ok && cross_style_fallback_count == 0;
+
+    serde_json::json!({
+        "gate": "BQ-F2-STYLE-001",
+        "green": green,
+        "table_ok": table_ok,
+        "victorian_wall_brick_style_ok": victorian_style_ok,
+        "tier_only_picks_different_job": tier_only_differs,
+        "cross_style_fallback_count": cross_style_fallback_count,
+        "victorian_wall_job_id": victorian_entry.map(|e| e.job_id.clone()),
+        "ungated_wall_job_id": ungated_entry.map(|e| e.job_id.clone()),
+    })
+}
+
+#[must_use]
+pub fn bq_f2_style_001_witness_green() -> bool {
+    build_bq_f2_style_001_witness_body()
+        .get("green")
+        .and_then(|v| v.as_bool())
+        .unwrap_or(false)
+}
+
+#[must_use]
+pub fn refresh_bq_f2_style_001_witness() -> bool {
+    use crate::dev::debug_run_envelope::{wrap_debug_run, write_debug_run_json};
+
+    let body = build_bq_f2_style_001_witness_body();
+    let green = body
+        .get("green")
+        .and_then(|v| v.as_bool())
+        .unwrap_or(false);
+    let wrapped = wrap_debug_run(
+        "BQ-F2-STYLE-001",
+        "refresh_bq_f2_style_001_witness",
+        BQ_F2_STYLE_001_LIVE_JSON,
+        body,
+    );
+    write_debug_run_json(BQ_F2_STYLE_001_LIVE_JSON, wrapped) && green
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -482,8 +675,9 @@ mod tests {
         );
         assert!(reg.len() >= 10);
         let wall = reg.get("wall_concrete_2u").expect("wall_concrete_2u");
-        assert_eq!(wall.job_id, "wall_concrete_2u_lod0_run001");
-        assert!(wall.glb_path.contains("wall_concrete_2u_lod0_run001"));
+        assert_eq!(wall.job_id, "wall_concrete_2u_production_run001");
+        assert!(wall.glb_path.contains("wall_concrete_2u_production_run001"));
+        assert_eq!(wall.palette_family, "palette_industrial_west");
         assert!(wall.glb_asset.starts_with("models/modules/"));
         assert_eq!(
             reg.module_id_for_job("wall_concrete_2u_lod0_run001"),
@@ -568,5 +762,31 @@ mod tests {
             .resolve_module_id("wall_brick_1u")
             .expect("resolve_module_id lod0");
         assert_eq!(entry.development_tier, DevelopmentTier::Lod0);
+    }
+
+    #[test]
+    fn bq_f2_victorian_wall_brick_never_picks_industrial_lod0() {
+        let reg = load_procedural_module_registry();
+        assert!(reg.load_errors.is_empty(), "{:?}", reg.load_errors);
+        let (entry, meta) = reg.stylepack_entry_for("wall_brick_1u", Some("style_victorian"));
+        let entry = entry.expect("victorian wall_brick");
+        assert_eq!(entry.style_pack, "style_victorian");
+        assert!(!meta.cross_style_fallback);
+        assert_eq!(entry.development_tier, DevelopmentTier::Production);
+        let (ungated, _) = reg.stylepack_entry_for("wall_brick_1u", None);
+        assert_eq!(
+            ungated.map(|e| e.style_pack.as_str()),
+            Some("style_industrial_west")
+        );
+    }
+
+    #[test]
+    fn bq_f2_style_001_witness_green_lib() {
+        assert!(super::bq_f2_style_001_witness_green());
+    }
+
+    #[test]
+    fn bq_f2_style_001_live_witness_refresh_green() {
+        assert!(super::refresh_bq_f2_style_001_witness());
     }
 }

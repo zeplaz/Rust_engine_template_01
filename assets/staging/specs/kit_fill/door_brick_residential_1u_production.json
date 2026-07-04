@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "asset_id": "door_brick_residential_1u",
+  "archetype": "module_door",
+  "batch_id": "kit_fill_bq_k1_001",
+  "style_pack": "style_colonial",
+  "style_packs": [
+    "style_colonial",
+    "style_victorian"
+  ],
+  "development_tier": "production",
+  "pbr_status": "planned",
+  "material_profile": "brick_red_01",
+  "material_family": "brick",
+  "module": {
+    "grid_units": [
+      1,
+      1
+    ],
+    "snap": "floor_edge",
+    "pivot": "bottom_center"
+  },
+  "dimensions_m": {
+    "w": 1.2,
+    "h": 2.2,
+    "d": 0.2
+  },
+  "references": [
+    "ref:charter:BQ-K1-KITFILL-001",
+    "ref:contract:src/dev/design_bq_k1_kitfill_charter_v1.md",
+    "ref:contract:tools/mcp/schemas/module_contract_v1.json"
+  ],
+  "_meta": {
+    "teaches": [
+      "brick",
+      "door",
+      "kit_fill_bq_k1"
+    ]
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "task_id": "APSR-A1-S2-ASM-001",
+  "gate": "APSR-A1-S2-ASM-001",
+  "green": true,
+  "mutation_inventory_green": true,
+  "live_mutation_count": 33,
+  "assembly_direct_write_sites": [],
+  "assembly_single_owner": true,
+  "assembly_service_module": "tools/mcp/art_pipeline_suite/aps_services/assembly_service.py",
+  "enforced_fields": [
+    "assembly_id",
+    "assembly_p0_passed",
+    "assembly_snapshot_data",
+    "assembly_snapshot_path",
+    "module_ids_in_assembly"
+  ],
+  "plan_ref": "src/dev/plan_aps_refactor_v1.md#APSR-S2",
+  "_agent_meta": {
+    "schema": "apsr_a1_s2_live_v1",
+    "profile": "APSR_A1_S2",
+    "relative_path": "debug_runs/apsr_a1_s2_001_live.json",
+    "source_system": "apsr_a1_s2",
+    "written_at_epoch_secs": 1783115133,
+    "ritual": "BLANG:WIT-HON APSR-A1-S2-ASM-001"
+  },
+  "witness_honesty": {
+    "status": "passed",
+    "error_count": 0,
+    "warning_count": 0,
+    "summary": "witness_honesty debug_runs/apsr_a1_s2_001_live.json: 0 error(s), 0 issue(s)"
+  }
+}

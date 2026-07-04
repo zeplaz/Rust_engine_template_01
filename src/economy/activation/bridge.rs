@@ -80,9 +80,12 @@ impl Plugin for IndustrialActivationPlugin {
         app.add_systems(
             Update,
             (
-                super::witness_collectors::write_industrial_activation_live_proof_system,
-                crate::dev::write_stage7_play_witness_system,
+                super::witness_collectors::write_industrial_activation_live_proof_system
+                    .run_if(crate::dev::runtime_witness::industrial_activation_live_proof_due),
+                crate::dev::write_stage7_play_witness_system
+                    .run_if(crate::dev::runtime_witness::stage7_play_live_proof_due),
                 crate::dev::write_stage7_behavioral_witness_system
+                    .run_if(crate::dev::runtime_witness::stage7_behavioral_live_proof_due)
                     .after(crate::strategic::publish_stage7_behavioral_overlay_samples)
                     .after(crate::strategic::tick_strategic_command_queue_system),
             )

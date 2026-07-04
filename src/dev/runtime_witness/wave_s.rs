@@ -5,7 +5,7 @@ use bevy::prelude::*;
 use crate::engine::states::BaseState;
 use crate::io::save::WaveSShellHydrateWitness;
 
-use super::common::{tick_live_proof_cadence, LiveProofCadence};
+use super::common::LiveProofCadence;
 use super::io::write_enveloped_witness;
 
 pub const WAVE_S_HYDRATE_JSON: &str = "debug_runs/wave_s_hydrate_live.json";
@@ -36,9 +36,6 @@ pub fn write_wave_s_hydrate_live_proof_system(
     witness: Res<WaveSShellHydrateWitness>,
 ) {
     if !matches!(base.get(), BaseState::Simulation) {
-        return;
-    }
-    if !tick_live_proof_cadence(&mut state) {
         return;
     }
     let body = build_wave_s_hydrate_proof_payload(witness.as_ref());

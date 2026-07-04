@@ -322,9 +322,9 @@ After **PASS** on this charter + G0c green:
 | Item | Owner | Trigger |
 |:---|:---|:---|
 | `ForestPark` · `Civic` · `HighDensityCommercial` recipes | designer-mcp | G1 gate witness green |
-| [`design_city_palette_variation_v1.md`](design_city_palette_variation_v1.md) (CITY-C5) | designer-mcp | After G1-C3 lands |
-| APS block-tier UI / debug overlay copy | designer | After evaluator wired |
-| BSN street furniture (C6 BSN part) | designer-mcp | POST-MIG |
+| [`design_city_palette_variation_v1.md`](design_city_palette_variation_v1.md) (CITY-C5) | designer-mcp | **PASS** 2026-07-03 |
+| APS block-tier UI / debug overlay copy | designer | **PASS** — [`design_city_block_debug_read_v1.md`](design_city_block_debug_read_v1.md) |
+| BSN street furniture (C6 BSN part) | designer-mcp | **DR-CITY-C6-BSN** — after C6 visual charter |
 
 ---
 
