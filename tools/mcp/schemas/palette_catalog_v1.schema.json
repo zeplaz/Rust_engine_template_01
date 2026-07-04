@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "palette_catalog_v1.schema.json",
+  "title": "PaletteCatalogV1",
+  "type": "object",
+  "required": ["schema", "palette_id", "style_pack", "label", "variations"],
+  "properties": {
+    "schema": { "const": "palette_catalog_v1" },
+    "version": { "type": "string" },
+    "palette_id": { "type": "string", "pattern": "^palette_[a-z0-9_]+$" },
+    "style_pack": { "type": "string", "pattern": "^style_[a-z0-9_]+$" },
+    "label": { "type": "string", "minLength": 1 },
+    "_meta": {
+      "type": "object",
+      "properties": {
+        "teaches": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 2
+        }
+      },
+      "required": ["teaches"]
+    },
+    "variations": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 6,
+      "items": {
+        "type": "object",
+        "required": ["variation_id", "label", "material_slots"],
+        "properties": {
+          "variation_id": { "type": "string", "pattern": "^[a-z0-9_]+$" },
+          "label": { "type": "string" },
+          "material_slots": {
+            "type": "object",
+            "minProperties": 1,
+            "additionalProperties": { "type": "string" }
+          },
+          "atlas_tint": {
+            "type": "array",
+            "items": { "type": "number" },
+            "minItems": 3,
+            "maxItems": 3
+          },
+          "variant_tags": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        }
+      }
+    }
+  }
+}

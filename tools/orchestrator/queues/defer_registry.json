@@ -1,62 +1,167 @@
 {
   "_meta": {
-    "version": "1.0.0",
-    "date": "2026-06-03",
-    "plan_doc": "docs/archive/2026-06-src-dev/plans/plan_defer_registry_v1.md",
-    "audit": "src/dev/planner_status_audit_v19.md",
-    "rule": "Do not promote defer[] rows to active[] without planner sign-off"
+    "version": "1.1.0",
+    "date": "2026-07-03",
+    "plan_doc": "src/dev/plan_deferral_registry_v1.md",
+    "migration_truth": "debug_runs/mig_bevy_019/mig_v1_gate.json",
+    "rule": "Do not promote defer[] rows to active[] until ALL unblock_when predicates in plan_deferral_registry_v1.md are true"
   },
   "defer": [
     {
+      "id": "DR-MIG-TILEMAP",
+      "track": "MIG",
+      "class": "ecosystem_blocked",
+      "reason": "bevy_ecs_tilemap crates.io latest 0.18.1 only — bevy_tilemap_adapter stays OFF",
+      "unblock_when": [
+        "crates.io/bevy_ecs_tilemap publishes 0.19.x",
+        "compat_matrix_g1.json row go:true for tilemap",
+        "steward sign-off on Cargo bump"
+      ],
+      "witness": "debug_runs/mig_bevy_019/compat_matrix_g1.json",
+      "plans": ["plan_gpu_terrain_production_exec_001_v1.md", "plan_bevy_019_migration_v1.md"]
+    },
+    {
+      "id": "DR-MIG-A8",
+      "track": "MIG",
+      "class": "closed_wont_adopt",
+      "reason": "SettingsPlugin — shell_persistence.rs owns HUD layout RON",
+      "unblock_when": ["never"],
+      "witness": "debug_runs/mig_bevy_019/mig_a_a8_settings_coexistence_audit.json",
+      "status": "closed"
+    },
+    {
+      "id": "DR-MIG-A15",
+      "track": "MIG",
+      "class": "product_blocked",
+      "reason": "No MorphWeights usage in src/",
+      "unblock_when": [
+        "procedural skinning product plan signed OR grep MorphWeights src/ non-zero"
+      ],
+      "plans": ["plan_bevy_019_migration_v1.md"]
+    },
+    {
+      "id": "DR-MIG-A9",
+      "track": "MIG",
+      "class": "closed_handoff",
+      "reason": "BSN pilot + witness complete — product owner plan_city_grammar § BSN ASSEMBLY CHARTER",
+      "unblock_when": ["never from MIG queue — pick DR-CITY-C6-VIS or DR-CITY-C6-BSN in city grammar plan"],
+      "witness": "debug_runs/mig_bevy_019/mig_a_a9_bsn_scene_handoff.json",
+      "plans": ["plan_city_grammar_upgrade_v1.md"],
+      "status": "closed",
+      "closed_at": "2026-07-03"
+    },
+    {
+      "id": "DR-CITY-C6-BSN",
+      "track": "CITY",
+      "class": "product_blocked",
+      "reason": "BSN scene assembly — product architecture (not migration)",
+      "unblock_when": [
+        "CITY-C6 visual witness green (DR-CITY-C6-VIS)",
+        "designer-mcp BSN assembly charter signed per plan_city_grammar § BSN ASSEMBLY CHARTER"
+      ],
+      "plans": ["plan_city_grammar_upgrade_v1.md", "coder_remaining_post_019_v1.md"]
+    },
+    {
+      "id": "DR-GPU-TERRAIN-P0C",
+      "track": "PERF",
+      "class": "ecosystem_blocked",
+      "reason": "P0-C tilemap default blocked on DR-MIG-TILEMAP",
+      "unblock_when": ["DR-MIG-TILEMAP all predicates true OR P0-C prime instanced path signed"],
+      "plans": ["plan_gpu_terrain_production_exec_001_v1.md"]
+    },
+    {
+      "id": "DR-SCHED-W2",
+      "track": "SCH",
+      "class": "program_gate",
+      "reason": "Schedule Wave 2 fire authority slices — after Wave 1 gate",
+      "unblock_when": [
+        "SCH-W1 gate recorded in HANDOFF",
+        "no file conflict with RTT lane"
+      ],
+      "plans": ["plan_schedule_sync_v1.md"]
+    },
+    {
+      "id": "DR-CLEANUP-P2",
+      "track": "CLN",
+      "class": "program_gate",
+      "reason": "Cleanup Phase 2+ authority splits",
+      "unblock_when": [
+        "Phase 0 slice started OR PERF-INSTR-VFX-002 baseline captured",
+        "steward sign-off on slice"
+      ],
+      "plans": ["plan_cleanup_v1.md"]
+    },
+    {
+      "id": "DR-RTT-VR16",
+      "track": "RTT",
+      "class": "verify",
+      "reason": "Sparks/particles — lib proof green; operator --test vfx verify",
+      "unblock_when": [
+        "cargo run --release -- --test vfx on display",
+        "stage5_full_app_live.json refreshed"
+      ],
+      "plans": ["visual_run_blockers.md"],
+      "status": "ready_to_verify"
+    },
+    {
       "id": "MCP-PILOT-GRAMMAR-001",
       "track": "B",
+      "class": "product_blocked",
       "reason": "Manual keyframe ship; headless minimum bake is not ship proof",
-      "unblock_when": "tile_promotion_honest_check green + operator G4 checklist",
+      "unblock_when": ["tile_promotion_honest_check green + operator G4 checklist"],
       "witness": "debug_runs/mcp_pilot_grammar_001_rejected_live.json"
     },
     {
       "id": "TRACK-B-G4-SHIP",
       "track": "B",
-      "reason": "Warehouse integration test paused — not blocking Track A/C",
-      "unblock_when": "MCP-PILOT-GRAMMAR-001 unpause"
+      "class": "product_blocked",
+      "reason": "Warehouse integration test paused",
+      "unblock_when": ["MCP-PILOT-GRAMMAR-001 unpause"]
     },
     {
       "id": "APS-ARTIST-TOOL-E2E-001",
       "track": "A",
       "reason": "CLI E2E green; product operator sign-off deferred",
-      "unblock_when": "ATL★ signed — review APS-ARTIST-TOOL-E2E-REVIEW-001 in Phase 3 queue",
+      "unblock_when": ["ATL signed — review APS-ARTIST-TOOL-E2E-REVIEW-001"],
       "witness": "debug_runs/aps_artist_tool_e2e_live.json",
       "status": "closed",
-      "closed_at": "2026-06-03",
-      "review": "src/dev/design_aps_artist_tool_e2e_review_v1.md",
-      "verdict": "PASS WITH NOTES"
+      "closed_at": "2026-06-03"
     },
     {
       "id": "APS-PHASE-9-PRODUCT-GATE",
       "track": "A",
       "reason": "Phase 9 witness exists — product gate not spine blocker",
-      "unblock_when": "ATL★ signed 2026-06-08 — operator/designer-mcp review"
+      "unblock_when": ["ATL signed — operator/designer-mcp review"]
     },
     {
       "id": "TILE-SPINE-RUN-WAREHOUSE",
       "track": "B",
       "reason": "tile_spine_run MCP is warehouse integration test only",
-      "unblock_when": "Track B unpause or orchestrator explicit"
+      "unblock_when": ["Track B unpause or orchestrator explicit"]
     },
     {
       "id": "EGUI-DEV-UX-001",
       "track": "A-prime",
-      "reason": "Lane 4 egui QC v2 shipped — not sim HUD; do not re-impl",
-      "unblock_when": "APS-UX-ASYNC-001 green",
+      "reason": "Lane 4 egui QC v2 shipped",
+      "unblock_when": ["APS-UX-ASYNC-001 green"],
       "status": "closed",
-      "closed_at": "2026-06-03",
-      "witness": "docs/archive/2026-06-src-dev/plans/design_aps_bevy_qc_hud_v2.md"
+      "closed_at": "2026-06-03"
     },
     {
       "id": "PLAN-AUDIT-020",
       "track": "planner",
       "reason": "Next fleet audit",
-      "unblock_when": "G-PLAY-01 operator EXECUTED + INFRA-E5-002 green"
+      "unblock_when": ["G-PLAY-01 operator EXECUTED + INFRA-E5-002 green"]
     }
-  ]
+  ],
+  "unblocked_pick_now": [
+    "DR-CITY-C6-VIS — CITY-C6 visual (ECS/recipe) · plan_city_grammar § BSN ASSEMBLY CHARTER",
+    "DR-CITY-P1 — block-scale StaticTransformOptimizations",
+    "DR-RTT-VR16 — operator verify",
+    "plan_cleanup Phase 0",
+    "plan_schedule_sync Wave 1",
+    "plan_gpu_terrain P0-C prime — POST-MIG perf (not MIG-A11/A17)"
+  ],
+  "migration_closed": true,
+  "migration_close_witness": "debug_runs/mig_bevy_019/mig_a_program_close.json"
 }

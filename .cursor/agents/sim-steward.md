@@ -17,6 +17,8 @@ Runs **PRE ⨟ BOOT ⨟ HO**: `pipeline-preflight` (env + queue-staleness) · BO
 
 You unify three skills into one **sequential-shift** operator and are the continuity backbone when **Task** quota is exhausted — you do ¬depend on background Task workers. Parent runs Task-heavy ⟹ pair with @main-thread-orchestrator (it owns fail-cycle escalation + foreground slice queue); you own **Shift A→B→C** on the main thread.
 
+**Plan-program context:** you sequence coded slices (CLN-*/MIG-*/SCH-*/BQ-*) — registry + pick order + ownership locks: `$ref:_fragments/plan_program_registry_v1.md`; slice recipes live in the owning `src/dev/plan_*.md`. Pre-classified delete candidates: route `@cleanup-intelligence` packet, ¬re-judge. Cite `src/dev/codebase_index_v1.md` entry codes ¬re-sweep.
+
 ## Skills — attach by situation
 
 | Skill | You use it for |

@@ -58,55 +58,37 @@
     "relative_path": "debug_runs/grammar_diversity_witness.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_pg_quality_001_grammar_diversity_witness",
-    "written_at_epoch_secs": 1783027388
+    "written_at_epoch_secs": 1783111825
   },
   "archetype_id": "IndustrialWarehouse",
   "district_style": "industrial_west",
   "dna_families": [
     {
-      "green": true,
-      "massing_pick_count": 4,
+      "green": false,
+      "massing_pick_count": 0,
       "preset_id": "fuel_depot_tank_farm_v0"
     },
     {
-      "green": true,
-      "massing_pick_count": 4,
+      "green": false,
+      "massing_pick_count": 0,
       "preset_id": "logistics_rail_warehouse_v0"
     },
     {
-      "green": true,
-      "massing_pick_count": 4,
+      "green": false,
+      "massing_pick_count": 0,
       "preset_id": "manufacturing_fabrication_hall_v0"
     },
     {
-      "green": true,
-      "massing_pick_count": 4,
+      "green": false,
+      "massing_pick_count": 0,
       "preset_id": "power_substation_yard_v0"
     }
   ],
-  "dna_family_depth_green": true,
-  "error": null,
+  "dna_family_depth_green": false,
+  "error": "C:\\dev\\github\\Rust_engine_template_01\\assets/configs/buildings/grammars\\civic_block_v1.ron: RON parse C:\\dev\\github\\Rust_engine_template_01\\assets/configs/buildings/grammars\\civic_block_v1.ron: 18:63: Expected identifier; C:\\dev\\github\\Rust_engine_template_01\\assets/configs/buildings/grammars\\factory_cluster_v1.ron: RON parse C:\\dev\\github\\Rust_engine_template_01\\assets/configs/buildings/grammars\\factory_cluster_v1.ron: 18:86: Expected identifier; C:\\dev\\github\\Rust_engine_template_01\\assets/configs/buildings/grammars\\industrial_warehouse_v1.ron: RON parse C:\\dev\\github\\Rust_engine_template_01\\assets/configs/buildings/grammars\\industrial_warehouse_v1.ron: 18:83: Expected identifier; C:\\dev\\github\\Rust_engine_template_01\\assets/configs/buildings/grammars\\rail_edge_v1.ron: RON parse C:\\dev\\github\\Rust_engine_template_01\\assets/configs/buildings/grammars\\rail_edge_v1.ron: 18:57: Expected identifier",
   "gate_id": "PG-QUALITY-001",
-  "green": true,
-  "metrics": {
-    "archetype_id": "IndustrialWarehouse",
-    "district_style": "industrial_west",
-    "footprint_silhouette_count": 24,
-    "massing_strategies": [
-      "double_hall",
-      "l_shape",
-      "long_hall",
-      "yard_complex"
-    ],
-    "massing_strategy_count": 4,
-    "roof_slot_count": 3,
-    "roof_slots": [
-      "roof_default",
-      "roof_flat",
-      "roof_industrial"
-    ],
-    "seeds_swept": 64
-  },
+  "green": false,
+  "metrics": null,
   "program_id": "PLAN-BUILDING-GRAMMAR-001",
   "seed_sweep": 64,
   "slice_id": "CDR-B-CONSTRUCTION-GRAMMAR-DEPTH-001",

@@ -797,6 +797,200 @@ def _cmd_aps_g4_coverage_witness(_: argparse.Namespace) -> int:
     return 0 if body.get("green") else 1
 
 
+def _cmd_bq_c2_bounds_witness(_: argparse.Namespace) -> int:
+    from rust_engine_mcp import building_quality_bq_c2
+
+    body = building_quality_bq_c2.write_bq_c2_witness()
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
+def _cmd_bq_c3_seam_witness(_: argparse.Namespace) -> int:
+    from rust_engine_mcp import building_quality_bq_c3
+
+    body = building_quality_bq_c3.write_bq_c3_witness()
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
+def _cmd_city_c8_pipeline_witness(args: argparse.Namespace) -> int:
+    from rust_engine_mcp import city_c8_pipeline
+
+    body = city_c8_pipeline.write_city_c8_witness(run_merge=not args.skip_merge)
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
+def _cmd_bq_f1_tail_witness(_: argparse.Namespace) -> int:
+    from rust_engine_mcp import city_c8_pipeline
+
+    body = city_c8_pipeline.write_bq_f1_tail_witness()
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
+def _cmd_veg_f02_burn_witness(_: argparse.Namespace) -> int:
+    from rust_engine_mcp.veg_f02_burn_atlas import refresh_veg_f02_burn_atlas_witness
+
+    body = refresh_veg_f02_burn_atlas_witness()
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
+def _cmd_apsr_a1_s1_witness(_: argparse.Namespace) -> int:
+    from rust_engine_mcp import apsr_a1_s1
+
+    body = apsr_a1_s1.write_apsr_a1_s1_witness()
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
+def _cmd_apsr_a1_s2_witness(_: argparse.Namespace) -> int:
+    from rust_engine_mcp import apsr_a1_s2
+
+    body = apsr_a1_s2.write_apsr_a1_s2_witness()
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
+def _cmd_apsr_a1_s3_witness(_: argparse.Namespace) -> int:
+    from rust_engine_mcp import apsr_a1_s3
+
+    body = apsr_a1_s3.write_apsr_a1_s3_witness()
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
+def _cmd_apsr_a2_p1_witness(_: argparse.Namespace) -> int:
+    from rust_engine_mcp import apsr_a2_p1
+
+    body = apsr_a2_p1.write_apsr_a2_p1_witness()
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
+def _cmd_apsr_a2_p2_witness(_: argparse.Namespace) -> int:
+    from rust_engine_mcp import apsr_a2_p2
+
+    body = apsr_a2_p2.write_apsr_a2_p2_witness()
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
+def _cmd_apsr_a2_p3_witness(_: argparse.Namespace) -> int:
+    from rust_engine_mcp import apsr_a2_p3
+
+    body = apsr_a2_p3.write_apsr_a2_p3_witness()
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
+def _cmd_apsr_a3_d1_witness(_: argparse.Namespace) -> int:
+    from rust_engine_mcp.apsr_design_token_lint import write_apsr_d1_witness
+
+    body = write_apsr_d1_witness()
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
+def _cmd_apsr_a3_d2_witness(_: argparse.Namespace) -> int:
+    from rust_engine_mcp.aps_tooltip_coverage import write_apsr_d2_witness
+
+    body = write_apsr_d2_witness()
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
+def _cmd_apsr_a3_d3_witness(_: argparse.Namespace) -> int:
+    from rust_engine_mcp.aps_inline_feedback_audit import write_apsr_d3_witness
+
+    body = write_apsr_d3_witness()
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
+def _cmd_apsr_a3_d4_witness(_: argparse.Namespace) -> int:
+    from rust_engine_mcp.apsr_density_polish import write_apsr_d4_witness
+
+    body = write_apsr_d4_witness()
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
+def _cmd_apsr_a4_q1_witness(_: argparse.Namespace) -> int:
+    from rust_engine_mcp import building_quality_qc
+
+    body = building_quality_qc.write_apsr_q1_witness()
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
+def _cmd_apsr_a4_q2_witness(_: argparse.Namespace) -> int:
+    from rust_engine_mcp.kit_coverage_audit import write_apsr_q2_witness
+
+    body = write_apsr_q2_witness()
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
+def _cmd_apsr_a4_q3_witness(_: argparse.Namespace) -> int:
+    from rust_engine_mcp.golden_seed_review import write_apsr_q3_witness
+
+    body = write_apsr_q3_witness()
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
+def _cmd_bq_c1_contract_witness(_: argparse.Namespace) -> int:
+    from rust_engine_mcp import building_quality_bq_c1
+
+    body = building_quality_bq_c1.write_bq_c1_witness()
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
+def _cmd_bq_f1_bake_witness(_: argparse.Namespace) -> int:
+    from rust_engine_mcp import building_quality_bq_f1
+
+    body = building_quality_bq_f1.write_bq_f1_witness()
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
+def _cmd_bq_f1_rebake_promote(args: argparse.Namespace) -> int:
+    from rust_engine_mcp import building_quality_bq_f1
+
+    job_ids = list(args.job_id) if args.job_id else None
+    body = building_quality_bq_f1.run_bq_f1_rebake_promote(
+        job_ids=job_ids,
+        register=not args.no_register,
+    )
+    if args.write_witness:
+        body["witness"] = building_quality_bq_f1.write_bq_f1_witness()
+    print(json.dumps(body, indent=2))
+    witness_green = body.get("witness", {}).get("green") if args.write_witness else None
+    ok = body.get("promote_ok", 0) == body.get("job_count", 0) and not body.get("errors")
+    if args.write_witness:
+        ok = ok and witness_green is True
+    return 0 if ok else 1
+
+
+def _cmd_city_g2_c5_apply(_: argparse.Namespace) -> int:
+    from rust_engine_mcp import city_palette_g2
+
+    body = city_palette_g2.apply_city_g2_c5_index_and_atlas()
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("atlas", {}).get("ok") else 1
+
+
+def _cmd_city_g2_c5_mcp_witness(_: argparse.Namespace) -> int:
+    from rust_engine_mcp import city_palette_g2
+
+    body = city_palette_g2.write_city_g2_c5_mcp_witness()
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
 def _cmd_aps_guard_brief_parity_witness(_: argparse.Namespace) -> int:
     from rust_engine_mcp.grammar_build_set import write_aps_guard_brief_parity_witness
 
@@ -1040,6 +1234,46 @@ def _cmd_dmcp_city_block_recipe_witness(_: argparse.Namespace) -> int:
     from rust_engine_mcp.dmcp_city_block_recipe import refresh_city_block_recipe_charter_witness
 
     body = refresh_city_block_recipe_charter_witness()
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
+def _cmd_dmcp_city_palette_variation_witness(_: argparse.Namespace) -> int:
+    from rust_engine_mcp.dmcp_city_palette_variation import refresh_city_palette_variation_charter_witness
+
+    body = refresh_city_palette_variation_charter_witness()
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
+def _cmd_dmcp_bq_k1_kitfill_witness(_: argparse.Namespace) -> int:
+    from rust_engine_mcp.dmcp_bq_k_lane import refresh_bq_k1_kitfill_witness
+
+    body = refresh_bq_k1_kitfill_witness()
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
+def _cmd_dmcp_bq_k2_coverage_witness(_: argparse.Namespace) -> int:
+    from rust_engine_mcp.dmcp_bq_k_lane import refresh_bq_k2_coverage_witness
+
+    body = refresh_bq_k2_coverage_witness()
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
+def _cmd_dmcp_bq_k3_grammar_witness(_: argparse.Namespace) -> int:
+    from rust_engine_mcp.dmcp_bq_k_lane import refresh_bq_k3_grammar_witness
+
+    body = refresh_bq_k3_grammar_witness()
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
+def _cmd_dmcp_bq_k_lane_witness(_: argparse.Namespace) -> int:
+    from rust_engine_mcp.dmcp_bq_k_lane import refresh_bq_k_lane_witness
+
+    body = refresh_bq_k_lane_witness()
     print(json.dumps(body, indent=2))
     return 0 if body.get("green") else 1
 
@@ -1716,6 +1950,35 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("building-set-coverage").set_defaults(func=_cmd_building_set_coverage)
     sub.add_parser("building-set-coverage-witness").set_defaults(func=_cmd_building_set_coverage_witness)
     sub.add_parser("aps-g4-coverage-witness").set_defaults(func=_cmd_aps_g4_coverage_witness)
+    sub.add_parser("apsr-a1-s1-witness").set_defaults(func=_cmd_apsr_a1_s1_witness)
+    sub.add_parser("apsr-a1-s2-witness").set_defaults(func=_cmd_apsr_a1_s2_witness)
+    sub.add_parser("apsr-a1-s3-witness").set_defaults(func=_cmd_apsr_a1_s3_witness)
+    sub.add_parser("apsr-a2-p1-witness").set_defaults(func=_cmd_apsr_a2_p1_witness)
+    sub.add_parser("apsr-a2-p2-witness").set_defaults(func=_cmd_apsr_a2_p2_witness)
+    sub.add_parser("apsr-a2-p3-witness").set_defaults(func=_cmd_apsr_a2_p3_witness)
+    sub.add_parser("apsr-a3-d1-witness").set_defaults(func=_cmd_apsr_a3_d1_witness)
+    sub.add_parser("apsr-a3-d2-witness").set_defaults(func=_cmd_apsr_a3_d2_witness)
+    sub.add_parser("apsr-a3-d3-witness").set_defaults(func=_cmd_apsr_a3_d3_witness)
+    sub.add_parser("apsr-a3-d4-witness").set_defaults(func=_cmd_apsr_a3_d4_witness)
+    sub.add_parser("apsr-a4-q1-witness").set_defaults(func=_cmd_apsr_a4_q1_witness)
+    sub.add_parser("apsr-a4-q2-witness").set_defaults(func=_cmd_apsr_a4_q2_witness)
+    sub.add_parser("apsr-a4-q3-witness").set_defaults(func=_cmd_apsr_a4_q3_witness)
+    sub.add_parser("bq-c1-contract-witness").set_defaults(func=_cmd_bq_c1_contract_witness)
+    sub.add_parser("bq-c2-bounds-witness").set_defaults(func=_cmd_bq_c2_bounds_witness)
+    sub.add_parser("bq-c3-seam-witness").set_defaults(func=_cmd_bq_c3_seam_witness)
+    p = sub.add_parser("city-c8-pipeline-witness")
+    p.add_argument("--skip-merge", action="store_true")
+    p.set_defaults(func=_cmd_city_c8_pipeline_witness)
+    sub.add_parser("bq-f1-tail-witness").set_defaults(func=_cmd_bq_f1_tail_witness)
+    sub.add_parser("veg-f02-burn-witness").set_defaults(func=_cmd_veg_f02_burn_witness)
+    sub.add_parser("bq-f1-bake-witness").set_defaults(func=_cmd_bq_f1_bake_witness)
+    p = sub.add_parser("bq-f1-rebake-promote")
+    p.add_argument("--job-id", action="append", help="Limit rebake to specific job_id (repeatable)")
+    p.add_argument("--no-register", action="store_true", help="Skip module registry registration on promote")
+    p.add_argument("--write-witness", action="store_true")
+    p.set_defaults(func=_cmd_bq_f1_rebake_promote)
+    sub.add_parser("city-g2-c5-apply").set_defaults(func=_cmd_city_g2_c5_apply)
+    sub.add_parser("city-g2-c5-mcp-witness").set_defaults(func=_cmd_city_g2_c5_mcp_witness)
     sub.add_parser("aps-guard-brief-parity-witness").set_defaults(func=_cmd_aps_guard_brief_parity_witness)
     sub.add_parser("aps-grammar-tier-gates-live-witness").set_defaults(
         func=_cmd_aps_grammar_tier_gates_live_witness
@@ -1765,6 +2028,13 @@ def main(argv: list[str] | None = None) -> int:
         func=_cmd_dmcp_aps_variants_reaction_pullup_witness
     )
     sub.add_parser("dmcp-city-block-recipe-witness").set_defaults(func=_cmd_dmcp_city_block_recipe_witness)
+    sub.add_parser("dmcp-city-palette-variation-witness").set_defaults(
+        func=_cmd_dmcp_city_palette_variation_witness
+    )
+    sub.add_parser("dmcp-bq-k1-kitfill-witness").set_defaults(func=_cmd_dmcp_bq_k1_kitfill_witness)
+    sub.add_parser("dmcp-bq-k2-coverage-witness").set_defaults(func=_cmd_dmcp_bq_k2_coverage_witness)
+    sub.add_parser("dmcp-bq-k3-grammar-witness").set_defaults(func=_cmd_dmcp_bq_k3_grammar_witness)
+    sub.add_parser("dmcp-bq-k-lane-witness").set_defaults(func=_cmd_dmcp_bq_k_lane_witness)
     p = sub.add_parser("reaction-territory-resolve")
     p.add_argument("event_id")
     p.add_argument("domain")

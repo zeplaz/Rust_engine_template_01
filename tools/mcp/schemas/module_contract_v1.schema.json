@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://rust-engine.local/schemas/module_contract_v1.schema.json",
+  "title": "ModuleContractV1",
+  "description": "BQ-C1 authoritative module-kit geometric contract (grid, pivot, edge sockets, family heights).",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "grid_unit_m",
+    "floor_height_m",
+    "pivot_convention",
+    "edge_socket_names",
+    "module_families"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "grid_unit_m": { "type": "number", "const": 4.0 },
+    "floor_height_m": { "type": "number", "const": 3.0 },
+    "pivot_convention": { "type": "string", "const": "bottom_center" },
+    "edge_socket_names": {
+      "type": "array",
+      "items": { "type": "string", "enum": ["left", "right", "top", "bottom"] },
+      "minItems": 4,
+      "maxItems": 4,
+      "uniqueItems": true
+    },
+    "module_families": {
+      "type": "object",
+      "required": ["wall", "door", "window", "roof", "corner", "prop"],
+      "properties": {
+        "wall": {
+          "type": "object",
+          "required": ["height_m"],
+          "properties": {
+            "height_m": { "type": "number" },
+            "width_grid_units": { "type": "array", "items": { "type": "integer", "minimum": 1 } }
+          },
+          "additionalProperties": false
+        },
+        "door": {
+          "type": "object",
+          "required": ["target_wall_height_m", "opening_height_m"],
+          "properties": {
+            "target_wall_height_m": { "type": "number" },
+            "opening_height_m": { "type": "number" },
+            "frame_align_top_to_wall": { "type": "boolean" }
+          },
+          "additionalProperties": false
+        },
+        "window": {
+          "type": "object",
+          "required": ["target_wall_height_m", "sill_height_m", "head_height_m"],
+          "properties": {
+            "target_wall_height_m": { "type": "number" },
+            "sill_height_m": { "type": "number" },
+            "head_height_m": { "type": "number" }
+          },
+          "additionalProperties": false
+        },
+        "roof": {
+          "type": "object",
+          "required": ["seat_plane_export_min_y"],
+          "properties": {
+            "seat_plane_export_min_y": { "type": "number" },
+            "notes": { "type": "string" }
+          },
+          "additionalProperties": false
+        },
+        "corner": {
+          "type": "object",
+          "required": ["height_m"],
+          "properties": {
+            "height_m": { "type": "number" }
+          },
+          "additionalProperties": false
+        },
+        "prop": {
+          "type": "object",
+          "properties": {
+            "bottom_pivot_y_zero": { "type": "boolean" }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "seam_tolerance_m": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 0.05,
+      "description": "BQ-C3 seam validator tolerance (default 0.01m)."
+    }
+  },
+  "additionalProperties": false
+}

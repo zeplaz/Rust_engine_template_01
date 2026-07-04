@@ -1,0 +1,151 @@
+{
+  "gate": "BQ-K1-KITFILL-001",
+  "program": "PLAN-BUILDING-QUALITY-v1",
+  "charter_doc": "src/dev/design_bq_k1_kitfill_charter_v1.md",
+  "batch_rel": "tools/mcp/schemas/examples/bq_k1_kitfill_batch_v1.json",
+  "jobs": [
+    {
+      "module_id": "roof_brick_gable_2u",
+      "material_family": "brick",
+      "category": "roof",
+      "spec_rel": "assets/staging/specs/kit_fill/roof_brick_gable_2u_production.json",
+      "geometry_job_rel": "tools/mcp/schemas/examples/geometry_job_roof_brick_gable_2u_production_run001.json",
+      "spec_on_disk": true,
+      "geometry_on_disk": true,
+      "contract_ref": true,
+      "deterministic_seed": true
+    },
+    {
+      "module_id": "door_brick_residential_1u",
+      "material_family": "brick",
+      "category": "door",
+      "spec_rel": "assets/staging/specs/kit_fill/door_brick_residential_1u_production.json",
+      "geometry_job_rel": "tools/mcp/schemas/examples/geometry_job_door_brick_residential_1u_production_run001.json",
+      "spec_on_disk": true,
+      "geometry_on_disk": true,
+      "contract_ref": true,
+      "deterministic_seed": true
+    },
+    {
+      "module_id": "win_brick_1u",
+      "material_family": "brick",
+      "category": "window",
+      "spec_rel": "assets/staging/specs/kit_fill/win_brick_1u_production.json",
+      "geometry_job_rel": "tools/mcp/schemas/examples/geometry_job_win_brick_1u_production_run001.json",
+      "spec_on_disk": true,
+      "geometry_on_disk": true,
+      "contract_ref": true,
+      "deterministic_seed": true
+    },
+    {
+      "module_id": "win_brick_2u",
+      "material_family": "brick",
+      "category": "window",
+      "spec_rel": "assets/staging/specs/kit_fill/win_brick_2u_production.json",
+      "geometry_job_rel": "tools/mcp/schemas/examples/geometry_job_win_brick_2u_production_run001.json",
+      "spec_on_disk": true,
+      "geometry_on_disk": true,
+      "contract_ref": true,
+      "deterministic_seed": true
+    },
+    {
+      "module_id": "roof_wood_gable_2u",
+      "material_family": "wood",
+      "category": "roof",
+      "spec_rel": "assets/staging/specs/kit_fill/roof_wood_gable_2u_production.json",
+      "geometry_job_rel": "tools/mcp/schemas/examples/geometry_job_roof_wood_gable_2u_production_run001.json",
+      "spec_on_disk": true,
+      "geometry_on_disk": true,
+      "contract_ref": true,
+      "deterministic_seed": true
+    },
+    {
+      "module_id": "win_wood_1u",
+      "material_family": "wood",
+      "category": "window",
+      "spec_rel": "assets/staging/specs/kit_fill/win_wood_1u_production.json",
+      "geometry_job_rel": "tools/mcp/schemas/examples/geometry_job_win_wood_1u_production_run001.json",
+      "spec_on_disk": true,
+      "geometry_on_disk": true,
+      "contract_ref": true,
+      "deterministic_seed": true
+    },
+    {
+      "module_id": "win_wood_2u",
+      "material_family": "wood",
+      "category": "window",
+      "spec_rel": "assets/staging/specs/kit_fill/win_wood_2u_production.json",
+      "geometry_job_rel": "tools/mcp/schemas/examples/geometry_job_win_wood_2u_production_run001.json",
+      "spec_on_disk": true,
+      "geometry_on_disk": true,
+      "contract_ref": true,
+      "deterministic_seed": true
+    },
+    {
+      "module_id": "roof_concrete_flat_2u",
+      "material_family": "concrete",
+      "category": "roof",
+      "spec_rel": "assets/staging/specs/kit_fill/roof_concrete_flat_2u_production.json",
+      "geometry_job_rel": "tools/mcp/schemas/examples/geometry_job_roof_concrete_flat_2u_production_run001.json",
+      "spec_on_disk": true,
+      "geometry_on_disk": true,
+      "contract_ref": true,
+      "deterministic_seed": true
+    },
+    {
+      "module_id": "door_concrete_service_1u",
+      "material_family": "concrete",
+      "category": "door",
+      "spec_rel": "assets/staging/specs/kit_fill/door_concrete_service_1u_production.json",
+      "geometry_job_rel": "tools/mcp/schemas/examples/geometry_job_door_concrete_service_1u_production_run001.json",
+      "spec_on_disk": true,
+      "geometry_on_disk": true,
+      "contract_ref": true,
+      "deterministic_seed": true
+    },
+    {
+      "module_id": "win_concrete_1u",
+      "material_family": "concrete",
+      "category": "window",
+      "spec_rel": "assets/staging/specs/kit_fill/win_concrete_1u_production.json",
+      "geometry_job_rel": "tools/mcp/schemas/examples/geometry_job_win_concrete_1u_production_run001.json",
+      "spec_on_disk": true,
+      "geometry_on_disk": true,
+      "contract_ref": true,
+      "deterministic_seed": true
+    },
+    {
+      "module_id": "win_concrete_2u",
+      "material_family": "concrete",
+      "category": "window",
+      "spec_rel": "assets/staging/specs/kit_fill/win_concrete_2u_production.json",
+      "geometry_job_rel": "tools/mcp/schemas/examples/geometry_job_win_concrete_2u_production_run001.json",
+      "spec_on_disk": true,
+      "geometry_on_disk": true,
+      "contract_ref": true,
+      "deterministic_seed": true
+    }
+  ],
+  "checks": {
+    "charter_doc": true,
+    "batch_manifest": true,
+    "job_count_11": true,
+    "all_specs_on_disk": true,
+    "all_geometry_on_disk": true,
+    "all_contract_refs": true
+  },
+  "green": true,
+  "verdict": "PASS",
+  "handoff": {
+    "coder_mcp": "kit_fill_bq_k1_001 batch bake + style_pack wire"
+  },
+  "_agent_meta": {
+    "schema": "bq_k1_kitfill_live_v1",
+    "written_at_epoch_secs": 1783118482,
+    "profile": "BQ_K1_KITFILL",
+    "source_system": "dmcp_bq_k_lane",
+    "relative_path": "debug_runs/bq_k1_kitfill_001_live.json",
+    "ritual": "BLANG:WIT-HON\u2192Q\u2713 BQ-K1-KITFILL-001",
+    "agent": "designer-mcp"
+  }
+}

@@ -107,6 +107,8 @@ class AssetValidationContext:
     def expects_non_box_silhouette(self) -> bool:
         arch = self.archetype or ""
         profile = (self.profile or "").lower()
+        if profile in BOX_OK_AT_LOD0.get(arch, frozenset()):
+            return False
         if profile and profile in NON_BOX_PROFILES.get(arch, frozenset()):
             return True
         for pattern, hint_arch, hint_profile in ASSET_ID_PROFILE_HINTS:

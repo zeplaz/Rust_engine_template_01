@@ -14,8 +14,10 @@ pub enum TestScene {
     /// Strong wind + hot chunks for atmosphere field / advection smoke tests.
     Atmosphere,
     /// **Recommended** smoke / fire / GPU field / precip demo: combines wind, fire, weather, and fuel cues.
+    /// Uses FullCapture proof path when invoked as `--test visual` (not `--test vfx`).
     Visual,
-    /// Menu stay-open: fire + weather + atmosphere with debug overlay visible (operator sandbox).
+    /// Operator sandbox — fire + weather + atmosphere; stays open; **no** full-capture auto-proof (`DemoOpen`).
+    /// Prefer for manual RTT/VFX inspection. See HANDOFF § `--test` modes.
     VfxSandbox,
 }
 

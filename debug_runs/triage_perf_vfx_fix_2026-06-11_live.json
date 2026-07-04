@@ -58,7 +58,7 @@
     "relative_path": "debug_runs/triage_perf_vfx_fix_2026-06-11_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "write_triage_perf_vfx_fix_live_witness",
-    "written_at_epoch_secs": 1783053334
+    "written_at_epoch_secs": 1783115016
   },
   "acceptance_targets": {
     "main_camera_transform_changed_steady_pct": 90.0,

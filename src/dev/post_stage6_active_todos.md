@@ -10,7 +10,7 @@
 
 **Stage tracks:** [`stage_tracks_signoff_ledger_v1.md`](stage_tracks_signoff_ledger_v1.md) · planner [`stage_planner_workboard_v1.md`](stage_planner_workboard_v1.md) · designer [`stage_designer_workboard_v1.md`](stage_designer_workboard_v1.md) · coder [`stage_coder_workboard_v1.md`](stage_coder_workboard_v1.md)
 
-**Operator refresh:** run sim → `wave_s_hydrate_live.json`, `wave_p_live.json`, `wave_c_live.json`, `stage6_virtualization_live.json`; `cargo run -p proc_A_dine01 --release -- --test visual` for Stage 5 regression.
+**Operator refresh:** run sim → `wave_s_hydrate_live.json`, `wave_p_live.json`, `wave_c_live.json`, `stage6_virtualization_live.json`; `cargo run -p proc_A_dine01 --release -- --test vfx` for RTT/VFX operator pass · `--test visual --stay-open` for proof harness without auto-exit · migration truth: `debug_runs/mig_bevy_019/mig_v1_gate.json`
 
 ---
 

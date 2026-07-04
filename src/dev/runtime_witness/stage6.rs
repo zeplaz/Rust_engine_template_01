@@ -10,7 +10,6 @@ use crate::render::{
     Stage6VirtualizationFrame,
 };
 
-use super::common::tick_live_proof_cadence;
 use super::io::{write_enveloped_witness, write_enveloped_witness_unchecked};
 
 use crate::gui::hud::frame_budget_diagnostics::{
@@ -317,9 +316,6 @@ pub fn write_stage6_virtualization_live_proof_system(
     view_authority: Option<Res<crate::render::view_runtime::ViewProjectionAuthority>>,
 ) {
     if !matches!(base.get(), BaseState::Simulation) {
-        return;
-    }
-    if !tick_live_proof_cadence(&mut state) {
         return;
     }
 

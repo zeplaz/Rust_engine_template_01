@@ -8,6 +8,29 @@
 
 ---
 
+## Status snapshot (2026-07-03)
+
+| ID | Symptom | Gate? | Plan / triage | Build state |
+|----|---------|-------|---------------|-------------|
+| **VR-10** | Post-Bevy-0.19 RTT: water overlay format panic (`Rgba16Float` vs `Bgra8UnormSrgb`) | **Yes** | Core2d overlay SDR unify | **Fixed:** `sim_map_rtt.rs` → `Rgba8UnormSrgb` + `CORE2D_OVERLAY_SDR_FORMAT` |
+| **VR-11** | Ghost/cost cursor vertically mirrored vs OS cursor | **Yes** — placement UX | `sim_map_projection.rs` | **Fixed:** `sim_map_screen_to_world_xy_in_frame` Y flip aligned with `sim_map_screen_to_world_xy_with_window` |
+| **VR-12** | Tactical map void always dark (no day/night) | No | `sim_map_rtt.rs` · `palette.rs` | **Fixed:** `sync_sim_map_clear_from_day_cycle` from `SimTimeMicros` |
+| **VR-13** | Weather particles invisible on tactical map | **Yes** | `weather_visual.rs` RTT layer | **Fixed:** `RenderLayers` on overlay + precip mesh children (layer 1) |
+| **VR-14** | Fire heat chunk markers missing | Partial | `gpu_tile_debug.rs` | **Fixed:** fire markers no longer gated on `CameraFocusDebug.enabled` |
+| **VR-15** | Fire test red box wrong region / no camera focus | Partial | `vfx_fire_test_highlight.rs` | **Fixed:** chunk origins + `map_camera_desired_fit_tile_aabb` |
+| **VR-16** | Sparks / GPU fire particles still not visible in play | **Yes** — operator verify | fire extract + raster dispatch | **Lib green** (`steward_spark_vfx_001`); **operator:** run `--test vfx` with display — code path fixed, witness refresh may be stale |
+
+**Operator verify command:**
+
+```powershell
+cargo run -p proc_A_dine01 --release -- --test vfx
+# Expect: rain/precip, fire heat squares, sparks near seeded burn, day/night void shift over sim time
+```
+
+**Witness refresh (required before claiming green):** `debug_runs/stage5_full_app_live.json` · optional `full_render_diagnostic_*.json`
+
+---
+
 ## Status snapshot (2026-05-23)
 
 | ID | Symptom | Gate? | Plan / triage | Build state |

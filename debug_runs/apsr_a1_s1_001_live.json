@@ -1,0 +1,31 @@
+{
+  "task_id": "APSR-A1-S1-001",
+  "gate": "APSR-A1-S1-001",
+  "green": true,
+  "mutation_inventory_green": true,
+  "live_mutation_count": 33,
+  "atlas_direct_write_sites": [],
+  "atlas_single_owner": true,
+  "event_bus_module": "tools/mcp/art_pipeline_suite/aps_event_bus.py",
+  "state_writer_module": "tools/mcp/art_pipeline_suite/aps_state_writer.py",
+  "atlas_service_module": "tools/mcp/art_pipeline_suite/aps_services/atlas_service.py",
+  "enforced_fields": [
+    "atlas_folder",
+    "tile_batch_path"
+  ],
+  "plan_ref": "src/dev/plan_aps_refactor_v1.md#APSR-S1",
+  "_agent_meta": {
+    "schema": "apsr_a1_s1_live_v1",
+    "profile": "APSR_A1_S1",
+    "relative_path": "debug_runs/apsr_a1_s1_001_live.json",
+    "source_system": "apsr_a1_s1",
+    "written_at_epoch_secs": 1783115132,
+    "ritual": "BLANG:WIT-HON APSR-A1-S1-001"
+  },
+  "witness_honesty": {
+    "status": "passed",
+    "error_count": 0,
+    "warning_count": 0,
+    "summary": "witness_honesty debug_runs/apsr_a1_s1_001_live.json: 0 error(s), 0 issue(s)"
+  }
+}

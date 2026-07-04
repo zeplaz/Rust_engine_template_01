@@ -250,6 +250,7 @@ impl Plugin for StrategicFieldsPlugin {
                 Update,
                 logistics_net_inject_into_overlays.in_set(StrategicFieldPipeline::LogisticsNetInject),
             )
+            // **SCH-W1-P2-001:** PostUpdate dirty mark → Update `NetworkFlow` next frame (1-frame lag by design).
             .add_systems(
                 PostUpdate,
                 terrain_rebuild_finished_marks_network_flow_dirty.after(rebuild_dirty_chunks),

@@ -214,7 +214,7 @@ pub fn sync_industrial_proof_witness_flags(
     proof: Res<IndustrialActivationLiveProofState>,
     mut witness: ResMut<IndustrialActivationWitness>,
 ) {
-    if proof.written {
+    if proof.written() {
         witness.proof_json = true;
     }
 }
@@ -257,8 +257,10 @@ fn assemble_industrial_proof_app() -> App {
     app.init_resource::<crate::economy::spatial_district::IndustrialDistrictSnapshot>();
 
     app.init_resource::<IndustrialActivationLiveProofState>();
+    app.add_plugins(crate::dev::runtime_witness::LiveProofCadencePlugin);
     app.world_mut()
         .resource_mut::<IndustrialActivationLiveProofState>()
+        .cadence
         .write_interval = 5;
 
     app.init_resource::<ConcreteChainE2eWitness>();
@@ -277,7 +279,8 @@ fn assemble_industrial_proof_app() -> App {
             refresh_industrial_activation_witness_system,
             sync_industrial_activation_board_system,
             sync_industrial_proof_witness_flags,
-            write_industrial_activation_live_proof_system,
+            write_industrial_activation_live_proof_system
+                .run_if(crate::dev::runtime_witness::industrial_activation_live_proof_due),
         )
             .chain()
             .after(collect_grid_overload_witness_system),
@@ -516,7 +519,7 @@ mod live_proof_tests {
                 >= 1,
             "expected at least one production tick"
         );
-        assert!(app.world().resource::<IndustrialActivationLiveProofState>().written);
+        assert!(app.world().resource::<IndustrialActivationLiveProofState>().written());
     }
 
     #[test]
@@ -604,7 +607,7 @@ mod live_proof_tests {
             json["ind_e03"]
         );
         assert_board_row_done(&json, "INDUSTRIAL-I3-02");
-        assert!(app.world().resource::<IndustrialActivationLiveProofState>().written);
+        assert!(app.world().resource::<IndustrialActivationLiveProofState>().written());
     }
 
     fn assert_board_row_done(json: &serde_json::Value, row_id: &str) {

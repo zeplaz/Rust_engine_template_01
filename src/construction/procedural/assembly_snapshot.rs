@@ -3,6 +3,7 @@
 //! Engine PG-2 emits the same JSON shape as `rust_engine_mcp.assembly.generate_assembly_snapshot`.
 //! Blender import stays in coder-mcp (`assembly_build` job).
 
+use std::collections::HashMap;
 use std::path::PathBuf;
 
 use bevy::prelude::Vec3;
@@ -16,8 +17,9 @@ use super::arch_build_grammar_v0::{
 use super::building_grammar::generate_with_arch_dna_preset;
 use super::{
     grammar_reference_tags, DevelopmentTier, FootprintGrid, FootprintToken,
-    GrammarGenerateResult, ProceduralBuildingRequest, ProceduralModuleRegistry,
-    StylePack, StylePackRegistry, StylePackSlotKey, GRAMMAR_RULES_VERSION,
+    GrammarGenerateResult, MissingSlotReason, MissingSlotViolation, ProceduralBuildingRequest,
+    ProceduralModuleRegistry, StylePack, StylePackRegistry, StylePackSlotKey, FallbackPolicy,
+    GRAMMAR_RULES_VERSION,
 };
 
 pub const ASSEMBLY_SNAPSHOT_SCHEMA: u32 = 1;
@@ -97,6 +99,9 @@ pub struct AssemblySnapshot {
     pub arch_dna: Option<serde_json::Value>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub pressure_field: Option<PressureFieldV0>,
+    /// **BQ-F3-SLOT-001** — slots hidden under `hide_slot` (never silent holes).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub missing_slot_violations: Vec<MissingSlotViolation>,
 }
 
 impl AssemblySnapshot {
@@ -229,6 +234,28 @@ pub fn build_assembly_snapshot_from_grammar_with_preset(
     ))
 }
 
+fn record_hide_slot_violation(
+    violations: &mut Vec<MissingSlotViolation>,
+    style_pack: &StylePack,
+    slot_key: &str,
+    cell: &super::FootprintCell,
+    module_id: &str,
+    reason: MissingSlotReason,
+) {
+    if !style_pack.records_hide_slot_violations() {
+        return;
+    }
+    violations.push(MissingSlotViolation {
+        slot_key: slot_key.to_owned(),
+        style_pack_id: style_pack.id.as_str().to_owned(),
+        grid_x: cell.x,
+        grid_y: cell.y,
+        floor: cell.floor,
+        module_id: module_id.to_owned(),
+        reason,
+    });
+}
+
 #[must_use]
 fn build_assembly_snapshot_with_grammar(
     request: &ProceduralBuildingRequest,
@@ -239,6 +266,7 @@ fn build_assembly_snapshot_with_grammar(
 ) -> AssemblySnapshot {
     let style_pack_id = style_pack.id.as_str().to_owned();
     let mut placements = Vec::new();
+    let mut missing_slot_violations = Vec::new();
     let mut source_tier = "lod0".to_owned();
 
     for cell in grid.facade_cells() {
@@ -254,12 +282,50 @@ fn build_assembly_snapshot_with_grammar(
             .map(|s| s.as_str())
             .unwrap_or(slot_name);
         let Some(raw_module_id) = style_pack.resolve_slot_str(effective_slot) else {
+            record_hide_slot_violation(
+                &mut missing_slot_violations,
+                style_pack,
+                effective_slot,
+                cell,
+                "",
+                MissingSlotReason::SlotUnresolved,
+            );
             continue;
         };
-        let Some(entry) = registry.resolve_module_id(raw_module_id) else {
+        let (Some(entry), meta) =
+            registry.resolve_module_id_for(raw_module_id, Some(style_pack.id.as_str()))
+        else {
+            record_hide_slot_violation(
+                &mut missing_slot_violations,
+                style_pack,
+                effective_slot,
+                cell,
+                raw_module_id,
+                MissingSlotReason::ModuleNotFound,
+            );
             continue;
         };
-        if entry.development_tier.is_smoke() || entry.batch_id.starts_with("kit_greybox") {
+        let _ = meta;
+        if entry.development_tier.is_smoke() {
+            record_hide_slot_violation(
+                &mut missing_slot_violations,
+                style_pack,
+                effective_slot,
+                cell,
+                &entry.module_id,
+                MissingSlotReason::SmokeModule,
+            );
+            continue;
+        }
+        if entry.batch_id.starts_with("kit_greybox") {
+            record_hide_slot_violation(
+                &mut missing_slot_violations,
+                style_pack,
+                effective_slot,
+                cell,
+                &entry.module_id,
+                MissingSlotReason::GreyboxModule,
+            );
             continue;
         }
         if entry.development_tier == DevelopmentTier::Production {
@@ -358,6 +424,7 @@ fn build_assembly_snapshot_with_grammar(
             wdc_cell_count: grid.wdc_cell_count(),
         },
         module_placements: placements,
+        missing_slot_violations,
         archetype_id,
         district_style,
         grammar_rule_chain,
@@ -534,6 +601,108 @@ pub fn snapshot_passes_auto_001_contract(snapshot: &AssemblySnapshot) -> bool {
             .all(|p| !p.module_id.is_empty() && !p.glb_path.is_empty())
 }
 
+pub const BQ_F3_SLOT_001_LIVE_JSON: &str = "debug_runs/bq_f3_slot_001_live.json";
+
+#[must_use]
+pub fn build_bq_f3_slot_001_witness_body() -> serde_json::Value {
+    use crate::render::extraction::{
+        assemble_procedural_build_instances, ProceduralModuleSceneCatalog,
+    };
+
+    let reg = crate::construction::procedural::load_procedural_module_registry();
+    let packs = crate::construction::procedural::load_style_pack_registry();
+    let table_ok = reg.load_errors.is_empty() && packs.load_errors.is_empty();
+
+    let mut pack = packs
+        .get("style_industrial_west")
+        .cloned()
+        .unwrap_or_else(|| StylePack {
+            schema_version: 1,
+            id: super::StylePackId("style_industrial_west".into()),
+            label: String::new(),
+            usage_bias: Vec::new(),
+            style_tags: Vec::new(),
+            slots: HashMap::new(),
+            fallback_policy: FallbackPolicy::HideSlot,
+        });
+    pack.slots
+        .insert("wall_1u".into(), "missing_industrial_wall_xyz".into());
+
+    let request = ProceduralBuildingRequest {
+        archetype_id: "rect_perimeter".into(),
+        width: 4,
+        depth: 2,
+        floors: 2,
+        style: super::StylePackId("style_industrial_west".into()),
+        seed: 43,
+        arch_dna_preset_id: None,
+    };
+    let grid = FootprintGrid::from_request(&request);
+    let extract = assemble_procedural_build_instances(
+        &request,
+        &pack,
+        &grid,
+        &reg,
+        &ProceduralModuleSceneCatalog::default(),
+    );
+
+    let snapshot = build_assembly_snapshot(&request, &pack, &grid, &reg);
+    let violation_count = extract.missing_slot_violations.len();
+    let tint_wired = extract.instances.iter().any(|i| i.violation_tint);
+    let snapshot_wired = !snapshot.missing_slot_violations.is_empty();
+    let module_not_found = extract
+        .missing_slot_violations
+        .iter()
+        .any(|v| v.reason == MissingSlotReason::ModuleNotFound);
+
+    let green = table_ok
+        && violation_count > 0
+        && tint_wired
+        && snapshot_wired
+        && module_not_found
+        && extract
+            .missing_slot_violations
+            .iter()
+            .all(|v| v.style_pack_id == "style_industrial_west");
+
+    serde_json::json!({
+        "gate": "BQ-F3-SLOT-001",
+        "green": green,
+        "table_ok": table_ok,
+        "violation_count": violation_count,
+        "snapshot_violation_count": snapshot.missing_slot_violations.len(),
+        "debug_tint_wired": tint_wired,
+        "module_not_found_recorded": module_not_found,
+        "style_pack_id": "style_industrial_west",
+    })
+}
+
+#[must_use]
+pub fn bq_f3_slot_001_witness_green() -> bool {
+    build_bq_f3_slot_001_witness_body()
+        .get("green")
+        .and_then(|v| v.as_bool())
+        .unwrap_or(false)
+}
+
+#[must_use]
+pub fn refresh_bq_f3_slot_001_witness() -> bool {
+    use crate::dev::debug_run_envelope::{wrap_debug_run, write_debug_run_json};
+
+    let body = build_bq_f3_slot_001_witness_body();
+    let green = body
+        .get("green")
+        .and_then(|v| v.as_bool())
+        .unwrap_or(false);
+    let wrapped = wrap_debug_run(
+        "BQ-F3-SLOT-001",
+        "refresh_bq_f3_slot_001_witness",
+        BQ_F3_SLOT_001_LIVE_JSON,
+        body,
+    );
+    write_debug_run_json(BQ_F3_SLOT_001_LIVE_JSON, wrapped) && green
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -686,5 +855,44 @@ mod tests {
         let loaded: AssemblySnapshot = serde_json::from_str(&text).unwrap();
         assert_eq!(loaded.assembly_id, snapshot.assembly_id);
         assert_eq!(loaded.module_placements.len(), snapshot.module_placements.len());
+    }
+
+    #[test]
+    fn bq_f3_missing_module_records_violation_in_snapshot() {
+        let modules = load_procedural_module_registry();
+        let mut pack = load_style_pack_registry()
+            .get("style_industrial_west")
+            .expect("style_industrial_west")
+            .clone();
+        pack.slots
+            .insert("wall_1u".into(), "missing_industrial_wall_xyz".into());
+        let request = ProceduralBuildingRequest {
+            archetype_id: "rect_perimeter".into(),
+            width: 4,
+            depth: 2,
+            floors: 2,
+            style: StylePackId("style_industrial_west".into()),
+            seed: 43,
+            arch_dna_preset_id: None,
+        };
+        let grid = FootprintGrid::from_request(&request);
+        let snapshot = build_assembly_snapshot(&request, &pack, &grid, &modules);
+        assert!(!snapshot.missing_slot_violations.is_empty());
+        assert!(
+            snapshot
+                .missing_slot_violations
+                .iter()
+                .all(|v| v.style_pack_id == "style_industrial_west")
+        );
+    }
+
+    #[test]
+    fn bq_f3_slot_001_witness_green_lib() {
+        assert!(super::bq_f3_slot_001_witness_green());
+    }
+
+    #[test]
+    fn bq_f3_slot_001_live_witness_refresh_green() {
+        assert!(super::refresh_bq_f3_slot_001_witness());
     }
 }

@@ -1,0 +1,296 @@
+{
+  "task_id": "BQ-F1-BAKE-001",
+  "green": true,
+  "bpy_source_audit_green": true,
+  "bpy_source_issues": [],
+  "promoted_ok": true,
+  "geometry_ok": true,
+  "job_count": 30,
+  "rows": [
+    {
+      "job_id": "roof_bunker_lod0_run001",
+      "operation": "module_roof",
+      "profile": "flat",
+      "promoted_glb": true,
+      "staging_glb": true,
+      "geometry_ok": true,
+      "geometry_check": "roof_bottom_flush"
+    },
+    {
+      "job_id": "roof_canopy_lod0_run001",
+      "operation": "module_roof",
+      "profile": "shed",
+      "promoted_glb": true,
+      "staging_glb": true,
+      "geometry_ok": true,
+      "geometry_check": "roof_bottom_flush"
+    },
+    {
+      "job_id": "roof_flat_2u_run001",
+      "operation": "module_roof",
+      "profile": null,
+      "promoted_glb": true,
+      "staging_glb": true,
+      "geometry_ok": true,
+      "geometry_check": "roof_bottom_flush"
+    },
+    {
+      "job_id": "roof_flat_lod0_run001",
+      "operation": "module_roof",
+      "profile": "flat",
+      "promoted_glb": true,
+      "staging_glb": true,
+      "geometry_ok": true,
+      "geometry_check": "roof_bottom_flush"
+    },
+    {
+      "job_id": "roof_industrial_shed_2u_production_run001",
+      "operation": "module_roof",
+      "profile": "shed",
+      "promoted_glb": true,
+      "staging_glb": true,
+      "geometry_ok": true,
+      "geometry_check": "roof_bottom_flush"
+    },
+    {
+      "job_id": "roof_industrial_shed_2u_run001",
+      "operation": "module_roof",
+      "profile": null,
+      "promoted_glb": true,
+      "staging_glb": true,
+      "geometry_ok": true,
+      "geometry_check": "roof_bottom_flush"
+    },
+    {
+      "job_id": "roof_metal_low_lod0_run001",
+      "operation": "module_roof",
+      "profile": "flat",
+      "promoted_glb": true,
+      "staging_glb": true,
+      "geometry_ok": true,
+      "geometry_check": "roof_bottom_flush"
+    },
+    {
+      "job_id": "roof_parapet_lod0_run001",
+      "operation": "module_roof",
+      "profile": "flat",
+      "promoted_glb": true,
+      "staging_glb": true,
+      "geometry_ok": true,
+      "geometry_check": "roof_bottom_flush"
+    },
+    {
+      "job_id": "roof_pitched_2u_run001",
+      "operation": "module_roof",
+      "profile": null,
+      "promoted_glb": true,
+      "staging_glb": true,
+      "geometry_ok": true,
+      "geometry_check": "roof_bottom_flush"
+    },
+    {
+      "job_id": "roof_pitched_gable_lod0_run001",
+      "operation": "module_roof",
+      "profile": "pitched_gable",
+      "promoted_glb": true,
+      "staging_glb": true,
+      "geometry_ok": true,
+      "geometry_check": "roof_bottom_flush"
+    },
+    {
+      "job_id": "roof_pitched_gable_production_run001",
+      "operation": "module_roof",
+      "profile": "pitched",
+      "promoted_glb": true,
+      "staging_glb": true,
+      "geometry_ok": true,
+      "geometry_check": "roof_bottom_flush"
+    },
+    {
+      "job_id": "roof_pitched_hip_lod0_run001",
+      "operation": "module_roof",
+      "profile": "pitched_gable",
+      "promoted_glb": true,
+      "staging_glb": true,
+      "geometry_ok": true,
+      "geometry_check": "roof_bottom_flush"
+    },
+    {
+      "job_id": "roof_sawtooth_2u_run001",
+      "operation": "module_roof",
+      "profile": null,
+      "promoted_glb": true,
+      "staging_glb": true,
+      "geometry_ok": true,
+      "geometry_check": "roof_bottom_flush"
+    },
+    {
+      "job_id": "roof_sawtooth_lod0_run001",
+      "operation": "module_roof",
+      "profile": "sawtooth",
+      "promoted_glb": true,
+      "staging_glb": true,
+      "geometry_ok": true,
+      "geometry_check": "roof_bottom_flush"
+    },
+    {
+      "job_id": "roof_sawtooth_production_run001",
+      "operation": "module_roof",
+      "profile": "sawtooth",
+      "promoted_glb": true,
+      "staging_glb": true,
+      "geometry_ok": true,
+      "geometry_check": "roof_bottom_flush"
+    },
+    {
+      "job_id": "roof_shed_lod0_run001",
+      "operation": "module_roof",
+      "profile": "shed",
+      "promoted_glb": true,
+      "staging_glb": true,
+      "geometry_ok": true,
+      "geometry_check": "roof_bottom_flush"
+    },
+    {
+      "job_id": "roof_shed_production_run001",
+      "operation": "module_roof",
+      "profile": "shed",
+      "promoted_glb": true,
+      "staging_glb": true,
+      "geometry_ok": true,
+      "geometry_check": "roof_bottom_flush"
+    },
+    {
+      "job_id": "roof_tile_lod0_run001",
+      "operation": "module_roof",
+      "profile": "flat",
+      "promoted_glb": true,
+      "staging_glb": true,
+      "geometry_ok": true,
+      "geometry_check": "roof_bottom_flush"
+    },
+    {
+      "job_id": "wall_brick_1u_lod0_run001",
+      "operation": "module_wall",
+      "profile": "flat",
+      "promoted_glb": true,
+      "staging_glb": true,
+      "geometry_ok": true,
+      "geometry_check": "wall_depth_exact"
+    },
+    {
+      "job_id": "wall_brick_2u_lod0_run001",
+      "operation": "module_wall",
+      "profile": "flat",
+      "promoted_glb": true,
+      "staging_glb": true,
+      "geometry_ok": true,
+      "geometry_check": "wall_depth_exact"
+    },
+    {
+      "job_id": "wall_concrete_1u_lod0_run001",
+      "operation": "module_wall",
+      "profile": "flat",
+      "promoted_glb": true,
+      "staging_glb": true,
+      "geometry_ok": true,
+      "geometry_check": "wall_depth_exact"
+    },
+    {
+      "job_id": "wall_concrete_2u_lod0_run001",
+      "operation": "module_wall",
+      "profile": "flat",
+      "promoted_glb": true,
+      "staging_glb": true,
+      "geometry_ok": true,
+      "geometry_check": "wall_depth_exact"
+    },
+    {
+      "job_id": "wall_concrete_2u_production_run001",
+      "operation": "module_wall",
+      "profile": "flat",
+      "promoted_glb": true,
+      "staging_glb": true,
+      "geometry_ok": true,
+      "geometry_check": "wall_depth_exact"
+    },
+    {
+      "job_id": "wall_glass_curtain_1u_lod0_run001",
+      "operation": "module_wall",
+      "profile": "flat",
+      "promoted_glb": true,
+      "staging_glb": true,
+      "geometry_ok": true,
+      "geometry_check": "wall_depth_exact"
+    },
+    {
+      "job_id": "wall_industrial_panel_2u_lod0_run001",
+      "operation": "module_wall",
+      "profile": "flat",
+      "promoted_glb": true,
+      "staging_glb": true,
+      "geometry_ok": true,
+      "geometry_check": "wall_depth_exact"
+    },
+    {
+      "job_id": "wall_military_bunker_1u_lod0_run001",
+      "operation": "module_wall",
+      "profile": "flat",
+      "promoted_glb": true,
+      "staging_glb": true,
+      "geometry_ok": true,
+      "geometry_check": "wall_depth_exact"
+    },
+    {
+      "job_id": "wall_steel_1u_lod0_run001",
+      "operation": "module_wall",
+      "profile": "flat",
+      "promoted_glb": true,
+      "staging_glb": true,
+      "geometry_ok": true,
+      "geometry_check": "wall_depth_exact"
+    },
+    {
+      "job_id": "wall_steel_1u_production_run001",
+      "operation": "module_wall",
+      "profile": "flat",
+      "promoted_glb": true,
+      "staging_glb": true,
+      "geometry_ok": true,
+      "geometry_check": "wall_depth_exact"
+    },
+    {
+      "job_id": "wall_wood_1u_lod0_run001",
+      "operation": "module_wall",
+      "profile": "flat",
+      "promoted_glb": true,
+      "staging_glb": true,
+      "geometry_ok": true,
+      "geometry_check": "wall_depth_exact"
+    },
+    {
+      "job_id": "wall_wood_2u_lod0_run001",
+      "operation": "module_wall",
+      "profile": "flat",
+      "promoted_glb": true,
+      "staging_glb": true,
+      "geometry_ok": true,
+      "geometry_check": "wall_depth_exact"
+    }
+  ],
+  "plan_ref": "src/dev/plan_building_quality_v1.md#BQ-F1",
+  "_agent_meta": {
+    "schema": "building_quality_bq_f1_live_v1",
+    "profile": "BQ_F1_BAKE",
+    "relative_path": "debug_runs/building_quality_bq_f1_live.json",
+    "source_system": "building_quality_bq_f1",
+    "written_at_epoch_secs": 1783108688,
+    "ritual": "BLANG:WIT-HON BQ-F1-BAKE-001"
+  },
+  "witness_honesty": {
+    "status": "passed",
+    "error_count": 0,
+    "warning_count": 0,
+    "summary": "witness_honesty debug_runs/building_quality_bq_f1_live.json: 0 error(s), 0 issue(s)"
+  }
+}

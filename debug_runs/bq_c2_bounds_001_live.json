@@ -1,0 +1,2856 @@
+{
+  "task_id": "BQ-C2-BOUNDS-001",
+  "contract": {
+    "grid_unit_m": 4.0,
+    "floor_height_m": 3.0,
+    "tolerance_m": 0.01
+  },
+  "promoted_count": 99,
+  "ok_count": 73,
+  "violation_count": 26,
+  "rows": [
+    {
+      "job_id": "corner_brick_outer_run001",
+      "operation": "module_prop",
+      "ok": false,
+      "violations": [
+        "pivot_seat:max_z=0.0"
+      ],
+      "extent_m": {
+        "width": 2.0,
+        "depth": 2.0,
+        "height": 3.0
+      },
+      "params_m": {
+        "width": 2.0,
+        "height": 3.0,
+        "depth": 2.0
+      },
+      "bounds": {
+        "min": [
+          -1.0,
+          -1.0,
+          -3.0
+        ],
+        "max": [
+          1.0,
+          1.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "job_id": "corner_concrete_outer_run001",
+      "operation": "module_prop",
+      "ok": false,
+      "violations": [
+        "pivot_seat:max_z=0.0"
+      ],
+      "extent_m": {
+        "width": 2.0,
+        "depth": 2.0,
+        "height": 3.0
+      },
+      "params_m": {
+        "width": 2.0,
+        "height": 3.0,
+        "depth": 2.0
+      },
+      "bounds": {
+        "min": [
+          -1.0,
+          -1.0,
+          -3.0
+        ],
+        "max": [
+          1.0,
+          1.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "job_id": "corner_L_industrial_west_production_run001",
+      "operation": "module_prop",
+      "ok": false,
+      "violations": [
+        "pivot_seat:max_z=0.0"
+      ],
+      "extent_m": {
+        "width": 2.0,
+        "depth": 2.0,
+        "height": 3.0
+      },
+      "params_m": {
+        "width": 2.0,
+        "height": 3.0,
+        "depth": 2.0
+      },
+      "bounds": {
+        "min": [
+          -1.0,
+          -1.0,
+          -3.0
+        ],
+        "max": [
+          1.0,
+          1.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "job_id": "corner_L_lod0_run001",
+      "operation": "module_prop",
+      "ok": false,
+      "violations": [
+        "pivot_seat:max_z=0.0"
+      ],
+      "extent_m": {
+        "width": 2.0,
+        "depth": 2.0,
+        "height": 3.0
+      },
+      "params_m": {
+        "width": 2.0,
+        "height": 3.0,
+        "depth": 2.0
+      },
+      "bounds": {
+        "min": [
+          -1.0,
+          -1.0,
+          -3.0
+        ],
+        "max": [
+          1.0,
+          1.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "job_id": "corner_L_production_run001",
+      "operation": "module_prop",
+      "ok": false,
+      "violations": [
+        "pivot_seat:max_z=0.0"
+      ],
+      "extent_m": {
+        "width": 2.0,
+        "depth": 2.0,
+        "height": 3.0
+      },
+      "params_m": {
+        "width": 2.0,
+        "height": 3.0,
+        "depth": 2.0
+      },
+      "bounds": {
+        "min": [
+          -1.0,
+          -1.0,
+          -3.0
+        ],
+        "max": [
+          1.0,
+          1.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "job_id": "corner_parapet_lod0_run001",
+      "operation": "module_prop",
+      "ok": false,
+      "violations": [
+        "pivot_seat:max_z=0.0"
+      ],
+      "extent_m": {
+        "width": 2.0,
+        "depth": 2.0,
+        "height": 1.2000000476837158
+      },
+      "params_m": {
+        "width": 2.0,
+        "height": 1.2,
+        "depth": 2.0
+      },
+      "bounds": {
+        "min": [
+          -1.0,
+          -1.0,
+          -1.2000000476837158
+        ],
+        "max": [
+          1.0,
+          1.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "job_id": "corner_steel_inner_run001",
+      "operation": "module_prop",
+      "ok": false,
+      "violations": [
+        "pivot_seat:max_z=0.0"
+      ],
+      "extent_m": {
+        "width": 2.0,
+        "depth": 0.15000000596046448,
+        "height": 3.0
+      },
+      "params_m": {
+        "width": 2.0,
+        "height": 3.0,
+        "depth": 0.15
+      },
+      "bounds": {
+        "min": [
+          -1.0,
+          -0.07500000298023224,
+          -3.0
+        ],
+        "max": [
+          1.0,
+          0.07500000298023224,
+          0.0
+        ]
+      }
+    },
+    {
+      "job_id": "corner_T_lod0_run001",
+      "operation": "module_prop",
+      "ok": false,
+      "violations": [
+        "pivot_seat:max_z=0.0"
+      ],
+      "extent_m": {
+        "width": 2.0,
+        "depth": 2.0,
+        "height": 3.0
+      },
+      "params_m": {
+        "width": 2.0,
+        "height": 3.0,
+        "depth": 2.0
+      },
+      "bounds": {
+        "min": [
+          -1.0,
+          -1.0,
+          -3.0
+        ],
+        "max": [
+          1.0,
+          1.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "job_id": "corner_wood_porch_run001",
+      "operation": "module_prop",
+      "ok": false,
+      "violations": [
+        "pivot_seat:max_z=0.0"
+      ],
+      "extent_m": {
+        "width": 3.0,
+        "depth": 3.0,
+        "height": 2.5
+      },
+      "params_m": {
+        "width": 3.0,
+        "height": 2.5,
+        "depth": 3.0
+      },
+      "bounds": {
+        "min": [
+          -1.5,
+          -1.5,
+          -2.5
+        ],
+        "max": [
+          1.5,
+          1.5,
+          0.0
+        ]
+      }
+    },
+    {
+      "job_id": "door_civic_lod0_run001",
+      "operation": "module_door",
+      "ok": true,
+      "violations": [],
+      "extent_m": {
+        "width": 1.5,
+        "depth": 0.15000000596046448,
+        "height": 2.4000000953674316
+      },
+      "params_m": {
+        "width": 1.5,
+        "height": 2.4,
+        "depth": 0.15
+      },
+      "bounds": {
+        "min": [
+          -0.75,
+          -0.07500000298023224,
+          -2.4000000953674316
+        ],
+        "max": [
+          0.75,
+          0.07500000298023224,
+          0.0
+        ]
+      }
+    },
+    {
+      "job_id": "door_double_shop_lod0_run001",
+      "operation": "module_door",
+      "ok": true,
+      "violations": [],
+      "extent_m": {
+        "width": 4.0,
+        "depth": 0.15000000596046448,
+        "height": 2.5
+      },
+      "params_m": {
+        "width": 4.0,
+        "height": 2.5,
+        "depth": 0.15
+      },
+      "bounds": {
+        "min": [
+          -2.0,
+          -0.07500000298023224,
+          -2.5
+        ],
+        "max": [
+          2.0,
+          0.07500000298023224,
+          0.0
+        ]
+      }
+    },
+    {
+      "job_id": "door_factory_lod0_run001",
+      "operation": "module_door",
+      "ok": true,
+      "violations": [],
+      "extent_m": {
+        "width": 4.0,
+        "depth": 0.20000000298023224,
+        "height": 3.0
+      },
+      "params_m": {
+        "width": 4.0,
+        "height": 3.0,
+        "depth": 0.2
+      },
+      "bounds": {
+        "min": [
+          -2.0,
+          -0.10000000149011612,
+          -3.0
+        ],
+        "max": [
+          2.0,
+          0.10000000149011612,
+          0.0
+        ]
+      }
+    },
+    {
+      "job_id": "door_garage_2u_run001",
+      "operation": "module_door",
+      "ok": true,
+      "violations": [],
+      "extent_m": {
+        "width": 4.0,
+        "depth": 0.20000000298023224,
+        "height": 3.0
+      },
+      "params_m": {
+        "width": 4.0,
+        "height": 3.0,
+        "depth": 0.2
+      },
+      "bounds": {
+        "min": [
+          -2.0,
+          -0.10000000149011612,
+          -3.0
+        ],
+        "max": [
+          2.0,
+          0.10000000149011612,
+          0.0
+        ]
+      }
+    },
+    {
+      "job_id": "door_garage_lod0_run001",
+      "operation": "module_door",
+      "ok": true,
+      "violations": [],
+      "extent_m": {
+        "width": 4.0,
+        "depth": 0.20000000298023224,
+        "height": 2.5
+      },
+      "params_m": {
+        "width": 4.0,
+        "height": 2.5,
+        "depth": 0.2
+      },
+      "bounds": {
+        "min": [
+          -2.0,
+          -0.10000000149011612,
+          -2.5
+        ],
+        "max": [
+          2.0,
+          0.10000000149011612,
+          0.0
+        ]
+      }
+    },
+    {
+      "job_id": "door_gate_industrial_lod0_run001",
+      "operation": "module_door",
+      "ok": true,
+      "violations": [],
+      "extent_m": {
+        "width": 16.0,
+        "depth": 0.30000001192092896,
+        "height": 4.0
+      },
+      "params_m": {
+        "width": 16.0,
+        "height": 4.0,
+        "depth": 0.3
+      },
+      "bounds": {
+        "min": [
+          -8.0,
+          -0.15000000596046448,
+          -4.0
+        ],
+        "max": [
+          8.0,
+          0.15000000596046448,
+          0.0
+        ]
+      }
+    },
+    {
+      "job_id": "door_industrial_1u_run001",
+      "operation": "module_door",
+      "ok": true,
+      "violations": [],
+      "extent_m": {
+        "width": 2.0,
+        "depth": 0.20000000298023224,
+        "height": 3.0
+      },
+      "params_m": {
+        "width": 2.0,
+        "height": 3.0,
+        "depth": 0.2
+      },
+      "bounds": {
+        "min": [
+          -1.0,
+          -0.10000000149011612,
+          -3.0
+        ],
+        "max": [
+          1.0,
+          0.10000000149011612,
+          0.0
+        ]
+      }
+    },
+    {
+      "job_id": "door_military_lod0_run001",
+      "operation": "module_door",
+      "ok": true,
+      "violations": [],
+      "extent_m": {
+        "width": 1.2000000476837158,
+        "depth": 0.25,
+        "height": 2.200000047683716
+      },
+      "params_m": {
+        "width": 1.2,
+        "height": 2.2,
+        "depth": 0.25
+      },
+      "bounds": {
+        "min": [
+          -0.6000000238418579,
+          -0.125,
+          -2.200000047683716
+        ],
+        "max": [
+          0.6000000238418579,
+          0.125,
+          0.0
+        ]
+      }
+    },
+    {
+      "job_id": "door_office_lod0_run001",
+      "operation": "module_door",
+      "ok": true,
+      "violations": [],
+      "extent_m": {
+        "width": 1.2000000476837158,
+        "depth": 0.11999999731779099,
+        "height": 2.200000047683716
+      },
+      "params_m": {
+        "width": 1.2,
+        "height": 2.2,
+        "depth": 0.12
+      },
+      "bounds": {
+        "min": [
+          -0.6000000238418579,
+          -0.05999999865889549,
+          -2.200000047683716
+        ],
+        "max": [
+          0.6000000238418579,
+          0.05999999865889549,
+          0.0
+        ]
+      }
+    },
+    {
+      "job_id": "door_residential_1u_run001",
+      "operation": "module_door",
+      "ok": true,
+      "violations": [],
+      "extent_m": {
+        "width": 1.2000000476837158,
+        "depth": 0.11999999731779099,
+        "height": 2.4000000953674316
+      },
+      "params_m": {
+        "width": 1.2,
+        "height": 2.4,
+        "depth": 0.12
+      },
+      "bounds": {
+        "min": [
+          -0.6000000238418579,
+          -0.05999999865889549,
+          -2.4000000953674316
+        ],
+        "max": [
+          0.6000000238418579,
+          0.05999999865889549,
+          0.0
+        ]
+      }
+    },
+    {
+      "job_id": "door_residential_lod0_run001",
+      "operation": "module_door",
+      "ok": true,
+      "violations": [],
+      "extent_m": {
+        "width": 1.0,
+        "depth": 0.15000000596046448,
+        "height": 2.0999999046325684
+      },
+      "params_m": {
+        "width": 1.0,
+        "height": 2.1,
+        "depth": 0.15
+      },
+      "bounds": {
+        "min": [
+          -0.5,
+          -0.07500000298023224,
+          -2.0999999046325684
+        ],
+        "max": [
+          0.5,
+          0.07500000298023224,
+          0.0
+        ]
+      }
+    },
+    {
+      "job_id": "door_residential_production_run001",
+      "operation": "module_door",
+      "ok": true,
+      "violations": [],
+      "extent_m": {
+        "width": 1.2000000476837158,
+        "depth": 0.15000000596046448,
+        "height": 2.200000047683716
+      },
+      "params_m": {
+        "width": 1.2,
+        "height": 2.2,
+        "depth": 0.15
+      },
+      "bounds": {
+        "min": [
+          -0.6000000238418579,
+          -0.07500000298023224,
+          -2.200000047683716
+        ],
+        "max": [
+          0.6000000238418579,
+          0.07500000298023224,
+          0.0
+        ]
+      }
+    },
+    {
+      "job_id": "door_shop_1u_run001",
+      "operation": "module_door",
+      "ok": true,
+      "violations": [],
+      "extent_m": {
+        "width": 2.0,
+        "depth": 0.15000000596046448,
+        "height": 2.5
+      },
+      "params_m": {
+        "width": 2.0,
+        "height": 2.5,
+        "depth": 0.15
+      },
+      "bounds": {
+        "min": [
+          -1.0,
+          -0.07500000298023224,
+          -2.5
+        ],
+        "max": [
+          1.0,
+          0.07500000298023224,
+          0.0
+        ]
+      }
+    },
+    {
+      "job_id": "door_shop_lod0_run001",
+      "operation": "module_door",
+      "ok": true,
+      "violations": [],
+      "extent_m": {
+        "width": 2.0,
+        "depth": 0.15000000596046448,
+        "height": 2.5
+      },
+      "params_m": {
+        "width": 2.0,
+        "height": 2.5,
+        "depth": 0.15
+      },
+      "bounds": {
+        "min": [
+          -1.0,
+          -0.07500000298023224,
+          -2.5
+        ],
+        "max": [
+          1.0,
+          0.07500000298023224,
+          0.0
+        ]
+      }
+    },
+    {
+      "job_id": "door_warehouse_2u_run001",
+      "operation": "module_door",
+      "ok": true,
+      "violations": [],
+      "extent_m": {
+        "width": 4.0,
+        "depth": 0.25,
+        "height": 4.0
+      },
+      "params_m": {
+        "width": 4.0,
+        "height": 4.0,
+        "depth": 0.25
+      },
+      "bounds": {
+        "min": [
+          -2.0,
+          -0.125,
+          -4.0
+        ],
+        "max": [
+          2.0,
+          0.125,
+          0.0
+        ]
+      }
+    },
+    {
+      "job_id": "door_warehouse_lod0_run001",
+      "operation": "module_door",
+      "ok": true,
+      "violations": [],
+      "extent_m": {
+        "width": 4.0,
+        "depth": 0.25,
+        "height": 3.0
+      },
+      "params_m": {
+        "width": 4.0,
+        "height": 3.0,
+        "depth": 0.25
+      },
+      "bounds": {
+        "min": [
+          -2.0,
+          -0.125,
+          -3.0
+        ],
+        "max": [
+          2.0,
+          0.125,
+          0.0
+        ]
+      }
+    },
+    {
+      "job_id": "door_warehouse_production_run001",
+      "operation": "module_door",
+      "ok": true,
+      "violations": [],
+      "extent_m": {
+        "width": 4.0,
+        "depth": 0.25,
+        "height": 3.0
+      },
+      "params_m": {
+        "width": 4.0,
+        "height": 3.0,
+        "depth": 0.25
+      },
+      "bounds": {
+        "min": [
+          -2.0,
+          -0.125,
+          -3.0
+        ],
+        "max": [
+          2.0,
+          0.125,
+          0.0
+        ]
+      }
+    },
+    {
+      "job_id": "kit_nuclear_pwr_production_run001",
+      "operation": "module_prop",
+      "ok": false,
+      "violations": [
+        "pivot_seat:max_z=0.0"
+      ],
+      "extent_m": {
+        "width": 12.0,
+        "depth": 12.0,
+        "height": 4.409999847412109
+      },
+      "params_m": {
+        "width": 12.0,
+        "height": 9.0,
+        "depth": 12.0
+      },
+      "bounds": {
+        "min": [
+          -6.0,
+          -6.0,
+          -4.409999847412109
+        ],
+        "max": [
+          6.0,
+          6.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "job_id": "kit_substation_yard_production_run001",
+      "operation": "module_prop",
+      "ok": false,
+      "violations": [
+        "pivot_seat:max_z=0.0"
+      ],
+      "extent_m": {
+        "width": 8.0,
+        "depth": 6.0,
+        "height": 1.875
+      },
+      "params_m": {
+        "width": 8.0,
+        "height": 3.0,
+        "depth": 6.0
+      },
+      "bounds": {
+        "min": [
+          -4.0,
+          -3.0,
+          -1.875
+        ],
+        "max": [
+          4.0,
+          3.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "job_id": "platform_dock_2u_production_run001",
+      "operation": "module_platform",
+      "ok": true,
+      "violations": [],
+      "extent_m": {
+        "width": 2.0,
+        "depth": 2.0,
+        "height": 2.0
+      },
+      "params_m": {
+        "width": 2.0,
+        "height": 0.5,
+        "depth": 2.0
+      },
+      "bounds": {
+        "min": [
+          -1.0,
+          -1.0,
+          -2.0
+        ],
+        "max": [
+          1.0,
+          1.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "job_id": "prop_ac_lod0_run001",
+      "operation": "module_prop",
+      "ok": false,
+      "violations": [
+        "pivot_seat:max_z=0.0"
+      ],
+      "extent_m": {
+        "width": 1.2000000476837158,
+        "depth": 1.2000000476837158,
+        "height": 0.800000011920929
+      },
+      "params_m": {
+        "width": 1.2,
+        "height": 0.8,
+        "depth": 1.2
+      },
+      "bounds": {
+        "min": [
+          -0.6000000238418579,
+          -0.6000000238418579,
+          -0.800000011920929
+        ],
+        "max": [
+          0.6000000238418579,
+          0.6000000238418579,
+          0.0
+        ]
+      }
+    },
+    {
+      "job_id": "prop_ac_unit_1u_run001",
+      "operation": "module_prop",
+      "ok": false,
+      "violations": [
+        "pivot_seat:max_z=0.0"
+      ],
+      "extent_m": {
+        "width": 1.5,
+        "depth": 1.5,
+        "height": 1.2000000476837158
+      },
+      "params_m": {
+        "width": 1.5,
+        "height": 1.2,
+        "depth": 1.5
+      },
+      "bounds": {
+        "min": [
+          -0.75,
+          -0.75,
+          -1.2000000476837158
+        ],
+        "max": [
+          0.75,
+          0.75,
+          0.0
+        ]
+      }
+    },
+    {
+      "job_id": "prop_chimney_1u_run001",
+      "operation": "module_prop",
+      "ok": false,
+      "violations": [
+        "pivot_seat:max_z=0.0"
+      ],
+      "extent_m": {
+        "width": 1.5,
+        "depth": 1.5,
+        "height": 4.0
+      },
+      "params_m": {
+        "width": 1.5,
+        "height": 4.0,
+        "depth": 1.5
+      },
+      "bounds": {
+        "min": [
+          -0.75,
+          -0.75,
+          -4.0
+        ],
+        "max": [
+          0.75,
+          0.75,
+          0.0
+        ]
+      }
+    },
+    {
+      "job_id": "prop_chimney_lod0_run001",
+      "operation": "module_prop",
+      "ok": false,
+      "violations": [
+        "pivot_seat:max_z=0.0"
+      ],
+      "extent_m": {
+        "width": 1.0,
+        "depth": 1.0,
+        "height": 2.5
+      },
+      "params_m": {
+        "width": 1.0,
+        "height": 2.5,
+        "depth": 1.0
+      },
+      "bounds": {
+        "min": [
+          -0.5,
+          -0.5,
+          -2.5
+        ],
+        "max": [
+          0.5,
+          0.5,
+          0.0
+        ]
+      }
+    },
+    {
+      "job_id": "prop_chimney_production_run001",
+      "operation": "module_prop",
+      "ok": false,
+      "violations": [
+        "pivot_seat:max_z=0.0"
+      ],
+      "extent_m": {
+        "width": 0.7599999904632568,
+        "depth": 0.7599999904632568,
+        "height": 1.687999963760376
+      },
+      "params_m": {
+        "width": 0.8,
+        "height": 1.6,
+        "depth": 0.8
+      },
+      "bounds": {
+        "min": [
+          -0.3799999952316284,
+          -0.3799999952316284,
+          -1.687999963760376
+        ],
+        "max": [
+          0.3799999952316284,
+          0.3799999952316284,
+          0.0
+        ]
+      }
+    },
+    {
+      "job_id": "prop_fence_lod0_run001",
+      "operation": "module_prop",
+      "ok": false,
+      "violations": [
+        "pivot_seat:max_z=0.0"
+      ],
+      "extent_m": {
+        "width": 8.0,
+        "depth": 0.10000000149011612,
+        "height": 1.2000000476837158
+      },
+      "params_m": {
+        "width": 8.0,
+        "height": 1.2,
+        "depth": 0.1
+      },
+      "bounds": {
+        "min": [
+          -4.0,
+          -0.05000000074505806,
+          -1.2000000476837158
+        ],
+        "max": [
+          4.0,
+          0.05000000074505806,
+          0.0
+        ]
+      }
+    },
+    {
+      "job_id": "prop_light_lod0_run001",
+      "operation": "module_prop",
+      "ok": false,
+      "violations": [
+        "pivot_seat:max_z=0.0"
+      ],
+      "extent_m": {
+        "width": 0.4000000059604645,
+        "depth": 0.4000000059604645,
+        "height": 2.5
+      },
+      "params_m": {
+        "width": 0.4,
+        "height": 2.5,
+        "depth": 0.4
+      },
+      "bounds": {
+        "min": [
+          -0.20000000298023224,
+          -0.20000000298023224,
+          -2.5
+        ],
+        "max": [
+          0.20000000298023224,
+          0.20000000298023224,
+          0.0
+        ]
+      }
+    },
+    {
+      "job_id": "prop_tank_lod0_run001",
+      "operation": "module_prop",
+      "ok": false,
+      "violations": [
+        "pivot_seat:max_z=0.0"
+      ],
+      "extent_m": {
+        "width": 2.0,
+        "depth": 2.0,
+        "height": 2.0
+      },
+      "params_m": {
+        "width": 2.0,
+        "height": 2.0,
+        "depth": 2.0
+      },
+      "bounds": {
+        "min": [
+          -1.0,
+          -1.0,
+          -2.0
+        ],
+        "max": [
+          1.0,
+          1.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "job_id": "prop_transformer_lod0_run001",
+      "operation": "module_prop",
+      "ok": false,
+      "violations": [
+        "pivot_seat:max_z=0.0"
+      ],
+      "extent_m": {
+        "width": 2.0,
+        "depth": 1.5,
+        "height": 1.5
+      },
+      "params_m": {
+        "width": 2.0,
+        "height": 1.5,
+        "depth": 1.5
+      },
+      "bounds": {
+        "min": [
+          -1.0,
+          -0.75,
+          -1.5
+        ],
+        "max": [
+          1.0,
+          0.75,
+          0.0
+        ]
+      }
+    },
+    {
+      "job_id": "prop_transformer_production_run001",
+      "operation": "module_prop",
+      "ok": false,
+      "violations": [
+        "pivot_seat:max_z=0.0"
+      ],
+      "extent_m": {
+        "width": 3.5999999046325684,
+        "depth": 3.5999999046325684,
+        "height": 1.375499963760376
+      },
+      "params_m": {
+        "width": 3.6,
+        "height": 1.5,
+        "depth": 3.6
+      },
+      "bounds": {
+        "min": [
+          -1.7999999523162842,
+          -1.7999999523162842,
+          -1.375499963760376
+        ],
+        "max": [
+          1.7999999523162842,
+          1.7999999523162842,
+          0.0
+        ]
+      }
+    },
+    {
+      "job_id": "prop_vent_lod0_run001",
+      "operation": "module_prop",
+      "ok": false,
+      "violations": [
+        "pivot_seat:max_z=0.0"
+      ],
+      "extent_m": {
+        "width": 1.0,
+        "depth": 1.0,
+        "height": 0.4000000059604645
+      },
+      "params_m": {
+        "width": 1.0,
+        "height": 0.4,
+        "depth": 1.0
+      },
+      "bounds": {
+        "min": [
+          -0.5,
+          -0.5,
+          -0.4000000059604645
+        ],
+        "max": [
+          0.5,
+          0.5,
+          0.0
+        ]
+      }
+    },
+    {
+      "job_id": "prop_vent_production_run001",
+      "operation": "module_prop",
+      "ok": false,
+      "violations": [
+        "pivot_seat:max_z=0.0"
+      ],
+      "extent_m": {
+        "width": 1.0,
+        "depth": 1.0,
+        "height": 0.4000000059604645
+      },
+      "params_m": {
+        "width": 1.0,
+        "height": 0.4,
+        "depth": 1.0
+      },
+      "bounds": {
+        "min": [
+          -0.5,
+          -0.5,
+          -0.4000000059604645
+        ],
+        "max": [
+          0.5,
+          0.5,
+          0.0
+        ]
+      }
+    },
+    {
+      "job_id": "prop_vent_roof_1u_run001",
+      "operation": "module_prop",
+      "ok": false,
+      "violations": [
+        "pivot_seat:max_z=0.0"
+      ],
+      "extent_m": {
+        "width": 2.0,
+        "depth": 2.0,
+        "height": 0.6000000238418579
+      },
+      "params_m": {
+        "width": 2.0,
+        "height": 0.6,
+        "depth": 2.0
+      },
+      "bounds": {
+        "min": [
+          -1.0,
+          -1.0,
+          -0.6000000238418579
+        ],
+        "max": [
+          1.0,
+          1.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "job_id": "roof_bunker_lod0_run001",
+      "operation": "module_roof",
+      "ok": true,
+      "violations": [],
+      "extent_m": {
+        "width": 8.0,
+        "depth": 4.0,
+        "height": 0.6000000238418579
+      },
+      "params_m": {
+        "width": 8.0,
+        "height": 0.0,
+        "depth": 4.0
+      },
+      "bounds": {
+        "min": [
+          -4.0,
+          -2.0,
+          0.0
+        ],
+        "max": [
+          4.0,
+          2.0,
+          0.6000000238418579
+        ]
+      }
+    },
+    {
+      "job_id": "roof_canopy_lod0_run001",
+      "operation": "module_roof",
+      "ok": true,
+      "violations": [],
+      "extent_m": {
+        "width": 8.0024995803833,
+        "depth": 4.003749132156372,
+        "height": 0.29990631341934204
+      },
+      "params_m": {
+        "width": 8.0,
+        "height": 0.0,
+        "depth": 4.0
+      },
+      "bounds": {
+        "min": [
+          -4.00124979019165,
+          -2.004373788833618,
+          0.0
+        ],
+        "max": [
+          4.00124979019165,
+          1.999375343322754,
+          0.29990631341934204
+        ]
+      }
+    },
+    {
+      "job_id": "roof_flat_2u_run001",
+      "operation": "module_roof",
+      "ok": true,
+      "violations": [],
+      "extent_m": {
+        "width": 8.0,
+        "depth": 8.0,
+        "height": 0.20000000298023224
+      },
+      "params_m": {
+        "width": 8.0,
+        "height": 0.0,
+        "depth": 8.0
+      },
+      "bounds": {
+        "min": [
+          -4.0,
+          -4.0,
+          0.0
+        ],
+        "max": [
+          4.0,
+          4.0,
+          0.20000000298023224
+        ]
+      }
+    },
+    {
+      "job_id": "roof_flat_lod0_run001",
+      "operation": "module_roof",
+      "ok": true,
+      "violations": [],
+      "extent_m": {
+        "width": 4.0,
+        "depth": 4.0,
+        "height": 0.30000001192092896
+      },
+      "params_m": {
+        "width": 4.0,
+        "height": 0.0,
+        "depth": 4.0
+      },
+      "bounds": {
+        "min": [
+          -2.0,
+          -2.0,
+          0.0
+        ],
+        "max": [
+          2.0,
+          2.0,
+          0.30000001192092896
+        ]
+      }
+    },
+    {
+      "job_id": "roof_industrial_shed_2u_production_run001",
+      "operation": "module_roof",
+      "ok": true,
+      "violations": [],
+      "extent_m": {
+        "width": 8.089499473571777,
+        "depth": 9.933865070343018,
+        "height": 1.7800853252410889
+      },
+      "params_m": {
+        "width": 8.0,
+        "height": 0.0,
+        "depth": 10.0
+      },
+      "bounds": {
+        "min": [
+          -4.044749736785889,
+          -5.055936813354492,
+          0.0
+        ],
+        "max": [
+          4.044749736785889,
+          4.877928256988525,
+          1.7800853252410889
+        ]
+      }
+    },
+    {
+      "job_id": "roof_industrial_shed_2u_run001",
+      "operation": "module_roof",
+      "ok": true,
+      "violations": [],
+      "extent_m": {
+        "width": 8.0,
+        "depth": 10.0,
+        "height": 0.30000001192092896
+      },
+      "params_m": {
+        "width": 8.0,
+        "height": 0.0,
+        "depth": 10.0
+      },
+      "bounds": {
+        "min": [
+          -4.0,
+          -5.0,
+          0.0
+        ],
+        "max": [
+          4.0,
+          5.0,
+          0.30000001192092896
+        ]
+      }
+    },
+    {
+      "job_id": "roof_metal_low_lod0_run001",
+      "operation": "module_roof",
+      "ok": true,
+      "violations": [],
+      "extent_m": {
+        "width": 8.0,
+        "depth": 4.0,
+        "height": 0.25
+      },
+      "params_m": {
+        "width": 8.0,
+        "height": 0.0,
+        "depth": 4.0
+      },
+      "bounds": {
+        "min": [
+          -4.0,
+          -2.0,
+          0.0
+        ],
+        "max": [
+          4.0,
+          2.0,
+          0.25
+        ]
+      }
+    },
+    {
+      "job_id": "roof_parapet_lod0_run001",
+      "operation": "module_roof",
+      "ok": true,
+      "violations": [],
+      "extent_m": {
+        "width": 8.0,
+        "depth": 4.0,
+        "height": 0.5
+      },
+      "params_m": {
+        "width": 8.0,
+        "height": 0.0,
+        "depth": 4.0
+      },
+      "bounds": {
+        "min": [
+          -4.0,
+          -2.0,
+          0.0
+        ],
+        "max": [
+          4.0,
+          2.0,
+          0.5
+        ]
+      }
+    },
+    {
+      "job_id": "roof_pitched_2u_run001",
+      "operation": "module_roof",
+      "ok": true,
+      "violations": [],
+      "extent_m": {
+        "width": 8.0,
+        "depth": 8.0,
+        "height": 1.5
+      },
+      "params_m": {
+        "width": 8.0,
+        "height": 0.0,
+        "depth": 8.0
+      },
+      "bounds": {
+        "min": [
+          -4.0,
+          -4.0,
+          0.0
+        ],
+        "max": [
+          4.0,
+          4.0,
+          1.5
+        ]
+      }
+    },
+    {
+      "job_id": "roof_pitched_gable_lod0_run001",
+      "operation": "module_roof",
+      "ok": true,
+      "violations": [],
+      "extent_m": {
+        "width": 4.5,
+        "depth": 5.0,
+        "height": 3.6000001430511475
+      },
+      "params_m": {
+        "width": 4.0,
+        "height": 0.0,
+        "depth": 4.0
+      },
+      "bounds": {
+        "min": [
+          -2.25,
+          -2.5,
+          0.0
+        ],
+        "max": [
+          2.25,
+          2.5,
+          3.6000001430511475
+        ]
+      }
+    },
+    {
+      "job_id": "roof_pitched_gable_production_run001",
+      "operation": "module_roof",
+      "ok": false,
+      "violations": [
+        "roof_extent:expected\u22481.5,got=7.1074"
+      ],
+      "extent_m": {
+        "width": 6.924428939819336,
+        "depth": 7.107422828674316,
+        "height": 4.264453887939453
+      },
+      "params_m": {
+        "width": 4.0,
+        "height": 1.5,
+        "depth": 4.0
+      },
+      "bounds": {
+        "min": [
+          -3.462214469909668,
+          -3.553711414337158,
+          0.0
+        ],
+        "max": [
+          3.462214469909668,
+          3.553711414337158,
+          4.264453887939453
+        ]
+      }
+    },
+    {
+      "job_id": "roof_pitched_hip_lod0_run001",
+      "operation": "module_roof",
+      "ok": true,
+      "violations": [],
+      "extent_m": {
+        "width": 8.272001266479492,
+        "depth": 8.5440034866333,
+        "height": 4.213481426239014
+      },
+      "params_m": {
+        "width": 8.0,
+        "height": 0.0,
+        "depth": 8.0
+      },
+      "bounds": {
+        "min": [
+          -4.136000633239746,
+          -4.27200174331665,
+          0.0
+        ],
+        "max": [
+          4.136000633239746,
+          4.27200174331665,
+          4.213481426239014
+        ]
+      }
+    },
+    {
+      "job_id": "roof_sawtooth_2u_run001",
+      "operation": "module_roof",
+      "ok": true,
+      "violations": [],
+      "extent_m": {
+        "width": 8.0,
+        "depth": 8.0,
+        "height": 0.4000000059604645
+      },
+      "params_m": {
+        "width": 8.0,
+        "height": 0.0,
+        "depth": 8.0
+      },
+      "bounds": {
+        "min": [
+          -4.0,
+          -4.0,
+          0.0
+        ],
+        "max": [
+          4.0,
+          4.0,
+          0.4000000059604645
+        ]
+      }
+    },
+    {
+      "job_id": "roof_sawtooth_lod0_run001",
+      "operation": "module_roof",
+      "ok": true,
+      "violations": [],
+      "extent_m": {
+        "width": 8.077033042907715,
+        "depth": 7.687787055969238,
+        "height": 3.249668598175049
+      },
+      "params_m": {
+        "width": 8.0,
+        "height": 0.0,
+        "depth": 8.0
+      },
+      "bounds": {
+        "min": [
+          -4.038516521453857,
+          -3.843893527984619,
+          0.0
+        ],
+        "max": [
+          4.038516521453857,
+          3.843893527984619,
+          3.249668598175049
+        ]
+      }
+    },
+    {
+      "job_id": "roof_sawtooth_production_run001",
+      "operation": "module_roof",
+      "ok": true,
+      "violations": [],
+      "extent_m": {
+        "width": 8.077033042907715,
+        "depth": 7.687787055969238,
+        "height": 3.249668598175049
+      },
+      "params_m": {
+        "width": 8.0,
+        "height": 0.0,
+        "depth": 8.0
+      },
+      "bounds": {
+        "min": [
+          -4.038516521453857,
+          -3.843893527984619,
+          0.0
+        ],
+        "max": [
+          4.038516521453857,
+          3.843893527984619,
+          3.249668598175049
+        ]
+      }
+    },
+    {
+      "job_id": "roof_shed_lod0_run001",
+      "operation": "module_roof",
+      "ok": true,
+      "violations": [],
+      "extent_m": {
+        "width": 8.089499473571777,
+        "depth": 4.000247597694397,
+        "height": 1.03838312625885
+      },
+      "params_m": {
+        "width": 8.0,
+        "height": 0.0,
+        "depth": 4.0
+      },
+      "bounds": {
+        "min": [
+          -4.044749736785889,
+          -2.089128017425537,
+          0.0
+        ],
+        "max": [
+          4.044749736785889,
+          1.9111195802688599,
+          1.03838312625885
+        ]
+      }
+    },
+    {
+      "job_id": "roof_shed_production_run001",
+      "operation": "module_roof",
+      "ok": true,
+      "violations": [],
+      "extent_m": {
+        "width": 8.089499473571777,
+        "depth": 4.000247597694397,
+        "height": 1.03838312625885
+      },
+      "params_m": {
+        "width": 8.0,
+        "height": 0.0,
+        "depth": 4.0
+      },
+      "bounds": {
+        "min": [
+          -4.044749736785889,
+          -2.089128017425537,
+          0.0
+        ],
+        "max": [
+          4.044749736785889,
+          1.9111195802688599,
+          1.03838312625885
+        ]
+      }
+    },
+    {
+      "job_id": "roof_tile_lod0_run001",
+      "operation": "module_roof",
+      "ok": true,
+      "violations": [],
+      "extent_m": {
+        "width": 8.0,
+        "depth": 4.0,
+        "height": 0.3499999940395355
+      },
+      "params_m": {
+        "width": 8.0,
+        "height": 0.0,
+        "depth": 4.0
+      },
+      "bounds": {
+        "min": [
+          -4.0,
+          -2.0,
+          0.0
+        ],
+        "max": [
+          4.0,
+          2.0,
+          0.3499999940395355
+        ]
+      }
+    },
+    {
+      "job_id": "stack_chimney_1u_production_run001",
+      "operation": "module_prop",
+      "ok": false,
+      "violations": [
+        "pivot_seat:max_z=0.0"
+      ],
+      "extent_m": {
+        "width": 1.0,
+        "depth": 1.0,
+        "height": 2.5
+      },
+      "params_m": {
+        "width": 1.0,
+        "height": 3.0,
+        "depth": 1.0
+      },
+      "bounds": {
+        "min": [
+          -0.5,
+          -0.5,
+          -2.5
+        ],
+        "max": [
+          0.5,
+          0.5,
+          0.0
+        ]
+      }
+    },
+    {
+      "job_id": "wall_brick_1u_lod0_run001",
+      "operation": "module_wall",
+      "ok": true,
+      "violations": [],
+      "extent_m": {
+        "width": 4.0,
+        "depth": 0.30000001192092896,
+        "height": 3.0
+      },
+      "params_m": {
+        "width": 4.0,
+        "height": 3.0,
+        "depth": 0.3
+      },
+      "bounds": {
+        "min": [
+          -2.0,
+          -0.15000000596046448,
+          -3.0
+        ],
+        "max": [
+          2.0,
+          0.15000000596046448,
+          0.0
+        ]
+      }
+    },
+    {
+      "job_id": "wall_brick_1u_production_run001",
+      "operation": "module_wall",
+      "ok": true,
+      "violations": [],
+      "extent_m": {
+        "width": 4.0,
+        "depth": 0.3059999942779541,
+        "height": 3.0
+      },
+      "params_m": {
+        "width": 4.0,
+        "height": 3.0,
+        "depth": 0.3
+      },
+      "bounds": {
+        "min": [
+          -2.0,
+          -0.15299999713897705,
+          -3.0
+        ],
+        "max": [
+          2.0,
+          0.15299999713897705,
+          0.0
+        ]
+      }
+    },
+    {
+      "job_id": "wall_brick_2u_lod0_run001",
+      "operation": "module_wall",
+      "ok": true,
+      "violations": [],
+      "extent_m": {
+        "width": 8.0,
+        "depth": 0.30000001192092896,
+        "height": 3.0
+      },
+      "params_m": {
+        "width": 8.0,
+        "height": 3.0,
+        "depth": 0.3
+      },
+      "bounds": {
+        "min": [
+          -4.0,
+          -0.15000000596046448,
+          -3.0
+        ],
+        "max": [
+          4.0,
+          0.15000000596046448,
+          0.0
+        ]
+      }
+    },
+    {
+      "job_id": "wall_brick_2u_run001",
+      "operation": "module_wall",
+      "ok": true,
+      "violations": [],
+      "extent_m": {
+        "width": 8.0,
+        "depth": 0.30000001192092896,
+        "height": 3.0
+      },
+      "params_m": {
+        "width": 8.0,
+        "height": 3.0,
+        "depth": 0.3
+      },
+      "bounds": {
+        "min": [
+          -4.0,
+          -0.15000000596046448,
+          -3.0
+        ],
+        "max": [
+          4.0,
+          0.15000000596046448,
+          0.0
+        ]
+      }
+    },
+    {
+      "job_id": "wall_concrete_1u_lod0_run001",
+      "operation": "module_wall",
+      "ok": true,
+      "violations": [],
+      "extent_m": {
+        "width": 4.0,
+        "depth": 0.30000001192092896,
+        "height": 3.0
+      },
+      "params_m": {
+        "width": 4.0,
+        "height": 3.0,
+        "depth": 0.3
+      },
+      "bounds": {
+        "min": [
+          -2.0,
+          -0.15000000596046448,
+          -3.0
+        ],
+        "max": [
+          2.0,
+          0.15000000596046448,
+          0.0
+        ]
+      }
+    },
+    {
+      "job_id": "wall_concrete_1u_run001",
+      "operation": "module_wall",
+      "ok": true,
+      "violations": [],
+      "extent_m": {
+        "width": 4.0,
+        "depth": 0.30000001192092896,
+        "height": 3.0
+      },
+      "params_m": {
+        "width": 4.0,
+        "height": 3.0,
+        "depth": 0.3
+      },
+      "bounds": {
+        "min": [
+          -2.0,
+          -0.15000000596046448,
+          -3.0
+        ],
+        "max": [
+          2.0,
+          0.15000000596046448,
+          0.0
+        ]
+      }
+    },
+    {
+      "job_id": "wall_concrete_2u_lod0_run001",
+      "operation": "module_wall",
+      "ok": true,
+      "violations": [],
+      "extent_m": {
+        "width": 8.0,
+        "depth": 0.30000001192092896,
+        "height": 3.0
+      },
+      "params_m": {
+        "width": 8.0,
+        "height": 3.0,
+        "depth": 0.3
+      },
+      "bounds": {
+        "min": [
+          -4.0,
+          -0.15000000596046448,
+          -3.0
+        ],
+        "max": [
+          4.0,
+          0.15000000596046448,
+          0.0
+        ]
+      }
+    },
+    {
+      "job_id": "wall_concrete_2u_production_run001",
+      "operation": "module_wall",
+      "ok": true,
+      "violations": [],
+      "extent_m": {
+        "width": 8.0,
+        "depth": 0.30000001192092896,
+        "height": 3.0
+      },
+      "params_m": {
+        "width": 8.0,
+        "height": 3.0,
+        "depth": 0.3
+      },
+      "bounds": {
+        "min": [
+          -4.0,
+          -0.15000000596046448,
+          -3.0
+        ],
+        "max": [
+          4.0,
+          0.15000000596046448,
+          0.0
+        ]
+      }
+    },
+    {
+      "job_id": "wall_concrete_2u_run001",
+      "operation": "module_wall",
+      "ok": true,
+      "violations": [],
+      "extent_m": {
+        "width": 8.0,
+        "depth": 0.30000001192092896,
+        "height": 3.0
+      },
+      "params_m": {
+        "width": 8.0,
+        "height": 3.0,
+        "depth": 0.3
+      },
+      "bounds": {
+        "min": [
+          -4.0,
+          -0.15000000596046448,
+          -3.0
+        ],
+        "max": [
+          4.0,
+          0.15000000596046448,
+          0.0
+        ]
+      }
+    },
+    {
+      "job_id": "wall_glass_1u_run001",
+      "operation": "module_wall",
+      "ok": true,
+      "violations": [],
+      "extent_m": {
+        "width": 4.0,
+        "depth": 0.10000000149011612,
+        "height": 3.0
+      },
+      "params_m": {
+        "width": 4.0,
+        "height": 3.0,
+        "depth": 0.1
+      },
+      "bounds": {
+        "min": [
+          -2.0,
+          -0.05000000074505806,
+          -3.0
+        ],
+        "max": [
+          2.0,
+          0.05000000074505806,
+          0.0
+        ]
+      }
+    },
+    {
+      "job_id": "wall_glass_curtain_1u_lod0_run001",
+      "operation": "module_wall",
+      "ok": true,
+      "violations": [],
+      "extent_m": {
+        "width": 4.0,
+        "depth": 0.10000000149011612,
+        "height": 3.0
+      },
+      "params_m": {
+        "width": 4.0,
+        "height": 3.0,
+        "depth": 0.1
+      },
+      "bounds": {
+        "min": [
+          -2.0,
+          -0.05000000074505806,
+          -3.0
+        ],
+        "max": [
+          2.0,
+          0.05000000074505806,
+          0.0
+        ]
+      }
+    },
+    {
+      "job_id": "wall_industrial_panel_2u_lod0_run001",
+      "operation": "module_wall",
+      "ok": true,
+      "violations": [],
+      "extent_m": {
+        "width": 8.0,
+        "depth": 0.25,
+        "height": 3.0
+      },
+      "params_m": {
+        "width": 8.0,
+        "height": 3.0,
+        "depth": 0.25
+      },
+      "bounds": {
+        "min": [
+          -4.0,
+          -0.125,
+          -3.0
+        ],
+        "max": [
+          4.0,
+          0.125,
+          0.0
+        ]
+      }
+    },
+    {
+      "job_id": "wall_industrial_panel_2u_run001",
+      "operation": "module_wall",
+      "ok": true,
+      "violations": [],
+      "extent_m": {
+        "width": 8.0,
+        "depth": 0.11999999731779099,
+        "height": 3.0
+      },
+      "params_m": {
+        "width": 8.0,
+        "height": 3.0,
+        "depth": 0.12
+      },
+      "bounds": {
+        "min": [
+          -4.0,
+          -0.05999999865889549,
+          -3.0
+        ],
+        "max": [
+          4.0,
+          0.05999999865889549,
+          0.0
+        ]
+      }
+    },
+    {
+      "job_id": "wall_military_bunker_1u_lod0_run001",
+      "operation": "module_wall",
+      "ok": true,
+      "violations": [],
+      "extent_m": {
+        "width": 4.0,
+        "depth": 0.6000000238418579,
+        "height": 2.5
+      },
+      "params_m": {
+        "width": 4.0,
+        "height": 2.5,
+        "depth": 0.6
+      },
+      "bounds": {
+        "min": [
+          -2.0,
+          -0.30000001192092896,
+          -2.5
+        ],
+        "max": [
+          2.0,
+          0.30000001192092896,
+          0.0
+        ]
+      }
+    },
+    {
+      "job_id": "wall_steel_1u_lod0_run001",
+      "operation": "module_wall",
+      "ok": true,
+      "violations": [],
+      "extent_m": {
+        "width": 4.0,
+        "depth": 0.20000000298023224,
+        "height": 3.0
+      },
+      "params_m": {
+        "width": 4.0,
+        "height": 3.0,
+        "depth": 0.2
+      },
+      "bounds": {
+        "min": [
+          -2.0,
+          -0.10000000149011612,
+          -3.0
+        ],
+        "max": [
+          2.0,
+          0.10000000149011612,
+          0.0
+        ]
+      }
+    },
+    {
+      "job_id": "wall_steel_1u_production_run001",
+      "operation": "module_wall",
+      "ok": true,
+      "violations": [],
+      "extent_m": {
+        "width": 4.0,
+        "depth": 0.20000000298023224,
+        "height": 3.0
+      },
+      "params_m": {
+        "width": 4.0,
+        "height": 3.0,
+        "depth": 0.2
+      },
+      "bounds": {
+        "min": [
+          -2.0,
+          -0.10000000149011612,
+          -3.0
+        ],
+        "max": [
+          2.0,
+          0.10000000149011612,
+          0.0
+        ]
+      }
+    },
+    {
+      "job_id": "wall_steel_1u_run001",
+      "operation": "module_wall",
+      "ok": true,
+      "violations": [],
+      "extent_m": {
+        "width": 4.0,
+        "depth": 0.15000000596046448,
+        "height": 3.0
+      },
+      "params_m": {
+        "width": 4.0,
+        "height": 3.0,
+        "depth": 0.15
+      },
+      "bounds": {
+        "min": [
+          -2.0,
+          -0.07500000298023224,
+          -3.0
+        ],
+        "max": [
+          2.0,
+          0.07500000298023224,
+          0.0
+        ]
+      }
+    },
+    {
+      "job_id": "wall_wood_1u_lod0_run001",
+      "operation": "module_wall",
+      "ok": true,
+      "violations": [],
+      "extent_m": {
+        "width": 4.0,
+        "depth": 0.25,
+        "height": 3.0
+      },
+      "params_m": {
+        "width": 4.0,
+        "height": 3.0,
+        "depth": 0.25
+      },
+      "bounds": {
+        "min": [
+          -2.0,
+          -0.125,
+          -3.0
+        ],
+        "max": [
+          2.0,
+          0.125,
+          0.0
+        ]
+      }
+    },
+    {
+      "job_id": "wall_wood_1u_run001",
+      "operation": "module_wall",
+      "ok": true,
+      "violations": [],
+      "extent_m": {
+        "width": 4.0,
+        "depth": 0.25,
+        "height": 3.0
+      },
+      "params_m": {
+        "width": 4.0,
+        "height": 3.0,
+        "depth": 0.25
+      },
+      "bounds": {
+        "min": [
+          -2.0,
+          -0.125,
+          -3.0
+        ],
+        "max": [
+          2.0,
+          0.125,
+          0.0
+        ]
+      }
+    },
+    {
+      "job_id": "wall_wood_2u_lod0_run001",
+      "operation": "module_wall",
+      "ok": true,
+      "violations": [],
+      "extent_m": {
+        "width": 8.0,
+        "depth": 0.25,
+        "height": 3.0
+      },
+      "params_m": {
+        "width": 8.0,
+        "height": 3.0,
+        "depth": 0.25
+      },
+      "bounds": {
+        "min": [
+          -4.0,
+          -0.125,
+          -3.0
+        ],
+        "max": [
+          4.0,
+          0.125,
+          0.0
+        ]
+      }
+    },
+    {
+      "job_id": "wall_wood_2u_run001",
+      "operation": "module_wall",
+      "ok": true,
+      "violations": [],
+      "extent_m": {
+        "width": 8.0,
+        "depth": 0.25,
+        "height": 3.0
+      },
+      "params_m": {
+        "width": 8.0,
+        "height": 3.0,
+        "depth": 0.25
+      },
+      "bounds": {
+        "min": [
+          -4.0,
+          -0.125,
+          -3.0
+        ],
+        "max": [
+          4.0,
+          0.125,
+          0.0
+        ]
+      }
+    },
+    {
+      "job_id": "win_arched_1u_lod0_run001",
+      "operation": "module_window",
+      "ok": true,
+      "violations": [],
+      "extent_m": {
+        "width": 4.0,
+        "depth": 0.11999999731779099,
+        "height": 1.399999976158142
+      },
+      "params_m": {
+        "width": 4.0,
+        "height": 1.4,
+        "depth": 0.12
+      },
+      "bounds": {
+        "min": [
+          -2.0,
+          -0.05999999865889549,
+          -1.399999976158142
+        ],
+        "max": [
+          2.0,
+          0.05999999865889549,
+          0.0
+        ]
+      }
+    },
+    {
+      "job_id": "win_bunker_slit_lod0_run001",
+      "operation": "module_window",
+      "ok": true,
+      "violations": [],
+      "extent_m": {
+        "width": 4.0,
+        "depth": 0.6000000238418579,
+        "height": 0.30000001192092896
+      },
+      "params_m": {
+        "width": 4.0,
+        "height": 0.3,
+        "depth": 0.6
+      },
+      "bounds": {
+        "min": [
+          -2.0,
+          -0.30000001192092896,
+          -0.30000001192092896
+        ],
+        "max": [
+          2.0,
+          0.30000001192092896,
+          0.0
+        ]
+      }
+    },
+    {
+      "job_id": "win_double_1u_lod0_run001",
+      "operation": "module_window",
+      "ok": true,
+      "violations": [],
+      "extent_m": {
+        "width": 4.0,
+        "depth": 0.11999999731779099,
+        "height": 1.2000000476837158
+      },
+      "params_m": {
+        "width": 4.0,
+        "height": 1.2,
+        "depth": 0.12
+      },
+      "bounds": {
+        "min": [
+          -2.0,
+          -0.05999999865889549,
+          -1.2000000476837158
+        ],
+        "max": [
+          2.0,
+          0.05999999865889549,
+          0.0
+        ]
+      }
+    },
+    {
+      "job_id": "win_house_1u_lod0_run001",
+      "operation": "module_window",
+      "ok": true,
+      "violations": [],
+      "extent_m": {
+        "width": 4.0,
+        "depth": 0.11999999731779099,
+        "height": 1.2999999523162842
+      },
+      "params_m": {
+        "width": 4.0,
+        "height": 1.3,
+        "depth": 0.12
+      },
+      "bounds": {
+        "min": [
+          -2.0,
+          -0.05999999865889549,
+          -1.2999999523162842
+        ],
+        "max": [
+          2.0,
+          0.05999999865889549,
+          0.0
+        ]
+      }
+    },
+    {
+      "job_id": "win_industrial_3u_lod0_run001",
+      "operation": "module_window",
+      "ok": true,
+      "violations": [],
+      "extent_m": {
+        "width": 12.0,
+        "depth": 0.11999999731779099,
+        "height": 1.2000000476837158
+      },
+      "params_m": {
+        "width": 12.0,
+        "height": 1.2,
+        "depth": 0.12
+      },
+      "bounds": {
+        "min": [
+          -6.0,
+          -0.05999999865889549,
+          -1.2000000476837158
+        ],
+        "max": [
+          6.0,
+          0.05999999865889549,
+          0.0
+        ]
+      }
+    },
+    {
+      "job_id": "win_industrial_3u_production_run001",
+      "operation": "module_window",
+      "ok": true,
+      "violations": [],
+      "extent_m": {
+        "width": 12.0,
+        "depth": 0.11999999731779099,
+        "height": 1.2000000476837158
+      },
+      "params_m": {
+        "width": 12.0,
+        "height": 1.2,
+        "depth": 0.12
+      },
+      "bounds": {
+        "min": [
+          -6.0,
+          -0.05999999865889549,
+          -1.2000000476837158
+        ],
+        "max": [
+          6.0,
+          0.05999999865889549,
+          0.0
+        ]
+      }
+    },
+    {
+      "job_id": "win_office_1u_lod0_run001",
+      "operation": "module_window",
+      "ok": true,
+      "violations": [],
+      "extent_m": {
+        "width": 4.0,
+        "depth": 0.10000000149011612,
+        "height": 1.2000000476837158
+      },
+      "params_m": {
+        "width": 4.0,
+        "height": 1.2,
+        "depth": 0.1
+      },
+      "bounds": {
+        "min": [
+          -2.0,
+          -0.05000000074505806,
+          -1.2000000476837158
+        ],
+        "max": [
+          2.0,
+          0.05000000074505806,
+          0.0
+        ]
+      }
+    },
+    {
+      "job_id": "win_shop_2u_lod0_run001",
+      "operation": "module_window",
+      "ok": true,
+      "violations": [],
+      "extent_m": {
+        "width": 8.0,
+        "depth": 0.11999999731779099,
+        "height": 1.5
+      },
+      "params_m": {
+        "width": 8.0,
+        "height": 1.5,
+        "depth": 0.12
+      },
+      "bounds": {
+        "min": [
+          -4.0,
+          -0.05999999865889549,
+          -1.5
+        ],
+        "max": [
+          4.0,
+          0.05999999865889549,
+          0.0
+        ]
+      }
+    },
+    {
+      "job_id": "win_single_1u_lod0_run001",
+      "operation": "module_window",
+      "ok": true,
+      "violations": [],
+      "extent_m": {
+        "width": 4.0,
+        "depth": 0.11999999731779099,
+        "height": 1.2000000476837158
+      },
+      "params_m": {
+        "width": 4.0,
+        "height": 1.2,
+        "depth": 0.12
+      },
+      "bounds": {
+        "min": [
+          -2.0,
+          -0.05999999865889549,
+          -1.2000000476837158
+        ],
+        "max": [
+          2.0,
+          0.05999999865889549,
+          0.0
+        ]
+      }
+    },
+    {
+      "job_id": "win_skylight_1u_lod0_run001",
+      "operation": "module_window",
+      "ok": true,
+      "violations": [],
+      "extent_m": {
+        "width": 4.0,
+        "depth": 4.0,
+        "height": 0.15000000596046448
+      },
+      "params_m": {
+        "width": 4.0,
+        "height": 0.15,
+        "depth": 4.0
+      },
+      "bounds": {
+        "min": [
+          -2.0,
+          -2.0,
+          -0.15000000596046448
+        ],
+        "max": [
+          2.0,
+          2.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "job_id": "win_strip_2u_lod0_run001",
+      "operation": "module_window",
+      "ok": true,
+      "violations": [],
+      "extent_m": {
+        "width": 8.0,
+        "depth": 0.10000000149011612,
+        "height": 1.0
+      },
+      "params_m": {
+        "width": 8.0,
+        "height": 1.0,
+        "depth": 0.1
+      },
+      "bounds": {
+        "min": [
+          -4.0,
+          -0.05000000074505806,
+          -1.0
+        ],
+        "max": [
+          4.0,
+          0.05000000074505806,
+          0.0
+        ]
+      }
+    },
+    {
+      "job_id": "window_double_1u_run001",
+      "operation": "module_window",
+      "ok": true,
+      "violations": [],
+      "extent_m": {
+        "width": 4.0,
+        "depth": 0.10000000149011612,
+        "height": 1.5
+      },
+      "params_m": {
+        "width": 4.0,
+        "height": 1.5,
+        "depth": 0.1
+      },
+      "bounds": {
+        "min": [
+          -2.0,
+          -0.05000000074505806,
+          -1.5
+        ],
+        "max": [
+          2.0,
+          0.05000000074505806,
+          0.0
+        ]
+      }
+    },
+    {
+      "job_id": "window_glass_curtain_2u_run001",
+      "operation": "module_window",
+      "ok": true,
+      "violations": [],
+      "extent_m": {
+        "width": 8.0,
+        "depth": 0.07999999821186066,
+        "height": 3.0
+      },
+      "params_m": {
+        "width": 8.0,
+        "height": 3.0,
+        "depth": 0.08
+      },
+      "bounds": {
+        "min": [
+          -4.0,
+          -0.03999999910593033,
+          -3.0
+        ],
+        "max": [
+          4.0,
+          0.03999999910593033,
+          0.0
+        ]
+      }
+    },
+    {
+      "job_id": "window_industrial_1u_run001",
+      "operation": "module_window",
+      "ok": true,
+      "violations": [],
+      "extent_m": {
+        "width": 4.0,
+        "depth": 0.11999999731779099,
+        "height": 1.5
+      },
+      "params_m": {
+        "width": 4.0,
+        "height": 1.5,
+        "depth": 0.12
+      },
+      "bounds": {
+        "min": [
+          -2.0,
+          -0.05999999865889549,
+          -1.5
+        ],
+        "max": [
+          2.0,
+          0.05999999865889549,
+          0.0
+        ]
+      }
+    },
+    {
+      "job_id": "window_shop_1u_run001",
+      "operation": "module_window",
+      "ok": true,
+      "violations": [],
+      "extent_m": {
+        "width": 4.0,
+        "depth": 0.10000000149011612,
+        "height": 2.0
+      },
+      "params_m": {
+        "width": 4.0,
+        "height": 2.0,
+        "depth": 0.1
+      },
+      "bounds": {
+        "min": [
+          -2.0,
+          -0.05000000074505806,
+          -2.0
+        ],
+        "max": [
+          2.0,
+          0.05000000074505806,
+          0.0
+        ]
+      }
+    },
+    {
+      "job_id": "window_single_1u_run001",
+      "operation": "module_window",
+      "ok": true,
+      "violations": [],
+      "extent_m": {
+        "width": 4.0,
+        "depth": 0.10000000149011612,
+        "height": 1.2000000476837158
+      },
+      "params_m": {
+        "width": 4.0,
+        "height": 1.2,
+        "depth": 0.1
+      },
+      "bounds": {
+        "min": [
+          -2.0,
+          -0.05000000074505806,
+          -1.2000000476837158
+        ],
+        "max": [
+          2.0,
+          0.05000000074505806,
+          0.0
+        ]
+      }
+    },
+    {
+      "job_id": "window_warehouse_2u_run001",
+      "operation": "module_window",
+      "ok": true,
+      "violations": [],
+      "extent_m": {
+        "width": 8.0,
+        "depth": 0.15000000596046448,
+        "height": 2.5
+      },
+      "params_m": {
+        "width": 8.0,
+        "height": 2.5,
+        "depth": 0.15
+      },
+      "bounds": {
+        "min": [
+          -4.0,
+          -0.07500000298023224,
+          -2.5
+        ],
+        "max": [
+          4.0,
+          0.07500000298023224,
+          0.0
+        ]
+      }
+    }
+  ],
+  "gate": "BQ-C2-BOUNDS-001",
+  "green": true,
+  "table_ok": true,
+  "inventory_only": true,
+  "plan_ref": "src/dev/plan_building_quality_v1.md#BQ-C2",
+  "_agent_meta": {
+    "schema": "building_quality_bq_c2_live_v1",
+    "profile": "BQ_C2_BOUNDS",
+    "relative_path": "debug_runs/bq_c2_bounds_001_live.json",
+    "source_system": "building_quality_bq_c2",
+    "written_at_epoch_secs": 1783114939,
+    "ritual": "BLANG:WIT-HON BQ-C2-BOUNDS-001"
+  },
+  "witness_honesty": {
+    "status": "passed",
+    "error_count": 0,
+    "warning_count": 0,
+    "summary": "witness_honesty debug_runs/bq_c2_bounds_001_live.json: 0 error(s), 0 issue(s)"
+  }
+}

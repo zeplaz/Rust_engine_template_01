@@ -72,6 +72,11 @@ impl MassingId {
     pub fn is_l_shape(&self) -> bool {
         self.0 == "l_shape"
     }
+
+    #[must_use]
+    pub fn is_yard_complex(&self) -> bool {
+        self.0 == "yard_complex"
+    }
 }
 
 impl fmt::Display for MassingId {
@@ -230,6 +235,33 @@ pub struct RoofRule {
 }
 
 #[derive(Debug, Clone, Deserialize)]
+pub struct FacadeMassingOverride {
+    pub massing_id: MassingId,
+    #[serde(default = "default_empty_slot")]
+    pub window_slot: SlotId,
+    #[serde(default = "default_empty_slot")]
+    pub door_slot: SlotId,
+    #[serde(default = "default_empty_slot")]
+    pub wall_slot: SlotId,
+    #[serde(default)]
+    pub placement_tags: Vec<String>,
+    /// **BQ-H1** — door column rhythm: `linear_center` · `perimeter_only` · `leg_offset` · `loading_bay`.
+    #[serde(default)]
+    pub door_rhythm: String,
+}
+
+/// Massing-resolved facade slots + tags (**BQ-H1-FACADE-001**).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ResolvedFacade {
+    pub window_slot: SlotId,
+    pub door_slot: SlotId,
+    pub wall_slot: SlotId,
+    pub placement_tags: Vec<String>,
+    pub door_rhythm: String,
+    pub massing_override_applied: bool,
+}
+
+#[derive(Debug, Clone, Deserialize)]
 pub struct FacadeRule {
     #[serde(default = "default_empty_slot")]
     pub window_slot: SlotId,
@@ -239,6 +271,64 @@ pub struct FacadeRule {
     pub wall_slot: SlotId,
     #[serde(default)]
     pub placement_tags: Vec<String>,
+    #[serde(default)]
+    pub by_massing: Vec<FacadeMassingOverride>,
+}
+
+impl FacadeRule {
+    #[must_use]
+    pub fn resolve_for_massing(&self, massing_id: &MassingId) -> ResolvedFacade {
+        let ov = self
+            .by_massing
+            .iter()
+            .find(|entry| entry.massing_id == *massing_id);
+        let pick_slot = |base: &SlotId, over: Option<&SlotId>| -> SlotId {
+            if let Some(slot) = over {
+                if !slot.as_str().is_empty() {
+                    return slot.clone();
+                }
+            }
+            base.clone()
+        };
+        let mut tags = self.placement_tags.clone();
+        if let Some(entry) = ov {
+            for tag in &entry.placement_tags {
+                if !tags.iter().any(|t| t == tag) {
+                    tags.push(tag.clone());
+                }
+            }
+        }
+        let door_rhythm = ov
+            .and_then(|entry| {
+                if entry.door_rhythm.is_empty() {
+                    None
+                } else {
+                    Some(entry.door_rhythm.clone())
+                }
+            })
+            .unwrap_or_else(|| default_door_rhythm_for_massing(massing_id));
+        ResolvedFacade {
+            window_slot: pick_slot(&self.window_slot, ov.map(|o| &o.window_slot)),
+            door_slot: pick_slot(&self.door_slot, ov.map(|o| &o.door_slot)),
+            wall_slot: pick_slot(&self.wall_slot, ov.map(|o| &o.wall_slot)),
+            placement_tags: tags,
+            door_rhythm,
+            massing_override_applied: ov.is_some(),
+        }
+    }
+}
+
+#[must_use]
+pub fn default_door_rhythm_for_massing(massing_id: &MassingId) -> String {
+    if massing_id.is_long_hall() {
+        "linear_center".into()
+    } else if massing_id.is_l_shape() {
+        "leg_offset".into()
+    } else if massing_id.is_yard_complex() {
+        "perimeter_only".into()
+    } else {
+        "default".into()
+    }
 }
 
 fn default_empty_slot() -> SlotId {
@@ -383,6 +473,8 @@ pub struct GrammarGenerateResult {
     pub material_profiles: HashMap<String, String>,
     pub weathering: String,
     pub arch_dna_preset_id: Option<String>,
+    /// **BQ-H1** — massing-resolved door column rhythm for footprint_grid.
+    pub door_rhythm: String,
 }
 
 #[derive(Resource, Debug, Default)]

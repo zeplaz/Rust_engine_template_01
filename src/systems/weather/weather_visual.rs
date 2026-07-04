@@ -15,7 +15,7 @@ use crate::systems::atmosphere::pipeline::AtmospherePipelineSet;
 use crate::render::ClimateVisualAggregate;
 use crate::render::{trace_particle_routing, DebugRenderTraceConfig};
 use crate::systems::weather::ChunkWeather;
-use crate::terrain::generation::Chunk;
+use crate::terrain::generation::{Chunk, ChunkCellMatrix};
 use crate::engine::states::BaseState;
 
 /// Enable / cap weather visuals (designer can toggle from diagnostics later).
@@ -150,6 +150,8 @@ fn attach_weather_vfx_to_camera(
         return;
     };
 
+    let rtt_layers = crate::gui::simulation_map_rtt_render_layers();
+
     let overlay_mat = materials.add(ColorMaterial::from_color(Color::srgba(0.52, 0.58, 0.78, 0.08)));
     let rain_mat = materials.add(ColorMaterial::from_color(Color::srgba(0.72, 0.76, 0.95, 0.82)));
     let snow_mat = materials.add(ColorMaterial::from_color(Color::WHITE.with_alpha(0.78)));
@@ -164,7 +166,7 @@ fn attach_weather_vfx_to_camera(
     let vfx_root = commands
         .spawn((
             WeatherVfxCameraChild,
-            crate::gui::simulation_map_rtt_render_layers(),
+            rtt_layers.clone(),
             Name::new("WeatherVfxRoot"),
             Transform::default(),
             Visibility::Visible,
@@ -172,6 +174,7 @@ fn attach_weather_vfx_to_camera(
         .with_children(|parent| {
             parent.spawn((
                 WeatherPrecipOverlay,
+                rtt_layers.clone(),
                 Mesh2d(overlay_mesh),
                 MeshMaterial2d(overlay_mat.clone()),
                 Transform::from_translation(Vec3::new(0.0, 0.0, WEATHER_OVERLAY_Z)),
@@ -199,6 +202,7 @@ fn attach_weather_vfx_to_camera(
                 let x = rng.gen_range(-hw..hw);
                 let y = rng.gen_range(-hh..hh);
                 parent.spawn((
+                    rtt_layers.clone(),
                     Mesh2d(mesh),
                     MeshMaterial2d(mat),
                     Transform::from_translation(Vec3::new(x, y, WEATHER_PRECIP_Z_BASE + i as f32 * 0.01)),
@@ -254,7 +258,7 @@ fn update_overlay_from_weather(
 fn sync_precip_sample_at_camera_focus(
     climate: Res<ClimateVisualAggregate>,
     metrics: Res<ExtractedCameraMetrics>,
-    weather: Query<(&Chunk, &ChunkWeather)>,
+    weather: Query<(&Chunk, &ChunkCellMatrix, &ChunkWeather)>,
     mut sample: ResMut<WeatherPrecipVisualSample>,
 ) {
     let focus = metrics.translation;
@@ -262,9 +266,9 @@ fn sync_precip_sample_at_camera_focus(
     let mut local_snow = 0.0_f32;
     let mut local_fog = 0.0_f32;
     let mut local_n = 0u32;
-    for (chunk, wx) in &weather {
-        let center = Vec2::new(chunk.coord.x as f32 + 0.5, chunk.coord.y as f32 + 0.5);
-        if focus.distance(center) > 2.5 {
+    for (chunk, matrix, wx) in &weather {
+        let center = crate::terrain::generation::chunk_world_center(chunk.coord, matrix.size);
+        if focus.distance(center) > matrix.size.x.max(matrix.size.y) as f32 * 2.5 {
             continue;
         }
         local_n += 1;

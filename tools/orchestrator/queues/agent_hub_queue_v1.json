@@ -1764,7 +1764,7 @@
       },
       {
         "id": "BUILD-READ-DESIGN-001",
-        "status": "blocked",
+        "status": "done",
         "owner": "designer",
         "queue": "coder_master_drain_queue.json",
         "program": "CODER-MASTER-DRAIN-001",
@@ -1773,7 +1773,7 @@
       },
       {
         "id": "BUILD-READ-DESIGN-001",
-        "status": "blocked",
+        "status": "done",
         "owner": "designer",
         "queue": "post_drain_phase5_queue.json",
         "program": "POST-DRAIN-PHASE-5-001",
@@ -1782,7 +1782,7 @@
       },
       {
         "id": "BUILD-READ-DESIGN-002",
-        "status": "blocked",
+        "status": "done",
         "owner": "designer",
         "queue": "post_drain_phase5_queue.json",
         "program": "POST-DRAIN-PHASE-5-001",

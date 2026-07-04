@@ -28,6 +28,8 @@ pub struct AtmosphereDiagnostics {
     pub sample_mean_smoke: f32,
     pub partial_field_writes: u64,
     pub full_field_reconciles: u64,
+    /// MIG-A6 — true when last fill used [`Query::contiguous_iter`].
+    pub last_fill_contiguous: bool,
     pub stale_partial_region_skips: u64,
     pub partial_write_metrics: AtmospherePartialWriteMetrics,
 }

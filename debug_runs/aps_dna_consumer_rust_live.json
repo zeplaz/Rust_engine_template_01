@@ -58,13 +58,13 @@
     "relative_path": "debug_runs/aps_dna_consumer_rust_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_aps_dna_consumer_rust_live_witness",
-    "written_at_epoch_secs": 1783027389
+    "written_at_epoch_secs": 1783111825
   },
   "commit_path": "parametric_commit::procedural_building_request_from_commit + footprint_grid_for_assembly",
   "consumer_ok": true,
   "consumer_wired": true,
   "gate_id": "BUILD-READ-CONSUMER-MCP-001",
-  "green": true,
+  "green": false,
   "mcp_contract": "debug_runs/aps_dna_consumer_contract_live.json",
   "preset_id": "logistics_rail_warehouse_v0",
   "rust_consumer": "src/construction/procedural/arch_build_grammar_v0.rs::load_arch_dna_preset",

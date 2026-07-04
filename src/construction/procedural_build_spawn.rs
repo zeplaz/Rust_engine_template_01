@@ -110,6 +110,7 @@ pub fn spawn_procedural_build_on_site_operational(
                     parent.spawn((
                         WorldAssetRoot(scene.clone()),
                         local,
+                        crate::render::mig_a_static_bulk_bundle(),
                         ProceduralBuildModuleChild {
                             module_id: inst.module_id.clone(),
                         },
@@ -117,6 +118,7 @@ pub fn spawn_procedural_build_on_site_operational(
                 } else {
                     parent.spawn((
                         local,
+                        crate::render::mig_a_static_bulk_bundle(),
                         ProceduralBuildModuleChild {
                             module_id: inst.module_id.clone(),
                         },

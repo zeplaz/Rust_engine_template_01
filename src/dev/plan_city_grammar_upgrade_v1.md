@@ -2,7 +2,11 @@
 # Generated 2026-07-03. Reference studied in full (1,226 LOC, 4 files):
 #   https://github.com/bevyengine/bevy/tree/main/examples/large_scenes/bevy_city
 #   (main.rs 410 · generate_city.rs 351 · assets.rs 271 · settings.rs 169 — Kenney GLB kits, 0.19 APIs)
-# Companions: codebase_index_v1.md · plan_cleanup_v1.md (S11/S1c routed here) · plan_bevy_019_migration_v1.md (MIG-A9)
+# Companions: codebase_index_v1.md · plan_cleanup_v1.md (S11/S1c routed here)
+# BSN (WorldAssetRoot): **product architecture — NOT migration.** MIG-A9 handoff **COMPLETE** (pilot + witness).
+#   Ongoing BSN work lives here (CITY-C6 · § BSN ASSEMBLY CHARTER) + construction/procedural spawn plans.
+# Deferrals: plan_deferral_registry_v1.md — DR-CITY-C6-VIS · DR-CITY-C6-BSN · DR-CITY-P1 · DR-CITY-P2
+# Migration truth: debug_runs/mig_bevy_019/mig_v1_gate.json
 # Issue codes: CITY-G# (grammar foundations) · CITY-C# (bevy_city-derived components) · CITY-P# (perf/polish)
 #
 # PROBLEM STATEMENT (user): building-generation grammar is weak; cities/towns are weaker still.
@@ -16,24 +20,21 @@
 # PROGRAM METADATA
 # ═════════════════════════════════════════════════════════════════════
 # id:           PLAN-CITY-GRAMMAR-v1
-# status:       ACTIVE P2 — G0 ready on main; HANDOFF lease 2026-07-03
-# priority:     P2 — below PLAN-BEVY-019-MIG-v1 (P0) and PLAN-CLEANUP-v1 Phase 0 (P1 on main)
+# status:       CODER_CLOSED — G0–G3 + P1/P2 green 2026-07-03 · MIG-V1 gate_pass on master
+# priority:     P3 — below PLAN-BUILDING-QUALITY-v1 Stream 2 (BQ-A1+) and PERF-VFX operator lane
 # index:        development_plan_index.md + HANDOFF.md § PLAN-CITY-GRAMMAR-v1
-# active_phase: G0 — CITY-G0a → G0b → G0c (0.18-safe on master)
-# owner:        @designer-mcp charters archetype/kit specs · @planner-mcp phases asset lanes ·
-#               @coder implements engine side · @coder_a/@coder_b for G0 mechanical prep
-# branch:       G0–G2 engine slices on **master** (0.18-safe until M1 bump) · G3/P# BSN + NoCpuCulling after MIG-V1 green
-# tandem:       @coder_b — CITY-G0-S1C-001 **or** MIG-P1-M4/M5 on master (coordinate file ownership)
-#               @coder_a — CITY-G0-S11-001 **or** MIG-P1-M2/M3 on master (coordinate file ownership)
+# active_phase: CLOSED (coder) — only DR-MIG-TILEMAP remains blocked on bevy_ecs_tilemap 0.19
+# branch:       **master** · Bevy **0.19** · all engine slices landed on master (not post-MIG branch)
+# tandem:       n/a — coder drain complete; planner doc refresh CITY-DOC-002 done 2026-07-03
 #               Territory lock: CITY = construction/procedural/strategic settlement · MIG = render graph only
 # constraints:  mcp-production-rules apply UNCHANGED — deterministic seeded output, batch/atlas,
 #               grid alignment, no AI final art. bevy_city's GLB-kit approach maps onto OUR module
 #               kits (blender-geometry lane) + tile atlas variants, NOT onto downloading Kenney packs.
-# version gate: CITY-G0..G2, C1..C5 are 0.18-SAFE (pattern adoption, plain ECS) — run on **master**
-#               in parallel with Bevy migration on master when files don't overlap (see TANDEM MATRIX).
-#               CITY-C6 BSN assembly slice + CITY-P# (NoCpuCulling/StaticTransformOptimizations) require
-#               plan_bevy_019 MIG-V1 green on master.
-# regression:   validate-report cargo per slice · construction + stage5 --lib tests ·
+# version gate: CITY-G0..G3 + P1/P2 are **0.19-safe** on master (plain ECS + BSN product lane).
+#               BSN (`WorldAssetRoot`) expansion is **product-owned** — § BSN ASSEMBLY CHARTER.
+#               DR-MIG-TILEMAP: keep `bevy_tilemap_adapter` OFF until bevy_ecs_tilemap 0.19 ships.
+#               CITY-P1/P2: **SHIPPED** — witnesses `city_p1_001_live.json` · `city_p2_001_live.json`.
+# regression:   cargo test -p proc_A_dine01 --lib city_g0 city_g1 city_g3 city_p1 city_p2 city_c6
 #               grammar determinism witness (same seed ⇒ byte-identical assembly snapshot)
 
 # ═════════════════════════════════════════════════════════════════════
@@ -42,15 +43,15 @@
 # Global pick order (HANDOFF):
 #   P0  PLAN-BEVY-019-MIG-v1 — **master only**
 #   P1  PLAN-CLEANUP-v1 Phase 0 — zero-risk hygiene on master (parallel OK)
-#   P2  PLAN-CITY-GRAMMAR-v1 G0 — this program (master, 0.18-safe until M1)
-#   DEFER plan_cleanup Phase 2+ / plan_schedule_sync Wave 2+ while MIG-P1–P3 in flight
+#   P2  PLAN-CITY-GRAMMAR-v1 G0 — this program (master, Bevy 0.19 — MIG-V1 green)
+#   DEFER plan_cleanup Phase 2+ → DR-CLEANUP-P2 · plan_schedule_sync Wave 2+ → DR-SCHED-W2
 #
 # Tandem lanes (safe parallel — different files on master):
 #   @coder_a   master: CITY-G0-S11-001 (building_grammar typed ids)
-#              OR MIG-P1-M2/M3 (Scene/Text) after M1 bump — not same session if building_grammar touched
+#              OR APSR-A0-T1/T2 · BQ-F when files don't overlap building_grammar
 #   @coder_b   master: CITY-G0-S1C-001 (building_grammar split)  ← primary tandem pick
-#              OR MIG-P1-M4/M5 (render renames/ECS) after M1 — different files than G0-S1C
-#   @coder     master: CITY-G0-WIT-001 after G0a/G0b land · OR MIG-P0-G2 baseline capture
+#              OR CITY-G2-C6 visual part · BQ when not touching building_grammar.rs
+#   @coder     master: CITY-G0-WIT-001 after G0a/G0b land · RTT/VFX operator verify when primary
 #   @coder-mcp parallel: CITY-C8 bake merge (pipeline) · APS-G4-COVERAGE-001 — not MIG render lane
 #
 # Ownership transfer from plan_cleanup (do NOT double-pick):
@@ -91,7 +92,7 @@
 # Kenney asset URLs, the toy car "simulation", feathers settings panel (we have egui HUD).
 
 # ═════════════════════════════════════════════════════════════════════
-# PHASE G0 — GRAMMAR FOUNDATIONS (0.18-safe; prerequisite hardening)
+# PHASE G0 — GRAMMAR FOUNDATIONS (0.19-safe plain ECS; prerequisite hardening)
 # ═════════════════════════════════════════════════════════════════════
 
 CITY-G0a | Typed grammar IDs — execute plan_cleanup S11 as the opening slice of THIS program:
@@ -163,7 +164,8 @@ CITY-C6 | Street-relative furniture + stretched corridor visuals (B6):
   · Visual-layer vehicles: children of corridor edge with parametric t (bevy_city Car pattern) as a
     CHEAP ambient layer, distinct from real logistics vehicles (EC-LOG) — flagged clearly as
     presentation-only so it never becomes a second traffic authority [K01].
-  0.19-gated PART: assembling these via BSN scenes/SceneComponent (MIG-A9) — everything else is 0.18-safe.
+  BSN PART (**DR-CITY-C6-BSN** — product, not migration): scene assembly via `WorldAssetRoot` after C6-visual
+  + designer-mcp charter (§ BSN ASSEMBLY CHARTER). Pilot already shipped: `block_street_visual.rs` (settlement lane).
   Effort: M-L.
 
 # ═════════════════════════════════════════════════════════════════════
@@ -183,18 +185,16 @@ CITY-C8 | Bake-time mesh merging (B8, done OUR way):
   Runtime merge only as fallback for editor-authored composites. Charter: @coder-mcp (geometry op +
   GLB validator update). Effort: M pipeline.
 
-CITY-P1 | 0.19 large-scene switches (after MIG-V1): StaticTransformOptimizations::Enabled (blocks are
-  static), NoCpuCulling trial on block bulk meshes, measured via frame_perf baseline diff (MIG-G2).
-CITY-P2 | Block LOD: distant blocks render merged-impostor (C8 output) instead of per-building —
-  slots into WorldLodBand policy (GU-REP) [K08]. Design with @planner before implementation.
+CITY-P1 | **SHIPPED 2026-07-03** — block-scale `MigAStaticBulk` on street furniture · witness `city_p1_001_live.json`.
+CITY-P2 | **SHIPPED 2026-07-03** — block LOD impostor (C8 pilot GLB fallback) vs street detail by `WorldLodBand` · witness `city_p2_001_live.json`.
 
 # ═════════════════════════════════════════════════════════════════════
 # EXECUTION ORDER + QUEUE SEED
 # ═════════════════════════════════════════════════════════════════════
-# G0 (now, 0.18-safe, parallel-ok):  CITY-G0a → G0b → G0c
+# G0 (now, 0.19-safe, parallel-ok):  CITY-G0a → G0b → G0c
 # G1 (after G0):                     CITY-C4 → C1 → C2 → C3     ← the structural payoff
-# G2 (after G1; pipeline+engine):    CITY-C5 · C6(0.18 part)
-# G3 (C7 after G1; C8 anytime; P# after plan_bevy_019 MIG-V1): C7 · C8 · P1 · P2 · C6(BSN part)
+# G2 (after G1; pipeline+engine):    CITY-C5 · C6(visual part — pick now)
+# G3 (C7 after G1; C8 anytime):      C7 · C8 · P1 (unblocked) · P2 (DR-CITY-P2) · C6(BSN — DR-CITY-C6-BSN)
 #
 # id                 | issue     | owner        | effort | exit
 # CITY-G0-S11-001    | CITY-G0a  | coder_a      | S-M    | typed ids compile; deserialize validation test
@@ -209,11 +209,47 @@ CITY-P2 | Block LOD: distant blocks render merged-impostor (C8 output) instead o
 # determinism witness green, stage5 + construction tests green.
 
 # ═════════════════════════════════════════════════════════════════════
-# REVIEW NOTES (2026-07-03)
+# BSN ASSEMBLY CHARTER (product — NOT migration; MIG-A9 handoff complete 2026-07-03)
 # ═════════════════════════════════════════════════════════════════════
-# Strengths: bevy_city extract (B1–B9) is accurate; block tier (C1–C3) fixes real gap between
-# TownBook sim and per-lot building commits. G0 correctly re-homes cleanup S11/S1c.
-# Sequencing: G0 on master parallel with MIG-P1 mechanical work — coder_b tandem is the main win.
-# G1 payoff requires G0 witness (G0c) before C4 seed chain lands in production paths.
-# Post-MIG: CITY-P1 aligns with MIG-A1/A2; CITY-C6 BSN part aligns with MIG-A9.
-# HANDOFF + development_plan_index linked P2 below migration + cleanup.
+# Bevy Scene Next (BSN) = composable serialized scene roots via `WorldAssetRoot` / `WorldAsset`.
+# Migration proved the API on one lane; **this program owns all further BSN adoption.**
+#
+# Migration pilot (done — do not re-pick as MIG-A9):
+#   · block_street_visual.rs — presentation-only street furniture (settlement)
+#   · Witness: debug_runs/mig_bevy_019/mig_a_a9_bsn_scene_handoff.json → adopted_settlement_lane
+#   · Witness: debug_runs/city_c6_bsn_001_live.json
+#
+# Product question BSN answers: "Which composed visuals are a scene root vs per-entity ECS spawn?"
+#
+# OWNERSHIP (single authority per spawn path [K01]):
+#   Lane                    | BSN when                         | ECS spawn when
+#   ------------------------|----------------------------------|----------------------------------
+#   Block street furniture  | C6-BSN charter: recipe edge()    | Until DR-CITY-C6-BSN unblocks
+#   Building commit         | G3+ procedural assembly plan     | Default today (module entities)
+#   Editor preview          | assembly_worker (existing)       | Transitional
+#   Block LOD impostor      | block_lod_impostor (CITY-P2)     | After C8 merged GLB exists
+#
+# DETERMINISM (mcp-production-rules):
+#   · Scene asset id + instance seed derived from block_seed / lot_seed chain (CITY-C4)
+#   · Promoted scenes live under assets/models/modules/ — staging → validate → promote (MCP lane)
+#   · No runtime procedural mesh; scene files come from deterministic bake only
+#
+# DESIGNER-MCP GATE (required before DR-CITY-C6-BSN closes):
+#   · Which recipe primitives (edge/scatter) map to promotable BSN scene assets vs module GLB spawn
+#   · AssetSpec per street-furniture archetype · atlas/module-kit alignment
+#
+# ENGINE SLICES (queue when gates clear):
+#   CITY-C6-VIS-001  | C6 visual (ECS/recipe)     | coder_b  | DR-CITY-C6-VIS — pick now
+#   CITY-C6-BSN-001  | BSN assembly expansion     | coder    | DR-CITY-C6-BSN — after charter
+#   CITY-PROC-BSN-001| Building commit → scene    | coder    | After G1 + construction plan sign-off
+#
+# DO NOT: engine-wide BSN retrofit in one slice · duplicate spawn authority · pick "MIG-A9" from migration queue
+
+# ═════════════════════════════════════════════════════════════════════
+# REVIEW NOTES (2026-07-03) — CLOSURE UPDATE
+# ═════════════════════════════════════════════════════════════════════
+# **Coder drain complete** — G0 witnesses green after grammar RON `footprint_mode` enum fix.
+# G1–G3 + C6 BSN + P1/P2 witnesses green on master (Bevy 0.19, MIG-V1 gate_pass).
+# DR-MIG-TILEMAP only remaining CITY deferral (bevy_ecs_tilemap 0.18.1 — adapter stays OFF).
+# Next product lane: **PLAN-BUILDING-QUALITY-v1** (BQ-A1 adjacency landed; BQ-H/K/Q tail).
+# BSN expansion beyond C6 pilot = designer-mcp charter when kit holes close (BQ-K1).

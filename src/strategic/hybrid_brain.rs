@@ -370,10 +370,14 @@ pub fn hybrid_agent_intent_contribution_system(
 /// Runbook §2.3 emotional drift — coarse proxies until regional threat is wired per-agent.
 pub fn hybrid_emotion_drift_system(
     time: Res<Time>,
+    ctrl: Res<crate::systems::sim_control::SimControlState>,
     world: Res<WorldFields>,
     mut brains: Query<&mut HybridBrainSample>,
 ) {
-    let dt = time.delta_secs().clamp(0.0, 0.25);
+    let dt = time.delta_secs().clamp(0.0, 0.25) * ctrl.dt_scale();
+    if dt <= 0.0 {
+        return;
+    }
     let k = 0.45_f32;
     for mut brain in &mut brains {
         let paranoia = brain.traits.paranoia;
@@ -430,6 +434,51 @@ pub fn hybrid_resolve_and_feedback_system(
         }
     }
     scratch.frame_counter = scratch.frame_counter.wrapping_add(1);
+}
+
+/// **SCH-W1-T1-001** lib witness — emotions frozen while sim paused.
+#[must_use]
+pub fn sch_w1_t1_hybrid_pause_witness_green() -> bool {
+    use crate::systems::sim_control::SimControlState;
+    use bevy::time::TimeUpdateStrategy;
+    use std::time::Duration;
+
+    let mut app = App::new();
+    app.add_plugins(MinimalPlugins)
+        .init_resource::<SimControlState>()
+        .init_resource::<WorldFields>()
+        .insert_resource(TimeUpdateStrategy::ManualDuration(Duration::from_secs_f32(0.1)))
+        .add_systems(Update, hybrid_emotion_drift_system);
+
+    app.world_mut().resource_mut::<WorldFields>().war_tension = 1.0;
+    app.world_mut().resource_mut::<WorldFields>().public_sentiment = 0.0;
+    app.world_mut().spawn(HybridBrainSample {
+        traits: HybridAgentTraits {
+            paranoia: 1.0,
+            ..HybridAgentTraits::default()
+        },
+        emotions: HybridAgentEmotions {
+            fear: 0.1,
+            anger: 0.1,
+            confidence: 0.5,
+            fatigue: 0.1,
+        },
+    });
+
+    {
+        let mut ctrl = app.world_mut().resource_mut::<SimControlState>();
+        ctrl.paused = true;
+    }
+
+    for _ in 0..8 {
+        app.update();
+    }
+
+    let fear = {
+        let mut q = app.world_mut().query::<&HybridBrainSample>();
+        q.iter(app.world()).next().expect("brain").emotions.fear
+    };
+    (fear - 0.1).abs() < 1e-5
 }
 
 #[cfg(test)]

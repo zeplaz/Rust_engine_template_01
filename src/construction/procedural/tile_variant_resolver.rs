@@ -205,6 +205,34 @@ fn clamp_to_available(
     fallback_key(catalog, available)
 }
 
+/// **CITY-G2-C5-001** — palette-suffixed tile variant key (`{base}__pal_{variation_id}`).
+#[must_use]
+pub fn palette_atlas_variant_key(base_variant_key: &str, variation_id: &str) -> String {
+    format!("{base_variant_key}__pal_{variation_id}")
+}
+
+/// Resolve sim variant, then apply palette suffix when `variation_id` is set.
+#[must_use]
+pub fn resolve_tile_variant_with_palette(
+    catalog: &VariantCatalog,
+    ctx: TileVariantContext,
+    available: &HashMap<String, [f32; 4]>,
+    palette_variation_id: Option<&str>,
+) -> ResolvedTileVariant {
+    let base = resolve_tile_variant(catalog, ctx, available);
+    let Some(variation_id) = palette_variation_id.filter(|s| !s.is_empty()) else {
+        return base;
+    };
+    let keyed = palette_atlas_variant_key(&base.variant_key, variation_id);
+    if available.contains_key(&keyed) {
+        return ResolvedTileVariant {
+            variant_key: keyed,
+            animation_frame: base.animation_frame,
+        };
+    }
+    base
+}
+
 /// Deterministic sim → variant_key (see plan § Sim → variant resolver).
 #[must_use]
 pub fn resolve_tile_variant(
@@ -596,6 +624,12 @@ mod tests {
         let catalog = load_variant_catalog().expect("catalog");
         assert_eq!(catalog.default_fallback_key, "clean_day");
         assert!(catalog.fire.frame_count >= 8);
+    }
+
+    #[test]
+    fn palette_atlas_variant_key_suffix() {
+        let key = super::palette_atlas_variant_key("clean_day", "rh_brownstone");
+        assert_eq!(key, "clean_day__pal_rh_brownstone");
     }
 
     #[test]

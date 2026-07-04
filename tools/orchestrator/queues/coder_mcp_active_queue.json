@@ -1,0 +1,307 @@
+{
+  "_meta": {
+    "version": "1.0.0",
+    "owner": "@coder-mcp",
+    "updated": "2026-07-03",
+    "next_pick": "APSR-T3 spec consolidation (@designer) or BQ-H1 facade lane",
+    "rule": "P2 parallel-safe with MIG · pipeline-only · do NOT re-pick closed APS presence/G4 rows",
+    "regression": "cd tools/mcp/python && python -m pytest tests -q -k \"bq or aps or city\"",
+    "plans": [
+      "src/dev/plan_building_quality_v1.md",
+      "src/dev/plan_aps_refactor_v1.md",
+      "src/dev/plan_city_grammar_upgrade_v1.md",
+      "tools/orchestrator/queues/city_grammar_queue.json"
+    ],
+    "handoff": "tools/orchestrator/queues/HANDOFF.md",
+    "agent": ".cursor/agents/coder-mcp.md"
+  },
+  "done": [
+    {
+      "id": "APS-GUARD-BRIEF-PARITY-001",
+      "program": "APS-PRESENCE",
+      "closed": "2026-07-03",
+      "witness": "debug_runs/aps_guard_brief_parity_live.json"
+    },
+    {
+      "id": "APS-GRAM-TIER-GATES-LIVE-001",
+      "program": "APS-PRESENCE",
+      "closed": "2026-07-03",
+      "witness": "debug_runs/aps_grammar_tier_gates_live.json"
+    },
+    {
+      "id": "DES-APS-SESSION-DUMP-001",
+      "program": "APS-PRESENCE",
+      "closed": "2026-07-03",
+      "witness": "debug_runs/aps_session_presence_live.json"
+    },
+    {
+      "id": "APS-G4-COVERAGE-001",
+      "program": "APS-GRAMMAR-EVOLUTION",
+      "closed": "2026-07-03",
+      "witness": "debug_runs/aps_g4_coverage_live.json"
+    },
+    {
+      "id": "BQ-F1-BAKE-001",
+      "program": "PLAN-BUILDING-QUALITY-v1",
+      "issue": "BQ-F1",
+      "closed": "2026-07-03",
+      "witness": "debug_runs/building_quality_bq_f1_live.json",
+      "note": "28/28 promoted; 2 brick lod0 SilhouetteInsufficient — see tail BQ-F1-TAIL-001"
+    },
+    {
+      "id": "BQ-C1-CONTRACT-001",
+      "program": "PLAN-BUILDING-QUALITY-v1",
+      "issue": "BQ-C1",
+      "closed": "2026-07-03",
+      "witness": "debug_runs/bq_c1_contract_001_live.json",
+      "deliverables": [
+        "tools/mcp/schemas/module_contract_v1.json",
+        "src/construction/procedural/module_contract.rs",
+        "tools/mcp/python/rust_engine_mcp/module_contract.py"
+      ]
+    },
+    {
+      "id": "CMCP-CITY-G1-C4-001",
+      "program": "PLAN-CITY-GRAMMAR-v1",
+      "issue": "CITY-C4",
+      "closed": "2026-07-03",
+      "witness": "debug_runs/city_g1_c4_001_live.json"
+    },
+    {
+      "id": "CITY-G2-C5-001",
+      "program": "PLAN-CITY-GRAMMAR-v1",
+      "issue": "CITY-C5",
+      "closed": "2026-07-03",
+      "witness": "debug_runs/city_g2_c5_mcp_live.json",
+      "co_owner": "coder"
+    },
+    {
+      "id": "CMCP-GRAM-SWEEP-PROCESS-001",
+      "program": "MULTI-PARALLEL-T2",
+      "closed": "2026-06-21",
+      "witness": "debug_runs/grammar_eval_sweep_live.json"
+    },
+    {
+      "id": "CMCP-GRAMMAR-FACILITY-BRIEF-001",
+      "program": "MULTI-PARALLEL-T2",
+      "closed": "2026-06-21",
+      "witness": "debug_runs/grammar_facility_brief_live.json"
+    },
+    {
+      "id": "CMCP-SITE-ZONE-VALIDATE-001",
+      "program": "MULTI-PARALLEL-T2",
+      "closed": "2026-06-21",
+      "witness": "debug_runs/site_zone_validate_live.json"
+    },
+    {
+      "id": "MCP-P2-QUEUE-PHASE4-001",
+      "program": "MCP-PRODUCTIVITY-P2",
+      "closed": "2026-06-21",
+      "witness": "debug_runs/agent_ops/mcp_phase4_queue_live.json"
+    },
+    {
+      "id": "MCP-P2-VALID-CONSTRUCTION-001",
+      "program": "MCP-PRODUCTIVITY-P2",
+      "closed": "2026-06-21",
+      "witness": "debug_runs/agent_ops/mcp_valid_construction_live.json"
+    },
+    {
+      "id": "BQ-C2-BOUNDS-001",
+      "program": "PLAN-BUILDING-QUALITY-v1",
+      "closed": "2026-07-03",
+      "witness": "debug_runs/bq_c2_bounds_001_live.json"
+    },
+    {
+      "id": "BQ-C3-SEAM-001",
+      "program": "PLAN-BUILDING-QUALITY-v1",
+      "closed": "2026-07-03",
+      "witness": "debug_runs/bq_c3_seam_001_live.json"
+    },
+    {
+      "id": "CITY-C8-PIPELINE-001",
+      "program": "PLAN-CITY-GRAMMAR-v1",
+      "closed": "2026-07-03",
+      "witness": "debug_runs/city_c8_pipeline_001_live.json"
+    },
+    {
+      "id": "BQ-F1-TAIL-001",
+      "program": "PLAN-BUILDING-QUALITY-v1",
+      "closed": "2026-07-03",
+      "witness": "debug_runs/bq_f1_tail_001_live.json"
+    },
+    {
+      "id": "VEG-F02-BURN-ATLAS-001",
+      "program": "VEGETATION",
+      "closed": "2026-07-03",
+      "witness": "debug_runs/veg_f02_burn_atlas_live.json"
+    },
+    {
+      "id": "APS-EVO-E4-ATLAS-EXPAND-001",
+      "program": "APS-GRAMMAR-EVOLUTION",
+      "closed": "2026-07-03",
+      "witness": "debug_runs/art_pipeline/tile_landscape_expanded_live.json"
+    },
+    {
+      "id": "APSR-A1-S1-001",
+      "program": "PLAN-APS-REFACTOR-v1",
+      "issue": "APSR-S1",
+      "closed": "2026-07-03",
+      "witness": "debug_runs/apsr_a1_s1_001_live.json",
+      "deliverables": [
+        "tools/mcp/art_pipeline_suite/aps_event_bus.py",
+        "tools/mcp/art_pipeline_suite/aps_state_writer.py",
+        "tools/mcp/art_pipeline_suite/aps_services/atlas_service.py"
+      ],
+      "note": "43 live mutation sites; atlas_folder + tile_batch_path AtlasService-only"
+    },
+    {
+      "id": "APSR-A1-S2-ASM-001",
+      "program": "PLAN-APS-REFACTOR-v1",
+      "issue": "APSR-S2",
+      "closed": "2026-07-03",
+      "witness": "debug_runs/apsr_a1_s2_001_live.json",
+      "deliverables": [
+        "tools/mcp/art_pipeline_suite/aps_services/assembly_service.py"
+      ],
+      "note": "33 live mutation sites; assembly_* AssemblyService-only; stale-panel xfail → pass"
+    },
+    {
+      "id": "APSR-A1-S3-001",
+      "program": "PLAN-APS-REFACTOR-v1",
+      "issue": "APSR-S3",
+      "closed": "2026-07-03",
+      "witness": "debug_runs/apsr_a1_s3_001_live.json",
+      "deliverables": [
+        "tools/mcp/art_pipeline_suite/aps_shell_wiring.py"
+      ],
+      "note": "app.py 541 LOC; LaneChanged + SendToAssembly events; zero shell sync_from_state"
+    },
+    {
+      "id": "APSR-A2-P1-001",
+      "program": "PLAN-APS-REFACTOR-v1",
+      "issue": "APSR-P1",
+      "closed": "2026-07-03",
+      "witness": "debug_runs/apsr_a2_p1_001_live.json",
+      "deliverables": [
+        "tools/mcp/art_pipeline_suite/assembly_panel.py",
+        "tools/mcp/art_pipeline_suite/assembly_grammar_section.py",
+        "tools/mcp/art_pipeline_suite/assembly_validation_section.py",
+        "tools/mcp/art_pipeline_suite/assembly_preview_section.py",
+        "tools/mcp/art_pipeline_suite/assembly_metadata_section.py",
+        "tools/mcp/art_pipeline_suite/assembly_footprint_section.py",
+        "tools/mcp/art_pipeline_suite/assembly_panel_layout.py"
+      ],
+      "note": "assembly_panel 68 LOC; logic in 6 section mixins + layout"
+    },
+    {
+      "id": "APSR-A2-P2-001",
+      "program": "PLAN-APS-REFACTOR-v1",
+      "issue": "APSR-P2",
+      "closed": "2026-07-03",
+      "witness": "debug_runs/apsr_a2_p2_001_live.json",
+      "deliverables": [
+        "tools/mcp/art_pipeline_suite/preview_state_display.py",
+        "tools/mcp/art_pipeline_suite/aps_preview_state.py"
+      ],
+      "note": "assembly/atlas/variants preview panels share preview_state_display"
+    },
+    {
+      "id": "APSR-A2-P3-001",
+      "program": "PLAN-APS-REFACTOR-v1",
+      "issue": "APSR-P3",
+      "closed": "2026-07-03",
+      "witness": "debug_runs/apsr_a2_p3_001_live.json",
+      "deliverables": [
+        "tools/mcp/art_pipeline_suite/material_browser.py"
+      ],
+      "note": "mount_material_library factory; assign + studio presets; no direct MaterialLibraryWidget in panels"
+    },
+    {
+      "id": "APSR-A3-D1-001",
+      "program": "PLAN-APS-REFACTOR-v1",
+      "issue": "APSR-D1",
+      "closed": "2026-07-03",
+      "witness": "debug_runs/apsr_a3_d1_001_live.json",
+      "note": "token lint zero violations; apsr_design_token_lint.py"
+    },
+    {
+      "id": "APSR-A3-D2-001",
+      "program": "PLAN-APS-REFACTOR-v1",
+      "issue": "APSR-D2",
+      "closed": "2026-07-03",
+      "witness": "debug_runs/apsr_a3_d2_001_live.json",
+      "note": "103 bind_aps_tooltip calls; gap_count 0"
+    },
+    {
+      "id": "APSR-A3-D3-001",
+      "program": "PLAN-APS-REFACTOR-v1",
+      "issue": "APSR-D3",
+      "closed": "2026-07-03",
+      "witness": "debug_runs/apsr_a3_d3_001_live.json",
+      "note": "inline-feedback adoption sweep; status atom everywhere"
+    },
+    {
+      "id": "APSR-A3-D4-001",
+      "program": "PLAN-APS-REFACTOR-v1",
+      "issue": "APSR-D4",
+      "closed": "2026-07-03",
+      "witness": "debug_runs/apsr_a3_d4_001_live.json",
+      "note": "VALIDATION_BANNER_MIN_PX smoothness charter wiring"
+    },
+    {
+      "id": "APSR-A4-Q1-001",
+      "program": "PLAN-APS-REFACTOR-v1",
+      "issue": "APSR-Q1",
+      "closed": "2026-07-03",
+      "witness": "debug_runs/apsr_a4_q1_001_live.json",
+      "note": "Assembly QC strip; approve blocked on red BQ witness"
+    },
+    {
+      "id": "APSR-A4-Q2-001",
+      "program": "PLAN-APS-REFACTOR-v1",
+      "issue": "APSR-Q2",
+      "closed": "2026-07-03",
+      "witness": "debug_runs/apsr_a4_q2_001_live.json",
+      "note": "Catalog kit-coverage strip; 7/7 style packs audited"
+    },
+    {
+      "id": "APSR-A4-Q3-001",
+      "program": "PLAN-APS-REFACTOR-v1",
+      "issue": "APSR-Q3",
+      "closed": "2026-07-03",
+      "witness": "debug_runs/apsr_a4_q3_001_live.json",
+      "note": "Golden-seed review panel; rubric rows JSON"
+    }
+  ],
+  "active": [
+    {
+      "seq": 13,
+      "id": "BQ-Q2-SCREEN-001",
+      "status": "blocked",
+      "priority": "P4",
+      "program": "PLAN-BUILDING-QUALITY-v1",
+      "issue": "BQ-Q2",
+      "goal": "bevy_preview_worker N seeds/style; rubric row",
+      "depends_on": ["BQ-A2-GATE-001"],
+      "effort": "M"
+    }
+  ],
+  "parallel_lanes": [
+    {
+      "id": "BUILD-READ-VISUAL-002",
+      "status": "blocked",
+      "priority": "P2",
+      "program": "BUILD-READ",
+      "goal": "Keyframe batch ship",
+      "depends_on": ["BUILD-READ-SHAPE-001"]
+    }
+  ],
+  "do_not_pick": [
+    "APS-GUARD-BRIEF-PARITY-001",
+    "APS-GRAM-TIER-GATES-LIVE-001",
+    "DES-APS-SESSION-DUMP-001",
+    "APS-G4-COVERAGE-001",
+    "OVR-P1-TOKENS-001 through OVR-P56-ONBOARD-001 (APS-UIUX closed — hub stale blocked rows)"
+  ],
+  "pick_order": []
+}

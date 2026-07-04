@@ -33,6 +33,7 @@ pub use pass::{
     apply_minimap_gpu_resize_request, bootstrap_minimap_gpu_render_target,
     commit_minimap_render_target_bind_system,
     minimap_gpu_compositor_default_on_unset, minimap_gpu_compositor_env_enabled,
+    minimap_terrain_source_label,
     perf_vis_p1b_gpu_default_001_green, queue_minimap_render_target_resize,
     run_minimap_compositor_pass, sync_minimap_presentation_source,
     minimap_gpu_compositor_runtime_enabled, MinimapCompositePath,
@@ -58,6 +59,19 @@ mod tests {
     };
     use crate::render::{MinimapRenderTargetRegistry, TileWorldFallbackState};
     use bevy::prelude::*;
+
+    #[test]
+    fn minimap_terrain_source_label_matches_gpu_authority() {
+        use crate::render::TerrainRenderAuthority;
+        assert_eq!(
+            super::minimap_terrain_source_label(TerrainRenderAuthority::GpuInstancedAtlas),
+            "gpu_atlas"
+        );
+        assert_eq!(
+            super::minimap_terrain_source_label(TerrainRenderAuthority::CpuFallback),
+            "cpu_fallback"
+        );
+    }
 
     #[test]
     fn minimap_and_preview_handles_differ_when_both_allocated() {

@@ -28,9 +28,18 @@ from .aps_inline_feedback import set_inline_status
 from .aps_paned import add_pane, horizontal_paned
 from .aps_scroll import attach_wheel_area, bind_debounced_scrollregion, canvas_yscroll, text_yscroll
 from .aps_preview_state import configure_preview_label
-from .aps_theme import COLOR_INPUT_BG, COLOR_MUTED, COLOR_TEXT_HINT, FONT_SMALL, PREVIEW_THUMB_LG, track_wraplength
+from .aps_theme import (
+    COLOR_INPUT_BG,
+    COLOR_MUTED,
+    COLOR_TEXT_HINT,
+    FONT_SMALL,
+    PREVIEW_THUMB_LG,
+    VALIDATION_BANNER_MIN_PX,
+    track_wraplength,
+)
 from .aps_tk import themed_text
 from .aps_workflow_layout import workflow_intro, workflow_primary_row
+from .catalog_kit_coverage_strip import CatalogKitCoverageStrip
 from .domain_router import catalog_source_for
 from .state import ArtDomain, SuiteState
 
@@ -56,6 +65,9 @@ class CatalogPanel(ttk.Frame):
             self,
             "Browse modules, validate GLB, edit sidecar metadata — Assembly tags and materials are what ship.",
         )
+        self._kit_coverage = CatalogKitCoverageStrip(self)
+        self._kit_coverage.pack(fill=tk.X, pady=(0, 6))
+        self._kit_coverage.refresh()
         bar = workflow_primary_row(self)
         ttk.Label(bar, text="Batch").pack(side=tk.LEFT)
         self.batch_var = tk.StringVar(value="(all)")
@@ -127,14 +139,17 @@ class CatalogPanel(ttk.Frame):
         sidecar_lbl.pack(anchor=tk.W, fill=tk.X, pady=(2, 0))
         bind_aps_tooltip(sidecar_lbl, "cat_sidecar_truth")
         self.validation = tk.StringVar(value="")
+        validation_holder = ttk.Frame(right, height=VALIDATION_BANNER_MIN_PX)
+        validation_holder.pack(anchor=tk.W, fill=tk.X, pady=(4, 0))
+        validation_holder.pack_propagate(False)
         self._validation_lbl = ttk.Label(
-            right,
+            validation_holder,
             textvariable=self.validation,
             wraplength=680,
             justify=tk.LEFT,
             font=("Segoe UI", 9),
         )
-        self._validation_lbl.pack(anchor=tk.W, fill=tk.X, pady=(4, 0))
+        self._validation_lbl.pack(anchor=tk.W, fill=tk.X)
         track_wraplength(right, summary_lbl, sidecar_lbl, self._validation_lbl, minimum=320)
 
         notebook = ttk.Notebook(right)

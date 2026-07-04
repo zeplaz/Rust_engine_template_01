@@ -15,10 +15,10 @@
     ),
     massing: (
         strategies: [
-            (id: "long_hall", weight: 35, width_depth_ratio: 2.0, footprint_mode: "rect"),
-            (id: "double_hall", weight: 30, width_depth_ratio: 1.45, footprint_mode: "rect"),
-            (id: "l_shape", weight: 20, footprint_mode: "l_shape"),
-            (id: "yard_complex", weight: 15, footprint_mode: "yard_interior"),
+            (id: "long_hall", weight: 35, width_depth_ratio: 2.0, footprint_mode: rect),
+            (id: "double_hall", weight: 30, width_depth_ratio: 1.45, footprint_mode: rect),
+            (id: "l_shape", weight: 20, footprint_mode: l_shape),
+            (id: "yard_complex", weight: 15, footprint_mode: yard_interior),
         ],
     ),
     roof: (
@@ -33,6 +33,29 @@
         door_slot: "door_wide",
         wall_slot: "wall_1u",
         placement_tags: ["exterior", "industrial", "street_facing"],
+        by_massing: [
+            (
+                massing_id: "long_hall",
+                door_rhythm: "linear_center",
+                placement_tags: ["sawtooth", "loading_dock"],
+            ),
+            (
+                massing_id: "double_hall",
+                door_rhythm: "loading_bay",
+                placement_tags: ["loading_dock"],
+            ),
+            (
+                massing_id: "yard_complex",
+                door_rhythm: "perimeter_only",
+                door_slot: "door_default",
+                placement_tags: ["courtyard_perimeter"],
+            ),
+            (
+                massing_id: "l_shape",
+                door_rhythm: "leg_offset",
+                placement_tags: ["leg_primary"],
+            ),
+        ],
     ),
     detail: (
         prop_slot: "prop_clutter",

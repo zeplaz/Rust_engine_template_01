@@ -17,6 +17,7 @@ use super::hybrid_brain::{
     HybridSimPhaseClock, HybridSimScratch, WorldIntentField,
 };
 use super::logistics_net::logistics_net_inject_into_overlays;
+use super::plugin::StrategicFieldPipeline;
 use super::runbook_rounds::city_planning::utility_redundancy_weight;
 use super::runbook_rounds::city_planning::{site_score, SettlementArchetype};
 use super::runbook_rounds::corridor::CorridorType;
@@ -211,6 +212,7 @@ pub struct StrategicSimulationPlugin;
 
 impl Plugin for StrategicSimulationPlugin {
     fn build(&self, app: &mut App) {
+        app.init_resource::<crate::systems::sim_control::SimControlState>();
         app.init_resource::<TransportFieldStore>();
         app.init_resource::<LogisticsAiRuntime>()
             .init_resource::<OperationalTheaterSummary>()
@@ -229,7 +231,7 @@ impl Plugin for StrategicSimulationPlugin {
                 (
                     HybridSimPipeline::EmotionDrift.after(HybridSimPipeline::IntentReset),
                     HybridSimPipeline::AgentIntent.after(HybridSimPipeline::EmotionDrift),
-                    HybridSimPipeline::IntentReset.after(logistics_net_inject_into_overlays),
+                    HybridSimPipeline::IntentReset.after(StrategicFieldPipeline::LogisticsNetInject),
                 ),
             )
             .add_systems(
@@ -488,6 +490,7 @@ fn strategic_city_planning_hints_tick(
 #[allow(clippy::type_complexity)]
 fn settlement_and_corridor_tick(
     time: Res<Time>,
+    ctrl: Res<crate::systems::sim_control::SimControlState>,
     hints: Res<CityPlanningHints>,
     mut settlements: Query<&mut SettlementSite>,
     mut standalone_corridors: Query<&mut InfrastructureCorridor, Without<StrategicTransportCorridor>>,
@@ -498,7 +501,10 @@ fn settlement_and_corridor_tick(
     )>,
     fields: Res<TransportFieldStore>,
 ) {
-    let dt = time.delta_secs().clamp(0.0, 0.25);
+    let dt = time.delta_secs().clamp(0.0, 0.25) * ctrl.dt_scale();
+    if dt <= 0.0 {
+        return;
+    }
     let wear_dt = dt * 0.01;
     let p = hints.adaptive_rebuild_pressure;
     for mut s in &mut settlements {
@@ -541,6 +547,38 @@ fn settlement_and_corridor_tick(
             c.wear = (raw * tf).min(1.0);
         }
     }
+}
+
+/// **SCH-W1-T1-001** lib witness — settlement growth frozen while sim paused.
+#[must_use]
+pub fn sch_w1_t1_settlement_pause_witness_green() -> bool {
+    use crate::systems::sim_control::SimControlState;
+    use bevy::time::TimeUpdateStrategy;
+    use std::time::Duration;
+
+    let mut app = App::new();
+    app.add_plugins(MinimalPlugins)
+        .init_resource::<SimControlState>()
+        .init_resource::<CityPlanningHints>()
+        .init_resource::<TransportFieldStore>()
+        .insert_resource(TimeUpdateStrategy::ManualDuration(Duration::from_secs_f32(0.5)))
+        .add_systems(Update, settlement_and_corridor_tick);
+
+    app.world_mut().spawn(SettlementSite::new(100, IVec2::ZERO, 1.0));
+    {
+        let mut ctrl = app.world_mut().resource_mut::<SimControlState>();
+        ctrl.paused = true;
+    }
+
+    for _ in 0..12 {
+        app.update();
+    }
+
+    let pop = {
+        let mut q = app.world_mut().query::<&SettlementSite>();
+        q.iter(app.world()).next().expect("settlement").population
+    };
+    pop == 100
 }
 
 #[cfg(test)]

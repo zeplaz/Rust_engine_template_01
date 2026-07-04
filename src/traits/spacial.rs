@@ -8,17 +8,14 @@ pub trait Spaceialization {
 
     // Default methods that return a 'not supported' value.
     fn get_position2d(&self) -> Vec2 {
-        println!("get_position2d: Not Supported");
-        Vec2::NEG_ONE // Return default Vec2
+        Vec2::NEG_ONE
     }
 
     fn get_position3d(&self) -> Vec3 {
-        println!("get_position3d: Not Supported");
-        Vec3::NEG_ONE // Return default Vec3
+        Vec3::NEG_ONE
     }
 
     fn get_position4d(&self) -> Vec4 {
-        println!("get_position4d: Not Supported");
-        Vec4::NEG_ONE // Return default Vec4
+        Vec4::NEG_ONE
     }
 }

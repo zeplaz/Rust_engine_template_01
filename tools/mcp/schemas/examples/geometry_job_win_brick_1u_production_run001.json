@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "job_id": "win_brick_1u_production_run001",
+  "batch_id": "kit_fill_bq_k1_001",
+  "development_tier": "production",
+  "spec_ref": "assets/staging/specs/kit_fill/win_brick_1u_production.json",
+  "operation": "module_window",
+  "params": {
+    "w": 1.2,
+    "h": 1.4,
+    "d": 0.15,
+    "profile": "brick",
+    "seed": 550103
+  },
+  "output": {
+    "glb": "assets/staging/win_brick_1u_production_run001/model.glb",
+    "thumbnail": "assets/staging/win_brick_1u_production_run001/preview.png"
+  }
+}

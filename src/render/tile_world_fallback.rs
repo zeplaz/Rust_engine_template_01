@@ -685,6 +685,7 @@ fn tile_world_fallback_sync_spawner(
             .spawn((
                 TileWorldFallbackSprite,
                 crate::gui::simulation_map_rtt_render_layers(),
+                crate::render::mig_a_static_bulk_bundle(),
                 Sprite {
                     image: image.clone(),
                     custom_size: Some(Vec2::new(w as f32, h as f32)),
@@ -1216,7 +1217,10 @@ fn tile_world_fallback_rasterize(
             zoom_alpha,
         );
 
-        if !raster_ctrl.atlas_stamps.is_empty() && !atlas_slices.is_empty() {
+        if !raster_ctrl.atlas_stamps.is_empty()
+            && !atlas_slices.is_empty()
+            && crate::gui::map_tile_atlas_stamp::stamp_cpu_rgba_blit_enabled(*authority)
+        {
             if let Some(mut dest_image) = images.get_mut(&state.image) {
                 if let Some(data) = dest_image.data.as_mut() {
                     crate::gui::map_tile_atlas_stamp::apply_atlas_stamps_to_rgba_subregion(

@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 import tkinter as tk
-from tkinter import ttk
+from tkinter import messagebox, ttk
 from typing import Any, Callable
 
 from rust_engine_mcp.aps_grammar_labels import human_label
+from rust_engine_mcp import building_quality_qc
 
 from .aps_theme import COLOR_MUTED, FONT_SMALL
 from .aps_tooltips import bind_aps_tooltip
@@ -23,11 +24,13 @@ class GenerationTraceStrip(ttk.LabelFrame):
         *,
         get_snapshot: Callable[[], dict[str, Any] | None],
         on_go_assembly: Callable[[], None] | None = None,
+        get_assembly_id: Callable[[], str | None] | None = None,
     ) -> None:
         super().__init__(master, text="Generation trace", padding=6)
         self.state = state
         self._get_snapshot = get_snapshot
         self._on_go_assembly = on_go_assembly
+        self._get_assembly_id = get_assembly_id
 
         self._summary_var = tk.StringVar(value="No assembly snapshot yet.")
         ttk.Label(self, textvariable=self._summary_var, wraplength=520, justify=tk.LEFT).pack(
@@ -62,6 +65,13 @@ class GenerationTraceStrip(ttk.LabelFrame):
             self._on_go_assembly()
 
     def _on_approve_toggle(self) -> None:
+        if self._approved_var.get():
+            aid = self._get_assembly_id() if self._get_assembly_id else self.state.assembly_id
+            allowed, reason = building_quality_qc.assembly_qc_allows_approve(aid or None)
+            if not allowed:
+                self._approved_var.set(False)
+                messagebox.showwarning("Approve blocked (QC)", reason)
+                return
         self.state.assembly_generation_approved = bool(self._approved_var.get())
 
     def refresh(self) -> None:

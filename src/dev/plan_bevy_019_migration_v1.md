@@ -9,10 +9,11 @@
 # PROGRAM METADATA
 # ═════════════════════════════════════════════════════════════════════
 # id:           PLAN-BEVY-019-MIG-v1
-# status:       ACTIVE P0 — Phase 0 gates; HANDOFF primary lease 2026-07-03
-# priority:     P0 PRIMARY — supersedes multi-parallel as global pick; defers cleanup/schedule Phase 2+ while MIG in flight
-# index:        development_plan_index.md + HANDOFF.md § PLAN-BEVY-019-MIG-v1 (linked 2026-07-03)
-# active_phase: Phase 0 — MIG-P0-G1-001 (steward) then MIG-P0-G2-001 (coder)
+# status:       ACTIVE — Phase 4 payoff + RTT/VFX operator lane (P0–V1 + MIG-A core COMPLETE 2026-07-03)
+# priority:     P0 = RTT/VFX operator visual verify · P1 = MIG-A deep perf (A11/A13/A14/A18) after visual green
+# active_phase: Phase 4 — operator visual sign-off, then deep MIG-A perf adoption (NOT Phase 0, NOT MIG-M/R)
+# truth:        debug_runs/mig_bevy_019/mig_v1_gate.json (gate_pass) · mig_a_rollup.json (MIG-A slices)
+# agent_routing: § AGENT ROUTING (2026-07-03) below — PICK NOW vs DEFER + why
 # owner:        @sim-steward gates + sequencing · @coder for MIG-R# render slices ·
 #               lesser agents (coder_a/coder_b/general) for MIG-M# mechanical slices
 # branch:       master (single canonical worktree — NO separate migration branch)
@@ -47,7 +48,27 @@
 #    disagree, guide wins — note the discrepancy in HANDOFF.
 
 # ═════════════════════════════════════════════════════════════════════
-# PHASE 0 — GATES (block everything; steward-owned)
+# SHIPPED ON MASTER (2026-07-03) — do not re-pick as "blocked on 0.18"
+# ═════════════════════════════════════════════════════════════════════
+# Witness rollup: debug_runs/mig_bevy_019/mig_v1_gate.json (gate_pass: true)
+# · MIG-G1 compat_matrix_g1.json · MIG-G2 pre/post baselines · MIG-G3 feature_flag_audit_g3.json
+# · MIG-M1 bevy 0.19 bump · MIG-M2..M9 mechanical · MIG-R1..R6 (RenderLabel grep zero in src/render)
+# · MIG-V1 lib stage5/vt/fire + --test visual pass at gate capture
+# · MIG-A core shipped — see mig_a_rollup.json (authoritative slice table):
+#     SHIPPED: A1, A2, A5(scaffold), A6, A7, A10, A16
+#     SHIPPED_SCAFFOLD: A12, A13, A17 (+ audit JSONs on disk)
+#     AUDIT (documented, no deep merge yet): A8, A11
+#     OPT_IN (env flag): A3(dev_tools), A4(MIG_A4=1), A14(MIG_A14), A18(MIG_A18/PERF)
+#     CLOSED/HANDOFF: A8 (won't adopt), A9 (BSN → plan_city_grammar § BSN ASSEMBLY CHARTER)
+#     DEFER (blocked): A15(morph), bevy_ecs_tilemap adapter
+#
+# OPEN (operator lane — not in mig_v1_gate): post-019 RTT visual regressions — see HANDOFF § Agent truth
+# MIG PROGRAM CLOSED (2026-07-03): all non-blocked MIG-A slices shipped/closed — witness mig_a_program_close.json
+# POST-MIG perf (NOT migration): depth prepass · GPU cluster replace · mesh collection deep → PERF-GPU / fire perf
+# Routing: § AGENT ROUTING at end of this file
+
+# ═════════════════════════════════════════════════════════════════════
+# PHASE 0 — GATES (block everything; steward-owned) — COMPLETE
 # ═════════════════════════════════════════════════════════════════════
 
 MIG-G1 | HARD | Ecosystem dependency gate — check crates.io/GitHub for 0.19-compatible releases:
@@ -277,9 +298,11 @@ MIG-A6 | contiguous_iter()/contiguous_iter_mut() SIMD on hot sim loops — pairs
 MIG-A7 | Observer run_if + delayed commands — simplify our cadence latches where they exist only to
         defer one-shot work (LiveProofCadence writers, staged spawn messages).
 MIG-A8 | SettingsPlugin — replace hand-rolled settings persistence (shell_persistence, options UI backing).
-MIG-A9 | BSN scenes + SceneComponent — DO NOT retrofit engine-wide; adopt first in the procedural
-        building assembly lane where composable/patchable scenes fit naturally → handed to
-        plan_city_grammar_upgrade_v1 CITY-C6. EditableText similarly: only if we move any HUD off egui.
+MIG-A9 | BSN scenes + SceneComponent — **HANDOFF COMPLETE (2026-07-03).** Migration proved
+        `WorldAssetRoot` on settlement pilot (`block_street_visual.rs`) + witnesses on disk.
+        **Do NOT pick as MIG.** All further BSN adoption is **product-owned**:
+        `plan_city_grammar_upgrade_v1.md` § BSN ASSEMBLY CHARTER · DR-CITY-C6-BSN.
+        See `mig_a_a9_bsn_scene_handoff.json` · defer registry **DR-MIG-A9** (closed_handoff).
 # Render perf adoption (see RENDER PERFORMANCE FOCUS table above):
 MIG-A10 | GPU MDI batch-set bin unpack — adopt stock path for terrain/particle indirect; retire redundant CPU prep.
 MIG-A11 | Batched depth-only prepasses — audit post-R1; batch norm/depth-only custom passes.
@@ -315,5 +338,45 @@ MIG-A18 | Parallel mesh collection benchmark — terrain_instanced + high cell-c
 # Critical sequencing: MIG-R6 (custom graph zero) BEFORE MIG-A10/A13 — otherwise duplicate CPU+GPU paths.
 # Ecosystem: bevy_egui remains hard gate (MIG-G1); tilemap/hanabi can feature-gate temporarily.
 # Perf proof: extend MIG-G2 baseline with render substage upd_* + optional debug_runs/mig_bevy_019/.
-# Conflict: freeze plan_cleanup Phase 2+ and plan_schedule_sync Wave 2+ while MIG-P1–P3 in flight on master.
+# Conflict: plan_cleanup Phase 2+ → DR-CLEANUP-P2 · plan_schedule_sync Wave 2+ → DR-SCHED-W2 (MIG-V1 green — Phase 0 / Wave 1 OK).
 # HANDOFF + development_plan_index linked 2026-07-03 as P0 PRIMARY.
+
+# ═════════════════════════════════════════════════════════════════════
+# AGENT ROUTING (2026-07-03) — read before picking MIG-* rows
+# ═════════════════════════════════════════════════════════════════════
+# Truth files (in order):
+#   1. debug_runs/mig_bevy_019/mig_v1_gate.json     — P0–V1 gate (gate_pass: true = on 0.19, done)
+#   2. debug_runs/mig_bevy_019/mig_a_rollup.json    — MIG-A slice status (green: true)
+#   3. src/dev/plan_deferral_registry_v1.md         — cross-program DR-* ids + unblock_when predicates
+#   4. tools/orchestrator/queues/defer_registry.json — machine queue defer rows
+#   5. tools/orchestrator/queues/HANDOFF.md § PLAN-BEVY-019-MIG-v1 — operator lane + priority ladder
+#
+# DO NOT pick (closed / shipped):
+#   MIG-G1..G3 · MIG-M1..M9 · MIG-R1..R6 · MIG-V1 · MIG-A1/A2/A5/A6/A7/A10/A16 · MIG-A8/A9 (closed)
+#   MIG-A12/A17 scaffolds
+#
+# DO NOT pick from MIG queue (route to product plan):
+#   BSN / WorldAssetRoot expansion → plan_city_grammar_upgrade_v1 § BSN ASSEMBLY CHARTER (DR-CITY-C6-*)
+#
+# ── DEFERRAL TAXONOMY (why something is "defer" — and whether you can fix it) ──
+#
+# | Class | Items | Can fix now? | Reason |
+# |-------|-------|--------------|--------|
+# | ECOSYSTEM | bevy_ecs_tilemap 0.19 | **NO** | **DR-MIG-TILEMAP** — crates.io latest is 0.18.1. Feature `bevy_tilemap_adapter` stays OFF until upstream ships 0.19. |
+# | PRODUCT | MIG-A15 morph | **NO** | **DR-MIG-A15** — Zero MorphWeights in src/. Nothing to wire until procedural skinning is a product requirement. |
+# | CLOSED | MIG-A8 SettingsPlugin | **NO (won't adopt)** | **DR-MIG-A8** — HUD layout RON is authoritative in shell_persistence.rs. Audit documents coexistence; do not migrate to SettingsPlugin. |
+# | POST-MIG | A11/A13/A17 deep perf | **NOT migration** | Moved to plan_gpu_terrain / fire perf — migration program CLOSED |
+# | CLOSED | MIG-A9 BSN handoff | **NO (product plan)** | **DR-MIG-A9** closed_handoff — pilot done; BSN → city grammar |
+# | VERIFY | VR-16 sparks (--test vfx) | **YES** | Code fixes VR-10–15 landed; lib witness `steward_spark_vfx_001` passes. Operator must run `--test vfx` and refresh JSON. |
+# | PROGRAM | schedule Wave 2+ · cleanup Phase 2+ | **YES (parallel)** | Was frozen during MIG-P1–P3. MIG-V1 green — Phase 0 / Wave 1 OK when files don't overlap RTT lane. |
+#
+# PICK NOW (stable — highest value) — **no MIG-* migration picks**:
+#   1. VR-16 operator verify — `cargo run --release -- --test vfx` · refresh stage5/triage witnesses
+#   2. CITY-G2 / CITY-C6 visual — plan_city_grammar_upgrade_v1.md (**DR-CITY-C6-VIS**)
+#   3. plan_cleanup Phase 0 · BQ Phase F · APSR-A0/S1
+#   4. plan_gpu_terrain P0-C′ — POST-MIG perf (was mislabeled MIG-A11/A17)
+#
+# DO NOT pick: any MIG-* slice — program CLOSED (mig_a_program_close.json)
+#
+# Sequencing rule: migration program CLOSED — POST-MIG perf slices use plan_gpu_terrain one-slice + visual regression.
+# Code: src/render/mig_a_adoption.rs · src/dev/runtime_witness/cadence_plugin.rs (MIG-A7)

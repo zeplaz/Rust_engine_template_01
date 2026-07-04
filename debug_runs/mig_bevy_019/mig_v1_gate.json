@@ -5,15 +5,15 @@
     "bevy_version": "0.19",
     "branch": "master",
     "captured_at": "2026-07-03T19:18:00Z",
-    "agent_commands": [
-      "cargo check -p proc_A_dine01",
-      "cargo test -p proc_A_dine01 --lib stage5 --release",
-      "cargo test -p proc_A_dine01 --lib vt_ci --release",
-      "cargo test -p proc_A_dine01 --lib fire --release",
-      "cargo run -p proc_A_dine01 -- --test visual"
-    ]
+    "reconciled_at": "2026-07-03T21:30:00Z",
+    "agent_routing_doc": "src/dev/plan_bevy_019_migration_v1.md § AGENT ROUTING",
+    "deferral_registry": "src/dev/plan_deferral_registry_v1.md",
+    "defer_registry_json": "tools/orchestrator/queues/defer_registry.json"
   },
   "gate_pass": true,
+  "mig_program_closed": true,
+  "mig_program_close_witness": "debug_runs/mig_bevy_019/mig_a_program_close.json",
+  "phase": "CLOSED — Bevy 0.19 migration complete on master. Active = RTT/VFX verify + product lanes (BQ/CITY/cleanup). POST-MIG perf (depth prepass, GPU clusters) is NOT migration.",
   "gates": {
     "cargo_check": { "status": "pass" },
     "stage5_lib": { "status": "pass", "passed": 39, "failed": 0 },
@@ -23,7 +23,7 @@
       "status": "pass",
       "exit_code": 0,
       "witness": "debug_runs/stage5_full_app_live.json",
-      "note": "Fixed Bevy 0.19 B0002 on minimap_composite_pass (World+ResMut conflict)"
+      "note": "Proof harness green; VR-16 operator --test vfx verify still recommended"
     },
     "feature_flag_audit_g3": {
       "status": "pass",
@@ -36,9 +36,53 @@
     "compat_matrix": "debug_runs/mig_bevy_019/compat_matrix_g1.json",
     "cargo_lock_sha256": "2488503f37d9620338068613fc227b993b2a795e80a88c2073ece5ea1992856c"
   },
-  "deferred": [
-    "bevy_ecs_tilemap 0.19 adapter (bevy_tilemap_adapter feature)",
-    "MIG-A10–A18 GPU perf adoption slices"
+  "mig_a_summary": {
+    "rollup": "debug_runs/mig_bevy_019/mig_a_rollup.json",
+    "green": true,
+    "shipped": ["A1", "A2", "A3", "A4", "A5", "A6", "A7", "A10", "A12", "A13", "A14", "A16", "A17", "A18"],
+    "closed_wont_adopt": ["A8", "A11"],
+    "closed_handoff": ["A9"],
+    "product_blocked": ["A15"],
+    "program_closed": true
+  },
+  "deferral_taxonomy": {
+    "ecosystem_blocked": [
+      {
+        "item": "bevy_ecs_tilemap 0.19",
+        "reason": "crates.io latest 0.18.1 only; feature bevy_tilemap_adapter stays OFF"
+      }
+    ],
+    "product_blocked": [
+      {
+        "item": "MIG-A15 morph",
+        "reason": "No MorphWeights in src/; no product requirement yet"
+      }
+    ],
+    "closed_handoff": [
+      {
+        "item": "MIG-A9 BSN",
+        "reason": "Migration pilot complete — product owner plan_city_grammar § BSN ASSEMBLY CHARTER (DR-MIG-A9 / DR-CITY-C6-*)"
+      }
+    ],
+    "closed_wont_adopt": [
+      {
+        "item": "MIG-A8 SettingsPlugin",
+        "reason": "shell_persistence.rs owns HUD layout RON — audit only"
+      }
+    ],
+    "post_mig_perf_not_migration": [
+      "Depth prepass merge (was MIG-A11 deep) → plan_gpu_terrain_production_exec_001_v1.md",
+      "GPU light cluster replace (was MIG-A13 deep) → fire/perf lane",
+      "Stock mesh collection deep (was MIG-A17 deep) → POST-MIG perf only"
+    ]
+  },
+  "pick_now": [
+    "VR-16: cargo run --release -- --test vfx (operator verify + witness refresh)",
+    "CITY-G2 / CITY-C6 visual (DR-CITY-C6-VIS · plan_city_grammar_upgrade_v1.md § BSN ASSEMBLY CHARTER)",
+    "plan_cleanup Phase 0 · BQ-F · APSR-A0 (parallel if file-safe)",
+    "MIG-A18: PERF_NO_VSYNC=1 MIG_A18=1 --test visual (optional baseline capture)"
   ],
+  "do_not_pick_migration": "PLAN-BEVY-019-MIG-v1 CLOSED — see mig_a_program_close.json"
+  "mig_a_rollup": "debug_runs/mig_bevy_019/mig_a_rollup.json",
   "merge_readiness": "green_on_master"
 }

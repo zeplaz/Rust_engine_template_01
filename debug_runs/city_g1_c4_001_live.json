@@ -1,46 +1,90 @@
 {
-  "gate": "CMCP-CITY-G1-C4-001",
-  "issue": "CITY-C4",
-  "green": true,
-  "three_run_stable": true,
+  "_agent_meta": {
+    "agent_commands": [
+      "cargo test -p proc_A_dine01 --lib"
+    ],
+    "docs": {
+      "compile_warnings": "src/dev/COMPILE_WARNINGS_TODOS.md",
+      "stage5_directive": "prompts/guides/stage5_convergence_directive_v1.md",
+      "viewport_recovery": "src/dev/recovery_viewport.md"
+    },
+    "logging_env": {
+      "ORCHESTRATOR_EXPORT_HEALTH": false,
+      "PERF": false,
+      "PERF_DISK": false,
+      "RUST_LOG": null,
+      "SIM_ANALYTICS": false,
+      "SIM_ANALYTICS_FRAMES": false,
+      "SIM_ANALYTICS_QUIET": false,
+      "SIM_VIEW_SYNC_DEBUG": false,
+      "STAGE5_READINESS_VERBOSE": false,
+      "STAGE5_VERBOSE": false,
+      "STALL": false,
+      "VIEWPORT_AUTHORITY_DEBUG": false
+    },
+    "orchestrator": {
+      "build_report": "tools/orchestrator/reports/build_report.md",
+      "ci_entry": "tools/orchestrator/ci/run.ps1",
+      "continuation_queue": "tools/orchestrator/queues/continuation_queue.json",
+      "warning_registry": "tools/orchestrator/reports/warning_registry.md"
+    },
+    "profile": "CITY-G1-C4-001",
+    "related_proofs": [
+      "debug_runs/stage5_full_app_live.json",
+      "debug_runs/infrastructure_view_isolation_live.json",
+      "debug_runs/construction_stage_live.json",
+      "debug_runs/industrial_activation_live.json",
+      "debug_runs/fire_ecology_live.json",
+      "debug_runs/logistics_throughput_live.json",
+      "debug_runs/replay_editor_parity_live.json",
+      "debug_runs/orchestrator_thread_health.json",
+      "debug_runs/viewport_drift.json",
+      "debug_runs/viewport_authority_migration_witness.json",
+      "debug_runs/main_thread_orchestrator_live.json",
+      "debug_runs/stage6_virtualization_live.json",
+      "debug_runs/wave_s_hydrate_live.json",
+      "debug_runs/wave_p_live.json",
+      "debug_runs/wave_c_live.json",
+      "debug_runs/ui_shell_migration_live.json",
+      "debug_runs/minimap_compositor_live.json",
+      "debug_runs/sim_spectrum_analytics_live.json",
+      "debug_runs/stage7_behavioral_live.json",
+      "debug_runs/stage7_play_live.json",
+      "debug_runs/wss_substrate_live.json",
+      "debug_runs/f2_smoke_pipeline_live.json",
+      "debug_runs/play_scenario_live.json",
+      "debug_runs/transport_network_live.json"
+    ],
+    "relative_path": "debug_runs/city_g1_c4_001_live.json",
+    "schema": "debug_run_envelope_v1",
+    "source_system": "refresh_city_g1_c4_001_seed_chain_witness",
+    "written_at_epoch_secs": 1783114441
+  },
   "auto_001_contract": true,
   "chain_layers": {
-    "town_seed": "0x4ac870faab87f9ad",
     "block_seed": "0x490697089ff6f2f5",
+    "building_grammar_seed": "0x035111798ad871aa",
     "lot_seed": "0x59dcfef41af9f0f9",
-    "building_grammar_seed": "0x035111798ad871aa"
+    "town_seed": "0x4ac870faab87f9ad"
   },
-  "stable_hash": "e8463a8e28b40a7ff93c3061014afb7a07ef7ed54db4fafe1a09f487157fcc7d",
+  "city_g0_wit_still_green": true,
+  "gate": "CITY-G1-C4-001",
+  "green": true,
+  "issue": "CITY-C4",
+  "registry_ok": true,
   "run_hashes": [
-    "e8463a8e28b40a7ff93c3061014afb7a07ef7ed54db4fafe1a09f487157fcc7d",
-    "e8463a8e28b40a7ff93c3061014afb7a07ef7ed54db4fafe1a09f487157fcc7d",
-    "e8463a8e28b40a7ff93c3061014afb7a07ef7ed54db4fafe1a09f487157fcc7d"
+    "0dd4ff52066ea6afb86a844b53e2dae3ab6f8929522989d48b43e3c1693fb933",
+    "0dd4ff52066ea6afb86a844b53e2dae3ab6f8929522989d48b43e3c1693fb933",
+    "0dd4ff52066ea6afb86a844b53e2dae3ab6f8929522989d48b43e3c1693fb933"
   ],
+  "stable_hash": "0dd4ff52066ea6afb86a844b53e2dae3ab6f8929522989d48b43e3c1693fb933",
+  "three_run_stable": true,
   "witness_context": {
-    "world_seed": 99001,
-    "town_id": "portland",
-    "block_id": "industrial_west_b01",
-    "lot_idx": 7,
     "archetype_id": "IndustrialWarehouse",
-    "district_style": "industrial_west"
-  },
-  "rules_check": {
-    "passed": true,
-    "blocked_by": [],
-    "seed": "238991468945502634"
-  },
-  "_agent_meta": {
-    "schema": "city_g1_c4_seed_chain_live_v1",
-    "profile": "CMCP_CITY_G1_C4",
-    "relative_path": "debug_runs/city_g1_c4_001_live.json",
-    "source_system": "city_seed_chain",
-    "written_at_epoch_secs": 1783101219,
-    "ritual": "BLANG:WIT-HON CMCP-CITY-G1-C4-001"
-  },
-  "witness_honesty": {
-    "status": "passed",
-    "error_count": 0,
-    "warning_count": 0,
-    "summary": "witness_honesty debug_runs/city_g1_c4_001_live.json: 0 error(s), 0 issue(s)"
+    "block_id": "industrial_west_b01",
+    "district_style": "industrial_west",
+    "lot_idx": 7,
+    "town_id": "portland",
+    "world_seed": 99001
   }
 }

@@ -128,6 +128,7 @@ impl Plugin for EnginePlugin {
                     ..default()
                 }),
         )
+            .add_plugins(crate::render::MigAAdoptionPlugin)
             // PERF-PLAY: keep simulation in continuous mode; reactive low-power mode can sleep
             // near 1s between frames and makes camera/minimap feel "broken" under active play.
             .insert_resource(WinitSettings::game())
@@ -155,7 +156,8 @@ impl Plugin for EnginePlugin {
             .add_plugins(crate::sim::SimEffectsPlugin)
             .add_plugins(ScenarioScriptingPlugin);
         configure_chunk_environment_sets(app);
-        app.add_plugins(crate::substrate::SubstratePlugin)
+        app.add_plugins(crate::dev::runtime_witness::LiveProofCadencePlugin)
+            .add_plugins(crate::substrate::SubstratePlugin)
             .add_plugins(ChunkEnvironmentPersistPlugin)
             .add_plugins(crate::io::save::WorldSaveSpinePlugin)
             .add_plugins(crate::render::Stage6VirtualizationPlugin)
@@ -190,6 +192,7 @@ impl Plugin for EnginePlugin {
         app.configure_sets(
             Update,
             crate::render::extraction::FireVisualFrameSet::BuildProfiles
+                .after(crate::systems::chunk_environment_set::ChunkEnvironmentSet::Fire)
                 .after(crate::systems::atmosphere::AtmospherePipelineSet::VisualExtract),
         );
         app.configure_sets(
@@ -317,6 +320,14 @@ impl Plugin for EnginePlugin {
             )
                 .chain(),
         );
+
+        if crate::dev::schedule_sync_witness::sch_ambiguity_warn_enabled() {
+            use bevy::ecs::schedule::{LogLevel, ScheduleBuildSettings};
+            app.configure_schedules(ScheduleBuildSettings {
+                ambiguity_detection: LogLevel::Warn,
+                ..default()
+            });
+        }
 
         info!(
             "Engine initialized. Debug maneuvers: \

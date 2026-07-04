@@ -1,29 +1,100 @@
 # BUILDING GENERATION QUALITY OVERHAUL v1 — from "incoherent jumbles" to real buildings
 # Generated 2026-07-03 from 3-agent audit (grammar logic · geometry/bake lane · APS surface).
+# **Integration hub** for dual-track execution: THIS plan (BQ-*) + companion
+# [`plan_aps_refactor_v1.md`](plan_aps_refactor_v1.md) (APSR-*).
 # Companions: codebase_index_v1.md (CB-GRM/CB-PRC) · plan_city_grammar_upgrade_v1.md (block/town tier —
-#   CITY owns G0 typed-ids/split; THIS plan owns building-level visual quality) · plan_aps_refactor_v1.md
-#   (QC surfaces land there) · plan_cleanup_v1.md
+#   CITY owns G0 typed-ids/split; THIS plan owns building-level visual quality) · plan_cleanup_v1.md
 # Issue codes: BQ-F# (fast fixes) · BQ-C# (contracts+validation) · BQ-A# (adjacency/coherence)
 #              BQ-H# (architectural hierarchy) · BQ-K# (kit/data enrichment) · BQ-Q# (visual QC gate)
+# APSR codes (companion plan): APSR-T# guardrails · APSR-S# services · APSR-P# panels · APSR-D# design
+#                             system · APSR-Q# quality surfaces (consume BQ witnesses)
 
 # ═════════════════════════════════════════════════════════════════════
-# PROGRAM METADATA
+# PROGRAM METADATA (integrated dual-track)
 # ═════════════════════════════════════════════════════════════════════
-# id:           PLAN-BUILDING-QUALITY-v1
-# status:       PLANNED — diagnosis signed 2026-07-03 (three independent audits agree)
-# priority:     recommend P1 on master alongside MIG Phase 0/1 — engine slices are in
-#               construction/procedural + tools/mcp (no overlap with MIG render lane);
-#               BQ-F# fast fixes are safe immediately
-# owner:        @coder engine selection/constraint slices · @coder-mcp bake ops + validators ·
-#               @designer-mcp kit charters, style packs, grammar data · @sim-steward sequences
-# depends:      CITY-G0a (typed ids) + CITY-G0b (grammar split) land FIRST — BQ engine slices build
-#               on the split files. CITY-G0c determinism witness is BQ's regression net too.
+# id:           PLAN-BUILDING-QUALITY-v1  (+ PLAN-APS-REFACTOR-v1 companion)
+# status:       PLANNED — diagnosis signed 2026-07-03; execution not started
+# priority:     P2 on master — parallel-safe with MIG (Bevy lane) and APS G4; BQ-F# + APSR-A0 safe now
+# owner:        @sim-steward sequences · @coder engine (BQ-F2/A/H) · @coder-mcp bake+APS (BQ-F1/C, APSR)
+#               @designer-mcp kit charters (BQ-K) · @designer IA spec (APSR-T3)
+# companion:    plan_aps_refactor_v1.md · aps-design-ux skill · design_aps_operator_rubric_v2.md
+# index:        development_plan_index.md + HANDOFF.md § PLAN-BUILDING-QUALITY-v1
+# regression:   validate-report cargo (engine) · pytest tools/mcp/python (APS + validators) ·
+#               CITY-G0c determinism witness · building_quality_live.json (BQ-Q1, once live)
+# depends:      CITY-G0a/G0b preferred before BQ-H grammar splits; BQ-F# has no CITY dependency
 # territory:    src/construction/procedural/* · src/render/extraction/procedural_build_extract.rs ·
 #               tools/mcp/blender/scripts/ops/* · tools/mcp/python/rust_engine_mcp/validators/* ·
-#               assets/configs/buildings/* · assets/models/modules/* (via MCP lane only)
-# regression:   validate-report cargo per engine slice · pytest tools/mcp/python per pipeline slice ·
-#               CITY-G0c determinism witness · NEW BQ-Q1 style-purity + adjacency witness once it exists
+#               tools/mcp/art_pipeline_suite/* (APSR) · assets/configs/buildings/*
 # rules:        mcp-production-rules UNCHANGED (deterministic, batch/atlas, grid, no AI final art)
+# done_bar:     BQ-Q3 golden-seed set operator-approved · zero cross-style fallbacks · zero adjacency
+#               violations · APSR mutation-inventory = services-only · APSR-Q1-Q3 live
+#
+# Thesis (user priority):
+#   Track BQ — Phase F fast fixes FIRST (~80% visible win in days): bake defects, style-aware
+#   selection, kill silent hide_slot → then contracts/validators so jank can't return → adjacency →
+#   massing→facade → kit-hole filling (@designer-mcp charters) → golden-seed QC gate = "done".
+#   Track APSR — guardrail tests FIRST (mutation inventory, stale-panel xfail) → services layer
+#   (single-writer + event bus) → panel decomposition → design-system lint → APSR-Q# surfaces that
+#   DISPLAY BQ gates in-tool so operators see violations before shipping janky output.
+
+# ═════════════════════════════════════════════════════════════════════
+# INTEGRATED EXECUTION GRAPH
+# ═════════════════════════════════════════════════════════════════════
+#
+#   Week 0 (parallel, no blockers):
+#     BQ-F1 bake fixes ──┐
+#     BQ-F2 style filter ├──► ~80% visible improvement
+#     BQ-F3 slot violations ──┘
+#     APSR-A0 T1/T2 guardrails ──► freeze behavior before refactor
+#
+#   Week 1:
+#     BQ-C1-C4 contracts/validators (lock in F wins)
+#     APSR-A1 S1→S2→S3 services (core stale-panel fix)
+#     BQ-K1 kit charters start (@designer-mcp, parallel)
+#
+#   Week 2+:
+#     BQ-A1-A2 adjacency + quality gate ──► feeds APSR-Q1
+#     APSR-A2 P1-P3 panel split + D1-D4 lint
+#     BQ-H1-H3 hierarchy ∥ BQ-K2-K3 data
+#     APSR-A4 Q1-Q3 as BQ witnesses land
+#     BQ-Q1-Q3 golden-seed done bar (operator sign-off)
+#
+# Coupling (BQ → APSR):
+#   BQ-F3 violations + BQ-A2 score ──► APSR-Q1 Assembly QC strip
+#   BQ-K2 slot coverage audit        ──► APSR-Q2 Kit-coverage panel
+#   BQ-Q3 golden seeds               ──► APSR-Q3 Golden-seed review flow
+#
+# Coupling (APSR → BQ):
+#   APSR-S2 AssemblyService          ──► single writer for assembly_snapshot + generation_trace
+#   APSR-Q1 blocks Approve           ──► operators can't ship red assemblies
+
+# ═════════════════════════════════════════════════════════════════════
+# CONFLICT MATRIX
+# ═════════════════════════════════════════════════════════════════════
+# Lane                         | BQ/APSR items           | Rule
+# -----------------------------|-------------------------|------------------------------------------
+# PLAN-BEVY-019-MIG-v1 P0      | none direct             | BQ engine + APS Python parallel-safe
+# PLAN-CITY-GRAMMAR G0         | BQ-H2 street-facing     | BlockFrame from CITY-C2 when ready; heuristic until then
+# plan_cleanup S11/S1c         | BQ overlaps grammar split| CITY-G0b owns split; do not double-pick
+# APS-G4-COVERAGE-001          | BQ-K prerequisite       | G4 content bar before kit ship claims
+# PERF / Stage 5               | BQ engine only          | stage5 --lib after procedural extract edits
+
+# ═════════════════════════════════════════════════════════════════════
+# ACTIVE PHASE
+# ═════════════════════════════════════════════════════════════════════
+# current:   BQ-A2 gate shipped — `building_quality_live.json` witness · BQ-A1 adjacency stubbed at 0
+# next_pick: BQ-A1-ADJ-001 · BQ-Q1-WITNESS-001 (wire APSR-Q1 after A2+F3 green)
+# blocked:   APSR-A4-Q1-001 until BQ-F3 + BQ-A2 witnesses green · BQ-Q3 until BQ-A/K/H slices land
+
+# ═════════════════════════════════════════════════════════════════════
+# SLICE TEMPLATE
+# ═════════════════════════════════════════════════════════════════════
+# id:            BQ-F1-BAKE-001 | APSR-A0-T1-001
+# issue:         BQ-F1 | APSR-T1
+# owner:         coder | coder-mcp | coder_a | designer-mcp | designer
+# exit_witness:  validate-report * · debug_runs/building_quality_live.json · pytest -k aps
+# blocks:        slice ids
+# parallel_ok:   see CONFLICT MATRIX
 
 # ═════════════════════════════════════════════════════════════════════
 # DIAGNOSIS (verified, file:line — why buildings are jumbles)
@@ -177,18 +248,77 @@ BQ-Q3 | Golden-seed regression set: ~12 seeds × archetype × style committed as
   approval).
 
 # ═════════════════════════════════════════════════════════════════════
-# EXECUTION ORDER + QUEUE SEED
+# EXECUTION ORDER + INTEGRATED QUEUE SEED
 # ═════════════════════════════════════════════════════════════════════
-# Order: F1+F2+F3 (days, big visible win) → C1-C4 (lock it in) → A1-A2 ∥ K1-K2 → H1-H3 ∥ K3 → Q1-Q3
 #
-# id               | issue | owner        | effort | exit
-# BQ-F1-BAKE-001   | BQ-F1 | coder-mcp    | S      | roof flush + sill exact; rebaked batch promoted
-# BQ-F2-STYLE-001  | BQ-F2 | coder        | S      | style-filtered selection + fallback log + unit test
-# BQ-F3-SLOT-001   | BQ-F3 | coder        | XS     | violations recorded, debug tint in preview
-# BQ-C1-CONTRACT-1 | BQ-C1 | coder-mcp    | S      | contract doc + GRID_UNIT_M constants both sides
-# BQ-C2-BOUNDS-001 | BQ-C2 | coder-mcp    | S-M    | G4 bounds/pivot check + 100-module violation report
-# BQ-A1-ADJ-001    | BQ-A1 | coder        | M      | 5 rules enforced; violation witness
-# BQ-K1-KITFILL-1  | BQ-K1 | designer-mcp | charter| brick/wood/concrete roof+door+window jobs queued
+# ── WEEK 0 — parallel (start here) ──────────────────────────────────
 #
-# Gate to declare "buildings fixed": BQ-Q3 golden set approved by operator across all style packs
-# with zero cross-style fallbacks and zero adjacency violations.
+# id                  | track | issue    | owner       | effort | exit
+# BQ-F1-BAKE-001      | BQ    | BQ-F1    | coder-mcp   | S      | roof Y=0 flush; wall no 1.05 sill; rebaked GLBs promoted
+# BQ-F2-STYLE-001     | BQ    | BQ-F2    | coder       | S      | style_pack filter in module_index; cross-style fallback logged
+# BQ-F3-SLOT-001      | BQ    | BQ-F3    | coder       | XS     | MissingSlotViolation witness; debug tint; no silent hide
+# APSR-A0-T1-001      | APSR  | APSR-T1  | coder_a     | S      | mutation-inventory pytest; new direct SuiteState write = fail
+# APSR-A0-T2-001      | APSR  | APSR-T2  | coder_a     | S      | stale-assembly xfail repro; lane round-trip characterization
+# APSR-A0-T3-001      | APSR  | APSR-T3  | designer    | M      | APS_IA_SPEC_v1.md + spec-ID headers on panels
+#
+# Week 0 gate: BQ-F1+F2+F3 done OR deferred with steward note · APSR-A0 T1+T2 red/green baseline recorded
+#
+# ── WEEK 1 — lock-in + services core ────────────────────────────────
+#
+# BQ-C1-CONTRACT-001    | BQ    | BQ-C1    | coder-mcp   | S      | module_contract_v1.md + GRID_UNIT_M both sides
+# BQ-C2-BOUNDS-001      | BQ    | BQ-C2    | coder-mcp   | S-M    | G4 bounds/pivot on 100 modules; violation report
+# BQ-C3-SEAM-001        | BQ    | BQ-C3    | coder-mcp   | M      | wall+door+window height agreement per style pack
+# BQ-C4-SCALE-001       | BQ    | BQ-C4    | coder       | S      | scale chain doc + iso_draw_scale authority decision
+# APSR-A1-S1-001        | APSR  | APSR-S1  | coder-mcp   | M      | EventBus + SuiteStateWriter; atlas_folder single-owner
+# APSR-A1-S2-ASM-001    | APSR  | APSR-S2  | coder-mcp   | M      | AssemblyService; _snapshot shadow removed; xfail→pass
+# APSR-A1-S3-001        | APSR  | APSR-S3  | coder-mcp   | S      | app.py <700 LOC; LaneChanged events only
+# BQ-K1-KITFILL-001     | BQ    | BQ-K1    | designer-mcp| charter| brick/wood/concrete roof+door+window job specs
+#
+# ── WEEK 2+ — structure, hierarchy, surfaces, done bar ──────────────
+#
+# BQ-A1-ADJ-001         | BQ    | BQ-A1    | coder       | M      | 5 adjacency rules + violation witness
+# BQ-A2-GATE-001        | BQ    | BQ-A2    | coder       | S      | style purity % + score → building_quality_live.json
+# BQ-H1-FACADE-001      | BQ    | BQ-H1    | coder       | M      | FacadeRule per massing_id in grammar RON
+# BQ-H2-OPENINGS-001    | BQ    | BQ-H2    | coder       | M      | kill width/2 door; consume placement_tags
+# BQ-H3-V0-RETIRE-001   | BQ    | BQ-H3    | sim-steward | S      | classify arch_build_grammar_v0; migrate or freeze
+# BQ-K2-COVERAGE-001    | BQ    | BQ-K2    | designer-mcp| M      | 100% slot coverage per style pack; pytest audit
+# BQ-K3-GRAMMAR-001     | BQ    | BQ-K3    | designer-mcp| M      | +massing strategies + FacadeRule tables
+# APSR-A2-P1-001        | APSR  | APSR-P1  | coder-mcp   | M      | assembly_panel ≤400 LOC; characterization green
+# APSR-A2-P2-001        | APSR  | APSR-P2  | coder-mcp   | S-M    | shared preview_state_display module
+# APSR-A2-P3-001        | APSR  | APSR-P3  | coder-mcp   | S      | material_browser single entry point
+# APSR-A3-D1-001        | APSR  | APSR-D1  | coder_b     | S      | token lint ratchet (inline fonts/colors)
+# APSR-A3-D2-001        | APSR  | APSR-D2  | coder_b     | XS     | tooltip coverage assertion
+# APSR-A3-D3-001        | APSR  | APSR-D3  | coder_b     | S      | inline-feedback adoption sweep
+# APSR-A4-Q1-001        | APSR  | APSR-Q1  | coder-mcp   | S-M    | QC strip ← BQ-F3/A2 (BLOCK until witnesses)
+# APSR-A4-Q2-001        | APSR  | APSR-Q2  | coder-mcp   | S      | kit-coverage panel ← BQ-K2 audit
+# APSR-A4-Q3-001        | APSR  | APSR-Q3  | operator    | M      | golden-seed browse/approve ← BQ-Q3
+# BQ-Q1-WITNESS-001     | BQ    | BQ-Q1    | coder       | S      | building_quality_live.json + APSR-Q1 wire
+# BQ-Q2-SCREEN-001      | BQ    | BQ-Q2    | coder-mcp   | M      | bevy_preview_worker N seeds/style; rubric row
+# BQ-Q3-GOLDEN-001      | BQ    | BQ-Q3    | operator    | M      | ~12 seeds × archetype × style; hash regression
+#
+# ── DONE BAR (both tracks) ──────────────────────────────────────────
+# PLAN-BUILDING-QUALITY-v1 CLOSED ⇔
+#   BQ-Q3 golden set operator-approved (all style packs)
+#   ∧ cross-style fallback count = 0 (BQ-F2 witness)
+#   ∧ adjacency violation count = 0 on goldens (BQ-A1/A2)
+#   ∧ G4 validators green on all promoted modules (BQ-C2/C3)
+# PLAN-APS-REFACTOR-v1 CLOSED ⇔
+#   mutation inventory = services-only (APSR-T1)
+#   ∧ stale-panel characterization tests pass (APSR-T2)
+#   ∧ APSR-Q1 blocks Approve on red QC · APSR-Q2/Q3 live
+#   ∧ pytest -k aps green headless · token lint zero (APSR-D1)
+
+# ═════════════════════════════════════════════════════════════════════
+# APS REFACTOR COMPANION (detail in plan_aps_refactor_v1.md)
+# ═════════════════════════════════════════════════════════════════════
+# Full APSR issue catalog, audit file:line, and target architecture live in the companion plan.
+# This hub owns sequencing + queue seeds + BQ↔APSR coupling only.
+# Do NOT start APSR-A4-Q* until BQ-F3 (violations) and BQ-A2 (score) witnesses exist.
+
+# ═════════════════════════════════════════════════════════════════════
+# REVIEW NOTES (2026-07-03)
+# ═════════════════════════════════════════════════════════════════════
+# Audit spot-checks: module_roof.py:29 t*0.5 float · module_wall.py:30 d*1.05 sill ·
+# prefer_stylepack_tier tier-only (module_index.rs:266) · assembly_panel shadow _snapshot (line 124) ·
+# hide_slot silent cull (procedural_build_extract.rs). All confirmed.
+# Integrated dual-track execution + queue seed landed; link HANDOFF + development_plan_index next.

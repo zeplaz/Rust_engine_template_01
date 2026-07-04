@@ -1,0 +1,35 @@
+{
+  "gate": "BQ-K3-GRAMMAR-001",
+  "program": "PLAN-BUILDING-QUALITY-v1",
+  "charter_doc": "src/dev/design_bq_k3_grammar_enrichment_v1.md",
+  "manifest_rel": "tools/mcp/schemas/examples/bq_k3_grammar_enrichment_v1.json",
+  "grammar_patches": [
+    "civic_block_v1",
+    "factory_cluster_v1",
+    "rail_edge_v1"
+  ],
+  "checks": {
+    "charter_doc": true,
+    "manifest_on_disk": true,
+    "three_grammars": true,
+    "massing_additions": true,
+    "facade_by_massing": true,
+    "roof_by_massing": true,
+    "age_aps_map_four_bands": true,
+    "reference_pattern_exists": true
+  },
+  "green": true,
+  "verdict": "PASS",
+  "handoff": {
+    "coder": "merge grammar_patches into RON + BQ-H1 FacadeRule evaluator"
+  },
+  "_agent_meta": {
+    "schema": "bq_k3_grammar_live_v1",
+    "written_at_epoch_secs": 1783118482,
+    "profile": "BQ_K3_GRAMMAR",
+    "source_system": "dmcp_bq_k_lane",
+    "relative_path": "debug_runs/bq_k3_grammar_001_live.json",
+    "ritual": "BLANG:WIT-HON\u2192Q\u2713 BQ-K3-GRAMMAR-001",
+    "agent": "designer-mcp"
+  }
+}

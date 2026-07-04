@@ -1,4 +1,8 @@
 //! Throughput solver + corridor pressure (LOG-C).
+//!
+//! **CLN-P0-P10 / EC-LOG:** route solve allocates `HashMap`/`HashSet` per invocation — acceptable
+//! because `solve_throughput_greedy_system` runs on-demand (graph revision / freight dispatch), not
+//! every sim frame. Pool or reuse if it ever moves into a per-frame hot path.
 
 use bevy::prelude::*;
 

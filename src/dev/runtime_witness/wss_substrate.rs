@@ -12,23 +12,23 @@ use crate::substrate::{
     PostSpineWitness, SubstratePr4Witness, WorldSubstrateRegistry, WssSubstrateWitness,
 };
 
+use super::common::WitnessWriteCadence;
 use super::io::{write_enveloped_witness, write_enveloped_witness_unchecked};
 
 pub const WSS_SUBSTRATE_LIVE_JSON: &str = "debug_runs/wss_substrate_live.json";
 
 #[derive(Resource, Debug, Clone)]
 pub struct WssSubstrateLiveProofState {
-    pub frames_since_write: u32,
-    pub write_interval: u32,
-    pub written: bool,
+    pub cadence: WitnessWriteCadence,
 }
 
 impl Default for WssSubstrateLiveProofState {
     fn default() -> Self {
         Self {
-            frames_since_write: 0,
-            write_interval: 60,
-            written: false,
+            cadence: WitnessWriteCadence {
+                write_interval: 60,
+                ..Default::default()
+            },
         }
     }
 }
@@ -105,11 +105,6 @@ pub fn write_wss_substrate_live_proof_system(
     if !matches!(base.get(), BaseState::Simulation) || !substrate_plugin_enabled() {
         return;
     }
-    state.frames_since_write = state.frames_since_write.saturating_add(1);
-    if state.frames_since_write < state.write_interval {
-        return;
-    }
-    state.frames_since_write = 0;
     let body = build_wss_substrate_payload(
         registry.as_ref(),
         witness.as_ref(),
@@ -133,6 +128,6 @@ pub fn write_wss_substrate_live_proof_system(
         WSS_SUBSTRATE_LIVE_JSON,
         body,
     ) {
-        state.written = true;
+        state.cadence.written = true;
     }
 }

@@ -7,7 +7,7 @@
   "columns": 4,
   "rows": 4,
   "tile_px": 128,
-  "variant_count": 14,
+  "variant_count": 18,
   "tiles": [
     {
       "variant_key": "clean_day",
@@ -204,6 +204,62 @@
         0.25,
         0.25
       ]
+    },
+    {
+      "variant_key": "clean_day__pal_rh_brownstone",
+      "grid": [
+        0,
+        0
+      ],
+      "uv": [
+        0.0,
+        0.0,
+        0.25,
+        0.25
+      ],
+      "png": "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_rowhouse_victorian_production_v1\\clean_day.png"
+    },
+    {
+      "variant_key": "clean_day__pal_rh_painted_row",
+      "grid": [
+        0,
+        0
+      ],
+      "uv": [
+        0.0,
+        0.0,
+        0.25,
+        0.25
+      ],
+      "png": "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_rowhouse_victorian_production_v1\\clean_day.png"
+    },
+    {
+      "variant_key": "clean_day__pal_rh_brick_party",
+      "grid": [
+        0,
+        0
+      ],
+      "uv": [
+        0.0,
+        0.0,
+        0.25,
+        0.25
+      ],
+      "png": "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_rowhouse_victorian_production_v1\\clean_day.png"
+    },
+    {
+      "variant_key": "clean_day__pal_rh_rehab_mixed",
+      "grid": [
+        0,
+        0
+      ],
+      "uv": [
+        0.0,
+        0.0,
+        0.25,
+        0.25
+      ],
+      "png": "C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\tiles\\tile_rowhouse_victorian_production_v1\\clean_day.png"
     }
   ]
 }

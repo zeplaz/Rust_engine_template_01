@@ -1,0 +1,27 @@
+{
+  "task_id": "CITY-G2-C5-001",
+  "green": true,
+  "checks": {
+    "schema_file": true,
+    "palette_index": true,
+    "palette_industrial_west_v1_ron": true,
+    "palette_colonial_res_v1_ron": true,
+    "palette_rowhouse_urban_v1_ron": true,
+    "module_index_palette_rows": true,
+    "module_index_pilot_modules_present": true,
+    "rowhouse_atlas_pal_keys": true,
+    "rust_witness_file": true,
+    "rust_witness_green": true
+  },
+  "pilot_module_count": 12,
+  "module_index_palette_rows": 16,
+  "rowhouse_pal_key_count": 4,
+  "_agent_meta": {
+    "schema": "city_g2_c5_mcp_live_v1",
+    "written_at_epoch_secs": 1783111083,
+    "profile": "CITY_G2_C5_MCP",
+    "source_system": "city_palette_g2",
+    "relative_path": "debug_runs/city_g2_c5_mcp_live.json",
+    "ritual": "BLANG:WIT-HON CITY-G2-C5-001-MCP"
+  }
+}

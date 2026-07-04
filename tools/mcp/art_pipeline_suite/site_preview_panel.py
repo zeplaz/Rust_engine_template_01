@@ -12,6 +12,7 @@ from rust_engine_mcp.paths import repo_root
 from rust_engine_mcp.validators.site_zone_grid import validate_site_zone_grid_path
 
 from .aps_collapsible import CollapsibleSection
+from .aps_inline_feedback import set_inline_status
 from .aps_theme import COLOR_EXPLAINER_BG, COLOR_MUTED, COLOR_OUTLINE, COLOR_TEXT_SUBTLE, COLOR_WARN, FONT_SMALL, FONT_UI
 from .footprint_canvas import TOKEN_COLORS
 from .state import ArtDomain
@@ -196,7 +197,7 @@ class SiteLayoutPreviewSection(CollapsibleSection):
         try:
             site = load_site_zone_data(path)
         except (OSError, json.JSONDecodeError) as exc:
-            self._status_var.set(f"◐ Site JSON invalid — {exc}")
+            set_inline_status(self._status, self._status_var, f"Site JSON invalid — {exc}", ok=None)
             self._status.pack(anchor=tk.W)
             return
         report = validate_site_zone_grid_path(path)
@@ -204,10 +205,10 @@ class SiteLayoutPreviewSection(CollapsibleSection):
         self._site_var.set(f"Site: {site_id}")
         if report.status == "failed":
             first = report.errors[0].hint if report.errors else "validation failed"
-            self._status_var.set(f"✗ site blocked — {first}")
+            set_inline_status(self._status, self._status_var, f"site blocked — {first}", ok=False)
             self._status.pack(anchor=tk.W, pady=(2, 0))
         else:
-            self._status_var.set("✓ site valid")
+            set_inline_status(self._status, self._status_var, "site valid", ok=True)
             self._status.pack(anchor=tk.W, pady=(2, 0))
         self._canvas.set_site(site, footprint_cells=footprint_cells)
         self._canvas.pack(fill=tk.BOTH, expand=True, pady=(4, 0))

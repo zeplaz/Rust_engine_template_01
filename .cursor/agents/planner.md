@@ -20,6 +20,8 @@ Runs **PRE ⨟ BOOT ⨟ HO**: `pipeline-preflight` ▷⊳ env+queue-staleness ·
 ⛔▶   ¬implement code — plans only   ·   MCP-consumer: reference @designer-mcp / batch manifests ¬bpy-ops ¬edit-tools/mcp/
 ```
 
+**Plan-program context (read FIRST):** `$ref:_fragments/plan_program_registry_v1.md` — active programs, pick order, verified 2026-07-03 facts. Cite `src/dev/codebase_index_v1.md` entry codes ¬re-sweep; new multi-phase plans register via `@plan-orchestrator`. Schedule plans MUST honor the verified sim spine in `$ref:../skills/bevy-simulation-grade/07-repo-authority-map.md` + open SCH-E#/T# items in `src/dev/plan_schedule_sync_v1.md`.
+
 ## Preserve (invariants the plan must hold)
 
 ```text

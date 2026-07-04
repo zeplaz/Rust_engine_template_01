@@ -16,24 +16,31 @@ use crate::dev::construction_round2_todos::ConstructionRound2TodoBoard;
 use crate::dev::construction_round3_todos::ConstructionRound3TodoBoard;
 use crate::engine::states::BaseState;
 
+use super::common::WitnessWriteCadence;
 use super::io::write_enveloped_witness;
 
 pub const CONSTRUCTION_STAGE_JSON: &str = "debug_runs/construction_stage_live.json";
 
 #[derive(Resource, Debug)]
 pub struct ConstructionLiveProofState {
-    pub frames_since_write: u32,
-    pub write_interval: u32,
-    pub written: bool,
+    pub cadence: WitnessWriteCadence,
 }
 
 impl Default for ConstructionLiveProofState {
     fn default() -> Self {
         Self {
-            frames_since_write: 0,
-            write_interval: 90,
-            written: false,
+            cadence: WitnessWriteCadence {
+                write_interval: 90,
+                ..Default::default()
+            },
         }
+    }
+}
+
+impl ConstructionLiveProofState {
+    #[must_use]
+    pub fn written(&self) -> bool {
+        self.cadence.written
     }
 }
 
@@ -97,11 +104,6 @@ pub fn write_construction_live_proof_system(
     if !matches!(base.get(), BaseState::Simulation) {
         return;
     }
-    state.frames_since_write = state.frames_since_write.saturating_add(1);
-    if state.frames_since_write < state.write_interval {
-        return;
-    }
-    state.frames_since_write = 0;
 
     let operational_for_payload = operational_witness.as_deref().map(|w| {
         let mut snap = w.clone();
@@ -131,6 +133,6 @@ pub fn write_construction_live_proof_system(
         path_feedback.as_deref(),
         junction_count,
     ) {
-        state.written = true;
+        state.cadence.written = true;
     }
 }

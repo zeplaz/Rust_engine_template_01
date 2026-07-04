@@ -24,12 +24,8 @@ def _join(objects: list[bpy.types.Object]) -> bpy.types.Object:
 
 
 def _build_flat_panel(w: float, h: float, d: float) -> bpy.types.Object:
-    """Flat panel + base course — readable massing at tactical zoom."""
-    sill_h = max(h * 0.06, 0.12)
-    body_h = h - sill_h
-    sill = _add_box("wall_sill", w, sill_h, d * 1.05, (0.0, sill_h * 0.5, 0.0))
-    body = _add_box("wall_body", w * 0.98, body_h, d, (0.0, sill_h + body_h * 0.5, 0.0))
-    return _join([sill, body])
+    """Flat panel at exact param dims — bottom flush Y=0, no sill depth lip."""
+    return _add_box("wall_panel", w, h, d, (0.0, h * 0.5, 0.0))
 
 
 def _build_recess(w: float, h: float, d: float) -> bpy.types.Object:

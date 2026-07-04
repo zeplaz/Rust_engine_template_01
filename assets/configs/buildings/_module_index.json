@@ -1890,7 +1890,7 @@
         "panel",
         "industrial_west"
       ],
-      "batch_id": "",
+      "batch_id": "kit_production_002",
       "development_tier": "production",
       "pbr_status": "shipped",
       "stylepack_visible": true

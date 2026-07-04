@@ -10,6 +10,7 @@ use super::witness_state::{
 use crate::dev::runtime_witness::view_runtime::{
     write_view_runtime_live_proof_system, ViewRuntimeLiveProofState,
 };
+use crate::dev::runtime_witness::view_runtime_live_proof_due;
 use super::view_fire_isolation::{
     refresh_view_fire_isolation_witness, ViewFireIsolationWitness,
 };
@@ -47,7 +48,8 @@ impl Plugin for ViewRuntimePlugin {
                 (
                     refresh_view_fire_isolation_witness,
                     refresh_view_runtime_witness,
-                    write_view_runtime_live_proof_system,
+                    write_view_runtime_live_proof_system
+                        .run_if(view_runtime_live_proof_due),
                 )
                     .chain()
                     .after(crate::render::FireVisualFrameSet::BuildProfiles)

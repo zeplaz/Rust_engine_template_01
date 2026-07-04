@@ -5,12 +5,12 @@ use bevy::world_serialization::WorldAsset;
 
 use crate::construction::procedural::{
     footprint_grid_for_assembly, FootprintCell, FootprintGrid, FootprintToken,
-    ProceduralBuildingRequest, ProceduralModuleRegistry, StylePack, StylePackRegistry,
-    StylePackSlotKey,
+    MissingSlotReason, MissingSlotViolation, ProceduralBuildingRequest, ProceduralModuleEntry,
+    ProceduralModuleRegistry, StylePack, StylePackRegistry, StylePackSlotKey,
 };
 use crate::gui::RepresentationResult;
 use crate::render::extraction::{
-    scene_for_module, ProceduralModuleSceneCatalog, ProceduralModuleVisualPolicy,
+    scene_for_resolved_entry, ProceduralModuleSceneCatalog, ProceduralModuleVisualPolicy,
 };
 
 /// One resolved module placement from PG-2 assembly.
@@ -23,6 +23,8 @@ pub struct ProceduralBuildInstance {
     pub floor: u32,
     pub scene: Option<Handle<WorldAsset>>,
     pub hidden: bool,
+    /// **BQ-F3-SLOT-001** — preview/debug tint for hide-slot violations.
+    pub violation_tint: bool,
 }
 
 /// Latest PG-2 assembly extract output (read-only for render consumers).
@@ -31,9 +33,12 @@ pub struct ProceduralBuildExtract {
     pub instances: Vec<ProceduralBuildInstance>,
     pub module_ids_used: Vec<String>,
     pub smoke_fallback_used: bool,
+    pub cross_style_fallback_count: u32,
     pub footprint_cells: u32,
     pub style_pack_id: String,
     pub pg2_wired: bool,
+    /// **BQ-F3-SLOT-001** — recorded hide-slot failures (never silent holes).
+    pub missing_slot_violations: Vec<MissingSlotViolation>,
 }
 
 #[must_use]
@@ -44,6 +49,80 @@ fn slot_key_for_token(token: FootprintToken) -> Option<StylePackSlotKey> {
         FootprintToken::Corner => Some(StylePackSlotKey::CornerOuter),
         FootprintToken::Roof => Some(StylePackSlotKey::RoofDefault),
         FootprintToken::Yard => None,
+    }
+}
+
+fn record_hide_slot_violation(
+    extract: &mut ProceduralBuildExtract,
+    style_pack: &StylePack,
+    slot_key: &str,
+    cell: &FootprintCell,
+    module_id: &str,
+    reason: MissingSlotReason,
+) {
+    if !style_pack.records_hide_slot_violations() {
+        return;
+    }
+    extract.missing_slot_violations.push(MissingSlotViolation {
+        slot_key: slot_key.to_owned(),
+        style_pack_id: style_pack.id.as_str().to_owned(),
+        grid_x: cell.x,
+        grid_y: cell.y,
+        floor: cell.floor,
+        module_id: module_id.to_owned(),
+        reason,
+    });
+}
+
+fn push_hidden_instance(
+    extract: &mut ProceduralBuildExtract,
+    style_pack: &StylePack,
+    cell: &FootprintCell,
+    slot_key: &str,
+    module_id: String,
+    reason: MissingSlotReason,
+) {
+    record_hide_slot_violation(extract, style_pack, slot_key, cell, &module_id, reason);
+    extract.instances.push(ProceduralBuildInstance {
+        module_id,
+        slot_key: slot_key.to_owned(),
+        grid_x: cell.x,
+        grid_y: cell.y,
+        floor: cell.floor,
+        scene: None,
+        hidden: true,
+        violation_tint: style_pack.records_hide_slot_violations(),
+    });
+}
+
+fn hide_smoke_or_greybox(
+    extract: &mut ProceduralBuildExtract,
+    style_pack: &StylePack,
+    cell: &FootprintCell,
+    slot_key: &str,
+    entry: &ProceduralModuleEntry,
+) {
+    if entry.development_tier.is_smoke() {
+        extract.smoke_fallback_used = true;
+        push_hidden_instance(
+            extract,
+            style_pack,
+            cell,
+            slot_key,
+            entry.module_id.clone(),
+            MissingSlotReason::SmokeModule,
+        );
+        return;
+    }
+    if entry.batch_id.starts_with("kit_greybox") {
+        push_hidden_instance(
+            extract,
+            style_pack,
+            cell,
+            slot_key,
+            entry.module_id.clone(),
+            MissingSlotReason::GreyboxModule,
+        );
     }
 }
 
@@ -69,22 +148,42 @@ pub fn assemble_procedural_build_instances(
         };
         let slot_name = slot_key.ron_key();
         let Some(raw_module_id) = style_pack.resolve_slot(slot_key) else {
-            push_hidden_instance(&mut extract, cell, slot_name, String::new());
+            push_hidden_instance(
+                &mut extract,
+                style_pack,
+                cell,
+                slot_name,
+                String::new(),
+                MissingSlotReason::SlotUnresolved,
+            );
             continue;
         };
 
-        let Some(entry) = registry.resolve_module_id(raw_module_id) else {
-            push_hidden_instance(&mut extract, cell, slot_name, raw_module_id.to_owned());
+        let (Some(entry), meta) =
+            registry.resolve_module_id_for(raw_module_id, Some(style_pack.id.as_str()))
+        else {
+            push_hidden_instance(
+                &mut extract,
+                style_pack,
+                cell,
+                slot_name,
+                raw_module_id.to_owned(),
+                MissingSlotReason::ModuleNotFound,
+            );
             continue;
         };
+        if meta.cross_style_fallback {
+            extract.cross_style_fallback_count = extract
+                .cross_style_fallback_count
+                .saturating_add(1);
+        }
 
         if entry.development_tier.is_smoke() || entry.batch_id.starts_with("kit_greybox") {
-            extract.smoke_fallback_used = true;
-            push_hidden_instance(&mut extract, cell, slot_name, entry.module_id.clone());
+            hide_smoke_or_greybox(&mut extract, style_pack, cell, slot_name, entry);
             continue;
         }
 
-        let scene = scene_for_module(catalog, registry, &entry.module_id).cloned();
+        let scene = scene_for_resolved_entry(catalog, entry).cloned();
         if !extract.module_ids_used.contains(&entry.module_id) {
             extract.module_ids_used.push(entry.module_id.clone());
         }
@@ -96,27 +195,11 @@ pub fn assemble_procedural_build_instances(
             floor: cell.floor,
             scene,
             hidden: false,
+            violation_tint: false,
         });
     }
 
     extract
-}
-
-fn push_hidden_instance(
-    extract: &mut ProceduralBuildExtract,
-    cell: &FootprintCell,
-    slot_key: &str,
-    module_id: String,
-) {
-    extract.instances.push(ProceduralBuildInstance {
-        module_id,
-        slot_key: slot_key.to_owned(),
-        grid_x: cell.x,
-        grid_y: cell.y,
-        floor: cell.floor,
-        scene: None,
-        hidden: true,
-    });
 }
 
 pub fn extract_procedural_build_assembly(
@@ -132,6 +215,7 @@ pub fn extract_procedural_build_assembly(
     if !policy.procedural_module_meshes || !visual.meshes_active {
         extract.instances.clear();
         extract.module_ids_used.clear();
+        extract.missing_slot_violations.clear();
         extract.pg2_wired = true;
         extract.smoke_fallback_used = false;
         return;
@@ -188,19 +272,34 @@ mod tests {
         );
         assert!(extract.footprint_cells > 0);
         assert!(!extract.smoke_fallback_used);
+        assert!(extract.missing_slot_violations.is_empty());
         let visible: Vec<_> = extract
             .instances
             .iter()
             .filter(|i| !i.hidden)
             .collect();
         assert!(!visible.is_empty(), "expected visible lod0 instances");
+        assert_eq!(extract.cross_style_fallback_count, 0);
         for inst in &visible {
-            let entry = registry
-                .resolve_module_id(&inst.module_id)
-                .expect("lod0 module");
-            assert_eq!(entry.development_tier, crate::construction::procedural::DevelopmentTier::Lod0);
-            assert!(entry.job_id.contains("_lod0_"));
+            let (Some(entry), meta) = registry
+                .resolve_module_id_for(&inst.module_id, Some("style_victorian"))
+            else {
+                panic!("style-aware module");
+            };
+            assert!(!meta.cross_style_fallback);
+            assert_eq!(entry.style_pack, "style_victorian");
         }
+        let wall = visible
+            .iter()
+            .find(|i| i.module_id == "wall_brick_1u")
+            .expect("wall_brick slot");
+        let (Some(wall_entry), _) = registry
+            .resolve_module_id_for(&wall.module_id, Some("style_victorian"))
+        else {
+            panic!("wall_brick victorian");
+        };
+        assert_eq!(wall_entry.development_tier, crate::construction::procedural::DevelopmentTier::Production);
+        assert!(wall_entry.job_id.contains("_production_"));
     }
 
     #[test]
@@ -233,8 +332,15 @@ mod tests {
             extract
                 .instances
                 .iter()
-                .any(|i| i.hidden && i.module_id == "corner_brick_outer"),
-            "smoke slot must be hidden"
+                .any(|i| i.hidden && i.violation_tint && i.module_id == "corner_brick_outer"),
+            "unresolved smoke id must be hidden with violation tint"
+        );
+        assert!(
+            extract
+                .missing_slot_violations
+                .iter()
+                .any(|v| v.reason == MissingSlotReason::ModuleNotFound),
+            "unresolved smoke id must record MissingSlotViolation"
         );
     }
 
@@ -258,8 +364,15 @@ mod tests {
             extract
                 .instances
                 .iter()
-                .any(|i| i.hidden && i.module_id == "missing_module_xyz"),
-            "missing module must hide slot"
+                .any(|i| i.hidden && i.violation_tint && i.module_id == "missing_module_xyz"),
+            "missing module must hide slot with debug tint"
+        );
+        assert!(
+            extract
+                .missing_slot_violations
+                .iter()
+                .any(|v| v.reason == MissingSlotReason::ModuleNotFound),
+            "missing module must record MissingSlotViolation"
         );
         assert!(!extract.smoke_fallback_used);
     }

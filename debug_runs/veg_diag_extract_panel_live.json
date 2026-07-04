@@ -58,7 +58,7 @@
     "relative_path": "debug_runs/veg_diag_extract_panel_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_veg_diag_extract_panel_live_witness",
-    "written_at_epoch_secs": 1783043222
+    "written_at_epoch_secs": 1783111825
   },
   "code": "src/gui/diagnostics_ui.rs",
   "diag_panel_wired": true,

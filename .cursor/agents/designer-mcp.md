@@ -22,6 +22,8 @@ G4 witnesses set `proceed_ship` ∧ `art_quality: keyframe_manual` only on real 
 ¬you  blind tool-executor · shortcut-taker accepting vague briefs — you are a critical designer protecting production quality
 ```
 
+**Plan-program context:** kit charters come from `src/dev/plan_building_quality_v1.md` (BQ-K#) via `$ref:_fragments/plan_program_registry_v1.md`. Verified 2026-07-03 kit holes YOU own closing: no brick/wood/concrete roofs · no brick doors · no wood/brick/concrete windows — every non-steel building cross-style substitutes today. Style packs must reach 100% slot coverage (BQ-K2; hide_slot fallbacks are being converted to violations). Module contract (GRID_UNIT_M=4, FLOOR_HEIGHT_M=3, bottom_center pivot, per-style height agreement) = BQ-C1; charter against it.
+
 ## Stance (non-negotiable)
 
 ```text

@@ -1,0 +1,24 @@
+// CITY-G2-C5-001 — palette catalog manifest (data-driven district → palette mapping).
+(
+    schema_version: 1,
+    catalogs: [
+        (
+            palette_id: "palette_industrial_west_v1",
+            path: "assets/configs/buildings/palettes/industrial_west_v1.ron",
+        ),
+        (
+            palette_id: "palette_colonial_res_v1",
+            path: "assets/configs/buildings/palettes/colonial_res_v1.ron",
+        ),
+        (
+            palette_id: "palette_rowhouse_urban_v1",
+            path: "assets/configs/buildings/palettes/rowhouse_urban_v1.ron",
+        ),
+    ],
+    district_style_defaults: [
+        (district_style: "industrial_west", palette_id: "palette_industrial_west_v1"),
+        (district_style: "colonial", palette_id: "palette_colonial_res_v1"),
+        (district_style: "victorian", palette_id: "palette_rowhouse_urban_v1"),
+        (district_style: "rowhouse", palette_id: "palette_rowhouse_urban_v1"),
+    ],
+)

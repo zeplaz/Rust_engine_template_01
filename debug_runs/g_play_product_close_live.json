@@ -58,10 +58,10 @@
     "relative_path": "debug_runs/g_play_product_close_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_product_verify_live_witnesses",
-    "written_at_epoch_secs": 1783028135
+    "written_at_epoch_secs": 1783111826
   },
   "demo_fire_sparks_visible_at_operational_zoom": true,
-  "g_play_coder_rollup_green": true,
+  "g_play_coder_rollup_green": false,
   "g_play_coder_sub_gates": {
     "G-PLAY-CODER-BUILD": true,
     "G-PLAY-CODER-FIRE": true,
@@ -72,7 +72,7 @@
   "gate": "PRODUCT-VERIFY-GPLAY-001",
   "green": false,
   "lanes": {
-    "build_visual": true,
+    "build_visual": false,
     "fire_ecology": true,
     "fire_play_vis": true,
     "landscape_grammar": true,

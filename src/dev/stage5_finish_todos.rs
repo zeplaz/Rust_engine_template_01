@@ -90,6 +90,15 @@ pub static STAGE5_FINISH_TODOS: &[Stage5LiveTodo] = &[
         runtime_check: "STAGE5_TODO_BOARD_REGRESSION_REOPEN on passes=false; STAGE5_ACTIVE_TODO shows real next item.",
         failure_mode: "False green operator signal while violations active.",
     },
+    Stage5LiveTodo {
+        id: "FINISH-WG-P5-01",
+        status: TodoStatus::Open,
+        file: "src/terrain/generation/passes/p5_agent_overlay.rs",
+        system: "apply_agent_overlay",
+        goal: "World-gen pass 5 agent/scenario overlay tags (impl Q §71–74).",
+        runtime_check: "ChunkCellMatrix receives agent overlay tags during generation passes.",
+        failure_mode: "Pass 5 is a permanent no-op stub.",
+    },
 ];
 
 /// Consecutive readiness evaluations where [`finish_ux06_frame_predicate`] held (see [`FINISH_UX06_STREAK_DONE`]).

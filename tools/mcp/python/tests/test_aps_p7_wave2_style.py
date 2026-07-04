@@ -26,6 +26,7 @@ HEX_ALLOWLIST = {
     "atlas_preview_panel.py",
     "landscape_grammar_panel.py",
     "assembly_panel.py",  # material swatch heuristic colors
+    "assembly_preview_section.py",
     "status_log_panel.py",
 }
 
@@ -220,10 +221,10 @@ def test_dark_theme_is_default_and_applies_tokens() -> None:
 
 
 def test_assembly_generate_defaults_to_grammar_path() -> None:
-    src = (SUITE / "assembly_panel.py").read_text(encoding="utf-8")
+    src = (SUITE / "assembly_panel_layout.py").read_text(encoding="utf-8")
     assert "Use building style rules (recommended)" in src
     assert "BooleanVar(value=bool(archetypes))" in src
-    assert "_grammar_combo_maps" in src
+    assert "grammar_combo_maps" in src
     assert "Kit grammar reference (advanced)" in src
 
 

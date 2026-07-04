@@ -41,11 +41,34 @@ Refresh: `powershell -File tools/orchestrator/scripts/ops_intelligence_scan.ps1`
 - **Deferred / sticky:** [`src/dev/stage5_triage_backlog.md`](../src/dev/stage5_triage_backlog.md)
 - Live JSON includes `stage5_closure` when written by visual harness
 
+## Bevy 0.19 migration (`mig_bevy_019/`)
+
+**Read first:** [`src/dev/plan_bevy_019_migration_v1.md`](../src/dev/plan_bevy_019_migration_v1.md) § **AGENT ROUTING** · [`HANDOFF.md`](../tools/orchestrator/queues/HANDOFF.md) § PLAN-BEVY-019-MIG-v1
+
+**Authoritative witnesses:**
+
+| File | Meaning |
+|------|---------|
+| [`mig_v1_gate.json`](mig_bevy_019/mig_v1_gate.json) | **P0–V1 complete** — `gate_pass: true` = Bevy 0.19 on master (not "Phase 0 blocked") |
+| [`mig_a_rollup.json`](mig_bevy_019/mig_a_rollup.json) | **MIG-A slice status** — authoritative per-slice shipped/audit/defer |
+| `compat_matrix_g1.json` | Ecosystem go/no-go (bevy_egui 0.41, etc.) |
+| `baseline_stage5_pre019.json` / `post019.json` | Perf/readiness anchor |
+| `feature_flag_audit_g3.json` | Cargo feature audit |
+| `mig_a_a8_settings_coexistence_audit.json` | MIG-A8 — Settings vs shell_persistence (audit) |
+| `mig_a_a9_bsn_scene_handoff.json` | MIG-A9 — **handoff complete** → city grammar § BSN ASSEMBLY CHARTER |
+| `mig_a_a11_depth_prepass_audit.json` | MIG-A11 — custom Core2d pass inventory |
+| `mig_a_a17_mesh_collection_audit.json` | MIG-A17 — RN-* batch metrics scaffold |
+| `mig_a_frame_perf.json` | MIG-A18 — opt-in (`MIG_A18=1` or `PERF=1`) after frame 120 |
+
+**Pick now (stable):** RTT/VFX operator visual — [`visual_run_blockers.md`](../src/dev/visual_run_blockers.md) · `--test vfx` · `--test visual`
+
+**Defer (with reason):** [`plan_deferral_registry_v1.md`](../src/dev/plan_deferral_registry_v1.md) — morph (**DR-MIG-A15**), tilemap (**DR-MIG-TILEMAP**), BSN expansion (**DR-CITY-C6-BSN** — product, not migration). **MIG-A9 = closed_handoff.** Incremental MIG-A deep is **pick-now**.
+
 ## Regenerate
 
 ```powershell
+cargo check -p proc_A_dine01
 cargo test -p proc_A_dine01 --lib stage5
-cargo run -p proc_A_dine01 --release -- --test visual
+cargo run -p proc_A_dine01 --release -- --test vfx          # operator sandbox (manual VFX)
+cargo run -p proc_A_dine01 --release -- --test visual --stay-open   # proof harness, no auto-exit
 ```
-
-`--test visual` uses **tactical** map zoom by default so `fire_spark_rows` and `water_particle_river_streaks` are not strategic-culled. Optional strict gate: `$env:TACTICAL_VFX_PROOF=1`.

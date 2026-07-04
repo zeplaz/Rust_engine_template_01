@@ -43,7 +43,7 @@ pub fn pending_blueprint_from_growth_proposal(proposal: &GrowthProposal) -> Pend
         z: proposal.anchor_tile.y.max(0) as u32,
     };
     PendingBuildBlueprint {
-        kind: PendingEntryKind::GrowthProposal,
+        kind: PendingEntryKind::BuildSite,
         label: format!("growth:{}", proposal.archetype_id.0),
         archetype: site_archetype_for_growth_proposal(proposal),
         origin,
@@ -117,7 +117,7 @@ pub fn growth_approve_execute_pipeline_witness_green() -> bool {
     queue.proposals.is_empty()
         && pending.entries.len() == 1
         && pending.entries[0].approved
-        && pending.entries[0].kind == PendingEntryKind::GrowthProposal
+        && pending.entries[0].kind == PendingEntryKind::BuildSite
         && pending.entries[0].catalog_id.as_deref() == Some("corner_shop")
 }
 

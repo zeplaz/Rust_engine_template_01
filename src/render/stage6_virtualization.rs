@@ -4,7 +4,7 @@ use bevy::prelude::*;
 
 use crate::dev::runtime_witness::stage6::{
     refresh_stage6_virtualization_witness, write_stage6_virtualization_live_proof_system,
-    Stage6LiveProofState, Stage6VirtualizationWitness,
+    Stage6VirtualizationWitness,
 };
 use bevy::render::extract_resource::{ExtractResource, ExtractResourcePlugin};
 
@@ -227,10 +227,6 @@ impl Plugin for Stage6VirtualizationPlugin {
             .init_resource::<ResidencyDrivenConsumerWindow>()
             .init_resource::<PerViewResidencyConsumerWindow>()
             .init_resource::<Stage6VirtualizationWitness>()
-            .insert_resource(Stage6LiveProofState {
-                write_interval: 90,
-                ..Default::default()
-            })
             .add_plugins(ExtractResourcePlugin::<Stage6VirtualizationFrame>::default())
             .add_systems(
                 Update,
@@ -239,7 +235,8 @@ impl Plugin for Stage6VirtualizationPlugin {
                     enqueue_stream_domain_apply_label,
                     crate::gui::hud::refresh_stage6_hud_telemetry,
                     refresh_stage6_virtualization_witness,
-                    write_stage6_virtualization_live_proof_system,
+                    write_stage6_virtualization_live_proof_system
+                        .run_if(crate::dev::runtime_witness::live_proof_cadence_due),
                 )
                     .chain()
                     .after(crate::gui::WorldRepresentationSystemSet::ComputeFrame)

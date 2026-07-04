@@ -1,7 +1,11 @@
-//! **Legacy** ECS placeholders for roads / rail — not wired to runtime nav or
+//! **Legacy (transitional B)** ECS placeholders for roads / rail — not wired to runtime nav or
 //! [`crate::gui::editor::map_editor::MapEditorRoadMarkerV1`] /
 //! [`crate::systems::transport::TransportTopology`].
-//! Kept for design review and parity with older notes; prefer R8 snapshots + editor bake for new work.
+//!
+//! **MIGRATION:** **INFRA-E0-003** — gated by `legacy_transport_ecs_stubs` feature (default off).
+//! Retire when [`crate::infrastructure::profiles::RailProfile`] + transport graph own the lane
+//! ([`src/dev/plan_infrastructure_world_layers_exec_001_v1.md`](../../dev/plan_infrastructure_world_layers_exec_001_v1.md)).
+//! Prefer R8 snapshots + editor bake for new work.
 #![allow(dead_code)]
 
 use bevy::prelude::*;

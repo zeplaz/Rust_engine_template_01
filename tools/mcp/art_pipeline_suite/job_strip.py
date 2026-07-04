@@ -6,6 +6,7 @@ import tkinter as tk
 from tkinter import ttk
 
 from .aps_theme import COLOR_TEXT_SUBTLE
+from .aps_tooltips import bind_aps_tooltip
 
 
 class JobStrip(ttk.Frame):
@@ -22,6 +23,7 @@ class JobStrip(ttk.Frame):
         ttk.Label(self, textvariable=self._step_var, foreground=COLOR_TEXT_SUBTLE).pack(side=tk.LEFT, padx=(0, 8))
         self._cancel_btn = ttk.Button(self, text="Cancel", command=self._on_cancel)
         self._cancel_btn.pack(side=tk.RIGHT)
+        bind_aps_tooltip(self._cancel_btn, "job_cancel")
 
     def _on_cancel(self) -> None:
         job = self._jobs.active_job()

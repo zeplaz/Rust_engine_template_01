@@ -82,3 +82,27 @@ impl Plugin for SharedOverlayFieldBuffersPlugin {
         app.init_resource::<SharedOverlayFieldBuffers>();
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use bevy::prelude::IVec2;
+
+    #[test]
+    fn chunk_fire_heat_maps_differ_on_epsilon() {
+        let mut prev = HashMap::new();
+        prev.insert(IVec2::ZERO, 0.5);
+        let mut next = prev.clone();
+        next.insert(IVec2::ZERO, 0.5 + CHUNK_FIRE_HEAT_OVERLAY_EPS * 0.5);
+        assert!(!chunk_fire_heat_maps_differ(&prev, &next));
+        next.insert(IVec2::ZERO, 0.5 + CHUNK_FIRE_HEAT_OVERLAY_EPS * 2.0);
+        assert!(chunk_fire_heat_maps_differ(&prev, &next));
+    }
+
+    #[test]
+    fn chunk_fire_heat_maps_differ_on_key_count() {
+        let prev = HashMap::from([(IVec2::ZERO, 0.2)]);
+        let next = HashMap::from([(IVec2::new(1, 0), 0.2)]);
+        assert!(chunk_fire_heat_maps_differ(&prev, &next));
+    }
+}

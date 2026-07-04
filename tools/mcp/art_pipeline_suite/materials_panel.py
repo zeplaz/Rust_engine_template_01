@@ -9,7 +9,7 @@ from .aps_paned import add_pane, horizontal_paned
 from .aps_tooltips import bind_aps_tooltip
 from .aps_theme import COLOR_MUTED, FONT_SMALL
 from .aps_workflow_layout import workflow_intro, workflow_lane_banner, workflow_primary_row
-from .material_library_widget import MaterialLibraryWidget
+from .material_browser import mount_material_library
 from .material_preview_modes import MaterialPreviewModesPanel
 from .state import ArtDomain, SuiteState
 
@@ -51,11 +51,10 @@ class MaterialsPanel(ttk.Frame):
         body.pack(fill=tk.BOTH, expand=True, pady=4)
         lib_wrap = ttk.Frame(body, padding=2)
         add_pane(body, lib_wrap, weight=3, minsize=320)
-        self.library = MaterialLibraryWidget(
+        self.library = mount_material_library(
             lib_wrap,
-            mode="studio",
+            mount="studio",
             on_log=on_log,
-            layout="studio_tree",
             on_open_in_assembly=on_open_in_assembly,
             on_profile_selected=self._on_profile_selected,
             start_job=start_job,

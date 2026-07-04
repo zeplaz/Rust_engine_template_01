@@ -58,7 +58,7 @@
     "relative_path": "debug_runs/logistics_throughput_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "logistics_throughput_live_proof",
-    "written_at_epoch_secs": 1782032229
+    "written_at_epoch_secs": 1783111826
   },
   "edge_saturation_max": 0.0,
   "graph_only_paths": true,
@@ -72,7 +72,7 @@
   "s7p_log_001_green": false,
   "throughput_green": false,
   "todo_total": 24,
-  "topology_revision": 1456375674,
+  "topology_revision": 129,
   "witness": {
     "congestion_feedback": false,
     "corridor_pressure": false,

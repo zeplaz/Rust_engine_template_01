@@ -1,0 +1,35 @@
+{
+  "task_id": "APSR-A2-P2-001",
+  "gate": "APSR-A2-P2-001",
+  "green": true,
+  "preview_state_display_module": "tools/mcp/art_pipeline_suite/preview_state_display.py",
+  "panel_consumers": [
+    {
+      "file": "tools/mcp/art_pipeline_suite/assembly_preview_panel.py",
+      "uses_preview_state_display": true
+    },
+    {
+      "file": "tools/mcp/art_pipeline_suite/atlas_preview_panel.py",
+      "uses_preview_state_display": true
+    },
+    {
+      "file": "tools/mcp/art_pipeline_suite/variants_preview_panel.py",
+      "uses_preview_state_display": true
+    }
+  ],
+  "plan_ref": "src/dev/plan_aps_refactor_v1.md#APSR-P2",
+  "_agent_meta": {
+    "schema": "apsr_a2_p2_live_v1",
+    "profile": "APSR_A2_P2",
+    "relative_path": "debug_runs/apsr_a2_p2_001_live.json",
+    "source_system": "apsr_a2_p2",
+    "written_at_epoch_secs": 1783118442,
+    "ritual": "BLANG:WIT-HON APSR-A2-P2-001"
+  },
+  "witness_honesty": {
+    "status": "passed",
+    "error_count": 0,
+    "warning_count": 0,
+    "summary": "witness_honesty debug_runs/apsr_a2_p2_001_live.json: 0 error(s), 0 issue(s)"
+  }
+}

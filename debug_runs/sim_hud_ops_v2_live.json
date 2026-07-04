@@ -58,7 +58,7 @@
     "relative_path": "debug_runs/sim_hud_ops_v2_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_sim_hud_ops_v2_live_witness",
-    "written_at_epoch_secs": 1783027410
+    "written_at_epoch_secs": 1783111825
   },
   "alert_tier_sort": true,
   "alerts_line_sample": "◆0  ALERTS  0",

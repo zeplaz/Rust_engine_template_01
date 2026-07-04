@@ -1,0 +1,112 @@
+{
+  "_agent_meta": {
+    "agent_commands": [
+      "cargo test -p proc_A_dine01 --lib"
+    ],
+    "docs": {
+      "compile_warnings": "src/dev/COMPILE_WARNINGS_TODOS.md",
+      "stage5_directive": "prompts/guides/stage5_convergence_directive_v1.md",
+      "viewport_recovery": "src/dev/recovery_viewport.md"
+    },
+    "logging_env": {
+      "ORCHESTRATOR_EXPORT_HEALTH": false,
+      "PERF": false,
+      "PERF_DISK": false,
+      "RUST_LOG": null,
+      "SIM_ANALYTICS": false,
+      "SIM_ANALYTICS_FRAMES": false,
+      "SIM_ANALYTICS_QUIET": false,
+      "SIM_VIEW_SYNC_DEBUG": false,
+      "STAGE5_READINESS_VERBOSE": false,
+      "STAGE5_VERBOSE": false,
+      "STALL": false,
+      "VIEWPORT_AUTHORITY_DEBUG": false
+    },
+    "orchestrator": {
+      "build_report": "tools/orchestrator/reports/build_report.md",
+      "ci_entry": "tools/orchestrator/ci/run.ps1",
+      "continuation_queue": "tools/orchestrator/queues/continuation_queue.json",
+      "warning_registry": "tools/orchestrator/reports/warning_registry.md"
+    },
+    "profile": "CITY-G1-C3-001",
+    "related_proofs": [
+      "debug_runs/stage5_full_app_live.json",
+      "debug_runs/infrastructure_view_isolation_live.json",
+      "debug_runs/construction_stage_live.json",
+      "debug_runs/industrial_activation_live.json",
+      "debug_runs/fire_ecology_live.json",
+      "debug_runs/logistics_throughput_live.json",
+      "debug_runs/replay_editor_parity_live.json",
+      "debug_runs/orchestrator_thread_health.json",
+      "debug_runs/viewport_drift.json",
+      "debug_runs/viewport_authority_migration_witness.json",
+      "debug_runs/main_thread_orchestrator_live.json",
+      "debug_runs/stage6_virtualization_live.json",
+      "debug_runs/wave_s_hydrate_live.json",
+      "debug_runs/wave_p_live.json",
+      "debug_runs/wave_c_live.json",
+      "debug_runs/ui_shell_migration_live.json",
+      "debug_runs/minimap_compositor_live.json",
+      "debug_runs/sim_spectrum_analytics_live.json",
+      "debug_runs/stage7_behavioral_live.json",
+      "debug_runs/stage7_play_live.json",
+      "debug_runs/wss_substrate_live.json",
+      "debug_runs/f2_smoke_pipeline_live.json",
+      "debug_runs/play_scenario_live.json",
+      "debug_runs/transport_network_live.json"
+    ],
+    "relative_path": "debug_runs/city_g1_c3_001_live.json",
+    "schema": "debug_run_envelope_v1",
+    "source_system": "refresh_city_g1_c3_001_block_recipe_witness",
+    "written_at_epoch_secs": 1783114441
+  },
+  "block_recipe_charter_green": true,
+  "city_g0_wit_still_green": true,
+  "city_g1_c1_still_green": true,
+  "city_g1_c2_still_green": true,
+  "city_g1_c4_still_green": true,
+  "evaluations": [
+    {
+      "block_archetype": "Industrial",
+      "edge_count": 1,
+      "errors": [],
+      "lot_count": 2,
+      "lot_list_hash": "e3f5ebee7e662e6f",
+      "park_fill_tiles": 0,
+      "recipe_id": "block_recipe_industrial_yard_v1",
+      "scatter_count": 1
+    },
+    {
+      "block_archetype": "LowDensityRes",
+      "edge_count": 1,
+      "errors": [],
+      "lot_count": 2,
+      "lot_list_hash": "f3b2565ce6fd4451",
+      "park_fill_tiles": 4,
+      "recipe_id": "block_recipe_low_density_res_v1",
+      "scatter_count": 0
+    },
+    {
+      "block_archetype": "MediumDensityRes",
+      "edge_count": 1,
+      "errors": [],
+      "lot_count": 4,
+      "lot_list_hash": "6356c2c698845f74",
+      "park_fill_tiles": 0,
+      "recipe_id": "block_recipe_medium_density_res_v1",
+      "scatter_count": 1
+    }
+  ],
+  "gate": "CITY-G1-C3-001",
+  "green": true,
+  "issue": "CITY-C3",
+  "recipes_loaded": 3,
+  "recipes_ok": true,
+  "run_hashes": [
+    "e3f5ebee7e662e6f",
+    "e3f5ebee7e662e6f",
+    "e3f5ebee7e662e6f"
+  ],
+  "stable_lot_hash": "e3f5ebee7e662e6f",
+  "three_run_stable": true
+}

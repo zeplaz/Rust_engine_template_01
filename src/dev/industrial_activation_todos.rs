@@ -10,7 +10,7 @@ use bevy::prelude::{App, Resource};
 use super::construction_live_todos::TodoStatus;
 use super::stage5_live_todos::Stage5LiveTodo;
 
-pub const INDUSTRIAL_ACTIVATION_TODO_COUNT: usize = 31;
+pub const INDUSTRIAL_ACTIVATION_TODO_COUNT: usize = 32;
 
 pub static INDUSTRIAL_ACTIVATION_TODOS: &[Stage5LiveTodo] = &[
     // ── I1 Bridge ───────────────────────────────────────────────────────────
@@ -298,6 +298,16 @@ pub static INDUSTRIAL_ACTIVATION_TODOS: &[Stage5LiveTodo] = &[
         runtime_check: "Unit test or loader warning on productive Industry def missing role.",
         failure_mode: "Chains re-merge into undifferentiated mega-buildings.",
     },
+    // ── MFG Manufacturing core tick (CLN-P0-T7 fold) ───────────────────────
+    Stage5LiveTodo {
+        id: "INDUSTRIAL-MFG-01",
+        status: TodoStatus::Open,
+        file: "src/entities/production/core/manufacturing_plugin.rs",
+        system: "ManufacturingCorePlugin::tick_manufacturing_nodes",
+        goal: "Drive `ManufacturingNode` throughput vs blueprint, decay/efficiency curves, alert events.",
+        runtime_check: "Sim tick mutates node rates when Operational + supply inputs present.",
+        failure_mode: "ManufacturingCorePlugin is a no-op scaffold forever.",
+    },
 ];
 
 #[derive(Resource, Clone, Debug, Default)]
@@ -338,6 +348,8 @@ pub struct IndustrialActivationWitness {
     pub spatial_industrial_district: bool,
     // Governance
     pub no_mega_factory_collapse: bool,
+    /// **INDUSTRIAL-MFG-01** — `ManufacturingCorePlugin` drives node throughput (CLN-P0-T7 fold).
+    pub manufacturing_core_tick: bool,
 }
 
 #[derive(Resource, Default)]
@@ -380,6 +392,7 @@ pub fn industrial_activation_todo_predicate(id: &str, w: &IndustrialActivationWi
         "INDUSTRIAL-I4-03" => w.logistics_path_required,
         "INDUSTRIAL-I4-04" => w.spatial_industrial_district,
         "INDUSTRIAL-GOV-01" => w.no_mega_factory_collapse,
+        "INDUSTRIAL-MFG-01" => w.manufacturing_core_tick,
         _ => false,
     }
 }

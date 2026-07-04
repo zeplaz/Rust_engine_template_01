@@ -29,7 +29,8 @@ use crate::render::gpu_packed_formats::{fire_particle_expanded_vertex_format, pa
 use crate::render::gpu_spark_compute::FireSparkComputePrepareSet;
 use crate::render::gpu_representation_metrics::GpuRepresentationMetrics;
 
-const PARTICLE_WORKGROUP: u32 = 64;
+/// Shared with [`crate::render::gpu_indirect_draw::GPU_INDIRECT_DISPATCH_WORKGROUP`] (MIG-A10).
+pub const PARTICLE_WORKGROUP: u32 = 64;
 
 #[derive(Resource, Clone, ShaderType)]
 pub struct WorldFireParticleDrawUniforms {

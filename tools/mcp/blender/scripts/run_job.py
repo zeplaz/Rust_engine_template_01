@@ -19,7 +19,7 @@ if str(_SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(_SCRIPT_DIR))
 
 from ops.export_glb import export_glb  # noqa: E402
-from ops import module_door, module_prop, module_roof, module_wall, module_window  # noqa: E402
+from ops import module_door, module_prop, module_roof, module_variant_merge, module_wall, module_window  # noqa: E402
 
 _OPS = {
     "module_wall": module_wall.build,
@@ -27,7 +27,9 @@ _OPS = {
     "module_door": module_door.build,
     "module_window": module_window.build,
     "module_prop": module_prop.build,
+    "module_variant_merge": module_variant_merge.build,
 }
+_SELF_EXPORT_OPS = frozenset({"module_variant_merge"})
 
 
 def _argv_after_double_dash() -> list[str]:
@@ -79,9 +81,12 @@ def main() -> None:
     glb_path.parent.mkdir(parents=True, exist_ok=True)
 
     _reset_scene()
+    params["_output_glb"] = str(glb_path)
+    params["_repo_root"] = str(repo_guess)
     _OPS[operation](params)
-    material_profile = params.get("material_profile")
-    export_glb(str(glb_path), material_profile=material_profile, repo_root=repo_guess)
+    if operation not in _SELF_EXPORT_OPS:
+        material_profile = params.get("material_profile")
+        export_glb(str(glb_path), material_profile=material_profile, repo_root=repo_guess)
     print(f"EXPORT_OK {glb_path}")
 
 

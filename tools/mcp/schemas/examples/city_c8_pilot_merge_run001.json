@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "job_id": "city_c8_pilot_merge_run001",
+  "batch_id": "city_c8_pilot_001",
+  "development_tier": "lod0",
+  "operation": "module_variant_merge",
+  "params": {
+    "seed": 42,
+    "name": "city_c8_pilot_variant",
+    "parts": [
+      {
+        "glb_path": "assets/models/modules/wall_brick_1u_production_run001/model.glb",
+        "position": [0.0, 0.0, 0.0],
+        "rotation_euler": [0.0, 0.0, 0.0]
+      },
+      {
+        "glb_path": "assets/models/modules/door_residential_production_run001/model.glb",
+        "position": [1.5, 0.0, 0.0],
+        "rotation_euler": [0.0, 0.0, 0.0]
+      }
+    ]
+  },
+  "output": {
+    "glb": "assets/staging/city_c8_pilot_merge_run001/model.glb"
+  }
+}

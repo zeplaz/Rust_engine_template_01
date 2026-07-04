@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "asset_id": "win_concrete_1u",
+  "archetype": "module_window",
+  "batch_id": "kit_fill_bq_k1_001",
+  "style_pack": "style_modern",
+  "style_packs": [
+    "style_modern"
+  ],
+  "development_tier": "production",
+  "pbr_status": "planned",
+  "material_profile": "concrete_pad_01",
+  "material_family": "concrete",
+  "module": {
+    "grid_units": [
+      1,
+      1
+    ],
+    "snap": "wall_center",
+    "pivot": "bottom_center"
+  },
+  "dimensions_m": {
+    "w": 1.2,
+    "h": 1.5,
+    "d": 0.12
+  },
+  "references": [
+    "ref:charter:BQ-K1-KITFILL-001",
+    "ref:contract:src/dev/design_bq_k1_kitfill_charter_v1.md",
+    "ref:contract:tools/mcp/schemas/module_contract_v1.json"
+  ],
+  "_meta": {
+    "teaches": [
+      "concrete",
+      "window",
+      "kit_fill_bq_k1"
+    ]
+  }
+}

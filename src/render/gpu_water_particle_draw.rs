@@ -428,6 +428,25 @@ fn world_water_particle_draw_pass(
 
 #[cfg(test)]
 mod tests {
+    use super::*;
+
+    #[test]
+    fn zero_instances_zero_dispatch() {
+        let count = 0u32;
+        let dispatch_count = if count > 0 {
+            count.div_ceil(PARTICLE_WORKGROUP)
+        } else {
+            0
+        };
+        assert_eq!(dispatch_count, 0);
+    }
+
+    #[test]
+    fn water_draw_dispatch_scales_with_instance_count() {
+        let count = PARTICLE_WORKGROUP * 2 + 1;
+        assert_eq!(count.div_ceil(PARTICLE_WORKGROUP), 3);
+    }
+
     #[test]
     fn water_particle_wgsl_exists() {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"));

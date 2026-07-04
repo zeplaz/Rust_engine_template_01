@@ -149,7 +149,7 @@ pub fn refresh_construction_phase2_witness_system(
     w.input_conflict_matrix = true;
     w.construction_proof_json = proof
         .as_ref()
-        .map(|p| p.written)
+        .map(|p| p.written())
         .unwrap_or_else(|| {
             std::path::Path::new("debug_runs/construction_stage_live.json").exists()
         });
@@ -331,7 +331,7 @@ pub fn refresh_construction_operational_witness_system(
 ) {
     w.toolbox = session.keep_tool_after_commit;
     w.undo = std::path::Path::new("src/construction/history.rs").exists();
-    w.proof_json = proof.as_ref().is_some_and(|p| p.written)
+    w.proof_json = proof.as_ref().is_some_and(|p| p.written())
         || std::path::Path::new("debug_runs/construction_stage_live.json").exists();
     w.road_commit = true;
     w.zone_paint = true;

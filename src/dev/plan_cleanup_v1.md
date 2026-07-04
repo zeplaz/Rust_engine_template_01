@@ -14,7 +14,8 @@
 # ═════════════════════════════════════════════════════════════════════
 # id:           PLAN-CLEANUP-v1
 # status:       PLANNED — catalog signed 2026-07-03; execution not started
-# companion:    codebase_index_v1.md (CO-*/RN-* entry codes, K## concepts)
+# Companion:    codebase_index_v1.md (CO-*/RN-* entry codes, K## concepts)
+# Deferrals:    plan_deferral_registry_v1.md — DR-CLEANUP-P2 (Phase 2+) · Phase 0 unblocked (MIG-V1 green)
 # owner:        @sim-steward sequences slices · @coder implements · @planner for Phase 4 splits
 # regression:   cargo test -p proc_A_dine01 --lib stage5 construction
 #               validate-report cargo (compression 3) after every code slice
@@ -28,7 +29,7 @@
 #   P1  PERF-INSTR-VFX-002 / plan_visual_perf_production_exec_001 — capture baseline BEFORE Phase 1 D2/D3
 #   P1  PLAN-CLEANUP Phase 0 — zero-risk hygiene (this program)
 #   P2  PLAN-CLEANUP Phase 1 — prod/debug separation (after perf baseline or in parallel with doc-only D2 registry)
-#   P3  PLAN-CLEANUP Phase 2+ — authority/perf/splits; @sim-steward review required
+#   P3  PLAN-CLEANUP Phase 2+ — authority/perf/splits; **DR-CLEANUP-P2** · @sim-steward review required
 
 # ═════════════════════════════════════════════════════════════════════
 # CONFLICT MATRIX (do not parallelize without steward sign-off)
@@ -51,7 +52,7 @@
 # R7    particle spine unify — DEFER until D3 gating lands (perf comparisons must be honest)
 # T2    delivery-wave naming sweep — DEFER until product lane quiet; refresh all witnesses same PR
 # R3    atmosphere dual-path — BLOCKED on debug-intelligence routing packet (see R3-Routing below)
-# R6+T1 minimap source ladder — DEFER until GPU terrain exec decision on TWF vs MMC
+# R6+T1 minimap source ladder — DEFER until GPU terrain exec decision on TWF vs MMC (**DR-GPU-TERRAIN-P0C**)
 
 # R3-Routing-Package (required before any R3 code):
 #   1. Refresh debug_runs/stage5_full_app_live.json baseline

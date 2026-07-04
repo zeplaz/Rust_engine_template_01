@@ -108,7 +108,7 @@ def test_tier_b2_wall_brick_cube_at_production():
         glb_path=repo_root() / "x.glb",
         vertex_count=24,
         archetype="module_wall",
-        profile="flat",
+        profile="brick",
         development_tier="production",
         batch_id="kit_production_001",
         module_id="wall_brick_1u",
@@ -117,6 +117,22 @@ def test_tier_b2_wall_brick_cube_at_production():
     )
     issues = tier_issues_for_asset(ctx, vertex_count=24)
     assert any(i.rule_id == "TIER-002" for i in issues)
+
+
+def test_tier_b2_wall_flat_panel_allows_box_at_lod0():
+    ctx = AssetValidationContext(
+        glb_path=repo_root() / "x.glb",
+        vertex_count=24,
+        archetype="module_wall",
+        profile="flat",
+        development_tier="lod0",
+        batch_id="kit_lod0_001",
+        module_id="wall_brick_1u_lod0_run001",
+        pbr_status="deferred",
+        material_profile="brick_red_01",
+    )
+    issues = tier_issues_for_asset(ctx, vertex_count=24)
+    assert not any(i.kind == "SilhouetteInsufficient" for i in issues)
 
 
 def test_tier_b2_roof_pitched_cube_at_production():

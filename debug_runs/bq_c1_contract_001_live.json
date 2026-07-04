@@ -1,0 +1,87 @@
+{
+  "task_id": "BQ-C1-CONTRACT-001",
+  "gate": "BQ-C1-CONTRACT-001",
+  "green": true,
+  "contract_json": "tools/mcp/schemas/module_contract_v1.json",
+  "contract_schema": "tools/mcp/schemas/module_contract_v1.schema.json",
+  "contract_md": "tools/mcp/schemas/module_contract_v1.md",
+  "python": {
+    "grid_unit_m": 4.0,
+    "floor_height_m": 3.0,
+    "pivot_convention": "bottom_center",
+    "edge_socket_names": [
+      "left",
+      "right",
+      "top",
+      "bottom"
+    ]
+  },
+  "contract": {
+    "schema_version": 1,
+    "grid_unit_m": 4.0,
+    "floor_height_m": 3.0,
+    "pivot_convention": "bottom_center",
+    "edge_socket_names": [
+      "left",
+      "right",
+      "top",
+      "bottom"
+    ],
+    "seam_tolerance_m": 0.01,
+    "module_families": {
+      "wall": {
+        "height_m": 3.0,
+        "width_grid_units": [
+          1,
+          2,
+          3
+        ]
+      },
+      "door": {
+        "target_wall_height_m": 3.0,
+        "opening_height_m": 2.1,
+        "frame_align_top_to_wall": true
+      },
+      "window": {
+        "target_wall_height_m": 3.0,
+        "sill_height_m": 0.9,
+        "head_height_m": 2.4
+      },
+      "roof": {
+        "seat_plane_export_min_y": 0.0,
+        "notes": "After glTF export (Blender Y\u2192glTF \u2212Z), seat plane min bound \u2265 0 (BQ-F1)."
+      },
+      "corner": {
+        "height_m": 3.0
+      },
+      "prop": {
+        "bottom_pivot_y_zero": true
+      }
+    }
+  },
+  "parity": {
+    "missing_files": [],
+    "schema_valid": true,
+    "grid_unit_m": true,
+    "floor_height_m": true,
+    "pivot_convention": true,
+    "edge_socket_names": true,
+    "wall_height_m": true,
+    "green": true
+  },
+  "plan_ref": "src/dev/plan_building_quality_v1.md#BQ-C1",
+  "_agent_meta": {
+    "schema": "building_quality_bq_c1_live_v1",
+    "profile": "BQ_C1_CONTRACT",
+    "relative_path": "debug_runs/bq_c1_contract_001_live.json",
+    "source_system": "building_quality_bq_c1",
+    "written_at_epoch_secs": 1783114938,
+    "ritual": "BLANG:WIT-HON BQ-C1-CONTRACT-001"
+  },
+  "witness_honesty": {
+    "status": "passed",
+    "error_count": 0,
+    "warning_count": 0,
+    "summary": "witness_honesty debug_runs/bq_c1_contract_001_live.json: 0 error(s), 0 issue(s)"
+  }
+}

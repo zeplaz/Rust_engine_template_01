@@ -1,4 +1,10 @@
 //! GPU instanced terrain atlas draw (P0-C′) — one quad per world tile from chunk matrices.
+//!
+//! **P0-C′-PRIME interim (plan Q3):** Simulation default uses dirty-gated **sprite texture bake**
+//! via [`super::terrain_render_authority::TerrainRenderAuthority::uses_gpu_sprite_display`].
+//! The Core2d instanced pass remains wired for a future flip when per-tile instancing replaces
+//! the sprite bake; [`sync_terrain_instances_from_chunks`] clears instances while sprite display
+//! is active.
 
 use std::borrow::Cow;
 

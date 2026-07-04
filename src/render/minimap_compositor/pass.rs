@@ -84,6 +84,18 @@ pub struct MinimapCompositorState {
     pub terrain_source_label: &'static str,
 }
 
+/// P0-E witness helper — terrain source label from terrain render authority.
+#[must_use]
+pub fn minimap_terrain_source_label(
+    authority: crate::render::TerrainRenderAuthority,
+) -> &'static str {
+    if authority.is_gpu() {
+        "gpu_atlas"
+    } else {
+        "cpu_fallback"
+    }
+}
+
 impl Default for MinimapCompositorState {
     fn default() -> Self {
         Self {
@@ -536,11 +548,7 @@ pub fn run_minimap_compositor_pass(
     }
 
     compositor.compositor_revision = registry.revision;
-    compositor.terrain_source_label = if authority.is_gpu() {
-        "gpu_atlas"
-    } else {
-        "cpu_fallback"
-    };
+    compositor.terrain_source_label = minimap_terrain_source_label(*authority);
     compositor.last_overlay_revision = overlay_revision;
     compositor.logistics_rows = logistics_rows;
     compositor.construction_rows = construction_rows;

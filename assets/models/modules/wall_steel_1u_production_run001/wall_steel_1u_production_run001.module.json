@@ -5,6 +5,7 @@
   "style_pack": "style_industrial_west",
   "development_tier": "production",
   "pbr_status": "shipped",
+  "batch_id": "kit_production_002",
   "module": {
     "grid_units": [1, 1],
     "snap": "floor_edge",
@@ -12,5 +13,10 @@
   },
   "dimensions_m": { "w": 4, "h": 3, "d": 0.2 },
   "material_profile": "steel_panel_01",
-  "references": ["ref:kit:kit_production_001"]
+  "references": [
+    "ref:kit:kit_production_002",
+    "ref:gate:MCP-P2-KIT002-G1",
+    "ref:manifest:batch_kit_production_002",
+    "ref:audit:PG-MODULE-AUDIT-002"
+  ]
 }

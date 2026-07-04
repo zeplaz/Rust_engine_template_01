@@ -1,0 +1,205 @@
+{
+  "_agent_meta": {
+    "agent_commands": [
+      "cargo test -p proc_A_dine01 --lib"
+    ],
+    "docs": {
+      "compile_warnings": "src/dev/COMPILE_WARNINGS_TODOS.md",
+      "stage5_directive": "prompts/guides/stage5_convergence_directive_v1.md",
+      "viewport_recovery": "src/dev/recovery_viewport.md"
+    },
+    "logging_env": {
+      "ORCHESTRATOR_EXPORT_HEALTH": false,
+      "PERF": false,
+      "PERF_DISK": false,
+      "RUST_LOG": null,
+      "SIM_ANALYTICS": false,
+      "SIM_ANALYTICS_FRAMES": false,
+      "SIM_ANALYTICS_QUIET": false,
+      "SIM_VIEW_SYNC_DEBUG": false,
+      "STAGE5_READINESS_VERBOSE": false,
+      "STAGE5_VERBOSE": false,
+      "STALL": false,
+      "VIEWPORT_AUTHORITY_DEBUG": false
+    },
+    "orchestrator": {
+      "build_report": "tools/orchestrator/reports/build_report.md",
+      "ci_entry": "tools/orchestrator/ci/run.ps1",
+      "continuation_queue": "tools/orchestrator/queues/continuation_queue.json",
+      "warning_registry": "tools/orchestrator/reports/warning_registry.md"
+    },
+    "profile": "MIG-A",
+    "related_proofs": [
+      "debug_runs/stage5_full_app_live.json",
+      "debug_runs/infrastructure_view_isolation_live.json",
+      "debug_runs/construction_stage_live.json",
+      "debug_runs/industrial_activation_live.json",
+      "debug_runs/fire_ecology_live.json",
+      "debug_runs/logistics_throughput_live.json",
+      "debug_runs/replay_editor_parity_live.json",
+      "debug_runs/orchestrator_thread_health.json",
+      "debug_runs/viewport_drift.json",
+      "debug_runs/viewport_authority_migration_witness.json",
+      "debug_runs/main_thread_orchestrator_live.json",
+      "debug_runs/stage6_virtualization_live.json",
+      "debug_runs/wave_s_hydrate_live.json",
+      "debug_runs/wave_p_live.json",
+      "debug_runs/wave_c_live.json",
+      "debug_runs/ui_shell_migration_live.json",
+      "debug_runs/minimap_compositor_live.json",
+      "debug_runs/sim_spectrum_analytics_live.json",
+      "debug_runs/stage7_behavioral_live.json",
+      "debug_runs/stage7_play_live.json",
+      "debug_runs/wss_substrate_live.json",
+      "debug_runs/f2_smoke_pipeline_live.json",
+      "debug_runs/play_scenario_live.json",
+      "debug_runs/transport_network_live.json"
+    ],
+    "relative_path": "debug_runs/mig_bevy_019/mig_a_rollup.json",
+    "schema": "debug_run_envelope_v1",
+    "source_system": "mig_a_rollup_witness",
+    "written_at_epoch_secs": 1783115023
+  },
+  "blocked_slices": [
+    "A15"
+  ],
+  "closed_handoff_slices": [
+    "A9"
+  ],
+  "closed_wont_adopt_slices": [
+    "A8",
+    "A11"
+  ],
+  "green": true,
+  "measurement": {
+    "baseline_post": "debug_runs/mig_bevy_019/baseline_stage5_post019.json",
+    "baseline_pre": "debug_runs/mig_bevy_019/baseline_stage5_pre019.json",
+    "perf_env": "PERF_NO_VSYNC=1 cargo run --release -- --test visual"
+  },
+  "phase": "MIG-A",
+  "program": "PLAN-BEVY-019-MIG-v1",
+  "program_closed": true,
+  "program_closed_note": "All non-blocked MIG-A slices shipped or closed. A11/A13/A17 deep perf = POST-MIG (PERF-GPU), not migration.",
+  "slices": {
+    "A1": {
+      "enabled": true,
+      "note": "StaticTransformOptimizations",
+      "status": "shipped"
+    },
+    "A10": {
+      "enabled": false,
+      "note": "GpuIndirectDrawSpine dispatch_count authority via apply_gpu_indirect_spine_dispatch_authority",
+      "status": "shipped",
+      "workgroup": 64
+    },
+    "A11": {
+      "custom_passes": [
+        "gpu_tile_debug_draw",
+        "terrain_instanced_draw",
+        "gpu_fire_particle_raster",
+        "gpu_water_particle_raster",
+        "gpu_water_surface_draw"
+      ],
+      "note": "Migration scope = pass inventory audit (done). Stock depth-prepass merge = POST-MIG perf, not migration.",
+      "status": "closed_wont_adopt",
+      "witness": "debug_runs/mig_bevy_019/mig_a_a11_depth_prepass_audit.json"
+    },
+    "A12": {
+      "note": "Sparse mesh uniforms — terrain_instanced storage upload_bytes tracked via MigAUploadMetrics",
+      "status": "shipped",
+      "terrain_upload_bytes_last": 0
+    },
+    "A13": {
+      "cpu_light_clusters_last": 0,
+      "cpu_light_requests_last": 0,
+      "note": "CPU fire_visual_extract clustering metrics wired for 0.19. GPU Bevy cluster replace = POST-MIG perf (plan_gpu_terrain / fire perf).",
+      "status": "shipped"
+    },
+    "A14": {
+      "enabled": false,
+      "note": "VisibilityRangePlugin + tactical static bulk wide range (MIG_A14=0 disables)",
+      "status": "shipped",
+      "tagged": 0
+    },
+    "A15": {
+      "note": "No MorphWeights in src/ — defer until procedural skinning product need (DR-MIG-A15)",
+      "status": "product_blocked"
+    },
+    "A16": {
+      "note": "MigAStaticBulk marker + A1 dirty-tree skip",
+      "status": "shipped"
+    },
+    "A17": {
+      "files": [
+        "terrain_instanced_draw.rs",
+        "gpu_tile_debug_draw.rs",
+        "gpu_particle_draw.rs"
+      ],
+      "note": "terrain_instanced_draw + RN-* batch metrics — migration shipped on 0.19",
+      "status": "shipped",
+      "terrain_instance_count_last": 0,
+      "witness": "debug_runs/mig_bevy_019/mig_a_a17_mesh_collection_audit.json"
+    },
+    "A18": {
+      "capture": "opt_in_env",
+      "note": "Frame perf witness path — MIG_A18=1 or PERF=1 after frame 120",
+      "status": "shipped",
+      "witness": "debug_runs/mig_bevy_019/mig_a_frame_perf.json"
+    },
+    "A2": {
+      "note": "NoCpuCulling on static bulk",
+      "status": "shipped",
+      "tagged": 3
+    },
+    "A3": {
+      "note": "DiagnosticsOverlayPlugin behind feature dev_tools + MIG_A3!=0 — optional dev overlay, not migration gate",
+      "requires": "cargo build --features dev_tools",
+      "status": "shipped"
+    },
+    "A4": {
+      "enabled": false,
+      "note": "RenderErrorHandler Recover — opt-in via MIG_A4=1; hook registered when enabled",
+      "status": "shipped"
+    },
+    "A5": {
+      "last_batch_preallocated": 0,
+      "note": "RemoteAllocator pre-reserve before stream apply — MIG_A5=0 disables",
+      "status": "shipped"
+    },
+    "A6": {
+      "note": "contiguous_iter atmosphere fill + ember heat/fuel slice scan",
+      "status": "shipped"
+    },
+    "A7": {
+      "note": "LiveProofCadencePlugin First arm + run_if write_due on all live-proof writers",
+      "status": "shipped",
+      "writers_armed": [
+        "wave_c",
+        "wave_s",
+        "stage6_virtualization",
+        "fire_ecology",
+        "wss_substrate",
+        "construction_stage",
+        "view_runtime",
+        "industrial_activation",
+        "logistics_throughput",
+        "fire_streaming",
+        "wave_p",
+        "stage7_play",
+        "stage7_behavioral"
+      ]
+    },
+    "A8": {
+      "coexistence": "src/gui/hud/shell_persistence.rs",
+      "note": "SettingsPlugin deferred permanently — shell_persistence owns HUD layout RON",
+      "status": "closed_wont_adopt",
+      "witness": "debug_runs/mig_bevy_019/mig_a_a8_settings_coexistence_audit.json"
+    },
+    "A9": {
+      "note": "Migration pilot done — BSN expansion is product-owned (DR-CITY-C6-VIS / DR-CITY-C6-BSN)",
+      "product_owner": "plan_city_grammar_upgrade_v1.md § BSN ASSEMBLY CHARTER",
+      "status": "handoff_complete",
+      "witness": "debug_runs/mig_bevy_019/mig_a_a9_bsn_scene_handoff.json"
+    }
+  }
+}

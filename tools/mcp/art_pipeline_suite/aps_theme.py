@@ -68,6 +68,8 @@ PANE_MIN_DETAIL = 280
 PANE_MIN_CANVAS = 320
 ROW_HEIGHT = 24
 SASH_WIDTH = 7
+# DES-APS-SMOOTHNESS-001 §3 — reserve validation banner row (no layout jump).
+VALIDATION_BANNER_MIN_PX = 24
 
 # Back-compat aliases (prefer GAP_* in new code)
 PAD_SM = GAP_SM

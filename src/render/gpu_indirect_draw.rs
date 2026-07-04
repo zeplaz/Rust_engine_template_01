@@ -1,11 +1,18 @@
 //! GPU-driven draw spine — compact post-LOD particle rows into indirect draw args.
+//!
+//! **MIG-A10:** [`apply_gpu_indirect_spine_dispatch_authority`] mirrors `dispatch_count` from the
+//! spine onto [`WorldFireParticleDrawDispatch`] so compute prepass workgroups have a single authority.
 
 use bevy::prelude::*;
 
 use crate::gui::RepresentationResult;
-use crate::render::gpu_particle_draw::WorldFireParticleDrawDispatch;
+use crate::render::gpu_particle_draw::{WorldFireParticleDrawDispatch, PARTICLE_WORKGROUP};
 use crate::render::gpu_particles::WorldFireParticleFrame;
+use crate::render::gpu_representation_metrics::GpuRepresentationMetrics;
 use crate::render::Stage5ReadinessProfile;
+
+/// Workgroup size for particle indirect dispatch (shared with compute raster prepass).
+pub const GPU_INDIRECT_DISPATCH_WORKGROUP: u32 = PARTICLE_WORKGROUP;
 
 /// Expanded billboard vertices per instanced fire particle row.
 pub const WORLD_FIRE_VERTICES_PER_INSTANCE: u32 = 4;
@@ -41,7 +48,7 @@ pub fn compact_world_fire_indirect_draw(
             .min(policy.gpu_budget.particle_rows_cap as u32)
     };
     let dispatch_count = if capped > 0 {
-        capped.div_ceil(64)
+        capped.div_ceil(GPU_INDIRECT_DISPATCH_WORKGROUP)
     } else {
         0
     };
@@ -79,13 +86,33 @@ pub fn sync_world_fire_indirect_draw(
     }
 }
 
+/// MIG-A10 — particle compute `dispatch_count` follows [`GpuIndirectDrawSpine`] when instances align.
+pub fn apply_gpu_indirect_spine_dispatch_authority(
+    spine: Res<GpuIndirectDrawSpine>,
+    mut draw: ResMut<WorldFireParticleDrawDispatch>,
+    mut metrics: ResMut<GpuRepresentationMetrics>,
+) {
+    if !crate::render::mig_a_adoption::mig_a10_spine_dispatch_authority() {
+        return;
+    }
+    if draw.instance_count != spine.world_fire.instance_count {
+        return;
+    }
+    draw.dispatch_count = spine.dispatch_count;
+    metrics.record_dispatch_count(draw.dispatch_count);
+}
+
 pub struct GpuIndirectDrawSpinePlugin;
 
 impl Plugin for GpuIndirectDrawSpinePlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<GpuIndirectDrawSpine>().add_systems(
             PostUpdate,
-            sync_world_fire_indirect_draw
+            (
+                sync_world_fire_indirect_draw,
+                apply_gpu_indirect_spine_dispatch_authority.after(sync_world_fire_indirect_draw),
+            )
+                .chain()
                 .after(crate::render::extraction::FireVisualFrameSet::EmitParticles)
                 .after(crate::render::sync_particle_draw_dispatch_from_policy),
         );
@@ -150,6 +177,29 @@ mod tests {
         let spine = compact_world_fire_indirect_draw(&policy, &particles, &draw);
         assert_eq!(spine.world_fire.instance_count, 0);
         assert_eq!(spine.dispatch_count, 0);
+    }
+
+    #[test]
+    fn mig_a10_spine_authority_reasserts_dispatch_count() {
+        let mut app = App::new();
+        app.init_resource::<WorldFireParticleDrawDispatch>();
+        app.init_resource::<GpuRepresentationMetrics>();
+        app.init_resource::<GpuIndirectDrawSpine>();
+        app.insert_resource(WorldFireParticleDrawDispatch {
+            instance_count: 130,
+            dispatch_count: 99,
+        });
+        app.insert_resource(GpuIndirectDrawSpine {
+            world_fire: WorldFireIndirectDrawArgs {
+                instance_count: 130,
+                ..Default::default()
+            },
+            dispatch_count: 3,
+        });
+        app.add_systems(PostUpdate, apply_gpu_indirect_spine_dispatch_authority);
+        app.update();
+        let draw = app.world().resource::<WorldFireParticleDrawDispatch>();
+        assert_eq!(draw.dispatch_count, 3);
     }
 
     #[test]

@@ -4,11 +4,11 @@
     "program_id": "PLAN-CITY-GRAMMAR-v1",
     "plan_doc": "src/dev/plan_city_grammar_upgrade_v1.md",
     "date": "2026-07-03",
-    "status": "ACTIVE",
-    "active_phase": "G1",
-    "priority": "P2",
+    "status": "PROGRAM_CLOSED",
+    "active_phase": "none",
+    "priority": "P3",
     "branch": "master",
-    "rule": "G1 C2 BlockFrame closed 2026-07-03 · C3 BlockRecipe evaluator next",
+    "rule": "Coder drain closed 2026-07-03 · DR-MIG-TILEMAP only defer · handoff → PLAN-BUILDING-QUALITY-v1",
     "regression": "cargo test -p proc_A_dine01 --lib block_archetype",
     "cross_program": {
       "aps_g4": "APS-G4-COVERAGE-001 done 2026-07-03 — CITY-C5 no longer blocked on pilot_hardcode",
@@ -19,9 +19,9 @@
   "dispatch_now": {
     "coder_a": "idle — CITY-G0-S11-001 done 2026-07-03",
     "coder_b": "idle — CITY-G0-S1C-001 done 2026-07-03",
-    "coder": "idle — CITY-G1-C2-001 done 2026-07-03",
-    "coder-mcp": "idle — CMCP-CITY-G1-C4-001 done 2026-07-03",
-    "designer-mcp": "DES-CITY-BLOCK-RECIPE-001 SIGNED 2026-07-03 — CITY-G1-C3-001 ready",
+    "coder": "idle — CITY-G2-C5-001 done 2026-07-03",
+    "coder-mcp": "idle — BQ-C2/C3 + CITY-C8 + VEG/E4 done 2026-07-03; APSR-S1 deferred",
+    "designer-mcp": "DES-CITY-PALETTE-VARIATION-001 SIGNED 2026-07-03 — CITY-G2-C5-001 ready",
     "designer": "on-call — no G0 designer picks; APS building-tier specs remain authoritative for APS UI only",
     "planner-mcp": "idle — phases in plan_city_grammar_upgrade_v1.md"
   },
@@ -144,51 +144,99 @@
       "seq": 9,
       "phase": "G1",
       "id": "CITY-G1-C3-001",
-      "status": "ready",
+      "status": "done",
       "priority": "P3",
       "owner": "coder",
       "issue": "CITY-C3",
       "goal": "Block recipe evaluator wired to BlockArchetype",
       "depends_on": ["CITY-G1-C2-001", "DES-CITY-BLOCK-RECIPE-001"],
-      "exit": "one district coherent blocks from fixed seed"
+      "exit": "one district coherent blocks from fixed seed",
+      "witness": "debug_runs/city_g1_c3_001_live.json",
+      "closed": "2026-07-03"
     },
     {
       "seq": 10,
       "phase": "G2",
       "id": "DES-CITY-PALETTE-VARIATION-001",
-      "status": "blocked",
+      "status": "done",
       "priority": "P3",
       "owner": "designer-mcp",
       "issue": "CITY-C5",
       "goal": "Kit × palette variation axis charter (module kit + tile atlas)",
       "depends_on": ["CITY-G1-C3-001"],
       "deliverable": "src/dev/design_city_palette_variation_v1.md",
-      "unblocks": ["CITY-G2-C5-001"],
-      "note": "APS-G4 green 2026-07-03 — pilot_hardcode gate cleared"
+      "deliverable_status": "SIGNED 2026-07-03",
+      "witness": "debug_runs/city_palette_variation_charter_live.json",
+      "closed": "2026-07-03",
+      "unblocks": ["CITY-G2-C5-001"]
     },
     {
       "seq": 11,
       "phase": "G2",
       "id": "CITY-G2-C5-001",
-      "status": "blocked",
+      "status": "done",
       "priority": "P3",
       "owner": "coder",
       "issue": "CITY-C5",
       "goal": "Palette/variation axis in module_index + tile_atlas_index",
       "depends_on": ["DES-CITY-PALETTE-VARIATION-001"],
-      "co_owner": "coder-mcp"
+      "co_owner": "coder-mcp",
+      "witness": "debug_runs/city_g2_c5_001_live.json",
+      "mcp_witness": "debug_runs/city_g2_c5_mcp_live.json",
+      "closed": "2026-07-03"
     },
     {
       "seq": 12,
       "phase": "G3",
       "id": "CITY-C8-PIPELINE-001",
-      "status": "blocked",
+      "status": "done",
       "priority": "P3",
       "owner": "coder-mcp",
       "issue": "CITY-C8",
       "goal": "Bake-time mesh merge per building variant GLB",
       "depends_on": ["CITY-G1-C3-001"],
-      "note": "parallel-ok with G0 when pipeline-only; not MIG render lane"
+      "witness": "debug_runs/city_c8_pipeline_001_live.json",
+      "closed": "2026-07-03"
+    },
+    {
+      "seq": 13,
+      "phase": "G3",
+      "id": "CITY-G3-ROLLOUT-001",
+      "status": "done",
+      "owner": "coder",
+      "issue": "CITY-C3/C7",
+      "witness": "debug_runs/city_g3_rollout_live.json",
+      "closed": "2026-07-03"
+    },
+    {
+      "seq": 14,
+      "phase": "G3",
+      "id": "CITY-C6-BSN-001",
+      "status": "done",
+      "owner": "coder",
+      "issue": "CITY-C6",
+      "witness": "debug_runs/city_c6_bsn_001_live.json",
+      "closed": "2026-07-03"
+    },
+    {
+      "seq": 15,
+      "phase": "P",
+      "id": "CITY-P1-001",
+      "status": "done",
+      "owner": "coder",
+      "issue": "CITY-P1",
+      "witness": "debug_runs/city_p1_001_live.json",
+      "closed": "2026-07-03"
+    },
+    {
+      "seq": 16,
+      "phase": "P",
+      "id": "CITY-P2-001",
+      "status": "done",
+      "owner": "coder",
+      "issue": "CITY-P2",
+      "witness": "debug_runs/city_p2_001_live.json",
+      "closed": "2026-07-03"
     }
   ]
 }

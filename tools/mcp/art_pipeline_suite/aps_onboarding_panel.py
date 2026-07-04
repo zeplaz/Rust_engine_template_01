@@ -35,6 +35,7 @@ from .aps_theme import (
     GAP_SM,
     GAP_XS,
 )
+from .aps_tooltips import bind_aps_tooltip
 
 
 class OnboardingPanel(ttk.Frame):
@@ -109,6 +110,7 @@ class OnboardingPanel(ttk.Frame):
         btn_row.pack(anchor=tk.E, pady=(GAP_MD, 0))
         self._dismiss_btn = ttk.Button(btn_row, text=ONBOARDING_DISMISS, command=self.dismiss)
         self._dismiss_btn.pack(side=tk.RIGHT)
+        bind_aps_tooltip(self._dismiss_btn, "onboard_dismiss")
 
     def dismiss(self) -> None:
         if self._on_dismiss is not None:

@@ -1,0 +1,24 @@
+{
+  "task_id": "APSR-A4-Q3-001",
+  "gate": "APSR-A4-Q3-001",
+  "green": true,
+  "golden_seed_count": 12,
+  "bq_q3_witness": "debug_runs/bq_q3_golden_001_live.json",
+  "rubric_rows_path": "debug_runs/aps_golden_seed_rubric_rows.json",
+  "rubric_row_count": 1,
+  "plan_ref": "src/dev/plan_aps_refactor_v1.md#APSR-Q3",
+  "_agent_meta": {
+    "schema": "apsr_a4_q3_live_v1",
+    "profile": "APSR_A4_Q3",
+    "relative_path": "debug_runs/apsr_a4_q3_001_live.json",
+    "source_system": "apsr_a4_q3",
+    "written_at_epoch_secs": 1783118446,
+    "ritual": "BLANG:WIT-HON APSR-A4-Q3-001"
+  },
+  "witness_honesty": {
+    "status": "passed",
+    "error_count": 0,
+    "warning_count": 0,
+    "summary": "witness_honesty debug_runs/apsr_a4_q3_001_live.json: 0 error(s), 0 issue(s)"
+  }
+}

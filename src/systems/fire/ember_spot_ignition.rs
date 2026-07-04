@@ -121,6 +121,8 @@ pub fn emit_ember_spot_ignition_events(
         let rain = (1.0_f32 - wx.rain_intensity * 0.85).max(0.0);
         let wind = 1.0 + wx.wind_speed * 0.75;
 
+        let heat = ovl.heat.as_slice();
+        let fuel = ovl.fuel.as_slice();
         let mut sent = 0usize;
         for i in 0..n {
             if sent >= MAX_EMBERS_PER_CHUNK {
@@ -129,11 +131,11 @@ pub fn emit_ember_spot_ignition_events(
             if water_gate.cell_has_standing_water(matrix, i) {
                 continue;
             }
-            let h = ovl.heat[i];
+            let h = heat[i];
             if h < HEAT_MIN {
                 continue;
             }
-            let f = ovl.fuel[i];
+            let f = fuel[i];
             let base_p = h * h * f * ember * rain * wind * dt * 0.55;
             if base_p <= 0.0 {
                 continue;

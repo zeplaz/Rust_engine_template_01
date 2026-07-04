@@ -54,9 +54,11 @@ class VariantsPanel(ttk.Frame):
         on_log,
         start_job=None,
         on_go_assembly=None,
+        atlas_service=None,
     ) -> None:
         super().__init__(master, padding=8)
         self.state = state
+        self._atlas = atlas_service
         self._on_log = on_log
         self._start_job = start_job
         self._on_go_assembly = on_go_assembly
@@ -823,7 +825,8 @@ class VariantsPanel(ttk.Frame):
         if result.get("ok"):
             png = result.get("png")
             rel = Path(str(png)).relative_to(repo_root()) if png else None
-            self.state.atlas_folder = str((repo_root() / "assets/staging/tiles" / self._data["assembly_id"]).resolve())
+            if self._atlas and self._data.get("assembly_id"):
+                self._atlas.set_folder_from_assembly_id(str(self._data["assembly_id"]))
             self._set_status(f"Bake OK · {rel}", ok=True)
         else:
             self._set_status(f"Bake failed: {result.get('error') or 'failed'}", ok=False)

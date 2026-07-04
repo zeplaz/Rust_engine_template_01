@@ -221,10 +221,12 @@ mod tests {
             WeatherSimulationPlugin,
             EcologyPlugin,
             super::super::FirePlugin,
+            crate::dev::runtime_witness::LiveProofCadencePlugin,
         ));
         app.init_resource::<FireEcologyLiveProofState>();
         app.world_mut()
             .resource_mut::<FireEcologyLiveProofState>()
+            .cadence
             .write_interval = 5;
         let mut matrix = ChunkCellMatrix::new(UVec2::new(4, 4));
         for m in matrix.moisture.iter_mut() {
@@ -281,6 +283,6 @@ mod tests {
         let json: serde_json::Value =
             serde_json::from_str(&fs::read_to_string(&path).expect("read")).expect("parse");
         assert_eq!(json["profile"], "FIRE_ECOLOGY_F1");
-        assert!(app.world().resource::<FireEcologyLiveProofState>().written);
+        assert!(app.world().resource::<FireEcologyLiveProofState>().written());
     }
 }

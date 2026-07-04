@@ -518,6 +518,45 @@ mod tests {
     }
 
     #[test]
+    fn variant_key_resolves_archive_uv_and_lookup_frame() {
+        let reg = load_tile_atlas_archive_registry();
+        let entry = reg
+            .get("rowhouse_victorian_pilot_v1")
+            .expect("archived pilot");
+        let via_registry = reg
+            .resolve_variant_uv("rowhouse_victorian_pilot_v1", "clean_day")
+            .expect("clean_day via registry");
+        assert_eq!(via_registry, [0.0, 0.0, 0.5, 1.0]);
+        if let Some(via_lookup) = entry.lookup_uv("clean_day", 0, 0) {
+            assert_eq!(via_lookup, via_registry);
+        }
+        for key in entry.variants.keys() {
+            let uv = reg
+                .resolve_variant_uv("rowhouse_victorian_pilot_v1", key)
+                .expect(key);
+            assert_eq!(uv.len(), 4);
+        }
+    }
+
+    #[test]
+    fn variant_key_frame_maps_to_gpu_material_index() {
+        let frame: u8 = 7;
+        let mut stamps = crate::gui::map_tile_atlas_stamp::TerrainGpuStampIndices::default();
+        let req = crate::gui::map_tile_atlas_stamp::TileAtlasStampRequest {
+            atlas_id: "test".into(),
+            variant_key: "burning_07".into(),
+            facing: 0,
+            frame,
+            uv: [0.0, 0.0, 0.25, 0.25],
+            origin: IVec2::ZERO,
+            footprint_w: 1,
+            footprint_h: 1,
+        };
+        crate::gui::map_tile_atlas_stamp::queue_gpu_terrain_stamp_indices(&[req], &mut stamps);
+        assert_eq!(stamps.tiles.get(&IVec2::ZERO), Some(&(frame as u32)));
+    }
+
+    #[test]
     fn tile_atlas_registry_empty_when_index_missing() {
         let reg = load_tile_atlas_registry_from_path(Path::new(
             "assets/configs/buildings/_tile_atlas_index_missing_test.ron",

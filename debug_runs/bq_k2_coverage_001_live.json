@@ -1,0 +1,261 @@
+{
+  "gate": "BQ-K2-COVERAGE-001",
+  "charter_doc": "src/dev/design_bq_k2_coverage_charter_v1.md",
+  "style_pack_count": 7,
+  "slot_resolution": {
+    "style_pack_count": 7,
+    "complete_count": 7,
+    "style_packs": [
+      {
+        "style_pack_id": "style_colonial",
+        "label": "Colonial",
+        "slot_total": 9,
+        "slot_covered": 9,
+        "coverage_pct": 100.0,
+        "complete": true,
+        "missing_slots": []
+      },
+      {
+        "style_pack_id": "style_industrial_soviet",
+        "label": "Industrial Soviet",
+        "slot_total": 8,
+        "slot_covered": 8,
+        "coverage_pct": 100.0,
+        "complete": true,
+        "missing_slots": []
+      },
+      {
+        "style_pack_id": "style_industrial_west",
+        "label": "Industrial West",
+        "slot_total": 11,
+        "slot_covered": 11,
+        "coverage_pct": 100.0,
+        "complete": true,
+        "missing_slots": []
+      },
+      {
+        "style_pack_id": "style_military",
+        "label": "Military",
+        "slot_total": 8,
+        "slot_covered": 8,
+        "coverage_pct": 100.0,
+        "complete": true,
+        "missing_slots": []
+      },
+      {
+        "style_pack_id": "style_modern",
+        "label": "Modern",
+        "slot_total": 9,
+        "slot_covered": 9,
+        "coverage_pct": 100.0,
+        "complete": true,
+        "missing_slots": []
+      },
+      {
+        "style_pack_id": "style_rural",
+        "label": "Rural",
+        "slot_total": 9,
+        "slot_covered": 9,
+        "coverage_pct": 100.0,
+        "complete": true,
+        "missing_slots": []
+      },
+      {
+        "style_pack_id": "style_victorian",
+        "label": "Victorian",
+        "slot_total": 9,
+        "slot_covered": 9,
+        "coverage_pct": 100.0,
+        "complete": true,
+        "missing_slots": []
+      }
+    ],
+    "green": true
+  },
+  "slot_key_audit": [
+    {
+      "style_pack_id": "style_colonial",
+      "required_slot_count": 9,
+      "declared_slot_count": 9,
+      "missing_slot_keys": [],
+      "slot_keys_complete": true
+    },
+    {
+      "style_pack_id": "style_industrial_soviet",
+      "required_slot_count": 9,
+      "declared_slot_count": 8,
+      "missing_slot_keys": [],
+      "slot_keys_complete": true
+    },
+    {
+      "style_pack_id": "style_industrial_west",
+      "required_slot_count": 11,
+      "declared_slot_count": 11,
+      "missing_slot_keys": [],
+      "slot_keys_complete": true
+    },
+    {
+      "style_pack_id": "style_military",
+      "required_slot_count": 8,
+      "declared_slot_count": 8,
+      "missing_slot_keys": [],
+      "slot_keys_complete": true
+    },
+    {
+      "style_pack_id": "style_modern",
+      "required_slot_count": 9,
+      "declared_slot_count": 9,
+      "missing_slot_keys": [],
+      "slot_keys_complete": true
+    },
+    {
+      "style_pack_id": "style_rural",
+      "required_slot_count": 9,
+      "declared_slot_count": 9,
+      "missing_slot_keys": [],
+      "slot_keys_complete": true
+    },
+    {
+      "style_pack_id": "style_victorian",
+      "required_slot_count": 9,
+      "declared_slot_count": 9,
+      "missing_slot_keys": [],
+      "slot_keys_complete": true
+    }
+  ],
+  "style_purity_gaps": [
+    {
+      "style_pack_id": "style_colonial",
+      "slot_key": "roof_default",
+      "current_module_id": "roof_pitched_gable",
+      "target_module_id": "roof_brick_gable_2u",
+      "material_family": "brick"
+    },
+    {
+      "style_pack_id": "style_victorian",
+      "slot_key": "roof_default",
+      "current_module_id": "roof_pitched_gable",
+      "target_module_id": "roof_brick_gable_2u",
+      "material_family": "brick"
+    },
+    {
+      "style_pack_id": "style_colonial",
+      "slot_key": "door_default",
+      "current_module_id": "door_civic",
+      "target_module_id": "door_brick_residential_1u",
+      "material_family": "brick"
+    },
+    {
+      "style_pack_id": "style_victorian",
+      "slot_key": "door_default",
+      "current_module_id": "door_residential",
+      "target_module_id": "door_brick_residential_1u",
+      "material_family": "brick"
+    },
+    {
+      "style_pack_id": "style_colonial",
+      "slot_key": "window_1u",
+      "current_module_id": "win_arched_1u",
+      "target_module_id": "win_brick_1u",
+      "material_family": "brick"
+    },
+    {
+      "style_pack_id": "style_victorian",
+      "slot_key": "window_1u",
+      "current_module_id": "win_single_1u",
+      "target_module_id": "win_brick_1u",
+      "material_family": "brick"
+    },
+    {
+      "style_pack_id": "style_colonial",
+      "slot_key": "window_2u",
+      "current_module_id": "win_shop_2u",
+      "target_module_id": "win_brick_2u",
+      "material_family": "brick"
+    },
+    {
+      "style_pack_id": "style_victorian",
+      "slot_key": "window_2u",
+      "current_module_id": "win_double_1u",
+      "target_module_id": "win_brick_2u",
+      "material_family": "brick"
+    },
+    {
+      "style_pack_id": "style_rural",
+      "slot_key": "roof_default",
+      "current_module_id": "roof_pitched_hip",
+      "target_module_id": "roof_wood_gable_2u",
+      "material_family": "wood"
+    },
+    {
+      "style_pack_id": "style_rural",
+      "slot_key": "window_1u",
+      "current_module_id": "win_house_1u",
+      "target_module_id": "win_wood_1u",
+      "material_family": "wood"
+    },
+    {
+      "style_pack_id": "style_rural",
+      "slot_key": "window_2u",
+      "current_module_id": "win_shop_2u",
+      "target_module_id": "win_wood_2u",
+      "material_family": "wood"
+    },
+    {
+      "style_pack_id": "style_modern",
+      "slot_key": "roof_default",
+      "current_module_id": "roof_flat",
+      "target_module_id": "roof_concrete_flat_2u",
+      "material_family": "concrete"
+    },
+    {
+      "style_pack_id": "style_military",
+      "slot_key": "roof_default",
+      "current_module_id": "roof_bunker",
+      "target_module_id": "roof_concrete_flat_2u",
+      "material_family": "concrete"
+    },
+    {
+      "style_pack_id": "style_modern",
+      "slot_key": "door_default",
+      "current_module_id": "door_office",
+      "target_module_id": "door_concrete_service_1u",
+      "material_family": "concrete"
+    },
+    {
+      "style_pack_id": "style_military",
+      "slot_key": "door_default",
+      "current_module_id": "door_military",
+      "target_module_id": "door_concrete_service_1u",
+      "material_family": "concrete"
+    },
+    {
+      "style_pack_id": "style_modern",
+      "slot_key": "window_1u",
+      "current_module_id": "win_office_1u",
+      "target_module_id": "win_concrete_1u",
+      "material_family": "concrete"
+    },
+    {
+      "style_pack_id": "style_modern",
+      "slot_key": "window_2u",
+      "current_module_id": "win_strip_2u",
+      "target_module_id": "win_concrete_2u",
+      "material_family": "concrete"
+    }
+  ],
+  "style_purity_gap_count": 17,
+  "style_purity_complete": false,
+  "green": true,
+  "verdict": "PASS",
+  "notes": "Charter PASS at 100% slot resolution; style purity closes when @coder-mcp wires K1 batch",
+  "_agent_meta": {
+    "schema": "bq_k2_coverage_live_v1",
+    "written_at_epoch_secs": 1783118482,
+    "profile": "BQ_K2_COVERAGE",
+    "source_system": "kit_coverage_audit",
+    "relative_path": "debug_runs/bq_k2_coverage_001_live.json",
+    "ritual": "BLANG:WIT-HON\u2192Q\u2713 BQ-K2-COVERAGE-001",
+    "agent": "designer-mcp"
+  }
+}

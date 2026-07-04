@@ -1,9 +1,10 @@
 INFO Draco mesh compression is available, use library at C:\Program Files (x86)\Steam\steamapps\common\Blender\5.1\scripts\addons_core\io_scene_gltf2\extern_draco.dll
-17:45:01 | INFO: Starting glTF 2.0 export
-17:45:01 | INFO: Extracting primitive: Cube
-17:45:01 | INFO: Primitives created: 1
-17:45:01 | INFO: Finished glTF 2.0 export in 0.006743669509887695 s
+15:57:40 | INFO: Starting glTF 2.0 export
+15:57:40 | INFO: Extracting primitive: Cube
+15:57:40 | INFO: Primitives created: 1
+15:57:40 | INFO: Finished glTF 2.0 export in 0.029984712600708008 s
 
+EXPORT_MODE pbr_profile profile=roof_metal_shed_01
 EXPORT_OK C:\dev\github\Rust_engine_template_01\assets\staging\roof_industrial_shed_2u_run001\model.glb
 Blender 5.1.2 (hash ec6e62d40fa9 built 2026-05-19 01:37:34)
 

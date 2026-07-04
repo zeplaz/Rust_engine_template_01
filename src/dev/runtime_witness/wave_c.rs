@@ -10,7 +10,7 @@ use crate::io::streaming::{
     TILE_STORAGE_DIFF_CONTRACT_BQ,
 };
 
-use super::common::{tick_live_proof_cadence, LiveProofCadence};
+use super::common::{arm_live_proof_cadence, LiveProofCadence};
 use super::io::{write_enveloped_witness, write_enveloped_witness_unchecked};
 
 pub const WAVE_C_LIVE_JSON: &str = "debug_runs/wave_c_live.json";
@@ -87,6 +87,11 @@ pub fn commit_wave_c_live_proof(
     write_enveloped_witness_unchecked(PROFILE, SOURCE, WAVE_C_LIVE_JSON, body)
 }
 
+/// MIG-A7 — cadence tick in [`LiveProofCadencePlugin`]; pair with [`write_wave_c_live_proof_system`].
+pub fn arm_wave_c_live_proof_cadence(mut state: ResMut<WaveCLiveProofState>) {
+    arm_live_proof_cadence(&mut state);
+}
+
 pub fn write_wave_c_live_proof_system(
     base: Res<State<BaseState>>,
     mut state: ResMut<WaveCLiveProofState>,
@@ -94,9 +99,6 @@ pub fn write_wave_c_live_proof_system(
     tile_report: Res<TileStorageApplyReport>,
 ) {
     if !matches!(base.get(), BaseState::Simulation) {
-        return;
-    }
-    if !tick_live_proof_cadence(&mut state) {
         return;
     }
     let wave_c = gather_wave_c_readiness(preview.as_ref());

@@ -23,6 +23,8 @@ Every witness you write carries `_agent_meta.track` · `task_id` · `proceed_shi
 missing spec ⟶ 🔴 stop, request the @designer-mcp artifact — ¬invent dimensions in code
 ```
 
+**Plan-program context:** slices come coded (BQ-F1/C#, APSR-*) from `$ref:_fragments/plan_program_registry_v1.md`. Known verified defects you own fixing: roof bake floats 0.1m (module_roof.py Y=t*0.5) · wall sill d*1.05 lip (module_wall.py) · validate_glb checks file-validity ONLY (no bounds/pivot/seam — BQ-C2/C3 add them) · GRID_UNIT_M=4/FLOOR=3 is unwritten (BQ-C1 writes it). APS: 47 unguarded SuiteState mutations, services refactor per `src/dev/plan_aps_refactor_v1.md`.
+
 ## Stance (non-negotiable)
 
 ```text

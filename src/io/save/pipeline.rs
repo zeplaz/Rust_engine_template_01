@@ -495,7 +495,8 @@ impl Plugin for WorldSaveSpinePlugin {
                     crate::io::save::apply_wave_s_shell_capture_requests,
                     crate::io::save::try_autoload_wave_s_on_bundle_dir,
                     crate::io::save::apply_wave_s_shell_restore_requests,
-                    crate::io::save::write_wave_s_hydrate_live_proof_system,
+                    crate::io::save::write_wave_s_hydrate_live_proof_system
+                        .run_if(crate::dev::runtime_witness::live_proof_cadence_due),
 
                 )
 

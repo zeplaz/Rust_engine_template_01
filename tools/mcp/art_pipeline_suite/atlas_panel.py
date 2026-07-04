@@ -51,9 +51,11 @@ class AtlasPanel(ttk.Frame):
         *,
         on_log,
         start_job: StartJobFn | None = None,
+        atlas_service=None,
     ) -> None:
         super().__init__(master, padding=8)
         self.state = state
+        self._atlas = atlas_service
         self._on_log = on_log
         self._start_job = start_job
         self._build()
@@ -289,13 +291,15 @@ class AtlasPanel(ttk.Frame):
         path = filedialog.askopenfilename(filetypes=[("JSON", "*.json")])
         if path:
             self.batch_json_var.set(path)
-            self.state.tile_batch_path = path
+            if self._atlas:
+                self._atlas.set_tile_batch_path(path)
 
     def on_browse_folder(self) -> None:
         path = filedialog.askdirectory()
         if path:
             self.folder_var.set(path)
-            self.state.atlas_folder = path
+            if self._atlas:
+                self._atlas.set_atlas_folder(path)
 
     def on_batch_from_variant_set(self) -> None:
         data = self.state.variant_set_data
@@ -306,7 +310,8 @@ class AtlasPanel(ttk.Frame):
         tmp = Path(tempfile.gettempdir()) / f"{batch['batch_id']}.json"
         tmp.write_text(json.dumps(batch, indent=2) + "\n", encoding="utf-8")
         self.batch_json_var.set(str(tmp))
-        self.state.tile_batch_path = str(tmp)
+        if self._atlas:
+            self._atlas.set_tile_batch_path(str(tmp))
         self._log(f"Variant set expanded into a tile job → {tmp}")
         self._inline_hint(f"Prepared a tile job: {tmp.name}", ok=True)
 
@@ -338,7 +343,8 @@ class AtlasPanel(ttk.Frame):
                     folder = repo_root() / "assets/staging/tiles" / str(bid)
                     if folder.is_dir():
                         self.folder_var.set(str(folder))
-                        self.state.atlas_folder = str(folder)
+                        if self._atlas:
+                            self._atlas.set_atlas_folder(str(folder))
                 except Exception:  # noqa: BLE001
                     pass
                 self._inline_hint("Tile batch finished — see status log.", ok=True)
@@ -366,7 +372,8 @@ class AtlasPanel(ttk.Frame):
             folder = repo_root() / "assets/staging/tiles" / str(bid)
             if folder.is_dir():
                 self.folder_var.set(str(folder))
-                self.state.atlas_folder = str(folder)
+                if self._atlas:
+                    self._atlas.set_atlas_folder(str(folder))
         except Exception:  # noqa: BLE001
             pass
         self._inline_hint("Tile batch finished.", ok=True)

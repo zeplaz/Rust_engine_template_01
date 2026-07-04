@@ -14,6 +14,7 @@ pub enum NavSets {
     MotionCalculation,
 }
 
+/// **CLN-P0-T4-001 / SCH-E6** — dormant set (zero usages); delete or wire when worldgen schedule lands.
 #[derive(Debug, Hash, PartialEq, Eq, Clone, SystemSet)]
 pub enum GameSystemSet {
     TerrainGeneration,

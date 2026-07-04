@@ -1,0 +1,25 @@
+{
+  "task_id": "CITY-C8-PIPELINE-001",
+  "gate": "CITY-C8-PIPELINE-001",
+  "green": false,
+  "schema_ok": true,
+  "schema_error": null,
+  "op_registered": true,
+  "job_path": "tools/mcp/schemas/examples/city_c8_pilot_merge_run001.json",
+  "merge": {
+    "ok": false,
+    "skipped": true
+  },
+  "plan_ref": "src/dev/plan_city_grammar_upgrade_v1.md#CITY-C8",
+  "_agent_meta": {
+    "schema": "city_c8_pipeline_live_v1",
+    "profile": "CITY_C8_PIPELINE",
+    "relative_path": "debug_runs/city_c8_pipeline_001_live.json",
+    "source_system": "city_c8_pipeline",
+    "written_at_epoch_secs": 1783114939
+  },
+  "witness_honesty": {
+    "status": "skipped",
+    "reason": "green not requested"
+  }
+}

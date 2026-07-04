@@ -11,6 +11,7 @@
 | **Date** | 2026-07-02 |
 | **Owner** | `@planner` → **`@coder`** (render + gui + terrain) |
 | **Status** | **ACTIVE — single-lane; no partial sign-off** |
+| **Deferrals** | [`plan_deferral_registry_v1.md`](plan_deferral_registry_v1.md) — **DR-MIG-TILEMAP** / **DR-GPU-TERRAIN-P0C** block P0-C tilemap default until crates.io 0.19 |
 
 ---
 
@@ -129,9 +130,11 @@ Each phase **blocks** the next. **Rollback trigger:** any Phase N gate red for 2
 
 #### P0-C — GPU tilemap render path (preferred production path)
 
+**BLOCKED — DR-MIG-TILEMAP / DR-GPU-TERRAIN-P0C:** `bevy_ecs_tilemap` crates.io latest is **0.18.1** (Bevy 0.18). Do **not** enable `bevy_tilemap_adapter` in default features until upstream 0.19 + compat witness. **Pick P0-C′ instanced path** or P0-A/B while blocked. Re-evaluate when `defer_registry.json` → `DR-MIG-TILEMAP` predicates all true.
+
 | Task | Files | Detail |
 |:---|:---|:---|
-| **P0-C1** | `Cargo.toml` | Enable `bevy_ecs_tilemap` **render** features (drop `default-features = false` OR explicit `features = ["render", ...]` — verify 0.18.1 API). Add `bevy_tilemap_adapter` to **default** features OR runtime-equivalent always-on in release. |
+| **P0-C1** | `Cargo.toml` | **WAIT** — Enable `bevy_ecs_tilemap` render features + `bevy_tilemap_adapter` default only after **DR-MIG-TILEMAP** unblock. Until then: feature stays OFF. |
 | **P0-C2** | `src/render/tilemap_adapter.rs` | Bind `TilemapTexture` to `TerrainMaterialAtlasGpu` handle. Map `MaterializedChunk.materials` → `TileTextureIndex` (already partial). |
 | **P0-C3** | `src/render/tilemap_render_plugin.rs` (new) | Camera-visible tilemap layer on `MainWorldCamera`; chunk world offset from `Chunk` transform. |
 | **P0-C4** | Hydration | On `DenseTerrainHydrationGate` complete + chunk slabs: ensure `spawn_chunk_tilemaps` runs before sim HUD visible. |
@@ -297,7 +300,7 @@ Add lib tests (not only manual runs):
 
 | Risk | Mitigation |
 |:---|:---|
-| `bevy_ecs_tilemap` render API mismatch 0.18 | P0-C′ instanced fallback; timebox C to 1 day |
+| `bevy_ecs_tilemap` render API mismatch 0.19 | **DR-MIG-TILEMAP** — use P0-C′ instanced fallback until upstream 0.19; timebox C to 1 day after unblock |
 | Editor still uses `PerTileEntities` | P0: editor may keep `CpuFallback` until editor migration (document); sim/demo must not |
 | Stage 5 regression | Run `cargo test -p proc_A_dine01 --lib stage5` each phase |
 | Atlas rebuild hitch on registry load | Async prepare one frame early; show loading chrome |
@@ -356,9 +359,9 @@ Invoke: `@coder` with link to this file + `tools/orchestrator/agents/stage5_read
 
 | Board ID | Phase | Status |
 |:---|:---|:---|
-| **PERF-GPU-TERRAIN-001** | P0 | **DONE** — P0-C′ instanced-atlas authority + dirty-gated sprite texture display |
-| **PERF-GPU-TERRAIN-002** | P1 | **DONE** |
-| **PERF-GPU-TERRAIN-003** | P2 | **DONE** |
-| **PERF-GPU-TERRAIN-004** | P3 | **DONE** |
+| **PERF-GPU-TERRAIN-001** | P0 | **SCAFFOLDED** — P0-C′ files + opt-in env; **PRIME + §10 gate open** → [`gpu_todos_v1.md`](gpu_todos_v1.md) |
+| **PERF-GPU-TERRAIN-002** | P1 | **PARTIAL** — verify P1-A..E in gpu_todos |
+| **PERF-GPU-TERRAIN-003** | P2 | **PARTIAL** — verify P2-A..D in gpu_todos |
+| **PERF-GPU-TERRAIN-004** | P3 | **OPEN** — runbook + tracy optional |
 
 Update [`plan_visual_perf_production_v1.md`](plan_visual_perf_production_v1.md) Phase 5 row: **→ moved to PLAN-GPU-TERRAIN-EXEC-001**.

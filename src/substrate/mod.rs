@@ -171,7 +171,8 @@ impl Plugin for SubstratePlugin {
                 (
                     sync_post_spine_witness_system,
                     ecs_retire_pass_system,
-                    write_wss_substrate_live_proof_system,
+                    write_wss_substrate_live_proof_system
+                        .run_if(crate::dev::runtime_witness::wss_substrate_live_proof_due),
                 )
                     .after(SimControlSystemSet::AdvanceSimTick)
                     .run_if(in_state(BaseState::Simulation)),

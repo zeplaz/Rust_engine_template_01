@@ -1,0 +1,53 @@
+(
+    schema: "palette_catalog_v1",
+    version: "1.0.0",
+    palette_id: "palette_rowhouse_urban_v1",
+    style_pack: "style_victorian",
+    label: "Urban rowhouse material variations",
+    _meta: (
+        teaches: ["palette_variation", "party_wall_read", "style_pack:style_victorian"],
+    ),
+    variations: [
+        (
+            variation_id: "rh_brownstone",
+            label: "Classic brownstone row",
+            material_slots: (
+                wall_primary: "mat_brownstone_dark",
+                trim: "mat_iron_black",
+                door: "mat_door_wood_dark",
+                window: "mat_sash_white",
+            ),
+        ),
+        (
+            variation_id: "rh_painted_row",
+            label: "Painted row with coloured doors",
+            material_slots: (
+                wall_primary: "mat_clapboard_pastel",
+                trim: "mat_trim_white",
+                door: "mat_door_painted_red",
+                window: "mat_sash_white",
+            ),
+        ),
+        (
+            variation_id: "rh_brick_party",
+            label: "Red brick party wall",
+            material_slots: (
+                wall_primary: "mat_brick_red_row",
+                wall_secondary: "mat_brick_red_party",
+                trim: "mat_trim_stone",
+                door: "mat_door_wood_brown",
+            ),
+        ),
+        (
+            variation_id: "rh_rehab_mixed",
+            label: "Renovation mix",
+            material_slots: (
+                wall_primary: "mat_clapboard_patch",
+                trim: "mat_trim_new_white",
+                roof: "mat_shingle_new",
+                door: "mat_door_steel_grey",
+            ),
+            variant_tags: ["decommissioned", "rehab"],
+        ),
+    ],
+)

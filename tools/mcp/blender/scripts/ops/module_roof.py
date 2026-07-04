@@ -25,8 +25,20 @@ def _join(objects: list[bpy.types.Object]) -> bpy.types.Object:
     return bpy.context.active_object
 
 
+def _snap_roof_seat_plane_to_y_zero(obj: bpy.types.Object) -> None:
+    """Underside seat at Blender Y=0 (wall-top plane); post-yup export glTF min Z >= 0."""
+    bpy.context.view_layer.update()
+    if not obj.data.vertices:
+        return
+    world_ys = [(obj.matrix_world @ v.co).y for v in obj.data.vertices]
+    max_y = max(world_ys)
+    if abs(max_y) > 1e-6:
+        obj.location.y -= max_y
+        bpy.ops.object.transform_apply(location=True)
+
+
 def _build_flat(w: float, d: float, t: float) -> bpy.types.Object:
-    return _add_box("roof_flat", w, t, d, (0.0, t * 0.5, 0.0))
+    return _add_box("roof_flat", w, t, d, (0.0, -t * 0.5, 0.0))
 
 
 def _build_pitched(w: float, d: float, t: float, pitch_h: float) -> bpy.types.Object:
@@ -87,4 +99,5 @@ def build(params: dict) -> bpy.types.Object:
         obj = _build_flat(w, d, t)
 
     obj.name = params.get("name", "module_roof")
+    _snap_roof_seat_plane_to_y_zero(obj)
     return obj

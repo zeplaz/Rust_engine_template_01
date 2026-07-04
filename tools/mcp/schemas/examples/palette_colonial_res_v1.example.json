@@ -1,0 +1,42 @@
+{
+  "schema": "palette_catalog_v1",
+  "version": "1.0.0",
+  "palette_id": "palette_colonial_res_v1",
+  "style_pack": "style_colonial",
+  "label": "Colonial residential material variations",
+  "_meta": {
+    "teaches": ["palette_variation", "material_slot_remap", "style_pack:style_colonial"]
+  },
+  "variations": [
+    {
+      "variation_id": "cr_brick_red",
+      "label": "Red brick frontage",
+      "material_slots": {
+        "wall_primary": "mat_brick_red",
+        "trim": "mat_trim_white",
+        "roof": "mat_shingle_dark",
+        "door": "mat_door_wood_red"
+      }
+    },
+    {
+      "variation_id": "cr_clapboard_white",
+      "label": "White clapboard",
+      "material_slots": {
+        "wall_primary": "mat_clapboard_white",
+        "trim": "mat_trim_navy",
+        "roof": "mat_shingle_grey",
+        "window": "mat_shutter_black"
+      }
+    },
+    {
+      "variation_id": "cr_stone_accent",
+      "label": "Stone foundation accent",
+      "material_slots": {
+        "wall_primary": "mat_clapboard_cream",
+        "foundation": "mat_stone_grey",
+        "trim": "mat_trim_brown",
+        "roof": "mat_shingle_brown"
+      }
+    }
+  ]
+}

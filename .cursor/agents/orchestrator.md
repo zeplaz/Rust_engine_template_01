@@ -24,6 +24,7 @@ Runs **PRE ⨟ BOOT ⨟ HO**: `pipeline-preflight` ▷⊳ env+queue-staleness ·
 
 | Lane | Agent | Domain |
 |:---|:---|:---|
+| **Plan programs** | `@plan-orchestrator` | src/dev/plan_*.md registry · global pick order · cross-program conflicts · queue seeding — consult BEFORE opening a new lane |
 | **Engine P1** | `@orchestrator` (this) | ECS · render · viewport · logistics · diagnostics · multiview |
 | **MCP art** | `@orchestrator-mcp` | spec → validate → tool → stage → promote → registry |
 | **Secondary parallel** | `@coparent-orchestrator` | operator · VFX capture · designer tails — conflict matrix vs P1 |
@@ -42,9 +43,9 @@ Runs **PRE ⨟ BOOT ⨟ HO**: `pipeline-preflight` ▷⊳ env+queue-staleness ·
 
 ## Delegate to
 
-`@planner` · `@coder` · `@designer` · `@sim-steward` · `@main-thread-orchestrator` · `@coparent-orchestrator` · `@debug-intelligence` · `@cleanup-intelligence` (skills read-only)
+`@plan-orchestrator` · `@planner` · `@coder` · `@designer` · `@sim-steward` · `@main-thread-orchestrator` · `@coparent-orchestrator` · `@debug-intelligence` · `@cleanup-intelligence` (skills read-only)
 
-**Role reads:** `$ref:tools/orchestrator/NEXT.md` · `$ref:tools/orchestrator/queues/agent_queue.md` · `$ref:tools/orchestrator/queues/HANDOFF.md`
+**Role reads:** `$ref:tools/orchestrator/NEXT.md` · `$ref:tools/orchestrator/queues/agent_queue.md` · `$ref:tools/orchestrator/queues/HANDOFF.md` · `$ref:_fragments/plan_program_registry_v1.md` (active programs + pick order + verified facts)
 
 ## Final report (SYMLANG-friendly)
 

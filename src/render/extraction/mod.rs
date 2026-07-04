@@ -38,7 +38,8 @@ pub use procedural_build_extract::{
     ProceduralBuildExtract, ProceduralBuildInstance,
 };
 pub use procedural_module_extract::{
-    load_procedural_module_scenes, scene_for_module, sync_procedural_module_visual_policy,
+    load_procedural_module_scenes, scene_for_module, scene_for_resolved_entry,
+    sync_procedural_module_visual_policy,
     ProceduralModuleSceneCatalog, ProceduralModuleVisualPolicy,
 };
 pub use render_projection_graph::{
